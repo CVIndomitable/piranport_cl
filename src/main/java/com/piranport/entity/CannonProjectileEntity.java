@@ -1,0 +1,98 @@
+package com.piranport.entity;
+
+import com.piranport.registry.ModEntityTypes;
+import com.piranport.registry.ModItems;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.projectile.ThrowableItemProjectile;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.phys.HitResult;
+
+public class CannonProjectileEntity extends ThrowableItemProjectile {
+    private float damage = 6f;
+    private boolean isHE = true;
+    private float explosionPower = 1.5f;
+
+    // Required constructor for entity type registration
+    public CannonProjectileEntity(EntityType<? extends CannonProjectileEntity> type, Level level) {
+        super(type, level);
+    }
+
+    // Constructor for firing
+    public CannonProjectileEntity(Level level, LivingEntity shooter,
+                                   ItemStack shellItem, float damage,
+                                   boolean isHE, float explosionPower) {
+        super(ModEntityTypes.CANNON_PROJECTILE.get(), shooter, level);
+        setItem(shellItem);
+        this.damage = damage;
+        this.isHE = isHE;
+        this.explosionPower = explosionPower;
+    }
+
+    @Override
+    protected Item getDefaultItem() {
+        return ModItems.SMALL_HE_SHELL.get();
+    }
+
+    @Override
+    protected void onHitEntity(EntityHitResult result) {
+        super.onHitEntity(result);
+        if (!level().isClientSide) {
+            if (isHE) {
+                // HE: area explosion damage
+                level().explode(this, getX(), getY(), getZ(), explosionPower,
+                        Level.ExplosionInteraction.NONE);
+            } else {
+                // AP: 130% direct damage, single target
+                float apDamage = damage * 1.3f;
+                result.getEntity().hurt(damageSources().thrown(this, getOwner()), apDamage);
+            }
+        }
+    }
+
+    @Override
+    protected void onHitBlock(BlockHitResult result) {
+        super.onHitBlock(result);
+        if (!level().isClientSide) {
+            if (isHE) {
+                level().explode(this, getX(), getY(), getZ(), explosionPower,
+                        Level.ExplosionInteraction.NONE);
+            }
+        }
+    }
+
+    @Override
+    protected void onHit(HitResult result) {
+        super.onHit(result);
+        if (!level().isClientSide) {
+            level().broadcastEntityEvent(this, (byte) 3);
+            discard();
+        }
+    }
+
+    @Override
+    protected double getDefaultGravity() {
+        return 0.05;
+    }
+
+    @Override
+    public void addAdditionalSaveData(CompoundTag tag) {
+        super.addAdditionalSaveData(tag);
+        tag.putFloat("Damage", damage);
+        tag.putBoolean("IsHE", isHE);
+        tag.putFloat("ExplosionPower", explosionPower);
+    }
+
+    @Override
+    public void readAdditionalSaveData(CompoundTag tag) {
+        super.readAdditionalSaveData(tag);
+        damage = tag.getFloat("Damage");
+        isHE = tag.getBoolean("IsHE");
+        explosionPower = tag.getFloat("ExplosionPower");
+    }
+}

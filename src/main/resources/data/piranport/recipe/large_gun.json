@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "III",
+    "AAA",
+    " R "
+  ],
+  "key": {
+    "I": "minecraft:iron_ingot",
+    "A": "piranport:aluminum_ingot",
+    "R": "minecraft:redstone"
+  },
+  "result": {
+    "id": "piranport:large_gun"
+  }
+}

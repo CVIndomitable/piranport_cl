@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "AIA",
+    "IAI",
+    "AIA"
+  ],
+  "key": {
+    "I": "minecraft:iron_ingot",
+    "A": "piranport:aluminum_ingot"
+  },
+  "result": {
+    "id": "piranport:large_ship_core"
+  }
+}

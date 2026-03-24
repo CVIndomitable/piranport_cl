@@ -2,8 +2,13 @@
   "type": "minecraft:disk",
   "config": {
     "state_provider": {
+      "type": "minecraft:rule",
       "fallback": {
-        "Name": "piranport:salt_block"
+        "type": "minecraft:simple_state_provider",
+        "state": {
+          "Name": "piranport:salt_block",
+          "Properties": {}
+        }
       },
       "rules": []
     },

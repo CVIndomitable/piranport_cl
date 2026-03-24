@@ -80,12 +80,12 @@ public class ShipCoreScreen extends AbstractContainerScreen<ShipCoreMenu> {
         gfx.drawString(this.font, Component.translatable("container.piranport.weapons"), 8, 10, 0x404040, false);
         gfx.drawString(this.font, Component.translatable("container.piranport.ammo"), 8, 36, 0x404040, false);
 
-        // Load display
+        // Load display (right of bar: bar starts at x=8, width=100, so text at x=112)
         int currentLoad = menu.getCurrentLoad();
         int maxLoad = menu.getMaxLoad();
         String loadText = Component.translatable("container.piranport.load",
                 currentLoad, maxLoad).getString();
-        gfx.drawString(this.font, loadText, 8, 54, currentLoad > maxLoad ? 0xFF0000 : 0x404040, false);
+        gfx.drawString(this.font, loadText, 112, 62, currentLoad > maxLoad ? 0xFF0000 : 0x404040, false);
 
         // Inventory label
         gfx.drawString(this.font, this.playerInventoryTitle, this.inventoryLabelX, this.inventoryLabelY, 0x404040, false);

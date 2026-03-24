@@ -1,0 +1,20 @@
+{
+  "itemGroup.piranport": "Piran Port",
+  "block.piranport.bauxite_ore": "Bauxite Ore",
+  "block.piranport.aluminum_block": "Aluminum Block",
+  "block.piranport.salt_block": "Salt Block",
+  "item.piranport.aluminum_ingot": "Aluminum Ingot",
+  "item.piranport.salt": "Salt",
+  "item.piranport.small_ship_core": "Small Ship Core",
+  "item.piranport.medium_ship_core": "Medium Ship Core",
+  "item.piranport.large_ship_core": "Large Ship Core",
+  "item.piranport.small_he_shell": "Small HE Shell",
+  "item.piranport.medium_he_shell": "Medium HE Shell",
+  "item.piranport.large_he_shell": "Large HE Shell",
+  "item.piranport.small_ap_shell": "Small AP Shell",
+  "item.piranport.medium_ap_shell": "Medium AP Shell",
+  "item.piranport.large_ap_shell": "Large AP Shell",
+  "item.piranport.small_gun": "Small Gun",
+  "item.piranport.medium_gun": "Medium Gun",
+  "item.piranport.large_gun": "Large Gun"
+}

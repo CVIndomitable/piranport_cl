@@ -1,0 +1,20 @@
+{
+  "itemGroup.piranport": "皮兰港",
+  "block.piranport.bauxite_ore": "矾土矿",
+  "block.piranport.aluminum_block": "铝块",
+  "block.piranport.salt_block": "盐块",
+  "item.piranport.aluminum_ingot": "铝锭",
+  "item.piranport.salt": "盐",
+  "item.piranport.small_ship_core": "小型舰装核心",
+  "item.piranport.medium_ship_core": "中型舰装核心",
+  "item.piranport.large_ship_core": "大型舰装核心",
+  "item.piranport.small_he_shell": "小口径HE炮弹",
+  "item.piranport.medium_he_shell": "中口径HE炮弹",
+  "item.piranport.large_he_shell": "大口径HE炮弹",
+  "item.piranport.small_ap_shell": "小口径AP炮弹",
+  "item.piranport.medium_ap_shell": "中口径AP炮弹",
+  "item.piranport.large_ap_shell": "大口径AP炮弹",
+  "item.piranport.small_gun": "小型火炮",
+  "item.piranport.medium_gun": "中型火炮",
+  "item.piranport.large_gun": "大型火炮"
+}

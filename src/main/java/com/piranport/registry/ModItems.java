@@ -1,6 +1,7 @@
 package com.piranport.registry;
 
 import com.piranport.PiranPort;
+import com.piranport.item.ShipCoreItem;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.neoforged.neoforge.registries.DeferredItem;
@@ -25,12 +26,15 @@ public class ModItems {
             ITEMS.registerSimpleItem("salt");
 
     // ===== Ship Cores =====
-    public static final DeferredItem<Item> SMALL_SHIP_CORE =
-            ITEMS.registerSimpleItem("small_ship_core", new Item.Properties().stacksTo(1));
-    public static final DeferredItem<Item> MEDIUM_SHIP_CORE =
-            ITEMS.registerSimpleItem("medium_ship_core", new Item.Properties().stacksTo(1));
-    public static final DeferredItem<Item> LARGE_SHIP_CORE =
-            ITEMS.registerSimpleItem("large_ship_core", new Item.Properties().stacksTo(1));
+    public static final DeferredItem<ShipCoreItem> SMALL_SHIP_CORE =
+            ITEMS.register("small_ship_core",
+                    () -> new ShipCoreItem(new Item.Properties().stacksTo(1), ShipCoreItem.ShipType.SMALL));
+    public static final DeferredItem<ShipCoreItem> MEDIUM_SHIP_CORE =
+            ITEMS.register("medium_ship_core",
+                    () -> new ShipCoreItem(new Item.Properties().stacksTo(1), ShipCoreItem.ShipType.MEDIUM));
+    public static final DeferredItem<ShipCoreItem> LARGE_SHIP_CORE =
+            ITEMS.register("large_ship_core",
+                    () -> new ShipCoreItem(new Item.Properties().stacksTo(1), ShipCoreItem.ShipType.LARGE));
 
     // ===== HE Shells =====
     public static final DeferredItem<Item> SMALL_HE_SHELL =

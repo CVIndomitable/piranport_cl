@@ -16,5 +16,17 @@
   "item.piranport.large_ap_shell": "大口径AP炮弹",
   "item.piranport.small_gun": "小型火炮",
   "item.piranport.medium_gun": "中型火炮",
-  "item.piranport.large_gun": "大型火炮"
+  "item.piranport.large_gun": "大型火炮",
+  "container.piranport.weapons": "武器栏",
+  "container.piranport.ammo": "弹药库",
+  "container.piranport.load": "负重: %s / %s",
+  "key.categories.piranport": "皮兰港",
+  "key.piranport.cycle_weapon": "切换武器",
+  "message.piranport.transformed": "舰装启动！",
+  "message.piranport.untransformed": "舰装解除",
+  "message.piranport.no_weapon": "未装备武器！",
+  "message.piranport.no_ammo": "弹药不足！",
+  "message.piranport.weapon_selected": "已选择: %s",
+  "message.piranport.slot_empty": "武器栏 %s: 空",
+  "entity.piranport.cannon_projectile": "炮弹"
 }

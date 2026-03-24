@@ -16,5 +16,17 @@
   "item.piranport.large_ap_shell": "Large AP Shell",
   "item.piranport.small_gun": "Small Gun",
   "item.piranport.medium_gun": "Medium Gun",
-  "item.piranport.large_gun": "Large Gun"
+  "item.piranport.large_gun": "Large Gun",
+  "container.piranport.weapons": "Weapons",
+  "container.piranport.ammo": "Ammo",
+  "container.piranport.load": "Load: %s / %s",
+  "key.categories.piranport": "Piran Port",
+  "key.piranport.cycle_weapon": "Cycle Weapon",
+  "message.piranport.transformed": "Transformation activated!",
+  "message.piranport.untransformed": "Transformation deactivated",
+  "message.piranport.no_weapon": "No weapon equipped!",
+  "message.piranport.no_ammo": "No ammo!",
+  "message.piranport.weapon_selected": "Selected: %s",
+  "message.piranport.slot_empty": "Weapon slot %s: Empty",
+  "entity.piranport.cannon_projectile": "Cannon Projectile"
 }

@@ -1,0 +1,6 @@
+{
+  "type": "piranport:cutting_board",
+  "ingredient": {"item": "minecraft:cooked_porkchop"},
+  "result": {"id": "piranport:bacon", "count": 4},
+  "cuts": 4
+}

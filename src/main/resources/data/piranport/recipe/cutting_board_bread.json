@@ -1,0 +1,6 @@
+{
+  "type": "piranport:cutting_board",
+  "ingredient": {"item": "minecraft:bread"},
+  "result": {"id": "piranport:toast_bread_slices", "count": 3},
+  "cuts": 3
+}

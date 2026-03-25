@@ -1,5 +1,6 @@
 package com.piranport;
 
+import com.piranport.block.entity.CookingPotBlockEntity;
 import com.piranport.block.entity.StoneMillBlockEntity;
 import com.piranport.registry.ModBlockEntityTypes;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -16,6 +17,11 @@ public class CommonEvents {
                 Capabilities.ItemHandler.BLOCK,
                 ModBlockEntityTypes.STONE_MILL.get(),
                 StoneMillBlockEntity::getItemHandler
+        );
+        event.registerBlockEntity(
+                Capabilities.ItemHandler.BLOCK,
+                ModBlockEntityTypes.COOKING_POT.get(),
+                CookingPotBlockEntity::getItemHandler
         );
     }
 }

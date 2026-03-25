@@ -93,5 +93,30 @@ public class ModCreativeTabs {
                         output.accept(ModItems.QUICKLIME.get());
                         // Functional Blocks
                         output.accept(ModItems.STONE_MILL.get());
+                        output.accept(ModItems.CUTTING_BOARD.get());
+                        output.accept(ModItems.COOKING_POT.get());
+                        // Intermediate Products
+                        output.accept(ModItems.SAUSAGE.get());
+                        output.accept(ModItems.SLICED_SAUSAGE.get());
+                        output.accept(ModItems.BACON.get());
+                        output.accept(ModItems.TOAST_BREAD_SLICES.get());
+                        output.accept(ModItems.BEER.get());
+                        output.accept(ModItems.ROUND_BUN.get());
+                        // Food Items
+                        output.accept(ModItems.TOAST_BREAD.get());
+                        output.accept(ModItems.NAVAL_BAKED_BEANS.get());
+                        output.accept(ModItems.LATIAO.get());
+                        output.accept(ModItems.MAPO_TOFU.get());
+                        output.accept(ModItems.NAVAL_CURRY.get());
+                        output.accept(ModItems.FRIED_FISH_AND_CHIPS.get());
+                        output.accept(ModItems.SCONE.get());
+                        output.accept(ModItems.SALTED_EGG_TOFU.get());
+                        output.accept(ModItems.SURSTROMMING.get());
+                        output.accept(ModItems.AMERICAN_BURGER.get());
+                        output.accept(ModItems.HOTDOG.get());
+                        output.accept(ModItems.PASTA.get());
+                        output.accept(ModItems.COOKED_RICE.get());
+                        output.accept(ModItems.BEET_BLOSSOM.get());
+                        output.accept(ModItems.MISO_SOUP.get());
                     }).build());
 }

@@ -2,6 +2,7 @@ package com.piranport.registry;
 
 import com.mojang.serialization.Codec;
 import com.piranport.PiranPort;
+import com.piranport.component.PlaceableInfo;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.codec.ByteBufCodecs;
@@ -32,5 +33,12 @@ public class ModDataComponents {
             () -> DataComponentType.<Integer>builder()
                     .persistent(Codec.INT)
                     .networkSynchronized(ByteBufCodecs.VAR_INT)
+                    .build());
+
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<PlaceableInfo>>
+            PLACEABLE_INFO = DATA_COMPONENTS.register("placeable_info",
+            () -> DataComponentType.<PlaceableInfo>builder()
+                    .persistent(PlaceableInfo.CODEC)
+                    .networkSynchronized(PlaceableInfo.STREAM_CODEC)
                     .build());
 }

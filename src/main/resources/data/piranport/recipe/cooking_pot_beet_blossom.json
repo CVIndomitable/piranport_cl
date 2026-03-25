@@ -1,0 +1,9 @@
+{
+  "type": "piranport:cooking_pot",
+  "ingredients": [
+    {"item": "piranport:tofu"},
+    {"item": "minecraft:sugar"}
+  ],
+  "result": {"id": "piranport:beet_blossom", "count": 1},
+  "cookingTime": 200
+}

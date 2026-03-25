@@ -1,0 +1,9 @@
+{
+  "type": "piranport:cooking_pot",
+  "ingredients": [
+    {"item": "piranport:chili_powder"},
+    {"item": "piranport:soy_sauce"}
+  ],
+  "result": {"id": "piranport:latiao", "count": 1},
+  "cookingTime": 100
+}

@@ -1,0 +1,6 @@
+{
+  "type": "piranport:cutting_board",
+  "ingredient": {"item": "piranport:sausage"},
+  "result": {"id": "piranport:sliced_sausage", "count": 4},
+  "cuts": 4
+}

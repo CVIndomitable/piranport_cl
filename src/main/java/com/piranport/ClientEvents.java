@@ -1,7 +1,11 @@
 package com.piranport;
 
+import com.piranport.client.CuttingBoardRenderer;
+import com.piranport.client.PlaceableFoodRenderer;
+import com.piranport.menu.CookingPotScreen;
 import com.piranport.menu.ShipCoreScreen;
 import com.piranport.menu.StoneMillScreen;
+import com.piranport.registry.ModBlockEntityTypes;
 import com.piranport.registry.ModEntityTypes;
 import com.piranport.registry.ModMenuTypes;
 import net.minecraft.client.KeyMapping;
@@ -24,6 +28,7 @@ public class ClientEvents {
     public static void registerScreens(RegisterMenuScreensEvent event) {
         event.register(ModMenuTypes.SHIP_CORE_MENU.get(), ShipCoreScreen::new);
         event.register(ModMenuTypes.STONE_MILL_MENU.get(), StoneMillScreen::new);
+        event.register(ModMenuTypes.COOKING_POT_MENU.get(), CookingPotScreen::new);
     }
 
     @SubscribeEvent
@@ -37,5 +42,9 @@ public class ClientEvents {
                 ThrownItemRenderer::new);
         event.registerEntityRenderer(ModEntityTypes.TORPEDO_ENTITY.get(),
                 ThrownItemRenderer::new);
+        event.registerBlockEntityRenderer(ModBlockEntityTypes.CUTTING_BOARD.get(),
+                CuttingBoardRenderer::new);
+        event.registerBlockEntityRenderer(ModBlockEntityTypes.PLACEABLE_FOOD.get(),
+                PlaceableFoodRenderer::new);
     }
 }

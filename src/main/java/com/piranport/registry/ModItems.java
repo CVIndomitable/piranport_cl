@@ -1,10 +1,15 @@
 package com.piranport.registry;
 
 import com.piranport.PiranPort;
+import com.piranport.component.PlaceableInfo;
 import com.piranport.item.ArmorPlateItem;
+import com.piranport.item.ModFoodItem;
 import com.piranport.item.ShipCoreItem;
 import com.piranport.item.TorpedoItem;
 import com.piranport.item.TorpedoLauncherItem;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.neoforged.neoforge.registries.DeferredItem;
@@ -138,9 +143,123 @@ public class ModItems {
             ITEMS.register("garlic_seeds", () -> new net.minecraft.world.item.ItemNameBlockItem(
                     ModBlocks.GARLIC_CROP.get(), new Item.Properties()));
 
-    // ===== Functional Block Items (Phase 12) =====
+    // ===== Functional Block Items (Phase 12-14) =====
     public static final DeferredItem<BlockItem> STONE_MILL =
             ITEMS.registerSimpleBlockItem(ModBlocks.STONE_MILL);
+    public static final DeferredItem<BlockItem> CUTTING_BOARD =
+            ITEMS.registerSimpleBlockItem(ModBlocks.CUTTING_BOARD);
+    public static final DeferredItem<BlockItem> COOKING_POT =
+            ITEMS.registerSimpleBlockItem(ModBlocks.COOKING_POT);
+
+    // ===== Intermediate Products (Phase 13/16) =====
+    public static final DeferredItem<Item> SAUSAGE            = ITEMS.registerSimpleItem("sausage");
+    public static final DeferredItem<Item> SLICED_SAUSAGE     = ITEMS.registerSimpleItem("sliced_sausage");
+    public static final DeferredItem<Item> BACON              = ITEMS.registerSimpleItem("bacon");
+    public static final DeferredItem<Item> TOAST_BREAD_SLICES = ITEMS.registerSimpleItem("toast_bread_slices");
+    public static final DeferredItem<Item> BEER               = ITEMS.registerSimpleItem("beer");
+    public static final DeferredItem<Item> ROUND_BUN          = ITEMS.registerSimpleItem("round_bun");
+
+    // ===== Food Items (Phase 16) =====
+    private static FoodProperties.Builder fp(int nutrition, float saturation) {
+        return new FoodProperties.Builder()
+                .nutrition(nutrition)
+                .saturationModifier(saturation / (nutrition * 2f))
+                .alwaysEdible();
+    }
+
+    public static final DeferredItem<ModFoodItem> TOAST_BREAD = ITEMS.register("toast_bread",
+            () -> new ModFoodItem(new Item.Properties()
+                    .food(fp(15, 18.8f).build())
+                    .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 3))));
+
+    public static final DeferredItem<ModFoodItem> NAVAL_BAKED_BEANS = ITEMS.register("naval_baked_beans",
+            () -> new ModFoodItem(new Item.Properties()
+                    .food(fp(4, 5f).build())
+                    .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 2))));
+
+    public static final DeferredItem<ModFoodItem> LATIAO = ITEMS.register("latiao",
+            () -> new ModFoodItem(new Item.Properties()
+                    .food(fp(2, 2.5f)
+                            .effect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 1800, 2), 1.0f)
+                            .build())
+                    .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 2))));
+
+    public static final DeferredItem<ModFoodItem> MAPO_TOFU = ITEMS.register("mapo_tofu",
+            () -> new ModFoodItem(new Item.Properties()
+                    .food(fp(4, 5f)
+                            .effect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 3600, 1), 1.0f)
+                            .effect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 3600, 0), 1.0f)
+                            .build())
+                    .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 3))));
+
+    public static final DeferredItem<ModFoodItem> NAVAL_CURRY = ITEMS.register("naval_curry",
+            () -> new ModFoodItem(new Item.Properties()
+                    .food(fp(5, 6.3f)
+                            .effect(new MobEffectInstance(MobEffects.NIGHT_VISION, 4800, 0), 1.0f)
+                            .build())
+                    .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 3))));
+
+    public static final DeferredItem<ModFoodItem> FRIED_FISH_AND_CHIPS = ITEMS.register("fried_fish_and_chips",
+            () -> new ModFoodItem(new Item.Properties()
+                    .food(fp(5, 6.3f)
+                            .effect(new MobEffectInstance(MobEffects.JUMP, 3600, 1), 1.0f)
+                            .build())
+                    .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 2))));
+
+    public static final DeferredItem<ModFoodItem> SCONE = ITEMS.register("scone",
+            () -> new ModFoodItem(new Item.Properties()
+                    .food(fp(3, 3.8f).build())
+                    .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 4))));
+
+    public static final DeferredItem<ModFoodItem> SALTED_EGG_TOFU = ITEMS.register("salted_egg_tofu",
+            () -> new ModFoodItem(new Item.Properties()
+                    .food(fp(3, 3.8f).build())
+                    .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 1))));
+
+    public static final DeferredItem<ModFoodItem> SURSTROMMING = ITEMS.register("surstromming",
+            () -> new ModFoodItem(new Item.Properties()
+                    .food(fp(4, 5f)
+                            .effect(new MobEffectInstance(MobEffects.WITHER, 40, 1), 1.0f)
+                            .effect(new MobEffectInstance(MobEffects.CONFUSION, 280, 3), 1.0f)
+                            .effect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 4800, 1), 1.0f)
+                            .build())
+                    .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 2))));
+
+    public static final DeferredItem<ModFoodItem> AMERICAN_BURGER = ITEMS.register("american_burger",
+            () -> new ModFoodItem(new Item.Properties()
+                    .food(fp(8, 10f)
+                            .effect(new MobEffectInstance(MobEffects.DIG_SPEED, 3600, 1), 1.0f)
+                            .build())
+                    .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 2))));
+
+    public static final DeferredItem<Item> HOTDOG = ITEMS.register("hotdog",
+            () -> new Item(new Item.Properties()
+                    .food(fp(4, 5f)
+                            .effect(new MobEffectInstance(MobEffects.DIG_SPEED, 3600, 0), 1.0f)
+                            .build())));
+
+    public static final DeferredItem<ModFoodItem> PASTA = ITEMS.register("pasta",
+            () -> new ModFoodItem(new Item.Properties()
+                    .food(fp(4, 5f).build())
+                    .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 2))));
+
+    public static final DeferredItem<ModFoodItem> COOKED_RICE = ITEMS.register("cooked_rice",
+            () -> new ModFoodItem(new Item.Properties()
+                    .food(fp(5, 6.3f).build())
+                    .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 2))));
+
+    public static final DeferredItem<ModFoodItem> BEET_BLOSSOM = ITEMS.register("beet_blossom",
+            () -> new ModFoodItem(new Item.Properties()
+                    .food(fp(3, 3.8f)
+                            .effect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 3600, 0), 1.0f)
+                            .effect(new MobEffectInstance(MobEffects.WATER_BREATHING, 3600, 0), 1.0f)
+                            .build())
+                    .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("bowl", 1))));
+
+    public static final DeferredItem<ModFoodItem> MISO_SOUP = ITEMS.register("miso_soup",
+            () -> new ModFoodItem(new Item.Properties()
+                    .food(fp(6, 7.5f).build())
+                    .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("bowl", 2))));
 
     // ===== Torpedo Launchers =====
     public static final DeferredItem<TorpedoLauncherItem> TWIN_TORPEDO_LAUNCHER =

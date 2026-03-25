@@ -1,7 +1,10 @@
 package com.piranport.registry;
 
 import com.piranport.PiranPort;
+import com.piranport.block.CookingPotBlock;
+import com.piranport.block.CuttingBoardBlock;
 import com.piranport.block.FourStageCropBlock;
+import com.piranport.block.PlaceableFoodBlock;
 import com.piranport.block.StoneMillBlock;
 import com.piranport.block.ThreeStageCropBlock;
 import net.minecraft.util.valueproviders.UniformInt;
@@ -67,4 +70,40 @@ public class ModBlocks {
                             .strength(3.5f, 10.0f)
                             .requiresCorrectToolForDrops()
                             .sound(SoundType.STONE)));
+
+    // ===== Functional Blocks (Phase 13) =====
+    public static final DeferredBlock<CuttingBoardBlock> CUTTING_BOARD =
+            BLOCKS.register("cutting_board", () -> new CuttingBoardBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.WOOD)
+                            .strength(2.0f, 3.0f)
+                            .sound(SoundType.WOOD)
+                            .noOcclusion()));
+
+    // ===== Functional Blocks (Phase 14) =====
+    public static final DeferredBlock<CookingPotBlock> COOKING_POT =
+            BLOCKS.register("cooking_pot", () -> new CookingPotBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.METAL)
+                            .strength(3.0f, 6.0f)
+                            .requiresCorrectToolForDrops()
+                            .sound(SoundType.METAL)
+                            .noOcclusion()));
+
+    // ===== Placeable Food Blocks (Phase 16) =====
+    private static BlockBehaviour.Properties foodBlockProps() {
+        return BlockBehaviour.Properties.of()
+                .mapColor(MapColor.TERRACOTTA_WHITE)
+                .strength(0.5f)
+                .sound(SoundType.WOOD)
+                .noOcclusion()
+                .noCollission();
+    }
+
+    public static final DeferredBlock<PlaceableFoodBlock.Plate> PLATE_FOOD =
+            BLOCKS.register("plate_food", () -> new PlaceableFoodBlock.Plate(foodBlockProps()));
+    public static final DeferredBlock<PlaceableFoodBlock.Bowl> BOWL_FOOD =
+            BLOCKS.register("bowl_food", () -> new PlaceableFoodBlock.Bowl(foodBlockProps()));
+    public static final DeferredBlock<PlaceableFoodBlock.Cake> CAKE_FOOD =
+            BLOCKS.register("cake_food", () -> new PlaceableFoodBlock.Cake(foodBlockProps()));
 }

@@ -1,6 +1,7 @@
 package com.piranport;
 
 import com.mojang.logging.LogUtils;
+import com.piranport.recipe.ModBrewingRecipes;
 import com.piranport.registry.ModBlockEntityTypes;
 import com.piranport.registry.ModBlocks;
 import com.piranport.registry.ModCreativeTabs;
@@ -13,6 +14,7 @@ import com.piranport.registry.ModRecipeTypes;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.event.brewing.RegisterBrewingRecipesEvent;
 import org.slf4j.Logger;
 
 @Mod(PiranPort.MOD_ID)
@@ -31,7 +33,12 @@ public class PiranPort {
         ModBlockEntityTypes.BLOCK_ENTITY_TYPES.register(modEventBus);
         ModRecipeTypes.RECIPE_TYPES.register(modEventBus);
         ModRecipeTypes.RECIPE_SERIALIZERS.register(modEventBus);
+        modEventBus.addListener(this::registerBrewingRecipes);
 
         LOGGER.info("Piran Port mod initialized!");
+    }
+
+    private void registerBrewingRecipes(final RegisterBrewingRecipesEvent event) {
+        ModBrewingRecipes.register(event.getBuilder());
     }
 }

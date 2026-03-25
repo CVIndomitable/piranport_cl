@@ -1,10 +1,15 @@
 package com.piranport.entity;
 
+import com.piranport.PiranPort;
 import com.piranport.registry.ModEntityTypes;
 import com.piranport.registry.ModItems;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.projectile.ThrowableItemProjectile;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -48,9 +53,24 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
                 level().explode(this, getX(), getY(), getZ(), explosionPower,
                         Level.ExplosionInteraction.NONE);
             } else {
-                // AP: 130% direct damage, single target
+                // AP: 130% direct damage, ignores 50% of target armor
                 float apDamage = damage * 1.3f;
-                result.getEntity().hurt(damageSources().thrown(this, getOwner()), apDamage);
+                if (result.getEntity() instanceof LivingEntity living) {
+                    AttributeInstance armorAttr = living.getAttribute(Attributes.ARMOR);
+                    ResourceLocation apPenId = ResourceLocation.fromNamespaceAndPath(
+                            PiranPort.MOD_ID, "ap_penetration");
+                    if (armorAttr != null) {
+                        double halfArmor = living.getAttributeValue(Attributes.ARMOR) * 0.5;
+                        armorAttr.addTransientModifier(new AttributeModifier(
+                                apPenId, -halfArmor, AttributeModifier.Operation.ADD_VALUE));
+                    }
+                    living.hurt(damageSources().thrown(this, getOwner()), apDamage);
+                    if (armorAttr != null) {
+                        armorAttr.removeModifier(apPenId);
+                    }
+                } else {
+                    result.getEntity().hurt(damageSources().thrown(this, getOwner()), apDamage);
+                }
             }
         }
     }

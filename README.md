@@ -2,7 +2,7 @@
 
 > 使用 Claude Code 开发的皮兰港模组。
 > 基于战舰少女R世界观的 Minecraft 综合性模组
-> NeoForge 1.21.11 | 版本 v0.2.0-alpha
+> NeoForge 21.1.220 for Minecraft 1.21.1 | 版本 v0.2.0-alpha
 
 ---
 
@@ -23,7 +23,7 @@
 
 ## 安装
 
-1. 安装 **NeoForge 21.11.x**（对应 Minecraft 1.21.11）
+1. 安装 **NeoForge 21.1.x**（对应 Minecraft 1.21.1）
 2. 将 `piranport-x.x.x.jar` 放入 `mods/` 文件夹
 3. 启动游戏
 
@@ -238,7 +238,3 @@
 | 四联鱼雷 ×1 | 28 ×4 | 6.0s | 18.7 | 20 |
 
 > 鱼雷 DPS 纸面偏高，但受制于：弹药有限（不自动补充）、需在水面使用、需靠近目标。
-
----
-
-*皮兰港 Mod — 同人项目，All Rights Reserved*

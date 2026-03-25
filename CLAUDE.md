@@ -357,6 +357,7 @@ src/main/java/com/piranport/
 | 问题 | 错误用法 | 正确用法 |
 |------|---------|---------|
 | 酿造配方注册 | `BrewingRecipeRegistry.addRecipe(recipe)` (静态方法已废) | 监听 `RegisterBrewingRecipesEvent`，用 `event.getBuilder().addRecipe(recipe)` |
+| 酿造事件总线 | `modEventBus.addListener(RegisterBrewingRecipesEvent)` (IllegalArgumentException) | `NeoForge.EVENT_BUS.addListener(...)` — 此事件在游戏总线，不在 mod 总线 |
 | 食物饱和度获取 | `food.saturationModifier()` | `food.saturation()` |
 | 熔炉热源检测 | `AbstractFurnaceBlockEntity.isLit()` (private) | `bs.hasProperty(BlockStateProperties.LIT) && bs.getValue(...LIT) && bs.getBlock() instanceof AbstractFurnaceBlock` |
 | 方块掉落物品 | `Containers.dropContents(level, pos, blockEntity)` (需实现 Container) | 手动 loop `itemHandler.getStackInSlot(i)` + `Containers.dropItemStack()` |

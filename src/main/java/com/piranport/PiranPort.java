@@ -14,6 +14,7 @@ import com.piranport.registry.ModRecipeTypes;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.brewing.RegisterBrewingRecipesEvent;
 import org.slf4j.Logger;
 
@@ -33,7 +34,7 @@ public class PiranPort {
         ModBlockEntityTypes.BLOCK_ENTITY_TYPES.register(modEventBus);
         ModRecipeTypes.RECIPE_TYPES.register(modEventBus);
         ModRecipeTypes.RECIPE_SERIALIZERS.register(modEventBus);
-        modEventBus.addListener(this::registerBrewingRecipes);
+        NeoForge.EVENT_BUS.addListener(this::registerBrewingRecipes);
 
         LOGGER.info("Piran Port mod initialized!");
     }

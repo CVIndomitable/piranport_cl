@@ -2,6 +2,7 @@ package com.piranport.registry;
 
 import com.piranport.PiranPort;
 import com.piranport.entity.CannonProjectileEntity;
+import com.piranport.entity.TorpedoEntity;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
@@ -19,4 +20,12 @@ public class ModEntityTypes {
                     .clientTrackingRange(4)
                     .updateInterval(10)
                     .build("cannon_projectile"));
+
+    public static final DeferredHolder<EntityType<?>, EntityType<TorpedoEntity>>
+            TORPEDO_ENTITY = ENTITY_TYPES.register("torpedo_entity",
+            () -> EntityType.Builder.<TorpedoEntity>of(TorpedoEntity::new, MobCategory.MISC)
+                    .sized(0.5f, 0.25f)
+                    .clientTrackingRange(8)
+                    .updateInterval(3)
+                    .build("torpedo_entity"));
 }

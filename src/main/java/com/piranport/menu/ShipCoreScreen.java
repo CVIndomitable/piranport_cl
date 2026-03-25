@@ -11,8 +11,8 @@ public class ShipCoreScreen extends AbstractContainerScreen<ShipCoreMenu> {
     public ShipCoreScreen(ShipCoreMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
         this.imageWidth = 176;
-        this.imageHeight = 166;
-        this.inventoryLabelY = 72;
+        this.imageHeight = 188;   // was 166, +22 for enhancement row
+        this.inventoryLabelY = 94; // was 72, +22
     }
 
     @Override
@@ -20,7 +20,10 @@ public class ShipCoreScreen extends AbstractContainerScreen<ShipCoreMenu> {
         int x = this.leftPos;
         int y = this.topPos;
 
-        // Main background (Minecraft-style gray)
+        ShipCoreItem.ShipType type = menu.getShipType();
+        boolean locked = menu.isTransformed();
+
+        // Main background
         gfx.fill(x, y, x + imageWidth, y + imageHeight, 0xFFC6C6C6);
 
         // 3D border
@@ -28,8 +31,6 @@ public class ShipCoreScreen extends AbstractContainerScreen<ShipCoreMenu> {
         gfx.fill(x, y, x + 1, y + imageHeight - 1, 0xFFFFFFFF);
         gfx.fill(x + imageWidth - 1, y, x + imageWidth, y + imageHeight, 0xFF555555);
         gfx.fill(x, y + imageHeight - 1, x + imageWidth, y + imageHeight, 0xFF555555);
-
-        ShipCoreItem.ShipType type = menu.getShipType();
 
         // Weapon slot backgrounds
         for (int i = 0; i < type.weaponSlots; i++) {
@@ -41,21 +42,26 @@ public class ShipCoreScreen extends AbstractContainerScreen<ShipCoreMenu> {
             drawSlotBg(gfx, x + 7 + i * 18, y + 45);
         }
 
+        // Enhancement slot backgrounds
+        for (int i = 0; i < type.enhancementSlots; i++) {
+            drawSlotBg(gfx, x + 7 + i * 18, y + 71);
+        }
+
         // Player inventory slot backgrounds
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
-                drawSlotBg(gfx, x + 7 + col * 18, y + 83 + row * 18);
+                drawSlotBg(gfx, x + 7 + col * 18, y + 105 + row * 18);
             }
         }
 
         // Hotbar slot backgrounds
         for (int col = 0; col < 9; col++) {
-            drawSlotBg(gfx, x + 7 + col * 18, y + 141);
+            drawSlotBg(gfx, x + 7 + col * 18, y + 163);
         }
 
-        // Load bar background
+        // Load bar background (moved down to y+91)
         int barX = x + 8;
-        int barY = y + 64;
+        int barY = y + 91;
         int barWidth = 100;
         int barHeight = 5;
         gfx.fill(barX - 1, barY - 1, barX + barWidth + 1, barY + barHeight + 1, 0xFF373737);
@@ -69,6 +75,16 @@ public class ShipCoreScreen extends AbstractContainerScreen<ShipCoreMenu> {
             int barColor = currentLoad > maxLoad * 0.8f ? 0xFFFF4444 : 0xFF44CC44;
             gfx.fill(barX, barY, barX + filledWidth, barY + barHeight, barColor);
         }
+
+        // Locked overlay for weapon and enhancement slots when transformed
+        if (locked) {
+            for (int i = 0; i < type.weaponSlots; i++) {
+                gfx.fill(x + 8 + i * 18, y + 20, x + 8 + i * 18 + 16, y + 20 + 16, 0x88000000);
+            }
+            for (int i = 0; i < type.enhancementSlots; i++) {
+                gfx.fill(x + 8 + i * 18, y + 72, x + 8 + i * 18 + 16, y + 72 + 16, 0x88000000);
+            }
+        }
     }
 
     @Override
@@ -79,20 +95,20 @@ public class ShipCoreScreen extends AbstractContainerScreen<ShipCoreMenu> {
         // Section labels
         gfx.drawString(this.font, Component.translatable("container.piranport.weapons"), 8, 10, 0x404040, false);
         gfx.drawString(this.font, Component.translatable("container.piranport.ammo"), 8, 36, 0x404040, false);
+        gfx.drawString(this.font, Component.translatable("container.piranport.enhancement"), 8, 62, 0x404040, false);
 
-        // Load display (right of bar: bar starts at x=8, width=100, so text at x=112)
+        // Load display (to the right of bar: bar at x=8, width=100; text at x=112, y=89)
         int currentLoad = menu.getCurrentLoad();
         int maxLoad = menu.getMaxLoad();
         String loadText = Component.translatable("container.piranport.load",
                 currentLoad, maxLoad).getString();
-        gfx.drawString(this.font, loadText, 112, 62, currentLoad > maxLoad ? 0xFF0000 : 0x404040, false);
+        gfx.drawString(this.font, loadText, 112, 89, currentLoad > maxLoad ? 0xFF0000 : 0x404040, false);
 
         // Inventory label
         gfx.drawString(this.font, this.playerInventoryTitle, this.inventoryLabelX, this.inventoryLabelY, 0x404040, false);
     }
 
     private void drawSlotBg(GuiGraphics gfx, int x, int y) {
-        // Inset slot (dark top-left, light bottom-right)
         gfx.fill(x, y, x + 18, y + 1, 0xFF373737);
         gfx.fill(x, y, x + 1, y + 18, 0xFF373737);
         gfx.fill(x + 1, y + 1, x + 17, y + 17, 0xFF8B8B8B);

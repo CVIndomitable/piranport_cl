@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "IAI",
+    "RPR",
+    "IRI"
+  ],
+  "key": {
+    "I": "minecraft:iron_ingot",
+    "A": "piranport:aluminum_ingot",
+    "R": "minecraft:redstone",
+    "P": "minecraft:gunpowder"
+  },
+  "result": {
+    "id": "piranport:torpedo_610mm",
+    "count": 4
+  }
+}

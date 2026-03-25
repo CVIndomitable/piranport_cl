@@ -1,7 +1,10 @@
 package com.piranport.registry;
 
 import com.piranport.PiranPort;
+import com.piranport.item.ArmorPlateItem;
 import com.piranport.item.ShipCoreItem;
+import com.piranport.item.TorpedoItem;
+import com.piranport.item.TorpedoLauncherItem;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.neoforged.neoforge.registries.DeferredItem;
@@ -59,4 +62,40 @@ public class ModItems {
             ITEMS.registerSimpleItem("medium_gun", new Item.Properties().stacksTo(1));
     public static final DeferredItem<Item> LARGE_GUN =
             ITEMS.registerSimpleItem("large_gun", new Item.Properties().stacksTo(1));
+
+    // ===== Torpedo Ammo =====
+    public static final DeferredItem<TorpedoItem> TORPEDO_533MM =
+            ITEMS.register("torpedo_533mm",
+                    () -> new TorpedoItem(new Item.Properties().stacksTo(16), 533));
+    public static final DeferredItem<TorpedoItem> TORPEDO_610MM =
+            ITEMS.register("torpedo_610mm",
+                    () -> new TorpedoItem(new Item.Properties().stacksTo(16), 610));
+
+    // ===== Armor Plates =====
+    public static final DeferredItem<ArmorPlateItem> SMALL_ARMOR_PLATE =
+            ITEMS.register("small_armor_plate",
+                    () -> new ArmorPlateItem(new Item.Properties().stacksTo(1), 2, 10));
+    public static final DeferredItem<ArmorPlateItem> MEDIUM_ARMOR_PLATE =
+            ITEMS.register("medium_armor_plate",
+                    () -> new ArmorPlateItem(new Item.Properties().stacksTo(1), 4, 20));
+    public static final DeferredItem<ArmorPlateItem> LARGE_ARMOR_PLATE =
+            ITEMS.register("large_armor_plate",
+                    () -> new ArmorPlateItem(new Item.Properties().stacksTo(1), 6, 30));
+
+    // ===== Torpedo Launchers =====
+    public static final DeferredItem<TorpedoLauncherItem> TWIN_TORPEDO_LAUNCHER =
+            ITEMS.register("twin_torpedo_launcher",
+                    () -> new TorpedoLauncherItem(
+                            new Item.Properties().stacksTo(1).durability(64),
+                            533, 2, 100));
+    public static final DeferredItem<TorpedoLauncherItem> TRIPLE_TORPEDO_LAUNCHER =
+            ITEMS.register("triple_torpedo_launcher",
+                    () -> new TorpedoLauncherItem(
+                            new Item.Properties().stacksTo(1).durability(48),
+                            533, 3, 100));
+    public static final DeferredItem<TorpedoLauncherItem> QUAD_TORPEDO_LAUNCHER =
+            ITEMS.register("quad_torpedo_launcher",
+                    () -> new TorpedoLauncherItem(
+                            new Item.Properties().stacksTo(1).durability(32),
+                            610, 4, 120));
 }

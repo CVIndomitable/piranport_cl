@@ -19,6 +19,7 @@
   "item.piranport.large_gun": "Large Gun",
   "container.piranport.weapons": "Weapons",
   "container.piranport.ammo": "Ammo",
+  "container.piranport.enhancement": "Enhancement",
   "container.piranport.load": "Load: %s / %s",
   "key.categories.piranport": "Piran Port",
   "key.piranport.cycle_weapon": "Cycle Weapon",
@@ -28,5 +29,15 @@
   "message.piranport.no_ammo": "No ammo!",
   "message.piranport.weapon_selected": "Selected: %s",
   "message.piranport.slot_empty": "Weapon slot %s: Empty",
-  "entity.piranport.cannon_projectile": "Cannon Projectile"
+  "entity.piranport.cannon_projectile": "Cannon Projectile",
+  "item.piranport.torpedo_533mm": "533mm Torpedo",
+  "item.piranport.torpedo_610mm": "610mm Oxygen Torpedo",
+  "item.piranport.twin_torpedo_launcher": "Twin Torpedo Launcher",
+  "item.piranport.triple_torpedo_launcher": "Triple Torpedo Launcher",
+  "item.piranport.quad_torpedo_launcher": "Quadruple Torpedo Launcher",
+  "entity.piranport.torpedo_entity": "Torpedo",
+  "item.piranport.small_armor_plate": "Small Armor Plate",
+  "item.piranport.medium_armor_plate": "Medium Armor Plate",
+  "item.piranport.large_armor_plate": "Large Armor Plate",
+  "effect.piranport.flooding": "Flooding"
 }

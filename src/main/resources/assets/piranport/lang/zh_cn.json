@@ -19,6 +19,7 @@
   "item.piranport.large_gun": "大型火炮",
   "container.piranport.weapons": "武器栏",
   "container.piranport.ammo": "弹药库",
+  "container.piranport.enhancement": "强化栏",
   "container.piranport.load": "负重: %s / %s",
   "key.categories.piranport": "皮兰港",
   "key.piranport.cycle_weapon": "切换武器",
@@ -28,5 +29,15 @@
   "message.piranport.no_ammo": "弹药不足！",
   "message.piranport.weapon_selected": "已选择: %s",
   "message.piranport.slot_empty": "武器栏 %s: 空",
-  "entity.piranport.cannon_projectile": "炮弹"
+  "entity.piranport.cannon_projectile": "炮弹",
+  "item.piranport.torpedo_533mm": "533mm标准鱼雷",
+  "item.piranport.torpedo_610mm": "610mm氧气鱼雷",
+  "item.piranport.twin_torpedo_launcher": "双联装鱼雷发射器",
+  "item.piranport.triple_torpedo_launcher": "三联装鱼雷发射器",
+  "item.piranport.quad_torpedo_launcher": "四联装鱼雷发射器",
+  "entity.piranport.torpedo_entity": "鱼雷",
+  "item.piranport.small_armor_plate": "小型附加装甲",
+  "item.piranport.medium_armor_plate": "中型附加装甲",
+  "item.piranport.large_armor_plate": "大型附加装甲",
+  "effect.piranport.flooding": "进水"
 }

@@ -1,5 +1,6 @@
 # 皮兰港 (Piran Port) Mod 教程
 
+> 使用 Claude Code 开发的皮兰港模组。
 > 基于战舰少女R世界观的 Minecraft 综合性模组
 > NeoForge 1.21.11 | 版本 v0.2.0-alpha
 

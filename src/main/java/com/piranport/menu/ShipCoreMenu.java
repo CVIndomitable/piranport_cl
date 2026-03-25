@@ -1,6 +1,10 @@
 package com.piranport.menu;
 
+import com.piranport.combat.TransformationManager;
+import com.piranport.item.ArmorPlateItem;
 import com.piranport.item.ShipCoreItem;
+import com.piranport.item.TorpedoItem;
+import com.piranport.item.TorpedoLauncherItem;
 import com.piranport.registry.ModDataComponents;
 import com.piranport.registry.ModItems;
 import com.piranport.registry.ModMenuTypes;
@@ -23,7 +27,7 @@ public class ShipCoreMenu extends AbstractContainerMenu {
     private final ShipCoreItem.ShipType shipType;
     private final SimpleContainer coreContainer;
 
-    // Weapon weight constants
+    // Weight constants (public for use in TransformationManager HUD etc.)
     public static final int SMALL_GUN_WEIGHT = 6;
     public static final int MEDIUM_GUN_WEIGHT = 16;
     public static final int LARGE_GUN_WEIGHT = 30;
@@ -57,29 +61,35 @@ public class ShipCoreMenu extends AbstractContainerMenu {
             coreContainer.setItem(i, tempItems.get(i));
         }
 
-        // Weapon slots
+        // Weapon slots (y=20)
         for (int i = 0; i < shipType.weaponSlots; i++) {
             addSlot(new WeaponSlot(coreContainer, i, 8 + i * 18, 20));
         }
 
-        // Ammo slots
+        // Ammo slots (y=46)
         for (int i = 0; i < shipType.ammoSlots; i++) {
             addSlot(new AmmoSlot(coreContainer, shipType.weaponSlots + i, 8 + i * 18, 46));
         }
 
-        // Player inventory (3 rows)
+        // Enhancement slots (y=72)
+        int eStart = shipType.weaponSlots + shipType.ammoSlots;
+        for (int i = 0; i < shipType.enhancementSlots; i++) {
+            addSlot(new EnhancementSlot(coreContainer, eStart + i, 8 + i * 18, 72));
+        }
+
+        // Player inventory (3 rows, y=106)
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
-                addSlot(new Slot(playerInventory, 9 + row * 9 + col, 8 + col * 18, 84 + row * 18));
+                addSlot(new Slot(playerInventory, 9 + row * 9 + col, 8 + col * 18, 106 + row * 18));
             }
         }
 
-        // Hotbar
+        // Hotbar (y=164)
         for (int col = 0; col < 9; col++) {
             if (col == coreSlot) {
-                addSlot(new LockedSlot(playerInventory, col, 8 + col * 18, 142));
+                addSlot(new LockedSlot(playerInventory, col, 8 + col * 18, 164));
             } else {
-                addSlot(new Slot(playerInventory, col, 8 + col * 18, 142));
+                addSlot(new Slot(playerInventory, col, 8 + col * 18, 164));
             }
         }
 
@@ -100,7 +110,13 @@ public class ShipCoreMenu extends AbstractContainerMenu {
 
     public int getCurrentLoad() {
         int load = 0;
+        // Weapon slots
         for (int i = 0; i < shipType.weaponSlots; i++) {
+            load += getWeight(coreContainer.getItem(i));
+        }
+        // Enhancement slots
+        int eStart = shipType.weaponSlots + shipType.ammoSlots;
+        for (int i = eStart; i < shipType.totalSlots(); i++) {
             load += getWeight(coreContainer.getItem(i));
         }
         return load;
@@ -114,17 +130,30 @@ public class ShipCoreMenu extends AbstractContainerMenu {
         return shipType;
     }
 
+    public boolean isTransformed() {
+        return TransformationManager.isTransformed(coreStack);
+    }
+
     public static int getWeight(ItemStack stack) {
         if (stack.is(ModItems.SMALL_GUN.get())) return SMALL_GUN_WEIGHT;
         if (stack.is(ModItems.MEDIUM_GUN.get())) return MEDIUM_GUN_WEIGHT;
         if (stack.is(ModItems.LARGE_GUN.get())) return LARGE_GUN_WEIGHT;
+        if (stack.is(ModItems.TWIN_TORPEDO_LAUNCHER.get())) return 8;
+        if (stack.is(ModItems.TRIPLE_TORPEDO_LAUNCHER.get())) return 12;
+        if (stack.is(ModItems.QUAD_TORPEDO_LAUNCHER.get())) return 20;
+        if (stack.getItem() instanceof ArmorPlateItem plate) return plate.getWeight();
         return 0;
     }
 
-    public static boolean isGun(ItemStack stack) {
+    public static boolean isWeapon(ItemStack stack) {
         return stack.is(ModItems.SMALL_GUN.get())
                 || stack.is(ModItems.MEDIUM_GUN.get())
-                || stack.is(ModItems.LARGE_GUN.get());
+                || stack.is(ModItems.LARGE_GUN.get())
+                || stack.getItem() instanceof TorpedoLauncherItem;
+    }
+
+    public static boolean isAmmo(ItemStack stack) {
+        return isShell(stack) || stack.getItem() instanceof TorpedoItem;
     }
 
     public static boolean isShell(ItemStack stack) {
@@ -134,6 +163,10 @@ public class ShipCoreMenu extends AbstractContainerMenu {
                 || stack.is(ModItems.SMALL_AP_SHELL.get())
                 || stack.is(ModItems.MEDIUM_AP_SHELL.get())
                 || stack.is(ModItems.LARGE_AP_SHELL.get());
+    }
+
+    public static boolean isArmor(ItemStack stack) {
+        return stack.getItem() instanceof ArmorPlateItem;
     }
 
     @Override
@@ -146,22 +179,27 @@ public class ShipCoreMenu extends AbstractContainerMenu {
 
         int weaponEnd = shipType.weaponSlots;
         int ammoEnd = weaponEnd + shipType.ammoSlots;
-        int invEnd = ammoEnd + 27;
+        int enhEnd = ammoEnd + shipType.enhancementSlots;
+        int invEnd = enhEnd + 27;
         int hotbarEnd = invEnd + 9;
 
-        if (index < ammoEnd) {
+        if (index < enhEnd) {
             // From core container → player inventory
-            if (!moveItemStackTo(slotStack, ammoEnd, hotbarEnd, true)) {
+            if (!moveItemStackTo(slotStack, enhEnd, hotbarEnd, true)) {
                 return ItemStack.EMPTY;
             }
         } else {
             // From player inventory → core container
-            if (isGun(slotStack)) {
+            if (isWeapon(slotStack)) {
                 if (!moveItemStackTo(slotStack, 0, weaponEnd, false)) {
                     return ItemStack.EMPTY;
                 }
-            } else if (isShell(slotStack)) {
+            } else if (isAmmo(slotStack)) {
                 if (!moveItemStackTo(slotStack, weaponEnd, ammoEnd, false)) {
+                    return ItemStack.EMPTY;
+                }
+            } else if (isArmor(slotStack)) {
+                if (!moveItemStackTo(slotStack, ammoEnd, enhEnd, false)) {
                     return ItemStack.EMPTY;
                 }
             } else {
@@ -193,6 +231,10 @@ public class ShipCoreMenu extends AbstractContainerMenu {
         super.removed(player);
         if (!player.level().isClientSide) {
             saveContents();
+            // Recalculate attributes if still transformed (equipment may have changed)
+            if (TransformationManager.isTransformed(coreStack)) {
+                TransformationManager.applyTransformationAttributes(player, coreStack);
+            }
         }
     }
 
@@ -205,11 +247,17 @@ public class ShipCoreMenu extends AbstractContainerMenu {
 
         @Override
         public boolean mayPlace(ItemStack stack) {
-            if (!isGun(stack)) return false;
+            if (isTransformed()) return false;
+            if (!isWeapon(stack)) return false;
             int currentLoad = getCurrentLoad();
             int existingWeight = getWeight(getItem());
             int newWeight = getWeight(stack);
             return (currentLoad - existingWeight + newWeight) <= getMaxLoad();
+        }
+
+        @Override
+        public boolean mayPickup(Player player) {
+            return !isTransformed();
         }
 
         @Override
@@ -218,14 +266,40 @@ public class ShipCoreMenu extends AbstractContainerMenu {
         }
     }
 
-    private static class AmmoSlot extends Slot {
+    private class AmmoSlot extends Slot {
         public AmmoSlot(SimpleContainer container, int slot, int x, int y) {
             super(container, slot, x, y);
         }
 
         @Override
         public boolean mayPlace(ItemStack stack) {
-            return isShell(stack);
+            return isAmmo(stack);
+        }
+    }
+
+    private class EnhancementSlot extends Slot {
+        public EnhancementSlot(SimpleContainer container, int slot, int x, int y) {
+            super(container, slot, x, y);
+        }
+
+        @Override
+        public boolean mayPlace(ItemStack stack) {
+            if (isTransformed()) return false;
+            if (!isArmor(stack)) return false;
+            int currentLoad = getCurrentLoad();
+            int existingWeight = getWeight(getItem());
+            int newWeight = getWeight(stack);
+            return (currentLoad - existingWeight + newWeight) <= getMaxLoad();
+        }
+
+        @Override
+        public boolean mayPickup(Player player) {
+            return !isTransformed();
+        }
+
+        @Override
+        public int getMaxStackSize() {
+            return 1;
         }
     }
 

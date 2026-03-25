@@ -33,5 +33,7 @@ public class ClientEvents {
     public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(ModEntityTypes.CANNON_PROJECTILE.get(),
                 ThrownItemRenderer::new);
+        event.registerEntityRenderer(ModEntityTypes.TORPEDO_ENTITY.get(),
+                ThrownItemRenderer::new);
     }
 }

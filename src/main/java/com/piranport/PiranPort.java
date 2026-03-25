@@ -7,6 +7,7 @@ import com.piranport.registry.ModDataComponents;
 import com.piranport.registry.ModEntityTypes;
 import com.piranport.registry.ModItems;
 import com.piranport.registry.ModMenuTypes;
+import com.piranport.registry.ModMobEffects;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
@@ -24,6 +25,7 @@ public class PiranPort {
         ModCreativeTabs.CREATIVE_TABS.register(modEventBus);
         ModMenuTypes.MENU_TYPES.register(modEventBus);
         ModEntityTypes.ENTITY_TYPES.register(modEventBus);
+        ModMobEffects.MOB_EFFECTS.register(modEventBus);
 
         LOGGER.info("Piran Port mod initialized!");
     }

@@ -2,6 +2,7 @@ package com.piranport.item;
 
 import com.piranport.combat.TransformationManager;
 import com.piranport.entity.CannonProjectileEntity;
+import com.piranport.entity.TorpedoEntity;
 import com.piranport.menu.ShipCoreMenu;
 import com.piranport.registry.ModDataComponents;
 import com.piranport.registry.ModItems;
@@ -19,28 +20,31 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemContainerContents;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
 
 public class ShipCoreItem extends Item {
 
     public enum ShipType {
-        SMALL(0, 40, 4, 4),
-        MEDIUM(5, 64, 5, 4),
-        LARGE(10, 112, 6, 4);
+        SMALL(0, 40, 4, 4, 2),
+        MEDIUM(5, 64, 5, 4, 3),
+        LARGE(10, 112, 6, 4, 4);
 
         public final int healthBonus;
         public final int maxLoad;
         public final int weaponSlots;
         public final int ammoSlots;
+        public final int enhancementSlots;
 
-        ShipType(int healthBonus, int maxLoad, int weaponSlots, int ammoSlots) {
+        ShipType(int healthBonus, int maxLoad, int weaponSlots, int ammoSlots, int enhancementSlots) {
             this.healthBonus = healthBonus;
             this.maxLoad = maxLoad;
             this.weaponSlots = weaponSlots;
             this.ammoSlots = ammoSlots;
+            this.enhancementSlots = enhancementSlots;
         }
 
         public int totalSlots() {
-            return weaponSlots + ammoSlots;
+            return weaponSlots + ammoSlots + enhancementSlots;
         }
     }
 
@@ -65,9 +69,11 @@ public class ShipCoreItem extends Item {
             if (!level.isClientSide) {
                 TransformationManager.setTransformed(stack, !isTransformed);
                 if (!isTransformed) {
+                    TransformationManager.applyTransformationAttributes(player, stack);
                     player.displayClientMessage(
                             Component.translatable("message.piranport.transformed"), true);
                 } else {
+                    TransformationManager.removeTransformationAttributes(player);
                     player.displayClientMessage(
                             Component.translatable("message.piranport.untransformed"), true);
                 }
@@ -128,6 +134,12 @@ public class ShipCoreItem extends Item {
         }
 
         ItemStack weapon = items.get(weaponIndex);
+
+        // Handle torpedo launcher
+        if (weapon.getItem() instanceof TorpedoLauncherItem torpedoLauncher) {
+            fireTorpedos(level, player, stack, items, weaponIndex, torpedoLauncher);
+            return;
+        }
 
         // Find matching ammo
         int ammoSlot = -1;
@@ -239,5 +251,96 @@ public class ShipCoreItem extends Item {
         if (weapon.is(ModItems.MEDIUM_GUN.get())) return 1.2f;
         if (weapon.is(ModItems.LARGE_GUN.get())) return 0.8f;
         return 1.0f;
+    }
+
+    // ===== Torpedo firing =====
+
+    private void fireTorpedos(Level level, Player player, ItemStack coreStack,
+                               NonNullList<ItemStack> items, int weaponIndex,
+                               TorpedoLauncherItem launcher) {
+        int caliber = launcher.getCaliber();
+        int tubeCount = launcher.getTubeCount();
+        int cooldown = launcher.getCooldownTicks();
+
+        // Count available ammo of the right caliber
+        int available = 0;
+        for (int i = shipType.weaponSlots; i < shipType.totalSlots(); i++) {
+            ItemStack ammo = items.get(i);
+            if (!ammo.isEmpty() && ammo.getItem() instanceof TorpedoItem ti && ti.getCaliber() == caliber) {
+                available += ammo.getCount();
+            }
+        }
+
+        if (available < tubeCount) {
+            player.displayClientMessage(
+                    Component.translatable("message.piranport.no_ammo"), true);
+            return;
+        }
+
+        // Fire torpedoes in spread pattern
+        float torpedoSpeed = caliber == 610 ? 1.0f : 1.2f;
+        float[] angles = getSpreadAngles(tubeCount);
+        Vec3 look = player.getLookAngle();
+
+        for (float angle : angles) {
+            Vec3 dir = rotateHorizontal(look, Math.toRadians(angle));
+            TorpedoEntity torpedo = new TorpedoEntity(level, player, caliber);
+            torpedo.setPos(
+                    player.getX() + dir.x * 0.5,
+                    player.getEyeY() - 0.3,
+                    player.getZ() + dir.z * 0.5);
+            torpedo.setDeltaMovement(dir.x * torpedoSpeed, 0, dir.z * torpedoSpeed);
+            level.addFreshEntity(torpedo);
+        }
+
+        // Consume ammo
+        int toConsume = tubeCount;
+        for (int i = shipType.weaponSlots; i < shipType.totalSlots() && toConsume > 0; i++) {
+            ItemStack ammo = items.get(i);
+            if (!ammo.isEmpty() && ammo.getItem() instanceof TorpedoItem ti && ti.getCaliber() == caliber) {
+                int take = Math.min(toConsume, ammo.getCount());
+                ammo.shrink(take);
+                toConsume -= take;
+            }
+        }
+
+        // Damage launcher (manual, since it lives in a container slot)
+        ItemStack launcherStack = items.get(weaponIndex);
+        int newDamage = launcherStack.getDamageValue() + 1;
+        if (newDamage >= launcherStack.getMaxDamage()) {
+            items.set(weaponIndex, ItemStack.EMPTY);
+            level.playSound(null, player.getX(), player.getY(), player.getZ(),
+                    SoundEvents.ITEM_BREAK, SoundSource.PLAYERS, 0.8f, 0.8f + level.random.nextFloat() * 0.4f);
+        } else {
+            launcherStack.setDamageValue(newDamage);
+        }
+
+        // Save updated contents
+        coreStack.set(ModDataComponents.SHIP_CORE_CONTENTS.get(), ItemContainerContents.fromItems(items));
+        TransformationManager.setWeaponIndex(coreStack, weaponIndex);
+
+        // Cooldown and launch sound
+        player.getCooldowns().addCooldown(launcher, cooldown);
+        level.playSound(null, player.getX(), player.getY(), player.getZ(),
+                SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 0.4f, 0.4f);
+    }
+
+    private static float[] getSpreadAngles(int count) {
+        return switch (count) {
+            case 2 -> new float[]{-3f, 3f};
+            case 3 -> new float[]{-4f, 0f, 4f};
+            case 4 -> new float[]{-6f, -2f, 2f, 6f};
+            default -> new float[]{0f};
+        };
+    }
+
+    /** Rotate a look vector around the Y axis by angleRad, project to horizontal plane, normalize. */
+    private static Vec3 rotateHorizontal(Vec3 look, double angleRad) {
+        double cos = Math.cos(angleRad);
+        double sin = Math.sin(angleRad);
+        double nx = look.x * cos - look.z * sin;
+        double nz = look.x * sin + look.z * cos;
+        Vec3 result = new Vec3(nx, 0, nz);
+        return result.lengthSqr() > 0 ? result.normalize() : new Vec3(1, 0, 0);
     }
 }

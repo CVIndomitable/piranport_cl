@@ -41,5 +41,16 @@ public class ModCreativeTabs {
                         output.accept(ModItems.SMALL_GUN.get());
                         output.accept(ModItems.MEDIUM_GUN.get());
                         output.accept(ModItems.LARGE_GUN.get());
+                        // Torpedo Ammo
+                        output.accept(ModItems.TORPEDO_533MM.get());
+                        output.accept(ModItems.TORPEDO_610MM.get());
+                        // Torpedo Launchers
+                        output.accept(ModItems.TWIN_TORPEDO_LAUNCHER.get());
+                        output.accept(ModItems.TRIPLE_TORPEDO_LAUNCHER.get());
+                        output.accept(ModItems.QUAD_TORPEDO_LAUNCHER.get());
+                        // Armor Plates
+                        output.accept(ModItems.SMALL_ARMOR_PLATE.get());
+                        output.accept(ModItems.MEDIUM_ARMOR_PLATE.get());
+                        output.accept(ModItems.LARGE_ARMOR_PLATE.get());
                     }).build());
 }

@@ -23,8 +23,8 @@
 |------|------|------|---------|
 | v0.1.0-alpha | MVP | ✅ DONE | 基础注册、世界生成、合成、舰装核心GUI、火炮战斗 |
 | v0.2.0-alpha | Torpedo | ✅ DONE | 鱼雷系统、舰装栏GUI完善、负重平衡、装填机制 |
-| v0.3.0-alpha | Kitchen | 🔨 CURRENT | 食物烹饪 + Buff系统、作物种植、加工站 |
-| v0.4.0-alpha | Deco | ⏳ PLANNED | 资源扩充、装饰方块、功能方块 |
+| v0.3.0-alpha | Kitchen | ✅ DONE | 食物烹饪 + Buff系统、作物种植、加工站 |
+| v0.4.0-alpha | Deco | 🔨 CURRENT | 资源扩充、装饰方块、功能方块 |
 | v0.5.0-alpha | Skin | ⏳ PLANNED | 皮肤/模型渲染系统 |
 
 ---
@@ -69,7 +69,10 @@
 
 ---
 
-## 🔨 v0.3.0-alpha — Kitchen (CURRENT)
+## ✅ v0.3.0-alpha — Kitchen (DONE)
+
+<details>
+<summary>已完成内容（折叠）</summary>
 
 **目标：实现食物烹饪 + Buff 系统的基础设施，包含作物种植、加工站（石磨/砧板/厨锅）、酿造扩展、可放置食物方块框架，注册 ~15 个代表性食物验证全链路。**
 
@@ -258,16 +261,18 @@ public static final DeferredItem<Item> TOAST_BREAD = register("toast_bread",
 
 **测试场景：** ①面粉→吐司→放置3次食用 ②大豆全链路→麻婆豆腐+Buff ③酿造链路 ④砧板链路
 
-**验证清单：**
-- [ ] 7种作物种植/生长/收获
-- [ ] 石磨6配方+漏斗
-- [ ] 砧板4配方+进度渲染
-- [ ] 厨锅9配方+热源检测
-- [ ] 酿造7配方
-- [ ] 食物Buff正确
-- [ ] 食物方块放置/食用/碗掉落
-- [ ] zh_cn + en_us 翻译
-- [ ] Creative Tab 分类
+**验证清单（构建通过，待 runClient 确认）：**
+- [x] 7种作物种植/生长/收获（Phase 11）
+- [x] 石磨6配方+漏斗（Phase 12）
+- [x] 砧板4配方+进度渲染（Phase 13）
+- [x] 厨锅9配方+热源检测（Phase 14）
+- [x] 酿造7配方（Phase 15，RegisterBrewingRecipesEvent API）
+- [x] 食物Buff正确（Phase 16，FoodProperties）
+- [x] 食物方块放置/食用/碗掉落（Phase 16）
+- [x] zh_cn + en_us 翻译（Phase 17）
+- [x] Creative Tab 分类（Phase 17）
+
+</details>
 
 ---
 
@@ -347,6 +352,18 @@ src/main/java/com/piranport/
 
 ## Technical Reference
 
+### NeoForge 21.1.220 API 坑（已踩过，勿重蹈）
+
+| 问题 | 错误用法 | 正确用法 |
+|------|---------|---------|
+| 酿造配方注册 | `BrewingRecipeRegistry.addRecipe(recipe)` (静态方法已废) | 监听 `RegisterBrewingRecipesEvent`，用 `event.getBuilder().addRecipe(recipe)` |
+| 食物饱和度获取 | `food.saturationModifier()` | `food.saturation()` |
+| 熔炉热源检测 | `AbstractFurnaceBlockEntity.isLit()` (private) | `bs.hasProperty(BlockStateProperties.LIT) && bs.getValue(...LIT) && bs.getBlock() instanceof AbstractFurnaceBlock` |
+| 方块掉落物品 | `Containers.dropContents(level, pos, blockEntity)` (需实现 Container) | 手动 loop `itemHandler.getStackInSlot(i)` + `Containers.dropItemStack()` |
+| PlaceableFoodBlock codec | 单个基类无法用 `simpleCodec(Base::new)` | 用3个静态内部类 (Plate/Bowl/Cake)，各自实现 `simpleCodec(ClassName::new)` |
+
+---
+
 ### 注册系统
 
 ```java
@@ -382,10 +399,11 @@ public class PiranPort {
         ModBlockEntityTypes.BLOCK_ENTITY_TYPES.register(modEventBus);  // v0.3.0
         ModMenuTypes.MENU_TYPES.register(modEventBus);                 // v0.3.0
         ModRecipeTypes.RECIPE_TYPES.register(modEventBus);             // v0.3.0
-        modEventBus.addListener(this::commonSetup);
+        modEventBus.addListener(this::registerBrewingRecipes);
     }
-    private void commonSetup(final FMLCommonSetupEvent event) {
-        event.enqueueWork(() -> ModBrewingRecipes.register());
+    // ⚠️ NeoForge 21.1.220: 不用 FMLCommonSetupEvent，改用 RegisterBrewingRecipesEvent
+    private void registerBrewingRecipes(final RegisterBrewingRecipesEvent event) {
+        ModBrewingRecipes.register(event.getBuilder());
     }
 }
 ```

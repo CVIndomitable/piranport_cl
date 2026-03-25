@@ -1,8 +1,12 @@
 package com.piranport.registry;
 
 import com.piranport.PiranPort;
+import com.piranport.block.FourStageCropBlock;
+import com.piranport.block.StoneMillBlock;
+import com.piranport.block.ThreeStageCropBlock;
 import net.minecraft.util.valueproviders.UniformInt;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.DropExperienceBlock;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
@@ -34,4 +38,33 @@ public class ModBlocks {
                     .mapColor(MapColor.SAND)
                     .strength(0.5f)
                     .sound(SoundType.SAND));
+
+    // ===== Crop Blocks (Phase 11) =====
+    private static BlockBehaviour.Properties cropProps() {
+        return BlockBehaviour.Properties.ofFullCopy(Blocks.WHEAT);
+    }
+
+    public static final DeferredBlock<FourStageCropBlock> TOMATO_CROP =
+            BLOCKS.register("tomato_crop", () -> new FourStageCropBlock(cropProps(), () -> ModItems.TOMATO_SEEDS.get()));
+    public static final DeferredBlock<FourStageCropBlock> SOYBEAN_CROP =
+            BLOCKS.register("soybean_crop", () -> new FourStageCropBlock(cropProps(), () -> ModItems.SOYBEAN_SEEDS.get()));
+    public static final DeferredBlock<FourStageCropBlock> CHILI_CROP =
+            BLOCKS.register("chili_crop", () -> new FourStageCropBlock(cropProps(), () -> ModItems.CHILI_SEEDS.get()));
+    public static final DeferredBlock<FourStageCropBlock> ONION_CROP =
+            BLOCKS.register("onion_crop", () -> new FourStageCropBlock(cropProps(), () -> ModItems.ONION_SEEDS.get()));
+    public static final DeferredBlock<FourStageCropBlock> RICE_CROP =
+            BLOCKS.register("rice_crop", () -> new FourStageCropBlock(cropProps(), () -> ModItems.RICE_SEEDS.get()));
+    public static final DeferredBlock<ThreeStageCropBlock> LETTUCE_CROP =
+            BLOCKS.register("lettuce_crop", () -> new ThreeStageCropBlock(cropProps(), () -> ModItems.LETTUCE_SEEDS.get()));
+    public static final DeferredBlock<ThreeStageCropBlock> GARLIC_CROP =
+            BLOCKS.register("garlic_crop", () -> new ThreeStageCropBlock(cropProps(), () -> ModItems.GARLIC_SEEDS.get()));
+
+    // ===== Functional Blocks (Phase 12) =====
+    public static final DeferredBlock<StoneMillBlock> STONE_MILL =
+            BLOCKS.register("stone_mill", () -> new StoneMillBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.STONE)
+                            .strength(3.5f, 10.0f)
+                            .requiresCorrectToolForDrops()
+                            .sound(SoundType.STONE)));
 }

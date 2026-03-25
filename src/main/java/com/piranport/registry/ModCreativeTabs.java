@@ -52,5 +52,46 @@ public class ModCreativeTabs {
                         output.accept(ModItems.SMALL_ARMOR_PLATE.get());
                         output.accept(ModItems.MEDIUM_ARMOR_PLATE.get());
                         output.accept(ModItems.LARGE_ARMOR_PLATE.get());
+                        // Crop Seeds
+                        output.accept(ModItems.TOMATO_SEEDS.get());
+                        output.accept(ModItems.SOYBEAN_SEEDS.get());
+                        output.accept(ModItems.CHILI_SEEDS.get());
+                        output.accept(ModItems.ONION_SEEDS.get());
+                        output.accept(ModItems.RICE_SEEDS.get());
+                        output.accept(ModItems.LETTUCE_SEEDS.get());
+                        output.accept(ModItems.GARLIC_SEEDS.get());
+                        // Crop Produce
+                        output.accept(ModItems.TOMATO.get());
+                        output.accept(ModItems.SOYBEAN.get());
+                        output.accept(ModItems.CHILI.get());
+                        output.accept(ModItems.ONION.get());
+                        output.accept(ModItems.RICE.get());
+                        output.accept(ModItems.LETTUCE.get());
+                        output.accept(ModItems.GARLIC.get());
+                        // Food Ingredients
+                        output.accept(ModItems.FLOUR.get());
+                        output.accept(ModItems.RICE_FLOUR.get());
+                        output.accept(ModItems.CHILI_POWDER.get());
+                        output.accept(ModItems.PORK_PASTE.get());
+                        output.accept(ModItems.EDIBLE_OIL.get());
+                        output.accept(ModItems.BUTTER.get());
+                        output.accept(ModItems.CREAM.get());
+                        output.accept(ModItems.SOYBEAN_MILK.get());
+                        output.accept(ModItems.TOFU.get());
+                        output.accept(ModItems.CHEESE.get());
+                        output.accept(ModItems.YEAST.get());
+                        output.accept(ModItems.SOY_SAUCE.get());
+                        output.accept(ModItems.VINEGAR.get());
+                        output.accept(ModItems.COOKING_WINE.get());
+                        output.accept(ModItems.MISO.get());
+                        output.accept(ModItems.BRINE.get());
+                        output.accept(ModItems.PIE_CRUST.get());
+                        output.accept(ModItems.RAW_PASTA.get());
+                        output.accept(ModItems.FERMENTED_FISH.get());
+                        output.accept(ModItems.PIZZA_BASE.get());
+                        output.accept(ModItems.GYPSUM_CHIP.get());
+                        output.accept(ModItems.QUICKLIME.get());
+                        // Functional Blocks
+                        output.accept(ModItems.STONE_MILL.get());
                     }).build());
 }

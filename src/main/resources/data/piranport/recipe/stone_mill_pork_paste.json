@@ -1,0 +1,7 @@
+{
+  "type": "piranport:stone_mill",
+  "ingredients": [
+    {"item": "minecraft:porkchop"}
+  ],
+  "result": {"id": "piranport:pork_paste", "count": 1}
+}

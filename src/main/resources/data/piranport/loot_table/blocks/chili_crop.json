@@ -1,0 +1,62 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "rolls": 1.0,
+      "bonus_rolls": 0.0,
+      "entries": [
+        {
+          "type": "minecraft:alternatives",
+          "children": [
+            {
+              "type": "minecraft:item",
+              "conditions": [
+                {
+                  "condition": "minecraft:block_state_property",
+                  "block": "piranport:chili_crop",
+                  "properties": {
+                    "age": "3"
+                  }
+                }
+              ],
+              "functions": [
+                {
+                  "function": "minecraft:set_count",
+                  "count": {
+                    "type": "minecraft:uniform",
+                    "min": 1.0,
+                    "max": 2.0
+                  }
+                }
+              ],
+              "name": "piranport:chili"
+            },
+            {
+              "type": "minecraft:item",
+              "name": "piranport:chili_seeds"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "rolls": 1.0,
+      "bonus_rolls": 0.0,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "conditions": [
+            {
+              "condition": "minecraft:block_state_property",
+              "block": "piranport:chili_crop",
+              "properties": {
+                "age": "3"
+              }
+            }
+          ],
+          "name": "piranport:chili_seeds"
+        }
+      ]
+    }
+  ]
+}

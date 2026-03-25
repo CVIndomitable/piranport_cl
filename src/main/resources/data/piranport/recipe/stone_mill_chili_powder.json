@@ -1,0 +1,8 @@
+{
+  "type": "piranport:stone_mill",
+  "ingredients": [
+    {"item": "piranport:chili"},
+    {"item": "piranport:salt"}
+  ],
+  "result": {"id": "piranport:chili_powder", "count": 1}
+}

@@ -1,6 +1,7 @@
 package com.piranport;
 
 import com.piranport.menu.ShipCoreScreen;
+import com.piranport.menu.StoneMillScreen;
 import com.piranport.registry.ModEntityTypes;
 import com.piranport.registry.ModMenuTypes;
 import net.minecraft.client.KeyMapping;
@@ -22,6 +23,7 @@ public class ClientEvents {
     @SubscribeEvent
     public static void registerScreens(RegisterMenuScreensEvent event) {
         event.register(ModMenuTypes.SHIP_CORE_MENU.get(), ShipCoreScreen::new);
+        event.register(ModMenuTypes.STONE_MILL_MENU.get(), StoneMillScreen::new);
     }
 
     @SubscribeEvent

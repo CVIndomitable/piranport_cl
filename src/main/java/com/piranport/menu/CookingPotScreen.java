@@ -39,6 +39,17 @@ public class CookingPotScreen extends AbstractContainerScreen<CookingPotMenu> {
 
         // Output slot
         drawSlotBg(guiGraphics, x + 123, y + 34);
+
+        // Player inventory (3 rows)
+        for (int row = 0; row < 3; row++) {
+            for (int col = 0; col < 9; col++) {
+                drawSlotBg(guiGraphics, x + 8 + col * 18, y + 84 + row * 18);
+            }
+        }
+        // Player hotbar
+        for (int col = 0; col < 9; col++) {
+            drawSlotBg(guiGraphics, x + 8 + col * 18, y + 142);
+        }
     }
 
     private void drawSlotBg(GuiGraphics g, int x, int y) {
@@ -48,7 +59,6 @@ public class CookingPotScreen extends AbstractContainerScreen<CookingPotMenu> {
 
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        renderBackground(guiGraphics, mouseX, mouseY, partialTick);
         super.render(guiGraphics, mouseX, mouseY, partialTick);
         renderTooltip(guiGraphics, mouseX, mouseY);
     }

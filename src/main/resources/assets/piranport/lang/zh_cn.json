@@ -28,6 +28,7 @@
   "message.piranport.no_weapon": "未装备武器！",
   "message.piranport.no_ammo": "弹药不足！",
   "message.piranport.weapon_selected": "已选择: %s",
+  "tooltip.piranport.weight": "负重: %s",
   "message.piranport.slot_empty": "武器栏 %s: 空",
   "entity.piranport.cannon_projectile": "炮弹",
   "item.piranport.torpedo_533mm": "533mm标准鱼雷",

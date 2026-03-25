@@ -123,7 +123,7 @@ public class TransformationManager {
         if (speedAttr != null) speedAttr.removeModifier(SPEED_MODIFIER_ID);
     }
 
-    private static int getItemLoad(ItemStack stack) {
+    public static int getItemLoad(ItemStack stack) {
         if (stack.is(ModItems.SMALL_GUN.get())) return 6;
         if (stack.is(ModItems.MEDIUM_GUN.get())) return 16;
         if (stack.is(ModItems.LARGE_GUN.get())) return 30;

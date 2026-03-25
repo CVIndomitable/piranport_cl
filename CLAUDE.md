@@ -344,6 +344,8 @@ src/main/java/com/piranport/
 │   ├── ShipCoreHudLayer.java / TorpedoRenderer.java
 │   ├── CuttingBoardRenderer.java   # 🆕
 │   └── PlaceableFoodRenderer.java  # 🆕
+├── GameEvents.java                 # 🆕 游戏总线事件（双端）：水面行走等
+├── ClientGameEvents.java           # 🆕 客户端游戏总线事件：负重 Tooltip 等
 ├── worldgen/ / combat/ / data/ / network/
 │   └── (同前，data 增加新配方和掉落表)
 ```
@@ -362,6 +364,9 @@ src/main/java/com/piranport/
 | 熔炉热源检测 | `AbstractFurnaceBlockEntity.isLit()` (private) | `bs.hasProperty(BlockStateProperties.LIT) && bs.getValue(...LIT) && bs.getBlock() instanceof AbstractFurnaceBlock` |
 | 方块掉落物品 | `Containers.dropContents(level, pos, blockEntity)` (需实现 Container) | 手动 loop `itemHandler.getStackInSlot(i)` + `Containers.dropItemStack()` |
 | PlaceableFoodBlock codec | 单个基类无法用 `simpleCodec(Base::new)` | 用3个静态内部类 (Plate/Bowl/Cake)，各自实现 `simpleCodec(ClassName::new)` |
+| 容器 GUI 玩家物品栏不显示 | `renderBg()` 只画机器槽，不画玩家物品栏/快捷栏槽背景 | 在 `renderBg()` 中手动 `drawSlotBg` 覆盖全部 27+9 个玩家物品栏格 |
+| `render()` 双重暗色背景 | `renderBackground(...)` 后再调 `super.render(...)`（后者已内部调用） | 直接 `super.render(...)`，不在前面额外调 `renderBackground` |
+| 游戏事件注册在 mod 总线 | `@EventBusSubscriber(bus = Bus.MOD)` 里监听 `PlayerTickEvent`/`ItemTooltipEvent` | 用不带 `bus` 参数的 `@EventBusSubscriber`（默认 Bus.GAME）；客户端限定加 `value = Dist.CLIENT` |
 
 ---
 
@@ -400,9 +405,9 @@ public class PiranPort {
         ModBlockEntityTypes.BLOCK_ENTITY_TYPES.register(modEventBus);  // v0.3.0
         ModMenuTypes.MENU_TYPES.register(modEventBus);                 // v0.3.0
         ModRecipeTypes.RECIPE_TYPES.register(modEventBus);             // v0.3.0
-        modEventBus.addListener(this::registerBrewingRecipes);
+        // ⚠️ RegisterBrewingRecipesEvent 是游戏总线事件，必须用 NeoForge.EVENT_BUS
+        NeoForge.EVENT_BUS.addListener(this::registerBrewingRecipes);
     }
-    // ⚠️ NeoForge 21.1.220: 不用 FMLCommonSetupEvent，改用 RegisterBrewingRecipesEvent
     private void registerBrewingRecipes(final RegisterBrewingRecipesEvent event) {
         ModBrewingRecipes.register(event.getBuilder());
     }
@@ -475,7 +480,9 @@ private boolean hasHeatSource(Level level, BlockPos pos) {
     if (bs.getFluidState().is(Fluids.LAVA)) return true;
     if (bs.is(Blocks.CAMPFIRE) && bs.getValue(CampfireBlock.LIT)) return true;
     if (bs.is(Blocks.SOUL_CAMPFIRE) && bs.getValue(CampfireBlock.LIT)) return true;
-    if (level.getBlockEntity(below) instanceof AbstractFurnaceBlockEntity f) return f.isLit();
+    // ⚠️ AbstractFurnaceBlockEntity.isLit() 是 private，用 BlockStateProperties 代替
+    if (bs.hasProperty(BlockStateProperties.LIT) && bs.getValue(BlockStateProperties.LIT)
+            && bs.getBlock() instanceof AbstractFurnaceBlock) return true;
     return false;
 }
 ```

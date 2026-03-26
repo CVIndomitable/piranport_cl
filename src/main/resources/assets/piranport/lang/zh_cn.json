@@ -112,5 +112,18 @@
   "item.piranport.pasta": "意面",
   "item.piranport.cooked_rice": "米饭",
   "item.piranport.beet_blossom": "甜豆花",
-  "item.piranport.miso_soup": "味噌汤"
+  "item.piranport.miso_soup": "味噌汤",
+  "item.piranport.fighter_squadron": "战斗机编队",
+  "item.piranport.dive_bomber_squadron": "俯冲轰炸机编队",
+  "item.piranport.torpedo_bomber_squadron": "鱼雷轰炸机编队",
+  "item.piranport.level_bomber_squadron": "水平轰炸机编队",
+  "item.piranport.aviation_fuel": "航空燃料",
+  "item.piranport.aerial_bomb_small": "小型航弹",
+  "item.piranport.aerial_bomb_medium": "中型航弹",
+  "item.piranport.aerial_torpedo": "航空鱼雷",
+  "container.piranport.flight_groups": "编组",
+  "container.piranport.available_aircraft": "可用飞机:",
+  "tooltip.piranport.aircraft_damage": "攻击力: %s",
+  "tooltip.piranport.aircraft_speed": "航速: %s",
+  "tooltip.piranport.fuel": "燃料: %s / %s"
 }

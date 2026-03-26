@@ -1,6 +1,8 @@
 package com.piranport.menu;
 
 import com.piranport.combat.TransformationManager;
+import com.piranport.component.AircraftInfo;
+import com.piranport.item.AircraftItem;
 import com.piranport.item.ArmorPlateItem;
 import com.piranport.item.ShipCoreItem;
 import com.piranport.item.TorpedoItem;
@@ -108,6 +110,10 @@ public class ShipCoreMenu extends AbstractContainerMenu {
                 ItemContainerContents.fromItems(items));
     }
 
+    public int getCoreSlot() {
+        return coreSlot;
+    }
+
     public int getCurrentLoad() {
         int load = 0;
         // Weapon slots
@@ -142,6 +148,10 @@ public class ShipCoreMenu extends AbstractContainerMenu {
         if (stack.is(ModItems.TRIPLE_TORPEDO_LAUNCHER.get())) return 12;
         if (stack.is(ModItems.QUAD_TORPEDO_LAUNCHER.get())) return 20;
         if (stack.getItem() instanceof ArmorPlateItem plate) return plate.getWeight();
+        if (stack.getItem() instanceof AircraftItem) {
+            AircraftInfo info = stack.get(ModDataComponents.AIRCRAFT_INFO.get());
+            return info != null ? info.weight() : 0;
+        }
         return 0;
     }
 
@@ -149,11 +159,19 @@ public class ShipCoreMenu extends AbstractContainerMenu {
         return stack.is(ModItems.SMALL_GUN.get())
                 || stack.is(ModItems.MEDIUM_GUN.get())
                 || stack.is(ModItems.LARGE_GUN.get())
-                || stack.getItem() instanceof TorpedoLauncherItem;
+                || stack.getItem() instanceof TorpedoLauncherItem
+                || stack.getItem() instanceof AircraftItem;
     }
 
     public static boolean isAmmo(ItemStack stack) {
-        return isShell(stack) || stack.getItem() instanceof TorpedoItem;
+        return isShell(stack) || stack.getItem() instanceof TorpedoItem || isAviationAmmo(stack);
+    }
+
+    public static boolean isAviationAmmo(ItemStack stack) {
+        return stack.is(ModItems.AVIATION_FUEL.get())
+                || stack.is(ModItems.AERIAL_BOMB_SMALL.get())
+                || stack.is(ModItems.AERIAL_BOMB_MEDIUM.get())
+                || stack.is(ModItems.AERIAL_TORPEDO.get());
     }
 
     public static boolean isShell(ItemStack stack) {

@@ -52,6 +52,16 @@ public class ModCreativeTabs {
                         output.accept(ModItems.SMALL_ARMOR_PLATE.get());
                         output.accept(ModItems.MEDIUM_ARMOR_PLATE.get());
                         output.accept(ModItems.LARGE_ARMOR_PLATE.get());
+                        // Aircraft Squadrons (Phase 18)
+                        output.accept(ModItems.FIGHTER_SQUADRON.get());
+                        output.accept(ModItems.DIVE_BOMBER_SQUADRON.get());
+                        output.accept(ModItems.TORPEDO_BOMBER_SQUADRON.get());
+                        output.accept(ModItems.LEVEL_BOMBER_SQUADRON.get());
+                        // Aviation Ammo (Phase 18)
+                        output.accept(ModItems.AVIATION_FUEL.get());
+                        output.accept(ModItems.AERIAL_BOMB_SMALL.get());
+                        output.accept(ModItems.AERIAL_BOMB_MEDIUM.get());
+                        output.accept(ModItems.AERIAL_TORPEDO.get());
                         // Crop Seeds
                         output.accept(ModItems.TOMATO_SEEDS.get());
                         output.accept(ModItems.SOYBEAN_SEEDS.get());

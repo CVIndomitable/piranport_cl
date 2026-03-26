@@ -24,8 +24,10 @@
 | v0.1.0-alpha | MVP | ✅ DONE | 基础注册、世界生成、合成、舰装核心GUI、火炮战斗 |
 | v0.2.0-alpha | Torpedo | ✅ DONE | 鱼雷系统、舰装栏GUI完善、负重平衡、装填机制 |
 | v0.3.0-alpha | Kitchen | ✅ DONE | 食物烹饪 + Buff系统、作物种植、加工站 |
-| v0.4.0-alpha | Deco | 🔨 CURRENT | 资源扩充、装饰方块、功能方块 |
-| v0.5.0-alpha | Skin | ⏳ PLANNED | 皮肤/模型渲染系统 |
+| v0.4.0-alpha | Aviation | 🔨 CURRENT | 航空系统（4种飞机+编组GUI+火控+AI）+ Patchouli手册 |
+| v0.5.0-alpha | Deco | ⏳ PLANNED | 资源扩充、装饰方块、功能方块、灶、剩余食物批量注册 |
+| v0.6.0-alpha | Skin | ⏳ PLANNED | 皮肤/模型渲染系统 |
+| v0.7.0-alpha | Aviation+ | ⏳ PLANNED | 侦察机视角切换、空战、编队跟随 |
 
 ---
 
@@ -278,8 +280,8 @@ public static final DeferredItem<Item> TOAST_BREAD = register("toast_bread",
 
 ## NOT In v0.3.0 (明确排除)
 
-- ❌ 灶方块（留 v0.4.0）
-- ❌ 夕张的水桶（留 v0.4.0）
+- ❌ 灶方块（留 v0.5.0）
+- ❌ 夕张的水桶（留 v0.5.0）
 - ❌ 厨锅自动弹出/侧面容器输出
 - ❌ 锅内物品/流体/碗架渲染
 - ❌ 食物方块自定义3D模型
@@ -290,64 +292,305 @@ public static final DeferredItem<Item> TOAST_BREAD = register("toast_bread",
 
 ---
 
-## Project Structure (v0.3.0 更新)
+## 🔨 v0.4.0-alpha — Aviation (CURRENT)
+
+**目标：实现航空战斗系统，包含4种飞机编队、编组GUI、多目标火控、4种攻击AI，以及 Patchouli 教程手册。**
+
+**设计原则：编队单实体化，编组GUI集中管理，四重防御保安全。**
+
+### 架构决策
+
+#### 飞机定位
+
+飞机 = 武器栏物品，手持右键放飞，返航自动回武器栏。与火炮、鱼雷发射器并列，计算负重。每架飞机为"编队"——单实体，模型和名称显示为飞行编队，伤害 = 面板伤害 × 编队系数。
+
+#### 编组GUI
+
+从舰装栏GUI中的"编组"按钮打开。变身前后均可编辑。固定4组（正航可用4组，轻航可用3组，由舰装核心决定）。
+
+| 编辑项 | 说明 |
+|--------|------|
+| 成员 | 从武器栏中的飞机拖入/拖出（引用，不移动物品） |
+| 弹药指定 | 为本组指定弹种，放飞时从弹药库扣对应弹药，**未指定则不可放飞** |
+| 出击顺序 | 组序号即默认顺序（1→2→3→4），可调整 |
+| 攻击模式 | FOCUS（全组打同一个火控目标）/ SPREAD（各自打最近目标） |
+
+飞行中的飞机在编组GUI中变灰不可编辑，返航后恢复。
+
+编组数据存储在舰装核心的 DataComponent `FlightGroupData` 中：
+
+```java
+// FlightGroupData — 存储在舰装核心上
+groups: [
+  {
+    slotIndices: [0, 2],      // 武器栏中的飞机槽位索引
+    ammoType: "piranport:aerial_torpedo",
+    attackMode: FOCUS,         // FOCUS | SPREAD
+    sortOrder: 1
+  },
+  // ... 共4组
+]
+```
+
+**编组GUI完全取代弹药库顺序（航空线）。** 炮弹和鱼雷仍走弹药库顺序。
+
+#### 燃料系统
+
+| 环节 | 行为 |
+|------|------|
+| 变身时 | 自动从弹药库扣航空燃料，填满所有飞机的 `currentFuel`。弹药库无燃料则该飞机不补 |
+| 易燃易爆 | 变身状态 + 有 `currentFuel > 0` 的飞机 → 挂 `FlammableEffect`（受伤加成 + 概率爆炸额外伤害） |
+| 放飞检查 | `currentFuel == 0` → 拒绝放飞，HUD提示"燃料不足" |
+| 返航后 | `currentFuel` 清零 |
+| 解除变身 | 不清空燃料，但移除易燃易爆debuff |
+
+#### 放飞操作
+
+| 操作 | 行为 |
+|------|------|
+| 右键 | 按出击顺序放飞下一个未出击编组 |
+| 数字键(1-4) + 右键 | 放飞指定编组 |
+
+放飞时从弹药库扣编组指定弹药。弹药不足则拒绝。飞机实体在玩家前方0.5格生成。
+
+#### 火控系统
+
+| 按键 | 功能 |
+|------|------|
+| P | 准星指向生物时按下 → 锁定/切换目标 |
+| O | 加选目标（追加到锁定列表） |
+| I | 取消所有锁定 |
+
+服务端维护 `lockedTargets: List<UUID>`，通过 CustomPacketPayload 同步。
+
+- FOCUS 编组：全组攻击锁定列表第一个目标
+- SPREAD 编组：各自攻击距自身最近的锁定目标；无锁定时自动索敌32格内敌对生物
+
+#### AircraftEntity
+
+继承 Entity（不继承 Mob）。状态机：
+
+```
+LAUNCHING → CRUISING → ATTACKING → RETURNING → REMOVED
+```
+
+**四种攻击行为：**
+
+| 类型 | AI行为 | 伤害方式 |
+|------|--------|---------|
+| FIGHTER | 接近目标后近战咬尾，每秒面板伤害 | 直接近战伤害 |
+| DIVE_BOMBER | 爬升→俯冲接触，类似幻翼 | 面板伤害 + 50%概率着火30s |
+| TORPEDO_BOMBER | 贴水面飞行→距目标10-16格投鱼雷 | 复用TorpedoEntity |
+| LEVEL_BOMBER | 爬升至目标上方32格→水平飞越投弹 | AerialBombEntity（自由落体+HE爆炸） |
+
+**DataComponent `AircraftInfo`：**
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `aircraftType` | enum | FIGHTER / DIVE_BOMBER / TORPEDO_BOMBER / LEVEL_BOMBER |
+| `fuelCapacity` | int | 燃料容量 |
+| `ammoCapacity` | int | 弹药容量 |
+| `currentFuel` | int | 当前燃料值（0=未整备） |
+| `panelDamage` | float | 面板伤害 |
+| `panelSpeed` | float | 面板航速 |
+| `weight` | int | 负重 |
+
+#### 防御机制
+
+| 机制 | 触发条件 | 行为 |
+|------|---------|------|
+| 滞空硬上限 | 10分钟（12000 tick） | 强制 RETURNING，超时则 REMOVED + 回武器栏 |
+| 距离上限 | 与玩家 > 48格 | TP回玩家附近5格，切为 RETURNING |
+| 卡死检测 | 连续60tick位置变化 < 0.1格 | 强制 REMOVED + 回武器栏 |
+| 空手右键 | 玩家右键自己的飞机 | 立即 REMOVED + 回武器栏 |
+| 玩家死亡 | PlayerDeathEvent | 全部飞机 REMOVED + 回武器栏 |
+| 玩家下线 | PlayerLoggedOutEvent | 同上 |
+
+#### 浮动靶子（测试工具）
+
+`FloatingTargetEntity`：继承盔甲架模型和盔甲槽逻辑，水面漂浮，可穿原版盔甲获得护甲效果。手持物品右键水面放置。
+
+---
+
+### ✅ Phase 18: 飞机物品 + 弹药物品 + 编组GUI框架 (DONE)
+
+- 飞机物品×4：`fighter_squadron`、`dive_bomber_squadron`、`torpedo_bomber_squadron`、`level_bomber_squadron`
+- 弹药物品：`aviation_fuel`（航空燃料）、`aerial_bomb_small`（小型航弹）、`aerial_bomb_medium`（中型航弹）、`aerial_torpedo`（航空鱼雷）
+- DataComponent：`AircraftInfo`（7字段，手写StreamCodec）、`FlightGroupData`（核心上的4组配置）
+- `FlightGroupMenu` + `FlightGroupScreen`，从舰装栏"编组"按钮发包→服务端openMenu打开
+- 编组GUI功能：4组显示、点击分配/取消飞机槽位、弹药类型循环（---/燃料/小弹/中弹/鱼雷）、集火/分散切换
+- 合成表（工作台，铝锭为主要材料）
+- `ShipCoreMenu.isWeapon()` 和 `getWeight()` 已扩展支持 AircraftItem
+- `isAmmo()` 已扩展支持航空弹药
+
+**验证（构建通过，待 runClient 确认）：**
+- [x] 4架飞机编队 + 4种航空弹药物品注册
+- [x] Creative Tab 可见
+- [x] 编组GUI可开（ShipCoreScreen "编组"按钮 → OpenFlightGroupPayload → 服务端openMenu）
+- [x] 编组GUI分组功能（点击飞机槽位切换分配）
+- [x] 指定弹药（点击弹药类型按钮循环）
+- [x] 攻击模式切换（集火/分散）
+- [x] FlightGroupUpdatePayload 保存到核心 DataComponent
+- [x] 飞机放入武器栏负重正确（AircraftItem.weight 从 AircraftInfo 读取）
+- [x] zh_cn + en_us 翻译
+
+---
+
+### Phase 19: AircraftEntity + 飞行物理 + 防御机制
+
+- `AircraftEntity` 注册（继承 Entity）
+- 状态机 LAUNCHING → CRUISING → ATTACKING → RETURNING → REMOVED
+- 飞行物理：爬升、巡航、盘旋、返航
+- 放飞逻辑：右键 / 数字键+右键 → 检查燃料弹药 → 生成实体 → 扣弹药
+- 返航逻辑：飞向玩家 → 到达后消失 → 物品回武器栏
+- 全部防御机制：滞空上限、距离TP、卡死检测、右键回收、死亡/下线回收
+- `FloatingTargetEntity`（浮动靶子）：盔甲架模型 + 水面漂浮 + 可穿盔甲
+- 占位渲染器
+
+**验证：** 放飞→飞行→盘旋→返航，四重防御正常，死亡/下线回收正常。
+
+---
+
+### Phase 20: 火控系统
+
+- KeyMapping 注册：P/O/I
+- 锁定逻辑：准星射线检测生物 → 加入/切换/取消
+- 锁定 HUD：目标显示菱形标记 + 血量/名称
+- 网络同步：CustomPacketPayload 同步 lockedTargets
+- AircraftEntity 读取所属玩家锁定列表确定目标
+
+**验证：** P锁定、O加选、I取消，HUD显示标记，飞机飞向锁定目标。
+
+---
+
+### Phase 21: 攻击AI（四种模式）
+
+- FIGHTER AI：接近→咬尾近战→持续攻击至目标死亡或燃料尽→返航
+- DIVE_BOMBER AI：爬升→俯冲接触→伤害+50%着火→拉起返航
+- TORPEDO_BOMBER AI：贴水面→距10-16格投鱼雷（复用TorpedoEntity）→返航
+- LEVEL_BOMBER AI：爬升32格→计算提前量投弹→返航
+- `AerialBombEntity`：自由落体 + 接触HE爆炸（复用火炮爆炸逻辑）
+- 自动索敌：无锁定时32格内寻找敌对生物
+- FOCUS/SPREAD 攻击模式逻辑
+
+**验证：** 四种飞机各自攻击行为正确，鱼雷机复用鱼雷正常，集火/分散模式正确。
+
+---
+
+### Phase 22: 燃料系统 + 舰装栏集成 + 数值平衡
+
+- 变身时自动补燃料（扣弹药库航空燃料 → 填飞机 currentFuel）
+- `FlammableEffect`（易燃易爆 MobEffect）
+- 舰装栏集成：飞机负重计算
+- 编组弹药消耗：放飞时按编组弹种扣弹药库
+- 3个配装场景数值验证
+
+**数值验证场景：**
+- 场景1：中型核心 + 2副炮 + 2战斗机 + 2鱼雷机 → 负重合理
+- 场景2：大型核心 + 4组攻击机满载 → 负重接近上限
+- 场景3：小型核心装飞机 → 负重超标或只能装1-2架
+
+**验证：** 变身补燃料+debuff正确，无燃料拒绝放飞，负重正确，三场景通过。
+
+---
+
+### Phase 23: Patchouli 教程手册
+
+- 引入 Patchouli 依赖（1.21.1-93-NEOFORGE）
+- `piranport:guidebook` 物品，配方：书+铝锭
+- 书籍内容（JSON data-driven）：入门/火炮/鱼雷/烹饪/航空 五章
+- zh_cn + en_us 双语
+
+**验证：** 合成书→右键打开→全部章节可浏览→合成配方页正确。
+
+---
+
+### Phase 24: 端到端验证
+
+| # | 场景 | 验证点 |
+|---|------|--------|
+| 1 | 航空全链路 | 装飞机→编组→变身→补燃料→火控锁定→放飞→攻击→返航→回武器栏 |
+| 2 | 四种攻击 | 四种飞机各自执行正确攻击模式 |
+| 3 | 编组操作 | 4组不同弹种+攻击模式，顺序/指定放飞 |
+| 4 | 防御机制 | 滞空超时/超距TP/卡死/手动回收/死亡/下线 |
+| 5 | 火控多目标 | P→O加选→集火打A、分散打最近 |
+| 6 | 教程手册 | 合成→翻阅→配方展示 |
+| 7 | 浮动靶子 | 水面放置→穿铁甲→四种飞机打靶→护甲减伤 |
+
+---
+
+## NOT In v0.4.0 (明确排除)
+
+- ❌ 侦察机（视角切换+假人+区块加载）→ 留 v0.7.0 Aviation+
+- ❌ 飞机间空战（战斗机攻击敌方飞机）
+- ❌ 编队跟随侦察机
+- ❌ 放飞动画（依赖皮肤系统）
+- ❌ 飞机自定义3D模型 → 先用占位模型
+- ❌ 弹种切换冷却
+- ❌ 飞机GUI、民用机型（F4U冰激凌等）
+- ❌ 校射联动、编队国籍限制
+- ❌ 武器合成台/弹药合成台 → v0.4.0 用工作台合成
+- ❌ 飞机残骸回收系统
+
+---
+
+## Project Structure (v0.4.0 更新)
 
 ```
 src/main/java/com/piranport/
 ├── PiranPort.java
 ├── registry/
-│   ├── ModItems.java               # + 食材、调料、食物、种子
-│   ├── ModBlocks.java              # + 厨锅、石磨、砧板、食物方块、作物
+│   ├── ModItems.java               # + 飞机编队、航空弹药、教程书、浮动靶子
+│   ├── ModBlocks.java
 │   ├── ModCreativeTabs.java
-│   ├── ModEntityTypes.java
-│   ├── ModDataComponents.java      # + PlaceableInfo
-│   ├── ModMobEffects.java
-│   ├── ModBlockEntityTypes.java    # 🆕 方块实体类型注册
-│   ├── ModMenuTypes.java           # 🆕 菜单类型注册
-│   └── ModRecipeTypes.java         # 🆕 配方类型注册
+│   ├── ModEntityTypes.java         # + AircraftEntity, AerialBombEntity, FloatingTargetEntity
+│   ├── ModDataComponents.java      # + AircraftInfo, AircraftAmmoInfo, FlightGroupData
+│   ├── ModMobEffects.java          # + FlammableEffect
+│   ├── ModBlockEntityTypes.java
+│   ├── ModMenuTypes.java           # + FlightGroupMenu
+│   ├── ModRecipeTypes.java
+│   └── ModKeyMappings.java         # 🆕 P/O/I 火控按键
 ├── item/
 │   ├── ShipCoreItem.java
 │   ├── CannonItem.java / ShellItem.java
 │   ├── TorpedoItem.java / TorpedoLauncherItem.java
 │   ├── ArmorPlateItem.java
-│   └── ModFoodItem.java            # 🆕 通用食物物品
-├── block/
-│   ├── BauxiteOreBlock.java / SaltBlock.java
-│   ├── CookingPotBlock.java        # 🆕
-│   ├── StoneMillBlock.java         # 🆕
-│   ├── CuttingBoardBlock.java      # 🆕
-│   ├── PlaceableFoodBlock.java     # 🆕
-│   └── crop/
-│       ├── ModCropBlock.java       # 🆕
-│       └── RiceCropBlock.java      # 🆕
-├── block/entity/
-│   ├── CookingPotBlockEntity.java  # 🆕
-│   ├── StoneMillBlockEntity.java   # 🆕
-│   ├── CuttingBoardBlockEntity.java# 🆕
-│   └── PlaceableFoodBlockEntity.java # 🆕
+│   ├── ModFoodItem.java
+│   ├── AircraftItem.java           # 🆕 飞机编队物品
+│   └── GuidebookItem.java          # 🆕 Patchouli教程书
+├── block/ (同v0.3.0)
+├── block/entity/ (同v0.3.0)
 ├── entity/
 │   ├── CannonProjectileEntity.java
-│   └── TorpedoEntity.java
+│   ├── TorpedoEntity.java
+│   ├── AircraftEntity.java         # 🆕 飞机实体（状态机+四种攻击AI）
+│   ├── AerialBombEntity.java       # 🆕 航空炸弹投射物
+│   └── FloatingTargetEntity.java   # 🆕 浮动靶子（测试工具）
 ├── effect/
-│   └── FloodingEffect.java
+│   ├── FloodingEffect.java
+│   └── FlammableEffect.java        # 🆕 易燃易爆
 ├── menu/
 │   ├── ShipCoreMenu.java / ShipCoreScreen.java
-│   ├── CookingPotMenu.java / CookingPotScreen.java   # 🆕
-│   └── StoneMillMenu.java / StoneMillScreen.java      # 🆕
-├── recipe/
-│   ├── CookingPotRecipe.java       # 🆕
-│   ├── StoneMillRecipe.java        # 🆕
-│   └── CuttingBoardRecipe.java     # 🆕
+│   ├── CookingPotMenu.java / CookingPotScreen.java
+│   ├── StoneMillMenu.java / StoneMillScreen.java
+│   └── FlightGroupMenu.java / FlightGroupScreen.java  # 🆕
 ├── component/
-│   └── PlaceableInfo.java          # 🆕
+│   ├── PlaceableInfo.java
+│   ├── AircraftInfo.java            # 🆕
+│   ├── AircraftAmmoInfo.java        # 🆕
+│   └── FlightGroupData.java         # 🆕
+├── aviation/                        # 🆕 航空系统包
+│   ├── AircraftAI.java              # 状态机+四种攻击行为
+│   └── FireControlManager.java      # 火控锁定管理
 ├── client/
 │   ├── ShipCoreHudLayer.java / TorpedoRenderer.java
-│   ├── CuttingBoardRenderer.java   # 🆕
-│   └── PlaceableFoodRenderer.java  # 🆕
-├── GameEvents.java                 # 🆕 游戏总线事件（双端）：水面行走等
-├── ClientGameEvents.java           # 🆕 客户端游戏总线事件：负重 Tooltip 等
+│   ├── CuttingBoardRenderer.java / PlaceableFoodRenderer.java
+│   ├── AircraftRenderer.java       # 🆕
+│   ├── AerialBombRenderer.java     # 🆕
+│   └── FireControlHudLayer.java    # 🆕 锁定标记HUD
+├── recipe/ (同v0.3.0)
 ├── worldgen/ / combat/ / data/ / network/
-│   └── (同前，data 增加新配方和掉落表)
+│   └── (network 增加火控同步包)
 ```
 
 ---
@@ -364,9 +607,27 @@ src/main/java/com/piranport/
 | 熔炉热源检测 | `AbstractFurnaceBlockEntity.isLit()` (private) | `bs.hasProperty(BlockStateProperties.LIT) && bs.getValue(...LIT) && bs.getBlock() instanceof AbstractFurnaceBlock` |
 | 方块掉落物品 | `Containers.dropContents(level, pos, blockEntity)` (需实现 Container) | 手动 loop `itemHandler.getStackInSlot(i)` + `Containers.dropItemStack()` |
 | PlaceableFoodBlock codec | 单个基类无法用 `simpleCodec(Base::new)` | 用3个静态内部类 (Plate/Bowl/Cake)，各自实现 `simpleCodec(ClassName::new)` |
-| 容器 GUI 玩家物品栏不显示 | `renderBg()` 只画机器槽，不画玩家物品栏/快捷栏槽背景 | 在 `renderBg()` 中手动 `drawSlotBg` 覆盖全部 27+9 个玩家物品栏格 |
-| `render()` 双重暗色背景 | `renderBackground(...)` 后再调 `super.render(...)`（后者已内部调用） | 直接 `super.render(...)`，不在前面额外调 `renderBackground` |
-| 游戏事件注册在 mod 总线 | `@EventBusSubscriber(bus = Bus.MOD)` 里监听 `PlayerTickEvent`/`ItemTooltipEvent` | 用不带 `bus` 参数的 `@EventBusSubscriber`（默认 Bus.GAME）；客户端限定加 `value = Dist.CLIENT` |
+| StreamCodec 超过6字段 | `StreamCodec.composite(...)` 最多支持6个字段 | 改用 `StreamCodec.of(encoder, decoder)` 手写编解码逻辑 |
+| ContainerMenu 无槽位 | AbstractContainerMenu 可以0个容器槽（如编组GUI），player inv槽放 x=-2000 隐藏 | GUI交互通过 C2S payload，不依赖 slot 机制 |
+| 从Screen开另一个Menu | 客户端Screen无法直接调 openMenu，需发 C2S 包 → 服务端调 serverPlayer.openMenu | `OpenFlightGroupPayload` 模式 |
+
+### v0.4.0 外部依赖
+
+**Patchouli 1.21.1-93-NEOFORGE**（教程手册）：
+- Maven: `vazkii.patchouli:Patchouli:1.21.1-93-NEOFORGE`
+- 书籍内容放在 `src/main/resources/data/piranport/patchouli_books/guidebook/`
+- 纯 JSON data-driven，不需要写 Java 代码
+- 书籍物品通过 Patchouli API 注册
+
+### v0.4.0 技术要点
+
+| 要点 | 说明 |
+|------|------|
+| AircraftEntity 不继承 Mob | 继承 Entity，自己管理状态机和移动，不用 Mob 的 AI 系统 |
+| 火控同步 | 客户端 KeyMapping → C2S Packet → 服务端更新 lockedTargets → S2C 广播给附近玩家 |
+| 编组数据位置 | 存在舰装核心的 DataComponent 上，不在飞机物品上 |
+| 浮动靶子 | 继承/参考 ArmorStand，覆写物理使其水面漂浮 |
+| AerialBombEntity | 类似 CannonProjectileEntity，但无初速度水平分量，纯自由落体 |
 
 ---
 
@@ -403,13 +664,24 @@ public class PiranPort {
         ModDataComponents.DATA_COMPONENTS.register(modEventBus);
         ModMobEffects.MOB_EFFECTS.register(modEventBus);
         ModBlockEntityTypes.BLOCK_ENTITY_TYPES.register(modEventBus);  // v0.3.0
-        ModMenuTypes.MENU_TYPES.register(modEventBus);                 // v0.3.0
+        ModMenuTypes.MENU_TYPES.register(modEventBus);                 // v0.3.0 + FlightGroupMenu
         ModRecipeTypes.RECIPE_TYPES.register(modEventBus);             // v0.3.0
-        // ⚠️ RegisterBrewingRecipesEvent 是游戏总线事件，必须用 NeoForge.EVENT_BUS
-        NeoForge.EVENT_BUS.addListener(this::registerBrewingRecipes);
+        modEventBus.addListener(this::registerBrewingRecipes);
     }
+    // ⚠️ NeoForge 21.1.220: 不用 FMLCommonSetupEvent，改用 RegisterBrewingRecipesEvent
     private void registerBrewingRecipes(final RegisterBrewingRecipesEvent event) {
         ModBrewingRecipes.register(event.getBuilder());
+    }
+}
+
+// v0.4.0 客户端: 注册 KeyMapping（P/O/I 火控按键）
+@Mod.EventBusSubscriber(modid = PiranPort.MOD_ID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
+public class ClientSetup {
+    @SubscribeEvent
+    public static void registerKeyMappings(RegisterKeyMappingsEvent event) {
+        event.register(ModKeyMappings.FIRE_CONTROL_LOCK);   // P
+        event.register(ModKeyMappings.FIRE_CONTROL_ADD);    // O
+        event.register(ModKeyMappings.FIRE_CONTROL_CANCEL); // I
     }
 }
 ```
@@ -480,9 +752,7 @@ private boolean hasHeatSource(Level level, BlockPos pos) {
     if (bs.getFluidState().is(Fluids.LAVA)) return true;
     if (bs.is(Blocks.CAMPFIRE) && bs.getValue(CampfireBlock.LIT)) return true;
     if (bs.is(Blocks.SOUL_CAMPFIRE) && bs.getValue(CampfireBlock.LIT)) return true;
-    // ⚠️ AbstractFurnaceBlockEntity.isLit() 是 private，用 BlockStateProperties 代替
-    if (bs.hasProperty(BlockStateProperties.LIT) && bs.getValue(BlockStateProperties.LIT)
-            && bs.getBlock() instanceof AbstractFurnaceBlock) return true;
+    if (level.getBlockEntity(below) instanceof AbstractFurnaceBlockEntity f) return f.isLit();
     return false;
 }
 ```
@@ -544,7 +814,7 @@ public void eat(Player player) {
 
 ### 测试规范
 - 每 Phase 完成后 `gradlew runClient` 验证
-- 见 Phase 17 验证清单
+- 见 Phase 24 验证清单
 
 ---
 
@@ -553,7 +823,7 @@ public void eat(Player player) {
 ```bash
 ./gradlew runClient    # 运行客户端
 ./gradlew runData      # DataGen
-./gradlew build        # 构建 → build/libs/piranport-0.0.2.jar（v0.2完成），Phase 11起改为 0.0.3
+./gradlew build        # 构建 → build/libs/piranport-0.0.4.jar
 ```
 
 > **自动构建 Hook**：每次 Claude Code 会话结束时自动执行 `./gradlew build` 并将 JAR 复制到 Minecraft mods 目录（配置在 `.claude/settings.local.json` Stop hook）。
@@ -564,7 +834,7 @@ public void eat(Player player) {
 mod_id=piranport
 mod_name=Piran Port
 mod_license=All Rights Reserved
-mod_version=0.0.3
+mod_version=0.0.4
 mod_group_id=com.piranport
 mod_authors=PiranPort Dev Team
 mod_description=Minecraft mod based on Warship Girls R
@@ -574,15 +844,15 @@ neo_version=21.1.220
 
 ---
 
-## Phase 实施顺序 (v0.3.0)
+## Phase 实施顺序 (v0.4.0)
 
-1. **Phase 11** → 食材/调料/种子注册，作物可种植生长收获
-2. **Phase 12** → 石磨 GUI，小麦→面粉，漏斗兼容
-3. **Phase 13** → 砧板交互，面包→切4次→吐司面包片
-4. **Phase 14** → 厨锅热源检测+烹饪，产出食物
-5. **Phase 15** → 酿造台产出酵母瓶、酱油等
-6. **Phase 16** → 食物手持食用+放置+分次食用+碗掉落
-7. **Phase 17** → 全链路测试通过
+1. ~~**Phase 18**~~ ✅ DONE — 飞机/弹药物品 + DataComponent + 编组GUI
+2. **Phase 19** → AircraftEntity + 飞行物理 + 防御机制 + 浮动靶子
+3. **Phase 20** → 火控系统 P/O/I + HUD + 网络同步
+4. **Phase 21** → 四种攻击AI + AerialBombEntity
+5. **Phase 22** → 燃料系统 + 易燃易爆 + 舰装栏集成 + 数值验证
+6. **Phase 23** → Patchouli 教程手册
+7. **Phase 24** → 端到端验证
 
 **不要跳步。不要提前做后续 Phase 的内容。**
 
@@ -594,5 +864,8 @@ neo_version=21.1.220
 - NeoForge 21.1 Release Notes: https://neoforged.net/news/21.1release/
 - MDK Template: https://github.com/NeoForgeMDKs/MDK-1.21.1-ModDevGradle
 - Minecraft Wiki (Technical): https://minecraft.wiki/
+- Patchouli Wiki: https://vazkiimods.github.io/Patchouli/
 - 原始策划案：见项目根目录 `docs/总策划案.docx`
+- v0.4.0 航空规划：见项目根目录 `docs/v0.4.0_Aviation_规划.md`
+- 开发纪要：见项目根目录 `docs/皮兰港开发纪要260325上午.md`、`docs/皮兰港开发纪要260325下午.md`
 - GitHub 远程仓库: https://github.com/CVIndomitable/piranport_cl.git

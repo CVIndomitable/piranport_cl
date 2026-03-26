@@ -112,5 +112,18 @@
   "item.piranport.pasta": "Pasta",
   "item.piranport.cooked_rice": "Cooked Rice",
   "item.piranport.beet_blossom": "Sweet Tofu Pudding",
-  "item.piranport.miso_soup": "Miso Soup"
+  "item.piranport.miso_soup": "Miso Soup",
+  "item.piranport.fighter_squadron": "Fighter Squadron",
+  "item.piranport.dive_bomber_squadron": "Dive Bomber Squadron",
+  "item.piranport.torpedo_bomber_squadron": "Torpedo Bomber Squadron",
+  "item.piranport.level_bomber_squadron": "Level Bomber Squadron",
+  "item.piranport.aviation_fuel": "Aviation Fuel",
+  "item.piranport.aerial_bomb_small": "Small Aerial Bomb",
+  "item.piranport.aerial_bomb_medium": "Medium Aerial Bomb",
+  "item.piranport.aerial_torpedo": "Aerial Torpedo",
+  "container.piranport.flight_groups": "Groups",
+  "container.piranport.available_aircraft": "Available Aircraft:",
+  "tooltip.piranport.aircraft_damage": "Damage: %s",
+  "tooltip.piranport.aircraft_speed": "Speed: %s",
+  "tooltip.piranport.fuel": "Fuel: %s / %s"
 }

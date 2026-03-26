@@ -2,6 +2,8 @@ package com.piranport.registry;
 
 import com.mojang.serialization.Codec;
 import com.piranport.PiranPort;
+import com.piranport.component.AircraftInfo;
+import com.piranport.component.FlightGroupData;
 import com.piranport.component.PlaceableInfo;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.Registries;
@@ -40,5 +42,21 @@ public class ModDataComponents {
             () -> DataComponentType.<PlaceableInfo>builder()
                     .persistent(PlaceableInfo.CODEC)
                     .networkSynchronized(PlaceableInfo.STREAM_CODEC)
+                    .build());
+
+    // ===== v0.4.0 Aviation DataComponents =====
+
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<AircraftInfo>>
+            AIRCRAFT_INFO = DATA_COMPONENTS.register("aircraft_info",
+            () -> DataComponentType.<AircraftInfo>builder()
+                    .persistent(AircraftInfo.CODEC)
+                    .networkSynchronized(AircraftInfo.STREAM_CODEC)
+                    .build());
+
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<FlightGroupData>>
+            FLIGHT_GROUP_DATA = DATA_COMPONENTS.register("flight_group_data",
+            () -> DataComponentType.<FlightGroupData>builder()
+                    .persistent(FlightGroupData.CODEC)
+                    .networkSynchronized(FlightGroupData.STREAM_CODEC)
                     .build());
 }

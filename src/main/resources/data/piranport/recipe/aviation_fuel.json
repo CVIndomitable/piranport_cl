@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:coal",
+    "minecraft:bucket",
+    "piranport:edible_oil"
+  ],
+  "result": {
+    "id": "piranport:aviation_fuel",
+    "count": 4
+  }
+}

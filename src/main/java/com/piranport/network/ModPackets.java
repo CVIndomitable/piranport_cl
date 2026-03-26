@@ -16,5 +16,15 @@ public class ModPackets {
                 CycleWeaponPayload.STREAM_CODEC,
                 CycleWeaponPayload::handle
         );
+        registrar.playToServer(
+                OpenFlightGroupPayload.TYPE,
+                OpenFlightGroupPayload.STREAM_CODEC,
+                OpenFlightGroupPayload::handle
+        );
+        registrar.playToServer(
+                FlightGroupUpdatePayload.TYPE,
+                FlightGroupUpdatePayload.STREAM_CODEC,
+                FlightGroupUpdatePayload::handle
+        );
     }
 }

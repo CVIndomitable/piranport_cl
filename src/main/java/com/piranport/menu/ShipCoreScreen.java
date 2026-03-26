@@ -1,10 +1,13 @@
 package com.piranport.menu;
 
 import com.piranport.item.ShipCoreItem;
+import com.piranport.network.OpenFlightGroupPayload;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 public class ShipCoreScreen extends AbstractContainerScreen<ShipCoreMenu> {
 
@@ -13,6 +16,17 @@ public class ShipCoreScreen extends AbstractContainerScreen<ShipCoreMenu> {
         this.imageWidth = 176;
         this.imageHeight = 188;   // was 166, +22 for enhancement row
         this.inventoryLabelY = 94; // was 72, +22
+    }
+
+    @Override
+    protected void init() {
+        super.init();
+        // "编组" button — opens FlightGroup GUI (top-right area of screen)
+        this.addRenderableWidget(Button.builder(
+                Component.translatable("container.piranport.flight_groups"),
+                btn -> PacketDistributor.sendToServer(
+                        new OpenFlightGroupPayload(this.menu.getCoreSlot()))
+        ).bounds(leftPos + 118, topPos + 2, 50, 10).build());
     }
 
     @Override

@@ -3,6 +3,7 @@ package com.piranport;
 import com.piranport.client.CuttingBoardRenderer;
 import com.piranport.client.PlaceableFoodRenderer;
 import com.piranport.menu.CookingPotScreen;
+import com.piranport.menu.FlightGroupScreen;
 import com.piranport.menu.ShipCoreScreen;
 import com.piranport.menu.StoneMillScreen;
 import com.piranport.registry.ModBlockEntityTypes;
@@ -29,6 +30,7 @@ public class ClientEvents {
         event.register(ModMenuTypes.SHIP_CORE_MENU.get(), ShipCoreScreen::new);
         event.register(ModMenuTypes.STONE_MILL_MENU.get(), StoneMillScreen::new);
         event.register(ModMenuTypes.COOKING_POT_MENU.get(), CookingPotScreen::new);
+        event.register(ModMenuTypes.FLIGHT_GROUP_MENU.get(), FlightGroupScreen::new);
     }
 
     @SubscribeEvent

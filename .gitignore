@@ -10,3 +10,5 @@ logs/
 repo/
 src/generated/
 .DS_Store
+文档/
+日志/

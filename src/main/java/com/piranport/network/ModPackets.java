@@ -26,5 +26,16 @@ public class ModPackets {
                 FlightGroupUpdatePayload.STREAM_CODEC,
                 FlightGroupUpdatePayload::handle
         );
+        // Phase 20: fire control
+        registrar.playToServer(
+                FireControlPayload.TYPE,
+                FireControlPayload.STREAM_CODEC,
+                FireControlPayload::handle
+        );
+        registrar.playToClient(
+                FireControlSyncPayload.TYPE,
+                FireControlSyncPayload.STREAM_CODEC,
+                FireControlSyncPayload::handle
+        );
     }
 }

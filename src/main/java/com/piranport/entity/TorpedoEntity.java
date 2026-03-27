@@ -21,7 +21,7 @@ public class TorpedoEntity extends ThrowableItemProjectile {
     private int caliber = 533;
     private float damage = 18f;
     private float torpedoSpeed = 1.2f;
-    private int lifetime = 200;
+    private int lifetime = 1200; // 1 minute hard cap
     private float explosionRadius = 2.0f;
 
     // Required constructor for entity type registration
@@ -36,12 +36,12 @@ public class TorpedoEntity extends ThrowableItemProjectile {
         if (caliber == 610) {
             this.damage = 28f;
             this.torpedoSpeed = 1.0f;
-            this.lifetime = 300;
+            this.lifetime = 1200;
             this.explosionRadius = 2.5f;
         } else {
             this.damage = 18f;
             this.torpedoSpeed = 1.2f;
-            this.lifetime = 200;
+            this.lifetime = 1200;
             this.explosionRadius = 2.0f;
         }
     }
@@ -62,8 +62,11 @@ public class TorpedoEntity extends ThrowableItemProjectile {
 
         if (isRemoved()) return;
 
-        // 1. 剩余航程检查
+        // 1. 剩余航程检查 — 超时自爆
         if (--lifetime <= 0) {
+            if (!level().isClientSide()) {
+                level().explode(this, getX(), getY(), getZ(), explosionRadius, Level.ExplosionInteraction.TNT);
+            }
             discard();
             return;
         }

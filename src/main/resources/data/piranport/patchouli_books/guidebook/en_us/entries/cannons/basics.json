@@ -1,0 +1,17 @@
+{
+  "name": "piranport.book.cannons.basics",
+  "category": "piranport:2_cannons",
+  "icon": "piranport:small_gun",
+  "sortnum": 0,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "piranport.book.cannons.basics.p1"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "piranport:small_gun",
+      "text": "piranport.book.cannons.basics.craft"
+    }
+  ]
+}

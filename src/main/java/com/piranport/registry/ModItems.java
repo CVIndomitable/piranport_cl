@@ -302,6 +302,16 @@ public class ModItems {
     public static final DeferredItem<Item> AERIAL_TORPEDO =
             ITEMS.registerSimpleItem("aerial_torpedo");
 
+    // ===== Phase 19: Floating Target =====
+    public static final DeferredItem<com.piranport.item.FloatingTargetItem> FLOATING_TARGET =
+            ITEMS.register("floating_target",
+                    () -> new com.piranport.item.FloatingTargetItem(new Item.Properties().stacksTo(16)));
+
+    // ===== Phase 23: Guidebook =====
+    public static final DeferredItem<com.piranport.item.GuidebookItem> GUIDEBOOK =
+            ITEMS.register("guidebook",
+                    () -> new com.piranport.item.GuidebookItem(new Item.Properties().stacksTo(1)));
+
     // ===== Torpedo Launchers =====
     public static final DeferredItem<TorpedoLauncherItem> TWIN_TORPEDO_LAUNCHER =
             ITEMS.register("twin_torpedo_launcher",

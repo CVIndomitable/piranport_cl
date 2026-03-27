@@ -62,6 +62,10 @@ public class ModCreativeTabs {
                         output.accept(ModItems.AERIAL_BOMB_SMALL.get());
                         output.accept(ModItems.AERIAL_BOMB_MEDIUM.get());
                         output.accept(ModItems.AERIAL_TORPEDO.get());
+                        // Test Items (Phase 19)
+                        output.accept(ModItems.FLOATING_TARGET.get());
+                        // Guidebook (Phase 23)
+                        output.accept(ModItems.GUIDEBOOK.get());
                         // Crop Seeds
                         output.accept(ModItems.TOMATO_SEEDS.get());
                         output.accept(ModItems.SOYBEAN_SEEDS.get());

@@ -1,19 +1,26 @@
 package com.piranport.item;
 
 import com.piranport.combat.TransformationManager;
+import com.piranport.component.AircraftInfo;
+import com.piranport.component.FlightGroupData;
+import com.piranport.entity.AircraftEntity;
 import com.piranport.entity.CannonProjectileEntity;
 import com.piranport.entity.TorpedoEntity;
 import com.piranport.menu.ShipCoreMenu;
 import com.piranport.registry.ModDataComponents;
 import com.piranport.registry.ModItems;
+import com.piranport.registry.ModMobEffects;
 import net.minecraft.core.NonNullList;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.SimpleMenuProvider;
+import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
@@ -70,10 +77,12 @@ public class ShipCoreItem extends Item {
                 TransformationManager.setTransformed(stack, !isTransformed);
                 if (!isTransformed) {
                     TransformationManager.applyTransformationAttributes(player, stack);
+                    refillAircraftFuel(player, stack);
                     player.displayClientMessage(
                             Component.translatable("message.piranport.transformed"), true);
                 } else {
                     TransformationManager.removeTransformationAttributes(player);
+                    player.removeEffect(ModMobEffects.FLAMMABLE);
                     player.displayClientMessage(
                             Component.translatable("message.piranport.untransformed"), true);
                 }
@@ -84,7 +93,10 @@ public class ShipCoreItem extends Item {
         if (isTransformed) {
             // Fire weapon
             if (!level.isClientSide) {
-                fireCurrentWeapon(level, player, stack);
+                int coreSlot = hand == InteractionHand.MAIN_HAND
+                        ? player.getInventory().selected
+                        : 40; // offhand slot index in Inventory
+                fireCurrentWeapon(level, player, stack, coreSlot);
             }
             return InteractionResultHolder.consume(stack);
         }
@@ -105,7 +117,7 @@ public class ShipCoreItem extends Item {
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
     }
 
-    private void fireCurrentWeapon(Level level, Player player, ItemStack stack) {
+    private void fireCurrentWeapon(Level level, Player player, ItemStack stack, int coreInventorySlot) {
         ItemContainerContents contents = stack.getOrDefault(
                 ModDataComponents.SHIP_CORE_CONTENTS.get(), ItemContainerContents.EMPTY);
         int totalSlots = shipType.totalSlots();
@@ -138,6 +150,12 @@ public class ShipCoreItem extends Item {
         // Handle torpedo launcher
         if (weapon.getItem() instanceof TorpedoLauncherItem torpedoLauncher) {
             fireTorpedos(level, player, stack, items, weaponIndex, torpedoLauncher);
+            return;
+        }
+
+        // Handle aircraft
+        if (weapon.getItem() instanceof AircraftItem) {
+            launchAircraft(level, player, stack, items, weaponIndex, coreInventorySlot);
             return;
         }
 
@@ -332,6 +350,125 @@ public class ShipCoreItem extends Item {
             case 4 -> new float[]{-6f, -2f, 2f, 6f};
             default -> new float[]{0f};
         };
+    }
+
+    // ===== Aircraft launch =====
+
+    private void launchAircraft(Level level, Player player, ItemStack coreStack,
+                                 NonNullList<ItemStack> items, int weaponIndex, int coreInventorySlot) {
+        ItemStack aircraftStack = items.get(weaponIndex);
+
+        // Look up group data for this weapon slot
+        FlightGroupData groupData = coreStack.getOrDefault(
+                ModDataComponents.FLIGHT_GROUP_DATA.get(), FlightGroupData.empty());
+        FlightGroupData.AttackMode attackMode = FlightGroupData.AttackMode.FOCUS;
+        String ammoTypeId = "";
+        for (FlightGroupData.FlightGroup group : groupData.groups()) {
+            if (group.slotIndices().contains(weaponIndex)) {
+                attackMode = group.attackMode();
+                ammoTypeId = group.getSlotAmmo(weaponIndex); // per-slot ammo assignment
+                break;
+            }
+        }
+
+        // Require ammo assignment — refuse launch if not configured
+        if (ammoTypeId.isEmpty()) {
+            player.displayClientMessage(
+                    Component.translatable("message.piranport.no_ammo"), true);
+            return;
+        }
+
+        // Deduct 1 of the assigned ammo type from ammo slots
+        boolean consumed = false;
+        int ammoStart = shipType.weaponSlots;
+        int ammoEnd = ammoStart + shipType.ammoSlots;
+        for (int ai = ammoStart; ai < ammoEnd; ai++) {
+            ItemStack ammoStack = items.get(ai);
+            if (!ammoStack.isEmpty()) {
+                ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(ammoStack.getItem());
+                if (ammoTypeId.equals(itemId.toString())) {
+                    ammoStack.shrink(1);
+                    consumed = true;
+                    break;
+                }
+            }
+        }
+
+        if (!consumed) {
+            player.displayClientMessage(
+                    Component.translatable("message.piranport.no_ammo"), true);
+            return;
+        }
+
+        AircraftEntity aircraft = AircraftEntity.create(level, player, weaponIndex, aircraftStack, attackMode, coreInventorySlot);
+        level.addFreshEntity(aircraft);
+
+        // Clear slot — aircraft is now airborne
+        items.set(weaponIndex, ItemStack.EMPTY);
+        coreStack.set(ModDataComponents.SHIP_CORE_CONTENTS.get(), ItemContainerContents.fromItems(items));
+        TransformationManager.setWeaponIndex(coreStack, weaponIndex);
+
+        player.getCooldowns().addCooldown(this, 20);
+        level.playSound(null, player.getX(), player.getY(), player.getZ(),
+                SoundEvents.FIRECHARGE_USE, SoundSource.PLAYERS, 0.6f, 1.3f);
+        player.displayClientMessage(
+                Component.translatable("message.piranport.aircraft_launched",
+                        aircraftStack.getHoverName()), true);
+    }
+
+    // ===== Fuel refill =====
+
+    /**
+     * On transformation: consume aviation_fuel from ammo slots to fill aircraft.
+     * One aviation_fuel item fills one aircraft to full fuelCapacity.
+     * Applies FlammableEffect if any aircraft ends up with fuel > 0.
+     */
+    private static void refillAircraftFuel(Player player, ItemStack coreStack) {
+        if (!(coreStack.getItem() instanceof ShipCoreItem sci)) return;
+
+        ItemContainerContents contents = coreStack.getOrDefault(
+                ModDataComponents.SHIP_CORE_CONTENTS.get(), ItemContainerContents.EMPTY);
+        int totalSlots = sci.getShipType().totalSlots();
+        NonNullList<ItemStack> items = NonNullList.withSize(totalSlots, ItemStack.EMPTY);
+        contents.copyInto(items);
+
+        int ammoStart = sci.getShipType().weaponSlots;
+        int ammoEnd = ammoStart + sci.getShipType().ammoSlots;
+        boolean contentsChanged = false;
+
+        for (int wi = 0; wi < sci.getShipType().weaponSlots; wi++) {
+            ItemStack weapon = items.get(wi);
+            if (!(weapon.getItem() instanceof AircraftItem)) continue;
+            AircraftInfo info = weapon.get(ModDataComponents.AIRCRAFT_INFO.get());
+            if (info == null || info.currentFuel() >= info.fuelCapacity()) continue;
+
+            // Find and consume one aviation_fuel item to fill this aircraft
+            for (int ai = ammoStart; ai < ammoEnd; ai++) {
+                ItemStack ammo = items.get(ai);
+                if (ammo.is(ModItems.AVIATION_FUEL.get()) && ammo.getCount() > 0) {
+                    ammo.shrink(1);
+                    weapon.set(ModDataComponents.AIRCRAFT_INFO.get(),
+                            info.withCurrentFuel(info.fuelCapacity()));
+                    contentsChanged = true;
+                    break;
+                }
+            }
+        }
+
+        if (contentsChanged) {
+            coreStack.set(ModDataComponents.SHIP_CORE_CONTENTS.get(),
+                    ItemContainerContents.fromItems(items));
+        }
+
+        // Apply FlammableEffect if any aircraft in weapon slots has fuel > 0
+        boolean hasFueled = false;
+        for (int wi = 0; wi < sci.getShipType().weaponSlots; wi++) {
+            AircraftInfo info = items.get(wi).get(ModDataComponents.AIRCRAFT_INFO.get());
+            if (info != null && info.currentFuel() > 0) { hasFueled = true; break; }
+        }
+        if (hasFueled) {
+            player.addEffect(new MobEffectInstance(ModMobEffects.FLAMMABLE, 999999, 0, false, true));
+        }
     }
 
     /** Rotate a look vector around the Y axis by angleRad, project to horizontal plane, normalize. */

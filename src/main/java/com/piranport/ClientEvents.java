@@ -1,5 +1,6 @@
 package com.piranport;
 
+import com.piranport.client.AircraftRenderer;
 import com.piranport.client.CuttingBoardRenderer;
 import com.piranport.client.PlaceableFoodRenderer;
 import com.piranport.menu.CookingPotScreen;
@@ -8,6 +9,7 @@ import com.piranport.menu.ShipCoreScreen;
 import com.piranport.menu.StoneMillScreen;
 import com.piranport.registry.ModBlockEntityTypes;
 import com.piranport.registry.ModEntityTypes;
+import com.piranport.registry.ModKeyMappings;
 import com.piranport.registry.ModMenuTypes;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.renderer.entity.ThrownItemRenderer;
@@ -36,6 +38,9 @@ public class ClientEvents {
     @SubscribeEvent
     public static void registerKeyMappings(RegisterKeyMappingsEvent event) {
         event.register(CYCLE_WEAPON_KEY);
+        event.register(ModKeyMappings.FIRE_CONTROL_LOCK);
+        event.register(ModKeyMappings.FIRE_CONTROL_ADD);
+        event.register(ModKeyMappings.FIRE_CONTROL_CANCEL);
     }
 
     @SubscribeEvent
@@ -43,6 +48,12 @@ public class ClientEvents {
         event.registerEntityRenderer(ModEntityTypes.CANNON_PROJECTILE.get(),
                 ThrownItemRenderer::new);
         event.registerEntityRenderer(ModEntityTypes.TORPEDO_ENTITY.get(),
+                ThrownItemRenderer::new);
+        event.registerEntityRenderer(ModEntityTypes.AIRCRAFT_ENTITY.get(),
+                AircraftRenderer::new);
+        event.registerEntityRenderer(ModEntityTypes.FLOATING_TARGET.get(),
+                ctx -> new net.minecraft.client.renderer.entity.NoopRenderer<>(ctx));
+        event.registerEntityRenderer(ModEntityTypes.AERIAL_BOMB.get(),
                 ThrownItemRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntityTypes.CUTTING_BOARD.get(),
                 CuttingBoardRenderer::new);

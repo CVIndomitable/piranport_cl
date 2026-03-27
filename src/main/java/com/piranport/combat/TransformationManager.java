@@ -131,6 +131,11 @@ public class TransformationManager {
         if (stack.is(ModItems.TRIPLE_TORPEDO_LAUNCHER.get())) return 12;
         if (stack.is(ModItems.QUAD_TORPEDO_LAUNCHER.get())) return 20;
         if (stack.getItem() instanceof ArmorPlateItem plate) return plate.getWeight();
+        if (stack.getItem() instanceof com.piranport.item.AircraftItem) {
+            com.piranport.component.AircraftInfo info =
+                    stack.get(ModDataComponents.AIRCRAFT_INFO.get());
+            return info != null ? info.weight() : 0;
+        }
         return 0;
     }
 }

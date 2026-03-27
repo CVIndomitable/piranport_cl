@@ -1,0 +1,8 @@
+{
+  "name": "piranport.book.name",
+  "landing_text": "piranport.book.landing",
+  "version": "1",
+  "use_blocky_font": false,
+  "show_progress": false,
+  "i18n": true
+}

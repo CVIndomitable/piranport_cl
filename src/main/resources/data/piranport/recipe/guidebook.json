@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "A",
+    "B"
+  ],
+  "key": {
+    "A": {"item": "piranport:aluminum_ingot"},
+    "B": {"item": "minecraft:book"}
+  },
+  "result": {
+    "id": "piranport:guidebook",
+    "count": 1
+  }
+}

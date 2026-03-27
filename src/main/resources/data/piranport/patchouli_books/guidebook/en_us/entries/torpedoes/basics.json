@@ -1,0 +1,17 @@
+{
+  "name": "piranport.book.torpedoes.basics",
+  "category": "piranport:3_torpedoes",
+  "icon": "piranport:twin_torpedo_launcher",
+  "sortnum": 0,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "piranport.book.torpedoes.basics.p1"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "piranport:twin_torpedo_launcher",
+      "text": "piranport.book.torpedoes.basics.craft"
+    }
+  ]
+}

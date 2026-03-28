@@ -25,9 +25,9 @@
 | v0.0.2-alpha | Torpedo | ✅ DONE | 鱼雷系统、舰装栏GUI完善、负重平衡、装填机制 |
 | v0.0.3-alpha | Kitchen | ✅ DONE | 食物烹饪 + Buff系统、作物种植、加工站 |
 | v0.0.4-alpha | Aviation | ✅ DONE | 航空系统（4种飞机+编组GUI+火控+AI）+ Patchouli手册 |
-| v0.0.5-alpha | Combat+ | 🔨 IN PROGRESS | 装填进度Decorator、装填加速/高速规避Buff、Buff食物注册 |
+| v0.0.5-alpha | Combat+ | ✅ DONE | 装填进度Decorator、装填加速/高速规避Buff、Buff食物注册 |
 | v0.0.6-alpha | Skin | ⏳ PLANNED | 皮肤/模型渲染系统 |
-| v0.0.7-alpha | Aviation+ | ⏳ PLANNED | 侦察机视角切换、空战、编队跟随 |
+| v0.0.7-alpha | Aviation+ | ✅ DONE | 侦察机视角切换、空战、编队跟随侦察机、加工站自动化 |
 
 ---
 
@@ -680,6 +680,18 @@ src/main/java/com/piranport/
 | 浮动靶子 | 继承/参考 ArmorStand，覆写物理使其水面漂浮 |
 | AerialBombEntity | 类似 CannonProjectileEntity，但无初速度水平分量，纯自由落体 |
 
+### v0.0.7 技术要点
+
+| 要点 | 说明 |
+|------|------|
+| 侦察机视角 | 服务端 `ReconStartPayload` → 客户端 `Minecraft.setCameraEntity(entity)` |
+| 侦察机操控 | 客户端每 tick 发 `ReconControlPayload(dx,dy,dz)` → 服务端 `ReconManager.handleControl()` → `AircraftEntity.tickReconActive()` consumeInput |
+| 区块加载管理 | `ServerLevel.setChunkForced(x,z,true/false)` 维护侦察机周围 3×3 区块；跟踪 `lastForcedChunkX/Z`，移动到新区块时先 release 再 force |
+| FOLLOW 模式距离 | FOLLOW 模式飞机使用 MAX_RECON_DIST(200 格) 上限，因为可能跟随侦察机到玩家 48格以外 |
+| IItemHandler capability | `RegisterCapabilitiesEvent` 中注册 `Capabilities.ItemHandler.BLOCK`；方向判断用 `direction == Direction.DOWN` 区分输出/输入 |
+| 砧板发射器联动 | `CuttingBoardBlock.neighborChanged()` 检测相邻方块是否为 `DispenserBlock` 且 `BlockStateProperties.TRIGGERED` 为 true 时调用 `performCut()` |
+| 命中/击杀通知 | `projectile.getOwner()` 获取 Player → `player.sendSystemMessage(Component)` 仅发给本人；`target.isAlive()` 在 `hurt()` 后判断 |
+
 ---
 
 ### 注册系统
@@ -914,9 +926,21 @@ neo_version=21.1.220
 1. ~~**Phase 25**~~ ✅ DONE — 装填进度物品装饰器 (`ReloadBarDecorator`) + 客户端 Config
 2. ~~**Phase 26**~~ ✅ DONE — 自定义战斗 Buff（`ReloadBoostEffect` / `EvasionEffect` + `EvasionHandler` + `TransformationManager.boostedCooldown`）
 3. ~~**Phase 27**~~ ✅ DONE — Buff 食物 + 菠萝作物（BottleFoodItem、4种食物、8条配方JSON、菠萝链路）
-4. **Phase 28** — 端到端验证
+4. ~~**Phase 28**~~ ✅ DONE — 端到端验证
 
 **不要跳步。不要提前做后续 Phase 的内容。**
+
+---
+
+## Phase 实施顺序 (v0.0.7)
+
+1. ~~**Phase 29**~~ ✅ DONE — 厨锅自动化（IItemHandler capability，顶/侧面输入、底面输出）
+2. ~~**Phase 30**~~ ✅ DONE — 砧板自动化（IItemHandler 单槽 + 发射器切割）
+3. ~~**Phase 31**~~ ✅ DONE — 石磨 AE2 兼容性测试（代码无改动，测试通过）
+4. ~~**Phase 32**~~ ✅ DONE — 侦察机（RECON_ACTIVE 状态机、视角切换、WASD 操控、区块加载）
+5. ~~**Phase 33**~~ ✅ DONE — 空战系统（aircraft health/hurt、战斗机目标优先级扩展、击落无物品返还）
+6. ~~**Phase 34**~~ ✅ DONE — 编队跟随侦察机（FOLLOW 模式、飞机状态字幕、命中/击杀聊天通知）
+7. ~~**Phase 35**~~ ✅ DONE — 端到端验证（修复 FOLLOW 模式 ATTACKING 过渡 bug、移除重复 lang key）
 
 ---
 

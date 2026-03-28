@@ -275,9 +275,8 @@ public class AircraftEntity extends Entity {
     }
 
     private void tickCruising(Player owner) {
-        // Transition to ATTACKING if owner has locked targets (non-RECON, non-FOLLOW only)
+        // Transition to ATTACKING if owner has locked targets (non-RECON only; FOLLOW mode can also attack)
         if (aircraftType != AircraftInfo.AircraftType.RECON
-                && attackMode != FlightGroupData.AttackMode.FOLLOW
                 && !FireControlManager.getTargets(owner.getUUID()).isEmpty()) {
             setState(FlightState.ATTACKING);
             return;

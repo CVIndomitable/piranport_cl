@@ -148,7 +148,6 @@
   "key.piranport.fire_control_cancel": "Cancel Lock [I]",
   "key.piranport.open_flight_group": "Open Groups [U]",
   "key.piranport.highlight_entities": "Highlight Battlefield [Y]",
-  "key.categories.piranport": "Piran Port",
   "container.piranport.flight_groups": "Groups",
   "container.piranport.available_aircraft": "Available Aircraft:",
   "tooltip.piranport.aircraft_damage": "Damage: %s",

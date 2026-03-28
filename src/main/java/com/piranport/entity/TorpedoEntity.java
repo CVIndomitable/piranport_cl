@@ -5,12 +5,15 @@ import com.piranport.registry.ModItems;
 import com.piranport.registry.ModMobEffects;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.ThrowableItemProjectile;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.BlockHitResult;
@@ -107,8 +110,17 @@ public class TorpedoEntity extends ThrowableItemProjectile {
             if (target instanceof LivingEntity living) {
                 living.addEffect(new MobEffectInstance(ModMobEffects.FLOODING, 60, 0));
             }
+            notifyOwner(target);
             discard();
         }
+    }
+
+    private void notifyOwner(Entity target) {
+        Entity owner = getOwner();
+        if (!(owner instanceof Player player)) return;
+        Component weaponName = new ItemStack(getDefaultItem()).getHoverName();
+        String key = target.isAlive() ? "message.piranport.weapon_hit" : "message.piranport.weapon_kill";
+        player.sendSystemMessage(Component.translatable(key, weaponName, target.getDisplayName()));
     }
 
     @Override

@@ -19,7 +19,8 @@ public record FlightGroupData(List<FlightGroup> groups) {
 
     public enum AttackMode implements StringRepresentable {
         FOCUS("focus"),
-        SPREAD("spread");
+        SPREAD("spread"),
+        FOLLOW("follow");  // Phase 34 — ordinal 2; must remain last for StreamCodec ordinal safety
 
         private final String serializedName;
 

@@ -3,10 +3,13 @@ package com.piranport.entity;
 import com.piranport.registry.ModEntityTypes;
 import com.piranport.registry.ModItems;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.ThrowableItemProjectile;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
@@ -45,8 +48,17 @@ public class AerialBombEntity extends ThrowableItemProjectile {
             Entity target = result.getEntity();
             target.hurt(damageSources().thrown(this, getOwner()), damage);
             level().explode(this, getX(), getY(), getZ(), explosionPower, Level.ExplosionInteraction.TNT);
+            notifyOwner(target);
             discard();
         }
+    }
+
+    private void notifyOwner(Entity target) {
+        Entity owner = getOwner();
+        if (!(owner instanceof Player player)) return;
+        Component weaponName = new ItemStack(getDefaultItem()).getHoverName();
+        String key = target.isAlive() ? "message.piranport.weapon_hit" : "message.piranport.weapon_kill";
+        player.sendSystemMessage(Component.translatable(key, weaponName, target.getDisplayName()));
     }
 
     @Override

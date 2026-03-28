@@ -13,6 +13,7 @@ import com.piranport.registry.ModItems;
 import net.minecraft.core.NonNullList;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -84,6 +85,9 @@ public class AircraftEntity extends Entity {
 
     // Phase 33: aircraft health (runtime only — not saved to NBT; aircraft resets on re-launch)
     private int aircraftHealth = 20;
+
+    // Phase 34: set to true when defense mechanisms force a recall (stuck, timeout, distance)
+    private boolean isForcedReturn = false;
 
     private static final int MAX_AIRTIME_TICKS = 12000;
     private static final double MAX_DIST_FROM_OWNER = 48.0;
@@ -174,6 +178,7 @@ public class AircraftEntity extends Entity {
         // Defense: 10-min airtime limit
         if (airtimeTicks >= MAX_AIRTIME_TICKS) {
             if (state == FlightState.RETURNING) { recallAndRemove(); return; }
+            isForcedReturn = true;
             setState(FlightState.RETURNING);
             return;
         }
@@ -183,7 +188,7 @@ public class AircraftEntity extends Entity {
             double moved = position().distanceTo(stuckCheckPos);
             if (moved < STUCK_THRESHOLD) {
                 stuckTicks += STUCK_CHECK_INTERVAL;
-                if (stuckTicks >= STUCK_CHECK_INTERVAL) { recallAndRemove(); return; }
+                if (stuckTicks >= STUCK_CHECK_INTERVAL) { isForcedReturn = true; recallAndRemove(); return; }
             } else {
                 stuckTicks = 0;
             }
@@ -191,10 +196,14 @@ public class AircraftEntity extends Entity {
         }
 
         // Defense: distance limit
-        double maxDist = (state == FlightState.RECON_ACTIVE) ? MAX_RECON_DIST : MAX_DIST_FROM_OWNER;
+        // FOLLOW mode uses extended range (recon plane may be 200 blocks away)
+        double maxDist = (state == FlightState.RECON_ACTIVE
+                || attackMode == FlightGroupData.AttackMode.FOLLOW)
+                ? MAX_RECON_DIST : MAX_DIST_FROM_OWNER;
         if (distanceTo(owner) > maxDist) {
             if (state == FlightState.RECON_ACTIVE) {
                 // Recon exceeded 200-block range — end recon and return
+                isForcedReturn = true;
                 setState(FlightState.RETURNING);
             } else {
                 Vec3 near = owner.position().add(
@@ -202,6 +211,7 @@ public class AircraftEntity extends Entity {
                 setPos(near.x, near.y, near.z);
                 stuckTicks = 0;
                 stuckCheckPos = position();
+                isForcedReturn = true;
                 setState(FlightState.RETURNING);
             }
             return;
@@ -265,11 +275,32 @@ public class AircraftEntity extends Entity {
     }
 
     private void tickCruising(Player owner) {
-        // Transition to ATTACKING if owner has locked targets (non-RECON only)
+        // Transition to ATTACKING if owner has locked targets (non-RECON, non-FOLLOW only)
         if (aircraftType != AircraftInfo.AircraftType.RECON
+                && attackMode != FlightGroupData.AttackMode.FOLLOW
                 && !FireControlManager.getTargets(owner.getUUID()).isEmpty()) {
             setState(FlightState.ATTACKING);
             return;
+        }
+
+        // FOLLOW mode: orbit the owner's active recon aircraft, or fall back to player
+        if (attackMode == FlightGroupData.AttackMode.FOLLOW) {
+            AircraftEntity reconAircraft = findOwnerReconAircraft(owner);
+            if (reconAircraft != null) {
+                orbitAngle += panelSpeed * 0.015;
+                double tx = reconAircraft.getX() + Math.cos(orbitAngle) * ORBIT_RADIUS;
+                double ty = reconAircraft.getY();  // match recon altitude
+                double tz = reconAircraft.getZ() + Math.sin(orbitAngle) * ORBIT_RADIUS;
+                Vec3 toTarget = new Vec3(tx - getX(), ty - getY(), tz - getZ());
+                double dist = toTarget.length();
+                if (dist > 0.1) {
+                    setDeltaMovement(toTarget.normalize().scale(Math.min(panelSpeed * 0.35, dist)));
+                } else {
+                    setDeltaMovement(Vec3.ZERO);
+                }
+                return;
+            }
+            // No active recon — fall through to normal orbit around player
         }
 
         orbitAngle += panelSpeed * 0.015;
@@ -283,6 +314,17 @@ public class AircraftEntity extends Entity {
         } else {
             setDeltaMovement(Vec3.ZERO);
         }
+    }
+
+    /** Finds the owner's currently active RECON_ACTIVE aircraft, or null if none. */
+    @Nullable
+    private AircraftEntity findOwnerReconAircraft(Player owner) {
+        if (!(level() instanceof ServerLevel sl)) return null;
+        UUID reconEntityId = ReconManager.getReconEntity(owner.getUUID());
+        if (reconEntityId == null) return null;
+        Entity e = sl.getEntity(reconEntityId);
+        if (e instanceof AircraftEntity ae && ae.getFlightState() == FlightState.RECON_ACTIVE) return ae;
+        return null;
     }
 
     // ===== ATTACKING dispatch =====
@@ -557,6 +599,12 @@ public class AircraftEntity extends Entity {
                 if (getFlightState() == FlightState.RECON_ACTIVE) {
                     handleStateTransition(FlightState.RECON_ACTIVE, FlightState.RETURNING, owner);
                 }
+                // Action bar notification
+                Component aircraftName = buildReturnStack().getHoverName();
+                String msgKey = isForcedReturn
+                        ? "message.piranport.aircraft_lost"
+                        : "message.piranport.aircraft_returned";
+                owner.displayClientMessage(Component.translatable(msgKey, aircraftName), true);
                 returnItemToOwner(owner);
             } else {
                 // Owner offline — still clean up recon state and chunks
@@ -660,11 +708,16 @@ public class AircraftEntity extends Entity {
                 sl.sendParticles(ParticleTypes.EXPLOSION, getX(), getY(), getZ(),
                         1, 0.3, 0.3, 0.3, 0.0);
             }
-            // Clean up recon state if needed
+            // Clean up recon state if needed + notify owner
+            Player owner = getOwner();
             if (state == FlightState.RECON_ACTIVE && ownerUUID != null) {
-                Player owner = getOwner();
                 if (owner != null) handleStateTransition(FlightState.RECON_ACTIVE, FlightState.REMOVED, owner);
                 else { ReconManager.endRecon(ownerUUID); releaseAllForcedChunks(); }
+            }
+            // Action bar shot-down notification
+            if (owner != null) {
+                owner.displayClientMessage(Component.translatable(
+                        "message.piranport.aircraft_shot_down", buildReturnStack().getHoverName()), true);
             }
             discard();
         }

@@ -119,12 +119,24 @@ public class FlightGroupScreen extends AbstractContainerScreen<FlightGroupMenu> 
             // Attack mode button
             int modeX = x + MODE_X;
             int modeY = gy + AIRCRAFT_Y;
-            boolean isFocus = group.attackMode() == FlightGroupData.AttackMode.FOCUS;
-            int modeBg = isFocus ? 0xFF335599 : 0xFF994422;
+            FlightGroupData.AttackMode mode = group.attackMode();
+            int modeBg = switch (mode) {
+                case FOCUS   -> 0xFF335599;
+                case SPREAD  -> 0xFF994422;
+                case FOLLOW  -> 0xFF225533;
+            };
+            int modeFg = switch (mode) {
+                case FOCUS   -> 0xFF4466BB;
+                case SPREAD  -> 0xFFBB5533;
+                case FOLLOW  -> 0xFF338844;
+            };
+            String modeLabel = switch (mode) {
+                case FOCUS  -> "集火";
+                case SPREAD -> "分散";
+                case FOLLOW -> "跟随";
+            };
             gfx.fill(modeX, modeY, modeX + MODE_W, modeY + BTN_H, modeBg);
-            gfx.fill(modeX + 1, modeY + 1, modeX + MODE_W - 1, modeY + BTN_H - 1,
-                    isFocus ? 0xFF4466BB : 0xFFBB5533);
-            String modeLabel = isFocus ? "集火" : "分散";
+            gfx.fill(modeX + 1, modeY + 1, modeX + MODE_W - 1, modeY + BTN_H - 1, modeFg);
             gfx.drawString(this.font, modeLabel, modeX + 6, modeY + 4, 0xFFFFFF, false);
         }
 
@@ -276,10 +288,12 @@ public class FlightGroupScreen extends AbstractContainerScreen<FlightGroupMenu> 
         List<FlightGroupData.FlightGroup> groups = data.groups();
         if (groupIndex >= groups.size()) return;
         FlightGroupData.FlightGroup group = groups.get(groupIndex);
-        FlightGroupData.AttackMode newMode =
-                group.attackMode() == FlightGroupData.AttackMode.FOCUS
-                        ? FlightGroupData.AttackMode.SPREAD
-                        : FlightGroupData.AttackMode.FOCUS;
+        // Cycle: FOCUS → SPREAD → FOLLOW → FOCUS
+        FlightGroupData.AttackMode newMode = switch (group.attackMode()) {
+            case FOCUS   -> FlightGroupData.AttackMode.SPREAD;
+            case SPREAD  -> FlightGroupData.AttackMode.FOLLOW;
+            case FOLLOW  -> FlightGroupData.AttackMode.FOCUS;
+        };
         FlightGroupData newData = data.withGroup(groupIndex, group.withAttackMode(newMode));
         menu.setGroupData(newData);
         sendUpdate(newData);

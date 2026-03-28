@@ -16,6 +16,7 @@ import net.minecraft.world.item.crafting.SingleRecipeInput;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.neoforged.neoforge.items.IItemHandler;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
@@ -23,6 +24,36 @@ import java.util.Optional;
 public class CuttingBoardBlockEntity extends BlockEntity {
     private ItemStack storedItem = ItemStack.EMPTY;
     private int progress = 0;
+
+    /**
+     * Phase 30: Single-slot IItemHandler for hopper/pipe automation.
+     * insert  — accepted only when board is empty (storedItem.isEmpty())
+     * extract — always EMPTY (output drops into the world, not extractable via capability)
+     */
+    private final IItemHandler itemHandler = new IItemHandler() {
+        @Override public int getSlots() { return 1; }
+
+        @Override public ItemStack getStackInSlot(int slot) { return storedItem; }
+
+        @Override
+        public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
+            if (stack.isEmpty() || !storedItem.isEmpty()) return stack;
+            if (!simulate) {
+                storedItem = stack.copyWithCount(1);
+                setChanged();
+                if (level != null)
+                    level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+            }
+            // Return remainder (all but the one we took)
+            return stack.getCount() > 1 ? stack.copyWithCount(stack.getCount() - 1) : ItemStack.EMPTY;
+        }
+
+        @Override public ItemStack extractItem(int slot, int amount, boolean simulate) { return ItemStack.EMPTY; }
+        @Override public int getSlotLimit(int slot) { return 1; }
+        @Override public boolean isItemValid(int slot, ItemStack stack) { return storedItem.isEmpty(); }
+    };
+
+    public IItemHandler getItemHandler() { return itemHandler; }
 
     public CuttingBoardBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntityTypes.CUTTING_BOARD.get(), pos, state);

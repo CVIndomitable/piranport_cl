@@ -15,6 +15,7 @@ import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.DispenserBlock;
 import net.minecraft.world.level.block.Mirror;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.Rotation;
@@ -112,6 +113,26 @@ public class CuttingBoardBlock extends BaseEntityBlock {
             return InteractionResult.sidedSuccess(level.isClientSide);
         }
         return InteractionResult.PASS;
+    }
+
+    /**
+     * Phase 30: Dispenser automation — when an adjacent dispenser's TRIGGERED state flips to
+     * true (i.e., it fires), execute one cut on this cutting board.
+     * Plan A: any adjacent dispenser activation cuts, regardless of facing direction.
+     */
+    @Override
+    protected void neighborChanged(BlockState state, Level level, BlockPos pos,
+                                   Block neighborBlock, BlockPos neighborPos, boolean movedByPiston) {
+        super.neighborChanged(state, level, pos, neighborBlock, neighborPos, movedByPiston);
+        if (!level.isClientSide && neighborBlock instanceof DispenserBlock) {
+            BlockState neighborState = level.getBlockState(neighborPos);
+            if (neighborState.hasProperty(BlockStateProperties.TRIGGERED)
+                    && neighborState.getValue(BlockStateProperties.TRIGGERED)) {
+                if (level.getBlockEntity(pos) instanceof CuttingBoardBlockEntity board) {
+                    board.cut(level);
+                }
+            }
+        }
     }
 
     @Override

@@ -1,6 +1,7 @@
 package com.piranport;
 
 import com.piranport.block.entity.CookingPotBlockEntity;
+import com.piranport.block.entity.CuttingBoardBlockEntity;
 import com.piranport.block.entity.StoneMillBlockEntity;
 import com.piranport.entity.FloatingTargetEntity;
 import com.piranport.registry.ModBlockEntityTypes;
@@ -25,6 +26,12 @@ public class CommonEvents {
                 Capabilities.ItemHandler.BLOCK,
                 ModBlockEntityTypes.COOKING_POT.get(),
                 CookingPotBlockEntity::getItemHandler
+        );
+        // Phase 30: single-slot handler for hopper input; extract is always EMPTY (output drops to world)
+        event.registerBlockEntity(
+                Capabilities.ItemHandler.BLOCK,
+                ModBlockEntityTypes.CUTTING_BOARD.get(),
+                (be, direction) -> be.getItemHandler()
         );
     }
 

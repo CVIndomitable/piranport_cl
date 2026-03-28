@@ -47,6 +47,36 @@ public class CookingPotBlockEntity extends BlockEntity implements MenuProvider {
         }
     };
 
+    /**
+     * Phase 29: Input-only view of slots 0-8 (top/side faces).
+     * External handlers may insert but not extract from input slots.
+     */
+    private final IItemHandler inputHandler = new IItemHandler() {
+        @Override public int getSlots() { return INPUT_SLOTS; }
+        @Override public ItemStack getStackInSlot(int slot) { return itemHandler.getStackInSlot(slot); }
+        @Override public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
+            return itemHandler.insertItem(slot, stack, simulate);
+        }
+        @Override public ItemStack extractItem(int slot, int amount, boolean simulate) { return ItemStack.EMPTY; }
+        @Override public int getSlotLimit(int slot) { return itemHandler.getSlotLimit(slot); }
+        @Override public boolean isItemValid(int slot, ItemStack stack) { return true; }
+    };
+
+    /**
+     * Phase 29: Output-only view of slot 9 (bottom face).
+     * External handlers may extract but not insert into the output slot.
+     */
+    private final IItemHandler outputHandler = new IItemHandler() {
+        @Override public int getSlots() { return 1; }
+        @Override public ItemStack getStackInSlot(int slot) { return itemHandler.getStackInSlot(OUTPUT_SLOT); }
+        @Override public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) { return stack; }
+        @Override public ItemStack extractItem(int slot, int amount, boolean simulate) {
+            return itemHandler.extractItem(OUTPUT_SLOT, amount, simulate);
+        }
+        @Override public int getSlotLimit(int slot) { return itemHandler.getSlotLimit(OUTPUT_SLOT); }
+        @Override public boolean isItemValid(int slot, ItemStack stack) { return false; }
+    };
+
     int cookingProgress = 0;
     int cookingTotalTime = 0;
     private CookingPotRecipe currentRecipe = null;
@@ -79,8 +109,10 @@ public class CookingPotBlockEntity extends BlockEntity implements MenuProvider {
 
     public ItemStackHandler getItemHandler() { return itemHandler; }
 
+    /** Phase 29: Direction-aware handler — DOWN = output-only, others = input-only. */
     public IItemHandler getItemHandler(@Nullable Direction side) {
-        return itemHandler;
+        if (side == Direction.DOWN) return outputHandler;
+        return inputHandler;
     }
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, CookingPotBlockEntity be) {

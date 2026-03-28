@@ -5,6 +5,7 @@ import com.piranport.item.ArmorPlateItem;
 import com.piranport.item.ShipCoreItem;
 import com.piranport.registry.ModDataComponents;
 import com.piranport.registry.ModItems;
+import com.piranport.registry.ModMobEffects;
 import net.minecraft.core.NonNullList;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -121,6 +122,19 @@ public class TransformationManager {
         AttributeInstance speedAttr = player.getAttribute(Attributes.MOVEMENT_SPEED);
         if (armorAttr != null) armorAttr.removeModifier(ARMOR_MODIFIER_ID);
         if (speedAttr != null) speedAttr.removeModifier(SPEED_MODIFIER_ID);
+    }
+
+    /**
+     * Phase 26: Apply RELOAD_BOOST effect to a base cooldown duration.
+     *   Level I  (amplifier 0) → cooldown ÷ 2  (2× reload speed)
+     *   Level II (amplifier 1) → cooldown ÷ 3  (3× reload speed)
+     * Only effective while the player is transformed (checked at call sites in ShipCoreItem).
+     */
+    public static int boostedCooldown(Player player, int baseTicks) {
+        var effect = player.getEffect(ModMobEffects.RELOAD_BOOST);
+        if (effect == null) return baseTicks;
+        int divisor = effect.getAmplifier() + 2; // I=÷2, II=÷3
+        return Math.max(1, baseTicks / divisor);
     }
 
     public static int getItemLoad(ItemStack stack) {

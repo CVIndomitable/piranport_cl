@@ -1,0 +1,9 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {"item": "minecraft:glass_bottle"},
+    {"item": "piranport:pineapple"}
+  ],
+  "result": {"id": "piranport:pineapple_juice", "count": 3}
+}

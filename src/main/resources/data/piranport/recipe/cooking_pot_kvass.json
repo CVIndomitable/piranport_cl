@@ -1,0 +1,10 @@
+{
+  "type": "piranport:cooking_pot",
+  "ingredients": [
+    {"item": "minecraft:bread"},
+    {"item": "piranport:yeast"},
+    {"item": "minecraft:water_bucket"}
+  ],
+  "result": {"id": "piranport:kvass", "count": 1},
+  "cookingTime": 200
+}

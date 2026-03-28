@@ -5,6 +5,7 @@ import com.piranport.component.AircraftInfo;
 import com.piranport.component.PlaceableInfo;
 import com.piranport.item.AircraftItem;
 import com.piranport.item.ArmorPlateItem;
+import com.piranport.item.BottleFoodItem;
 import com.piranport.item.ModFoodItem;
 import com.piranport.item.ShipCoreItem;
 import com.piranport.item.TorpedoItem;
@@ -317,6 +318,53 @@ public class ModItems {
     public static final DeferredItem<com.piranport.item.GuidebookItem> GUIDEBOOK =
             ITEMS.register("guidebook",
                     () -> new com.piranport.item.GuidebookItem(new Item.Properties().stacksTo(1)));
+
+    // ===== Phase 27: Pineapple chain =====
+    public static final DeferredItem<net.minecraft.world.item.ItemNameBlockItem> PINEAPPLE_SEED =
+            ITEMS.register("pineapple_seed", () -> new net.minecraft.world.item.ItemNameBlockItem(
+                    ModBlocks.PINEAPPLE_CROP.get(), new Item.Properties()));
+    public static final DeferredItem<Item> PINEAPPLE =
+            ITEMS.register("pineapple",
+                    () -> new Item(new Item.Properties().food(fp(3, 3.8f).build())));
+    public static final DeferredItem<Item> PINEAPPLE_JUICE =
+            ITEMS.register("pineapple_juice",
+                    () -> new Item(new Item.Properties().food(fp(2, 2.5f).build())));
+
+    // ===== Phase 27: Buff foods =====
+
+    /** 龙田烧 — 装填加速 I × 180s; plate × 2 */
+    public static final DeferredItem<ModFoodItem> CHICKEN_TATSUTA = ITEMS.register("chicken_tatsuta",
+            () -> new ModFoodItem(new Item.Properties()
+                    .food(fp(6, 7.5f)
+                            .effect(new MobEffectInstance(ModMobEffects.RELOAD_BOOST, 3600, 0), 1.0f)
+                            .build())
+                    .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 2))));
+
+    /** 鱼雷果汁 — 饥饿 II 180s + 装填加速 II 300s + 抗火 I 300s; 食用后返还玻璃瓶 */
+    public static final DeferredItem<BottleFoodItem> TORPEDO_JUICE = ITEMS.register("torpedo_juice",
+            () -> new BottleFoodItem(new Item.Properties()
+                    .food(fp(3, 3.8f)
+                            .effect(new MobEffectInstance(MobEffects.HUNGER, 3600, 1), 1.0f)
+                            .effect(new MobEffectInstance(ModMobEffects.RELOAD_BOOST, 6000, 1), 1.0f)
+                            .effect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 6000, 0), 1.0f)
+                            .build())));
+
+    /** 炸鱼天妇罗 — 高速规避 I × 180s; plate × 2 */
+    public static final DeferredItem<ModFoodItem> TEMPURA = ITEMS.register("tempura",
+            () -> new ModFoodItem(new Item.Properties()
+                    .food(fp(6, 7.5f)
+                            .effect(new MobEffectInstance(ModMobEffects.EVASION, 3600, 0), 1.0f)
+                            .build())
+                    .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 2))));
+
+    /** 格瓦斯 — 缓慢 I + 缓降 I + 高速规避 II × 120s; 食用后返还玻璃瓶 */
+    public static final DeferredItem<BottleFoodItem> KVASS = ITEMS.register("kvass",
+            () -> new BottleFoodItem(new Item.Properties()
+                    .food(fp(4, 5.0f)
+                            .effect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 2400, 0), 1.0f)
+                            .effect(new MobEffectInstance(MobEffects.SLOW_FALLING, 2400, 0), 1.0f)
+                            .effect(new MobEffectInstance(ModMobEffects.EVASION, 2400, 1), 1.0f)
+                            .build())));
 
     // ===== Torpedo Launchers =====
     public static final DeferredItem<TorpedoLauncherItem> TWIN_TORPEDO_LAUNCHER =

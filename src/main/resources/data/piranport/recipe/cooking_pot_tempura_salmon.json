@@ -1,0 +1,11 @@
+{
+  "type": "piranport:cooking_pot",
+  "ingredients": [
+    {"item": "minecraft:salmon"},
+    {"item": "piranport:flour"},
+    {"item": "minecraft:water_bucket"},
+    {"item": "piranport:edible_oil"}
+  ],
+  "result": {"id": "piranport:tempura", "count": 1},
+  "cookingTime": 200
+}

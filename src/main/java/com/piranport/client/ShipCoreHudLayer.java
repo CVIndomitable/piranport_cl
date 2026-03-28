@@ -2,6 +2,7 @@ package com.piranport.client;
 
 import com.piranport.PiranPort;
 import com.piranport.combat.TransformationManager;
+import com.piranport.config.ModClientConfig;
 import com.piranport.item.ShipCoreItem;
 import com.piranport.item.TorpedoLauncherItem;
 import com.piranport.registry.ModDataComponents;
@@ -22,6 +23,8 @@ public class ShipCoreHudLayer {
 
     @SubscribeEvent
     public static void onRenderGui(RenderGuiLayerEvent.Post event) {
+        // Legacy HUD bar — hidden by default, replaced by ReloadBarDecorator on the item icon.
+        if (!ModClientConfig.SHOW_LEGACY_RELOAD_HUD.get()) return;
         if (!event.getName().equals(VanillaGuiLayers.HOTBAR)) return;
 
         Minecraft mc = Minecraft.getInstance();

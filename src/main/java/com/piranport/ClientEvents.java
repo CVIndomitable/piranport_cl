@@ -3,12 +3,14 @@ package com.piranport;
 import com.piranport.client.AircraftRenderer;
 import com.piranport.client.CuttingBoardRenderer;
 import com.piranport.client.PlaceableFoodRenderer;
+import com.piranport.client.ReloadBarDecorator;
 import com.piranport.menu.CookingPotScreen;
 import com.piranport.menu.FlightGroupScreen;
 import com.piranport.menu.ShipCoreScreen;
 import com.piranport.menu.StoneMillScreen;
 import com.piranport.registry.ModBlockEntityTypes;
 import com.piranport.registry.ModEntityTypes;
+import com.piranport.registry.ModItems;
 import com.piranport.registry.ModKeyMappings;
 import com.piranport.registry.ModMenuTypes;
 import net.minecraft.client.renderer.entity.ThrownItemRenderer;
@@ -17,6 +19,7 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
+import net.neoforged.neoforge.client.event.RegisterItemDecorationsEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import org.lwjgl.glfw.GLFW;
@@ -43,6 +46,14 @@ public class ClientEvents {
         event.register(ModKeyMappings.FIRE_CONTROL_CANCEL);
         event.register(ModKeyMappings.OPEN_FLIGHT_GROUP);
         event.register(ModKeyMappings.HIGHLIGHT_ENTITIES);
+    }
+
+    @SubscribeEvent
+    public static void registerItemDecorations(RegisterItemDecorationsEvent event) {
+        ReloadBarDecorator decorator = new ReloadBarDecorator();
+        event.register(ModItems.SMALL_SHIP_CORE.get(), decorator);
+        event.register(ModItems.MEDIUM_SHIP_CORE.get(), decorator);
+        event.register(ModItems.LARGE_SHIP_CORE.get(), decorator);
     }
 
     @SubscribeEvent

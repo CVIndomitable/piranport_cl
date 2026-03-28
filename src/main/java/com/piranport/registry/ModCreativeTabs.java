@@ -74,6 +74,7 @@ public class ModCreativeTabs {
                         output.accept(ModItems.RICE_SEEDS.get());
                         output.accept(ModItems.LETTUCE_SEEDS.get());
                         output.accept(ModItems.GARLIC_SEEDS.get());
+                        output.accept(ModItems.PINEAPPLE_SEED.get());   // Phase 27
                         // Crop Produce
                         output.accept(ModItems.TOMATO.get());
                         output.accept(ModItems.SOYBEAN.get());
@@ -82,6 +83,8 @@ public class ModCreativeTabs {
                         output.accept(ModItems.RICE.get());
                         output.accept(ModItems.LETTUCE.get());
                         output.accept(ModItems.GARLIC.get());
+                        output.accept(ModItems.PINEAPPLE.get());        // Phase 27
+                        output.accept(ModItems.PINEAPPLE_JUICE.get());  // Phase 27
                         // Food Ingredients
                         output.accept(ModItems.FLOUR.get());
                         output.accept(ModItems.RICE_FLOUR.get());
@@ -132,5 +135,10 @@ public class ModCreativeTabs {
                         output.accept(ModItems.COOKED_RICE.get());
                         output.accept(ModItems.BEET_BLOSSOM.get());
                         output.accept(ModItems.MISO_SOUP.get());
+                        // Phase 27: Buff foods
+                        output.accept(ModItems.CHICKEN_TATSUTA.get());
+                        output.accept(ModItems.TORPEDO_JUICE.get());
+                        output.accept(ModItems.TEMPURA.get());
+                        output.accept(ModItems.KVASS.get());
                     }).build());
 }

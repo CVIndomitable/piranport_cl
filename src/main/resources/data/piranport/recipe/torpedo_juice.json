@@ -1,0 +1,9 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {"item": "piranport:torpedo_533mm"},
+    {"item": "piranport:pineapple_juice"}
+  ],
+  "result": {"id": "piranport:torpedo_juice", "count": 1}
+}

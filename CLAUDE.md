@@ -25,7 +25,7 @@
 | v0.0.2-alpha | Torpedo | ✅ DONE | 鱼雷系统、舰装栏GUI完善、负重平衡、装填机制 |
 | v0.0.3-alpha | Kitchen | ✅ DONE | 食物烹饪 + Buff系统、作物种植、加工站 |
 | v0.0.4-alpha | Aviation | ✅ DONE | 航空系统（4种飞机+编组GUI+火控+AI）+ Patchouli手册 |
-| v0.0.5-alpha | Deco | ⏳ PLANNED | 资源扩充、装饰方块、功能方块、灶、剩余食物批量注册 |
+| v0.0.5-alpha | Combat+ | 🔨 IN PROGRESS | 装填进度Decorator、装填加速/高速规避Buff、Buff食物注册 |
 | v0.0.6-alpha | Skin | ⏳ PLANNED | 皮肤/模型渲染系统 |
 | v0.0.7-alpha | Aviation+ | ⏳ PLANNED | 侦察机视角切换、空战、编队跟随 |
 
@@ -904,6 +904,17 @@ neo_version=21.1.220
 5. ~~**Phase 22**~~ ✅ DONE — 燃料系统 + FlammableEffect + 放飞弹药消耗
 6. ~~**Phase 23**~~ ✅ DONE — Patchouli 教程手册（GuidebookItem + 5章节JSON + zh_cn/en_us）
 7. ~~**Phase 24**~~ ✅ DONE — 端到端验证（代码审查 + coreInventorySlot返航修复）
+
+**不要跳步。不要提前做后续 Phase 的内容。**
+
+---
+
+## Phase 实施顺序 (v0.0.5)
+
+1. ~~**Phase 25**~~ ✅ DONE — 装填进度物品装饰器 (`ReloadBarDecorator`) + 客户端 Config
+2. ~~**Phase 26**~~ ✅ DONE — 自定义战斗 Buff（`ReloadBoostEffect` / `EvasionEffect` + `EvasionHandler` + `TransformationManager.boostedCooldown`）
+3. ~~**Phase 27**~~ ✅ DONE — Buff 食物 + 菠萝作物（BottleFoodItem、4种食物、8条配方JSON、菠萝链路）
+4. **Phase 28** — 端到端验证
 
 **不要跳步。不要提前做后续 Phase 的内容。**
 

@@ -61,6 +61,9 @@ public class ModBlocks {
             BLOCKS.register("lettuce_crop", () -> new ThreeStageCropBlock(cropProps(), () -> ModItems.LETTUCE_SEEDS.get()));
     public static final DeferredBlock<ThreeStageCropBlock> GARLIC_CROP =
             BLOCKS.register("garlic_crop", () -> new ThreeStageCropBlock(cropProps(), () -> ModItems.GARLIC_SEEDS.get()));
+    // Phase 27: Pineapple crop
+    public static final DeferredBlock<FourStageCropBlock> PINEAPPLE_CROP =
+            BLOCKS.register("pineapple_crop", () -> new FourStageCropBlock(cropProps(), () -> ModItems.PINEAPPLE_SEED.get()));
 
     // ===== Functional Blocks (Phase 12) =====
     public static final DeferredBlock<StoneMillBlock> STONE_MILL =

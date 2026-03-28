@@ -198,8 +198,8 @@ public class ShipCoreItem extends Item {
                 0.0f, velocity, inaccuracy);
         level.addFreshEntity(projectile);
 
-        // Cooldown
-        int cooldownTicks = getGunCooldown(weapon);
+        // Cooldown (reduced by ReloadBoostEffect if active)
+        int cooldownTicks = TransformationManager.boostedCooldown(player, getGunCooldown(weapon));
         player.getCooldowns().addCooldown(this, cooldownTicks);
 
         // Sound
@@ -337,8 +337,9 @@ public class ShipCoreItem extends Item {
         coreStack.set(ModDataComponents.SHIP_CORE_CONTENTS.get(), ItemContainerContents.fromItems(items));
         TransformationManager.setWeaponIndex(coreStack, weaponIndex);
 
-        // Cooldown and launch sound
-        player.getCooldowns().addCooldown(launcher, cooldown);
+        // Cooldown and launch sound (reduced by ReloadBoostEffect if active)
+        int boostedCooldown = TransformationManager.boostedCooldown(player, cooldown);
+        player.getCooldowns().addCooldown(launcher, boostedCooldown);
         level.playSound(null, player.getX(), player.getY(), player.getZ(),
                 SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 0.4f, 0.4f);
     }
@@ -408,7 +409,7 @@ public class ShipCoreItem extends Item {
         coreStack.set(ModDataComponents.SHIP_CORE_CONTENTS.get(), ItemContainerContents.fromItems(items));
         TransformationManager.setWeaponIndex(coreStack, weaponIndex);
 
-        player.getCooldowns().addCooldown(this, 20);
+        player.getCooldowns().addCooldown(this, TransformationManager.boostedCooldown(player, 20));
         level.playSound(null, player.getX(), player.getY(), player.getZ(),
                 SoundEvents.FIRECHARGE_USE, SoundSource.PLAYERS, 0.6f, 1.3f);
         player.displayClientMessage(

@@ -57,6 +57,7 @@ public class ModCreativeTabs {
                         output.accept(ModItems.DIVE_BOMBER_SQUADRON.get());
                         output.accept(ModItems.TORPEDO_BOMBER_SQUADRON.get());
                         output.accept(ModItems.LEVEL_BOMBER_SQUADRON.get());
+                        output.accept(ModItems.RECON_SQUADRON.get());          // Phase 32
                         // Aviation Ammo (Phase 18)
                         output.accept(ModItems.AVIATION_FUEL.get());
                         output.accept(ModItems.AERIAL_BOMB.get());

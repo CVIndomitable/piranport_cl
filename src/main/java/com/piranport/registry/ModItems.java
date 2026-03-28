@@ -293,6 +293,13 @@ public class ModItems {
                                     new AircraftInfo(AircraftInfo.AircraftType.LEVEL_BOMBER,
                                             1200, 8, 0, 36f, 1.0f, 24))));
 
+    public static final DeferredItem<AircraftItem> RECON_SQUADRON =
+            ITEMS.register("recon_squadron",
+                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
+                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
+                                    new AircraftInfo(AircraftInfo.AircraftType.RECON,
+                                            1500, 0, 0, 0f, 2.0f, 8))));
+
     // ===== Aviation Ammo (Phase 18) =====
     public static final DeferredItem<Item> AVIATION_FUEL =
             ITEMS.registerSimpleItem("aviation_fuel");

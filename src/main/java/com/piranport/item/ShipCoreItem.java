@@ -372,11 +372,16 @@ public class ShipCoreItem extends Item {
             }
         }
 
-        // Require ammo assignment — refuse launch if not configured
+        // RECON auto-uses aviation_fuel without requiring manual ammo configuration
         if (ammoTypeId.isEmpty()) {
-            player.displayClientMessage(
-                    Component.translatable("message.piranport.no_ammo"), true);
-            return;
+            AircraftInfo aircraftInfo = aircraftStack.get(ModDataComponents.AIRCRAFT_INFO.get());
+            if (aircraftInfo != null && aircraftInfo.aircraftType() == AircraftInfo.AircraftType.RECON) {
+                ammoTypeId = BuiltInRegistries.ITEM.getKey(ModItems.AVIATION_FUEL.get()).toString();
+            } else {
+                player.displayClientMessage(
+                        Component.translatable("message.piranport.no_ammo"), true);
+                return;
+            }
         }
 
         // Deduct 1 of the assigned ammo type from ammo slots

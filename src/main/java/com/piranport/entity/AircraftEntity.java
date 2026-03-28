@@ -1,9 +1,12 @@
 package com.piranport.entity;
 
 import com.piranport.aviation.FireControlManager;
+import com.piranport.aviation.ReconManager;
 import com.piranport.component.AircraftInfo;
 import com.piranport.component.FlightGroupData;
 import com.piranport.item.ShipCoreItem;
+import com.piranport.network.ReconEndPayload;
+import com.piranport.network.ReconStartPayload;
 import com.piranport.registry.ModDataComponents;
 import com.piranport.registry.ModEntityTypes;
 import com.piranport.registry.ModItems;
@@ -16,8 +19,11 @@ import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.player.Player;
@@ -26,6 +32,7 @@ import net.minecraft.world.item.component.ItemContainerContents;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Comparator;
@@ -36,7 +43,8 @@ import java.util.UUID;
 public class AircraftEntity extends Entity {
 
     public enum FlightState {
-        LAUNCHING, CRUISING, ATTACKING, RETURNING, REMOVED
+        LAUNCHING, CRUISING, ATTACKING, RETURNING, REMOVED,
+        RECON_ACTIVE  // Phase 32 — ordinal 5, must remain last
     }
 
     private static final EntityDataAccessor<Integer> STATE =
@@ -65,8 +73,15 @@ public class AircraftEntity extends Entity {
     private int attackCooldown = 0;
     private boolean hasFired = false;
 
+    // Phase 32 runtime fields
+    private FlightState lastKnownState = FlightState.LAUNCHING;
+    private int lastForcedChunkX = Integer.MIN_VALUE;
+    private int lastForcedChunkZ = Integer.MIN_VALUE;
+    private boolean appliedSlowness = false;
+
     private static final int MAX_AIRTIME_TICKS = 12000;
     private static final double MAX_DIST_FROM_OWNER = 48.0;
+    private static final double MAX_RECON_DIST = 200.0;  // Phase 32
     private static final int STUCK_CHECK_INTERVAL = 60;
     private static final double STUCK_THRESHOLD = 0.1;
     private static final int LAUNCH_DURATION = 30;
@@ -129,6 +144,23 @@ public class AircraftEntity extends Entity {
         FlightState state = getFlightState();
         if (state == FlightState.REMOVED) { discard(); return; }
 
+        Player owner = getOwner();
+        if (owner == null) {
+            // Clean up recon state if owner goes offline
+            if (ownerUUID != null && state == FlightState.RECON_ACTIVE) {
+                ReconManager.endRecon(ownerUUID);
+                releaseAllForcedChunks();
+            }
+            discard();
+            return;
+        }
+
+        // Detect state transitions and fire enter/exit hooks
+        if (state != lastKnownState) {
+            handleStateTransition(lastKnownState, state, owner);
+            lastKnownState = state;
+        }
+
         airtimeTicks++;
         stateTicks++;
 
@@ -136,10 +168,11 @@ public class AircraftEntity extends Entity {
         if (airtimeTicks >= MAX_AIRTIME_TICKS) {
             if (state == FlightState.RETURNING) { recallAndRemove(); return; }
             setState(FlightState.RETURNING);
+            return;
         }
 
-        // Defense: stuck detection (every 60 ticks)
-        if (stateTicks % STUCK_CHECK_INTERVAL == 0) {
+        // Defense: stuck detection (disabled in RECON_ACTIVE — player may hover stationary)
+        if (state != FlightState.RECON_ACTIVE && stateTicks % STUCK_CHECK_INTERVAL == 0) {
             double moved = position().distanceTo(stuckCheckPos);
             if (moved < STUCK_THRESHOLD) {
                 stuckTicks += STUCK_CHECK_INTERVAL;
@@ -150,26 +183,31 @@ public class AircraftEntity extends Entity {
             stuckCheckPos = position();
         }
 
-        Player owner = getOwner();
-        if (owner == null) { discard(); return; }
-
         // Defense: distance limit
-        if (distanceTo(owner) > MAX_DIST_FROM_OWNER) {
-            Vec3 near = owner.position().add(
-                    (random.nextDouble() - 0.5) * 4, 3, (random.nextDouble() - 0.5) * 4);
-            setPos(near.x, near.y, near.z);
-            stuckTicks = 0;
-            stuckCheckPos = position();
-            setState(FlightState.RETURNING);
+        double maxDist = (state == FlightState.RECON_ACTIVE) ? MAX_RECON_DIST : MAX_DIST_FROM_OWNER;
+        if (distanceTo(owner) > maxDist) {
+            if (state == FlightState.RECON_ACTIVE) {
+                // Recon exceeded 200-block range — end recon and return
+                setState(FlightState.RETURNING);
+            } else {
+                Vec3 near = owner.position().add(
+                        (random.nextDouble() - 0.5) * 4, 3, (random.nextDouble() - 0.5) * 4);
+                setPos(near.x, near.y, near.z);
+                stuckTicks = 0;
+                stuckCheckPos = position();
+                setState(FlightState.RETURNING);
+            }
+            return;
         }
 
         if (attackCooldown > 0) attackCooldown--;
 
         switch (state) {
-            case LAUNCHING  -> tickLaunching(owner);
-            case CRUISING   -> tickCruising(owner);
-            case ATTACKING  -> tickAttacking(owner);
-            case RETURNING  -> tickReturning(owner);
+            case LAUNCHING      -> tickLaunching(owner);
+            case CRUISING       -> tickCruising(owner);
+            case ATTACKING      -> tickAttacking(owner);
+            case RETURNING      -> tickReturning(owner);
+            case RECON_ACTIVE   -> tickReconActive(owner);
         }
 
         // Apply movement
@@ -178,19 +216,51 @@ public class AircraftEntity extends Entity {
                getZ() + getDeltaMovement().z);
     }
 
+    // ===== State transition hooks =====
+
+    private void handleStateTransition(FlightState from, FlightState to, Player owner) {
+        if (to == FlightState.RECON_ACTIVE) {
+            ReconManager.startRecon(owner.getUUID(), getUUID());
+            // Lock player body with max slowness
+            owner.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN,
+                    Integer.MAX_VALUE, 9, false, false));
+            appliedSlowness = true;
+            // Notify client to switch camera
+            if (owner instanceof ServerPlayer sp) {
+                PacketDistributor.sendToPlayer(sp, new ReconStartPayload(getId()));
+            }
+        } else if (from == FlightState.RECON_ACTIVE) {
+            ReconManager.endRecon(owner.getUUID());
+            if (appliedSlowness) {
+                owner.removeEffect(MobEffects.MOVEMENT_SLOWDOWN);
+                appliedSlowness = false;
+            }
+            releaseAllForcedChunks();
+            // Notify client to restore camera
+            if (owner instanceof ServerPlayer sp) {
+                PacketDistributor.sendToPlayer(sp, new ReconEndPayload());
+            }
+        }
+    }
+
+    // ===== Tick methods =====
+
     private void tickLaunching(Player owner) {
         double targetY = owner.getY() + CRUISE_ALTITUDE;
         double dy = targetY - getY();
         double rise = Math.min(panelSpeed * 0.3, Math.abs(dy));
         setDeltaMovement(getDeltaMovement().x * 0.5, dy > 0 ? rise : -rise, getDeltaMovement().z * 0.5);
         if (stateTicks >= LAUNCH_DURATION || Math.abs(dy) < 1.5) {
-            setState(FlightState.CRUISING);
+            // RECON goes directly to RECON_ACTIVE; others go to CRUISING
+            setState(aircraftType == AircraftInfo.AircraftType.RECON
+                    ? FlightState.RECON_ACTIVE : FlightState.CRUISING);
         }
     }
 
     private void tickCruising(Player owner) {
-        // Transition to ATTACKING if owner has locked targets
-        if (!FireControlManager.getTargets(owner.getUUID()).isEmpty()) {
+        // Transition to ATTACKING if owner has locked targets (non-RECON only)
+        if (aircraftType != AircraftInfo.AircraftType.RECON
+                && !FireControlManager.getTargets(owner.getUUID()).isEmpty()) {
             setState(FlightState.ATTACKING);
             return;
         }
@@ -221,6 +291,7 @@ public class AircraftEntity extends Entity {
             case DIVE_BOMBER    -> tickDiveBomberAttack(owner, target);
             case TORPEDO_BOMBER -> tickTorpedoBomberAttack(owner, target);
             case LEVEL_BOMBER   -> tickLevelBomberAttack(owner, target);
+            case RECON          -> setState(FlightState.RETURNING);  // RECON doesn't attack
         }
     }
 
@@ -362,6 +433,64 @@ public class AircraftEntity extends Entity {
     }
 
     /**
+     * RECON_ACTIVE: read movement input from ReconManager and apply to entity.
+     * Maintains chunk forcing around current position.
+     */
+    private void tickReconActive(Player owner) {
+        // Maintain forced chunks around current position
+        int cx = getBlockX() >> 4;
+        int cz = getBlockZ() >> 4;
+        if (cx != lastForcedChunkX || cz != lastForcedChunkZ) {
+            if (lastForcedChunkX != Integer.MIN_VALUE) {
+                releaseChunks(lastForcedChunkX, lastForcedChunkZ);
+            }
+            forceChunks(cx, cz);
+            lastForcedChunkX = cx;
+            lastForcedChunkZ = cz;
+        }
+
+        // Apply pending movement input from client
+        float[] input = ReconManager.consumeInput(owner.getUUID());
+        if (input != null && (input[0] != 0 || input[1] != 0 || input[2] != 0)) {
+            double speed = panelSpeed * 0.5;
+            setDeltaMovement(input[0] * speed, input[1] * speed, input[2] * speed);
+        } else {
+            // No input — decelerate smoothly
+            setDeltaMovement(getDeltaMovement().scale(0.7));
+        }
+    }
+
+    // ===== Chunk forcing (Phase 32) =====
+
+    private void forceChunks(int cx, int cz) {
+        if (!(level() instanceof ServerLevel sl)) return;
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                sl.setChunkForced(cx + dx, cz + dz, true);
+            }
+        }
+    }
+
+    private void releaseChunks(int cx, int cz) {
+        if (!(level() instanceof ServerLevel sl)) return;
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                sl.setChunkForced(cx + dx, cz + dz, false);
+            }
+        }
+    }
+
+    private void releaseAllForcedChunks() {
+        if (lastForcedChunkX != Integer.MIN_VALUE) {
+            releaseChunks(lastForcedChunkX, lastForcedChunkZ);
+            lastForcedChunkX = Integer.MIN_VALUE;
+            lastForcedChunkZ = Integer.MIN_VALUE;
+        }
+    }
+
+    // ===== Target resolution =====
+
+    /**
      * Resolves the attack target from the fire control lock list.
      */
     @Nullable
@@ -403,7 +532,17 @@ public class AircraftEntity extends Entity {
     public void recallAndRemove() {
         if (!level().isClientSide() && ownerUUID != null && level() instanceof ServerLevel sl) {
             Player owner = sl.getServer().getPlayerList().getPlayer(ownerUUID);
-            if (owner != null) returnItemToOwner(owner);
+            if (owner != null) {
+                // Clean up recon if active
+                if (getFlightState() == FlightState.RECON_ACTIVE) {
+                    handleStateTransition(FlightState.RECON_ACTIVE, FlightState.RETURNING, owner);
+                }
+                returnItemToOwner(owner);
+            } else {
+                // Owner offline — still clean up recon state and chunks
+                ReconManager.endRecon(ownerUUID);
+                releaseAllForcedChunks();
+            }
         }
         discard();
     }
@@ -441,6 +580,7 @@ public class AircraftEntity extends Entity {
             case DIVE_BOMBER    -> new ItemStack(ModItems.DIVE_BOMBER_SQUADRON.get());
             case TORPEDO_BOMBER -> new ItemStack(ModItems.TORPEDO_BOMBER_SQUADRON.get());
             case LEVEL_BOMBER   -> new ItemStack(ModItems.LEVEL_BOMBER_SQUADRON.get());
+            case RECON          -> new ItemStack(ModItems.RECON_SQUADRON.get());
         };
         AircraftInfo orig = stack.get(ModDataComponents.AIRCRAFT_INFO.get());
         if (orig != null) stack.set(ModDataComponents.AIRCRAFT_INFO.get(), orig.withCurrentFuel(0));
@@ -466,7 +606,10 @@ public class AircraftEntity extends Entity {
     }
 
     public FlightState getFlightState() {
-        return FlightState.values()[entityData.get(STATE)];
+        int ordinal = entityData.get(STATE);
+        FlightState[] values = FlightState.values();
+        if (ordinal < 0 || ordinal >= values.length) return FlightState.REMOVED;
+        return values[ordinal];
     }
 
     public AircraftInfo.AircraftType getAircraftType() {

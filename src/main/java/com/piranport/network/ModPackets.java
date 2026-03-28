@@ -37,5 +37,26 @@ public class ModPackets {
                 FireControlSyncPayload.STREAM_CODEC,
                 FireControlSyncPayload::handle
         );
+        // Phase 32: recon aircraft
+        registrar.playToServer(
+                ReconControlPayload.TYPE,
+                ReconControlPayload.STREAM_CODEC,
+                ReconControlPayload::handle
+        );
+        registrar.playToServer(
+                ReconExitPayload.TYPE,
+                ReconExitPayload.STREAM_CODEC,
+                ReconExitPayload::handle
+        );
+        registrar.playToClient(
+                ReconStartPayload.TYPE,
+                ReconStartPayload.STREAM_CODEC,
+                ReconStartPayload::handle
+        );
+        registrar.playToClient(
+                ReconEndPayload.TYPE,
+                ReconEndPayload.STREAM_CODEC,
+                ReconEndPayload::handle
+        );
     }
 }

@@ -45,6 +45,7 @@ public class AircraftRenderer extends EntityRenderer<AircraftEntity> {
             case DIVE_BOMBER    -> new ItemStack(ModItems.DIVE_BOMBER_SQUADRON.get());
             case TORPEDO_BOMBER -> new ItemStack(ModItems.TORPEDO_BOMBER_SQUADRON.get());
             case LEVEL_BOMBER   -> new ItemStack(ModItems.LEVEL_BOMBER_SQUADRON.get());
+            case RECON          -> new ItemStack(ModItems.RECON_SQUADRON.get());
         };
     }
 

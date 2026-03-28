@@ -1,6 +1,7 @@
 package com.piranport;
 
 import com.piranport.aviation.ClientFireControlData;
+import com.piranport.aviation.ClientReconData;
 import com.piranport.combat.TransformationManager;
 import com.piranport.entity.AerialBombEntity;
 import com.piranport.entity.AircraftEntity;
@@ -10,8 +11,11 @@ import com.piranport.item.ShipCoreItem;
 import com.piranport.network.CycleWeaponPayload;
 import com.piranport.network.FireControlPayload;
 import com.piranport.network.OpenFlightGroupPayload;
+import com.piranport.network.ReconControlPayload;
+import com.piranport.network.ReconExitPayload;
 import com.piranport.registry.ModKeyMappings;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.Options;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -45,12 +49,22 @@ public class ClientTickHandler {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
 
-        // Weapon cycling
+        // Weapon cycling (V key) — in recon mode this exits recon instead
         while (ClientEvents.CYCLE_WEAPON_KEY.consumeClick()) {
-            ItemStack hand = mc.player.getMainHandItem();
-            if (hand.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(hand)) {
-                PacketDistributor.sendToServer(new CycleWeaponPayload());
+            if (ClientReconData.isInReconMode()) {
+                PacketDistributor.sendToServer(new ReconExitPayload());
+            } else {
+                ItemStack hand = mc.player.getMainHandItem();
+                if (hand.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(hand)) {
+                    PacketDistributor.sendToServer(new CycleWeaponPayload());
+                }
             }
+        }
+
+        // Phase 32: recon aircraft WASD control
+        if (ClientReconData.isInReconMode()) {
+            handleReconInput(mc);
+            return;  // skip all other key handling while in recon mode
         }
 
         boolean transformed = mc.player.getMainHandItem().getItem() instanceof ShipCoreItem sci
@@ -139,6 +153,41 @@ public class ClientTickHandler {
         // Fire control locked targets
         if (lockedTargets.contains(entity.getUUID())) return true;
         return false;
+    }
+
+    /**
+     * Phase 32: send WASD/Space/Sneak input to server for recon aircraft control.
+     * Movement direction is relative to the player's current look direction.
+     */
+    private static void handleReconInput(Minecraft mc) {
+        if (mc.player == null) return;
+        Options opts = mc.options;
+        boolean anyKey = opts.keyUp.isDown() || opts.keyDown.isDown()
+                || opts.keyLeft.isDown() || opts.keyRight.isDown()
+                || opts.keyJump.isDown() || opts.keyShift.isDown();
+        if (!anyKey) return;
+
+        Vec3 look = mc.player.getLookAngle();
+        // Forward = horizontal look direction, Right = perpendicular horizontal
+        Vec3 fwd = new Vec3(look.x, 0, look.z);
+        double fwdLen = fwd.length();
+        if (fwdLen < 0.001) fwd = new Vec3(0, 0, 1);
+        else fwd = fwd.scale(1.0 / fwdLen);
+        Vec3 right = new Vec3(-fwd.z, 0, fwd.x);  // 90° clockwise rotation of forward
+
+        float dx = 0, dy = 0, dz = 0;
+        if (opts.keyUp.isDown())  { dx += (float) fwd.x;   dz += (float) fwd.z; }
+        if (opts.keyDown.isDown())     { dx -= (float) fwd.x;   dz -= (float) fwd.z; }
+        if (opts.keyLeft.isDown())     { dx -= (float) right.x; dz -= (float) right.z; }
+        if (opts.keyRight.isDown())    { dx += (float) right.x; dz += (float) right.z; }
+        if (opts.keyJump.isDown())     dy += 1f;
+        if (opts.keyShift.isDown())    dy -= 1f;
+
+        // Normalize horizontal to prevent diagonal speed boost
+        float hLen = (float) Math.sqrt(dx * dx + dz * dz);
+        if (hLen > 1f) { dx /= hLen; dz /= hLen; }
+
+        PacketDistributor.sendToServer(new ReconControlPayload(dx, dy, dz));
     }
 
     @Nullable

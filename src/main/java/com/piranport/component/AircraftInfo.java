@@ -20,7 +20,8 @@ public record AircraftInfo(
         FIGHTER("fighter"),
         DIVE_BOMBER("dive_bomber"),
         TORPEDO_BOMBER("torpedo_bomber"),
-        LEVEL_BOMBER("level_bomber");
+        LEVEL_BOMBER("level_bomber"),
+        RECON("recon");  // Phase 32
 
         private final String serializedName;
 

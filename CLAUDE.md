@@ -21,17 +21,17 @@
 
 | 版本 | 代号 | 状态 | 核心内容 |
 |------|------|------|---------|
-| v0.1.0-alpha | MVP | ✅ DONE | 基础注册、世界生成、合成、舰装核心GUI、火炮战斗 |
-| v0.2.0-alpha | Torpedo | ✅ DONE | 鱼雷系统、舰装栏GUI完善、负重平衡、装填机制 |
-| v0.3.0-alpha | Kitchen | ✅ DONE | 食物烹饪 + Buff系统、作物种植、加工站 |
-| v0.4.0-alpha | Aviation | ✅ DONE | 航空系统（4种飞机+编组GUI+火控+AI）+ Patchouli手册 |
-| v0.5.0-alpha | Deco | ⏳ PLANNED | 资源扩充、装饰方块、功能方块、灶、剩余食物批量注册 |
-| v0.6.0-alpha | Skin | ⏳ PLANNED | 皮肤/模型渲染系统 |
-| v0.7.0-alpha | Aviation+ | ⏳ PLANNED | 侦察机视角切换、空战、编队跟随 |
+| v0.0.1-alpha | MVP | ✅ DONE | 基础注册、世界生成、合成、舰装核心GUI、火炮战斗 |
+| v0.0.2-alpha | Torpedo | ✅ DONE | 鱼雷系统、舰装栏GUI完善、负重平衡、装填机制 |
+| v0.0.3-alpha | Kitchen | ✅ DONE | 食物烹饪 + Buff系统、作物种植、加工站 |
+| v0.0.4-alpha | Aviation | ✅ DONE | 航空系统（4种飞机+编组GUI+火控+AI）+ Patchouli手册 |
+| v0.0.5-alpha | Deco | ⏳ PLANNED | 资源扩充、装饰方块、功能方块、灶、剩余食物批量注册 |
+| v0.0.6-alpha | Skin | ⏳ PLANNED | 皮肤/模型渲染系统 |
+| v0.0.7-alpha | Aviation+ | ⏳ PLANNED | 侦察机视角切换、空战、编队跟随 |
 
 ---
 
-## ✅ v0.1.0-alpha — MVP (DONE)
+## ✅ v0.0.1-alpha — MVP (DONE)
 
 <details>
 <summary>已完成内容（折叠）</summary>
@@ -47,7 +47,7 @@
 
 ---
 
-## ✅ v0.2.0-alpha — Torpedo (DONE)
+## ✅ v0.0.2-alpha — Torpedo (DONE)
 
 <details>
 <summary>已完成内容（折叠）</summary>
@@ -71,7 +71,7 @@
 
 ---
 
-## ✅ v0.3.0-alpha — Kitchen (DONE)
+## ✅ v0.0.3-alpha — Kitchen (DONE)
 
 <details>
 <summary>已完成内容（折叠）</summary>
@@ -201,7 +201,7 @@ public static final DeferredItem<Item> TOAST_BREAD = register("toast_bread",
 
 **热源：** FIRE/SOUL_FIRE/CAMPFIRE(lit)/SOUL_CAMPFIRE(lit)/MAGMA_BLOCK/LAVA/燃烧中熔炉。
 
-**逻辑：** 每tick匹配配方→计时→完成消耗输入产出结果。无热源不推进。v0.3.0产物手动取。
+**逻辑：** 每tick匹配配方→计时→完成消耗输入产出结果。无热源不推进。v0.0.3产物手动取。
 
 **配方（`piranport:cooking_pot`）：** 吐司面包(200t)、海军烘豆子(200t)、辣条(100t)、麻婆豆腐(300t)、海军咖喱(300t)、司康饼(200t)、炸鱼薯条(200t)、咸蛋拌豆腐(100t)、甜豆花(200t)。
 
@@ -278,10 +278,10 @@ public static final DeferredItem<Item> TOAST_BREAD = register("toast_bread",
 
 ---
 
-## NOT In v0.3.0 (明确排除)
+## NOT In v0.0.3 (明确排除)
 
-- ❌ 灶方块（留 v0.5.0）
-- ❌ 夕张的水桶（留 v0.5.0）
+- ❌ 灶方块（留 v0.0.5）
+- ❌ 夕张的水桶（留 v0.0.5）
 - ❌ 厨锅自动弹出/侧面容器输出
 - ❌ 锅内物品/流体/碗架渲染
 - ❌ 食物方块自定义3D模型
@@ -292,7 +292,7 @@ public static final DeferredItem<Item> TOAST_BREAD = register("toast_bread",
 
 ---
 
-## ✅ v0.4.0-alpha — Aviation (DONE)
+## ✅ v0.0.4-alpha — Aviation (DONE)
 
 **目标：实现航空战斗系统，包含4种飞机编队、编组GUI、多目标火控、4种攻击AI，以及 Patchouli 教程手册。**
 
@@ -564,9 +564,9 @@ LAUNCHING → CRUISING → ATTACKING → RETURNING → REMOVED
 
 ---
 
-## NOT In v0.4.0 (明确排除)
+## NOT In v0.0.4 (明确排除)
 
-- ❌ 侦察机（视角切换+假人+区块加载）→ 留 v0.7.0 Aviation+
+- ❌ 侦察机（视角切换+假人+区块加载）→ 留 v0.0.7 Aviation+
 - ❌ 飞机间空战（战斗机攻击敌方飞机）
 - ❌ 编队跟随侦察机
 - ❌ 放飞动画（依赖皮肤系统）
@@ -574,12 +574,12 @@ LAUNCHING → CRUISING → ATTACKING → RETURNING → REMOVED
 - ❌ 弹种切换冷却
 - ❌ 飞机GUI、民用机型（F4U冰激凌等）
 - ❌ 校射联动、编队国籍限制
-- ❌ 武器合成台/弹药合成台 → v0.4.0 用工作台合成
+- ❌ 武器合成台/弹药合成台 → v0.0.4 用工作台合成
 - ❌ 飞机残骸回收系统
 
 ---
 
-## Project Structure (v0.4.0 更新)
+## Project Structure (v0.0.4 更新)
 
 ```
 src/main/java/com/piranport/
@@ -603,8 +603,8 @@ src/main/java/com/piranport/
 │   ├── ModFoodItem.java
 │   ├── AircraftItem.java           # 🆕 飞机编队物品
 │   └── GuidebookItem.java          # 🆕 Patchouli教程书
-├── block/ (同v0.3.0)
-├── block/entity/ (同v0.3.0)
+├── block/ (同v0.0.3)
+├── block/entity/ (同v0.0.3)
 ├── entity/
 │   ├── CannonProjectileEntity.java
 │   ├── TorpedoEntity.java
@@ -633,7 +633,7 @@ src/main/java/com/piranport/
 │   ├── AircraftRenderer.java       # 🆕
 │   ├── AerialBombRenderer.java     # 🆕
 │   └── FireControlHudLayer.java    # 🆕 锁定标记HUD
-├── recipe/ (同v0.3.0)
+├── recipe/ (同v0.0.3)
 ├── worldgen/ / combat/ / data/ / network/
 │   └── (network 增加火控同步包)
 ```
@@ -662,7 +662,7 @@ src/main/java/com/piranport/
 | Inventory offhand槽位索引 | 无 `SLOT_OFFHAND` 常量 | `Inventory.getItem(40)` 即为副手槽；主手用 `player.getInventory().selected` |
 | Entity返回物品到玩家背包 | `player.getMainHandItem()` 只查主手 | 需存储 `coreInventorySlot`（发射时记录 selected 或40副手），返航时用 `player.getInventory().getItem(slot)` 精准定位，附加 main/offhand 兜底 |
 
-### v0.4.0 外部依赖
+### v0.0.4 外部依赖
 
 **Patchouli 1.21.1-93-NEOFORGE**（教程手册）：
 - Maven: `vazkii.patchouli:Patchouli:1.21.1-93-NEOFORGE`
@@ -670,7 +670,7 @@ src/main/java/com/piranport/
 - 纯 JSON data-driven，不需要写 Java 代码
 - 书籍物品通过 Patchouli API 注册
 
-### v0.4.0 技术要点
+### v0.0.4 技术要点
 
 | 要点 | 说明 |
 |------|------|
@@ -688,9 +688,9 @@ src/main/java/com/piranport/
 public class ModItems {
     public static final DeferredRegister.Items ITEMS =
         DeferredRegister.createItems(PiranPort.MOD_ID);
-    // v0.3.0 食材
+    // v0.0.3 食材
     public static final DeferredItem<Item> FLOUR = ITEMS.registerSimpleItem("flour");
-    // v0.3.0 食物
+    // v0.0.3 食物
     public static final DeferredItem<Item> TOAST_BREAD = ITEMS.register("toast_bread",
         () -> new ModFoodItem(new Item.Properties()
             .food(new FoodProperties.Builder()
@@ -714,9 +714,9 @@ public class PiranPort {
         ModEntityTypes.ENTITY_TYPES.register(modEventBus);
         ModDataComponents.DATA_COMPONENTS.register(modEventBus);
         ModMobEffects.MOB_EFFECTS.register(modEventBus);
-        ModBlockEntityTypes.BLOCK_ENTITY_TYPES.register(modEventBus);  // v0.3.0
-        ModMenuTypes.MENU_TYPES.register(modEventBus);                 // v0.3.0 + FlightGroupMenu
-        ModRecipeTypes.RECIPE_TYPES.register(modEventBus);             // v0.3.0
+        ModBlockEntityTypes.BLOCK_ENTITY_TYPES.register(modEventBus);  // v0.0.3
+        ModMenuTypes.MENU_TYPES.register(modEventBus);                 // v0.0.3 + FlightGroupMenu
+        ModRecipeTypes.RECIPE_TYPES.register(modEventBus);             // v0.0.3
         modEventBus.addListener(this::registerBrewingRecipes);
     }
     // ⚠️ NeoForge 21.1.220: 不用 FMLCommonSetupEvent，改用 RegisterBrewingRecipesEvent
@@ -725,7 +725,7 @@ public class PiranPort {
     }
 }
 
-// v0.4.0 客户端: 注册 KeyMapping（P/O/I 火控按键）
+// v0.0.4 客户端: 注册 KeyMapping（P/O/I 火控按键）
 @Mod.EventBusSubscriber(modid = PiranPort.MOD_ID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class ClientSetup {
     @SubscribeEvent
@@ -737,7 +737,7 @@ public class ClientSetup {
 }
 ```
 
-### BlockEntity/Menu/RecipeType 注册 (v0.3.0)
+### BlockEntity/Menu/RecipeType 注册 (v0.0.3)
 
 ```java
 public class ModBlockEntityTypes {
@@ -895,7 +895,7 @@ neo_version=21.1.220
 
 ---
 
-## Phase 实施顺序 (v0.4.0)
+## Phase 实施顺序 (v0.0.4)
 
 1. ~~**Phase 18**~~ ✅ DONE — 飞机/弹药物品 + DataComponent + 编组GUI
 2. ~~**Phase 19**~~ ✅ DONE — AircraftEntity + 飞行物理 + 防御机制 + 浮动靶子
@@ -917,6 +917,6 @@ neo_version=21.1.220
 - Minecraft Wiki (Technical): https://minecraft.wiki/
 - Patchouli Wiki: https://vazkiimods.github.io/Patchouli/
 - 原始策划案：见项目根目录 `docs/总策划案.docx`
-- v0.4.0 航空规划：见项目根目录 `docs/v0.4.0_Aviation_规划.md`
+- v0.0.4 航空规划：见项目根目录 `docs/v0.0.4_Aviation_规划.md`
 - 开发纪要：见项目根目录 `docs/皮兰港开发纪要260325上午.md`、`docs/皮兰港开发纪要260325下午.md`
 - GitHub 远程仓库: https://github.com/CVIndomitable/piranport_cl.git

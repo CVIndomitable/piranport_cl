@@ -11,8 +11,8 @@ import com.piranport.registry.ModBlockEntityTypes;
 import com.piranport.registry.ModEntityTypes;
 import com.piranport.registry.ModKeyMappings;
 import com.piranport.registry.ModMenuTypes;
-import net.minecraft.client.KeyMapping;
 import net.minecraft.client.renderer.entity.ThrownItemRenderer;
+import net.minecraft.client.KeyMapping;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -41,6 +41,8 @@ public class ClientEvents {
         event.register(ModKeyMappings.FIRE_CONTROL_LOCK);
         event.register(ModKeyMappings.FIRE_CONTROL_ADD);
         event.register(ModKeyMappings.FIRE_CONTROL_CANCEL);
+        event.register(ModKeyMappings.OPEN_FLIGHT_GROUP);
+        event.register(ModKeyMappings.HIGHLIGHT_ENTITIES);
     }
 
     @SubscribeEvent
@@ -54,6 +56,8 @@ public class ClientEvents {
         event.registerEntityRenderer(ModEntityTypes.FLOATING_TARGET.get(),
                 ctx -> new net.minecraft.client.renderer.entity.NoopRenderer<>(ctx));
         event.registerEntityRenderer(ModEntityTypes.AERIAL_BOMB.get(),
+                ThrownItemRenderer::new);
+        event.registerEntityRenderer(ModEntityTypes.BULLET.get(),
                 ThrownItemRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntityTypes.CUTTING_BOARD.get(),
                 CuttingBoardRenderer::new);

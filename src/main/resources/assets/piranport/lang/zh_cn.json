@@ -121,12 +121,16 @@
   "item.piranport.aviation_fuel": "航空燃料",
   "item.piranport.aerial_bomb_small": "小型航弹",
   "item.piranport.aerial_bomb_medium": "中型航弹",
+  "item.piranport.aerial_bomb": "航空炸弹",
   "item.piranport.aerial_torpedo": "航空鱼雷",
+  "item.piranport.fighter_ammo": "子弹",
   "item.piranport.floating_target": "浮动靶子",
   "message.piranport.aircraft_launched": "放飞 %s",
   "key.piranport.fire_control_lock": "锁定目标 [P]",
   "key.piranport.fire_control_add": "加选目标 [O]",
   "key.piranport.fire_control_cancel": "取消锁定 [I]",
+  "key.piranport.open_flight_group": "打开编组 [U]",
+  "key.piranport.highlight_entities": "高亮战场单位 [Y]",
   "key.categories.piranport": "皮兰港",
   "container.piranport.flight_groups": "编组",
   "container.piranport.available_aircraft": "可用飞机:",
@@ -165,8 +169,8 @@
   "piranport.book.cooking.stations.p1": "$(bold)石磨：$()右键打开。将作物研磨为面粉、粉末和糜酱。最多放入4种食材，产出1-2个结果。$(br)$(br)$(bold)砧板：$()右键放入食材，再反复右键切割，Shift+右键取回。",
   "piranport.book.cooking.stations.p2": "$(bold)厨锅：$()放在热源上方（火焰、营火、岩浆块、熔岩）。右键打开GUI，放入食材后锅在加热时自动烹饪。配方最多9种食材合成一道料理。",
   "piranport.book.aviation.aircraft": "飞机编队",
-  "piranport.book.aviation.aircraft.p1": "四种机型：$(item)战斗机$()（近战咬尾）、$(item)俯冲轰炸机$()（俯冲+50%着火概率）、$(item)鱼雷轰炸机$()（距目标10-16格投鱼雷）、$(item)水平轰炸机$()（目标上方32格投弹）。",
-  "piranport.book.aviation.aircraft.p2": "打开舰装核心GUI，点击$(bold)编组$()配置编组。分配飞机槽位，指定弹种（未指定则无法放飞），选择攻击模式：$(bold)集火$()（全组打第一个锁定目标）或$(bold)分散$()（各自打最近的锁定目标）。",
+  "piranport.book.aviation.aircraft.p1": "四种机型：$(item)战斗机$()（悬停射击子弹，备弹64发）、$(item)俯冲轰炸机$()（俯冲近距投弹）、$(item)鱼雷轰炸机$()（距目标20-30格投鱼雷）、$(item)水平轰炸机$()（目标上方32格投弹，共8发）。",
+  "piranport.book.aviation.aircraft.p2": "变身后按$(bold)[U]$()直接打开编组。未变身时可在舰装栏GUI中点击$(bold)编组$()配置。分配飞机槽位（左键），右键循环指定弹种（$(item)子弹$()→战斗机，$(item)航空炸弹$()→轰炸机，$(item)航空鱼雷$()→鱼雷机）。未指定弹种则无法放飞。",
   "piranport.book.aviation.fire_control": "火控系统",
-  "piranport.book.aviation.fire_control.p1": "变身且装备舰装核心时：$(bold)[P]$()锁定准星指向的目标；$(bold)[O]$()加选目标（最多4个）；$(bold)[I]$()取消所有锁定。被锁定目标显示在右上角HUD面板，显示名称和血量。飞机在有锁定目标时自动出击。"
+  "piranport.book.aviation.fire_control.p1": "变身时：$(bold)[P]$()锁定准星目标（范围80格）；$(bold)[O]$()加选；$(bold)[I]$()取消所有锁定。锁定目标显示在右上角HUD。按$(bold)[Y]$()切换战场高亮：自己的飞机/鱼雷/炸弹发光，己方与敌方目标均可见，仅自己可见。"
 }

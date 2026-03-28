@@ -59,9 +59,9 @@ public class ModCreativeTabs {
                         output.accept(ModItems.LEVEL_BOMBER_SQUADRON.get());
                         // Aviation Ammo (Phase 18)
                         output.accept(ModItems.AVIATION_FUEL.get());
-                        output.accept(ModItems.AERIAL_BOMB_SMALL.get());
-                        output.accept(ModItems.AERIAL_BOMB_MEDIUM.get());
+                        output.accept(ModItems.AERIAL_BOMB.get());
                         output.accept(ModItems.AERIAL_TORPEDO.get());
+                        output.accept(ModItems.FIGHTER_AMMO.get());
                         // Test Items (Phase 19)
                         output.accept(ModItems.FLOATING_TARGET.get());
                         // Guidebook (Phase 23)

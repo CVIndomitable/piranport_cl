@@ -171,7 +171,9 @@ public class ShipCoreMenu extends AbstractContainerMenu {
         return stack.is(ModItems.AVIATION_FUEL.get())
                 || stack.is(ModItems.AERIAL_BOMB_SMALL.get())
                 || stack.is(ModItems.AERIAL_BOMB_MEDIUM.get())
-                || stack.is(ModItems.AERIAL_TORPEDO.get());
+                || stack.is(ModItems.AERIAL_BOMB.get())
+                || stack.is(ModItems.AERIAL_TORPEDO.get())
+                || stack.is(ModItems.FIGHTER_AMMO.get());
     }
 
     public static boolean isShell(ItemStack stack) {

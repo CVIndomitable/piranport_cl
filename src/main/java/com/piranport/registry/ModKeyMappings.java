@@ -14,4 +14,10 @@ public class ModKeyMappings {
 
     public static final KeyMapping FIRE_CONTROL_CANCEL =
             new KeyMapping("key.piranport.fire_control_cancel", GLFW.GLFW_KEY_I, CATEGORY);
+
+    public static final KeyMapping OPEN_FLIGHT_GROUP =
+            new KeyMapping("key.piranport.open_flight_group", GLFW.GLFW_KEY_U, CATEGORY);
+
+    public static final KeyMapping HIGHLIGHT_ENTITIES =
+            new KeyMapping("key.piranport.highlight_entities", GLFW.GLFW_KEY_Y, CATEGORY);
 }

@@ -30,6 +30,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public class AircraftEntity extends Entity {
@@ -42,15 +43,18 @@ public class AircraftEntity extends Entity {
             SynchedEntityData.defineId(AircraftEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Integer> AIRCRAFT_TYPE_DATA =
             SynchedEntityData.defineId(AircraftEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Optional<UUID>> OWNER_ID =
+            SynchedEntityData.defineId(AircraftEntity.class, EntityDataSerializers.OPTIONAL_UUID);
 
     // Saved to NBT
     @Nullable private UUID ownerUUID;
     private int weaponSlotIndex;
-    private int coreInventorySlot = 0; // inventory slot of the ship core (40 = offhand)
+    private int coreInventorySlot = 0;
     private AircraftInfo.AircraftType aircraftType = AircraftInfo.AircraftType.FIGHTER;
     private FlightGroupData.AttackMode attackMode = FlightGroupData.AttackMode.FOCUS;
     private float panelDamage;
     private float panelSpeed;
+    private int remainingAmmo = 0;
 
     // Runtime (not saved)
     private int airtimeTicks = 0;
@@ -91,8 +95,10 @@ public class AircraftEntity extends Entity {
             entity.aircraftType = info.aircraftType();
             entity.panelDamage = info.panelDamage();
             entity.panelSpeed = info.panelSpeed();
+            entity.remainingAmmo = info.ammoCapacity();
         }
         entity.entityData.set(AIRCRAFT_TYPE_DATA, entity.aircraftType.ordinal());
+        entity.entityData.set(OWNER_ID, Optional.of(owner.getUUID()));
 
         Vec3 look = owner.getLookAngle();
         entity.setPos(owner.getX() + look.x * 0.8, owner.getEyeY(), owner.getZ() + look.z * 0.8);
@@ -105,6 +111,7 @@ public class AircraftEntity extends Entity {
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
         builder.define(STATE, FlightState.LAUNCHING.ordinal());
         builder.define(AIRCRAFT_TYPE_DATA, 0);
+        builder.define(OWNER_ID, Optional.empty());
     }
 
     @Override
@@ -217,44 +224,63 @@ public class AircraftEntity extends Entity {
         }
     }
 
-    /** FIGHTER: fly to target, melee bite every 20 ticks. */
+    /**
+     * FIGHTER: hover at ~11 blocks and fire bullets. 64 rounds total.
+     */
     private void tickFighterAttack(Player owner, LivingEntity target) {
+        if (remainingAmmo <= 0) { setState(FlightState.RETURNING); return; }
+
         Vec3 toTarget = target.getEyePosition().subtract(position());
         double dist = toTarget.length();
+        double preferredDist = 11.0;
 
-        if (dist > 0.5) {
+        if (dist > preferredDist + 3) {
             setDeltaMovement(toTarget.normalize().scale(Math.min(panelSpeed * 0.5, dist)));
+        } else if (dist < preferredDist - 3) {
+            setDeltaMovement(toTarget.normalize().scale(-panelSpeed * 0.2));
         } else {
-            setDeltaMovement(Vec3.ZERO);
+            setDeltaMovement(getDeltaMovement().scale(0.8));
         }
 
-        if (dist < 2.5 && attackCooldown <= 0) {
-            target.hurt(damageSources().playerAttack(owner), panelDamage);
-            attackCooldown = 20;
+        if (attackCooldown <= 0 && dist < 24.0) {
+            BulletEntity bullet = new BulletEntity(level(), panelDamage / 8f);
+            Vec3 dir = toTarget.normalize();
+            bullet.setPos(getX(), getY() + 0.3, getZ());
+            bullet.setDeltaMovement(dir.scale(2.5));
+            bullet.setOwner(owner);
+            level().addFreshEntity(bullet);
+            remainingAmmo--;
+            attackCooldown = 5;
+
+            if (remainingAmmo <= 0) {
+                setState(FlightState.RETURNING);
+            }
         }
     }
 
     /**
      * DIVE_BOMBER: climb to target+18 blocks, then dive.
-     * On contact, deal 1.5× damage + 50% chance to set on fire for 30s, then return.
+     * On close contact (dist < 4), drop an AerialBombEntity and return.
      */
     private void tickDiveBomberAttack(Player owner, LivingEntity target) {
+        if (hasFired) { setState(FlightState.RETURNING); return; }
+
         double climbY = target.getY() + 18.0;
 
         if (getY() < climbY - 1.0 && stateTicks < 80) {
-            // Climbing phase: move toward a point directly above target
             Vec3 toClimb = new Vec3(target.getX() - getX(), climbY - getY(), target.getZ() - getZ());
             double dist = toClimb.length();
             setDeltaMovement(toClimb.normalize().scale(Math.min(panelSpeed * 0.4, dist)));
         } else {
-            // Dive phase: fly straight toward target
             Vec3 toTarget = target.getEyePosition().subtract(position());
             double dist = toTarget.length();
-            if (dist < 1.5) {
-                target.hurt(damageSources().playerAttack(owner), panelDamage * 1.5f);
-                if (level().random.nextFloat() < 0.5f) {
-                    target.setRemainingFireTicks(30 * 20);
-                }
+            if (dist < 4.0) {
+                AerialBombEntity bomb = new AerialBombEntity(level(), panelDamage * 1.5f, 2.5f);
+                bomb.setPos(getX(), getY(), getZ());
+                bomb.setDeltaMovement(getDeltaMovement().x * 0.2, -0.3, getDeltaMovement().z * 0.2);
+                bomb.setOwner(owner);
+                level().addFreshEntity(bomb);
+                hasFired = true;
                 setState(FlightState.RETURNING);
                 return;
             }
@@ -263,8 +289,8 @@ public class AircraftEntity extends Entity {
     }
 
     /**
-     * TORPEDO_BOMBER: fly low, fire a torpedo when horizontal distance to target is 10–16 blocks.
-     * If overshot (dist < 10), abort and return.
+     * TORPEDO_BOMBER: fly low, fire torpedo when 20-30 blocks from target.
+     * Fires early so the torpedo travels forward to hit.
      */
     private void tickTorpedoBomberAttack(Player owner, LivingEntity target) {
         if (hasFired) { setState(FlightState.RETURNING); return; }
@@ -273,12 +299,11 @@ public class AircraftEntity extends Entity {
         double dz = target.getZ() - getZ();
         double horizDist = Math.sqrt(dx * dx + dz * dz);
 
-        if (horizDist >= 10 && horizDist <= 16) {
-            // Fire torpedo
+        if (horizDist >= 20 && horizDist <= 30) {
             TorpedoEntity torpedo = new TorpedoEntity(ModEntityTypes.TORPEDO_ENTITY.get(), level());
             Vec3 dir = new Vec3(dx, 0, dz).normalize();
             torpedo.setPos(getX(), getY(), getZ());
-            torpedo.setDeltaMovement(dir.x * 1.2, 0, dir.z * 1.2);
+            torpedo.setDeltaMovement(dir.x * 0.7, 0, dir.z * 0.7);
             torpedo.setOwner(owner);
             level().addFreshEntity(torpedo);
             hasFired = true;
@@ -286,8 +311,8 @@ public class AircraftEntity extends Entity {
             return;
         }
 
-        if (horizDist < 10) {
-            // Overshot — return without firing
+        if (horizDist < 16) {
+            // Overshot — abort
             hasFired = true;
             setState(FlightState.RETURNING);
             return;
@@ -303,39 +328,34 @@ public class AircraftEntity extends Entity {
     }
 
     /**
-     * LEVEL_BOMBER: climb to target+32 blocks, then fly horizontally over target.
-     * When directly overhead (horizontal dist < 3), drop an AerialBombEntity.
+     * LEVEL_BOMBER: climb to target+32 blocks, fly over and drop bombs.
+     * 8 rounds total; does not return until ammo depleted.
      */
     private void tickLevelBomberAttack(Player owner, LivingEntity target) {
-        if (hasFired) { setState(FlightState.RETURNING); return; }
+        if (remainingAmmo <= 0) { setState(FlightState.RETURNING); return; }
 
         double bombAltitude = target.getY() + 32.0;
 
         if (getY() < bombAltitude - 1.5) {
-            // Climb phase: move up toward bomb altitude while drifting toward target
             Vec3 toPoint = new Vec3(target.getX() - getX(), bombAltitude - getY(), target.getZ() - getZ());
             double dist = toPoint.length();
             setDeltaMovement(toPoint.normalize().scale(Math.min(panelSpeed * 0.4, dist)));
         } else {
-            // Level approach: fly horizontally toward target, maintain altitude
             double dx = target.getX() - getX();
             double dz = target.getZ() - getZ();
             double horizDist = Math.sqrt(dx * dx + dz * dz);
 
-            if (horizDist < 3.0) {
-                // Drop bomb
+            if (horizDist < 3.0 && attackCooldown <= 0) {
                 AerialBombEntity bomb = new AerialBombEntity(level(), panelDamage * 1.5f, 2.5f);
                 bomb.setPos(getX(), getY(), getZ());
                 bomb.setDeltaMovement(getDeltaMovement().x * 0.1, -0.1, getDeltaMovement().z * 0.1);
                 bomb.setOwner(owner);
                 level().addFreshEntity(bomb);
-                hasFired = true;
-                setState(FlightState.RETURNING);
-                return;
+                remainingAmmo--;
+                attackCooldown = 40;
             }
 
             Vec3 horizontal = new Vec3(dx, 0, dz).normalize().scale(Math.min(panelSpeed * 0.4, horizDist));
-            // Correct altitude drift
             double yCorrect = (bombAltitude - getY()) * 0.15;
             setDeltaMovement(horizontal.x, yCorrect, horizontal.z);
         }
@@ -343,9 +363,6 @@ public class AircraftEntity extends Entity {
 
     /**
      * Resolves the attack target from the fire control lock list.
-     * FOCUS: always use the first locked target.
-     * SPREAD: use the nearest locked target to this aircraft.
-     * Falls back to nearest hostile monster within 32 blocks if no locks.
      */
     @Nullable
     private LivingEntity resolveTarget(Player owner) {
@@ -354,7 +371,6 @@ public class AircraftEntity extends Entity {
         List<UUID> locks = FireControlManager.getTargets(owner.getUUID());
         if (!locks.isEmpty()) {
             if (attackMode == FlightGroupData.AttackMode.SPREAD) {
-                // Pick nearest locked target to this aircraft
                 return locks.stream()
                         .map(uuid -> sl.getEntity(uuid))
                         .filter(e -> e instanceof LivingEntity le && le.isAlive())
@@ -362,7 +378,6 @@ public class AircraftEntity extends Entity {
                         .min(Comparator.comparingDouble(e -> distanceTo(e)))
                         .orElse(null);
             } else {
-                // FOCUS: pick first locked target
                 Entity e = sl.getEntity(locks.get(0));
                 if (e instanceof LivingEntity le && le.isAlive()) return le;
             }
@@ -409,7 +424,6 @@ public class AircraftEntity extends Entity {
         }
     }
 
-    /** Find the ship core stack using the tracked inventory slot, with main/offhand fallback. */
     private ItemStack findCoreStack(Player player) {
         int size = player.getInventory().getContainerSize();
         if (coreInventorySlot >= 0 && coreInventorySlot < size) {
@@ -459,6 +473,12 @@ public class AircraftEntity extends Entity {
         return AircraftInfo.AircraftType.values()[entityData.get(AIRCRAFT_TYPE_DATA)];
     }
 
+    /** Returns true if this aircraft is owned by the given player. Works client-side (synced). */
+    public boolean isOwnedByPlayer(Player player) {
+        Optional<UUID> id = entityData.get(OWNER_ID);
+        return id.isPresent() && id.get().equals(player.getUUID());
+    }
+
     @Nullable
     public UUID getOwnerUUID() { return ownerUUID; }
 
@@ -485,8 +505,10 @@ public class AircraftEntity extends Entity {
         catch (Exception e) { attackMode = FlightGroupData.AttackMode.FOCUS; }
         panelDamage = tag.getFloat("PanelDamage");
         panelSpeed  = tag.getFloat("PanelSpeed");
+        remainingAmmo = tag.getInt("RemainingAmmo");
         entityData.set(STATE, tag.getInt("FlightState"));
         entityData.set(AIRCRAFT_TYPE_DATA, aircraftType.ordinal());
+        if (ownerUUID != null) entityData.set(OWNER_ID, Optional.of(ownerUUID));
     }
 
     @Override
@@ -498,6 +520,7 @@ public class AircraftEntity extends Entity {
         tag.putString("AttackMode", attackMode.name());
         tag.putFloat("PanelDamage", panelDamage);
         tag.putFloat("PanelSpeed", panelSpeed);
+        tag.putInt("RemainingAmmo", remainingAmmo);
         tag.putInt("FlightState", entityData.get(STATE));
     }
 }

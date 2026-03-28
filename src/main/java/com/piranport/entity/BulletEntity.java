@@ -11,32 +11,27 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
 
-public class AerialBombEntity extends ThrowableItemProjectile {
+public class BulletEntity extends ThrowableItemProjectile {
 
-    private float damage = 10f;
-    private float explosionPower = 2.5f;
+    private float damage = 2f;
 
-    /** Required by entity type registration. */
-    public AerialBombEntity(EntityType<? extends AerialBombEntity> type, Level level) {
+    public BulletEntity(EntityType<? extends BulletEntity> type, Level level) {
         super(type, level);
     }
 
-    /** Spawned by AircraftEntity; position and velocity set externally after construction. */
-    public AerialBombEntity(Level level, float damage, float explosionPower) {
-        super(ModEntityTypes.AERIAL_BOMB.get(), level);
+    public BulletEntity(Level level, float damage) {
+        super(ModEntityTypes.BULLET.get(), level);
         this.damage = damage;
-        this.explosionPower = explosionPower;
     }
 
     @Override
     protected Item getDefaultItem() {
-        return ModItems.AERIAL_BOMB.get();
+        return ModItems.FIGHTER_AMMO.get();
     }
 
-    /** Stronger gravity than default (0.03) to simulate free-fall bomb. */
     @Override
     protected double getDefaultGravity() {
-        return 0.06;
+        return 0.005;
     }
 
     @Override
@@ -44,30 +39,24 @@ public class AerialBombEntity extends ThrowableItemProjectile {
         if (!level().isClientSide()) {
             Entity target = result.getEntity();
             target.hurt(damageSources().thrown(this, getOwner()), damage);
-            level().explode(this, getX(), getY(), getZ(), explosionPower, Level.ExplosionInteraction.TNT);
             discard();
         }
     }
 
     @Override
     protected void onHitBlock(BlockHitResult result) {
-        if (!level().isClientSide()) {
-            level().explode(this, getX(), getY(), getZ(), explosionPower, Level.ExplosionInteraction.TNT);
-            discard();
-        }
+        discard();
     }
 
     @Override
     public void addAdditionalSaveData(CompoundTag tag) {
         super.addAdditionalSaveData(tag);
-        tag.putFloat("BombDamage", damage);
-        tag.putFloat("ExplosionPower", explosionPower);
+        tag.putFloat("BulletDamage", damage);
     }
 
     @Override
     public void readAdditionalSaveData(CompoundTag tag) {
         super.readAdditionalSaveData(tag);
-        if (tag.contains("BombDamage")) damage = tag.getFloat("BombDamage");
-        if (tag.contains("ExplosionPower")) explosionPower = tag.getFloat("ExplosionPower");
+        if (tag.contains("BulletDamage")) damage = tag.getFloat("BulletDamage");
     }
 }

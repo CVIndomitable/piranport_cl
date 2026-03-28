@@ -10,6 +10,8 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.PacketDistributor;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class FlightGroupScreen extends AbstractContainerScreen<FlightGroupMenu> {
@@ -21,13 +23,13 @@ public class FlightGroupScreen extends AbstractContainerScreen<FlightGroupMenu> 
     private static final int GROUP_HEIGHT = 30;
     private static final int GROUP_WIDTH = 210;
 
-    // Slots in each group row
+    // Slots in each group row — compact: start from left, only assigned slots shown
     private static final int AIRCRAFT_X = 26;   // x offset within group row (relative to leftPos)
     private static final int AIRCRAFT_Y = 7;    // y offset within group row
     private static final int SLOT_SIZE = 18;
     private static final int MAX_WEAPON_SLOTS = 6;
 
-    // Mode button position (relative to leftPos); placed after aircraft slots
+    // Mode button position (relative to leftPos); placed after compact aircraft area
     private static final int MODE_X = AIRCRAFT_X + MAX_WEAPON_SLOTS * SLOT_SIZE + 4; // 138
     private static final int MODE_W = 36;
     private static final int BTN_H = 16;
@@ -36,24 +38,24 @@ public class FlightGroupScreen extends AbstractContainerScreen<FlightGroupMenu> 
     private static final int AVAIL_LABEL_Y = 147;
     private static final int AVAIL_Y = 157;
 
-    // Ammo types cycling order (empty = none); used for per-slot cycling
+    // Ammo types cycling order; aerial_bomb replaces small/medium distinction
     private static final String[] AMMO_TYPES = {
             "",
             "piranport:aviation_fuel",
-            "piranport:aerial_bomb_small",
-            "piranport:aerial_bomb_medium",
-            "piranport:aerial_torpedo"
+            "piranport:aerial_bomb",
+            "piranport:aerial_torpedo",
+            "piranport:fighter_ammo"
     };
     private static final String[] AMMO_LABELS = {
-            "---", "燃料", "小弹", "中弹", "鱼雷"
+            "---", "燃料", "航弹", "鱼雷", "子弹"
     };
     // Ammo indicator colors shown as a strip at the bottom of assigned slots
     private static final int[] AMMO_COLORS = {
             0xFF666666,   // --- : dark gray
             0xFFFFAA00,   // fuel: amber
-            0xFFFF4444,   // small bomb: red
-            0xFFFF8800,   // medium bomb: orange
+            0xFFFF4444,   // aerial bomb: red
             0xFF4488FF,   // torpedo: blue
+            0xFFCCCCCC,   // fighter ammo: light gray
     };
 
     public FlightGroupScreen(FlightGroupMenu menu, Inventory playerInventory, Component title) {
@@ -97,21 +99,21 @@ public class FlightGroupScreen extends AbstractContainerScreen<FlightGroupMenu> 
             FlightGroupData.FlightGroup group = gi < groups.size()
                     ? groups.get(gi) : FlightGroupData.FlightGroup.empty(gi + 1);
 
-            // Aircraft slot backgrounds, icons, and per-slot ammo indicator
-            for (int si = 0; si < menu.getWeaponSlotCount(); si++) {
-                int sx = x + AIRCRAFT_X + si * SLOT_SIZE;
+            // Compact display: show only assigned slots, packed from left
+            List<Integer> sortedSlots = sortedAssignedSlots(group);
+            List<ItemStack> weapons = menu.getWeaponItems();
+            for (int ci = 0; ci < sortedSlots.size(); ci++) {
+                int si = sortedSlots.get(ci);
+                int sx = x + AIRCRAFT_X + ci * SLOT_SIZE;
                 int sy = gy + AIRCRAFT_Y;
                 drawSlotBg(gfx, sx, sy);
-                if (group.slotIndices().contains(si)) {
-                    List<ItemStack> weapons = menu.getWeaponItems();
-                    if (si < weapons.size() && !weapons.get(si).isEmpty()) {
-                        gfx.renderItem(weapons.get(si), sx + 1, sy + 1);
-                    }
-                    // Per-slot ammo indicator: 3px strip at bottom of slot
-                    String slotAmmo = group.getSlotAmmo(si);
-                    int ammoColor = getAmmoColor(slotAmmo);
-                    gfx.fill(sx + 2, sy + 14, sx + 16, sy + 17, ammoColor);
+                if (si < weapons.size() && !weapons.get(si).isEmpty()) {
+                    gfx.renderItem(weapons.get(si), sx + 1, sy + 1);
                 }
+                // Per-slot ammo indicator: 3px strip at bottom
+                String slotAmmo = group.getSlotAmmo(si);
+                int ammoColor = getAmmoColor(slotAmmo);
+                gfx.fill(sx + 2, sy + 14, sx + 16, sy + 17, ammoColor);
             }
 
             // Attack mode button
@@ -171,15 +173,13 @@ public class FlightGroupScreen extends AbstractContainerScreen<FlightGroupMenu> 
             int gy = GROUP_Y[gi];
             if (relX >= 3 && relX < 3 + GROUP_WIDTH && relY >= gy && relY < gy + GROUP_HEIGHT) {
 
-                // Check aircraft slot indicators
-                int slotHit = getAircraftSlotHit(relX, relY, gy);
+                // Check compact aircraft slot indicators
+                int slotHit = getAircraftSlotHit(relX, relY, gy, gi);
                 if (slotHit >= 0) {
                     selectedGroupIndex = gi;
                     if (button == 0) {
-                        // Left-click: toggle membership
                         toggleSlotInGroup(gi, slotHit);
                     } else if (button == 1) {
-                        // Right-click: cycle ammo for this slot (only if assigned)
                         FlightGroupData data = menu.getGroupData();
                         List<FlightGroupData.FlightGroup> groups = data.groups();
                         if (gi < groups.size() && groups.get(gi).slotIndices().contains(slotHit)) {
@@ -219,12 +219,19 @@ public class FlightGroupScreen extends AbstractContainerScreen<FlightGroupMenu> 
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
-    private int getAircraftSlotHit(int relX, int relY, int groupRelY) {
+    /** Returns the actual slot index from a click on a compact group row, or -1 if not a slot. */
+    private int getAircraftSlotHit(int relX, int relY, int groupRelY, int gi) {
+        FlightGroupData data = menu.getGroupData();
+        List<FlightGroupData.FlightGroup> groups = data.groups();
+        FlightGroupData.FlightGroup group = gi < groups.size()
+                ? groups.get(gi) : FlightGroupData.FlightGroup.empty(gi + 1);
+
+        List<Integer> sortedSlots = sortedAssignedSlots(group);
         int ay = groupRelY + AIRCRAFT_Y;
-        for (int si = 0; si < menu.getWeaponSlotCount(); si++) {
-            int ax = AIRCRAFT_X + si * SLOT_SIZE;
+        for (int ci = 0; ci < sortedSlots.size(); ci++) {
+            int ax = AIRCRAFT_X + ci * SLOT_SIZE;
             if (relX >= ax && relX < ax + 16 && relY >= ay && relY < ay + 16) {
-                return si;
+                return sortedSlots.get(ci);
             }
         }
         return -1;
@@ -248,7 +255,6 @@ public class FlightGroupScreen extends AbstractContainerScreen<FlightGroupMenu> 
         sendUpdate(newData);
     }
 
-    /** Cycle the ammo type for a specific weapon slot within the group. Right-click interaction. */
     private void cycleSlotAmmo(int groupIndex, int slotIndex) {
         FlightGroupData data = menu.getGroupData();
         List<FlightGroupData.FlightGroup> groups = data.groups();
@@ -290,6 +296,20 @@ public class FlightGroupScreen extends AbstractContainerScreen<FlightGroupMenu> 
         return AMMO_COLORS[0];
     }
 
+    private String getAmmoLabel(String ammoType) {
+        for (int i = 0; i < AMMO_TYPES.length; i++) {
+            if (AMMO_TYPES[i].equals(ammoType)) return AMMO_LABELS[i];
+        }
+        return "---";
+    }
+
+    /** Returns the assigned slot indices for a group, sorted ascending. */
+    private static List<Integer> sortedAssignedSlots(FlightGroupData.FlightGroup group) {
+        List<Integer> sorted = new ArrayList<>(group.slotIndices());
+        Collections.sort(sorted);
+        return sorted;
+    }
+
     private void drawSlotBg(GuiGraphics gfx, int x, int y) {
         gfx.fill(x, y, x + 18, y + 1, 0xFF373737);
         gfx.fill(x, y, x + 1, y + 18, 0xFF373737);
@@ -305,25 +325,25 @@ public class FlightGroupScreen extends AbstractContainerScreen<FlightGroupMenu> 
         renderAircraftTooltip(gfx, mouseX, mouseY);
     }
 
-    /** Show tooltip when hovering over any aircraft slot icon (in group rows or available section). */
     private void renderAircraftTooltip(GuiGraphics gfx, int mouseX, int mouseY) {
         int relX = mouseX - leftPos;
         int relY = mouseY - topPos;
         List<ItemStack> weapons = menu.getWeaponItems();
 
-        // Check group row aircraft slots
+        // Check group row aircraft slots (compact layout)
         FlightGroupData data = menu.getGroupData();
         for (int gi = 0; gi < FlightGroupData.MAX_GROUPS; gi++) {
             int gy = GROUP_Y[gi];
             FlightGroupData.FlightGroup group = gi < data.groups().size()
                     ? data.groups().get(gi) : FlightGroupData.FlightGroup.empty(gi + 1);
-            for (int si = 0; si < menu.getWeaponSlotCount(); si++) {
-                if (!group.slotIndices().contains(si)) continue;
-                int sx = AIRCRAFT_X + si * SLOT_SIZE;
+
+            List<Integer> sortedSlots = sortedAssignedSlots(group);
+            for (int ci = 0; ci < sortedSlots.size(); ci++) {
+                int si = sortedSlots.get(ci);
+                int sx = AIRCRAFT_X + ci * SLOT_SIZE;
                 int sy = gy + AIRCRAFT_Y;
                 if (relX >= sx && relX < sx + 16 && relY >= sy && relY < sy + 16) {
                     if (si < weapons.size() && !weapons.get(si).isEmpty()) {
-                        // Show item tooltip + ammo assignment hint
                         String ammoLabel = getAmmoLabel(group.getSlotAmmo(si));
                         gfx.renderTooltip(this.font,
                                 List.of(
@@ -348,12 +368,5 @@ public class FlightGroupScreen extends AbstractContainerScreen<FlightGroupMenu> 
                 }
             }
         }
-    }
-
-    private String getAmmoLabel(String ammoType) {
-        for (int i = 0; i < AMMO_TYPES.length; i++) {
-            if (AMMO_TYPES[i].equals(ammoType)) return AMMO_LABELS[i];
-        }
-        return "---";
     }
 }

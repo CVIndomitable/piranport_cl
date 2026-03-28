@@ -121,12 +121,16 @@
   "item.piranport.aviation_fuel": "Aviation Fuel",
   "item.piranport.aerial_bomb_small": "Small Aerial Bomb",
   "item.piranport.aerial_bomb_medium": "Medium Aerial Bomb",
+  "item.piranport.aerial_bomb": "Aerial Bomb",
   "item.piranport.aerial_torpedo": "Aerial Torpedo",
+  "item.piranport.fighter_ammo": "Fighter Ammo",
   "item.piranport.floating_target": "Floating Target",
   "message.piranport.aircraft_launched": "Launched %s",
   "key.piranport.fire_control_lock": "Lock Target [P]",
   "key.piranport.fire_control_add": "Add Target [O]",
   "key.piranport.fire_control_cancel": "Cancel Lock [I]",
+  "key.piranport.open_flight_group": "Open Groups [U]",
+  "key.piranport.highlight_entities": "Highlight Battlefield [Y]",
   "key.categories.piranport": "Piran Port",
   "container.piranport.flight_groups": "Groups",
   "container.piranport.available_aircraft": "Available Aircraft:",
@@ -165,8 +169,8 @@
   "piranport.book.cooking.stations.p1": "$(bold)Stone Mill:$() Right-click to open. Grind crops into flour, powder, and paste. Accepts up to 4 ingredients and produces 1-2 outputs.$(br)$(br)$(bold)Cutting Board:$() Right-click to place an ingredient, then right-click repeatedly to cut. Shift+right-click to retrieve.",
   "piranport.book.cooking.stations.p2": "$(bold)Cooking Pot:$() Place over a heat source (fire, campfire, magma, lava). Right-click to open GUI. Add ingredients; the pot cooks automatically when heated. Recipes combine 1-9 inputs into a single food output.",
   "piranport.book.aviation.aircraft": "Aircraft Squadrons",
-  "piranport.book.aviation.aircraft.p1": "Four aircraft types: $(item)Fighter$() (melee biting), $(item)Dive Bomber$() (dive + 50% fire chance), $(item)Torpedo Bomber$() (launches torpedo at 10-16 blocks range), $(item)Level Bomber$() (drops bombs from 32 blocks above).",
-  "piranport.book.aviation.aircraft.p2": "Open the Ship Core GUI and click $(bold)Groups$() to configure groups. Assign aircraft slots, set ammo type (required to launch), and choose attack mode: $(bold)Focus$() (all target the first locked enemy) or $(bold)Spread$() (each targets the nearest locked enemy).",
+  "piranport.book.aviation.aircraft.p1": "Four aircraft types: $(item)Fighter$() (hovers and fires bullets, 64 rounds), $(item)Dive Bomber$() (dives close and drops a bomb), $(item)Torpedo Bomber$() (fires torpedo at 20-30 blocks range), $(item)Level Bomber$() (drops bombs from 32 blocks above, 8 rounds).",
+  "piranport.book.aviation.aircraft.p2": "Press $(bold)[U]$() while transformed to open Groups directly. Assign aircraft slots (left-click), right-click to cycle ammo: $(item)Fighter Ammo$() for fighters, $(item)Aerial Bomb$() for bombers, $(item)Aerial Torpedo$() for torpedo bombers. No ammo assigned = cannot launch.",
   "piranport.book.aviation.fire_control": "Fire Control",
-  "piranport.book.aviation.fire_control.p1": "While transformed with a Ship Core: $(bold)[P]$() locks the crosshair target; $(bold)[O]$() adds another target (up to 4); $(bold)[I]$() cancels all locks. Locked targets appear in a HUD panel (top-right) showing name and HP. Aircraft automatically attack when targets are locked."
+  "piranport.book.aviation.fire_control.p1": "While transformed: $(bold)[P]$() locks crosshair target (80-block range); $(bold)[O]$() adds target; $(bold)[I]$() cancels all locks. Locked targets shown in top-right HUD. Press $(bold)[Y]$() to toggle battlefield highlight — your aircraft/torpedoes/bombs glow. Only visible to you."
 }

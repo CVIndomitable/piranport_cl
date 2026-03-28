@@ -3,6 +3,7 @@ package com.piranport.registry;
 import com.piranport.PiranPort;
 import com.piranport.entity.AerialBombEntity;
 import com.piranport.entity.AircraftEntity;
+import com.piranport.entity.BulletEntity;
 import com.piranport.entity.CannonProjectileEntity;
 import com.piranport.entity.FloatingTargetEntity;
 import com.piranport.entity.TorpedoEntity;
@@ -56,4 +57,12 @@ public class ModEntityTypes {
                     .clientTrackingRange(8)
                     .updateInterval(5)
                     .build("aerial_bomb"));
+
+    public static final DeferredHolder<EntityType<?>, EntityType<BulletEntity>>
+            BULLET = ENTITY_TYPES.register("bullet",
+            () -> EntityType.Builder.<BulletEntity>of(BulletEntity::new, MobCategory.MISC)
+                    .sized(0.15f, 0.15f)
+                    .clientTrackingRange(8)
+                    .updateInterval(2)
+                    .build("bullet"));
 }

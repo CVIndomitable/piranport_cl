@@ -269,7 +269,7 @@ public class ModItems {
                     () -> new AircraftItem(new Item.Properties().stacksTo(1)
                             .component(ModDataComponents.AIRCRAFT_INFO.get(),
                                     new AircraftInfo(AircraftInfo.AircraftType.FIGHTER,
-                                            1200, 0, 0, 18f, 1.8f, 12))));
+                                            1200, 64, 0, 18f, 1.8f, 12))));
 
     public static final DeferredItem<AircraftItem> DIVE_BOMBER_SQUADRON =
             ITEMS.register("dive_bomber_squadron",
@@ -290,7 +290,7 @@ public class ModItems {
                     () -> new AircraftItem(new Item.Properties().stacksTo(1)
                             .component(ModDataComponents.AIRCRAFT_INFO.get(),
                                     new AircraftInfo(AircraftInfo.AircraftType.LEVEL_BOMBER,
-                                            1200, 12, 0, 36f, 1.0f, 24))));
+                                            1200, 8, 0, 36f, 1.0f, 24))));
 
     // ===== Aviation Ammo (Phase 18) =====
     public static final DeferredItem<Item> AVIATION_FUEL =
@@ -301,6 +301,12 @@ public class ModItems {
             ITEMS.registerSimpleItem("aerial_bomb_medium");
     public static final DeferredItem<Item> AERIAL_TORPEDO =
             ITEMS.registerSimpleItem("aerial_torpedo");
+    // Unified aerial bomb (replaces small/medium distinction)
+    public static final DeferredItem<Item> AERIAL_BOMB =
+            ITEMS.registerSimpleItem("aerial_bomb");
+    // Fighter ammo (子弹)
+    public static final DeferredItem<Item> FIGHTER_AMMO =
+            ITEMS.registerSimpleItem("fighter_ammo");
 
     // ===== Phase 19: Floating Target =====
     public static final DeferredItem<com.piranport.item.FloatingTargetItem> FLOATING_TARGET =

@@ -21,7 +21,6 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.ItemStackHandler;
-import net.neoforged.neoforge.items.wrapper.RangedWrapper;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -45,8 +44,37 @@ public class StoneMillBlockEntity extends BlockEntity implements MenuProvider {
         }
     };
 
-    private final RangedWrapper inputHandler = new RangedWrapper(itemHandler, 0, INPUT_SLOTS);
-    private final RangedWrapper outputHandler = new RangedWrapper(itemHandler, INPUT_SLOTS, TOTAL_SLOTS);
+    /**
+     * Phase 31: AE2/hopper automation — input-only view of slots 0-3 (top/side faces).
+     * External automation may insert ingredients but not extract them.
+     * RangedWrapper was replaced because it allowed extraction from input slots,
+     * which could cause AE2 Storage Bus to accidentally pull out unprocessed ingredients.
+     */
+    private final IItemHandler inputHandler = new IItemHandler() {
+        @Override public int getSlots() { return INPUT_SLOTS; }
+        @Override public ItemStack getStackInSlot(int slot) { return itemHandler.getStackInSlot(slot); }
+        @Override public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
+            return itemHandler.insertItem(slot, stack, simulate);
+        }
+        @Override public ItemStack extractItem(int slot, int amount, boolean simulate) { return ItemStack.EMPTY; }
+        @Override public int getSlotLimit(int slot) { return itemHandler.getSlotLimit(slot); }
+        @Override public boolean isItemValid(int slot, ItemStack stack) { return true; }
+    };
+
+    /**
+     * Phase 31: output-only view of slots 4-5 (bottom face).
+     * External automation may extract products but not insert into output slots.
+     */
+    private final IItemHandler outputHandler = new IItemHandler() {
+        @Override public int getSlots() { return OUTPUT_SLOTS; }
+        @Override public ItemStack getStackInSlot(int slot) { return itemHandler.getStackInSlot(INPUT_SLOTS + slot); }
+        @Override public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) { return stack; }
+        @Override public ItemStack extractItem(int slot, int amount, boolean simulate) {
+            return itemHandler.extractItem(INPUT_SLOTS + slot, amount, simulate);
+        }
+        @Override public int getSlotLimit(int slot) { return itemHandler.getSlotLimit(INPUT_SLOTS + slot); }
+        @Override public boolean isItemValid(int slot, ItemStack stack) { return false; }
+    };
 
     public StoneMillBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntityTypes.STONE_MILL.get(), pos, state);

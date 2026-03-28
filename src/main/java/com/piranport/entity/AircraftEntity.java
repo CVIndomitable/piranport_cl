@@ -20,8 +20,11 @@ import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
@@ -79,6 +82,9 @@ public class AircraftEntity extends Entity {
     private int lastForcedChunkZ = Integer.MIN_VALUE;
     private boolean appliedSlowness = false;
 
+    // Phase 33: aircraft health (runtime only — not saved to NBT; aircraft resets on re-launch)
+    private int aircraftHealth = 20;
+
     private static final int MAX_AIRTIME_TICKS = 12000;
     private static final double MAX_DIST_FROM_OWNER = 48.0;
     private static final double MAX_RECON_DIST = 200.0;  // Phase 32
@@ -112,6 +118,7 @@ public class AircraftEntity extends Entity {
             entity.panelSpeed = info.panelSpeed();
             entity.remainingAmmo = info.ammoCapacity();
         }
+        entity.aircraftHealth = getMaxHealth(entity.aircraftType);
         entity.entityData.set(AIRCRAFT_TYPE_DATA, entity.aircraftType.ordinal());
         entity.entityData.set(OWNER_ID, Optional.of(owner.getUUID()));
 
@@ -281,24 +288,37 @@ public class AircraftEntity extends Entity {
     // ===== ATTACKING dispatch =====
 
     private void tickAttacking(Player owner) {
-        LivingEntity target = resolveTarget(owner);
-        if (target == null) {
-            setState(FlightState.CRUISING);
-            return;
-        }
         switch (aircraftType) {
-            case FIGHTER        -> tickFighterAttack(owner, target);
-            case DIVE_BOMBER    -> tickDiveBomberAttack(owner, target);
-            case TORPEDO_BOMBER -> tickTorpedoBomberAttack(owner, target);
-            case LEVEL_BOMBER   -> tickLevelBomberAttack(owner, target);
-            case RECON          -> setState(FlightState.RETURNING);  // RECON doesn't attack
+            case FIGHTER -> {
+                // Phase 33: fighters can target aircraft or living entities
+                Entity target = resolveFighterTarget(owner);
+                if (target == null) { setState(FlightState.CRUISING); return; }
+                tickFighterAttack(owner, target);
+            }
+            case DIVE_BOMBER -> {
+                LivingEntity target = resolveTarget(owner);
+                if (target == null) { setState(FlightState.CRUISING); return; }
+                tickDiveBomberAttack(owner, target);
+            }
+            case TORPEDO_BOMBER -> {
+                LivingEntity target = resolveTarget(owner);
+                if (target == null) { setState(FlightState.CRUISING); return; }
+                tickTorpedoBomberAttack(owner, target);
+            }
+            case LEVEL_BOMBER -> {
+                LivingEntity target = resolveTarget(owner);
+                if (target == null) { setState(FlightState.CRUISING); return; }
+                tickLevelBomberAttack(owner, target);
+            }
+            case RECON -> setState(FlightState.RETURNING);  // RECON doesn't attack
         }
     }
 
     /**
      * FIGHTER: hover at ~11 blocks and fire bullets. 64 rounds total.
+     * Phase 33: target may be a LivingEntity or an enemy AircraftEntity.
      */
-    private void tickFighterAttack(Player owner, LivingEntity target) {
+    private void tickFighterAttack(Player owner, Entity target) {
         if (remainingAmmo <= 0) { setState(FlightState.RETURNING); return; }
 
         Vec3 toTarget = target.getEyePosition().subtract(position());
@@ -594,6 +614,105 @@ public class AircraftEntity extends Entity {
             return InteractionResult.sidedSuccess(false);
         }
         return InteractionResult.PASS;
+    }
+
+    // ===== Phase 33: air combat =====
+
+    private static int getMaxHealth(AircraftInfo.AircraftType type) {
+        return switch (type) {
+            case FIGHTER        -> 20;
+            case DIVE_BOMBER    -> 15;
+            case TORPEDO_BOMBER -> 15;
+            case LEVEL_BOMBER   -> 12;
+            case RECON          -> 10;
+        };
+    }
+
+    /**
+     * Aircraft takes damage from bullets and other sources.
+     * Friendly fire (same ownerUUID) is ignored.
+     * On death: explosion effect, discard WITHOUT returning item to owner.
+     */
+    @Override
+    public boolean hurt(DamageSource source, float amount) {
+        if (level().isClientSide()) return false;
+        FlightState state = getFlightState();
+        if (state == FlightState.REMOVED) return false;
+
+        // Friendly fire — ignore damage from the same player's attacks
+        Entity attacker = source.getEntity();
+        if (attacker instanceof Player p && ownerUUID != null && ownerUUID.equals(p.getUUID())) {
+            return false;
+        }
+
+        aircraftHealth -= (int) Math.ceil(amount);
+
+        // Hit sound
+        level().playSound(null, getX(), getY(), getZ(),
+                SoundEvents.IRON_GOLEM_HURT, SoundSource.HOSTILE,
+                0.4f, 1.4f + random.nextFloat() * 0.2f);
+
+        if (aircraftHealth <= 0) {
+            // Explosion effect + destroy (no item return)
+            level().playSound(null, getX(), getY(), getZ(),
+                    SoundEvents.GENERIC_EXPLODE, SoundSource.HOSTILE, 1.0f, 0.9f + random.nextFloat() * 0.2f);
+            if (level() instanceof ServerLevel sl) {
+                sl.sendParticles(ParticleTypes.EXPLOSION, getX(), getY(), getZ(),
+                        1, 0.3, 0.3, 0.3, 0.0);
+            }
+            // Clean up recon state if needed
+            if (state == FlightState.RECON_ACTIVE && ownerUUID != null) {
+                Player owner = getOwner();
+                if (owner != null) handleStateTransition(FlightState.RECON_ACTIVE, FlightState.REMOVED, owner);
+                else { ReconManager.endRecon(ownerUUID); releaseAllForcedChunks(); }
+            }
+            discard();
+        }
+        return true;
+    }
+
+    /**
+     * Phase 33: fighter target resolution with extended priority:
+     * 1. Fire control locked targets (any entity type)
+     * 2. Enemy aircraft (non-same-owner AircraftEntity, 32-block radius)
+     * 3. Hostile mobs (32-block radius)
+     */
+    @Nullable
+    private Entity resolveFighterTarget(Player owner) {
+        if (!(level() instanceof ServerLevel sl)) return null;
+
+        List<UUID> locks = FireControlManager.getTargets(owner.getUUID());
+        if (!locks.isEmpty()) {
+            if (attackMode == FlightGroupData.AttackMode.SPREAD) {
+                return locks.stream()
+                        .map(sl::getEntity)
+                        .filter(e -> e != null && e.isAlive())
+                        .min(Comparator.comparingDouble(this::distanceTo))
+                        .orElse(null);
+            } else {
+                Entity e = sl.getEntity(locks.get(0));
+                if (e != null && e.isAlive()) return e;
+            }
+        }
+
+        AABB box = getBoundingBox().inflate(32.0);
+
+        // Enemy aircraft (non-same-owner, non-self)
+        List<AircraftEntity> enemyAircraft = sl.getEntitiesOfClass(AircraftEntity.class, box,
+                ae -> ae.isAlive() && ae != this
+                        && !(ownerUUID != null && ownerUUID.equals(ae.ownerUUID)));
+        if (!enemyAircraft.isEmpty()) {
+            return enemyAircraft.stream()
+                    .min(Comparator.comparingDouble(this::distanceTo))
+                    .orElse(null);
+        }
+
+        // Hostile mobs fallback
+        return sl.getEntitiesOfClass(LivingEntity.class, box,
+                e -> e.isAlive() && e != owner && e instanceof Monster)
+                .stream()
+                .min(Comparator.comparingDouble(this::distanceTo))
+                .orElse(null);
     }
 
     public void setState(FlightState newState) {

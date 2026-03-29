@@ -3,6 +3,9 @@ package com.piranport;
 import com.piranport.aviation.ClientFireControlData;
 import com.piranport.aviation.ClientReconData;
 import com.piranport.combat.TransformationManager;
+import com.piranport.debug.PiranPortDebug;
+import com.piranport.network.DebugTogglePayload;
+import com.piranport.network.SnapshotRequestPayload;
 import com.piranport.entity.AerialBombEntity;
 import com.piranport.entity.AircraftEntity;
 import com.piranport.entity.BulletEntity;
@@ -99,6 +102,23 @@ public class ClientTickHandler {
             if (!transformed) continue;
             int coreSlot = mc.player.getInventory().selected;
             PacketDistributor.sendToServer(new OpenFlightGroupPayload(coreSlot));
+        }
+
+        // F8 / Shift+F8: debug toggle / snapshot
+        while (ModKeyMappings.DEBUG_TOGGLE.consumeClick()) {
+            if (net.minecraft.client.gui.screens.Screen.hasShiftDown()) {
+                // Shift+F8: request server snapshot (no enabled required)
+                PacketDistributor.sendToServer(new SnapshotRequestPayload());
+                mc.player.displayClientMessage(
+                        net.minecraft.network.chat.Component.literal("[PP] Snapshot written to logs/piranport-debug.log"), true);
+            } else {
+                // F8: toggle client watermark + notify server
+                boolean nowEnabled = PiranPortDebug.toggleClient();
+                PacketDistributor.sendToServer(new DebugTogglePayload(nowEnabled));
+                mc.player.displayClientMessage(
+                        net.minecraft.network.chat.Component.literal(
+                                nowEnabled ? "[PP DEBUG] ON" : "[PP DEBUG] OFF"), true);
+            }
         }
 
         // Toggle entity highlight (Y key)

@@ -79,19 +79,19 @@ public class ShipCoreMenu extends AbstractContainerMenu {
             addSlot(new EnhancementSlot(coreContainer, eStart + i, 8 + i * 18, 72));
         }
 
-        // Player inventory (3 rows, y=106)
+        // Player inventory (3 rows, y=128 — shifted +22 to make room for ship config section)
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
-                addSlot(new Slot(playerInventory, 9 + row * 9 + col, 8 + col * 18, 106 + row * 18));
+                addSlot(new Slot(playerInventory, 9 + row * 9 + col, 8 + col * 18, 128 + row * 18));
             }
         }
 
-        // Hotbar (y=164)
+        // Hotbar (y=186)
         for (int col = 0; col < 9; col++) {
             if (col == coreSlot) {
-                addSlot(new LockedSlot(playerInventory, col, 8 + col * 18, 164));
+                addSlot(new LockedSlot(playerInventory, col, 8 + col * 18, 186));
             } else {
-                addSlot(new Slot(playerInventory, col, 8 + col * 18, 164));
+                addSlot(new Slot(playerInventory, col, 8 + col * 18, 186));
             }
         }
 
@@ -138,6 +138,10 @@ public class ShipCoreMenu extends AbstractContainerMenu {
 
     public boolean isTransformed() {
         return TransformationManager.isTransformed(coreStack);
+    }
+
+    public boolean isAutoLaunch() {
+        return coreStack.getOrDefault(ModDataComponents.SHIP_AUTO_LAUNCH.get(), false);
     }
 
     public static int getWeight(ItemStack stack) {
@@ -204,8 +208,8 @@ public class ShipCoreMenu extends AbstractContainerMenu {
         int hotbarEnd = invEnd + 9;
 
         if (index < enhEnd) {
-            // From core container → player inventory
-            if (!moveItemStackTo(slotStack, enhEnd, hotbarEnd, true)) {
+            // From core container → player inventory (main inventory first, then hotbar)
+            if (!moveItemStackTo(slotStack, enhEnd, hotbarEnd, false)) {
                 return ItemStack.EMPTY;
             }
         } else {

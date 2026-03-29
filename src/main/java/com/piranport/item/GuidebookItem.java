@@ -2,7 +2,6 @@ package com.piranport.item;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Player;
@@ -22,17 +21,21 @@ public class GuidebookItem extends Item {
 
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
-        if (!level.isClientSide() && player instanceof ServerPlayer sp) {
+        if (level.isClientSide()) {
+            // Client-side: open book GUI directly (no network round-trip needed)
             if (ModList.get().isLoaded("patchouli")) {
                 try {
                     Class<?> apiClass = Class.forName("vazkii.patchouli.api.PatchouliAPI");
                     Object api = apiClass.getMethod("get").invoke(null);
                     api.getClass()
-                       .getMethod("openBookGUI", ServerPlayer.class, ResourceLocation.class)
-                       .invoke(api, sp, BOOK_ID);
-                } catch (Exception ignored) {}
+                       .getMethod("openBookGUI", ResourceLocation.class)
+                       .invoke(api, BOOK_ID);
+                } catch (Exception e) {
+                    player.displayClientMessage(
+                            Component.translatable("message.piranport.patchouli_required"), true);
+                }
             } else {
-                sp.displayClientMessage(
+                player.displayClientMessage(
                         Component.translatable("message.piranport.patchouli_required"), true);
             }
         }

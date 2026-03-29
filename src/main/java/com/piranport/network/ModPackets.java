@@ -58,5 +58,22 @@ public class ModPackets {
                 ReconEndPayload.STREAM_CODEC,
                 ReconEndPayload::handle
         );
+        // Phase 36: ship config
+        registrar.playToServer(
+                AutoLaunchTogglePayload.TYPE,
+                AutoLaunchTogglePayload.STREAM_CODEC,
+                AutoLaunchTogglePayload::handle
+        );
+        // Debug system
+        registrar.playToServer(
+                DebugTogglePayload.TYPE,
+                DebugTogglePayload.STREAM_CODEC,
+                DebugTogglePayload::handle
+        );
+        registrar.playToServer(
+                SnapshotRequestPayload.TYPE,
+                SnapshotRequestPayload.STREAM_CODEC,
+                SnapshotRequestPayload::handle
+        );
     }
 }

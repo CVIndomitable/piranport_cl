@@ -43,8 +43,13 @@ public class EvasionHandler {
         int amplifier = effectInstance.getAmplifier();
         float dodgeChance = (amplifier + 1) * 0.10f + 0.05f;
 
-        if (player.getRandom().nextFloat() < dodgeChance) {
+        float roll = player.getRandom().nextFloat();
+        if (roll < dodgeChance) {
             event.setCanceled(true);
+            com.piranport.debug.PiranPortDebug.event(
+                    "Evasion DODGE | chance={}% roll={} source={}",
+                    String.format("%.0f", dodgeChance * 100), String.format("%.2f", roll),
+                    event.getSource().type().msgId());
 
             // Sound — broadcast to nearby players
             player.level().playSound(null,

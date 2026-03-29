@@ -2,9 +2,9 @@ package com.piranport.client;
 
 import com.piranport.PiranPort;
 import com.piranport.combat.TransformationManager;
+import com.piranport.component.SlotCooldowns;
 import com.piranport.config.ModClientConfig;
 import com.piranport.item.ShipCoreItem;
-import com.piranport.item.TorpedoLauncherItem;
 import com.piranport.registry.ModDataComponents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -53,7 +53,8 @@ public class ShipCoreHudLayer {
         int startX = screenWidth / 2 - totalWidth / 2;
         int barY = screenHeight - 44;
 
-        float partialTick = 0.0f; // sub-tick interpolation not critical for cooldown bars
+        long currentTick = mc.level != null ? mc.level.getGameTime() : 0L;
+        SlotCooldowns cooldowns = mainHand.getOrDefault(ModDataComponents.SLOT_COOLDOWNS.get(), SlotCooldowns.EMPTY);
 
         for (int i = 0; i < type.weaponSlots; i++) {
             ItemStack weapon = items.get(i);
@@ -68,7 +69,7 @@ public class ShipCoreHudLayer {
                 continue;
             }
 
-            float cooldownFraction = getCooldownPercent(player, mainHand, weapon, partialTick);
+            float cooldownFraction = cooldowns.getFraction(i, currentTick);
 
             if (cooldownFraction <= 0f) {
                 // Ready: solid green
@@ -85,14 +86,5 @@ public class ShipCoreHudLayer {
                 }
             }
         }
-    }
-
-    private static float getCooldownPercent(LocalPlayer player, ItemStack coreStack,
-                                             ItemStack weapon, float partialTick) {
-        if (weapon.getItem() instanceof TorpedoLauncherItem) {
-            return player.getCooldowns().getCooldownPercent(weapon.getItem(), partialTick);
-        }
-        // Cannon uses the ship core item's cooldown
-        return player.getCooldowns().getCooldownPercent(coreStack.getItem(), partialTick);
     }
 }

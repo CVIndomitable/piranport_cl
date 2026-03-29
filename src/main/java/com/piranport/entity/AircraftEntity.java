@@ -1,6 +1,8 @@
 package com.piranport.entity;
 
 import com.piranport.aviation.FireControlManager;
+import com.piranport.config.ModCommonConfig;
+import net.minecraft.core.registries.BuiltInRegistries;
 import com.piranport.aviation.ReconManager;
 import com.piranport.component.AircraftInfo;
 import com.piranport.component.FlightGroupData;
@@ -67,6 +69,12 @@ public class AircraftEntity extends Entity {
     private float panelDamage;
     private float panelSpeed;
     private int remainingAmmo = 0;
+    private int ammoCapacity = 0;
+    private int currentFuel = 0;
+    private int fuelCapacity = 1;
+    private boolean hasBullets = false;
+    private String payloadType = "";
+    private AircraftInfo.BombingMode bombingMode = AircraftInfo.BombingMode.DIVE;
 
     // Runtime (not saved)
     private int airtimeTicks = 0;
@@ -108,19 +116,27 @@ public class AircraftEntity extends Entity {
     public static AircraftEntity create(Level level, Player owner, int weaponSlotIndex,
                                         ItemStack aircraftStack,
                                         FlightGroupData.AttackMode attackMode,
-                                        int coreInventorySlot) {
+                                        int coreInventorySlot,
+                                        boolean hasBullets,
+                                        String payloadType) {
         AircraftEntity entity = new AircraftEntity(ModEntityTypes.AIRCRAFT_ENTITY.get(), level);
         entity.ownerUUID = owner.getUUID();
         entity.weaponSlotIndex = weaponSlotIndex;
         entity.coreInventorySlot = coreInventorySlot;
         entity.attackMode = attackMode;
+        entity.hasBullets = hasBullets;
+        entity.payloadType = payloadType;
 
         AircraftInfo info = aircraftStack.get(ModDataComponents.AIRCRAFT_INFO.get());
         if (info != null) {
             entity.aircraftType = info.aircraftType();
             entity.panelDamage = info.panelDamage();
             entity.panelSpeed = info.panelSpeed();
+            entity.ammoCapacity = info.ammoCapacity();
             entity.remainingAmmo = info.ammoCapacity();
+            entity.fuelCapacity = info.fuelCapacity();
+            entity.currentFuel = info.currentFuel();
+            entity.bombingMode = info.bombingMode();
         }
         entity.aircraftHealth = getMaxHealth(entity.aircraftType);
         entity.entityData.set(AIRCRAFT_TYPE_DATA, entity.aircraftType.ordinal());
@@ -275,8 +291,14 @@ public class AircraftEntity extends Entity {
     }
 
     private void tickCruising(Player owner) {
-        // Transition to ATTACKING if owner has locked targets (non-RECON only; FOLLOW mode can also attack)
+        // Auto fuel resupply: draw from core if empty and config enabled
+        if (currentFuel <= 0 && ModCommonConfig.AUTO_RESUPPLY_ENABLED.get()) {
+            tryAutoResupplyFuel(owner);
+        }
+
+        // Transition to ATTACKING if owner has locked targets, aircraft has attack capability, and is not RECON
         if (aircraftType != AircraftInfo.AircraftType.RECON
+                && (hasBullets || !payloadType.isEmpty())
                 && !FireControlManager.getTargets(owner.getUUID()).isEmpty()) {
             setState(FlightState.ATTACKING);
             return;
@@ -329,38 +351,48 @@ public class AircraftEntity extends Entity {
     // ===== ATTACKING dispatch =====
 
     private void tickAttacking(Player owner) {
-        switch (aircraftType) {
-            case FIGHTER -> {
-                // Phase 33: fighters can target aircraft or living entities
-                Entity target = resolveFighterTarget(owner);
-                if (target == null) { setState(FlightState.CRUISING); return; }
-                tickFighterAttack(owner, target);
-            }
-            case DIVE_BOMBER -> {
-                LivingEntity target = resolveTarget(owner);
-                if (target == null) { setState(FlightState.CRUISING); return; }
-                tickDiveBomberAttack(owner, target);
-            }
-            case TORPEDO_BOMBER -> {
+        if (aircraftType == AircraftInfo.AircraftType.RECON) {
+            setState(FlightState.RETURNING);
+            return;
+        }
+
+        // 子弹优先：使用战斗机AI
+        if (hasBullets) {
+            Entity target = resolveFighterTarget(owner);
+            if (target == null) { setState(FlightState.CRUISING); return; }
+            tickFighterAttack(owner, target);
+            return;
+        }
+
+        // 无子弹时按挂载类型决定攻击行为
+        switch (payloadType) {
+            case "piranport:aerial_torpedo" -> {
                 LivingEntity target = resolveTarget(owner);
                 if (target == null) { setState(FlightState.CRUISING); return; }
                 tickTorpedoBomberAttack(owner, target);
             }
-            case LEVEL_BOMBER -> {
+            case "piranport:aerial_bomb" -> {
                 LivingEntity target = resolveTarget(owner);
                 if (target == null) { setState(FlightState.CRUISING); return; }
-                tickLevelBomberAttack(owner, target);
+                if (bombingMode == AircraftInfo.BombingMode.LEVEL) {
+                    tickLevelBomberAttack(owner, target);
+                } else {
+                    tickDiveBomberAttack(owner, target);
+                }
             }
-            case RECON -> setState(FlightState.RETURNING);  // RECON doesn't attack
+            default -> setState(FlightState.RETURNING); // 无挂载，不攻击
         }
     }
 
     /**
-     * FIGHTER: hover at ~11 blocks and fire bullets. 64 rounds total.
+     * FIGHTER: hover at ~11 blocks and fire bullets.
+     * When fighterAmmoEnabled=false (default), ammo is unlimited and the fighter
+     * never returns due to depletion. When true, 64 rounds total (ammoCapacity).
      * Phase 33: target may be a LivingEntity or an enemy AircraftEntity.
      */
     private void tickFighterAttack(Player owner, Entity target) {
-        if (remainingAmmo <= 0) { setState(FlightState.RETURNING); return; }
+        boolean ammoEnabled = ModCommonConfig.FIGHTER_AMMO_ENABLED.get();
+        if (ammoEnabled && remainingAmmo <= 0) { setState(FlightState.RETURNING); return; }
 
         Vec3 toTarget = target.getEyePosition().subtract(position());
         double dist = toTarget.length();
@@ -381,11 +413,17 @@ public class AircraftEntity extends Entity {
             bullet.setDeltaMovement(dir.scale(2.5));
             bullet.setOwner(owner);
             level().addFreshEntity(bullet);
-            remainingAmmo--;
             attackCooldown = 5;
 
-            if (remainingAmmo <= 0) {
-                setState(FlightState.RETURNING);
+            if (ammoEnabled) {
+                remainingAmmo--;
+                if (remainingAmmo <= 0) {
+                    if (ModCommonConfig.AUTO_RESUPPLY_ENABLED.get() && tryAutoResupplyAmmo(owner)) {
+                        // Ammo restored (payload type must be set) — continue
+                    } else {
+                        setState(FlightState.RETURNING);
+                    }
+                }
             }
         }
     }
@@ -395,7 +433,14 @@ public class AircraftEntity extends Entity {
      * On close contact (dist < 4), drop an AerialBombEntity and return.
      */
     private void tickDiveBomberAttack(Player owner, LivingEntity target) {
-        if (hasFired) { setState(FlightState.RETURNING); return; }
+        if (hasFired) {
+            if (ModCommonConfig.AUTO_RESUPPLY_ENABLED.get() && tryAutoResupplyAmmo(owner)) {
+                setState(FlightState.CRUISING);
+            } else {
+                setState(FlightState.RETURNING);
+            }
+            return;
+        }
 
         double climbY = target.getY() + 18.0;
 
@@ -425,7 +470,14 @@ public class AircraftEntity extends Entity {
      * Fires early so the torpedo travels forward to hit.
      */
     private void tickTorpedoBomberAttack(Player owner, LivingEntity target) {
-        if (hasFired) { setState(FlightState.RETURNING); return; }
+        if (hasFired) {
+            if (ModCommonConfig.AUTO_RESUPPLY_ENABLED.get() && tryAutoResupplyAmmo(owner)) {
+                setState(FlightState.CRUISING);
+            } else {
+                setState(FlightState.RETURNING);
+            }
+            return;
+        }
 
         double dx = target.getX() - getX();
         double dz = target.getZ() - getZ();
@@ -464,7 +516,14 @@ public class AircraftEntity extends Entity {
      * 8 rounds total; does not return until ammo depleted.
      */
     private void tickLevelBomberAttack(Player owner, LivingEntity target) {
-        if (remainingAmmo <= 0) { setState(FlightState.RETURNING); return; }
+        if (remainingAmmo <= 0) {
+            if (ModCommonConfig.AUTO_RESUPPLY_ENABLED.get() && tryAutoResupplyAmmo(owner)) {
+                // Ammo restored — continue attacking
+            } else {
+                setState(FlightState.RETURNING);
+                return;
+            }
+        }
 
         double bombAltitude = target.getY() + 32.0;
 
@@ -591,6 +650,9 @@ public class AircraftEntity extends Entity {
 
     /** Remove entity and return aircraft item to the owner's ship core weapon slot. */
     public void recallAndRemove() {
+        com.piranport.debug.PiranPortDebug.event(
+                "Aircraft RETURN | type={} entityId={} forced={}",
+                aircraftType.name(), getId(), isForcedReturn);
         if (!level().isClientSide() && ownerUUID != null && level() instanceof ServerLevel sl) {
             Player owner = sl.getServer().getPlayerList().getPlayer(ownerUUID);
             if (owner != null) {
@@ -615,6 +677,27 @@ public class AircraftEntity extends Entity {
     }
 
     private void returnItemToOwner(Player player) {
+        if (!com.piranport.config.ModCommonConfig.SHIP_CORE_GUI_ENABLED.get()) {
+            // Inventory mode: return aircraft directly to the inventory slot it was launched from
+            ItemStack returnStack = buildReturnStack();
+            if (weaponSlotIndex == 40) {
+                if (player.getInventory().offhand.get(0).isEmpty()) {
+                    player.getInventory().offhand.set(0, returnStack);
+                } else {
+                    player.getInventory().placeItemBackInInventory(returnStack);
+                }
+            } else if (weaponSlotIndex >= 0 && weaponSlotIndex < player.getInventory().items.size()) {
+                if (player.getInventory().items.get(weaponSlotIndex).isEmpty()) {
+                    player.getInventory().items.set(weaponSlotIndex, returnStack);
+                } else {
+                    player.getInventory().placeItemBackInInventory(returnStack);
+                }
+            } else {
+                player.getInventory().placeItemBackInInventory(returnStack);
+            }
+            return;
+        }
+
         ItemStack coreStack = findCoreStack(player);
         if (!(coreStack.getItem() instanceof ShipCoreItem sci)) return;
 
@@ -656,11 +739,99 @@ public class AircraftEntity extends Entity {
 
     @Override
     public InteractionResult interact(Player player, InteractionHand hand) {
-        if (!level().isClientSide() && ownerUUID != null && ownerUUID.equals(player.getUUID())) {
+        if (level().isClientSide() || ownerUUID == null || !ownerUUID.equals(player.getUUID()))
+            return InteractionResult.PASS;
+
+        ItemStack held = player.getItemInHand(hand);
+
+        // Manual fuel resupply: hold aviation_fuel → right-click
+        if (held.is(ModItems.AVIATION_FUEL.get())) {
+            if (currentFuel < fuelCapacity) {
+                held.shrink(1);
+                currentFuel = fuelCapacity;
+                player.displayClientMessage(
+                        Component.translatable("message.piranport.aircraft_refueled", getDisplayName()), true);
+                return InteractionResult.sidedSuccess(false);
+            }
+            // Already full fuel — fall through to recall check
+        }
+
+        // Manual ammo resupply: hold the aircraft's payload item → right-click
+        if (!held.isEmpty() && !payloadType.isEmpty()) {
+            String heldId = BuiltInRegistries.ITEM.getKey(held.getItem()).toString();
+            if (payloadType.equals(heldId) && remainingAmmo < ammoCapacity) {
+                held.shrink(1);
+                remainingAmmo = ammoCapacity;
+                hasFired = false;
+                player.displayClientMessage(
+                        Component.translatable("message.piranport.aircraft_resupplied", getDisplayName()), true);
+                return InteractionResult.sidedSuccess(false);
+            }
+        }
+
+        // Empty hand → recall
+        if (held.isEmpty()) {
             recallAndRemove();
             return InteractionResult.sidedSuccess(false);
         }
+
         return InteractionResult.PASS;
+    }
+
+    /**
+     * Attempt to draw one unit of the aircraft's payload item from the owner's
+     * ship core ammo slots. Returns true if successful.
+     */
+    private boolean tryAutoResupplyAmmo(Player owner) {
+        if (payloadType.isEmpty()) return false;
+        ItemStack coreStack = findCoreStack(owner);
+        if (!(coreStack.getItem() instanceof ShipCoreItem sci)) return false;
+
+        ItemContainerContents contents = coreStack.getOrDefault(
+                ModDataComponents.SHIP_CORE_CONTENTS.get(), ItemContainerContents.EMPTY);
+        NonNullList<ItemStack> items = NonNullList.withSize(sci.getShipType().totalSlots(), ItemStack.EMPTY);
+        contents.copyInto(items);
+
+        int ammoStart = sci.getShipType().weaponSlots;
+        int ammoEnd = ammoStart + sci.getShipType().ammoSlots;
+        for (int ai = ammoStart; ai < ammoEnd; ai++) {
+            ItemStack ammo = items.get(ai);
+            if (!ammo.isEmpty() && BuiltInRegistries.ITEM.getKey(ammo.getItem()).toString().equals(payloadType)) {
+                ammo.shrink(1);
+                coreStack.set(ModDataComponents.SHIP_CORE_CONTENTS.get(), ItemContainerContents.fromItems(items));
+                remainingAmmo = ammoCapacity;
+                hasFired = false;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Attempt to draw one aviation_fuel from the owner's ship core ammo slots.
+     * Returns true if successful.
+     */
+    private boolean tryAutoResupplyFuel(Player owner) {
+        ItemStack coreStack = findCoreStack(owner);
+        if (!(coreStack.getItem() instanceof ShipCoreItem sci)) return false;
+
+        ItemContainerContents contents = coreStack.getOrDefault(
+                ModDataComponents.SHIP_CORE_CONTENTS.get(), ItemContainerContents.EMPTY);
+        NonNullList<ItemStack> items = NonNullList.withSize(sci.getShipType().totalSlots(), ItemStack.EMPTY);
+        contents.copyInto(items);
+
+        int ammoStart = sci.getShipType().weaponSlots;
+        int ammoEnd = ammoStart + sci.getShipType().ammoSlots;
+        for (int ai = ammoStart; ai < ammoEnd; ai++) {
+            ItemStack ammo = items.get(ai);
+            if (ammo.is(ModItems.AVIATION_FUEL.get()) && ammo.getCount() > 0) {
+                ammo.shrink(1);
+                coreStack.set(ModDataComponents.SHIP_CORE_CONTENTS.get(), ItemContainerContents.fromItems(items));
+                currentFuel = fuelCapacity;
+                return true;
+            }
+        }
+        return false;
     }
 
     // ===== Phase 33: air combat =====
@@ -718,6 +889,10 @@ public class AircraftEntity extends Entity {
                 owner.displayClientMessage(Component.translatable(
                         "message.piranport.aircraft_shot_down", buildReturnStack().getHoverName()), true);
             }
+            com.piranport.debug.PiranPortDebug.event(
+                    "Aircraft KILLED | type={} entityId={} attacker={}",
+                    aircraftType.name(), getId(),
+                    attacker != null ? attacker.getType().toShortString() : "unknown");
             discard();
         }
         return true;
@@ -784,7 +959,10 @@ public class AircraftEntity extends Entity {
     }
 
     public AircraftInfo.AircraftType getAircraftType() {
-        return AircraftInfo.AircraftType.values()[entityData.get(AIRCRAFT_TYPE_DATA)];
+        int ordinal = entityData.get(AIRCRAFT_TYPE_DATA);
+        AircraftInfo.AircraftType[] values = AircraftInfo.AircraftType.values();
+        if (ordinal < 0 || ordinal >= values.length) return AircraftInfo.AircraftType.FIGHTER;
+        return values[ordinal];
     }
 
     /** Returns true if this aircraft is owned by the given player. Works client-side (synced). */
@@ -814,12 +992,20 @@ public class AircraftEntity extends Entity {
         weaponSlotIndex = tag.getInt("WeaponSlot");
         coreInventorySlot = tag.getInt("CoreSlot");
         try { aircraftType = AircraftInfo.AircraftType.valueOf(tag.getString("AircraftType")); }
-        catch (Exception e) { aircraftType = AircraftInfo.AircraftType.FIGHTER; }
+        catch (IllegalArgumentException e) { aircraftType = AircraftInfo.AircraftType.FIGHTER; }
         try { attackMode = FlightGroupData.AttackMode.valueOf(tag.getString("AttackMode")); }
-        catch (Exception e) { attackMode = FlightGroupData.AttackMode.FOCUS; }
+        catch (IllegalArgumentException e) { attackMode = FlightGroupData.AttackMode.FOCUS; }
         panelDamage = tag.getFloat("PanelDamage");
         panelSpeed  = tag.getFloat("PanelSpeed");
         remainingAmmo = tag.getInt("RemainingAmmo");
+        ammoCapacity = tag.getInt("AmmoCapacity");
+        currentFuel = tag.getInt("CurrentFuel");
+        fuelCapacity = tag.getInt("FuelCapacity");
+        if (fuelCapacity <= 0) fuelCapacity = 1; // guard against old saves
+        hasBullets = tag.getBoolean("HasBullets");
+        payloadType = tag.getString("PayloadType");
+        try { bombingMode = AircraftInfo.BombingMode.valueOf(tag.getString("BombingMode")); }
+        catch (IllegalArgumentException e) { bombingMode = AircraftInfo.BombingMode.DIVE; }
         entityData.set(STATE, tag.getInt("FlightState"));
         entityData.set(AIRCRAFT_TYPE_DATA, aircraftType.ordinal());
         if (ownerUUID != null) entityData.set(OWNER_ID, Optional.of(ownerUUID));
@@ -833,6 +1019,12 @@ public class AircraftEntity extends Entity {
         tag.putString("AircraftType", aircraftType.name());
         tag.putString("AttackMode", attackMode.name());
         tag.putFloat("PanelDamage", panelDamage);
+        tag.putInt("AmmoCapacity", ammoCapacity);
+        tag.putInt("CurrentFuel", currentFuel);
+        tag.putInt("FuelCapacity", fuelCapacity);
+        tag.putBoolean("HasBullets", hasBullets);
+        tag.putString("PayloadType", payloadType);
+        tag.putString("BombingMode", bombingMode.name());
         tag.putFloat("PanelSpeed", panelSpeed);
         tag.putInt("RemainingAmmo", remainingAmmo);
         tag.putInt("FlightState", entityData.get(STATE));

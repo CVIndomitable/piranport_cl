@@ -20,4 +20,7 @@ public class ModKeyMappings {
 
     public static final KeyMapping HIGHLIGHT_ENTITIES =
             new KeyMapping("key.piranport.highlight_entities", GLFW.GLFW_KEY_Y, CATEGORY);
+
+    public static final KeyMapping DEBUG_TOGGLE =
+            new KeyMapping("key.piranport.debug_toggle", GLFW.GLFW_KEY_F8, CATEGORY);
 }

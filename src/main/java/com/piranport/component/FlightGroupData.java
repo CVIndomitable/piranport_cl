@@ -20,7 +20,7 @@ public record FlightGroupData(List<FlightGroup> groups) {
     public enum AttackMode implements StringRepresentable {
         FOCUS("focus"),
         SPREAD("spread"),
-        FOLLOW("follow");  // Phase 34 — ordinal 2; must remain last for StreamCodec ordinal safety
+        FOLLOW("follow");
 
         private final String serializedName;
 
@@ -42,41 +42,49 @@ public record FlightGroupData(List<FlightGroup> groups) {
 
     public record FlightGroup(
             List<Integer> slotIndices,
-            Map<Integer, String> slotAmmoTypes, // weapon slot index → ammo type id (empty = unassigned)
+            List<Integer> slotBulletsList,   // slot indices that have bullets enabled
+            Map<Integer, String> slotPayload, // slot → "" | "piranport:aerial_torpedo" | "piranport:aerial_bomb"
             AttackMode attackMode,
             int sortOrder
     ) {
-        // Helper record for Codec serialization of each slot-ammo pair
-        private record SlotAmmoEntry(int slot, String ammo) {}
+        private record SlotPayloadEntry(int slot, String payload) {}
 
-        private static final Codec<SlotAmmoEntry> SLOT_AMMO_CODEC = RecordCodecBuilder.create(i ->
+        private static final Codec<SlotPayloadEntry> SLOT_PAYLOAD_CODEC = RecordCodecBuilder.create(i ->
                 i.group(
-                        Codec.INT.fieldOf("s").forGetter(SlotAmmoEntry::slot),
-                        Codec.STRING.fieldOf("a").forGetter(SlotAmmoEntry::ammo)
-                ).apply(i, SlotAmmoEntry::new)
+                        Codec.INT.fieldOf("s").forGetter(SlotPayloadEntry::slot),
+                        Codec.STRING.fieldOf("p").forGetter(SlotPayloadEntry::payload)
+                ).apply(i, SlotPayloadEntry::new)
         );
 
         public static final Codec<FlightGroup> CODEC = RecordCodecBuilder.create(i -> i.group(
                 Codec.INT.listOf().fieldOf("slot_indices").forGetter(FlightGroup::slotIndices),
-                SLOT_AMMO_CODEC.listOf().fieldOf("slot_ammos")
-                        .forGetter(g -> g.slotAmmoTypes().entrySet().stream()
-                                .map(e -> new SlotAmmoEntry(e.getKey(), e.getValue()))
+                Codec.INT.listOf().optionalFieldOf("slot_bullets", List.of()).forGetter(FlightGroup::slotBulletsList),
+                SLOT_PAYLOAD_CODEC.listOf().optionalFieldOf("slot_payloads", List.of())
+                        .forGetter(g -> g.slotPayload().entrySet().stream()
+                                .filter(e -> !e.getValue().isEmpty())
+                                .map(e -> new SlotPayloadEntry(e.getKey(), e.getValue()))
                                 .collect(Collectors.toList())),
                 AttackMode.CODEC.fieldOf("attack_mode").forGetter(FlightGroup::attackMode),
                 Codec.INT.fieldOf("sort_order").forGetter(FlightGroup::sortOrder)
-        ).apply(i, (slots, ammos, mode, order) -> new FlightGroup(
+        ).apply(i, (slots, bullets, payloads, mode, order) -> new FlightGroup(
                 slots,
-                ammos.stream().collect(Collectors.toMap(SlotAmmoEntry::slot, SlotAmmoEntry::ammo)),
+                bullets,
+                payloads.stream().collect(Collectors.toMap(SlotPayloadEntry::slot, SlotPayloadEntry::payload)),
                 mode,
                 order
         )));
 
         public static final StreamCodec<ByteBuf, FlightGroup> STREAM_CODEC = StreamCodec.of(
                 (buf, g) -> {
+                    // slotIndices
                     ByteBufCodecs.VAR_INT.encode(buf, g.slotIndices().size());
                     for (int idx : g.slotIndices()) ByteBufCodecs.VAR_INT.encode(buf, idx);
-                    ByteBufCodecs.VAR_INT.encode(buf, g.slotAmmoTypes().size());
-                    for (Map.Entry<Integer, String> e : g.slotAmmoTypes().entrySet()) {
+                    // slotBulletsList
+                    ByteBufCodecs.VAR_INT.encode(buf, g.slotBulletsList().size());
+                    for (int idx : g.slotBulletsList()) ByteBufCodecs.VAR_INT.encode(buf, idx);
+                    // slotPayload
+                    ByteBufCodecs.VAR_INT.encode(buf, g.slotPayload().size());
+                    for (Map.Entry<Integer, String> e : g.slotPayload().entrySet()) {
                         ByteBufCodecs.VAR_INT.encode(buf, e.getKey());
                         ByteBufCodecs.STRING_UTF8.encode(buf, e.getValue());
                     }
@@ -87,55 +95,79 @@ public record FlightGroupData(List<FlightGroup> groups) {
                     int cnt = ByteBufCodecs.VAR_INT.decode(buf);
                     List<Integer> indices = new ArrayList<>(cnt);
                     for (int j = 0; j < cnt; j++) indices.add(ByteBufCodecs.VAR_INT.decode(buf));
-                    int ammoCnt = ByteBufCodecs.VAR_INT.decode(buf);
-                    Map<Integer, String> ammoMap = new HashMap<>(ammoCnt);
-                    for (int j = 0; j < ammoCnt; j++) {
+
+                    int bcnt = ByteBufCodecs.VAR_INT.decode(buf);
+                    List<Integer> bullets = new ArrayList<>(bcnt);
+                    for (int j = 0; j < bcnt; j++) bullets.add(ByteBufCodecs.VAR_INT.decode(buf));
+
+                    int pcnt = ByteBufCodecs.VAR_INT.decode(buf);
+                    Map<Integer, String> payloadMap = new HashMap<>(pcnt);
+                    for (int j = 0; j < pcnt; j++) {
                         int slot = ByteBufCodecs.VAR_INT.decode(buf);
-                        String ammo = ByteBufCodecs.STRING_UTF8.decode(buf);
-                        ammoMap.put(slot, ammo);
+                        String payload = ByteBufCodecs.STRING_UTF8.decode(buf);
+                        payloadMap.put(slot, payload);
                     }
                     AttackMode mode = AttackMode.STREAM_CODEC.decode(buf);
                     int order = ByteBufCodecs.VAR_INT.decode(buf);
-                    return new FlightGroup(List.copyOf(indices), Map.copyOf(ammoMap), mode, order);
+                    return new FlightGroup(List.copyOf(indices), List.copyOf(bullets),
+                            Map.copyOf(payloadMap), mode, order);
                 }
         );
 
         public static FlightGroup empty(int sortOrder) {
-            return new FlightGroup(List.of(), Map.of(), AttackMode.FOCUS, sortOrder);
+            return new FlightGroup(List.of(), List.of(), Map.of(), AttackMode.FOCUS, sortOrder);
         }
 
-        /** Toggle a weapon slot's membership in this group. Removing a slot also clears its ammo. */
+        /** Toggle a weapon slot's membership. Removing also clears its bullets and payload. */
         public FlightGroup withSlotToggled(int slotIndex) {
             List<Integer> newIndices = new ArrayList<>(slotIndices);
-            Map<Integer, String> newAmmo = new HashMap<>(slotAmmoTypes);
+            List<Integer> newBullets = new ArrayList<>(slotBulletsList);
+            Map<Integer, String> newPayload = new HashMap<>(slotPayload);
             if (newIndices.contains(slotIndex)) {
                 newIndices.remove((Integer) slotIndex);
-                newAmmo.remove(slotIndex);
+                newBullets.remove((Integer) slotIndex);
+                newPayload.remove(slotIndex);
             } else {
                 newIndices.add(slotIndex);
-                // ammo defaults to unassigned; don't add to map
             }
-            return new FlightGroup(List.copyOf(newIndices), Map.copyOf(newAmmo), attackMode, sortOrder);
+            return new FlightGroup(List.copyOf(newIndices), List.copyOf(newBullets),
+                    Map.copyOf(newPayload), attackMode, sortOrder);
         }
 
-        /** Set or clear the ammo type for a specific weapon slot. Empty string = unassigned. */
-        public FlightGroup withSlotAmmo(int slotIndex, String ammo) {
-            Map<Integer, String> newAmmo = new HashMap<>(slotAmmoTypes);
-            if (ammo.isEmpty()) {
-                newAmmo.remove(slotIndex);
+        /** Toggle bullets for a specific weapon slot. */
+        public FlightGroup withSlotBulletsToggled(int slotIndex) {
+            List<Integer> newBullets = new ArrayList<>(slotBulletsList);
+            if (newBullets.contains(slotIndex)) {
+                newBullets.remove((Integer) slotIndex);
             } else {
-                newAmmo.put(slotIndex, ammo);
+                newBullets.add(slotIndex);
             }
-            return new FlightGroup(slotIndices, Map.copyOf(newAmmo), attackMode, sortOrder);
+            return new FlightGroup(slotIndices, List.copyOf(newBullets), slotPayload, attackMode, sortOrder);
         }
 
-        /** Returns the ammo type assigned to this weapon slot, or "" if unassigned. */
-        public String getSlotAmmo(int slotIndex) {
-            return slotAmmoTypes.getOrDefault(slotIndex, "");
+        /** Set or clear the payload for a specific weapon slot. Empty string = no payload. */
+        public FlightGroup withSlotPayload(int slotIndex, String payload) {
+            Map<Integer, String> newPayload = new HashMap<>(slotPayload);
+            if (payload.isEmpty()) {
+                newPayload.remove(slotIndex);
+            } else {
+                newPayload.put(slotIndex, payload);
+            }
+            return new FlightGroup(slotIndices, slotBulletsList, Map.copyOf(newPayload), attackMode, sortOrder);
+        }
+
+        /** Returns true if this slot has bullets enabled. */
+        public boolean getSlotBullets(int slotIndex) {
+            return slotBulletsList.contains(slotIndex);
+        }
+
+        /** Returns the payload for this slot, or "" if none. */
+        public String getSlotPayload(int slotIndex) {
+            return slotPayload.getOrDefault(slotIndex, "");
         }
 
         public FlightGroup withAttackMode(AttackMode mode) {
-            return new FlightGroup(slotIndices, slotAmmoTypes, mode, sortOrder);
+            return new FlightGroup(slotIndices, slotBulletsList, slotPayload, mode, sortOrder);
         }
     }
 

@@ -32,8 +32,9 @@ public record ReconControlPayload(float dx, float dy, float dz) implements Custo
     public Type<? extends CustomPacketPayload> type() { return TYPE; }
 
     public static void handle(ReconControlPayload payload, IPayloadContext ctx) {
-        ctx.enqueueWork(() ->
-                ReconManager.handleControl(ctx.player().getUUID(), payload.dx(), payload.dy(), payload.dz())
-        );
+        ctx.enqueueWork(() -> {
+            if (ctx.player() == null) return;
+            ReconManager.handleControl(ctx.player().getUUID(), payload.dx(), payload.dy(), payload.dz());
+        });
     }
 }

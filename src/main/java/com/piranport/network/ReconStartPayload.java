@@ -32,8 +32,8 @@ public record ReconStartPayload(int entityId) implements CustomPacketPayload {
             Entity entity = mc.level.getEntity(payload.entityId());
             if (entity != null) {
                 mc.setCameraEntity(entity);
+                ClientReconData.setReconActive(payload.entityId());
             }
-            ClientReconData.setReconActive(payload.entityId());
 
             // Display HUD hint
             if (mc.player != null) {

@@ -18,6 +18,8 @@ public class FireControlManager {
         List<UUID> list = new ArrayList<>();
         list.add(targetUUID);
         LOCKED_TARGETS.put(playerUUID, list);
+        com.piranport.debug.PiranPortDebug.event(
+                "FireControl LOCK | player={} target={}", playerUUID, targetUUID);
     }
 
     /** Append a target (up to MAX_TARGETS). Does nothing if already in list. */
@@ -25,17 +27,25 @@ public class FireControlManager {
         List<UUID> list = LOCKED_TARGETS.computeIfAbsent(playerUUID, k -> new ArrayList<>());
         if (!list.contains(targetUUID) && list.size() < MAX_TARGETS) {
             list.add(targetUUID);
+            com.piranport.debug.PiranPortDebug.event(
+                    "FireControl ADD | player={} target={} total={}", playerUUID, targetUUID, list.size());
         }
     }
 
     /** Remove all locked targets for this player. */
     public static void clearTargets(UUID playerUUID) {
         LOCKED_TARGETS.remove(playerUUID);
+        com.piranport.debug.PiranPortDebug.event("FireControl CANCEL | player={}", playerUUID);
     }
 
     /** Returns an unmodifiable snapshot of the player's locked targets. */
     public static List<UUID> getTargets(UUID playerUUID) {
         List<UUID> list = LOCKED_TARGETS.get(playerUUID);
         return list == null ? List.of() : Collections.unmodifiableList(list);
+    }
+
+    /** Remove all state (call on server stop / world unload). */
+    public static void clearAll() {
+        LOCKED_TARGETS.clear();
     }
 }

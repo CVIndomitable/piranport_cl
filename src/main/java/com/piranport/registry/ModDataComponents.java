@@ -5,6 +5,8 @@ import com.piranport.PiranPort;
 import com.piranport.component.AircraftInfo;
 import com.piranport.component.FlightGroupData;
 import com.piranport.component.PlaceableInfo;
+import com.piranport.component.SlotCooldowns;
+import com.piranport.component.WeaponCategory;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.codec.ByteBufCodecs;
@@ -58,5 +60,32 @@ public class ModDataComponents {
             () -> DataComponentType.<FlightGroupData>builder()
                     .persistent(FlightGroupData.CODEC)
                     .networkSynchronized(FlightGroupData.STREAM_CODEC)
+                    .build());
+
+    // ===== v0.0.7 Ship Config DataComponents =====
+
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<Boolean>>
+            SHIP_AUTO_LAUNCH = DATA_COMPONENTS.register("ship_auto_launch",
+            () -> DataComponentType.<Boolean>builder()
+                    .persistent(Codec.BOOL)
+                    .networkSynchronized(ByteBufCodecs.BOOL)
+                    .build());
+
+    // ===== 武器种类标签 =====
+
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<WeaponCategory>>
+            WEAPON_CATEGORY = DATA_COMPONENTS.register("weapon_category",
+            () -> DataComponentType.<WeaponCategory>builder()
+                    .persistent(WeaponCategory.CODEC)
+                    .networkSynchronized(WeaponCategory.STREAM_CODEC)
+                    .build());
+
+    // ===== 分槽冷却 =====
+
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<SlotCooldowns>>
+            SLOT_COOLDOWNS = DATA_COMPONENTS.register("slot_cooldowns",
+            () -> DataComponentType.<SlotCooldowns>builder()
+                    .persistent(SlotCooldowns.CODEC)
+                    .networkSynchronized(SlotCooldowns.STREAM_CODEC)
                     .build());
 }

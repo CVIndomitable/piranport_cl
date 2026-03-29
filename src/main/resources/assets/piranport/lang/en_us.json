@@ -137,6 +137,8 @@
   "item.piranport.floating_target": "Floating Target",
   "message.piranport.aircraft_launched": "Launched %s",
   "message.piranport.aircraft_returned": "%s Returned",
+  "message.piranport.aircraft_refueled": "%s Refueled",
+  "message.piranport.aircraft_resupplied": "%s Resupplied",
   "message.piranport.aircraft_lost": "%s Lost",
   "message.piranport.aircraft_shot_down": "%s Shot Down",
   "message.piranport.weapon_hit": "%s Hit %s",
@@ -148,6 +150,7 @@
   "key.piranport.fire_control_cancel": "Cancel Lock [I]",
   "key.piranport.open_flight_group": "Open Groups [U]",
   "key.piranport.highlight_entities": "Highlight Battlefield [Y]",
+  "key.piranport.debug_toggle": "Debug Toggle [F8]",
   "container.piranport.flight_groups": "Groups",
   "container.piranport.available_aircraft": "Available Aircraft:",
   "tooltip.piranport.aircraft_damage": "Damage: %s",
@@ -188,5 +191,9 @@
   "piranport.book.aviation.aircraft.p1": "Four aircraft types: $(item)Fighter$() (hovers and fires bullets, 64 rounds), $(item)Dive Bomber$() (dives close and drops a bomb), $(item)Torpedo Bomber$() (fires torpedo at 20-30 blocks range), $(item)Level Bomber$() (drops bombs from 32 blocks above, 8 rounds).",
   "piranport.book.aviation.aircraft.p2": "Press $(bold)[U]$() while transformed to open Groups directly. Assign aircraft slots (left-click), right-click to cycle ammo: $(item)Fighter Ammo$() for fighters, $(item)Aerial Bomb$() for bombers, $(item)Aerial Torpedo$() for torpedo bombers. No ammo assigned = cannot launch.",
   "piranport.book.aviation.fire_control": "Fire Control",
-  "piranport.book.aviation.fire_control.p1": "While transformed: $(bold)[P]$() locks crosshair target (80-block range); $(bold)[O]$() adds target; $(bold)[I]$() cancels all locks. Locked targets shown in top-right HUD. Press $(bold)[Y]$() to toggle battlefield highlight — your aircraft/torpedoes/bombs glow. Only visible to you."
+  "piranport.book.aviation.fire_control.p1": "While transformed: $(bold)[P]$() locks crosshair target (80-block range); $(bold)[O]$() adds target; $(bold)[I]$() cancels all locks. Locked targets shown in top-right HUD. Press $(bold)[Y]$() to toggle battlefield highlight — your aircraft/torpedoes/bombs glow. Only visible to you.",
+  "container.piranport.ship_config": "Ship Config",
+  "container.piranport.auto_launch_on": "Fighter Auto-Launch: [ON]",
+  "container.piranport.auto_launch_off": "Fighter Auto-Launch: [OFF]",
+  "tooltip.piranport.core_inactive": "Not Active (higher-load core present)"
 }

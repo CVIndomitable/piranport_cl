@@ -29,6 +29,7 @@ public record ReconExitPayload() implements CustomPacketPayload {
 
     public static void handle(ReconExitPayload payload, IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
+            if (ctx.player() == null) return;
             UUID playerUUID = ctx.player().getUUID();
             UUID entityUUID = ReconManager.getReconEntity(playerUUID);
             if (entityUUID == null) return;

@@ -1,6 +1,7 @@
 package com.piranport.client;
 
 import com.piranport.combat.TransformationManager;
+import com.piranport.component.SlotCooldowns;
 import com.piranport.item.AircraftItem;
 import com.piranport.item.ShipCoreItem;
 import com.piranport.item.TorpedoLauncherItem;
@@ -66,6 +67,9 @@ public class ReloadBarDecorator implements IItemDecorator {
         NonNullList<ItemStack> items = NonNullList.withSize(type.totalSlots(), ItemStack.EMPTY);
         contents.copyInto(items);
 
+        long currentTick = mc.level != null ? mc.level.getGameTime() : 0L;
+        SlotCooldowns cooldowns = stack.getOrDefault(ModDataComponents.SLOT_COOLDOWNS.get(), SlotCooldowns.EMPTY);
+
         int rendered = 0;
         for (int i = 0; i < type.weaponSlots; i++) {
             ItemStack weapon = items.get(i);
@@ -80,7 +84,7 @@ public class ReloadBarDecorator implements IItemDecorator {
             // Background
             gui.fill(barX, barY, barX + BAR_MAX_W, barY + 1, BG);
 
-            float cd = getCooldown(player, stack, weapon);
+            float cd = cooldowns.getFraction(i, currentTick);
 
             int loadingColor, readyColor;
             if (weapon.getItem() instanceof TorpedoLauncherItem) {
@@ -111,13 +115,5 @@ public class ReloadBarDecorator implements IItemDecorator {
 
         // Return false so vanilla decorations (durability bar etc.) still render.
         return false;
-    }
-
-    private static float getCooldown(LocalPlayer player, ItemStack core, ItemStack weapon) {
-        if (weapon.getItem() instanceof TorpedoLauncherItem) {
-            return player.getCooldowns().getCooldownPercent(weapon.getItem(), 0f);
-        }
-        // Cannons and aircraft share the ship-core item's cooldown channel.
-        return player.getCooldowns().getCooldownPercent(core.getItem(), 0f);
     }
 }

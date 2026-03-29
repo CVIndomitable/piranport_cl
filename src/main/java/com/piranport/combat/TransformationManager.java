@@ -42,9 +42,15 @@ public class TransformationManager {
     /** Cycle to the next weapon slot, skipping empty slots. Called from server via network packet. */
     public static void cycleWeapon(Player player) {
         ItemStack mainHand = player.getMainHandItem();
-        if (!(mainHand.getItem() instanceof ShipCoreItem sci)) return;
+        if (!(mainHand.getItem() instanceof ShipCoreItem)) return;
         if (!isTransformed(mainHand)) return;
 
+        if (!com.piranport.config.ModCommonConfig.SHIP_CORE_GUI_ENABLED.get()) {
+            cycleWeaponInventoryMode(player, mainHand);
+            return;
+        }
+
+        ShipCoreItem sci = (ShipCoreItem) mainHand.getItem();
         int weaponSlots = sci.getShipType().weaponSlots;
         ItemContainerContents contents = mainHand.getOrDefault(
                 ModDataComponents.SHIP_CORE_CONTENTS.get(), ItemContainerContents.EMPTY);
@@ -67,14 +73,60 @@ public class TransformationManager {
                 Component.translatable("message.piranport.weapon_selected", items.get(next).getHoverName()), true);
     }
 
+    /** Cycle weapon in inventory mode: find all weapon items in inventory and select the next one. */
+    private static void cycleWeaponInventoryMode(Player player, ItemStack coreStack) {
+        net.minecraft.world.entity.player.Inventory inv = player.getInventory();
+        int coreSlot = inv.selected; // core is in main hand (offhand transform not cycled)
+
+        // Collect all inventory slots containing weapons (ordered by slot index)
+        java.util.List<Integer> weaponSlots = new java.util.ArrayList<>();
+        for (int i = 0; i < inv.items.size(); i++) {
+            if (i == coreSlot) continue;
+            if (isFireableWeapon(inv.items.get(i))) weaponSlots.add(i);
+        }
+        // Also check offhand slot 40
+        if (isFireableWeapon(inv.offhand.get(0))) weaponSlots.add(40);
+
+        if (weaponSlots.size() < 2) return; // nothing to cycle to
+
+        int current = getWeaponIndex(coreStack);
+        int currentPos = weaponSlots.indexOf(current);
+        int next = weaponSlots.get((currentPos + 1) % weaponSlots.size());
+
+        setWeaponIndex(coreStack, next);
+        ItemStack nextWeapon = next == 40 ? inv.offhand.get(0) : inv.items.get(next);
+        player.displayClientMessage(
+                Component.translatable("message.piranport.weapon_selected", nextWeapon.getHoverName()), true);
+    }
+
+    /** Returns true for items that can be fired/launched (guns, torpedo launchers, aircraft — not cores, armor, ammo). */
+    public static boolean isFireableWeapon(ItemStack stack) {
+        if (stack.isEmpty()) return false;
+        if (stack.getItem() instanceof ShipCoreItem) return false;
+        if (stack.getItem() instanceof ArmorPlateItem) return false;
+        // Torpedo ammo, shells, and aviation consumables all have getItemLoad == 0, so excluded naturally
+        return getItemLoad(stack) > 0;
+    }
+
     /**
      * Apply armor and speed attribute modifiers based on current ship core equipment.
      * Call when player transforms or when GUI closes (to recalculate after changes).
+     *
+     * When SHIP_CORE_GUI_ENABLED is false: the ship core with the highest maxLoad in the
+     * player's inventory provides the capacity; all weapon items in the inventory consume load.
+     * When SHIP_CORE_GUI_ENABLED is true: reads weapons/armor from the core's ItemContainerContents.
      */
     public static void applyTransformationAttributes(Player player, ItemStack coreStack) {
         if (player.level().isClientSide()) return;
-        if (!(coreStack.getItem() instanceof ShipCoreItem sci)) return;
+        if (!(coreStack.getItem() instanceof ShipCoreItem)) return;
 
+        if (!com.piranport.config.ModCommonConfig.SHIP_CORE_GUI_ENABLED.get()) {
+            applyAttributesInventoryMode(player);
+            return;
+        }
+
+        // GUI mode: read equipment from the core's container slots
+        ShipCoreItem sci = (ShipCoreItem) coreStack.getItem();
         ShipCoreItem.ShipType type = sci.getShipType();
         ItemContainerContents contents = coreStack.getOrDefault(
                 ModDataComponents.SHIP_CORE_CONTENTS.get(), ItemContainerContents.EMPTY);
@@ -100,7 +152,6 @@ public class TransformationManager {
 
         double speedMult = Math.max(0.4, 1.0 - ((double) totalLoad / type.maxLoad) * 0.6);
 
-        // Remove old modifiers before applying new ones
         removeTransformationAttributes(player);
 
         AttributeInstance armorAttr = player.getAttribute(Attributes.ARMOR);
@@ -114,6 +165,81 @@ public class TransformationManager {
             speedAttr.addTransientModifier(new AttributeModifier(
                     SPEED_MODIFIER_ID, speedMult - 1.0, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
         }
+    }
+
+    /**
+     * Inventory mode (GUI disabled): scan the player's entire inventory.
+     * The ship core with the highest maxLoad provides the weight capacity.
+     * All weapon items (guns, torpedoes, aircraft — not armor plates) in the inventory consume load.
+     */
+    private static void applyAttributesInventoryMode(Player player) {
+        net.minecraft.world.entity.player.Inventory inv = player.getInventory();
+
+        // Find the ship core with the highest maxLoad
+        int maxLoad = 0;
+        for (ItemStack stack : inv.items) {
+            if (stack.getItem() instanceof ShipCoreItem sci) {
+                maxLoad = Math.max(maxLoad, sci.getShipType().maxLoad);
+            }
+        }
+        ItemStack offhandStack = inv.offhand.get(0);
+        if (offhandStack.getItem() instanceof ShipCoreItem sci) {
+            maxLoad = Math.max(maxLoad, sci.getShipType().maxLoad);
+        }
+
+        removeTransformationAttributes(player);
+        if (maxLoad == 0) return;
+
+        long _t = System.nanoTime();
+        int totalLoad = getInventoryWeaponLoad(inv);
+        int armorBonus = getInventoryArmorBonus(inv);
+        com.piranport.debug.PiranPortDebug.perf("WeightScan", System.nanoTime() - _t,
+                "player=" + player.getName().getString() + " load=" + totalLoad + "/" + maxLoad + " armor=" + armorBonus);
+
+        double speedMult = Math.max(0.4, 1.0 - ((double) totalLoad / maxLoad) * 0.6);
+
+        AttributeInstance armorAttr = player.getAttribute(Attributes.ARMOR);
+        AttributeInstance speedAttr = player.getAttribute(Attributes.MOVEMENT_SPEED);
+
+        if (armorAttr != null && armorBonus > 0) {
+            armorAttr.addTransientModifier(new AttributeModifier(
+                    ARMOR_MODIFIER_ID, armorBonus, AttributeModifier.Operation.ADD_VALUE));
+        }
+        if (speedAttr != null && speedMult < 1.0) {
+            speedAttr.addTransientModifier(new AttributeModifier(
+                    SPEED_MODIFIER_ID, speedMult - 1.0, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
+        }
+    }
+
+    /**
+     * Sum the load of all weapons and armor plates (not ship cores) in inventory. Used in inventory mode.
+     */
+    public static int getInventoryWeaponLoad(net.minecraft.world.entity.player.Inventory inv) {
+        int total = 0;
+        for (ItemStack stack : inv.items) {
+            if (isLoadItem(stack)) total += getItemLoad(stack);
+        }
+        ItemStack offhand = inv.offhand.get(0);
+        if (isLoadItem(offhand)) total += getItemLoad(offhand);
+        return total;
+    }
+
+    /** Sum armor bonus from ArmorPlateItems in the player's inventory. Used in inventory mode. */
+    public static int getInventoryArmorBonus(net.minecraft.world.entity.player.Inventory inv) {
+        int total = 0;
+        for (ItemStack stack : inv.items) {
+            if (stack.getItem() instanceof ArmorPlateItem plate) total += plate.getArmorBonus();
+        }
+        ItemStack offhand = inv.offhand.get(0);
+        if (offhand.getItem() instanceof ArmorPlateItem plate) total += plate.getArmorBonus();
+        return total;
+    }
+
+    /** Returns true for items that consume load in inventory mode (weapons + armor plates, not ship cores). */
+    private static boolean isLoadItem(ItemStack stack) {
+        if (stack.isEmpty()) return false;
+        if (stack.getItem() instanceof ShipCoreItem) return false;
+        return getItemLoad(stack) > 0;
     }
 
     /** Remove ship core attribute modifiers. Call when player un-transforms. */

@@ -1,7 +1,6 @@
 package com.piranport.network;
 
 import com.piranport.PiranPort;
-import com.piranport.component.FlightGroupData;
 import com.piranport.item.ShipCoreItem;
 import com.piranport.registry.ModDataComponents;
 import io.netty.buffer.ByteBuf;
@@ -13,25 +12,20 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
-public record FlightGroupUpdatePayload(int coreSlot, FlightGroupData data)
-        implements CustomPacketPayload {
+public record AutoLaunchTogglePayload(int coreSlot) implements CustomPacketPayload {
 
-    public static final Type<FlightGroupUpdatePayload> TYPE =
-            new Type<>(ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "flight_group_update"));
+    public static final Type<AutoLaunchTogglePayload> TYPE =
+            new Type<>(ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "auto_launch_toggle"));
 
-    public static final StreamCodec<ByteBuf, FlightGroupUpdatePayload> STREAM_CODEC =
-            StreamCodec.composite(
-                    ByteBufCodecs.VAR_INT, FlightGroupUpdatePayload::coreSlot,
-                    FlightGroupData.STREAM_CODEC, FlightGroupUpdatePayload::data,
-                    FlightGroupUpdatePayload::new
-            );
+    public static final StreamCodec<ByteBuf, AutoLaunchTogglePayload> STREAM_CODEC =
+            ByteBufCodecs.VAR_INT.map(AutoLaunchTogglePayload::new, AutoLaunchTogglePayload::coreSlot);
 
     @Override
     public Type<? extends CustomPacketPayload> type() {
         return TYPE;
     }
 
-    public static void handle(FlightGroupUpdatePayload payload, IPayloadContext context) {
+    public static void handle(AutoLaunchTogglePayload payload, IPayloadContext context) {
         context.enqueueWork(() -> {
             Player player = context.player();
             if (player == null) return;
@@ -39,7 +33,8 @@ public record FlightGroupUpdatePayload(int coreSlot, FlightGroupData data)
             if (slot < 0 || slot >= 41) return;
             ItemStack coreStack = player.getInventory().getItem(slot);
             if (coreStack.getItem() instanceof ShipCoreItem) {
-                coreStack.set(ModDataComponents.FLIGHT_GROUP_DATA.get(), payload.data());
+                boolean current = coreStack.getOrDefault(ModDataComponents.SHIP_AUTO_LAUNCH.get(), false);
+                coreStack.set(ModDataComponents.SHIP_AUTO_LAUNCH.get(), !current);
             }
         });
     }

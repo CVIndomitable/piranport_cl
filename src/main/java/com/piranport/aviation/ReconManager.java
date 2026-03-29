@@ -42,4 +42,10 @@ public class ReconManager {
     public static float[] consumeInput(UUID playerUUID) {
         return pendingInput.remove(playerUUID);
     }
+
+    /** Remove all state (call on server stop / world unload). */
+    public static void clearAll() {
+        activeRecon.clear();
+        pendingInput.clear();
+    }
 }

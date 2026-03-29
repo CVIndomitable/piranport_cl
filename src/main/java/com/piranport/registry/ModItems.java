@@ -3,6 +3,7 @@ package com.piranport.registry;
 import com.piranport.PiranPort;
 import com.piranport.component.AircraftInfo;
 import com.piranport.component.PlaceableInfo;
+import com.piranport.component.WeaponCategory;
 import com.piranport.item.AircraftItem;
 import com.piranport.item.ArmorPlateItem;
 import com.piranport.item.BottleFoodItem;
@@ -65,11 +66,14 @@ public class ModItems {
 
     // ===== Guns =====
     public static final DeferredItem<Item> SMALL_GUN =
-            ITEMS.registerSimpleItem("small_gun", new Item.Properties().stacksTo(1));
+            ITEMS.register("small_gun", () -> new Item(new Item.Properties().stacksTo(1)
+                    .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.CANNON)));
     public static final DeferredItem<Item> MEDIUM_GUN =
-            ITEMS.registerSimpleItem("medium_gun", new Item.Properties().stacksTo(1));
+            ITEMS.register("medium_gun", () -> new Item(new Item.Properties().stacksTo(1)
+                    .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.CANNON)));
     public static final DeferredItem<Item> LARGE_GUN =
-            ITEMS.registerSimpleItem("large_gun", new Item.Properties().stacksTo(1));
+            ITEMS.register("large_gun", () -> new Item(new Item.Properties().stacksTo(1)
+                    .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.CANNON)));
 
     // ===== Torpedo Ammo =====
     public static final DeferredItem<TorpedoItem> TORPEDO_533MM =
@@ -82,13 +86,16 @@ public class ModItems {
     // ===== Armor Plates =====
     public static final DeferredItem<ArmorPlateItem> SMALL_ARMOR_PLATE =
             ITEMS.register("small_armor_plate",
-                    () -> new ArmorPlateItem(new Item.Properties().stacksTo(1), 2, 10));
+                    () -> new ArmorPlateItem(new Item.Properties().stacksTo(1)
+                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ARMOR), 2, 10));
     public static final DeferredItem<ArmorPlateItem> MEDIUM_ARMOR_PLATE =
             ITEMS.register("medium_armor_plate",
-                    () -> new ArmorPlateItem(new Item.Properties().stacksTo(1), 4, 20));
+                    () -> new ArmorPlateItem(new Item.Properties().stacksTo(1)
+                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ARMOR), 4, 20));
     public static final DeferredItem<ArmorPlateItem> LARGE_ARMOR_PLATE =
             ITEMS.register("large_armor_plate",
-                    () -> new ArmorPlateItem(new Item.Properties().stacksTo(1), 6, 30));
+                    () -> new ArmorPlateItem(new Item.Properties().stacksTo(1)
+                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ARMOR), 6, 30));
 
     // ===== Food Ingredients (Phase 11a) =====
     public static final DeferredItem<Item> FLOUR           = ITEMS.registerSimpleItem("flour");
@@ -268,37 +275,42 @@ public class ModItems {
     public static final DeferredItem<AircraftItem> FIGHTER_SQUADRON =
             ITEMS.register("fighter_squadron",
                     () -> new AircraftItem(new Item.Properties().stacksTo(1)
+                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
                             .component(ModDataComponents.AIRCRAFT_INFO.get(),
                                     new AircraftInfo(AircraftInfo.AircraftType.FIGHTER,
-                                            1200, 64, 0, 18f, 1.8f, 12))));
+                                            1200, 64, 0, 18f, 1.8f, 12, AircraftInfo.BombingMode.DIVE))));
 
     public static final DeferredItem<AircraftItem> DIVE_BOMBER_SQUADRON =
             ITEMS.register("dive_bomber_squadron",
                     () -> new AircraftItem(new Item.Properties().stacksTo(1)
+                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
                             .component(ModDataComponents.AIRCRAFT_INFO.get(),
                                     new AircraftInfo(AircraftInfo.AircraftType.DIVE_BOMBER,
-                                            1200, 8, 0, 24f, 1.4f, 16))));
+                                            1200, 8, 0, 24f, 1.4f, 16, AircraftInfo.BombingMode.DIVE))));
 
     public static final DeferredItem<AircraftItem> TORPEDO_BOMBER_SQUADRON =
             ITEMS.register("torpedo_bomber_squadron",
                     () -> new AircraftItem(new Item.Properties().stacksTo(1)
+                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
                             .component(ModDataComponents.AIRCRAFT_INFO.get(),
                                     new AircraftInfo(AircraftInfo.AircraftType.TORPEDO_BOMBER,
-                                            1200, 6, 0, 30f, 1.2f, 20))));
+                                            1200, 6, 0, 30f, 1.2f, 20, AircraftInfo.BombingMode.DIVE))));
 
     public static final DeferredItem<AircraftItem> LEVEL_BOMBER_SQUADRON =
             ITEMS.register("level_bomber_squadron",
                     () -> new AircraftItem(new Item.Properties().stacksTo(1)
+                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
                             .component(ModDataComponents.AIRCRAFT_INFO.get(),
                                     new AircraftInfo(AircraftInfo.AircraftType.LEVEL_BOMBER,
-                                            1200, 8, 0, 36f, 1.0f, 24))));
+                                            1200, 8, 0, 36f, 1.0f, 24, AircraftInfo.BombingMode.LEVEL))));
 
     public static final DeferredItem<AircraftItem> RECON_SQUADRON =
             ITEMS.register("recon_squadron",
                     () -> new AircraftItem(new Item.Properties().stacksTo(1)
+                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
                             .component(ModDataComponents.AIRCRAFT_INFO.get(),
                                     new AircraftInfo(AircraftInfo.AircraftType.RECON,
-                                            1500, 0, 0, 0f, 2.0f, 8))));
+                                            1500, 0, 0, 0f, 2.0f, 8, AircraftInfo.BombingMode.DIVE))));
 
     // ===== Aviation Ammo (Phase 18) =====
     public static final DeferredItem<Item> AVIATION_FUEL =
@@ -377,16 +389,19 @@ public class ModItems {
     public static final DeferredItem<TorpedoLauncherItem> TWIN_TORPEDO_LAUNCHER =
             ITEMS.register("twin_torpedo_launcher",
                     () -> new TorpedoLauncherItem(
-                            new Item.Properties().stacksTo(1).durability(64),
+                            new Item.Properties().stacksTo(1).durability(64)
+                                    .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.TORPEDO),
                             533, 2, 100));
     public static final DeferredItem<TorpedoLauncherItem> TRIPLE_TORPEDO_LAUNCHER =
             ITEMS.register("triple_torpedo_launcher",
                     () -> new TorpedoLauncherItem(
-                            new Item.Properties().stacksTo(1).durability(48),
+                            new Item.Properties().stacksTo(1).durability(48)
+                                    .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.TORPEDO),
                             533, 3, 100));
     public static final DeferredItem<TorpedoLauncherItem> QUAD_TORPEDO_LAUNCHER =
             ITEMS.register("quad_torpedo_launcher",
                     () -> new TorpedoLauncherItem(
-                            new Item.Properties().stacksTo(1).durability(32),
+                            new Item.Properties().stacksTo(1).durability(32)
+                                    .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.TORPEDO),
                             610, 4, 120));
 }

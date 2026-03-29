@@ -1,6 +1,8 @@
 package com.piranport.menu;
 
+import com.piranport.config.ModClientConfig;
 import com.piranport.item.ShipCoreItem;
+import com.piranport.network.AutoLaunchTogglePayload;
 import com.piranport.network.OpenFlightGroupPayload;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -11,22 +13,41 @@ import net.neoforged.neoforge.network.PacketDistributor;
 
 public class ShipCoreScreen extends AbstractContainerScreen<ShipCoreMenu> {
 
+    private Button autoLaunchButton;
+
     public ShipCoreScreen(ShipCoreMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
         this.imageWidth = 176;
-        this.imageHeight = 188;   // was 166, +22 for enhancement row
-        this.inventoryLabelY = 94; // was 72, +22
+        this.imageHeight = 210;   // +22 vs previous 188 for ship config section
+        this.inventoryLabelY = 116; // +22 vs previous 94
     }
 
     @Override
     protected void init() {
         super.init();
         // "编组" button — opens FlightGroup GUI (top-right area of screen)
-        this.addRenderableWidget(Button.builder(
-                Component.translatable("container.piranport.flight_groups"),
+        // Only shown when flightGroupEnabled = true in piranport-client.toml
+        if (ModClientConfig.FLIGHT_GROUP_ENABLED.get()) {
+            this.addRenderableWidget(Button.builder(
+                    Component.translatable("container.piranport.flight_groups"),
+                    btn -> PacketDistributor.sendToServer(
+                            new OpenFlightGroupPayload(this.menu.getCoreSlot()))
+            ).bounds(leftPos + 118, topPos + 2, 50, 10).build());
+        }
+
+        // "战斗机自动升空" toggle button (ship config section)
+        autoLaunchButton = Button.builder(
+                getAutoLaunchMessage(),
                 btn -> PacketDistributor.sendToServer(
-                        new OpenFlightGroupPayload(this.menu.getCoreSlot()))
-        ).bounds(leftPos + 118, topPos + 2, 50, 10).build());
+                        new AutoLaunchTogglePayload(this.menu.getCoreSlot()))
+        ).bounds(leftPos + 7, topPos + 105, 130, 10).build();
+        this.addRenderableWidget(autoLaunchButton);
+    }
+
+    private Component getAutoLaunchMessage() {
+        return Component.translatable(menu.isAutoLaunch()
+                ? "container.piranport.auto_launch_on"
+                : "container.piranport.auto_launch_off");
     }
 
     @Override
@@ -61,16 +82,19 @@ public class ShipCoreScreen extends AbstractContainerScreen<ShipCoreMenu> {
             drawSlotBg(gfx, x + 7 + i * 18, y + 71);
         }
 
-        // Player inventory slot backgrounds
+        // Thin separator before ship config section
+        gfx.fill(x + 7, y + 95, x + imageWidth - 7, y + 96, 0xFF888888);
+
+        // Player inventory slot backgrounds (shifted +22)
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
-                drawSlotBg(gfx, x + 7 + col * 18, y + 105 + row * 18);
+                drawSlotBg(gfx, x + 7 + col * 18, y + 127 + row * 18);
             }
         }
 
-        // Hotbar slot backgrounds
+        // Hotbar slot backgrounds (shifted +22)
         for (int col = 0; col < 9; col++) {
-            drawSlotBg(gfx, x + 7 + col * 18, y + 163);
+            drawSlotBg(gfx, x + 7 + col * 18, y + 185);
         }
 
         // Load bar background (moved down to y+91)
@@ -111,14 +135,17 @@ public class ShipCoreScreen extends AbstractContainerScreen<ShipCoreMenu> {
         gfx.drawString(this.font, Component.translatable("container.piranport.ammo"), 8, 36, 0x404040, false);
         gfx.drawString(this.font, Component.translatable("container.piranport.enhancement"), 8, 62, 0x404040, false);
 
-        // Load display (to the right of bar: bar at x=8, width=100; text at x=112, y=89)
+        // Load display (to the right of bar)
         int currentLoad = menu.getCurrentLoad();
         int maxLoad = menu.getMaxLoad();
         String loadText = Component.translatable("container.piranport.load",
                 currentLoad, maxLoad).getString();
         gfx.drawString(this.font, loadText, 112, 89, currentLoad > maxLoad ? 0xFF0000 : 0x404040, false);
 
-        // Inventory label
+        // Ship config section label
+        gfx.drawString(this.font, Component.translatable("container.piranport.ship_config"), 8, 97, 0x404040, false);
+
+        // Inventory label (shifted +22)
         gfx.drawString(this.font, this.playerInventoryTitle, this.inventoryLabelX, this.inventoryLabelY, 0x404040, false);
     }
 
@@ -132,6 +159,10 @@ public class ShipCoreScreen extends AbstractContainerScreen<ShipCoreMenu> {
 
     @Override
     public void render(GuiGraphics gfx, int mouseX, int mouseY, float partialTick) {
+        // Keep button message in sync with server state
+        if (autoLaunchButton != null) {
+            autoLaunchButton.setMessage(getAutoLaunchMessage());
+        }
         super.render(gfx, mouseX, mouseY, partialTick);
         renderTooltip(gfx, mouseX, mouseY);
     }

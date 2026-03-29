@@ -195,5 +195,7 @@
   "container.piranport.ship_config": "舰装配置",
   "container.piranport.auto_launch_on": "战斗机自动升空: [开]",
   "container.piranport.auto_launch_off": "战斗机自动升空: [关]",
-  "tooltip.piranport.core_inactive": "不生效（背包内有更高负重核心）"
+  "tooltip.piranport.core_inactive": "不生效（背包内有更高负重核心）",
+  "tooltip.piranport.weapon_ready": "已装填",
+  "tooltip.piranport.weapon_not_loaded": "未装填"
 }

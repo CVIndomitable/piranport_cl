@@ -20,22 +20,32 @@ public class ModCommonConfig {
                     .define("fighterAmmoEnabled", false);
 
     /**
-     * When true, aircraft automatically resupply ammo and fuel from the owner's
-     * ship core ammo slots when depleted, instead of returning to carrier.
-     * Default false — aircraft return when ammo/fuel is exhausted.
+     * When true (auto mode): cannons/torpedoes scan the player's inventory for ammo on each shot;
+     * aircraft fuel is automatically consumed from the ammo slots on transformation.
+     * When false (manual mode): all weapons require manual loading —
+     * right-click ammo onto the weapon item in the inventory to load one round at a time.
+     * Default false — manual reload mode.
      */
     public static final ModConfigSpec.BooleanValue AUTO_RESUPPLY_ENABLED =
             BUILDER
                     .comment(
-                            "Enable automatic ammo and fuel resupply for aircraft.",
-                            "Default: false (aircraft return to carrier when ammo/fuel is exhausted).",
-                            "Set to true to automatically draw from the ship core's ammo slots mid-sortie. (飞机自动补给弹药和燃油，默认关闭)")
+                            "Enable automatic ammo resupply for all weapons (自动装填模式).",
+                            "Default: false (manual reload — right-click ammo onto weapon slot to load, 手动装填).",
+                            "Set to true to auto-consume ammo from inventory on each shot. (自动从背包消耗弹药，默认关闭)")
                     .define("autoResupplyEnabled", false);
 
     /**
      * When true, right-clicking the ship core while not transformed opens the ship core GUI.
      * Default false — GUI is hidden; right-click only fires weapons or transforms.
      */
+    public static final ModConfigSpec.BooleanValue FLAMMABLE_EFFECT_ENABLED =
+            BUILDER
+                    .comment(
+                            "When true, loading aviation fuel onto an aircraft applies the Flammable (易燃易爆) debuff.",
+                            "Default: false.",
+                            "Set to true to enable the fire-hazard penalty for fueled aircraft. (飞机装燃料触发易燃易爆，默认关闭)")
+                    .define("flammableEffectEnabled", false);
+
     public static final ModConfigSpec.BooleanValue SHIP_CORE_GUI_ENABLED =
             BUILDER
                     .comment(

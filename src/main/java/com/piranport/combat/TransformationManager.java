@@ -46,7 +46,7 @@ public class TransformationManager {
         if (!isTransformed(mainHand)) return;
 
         if (!com.piranport.config.ModCommonConfig.SHIP_CORE_GUI_ENABLED.get()) {
-            cycleWeaponInventoryMode(player, mainHand);
+            // No-GUI mode: weapon is determined by what the player is holding, no cycling needed
             return;
         }
 

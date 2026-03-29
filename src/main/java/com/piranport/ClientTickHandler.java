@@ -52,16 +52,17 @@ public class ClientTickHandler {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
 
-        // Weapon cycling (V key) — in recon mode this exits recon instead
+        // V key — exits recon mode, or cycles weapon in GUI mode only
         while (ClientEvents.CYCLE_WEAPON_KEY.consumeClick()) {
             if (ClientReconData.isInReconMode()) {
                 PacketDistributor.sendToServer(new ReconExitPayload());
-            } else {
+            } else if (com.piranport.config.ModCommonConfig.SHIP_CORE_GUI_ENABLED.get()) {
                 ItemStack hand = mc.player.getMainHandItem();
                 if (hand.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(hand)) {
                     PacketDistributor.sendToServer(new CycleWeaponPayload());
                 }
             }
+            // No-GUI mode: weapon is the other-hand item, V key does nothing here
         }
 
         // Phase 32: recon aircraft WASD control

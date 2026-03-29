@@ -18,28 +18,10 @@ import net.minecraft.world.level.Level;
 
 import java.util.List;
 
-public class TorpedoLauncherItem extends Item {
-    private final int caliber;
-    private final int tubeCount;
-    private final int cooldownTicks;
+public class CannonItem extends Item {
 
-    public TorpedoLauncherItem(Properties properties, int caliber, int tubeCount, int cooldownTicks) {
+    public CannonItem(Properties properties) {
         super(properties);
-        this.caliber = caliber;
-        this.tubeCount = tubeCount;
-        this.cooldownTicks = cooldownTicks;
-    }
-
-    public int getCaliber() {
-        return caliber;
-    }
-
-    public int getTubeCount() {
-        return tubeCount;
-    }
-
-    public int getCooldownTicks() {
-        return cooldownTicks;
     }
 
     @Override
@@ -52,30 +34,24 @@ public class TorpedoLauncherItem extends Item {
     }
 
     /**
-     * Right-click torpedo onto launcher in inventory to load one tube at a time (manual reload mode only).
-     * Must load tubeCount torpedoes before the launcher is ready to fire.
+     * Right-click ammo onto the cannon in the inventory to load one round (manual reload mode only).
      */
     @Override
     public boolean overrideOtherStackedOnMe(ItemStack stack, ItemStack other, Slot slot,
             ClickAction action, Player player, net.minecraft.world.entity.SlotAccess access) {
         if (action != ClickAction.SECONDARY) return false;
         if (com.piranport.config.ModCommonConfig.AUTO_RESUPPLY_ENABLED.get()) return false;
-        if (other.isEmpty()) return false;
-        if (!(other.getItem() instanceof TorpedoItem ti) || ti.getCaliber() != caliber) return false;
+        if (other.isEmpty() || !ShipCoreItem.matchesCaliber(other, stack)) return false;
 
         LoadedAmmo current = stack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
-        if (current.count() >= tubeCount) return false; // already full
+        if (current.hasAmmo()) return false; // already loaded, one round max
 
-        String torpedoId = BuiltInRegistries.ITEM.getKey(other.getItem()).toString();
-        // Cannot mix torpedo types in the same launcher
-        if (current.hasAmmo() && !current.ammoItemId().equals(torpedoId)) return false;
-
-        int newCount = current.count() + 1;
-        stack.set(ModDataComponents.LOADED_AMMO.get(), new LoadedAmmo(newCount, torpedoId));
+        String ammoId = BuiltInRegistries.ITEM.getKey(other.getItem()).toString();
+        stack.set(ModDataComponents.LOADED_AMMO.get(), new LoadedAmmo(1, ammoId));
         other.shrink(1);
 
         player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
-                SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.5f, 1.0f);
+                SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.5f, 1.4f);
         return true;
     }
 

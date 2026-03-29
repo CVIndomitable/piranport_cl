@@ -4,6 +4,7 @@ import com.mojang.serialization.Codec;
 import com.piranport.PiranPort;
 import com.piranport.component.AircraftInfo;
 import com.piranport.component.FlightGroupData;
+import com.piranport.component.LoadedAmmo;
 import com.piranport.component.PlaceableInfo;
 import com.piranport.component.SlotCooldowns;
 import com.piranport.component.WeaponCategory;
@@ -87,5 +88,14 @@ public class ModDataComponents {
             () -> DataComponentType.<SlotCooldowns>builder()
                     .persistent(SlotCooldowns.CODEC)
                     .networkSynchronized(SlotCooldowns.STREAM_CODEC)
+                    .build());
+
+    // ===== 手动装填弹药 =====
+
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<LoadedAmmo>>
+            LOADED_AMMO = DATA_COMPONENTS.register("loaded_ammo",
+            () -> DataComponentType.<LoadedAmmo>builder()
+                    .persistent(LoadedAmmo.CODEC)
+                    .networkSynchronized(LoadedAmmo.STREAM_CODEC)
                     .build());
 }

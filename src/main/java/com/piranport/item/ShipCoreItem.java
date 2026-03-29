@@ -3,6 +3,7 @@ package com.piranport.item;
 import com.piranport.combat.TransformationManager;
 import com.piranport.component.AircraftInfo;
 import com.piranport.component.FlightGroupData;
+import com.piranport.component.LoadedAmmo;
 import com.piranport.component.SlotCooldowns;
 import com.piranport.entity.AircraftEntity;
 import com.piranport.entity.CannonProjectileEntity;
@@ -31,7 +32,6 @@ import net.minecraft.world.item.component.ItemContainerContents;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class ShipCoreItem extends Item {
@@ -154,14 +154,18 @@ public class ShipCoreItem extends Item {
         }
 
         if (isTransformed) {
-            // Fire weapon
-            if (!level.isClientSide) {
-                int coreSlot = hand == InteractionHand.MAIN_HAND
-                        ? player.getInventory().selected
-                        : 40; // offhand slot index in Inventory
-                fireCurrentWeapon(level, player, stack, coreSlot);
+            if (com.piranport.config.ModCommonConfig.SHIP_CORE_GUI_ENABLED.get()) {
+                // GUI mode: core in hand fires the selected weapon slot
+                if (!level.isClientSide) {
+                    int coreSlot = hand == InteractionHand.MAIN_HAND
+                            ? player.getInventory().selected
+                            : 40;
+                    fireCurrentWeapon(level, player, stack, coreSlot);
+                }
+                return InteractionResultHolder.consume(stack);
             }
-            return InteractionResultHolder.consume(stack);
+            // No-GUI mode: weapons fire via their own use(); return pass so offhand may trigger
+            return InteractionResultHolder.pass(stack);
         }
 
         // Open GUI (guarded by config)
@@ -182,11 +186,7 @@ public class ShipCoreItem extends Item {
     }
 
     private void fireCurrentWeapon(Level level, Player player, ItemStack stack, int coreInventorySlot) {
-        if (!com.piranport.config.ModCommonConfig.SHIP_CORE_GUI_ENABLED.get()) {
-            fireCurrentWeaponInventoryMode(level, player, stack, coreInventorySlot);
-            return;
-        }
-
+        // GUI mode only; no-GUI mode fires via weapon items' own use() → tryFireFromInventory()
         ItemContainerContents contents = stack.getOrDefault(
                 ModDataComponents.SHIP_CORE_CONTENTS.get(), ItemContainerContents.EMPTY);
         int totalSlots = shipType.totalSlots();
@@ -291,78 +291,139 @@ public class ShipCoreItem extends Item {
     // ===== Inventory-mode firing =====
 
     /**
-     * No-GUI (full-inventory) mode firing.
-     * Weapons are found directly in the player's inventory; ammo is also scanned from inventory.
+     * Entry point for weapon items' use() in no-GUI mode.
+     * Scans inventory for an active (transformed) ship core, then fires the weapon at the given hand slot.
+     * Returns true if firing was attempted (so the weapon can return CONSUME).
      */
-    private void fireCurrentWeaponInventoryMode(Level level, Player player, ItemStack coreStack, int coreInventorySlot) {
+    public static boolean tryFireFromInventory(Level level, Player player, InteractionHand hand) {
+        if (level.isClientSide || com.piranport.config.ModCommonConfig.SHIP_CORE_GUI_ENABLED.get()) return false;
+
         Inventory inv = player.getInventory();
+        int weaponSlot = (hand == InteractionHand.MAIN_HAND) ? inv.selected : 40;
 
-        // Build ordered list of fireable weapon slots in inventory
-        List<Integer> weaponSlots = new ArrayList<>();
+        // Find transformed core (skip the weapon's own slot)
+        ItemStack coreStack = ItemStack.EMPTY;
+        int coreInventorySlot = -1;
         for (int i = 0; i < inv.items.size(); i++) {
-            if (i == coreInventorySlot) continue;
-            if (TransformationManager.isFireableWeapon(inv.items.get(i))) weaponSlots.add(i);
+            if (i == weaponSlot) continue;
+            ItemStack s = inv.items.get(i);
+            if (s.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(s)) {
+                coreStack = s;
+                coreInventorySlot = i;
+                break;
+            }
         }
-        // Offhand (slot 40) — skip if core is there
-        if (coreInventorySlot != 40 && TransformationManager.isFireableWeapon(inv.offhand.get(0))) {
-            weaponSlots.add(40);
+        if (coreStack.isEmpty() && weaponSlot != 40) {
+            ItemStack offhand = inv.offhand.get(0);
+            if (offhand.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(offhand)) {
+                coreStack = offhand;
+                coreInventorySlot = 40;
+            }
         }
+        if (coreStack.isEmpty()) return false;
 
-        if (weaponSlots.isEmpty()) {
-            player.displayClientMessage(Component.translatable("message.piranport.no_weapon"), true);
-            return;
-        }
+        fireWeaponAtSlot(level, player, coreStack, weaponSlot, coreInventorySlot);
+        return true;
+    }
 
-        // Resolve selected slot: stored weaponIndex is an inventory slot number in this mode
-        int selectedSlot = TransformationManager.getWeaponIndex(coreStack);
-        if (!weaponSlots.contains(selectedSlot)) {
-            selectedSlot = weaponSlots.get(0);
-            TransformationManager.setWeaponIndex(coreStack, selectedSlot);
-        }
-
-        ItemStack weapon = selectedSlot == 40 ? inv.offhand.get(0) : inv.items.get(selectedSlot);
+    /** Fires the weapon at the given inventory slot using the ship core's ammo pool and cooldowns. */
+    private static void fireWeaponAtSlot(Level level, Player player, ItemStack coreStack, int weaponSlot, int coreInventorySlot) {
+        Inventory inv = player.getInventory();
+        ItemStack weapon = (weaponSlot == 40) ? inv.offhand.get(0) : inv.items.get(weaponSlot);
 
         // Per-slot cooldown (keyed by inventory slot index)
         SlotCooldowns cooldowns = coreStack.getOrDefault(ModDataComponents.SLOT_COOLDOWNS.get(), SlotCooldowns.EMPTY);
-        if (cooldowns.isOnCooldown(selectedSlot, level.getGameTime())) return;
+        if (cooldowns.isOnCooldown(weaponSlot, level.getGameTime())) return;
 
         // Torpedo launcher
         if (weapon.getItem() instanceof TorpedoLauncherItem torpedoLauncher) {
-            fireTorpedosInventoryMode(level, player, coreStack, inv, selectedSlot, coreInventorySlot, torpedoLauncher, cooldowns);
+            if (!com.piranport.config.ModCommonConfig.AUTO_RESUPPLY_ENABLED.get()) {
+                fireTorpedosManualMode(level, player, coreStack, inv, weaponSlot, torpedoLauncher, cooldowns);
+            } else {
+                fireTorpedosInventoryMode(level, player, coreStack, inv, weaponSlot, coreInventorySlot, torpedoLauncher, cooldowns);
+            }
             return;
         }
 
         // Aircraft
         if (weapon.getItem() instanceof AircraftItem) {
-            launchAircraftInventoryMode(level, player, coreStack, inv, selectedSlot, coreInventorySlot, cooldowns);
+            launchAircraftInventoryMode(level, player, coreStack, inv, weaponSlot, coreInventorySlot, cooldowns);
             return;
         }
 
-        // Cannon: find matching ammo anywhere in inventory
-        int ammoSlot = -1;
-        for (int i = 0; i < inv.items.size(); i++) {
-            if (i == coreInventorySlot || i == selectedSlot) continue;
-            ItemStack ammo = inv.items.get(i);
-            if (!ammo.isEmpty() && matchesCaliber(ammo, weapon)) {
-                ammoSlot = i;
-                break;
+        // Cannon
+        if (!com.piranport.config.ModCommonConfig.AUTO_RESUPPLY_ENABLED.get()) {
+            // Manual mode: use LOADED_AMMO component on weapon item
+            fireCannonManualMode(level, player, coreStack, weapon, weaponSlot, cooldowns);
+        } else {
+            // Auto mode: find matching ammo anywhere in inventory
+            int ammoSlot = -1;
+            for (int i = 0; i < inv.items.size(); i++) {
+                if (i == coreInventorySlot || i == weaponSlot) continue;
+                ItemStack ammo = inv.items.get(i);
+                if (!ammo.isEmpty() && matchesCaliber(ammo, weapon)) {
+                    ammoSlot = i;
+                    break;
+                }
             }
-        }
 
-        if (ammoSlot == -1) {
+            if (ammoSlot == -1) {
+                player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
+                return;
+            }
+
+            ItemStack ammoStack = inv.items.get(ammoSlot);
+            boolean isHE = isHEShell(ammoStack);
+            ItemStack shellForRender = ammoStack.copyWithCount(1);
+            ammoStack.shrink(1);
+
+            int cooldownTicks = TransformationManager.boostedCooldown(player, getGunCooldown(weapon));
+            coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
+                    cooldowns.withSlotCooldown(weaponSlot, cooldownTicks, level.getGameTime()));
+
+            float damage = getGunDamage(weapon);
+            float explosionPower = getExplosionPower(weapon);
+            float velocity = getProjectileVelocity(weapon);
+            float inaccuracy = getProjectileInaccuracy(weapon);
+
+            CannonProjectileEntity projectile = new CannonProjectileEntity(
+                    level, player, shellForRender, damage, isHE, explosionPower);
+            projectile.shootFromRotation(player, player.getXRot(), player.getYRot(), 0.0f, velocity, inaccuracy);
+            level.addFreshEntity(projectile);
+
+            com.piranport.debug.PiranPortDebug.event(
+                    "Fire | weapon={} ammo={} remaining={}",
+                    BuiltInRegistries.ITEM.getKey(weapon.getItem()).getPath(),
+                    BuiltInRegistries.ITEM.getKey(shellForRender.getItem()).getPath(),
+                    ammoStack.getCount());
+
+            float pitch = getSoundPitch(weapon);
+            level.playSound(null, player.getX(), player.getY(), player.getZ(),
+                    SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 0.5f, pitch);
+        }
+    }
+
+    /** Manual-mode cannon: consume LOADED_AMMO component on the weapon item. */
+    private static void fireCannonManualMode(Level level, Player player, ItemStack coreStack,
+            ItemStack weapon, int weaponSlot, SlotCooldowns cooldowns) {
+        LoadedAmmo loaded = weapon.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
+        if (!loaded.hasAmmo()) {
             player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
             return;
         }
 
-        ItemStack ammoStack = inv.items.get(ammoSlot);
-        boolean isHE = isHEShell(ammoStack);
-        ItemStack shellForRender = ammoStack.copyWithCount(1);
-        ammoStack.shrink(1);
+        boolean isHE = isHEShell(loaded.ammoItemId());
+        net.minecraft.world.item.Item shellItem = BuiltInRegistries.ITEM
+                .getOptional(ResourceLocation.tryParse(loaded.ammoItemId()))
+                .orElse(net.minecraft.world.item.Items.AIR);
+        ItemStack shellForRender = new ItemStack(shellItem, 1);
+
+        // Consume the loaded round
+        weapon.remove(ModDataComponents.LOADED_AMMO.get());
 
         int cooldownTicks = TransformationManager.boostedCooldown(player, getGunCooldown(weapon));
         coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
-                cooldowns.withSlotCooldown(selectedSlot, cooldownTicks, level.getGameTime()));
-        TransformationManager.setWeaponIndex(coreStack, selectedSlot);
+                cooldowns.withSlotCooldown(weaponSlot, cooldownTicks, level.getGameTime()));
 
         float damage = getGunDamage(weapon);
         float explosionPower = getExplosionPower(weapon);
@@ -375,17 +436,66 @@ public class ShipCoreItem extends Item {
         level.addFreshEntity(projectile);
 
         com.piranport.debug.PiranPortDebug.event(
-                "Fire | weapon={} ammo={} remaining={}",
+                "Fire (manual) | weapon={} ammo={}",
                 BuiltInRegistries.ITEM.getKey(weapon.getItem()).getPath(),
-                BuiltInRegistries.ITEM.getKey(shellForRender.getItem()).getPath(),
-                ammoStack.getCount());
+                loaded.ammoItemId());
 
         float pitch = getSoundPitch(weapon);
         level.playSound(null, player.getX(), player.getY(), player.getZ(),
                 SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 0.5f, pitch);
     }
 
-    private void fireTorpedosInventoryMode(Level level, Player player, ItemStack coreStack,
+    /** Manual-mode torpedo: consume LOADED_AMMO component on the launcher item. */
+    private static void fireTorpedosManualMode(Level level, Player player, ItemStack coreStack,
+            Inventory inv, int weaponSlot, TorpedoLauncherItem launcher, SlotCooldowns cooldowns) {
+        ItemStack launcherStack = weaponSlot == 40 ? inv.offhand.get(0) : inv.items.get(weaponSlot);
+        LoadedAmmo loaded = launcherStack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
+
+        int tubeCount = launcher.getTubeCount();
+        if (!loaded.hasAmmo() || loaded.count() < tubeCount) {
+            player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
+            return;
+        }
+
+        int caliber = launcher.getCaliber();
+        int cooldown = launcher.getCooldownTicks();
+        float torpedoSpeed = caliber == 610 ? 1.0f : 1.2f;
+        float[] angles = getSpreadAngles(tubeCount);
+        Vec3 look = player.getLookAngle();
+
+        for (float angle : angles) {
+            Vec3 dir = rotateHorizontal(look, Math.toRadians(angle));
+            TorpedoEntity torpedo = new TorpedoEntity(level, player, caliber);
+            torpedo.setPos(player.getX() + dir.x * 0.5, player.getEyeY() - 0.3, player.getZ() + dir.z * 0.5);
+            torpedo.setDeltaMovement(dir.x * torpedoSpeed, 0, dir.z * torpedoSpeed);
+            level.addFreshEntity(torpedo);
+        }
+
+        // Consume all loaded torpedoes
+        launcherStack.remove(ModDataComponents.LOADED_AMMO.get());
+
+        // Damage launcher
+        if (!launcherStack.isEmpty()) {
+            int newDamage = launcherStack.getDamageValue() + 1;
+            if (newDamage >= launcherStack.getMaxDamage()) {
+                if (weaponSlot == 40) inv.offhand.set(0, ItemStack.EMPTY);
+                else inv.items.set(weaponSlot, ItemStack.EMPTY);
+                level.playSound(null, player.getX(), player.getY(), player.getZ(),
+                        SoundEvents.ITEM_BREAK, SoundSource.PLAYERS, 0.8f, 0.8f + level.random.nextFloat() * 0.4f);
+            } else {
+                launcherStack.setDamageValue(newDamage);
+            }
+        }
+
+        int boostedCooldown = TransformationManager.boostedCooldown(player, cooldown);
+        coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
+                cooldowns.withSlotCooldown(weaponSlot, boostedCooldown, level.getGameTime()));
+
+        level.playSound(null, player.getX(), player.getY(), player.getZ(),
+                SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 0.4f, 0.4f);
+    }
+
+    private static void fireTorpedosInventoryMode(Level level, Player player, ItemStack coreStack,
                                             Inventory inv, int weaponSlot, int coreSlot,
                                             TorpedoLauncherItem launcher, SlotCooldowns cooldowns) {
         int caliber = launcher.getCaliber();
@@ -454,7 +564,7 @@ public class ShipCoreItem extends Item {
                 SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 0.4f, 0.4f);
     }
 
-    private void launchAircraftInventoryMode(Level level, Player player, ItemStack coreStack,
+    private static void launchAircraftInventoryMode(Level level, Player player, ItemStack coreStack,
                                               Inventory inv, int weaponSlot, int coreInventorySlot,
                                               SlotCooldowns cooldowns) {
         ItemStack aircraftStack = weaponSlot == 40 ? inv.offhand.get(0) : inv.items.get(weaponSlot);
@@ -518,9 +628,79 @@ public class ShipCoreItem extends Item {
                 Component.translatable("message.piranport.aircraft_launched", aircraftStack.getHoverName()), true);
     }
 
+    // ===== Weapon cooldown tooltip (shared by all weapon item types) =====
+
+    /**
+     * Client-only helper. Appends "已装填" or "装填中: Xs" to a weapon item's tooltip,
+     * based on the player's active ship core SlotCooldowns.
+     * Only shows when the player is transformed and the weapon is physically in their inventory.
+     */
+    public static void appendWeaponCooldownTooltip(ItemStack stack, List<Component> tooltip) {
+        if (!net.neoforged.fml.loading.FMLEnvironment.dist.isClient()) return;
+        net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
+        if (mc.player == null || mc.level == null) return;
+
+        Inventory inv = mc.player.getInventory();
+
+        // Find the active (transformed) ship core
+        ItemStack coreStack = ItemStack.EMPTY;
+        for (ItemStack s : inv.items) {
+            if (s.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(s)) {
+                coreStack = s;
+                break;
+            }
+        }
+        if (coreStack.isEmpty()) {
+            ItemStack offhand = inv.offhand.get(0);
+            if (offhand.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(offhand)) {
+                coreStack = offhand;
+            }
+        }
+        if (coreStack.isEmpty()) return;
+
+        // Find weapon slot by object identity (only works when item is directly in player's inventory)
+        int weaponSlot = -1;
+        for (int i = 0; i < inv.items.size(); i++) {
+            if (inv.items.get(i) == stack) { weaponSlot = i; break; }
+        }
+        if (weaponSlot == -1 && inv.offhand.get(0) == stack) weaponSlot = 40;
+        if (weaponSlot == -1) return;
+
+        SlotCooldowns cooldowns = coreStack.getOrDefault(
+                ModDataComponents.SLOT_COOLDOWNS.get(), SlotCooldowns.EMPTY);
+        long gameTime = mc.level.getGameTime();
+
+        boolean onCooldown = cooldowns.isOnCooldown(weaponSlot, gameTime);
+        boolean isManualMode = !com.piranport.config.ModCommonConfig.AUTO_RESUPPLY_ENABLED.get();
+
+        if (onCooldown) {
+            tooltip.add(Component.translatable("tooltip.piranport.weapon_not_loaded")
+                    .withStyle(net.minecraft.ChatFormatting.RED));
+        } else if (isManualMode && !(stack.getItem() instanceof AircraftItem)) {
+            // Manual mode: also require LOADED_AMMO to be present
+            LoadedAmmo loaded = stack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
+            boolean hasAmmo;
+            if (stack.getItem() instanceof TorpedoLauncherItem tl) {
+                hasAmmo = loaded.count() >= tl.getTubeCount();
+            } else {
+                hasAmmo = loaded.hasAmmo();
+            }
+            if (hasAmmo) {
+                tooltip.add(Component.translatable("tooltip.piranport.weapon_ready")
+                        .withStyle(net.minecraft.ChatFormatting.GREEN));
+            } else {
+                tooltip.add(Component.translatable("tooltip.piranport.weapon_not_loaded")
+                        .withStyle(net.minecraft.ChatFormatting.RED));
+            }
+        } else {
+            tooltip.add(Component.translatable("tooltip.piranport.weapon_ready")
+                    .withStyle(net.minecraft.ChatFormatting.GREEN));
+        }
+    }
+
     // ===== Caliber matching =====
 
-    private static boolean matchesCaliber(ItemStack ammo, ItemStack weapon) {
+    static boolean matchesCaliber(ItemStack ammo, ItemStack weapon) {
         if (weapon.is(ModItems.SMALL_GUN.get())) {
             return ammo.is(ModItems.SMALL_HE_SHELL.get()) || ammo.is(ModItems.SMALL_AP_SHELL.get());
         } else if (weapon.is(ModItems.MEDIUM_GUN.get())) {
@@ -531,10 +711,16 @@ public class ShipCoreItem extends Item {
         return false;
     }
 
-    private static boolean isHEShell(ItemStack stack) {
+    static boolean isHEShell(ItemStack stack) {
         return stack.is(ModItems.SMALL_HE_SHELL.get())
                 || stack.is(ModItems.MEDIUM_HE_SHELL.get())
                 || stack.is(ModItems.LARGE_HE_SHELL.get());
+    }
+
+    static boolean isHEShell(String ammoItemId) {
+        return ammoItemId.equals(BuiltInRegistries.ITEM.getKey(ModItems.SMALL_HE_SHELL.get()).toString())
+                || ammoItemId.equals(BuiltInRegistries.ITEM.getKey(ModItems.MEDIUM_HE_SHELL.get()).toString())
+                || ammoItemId.equals(BuiltInRegistries.ITEM.getKey(ModItems.LARGE_HE_SHELL.get()).toString());
     }
 
     // ===== Gun stats =====
@@ -744,6 +930,7 @@ public class ShipCoreItem extends Item {
      * Applies FlammableEffect if any aircraft ends up with fuel > 0.
      */
     private static void refillAircraftFuel(Player player, ItemStack coreStack) {
+        if (!com.piranport.config.ModCommonConfig.AUTO_RESUPPLY_ENABLED.get()) return; // manual mode: no auto fuel
         if (!(coreStack.getItem() instanceof ShipCoreItem)) return;
 
         if (!com.piranport.config.ModCommonConfig.SHIP_CORE_GUI_ENABLED.get()) {
@@ -790,7 +977,7 @@ public class ShipCoreItem extends Item {
             AircraftInfo info = items.get(wi).get(ModDataComponents.AIRCRAFT_INFO.get());
             if (info != null && info.currentFuel() > 0) { hasFueled = true; break; }
         }
-        if (hasFueled) {
+        if (hasFueled && com.piranport.config.ModCommonConfig.FLAMMABLE_EFFECT_ENABLED.get()) {
             player.addEffect(new MobEffectInstance(ModMobEffects.FLAMMABLE, 999999, 0, false, true));
         }
     }
@@ -822,7 +1009,7 @@ public class ShipCoreItem extends Item {
             }
         }
 
-        if (hasFueled) {
+        if (hasFueled && com.piranport.config.ModCommonConfig.FLAMMABLE_EFFECT_ENABLED.get()) {
             player.addEffect(new MobEffectInstance(ModMobEffects.FLAMMABLE, 999999, 0, false, true));
         }
     }

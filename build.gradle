@@ -19,6 +19,10 @@ sourceSets.main.resources {
 }
 
 repositories {
+    maven {
+        name = "BlameJared"
+        url = "https://maven.blamejared.com"
+    }
 }
 
 base {
@@ -72,6 +76,8 @@ configurations {
 }
 
 dependencies {
+    // Patchouli — soft dependency, runtime only (reflection-based API in GuidebookItem)
+    localRuntime "vazkii.patchouli:Patchouli:1.21.1-93-NEOFORGE"
 }
 
 var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {

@@ -16,8 +16,10 @@ import net.minecraft.core.NonNullList;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
@@ -151,6 +153,16 @@ public class ShipCoreItem extends Item {
                 }
             }
             return InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
+        }
+
+        // Right-click (no shift) while transformed → recall all airborne aircraft
+        if (isTransformed && !level.isClientSide && level instanceof ServerLevel sl) {
+            int recalled = recallAllAircraft(sl, player);
+            if (recalled > 0) {
+                player.displayClientMessage(
+                        Component.translatable("message.piranport.aircraft_recalled", recalled), true);
+                return InteractionResultHolder.consume(stack);
+            }
         }
 
         if (isTransformed) {
@@ -923,6 +935,27 @@ public class ShipCoreItem extends Item {
     }
 
     // ===== Fuel refill =====
+
+    /**
+     * Recall all airborne aircraft owned by this player. Returns the count recalled.
+     */
+    private static int recallAllAircraft(ServerLevel level, Player player) {
+        java.util.UUID ownerUUID = player.getUUID();
+        java.util.List<AircraftEntity> aircraft = level.getEntitiesOfClass(
+                AircraftEntity.class,
+                new AABB(player.getX() - 300, player.getY() - 300, player.getZ() - 300,
+                         player.getX() + 300, player.getY() + 300, player.getZ() + 300),
+                a -> ownerUUID.equals(a.getOwnerUUID()) && a.isAlive());
+        for (AircraftEntity a : aircraft) {
+            a.recallAndRemove();
+        }
+        // End recon mode if active
+        if (!aircraft.isEmpty()) {
+            com.piranport.aviation.ReconManager.endRecon(ownerUUID);
+            com.piranport.aviation.FireControlManager.clearTargets(ownerUUID);
+        }
+        return aircraft.size();
+    }
 
     /**
      * On transformation: consume aviation_fuel to fill aircraft.

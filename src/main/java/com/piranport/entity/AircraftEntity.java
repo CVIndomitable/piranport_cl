@@ -984,6 +984,16 @@ public class AircraftEntity extends Entity {
     }
 
     @Override
+    public boolean isCurrentlyGlowing() {
+        if (level().isClientSide() && com.piranport.ClientTickHandler.isHighlightEnabled()) {
+            // Safe: isClientSide() ensures Minecraft is available; null-check for mc.player
+            net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
+            if (mc != null && mc.player != null && isOwnedByPlayer(mc.player)) return true;
+        }
+        return super.isCurrentlyGlowing();
+    }
+
+    @Override
     public boolean isPickable() { return true; }
 
     @Override

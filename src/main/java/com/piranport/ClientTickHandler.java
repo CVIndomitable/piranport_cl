@@ -45,6 +45,8 @@ public class ClientTickHandler {
     private static final double FIRE_CONTROL_RANGE = 80.0;
 
     private static boolean highlightEnabled = false;
+
+    public static boolean isHighlightEnabled() { return highlightEnabled; }
     private static final Set<Integer> highlightedEntityIds = new HashSet<>();
 
     @SubscribeEvent
@@ -67,6 +69,14 @@ public class ClientTickHandler {
 
         // Phase 32: recon aircraft WASD control
         if (ClientReconData.isInReconMode()) {
+            // Mirror player mouse rotation to the recon entity so the camera rotates with mouse input
+            if (mc.level != null) {
+                Entity reconEntity = mc.level.getEntity(ClientReconData.getReconEntityId());
+                if (reconEntity != null) {
+                    reconEntity.setXRot(mc.player.getXRot());
+                    reconEntity.setYRot(mc.player.getYRot());
+                }
+            }
             handleReconInput(mc);
             return;  // skip all other key handling while in recon mode
         }
@@ -135,6 +145,11 @@ public class ClientTickHandler {
                 }
                 highlightedEntityIds.clear();
             }
+            mc.player.displayClientMessage(
+                    net.minecraft.network.chat.Component.translatable(
+                            highlightEnabled ? "message.piranport.highlight_on"
+                                             : "message.piranport.highlight_off"),
+                    true);
         }
 
         // Apply/maintain highlight effect each tick
@@ -145,10 +160,9 @@ public class ClientTickHandler {
             for (Entity entity : mc.level.entitiesForRendering()) {
                 boolean shouldGlow = isHighlightTarget(entity, localPlayer, lockedTargets);
                 if (shouldGlow) {
-                    if (!highlightedEntityIds.contains(entity.getId())) {
-                        entity.setGlowingTag(true);
-                        highlightedEntityIds.add(entity.getId());
-                    }
+                    // Set every tick — server data sync may reset the flag
+                    entity.setGlowingTag(true);
+                    highlightedEntityIds.add(entity.getId());
                 } else if (highlightedEntityIds.contains(entity.getId())) {
                     entity.setGlowingTag(false);
                     highlightedEntityIds.remove(entity.getId());
@@ -159,19 +173,16 @@ public class ClientTickHandler {
         }
     }
 
-    /** Returns true if the entity should be highlighted. */
+    /**
+     * Returns true if the entity should have setGlowingTag applied.
+     * AircraftEntity is excluded — its outline is handled via AircraftRenderer.shouldShowOutline().
+     */
     private static boolean isHighlightTarget(Entity entity, Player localPlayer, List<UUID> lockedTargets) {
-        // Own aircraft
-        if (entity instanceof AircraftEntity ae && ae.isOwnedByPlayer(localPlayer)) return true;
-        // Own torpedoes and bombs
+        // Torpedoes, bombs, bullets (use ThrownItemRenderer, no shouldShowOutline override available)
         if (entity instanceof TorpedoEntity te && te.getOwner() == localPlayer) return true;
         if (entity instanceof AerialBombEntity be && be.getOwner() == localPlayer) return true;
         if (entity instanceof BulletEntity bl && bl.getOwner() == localPlayer) return true;
-        // Other players' aircraft, torpedoes, bombs (entities of same type not owned by us)
-        if (entity instanceof AircraftEntity ae && !ae.isOwnedByPlayer(localPlayer)) return true;
-        if (entity instanceof TorpedoEntity te2 && !(te2.getOwner() == localPlayer)) return true;
-        if (entity instanceof AerialBombEntity be2 && !(be2.getOwner() == localPlayer)) return true;
-        // Fire control locked targets
+        // Fire control locked targets (any entity type)
         if (lockedTargets.contains(entity.getUUID())) return true;
         return false;
     }

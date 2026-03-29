@@ -661,14 +661,17 @@ src/main/java/com/piranport/
 | 物品注册ID字符串比对 | 硬编码字符串 | `BuiltInRegistries.ITEM.getKey(stack.getItem()).toString()` 获取"namespace:path"格式 |
 | Inventory offhand槽位索引 | 无 `SLOT_OFFHAND` 常量 | `Inventory.getItem(40)` 即为副手槽；主手用 `player.getInventory().selected` |
 | Entity返回物品到玩家背包 | `player.getMainHandItem()` 只查主手 | 需存储 `coreInventorySlot`（发射时记录 selected 或40副手），返航时用 `player.getInventory().getItem(slot)` 精准定位，附加 main/offhand 兜底 |
+| 客户端实体描边/高亮 | `entity.setGlowingTag(true)` 在客户端调用不生效（服务端每次同步覆盖）；`EntityRenderer.shouldShowOutline()` 在 1.21.1 不存在 | 在实体类重写 `isCurrentlyGlowing()`：`if (level().isClientSide() && ClientTickHandler.isHighlightEnabled()) return true;` |
+| Patchouli 1.20+ 书籍结构 | 书籍内容放在 `data/<mod>/patchouli_books/` 下 → 加载时报 `IllegalArgumentException: use_resource_pack set to false` | `book.json` 加 `"use_resource_pack": true`；所有 categories/entries JSON 移到 `assets/<mod>/patchouli_books/<id>/` |
+| Patchouli 软依赖引入 | 直接 Maven 引用会成为硬依赖 | `build.gradle` 的 `dependencies` 用 `localRuntime` + BlameJared maven，编译时反射调用 API |
 
 ### v0.0.4 外部依赖
 
 **Patchouli 1.21.1-93-NEOFORGE**（教程手册）：
-- Maven: `vazkii.patchouli:Patchouli:1.21.1-93-NEOFORGE`
-- 书籍内容放在 `src/main/resources/data/piranport/patchouli_books/guidebook/`
-- 纯 JSON data-driven，不需要写 Java 代码
-- 书籍物品通过 Patchouli API 注册
+- Maven: `vazkii.patchouli:Patchouli:1.21.1-93-NEOFORGE`（BlameJared maven，`localRuntime` 软依赖）
+- `book.json` 在 `src/main/resources/data/piranport/patchouli_books/guidebook/book.json`，需含 `"use_resource_pack": true`
+- 所有 categories/entries JSON 在 `src/main/resources/assets/piranport/patchouli_books/guidebook/en_us/`
+- Java 代码通过反射调用 `PatchouliAPI.get().openBookGUI(ResourceLocation)`，无 Patchouli 时显示提示
 
 ### v0.0.4 技术要点
 
@@ -686,11 +689,15 @@ src/main/java/com/piranport/
 |------|------|
 | 侦察机视角 | 服务端 `ReconStartPayload` → 客户端 `Minecraft.setCameraEntity(entity)` |
 | 侦察机操控 | 客户端每 tick 发 `ReconControlPayload(dx,dy,dz)` → 服务端 `ReconManager.handleControl()` → `AircraftEntity.tickReconActive()` consumeInput |
+| 侦察机镜头旋转 | `setCameraEntity` 后镜头固定在飞机自身朝向，鼠标无效。修复：`ClientTickHandler.onClientTick` 每 tick 将 `mc.player.getXRot/YRot` 同步给飞机实体 |
 | 区块加载管理 | `ServerLevel.setChunkForced(x,z,true/false)` 维护侦察机周围 3×3 区块；跟踪 `lastForcedChunkX/Z`，移动到新区块时先 release 再 force |
 | FOLLOW 模式距离 | FOLLOW 模式飞机使用 MAX_RECON_DIST(200 格) 上限，因为可能跟随侦察机到玩家 48格以外 |
 | IItemHandler capability | `RegisterCapabilitiesEvent` 中注册 `Capabilities.ItemHandler.BLOCK`；方向判断用 `direction == Direction.DOWN` 区分输出/输入 |
 | 砧板发射器联动 | `CuttingBoardBlock.neighborChanged()` 检测相邻方块是否为 `DispenserBlock` 且 `BlockStateProperties.TRIGGERED` 为 true 时调用 `performCut()` |
 | 命中/击杀通知 | `projectile.getOwner()` 获取 Player → `player.sendSystemMessage(Component)` 仅发给本人；`target.isAlive()` 在 `hurt()` 后判断 |
+| 实体高亮（Y键） | `setGlowingTag` 客户端直接调用无效（服务端同步会覆盖）。正确做法：在实体类重写 `isCurrentlyGlowing()`，用 `level().isClientSide()` 守门后读取客户端静态标志 |
+| 右键核心召回舰载机 | `ShipCoreItem.use()` 右键（非Shift）且有飞机在空时，`recallAllAircraft()` 搜索300格内己方飞机全部 `recallAndRemove()`，同时结束侦察模式和火控锁定 |
+| 无GUI模式水上行走 | `GameEvents.onPlayerTick` 水上行走检查不能只看 `mainHand`；no-GUI模式需遍历整个背包找变身核心 |
 
 ---
 

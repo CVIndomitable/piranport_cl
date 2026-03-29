@@ -39,7 +39,7 @@ public class ModEntityTypes {
             () -> EntityType.Builder.<AircraftEntity>of(AircraftEntity::new, MobCategory.MISC)
                     .sized(1.0f, 0.5f)
                     .clientTrackingRange(16)
-                    .updateInterval(3)
+                    .updateInterval(1)
                     .build("aircraft_entity"));
 
     public static final DeferredHolder<EntityType<?>, EntityType<FloatingTargetEntity>>

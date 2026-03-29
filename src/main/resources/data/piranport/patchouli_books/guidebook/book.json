@@ -4,5 +4,6 @@
   "version": "1",
   "use_blocky_font": false,
   "show_progress": false,
-  "i18n": true
+  "i18n": true,
+  "use_resource_pack": true
 }

@@ -4,14 +4,15 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.HashMap;
 
-/** Server-side: tracks which player is in recon mode and their pending movement input. */
+/** Server-side: tracks which player is in recon mode and their pending movement input.
+ *  All access occurs on the server thread — no concurrent access. */
 public class ReconManager {
     // playerUUID → reconEntityUUID
-    private static final Map<UUID, UUID> activeRecon = new ConcurrentHashMap<>();
+    private static final Map<UUID, UUID> activeRecon = new HashMap<>();
     // playerUUID → [dx, dy, dz]
-    private static final Map<UUID, float[]> pendingInput = new ConcurrentHashMap<>();
+    private static final Map<UUID, float[]> pendingInput = new HashMap<>();
 
     public static void startRecon(UUID playerUUID, UUID entityUUID) {
         activeRecon.put(playerUUID, entityUUID);

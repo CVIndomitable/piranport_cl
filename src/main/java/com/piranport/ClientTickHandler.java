@@ -87,26 +87,7 @@ public class ClientTickHandler {
             return;  // skip all other key handling while in recon mode
         }
 
-        // GUI mode: core must be in main hand.
-        // No-GUI mode: core can be anywhere in inventory/offhand — scan the full inventory.
-        boolean transformed = false;
-        ItemStack mainHand = mc.player.getMainHandItem();
-        if (mainHand.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(mainHand)) {
-            transformed = true;
-        } else {
-            for (ItemStack s : mc.player.getInventory().items) {
-                if (s.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(s)) {
-                    transformed = true;
-                    break;
-                }
-            }
-            if (!transformed) {
-                ItemStack offhand = mc.player.getInventory().offhand.get(0);
-                if (offhand.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(offhand)) {
-                    transformed = true;
-                }
-            }
-        }
+        boolean transformed = TransformationManager.isPlayerTransformed(mc.player);
 
         // Fire control — only while transformed
         while (ModKeyMappings.FIRE_CONTROL_LOCK.consumeClick()) {
@@ -200,7 +181,7 @@ public class ClientTickHandler {
         // Apply/maintain highlight effect each tick
         if (highlightEnabled && mc.level != null) {
             Player localPlayer = mc.player;
-            List<UUID> lockedTargets = ClientFireControlData.getTargets();
+            java.util.Set<UUID> lockedTargets = new java.util.HashSet<>(ClientFireControlData.getTargets());
 
             for (Entity entity : mc.level.entitiesForRendering()) {
                 boolean shouldGlow = isHighlightTarget(entity, localPlayer, lockedTargets);
@@ -222,7 +203,7 @@ public class ClientTickHandler {
      * Returns true if the entity should have setGlowingTag applied.
      * AircraftEntity is excluded — its outline is handled via AircraftRenderer.shouldShowOutline().
      */
-    private static boolean isHighlightTarget(Entity entity, Player localPlayer, List<UUID> lockedTargets) {
+    private static boolean isHighlightTarget(Entity entity, Player localPlayer, java.util.Set<UUID> lockedTargets) {
         // Torpedoes, bombs, bullets (use ThrownItemRenderer, no shouldShowOutline override available)
         if (entity instanceof TorpedoEntity te && te.getOwner() == localPlayer) return true;
         if (entity instanceof AerialBombEntity be && be.getOwner() == localPlayer) return true;

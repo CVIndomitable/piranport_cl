@@ -27,6 +27,23 @@ public class TransformationManager {
         return coreStack.getOrDefault(ModDataComponents.SHIP_CORE_TRANSFORMED.get(), false);
     }
 
+    /** Find the first transformed ship core in main hand, inventory, or offhand. Returns EMPTY if none. */
+    public static ItemStack findTransformedCore(net.minecraft.world.entity.player.Player player) {
+        ItemStack mainHand = player.getMainHandItem();
+        if (mainHand.getItem() instanceof ShipCoreItem && isTransformed(mainHand)) return mainHand;
+        for (ItemStack s : player.getInventory().items) {
+            if (s.getItem() instanceof ShipCoreItem && isTransformed(s)) return s;
+        }
+        ItemStack offhand = player.getOffhandItem();
+        if (offhand.getItem() instanceof ShipCoreItem && isTransformed(offhand)) return offhand;
+        return ItemStack.EMPTY;
+    }
+
+    /** Check if the player has any transformed ship core. */
+    public static boolean isPlayerTransformed(net.minecraft.world.entity.player.Player player) {
+        return !findTransformedCore(player).isEmpty();
+    }
+
     public static void setTransformed(ItemStack coreStack, boolean transformed) {
         coreStack.set(ModDataComponents.SHIP_CORE_TRANSFORMED.get(), transformed);
     }
@@ -300,13 +317,25 @@ public class TransformationManager {
         return Math.max(1, baseTicks / divisor);
     }
 
+    // P3 #36: data-driven weapon load map (lazy initialized)
+    private static java.util.Map<net.minecraft.world.item.Item, Integer> weaponLoadMap;
+
+    private static java.util.Map<net.minecraft.world.item.Item, Integer> getWeaponLoadMap() {
+        if (weaponLoadMap == null) {
+            weaponLoadMap = new java.util.IdentityHashMap<>();
+            weaponLoadMap.put(ModItems.SMALL_GUN.get(), 6);
+            weaponLoadMap.put(ModItems.MEDIUM_GUN.get(), 16);
+            weaponLoadMap.put(ModItems.LARGE_GUN.get(), 30);
+            weaponLoadMap.put(ModItems.TWIN_TORPEDO_LAUNCHER.get(), 8);
+            weaponLoadMap.put(ModItems.TRIPLE_TORPEDO_LAUNCHER.get(), 12);
+            weaponLoadMap.put(ModItems.QUAD_TORPEDO_LAUNCHER.get(), 20);
+        }
+        return weaponLoadMap;
+    }
+
     public static int getItemLoad(ItemStack stack) {
-        if (stack.is(ModItems.SMALL_GUN.get())) return 6;
-        if (stack.is(ModItems.MEDIUM_GUN.get())) return 16;
-        if (stack.is(ModItems.LARGE_GUN.get())) return 30;
-        if (stack.is(ModItems.TWIN_TORPEDO_LAUNCHER.get())) return 8;
-        if (stack.is(ModItems.TRIPLE_TORPEDO_LAUNCHER.get())) return 12;
-        if (stack.is(ModItems.QUAD_TORPEDO_LAUNCHER.get())) return 20;
+        Integer load = getWeaponLoadMap().get(stack.getItem());
+        if (load != null) return load;
         if (stack.getItem() instanceof ArmorPlateItem plate) return plate.getWeight();
         if (stack.getItem() instanceof com.piranport.item.AircraftItem) {
             com.piranport.component.AircraftInfo info =

@@ -85,6 +85,8 @@ public class AircraftEntity extends Entity {
     private int stateTicks = 0;
     private int attackCooldown = 0;
     private boolean hasFired = false;
+    private int autoSeekCooldown = 0; // P3 #30: throttle AABB queries
+    private transient net.minecraft.world.item.Item cachedPayloadItem; // P3 #31: cached Item reference
 
     // Phase 32 runtime fields
     private FlightState lastKnownState = FlightState.LAUNCHING;
@@ -643,7 +645,9 @@ public class AircraftEntity extends Entity {
             }
         }
 
-        // Auto-seek: nearest hostile within 32 blocks
+        // Auto-seek: nearest hostile within 32 blocks (throttled to every 20 ticks)
+        if (autoSeekCooldown > 0) { autoSeekCooldown--; return null; }
+        autoSeekCooldown = 20;
         AABB box = getBoundingBox().inflate(32.0);
         return sl.getEntitiesOfClass(LivingEntity.class, box,
                 e -> e.isAlive() && e != owner && e instanceof Monster)
@@ -821,6 +825,15 @@ public class AircraftEntity extends Entity {
      * Attempt to draw one unit of the aircraft's payload item from the owner's
      * ship core ammo slots. Returns true if successful.
      */
+    /** Lazily resolve the payload type string to an Item reference for fast comparison. */
+    private net.minecraft.world.item.Item resolvePayloadItem() {
+        if (cachedPayloadItem == null && !payloadType.isEmpty()) {
+            cachedPayloadItem = BuiltInRegistries.ITEM.get(
+                    net.minecraft.resources.ResourceLocation.parse(payloadType));
+        }
+        return cachedPayloadItem;
+    }
+
     private boolean tryAutoResupplyAmmo(Player owner) {
         if (payloadType.isEmpty()) return false;
         ItemStack coreStack = findCoreStack(owner);
@@ -835,7 +848,7 @@ public class AircraftEntity extends Entity {
         int ammoEnd = ammoStart + sci.getShipType().ammoSlots;
         for (int ai = ammoStart; ai < ammoEnd; ai++) {
             ItemStack ammo = items.get(ai);
-            if (!ammo.isEmpty() && BuiltInRegistries.ITEM.getKey(ammo.getItem()).toString().equals(payloadType)) {
+            if (!ammo.isEmpty() && ammo.getItem() == resolvePayloadItem()) {
                 ammo.shrink(1);
                 coreStack.set(ModDataComponents.SHIP_CORE_CONTENTS.get(), ItemContainerContents.fromItems(items));
                 remainingAmmo = ammoCapacity;
@@ -961,6 +974,9 @@ public class AircraftEntity extends Entity {
             }
         }
 
+        // Auto-seek (throttled to every 20 ticks)
+        if (autoSeekCooldown > 0) { autoSeekCooldown--; return null; }
+        autoSeekCooldown = 20;
         AABB box = getBoundingBox().inflate(32.0);
 
         // Enemy aircraft (non-same-owner, non-self)

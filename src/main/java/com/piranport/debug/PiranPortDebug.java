@@ -149,25 +149,7 @@ public final class PiranPortDebug {
         sb.append("===== PiranPort Snapshot ").append(LocalTime.now().format(TIME_FMT)).append(" =====\n");
         sb.append("Player: ").append(player.getName().getString()).append("\n");
 
-        // Transform state — scan full inventory for transformed core (no-GUI mode support)
-        ItemStack coreStack = ItemStack.EMPTY;
-        ItemStack mainHand = player.getMainHandItem();
-        if (mainHand.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(mainHand)) {
-            coreStack = mainHand;
-        } else {
-            for (ItemStack s : player.getInventory().items) {
-                if (s.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(s)) {
-                    coreStack = s;
-                    break;
-                }
-            }
-            if (coreStack.isEmpty()) {
-                ItemStack offhand = player.getOffhandItem();
-                if (offhand.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(offhand)) {
-                    coreStack = offhand;
-                }
-            }
-        }
+        ItemStack coreStack = TransformationManager.findTransformedCore(player);
         boolean transformed = !coreStack.isEmpty();
 
         if (transformed) {

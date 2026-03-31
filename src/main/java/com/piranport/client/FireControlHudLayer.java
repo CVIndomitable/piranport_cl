@@ -17,7 +17,9 @@ import net.neoforged.neoforge.client.event.RenderGuiLayerEvent;
 import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -30,17 +32,27 @@ public class FireControlHudLayer {
     private static final int PANEL_WIDTH = 110;
     private static final int LINE_HEIGHT  = 18;
 
+    // P3 #32: cache UUID→Entity mappings, rebuild every 20 ticks
+    private static final Map<UUID, Entity> entityCache = new HashMap<>();
+    private static int cacheAge = 0;
+
+    public static void clearCache() { entityCache.clear(); cacheAge = 0; }
+
     @Nullable
     private static Entity findEntityByUUID(Minecraft mc, UUID uuid) {
         if (mc.level == null) return null;
-        // Check players first (fast path)
-        Entity player = mc.level.getPlayerByUUID(uuid);
-        if (player != null) return player;
-        // Fall back to full entity scan (within render distance)
-        for (Entity e : mc.level.entitiesForRendering()) {
-            if (uuid.equals(e.getUUID())) return e;
+        // Rebuild cache periodically (every 20 ticks)
+        if (++cacheAge > 20) {
+            entityCache.clear();
+            for (Entity e : mc.level.entitiesForRendering()) {
+                entityCache.put(e.getUUID(), e);
+            }
+            cacheAge = 0;
         }
-        return null;
+        Entity cached = entityCache.get(uuid);
+        if (cached != null) return cached;
+        // Fast path for players (always accessible)
+        return mc.level.getPlayerByUUID(uuid);
     }
 
     @SubscribeEvent
@@ -51,27 +63,7 @@ public class FireControlHudLayer {
         LocalPlayer player = mc.player;
         if (player == null) return;
 
-        // Only show while transformed — works in both GUI mode (core in main hand)
-        // and no-GUI mode (core anywhere in inventory/offhand)
-        boolean transformed = false;
-        ItemStack mainHand = player.getMainHandItem();
-        if (mainHand.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(mainHand)) {
-            transformed = true;
-        } else {
-            for (ItemStack s : player.getInventory().items) {
-                if (s.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(s)) {
-                    transformed = true;
-                    break;
-                }
-            }
-            if (!transformed) {
-                ItemStack offhand = player.getInventory().offhand.get(0);
-                if (offhand.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(offhand)) {
-                    transformed = true;
-                }
-            }
-        }
-        if (!transformed) return;
+        if (!TransformationManager.isPlayerTransformed(player)) return;
 
         List<UUID> targets = ClientFireControlData.getTargets();
         if (targets.isEmpty()) return;

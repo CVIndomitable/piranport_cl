@@ -2,15 +2,15 @@ package com.piranport.aviation;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-
-/** Server-side fire control state. Maps player UUID → locked entity UUIDs. */
+/** Server-side fire control state. Maps player UUID → locked entity UUIDs.
+ *  All access occurs on the server thread — no concurrent access. */
 public class FireControlManager {
 
-    private static final Map<UUID, List<UUID>> LOCKED_TARGETS = new ConcurrentHashMap<>();
+    private static final Map<UUID, List<UUID>> LOCKED_TARGETS = new HashMap<>();
     private static final int MAX_TARGETS = 4;
 
     /** Replace the target list with a single target. */

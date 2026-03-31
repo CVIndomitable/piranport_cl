@@ -53,28 +53,7 @@ public class GameEvents {
             tickInventoryLoadCheck(player);
         }
 
-        // Find a transformed ship core — main hand first, then full inventory in no-GUI mode
-        ItemStack mainHand = player.getMainHandItem();
-        boolean transformed = mainHand.getItem() instanceof ShipCoreItem
-                && TransformationManager.isTransformed(mainHand);
-        if (!transformed && !com.piranport.config.ModCommonConfig.SHIP_CORE_GUI_ENABLED.get()) {
-            net.minecraft.world.entity.player.Inventory inv = player.getInventory();
-            for (ItemStack stack : inv.items) {
-                if (stack.getItem() instanceof ShipCoreItem
-                        && TransformationManager.isTransformed(stack)) {
-                    transformed = true;
-                    break;
-                }
-            }
-            if (!transformed) {
-                ItemStack offhand = inv.offhand.get(0);
-                if (offhand.getItem() instanceof ShipCoreItem
-                        && TransformationManager.isTransformed(offhand)) {
-                    transformed = true;
-                }
-            }
-        }
-        if (!transformed) return;
+        if (!TransformationManager.isPlayerTransformed(player)) return;
 
         // 水面行走：脚踩水但眼睛未入水时，取消下沉速度
         if (player.isInWater() && !player.isEyeInFluid(FluidTags.WATER)) {
@@ -99,9 +78,10 @@ public class GameEvents {
             // Find the actual transformed core and its slot for auto-launch
             ItemStack autoLaunchCore = ItemStack.EMPTY;
             int autoLaunchSlot = -1;
-            if (mainHand.getItem() instanceof ShipCoreItem
-                    && TransformationManager.isTransformed(mainHand)) {
-                autoLaunchCore = mainHand;
+            ItemStack mh = player.getMainHandItem();
+            if (mh.getItem() instanceof ShipCoreItem
+                    && TransformationManager.isTransformed(mh)) {
+                autoLaunchCore = mh;
                 autoLaunchSlot = player.getInventory().selected;
             } else {
                 Inventory inv2 = player.getInventory();

@@ -36,29 +36,7 @@ public class EvasionHandler {
         if (event.getSource().is(net.minecraft.tags.DamageTypeTags.BYPASSES_INVULNERABILITY)
                 || event.getSource().is(net.minecraft.world.damagesource.DamageTypes.STARVE)) return;
 
-        // Must be transformed — check main hand first, then full inventory for no-GUI mode
-        boolean isTransformed = false;
-        ItemStack mainHand = player.getMainHandItem();
-        if (mainHand.getItem() instanceof com.piranport.item.ShipCoreItem
-                && TransformationManager.isTransformed(mainHand)) {
-            isTransformed = true;
-        } else {
-            for (ItemStack s : player.getInventory().items) {
-                if (s.getItem() instanceof com.piranport.item.ShipCoreItem
-                        && TransformationManager.isTransformed(s)) {
-                    isTransformed = true;
-                    break;
-                }
-            }
-            if (!isTransformed) {
-                ItemStack offhand = player.getOffhandItem();
-                if (offhand.getItem() instanceof com.piranport.item.ShipCoreItem
-                        && TransformationManager.isTransformed(offhand)) {
-                    isTransformed = true;
-                }
-            }
-        }
-        if (!isTransformed) return;
+        if (!TransformationManager.isPlayerTransformed(player)) return;
 
         // Must have EvasionEffect active
         MobEffectInstance effectInstance = player.getEffect(ModMobEffects.EVASION);

@@ -1063,7 +1063,21 @@ neo_version=21.1.220
 
 **P2 小计**: 12/12 DONE ✅
 
-**总修复数**: P0 (5) + P1 (11) + P2 (12) = **28个**
+### P3 修复清单 (7个 — 性能优化/代码质量)
+
+| # | 类型 | 文件 | 问题 | 修复 | 状态 |
+|---|------|------|------|------|------|
+| 30 | 性能 | `AircraftEntity.java` | `resolveTarget/resolveFighterTarget` 无锁定目标时每tick做32格AABB查询 | ✅ 添加 `autoSeekCooldown`，无锁定时每20tick查询一次 | DONE |
+| 31 | 性能 | `AircraftEntity.java` / `ShipCoreItem.java` | 弹药匹配每次 `toString().equals()` 字符串比较 | ✅ 缓存 `Item` 引用，直接 `==` 比较 | DONE |
+| 32 | 性能 | `FireControlHudLayer.java` | `findEntityByUUID` 每帧遍历全部实体 | ✅ 添加 UUID→Entity 缓存，20tick刷新一次 | DONE |
+| 33 | 性能 | `ClientTickHandler.java` | 高亮系统 `lockedTargets.contains(UUID)` 用 List O(n) | ✅ 转 HashSet O(1) | DONE |
+| 34 | 代码质量 | 6处重复 | 变身检测逻辑（遍历背包找变身核心）在6处重复 | ✅ 抽取 `TransformationManager.findTransformedCore()` / `isPlayerTransformed()` | DONE |
+| 35 | 代码质量 | `FireControlManager.java` / `ReconManager.java` | 单线程环境使用 `ConcurrentHashMap` 虚假暗示 | ✅ 改 `HashMap` + 注释说明 | DONE |
+| 36 | 代码质量 | `TransformationManager.java` | `getItemLoad()` 硬编码物品比较链 | ✅ 改为 `IdentityHashMap` 数据驱动查表 | DONE |
+
+**P3 小计**: 7/7 DONE ✅
+
+**总修复数**: P0 (5) + P1 (11) + P2 (12) + P3 (7) = **35个**
 
 **构建状态**: BUILD SUCCESSFUL ✅
 

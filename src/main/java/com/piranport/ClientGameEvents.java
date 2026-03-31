@@ -32,5 +32,6 @@ public class ClientGameEvents {
         ClientFireControlData.clear();
         ClientReconData.clearRecon();
         ClientTickHandler.resetClientState();
+        com.piranport.client.FireControlHudLayer.clearCache();
     }
 }

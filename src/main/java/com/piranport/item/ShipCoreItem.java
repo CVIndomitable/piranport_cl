@@ -682,11 +682,13 @@ public class ShipCoreItem extends Item {
 
         // Consume payload from inventory if needed
         if (!payloadType.isEmpty() && !hasBullets) {
+            net.minecraft.world.item.Item payloadItem = net.minecraft.core.registries.BuiltInRegistries.ITEM.get(
+                    net.minecraft.resources.ResourceLocation.parse(payloadType));
             boolean consumed = false;
             for (int i = 0; i < inv.items.size(); i++) {
                 if (i == coreInventorySlot || i == weaponSlot) continue;
                 ItemStack s = inv.items.get(i);
-                if (!s.isEmpty() && BuiltInRegistries.ITEM.getKey(s.getItem()).toString().equals(payloadType)) {
+                if (!s.isEmpty() && s.getItem() == payloadItem) {
                     s.shrink(1);
                     consumed = true;
                     break;

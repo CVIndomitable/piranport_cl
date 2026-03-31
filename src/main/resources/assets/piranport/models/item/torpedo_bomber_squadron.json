@@ -1,6 +1,12 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "piranport:item/torpedo_bomber_squadron"
-  }
+    "layer0": "piranport:item/torpedo_bomber_squadron_empty"
+  },
+  "overrides": [
+    {
+      "predicate": { "piranport:fueled": 1 },
+      "model": "piranport:item/torpedo_bomber_squadron_fueled"
+    }
+  ]
 }

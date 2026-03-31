@@ -38,7 +38,12 @@ public class StoneMillRecipe implements Recipe<StoneMillRecipeInput> {
 
         List<Ingredient> remaining = new ArrayList<>(ingredients);
         for (ItemStack avail : available) {
-            remaining.removeIf(ing -> ing.test(avail));
+            for (int i = 0; i < remaining.size(); i++) {
+                if (remaining.get(i).test(avail)) {
+                    remaining.remove(i);
+                    break;
+                }
+            }
         }
         return remaining.isEmpty();
     }

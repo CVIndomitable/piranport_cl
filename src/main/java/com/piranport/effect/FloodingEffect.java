@@ -11,7 +11,9 @@ public class FloodingEffect extends MobEffect {
 
     @Override
     public boolean applyEffectTick(LivingEntity entity, int amplifier) {
-        entity.hurt(entity.damageSources().magic(), 1.0f);
+        if (!entity.level().isClientSide()) {
+            entity.hurt(entity.damageSources().magic(), 1.0f);
+        }
         return true;
     }
 

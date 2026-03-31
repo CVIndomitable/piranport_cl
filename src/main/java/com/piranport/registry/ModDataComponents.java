@@ -98,4 +98,14 @@ public class ModDataComponents {
                     .persistent(LoadedAmmo.CODEC)
                     .networkSynchronized(LoadedAmmo.STREAM_CODEC)
                     .build());
+
+    // ===== 无GUI模式舰装核心储存护甲板 =====
+
+    /** Stores ArmorPlateItems slotted into the ship core (no-GUI mode only). */
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<ItemContainerContents>>
+            SHIP_CORE_ARMOR = DATA_COMPONENTS.register("ship_core_armor",
+            () -> DataComponentType.<ItemContainerContents>builder()
+                    .persistent(ItemContainerContents.CODEC)
+                    .networkSynchronized(ItemContainerContents.STREAM_CODEC)
+                    .build());
 }

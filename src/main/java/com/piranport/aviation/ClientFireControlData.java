@@ -18,7 +18,7 @@ public class ClientFireControlData {
     }
 
     public static List<UUID> getTargets() {
-        return lockedTargets;
+        return List.copyOf(lockedTargets);
     }
 
     public static void clear() {

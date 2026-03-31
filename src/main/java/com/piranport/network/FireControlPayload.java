@@ -22,7 +22,10 @@ public record FireControlPayload(FireAction action, UUID targetUUID) implements 
         LOCK, ADD, CANCEL;
 
         static final StreamCodec<ByteBuf, FireAction> STREAM_CODEC =
-                ByteBufCodecs.VAR_INT.map(i -> values()[i], Enum::ordinal);
+                ByteBufCodecs.VAR_INT.map(i -> {
+                    var vals = values();
+                    return i >= 0 && i < vals.length ? vals[i] : CANCEL;
+                }, Enum::ordinal);
     }
 
     /** Sentinel UUID used when action is CANCEL. */

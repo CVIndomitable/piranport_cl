@@ -149,13 +149,29 @@ public final class PiranPortDebug {
         sb.append("===== PiranPort Snapshot ").append(LocalTime.now().format(TIME_FMT)).append(" =====\n");
         sb.append("Player: ").append(player.getName().getString()).append("\n");
 
-        // Transform state
+        // Transform state — scan full inventory for transformed core (no-GUI mode support)
+        ItemStack coreStack = ItemStack.EMPTY;
         ItemStack mainHand = player.getMainHandItem();
-        boolean transformed = mainHand.getItem() instanceof ShipCoreItem sci
-                && TransformationManager.isTransformed(mainHand);
+        if (mainHand.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(mainHand)) {
+            coreStack = mainHand;
+        } else {
+            for (ItemStack s : player.getInventory().items) {
+                if (s.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(s)) {
+                    coreStack = s;
+                    break;
+                }
+            }
+            if (coreStack.isEmpty()) {
+                ItemStack offhand = player.getOffhandItem();
+                if (offhand.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(offhand)) {
+                    coreStack = offhand;
+                }
+            }
+        }
+        boolean transformed = !coreStack.isEmpty();
 
         if (transformed) {
-            ShipCoreItem sci = (ShipCoreItem) mainHand.getItem();
+            ShipCoreItem sci = (ShipCoreItem) coreStack.getItem();
             String coreId = BuiltInRegistries.ITEM.getKey(sci).getPath();
             sb.append("Transform: ON (").append(coreId).append(")\n");
             int load = TransformationManager.getInventoryWeaponLoad(player.getInventory());

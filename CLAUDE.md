@@ -741,6 +741,10 @@ src/main/resources/assets/piranport/
 | 无GUI模式水上行走 | `GameEvents.onPlayerTick` 水上行走检查不能只看 `mainHand`；no-GUI模式需遍历整个背包找变身核心 |
 | 火控HUD/按键无GUI模式 | `FireControlHudLayer` 和 `ClientTickHandler` 的 `transformed` 检测原先只看 `mainHand instanceof ShipCoreItem`；无GUI模式核心不在主手，需改为遍历 `player.getInventory().items` + offhand，找到任意已变身核心即生效。**此模式应允许空手时也能使用火控。** |
 | 飞机双态贴图 | 飞机有燃料/无燃料显示不同贴图：① `ItemProperties.register(item, rl, func)` 在 `FMLClientSetupEvent.enqueueWork()` 中注册 `piranport:fueled` predicate；② model JSON 用 `"overrides"` 数组 + `"predicate": {"piranport:fueled": 1}` 指向 `xxx_fueled.json`；③ default model 引用 `xxx_empty` 贴图，fueled model 引用 `xxx` 贴图 |
+| 无GUI自动变身（副手驱动） | `GameEvents.tickInventoryLoadCheck` 每 tick 检测副手槽：有 ShipCoreItem → 自动 `setTransformed(true)` + 应用属性 + 补燃料；无 → 自动解除变身 + 召回飞机。`ShipCoreItem.use()` 的 Shift+右键分支在 `!SHIP_CORE_GUI_ENABLED` 时直接 `return pass` 禁用 |
+| 核心护甲存储（无GUI） | `SHIP_CORE_ARMOR` DataComponent（`ItemContainerContents`）存在核心物品上，容量=`shipType.enhancementSlots`。`ShipCoreItem.overrideOtherStackedOnMe` 实现右键存入/取出（收纳袋逻辑）。`isLoadItem()` 已排除 ArmorPlateItem（散落背包的护甲不计重/不生效）。护甲加成和负重通过 `TransformationManager.getCoreArmorBonus/getCoreArmorLoad` 读取 |
+| 武器拾取入背包 | `GameEvents.onWeaponPickup(ItemEntityPickupEvent.Pre)`：当 `weaponPickupToInventory=true` 且拾取物品 `getItemLoad > 0`，优先填入 slots 9–35，全满才退回快捷栏。用 `TriState.FALSE` 阻止原版放入快捷栏 |
+| 快捷栏负重模式 | `hotbarOnlyLoad=true` 时，`getInventoryWeaponLoad` / `getInventoryArmorBonus` 只扫描 slots 0–8（`HOTBAR_SIZE=9`），不含副手和主背包区 |
 
 ---
 

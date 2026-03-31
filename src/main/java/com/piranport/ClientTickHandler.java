@@ -81,8 +81,26 @@ public class ClientTickHandler {
             return;  // skip all other key handling while in recon mode
         }
 
-        boolean transformed = mc.player.getMainHandItem().getItem() instanceof ShipCoreItem sci
-                && TransformationManager.isTransformed(mc.player.getMainHandItem());
+        // GUI mode: core must be in main hand.
+        // No-GUI mode: core can be anywhere in inventory/offhand — scan the full inventory.
+        boolean transformed = false;
+        ItemStack mainHand = mc.player.getMainHandItem();
+        if (mainHand.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(mainHand)) {
+            transformed = true;
+        } else {
+            for (ItemStack s : mc.player.getInventory().items) {
+                if (s.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(s)) {
+                    transformed = true;
+                    break;
+                }
+            }
+            if (!transformed) {
+                ItemStack offhand = mc.player.getInventory().offhand.get(0);
+                if (offhand.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(offhand)) {
+                    transformed = true;
+                }
+            }
+        }
 
         // Fire control — only while transformed
         while (ModKeyMappings.FIRE_CONTROL_LOCK.consumeClick()) {
@@ -111,8 +129,29 @@ public class ClientTickHandler {
         // Open flight group GUI (U key) — only while transformed
         while (ModKeyMappings.OPEN_FLIGHT_GROUP.consumeClick()) {
             if (!transformed) continue;
+            // Find the actual core slot (may be in offhand or elsewhere in no-GUI mode)
             int coreSlot = mc.player.getInventory().selected;
-            PacketDistributor.sendToServer(new OpenFlightGroupPayload(coreSlot));
+            ItemStack mh = mc.player.getMainHandItem();
+            if (!(mh.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(mh))) {
+                // Core not in main hand — scan inventory
+                coreSlot = -1;
+                for (int i = 0; i < mc.player.getInventory().items.size(); i++) {
+                    ItemStack s = mc.player.getInventory().items.get(i);
+                    if (s.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(s)) {
+                        coreSlot = i;
+                        break;
+                    }
+                }
+                if (coreSlot == -1) {
+                    ItemStack oh = mc.player.getInventory().offhand.get(0);
+                    if (oh.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(oh)) {
+                        coreSlot = 40;
+                    }
+                }
+            }
+            if (coreSlot >= 0) {
+                PacketDistributor.sendToServer(new OpenFlightGroupPayload(coreSlot));
+            }
         }
 
         // F8 / Shift+F8: debug toggle / snapshot

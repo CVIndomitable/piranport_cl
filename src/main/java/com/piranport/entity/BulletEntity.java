@@ -39,6 +39,7 @@ public class BulletEntity extends ThrowableItemProjectile {
 
     @Override
     protected void onHitEntity(EntityHitResult result) {
+        super.onHitEntity(result);
         if (!level().isClientSide()) {
             Entity target = result.getEntity();
             target.hurt(damageSources().thrown(this, getOwner()), damage);
@@ -57,7 +58,10 @@ public class BulletEntity extends ThrowableItemProjectile {
 
     @Override
     protected void onHitBlock(BlockHitResult result) {
-        discard();
+        super.onHitBlock(result);
+        if (!level().isClientSide()) {
+            discard();
+        }
     }
 
     @Override

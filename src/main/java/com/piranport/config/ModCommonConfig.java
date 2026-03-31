@@ -35,8 +35,8 @@ public class ModCommonConfig {
                     .define("autoResupplyEnabled", false);
 
     /**
-     * When true, right-clicking the ship core while not transformed opens the ship core GUI.
-     * Default false — GUI is hidden; right-click only fires weapons or transforms.
+     * When true, loading aviation fuel onto an aircraft applies the Flammable (易燃易爆) debuff.
+     * Default false.
      */
     public static final ModConfigSpec.BooleanValue FLAMMABLE_EFFECT_ENABLED =
             BUILDER

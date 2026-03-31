@@ -204,7 +204,7 @@ public class AircraftEntity extends Entity {
             double moved = position().distanceTo(stuckCheckPos);
             if (moved < STUCK_THRESHOLD) {
                 stuckTicks += STUCK_CHECK_INTERVAL;
-                if (stuckTicks >= STUCK_CHECK_INTERVAL) { isForcedReturn = true; recallAndRemove(); return; }
+                if (stuckTicks >= STUCK_CHECK_INTERVAL * 2) { isForcedReturn = true; recallAndRemove(); return; }
             } else {
                 stuckTicks = 0;
             }
@@ -985,12 +985,20 @@ public class AircraftEntity extends Entity {
 
     @Override
     public boolean isCurrentlyGlowing() {
-        if (level().isClientSide() && com.piranport.ClientTickHandler.isHighlightEnabled()) {
-            // Safe: isClientSide() ensures Minecraft is available; null-check for mc.player
-            net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
-            if (mc != null && mc.player != null && isOwnedByPlayer(mc.player)) return true;
+        if (level().isClientSide()) {
+            return AircraftGlowHelper.shouldGlow(this);
         }
         return super.isCurrentlyGlowing();
+    }
+
+    /** Isolates client-only class references to avoid NoClassDefFoundError on dedicated servers. */
+    @net.neoforged.api.distmarker.OnlyIn(net.neoforged.api.distmarker.Dist.CLIENT)
+    private static class AircraftGlowHelper {
+        static boolean shouldGlow(AircraftEntity aircraft) {
+            if (!com.piranport.ClientTickHandler.isHighlightEnabled()) return false;
+            net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
+            return mc != null && mc.player != null && aircraft.isOwnedByPlayer(mc.player);
+        }
     }
 
     @Override

@@ -32,9 +32,29 @@ public class EvasionHandler {
         if (event.getEntity().level().isClientSide()) return;
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
 
-        // Must be transformed
+        // Must be transformed — check main hand first, then full inventory for no-GUI mode
+        boolean isTransformed = false;
         ItemStack mainHand = player.getMainHandItem();
-        if (!TransformationManager.isTransformed(mainHand)) return;
+        if (mainHand.getItem() instanceof com.piranport.item.ShipCoreItem
+                && TransformationManager.isTransformed(mainHand)) {
+            isTransformed = true;
+        } else {
+            for (ItemStack s : player.getInventory().items) {
+                if (s.getItem() instanceof com.piranport.item.ShipCoreItem
+                        && TransformationManager.isTransformed(s)) {
+                    isTransformed = true;
+                    break;
+                }
+            }
+            if (!isTransformed) {
+                ItemStack offhand = player.getOffhandItem();
+                if (offhand.getItem() instanceof com.piranport.item.ShipCoreItem
+                        && TransformationManager.isTransformed(offhand)) {
+                    isTransformed = true;
+                }
+            }
+        }
+        if (!isTransformed) return;
 
         // Must have EvasionEffect active
         MobEffectInstance effectInstance = player.getEffect(ModMobEffects.EVASION);

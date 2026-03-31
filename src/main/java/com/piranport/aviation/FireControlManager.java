@@ -41,7 +41,7 @@ public class FireControlManager {
     /** Returns an unmodifiable snapshot of the player's locked targets. */
     public static List<UUID> getTargets(UUID playerUUID) {
         List<UUID> list = LOCKED_TARGETS.get(playerUUID);
-        return list == null ? List.of() : Collections.unmodifiableList(list);
+        return list == null ? List.of() : List.copyOf(list);
     }
 
     /** Remove all state (call on server stop / world unload). */

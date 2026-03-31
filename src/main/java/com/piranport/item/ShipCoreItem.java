@@ -27,6 +27,9 @@ import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.SlotAccess;
+import net.minecraft.world.inventory.ClickAction;
+import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
@@ -73,6 +76,55 @@ public class ShipCoreItem extends Item {
         return shipType;
     }
 
+    /**
+     * Bundle-like armor storage for no-GUI mode.
+     * - Right-click an ArmorPlateItem onto the core in inventory → stores the plate inside the core.
+     * - Right-click the core with an empty cursor → extracts the last stored plate back to cursor.
+     * Capacity = shipType.enhancementSlots (2–4 plates).
+     */
+    @Override
+    public boolean overrideOtherStackedOnMe(ItemStack stack, ItemStack other,
+            Slot slot, ClickAction action, Player player, SlotAccess access) {
+        if (com.piranport.config.ModCommonConfig.SHIP_CORE_GUI_ENABLED.get()) return false;
+        if (action != ClickAction.SECONDARY) return false;
+
+        int capacity = shipType.enhancementSlots;
+        ItemContainerContents existing = stack.getOrDefault(
+                ModDataComponents.SHIP_CORE_ARMOR.get(), ItemContainerContents.EMPTY);
+        NonNullList<ItemStack> stored = NonNullList.withSize(capacity, ItemStack.EMPTY);
+        existing.copyInto(stored);
+
+        if (!other.isEmpty()) {
+            // Insert: cursor has ArmorPlateItem → store one plate in first empty slot
+            if (!(other.getItem() instanceof ArmorPlateItem)) return false;
+            for (int i = 0; i < capacity; i++) {
+                if (stored.get(i).isEmpty()) {
+                    stored.set(i, other.copyWithCount(1));
+                    other.shrink(1);
+                    stack.set(ModDataComponents.SHIP_CORE_ARMOR.get(),
+                            ItemContainerContents.fromItems(stored));
+                    return true;
+                }
+            }
+            // Full — play error sound as feedback
+            player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+                    net.minecraft.sounds.SoundEvents.VILLAGER_NO, net.minecraft.sounds.SoundSource.PLAYERS, 0.5f, 1.0f);
+            return true;
+        } else {
+            // Extract: cursor is empty → pop last stored plate back to cursor
+            for (int i = capacity - 1; i >= 0; i--) {
+                if (!stored.get(i).isEmpty()) {
+                    access.set(stored.get(i).copy());
+                    stored.set(i, ItemStack.EMPTY);
+                    stack.set(ModDataComponents.SHIP_CORE_ARMOR.get(),
+                            ItemContainerContents.fromItems(stored));
+                    return true;
+                }
+            }
+            return false; // nothing stored
+        }
+    }
+
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context,
                                 List<Component> tooltipComponents, TooltipFlag tooltipFlag) {
@@ -95,10 +147,26 @@ public class ShipCoreItem extends Item {
                         bestMaxLoad = Math.max(bestMaxLoad, sci2.getShipType().maxLoad);
                     }
                     if (shipType.maxLoad >= bestMaxLoad) {
-                        int totalLoad = com.piranport.combat.TransformationManager
+                        int weaponLoad = com.piranport.combat.TransformationManager
                                 .getInventoryWeaponLoad(inv);
+                        int armorLoad = com.piranport.combat.TransformationManager
+                                .getCoreArmorLoad(stack);
                         tooltipComponents.add(Component.translatable(
-                                "container.piranport.load", totalLoad, bestMaxLoad));
+                                "container.piranport.load", weaponLoad + armorLoad, bestMaxLoad));
+                        // Show stored armor plates
+                        int capacity = shipType.enhancementSlots;
+                        ItemContainerContents armorContents = stack.getOrDefault(
+                                ModDataComponents.SHIP_CORE_ARMOR.get(), ItemContainerContents.EMPTY);
+                        NonNullList<ItemStack> storedArmor = NonNullList.withSize(capacity, ItemStack.EMPTY);
+                        armorContents.copyInto(storedArmor);
+                        int armorBonus = com.piranport.combat.TransformationManager.getCoreArmorBonus(stack);
+                        tooltipComponents.add(Component.translatable(
+                                "tooltip.piranport.core_armor_slots", armorBonus, capacity));
+                        for (ItemStack s : storedArmor) {
+                            if (!s.isEmpty()) {
+                                tooltipComponents.add(Component.literal("  • ").append(s.getHoverName()));
+                            }
+                        }
                     } else {
                         tooltipComponents.add(Component.translatable("tooltip.piranport.core_inactive"));
                     }
@@ -129,6 +197,10 @@ public class ShipCoreItem extends Item {
         boolean isTransformed = TransformationManager.isTransformed(stack);
 
         if (player.isShiftKeyDown()) {
+            // No-GUI mode: transformation is automatic (offhand-driven), manual toggle disabled
+            if (!com.piranport.config.ModCommonConfig.SHIP_CORE_GUI_ENABLED.get()) {
+                return InteractionResultHolder.pass(stack);
+            }
             // Toggle transformation
             if (!level.isClientSide) {
                 TransformationManager.setTransformed(stack, !isTransformed);
@@ -364,11 +436,14 @@ public class ShipCoreItem extends Item {
         }
 
         // Cannon
-        if (!com.piranport.config.ModCommonConfig.AUTO_RESUPPLY_ENABLED.get()) {
+        // Small gun always auto-reloads from inventory in no-GUI mode
+        boolean cannonAutoMode = com.piranport.config.ModCommonConfig.AUTO_RESUPPLY_ENABLED.get()
+                || weapon.is(ModItems.SMALL_GUN.get());
+        if (!cannonAutoMode) {
             // Manual mode: use LOADED_AMMO component on weapon item
             fireCannonManualMode(level, player, coreStack, weapon, weaponSlot, cooldowns);
         } else {
-            // Auto mode: find matching ammo anywhere in inventory
+            // Auto mode (or small gun): find matching ammo anywhere in inventory
             int ammoSlot = -1;
             for (int i = 0; i < inv.items.size(); i++) {
                 if (i == coreInventorySlot || i == weaponSlot) continue;
@@ -580,6 +655,13 @@ public class ShipCoreItem extends Item {
                                               Inventory inv, int weaponSlot, int coreInventorySlot,
                                               SlotCooldowns cooldowns) {
         ItemStack aircraftStack = weaponSlot == 40 ? inv.offhand.get(0) : inv.items.get(weaponSlot);
+
+        // Fuel check — refuse launch if currentFuel == 0
+        AircraftInfo launchInfo = aircraftStack.get(ModDataComponents.AIRCRAFT_INFO.get());
+        if (launchInfo == null || launchInfo.currentFuel() <= 0) {
+            player.displayClientMessage(Component.translatable("message.piranport.no_fuel"), true);
+            return;
+        }
 
         // In no-GUI mode, use FlightGroupData if present (indexed by inventory slot).
         // Since group slotIndices map to inventory slot numbers in this mode, look them up.
@@ -872,11 +954,18 @@ public class ShipCoreItem extends Item {
                                  NonNullList<ItemStack> items, int weaponIndex, int coreInventorySlot) {
         ItemStack aircraftStack = items.get(weaponIndex);
 
+        // Fuel check — refuse launch if currentFuel == 0
+        AircraftInfo launchInfo = aircraftStack.get(ModDataComponents.AIRCRAFT_INFO.get());
+        if (launchInfo == null || launchInfo.currentFuel() <= 0) {
+            player.displayClientMessage(Component.translatable("message.piranport.no_fuel"), true);
+            return;
+        }
+
         // Look up group data for this weapon slot
         FlightGroupData groupData = coreStack.getOrDefault(
                 ModDataComponents.FLIGHT_GROUP_DATA.get(), FlightGroupData.empty());
         FlightGroupData.AttackMode attackMode = FlightGroupData.AttackMode.FOCUS;
-        boolean hasBullets = false;
+        boolean hasBullets = true; // default: fighters use bullets
         String payloadType = "";
         for (FlightGroupData.FlightGroup group : groupData.groups()) {
             if (group.slotIndices().contains(weaponIndex)) {
@@ -962,7 +1051,7 @@ public class ShipCoreItem extends Item {
      * One aviation_fuel item fills one aircraft to full fuelCapacity.
      * Applies FlammableEffect if any aircraft ends up with fuel > 0.
      */
-    private static void refillAircraftFuel(Player player, ItemStack coreStack) {
+    public static void refillAircraftFuel(Player player, ItemStack coreStack) {
         if (!com.piranport.config.ModCommonConfig.AUTO_RESUPPLY_ENABLED.get()) return; // manual mode: no auto fuel
         if (!(coreStack.getItem() instanceof ShipCoreItem)) return;
 

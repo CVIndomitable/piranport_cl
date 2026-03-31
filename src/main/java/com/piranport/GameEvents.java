@@ -2,6 +2,7 @@ package com.piranport;
 
 import com.piranport.aviation.FireControlManager;
 import com.piranport.aviation.ReconManager;
+import net.minecraft.network.chat.Component;
 import com.piranport.combat.TransformationManager;
 import com.piranport.config.ModCommonConfig;
 import com.piranport.entity.AircraftEntity;
@@ -24,7 +25,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.common.util.TriState;
+import net.neoforged.neoforge.common.util.TriState;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.entity.player.ItemEntityPickupEvent;
@@ -84,58 +85,86 @@ public class GameEvents {
 
         // 战斗机自动升空 — server only, checked every 40 ticks (2 s)
         if (!player.level().isClientSide() && player.tickCount % 40 == 0) {
-            tickAutoLaunchFighters(player, mainHand, player.getInventory().selected);
+            // Find the actual transformed core and its slot for auto-launch
+            ItemStack autoLaunchCore = ItemStack.EMPTY;
+            int autoLaunchSlot = -1;
+            if (mainHand.getItem() instanceof ShipCoreItem
+                    && TransformationManager.isTransformed(mainHand)) {
+                autoLaunchCore = mainHand;
+                autoLaunchSlot = player.getInventory().selected;
+            } else {
+                Inventory inv2 = player.getInventory();
+                for (int i = 0; i < inv2.items.size(); i++) {
+                    ItemStack s = inv2.items.get(i);
+                    if (s.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(s)) {
+                        autoLaunchCore = s;
+                        autoLaunchSlot = i;
+                        break;
+                    }
+                }
+                if (autoLaunchCore.isEmpty()) {
+                    ItemStack offh = inv2.offhand.get(0);
+                    if (offh.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(offh)) {
+                        autoLaunchCore = offh;
+                        autoLaunchSlot = 40;
+                    }
+                }
+            }
+            if (!autoLaunchCore.isEmpty()) {
+                tickAutoLaunchFighters(player, autoLaunchCore, autoLaunchSlot);
+            }
         }
     }
 
     /**
-     * Checks whether the inventory weapon load (or best core capacity) has changed since last tick.
-     * Only calls applyTransformationAttributes when the value actually differs — avoiding the cost
-     * of re-applying attribute modifiers on every tick.
+     * No-GUI mode: transformation is driven entirely by the offhand slot.
+     * - ShipCoreItem enters offhand  → auto-transform (apply attributes, refill fuel, message).
+     * - ShipCoreItem leaves offhand  → auto-un-transform (remove attributes, recall aircraft, message).
+     * - Core stays in offhand        → recalculate attributes only when weapon load changes.
      */
     private static void tickInventoryLoadCheck(Player player) {
         net.minecraft.world.entity.player.Inventory inv = player.getInventory();
+        ItemStack offhand = inv.offhand.get(0);
+        boolean coreInOffhand = offhand.getItem() instanceof ShipCoreItem;
 
-        // Find a transformed ShipCoreItem anywhere in the inventory
-        ItemStack transformedCore = null;
-        for (ItemStack stack : inv.items) {
-            if (stack.getItem() instanceof ShipCoreItem
-                    && TransformationManager.isTransformed(stack)) {
-                transformedCore = stack;
-                break;
+        if (coreInOffhand) {
+            // Auto-transform when core is placed in offhand
+            if (!TransformationManager.isTransformed(offhand)) {
+                TransformationManager.setTransformed(offhand, true);
+                TransformationManager.applyTransformationAttributes(player, offhand);
+                ShipCoreItem.refillAircraftFuel(player, offhand);
+                player.displayClientMessage(
+                        Component.translatable("message.piranport.transformed"), true);
+                lastWeaponLoad.put(player.getUUID(), -1); // force attribute recalc next tick
+                return;
             }
-        }
-        if (transformedCore == null) {
-            ItemStack offhand = inv.offhand.get(0);
-            if (offhand.getItem() instanceof ShipCoreItem
-                    && TransformationManager.isTransformed(offhand)) {
-                transformedCore = offhand;
+
+            // Core already transformed — recalculate attributes only when load changes
+            int weaponLoad = TransformationManager.getInventoryWeaponLoad(inv);
+            int armorLoad  = TransformationManager.getCoreArmorLoad(offhand);
+            int maxLoad    = ((ShipCoreItem) offhand.getItem()).getShipType().maxLoad;
+            int cacheKey   = (weaponLoad + armorLoad) * 1000 + maxLoad;
+            Integer cached = lastWeaponLoad.get(player.getUUID());
+            if (cached == null || cached != cacheKey) {
+                lastWeaponLoad.put(player.getUUID(), cacheKey);
+                TransformationManager.applyTransformationAttributes(player, offhand);
             }
-        }
-
-        if (transformedCore == null) {
-            lastWeaponLoad.remove(player.getUUID());
-            return;
-        }
-
-        // Cache key encodes both weapon load and the best-core capacity so that picking up
-        // a larger ship core also triggers a recalculation even without weapon changes.
-        int weaponLoad = TransformationManager.getInventoryWeaponLoad(inv);
-        int maxLoad = 0;
-        for (ItemStack stack : inv.items) {
-            if (stack.getItem() instanceof ShipCoreItem sci) {
-                maxLoad = Math.max(maxLoad, sci.getShipType().maxLoad);
+        } else {
+            // No core in offhand — clear isTransformed flag on any core still in inventory
+            for (ItemStack stack : inv.items) {
+                if (stack.getItem() instanceof ShipCoreItem
+                        && TransformationManager.isTransformed(stack)) {
+                    TransformationManager.setTransformed(stack, false);
+                }
             }
-        }
-        if (inv.offhand.get(0).getItem() instanceof ShipCoreItem sci) {
-            maxLoad = Math.max(maxLoad, sci.getShipType().maxLoad);
-        }
-
-        int cacheKey = weaponLoad * 1000 + maxLoad;
-        Integer cached = lastWeaponLoad.get(player.getUUID());
-        if (cached == null || cached != cacheKey) {
-            lastWeaponLoad.put(player.getUUID(), cacheKey);
-            TransformationManager.applyTransformationAttributes(player, transformedCore);
+            // Auto-un-transform if we were previously transformed
+            if (lastWeaponLoad.remove(player.getUUID()) != null) {
+                TransformationManager.removeTransformationAttributes(player);
+                player.removeEffect(com.piranport.registry.ModMobEffects.FLAMMABLE);
+                recallAircraftForPlayer(player);
+                player.displayClientMessage(
+                        Component.translatable("message.piranport.untransformed"), true);
+            }
         }
     }
 
@@ -203,7 +232,7 @@ public class GameEvents {
     private static void recallAircraftForPlayer(Player player) {
         if (!(player.level() instanceof ServerLevel serverLevel)) return;
         UUID ownerUUID = player.getUUID();
-        AABB searchBox = AABB.ofSize(player.position(), 200, 200, 200);
+        AABB searchBox = AABB.ofSize(player.position(), 600, 600, 600);
         List<AircraftEntity> aircraft = serverLevel.getEntitiesOfClass(
                 AircraftEntity.class, searchBox,
                 a -> ownerUUID.equals(a.getOwnerUUID()));

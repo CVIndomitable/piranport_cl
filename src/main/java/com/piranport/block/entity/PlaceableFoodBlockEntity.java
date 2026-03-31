@@ -50,7 +50,7 @@ public class PlaceableFoodBlockEntity extends BlockEntity {
         if (food == null) return;
 
         int nutritionPerBite = (int) Math.ceil((double) food.nutrition() / totalServings);
-        float satModPerBite = food.saturation();
+        float satModPerBite = (float) Math.ceil(food.saturation() / totalServings * 10) / 10f;
         player.getFoodData().eat(nutritionPerBite, satModPerBite);
 
         for (FoodProperties.PossibleEffect pe : food.effects()) {

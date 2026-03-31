@@ -51,10 +51,27 @@ public class FireControlHudLayer {
         LocalPlayer player = mc.player;
         if (player == null) return;
 
-        // Only show while transformed
+        // Only show while transformed — works in both GUI mode (core in main hand)
+        // and no-GUI mode (core anywhere in inventory/offhand)
+        boolean transformed = false;
         ItemStack mainHand = player.getMainHandItem();
-        if (!(mainHand.getItem() instanceof ShipCoreItem)) return;
-        if (!TransformationManager.isTransformed(mainHand)) return;
+        if (mainHand.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(mainHand)) {
+            transformed = true;
+        } else {
+            for (ItemStack s : player.getInventory().items) {
+                if (s.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(s)) {
+                    transformed = true;
+                    break;
+                }
+            }
+            if (!transformed) {
+                ItemStack offhand = player.getInventory().offhand.get(0);
+                if (offhand.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(offhand)) {
+                    transformed = true;
+                }
+            }
+        }
+        if (!transformed) return;
 
         List<UUID> targets = ClientFireControlData.getTargets();
         if (targets.isEmpty()) return;

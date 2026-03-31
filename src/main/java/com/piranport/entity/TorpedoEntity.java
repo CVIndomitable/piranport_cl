@@ -103,6 +103,7 @@ public class TorpedoEntity extends ThrowableItemProjectile {
 
     @Override
     protected void onHitEntity(EntityHitResult result) {
+        super.onHitEntity(result);
         if (!level().isClientSide()) {
             Entity target = result.getEntity();
             target.hurt(damageSources().thrown(this, getOwner()), damage);
@@ -125,6 +126,7 @@ public class TorpedoEntity extends ThrowableItemProjectile {
 
     @Override
     protected void onHitBlock(BlockHitResult result) {
+        super.onHitBlock(result);
         if (!level().isClientSide()) {
             // 水中命中方块：静默消失，不爆炸
             if (level().getBlockState(result.getBlockPos()).getFluidState().is(Fluids.WATER)) {
@@ -158,7 +160,10 @@ public class TorpedoEntity extends ThrowableItemProjectile {
         caliber = tag.getInt("Caliber");
         damage = tag.getFloat("Damage");
         torpedoSpeed = tag.getFloat("TorpedoSpeed");
+        if (torpedoSpeed <= 0) torpedoSpeed = 1.2f;
         lifetime = tag.getInt("Lifetime");
+        if (lifetime <= 0) lifetime = 1200;
         explosionRadius = tag.getFloat("ExplosionRadius");
+        if (explosionRadius <= 0) explosionRadius = 2.0f;
     }
 }

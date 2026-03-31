@@ -44,6 +44,7 @@ public class AerialBombEntity extends ThrowableItemProjectile {
 
     @Override
     protected void onHitEntity(EntityHitResult result) {
+        super.onHitEntity(result);
         if (!level().isClientSide()) {
             Entity target = result.getEntity();
             target.hurt(damageSources().thrown(this, getOwner()), damage);

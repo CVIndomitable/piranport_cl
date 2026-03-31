@@ -73,32 +73,6 @@ public class TransformationManager {
                 Component.translatable("message.piranport.weapon_selected", items.get(next).getHoverName()), true);
     }
 
-    /** Cycle weapon in inventory mode: find all weapon items in inventory and select the next one. */
-    private static void cycleWeaponInventoryMode(Player player, ItemStack coreStack) {
-        net.minecraft.world.entity.player.Inventory inv = player.getInventory();
-        int coreSlot = inv.selected; // core is in main hand (offhand transform not cycled)
-
-        // Collect all inventory slots containing weapons (ordered by slot index)
-        java.util.List<Integer> weaponSlots = new java.util.ArrayList<>();
-        for (int i = 0; i < inv.items.size(); i++) {
-            if (i == coreSlot) continue;
-            if (isFireableWeapon(inv.items.get(i))) weaponSlots.add(i);
-        }
-        // Also check offhand slot 40
-        if (isFireableWeapon(inv.offhand.get(0))) weaponSlots.add(40);
-
-        if (weaponSlots.size() < 2) return; // nothing to cycle to
-
-        int current = getWeaponIndex(coreStack);
-        int currentPos = weaponSlots.indexOf(current);
-        int next = weaponSlots.get((currentPos + 1) % weaponSlots.size());
-
-        setWeaponIndex(coreStack, next);
-        ItemStack nextWeapon = next == 40 ? inv.offhand.get(0) : inv.items.get(next);
-        player.displayClientMessage(
-                Component.translatable("message.piranport.weapon_selected", nextWeapon.getHoverName()), true);
-    }
-
     /** Returns true for items that can be fired/launched (guns, torpedo launchers, aircraft — not cores, armor, ammo). */
     public static boolean isFireableWeapon(ItemStack stack) {
         if (stack.isEmpty()) return false;
@@ -189,7 +163,8 @@ public class TransformationManager {
                 maxLoad = Math.max(maxLoad, sci.getShipType().maxLoad);
             }
         }
-        if (!hotbarOnly) {
+        // Always check offhand — no-GUI mode requires the core to be in offhand
+        {
             ItemStack offhandStack = inv.offhand.get(0);
             if (offhandStack.getItem() instanceof ShipCoreItem sci) {
                 maxLoad = Math.max(maxLoad, sci.getShipType().maxLoad);
@@ -200,8 +175,11 @@ public class TransformationManager {
         if (maxLoad == 0) return;
 
         long _t = System.nanoTime();
-        int totalLoad = getInventoryWeaponLoad(inv);
-        int armorBonus = getInventoryArmorBonus(inv);
+        // Armor comes from plates stored inside the offhand core, not from inventory scan
+        ItemStack offhandCore = inv.offhand.get(0);
+        int armorBonus = getCoreArmorBonus(offhandCore);
+        int armorLoad  = getCoreArmorLoad(offhandCore);
+        int totalLoad  = getInventoryWeaponLoad(inv) + armorLoad;
         com.piranport.debug.PiranPortDebug.perf("WeightScan", System.nanoTime() - _t,
                 "player=" + player.getName().getString() + " load=" + totalLoad + "/" + maxLoad + " armor=" + armorBonus);
 
@@ -256,10 +234,48 @@ public class TransformationManager {
         return total;
     }
 
-    /** Returns true for items that consume load in inventory mode (weapons + armor plates, not ship cores). */
+    /**
+     * Returns the total armor bonus from ArmorPlateItems stored inside a ship core's
+     * SHIP_CORE_ARMOR DataComponent (no-GUI mode).
+     */
+    public static int getCoreArmorBonus(ItemStack coreStack) {
+        if (!(coreStack.getItem() instanceof ShipCoreItem sci)) return 0;
+        ItemContainerContents contents = coreStack.getOrDefault(
+                ModDataComponents.SHIP_CORE_ARMOR.get(), ItemContainerContents.EMPTY);
+        NonNullList<ItemStack> stored = NonNullList.withSize(sci.getShipType().enhancementSlots, ItemStack.EMPTY);
+        contents.copyInto(stored);
+        int total = 0;
+        for (ItemStack s : stored) {
+            if (s.getItem() instanceof ArmorPlateItem plate) total += plate.getArmorBonus();
+        }
+        return total;
+    }
+
+    /**
+     * Returns the total load contributed by ArmorPlateItems stored inside a ship core's
+     * SHIP_CORE_ARMOR DataComponent (no-GUI mode).
+     */
+    public static int getCoreArmorLoad(ItemStack coreStack) {
+        if (!(coreStack.getItem() instanceof ShipCoreItem sci)) return 0;
+        ItemContainerContents contents = coreStack.getOrDefault(
+                ModDataComponents.SHIP_CORE_ARMOR.get(), ItemContainerContents.EMPTY);
+        NonNullList<ItemStack> stored = NonNullList.withSize(sci.getShipType().enhancementSlots, ItemStack.EMPTY);
+        contents.copyInto(stored);
+        int total = 0;
+        for (ItemStack s : stored) {
+            if (s.getItem() instanceof ArmorPlateItem plate) total += plate.getWeight();
+        }
+        return total;
+    }
+
+    /**
+     * Returns true for items that consume load in inventory mode (weapons only, not ship cores).
+     * ArmorPlateItems are excluded here — they must be stored inside the ship core to count.
+     */
     private static boolean isLoadItem(ItemStack stack) {
         if (stack.isEmpty()) return false;
         if (stack.getItem() instanceof ShipCoreItem) return false;
+        if (stack.getItem() instanceof ArmorPlateItem) return false;
         return getItemLoad(stack) > 0;
     }
 

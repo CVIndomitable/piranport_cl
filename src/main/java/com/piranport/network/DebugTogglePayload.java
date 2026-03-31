@@ -22,6 +22,11 @@ public record DebugTogglePayload(boolean enabled) implements CustomPacketPayload
     public Type<? extends CustomPacketPayload> type() { return TYPE; }
 
     public static void handle(DebugTogglePayload payload, IPayloadContext context) {
-        context.enqueueWork(() -> PiranPortDebug.setServerEnabled(payload.enabled()));
+        context.enqueueWork(() -> {
+            if (context.player() instanceof net.minecraft.server.level.ServerPlayer sp
+                    && sp.hasPermissions(2)) {
+                PiranPortDebug.setServerEnabled(payload.enabled());
+            }
+        });
     }
 }

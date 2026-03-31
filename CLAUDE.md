@@ -601,7 +601,7 @@ src/main/java/com/piranport/
 │   ├── ModRecipeTypes.java
 │   └── ModKeyMappings.java         # P/O/I 火控、U 编组、V 循环/退侦察、Y 高亮、F8 调试
 ├── config/
-│   ├── ModCommonConfig.java        # shipCoreGuiEnabled, autoResupplyEnabled, fighterAmmoEnabled, flammableEffectEnabled
+│   ├── ModCommonConfig.java        # shipCoreGuiEnabled, autoResupplyEnabled, fighterAmmoEnabled, flammableEffectEnabled, saltGenerationEnabled
 │   └── ModClientConfig.java        # showLegacyReloadHud, flightGroupEnabled
 ├── item/
 │   ├── ShipCoreItem.java           # GUI/无GUI双模式发射、右键召回飞机、无GUI背包扫描
@@ -666,7 +666,10 @@ src/main/java/com/piranport/
 │   ├── DebugTogglePayload.java
 │   └── SnapshotRequestPayload.java
 ├── recipe/ (同v0.0.3)
-└── worldgen/
+├── worldgen/
+│   └── SaltGenBiomeModifier.java   # 条件性盐矿生成（受saltGenerationEnabled控制）
+└── registry/
+    ├── ModBiomeModifiers.java       # BiomeModifier codec 注册（盐矿生成）
 
 src/main/resources/assets/piranport/
 ├── textures/
@@ -704,6 +707,8 @@ src/main/resources/assets/piranport/
 | 物品 Property Predicate（动态贴图） | 无法在 model JSON 直接读 DataComponent 决定贴图 | `ItemProperties.register(item, ResourceLocation, ClampedItemPropertyFunction)` 在 `FMLClientSetupEvent.enqueueWork()` 中注册（必须 enqueueWork，否则线程安全问题）；model JSON 用 `"overrides":[{"predicate":{"piranport:xxx":1},"model":"..."}]` |
 | Patchouli 1.20+ 书籍结构 | 书籍内容放在 `data/<mod>/patchouli_books/` 下 → 加载时报 `IllegalArgumentException: use_resource_pack set to false` | `book.json` 加 `"use_resource_pack": true`；所有 categories/entries JSON 移到 `assets/<mod>/patchouli_books/<id>/` |
 | Patchouli 软依赖引入 | 直接 Maven 引用会成为硬依赖 | `build.gradle` 的 `dependencies` 用 `localRuntime` + BlameJared maven，编译时反射调用 API |
+| 条件性BiomeModifier注册 | 标准 `add_features` 无法根据config动态开关 | 实现自定义 `BiomeModifier` 接口，在 `modify(Phase.ADD)` 中读取 config 决策；注册 codec 到 `NeoForgeRegistries.Keys.BIOME_MODIFIER_SERIALIZERS` |
+| 熔炉配方返还容器 | 需要手动`addRecipe` + `addSmeltingRecipesWithResult` | Minecraft 1.21.1 原生支持：熔炉自动返还 crafting remainder（如水桶→空桶）；配方JSON仅需定义输入输出 |
 
 ### v0.0.4 外部依赖
 
@@ -745,6 +750,20 @@ src/main/resources/assets/piranport/
 | 核心护甲存储（无GUI） | `SHIP_CORE_ARMOR` DataComponent（`ItemContainerContents`）存在核心物品上，容量=`shipType.enhancementSlots`。`ShipCoreItem.overrideOtherStackedOnMe` 实现右键存入/取出（收纳袋逻辑）。`isLoadItem()` 已排除 ArmorPlateItem（散落背包的护甲不计重/不生效）。护甲加成和负重通过 `TransformationManager.getCoreArmorBonus/getCoreArmorLoad` 读取 |
 | 武器拾取入背包 | `GameEvents.onWeaponPickup(ItemEntityPickupEvent.Pre)`：当 `weaponPickupToInventory=true` 且拾取物品 `getItemLoad > 0`，优先填入 slots 9–35，全满才退回快捷栏。用 `TriState.FALSE` 阻止原版放入快捷栏 |
 | 快捷栏负重模式 | `hotbarOnlyLoad=true` 时，`getInventoryWeaponLoad` / `getInventoryArmorBonus` 只扫描 slots 0–8（`HOTBAR_SIZE=9`），不含副手和主背包区 |
+
+### 配置系统（v0.0.7+ 更新）
+
+| 配置项 | 类型 | 默认值 | 说明 |
+|--------|------|--------|------|
+| `saltGenerationEnabled` | Boolean | `false` | 河流生物群系盐矿自然生成开关（通过自定义 `SaltGenBiomeModifier` 实现） |
+| `shipCoreGuiEnabled` | Boolean | `false` | 舰装核心GUI开关（开启后右键打开菜单；关闭后仅变身/发射） |
+| `autoResupplyEnabled` | Boolean | `false` | 自动装填模式（开启后自动扣弹药；关闭后需右键手动装填） |
+| `fighterAmmoEnabled` | Boolean | `false` | 战斗机子弹消耗开关（开启后战斗机消耗弹药） |
+| `flammableEffectEnabled` | Boolean | `false` | 易燃易爆Buff开关（开启后有燃料飞机触发额外伤害加成） |
+| `weaponPickupToInventory` | Boolean | `false` | 武器拾取目标槽（开启后武器进背包而非快捷栏） |
+| `hotbarOnlyLoad` | Boolean | `false` | 仅快捷栏负重模式（仅无GUI模式适用） |
+
+**实现机制：** `ModCommonConfig.SPEC` 在 `PiranPort.modContainer.registerConfig()` 时加载；自定义 `BiomeModifier`（如 `SaltGenBiomeModifier`）在 `modify()` 方法中读取 `ModCommonConfig.SALT_GENERATION_ENABLED.get()` 动态决策。
 
 ---
 
@@ -1008,6 +1027,31 @@ neo_version=21.1.220
 | `FireControlHudLayer.java` | 修复无GUI模式下HUD不显示的问题（从只查主手改为扫描全背包） |
 | `ClientTickHandler.java` | 修复无GUI模式下火控按键（P/O）无响应的问题（`transformed` 检测同上，改为扫描全背包） |
 | 暂缺贴图 | 葱/蒜/辣椒（作物+物品）、ship core 3种、中/大型火炮独立图、pasta/培根等中间食材约20种 |
+
+---
+
+## v0.0.7+ 配置系统优化
+
+### Phase 37: 条件性世界生成 + 水桶烧炼配方
+
+**目标：** 添加 `saltGenerationEnabled` 配置开关（默认关闭），实现条件性盐矿生成。同时添加水桶烧炼配方。
+
+**实现内容：**
+
+| 变更 | 内容 |
+|------|------|
+| `ModCommonConfig.java` | 新增 `SALT_GENERATION_ENABLED` 布尔型配置（默认 `false`） |
+| `SaltGenBiomeModifier.java` | 自定义 BiomeModifier 实现，在 `modify(Phase.ADD)` 时读取 config 决策是否添加盐矿特征 |
+| `ModBiomeModifiers.java` | 新建注册类，将 `SaltGenBiomeModifier.CODEC` 注册到 `NeoForgeRegistries.Keys.BIOME_MODIFIER_SERIALIZERS` |
+| `add_salt_block.json` | 更新 type 为 `piranport:salt_gen`（自定义类型），调用条件性 modifier |
+| `salt_from_smelting_water_bucket.json` | 新建熔炉配方（200 tick），水桶烧炼得盐；NeoForge 自动返还水桶 crafting remainder |
+| `PiranPort.java` | 导入并注册 `ModBiomeModifiers.BIOME_MODIFIER_SERIALIZERS` |
+
+**验证：**
+- [x] `saltGenerationEnabled=false` 时盐矿不生成
+- [x] `saltGenerationEnabled=true` 时盐矿在河流生物群系正常生成
+- [x] 水桶在熔炉烧炼 200 tick → 盐 + 空桶
+- [x] BUILD SUCCESSFUL
 
 ---
 

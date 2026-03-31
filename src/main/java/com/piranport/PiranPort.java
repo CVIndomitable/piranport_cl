@@ -4,6 +4,7 @@ import com.mojang.logging.LogUtils;
 import com.piranport.config.ModClientConfig;
 import com.piranport.config.ModCommonConfig;
 import com.piranport.recipe.ModBrewingRecipes;
+import com.piranport.registry.ModBiomeModifiers;
 import com.piranport.registry.ModBlockEntityTypes;
 import com.piranport.registry.ModBlocks;
 import com.piranport.registry.ModCreativeTabs;
@@ -37,6 +38,7 @@ public class PiranPort {
         ModBlockEntityTypes.BLOCK_ENTITY_TYPES.register(modEventBus);
         ModRecipeTypes.RECIPE_TYPES.register(modEventBus);
         ModRecipeTypes.RECIPE_SERIALIZERS.register(modEventBus);
+        ModBiomeModifiers.BIOME_MODIFIER_SERIALIZERS.register(modEventBus);
         NeoForge.EVENT_BUS.addListener(this::registerBrewingRecipes);
         modContainer.registerConfig(ModConfig.Type.CLIENT, ModClientConfig.SPEC);
         modContainer.registerConfig(ModConfig.Type.COMMON, ModCommonConfig.SPEC);

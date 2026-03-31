@@ -80,5 +80,17 @@ public class ModCommonConfig {
                             "Set to true to only count items in hotbar slots 0-8 for load and effect. (仅快捷物品栏的装备计算负重和生效)")
                     .define("hotbarOnlyLoad", false);
 
+    /**
+     * When true, salt blocks generate naturally in river biomes.
+     * Default false — salt is only obtainable via smelting water buckets or crafting.
+     */
+    public static final ModConfigSpec.BooleanValue SALT_GENERATION_ENABLED =
+            BUILDER
+                    .comment(
+                            "Enable natural salt block generation in river biomes (河床盐矿生成).",
+                            "Default: false (salt blocks do not generate naturally, 盐矿不自然生成).",
+                            "Set to true to enable salt disk features in rivers. (开启后河流底部会生成盐块)")
+                    .define("saltGenerationEnabled", false);
+
     public static final ModConfigSpec SPEC = BUILDER.build();
 }

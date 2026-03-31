@@ -1,5 +1,5 @@
 {
-  "type": "neoforge:add_features",
+  "type": "piranport:salt_gen",
   "biomes": "#minecraft:is_river",
   "features": "piranport:salt_block",
   "step": "underground_ores"

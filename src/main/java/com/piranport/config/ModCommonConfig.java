@@ -54,5 +54,31 @@ public class ModCommonConfig {
                             "Set to true to allow opening the ship core inventory screen. (舰装核心GUI开关，默认关闭)")
                     .define("shipCoreGuiEnabled", false);
 
+    /**
+     * When true, picking up a weapon item (gun/torpedo/aircraft/armor plate) sends it directly
+     * to main inventory slots (9–35) instead of the hotbar.
+     * Falls back to vanilla behavior if main inventory is full.
+     */
+    public static final ModConfigSpec.BooleanValue WEAPON_PICKUP_TO_INVENTORY =
+            BUILDER
+                    .comment(
+                            "Send picked-up weapon items to main inventory instead of hotbar (武器拾取入背包).",
+                            "Default: false (vanilla behavior — hotbar first).",
+                            "Set to true to redirect guns/torpedoes/aircraft/armor plates to slots 9-35 on pickup. (武器拾取自动进入背包而非快捷栏，默认关闭)")
+                    .define("weaponPickupToInventory", false);
+
+    /**
+     * When true (hotbar mode): only items in the hotbar (slots 0–8) count toward load and take effect.
+     * When false (full inventory mode): all items across the entire inventory count toward load.
+     * Only applies when shipCoreGuiEnabled=false (inventory mode).
+     */
+    public static final ModConfigSpec.BooleanValue HOTBAR_ONLY_LOAD =
+            BUILDER
+                    .comment(
+                            "Hotbar-only load mode (快捷物品栏负重模式).",
+                            "Default: false (all inventory items contribute to load, 全背包负重).",
+                            "Set to true to only count items in hotbar slots 0-8 for load and effect. (仅快捷物品栏的装备计算负重和生效)")
+                    .define("hotbarOnlyLoad", false);
+
     public static final ModConfigSpec SPEC = BUILDER.build();
 }

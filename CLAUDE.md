@@ -579,63 +579,102 @@ LAUNCHING → CRUISING → ATTACKING → RETURNING → REMOVED
 
 ---
 
-## Project Structure (v0.0.4 更新)
+## Project Structure (v0.0.7 更新)
 
 ```
 src/main/java/com/piranport/
 ├── PiranPort.java
+├── ClientEvents.java               # MOD总线客户端事件（屏幕/按键/渲染器/ItemProperties注册）
+├── ClientGameEvents.java           # GAME总线客户端事件
+├── ClientTickHandler.java          # 每tick按键检测（火控/侦察机/高亮）
+├── GameEvents.java                 # GAME总线服务端事件（变身/水上行走/飞机召回等）
+├── CommonEvents.java               # 属性注册等通用事件
 ├── registry/
-│   ├── ModItems.java               # + 飞机编队、航空弹药、教程书、浮动靶子
+│   ├── ModItems.java               # 所有物品注册
 │   ├── ModBlocks.java
 │   ├── ModCreativeTabs.java
-│   ├── ModEntityTypes.java         # + AircraftEntity, AerialBombEntity, FloatingTargetEntity
-│   ├── ModDataComponents.java      # + AircraftInfo, AircraftAmmoInfo, FlightGroupData
-│   ├── ModMobEffects.java          # + FlammableEffect
+│   ├── ModEntityTypes.java         # 含 updateInterval=1（侦察机平滑）
+│   ├── ModDataComponents.java      # AircraftInfo, FlightGroupData, LoadedAmmo, SlotCooldowns 等
+│   ├── ModMobEffects.java          # FlammableEffect, ReloadBoostEffect, EvasionEffect, FloodingEffect
 │   ├── ModBlockEntityTypes.java
-│   ├── ModMenuTypes.java           # + FlightGroupMenu
+│   ├── ModMenuTypes.java
 │   ├── ModRecipeTypes.java
-│   └── ModKeyMappings.java         # 🆕 P/O/I 火控按键
+│   └── ModKeyMappings.java         # P/O/I 火控、U 编组、V 循环/退侦察、Y 高亮、F8 调试
+├── config/
+│   ├── ModCommonConfig.java        # shipCoreGuiEnabled, autoResupplyEnabled, fighterAmmoEnabled, flammableEffectEnabled
+│   └── ModClientConfig.java        # showLegacyReloadHud, flightGroupEnabled
 ├── item/
-│   ├── ShipCoreItem.java
-│   ├── CannonItem.java / ShellItem.java
+│   ├── ShipCoreItem.java           # GUI/无GUI双模式发射、右键召回飞机、无GUI背包扫描
+│   ├── CannonItem.java
 │   ├── TorpedoItem.java / TorpedoLauncherItem.java
 │   ├── ArmorPlateItem.java
-│   ├── ModFoodItem.java
-│   ├── AircraftItem.java           # 🆕 飞机编队物品
-│   └── GuidebookItem.java          # 🆕 Patchouli教程书
+│   ├── ModFoodItem.java / BottleFoodItem.java
+│   ├── AircraftItem.java           # 发射入口 + 手动加油（overrideOtherStackedOnMe）
+│   ├── FloatingTargetItem.java
+│   └── GuidebookItem.java
 ├── block/ (同v0.0.3)
 ├── block/entity/ (同v0.0.3)
 ├── entity/
 │   ├── CannonProjectileEntity.java
 │   ├── TorpedoEntity.java
-│   ├── AircraftEntity.java         # 🆕 飞机实体（状态机+四种攻击AI）
-│   ├── AerialBombEntity.java       # 🆕 航空炸弹投射物
-│   └── FloatingTargetEntity.java   # 🆕 浮动靶子（测试工具）
+│   ├── AircraftEntity.java         # 状态机 + 五种飞机AI（含RECON）+ isCurrentlyGlowing()
+│   ├── AerialBombEntity.java
+│   ├── BulletEntity.java           # 战斗机子弹（fighterAmmoEnabled=true时消耗）
+│   └── FloatingTargetEntity.java
 ├── effect/
 │   ├── FloodingEffect.java
-│   └── FlammableEffect.java        # 🆕 易燃易爆
+│   ├── FlammableEffect.java
+│   ├── ReloadBoostEffect.java      # 装填加速Buff
+│   └── EvasionEffect.java          # 高速规避Buff
 ├── menu/
 │   ├── ShipCoreMenu.java / ShipCoreScreen.java
 │   ├── CookingPotMenu.java / CookingPotScreen.java
 │   ├── StoneMillMenu.java / StoneMillScreen.java
-│   └── FlightGroupMenu.java / FlightGroupScreen.java  # 🆕
+│   └── FlightGroupMenu.java / FlightGroupScreen.java
 ├── component/
 │   ├── PlaceableInfo.java
-│   ├── AircraftInfo.java            # 🆕
-│   ├── AircraftAmmoInfo.java        # 🆕
-│   └── FlightGroupData.java         # 🆕
-├── aviation/                        # 🆕 航空系统包
-│   ├── AircraftAI.java              # 状态机+四种攻击行为
-│   └── FireControlManager.java      # 火控锁定管理
+│   ├── AircraftInfo.java           # fuelCapacity/currentFuel/panelDamage 等
+│   ├── FlightGroupData.java        # 4编组 + slotAmmoTypes + attackMode
+│   ├── LoadedAmmo.java             # 手动装填状态
+│   ├── SlotCooldowns.java          # 每槽冷却
+│   └── WeaponCategory.java
+├── aviation/
+│   ├── FireControlManager.java     # 服务端锁定列表（playerUUID → List<UUID>）
+│   ├── ClientFireControlData.java  # 客户端锁定列表镜像
+│   ├── ClientReconData.java        # 侦察机客户端状态（entityId、是否在侦察模式）
+│   └── ReconManager.java           # 服务端侦察机控制（handleControl、区块加载）
+├── combat/
+│   ├── TransformationManager.java  # 变身属性、负重、武器槽、冷却
+│   └── EvasionHandler.java         # 高速规避伤害减免
 ├── client/
-│   ├── ShipCoreHudLayer.java / TorpedoRenderer.java
-│   ├── CuttingBoardRenderer.java / PlaceableFoodRenderer.java
-│   ├── AircraftRenderer.java       # 🆕
-│   ├── AerialBombRenderer.java     # 🆕
-│   └── FireControlHudLayer.java    # 🆕 锁定标记HUD
+│   ├── ShipCoreHudLayer.java       # 装填进度HUD
+│   ├── FireControlHudLayer.java    # 火控锁定HUD（支持无GUI模式）
+│   ├── ReloadBarDecorator.java     # 物品装饰器（图标右下角进度）
+│   ├── AircraftRenderer.java
+│   ├── CuttingBoardRenderer.java
+│   └── PlaceableFoodRenderer.java
+├── debug/
+│   └── PiranPortDebug.java         # F8调试开关 + 事件日志 + Shift+F8快照
+├── network/
+│   ├── ModPackets.java
+│   ├── FireControlPayload.java / FireControlSyncPayload.java
+│   ├── OpenFlightGroupPayload.java / FlightGroupUpdatePayload.java
+│   ├── ReconStartPayload.java / ReconEndPayload.java
+│   ├── ReconControlPayload.java / ReconExitPayload.java
+│   ├── AutoLaunchTogglePayload.java
+│   ├── CycleWeaponPayload.java
+│   ├── DebugTogglePayload.java
+│   └── SnapshotRequestPayload.java
 ├── recipe/ (同v0.0.3)
-├── worldgen/ / combat/ / data/ / network/
-│   └── (network 增加火控同步包)
+└── worldgen/
+
+src/main/resources/assets/piranport/
+├── textures/
+│   ├── block/   # bauxite_ore, salt_block, 5种作物各阶段（共21张）
+│   └── item/    # 食物/武器/飞机双态/食材/种子（共60张）；飞机双态通过 piranport:fueled predicate 切换
+├── models/item/ # 飞机模型含 overrides（xxx_empty→xxx_fueled.json）
+├── patchouli_books/guidebook/en_us/   # 5章节 + 10词条（use_resource_pack=true）
+└── lang/
 ```
 
 ---
@@ -662,6 +701,7 @@ src/main/java/com/piranport/
 | Inventory offhand槽位索引 | 无 `SLOT_OFFHAND` 常量 | `Inventory.getItem(40)` 即为副手槽；主手用 `player.getInventory().selected` |
 | Entity返回物品到玩家背包 | `player.getMainHandItem()` 只查主手 | 需存储 `coreInventorySlot`（发射时记录 selected 或40副手），返航时用 `player.getInventory().getItem(slot)` 精准定位，附加 main/offhand 兜底 |
 | 客户端实体描边/高亮 | `entity.setGlowingTag(true)` 在客户端调用不生效（服务端每次同步覆盖）；`EntityRenderer.shouldShowOutline()` 在 1.21.1 不存在 | 在实体类重写 `isCurrentlyGlowing()`：`if (level().isClientSide() && ClientTickHandler.isHighlightEnabled()) return true;` |
+| 物品 Property Predicate（动态贴图） | 无法在 model JSON 直接读 DataComponent 决定贴图 | `ItemProperties.register(item, ResourceLocation, ClampedItemPropertyFunction)` 在 `FMLClientSetupEvent.enqueueWork()` 中注册（必须 enqueueWork，否则线程安全问题）；model JSON 用 `"overrides":[{"predicate":{"piranport:xxx":1},"model":"..."}]` |
 | Patchouli 1.20+ 书籍结构 | 书籍内容放在 `data/<mod>/patchouli_books/` 下 → 加载时报 `IllegalArgumentException: use_resource_pack set to false` | `book.json` 加 `"use_resource_pack": true`；所有 categories/entries JSON 移到 `assets/<mod>/patchouli_books/<id>/` |
 | Patchouli 软依赖引入 | 直接 Maven 引用会成为硬依赖 | `build.gradle` 的 `dependencies` 用 `localRuntime` + BlameJared maven，编译时反射调用 API |
 
@@ -692,12 +732,15 @@ src/main/java/com/piranport/
 | 侦察机镜头旋转 | `setCameraEntity` 后镜头固定在飞机自身朝向，鼠标无效。修复：`ClientTickHandler.onClientTick` 每 tick 将 `mc.player.getXRot/YRot` 同步给飞机实体 |
 | 区块加载管理 | `ServerLevel.setChunkForced(x,z,true/false)` 维护侦察机周围 3×3 区块；跟踪 `lastForcedChunkX/Z`，移动到新区块时先 release 再 force |
 | FOLLOW 模式距离 | FOLLOW 模式飞机使用 MAX_RECON_DIST(200 格) 上限，因为可能跟随侦察机到玩家 48格以外 |
+| AircraftEntity updateInterval | `ModEntityTypes` 中 `AircraftEntity` 的 `updateInterval` 设为 **1**（默认为3）；侦察机视角每tick同步，不同步导致摄像机卡顿 |
 | IItemHandler capability | `RegisterCapabilitiesEvent` 中注册 `Capabilities.ItemHandler.BLOCK`；方向判断用 `direction == Direction.DOWN` 区分输出/输入 |
 | 砧板发射器联动 | `CuttingBoardBlock.neighborChanged()` 检测相邻方块是否为 `DispenserBlock` 且 `BlockStateProperties.TRIGGERED` 为 true 时调用 `performCut()` |
 | 命中/击杀通知 | `projectile.getOwner()` 获取 Player → `player.sendSystemMessage(Component)` 仅发给本人；`target.isAlive()` 在 `hurt()` 后判断 |
 | 实体高亮（Y键） | `setGlowingTag` 客户端直接调用无效（服务端同步会覆盖）。正确做法：在实体类重写 `isCurrentlyGlowing()`，用 `level().isClientSide()` 守门后读取客户端静态标志 |
 | 右键核心召回舰载机 | `ShipCoreItem.use()` 右键（非Shift）且有飞机在空时，`recallAllAircraft()` 搜索300格内己方飞机全部 `recallAndRemove()`，同时结束侦察模式和火控锁定 |
 | 无GUI模式水上行走 | `GameEvents.onPlayerTick` 水上行走检查不能只看 `mainHand`；no-GUI模式需遍历整个背包找变身核心 |
+| 火控HUD/按键无GUI模式 | `FireControlHudLayer` 和 `ClientTickHandler` 的 `transformed` 检测原先只看 `mainHand instanceof ShipCoreItem`；无GUI模式核心不在主手，需改为遍历 `player.getInventory().items` + offhand，找到任意已变身核心即生效。**此模式应允许空手时也能使用火控。** |
+| 飞机双态贴图 | 飞机有燃料/无燃料显示不同贴图：① `ItemProperties.register(item, rl, func)` 在 `FMLClientSetupEvent.enqueueWork()` 中注册 `piranport:fueled` predicate；② model JSON 用 `"overrides"` 数组 + `"predicate": {"piranport:fueled": 1}` 指向 `xxx_fueled.json`；③ default model 引用 `xxx_empty` 贴图，fueled model 引用 `xxx` 贴图 |
 
 ---
 
@@ -896,7 +939,7 @@ public void eat(Player player) {
 ./gradlew build        # 构建 → build/libs/piranport-0.0.4.jar
 ```
 
-> **自动构建 Hook**：每次 Claude Code 会话结束时自动执行 `./gradlew build` 并将 JAR 复制到 Minecraft mods 目录（配置在 `.claude/settings.local.json` Stop hook）。
+> **自动构建 Hook**：已关闭。如需打包，手动执行 `./gradlew build`，再将 JAR 复制到 mods 目录。
 
 ### gradle.properties
 
@@ -948,6 +991,19 @@ neo_version=21.1.220
 5. ~~**Phase 33**~~ ✅ DONE — 空战系统（aircraft health/hurt、战斗机目标优先级扩展、击落无物品返还）
 6. ~~**Phase 34**~~ ✅ DONE — 编队跟随侦察机（FOLLOW 模式、飞机状态字幕、命中/击杀聊天通知）
 7. ~~**Phase 35**~~ ✅ DONE — 端到端验证（修复 FOLLOW 模式 ATTACKING 过渡 bug、移除重复 lang key）
+8. ~~**Phase 36**~~ ✅ DONE — 美术素材补全（贴图复制 60 个、飞机双态贴图、火控HUD无GUI模式修复）
+
+**Phase 36 变更明细：**
+
+| 变更 | 内容 |
+|------|------|
+| `textures/block/` | bauxite_ore、salt_block、菠萝/番茄/生菜/大豆/水稻作物各阶段（21张） |
+| `textures/item/` | 食物17种、鱼雷+发射管、炮弹6种、火炮（小炮→初雪主炮）、装甲3种、铝锭、航空燃料、飞机双态×5、食材4种、种子果实8种（39张） |
+| 飞机双态贴图 | 无燃料显示 `xxx_empty.png`，有燃料显示 `xxx.png`；通过 `piranport:fueled` ItemProperty + model overrides 实现 |
+| `ClientEvents.java` | 新增 `FMLClientSetupEvent` 监听，为5种飞机注册 `piranport:fueled` property |
+| `FireControlHudLayer.java` | 修复无GUI模式下HUD不显示的问题（从只查主手改为扫描全背包） |
+| `ClientTickHandler.java` | 修复无GUI模式下火控按键（P/O）无响应的问题（`transformed` 检测同上，改为扫描全背包） |
+| 暂缺贴图 | 葱/蒜/辣椒（作物+物品）、ship core 3种、中/大型火炮独立图、pasta/培根等中间食材约20种 |
 
 ---
 

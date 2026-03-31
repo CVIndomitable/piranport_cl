@@ -3,24 +3,31 @@ package com.piranport;
 import com.piranport.aviation.FireControlManager;
 import com.piranport.aviation.ReconManager;
 import com.piranport.combat.TransformationManager;
+import com.piranport.config.ModCommonConfig;
 import com.piranport.entity.AircraftEntity;
 import com.piranport.item.ShipCoreItem;
 import com.piranport.registry.ModDataComponents;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.stats.Stats;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.FlyingMob;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.monster.Phantom;
 import net.minecraft.world.entity.monster.Vex;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.common.util.TriState;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
+import net.neoforged.neoforge.event.entity.player.ItemEntityPickupEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.server.ServerStoppedEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
@@ -205,6 +212,61 @@ public class GameEvents {
         }
         FireControlManager.clearTargets(ownerUUID);
         ReconManager.endRecon(ownerUUID);
+    }
+
+    /**
+     * Redirect weapon item pickups to main inventory (slots 9–35) instead of hotbar.
+     * Enabled by the weaponPickupToInventory config flag.
+     * Falls back to vanilla (hotbar-first) when main inventory is full.
+     */
+    @SubscribeEvent
+    public static void onWeaponPickup(ItemEntityPickupEvent.Pre event) {
+        if (!ModCommonConfig.WEAPON_PICKUP_TO_INVENTORY.get()) return;
+        Player player = event.getPlayer();
+        ItemEntity itemEntity = event.getItemEntity();
+        ItemStack stack = itemEntity.getItem();
+        if (TransformationManager.getItemLoad(stack) <= 0) return;
+
+        Inventory inv = player.getInventory();
+        int total = stack.getCount();
+        int taken = 0;
+
+        // Phase 1: merge with existing partial stacks in main inventory (slots 9–35)
+        for (int i = 9; i < 36 && taken < total; i++) {
+            ItemStack existing = inv.getItem(i);
+            if (ItemStack.isSameItemSameComponents(existing, stack)
+                    && existing.getCount() < existing.getMaxStackSize()) {
+                int space = existing.getMaxStackSize() - existing.getCount();
+                int add = Math.min(space, total - taken);
+                existing.grow(add);
+                taken += add;
+            }
+        }
+
+        // Phase 2: place remainder in empty main inventory slots (slots 9–35)
+        for (int i = 9; i < 36 && taken < total; i++) {
+            if (inv.getItem(i).isEmpty()) {
+                int add = Math.min(stack.getMaxStackSize(), total - taken);
+                inv.setItem(i, stack.copyWithCount(add));
+                taken += add;
+            }
+        }
+
+        if (taken == 0) return; // main inventory full, fall back to vanilla (hotbar)
+
+        // Award pickup stats
+        if (player instanceof ServerPlayer sp) {
+            sp.awardStat(Stats.ITEM_PICKED_UP.get(stack.getItem()), taken);
+        }
+
+        // Shrink / discard the item entity
+        stack.shrink(taken);
+        if (stack.isEmpty()) {
+            itemEntity.discard();
+        }
+
+        // Prevent vanilla from adding to hotbar
+        event.setCanPickup(TriState.FALSE);
     }
 
     @SubscribeEvent

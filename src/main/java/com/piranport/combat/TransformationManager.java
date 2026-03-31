@@ -167,24 +167,33 @@ public class TransformationManager {
         }
     }
 
+    /** Hotbar slot count (slots 0–8 in Inventory.items). */
+    private static final int HOTBAR_SIZE = 9;
+
     /**
-     * Inventory mode (GUI disabled): scan the player's entire inventory.
+     * Inventory mode (GUI disabled): scan the player's inventory for load and attributes.
+     * When hotbarOnlyLoad=true, only hotbar slots (0–8) are considered.
+     * When hotbarOnlyLoad=false (default), the entire inventory is scanned.
      * The ship core with the highest maxLoad provides the weight capacity.
-     * All weapon items (guns, torpedoes, aircraft — not armor plates) in the inventory consume load.
      */
     private static void applyAttributesInventoryMode(Player player) {
         net.minecraft.world.entity.player.Inventory inv = player.getInventory();
+        boolean hotbarOnly = com.piranport.config.ModCommonConfig.HOTBAR_ONLY_LOAD.get();
 
         // Find the ship core with the highest maxLoad
         int maxLoad = 0;
-        for (ItemStack stack : inv.items) {
+        int scanLimit = hotbarOnly ? HOTBAR_SIZE : inv.items.size();
+        for (int i = 0; i < scanLimit; i++) {
+            ItemStack stack = inv.items.get(i);
             if (stack.getItem() instanceof ShipCoreItem sci) {
                 maxLoad = Math.max(maxLoad, sci.getShipType().maxLoad);
             }
         }
-        ItemStack offhandStack = inv.offhand.get(0);
-        if (offhandStack.getItem() instanceof ShipCoreItem sci) {
-            maxLoad = Math.max(maxLoad, sci.getShipType().maxLoad);
+        if (!hotbarOnly) {
+            ItemStack offhandStack = inv.offhand.get(0);
+            if (offhandStack.getItem() instanceof ShipCoreItem sci) {
+                maxLoad = Math.max(maxLoad, sci.getShipType().maxLoad);
+            }
         }
 
         removeTransformationAttributes(player);
@@ -213,25 +222,37 @@ public class TransformationManager {
 
     /**
      * Sum the load of all weapons and armor plates (not ship cores) in inventory. Used in inventory mode.
+     * Respects hotbarOnlyLoad config: when true, only scans hotbar slots (0–8).
      */
     public static int getInventoryWeaponLoad(net.minecraft.world.entity.player.Inventory inv) {
         int total = 0;
-        for (ItemStack stack : inv.items) {
+        boolean hotbarOnly = com.piranport.config.ModCommonConfig.HOTBAR_ONLY_LOAD.get();
+        int limit = hotbarOnly ? HOTBAR_SIZE : inv.items.size();
+        for (int i = 0; i < limit; i++) {
+            ItemStack stack = inv.items.get(i);
             if (isLoadItem(stack)) total += getItemLoad(stack);
         }
-        ItemStack offhand = inv.offhand.get(0);
-        if (isLoadItem(offhand)) total += getItemLoad(offhand);
+        if (!hotbarOnly) {
+            ItemStack offhand = inv.offhand.get(0);
+            if (isLoadItem(offhand)) total += getItemLoad(offhand);
+        }
         return total;
     }
 
-    /** Sum armor bonus from ArmorPlateItems in the player's inventory. Used in inventory mode. */
+    /** Sum armor bonus from ArmorPlateItems in the player's inventory. Used in inventory mode.
+     * Respects hotbarOnlyLoad config: when true, only scans hotbar slots (0–8). */
     public static int getInventoryArmorBonus(net.minecraft.world.entity.player.Inventory inv) {
         int total = 0;
-        for (ItemStack stack : inv.items) {
+        boolean hotbarOnly = com.piranport.config.ModCommonConfig.HOTBAR_ONLY_LOAD.get();
+        int limit = hotbarOnly ? HOTBAR_SIZE : inv.items.size();
+        for (int i = 0; i < limit; i++) {
+            ItemStack stack = inv.items.get(i);
             if (stack.getItem() instanceof ArmorPlateItem plate) total += plate.getArmorBonus();
         }
-        ItemStack offhand = inv.offhand.get(0);
-        if (offhand.getItem() instanceof ArmorPlateItem plate) total += plate.getArmorBonus();
+        if (!hotbarOnly) {
+            ItemStack offhand = inv.offhand.get(0);
+            if (offhand.getItem() instanceof ArmorPlateItem plate) total += plate.getArmorBonus();
+        }
         return total;
     }
 

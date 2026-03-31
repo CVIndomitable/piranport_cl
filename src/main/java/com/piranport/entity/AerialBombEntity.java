@@ -36,6 +36,14 @@ public class AerialBombEntity extends ThrowableItemProjectile {
         return ModItems.AERIAL_BOMB.get();
     }
 
+    private static final int MAX_LIFETIME = 600; // 30 seconds
+
+    @Override
+    public void tick() {
+        super.tick();
+        if (!level().isClientSide() && tickCount > MAX_LIFETIME) discard();
+    }
+
     /** Stronger gravity than default (0.03) to simulate free-fall bomb. */
     @Override
     protected double getDefaultGravity() {

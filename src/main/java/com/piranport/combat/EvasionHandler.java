@@ -32,6 +32,10 @@ public class EvasionHandler {
         if (event.getEntity().level().isClientSide()) return;
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
 
+        // Never dodge absolute/bypass damage types (void, /kill, starvation)
+        if (event.getSource().is(net.minecraft.tags.DamageTypeTags.BYPASSES_INVULNERABILITY)
+                || event.getSource().is(net.minecraft.world.damagesource.DamageTypes.STARVE)) return;
+
         // Must be transformed — check main hand first, then full inventory for no-GUI mode
         boolean isTransformed = false;
         ItemStack mainHand = player.getMainHandItem();

@@ -36,6 +36,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemContainerContents;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -91,8 +92,11 @@ public class AircraftEntity extends Entity {
     private int lastForcedChunkZ = Integer.MIN_VALUE;
     private boolean appliedSlowness = false;
 
-    // Phase 33: aircraft health (runtime only — not saved to NBT; aircraft resets on re-launch)
+    // Phase 33: aircraft health (persisted to NBT)
     private int aircraftHealth = 20;
+
+    // P2 #29: preserve original ItemStack across launch-return cycle
+    private ItemStack originalStack = ItemStack.EMPTY;
 
     // Phase 34: set to true when defense mechanisms force a recall (stuck, timeout, distance)
     private boolean isForcedReturn = false;
@@ -139,6 +143,7 @@ public class AircraftEntity extends Entity {
             entity.bombingMode = info.bombingMode();
         }
         entity.aircraftHealth = getMaxHealth(entity.aircraftType);
+        entity.originalStack = aircraftStack.copy();
         entity.entityData.set(AIRCRAFT_TYPE_DATA, entity.aircraftType.ordinal());
         entity.entityData.set(OWNER_ID, Optional.of(owner.getUUID()));
 
@@ -296,12 +301,18 @@ public class AircraftEntity extends Entity {
             tryAutoResupplyFuel(owner);
         }
 
-        // Transition to ATTACKING if owner has locked targets, aircraft has attack capability, and is not RECON
+        // Transition to ATTACKING if owner has locked targets with at least one alive entity
         if (aircraftType != AircraftInfo.AircraftType.RECON
                 && (hasBullets || !payloadType.isEmpty())
                 && !FireControlManager.getTargets(owner.getUUID()).isEmpty()) {
-            setState(FlightState.ATTACKING);
-            return;
+            // Verify at least one locked target is still alive before transitioning
+            if (hasAliveLockedTarget(owner)) {
+                setState(FlightState.ATTACKING);
+                return;
+            } else {
+                // All locked targets are dead — clean up stale UUIDs
+                FireControlManager.clearTargets(owner.getUUID());
+            }
         }
 
         // FOLLOW mode: orbit the owner's active recon aircraft, or fall back to player
@@ -641,6 +652,16 @@ public class AircraftEntity extends Entity {
                 .orElse(null);
     }
 
+    /** Check if any locked target UUID still resolves to an alive entity. */
+    private boolean hasAliveLockedTarget(Player owner) {
+        if (!(level() instanceof ServerLevel sl)) return false;
+        for (UUID uuid : FireControlManager.getTargets(owner.getUUID())) {
+            Entity e = sl.getEntity(uuid);
+            if (e instanceof LivingEntity le && le.isAlive()) return true;
+        }
+        return false;
+    }
+
     private void tickReturning(Player owner) {
         Vec3 toOwner = owner.getEyePosition().subtract(position());
         double dist = toOwner.length();
@@ -707,7 +728,15 @@ public class AircraftEntity extends Entity {
         contents.copyInto(items);
 
         if (weaponSlotIndex < sci.getShipType().weaponSlots) {
-            items.set(weaponSlotIndex, buildReturnStack());
+            ItemStack returnStack = buildReturnStack();
+            if (items.get(weaponSlotIndex).isEmpty()) {
+                items.set(weaponSlotIndex, returnStack);
+            } else {
+                // Slot occupied — try to put in player's inventory instead
+                if (!player.getInventory().add(returnStack)) {
+                    Block.popResource(player.level(), player.blockPosition(), returnStack);
+                }
+            }
             coreStack.set(ModDataComponents.SHIP_CORE_CONTENTS.get(),
                     ItemContainerContents.fromItems(items));
         }
@@ -721,19 +750,29 @@ public class AircraftEntity extends Entity {
         }
         if (player.getMainHandItem().getItem() instanceof ShipCoreItem) return player.getMainHandItem();
         if (player.getOffhandItem().getItem() instanceof ShipCoreItem) return player.getOffhandItem();
+        // Fallback: scan entire inventory (no-GUI mode, core can be anywhere)
+        for (ItemStack s : player.getInventory().items) {
+            if (s.getItem() instanceof ShipCoreItem) return s;
+        }
         return ItemStack.EMPTY;
     }
 
     private ItemStack buildReturnStack() {
-        ItemStack stack = switch (aircraftType) {
-            case FIGHTER        -> new ItemStack(ModItems.FIGHTER_SQUADRON.get());
-            case DIVE_BOMBER    -> new ItemStack(ModItems.DIVE_BOMBER_SQUADRON.get());
-            case TORPEDO_BOMBER -> new ItemStack(ModItems.TORPEDO_BOMBER_SQUADRON.get());
-            case LEVEL_BOMBER   -> new ItemStack(ModItems.LEVEL_BOMBER_SQUADRON.get());
-            case RECON          -> new ItemStack(ModItems.RECON_SQUADRON.get());
-        };
-        AircraftInfo orig = stack.get(ModDataComponents.AIRCRAFT_INFO.get());
-        if (orig != null) stack.set(ModDataComponents.AIRCRAFT_INFO.get(), orig.withCurrentFuel(0));
+        // Restore original ItemStack if available, preserving custom names/enchants/components
+        ItemStack stack;
+        if (originalStack != null && !originalStack.isEmpty()) {
+            stack = originalStack.copy();
+        } else {
+            stack = switch (aircraftType) {
+                case FIGHTER        -> new ItemStack(ModItems.FIGHTER_SQUADRON.get());
+                case DIVE_BOMBER    -> new ItemStack(ModItems.DIVE_BOMBER_SQUADRON.get());
+                case TORPEDO_BOMBER -> new ItemStack(ModItems.TORPEDO_BOMBER_SQUADRON.get());
+                case LEVEL_BOMBER   -> new ItemStack(ModItems.LEVEL_BOMBER_SQUADRON.get());
+                case RECON          -> new ItemStack(ModItems.RECON_SQUADRON.get());
+            };
+        }
+        AircraftInfo info = stack.get(ModDataComponents.AIRCRAFT_INFO.get());
+        if (info != null) stack.set(ModDataComponents.AIRCRAFT_INFO.get(), info.withCurrentFuel(0));
         return stack;
     }
 
@@ -1051,6 +1090,15 @@ public class AircraftEntity extends Entity {
         entityData.set(STATE, tag.getInt("FlightState"));
         entityData.set(AIRCRAFT_TYPE_DATA, aircraftType.ordinal());
         if (ownerUUID != null) entityData.set(OWNER_ID, Optional.of(ownerUUID));
+        airtimeTicks = tag.getInt("AirtimeTicks");
+        hasFired = tag.getBoolean("HasFired");
+        aircraftHealth = tag.contains("AircraftHealth")
+                ? tag.getInt("AircraftHealth")
+                : getMaxHealth(aircraftType);
+        if (tag.contains("OriginalStack")) {
+            originalStack = ItemStack.parse(level().registryAccess(), tag.getCompound("OriginalStack"))
+                    .orElse(ItemStack.EMPTY);
+        }
     }
 
     @Override
@@ -1072,5 +1120,11 @@ public class AircraftEntity extends Entity {
         tag.putInt("LastForcedChunkX", lastForcedChunkX);
         tag.putInt("LastForcedChunkZ", lastForcedChunkZ);
         tag.putInt("FlightState", entityData.get(STATE));
+        tag.putInt("AirtimeTicks", airtimeTicks);
+        tag.putBoolean("HasFired", hasFired);
+        tag.putInt("AircraftHealth", aircraftHealth);
+        if (originalStack != null && !originalStack.isEmpty()) {
+            tag.put("OriginalStack", originalStack.save(level().registryAccess()));
+        }
     }
 }

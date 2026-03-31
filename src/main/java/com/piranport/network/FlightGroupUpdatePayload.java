@@ -38,7 +38,14 @@ public record FlightGroupUpdatePayload(int coreSlot, FlightGroupData data)
             int slot = payload.coreSlot();
             if (slot < 0 || slot >= 41) return;
             ItemStack coreStack = player.getInventory().getItem(slot);
-            if (coreStack.getItem() instanceof ShipCoreItem) {
+            if (coreStack.getItem() instanceof ShipCoreItem sci) {
+                // Validate all slotIndices are within weapon slot range
+                int weaponSlots = sci.getShipType().weaponSlots;
+                for (var group : payload.data().groups()) {
+                    for (int idx : group.slotIndices()) {
+                        if (idx < 0 || idx >= weaponSlots) return;
+                    }
+                }
                 coreStack.set(ModDataComponents.FLIGHT_GROUP_DATA.get(), payload.data());
             }
         });

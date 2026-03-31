@@ -170,17 +170,20 @@ public class CookingPotBlockEntity extends BlockEntity implements MenuProvider {
     }
 
     private void craftItem(CookingPotRecipe recipe, CookingPotRecipeInput input) {
-        // Consume ingredients
+        // Consume ingredients — allow stacked items to satisfy multiple same-type ingredients
         List<net.minecraft.world.item.crafting.Ingredient> remaining = new ArrayList<>(recipe.getIngredients());
         for (int i = 0; i < INPUT_SLOTS && !remaining.isEmpty(); i++) {
             ItemStack slot = itemHandler.getStackInSlot(i);
             if (slot.isEmpty()) continue;
-            for (int j = 0; j < remaining.size(); j++) {
+            int consumed = 0;
+            for (int j = remaining.size() - 1; j >= 0 && consumed < slot.getCount(); j--) {
                 if (remaining.get(j).test(slot)) {
-                    itemHandler.setStackInSlot(i, slot.copyWithCount(slot.getCount() - 1));
                     remaining.remove(j);
-                    break;
+                    consumed++;
                 }
+            }
+            if (consumed > 0) {
+                itemHandler.setStackInSlot(i, slot.copyWithCount(slot.getCount() - consumed));
             }
         }
         // Add result

@@ -231,6 +231,14 @@ public class GameEvents {
         recallAircraftForPlayer(player);
     }
 
+    /** When a player changes dimension, recall all aircraft and clear fire control state. */
+    @SubscribeEvent
+    public static void onDimensionChange(PlayerEvent.PlayerChangedDimensionEvent event) {
+        if (!(event.getEntity() instanceof Player player)) return;
+        if (player.level().isClientSide()) return;
+        recallAircraftForPlayer(player);
+    }
+
     /** When a player logs out, recall all their airborne aircraft and clear cached load. */
     @SubscribeEvent
     public static void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {

@@ -55,9 +55,7 @@ public class PlaceableFoodBlockEntity extends BlockEntity {
 
         for (FoodProperties.PossibleEffect pe : food.effects()) {
             MobEffectInstance orig = pe.effect();
-            int dur = totalServings > 1
-                    ? (int) Math.ceil((double) orig.getDuration() / (totalServings - 1))
-                    : orig.getDuration();
+            int dur = (int) Math.ceil((double) orig.getDuration() / totalServings);
             if (player.getRandom().nextFloat() < pe.probability()) {
                 player.addEffect(new MobEffectInstance(orig.getEffect(), dur, orig.getAmplifier()));
             }

@@ -49,6 +49,12 @@ public class ClientTickHandler {
     public static boolean isHighlightEnabled() { return highlightEnabled; }
     private static final Set<Integer> highlightedEntityIds = new HashSet<>();
 
+    /** Reset all client-side static state (called on disconnect). */
+    public static void resetClientState() {
+        highlightEnabled = false;
+        highlightedEntityIds.clear();
+    }
+
     @SubscribeEvent
     public static void onClientTick(ClientTickEvent.Post event) {
         Minecraft mc = Minecraft.getInstance();

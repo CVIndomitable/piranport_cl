@@ -32,6 +32,14 @@ public class BulletEntity extends ThrowableItemProjectile {
         return ModItems.FIGHTER_AMMO.get();
     }
 
+    private static final int MAX_LIFETIME = 600; // 30 seconds
+
+    @Override
+    public void tick() {
+        super.tick();
+        if (!level().isClientSide() && tickCount > MAX_LIFETIME) discard();
+    }
+
     @Override
     protected double getDefaultGravity() {
         return 0.005;

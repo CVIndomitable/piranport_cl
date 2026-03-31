@@ -28,6 +28,7 @@ public record FireControlSyncPayload(List<UUID> targetUUIDs) implements CustomPa
             },
             buf -> {
                 int size = ByteBufCodecs.VAR_INT.decode(buf);
+                if (size < 0 || size > 16) size = 0; // guard against oversized packets
                 List<UUID> list = new ArrayList<>(size);
                 for (int i = 0; i < size; i++) {
                     list.add(new UUID(buf.readLong(), buf.readLong()));

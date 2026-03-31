@@ -66,7 +66,10 @@ public record FireControlPayload(FireAction action, UUID targetUUID) implements 
                 FireControlManager.clearTargets(playerUUID);
             } else {
                 Entity entity = player.serverLevel().getEntity(payload.targetUUID());
-                if (entity instanceof LivingEntity le && le.isAlive() && entity != player) {
+                // Limit lock range to simulation distance (in blocks)
+                int simDistBlocks = player.serverLevel().getServer().getPlayerList().getSimulationDistance() * 16;
+                if (entity instanceof LivingEntity le && le.isAlive() && entity != player
+                        && player.distanceTo(entity) <= simDistBlocks) {
                     if (payload.action() == FireAction.LOCK) {
                         FireControlManager.lock(playerUUID, entity.getUUID());
                     } else {

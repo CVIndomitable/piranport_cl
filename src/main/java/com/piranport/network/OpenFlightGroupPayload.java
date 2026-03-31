@@ -28,12 +28,16 @@ public record OpenFlightGroupPayload(int coreSlot) implements CustomPacketPayloa
     public static void handle(OpenFlightGroupPayload payload, IPayloadContext context) {
         context.enqueueWork(() -> {
             if (context.player() instanceof ServerPlayer serverPlayer) {
+                int slot = payload.coreSlot();
+                if (slot < 0 || slot >= 41) return;
+                net.minecraft.world.item.ItemStack coreStack = serverPlayer.getInventory().getItem(slot);
+                if (!(coreStack.getItem() instanceof com.piranport.item.ShipCoreItem)) return;
                 serverPlayer.openMenu(
                         new SimpleMenuProvider(
-                                (id, inv, p) -> new FlightGroupMenu(id, inv, payload.coreSlot()),
+                                (id, inv, p) -> new FlightGroupMenu(id, inv, slot),
                                 Component.translatable("container.piranport.flight_groups")
                         ),
-                        buf -> buf.writeVarInt(payload.coreSlot())
+                        buf -> buf.writeVarInt(slot)
                 );
             }
         });

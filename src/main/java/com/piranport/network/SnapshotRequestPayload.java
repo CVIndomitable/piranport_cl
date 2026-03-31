@@ -23,7 +23,7 @@ public record SnapshotRequestPayload() implements CustomPacketPayload {
 
     public static void handle(SnapshotRequestPayload payload, IPayloadContext context) {
         context.enqueueWork(() -> {
-            if (context.player() instanceof ServerPlayer sp) {
+            if (context.player() instanceof ServerPlayer sp && sp.hasPermissions(2)) {
                 PiranPortDebug.snapshot(sp);
             }
         });

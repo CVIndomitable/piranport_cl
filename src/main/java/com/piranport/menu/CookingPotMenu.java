@@ -30,8 +30,10 @@ public class CookingPotMenu extends AbstractContainerMenu {
 
     public static CookingPotMenu fromNetwork(int containerId, Inventory playerInventory, FriendlyByteBuf buf) {
         BlockPos pos = buf.readBlockPos();
-        CookingPotBlockEntity be = (CookingPotBlockEntity) playerInventory.player.level().getBlockEntity(pos);
-        return new CookingPotMenu(containerId, playerInventory, be);
+        if (playerInventory.player.level().getBlockEntity(pos) instanceof CookingPotBlockEntity be) {
+            return new CookingPotMenu(containerId, playerInventory, be);
+        }
+        return null;
     }
 
     public CookingPotMenu(int containerId, Inventory playerInventory, CookingPotBlockEntity be) {

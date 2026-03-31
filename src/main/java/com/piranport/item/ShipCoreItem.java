@@ -318,7 +318,8 @@ public class ShipCoreItem extends Item {
 
         // Find matching ammo
         int ammoSlot = -1;
-        for (int i = shipType.weaponSlots; i < totalSlots; i++) {
+        int ammoEnd = shipType.weaponSlots + shipType.ammoSlots;
+        for (int i = shipType.weaponSlots; i < ammoEnd; i++) {
             ItemStack ammo = items.get(i);
             if (!ammo.isEmpty() && matchesCaliber(ammo, weapon)) {
                 ammoSlot = i;
@@ -604,6 +605,18 @@ public class ShipCoreItem extends Item {
             return;
         }
 
+        // Consume ammo before spawning entities (prevent TOCTOU)
+        int toConsume = tubeCount;
+        for (int i = 0; i < inv.items.size() && toConsume > 0; i++) {
+            if (i == coreSlot || i == weaponSlot) continue;
+            ItemStack s = inv.items.get(i);
+            if (!s.isEmpty() && s.getItem() instanceof TorpedoItem ti && ti.getCaliber() == caliber) {
+                int take = Math.min(toConsume, s.getCount());
+                s.shrink(take);
+                toConsume -= take;
+            }
+        }
+
         float torpedoSpeed = caliber == 610 ? 1.0f : 1.2f;
         float[] angles = getSpreadAngles(tubeCount);
         Vec3 look = player.getLookAngle();
@@ -614,18 +627,6 @@ public class ShipCoreItem extends Item {
             torpedo.setPos(player.getX() + dir.x * 0.5, player.getEyeY() - 0.3, player.getZ() + dir.z * 0.5);
             torpedo.setDeltaMovement(dir.x * torpedoSpeed, 0, dir.z * torpedoSpeed);
             level.addFreshEntity(torpedo);
-        }
-
-        // Consume ammo from inventory
-        int toConsume = tubeCount;
-        for (int i = 0; i < inv.items.size() && toConsume > 0; i++) {
-            if (i == coreSlot || i == weaponSlot) continue;
-            ItemStack s = inv.items.get(i);
-            if (!s.isEmpty() && s.getItem() instanceof TorpedoItem ti && ti.getCaliber() == caliber) {
-                int take = Math.min(toConsume, s.getCount());
-                s.shrink(take);
-                toConsume -= take;
-            }
         }
 
         // Damage launcher in-inventory
@@ -886,6 +887,17 @@ public class ShipCoreItem extends Item {
             return;
         }
 
+        // Consume ammo before spawning entities (prevent TOCTOU)
+        int toConsume = tubeCount;
+        for (int i = shipType.weaponSlots; i < ammoEnd && toConsume > 0; i++) {
+            ItemStack ammo = items.get(i);
+            if (!ammo.isEmpty() && ammo.getItem() instanceof TorpedoItem ti && ti.getCaliber() == caliber) {
+                int take = Math.min(toConsume, ammo.getCount());
+                ammo.shrink(take);
+                toConsume -= take;
+            }
+        }
+
         // Fire torpedoes in spread pattern
         float torpedoSpeed = caliber == 610 ? 1.0f : 1.2f;
         float[] angles = getSpreadAngles(tubeCount);
@@ -900,17 +912,6 @@ public class ShipCoreItem extends Item {
                     player.getZ() + dir.z * 0.5);
             torpedo.setDeltaMovement(dir.x * torpedoSpeed, 0, dir.z * torpedoSpeed);
             level.addFreshEntity(torpedo);
-        }
-
-        // Consume ammo (ammo slots only)
-        int toConsume = tubeCount;
-        for (int i = shipType.weaponSlots; i < ammoEnd && toConsume > 0; i++) {
-            ItemStack ammo = items.get(i);
-            if (!ammo.isEmpty() && ammo.getItem() instanceof TorpedoItem ti && ti.getCaliber() == caliber) {
-                int take = Math.min(toConsume, ammo.getCount());
-                ammo.shrink(take);
-                toConsume -= take;
-            }
         }
 
         // Damage launcher (manual, since it lives in a container slot)

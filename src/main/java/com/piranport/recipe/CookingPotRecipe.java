@@ -36,13 +36,15 @@ public class CookingPotRecipe implements Recipe<CookingPotRecipeInput> {
         for (ItemStack stack : input.items()) {
             if (!stack.isEmpty()) available.add(stack);
         }
-        if (available.size() < ingredients.size()) return false;
+        if (available.isEmpty() && !ingredients.isEmpty()) return false;
+        // Allow stacked items to satisfy multiple same-type ingredients
         List<Ingredient> remaining = new ArrayList<>(ingredients);
         for (ItemStack avail : available) {
-            for (int i = 0; i < remaining.size(); i++) {
+            int matchesLeft = avail.getCount();
+            for (int i = remaining.size() - 1; i >= 0 && matchesLeft > 0; i--) {
                 if (remaining.get(i).test(avail)) {
                     remaining.remove(i);
-                    break;
+                    matchesLeft--;
                 }
             }
         }

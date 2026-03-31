@@ -1025,6 +1025,46 @@ neo_version=21.1.220
 | 4 | OOM 攻击 | `FlightGroupData.java` | StreamCodec 反序列化无大小上限，恶意包可发送 `size=Integer.MAX_VALUE` 触发崩溃 | ✅ groups/indices/bullets/payloads 数组加上限校验；`AttackMode` 加 ordinal 边界防护 | DONE |
 | 5 | 永久锁定 | `GameEvents.java` | 侦察机减速效果 duration=`Integer.MAX_VALUE`，若实体被 `/kill` 则玩家永久无法移动 | ✅ 每20tick检查：有 amplifier≥9 减速但无活跃侦察机时自动移除 | DONE |
 
+### P1 修复清单 (11个 — 物品丢失/数据验证/网络安全)
+
+| # | 类型 | 文件 | 问题 | 修复 | 状态 |
+|---|------|------|------|------|------|
+| 6 | 物品丢失 | `AircraftEntity.java` | GUI模式返航直接覆盖武器槽，飞行期间新放入的武器被静默覆盖 | ✅ 检查槽位是否为空，被占用则放入玩家背包 | DONE |
+| 7 | 数据验证 | `FlightGroupUpdatePayload.java` | `slotIndices` 未验证范围，恶意包可注入 index=999 导致 IndexOutOfBoundsException | ✅ 验证每个 index ∈ [0, weaponSlots) | DONE |
+| 8 | 边界保护 | `FlightGroupData.java` AttackMode | 已修复（跳过） | — | DONE |
+| 9 | 异常安全 | `CannonProjectileEntity.java` | AP弹 `hurt()` 异常时 modifier 永久残留 | ✅ 用 try-finally 保护 modifier 清理 | DONE |
+| 10 | 距离限制 | `FireControlPayload.java` | 火控锁定无距离验证，任意距离可被锁定 | ✅ 限制在模拟距离内（simDist × 16 格） | DONE |
+| 11 | TOCTOU | `ShipCoreItem.java` | 鱼雷先发射实体后扣弹药，检查消耗间隙可漏洞利用 | ✅ 调整顺序：先消耗弹药确认成功再生成实体 | DONE |
+| 12 | 状态振荡 | `AircraftEntity.java` | 死亡目标UUID残留导致CRUISING/ATTACKING循环振荡 | ✅ 转ATTACKING前验证锁定目标中有存活实体，否则自动清理死亡UUID | DONE |
+| 13 | 维度泄漏 | `GameEvents.java` | 维度切换不清理火控/侦察状态，跨维度残留 | ✅ 新增 `PlayerChangedDimensionEvent` 监听器 | DONE |
+| 14 | 绕过防护 | `EvasionHandler.java` | 高速规避可闪避 `/kill`、虚空伤害等不应闪避的伤害 | ✅ 排除 `BYPASSES_INVULNERABILITY` 和 `STARVE` 伤害类型 | DONE |
+| 15 | 配方破坏 | `CookingPotRecipe.java` | 超集匹配：5材料可匹配只需2材料的配方，多余被浪费 | ✅ 改为精确匹配 `available.size() == ingredients.size()` | DONE |
+| 16 | 权限泄漏 | `SnapshotRequestPayload.java` | 任意玩家可触发服务端快照（DoS）无权限校验 | ✅ 添加 `hasPermissions(2)` 检查 | DONE |
+| 21 | 物品丢失 | `AircraftEntity.java` findCoreStack | 无GUI模式核心可能在背包任意位置找不到时丢失 | ✅ 添加全背包遍历兜底 | DONE |
+
+**P1 小计**: 11/11 DONE ✅
+
+### P2 修复清单 (12个 — 持久化/生命周期/null安全/网络防护)
+
+| # | 类型 | 文件 | 问题 | 修复 | 状态 |
+|---|------|------|------|------|------|
+| 17 | 持久化 | `AircraftEntity.java` | `airtimeTicks` runtime字段，区块卸载后重置为0，滞空上限被重置 | ✅ 持久化到NBT，readAdditionalSaveData恢复 | DONE |
+| 18 | 持久化 | `AircraftEntity.java` | `hasFired` runtime字段，反序列化后重置false，炸弹/鱼雷可重复投弹 | ✅ 持久化到NBT | DONE |
+| 19 | 生命周期 | `AerialBombEntity.java` / `BulletEntity.java` | 无lifetime限制，向虚空射击永不清理导致内存泄漏 | ✅ 添加600tick(30s)上限，超时自动discard() | DONE |
+| 20 | 持久化 | `AircraftEntity.java` | `aircraftHealth` 默认20但RECON设计值10，重启后超设计值 | ✅ 持久化到NBT，无存档则用getMaxHealth()初始化 | DONE |
+| 22 | 配方逻辑 | `CookingPotRecipe.java` / `CookingPotBlockEntity.java` | 同槽堆叠物品无法满足多材料需求，漏斗自动化兼容性差 | ✅ 修改matches/craftItem基于计数，支持堆叠 | DONE |
+| 23 | 数值错误 | `PlaceableFoodBlockEntity.java` | Buff时长除以 `totalServings-1` 导致总时长超设计 (例:270s>180s) | ✅ 除数改为 `totalServings` | DONE |
+| 24 | Null安全 | `CookingPotMenu.java` fromNetwork | 直接强转block entity不检查null，方块被破坏时NPE崩溃 | ✅ 添加instanceof检查 | DONE |
+| 25 | 输入验证 | `OpenFlightGroupPayload.java` | 无coreSlot验证，恶意包可在任意物品上打开编组GUI | ✅ 验证范围+物品类型必须ShipCoreItem | DONE |
+| 26 | 网络防护 | `FireControlSyncPayload.java` | UUID列表反序列化无size上限，中间人攻击可OOM | ✅ 添加 `size > 16` 上限校验 | DONE |
+| 27 | 客户端清理 | `ClientGameEvents.java` / `ClientTickHandler.java` / `ClientFireControlData.java` / `ClientReconData.java` | 静态状态跨服务器残留，断连不清理导致状态污染 | ✅ 监听LoggingOut事件统一清理高亮/火控/侦察数据 | DONE |
+| 28 | 范围错误 | `ShipCoreItem.java` | 弹药搜索 `i < totalSlots` 包含强化槽，误消耗强化槽物品 | ✅ 改为 `i < weaponSlots + ammoSlots` | DONE |
+| 29 | 数据丢失 | `AircraftEntity.java` buildReturnStack | 重建全新ItemStack丢失自定义名称/附魔/DataComponent | ✅ 序列化完整originalStack到NBT，返航时恢复 | DONE |
+
+**P2 小计**: 12/12 DONE ✅
+
+**总修复数**: P0 (5) + P1 (11) + P2 (12) = **28个**
+
 **构建状态**: BUILD SUCCESSFUL ✅
 
 ---

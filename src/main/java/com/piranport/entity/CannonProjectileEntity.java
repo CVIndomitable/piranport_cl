@@ -68,9 +68,12 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
                         armorAttr.addTransientModifier(new AttributeModifier(
                                 apPenId, -halfArmor, AttributeModifier.Operation.ADD_VALUE));
                     }
-                    living.hurt(damageSources().thrown(this, getOwner()), apDamage);
-                    if (armorAttr != null) {
-                        armorAttr.removeModifier(apPenId);
+                    try {
+                        living.hurt(damageSources().thrown(this, getOwner()), apDamage);
+                    } finally {
+                        if (armorAttr != null) {
+                            armorAttr.removeModifier(apPenId);
+                        }
                     }
                 } else {
                     target.hurt(damageSources().thrown(this, getOwner()), apDamage);

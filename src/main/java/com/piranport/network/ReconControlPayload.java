@@ -7,6 +7,7 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 /** C2S: player sends WASD movement direction for recon aircraft control. */
@@ -34,7 +35,11 @@ public record ReconControlPayload(float dx, float dy, float dz) implements Custo
     public static void handle(ReconControlPayload payload, IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
             if (ctx.player() == null) return;
-            ReconManager.handleControl(ctx.player().getUUID(), payload.dx(), payload.dy(), payload.dz());
+            float dx = Mth.clamp(payload.dx(), -1.0f, 1.0f);
+            float dy = Mth.clamp(payload.dy(), -1.0f, 1.0f);
+            float dz = Mth.clamp(payload.dz(), -1.0f, 1.0f);
+            if (Float.isNaN(dx) || Float.isNaN(dy) || Float.isNaN(dz)) return;
+            ReconManager.handleControl(ctx.player().getUUID(), dx, dy, dz);
         });
     }
 }

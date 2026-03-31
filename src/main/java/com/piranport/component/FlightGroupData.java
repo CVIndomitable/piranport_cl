@@ -7,6 +7,8 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.util.StringRepresentable;
 
+import io.netty.handler.codec.DecoderException;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -37,7 +39,10 @@ public record FlightGroupData(List<FlightGroup> groups) {
                 StringRepresentable.fromEnum(AttackMode::values);
 
         public static final StreamCodec<ByteBuf, AttackMode> STREAM_CODEC =
-                ByteBufCodecs.VAR_INT.map(i -> AttackMode.values()[i], Enum::ordinal);
+                ByteBufCodecs.VAR_INT.map(i -> {
+                    var vals = values();
+                    return i >= 0 && i < vals.length ? vals[i] : FOCUS;
+                }, Enum::ordinal);
     }
 
     public record FlightGroup(
@@ -93,14 +98,17 @@ public record FlightGroupData(List<FlightGroup> groups) {
                 },
                 buf -> {
                     int cnt = ByteBufCodecs.VAR_INT.decode(buf);
+                    if (cnt < 0 || cnt > 16) throw new DecoderException("Too many slot indices: " + cnt);
                     List<Integer> indices = new ArrayList<>(cnt);
                     for (int j = 0; j < cnt; j++) indices.add(ByteBufCodecs.VAR_INT.decode(buf));
 
                     int bcnt = ByteBufCodecs.VAR_INT.decode(buf);
+                    if (bcnt < 0 || bcnt > 16) throw new DecoderException("Too many bullet slots: " + bcnt);
                     List<Integer> bullets = new ArrayList<>(bcnt);
                     for (int j = 0; j < bcnt; j++) bullets.add(ByteBufCodecs.VAR_INT.decode(buf));
 
                     int pcnt = ByteBufCodecs.VAR_INT.decode(buf);
+                    if (pcnt < 0 || pcnt > 16) throw new DecoderException("Too many payload entries: " + pcnt);
                     Map<Integer, String> payloadMap = new HashMap<>(pcnt);
                     for (int j = 0; j < pcnt; j++) {
                         int slot = ByteBufCodecs.VAR_INT.decode(buf);
@@ -182,6 +190,7 @@ public record FlightGroupData(List<FlightGroup> groups) {
             },
             buf -> {
                 int size = ByteBufCodecs.VAR_INT.decode(buf);
+                if (size < 0 || size > MAX_GROUPS) throw new DecoderException("Too many groups: " + size);
                 List<FlightGroup> groups = new ArrayList<>(size);
                 for (int i = 0; i < size; i++) groups.add(FlightGroup.STREAM_CODEC.decode(buf));
                 return new FlightGroupData(List.copyOf(groups));

@@ -10,6 +10,8 @@ import com.piranport.item.ShipCoreItem;
 import com.piranport.registry.ModDataComponents;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.stats.Stats;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.entity.Entity;
@@ -81,6 +83,15 @@ public class GameEvents {
                 player.setDeltaMovement(vel.x, 0.0, vel.z);
             }
             player.resetFallDistance();
+        }
+
+        // Safety net: remove recon slowness if no active recon (server only, every 20 ticks)
+        if (!player.level().isClientSide() && player.tickCount % 20 == 0) {
+            MobEffectInstance slowness = player.getEffect(MobEffects.MOVEMENT_SLOWDOWN);
+            if (slowness != null && slowness.getAmplifier() >= 9
+                    && !ReconManager.isInRecon(player.getUUID())) {
+                player.removeEffect(MobEffects.MOVEMENT_SLOWDOWN);
+            }
         }
 
         // 战斗机自动升空 — server only, checked every 40 ticks (2 s)

@@ -1011,6 +1011,24 @@ neo_version=21.1.220
 
 ---
 
+## 代码审查修复 (2026-03-31)
+
+**背景**: 全面代码审查（5个并行深度审查代理，94个Java文件）发现5个P0级（必须立即修复）安全漏洞。
+
+### P0 修复清单
+
+| # | 类型 | 文件 | 问题 | 修复 | 状态 |
+|---|------|------|------|------|------|
+| 1 | 内存泄漏 | `AircraftEntity.java` | 侦察机 `setChunkForced()` 加载区块，多个删除路径（`/kill`、崩溃）跳过清理，导致永久泄漏 | ✅ 重写 `remove(RemovalReason)`，释放强制加载区块 + 清理侦察状态 + 移除减速效果；`lastForcedChunkX/Z` 持久化 NBT | DONE |
+| 2 | 多人同步 | `FlammableEffect.java` | `explosionTimer` 是实例变量，`MobEffect` 单例导致所有玩家共享爆炸频率 | ✅ 移除实例计数器，改用 `entity.tickCount % 39 == 0` | DONE |
+| 3 | 输入校验 | `ReconControlPayload.java` | 客户端 `dx/dy/dz` 无范围校验，恶意客户端可发送 `Float.MAX_VALUE` 或 `NaN` 瞬移飞机 | ✅ `Mth.clamp(-1,1)` + `Float.isNaN` 检查 | DONE |
+| 4 | OOM 攻击 | `FlightGroupData.java` | StreamCodec 反序列化无大小上限，恶意包可发送 `size=Integer.MAX_VALUE` 触发崩溃 | ✅ groups/indices/bullets/payloads 数组加上限校验；`AttackMode` 加 ordinal 边界防护 | DONE |
+| 5 | 永久锁定 | `GameEvents.java` | 侦察机减速效果 duration=`Integer.MAX_VALUE`，若实体被 `/kill` 则玩家永久无法移动 | ✅ 每20tick检查：有 amplifier≥9 减速但无活跃侦察机时自动移除 | DONE |
+
+**构建状态**: BUILD SUCCESSFUL ✅
+
+---
+
 ## Reference Links
 
 - NeoForge Docs: https://docs.neoforged.net/

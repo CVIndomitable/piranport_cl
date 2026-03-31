@@ -1005,6 +1005,27 @@ public class AircraftEntity extends Entity {
     public boolean isPickable() { return true; }
 
     @Override
+    public void remove(RemovalReason reason) {
+        if (!level().isClientSide()) {
+            // Safety net: release any forced chunks that weren't cleaned up
+            releaseAllForcedChunks();
+            // Clean up recon state
+            if (ownerUUID != null) {
+                ReconManager.endRecon(ownerUUID);
+                // Remove slowness if we applied it
+                if (appliedSlowness && level() instanceof ServerLevel sl) {
+                    Player owner = sl.getServer().getPlayerList().getPlayer(ownerUUID);
+                    if (owner != null) {
+                        owner.removeEffect(MobEffects.MOVEMENT_SLOWDOWN);
+                    }
+                    appliedSlowness = false;
+                }
+            }
+        }
+        super.remove(reason);
+    }
+
+    @Override
     protected void readAdditionalSaveData(CompoundTag tag) {
         if (tag.hasUUID("OwnerUUID")) ownerUUID = tag.getUUID("OwnerUUID");
         weaponSlotIndex = tag.getInt("WeaponSlot");
@@ -1024,6 +1045,9 @@ public class AircraftEntity extends Entity {
         payloadType = tag.getString("PayloadType");
         try { bombingMode = AircraftInfo.BombingMode.valueOf(tag.getString("BombingMode")); }
         catch (IllegalArgumentException e) { bombingMode = AircraftInfo.BombingMode.DIVE; }
+        lastForcedChunkX = tag.getInt("LastForcedChunkX");
+        lastForcedChunkZ = tag.getInt("LastForcedChunkZ");
+        if (!tag.contains("LastForcedChunkX")) lastForcedChunkX = Integer.MIN_VALUE;
         entityData.set(STATE, tag.getInt("FlightState"));
         entityData.set(AIRCRAFT_TYPE_DATA, aircraftType.ordinal());
         if (ownerUUID != null) entityData.set(OWNER_ID, Optional.of(ownerUUID));
@@ -1045,6 +1069,8 @@ public class AircraftEntity extends Entity {
         tag.putString("BombingMode", bombingMode.name());
         tag.putFloat("PanelSpeed", panelSpeed);
         tag.putInt("RemainingAmmo", remainingAmmo);
+        tag.putInt("LastForcedChunkX", lastForcedChunkX);
+        tag.putInt("LastForcedChunkZ", lastForcedChunkZ);
         tag.putInt("FlightState", entityData.get(STATE));
     }
 }

@@ -9,7 +9,7 @@ import net.minecraft.world.level.block.state.properties.IntegerProperty;
 
 import java.util.function.Supplier;
 
-/** 4阶段作物方块 (age 0-3)。用于番茄、大豆、辣椒、洋葱、稻。 */
+/** 4阶段作物方块 (age 0-3)。用于番茄、大豆、辣椒、洋葱。 */
 public class FourStageCropBlock extends CropBlock {
     public static final IntegerProperty AGE = BlockStateProperties.AGE_3;
     private final Supplier<? extends ItemLike> seedSupplier;

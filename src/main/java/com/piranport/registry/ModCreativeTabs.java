@@ -22,6 +22,7 @@ public class ModCreativeTabs {
                         output.accept(ModItems.BAUXITE_ORE.get());
                         output.accept(ModItems.ALUMINUM_BLOCK.get());
                         output.accept(ModItems.SALT_BLOCK.get());
+                        output.accept(ModItems.SALT_CHIP.get());
                         // Materials
                         output.accept(ModItems.ALUMINUM_INGOT.get());
                         output.accept(ModItems.SALT.get());

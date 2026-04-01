@@ -31,6 +31,8 @@ public class ModItems {
             ITEMS.registerSimpleBlockItem(ModBlocks.ALUMINUM_BLOCK);
     public static final DeferredItem<BlockItem> SALT_BLOCK =
             ITEMS.registerSimpleBlockItem(ModBlocks.SALT_BLOCK);
+    public static final DeferredItem<BlockItem> SALT_CHIP =
+            ITEMS.registerSimpleBlockItem(ModBlocks.SALT_CHIP);
 
     // ===== Materials =====
     public static final DeferredItem<Item> ALUMINUM_INGOT =
@@ -311,7 +313,7 @@ public class ModItems {
                             .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
                             .component(ModDataComponents.AIRCRAFT_INFO.get(),
                                     new AircraftInfo(AircraftInfo.AircraftType.RECON,
-                                            1500, 0, 0, 0f, 2.0f, 8, AircraftInfo.BombingMode.DIVE))));
+                                            1500, 0, 0, 0f, 1.5f, 8, AircraftInfo.BombingMode.DIVE))));
 
     // ===== Aviation Ammo (Phase 18) =====
     public static final DeferredItem<Item> AVIATION_FUEL =

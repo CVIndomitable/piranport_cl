@@ -5,6 +5,8 @@ import com.piranport.block.CookingPotBlock;
 import com.piranport.block.CuttingBoardBlock;
 import com.piranport.block.FourStageCropBlock;
 import com.piranport.block.PlaceableFoodBlock;
+import com.piranport.block.RiceCropBlock;
+import com.piranport.block.SaltChipBlock;
 import com.piranport.block.StoneMillBlock;
 import com.piranport.block.ThreeStageCropBlock;
 import net.minecraft.util.valueproviders.UniformInt;
@@ -42,6 +44,13 @@ public class ModBlocks {
                     .strength(0.5f)
                     .sound(SoundType.SAND));
 
+    public static final DeferredBlock<SaltChipBlock> SALT_CHIP = BLOCKS.register("salt_chip",
+            () -> new SaltChipBlock(BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.SAND)
+                    .strength(0.3f)
+                    .sound(SoundType.SAND)
+                    .noOcclusion()));
+
     // ===== Crop Blocks (Phase 11) =====
     private static BlockBehaviour.Properties cropProps() {
         return BlockBehaviour.Properties.ofFullCopy(Blocks.WHEAT);
@@ -55,8 +64,8 @@ public class ModBlocks {
             BLOCKS.register("chili_crop", () -> new FourStageCropBlock(cropProps(), () -> ModItems.CHILI_SEEDS.get()));
     public static final DeferredBlock<FourStageCropBlock> ONION_CROP =
             BLOCKS.register("onion_crop", () -> new FourStageCropBlock(cropProps(), () -> ModItems.ONION_SEEDS.get()));
-    public static final DeferredBlock<FourStageCropBlock> RICE_CROP =
-            BLOCKS.register("rice_crop", () -> new FourStageCropBlock(cropProps(), () -> ModItems.RICE_SEEDS.get()));
+    public static final DeferredBlock<RiceCropBlock> RICE_CROP =
+            BLOCKS.register("rice_crop", () -> new RiceCropBlock(cropProps(), () -> ModItems.RICE_SEEDS.get()));
     public static final DeferredBlock<ThreeStageCropBlock> LETTUCE_CROP =
             BLOCKS.register("lettuce_crop", () -> new ThreeStageCropBlock(cropProps(), () -> ModItems.LETTUCE_SEEDS.get()));
     public static final DeferredBlock<ThreeStageCropBlock> GARLIC_CROP =

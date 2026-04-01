@@ -582,15 +582,17 @@ public class AircraftEntity extends Entity {
             lastForcedChunkZ = cz;
         }
 
-        // Apply pending movement input from client
+        // Apply pending movement input from client (lerp for smooth acceleration/deceleration)
         float[] input = ReconManager.consumeInput(owner.getUUID());
-        if (input != null && (input[0] != 0 || input[1] != 0 || input[2] != 0)) {
-            double speed = panelSpeed * 0.5;
-            setDeltaMovement(input[0] * speed, input[1] * speed, input[2] * speed);
-        } else {
-            // No input — decelerate smoothly
-            setDeltaMovement(getDeltaMovement().scale(0.7));
-        }
+        boolean hasInput = input != null && (input[0] != 0 || input[1] != 0 || input[2] != 0);
+        double speed = panelSpeed * 0.5;
+        Vec3 target = hasInput
+                ? new Vec3(input[0] * speed, input[1] * speed, input[2] * speed)
+                : Vec3.ZERO;
+        Vec3 current = getDeltaMovement();
+        // Accelerate slowly (inertia), decelerate faster (responsiveness)
+        double factor = hasInput ? 0.12 : 0.25;
+        setDeltaMovement(current.lerp(target, factor));
     }
 
     // ===== Chunk forcing (Phase 32) =====

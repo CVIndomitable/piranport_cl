@@ -1,0 +1,94 @@
+package com.piranport.dungeon.network;
+
+import com.piranport.PiranPort;
+import com.piranport.dungeon.data.DungeonRegistry;
+import com.piranport.dungeon.data.NodeData;
+import com.piranport.dungeon.data.StageData;
+import com.piranport.dungeon.event.DungeonEventHandler;
+import com.piranport.dungeon.instance.DungeonInstance;
+import com.piranport.dungeon.instance.DungeonInstanceManager;
+import com.piranport.dungeon.key.DungeonKeyItem;
+import com.piranport.dungeon.key.DungeonProgress;
+import com.piranport.dungeon.lobby.DungeonLobbyManager;
+import com.piranport.registry.ModDataComponents;
+import io.netty.buffer.ByteBuf;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
+
+/**
+ * C2S: Flagship selects a node to enter in the node map.
+ */
+public record SelectNodePayload(BlockPos lecternPos, int keySlot, String nodeId)
+        implements CustomPacketPayload {
+
+    public static final Type<SelectNodePayload> TYPE =
+            new Type<>(ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "select_node"));
+
+    public static final StreamCodec<ByteBuf, SelectNodePayload> STREAM_CODEC = StreamCodec.of(
+            (buf, p) -> {
+                buf.writeLong(p.lecternPos().asLong());
+                ByteBufCodecs.VAR_INT.encode(buf, p.keySlot());
+                ByteBufCodecs.STRING_UTF8.encode(buf, p.nodeId());
+            },
+            buf -> new SelectNodePayload(
+                    BlockPos.of(buf.readLong()),
+                    ByteBufCodecs.VAR_INT.decode(buf),
+                    ByteBufCodecs.STRING_UTF8.decode(buf))
+    );
+
+    @Override
+    public Type<? extends CustomPacketPayload> type() { return TYPE; }
+
+    public static void handle(SelectNodePayload payload, IPayloadContext context) {
+        context.enqueueWork(() -> {
+            if (!(context.player() instanceof ServerPlayer player)) return;
+
+            // Validate key
+            ItemStack keyStack = player.getInventory().getItem(payload.keySlot());
+            if (!(keyStack.getItem() instanceof DungeonKeyItem)) return;
+
+            String stageId = DungeonKeyItem.getStageId(keyStack);
+            StageData stage = DungeonRegistry.INSTANCE.getStage(stageId);
+            if (stage == null) return;
+
+            NodeData node = stage.nodes().get(payload.nodeId());
+            if (node == null) return;
+
+            // Get or create instance
+            ServerLevel serverLevel = (ServerLevel) player.level();
+            DungeonInstanceManager mgr = DungeonInstanceManager.get(serverLevel);
+            java.util.UUID instanceId = DungeonKeyItem.getInstanceId(keyStack);
+            DungeonInstance instance;
+
+            if (instanceId != null) {
+                instance = mgr.getInstance(instanceId);
+                if (instance == null) return;
+                if (instance.getState() == DungeonInstance.State.SUSPENDED) {
+                    mgr.resumeInstance(instanceId);
+                }
+            } else {
+                // First node selection: create new instance
+                instance = mgr.createInstance(stageId, player,
+                        payload.lecternPos(),
+                        player.level().dimension().location().toString());
+                if (instance == null) return;
+                DungeonKeyItem.setInstanceId(keyStack, instance.getInstanceId());
+            }
+
+            // Get lobby members
+            DungeonLobbyManager.Lobby lobby =
+                    DungeonLobbyManager.INSTANCE.getLobby(payload.lecternPos());
+
+            // Handle node by type
+            DungeonEventHandler.enterNode(serverLevel, instance, node, stage,
+                    player, keyStack, lobby);
+        });
+    }
+}

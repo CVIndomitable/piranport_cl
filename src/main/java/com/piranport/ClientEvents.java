@@ -62,6 +62,9 @@ public class ClientEvents {
         event.register(ModMenuTypes.STONE_MILL_MENU.get(), StoneMillScreen::new);
         event.register(ModMenuTypes.COOKING_POT_MENU.get(), CookingPotScreen::new);
         event.register(ModMenuTypes.FLIGHT_GROUP_MENU.get(), FlightGroupScreen::new);
+        // Dungeon
+        event.register(ModMenuTypes.DUNGEON_BOOK_MENU.get(),
+                com.piranport.dungeon.client.DungeonBookScreen::new);
     }
 
     @SubscribeEvent
@@ -101,5 +104,10 @@ public class ClientEvents {
                 CuttingBoardRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntityTypes.PLACEABLE_FOOD.get(),
                 PlaceableFoodRenderer::new);
+        // Dungeon entities (use NoopRenderer for now — visual effects are done via particles in tick())
+        event.registerEntityRenderer(ModEntityTypes.DUNGEON_PORTAL.get(),
+                com.piranport.dungeon.client.DungeonPortalRenderer::new);
+        event.registerEntityRenderer(ModEntityTypes.LOOT_SHIP.get(),
+                com.piranport.dungeon.client.LootShipRenderer::new);
     }
 }

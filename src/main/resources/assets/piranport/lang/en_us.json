@@ -202,5 +202,42 @@
   "tooltip.piranport.core_inactive": "Not Active (higher-load core present)",
   "tooltip.piranport.core_armor_slots": "Armor: +%s (capacity %s slots)",
   "tooltip.piranport.weapon_ready": "Ready",
-  "tooltip.piranport.weapon_not_loaded": "Not Loaded"
+  "tooltip.piranport.weapon_not_loaded": "Not Loaded",
+
+  "block.piranport.dungeon_lectern": "Dungeon Lectern",
+  "item.piranport.dungeon_key": "Dungeon Key",
+  "item.piranport.dungeon_key.progress": "Cleared Nodes: %s",
+  "item.piranport.town_scroll": "Town Scroll",
+  "item.piranport.town_scroll.tooltip": "Right-click to return to ruins",
+  "entity.piranport.dungeon_portal": "Portal",
+  "entity.piranport.loot_ship": "Loot Ship",
+  "container.piranport.dungeon_book": "Sortie",
+  "block.piranport.dungeon_lectern.no_key": "You need a Dungeon Key to use this lectern",
+
+  "gui.piranport.dungeon_book.sortie": "Sortie",
+  "gui.piranport.dungeon_book.exit": "Exit",
+  "gui.piranport.dungeon_book.back": "Back",
+
+  "gui.piranport.dungeon_revive.title": "Revive",
+  "gui.piranport.dungeon_revive.died": "You have fallen!",
+  "gui.piranport.dungeon_revive.cost": "Consume 1 Totem of Undying to return?",
+  "gui.piranport.dungeon_revive.no_totem": "Totem of Undying required",
+  "gui.piranport.dungeon_revive.revive": "Revive",
+  "gui.piranport.dungeon_revive.giveup": "Give Up",
+
+  "gui.piranport.dungeon_result.title": "Result",
+  "gui.piranport.dungeon_result.clear": "Stage Cleared!",
+  "gui.piranport.dungeon_result.time": "Time: %s",
+  "gui.piranport.dungeon_result.first_clear": "★ First Clear ★",
+  "gui.piranport.dungeon_result.close": "OK",
+
+  "gui.piranport.town_scroll.title": "Return",
+  "gui.piranport.town_scroll.question": "Leave dungeon?",
+  "gui.piranport.town_scroll.confirm": "Confirm",
+  "gui.piranport.town_scroll.cancel": "Cancel",
+
+  "hud.piranport.dungeon.node": "Node: %s",
+
+  "dungeon.piranport.resource_collected": "Supplies collected!",
+  "dungeon.piranport.insufficient_cost": "Insufficient: need %s x %s"
 }

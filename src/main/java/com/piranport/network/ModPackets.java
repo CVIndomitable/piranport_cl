@@ -75,5 +75,64 @@ public class ModPackets {
                 SnapshotRequestPayload.STREAM_CODEC,
                 SnapshotRequestPayload::handle
         );
+
+        // ===== Dungeon System =====
+        // C2S
+        registrar.playToServer(
+                com.piranport.dungeon.network.JoinLobbyPayload.TYPE,
+                com.piranport.dungeon.network.JoinLobbyPayload.STREAM_CODEC,
+                com.piranport.dungeon.network.JoinLobbyPayload::handle
+        );
+        registrar.playToServer(
+                com.piranport.dungeon.network.LeaveLobbyPayload.TYPE,
+                com.piranport.dungeon.network.LeaveLobbyPayload.STREAM_CODEC,
+                com.piranport.dungeon.network.LeaveLobbyPayload::handle
+        );
+        registrar.playToServer(
+                com.piranport.dungeon.network.SelectStagePayload.TYPE,
+                com.piranport.dungeon.network.SelectStagePayload.STREAM_CODEC,
+                com.piranport.dungeon.network.SelectStagePayload::handle
+        );
+        registrar.playToServer(
+                com.piranport.dungeon.network.SelectNodePayload.TYPE,
+                com.piranport.dungeon.network.SelectNodePayload.STREAM_CODEC,
+                com.piranport.dungeon.network.SelectNodePayload::handle
+        );
+        registrar.playToServer(
+                com.piranport.dungeon.network.ReviveRequestPayload.TYPE,
+                com.piranport.dungeon.network.ReviveRequestPayload.STREAM_CODEC,
+                com.piranport.dungeon.network.ReviveRequestPayload::handle
+        );
+        registrar.playToServer(
+                com.piranport.dungeon.network.TownScrollUsePayload.TYPE,
+                com.piranport.dungeon.network.TownScrollUsePayload.STREAM_CODEC,
+                com.piranport.dungeon.network.TownScrollUsePayload::handle
+        );
+        // S2C
+        registrar.playToClient(
+                com.piranport.dungeon.network.LobbyUpdatePayload.TYPE,
+                com.piranport.dungeon.network.LobbyUpdatePayload.STREAM_CODEC,
+                com.piranport.dungeon.network.LobbyUpdatePayload::handle
+        );
+        registrar.playToClient(
+                com.piranport.dungeon.network.DungeonStatePayload.TYPE,
+                com.piranport.dungeon.network.DungeonStatePayload.STREAM_CODEC,
+                com.piranport.dungeon.network.DungeonStatePayload::handle
+        );
+        registrar.playToClient(
+                com.piranport.dungeon.network.NodeEnteredPayload.TYPE,
+                com.piranport.dungeon.network.NodeEnteredPayload.STREAM_CODEC,
+                com.piranport.dungeon.network.NodeEnteredPayload::handle
+        );
+        registrar.playToClient(
+                com.piranport.dungeon.network.DungeonResultPayload.TYPE,
+                com.piranport.dungeon.network.DungeonResultPayload.STREAM_CODEC,
+                com.piranport.dungeon.network.DungeonResultPayload::handle
+        );
+        registrar.playToClient(
+                com.piranport.dungeon.network.PlayerDiedInDungeonPayload.TYPE,
+                com.piranport.dungeon.network.PlayerDiedInDungeonPayload.STREAM_CODEC,
+                com.piranport.dungeon.network.PlayerDiedInDungeonPayload::handle
+        );
     }
 }

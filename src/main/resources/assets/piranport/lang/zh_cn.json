@@ -202,5 +202,42 @@
   "tooltip.piranport.core_inactive": "不生效（背包内有更高负重核心）",
   "tooltip.piranport.core_armor_slots": "护甲：+%s（槽位容量 %s）",
   "tooltip.piranport.weapon_ready": "已装填",
-  "tooltip.piranport.weapon_not_loaded": "未装填"
+  "tooltip.piranport.weapon_not_loaded": "未装填",
+
+  "block.piranport.dungeon_lectern": "海域出击书台",
+  "item.piranport.dungeon_key": "副本钥匙",
+  "item.piranport.dungeon_key.progress": "已通关节点：%s",
+  "item.piranport.town_scroll": "回城卷轴",
+  "item.piranport.town_scroll.tooltip": "右键使用返回遗迹",
+  "entity.piranport.dungeon_portal": "传送门",
+  "entity.piranport.loot_ship": "箱子船",
+  "container.piranport.dungeon_book": "海域出击",
+  "block.piranport.dungeon_lectern.no_key": "需要副本钥匙才能使用书台",
+
+  "gui.piranport.dungeon_book.sortie": "出击",
+  "gui.piranport.dungeon_book.exit": "退出",
+  "gui.piranport.dungeon_book.back": "返回",
+
+  "gui.piranport.dungeon_revive.title": "复活确认",
+  "gui.piranport.dungeon_revive.died": "你已阵亡",
+  "gui.piranport.dungeon_revive.cost": "消耗 1个不死图腾 返回战场？",
+  "gui.piranport.dungeon_revive.no_totem": "需要不死图腾",
+  "gui.piranport.dungeon_revive.revive": "复活",
+  "gui.piranport.dungeon_revive.giveup": "放弃",
+
+  "gui.piranport.dungeon_result.title": "通关结算",
+  "gui.piranport.dungeon_result.clear": "关卡通过！",
+  "gui.piranport.dungeon_result.time": "用时：%s",
+  "gui.piranport.dungeon_result.first_clear": "★ 首次通关 ★",
+  "gui.piranport.dungeon_result.close": "确认",
+
+  "gui.piranport.town_scroll.title": "回城确认",
+  "gui.piranport.town_scroll.question": "确认离开副本？",
+  "gui.piranport.town_scroll.confirm": "确认",
+  "gui.piranport.town_scroll.cancel": "取消",
+
+  "hud.piranport.dungeon.node": "当前节点：%s",
+
+  "dungeon.piranport.resource_collected": "补给已收集！",
+  "dungeon.piranport.insufficient_cost": "资源不足，需要 %s 个 %s"
 }

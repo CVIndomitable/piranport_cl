@@ -1,0 +1,113 @@
+package com.piranport.dungeon.lobby;
+
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerPlayer;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+/**
+ * Manages dungeon lobbies. Each lectern BlockPos can have one active lobby.
+ * The first player to interact becomes the flagship (lobby leader).
+ */
+public final class DungeonLobbyManager {
+    public static final DungeonLobbyManager INSTANCE = new DungeonLobbyManager();
+
+    private final Map<BlockPos, Lobby> lobbies = new HashMap<>();
+
+    private DungeonLobbyManager() {}
+
+    public static class Lobby {
+        private final BlockPos lecternPos;
+        private UUID flagshipUuid;
+        private String flagshipName;
+        private final List<UUID> memberUuids = new ArrayList<>();
+        private final List<String> memberNames = new ArrayList<>();
+        private String selectedStageId;
+
+        public Lobby(BlockPos pos, ServerPlayer flagship) {
+            this.lecternPos = pos;
+            this.flagshipUuid = flagship.getUUID();
+            this.flagshipName = flagship.getGameProfile().getName();
+            this.memberUuids.add(flagship.getUUID());
+            this.memberNames.add(flagshipName);
+        }
+
+        public BlockPos getLecternPos() { return lecternPos; }
+        public UUID getFlagshipUuid() { return flagshipUuid; }
+        public String getFlagshipName() { return flagshipName; }
+        public List<UUID> getMemberUuids() { return List.copyOf(memberUuids); }
+        public List<String> getMemberNames() { return List.copyOf(memberNames); }
+        public String getSelectedStageId() { return selectedStageId; }
+        public void setSelectedStageId(String stageId) { this.selectedStageId = stageId; }
+
+        public boolean isFlagship(UUID uuid) {
+            return flagshipUuid.equals(uuid);
+        }
+
+        public void addMember(ServerPlayer player) {
+            UUID uuid = player.getUUID();
+            if (!memberUuids.contains(uuid)) {
+                memberUuids.add(uuid);
+                memberNames.add(player.getGameProfile().getName());
+            }
+        }
+
+        public void removeMember(UUID uuid) {
+            int idx = memberUuids.indexOf(uuid);
+            if (idx >= 0) {
+                memberUuids.remove(idx);
+                memberNames.remove(idx);
+            }
+            // If flagship left and there are others, promote first member
+            if (flagshipUuid.equals(uuid) && !memberUuids.isEmpty()) {
+                flagshipUuid = memberUuids.get(0);
+                flagshipName = memberNames.get(0);
+            }
+        }
+
+        public boolean isEmpty() {
+            return memberUuids.isEmpty();
+        }
+
+        public int size() {
+            return memberUuids.size();
+        }
+    }
+
+    public Lobby joinLobby(BlockPos lecternPos, ServerPlayer player) {
+        Lobby lobby = lobbies.get(lecternPos);
+        if (lobby == null) {
+            lobby = new Lobby(lecternPos, player);
+            lobbies.put(lecternPos, lobby);
+        } else {
+            lobby.addMember(player);
+        }
+        return lobby;
+    }
+
+    public void leaveLobby(BlockPos lecternPos, UUID playerUuid) {
+        Lobby lobby = lobbies.get(lecternPos);
+        if (lobby != null) {
+            lobby.removeMember(playerUuid);
+            if (lobby.isEmpty()) {
+                lobbies.remove(lecternPos);
+            }
+        }
+    }
+
+    public Lobby getLobby(BlockPos lecternPos) {
+        return lobbies.get(lecternPos);
+    }
+
+    public void removeLobby(BlockPos lecternPos) {
+        lobbies.remove(lecternPos);
+    }
+
+    public void clearAll() {
+        lobbies.clear();
+    }
+}

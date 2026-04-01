@@ -28,13 +28,14 @@
 | v0.0.5-alpha | Combat+ | ✅ DONE | 装填进度Decorator、装填加速/高速规避Buff、Buff食物注册 |
 | v0.0.6-alpha | Skin | ⏳ PLANNED | 皮肤/模型渲染系统 |
 | v0.0.7-alpha | Aviation+ | ✅ DONE | 侦察机视角切换、空战、编队跟随侦察机、加工站自动化 |
+| v0.0.8-alpha | Salt & Rice | ✅ DONE | 稻田种植、盐蒸发系统、条件性盐矿生成、全面代码审查修复(35项P0-P3) |
 
 > 已完成 Phase 详情见 `docs/phases_archive.md`
 > 代码审查修复（35项）详情见 `docs/code_review_2026-03-31.md`
 
 ---
 
-## Project Structure (v0.0.7)
+## Project Structure (v0.0.8)
 
 ```
 src/main/java/com/piranport/
@@ -68,6 +69,7 @@ src/main/java/com/piranport/
 │   ├── FloatingTargetItem.java
 │   └── GuidebookItem.java
 ├── block/
+│   ├── RiceCropBlock.java          # 水稻（3阶段waterlogged作物）
 │   ├── SaltChipBlock.java          # 盐片薄层方块（蒸发产物）
 │   ├── SaltEvaporationHandler.java # 熔炉上方水→盐蒸发逻辑
 │   ├── CookingPotBlock.java / StoneMillBlock.java / CuttingBoardBlock.java
@@ -204,7 +206,7 @@ src/main/java/com/piranport/
 ```bash
 ./gradlew runClient    # 运行客户端
 ./gradlew runData      # DataGen
-./gradlew build        # 构建 → build/libs/piranport-0.0.4.jar
+./gradlew build        # 构建 → build/libs/piranport-0.0.8.jar
 ```
 
 ### gradle.properties
@@ -213,7 +215,7 @@ src/main/java/com/piranport/
 mod_id=piranport
 mod_name=Piran Port
 mod_license=All Rights Reserved
-mod_version=0.0.4
+mod_version=0.0.8
 mod_group_id=com.piranport
 mod_authors=PiranPort Dev Team
 mod_description=Minecraft mod based on Warship Girls R

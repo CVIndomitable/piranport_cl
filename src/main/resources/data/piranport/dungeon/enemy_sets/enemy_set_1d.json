@@ -1,0 +1,11 @@
+{
+  "enemy_set_id": "enemy_set_1d",
+  "spawn_list": [
+    { "entity": "minecraft:zombie", "count": 4 },
+    { "entity": "minecraft:skeleton", "count": 3 }
+  ],
+  "flagship": {
+    "entity": "minecraft:husk",
+    "count": 1
+  }
+}

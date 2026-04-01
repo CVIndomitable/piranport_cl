@@ -1,0 +1,34 @@
+{
+  "stage_id": "1-2",
+  "chapter": "chapter_1",
+  "display_name": "1-2 远洋护航",
+  "nodes": {
+    "A": {
+      "type": "battle",
+      "enemies": "enemy_set_1a",
+      "display_x": 50,
+      "display_y": 150
+    },
+    "B": {
+      "type": "battle",
+      "enemies": "enemy_set_1d",
+      "display_x": 200,
+      "display_y": 150
+    },
+    "C": {
+      "type": "boss",
+      "enemies": "boss_1_1",
+      "display_x": 350,
+      "display_y": 150
+    }
+  },
+  "edges": [
+    { "from": "A", "to": "B" },
+    { "from": "B", "to": "C" }
+  ],
+  "start_node": "A",
+  "boss_nodes": ["C"],
+  "first_clear_rewards": [
+    { "item": "minecraft:emerald", "count": 5 }
+  ]
+}

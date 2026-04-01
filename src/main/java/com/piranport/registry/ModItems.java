@@ -407,4 +407,19 @@ public class ModItems {
                             new Item.Properties().stacksTo(1).durability(32)
                                     .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.TORPEDO),
                             610, 4, 120));
+
+    // ===== Dungeon System (v0.0.8) =====
+    public static final DeferredItem<com.piranport.dungeon.key.DungeonKeyItem> DUNGEON_KEY =
+            ITEMS.register("dungeon_key",
+                    () -> new com.piranport.dungeon.key.DungeonKeyItem(new Item.Properties().stacksTo(1)
+                            .component(ModDataComponents.DUNGEON_STAGE_ID.get(), "")
+                            .component(ModDataComponents.DUNGEON_PROGRESS.get(),
+                                    com.piranport.dungeon.key.DungeonProgress.EMPTY)));
+
+    public static final DeferredItem<com.piranport.dungeon.item.TownScrollItem> TOWN_SCROLL =
+            ITEMS.register("town_scroll",
+                    () -> new com.piranport.dungeon.item.TownScrollItem(new Item.Properties().stacksTo(1)));
+
+    public static final DeferredItem<BlockItem> DUNGEON_LECTERN =
+            ITEMS.registerSimpleBlockItem(ModBlocks.DUNGEON_LECTERN);
 }

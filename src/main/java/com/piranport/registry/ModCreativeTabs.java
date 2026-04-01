@@ -142,5 +142,9 @@ public class ModCreativeTabs {
                         output.accept(ModItems.TORPEDO_JUICE.get());
                         output.accept(ModItems.TEMPURA.get());
                         output.accept(ModItems.KVASS.get());
+                        // Dungeon System
+                        output.accept(ModItems.DUNGEON_LECTERN.get());
+                        output.accept(ModItems.DUNGEON_KEY.get());
+                        output.accept(ModItems.TOWN_SCROLL.get());
                     }).build());
 }

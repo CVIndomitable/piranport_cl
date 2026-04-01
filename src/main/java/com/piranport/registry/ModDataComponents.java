@@ -108,4 +108,30 @@ public class ModDataComponents {
                     .persistent(ItemContainerContents.CODEC)
                     .networkSynchronized(ItemContainerContents.STREAM_CODEC)
                     .build());
+
+    // ===== v0.0.8 Dungeon DataComponents =====
+
+    /** Stage ID stored on a dungeon key. */
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<String>>
+            DUNGEON_STAGE_ID = DATA_COMPONENTS.register("dungeon_stage_id",
+            () -> DataComponentType.<String>builder()
+                    .persistent(Codec.STRING)
+                    .networkSynchronized(ByteBufCodecs.STRING_UTF8)
+                    .build());
+
+    /** Instance UUID stored on a dungeon key. */
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<java.util.UUID>>
+            DUNGEON_INSTANCE_ID = DATA_COMPONENTS.register("dungeon_instance_id",
+            () -> DataComponentType.<java.util.UUID>builder()
+                    .persistent(net.minecraft.core.UUIDUtil.CODEC)
+                    .networkSynchronized(net.minecraft.core.UUIDUtil.STREAM_CODEC)
+                    .build());
+
+    /** Progress record stored on a dungeon key. */
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<com.piranport.dungeon.key.DungeonProgress>>
+            DUNGEON_PROGRESS = DATA_COMPONENTS.register("dungeon_progress",
+            () -> DataComponentType.<com.piranport.dungeon.key.DungeonProgress>builder()
+                    .persistent(com.piranport.dungeon.key.DungeonProgress.CODEC)
+                    .networkSynchronized(com.piranport.dungeon.key.DungeonProgress.STREAM_CODEC)
+                    .build());
 }

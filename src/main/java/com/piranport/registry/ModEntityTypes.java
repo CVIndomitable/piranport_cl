@@ -65,4 +65,23 @@ public class ModEntityTypes {
                     .clientTrackingRange(8)
                     .updateInterval(2)
                     .build("bullet"));
+
+    // Dungeon System
+    public static final DeferredHolder<EntityType<?>, EntityType<com.piranport.dungeon.entity.DungeonPortalEntity>>
+            DUNGEON_PORTAL = ENTITY_TYPES.register("dungeon_portal",
+            () -> EntityType.Builder.<com.piranport.dungeon.entity.DungeonPortalEntity>of(
+                            com.piranport.dungeon.entity.DungeonPortalEntity::new, MobCategory.MISC)
+                    .sized(2.0f, 3.0f)
+                    .clientTrackingRange(16)
+                    .updateInterval(5)
+                    .build("dungeon_portal"));
+
+    public static final DeferredHolder<EntityType<?>, EntityType<com.piranport.dungeon.entity.LootShipEntity>>
+            LOOT_SHIP = ENTITY_TYPES.register("loot_ship",
+            () -> EntityType.Builder.<com.piranport.dungeon.entity.LootShipEntity>of(
+                            com.piranport.dungeon.entity.LootShipEntity::new, MobCategory.MISC)
+                    .sized(1.5f, 1.0f)
+                    .clientTrackingRange(10)
+                    .updateInterval(10)
+                    .build("loot_ship"));
 }

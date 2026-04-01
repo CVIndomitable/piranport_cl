@@ -118,4 +118,14 @@ public class ModBlocks {
             BLOCKS.register("bowl_food", () -> new PlaceableFoodBlock.Bowl(foodBlockProps()));
     public static final DeferredBlock<PlaceableFoodBlock.Cake> CAKE_FOOD =
             BLOCKS.register("cake_food", () -> new PlaceableFoodBlock.Cake(foodBlockProps()));
+
+    // ===== Dungeon System (v0.0.8) =====
+    public static final DeferredBlock<com.piranport.dungeon.block.DungeonLecternBlock> DUNGEON_LECTERN =
+            BLOCKS.register("dungeon_lectern",
+                    () -> new com.piranport.dungeon.block.DungeonLecternBlock(
+                            BlockBehaviour.Properties.of()
+                                    .mapColor(MapColor.DEEPSLATE)
+                                    .strength(5.0f, 1200.0f)
+                                    .sound(SoundType.DEEPSLATE)
+                                    .noOcclusion()));
 }

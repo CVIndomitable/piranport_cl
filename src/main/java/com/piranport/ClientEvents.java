@@ -4,6 +4,7 @@ import com.piranport.client.AircraftRenderer;
 import com.piranport.client.CuttingBoardRenderer;
 import com.piranport.client.PlaceableFoodRenderer;
 import com.piranport.client.ReloadBarDecorator;
+import com.piranport.client.WeaponReloadDecorator;
 import com.piranport.component.AircraftInfo;
 import com.piranport.menu.CookingPotScreen;
 import com.piranport.menu.FlightGroupScreen;
@@ -84,6 +85,15 @@ public class ClientEvents {
         event.register(ModItems.SMALL_SHIP_CORE.get(), decorator);
         event.register(ModItems.MEDIUM_SHIP_CORE.get(), decorator);
         event.register(ModItems.LARGE_SHIP_CORE.get(), decorator);
+
+        // Weapon reload bar (no-GUI mode — durability-style bar on weapon items)
+        WeaponReloadDecorator weaponDecorator = new WeaponReloadDecorator();
+        event.register(ModItems.SMALL_GUN.get(), weaponDecorator);
+        event.register(ModItems.MEDIUM_GUN.get(), weaponDecorator);
+        event.register(ModItems.LARGE_GUN.get(), weaponDecorator);
+        event.register(ModItems.TWIN_TORPEDO_LAUNCHER.get(), weaponDecorator);
+        event.register(ModItems.TRIPLE_TORPEDO_LAUNCHER.get(), weaponDecorator);
+        event.register(ModItems.QUAD_TORPEDO_LAUNCHER.get(), weaponDecorator);
     }
 
     @SubscribeEvent

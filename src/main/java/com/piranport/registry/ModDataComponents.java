@@ -8,6 +8,7 @@ import com.piranport.component.LoadedAmmo;
 import com.piranport.component.PlaceableInfo;
 import com.piranport.component.SlotCooldowns;
 import com.piranport.component.WeaponCategory;
+import com.piranport.component.WeaponCooldown;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.codec.ByteBufCodecs;
@@ -88,6 +89,15 @@ public class ModDataComponents {
             () -> DataComponentType.<SlotCooldowns>builder()
                     .persistent(SlotCooldowns.CODEC)
                     .networkSynchronized(SlotCooldowns.STREAM_CODEC)
+                    .build());
+
+    // ===== 武器冷却（无GUI模式，直接存在武器物品上） =====
+
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<WeaponCooldown>>
+            WEAPON_COOLDOWN = DATA_COMPONENTS.register("weapon_cooldown",
+            () -> DataComponentType.<WeaponCooldown>builder()
+                    .persistent(WeaponCooldown.CODEC)
+                    .networkSynchronized(WeaponCooldown.STREAM_CODEC)
                     .build());
 
     // ===== 手动装填弹药 =====

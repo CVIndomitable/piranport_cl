@@ -8,6 +8,7 @@ import com.piranport.config.ModCommonConfig;
 import com.piranport.entity.AircraftEntity;
 import com.piranport.item.ShipCoreItem;
 import com.piranport.registry.ModDataComponents;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -126,6 +127,20 @@ public class GameEvents {
                 ShipCoreItem.refillAircraftFuel(player, offhand);
                 player.displayClientMessage(
                         Component.translatable("message.piranport.transformed"), true);
+                // Spawn green plant-growth particles (bone meal effect) around the player
+                if (player.level() instanceof ServerLevel sl) {
+                    double px = player.getX();
+                    double py = player.getY() + 0.5;
+                    double pz = player.getZ();
+                    for (int i = 0; i < 30; i++) {
+                        double ox = (player.getRandom().nextDouble() - 0.5) * 1.5;
+                        double oy = player.getRandom().nextDouble() * 2.0;
+                        double oz = (player.getRandom().nextDouble() - 0.5) * 1.5;
+                        sl.sendParticles(ParticleTypes.HAPPY_VILLAGER,
+                                px + ox, py + oy, pz + oz,
+                                1, 0, 0, 0, 0);
+                    }
+                }
                 lastWeaponLoad.put(player.getUUID(), -1); // force attribute recalc next tick
                 return;
             }

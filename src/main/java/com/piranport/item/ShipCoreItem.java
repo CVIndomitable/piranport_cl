@@ -5,6 +5,7 @@ import com.piranport.component.AircraftInfo;
 import com.piranport.component.FlightGroupData;
 import com.piranport.component.LoadedAmmo;
 import com.piranport.component.SlotCooldowns;
+import com.piranport.component.WeaponCooldown;
 import com.piranport.entity.AircraftEntity;
 import com.piranport.entity.CannonProjectileEntity;
 import com.piranport.entity.TorpedoEntity;
@@ -228,7 +229,11 @@ public class ShipCoreItem extends Item {
         }
 
         // Right-click (no shift) while transformed → recall all airborne aircraft
-        if (isTransformed && !level.isClientSide && level instanceof ServerLevel sl) {
+        // Only when core is in main hand — in no-GUI mode the core sits in offhand and
+        // the offhand use() fires after every weapon use(), which would immediately recall
+        // any aircraft that was just launched by the main-hand weapon item.
+        if (isTransformed && hand == InteractionHand.MAIN_HAND
+                && !level.isClientSide && level instanceof ServerLevel sl) {
             int recalled = recallAllAircraft(sl, player);
             if (recalled > 0) {
                 player.displayClientMessage(
@@ -468,6 +473,8 @@ public class ShipCoreItem extends Item {
             int cooldownTicks = TransformationManager.boostedCooldown(player, getGunCooldown(weapon));
             coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
                     cooldowns.withSlotCooldown(weaponSlot, cooldownTicks, level.getGameTime()));
+            weapon.set(ModDataComponents.WEAPON_COOLDOWN.get(),
+                    new WeaponCooldown(level.getGameTime() + cooldownTicks, cooldownTicks));
 
             float damage = getGunDamage(weapon);
             float explosionPower = getExplosionPower(weapon);
@@ -512,6 +519,8 @@ public class ShipCoreItem extends Item {
         int cooldownTicks = TransformationManager.boostedCooldown(player, getGunCooldown(weapon));
         coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
                 cooldowns.withSlotCooldown(weaponSlot, cooldownTicks, level.getGameTime()));
+        weapon.set(ModDataComponents.WEAPON_COOLDOWN.get(),
+                new WeaponCooldown(level.getGameTime() + cooldownTicks, cooldownTicks));
 
         float damage = getGunDamage(weapon);
         float explosionPower = getExplosionPower(weapon);
@@ -578,6 +587,8 @@ public class ShipCoreItem extends Item {
         int boostedCooldown = TransformationManager.boostedCooldown(player, cooldown);
         coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
                 cooldowns.withSlotCooldown(weaponSlot, boostedCooldown, level.getGameTime()));
+        launcherStack.set(ModDataComponents.WEAPON_COOLDOWN.get(),
+                new WeaponCooldown(level.getGameTime() + boostedCooldown, boostedCooldown));
 
         level.playSound(null, player.getX(), player.getY(), player.getZ(),
                 SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 0.4f, 0.4f);
@@ -646,6 +657,8 @@ public class ShipCoreItem extends Item {
         int boostedCooldown = TransformationManager.boostedCooldown(player, cooldown);
         coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
                 cooldowns.withSlotCooldown(weaponSlot, boostedCooldown, level.getGameTime()));
+        launcherStack.set(ModDataComponents.WEAPON_COOLDOWN.get(),
+                new WeaponCooldown(level.getGameTime() + boostedCooldown, boostedCooldown));
         TransformationManager.setWeaponIndex(coreStack, weaponSlot);
 
         level.playSound(null, player.getX(), player.getY(), player.getZ(),

@@ -2,7 +2,9 @@ package com.piranport.dungeon.network;
 
 import com.piranport.PiranPort;
 import com.piranport.dungeon.data.DungeonRegistry;
+import com.piranport.dungeon.key.DungeonKeyItem;
 import com.piranport.dungeon.lobby.DungeonLobbyManager;
+import com.piranport.registry.ModDataComponents;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.codec.ByteBufCodecs;
@@ -10,6 +12,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 /**
@@ -45,6 +48,12 @@ public record SelectStagePayload(BlockPos lecternPos, int keySlot, String stageI
                     DungeonLobbyManager.INSTANCE.getLobby(payload.lecternPos());
             if (lobby != null && lobby.isFlagship(player.getUUID())) {
                 lobby.setSelectedStageId(payload.stageId());
+
+                // Write stage ID onto the key so SelectNodePayload can read it later
+                ItemStack keyStack = player.getInventory().getItem(payload.keySlot());
+                if (keyStack.getItem() instanceof DungeonKeyItem) {
+                    keyStack.set(ModDataComponents.DUNGEON_STAGE_ID.get(), payload.stageId());
+                }
             }
         });
     }

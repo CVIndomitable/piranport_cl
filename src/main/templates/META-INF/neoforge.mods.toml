@@ -25,3 +25,10 @@ Minecraft mod based on Warship Girls R (战舰少女R).
     versionRange="${minecraft_version_range}"
     ordering="NONE"
     side="BOTH"
+
+[[dependencies.${mod_id}]]
+    modId="jei"
+    type="optional"
+    versionRange="[19.0,)"
+    ordering="AFTER"
+    side="CLIENT"

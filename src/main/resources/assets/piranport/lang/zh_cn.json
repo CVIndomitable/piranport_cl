@@ -239,5 +239,9 @@
   "hud.piranport.dungeon.node": "当前节点：%s",
 
   "dungeon.piranport.resource_collected": "补给已收集！",
-  "dungeon.piranport.insufficient_cost": "资源不足，需要 %s 个 %s"
+  "dungeon.piranport.insufficient_cost": "资源不足，需要 %s 个 %s",
+
+  "jei.piranport.cooking_pot": "厨锅",
+  "jei.piranport.stone_mill": "石磨",
+  "jei.piranport.cutting_board": "砧板"
 }

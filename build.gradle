@@ -78,6 +78,11 @@ configurations {
 dependencies {
     // Patchouli — soft dependency, runtime only (reflection-based API in GuidebookItem)
     localRuntime "vazkii.patchouli:Patchouli:1.21.1-93-NEOFORGE"
+
+    // JEI — soft dependency, compile-time API + runtime
+    compileOnly "mezz.jei:jei-1.21.1-common-api:19.27.0.340"
+    compileOnly "mezz.jei:jei-1.21.1-neoforge-api:19.27.0.340"
+    localRuntime "mezz.jei:jei-1.21.1-neoforge:19.27.0.340"
 }
 
 var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {

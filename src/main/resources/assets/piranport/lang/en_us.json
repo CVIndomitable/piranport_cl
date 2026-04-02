@@ -239,5 +239,9 @@
   "hud.piranport.dungeon.node": "Node: %s",
 
   "dungeon.piranport.resource_collected": "Supplies collected!",
-  "dungeon.piranport.insufficient_cost": "Insufficient: need %s x %s"
+  "dungeon.piranport.insufficient_cost": "Insufficient: need %s x %s",
+
+  "jei.piranport.cooking_pot": "Cooking Pot",
+  "jei.piranport.stone_mill": "Stone Mill",
+  "jei.piranport.cutting_board": "Cutting Board"
 }

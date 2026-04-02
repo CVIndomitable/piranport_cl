@@ -911,10 +911,11 @@ public class AircraftEntity extends Entity {
         FlightState state = getFlightState();
         if (state == FlightState.REMOVED) return false;
 
-        // Friendly fire — ignore damage from the same player's attacks
+        // Friendly fire — ignore all damage from the same player's weapons/aircraft
         Entity attacker = source.getEntity();
-        if (attacker instanceof Player p && ownerUUID != null && ownerUUID.equals(p.getUUID())) {
-            return false;
+        if (ownerUUID != null) {
+            if (attacker instanceof Player p && ownerUUID.equals(p.getUUID())) return false;
+            if (attacker instanceof AircraftEntity ac && ownerUUID.equals(ac.getOwnerUUID())) return false;
         }
 
         aircraftHealth -= (int) Math.ceil(amount);
@@ -940,8 +941,14 @@ public class AircraftEntity extends Entity {
             }
             // Action bar shot-down notification
             if (owner != null) {
-                owner.displayClientMessage(Component.translatable(
-                        "message.piranport.aircraft_shot_down", buildReturnStack().getHoverName()), true);
+                Component aircraftName = buildReturnStack().getHoverName();
+                if (attacker != null) {
+                    owner.displayClientMessage(Component.translatable(
+                            "message.piranport.aircraft_shot_down_by", aircraftName, attacker.getDisplayName()), true);
+                } else {
+                    owner.displayClientMessage(Component.translatable(
+                            "message.piranport.aircraft_shot_down", aircraftName), true);
+                }
             }
             com.piranport.debug.PiranPortDebug.event(
                     "Aircraft KILLED | type={} entityId={} attacker={}",
@@ -1048,13 +1055,39 @@ public class AircraftEntity extends Entity {
         return super.isCurrentlyGlowing();
     }
 
+    @Override
+    public int getTeamColor() {
+        if (level().isClientSide()) {
+            return AircraftGlowHelper.getGlowColor(this);
+        }
+        return super.getTeamColor();
+    }
+
     /** Isolates client-only class references to avoid NoClassDefFoundError on dedicated servers. */
     @net.neoforged.api.distmarker.OnlyIn(net.neoforged.api.distmarker.Dist.CLIENT)
     private static class AircraftGlowHelper {
+        private static final int FRIENDLY_BLUE = 0x3399FF;
+        private static final int HOSTILE_RED = 0xFF3333;
+        private static final int ALLY_GREEN = 0x33FF33;
+
         static boolean shouldGlow(AircraftEntity aircraft) {
             if (!com.piranport.ClientTickHandler.isHighlightEnabled()) return false;
             net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
-            return mc != null && mc.player != null && aircraft.isOwnedByPlayer(mc.player);
+            if (mc == null || mc.player == null) return false;
+            // Glow any player-owned aircraft in highlight mode
+            return aircraft.entityData.get(OWNER_ID).isPresent();
+        }
+
+        static int getGlowColor(AircraftEntity aircraft) {
+            net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
+            if (mc == null || mc.player == null) return 0xFFFFFF;
+            if (aircraft.isOwnedByPlayer(mc.player)) {
+                return FRIENDLY_BLUE;
+            }
+            if (aircraft.getFlightState() == FlightState.ATTACKING) {
+                return HOSTILE_RED;
+            }
+            return ALLY_GREEN;
         }
     }
 

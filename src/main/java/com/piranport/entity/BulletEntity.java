@@ -46,6 +46,17 @@ public class BulletEntity extends ThrowableItemProjectile {
     }
 
     @Override
+    protected boolean canHitEntity(Entity target) {
+        if (target instanceof AircraftEntity aircraft) {
+            Entity owner = getOwner();
+            if (owner instanceof Player p && p.getUUID().equals(aircraft.getOwnerUUID())) {
+                return false;
+            }
+        }
+        return super.canHitEntity(target);
+    }
+
+    @Override
     protected void onHitEntity(EntityHitResult result) {
         super.onHitEntity(result);
         if (!level().isClientSide()) {

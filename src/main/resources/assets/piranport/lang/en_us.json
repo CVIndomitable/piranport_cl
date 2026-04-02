@@ -142,6 +142,7 @@
   "message.piranport.aircraft_resupplied": "%s Resupplied",
   "message.piranport.aircraft_lost": "%s Lost",
   "message.piranport.aircraft_shot_down": "%s Shot Down",
+  "message.piranport.aircraft_shot_down_by": "%s Shot Down by %s",
   "message.piranport.weapon_hit": "%s Hit %s",
   "message.piranport.weapon_kill": "%s Killed %s",
   "message.piranport.aircraft_recalled": "Recalled %s aircraft",

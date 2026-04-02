@@ -49,10 +49,14 @@ public class ClientTickHandler {
     public static boolean isHighlightEnabled() { return highlightEnabled; }
     private static final Set<Integer> highlightedEntityIds = new HashSet<>();
 
+    private static final String FC_TEAM_NAME = "pp_fc_target";
+    private static final Set<String> fcTeamMembers = new HashSet<>();
+
     /** Reset all client-side static state (called on disconnect). */
     public static void resetClientState() {
         highlightEnabled = false;
         highlightedEntityIds.clear();
+        fcTeamMembers.clear();
     }
 
     @SubscribeEvent
@@ -168,6 +172,7 @@ public class ClientTickHandler {
                         Entity e = mc.level.getEntity(id);
                         if (e != null) e.setGlowingTag(false);
                     }
+                    clearFcTeam(mc);
                 }
                 highlightedEntityIds.clear();
             }
@@ -183,17 +188,26 @@ public class ClientTickHandler {
             Player localPlayer = mc.player;
             java.util.Set<UUID> lockedTargets = new java.util.HashSet<>(ClientFireControlData.getTargets());
 
+            Set<String> currentFcMembers = new HashSet<>();
+
             for (Entity entity : mc.level.entitiesForRendering()) {
+                boolean isFcTarget = lockedTargets.contains(entity.getUUID());
                 boolean shouldGlow = isHighlightTarget(entity, localPlayer, lockedTargets);
                 if (shouldGlow) {
                     // Set every tick — server data sync may reset the flag
                     entity.setGlowingTag(true);
                     highlightedEntityIds.add(entity.getId());
+                    // Track FC targets for red team coloring (AircraftEntity handles its own color)
+                    if (isFcTarget && !(entity instanceof AircraftEntity)) {
+                        currentFcMembers.add(entity.getStringUUID());
+                    }
                 } else if (highlightedEntityIds.contains(entity.getId())) {
                     entity.setGlowingTag(false);
                     highlightedEntityIds.remove(entity.getId());
                 }
             }
+            // Sync client-side scoreboard team for red outline on FC targets
+            syncFcTeam(mc, currentFcMembers);
             // Clean up IDs for despawned entities
             highlightedEntityIds.removeIf(id -> mc.level.getEntity(id) == null);
         }
@@ -246,6 +260,49 @@ public class ClientTickHandler {
         if (hLen > 1f) { dx /= hLen; dz /= hLen; }
 
         PacketDistributor.sendToServer(new ReconControlPayload(dx, dy, dz));
+    }
+
+    /** Sync the client-side FC target team: add new members, remove stale ones. */
+    private static void syncFcTeam(Minecraft mc, Set<String> currentMembers) {
+        if (mc.level == null) return;
+        net.minecraft.world.scores.Scoreboard scoreboard = mc.level.getScoreboard();
+        net.minecraft.world.scores.PlayerTeam team = scoreboard.getPlayerTeam(FC_TEAM_NAME);
+        if (team == null && !currentMembers.isEmpty()) {
+            team = scoreboard.addPlayerTeam(FC_TEAM_NAME);
+            team.setColor(net.minecraft.ChatFormatting.RED);
+        }
+        if (team == null) {
+            fcTeamMembers.clear();
+            return;
+        }
+        // Remove members no longer targeted
+        for (String name : new HashSet<>(fcTeamMembers)) {
+            if (!currentMembers.contains(name)) {
+                scoreboard.removePlayerFromTeam(name, team);
+            }
+        }
+        // Add new members
+        for (String name : currentMembers) {
+            if (!fcTeamMembers.contains(name)) {
+                scoreboard.addPlayerToTeam(name, team);
+            }
+        }
+        fcTeamMembers.clear();
+        fcTeamMembers.addAll(currentMembers);
+    }
+
+    /** Remove all FC team members and delete the team. */
+    private static void clearFcTeam(Minecraft mc) {
+        if (mc.level == null || fcTeamMembers.isEmpty()) return;
+        net.minecraft.world.scores.Scoreboard scoreboard = mc.level.getScoreboard();
+        net.minecraft.world.scores.PlayerTeam team = scoreboard.getPlayerTeam(FC_TEAM_NAME);
+        if (team != null) {
+            for (String name : fcTeamMembers) {
+                scoreboard.removePlayerFromTeam(name, team);
+            }
+            scoreboard.removePlayerTeam(team);
+        }
+        fcTeamMembers.clear();
     }
 
     @Nullable

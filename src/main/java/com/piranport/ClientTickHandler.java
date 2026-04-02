@@ -166,15 +166,17 @@ public class ClientTickHandler {
         while (ModKeyMappings.HIGHLIGHT_ENTITIES.consumeClick()) {
             highlightEnabled = !highlightEnabled;
             if (!highlightEnabled) {
-                // Remove glow from all entities we highlighted
+                // Remove glow from highlight-only entities; keep FC targets glowing
                 if (mc.level != null) {
-                    for (int id : highlightedEntityIds) {
+                    java.util.Set<UUID> fcTargets = new java.util.HashSet<>(ClientFireControlData.getTargets());
+                    for (int id : new HashSet<>(highlightedEntityIds)) {
                         Entity e = mc.level.getEntity(id);
-                        if (e != null) e.setGlowingTag(false);
+                        if (e != null && !fcTargets.contains(e.getUUID())) {
+                            e.setGlowingTag(false);
+                            highlightedEntityIds.remove(id);
+                        }
                     }
-                    clearFcTeam(mc);
                 }
-                highlightedEntityIds.clear();
             }
             mc.player.displayClientMessage(
                     net.minecraft.network.chat.Component.translatable(
@@ -183,27 +185,31 @@ public class ClientTickHandler {
                     true);
         }
 
-        // Apply/maintain highlight effect each tick
-        if (highlightEnabled && mc.level != null) {
+        // Apply/maintain highlight and fire-control glow each tick
+        if (mc.level != null) {
             Player localPlayer = mc.player;
             java.util.Set<UUID> lockedTargets = new java.util.HashSet<>(ClientFireControlData.getTargets());
+            boolean hasFcTargets = !lockedTargets.isEmpty();
 
             Set<String> currentFcMembers = new HashSet<>();
 
-            for (Entity entity : mc.level.entitiesForRendering()) {
-                boolean isFcTarget = lockedTargets.contains(entity.getUUID());
-                boolean shouldGlow = isHighlightTarget(entity, localPlayer, lockedTargets);
-                if (shouldGlow) {
-                    // Set every tick — server data sync may reset the flag
-                    entity.setGlowingTag(true);
-                    highlightedEntityIds.add(entity.getId());
-                    // Track FC targets for red team coloring (AircraftEntity handles its own color)
-                    if (isFcTarget && !(entity instanceof AircraftEntity)) {
-                        currentFcMembers.add(entity.getStringUUID());
+            // Always process FC targets; process highlight targets only when Y-key enabled
+            if (highlightEnabled || hasFcTargets || !highlightedEntityIds.isEmpty()) {
+                for (Entity entity : mc.level.entitiesForRendering()) {
+                    boolean isFcTarget = lockedTargets.contains(entity.getUUID());
+                    boolean isHighlight = highlightEnabled && isHighlightTarget(entity, localPlayer);
+                    boolean shouldGlow = isFcTarget || isHighlight;
+                    if (shouldGlow) {
+                        entity.setGlowingTag(true);
+                        highlightedEntityIds.add(entity.getId());
+                        // Track FC targets for red team coloring (AircraftEntity handles its own via getTeamColor)
+                        if (isFcTarget && !(entity instanceof AircraftEntity)) {
+                            currentFcMembers.add(entity.getStringUUID());
+                        }
+                    } else if (highlightedEntityIds.contains(entity.getId())) {
+                        entity.setGlowingTag(false);
+                        highlightedEntityIds.remove(entity.getId());
                     }
-                } else if (highlightedEntityIds.contains(entity.getId())) {
-                    entity.setGlowingTag(false);
-                    highlightedEntityIds.remove(entity.getId());
                 }
             }
             // Sync client-side scoreboard team for red outline on FC targets
@@ -214,16 +220,14 @@ public class ClientTickHandler {
     }
 
     /**
-     * Returns true if the entity should have setGlowingTag applied.
-     * AircraftEntity is excluded — its outline is handled via AircraftRenderer.shouldShowOutline().
+     * Returns true if the entity should glow when Y-key highlight is enabled.
+     * Does NOT include fire control targets — those are handled separately.
      */
-    private static boolean isHighlightTarget(Entity entity, Player localPlayer, java.util.Set<UUID> lockedTargets) {
+    private static boolean isHighlightTarget(Entity entity, Player localPlayer) {
         // Torpedoes, bombs, bullets (use ThrownItemRenderer, no shouldShowOutline override available)
         if (entity instanceof TorpedoEntity te && te.getOwner() == localPlayer) return true;
         if (entity instanceof AerialBombEntity be && be.getOwner() == localPlayer) return true;
         if (entity instanceof BulletEntity bl && bl.getOwner() == localPlayer) return true;
-        // Fire control locked targets (any entity type)
-        if (lockedTargets.contains(entity.getUUID())) return true;
         return false;
     }
 

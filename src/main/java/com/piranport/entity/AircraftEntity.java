@@ -144,6 +144,17 @@ public class AircraftEntity extends Entity {
             entity.currentFuel = info.currentFuel();
             entity.bombingMode = info.bombingMode();
         }
+        // Default payload based on aircraft type when not explicitly configured
+        if (entity.payloadType.isEmpty()) {
+            switch (entity.aircraftType) {
+                case TORPEDO_BOMBER -> entity.payloadType = "piranport:aerial_torpedo";
+                case DIVE_BOMBER, LEVEL_BOMBER -> entity.payloadType = "piranport:aerial_bomb";
+                default -> { /* FIGHTER / RECON keep empty payload */ }
+            }
+            if (!entity.payloadType.isEmpty()) {
+                entity.hasBullets = false;
+            }
+        }
         entity.aircraftHealth = getMaxHealth(entity.aircraftType);
         entity.originalStack = aircraftStack.copy();
         entity.entityData.set(AIRCRAFT_TYPE_DATA, entity.aircraftType.ordinal());
@@ -1068,17 +1079,22 @@ public class AircraftEntity extends Entity {
     private static class AircraftGlowHelper {
         private static final int FRIENDLY_BLUE = 0x3399FF;
         private static final int HOSTILE_RED = 0xFF3333;
+        private static final int FC_TARGET_RED = 0xFF0000;
         private static final int ALLY_GREEN = 0x33FF33;
 
         static boolean shouldGlow(AircraftEntity aircraft) {
+            // Fire control locked targets always glow
+            if (isFcTarget(aircraft)) return true;
+            // Highlight mode (Y key): glow any player-owned aircraft
             if (!com.piranport.ClientTickHandler.isHighlightEnabled()) return false;
             net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
             if (mc == null || mc.player == null) return false;
-            // Glow any player-owned aircraft in highlight mode
             return aircraft.entityData.get(OWNER_ID).isPresent();
         }
 
         static int getGlowColor(AircraftEntity aircraft) {
+            // Fire control targets are always red
+            if (isFcTarget(aircraft)) return FC_TARGET_RED;
             net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
             if (mc == null || mc.player == null) return 0xFFFFFF;
             if (aircraft.isOwnedByPlayer(mc.player)) {
@@ -1088,6 +1104,10 @@ public class AircraftEntity extends Entity {
                 return HOSTILE_RED;
             }
             return ALLY_GREEN;
+        }
+
+        private static boolean isFcTarget(AircraftEntity aircraft) {
+            return com.piranport.aviation.ClientFireControlData.getTargets().contains(aircraft.getUUID());
         }
     }
 

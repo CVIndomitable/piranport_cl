@@ -693,6 +693,15 @@ public class ShipCoreItem extends Item {
             }
         }
 
+        // Apply default payload for bombers when no flight group configured
+        if (payloadType.isEmpty() && launchInfo != null) {
+            switch (launchInfo.aircraftType()) {
+                case TORPEDO_BOMBER -> { payloadType = "piranport:aerial_torpedo"; hasBullets = false; }
+                case DIVE_BOMBER, LEVEL_BOMBER -> { payloadType = "piranport:aerial_bomb"; hasBullets = false; }
+                default -> { }
+            }
+        }
+
         // Consume payload from inventory if needed
         if (!payloadType.isEmpty() && !hasBullets) {
             net.minecraft.world.item.Item payloadItem = net.minecraft.core.registries.BuiltInRegistries.ITEM.get(

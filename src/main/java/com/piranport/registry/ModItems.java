@@ -38,6 +38,10 @@ public class ModItems {
     public static final DeferredItem<BlockItem> SALT_CHIP =
             ITEMS.registerSimpleBlockItem(ModBlocks.SALT_CHIP);
 
+    // ===== Tab Icon (no components, no bar) =====
+    public static final DeferredItem<Item> TAB_ICON =
+            ITEMS.registerSimpleItem("tab_icon");
+
     // ===== Materials =====
     public static final DeferredItem<Item> ALUMINUM_INGOT =
             ITEMS.registerSimpleItem("aluminum_ingot");

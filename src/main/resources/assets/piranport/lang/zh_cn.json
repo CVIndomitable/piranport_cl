@@ -236,6 +236,7 @@
   "item.piranport.dungeon_key.progress": "已通关节点：%s",
   "item.piranport.town_scroll": "回城卷轴",
   "item.piranport.town_scroll.tooltip": "右键使用返回遗迹",
+  "item.piranport.town_scroll.recon_blocked": "侦察机模式下无法使用回城卷轴",
   "entity.piranport.dungeon_portal": "传送门",
   "entity.piranport.loot_ship": "箱子船",
   "container.piranport.dungeon_book": "海域出击",

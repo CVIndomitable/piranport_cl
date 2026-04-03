@@ -16,7 +16,7 @@ public class ModCreativeTabs {
             CREATIVE_TABS.register("piranport_tab", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.piranport"))
                     .withTabsBefore(CreativeModeTabs.COMBAT)
-                    .icon(() -> ModItems.SMALL_SHIP_CORE.get().getDefaultInstance())
+                    .icon(() -> ModItems.TAB_ICON.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
                         // Blocks
                         output.accept(ModItems.BAUXITE_ORE.get());

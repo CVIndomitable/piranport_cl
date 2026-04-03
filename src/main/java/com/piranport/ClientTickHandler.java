@@ -78,7 +78,8 @@ public class ClientTickHandler {
         }
 
         // Phase 32: recon aircraft WASD control
-        if (ClientReconData.isInReconMode()) {
+        boolean inReconMode = ClientReconData.isInReconMode();
+        if (inReconMode) {
             // Mirror player mouse rotation to the recon entity so the camera rotates with mouse input
             if (mc.level != null) {
                 Entity reconEntity = mc.level.getEntity(ClientReconData.getReconEntityId());
@@ -88,14 +89,14 @@ public class ClientTickHandler {
                 }
             }
             handleReconInput(mc);
-            return;  // skip all other key handling while in recon mode
+            // Don't return — fire control and glow sync still need to run in recon mode
         }
 
         boolean transformed = TransformationManager.isPlayerTransformed(mc.player);
 
-        // Fire control — only while transformed
+        // Fire control — while transformed or in recon mode
         while (ModKeyMappings.FIRE_CONTROL_LOCK.consumeClick()) {
-            if (!transformed) continue;
+            if (!transformed && !inReconMode) continue;
             Entity target = getTargetInCrosshair(mc, FIRE_CONTROL_RANGE);
             if (target != null) {
                 PacketDistributor.sendToServer(new FireControlPayload(
@@ -104,7 +105,7 @@ public class ClientTickHandler {
         }
 
         while (ModKeyMappings.FIRE_CONTROL_ADD.consumeClick()) {
-            if (!transformed) continue;
+            if (!transformed && !inReconMode) continue;
             Entity target = getTargetInCrosshair(mc, FIRE_CONTROL_RANGE);
             if (target != null) {
                 PacketDistributor.sendToServer(new FireControlPayload(
@@ -117,9 +118,9 @@ public class ClientTickHandler {
             ClientFireControlData.clear();
         }
 
-        // Open flight group GUI (U key) — only while transformed
+        // Open flight group GUI (U key) — only while transformed, not in recon mode
         while (ModKeyMappings.OPEN_FLIGHT_GROUP.consumeClick()) {
-            if (!transformed) continue;
+            if (!transformed || inReconMode) continue;
             // Find the actual core slot (may be in offhand or elsewhere in no-GUI mode)
             int coreSlot = mc.player.getInventory().selected;
             ItemStack mh = mc.player.getMainHandItem();
@@ -312,17 +313,21 @@ public class ClientTickHandler {
     @Nullable
     private static Entity getTargetInCrosshair(Minecraft mc, double range) {
         if (mc.player == null || mc.level == null) return null;
-        Vec3 eyePos = mc.player.getEyePosition();
+        // In recon mode, raycast from the camera entity (recon aircraft) position
+        Entity cameraEntity = mc.getCameraEntity();
+        if (cameraEntity == null) cameraEntity = mc.player;
+        Vec3 eyePos = cameraEntity.getEyePosition();
         Vec3 lookDir = mc.player.getLookAngle();
         Vec3 end = eyePos.add(lookDir.scale(range));
 
-        AABB searchBox = mc.player.getBoundingBox()
+        AABB searchBox = cameraEntity.getBoundingBox()
                 .expandTowards(lookDir.scale(range))
                 .inflate(1.0);
 
+        final Entity cam = cameraEntity;
         EntityHitResult hit = ProjectileUtil.getEntityHitResult(
                 mc.level, mc.player, eyePos, end, searchBox,
-                e -> e instanceof LivingEntity && e.isAlive() && e != mc.player,
+                e -> e instanceof LivingEntity && e.isAlive() && e != mc.player && e != cam,
                 0.0f);
 
         return hit != null ? hit.getEntity() : null;

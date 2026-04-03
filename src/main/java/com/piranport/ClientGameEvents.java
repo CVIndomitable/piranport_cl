@@ -12,6 +12,7 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
+import net.neoforged.neoforge.client.event.RenderHandEvent;
 import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -38,6 +39,14 @@ public class ClientGameEvents {
             if (currentSkin > 0) {
                 PacketDistributor.sendToServer(new SkinRevertPayload());
             }
+        }
+    }
+
+    /** Hide player hands/arms while in recon mode — camera is on the aircraft. */
+    @SubscribeEvent
+    public static void onRenderHand(RenderHandEvent event) {
+        if (ClientReconData.isInReconMode()) {
+            event.setCanceled(true);
         }
     }
 

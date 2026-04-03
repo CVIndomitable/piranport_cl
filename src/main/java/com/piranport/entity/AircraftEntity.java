@@ -98,6 +98,11 @@ public class AircraftEntity extends Entity {
     private int lastForcedChunkZ = Integer.MIN_VALUE;
     private boolean appliedSlowness = false;
 
+    // Recon chunk loading: view-distance-based force loading + chunk sending
+    private final java.util.Set<Long> reconForcedChunks = new java.util.HashSet<>();
+    private final java.util.Set<Long> reconPendingSend = new java.util.HashSet<>();
+    private static final int RECON_CHUNK_SEND_RATE = 16; // max chunks to send per tick
+
     // Phase 33: aircraft health (persisted to NBT)
     private int aircraftHealth = 20;
 
@@ -606,19 +611,20 @@ public class AircraftEntity extends Entity {
 
     /**
      * RECON_ACTIVE: read movement input from ReconManager and apply to entity.
-     * Maintains chunk forcing around current position.
+     * Maintains chunk forcing around current position (view-distance radius, like a player).
      */
     private void tickReconActive(Player owner) {
-        // Maintain forced chunks around current position
+        // Maintain forced chunks around current position (view-distance radius)
         int cx = getBlockX() >> 4;
         int cz = getBlockZ() >> 4;
         if (cx != lastForcedChunkX || cz != lastForcedChunkZ) {
-            if (lastForcedChunkX != Integer.MIN_VALUE) {
-                releaseChunks(lastForcedChunkX, lastForcedChunkZ);
-            }
-            forceChunks(cx, cz);
+            updateReconChunkLoading(owner, cx, cz);
             lastForcedChunkX = cx;
             lastForcedChunkZ = cz;
+        }
+        // Send pending chunks to player each tick (rate limited)
+        if (owner instanceof ServerPlayer sp) {
+            sendPendingChunks(sp);
         }
 
         // Apply pending movement input from client (lerp for smooth acceleration/deceleration)
@@ -648,32 +654,87 @@ public class AircraftEntity extends Entity {
         }
     }
 
-    // ===== Chunk forcing (Phase 32) =====
+    // ===== Chunk forcing (Phase 32) — view-distance-based for recon =====
 
-    private void forceChunks(int cx, int cz) {
+    /**
+     * Updates forced chunks around the recon aircraft to match the server view distance.
+     * Diffs with the previous set to only force/release changed chunks.
+     * New chunks are queued for sending to the player.
+     */
+    private void updateReconChunkLoading(Player owner, int cx, int cz) {
         if (!(level() instanceof ServerLevel sl)) return;
-        for (int dx = -1; dx <= 1; dx++) {
-            for (int dz = -1; dz <= 1; dz++) {
-                sl.setChunkForced(cx + dx, cz + dz, true);
+        int radius = Math.min(sl.getServer().getPlayerList().getViewDistance(), 10);
+
+        java.util.Set<Long> desired = new java.util.HashSet<>();
+        for (int dx = -radius; dx <= radius; dx++) {
+            for (int dz = -radius; dz <= radius; dz++) {
+                desired.add(net.minecraft.world.level.ChunkPos.asLong(cx + dx, cz + dz));
+            }
+        }
+
+        // Release chunks no longer in range
+        java.util.Iterator<Long> it = reconForcedChunks.iterator();
+        while (it.hasNext()) {
+            long key = it.next();
+            if (!desired.contains(key)) {
+                sl.setChunkForced(net.minecraft.world.level.ChunkPos.getX(key),
+                        net.minecraft.world.level.ChunkPos.getZ(key), false);
+                it.remove();
+            }
+        }
+
+        // Force-load new chunks and queue them for sending
+        for (long key : desired) {
+            if (!reconForcedChunks.contains(key)) {
+                int x = net.minecraft.world.level.ChunkPos.getX(key);
+                int z = net.minecraft.world.level.ChunkPos.getZ(key);
+                sl.setChunkForced(x, z, true);
+                reconForcedChunks.add(key);
+                reconPendingSend.add(key);
             }
         }
     }
 
-    private void releaseChunks(int cx, int cz) {
+    /**
+     * Sends pending chunks to the player (rate-limited to avoid network spikes).
+     * Chunks that haven't finished generating yet remain in the queue.
+     */
+    private void sendPendingChunks(ServerPlayer player) {
+        if (reconPendingSend.isEmpty()) return;
         if (!(level() instanceof ServerLevel sl)) return;
-        for (int dx = -1; dx <= 1; dx++) {
-            for (int dz = -1; dz <= 1; dz++) {
-                sl.setChunkForced(cx + dx, cz + dz, false);
+
+        java.util.Iterator<Long> it = reconPendingSend.iterator();
+        int sent = 0;
+        while (it.hasNext() && sent < RECON_CHUNK_SEND_RATE) {
+            long key = it.next();
+            int x = net.minecraft.world.level.ChunkPos.getX(key);
+            int z = net.minecraft.world.level.ChunkPos.getZ(key);
+            net.minecraft.world.level.chunk.LevelChunk chunk = sl.getChunkSource().getChunkNow(x, z);
+            if (chunk != null) {
+                player.connection.send(new net.minecraft.network.protocol.game.ClientboundLevelChunkWithLightPacket(
+                        chunk, sl.getLightEngine(), null, null));
+                it.remove();
+                sent++;
             }
         }
     }
 
     private void releaseAllForcedChunks() {
-        if (lastForcedChunkX != Integer.MIN_VALUE) {
-            releaseChunks(lastForcedChunkX, lastForcedChunkZ);
+        if (!(level() instanceof ServerLevel sl)) {
+            reconForcedChunks.clear();
+            reconPendingSend.clear();
             lastForcedChunkX = Integer.MIN_VALUE;
             lastForcedChunkZ = Integer.MIN_VALUE;
+            return;
         }
+        for (long key : reconForcedChunks) {
+            sl.setChunkForced(net.minecraft.world.level.ChunkPos.getX(key),
+                    net.minecraft.world.level.ChunkPos.getZ(key), false);
+        }
+        reconForcedChunks.clear();
+        reconPendingSend.clear();
+        lastForcedChunkX = Integer.MIN_VALUE;
+        lastForcedChunkZ = Integer.MIN_VALUE;
     }
 
     // ===== Target resolution =====

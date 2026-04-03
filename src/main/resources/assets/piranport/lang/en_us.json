@@ -236,6 +236,7 @@
   "item.piranport.dungeon_key.progress": "Cleared Nodes: %s",
   "item.piranport.town_scroll": "Town Scroll",
   "item.piranport.town_scroll.tooltip": "Right-click to return to ruins",
+  "item.piranport.town_scroll.recon_blocked": "Cannot use Town Scroll in recon mode",
   "entity.piranport.dungeon_portal": "Portal",
   "entity.piranport.loot_ship": "Loot Ship",
   "container.piranport.dungeon_book": "Sortie",

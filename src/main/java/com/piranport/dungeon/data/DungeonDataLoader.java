@@ -146,9 +146,10 @@ public class DungeonDataLoader extends SimpleJsonResourceReloadListener {
         String costMessage = json.has("cost_message") ? json.get("cost_message").getAsString() : "";
         int displayX = json.has("display_x") ? json.get("display_x").getAsInt() : 0;
         int displayY = json.has("display_y") ? json.get("display_y").getAsInt() : 0;
+        String script = json.has("script") ? json.get("script").getAsString() : null;
 
         return new NodeData(nodeId, type, enemies, List.copyOf(rewards),
-                List.copyOf(cost), costMessage, displayX, displayY);
+                List.copyOf(cost), costMessage, displayX, displayY, script);
     }
 
     private List<NodeData.RewardEntry> parseRewards(JsonArray arr) {

@@ -5,6 +5,9 @@ import com.piranport.entity.AerialBombEntity;
 import com.piranport.entity.AircraftEntity;
 import com.piranport.entity.BulletEntity;
 import com.piranport.entity.CannonProjectileEntity;
+import com.piranport.entity.DungeonTransportPlaneEntity;
+import com.piranport.entity.LowTierDestroyerEntity;
+import com.piranport.entity.SanshikiPelletEntity;
 import com.piranport.entity.FloatingTargetEntity;
 import com.piranport.entity.TorpedoEntity;
 import net.minecraft.core.registries.Registries;
@@ -65,6 +68,33 @@ public class ModEntityTypes {
                     .clientTrackingRange(8)
                     .updateInterval(2)
                     .build("bullet"));
+
+    // Sanshiki (Type 3) pellet
+    public static final DeferredHolder<EntityType<?>, EntityType<SanshikiPelletEntity>>
+            SANSHIKI_PELLET = ENTITY_TYPES.register("sanshiki_pellet",
+            () -> EntityType.Builder.<SanshikiPelletEntity>of(SanshikiPelletEntity::new, MobCategory.MISC)
+                    .sized(0.15f, 0.15f)
+                    .clientTrackingRange(4)
+                    .updateInterval(5)
+                    .build("sanshiki_pellet"));
+
+    // Dungeon transport plane (artillery intro script)
+    public static final DeferredHolder<EntityType<?>, EntityType<DungeonTransportPlaneEntity>>
+            DUNGEON_TRANSPORT_PLANE = ENTITY_TYPES.register("dungeon_transport_plane",
+            () -> EntityType.Builder.<DungeonTransportPlaneEntity>of(DungeonTransportPlaneEntity::new, MobCategory.MISC)
+                    .sized(1.5f, 1.0f)
+                    .clientTrackingRange(16)
+                    .updateInterval(3)
+                    .build("dungeon_transport_plane"));
+
+    // Dungeon enemies
+    public static final DeferredHolder<EntityType<?>, EntityType<LowTierDestroyerEntity>>
+            LOW_TIER_DESTROYER = ENTITY_TYPES.register("low_tier_destroyer",
+            () -> EntityType.Builder.<LowTierDestroyerEntity>of(LowTierDestroyerEntity::new, MobCategory.MONSTER)
+                    .sized(0.6f, 1.8f)
+                    .clientTrackingRange(16)
+                    .updateInterval(3)
+                    .build("low_tier_destroyer"));
 
     // Dungeon System
     public static final DeferredHolder<EntityType<?>, EntityType<com.piranport.dungeon.entity.DungeonPortalEntity>>

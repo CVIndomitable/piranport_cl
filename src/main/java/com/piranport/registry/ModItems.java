@@ -2,6 +2,7 @@ package com.piranport.registry;
 
 import com.piranport.PiranPort;
 import com.piranport.component.AircraftInfo;
+import com.piranport.component.FuelData;
 import com.piranport.component.PlaceableInfo;
 import com.piranport.component.WeaponCategory;
 import com.piranport.item.AircraftItem;
@@ -10,8 +11,11 @@ import com.piranport.item.CannonItem;
 import com.piranport.item.BottleFoodItem;
 import com.piranport.item.ModFoodItem;
 import com.piranport.item.ShipCoreItem;
+import com.piranport.item.SkinCoreItem;
+import com.piranport.item.SonarItem;
 import com.piranport.item.TorpedoItem;
 import com.piranport.item.TorpedoLauncherItem;
+import com.piranport.item.UnicornHarpItem;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.food.FoodProperties;
@@ -43,13 +47,28 @@ public class ModItems {
     // ===== Ship Cores =====
     public static final DeferredItem<ShipCoreItem> SMALL_SHIP_CORE =
             ITEMS.register("small_ship_core",
-                    () -> new ShipCoreItem(new Item.Properties().stacksTo(1), ShipCoreItem.ShipType.SMALL));
+                    () -> new ShipCoreItem(new Item.Properties().stacksTo(1)
+                            .component(ModDataComponents.SHIP_CORE_FUEL.get(),
+                                    new FuelData(0, ShipCoreItem.ShipType.SMALL.fuelCapacity)),
+                            ShipCoreItem.ShipType.SMALL));
     public static final DeferredItem<ShipCoreItem> MEDIUM_SHIP_CORE =
             ITEMS.register("medium_ship_core",
-                    () -> new ShipCoreItem(new Item.Properties().stacksTo(1), ShipCoreItem.ShipType.MEDIUM));
+                    () -> new ShipCoreItem(new Item.Properties().stacksTo(1)
+                            .component(ModDataComponents.SHIP_CORE_FUEL.get(),
+                                    new FuelData(0, ShipCoreItem.ShipType.MEDIUM.fuelCapacity)),
+                            ShipCoreItem.ShipType.MEDIUM));
     public static final DeferredItem<ShipCoreItem> LARGE_SHIP_CORE =
             ITEMS.register("large_ship_core",
-                    () -> new ShipCoreItem(new Item.Properties().stacksTo(1), ShipCoreItem.ShipType.LARGE));
+                    () -> new ShipCoreItem(new Item.Properties().stacksTo(1)
+                            .component(ModDataComponents.SHIP_CORE_FUEL.get(),
+                                    new FuelData(0, ShipCoreItem.ShipType.LARGE.fuelCapacity)),
+                            ShipCoreItem.ShipType.LARGE));
+    public static final DeferredItem<ShipCoreItem> SUBMARINE_CORE =
+            ITEMS.register("submarine_core",
+                    () -> new ShipCoreItem(new Item.Properties().stacksTo(1)
+                            .component(ModDataComponents.SHIP_CORE_FUEL.get(),
+                                    new FuelData(0, ShipCoreItem.ShipType.SUBMARINE.fuelCapacity)),
+                            ShipCoreItem.ShipType.SUBMARINE));
 
     // ===== HE Shells =====
     public static final DeferredItem<Item> SMALL_HE_SHELL =
@@ -66,6 +85,18 @@ public class ModItems {
             ITEMS.registerSimpleItem("medium_ap_shell");
     public static final DeferredItem<Item> LARGE_AP_SHELL =
             ITEMS.registerSimpleItem("large_ap_shell");
+
+    // ===== VT Shells (proximity fuze, small caliber only) =====
+    public static final DeferredItem<Item> SMALL_VT_SHELL =
+            ITEMS.registerSimpleItem("small_vt_shell");
+
+    // ===== Type 3 (Sanshiki) Shells =====
+    public static final DeferredItem<Item> SMALL_TYPE3_SHELL =
+            ITEMS.registerSimpleItem("small_type3_shell");
+    public static final DeferredItem<Item> MEDIUM_TYPE3_SHELL =
+            ITEMS.registerSimpleItem("medium_type3_shell");
+    public static final DeferredItem<Item> LARGE_TYPE3_SHELL =
+            ITEMS.registerSimpleItem("large_type3_shell");
 
     // ===== Guns =====
     public static final DeferredItem<Item> SMALL_GUN =
@@ -299,6 +330,14 @@ public class ModItems {
                                     new AircraftInfo(AircraftInfo.AircraftType.TORPEDO_BOMBER,
                                             1200, 1, 0, 30f, 1.2f, 20, AircraftInfo.BombingMode.DIVE))));
 
+    public static final DeferredItem<AircraftItem> XTB2D =
+            ITEMS.register("xtb2d",
+                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
+                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
+                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
+                                    new AircraftInfo(AircraftInfo.AircraftType.TORPEDO_BOMBER,
+                                            1200, 4, 0, 30f, 1.2f, 22, AircraftInfo.BombingMode.DIVE))));
+
     public static final DeferredItem<AircraftItem> LEVEL_BOMBER_SQUADRON =
             ITEMS.register("level_bomber_squadron",
                     () -> new AircraftItem(new Item.Properties().stacksTo(1)
@@ -388,6 +427,12 @@ public class ModItems {
                             .effect(new MobEffectInstance(ModMobEffects.EVASION, 2400, 1), 1.0f)
                             .build())));
 
+    // ===== Sonar =====
+    public static final DeferredItem<SonarItem> STANDARD_SONAR =
+            ITEMS.register("standard_sonar",
+                    () -> new SonarItem(new Item.Properties().stacksTo(1)
+                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ARMOR), 10));
+
     // ===== Torpedo Launchers =====
     public static final DeferredItem<TorpedoLauncherItem> TWIN_TORPEDO_LAUNCHER =
             ITEMS.register("twin_torpedo_launcher",
@@ -422,4 +467,24 @@ public class ModItems {
 
     public static final DeferredItem<BlockItem> DUNGEON_LECTERN =
             ITEMS.registerSimpleBlockItem(ModBlocks.DUNGEON_LECTERN);
+
+    // ===== Skin Cores =====
+    public static final DeferredItem<SkinCoreItem> SKIN_CORE_1 =
+            ITEMS.register("skin_core_1",
+                    () -> new SkinCoreItem(new Item.Properties().stacksTo(1), 1));
+    public static final DeferredItem<SkinCoreItem> SKIN_CORE_2 =
+            ITEMS.register("skin_core_2",
+                    () -> new SkinCoreItem(new Item.Properties().stacksTo(1), 2));
+    public static final DeferredItem<SkinCoreItem> SKIN_CORE_3 =
+            ITEMS.register("skin_core_3",
+                    () -> new SkinCoreItem(new Item.Properties().stacksTo(1), 3));
+
+    // ===== Fuel =====
+    public static final DeferredItem<Item> FUEL =
+            ITEMS.registerSimpleItem("fuel");
+
+    // ===== Tools =====
+    public static final DeferredItem<UnicornHarpItem> UNICORN_HARP =
+            ITEMS.register("unicorn_harp",
+                    () -> new UnicornHarpItem(new Item.Properties().stacksTo(1)));
 }

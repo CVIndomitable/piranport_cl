@@ -92,5 +92,18 @@ public class ModCommonConfig {
                             "Set to true to enable salt disk features in rivers. (开启后河流底部会生成盐块)")
                     .define("saltGenerationEnabled", false);
 
+    /**
+     * When true, cannon shells and torpedo explosions destroy blocks (like TNT).
+     * When false, explosions only deal damage without breaking blocks.
+     * Default true — explosions destroy terrain.
+     */
+    public static final ModConfigSpec.BooleanValue EXPLOSION_BLOCK_DAMAGE =
+            BUILDER
+                    .comment(
+                            "Allow cannon/torpedo explosions to destroy blocks (炮弹/鱼雷爆炸破坏方块).",
+                            "Default: true (explosions break blocks like TNT, 爆炸会破坏地形).",
+                            "Set to false to disable block destruction from projectile explosions. (关闭后爆炸不破坏方块)")
+                    .define("explosionBlockDamage", true);
+
     public static final ModConfigSpec SPEC = BUILDER.build();
 }

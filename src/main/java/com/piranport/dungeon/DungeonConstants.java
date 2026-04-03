@@ -26,4 +26,15 @@ public final class DungeonConstants {
 
     /** Maximum leaderboard entries per stage. */
     public static final int MAX_LEADERBOARD_ENTRIES = 100;
+
+    // ===== Artillery Intro Script =====
+
+    /** Looting phase timeout in ticks (60 seconds). */
+    public static final int ARTILLERY_INTRO_LOOTING_TIMEOUT = 60 * 20;
+
+    /** Distance (blocks) at which looting phase ends. */
+    public static final double ARTILLERY_INTRO_LEAVE_DISTANCE = 20.0;
+
+    /** Transport plane altitude above sea level. */
+    public static final int TRANSPORT_PLANE_ALTITUDE = 15;
 }

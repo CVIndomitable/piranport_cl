@@ -3,11 +3,13 @@ package com.piranport.item;
 import com.piranport.combat.TransformationManager;
 import com.piranport.component.AircraftInfo;
 import com.piranport.component.FlightGroupData;
+import com.piranport.component.FuelData;
 import com.piranport.component.LoadedAmmo;
 import com.piranport.component.SlotCooldowns;
 import com.piranport.component.WeaponCooldown;
 import com.piranport.entity.AircraftEntity;
 import com.piranport.entity.CannonProjectileEntity;
+import com.piranport.entity.SanshikiPelletEntity;
 import com.piranport.entity.TorpedoEntity;
 import com.piranport.menu.ShipCoreMenu;
 import com.piranport.registry.ModDataComponents;
@@ -43,22 +45,30 @@ import java.util.List;
 public class ShipCoreItem extends Item {
 
     public enum ShipType {
-        SMALL(0, 40, 4, 4, 2),
-        MEDIUM(5, 64, 5, 4, 3),
-        LARGE(10, 112, 6, 4, 4);
+        SMALL(0, 40, 4, 4, 2, 10, 100.0),
+        MEDIUM(5, 64, 5, 4, 3, 20, 70.0),
+        LARGE(10, 112, 6, 4, 4, 30, 50.0),
+        SUBMARINE(0, 40, 4, 4, 2, 10, 100.0);
 
         public final int healthBonus;
         public final int maxLoad;
         public final int weaponSlots;
         public final int ammoSlots;
         public final int enhancementSlots;
+        /** Fuel tank capacity in b (bucket) units. */
+        public final int fuelCapacity;
+        /** Distance in blocks per 1b fuel consumed. */
+        public final double distancePerFuel;
 
-        ShipType(int healthBonus, int maxLoad, int weaponSlots, int ammoSlots, int enhancementSlots) {
+        ShipType(int healthBonus, int maxLoad, int weaponSlots, int ammoSlots, int enhancementSlots,
+                 int fuelCapacity, double distancePerFuel) {
             this.healthBonus = healthBonus;
             this.maxLoad = maxLoad;
             this.weaponSlots = weaponSlots;
             this.ammoSlots = ammoSlots;
             this.enhancementSlots = enhancementSlots;
+            this.fuelCapacity = fuelCapacity;
+            this.distancePerFuel = distancePerFuel;
         }
 
         public int totalSlots() {
@@ -77,6 +87,29 @@ public class ShipCoreItem extends Item {
         return shipType;
     }
 
+    // ===== Fuel bar (durability-style) =====
+
+    @Override
+    public boolean isBarVisible(ItemStack stack) {
+        FuelData fuel = stack.get(ModDataComponents.SHIP_CORE_FUEL.get());
+        return fuel != null && fuel.currentFuel() < fuel.maxFuel();
+    }
+
+    @Override
+    public int getBarWidth(ItemStack stack) {
+        FuelData fuel = stack.get(ModDataComponents.SHIP_CORE_FUEL.get());
+        if (fuel == null || fuel.maxFuel() == 0) return 0;
+        return Math.round(13.0f * fuel.currentFuel() / fuel.maxFuel());
+    }
+
+    @Override
+    public int getBarColor(ItemStack stack) {
+        FuelData fuel = stack.get(ModDataComponents.SHIP_CORE_FUEL.get());
+        if (fuel == null) return 0xFF00FF00;
+        float fraction = fuel.getFraction();
+        return net.minecraft.util.Mth.hsvToRgb(fraction / 3.0f, 1.0f, 1.0f);
+    }
+
     /**
      * Bundle-like armor storage for no-GUI mode.
      * - Right-click an ArmorPlateItem onto the core in inventory → stores the plate inside the core.
@@ -86,8 +119,44 @@ public class ShipCoreItem extends Item {
     @Override
     public boolean overrideOtherStackedOnMe(ItemStack stack, ItemStack other,
             Slot slot, ClickAction action, Player player, SlotAccess access) {
-        if (com.piranport.config.ModCommonConfig.SHIP_CORE_GUI_ENABLED.get()) return false;
         if (action != ClickAction.SECONDARY) return false;
+
+        // Fuel refueling: lava bucket → +1b fuel (works in both GUI and no-GUI modes)
+        if (!other.isEmpty() && other.is(net.minecraft.world.item.Items.LAVA_BUCKET)) {
+            FuelData fuel = stack.getOrDefault(ModDataComponents.SHIP_CORE_FUEL.get(),
+                    new FuelData(0, shipType.fuelCapacity));
+            if (!fuel.isFull()) {
+                stack.set(ModDataComponents.SHIP_CORE_FUEL.get(),
+                        fuel.withCurrentFuel(fuel.currentFuel() + 1));
+                access.set(new ItemStack(net.minecraft.world.item.Items.BUCKET));
+                player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+                        SoundEvents.BUCKET_EMPTY_LAVA, SoundSource.PLAYERS, 0.5f, 1.0f);
+                return true;
+            }
+            // Full — feedback
+            player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+                    SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 0.5f, 1.0f);
+            return true;
+        }
+
+        // Fuel refueling: fuel item → +1b fuel (works in both GUI and no-GUI modes)
+        if (!other.isEmpty() && other.is(ModItems.FUEL.get())) {
+            FuelData fuel = stack.getOrDefault(ModDataComponents.SHIP_CORE_FUEL.get(),
+                    new FuelData(0, shipType.fuelCapacity));
+            if (!fuel.isFull()) {
+                stack.set(ModDataComponents.SHIP_CORE_FUEL.get(),
+                        fuel.withCurrentFuel(fuel.currentFuel() + 1));
+                other.shrink(1);
+                player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+                        SoundEvents.BUCKET_EMPTY_LAVA, SoundSource.PLAYERS, 0.5f, 1.0f);
+                return true;
+            }
+            player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+                    SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 0.5f, 1.0f);
+            return true;
+        }
+
+        if (com.piranport.config.ModCommonConfig.SHIP_CORE_GUI_ENABLED.get()) return false;
 
         int capacity = shipType.enhancementSlots;
         ItemContainerContents existing = stack.getOrDefault(
@@ -96,8 +165,8 @@ public class ShipCoreItem extends Item {
         existing.copyInto(stored);
 
         if (!other.isEmpty()) {
-            // Insert: cursor has ArmorPlateItem → store one plate in first empty slot
-            if (!(other.getItem() instanceof ArmorPlateItem)) return false;
+            // Insert: cursor has ArmorPlateItem or SonarItem → store in first empty slot
+            if (!(other.getItem() instanceof ArmorPlateItem) && !(other.getItem() instanceof SonarItem)) return false;
             for (int i = 0; i < capacity; i++) {
                 if (stored.get(i).isEmpty()) {
                     stored.set(i, other.copyWithCount(1));
@@ -190,6 +259,11 @@ public class ShipCoreItem extends Item {
             tooltipComponents.add(Component.translatable(
                     "container.piranport.load", totalLoad, shipType.maxLoad));
         }
+        // Fuel tank info (both modes)
+        FuelData fuel = stack.getOrDefault(ModDataComponents.SHIP_CORE_FUEL.get(),
+                new FuelData(0, shipType.fuelCapacity));
+        tooltipComponents.add(Component.translatable(
+                "tooltip.piranport.fuel_tank", fuel.currentFuel(), fuel.maxFuel()));
     }
 
     @Override
@@ -204,6 +278,16 @@ public class ShipCoreItem extends Item {
             }
             // Toggle transformation
             if (!level.isClientSide) {
+                if (!isTransformed) {
+                    // Check fuel before transforming
+                    FuelData fuel = stack.getOrDefault(ModDataComponents.SHIP_CORE_FUEL.get(),
+                            new FuelData(0, shipType.fuelCapacity));
+                    if (fuel.isEmpty()) {
+                        player.displayClientMessage(
+                                Component.translatable("message.piranport.no_fuel"), true);
+                        return InteractionResultHolder.fail(stack);
+                    }
+                }
                 TransformationManager.setTransformed(stack, !isTransformed);
                 if (!isTransformed) {
                     TransformationManager.applyTransformationAttributes(player, stack);
@@ -219,6 +303,7 @@ public class ShipCoreItem extends Item {
                 } else {
                     TransformationManager.removeTransformationAttributes(player);
                     player.removeEffect(ModMobEffects.FLAMMABLE);
+                    player.removeEffect(net.minecraft.world.effect.MobEffects.WATER_BREATHING);
                     player.displayClientMessage(
                             Component.translatable("message.piranport.untransformed"), true);
                     com.piranport.debug.PiranPortDebug.event(
@@ -339,7 +424,9 @@ public class ShipCoreItem extends Item {
         }
 
         ItemStack ammoStack = items.get(ammoSlot);
-        boolean isHE = isHEShell(ammoStack);
+        boolean isType3 = isType3Shell(ammoStack);
+        boolean isVT = isVTShell(ammoStack);
+        boolean isHE = isHEShell(ammoStack) || isVT;
         ItemStack shellForRender = ammoStack.copyWithCount(1);
 
         // Consume ammo
@@ -354,17 +441,22 @@ public class ShipCoreItem extends Item {
                 cooldowns.withSlotCooldown(weaponIndex, cooldownTicks, level.getGameTime()));
         TransformationManager.setWeaponIndex(stack, weaponIndex);
 
-        // Create and launch projectile
-        float damage = getGunDamage(weapon);
-        float explosionPower = getExplosionPower(weapon);
-        float velocity = getProjectileVelocity(weapon);
-        float inaccuracy = getProjectileInaccuracy(weapon);
+        if (isType3) {
+            fireSanshikiSpread(level, player, weapon, shellForRender);
+        } else {
+            // Create and launch projectile
+            float damage = getGunDamage(weapon);
+            float explosionPower = getExplosionPower(weapon);
+            float velocity = getProjectileVelocity(weapon);
+            float inaccuracy = getProjectileInaccuracy(weapon);
 
-        CannonProjectileEntity projectile = new CannonProjectileEntity(
-                level, player, shellForRender, damage, isHE, explosionPower);
-        projectile.shootFromRotation(player, player.getXRot(), player.getYRot(),
-                0.0f, velocity, inaccuracy);
-        level.addFreshEntity(projectile);
+            CannonProjectileEntity projectile = new CannonProjectileEntity(
+                    level, player, shellForRender, damage, isHE, explosionPower);
+            if (isVT) projectile.setVT(true);
+            projectile.shootFromRotation(player, player.getXRot(), player.getYRot(),
+                    0.0f, velocity, inaccuracy);
+            level.addFreshEntity(projectile);
+        }
 
         com.piranport.debug.PiranPortDebug.event(
                 "Fire | weapon={} ammo={} remaining={}",
@@ -466,7 +558,9 @@ public class ShipCoreItem extends Item {
             }
 
             ItemStack ammoStack = inv.items.get(ammoSlot);
-            boolean isHE = isHEShell(ammoStack);
+            boolean isType3 = isType3Shell(ammoStack);
+            boolean isVT = isVTShell(ammoStack);
+            boolean isHE = isHEShell(ammoStack) || isVT;
             ItemStack shellForRender = ammoStack.copyWithCount(1);
             ammoStack.shrink(1);
 
@@ -476,15 +570,20 @@ public class ShipCoreItem extends Item {
             weapon.set(ModDataComponents.WEAPON_COOLDOWN.get(),
                     new WeaponCooldown(level.getGameTime() + cooldownTicks, cooldownTicks));
 
-            float damage = getGunDamage(weapon);
-            float explosionPower = getExplosionPower(weapon);
-            float velocity = getProjectileVelocity(weapon);
-            float inaccuracy = getProjectileInaccuracy(weapon);
+            if (isType3) {
+                fireSanshikiSpread(level, player, weapon, shellForRender);
+            } else {
+                float damage = getGunDamage(weapon);
+                float explosionPower = getExplosionPower(weapon);
+                float velocity = getProjectileVelocity(weapon);
+                float inaccuracy = getProjectileInaccuracy(weapon);
 
-            CannonProjectileEntity projectile = new CannonProjectileEntity(
-                    level, player, shellForRender, damage, isHE, explosionPower);
-            projectile.shootFromRotation(player, player.getXRot(), player.getYRot(), 0.0f, velocity, inaccuracy);
-            level.addFreshEntity(projectile);
+                CannonProjectileEntity projectile = new CannonProjectileEntity(
+                        level, player, shellForRender, damage, isHE, explosionPower);
+                if (isVT) projectile.setVT(true);
+                projectile.shootFromRotation(player, player.getXRot(), player.getYRot(), 0.0f, velocity, inaccuracy);
+                level.addFreshEntity(projectile);
+            }
 
             com.piranport.debug.PiranPortDebug.event(
                     "Fire | weapon={} ammo={} remaining={}",
@@ -507,7 +606,9 @@ public class ShipCoreItem extends Item {
             return;
         }
 
-        boolean isHE = isHEShell(loaded.ammoItemId());
+        boolean isType3 = isType3Shell(loaded.ammoItemId());
+        boolean isVT = isVTShell(loaded.ammoItemId());
+        boolean isHE = isHEShell(loaded.ammoItemId()) || isVT;
         net.minecraft.world.item.Item shellItem = BuiltInRegistries.ITEM
                 .getOptional(ResourceLocation.tryParse(loaded.ammoItemId()))
                 .orElse(net.minecraft.world.item.Items.AIR);
@@ -522,15 +623,20 @@ public class ShipCoreItem extends Item {
         weapon.set(ModDataComponents.WEAPON_COOLDOWN.get(),
                 new WeaponCooldown(level.getGameTime() + cooldownTicks, cooldownTicks));
 
-        float damage = getGunDamage(weapon);
-        float explosionPower = getExplosionPower(weapon);
-        float velocity = getProjectileVelocity(weapon);
-        float inaccuracy = getProjectileInaccuracy(weapon);
+        if (isType3) {
+            fireSanshikiSpread(level, player, weapon, shellForRender);
+        } else {
+            float damage = getGunDamage(weapon);
+            float explosionPower = getExplosionPower(weapon);
+            float velocity = getProjectileVelocity(weapon);
+            float inaccuracy = getProjectileInaccuracy(weapon);
 
-        CannonProjectileEntity projectile = new CannonProjectileEntity(
-                level, player, shellForRender, damage, isHE, explosionPower);
-        projectile.shootFromRotation(player, player.getXRot(), player.getYRot(), 0.0f, velocity, inaccuracy);
-        level.addFreshEntity(projectile);
+            CannonProjectileEntity projectile = new CannonProjectileEntity(
+                    level, player, shellForRender, damage, isHE, explosionPower);
+            if (isVT) projectile.setVT(true);
+            projectile.shootFromRotation(player, player.getXRot(), player.getYRot(), 0.0f, velocity, inaccuracy);
+            level.addFreshEntity(projectile);
+        }
 
         com.piranport.debug.PiranPortDebug.event(
                 "Fire (manual) | weapon={} ammo={}",
@@ -821,11 +927,14 @@ public class ShipCoreItem extends Item {
 
     static boolean matchesCaliber(ItemStack ammo, ItemStack weapon) {
         if (weapon.is(ModItems.SMALL_GUN.get())) {
-            return ammo.is(ModItems.SMALL_HE_SHELL.get()) || ammo.is(ModItems.SMALL_AP_SHELL.get());
+            return ammo.is(ModItems.SMALL_HE_SHELL.get()) || ammo.is(ModItems.SMALL_AP_SHELL.get())
+                    || ammo.is(ModItems.SMALL_VT_SHELL.get()) || ammo.is(ModItems.SMALL_TYPE3_SHELL.get());
         } else if (weapon.is(ModItems.MEDIUM_GUN.get())) {
-            return ammo.is(ModItems.MEDIUM_HE_SHELL.get()) || ammo.is(ModItems.MEDIUM_AP_SHELL.get());
+            return ammo.is(ModItems.MEDIUM_HE_SHELL.get()) || ammo.is(ModItems.MEDIUM_AP_SHELL.get())
+                    || ammo.is(ModItems.MEDIUM_TYPE3_SHELL.get());
         } else if (weapon.is(ModItems.LARGE_GUN.get())) {
-            return ammo.is(ModItems.LARGE_HE_SHELL.get()) || ammo.is(ModItems.LARGE_AP_SHELL.get());
+            return ammo.is(ModItems.LARGE_HE_SHELL.get()) || ammo.is(ModItems.LARGE_AP_SHELL.get())
+                    || ammo.is(ModItems.LARGE_TYPE3_SHELL.get());
         }
         return false;
     }
@@ -840,6 +949,26 @@ public class ShipCoreItem extends Item {
         return ammoItemId.equals(BuiltInRegistries.ITEM.getKey(ModItems.SMALL_HE_SHELL.get()).toString())
                 || ammoItemId.equals(BuiltInRegistries.ITEM.getKey(ModItems.MEDIUM_HE_SHELL.get()).toString())
                 || ammoItemId.equals(BuiltInRegistries.ITEM.getKey(ModItems.LARGE_HE_SHELL.get()).toString());
+    }
+
+    static boolean isVTShell(ItemStack stack) {
+        return stack.is(ModItems.SMALL_VT_SHELL.get());
+    }
+
+    static boolean isVTShell(String ammoItemId) {
+        return ammoItemId.equals(BuiltInRegistries.ITEM.getKey(ModItems.SMALL_VT_SHELL.get()).toString());
+    }
+
+    static boolean isType3Shell(ItemStack stack) {
+        return stack.is(ModItems.SMALL_TYPE3_SHELL.get())
+                || stack.is(ModItems.MEDIUM_TYPE3_SHELL.get())
+                || stack.is(ModItems.LARGE_TYPE3_SHELL.get());
+    }
+
+    static boolean isType3Shell(String ammoItemId) {
+        return ammoItemId.equals(BuiltInRegistries.ITEM.getKey(ModItems.SMALL_TYPE3_SHELL.get()).toString())
+                || ammoItemId.equals(BuiltInRegistries.ITEM.getKey(ModItems.MEDIUM_TYPE3_SHELL.get()).toString())
+                || ammoItemId.equals(BuiltInRegistries.ITEM.getKey(ModItems.LARGE_TYPE3_SHELL.get()).toString());
     }
 
     // ===== Gun stats =====
@@ -884,6 +1013,39 @@ public class ShipCoreItem extends Item {
         if (weapon.is(ModItems.MEDIUM_GUN.get())) return 1.2f;
         if (weapon.is(ModItems.LARGE_GUN.get())) return 0.8f;
         return 1.0f;
+    }
+
+    // ===== Type 3 (Sanshiki) spread firing =====
+
+    /**
+     * Spawns 64 pellets in a circular spread pattern (sunflower/golden-angle distribution).
+     * Each pellet deals 1/4 of the same-caliber HE base damage.
+     */
+    private static void fireSanshikiSpread(Level level, Player player, ItemStack weapon, ItemStack shellForRender) {
+        float baseDamage = getGunDamage(weapon);
+        float pelletDamage = baseDamage * 0.25f;
+        float velocity = getProjectileVelocity(weapon);
+
+        float baseYaw = player.getYRot();
+        float basePitch = player.getXRot();
+        float maxRadius = 7.0f; // degrees, same spread range as before
+        int pelletCount = 64;
+        float goldenAngle = 2.39996323f; // ~137.508 degrees in radians
+
+        for (int i = 0; i < pelletCount; i++) {
+            float r = maxRadius * (float) Math.sqrt((i + 0.5f) / pelletCount);
+            float theta = i * goldenAngle;
+            float yawOffset = r * (float) Math.cos(theta);
+            float pitchOffset = r * (float) Math.sin(theta);
+
+            SanshikiPelletEntity pellet = new SanshikiPelletEntity(
+                    level, player, pelletDamage, shellForRender);
+            pellet.shootFromRotation(player,
+                    basePitch + pitchOffset,
+                    baseYaw + yawOffset,
+                    0.0f, velocity, 0.5f);
+            level.addFreshEntity(pellet);
+        }
     }
 
     // ===== Torpedo firing =====

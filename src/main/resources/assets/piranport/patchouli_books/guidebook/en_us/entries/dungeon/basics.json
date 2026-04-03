@@ -1,0 +1,16 @@
+{
+  "name": "piranport.book.dungeon.basics",
+  "category": "piranport:7_dungeon",
+  "icon": "piranport:dungeon_key",
+  "sortnum": 0,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "piranport.book.dungeon.basics.p1"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "piranport.book.dungeon.basics.p2"
+    }
+  ]
+}

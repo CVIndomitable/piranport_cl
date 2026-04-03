@@ -35,10 +35,16 @@ import java.util.List;
 public class LootShipEntity extends Entity {
     private static final EntityDataAccessor<Integer> SHIP_TIER =
             SynchedEntityData.defineId(LootShipEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Boolean> DROPPING =
+            SynchedEntityData.defineId(LootShipEntity.class, EntityDataSerializers.BOOLEAN);
 
     private final SimpleContainer inventory = new SimpleContainer(27);
     private boolean lootGenerated = false;
     private int despawnTimer = 0;
+    /** Set of player UUIDs who have opened this crate (for scripted tracking). */
+    private final java.util.Set<java.util.UUID> openedBy = new java.util.HashSet<>();
+    /** Callback fired when the crate lands on water (dropping → stationary). */
+    private Runnable onLanded;
 
     public LootShipEntity(EntityType<?> type, Level level) {
         super(type, level);
@@ -56,11 +62,32 @@ public class LootShipEntity extends Entity {
     @Override
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
         builder.define(SHIP_TIER, 0);
+        builder.define(DROPPING, false);
     }
 
     @Override
     public void tick() {
         super.tick();
+
+        // Dropping mode: fall until reaching sea level
+        if (entityData.get(DROPPING)) {
+            if (!level().isClientSide()) {
+                setDeltaMovement(0, -0.5, 0);
+                move(net.minecraft.world.entity.MoverType.SELF, getDeltaMovement());
+                if (getY() <= DungeonConstants.SEA_LEVEL + 0.5) {
+                    entityData.set(DROPPING, false);
+                    setDeltaMovement(net.minecraft.world.phys.Vec3.ZERO);
+                    setPos(getX(), DungeonConstants.SEA_LEVEL + 0.5, getZ());
+                    if (onLanded != null) {
+                        onLanded.run();
+                        onLanded = null;
+                    }
+                }
+            } else {
+                move(net.minecraft.world.entity.MoverType.SELF, getDeltaMovement());
+            }
+            return;
+        }
 
         if (level().isClientSide()) {
             // Client: gentle bobbing
@@ -87,6 +114,7 @@ public class LootShipEntity extends Entity {
                 generateLoot(serverPlayer);
                 lootGenerated = true;
             }
+            openedBy.add(serverPlayer.getUUID());
             serverPlayer.openMenu(new SimpleMenuProvider(
                     (id, inv, p) -> ChestMenu.threeRows(id, inv, inventory),
                     Component.translatable("entity.piranport.loot_ship")
@@ -123,6 +151,33 @@ public class LootShipEntity extends Entity {
 
     public int getShipTier() {
         return entityData.get(SHIP_TIER);
+    }
+
+    /** Start in dropping (airdrop) mode — falls to sea level. */
+    public void setDropping(boolean dropping) {
+        entityData.set(DROPPING, dropping);
+    }
+
+    public boolean isDropping() {
+        return entityData.get(DROPPING);
+    }
+
+    /** Set callback for when the crate finishes falling. */
+    public void setOnLanded(Runnable callback) {
+        this.onLanded = callback;
+    }
+
+    /** Pre-fill inventory with given stacks (bypasses loot table). */
+    public void fillInventory(List<ItemStack> items) {
+        for (int i = 0; i < items.size() && i < inventory.getContainerSize(); i++) {
+            inventory.setItem(i, items.get(i));
+        }
+        lootGenerated = true; // prevent loot table from overwriting
+    }
+
+    /** Returns the set of player UUIDs who have interacted with this crate. */
+    public java.util.Set<java.util.UUID> getOpenedBy() {
+        return java.util.Set.copyOf(openedBy);
     }
 
     @Override

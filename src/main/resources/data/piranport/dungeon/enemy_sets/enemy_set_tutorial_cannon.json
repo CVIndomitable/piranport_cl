@@ -1,0 +1,10 @@
+{
+  "enemy_set_id": "enemy_set_tutorial_cannon",
+  "spawn_list": [
+    { "entity": "piranport:low_tier_destroyer", "count": 2 }
+  ],
+  "flagship": {
+    "entity": "piranport:low_tier_destroyer",
+    "count": 1
+  }
+}

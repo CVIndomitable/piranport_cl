@@ -3,6 +3,7 @@ package com.piranport.combat;
 import com.piranport.PiranPort;
 import com.piranport.item.ArmorPlateItem;
 import com.piranport.item.ShipCoreItem;
+import com.piranport.item.SonarItem;
 import com.piranport.registry.ModDataComponents;
 import com.piranport.registry.ModItems;
 import com.piranport.registry.ModMobEffects;
@@ -95,6 +96,7 @@ public class TransformationManager {
         if (stack.isEmpty()) return false;
         if (stack.getItem() instanceof ShipCoreItem) return false;
         if (stack.getItem() instanceof ArmorPlateItem) return false;
+        if (stack.getItem() instanceof SonarItem) return false;
         // Torpedo ammo, shells, and aviation consumables all have getItemLoad == 0, so excluded naturally
         return getItemLoad(stack) > 0;
     }
@@ -281,6 +283,7 @@ public class TransformationManager {
         int total = 0;
         for (ItemStack s : stored) {
             if (s.getItem() instanceof ArmorPlateItem plate) total += plate.getWeight();
+            else if (s.getItem() instanceof SonarItem sonar) total += sonar.getWeight();
         }
         return total;
     }
@@ -337,11 +340,43 @@ public class TransformationManager {
         Integer load = getWeaponLoadMap().get(stack.getItem());
         if (load != null) return load;
         if (stack.getItem() instanceof ArmorPlateItem plate) return plate.getWeight();
+        if (stack.getItem() instanceof SonarItem sonar) return sonar.getWeight();
         if (stack.getItem() instanceof com.piranport.item.AircraftItem) {
             com.piranport.component.AircraftInfo info =
                     stack.get(ModDataComponents.AIRCRAFT_INFO.get());
             return info != null ? info.weight() : 0;
         }
         return 0;
+    }
+
+    /**
+     * Check if the transformed player has a SonarItem equipped in enhancement slots.
+     * Works in both GUI mode (SHIP_CORE_CONTENTS) and no-GUI mode (SHIP_CORE_ARMOR).
+     */
+    public static boolean hasSonarEquipped(Player player, ItemStack coreStack) {
+        if (!(coreStack.getItem() instanceof ShipCoreItem sci)) return false;
+        ShipCoreItem.ShipType type = sci.getShipType();
+
+        if (com.piranport.config.ModCommonConfig.SHIP_CORE_GUI_ENABLED.get()) {
+            // GUI mode: check enhancement slots in SHIP_CORE_CONTENTS
+            ItemContainerContents contents = coreStack.getOrDefault(
+                    ModDataComponents.SHIP_CORE_CONTENTS.get(), ItemContainerContents.EMPTY);
+            NonNullList<ItemStack> items = NonNullList.withSize(type.totalSlots(), ItemStack.EMPTY);
+            contents.copyInto(items);
+            int eStart = type.weaponSlots + type.ammoSlots;
+            for (int i = eStart; i < type.totalSlots(); i++) {
+                if (items.get(i).getItem() instanceof SonarItem) return true;
+            }
+        } else {
+            // No-GUI mode: check SHIP_CORE_ARMOR storage
+            ItemContainerContents contents = coreStack.getOrDefault(
+                    ModDataComponents.SHIP_CORE_ARMOR.get(), ItemContainerContents.EMPTY);
+            NonNullList<ItemStack> stored = NonNullList.withSize(type.enhancementSlots, ItemStack.EMPTY);
+            contents.copyInto(stored);
+            for (ItemStack s : stored) {
+                if (s.getItem() instanceof SonarItem) return true;
+            }
+        }
+        return false;
     }
 }

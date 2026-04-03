@@ -4,6 +4,7 @@ import com.piranport.block.entity.CookingPotBlockEntity;
 import com.piranport.block.entity.CuttingBoardBlockEntity;
 import com.piranport.block.entity.StoneMillBlockEntity;
 import com.piranport.entity.FloatingTargetEntity;
+import com.piranport.entity.LowTierDestroyerEntity;
 import com.piranport.registry.ModBlockEntityTypes;
 import com.piranport.registry.ModEntityTypes;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -39,5 +40,7 @@ public class CommonEvents {
     public static void registerEntityAttributes(EntityAttributeCreationEvent event) {
         event.put(ModEntityTypes.FLOATING_TARGET.get(),
                 FloatingTargetEntity.createAttributes().build());
+        event.put(ModEntityTypes.LOW_TIER_DESTROYER.get(),
+                LowTierDestroyerEntity.createAttributes().build());
     }
 }

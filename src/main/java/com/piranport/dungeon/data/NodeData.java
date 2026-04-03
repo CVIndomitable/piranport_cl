@@ -13,7 +13,8 @@ public record NodeData(
         List<CostEntry> cost,     // cost node costs
         String costMessage,       // cost node message
         int displayX,
-        int displayY
+        int displayY,
+        String script             // optional script ID (e.g. "artillery_intro") for scripted battle nodes
 ) {
     public enum NodeType {
         BATTLE, BOSS, RESOURCE, COST;

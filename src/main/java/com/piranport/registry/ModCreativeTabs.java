@@ -30,6 +30,7 @@ public class ModCreativeTabs {
                         output.accept(ModItems.SMALL_SHIP_CORE.get());
                         output.accept(ModItems.MEDIUM_SHIP_CORE.get());
                         output.accept(ModItems.LARGE_SHIP_CORE.get());
+                        output.accept(ModItems.SUBMARINE_CORE.get());
                         // HE Shells
                         output.accept(ModItems.SMALL_HE_SHELL.get());
                         output.accept(ModItems.MEDIUM_HE_SHELL.get());
@@ -38,6 +39,12 @@ public class ModCreativeTabs {
                         output.accept(ModItems.SMALL_AP_SHELL.get());
                         output.accept(ModItems.MEDIUM_AP_SHELL.get());
                         output.accept(ModItems.LARGE_AP_SHELL.get());
+                        // VT Shells
+                        output.accept(ModItems.SMALL_VT_SHELL.get());
+                        // Type 3 (Sanshiki) Shells
+                        output.accept(ModItems.SMALL_TYPE3_SHELL.get());
+                        output.accept(ModItems.MEDIUM_TYPE3_SHELL.get());
+                        output.accept(ModItems.LARGE_TYPE3_SHELL.get());
                         // Guns
                         output.accept(ModItems.SMALL_GUN.get());
                         output.accept(ModItems.MEDIUM_GUN.get());
@@ -53,12 +60,17 @@ public class ModCreativeTabs {
                         output.accept(ModItems.SMALL_ARMOR_PLATE.get());
                         output.accept(ModItems.MEDIUM_ARMOR_PLATE.get());
                         output.accept(ModItems.LARGE_ARMOR_PLATE.get());
+                        // Sonar
+                        output.accept(ModItems.STANDARD_SONAR.get());
                         // Aircraft Squadrons (Phase 18)
                         output.accept(ModItems.FIGHTER_SQUADRON.get());
                         output.accept(ModItems.DIVE_BOMBER_SQUADRON.get());
                         output.accept(ModItems.TORPEDO_BOMBER_SQUADRON.get());
+                        output.accept(ModItems.XTB2D.get());
                         output.accept(ModItems.LEVEL_BOMBER_SQUADRON.get());
                         output.accept(ModItems.RECON_SQUADRON.get());          // Phase 32
+                        // Fuel
+                        output.accept(ModItems.FUEL.get());
                         // Aviation Ammo (Phase 18)
                         output.accept(ModItems.AVIATION_FUEL.get());
                         output.accept(ModItems.AERIAL_BOMB.get());
@@ -146,5 +158,11 @@ public class ModCreativeTabs {
                         output.accept(ModItems.DUNGEON_LECTERN.get());
                         output.accept(ModItems.DUNGEON_KEY.get());
                         output.accept(ModItems.TOWN_SCROLL.get());
+                        // Skin Cores
+                        output.accept(ModItems.SKIN_CORE_1.get());
+                        output.accept(ModItems.SKIN_CORE_2.get());
+                        output.accept(ModItems.SKIN_CORE_3.get());
+                        // Tools
+                        output.accept(ModItems.UNICORN_HARP.get());
                     }).build());
 }

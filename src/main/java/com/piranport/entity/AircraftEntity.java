@@ -37,6 +37,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemContainerContents;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.item.MapItem;
+import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -86,6 +88,8 @@ public class AircraftEntity extends Entity {
     private int attackCooldown = 0;
     private boolean hasFired = false;
     private int autoSeekCooldown = 0; // P3 #30: throttle AABB queries
+    private boolean autoSeekDone = false;    // true after first auto-seek scan (one-shot)
+    private boolean hasEverHadFireControl = false; // true if FC target was ever assigned
     private transient net.minecraft.world.item.Item cachedPayloadItem; // P3 #31: cached Item reference
 
     // Phase 32 runtime fields
@@ -320,11 +324,35 @@ public class AircraftEntity extends Entity {
                 && !FireControlManager.getTargets(owner.getUUID()).isEmpty()) {
             // Verify at least one locked target is still alive before transitioning
             if (hasAliveLockedTarget(owner)) {
+                hasEverHadFireControl = true;
                 setState(FlightState.ATTACKING);
                 return;
             } else {
                 // All locked targets are dead — clean up stale UUIDs
                 FireControlManager.clearTargets(owner.getUUID());
+            }
+        }
+
+        // Auto-seek for attack aircraft (bombers + torpedo bombers) without fire-control locks:
+        // Only search ONCE after launch; if FC target died, just keep orbiting.
+        if (!payloadType.isEmpty()
+                && aircraftType != AircraftInfo.AircraftType.RECON
+                && !hasEverHadFireControl && !autoSeekDone
+                && FireControlManager.getTargets(owner.getUUID()).isEmpty()) {
+            if (autoSeekCooldown > 0) {
+                autoSeekCooldown--;
+            } else {
+                autoSeekDone = true;
+                if (level() instanceof ServerLevel sl) {
+                    AABB box = getBoundingBox().inflate(32.0);
+                    boolean hasNearbyHostile = !sl.getEntitiesOfClass(LivingEntity.class, box,
+                            e -> e.isAlive() && e != owner && e instanceof Monster).isEmpty();
+                    if (hasNearbyHostile) {
+                        autoSeekCooldown = 0; // reset so resolveTarget() finds it immediately
+                        setState(FlightState.ATTACKING);
+                        return;
+                    }
+                }
             }
         }
 
@@ -604,6 +632,20 @@ public class AircraftEntity extends Entity {
         // Accelerate slowly (inertia), decelerate faster (responsiveness)
         double factor = hasInput ? 0.12 : 0.25;
         setDeltaMovement(current.lerp(target, factor));
+
+        // Update maps in owner's inventory using aircraft position
+        if (!level().isClientSide) {
+            for (int i = 0; i < owner.getInventory().getContainerSize(); i++) {
+                ItemStack stack = owner.getInventory().getItem(i);
+                if (stack.getItem() instanceof MapItem mapItem) {
+                    MapItemSavedData mapData = MapItem.getSavedData(stack, level());
+                    if (mapData != null && !mapData.locked) {
+                        mapData.tickCarriedBy(owner, stack);
+                        mapItem.update(level(), this, mapData);
+                    }
+                }
+            }
+        }
     }
 
     // ===== Chunk forcing (Phase 32) =====
@@ -658,9 +700,10 @@ public class AircraftEntity extends Entity {
             }
         }
 
-        // Auto-seek: nearest hostile within 32 blocks (throttled to every 20 ticks)
+        // Auto-seek: only if never had FC target and first scan not yet done
+        if (hasEverHadFireControl || autoSeekDone) return null;
         if (autoSeekCooldown > 0) { autoSeekCooldown--; return null; }
-        autoSeekCooldown = 20;
+        autoSeekDone = true;
         AABB box = getBoundingBox().inflate(32.0);
         return sl.getEntitiesOfClass(LivingEntity.class, box,
                 e -> e.isAlive() && e != owner && e instanceof Monster)
@@ -994,9 +1037,10 @@ public class AircraftEntity extends Entity {
             }
         }
 
-        // Auto-seek (throttled to every 20 ticks)
+        // Auto-seek: only if never had FC target and first scan not yet done
+        if (hasEverHadFireControl || autoSeekDone) return null;
         if (autoSeekCooldown > 0) { autoSeekCooldown--; return null; }
-        autoSeekCooldown = 20;
+        autoSeekDone = true;
         AABB box = getBoundingBox().inflate(32.0);
 
         // Enemy aircraft (non-same-owner, non-self)

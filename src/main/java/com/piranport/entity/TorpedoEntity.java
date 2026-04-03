@@ -1,5 +1,6 @@
 package com.piranport.entity;
 
+import com.piranport.config.ModCommonConfig;
 import com.piranport.registry.ModEntityTypes;
 import com.piranport.registry.ModItems;
 import com.piranport.registry.ModMobEffects;
@@ -68,7 +69,9 @@ public class TorpedoEntity extends ThrowableItemProjectile {
         // 1. 剩余航程检查 — 超时自爆
         if (--lifetime <= 0) {
             if (!level().isClientSide()) {
-                level().explode(this, getX(), getY(), getZ(), explosionRadius, Level.ExplosionInteraction.TNT);
+                Level.ExplosionInteraction interaction = ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get()
+                        ? Level.ExplosionInteraction.TNT : Level.ExplosionInteraction.NONE;
+                level().explode(this, getX(), getY(), getZ(), explosionRadius, interaction);
             }
             discard();
             return;
@@ -145,7 +148,9 @@ public class TorpedoEntity extends ThrowableItemProjectile {
                 return;
             }
             // 非水中命中方块：小范围爆炸
-            level().explode(this, getX(), getY(), getZ(), explosionRadius, Level.ExplosionInteraction.TNT);
+            Level.ExplosionInteraction interaction = ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get()
+                    ? Level.ExplosionInteraction.TNT : Level.ExplosionInteraction.NONE;
+            level().explode(this, getX(), getY(), getZ(), explosionRadius, interaction);
             discard();
         }
     }

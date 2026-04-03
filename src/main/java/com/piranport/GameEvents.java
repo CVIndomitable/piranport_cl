@@ -4,6 +4,7 @@ import com.piranport.aviation.FireControlManager;
 import com.piranport.aviation.ReconManager;
 import net.minecraft.network.chat.Component;
 import com.piranport.combat.TransformationManager;
+import com.piranport.component.FuelData;
 import com.piranport.config.ModCommonConfig;
 import com.piranport.entity.AircraftEntity;
 import com.piranport.item.ShipCoreItem;
@@ -35,6 +36,7 @@ import net.neoforged.neoforge.event.entity.player.ItemEntityPickupEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.server.ServerStoppedEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
 import java.util.Comparator;
 import java.util.List;
@@ -54,15 +56,53 @@ public class GameEvents {
             tickInventoryLoadCheck(player);
         }
 
-        if (!TransformationManager.isPlayerTransformed(player)) return;
+        if (!TransformationManager.isPlayerTransformed(player)) {
+            // Not transformed — clear distance tracking
+            if (!player.level().isClientSide()) {
+                lastPlayerPos.remove(player.getUUID());
+                accumulatedDistance.remove(player.getUUID());
+            }
+            return;
+        }
 
-        // 水面行走：脚踩水但眼睛未入水时，取消下沉速度
-        if (player.isInWater() && !player.isEyeInFluid(FluidTags.WATER)) {
+        // Fuel consumption based on distance moved (server only)
+        if (!player.level().isClientSide()) {
+            tickFuelConsumption(player);
+            // Re-check — fuel depletion may have caused untransform
+            if (!TransformationManager.isPlayerTransformed(player)) return;
+        }
+
+        // Check core type for submarine-specific behavior
+        ItemStack transformedCore = TransformationManager.findTransformedCore(player);
+        boolean isSubmarine = transformedCore.getItem() instanceof ShipCoreItem sci
+                && sci.getShipType() == ShipCoreItem.ShipType.SUBMARINE;
+
+        // 水面行走：脚踩水但眼睛未入水时，取消下沉速度（潜艇核心不适用）
+        // 水中摩擦力比陆地低，保留滑行惯性，模拟舰船水面移动手感
+        if (!isSubmarine && player.isInWater() && !player.isEyeInFluid(FluidTags.WATER)) {
             Vec3 vel = player.getDeltaMovement();
             if (vel.y < 0) {
                 player.setDeltaMovement(vel.x, 0.0, vel.z);
             }
             player.resetFallDistance();
+        }
+
+        // 潜艇核心：无限水下呼吸
+        if (isSubmarine && !player.level().isClientSide()) {
+            player.addEffect(new MobEffectInstance(MobEffects.WATER_BREATHING, 400, 0, false, false, true));
+        }
+
+        // 声纳效果：装备声纳时，24格内所有生物持续获得发光效果（每20tick刷新一次）
+        if (!player.level().isClientSide() && player.tickCount % 20 == 0) {
+            if (TransformationManager.hasSonarEquipped(player, transformedCore)) {
+                List<LivingEntity> nearby = player.level().getEntitiesOfClass(
+                        LivingEntity.class,
+                        player.getBoundingBox().inflate(24.0),
+                        e -> e.isAlive() && e != player);
+                for (LivingEntity entity : nearby) {
+                    entity.addEffect(new MobEffectInstance(MobEffects.GLOWING, 40, 0, false, false, false));
+                }
+            }
         }
 
         // Safety net: remove recon slowness if no active recon (server only, every 20 ticks)
@@ -122,6 +162,18 @@ public class GameEvents {
         if (coreInOffhand) {
             // Auto-transform when core is placed in offhand
             if (!TransformationManager.isTransformed(offhand)) {
+                // Check fuel — don't auto-transform with empty tank
+                FuelData fuel = offhand.getOrDefault(ModDataComponents.SHIP_CORE_FUEL.get(),
+                        new FuelData(0, ((ShipCoreItem) offhand.getItem()).getShipType().fuelCapacity));
+                if (fuel.isEmpty()) {
+                    // Show message only once (not every tick)
+                    if (!lastWeaponLoad.containsKey(player.getUUID())) {
+                        lastWeaponLoad.put(player.getUUID(), -999);
+                        player.displayClientMessage(
+                                Component.translatable("message.piranport.no_fuel"), true);
+                    }
+                    return;
+                }
                 TransformationManager.setTransformed(offhand, true);
                 TransformationManager.applyTransformationAttributes(player, offhand);
                 ShipCoreItem.refillAircraftFuel(player, offhand);
@@ -167,6 +219,7 @@ public class GameEvents {
             if (lastWeaponLoad.remove(player.getUUID()) != null) {
                 TransformationManager.removeTransformationAttributes(player);
                 player.removeEffect(com.piranport.registry.ModMobEffects.FLAMMABLE);
+                player.removeEffect(MobEffects.WATER_BREATHING);
                 recallAircraftForPlayer(player);
                 player.displayClientMessage(
                         Component.translatable("message.piranport.untransformed"), true);
@@ -218,6 +271,59 @@ public class GameEvents {
     private static final java.util.Map<UUID, Integer> lastWeaponLoad =
             new java.util.concurrent.ConcurrentHashMap<>();
 
+    // Fuel consumption: track distance moved per player (server-side only).
+    private static final java.util.Map<UUID, Vec3> lastPlayerPos =
+            new java.util.concurrent.ConcurrentHashMap<>();
+    private static final java.util.Map<UUID, Double> accumulatedDistance =
+            new java.util.concurrent.ConcurrentHashMap<>();
+
+    /**
+     * Consume fuel based on distance moved while transformed.
+     * Each ShipType defines distancePerFuel (blocks per 1b consumed).
+     * When fuel reaches 0, auto-untransform and recall aircraft.
+     */
+    private static void tickFuelConsumption(Player player) {
+        UUID uuid = player.getUUID();
+        Vec3 currentPos = player.position();
+        Vec3 lastPos = lastPlayerPos.put(uuid, currentPos);
+
+        if (lastPos == null) return; // first tick — no distance yet
+
+        double dist = currentPos.distanceTo(lastPos);
+        if (dist > 10.0 || dist < 0.001) return; // ignore teleports and standing still
+
+        ItemStack core = TransformationManager.findTransformedCore(player);
+        if (!(core.getItem() instanceof ShipCoreItem sci)) return;
+
+        double threshold = sci.getShipType().distancePerFuel;
+        double acc = accumulatedDistance.getOrDefault(uuid, 0.0) + dist;
+
+        FuelData fuel = core.getOrDefault(ModDataComponents.SHIP_CORE_FUEL.get(),
+                new FuelData(0, sci.getShipType().fuelCapacity));
+
+        while (acc >= threshold && fuel.currentFuel() > 0) {
+            acc -= threshold;
+            fuel = fuel.withCurrentFuel(fuel.currentFuel() - 1);
+        }
+        core.set(ModDataComponents.SHIP_CORE_FUEL.get(), fuel);
+
+        if (fuel.isEmpty()) {
+            // Fuel depleted — auto-untransform
+            TransformationManager.setTransformed(core, false);
+            TransformationManager.removeTransformationAttributes(player);
+            player.removeEffect(com.piranport.registry.ModMobEffects.FLAMMABLE);
+            recallAircraftForPlayer(player);
+            lastWeaponLoad.remove(uuid);
+            accumulatedDistance.remove(uuid);
+            lastPlayerPos.remove(uuid);
+            player.displayClientMessage(
+                    Component.translatable("message.piranport.fuel_depleted"), true);
+            return;
+        }
+
+        accumulatedDistance.put(uuid, acc);
+    }
+
     /** When a player dies, recall all their airborne aircraft. */
     @SubscribeEvent
     public static void onPlayerDeath(LivingDeathEvent event) {
@@ -234,12 +340,21 @@ public class GameEvents {
         recallAircraftForPlayer(player);
     }
 
+    /** When a player logs in, sync all active skins to them. */
+    @SubscribeEvent
+    public static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
+        if (!(event.getEntity() instanceof ServerPlayer joiner)) return;
+        com.piranport.skin.SkinManager.syncAllSkinsToPlayer(joiner);
+    }
+
     /** When a player logs out, recall all their airborne aircraft and clear cached load. */
     @SubscribeEvent
     public static void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
         if (!(event.getEntity() instanceof Player player)) return;
         if (player.level().isClientSide()) return;
         lastWeaponLoad.remove(player.getUUID());
+        lastPlayerPos.remove(player.getUUID());
+        accumulatedDistance.remove(player.getUUID());
         recallAircraftForPlayer(player);
     }
 
@@ -312,10 +427,49 @@ public class GameEvents {
         event.setCanPickup(TriState.FALSE);
     }
 
+    /**
+     * Tick all active dungeon scripts once per server tick.
+     * Scripts run in the dungeon dimension level.
+     */
+    @SubscribeEvent
+    public static void onServerTick(ServerTickEvent.Post event) {
+        ServerLevel dungeonLevel = event.getServer().getLevel(
+                com.piranport.dungeon.event.DungeonEventHandler.DUNGEON_DIMENSION);
+        if (dungeonLevel != null) {
+            com.piranport.dungeon.script.DungeonScriptManager.tickAll(dungeonLevel);
+        }
+    }
+
+    /**
+     * When a dungeon-tagged mob dies, notify the script manager.
+     * This handles destroyers and other scripted enemies.
+     */
+    @SubscribeEvent
+    public static void onDungeonMobDeath(LivingDeathEvent event) {
+        if (event.getEntity().level().isClientSide()) return;
+        LivingEntity entity = event.getEntity();
+        if (!entity.getTags().contains("dungeon_script")) return;
+
+        // Extract instance UUID from tags
+        for (String tag : entity.getTags()) {
+            if (tag.startsWith("dungeon_instance_")) {
+                try {
+                    java.util.UUID instanceId = java.util.UUID.fromString(
+                            tag.substring("dungeon_instance_".length()));
+                    com.piranport.dungeon.script.DungeonScriptManager.onEntityDeath(instanceId, entity);
+                } catch (IllegalArgumentException ignored) {}
+                break;
+            }
+        }
+    }
+
     @SubscribeEvent
     public static void onServerStopped(ServerStoppedEvent event) {
         FireControlManager.clearAll();
         ReconManager.clearAll();
+        com.piranport.dungeon.script.DungeonScriptManager.clearAll();
         lastWeaponLoad.clear();
+        lastPlayerPos.clear();
+        accumulatedDistance.clear();
     }
 }

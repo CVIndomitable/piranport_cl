@@ -1,0 +1,12 @@
+{
+  "name": "piranport.book.cooking.salt_rice",
+  "category": "piranport:4_cooking",
+  "icon": "piranport:salt",
+  "sortnum": 2,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "piranport.book.cooking.salt_rice.p1"
+    }
+  ]
+}

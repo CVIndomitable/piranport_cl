@@ -4,6 +4,7 @@ import com.mojang.serialization.Codec;
 import com.piranport.PiranPort;
 import com.piranport.component.AircraftInfo;
 import com.piranport.component.FlightGroupData;
+import com.piranport.component.FuelData;
 import com.piranport.component.LoadedAmmo;
 import com.piranport.component.PlaceableInfo;
 import com.piranport.component.SlotCooldowns;
@@ -117,6 +118,15 @@ public class ModDataComponents {
             () -> DataComponentType.<ItemContainerContents>builder()
                     .persistent(ItemContainerContents.CODEC)
                     .networkSynchronized(ItemContainerContents.STREAM_CODEC)
+                    .build());
+
+    // ===== 舰装核心燃料库 =====
+
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<FuelData>>
+            SHIP_CORE_FUEL = DATA_COMPONENTS.register("ship_core_fuel",
+            () -> DataComponentType.<FuelData>builder()
+                    .persistent(FuelData.CODEC)
+                    .networkSynchronized(FuelData.STREAM_CODEC)
                     .build());
 
     // ===== v0.0.8 Dungeon DataComponents =====

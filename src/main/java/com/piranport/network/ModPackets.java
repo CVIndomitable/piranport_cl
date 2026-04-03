@@ -76,6 +76,18 @@ public class ModPackets {
                 SnapshotRequestPayload::handle
         );
 
+        // ===== Skin System =====
+        registrar.playToClient(
+                SkinSyncPayload.TYPE,
+                SkinSyncPayload.STREAM_CODEC,
+                SkinSyncPayload::handle
+        );
+        registrar.playToServer(
+                SkinRevertPayload.TYPE,
+                SkinRevertPayload.STREAM_CODEC,
+                SkinRevertPayload::handle
+        );
+
         // ===== Dungeon System =====
         // C2S
         registrar.playToServer(

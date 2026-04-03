@@ -1,0 +1,12 @@
+{
+  "name": "piranport.book.combat.effects",
+  "category": "piranport:6_combat",
+  "icon": "minecraft:potion",
+  "sortnum": 0,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "piranport.book.combat.effects.p1"
+    }
+  ]
+}

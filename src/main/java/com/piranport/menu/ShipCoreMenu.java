@@ -5,6 +5,7 @@ import com.piranport.component.AircraftInfo;
 import com.piranport.item.AircraftItem;
 import com.piranport.item.ArmorPlateItem;
 import com.piranport.item.ShipCoreItem;
+import com.piranport.item.SonarItem;
 import com.piranport.item.TorpedoItem;
 import com.piranport.item.TorpedoLauncherItem;
 import com.piranport.registry.ModDataComponents;
@@ -152,6 +153,7 @@ public class ShipCoreMenu extends AbstractContainerMenu {
         if (stack.is(ModItems.TRIPLE_TORPEDO_LAUNCHER.get())) return 12;
         if (stack.is(ModItems.QUAD_TORPEDO_LAUNCHER.get())) return 20;
         if (stack.getItem() instanceof ArmorPlateItem plate) return plate.getWeight();
+        if (stack.getItem() instanceof SonarItem sonar) return sonar.getWeight();
         if (stack.getItem() instanceof AircraftItem) {
             AircraftInfo info = stack.get(ModDataComponents.AIRCRAFT_INFO.get());
             return info != null ? info.weight() : 0;
@@ -186,11 +188,15 @@ public class ShipCoreMenu extends AbstractContainerMenu {
                 || stack.is(ModItems.LARGE_HE_SHELL.get())
                 || stack.is(ModItems.SMALL_AP_SHELL.get())
                 || stack.is(ModItems.MEDIUM_AP_SHELL.get())
-                || stack.is(ModItems.LARGE_AP_SHELL.get());
+                || stack.is(ModItems.LARGE_AP_SHELL.get())
+                || stack.is(ModItems.SMALL_TYPE3_SHELL.get())
+                || stack.is(ModItems.MEDIUM_TYPE3_SHELL.get())
+                || stack.is(ModItems.LARGE_TYPE3_SHELL.get());
     }
 
     public static boolean isArmor(ItemStack stack) {
-        return stack.getItem() instanceof ArmorPlateItem;
+        return stack.getItem() instanceof ArmorPlateItem
+                || stack.getItem() instanceof SonarItem;
     }
 
     @Override

@@ -24,6 +24,8 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
+import net.minecraft.client.renderer.entity.player.PlayerRenderer;
+import net.minecraft.client.resources.PlayerSkin;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.RegisterItemDecorationsEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
@@ -46,6 +48,7 @@ public class ClientEvents {
                     ModItems.FIGHTER_SQUADRON.get(),
                     ModItems.DIVE_BOMBER_SQUADRON.get(),
                     ModItems.TORPEDO_BOMBER_SQUADRON.get(),
+                    ModItems.XTB2D.get(),
                     ModItems.LEVEL_BOMBER_SQUADRON.get(),
                     ModItems.RECON_SQUADRON.get()
             }) {
@@ -97,6 +100,17 @@ public class ClientEvents {
     }
 
     @SubscribeEvent
+    public static void onAddLayers(EntityRenderersEvent.AddLayers event) {
+        for (PlayerSkin.Model skinModel : event.getSkins()) {
+            var renderer = event.getSkin(skinModel);
+            if (renderer instanceof PlayerRenderer playerRenderer) {
+                playerRenderer.addLayer(
+                        new com.piranport.client.SkinOverlayLayer(playerRenderer));
+            }
+        }
+    }
+
+    @SubscribeEvent
     public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(ModEntityTypes.CANNON_PROJECTILE.get(),
                 ThrownItemRenderer::new);
@@ -110,10 +124,18 @@ public class ClientEvents {
                 ThrownItemRenderer::new);
         event.registerEntityRenderer(ModEntityTypes.BULLET.get(),
                 ThrownItemRenderer::new);
+        event.registerEntityRenderer(ModEntityTypes.SANSHIKI_PELLET.get(),
+                ThrownItemRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntityTypes.CUTTING_BOARD.get(),
                 CuttingBoardRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntityTypes.PLACEABLE_FOOD.get(),
                 PlaceableFoodRenderer::new);
+        // Dungeon enemies
+        event.registerEntityRenderer(ModEntityTypes.LOW_TIER_DESTROYER.get(),
+                com.piranport.client.LowTierDestroyerRenderer::new);
+        // Dungeon transport plane (artillery intro script)
+        event.registerEntityRenderer(ModEntityTypes.DUNGEON_TRANSPORT_PLANE.get(),
+                com.piranport.client.DungeonTransportPlaneRenderer::new);
         // Dungeon entities (use NoopRenderer for now — visual effects are done via particles in tick())
         event.registerEntityRenderer(ModEntityTypes.DUNGEON_PORTAL.get(),
                 com.piranport.dungeon.client.DungeonPortalRenderer::new);

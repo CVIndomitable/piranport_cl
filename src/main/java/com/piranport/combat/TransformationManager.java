@@ -25,6 +25,10 @@ public class TransformationManager {
             ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "ship_core_armor");
     public static final ResourceLocation SPEED_MODIFIER_ID =
             ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "ship_core_speed");
+    public static final ResourceLocation HEALTH_MODIFIER_ID =
+            ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "ship_core_health");
+    public static final ResourceLocation TOUGHNESS_MODIFIER_ID =
+            ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "ship_core_toughness");
 
     public static boolean isTransformed(ItemStack coreStack) {
         return coreStack.getOrDefault(ModDataComponents.SHIP_CORE_TRANSFORMED.get(), false);
@@ -145,22 +149,11 @@ public class TransformationManager {
             }
         }
 
-        double speedMult = Math.max(0.4, 1.0 - ((double) totalLoad / type.maxLoad) * 0.6);
+        double loadRatio = type.maxLoad > 0 ? (double) totalLoad / type.maxLoad : 0;
+        double speedMult = type.emptySpeed - (type.emptySpeed - type.fullLoadSpeed) * Math.min(loadRatio, 1.0);
 
         removeTransformationAttributes(player);
-
-        AttributeInstance armorAttr = player.getAttribute(Attributes.ARMOR);
-        AttributeInstance speedAttr = player.getAttribute(Attributes.MOVEMENT_SPEED);
-
-        if (armorAttr != null && armorBonus > 0) {
-            armorAttr.addTransientModifier(new AttributeModifier(
-                    ARMOR_MODIFIER_ID, armorBonus, AttributeModifier.Operation.ADD_VALUE));
-        }
-        if (speedAttr != null && speedMult < 1.0) {
-            speedAttr.addTransientModifier(new AttributeModifier(
-                    SPEED_MODIFIER_ID, speedMult - 1.0, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
-        }
-
+        applyTypeAttributes(player, type, armorBonus, speedMult);
         applyOverweightPenalty(player, totalLoad, type.maxLoad);
     }
 
@@ -177,25 +170,29 @@ public class TransformationManager {
         net.minecraft.world.entity.player.Inventory inv = player.getInventory();
         boolean hotbarOnly = com.piranport.config.ModCommonConfig.HOTBAR_ONLY_LOAD.get();
 
-        // Find the ship core with the highest maxLoad
-        int maxLoad = 0;
+        // Find the ship core with the highest maxLoad and track its ShipType
+        ShipCoreItem.ShipType bestType = null;
         int scanLimit = hotbarOnly ? HOTBAR_SIZE : inv.items.size();
         for (int i = 0; i < scanLimit; i++) {
             ItemStack stack = inv.items.get(i);
             if (stack.getItem() instanceof ShipCoreItem sci) {
-                maxLoad = Math.max(maxLoad, sci.getShipType().maxLoad);
+                if (bestType == null || sci.getShipType().maxLoad > bestType.maxLoad) {
+                    bestType = sci.getShipType();
+                }
             }
         }
         // Always check offhand — no-GUI mode requires the core to be in offhand
         {
             ItemStack offhandStack = inv.offhand.get(0);
             if (offhandStack.getItem() instanceof ShipCoreItem sci) {
-                maxLoad = Math.max(maxLoad, sci.getShipType().maxLoad);
+                if (bestType == null || sci.getShipType().maxLoad > bestType.maxLoad) {
+                    bestType = sci.getShipType();
+                }
             }
         }
 
         removeTransformationAttributes(player);
-        if (maxLoad == 0) return;
+        if (bestType == null) return;
 
         // Armor comes from plates stored inside the offhand core, not from inventory scan
         ItemStack offhandCore = inv.offhand.get(0);
@@ -203,21 +200,11 @@ public class TransformationManager {
         int armorLoad  = getCoreArmorLoad(offhandCore);
         int totalLoad  = getInventoryWeaponLoad(inv) + armorLoad;
 
-        double speedMult = Math.max(0.4, 1.0 - ((double) totalLoad / maxLoad) * 0.6);
+        double loadRatio = bestType.maxLoad > 0 ? (double) totalLoad / bestType.maxLoad : 0;
+        double speedMult = bestType.emptySpeed - (bestType.emptySpeed - bestType.fullLoadSpeed) * Math.min(loadRatio, 1.0);
 
-        AttributeInstance armorAttr = player.getAttribute(Attributes.ARMOR);
-        AttributeInstance speedAttr = player.getAttribute(Attributes.MOVEMENT_SPEED);
-
-        if (armorAttr != null && armorBonus > 0) {
-            armorAttr.addTransientModifier(new AttributeModifier(
-                    ARMOR_MODIFIER_ID, armorBonus, AttributeModifier.Operation.ADD_VALUE));
-        }
-        if (speedAttr != null && speedMult < 1.0) {
-            speedAttr.addTransientModifier(new AttributeModifier(
-                    SPEED_MODIFIER_ID, speedMult - 1.0, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
-        }
-
-        applyOverweightPenalty(player, totalLoad, maxLoad);
+        applyTypeAttributes(player, bestType, armorBonus, speedMult);
+        applyOverweightPenalty(player, totalLoad, bestType.maxLoad);
     }
 
     /**
@@ -354,8 +341,41 @@ public class TransformationManager {
     public static void removeTransformationAttributes(Player player) {
         AttributeInstance armorAttr = player.getAttribute(Attributes.ARMOR);
         AttributeInstance speedAttr = player.getAttribute(Attributes.MOVEMENT_SPEED);
+        AttributeInstance healthAttr = player.getAttribute(Attributes.MAX_HEALTH);
+        AttributeInstance toughnessAttr = player.getAttribute(Attributes.ARMOR_TOUGHNESS);
         if (armorAttr != null) armorAttr.removeModifier(ARMOR_MODIFIER_ID);
         if (speedAttr != null) speedAttr.removeModifier(SPEED_MODIFIER_ID);
+        if (healthAttr != null) healthAttr.removeModifier(HEALTH_MODIFIER_ID);
+        if (toughnessAttr != null) toughnessAttr.removeModifier(TOUGHNESS_MODIFIER_ID);
+    }
+
+    /**
+     * Apply all type-based attribute modifiers: health, armor (base + plates), toughness, speed.
+     */
+    private static void applyTypeAttributes(Player player, ShipCoreItem.ShipType type,
+                                             int plateArmorBonus, double speedMult) {
+        AttributeInstance healthAttr = player.getAttribute(Attributes.MAX_HEALTH);
+        AttributeInstance armorAttr = player.getAttribute(Attributes.ARMOR);
+        AttributeInstance toughnessAttr = player.getAttribute(Attributes.ARMOR_TOUGHNESS);
+        AttributeInstance speedAttr = player.getAttribute(Attributes.MOVEMENT_SPEED);
+
+        if (healthAttr != null && type.healthBonus != 0) {
+            healthAttr.addTransientModifier(new AttributeModifier(
+                    HEALTH_MODIFIER_ID, type.healthBonus, AttributeModifier.Operation.ADD_VALUE));
+        }
+        int totalArmor = type.baseArmor + plateArmorBonus;
+        if (armorAttr != null && totalArmor > 0) {
+            armorAttr.addTransientModifier(new AttributeModifier(
+                    ARMOR_MODIFIER_ID, totalArmor, AttributeModifier.Operation.ADD_VALUE));
+        }
+        if (toughnessAttr != null && type.armorToughness > 0) {
+            toughnessAttr.addTransientModifier(new AttributeModifier(
+                    TOUGHNESS_MODIFIER_ID, type.armorToughness, AttributeModifier.Operation.ADD_VALUE));
+        }
+        if (speedAttr != null && speedMult != 1.0) {
+            speedAttr.addTransientModifier(new AttributeModifier(
+                    SPEED_MODIFIER_ID, speedMult - 1.0, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
+        }
     }
 
     /**

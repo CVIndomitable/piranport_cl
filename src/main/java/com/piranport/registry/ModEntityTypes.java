@@ -9,6 +9,7 @@ import com.piranport.entity.DungeonTransportPlaneEntity;
 import com.piranport.entity.LowTierDestroyerEntity;
 import com.piranport.entity.SanshikiPelletEntity;
 import com.piranport.entity.FloatingTargetEntity;
+import com.piranport.entity.DepthChargeEntity;
 import com.piranport.entity.TorpedoEntity;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.entity.EntityType;
@@ -60,6 +61,14 @@ public class ModEntityTypes {
                     .clientTrackingRange(8)
                     .updateInterval(5)
                     .build("piranport:aerial_bomb"));
+
+    public static final DeferredHolder<EntityType<?>, EntityType<DepthChargeEntity>>
+            DEPTH_CHARGE = ENTITY_TYPES.register("depth_charge",
+            () -> EntityType.Builder.<DepthChargeEntity>of(DepthChargeEntity::new, MobCategory.MISC)
+                    .sized(0.35f, 0.35f)
+                    .clientTrackingRange(8)
+                    .updateInterval(5)
+                    .build("piranport:depth_charge"));
 
     public static final DeferredHolder<EntityType<?>, EntityType<BulletEntity>>
             BULLET = ENTITY_TYPES.register("bullet",

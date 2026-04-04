@@ -256,16 +256,33 @@ public class ModCreativeTabs {
                         output.accept(ModItems.SMALL_TYPE3_SHELL.get());
                         output.accept(ModItems.MEDIUM_TYPE3_SHELL.get());
                         output.accept(ModItems.LARGE_TYPE3_SHELL.get());
-                        // Torpedo Ammo
+                        // Torpedo Ammo (legacy)
                         output.accept(ModItems.TORPEDO_533MM.get());
                         output.accept(ModItems.TORPEDO_610MM.get());
                         output.accept(ModItems.MAGNETIC_TORPEDO_533MM.get());
                         output.accept(ModItems.WIRE_GUIDED_TORPEDO_533MM.get());
                         output.accept(ModItems.ACOUSTIC_TORPEDO_533MM.get());
+                        // Torpedo Ammo (named)
+                        output.accept(ModItems.TORPEDO_533MM_G7A.get());
+                        output.accept(ModItems.MAGNETIC_TORPEDO_533MM_G7A.get());
+                        output.accept(ModItems.TORPEDO_533MM_MK17.get());
+                        output.accept(ModItems.TORPEDO_533MM_MK14.get());
+                        output.accept(ModItems.TORPEDO_533MM_MK16.get());
+                        output.accept(ModItems.MAGNETIC_TORPEDO_533MM_G7E.get());
+                        output.accept(ModItems.ACOUSTIC_TORPEDO_533MM_G7E.get());
+                        output.accept(ModItems.WIRE_GUIDED_TORPEDO_533MM_G7E.get());
+                        output.accept(ModItems.ACOUSTIC_TORPEDO_533MM_MK27.get());
+                        output.accept(ModItems.TORPEDO_530MM_TYPE95.get());
+                        output.accept(ModItems.TORPEDO_610MM_TYPE91.get());
+                        output.accept(ModItems.TORPEDO_610MM_TYPE93_MK1.get());
+                        output.accept(ModItems.TORPEDO_610MM_TYPE93_MK3.get());
+                        output.accept(ModItems.TORPEDO_610MM_TYPE95_MK2.get());
+                        output.accept(ModItems.TORPEDO_720MM_TYPE0.get());
                         // Aviation Ammo
                         output.accept(ModItems.AVIATION_FUEL.get());
                         output.accept(ModItems.AERIAL_BOMB.get());
                         output.accept(ModItems.AERIAL_TORPEDO.get());
+                        output.accept(ModItems.DEPTH_CHARGE.get());
                         output.accept(ModItems.FIGHTER_AMMO.get());
                     }).build());
 

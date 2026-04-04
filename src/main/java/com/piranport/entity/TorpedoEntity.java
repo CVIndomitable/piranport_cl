@@ -81,6 +81,18 @@ public class TorpedoEntity extends ThrowableItemProjectile {
         return torpedoSpeed;
     }
 
+    public void setDamage(float damage) {
+        this.damage = damage;
+    }
+
+    public void setSpeed(float speed) {
+        this.torpedoSpeed = speed;
+    }
+
+    public void setLifetime(int lifetime) {
+        this.lifetime = lifetime;
+    }
+
     public void setMagnetic(boolean magnetic) {
         this.magnetic = magnetic;
     }
@@ -126,7 +138,12 @@ public class TorpedoEntity extends ThrowableItemProjectile {
 
     @Override
     protected Item getDefaultItem() {
-        return caliber == 610 ? ModItems.TORPEDO_610MM.get() : ModItems.TORPEDO_533MM.get();
+        return switch (caliber) {
+            case 610 -> ModItems.TORPEDO_610MM.get();
+            case 720 -> ModItems.TORPEDO_720MM_TYPE0.get();
+            case 530 -> ModItems.TORPEDO_530MM_TYPE95.get();
+            default -> ModItems.TORPEDO_533MM.get();
+        };
     }
 
     @Override

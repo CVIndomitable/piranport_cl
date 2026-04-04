@@ -133,6 +133,8 @@ public class ClientEvents {
                 ThrownItemRenderer::new);
         event.registerEntityRenderer(ModEntityTypes.SANSHIKI_PELLET.get(),
                 ThrownItemRenderer::new);
+        event.registerEntityRenderer(ModEntityTypes.DEPTH_CHARGE.get(),
+                ThrownItemRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntityTypes.CUTTING_BOARD.get(),
                 CuttingBoardRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntityTypes.PLACEABLE_FOOD.get(),

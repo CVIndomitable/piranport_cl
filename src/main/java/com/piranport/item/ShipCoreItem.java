@@ -10,6 +10,7 @@ import com.piranport.component.WeaponCooldown;
 import com.piranport.entity.AircraftEntity;
 import com.piranport.entity.CannonProjectileEntity;
 import com.piranport.entity.SanshikiPelletEntity;
+import com.piranport.entity.DepthChargeEntity;
 import com.piranport.entity.TorpedoEntity;
 import com.piranport.menu.ShipCoreMenu;
 import com.piranport.registry.ModDataComponents;
@@ -722,13 +723,21 @@ public class ShipCoreItem extends Item {
         boolean magnetic = isMagneticTorpedo(loaded.ammoItemId());
         boolean wireGuided = isWireGuidedTorpedo(loaded.ammoItemId());
         boolean acousticHoming = isAcousticTorpedo(loaded.ammoItemId());
-        float torpedoSpeed = caliber == 610 ? 1.0f : 1.2f;
+        // Resolve torpedo item to read per-item stats
+        Item loadedItem = BuiltInRegistries.ITEM.get(ResourceLocation.parse(loaded.ammoItemId()));
+        TorpedoItem loadedTorpedo = loadedItem instanceof TorpedoItem ti ? ti : null;
+        float torpedoSpeed = loadedTorpedo != null ? loadedTorpedo.getSpeed() : (caliber == 610 ? 1.0f : 1.2f);
         float[] angles = getSpreadAngles(tubeCount);
         Vec3 look = player.getLookAngle();
 
         for (float angle : angles) {
             Vec3 dir = rotateHorizontal(look, Math.toRadians(angle));
             TorpedoEntity torpedo = new TorpedoEntity(level, player, caliber);
+            if (loadedTorpedo != null) {
+                torpedo.setDamage(loadedTorpedo.getDamage());
+                torpedo.setSpeed(loadedTorpedo.getSpeed());
+                torpedo.setLifetime(loadedTorpedo.getLifetimeTicks());
+            }
             if (magnetic) torpedo.setMagnetic(true);
             if (wireGuided) torpedo.setWireGuided(true);
             if (acousticHoming) torpedo.setAcoustic(true);
@@ -789,11 +798,13 @@ public class ShipCoreItem extends Item {
         boolean magnetic = false;
         boolean acousticHoming = false;
         boolean wireGuided = false;
+        TorpedoItem firstTorpedo = null;
         int toConsume = tubeCount;
         for (int i = 0; i < inv.items.size() && toConsume > 0; i++) {
             if (i == coreSlot || i == weaponSlot) continue;
             ItemStack s = inv.items.get(i);
             if (!s.isEmpty() && s.getItem() instanceof TorpedoItem ti && ti.getCaliber() == caliber) {
+                if (firstTorpedo == null) firstTorpedo = ti;
                 if (ti.isMagnetic()) magnetic = true;
                 if (ti.isAcoustic()) acousticHoming = true;
                 if (ti.isWireGuided()) wireGuided = true;
@@ -803,13 +814,18 @@ public class ShipCoreItem extends Item {
             }
         }
 
-        float torpedoSpeed = caliber == 610 ? 1.0f : 1.2f;
+        float torpedoSpeed = firstTorpedo != null ? firstTorpedo.getSpeed() : (caliber == 610 ? 1.0f : 1.2f);
         float[] angles = getSpreadAngles(tubeCount);
         Vec3 look = player.getLookAngle();
 
         for (float angle : angles) {
             Vec3 dir = rotateHorizontal(look, Math.toRadians(angle));
             TorpedoEntity torpedo = new TorpedoEntity(level, player, caliber);
+            if (firstTorpedo != null) {
+                torpedo.setDamage(firstTorpedo.getDamage());
+                torpedo.setSpeed(firstTorpedo.getSpeed());
+                torpedo.setLifetime(firstTorpedo.getLifetimeTicks());
+            }
             if (magnetic) torpedo.setMagnetic(true);
             if (acousticHoming) torpedo.setAcoustic(true);
             if (wireGuided) torpedo.setWireGuided(true);
@@ -1049,7 +1065,10 @@ public class ShipCoreItem extends Item {
     }
 
     static boolean isMagneticTorpedo(String ammoItemId) {
-        return ammoItemId.equals(BuiltInRegistries.ITEM.getKey(ModItems.MAGNETIC_TORPEDO_533MM.get()).toString());
+        var rl = net.minecraft.resources.ResourceLocation.tryParse(ammoItemId);
+        if (rl == null) return false;
+        Item item = BuiltInRegistries.ITEM.get(rl);
+        return item instanceof TorpedoItem ti && ti.isMagnetic();
     }
 
     static boolean isWireGuidedTorpedo(ItemStack stack) {
@@ -1057,7 +1076,10 @@ public class ShipCoreItem extends Item {
     }
 
     static boolean isWireGuidedTorpedo(String ammoItemId) {
-        return ammoItemId.equals(BuiltInRegistries.ITEM.getKey(ModItems.WIRE_GUIDED_TORPEDO_533MM.get()).toString());
+        var rl = net.minecraft.resources.ResourceLocation.tryParse(ammoItemId);
+        if (rl == null) return false;
+        Item item = BuiltInRegistries.ITEM.get(rl);
+        return item instanceof TorpedoItem ti && ti.isWireGuided();
     }
 
     static boolean isAcousticTorpedo(ItemStack stack) {
@@ -1065,7 +1087,18 @@ public class ShipCoreItem extends Item {
     }
 
     static boolean isAcousticTorpedo(String ammoItemId) {
-        return ammoItemId.equals(BuiltInRegistries.ITEM.getKey(ModItems.ACOUSTIC_TORPEDO_533MM.get()).toString());
+        var rl = net.minecraft.resources.ResourceLocation.tryParse(ammoItemId);
+        if (rl == null) return false;
+        Item item = BuiltInRegistries.ITEM.get(rl);
+        return item instanceof TorpedoItem ti && ti.isAcoustic();
+    }
+
+    /** Look up TorpedoItem from a loaded ammo item ID string. */
+    static TorpedoItem lookupTorpedoItem(String ammoItemId) {
+        var rl = net.minecraft.resources.ResourceLocation.tryParse(ammoItemId);
+        if (rl == null) return null;
+        Item item = BuiltInRegistries.ITEM.get(rl);
+        return item instanceof TorpedoItem ti ? ti : null;
     }
 
     // ===== Gun stats =====
@@ -1181,10 +1214,12 @@ public class ShipCoreItem extends Item {
         boolean magnetic = false;
         boolean acousticHoming = false;
         boolean wireGuided = false;
+        TorpedoItem firstTorpedo = null;
         int toConsume = tubeCount;
         for (int i = shipType.weaponSlots; i < ammoEnd && toConsume > 0; i++) {
             ItemStack ammo = items.get(i);
             if (!ammo.isEmpty() && ammo.getItem() instanceof TorpedoItem ti && ti.getCaliber() == caliber) {
+                if (firstTorpedo == null) firstTorpedo = ti;
                 if (ti.isMagnetic()) magnetic = true;
                 if (ti.isAcoustic()) acousticHoming = true;
                 if (ti.isWireGuided()) wireGuided = true;
@@ -1195,13 +1230,18 @@ public class ShipCoreItem extends Item {
         }
 
         // Fire torpedoes in spread pattern
-        float torpedoSpeed = caliber == 610 ? 1.0f : 1.2f;
+        float torpedoSpeed = firstTorpedo != null ? firstTorpedo.getSpeed() : (caliber == 610 ? 1.0f : 1.2f);
         float[] angles = getSpreadAngles(tubeCount);
         Vec3 look = player.getLookAngle();
 
         for (float angle : angles) {
             Vec3 dir = rotateHorizontal(look, Math.toRadians(angle));
             TorpedoEntity torpedo = new TorpedoEntity(level, player, caliber);
+            if (firstTorpedo != null) {
+                torpedo.setDamage(firstTorpedo.getDamage());
+                torpedo.setSpeed(firstTorpedo.getSpeed());
+                torpedo.setLifetime(firstTorpedo.getLifetimeTicks());
+            }
             if (magnetic) torpedo.setMagnetic(true);
             if (acousticHoming) torpedo.setAcoustic(true);
             if (wireGuided) torpedo.setWireGuided(true);

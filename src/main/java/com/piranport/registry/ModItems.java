@@ -17,6 +17,7 @@ import com.piranport.item.EngineItem;
 import com.piranport.item.TorpedoItem;
 import com.piranport.item.TorpedoLauncherItem;
 import com.piranport.item.TorpedoReloadItem;
+import com.piranport.item.DepthChargeLauncherItem;
 import com.piranport.item.MissileLauncherItem;
 import com.piranport.item.UnicornHarpItem;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -118,7 +119,7 @@ public class ModItems {
             ITEMS.register("large_gun", () -> new CannonItem(new Item.Properties().stacksTo(1)
                     .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.CANNON)));
 
-    // ===== Torpedo Ammo =====
+    // ===== Torpedo Ammo (legacy generic) =====
     public static final DeferredItem<TorpedoItem> TORPEDO_533MM =
             ITEMS.register("torpedo_533mm",
                     () -> new TorpedoItem(new Item.Properties().stacksTo(16), 533));
@@ -134,6 +135,68 @@ public class ModItems {
     public static final DeferredItem<TorpedoItem> ACOUSTIC_TORPEDO_533MM =
             ITEMS.register("acoustic_torpedo_533mm",
                     () -> new TorpedoItem(new Item.Properties().stacksTo(16), 533, false, false, true));
+
+    // ===== Torpedo Ammo (named variants) =====
+    public static final DeferredItem<TorpedoItem> TORPEDO_533MM_G7A =
+            ITEMS.register("torpedo_533mm_g7a",
+                    () -> new TorpedoItem(new Item.Properties().stacksTo(16),
+                            533, 27f, 18, 0.817f, false, false, false));
+    public static final DeferredItem<TorpedoItem> MAGNETIC_TORPEDO_533MM_G7A =
+            ITEMS.register("magnetic_torpedo_533mm_g7a",
+                    () -> new TorpedoItem(new Item.Properties().stacksTo(16),
+                            533, 27f, 18, 0.817f, true, false, false));
+    public static final DeferredItem<TorpedoItem> TORPEDO_533MM_MK17 =
+            ITEMS.register("torpedo_533mm_mk17",
+                    () -> new TorpedoItem(new Item.Properties().stacksTo(16),
+                            533, 55.5f, 49, 0.854f, false, false, false));
+    public static final DeferredItem<TorpedoItem> TORPEDO_610MM_TYPE91 =
+            ITEMS.register("torpedo_610mm_type91",
+                    () -> new TorpedoItem(new Item.Properties().stacksTo(16),
+                            610, 49.5f, 30, 0.743f, false, false, false));
+    public static final DeferredItem<TorpedoItem> TORPEDO_610MM_TYPE93_MK1 =
+            ITEMS.register("torpedo_610mm_type93_mk1",
+                    () -> new TorpedoItem(new Item.Properties().stacksTo(16),
+                            610, 49.5f, 60, 0.929f, false, false, false));
+    public static final DeferredItem<TorpedoItem> TORPEDO_610MM_TYPE93_MK3 =
+            ITEMS.register("torpedo_610mm_type93_mk3",
+                    () -> new TorpedoItem(new Item.Properties().stacksTo(16),
+                            610, 78f, 90, 0.706f, false, false, false));
+    public static final DeferredItem<TorpedoItem> TORPEDO_720MM_TYPE0 =
+            ITEMS.register("torpedo_720mm_type0",
+                    () -> new TorpedoItem(new Item.Properties().stacksTo(16),
+                            720, 55.5f, 70, 0.743f, false, false, false));
+    public static final DeferredItem<TorpedoItem> TORPEDO_533MM_MK14 =
+            ITEMS.register("torpedo_533mm_mk14",
+                    () -> new TorpedoItem(new Item.Properties().stacksTo(16),
+                            533, 24f, 25, 0.576f, false, false, false));
+    public static final DeferredItem<TorpedoItem> TORPEDO_533MM_MK16 =
+            ITEMS.register("torpedo_533mm_mk16",
+                    () -> new TorpedoItem(new Item.Properties().stacksTo(16),
+                            533, 55.5f, 47, 0.854f, false, false, false));
+    public static final DeferredItem<TorpedoItem> MAGNETIC_TORPEDO_533MM_G7E =
+            ITEMS.register("magnetic_torpedo_533mm_g7e",
+                    () -> new TorpedoItem(new Item.Properties().stacksTo(16),
+                            533, 21f, 25, 0.669f, true, false, false));
+    public static final DeferredItem<TorpedoItem> ACOUSTIC_TORPEDO_533MM_G7E =
+            ITEMS.register("acoustic_torpedo_533mm_g7e",
+                    () -> new TorpedoItem(new Item.Properties().stacksTo(16),
+                            533, 21f, 17, 0.446f, false, false, true));
+    public static final DeferredItem<TorpedoItem> WIRE_GUIDED_TORPEDO_533MM_G7E =
+            ITEMS.register("wire_guided_torpedo_533mm_g7e",
+                    () -> new TorpedoItem(new Item.Properties().stacksTo(16),
+                            533, 21f, 15, 0.557f, false, true, false));
+    public static final DeferredItem<TorpedoItem> ACOUSTIC_TORPEDO_533MM_MK27 =
+            ITEMS.register("acoustic_torpedo_533mm_mk27",
+                    () -> new TorpedoItem(new Item.Properties().stacksTo(16),
+                            533, 24f, 25, 0.669f, false, false, true));
+    public static final DeferredItem<TorpedoItem> TORPEDO_530MM_TYPE95 =
+            ITEMS.register("torpedo_530mm_type95",
+                    () -> new TorpedoItem(new Item.Properties().stacksTo(16),
+                            530, 39f, 23, 0.854f, false, false, false));
+    public static final DeferredItem<TorpedoItem> TORPEDO_610MM_TYPE95_MK2 =
+            ITEMS.register("torpedo_610mm_type95_mk2",
+                    () -> new TorpedoItem(new Item.Properties().stacksTo(16),
+                            610, 55.5f, 45, 0.929f, false, false, false));
 
     // ===== Armor Plates =====
     public static final DeferredItem<ArmorPlateItem> SMALL_ARMOR_PLATE =
@@ -618,6 +681,9 @@ public class ModItems {
     // Unified aerial bomb (replaces small/medium distinction)
     public static final DeferredItem<Item> AERIAL_BOMB =
             ITEMS.registerSimpleItem("aerial_bomb");
+    // 深水炸弹
+    public static final DeferredItem<Item> DEPTH_CHARGE =
+            ITEMS.registerSimpleItem("depth_charge");
     // Fighter ammo (子弹)
     public static final DeferredItem<Item> FIGHTER_AMMO =
             ITEMS.registerSimpleItem("fighter_ammo");
@@ -732,6 +798,14 @@ public class ModItems {
                             new Item.Properties().stacksTo(1).durability(32)
                                     .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.TORPEDO),
                             610, 4, 120));
+
+    // ===== Depth Charge Launcher =====
+    public static final DeferredItem<DepthChargeLauncherItem> DEPTH_CHARGE_LAUNCHER =
+            ITEMS.register("depth_charge_launcher",
+                    () -> new DepthChargeLauncherItem(
+                            new Item.Properties().stacksTo(1).durability(64)
+                                    .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.TORPEDO),
+                            4, 80, 14f, 3.0f));
 
     // ===== Missile Launchers =====
     public static final DeferredItem<MissileLauncherItem> SY1_LAUNCHER =

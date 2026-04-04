@@ -244,19 +244,13 @@ public class AircraftEntity extends Entity {
                 currentFuel--;
             }
             if (currentFuel <= 0) {
-                // Try auto-resupply from core
-                if (ModCommonConfig.AUTO_RESUPPLY_ENABLED.get()) {
-                    tryAutoResupplyFuel(owner);
+                isForcedReturn = true;
+                setState(FlightState.RETURNING);
+                if (owner instanceof ServerPlayer sp) {
+                    sp.displayClientMessage(
+                            Component.translatable("message.piranport.aircraft_no_fuel", getDisplayName()), true);
                 }
-                if (currentFuel <= 0) {
-                    isForcedReturn = true;
-                    setState(FlightState.RETURNING);
-                    if (owner instanceof ServerPlayer sp) {
-                        sp.displayClientMessage(
-                                Component.translatable("message.piranport.aircraft_no_fuel", getDisplayName()), true);
-                    }
-                    return;
-                }
+                return;
             }
         }
 

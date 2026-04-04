@@ -87,9 +87,7 @@ public class TorpedoEntity extends ThrowableItemProjectile {
 
     public void setWireGuided(boolean wireGuided) {
         this.wireGuided = wireGuided;
-        if (wireGuided) {
-            this.launchPos = position();
-        }
+        // launchPos is set lazily on first tick (after setPos has been called)
     }
 
     public boolean isWireGuided() {
@@ -155,7 +153,10 @@ public class TorpedoEntity extends ThrowableItemProjectile {
             if (exploded) return;
         }
 
-        // 1.6. 线导鱼雷掉线检测
+        // 1.6. 线导鱼雷掉线检测 — launchPos lazily initialized after setPos
+        if (!level().isClientSide() && wireGuided && launchPos == null) {
+            launchPos = position();
+        }
         if (!level().isClientSide() && wireGuided && launchPos != null) {
             double dist = position().distanceTo(launchPos);
             if (dist > WIRE_MAX_RANGE) {

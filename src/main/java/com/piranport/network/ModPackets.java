@@ -92,6 +92,13 @@ public class ModPackets {
                 ManualReloadPayload::handle
         );
 
+        // Wire-guided torpedo steering (9/0 keys)
+        registrar.playToServer(
+                TorpedoSteerPayload.TYPE,
+                TorpedoSteerPayload.STREAM_CODEC,
+                TorpedoSteerPayload::handle
+        );
+
         // ===== Skin System =====
         registrar.playToClient(
                 SkinSyncPayload.TYPE,

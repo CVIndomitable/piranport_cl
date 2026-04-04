@@ -16,6 +16,7 @@ import com.piranport.network.CycleWeaponPayload;
 import com.piranport.network.FireControlPayload;
 import com.piranport.network.ManualReloadPayload;
 import com.piranport.network.OpenFlightGroupPayload;
+import com.piranport.network.TorpedoSteerPayload;
 import com.piranport.network.ReconControlPayload;
 import com.piranport.network.ReconExitPayload;
 import com.piranport.registry.ModKeyMappings;
@@ -154,6 +155,16 @@ public class ClientTickHandler {
         while (ModKeyMappings.MANUAL_RELOAD.consumeClick()) {
             if (!transformed || inReconMode) continue;
             PacketDistributor.sendToServer(new ManualReloadPayload());
+        }
+
+        // 9/0 keys — wire-guided torpedo steering
+        while (ModKeyMappings.TORPEDO_STEER_LEFT.consumeClick()) {
+            if (!transformed || inReconMode) continue;
+            PacketDistributor.sendToServer(new TorpedoSteerPayload(-1));
+        }
+        while (ModKeyMappings.TORPEDO_STEER_RIGHT.consumeClick()) {
+            if (!transformed || inReconMode) continue;
+            PacketDistributor.sendToServer(new TorpedoSteerPayload(1));
         }
 
         // F8 / Shift+F8: debug toggle / snapshot

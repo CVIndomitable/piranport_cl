@@ -32,4 +32,10 @@ public class ModKeyMappings {
 
     public static final KeyMapping MANUAL_RELOAD =
             new KeyMapping("key.piranport.manual_reload", GLFW.GLFW_KEY_R, CATEGORY);
+
+    public static final KeyMapping TORPEDO_STEER_LEFT =
+            new KeyMapping("key.piranport.torpedo_steer_left", GLFW.GLFW_KEY_9, CATEGORY);
+
+    public static final KeyMapping TORPEDO_STEER_RIGHT =
+            new KeyMapping("key.piranport.torpedo_steer_right", GLFW.GLFW_KEY_0, CATEGORY);
 }

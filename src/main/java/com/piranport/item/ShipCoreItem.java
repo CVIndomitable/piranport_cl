@@ -968,7 +968,7 @@ public class ShipCoreItem extends Item {
     // ===== Caliber matching =====
     // TODO: replace hardcoded item matching with item tags (e.g. piranport:small_caliber_ammo)
 
-    static boolean matchesCaliber(ItemStack ammo, ItemStack weapon) {
+    public static boolean matchesCaliber(ItemStack ammo, ItemStack weapon) {
         if (weapon.is(ModItems.SMALL_GUN.get())) {
             return ammo.is(ModItems.SMALL_HE_SHELL.get()) || ammo.is(ModItems.SMALL_AP_SHELL.get())
                     || ammo.is(ModItems.SMALL_VT_SHELL.get()) || ammo.is(ModItems.SMALL_TYPE3_SHELL.get());

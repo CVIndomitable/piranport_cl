@@ -82,6 +82,7 @@ public class ClientEvents {
         event.register(ModKeyMappings.HIGHLIGHT_ENTITIES);
         event.register(ModKeyMappings.TOGGLE_AUTO_LAUNCH);
         event.register(ModKeyMappings.DEBUG_TOGGLE);
+        event.register(ModKeyMappings.MANUAL_RELOAD);
     }
 
     @SubscribeEvent

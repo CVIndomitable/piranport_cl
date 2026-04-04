@@ -14,6 +14,7 @@ import com.piranport.item.ShipCoreItem;
 import com.piranport.network.AutoLaunchTogglePayload;
 import com.piranport.network.CycleWeaponPayload;
 import com.piranport.network.FireControlPayload;
+import com.piranport.network.ManualReloadPayload;
 import com.piranport.network.OpenFlightGroupPayload;
 import com.piranport.network.ReconControlPayload;
 import com.piranport.network.ReconExitPayload;
@@ -147,6 +148,12 @@ public class ClientTickHandler {
             if (autoSlot >= 0) {
                 PacketDistributor.sendToServer(new AutoLaunchTogglePayload(autoSlot));
             }
+        }
+
+        // R key — manual reload for medium/large cannons
+        while (ModKeyMappings.MANUAL_RELOAD.consumeClick()) {
+            if (!transformed || inReconMode) continue;
+            PacketDistributor.sendToServer(new ManualReloadPayload());
         }
 
         // F8 / Shift+F8: debug toggle / snapshot

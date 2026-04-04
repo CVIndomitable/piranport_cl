@@ -29,4 +29,7 @@ public class ModKeyMappings {
 
     public static final KeyMapping DEBUG_TOGGLE =
             new KeyMapping("key.piranport.debug_toggle", GLFW.GLFW_KEY_F8, CATEGORY);
+
+    public static final KeyMapping MANUAL_RELOAD =
+            new KeyMapping("key.piranport.manual_reload", GLFW.GLFW_KEY_R, CATEGORY);
 }

@@ -85,6 +85,13 @@ public class ModPackets {
                 RecallAllAircraftPayload::handle
         );
 
+        // Manual reload (R key)
+        registrar.playToServer(
+                ManualReloadPayload.TYPE,
+                ManualReloadPayload.STREAM_CODEC,
+                ManualReloadPayload::handle
+        );
+
         // ===== Skin System =====
         registrar.playToClient(
                 SkinSyncPayload.TYPE,

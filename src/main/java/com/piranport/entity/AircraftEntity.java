@@ -333,9 +333,14 @@ public class AircraftEntity extends Entity {
                 && !FireControlManager.getTargets(owner.getUUID()).isEmpty()) {
             // Verify at least one locked target is still alive before transitioning
             if (hasAliveLockedTarget(owner)) {
-                hasEverHadFireControl = true;
-                setState(FlightState.ATTACKING);
-                return;
+                // Attack aircraft (payload-only, no bullets) skip airborne targets
+                boolean isAttackAircraft = !hasBullets && !payloadType.isEmpty();
+                if (!isAttackAircraft || hasAliveGroundLockedTarget(owner)) {
+                    hasEverHadFireControl = true;
+                    setState(FlightState.ATTACKING);
+                    return;
+                }
+                // Attack aircraft: alive targets exist but all airborne — stay cruising
             } else {
                 // All locked targets are dead — clean up stale UUIDs
                 FireControlManager.clearTargets(owner.getUUID());
@@ -355,7 +360,7 @@ public class AircraftEntity extends Entity {
                 if (level() instanceof ServerLevel sl) {
                     AABB box = getBoundingBox().inflate(32.0);
                     boolean hasNearbyHostile = !sl.getEntitiesOfClass(LivingEntity.class, box,
-                            e -> e.isAlive() && e != owner && e instanceof Monster).isEmpty();
+                            e -> e.isAlive() && e != owner && e instanceof Monster && !isAirborneTarget(e)).isEmpty();
                     if (hasNearbyHostile) {
                         autoSeekCooldown = 0; // reset so resolveTarget() finds it immediately
                         setState(FlightState.ATTACKING);
@@ -753,6 +758,7 @@ public class AircraftEntity extends Entity {
 
     /**
      * Resolves the attack target from the fire control lock list.
+     * Attack aircraft (bombers/torpedo bombers) skip airborne targets — only fighters engage air targets.
      */
     @Nullable
     private LivingEntity resolveTarget(Player owner) {
@@ -763,13 +769,17 @@ public class AircraftEntity extends Entity {
             if (attackMode == FlightGroupData.AttackMode.SPREAD) {
                 return locks.stream()
                         .map(uuid -> sl.getEntity(uuid))
-                        .filter(e -> e instanceof LivingEntity le && le.isAlive())
+                        .filter(e -> e instanceof LivingEntity le && le.isAlive() && !isAirborneTarget(le))
                         .map(e -> (LivingEntity) e)
                         .min(Comparator.comparingDouble(e -> distanceTo(e)))
                         .orElse(null);
             } else {
-                Entity e = sl.getEntity(locks.get(0));
-                if (e instanceof LivingEntity le && le.isAlive()) return le;
+                // FOCUS: find first non-airborne alive target in the lock list
+                for (UUID uuid : locks) {
+                    Entity e = sl.getEntity(uuid);
+                    if (e instanceof LivingEntity le && le.isAlive() && !isAirborneTarget(le)) return le;
+                }
+                return null;
             }
         }
 
@@ -779,7 +789,7 @@ public class AircraftEntity extends Entity {
         autoSeekDone = true;
         AABB box = getBoundingBox().inflate(32.0);
         return sl.getEntitiesOfClass(LivingEntity.class, box,
-                e -> e.isAlive() && e != owner && e instanceof Monster)
+                e -> e.isAlive() && e != owner && e instanceof Monster && !isAirborneTarget(e))
                 .stream()
                 .min(Comparator.comparingDouble(e -> distanceTo(e)))
                 .orElse(null);
@@ -793,6 +803,21 @@ public class AircraftEntity extends Entity {
             if (e instanceof LivingEntity le && le.isAlive()) return true;
         }
         return false;
+    }
+
+    /** Check if any locked target is alive AND on the ground/in water (not airborne). */
+    private boolean hasAliveGroundLockedTarget(Player owner) {
+        if (!(level() instanceof ServerLevel sl)) return false;
+        for (UUID uuid : FireControlManager.getTargets(owner.getUUID())) {
+            Entity e = sl.getEntity(uuid);
+            if (e instanceof LivingEntity le && le.isAlive() && !isAirborneTarget(le)) return true;
+        }
+        return false;
+    }
+
+    /** An entity is considered airborne if it is not on the ground and not in water. */
+    private static boolean isAirborneTarget(Entity e) {
+        return !e.onGround() && !e.isInWater();
     }
 
     private void tickReturning(Player owner) {

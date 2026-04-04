@@ -172,6 +172,8 @@
   "tooltip.piranport.aircraft_damage": "Damage: %s",
   "tooltip.piranport.aircraft_speed": "Speed: %s",
   "tooltip.piranport.fuel": "Fuel: %s / %s",
+  "tooltip.piranport.aircraft_fueled": "Fueled",
+  "tooltip.piranport.aircraft_not_fueled": "Not Fueled",
   "item.piranport.guidebook": "Navigation Manual",
   "message.piranport.patchouli_required": "Patchouli mod is required to open this book.",
   "piranport.book.name": "Piran Port Navigation Manual",

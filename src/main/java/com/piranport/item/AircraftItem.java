@@ -88,8 +88,11 @@ public class AircraftItem extends Item {
                     String.format("%.1f", info.panelSpeed())));
             tooltipComponents.add(Component.translatable("tooltip.piranport.weight", info.weight()));
             if (info.currentFuel() > 0) {
-                tooltipComponents.add(Component.translatable("tooltip.piranport.fuel",
-                        info.currentFuel(), info.fuelCapacity()));
+                tooltipComponents.add(Component.translatable("tooltip.piranport.aircraft_fueled")
+                        .withStyle(net.minecraft.ChatFormatting.GREEN));
+            } else {
+                tooltipComponents.add(Component.translatable("tooltip.piranport.aircraft_not_fueled")
+                        .withStyle(net.minecraft.ChatFormatting.RED));
             }
         }
         ShipCoreItem.appendWeaponCooldownTooltip(stack, tooltipComponents);

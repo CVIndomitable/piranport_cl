@@ -172,6 +172,8 @@
   "tooltip.piranport.aircraft_damage": "攻击力: %s",
   "tooltip.piranport.aircraft_speed": "航速: %s",
   "tooltip.piranport.fuel": "燃料: %s / %s",
+  "tooltip.piranport.aircraft_fueled": "已加注",
+  "tooltip.piranport.aircraft_not_fueled": "未加注",
   "item.piranport.guidebook": "航行手册",
   "message.piranport.patchouli_required": "需要安装 Patchouli 模组才能打开此手册。",
   "piranport.book.name": "皮兰港航行手册",

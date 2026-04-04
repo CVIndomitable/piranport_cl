@@ -10,6 +10,8 @@ import com.piranport.registry.ModMobEffects;
 import net.minecraft.core.NonNullList;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -158,6 +160,8 @@ public class TransformationManager {
             speedAttr.addTransientModifier(new AttributeModifier(
                     SPEED_MODIFIER_ID, speedMult - 1.0, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
         }
+
+        applyOverweightPenalty(player, totalLoad, type.maxLoad);
     }
 
     /** Hotbar slot count (slots 0–8 in Inventory.items). */
@@ -212,6 +216,8 @@ public class TransformationManager {
             speedAttr.addTransientModifier(new AttributeModifier(
                     SPEED_MODIFIER_ID, speedMult - 1.0, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
         }
+
+        applyOverweightPenalty(player, totalLoad, maxLoad);
     }
 
     /**
@@ -294,6 +300,54 @@ public class TransformationManager {
         if (stack.getItem() instanceof ShipCoreItem) return false;
         if (stack.getItem() instanceof ArmorPlateItem) return false;
         return getItemLoad(stack) > 0;
+    }
+
+    /**
+     * Apply overweight debuffs based on how much totalLoad exceeds maxLoad.
+     * cost = maxLoad - totalLoad. Negative cost means overweight.
+     *   cost < 0:    (speed penalty only, no extra debuff)
+     *   cost < -20:  Mining Fatigue I
+     *   cost < -50:  Mining Fatigue III + Weakness II
+     *   cost < -100: Mining Fatigue III + Poison II
+     * Effects last 60 ticks (3s), refreshed each recalculation.
+     */
+    public static void applyOverweightPenalty(Player player, int totalLoad, int maxLoad) {
+        if (player.level().isClientSide()) return;
+        int cost = maxLoad - totalLoad;
+        // Remove previous overweight debuffs if no longer overweight
+        if (cost >= -20) {
+            player.removeEffect(MobEffects.DIG_SLOWDOWN);
+        }
+        if (cost >= -50) {
+            player.removeEffect(MobEffects.WEAKNESS);
+            player.removeEffect(MobEffects.POISON);
+        }
+        if (cost >= 0) return;
+
+        int duration = 60; // 3 seconds, refreshed each recalc
+        if (cost < -100) {
+            // Mining Fatigue III + Poison II
+            player.addEffect(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, duration, 2, false, false, true));
+            player.addEffect(new MobEffectInstance(MobEffects.POISON, duration, 1, false, false, true));
+            player.removeEffect(MobEffects.WEAKNESS);
+        } else if (cost < -50) {
+            // Mining Fatigue III + Weakness II
+            player.addEffect(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, duration, 2, false, false, true));
+            player.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, duration, 1, false, false, true));
+            player.removeEffect(MobEffects.POISON);
+        } else if (cost < -20) {
+            // Mining Fatigue I
+            player.addEffect(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, duration, 0, false, false, true));
+            player.removeEffect(MobEffects.WEAKNESS);
+            player.removeEffect(MobEffects.POISON);
+        }
+    }
+
+    /** Remove overweight debuffs. Call when player un-transforms. */
+    public static void removeOverweightPenalty(Player player) {
+        player.removeEffect(MobEffects.DIG_SLOWDOWN);
+        player.removeEffect(MobEffects.WEAKNESS);
+        player.removeEffect(MobEffects.POISON);
     }
 
     /** Remove ship core attribute modifiers. Call when player un-transforms. */

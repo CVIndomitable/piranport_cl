@@ -344,6 +344,7 @@ public class ShipCoreItem extends Item {
                             _load, shipType.maxLoad);
                 } else {
                     TransformationManager.removeTransformationAttributes(player);
+                    TransformationManager.removeOverweightPenalty(player);
                     player.removeEffect(ModMobEffects.FLAMMABLE);
                     player.removeEffect(net.minecraft.world.effect.MobEffects.WATER_BREATHING);
                     player.displayClientMessage(

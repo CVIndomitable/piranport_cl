@@ -206,6 +206,12 @@ public class GameEvents {
             if (cached == null || cached != cacheKey) {
                 lastWeaponLoad.put(player.getUUID(), cacheKey);
                 TransformationManager.applyTransformationAttributes(player, offhand);
+            } else {
+                // Reapply overweight debuffs every 40 ticks to keep them active
+                int totalLoad = weaponLoad + armorLoad;
+                if (totalLoad > maxLoad && player.tickCount % 40 == 0) {
+                    TransformationManager.applyOverweightPenalty(player, totalLoad, maxLoad);
+                }
             }
         } else {
             // No core in offhand — clear isTransformed flag on any core still in inventory
@@ -218,6 +224,7 @@ public class GameEvents {
             // Auto-un-transform if we were previously transformed
             if (lastWeaponLoad.remove(player.getUUID()) != null) {
                 TransformationManager.removeTransformationAttributes(player);
+                TransformationManager.removeOverweightPenalty(player);
                 player.removeEffect(com.piranport.registry.ModMobEffects.FLAMMABLE);
                 player.removeEffect(MobEffects.WATER_BREATHING);
                 recallAircraftForPlayer(player);
@@ -311,6 +318,7 @@ public class GameEvents {
             // Fuel depleted — auto-untransform
             TransformationManager.setTransformed(core, false);
             TransformationManager.removeTransformationAttributes(player);
+            TransformationManager.removeOverweightPenalty(player);
             player.removeEffect(com.piranport.registry.ModMobEffects.FLAMMABLE);
             recallAircraftForPlayer(player);
             lastWeaponLoad.remove(uuid);

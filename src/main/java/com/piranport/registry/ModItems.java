@@ -43,6 +43,8 @@ public class ModItems {
             ITEMS.registerSimpleItem("tab_icon");
 
     // ===== Materials =====
+    public static final DeferredItem<Item> RAW_ALUMINUM =
+            ITEMS.registerSimpleItem("raw_aluminum");
     public static final DeferredItem<Item> ALUMINUM_INGOT =
             ITEMS.registerSimpleItem("aluminum_ingot");
     public static final DeferredItem<Item> SALT =

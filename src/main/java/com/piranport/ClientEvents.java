@@ -104,6 +104,9 @@ public class ClientEvents {
         event.register(ModItems.TWIN_TORPEDO_LAUNCHER.get(), weaponDecorator);
         event.register(ModItems.TRIPLE_TORPEDO_LAUNCHER.get(), weaponDecorator);
         event.register(ModItems.QUAD_TORPEDO_LAUNCHER.get(), weaponDecorator);
+        event.register(ModItems.DEPTH_CHARGE_LAUNCHER.get(), weaponDecorator);
+        event.register(ModItems.DEPTH_CHARGE_LAUNCHER_IMPROVED.get(), weaponDecorator);
+        event.register(ModItems.DEPTH_CHARGE_LAUNCHER_ADVANCED.get(), weaponDecorator);
     }
 
     @SubscribeEvent

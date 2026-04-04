@@ -1,6 +1,7 @@
 package com.piranport.client;
 
 import com.piranport.component.WeaponCooldown;
+import com.piranport.item.DepthChargeLauncherItem;
 import com.piranport.item.TorpedoLauncherItem;
 import com.piranport.registry.ModDataComponents;
 import net.minecraft.client.Minecraft;
@@ -20,6 +21,7 @@ public class WeaponReloadDecorator implements IItemDecorator {
     // Colors
     private static final int CANNON_COLOR  = 0xFFE05030; // orange-red
     private static final int TORPEDO_COLOR = 0xFF3070C0; // blue
+    private static final int DC_COLOR      = 0xFF40A040; // green
     private static final int BG_COLOR      = 0xFF000000; // black background
 
     @Override
@@ -33,8 +35,14 @@ public class WeaponReloadDecorator implements IItemDecorator {
         float fraction = cd.getFraction(currentTick);
         if (fraction <= 0f) return false; // ready — no bar
 
-        int fillColor = (stack.getItem() instanceof TorpedoLauncherItem)
-                ? TORPEDO_COLOR : CANNON_COLOR;
+        int fillColor;
+        if (stack.getItem() instanceof TorpedoLauncherItem) {
+            fillColor = TORPEDO_COLOR;
+        } else if (stack.getItem() instanceof DepthChargeLauncherItem) {
+            fillColor = DC_COLOR;
+        } else {
+            fillColor = CANNON_COLOR;
+        }
 
         // Progress: 0% at start of cooldown → 100% when ready
         int fillW = Math.round(BAR_WIDTH * (1f - fraction));

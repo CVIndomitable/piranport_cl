@@ -480,6 +480,9 @@ public class TransformationManager {
             weaponLoadMap.put(ModItems.SHIP_ROCKET_LAUNCHER.get(), 8);
             weaponLoadMap.put(ModItems.SEA_DART_LAUNCHER.get(), 12);
             weaponLoadMap.put(ModItems.SEACAT_LAUNCHER.get(), 6);
+            weaponLoadMap.put(ModItems.DEPTH_CHARGE_LAUNCHER.get(), 2);
+            weaponLoadMap.put(ModItems.DEPTH_CHARGE_LAUNCHER_IMPROVED.get(), 3);
+            weaponLoadMap.put(ModItems.DEPTH_CHARGE_LAUNCHER_ADVANCED.get(), 5);
         }
         return weaponLoadMap;
     }

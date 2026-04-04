@@ -168,11 +168,13 @@ public class ShipCoreMenu extends AbstractContainerMenu {
                 || stack.is(ModItems.MEDIUM_GUN.get())
                 || stack.is(ModItems.LARGE_GUN.get())
                 || stack.getItem() instanceof TorpedoLauncherItem
+                || stack.getItem() instanceof com.piranport.item.DepthChargeLauncherItem
                 || stack.getItem() instanceof AircraftItem;
     }
 
     public static boolean isAmmo(ItemStack stack) {
-        return isShell(stack) || stack.getItem() instanceof TorpedoItem || isAviationAmmo(stack);
+        return isShell(stack) || stack.getItem() instanceof TorpedoItem
+                || stack.is(ModItems.DEPTH_CHARGE.get()) || isAviationAmmo(stack);
     }
 
     public static boolean isAviationAmmo(ItemStack stack) {

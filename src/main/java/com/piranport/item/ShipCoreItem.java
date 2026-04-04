@@ -458,6 +458,12 @@ public class ShipCoreItem extends Item {
             return;
         }
 
+        // Handle depth charge launcher
+        if (weapon.getItem() instanceof DepthChargeLauncherItem dcLauncher) {
+            fireDepthChargesGui(level, player, stack, items, weaponIndex, dcLauncher);
+            return;
+        }
+
         // Handle aircraft
         if (weapon.getItem() instanceof AircraftItem) {
             launchAircraft(level, player, stack, items, weaponIndex, coreInventorySlot);
@@ -582,6 +588,12 @@ public class ShipCoreItem extends Item {
             } else {
                 fireTorpedosManualMode(level, player, coreStack, inv, weaponSlot, torpedoLauncher, cooldowns);
             }
+            return;
+        }
+
+        // Depth charge launcher
+        if (weapon.getItem() instanceof DepthChargeLauncherItem dcLauncher) {
+            fireDepthCharges(level, player, coreStack, inv, weaponSlot, coreInventorySlot, dcLauncher, cooldowns);
             return;
         }
 
@@ -857,6 +869,91 @@ public class ShipCoreItem extends Item {
 
         level.playSound(null, player.getX(), player.getY(), player.getZ(),
                 SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 0.4f, 0.4f);
+    }
+
+    private static void fireDepthCharges(Level level, Player player, ItemStack coreStack,
+                                          Inventory inv, int weaponSlot, int coreSlot,
+                                          DepthChargeLauncherItem launcher, SlotCooldowns cooldowns) {
+        int chargeCount = launcher.getChargeCount();
+        int cooldown = launcher.getCooldownTicks();
+
+        // Count available depth charge ammo in inventory
+        int available = 0;
+        for (int i = 0; i < inv.items.size(); i++) {
+            if (i == coreSlot || i == weaponSlot) continue;
+            ItemStack s = inv.items.get(i);
+            if (!s.isEmpty() && s.is(ModItems.DEPTH_CHARGE.get())) {
+                available += s.getCount();
+            }
+        }
+
+        if (available < chargeCount) {
+            player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
+            return;
+        }
+
+        // Consume ammo
+        int toConsume = chargeCount;
+        for (int i = 0; i < inv.items.size() && toConsume > 0; i++) {
+            if (i == coreSlot || i == weaponSlot) continue;
+            ItemStack s = inv.items.get(i);
+            if (!s.isEmpty() && s.is(ModItems.DEPTH_CHARGE.get())) {
+                int take = Math.min(toConsume, s.getCount());
+                s.shrink(take);
+                toConsume -= take;
+            }
+        }
+
+        // Spawn depth charges based on spread pattern
+        Vec3 look = player.getLookAngle();
+        Vec3 horizLook = new Vec3(look.x, 0, look.z).normalize();
+        switch (launcher.getSpreadPattern()) {
+            case SINGLE -> {
+                spawnDepthCharge(level, player, horizLook, 0.0, 0.6);
+            }
+            case FRONT_BACK -> {
+                spawnDepthCharge(level, player, horizLook, 0.0, 0.7);   // far
+                spawnDepthCharge(level, player, horizLook, 0.0, 0.4);   // near
+            }
+            case TRIANGLE -> {
+                spawnDepthCharge(level, player, horizLook, 0.0, 0.7);   // center far
+                Vec3 left = rotateHorizontal(horizLook, Math.toRadians(-20));
+                spawnDepthCharge(level, player, left, 0.0, 0.5);
+                Vec3 right = rotateHorizontal(horizLook, Math.toRadians(20));
+                spawnDepthCharge(level, player, right, 0.0, 0.5);
+            }
+        }
+
+        // Damage launcher
+        ItemStack launcherStack = weaponSlot == 40 ? inv.offhand.get(0) : inv.items.get(weaponSlot);
+        if (!launcherStack.isEmpty()) {
+            int newDamage = launcherStack.getDamageValue() + 1;
+            if (newDamage >= launcherStack.getMaxDamage()) {
+                if (weaponSlot == 40) inv.offhand.set(0, ItemStack.EMPTY);
+                else inv.items.set(weaponSlot, ItemStack.EMPTY);
+                level.playSound(null, player.getX(), player.getY(), player.getZ(),
+                        SoundEvents.ITEM_BREAK, SoundSource.PLAYERS, 0.8f, 0.8f + level.random.nextFloat() * 0.4f);
+            } else {
+                launcherStack.setDamageValue(newDamage);
+            }
+        }
+
+        int boostedCooldown = TransformationManager.boostedCooldown(player, cooldown);
+        coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
+                cooldowns.withSlotCooldown(weaponSlot, boostedCooldown, level.getGameTime()));
+        launcherStack.set(ModDataComponents.WEAPON_COOLDOWN.get(),
+                new WeaponCooldown(level.getGameTime() + boostedCooldown, boostedCooldown));
+        TransformationManager.setWeaponIndex(coreStack, weaponSlot);
+
+        level.playSound(null, player.getX(), player.getY(), player.getZ(),
+                SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 0.5f, 0.6f);
+    }
+
+    private static void spawnDepthCharge(Level level, Player player, Vec3 dir, double angleOffset, double speed) {
+        DepthChargeEntity dc = new DepthChargeEntity(level, player, 14f, 3.0f);
+        dc.setPos(player.getX() + dir.x * 0.5, player.getEyeY() - 0.3, player.getZ() + dir.z * 0.5);
+        dc.setDeltaMovement(dir.x * speed, 0.3, dir.z * speed);
+        level.addFreshEntity(dc);
     }
 
     private static void launchAircraftInventoryMode(Level level, Player player, ItemStack coreStack,
@@ -1277,6 +1374,78 @@ public class ShipCoreItem extends Item {
         // Launch sound
         level.playSound(null, player.getX(), player.getY(), player.getZ(),
                 SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 0.4f, 0.4f);
+    }
+
+    // ===== Depth charge firing (GUI mode) =====
+
+    private void fireDepthChargesGui(Level level, Player player, ItemStack coreStack,
+                                      NonNullList<ItemStack> items, int weaponIndex,
+                                      DepthChargeLauncherItem launcher) {
+        int chargeCount = launcher.getChargeCount();
+        int cooldown = launcher.getCooldownTicks();
+
+        // Count available depth charge ammo in ammo slots
+        int ammoEnd = shipType.weaponSlots + shipType.ammoSlots;
+        int available = 0;
+        for (int i = shipType.weaponSlots; i < ammoEnd; i++) {
+            ItemStack ammo = items.get(i);
+            if (!ammo.isEmpty() && ammo.is(ModItems.DEPTH_CHARGE.get())) {
+                available += ammo.getCount();
+            }
+        }
+
+        if (available < chargeCount) {
+            player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
+            return;
+        }
+
+        // Consume ammo
+        int toConsume = chargeCount;
+        for (int i = shipType.weaponSlots; i < ammoEnd && toConsume > 0; i++) {
+            ItemStack ammo = items.get(i);
+            if (!ammo.isEmpty() && ammo.is(ModItems.DEPTH_CHARGE.get())) {
+                int take = Math.min(toConsume, ammo.getCount());
+                ammo.shrink(take);
+                toConsume -= take;
+            }
+        }
+
+        // Spawn depth charges
+        Vec3 look = player.getLookAngle();
+        Vec3 horizLook = new Vec3(look.x, 0, look.z).normalize();
+        switch (launcher.getSpreadPattern()) {
+            case SINGLE -> spawnDepthCharge(level, player, horizLook, 0.0, 0.6);
+            case FRONT_BACK -> {
+                spawnDepthCharge(level, player, horizLook, 0.0, 0.7);
+                spawnDepthCharge(level, player, horizLook, 0.0, 0.4);
+            }
+            case TRIANGLE -> {
+                spawnDepthCharge(level, player, horizLook, 0.0, 0.7);
+                spawnDepthCharge(level, player, rotateHorizontal(horizLook, Math.toRadians(-20)), 0.0, 0.5);
+                spawnDepthCharge(level, player, rotateHorizontal(horizLook, Math.toRadians(20)), 0.0, 0.5);
+            }
+        }
+
+        // Damage launcher
+        ItemStack launcherStack = items.get(weaponIndex);
+        int newDamage = launcherStack.getDamageValue() + 1;
+        if (newDamage >= launcherStack.getMaxDamage()) {
+            items.set(weaponIndex, ItemStack.EMPTY);
+            level.playSound(null, player.getX(), player.getY(), player.getZ(),
+                    SoundEvents.ITEM_BREAK, SoundSource.PLAYERS, 0.8f, 0.8f + level.random.nextFloat() * 0.4f);
+        } else {
+            launcherStack.setDamageValue(newDamage);
+        }
+
+        int boostedCooldown = TransformationManager.boostedCooldown(player, cooldown);
+        SlotCooldowns cd = coreStack.getOrDefault(ModDataComponents.SLOT_COOLDOWNS.get(), SlotCooldowns.EMPTY);
+        coreStack.set(ModDataComponents.SHIP_CORE_CONTENTS.get(), ItemContainerContents.fromItems(items));
+        coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
+                cd.withSlotCooldown(weaponIndex, boostedCooldown, level.getGameTime()));
+        TransformationManager.setWeaponIndex(coreStack, weaponIndex);
+
+        level.playSound(null, player.getX(), player.getY(), player.getZ(),
+                SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 0.5f, 0.6f);
     }
 
     private static float[] getSpreadAngles(int count) {

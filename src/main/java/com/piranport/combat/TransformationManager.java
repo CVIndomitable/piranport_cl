@@ -63,7 +63,7 @@ public class TransformationManager {
         if (!(mainHand.getItem() instanceof ShipCoreItem)) return;
         if (!isTransformed(mainHand)) return;
 
-        if (!com.piranport.config.ModCommonConfig.SHIP_CORE_GUI_ENABLED.get()) {
+        if (!com.piranport.config.ModCommonConfig.isShipCoreGuiEnabled()) {
             // No-GUI mode: weapon is determined by what the player is holding, no cycling needed
             return;
         }
@@ -113,7 +113,7 @@ public class TransformationManager {
         if (player.level().isClientSide()) return;
         if (!(coreStack.getItem() instanceof ShipCoreItem)) return;
 
-        if (!com.piranport.config.ModCommonConfig.SHIP_CORE_GUI_ENABLED.get()) {
+        if (!com.piranport.config.ModCommonConfig.isShipCoreGuiEnabled()) {
             applyAttributesInventoryMode(player);
             return;
         }
@@ -356,7 +356,7 @@ public class TransformationManager {
         if (!(coreStack.getItem() instanceof ShipCoreItem sci)) return false;
         ShipCoreItem.ShipType type = sci.getShipType();
 
-        if (com.piranport.config.ModCommonConfig.SHIP_CORE_GUI_ENABLED.get()) {
+        if (com.piranport.config.ModCommonConfig.isShipCoreGuiEnabled()) {
             // GUI mode: check enhancement slots in SHIP_CORE_CONTENTS
             ItemContainerContents contents = coreStack.getOrDefault(
                     ModDataComponents.SHIP_CORE_CONTENTS.get(), ItemContainerContents.EMPTY);

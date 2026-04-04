@@ -862,7 +862,7 @@ public class AircraftEntity extends Entity {
     }
 
     private void returnItemToOwner(Player player) {
-        if (!com.piranport.config.ModCommonConfig.SHIP_CORE_GUI_ENABLED.get()) {
+        if (!com.piranport.config.ModCommonConfig.isShipCoreGuiEnabled()) {
             // Inventory mode: return aircraft directly to the inventory slot it was launched from
             ItemStack returnStack = buildReturnStack();
             if (weaponSlotIndex == 40) {

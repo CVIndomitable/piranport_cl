@@ -86,5 +86,39 @@ public class ModCommonConfig {
                             "Set to true to enable salt disk features in rivers. (开启后河流底部会生成盐块)")
                     .define("worldgen.saltGenerationEnabled", false);
 
+    // ===== Game Mode (游戏模式) =====
+
+    public static final ModConfigSpec.BooleanValue KANSEN_MODE =
+            BUILDER
+                    .comment(
+                            "Enable Kansen Mode (舰R模式).",
+                            "Default: true. When enabled, forces no-GUI mode (overrides shipCoreGuiEnabled).",
+                            "舰R模式，默认开启。开启时强制使用无GUI模式。")
+                    .define("gameMode.kansenMode", true);
+
+    public static final ModConfigSpec.BooleanValue SLAV_PRISON_MODE =
+            BUILDER
+                    .comment(
+                            "Enable Slav Prison Mode (斯拉夫大牢模式).",
+                            "Default: false.",
+                            "斯拉夫大牢模式，默认关闭。")
+                    .define("gameMode.slavPrisonMode", false);
+
+    public static final ModConfigSpec.BooleanValue GIVE_GUIDEBOOK_ON_FIRST_JOIN =
+            BUILDER
+                    .comment(
+                            "Give players a Guidebook when they first join the world (首次进入世界赠送教程书).",
+                            "Default: true.",
+                            "开启后，玩家首次加入时自动获得一本航行手册。")
+                    .define("gameMode.giveGuidebookOnFirstJoin", true);
+
     public static final ModConfigSpec SPEC = BUILDER.build();
+
+    /**
+     * Helper: returns true only if the Ship Core GUI is truly enabled.
+     * Kansen Mode overrides GUI to disabled.
+     */
+    public static boolean isShipCoreGuiEnabled() {
+        return SHIP_CORE_GUI_ENABLED.get() && !KANSEN_MODE.get();
+    }
 }

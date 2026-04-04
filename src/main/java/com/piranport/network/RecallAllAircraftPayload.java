@@ -38,7 +38,7 @@ public record RecallAllAircraftPayload() implements CustomPacketPayload {
             if (sp.level().isClientSide()) return;
 
             // Only in no-GUI mode + transformed
-            if (com.piranport.config.ModCommonConfig.SHIP_CORE_GUI_ENABLED.get()) return;
+            if (com.piranport.config.ModCommonConfig.isShipCoreGuiEnabled()) return;
             if (!com.piranport.combat.TransformationManager.isPlayerTransformed(sp)) return;
 
             ServerLevel sl = (ServerLevel) sp.level();

@@ -197,7 +197,7 @@ public class ShipCoreItem extends Item {
             return false;
         }
 
-        if (com.piranport.config.ModCommonConfig.SHIP_CORE_GUI_ENABLED.get()) return false;
+        if (com.piranport.config.ModCommonConfig.isShipCoreGuiEnabled()) return false;
 
         int capacity = shipType.enhancementSlots;
         ItemContainerContents existing = stack.getOrDefault(
@@ -239,7 +239,7 @@ public class ShipCoreItem extends Item {
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context,
                                 List<Component> tooltipComponents, TooltipFlag tooltipFlag) {
-        if (!com.piranport.config.ModCommonConfig.SHIP_CORE_GUI_ENABLED.get()) {
+        if (!com.piranport.config.ModCommonConfig.isShipCoreGuiEnabled()) {
             // No-GUI mode: find the best (highest maxLoad) core in inventory.
             // If this core is the best (effective) one, show load info; otherwise show "不生效".
             // Safe: FMLEnvironment.dist check prevents Minecraft.getInstance() from loading on server
@@ -315,7 +315,7 @@ public class ShipCoreItem extends Item {
 
         if (player.isShiftKeyDown()) {
             // No-GUI mode: transformation is automatic (offhand-driven), manual toggle disabled
-            if (!com.piranport.config.ModCommonConfig.SHIP_CORE_GUI_ENABLED.get()) {
+            if (!com.piranport.config.ModCommonConfig.isShipCoreGuiEnabled()) {
                 return InteractionResultHolder.pass(stack);
             }
             // Toggle transformation
@@ -370,7 +370,7 @@ public class ShipCoreItem extends Item {
         }
 
         if (isTransformed) {
-            if (com.piranport.config.ModCommonConfig.SHIP_CORE_GUI_ENABLED.get()) {
+            if (com.piranport.config.ModCommonConfig.isShipCoreGuiEnabled()) {
                 // GUI mode: core in hand fires the selected weapon slot
                 if (!level.isClientSide) {
                     int coreSlot = hand == InteractionHand.MAIN_HAND
@@ -386,7 +386,7 @@ public class ShipCoreItem extends Item {
 
         // Open GUI (guarded by config)
         if (!level.isClientSide && player instanceof ServerPlayer serverPlayer
-                && com.piranport.config.ModCommonConfig.SHIP_CORE_GUI_ENABLED.get()) {
+                && com.piranport.config.ModCommonConfig.isShipCoreGuiEnabled()) {
             int slot = hand == InteractionHand.MAIN_HAND
                     ? player.getInventory().selected
                     : Inventory.SLOT_OFFHAND;
@@ -520,7 +520,7 @@ public class ShipCoreItem extends Item {
      * Returns true if firing was attempted (so the weapon can return CONSUME).
      */
     public static boolean tryFireFromInventory(Level level, Player player, InteractionHand hand) {
-        if (level.isClientSide || com.piranport.config.ModCommonConfig.SHIP_CORE_GUI_ENABLED.get()) return false;
+        if (level.isClientSide || com.piranport.config.ModCommonConfig.isShipCoreGuiEnabled()) return false;
 
         Inventory inv = player.getInventory();
         int weaponSlot = (hand == InteractionHand.MAIN_HAND) ? inv.selected : 40;
@@ -1285,7 +1285,7 @@ public class ShipCoreItem extends Item {
         if (!com.piranport.config.ModCommonConfig.AUTO_RESUPPLY_ENABLED.get()) return; // manual mode: no auto fuel
         if (!(coreStack.getItem() instanceof ShipCoreItem)) return;
 
-        if (!com.piranport.config.ModCommonConfig.SHIP_CORE_GUI_ENABLED.get()) {
+        if (!com.piranport.config.ModCommonConfig.isShipCoreGuiEnabled()) {
             refillAircraftFuelInventoryMode(player);
             return;
         }

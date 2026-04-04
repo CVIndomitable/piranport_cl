@@ -313,5 +313,7 @@
   "dungeon.piranport.artillery_intro.looting": "Prepare for combat — %s seconds remaining",
   "dungeon.piranport.artillery_intro.battle_start": "Enemy destroyers approaching — engage!",
   "dungeon.piranport.artillery_intro.kills": "Destroyers sunk: %s/%s (%s remaining)",
-  "dungeon.piranport.artillery_intro.cleared": "All enemies eliminated — portal opened!"
+  "dungeon.piranport.artillery_intro.cleared": "All enemies eliminated — portal opened!",
+
+  "message.piranport.guidebook_received": "You received a Navigation Manual!"
 }

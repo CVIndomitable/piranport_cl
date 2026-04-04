@@ -313,5 +313,7 @@
   "dungeon.piranport.artillery_intro.looting": "准备战斗——剩余 %s 秒",
   "dungeon.piranport.artillery_intro.battle_start": "敌方驱逐舰正在靠近——迎战！",
   "dungeon.piranport.artillery_intro.kills": "击沉驱逐舰：%s/%s（剩余 %s）",
-  "dungeon.piranport.artillery_intro.cleared": "全部敌舰已消灭——传送门已开启！"
+  "dungeon.piranport.artillery_intro.cleared": "全部敌舰已消灭——传送门已开启！",
+
+  "message.piranport.guidebook_received": "获得了一本航行手册！"
 }

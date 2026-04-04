@@ -52,7 +52,7 @@ public class GameEvents {
         // No-GUI mode: detect inventory weapon-load changes and recalculate attributes.
         // The scan is O(36) per tick but attribute recalculation only happens when the value changes.
         if (!player.level().isClientSide()
-                && !com.piranport.config.ModCommonConfig.SHIP_CORE_GUI_ENABLED.get()) {
+                && !com.piranport.config.ModCommonConfig.isShipCoreGuiEnabled()) {
             tickInventoryLoadCheck(player);
         }
 
@@ -340,11 +340,25 @@ public class GameEvents {
         recallAircraftForPlayer(player);
     }
 
-    /** When a player logs in, sync all active skins to them. */
+    /** When a player logs in, sync all active skins and give guidebook on first join. */
     @SubscribeEvent
     public static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
         if (!(event.getEntity() instanceof ServerPlayer joiner)) return;
         com.piranport.skin.SkinManager.syncAllSkinsToPlayer(joiner);
+
+        // Give guidebook on first join
+        if (ModCommonConfig.GIVE_GUIDEBOOK_ON_FIRST_JOIN.get()) {
+            net.minecraft.nbt.CompoundTag persisted = joiner.getPersistentData();
+            String tag = "piranport:received_guidebook";
+            if (!persisted.getBoolean(tag)) {
+                persisted.putBoolean(tag, true);
+                ItemStack guidebook = new ItemStack(
+                        com.piranport.registry.ModItems.GUIDEBOOK.get());
+                if (!joiner.getInventory().add(guidebook)) {
+                    joiner.drop(guidebook, false);
+                }
+            }
+        }
     }
 
     /** When a player logs out, recall all their airborne aircraft and clear cached load. */

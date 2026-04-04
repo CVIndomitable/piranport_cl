@@ -48,7 +48,7 @@ public class ClientGameEvents {
             return;
         }
         // No-GUI mode: empty hand right-click → recall all aircraft
-        if (!ModCommonConfig.SHIP_CORE_GUI_ENABLED.get()
+        if (!ModCommonConfig.isShipCoreGuiEnabled()
                 && TransformationManager.isPlayerTransformed(event.getEntity())) {
             PacketDistributor.sendToServer(new RecallAllAircraftPayload());
         }

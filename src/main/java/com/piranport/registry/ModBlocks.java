@@ -3,6 +3,7 @@ package com.piranport.registry;
 import com.piranport.PiranPort;
 import com.piranport.block.CookingPotBlock;
 import com.piranport.block.CuttingBoardBlock;
+import com.piranport.block.ReloadFacilityBlock;
 import com.piranport.block.FourStageCropBlock;
 import com.piranport.block.PlaceableFoodBlock;
 import com.piranport.block.RiceCropBlock;
@@ -118,6 +119,15 @@ public class ModBlocks {
             BLOCKS.register("bowl_food", () -> new PlaceableFoodBlock.Bowl(foodBlockProps()));
     public static final DeferredBlock<PlaceableFoodBlock.Cake> CAKE_FOOD =
             BLOCKS.register("cake_food", () -> new PlaceableFoodBlock.Cake(foodBlockProps()));
+
+    // ===== Reload Facility =====
+    public static final DeferredBlock<ReloadFacilityBlock> RELOAD_FACILITY =
+            BLOCKS.register("reload_facility", () -> new ReloadFacilityBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.METAL)
+                            .strength(3.5f, 6.0f)
+                            .requiresCorrectToolForDrops()
+                            .sound(SoundType.METAL)));
 
     // ===== Dungeon System (v0.0.8) =====
     public static final DeferredBlock<com.piranport.dungeon.block.DungeonLecternBlock> DUNGEON_LECTERN =

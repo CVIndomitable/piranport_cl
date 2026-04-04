@@ -4,6 +4,7 @@ import com.piranport.PiranPort;
 import com.piranport.menu.ShipCoreMenu;
 import com.piranport.menu.CookingPotMenu;
 import com.piranport.menu.FlightGroupMenu;
+import com.piranport.menu.ReloadFacilityMenu;
 import com.piranport.menu.StoneMillMenu;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.inventory.MenuType;
@@ -26,6 +27,10 @@ public class ModMenuTypes {
     public static final DeferredHolder<MenuType<?>, MenuType<CookingPotMenu>> COOKING_POT_MENU =
             MENU_TYPES.register("cooking_pot",
                     () -> IMenuTypeExtension.create(CookingPotMenu::fromNetwork));
+
+    public static final DeferredHolder<MenuType<?>, MenuType<ReloadFacilityMenu>> RELOAD_FACILITY_MENU =
+            MENU_TYPES.register("reload_facility",
+                    () -> IMenuTypeExtension.create(ReloadFacilityMenu::fromNetwork));
 
     public static final DeferredHolder<MenuType<?>, MenuType<FlightGroupMenu>> FLIGHT_GROUP_MENU =
             MENU_TYPES.register("flight_group",

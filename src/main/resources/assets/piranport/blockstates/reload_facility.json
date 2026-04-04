@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "piranport:block/reload_facility" },
+    "facing=south": { "model": "piranport:block/reload_facility", "y": 180 },
+    "facing=east":  { "model": "piranport:block/reload_facility", "y": 90 },
+    "facing=west":  { "model": "piranport:block/reload_facility", "y": 270 }
+  }
+}

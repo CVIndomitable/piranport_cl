@@ -8,6 +8,7 @@ import com.piranport.client.WeaponReloadDecorator;
 import com.piranport.component.AircraftInfo;
 import com.piranport.menu.CookingPotScreen;
 import com.piranport.menu.FlightGroupScreen;
+import com.piranport.menu.ReloadFacilityScreen;
 import com.piranport.menu.ShipCoreScreen;
 import com.piranport.menu.StoneMillScreen;
 import com.piranport.registry.ModBlockEntityTypes;
@@ -67,6 +68,7 @@ public class ClientEvents {
         event.register(ModMenuTypes.STONE_MILL_MENU.get(), StoneMillScreen::new);
         event.register(ModMenuTypes.COOKING_POT_MENU.get(), CookingPotScreen::new);
         event.register(ModMenuTypes.FLIGHT_GROUP_MENU.get(), FlightGroupScreen::new);
+        event.register(ModMenuTypes.RELOAD_FACILITY_MENU.get(), ReloadFacilityScreen::new);
         // Dungeon
         event.register(ModMenuTypes.DUNGEON_BOOK_MENU.get(),
                 com.piranport.dungeon.client.DungeonBookScreen::new);
@@ -83,6 +85,8 @@ public class ClientEvents {
         event.register(ModKeyMappings.TOGGLE_AUTO_LAUNCH);
         event.register(ModKeyMappings.DEBUG_TOGGLE);
         event.register(ModKeyMappings.MANUAL_RELOAD);
+        event.register(ModKeyMappings.TORPEDO_STEER_LEFT);
+        event.register(ModKeyMappings.TORPEDO_STEER_RIGHT);
     }
 
     @SubscribeEvent

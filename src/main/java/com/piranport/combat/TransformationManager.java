@@ -4,6 +4,7 @@ import com.piranport.PiranPort;
 import com.piranport.item.ArmorPlateItem;
 import com.piranport.item.ShipCoreItem;
 import com.piranport.item.SonarItem;
+import com.piranport.item.TorpedoReloadItem;
 import com.piranport.item.EngineItem;
 import com.piranport.registry.ModDataComponents;
 import com.piranport.registry.ModItems;
@@ -523,6 +524,37 @@ public class TransformationManager {
             contents.copyInto(stored);
             for (ItemStack s : stored) {
                 if (s.getItem() instanceof SonarItem) return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Check if the transformed player has a TorpedoReloadItem equipped in enhancement slots.
+     * Works in both GUI mode (SHIP_CORE_CONTENTS) and no-GUI mode (SHIP_CORE_ARMOR).
+     */
+    public static boolean hasTorpedoReloadEquipped(Player player, ItemStack coreStack) {
+        if (!(coreStack.getItem() instanceof ShipCoreItem sci)) return false;
+        ShipCoreItem.ShipType type = sci.getShipType();
+
+        if (com.piranport.config.ModCommonConfig.isShipCoreGuiEnabled()) {
+            // GUI mode: check enhancement slots in SHIP_CORE_CONTENTS
+            ItemContainerContents contents = coreStack.getOrDefault(
+                    ModDataComponents.SHIP_CORE_CONTENTS.get(), ItemContainerContents.EMPTY);
+            NonNullList<ItemStack> items = NonNullList.withSize(type.totalSlots(), ItemStack.EMPTY);
+            contents.copyInto(items);
+            int eStart = type.weaponSlots + type.ammoSlots;
+            for (int i = eStart; i < type.totalSlots(); i++) {
+                if (items.get(i).getItem() instanceof TorpedoReloadItem) return true;
+            }
+        } else {
+            // No-GUI mode: check SHIP_CORE_ARMOR storage
+            ItemContainerContents contents = coreStack.getOrDefault(
+                    ModDataComponents.SHIP_CORE_ARMOR.get(), ItemContainerContents.EMPTY);
+            NonNullList<ItemStack> stored = NonNullList.withSize(type.enhancementSlots, ItemStack.EMPTY);
+            contents.copyInto(stored);
+            for (ItemStack s : stored) {
+                if (s.getItem() instanceof TorpedoReloadItem) return true;
             }
         }
         return false;

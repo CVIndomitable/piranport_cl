@@ -63,13 +63,16 @@ public class ModCreativeTabs {
                         output.accept(ModItems.TBF_ASW.get());
                         output.accept(ModItems.TENZAN_TORPEDO.get());
                         output.accept(ModItems.TYPE97_TORPEDO.get());
+                        output.accept(ModItems.SKY_PIRATE_TORPEDO.get());
                         // Dive bombers
                         output.accept(ModItems.PETREL_BOMBER.get());
-                        output.accept(ModItems.SEIUN_BOMBER.get());
                         output.accept(ModItems.TYPE99_DIVE_BOMBER.get());
                         output.accept(ModItems.SBD_DAUNTLESS.get());
                         output.accept(ModItems.FIREFLY_AS_MK5.get());
                         output.accept(ModItems.SUISEI_BOMBER.get());
+                        // Level bombers
+                        output.accept(ModItems.SEIUN_BOMBER.get());
+                        output.accept(ModItems.B25_BOMBER.get());
                         output.accept(ModItems.XA2J_BOMBER.get());
                         // Fighters
                         output.accept(ModItems.F6F_HELLCAT_ROCKET.get());
@@ -257,6 +260,7 @@ public class ModCreativeTabs {
                         output.accept(ModItems.TORPEDO_533MM.get());
                         output.accept(ModItems.TORPEDO_610MM.get());
                         output.accept(ModItems.MAGNETIC_TORPEDO_533MM.get());
+                        output.accept(ModItems.WIRE_GUIDED_TORPEDO_533MM.get());
                         output.accept(ModItems.ACOUSTIC_TORPEDO_533MM.get());
                         // Aviation Ammo
                         output.accept(ModItems.AVIATION_FUEL.get());

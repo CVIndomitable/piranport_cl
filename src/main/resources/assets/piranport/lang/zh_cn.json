@@ -370,5 +370,10 @@
   "dungeon.piranport.artillery_intro.kills": "击沉驱逐舰：%s/%s（剩余 %s）",
   "dungeon.piranport.artillery_intro.cleared": "全部敌舰已消灭——传送门已开启！",
 
-  "message.piranport.guidebook_received": "获得了一本航行手册！"
+  "message.piranport.guidebook_received": "获得了一本航行手册！",
+
+  "item.piranport.wire_guided_torpedo_533mm": "533mm线导鱼雷",
+  "message.piranport.torpedo_wire_lost": "鱼雷掉线",
+  "key.piranport.torpedo_steer_left": "鱼雷左偏航 [9]",
+  "key.piranport.torpedo_steer_right": "鱼雷右偏航 [0]"
 }

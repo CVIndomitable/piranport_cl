@@ -4,6 +4,7 @@ import com.piranport.PiranPort;
 import com.piranport.block.entity.CookingPotBlockEntity;
 import com.piranport.block.entity.CuttingBoardBlockEntity;
 import com.piranport.block.entity.PlaceableFoodBlockEntity;
+import com.piranport.block.entity.ReloadFacilityBlockEntity;
 import com.piranport.block.entity.StoneMillBlockEntity;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -27,6 +28,11 @@ public class ModBlockEntityTypes {
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<CookingPotBlockEntity>> COOKING_POT =
             BLOCK_ENTITY_TYPES.register("cooking_pot", () ->
                     BlockEntityType.Builder.of(CookingPotBlockEntity::new, ModBlocks.COOKING_POT.get())
+                            .build(null));
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<ReloadFacilityBlockEntity>> RELOAD_FACILITY =
+            BLOCK_ENTITY_TYPES.register("reload_facility", () ->
+                    BlockEntityType.Builder.of(ReloadFacilityBlockEntity::new, ModBlocks.RELOAD_FACILITY.get())
                             .build(null));
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<PlaceableFoodBlockEntity>> PLACEABLE_FOOD =

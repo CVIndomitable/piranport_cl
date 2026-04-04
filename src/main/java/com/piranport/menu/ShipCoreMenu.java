@@ -8,6 +8,7 @@ import com.piranport.item.ShipCoreItem;
 import com.piranport.item.SonarItem;
 import com.piranport.item.TorpedoItem;
 import com.piranport.item.TorpedoLauncherItem;
+import com.piranport.item.TorpedoReloadItem;
 import com.piranport.registry.ModDataComponents;
 import com.piranport.registry.ModItems;
 import com.piranport.registry.ModMenuTypes;
@@ -154,6 +155,7 @@ public class ShipCoreMenu extends AbstractContainerMenu {
         if (stack.is(ModItems.QUAD_TORPEDO_LAUNCHER.get())) return 20;
         if (stack.getItem() instanceof ArmorPlateItem plate) return plate.getWeight();
         if (stack.getItem() instanceof SonarItem sonar) return sonar.getWeight();
+        if (stack.getItem() instanceof TorpedoReloadItem tr) return tr.getWeight();
         if (stack.getItem() instanceof AircraftItem) {
             AircraftInfo info = stack.get(ModDataComponents.AIRCRAFT_INFO.get());
             return info != null ? info.weight() : 0;
@@ -196,7 +198,8 @@ public class ShipCoreMenu extends AbstractContainerMenu {
 
     public static boolean isArmor(ItemStack stack) {
         return stack.getItem() instanceof ArmorPlateItem
-                || stack.getItem() instanceof SonarItem;
+                || stack.getItem() instanceof SonarItem
+                || stack.getItem() instanceof TorpedoReloadItem;
     }
 
     @Override

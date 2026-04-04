@@ -646,9 +646,15 @@ public class AircraftEntity extends Entity {
         float[] input = ReconManager.consumeInput(owner.getUUID());
         boolean hasInput = input != null && (input[0] != 0 || input[1] != 0 || input[2] != 0);
         double speed = panelSpeed * 0.5;
-        Vec3 target = hasInput
-                ? new Vec3(input[0] * speed, input[1] * speed, input[2] * speed)
-                : Vec3.ZERO;
+        Vec3 target;
+        if (hasInput) {
+            target = new Vec3(input[0] * speed, input[1] * speed, input[2] * speed);
+        } else {
+            // No hovering — drift forward at minimum speed along current yaw
+            double minSpeed = speed * 0.15;
+            float yawRad = (float) Math.toRadians(getYRot());
+            target = new Vec3(-Math.sin(yawRad) * minSpeed, 0, Math.cos(yawRad) * minSpeed);
+        }
         Vec3 current = getDeltaMovement();
         // Accelerate slowly (inertia), decelerate faster (responsiveness)
         double factor = hasInput ? 0.12 : 0.25;

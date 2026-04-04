@@ -1140,6 +1140,13 @@ public class AircraftEntity extends Entity {
                     "Aircraft KILLED | type={} entityId={} attacker={}",
                     aircraftType.name(), getId(),
                     attacker != null ? attacker.getType().toShortString() : "unknown");
+            // 掉落飞机物品（防爆+浮水）
+            ItemStack dropStack = buildReturnStack();
+            if (!dropStack.isEmpty()) {
+                AircraftDropEntity drop = new AircraftDropEntity(
+                        level(), getX(), getY(), getZ(), dropStack);
+                level().addFreshEntity(drop);
+            }
             discard();
         }
         return true;

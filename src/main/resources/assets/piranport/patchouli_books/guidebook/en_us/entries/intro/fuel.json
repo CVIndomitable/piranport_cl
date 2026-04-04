@@ -1,0 +1,12 @@
+{
+  "name": "piranport.book.intro.fuel",
+  "category": "piranport:1_intro",
+  "icon": "piranport:fuel",
+  "sortnum": 2,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "piranport.book.intro.fuel.p1"
+    }
+  ]
+}

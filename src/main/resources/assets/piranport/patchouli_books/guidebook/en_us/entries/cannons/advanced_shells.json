@@ -1,0 +1,12 @@
+{
+  "name": "piranport.book.cannons.advanced",
+  "category": "piranport:2_cannons",
+  "icon": "piranport:small_type3_shell",
+  "sortnum": 1,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "piranport.book.cannons.advanced.p1"
+    }
+  ]
+}

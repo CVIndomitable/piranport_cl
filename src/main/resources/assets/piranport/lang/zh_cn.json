@@ -51,6 +51,7 @@
   "entity.piranport.cannon_projectile": "炮弹",
   "item.piranport.torpedo_533mm": "533mm标准鱼雷",
   "item.piranport.torpedo_610mm": "610mm氧气鱼雷",
+  "item.piranport.magnetic_torpedo_533mm": "533mm磁性鱼雷",
   "item.piranport.twin_torpedo_launcher": "双联装鱼雷发射器",
   "item.piranport.triple_torpedo_launcher": "三联装鱼雷发射器",
   "item.piranport.quad_torpedo_launcher": "四联装鱼雷发射器",

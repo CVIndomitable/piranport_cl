@@ -13,6 +13,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.ThrowableItemProjectile;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -27,6 +28,13 @@ public class TorpedoEntity extends ThrowableItemProjectile {
     private float torpedoSpeed = 1.2f;
     private int lifetime = 1200; // 1 minute hard cap
     private float explosionRadius = 2.0f;
+    private boolean magnetic = false;
+    private boolean exploded = false;
+
+    /** Distance at which magnetic proximity fuze detonates (blocks). */
+    private static final double MAGNETIC_DETONATE_DIST = 3.0;
+    /** Grace period after launch before magnetic fuze arms (ticks). */
+    private static final int MAGNETIC_ARM_TICKS = 5;
 
     // Required constructor for entity type registration
     public TorpedoEntity(EntityType<? extends TorpedoEntity> type, Level level) {
@@ -52,6 +60,10 @@ public class TorpedoEntity extends ThrowableItemProjectile {
 
     public float getTorpedoSpeed() {
         return torpedoSpeed;
+    }
+
+    public void setMagnetic(boolean magnetic) {
+        this.magnetic = magnetic;
     }
 
     @Override
@@ -85,6 +97,12 @@ public class TorpedoEntity extends ThrowableItemProjectile {
             return;
         }
 
+        // 1.5. 磁性鱼雷近炸检测
+        if (!level().isClientSide() && magnetic && tickCount > MAGNETIC_ARM_TICKS) {
+            checkMagneticProximity();
+            if (exploded) return;
+        }
+
         Vec3 motion = getDeltaMovement();
 
         // 2. 恢复水平速度（抵消 super.tick() 施加的 0.99 空气阻力）
@@ -112,6 +130,32 @@ public class TorpedoEntity extends ThrowableItemProjectile {
         }
     }
 
+    private void checkMagneticProximity() {
+        AABB searchBox = getBoundingBox().inflate(MAGNETIC_DETONATE_DIST);
+        java.util.List<Entity> nearby = level().getEntities(this, searchBox, e -> {
+            if (e == getOwner()) return false;
+            if (com.piranport.combat.FriendlyFireHelper.shouldBlockHit(e, getOwner())) return false;
+            return e.isAlive() && e.isPickable();
+        });
+
+        for (Entity entity : nearby) {
+            double dist = entity.distanceTo(this);
+            if (dist <= MAGNETIC_DETONATE_DIST) {
+                magneticDetonate();
+                return;
+            }
+        }
+    }
+
+    private void magneticDetonate() {
+        if (exploded) return;
+        exploded = true;
+        Level.ExplosionInteraction interaction = ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get()
+                ? Level.ExplosionInteraction.TNT : Level.ExplosionInteraction.NONE;
+        level().explode(this, getX(), getY(), getZ(), explosionRadius, interaction);
+        discard();
+    }
+
     @Override
     protected boolean canHitEntity(Entity target) {
         if (com.piranport.combat.FriendlyFireHelper.shouldBlockHit(target, getOwner())) return false;
@@ -121,15 +165,21 @@ public class TorpedoEntity extends ThrowableItemProjectile {
     @Override
     protected void onHitEntity(EntityHitResult result) {
         super.onHitEntity(result);
-        if (!level().isClientSide()) {
+        if (!level().isClientSide() && !exploded) {
             Entity target = result.getEntity();
-            target.hurt(damageSources().thrown(this, getOwner()), damage);
-            // 附加进水 debuff（3秒，每秒 1 点魔法伤害）
-            if (target instanceof LivingEntity living) {
-                living.addEffect(new MobEffectInstance(ModMobEffects.FLOODING, 60, 0));
+            if (magnetic) {
+                // 磁性鱼雷：HE式爆炸
+                target.hurt(damageSources().explosion(this, getOwner()), damage);
+                magneticDetonate();
+            } else {
+                target.hurt(damageSources().thrown(this, getOwner()), damage);
+                // 附加进水 debuff（3秒，每秒 1 点魔法伤害）
+                if (target instanceof LivingEntity living) {
+                    living.addEffect(new MobEffectInstance(ModMobEffects.FLOODING, 60, 0));
+                }
+                discard();
             }
             notifyOwner(target);
-            discard();
         }
     }
 
@@ -144,17 +194,21 @@ public class TorpedoEntity extends ThrowableItemProjectile {
     @Override
     protected void onHitBlock(BlockHitResult result) {
         super.onHitBlock(result);
-        if (!level().isClientSide()) {
+        if (!level().isClientSide() && !exploded) {
             // 水中命中方块：静默消失，不爆炸
             if (level().getBlockState(result.getBlockPos()).getFluidState().is(Fluids.WATER)) {
                 discard();
                 return;
             }
             // 非水中命中方块：小范围爆炸
-            Level.ExplosionInteraction interaction = ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get()
-                    ? Level.ExplosionInteraction.TNT : Level.ExplosionInteraction.NONE;
-            level().explode(this, getX(), getY(), getZ(), explosionRadius, interaction);
-            discard();
+            if (magnetic) {
+                magneticDetonate();
+            } else {
+                Level.ExplosionInteraction interaction = ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get()
+                        ? Level.ExplosionInteraction.TNT : Level.ExplosionInteraction.NONE;
+                level().explode(this, getX(), getY(), getZ(), explosionRadius, interaction);
+                discard();
+            }
         }
     }
 
@@ -171,6 +225,7 @@ public class TorpedoEntity extends ThrowableItemProjectile {
         tag.putFloat("TorpedoSpeed", torpedoSpeed);
         tag.putInt("Lifetime", lifetime);
         tag.putFloat("ExplosionRadius", explosionRadius);
+        tag.putBoolean("Magnetic", magnetic);
     }
 
     @Override
@@ -184,5 +239,6 @@ public class TorpedoEntity extends ThrowableItemProjectile {
         if (lifetime <= 0) lifetime = 1200;
         explosionRadius = tag.getFloat("ExplosionRadius");
         if (explosionRadius <= 0) explosionRadius = 2.0f;
+        magnetic = tag.getBoolean("Magnetic");
     }
 }

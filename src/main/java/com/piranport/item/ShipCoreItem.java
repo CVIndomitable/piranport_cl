@@ -220,8 +220,8 @@ public class ShipCoreItem extends Item {
         existing.copyInto(stored);
 
         if (!other.isEmpty()) {
-            // Insert: cursor has ArmorPlateItem or SonarItem → store in first empty slot
-            if (!(other.getItem() instanceof ArmorPlateItem) && !(other.getItem() instanceof SonarItem)) return false;
+            // Insert: cursor has ArmorPlateItem, SonarItem, or EngineItem → store in first empty slot
+            if (!(other.getItem() instanceof ArmorPlateItem) && !(other.getItem() instanceof SonarItem) && !(other.getItem() instanceof EngineItem)) return false;
             for (int i = 0; i < capacity; i++) {
                 if (stored.get(i).isEmpty()) {
                     stored.set(i, other.copyWithCount(1));
@@ -719,6 +719,7 @@ public class ShipCoreItem extends Item {
 
         int caliber = launcher.getCaliber();
         int cooldown = launcher.getCooldownTicks();
+        boolean magnetic = isMagneticTorpedo(loaded.ammoItemId());
         float torpedoSpeed = caliber == 610 ? 1.0f : 1.2f;
         float[] angles = getSpreadAngles(tubeCount);
         Vec3 look = player.getLookAngle();
@@ -726,6 +727,7 @@ public class ShipCoreItem extends Item {
         for (float angle : angles) {
             Vec3 dir = rotateHorizontal(look, Math.toRadians(angle));
             TorpedoEntity torpedo = new TorpedoEntity(level, player, caliber);
+            if (magnetic) torpedo.setMagnetic(true);
             torpedo.setPos(player.getX() + dir.x * 0.5, player.getEyeY() - 0.3, player.getZ() + dir.z * 0.5);
             torpedo.setDeltaMovement(dir.x * torpedoSpeed, 0, dir.z * torpedoSpeed);
             level.addFreshEntity(torpedo);
@@ -780,11 +782,13 @@ public class ShipCoreItem extends Item {
         }
 
         // Consume ammo before spawning entities (prevent TOCTOU)
+        boolean magnetic = false;
         int toConsume = tubeCount;
         for (int i = 0; i < inv.items.size() && toConsume > 0; i++) {
             if (i == coreSlot || i == weaponSlot) continue;
             ItemStack s = inv.items.get(i);
             if (!s.isEmpty() && s.getItem() instanceof TorpedoItem ti && ti.getCaliber() == caliber) {
+                if (ti.isMagnetic()) magnetic = true;
                 int take = Math.min(toConsume, s.getCount());
                 s.shrink(take);
                 toConsume -= take;
@@ -798,6 +802,7 @@ public class ShipCoreItem extends Item {
         for (float angle : angles) {
             Vec3 dir = rotateHorizontal(look, Math.toRadians(angle));
             TorpedoEntity torpedo = new TorpedoEntity(level, player, caliber);
+            if (magnetic) torpedo.setMagnetic(true);
             torpedo.setPos(player.getX() + dir.x * 0.5, player.getEyeY() - 0.3, player.getZ() + dir.z * 0.5);
             torpedo.setDeltaMovement(dir.x * torpedoSpeed, 0, dir.z * torpedoSpeed);
             level.addFreshEntity(torpedo);
@@ -1029,6 +1034,14 @@ public class ShipCoreItem extends Item {
                 || ammoItemId.equals(BuiltInRegistries.ITEM.getKey(ModItems.LARGE_TYPE3_SHELL.get()).toString());
     }
 
+    static boolean isMagneticTorpedo(ItemStack stack) {
+        return stack.getItem() instanceof TorpedoItem ti && ti.isMagnetic();
+    }
+
+    static boolean isMagneticTorpedo(String ammoItemId) {
+        return ammoItemId.equals(BuiltInRegistries.ITEM.getKey(ModItems.MAGNETIC_TORPEDO_533MM.get()).toString());
+    }
+
     // ===== Gun stats =====
 
     private static float getGunDamage(ItemStack weapon) {
@@ -1132,10 +1145,12 @@ public class ShipCoreItem extends Item {
         }
 
         // Consume ammo before spawning entities (prevent TOCTOU)
+        boolean magnetic = false;
         int toConsume = tubeCount;
         for (int i = shipType.weaponSlots; i < ammoEnd && toConsume > 0; i++) {
             ItemStack ammo = items.get(i);
             if (!ammo.isEmpty() && ammo.getItem() instanceof TorpedoItem ti && ti.getCaliber() == caliber) {
+                if (ti.isMagnetic()) magnetic = true;
                 int take = Math.min(toConsume, ammo.getCount());
                 ammo.shrink(take);
                 toConsume -= take;
@@ -1150,6 +1165,7 @@ public class ShipCoreItem extends Item {
         for (float angle : angles) {
             Vec3 dir = rotateHorizontal(look, Math.toRadians(angle));
             TorpedoEntity torpedo = new TorpedoEntity(level, player, caliber);
+            if (magnetic) torpedo.setMagnetic(true);
             torpedo.setPos(
                     player.getX() + dir.x * 0.5,
                     player.getEyeY() - 0.3,

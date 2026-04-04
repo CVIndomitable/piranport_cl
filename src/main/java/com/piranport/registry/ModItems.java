@@ -124,6 +124,9 @@ public class ModItems {
     public static final DeferredItem<TorpedoItem> TORPEDO_610MM =
             ITEMS.register("torpedo_610mm",
                     () -> new TorpedoItem(new Item.Properties().stacksTo(16), 610));
+    public static final DeferredItem<TorpedoItem> MAGNETIC_TORPEDO_533MM =
+            ITEMS.register("magnetic_torpedo_533mm",
+                    () -> new TorpedoItem(new Item.Properties().stacksTo(16), 533, true));
 
     // ===== Armor Plates =====
     public static final DeferredItem<ArmorPlateItem> SMALL_ARMOR_PLATE =

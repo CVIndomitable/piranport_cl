@@ -51,6 +51,7 @@
   "entity.piranport.cannon_projectile": "Cannon Projectile",
   "item.piranport.torpedo_533mm": "533mm Torpedo",
   "item.piranport.torpedo_610mm": "610mm Oxygen Torpedo",
+  "item.piranport.magnetic_torpedo_533mm": "533mm Magnetic Torpedo",
   "item.piranport.twin_torpedo_launcher": "Twin Torpedo Launcher",
   "item.piranport.triple_torpedo_launcher": "Triple Torpedo Launcher",
   "item.piranport.quad_torpedo_launcher": "Quadruple Torpedo Launcher",

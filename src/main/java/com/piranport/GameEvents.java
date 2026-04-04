@@ -87,9 +87,12 @@ public class GameEvents {
             player.resetFallDistance();
         }
 
-        // 潜艇核心：无限水下呼吸
+        // 潜艇核心：无限水下呼吸 + 水下隐身
         if (isSubmarine && !player.level().isClientSide()) {
             player.addEffect(new MobEffectInstance(MobEffects.WATER_BREATHING, 400, 0, false, false, true));
+            if (player.isEyeInFluid(FluidTags.WATER)) {
+                player.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 40, 0, false, false, true));
+            }
         }
 
         // 声纳效果：装备声纳时，24格内敌对生物持续获得发光效果（每20tick刷新一次）

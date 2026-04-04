@@ -37,6 +37,9 @@ public class ClientGameEvents {
     /** Empty hand + right click (no shift, no-GUI, transformed) → recall all aircraft. */
     @SubscribeEvent
     public static void onRightClickEmpty(PlayerInteractEvent.RightClickEmpty event) {
+        // Block all empty-hand actions while in recon mode to prevent errors
+        if (ClientReconData.isInReconMode()) return;
+
         if (event.getEntity().isShiftKeyDown()) {
             int currentSkin = ClientSkinData.getActiveSkin(event.getEntity().getUUID());
             if (currentSkin > 0) {

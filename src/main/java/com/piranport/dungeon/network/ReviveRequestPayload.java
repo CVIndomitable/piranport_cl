@@ -33,6 +33,13 @@ public record ReviveRequestPayload() implements CustomPacketPayload {
         context.enqueueWork(() -> {
             if (!(context.player() instanceof ServerPlayer player)) return;
 
+            // Only valid when player is NOT in the dungeon (teleported out on death)
+            if (player.level().dimension().equals(
+                    com.piranport.dungeon.event.DungeonEventHandler.DUNGEON_DIMENSION)) return;
+
+            // Player must be alive (they were teleported out on death) — verify they have an active instance key
+            if (!player.isAlive()) return;
+
             // Find and consume totem
             Inventory inv = player.getInventory();
             boolean found = false;

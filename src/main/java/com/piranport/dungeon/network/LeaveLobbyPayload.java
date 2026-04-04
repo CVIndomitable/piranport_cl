@@ -30,6 +30,7 @@ public record LeaveLobbyPayload(BlockPos lecternPos) implements CustomPacketPayl
         context.enqueueWork(() -> {
             if (!(context.player() instanceof ServerPlayer player)) return;
             DungeonLobbyManager.INSTANCE.leaveLobby(payload.lecternPos(), player.getUUID());
+            DungeonLobbyManager.INSTANCE.broadcastLobbyUpdate(player.server, payload.lecternPos());
         });
     }
 }

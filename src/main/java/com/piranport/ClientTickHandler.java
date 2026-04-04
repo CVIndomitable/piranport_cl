@@ -51,12 +51,14 @@ public class ClientTickHandler {
 
     private static final String FC_TEAM_NAME = "pp_fc_target";
     private static final Set<String> fcTeamMembers = new HashSet<>();
+    /** Throttle full entity scan to every 4 ticks when only highlight (not FC) is active. */
+    private static int entityScanCooldown = 0;
 
     /** Reset all client-side static state (called on disconnect). */
     public static void resetClientState() {
         highlightEnabled = false;
         highlightedEntityIds.clear();
-        fcTeamMembers.clear();
+        clearFcTeam(Minecraft.getInstance());
     }
 
     @SubscribeEvent
@@ -65,10 +67,11 @@ public class ClientTickHandler {
         if (mc.player == null) return;
 
         // V key — exits recon mode, or cycles weapon in GUI mode only
-        while (ClientEvents.CYCLE_WEAPON_KEY.consumeClick()) {
+        while (ModKeyMappings.CYCLE_WEAPON.consumeClick()) {
             if (ClientReconData.isInReconMode()) {
                 PacketDistributor.sendToServer(new ReconExitPayload());
-            } else if (com.piranport.config.ModCommonConfig.SHIP_CORE_GUI_ENABLED.get()) {
+            } else {
+                // Let the server decide if GUI mode is active — avoids reading Common config on client
                 ItemStack hand = mc.player.getMainHandItem();
                 if (hand.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(hand)) {
                     PacketDistributor.sendToServer(new CycleWeaponPayload());
@@ -77,7 +80,7 @@ public class ClientTickHandler {
             // No-GUI mode: weapon is the other-hand item, V key does nothing here
         }
 
-        // Phase 32: recon aircraft WASD control
+        // Phase 32: recon aircraft WASD control (throttled to every 2 ticks to reduce network traffic)
         boolean inReconMode = ClientReconData.isInReconMode();
         if (inReconMode) {
             // Mirror player mouse rotation to the recon entity so the camera rotates with mouse input
@@ -88,7 +91,9 @@ public class ClientTickHandler {
                     reconEntity.setYRot(mc.player.getYRot());
                 }
             }
-            handleReconInput(mc);
+            if (mc.player.tickCount % 2 == 0) {
+                handleReconInput(mc);
+            }
             // Don't return — fire control and glow sync still need to run in recon mode
         }
 
@@ -195,23 +200,29 @@ public class ClientTickHandler {
             Set<String> currentFcMembers = new HashSet<>();
 
             // Always process FC targets; process highlight targets only when Y-key enabled
-            if (highlightEnabled || hasFcTargets || !highlightedEntityIds.isEmpty()) {
-                for (Entity entity : mc.level.entitiesForRendering()) {
-                    boolean isFcTarget = lockedTargets.contains(entity.getUUID());
-                    boolean isHighlight = highlightEnabled && isHighlightTarget(entity, localPlayer);
-                    boolean shouldGlow = isFcTarget || isHighlight;
-                    if (shouldGlow) {
-                        entity.setGlowingTag(true);
-                        highlightedEntityIds.add(entity.getId());
-                        // Track FC targets for red team coloring (AircraftEntity handles its own via getTeamColor)
-                        if (isFcTarget && !(entity instanceof AircraftEntity)) {
-                            currentFcMembers.add(entity.getStringUUID());
+            // Throttle full entity scan: FC targets use targeted lookup; highlight scans every 4 ticks
+            if (hasFcTargets || highlightEnabled || !highlightedEntityIds.isEmpty()) {
+                boolean doFullScan = highlightEnabled && (entityScanCooldown <= 0);
+                if (doFullScan) entityScanCooldown = 4;
+
+                if (doFullScan || hasFcTargets) {
+                    for (Entity entity : mc.level.entitiesForRendering()) {
+                        boolean isFcTarget = lockedTargets.contains(entity.getUUID());
+                        boolean isHighlight = doFullScan && isHighlightTarget(entity, localPlayer);
+                        boolean shouldGlow = isFcTarget || isHighlight;
+                        if (shouldGlow) {
+                            entity.setGlowingTag(true);
+                            highlightedEntityIds.add(entity.getId());
+                            if (isFcTarget && !(entity instanceof AircraftEntity)) {
+                                currentFcMembers.add(entity.getStringUUID());
+                            }
+                        } else if (highlightedEntityIds.contains(entity.getId())) {
+                            entity.setGlowingTag(false);
+                            highlightedEntityIds.remove(entity.getId());
                         }
-                    } else if (highlightedEntityIds.contains(entity.getId())) {
-                        entity.setGlowingTag(false);
-                        highlightedEntityIds.remove(entity.getId());
                     }
                 }
+                entityScanCooldown--;
             }
             // Sync client-side scoreboard team for red outline on FC targets
             syncFcTeam(mc, currentFcMembers);

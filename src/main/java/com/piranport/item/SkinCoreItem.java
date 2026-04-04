@@ -50,7 +50,8 @@ public class SkinCoreItem extends Item {
                 SkinManager.setActiveSkin(sp, skinId);
                 stack.shrink(1);
                 sp.displayClientMessage(
-                        Component.translatable("message.piranport.skin_applied", skinId), true);
+                        Component.translatable("message.piranport.skin_applied",
+                                Component.translatable("skin.piranport." + skinId)), true);
             }
         }
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
@@ -58,7 +59,8 @@ public class SkinCoreItem extends Item {
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        tooltip.add(Component.translatable("tooltip.piranport.skin_core", skinId)
+        tooltip.add(Component.translatable("tooltip.piranport.skin_core",
+                        Component.translatable("skin.piranport." + skinId))
                 .withStyle(ChatFormatting.AQUA));
     }
 }

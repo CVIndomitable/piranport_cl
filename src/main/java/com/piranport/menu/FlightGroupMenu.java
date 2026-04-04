@@ -55,7 +55,10 @@ public class FlightGroupMenu extends AbstractContainerMenu {
             weaponItems.add(allItems.get(i).copy());
         }
 
-        // Player inventory slots placed off-screen (required by AbstractContainerMenu contract)
+        // Player inventory slots placed off-screen at (-2000, -2000).
+        // AbstractContainerMenu requires player inventory slots to exist for quickMoveStack()
+        // and shift-click behavior, but FlightGroupMenu uses C2S payloads instead of slot
+        // interaction. Off-screen placement prevents rendering and accidental mouse interaction.
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
                 addSlot(new Slot(playerInventory, 9 + row * 9 + col, -2000, -2000));

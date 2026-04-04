@@ -1,16 +1,11 @@
 package com.piranport.menu;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 
 public class CookingPotScreen extends AbstractContainerScreen<CookingPotMenu> {
-    private static final ResourceLocation TEXTURE =
-            ResourceLocation.fromNamespaceAndPath("piranport", "textures/gui/cooking_pot.png");
-
     public CookingPotScreen(CookingPotMenu menu, Inventory inv, Component title) {
         super(menu, inv, title);
         this.imageWidth = 176;

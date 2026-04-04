@@ -1,6 +1,7 @@
 package com.piranport.dungeon.network;
 
 import com.piranport.PiranPort;
+import com.piranport.dungeon.block.DungeonLecternBlock;
 import com.piranport.dungeon.lobby.DungeonLobbyManager;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.core.BlockPos;
@@ -29,7 +30,16 @@ public record JoinLobbyPayload(BlockPos lecternPos) implements CustomPacketPaylo
     public static void handle(JoinLobbyPayload payload, IPayloadContext context) {
         context.enqueueWork(() -> {
             if (!(context.player() instanceof ServerPlayer player)) return;
-            DungeonLobbyManager.INSTANCE.joinLobby(payload.lecternPos(), player);
+
+            // Validate distance to lectern
+            BlockPos pos = payload.lecternPos();
+            if (player.distanceToSqr(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5) > 64.0) return;
+
+            // Validate lectern block exists at position
+            if (!(player.level().getBlockState(pos).getBlock() instanceof DungeonLecternBlock)) return;
+
+            DungeonLobbyManager.INSTANCE.joinLobby(pos, player);
+            DungeonLobbyManager.INSTANCE.broadcastLobbyUpdate(player.server, pos);
         });
     }
 }

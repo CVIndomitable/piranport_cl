@@ -193,14 +193,11 @@ public class TransformationManager {
         removeTransformationAttributes(player);
         if (maxLoad == 0) return;
 
-        long _t = System.nanoTime();
         // Armor comes from plates stored inside the offhand core, not from inventory scan
         ItemStack offhandCore = inv.offhand.get(0);
         int armorBonus = getCoreArmorBonus(offhandCore);
         int armorLoad  = getCoreArmorLoad(offhandCore);
         int totalLoad  = getInventoryWeaponLoad(inv) + armorLoad;
-        com.piranport.debug.PiranPortDebug.perf("WeightScan", System.nanoTime() - _t,
-                "player=" + player.getName().getString() + " load=" + totalLoad + "/" + maxLoad + " armor=" + armorBonus);
 
         double speedMult = Math.max(0.4, 1.0 - ((double) totalLoad / maxLoad) * 0.6);
 
@@ -321,6 +318,8 @@ public class TransformationManager {
     }
 
     // P3 #36: data-driven weapon load map (lazy initialized)
+    // IdentityHashMap is correct here: Item instances are registry singletons,
+    // so reference equality (==) is both safe and faster than hashCode/equals.
     private static java.util.Map<net.minecraft.world.item.Item, Integer> weaponLoadMap;
 
     private static java.util.Map<net.minecraft.world.item.Item, Integer> getWeaponLoadMap() {

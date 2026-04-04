@@ -36,6 +36,11 @@ public class DungeonHudLayer implements LayeredDraw.Layer {
         timerStartMillis = 0;
     }
 
+    /** Update just the node ID for immediate feedback when entering a new node. */
+    public static void updateNode(String nodeId) {
+        currentNodeId = nodeId;
+    }
+
     public static boolean isInDungeon() {
         return inDungeon;
     }

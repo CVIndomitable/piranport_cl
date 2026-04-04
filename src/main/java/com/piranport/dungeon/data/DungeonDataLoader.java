@@ -84,7 +84,16 @@ public class DungeonDataLoader extends SimpleJsonResourceReloadListener {
                 chapters.size(), stages.size(), enemySets.size());
     }
 
+    private void requireField(JsonObject json, String field, String context) {
+        if (!json.has(field) || json.get(field).isJsonNull()) {
+            throw new IllegalArgumentException("Missing required field '" + field + "' in " + context);
+        }
+    }
+
     private ChapterData parseChapter(JsonObject json) {
+        requireField(json, "chapter_id", "chapter");
+        requireField(json, "display_name", "chapter");
+        requireField(json, "stages", "chapter");
         String chapterId = json.get("chapter_id").getAsString();
         String displayName = json.get("display_name").getAsString();
         int sortOrder = json.has("sort_order") ? json.get("sort_order").getAsInt() : 0;
@@ -96,6 +105,13 @@ public class DungeonDataLoader extends SimpleJsonResourceReloadListener {
     }
 
     private StageData parseStage(JsonObject json) {
+        requireField(json, "stage_id", "stage");
+        requireField(json, "chapter", "stage");
+        requireField(json, "display_name", "stage");
+        requireField(json, "start_node", "stage");
+        requireField(json, "nodes", "stage");
+        requireField(json, "edges", "stage");
+        requireField(json, "boss_nodes", "stage");
         String stageId = json.get("stage_id").getAsString();
         String chapter = json.get("chapter").getAsString();
         String displayName = json.get("display_name").getAsString();
@@ -137,6 +153,7 @@ public class DungeonDataLoader extends SimpleJsonResourceReloadListener {
     }
 
     private NodeData parseNode(String nodeId, JsonObject json) {
+        requireField(json, "type", "node " + nodeId);
         NodeData.NodeType type = NodeData.NodeType.fromString(json.get("type").getAsString());
         String enemies = json.has("enemies") ? json.get("enemies").getAsString() : null;
         List<NodeData.RewardEntry> rewards = json.has("rewards")
@@ -176,6 +193,8 @@ public class DungeonDataLoader extends SimpleJsonResourceReloadListener {
     }
 
     private EnemySetData parseEnemySet(JsonObject json) {
+        requireField(json, "enemy_set_id", "enemy_set");
+        requireField(json, "spawn_list", "enemy_set");
         String id = json.get("enemy_set_id").getAsString();
         List<EnemySetData.SpawnEntry> spawnList = new ArrayList<>();
         for (JsonElement e : json.getAsJsonArray("spawn_list")) {

@@ -26,7 +26,7 @@ public class ModEntityTypes {
                     .sized(0.25f, 0.25f)
                     .clientTrackingRange(4)
                     .updateInterval(10)
-                    .build("cannon_projectile"));
+                    .build(null));
 
     public static final DeferredHolder<EntityType<?>, EntityType<TorpedoEntity>>
             TORPEDO_ENTITY = ENTITY_TYPES.register("torpedo_entity",
@@ -34,7 +34,7 @@ public class ModEntityTypes {
                     .sized(0.5f, 0.25f)
                     .clientTrackingRange(8)
                     .updateInterval(3)
-                    .build("torpedo_entity"));
+                    .build(null));
 
     // Phase 19
     public static final DeferredHolder<EntityType<?>, EntityType<AircraftEntity>>
@@ -43,14 +43,14 @@ public class ModEntityTypes {
                     .sized(1.0f, 0.5f)
                     .clientTrackingRange(16)
                     .updateInterval(1)
-                    .build("aircraft_entity"));
+                    .build(null));
 
     public static final DeferredHolder<EntityType<?>, EntityType<FloatingTargetEntity>>
             FLOATING_TARGET = ENTITY_TYPES.register("floating_target",
             () -> EntityType.Builder.<FloatingTargetEntity>of(FloatingTargetEntity::new, MobCategory.MISC)
                     .sized(0.5f, 1.975f)
                     .clientTrackingRange(10)
-                    .build("floating_target"));
+                    .build(null));
 
     // Phase 21
     public static final DeferredHolder<EntityType<?>, EntityType<AerialBombEntity>>
@@ -59,7 +59,7 @@ public class ModEntityTypes {
                     .sized(0.25f, 0.25f)
                     .clientTrackingRange(8)
                     .updateInterval(5)
-                    .build("aerial_bomb"));
+                    .build(null));
 
     public static final DeferredHolder<EntityType<?>, EntityType<BulletEntity>>
             BULLET = ENTITY_TYPES.register("bullet",
@@ -67,7 +67,7 @@ public class ModEntityTypes {
                     .sized(0.15f, 0.15f)
                     .clientTrackingRange(8)
                     .updateInterval(2)
-                    .build("bullet"));
+                    .build(null));
 
     // Sanshiki (Type 3) pellet
     public static final DeferredHolder<EntityType<?>, EntityType<SanshikiPelletEntity>>
@@ -76,7 +76,7 @@ public class ModEntityTypes {
                     .sized(0.15f, 0.15f)
                     .clientTrackingRange(4)
                     .updateInterval(5)
-                    .build("sanshiki_pellet"));
+                    .build(null));
 
     // Dungeon transport plane (artillery intro script)
     public static final DeferredHolder<EntityType<?>, EntityType<DungeonTransportPlaneEntity>>
@@ -85,7 +85,7 @@ public class ModEntityTypes {
                     .sized(1.5f, 1.0f)
                     .clientTrackingRange(16)
                     .updateInterval(3)
-                    .build("dungeon_transport_plane"));
+                    .build(null));
 
     // Dungeon enemies
     public static final DeferredHolder<EntityType<?>, EntityType<LowTierDestroyerEntity>>
@@ -94,7 +94,7 @@ public class ModEntityTypes {
                     .sized(0.6f, 1.8f)
                     .clientTrackingRange(16)
                     .updateInterval(3)
-                    .build("low_tier_destroyer"));
+                    .build(null));
 
     // Dungeon System
     public static final DeferredHolder<EntityType<?>, EntityType<com.piranport.dungeon.entity.DungeonPortalEntity>>
@@ -104,7 +104,7 @@ public class ModEntityTypes {
                     .sized(2.0f, 3.0f)
                     .clientTrackingRange(16)
                     .updateInterval(5)
-                    .build("dungeon_portal"));
+                    .build(null));
 
     public static final DeferredHolder<EntityType<?>, EntityType<com.piranport.dungeon.entity.LootShipEntity>>
             LOOT_SHIP = ENTITY_TYPES.register("loot_ship",
@@ -113,5 +113,5 @@ public class ModEntityTypes {
                     .sized(1.5f, 1.0f)
                     .clientTrackingRange(10)
                     .updateInterval(10)
-                    .build("loot_ship"));
+                    .build(null));
 }

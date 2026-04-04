@@ -69,6 +69,7 @@ public class ArtilleryIntroScript implements DungeonScript {
     private int destroyersKilled = 0;
     private BlockPos lastDestroyerDeathPos;
     private boolean portalSpawned = false;
+    private int battleStartTick = -1; // tick when battle phase began
 
     private boolean finished = false;
 
@@ -262,6 +263,7 @@ public class ArtilleryIntroScript implements DungeonScript {
 
     private void startBattle(ServerLevel level, String reason) {
         phase = Phase.BATTLE;
+        battleStartTick = tickCounter;
         PiranPort.LOGGER.info("[ArtilleryIntro] Phase 2 → 3 ({}), instance={}", reason, instanceId);
         spawnDestroyers(level);
         sendActionBar(level, Component.translatable("dungeon.piranport.artillery_intro.battle_start"));
@@ -323,8 +325,8 @@ public class ArtilleryIntroScript implements DungeonScript {
 
     private void tickBattle(ServerLevel level) {
         // Battle progress is driven by onEntityDeath() calls.
-        // Safety timeout: 10 minutes
-        if (tickCounter > 12000 && !portalSpawned) {
+        // Safety timeout: 10 minutes from battle start
+        if (battleStartTick >= 0 && (tickCounter - battleStartTick) > 12000 && !portalSpawned) {
             PiranPort.LOGGER.warn("[ArtilleryIntro] Battle timeout, forcing portal spawn");
             spawnCompletionPortal(level);
         }

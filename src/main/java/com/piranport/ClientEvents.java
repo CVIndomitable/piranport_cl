@@ -35,8 +35,9 @@ import org.lwjgl.glfw.GLFW;
 @EventBusSubscriber(modid = PiranPort.MOD_ID, value = Dist.CLIENT, bus = EventBusSubscriber.Bus.MOD)
 public class ClientEvents {
 
-    public static final KeyMapping CYCLE_WEAPON_KEY = new KeyMapping(
-            "key.piranport.cycle_weapon", GLFW.GLFW_KEY_V, "key.categories.piranport");
+    /** @deprecated Use {@link ModKeyMappings#CYCLE_WEAPON} instead. */
+    @Deprecated
+    public static final KeyMapping CYCLE_WEAPON_KEY = ModKeyMappings.CYCLE_WEAPON;
 
     @SubscribeEvent
     public static void onClientSetup(FMLClientSetupEvent event) {
@@ -73,7 +74,7 @@ public class ClientEvents {
 
     @SubscribeEvent
     public static void registerKeyMappings(RegisterKeyMappingsEvent event) {
-        event.register(CYCLE_WEAPON_KEY);
+        event.register(ModKeyMappings.CYCLE_WEAPON);
         event.register(ModKeyMappings.FIRE_CONTROL_LOCK);
         event.register(ModKeyMappings.FIRE_CONTROL_ADD);
         event.register(ModKeyMappings.FIRE_CONTROL_CANCEL);

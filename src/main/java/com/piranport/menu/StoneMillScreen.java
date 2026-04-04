@@ -67,10 +67,6 @@ public class StoneMillScreen extends AbstractContainerScreen<StoneMillMenu> {
     }
 
     private void drawSlotBg(GuiGraphics gfx, int x, int y) {
-        gfx.fill(x, y, x + 18, y + 1, 0xFF373737);
-        gfx.fill(x, y, x + 1, y + 18, 0xFF373737);
-        gfx.fill(x + 1, y + 1, x + 17, y + 17, 0xFF8B8B8B);
-        gfx.fill(x + 17, y + 1, x + 18, y + 18, 0xFFFFFFFF);
-        gfx.fill(x + 1, y + 17, x + 18, y + 18, 0xFFFFFFFF);
+        com.piranport.client.GuiHelper.drawSlotBg(gfx, x, y);
     }
 }

@@ -6,6 +6,9 @@ import org.lwjgl.glfw.GLFW;
 public class ModKeyMappings {
     private static final String CATEGORY = "key.categories.piranport";
 
+    public static final KeyMapping CYCLE_WEAPON =
+            new KeyMapping("key.piranport.cycle_weapon", GLFW.GLFW_KEY_V, CATEGORY);
+
     public static final KeyMapping FIRE_CONTROL_LOCK =
             new KeyMapping("key.piranport.fire_control_lock", GLFW.GLFW_KEY_P, CATEGORY);
 

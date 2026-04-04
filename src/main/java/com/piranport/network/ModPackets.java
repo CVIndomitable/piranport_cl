@@ -8,9 +8,11 @@ import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 
 @EventBusSubscriber(modid = PiranPort.MOD_ID, bus = EventBusSubscriber.Bus.MOD)
 public class ModPackets {
+    public static final String PROTOCOL_VERSION = "1";
+
     @SubscribeEvent
     public static void register(RegisterPayloadHandlersEvent event) {
-        PayloadRegistrar registrar = event.registrar("1");
+        PayloadRegistrar registrar = event.registrar(PROTOCOL_VERSION);
         registrar.playToServer(
                 CycleWeaponPayload.TYPE,
                 CycleWeaponPayload.STREAM_CODEC,

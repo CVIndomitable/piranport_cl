@@ -37,7 +37,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.AddReloadListenerEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
-import net.neoforged.neoforge.event.server.ServerStoppedEvent;
+import net.neoforged.neoforge.event.server.ServerStoppingEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.ArrayList;
@@ -82,9 +82,10 @@ public class DungeonEventHandler {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
         if (!isInDungeon(player)) return;
 
-        // Cancel death, keep inventory
+        // Cancel death, keep inventory, add invulnerability frames to prevent re-damage before teleport
         event.setCanceled(true);
         player.setHealth(player.getMaxHealth());
+        player.invulnerableTime = 40; // 2 seconds of damage immunity frames
 
         // Find the player's instance and teleport to lectern
         DungeonInstanceManager mgr = DungeonInstanceManager.get((ServerLevel) player.level());
@@ -126,7 +127,7 @@ public class DungeonEventHandler {
     }
 
     @SubscribeEvent
-    public static void onServerStopped(ServerStoppedEvent event) {
+    public static void onServerStopping(net.neoforged.neoforge.event.server.ServerStoppingEvent event) {
         DungeonLobbyManager.INSTANCE.clearAll();
     }
 
@@ -213,81 +214,21 @@ public class DungeonEventHandler {
         mgr.advanceNode(instance.getInstanceId(), node.nodeId(), keyStack);
     }
 
-    private static void handleBattleNode(ServerLevel level, DungeonInstance instance,
-                                          NodeData node, StageData stage,
-                                          ServerPlayer flagship, ItemStack keyStack,
-                                          DungeonLobbyManager.Lobby lobby) {
-        ServerLevel dungeonLevel = getDungeonLevel(level.getServer());
-        if (dungeonLevel == null) {
-            PiranPort.LOGGER.error("Dungeon dimension not found!");
-            flagship.sendSystemMessage(Component.literal("Error: Dungeon dimension not available"));
-            return;
-        }
-
-        // Update instance progress
-        DungeonInstanceManager mgr = DungeonInstanceManager.get(level);
-        mgr.advanceNode(instance.getInstanceId(), node.nodeId(), keyStack);
-
-        // Generate battlefield
-        NodeBattleField.generateTerrain(dungeonLevel, instance, node.nodeId());
-
-        // Spawn enemies
-        NodeBattleField.spawnEnemies(dungeonLevel, instance, node);
-
-        // Teleport all lobby members to battlefield
-        BlockPos spawn = instance.getNodeSpawnPos(node.nodeId());
-        List<ServerPlayer> toTeleport = new ArrayList<>();
-        toTeleport.add(flagship);
-
-        if (lobby != null) {
-            for (UUID memberUuid : lobby.getMemberUuids()) {
-                if (memberUuid.equals(flagship.getUUID())) continue;
-                ServerPlayer member = level.getServer().getPlayerList().getPlayer(memberUuid);
-                if (member != null) {
-                    toTeleport.add(member);
-                    instance.addPlayer(memberUuid);
-                }
-            }
-        }
-
-        for (ServerPlayer player : toTeleport) {
-            // Give town scroll
-            ItemStack scroll = new ItemStack(ModItems.TOWN_SCROLL.get());
-            if (!player.getInventory().add(scroll)) {
-                player.drop(scroll, false);
-            }
-
-            player.teleportTo(dungeonLevel,
-                    spawn.getX() + 0.5, spawn.getY(), spawn.getZ() + 0.5,
-                    player.getYRot(), player.getXRot());
-
-            // Sync dungeon state to client
-            StageData stageData = DungeonRegistry.INSTANCE.getStage(instance.getStageId());
-            String stageName = stageData != null ? stageData.displayName() : instance.getStageId();
-            PacketDistributor.sendToPlayer(player,
-                    new DungeonStatePayload(stageName, node.nodeId(),
-                            instance.getStartTimeMillis()));
-        }
-
-        // Close lobby after entering dungeon
-        if (lobby != null) {
-            DungeonLobbyManager.INSTANCE.removeLobby(lobby.getLecternPos());
-        }
-    }
-
     /**
-     * Handles battle nodes with a script field (e.g. "artillery_intro").
-     * Teleports players to the battlefield first, then starts the script.
+     * Shared setup for battle nodes: validate dimension, advance progress, generate terrain,
+     * gather and teleport players, close lobby. Returns the teleported players (and their UUIDs),
+     * or null if the dungeon dimension is not available.
      */
-    private static void handleScriptedBattleNode(ServerLevel level, DungeonInstance instance,
-                                                   NodeData node, StageData stage,
-                                                   ServerPlayer flagship, ItemStack keyStack,
-                                                   DungeonLobbyManager.Lobby lobby) {
+    private record BattleSetupResult(ServerLevel dungeonLevel, List<ServerPlayer> players, List<UUID> playerUuids) {}
+
+    private static BattleSetupResult prepareBattleNode(ServerLevel level, DungeonInstance instance,
+                                                        NodeData node, ServerPlayer flagship,
+                                                        ItemStack keyStack, DungeonLobbyManager.Lobby lobby) {
         ServerLevel dungeonLevel = getDungeonLevel(level.getServer());
         if (dungeonLevel == null) {
             PiranPort.LOGGER.error("Dungeon dimension not found!");
             flagship.sendSystemMessage(Component.literal("Error: Dungeon dimension not available"));
-            return;
+            return null;
         }
 
         // Update instance progress
@@ -297,7 +238,7 @@ public class DungeonEventHandler {
         // Generate battlefield
         NodeBattleField.generateTerrain(dungeonLevel, instance, node.nodeId());
 
-        // Teleport all lobby members to battlefield
+        // Gather all lobby members
         BlockPos spawn = instance.getNodeSpawnPos(node.nodeId());
         List<ServerPlayer> toTeleport = new ArrayList<>();
         List<UUID> playerUuids = new ArrayList<>();
@@ -316,8 +257,8 @@ public class DungeonEventHandler {
             }
         }
 
+        // Teleport and sync
         for (ServerPlayer player : toTeleport) {
-            // Give town scroll
             ItemStack scroll = new ItemStack(ModItems.TOWN_SCROLL.get());
             if (!player.getInventory().add(scroll)) {
                 player.drop(scroll, false);
@@ -327,7 +268,6 @@ public class DungeonEventHandler {
                     spawn.getX() + 0.5, spawn.getY(), spawn.getZ() + 0.5,
                     player.getYRot(), player.getXRot());
 
-            // Sync dungeon state to client
             StageData stageData = DungeonRegistry.INSTANCE.getStage(instance.getStageId());
             String stageName = stageData != null ? stageData.displayName() : instance.getStageId();
             PacketDistributor.sendToPlayer(player,
@@ -340,19 +280,44 @@ public class DungeonEventHandler {
             DungeonLobbyManager.INSTANCE.removeLobby(lobby.getLecternPos());
         }
 
+        return new BattleSetupResult(dungeonLevel, toTeleport, playerUuids);
+    }
+
+    private static void handleBattleNode(ServerLevel level, DungeonInstance instance,
+                                          NodeData node, StageData stage,
+                                          ServerPlayer flagship, ItemStack keyStack,
+                                          DungeonLobbyManager.Lobby lobby) {
+        BattleSetupResult setup = prepareBattleNode(level, instance, node, flagship, keyStack, lobby);
+        if (setup == null) return;
+
+        // Spawn enemies for standard battle
+        NodeBattleField.spawnEnemies(setup.dungeonLevel(), instance, node);
+    }
+
+    /**
+     * Handles battle nodes with a script field (e.g. "artillery_intro").
+     * Teleports players to the battlefield first, then starts the script.
+     */
+    private static void handleScriptedBattleNode(ServerLevel level, DungeonInstance instance,
+                                                   NodeData node, StageData stage,
+                                                   ServerPlayer flagship, ItemStack keyStack,
+                                                   DungeonLobbyManager.Lobby lobby) {
+        BattleSetupResult setup = prepareBattleNode(level, instance, node, flagship, keyStack, lobby);
+        if (setup == null) return;
+
         // Start the script
         StageData stageData = DungeonRegistry.INSTANCE.getStage(instance.getStageId());
         String displayName = stageData != null ? stageData.displayName() : instance.getStageId();
 
         if ("artillery_intro".equals(node.script())) {
             var script = new com.piranport.dungeon.script.ArtilleryIntroScript(
-                    instance, node.nodeId(), displayName, playerUuids);
+                    instance, node.nodeId(), displayName, setup.playerUuids());
             com.piranport.dungeon.script.DungeonScriptManager.start(
                     instance.getInstanceId(), script);
         } else {
             PiranPort.LOGGER.warn("Unknown script: {}", node.script());
             // Fallback: spawn enemies normally
-            NodeBattleField.spawnEnemies(dungeonLevel, instance, node);
+            NodeBattleField.spawnEnemies(setup.dungeonLevel(), instance, node);
         }
     }
 

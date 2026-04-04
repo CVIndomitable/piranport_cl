@@ -113,6 +113,7 @@ public record FlightGroupData(List<FlightGroup> groups) {
                     for (int j = 0; j < pcnt; j++) {
                         int slot = ByteBufCodecs.VAR_INT.decode(buf);
                         String payload = ByteBufCodecs.STRING_UTF8.decode(buf);
+                        if (payload.length() > 256) throw new DecoderException("Payload string too long: " + payload.length());
                         payloadMap.put(slot, payload);
                     }
                     AttackMode mode = AttackMode.STREAM_CODEC.decode(buf);

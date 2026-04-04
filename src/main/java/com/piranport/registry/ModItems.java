@@ -361,9 +361,10 @@ public class ModItems {
     // ===== Aviation Ammo (Phase 18) =====
     public static final DeferredItem<Item> AVIATION_FUEL =
             ITEMS.registerSimpleItem("aviation_fuel");
-    public static final DeferredItem<Item> AERIAL_BOMB_SMALL =
+    // Legacy items kept for world compatibility — unified into AERIAL_BOMB below
+    @Deprecated public static final DeferredItem<Item> AERIAL_BOMB_SMALL =
             ITEMS.registerSimpleItem("aerial_bomb_small");
-    public static final DeferredItem<Item> AERIAL_BOMB_MEDIUM =
+    @Deprecated public static final DeferredItem<Item> AERIAL_BOMB_MEDIUM =
             ITEMS.registerSimpleItem("aerial_bomb_medium");
     public static final DeferredItem<Item> AERIAL_TORPEDO =
             ITEMS.registerSimpleItem("aerial_torpedo");

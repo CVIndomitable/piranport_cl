@@ -34,6 +34,9 @@ public record ReconExitPayload() implements CustomPacketPayload {
             UUID entityUUID = ReconManager.getReconEntity(playerUUID);
             if (entityUUID == null) return;
 
+            // End recon state first to prevent permanent slowness if entity is unloaded
+            ReconManager.endRecon(playerUUID);
+
             if (ctx.player().level() instanceof ServerLevel sl) {
                 Entity entity = sl.getEntity(entityUUID);
                 if (entity instanceof AircraftEntity aircraft) {

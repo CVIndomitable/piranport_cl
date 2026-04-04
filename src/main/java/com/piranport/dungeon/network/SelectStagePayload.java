@@ -42,6 +42,11 @@ public record SelectStagePayload(BlockPos lecternPos, int keySlot, String stageI
     public static void handle(SelectStagePayload payload, IPayloadContext context) {
         context.enqueueWork(() -> {
             if (!(context.player() instanceof ServerPlayer player)) return;
+
+            // Validate keySlot range
+            int keySlot = payload.keySlot();
+            if (keySlot < 0 || keySlot >= player.getInventory().getContainerSize()) return;
+
             if (!DungeonRegistry.INSTANCE.hasStage(payload.stageId())) return;
 
             DungeonLobbyManager.Lobby lobby =
@@ -50,10 +55,11 @@ public record SelectStagePayload(BlockPos lecternPos, int keySlot, String stageI
                 lobby.setSelectedStageId(payload.stageId());
 
                 // Write stage ID onto the key so SelectNodePayload can read it later
-                ItemStack keyStack = player.getInventory().getItem(payload.keySlot());
+                ItemStack keyStack = player.getInventory().getItem(keySlot);
                 if (keyStack.getItem() instanceof DungeonKeyItem) {
                     keyStack.set(ModDataComponents.DUNGEON_STAGE_ID.get(), payload.stageId());
                 }
+                DungeonLobbyManager.INSTANCE.broadcastLobbyUpdate(player.server, payload.lecternPos());
             }
         });
     }

@@ -71,7 +71,18 @@ public class DungeonInstance {
     public BlockPos getNodeSpawnPos(String nodeId) {
         // Nodes are laid out in a grid within the instance region.
         // Simple: A=0, B=1, C=2, ... along X axis with NODE_AREA_SIZE spacing.
-        int nodeIndex = nodeId.charAt(0) - 'A';
+        int nodeIndex = 0;
+        if (nodeId != null && !nodeId.isEmpty()) {
+            char ch = nodeId.charAt(0);
+            if (ch >= 'A' && ch <= 'Z') {
+                nodeIndex = ch - 'A';
+            } else if (ch >= 'a' && ch <= 'z') {
+                nodeIndex = ch - 'a';
+            } else {
+                // Fallback: use hashCode for non-letter nodeIds
+                nodeIndex = Math.abs(nodeId.hashCode()) % com.piranport.dungeon.DungeonConstants.MAX_NODES_PER_STAGE;
+            }
+        }
         int nodeX = getRegionOriginX() + nodeIndex * com.piranport.dungeon.DungeonConstants.NODE_AREA_SIZE
                 + com.piranport.dungeon.DungeonConstants.NODE_AREA_SIZE / 2;
         int nodeZ = getRegionOriginZ() + com.piranport.dungeon.DungeonConstants.NODE_AREA_SIZE / 2;

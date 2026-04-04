@@ -33,7 +33,7 @@ public class CookingPotMenu extends AbstractContainerMenu {
         if (playerInventory.player.level().getBlockEntity(pos) instanceof CookingPotBlockEntity be) {
             return new CookingPotMenu(containerId, playerInventory, be);
         }
-        return null;
+        throw new IllegalStateException("CookingPotBlockEntity not found at " + pos);
     }
 
     public CookingPotMenu(int containerId, Inventory playerInventory, CookingPotBlockEntity be) {

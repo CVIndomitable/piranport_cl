@@ -117,6 +117,13 @@ public class SaltEvaporationHandler {
     }
 
     @SubscribeEvent
+    public static void onLevelUnload(net.neoforged.neoforge.event.level.LevelEvent.Unload event) {
+        if (event.getLevel() instanceof ServerLevel level) {
+            evaporating.remove(level.dimension());
+        }
+    }
+
+    @SubscribeEvent
     public static void onServerStopped(ServerStoppedEvent event) {
         evaporating.clear();
     }

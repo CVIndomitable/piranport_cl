@@ -25,7 +25,7 @@ public class PlaceableFoodRenderer implements BlockEntityRenderer<PlaceableFoodB
         poseStack.translate(0.5, 0.2, 0.5);
         poseStack.scale(0.5f, 0.5f, 0.5f);
         Minecraft.getInstance().getItemRenderer().renderStatic(
-                new ItemStack(item), ItemDisplayContext.FIXED, packedLight, packedOverlay, poseStack, bufferSource,
+                item.getDefaultInstance(), ItemDisplayContext.FIXED, packedLight, packedOverlay, poseStack, bufferSource,
                 blockEntity.getLevel(), 0
         );
         poseStack.popPose();

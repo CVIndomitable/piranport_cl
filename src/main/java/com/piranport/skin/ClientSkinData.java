@@ -1,11 +1,12 @@
 package com.piranport.skin;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class ClientSkinData {
-    private static final Map<UUID, Integer> activeSkins = new ConcurrentHashMap<>();
+    // Client-only: accessed from the render thread, no concurrency needed
+    private static final Map<UUID, Integer> activeSkins = new HashMap<>();
 
     public static int getActiveSkin(UUID playerUuid) {
         return activeSkins.getOrDefault(playerUuid, 0);

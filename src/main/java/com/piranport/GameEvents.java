@@ -92,13 +92,13 @@ public class GameEvents {
             player.addEffect(new MobEffectInstance(MobEffects.WATER_BREATHING, 400, 0, false, false, true));
         }
 
-        // 声纳效果：装备声纳时，24格内所有生物持续获得发光效果（每20tick刷新一次）
+        // 声纳效果：装备声纳时，24格内敌对生物持续获得发光效果（每20tick刷新一次）
         if (!player.level().isClientSide() && player.tickCount % 20 == 0) {
             if (TransformationManager.hasSonarEquipped(player, transformedCore)) {
                 List<LivingEntity> nearby = player.level().getEntitiesOfClass(
                         LivingEntity.class,
                         player.getBoundingBox().inflate(24.0),
-                        e -> e.isAlive() && e != player);
+                        e -> e.isAlive() && e != player && !(e instanceof Player));
                 for (LivingEntity entity : nearby) {
                     entity.addEffect(new MobEffectInstance(MobEffects.GLOWING, 40, 0, false, false, false));
                 }
@@ -359,14 +359,16 @@ public class GameEvents {
     }
 
     private static void recallAircraftForPlayer(Player player) {
-        if (!(player.level() instanceof ServerLevel serverLevel)) return;
+        if (player.level().isClientSide()) return;
         UUID ownerUUID = player.getUUID();
-        AABB searchBox = AABB.ofSize(player.position(), 600, 600, 600);
-        List<AircraftEntity> aircraft = serverLevel.getEntitiesOfClass(
-                AircraftEntity.class, searchBox,
-                a -> ownerUUID.equals(a.getOwnerUUID()));
-        for (AircraftEntity a : aircraft) {
-            a.recallAndRemove();
+        // Search ALL server levels to handle cross-dimension recall (e.g. death in dungeon)
+        for (ServerLevel sl : player.getServer().getAllLevels()) {
+            for (Entity entity : sl.getEntities().getAll()) {
+                if (entity instanceof AircraftEntity aircraft
+                        && ownerUUID.equals(aircraft.getOwnerUUID())) {
+                    aircraft.recallAndRemove();
+                }
+            }
         }
         FireControlManager.clearTargets(ownerUUID);
         ReconManager.endRecon(ownerUUID);
@@ -463,6 +465,7 @@ public class GameEvents {
         }
     }
 
+    // See also: DungeonEventHandler.onServerStopping for dungeon-specific cleanup
     @SubscribeEvent
     public static void onServerStopped(ServerStoppedEvent event) {
         FireControlManager.clearAll();

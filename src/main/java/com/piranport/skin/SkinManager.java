@@ -8,6 +8,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.PacketDistributor;
 
+// TODO: migrate from getPersistentData() (legacy NBT) to NeoForge Entity Attachments
+//       for proper data isolation and lifecycle management.
 public class SkinManager {
     private static final String SKIN_KEY = "piranport_active_skin";
 

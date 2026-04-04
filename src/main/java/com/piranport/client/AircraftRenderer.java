@@ -1,6 +1,7 @@
 package com.piranport.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.piranport.component.AircraftInfo;
 import com.piranport.entity.AircraftEntity;
 import com.piranport.registry.ModItems;
 import net.minecraft.client.Minecraft;
@@ -15,6 +16,13 @@ import net.minecraft.world.item.ItemStack;
 
 /** Placeholder renderer — displays the aircraft item spinning at the entity position. */
 public class AircraftRenderer extends EntityRenderer<AircraftEntity> {
+
+    private static final java.util.EnumMap<AircraftInfo.AircraftType, ItemStack> DISPLAY_STACKS =
+            new java.util.EnumMap<>(AircraftInfo.AircraftType.class);
+
+    static {
+        // Populated lazily on first render (items must be registered first)
+    }
 
     public AircraftRenderer(EntityRendererProvider.Context ctx) {
         super(ctx);
@@ -40,13 +48,14 @@ public class AircraftRenderer extends EntityRenderer<AircraftEntity> {
     }
 
     private static ItemStack getDisplayStack(AircraftEntity entity) {
-        return switch (entity.getAircraftType()) {
-            case FIGHTER        -> new ItemStack(ModItems.FIGHTER_SQUADRON.get());
-            case DIVE_BOMBER    -> new ItemStack(ModItems.DIVE_BOMBER_SQUADRON.get());
-            case TORPEDO_BOMBER -> new ItemStack(ModItems.TORPEDO_BOMBER_SQUADRON.get());
-            case LEVEL_BOMBER   -> new ItemStack(ModItems.LEVEL_BOMBER_SQUADRON.get());
-            case RECON          -> new ItemStack(ModItems.RECON_SQUADRON.get());
-        };
+        AircraftInfo.AircraftType type = entity.getAircraftType();
+        return DISPLAY_STACKS.computeIfAbsent(type, t -> switch (t) {
+            case FIGHTER        -> ModItems.FIGHTER_SQUADRON.get().getDefaultInstance();
+            case DIVE_BOMBER    -> ModItems.DIVE_BOMBER_SQUADRON.get().getDefaultInstance();
+            case TORPEDO_BOMBER -> ModItems.TORPEDO_BOMBER_SQUADRON.get().getDefaultInstance();
+            case LEVEL_BOMBER   -> ModItems.LEVEL_BOMBER_SQUADRON.get().getDefaultInstance();
+            case RECON          -> ModItems.RECON_SQUADRON.get().getDefaultInstance();
+        });
     }
 
     @Override

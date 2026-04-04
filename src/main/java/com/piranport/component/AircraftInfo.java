@@ -39,7 +39,10 @@ public record AircraftInfo(
                 StringRepresentable.fromEnum(AircraftType::values);
 
         public static final StreamCodec<ByteBuf, AircraftType> STREAM_CODEC =
-                ByteBufCodecs.VAR_INT.map(i -> AircraftType.values()[i], Enum::ordinal);
+                ByteBufCodecs.VAR_INT.map(i -> {
+                    AircraftType[] vals = AircraftType.values();
+                    return (i >= 0 && i < vals.length) ? vals[i] : FIGHTER;
+                }, Enum::ordinal);
     }
 
     /** 轰炸方式：水平轰炸（高空水平飞越投弹）或俯冲轰炸（爬升后俯冲接触投弹）。 */
@@ -62,7 +65,10 @@ public record AircraftInfo(
                 StringRepresentable.fromEnum(BombingMode::values);
 
         public static final StreamCodec<ByteBuf, BombingMode> STREAM_CODEC =
-                ByteBufCodecs.VAR_INT.map(i -> BombingMode.values()[i], Enum::ordinal);
+                ByteBufCodecs.VAR_INT.map(i -> {
+                    BombingMode[] vals = BombingMode.values();
+                    return (i >= 0 && i < vals.length) ? vals[i] : DIVE;
+                }, Enum::ordinal);
     }
 
     public static final Codec<AircraftInfo> CODEC = RecordCodecBuilder.create(i -> i.group(

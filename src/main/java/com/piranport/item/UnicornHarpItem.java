@@ -30,11 +30,11 @@ public class UnicornHarpItem extends Item {
         ItemStack stack = player.getItemInHand(hand);
 
         if (!level.isClientSide()) {
-            // Apply Regeneration I to all living entities within 16 blocks
+            // Apply Regeneration I to all players within 16 blocks
             AABB area = player.getBoundingBox().inflate(RANGE);
-            List<LivingEntity> entities = level.getEntitiesOfClass(LivingEntity.class, area);
-            for (LivingEntity entity : entities) {
-                entity.addEffect(new MobEffectInstance(MobEffects.REGENERATION, REGEN_DURATION, REGEN_AMPLIFIER));
+            List<Player> nearby = level.getEntitiesOfClass(Player.class, area);
+            for (Player target : nearby) {
+                target.addEffect(new MobEffectInstance(MobEffects.REGENERATION, REGEN_DURATION, REGEN_AMPLIFIER));
             }
         }
 

@@ -50,9 +50,23 @@ public record SelectNodePayload(BlockPos lecternPos, int keySlot, String nodeId)
         context.enqueueWork(() -> {
             if (!(context.player() instanceof ServerPlayer player)) return;
 
+            // Validate keySlot range
+            int keySlot = payload.keySlot();
+            if (keySlot < 0 || keySlot >= player.getInventory().getContainerSize()) return;
+
+            // Validate distance to lectern
+            if (player.distanceToSqr(payload.lecternPos().getX() + 0.5,
+                    payload.lecternPos().getY() + 0.5,
+                    payload.lecternPos().getZ() + 0.5) > 64.0) return;
+
             // Validate key
-            ItemStack keyStack = player.getInventory().getItem(payload.keySlot());
+            ItemStack keyStack = player.getInventory().getItem(keySlot);
             if (!(keyStack.getItem() instanceof DungeonKeyItem)) return;
+
+            // Validate flagship permission
+            DungeonLobbyManager.Lobby lobby =
+                    DungeonLobbyManager.INSTANCE.getLobby(payload.lecternPos());
+            if (lobby != null && !lobby.isFlagship(player.getUUID())) return;
 
             String stageId = DungeonKeyItem.getStageId(keyStack);
             StageData stage = DungeonRegistry.INSTANCE.getStage(stageId);
@@ -81,10 +95,6 @@ public record SelectNodePayload(BlockPos lecternPos, int keySlot, String nodeId)
                 if (instance == null) return;
                 DungeonKeyItem.setInstanceId(keyStack, instance.getInstanceId());
             }
-
-            // Get lobby members
-            DungeonLobbyManager.Lobby lobby =
-                    DungeonLobbyManager.INSTANCE.getLobby(payload.lecternPos());
 
             // Handle node by type
             DungeonEventHandler.enterNode(serverLevel, instance, node, stage,

@@ -1,7 +1,10 @@
 package com.piranport.dungeon.lobby;
 
+import com.piranport.dungeon.network.LobbyUpdatePayload;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -105,6 +108,21 @@ public final class DungeonLobbyManager {
 
     public void removeLobby(BlockPos lecternPos) {
         lobbies.remove(lecternPos);
+    }
+
+    /** Send current lobby state to all online members. */
+    public void broadcastLobbyUpdate(MinecraftServer server, BlockPos lecternPos) {
+        Lobby lobby = lobbies.get(lecternPos);
+        if (lobby == null) return;
+        LobbyUpdatePayload payload = new LobbyUpdatePayload(
+                lobby.getMemberNames(), lobby.getFlagshipName(),
+                lobby.getSelectedStageId() != null ? lobby.getSelectedStageId() : "");
+        for (UUID uuid : lobby.getMemberUuids()) {
+            ServerPlayer player = server.getPlayerList().getPlayer(uuid);
+            if (player != null) {
+                PacketDistributor.sendToPlayer(player, payload);
+            }
+        }
     }
 
     public void clearAll() {

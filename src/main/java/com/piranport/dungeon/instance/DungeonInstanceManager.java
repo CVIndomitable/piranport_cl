@@ -29,6 +29,7 @@ public class DungeonInstanceManager extends SavedData {
 
     private final Map<UUID, DungeonInstance> instances = new HashMap<>();
     private int nextIndex = 0;
+    private final java.util.Queue<Integer> freedIndices = new java.util.ArrayDeque<>();
 
     public DungeonInstanceManager() {}
 
@@ -46,7 +47,7 @@ public class DungeonInstanceManager extends SavedData {
         }
 
         UUID instanceId = UUID.randomUUID();
-        int index = nextIndex++;
+        int index = freedIndices.isEmpty() ? nextIndex++ : freedIndices.poll();
         DungeonInstance instance = new DungeonInstance(instanceId, stageId, index);
         instance.setState(DungeonInstance.State.ACTIVE);
         instance.setLecternPos(lecternPos);
@@ -109,6 +110,7 @@ public class DungeonInstanceManager extends SavedData {
     public void cleanupInstance(UUID instanceId) {
         DungeonInstance inst = instances.remove(instanceId);
         if (inst != null) {
+            freedIndices.add(inst.getInstanceIndex());
             inst.setState(DungeonInstance.State.CLEANUP);
             setDirty();
             PiranPort.LOGGER.info("Cleaned up dungeon instance {}", instanceId);
@@ -141,6 +143,9 @@ public class DungeonInstanceManager extends SavedData {
     @Override
     public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
         tag.putInt("NextIndex", nextIndex);
+        if (!freedIndices.isEmpty()) {
+            tag.putIntArray("FreedIndices", freedIndices.stream().mapToInt(Integer::intValue).toArray());
+        }
         ListTag list = new ListTag();
         for (DungeonInstance inst : instances.values()) {
             list.add(inst.save());
@@ -152,6 +157,11 @@ public class DungeonInstanceManager extends SavedData {
     public static DungeonInstanceManager load(CompoundTag tag, HolderLookup.Provider registries) {
         DungeonInstanceManager mgr = new DungeonInstanceManager();
         mgr.nextIndex = tag.getInt("NextIndex");
+        if (tag.contains("FreedIndices")) {
+            for (int idx : tag.getIntArray("FreedIndices")) {
+                mgr.freedIndices.add(idx);
+            }
+        }
         ListTag list = tag.getList("Instances", Tag.TAG_COMPOUND);
         for (int i = 0; i < list.size(); i++) {
             DungeonInstance inst = DungeonInstance.load(list.getCompound(i));

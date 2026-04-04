@@ -71,7 +71,9 @@ public class DungeonPortalEntity extends Entity {
             return;
         }
 
-        // Server-side: check for players in the portal area
+        // Server-side: check for nearby players every 10 ticks instead of every tick
+        if (tickCount % 10 != 0) return;
+
         AABB area = getBoundingBox().inflate(2.0, 1.0, 2.0);
         List<ServerPlayer> nearbyPlayers = ((ServerLevel) level())
                 .getEntitiesOfClass(ServerPlayer.class, area);
@@ -120,11 +122,29 @@ public class DungeonPortalEntity extends Entity {
     protected void addAdditionalSaveData(CompoundTag tag) {
         if (instanceId != null) tag.putUUID("InstanceId", instanceId);
         if (nodeId != null) tag.putString("NodeId", nodeId);
+        if (!enteredPlayers.isEmpty()) {
+            net.minecraft.nbt.ListTag list = new net.minecraft.nbt.ListTag();
+            for (UUID uuid : enteredPlayers) {
+                CompoundTag entry = new CompoundTag();
+                entry.putUUID("UUID", uuid);
+                list.add(entry);
+            }
+            tag.put("EnteredPlayers", list);
+        }
     }
 
     @Override
     protected void readAdditionalSaveData(CompoundTag tag) {
         if (tag.hasUUID("InstanceId")) instanceId = tag.getUUID("InstanceId");
         if (tag.contains("NodeId")) nodeId = tag.getString("NodeId");
+        if (tag.contains("EnteredPlayers")) {
+            net.minecraft.nbt.ListTag list = tag.getList("EnteredPlayers", net.minecraft.nbt.Tag.TAG_COMPOUND);
+            for (int i = 0; i < list.size(); i++) {
+                CompoundTag entry = list.getCompound(i);
+                if (entry.hasUUID("UUID")) {
+                    enteredPlayers.add(entry.getUUID("UUID"));
+                }
+            }
+        }
     }
 }

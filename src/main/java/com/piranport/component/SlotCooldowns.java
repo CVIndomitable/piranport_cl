@@ -45,6 +45,7 @@ public record SlotCooldowns(Map<Integer, Long> endTick, Map<Integer, Integer> to
             },
             buf -> {
                 int eCnt = ByteBufCodecs.VAR_INT.decode(buf);
+                if (eCnt < 0 || eCnt > 64) throw new io.netty.handler.codec.DecoderException("Too many endTick entries: " + eCnt);
                 Map<Integer, Long> endMap = new HashMap<>(eCnt);
                 for (int i = 0; i < eCnt; i++) {
                     int slot = ByteBufCodecs.VAR_INT.decode(buf);
@@ -52,6 +53,7 @@ public record SlotCooldowns(Map<Integer, Long> endTick, Map<Integer, Integer> to
                     endMap.put(slot, tick);
                 }
                 int tCnt = ByteBufCodecs.VAR_INT.decode(buf);
+                if (tCnt < 0 || tCnt > 64) throw new io.netty.handler.codec.DecoderException("Too many totalTick entries: " + tCnt);
                 Map<Integer, Integer> totalMap = new HashMap<>(tCnt);
                 for (int i = 0; i < tCnt; i++) {
                     int slot = ByteBufCodecs.VAR_INT.decode(buf);

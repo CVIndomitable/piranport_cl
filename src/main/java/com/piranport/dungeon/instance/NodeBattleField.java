@@ -36,13 +36,15 @@ public final class NodeBattleField {
         int startX = spawn.getX() - halfSize;
         int startZ = spawn.getZ() - halfSize;
 
+        // Flag 2 = send to clients, flag 16 = skip neighbor updates (performance)
+        int flags = 2 | 16;
         for (int x = 0; x < DungeonConstants.NODE_AREA_SIZE; x++) {
             for (int z = 0; z < DungeonConstants.NODE_AREA_SIZE; z++) {
                 BlockPos waterPos = new BlockPos(startX + x, seaLevel, startZ + z);
-                dungeonLevel.setBlock(waterPos, Blocks.WATER.defaultBlockState(), 2);
+                dungeonLevel.setBlock(waterPos, Blocks.WATER.defaultBlockState(), flags);
                 // Solid floor below water
                 BlockPos floorPos = new BlockPos(startX + x, seaLevel - 1, startZ + z);
-                dungeonLevel.setBlock(floorPos, Blocks.STONE.defaultBlockState(), 2);
+                dungeonLevel.setBlock(floorPos, Blocks.STONE.defaultBlockState(), flags);
             }
         }
 
@@ -50,10 +52,10 @@ public final class NodeBattleField {
         for (int dx = -2; dx <= 2; dx++) {
             for (int dz = -2; dz <= 2; dz++) {
                 BlockPos platPos = spawn.offset(dx, -1, dz);
-                dungeonLevel.setBlock(platPos, Blocks.OAK_PLANKS.defaultBlockState(), 2);
+                dungeonLevel.setBlock(platPos, Blocks.OAK_PLANKS.defaultBlockState(), flags);
                 // Remove water above platform
                 BlockPos abovePos = spawn.offset(dx, 0, dz);
-                dungeonLevel.setBlock(abovePos, Blocks.AIR.defaultBlockState(), 2);
+                dungeonLevel.setBlock(abovePos, Blocks.AIR.defaultBlockState(), flags);
             }
         }
     }

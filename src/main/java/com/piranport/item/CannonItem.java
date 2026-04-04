@@ -50,8 +50,10 @@ public class CannonItem extends Item {
         stack.set(ModDataComponents.LOADED_AMMO.get(), new LoadedAmmo(1, ammoId));
         other.shrink(1);
 
-        player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
-                SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.5f, 1.4f);
+        if (!player.level().isClientSide()) {
+            player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+                    SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.5f, 1.4f);
+        }
         return true;
     }
 

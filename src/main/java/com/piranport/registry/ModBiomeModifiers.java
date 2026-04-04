@@ -12,7 +12,7 @@ public class ModBiomeModifiers {
     public static final DeferredRegister<MapCodec<? extends BiomeModifier>> BIOME_MODIFIER_SERIALIZERS =
             DeferredRegister.create(NeoForgeRegistries.Keys.BIOME_MODIFIER_SERIALIZERS, PiranPort.MOD_ID);
 
-    static {
-        BIOME_MODIFIER_SERIALIZERS.register("salt_gen", () -> SaltGenBiomeModifier.CODEC);
-    }
+    @SuppressWarnings("unused") // held by DeferredRegister
+    public static final net.neoforged.neoforge.registries.DeferredHolder<MapCodec<? extends BiomeModifier>, MapCodec<SaltGenBiomeModifier>> SALT_GEN =
+            BIOME_MODIFIER_SERIALIZERS.register("salt_gen", () -> SaltGenBiomeModifier.CODEC);
 }

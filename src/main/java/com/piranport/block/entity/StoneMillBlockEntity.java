@@ -38,6 +38,8 @@ public class StoneMillBlockEntity extends BlockEntity implements MenuProvider {
         @Override
         protected void onContentsChanged(int slot) {
             setChanged();
+            // Recursion safe: processing flag prevents re-entry from insertOutput/consumeIngredients;
+            // the while loop in processRecipes() re-checks after each successful recipe.
             if (level != null && !level.isClientSide() && !processing) {
                 processRecipes();
             }

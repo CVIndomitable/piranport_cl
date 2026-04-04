@@ -29,9 +29,8 @@ public record NodeEnteredPayload(String nodeId, String nodeType) implements Cust
 
     public static void handle(NodeEnteredPayload payload, IPayloadContext context) {
         context.enqueueWork(() -> {
-            // Update HUD with current node
-            // The full state will be synced via DungeonStatePayload,
-            // this is just for immediate feedback
+            // Immediate feedback: update HUD node display before full DungeonStatePayload arrives
+            DungeonHudLayer.updateNode(payload.nodeId);
         });
     }
 }

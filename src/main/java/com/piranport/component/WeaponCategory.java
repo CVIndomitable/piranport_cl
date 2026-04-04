@@ -28,5 +28,8 @@ public enum WeaponCategory implements StringRepresentable {
             StringRepresentable.fromEnum(WeaponCategory::values);
 
     public static final StreamCodec<ByteBuf, WeaponCategory> STREAM_CODEC =
-            ByteBufCodecs.VAR_INT.map(i -> WeaponCategory.values()[i], Enum::ordinal);
+            ByteBufCodecs.VAR_INT.map(i -> {
+                WeaponCategory[] vals = WeaponCategory.values();
+                return (i >= 0 && i < vals.length) ? vals[i] : CANNON;
+            }, Enum::ordinal);
 }

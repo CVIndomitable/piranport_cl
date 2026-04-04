@@ -12,13 +12,17 @@ public class FloodingEffect extends MobEffect {
     @Override
     public boolean applyEffectTick(LivingEntity entity, int amplifier) {
         if (!entity.level().isClientSide()) {
-            entity.hurt(entity.damageSources().magic(), 1.0f);
+            // Higher amplifier = more damage: 1.0 base + 0.5 per level
+            float damage = 1.0f + amplifier * 0.5f;
+            entity.hurt(entity.damageSources().magic(), damage);
         }
         return true;
     }
 
     @Override
     public boolean shouldApplyEffectTickThisTick(int duration, int amplifier) {
-        return duration % 20 == 0;
+        // Higher amplifier = more frequent ticks: 20, 15, 10, 10...
+        int interval = Math.max(10, 20 - amplifier * 5);
+        return duration % interval == 0;
     }
 }

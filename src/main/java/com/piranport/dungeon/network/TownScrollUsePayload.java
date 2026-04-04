@@ -37,6 +37,10 @@ public record TownScrollUsePayload() implements CustomPacketPayload {
         context.enqueueWork(() -> {
             if (!(context.player() instanceof ServerPlayer player)) return;
 
+            // Only usable inside the dungeon dimension
+            if (!player.level().dimension().equals(
+                    com.piranport.dungeon.event.DungeonEventHandler.DUNGEON_DIMENSION)) return;
+
             // Find and consume town scroll
             Inventory inv = player.getInventory();
             boolean found = false;

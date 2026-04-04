@@ -1,5 +1,6 @@
 package com.piranport.entity;
 
+import com.piranport.config.ModCommonConfig;
 import com.piranport.registry.ModEntityTypes;
 import com.piranport.registry.ModItems;
 import net.minecraft.nbt.CompoundTag;
@@ -52,12 +53,7 @@ public class AerialBombEntity extends ThrowableItemProjectile {
 
     @Override
     protected boolean canHitEntity(Entity target) {
-        if (target instanceof AircraftEntity aircraft) {
-            Entity owner = getOwner();
-            if (owner instanceof Player p && p.getUUID().equals(aircraft.getOwnerUUID())) {
-                return false;
-            }
-        }
+        if (com.piranport.combat.FriendlyFireHelper.shouldBlockHit(target, getOwner())) return false;
         return super.canHitEntity(target);
     }
 
@@ -67,7 +63,9 @@ public class AerialBombEntity extends ThrowableItemProjectile {
         if (!level().isClientSide()) {
             Entity target = result.getEntity();
             target.hurt(damageSources().thrown(this, getOwner()), damage);
-            level().explode(this, getX(), getY(), getZ(), explosionPower, Level.ExplosionInteraction.TNT);
+            Level.ExplosionInteraction interaction = ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get()
+                    ? Level.ExplosionInteraction.TNT : Level.ExplosionInteraction.NONE;
+            level().explode(this, getX(), getY(), getZ(), explosionPower, interaction);
             notifyOwner(target);
             discard();
         }
@@ -76,7 +74,7 @@ public class AerialBombEntity extends ThrowableItemProjectile {
     private void notifyOwner(Entity target) {
         Entity owner = getOwner();
         if (!(owner instanceof Player player)) return;
-        Component weaponName = new ItemStack(getDefaultItem()).getHoverName();
+        Component weaponName = getDefaultItem().getDescription();
         String key = target.isAlive() ? "message.piranport.weapon_hit" : "message.piranport.weapon_kill";
         player.sendSystemMessage(Component.translatable(key, weaponName, target.getDisplayName()));
     }
@@ -84,7 +82,9 @@ public class AerialBombEntity extends ThrowableItemProjectile {
     @Override
     protected void onHitBlock(BlockHitResult result) {
         if (!level().isClientSide()) {
-            level().explode(this, getX(), getY(), getZ(), explosionPower, Level.ExplosionInteraction.TNT);
+            Level.ExplosionInteraction interaction = ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get()
+                    ? Level.ExplosionInteraction.TNT : Level.ExplosionInteraction.NONE;
+            level().explode(this, getX(), getY(), getZ(), explosionPower, interaction);
             discard();
         }
     }

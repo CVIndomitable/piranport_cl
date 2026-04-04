@@ -106,6 +106,10 @@ public class AircraftEntity extends Entity {
     // Phase 33: aircraft health (persisted to NBT)
     private int aircraftHealth = 20;
 
+    // P3 #6: cached recon aircraft reference for FOLLOW mode (refreshed every 20 ticks)
+    @Nullable private AircraftEntity cachedReconAircraft;
+    private int reconCacheTick = 0;
+
     // P2 #29: preserve original ItemStack across launch-return cycle
     private ItemStack originalStack = ItemStack.EMPTY;
 
@@ -363,7 +367,12 @@ public class AircraftEntity extends Entity {
 
         // FOLLOW mode: orbit the owner's active recon aircraft, or fall back to player
         if (attackMode == FlightGroupData.AttackMode.FOLLOW) {
-            AircraftEntity reconAircraft = findOwnerReconAircraft(owner);
+            // Refresh cache every 20 ticks to avoid per-tick entity lookup
+            if (tickCount - reconCacheTick > 20 || cachedReconAircraft != null && cachedReconAircraft.isRemoved()) {
+                cachedReconAircraft = findOwnerReconAircraft(owner);
+                reconCacheTick = tickCount;
+            }
+            AircraftEntity reconAircraft = cachedReconAircraft;
             if (reconAircraft != null) {
                 orbitAngle += panelSpeed * 0.015;
                 double tx = reconAircraft.getX() + Math.cos(orbitAngle) * ORBIT_RADIUS;
@@ -639,8 +648,8 @@ public class AircraftEntity extends Entity {
         double factor = hasInput ? 0.12 : 0.25;
         setDeltaMovement(current.lerp(target, factor));
 
-        // Update maps in owner's inventory using aircraft position
-        if (!level().isClientSide) {
+        // Update maps in owner's inventory using aircraft position (throttled to every 20 ticks)
+        if (!level().isClientSide && tickCount % 20 == 0) {
             for (int i = 0; i < owner.getInventory().getContainerSize(); i++) {
                 ItemStack stack = owner.getInventory().getItem(i);
                 if (stack.getItem() instanceof MapItem mapItem) {
@@ -663,7 +672,7 @@ public class AircraftEntity extends Entity {
      */
     private void updateReconChunkLoading(Player owner, int cx, int cz) {
         if (!(level() instanceof ServerLevel sl)) return;
-        int radius = Math.min(sl.getServer().getPlayerList().getViewDistance(), 10);
+        int radius = Math.min(sl.getServer().getPlayerList().getViewDistance(), 5);
 
         java.util.Set<Long> desired = new java.util.HashSet<>();
         for (int dx = -radius; dx <= radius; dx++) {
@@ -698,6 +707,8 @@ public class AircraftEntity extends Entity {
     /**
      * Sends pending chunks to the player (rate-limited to avoid network spikes).
      * Chunks that haven't finished generating yet remain in the queue.
+     * Note: uses vanilla ClientboundLevelChunkWithLightPacket directly because NeoForge's
+     * PacketDistributor has no equivalent for sending raw chunk data to a specific player.
      */
     private void sendPendingChunks(ServerPlayer player) {
         if (reconPendingSend.isEmpty()) return;
@@ -892,6 +903,7 @@ public class AircraftEntity extends Entity {
                 case RECON          -> new ItemStack(ModItems.RECON_SQUADRON.get());
             };
         }
+        // Intentionally reset fuel to 0: returning aircraft must be refueled before next sortie
         AircraftInfo info = stack.get(ModDataComponents.AIRCRAFT_INFO.get());
         if (info != null) stack.set(ModDataComponents.AIRCRAFT_INFO.get(), info.withCurrentFuel(0));
         return stack;
@@ -1131,18 +1143,19 @@ public class AircraftEntity extends Entity {
         stateTicks = 0;
     }
 
+    private static final FlightState[] FLIGHT_STATE_VALUES = FlightState.values();
+    private static final AircraftInfo.AircraftType[] AIRCRAFT_TYPE_VALUES = AircraftInfo.AircraftType.values();
+
     public FlightState getFlightState() {
         int ordinal = entityData.get(STATE);
-        FlightState[] values = FlightState.values();
-        if (ordinal < 0 || ordinal >= values.length) return FlightState.REMOVED;
-        return values[ordinal];
+        if (ordinal < 0 || ordinal >= FLIGHT_STATE_VALUES.length) return FlightState.REMOVED;
+        return FLIGHT_STATE_VALUES[ordinal];
     }
 
     public AircraftInfo.AircraftType getAircraftType() {
         int ordinal = entityData.get(AIRCRAFT_TYPE_DATA);
-        AircraftInfo.AircraftType[] values = AircraftInfo.AircraftType.values();
-        if (ordinal < 0 || ordinal >= values.length) return AircraftInfo.AircraftType.FIGHTER;
-        return values[ordinal];
+        if (ordinal < 0 || ordinal >= AIRCRAFT_TYPE_VALUES.length) return AircraftInfo.AircraftType.FIGHTER;
+        return AIRCRAFT_TYPE_VALUES[ordinal];
     }
 
     /** Returns true if this aircraft is owned by the given player. Works client-side (synced). */
@@ -1263,6 +1276,14 @@ public class AircraftEntity extends Entity {
         lastForcedChunkX = tag.getInt("LastForcedChunkX");
         lastForcedChunkZ = tag.getInt("LastForcedChunkZ");
         if (!tag.contains("LastForcedChunkX")) lastForcedChunkX = Integer.MIN_VALUE;
+        // Release any forced chunks from a previous session (recon interrupted by restart)
+        if (tag.contains("ReconForcedChunks") && level() instanceof ServerLevel sl) {
+            long[] saved = tag.getLongArray("ReconForcedChunks");
+            for (long key : saved) {
+                sl.setChunkForced(net.minecraft.world.level.ChunkPos.getX(key),
+                        net.minecraft.world.level.ChunkPos.getZ(key), false);
+            }
+        }
         entityData.set(STATE, tag.getInt("FlightState"));
         entityData.set(AIRCRAFT_TYPE_DATA, aircraftType.ordinal());
         if (ownerUUID != null) entityData.set(OWNER_ID, Optional.of(ownerUUID));
@@ -1295,6 +1316,13 @@ public class AircraftEntity extends Entity {
         tag.putInt("RemainingAmmo", remainingAmmo);
         tag.putInt("LastForcedChunkX", lastForcedChunkX);
         tag.putInt("LastForcedChunkZ", lastForcedChunkZ);
+        // Persist forced chunks so they can be released after server restart
+        if (!reconForcedChunks.isEmpty()) {
+            long[] chunks = new long[reconForcedChunks.size()];
+            int idx = 0;
+            for (long key : reconForcedChunks) chunks[idx++] = key;
+            tag.putLongArray("ReconForcedChunks", chunks);
+        }
         tag.putInt("FlightState", entityData.get(STATE));
         tag.putInt("AirtimeTicks", airtimeTicks);
         tag.putBoolean("HasFired", hasFired);

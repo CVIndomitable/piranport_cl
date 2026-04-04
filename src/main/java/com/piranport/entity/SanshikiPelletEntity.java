@@ -56,16 +56,9 @@ public class SanshikiPelletEntity extends ThrowableItemProjectile {
 
     @Override
     protected boolean canHitEntity(Entity target) {
-        // Friendly fire protection
-        if (target instanceof AircraftEntity aircraft) {
-            Entity owner = getOwner();
-            if (owner instanceof Player p && p.getUUID().equals(aircraft.getOwnerUUID())) {
-                return false;
-            }
-        }
-        // Don't hit the player who fired
         Entity owner = getOwner();
-        if (owner != null && target == owner) return false;
+        if (owner != null && target == owner) return false; // don't hit the firer
+        if (com.piranport.combat.FriendlyFireHelper.shouldBlockHit(target, owner)) return false;
         return super.canHitEntity(target);
     }
 
@@ -84,7 +77,7 @@ public class SanshikiPelletEntity extends ThrowableItemProjectile {
         Entity owner = getOwner();
         if (!(owner instanceof Player player)) return;
         Component weaponName = shellForRender.isEmpty()
-                ? new ItemStack(getDefaultItem()).getHoverName()
+                ? getDefaultItem().getDescription()
                 : shellForRender.getHoverName();
         String key = target.isAlive() ? "message.piranport.weapon_hit" : "message.piranport.weapon_kill";
         player.sendSystemMessage(Component.translatable(key, weaponName, target.getDisplayName()));

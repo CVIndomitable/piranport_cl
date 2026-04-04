@@ -36,6 +36,8 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
     private boolean isVT = false;
     private float explosionPower = 1.5f;
     private float initialSpeed = 2.0f;
+    /** Prevents VT proximity detonation + onHit from double-exploding in the same tick. */
+    private boolean exploded = false;
 
     /** Tracking (homing) shell: gently steers toward target each tick. */
     private int trackingTargetId = -1;
@@ -126,7 +128,9 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         AABB searchBox = getBoundingBox().inflate(VT_DETECT_RANGE);
         List<Entity> nearby = level().getEntities(this, searchBox, e -> {
             if (e == getOwner()) return false;
-            if (e instanceof Player) return false; // friendly fire protection
+            // Friendly fire protection: skip players when config disabled
+            if (!ModCommonConfig.FRIENDLY_FIRE_ENABLED.get()
+                    && e instanceof Player && getOwner() instanceof Player) return false;
             if (e instanceof AircraftEntity aircraft) {
                 Entity owner = getOwner();
                 if (owner instanceof Player p && p.getUUID().equals(aircraft.getOwnerUUID())) return false;
@@ -158,6 +162,8 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
     }
 
     private void proximityDetonate() {
+        if (exploded) return;
+        exploded = true;
         Level.ExplosionInteraction interaction = ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get()
                 ? Level.ExplosionInteraction.TNT : Level.ExplosionInteraction.NONE;
         level().explode(this, getX(), getY(), getZ(), explosionPower, interaction);
@@ -172,19 +178,14 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
 
     @Override
     protected boolean canHitEntity(Entity target) {
-        if (target instanceof AircraftEntity aircraft) {
-            Entity owner = getOwner();
-            if (owner instanceof Player p && p.getUUID().equals(aircraft.getOwnerUUID())) {
-                return false;
-            }
-        }
+        if (com.piranport.combat.FriendlyFireHelper.shouldBlockHit(target, getOwner())) return false;
         return super.canHitEntity(target);
     }
 
     @Override
     protected void onHitEntity(EntityHitResult result) {
         super.onHitEntity(result);
-        if (!level().isClientSide) {
+        if (!level().isClientSide && !exploded) {
             Entity target = result.getEntity();
             if (isHE) {
                 // HE: area explosion damage
@@ -232,7 +233,7 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
     @Override
     protected void onHitBlock(BlockHitResult result) {
         super.onHitBlock(result);
-        if (!level().isClientSide) {
+        if (!level().isClientSide && !exploded) {
             if (isHE) {
                 Level.ExplosionInteraction interaction = ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get()
                         ? Level.ExplosionInteraction.TNT : Level.ExplosionInteraction.NONE;
@@ -280,6 +281,7 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
     public void readAdditionalSaveData(CompoundTag tag) {
         super.readAdditionalSaveData(tag);
         damage = tag.getFloat("Damage");
+        if (damage <= 0) damage = 4.0f; // fallback: avoid zero-damage projectiles after world reload
         isHE = tag.getBoolean("IsHE");
         isVT = tag.getBoolean("IsVT");
         explosionPower = tag.getFloat("ExplosionPower");

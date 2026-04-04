@@ -40,10 +40,14 @@ public class CookingPotBlockEntity extends BlockEntity implements MenuProvider {
     public static final int OUTPUT_SLOT = 9;
     public static final int TOTAL_SLOTS = 10;
 
+    private CookingPotRecipe currentRecipe;
+    private net.minecraft.resources.ResourceLocation currentRecipeId;
+
     private final ItemStackHandler itemHandler = new ItemStackHandler(TOTAL_SLOTS) {
         @Override
         protected void onContentsChanged(int slot) {
             setChanged();
+            if (slot < INPUT_SLOTS) markInputsDirty();
         }
     };
 
@@ -79,7 +83,6 @@ public class CookingPotBlockEntity extends BlockEntity implements MenuProvider {
 
     int cookingProgress = 0;
     int cookingTotalTime = 0;
-    private CookingPotRecipe currentRecipe = null;
 
     public final ContainerData dataAccess = new ContainerData() {
         @Override
@@ -115,6 +118,10 @@ public class CookingPotBlockEntity extends BlockEntity implements MenuProvider {
         return inputHandler;
     }
 
+    private boolean inputsDirty = true;
+
+    public void markInputsDirty() { this.inputsDirty = true; }
+
     public static void serverTick(Level level, BlockPos pos, BlockState state, CookingPotBlockEntity be) {
         if (!hasHeatSource(level, pos)) {
             if (be.cookingProgress > 0) {
@@ -135,26 +142,34 @@ public class CookingPotBlockEntity extends BlockEntity implements MenuProvider {
             return;
         }
 
-        CookingPotRecipeInput input = new CookingPotRecipeInput(inputs);
-        Optional<RecipeHolder<CookingPotRecipe>> opt =
-                level.getRecipeManager().getRecipeFor(ModRecipeTypes.COOKING_POT_TYPE.get(), input, level);
+        // Only re-query the recipe when inputs have changed (throttle expensive lookup)
+        if (be.inputsDirty) {
+            be.inputsDirty = false;
+            CookingPotRecipeInput input = new CookingPotRecipeInput(inputs);
+            Optional<RecipeHolder<CookingPotRecipe>> opt =
+                    level.getRecipeManager().getRecipeFor(ModRecipeTypes.COOKING_POT_TYPE.get(), input, level);
 
-        if (opt.isEmpty()) {
-            be.cookingProgress = 0;
-            be.currentRecipe = null;
-            return;
+            if (opt.isEmpty()) {
+                be.cookingProgress = 0;
+                be.currentRecipe = null;
+                return;
+            }
+
+            CookingPotRecipe recipe = opt.get().value();
+            if (be.currentRecipe == null
+                    || !opt.get().id().equals(be.currentRecipeId)) {
+                be.currentRecipe = recipe;
+                be.currentRecipeId = opt.get().id();
+                be.cookingProgress = 0;
+                be.cookingTotalTime = recipe.getCookingTime();
+            }
         }
 
-        CookingPotRecipe recipe = opt.get().value();
-        if (be.currentRecipe != recipe) {
-            be.currentRecipe = recipe;
-            be.cookingProgress = 0;
-            be.cookingTotalTime = recipe.getCookingTime();
-        }
+        if (be.currentRecipe == null) return;
 
         // Check output slot availability
         ItemStack output = be.itemHandler.getStackInSlot(OUTPUT_SLOT);
-        ItemStack result = recipe.getResult();
+        ItemStack result = be.currentRecipe.getResult();
         if (!output.isEmpty() && !(ItemStack.isSameItemSameComponents(output, result)
                 && output.getCount() + result.getCount() <= output.getMaxStackSize())) {
             return;
@@ -162,9 +177,12 @@ public class CookingPotBlockEntity extends BlockEntity implements MenuProvider {
 
         be.cookingProgress++;
         if (be.cookingProgress >= be.cookingTotalTime) {
-            be.craftItem(recipe, input);
+            CookingPotRecipeInput currentInput = new CookingPotRecipeInput(inputs);
+            be.craftItem(be.currentRecipe, currentInput);
             be.cookingProgress = 0;
             be.currentRecipe = null;
+            be.currentRecipeId = null;
+            be.inputsDirty = true; // re-check after crafting
         }
         be.setChanged();
     }

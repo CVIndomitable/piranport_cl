@@ -31,6 +31,9 @@ public record FlightGroupUpdatePayload(int coreSlot, FlightGroupData data)
         return TYPE;
     }
 
+    private static final java.util.Set<String> VALID_PAYLOADS = java.util.Set.of(
+            "", "piranport:aerial_torpedo", "piranport:aerial_bomb");
+
     public static void handle(FlightGroupUpdatePayload payload, IPayloadContext context) {
         context.enqueueWork(() -> {
             Player player = context.player();
@@ -44,6 +47,10 @@ public record FlightGroupUpdatePayload(int coreSlot, FlightGroupData data)
                 for (var group : payload.data().groups()) {
                     for (int idx : group.slotIndices()) {
                         if (idx < 0 || idx >= weaponSlots) return;
+                    }
+                    // Validate slotPayload strings are whitelisted
+                    for (String pl : group.slotPayload().values()) {
+                        if (!VALID_PAYLOADS.contains(pl)) return;
                     }
                 }
                 coreStack.set(ModDataComponents.FLIGHT_GROUP_DATA.get(), payload.data());

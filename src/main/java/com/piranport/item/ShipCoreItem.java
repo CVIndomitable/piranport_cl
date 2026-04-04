@@ -133,10 +133,10 @@ public class ShipCoreItem extends Item {
                         SoundEvents.BUCKET_EMPTY_LAVA, SoundSource.PLAYERS, 0.5f, 1.0f);
                 return true;
             }
-            // Full — feedback
+            // Full — feedback but don't consume interaction (allow armor install etc.)
             player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
                     SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 0.5f, 1.0f);
-            return true;
+            return false;
         }
 
         // Fuel refueling: fuel item → +1b fuel (works in both GUI and no-GUI modes)
@@ -151,9 +151,10 @@ public class ShipCoreItem extends Item {
                         SoundEvents.BUCKET_EMPTY_LAVA, SoundSource.PLAYERS, 0.5f, 1.0f);
                 return true;
             }
+            // Full — feedback but don't consume interaction
             player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
                     SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 0.5f, 1.0f);
-            return true;
+            return false;
         }
 
         if (com.piranport.config.ModCommonConfig.SHIP_CORE_GUI_ENABLED.get()) return false;
@@ -201,6 +202,7 @@ public class ShipCoreItem extends Item {
         if (!com.piranport.config.ModCommonConfig.SHIP_CORE_GUI_ENABLED.get()) {
             // No-GUI mode: find the best (highest maxLoad) core in inventory.
             // If this core is the best (effective) one, show load info; otherwise show "不生效".
+            // Safe: FMLEnvironment.dist check prevents Minecraft.getInstance() from loading on server
             if (net.neoforged.fml.loading.FMLEnvironment.dist.isClient()) {
                 net.minecraft.world.entity.player.Player clientPlayer =
                         net.minecraft.client.Minecraft.getInstance().player;
@@ -924,6 +926,7 @@ public class ShipCoreItem extends Item {
     }
 
     // ===== Caliber matching =====
+    // TODO: replace hardcoded item matching with item tags (e.g. piranport:small_caliber_ammo)
 
     static boolean matchesCaliber(ItemStack ammo, ItemStack weapon) {
         if (weapon.is(ModItems.SMALL_GUN.get())) {

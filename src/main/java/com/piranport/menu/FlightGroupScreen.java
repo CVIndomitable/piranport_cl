@@ -42,7 +42,8 @@ public class FlightGroupScreen extends AbstractContainerScreen<FlightGroupMenu> 
 
     // Payload cycling: empty → torpedo → bomb → empty
     private static final String[] PAYLOAD_CYCLE  = { "", PAYLOAD_TORPEDO, PAYLOAD_BOMB };
-    private static final String[] PAYLOAD_LABELS = { "---", "鱼雷", "航弹" };
+    private static final String[] PAYLOAD_LABEL_KEYS = {
+            "", "gui.piranport.payload_torpedo", "gui.piranport.payload_bomb" };
     private static final int[] PAYLOAD_COLORS = {
             0xFF555555,   // empty: dark gray
             0xFF4488FF,   // torpedo: blue
@@ -321,17 +322,16 @@ public class FlightGroupScreen extends AbstractContainerScreen<FlightGroupMenu> 
 
     private String getPayloadLabel(String payload) {
         for (int i = 0; i < PAYLOAD_CYCLE.length; i++) {
-            if (PAYLOAD_CYCLE[i].equals(payload)) return PAYLOAD_LABELS[i];
+            if (PAYLOAD_CYCLE[i].equals(payload)) {
+                String key = PAYLOAD_LABEL_KEYS[i];
+                return key.isEmpty() ? "---" : net.minecraft.network.chat.Component.translatable(key).getString();
+            }
         }
         return "---";
     }
 
     private void drawSlotBg(GuiGraphics gfx, int x, int y) {
-        gfx.fill(x, y, x + 18, y + 1, 0xFF373737);
-        gfx.fill(x, y, x + 1, y + 18, 0xFF373737);
-        gfx.fill(x + 1, y + 1, x + 17, y + 17, 0xFF8B8B8B);
-        gfx.fill(x + 17, y + 1, x + 18, y + 18, 0xFFFFFFFF);
-        gfx.fill(x + 1, y + 17, x + 18, y + 18, 0xFFFFFFFF);
+        com.piranport.client.GuiHelper.drawSlotBg(gfx, x, y);
     }
 
     @Override

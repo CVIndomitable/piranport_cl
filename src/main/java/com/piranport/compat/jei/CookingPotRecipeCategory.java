@@ -57,16 +57,22 @@ public class CookingPotRecipeCategory implements IRecipeCategory<CookingPotRecip
                 .addItemStack(recipe.getResult());
     }
 
+    // Arrow drawing constants
+    private static final int ARROW_COLOR = 0xFF808080;
+    private static final int ARROW_X_START = 64;
+    private static final int ARROW_X_END = 110;
+    private static final int ARROW_Y_CENTER = 29;
+
     @Override
     public void draw(CookingPotRecipe recipe, IRecipeSlotsView slotsView, GuiGraphics gfx, double mouseX, double mouseY) {
         // Arrow shaft
-        gfx.fill(64, 28, 106, 30, 0xFF808080);
-        // Arrow head
-        gfx.fill(100, 25, 106, 33, 0xFF808080);
-        gfx.fill(106, 26, 108, 32, 0xFF808080);
-        gfx.fill(108, 27, 110, 31, 0xFF808080);
+        gfx.fill(ARROW_X_START, ARROW_Y_CENTER - 1, ARROW_X_END - 4, ARROW_Y_CENTER + 1, ARROW_COLOR);
+        // Arrow head (3-layer triangle)
+        gfx.fill(ARROW_X_END - 10, ARROW_Y_CENTER - 4, ARROW_X_END - 4, ARROW_Y_CENTER + 4, ARROW_COLOR);
+        gfx.fill(ARROW_X_END - 4, ARROW_Y_CENTER - 3, ARROW_X_END - 2, ARROW_Y_CENTER + 3, ARROW_COLOR);
+        gfx.fill(ARROW_X_END - 2, ARROW_Y_CENTER - 2, ARROW_X_END, ARROW_Y_CENTER + 2, ARROW_COLOR);
         // Cooking time
         String timeText = recipe.getCookingTime() / 20 + "s";
-        gfx.drawString(Minecraft.getInstance().font, timeText, 78, 34, 0xFF808080, false);
+        gfx.drawString(Minecraft.getInstance().font, timeText, 78, 34, ARROW_COLOR, false);
     }
 }

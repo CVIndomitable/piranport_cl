@@ -78,6 +78,13 @@ public class ModPackets {
                 SnapshotRequestPayload::handle
         );
 
+        // No-GUI mode: empty-hand recall all aircraft
+        registrar.playToServer(
+                RecallAllAircraftPayload.TYPE,
+                RecallAllAircraftPayload.STREAM_CODEC,
+                RecallAllAircraftPayload::handle
+        );
+
         // ===== Skin System =====
         registrar.playToClient(
                 SkinSyncPayload.TYPE,

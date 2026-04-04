@@ -3,6 +3,8 @@ package com.piranport;
 import com.piranport.aviation.ClientFireControlData;
 import com.piranport.aviation.ClientReconData;
 import com.piranport.combat.TransformationManager;
+import com.piranport.config.ModCommonConfig;
+import com.piranport.network.RecallAllAircraftPayload;
 import com.piranport.network.SkinRevertPayload;
 import com.piranport.skin.ClientSkinData;
 import net.minecraft.ChatFormatting;
@@ -32,6 +34,7 @@ public class ClientGameEvents {
     }
 
     /** Empty hand + shift + right click → revert skin and return core. */
+    /** Empty hand + right click (no shift, no-GUI, transformed) → recall all aircraft. */
     @SubscribeEvent
     public static void onRightClickEmpty(PlayerInteractEvent.RightClickEmpty event) {
         if (event.getEntity().isShiftKeyDown()) {
@@ -39,6 +42,12 @@ public class ClientGameEvents {
             if (currentSkin > 0) {
                 PacketDistributor.sendToServer(new SkinRevertPayload());
             }
+            return;
+        }
+        // No-GUI mode: empty hand right-click → recall all aircraft
+        if (!ModCommonConfig.SHIP_CORE_GUI_ENABLED.get()
+                && TransformationManager.isPlayerTransformed(event.getEntity())) {
+            PacketDistributor.sendToServer(new RecallAllAircraftPayload());
         }
     }
 

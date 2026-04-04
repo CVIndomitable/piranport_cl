@@ -35,11 +35,11 @@ public record OpenFlightGroupPayload(int coreSlot) implements CustomPacketPayloa
 
                 // No-GUI mode: U key toggles fighter air-only instead of opening flight group menu
                 if (!com.piranport.config.ModCommonConfig.SHIP_CORE_GUI_ENABLED.get()) {
-                    boolean airOnly = com.piranport.aviation.FireControlManager.toggleFighterAirOnly(
+                    boolean groundEnabled = com.piranport.aviation.FireControlManager.toggleFighterGround(
                             serverPlayer.getUUID());
                     serverPlayer.displayClientMessage(Component.translatable(
-                            airOnly ? "message.piranport.fighter_air_only_on"
-                                    : "message.piranport.fighter_air_only_off"), true);
+                            groundEnabled ? "message.piranport.fighter_air_only_off"
+                                          : "message.piranport.fighter_air_only_on"), true);
                     return;
                 }
 

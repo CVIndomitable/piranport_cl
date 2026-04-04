@@ -45,26 +45,26 @@ public class FireControlManager {
         return list == null ? List.of() : List.copyOf(list);
     }
 
-    // ===== Fighter Air-Only Mode =====
-    private static final Set<UUID> FIGHTER_AIR_ONLY = ConcurrentHashMap.newKeySet();
+    // ===== Fighter Ground-Attack Mode (default OFF = air-only) =====
+    private static final Set<UUID> FIGHTER_GROUND_ENABLED = ConcurrentHashMap.newKeySet();
 
-    /** Toggle fighter air-only mode for the player. Returns true if now air-only. */
-    public static boolean toggleFighterAirOnly(UUID playerUUID) {
-        if (!FIGHTER_AIR_ONLY.remove(playerUUID)) {
-            FIGHTER_AIR_ONLY.add(playerUUID);
+    /** Toggle fighter ground-attack mode. Returns true if ground attack is now enabled. */
+    public static boolean toggleFighterGround(UUID playerUUID) {
+        if (!FIGHTER_GROUND_ENABLED.remove(playerUUID)) {
+            FIGHTER_GROUND_ENABLED.add(playerUUID);
             return true;
         }
         return false;
     }
 
-    /** Returns true if the player's fighters should only attack airborne FC targets. */
+    /** Returns true if the player's fighters should only attack airborne FC targets (default). */
     public static boolean isFighterAirOnly(UUID playerUUID) {
-        return FIGHTER_AIR_ONLY.contains(playerUUID);
+        return !FIGHTER_GROUND_ENABLED.contains(playerUUID);
     }
 
     /** Remove all state (call on server stop / world unload). */
     public static void clearAll() {
         LOCKED_TARGETS.clear();
-        FIGHTER_AIR_ONLY.clear();
+        FIGHTER_GROUND_ENABLED.clear();
     }
 }

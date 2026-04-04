@@ -187,6 +187,21 @@ public class AircraftEntity extends Entity {
         builder.define(OWNER_ID, Optional.empty());
     }
 
+    /**
+     * Override lerpTo to ignore server rotation updates while in RECON_ACTIVE on the client.
+     * The client controls camera rotation via ClientTickHandler (mouse input);
+     * accepting server rotation causes per-tick flicker between server and client values.
+     */
+    @Override
+    public void lerpTo(double x, double y, double z, float yRot, float xRot, int steps) {
+        if (level().isClientSide() && getFlightState() == FlightState.RECON_ACTIVE) {
+            // Accept position updates but keep client-controlled rotation
+            super.lerpTo(x, y, z, getYRot(), getXRot(), steps);
+            return;
+        }
+        super.lerpTo(x, y, z, yRot, xRot, steps);
+    }
+
     @Override
     public void tick() {
         super.tick();

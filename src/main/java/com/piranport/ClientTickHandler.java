@@ -88,8 +88,15 @@ public class ClientTickHandler {
             if (mc.level != null) {
                 Entity reconEntity = mc.level.getEntity(ClientReconData.getReconEntityId());
                 if (reconEntity != null) {
+                    // Maintain camera binding — Minecraft may reset it (e.g. entity re-sync)
+                    if (mc.getCameraEntity() != reconEntity) {
+                        mc.setCameraEntity(reconEntity);
+                    }
+                    // Set both current and previous-tick rotation to prevent partialTick interpolation flicker
                     reconEntity.setXRot(mc.player.getXRot());
                     reconEntity.setYRot(mc.player.getYRot());
+                    reconEntity.xRotO = mc.player.xRotO;
+                    reconEntity.yRotO = mc.player.yRotO;
                 }
             }
             if (mc.player.tickCount % 2 == 0) {

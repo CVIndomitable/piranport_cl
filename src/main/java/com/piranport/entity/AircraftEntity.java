@@ -553,7 +553,8 @@ public class AircraftEntity extends Entity {
             TorpedoEntity torpedo = new TorpedoEntity(ModEntityTypes.TORPEDO_ENTITY.get(), level());
             Vec3 dir = new Vec3(dx, 0, dz).normalize();
             torpedo.setPos(getX(), getY(), getZ());
-            torpedo.setDeltaMovement(dir.x * 0.7, 0, dir.z * 0.7);
+            // 投下鱼雷：向前+向下，先入水再走鱼雷水面巡航逻辑
+            torpedo.setDeltaMovement(dir.x * 0.5, -0.3, dir.z * 0.5);
             torpedo.setOwner(owner);
             level().addFreshEntity(torpedo);
             hasFired = true;

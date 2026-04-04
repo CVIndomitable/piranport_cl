@@ -56,7 +56,7 @@ src/main/java/com/piranport/
 │   ├── ModBlockEntityTypes.java
 │   ├── ModMenuTypes.java           # 含 DUNGEON_BOOK_MENU
 │   ├── ModRecipeTypes.java
-│   └── ModKeyMappings.java         # P/O/I 火控、U 编组、V 循环/退侦察、Y 高亮、F8 调试
+│   └── ModKeyMappings.java         # P/O/I 火控、U 编组、V 循环/退侦察、Y 高亮、H 自动升空、F8 调试
 ├── config/
 │   ├── ModCommonConfig.java
 │   └── ModClientConfig.java        # 含 showLegacyReloadHud, flightGroupEnabled

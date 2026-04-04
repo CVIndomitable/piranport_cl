@@ -80,6 +80,7 @@ public class ClientEvents {
         event.register(ModKeyMappings.FIRE_CONTROL_CANCEL);
         event.register(ModKeyMappings.OPEN_FLIGHT_GROUP);
         event.register(ModKeyMappings.HIGHLIGHT_ENTITIES);
+        event.register(ModKeyMappings.TOGGLE_AUTO_LAUNCH);
         event.register(ModKeyMappings.DEBUG_TOGGLE);
     }
 

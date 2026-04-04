@@ -8,6 +8,7 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
@@ -34,7 +35,11 @@ public record AutoLaunchTogglePayload(int coreSlot) implements CustomPacketPaylo
             ItemStack coreStack = player.getInventory().getItem(slot);
             if (coreStack.getItem() instanceof ShipCoreItem) {
                 boolean current = coreStack.getOrDefault(ModDataComponents.SHIP_AUTO_LAUNCH.get(), false);
-                coreStack.set(ModDataComponents.SHIP_AUTO_LAUNCH.get(), !current);
+                boolean newState = !current;
+                coreStack.set(ModDataComponents.SHIP_AUTO_LAUNCH.get(), newState);
+                player.displayClientMessage(Component.translatable(
+                        newState ? "message.piranport.auto_launch_on"
+                                 : "message.piranport.auto_launch_off"), true);
             }
         });
     }

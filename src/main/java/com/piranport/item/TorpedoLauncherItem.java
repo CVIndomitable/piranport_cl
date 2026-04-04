@@ -16,6 +16,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 
+import com.piranport.component.WeaponCategory;
+
 import java.util.List;
 
 public class TorpedoLauncherItem extends Item {
@@ -63,6 +65,11 @@ public class TorpedoLauncherItem extends Item {
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context,
                                 List<Component> tooltipComponents, TooltipFlag tooltipFlag) {
+        WeaponCategory cat = stack.get(ModDataComponents.WEAPON_CATEGORY.get());
+        if (cat != null) {
+            tooltipComponents.add(Component.translatable("tooltip.piranport.weapon_category." + cat.getSerializedName())
+                    .withStyle(net.minecraft.ChatFormatting.DARK_GREEN));
+        }
         ShipCoreItem.appendWeaponCooldownTooltip(stack, tooltipComponents);
     }
 }

@@ -2,6 +2,7 @@ package com.piranport.item;
 
 import com.piranport.combat.TransformationManager;
 import com.piranport.component.AircraftInfo;
+import com.piranport.component.WeaponCategory;
 import com.piranport.registry.ModDataComponents;
 import com.piranport.registry.ModItems;
 import com.piranport.registry.ModMobEffects;
@@ -80,6 +81,11 @@ public class AircraftItem extends Item {
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context,
                                 List<Component> tooltipComponents, TooltipFlag tooltipFlag) {
+        WeaponCategory cat = stack.get(ModDataComponents.WEAPON_CATEGORY.get());
+        if (cat != null) {
+            tooltipComponents.add(Component.translatable("tooltip.piranport.weapon_category." + cat.getSerializedName())
+                    .withStyle(net.minecraft.ChatFormatting.DARK_GREEN));
+        }
         AircraftInfo info = stack.get(ModDataComponents.AIRCRAFT_INFO.get());
         if (info != null) {
             tooltipComponents.add(Component.translatable("tooltip.piranport.aircraft_type." + info.aircraftType().getSerializedName())

@@ -31,6 +31,25 @@ public class TorpedoEntity extends ThrowableItemProjectile {
     private boolean magnetic = false;
     private boolean exploded = false;
 
+    /** Wire-guided torpedo state. */
+    private boolean wireGuided = false;
+    private Vec3 launchPos = null;
+    /** Maximum wire control distance in blocks. */
+    private static final double WIRE_MAX_RANGE = 16.0;
+    /** Yaw adjustment per steer input (degrees). */
+    private static final float WIRE_STEER_DEGREES = 8.0f;
+
+    /** Acoustic homing torpedo state. */
+    private boolean acoustic = false;
+    /** Detection range for moving entities (blocks). */
+    private static final double ACOUSTIC_DETECT_RANGE = 25.0;
+    /** Reduced detection range for sneaking entities (blocks). */
+    private static final double ACOUSTIC_SNEAK_RANGE = 10.0;
+    /** Maximum turn rate per tick (degrees). */
+    private static final float ACOUSTIC_MAX_TURN_DEG = 8.0f;
+    /** Grace period before acoustic homing activates (ticks). */
+    private static final int ACOUSTIC_ARM_TICKS = 10;
+
     /** Distance at which magnetic proximity fuze detonates (blocks). */
     private static final double MAGNETIC_DETONATE_DIST = 3.0;
     /** Grace period after launch before magnetic fuze arms (ticks). */
@@ -64,6 +83,39 @@ public class TorpedoEntity extends ThrowableItemProjectile {
 
     public void setMagnetic(boolean magnetic) {
         this.magnetic = magnetic;
+    }
+
+    public void setWireGuided(boolean wireGuided) {
+        this.wireGuided = wireGuided;
+        if (wireGuided) {
+            this.launchPos = position();
+        }
+    }
+
+    public boolean isWireGuided() {
+        return wireGuided;
+    }
+
+    public void setAcoustic(boolean acoustic) {
+        this.acoustic = acoustic;
+        if (acoustic) {
+            this.torpedoSpeed = 1.0f;
+        }
+    }
+
+    /**
+     * Steer the torpedo left or right by adjusting its horizontal velocity direction.
+     * @param direction -1 for left, +1 for right
+     */
+    public void steer(int direction) {
+        if (!wireGuided) return;
+        Vec3 motion = getDeltaMovement();
+        double angleRad = Math.toRadians(WIRE_STEER_DEGREES * direction);
+        double cos = Math.cos(angleRad);
+        double sin = Math.sin(angleRad);
+        double newX = motion.x * cos - motion.z * sin;
+        double newZ = motion.x * sin + motion.z * cos;
+        setDeltaMovement(newX, motion.y, newZ);
     }
 
     @Override
@@ -101,6 +153,24 @@ public class TorpedoEntity extends ThrowableItemProjectile {
         if (!level().isClientSide() && magnetic && tickCount > MAGNETIC_ARM_TICKS) {
             checkMagneticProximity();
             if (exploded) return;
+        }
+
+        // 1.6. 线导鱼雷掉线检测
+        if (!level().isClientSide() && wireGuided && launchPos != null) {
+            double dist = position().distanceTo(launchPos);
+            if (dist > WIRE_MAX_RANGE) {
+                wireGuided = false;
+                Entity owner = getOwner();
+                if (owner instanceof Player player) {
+                    player.displayClientMessage(
+                            Component.translatable("message.piranport.torpedo_wire_lost"), true);
+                }
+            }
+        }
+
+        // 1.7. 声导鱼雷追踪
+        if (!level().isClientSide() && acoustic && tickCount > ACOUSTIC_ARM_TICKS) {
+            acousticHoming();
         }
 
         Vec3 motion = getDeltaMovement();
@@ -145,6 +215,62 @@ public class TorpedoEntity extends ThrowableItemProjectile {
                 return;
             }
         }
+    }
+
+    /**
+     * 声导追踪：扫描范围内实体，向最近的"有声音"目标转向。
+     * 移动中的实体检测范围25格，潜行实体缩减到10格。
+     */
+    private void acousticHoming() {
+        AABB searchBox = getBoundingBox().inflate(ACOUSTIC_DETECT_RANGE);
+        Entity bestTarget = null;
+        double bestDist = Double.MAX_VALUE;
+
+        for (Entity e : level().getEntities(this, searchBox, e -> {
+            if (e == getOwner()) return false;
+            if (com.piranport.combat.FriendlyFireHelper.shouldBlockHit(e, getOwner())) return false;
+            return e.isAlive() && e.isPickable() && e instanceof LivingEntity;
+        })) {
+            double dist = distanceTo(e);
+            // 潜行实体缩减检测范围
+            double range = (e instanceof LivingEntity living && living.isShiftKeyDown())
+                    ? ACOUSTIC_SNEAK_RANGE : ACOUSTIC_DETECT_RANGE;
+            if (dist > range) continue;
+            // 声音检测：实体必须在移动（速度 > 0.01）或有声音事件
+            Vec3 vel = e.getDeltaMovement();
+            double speed = vel.x * vel.x + vel.y * vel.y + vel.z * vel.z;
+            if (speed < 0.0001 && e instanceof LivingEntity living && living.isShiftKeyDown()) {
+                continue; // 静止+潜行 = 不产生声音
+            }
+            if (dist < bestDist) {
+                bestDist = dist;
+                bestTarget = e;
+            }
+        }
+
+        if (bestTarget == null) return;
+
+        // 计算转向：限制最大转角
+        Vec3 motion = getDeltaMovement();
+        double hSpeed = Math.sqrt(motion.x * motion.x + motion.z * motion.z);
+        if (hSpeed < 0.001) return;
+
+        double currentYaw = Math.atan2(motion.z, motion.x);
+        double dx = bestTarget.getX() - getX();
+        double dz = bestTarget.getZ() - getZ();
+        double targetYaw = Math.atan2(dz, dx);
+
+        double deltaYaw = targetYaw - currentYaw;
+        // 归一化到 [-PI, PI]
+        while (deltaYaw > Math.PI) deltaYaw -= 2 * Math.PI;
+        while (deltaYaw < -Math.PI) deltaYaw += 2 * Math.PI;
+
+        double maxTurnRad = Math.toRadians(ACOUSTIC_MAX_TURN_DEG);
+        if (deltaYaw > maxTurnRad) deltaYaw = maxTurnRad;
+        if (deltaYaw < -maxTurnRad) deltaYaw = -maxTurnRad;
+
+        double newYaw = currentYaw + deltaYaw;
+        setDeltaMovement(Math.cos(newYaw) * hSpeed, motion.y, Math.sin(newYaw) * hSpeed);
     }
 
     private void magneticDetonate() {
@@ -226,6 +352,13 @@ public class TorpedoEntity extends ThrowableItemProjectile {
         tag.putInt("Lifetime", lifetime);
         tag.putFloat("ExplosionRadius", explosionRadius);
         tag.putBoolean("Magnetic", magnetic);
+        tag.putBoolean("WireGuided", wireGuided);
+        tag.putBoolean("Acoustic", acoustic);
+        if (launchPos != null) {
+            tag.putDouble("LaunchX", launchPos.x);
+            tag.putDouble("LaunchY", launchPos.y);
+            tag.putDouble("LaunchZ", launchPos.z);
+        }
     }
 
     @Override
@@ -240,5 +373,10 @@ public class TorpedoEntity extends ThrowableItemProjectile {
         explosionRadius = tag.getFloat("ExplosionRadius");
         if (explosionRadius <= 0) explosionRadius = 2.0f;
         magnetic = tag.getBoolean("Magnetic");
+        wireGuided = tag.getBoolean("WireGuided");
+        acoustic = tag.getBoolean("Acoustic");
+        if (tag.contains("LaunchX")) {
+            launchPos = new Vec3(tag.getDouble("LaunchX"), tag.getDouble("LaunchY"), tag.getDouble("LaunchZ"));
+        }
     }
 }

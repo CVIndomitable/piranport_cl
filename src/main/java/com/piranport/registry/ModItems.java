@@ -16,6 +16,7 @@ import com.piranport.item.SonarItem;
 import com.piranport.item.EngineItem;
 import com.piranport.item.TorpedoItem;
 import com.piranport.item.TorpedoLauncherItem;
+import com.piranport.item.TorpedoReloadItem;
 import com.piranport.item.MissileLauncherItem;
 import com.piranport.item.UnicornHarpItem;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -127,6 +128,12 @@ public class ModItems {
     public static final DeferredItem<TorpedoItem> MAGNETIC_TORPEDO_533MM =
             ITEMS.register("magnetic_torpedo_533mm",
                     () -> new TorpedoItem(new Item.Properties().stacksTo(16), 533, true));
+    public static final DeferredItem<TorpedoItem> WIRE_GUIDED_TORPEDO_533MM =
+            ITEMS.register("wire_guided_torpedo_533mm",
+                    () -> new TorpedoItem(new Item.Properties().stacksTo(16), 533, false, true));
+    public static final DeferredItem<TorpedoItem> ACOUSTIC_TORPEDO_533MM =
+            ITEMS.register("acoustic_torpedo_533mm",
+                    () -> new TorpedoItem(new Item.Properties().stacksTo(16), 533, false, false, true));
 
     // ===== Armor Plates =====
     public static final DeferredItem<ArmorPlateItem> SMALL_ARMOR_PLATE =
@@ -205,6 +212,8 @@ public class ModItems {
             ITEMS.registerSimpleBlockItem(ModBlocks.CUTTING_BOARD);
     public static final DeferredItem<BlockItem> COOKING_POT =
             ITEMS.registerSimpleBlockItem(ModBlocks.COOKING_POT);
+    public static final DeferredItem<BlockItem> RELOAD_FACILITY =
+            ITEMS.registerSimpleBlockItem(ModBlocks.RELOAD_FACILITY);
 
     // ===== Intermediate Products (Phase 13/16) =====
     public static final DeferredItem<Item> SAUSAGE            = ITEMS.registerSimpleItem("sausage");
@@ -656,6 +665,12 @@ public class ModItems {
             ITEMS.register("diesel_engine",
                     () -> new EngineItem(new Item.Properties().stacksTo(1)
                             .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ENGINE), 0.08, 2));
+
+    // ===== Torpedo Reload Enhancement =====
+    public static final DeferredItem<TorpedoReloadItem> TORPEDO_RELOAD =
+            ITEMS.register("torpedo_reload",
+                    () -> new TorpedoReloadItem(new Item.Properties().stacksTo(1)
+                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ARMOR), 8));
 
     // ===== Torpedo Launchers =====
     public static final DeferredItem<TorpedoLauncherItem> TWIN_TORPEDO_LAUNCHER =

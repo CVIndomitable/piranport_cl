@@ -119,12 +119,16 @@ public class ModCreativeTabs {
                         output.accept(ModItems.ADVANCED_ENGINE.get());
                         output.accept(ModItems.HIGH_PRESSURE_BOILER.get());
                         output.accept(ModItems.DIESEL_ENGINE.get());
+                        // Torpedo Reload
+                        output.accept(ModItems.TORPEDO_RELOAD.get());
                         // Skin Cores
                         output.accept(ModItems.SKIN_CORE_1.get());
                         output.accept(ModItems.SKIN_CORE_2.get());
                         output.accept(ModItems.SKIN_CORE_3.get());
                         // Fuel
                         output.accept(ModItems.FUEL.get());
+                        // Reload Facility
+                        output.accept(ModItems.RELOAD_FACILITY.get());
                     }).build());
 
     // ===== 农业 — 矿石 / 材料 / 种子 / 作物 =====
@@ -253,6 +257,7 @@ public class ModCreativeTabs {
                         output.accept(ModItems.TORPEDO_533MM.get());
                         output.accept(ModItems.TORPEDO_610MM.get());
                         output.accept(ModItems.MAGNETIC_TORPEDO_533MM.get());
+                        output.accept(ModItems.ACOUSTIC_TORPEDO_533MM.get());
                         // Aviation Ammo
                         output.accept(ModItems.AVIATION_FUEL.get());
                         output.accept(ModItems.AERIAL_BOMB.get());

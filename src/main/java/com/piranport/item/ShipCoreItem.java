@@ -574,12 +574,12 @@ public class ShipCoreItem extends Item {
         SlotCooldowns cooldowns = coreStack.getOrDefault(ModDataComponents.SLOT_COOLDOWNS.get(), SlotCooldowns.EMPTY);
         if (cooldowns.isOnCooldown(weaponSlot, level.getGameTime())) return;
 
-        // Torpedo launcher
+        // Torpedo launcher — requires 鱼雷再装填 enhancement for auto-reload
         if (weapon.getItem() instanceof TorpedoLauncherItem torpedoLauncher) {
-            if (!com.piranport.config.ModCommonConfig.AUTO_RESUPPLY_ENABLED.get()) {
-                fireTorpedosManualMode(level, player, coreStack, inv, weaponSlot, torpedoLauncher, cooldowns);
-            } else {
+            if (TransformationManager.hasTorpedoReloadEquipped(player, coreStack)) {
                 fireTorpedosInventoryMode(level, player, coreStack, inv, weaponSlot, coreInventorySlot, torpedoLauncher, cooldowns);
+            } else {
+                fireTorpedosManualMode(level, player, coreStack, inv, weaponSlot, torpedoLauncher, cooldowns);
             }
             return;
         }
@@ -720,6 +720,8 @@ public class ShipCoreItem extends Item {
         int caliber = launcher.getCaliber();
         int cooldown = launcher.getCooldownTicks();
         boolean magnetic = isMagneticTorpedo(loaded.ammoItemId());
+        boolean wireGuided = isWireGuidedTorpedo(loaded.ammoItemId());
+        boolean acousticHoming = isAcousticTorpedo(loaded.ammoItemId());
         float torpedoSpeed = caliber == 610 ? 1.0f : 1.2f;
         float[] angles = getSpreadAngles(tubeCount);
         Vec3 look = player.getLookAngle();
@@ -728,6 +730,8 @@ public class ShipCoreItem extends Item {
             Vec3 dir = rotateHorizontal(look, Math.toRadians(angle));
             TorpedoEntity torpedo = new TorpedoEntity(level, player, caliber);
             if (magnetic) torpedo.setMagnetic(true);
+            if (wireGuided) torpedo.setWireGuided(true);
+            if (acousticHoming) torpedo.setAcoustic(true);
             torpedo.setPos(player.getX() + dir.x * 0.5, player.getEyeY() - 0.3, player.getZ() + dir.z * 0.5);
             torpedo.setDeltaMovement(dir.x * torpedoSpeed, 0, dir.z * torpedoSpeed);
             level.addFreshEntity(torpedo);
@@ -783,12 +787,16 @@ public class ShipCoreItem extends Item {
 
         // Consume ammo before spawning entities (prevent TOCTOU)
         boolean magnetic = false;
+        boolean acousticHoming = false;
+        boolean wireGuided = false;
         int toConsume = tubeCount;
         for (int i = 0; i < inv.items.size() && toConsume > 0; i++) {
             if (i == coreSlot || i == weaponSlot) continue;
             ItemStack s = inv.items.get(i);
             if (!s.isEmpty() && s.getItem() instanceof TorpedoItem ti && ti.getCaliber() == caliber) {
                 if (ti.isMagnetic()) magnetic = true;
+                if (ti.isAcoustic()) acousticHoming = true;
+                if (ti.isWireGuided()) wireGuided = true;
                 int take = Math.min(toConsume, s.getCount());
                 s.shrink(take);
                 toConsume -= take;
@@ -803,6 +811,8 @@ public class ShipCoreItem extends Item {
             Vec3 dir = rotateHorizontal(look, Math.toRadians(angle));
             TorpedoEntity torpedo = new TorpedoEntity(level, player, caliber);
             if (magnetic) torpedo.setMagnetic(true);
+            if (acousticHoming) torpedo.setAcoustic(true);
+            if (wireGuided) torpedo.setWireGuided(true);
             torpedo.setPos(player.getX() + dir.x * 0.5, player.getEyeY() - 0.3, player.getZ() + dir.z * 0.5);
             torpedo.setDeltaMovement(dir.x * torpedoSpeed, 0, dir.z * torpedoSpeed);
             level.addFreshEntity(torpedo);
@@ -1042,6 +1052,22 @@ public class ShipCoreItem extends Item {
         return ammoItemId.equals(BuiltInRegistries.ITEM.getKey(ModItems.MAGNETIC_TORPEDO_533MM.get()).toString());
     }
 
+    static boolean isWireGuidedTorpedo(ItemStack stack) {
+        return stack.getItem() instanceof TorpedoItem ti && ti.isWireGuided();
+    }
+
+    static boolean isWireGuidedTorpedo(String ammoItemId) {
+        return ammoItemId.equals(BuiltInRegistries.ITEM.getKey(ModItems.WIRE_GUIDED_TORPEDO_533MM.get()).toString());
+    }
+
+    static boolean isAcousticTorpedo(ItemStack stack) {
+        return stack.getItem() instanceof TorpedoItem ti && ti.isAcoustic();
+    }
+
+    static boolean isAcousticTorpedo(String ammoItemId) {
+        return ammoItemId.equals(BuiltInRegistries.ITEM.getKey(ModItems.ACOUSTIC_TORPEDO_533MM.get()).toString());
+    }
+
     // ===== Gun stats =====
 
     private static float getGunDamage(ItemStack weapon) {
@@ -1124,6 +1150,13 @@ public class ShipCoreItem extends Item {
     private void fireTorpedos(Level level, Player player, ItemStack coreStack,
                                NonNullList<ItemStack> items, int weaponIndex,
                                TorpedoLauncherItem launcher) {
+        // GUI mode also requires 鱼雷再装填 enhancement for auto-reload from ammo slots
+        if (!TransformationManager.hasTorpedoReloadEquipped(player, coreStack)) {
+            player.displayClientMessage(
+                    Component.translatable("message.piranport.need_torpedo_reload"), true);
+            return;
+        }
+
         int caliber = launcher.getCaliber();
         int tubeCount = launcher.getTubeCount();
         int cooldown = launcher.getCooldownTicks();
@@ -1146,11 +1179,15 @@ public class ShipCoreItem extends Item {
 
         // Consume ammo before spawning entities (prevent TOCTOU)
         boolean magnetic = false;
+        boolean acousticHoming = false;
+        boolean wireGuided = false;
         int toConsume = tubeCount;
         for (int i = shipType.weaponSlots; i < ammoEnd && toConsume > 0; i++) {
             ItemStack ammo = items.get(i);
             if (!ammo.isEmpty() && ammo.getItem() instanceof TorpedoItem ti && ti.getCaliber() == caliber) {
                 if (ti.isMagnetic()) magnetic = true;
+                if (ti.isAcoustic()) acousticHoming = true;
+                if (ti.isWireGuided()) wireGuided = true;
                 int take = Math.min(toConsume, ammo.getCount());
                 ammo.shrink(take);
                 toConsume -= take;
@@ -1166,6 +1203,8 @@ public class ShipCoreItem extends Item {
             Vec3 dir = rotateHorizontal(look, Math.toRadians(angle));
             TorpedoEntity torpedo = new TorpedoEntity(level, player, caliber);
             if (magnetic) torpedo.setMagnetic(true);
+            if (acousticHoming) torpedo.setAcoustic(true);
+            if (wireGuided) torpedo.setWireGuided(true);
             torpedo.setPos(
                     player.getX() + dir.x * 0.5,
                     player.getEyeY() - 0.3,

@@ -82,6 +82,9 @@ public class AircraftItem extends Item {
                                 List<Component> tooltipComponents, TooltipFlag tooltipFlag) {
         AircraftInfo info = stack.get(ModDataComponents.AIRCRAFT_INFO.get());
         if (info != null) {
+            tooltipComponents.add(Component.translatable("tooltip.piranport.aircraft_type." + info.aircraftType().getSerializedName())
+                    .withStyle(net.minecraft.ChatFormatting.GOLD));
+            tooltipComponents.add(Component.translatable("tooltip.piranport.aircraft_ammo_capacity", info.ammoCapacity()));
             tooltipComponents.add(Component.translatable("tooltip.piranport.aircraft_damage",
                     String.format("%.1f", info.panelDamage())));
             tooltipComponents.add(Component.translatable("tooltip.piranport.aircraft_speed",

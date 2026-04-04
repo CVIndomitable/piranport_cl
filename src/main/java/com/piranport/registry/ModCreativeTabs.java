@@ -12,18 +12,26 @@ public class ModCreativeTabs {
     public static final DeferredRegister<CreativeModeTab> CREATIVE_TABS =
             DeferredRegister.create(Registries.CREATIVE_MODE_TAB, PiranPort.MOD_ID);
 
-    // ===== 炮雷 — 舰装核心 / 火炮 / 鱼雷发射器 / 副本 / 工具 =====
+    // ===== 核心 — 舰装核心 =====
+    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> CORE_TAB =
+            CREATIVE_TABS.register("core_tab", () -> CreativeModeTab.builder()
+                    .title(Component.translatable("itemGroup.piranport.core"))
+                    .withTabsBefore(CreativeModeTabs.COMBAT)
+                    .icon(() -> ModItems.MEDIUM_SHIP_CORE.get().getDefaultInstance())
+                    .displayItems((parameters, output) -> {
+                        output.accept(ModItems.SMALL_SHIP_CORE.get());
+                        output.accept(ModItems.MEDIUM_SHIP_CORE.get());
+                        output.accept(ModItems.LARGE_SHIP_CORE.get());
+                        output.accept(ModItems.SUBMARINE_CORE.get());
+                    }).build());
+
+    // ===== 炮雷 — 火炮 / 鱼雷发射器 =====
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> CANNON_TORPEDO_TAB =
             CREATIVE_TABS.register("cannon_torpedo_tab", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.piranport.cannon_torpedo"))
                     .withTabsBefore(CreativeModeTabs.COMBAT)
                     .icon(() -> ModItems.MEDIUM_GUN.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
-                        // Ship Cores
-                        output.accept(ModItems.SMALL_SHIP_CORE.get());
-                        output.accept(ModItems.MEDIUM_SHIP_CORE.get());
-                        output.accept(ModItems.LARGE_SHIP_CORE.get());
-                        output.accept(ModItems.SUBMARINE_CORE.get());
                         // Guns
                         output.accept(ModItems.SMALL_GUN.get());
                         output.accept(ModItems.MEDIUM_GUN.get());
@@ -32,13 +40,6 @@ public class ModCreativeTabs {
                         output.accept(ModItems.TWIN_TORPEDO_LAUNCHER.get());
                         output.accept(ModItems.TRIPLE_TORPEDO_LAUNCHER.get());
                         output.accept(ModItems.QUAD_TORPEDO_LAUNCHER.get());
-                        // Utility
-                        output.accept(ModItems.FLOATING_TARGET.get());
-                        output.accept(ModItems.GUIDEBOOK.get());
-                        // Dungeon
-                        output.accept(ModItems.DUNGEON_LECTERN.get());
-                        output.accept(ModItems.DUNGEON_KEY.get());
-                        output.accept(ModItems.TOWN_SCROLL.get());
                     }).build());
 
     // ===== 航空 — 飞机编队 =====
@@ -96,8 +97,6 @@ public class ModCreativeTabs {
                         output.accept(ModItems.SKIN_CORE_3.get());
                         // Fuel
                         output.accept(ModItems.FUEL.get());
-                        // Tools
-                        output.accept(ModItems.UNICORN_HARP.get());
                     }).build());
 
     // ===== 农业 — 矿石 / 材料 / 种子 / 作物 =====
@@ -230,5 +229,20 @@ public class ModCreativeTabs {
                         output.accept(ModItems.AERIAL_BOMB.get());
                         output.accept(ModItems.AERIAL_TORPEDO.get());
                         output.accept(ModItems.FIGHTER_AMMO.get());
+                    }).build());
+
+    // ===== 道具 — 工具 / 副本道具 =====
+    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> PROPS_TAB =
+            CREATIVE_TABS.register("props_tab", () -> CreativeModeTab.builder()
+                    .title(Component.translatable("itemGroup.piranport.props"))
+                    .withTabsBefore(CreativeModeTabs.COMBAT)
+                    .icon(() -> ModItems.GUIDEBOOK.get().getDefaultInstance())
+                    .displayItems((parameters, output) -> {
+                        output.accept(ModItems.UNICORN_HARP.get());
+                        output.accept(ModItems.FLOATING_TARGET.get());
+                        output.accept(ModItems.GUIDEBOOK.get());
+                        output.accept(ModItems.DUNGEON_LECTERN.get());
+                        output.accept(ModItems.DUNGEON_KEY.get());
+                        output.accept(ModItems.TOWN_SCROLL.get());
                     }).build());
 }

@@ -1,4 +1,5 @@
 {
+  "itemGroup.piranport.core": "Piran Port: Cores",
   "itemGroup.piranport.cannon_torpedo": "Piran Port: Cannons & Torpedoes",
   "itemGroup.piranport.aviation": "Piran Port: Aviation",
   "itemGroup.piranport.missile": "Piran Port: Missiles",
@@ -6,6 +7,7 @@
   "itemGroup.piranport.agriculture": "Piran Port: Agriculture",
   "itemGroup.piranport.kitchen": "Piran Port: Kitchen",
   "itemGroup.piranport.ammo": "Piran Port: Ammo",
+  "itemGroup.piranport.props": "Piran Port: Props",
   "block.piranport.bauxite_ore": "Bauxite Ore",
   "block.piranport.aluminum_block": "Aluminum Block",
   "block.piranport.salt_block": "Salt Block",

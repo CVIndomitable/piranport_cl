@@ -1,4 +1,5 @@
 {
+  "itemGroup.piranport.core": "皮兰港核心",
   "itemGroup.piranport.cannon_torpedo": "皮兰港炮雷",
   "itemGroup.piranport.aviation": "皮兰港航空",
   "itemGroup.piranport.missile": "皮兰港导弹",
@@ -6,6 +7,7 @@
   "itemGroup.piranport.agriculture": "皮兰港农业",
   "itemGroup.piranport.kitchen": "皮兰港厨房",
   "itemGroup.piranport.ammo": "皮兰港弹药",
+  "itemGroup.piranport.props": "皮兰港道具",
   "block.piranport.bauxite_ore": "矾土矿",
   "block.piranport.aluminum_block": "铝块",
   "block.piranport.salt_block": "盐块",

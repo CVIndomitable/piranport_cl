@@ -85,6 +85,8 @@ public class TorpedoItem extends Item {
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context,
                                 List<Component> tooltipComponents, TooltipFlag tooltipFlag) {
+        tooltipComponents.add(Component.translatable("tooltip.piranport.ammo_type.torpedo")
+                .withStyle(ChatFormatting.DARK_GREEN));
         tooltipComponents.add(Component.translatable("tooltip.piranport.torpedo.damage",
                 String.format("%.1f", damage)).withStyle(ChatFormatting.RED));
         tooltipComponents.add(Component.translatable("tooltip.piranport.torpedo.range",

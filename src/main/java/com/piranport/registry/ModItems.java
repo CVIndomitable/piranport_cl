@@ -6,6 +6,7 @@ import com.piranport.component.FuelData;
 import com.piranport.component.PlaceableInfo;
 import com.piranport.component.WeaponCategory;
 import com.piranport.item.AircraftItem;
+import com.piranport.item.AmmoItem;
 import com.piranport.item.ArmorPlateItem;
 import com.piranport.item.CannonItem;
 import com.piranport.item.BottleFoodItem;
@@ -82,31 +83,41 @@ public class ModItems {
 
     // ===== HE Shells =====
     public static final DeferredItem<Item> SMALL_HE_SHELL =
-            ITEMS.registerSimpleItem("small_he_shell");
+            ITEMS.register("small_he_shell",
+                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.he_shell"));
     public static final DeferredItem<Item> MEDIUM_HE_SHELL =
-            ITEMS.registerSimpleItem("medium_he_shell");
+            ITEMS.register("medium_he_shell",
+                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.he_shell"));
     public static final DeferredItem<Item> LARGE_HE_SHELL =
-            ITEMS.registerSimpleItem("large_he_shell");
+            ITEMS.register("large_he_shell",
+                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.he_shell"));
 
     // ===== AP Shells =====
     public static final DeferredItem<Item> SMALL_AP_SHELL =
-            ITEMS.registerSimpleItem("small_ap_shell");
+            ITEMS.register("small_ap_shell",
+                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.ap_shell"));
     public static final DeferredItem<Item> MEDIUM_AP_SHELL =
-            ITEMS.registerSimpleItem("medium_ap_shell");
+            ITEMS.register("medium_ap_shell",
+                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.ap_shell"));
     public static final DeferredItem<Item> LARGE_AP_SHELL =
-            ITEMS.registerSimpleItem("large_ap_shell");
+            ITEMS.register("large_ap_shell",
+                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.ap_shell"));
 
     // ===== VT Shells (proximity fuze, small caliber only) =====
     public static final DeferredItem<Item> SMALL_VT_SHELL =
-            ITEMS.registerSimpleItem("small_vt_shell");
+            ITEMS.register("small_vt_shell",
+                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.vt_shell"));
 
     // ===== Type 3 (Sanshiki) Shells =====
     public static final DeferredItem<Item> SMALL_TYPE3_SHELL =
-            ITEMS.registerSimpleItem("small_type3_shell");
+            ITEMS.register("small_type3_shell",
+                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.type3_shell"));
     public static final DeferredItem<Item> MEDIUM_TYPE3_SHELL =
-            ITEMS.registerSimpleItem("medium_type3_shell");
+            ITEMS.register("medium_type3_shell",
+                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.type3_shell"));
     public static final DeferredItem<Item> LARGE_TYPE3_SHELL =
-            ITEMS.registerSimpleItem("large_type3_shell");
+            ITEMS.register("large_type3_shell",
+                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.type3_shell"));
 
     // ===== Guns =====
     public static final DeferredItem<Item> SMALL_GUN =
@@ -670,23 +681,30 @@ public class ModItems {
 
     // ===== Aviation Ammo (Phase 18) =====
     public static final DeferredItem<Item> AVIATION_FUEL =
-            ITEMS.registerSimpleItem("aviation_fuel");
+            ITEMS.register("aviation_fuel",
+                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.aviation_fuel"));
     // Legacy items kept for world compatibility — unified into AERIAL_BOMB below
     @Deprecated public static final DeferredItem<Item> AERIAL_BOMB_SMALL =
-            ITEMS.registerSimpleItem("aerial_bomb_small");
+            ITEMS.register("aerial_bomb_small",
+                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.aerial_bomb"));
     @Deprecated public static final DeferredItem<Item> AERIAL_BOMB_MEDIUM =
-            ITEMS.registerSimpleItem("aerial_bomb_medium");
+            ITEMS.register("aerial_bomb_medium",
+                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.aerial_bomb"));
     public static final DeferredItem<Item> AERIAL_TORPEDO =
-            ITEMS.registerSimpleItem("aerial_torpedo");
+            ITEMS.register("aerial_torpedo",
+                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.aerial_torpedo"));
     // Unified aerial bomb (replaces small/medium distinction)
     public static final DeferredItem<Item> AERIAL_BOMB =
-            ITEMS.registerSimpleItem("aerial_bomb");
+            ITEMS.register("aerial_bomb",
+                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.aerial_bomb"));
     // 深水炸弹
     public static final DeferredItem<Item> DEPTH_CHARGE =
-            ITEMS.registerSimpleItem("depth_charge");
+            ITEMS.register("depth_charge",
+                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.depth_charge"));
     // Fighter ammo (子弹)
     public static final DeferredItem<Item> FIGHTER_AMMO =
-            ITEMS.registerSimpleItem("fighter_ammo");
+            ITEMS.register("fighter_ammo",
+                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.fighter_ammo"));
 
     // ===== Phase 19: Floating Target =====
     public static final DeferredItem<com.piranport.item.FloatingTargetItem> FLOATING_TARGET =

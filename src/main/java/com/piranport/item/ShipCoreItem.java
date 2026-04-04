@@ -139,14 +139,16 @@ public class ShipCoreItem extends Item {
             return false;
         }
 
-        // Fuel refueling: fuel item → +1b fuel (works in both GUI and no-GUI modes)
+        // Fuel refueling: fuel item → batch fill (works in both GUI and no-GUI modes)
         if (!other.isEmpty() && other.is(ModItems.FUEL.get())) {
             FuelData fuel = stack.getOrDefault(ModDataComponents.SHIP_CORE_FUEL.get(),
                     new FuelData(0, shipType.fuelCapacity));
             if (!fuel.isFull()) {
+                int space = fuel.maxFuel() - fuel.currentFuel();
+                int toAdd = Math.min(space, other.getCount());
                 stack.set(ModDataComponents.SHIP_CORE_FUEL.get(),
-                        fuel.withCurrentFuel(fuel.currentFuel() + 1));
-                other.shrink(1);
+                        fuel.withCurrentFuel(fuel.currentFuel() + toAdd));
+                other.shrink(toAdd);
                 player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
                         SoundEvents.BUCKET_EMPTY_LAVA, SoundSource.PLAYERS, 0.5f, 1.0f);
                 return true;

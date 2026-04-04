@@ -188,7 +188,8 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         if (!level().isClientSide && !exploded) {
             Entity target = result.getEntity();
             if (isHE) {
-                // HE: area explosion damage
+                // HE: direct hit damage + area explosion for splash
+                target.hurt(damageSources().explosion(this, getOwner()), damage);
                 Level.ExplosionInteraction interaction = ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get()
                         ? Level.ExplosionInteraction.TNT : Level.ExplosionInteraction.NONE;
                 level().explode(this, getX(), getY(), getZ(), explosionPower, interaction);

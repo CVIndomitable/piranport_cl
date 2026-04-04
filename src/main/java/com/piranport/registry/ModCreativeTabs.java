@@ -40,6 +40,7 @@ public class ModCreativeTabs {
                         output.accept(ModItems.TWIN_TORPEDO_LAUNCHER.get());
                         output.accept(ModItems.TRIPLE_TORPEDO_LAUNCHER.get());
                         output.accept(ModItems.QUAD_TORPEDO_LAUNCHER.get());
+                        output.accept(ModItems.DEPTH_CHARGE_LAUNCHER.get());
                     }).build());
 
     // ===== 航空 — 飞机编队 =====

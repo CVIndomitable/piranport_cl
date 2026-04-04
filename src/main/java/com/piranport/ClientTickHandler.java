@@ -236,9 +236,7 @@ public class ClientTickHandler {
      * Does NOT include fire control targets — those are handled separately.
      */
     private static boolean isHighlightTarget(Entity entity, Player localPlayer) {
-        // Torpedoes, bombs, bullets (use ThrownItemRenderer, no shouldShowOutline override available)
-        if (entity instanceof TorpedoEntity te && te.getOwner() == localPlayer) return true;
-        if (entity instanceof AerialBombEntity be && be.getOwner() == localPlayer) return true;
+        // Bullets use setGlowingTag; torpedoes & bombs use isCurrentlyGlowing() override
         if (entity instanceof BulletEntity bl && bl.getOwner() == localPlayer) return true;
         return false;
     }

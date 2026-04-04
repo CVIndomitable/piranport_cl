@@ -129,15 +129,15 @@ public class ModItems {
     public static final DeferredItem<ArmorPlateItem> SMALL_ARMOR_PLATE =
             ITEMS.register("small_armor_plate",
                     () -> new ArmorPlateItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ARMOR), 2, 10));
+                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ARMOR), 2, 10, 3));
     public static final DeferredItem<ArmorPlateItem> MEDIUM_ARMOR_PLATE =
             ITEMS.register("medium_armor_plate",
                     () -> new ArmorPlateItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ARMOR), 4, 20));
+                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ARMOR), 4, 20, 6));
     public static final DeferredItem<ArmorPlateItem> LARGE_ARMOR_PLATE =
             ITEMS.register("large_armor_plate",
                     () -> new ArmorPlateItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ARMOR), 6, 30));
+                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ARMOR), 6, 30, 0));
 
     // ===== Food Ingredients (Phase 11a) =====
     public static final DeferredItem<Item> FLOUR           = ITEMS.registerSimpleItem("flour");
@@ -446,23 +446,23 @@ public class ModItems {
     public static final DeferredItem<EngineItem> STANDARD_ENGINE =
             ITEMS.register("standard_engine",
                     () -> new EngineItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ENGINE), 0.05, 10));
+                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ENGINE), 0.05, 5));
     public static final DeferredItem<EngineItem> IMPROVED_ENGINE =
             ITEMS.register("improved_engine",
                     () -> new EngineItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ENGINE), 0.10, 15));
+                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ENGINE), 0.10, 10));
     public static final DeferredItem<EngineItem> ADVANCED_ENGINE =
             ITEMS.register("advanced_engine",
                     () -> new EngineItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ENGINE), 0.15, 20));
+                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ENGINE), 0.15, 15));
     public static final DeferredItem<EngineItem> HIGH_PRESSURE_BOILER =
             ITEMS.register("high_pressure_boiler",
                     () -> new EngineItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ENGINE), 0.12, 25));
+                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ENGINE), 0.12, 20));
     public static final DeferredItem<EngineItem> DIESEL_ENGINE =
             ITEMS.register("diesel_engine",
                     () -> new EngineItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ENGINE), 0.08, 12));
+                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ENGINE), 0.08, 2));
 
     // ===== Torpedo Launchers =====
     public static final DeferredItem<TorpedoLauncherItem> TWIN_TORPEDO_LAUNCHER =

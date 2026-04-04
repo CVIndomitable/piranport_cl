@@ -4,6 +4,7 @@ import com.piranport.PiranPort;
 import com.piranport.item.ArmorPlateItem;
 import com.piranport.item.ShipCoreItem;
 import com.piranport.item.SonarItem;
+import com.piranport.item.EngineItem;
 import com.piranport.registry.ModDataComponents;
 import com.piranport.registry.ModItems;
 import com.piranport.registry.ModMobEffects;
@@ -103,6 +104,7 @@ public class TransformationManager {
         if (stack.getItem() instanceof ShipCoreItem) return false;
         if (stack.getItem() instanceof ArmorPlateItem) return false;
         if (stack.getItem() instanceof SonarItem) return false;
+        if (stack.getItem() instanceof EngineItem) return false;
         // Torpedo ammo, shells, and aviation consumables all have getItemLoad == 0, so excluded naturally
         return getItemLoad(stack) > 0;
     }
@@ -133,24 +135,28 @@ public class TransformationManager {
         contents.copyInto(items);
 
         int armorBonus = 0;
+        double engineSpeedBonus = 0;
         int totalLoad = 0;
 
         // Weapon slots contribute to load
         for (int i = 0; i < type.weaponSlots; i++) {
             totalLoad += getItemLoad(items.get(i));
         }
-        // Enhancement slots contribute to both load and armor
+        // Enhancement slots contribute to load, armor, and engine speed
         int eStart = type.weaponSlots + type.ammoSlots;
         for (int i = eStart; i < type.totalSlots(); i++) {
             ItemStack item = items.get(i);
             totalLoad += getItemLoad(item);
             if (item.getItem() instanceof ArmorPlateItem plate) {
                 armorBonus += plate.getArmorBonus();
+            } else if (item.getItem() instanceof EngineItem engine) {
+                engineSpeedBonus += engine.getSpeedBonus();
             }
         }
 
         double loadRatio = type.maxLoad > 0 ? (double) totalLoad / type.maxLoad : 0;
         double speedMult = type.emptySpeed - (type.emptySpeed - type.fullLoadSpeed) * Math.min(loadRatio, 1.0);
+        speedMult += engineSpeedBonus;
 
         removeTransformationAttributes(player);
         applyTypeAttributes(player, type, armorBonus, speedMult);
@@ -194,14 +200,16 @@ public class TransformationManager {
         removeTransformationAttributes(player);
         if (bestType == null) return;
 
-        // Armor comes from plates stored inside the offhand core, not from inventory scan
+        // Armor & engine bonuses come from items stored inside the offhand core
         ItemStack offhandCore = inv.offhand.get(0);
         int armorBonus = getCoreArmorBonus(offhandCore);
+        double engineSpeedBonus = getCoreEngineSpeedBonus(offhandCore);
         int armorLoad  = getCoreArmorLoad(offhandCore);
         int totalLoad  = getInventoryWeaponLoad(inv) + armorLoad;
 
         double loadRatio = bestType.maxLoad > 0 ? (double) totalLoad / bestType.maxLoad : 0;
         double speedMult = bestType.emptySpeed - (bestType.emptySpeed - bestType.fullLoadSpeed) * Math.min(loadRatio, 1.0);
+        speedMult += engineSpeedBonus;
 
         applyTypeAttributes(player, bestType, armorBonus, speedMult);
         applyOverweightPenalty(player, totalLoad, bestType.maxLoad);
@@ -261,6 +269,47 @@ public class TransformationManager {
     }
 
     /**
+     * Returns the total protection level from ArmorPlateItems stored inside a ship core's
+     * SHIP_CORE_ARMOR DataComponent (no-GUI mode).
+     */
+    public static int getCoreProtectionLevel(ItemStack coreStack) {
+        if (!(coreStack.getItem() instanceof ShipCoreItem sci)) return 0;
+        ItemContainerContents contents = coreStack.getOrDefault(
+                ModDataComponents.SHIP_CORE_ARMOR.get(), ItemContainerContents.EMPTY);
+        NonNullList<ItemStack> stored = NonNullList.withSize(sci.getShipType().enhancementSlots, ItemStack.EMPTY);
+        contents.copyInto(stored);
+        int total = 0;
+        for (ItemStack s : stored) {
+            if (s.getItem() instanceof ArmorPlateItem plate) total += plate.getProtectionLevel();
+        }
+        return total;
+    }
+
+    /**
+     * Returns the total protection level from ArmorPlateItems in GUI mode
+     * (read from SHIP_CORE_CONTENTS enhancement slots) or no-GUI mode (SHIP_CORE_ARMOR).
+     */
+    public static int getEquippedProtectionLevel(Player player, ItemStack coreStack) {
+        if (!(coreStack.getItem() instanceof ShipCoreItem sci)) return 0;
+        ShipCoreItem.ShipType type = sci.getShipType();
+
+        if (com.piranport.config.ModCommonConfig.isShipCoreGuiEnabled()) {
+            ItemContainerContents contents = coreStack.getOrDefault(
+                    ModDataComponents.SHIP_CORE_CONTENTS.get(), ItemContainerContents.EMPTY);
+            NonNullList<ItemStack> items = NonNullList.withSize(type.totalSlots(), ItemStack.EMPTY);
+            contents.copyInto(items);
+            int total = 0;
+            int eStart = type.weaponSlots + type.ammoSlots;
+            for (int i = eStart; i < type.totalSlots(); i++) {
+                if (items.get(i).getItem() instanceof ArmorPlateItem plate) total += plate.getProtectionLevel();
+            }
+            return total;
+        } else {
+            return getCoreProtectionLevel(coreStack);
+        }
+    }
+
+    /**
      * Returns the total load contributed by ArmorPlateItems stored inside a ship core's
      * SHIP_CORE_ARMOR DataComponent (no-GUI mode).
      */
@@ -274,6 +323,24 @@ public class TransformationManager {
         for (ItemStack s : stored) {
             if (s.getItem() instanceof ArmorPlateItem plate) total += plate.getWeight();
             else if (s.getItem() instanceof SonarItem sonar) total += sonar.getWeight();
+            else if (s.getItem() instanceof EngineItem engine) total += engine.getWeight();
+        }
+        return total;
+    }
+
+    /**
+     * Returns the total speed bonus from EngineItems stored inside a ship core's
+     * SHIP_CORE_ARMOR DataComponent (no-GUI mode).
+     */
+    public static double getCoreEngineSpeedBonus(ItemStack coreStack) {
+        if (!(coreStack.getItem() instanceof ShipCoreItem sci)) return 0;
+        ItemContainerContents contents = coreStack.getOrDefault(
+                ModDataComponents.SHIP_CORE_ARMOR.get(), ItemContainerContents.EMPTY);
+        NonNullList<ItemStack> stored = NonNullList.withSize(sci.getShipType().enhancementSlots, ItemStack.EMPTY);
+        contents.copyInto(stored);
+        double total = 0;
+        for (ItemStack s : stored) {
+            if (s.getItem() instanceof EngineItem engine) total += engine.getSpeedBonus();
         }
         return total;
     }
@@ -286,6 +353,7 @@ public class TransformationManager {
         if (stack.isEmpty()) return false;
         if (stack.getItem() instanceof ShipCoreItem) return false;
         if (stack.getItem() instanceof ArmorPlateItem) return false;
+        if (stack.getItem() instanceof EngineItem) return false;
         return getItemLoad(stack) > 0;
     }
 
@@ -420,6 +488,7 @@ public class TransformationManager {
         if (load != null) return load;
         if (stack.getItem() instanceof ArmorPlateItem plate) return plate.getWeight();
         if (stack.getItem() instanceof SonarItem sonar) return sonar.getWeight();
+        if (stack.getItem() instanceof EngineItem engine) return engine.getWeight();
         if (stack.getItem() instanceof com.piranport.item.AircraftItem) {
             com.piranport.component.AircraftInfo info =
                     stack.get(ModDataComponents.AIRCRAFT_INFO.get());

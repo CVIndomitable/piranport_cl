@@ -42,6 +42,8 @@
   "message.piranport.no_weapon": "No weapon equipped!",
   "message.piranport.no_ammo": "No ammo!",
   "message.piranport.weapon_selected": "Selected: %s",
+  "tooltip.piranport.armor_bonus": "Armor: +%s",
+  "tooltip.piranport.protection_level": "Protection %s",
   "tooltip.piranport.weight": "Weight: %s",
   "message.piranport.slot_empty": "Weapon slot %s: Empty",
   "entity.piranport.cannon_projectile": "Cannon Projectile",

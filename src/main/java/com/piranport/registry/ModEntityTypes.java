@@ -26,7 +26,7 @@ public class ModEntityTypes {
                     .sized(0.25f, 0.25f)
                     .clientTrackingRange(4)
                     .updateInterval(10)
-                    .build(null));
+                    .build("piranport:cannon_projectile"));
 
     public static final DeferredHolder<EntityType<?>, EntityType<TorpedoEntity>>
             TORPEDO_ENTITY = ENTITY_TYPES.register("torpedo_entity",
@@ -34,7 +34,7 @@ public class ModEntityTypes {
                     .sized(0.5f, 0.25f)
                     .clientTrackingRange(8)
                     .updateInterval(3)
-                    .build(null));
+                    .build("piranport:torpedo_entity"));
 
     // Phase 19
     public static final DeferredHolder<EntityType<?>, EntityType<AircraftEntity>>
@@ -43,14 +43,14 @@ public class ModEntityTypes {
                     .sized(1.0f, 0.5f)
                     .clientTrackingRange(16)
                     .updateInterval(1)
-                    .build(null));
+                    .build("piranport:aircraft_entity"));
 
     public static final DeferredHolder<EntityType<?>, EntityType<FloatingTargetEntity>>
             FLOATING_TARGET = ENTITY_TYPES.register("floating_target",
             () -> EntityType.Builder.<FloatingTargetEntity>of(FloatingTargetEntity::new, MobCategory.MISC)
                     .sized(0.5f, 1.975f)
                     .clientTrackingRange(10)
-                    .build(null));
+                    .build("piranport:floating_target"));
 
     // Phase 21
     public static final DeferredHolder<EntityType<?>, EntityType<AerialBombEntity>>
@@ -59,7 +59,7 @@ public class ModEntityTypes {
                     .sized(0.25f, 0.25f)
                     .clientTrackingRange(8)
                     .updateInterval(5)
-                    .build(null));
+                    .build("piranport:aerial_bomb"));
 
     public static final DeferredHolder<EntityType<?>, EntityType<BulletEntity>>
             BULLET = ENTITY_TYPES.register("bullet",
@@ -67,7 +67,7 @@ public class ModEntityTypes {
                     .sized(0.15f, 0.15f)
                     .clientTrackingRange(8)
                     .updateInterval(2)
-                    .build(null));
+                    .build("piranport:bullet"));
 
     // Sanshiki (Type 3) pellet
     public static final DeferredHolder<EntityType<?>, EntityType<SanshikiPelletEntity>>
@@ -76,7 +76,7 @@ public class ModEntityTypes {
                     .sized(0.15f, 0.15f)
                     .clientTrackingRange(4)
                     .updateInterval(5)
-                    .build(null));
+                    .build("piranport:sanshiki_pellet"));
 
     // Dungeon transport plane (artillery intro script)
     public static final DeferredHolder<EntityType<?>, EntityType<DungeonTransportPlaneEntity>>
@@ -85,7 +85,7 @@ public class ModEntityTypes {
                     .sized(1.5f, 1.0f)
                     .clientTrackingRange(16)
                     .updateInterval(3)
-                    .build(null));
+                    .build("piranport:dungeon_transport_plane"));
 
     // Dungeon enemies
     public static final DeferredHolder<EntityType<?>, EntityType<LowTierDestroyerEntity>>
@@ -94,7 +94,7 @@ public class ModEntityTypes {
                     .sized(0.6f, 1.8f)
                     .clientTrackingRange(16)
                     .updateInterval(3)
-                    .build(null));
+                    .build("piranport:low_tier_destroyer"));
 
     // Dungeon System
     public static final DeferredHolder<EntityType<?>, EntityType<com.piranport.dungeon.entity.DungeonPortalEntity>>
@@ -104,7 +104,7 @@ public class ModEntityTypes {
                     .sized(2.0f, 3.0f)
                     .clientTrackingRange(16)
                     .updateInterval(5)
-                    .build(null));
+                    .build("piranport:dungeon_portal"));
 
     public static final DeferredHolder<EntityType<?>, EntityType<com.piranport.dungeon.entity.LootShipEntity>>
             LOOT_SHIP = ENTITY_TYPES.register("loot_ship",
@@ -113,5 +113,5 @@ public class ModEntityTypes {
                     .sized(1.5f, 1.0f)
                     .clientTrackingRange(10)
                     .updateInterval(10)
-                    .build(null));
+                    .build("piranport:loot_ship"));
 }

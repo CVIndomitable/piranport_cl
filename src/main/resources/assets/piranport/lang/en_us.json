@@ -148,6 +148,7 @@
   "message.piranport.aircraft_launched": "Launched %s",
   "message.piranport.aircraft_returned": "%s Returned",
   "message.piranport.aircraft_refueled": "%s Refueled",
+  "message.piranport.aircraft_no_fuel": "%s Out of Fuel — Returning",
   "message.piranport.aircraft_resupplied": "%s Resupplied",
   "message.piranport.aircraft_lost": "%s Lost",
   "message.piranport.aircraft_shot_down": "%s Shot Down",

@@ -148,6 +148,7 @@
   "message.piranport.aircraft_launched": "放飞 %s",
   "message.piranport.aircraft_returned": "%s 已返航",
   "message.piranport.aircraft_refueled": "%s 已补充燃油",
+  "message.piranport.aircraft_no_fuel": "%s 燃油耗尽，正在返航",
   "message.piranport.aircraft_resupplied": "%s 已补充弹药",
   "message.piranport.aircraft_lost": "%s 已丢失",
   "message.piranport.aircraft_shot_down": "%s 被击落",

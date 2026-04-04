@@ -125,6 +125,7 @@ public class AircraftEntity extends Entity {
     private static final double CRUISE_ALTITUDE = 18.0;
     private static final double ORBIT_RADIUS = 8.0;
     private static final double RETURN_ARRIVAL_DIST = 3.0;
+    private static final int FUEL_BURN_INTERVAL = 4; // burn 1 fuel every 4 ticks
 
     public AircraftEntity(EntityType<?> type, Level level) {
         super(type, level);
@@ -237,6 +238,28 @@ public class AircraftEntity extends Entity {
         airtimeTicks++;
         stateTicks++;
 
+        // Fuel consumption: burn 1 fuel per FUEL_BURN_INTERVAL ticks during active flight
+        if (state == FlightState.CRUISING || state == FlightState.ATTACKING || state == FlightState.RECON_ACTIVE) {
+            if (currentFuel > 0 && airtimeTicks % FUEL_BURN_INTERVAL == 0) {
+                currentFuel--;
+            }
+            if (currentFuel <= 0) {
+                // Try auto-resupply from core
+                if (ModCommonConfig.AUTO_RESUPPLY_ENABLED.get()) {
+                    tryAutoResupplyFuel(owner);
+                }
+                if (currentFuel <= 0) {
+                    isForcedReturn = true;
+                    setState(FlightState.RETURNING);
+                    if (owner instanceof ServerPlayer sp) {
+                        sp.displayClientMessage(
+                                Component.translatable("message.piranport.aircraft_no_fuel", getDisplayName()), true);
+                    }
+                    return;
+                }
+            }
+        }
+
         // Defense: 10-min airtime limit
         if (airtimeTicks >= MAX_AIRTIME_TICKS) {
             if (state == FlightState.RETURNING) { recallAndRemove(); return; }
@@ -337,11 +360,6 @@ public class AircraftEntity extends Entity {
     }
 
     private void tickCruising(Player owner) {
-        // Auto fuel resupply: draw from core if empty and config enabled
-        if (currentFuel <= 0 && ModCommonConfig.AUTO_RESUPPLY_ENABLED.get()) {
-            tryAutoResupplyFuel(owner);
-        }
-
         // Transition to ATTACKING if owner has locked targets with at least one alive entity
         if (aircraftType != AircraftInfo.AircraftType.RECON
                 && (hasBullets || !payloadType.isEmpty())

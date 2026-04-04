@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "piranport:item/xa2j_bomber_empty"
+  },
+  "overrides": [
+    {
+      "predicate": { "piranport:fueled": 1 },
+      "model": "piranport:item/xa2j_bomber_fueled"
+    }
+  ]
+}

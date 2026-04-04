@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "piranport:item/saiun_recon_empty"
+  },
+  "overrides": [
+    {
+      "predicate": { "piranport:fueled": 1 },
+      "model": "piranport:item/saiun_recon_fueled"
+    }
+  ]
+}

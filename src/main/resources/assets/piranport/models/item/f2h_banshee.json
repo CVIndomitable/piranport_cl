@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "piranport:item/f2h_banshee_empty"
+  },
+  "overrides": [
+    {
+      "predicate": { "piranport:fueled": 1 },
+      "model": "piranport:item/f2h_banshee_fueled"
+    }
+  ]
+}

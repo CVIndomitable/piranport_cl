@@ -49,12 +49,40 @@ public class ModCreativeTabs {
                     .withTabsBefore(CreativeModeTabs.COMBAT)
                     .icon(() -> ModItems.FIGHTER_SQUADRON.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
+                        // Generic squadrons
                         output.accept(ModItems.FIGHTER_SQUADRON.get());
                         output.accept(ModItems.DIVE_BOMBER_SQUADRON.get());
                         output.accept(ModItems.TORPEDO_BOMBER_SQUADRON.get());
                         output.accept(ModItems.XTB2D.get());
                         output.accept(ModItems.LEVEL_BOMBER_SQUADRON.get());
                         output.accept(ModItems.RECON_SQUADRON.get());
+                        // Torpedo bombers
+                        output.accept(ModItems.SWORDFISH_TORPEDO.get());
+                        output.accept(ModItems.SWORDFISH_ASW.get());
+                        output.accept(ModItems.TBF_TORPEDO.get());
+                        output.accept(ModItems.TBF_ASW.get());
+                        output.accept(ModItems.TENZAN_TORPEDO.get());
+                        output.accept(ModItems.TYPE97_TORPEDO.get());
+                        // Dive bombers
+                        output.accept(ModItems.PETREL_BOMBER.get());
+                        output.accept(ModItems.SEIUN_BOMBER.get());
+                        output.accept(ModItems.TYPE99_DIVE_BOMBER.get());
+                        output.accept(ModItems.SBD_DAUNTLESS.get());
+                        output.accept(ModItems.FIREFLY_AS_MK5.get());
+                        output.accept(ModItems.SUISEI_BOMBER.get());
+                        output.accept(ModItems.XA2J_BOMBER.get());
+                        // Fighters
+                        output.accept(ModItems.F6F_HELLCAT_ROCKET.get());
+                        output.accept(ModItems.SEAFIRE.get());
+                        output.accept(ModItems.ZERO_MODEL52.get());
+                        output.accept(ModItems.F4F_WILDCAT.get());
+                        output.accept(ModItems.F4U_CORSAIR_ICE.get());
+                        output.accept(ModItems.F4U_CORSAIR.get());
+                        output.accept(ModItems.F2H_BANSHEE.get());
+                        // Recon
+                        output.accept(ModItems.TYPE0_RECON.get());
+                        output.accept(ModItems.C1_RECON.get());
+                        output.accept(ModItems.SAIUN_RECON.get());
                     }).build());
 
     // ===== 导弹 — 导弹发射器 =====

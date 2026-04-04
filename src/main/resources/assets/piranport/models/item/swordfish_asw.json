@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "piranport:item/swordfish_asw_empty"
+  },
+  "overrides": [
+    {
+      "predicate": { "piranport:fueled": 1 },
+      "model": "piranport:item/swordfish_asw_fueled"
+    }
+  ]
+}

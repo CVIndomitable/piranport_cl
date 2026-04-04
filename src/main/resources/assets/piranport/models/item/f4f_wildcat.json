@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "piranport:item/f4f_wildcat_empty"
+  },
+  "overrides": [
+    {
+      "predicate": { "piranport:fueled": 1 },
+      "model": "piranport:item/f4f_wildcat_fueled"
+    }
+  ]
+}

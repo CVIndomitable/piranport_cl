@@ -137,7 +137,7 @@ public class ModItems {
     public static final DeferredItem<ArmorPlateItem> LARGE_ARMOR_PLATE =
             ITEMS.register("large_armor_plate",
                     () -> new ArmorPlateItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ARMOR), 6, 30, 0));
+                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ARMOR), 6, 30, 9));
 
     // ===== Food Ingredients (Phase 11a) =====
     public static final DeferredItem<Item> FLOUR           = ITEMS.registerSimpleItem("flour");
@@ -361,6 +361,196 @@ public class ModItems {
                             .component(ModDataComponents.AIRCRAFT_INFO.get(),
                                     new AircraftInfo(AircraftInfo.AircraftType.RECON,
                                             1500, 0, 0, 0f, 1.5f, 8, AircraftInfo.BombingMode.DIVE))));
+
+    // ===== Named Aircraft =====
+
+    // --- 鱼雷机 ---
+    public static final DeferredItem<AircraftItem> SWORDFISH_TORPEDO =
+            ITEMS.register("swordfish_torpedo",
+                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
+                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
+                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
+                                    new AircraftInfo(AircraftInfo.AircraftType.TORPEDO_BOMBER,
+                                            1200, 1, 0, 26f, 1.0f, 18, AircraftInfo.BombingMode.DIVE))));
+
+    public static final DeferredItem<AircraftItem> SWORDFISH_ASW =
+            ITEMS.register("swordfish_asw",
+                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
+                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
+                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
+                                    new AircraftInfo(AircraftInfo.AircraftType.TORPEDO_BOMBER,
+                                            1200, 1, 0, 22f, 1.0f, 16, AircraftInfo.BombingMode.DIVE))));
+
+    public static final DeferredItem<AircraftItem> TBF_TORPEDO =
+            ITEMS.register("tbf_torpedo",
+                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
+                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
+                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
+                                    new AircraftInfo(AircraftInfo.AircraftType.TORPEDO_BOMBER,
+                                            1200, 1, 0, 30f, 1.2f, 20, AircraftInfo.BombingMode.DIVE))));
+
+    public static final DeferredItem<AircraftItem> TBF_ASW =
+            ITEMS.register("tbf_asw",
+                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
+                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
+                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
+                                    new AircraftInfo(AircraftInfo.AircraftType.TORPEDO_BOMBER,
+                                            1200, 1, 0, 26f, 1.2f, 18, AircraftInfo.BombingMode.DIVE))));
+
+    public static final DeferredItem<AircraftItem> TENZAN_TORPEDO =
+            ITEMS.register("tenzan_torpedo",
+                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
+                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
+                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
+                                    new AircraftInfo(AircraftInfo.AircraftType.TORPEDO_BOMBER,
+                                            1200, 1, 0, 32f, 1.3f, 20, AircraftInfo.BombingMode.DIVE))));
+
+    public static final DeferredItem<AircraftItem> TYPE97_TORPEDO =
+            ITEMS.register("type97_torpedo",
+                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
+                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
+                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
+                                    new AircraftInfo(AircraftInfo.AircraftType.TORPEDO_BOMBER,
+                                            1200, 1, 0, 28f, 1.1f, 18, AircraftInfo.BombingMode.DIVE))));
+
+    // --- 轰炸机 ---
+    public static final DeferredItem<AircraftItem> PETREL_BOMBER =
+            ITEMS.register("petrel_bomber",
+                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
+                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
+                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
+                                    new AircraftInfo(AircraftInfo.AircraftType.DIVE_BOMBER,
+                                            1200, 1, 0, 22f, 1.3f, 14, AircraftInfo.BombingMode.DIVE))));
+
+    public static final DeferredItem<AircraftItem> SEIUN_BOMBER =
+            ITEMS.register("seiun_bomber",
+                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
+                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
+                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
+                                    new AircraftInfo(AircraftInfo.AircraftType.DIVE_BOMBER,
+                                            1200, 1, 0, 26f, 1.5f, 16, AircraftInfo.BombingMode.DIVE))));
+
+    public static final DeferredItem<AircraftItem> TYPE99_DIVE_BOMBER =
+            ITEMS.register("type99_dive_bomber",
+                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
+                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
+                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
+                                    new AircraftInfo(AircraftInfo.AircraftType.DIVE_BOMBER,
+                                            1200, 1, 0, 24f, 1.3f, 16, AircraftInfo.BombingMode.DIVE))));
+
+    public static final DeferredItem<AircraftItem> SBD_DAUNTLESS =
+            ITEMS.register("sbd_dauntless",
+                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
+                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
+                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
+                                    new AircraftInfo(AircraftInfo.AircraftType.DIVE_BOMBER,
+                                            1200, 1, 0, 26f, 1.4f, 16, AircraftInfo.BombingMode.DIVE))));
+
+    public static final DeferredItem<AircraftItem> FIREFLY_AS_MK5 =
+            ITEMS.register("firefly_as_mk5",
+                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
+                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
+                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
+                                    new AircraftInfo(AircraftInfo.AircraftType.DIVE_BOMBER,
+                                            1200, 1, 0, 28f, 1.4f, 18, AircraftInfo.BombingMode.DIVE))));
+
+    public static final DeferredItem<AircraftItem> SUISEI_BOMBER =
+            ITEMS.register("suisei_bomber",
+                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
+                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
+                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
+                                    new AircraftInfo(AircraftInfo.AircraftType.DIVE_BOMBER,
+                                            1200, 1, 0, 28f, 1.5f, 16, AircraftInfo.BombingMode.DIVE))));
+
+    public static final DeferredItem<AircraftItem> XA2J_BOMBER =
+            ITEMS.register("xa2j_bomber",
+                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
+                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
+                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
+                                    new AircraftInfo(AircraftInfo.AircraftType.DIVE_BOMBER,
+                                            1200, 1, 0, 30f, 1.3f, 20, AircraftInfo.BombingMode.DIVE))));
+
+    // --- 战斗机 ---
+    public static final DeferredItem<AircraftItem> F6F_HELLCAT_ROCKET =
+            ITEMS.register("f6f_hellcat_rocket",
+                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
+                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
+                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
+                                    new AircraftInfo(AircraftInfo.AircraftType.FIGHTER,
+                                            1200, 8, 0, 22f, 1.7f, 14, AircraftInfo.BombingMode.DIVE))));
+
+    public static final DeferredItem<AircraftItem> SEAFIRE =
+            ITEMS.register("seafire",
+                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
+                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
+                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
+                                    new AircraftInfo(AircraftInfo.AircraftType.FIGHTER,
+                                            1200, 64, 0, 18f, 1.8f, 12, AircraftInfo.BombingMode.DIVE))));
+
+    public static final DeferredItem<AircraftItem> ZERO_MODEL52 =
+            ITEMS.register("zero_model52",
+                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
+                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
+                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
+                                    new AircraftInfo(AircraftInfo.AircraftType.FIGHTER,
+                                            1200, 64, 0, 18f, 1.9f, 10, AircraftInfo.BombingMode.DIVE))));
+
+    public static final DeferredItem<AircraftItem> F4F_WILDCAT =
+            ITEMS.register("f4f_wildcat",
+                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
+                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
+                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
+                                    new AircraftInfo(AircraftInfo.AircraftType.FIGHTER,
+                                            1200, 64, 0, 16f, 1.7f, 12, AircraftInfo.BombingMode.DIVE))));
+
+    public static final DeferredItem<AircraftItem> F4U_CORSAIR_ICE =
+            ITEMS.register("f4u_corsair_ice",
+                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
+                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
+                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
+                                    new AircraftInfo(AircraftInfo.AircraftType.FIGHTER,
+                                            1200, 64, 0, 20f, 1.9f, 14, AircraftInfo.BombingMode.DIVE))));
+
+    public static final DeferredItem<AircraftItem> F4U_CORSAIR =
+            ITEMS.register("f4u_corsair",
+                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
+                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
+                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
+                                    new AircraftInfo(AircraftInfo.AircraftType.FIGHTER,
+                                            1200, 64, 0, 20f, 1.8f, 14, AircraftInfo.BombingMode.DIVE))));
+
+    public static final DeferredItem<AircraftItem> F2H_BANSHEE =
+            ITEMS.register("f2h_banshee",
+                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
+                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
+                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
+                                    new AircraftInfo(AircraftInfo.AircraftType.FIGHTER,
+                                            1200, 64, 0, 22f, 2.0f, 14, AircraftInfo.BombingMode.DIVE))));
+
+    // --- 侦察机 ---
+    public static final DeferredItem<AircraftItem> TYPE0_RECON =
+            ITEMS.register("type0_recon",
+                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
+                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
+                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
+                                    new AircraftInfo(AircraftInfo.AircraftType.RECON,
+                                            1500, 0, 0, 0f, 1.4f, 8, AircraftInfo.BombingMode.DIVE))));
+
+    public static final DeferredItem<AircraftItem> C1_RECON =
+            ITEMS.register("c1_recon",
+                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
+                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
+                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
+                                    new AircraftInfo(AircraftInfo.AircraftType.RECON,
+                                            1500, 0, 0, 0f, 1.6f, 8, AircraftInfo.BombingMode.DIVE))));
+
+    public static final DeferredItem<AircraftItem> SAIUN_RECON =
+            ITEMS.register("saiun_recon",
+                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
+                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
+                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
+                                    new AircraftInfo(AircraftInfo.AircraftType.RECON,
+                                            1800, 0, 0, 0f, 1.8f, 8, AircraftInfo.BombingMode.DIVE))));
 
     // ===== Aviation Ammo (Phase 18) =====
     public static final DeferredItem<Item> AVIATION_FUEL =

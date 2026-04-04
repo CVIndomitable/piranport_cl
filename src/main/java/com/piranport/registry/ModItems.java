@@ -13,8 +13,10 @@ import com.piranport.item.ModFoodItem;
 import com.piranport.item.ShipCoreItem;
 import com.piranport.item.SkinCoreItem;
 import com.piranport.item.SonarItem;
+import com.piranport.item.EngineItem;
 import com.piranport.item.TorpedoItem;
 import com.piranport.item.TorpedoLauncherItem;
+import com.piranport.item.MissileLauncherItem;
 import com.piranport.item.UnicornHarpItem;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -440,6 +442,28 @@ public class ModItems {
                     () -> new SonarItem(new Item.Properties().stacksTo(1)
                             .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ARMOR), 10));
 
+    // ===== Engines =====
+    public static final DeferredItem<EngineItem> STANDARD_ENGINE =
+            ITEMS.register("standard_engine",
+                    () -> new EngineItem(new Item.Properties().stacksTo(1)
+                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ENGINE), 0.05, 10));
+    public static final DeferredItem<EngineItem> IMPROVED_ENGINE =
+            ITEMS.register("improved_engine",
+                    () -> new EngineItem(new Item.Properties().stacksTo(1)
+                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ENGINE), 0.10, 15));
+    public static final DeferredItem<EngineItem> ADVANCED_ENGINE =
+            ITEMS.register("advanced_engine",
+                    () -> new EngineItem(new Item.Properties().stacksTo(1)
+                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ENGINE), 0.15, 20));
+    public static final DeferredItem<EngineItem> HIGH_PRESSURE_BOILER =
+            ITEMS.register("high_pressure_boiler",
+                    () -> new EngineItem(new Item.Properties().stacksTo(1)
+                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ENGINE), 0.12, 25));
+    public static final DeferredItem<EngineItem> DIESEL_ENGINE =
+            ITEMS.register("diesel_engine",
+                    () -> new EngineItem(new Item.Properties().stacksTo(1)
+                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ENGINE), 0.08, 12));
+
     // ===== Torpedo Launchers =====
     public static final DeferredItem<TorpedoLauncherItem> TWIN_TORPEDO_LAUNCHER =
             ITEMS.register("twin_torpedo_launcher",
@@ -459,6 +483,44 @@ public class ModItems {
                             new Item.Properties().stacksTo(1).durability(32)
                                     .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.TORPEDO),
                             610, 4, 120));
+
+    // ===== Missile Launchers =====
+    public static final DeferredItem<MissileLauncherItem> SY1_LAUNCHER =
+            ITEMS.register("sy1_launcher",
+                    () -> new MissileLauncherItem(
+                            new Item.Properties().stacksTo(1)
+                                    .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.MISSILE),
+                            160));
+    public static final DeferredItem<MissileLauncherItem> MK14_HARPOON_LAUNCHER =
+            ITEMS.register("mk14_harpoon_launcher",
+                    () -> new MissileLauncherItem(
+                            new Item.Properties().stacksTo(1)
+                                    .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.MISSILE),
+                            140));
+    public static final DeferredItem<MissileLauncherItem> TERRIER_LAUNCHER =
+            ITEMS.register("terrier_launcher",
+                    () -> new MissileLauncherItem(
+                            new Item.Properties().stacksTo(1)
+                                    .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.MISSILE),
+                            100));
+    public static final DeferredItem<MissileLauncherItem> SHIP_ROCKET_LAUNCHER =
+            ITEMS.register("ship_rocket_launcher",
+                    () -> new MissileLauncherItem(
+                            new Item.Properties().stacksTo(1)
+                                    .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.MISSILE),
+                            60));
+    public static final DeferredItem<MissileLauncherItem> SEA_DART_LAUNCHER =
+            ITEMS.register("sea_dart_launcher",
+                    () -> new MissileLauncherItem(
+                            new Item.Properties().stacksTo(1)
+                                    .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.MISSILE),
+                            120));
+    public static final DeferredItem<MissileLauncherItem> SEACAT_LAUNCHER =
+            ITEMS.register("seacat_launcher",
+                    () -> new MissileLauncherItem(
+                            new Item.Properties().stacksTo(1)
+                                    .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.MISSILE),
+                            80));
 
     // ===== Dungeon System (v0.0.8) =====
     public static final DeferredItem<com.piranport.dungeon.key.DungeonKeyItem> DUNGEON_KEY =

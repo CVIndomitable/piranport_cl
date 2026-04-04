@@ -11,7 +11,9 @@ public enum WeaponCategory implements StringRepresentable {
     AIRCRAFT("aircraft"),
     TORPEDO("torpedo"),
     CANNON("cannon"),
-    ARMOR("armor");
+    ARMOR("armor"),
+    MISSILE("missile"),
+    ENGINE("engine");
 
     private final String serializedName;
 

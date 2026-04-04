@@ -405,6 +405,12 @@ public class TransformationManager {
             weaponLoadMap.put(ModItems.TWIN_TORPEDO_LAUNCHER.get(), 8);
             weaponLoadMap.put(ModItems.TRIPLE_TORPEDO_LAUNCHER.get(), 12);
             weaponLoadMap.put(ModItems.QUAD_TORPEDO_LAUNCHER.get(), 20);
+            weaponLoadMap.put(ModItems.SY1_LAUNCHER.get(), 14);
+            weaponLoadMap.put(ModItems.MK14_HARPOON_LAUNCHER.get(), 16);
+            weaponLoadMap.put(ModItems.TERRIER_LAUNCHER.get(), 10);
+            weaponLoadMap.put(ModItems.SHIP_ROCKET_LAUNCHER.get(), 8);
+            weaponLoadMap.put(ModItems.SEA_DART_LAUNCHER.get(), 12);
+            weaponLoadMap.put(ModItems.SEACAT_LAUNCHER.get(), 6);
         }
         return weaponLoadMap;
     }

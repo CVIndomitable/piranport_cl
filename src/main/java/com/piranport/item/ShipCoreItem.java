@@ -11,6 +11,7 @@ import com.piranport.entity.AircraftEntity;
 import com.piranport.entity.CannonProjectileEntity;
 import com.piranport.entity.SanshikiPelletEntity;
 import com.piranport.entity.DepthChargeEntity;
+import com.piranport.entity.MissileEntity;
 import com.piranport.entity.TorpedoEntity;
 import com.piranport.menu.ShipCoreMenu;
 import com.piranport.registry.ModDataComponents;
@@ -464,6 +465,12 @@ public class ShipCoreItem extends Item {
             return;
         }
 
+        // Handle missile launcher
+        if (weapon.getItem() instanceof MissileLauncherItem missileLauncher) {
+            fireMissileGui(level, player, stack, items, weaponIndex, missileLauncher, cooldowns);
+            return;
+        }
+
         // Handle aircraft
         if (weapon.getItem() instanceof AircraftItem) {
             launchAircraft(level, player, stack, items, weaponIndex, coreInventorySlot);
@@ -594,6 +601,12 @@ public class ShipCoreItem extends Item {
         // Depth charge launcher
         if (weapon.getItem() instanceof DepthChargeLauncherItem dcLauncher) {
             fireDepthCharges(level, player, coreStack, inv, weaponSlot, coreInventorySlot, dcLauncher, cooldowns);
+            return;
+        }
+
+        // Missile launcher
+        if (weapon.getItem() instanceof MissileLauncherItem missileLauncher) {
+            fireMissiles(level, player, coreStack, inv, weaponSlot, coreInventorySlot, missileLauncher, cooldowns);
             return;
         }
 
@@ -954,6 +967,163 @@ public class ShipCoreItem extends Item {
         dc.setPos(player.getX() + dir.x * 0.5, player.getEyeY() - 0.3, player.getZ() + dir.z * 0.5);
         dc.setDeltaMovement(dir.x * speed, 0.3, dir.z * speed);
         level.addFreshEntity(dc);
+    }
+
+    // ===== Missile firing (no-GUI mode) =====
+
+    private static void fireMissiles(Level level, Player player, ItemStack coreStack,
+                                      Inventory inv, int weaponSlot, int coreSlot,
+                                      MissileLauncherItem launcher, SlotCooldowns cooldowns) {
+        if (launcher.isManualReload()) {
+            fireMissileManual(level, player, coreStack, inv, weaponSlot, launcher, cooldowns);
+        } else {
+            fireMissileAutoReload(level, player, coreStack, inv, weaponSlot, coreSlot, launcher, cooldowns);
+        }
+    }
+
+    /** 反舰导弹/火箭弹：消耗 LOADED_AMMO，无冷却，仅装填设施装弹。 */
+    private static void fireMissileManual(Level level, Player player, ItemStack coreStack,
+                                           Inventory inv, int weaponSlot,
+                                           MissileLauncherItem launcher, SlotCooldowns cooldowns) {
+        ItemStack launcherStack = weaponSlot == 40 ? inv.offhand.get(0) : inv.items.get(weaponSlot);
+        LoadedAmmo loaded = launcherStack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
+        if (!loaded.hasAmmo()) {
+            player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
+            return;
+        }
+
+        // 发射1枚导弹
+        String ammoId = loaded.ammoItemId();
+        spawnMissile(level, player, launcher, ammoId);
+
+        // 消耗1枚
+        int remaining = loaded.count() - 1;
+        if (remaining <= 0) {
+            launcherStack.remove(ModDataComponents.LOADED_AMMO.get());
+        } else {
+            launcherStack.set(ModDataComponents.LOADED_AMMO.get(), new LoadedAmmo(remaining, ammoId));
+        }
+
+        // 无冷却 — 反舰/火箭可连续发射
+        TransformationManager.setWeaponIndex(coreStack, weaponSlot);
+
+        level.playSound(null, player.getX(), player.getY(), player.getZ(),
+                SoundEvents.FIREWORK_ROCKET_LAUNCH, SoundSource.PLAYERS, 1.0f, 0.8f);
+    }
+
+    /** 防空导弹：自动从背包消耗弹药，发射后进入冷却。 */
+    private static void fireMissileAutoReload(Level level, Player player, ItemStack coreStack,
+                                               Inventory inv, int weaponSlot, int coreSlot,
+                                               MissileLauncherItem launcher, SlotCooldowns cooldowns) {
+        Item ammoItem = launcher.getAmmoItem();
+
+        // 查找弹药
+        int ammoSlot = -1;
+        for (int i = 0; i < inv.items.size(); i++) {
+            if (i == coreSlot || i == weaponSlot) continue;
+            ItemStack s = inv.items.get(i);
+            if (!s.isEmpty() && s.is(ammoItem)) {
+                ammoSlot = i;
+                break;
+            }
+        }
+        if (ammoSlot == -1) {
+            player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
+            return;
+        }
+
+        // 消耗1枚弹药
+        String ammoId = BuiltInRegistries.ITEM.getKey(ammoItem).toString();
+        inv.items.get(ammoSlot).shrink(1);
+
+        // 发射
+        spawnMissile(level, player, launcher, ammoId);
+
+        // 应用冷却
+        ItemStack launcherStack = weaponSlot == 40 ? inv.offhand.get(0) : inv.items.get(weaponSlot);
+        int cd = TransformationManager.boostedCooldown(player, launcher.getCooldownTicks());
+        coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
+                cooldowns.withSlotCooldown(weaponSlot, cd, level.getGameTime()));
+        launcherStack.set(ModDataComponents.WEAPON_COOLDOWN.get(),
+                new WeaponCooldown(level.getGameTime() + cd, cd));
+        TransformationManager.setWeaponIndex(coreStack, weaponSlot);
+
+        level.playSound(null, player.getX(), player.getY(), player.getZ(),
+                SoundEvents.FIREWORK_ROCKET_LAUNCH, SoundSource.PLAYERS, 1.0f, 0.8f);
+    }
+
+    // ===== Missile firing (GUI mode) =====
+
+    private void fireMissileGui(Level level, Player player, ItemStack stack,
+                                 NonNullList<ItemStack> items, int weaponIndex,
+                                 MissileLauncherItem launcher, SlotCooldowns cooldowns) {
+        ItemStack weapon = items.get(weaponIndex);
+
+        if (launcher.isManualReload()) {
+            // 反舰/火箭：消耗 LOADED_AMMO
+            LoadedAmmo loaded = weapon.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
+            if (!loaded.hasAmmo()) {
+                player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
+                return;
+            }
+
+            String ammoId = loaded.ammoItemId();
+            spawnMissile(level, player, launcher, ammoId);
+
+            int remaining = loaded.count() - 1;
+            if (remaining <= 0) {
+                weapon.remove(ModDataComponents.LOADED_AMMO.get());
+            } else {
+                weapon.set(ModDataComponents.LOADED_AMMO.get(), new LoadedAmmo(remaining, ammoId));
+            }
+            stack.set(ModDataComponents.SHIP_CORE_CONTENTS.get(), ItemContainerContents.fromItems(items));
+        } else {
+            // 防空：从弹药槽消耗
+            Item ammoItem = launcher.getAmmoItem();
+            int ammoSlot = -1;
+            int ammoEnd = shipType.weaponSlots + shipType.ammoSlots;
+            for (int i = shipType.weaponSlots; i < ammoEnd; i++) {
+                if (!items.get(i).isEmpty() && items.get(i).is(ammoItem)) {
+                    ammoSlot = i;
+                    break;
+                }
+            }
+            if (ammoSlot == -1) {
+                player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
+                return;
+            }
+
+            String ammoId = BuiltInRegistries.ITEM.getKey(ammoItem).toString();
+            items.get(ammoSlot).shrink(1);
+
+            spawnMissile(level, player, launcher, ammoId);
+
+            int cd = TransformationManager.boostedCooldown(player, launcher.getCooldownTicks());
+            stack.set(ModDataComponents.SHIP_CORE_CONTENTS.get(), ItemContainerContents.fromItems(items));
+            stack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
+                    cooldowns.withSlotCooldown(weaponIndex, cd, level.getGameTime()));
+        }
+
+        TransformationManager.setWeaponIndex(stack, weaponIndex);
+        level.playSound(null, player.getX(), player.getY(), player.getZ(),
+                SoundEvents.FIREWORK_ROCKET_LAUNCH, SoundSource.PLAYERS, 1.0f, 0.8f);
+    }
+
+    /** 生成导弹实体：玩家前方0.5格处，沿视线方向发射。 */
+    private static void spawnMissile(Level level, Player player,
+                                      MissileLauncherItem launcher, String displayItemId) {
+        MissileEntity missile = new MissileEntity(level, launcher.getMissileType(),
+                launcher.getDamage(), launcher.getArmorPen(),
+                launcher.getExplosionPower(), displayItemId);
+        Vec3 look = player.getLookAngle();
+        missile.setOwner(player);
+        missile.setPos(
+                player.getX() + look.x * 0.5,
+                player.getEyeY() - 0.1,
+                player.getZ() + look.z * 0.5);
+        float initSpeed = launcher.getMissileType().initialSpeed;
+        missile.setDeltaMovement(look.x * initSpeed, look.y * initSpeed, look.z * initSpeed);
+        level.addFreshEntity(missile);
     }
 
     private static void launchAircraftInventoryMode(Level level, Player player, ItemStack coreStack,

@@ -287,6 +287,12 @@ public class ModCreativeTabs {
                         output.accept(ModItems.AERIAL_TORPEDO.get());
                         output.accept(ModItems.DEPTH_CHARGE.get());
                         output.accept(ModItems.FIGHTER_AMMO.get());
+                        // Missile / Rocket Ammo
+                        output.accept(ModItems.SY1_MISSILE.get());
+                        output.accept(ModItems.HARPOON_MISSILE.get());
+                        output.accept(ModItems.TERRIER_MISSILE.get());
+                        output.accept(ModItems.ANTI_AIR_MISSILE.get());
+                        output.accept(ModItems.ROCKET_AMMO.get());
                     }).build());
 
     // ===== 道具 — 工具 / 副本道具 =====

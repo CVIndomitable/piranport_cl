@@ -10,6 +10,7 @@ import com.piranport.entity.LowTierDestroyerEntity;
 import com.piranport.entity.SanshikiPelletEntity;
 import com.piranport.entity.FloatingTargetEntity;
 import com.piranport.entity.DepthChargeEntity;
+import com.piranport.entity.MissileEntity;
 import com.piranport.entity.TorpedoEntity;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.entity.EntityType;
@@ -95,6 +96,15 @@ public class ModEntityTypes {
                     .clientTrackingRange(16)
                     .updateInterval(3)
                     .build("piranport:dungeon_transport_plane"));
+
+    // Missile / Rocket
+    public static final DeferredHolder<EntityType<?>, EntityType<MissileEntity>>
+            MISSILE_ENTITY = ENTITY_TYPES.register("missile_entity",
+            () -> EntityType.Builder.<MissileEntity>of(MissileEntity::new, MobCategory.MISC)
+                    .sized(0.3f, 0.3f)
+                    .clientTrackingRange(8)
+                    .updateInterval(3)
+                    .build("piranport:missile_entity"));
 
     // Dungeon enemies
     public static final DeferredHolder<EntityType<?>, EntityType<LowTierDestroyerEntity>>

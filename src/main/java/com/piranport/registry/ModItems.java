@@ -19,6 +19,7 @@ import com.piranport.item.TorpedoItem;
 import com.piranport.item.TorpedoLauncherItem;
 import com.piranport.item.TorpedoReloadItem;
 import com.piranport.item.DepthChargeLauncherItem;
+import com.piranport.item.MissileItem;
 import com.piranport.item.MissileLauncherItem;
 import com.piranport.item.UnicornHarpItem;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -837,43 +838,83 @@ public class ModItems {
                                     .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.TORPEDO),
                             3, 100, DepthChargeLauncherItem.SpreadPattern.TRIANGLE));
 
+    // ===== Missile / Rocket Ammo =====
+    public static final DeferredItem<MissileItem> SY1_MISSILE =
+            ITEMS.register("sy1_missile",
+                    () -> new MissileItem(new Item.Properties().stacksTo(16),
+                            MissileItem.MissileAmmoType.ANTI_SHIP, 30f, 6f));
+    public static final DeferredItem<MissileItem> HARPOON_MISSILE =
+            ITEMS.register("harpoon_missile",
+                    () -> new MissileItem(new Item.Properties().stacksTo(16),
+                            MissileItem.MissileAmmoType.ANTI_SHIP, 24f));
+    public static final DeferredItem<MissileItem> TERRIER_MISSILE =
+            ITEMS.register("terrier_missile",
+                    () -> new MissileItem(new Item.Properties().stacksTo(16),
+                            MissileItem.MissileAmmoType.ANTI_AIR, 9f));
+    public static final DeferredItem<MissileItem> ANTI_AIR_MISSILE =
+            ITEMS.register("anti_air_missile",
+                    () -> new MissileItem(new Item.Properties().stacksTo(16),
+                            MissileItem.MissileAmmoType.ANTI_AIR, 6f));
+    public static final DeferredItem<MissileItem> ROCKET_AMMO =
+            ITEMS.register("rocket_ammo",
+                    () -> new MissileItem(new Item.Properties().stacksTo(16),
+                            MissileItem.MissileAmmoType.ROCKET, 6f));
+
     // ===== Missile Launchers =====
+    // 上游一号（反舰导弹）: 伤害30+6穿甲, 连装2, 负重25
     public static final DeferredItem<MissileLauncherItem> SY1_LAUNCHER =
             ITEMS.register("sy1_launcher",
                     () -> new MissileLauncherItem(
                             new Item.Properties().stacksTo(1)
                                     .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.MISSILE),
-                            160));
+                            com.piranport.entity.MissileEntity.MissileType.ANTI_SHIP,
+                            30f, 6f, 0f, 2, 0,
+                            () -> ModItems.SY1_MISSILE.get()));
+    // MK14鱼叉（反舰导弹）: 伤害24, 连装4, 负重22
     public static final DeferredItem<MissileLauncherItem> MK14_HARPOON_LAUNCHER =
             ITEMS.register("mk14_harpoon_launcher",
                     () -> new MissileLauncherItem(
                             new Item.Properties().stacksTo(1)
                                     .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.MISSILE),
-                            140));
+                            com.piranport.entity.MissileEntity.MissileType.ANTI_SHIP,
+                            24f, 0f, 0f, 4, 0,
+                            () -> ModItems.HARPOON_MISSILE.get()));
+    // 小猎犬（防空导弹）: 伤害9, 冷却60s, 负重14
     public static final DeferredItem<MissileLauncherItem> TERRIER_LAUNCHER =
             ITEMS.register("terrier_launcher",
                     () -> new MissileLauncherItem(
                             new Item.Properties().stacksTo(1)
                                     .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.MISSILE),
-                            100));
+                            com.piranport.entity.MissileEntity.MissileType.ANTI_AIR,
+                            9f, 0f, 2.0f, 1, 1200,
+                            () -> ModItems.TERRIER_MISSILE.get()));
+    // 舰载火箭弹: 伤害6, 连装6, 负重32
     public static final DeferredItem<MissileLauncherItem> SHIP_ROCKET_LAUNCHER =
             ITEMS.register("ship_rocket_launcher",
                     () -> new MissileLauncherItem(
                             new Item.Properties().stacksTo(1)
                                     .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.MISSILE),
-                            60));
+                            com.piranport.entity.MissileEntity.MissileType.ROCKET,
+                            6f, 0f, 2.0f, 6, 0,
+                            () -> ModItems.ROCKET_AMMO.get()));
+    // 箭型防空导弹（Sea Dart）: 伤害6, 冷却60s, 负重7
     public static final DeferredItem<MissileLauncherItem> SEA_DART_LAUNCHER =
             ITEMS.register("sea_dart_launcher",
                     () -> new MissileLauncherItem(
                             new Item.Properties().stacksTo(1)
                                     .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.MISSILE),
-                            120));
+                            com.piranport.entity.MissileEntity.MissileType.ANTI_AIR,
+                            6f, 0f, 1.5f, 1, 1200,
+                            () -> ModItems.ANTI_AIR_MISSILE.get()));
+    // 海猫防空导弹（Seacat）: 伤害6, 冷却60s, 负重6
     public static final DeferredItem<MissileLauncherItem> SEACAT_LAUNCHER =
             ITEMS.register("seacat_launcher",
                     () -> new MissileLauncherItem(
                             new Item.Properties().stacksTo(1)
                                     .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.MISSILE),
-                            80));
+                            com.piranport.entity.MissileEntity.MissileType.ANTI_AIR,
+                            6f, 0f, 1.5f, 1, 1200,
+                            () -> ModItems.ANTI_AIR_MISSILE.get()));
 
     // ===== Dungeon System (v0.0.8) =====
     public static final DeferredItem<com.piranport.dungeon.key.DungeonKeyItem> DUNGEON_KEY =

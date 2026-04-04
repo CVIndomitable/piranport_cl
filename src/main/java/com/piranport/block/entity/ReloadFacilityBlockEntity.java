@@ -1,6 +1,8 @@
 package com.piranport.block.entity;
 
 import com.piranport.component.LoadedAmmo;
+import com.piranport.item.MissileItem;
+import com.piranport.item.MissileLauncherItem;
 import com.piranport.item.TorpedoItem;
 import com.piranport.item.TorpedoLauncherItem;
 import com.piranport.menu.ReloadFacilityMenu;
@@ -49,8 +51,10 @@ public class ReloadFacilityBlockEntity extends BlockEntity implements MenuProvid
         @Override
         public boolean isItemValid(int slot, ItemStack stack) {
             return switch (slot) {
-                case LAUNCHER_SLOT -> stack.getItem() instanceof TorpedoLauncherItem;
-                case AMMO_SLOT -> stack.getItem() instanceof TorpedoItem;
+                case LAUNCHER_SLOT -> stack.getItem() instanceof TorpedoLauncherItem
+                        || (stack.getItem() instanceof MissileLauncherItem ml && ml.isManualReload());
+                case AMMO_SLOT -> stack.getItem() instanceof TorpedoItem
+                        || stack.getItem() instanceof MissileItem;
                 case OUTPUT_SLOT -> false; // output only
                 default -> false;
             };
@@ -68,13 +72,15 @@ public class ReloadFacilityBlockEntity extends BlockEntity implements MenuProvid
         @Override public int getSlots() { return 1; }
         @Override public ItemStack getStackInSlot(int slot) { return itemHandler.getStackInSlot(LAUNCHER_SLOT); }
         @Override public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
-            if (!(stack.getItem() instanceof TorpedoLauncherItem)) return stack;
+            if (!(stack.getItem() instanceof TorpedoLauncherItem)
+                    && !(stack.getItem() instanceof MissileLauncherItem ml && ml.isManualReload())) return stack;
             return itemHandler.insertItem(LAUNCHER_SLOT, stack, simulate);
         }
         @Override public ItemStack extractItem(int slot, int amount, boolean simulate) { return ItemStack.EMPTY; }
         @Override public int getSlotLimit(int slot) { return 1; }
         @Override public boolean isItemValid(int slot, ItemStack stack) {
-            return stack.getItem() instanceof TorpedoLauncherItem;
+            return stack.getItem() instanceof TorpedoLauncherItem
+                    || (stack.getItem() instanceof MissileLauncherItem ml && ml.isManualReload());
         }
     };
 
@@ -83,13 +89,13 @@ public class ReloadFacilityBlockEntity extends BlockEntity implements MenuProvid
         @Override public int getSlots() { return 1; }
         @Override public ItemStack getStackInSlot(int slot) { return itemHandler.getStackInSlot(AMMO_SLOT); }
         @Override public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
-            if (!(stack.getItem() instanceof TorpedoItem)) return stack;
+            if (!(stack.getItem() instanceof TorpedoItem) && !(stack.getItem() instanceof MissileItem)) return stack;
             return itemHandler.insertItem(AMMO_SLOT, stack, simulate);
         }
         @Override public ItemStack extractItem(int slot, int amount, boolean simulate) { return ItemStack.EMPTY; }
         @Override public int getSlotLimit(int slot) { return 64; }
         @Override public boolean isItemValid(int slot, ItemStack stack) {
-            return stack.getItem() instanceof TorpedoItem;
+            return stack.getItem() instanceof TorpedoItem || stack.getItem() instanceof MissileItem;
         }
     };
 
@@ -154,28 +160,39 @@ public class ReloadFacilityBlockEntity extends BlockEntity implements MenuProvid
             return;
         }
 
-        // Need a torpedo launcher in slot 0
-        if (!(launcherStack.getItem() instanceof TorpedoLauncherItem launcher)) {
+        // Determine reload parameters based on launcher type
+        int maxLoad;
+        int needed;
+        boolean validCombo;
+
+        if (launcherStack.getItem() instanceof TorpedoLauncherItem torpedoLauncher) {
+            // Torpedo launcher reload
+            LoadedAmmo existing = launcherStack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
+            maxLoad = torpedoLauncher.getTubeCount();
+            if (existing.hasAmmo() && existing.count() >= maxLoad) {
+                be.resetProgress();
+                return;
+            }
+            needed = maxLoad - (existing.hasAmmo() ? existing.count() : 0);
+            validCombo = ammoStack.getItem() instanceof TorpedoItem torpedo
+                    && torpedo.getCaliber() == torpedoLauncher.getCaliber();
+        } else if (launcherStack.getItem() instanceof MissileLauncherItem missileLauncher
+                && missileLauncher.isManualReload()) {
+            // Missile launcher reload (anti-ship / rocket)
+            LoadedAmmo existing = launcherStack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
+            maxLoad = missileLauncher.getBurstCount();
+            if (existing.hasAmmo() && existing.count() >= maxLoad) {
+                be.resetProgress();
+                return;
+            }
+            needed = maxLoad - (existing.hasAmmo() ? existing.count() : 0);
+            validCombo = ammoStack.is(missileLauncher.getAmmoItem());
+        } else {
             be.resetProgress();
             return;
         }
 
-        // Check if launcher already fully loaded
-        LoadedAmmo existing = launcherStack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
-        if (existing.hasAmmo() && existing.count() >= launcher.getTubeCount()) {
-            be.resetProgress();
-            return;
-        }
-
-        // Need matching caliber torpedoes in slot 1
-        if (!(ammoStack.getItem() instanceof TorpedoItem torpedo) || torpedo.getCaliber() != launcher.getCaliber()) {
-            be.resetProgress();
-            return;
-        }
-
-        // Need enough torpedoes
-        int needed = launcher.getTubeCount() - (existing.hasAmmo() ? existing.count() : 0);
-        if (ammoStack.getCount() < needed) {
+        if (!validCombo || ammoStack.getCount() < needed) {
             be.resetProgress();
             return;
         }
@@ -189,10 +206,9 @@ public class ReloadFacilityBlockEntity extends BlockEntity implements MenuProvid
         be.reloadProgress++;
         if (be.reloadProgress >= be.reloadTotalTime) {
             // Complete: produce loaded launcher
-            String torpedoId = BuiltInRegistries.ITEM.getKey(ammoStack.getItem()).toString();
+            String ammoId = BuiltInRegistries.ITEM.getKey(ammoStack.getItem()).toString();
             ItemStack result = launcherStack.copy();
-            result.set(ModDataComponents.LOADED_AMMO.get(),
-                    new LoadedAmmo(launcher.getTubeCount(), torpedoId));
+            result.set(ModDataComponents.LOADED_AMMO.get(), new LoadedAmmo(maxLoad, ammoId));
 
             be.itemHandler.setStackInSlot(OUTPUT_SLOT, result);
             be.itemHandler.setStackInSlot(LAUNCHER_SLOT, ItemStack.EMPTY);

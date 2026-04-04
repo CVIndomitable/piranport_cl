@@ -107,6 +107,10 @@ public class ClientEvents {
         event.register(ModItems.DEPTH_CHARGE_LAUNCHER.get(), weaponDecorator);
         event.register(ModItems.DEPTH_CHARGE_LAUNCHER_IMPROVED.get(), weaponDecorator);
         event.register(ModItems.DEPTH_CHARGE_LAUNCHER_ADVANCED.get(), weaponDecorator);
+        // Missile launchers (anti-air uses cooldown bar)
+        event.register(ModItems.TERRIER_LAUNCHER.get(), weaponDecorator);
+        event.register(ModItems.SEA_DART_LAUNCHER.get(), weaponDecorator);
+        event.register(ModItems.SEACAT_LAUNCHER.get(), weaponDecorator);
     }
 
     @SubscribeEvent
@@ -137,6 +141,8 @@ public class ClientEvents {
         event.registerEntityRenderer(ModEntityTypes.SANSHIKI_PELLET.get(),
                 ThrownItemRenderer::new);
         event.registerEntityRenderer(ModEntityTypes.DEPTH_CHARGE.get(),
+                ThrownItemRenderer::new);
+        event.registerEntityRenderer(ModEntityTypes.MISSILE_ENTITY.get(),
                 ThrownItemRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntityTypes.CUTTING_BOARD.get(),
                 CuttingBoardRenderer::new);

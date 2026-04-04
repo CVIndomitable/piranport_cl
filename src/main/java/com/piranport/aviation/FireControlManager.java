@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 /** Server-side fire control state. Maps player UUID → locked entity UUIDs.
@@ -44,8 +45,26 @@ public class FireControlManager {
         return list == null ? List.of() : List.copyOf(list);
     }
 
+    // ===== Fighter Air-Only Mode =====
+    private static final Set<UUID> FIGHTER_AIR_ONLY = ConcurrentHashMap.newKeySet();
+
+    /** Toggle fighter air-only mode for the player. Returns true if now air-only. */
+    public static boolean toggleFighterAirOnly(UUID playerUUID) {
+        if (!FIGHTER_AIR_ONLY.remove(playerUUID)) {
+            FIGHTER_AIR_ONLY.add(playerUUID);
+            return true;
+        }
+        return false;
+    }
+
+    /** Returns true if the player's fighters should only attack airborne FC targets. */
+    public static boolean isFighterAirOnly(UUID playerUUID) {
+        return FIGHTER_AIR_ONLY.contains(playerUUID);
+    }
+
     /** Remove all state (call on server stop / world unload). */
     public static void clearAll() {
         LOCKED_TARGETS.clear();
+        FIGHTER_AIR_ONLY.clear();
     }
 }

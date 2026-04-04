@@ -1117,24 +1117,38 @@ public class AircraftEntity extends Entity {
      * 1. Fire control locked targets (any entity type)
      * 2. Enemy aircraft (non-same-owner AircraftEntity, 32-block radius)
      * 3. Hostile mobs (32-block radius)
+     *
+     * When fighter-air-only mode is active, only FC-locked airborne targets are considered.
      */
     @Nullable
     private Entity resolveFighterTarget(Player owner) {
         if (!(level() instanceof ServerLevel sl)) return null;
+
+        boolean airOnly = FireControlManager.isFighterAirOnly(owner.getUUID());
 
         List<UUID> locks = FireControlManager.getTargets(owner.getUUID());
         if (!locks.isEmpty()) {
             if (attackMode == FlightGroupData.AttackMode.SPREAD) {
                 return locks.stream()
                         .map(sl::getEntity)
-                        .filter(e -> e != null && e.isAlive())
+                        .filter(e -> e != null && e.isAlive()
+                                && (!airOnly || e instanceof AircraftEntity || isAirborneTarget(e)))
                         .min(Comparator.comparingDouble(this::distanceTo))
                         .orElse(null);
             } else {
-                Entity e = sl.getEntity(locks.get(0));
-                if (e != null && e.isAlive()) return e;
+                for (UUID uuid : locks) {
+                    Entity e = sl.getEntity(uuid);
+                    if (e != null && e.isAlive()
+                            && (!airOnly || e instanceof AircraftEntity || isAirborneTarget(e))) {
+                        return e;
+                    }
+                }
+                return null;
             }
         }
+
+        // Air-only mode: no auto-seek at all
+        if (airOnly) return null;
 
         // Auto-seek: only if never had FC target and first scan not yet done
         if (hasEverHadFireControl || autoSeekDone) return null;

@@ -32,6 +32,17 @@ public record OpenFlightGroupPayload(int coreSlot) implements CustomPacketPayloa
                 if (slot < 0 || slot >= 41) return;
                 net.minecraft.world.item.ItemStack coreStack = serverPlayer.getInventory().getItem(slot);
                 if (!(coreStack.getItem() instanceof com.piranport.item.ShipCoreItem)) return;
+
+                // No-GUI mode: U key toggles fighter air-only instead of opening flight group menu
+                if (!com.piranport.config.ModCommonConfig.SHIP_CORE_GUI_ENABLED.get()) {
+                    boolean airOnly = com.piranport.aviation.FireControlManager.toggleFighterAirOnly(
+                            serverPlayer.getUUID());
+                    serverPlayer.displayClientMessage(Component.translatable(
+                            airOnly ? "message.piranport.fighter_air_only_on"
+                                    : "message.piranport.fighter_air_only_off"), true);
+                    return;
+                }
+
                 serverPlayer.openMenu(
                         new SimpleMenuProvider(
                                 (id, inv, p) -> new FlightGroupMenu(id, inv, slot),

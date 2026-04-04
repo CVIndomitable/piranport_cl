@@ -155,6 +155,8 @@
   "message.piranport.weapon_hit": "%s Hit %s",
   "message.piranport.weapon_kill": "%s Killed %s",
   "message.piranport.aircraft_recalled": "Recalled %s aircraft",
+  "message.piranport.fighter_air_only_on": "Fighter Ground Attack OFF (Air Only)",
+  "message.piranport.fighter_air_only_off": "Fighter Ground Attack ON",
   "message.piranport.highlight_on": "Battlefield Highlight ON",
   "message.piranport.highlight_off": "Battlefield Highlight OFF",
   "message.piranport.recon_enter": "Recon View Active [V to Exit]",

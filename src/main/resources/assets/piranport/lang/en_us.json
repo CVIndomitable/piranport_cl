@@ -1,5 +1,11 @@
 {
-  "itemGroup.piranport": "Piran Port",
+  "itemGroup.piranport.cannon_torpedo": "Piran Port: Cannons & Torpedoes",
+  "itemGroup.piranport.aviation": "Piran Port: Aviation",
+  "itemGroup.piranport.missile": "Piran Port: Missiles",
+  "itemGroup.piranport.enhancement": "Piran Port: Enhancement",
+  "itemGroup.piranport.agriculture": "Piran Port: Agriculture",
+  "itemGroup.piranport.kitchen": "Piran Port: Kitchen",
+  "itemGroup.piranport.ammo": "Piran Port: Ammo",
   "block.piranport.bauxite_ore": "Bauxite Ore",
   "block.piranport.aluminum_block": "Aluminum Block",
   "block.piranport.salt_block": "Salt Block",
@@ -312,6 +318,12 @@
   "item.piranport.unicorn_harp": "Unicorn's Harp",
 
   "item.piranport.standard_sonar": "Standard Sonar",
+
+  "item.piranport.standard_engine": "Standard Engine",
+  "item.piranport.improved_engine": "Improved Engine",
+  "item.piranport.advanced_engine": "Advanced Engine",
+  "item.piranport.high_pressure_boiler": "High-Pressure Boiler",
+  "item.piranport.diesel_engine": "Diesel Engine",
 
   "entity.piranport.low_tier_destroyer": "Low-Tier Destroyer",
 

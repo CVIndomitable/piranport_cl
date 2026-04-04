@@ -1,5 +1,11 @@
 {
-  "itemGroup.piranport": "皮兰港",
+  "itemGroup.piranport.cannon_torpedo": "皮兰港炮雷",
+  "itemGroup.piranport.aviation": "皮兰港航空",
+  "itemGroup.piranport.missile": "皮兰港导弹",
+  "itemGroup.piranport.enhancement": "皮兰港强化",
+  "itemGroup.piranport.agriculture": "皮兰港农业",
+  "itemGroup.piranport.kitchen": "皮兰港厨房",
+  "itemGroup.piranport.ammo": "皮兰港弹药",
   "block.piranport.bauxite_ore": "矾土矿",
   "block.piranport.aluminum_block": "铝块",
   "block.piranport.salt_block": "盐块",
@@ -312,6 +318,12 @@
   "item.piranport.unicorn_harp": "独角兽的竖琴",
 
   "item.piranport.standard_sonar": "标准型声纳",
+
+  "item.piranport.standard_engine": "标准型动力系统",
+  "item.piranport.improved_engine": "改良型动力系统",
+  "item.piranport.advanced_engine": "先进型动力系统",
+  "item.piranport.high_pressure_boiler": "高温高压锅炉",
+  "item.piranport.diesel_engine": "柴油机",
 
   "entity.piranport.low_tier_destroyer": "低级驱逐舰",
 

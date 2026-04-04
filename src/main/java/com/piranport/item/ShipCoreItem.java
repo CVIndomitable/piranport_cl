@@ -322,6 +322,31 @@ public class ShipCoreItem extends Item {
                 new FuelData(0, shipType.fuelCapacity));
         tooltipComponents.add(Component.translatable(
                 "tooltip.piranport.fuel_tank", fuel.currentFuel(), fuel.maxFuel()));
+        // Shift: core stats
+        if (net.neoforged.fml.loading.FMLEnvironment.dist.isClient()) {
+            if (net.minecraft.client.gui.screens.Screen.hasShiftDown()) {
+                if (shipType.healthBonus != 0) {
+                    tooltipComponents.add(Component.translatable("tooltip.piranport.core.health_bonus",
+                            (shipType.healthBonus > 0 ? "+" : "") + shipType.healthBonus)
+                            .withStyle(net.minecraft.ChatFormatting.RED));
+                }
+                tooltipComponents.add(Component.translatable("tooltip.piranport.core.max_load", shipType.maxLoad)
+                        .withStyle(net.minecraft.ChatFormatting.GOLD));
+                tooltipComponents.add(Component.translatable("tooltip.piranport.core.armor", shipType.baseArmor)
+                        .withStyle(net.minecraft.ChatFormatting.BLUE));
+                if (shipType.armorToughness > 0) {
+                    tooltipComponents.add(Component.translatable("tooltip.piranport.core.toughness", shipType.armorToughness)
+                            .withStyle(net.minecraft.ChatFormatting.AQUA));
+                }
+                tooltipComponents.add(Component.translatable("tooltip.piranport.core.empty_speed",
+                        String.format("%.2f", shipType.emptySpeed)).withStyle(net.minecraft.ChatFormatting.GREEN));
+                tooltipComponents.add(Component.translatable("tooltip.piranport.core.full_speed",
+                        String.format("%.2f", shipType.fullLoadSpeed)).withStyle(net.minecraft.ChatFormatting.YELLOW));
+            } else {
+                tooltipComponents.add(Component.translatable("tooltip.piranport.shift_for_details")
+                        .withStyle(net.minecraft.ChatFormatting.DARK_GRAY));
+            }
+        }
     }
 
     @Override

@@ -71,14 +71,28 @@ public class DepthChargeLauncherItem extends Item {
             tooltipComponents.add(Component.translatable("tooltip.piranport.weapon_category." + cat.getSerializedName())
                     .withStyle(ChatFormatting.DARK_GREEN));
         }
-        tooltipComponents.add(Component.translatable("tooltip.piranport.dc_launcher.count", chargeCount)
-                .withStyle(ChatFormatting.AQUA));
-        String patternKey = switch (spreadPattern) {
-            case SINGLE -> "tooltip.piranport.dc_launcher.pattern.single";
-            case FRONT_BACK -> "tooltip.piranport.dc_launcher.pattern.front_back";
-            case TRIANGLE -> "tooltip.piranport.dc_launcher.pattern.triangle";
-        };
-        tooltipComponents.add(Component.translatable(patternKey).withStyle(ChatFormatting.GRAY));
+        if (net.neoforged.fml.loading.FMLEnvironment.dist.isClient()) {
+            if (net.minecraft.client.gui.screens.Screen.hasShiftDown()) {
+                tooltipComponents.add(Component.translatable("tooltip.piranport.dc_launcher.count", chargeCount)
+                        .withStyle(ChatFormatting.AQUA));
+                String patternKey = switch (spreadPattern) {
+                    case SINGLE -> "tooltip.piranport.dc_launcher.pattern.single";
+                    case FRONT_BACK -> "tooltip.piranport.dc_launcher.pattern.front_back";
+                    case TRIANGLE -> "tooltip.piranport.dc_launcher.pattern.triangle";
+                };
+                tooltipComponents.add(Component.translatable(patternKey).withStyle(ChatFormatting.GRAY));
+                tooltipComponents.add(Component.translatable("tooltip.piranport.cooldown",
+                        String.format("%.1f", cooldownTicks / 20.0)).withStyle(ChatFormatting.YELLOW));
+                if (stack.isDamageableItem()) {
+                    tooltipComponents.add(Component.translatable("tooltip.piranport.durability",
+                            stack.getMaxDamage() - stack.getDamageValue(), stack.getMaxDamage())
+                            .withStyle(ChatFormatting.GREEN));
+                }
+            } else {
+                tooltipComponents.add(Component.translatable("tooltip.piranport.shift_for_details")
+                        .withStyle(ChatFormatting.DARK_GRAY));
+            }
+        }
         ShipCoreItem.appendWeaponCooldownTooltip(stack, tooltipComponents);
     }
 }

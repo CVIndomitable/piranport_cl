@@ -21,10 +21,17 @@ import com.piranport.component.WeaponCategory;
 import java.util.List;
 
 public class CannonItem extends Item {
+    private final float damage;
+    private final int cooldownTicks;
 
-    public CannonItem(Properties properties) {
+    public CannonItem(Properties properties, float damage, int cooldownTicks) {
         super(properties);
+        this.damage = damage;
+        this.cooldownTicks = cooldownTicks;
     }
+
+    public float getDamage() { return damage; }
+    public int getCooldownTicks() { return cooldownTicks; }
 
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
@@ -66,6 +73,17 @@ public class CannonItem extends Item {
         if (cat != null) {
             tooltipComponents.add(Component.translatable("tooltip.piranport.weapon_category." + cat.getSerializedName())
                     .withStyle(net.minecraft.ChatFormatting.DARK_GREEN));
+        }
+        if (net.neoforged.fml.loading.FMLEnvironment.dist.isClient()) {
+            if (net.minecraft.client.gui.screens.Screen.hasShiftDown()) {
+                tooltipComponents.add(Component.translatable("tooltip.piranport.cannon.damage",
+                        String.format("%.1f", damage)).withStyle(net.minecraft.ChatFormatting.RED));
+                tooltipComponents.add(Component.translatable("tooltip.piranport.cooldown",
+                        String.format("%.1f", cooldownTicks / 20.0)).withStyle(net.minecraft.ChatFormatting.YELLOW));
+            } else {
+                tooltipComponents.add(Component.translatable("tooltip.piranport.shift_for_details")
+                        .withStyle(net.minecraft.ChatFormatting.DARK_GRAY));
+            }
         }
         ShipCoreItem.appendWeaponCooldownTooltip(stack, tooltipComponents);
     }

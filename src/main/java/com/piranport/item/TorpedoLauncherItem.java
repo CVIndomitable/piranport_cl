@@ -70,6 +70,24 @@ public class TorpedoLauncherItem extends Item {
             tooltipComponents.add(Component.translatable("tooltip.piranport.weapon_category." + cat.getSerializedName())
                     .withStyle(net.minecraft.ChatFormatting.DARK_GREEN));
         }
+        if (net.neoforged.fml.loading.FMLEnvironment.dist.isClient()) {
+            if (net.minecraft.client.gui.screens.Screen.hasShiftDown()) {
+                tooltipComponents.add(Component.translatable("tooltip.piranport.launcher.caliber", caliber)
+                        .withStyle(net.minecraft.ChatFormatting.GRAY));
+                tooltipComponents.add(Component.translatable("tooltip.piranport.launcher.tubes", tubeCount)
+                        .withStyle(net.minecraft.ChatFormatting.AQUA));
+                tooltipComponents.add(Component.translatable("tooltip.piranport.cooldown",
+                        String.format("%.1f", cooldownTicks / 20.0)).withStyle(net.minecraft.ChatFormatting.YELLOW));
+                if (stack.isDamageableItem()) {
+                    tooltipComponents.add(Component.translatable("tooltip.piranport.durability",
+                            stack.getMaxDamage() - stack.getDamageValue(), stack.getMaxDamage())
+                            .withStyle(net.minecraft.ChatFormatting.GREEN));
+                }
+            } else {
+                tooltipComponents.add(Component.translatable("tooltip.piranport.shift_for_details")
+                        .withStyle(net.minecraft.ChatFormatting.DARK_GRAY));
+            }
+        }
         ShipCoreItem.appendWeaponCooldownTooltip(stack, tooltipComponents);
     }
 }

@@ -35,13 +35,20 @@ public class ArmorPlateItem extends Item {
             tooltip.add(Component.translatable("tooltip.piranport.weapon_category." + cat.getSerializedName())
                     .withStyle(ChatFormatting.DARK_GREEN));
         }
-        tooltip.add(Component.translatable("tooltip.piranport.armor_bonus", armorBonus)
-                .withStyle(ChatFormatting.BLUE));
-        if (protectionLevel > 0) {
-            tooltip.add(Component.translatable("tooltip.piranport.protection_level", protectionLevel)
-                    .withStyle(ChatFormatting.AQUA));
+        if (net.neoforged.fml.loading.FMLEnvironment.dist.isClient()) {
+            if (net.minecraft.client.gui.screens.Screen.hasShiftDown()) {
+                tooltip.add(Component.translatable("tooltip.piranport.armor_bonus", armorBonus)
+                        .withStyle(ChatFormatting.BLUE));
+                if (protectionLevel > 0) {
+                    tooltip.add(Component.translatable("tooltip.piranport.protection_level", protectionLevel)
+                            .withStyle(ChatFormatting.AQUA));
+                }
+                tooltip.add(Component.translatable("tooltip.piranport.weight", weight)
+                        .withStyle(ChatFormatting.GRAY));
+            } else {
+                tooltip.add(Component.translatable("tooltip.piranport.shift_for_details")
+                        .withStyle(ChatFormatting.DARK_GRAY));
+            }
         }
-        tooltip.add(Component.translatable("tooltip.piranport.weight", weight)
-                .withStyle(ChatFormatting.GRAY));
     }
 }

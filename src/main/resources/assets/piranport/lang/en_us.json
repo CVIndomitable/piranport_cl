@@ -429,5 +429,26 @@
   "item.piranport.wire_guided_torpedo_533mm": "533mm Wire-Guided Torpedo",
   "message.piranport.torpedo_wire_lost": "Torpedo wire lost!",
   "key.piranport.torpedo_steer_left": "Torpedo Steer Left [9]",
-  "key.piranport.torpedo_steer_right": "Torpedo Steer Right [0]"
+  "key.piranport.torpedo_steer_right": "Torpedo Steer Right [0]",
+
+  "tooltip.piranport.shift_for_details": "Hold Shift for details",
+  "tooltip.piranport.cannon.damage": "Damage: %s",
+  "tooltip.piranport.cooldown": "Reload Time: %ss",
+  "tooltip.piranport.launcher.tubes": "Tubes: %s",
+  "tooltip.piranport.launcher.caliber": "Caliber: %smm",
+  "tooltip.piranport.engine.speed_bonus": "Speed Bonus: +%s%%",
+  "tooltip.piranport.durability": "Durability: %s/%s",
+  "tooltip.piranport.core.health_bonus": "HP Bonus: %s",
+  "tooltip.piranport.core.max_load": "Max Load: %s",
+  "tooltip.piranport.core.armor": "Armor: %s",
+  "tooltip.piranport.core.toughness": "Armor Toughness: %s",
+  "tooltip.piranport.core.empty_speed": "Empty Speed: ×%s",
+  "tooltip.piranport.core.full_speed": "Full-Load Speed: ×%s",
+  "tooltip.piranport.missile.type.anti_ship": "Anti-Ship Missile",
+  "tooltip.piranport.missile.type.anti_air": "Anti-Air Missile",
+  "tooltip.piranport.missile.type.rocket": "Rocket",
+  "tooltip.piranport.missile.damage": "Damage: %s",
+  "tooltip.piranport.missile.damage_ap": "Damage: %s (+%s AP)",
+  "tooltip.piranport.missile.burst": "Burst: %s",
+  "tooltip.piranport.missile.explosion": "Explosion Radius: %s"
 }

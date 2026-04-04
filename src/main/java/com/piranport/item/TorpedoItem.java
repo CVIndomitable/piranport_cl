@@ -87,23 +87,30 @@ public class TorpedoItem extends Item {
                                 List<Component> tooltipComponents, TooltipFlag tooltipFlag) {
         tooltipComponents.add(Component.translatable("tooltip.piranport.ammo_type.torpedo")
                 .withStyle(ChatFormatting.DARK_GREEN));
-        tooltipComponents.add(Component.translatable("tooltip.piranport.torpedo.damage",
-                String.format("%.1f", damage)).withStyle(ChatFormatting.RED));
-        tooltipComponents.add(Component.translatable("tooltip.piranport.torpedo.range",
-                range).withStyle(ChatFormatting.AQUA));
-        tooltipComponents.add(Component.translatable("tooltip.piranport.torpedo.speed",
-                String.format("%.2f", speed)).withStyle(ChatFormatting.GREEN));
-        if (magnetic) {
-            tooltipComponents.add(Component.translatable("tooltip.piranport.torpedo.magnetic")
-                    .withStyle(ChatFormatting.LIGHT_PURPLE));
-        }
-        if (wireGuided) {
-            tooltipComponents.add(Component.translatable("tooltip.piranport.torpedo.wire_guided")
-                    .withStyle(ChatFormatting.YELLOW));
-        }
-        if (acoustic) {
-            tooltipComponents.add(Component.translatable("tooltip.piranport.torpedo.acoustic")
-                    .withStyle(ChatFormatting.GOLD));
+        if (net.neoforged.fml.loading.FMLEnvironment.dist.isClient()) {
+            if (net.minecraft.client.gui.screens.Screen.hasShiftDown()) {
+                tooltipComponents.add(Component.translatable("tooltip.piranport.torpedo.damage",
+                        String.format("%.1f", damage)).withStyle(ChatFormatting.RED));
+                tooltipComponents.add(Component.translatable("tooltip.piranport.torpedo.range",
+                        range).withStyle(ChatFormatting.AQUA));
+                tooltipComponents.add(Component.translatable("tooltip.piranport.torpedo.speed",
+                        String.format("%.2f", speed)).withStyle(ChatFormatting.GREEN));
+                if (magnetic) {
+                    tooltipComponents.add(Component.translatable("tooltip.piranport.torpedo.magnetic")
+                            .withStyle(ChatFormatting.LIGHT_PURPLE));
+                }
+                if (wireGuided) {
+                    tooltipComponents.add(Component.translatable("tooltip.piranport.torpedo.wire_guided")
+                            .withStyle(ChatFormatting.YELLOW));
+                }
+                if (acoustic) {
+                    tooltipComponents.add(Component.translatable("tooltip.piranport.torpedo.acoustic")
+                            .withStyle(ChatFormatting.GOLD));
+                }
+            } else {
+                tooltipComponents.add(Component.translatable("tooltip.piranport.shift_for_details")
+                        .withStyle(ChatFormatting.DARK_GRAY));
+            }
         }
     }
 }

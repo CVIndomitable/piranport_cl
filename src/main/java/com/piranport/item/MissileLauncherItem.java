@@ -69,7 +69,7 @@ public class MissileLauncherItem extends Item {
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context,
                                 List<Component> tooltipComponents, TooltipFlag tooltipFlag) {
-        // 导弹类型
+        // 导弹类型（always visible）
         String typeKey = switch (missileType) {
             case ANTI_SHIP -> "tooltip.piranport.missile.type.anti_ship";
             case ANTI_AIR -> "tooltip.piranport.missile.type.anti_air";
@@ -77,26 +77,36 @@ public class MissileLauncherItem extends Item {
         };
         tooltipComponents.add(Component.translatable(typeKey).withStyle(ChatFormatting.GRAY));
 
-        // 伤害
-        if (armorPen > 0) {
-            tooltipComponents.add(Component.translatable("tooltip.piranport.missile.damage_ap",
-                    String.format("%.0f", damage), String.format("%.0f", armorPen))
-                    .withStyle(ChatFormatting.RED));
-        } else {
-            tooltipComponents.add(Component.translatable("tooltip.piranport.missile.damage",
-                    String.format("%.0f", damage)).withStyle(ChatFormatting.RED));
-        }
-
-        // 连装数（反舰/火箭）
-        if (isManualReload() && burstCount > 1) {
-            tooltipComponents.add(Component.translatable("tooltip.piranport.missile.burst", burstCount)
-                    .withStyle(ChatFormatting.AQUA));
-        }
-
-        // 爆炸（防空/火箭）
-        if (missileType != MissileEntity.MissileType.ANTI_SHIP) {
-            tooltipComponents.add(Component.translatable("tooltip.piranport.missile.explosion",
-                    String.format("%.1f", explosionPower)).withStyle(ChatFormatting.GOLD));
+        if (net.neoforged.fml.loading.FMLEnvironment.dist.isClient()) {
+            if (net.minecraft.client.gui.screens.Screen.hasShiftDown()) {
+                // 伤害
+                if (armorPen > 0) {
+                    tooltipComponents.add(Component.translatable("tooltip.piranport.missile.damage_ap",
+                            String.format("%.0f", damage), String.format("%.0f", armorPen))
+                            .withStyle(ChatFormatting.RED));
+                } else {
+                    tooltipComponents.add(Component.translatable("tooltip.piranport.missile.damage",
+                            String.format("%.0f", damage)).withStyle(ChatFormatting.RED));
+                }
+                // 连装数（反舰/火箭）
+                if (isManualReload() && burstCount > 1) {
+                    tooltipComponents.add(Component.translatable("tooltip.piranport.missile.burst", burstCount)
+                            .withStyle(ChatFormatting.AQUA));
+                }
+                // 爆炸（防空/火箭）
+                if (missileType != MissileEntity.MissileType.ANTI_SHIP) {
+                    tooltipComponents.add(Component.translatable("tooltip.piranport.missile.explosion",
+                            String.format("%.1f", explosionPower)).withStyle(ChatFormatting.GOLD));
+                }
+                // 装填时间（防空导弹有冷却）
+                if (cooldownTicks > 0) {
+                    tooltipComponents.add(Component.translatable("tooltip.piranport.cooldown",
+                            String.format("%.1f", cooldownTicks / 20.0)).withStyle(ChatFormatting.YELLOW));
+                }
+            } else {
+                tooltipComponents.add(Component.translatable("tooltip.piranport.shift_for_details")
+                        .withStyle(ChatFormatting.DARK_GRAY));
+            }
         }
 
         ShipCoreItem.appendWeaponCooldownTooltip(stack, tooltipComponents);

@@ -52,13 +52,20 @@ public class MissileItem extends Item {
                                 List<Component> tooltipComponents, TooltipFlag tooltipFlag) {
         tooltipComponents.add(Component.translatable(ammoType.translationKey)
                 .withStyle(ammoType.color));
-        if (displayAP > 0) {
-            tooltipComponents.add(Component.translatable("tooltip.piranport.missile.damage_ap",
-                    String.format("%.0f", displayDamage), String.format("%.0f", displayAP))
-                    .withStyle(ChatFormatting.RED));
-        } else {
-            tooltipComponents.add(Component.translatable("tooltip.piranport.missile.damage",
-                    String.format("%.0f", displayDamage)).withStyle(ChatFormatting.RED));
+        if (net.neoforged.fml.loading.FMLEnvironment.dist.isClient()) {
+            if (net.minecraft.client.gui.screens.Screen.hasShiftDown()) {
+                if (displayAP > 0) {
+                    tooltipComponents.add(Component.translatable("tooltip.piranport.missile.damage_ap",
+                            String.format("%.0f", displayDamage), String.format("%.0f", displayAP))
+                            .withStyle(ChatFormatting.RED));
+                } else {
+                    tooltipComponents.add(Component.translatable("tooltip.piranport.missile.damage",
+                            String.format("%.0f", displayDamage)).withStyle(ChatFormatting.RED));
+                }
+            } else {
+                tooltipComponents.add(Component.translatable("tooltip.piranport.shift_for_details")
+                        .withStyle(ChatFormatting.DARK_GRAY));
+            }
         }
     }
 }

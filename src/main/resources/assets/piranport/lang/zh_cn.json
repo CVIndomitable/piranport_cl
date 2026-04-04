@@ -429,5 +429,26 @@
   "item.piranport.wire_guided_torpedo_533mm": "533mm线导鱼雷",
   "message.piranport.torpedo_wire_lost": "鱼雷掉线",
   "key.piranport.torpedo_steer_left": "鱼雷左偏航 [9]",
-  "key.piranport.torpedo_steer_right": "鱼雷右偏航 [0]"
+  "key.piranport.torpedo_steer_right": "鱼雷右偏航 [0]",
+
+  "tooltip.piranport.shift_for_details": "按住 Shift 查看详情",
+  "tooltip.piranport.cannon.damage": "伤害: %s",
+  "tooltip.piranport.cooldown": "装填时间: %ss",
+  "tooltip.piranport.launcher.tubes": "管数: %s",
+  "tooltip.piranport.launcher.caliber": "口径: %smm",
+  "tooltip.piranport.engine.speed_bonus": "航速加成: +%s%%",
+  "tooltip.piranport.durability": "耐久: %s/%s",
+  "tooltip.piranport.core.health_bonus": "HP加成: %s",
+  "tooltip.piranport.core.max_load": "最大负重: %s",
+  "tooltip.piranport.core.armor": "护甲: %s",
+  "tooltip.piranport.core.toughness": "护甲韧性: %s",
+  "tooltip.piranport.core.empty_speed": "空载航速: ×%s",
+  "tooltip.piranport.core.full_speed": "满载航速: ×%s",
+  "tooltip.piranport.missile.type.anti_ship": "反舰导弹",
+  "tooltip.piranport.missile.type.anti_air": "防空导弹",
+  "tooltip.piranport.missile.type.rocket": "火箭弹",
+  "tooltip.piranport.missile.damage": "伤害: %s",
+  "tooltip.piranport.missile.damage_ap": "伤害: %s (+%s穿甲)",
+  "tooltip.piranport.missile.burst": "连装: %s",
+  "tooltip.piranport.missile.explosion": "爆炸范围: %s"
 }

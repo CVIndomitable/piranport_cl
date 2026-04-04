@@ -90,18 +90,28 @@ public class AircraftItem extends Item {
         if (info != null) {
             tooltipComponents.add(Component.translatable("tooltip.piranport.aircraft_type." + info.aircraftType().getSerializedName())
                     .withStyle(net.minecraft.ChatFormatting.GOLD));
-            tooltipComponents.add(Component.translatable("tooltip.piranport.aircraft_ammo_capacity", info.ammoCapacity()));
-            tooltipComponents.add(Component.translatable("tooltip.piranport.aircraft_damage",
-                    String.format("%.1f", info.panelDamage())));
-            tooltipComponents.add(Component.translatable("tooltip.piranport.aircraft_speed",
-                    String.format("%.1f", info.panelSpeed())));
-            tooltipComponents.add(Component.translatable("tooltip.piranport.weight", info.weight()));
-            if (info.currentFuel() > 0) {
-                tooltipComponents.add(Component.translatable("tooltip.piranport.aircraft_fueled")
-                        .withStyle(net.minecraft.ChatFormatting.GREEN));
-            } else {
-                tooltipComponents.add(Component.translatable("tooltip.piranport.aircraft_not_fueled")
-                        .withStyle(net.minecraft.ChatFormatting.RED));
+            if (net.neoforged.fml.loading.FMLEnvironment.dist.isClient()
+                    && net.minecraft.client.gui.screens.Screen.hasShiftDown()) {
+                if (info.panelDamage() > 0) {
+                    tooltipComponents.add(Component.translatable("tooltip.piranport.aircraft_damage",
+                            String.format("%.1f", info.panelDamage())).withStyle(net.minecraft.ChatFormatting.RED));
+                }
+                tooltipComponents.add(Component.translatable("tooltip.piranport.aircraft_speed",
+                        String.format("%.1f", info.panelSpeed())).withStyle(net.minecraft.ChatFormatting.GREEN));
+                tooltipComponents.add(Component.translatable("tooltip.piranport.aircraft_ammo_capacity", info.ammoCapacity())
+                        .withStyle(net.minecraft.ChatFormatting.AQUA));
+                tooltipComponents.add(Component.translatable("tooltip.piranport.weight", info.weight())
+                        .withStyle(net.minecraft.ChatFormatting.GRAY));
+                if (info.currentFuel() > 0) {
+                    tooltipComponents.add(Component.translatable("tooltip.piranport.aircraft_fueled")
+                            .withStyle(net.minecraft.ChatFormatting.GREEN));
+                } else {
+                    tooltipComponents.add(Component.translatable("tooltip.piranport.aircraft_not_fueled")
+                            .withStyle(net.minecraft.ChatFormatting.RED));
+                }
+            } else if (net.neoforged.fml.loading.FMLEnvironment.dist.isClient()) {
+                tooltipComponents.add(Component.translatable("tooltip.piranport.shift_for_details")
+                        .withStyle(net.minecraft.ChatFormatting.DARK_GRAY));
             }
         }
         ShipCoreItem.appendWeaponCooldownTooltip(stack, tooltipComponents);

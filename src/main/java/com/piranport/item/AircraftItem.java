@@ -95,8 +95,6 @@ public class AircraftItem extends Item {
                         String.format("%.1f", info.panelSpeed())).withStyle(net.minecraft.ChatFormatting.GREEN));
                 tooltipComponents.add(Component.translatable("tooltip.piranport.aircraft_ammo_capacity", info.ammoCapacity())
                         .withStyle(net.minecraft.ChatFormatting.AQUA));
-                tooltipComponents.add(Component.translatable("tooltip.piranport.weight", info.weight())
-                        .withStyle(net.minecraft.ChatFormatting.GRAY));
                 if (info.currentFuel() > 0) {
                     tooltipComponents.add(Component.translatable("tooltip.piranport.aircraft_fueled")
                             .withStyle(net.minecraft.ChatFormatting.GREEN));

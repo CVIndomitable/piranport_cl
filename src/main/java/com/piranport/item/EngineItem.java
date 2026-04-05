@@ -35,8 +35,6 @@ public class EngineItem extends Item {
             if (net.minecraft.client.gui.screens.Screen.hasShiftDown()) {
                 tooltip.add(Component.translatable("tooltip.piranport.engine.speed_bonus",
                         String.format("%.0f", speedBonus * 100)).withStyle(ChatFormatting.GREEN));
-                tooltip.add(Component.translatable("tooltip.piranport.weight", weight)
-                        .withStyle(ChatFormatting.GRAY));
             } else {
                 tooltip.add(Component.translatable("tooltip.piranport.shift_for_details")
                         .withStyle(ChatFormatting.DARK_GRAY));

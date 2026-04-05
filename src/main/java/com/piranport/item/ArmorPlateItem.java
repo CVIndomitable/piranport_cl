@@ -43,8 +43,6 @@ public class ArmorPlateItem extends Item {
                     tooltip.add(Component.translatable("tooltip.piranport.protection_level", protectionLevel)
                             .withStyle(ChatFormatting.AQUA));
                 }
-                tooltip.add(Component.translatable("tooltip.piranport.weight", weight)
-                        .withStyle(ChatFormatting.GRAY));
             } else {
                 tooltip.add(Component.translatable("tooltip.piranport.shift_for_details")
                         .withStyle(ChatFormatting.DARK_GRAY));

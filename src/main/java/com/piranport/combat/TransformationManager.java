@@ -36,8 +36,15 @@ public class TransformationManager {
         return coreStack.getOrDefault(ModDataComponents.SHIP_CORE_TRANSFORMED.get(), false);
     }
 
-    /** Find the first transformed ship core in main hand, inventory, or offhand. Returns EMPTY if none. */
+    /** Find the active transformed ship core. No-GUI mode: offhand only. GUI mode: main hand → inventory → offhand. */
     public static ItemStack findTransformedCore(net.minecraft.world.entity.player.Player player) {
+        if (!com.piranport.config.ModCommonConfig.isShipCoreGuiEnabled()) {
+            // No-GUI mode: only offhand core counts
+            ItemStack offhand = player.getOffhandItem();
+            if (offhand.getItem() instanceof ShipCoreItem && isTransformed(offhand)) return offhand;
+            return ItemStack.EMPTY;
+        }
+        // GUI mode: scan all slots
         ItemStack mainHand = player.getMainHandItem();
         if (mainHand.getItem() instanceof ShipCoreItem && isTransformed(mainHand)) return mainHand;
         for (ItemStack s : player.getInventory().items) {

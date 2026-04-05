@@ -70,12 +70,7 @@ public class AircraftItem extends Item {
 
     /** Returns true if the player has any ship core in transformed state. */
     private static boolean isPlayerTransformed(Player player) {
-        Inventory inv = player.getInventory();
-        for (ItemStack s : inv.items) {
-            if (s.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(s)) return true;
-        }
-        ItemStack offhand = inv.offhand.get(0);
-        return offhand.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(offhand);
+        return TransformationManager.isPlayerTransformed(player);
     }
 
     @Override

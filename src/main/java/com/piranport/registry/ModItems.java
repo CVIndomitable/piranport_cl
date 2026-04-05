@@ -823,19 +823,19 @@ public class ModItems {
             ITEMS.register("depth_charge_launcher",
                     () -> new DepthChargeLauncherItem(
                             new Item.Properties().stacksTo(1).durability(64)
-                                    .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.TORPEDO),
+                                    .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.DEPTH_CHARGE),
                             1, 60, DepthChargeLauncherItem.SpreadPattern.SINGLE));
     public static final DeferredItem<DepthChargeLauncherItem> DEPTH_CHARGE_LAUNCHER_IMPROVED =
             ITEMS.register("depth_charge_launcher_improved",
                     () -> new DepthChargeLauncherItem(
                             new Item.Properties().stacksTo(1).durability(48)
-                                    .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.TORPEDO),
+                                    .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.DEPTH_CHARGE),
                             2, 80, DepthChargeLauncherItem.SpreadPattern.FRONT_BACK));
     public static final DeferredItem<DepthChargeLauncherItem> DEPTH_CHARGE_LAUNCHER_ADVANCED =
             ITEMS.register("depth_charge_launcher_advanced",
                     () -> new DepthChargeLauncherItem(
                             new Item.Properties().stacksTo(1).durability(32)
-                                    .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.TORPEDO),
+                                    .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.DEPTH_CHARGE),
                             3, 100, DepthChargeLauncherItem.SpreadPattern.TRIANGLE));
 
     // ===== Missile / Rocket Ammo =====

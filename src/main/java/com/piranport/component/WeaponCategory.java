@@ -13,7 +13,8 @@ public enum WeaponCategory implements StringRepresentable {
     CANNON("cannon"),
     ARMOR("armor"),
     MISSILE("missile"),
-    ENGINE("engine");
+    ENGINE("engine"),
+    DEPTH_CHARGE("depth_charge");
 
     private final String serializedName;
 

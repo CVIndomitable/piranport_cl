@@ -54,6 +54,7 @@
   "tooltip.piranport.weapon_category.armor": "类型: 强化部件",
   "tooltip.piranport.weapon_category.missile": "类型: 导弹",
   "tooltip.piranport.weapon_category.engine": "类型: 轮机",
+  "tooltip.piranport.weapon_category.depth_charge": "类型: 深弹",
   "message.piranport.slot_empty": "武器栏 %s: 空",
   "entity.piranport.cannon_projectile": "炮弹",
   "item.piranport.torpedo_533mm": "533mm标准鱼雷",

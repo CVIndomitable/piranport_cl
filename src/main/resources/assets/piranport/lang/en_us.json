@@ -343,7 +343,7 @@
   "container.piranport.ship_config": "Ship Config",
   "container.piranport.auto_launch_on": "Fighter Auto-Launch: [ON]",
   "container.piranport.auto_launch_off": "Fighter Auto-Launch: [OFF]",
-  "tooltip.piranport.core_inactive": "Not Active (higher-load core present)",
+  "tooltip.piranport.core_inactive": "Not Active",
   "tooltip.piranport.core_armor_slots": "Armor: +%s (capacity %s slots)",
   "tooltip.piranport.weapon_ready": "Ready",
   "tooltip.piranport.weapon_not_loaded": "Not Loaded",

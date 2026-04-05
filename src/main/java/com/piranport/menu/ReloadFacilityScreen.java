@@ -3,9 +3,13 @@ package com.piranport.menu;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 
 public class ReloadFacilityScreen extends AbstractContainerScreen<ReloadFacilityMenu> {
+    private static final ResourceLocation LAUNCHER_HINT = ResourceLocation.fromNamespaceAndPath("piranport", "textures/gui/launcher_hint.png");
+    private static final ResourceLocation TORPEDO_HINT = ResourceLocation.fromNamespaceAndPath("piranport", "textures/gui/torpedo_hint.png");
+
     public ReloadFacilityScreen(ReloadFacilityMenu menu, Inventory inv, Component title) {
         super(menu, inv, title);
         this.imageWidth = 176;
@@ -42,6 +46,10 @@ public class ReloadFacilityScreen extends AbstractContainerScreen<ReloadFacility
 
         // "+" symbol between launcher and ammo slots
         g.drawString(font, "+", x + 56, y + 38, 0xFF404040, false);
+
+        // Hint icons below slots (32x32 textures scaled to 16x16)
+        g.blit(LAUNCHER_HINT, x + 34, y + 54, 0, 0, 16, 16, 16, 16);
+        g.blit(TORPEDO_HINT, x + 70, y + 54, 0, 0, 16, 16, 16, 16);
 
         // Player inventory (3 rows)
         for (int row = 0; row < 3; row++) {

@@ -113,6 +113,7 @@ public class TransformationManager {
         if (stack.getItem() instanceof ArmorPlateItem) return false;
         if (stack.getItem() instanceof SonarItem) return false;
         if (stack.getItem() instanceof EngineItem) return false;
+        if (stack.getItem() instanceof TorpedoReloadItem) return false;
         // Torpedo ammo, shells, and aviation consumables all have getItemLoad == 0, so excluded naturally
         return getItemLoad(stack) > 0;
     }
@@ -332,6 +333,7 @@ public class TransformationManager {
             if (s.getItem() instanceof ArmorPlateItem plate) total += plate.getWeight();
             else if (s.getItem() instanceof SonarItem sonar) total += sonar.getWeight();
             else if (s.getItem() instanceof EngineItem engine) total += engine.getWeight();
+            else if (s.getItem() instanceof TorpedoReloadItem tr) total += tr.getWeight();
         }
         return total;
     }
@@ -360,8 +362,11 @@ public class TransformationManager {
     private static boolean isLoadItem(ItemStack stack) {
         if (stack.isEmpty()) return false;
         if (stack.getItem() instanceof ShipCoreItem) return false;
+        // Enhancement items only count load when stored inside the core (SHIP_CORE_ARMOR)
         if (stack.getItem() instanceof ArmorPlateItem) return false;
         if (stack.getItem() instanceof EngineItem) return false;
+        if (stack.getItem() instanceof SonarItem) return false;
+        if (stack.getItem() instanceof TorpedoReloadItem) return false;
         return getItemLoad(stack) > 0;
     }
 
@@ -500,6 +505,7 @@ public class TransformationManager {
         if (stack.getItem() instanceof ArmorPlateItem plate) return plate.getWeight();
         if (stack.getItem() instanceof SonarItem sonar) return sonar.getWeight();
         if (stack.getItem() instanceof EngineItem engine) return engine.getWeight();
+        if (stack.getItem() instanceof TorpedoReloadItem tr) return tr.getWeight();
         if (stack.getItem() instanceof com.piranport.item.AircraftItem) {
             com.piranport.component.AircraftInfo info =
                     stack.get(ModDataComponents.AIRCRAFT_INFO.get());

@@ -659,21 +659,26 @@ public class ShipCoreItem extends Item {
                     break;
                 }
             }
+            if (ammoSlot == -1 && weaponSlot != 40 && coreInventorySlot != 40) {
+                ItemStack oh = inv.offhand.get(0);
+                if (!oh.isEmpty() && matchesCaliber(oh, weapon)) {
+                    ammoSlot = 40;
+                }
+            }
 
             if (ammoSlot == -1) {
                 player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
                 return;
             }
 
-            ItemStack ammoStack = inv.items.get(ammoSlot);
+            ItemStack ammoStack = ammoSlot == 40 ? inv.offhand.get(0) : inv.items.get(ammoSlot);
             boolean isType3 = isType3Shell(ammoStack);
             boolean isVT = isVTShell(ammoStack);
             boolean isHE = isHEShell(ammoStack) || isVT;
             ItemStack shellForRender = ammoStack.copyWithCount(1);
             ammoStack.shrink(1);
 
-            // Check if more ammo remains for next reload — if not, skip cooldown so
-            // the reload bar won't misleadingly fill up
+            // Check if more ammo remains for next reload
             boolean hasNextRound = false;
             for (int i = 0; i < inv.items.size(); i++) {
                 if (i == coreInventorySlot || i == weaponSlot) continue;
@@ -681,6 +686,12 @@ public class ShipCoreItem extends Item {
                 if (!check.isEmpty() && matchesCaliber(check, weapon)) {
                     hasNextRound = true;
                     break;
+                }
+            }
+            if (!hasNextRound && weaponSlot != 40 && coreInventorySlot != 40) {
+                ItemStack oh = inv.offhand.get(0);
+                if (!oh.isEmpty() && matchesCaliber(oh, weapon)) {
+                    hasNextRound = true;
                 }
             }
 
@@ -691,6 +702,11 @@ public class ShipCoreItem extends Item {
                 weapon.set(ModDataComponents.WEAPON_COOLDOWN.get(),
                         new WeaponCooldown(level.getGameTime() + cooldownTicks, cooldownTicks));
             } else {
+                int penaltyTicks = 10;
+                coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
+                        cooldowns.withSlotCooldown(weaponSlot, penaltyTicks, level.getGameTime()));
+                weapon.set(ModDataComponents.WEAPON_COOLDOWN.get(),
+                        new WeaponCooldown(level.getGameTime() + penaltyTicks, penaltyTicks));
                 player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
             }
 
@@ -816,11 +832,13 @@ public class ShipCoreItem extends Item {
         launcherStack.remove(ModDataComponents.LOADED_AMMO.get());
 
         // Damage launcher
+        boolean launcherBroken = false;
         if (!launcherStack.isEmpty()) {
             int newDamage = launcherStack.getDamageValue() + 1;
             if (newDamage >= launcherStack.getMaxDamage()) {
                 if (weaponSlot == 40) inv.offhand.set(0, ItemStack.EMPTY);
                 else inv.items.set(weaponSlot, ItemStack.EMPTY);
+                launcherBroken = true;
                 level.playSound(null, player.getX(), player.getY(), player.getZ(),
                         SoundEvents.ITEM_BREAK, SoundSource.PLAYERS, 0.8f, 0.8f + level.random.nextFloat() * 0.4f);
             } else {
@@ -828,11 +846,13 @@ public class ShipCoreItem extends Item {
             }
         }
 
-        int boostedCooldown = TransformationManager.boostedCooldown(player, cooldown);
-        coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
-                cooldowns.withSlotCooldown(weaponSlot, boostedCooldown, level.getGameTime()));
-        launcherStack.set(ModDataComponents.WEAPON_COOLDOWN.get(),
-                new WeaponCooldown(level.getGameTime() + boostedCooldown, boostedCooldown));
+        if (!launcherBroken) {
+            int boostedCooldown = TransformationManager.boostedCooldown(player, cooldown);
+            coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
+                    cooldowns.withSlotCooldown(weaponSlot, boostedCooldown, level.getGameTime()));
+            launcherStack.set(ModDataComponents.WEAPON_COOLDOWN.get(),
+                    new WeaponCooldown(level.getGameTime() + boostedCooldown, boostedCooldown));
+        }
 
         level.playSound(null, player.getX(), player.getY(), player.getZ(),
                 SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 0.4f, 0.4f);
@@ -852,6 +872,12 @@ public class ShipCoreItem extends Item {
             ItemStack s = inv.items.get(i);
             if (!s.isEmpty() && s.getItem() instanceof TorpedoItem ti && ti.getCaliber() == caliber) {
                 available += s.getCount();
+            }
+        }
+        if (weaponSlot != 40 && coreSlot != 40) {
+            ItemStack oh = inv.offhand.get(0);
+            if (!oh.isEmpty() && oh.getItem() instanceof TorpedoItem ti && ti.getCaliber() == caliber) {
+                available += oh.getCount();
             }
         }
 
@@ -879,6 +905,18 @@ public class ShipCoreItem extends Item {
                 toConsume -= take;
             }
         }
+        if (toConsume > 0 && weaponSlot != 40 && coreSlot != 40) {
+            ItemStack oh = inv.offhand.get(0);
+            if (!oh.isEmpty() && oh.getItem() instanceof TorpedoItem ti && ti.getCaliber() == caliber) {
+                if (firstTorpedo == null) firstTorpedo = ti;
+                if (ti.isMagnetic()) magnetic = true;
+                if (ti.isAcoustic()) acousticHoming = true;
+                if (ti.isWireGuided()) wireGuided = true;
+                int take = Math.min(toConsume, oh.getCount());
+                oh.shrink(take);
+                toConsume -= take;
+            }
+        }
 
         float torpedoSpeed = firstTorpedo != null ? firstTorpedo.getSpeed() : (caliber == 610 ? 1.0f : 1.2f);
         float[] angles = getSpreadAngles(tubeCount);
@@ -902,11 +940,13 @@ public class ShipCoreItem extends Item {
 
         // Damage launcher in-inventory
         ItemStack launcherStack = weaponSlot == 40 ? inv.offhand.get(0) : inv.items.get(weaponSlot);
+        boolean launcherBroken = false;
         if (!launcherStack.isEmpty()) {
             int newDamage = launcherStack.getDamageValue() + 1;
             if (newDamage >= launcherStack.getMaxDamage()) {
                 if (weaponSlot == 40) inv.offhand.set(0, ItemStack.EMPTY);
                 else inv.items.set(weaponSlot, ItemStack.EMPTY);
+                launcherBroken = true;
                 level.playSound(null, player.getX(), player.getY(), player.getZ(),
                         SoundEvents.ITEM_BREAK, SoundSource.PLAYERS, 0.8f, 0.8f + level.random.nextFloat() * 0.4f);
             } else {
@@ -914,8 +954,7 @@ public class ShipCoreItem extends Item {
             }
         }
 
-        // Check if enough torpedoes remain for next salvo — if not, skip cooldown
-        // so the reload bar won't misleadingly fill up
+        // Check if enough torpedoes remain for next salvo
         int nextAvailable = 0;
         for (int i = 0; i < inv.items.size(); i++) {
             if (i == coreSlot || i == weaponSlot) continue;
@@ -924,15 +963,28 @@ public class ShipCoreItem extends Item {
                 nextAvailable += s.getCount();
             }
         }
+        if (weaponSlot != 40 && coreSlot != 40) {
+            ItemStack oh = inv.offhand.get(0);
+            if (!oh.isEmpty() && oh.getItem() instanceof TorpedoItem ti && ti.getCaliber() == caliber) {
+                nextAvailable += oh.getCount();
+            }
+        }
 
-        if (nextAvailable >= tubeCount) {
-            int boostedCooldown = TransformationManager.boostedCooldown(player, cooldown);
-            coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
-                    cooldowns.withSlotCooldown(weaponSlot, boostedCooldown, level.getGameTime()));
-            launcherStack.set(ModDataComponents.WEAPON_COOLDOWN.get(),
-                    new WeaponCooldown(level.getGameTime() + boostedCooldown, boostedCooldown));
-        } else {
-            player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
+        if (!launcherBroken) {
+            if (nextAvailable >= tubeCount) {
+                int boostedCooldown = TransformationManager.boostedCooldown(player, cooldown);
+                coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
+                        cooldowns.withSlotCooldown(weaponSlot, boostedCooldown, level.getGameTime()));
+                launcherStack.set(ModDataComponents.WEAPON_COOLDOWN.get(),
+                        new WeaponCooldown(level.getGameTime() + boostedCooldown, boostedCooldown));
+            } else {
+                int penaltyTicks = 10;
+                coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
+                        cooldowns.withSlotCooldown(weaponSlot, penaltyTicks, level.getGameTime()));
+                launcherStack.set(ModDataComponents.WEAPON_COOLDOWN.get(),
+                        new WeaponCooldown(level.getGameTime() + penaltyTicks, penaltyTicks));
+                player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
+            }
         }
         TransformationManager.setWeaponIndex(coreStack, weaponSlot);
 
@@ -955,6 +1007,12 @@ public class ShipCoreItem extends Item {
                 available += s.getCount();
             }
         }
+        if (weaponSlot != 40 && coreSlot != 40) {
+            ItemStack oh = inv.offhand.get(0);
+            if (!oh.isEmpty() && oh.is(ModItems.DEPTH_CHARGE.get())) {
+                available += oh.getCount();
+            }
+        }
 
         if (available < chargeCount) {
             player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
@@ -969,6 +1027,14 @@ public class ShipCoreItem extends Item {
             if (!s.isEmpty() && s.is(ModItems.DEPTH_CHARGE.get())) {
                 int take = Math.min(toConsume, s.getCount());
                 s.shrink(take);
+                toConsume -= take;
+            }
+        }
+        if (toConsume > 0 && weaponSlot != 40 && coreSlot != 40) {
+            ItemStack oh = inv.offhand.get(0);
+            if (!oh.isEmpty() && oh.is(ModItems.DEPTH_CHARGE.get())) {
+                int take = Math.min(toConsume, oh.getCount());
+                oh.shrink(take);
                 toConsume -= take;
             }
         }
@@ -995,11 +1061,13 @@ public class ShipCoreItem extends Item {
 
         // Damage launcher
         ItemStack launcherStack = weaponSlot == 40 ? inv.offhand.get(0) : inv.items.get(weaponSlot);
+        boolean launcherBroken = false;
         if (!launcherStack.isEmpty()) {
             int newDamage = launcherStack.getDamageValue() + 1;
             if (newDamage >= launcherStack.getMaxDamage()) {
                 if (weaponSlot == 40) inv.offhand.set(0, ItemStack.EMPTY);
                 else inv.items.set(weaponSlot, ItemStack.EMPTY);
+                launcherBroken = true;
                 level.playSound(null, player.getX(), player.getY(), player.getZ(),
                         SoundEvents.ITEM_BREAK, SoundSource.PLAYERS, 0.8f, 0.8f + level.random.nextFloat() * 0.4f);
             } else {
@@ -1007,11 +1075,13 @@ public class ShipCoreItem extends Item {
             }
         }
 
-        int boostedCooldown = TransformationManager.boostedCooldown(player, cooldown);
-        coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
-                cooldowns.withSlotCooldown(weaponSlot, boostedCooldown, level.getGameTime()));
-        launcherStack.set(ModDataComponents.WEAPON_COOLDOWN.get(),
-                new WeaponCooldown(level.getGameTime() + boostedCooldown, boostedCooldown));
+        if (!launcherBroken) {
+            int boostedCooldown = TransformationManager.boostedCooldown(player, cooldown);
+            coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
+                    cooldowns.withSlotCooldown(weaponSlot, boostedCooldown, level.getGameTime()));
+            launcherStack.set(ModDataComponents.WEAPON_COOLDOWN.get(),
+                    new WeaponCooldown(level.getGameTime() + boostedCooldown, boostedCooldown));
+        }
         TransformationManager.setWeaponIndex(coreStack, weaponSlot);
 
         level.playSound(null, player.getX(), player.getY(), player.getZ(),
@@ -1083,6 +1153,12 @@ public class ShipCoreItem extends Item {
                 break;
             }
         }
+        if (ammoSlot == -1 && weaponSlot != 40 && coreSlot != 40) {
+            ItemStack oh = inv.offhand.get(0);
+            if (!oh.isEmpty() && oh.is(ammoItem)) {
+                ammoSlot = 40;
+            }
+        }
         if (ammoSlot == -1) {
             player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
             return;
@@ -1090,7 +1166,7 @@ public class ShipCoreItem extends Item {
 
         // 消耗1枚弹药
         String ammoId = BuiltInRegistries.ITEM.getKey(ammoItem).toString();
-        inv.items.get(ammoSlot).shrink(1);
+        (ammoSlot == 40 ? inv.offhand.get(0) : inv.items.get(ammoSlot)).shrink(1);
 
         // 发射
         spawnMissile(level, player, launcher, ammoId);

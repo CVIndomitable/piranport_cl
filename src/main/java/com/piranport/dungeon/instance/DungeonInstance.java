@@ -79,8 +79,8 @@ public class DungeonInstance {
             } else if (ch >= 'a' && ch <= 'z') {
                 nodeIndex = ch - 'a';
             } else {
-                // Fallback: use hashCode for non-letter nodeIds
-                nodeIndex = Math.abs(nodeId.hashCode()) % com.piranport.dungeon.DungeonConstants.MAX_NODES_PER_STAGE;
+                // Fallback: use hashCode for non-letter nodeIds (floorMod avoids Integer.MIN_VALUE issue)
+                nodeIndex = Math.floorMod(nodeId.hashCode(), com.piranport.dungeon.DungeonConstants.MAX_NODES_PER_STAGE);
             }
         }
         int nodeX = getRegionOriginX() + nodeIndex * com.piranport.dungeon.DungeonConstants.NODE_AREA_SIZE

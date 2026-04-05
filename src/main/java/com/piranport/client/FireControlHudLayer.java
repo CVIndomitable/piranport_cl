@@ -32,22 +32,23 @@ public class FireControlHudLayer {
     private static final int PANEL_WIDTH = 110;
     private static final int LINE_HEIGHT  = 18;
 
-    // P3 #32: cache UUID→Entity mappings, rebuild every 20 ticks
+    // Cache UUID→Entity mappings, rebuild every 20 game ticks (not per-call)
     private static final Map<UUID, Entity> entityCache = new HashMap<>();
-    private static int cacheAge = 0;
+    private static long lastRebuildTick = -1;
 
-    public static void clearCache() { entityCache.clear(); cacheAge = 0; }
+    public static void clearCache() { entityCache.clear(); lastRebuildTick = -1; }
 
     @Nullable
     private static Entity findEntityByUUID(Minecraft mc, UUID uuid) {
         if (mc.level == null) return null;
-        // Rebuild cache periodically (every 20 ticks)
-        if (++cacheAge > 20) {
+        // Rebuild cache once per 20 game ticks regardless of call count
+        long currentTick = mc.level.getGameTime();
+        if (currentTick - lastRebuildTick >= 20) {
+            lastRebuildTick = currentTick;
             entityCache.clear();
             for (Entity e : mc.level.entitiesForRendering()) {
                 entityCache.put(e.getUUID(), e);
             }
-            cacheAge = 0;
         }
         Entity cached = entityCache.get(uuid);
         if (cached != null) return cached;

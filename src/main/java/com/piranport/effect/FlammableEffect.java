@@ -23,8 +23,8 @@ public class FlammableEffect extends MobEffect {
             // tickCount % 39 == 0 fires once every ~39 ticks (~2 seconds)
             if (entity.tickCount % 39 == 0) {
                 if (entity.getRandom().nextFloat() < 0.15f) {
-                    // Pass null source so explosion damage isn't attributed to the victim
-                    entity.level().explode(null,
+                    // Source is the entity itself for proper death messages
+                    entity.level().explode(entity,
                             entity.getX(), entity.getY(), entity.getZ(),
                             0.8f, Level.ExplosionInteraction.NONE);
                 }

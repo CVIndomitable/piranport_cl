@@ -67,6 +67,10 @@ public class MissileEntity extends ThrowableItemProjectile {
     private static final double SEARCH_RANGE = 32.0;
     /** Maximum turn rate per tick (degrees). */
     private static final float MAX_TURN_DEG = 12.0f;
+    /** Cached tracking target for guided missiles. */
+    private Entity trackedTarget = null;
+    /** Ticks until next target search (throttle). */
+    private int targetSearchCooldown = 0;
 
     private static final ResourceLocation AP_PEN_ID =
             ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "missile_ap");
@@ -139,10 +143,16 @@ public class MissileEntity extends ThrowableItemProjectile {
                     setDeltaMovement(motion.x * scale, motion.y * scale, motion.z * scale);
                 }
             } else {
-                // 反舰/防空导弹：制导追踪
-                Entity target = findTarget();
-                if (target != null) {
-                    homeToward(target);
+                // 反舰/防空导弹：制导追踪（目标缓存，每5tick重新搜索）
+                if (trackedTarget != null && (!trackedTarget.isAlive() || trackedTarget.isRemoved())) {
+                    trackedTarget = null;
+                }
+                if (trackedTarget == null && --targetSearchCooldown <= 0) {
+                    trackedTarget = findTarget();
+                    targetSearchCooldown = 5;
+                }
+                if (trackedTarget != null) {
+                    homeToward(trackedTarget);
                 } else {
                     // 无目标：维持方向和速度
                     double totalSpeed = motion.length();

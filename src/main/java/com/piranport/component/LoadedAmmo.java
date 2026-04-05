@@ -29,9 +29,11 @@ public record LoadedAmmo(int count, String ammoItemId) {
                 ByteBufCodecs.VAR_INT.encode(buf, la.count());
                 ByteBufCodecs.STRING_UTF8.encode(buf, la.ammoItemId());
             },
-            buf -> new LoadedAmmo(
-                    ByteBufCodecs.VAR_INT.decode(buf),
-                    ByteBufCodecs.STRING_UTF8.decode(buf)
-            )
+            buf -> {
+                int count = ByteBufCodecs.VAR_INT.decode(buf);
+                String ammoId = ByteBufCodecs.STRING_UTF8.decode(buf);
+                if (ammoId.length() > 256) throw new io.netty.handler.codec.DecoderException("ammoItemId too long");
+                return new LoadedAmmo(count, ammoId);
+            }
     );
 }

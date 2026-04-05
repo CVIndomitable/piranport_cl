@@ -1,12 +1,12 @@
 package com.piranport.aviation;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 /** Server-side fire control state. Maps player UUID → locked entity UUIDs.
  *  Primarily accessed on server thread; ConcurrentHashMap guards clearAll() during shutdown. */
 public class FireControlManager {
@@ -16,7 +16,7 @@ public class FireControlManager {
 
     /** Replace the target list with a single target. */
     public static void lock(UUID playerUUID, UUID targetUUID) {
-        List<UUID> list = new ArrayList<>();
+        List<UUID> list = new CopyOnWriteArrayList<>();
         list.add(targetUUID);
         LOCKED_TARGETS.put(playerUUID, list);
         com.piranport.debug.PiranPortDebug.event(
@@ -25,7 +25,7 @@ public class FireControlManager {
 
     /** Append a target (up to MAX_TARGETS). Does nothing if already in list. */
     public static void addTarget(UUID playerUUID, UUID targetUUID) {
-        List<UUID> list = LOCKED_TARGETS.computeIfAbsent(playerUUID, k -> new ArrayList<>());
+        List<UUID> list = LOCKED_TARGETS.computeIfAbsent(playerUUID, k -> new CopyOnWriteArrayList<>());
         if (!list.contains(targetUUID) && list.size() < MAX_TARGETS) {
             list.add(targetUUID);
             com.piranport.debug.PiranPortDebug.event(

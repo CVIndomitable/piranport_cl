@@ -128,13 +128,8 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         AABB searchBox = getBoundingBox().inflate(VT_DETECT_RANGE);
         List<Entity> nearby = level().getEntities(this, searchBox, e -> {
             if (e == getOwner()) return false;
-            // Friendly fire protection: skip players when config disabled
-            if (!ModCommonConfig.FRIENDLY_FIRE_ENABLED.get()
-                    && e instanceof Player && getOwner() instanceof Player) return false;
-            if (e instanceof AircraftEntity aircraft) {
-                Entity owner = getOwner();
-                if (owner instanceof Player p && p.getUUID().equals(aircraft.getOwnerUUID())) return false;
-            }
+            // Use unified friendly fire logic (consistent with canHitEntity)
+            if (com.piranport.combat.FriendlyFireHelper.shouldBlockHit(e, getOwner())) return false;
             return e.isAlive() && e.isPickable();
         });
 

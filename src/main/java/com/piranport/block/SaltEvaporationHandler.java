@@ -75,6 +75,9 @@ public class SaltEvaporationHandler {
                 Map.Entry<BlockPos, Integer> entry = it.next();
                 BlockPos pos = entry.getKey();
 
+                // Skip unloaded chunks to avoid forcing chunk loads
+                if (!level.isLoaded(pos)) continue;
+
                 // Validate conditions still hold
                 BlockState waterState = level.getBlockState(pos);
                 if (!waterState.is(Blocks.WATER)

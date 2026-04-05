@@ -32,6 +32,9 @@ public record RecallAllAircraftPayload() implements CustomPacketPayload {
         return TYPE;
     }
 
+    /** Per-player cooldown: minimum 20 ticks between recall attempts. */
+    private static final java.util.Map<UUID, Long> lastRecallTick = new java.util.concurrent.ConcurrentHashMap<>();
+
     public static void handle(RecallAllAircraftPayload payload, IPayloadContext context) {
         context.enqueueWork(() -> {
             if (!(context.player() instanceof ServerPlayer sp)) return;
@@ -40,6 +43,12 @@ public record RecallAllAircraftPayload() implements CustomPacketPayload {
             // Only in no-GUI mode + transformed
             if (com.piranport.config.ModCommonConfig.isShipCoreGuiEnabled()) return;
             if (!com.piranport.combat.TransformationManager.isPlayerTransformed(sp)) return;
+
+            // Rate limit: 20 ticks between recalls
+            long now = sp.level().getGameTime();
+            Long last = lastRecallTick.get(sp.getUUID());
+            if (last != null && now - last < 20) return;
+            lastRecallTick.put(sp.getUUID(), now);
 
             ServerLevel sl = (ServerLevel) sp.level();
             UUID ownerUUID = sp.getUUID();

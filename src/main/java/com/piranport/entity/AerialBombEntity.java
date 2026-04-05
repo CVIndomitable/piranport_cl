@@ -19,6 +19,7 @@ public class AerialBombEntity extends ThrowableItemProjectile {
 
     private float damage = 10f;
     private float explosionPower = 2.5f;
+    private boolean exploded = false;
 
     /** Required by entity type registration. */
     public AerialBombEntity(EntityType<? extends AerialBombEntity> type, Level level) {
@@ -68,7 +69,8 @@ public class AerialBombEntity extends ThrowableItemProjectile {
     @Override
     protected void onHitEntity(EntityHitResult result) {
         super.onHitEntity(result);
-        if (!level().isClientSide()) {
+        if (!level().isClientSide() && !exploded) {
+            exploded = true;
             Entity target = result.getEntity();
             target.hurt(damageSources().thrown(this, getOwner()), damage);
             Level.ExplosionInteraction interaction = ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get()
@@ -89,7 +91,8 @@ public class AerialBombEntity extends ThrowableItemProjectile {
 
     @Override
     protected void onHitBlock(BlockHitResult result) {
-        if (!level().isClientSide()) {
+        if (!level().isClientSide() && !exploded) {
+            exploded = true;
             Level.ExplosionInteraction interaction = ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get()
                     ? Level.ExplosionInteraction.TNT : Level.ExplosionInteraction.NONE;
             level().explode(this, getX(), getY(), getZ(), explosionPower, interaction);

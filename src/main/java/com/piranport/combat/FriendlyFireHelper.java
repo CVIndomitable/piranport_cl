@@ -24,10 +24,13 @@ public final class FriendlyFireHelper {
                 && target instanceof Player && owner instanceof Player) {
             return true;
         }
-        // Don't hit the owner's own aircraft
-        if (target instanceof AircraftEntity aircraft) {
+        // Don't hit any player-owned aircraft when friendly fire is disabled
+        if (target instanceof AircraftEntity aircraft && aircraft.getOwnerUUID() != null) {
             if (owner instanceof Player p && p.getUUID().equals(aircraft.getOwnerUUID())) {
-                return true;
+                return true; // always protect own aircraft
+            }
+            if (!ModCommonConfig.FRIENDLY_FIRE_ENABLED.get() && owner instanceof Player) {
+                return true; // protect other players' aircraft when FF disabled
             }
         }
         return false;

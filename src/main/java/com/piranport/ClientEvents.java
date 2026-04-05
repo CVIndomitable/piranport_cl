@@ -19,7 +19,6 @@ import com.piranport.registry.ModKeyMappings;
 import com.piranport.registry.ModMenuTypes;
 import net.minecraft.client.renderer.entity.ThrownItemRenderer;
 import net.minecraft.client.renderer.item.ItemProperties;
-import net.minecraft.client.KeyMapping;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -36,9 +35,7 @@ import org.lwjgl.glfw.GLFW;
 @EventBusSubscriber(modid = PiranPort.MOD_ID, value = Dist.CLIENT, bus = EventBusSubscriber.Bus.MOD)
 public class ClientEvents {
 
-    /** @deprecated Use {@link ModKeyMappings#CYCLE_WEAPON} instead. */
-    @Deprecated
-    public static final KeyMapping CYCLE_WEAPON_KEY = ModKeyMappings.CYCLE_WEAPON;
+
 
     @SubscribeEvent
     public static void onClientSetup(FMLClientSetupEvent event) {
@@ -46,18 +43,14 @@ public class ClientEvents {
         // Models use this predicate to switch between loaded and empty textures.
         ResourceLocation fueled = ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "fueled");
         event.enqueueWork(() -> {
-            for (var item : new net.minecraft.world.item.Item[]{
-                    ModItems.FIGHTER_SQUADRON.get(),
-                    ModItems.DIVE_BOMBER_SQUADRON.get(),
-                    ModItems.TORPEDO_BOMBER_SQUADRON.get(),
-                    ModItems.XTB2D.get(),
-                    ModItems.LEVEL_BOMBER_SQUADRON.get(),
-                    ModItems.RECON_SQUADRON.get()
-            }) {
-                ItemProperties.register(item, fueled, (stack, level, entity, seed) -> {
-                    AircraftInfo info = stack.get(ModDataComponents.AIRCRAFT_INFO.get());
-                    return (info != null && info.currentFuel() > 0) ? 1.0f : 0.0f;
-                });
+            // Register "fueled" property for ALL AircraftItem instances (including named variants)
+            for (var entry : ModItems.ITEMS.getEntries()) {
+                if (entry.get() instanceof com.piranport.item.AircraftItem) {
+                    ItemProperties.register(entry.get(), fueled, (stack, level, entity, seed) -> {
+                        AircraftInfo info = stack.get(ModDataComponents.AIRCRAFT_INFO.get());
+                        return (info != null && info.currentFuel() > 0) ? 1.0f : 0.0f;
+                    });
+                }
             }
         });
     }
@@ -107,10 +100,13 @@ public class ClientEvents {
         event.register(ModItems.DEPTH_CHARGE_LAUNCHER.get(), weaponDecorator);
         event.register(ModItems.DEPTH_CHARGE_LAUNCHER_IMPROVED.get(), weaponDecorator);
         event.register(ModItems.DEPTH_CHARGE_LAUNCHER_ADVANCED.get(), weaponDecorator);
-        // Missile launchers (anti-air uses cooldown bar)
+        // Missile launchers — all types get cooldown bar
         event.register(ModItems.TERRIER_LAUNCHER.get(), weaponDecorator);
         event.register(ModItems.SEA_DART_LAUNCHER.get(), weaponDecorator);
         event.register(ModItems.SEACAT_LAUNCHER.get(), weaponDecorator);
+        event.register(ModItems.SY1_LAUNCHER.get(), weaponDecorator);
+        event.register(ModItems.MK14_HARPOON_LAUNCHER.get(), weaponDecorator);
+        event.register(ModItems.SHIP_ROCKET_LAUNCHER.get(), weaponDecorator);
     }
 
     @SubscribeEvent

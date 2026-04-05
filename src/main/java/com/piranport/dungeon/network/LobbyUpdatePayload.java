@@ -31,6 +31,7 @@ public record LobbyUpdatePayload(List<String> memberNames, String flagshipName,
             },
             buf -> {
                 int size = ByteBufCodecs.VAR_INT.decode(buf);
+                if (size < 0 || size > 64) size = 0;
                 List<String> names = new ArrayList<>(size);
                 for (int i = 0; i < size; i++) {
                     names.add(ByteBufCodecs.STRING_UTF8.decode(buf));

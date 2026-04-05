@@ -3,9 +3,9 @@ package com.piranport.dungeon.script;
 import com.piranport.PiranPort;
 import net.minecraft.server.level.ServerLevel;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Manages active dungeon scripts. Ticked once per server tick from the game event bus.
@@ -14,7 +14,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class DungeonScriptManager {
     private DungeonScriptManager() {}
 
-    private static final Map<UUID, DungeonScript> ACTIVE_SCRIPTS = new ConcurrentHashMap<>();
+    // All access is on the server main thread (via enqueueWork / ServerTickEvent), plain HashMap suffices
+    private static final Map<UUID, DungeonScript> ACTIVE_SCRIPTS = new HashMap<>();
 
     /** Register a new script for a dungeon instance. */
     public static void start(UUID instanceId, DungeonScript script) {

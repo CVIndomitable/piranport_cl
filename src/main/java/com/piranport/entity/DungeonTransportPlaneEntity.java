@@ -40,6 +40,8 @@ public class DungeonTransportPlaneEntity extends Entity {
     private double dirX, dirZ;
     private boolean dropped = false;
     private boolean climbing = false;
+    /** Tick count when drop occurred — used for post-drop level flight timing. */
+    private int dropTick = -1;
 
     /** Callback set by the script — fired once when the plane reaches the drop point. */
     private Runnable onDrop;
@@ -115,6 +117,7 @@ public class DungeonTransportPlaneEntity extends Entity {
                         Math.pow(getX() - targetX, 2) + Math.pow(getZ() - targetZ, 2));
                 if (hDist < DROP_THRESHOLD) {
                     dropped = true;
+                    dropTick = tickCount;
                     entityData.set(HAS_DROPPED, true);
                     if (onDrop != null) {
                         onDrop.run();
@@ -123,7 +126,7 @@ public class DungeonTransportPlaneEntity extends Entity {
             }
 
             // Start climbing 60 ticks after drop (3 seconds of level flight past drop point)
-            if (dropped && !climbing && tickCount > 60) {
+            if (dropped && !climbing && dropTick >= 0 && (tickCount - dropTick) > 60) {
                 climbing = true;
             }
         } else {
@@ -161,6 +164,7 @@ public class DungeonTransportPlaneEntity extends Entity {
         tag.putDouble("DirZ", dirZ);
         tag.putBoolean("Dropped", dropped);
         tag.putBoolean("Climbing", climbing);
+        tag.putInt("DropTick", dropTick);
     }
 
     @Override
@@ -171,6 +175,7 @@ public class DungeonTransportPlaneEntity extends Entity {
         dirZ = tag.getDouble("DirZ");
         dropped = tag.getBoolean("Dropped");
         climbing = tag.getBoolean("Climbing");
+        dropTick = tag.getInt("DropTick");
         entityData.set(HAS_DROPPED, dropped);
     }
 }

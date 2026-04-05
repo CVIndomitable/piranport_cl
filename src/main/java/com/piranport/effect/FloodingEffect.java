@@ -21,8 +21,8 @@ public class FloodingEffect extends MobEffect {
 
     @Override
     public boolean shouldApplyEffectTickThisTick(int duration, int amplifier) {
-        // Higher amplifier = more frequent ticks: 20, 15, 10, 10...
-        int interval = Math.max(10, 20 - amplifier * 5);
-        return duration % interval == 0;
+        // Higher amplifier = more frequent ticks: 20, 15, 10, 7, 5 (min 5)
+        int interval = Math.max(5, 20 - amplifier * 5);
+        return duration > 0 && duration % interval == 0;
     }
 }

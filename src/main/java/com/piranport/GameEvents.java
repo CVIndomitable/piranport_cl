@@ -351,11 +351,17 @@ public class GameEvents {
         recallAircraftForPlayer(player);
     }
 
-    /** When a player logs in, sync all active skins and give guidebook on first join. */
+    /** When a player logs in, sync skins, give guidebook, and clean up stale recon slowness. */
     @SubscribeEvent
     public static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
         if (!(event.getEntity() instanceof ServerPlayer joiner)) return;
         com.piranport.skin.SkinManager.syncAllSkinsToPlayer(joiner);
+
+        // Safety net: remove residual recon slowness (amplifier 9) left by server crash
+        var slowness = joiner.getEffect(MobEffects.MOVEMENT_SLOWDOWN);
+        if (slowness != null && slowness.getAmplifier() >= 9) {
+            joiner.removeEffect(MobEffects.MOVEMENT_SLOWDOWN);
+        }
 
         // Give guidebook on first join
         if (ModCommonConfig.GIVE_GUIDEBOOK_ON_FIRST_JOIN.get()) {

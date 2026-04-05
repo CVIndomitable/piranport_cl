@@ -60,7 +60,7 @@ public class AircraftItem extends Item {
                     SoundEvents.BUCKET_FILL, SoundSource.PLAYERS, 0.5f, 1.2f);
 
             // Apply FlammableEffect if enabled and player is currently transformed
-            if (com.piranport.config.ModCommonConfig.FLAMMABLE_EFFECT_ENABLED.get()
+            if (com.piranport.config.ModCommonConfig.isFlammableEffectActive()
                     && isPlayerTransformed(player)) {
                 player.addEffect(new MobEffectInstance(ModMobEffects.FLAMMABLE, 999999, 0, false, true));
             }

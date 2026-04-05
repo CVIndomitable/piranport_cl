@@ -86,6 +86,9 @@ public class DungeonEventHandler {
         event.setCanceled(true);
         player.setHealth(player.getMaxHealth());
         player.invulnerableTime = 40; // 2 seconds of damage immunity frames
+        // Clear residual DOT effects (fire, poison, wither) to prevent re-death after teleport
+        player.clearFire();
+        player.removeAllEffects();
 
         // Find the player's instance and teleport to lectern
         DungeonInstanceManager mgr = DungeonInstanceManager.get((ServerLevel) player.level());

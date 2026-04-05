@@ -1503,16 +1503,12 @@ public class ShipCoreItem extends Item {
     // ===== Gun stats =====
 
     private static float getGunDamage(ItemStack weapon) {
-        if (weapon.is(ModItems.SMALL_GUN.get())) return 6f;
-        if (weapon.is(ModItems.MEDIUM_GUN.get())) return 12f;
-        if (weapon.is(ModItems.LARGE_GUN.get())) return 20f;
+        if (weapon.getItem() instanceof CannonItem ci) return ci.getDamage();
         return 6f;
     }
 
     private static int getGunCooldown(ItemStack weapon) {
-        if (weapon.is(ModItems.SMALL_GUN.get())) return 30;
-        if (weapon.is(ModItems.MEDIUM_GUN.get())) return 50;
-        if (weapon.is(ModItems.LARGE_GUN.get())) return 80;
+        if (weapon.getItem() instanceof CannonItem ci) return ci.getCooldownTicks();
         return 30;
     }
 
@@ -1910,7 +1906,7 @@ public class ShipCoreItem extends Item {
             AircraftInfo info = items.get(wi).get(ModDataComponents.AIRCRAFT_INFO.get());
             if (info != null && info.currentFuel() > 0) { hasFueled = true; break; }
         }
-        if (hasFueled && com.piranport.config.ModCommonConfig.FLAMMABLE_EFFECT_ENABLED.get()) {
+        if (hasFueled && com.piranport.config.ModCommonConfig.isFlammableEffectActive()) {
             player.addEffect(new MobEffectInstance(ModMobEffects.FLAMMABLE, 999999, 0, false, true));
         }
     }
@@ -1942,7 +1938,7 @@ public class ShipCoreItem extends Item {
             }
         }
 
-        if (hasFueled && com.piranport.config.ModCommonConfig.FLAMMABLE_EFFECT_ENABLED.get()) {
+        if (hasFueled && com.piranport.config.ModCommonConfig.isFlammableEffectActive()) {
             player.addEffect(new MobEffectInstance(ModMobEffects.FLAMMABLE, 999999, 0, false, true));
         }
     }

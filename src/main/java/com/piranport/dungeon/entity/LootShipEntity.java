@@ -188,6 +188,17 @@ public class LootShipEntity extends Entity {
         tag.putInt("ShipTier", entityData.get(SHIP_TIER));
         tag.putBoolean("LootGenerated", lootGenerated);
         tag.putInt("DespawnTimer", despawnTimer);
+        tag.putBoolean("Dropping", entityData.get(DROPPING));
+        // Persist openedBy UUIDs
+        if (!openedBy.isEmpty()) {
+            net.minecraft.nbt.ListTag openedList = new net.minecraft.nbt.ListTag();
+            for (java.util.UUID uuid : openedBy) {
+                CompoundTag entry = new CompoundTag();
+                entry.putUUID("UUID", uuid);
+                openedList.add(entry);
+            }
+            tag.put("OpenedBy", openedList);
+        }
         // Save inventory
         CompoundTag invTag = new CompoundTag();
         for (int i = 0; i < inventory.getContainerSize(); i++) {
@@ -204,6 +215,19 @@ public class LootShipEntity extends Entity {
         entityData.set(SHIP_TIER, tag.getInt("ShipTier"));
         lootGenerated = tag.getBoolean("LootGenerated");
         despawnTimer = tag.getInt("DespawnTimer");
+        if (tag.getBoolean("Dropping")) {
+            entityData.set(DROPPING, true);
+        }
+        // Restore openedBy UUIDs
+        if (tag.contains("OpenedBy")) {
+            net.minecraft.nbt.ListTag openedList = tag.getList("OpenedBy", net.minecraft.nbt.Tag.TAG_COMPOUND);
+            for (int i = 0; i < openedList.size(); i++) {
+                CompoundTag entry = openedList.getCompound(i);
+                if (entry.hasUUID("UUID")) {
+                    openedBy.add(entry.getUUID("UUID"));
+                }
+            }
+        }
         if (tag.contains("Inventory")) {
             CompoundTag invTag = tag.getCompound("Inventory");
             for (int i = 0; i < inventory.getContainerSize(); i++) {

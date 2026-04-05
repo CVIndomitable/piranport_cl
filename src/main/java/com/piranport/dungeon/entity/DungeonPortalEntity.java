@@ -58,8 +58,7 @@ public class DungeonPortalEntity extends Entity {
         super.tick();
 
         if (level().isClientSide()) {
-            // Client-side: spinning visual + particles
-            entityData.set(SPIN_TICK, tickCount);
+            // Client-side: spinning visual + particles (use tickCount directly, no SynchedEntityData write)
             if (tickCount % 4 == 0) {
                 double angle = tickCount * 0.1;
                 level().addParticle(net.minecraft.core.particles.ParticleTypes.PORTAL,
@@ -113,7 +112,7 @@ public class DungeonPortalEntity extends Entity {
 
     public UUID getInstanceId() { return instanceId; }
     public String getNodeId() { return nodeId; }
-    public int getSpinTick() { return entityData.get(SPIN_TICK); }
+    public int getSpinTick() { return tickCount; }
 
     @Override
     public boolean isPickable() { return false; }

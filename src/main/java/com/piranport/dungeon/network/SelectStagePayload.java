@@ -43,10 +43,18 @@ public record SelectStagePayload(BlockPos lecternPos, int keySlot, String stageI
         context.enqueueWork(() -> {
             if (!(context.player() instanceof ServerPlayer player)) return;
 
+            // Validate distance to lectern (consistent with JoinLobbyPayload / SelectNodePayload)
+            BlockPos pos = payload.lecternPos();
+            if (player.distanceToSqr(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5) > 64.0) return;
+            if (!(player.level().getBlockState(pos).getBlock()
+                    instanceof com.piranport.dungeon.block.DungeonLecternBlock)) return;
+
             // Validate keySlot range
             int keySlot = payload.keySlot();
             if (keySlot < 0 || keySlot >= player.getInventory().getContainerSize()) return;
 
+            // Validate stageId length
+            if (payload.stageId().length() > 128) return;
             if (!DungeonRegistry.INSTANCE.hasStage(payload.stageId())) return;
 
             DungeonLobbyManager.Lobby lobby =

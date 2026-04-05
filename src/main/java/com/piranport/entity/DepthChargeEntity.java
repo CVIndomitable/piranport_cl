@@ -132,7 +132,7 @@ public class DepthChargeEntity extends ThrowableItemProjectile {
                     (target.getX() - cx) * (target.getX() - cx) +
                     (target.getZ() - cz) * (target.getZ() - cz));
             float ratio = 1.0f - (float) (dist / BLAST_RADIUS) * 0.5f;
-            target.hurt(damageSources().magic(), damage * Math.max(ratio, 0.5f));
+            target.hurt(damageSources().indirectMagic(this, getOwner()), damage * Math.max(ratio, 0.5f));
             notifyOwner(target);
         }
 

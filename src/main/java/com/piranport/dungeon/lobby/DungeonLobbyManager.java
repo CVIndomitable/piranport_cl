@@ -51,9 +51,12 @@ public final class DungeonLobbyManager {
             return flagshipUuid.equals(uuid);
         }
 
+        /** Maximum number of players per lobby. */
+        public static final int MAX_LOBBY_SIZE = 6;
+
         public void addMember(ServerPlayer player) {
             UUID uuid = player.getUUID();
-            if (!memberUuids.contains(uuid)) {
+            if (!memberUuids.contains(uuid) && memberUuids.size() < MAX_LOBBY_SIZE) {
                 memberUuids.add(uuid);
                 memberNames.add(player.getGameProfile().getName());
             }

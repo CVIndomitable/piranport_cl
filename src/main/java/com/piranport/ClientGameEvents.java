@@ -71,5 +71,6 @@ public class ClientGameEvents {
         ClientSkinData.clear();
         com.piranport.client.FireControlHudLayer.clearCache();
         com.piranport.dungeon.client.DungeonHudLayer.clearDungeonState();
+        com.piranport.dungeon.network.ClientDungeonData.clear();
     }
 }

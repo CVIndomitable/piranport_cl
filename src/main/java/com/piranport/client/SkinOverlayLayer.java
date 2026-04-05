@@ -30,7 +30,7 @@ public class SkinOverlayLayer extends RenderLayer<AbstractClientPlayer, PlayerMo
                        AbstractClientPlayer player, float limbSwing, float limbSwingAmount,
                        float partialTick, float ageInTicks, float netHeadYaw, float headPitch) {
         int skinId = ClientSkinData.getActiveSkin(player.getUUID());
-        if (skinId <= 0) return;
+        if (skinId <= 0 || skinId > 3) return; // only valid skin IDs 1-3
         if (player.isInvisible()) return;
 
         ResourceLocation skinTexture = ResourceLocation.fromNamespaceAndPath(

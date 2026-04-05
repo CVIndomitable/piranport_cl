@@ -39,6 +39,7 @@ public record DungeonResultPayload(String stageName, long timeMillis,
                 long time = buf.readLong();
                 boolean first = ByteBufCodecs.BOOL.decode(buf);
                 int count = ByteBufCodecs.VAR_INT.decode(buf);
+                if (count < 0 || count > 64) count = 0;
                 List<String> rewards = new ArrayList<>(count);
                 for (int i = 0; i < count; i++) {
                     rewards.add(ByteBufCodecs.STRING_UTF8.decode(buf));

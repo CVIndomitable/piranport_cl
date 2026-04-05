@@ -29,6 +29,11 @@ public record LeaveLobbyPayload(BlockPos lecternPos) implements CustomPacketPayl
     public static void handle(LeaveLobbyPayload payload, IPayloadContext context) {
         context.enqueueWork(() -> {
             if (!(context.player() instanceof ServerPlayer player)) return;
+            // Validate distance and block type (consistent with JoinLobbyPayload)
+            net.minecraft.core.BlockPos pos = payload.lecternPos();
+            if (player.distanceToSqr(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5) > 64.0) return;
+            if (!(player.level().getBlockState(pos).getBlock()
+                    instanceof com.piranport.dungeon.block.DungeonLecternBlock)) return;
             DungeonLobbyManager.INSTANCE.leaveLobby(payload.lecternPos(), player.getUUID());
             DungeonLobbyManager.INSTANCE.broadcastLobbyUpdate(player.server, payload.lecternPos());
         });

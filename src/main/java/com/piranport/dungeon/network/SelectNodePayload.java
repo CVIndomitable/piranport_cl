@@ -54,6 +54,9 @@ public record SelectNodePayload(BlockPos lecternPos, int keySlot, String nodeId)
             int keySlot = payload.keySlot();
             if (keySlot < 0 || keySlot >= player.getInventory().getContainerSize()) return;
 
+            // Validate nodeId length
+            if (payload.nodeId().length() > 128) return;
+
             // Validate distance to lectern
             if (player.distanceToSqr(payload.lecternPos().getX() + 0.5,
                     payload.lecternPos().getY() + 0.5,

@@ -100,8 +100,8 @@ public class ModCommonConfig {
             BUILDER
                     .comment(
                             "Enable Slav Prison Mode (斯拉夫大牢模式).",
-                            "Default: false.",
-                            "斯拉夫大牢模式，默认关闭。")
+                            "Default: false. When enabled, also activates flammableEffectEnabled.",
+                            "斯拉夫大牢模式，默认关闭。开启时同时启用易燃易爆效果。")
                     .define("gameMode.slavPrisonMode", false);
 
     public static final ModConfigSpec.BooleanValue GIVE_GUIDEBOOK_ON_FIRST_JOIN =
@@ -120,5 +120,13 @@ public class ModCommonConfig {
      */
     public static boolean isShipCoreGuiEnabled() {
         return SHIP_CORE_GUI_ENABLED.get() && !KANSEN_MODE.get();
+    }
+
+    /**
+     * Helper: returns true if the flammable effect should be active.
+     * Slav Prison Mode forces this on.
+     */
+    public static boolean isFlammableEffectActive() {
+        return FLAMMABLE_EFFECT_ENABLED.get() || SLAV_PRISON_MODE.get();
     }
 }

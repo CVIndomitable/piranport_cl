@@ -155,7 +155,8 @@ public class TorpedoEntity extends ThrowableItemProjectile {
 
         // 1. 剩余航程检查 — 超时自爆
         if (--lifetime <= 0) {
-            if (!level().isClientSide()) {
+            if (!level().isClientSide() && !exploded) {
+                exploded = true;
                 Level.ExplosionInteraction interaction = ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get()
                         ? Level.ExplosionInteraction.TNT : Level.ExplosionInteraction.NONE;
                 level().explode(this, getX(), getY(), getZ(), explosionRadius, interaction);

@@ -36,8 +36,8 @@ public final class NodeBattleField {
         int startX = spawn.getX() - halfSize;
         int startZ = spawn.getZ() - halfSize;
 
-        // Flag 2 = send to clients, flag 16 = skip neighbor updates (performance)
-        int flags = 2 | 16;
+        // Flag 2 = send to clients, 16 = skip neighbor updates, 64 = skip light updates (performance)
+        int flags = 2 | 16 | 64;
         for (int x = 0; x < DungeonConstants.NODE_AREA_SIZE; x++) {
             for (int z = 0; z < DungeonConstants.NODE_AREA_SIZE; z++) {
                 BlockPos waterPos = new BlockPos(startX + x, seaLevel, startZ + z);
@@ -137,12 +137,11 @@ public final class NodeBattleField {
         int originZ = instance.getRegionOriginZ();
         int size = DungeonConstants.REGION_SIZE;
 
-        // Remove entities in the region
-        dungeonLevel.getEntities().getAll().forEach(entity -> {
-            if (entity.getX() >= originX && entity.getX() < originX + size
-                    && entity.getZ() >= originZ && entity.getZ() < originZ + size) {
-                entity.discard();
-            }
+        // Remove entities in the region using AABB spatial query instead of full traversal
+        net.minecraft.world.phys.AABB regionBox = new net.minecraft.world.phys.AABB(
+                originX, -64, originZ, originX + size, 320, originZ + size);
+        dungeonLevel.getEntities().get(regionBox, entity -> {
+            entity.discard();
         });
 
         // Note: we don't clear blocks here to avoid lag.

@@ -1,6 +1,8 @@
 package com.piranport.menu;
 
 import com.piranport.block.entity.ReloadFacilityBlockEntity;
+import com.piranport.item.MissileItem;
+import com.piranport.item.MissileLauncherItem;
 import com.piranport.item.TorpedoItem;
 import com.piranport.item.TorpedoLauncherItem;
 import com.piranport.registry.ModMenuTypes;
@@ -20,27 +22,29 @@ public class ReloadFacilityMenu extends AbstractContainerMenu {
     private final ReloadFacilityBlockEntity blockEntity;
     private final Level level;
 
-    // Slot that only accepts torpedo launchers
+    // Slot that accepts torpedo launchers and manual-reload missile launchers
     private static class LauncherSlot extends SlotItemHandler {
         public LauncherSlot(IItemHandler handler, int index, int x, int y) {
             super(handler, index, x, y);
         }
         @Override
         public boolean mayPlace(ItemStack stack) {
-            return stack.getItem() instanceof TorpedoLauncherItem;
+            return stack.getItem() instanceof TorpedoLauncherItem
+                    || (stack.getItem() instanceof MissileLauncherItem ml && ml.isManualReload());
         }
         @Override
         public int getMaxStackSize() { return 1; }
     }
 
-    // Slot that only accepts torpedo ammo
+    // Slot that accepts torpedo ammo and missile ammo
     private static class AmmoSlot extends SlotItemHandler {
         public AmmoSlot(IItemHandler handler, int index, int x, int y) {
             super(handler, index, x, y);
         }
         @Override
         public boolean mayPlace(ItemStack stack) {
-            return stack.getItem() instanceof TorpedoItem;
+            return stack.getItem() instanceof TorpedoItem
+                    || stack.getItem() instanceof MissileItem;
         }
     }
 
@@ -104,9 +108,11 @@ public class ReloadFacilityMenu extends AbstractContainerMenu {
                 if (!moveItemStackTo(stack, 3, 39, true)) return ItemStack.EMPTY;
             } else {
                 // From player to machine
-                if (stack.getItem() instanceof TorpedoLauncherItem) {
+                if (stack.getItem() instanceof TorpedoLauncherItem
+                        || (stack.getItem() instanceof MissileLauncherItem ml && ml.isManualReload())) {
                     if (!moveItemStackTo(stack, 0, 1, false)) return ItemStack.EMPTY;
-                } else if (stack.getItem() instanceof TorpedoItem) {
+                } else if (stack.getItem() instanceof TorpedoItem
+                        || stack.getItem() instanceof MissileItem) {
                     if (!moveItemStackTo(stack, 1, 2, false)) return ItemStack.EMPTY;
                 } else {
                     return ItemStack.EMPTY;

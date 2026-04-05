@@ -661,7 +661,7 @@ public class ShipCoreItem extends Item {
             }
 
             if (ammoSlot == -1) {
-                // No ammo available — silently skip, auto-reload will fire when ammo appears
+                player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
                 return;
             }
 
@@ -672,11 +672,27 @@ public class ShipCoreItem extends Item {
             ItemStack shellForRender = ammoStack.copyWithCount(1);
             ammoStack.shrink(1);
 
-            int cooldownTicks = TransformationManager.boostedCooldown(player, getGunCooldown(weapon));
-            coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
-                    cooldowns.withSlotCooldown(weaponSlot, cooldownTicks, level.getGameTime()));
-            weapon.set(ModDataComponents.WEAPON_COOLDOWN.get(),
-                    new WeaponCooldown(level.getGameTime() + cooldownTicks, cooldownTicks));
+            // Check if more ammo remains for next reload — if not, skip cooldown so
+            // the reload bar won't misleadingly fill up
+            boolean hasNextRound = false;
+            for (int i = 0; i < inv.items.size(); i++) {
+                if (i == coreInventorySlot || i == weaponSlot) continue;
+                ItemStack check = inv.items.get(i);
+                if (!check.isEmpty() && matchesCaliber(check, weapon)) {
+                    hasNextRound = true;
+                    break;
+                }
+            }
+
+            if (hasNextRound) {
+                int cooldownTicks = TransformationManager.boostedCooldown(player, getGunCooldown(weapon));
+                coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
+                        cooldowns.withSlotCooldown(weaponSlot, cooldownTicks, level.getGameTime()));
+                weapon.set(ModDataComponents.WEAPON_COOLDOWN.get(),
+                        new WeaponCooldown(level.getGameTime() + cooldownTicks, cooldownTicks));
+            } else {
+                player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
+            }
 
             if (isType3) {
                 fireSanshikiSpread(level, player, weapon, shellForRender);
@@ -840,7 +856,7 @@ public class ShipCoreItem extends Item {
         }
 
         if (available < tubeCount) {
-            // No torpedo ammo available — silently skip, auto-reload will fire when ammo appears
+            player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
             return;
         }
 
@@ -898,11 +914,26 @@ public class ShipCoreItem extends Item {
             }
         }
 
-        int boostedCooldown = TransformationManager.boostedCooldown(player, cooldown);
-        coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
-                cooldowns.withSlotCooldown(weaponSlot, boostedCooldown, level.getGameTime()));
-        launcherStack.set(ModDataComponents.WEAPON_COOLDOWN.get(),
-                new WeaponCooldown(level.getGameTime() + boostedCooldown, boostedCooldown));
+        // Check if enough torpedoes remain for next salvo — if not, skip cooldown
+        // so the reload bar won't misleadingly fill up
+        int nextAvailable = 0;
+        for (int i = 0; i < inv.items.size(); i++) {
+            if (i == coreSlot || i == weaponSlot) continue;
+            ItemStack s = inv.items.get(i);
+            if (!s.isEmpty() && s.getItem() instanceof TorpedoItem ti && ti.getCaliber() == caliber) {
+                nextAvailable += s.getCount();
+            }
+        }
+
+        if (nextAvailable >= tubeCount) {
+            int boostedCooldown = TransformationManager.boostedCooldown(player, cooldown);
+            coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
+                    cooldowns.withSlotCooldown(weaponSlot, boostedCooldown, level.getGameTime()));
+            launcherStack.set(ModDataComponents.WEAPON_COOLDOWN.get(),
+                    new WeaponCooldown(level.getGameTime() + boostedCooldown, boostedCooldown));
+        } else {
+            player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
+        }
         TransformationManager.setWeaponIndex(coreStack, weaponSlot);
 
         level.playSound(null, player.getX(), player.getY(), player.getZ(),

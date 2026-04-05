@@ -661,7 +661,7 @@ public class ShipCoreItem extends Item {
             }
 
             if (ammoSlot == -1) {
-                player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
+                // No ammo available — silently skip, auto-reload will fire when ammo appears
                 return;
             }
 
@@ -840,7 +840,7 @@ public class ShipCoreItem extends Item {
         }
 
         if (available < tubeCount) {
-            player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
+            // No torpedo ammo available — silently skip, auto-reload will fire when ammo appears
             return;
         }
 

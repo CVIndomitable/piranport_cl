@@ -10,6 +10,7 @@ import com.piranport.block.RiceCropBlock;
 import com.piranport.block.SaltChipBlock;
 import com.piranport.block.StoneMillBlock;
 import com.piranport.block.ThreeStageCropBlock;
+import com.piranport.block.YubariWaterBucketBlock;
 import net.minecraft.util.valueproviders.UniformInt;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -128,6 +129,15 @@ public class ModBlocks {
                             .strength(3.5f, 6.0f)
                             .requiresCorrectToolForDrops()
                             .sound(SoundType.METAL)));
+
+    // ===== Yubari Water Bucket =====
+    public static final DeferredBlock<YubariWaterBucketBlock> YUBARI_WATER_BUCKET =
+            BLOCKS.register("yubari_water_bucket", () -> new YubariWaterBucketBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.WOOD)
+                            .strength(2.0f, 3.0f)
+                            .sound(SoundType.WOOD)
+                            .noOcclusion()));
 
     // ===== Dungeon System (v0.0.8) =====
     public static final DeferredBlock<com.piranport.dungeon.block.DungeonLecternBlock> DUNGEON_LECTERN =

@@ -3,6 +3,7 @@ package com.piranport;
 import com.piranport.block.entity.CookingPotBlockEntity;
 import com.piranport.block.entity.CuttingBoardBlockEntity;
 import com.piranport.block.entity.StoneMillBlockEntity;
+import com.piranport.block.entity.YubariWaterBucketBlockEntity;
 import com.piranport.entity.FloatingTargetEntity;
 import com.piranport.entity.LowTierDestroyerEntity;
 import com.piranport.registry.ModBlockEntityTypes;
@@ -33,6 +34,12 @@ public class CommonEvents {
                 Capabilities.ItemHandler.BLOCK,
                 ModBlockEntityTypes.CUTTING_BOARD.get(),
                 (be, direction) -> be.getItemHandler()
+        );
+        // Yubari Water Bucket: infinite water source for pipes/tanks
+        event.registerBlockEntity(
+                Capabilities.FluidHandler.BLOCK,
+                ModBlockEntityTypes.YUBARI_WATER_BUCKET.get(),
+                YubariWaterBucketBlockEntity::getFluidHandler
         );
     }
 

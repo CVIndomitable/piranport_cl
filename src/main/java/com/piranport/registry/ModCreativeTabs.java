@@ -192,6 +192,7 @@ public class ModCreativeTabs {
                         output.accept(ModItems.STONE_MILL.get());
                         output.accept(ModItems.CUTTING_BOARD.get());
                         output.accept(ModItems.COOKING_POT.get());
+                        output.accept(ModItems.YUBARI_WATER_BUCKET.get());
                         // Food Ingredients
                         output.accept(ModItems.FLOUR.get());
                         output.accept(ModItems.RICE_FLOUR.get());

@@ -289,6 +289,8 @@ public class ModItems {
             ITEMS.registerSimpleBlockItem(ModBlocks.COOKING_POT);
     public static final DeferredItem<BlockItem> RELOAD_FACILITY =
             ITEMS.registerSimpleBlockItem(ModBlocks.RELOAD_FACILITY);
+    public static final DeferredItem<BlockItem> YUBARI_WATER_BUCKET =
+            ITEMS.registerSimpleBlockItem(ModBlocks.YUBARI_WATER_BUCKET);
 
     // ===== Intermediate Products (Phase 13/16) =====
     public static final DeferredItem<Item> SAUSAGE            = ITEMS.registerSimpleItem("sausage");

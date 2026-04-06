@@ -294,6 +294,14 @@ public class ModItems {
 
     public static final DeferredItem<BlockItem> AMMO_WORKBENCH =
             ITEMS.registerSimpleBlockItem(ModBlocks.AMMO_WORKBENCH);
+    public static final DeferredItem<BlockItem> WEAPON_WORKBENCH =
+            ITEMS.registerSimpleBlockItem(ModBlocks.WEAPON_WORKBENCH);
+
+    // ===== Blueprints =====
+    public static final DeferredItem<Item> MEDIUM_GUN_BLUEPRINT =
+            ITEMS.registerSimpleItem("medium_gun_blueprint", new Item.Properties().stacksTo(1));
+    public static final DeferredItem<Item> LARGE_GUN_BLUEPRINT =
+            ITEMS.registerSimpleItem("large_gun_blueprint", new Item.Properties().stacksTo(1));
 
     // ===== Intermediate Products (Phase 13/16) =====
     public static final DeferredItem<Item> SAUSAGE            = ITEMS.registerSimpleItem("sausage");

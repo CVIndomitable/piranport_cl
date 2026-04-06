@@ -143,6 +143,11 @@ public class ModCreativeTabs {
                         output.accept(ModItems.RELOAD_FACILITY.get());
                         // Ammo Workbench
                         output.accept(ModItems.AMMO_WORKBENCH.get());
+                        // Weapon Workbench
+                        output.accept(ModItems.WEAPON_WORKBENCH.get());
+                        // Blueprints
+                        output.accept(ModItems.MEDIUM_GUN_BLUEPRINT.get());
+                        output.accept(ModItems.LARGE_GUN_BLUEPRINT.get());
                     }).build());
 
     // ===== 农业 — 矿石 / 材料 / 种子 / 作物 =====

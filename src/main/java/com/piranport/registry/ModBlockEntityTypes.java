@@ -47,6 +47,12 @@ public class ModBlockEntityTypes {
                             ModBlocks.AMMO_WORKBENCH.get())
                             .build(null));
 
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<com.piranport.block.entity.WeaponWorkbenchBlockEntity>> WEAPON_WORKBENCH =
+            BLOCK_ENTITY_TYPES.register("weapon_workbench", () ->
+                    BlockEntityType.Builder.of(com.piranport.block.entity.WeaponWorkbenchBlockEntity::new,
+                            ModBlocks.WEAPON_WORKBENCH.get())
+                            .build(null));
+
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<PlaceableFoodBlockEntity>> PLACEABLE_FOOD =
             BLOCK_ENTITY_TYPES.register("placeable_food", () ->
                     BlockEntityType.Builder.of(PlaceableFoodBlockEntity::new,

@@ -65,6 +65,9 @@ public class ClientEvents {
         event.register(ModMenuTypes.RELOAD_FACILITY_MENU.get(), ReloadFacilityScreen::new);
         // Ammo Workbench
         event.register(ModMenuTypes.AMMO_WORKBENCH_MENU.get(), AmmoWorkbenchScreen::new);
+        // Weapon Workbench
+        event.register(ModMenuTypes.WEAPON_WORKBENCH_MENU.get(),
+                com.piranport.menu.WeaponWorkbenchScreen::new);
         // Dungeon
         event.register(ModMenuTypes.DUNGEON_BOOK_MENU.get(),
                 com.piranport.dungeon.client.DungeonBookScreen::new);

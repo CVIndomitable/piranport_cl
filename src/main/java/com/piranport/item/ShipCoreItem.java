@@ -1100,7 +1100,8 @@ public class ShipCoreItem extends Item {
     private static void fireMissiles(Level level, Player player, ItemStack coreStack,
                                       Inventory inv, int weaponSlot, int coreSlot,
                                       MissileLauncherItem launcher, SlotCooldowns cooldowns) {
-        if (launcher.isManualReload()) {
+        if (launcher.isManualReload()
+                && !TransformationManager.hasTorpedoReloadEquipped(player, coreStack)) {
             fireMissileManual(level, player, coreStack, inv, weaponSlot, launcher, cooldowns);
         } else {
             fireMissileAutoReload(level, player, coreStack, inv, weaponSlot, coreSlot, launcher, cooldowns);
@@ -1137,7 +1138,7 @@ public class ShipCoreItem extends Item {
                 SoundEvents.FIREWORK_ROCKET_LAUNCH, SoundSource.PLAYERS, 1.0f, 0.8f);
     }
 
-    /** 防空导弹：自动从背包消耗弹药，发射后进入冷却。 */
+    /** 导弹自动装填：从背包消耗弹药，发射后进入冷却。有鱼雷再装填时反舰/火箭也走此路径。 */
     private static void fireMissileAutoReload(Level level, Player player, ItemStack coreStack,
                                                Inventory inv, int weaponSlot, int coreSlot,
                                                MissileLauncherItem launcher, SlotCooldowns cooldowns) {
@@ -1171,13 +1172,38 @@ public class ShipCoreItem extends Item {
         // 发射
         spawnMissile(level, player, launcher, ammoId);
 
+        // 检查剩余弹药（避免冷却后才发现无弹药）
+        int nextAvailable = 0;
+        for (int i = 0; i < inv.items.size(); i++) {
+            if (i == coreSlot || i == weaponSlot) continue;
+            ItemStack s = inv.items.get(i);
+            if (!s.isEmpty() && s.is(ammoItem)) {
+                nextAvailable += s.getCount();
+            }
+        }
+        if (weaponSlot != 40 && coreSlot != 40) {
+            ItemStack oh = inv.offhand.get(0);
+            if (!oh.isEmpty() && oh.is(ammoItem)) {
+                nextAvailable += oh.getCount();
+            }
+        }
+
         // 应用冷却
         ItemStack launcherStack = weaponSlot == 40 ? inv.offhand.get(0) : inv.items.get(weaponSlot);
-        int cd = TransformationManager.boostedCooldown(player, launcher.getCooldownTicks());
-        coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
-                cooldowns.withSlotCooldown(weaponSlot, cd, level.getGameTime()));
-        launcherStack.set(ModDataComponents.WEAPON_COOLDOWN.get(),
-                new WeaponCooldown(level.getGameTime() + cd, cd));
+        if (nextAvailable > 0) {
+            int cd = TransformationManager.boostedCooldown(player, launcher.getCooldownTicks());
+            coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
+                    cooldowns.withSlotCooldown(weaponSlot, cd, level.getGameTime()));
+            launcherStack.set(ModDataComponents.WEAPON_COOLDOWN.get(),
+                    new WeaponCooldown(level.getGameTime() + cd, cd));
+        } else {
+            int penaltyTicks = 10;
+            coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
+                    cooldowns.withSlotCooldown(weaponSlot, penaltyTicks, level.getGameTime()));
+            launcherStack.set(ModDataComponents.WEAPON_COOLDOWN.get(),
+                    new WeaponCooldown(level.getGameTime() + penaltyTicks, penaltyTicks));
+            player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
+        }
         TransformationManager.setWeaponIndex(coreStack, weaponSlot);
 
         level.playSound(null, player.getX(), player.getY(), player.getZ(),

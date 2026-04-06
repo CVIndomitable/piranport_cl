@@ -59,7 +59,7 @@ public record RecallAllAircraftPayload() implements CustomPacketPayload {
                     a -> ownerUUID.equals(a.getOwnerUUID()) && a.isAlive());
 
             for (AircraftEntity a : aircraft) {
-                a.recallAndRemove();
+                a.startReturning();
             }
 
             if (!aircraft.isEmpty()) {

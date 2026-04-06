@@ -874,6 +874,17 @@ public class AircraftEntity extends Entity {
         setDeltaMovement(toOwner.normalize().scale(Math.min(panelSpeed * 0.4, dist)));
     }
 
+    /**
+     * Begin returning to owner — enters RETURNING state so the aircraft visibly
+     * flies back before being recalled.  Safe to call from any state; silently
+     * ignored if already RETURNING or REMOVED.
+     */
+    public void startReturning() {
+        FlightState cur = getFlightState();
+        if (cur == FlightState.RETURNING || cur == FlightState.REMOVED) return;
+        setState(FlightState.RETURNING);
+    }
+
     /** Remove entity and return aircraft item to the owner's ship core weapon slot. */
     public void recallAndRemove() {
         com.piranport.debug.PiranPortDebug.event(
@@ -1016,9 +1027,9 @@ public class AircraftEntity extends Entity {
             }
         }
 
-        // Empty hand → recall
+        // Empty hand → fly back then recall
         if (held.isEmpty()) {
-            recallAndRemove();
+            startReturning();
             return InteractionResult.sidedSuccess(false);
         }
 

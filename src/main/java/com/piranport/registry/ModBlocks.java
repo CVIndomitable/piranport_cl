@@ -139,6 +139,15 @@ public class ModBlocks {
                             .sound(SoundType.WOOD)
                             .noOcclusion()));
 
+    // ===== Ammo Workbench =====
+    public static final DeferredBlock<com.piranport.block.AmmoWorkbenchBlock> AMMO_WORKBENCH =
+            BLOCKS.register("ammo_workbench", () -> new com.piranport.block.AmmoWorkbenchBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.METAL)
+                            .strength(3.5f, 6.0f)
+                            .requiresCorrectToolForDrops()
+                            .sound(SoundType.METAL)));
+
     // ===== Dungeon System (v0.0.8) =====
     public static final DeferredBlock<com.piranport.dungeon.block.DungeonLecternBlock> DUNGEON_LECTERN =
             BLOCKS.register("dungeon_lectern",

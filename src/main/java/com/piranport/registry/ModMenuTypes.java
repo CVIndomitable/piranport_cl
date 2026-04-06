@@ -36,6 +36,10 @@ public class ModMenuTypes {
             MENU_TYPES.register("flight_group",
                     () -> IMenuTypeExtension.create(FlightGroupMenu::fromNetwork));
 
+    public static final DeferredHolder<MenuType<?>, MenuType<com.piranport.menu.AmmoWorkbenchMenu>> AMMO_WORKBENCH_MENU =
+            MENU_TYPES.register("ammo_workbench",
+                    () -> IMenuTypeExtension.create(com.piranport.menu.AmmoWorkbenchMenu::fromNetwork));
+
     // Dungeon System
     public static final DeferredHolder<MenuType<?>, MenuType<com.piranport.dungeon.menu.DungeonBookMenu>>
             DUNGEON_BOOK_MENU = MENU_TYPES.register("dungeon_book",

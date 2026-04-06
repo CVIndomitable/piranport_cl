@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "piranport:block/ammo_workbench" },
+    "facing=south": { "model": "piranport:block/ammo_workbench", "y": 180 },
+    "facing=east":  { "model": "piranport:block/ammo_workbench", "y": 90 },
+    "facing=west":  { "model": "piranport:block/ammo_workbench", "y": 270 }
+  }
+}

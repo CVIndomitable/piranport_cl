@@ -6,6 +6,7 @@ import com.piranport.client.PlaceableFoodRenderer;
 import com.piranport.client.ReloadBarDecorator;
 import com.piranport.client.WeaponReloadDecorator;
 import com.piranport.component.AircraftInfo;
+import com.piranport.menu.AmmoWorkbenchScreen;
 import com.piranport.menu.CookingPotScreen;
 import com.piranport.menu.FlightGroupScreen;
 import com.piranport.menu.ReloadFacilityScreen;
@@ -62,6 +63,8 @@ public class ClientEvents {
         event.register(ModMenuTypes.COOKING_POT_MENU.get(), CookingPotScreen::new);
         event.register(ModMenuTypes.FLIGHT_GROUP_MENU.get(), FlightGroupScreen::new);
         event.register(ModMenuTypes.RELOAD_FACILITY_MENU.get(), ReloadFacilityScreen::new);
+        // Ammo Workbench
+        event.register(ModMenuTypes.AMMO_WORKBENCH_MENU.get(), AmmoWorkbenchScreen::new);
         // Dungeon
         event.register(ModMenuTypes.DUNGEON_BOOK_MENU.get(),
                 com.piranport.dungeon.client.DungeonBookScreen::new);

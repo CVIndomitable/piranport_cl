@@ -292,6 +292,9 @@ public class ModItems {
     public static final DeferredItem<BlockItem> YUBARI_WATER_BUCKET =
             ITEMS.registerSimpleBlockItem(ModBlocks.YUBARI_WATER_BUCKET);
 
+    public static final DeferredItem<BlockItem> AMMO_WORKBENCH =
+            ITEMS.registerSimpleBlockItem(ModBlocks.AMMO_WORKBENCH);
+
     // ===== Intermediate Products (Phase 13/16) =====
     public static final DeferredItem<Item> SAUSAGE            = ITEMS.registerSimpleItem("sausage");
     public static final DeferredItem<Item> SLICED_SAUSAGE     = ITEMS.registerSimpleItem("sliced_sausage");

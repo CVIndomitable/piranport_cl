@@ -111,6 +111,13 @@ public class ModPackets {
                 SkinRevertPayload::handle
         );
 
+        // ===== Ammo Workbench =====
+        registrar.playToServer(
+                AmmoWorkbenchCraftPayload.TYPE,
+                AmmoWorkbenchCraftPayload.STREAM_CODEC,
+                AmmoWorkbenchCraftPayload::handle
+        );
+
         // ===== Dungeon System =====
         // C2S
         registrar.playToServer(

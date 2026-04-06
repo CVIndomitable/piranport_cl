@@ -141,6 +141,8 @@ public class ModCreativeTabs {
                         output.accept(ModItems.FUEL.get());
                         // Reload Facility
                         output.accept(ModItems.RELOAD_FACILITY.get());
+                        // Ammo Workbench
+                        output.accept(ModItems.AMMO_WORKBENCH.get());
                     }).build());
 
     // ===== 农业 — 矿石 / 材料 / 种子 / 作物 =====

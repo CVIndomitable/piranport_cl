@@ -1410,8 +1410,20 @@ public class ShipCoreItem extends Item {
         boolean isManualMode = !com.piranport.config.ModCommonConfig.AUTO_RESUPPLY_ENABLED.get();
 
         if (onCooldown) {
-            tooltip.add(Component.translatable("tooltip.piranport.weapon_not_loaded")
-                    .withStyle(net.minecraft.ChatFormatting.RED));
+            // Manual mode cannon/torpedo with LoadedAmmo = actively reloading
+            if (isManualMode && !(stack.getItem() instanceof AircraftItem)) {
+                LoadedAmmo reloading = stack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
+                if (reloading.hasAmmo()) {
+                    tooltip.add(Component.translatable("tooltip.piranport.weapon_reloading")
+                            .withStyle(net.minecraft.ChatFormatting.YELLOW));
+                } else {
+                    tooltip.add(Component.translatable("tooltip.piranport.weapon_not_loaded")
+                            .withStyle(net.minecraft.ChatFormatting.RED));
+                }
+            } else {
+                tooltip.add(Component.translatable("tooltip.piranport.weapon_not_loaded")
+                        .withStyle(net.minecraft.ChatFormatting.RED));
+            }
         } else if (isManualMode && !(stack.getItem() instanceof AircraftItem)) {
             // Manual mode: also require LOADED_AMMO to be present
             LoadedAmmo loaded = stack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);

@@ -3,6 +3,8 @@ package com.piranport.network;
 import com.piranport.PiranPort;
 import com.piranport.combat.TransformationManager;
 import com.piranport.component.LoadedAmmo;
+import com.piranport.component.SlotCooldowns;
+import com.piranport.component.WeaponCooldown;
 import com.piranport.item.CannonItem;
 import com.piranport.item.ShipCoreItem;
 import com.piranport.registry.ModDataComponents;
@@ -58,31 +60,40 @@ public record ManualReloadPayload() implements CustomPacketPayload {
             }
             if (weapon.isEmpty()) return;
 
-            // Already loaded
+            // Already loaded or reloading
             LoadedAmmo current = weapon.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
             if (current.hasAmmo()) {
-                player.displayClientMessage(Component.translatable("message.piranport.already_loaded"), true);
+                WeaponCooldown wc = weapon.getOrDefault(ModDataComponents.WEAPON_COOLDOWN.get(), WeaponCooldown.EMPTY);
+                if (wc.isOnCooldown(player.level().getGameTime())) {
+                    player.displayClientMessage(Component.translatable("message.piranport.already_reloading"), true);
+                } else {
+                    player.displayClientMessage(Component.translatable("message.piranport.already_loaded"), true);
+                }
                 return;
             }
 
-            // Find transformed core slot (to skip it during ammo scan)
+            // Find transformed core (need it for SLOT_COOLDOWNS)
+            ItemStack coreStack = ItemStack.EMPTY;
             int coreSlot = -1;
             for (int i = 0; i < inv.items.size(); i++) {
                 if (i == weaponSlot) continue;
                 ItemStack s = inv.items.get(i);
                 if (s.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(s)) {
+                    coreStack = s;
                     coreSlot = i;
                     break;
                 }
             }
-            if (coreSlot == -1 && weaponSlot != 40) {
+            if (coreStack.isEmpty() && weaponSlot != 40) {
                 ItemStack offhand = inv.offhand.get(0);
                 if (offhand.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(offhand)) {
+                    coreStack = offhand;
                     coreSlot = 40;
                 }
             }
+            if (coreStack.isEmpty()) return;
 
-            // Scan inventory for matching caliber ammo (same logic as auto-reload)
+            // Scan inventory for matching caliber ammo
             int ammoSlot = -1;
             for (int i = 0; i < inv.items.size(); i++) {
                 if (i == coreSlot || i == weaponSlot) continue;
@@ -98,15 +109,26 @@ public record ManualReloadPayload() implements CustomPacketPayload {
                 return;
             }
 
-            // Load the ammo
+            // Consume ammo and start reload cooldown
             ItemStack ammoStack = inv.items.get(ammoSlot);
             String ammoId = BuiltInRegistries.ITEM.getKey(ammoStack.getItem()).toString();
             weapon.set(ModDataComponents.LOADED_AMMO.get(), new LoadedAmmo(1, ammoId));
             ammoStack.shrink(1);
 
+            // Set cooldown — reload time starts now, weapon ready when cooldown expires
+            int baseCooldown = ((CannonItem) weapon.getItem()).getCooldownTicks();
+            int cooldownTicks = TransformationManager.boostedCooldown(player, baseCooldown);
+            long gameTime = player.level().getGameTime();
+            weapon.set(ModDataComponents.WEAPON_COOLDOWN.get(),
+                    new WeaponCooldown(gameTime + cooldownTicks, cooldownTicks));
+            SlotCooldowns cooldowns = coreStack.getOrDefault(
+                    ModDataComponents.SLOT_COOLDOWNS.get(), SlotCooldowns.EMPTY);
+            coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
+                    cooldowns.withSlotCooldown(weaponSlot, cooldownTicks, gameTime));
+
             player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
                     SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.5f, 1.4f);
-            player.displayClientMessage(Component.translatable("message.piranport.reload_complete"), true);
+            player.displayClientMessage(Component.translatable("message.piranport.reload_start"), true);
         });
     }
 }

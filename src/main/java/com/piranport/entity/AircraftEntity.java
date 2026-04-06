@@ -555,6 +555,7 @@ public class AircraftEntity extends Entity {
                 bomb.setPos(getX(), getY(), getZ());
                 bomb.setDeltaMovement(getDeltaMovement().x * 0.2, -0.3, getDeltaMovement().z * 0.2);
                 bomb.setOwner(owner);
+                bomb.setSourceAircraftName(getDisplayName());
                 level().addFreshEntity(bomb);
                 hasFired = true;
                 setState(FlightState.RETURNING);
@@ -596,6 +597,7 @@ public class AircraftEntity extends Entity {
             // 投下鱼雷：向前+向下，先入水再走鱼雷水面巡航逻辑
             torpedo.setDeltaMovement(dir.x * 0.5, -0.3, dir.z * 0.5);
             torpedo.setOwner(owner);
+            torpedo.setSourceAircraftName(getDisplayName());
             level().addFreshEntity(torpedo);
             remainingAmmo--;
             hasFired = true;
@@ -651,6 +653,7 @@ public class AircraftEntity extends Entity {
                 bomb.setPos(getX(), getY(), getZ());
                 bomb.setDeltaMovement(getDeltaMovement().x * 0.1, -0.1, getDeltaMovement().z * 0.1);
                 bomb.setOwner(owner);
+                bomb.setSourceAircraftName(getDisplayName());
                 level().addFreshEntity(bomb);
                 remainingAmmo--;
                 attackCooldown = 40;

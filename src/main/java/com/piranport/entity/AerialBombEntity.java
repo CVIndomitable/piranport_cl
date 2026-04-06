@@ -20,6 +20,7 @@ public class AerialBombEntity extends ThrowableItemProjectile {
     private float damage = 10f;
     private float explosionPower = 2.5f;
     private boolean exploded = false;
+    private Component sourceAircraftName;
 
     /** Required by entity type registration. */
     public AerialBombEntity(EntityType<? extends AerialBombEntity> type, Level level) {
@@ -81,10 +82,14 @@ public class AerialBombEntity extends ThrowableItemProjectile {
         }
     }
 
+    public void setSourceAircraftName(Component name) {
+        this.sourceAircraftName = name;
+    }
+
     private void notifyOwner(Entity target) {
         Entity owner = getOwner();
         if (!(owner instanceof Player player)) return;
-        Component weaponName = getDefaultItem().getDescription();
+        Component weaponName = sourceAircraftName != null ? sourceAircraftName : getDefaultItem().getDescription();
         String key = target.isAlive() ? "message.piranport.weapon_hit" : "message.piranport.weapon_kill";
         player.sendSystemMessage(Component.translatable(key, weaponName, target.getDisplayName()));
     }

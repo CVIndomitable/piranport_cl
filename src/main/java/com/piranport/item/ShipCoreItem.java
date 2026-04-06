@@ -1879,7 +1879,7 @@ public class ShipCoreItem extends Item {
                          player.getX() + 300, player.getY() + 300, player.getZ() + 300),
                 a -> ownerUUID.equals(a.getOwnerUUID()) && a.isAlive());
         for (AircraftEntity a : aircraft) {
-            a.startReturning();
+            a.startReturning("core_recall");
         }
         // End recon mode if active
         if (!aircraft.isEmpty()) {

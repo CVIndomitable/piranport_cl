@@ -245,7 +245,7 @@ public class AircraftEntity extends Entity {
             }
             if (currentFuel <= 0) {
                 isForcedReturn = true;
-                setState(FlightState.RETURNING);
+                startReturning("fuel_empty");
                 if (owner instanceof ServerPlayer sp) {
                     sp.displayClientMessage(
                             Component.translatable("message.piranport.aircraft_no_fuel", getDisplayName()), true);
@@ -258,7 +258,7 @@ public class AircraftEntity extends Entity {
         if (airtimeTicks >= MAX_AIRTIME_TICKS) {
             if (state == FlightState.RETURNING) { recallAndRemove(); return; }
             isForcedReturn = true;
-            setState(FlightState.RETURNING);
+            startReturning("max_airtime");
             return;
         }
 
@@ -283,7 +283,7 @@ public class AircraftEntity extends Entity {
             if (state == FlightState.RECON_ACTIVE) {
                 // Recon exceeded 200-block range — end recon and return
                 isForcedReturn = true;
-                setState(FlightState.RETURNING);
+                startReturning("recon_max_distance");
             } else {
                 Vec3 near = owner.position().add(
                         (random.nextDouble() - 0.5) * 4, 3, (random.nextDouble() - 0.5) * 4);
@@ -291,7 +291,7 @@ public class AircraftEntity extends Entity {
                 stuckTicks = 0;
                 stuckCheckPos = position();
                 isForcedReturn = true;
-                setState(FlightState.RETURNING);
+                startReturning("distance_limit");
             }
             return;
         }
@@ -450,7 +450,7 @@ public class AircraftEntity extends Entity {
 
     private void tickAttacking(Player owner) {
         if (aircraftType == AircraftInfo.AircraftType.RECON) {
-            setState(FlightState.RETURNING);
+            startReturning("recon_no_attack");
             return;
         }
 
@@ -478,7 +478,7 @@ public class AircraftEntity extends Entity {
                     tickDiveBomberAttack(owner, target);
                 }
             }
-            default -> setState(FlightState.RETURNING); // 无挂载，不攻击
+            default -> startReturning("no_payload"); // 无挂载，不攻击
         }
     }
 
@@ -490,7 +490,7 @@ public class AircraftEntity extends Entity {
      */
     private void tickFighterAttack(Player owner, Entity target) {
         boolean ammoEnabled = ModCommonConfig.FIGHTER_AMMO_ENABLED.get();
-        if (ammoEnabled && remainingAmmo <= 0) { setState(FlightState.RETURNING); return; }
+        if (ammoEnabled && remainingAmmo <= 0) { startReturning("fighter_ammo_depleted"); return; }
 
         Vec3 toTarget = target.getEyePosition().subtract(position());
         double dist = toTarget.length();
@@ -520,7 +520,7 @@ public class AircraftEntity extends Entity {
                     if (ModCommonConfig.AUTO_RESUPPLY_ENABLED.get() && tryAutoResupplyAmmo(owner)) {
                         // Ammo restored (payload type must be set) — continue
                     } else {
-                        setState(FlightState.RETURNING);
+                        startReturning("fighter_ammo_depleted");
                     }
                 }
             }
@@ -536,7 +536,7 @@ public class AircraftEntity extends Entity {
             if (ModCommonConfig.AUTO_RESUPPLY_ENABLED.get() && tryAutoResupplyAmmo(owner)) {
                 setState(FlightState.CRUISING);
             } else {
-                setState(FlightState.RETURNING);
+                startReturning("dive_bomber_done");
             }
             return;
         }
@@ -558,7 +558,7 @@ public class AircraftEntity extends Entity {
                 bomb.setSourceAircraftName(getDisplayName());
                 level().addFreshEntity(bomb);
                 hasFired = true;
-                setState(FlightState.RETURNING);
+                startReturning("dive_bomb_dropped");
                 return;
             }
             setDeltaMovement(toTarget.normalize().scale(Math.min(panelSpeed * 0.6, dist)));
@@ -574,7 +574,7 @@ public class AircraftEntity extends Entity {
             if (ModCommonConfig.AUTO_RESUPPLY_ENABLED.get() && tryAutoResupplyAmmo(owner)) {
                 setState(FlightState.CRUISING);
             } else {
-                setState(FlightState.RETURNING);
+                startReturning("torpedo_bomber_done");
             }
             return;
         }
@@ -582,7 +582,7 @@ public class AircraftEntity extends Entity {
         // Timeout — if attack run takes too long, abort
         if (stateTicks > 200) {
             hasFired = true;
-            setState(FlightState.RETURNING);
+            startReturning("torpedo_attack_timeout");
             return;
         }
 
@@ -601,7 +601,7 @@ public class AircraftEntity extends Entity {
             level().addFreshEntity(torpedo);
             remainingAmmo--;
             hasFired = true;
-            setState(FlightState.RETURNING);
+            startReturning("torpedo_launched");
             return;
         }
 
@@ -632,7 +632,7 @@ public class AircraftEntity extends Entity {
             if (ModCommonConfig.AUTO_RESUPPLY_ENABLED.get() && tryAutoResupplyAmmo(owner)) {
                 // Ammo restored — continue attacking
             } else {
-                setState(FlightState.RETURNING);
+                startReturning("level_bomber_ammo_depleted");
                 return;
             }
         }
@@ -878,10 +878,15 @@ public class AircraftEntity extends Entity {
      * Begin returning to owner — enters RETURNING state so the aircraft visibly
      * flies back before being recalled.  Safe to call from any state; silently
      * ignored if already RETURNING or REMOVED.
+     *
+     * @param reason debug reason tag (logged when debug mode is active)
      */
-    public void startReturning() {
+    public void startReturning(String reason) {
         FlightState cur = getFlightState();
         if (cur == FlightState.RETURNING || cur == FlightState.REMOVED) return;
+        com.piranport.debug.PiranPortDebug.event(
+                "Aircraft RETURNING | type={} entityId={} reason={}",
+                aircraftType.name(), getId(), reason);
         setState(FlightState.RETURNING);
     }
 
@@ -1029,7 +1034,7 @@ public class AircraftEntity extends Entity {
 
         // Empty hand → fly back then recall
         if (held.isEmpty()) {
-            startReturning();
+            startReturning("player_interact");
             return InteractionResult.sidedSuccess(false);
         }
 

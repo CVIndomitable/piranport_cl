@@ -1098,9 +1098,20 @@ public class ShipCoreItem extends Item {
     private static void fireMissiles(Level level, Player player, ItemStack coreStack,
                                       Inventory inv, int weaponSlot, int coreSlot,
                                       MissileLauncherItem launcher, SlotCooldowns cooldowns) {
-        if (launcher.isManualReload()
-                && !TransformationManager.hasTorpedoReloadEquipped(player, coreStack)) {
-            fireMissileManual(level, player, coreStack, inv, weaponSlot, launcher, cooldowns);
+        if (launcher.isManualReload()) {
+            // 已装填的发射器（LOADED_AMMO）优先使用手动发射路径，无论是否有鱼雷再装填
+            ItemStack launcherStack = weaponSlot == 40 ? inv.offhand.get(0) : inv.items.get(weaponSlot);
+            LoadedAmmo loaded = launcherStack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
+            if (loaded.hasAmmo()) {
+                fireMissileManual(level, player, coreStack, inv, weaponSlot, launcher, cooldowns);
+                return;
+            }
+            // 无已装填弹药：有鱼雷再装填则走自动路径，否则提示弹药不足
+            if (TransformationManager.hasTorpedoReloadEquipped(player, coreStack)) {
+                fireMissileAutoReload(level, player, coreStack, inv, weaponSlot, coreSlot, launcher, cooldowns);
+            } else {
+                fireMissileManual(level, player, coreStack, inv, weaponSlot, launcher, cooldowns);
+            }
         } else {
             fireMissileAutoReload(level, player, coreStack, inv, weaponSlot, coreSlot, launcher, cooldowns);
         }

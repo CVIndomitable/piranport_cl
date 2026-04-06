@@ -2,6 +2,7 @@ package com.piranport.client;
 
 import com.piranport.component.WeaponCooldown;
 import com.piranport.item.DepthChargeLauncherItem;
+import com.piranport.item.MissileLauncherItem;
 import com.piranport.item.TorpedoLauncherItem;
 import com.piranport.registry.ModDataComponents;
 import net.minecraft.client.Minecraft;
@@ -22,6 +23,7 @@ public class WeaponReloadDecorator implements IItemDecorator {
     private static final int CANNON_COLOR  = 0xFFE05030; // orange-red
     private static final int TORPEDO_COLOR = 0xFF3070C0; // blue
     private static final int DC_COLOR      = 0xFF40A040; // green
+    private static final int MISSILE_COLOR = 0xFFD0D040; // yellow for anti-air/missile launchers
     private static final int BG_COLOR      = 0xFF000000; // black background
 
     @Override
@@ -40,6 +42,8 @@ public class WeaponReloadDecorator implements IItemDecorator {
             fillColor = TORPEDO_COLOR;
         } else if (stack.getItem() instanceof DepthChargeLauncherItem) {
             fillColor = DC_COLOR;
+        } else if (stack.getItem() instanceof MissileLauncherItem) {
+            fillColor = MISSILE_COLOR;
         } else {
             fillColor = CANNON_COLOR;
         }

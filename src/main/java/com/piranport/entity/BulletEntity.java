@@ -17,6 +17,7 @@ import net.minecraft.world.phys.EntityHitResult;
 public class BulletEntity extends ThrowableItemProjectile {
 
     private float damage = 2f;
+    private Component sourceAircraftName;
 
     public BulletEntity(EntityType<? extends BulletEntity> type, Level level) {
         super(type, level);
@@ -62,10 +63,14 @@ public class BulletEntity extends ThrowableItemProjectile {
         }
     }
 
+    public void setSourceAircraftName(Component name) {
+        this.sourceAircraftName = name;
+    }
+
     private void notifyOwner(Entity target) {
         Entity owner = getOwner();
         if (!(owner instanceof Player player)) return;
-        Component weaponName = getDefaultItem().getDescription();
+        Component weaponName = sourceAircraftName != null ? sourceAircraftName : getDefaultItem().getDescription();
         String key = target.isAlive() ? "message.piranport.weapon_hit" : "message.piranport.weapon_kill";
         player.sendSystemMessage(Component.translatable(key, weaponName, target.getDisplayName()));
     }

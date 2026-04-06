@@ -510,6 +510,7 @@ public class AircraftEntity extends Entity {
             bullet.setPos(getX(), getY() + 0.3, getZ());
             bullet.setDeltaMovement(dir.scale(2.5));
             bullet.setOwner(owner);
+            bullet.setSourceAircraftName(getDisplayName());
             level().addFreshEntity(bullet);
             attackCooldown = 5;
 

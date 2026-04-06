@@ -1,30 +1,22 @@
 package com.piranport.client;
 
 import com.piranport.component.WeaponCooldown;
-import com.piranport.item.DepthChargeLauncherItem;
-import com.piranport.item.MissileLauncherItem;
-import com.piranport.item.TorpedoLauncherItem;
 import com.piranport.registry.ModDataComponents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.client.IItemDecorator;
 
 /**
  * Renders a durability-bar-style reload progress bar on weapon items (no-GUI mode).
- * Cannons: orange bar. Torpedo launchers: blue bar.
+ * Color transitions red → yellow → green as cooldown progresses, like vanilla durability.
  */
 public class WeaponReloadDecorator implements IItemDecorator {
 
     private static final int BAR_WIDTH = 13;
-
-    // Colors
-    private static final int CANNON_COLOR  = 0xFFE05030; // orange-red
-    private static final int TORPEDO_COLOR = 0xFF3070C0; // blue
-    private static final int DC_COLOR      = 0xFF40A040; // green
-    private static final int MISSILE_COLOR = 0xFFD0D040; // yellow for anti-air/missile launchers
-    private static final int BG_COLOR      = 0xFF000000; // black background
+    private static final int BG_COLOR  = 0xFF000000;
 
     @Override
     public boolean render(GuiGraphics gui, Font font, ItemStack stack, int x, int y) {
@@ -37,30 +29,23 @@ public class WeaponReloadDecorator implements IItemDecorator {
         float fraction = cd.getFraction(currentTick);
         if (fraction <= 0f) return false; // ready — no bar
 
-        int fillColor;
-        if (stack.getItem() instanceof TorpedoLauncherItem) {
-            fillColor = TORPEDO_COLOR;
-        } else if (stack.getItem() instanceof DepthChargeLauncherItem) {
-            fillColor = DC_COLOR;
-        } else if (stack.getItem() instanceof MissileLauncherItem) {
-            fillColor = MISSILE_COLOR;
-        } else {
-            fillColor = CANNON_COLOR;
-        }
+        // progress: 0 = just started cooldown, 1 = about to be ready
+        float progress = 1f - fraction;
 
-        // Progress: 0% at start of cooldown → 100% when ready
-        int fillW = Math.round(BAR_WIDTH * (1f - fraction));
+        // Vanilla-style color: red(0) → yellow(0.5) → green(1)
+        // Hue: 0/3 (red) → 1/3 (green), saturation=1, value=1
+        int color = Mth.hsvToRgb(progress / 3f, 1f, 1f) | 0xFF000000;
+
+        int fillW = Math.round(BAR_WIDTH * progress);
 
         int barX = x + 2;
         int barY = y + 13;
 
-        // Background (2px tall, same as vanilla durability bar)
         gui.fill(barX, barY, barX + BAR_WIDTH, barY + 2, BG_COLOR);
-        // Fill (1px tall on top row)
         if (fillW > 0) {
-            gui.fill(barX, barY, barX + fillW, barY + 1, fillColor);
+            gui.fill(barX, barY, barX + fillW, barY + 1, color);
         }
 
-        return false; // don't suppress vanilla decorations
+        return false;
     }
 }

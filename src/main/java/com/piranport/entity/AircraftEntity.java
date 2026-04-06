@@ -110,6 +110,10 @@ public class AircraftEntity extends Entity {
     @Nullable private AircraftEntity cachedReconAircraft;
     private int reconCacheTick = 0;
 
+    // Client-side position interpolation (prevents camera stutter from raw setPos jumps)
+    private int clientLerpSteps;
+    private double clientLerpX, clientLerpY, clientLerpZ;
+
     // P2 #29: preserve original ItemStack across launch-return cycle
     private ItemStack originalStack = ItemStack.EMPTY;
 
@@ -189,26 +193,53 @@ public class AircraftEntity extends Entity {
     }
 
     /**
-     * Override lerpTo to ignore server rotation updates while in RECON_ACTIVE on the client.
-     * The client controls camera rotation via ClientTickHandler (mouse input);
-     * accepting server rotation causes per-tick flicker between server and client values.
+     * Override lerpTo to:
+     * 1. Smooth position updates on the client via lerp steps (Entity base class sets
+     *    position directly in lerpTo, which causes camera stutter since xo==x after
+     *    setOldPosAndRot → no partial-tick interpolation).
+     * 2. In recon mode, ignore server rotation (client controls camera via mouse).
+     *    Uses ClientReconData instead of getFlightState() to avoid race with entity
+     *    data sync — the ReconStartPayload arrives before the STATE data packet.
      */
     @Override
     public void lerpTo(double x, double y, double z, float yRot, float xRot, int steps) {
-        if (level().isClientSide() && getFlightState() == FlightState.RECON_ACTIVE) {
-            // Accept position updates but keep client-controlled rotation
-            super.lerpTo(x, y, z, getYRot(), getXRot(), steps);
+        if (level().isClientSide()) {
+            // Store lerp target; position will be interpolated in tick()
+            this.clientLerpSteps = steps + 2;
+            this.clientLerpX = x;
+            this.clientLerpY = y;
+            this.clientLerpZ = z;
+            // In recon mode, keep client-controlled rotation
+            if (com.piranport.aviation.ClientReconData.isInReconMode()
+                    && com.piranport.aviation.ClientReconData.getReconEntityId() == getId()) {
+                return;
+            }
+            // Non-recon: accept server rotation directly
+            this.setRot(yRot, xRot);
             return;
         }
         super.lerpTo(x, y, z, yRot, xRot, steps);
     }
 
+    @Override public double lerpTargetX() { return clientLerpSteps > 0 ? clientLerpX : getX(); }
+    @Override public double lerpTargetY() { return clientLerpSteps > 0 ? clientLerpY : getY(); }
+    @Override public double lerpTargetZ() { return clientLerpSteps > 0 ? clientLerpZ : getZ(); }
+
     @Override
     public void tick() {
         super.tick();
 
-        // Client: particles only
+        // Client: position interpolation + particles
         if (level().isClientSide()) {
+            // Process position lerp steps for smooth camera/render movement
+            if (clientLerpSteps > 0) {
+                double d = 1.0 / (double) clientLerpSteps;
+                double nx = getX() + (clientLerpX - getX()) * d;
+                double ny = getY() + (clientLerpY - getY()) * d;
+                double nz = getZ() + (clientLerpZ - getZ()) * d;
+                setPos(nx, ny, nz);
+                clientLerpSteps--;
+            }
             if (getFlightState() == FlightState.CRUISING && tickCount % 8 == 0) {
                 level().addParticle(ParticleTypes.CLOUD, getX(), getY(), getZ(), 0, 0.02, 0);
             }

@@ -566,7 +566,7 @@ public class AircraftEntity extends Entity {
 
     /**
      * TORPEDO_BOMBER: fly low, fire torpedo when 20-30 blocks from target.
-     * Fires early so the torpedo travels forward to hit.
+     * If too close, flies away first to set up a proper attack run.
      */
     private void tickTorpedoBomberAttack(Player owner, LivingEntity target) {
         if (hasFired) {
@@ -575,6 +575,13 @@ public class AircraftEntity extends Entity {
             } else {
                 setState(FlightState.RETURNING);
             }
+            return;
+        }
+
+        // Timeout — if attack run takes too long, abort
+        if (stateTicks > 200) {
+            hasFired = true;
+            setState(FlightState.RETURNING);
             return;
         }
 
@@ -590,20 +597,23 @@ public class AircraftEntity extends Entity {
             torpedo.setDeltaMovement(dir.x * 0.5, -0.3, dir.z * 0.5);
             torpedo.setOwner(owner);
             level().addFreshEntity(torpedo);
+            remainingAmmo--;
             hasFired = true;
             setState(FlightState.RETURNING);
             return;
         }
 
-        if (horizDist < 16) {
-            // Overshot — abort
-            hasFired = true;
-            setState(FlightState.RETURNING);
-            return;
-        }
-
-        // Approach at low altitude (target.y + 2)
         double targetY = target.getY() + 2.0;
+
+        if (horizDist < 20) {
+            // Too close — fly away from target to set up attack run
+            Vec3 awayDir = new Vec3(-dx, 0, -dz).normalize();
+            double yDelta = (targetY - getY()) * 0.1;
+            setDeltaMovement(awayDir.scale(panelSpeed * 0.4).add(0, yDelta, 0));
+            return;
+        }
+
+        // horizDist > 30 — approach at low altitude (target.y + 2)
         Vec3 toTarget = new Vec3(dx, targetY - getY(), dz);
         double dist = toTarget.length();
         if (dist > 0.1) {

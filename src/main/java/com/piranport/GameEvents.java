@@ -200,11 +200,12 @@ public class GameEvents {
                 return;
             }
 
-            // Core already transformed — recalculate attributes only when load changes
+            // Core already transformed — recalculate attributes only when load/engine changes
             int weaponLoad = TransformationManager.getInventoryWeaponLoad(inv);
             int armorLoad  = TransformationManager.getCoreArmorLoad(offhand);
+            double engineBonus = TransformationManager.getCoreEngineSpeedBonus(offhand);
             int maxLoad    = ((ShipCoreItem) offhand.getItem()).getShipType().maxLoad;
-            int cacheKey   = (weaponLoad + armorLoad) * 1000 + maxLoad;
+            int cacheKey   = (weaponLoad + armorLoad) * 1000 + maxLoad + (int)(engineBonus * 10000);
             Integer cached = lastWeaponLoad.get(player.getUUID());
             if (cached == null || cached != cacheKey) {
                 lastWeaponLoad.put(player.getUUID(), cacheKey);

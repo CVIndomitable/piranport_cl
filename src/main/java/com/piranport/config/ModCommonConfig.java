@@ -50,14 +50,6 @@ public class ModCommonConfig {
                             "Set to true to redirect guns/torpedoes/aircraft/armor plates to slots 9-35 on pickup. (武器拾取自动进入背包而非快捷栏，默认关闭)")
                     .define("gui.weaponPickupToInventory", false);
 
-    public static final ModConfigSpec.BooleanValue HOTBAR_ONLY_LOAD =
-            BUILDER
-                    .comment(
-                            "Hotbar-only load mode (快捷物品栏负重模式).",
-                            "Default: false (all inventory items contribute to load, 全背包负重).",
-                            "Set to true to only count items in hotbar slots 0-8 for load and effect. (仅快捷物品栏的装备计算负重和生效)")
-                    .define("gui.hotbarOnlyLoad", false);
-
     // ===== Combat (战斗) =====
 
     public static final ModConfigSpec.BooleanValue FRIENDLY_FIRE_ENABLED =

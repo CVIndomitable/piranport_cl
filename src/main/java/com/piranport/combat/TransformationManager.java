@@ -177,17 +177,14 @@ public class TransformationManager {
 
     /**
      * Inventory mode (GUI disabled): scan the player's inventory for load and attributes.
-     * When hotbarOnlyLoad=true, only hotbar slots (0–8) are considered.
-     * When hotbarOnlyLoad=false (default), the entire inventory is scanned.
+     * Only hotbar slots (0–8) are considered for weight calculation.
      * The ship core with the highest maxLoad provides the weight capacity.
      */
     private static void applyAttributesInventoryMode(Player player) {
         net.minecraft.world.entity.player.Inventory inv = player.getInventory();
-        boolean hotbarOnly = com.piranport.config.ModCommonConfig.HOTBAR_ONLY_LOAD.get();
-
         // Find the ship core with the highest maxLoad and track its ShipType
         ShipCoreItem.ShipType bestType = null;
-        int scanLimit = hotbarOnly ? HOTBAR_SIZE : inv.items.size();
+        int scanLimit = HOTBAR_SIZE;
         for (int i = 0; i < scanLimit; i++) {
             ItemStack stack = inv.items.get(i);
             if (stack.getItem() instanceof ShipCoreItem sci) {
@@ -225,37 +222,25 @@ public class TransformationManager {
     }
 
     /**
-     * Sum the load of all weapons and armor plates (not ship cores) in inventory. Used in inventory mode.
-     * Respects hotbarOnlyLoad config: when true, only scans hotbar slots (0–8).
+     * Sum the load of all weapons and armor plates (not ship cores) in hotbar. Used in inventory mode.
+     * Only scans hotbar slots (0–8).
      */
     public static int getInventoryWeaponLoad(net.minecraft.world.entity.player.Inventory inv) {
         int total = 0;
-        boolean hotbarOnly = com.piranport.config.ModCommonConfig.HOTBAR_ONLY_LOAD.get();
-        int limit = hotbarOnly ? HOTBAR_SIZE : inv.items.size();
-        for (int i = 0; i < limit; i++) {
+        for (int i = 0; i < HOTBAR_SIZE; i++) {
             ItemStack stack = inv.items.get(i);
             if (isLoadItem(stack)) total += getItemLoad(stack);
-        }
-        if (!hotbarOnly) {
-            ItemStack offhand = inv.offhand.get(0);
-            if (isLoadItem(offhand)) total += getItemLoad(offhand);
         }
         return total;
     }
 
-    /** Sum armor bonus from ArmorPlateItems in the player's inventory. Used in inventory mode.
-     * Respects hotbarOnlyLoad config: when true, only scans hotbar slots (0–8). */
+    /** Sum armor bonus from ArmorPlateItems in the player's hotbar. Used in inventory mode.
+     * Only scans hotbar slots (0–8). */
     public static int getInventoryArmorBonus(net.minecraft.world.entity.player.Inventory inv) {
         int total = 0;
-        boolean hotbarOnly = com.piranport.config.ModCommonConfig.HOTBAR_ONLY_LOAD.get();
-        int limit = hotbarOnly ? HOTBAR_SIZE : inv.items.size();
-        for (int i = 0; i < limit; i++) {
+        for (int i = 0; i < HOTBAR_SIZE; i++) {
             ItemStack stack = inv.items.get(i);
             if (stack.getItem() instanceof ArmorPlateItem plate) total += plate.getArmorBonus();
-        }
-        if (!hotbarOnly) {
-            ItemStack offhand = inv.offhand.get(0);
-            if (offhand.getItem() instanceof ArmorPlateItem plate) total += plate.getArmorBonus();
         }
         return total;
     }

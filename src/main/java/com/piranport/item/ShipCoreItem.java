@@ -1,5 +1,6 @@
 package com.piranport.item;
 
+import com.piranport.aviation.FireControlManager;
 import com.piranport.combat.TransformationManager;
 import com.piranport.component.AircraftInfo;
 import com.piranport.component.FlightGroupData;
@@ -43,6 +44,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.List;
+import java.util.UUID;
 
 public class ShipCoreItem extends Item {
 
@@ -2014,6 +2016,104 @@ public class ShipCoreItem extends Item {
             return true;
         }
         return false;
+    }
+
+    /**
+     * Auto-fire anti-air missiles from the player's hotbar when auto-launch is active.
+     * Scans hotbar for ANTI_AIR MissileLauncherItems, checks cooldown and ammo, fires one missile.
+     * The missile is aimed toward the fire control target (or upward if no lock).
+     */
+    public static boolean tryAutoFireAntiAirMissile(Level level, Player player, ItemStack coreStack, int coreSlot) {
+        if (!(coreStack.getItem() instanceof ShipCoreItem)) return false;
+        if (level.isClientSide()) return false;
+
+        Inventory inv = player.getInventory();
+        SlotCooldowns cooldowns = coreStack.getOrDefault(
+                ModDataComponents.SLOT_COOLDOWNS.get(), SlotCooldowns.EMPTY);
+        long gameTime = level.getGameTime();
+
+        // Scan hotbar (slots 0-8) for anti-air missile launchers
+        for (int slot = 0; slot < 9; slot++) {
+            if (slot == coreSlot) continue;
+            ItemStack stack = inv.items.get(slot);
+            if (stack.isEmpty() || !(stack.getItem() instanceof MissileLauncherItem launcher)) continue;
+            if (launcher.getMissileType() != MissileEntity.MissileType.ANTI_AIR) continue;
+
+            // Check cooldown
+            if (cooldowns.isOnCooldown(slot, gameTime)) continue;
+
+            // Find ammo in inventory
+            Item ammoItem = launcher.getAmmoItem();
+            int ammoSlot = -1;
+            for (int i = 0; i < inv.items.size(); i++) {
+                if (i == coreSlot || i == slot) continue;
+                ItemStack s = inv.items.get(i);
+                if (!s.isEmpty() && s.is(ammoItem)) {
+                    ammoSlot = i;
+                    break;
+                }
+            }
+            if (ammoSlot == -1 && slot != 40 && coreSlot != 40) {
+                ItemStack oh = inv.offhand.get(0);
+                if (!oh.isEmpty() && oh.is(ammoItem)) {
+                    ammoSlot = 40;
+                }
+            }
+            if (ammoSlot == -1) continue; // No ammo for this launcher, try next
+
+            // Consume 1 ammo
+            String ammoId = BuiltInRegistries.ITEM.getKey(ammoItem).toString();
+            (ammoSlot == 40 ? inv.offhand.get(0) : inv.items.get(ammoSlot)).shrink(1);
+
+            // Spawn missile aimed at fire control target
+            spawnMissileAutoAim(level, player, launcher, ammoId);
+
+            // Apply cooldown
+            int cd = TransformationManager.boostedCooldown(player, launcher.getCooldownTicks());
+            coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
+                    cooldowns.withSlotCooldown(slot, cd, gameTime));
+            stack.set(ModDataComponents.WEAPON_COOLDOWN.get(),
+                    new WeaponCooldown(gameTime + cd, cd));
+
+            level.playSound(null, player.getX(), player.getY(), player.getZ(),
+                    SoundEvents.FIREWORK_ROCKET_LAUNCH, SoundSource.PLAYERS, 1.0f, 0.8f);
+            return true;
+        }
+        return false;
+    }
+
+    /** Spawn a missile aimed toward the fire control target, or upward if no target. */
+    private static void spawnMissileAutoAim(Level level, Player player,
+                                             MissileLauncherItem launcher, String displayItemId) {
+        MissileEntity missile = new MissileEntity(level, launcher.getMissileType(),
+                launcher.getDamage(), launcher.getArmorPen(),
+                launcher.getExplosionPower(), displayItemId);
+        missile.setOwner(player);
+
+        // Aim toward fire control target; fallback to player look direction with upward bias
+        Vec3 aimDir = player.getLookAngle();
+        if (level instanceof ServerLevel sl) {
+            List<UUID> fcTargets = FireControlManager.getTargets(player.getUUID());
+            for (UUID targetUUID : fcTargets) {
+                net.minecraft.world.entity.Entity target = sl.getEntity(targetUUID);
+                if (target != null && target.isAlive()) {
+                    Vec3 toTarget = target.position().add(0, target.getBbHeight() * 0.5, 0)
+                            .subtract(player.getEyePosition());
+                    if (toTarget.lengthSqr() > 0.01) {
+                        aimDir = toTarget.normalize();
+                    }
+                    break;
+                }
+            }
+        }
+
+        missile.setPos(
+                player.getX() + aimDir.x * 0.5,
+                player.getEyeY() - 0.1,
+                player.getZ() + aimDir.z * 0.5);
+        float initSpeed = launcher.getMissileType().initialSpeed;
+        missile.setDeltaMovement(aimDir.x * initSpeed, aimDir.y * initSpeed, aimDir.z * initSpeed);
+        level.addFreshEntity(missile);
     }
 
     /** Rotate a look vector around the Y axis by angleRad, project to horizontal plane, normalize. */

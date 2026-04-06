@@ -274,6 +274,7 @@ public class GameEvents {
         }
 
         ShipCoreItem.tryAutoLaunchFighter(player.level(), player, coreStack, coreSlot);
+        ShipCoreItem.tryAutoFireAntiAirMissile(player.level(), player, coreStack, coreSlot);
     }
 
     // Cache of last-known weapon load per player (for no-GUI inventory mode).

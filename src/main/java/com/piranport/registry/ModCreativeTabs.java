@@ -104,6 +104,12 @@ public class ModCreativeTabs {
                         output.accept(ModItems.SHIP_ROCKET_LAUNCHER.get());
                         output.accept(ModItems.SEA_DART_LAUNCHER.get());
                         output.accept(ModItems.SEACAT_LAUNCHER.get());
+                        // Missile Ammo
+                        output.accept(ModItems.SY1_MISSILE.get());
+                        output.accept(ModItems.HARPOON_MISSILE.get());
+                        output.accept(ModItems.TERRIER_MISSILE.get());
+                        output.accept(ModItems.ANTI_AIR_MISSILE.get());
+                        output.accept(ModItems.ROCKET_AMMO.get());
                     }).build());
 
     // ===== 强化 — 装甲 / 声纳 / 动力 / 皮肤 / 燃料 =====

@@ -276,29 +276,31 @@ public class ShipCoreItem extends Item {
                     if (offhand.getItem() instanceof ShipCoreItem sci2) {
                         bestMaxLoad = Math.max(bestMaxLoad, sci2.getShipType().maxLoad);
                     }
-                    if (shipType.maxLoad >= bestMaxLoad) {
-                        int weaponLoad = com.piranport.combat.TransformationManager
-                                .getInventoryWeaponLoad(inv);
-                        int armorLoad = com.piranport.combat.TransformationManager
-                                .getCoreArmorLoad(stack);
-                        tooltipComponents.add(Component.translatable(
-                                "container.piranport.load", weaponLoad + armorLoad, bestMaxLoad));
-                        // Show stored armor plates
-                        int capacity = shipType.enhancementSlots;
-                        ItemContainerContents armorContents = stack.getOrDefault(
-                                ModDataComponents.SHIP_CORE_ARMOR.get(), ItemContainerContents.EMPTY);
-                        NonNullList<ItemStack> storedArmor = NonNullList.withSize(capacity, ItemStack.EMPTY);
-                        armorContents.copyInto(storedArmor);
-                        int armorBonus = com.piranport.combat.TransformationManager.getCoreArmorBonus(stack);
-                        tooltipComponents.add(Component.translatable(
-                                "tooltip.piranport.core_armor_slots", armorBonus, capacity));
-                        for (ItemStack s : storedArmor) {
-                            if (!s.isEmpty()) {
-                                tooltipComponents.add(Component.literal("  • ").append(s.getHoverName()));
-                            }
+                    boolean isActive = shipType.maxLoad >= bestMaxLoad;
+                    if (!isActive) {
+                        tooltipComponents.add(Component.translatable("tooltip.piranport.core_inactive")
+                                .withStyle(net.minecraft.ChatFormatting.DARK_GRAY));
+                    }
+                    int weaponLoad = com.piranport.combat.TransformationManager
+                            .getInventoryWeaponLoad(inv);
+                    int armorLoad = com.piranport.combat.TransformationManager
+                            .getCoreArmorLoad(stack);
+                    tooltipComponents.add(Component.translatable(
+                            "container.piranport.load", weaponLoad + armorLoad,
+                            isActive ? bestMaxLoad : shipType.maxLoad));
+                    // Show stored armor plates
+                    int capacity = shipType.enhancementSlots;
+                    ItemContainerContents armorContents = stack.getOrDefault(
+                            ModDataComponents.SHIP_CORE_ARMOR.get(), ItemContainerContents.EMPTY);
+                    NonNullList<ItemStack> storedArmor = NonNullList.withSize(capacity, ItemStack.EMPTY);
+                    armorContents.copyInto(storedArmor);
+                    int armorBonus = com.piranport.combat.TransformationManager.getCoreArmorBonus(stack);
+                    tooltipComponents.add(Component.translatable(
+                            "tooltip.piranport.core_armor_slots", armorBonus, capacity));
+                    for (ItemStack s : storedArmor) {
+                        if (!s.isEmpty()) {
+                            tooltipComponents.add(Component.literal("  • ").append(s.getHoverName()));
                         }
-                    } else {
-                        tooltipComponents.add(Component.translatable("tooltip.piranport.core_inactive"));
                     }
                 }
             }
@@ -756,14 +758,8 @@ public class ShipCoreItem extends Item {
                 .orElse(net.minecraft.world.item.Items.AIR);
         ItemStack shellForRender = new ItemStack(shellItem, 1);
 
-        // Consume the loaded round
+        // Consume the loaded round (cooldown was already applied when R was pressed)
         weapon.remove(ModDataComponents.LOADED_AMMO.get());
-
-        int cooldownTicks = TransformationManager.boostedCooldown(player, getGunCooldown(weapon));
-        coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
-                cooldowns.withSlotCooldown(weaponSlot, cooldownTicks, level.getGameTime()));
-        weapon.set(ModDataComponents.WEAPON_COOLDOWN.get(),
-                new WeaponCooldown(level.getGameTime() + cooldownTicks, cooldownTicks));
 
         if (isType3) {
             fireSanshikiSpread(level, player, weapon, shellForRender);

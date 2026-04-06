@@ -1002,8 +1002,10 @@ public class AircraftEntity extends Entity {
         if (!held.isEmpty() && !payloadType.isEmpty()) {
             String heldId = BuiltInRegistries.ITEM.getKey(held.getItem()).toString();
             if (payloadType.equals(heldId) && remainingAmmo < ammoCapacity) {
-                held.shrink(1);
-                remainingAmmo = ammoCapacity;
+                int needed = ammoCapacity - remainingAmmo;
+                int toLoad = Math.min(needed, held.getCount());
+                held.shrink(toLoad);
+                remainingAmmo += toLoad;
                 hasFired = false;
                 player.displayClientMessage(
                         Component.translatable("message.piranport.aircraft_resupplied", getDisplayName()), true);
@@ -1043,17 +1045,24 @@ public class AircraftEntity extends Entity {
         NonNullList<ItemStack> items = NonNullList.withSize(sci.getShipType().totalSlots(), ItemStack.EMPTY);
         contents.copyInto(items);
 
+        int needed = ammoCapacity - remainingAmmo;
+        int loaded = 0;
         int ammoStart = sci.getShipType().weaponSlots;
         int ammoEnd = ammoStart + sci.getShipType().ammoSlots;
-        for (int ai = ammoStart; ai < ammoEnd; ai++) {
+        for (int ai = ammoStart; ai < ammoEnd && needed > 0; ai++) {
             ItemStack ammo = items.get(ai);
             if (!ammo.isEmpty() && ammo.getItem() == resolvePayloadItem()) {
-                ammo.shrink(1);
-                coreStack.set(ModDataComponents.SHIP_CORE_CONTENTS.get(), ItemContainerContents.fromItems(items));
-                remainingAmmo = ammoCapacity;
-                hasFired = false;
-                return true;
+                int take = Math.min(needed, ammo.getCount());
+                ammo.shrink(take);
+                needed -= take;
+                loaded += take;
             }
+        }
+        if (loaded > 0) {
+            coreStack.set(ModDataComponents.SHIP_CORE_CONTENTS.get(), ItemContainerContents.fromItems(items));
+            remainingAmmo += loaded;
+            hasFired = false;
+            return true;
         }
         return false;
     }

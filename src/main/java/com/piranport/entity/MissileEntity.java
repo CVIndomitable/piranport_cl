@@ -95,7 +95,7 @@ public class MissileEntity extends ThrowableItemProjectile {
 
     @Override
     protected Item getDefaultItem() {
-        if (!displayItemId.isEmpty()) {
+        if (displayItemId != null && !displayItemId.isEmpty()) {
             var rl = ResourceLocation.tryParse(displayItemId);
             if (rl != null) {
                 var item = net.minecraft.core.registries.BuiltInRegistries.ITEM.getOptional(rl);

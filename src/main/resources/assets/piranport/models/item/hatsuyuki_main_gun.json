@@ -1,0 +1,6 @@
+{
+  "parent": "item/handheld",
+  "textures": {
+    "layer0": "piranport:item/hatsuyuki_main_gun"
+  }
+}

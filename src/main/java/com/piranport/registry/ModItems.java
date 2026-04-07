@@ -26,9 +26,12 @@ import com.piranport.item.DamageControlItem;
 import com.piranport.item.KirinHeadbandItem;
 import com.piranport.item.RepairKitItem;
 import com.piranport.item.FootballArmorItem;
+import com.piranport.item.GungnirItem;
+import com.piranport.item.HatsuyukiMainGunItem;
 import com.piranport.item.CommandSwordItem;
 import com.piranport.item.MysteriousWeaponItem;
 import com.piranport.item.SmokeCandleItem;
+import com.piranport.item.EugenShieldItem;
 import com.piranport.item.TaihouUmbrellaItem;
 import com.piranport.item.UnicornHarpItem;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -1009,6 +1012,13 @@ public class ModItems {
                             .durability(1520)
                             .attributes(TaihouUmbrellaItem.createAttributes())));
 
+    // ===== Eugen's Ship Shield =====
+    public static final DeferredItem<EugenShieldItem> EUGEN_SHIELD =
+            ITEMS.register("eugen_shield",
+                    () -> new EugenShieldItem(new Item.Properties().stacksTo(1)
+                            .durability(1200)
+                            .attributes(EugenShieldItem.createAttributes())));
+
     // ===== Props Tab Icon =====
     public static final DeferredItem<Item> HENTAI_TROPHY =
             ITEMS.registerSimpleItem("hentai_trophy");
@@ -1038,4 +1048,17 @@ public class ModItems {
                             net.minecraft.world.item.ArmorItem.Type.BOOTS,
                             new Item.Properties().durability(
                                     net.minecraft.world.item.ArmorItem.Type.BOOTS.getDurability(10))));
+
+    // ===== Hatsuyuki's Main Gun (初雪的主炮) =====
+    public static final DeferredItem<HatsuyukiMainGunItem> HATSUYUKI_MAIN_GUN =
+            ITEMS.register("hatsuyuki_main_gun",
+                    () -> new HatsuyukiMainGunItem(new Item.Properties().stacksTo(1)));
+
+    // ===== Gungnir (冈格尼尔) =====
+    public static final DeferredItem<GungnirItem> GUNGNIR =
+            ITEMS.register("gungnir",
+                    () -> new GungnirItem(new Item.Properties()
+                            .durability(512)
+                            .attributes(GungnirItem.createAttributes())
+                            .stacksTo(1)));
 }

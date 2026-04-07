@@ -494,5 +494,13 @@
   "effect.piranport.experience_boost": "Experience Boost",
 
   "item.piranport.mysterious_weapon": "Mysterious Weapon",
-  "item.piranport.richelieu_command_sword": "Richelieu's Command Sword"
+  "item.piranport.richelieu_command_sword": "Richelieu's Command Sword",
+  "item.piranport.taihou_umbrella": "Taihou's Umbrella",
+
+  "item.piranport.hatsuyuki_main_gun": "Hatsuyuki's Main Gun",
+  "item.piranport.gungnir": "Gungnir",
+  "entity.piranport.gungnir": "Gungnir",
+
+  "item.piranport.eugen_shield": "Eugen's Ship Shield",
+  "tooltip.piranport.eugen_shield.block": "Blocks damage from a 150° frontal arc"
 }

@@ -494,5 +494,13 @@
   "effect.piranport.experience_boost": "经验提升",
 
   "item.piranport.mysterious_weapon": "神秘武器",
-  "item.piranport.richelieu_command_sword": "黎塞留的指挥刀"
+  "item.piranport.richelieu_command_sword": "黎塞留的指挥刀",
+  "item.piranport.taihou_umbrella": "大凤的伞",
+
+  "item.piranport.hatsuyuki_main_gun": "初雪的主炮",
+  "item.piranport.gungnir": "冈格尼尔",
+  "entity.piranport.gungnir": "冈格尼尔",
+
+  "item.piranport.eugen_shield": "欧根的舰盾",
+  "tooltip.piranport.eugen_shield.block": "格挡前方150°范围内的伤害"
 }

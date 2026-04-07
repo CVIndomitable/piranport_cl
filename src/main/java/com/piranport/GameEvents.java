@@ -17,6 +17,7 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.stats.Stats;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.FlyingMob;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -48,6 +49,14 @@ public class GameEvents {
     @SubscribeEvent
     public static void onPlayerTick(PlayerTickEvent.Post event) {
         Player player = event.getEntity();
+
+        // Kirin Headband: permanent invisibility when worn on head (server only)
+        if (!player.level().isClientSide()
+                && player.getItemBySlot(EquipmentSlot.HEAD).getItem()
+                instanceof com.piranport.item.KirinHeadbandItem) {
+            player.addEffect(new MobEffectInstance(
+                    MobEffects.INVISIBILITY, 60, 0, false, false, true));
+        }
 
         // No-GUI mode: detect inventory weapon-load changes and recalculate attributes.
         // The scan is O(36) per tick but attribute recalculation only happens when the value changes.

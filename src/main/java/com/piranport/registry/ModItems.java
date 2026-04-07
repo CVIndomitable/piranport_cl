@@ -962,6 +962,10 @@ public class ModItems {
             ITEMS.register("damage_control",
                     () -> new DamageControlItem(new Item.Properties().stacksTo(1)));
 
+    public static final DeferredItem<com.piranport.item.QuickRepairItem> QUICK_REPAIR =
+            ITEMS.register("quick_repair",
+                    () -> new com.piranport.item.QuickRepairItem(new Item.Properties().stacksTo(1)));
+
     // ===== Smoke Candle =====
     public static final DeferredItem<SmokeCandleItem> SMOKE_CANDLE =
             ITEMS.register("smoke_candle",

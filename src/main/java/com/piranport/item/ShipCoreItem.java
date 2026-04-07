@@ -615,7 +615,14 @@ public class ShipCoreItem extends Item {
 
         // Per-slot cooldown (keyed by inventory slot index)
         SlotCooldowns cooldowns = coreStack.getOrDefault(ModDataComponents.SLOT_COOLDOWNS.get(), SlotCooldowns.EMPTY);
-        if (cooldowns.isOnCooldown(weaponSlot, level.getGameTime())) return;
+        if (cooldowns.isOnCooldown(weaponSlot, level.getGameTime())) {
+            com.piranport.debug.PiranPortDebug.event(
+                    "Fire BLOCKED by cooldown | slot={} weapon={} remainTicks={}",
+                    weaponSlot,
+                    BuiltInRegistries.ITEM.getKey(weapon.getItem()).getPath(),
+                    cooldowns.endTick().getOrDefault(weaponSlot, 0L) - level.getGameTime());
+            return;
+        }
 
         // Torpedo launcher — requires 鱼雷再装填 enhancement for auto-reload
         if (weapon.getItem() instanceof TorpedoLauncherItem torpedoLauncher) {
@@ -1102,6 +1109,9 @@ public class ShipCoreItem extends Item {
             // 已装填的发射器（LOADED_AMMO）优先使用手动发射路径，无论是否有鱼雷再装填
             ItemStack launcherStack = weaponSlot == 40 ? inv.offhand.get(0) : inv.items.get(weaponSlot);
             LoadedAmmo loaded = launcherStack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
+            com.piranport.debug.PiranPortDebug.event(
+                    "fireMissiles | type={} manualReload=true loaded={} count={} ammo={}",
+                    launcher.getMissileType(), loaded.hasAmmo(), loaded.count(), loaded.ammoItemId());
             if (loaded.hasAmmo()) {
                 fireMissileManual(level, player, coreStack, inv, weaponSlot, launcher, cooldowns);
                 return;
@@ -1419,10 +1429,13 @@ public class ShipCoreItem extends Item {
 
         boolean onCooldown = cooldowns.isOnCooldown(weaponSlot, gameTime);
         boolean isManualMode = !com.piranport.config.ModCommonConfig.AUTO_RESUPPLY_ENABLED.get();
+        // Manual-reload missiles (ROCKET/ANTI_SHIP) always need LoadedAmmo regardless of config
+        boolean needsLoadedAmmo = (isManualMode && !(stack.getItem() instanceof AircraftItem))
+                || (stack.getItem() instanceof MissileLauncherItem ml && ml.isManualReload());
 
         if (onCooldown) {
-            // Manual mode cannon/torpedo with LoadedAmmo = actively reloading
-            if (isManualMode && !(stack.getItem() instanceof AircraftItem)) {
+            // Weapon with LoadedAmmo on cooldown = actively reloading
+            if (needsLoadedAmmo) {
                 LoadedAmmo reloading = stack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
                 if (reloading.hasAmmo()) {
                     tooltip.add(Component.translatable("tooltip.piranport.weapon_reloading")
@@ -1435,8 +1448,8 @@ public class ShipCoreItem extends Item {
                 tooltip.add(Component.translatable("tooltip.piranport.weapon_not_loaded")
                         .withStyle(net.minecraft.ChatFormatting.RED));
             }
-        } else if (isManualMode && !(stack.getItem() instanceof AircraftItem)) {
-            // Manual mode: also require LOADED_AMMO to be present
+        } else if (needsLoadedAmmo) {
+            // Manual mode or manual-reload missile: require LOADED_AMMO to be present
             LoadedAmmo loaded = stack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
             boolean hasAmmo;
             if (stack.getItem() instanceof TorpedoLauncherItem tl) {

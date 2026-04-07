@@ -165,5 +165,8 @@ public class ClientEvents {
                 com.piranport.dungeon.client.DungeonPortalRenderer::new);
         event.registerEntityRenderer(ModEntityTypes.LOOT_SHIP.get(),
                 com.piranport.dungeon.client.LootShipRenderer::new);
+        // Gungnir
+        event.registerEntityRenderer(ModEntityTypes.GUNGNIR.get(),
+                ThrownItemRenderer::new);
     }
 }

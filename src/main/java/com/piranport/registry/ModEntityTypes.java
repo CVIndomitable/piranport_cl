@@ -6,6 +6,7 @@ import com.piranport.entity.AircraftEntity;
 import com.piranport.entity.BulletEntity;
 import com.piranport.entity.CannonProjectileEntity;
 import com.piranport.entity.FlareProjectileEntity;
+import com.piranport.entity.GungnirEntity;
 import com.piranport.entity.RailgunProjectileEntity;
 import com.piranport.entity.DungeonTransportPlaneEntity;
 import com.piranport.entity.LowTierDestroyerEntity;
@@ -144,6 +145,15 @@ public class ModEntityTypes {
                     .clientTrackingRange(8)
                     .updateInterval(2)
                     .build("piranport:railgun_projectile"));
+
+    // Gungnir thrown spear
+    public static final DeferredHolder<EntityType<?>, EntityType<GungnirEntity>>
+            GUNGNIR = ENTITY_TYPES.register("gungnir",
+            () -> EntityType.Builder.<GungnirEntity>of(GungnirEntity::new, MobCategory.MISC)
+                    .sized(0.3f, 0.3f)
+                    .clientTrackingRange(8)
+                    .updateInterval(2)
+                    .build("piranport:gungnir"));
 
     public static final DeferredHolder<EntityType<?>, EntityType<com.piranport.dungeon.entity.LootShipEntity>>
             LOOT_SHIP = ENTITY_TYPES.register("loot_ship",

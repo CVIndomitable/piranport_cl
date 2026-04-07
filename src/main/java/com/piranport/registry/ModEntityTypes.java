@@ -6,6 +6,7 @@ import com.piranport.entity.AircraftEntity;
 import com.piranport.entity.BulletEntity;
 import com.piranport.entity.CannonProjectileEntity;
 import com.piranport.entity.FlareProjectileEntity;
+import com.piranport.entity.RailgunProjectileEntity;
 import com.piranport.entity.DungeonTransportPlaneEntity;
 import com.piranport.entity.LowTierDestroyerEntity;
 import com.piranport.entity.SanshikiPelletEntity;
@@ -134,6 +135,15 @@ public class ModEntityTypes {
                     .clientTrackingRange(8)
                     .updateInterval(5)
                     .build("piranport:flare_projectile"));
+
+    // Railgun projectile
+    public static final DeferredHolder<EntityType<?>, EntityType<RailgunProjectileEntity>>
+            RAILGUN_PROJECTILE = ENTITY_TYPES.register("railgun_projectile",
+            () -> EntityType.Builder.<RailgunProjectileEntity>of(RailgunProjectileEntity::new, MobCategory.MISC)
+                    .sized(0.15f, 0.15f)
+                    .clientTrackingRange(8)
+                    .updateInterval(2)
+                    .build("piranport:railgun_projectile"));
 
     public static final DeferredHolder<EntityType<?>, EntityType<com.piranport.dungeon.entity.LootShipEntity>>
             LOOT_SHIP = ENTITY_TYPES.register("loot_ship",

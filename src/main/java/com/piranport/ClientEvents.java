@@ -148,6 +148,8 @@ public class ClientEvents {
                 ThrownItemRenderer::new);
         event.registerEntityRenderer(ModEntityTypes.FLARE_PROJECTILE.get(),
                 ThrownItemRenderer::new);
+        event.registerEntityRenderer(ModEntityTypes.RAILGUN_PROJECTILE.get(),
+                ThrownItemRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntityTypes.CUTTING_BOARD.get(),
                 CuttingBoardRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntityTypes.PLACEABLE_FOOD.get(),

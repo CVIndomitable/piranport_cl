@@ -26,6 +26,7 @@ import com.piranport.item.DamageControlItem;
 import com.piranport.item.KirinHeadbandItem;
 import com.piranport.item.RepairKitItem;
 import com.piranport.item.FootballArmorItem;
+import com.piranport.item.MysteriousWeaponItem;
 import com.piranport.item.SmokeCandleItem;
 import com.piranport.item.UnicornHarpItem;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -988,6 +989,11 @@ public class ModItems {
     public static final DeferredItem<KirinHeadbandItem> KIRIN_HEADBAND =
             ITEMS.register("kirin_headband",
                     () -> new KirinHeadbandItem(new Item.Properties().stacksTo(1)));
+
+    // ===== Mysterious Weapon =====
+    public static final DeferredItem<MysteriousWeaponItem> MYSTERIOUS_WEAPON =
+            ITEMS.register("mysterious_weapon",
+                    () -> new MysteriousWeaponItem(new Item.Properties().stacksTo(1).durability(128)));
 
     // ===== Props Tab Icon =====
     public static final DeferredItem<Item> HENTAI_TROPHY =

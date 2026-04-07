@@ -328,6 +328,7 @@ public class ModCreativeTabs {
                         output.accept(ModItems.FLARE_LAUNCHER.get());
                         output.accept(ModItems.KIRIN_HEADBAND.get());
                         output.accept(ModItems.REPAIR_KIT.get());
+                        output.accept(ModItems.MYSTERIOUS_WEAPON.get());
                         // Football Superstar Set
                         output.accept(ModItems.SPIDER_GLOVES.get());
                         output.accept(ModItems.BLUE_JERSEY.get());

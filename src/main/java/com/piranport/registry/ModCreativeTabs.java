@@ -323,8 +323,15 @@ public class ModCreativeTabs {
                         output.accept(ModItems.TOWN_SCROLL.get());
                         output.accept(ModItems.ELITE_DAMAGE_CONTROL.get());
                         output.accept(ModItems.DAMAGE_CONTROL.get());
+                        output.accept(ModItems.QUICK_REPAIR.get());
                         output.accept(ModItems.SMOKE_CANDLE.get());
                         output.accept(ModItems.FLARE_LAUNCHER.get());
                         output.accept(ModItems.KIRIN_HEADBAND.get());
+                        output.accept(ModItems.REPAIR_KIT.get());
+                        // Football Superstar Set
+                        output.accept(ModItems.SPIDER_GLOVES.get());
+                        output.accept(ModItems.BLUE_JERSEY.get());
+                        output.accept(ModItems.RED_BLACK_SOCKS.get());
+                        output.accept(ModItems.MIRACLE_BOOTS.get());
                     }).build());
 }

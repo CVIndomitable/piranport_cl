@@ -484,5 +484,12 @@
   "tooltip.piranport.missile.burst": "Burst: %s",
   "tooltip.piranport.missile.explosion": "Explosion Radius: %s",
   "item.piranport.flare_launcher": "Flare Launcher",
-  "block.piranport.flare_light": "Flare Light"
+  "block.piranport.flare_light": "Flare Light",
+  "item.piranport.repair_kit": "Repair Kit",
+
+  "item.piranport.spider_gloves": "Spider Gloves",
+  "item.piranport.blue_jersey": "Blue Jersey",
+  "item.piranport.red_black_socks": "Red & Black Socks",
+  "item.piranport.miracle_boots": "Miracle Boots",
+  "effect.piranport.experience_boost": "Experience Boost"
 }

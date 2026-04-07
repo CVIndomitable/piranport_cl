@@ -24,6 +24,8 @@ import com.piranport.item.MissileLauncherItem;
 import com.piranport.item.FlareLauncherItem;
 import com.piranport.item.DamageControlItem;
 import com.piranport.item.KirinHeadbandItem;
+import com.piranport.item.RepairKitItem;
+import com.piranport.item.FootballArmorItem;
 import com.piranport.item.SmokeCandleItem;
 import com.piranport.item.UnicornHarpItem;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -962,6 +964,7 @@ public class ModItems {
             ITEMS.register("damage_control",
                     () -> new DamageControlItem(new Item.Properties().stacksTo(1)));
 
+    // ===== Quick Repair =====
     public static final DeferredItem<com.piranport.item.QuickRepairItem> QUICK_REPAIR =
             ITEMS.register("quick_repair",
                     () -> new com.piranport.item.QuickRepairItem(new Item.Properties().stacksTo(1)));
@@ -976,6 +979,11 @@ public class ModItems {
             ITEMS.register("flare_launcher",
                     () -> new FlareLauncherItem(new Item.Properties().stacksTo(1).durability(4096)));
 
+    // ===== Repair Kit =====
+    public static final DeferredItem<RepairKitItem> REPAIR_KIT =
+            ITEMS.register("repair_kit",
+                    () -> new RepairKitItem(new Item.Properties().stacksTo(1)));
+
     // ===== Kirin Headband =====
     public static final DeferredItem<KirinHeadbandItem> KIRIN_HEADBAND =
             ITEMS.register("kirin_headband",
@@ -984,4 +992,30 @@ public class ModItems {
     // ===== Props Tab Icon =====
     public static final DeferredItem<Item> HENTAI_TROPHY =
             ITEMS.registerSimpleItem("hentai_trophy");
+
+    // ===== Football Superstar Set (足球巨星套装) =====
+    public static final DeferredItem<FootballArmorItem> SPIDER_GLOVES =
+            ITEMS.register("spider_gloves",
+                    () -> new FootballArmorItem(ModArmorMaterials.FOOTBALL,
+                            net.minecraft.world.item.ArmorItem.Type.HELMET,
+                            new Item.Properties().durability(
+                                    net.minecraft.world.item.ArmorItem.Type.HELMET.getDurability(10))));
+    public static final DeferredItem<FootballArmorItem> BLUE_JERSEY =
+            ITEMS.register("blue_jersey",
+                    () -> new FootballArmorItem(ModArmorMaterials.FOOTBALL,
+                            net.minecraft.world.item.ArmorItem.Type.CHESTPLATE,
+                            new Item.Properties().durability(
+                                    net.minecraft.world.item.ArmorItem.Type.CHESTPLATE.getDurability(10))));
+    public static final DeferredItem<FootballArmorItem> RED_BLACK_SOCKS =
+            ITEMS.register("red_black_socks",
+                    () -> new FootballArmorItem(ModArmorMaterials.FOOTBALL,
+                            net.minecraft.world.item.ArmorItem.Type.LEGGINGS,
+                            new Item.Properties().durability(
+                                    net.minecraft.world.item.ArmorItem.Type.LEGGINGS.getDurability(10))));
+    public static final DeferredItem<FootballArmorItem> MIRACLE_BOOTS =
+            ITEMS.register("miracle_boots",
+                    () -> new FootballArmorItem(ModArmorMaterials.FOOTBALL,
+                            net.minecraft.world.item.ArmorItem.Type.BOOTS,
+                            new Item.Properties().durability(
+                                    net.minecraft.world.item.ArmorItem.Type.BOOTS.getDurability(10))));
 }

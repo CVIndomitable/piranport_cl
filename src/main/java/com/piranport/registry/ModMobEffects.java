@@ -27,4 +27,8 @@ public class ModMobEffects {
 
     public static final DeferredHolder<MobEffect, EvasionEffect> EVASION =
             MOB_EFFECTS.register("evasion", EvasionEffect::new);
+
+    // Football Superstar Set: experience boost
+    public static final DeferredHolder<MobEffect, com.piranport.effect.ExperienceBoostEffect> EXPERIENCE_BOOST =
+            MOB_EFFECTS.register("experience_boost", com.piranport.effect.ExperienceBoostEffect::new);
 }

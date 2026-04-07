@@ -485,5 +485,11 @@
   "tooltip.piranport.missile.explosion": "爆炸范围: %s",
   "item.piranport.flare_launcher": "照明弹发射器",
   "block.piranport.flare_light": "照明弹光源",
-  "item.piranport.repair_kit": "维修台"
+  "item.piranport.repair_kit": "维修台",
+
+  "item.piranport.spider_gloves": "蜘蛛手套",
+  "item.piranport.blue_jersey": "蓝色战袍",
+  "item.piranport.red_black_socks": "红黑球袜",
+  "item.piranport.miracle_boots": "奇迹球鞋",
+  "effect.piranport.experience_boost": "经验提升"
 }

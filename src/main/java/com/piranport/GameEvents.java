@@ -58,6 +58,21 @@ public class GameEvents {
                     MobEffects.INVISIBILITY, 60, 0, false, false, true));
         }
 
+        // Football Superstar Set: experience boost when any piece is worn
+        if (!player.level().isClientSide() && player.tickCount % 20 == 0) {
+            boolean hasFootball = false;
+            for (ItemStack armor : player.getArmorSlots()) {
+                if (armor.getItem() instanceof com.piranport.item.FootballArmorItem) {
+                    hasFootball = true;
+                    break;
+                }
+            }
+            if (hasFootball) {
+                player.addEffect(new MobEffectInstance(
+                        com.piranport.registry.ModMobEffects.EXPERIENCE_BOOST, 100, 0, false, false, true));
+            }
+        }
+
         // No-GUI mode: detect inventory weapon-load changes and recalculate attributes.
         // The scan is O(36) per tick but attribute recalculation only happens when the value changes.
         if (!player.level().isClientSide()
@@ -546,6 +561,16 @@ public class GameEvents {
     }
 
     // See also: DungeonEventHandler.onServerStopping for dungeon-specific cleanup
+    /** 经验提升Buff: 怪物掉落经验 +50% */
+    @SubscribeEvent
+    public static void onXpDrop(net.neoforged.neoforge.event.entity.living.LivingExperienceDropEvent event) {
+        Player attacker = event.getAttackingPlayer();
+        if (attacker != null && attacker.hasEffect(com.piranport.registry.ModMobEffects.EXPERIENCE_BOOST)) {
+            int original = event.getDroppedExperience();
+            event.setDroppedExperience((int) (original * 1.5));
+        }
+    }
+
     @SubscribeEvent
     public static void onServerStopped(ServerStoppedEvent event) {
         FireControlManager.clearAll();

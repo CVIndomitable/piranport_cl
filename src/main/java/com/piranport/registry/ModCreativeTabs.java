@@ -155,7 +155,7 @@ public class ModCreativeTabs {
             CREATIVE_TABS.register("agriculture_tab", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.piranport.agriculture"))
                     .withTabsBefore(CreativeModeTabs.COMBAT)
-                    .icon(() -> ModItems.RICE_SEEDS.get().getDefaultInstance())
+                    .icon(() -> ModItems.RAW_ALUMINUM.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
                         // Blocks
                         output.accept(ModItems.BAUXITE_ORE.get());

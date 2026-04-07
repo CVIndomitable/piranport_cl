@@ -31,14 +31,14 @@
 | v0.0.8-alpha | Salt & Rice | ✅ DONE | 稻田种植、盐蒸发系统、条件性盐矿生成、全面代码审查修复(35项P0-P3) |
 | v0.0.9-alpha | Dungeon | ✅ DONE | 副本系统（大厅/实例/节点战斗/传送门/箱子船/钥匙/回城卷轴）+ JEI兼容 + 武器冷却条 + 友军伤害防护 + 彩色描边 + 击落归因 |
 | v0.0.10-alpha | Arsenal | ✅ DONE | 导弹系统 + 深弹系统 + 命名鱼雷 + 武器/弹药合成台 + 装填设施 + 特殊道具(烟幕/照明弹/电磁炮/损管/维修台/足球套装等) + 皮肤系统 + 全局代码审查修复(47项) |
-| v0.0.11-alpha | Ruins | 🔧 WIP | 主世界四类遗迹(传送门/补给站/前哨站/深海基地) + 9种深海NPC + 集群AI + 抛物线/追踪弹道 + 战利品系统 + 占位物品(国旗/碎片/档案) + 调试命令 |
+| v0.0.11-alpha | Ruins | ✅ DONE | 主世界四类遗迹(传送门/补给站/前哨站/深海基地) + 9种深海NPC + 集群AI + 抛物线/追踪弹道 + 战利品系统 + 占位物品(国旗/碎片/档案) + 调试命令 + 舰娘NPC框架 |
 
 > 已完成 Phase 详情见 `docs/phases_archive.md`
 > 代码审查修复详情见 `docs/code_review_2026-03-31.md`、`docs/code_review_2026-04-04.md`、`docs/code_review_2026-04-05.md`
 
 ---
 
-## Project Structure (v0.0.10)
+## Project Structure (v0.0.11)
 
 ```
 src/main/java/com/piranport/
@@ -49,13 +49,13 @@ src/main/java/com/piranport/
 ├── GameEvents.java                 # GAME总线服务端事件（变身/水上行走/飞机召回等）
 ├── CommonEvents.java               # 属性注册等通用事件
 ├── registry/
-│   ├── ModItems.java               # 所有物品注册（食材/食物/武器/飞机/导弹/深弹/道具/副本钥匙/回城卷轴）
-│   ├── ModBlocks.java              # 含 DUNGEON_LECTERN, RELOAD_FACILITY, AMMO/WEAPON_WORKBENCH, SMOKE_SCREEN, FLARE_LIGHT
+│   ├── ModItems.java               # 所有物品注册（食材/食物/武器/飞机/导弹/深弹/道具/副本钥匙/回城卷轴/占位物品/深海刷怪蛋）
+│   ├── ModBlocks.java              # 含 DUNGEON_LECTERN, RELOAD_FACILITY, AMMO/WEAPON_WORKBENCH, SMOKE_SCREEN, FLARE_LIGHT, ABYSSAL_PORTAL/FRAME/SPAWNER
 │   ├── ModCreativeTabs.java
-│   ├── ModEntityTypes.java         # 含副本实体 + MissileEntity + DepthChargeEntity + RailgunProjectileEntity + FlareProjectileEntity + GungnirEntity + SanshikiPelletEntity + LowTierDestroyerEntity + AircraftDropEntity
+│   ├── ModEntityTypes.java         # 含副本实体 + 武器弹丸 + 9种深海NPC + DeepOceanProjectile + ShipGirl
 │   ├── ModDataComponents.java      # 含 DUNGEON_*, WEAPON_COOLDOWN, FUEL_DATA
 │   ├── ModMobEffects.java          # FlammableEffect, ReloadBoostEffect, EvasionEffect, FloodingEffect, ExperienceBoostEffect
-│   ├── ModBlockEntityTypes.java    # 含 RELOAD_FACILITY, AMMO_WORKBENCH, WEAPON_WORKBENCH
+│   ├── ModBlockEntityTypes.java    # 含 RELOAD_FACILITY, AMMO_WORKBENCH, WEAPON_WORKBENCH, ABYSSAL_SPAWNER
 │   ├── ModMenuTypes.java           # 含 DUNGEON_BOOK_MENU, RELOAD_FACILITY_MENU, AMMO_WORKBENCH_MENU, WEAPON_WORKBENCH_MENU
 │   ├── ModRecipeTypes.java
 │   └── ModKeyMappings.java         # P/O/I 火控、U 编组、V 循环/退侦察、Y 高亮、H 自动升空、F8 调试
@@ -88,6 +88,7 @@ src/main/java/com/piranport/
 │   ├── FootballArmorItem.java      # 足球巨星套装（经验提升Buff）
 │   ├── KirinHeadbandItem.java      # 基林级发带（恒定隐身）
 │   ├── SkinCoreItem.java           # 皮肤核心（3种变体）
+│   ├── PlaceholderItem.java        # 通用占位物品（自定义tooltip）
 │   ├── FloatingTargetItem.java
 │   └── GuidebookItem.java
 ├── block/
@@ -102,8 +103,11 @@ src/main/java/com/piranport/
 │   ├── WeaponWorkbenchBlock.java   # 武器合成台（5标签页/下拉/蓝图/定时合成）
 │   ├── YubariWaterBucketBlock.java # 夕张的水桶（无限水源）
 │   ├── SmokeScreenBlock.java       # 烟幕方块（非实体）
-│   └── FlareLightBlock.java        # 照明弹光源方块
-├── block/entity/                   # 含 ReloadFacilityBlockEntity, AmmoWorkbenchBlockEntity, WeaponWorkbenchBlockEntity
+│   ├── FlareLightBlock.java        # 照明弹光源方块
+│   ├── PortalFrameBlock.java       # 深海传送门框架方块
+│   ├── AbyssalPortalBlock.java     # 深海传送门方块（非实体，发光）
+│   └── AbyssalSpawnerBlock.java    # 一次性刷怪方块（结构用，自毁）
+├── block/entity/                   # 含 ReloadFacilityBlockEntity, AmmoWorkbenchBlockEntity, WeaponWorkbenchBlockEntity, AbyssalSpawnerBlockEntity
 ├── entity/
 │   ├── CannonProjectileEntity.java # 含友军伤害防护 + 击落归因
 │   ├── TorpedoEntity.java          # 伤害/速度/航程由装填鱼雷物品决定
@@ -118,6 +122,7 @@ src/main/java/com/piranport/
 │   ├── SanshikiPelletEntity.java   # 三式弹散射弹丸
 │   ├── AircraftDropEntity.java     # 飞机空投物品
 │   ├── LowTierDestroyerEntity.java # 副本敌人（低级驱逐）
+│   ├── DeepOceanProjectileEntity.java # 深海NPC多模式弹丸（抛物线/追踪/直射）
 │   ├── FloatingTargetEntity.java
 │   └── DungeonTransportPlaneEntity.java # 副本运输机（空投脚本用）
 ├── effect/
@@ -172,7 +177,9 @@ src/main/java/com/piranport/
 │   ├── PlaceableFoodRenderer.java
 │   ├── SkinOverlayLayer.java       # 自定义皮肤渲染层
 │   ├── DungeonTransportPlaneRenderer.java
-│   └── LowTierDestroyerRenderer.java
+│   ├── LowTierDestroyerRenderer.java
+│   ├── DeepOceanRenderer.java      # 深海NPC统一渲染器
+│   └── ShipGirlRenderer.java       # 舰娘NPC渲染器
 ├── compat/
 │   └── jei/
 │       ├── PiranPortJEIPlugin.java      # JEI 插件入口
@@ -242,6 +249,9 @@ src/main/java/com/piranport/
 │   │   └── DeepOceanSubmarineEntity.java      # 深海潜艇
 │   ├── shipgirl/
 │   │   └── ShipGirlEntity.java                # 舰娘NPC
+│   ├── data/
+│   │   ├── DeepOceanData.java                 # NPC属性数据结构
+│   │   └── DeepOceanDataLoader.java           # JSON驱动NPC数据加载
 │   └── ai/
 │       ├── FleetGroup.java                    # 舰队组数据
 │       ├── FleetGroupManager.java             # 舰队组管理器(SavedData)
@@ -340,6 +350,12 @@ src/main/java/com/piranport/
 | 集群警戒 | 同 clusterUUID 实体共享首个目标，已交战者不切换 |
 | 结构生成 | Jigsaw/SinglePool + StructureProcessor 注入战利品表和敌人 |
 | 一次性Spawner | AbyssalSpawnerBlock 在结构首次加载时生成NPC后自毁 |
+| 深海NPC数据驱动 | `data/piranport/npc/deep_ocean/` 下9种JSON配置（血量/护甲/速度/武器/战利品表），`DeepOceanDataLoader` 加载 |
+| 深海弹丸多模式 | `DeepOceanProjectileEntity` 支持抛物线/追踪/直射三种模式 |
+| 舰娘NPC | `ShipGirlEntity extends PathfinderMob`，友好NPC框架，可交互，对深海敌人作战 |
+| 占位物品 | `PlaceholderItem` 通用占位（国旗×7/混沌碎片×9/传送门核心/经验弹/战斗报告），战利品和合成材料 |
+| 调试命令 | `/ppd spawn_ruin <type>` 强制生成遗迹、`/ppd spawn_abyssal <type> [count]` 刷怪、`/ppd locate_ruin <type>` 定位 |
+| 遗迹战利品表 | 4级战利品（portal_ruin/supply_depot/outpost/abyssal_base），`LootChestProcessor` 注入 |
 
 ### 配置系统
 
@@ -391,7 +407,7 @@ src/main/java/com/piranport/
 ```bash
 ./gradlew runClient    # 运行客户端
 ./gradlew runData      # DataGen
-./gradlew build        # 构建 → build/libs/piranport-0.0.10.jar
+./gradlew build        # 构建 → build/libs/piranport-0.0.11.jar
 ```
 
 ### gradle.properties
@@ -400,7 +416,7 @@ src/main/java/com/piranport/
 mod_id=piranport
 mod_name=Piran Port
 mod_license=All Rights Reserved
-mod_version=0.0.10
+mod_version=0.0.11
 mod_group_id=com.piranport
 mod_authors=PiranPort Dev Team
 mod_description=Minecraft mod based on Warship Girls R

@@ -949,6 +949,11 @@ public class ModItems {
             ITEMS.register("unicorn_harp",
                     () -> new UnicornHarpItem(new Item.Properties().stacksTo(1)));
 
+    // ===== 道具 =====
+    public static final DeferredItem<Item> ELITE_DAMAGE_CONTROL =
+            ITEMS.register("elite_damage_control",
+                    () -> new Item(new Item.Properties().stacksTo(1)));
+
     // ===== Props Tab Icon =====
     public static final DeferredItem<Item> HENTAI_TROPHY =
             ITEMS.registerSimpleItem("hentai_trophy");

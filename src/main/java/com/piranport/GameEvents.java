@@ -337,6 +337,44 @@ public class GameEvents {
         accumulatedDistance.put(uuid, acc);
     }
 
+    /**
+     * Elite Damage Control Squad: prevent lethal damage if the player has one in inventory.
+     * Consumes the item, sets health to 1, and grants Resistance II (30s),
+     * Fire Resistance (30s), Regeneration II (6s). Plays totem animation.
+     */
+    @SubscribeEvent(priority = net.neoforged.bus.api.EventPriority.HIGHEST)
+    public static void onEliteDamageControl(LivingDeathEvent event) {
+        if (event.getEntity().level().isClientSide()) return;
+        if (!(event.getEntity() instanceof ServerPlayer player)) return;
+
+        Inventory inv = player.getInventory();
+        int foundSlot = -1;
+        for (int i = 0; i < inv.getContainerSize(); i++) {
+            if (inv.getItem(i).is(com.piranport.registry.ModItems.ELITE_DAMAGE_CONTROL.get())) {
+                foundSlot = i;
+                break;
+            }
+        }
+        if (foundSlot < 0) return;
+
+        // Consume the item
+        inv.getItem(foundSlot).shrink(1);
+
+        // Cancel death
+        event.setCanceled(true);
+
+        // Restore to 1 HP
+        player.setHealth(1.0f);
+
+        // Apply buffs: Resistance II 30s, Fire Resistance 30s, Regeneration II 6s
+        player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 600, 1));
+        player.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 600, 0));
+        player.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 120, 1));
+
+        // Totem-style animation
+        player.level().broadcastEntityEvent(player, (byte) 35);
+    }
+
     /** When a player dies, recall all their airborne aircraft. */
     @SubscribeEvent
     public static void onPlayerDeath(LivingDeathEvent event) {

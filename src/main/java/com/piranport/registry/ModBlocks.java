@@ -8,6 +8,7 @@ import com.piranport.block.FourStageCropBlock;
 import com.piranport.block.PlaceableFoodBlock;
 import com.piranport.block.RiceCropBlock;
 import com.piranport.block.SaltChipBlock;
+import com.piranport.block.SmokeScreenBlock;
 import com.piranport.block.StoneMillBlock;
 import com.piranport.block.ThreeStageCropBlock;
 import com.piranport.block.YubariWaterBucketBlock;
@@ -156,6 +157,20 @@ public class ModBlocks {
                             .strength(3.5f, 6.0f)
                             .requiresCorrectToolForDrops()
                             .sound(SoundType.METAL)));
+
+    // ===== Smoke Screen =====
+    public static final DeferredBlock<SmokeScreenBlock> SMOKE_SCREEN =
+            BLOCKS.register("smoke_screen", () -> new SmokeScreenBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.COLOR_GRAY)
+                            .strength(-1.0f, 3600000.0f)
+                            .sound(SoundType.WOOL)
+                            .noOcclusion()
+                            .noCollission()
+                            .noLootTable()
+                            .isViewBlocking((s, g, p) -> true)
+                            .isSuffocating((s, g, p) -> false)
+                            .isRedstoneConductor((s, g, p) -> false)));
 
     // ===== Dungeon System (v0.0.8) =====
     public static final DeferredBlock<com.piranport.dungeon.block.DungeonLecternBlock> DUNGEON_LECTERN =

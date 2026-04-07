@@ -21,6 +21,7 @@ import com.piranport.item.TorpedoReloadItem;
 import com.piranport.item.DepthChargeLauncherItem;
 import com.piranport.item.MissileItem;
 import com.piranport.item.MissileLauncherItem;
+import com.piranport.item.SmokeCandleItem;
 import com.piranport.item.UnicornHarpItem;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -953,6 +954,11 @@ public class ModItems {
     public static final DeferredItem<Item> ELITE_DAMAGE_CONTROL =
             ITEMS.register("elite_damage_control",
                     () -> new Item(new Item.Properties().stacksTo(1)));
+
+    // ===== Smoke Candle =====
+    public static final DeferredItem<SmokeCandleItem> SMOKE_CANDLE =
+            ITEMS.register("smoke_candle",
+                    () -> new SmokeCandleItem(new Item.Properties().stacksTo(1).durability(16)));
 
     // ===== Props Tab Icon =====
     public static final DeferredItem<Item> HENTAI_TROPHY =

@@ -322,5 +322,6 @@ public class ModCreativeTabs {
                         output.accept(ModItems.DUNGEON_KEY.get());
                         output.accept(ModItems.TOWN_SCROLL.get());
                         output.accept(ModItems.ELITE_DAMAGE_CONTROL.get());
+                        output.accept(ModItems.SMOKE_CANDLE.get());
                     }).build());
 }

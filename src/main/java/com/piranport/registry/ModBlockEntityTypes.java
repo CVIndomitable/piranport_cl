@@ -53,6 +53,13 @@ public class ModBlockEntityTypes {
                             ModBlocks.WEAPON_WORKBENCH.get())
                             .build(null));
 
+    // Abyssal Spawner (v0.0.11)
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<com.piranport.block.entity.AbyssalSpawnerBlockEntity>> ABYSSAL_SPAWNER =
+            BLOCK_ENTITY_TYPES.register("abyssal_spawner", () ->
+                    BlockEntityType.Builder.of(com.piranport.block.entity.AbyssalSpawnerBlockEntity::new,
+                            ModBlocks.ABYSSAL_SPAWNER.get())
+                            .build(null));
+
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<PlaceableFoodBlockEntity>> PLACEABLE_FOOD =
             BLOCK_ENTITY_TYPES.register("placeable_food", () ->
                     BlockEntityType.Builder.of(PlaceableFoodBlockEntity::new,

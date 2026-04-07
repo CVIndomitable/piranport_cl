@@ -1,0 +1,14 @@
+{
+  "structures": [
+    {
+      "structure": "piranport:portal_ruin",
+      "weight": 1
+    }
+  ],
+  "placement": {
+    "type": "minecraft:random_spread",
+    "spacing": 40,
+    "separation": 20,
+    "salt": 1837462951
+  }
+}

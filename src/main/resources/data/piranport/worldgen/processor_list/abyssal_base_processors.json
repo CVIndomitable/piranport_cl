@@ -1,0 +1,12 @@
+{
+  "processors": [
+    {
+      "processor_type": "piranport:loot_chest_processor",
+      "loot_table": "piranport:chests/abyssal_base"
+    },
+    {
+      "processor_type": "piranport:ruin_degradation",
+      "integrity": 0.70
+    }
+  ]
+}

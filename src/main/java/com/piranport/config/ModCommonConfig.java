@@ -78,6 +78,43 @@ public class ModCommonConfig {
                             "Set to true to enable salt disk features in rivers. (开启后河流底部会生成盐块)")
                     .define("worldgen.saltGenerationEnabled", false);
 
+    // ===== Ruins & World Structures (遗迹与世界结构) =====
+
+    public static final ModConfigSpec.BooleanValue RUIN_GENERATION_ENABLED =
+            BUILDER
+                    .comment(
+                            "Enable overworld ruin structure generation (主世界遗迹生成总开关).",
+                            "Default: true (ruins generate in ocean biomes, 遗迹在海洋群系生成).",
+                            "Set to false to disable all four ruin types. (关闭后不生成任何遗迹)")
+                    .define("worldgen.ruinGenerationEnabled", true);
+
+    public static final ModConfigSpec.IntValue PORTAL_RUIN_SPACING =
+            BUILDER
+                    .comment("Spacing (in chunks) between portal ruin structures (传送门遗迹间距).",
+                            "Reference value for JSON; changing this does NOT auto-update structure_set JSON.")
+                    .defineInRange("worldgen.portalRuinSpacing", 40, 8, 256);
+
+    public static final ModConfigSpec.IntValue SUPPLY_DEPOT_SPACING =
+            BUILDER
+                    .comment("Spacing (in chunks) between supply depots (补给站间距).")
+                    .defineInRange("worldgen.supplyDepotSpacing", 32, 8, 256);
+
+    public static final ModConfigSpec.IntValue OUTPOST_SPACING =
+            BUILDER
+                    .comment("Spacing (in chunks) between outposts (前哨站间距).")
+                    .defineInRange("worldgen.outpostSpacing", 48, 8, 256);
+
+    public static final ModConfigSpec.IntValue ABYSSAL_BASE_SPACING =
+            BUILDER
+                    .comment("Spacing (in chunks) between abyssal bases (深海基地间距).")
+                    .defineInRange("worldgen.abyssalBaseSpacing", 64, 8, 256);
+
+    public static final ModConfigSpec.DoubleValue ABYSSAL_ENEMY_DIFFICULTY_MULTIPLIER =
+            BUILDER
+                    .comment("Difficulty multiplier for abyssal NPC attributes (深海NPC属性倍率).",
+                            "Default: 1.0. Values > 1.0 increase HP/damage, < 1.0 decrease.")
+                    .defineInRange("worldgen.abyssalEnemyDifficultyMultiplier", 1.0, 0.1, 10.0);
+
     // ===== Game Mode (游戏模式) =====
 
     public static final ModConfigSpec.BooleanValue KANSEN_MODE =

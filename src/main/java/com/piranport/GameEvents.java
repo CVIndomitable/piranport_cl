@@ -572,6 +572,11 @@ public class GameEvents {
     }
 
     @SubscribeEvent
+    public static void onRegisterCommands(net.neoforged.neoforge.event.RegisterCommandsEvent event) {
+        com.piranport.debug.PiranPortCommands.register(event.getDispatcher());
+    }
+
+    @SubscribeEvent
     public static void onServerStopped(ServerStoppedEvent event) {
         FireControlManager.clearAll();
         ReconManager.clearAll();

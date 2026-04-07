@@ -56,6 +56,12 @@ public class ModItems {
     public static final DeferredItem<BlockItem> SALT_CHIP =
             ITEMS.registerSimpleBlockItem(ModBlocks.SALT_CHIP);
 
+    // ===== Abyssal Blocks (v0.0.11) =====
+    public static final DeferredItem<BlockItem> ABYSSAL_PORTAL_FRAME =
+            ITEMS.registerSimpleBlockItem(ModBlocks.ABYSSAL_PORTAL_FRAME);
+    public static final DeferredItem<BlockItem> ABYSSAL_SPAWNER =
+            ITEMS.registerSimpleBlockItem(ModBlocks.ABYSSAL_SPAWNER);
+
     // ===== Tab Icon (no components, no bar) =====
     public static final DeferredItem<Item> TAB_ICON =
             ITEMS.registerSimpleItem("tab_icon");
@@ -1061,6 +1067,93 @@ public class ModItems {
                             .durability(512)
                             .attributes(GungnirItem.createAttributes())
                             .stacksTo(1)));
+
+    // ===== v0.0.11 Ruins — Placeholder Items =====
+    // Abyssal Report (深海作战档案)
+    public static final DeferredItem<com.piranport.item.PlaceholderItem> ABYSSAL_REPORT =
+            ITEMS.register("abyssal_report",
+                    () -> new com.piranport.item.PlaceholderItem(new Item.Properties(),
+                            "tooltip.piranport.abyssal_report"));
+
+    // Chaos Shards (无序意志碎片 α~ι)
+    public static final DeferredItem<com.piranport.item.PlaceholderItem> CHAOS_SHARD_ALPHA =
+            ITEMS.register("chaos_shard_alpha",
+                    () -> new com.piranport.item.PlaceholderItem(new Item.Properties(),
+                            "tooltip.piranport.chaos_shard"));
+    public static final DeferredItem<com.piranport.item.PlaceholderItem> CHAOS_SHARD_BETA =
+            ITEMS.register("chaos_shard_beta",
+                    () -> new com.piranport.item.PlaceholderItem(new Item.Properties(),
+                            "tooltip.piranport.chaos_shard"));
+    public static final DeferredItem<com.piranport.item.PlaceholderItem> CHAOS_SHARD_GAMMA =
+            ITEMS.register("chaos_shard_gamma",
+                    () -> new com.piranport.item.PlaceholderItem(new Item.Properties(),
+                            "tooltip.piranport.chaos_shard"));
+    public static final DeferredItem<com.piranport.item.PlaceholderItem> CHAOS_SHARD_DELTA =
+            ITEMS.register("chaos_shard_delta",
+                    () -> new com.piranport.item.PlaceholderItem(new Item.Properties(),
+                            "tooltip.piranport.chaos_shard"));
+    public static final DeferredItem<com.piranport.item.PlaceholderItem> CHAOS_SHARD_EPSILON =
+            ITEMS.register("chaos_shard_epsilon",
+                    () -> new com.piranport.item.PlaceholderItem(new Item.Properties(),
+                            "tooltip.piranport.chaos_shard"));
+    public static final DeferredItem<com.piranport.item.PlaceholderItem> CHAOS_SHARD_ZETA =
+            ITEMS.register("chaos_shard_zeta",
+                    () -> new com.piranport.item.PlaceholderItem(new Item.Properties(),
+                            "tooltip.piranport.chaos_shard"));
+    public static final DeferredItem<com.piranport.item.PlaceholderItem> CHAOS_SHARD_ETA =
+            ITEMS.register("chaos_shard_eta",
+                    () -> new com.piranport.item.PlaceholderItem(new Item.Properties(),
+                            "tooltip.piranport.chaos_shard"));
+    public static final DeferredItem<com.piranport.item.PlaceholderItem> CHAOS_SHARD_THETA =
+            ITEMS.register("chaos_shard_theta",
+                    () -> new com.piranport.item.PlaceholderItem(new Item.Properties(),
+                            "tooltip.piranport.chaos_shard"));
+    public static final DeferredItem<com.piranport.item.PlaceholderItem> CHAOS_SHARD_IOTA =
+            ITEMS.register("chaos_shard_iota",
+                    () -> new com.piranport.item.PlaceholderItem(new Item.Properties(),
+                            "tooltip.piranport.chaos_shard"));
+
+    // Portal Activation Core (传送门激活核心)
+    public static final DeferredItem<com.piranport.item.PlaceholderItem> PORTAL_ACTIVATION_CORE =
+            ITEMS.register("portal_activation_core",
+                    () -> new com.piranport.item.PlaceholderItem(new Item.Properties(),
+                            "tooltip.piranport.portal_activation_core"));
+
+    // National Flags (各国国旗)
+    public static final DeferredItem<com.piranport.item.PlaceholderItem> FLAG_J =
+            ITEMS.register("flag_j",
+                    () -> new com.piranport.item.PlaceholderItem(new Item.Properties(),
+                            "tooltip.piranport.flag"));
+    public static final DeferredItem<com.piranport.item.PlaceholderItem> FLAG_E =
+            ITEMS.register("flag_e",
+                    () -> new com.piranport.item.PlaceholderItem(new Item.Properties(),
+                            "tooltip.piranport.flag"));
+    public static final DeferredItem<com.piranport.item.PlaceholderItem> FLAG_U =
+            ITEMS.register("flag_u",
+                    () -> new com.piranport.item.PlaceholderItem(new Item.Properties(),
+                            "tooltip.piranport.flag"));
+    public static final DeferredItem<com.piranport.item.PlaceholderItem> FLAG_G =
+            ITEMS.register("flag_g",
+                    () -> new com.piranport.item.PlaceholderItem(new Item.Properties(),
+                            "tooltip.piranport.flag"));
+    public static final DeferredItem<com.piranport.item.PlaceholderItem> FLAG_F =
+            ITEMS.register("flag_f",
+                    () -> new com.piranport.item.PlaceholderItem(new Item.Properties(),
+                            "tooltip.piranport.flag"));
+    public static final DeferredItem<com.piranport.item.PlaceholderItem> FLAG_I =
+            ITEMS.register("flag_i",
+                    () -> new com.piranport.item.PlaceholderItem(new Item.Properties(),
+                            "tooltip.piranport.flag"));
+    public static final DeferredItem<com.piranport.item.PlaceholderItem> FLAG_C =
+            ITEMS.register("flag_c",
+                    () -> new com.piranport.item.PlaceholderItem(new Item.Properties(),
+                            "tooltip.piranport.flag"));
+
+    // Experience Shell (经验炮弹)
+    public static final DeferredItem<com.piranport.item.PlaceholderItem> EXP_SHELL =
+            ITEMS.register("exp_shell",
+                    () -> new com.piranport.item.PlaceholderItem(new Item.Properties(),
+                            "tooltip.piranport.exp_shell"));
 
     // ===== Deep Ocean Spawn Eggs (深海生成蛋) =====
     public static final DeferredItem<net.minecraft.world.item.SpawnEggItem> DEEP_OCEAN_SUPPLY_SPAWN_EGG =

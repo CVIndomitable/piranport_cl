@@ -2,6 +2,7 @@ package com.piranport.registry;
 
 import com.mojang.serialization.MapCodec;
 import com.piranport.PiranPort;
+import com.piranport.worldgen.AbyssalOceanBiomeModifier;
 import com.piranport.worldgen.SaltGenBiomeModifier;
 import net.neoforged.neoforge.common.world.BiomeModifier;
 import net.neoforged.neoforge.registries.DeferredRegister;
@@ -15,4 +16,8 @@ public class ModBiomeModifiers {
     @SuppressWarnings("unused") // held by DeferredRegister
     public static final net.neoforged.neoforge.registries.DeferredHolder<MapCodec<? extends BiomeModifier>, MapCodec<SaltGenBiomeModifier>> SALT_GEN =
             BIOME_MODIFIER_SERIALIZERS.register("salt_gen", () -> SaltGenBiomeModifier.CODEC);
+
+    @SuppressWarnings("unused") // held by DeferredRegister — reserved for future activation
+    public static final net.neoforged.neoforge.registries.DeferredHolder<MapCodec<? extends BiomeModifier>, MapCodec<AbyssalOceanBiomeModifier>> ABYSSAL_OCEAN =
+            BIOME_MODIFIER_SERIALIZERS.register("abyssal_ocean", () -> AbyssalOceanBiomeModifier.CODEC);
 }

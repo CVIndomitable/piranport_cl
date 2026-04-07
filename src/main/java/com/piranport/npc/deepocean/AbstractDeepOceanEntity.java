@@ -175,6 +175,7 @@ public abstract class AbstractDeepOceanEntity extends Monster {
 
     @Override
     public void die(DamageSource source) {
+        if (this.isRemoved()) return;
         if (!level().isClientSide() && !isSinking) {
             isSinking = true;
             sinkingTicks = 0;

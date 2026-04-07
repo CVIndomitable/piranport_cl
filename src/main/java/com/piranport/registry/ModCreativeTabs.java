@@ -353,4 +353,38 @@ public class ModCreativeTabs {
                         output.accept(ModItems.DEEP_OCEAN_SUBMARINE_SPAWN_EGG.get());
                         output.accept(ModItems.SHIP_GIRL_SPAWN_EGG.get());
                     }).build());
+
+    // ===== 遗迹 — 传送门/碎片/国旗/档案 =====
+    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> RUINS_TAB =
+            CREATIVE_TABS.register("ruins_tab", () -> CreativeModeTab.builder()
+                    .title(Component.translatable("itemGroup.piranport.ruins"))
+                    .withTabsBefore(CreativeModeTabs.COMBAT)
+                    .icon(() -> ModItems.ABYSSAL_PORTAL_FRAME.get().getDefaultInstance())
+                    .displayItems((parameters, output) -> {
+                        // Blocks
+                        output.accept(ModItems.ABYSSAL_PORTAL_FRAME.get());
+                        output.accept(ModItems.ABYSSAL_SPAWNER.get());
+                        // Placeholder items
+                        output.accept(ModItems.ABYSSAL_REPORT.get());
+                        output.accept(ModItems.PORTAL_ACTIVATION_CORE.get());
+                        output.accept(ModItems.EXP_SHELL.get());
+                        // Chaos Shards
+                        output.accept(ModItems.CHAOS_SHARD_ALPHA.get());
+                        output.accept(ModItems.CHAOS_SHARD_BETA.get());
+                        output.accept(ModItems.CHAOS_SHARD_GAMMA.get());
+                        output.accept(ModItems.CHAOS_SHARD_DELTA.get());
+                        output.accept(ModItems.CHAOS_SHARD_EPSILON.get());
+                        output.accept(ModItems.CHAOS_SHARD_ZETA.get());
+                        output.accept(ModItems.CHAOS_SHARD_ETA.get());
+                        output.accept(ModItems.CHAOS_SHARD_THETA.get());
+                        output.accept(ModItems.CHAOS_SHARD_IOTA.get());
+                        // National Flags
+                        output.accept(ModItems.FLAG_J.get());
+                        output.accept(ModItems.FLAG_E.get());
+                        output.accept(ModItems.FLAG_U.get());
+                        output.accept(ModItems.FLAG_G.get());
+                        output.accept(ModItems.FLAG_F.get());
+                        output.accept(ModItems.FLAG_I.get());
+                        output.accept(ModItems.FLAG_C.get());
+                    }).build());
 }

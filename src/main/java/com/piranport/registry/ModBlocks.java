@@ -186,6 +186,39 @@ public class ModBlocks {
                             .sound(SoundType.WOOL)
                             .instabreak()));
 
+    // ===== Abyssal Portal (v0.0.11) =====
+    public static final DeferredBlock<com.piranport.block.PortalFrameBlock> ABYSSAL_PORTAL_FRAME =
+            BLOCKS.register("abyssal_portal_frame",
+                    () -> new com.piranport.block.PortalFrameBlock(
+                            BlockBehaviour.Properties.of()
+                                    .mapColor(MapColor.COLOR_PURPLE)
+                                    .strength(5.0f, 1200.0f)
+                                    .requiresCorrectToolForDrops()
+                                    .sound(SoundType.DEEPSLATE)
+                                    .lightLevel(state -> 3)));
+
+    public static final DeferredBlock<com.piranport.block.AbyssalPortalBlock> ABYSSAL_PORTAL =
+            BLOCKS.register("abyssal_portal",
+                    () -> new com.piranport.block.AbyssalPortalBlock(
+                            BlockBehaviour.Properties.of()
+                                    .mapColor(MapColor.COLOR_PURPLE)
+                                    .noCollission()
+                                    .noOcclusion()
+                                    .noLootTable()
+                                    .strength(-1.0f, 3600000.0f)
+                                    .lightLevel(state -> 11)
+                                    .sound(SoundType.GLASS)));
+
+    // ===== Abyssal Spawner (v0.0.11) =====
+    public static final DeferredBlock<com.piranport.block.AbyssalSpawnerBlock> ABYSSAL_SPAWNER =
+            BLOCKS.register("abyssal_spawner",
+                    () -> new com.piranport.block.AbyssalSpawnerBlock(
+                            BlockBehaviour.Properties.of()
+                                    .mapColor(MapColor.DEEPSLATE)
+                                    .strength(-1.0f, 3600000.0f)
+                                    .noLootTable()
+                                    .noOcclusion()));
+
     // ===== Dungeon System (v0.0.8) =====
     public static final DeferredBlock<com.piranport.dungeon.block.DungeonLecternBlock> DUNGEON_LECTERN =
             BLOCKS.register("dungeon_lectern",

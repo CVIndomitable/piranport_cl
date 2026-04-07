@@ -34,10 +34,16 @@ public class FleetGroupManager extends SavedData {
     // --- Group lifecycle ---
 
     /**
-     * Create a new fleet group and return it.
+     * Create a new fleet group with a random UUID and return it.
      */
     public FleetGroup createGroup() {
-        UUID id = UUID.randomUUID();
+        return createGroup(UUID.randomUUID());
+    }
+
+    /**
+     * Create a new fleet group with the specified UUID and return it.
+     */
+    public FleetGroup createGroup(UUID id) {
         FleetGroup group = new FleetGroup(id);
         groups.put(id, group);
         setDirty();
@@ -89,13 +95,16 @@ public class FleetGroupManager extends SavedData {
     public void alertGroup(UUID groupId, LivingEntity target, UUID discovererUuid) {
         FleetGroup group = groups.get(groupId);
         if (group == null) return;
+        if (target.getServer() == null) return;
+
+        // Prevent O(N^2) recursion: if group is already in COMBAT, skip propagation
+        if (group.getState() == FleetGroup.State.COMBAT) return;
 
         group.setSharedTarget(target.getUUID());
         setDirty();
 
         // Propagate to IDLE members in the same level
         ServerLevel level = null;
-        Entity discoverer = null;
         for (UUID memberUuid : group.getMembers()) {
             if (memberUuid.equals(discovererUuid)) continue;
             // We need the level to look up entities — get it from any member

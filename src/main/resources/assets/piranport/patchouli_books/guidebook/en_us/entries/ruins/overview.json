@@ -1,0 +1,16 @@
+{
+  "name": "piranport.book.ruins.overview",
+  "category": "piranport:8_ruins",
+  "icon": "piranport:abyssal_portal_frame",
+  "sortnum": 0,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "piranport.book.ruins.overview.p1"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "piranport.book.ruins.overview.p2"
+    }
+  ]
+}

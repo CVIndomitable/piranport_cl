@@ -31,6 +31,7 @@
 | v0.0.8-alpha | Salt & Rice | ✅ DONE | 稻田种植、盐蒸发系统、条件性盐矿生成、全面代码审查修复(35项P0-P3) |
 | v0.0.9-alpha | Dungeon | ✅ DONE | 副本系统（大厅/实例/节点战斗/传送门/箱子船/钥匙/回城卷轴）+ JEI兼容 + 武器冷却条 + 友军伤害防护 + 彩色描边 + 击落归因 |
 | v0.0.10-alpha | Arsenal | ✅ DONE | 导弹系统 + 深弹系统 + 命名鱼雷 + 武器/弹药合成台 + 装填设施 + 特殊道具(烟幕/照明弹/电磁炮/损管/维修台/足球套装等) + 皮肤系统 + 全局代码审查修复(47项) |
+| v0.0.11-alpha | Ruins | 🔧 WIP | 主世界四类遗迹(传送门/补给站/前哨站/深海基地) + 9种深海NPC + 集群AI + 抛物线/追踪弹道 + 战利品系统 + 占位物品(国旗/碎片/档案) + 调试命令 |
 
 > 已完成 Phase 详情见 `docs/phases_archive.md`
 > 代码审查修复详情见 `docs/code_review_2026-03-31.md`、`docs/code_review_2026-04-04.md`、`docs/code_review_2026-04-05.md`
@@ -227,12 +228,47 @@ src/main/java/com/piranport/
 │   └── saved/
 │       ├── DungeonSavedData.java
 │       └── DungeonLeaderboard.java
+├── npc/                            # NPC系统 (v0.0.11)
+│   ├── deepocean/
+│   │   ├── AbstractDeepOceanEntity.java       # 深海NPC基类
+│   │   ├── DeepOceanSupplyEntity.java         # 补给酱
+│   │   ├── DeepOceanDestroyerEntity.java      # 深海驱逐
+│   │   ├── DeepOceanLightCruiserEntity.java   # 深海轻巡
+│   │   ├── DeepOceanHeavyCruiserEntity.java   # 深海重巡
+│   │   ├── DeepOceanBattleCruiserEntity.java  # 深海战巡
+│   │   ├── DeepOceanBattleshipEntity.java     # 深海战列
+│   │   ├── DeepOceanLightCarrierEntity.java   # 深海轻母
+│   │   ├── DeepOceanCarrierEntity.java        # 深海航母
+│   │   └── DeepOceanSubmarineEntity.java      # 深海潜艇
+│   ├── shipgirl/
+│   │   └── ShipGirlEntity.java                # 舰娘NPC
+│   └── ai/
+│       ├── FleetGroup.java                    # 舰队组数据
+│       ├── FleetGroupManager.java             # 舰队组管理器(SavedData)
+│       ├── goal/
+│       │   ├── OrbitTargetGoal.java           # 环绕AI
+│       │   ├── CannonAttackGoal.java          # 炮击AI（含提前量）
+│       │   ├── TorpedoAttackGoal.java         # 鱼雷攻击AI
+│       │   ├── AircraftLaunchGoal.java        # 航母放飞AI
+│       │   ├── SubmergeGoal.java              # 潜艇下潜AI
+│       │   ├── FleetAlertGoal.java            # 集群共享警戒
+│       │   └── IdleWanderGoal.java            # 待机漫游
+│       └── ballistic/
+│           ├── ParabolicCalculator.java       # 抛物线弹道计算
+│           ├── TrackingCalculator.java        # 比例导航制导
+│           └── ProximityFuse.java             # 近炸引信
 ├── debug/
-│   └── PiranPortDebug.java
+│   ├── PiranPortDebug.java
+│   └── PiranPortCommands.java      # /ppd 调试命令
 ├── network/                        # 所有 CustomPacketPayload（含 SkinSyncPayload, SkinRevertPayload, AmmoWorkbenchCraftPayload 等）
 ├── recipe/
 ├── worldgen/
-│   └── SaltGenBiomeModifier.java
+│   ├── SaltGenBiomeModifier.java
+│   ├── AbyssalOceanBiomeModifier.java  # 预留，v0.0.11暂不激活
+│   ├── LootChestProcessor.java         # 结构箱子战利品注入
+│   ├── RuinDegradationProcessor.java   # 遗迹损坏处理器
+│   ├── ModStructureProcessors.java     # 处理器注册
+│   └── ModStructures.java              # 结构常量
 └── registry/
     └── ModBiomeModifiers.java
 ```
@@ -298,6 +334,12 @@ src/main/java/com/piranport/
 | 脚本化节点 | NodeData.script字段触发脚本分发；`DungeonScriptManager` 每tick驱动；`ArtilleryIntroScript` 实现3阶段（空投→拾取→战斗） |
 | 运输机 | `DungeonTransportPlaneEntity` 直线飞行+空投+爬升消失；LootShipEntity.dropping模式实现垂直下落 |
 | JEI兼容 | `PiranPortJEIPlugin` 注册3个加工站配方Category，`localRuntime` 软依赖 |
+| 深海NPC基类 | `AbstractDeepOceanEntity extends PathfinderMob`，含环绕/炮击/集群三大AI Goal |
+| 抛物线弹道 | 根据距离线性插值抛高，发射时计算提前量 |
+| 追踪弹制导 | 过最高点后启用比例导航，设最大过载限制转弯率 |
+| 集群警戒 | 同 clusterUUID 实体共享首个目标，已交战者不切换 |
+| 结构生成 | Jigsaw/SinglePool + StructureProcessor 注入战利品表和敌人 |
+| 一次性Spawner | AbyssalSpawnerBlock 在结构首次加载时生成NPC后自毁 |
 
 ### 配置系统
 
@@ -309,6 +351,12 @@ src/main/java/com/piranport/
 | `fighterAmmoEnabled` | Common | `false` | 战斗机子弹消耗 |
 | `flammableEffectEnabled` | Common | `false` | 易燃易爆Buff |
 | `weaponPickupToInventory` | Common | `false` | 武器拾取进背包 |
+| `ruinGenerationEnabled` | Common | `true` | 主世界遗迹生成总开关 |
+| `portalRuinSpacing` | Common | `40` | 传送门遗迹间距（参考值） |
+| `supplyDepotSpacing` | Common | `32` | 补给站间距（参考值） |
+| `outpostSpacing` | Common | `48` | 前哨站间距（参考值） |
+| `abyssalBaseSpacing` | Common | `64` | 深海基地间距（参考值） |
+| `abyssalEnemyDifficultyMultiplier` | Common | `1.0` | 深海NPC属性倍率 |
 | `showLegacyReloadHud` | Client | `false` | 显示旧版装填HUD条（已被物品Decorator替代） |
 | `flightGroupEnabled` | Client | `false` | 启用编组配置UI |
 

@@ -329,10 +329,13 @@ public class ModCreativeTabs {
                         output.accept(ModItems.KIRIN_HEADBAND.get());
                         output.accept(ModItems.REPAIR_KIT.get());
                         output.accept(ModItems.MYSTERIOUS_WEAPON.get());
+                        output.accept(ModItems.RICHELIEU_COMMAND_SWORD.get());
                         // Football Superstar Set
                         output.accept(ModItems.SPIDER_GLOVES.get());
                         output.accept(ModItems.BLUE_JERSEY.get());
                         output.accept(ModItems.RED_BLACK_SOCKS.get());
                         output.accept(ModItems.MIRACLE_BOOTS.get());
+                        // Gungnir
+                        output.accept(ModItems.GUNGNIR.get());
                     }).build());
 }

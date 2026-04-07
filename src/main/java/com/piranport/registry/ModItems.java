@@ -26,8 +26,10 @@ import com.piranport.item.DamageControlItem;
 import com.piranport.item.KirinHeadbandItem;
 import com.piranport.item.RepairKitItem;
 import com.piranport.item.FootballArmorItem;
+import com.piranport.item.CommandSwordItem;
 import com.piranport.item.MysteriousWeaponItem;
 import com.piranport.item.SmokeCandleItem;
+import com.piranport.item.TaihouUmbrellaItem;
 import com.piranport.item.UnicornHarpItem;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -994,6 +996,18 @@ public class ModItems {
     public static final DeferredItem<MysteriousWeaponItem> MYSTERIOUS_WEAPON =
             ITEMS.register("mysterious_weapon",
                     () -> new MysteriousWeaponItem(new Item.Properties().stacksTo(1).durability(128)));
+
+    // ===== Richelieu's Command Sword =====
+    public static final DeferredItem<CommandSwordItem> RICHELIEU_COMMAND_SWORD =
+            ITEMS.register("richelieu_command_sword",
+                    () -> new CommandSwordItem(new Item.Properties().stacksTo(1)));
+
+    // ===== Taihou's Umbrella (Shield) =====
+    public static final DeferredItem<TaihouUmbrellaItem> TAIHOU_UMBRELLA =
+            ITEMS.register("taihou_umbrella",
+                    () -> new TaihouUmbrellaItem(new Item.Properties().stacksTo(1)
+                            .durability(1520)
+                            .attributes(TaihouUmbrellaItem.createAttributes())));
 
     // ===== Props Tab Icon =====
     public static final DeferredItem<Item> HENTAI_TROPHY =

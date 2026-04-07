@@ -1,0 +1,6 @@
+{
+  "parent": "item/handheld",
+  "textures": {
+    "layer0": "piranport:item/richelieu_command_sword"
+  }
+}

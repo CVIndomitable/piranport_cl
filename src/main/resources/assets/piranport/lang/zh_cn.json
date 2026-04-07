@@ -480,5 +480,7 @@
   "tooltip.piranport.missile.damage": "伤害: %s",
   "tooltip.piranport.missile.damage_ap": "伤害: %s (+%s穿甲)",
   "tooltip.piranport.missile.burst": "连装: %s",
-  "tooltip.piranport.missile.explosion": "爆炸范围: %s"
+  "tooltip.piranport.missile.explosion": "爆炸范围: %s",
+  "item.piranport.flare_launcher": "照明弹发射器",
+  "block.piranport.flare_light": "照明弹光源"
 }

@@ -3,6 +3,7 @@ package com.piranport.registry;
 import com.piranport.PiranPort;
 import com.piranport.block.CookingPotBlock;
 import com.piranport.block.CuttingBoardBlock;
+import com.piranport.block.FlareLightBlock;
 import com.piranport.block.ReloadFacilityBlock;
 import com.piranport.block.FourStageCropBlock;
 import com.piranport.block.PlaceableFoodBlock;
@@ -171,6 +172,19 @@ public class ModBlocks {
                             .isViewBlocking((s, g, p) -> true)
                             .isSuffocating((s, g, p) -> false)
                             .isRedstoneConductor((s, g, p) -> false)));
+
+    // ===== Flare Light =====
+    public static final DeferredBlock<FlareLightBlock> FLARE_LIGHT =
+            BLOCKS.register("flare_light", () -> new FlareLightBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.NONE)
+                            .noCollission()
+                            .noOcclusion()
+                            .noLootTable()
+                            .replaceable()
+                            .lightLevel(state -> 14)
+                            .sound(SoundType.WOOL)
+                            .instabreak()));
 
     // ===== Dungeon System (v0.0.8) =====
     public static final DeferredBlock<com.piranport.dungeon.block.DungeonLecternBlock> DUNGEON_LECTERN =

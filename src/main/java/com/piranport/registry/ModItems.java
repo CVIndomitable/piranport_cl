@@ -21,6 +21,9 @@ import com.piranport.item.TorpedoReloadItem;
 import com.piranport.item.DepthChargeLauncherItem;
 import com.piranport.item.MissileItem;
 import com.piranport.item.MissileLauncherItem;
+import com.piranport.item.FlareLauncherItem;
+import com.piranport.item.DamageControlItem;
+import com.piranport.item.KirinHeadbandItem;
 import com.piranport.item.SmokeCandleItem;
 import com.piranport.item.UnicornHarpItem;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -955,10 +958,24 @@ public class ModItems {
             ITEMS.register("elite_damage_control",
                     () -> new Item(new Item.Properties().stacksTo(1)));
 
+    public static final DeferredItem<DamageControlItem> DAMAGE_CONTROL =
+            ITEMS.register("damage_control",
+                    () -> new DamageControlItem(new Item.Properties().stacksTo(1)));
+
     // ===== Smoke Candle =====
     public static final DeferredItem<SmokeCandleItem> SMOKE_CANDLE =
             ITEMS.register("smoke_candle",
                     () -> new SmokeCandleItem(new Item.Properties().stacksTo(1).durability(16)));
+
+    // ===== Flare Launcher =====
+    public static final DeferredItem<FlareLauncherItem> FLARE_LAUNCHER =
+            ITEMS.register("flare_launcher",
+                    () -> new FlareLauncherItem(new Item.Properties().stacksTo(1).durability(4096)));
+
+    // ===== Kirin Headband =====
+    public static final DeferredItem<KirinHeadbandItem> KIRIN_HEADBAND =
+            ITEMS.register("kirin_headband",
+                    () -> new KirinHeadbandItem(new Item.Properties().stacksTo(1)));
 
     // ===== Props Tab Icon =====
     public static final DeferredItem<Item> HENTAI_TROPHY =

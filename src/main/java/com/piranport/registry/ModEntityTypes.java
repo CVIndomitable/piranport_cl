@@ -5,6 +5,7 @@ import com.piranport.entity.AerialBombEntity;
 import com.piranport.entity.AircraftEntity;
 import com.piranport.entity.BulletEntity;
 import com.piranport.entity.CannonProjectileEntity;
+import com.piranport.entity.FlareProjectileEntity;
 import com.piranport.entity.DungeonTransportPlaneEntity;
 import com.piranport.entity.LowTierDestroyerEntity;
 import com.piranport.entity.SanshikiPelletEntity;
@@ -124,6 +125,15 @@ public class ModEntityTypes {
                     .clientTrackingRange(16)
                     .updateInterval(5)
                     .build("piranport:dungeon_portal"));
+
+    // Flare projectile
+    public static final DeferredHolder<EntityType<?>, EntityType<FlareProjectileEntity>>
+            FLARE_PROJECTILE = ENTITY_TYPES.register("flare_projectile",
+            () -> EntityType.Builder.<FlareProjectileEntity>of(FlareProjectileEntity::new, MobCategory.MISC)
+                    .sized(0.25f, 0.25f)
+                    .clientTrackingRange(8)
+                    .updateInterval(5)
+                    .build("piranport:flare_projectile"));
 
     public static final DeferredHolder<EntityType<?>, EntityType<com.piranport.dungeon.entity.LootShipEntity>>
             LOOT_SHIP = ENTITY_TYPES.register("loot_ship",

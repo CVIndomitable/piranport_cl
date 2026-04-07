@@ -480,5 +480,7 @@
   "tooltip.piranport.missile.damage": "Damage: %s",
   "tooltip.piranport.missile.damage_ap": "Damage: %s (+%s AP)",
   "tooltip.piranport.missile.burst": "Burst: %s",
-  "tooltip.piranport.missile.explosion": "Explosion Radius: %s"
+  "tooltip.piranport.missile.explosion": "Explosion Radius: %s",
+  "item.piranport.flare_launcher": "Flare Launcher",
+  "block.piranport.flare_light": "Flare Light"
 }

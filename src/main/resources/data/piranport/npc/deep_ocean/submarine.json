@@ -1,0 +1,15 @@
+{
+  "entity_id": "piranport:deep_ocean_submarine",
+  "health": 40,
+  "armor": 2,
+  "speed": 0.20,
+  "detection_range": 24,
+  "orbit_distance": 0,
+  "weapons": ["torpedo"],
+  "loot_table": "piranport:entities/deep_ocean_submarine",
+  "fire_interval": 0,
+  "shell_damage": 0,
+  "explosion_power": 0,
+  "tracking_interval_min": 0,
+  "tracking_interval_max": 0
+}

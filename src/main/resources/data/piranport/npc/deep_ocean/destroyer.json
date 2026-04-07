@@ -1,0 +1,15 @@
+{
+  "entity_id": "piranport:deep_ocean_destroyer",
+  "health": 30,
+  "armor": 4,
+  "speed": 0.35,
+  "detection_range": 24,
+  "orbit_distance": 12,
+  "weapons": ["cannon", "torpedo"],
+  "loot_table": "piranport:entities/deep_ocean_destroyer",
+  "fire_interval": 100,
+  "shell_damage": 4.0,
+  "explosion_power": 1.2,
+  "tracking_interval_min": 3,
+  "tracking_interval_max": 6
+}

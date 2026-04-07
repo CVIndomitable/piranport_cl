@@ -502,5 +502,30 @@
   "entity.piranport.gungnir": "Gungnir",
 
   "item.piranport.eugen_shield": "Eugen's Ship Shield",
-  "tooltip.piranport.eugen_shield.block": "Blocks damage from a 150° frontal arc"
+  "tooltip.piranport.eugen_shield.block": "Blocks damage from a 150° frontal arc",
+
+  "entity.piranport.deep_ocean_supply": "Abyssal Supply",
+  "entity.piranport.deep_ocean_destroyer": "Abyssal Destroyer",
+  "entity.piranport.deep_ocean_light_cruiser": "Abyssal Light Cruiser",
+  "entity.piranport.deep_ocean_heavy_cruiser": "Abyssal Heavy Cruiser",
+  "entity.piranport.deep_ocean_battle_cruiser": "Abyssal Battle Cruiser",
+  "entity.piranport.deep_ocean_battleship": "Abyssal Battleship",
+  "entity.piranport.deep_ocean_light_carrier": "Abyssal Light Carrier",
+  "entity.piranport.deep_ocean_carrier": "Abyssal Carrier",
+  "entity.piranport.deep_ocean_submarine": "Abyssal Submarine",
+  "entity.piranport.deep_ocean_projectile": "Abyssal Shell",
+  "entity.piranport.ship_girl": "Ship Girl",
+
+  "item.piranport.deep_ocean_supply_spawn_egg": "Abyssal Supply Spawn Egg",
+  "item.piranport.deep_ocean_destroyer_spawn_egg": "Abyssal Destroyer Spawn Egg",
+  "item.piranport.deep_ocean_light_cruiser_spawn_egg": "Abyssal Light Cruiser Spawn Egg",
+  "item.piranport.deep_ocean_heavy_cruiser_spawn_egg": "Abyssal Heavy Cruiser Spawn Egg",
+  "item.piranport.deep_ocean_battle_cruiser_spawn_egg": "Abyssal Battle Cruiser Spawn Egg",
+  "item.piranport.deep_ocean_battleship_spawn_egg": "Abyssal Battleship Spawn Egg",
+  "item.piranport.deep_ocean_light_carrier_spawn_egg": "Abyssal Light Carrier Spawn Egg",
+  "item.piranport.deep_ocean_carrier_spawn_egg": "Abyssal Carrier Spawn Egg",
+  "item.piranport.deep_ocean_submarine_spawn_egg": "Abyssal Submarine Spawn Egg",
+  "item.piranport.ship_girl_spawn_egg": "Ship Girl Spawn Egg",
+
+  "message.piranport.ship_girl_greet": "Hello, Admiral! How can I help?"
 }

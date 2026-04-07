@@ -502,5 +502,30 @@
   "entity.piranport.gungnir": "冈格尼尔",
 
   "item.piranport.eugen_shield": "欧根的舰盾",
-  "tooltip.piranport.eugen_shield.block": "格挡前方150°范围内的伤害"
+  "tooltip.piranport.eugen_shield.block": "格挡前方150°范围内的伤害",
+
+  "entity.piranport.deep_ocean_supply": "补给酱",
+  "entity.piranport.deep_ocean_destroyer": "深海驱逐",
+  "entity.piranport.deep_ocean_light_cruiser": "深海轻巡",
+  "entity.piranport.deep_ocean_heavy_cruiser": "深海重巡",
+  "entity.piranport.deep_ocean_battle_cruiser": "深海战巡",
+  "entity.piranport.deep_ocean_battleship": "深海战列",
+  "entity.piranport.deep_ocean_light_carrier": "深海轻母",
+  "entity.piranport.deep_ocean_carrier": "深海航母",
+  "entity.piranport.deep_ocean_submarine": "深海潜艇",
+  "entity.piranport.deep_ocean_projectile": "深海炮弹",
+  "entity.piranport.ship_girl": "舰娘",
+
+  "item.piranport.deep_ocean_supply_spawn_egg": "补给酱 刷怪蛋",
+  "item.piranport.deep_ocean_destroyer_spawn_egg": "深海驱逐 刷怪蛋",
+  "item.piranport.deep_ocean_light_cruiser_spawn_egg": "深海轻巡 刷怪蛋",
+  "item.piranport.deep_ocean_heavy_cruiser_spawn_egg": "深海重巡 刷怪蛋",
+  "item.piranport.deep_ocean_battle_cruiser_spawn_egg": "深海战巡 刷怪蛋",
+  "item.piranport.deep_ocean_battleship_spawn_egg": "深海战列 刷怪蛋",
+  "item.piranport.deep_ocean_light_carrier_spawn_egg": "深海轻母 刷怪蛋",
+  "item.piranport.deep_ocean_carrier_spawn_egg": "深海航母 刷怪蛋",
+  "item.piranport.deep_ocean_submarine_spawn_egg": "深海潜艇 刷怪蛋",
+  "item.piranport.ship_girl_spawn_egg": "舰娘 刷怪蛋",
+
+  "message.piranport.ship_girl_greet": "你好，提督！有什么需要帮忙的吗？"
 }

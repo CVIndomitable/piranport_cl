@@ -341,5 +341,16 @@ public class ModCreativeTabs {
                         output.accept(ModItems.HATSUYUKI_MAIN_GUN.get());
                         // Gungnir
                         output.accept(ModItems.GUNGNIR.get());
+                        // Deep Ocean Spawn Eggs
+                        output.accept(ModItems.DEEP_OCEAN_SUPPLY_SPAWN_EGG.get());
+                        output.accept(ModItems.DEEP_OCEAN_DESTROYER_SPAWN_EGG.get());
+                        output.accept(ModItems.DEEP_OCEAN_LIGHT_CRUISER_SPAWN_EGG.get());
+                        output.accept(ModItems.DEEP_OCEAN_HEAVY_CRUISER_SPAWN_EGG.get());
+                        output.accept(ModItems.DEEP_OCEAN_BATTLE_CRUISER_SPAWN_EGG.get());
+                        output.accept(ModItems.DEEP_OCEAN_BATTLESHIP_SPAWN_EGG.get());
+                        output.accept(ModItems.DEEP_OCEAN_LIGHT_CARRIER_SPAWN_EGG.get());
+                        output.accept(ModItems.DEEP_OCEAN_CARRIER_SPAWN_EGG.get());
+                        output.accept(ModItems.DEEP_OCEAN_SUBMARINE_SPAWN_EGG.get());
+                        output.accept(ModItems.SHIP_GIRL_SPAWN_EGG.get());
                     }).build());
 }

@@ -1061,4 +1061,46 @@ public class ModItems {
                             .durability(512)
                             .attributes(GungnirItem.createAttributes())
                             .stacksTo(1)));
+
+    // ===== Deep Ocean Spawn Eggs (深海生成蛋) =====
+    public static final DeferredItem<net.minecraft.world.item.SpawnEggItem> DEEP_OCEAN_SUPPLY_SPAWN_EGG =
+            ITEMS.register("deep_ocean_supply_spawn_egg",
+                    () -> new net.minecraft.world.item.SpawnEggItem(ModEntityTypes.DEEP_OCEAN_SUPPLY.get(),
+                            0x2D2D3D, 0x8888AA, new Item.Properties()));
+    public static final DeferredItem<net.minecraft.world.item.SpawnEggItem> DEEP_OCEAN_DESTROYER_SPAWN_EGG =
+            ITEMS.register("deep_ocean_destroyer_spawn_egg",
+                    () -> new net.minecraft.world.item.SpawnEggItem(ModEntityTypes.DEEP_OCEAN_DESTROYER.get(),
+                            0x2D2D3D, 0xCC4444, new Item.Properties()));
+    public static final DeferredItem<net.minecraft.world.item.SpawnEggItem> DEEP_OCEAN_LIGHT_CRUISER_SPAWN_EGG =
+            ITEMS.register("deep_ocean_light_cruiser_spawn_egg",
+                    () -> new net.minecraft.world.item.SpawnEggItem(ModEntityTypes.DEEP_OCEAN_LIGHT_CRUISER.get(),
+                            0x2D2D3D, 0xDD8844, new Item.Properties()));
+    public static final DeferredItem<net.minecraft.world.item.SpawnEggItem> DEEP_OCEAN_HEAVY_CRUISER_SPAWN_EGG =
+            ITEMS.register("deep_ocean_heavy_cruiser_spawn_egg",
+                    () -> new net.minecraft.world.item.SpawnEggItem(ModEntityTypes.DEEP_OCEAN_HEAVY_CRUISER.get(),
+                            0x2D2D3D, 0xAA6622, new Item.Properties()));
+    public static final DeferredItem<net.minecraft.world.item.SpawnEggItem> DEEP_OCEAN_BATTLE_CRUISER_SPAWN_EGG =
+            ITEMS.register("deep_ocean_battle_cruiser_spawn_egg",
+                    () -> new net.minecraft.world.item.SpawnEggItem(ModEntityTypes.DEEP_OCEAN_BATTLE_CRUISER.get(),
+                            0x2D2D3D, 0x884488, new Item.Properties()));
+    public static final DeferredItem<net.minecraft.world.item.SpawnEggItem> DEEP_OCEAN_BATTLESHIP_SPAWN_EGG =
+            ITEMS.register("deep_ocean_battleship_spawn_egg",
+                    () -> new net.minecraft.world.item.SpawnEggItem(ModEntityTypes.DEEP_OCEAN_BATTLESHIP.get(),
+                            0x2D2D3D, 0x444444, new Item.Properties()));
+    public static final DeferredItem<net.minecraft.world.item.SpawnEggItem> DEEP_OCEAN_LIGHT_CARRIER_SPAWN_EGG =
+            ITEMS.register("deep_ocean_light_carrier_spawn_egg",
+                    () -> new net.minecraft.world.item.SpawnEggItem(ModEntityTypes.DEEP_OCEAN_LIGHT_CARRIER.get(),
+                            0x2D2D3D, 0x44AA44, new Item.Properties()));
+    public static final DeferredItem<net.minecraft.world.item.SpawnEggItem> DEEP_OCEAN_CARRIER_SPAWN_EGG =
+            ITEMS.register("deep_ocean_carrier_spawn_egg",
+                    () -> new net.minecraft.world.item.SpawnEggItem(ModEntityTypes.DEEP_OCEAN_CARRIER.get(),
+                            0x2D2D3D, 0x2288AA, new Item.Properties()));
+    public static final DeferredItem<net.minecraft.world.item.SpawnEggItem> DEEP_OCEAN_SUBMARINE_SPAWN_EGG =
+            ITEMS.register("deep_ocean_submarine_spawn_egg",
+                    () -> new net.minecraft.world.item.SpawnEggItem(ModEntityTypes.DEEP_OCEAN_SUBMARINE.get(),
+                            0x2D2D3D, 0x334466, new Item.Properties()));
+    public static final DeferredItem<net.minecraft.world.item.SpawnEggItem> SHIP_GIRL_SPAWN_EGG =
+            ITEMS.register("ship_girl_spawn_egg",
+                    () -> new net.minecraft.world.item.SpawnEggItem(ModEntityTypes.SHIP_GIRL.get(),
+                            0xFFDDCC, 0x4488FF, new Item.Properties()));
 }

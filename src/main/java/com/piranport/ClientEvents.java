@@ -168,5 +168,30 @@ public class ClientEvents {
         // Gungnir
         event.registerEntityRenderer(ModEntityTypes.GUNGNIR.get(),
                 ThrownItemRenderer::new);
+        // Deep Ocean projectile
+        event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_PROJECTILE.get(),
+                ThrownItemRenderer::new);
+        // Deep Ocean NPC entities (placeholder renderer with fleet state particles)
+        event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_SUPPLY.get(),
+                com.piranport.client.DeepOceanRenderer::new);
+        event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_DESTROYER.get(),
+                com.piranport.client.DeepOceanRenderer::new);
+        event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_LIGHT_CRUISER.get(),
+                com.piranport.client.DeepOceanRenderer::new);
+        event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_HEAVY_CRUISER.get(),
+                com.piranport.client.DeepOceanRenderer::new);
+        event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_BATTLE_CRUISER.get(),
+                com.piranport.client.DeepOceanRenderer::new);
+        event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_BATTLESHIP.get(),
+                com.piranport.client.DeepOceanRenderer::new);
+        event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_LIGHT_CARRIER.get(),
+                com.piranport.client.DeepOceanRenderer::new);
+        event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_CARRIER.get(),
+                com.piranport.client.DeepOceanRenderer::new);
+        event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_SUBMARINE.get(),
+                com.piranport.client.DeepOceanRenderer::new);
+        // Ship Girl NPC
+        event.registerEntityRenderer(ModEntityTypes.SHIP_GIRL.get(),
+                com.piranport.client.ShipGirlRenderer::new);
     }
 }

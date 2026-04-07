@@ -1,0 +1,15 @@
+{
+  "entity_id": "piranport:deep_ocean_carrier",
+  "health": 80,
+  "armor": 8,
+  "speed": 0.225,
+  "detection_range": 64,
+  "orbit_distance": 40,
+  "weapons": ["aircraft"],
+  "loot_table": "piranport:entities/deep_ocean_carrier",
+  "fire_interval": 0,
+  "shell_damage": 0,
+  "explosion_power": 0,
+  "tracking_interval_min": 0,
+  "tracking_interval_max": 0
+}

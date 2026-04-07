@@ -1,0 +1,15 @@
+{
+  "entity_id": "piranport:deep_ocean_light_cruiser",
+  "health": 50,
+  "armor": 8,
+  "speed": 0.30,
+  "detection_range": 32,
+  "orbit_distance": 16,
+  "weapons": ["cannon", "torpedo"],
+  "loot_table": "piranport:entities/deep_ocean_light_cruiser",
+  "fire_interval": 80,
+  "shell_damage": 5.0,
+  "explosion_power": 1.5,
+  "tracking_interval_min": 3,
+  "tracking_interval_max": 6
+}

@@ -74,6 +74,7 @@ public class DungeonEventHandler {
     @SubscribeEvent
     public static void onAddReloadListener(AddReloadListenerEvent event) {
         event.addListener(new com.piranport.dungeon.data.DungeonDataLoader());
+        event.addListener(new com.piranport.npc.data.DeepOceanDataLoader());
     }
 
     @SubscribeEvent

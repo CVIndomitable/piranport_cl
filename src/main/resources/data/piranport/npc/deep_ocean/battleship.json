@@ -1,0 +1,15 @@
+{
+  "entity_id": "piranport:deep_ocean_battleship",
+  "health": 150,
+  "armor": 20,
+  "speed": 0.20,
+  "detection_range": 48,
+  "orbit_distance": 28,
+  "weapons": ["cannon"],
+  "loot_table": "piranport:entities/deep_ocean_battleship",
+  "fire_interval": 120,
+  "shell_damage": 12.0,
+  "explosion_power": 3.0,
+  "tracking_interval_min": 2,
+  "tracking_interval_max": 4
+}

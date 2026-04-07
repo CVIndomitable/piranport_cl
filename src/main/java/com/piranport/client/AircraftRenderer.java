@@ -53,7 +53,7 @@ public class AircraftRenderer extends EntityRenderer<AircraftEntity> {
             case FIGHTER        -> ModItems.FIGHTER_SQUADRON.get().getDefaultInstance();
             case DIVE_BOMBER    -> ModItems.DIVE_BOMBER_SQUADRON.get().getDefaultInstance();
             case TORPEDO_BOMBER -> ModItems.SWORDFISH_TORPEDO.get().getDefaultInstance();
-            case LEVEL_BOMBER   -> ModItems.LEVEL_BOMBER_SQUADRON.get().getDefaultInstance();
+            case LEVEL_BOMBER   -> ModItems.B25_BOMBER.get().getDefaultInstance();
             case RECON          -> ModItems.RECON_SQUADRON.get().getDefaultInstance();
         });
     }

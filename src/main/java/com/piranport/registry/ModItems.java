@@ -438,13 +438,6 @@ public class ModItems {
                                     new AircraftInfo(AircraftInfo.AircraftType.TORPEDO_BOMBER,
                                             1200, 4, 0, 30f, 1.2f, 22, AircraftInfo.BombingMode.DIVE))));
 
-    public static final DeferredItem<AircraftItem> LEVEL_BOMBER_SQUADRON =
-            ITEMS.register("level_bomber_squadron",
-                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
-                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
-                                    new AircraftInfo(AircraftInfo.AircraftType.LEVEL_BOMBER,
-                                            1200, 32, 0, 36f, 1.0f, 24, AircraftInfo.BombingMode.LEVEL))));
 
     public static final DeferredItem<AircraftItem> RECON_SQUADRON =
             ITEMS.register("recon_squadron",

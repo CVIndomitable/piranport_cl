@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "piranport:item/b25_bomber"
+    "layer0": "piranport:item/level_bomber_squadron"
   }
 }

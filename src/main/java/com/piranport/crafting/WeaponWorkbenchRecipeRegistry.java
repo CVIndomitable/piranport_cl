@@ -150,7 +150,7 @@ public class WeaponWorkbenchRecipeRegistry {
 
 
 
-        add(4, ModItems.LEVEL_BOMBER_SQUADRON.get(), List.of(
+        add(4, ModItems.B25_BOMBER.get(), List.of(
                 new ItemStack(ModItems.ALUMINUM_INGOT.get(), 4),
                 new ItemStack(Items.REDSTONE, 2),
                 new ItemStack(Items.TNT, 1)

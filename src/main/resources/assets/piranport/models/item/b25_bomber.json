@@ -1,7 +1,7 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "piranport:item/b25_bomber_empty"
+    "layer0": "piranport:item/level_bomber_squadron_empty"
   },
   "overrides": [
     {

@@ -52,7 +52,7 @@ public class AircraftRenderer extends EntityRenderer<AircraftEntity> {
         return DISPLAY_STACKS.computeIfAbsent(type, t -> switch (t) {
             case FIGHTER        -> ModItems.FIGHTER_SQUADRON.get().getDefaultInstance();
             case DIVE_BOMBER    -> ModItems.DIVE_BOMBER_SQUADRON.get().getDefaultInstance();
-            case TORPEDO_BOMBER -> ModItems.TORPEDO_BOMBER_SQUADRON.get().getDefaultInstance();
+            case TORPEDO_BOMBER -> ModItems.SWORDFISH_TORPEDO.get().getDefaultInstance();
             case LEVEL_BOMBER   -> ModItems.LEVEL_BOMBER_SQUADRON.get().getDefaultInstance();
             case RECON          -> ModItems.RECON_SQUADRON.get().getDefaultInstance();
         });

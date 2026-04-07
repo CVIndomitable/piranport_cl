@@ -325,5 +325,6 @@ public class ModCreativeTabs {
                         output.accept(ModItems.DAMAGE_CONTROL.get());
                         output.accept(ModItems.SMOKE_CANDLE.get());
                         output.accept(ModItems.FLARE_LAUNCHER.get());
+                        output.accept(ModItems.KIRIN_HEADBAND.get());
                     }).build());
 }

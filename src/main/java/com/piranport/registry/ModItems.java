@@ -948,4 +948,8 @@ public class ModItems {
     public static final DeferredItem<UnicornHarpItem> UNICORN_HARP =
             ITEMS.register("unicorn_harp",
                     () -> new UnicornHarpItem(new Item.Properties().stacksTo(1)));
+
+    // ===== Props Tab Icon =====
+    public static final DeferredItem<Item> HENTAI_TROPHY =
+            ITEMS.registerSimpleItem("hentai_trophy");
 }

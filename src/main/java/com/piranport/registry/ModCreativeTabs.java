@@ -313,7 +313,7 @@ public class ModCreativeTabs {
             CREATIVE_TABS.register("props_tab", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.piranport.props"))
                     .withTabsBefore(CreativeModeTabs.COMBAT)
-                    .icon(() -> ModItems.GUIDEBOOK.get().getDefaultInstance())
+                    .icon(() -> ModItems.HENTAI_TROPHY.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
                         output.accept(ModItems.UNICORN_HARP.get());
                         output.accept(ModItems.FLOATING_TARGET.get());

@@ -26,13 +26,14 @@
 | v0.0.3-alpha | Kitchen | ✅ DONE | 食物烹饪 + Buff系统、作物种植、加工站 |
 | v0.0.4-alpha | Aviation | ✅ DONE | 航空系统（4种飞机+编组GUI+火控+AI）+ Patchouli手册 |
 | v0.0.5-alpha | Combat+ | ✅ DONE | 装填进度Decorator、装填加速/高速规避Buff、Buff食物注册 |
-| v0.0.6-alpha | Skin | ⏳ PLANNED | 皮肤/模型渲染系统 |
+| v0.0.6-alpha | Skin | ✅ DONE | 皮肤/模型渲染系统（SkinManager + SkinOverlayLayer + SkinCoreItem） |
 | v0.0.7-alpha | Aviation+ | ✅ DONE | 侦察机视角切换、空战、编队跟随侦察机、加工站自动化 |
 | v0.0.8-alpha | Salt & Rice | ✅ DONE | 稻田种植、盐蒸发系统、条件性盐矿生成、全面代码审查修复(35项P0-P3) |
 | v0.0.9-alpha | Dungeon | ✅ DONE | 副本系统（大厅/实例/节点战斗/传送门/箱子船/钥匙/回城卷轴）+ JEI兼容 + 武器冷却条 + 友军伤害防护 + 彩色描边 + 击落归因 |
+| v0.0.10-alpha | Arsenal | ✅ DONE | 导弹系统 + 深弹系统 + 命名鱼雷 + 武器/弹药合成台 + 装填设施 + 特殊道具(烟幕/照明弹/电磁炮/损管/维修台/足球套装等) + 皮肤系统 + 全局代码审查修复(47项) |
 
 > 已完成 Phase 详情见 `docs/phases_archive.md`
-> 代码审查修复（35项）详情见 `docs/code_review_2026-03-31.md`
+> 代码审查修复详情见 `docs/code_review_2026-03-31.md`、`docs/code_review_2026-04-04.md`、`docs/code_review_2026-04-05.md`
 
 ---
 
@@ -47,14 +48,14 @@ src/main/java/com/piranport/
 ├── GameEvents.java                 # GAME总线服务端事件（变身/水上行走/飞机召回等）
 ├── CommonEvents.java               # 属性注册等通用事件
 ├── registry/
-│   ├── ModItems.java               # 所有物品注册（食材/食物/武器/飞机/副本钥匙/回城卷轴）
-│   ├── ModBlocks.java              # 含 DUNGEON_LECTERN
+│   ├── ModItems.java               # 所有物品注册（食材/食物/武器/飞机/导弹/深弹/道具/副本钥匙/回城卷轴）
+│   ├── ModBlocks.java              # 含 DUNGEON_LECTERN, RELOAD_FACILITY, AMMO/WEAPON_WORKBENCH, SMOKE_SCREEN, FLARE_LIGHT
 │   ├── ModCreativeTabs.java
-│   ├── ModEntityTypes.java         # 含 DUNGEON_PORTAL, LOOT_SHIP, DUNGEON_TRANSPORT_PLANE
-│   ├── ModDataComponents.java      # 含 DUNGEON_STAGE_ID, DUNGEON_INSTANCE_ID, DUNGEON_PROGRESS, WEAPON_COOLDOWN
-│   ├── ModMobEffects.java          # FlammableEffect, ReloadBoostEffect, EvasionEffect, FloodingEffect
-│   ├── ModBlockEntityTypes.java
-│   ├── ModMenuTypes.java           # 含 DUNGEON_BOOK_MENU
+│   ├── ModEntityTypes.java         # 含副本实体 + MissileEntity + DepthChargeEntity + RailgunProjectileEntity + FlareProjectileEntity + GungnirEntity + SanshikiPelletEntity + LowTierDestroyerEntity + AircraftDropEntity
+│   ├── ModDataComponents.java      # 含 DUNGEON_*, WEAPON_COOLDOWN, FUEL_DATA
+│   ├── ModMobEffects.java          # FlammableEffect, ReloadBoostEffect, EvasionEffect, FloodingEffect, ExperienceBoostEffect
+│   ├── ModBlockEntityTypes.java    # 含 RELOAD_FACILITY, AMMO_WORKBENCH, WEAPON_WORKBENCH
+│   ├── ModMenuTypes.java           # 含 DUNGEON_BOOK_MENU, RELOAD_FACILITY_MENU, AMMO_WORKBENCH_MENU, WEAPON_WORKBENCH_MENU
 │   ├── ModRecipeTypes.java
 │   └── ModKeyMappings.java         # P/O/I 火控、U 编组、V 循环/退侦察、Y 高亮、H 自动升空、F8 调试
 ├── config/
@@ -64,9 +65,28 @@ src/main/java/com/piranport/
 │   ├── ShipCoreItem.java           # GUI/无GUI双模式发射、右键召回飞机、无GUI背包扫描
 │   ├── CannonItem.java
 │   ├── TorpedoItem.java / TorpedoLauncherItem.java
-│   ├── ArmorPlateItem.java
+│   ├── ArmorPlateItem.java / EngineItem.java / SonarItem.java / TorpedoReloadItem.java
 │   ├── ModFoodItem.java / BottleFoodItem.java
 │   ├── AircraftItem.java           # 发射入口 + 手动加油（overrideOtherStackedOnMe）
+│   ├── AmmoItem.java               # 通用弹药物品
+│   ├── MissileItem.java            # 导弹物品（反舰/防空/火箭三种类型）
+│   ├── MissileLauncherItem.java    # 导弹发射器
+│   ├── DepthChargeLauncherItem.java # 深弹投射器三型号
+│   ├── FlareLauncherItem.java      # 照明弹发射器
+│   ├── SmokeCandleItem.java        # 发烟筒
+│   ├── MysteriousWeaponItem.java   # 电磁炮（无视重力高速弹丸）
+│   ├── GungnirItem.java            # 冈格尼尔投掷武器
+│   ├── CommandSwordItem.java       # 黎塞留的指挥刀
+│   ├── HatsuyukiMainGunItem.java   # 初雪的主炮（斧类）
+│   ├── EugenShieldItem.java        # 欧根的舰盾（盾牌型，150度格挡）
+│   ├── TaihouUmbrellaItem.java     # 大凤的伞
+│   ├── UnicornHarpItem.java        # 独角兽的竖琴
+│   ├── DamageControlItem.java      # 损害管制（消除debuff+灭火）
+│   ├── QuickRepairItem.java        # 快速修复（一次性瞬间治疗）
+│   ├── RepairKitItem.java          # 维修台（持续对准生物恢复）
+│   ├── FootballArmorItem.java      # 足球巨星套装（经验提升Buff）
+│   ├── KirinHeadbandItem.java      # 基林级发带（恒定隐身）
+│   ├── SkinCoreItem.java           # 皮肤核心（3种变体）
 │   ├── FloatingTargetItem.java
 │   └── GuidebookItem.java
 ├── block/
@@ -75,34 +95,63 @@ src/main/java/com/piranport/
 │   ├── SaltEvaporationHandler.java # 熔炉上方水→盐蒸发逻辑
 │   ├── CookingPotBlock.java / StoneMillBlock.java / CuttingBoardBlock.java
 │   ├── PlaceableFoodBlock.java
-│   └── FourStageCropBlock.java / ThreeStageCropBlock.java
-├── block/entity/
+│   ├── FourStageCropBlock.java / ThreeStageCropBlock.java
+│   ├── ReloadFacilityBlock.java    # 装填设施（发射器+弹药装填）
+│   ├── AmmoWorkbenchBlock.java     # 弹药合成台
+│   ├── WeaponWorkbenchBlock.java   # 武器合成台（5标签页/下拉/蓝图/定时合成）
+│   ├── YubariWaterBucketBlock.java # 夕张的水桶（无限水源）
+│   ├── SmokeScreenBlock.java       # 烟幕方块（非实体）
+│   └── FlareLightBlock.java        # 照明弹光源方块
+├── block/entity/                   # 含 ReloadFacilityBlockEntity, AmmoWorkbenchBlockEntity, WeaponWorkbenchBlockEntity
 ├── entity/
 │   ├── CannonProjectileEntity.java # 含友军伤害防护 + 击落归因
-│   ├── TorpedoEntity.java          # 含友军伤害防护 + 击落归因
+│   ├── TorpedoEntity.java          # 伤害/速度/航程由装填鱼雷物品决定
 │   ├── AircraftEntity.java         # 状态机 + 五种飞机AI + isCurrentlyGlowing() + getTeamColor()
 │   ├── AerialBombEntity.java       # 含友军伤害防护 + 击落归因
 │   ├── BulletEntity.java           # 含友军伤害防护 + 击落归因
+│   ├── MissileEntity.java          # 导弹实体（制导追踪）
+│   ├── DepthChargeEntity.java      # 深水炸弹（近炸引信 + 区域魔法伤害）
+│   ├── RailgunProjectileEntity.java # 电磁炮弹丸（无视重力）
+│   ├── FlareProjectileEntity.java  # 照明弹（附着方块发光+命中发光击退）
+│   ├── GungnirEntity.java          # 冈格尼尔投掷实体
+│   ├── SanshikiPelletEntity.java   # 三式弹散射弹丸
+│   ├── AircraftDropEntity.java     # 飞机空投物品
+│   ├── LowTierDestroyerEntity.java # 副本敌人（低级驱逐）
 │   ├── FloatingTargetEntity.java
 │   └── DungeonTransportPlaneEntity.java # 副本运输机（空投脚本用）
 ├── effect/
 │   ├── FloodingEffect.java
 │   ├── FlammableEffect.java
 │   ├── ReloadBoostEffect.java
-│   └── EvasionEffect.java
+│   ├── EvasionEffect.java
+│   └── ExperienceBoostEffect.java  # 经验提升（足球套装触发）
 ├── menu/
 │   ├── ShipCoreMenu.java / ShipCoreScreen.java
 │   ├── CookingPotMenu.java / CookingPotScreen.java
 │   ├── StoneMillMenu.java / StoneMillScreen.java
-│   └── FlightGroupMenu.java / FlightGroupScreen.java
+│   ├── FlightGroupMenu.java / FlightGroupScreen.java
+│   ├── ReloadFacilityMenu.java / ReloadFacilityScreen.java
+│   ├── AmmoWorkbenchMenu.java / AmmoWorkbenchScreen.java
+│   └── WeaponWorkbenchMenu.java / WeaponWorkbenchScreen.java
 ├── component/
 │   ├── PlaceableInfo.java
 │   ├── AircraftInfo.java
 │   ├── FlightGroupData.java        # 4编组 + slotAmmoTypes + attackMode
 │   ├── LoadedAmmo.java
 │   ├── SlotCooldowns.java
-│   ├── WeaponCategory.java
-│   └── WeaponCooldown.java         # endTick/totalTick/getFraction 冷却数据
+│   ├── WeaponCategory.java         # 含 DEPTH_CHARGE 分类
+│   ├── WeaponCooldown.java         # endTick/totalTick/getFraction 冷却数据
+│   └── FuelData.java               # 舰装核心燃油数据
+├── ammo/                           # 弹药系统
+│   ├── AmmoCategory.java           # 弹药分类
+│   ├── AmmoRecipe.java             # 弹药配方结构
+│   └── AmmoRecipeRegistry.java     # 弹药配方注册表
+├── crafting/                       # 武器合成系统
+│   ├── WeaponWorkbenchRecipe.java  # 武器合成配方
+│   └── WeaponWorkbenchRecipeRegistry.java
+├── skin/                           # 皮肤系统
+│   ├── SkinManager.java            # 服务端皮肤管理
+│   └── ClientSkinData.java         # 客户端皮肤数据
 ├── aviation/
 │   ├── FireControlManager.java     # 服务端锁定列表
 │   ├── ClientFireControlData.java
@@ -115,10 +164,14 @@ src/main/java/com/piranport/
 │   ├── ShipCoreHudLayer.java
 │   ├── FireControlHudLayer.java
 │   ├── ReloadBarDecorator.java
-│   ├── WeaponReloadDecorator.java  # IItemDecorator 武器冷却条（橙=火炮/蓝=鱼雷）
+│   ├── WeaponReloadDecorator.java  # IItemDecorator 武器冷却条（红→黄→绿原版配色）
+│   ├── GuiHelper.java              # 共享GUI绘制工具类
 │   ├── AircraftRenderer.java
 │   ├── CuttingBoardRenderer.java
-│   └── PlaceableFoodRenderer.java
+│   ├── PlaceableFoodRenderer.java
+│   ├── SkinOverlayLayer.java       # 自定义皮肤渲染层
+│   ├── DungeonTransportPlaneRenderer.java
+│   └── LowTierDestroyerRenderer.java
 ├── compat/
 │   └── jei/
 │       ├── PiranPortJEIPlugin.java      # JEI 插件入口
@@ -176,7 +229,7 @@ src/main/java/com/piranport/
 │       └── DungeonLeaderboard.java
 ├── debug/
 │   └── PiranPortDebug.java
-├── network/                        # 所有 CustomPacketPayload
+├── network/                        # 所有 CustomPacketPayload（含 SkinSyncPayload, SkinRevertPayload, AmmoWorkbenchCraftPayload 等）
 ├── recipe/
 ├── worldgen/
 │   └── SaltGenBiomeModifier.java
@@ -213,6 +266,7 @@ src/main/java/com/piranport/
 | 熔炉配方返还容器 | — | 1.21.1 原生支持 crafting remainder |
 | 彩色实体描边 | `entity.setGlowingTag` + team color 不同步 | 客户端记分板队伍 + `ChatFormatting.RED` 等颜色，每tick `syncFcTeam()` |
 | 自定义维度注册 | 代码注册 dimension | `data/piranport/dimension/` + `dimension_type/` JSON 文件 |
+| 导弹发射器构造NPE | `getDefaultItem()` 在 `super()` 期间 displayItemId 为 null | 延迟初始化或 null 检查 |
 
 ### 关键技术要点
 
@@ -229,7 +283,16 @@ src/main/java/com/piranport/
 | 无GUI模式 | 副手驱动自动变身；变身检测用 `TransformationManager.findTransformedCore()` 扫描全背包 |
 | 核心护甲存储 | `SHIP_CORE_ARMOR` DataComponent，`overrideOtherStackedOnMe` 收纳袋逻辑 |
 | 熔炉蒸发制盐 | `SaltEvaporationHandler`：`NeighborNotifyEvent` → 200tick计时 → 水源→盐块/流动水→盐片 |
-| 武器冷却条 | `WeaponReloadDecorator` 实现 `IItemDecorator`，读取 `WEAPON_COOLDOWN` 渲染进度条 |
+| 武器冷却条 | `WeaponReloadDecorator` 实现 `IItemDecorator`，读取 `WEAPON_COOLDOWN` 渲染进度条（红→黄→绿原版配色，导弹独立黄色） |
+| 导弹系统 | 三种类型（ANTI_SHIP/ANTI_AIR/ROCKET），`MissileEntity` 制导追踪，防空导弹自动升空模式下自动打击空中目标 |
+| 深弹系统 | `DepthChargeLauncherItem` 三型号，`DepthChargeEntity` 近炸引信 + 区域魔法伤害，独立DEPTH_CHARGE武器分类 |
+| 命名鱼雷 | 15种（G7a/G7e/MK系列/九式/零式），各有独立伤害/航程/速度属性，`TorpedoEntity` 读取装填物品数据 |
+| 武器/弹药合成 | `WeaponWorkbenchBlock`（5标签页/下拉选择/蓝图/定时合成）+ `AmmoWorkbenchBlock`，配方注册在 `ammo/` 和 `crafting/` 包 |
+| 装填设施 | `ReloadFacilityBlock` 支持火炮/鱼雷/导弹发射器的弹药装填 |
+| 皮肤系统 | `SkinManager`（服务端） + `ClientSkinData` + `SkinOverlayLayer`（渲染层），`SkinCoreItem` 3种变体 |
+| 特殊道具 | 电磁炮（无视重力弹丸）、照明弹（光源+发光）、发烟筒（烟幕方块）、损管（消debuff）、快速修复（瞬间治疗）、维修台（持续恢复）、足球套装（经验提升）、基林发带（恒定隐身） |
+| 无GUI模式负重 | 固定只计算快捷栏（移除hotbarOnlyLoad配置项），副手核心即生效核心 |
+| 潜艇隐身 | 潜艇核心变身后眼睛没入水中时自动获得隐身效果 |
 | 副本系统 | 独立维度 `piranport:dungeon`，JSON驱动关卡数据，实例化战斗场，大厅组队机制 |
 | 副本数据 | `data/piranport/dungeon/` 下 chapters/stages/enemy_sets JSON，`DungeonDataLoader` 加载 |
 | 脚本化节点 | NodeData.script字段触发脚本分发；`DungeonScriptManager` 每tick驱动；`ArtilleryIntroScript` 实现3阶段（空投→拾取→战斗） |
@@ -246,7 +309,6 @@ src/main/java/com/piranport/
 | `fighterAmmoEnabled` | Common | `false` | 战斗机子弹消耗 |
 | `flammableEffectEnabled` | Common | `false` | 易燃易爆Buff |
 | `weaponPickupToInventory` | Common | `false` | 武器拾取进背包 |
-| `hotbarOnlyLoad` | Common | `false` | 仅快捷栏负重（无GUI模式） |
 | `showLegacyReloadHud` | Client | `false` | 显示旧版装填HUD条（已被物品Decorator替代） |
 | `flightGroupEnabled` | Client | `false` | 启用编组配置UI |
 

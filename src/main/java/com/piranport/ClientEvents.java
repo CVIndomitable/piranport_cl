@@ -127,6 +127,14 @@ public class ClientEvents {
     }
 
     @SubscribeEvent
+    public static void registerLayerDefinitions(EntityRenderersEvent.RegisterLayerDefinitions event) {
+        event.registerLayerDefinition(com.piranport.client.model.B25Model.LAYER_LOCATION,
+                com.piranport.client.model.B25Model::createBodyLayer);
+        event.registerLayerDefinition(com.piranport.client.model.F4FModel.LAYER_LOCATION,
+                com.piranport.client.model.F4FModel::createBodyLayer);
+    }
+
+    @SubscribeEvent
     public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(ModEntityTypes.CANNON_PROJECTILE.get(),
                 ThrownItemRenderer::new);

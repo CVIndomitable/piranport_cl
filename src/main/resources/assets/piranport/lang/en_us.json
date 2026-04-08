@@ -573,5 +573,15 @@
   "piranport.book.ruins.enemies.p2": "§lBattleship§r — Strongest cannons + highest defense$(br)§lLight Carrier§r — Launches a few aircraft$(br)§lCarrier§r — Large aircraft squadrons$(br)§lSubmarine§r — Underwater stealth + torpedo attacks$(br)$(br)Abyssal NPCs have fleet alert AI — attacking one may alert the entire fleet!",
   "piranport.book.ruins.loot": "Loot",
   "piranport.book.ruins.loot.p1": "Each ruin type contains different tiers of loot:$(br)$(br)§lPortal Ruins§r — Basic materials, some portal frame blocks$(br)§lSupply Depots§r — Small equipment, resources, flags, sortie channel (rare)$(br)§lOutposts§r — Medium/large equipment, aircraft, exp shells, chaos shards (rare)",
-  "piranport.book.ruins.loot.p2": "§lAbyssal Bases§r — All tiers of equipment, abyssal reports, chaos shards, portal activation cores (rare)$(br)$(br)Chaos shards come in 9 varieties (α-ι), key materials for activating the deep sea portal in a future update. Flags can be used in skin crafting."
+  "piranport.book.ruins.loot.p2": "§lAbyssal Bases§r — All tiers of equipment, abyssal reports, chaos shards, portal activation cores (rare)$(br)$(br)Chaos shards come in 9 varieties (α-ι), key materials for activating the deep sea portal in a future update. Flags can be used in skin crafting.",
+
+  "itemGroup.piranport.decoration": "Piran Port Decoration",
+  "block.piranport.confidential_cargo": "Confidential Cargo",
+  "block.piranport.confidential_cargo.tooltip": "Too naive. It's classified cargo — of course there's no description.",
+  "block.piranport.abyss_red_spider_lily": "Abyss Red Spider Lily",
+  "block.piranport.abyss_red_spider_lily.tooltip": "A flower from the abyss",
+  "block.piranport.italian_dish_kit": "Italian Dish Kit",
+  "block.piranport.italian_dish_kit.tooltip": "An essential companion for enjoying Mediterranean sun and sea breeze.",
+  "block.piranport.b25_model": "B25 Model",
+  "block.piranport.b25_model.tooltip": "B25 model, cannot be launched"
 }

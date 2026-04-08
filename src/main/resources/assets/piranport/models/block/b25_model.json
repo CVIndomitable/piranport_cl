@@ -1,0 +1,9 @@
+{
+  "parent": "piranport:custom/b25_model",
+  "textures": {
+    "all": "piranport:block/b25_model",
+    "particle": "piranport:block/b25_model",
+    "0": "piranport:block/b25_model"
+  },
+  "render_type": "solid"
+}

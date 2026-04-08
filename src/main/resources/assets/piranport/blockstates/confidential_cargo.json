@@ -1,0 +1,5 @@
+{
+  "variants": {
+    "": { "model": "piranport:block/confidential_cargo" }
+  }
+}

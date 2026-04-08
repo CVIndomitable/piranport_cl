@@ -1,65 +1,74 @@
 package com.piranport.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.math.Axis;
+import com.piranport.PiranPort;
+import com.piranport.client.model.B25Model;
+import com.piranport.client.model.F4FModel;
 import com.piranport.component.AircraftInfo;
 import com.piranport.entity.AircraftEntity;
-import com.piranport.registry.ModItems;
-import net.minecraft.client.Minecraft;
+import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.ItemDisplayContext;
-import net.minecraft.world.item.ItemStack;
 
-/** Placeholder renderer — displays the aircraft item spinning at the entity position. */
+/**
+ * Aircraft renderer using 3D entity models.
+ * B25 (LEVEL_BOMBER) uses B25Model, all others use F4FModel.
+ */
 public class AircraftRenderer extends EntityRenderer<AircraftEntity> {
 
-    private static final java.util.EnumMap<AircraftInfo.AircraftType, ItemStack> DISPLAY_STACKS =
-            new java.util.EnumMap<>(AircraftInfo.AircraftType.class);
+    private static final ResourceLocation B25_TEXTURE =
+            ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "textures/entity/b25.png");
+    private static final ResourceLocation F4F_TEXTURE =
+            ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "textures/entity/f4f.png");
 
-    static {
-        // Populated lazily on first render (items must be registered first)
-    }
+    private final B25Model<AircraftEntity> b25Model;
+    private final F4FModel<AircraftEntity> f4fModel;
 
     public AircraftRenderer(EntityRendererProvider.Context ctx) {
         super(ctx);
         this.shadowRadius = 0.5f;
+        this.b25Model = new B25Model<>(ctx.bakeLayer(B25Model.LAYER_LOCATION));
+        this.f4fModel = new F4FModel<>(ctx.bakeLayer(F4FModel.LAYER_LOCATION));
     }
 
     @Override
     public void render(AircraftEntity entity, float entityYaw, float partialTick,
                        PoseStack poseStack, MultiBufferSource bufferSource, int packedLight) {
         poseStack.pushPose();
-        poseStack.mulPose(com.mojang.math.Axis.YP.rotationDegrees(
-                (entity.tickCount + partialTick) * 3.0f));
-        poseStack.scale(0.5f, 0.5f, 0.5f);
 
-        Minecraft.getInstance().getItemRenderer().renderStatic(
-                getDisplayStack(entity),
-                ItemDisplayContext.GROUND,
-                packedLight, OverlayTexture.NO_OVERLAY,
-                poseStack, bufferSource, entity.level(), entity.getId());
+        // Rotate to face entity yaw
+        poseStack.mulPose(Axis.YP.rotationDegrees(-entityYaw));
+        // Flip model (Minecraft entity models are upside-down by convention) and scale up
+        poseStack.scale(1.5f, -1.5f, -1.5f);
+        poseStack.translate(0.0, -1.501, 0.0);
+
+        EntityModel<AircraftEntity> model;
+        ResourceLocation texture;
+        if (entity.getAircraftType() == AircraftInfo.AircraftType.LEVEL_BOMBER) {
+            model = b25Model;
+            texture = B25_TEXTURE;
+        } else {
+            model = f4fModel;
+            texture = F4F_TEXTURE;
+        }
+
+        VertexConsumer vertexConsumer = bufferSource.getBuffer(model.renderType(texture));
+        model.renderToBuffer(poseStack, vertexConsumer, packedLight, OverlayTexture.NO_OVERLAY, -1);
 
         poseStack.popPose();
         super.render(entity, entityYaw, partialTick, poseStack, bufferSource, packedLight);
     }
 
-    private static ItemStack getDisplayStack(AircraftEntity entity) {
-        AircraftInfo.AircraftType type = entity.getAircraftType();
-        return DISPLAY_STACKS.computeIfAbsent(type, t -> switch (t) {
-            case FIGHTER        -> ModItems.FIGHTER_SQUADRON.get().getDefaultInstance();
-            case DIVE_BOMBER    -> ModItems.DIVE_BOMBER_SQUADRON.get().getDefaultInstance();
-            case TORPEDO_BOMBER -> ModItems.SWORDFISH_TORPEDO.get().getDefaultInstance();
-            case LEVEL_BOMBER   -> ModItems.B25_BOMBER.get().getDefaultInstance();
-            case RECON          -> ModItems.RECON_SQUADRON.get().getDefaultInstance();
-        });
-    }
-
     @Override
     public ResourceLocation getTextureLocation(AircraftEntity entity) {
-        return TextureAtlas.LOCATION_BLOCKS;
+        if (entity.getAircraftType() == AircraftInfo.AircraftType.LEVEL_BOMBER) {
+            return B25_TEXTURE;
+        }
+        return F4F_TEXTURE;
     }
 }

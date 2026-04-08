@@ -1,0 +1,9 @@
+{
+  "parent": "piranport:custom/confidential_cargo",
+  "textures": {
+    "all": "piranport:block/confidential_cargo",
+    "particle": "piranport:block/confidential_cargo",
+    "0": "piranport:block/confidential_cargo"
+  },
+  "render_type": "solid"
+}

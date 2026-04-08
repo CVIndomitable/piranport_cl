@@ -62,6 +62,16 @@ public class ModItems {
     public static final DeferredItem<BlockItem> ABYSSAL_SPAWNER =
             ITEMS.registerSimpleBlockItem(ModBlocks.ABYSSAL_SPAWNER);
 
+    // ===== Decorative Blocks (from sheropshire) =====
+    public static final DeferredItem<BlockItem> CONFIDENTIAL_CARGO =
+            ITEMS.registerSimpleBlockItem(ModBlocks.CONFIDENTIAL_CARGO);
+    public static final DeferredItem<BlockItem> ABYSS_RED_SPIDER_LILY =
+            ITEMS.registerSimpleBlockItem(ModBlocks.ABYSS_RED_SPIDER_LILY);
+    public static final DeferredItem<BlockItem> ITALIAN_DISH_KIT =
+            ITEMS.registerSimpleBlockItem(ModBlocks.ITALIAN_DISH_KIT);
+    public static final DeferredItem<BlockItem> B25_MODEL =
+            ITEMS.registerSimpleBlockItem(ModBlocks.B25_MODEL);
+
     // ===== Tab Icon (no components, no bar) =====
     public static final DeferredItem<Item> TAB_ICON =
             ITEMS.registerSimpleItem("tab_icon");

@@ -219,6 +219,23 @@ public class ModBlocks {
                                     .noLootTable()
                                     .noOcclusion()));
 
+    // ===== Decorative Blocks (from sheropshire) =====
+    public static final DeferredBlock<com.piranport.block.ConfidentialCargoBlock> CONFIDENTIAL_CARGO =
+            BLOCKS.register("confidential_cargo",
+                    () -> new com.piranport.block.ConfidentialCargoBlock());
+
+    public static final DeferredBlock<com.piranport.block.AbyssRedSpiderLilyBlock> ABYSS_RED_SPIDER_LILY =
+            BLOCKS.register("abyss_red_spider_lily",
+                    () -> new com.piranport.block.AbyssRedSpiderLilyBlock());
+
+    public static final DeferredBlock<com.piranport.block.ItalianDishKitBlock> ITALIAN_DISH_KIT =
+            BLOCKS.register("italian_dish_kit",
+                    () -> new com.piranport.block.ItalianDishKitBlock());
+
+    public static final DeferredBlock<com.piranport.block.B25ModelBlock> B25_MODEL =
+            BLOCKS.register("b25_model",
+                    () -> new com.piranport.block.B25ModelBlock());
+
     // ===== Dungeon System (v0.0.8) =====
     public static final DeferredBlock<com.piranport.dungeon.block.DungeonLecternBlock> DUNGEON_LECTERN =
             BLOCKS.register("dungeon_lectern",

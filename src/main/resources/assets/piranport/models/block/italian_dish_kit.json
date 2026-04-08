@@ -1,0 +1,9 @@
+{
+  "parent": "piranport:custom/italian_dish_kit",
+  "textures": {
+    "all": "piranport:block/italian_dish_kit",
+    "particle": "piranport:block/italian_dish_kit",
+    "1": "piranport:block/italian_dish_kit"
+  },
+  "render_type": "solid"
+}

@@ -354,6 +354,19 @@ public class ModCreativeTabs {
                         output.accept(ModItems.SHIP_GIRL_SPAWN_EGG.get());
                     }).build());
 
+    // ===== 装饰 — 家具/花卉/模型 =====
+    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> DECORATION_TAB =
+            CREATIVE_TABS.register("decoration_tab", () -> CreativeModeTab.builder()
+                    .title(Component.translatable("itemGroup.piranport.decoration"))
+                    .withTabsBefore(CreativeModeTabs.COMBAT)
+                    .icon(() -> ModItems.CONFIDENTIAL_CARGO.get().getDefaultInstance())
+                    .displayItems((parameters, output) -> {
+                        output.accept(ModItems.CONFIDENTIAL_CARGO.get());
+                        output.accept(ModItems.ABYSS_RED_SPIDER_LILY.get());
+                        output.accept(ModItems.ITALIAN_DISH_KIT.get());
+                        output.accept(ModItems.B25_MODEL.get());
+                    }).build());
+
     // ===== 遗迹 — 传送门/碎片/国旗/档案 =====
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> RUINS_TAB =
             CREATIVE_TABS.register("ruins_tab", () -> CreativeModeTab.builder()

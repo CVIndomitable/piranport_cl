@@ -573,5 +573,15 @@
   "piranport.book.ruins.enemies.p2": "§l战列§r — 最强炮击+最高防御$(br)§l轻母§r — 放飞少量舰载机$(br)§l航母§r — 大量舰载机编队$(br)§l潜艇§r — 水下隐身+鱼雷攻击$(br)$(br)深海NPC具有集群警戒AI，攻击其中一个可能会引来整个舰队！",
   "piranport.book.ruins.loot": "战利品",
   "piranport.book.ruins.loot.p1": "每类遗迹都含有不同等级的战利品箱：$(br)$(br)§l传送门遗迹§r — 基础材料、少量传送门框架$(br)§l补给站§r — 小型装备、油弹钢铝、国旗、出击渠（稀有）$(br)§l前哨站§r — 中大型装备、舰载机、经验炮弹、无序意志碎片（稀有）",
-  "piranport.book.ruins.loot.p2": "§l深海基地§r — 全等级装备、深海作战档案、无序意志碎片、传送门激活核心（稀有）$(br)$(br)无序意志碎片共有9种（α~ι），是未来激活深海传送门的关键材料。国旗可用于皮肤合成。"
+  "piranport.book.ruins.loot.p2": "§l深海基地§r — 全等级装备、深海作战档案、无序意志碎片、传送门激活核心（稀有）$(br)$(br)无序意志碎片共有9种（α~ι），是未来激活深海传送门的关键材料。国旗可用于皮肤合成。",
+
+  "itemGroup.piranport.decoration": "皮兰港装饰",
+  "block.piranport.confidential_cargo": "机密货物",
+  "block.piranport.confidential_cargo.tooltip": "太天真了，都说了是极密货物，怎么会有说明。",
+  "block.piranport.abyss_red_spider_lily": "深渊彼岸花",
+  "block.piranport.abyss_red_spider_lily.tooltip": "来自深渊的花卉",
+  "block.piranport.italian_dish_kit": "意式餐具",
+  "block.piranport.italian_dish_kit.tooltip": "享受地中海阳光和海风必不可少的伴侣。",
+  "block.piranport.b25_model": "B25模型",
+  "block.piranport.b25_model.tooltip": "B25模型，无法放飞"
 }

@@ -30,7 +30,7 @@ public class BulletEntity extends ThrowableItemProjectile {
 
     @Override
     protected Item getDefaultItem() {
-        return ModItems.FIGHTER_AMMO.get();
+        return ModItems.PROJECTILE_BULLET.get();
     }
 
     private static final int MAX_LIFETIME = 600; // 30 seconds

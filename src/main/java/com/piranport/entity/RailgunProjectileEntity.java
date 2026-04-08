@@ -33,7 +33,7 @@ public class RailgunProjectileEntity extends ThrowableItemProjectile {
 
     @Override
     protected Item getDefaultItem() {
-        return ModItems.MYSTERIOUS_WEAPON.get();
+        return ModItems.PROJECTILE_BULLET.get();
     }
 
     @Override

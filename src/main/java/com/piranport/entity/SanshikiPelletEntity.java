@@ -40,7 +40,7 @@ public class SanshikiPelletEntity extends ThrowableItemProjectile {
 
     @Override
     protected Item getDefaultItem() {
-        return ModItems.SMALL_TYPE3_SHELL.get();
+        return ModItems.PROJECTILE_BULLET.get();
     }
 
     @Override

@@ -723,6 +723,10 @@ public class ModItems {
             ITEMS.register("fighter_ammo",
                     () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.fighter_ammo"));
 
+    // 弹丸渲染用隐藏物品（不加入创造模式标签页）
+    public static final DeferredItem<Item> PROJECTILE_BULLET =
+            ITEMS.register("projectile_bullet", () -> new Item(new Item.Properties()));
+
     // ===== Phase 19: Floating Target =====
     public static final DeferredItem<com.piranport.item.FloatingTargetItem> FLOATING_TARGET =
             ITEMS.register("floating_target",

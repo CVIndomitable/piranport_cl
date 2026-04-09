@@ -241,6 +241,7 @@ public final class PiranPortCommands {
                     .normalize();
             float speed = MissileEntity.MissileType.ANTI_SHIP.initialSpeed;
             missile.setDeltaMovement(toPlayer.scale(speed));
+            missile.setTrackedTarget(player);
 
             level.addFreshEntity(missile);
             fired++;

@@ -69,6 +69,8 @@ public class MissileEntity extends ThrowableItemProjectile {
     private static final float MAX_TURN_DEG = 12.0f;
     /** Cached tracking target for guided missiles. */
     private Entity trackedTarget = null;
+    /** When true, skip automatic target search and keep the manually assigned target. */
+    private boolean manualTarget = false;
     /** Ticks until next target search (throttle). */
     private int targetSearchCooldown = 0;
 
@@ -91,6 +93,12 @@ public class MissileEntity extends ThrowableItemProjectile {
         this.explosionPower = explosionPower;
         this.currentSpeed = type.initialSpeed;
         this.displayItemId = displayItemId;
+    }
+
+    /** 手动指定追踪目标，跳过自动搜索逻辑。 */
+    public void setTrackedTarget(Entity target) {
+        this.trackedTarget = target;
+        this.manualTarget = true;
     }
 
     @Override
@@ -147,7 +155,7 @@ public class MissileEntity extends ThrowableItemProjectile {
                 if (trackedTarget != null && (!trackedTarget.isAlive() || trackedTarget.isRemoved())) {
                     trackedTarget = null;
                 }
-                if (trackedTarget == null && --targetSearchCooldown <= 0) {
+                if (trackedTarget == null && !manualTarget && --targetSearchCooldown <= 0) {
                     trackedTarget = findTarget();
                     targetSearchCooldown = 5;
                 }

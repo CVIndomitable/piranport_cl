@@ -1,7 +1,7 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "piranport:item/tbf_asw_empty"
+    "layer0": "piranport:item/tbf_torpedo_empty"
   },
   "overrides": [
     {

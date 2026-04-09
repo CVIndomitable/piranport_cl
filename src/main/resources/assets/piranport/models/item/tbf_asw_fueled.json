@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "piranport:item/tbf_asw"
+    "layer0": "piranport:item/tbf_torpedo"
   }
 }

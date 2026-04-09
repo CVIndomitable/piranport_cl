@@ -3,10 +3,15 @@ package com.piranport.debug;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
+import com.piranport.component.AircraftInfo;
+import com.piranport.component.FlightGroupData;
+import com.piranport.entity.AircraftEntity;
 import com.piranport.entity.FloatingTargetEntity;
 import com.piranport.entity.MissileEntity;
 import com.piranport.npc.deepocean.AbstractDeepOceanEntity;
 import com.piranport.registry.ModBlocks;
+import com.piranport.registry.ModDataComponents;
+import com.piranport.registry.ModItems;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.core.BlockPos;
@@ -19,6 +24,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
@@ -77,6 +83,10 @@ public final class PiranPortCommands {
                 // /ppd target_fire
                 .then(Commands.literal("target_fire")
                         .executes(ctx -> targetFire(ctx.getSource())))
+
+                // /ppd target_b25
+                .then(Commands.literal("target_b25")
+                        .executes(ctx -> targetB25(ctx.getSource())))
 
                 // /ppd locate_ruin <type>
                 .then(Commands.literal("locate_ruin")
@@ -240,6 +250,52 @@ public final class PiranPortCommands {
         source.sendSuccess(() -> Component.literal(
                 finalFired + " 个浮动靶子向你发射了导弹！"), true);
         return fired;
+    }
+
+    private static int targetB25(CommandSourceStack source) {
+        ServerPlayer player = source.getPlayer();
+        if (player == null) {
+            source.sendFailure(Component.literal("Must be run by a player"));
+            return 0;
+        }
+
+        ServerLevel level = player.serverLevel();
+        double range = 32.0;
+        AABB searchBox = player.getBoundingBox().inflate(range);
+        List<FloatingTargetEntity> targets = level.getEntitiesOfClass(
+                FloatingTargetEntity.class, searchBox, Entity::isAlive);
+
+        if (targets.isEmpty()) {
+            source.sendFailure(Component.literal("附近没有浮动靶子"));
+            return 0;
+        }
+
+        int launched = 0;
+        for (FloatingTargetEntity target : targets) {
+            ItemStack b25Stack = new ItemStack(ModItems.B25_BOMBER.get());
+            AircraftInfo info = b25Stack.get(ModDataComponents.AIRCRAFT_INFO.get());
+            if (info != null) {
+                b25Stack.set(ModDataComponents.AIRCRAFT_INFO.get(),
+                        info.withCurrentFuel(info.fuelCapacity()));
+            }
+
+            AircraftEntity aircraft = AircraftEntity.create(
+                    level, player, -1, b25Stack,
+                    FlightGroupData.AttackMode.SPREAD,
+                    -1, false, "piranport:aerial_bomb");
+
+            aircraft.setPos(target.getX(),
+                    target.getY() + target.getBbHeight() + 1.0,
+                    target.getZ());
+
+            level.addFreshEntity(aircraft);
+            launched++;
+        }
+
+        int finalLaunched = launched;
+        source.sendSuccess(() -> Component.literal(
+                finalLaunched + " 个浮动靶子放飞了B25轰炸机！"), true);
+        return launched;
     }
 
     private static int locateRuin(CommandSourceStack source, String type) {

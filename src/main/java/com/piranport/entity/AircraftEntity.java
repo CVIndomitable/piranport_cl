@@ -87,6 +87,8 @@ public class AircraftEntity extends Entity {
     private int stateTicks = 0;
     private int attackCooldown = 0;
     private boolean hasFired = false;
+    private boolean diveCommitted = false;  // true once dive bomber locks its drop point
+    @Nullable private Vec3 diveTarget = null; // predicted bomb drop point (fixed after commit)
     private int autoSeekCooldown = 0; // P3 #30: throttle AABB queries
     private boolean autoSeekDone = false;    // true after first auto-seek scan (one-shot)
     private boolean hasEverHadFireControl = false; // true if FC target was ever assigned
@@ -575,8 +577,8 @@ public class AircraftEntity extends Entity {
     }
 
     /**
-     * DIVE_BOMBER: climb to target+18 blocks, then dive.
-     * On close contact (dist < 4), drop an AerialBombEntity and return.
+     * DIVE_BOMBER: climb to target+18 blocks, then commit to a dive with lead prediction.
+     * Once the dive is committed, the drop point is fixed — no more recalculation.
      */
     private void tickDiveBomberAttack(Player owner, LivingEntity target) {
         if (hasFired) {
@@ -590,26 +592,43 @@ public class AircraftEntity extends Entity {
 
         double climbY = target.getY() + 18.0;
 
-        if (getY() < climbY - 1.0 && stateTicks < 80) {
+        // Phase 1: Climb — ascend above the target until altitude reached or timeout
+        if (!diveCommitted && getY() < climbY - 1.0 && stateTicks < 80) {
             Vec3 toClimb = new Vec3(target.getX() - getX(), climbY - getY(), target.getZ() - getZ());
             double dist = toClimb.length();
             setDeltaMovement(toClimb.normalize().scale(Math.min(panelSpeed * 0.4, dist)));
-        } else {
-            Vec3 toTarget = target.getEyePosition().subtract(position());
-            double dist = toTarget.length();
-            if (dist < 4.0) {
-                AerialBombEntity bomb = new AerialBombEntity(level(), panelDamage * 1.5f, 2.5f);
-                bomb.setPos(getX(), getY(), getZ());
-                bomb.setDeltaMovement(getDeltaMovement().x * 0.2, -0.3, getDeltaMovement().z * 0.2);
-                bomb.setOwner(owner);
-                bomb.setSourceAircraftName(getDisplayName());
-                level().addFreshEntity(bomb);
-                hasFired = true;
-                startReturning("dive_bomb_dropped");
-                return;
-            }
-            setDeltaMovement(toTarget.normalize().scale(Math.min(panelSpeed * 0.6, dist)));
+            return;
         }
+
+        // Phase 2: Commit — lock the predicted drop point once
+        if (!diveCommitted) {
+            diveCommitted = true;
+            Vec3 targetPos = target.getEyePosition();
+            double estimatedDist = position().distanceTo(targetPos);
+            double diveSpeed = Math.max(panelSpeed * 0.6, 0.1);
+            double estimatedTicks = estimatedDist / diveSpeed;
+            Vec3 targetVel = target.getDeltaMovement();
+            diveTarget = targetPos.add(targetVel.scale(estimatedTicks));
+        }
+
+        // Phase 3: Dive — fly toward the fixed predicted point
+        Vec3 toTarget = diveTarget.subtract(position());
+        double dist = toTarget.length();
+
+        // Drop bomb when close enough or when aircraft has descended past the drop point
+        if (dist < 4.0 || getY() < diveTarget.y()) {
+            AerialBombEntity bomb = new AerialBombEntity(level(), panelDamage * 1.5f, 2.5f);
+            bomb.setPos(getX(), getY(), getZ());
+            bomb.setDeltaMovement(getDeltaMovement().x * 0.2, -0.3, getDeltaMovement().z * 0.2);
+            bomb.setOwner(owner);
+            bomb.setSourceAircraftName(getDisplayName());
+            level().addFreshEntity(bomb);
+            hasFired = true;
+            startReturning("dive_bomb_dropped");
+            return;
+        }
+
+        setDeltaMovement(toTarget.normalize().scale(Math.min(panelSpeed * 0.6, dist)));
     }
 
     /**
@@ -1304,6 +1323,8 @@ public class AircraftEntity extends Entity {
         if (newState == FlightState.ATTACKING) {
             hasFired = false;
             attackCooldown = 0;
+            diveCommitted = false;
+            diveTarget = null;
         }
         entityData.set(STATE, newState.ordinal());
         stateTicks = 0;

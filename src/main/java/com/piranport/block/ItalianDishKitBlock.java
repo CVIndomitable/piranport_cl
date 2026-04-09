@@ -21,6 +21,8 @@ import java.util.List;
 /** Decorative Italian dish set block (ported from sheropshire). */
 public class ItalianDishKitBlock extends Block {
 
+    private static final VoxelShape SHAPE = Block.box(0.0, 0.0, 0.0, 16.0, 2.0, 16.0);
+
     public ItalianDishKitBlock() {
         super(BlockBehaviour.Properties.of()
                 .mapColor(MapColor.TERRACOTTA_WHITE)
@@ -36,6 +38,18 @@ public class ItalianDishKitBlock extends Block {
                                 List<Component> tooltip, TooltipFlag flag) {
         super.appendHoverText(stack, context, tooltip, flag);
         tooltip.add(Component.translatable("block.piranport.italian_dish_kit.tooltip"));
+    }
+
+    @Override
+    public VoxelShape getShape(BlockState state, BlockGetter world, BlockPos pos,
+                               CollisionContext context) {
+        return SHAPE;
+    }
+
+    @Override
+    public VoxelShape getCollisionShape(BlockState state, BlockGetter world, BlockPos pos,
+                                        CollisionContext context) {
+        return SHAPE;
     }
 
     @Override

@@ -57,6 +57,17 @@ public class ClientTickHandler {
     /** Throttle full entity scan to every 4 ticks when only highlight (not FC) is active. */
     private static int entityScanCooldown = 0;
 
+    /**
+     * Returns true if the entity has vanilla-level glowing (e.g. Glowing MobEffect, spectral arrow).
+     * Vanilla glow has the highest priority and must never be removed by our mod.
+     */
+    private static boolean hasVanillaGlow(Entity entity) {
+        if (entity instanceof LivingEntity living) {
+            return living.hasEffect(net.minecraft.world.effect.MobEffects.GLOWING);
+        }
+        return false;
+    }
+
     /** Reset all client-side static state (called on disconnect). */
     public static void resetClientState() {
         highlightEnabled = false;
@@ -188,12 +199,12 @@ public class ClientTickHandler {
         while (ModKeyMappings.HIGHLIGHT_ENTITIES.consumeClick()) {
             highlightEnabled = !highlightEnabled;
             if (!highlightEnabled) {
-                // Remove glow from highlight-only entities; keep FC targets glowing
+                // Remove glow from highlight-only entities; keep FC targets and vanilla glowing
                 if (mc.level != null) {
                     java.util.Set<UUID> fcTargets = new java.util.HashSet<>(ClientFireControlData.getTargets());
                     for (int id : new HashSet<>(highlightedEntityIds)) {
                         Entity e = mc.level.getEntity(id);
-                        if (e != null && !fcTargets.contains(e.getUUID())) {
+                        if (e != null && !fcTargets.contains(e.getUUID()) && !hasVanillaGlow(e)) {
                             e.setGlowingTag(false);
                             highlightedEntityIds.remove(id);
                         }
@@ -233,7 +244,10 @@ public class ClientTickHandler {
                                 currentFcMembers.add(entity.getStringUUID());
                             }
                         } else if (highlightedEntityIds.contains(entity.getId())) {
-                            entity.setGlowingTag(false);
+                            // Respect vanilla glow priority — don't remove if entity has Glowing effect
+                            if (!hasVanillaGlow(entity)) {
+                                entity.setGlowingTag(false);
+                            }
                             highlightedEntityIds.remove(entity.getId());
                         }
                     }

@@ -1507,15 +1507,21 @@ public class AircraftEntity extends Entity {
 
     @Override
     public boolean isCurrentlyGlowing() {
+        // Vanilla glow has highest priority
+        if (super.isCurrentlyGlowing()) return true;
         if (level().isClientSide()) {
             return AircraftGlowHelper.shouldGlow(this);
         }
-        return super.isCurrentlyGlowing();
+        return false;
     }
 
     @Override
     public int getTeamColor() {
         if (level().isClientSide()) {
+            // Vanilla glow has highest priority for color
+            if (super.isCurrentlyGlowing() && !AircraftGlowHelper.isFcTarget(this)) {
+                return super.getTeamColor();
+            }
             return AircraftGlowHelper.getGlowColor(this);
         }
         return super.getTeamColor();

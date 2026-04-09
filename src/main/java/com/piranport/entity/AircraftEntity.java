@@ -113,6 +113,7 @@ public class AircraftEntity extends Entity {
     // Client-side position interpolation (prevents camera stutter from raw setPos jumps)
     private int clientLerpSteps;
     private double clientLerpX, clientLerpY, clientLerpZ;
+    private float clientLerpYRot, clientLerpXRot;
 
     // P2 #29: preserve original ItemStack across launch-return cycle
     private ItemStack originalStack = ItemStack.EMPTY;
@@ -214,8 +215,9 @@ public class AircraftEntity extends Entity {
                     && com.piranport.aviation.ClientReconData.getReconEntityId() == getId()) {
                 return;
             }
-            // Non-recon: accept server rotation directly
-            this.setRot(yRot, xRot);
+            // Non-recon: store target rotation for smooth lerping in tick()
+            this.clientLerpYRot = yRot;
+            this.clientLerpXRot = xRot;
             return;
         }
         super.lerpTo(x, y, z, yRot, xRot, steps);
@@ -229,15 +231,21 @@ public class AircraftEntity extends Entity {
     public void tick() {
         super.tick();
 
-        // Client: position interpolation + particles
+        // Client: position + rotation interpolation + particles
         if (level().isClientSide()) {
-            // Process position lerp steps for smooth camera/render movement
+            // Process position and rotation lerp steps for smooth rendering
             if (clientLerpSteps > 0) {
                 double d = 1.0 / (double) clientLerpSteps;
                 double nx = getX() + (clientLerpX - getX()) * d;
                 double ny = getY() + (clientLerpY - getY()) * d;
                 double nz = getZ() + (clientLerpZ - getZ()) * d;
                 setPos(nx, ny, nz);
+                // Smooth rotation lerp (shortest-path yaw wrapping)
+                float yDiff = clientLerpYRot - getYRot();
+                while (yDiff > 180f) yDiff -= 360f;
+                while (yDiff < -180f) yDiff += 360f;
+                setYRot(getYRot() + yDiff * (float) d);
+                setXRot(getXRot() + (clientLerpXRot - getXRot()) * (float) d);
                 clientLerpSteps--;
             }
             if (getFlightState() == FlightState.CRUISING && tickCount % 8 == 0) {
@@ -337,10 +345,18 @@ public class AircraftEntity extends Entity {
             case RECON_ACTIVE   -> tickReconActive(owner);
         }
 
+        // Update rotation to face movement direction (nose forward)
+        Vec3 vel = getDeltaMovement();
+        double hDist = vel.horizontalDistance();
+        if (hDist > 0.001) {
+            float targetYaw = (float) (Math.atan2(-vel.x, vel.z) * (180.0 / Math.PI));
+            float targetPitch = (float) (Math.atan2(vel.y, hDist) * (180.0 / Math.PI));
+            setYRot(targetYaw);
+            setXRot(targetPitch);
+        }
+
         // Apply movement
-        setPos(getX() + getDeltaMovement().x,
-               getY() + getDeltaMovement().y,
-               getZ() + getDeltaMovement().z);
+        setPos(getX() + vel.x, getY() + vel.y, getZ() + vel.z);
     }
 
     // ===== State transition hooks =====

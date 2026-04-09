@@ -492,8 +492,8 @@ public class ModItems {
                     () -> new AircraftItem(new Item.Properties().stacksTo(1)
                             .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
                             .component(ModDataComponents.AIRCRAFT_INFO.get(),
-                                    new AircraftInfo(AircraftInfo.AircraftType.TORPEDO_BOMBER,
-                                            1200, 6, 0, 8f, 0.8f, 16, AircraftInfo.BombingMode.DIVE))));
+                                    new AircraftInfo(AircraftInfo.AircraftType.ASW,
+                                            1200, 6, 0, 8f, 0.8f, 16, AircraftInfo.BombingMode.LEVEL))));
 
     /** TBF（鱼雷）— 1×533鱼雷21, HP5, 56节 */
     public static final DeferredItem<AircraftItem> TBF_TORPEDO =
@@ -510,8 +510,8 @@ public class ModItems {
                     () -> new AircraftItem(new Item.Properties().stacksTo(1)
                             .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
                             .component(ModDataComponents.AIRCRAFT_INFO.get(),
-                                    new AircraftInfo(AircraftInfo.AircraftType.TORPEDO_BOMBER,
-                                            1200, 4, 0, 8f, 0.9f, 18, AircraftInfo.BombingMode.DIVE))));
+                                    new AircraftInfo(AircraftInfo.AircraftType.ASW,
+                                            1200, 4, 0, 8f, 0.9f, 18, AircraftInfo.BombingMode.LEVEL))));
 
     /** 天山（鱼雷）— 610鱼雷24, HP4, 64�� */
     public static final DeferredItem<AircraftItem> TENZAN_TORPEDO =

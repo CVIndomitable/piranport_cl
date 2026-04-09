@@ -300,6 +300,7 @@
   "tooltip.piranport.aircraft_type.dive_bomber": "俯冲轰炸机",
   "tooltip.piranport.aircraft_type.torpedo_bomber": "鱼雷机",
   "tooltip.piranport.aircraft_type.level_bomber": "水平轰炸机",
+  "tooltip.piranport.aircraft_type.asw": "反潜机",
   "tooltip.piranport.aircraft_type.recon": "侦察机",
   "tooltip.piranport.aircraft_ammo_capacity": "弹药容量: %s",
   "tooltip.piranport.aircraft_damage": "攻击力: %s",

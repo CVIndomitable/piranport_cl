@@ -7,6 +7,7 @@ import com.piranport.aviation.ReconManager;
 import com.piranport.component.AircraftInfo;
 import com.piranport.component.FlightGroupData;
 import com.piranport.item.ShipCoreItem;
+import com.piranport.network.AswSonarSyncPayload;
 import com.piranport.network.ReconEndPayload;
 import com.piranport.network.ReconStartPayload;
 import com.piranport.registry.ModDataComponents;
@@ -17,6 +18,8 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.animal.WaterAnimal;
+import net.minecraft.world.entity.monster.Guardian;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -174,6 +177,7 @@ public class AircraftEntity extends Entity {
             switch (entity.aircraftType) {
                 case TORPEDO_BOMBER -> entity.payloadType = "piranport:aerial_torpedo";
                 case DIVE_BOMBER, LEVEL_BOMBER -> entity.payloadType = "piranport:aerial_bomb";
+                case ASW -> entity.payloadType = "piranport:depth_charge";
                 default -> { /* FIGHTER / RECON keep empty payload */ }
             }
             if (!entity.payloadType.isEmpty()) {
@@ -386,6 +390,13 @@ public class AircraftEntity extends Entity {
             case RECON_ACTIVE   -> tickReconActive(owner);
         }
 
+        // ASW sonar scan: every 20 ticks while cruising or attacking
+        if (aircraftType == AircraftInfo.AircraftType.ASW
+                && (state == FlightState.CRUISING || state == FlightState.ATTACKING)
+                && tickCount % 20 == 0) {
+            tickAswSonar(owner);
+        }
+
         // Update rotation to face movement direction (nose forward)
         Vec3 vel = getDeltaMovement();
         double hDist = vel.horizontalDistance();
@@ -442,20 +453,31 @@ public class AircraftEntity extends Entity {
     }
 
     private void tickCruising(Player owner) {
+        boolean isAsw = aircraftType == AircraftInfo.AircraftType.ASW;
         // Transition to ATTACKING if owner has locked targets with at least one alive entity
         if (aircraftType != AircraftInfo.AircraftType.RECON
                 && (hasBullets || !payloadType.isEmpty())
                 && !FireControlManager.getTargets(owner.getUUID()).isEmpty()) {
             // Verify at least one locked target is still alive before transitioning
             if (hasAliveLockedTarget(owner)) {
-                // Attack aircraft (payload-only, no bullets) skip airborne targets
-                boolean isAttackAircraft = !hasBullets && !payloadType.isEmpty();
-                if (!isAttackAircraft || hasAliveGroundLockedTarget(owner)) {
-                    hasEverHadFireControl = true;
-                    setState(FlightState.ATTACKING);
-                    return;
+                // ASW: only transition if there's an alive ASW-eligible target
+                if (isAsw) {
+                    if (hasAliveAswLockedTarget(owner)) {
+                        hasEverHadFireControl = true;
+                        setState(FlightState.ATTACKING);
+                        return;
+                    }
+                    // ASW: alive targets exist but none are aquatic — stay cruising
+                } else {
+                    // Attack aircraft (payload-only, no bullets) skip airborne targets
+                    boolean isAttackAircraft = !hasBullets && !payloadType.isEmpty();
+                    if (!isAttackAircraft || hasAliveGroundLockedTarget(owner)) {
+                        hasEverHadFireControl = true;
+                        setState(FlightState.ATTACKING);
+                        return;
+                    }
+                    // Attack aircraft: alive targets exist but all airborne — stay cruising
                 }
-                // Attack aircraft: alive targets exist but all airborne — stay cruising
             } else {
                 // All locked targets are dead — clean up stale UUIDs
                 FireControlManager.clearTargets(owner.getUUID());
@@ -474,9 +496,15 @@ public class AircraftEntity extends Entity {
                 autoSeekDone = true;
                 if (level() instanceof ServerLevel sl) {
                     AABB box = getBoundingBox().inflate(32.0);
-                    boolean hasNearbyHostile = !sl.getEntitiesOfClass(LivingEntity.class, box,
-                            e -> e.isAlive() && e != owner && e instanceof Monster && !isAirborneTarget(e)).isEmpty();
-                    if (hasNearbyHostile) {
+                    boolean hasNearbyTarget;
+                    if (isAsw) {
+                        hasNearbyTarget = !sl.getEntitiesOfClass(LivingEntity.class, box,
+                                e -> e.isAlive() && e != owner && isAswTarget(e)).isEmpty();
+                    } else {
+                        hasNearbyTarget = !sl.getEntitiesOfClass(LivingEntity.class, box,
+                                e -> e.isAlive() && e != owner && e instanceof Monster && !isAirborneTarget(e)).isEmpty();
+                    }
+                    if (hasNearbyTarget) {
                         autoSeekCooldown = 0; // reset so resolveTarget() finds it immediately
                         setState(FlightState.ATTACKING);
                         return;
@@ -565,6 +593,11 @@ public class AircraftEntity extends Entity {
                 } else {
                     tickDiveBomberAttack(owner, target);
                 }
+            }
+            case "piranport:depth_charge" -> {
+                LivingEntity target = resolveASWTarget(owner);
+                if (target == null) { setState(FlightState.CRUISING); return; }
+                tickASWAttack(owner, target);
             }
             default -> startReturning("no_payload"); // 无挂载，不攻击
         }
@@ -772,6 +805,113 @@ public class AircraftEntity extends Entity {
     }
 
     /**
+     * ASW: fly at target+20 altitude, drop depth charges when over target.
+     * Similar to level bomber but lower altitude and uses DepthChargeEntity.
+     */
+    private void tickASWAttack(Player owner, LivingEntity target) {
+        if (remainingAmmo <= 0) {
+            if (ModCommonConfig.AUTO_RESUPPLY_ENABLED.get() && tryAutoResupplyAmmo(owner)) {
+                // Ammo restored — continue attacking
+            } else {
+                startReturning("asw_ammo_depleted");
+                return;
+            }
+        }
+
+        double bombAltitude = target.getY() + 20.0;
+
+        if (getY() < bombAltitude - 1.5) {
+            Vec3 toPoint = new Vec3(target.getX() - getX(), bombAltitude - getY(), target.getZ() - getZ());
+            double dist = toPoint.length();
+            setDeltaMovement(toPoint.normalize().scale(Math.min(panelSpeed * 0.4, dist)));
+        } else {
+            double dx = target.getX() - getX();
+            double dz = target.getZ() - getZ();
+            double horizDist = Math.sqrt(dx * dx + dz * dz);
+
+            if (horizDist < 4.0 && attackCooldown <= 0) {
+                DepthChargeEntity dc = new DepthChargeEntity(level(), panelDamage * 1.5f, 3.0f);
+                dc.setPos(getX(), getY(), getZ());
+                dc.setDeltaMovement(getDeltaMovement().x * 0.1, -0.1, getDeltaMovement().z * 0.1);
+                dc.setOwner(owner);
+                level().addFreshEntity(dc);
+                remainingAmmo--;
+                attackCooldown = 30;
+            }
+
+            Vec3 horizontal = new Vec3(dx, 0, dz).normalize().scale(Math.min(panelSpeed * 0.4, horizDist));
+            double yCorrect = (bombAltitude - getY()) * 0.15;
+            setDeltaMovement(horizontal.x, yCorrect, horizontal.z);
+        }
+    }
+
+    /**
+     * ASW target resolution: only targets submarines and aquatic creatures.
+     * 1. FC-locked targets (filtered to ASW-eligible)
+     * 2. Auto-seek: underwater monsters and aquatic creatures within 32 blocks.
+     */
+    @Nullable
+    private LivingEntity resolveASWTarget(Player owner) {
+        if (!(level() instanceof ServerLevel sl)) return null;
+
+        List<UUID> locks = FireControlManager.getTargets(owner.getUUID());
+        if (!locks.isEmpty()) {
+            if (attackMode == FlightGroupData.AttackMode.SPREAD) {
+                return locks.stream()
+                        .map(sl::getEntity)
+                        .filter(e -> e instanceof LivingEntity le && le.isAlive() && isAswTarget(le))
+                        .map(e -> (LivingEntity) e)
+                        .min(Comparator.comparingDouble(this::distanceTo))
+                        .orElse(null);
+            } else {
+                for (UUID uuid : locks) {
+                    Entity e = sl.getEntity(uuid);
+                    if (e instanceof LivingEntity le && le.isAlive() && isAswTarget(le)) return le;
+                }
+                return null;
+            }
+        }
+
+        // Auto-seek: only once after launch
+        if (hasEverHadFireControl || autoSeekDone) return null;
+        if (autoSeekCooldown > 0) { autoSeekCooldown--; return null; }
+        autoSeekDone = true;
+        AABB box = getBoundingBox().inflate(32.0);
+        return sl.getEntitiesOfClass(LivingEntity.class, box,
+                e -> e.isAlive() && e != owner && isAswTarget(e))
+                .stream()
+                .min(Comparator.comparingDouble(this::distanceTo))
+                .orElse(null);
+    }
+
+    /** Returns true if the entity qualifies as an ASW target (submarine or aquatic creature). */
+    private static boolean isAswTarget(Entity e) {
+        if (e instanceof com.piranport.npc.deepocean.DeepOceanSubmarineEntity) return true;
+        if (e instanceof WaterAnimal) return true;
+        if (e instanceof Guardian) return true;
+        // Any monster currently submerged in water
+        if (e instanceof Monster && e.isInWater()) return true;
+        return false;
+    }
+
+    /**
+     * ASW sonar: scan 16-block radius for underwater entities and send detections to owner.
+     * Called from main tick every 20 ticks while ASW aircraft is active (CRUISING or ATTACKING).
+     */
+    private void tickAswSonar(Player owner) {
+        if (!(level() instanceof ServerLevel sl)) return;
+        if (!(owner instanceof ServerPlayer sp)) return;
+
+        AABB sonarBox = getBoundingBox().inflate(16.0);
+        List<Integer> detectedIds = new java.util.ArrayList<>();
+        for (LivingEntity e : sl.getEntitiesOfClass(LivingEntity.class, sonarBox,
+                le -> le.isAlive() && le != owner && (le.isInWater() || isAswTarget(le)))) {
+            detectedIds.add(e.getId());
+        }
+        PacketDistributor.sendToPlayer(sp, new AswSonarSyncPayload(getId(), detectedIds));
+    }
+
+    /**
      * RECON_ACTIVE: read movement input from ReconManager and apply to entity.
      * Maintains chunk forcing around current position (view-distance radius, like a player).
      */
@@ -964,6 +1104,16 @@ public class AircraftEntity extends Entity {
         for (UUID uuid : FireControlManager.getTargets(owner.getUUID())) {
             Entity e = sl.getEntity(uuid);
             if (e instanceof LivingEntity le && le.isAlive() && !isAirborneTarget(le)) return true;
+        }
+        return false;
+    }
+
+    /** Check if any locked target is alive AND is an ASW-eligible target. */
+    private boolean hasAliveAswLockedTarget(Player owner) {
+        if (!(level() instanceof ServerLevel sl)) return false;
+        for (UUID uuid : FireControlManager.getTargets(owner.getUUID())) {
+            Entity e = sl.getEntity(uuid);
+            if (e instanceof LivingEntity le && le.isAlive() && isAswTarget(le)) return true;
         }
         return false;
     }
@@ -1197,6 +1347,7 @@ public class AircraftEntity extends Entity {
                 case DIVE_BOMBER    -> new ItemStack(ModItems.DIVE_BOMBER_SQUADRON.get());
                 case TORPEDO_BOMBER -> new ItemStack(ModItems.SWORDFISH_TORPEDO.get());
                 case LEVEL_BOMBER   -> new ItemStack(ModItems.B25_BOMBER.get());
+                case ASW            -> new ItemStack(ModItems.SWORDFISH_ASW.get());
                 case RECON          -> new ItemStack(ModItems.RECON_SQUADRON.get());
             };
         }
@@ -1329,6 +1480,7 @@ public class AircraftEntity extends Entity {
             case DIVE_BOMBER    -> 15;
             case TORPEDO_BOMBER -> 15;
             case LEVEL_BOMBER   -> 12;
+            case ASW            -> 12;
             case RECON          -> 10;
         };
     }

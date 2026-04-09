@@ -22,6 +22,7 @@ public record AircraftInfo(
         DIVE_BOMBER("dive_bomber"),
         TORPEDO_BOMBER("torpedo_bomber"),
         LEVEL_BOMBER("level_bomber"),
+        ASW("asw"),
         RECON("recon");
 
         private final String serializedName;

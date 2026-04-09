@@ -54,6 +54,9 @@ public class ClientTickHandler {
 
     private static final String FC_TEAM_NAME = "pp_fc_target";
     private static final Set<String> fcTeamMembers = new HashSet<>();
+    private static final String ASW_TEAM_NAME = "pp_asw_sonar";
+    private static final Set<String> aswTeamMembers = new HashSet<>();
+    private static final Set<Integer> aswHighlightedEntityIds = new HashSet<>();
     /** Throttle full entity scan to every 4 ticks when only highlight (not FC) is active. */
     private static int entityScanCooldown = 0;
 
@@ -73,6 +76,8 @@ public class ClientTickHandler {
         highlightEnabled = false;
         highlightedEntityIds.clear();
         clearFcTeam(Minecraft.getInstance());
+        clearAswTeam(Minecraft.getInstance());
+        com.piranport.aviation.ClientAswSonarData.resetClientState();
     }
 
     @SubscribeEvent
@@ -259,6 +264,38 @@ public class ClientTickHandler {
             // Clean up IDs for despawned entities
             highlightedEntityIds.removeIf(id -> mc.level.getEntity(id) == null);
         }
+
+        // ASW sonar highlight — independent of Y-key, uses yellow outline
+        com.piranport.aviation.ClientAswSonarData.tick();
+        if (mc.level != null) {
+            Set<Integer> aswDetected = com.piranport.aviation.ClientAswSonarData.getAllDetected();
+            Set<String> currentAswMembers = new HashSet<>();
+            java.util.Set<UUID> lockedTargets2 = new java.util.HashSet<>(ClientFireControlData.getTargets());
+
+            // Apply glow to newly detected entities
+            for (int eid : aswDetected) {
+                Entity entity = mc.level.getEntity(eid);
+                if (entity == null || !entity.isAlive()) continue;
+                entity.setGlowingTag(true);
+                aswHighlightedEntityIds.add(eid);
+                // FC team takes priority — don't add to ASW team if already FC target
+                if (!lockedTargets2.contains(entity.getUUID())) {
+                    currentAswMembers.add(entity.getStringUUID());
+                }
+            }
+            // Remove glow from entities no longer detected by sonar
+            aswHighlightedEntityIds.removeIf(id -> {
+                if (aswDetected.contains(id)) return false;
+                Entity entity = mc.level.getEntity(id);
+                if (entity == null) return true;
+                // Don't remove glow if entity is highlighted by FC or Y-key or vanilla
+                if (highlightedEntityIds.contains(id)) return true;
+                if (hasVanillaGlow(entity)) return true;
+                entity.setGlowingTag(false);
+                return true;
+            });
+            syncAswTeam(mc, currentAswMembers);
+        }
     }
 
     /**
@@ -347,6 +384,50 @@ public class ClientTickHandler {
             scoreboard.removePlayerTeam(team);
         }
         fcTeamMembers.clear();
+    }
+
+    /** Sync the client-side ASW sonar team: yellow outline for detected underwater entities. */
+    private static void syncAswTeam(Minecraft mc, Set<String> currentMembers) {
+        if (mc.level == null) return;
+        net.minecraft.world.scores.Scoreboard scoreboard = mc.level.getScoreboard();
+        net.minecraft.world.scores.PlayerTeam team = scoreboard.getPlayerTeam(ASW_TEAM_NAME);
+        if (team == null && !currentMembers.isEmpty()) {
+            team = scoreboard.addPlayerTeam(ASW_TEAM_NAME);
+            team.setColor(net.minecraft.ChatFormatting.YELLOW);
+        }
+        if (team == null) {
+            aswTeamMembers.clear();
+            return;
+        }
+        // Remove members no longer detected
+        for (String name : new HashSet<>(aswTeamMembers)) {
+            if (!currentMembers.contains(name)) {
+                scoreboard.removePlayerFromTeam(name, team);
+            }
+        }
+        // Add new members
+        for (String name : currentMembers) {
+            if (!aswTeamMembers.contains(name)) {
+                scoreboard.addPlayerToTeam(name, team);
+            }
+        }
+        aswTeamMembers.clear();
+        aswTeamMembers.addAll(currentMembers);
+    }
+
+    /** Remove all ASW team members and delete the team. */
+    private static void clearAswTeam(Minecraft mc) {
+        if (mc.level == null || aswTeamMembers.isEmpty()) return;
+        net.minecraft.world.scores.Scoreboard scoreboard = mc.level.getScoreboard();
+        net.minecraft.world.scores.PlayerTeam team = scoreboard.getPlayerTeam(ASW_TEAM_NAME);
+        if (team != null) {
+            for (String name : aswTeamMembers) {
+                scoreboard.removePlayerFromTeam(name, team);
+            }
+            scoreboard.removePlayerTeam(team);
+        }
+        aswTeamMembers.clear();
+        aswHighlightedEntityIds.clear();
     }
 
     /** Find the inventory slot of the active transformed ship core. Returns -1 if not found. */

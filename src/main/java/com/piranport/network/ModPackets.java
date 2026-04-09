@@ -99,6 +99,13 @@ public class ModPackets {
                 TorpedoSteerPayload::handle
         );
 
+        // ===== ASW Sonar =====
+        registrar.playToClient(
+                AswSonarSyncPayload.TYPE,
+                AswSonarSyncPayload.STREAM_CODEC,
+                AswSonarSyncPayload::handle
+        );
+
         // ===== Skin System =====
         registrar.playToClient(
                 SkinSyncPayload.TYPE,

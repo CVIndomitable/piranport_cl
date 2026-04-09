@@ -51,6 +51,10 @@ public class TorpedoEntity extends ThrowableItemProjectile {
     /** Grace period before acoustic homing activates (ticks). */
     private static final int ACOUSTIC_ARM_TICKS = 10;
 
+    /** 空投下落阶段（鱼雷机投弹后垂直入水，再切巡航） */
+    private boolean airDrop = false;
+    private Vec3 airDropDirection = Vec3.ZERO;
+
     /** Distance at which magnetic proximity fuze detonates (blocks). */
     private static final double MAGNETIC_DETONATE_DIST = 3.0;
     /** Grace period after launch before magnetic fuze arms (ticks). */
@@ -105,6 +109,11 @@ public class TorpedoEntity extends ThrowableItemProjectile {
 
     public boolean isWireGuided() {
         return wireGuided;
+    }
+
+    public void setAirDrop(boolean airDrop, Vec3 direction) {
+        this.airDrop = airDrop;
+        this.airDropDirection = new Vec3(direction.x, 0, direction.z).normalize();
     }
 
     public void setAcoustic(boolean acoustic) {
@@ -191,6 +200,25 @@ public class TorpedoEntity extends ThrowableItemProjectile {
         // 1.7. 声导鱼雷追踪
         if (!level().isClientSide() && acoustic && tickCount > ACOUSTIC_ARM_TICKS) {
             acousticHoming();
+        }
+
+        // 空投下落阶段：垂直入水后才切换为巡航
+        if (airDrop) {
+            Vec3 motion = getDeltaMovement();
+            BlockPos pos = blockPosition();
+            boolean inWater = level().getBlockState(pos).getFluidState().is(Fluids.WATER);
+            boolean inAir = level().getBlockState(pos).isAir();
+            boolean waterBelow = level().getBlockState(pos.below()).getFluidState().is(Fluids.WATER);
+
+            if (inWater || (inAir && waterBelow)) {
+                // 着水 → 切换为水面巡航
+                airDrop = false;
+                setDeltaMovement(airDropDirection.x * torpedoSpeed, 0, airDropDirection.z * torpedoSpeed);
+            } else {
+                // 空中自由落体
+                setDeltaMovement(motion.x * 0.98, motion.y - 0.08, motion.z * 0.98);
+            }
+            return;
         }
 
         Vec3 motion = getDeltaMovement();
@@ -378,6 +406,11 @@ public class TorpedoEntity extends ThrowableItemProjectile {
         tag.putBoolean("Magnetic", magnetic);
         tag.putBoolean("WireGuided", wireGuided);
         tag.putBoolean("Acoustic", acoustic);
+        tag.putBoolean("AirDrop", airDrop);
+        if (airDrop) {
+            tag.putDouble("AirDropDirX", airDropDirection.x);
+            tag.putDouble("AirDropDirZ", airDropDirection.z);
+        }
         if (launchPos != null) {
             tag.putDouble("LaunchX", launchPos.x);
             tag.putDouble("LaunchY", launchPos.y);
@@ -399,6 +432,10 @@ public class TorpedoEntity extends ThrowableItemProjectile {
         magnetic = tag.getBoolean("Magnetic");
         wireGuided = tag.getBoolean("WireGuided");
         acoustic = tag.getBoolean("Acoustic");
+        airDrop = tag.getBoolean("AirDrop");
+        if (airDrop && tag.contains("AirDropDirX")) {
+            airDropDirection = new Vec3(tag.getDouble("AirDropDirX"), 0, tag.getDouble("AirDropDirZ"));
+        }
         if (tag.contains("LaunchX")) {
             launchPos = new Vec3(tag.getDouble("LaunchX"), tag.getDouble("LaunchY"), tag.getDouble("LaunchZ"));
         }

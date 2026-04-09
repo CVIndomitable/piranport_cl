@@ -3,22 +3,25 @@ package com.piranport.client;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.piranport.npc.ai.FleetGroup;
 import com.piranport.npc.deepocean.AbstractDeepOceanEntity;
+import net.minecraft.client.model.HumanoidModel;
+import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
 /**
- * Placeholder renderer for all deep ocean entities.
- * The entity uses isCurrentlyGlowing()=true for visibility.
+ * Renderer for all deep ocean entities using the Stray (小白) model.
  * Renders fleet state particles: ALERT=yellow, COMBAT=red.
  */
-public class DeepOceanRenderer extends EntityRenderer<AbstractDeepOceanEntity> {
+public class DeepOceanRenderer extends HumanoidMobRenderer<AbstractDeepOceanEntity, HumanoidModel<AbstractDeepOceanEntity>> {
+
+    private static final ResourceLocation STRAY_TEXTURE =
+            ResourceLocation.withDefaultNamespace("textures/entity/skeleton/stray.png");
 
     public DeepOceanRenderer(EntityRendererProvider.Context context) {
-        super(context);
+        super(context, new HumanoidModel<>(context.bakeLayer(ModelLayers.SKELETON)), 0.5f);
     }
 
     @Override
@@ -43,6 +46,6 @@ public class DeepOceanRenderer extends EntityRenderer<AbstractDeepOceanEntity> {
 
     @Override
     public ResourceLocation getTextureLocation(AbstractDeepOceanEntity entity) {
-        return ResourceLocation.withDefaultNamespace("textures/entity/zombie/zombie.png");
+        return STRAY_TEXTURE;
     }
 }

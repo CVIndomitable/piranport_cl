@@ -3,14 +3,11 @@ package com.piranport.debug;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
-import com.piranport.component.AircraftInfo;
-import com.piranport.component.FlightGroupData;
 import com.piranport.entity.AircraftEntity;
 import com.piranport.entity.FloatingTargetEntity;
 import com.piranport.entity.MissileEntity;
 import com.piranport.npc.deepocean.AbstractDeepOceanEntity;
 import com.piranport.registry.ModBlocks;
-import com.piranport.registry.ModDataComponents;
 import com.piranport.registry.ModItems;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -274,21 +271,11 @@ public final class PiranPortCommands {
         int launched = 0;
         for (FloatingTargetEntity target : targets) {
             ItemStack b25Stack = new ItemStack(ModItems.B25_BOMBER.get());
-            AircraftInfo info = b25Stack.get(ModDataComponents.AIRCRAFT_INFO.get());
-            if (info != null) {
-                b25Stack.set(ModDataComponents.AIRCRAFT_INFO.get(),
-                        info.withCurrentFuel(info.fuelCapacity()));
-            }
-
-            AircraftEntity aircraft = AircraftEntity.create(
-                    level, player, -1, b25Stack,
-                    FlightGroupData.AttackMode.SPREAD,
-                    -1, false, "piranport:aerial_bomb");
-
-            aircraft.setPos(target.getX(),
+            Vec3 spawnPos = new Vec3(target.getX(),
                     target.getY() + target.getBbHeight() + 1.0,
                     target.getZ());
 
+            AircraftEntity aircraft = AircraftEntity.createAutonomous(level, spawnPos, b25Stack);
             level.addFreshEntity(aircraft);
             launched++;
         }

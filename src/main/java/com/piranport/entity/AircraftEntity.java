@@ -123,6 +123,10 @@ public class AircraftEntity extends Entity {
     // Phase 34: set to true when defense mechanisms force a recall (stuck, timeout, distance)
     private boolean isForcedReturn = false;
 
+    // Autonomous mode: aircraft has no player owner (e.g. launched by floating target)
+    private boolean autonomous = false;
+    private Vec3 homePosition = Vec3.ZERO;
+
     private static final int MAX_AIRTIME_TICKS = 12000;
     private static final double MAX_DIST_FROM_OWNER = 48.0;
     private static final double MAX_RECON_DIST = 200.0;  // Phase 32
@@ -184,6 +188,37 @@ public class AircraftEntity extends Entity {
         Vec3 look = owner.getLookAngle();
         entity.setPos(owner.getX() + look.x * 0.8, owner.getEyeY(), owner.getZ() + look.z * 0.8);
         entity.orbitAngle = Math.atan2(look.z, look.x);
+        entity.stuckCheckPos = entity.position();
+        return entity;
+    }
+
+    /**
+     * Factory for autonomous aircraft (no player owner).
+     * Used by debug commands to spawn aircraft from non-player entities (e.g. floating targets).
+     */
+    public static AircraftEntity createAutonomous(Level level, Vec3 spawnPos, ItemStack aircraftStack) {
+        AircraftEntity entity = new AircraftEntity(ModEntityTypes.AIRCRAFT_ENTITY.get(), level);
+        entity.autonomous = true;
+        entity.homePosition = spawnPos;
+
+        AircraftInfo info = aircraftStack.get(ModDataComponents.AIRCRAFT_INFO.get());
+        if (info != null) {
+            entity.aircraftType = info.aircraftType();
+            entity.panelDamage = info.panelDamage();
+            entity.panelSpeed = info.panelSpeed();
+            entity.ammoCapacity = info.ammoCapacity();
+            entity.remainingAmmo = info.ammoCapacity();
+            entity.fuelCapacity = info.fuelCapacity();
+            entity.currentFuel = info.fuelCapacity();
+            entity.bombingMode = info.bombingMode();
+        }
+        entity.payloadType = "piranport:aerial_bomb";
+        entity.aircraftHealth = getMaxHealth(entity.aircraftType);
+        entity.originalStack = aircraftStack.copy();
+        entity.entityData.set(AIRCRAFT_TYPE_DATA, entity.aircraftType.ordinal());
+
+        entity.setPos(spawnPos.x, spawnPos.y, spawnPos.z);
+        entity.orbitAngle = level.random.nextDouble() * Math.PI * 2;
         entity.stuckCheckPos = entity.position();
         return entity;
     }
@@ -261,6 +296,10 @@ public class AircraftEntity extends Entity {
 
         Player owner = getOwner();
         if (owner == null) {
+            if (autonomous) {
+                tickAutonomousServer();
+                return;
+            }
             // Clean up recon state if owner goes offline
             if (ownerUUID != null && state == FlightState.RECON_ACTIVE) {
                 ReconManager.endRecon(ownerUUID);
@@ -941,6 +980,108 @@ public class AircraftEntity extends Entity {
         setDeltaMovement(toOwner.normalize().scale(Math.min(panelSpeed * 0.4, dist)));
     }
 
+    // ===== Autonomous (no player owner) tick =====
+
+    private void tickAutonomousServer() {
+        FlightState state = getFlightState();
+        if (state == FlightState.REMOVED) { discard(); return; }
+
+        airtimeTicks++;
+        stateTicks++;
+
+        // Fuel consumption
+        if (state == FlightState.CRUISING || state == FlightState.ATTACKING) {
+            if (currentFuel > 0 && airtimeTicks % FUEL_BURN_INTERVAL == 0) currentFuel--;
+            if (currentFuel <= 0) { discard(); return; }
+        }
+        if (airtimeTicks >= MAX_AIRTIME_TICKS) { discard(); return; }
+        if (position().distanceTo(homePosition) > MAX_DIST_FROM_OWNER * 2) { discard(); return; }
+
+        if (attackCooldown > 0) attackCooldown--;
+
+        switch (state) {
+            case LAUNCHING -> {
+                double targetY = homePosition.y + CRUISE_ALTITUDE;
+                double dy = targetY - getY();
+                double rise = Math.min(panelSpeed * 0.3, Math.abs(dy));
+                setDeltaMovement(getDeltaMovement().x * 0.5, dy > 0 ? rise : -rise, getDeltaMovement().z * 0.5);
+                if (stateTicks >= LAUNCH_DURATION || Math.abs(dy) < 1.5) {
+                    setState(FlightState.CRUISING);
+                }
+            }
+            case CRUISING -> {
+                // Auto-seek players
+                if (level() instanceof ServerLevel sl && !payloadType.isEmpty()) {
+                    AABB box = getBoundingBox().inflate(48.0);
+                    boolean hasTarget = !sl.getEntitiesOfClass(Player.class, box,
+                            e -> e.isAlive() && !e.isSpectator()).isEmpty();
+                    if (hasTarget) {
+                        setState(FlightState.ATTACKING);
+                        return;
+                    }
+                }
+                // Orbit home position
+                orbitAngle += panelSpeed * 0.015;
+                double tx = homePosition.x + Math.cos(orbitAngle) * ORBIT_RADIUS;
+                double ty = homePosition.y + CRUISE_ALTITUDE;
+                double tz = homePosition.z + Math.sin(orbitAngle) * ORBIT_RADIUS;
+                Vec3 toTarget = new Vec3(tx - getX(), ty - getY(), tz - getZ());
+                double dist = toTarget.length();
+                if (dist > 0.1) {
+                    setDeltaMovement(toTarget.normalize().scale(Math.min(panelSpeed * 0.3, dist)));
+                } else {
+                    setDeltaMovement(Vec3.ZERO);
+                }
+            }
+            case ATTACKING -> {
+                if (remainingAmmo <= 0) { discard(); return; }
+                if (!(level() instanceof ServerLevel sl)) return;
+                AABB box = getBoundingBox().inflate(48.0);
+                LivingEntity target = sl.getEntitiesOfClass(Player.class, box,
+                                e -> e.isAlive() && !e.isSpectator())
+                        .stream().map(e -> (LivingEntity) e)
+                        .min(Comparator.comparingDouble(this::distanceTo)).orElse(null);
+                if (target == null) { setState(FlightState.CRUISING); return; }
+                tickAutonomousLevelBomb(target);
+            }
+            case RETURNING -> discard();
+            default -> {}
+        }
+
+        // Update rotation to face movement direction
+        Vec3 vel = getDeltaMovement();
+        double hDist = vel.horizontalDistance();
+        if (hDist > 0.001) {
+            setYRot((float) (Math.atan2(-vel.x, vel.z) * (180.0 / Math.PI)));
+            setXRot((float) (Math.atan2(vel.y, hDist) * (180.0 / Math.PI)));
+        }
+    }
+
+    private void tickAutonomousLevelBomb(LivingEntity target) {
+        double bombAltitude = target.getY() + 32.0;
+        if (getY() < bombAltitude - 1.5) {
+            Vec3 toPoint = new Vec3(target.getX() - getX(), bombAltitude - getY(), target.getZ() - getZ());
+            double dist = toPoint.length();
+            setDeltaMovement(toPoint.normalize().scale(Math.min(panelSpeed * 0.4, dist)));
+        } else {
+            double dx = target.getX() - getX();
+            double dz = target.getZ() - getZ();
+            double horizDist = Math.sqrt(dx * dx + dz * dz);
+            if (horizDist < 3.0 && attackCooldown <= 0) {
+                AerialBombEntity bomb = new AerialBombEntity(level(), panelDamage * 1.5f, 2.5f);
+                bomb.setPos(getX(), getY(), getZ());
+                bomb.setDeltaMovement(getDeltaMovement().x * 0.1, -0.1, getDeltaMovement().z * 0.1);
+                bomb.setSourceAircraftName(getDisplayName());
+                level().addFreshEntity(bomb);
+                remainingAmmo--;
+                attackCooldown = 40;
+            }
+            Vec3 horizontal = new Vec3(dx, 0, dz).normalize().scale(Math.min(panelSpeed * 0.4, horizDist));
+            double yCorrect = (bombAltitude - getY()) * 0.15;
+            setDeltaMovement(horizontal.x, yCorrect, horizontal.z);
+        }
+    }
+
     /**
      * Begin returning to owner — enters RETURNING state so the aircraft visibly
      * flies back before being recalled.  Safe to call from any state; silently
@@ -1484,6 +1625,10 @@ public class AircraftEntity extends Entity {
             originalStack = ItemStack.parse(level().registryAccess(), tag.getCompound("OriginalStack"))
                     .orElse(ItemStack.EMPTY);
         }
+        autonomous = tag.getBoolean("Autonomous");
+        if (tag.contains("HomeX")) {
+            homePosition = new Vec3(tag.getDouble("HomeX"), tag.getDouble("HomeY"), tag.getDouble("HomeZ"));
+        }
     }
 
     @Override
@@ -1517,6 +1662,12 @@ public class AircraftEntity extends Entity {
         tag.putInt("AircraftHealth", aircraftHealth);
         if (originalStack != null && !originalStack.isEmpty()) {
             tag.put("OriginalStack", originalStack.save(level().registryAccess()));
+        }
+        tag.putBoolean("Autonomous", autonomous);
+        if (autonomous) {
+            tag.putDouble("HomeX", homePosition.x);
+            tag.putDouble("HomeY", homePosition.y);
+            tag.putDouble("HomeZ", homePosition.z);
         }
     }
 }

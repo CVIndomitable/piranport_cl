@@ -3,6 +3,8 @@ package com.piranport.debug;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
+import com.piranport.entity.FloatingTargetEntity;
+import com.piranport.entity.MissileEntity;
 import com.piranport.npc.deepocean.AbstractDeepOceanEntity;
 import com.piranport.registry.ModBlocks;
 import net.minecraft.commands.CommandSourceStack;
@@ -19,7 +21,10 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -68,6 +73,10 @@ public final class PiranPortCommands {
                                         .executes(ctx -> spawnAbyssal(ctx.getSource(),
                                                 StringArgumentType.getString(ctx, "entity_type"),
                                                 IntegerArgumentType.getInteger(ctx, "count"))))))
+
+                // /ppd target_fire
+                .then(Commands.literal("target_fire")
+                        .executes(ctx -> targetFire(ctx.getSource())))
 
                 // /ppd locate_ruin <type>
                 .then(Commands.literal("locate_ruin")
@@ -184,6 +193,53 @@ public final class PiranPortCommands {
         int finalSpawned = spawned;
         source.sendSuccess(() -> Component.literal("Spawned " + finalSpawned + "x piranport:" + entityId), true);
         return spawned;
+    }
+
+    private static int targetFire(CommandSourceStack source) {
+        ServerPlayer player = source.getPlayer();
+        if (player == null) {
+            source.sendFailure(Component.literal("Must be run by a player"));
+            return 0;
+        }
+
+        ServerLevel level = player.serverLevel();
+        double range = 32.0;
+        AABB searchBox = player.getBoundingBox().inflate(range);
+        List<FloatingTargetEntity> targets = level.getEntitiesOfClass(
+                FloatingTargetEntity.class, searchBox, Entity::isAlive);
+
+        if (targets.isEmpty()) {
+            source.sendFailure(Component.literal("附近没有浮动靶子"));
+            return 0;
+        }
+
+        int fired = 0;
+        for (FloatingTargetEntity target : targets) {
+            MissileEntity missile = new MissileEntity(level,
+                    MissileEntity.MissileType.ANTI_SHIP, 20f, 0f, 2.0f,
+                    "piranport:sy1_missile");
+
+            double startX = target.getX();
+            double startY = target.getY() + target.getBbHeight() / 2;
+            double startZ = target.getZ();
+            missile.setPos(startX, startY, startZ);
+            missile.setOwner(target);
+
+            Vec3 toPlayer = player.position()
+                    .add(0, player.getBbHeight() / 2, 0)
+                    .subtract(startX, startY, startZ)
+                    .normalize();
+            float speed = MissileEntity.MissileType.ANTI_SHIP.initialSpeed;
+            missile.setDeltaMovement(toPlayer.scale(speed));
+
+            level.addFreshEntity(missile);
+            fired++;
+        }
+
+        int finalFired = fired;
+        source.sendSuccess(() -> Component.literal(
+                finalFired + " 个浮动靶子向你发射了导弹！"), true);
+        return fired;
     }
 
     private static int locateRuin(CommandSourceStack source, String type) {

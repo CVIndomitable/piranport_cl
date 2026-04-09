@@ -1,0 +1,12 @@
+{
+  "name": "piranport.book.arsenal.depth_charges",
+  "category": "piranport:9_arsenal",
+  "icon": "piranport:depth_charge_launcher",
+  "sortnum": 1,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "piranport.book.arsenal.depth_charges.p1"
+    }
+  ]
+}

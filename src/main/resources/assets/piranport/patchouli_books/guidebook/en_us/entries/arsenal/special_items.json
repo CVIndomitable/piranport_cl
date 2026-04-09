@@ -1,0 +1,16 @@
+{
+  "name": "piranport.book.arsenal.special",
+  "category": "piranport:9_arsenal",
+  "icon": "piranport:mysterious_weapon",
+  "sortnum": 2,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "piranport.book.arsenal.special.p1"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "piranport.book.arsenal.special.p2"
+    }
+  ]
+}

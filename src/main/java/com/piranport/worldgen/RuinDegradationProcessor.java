@@ -3,6 +3,7 @@ package com.piranport.worldgen;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.piranport.registry.ModBlocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.LevelReader;
@@ -46,7 +47,8 @@ public class RuinDegradationProcessor extends StructureProcessor {
         // Don't degrade chests, spawner blocks, or air
         if (relativeBlockInfo.state().is(Blocks.CHEST)
                 || relativeBlockInfo.state().isAir()
-                || relativeBlockInfo.state().is(Blocks.SPAWNER)) {
+                || relativeBlockInfo.state().is(Blocks.SPAWNER)
+                || relativeBlockInfo.state().is(ModBlocks.ABYSSAL_SPAWNER.get())) {
             return relativeBlockInfo;
         }
 

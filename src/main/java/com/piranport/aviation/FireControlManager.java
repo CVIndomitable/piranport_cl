@@ -39,6 +39,16 @@ public class FireControlManager {
         com.piranport.debug.PiranPortDebug.event("FireControl CANCEL | player={}", playerUUID);
     }
 
+    /** Remove specific dead target UUIDs. Only fully clears if no targets remain. */
+    public static void removeDeadTargets(UUID playerUUID, java.util.function.Predicate<UUID> isDead) {
+        List<UUID> list = LOCKED_TARGETS.get(playerUUID);
+        if (list == null) return;
+        list.removeIf(isDead);
+        if (list.isEmpty()) {
+            LOCKED_TARGETS.remove(playerUUID);
+        }
+    }
+
     /** Returns an unmodifiable snapshot of the player's locked targets. */
     public static List<UUID> getTargets(UUID playerUUID) {
         List<UUID> list = LOCKED_TARGETS.get(playerUUID);

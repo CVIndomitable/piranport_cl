@@ -479,8 +479,13 @@ public class AircraftEntity extends Entity {
                     // Attack aircraft: alive targets exist but all airborne — stay cruising
                 }
             } else {
-                // All locked targets are dead — clean up stale UUIDs
-                FireControlManager.clearTargets(owner.getUUID());
+                // Remove only the dead UUIDs, preserving any newly added targets
+                if (owner.level() instanceof net.minecraft.server.level.ServerLevel sl) {
+                    FireControlManager.removeDeadTargets(owner.getUUID(), targetUuid -> {
+                        Entity e = sl.getEntities().get(targetUuid);
+                        return e == null || !e.isAlive();
+                    });
+                }
             }
         }
 
@@ -922,6 +927,7 @@ public class AircraftEntity extends Entity {
         for (LivingEntity e : sl.getEntitiesOfClass(LivingEntity.class, sonarBox,
                 le -> le.isAlive() && le != owner && (le.isInWater() || isAswTarget(le)))) {
             detectedIds.add(e.getId());
+            if (detectedIds.size() >= 128) break;
         }
         PacketDistributor.sendToPlayer(sp, new AswSonarSyncPayload(getId(), detectedIds));
     }

@@ -92,8 +92,12 @@ public class AmmoWorkbenchBlockEntity extends BlockEntity implements MenuProvide
                 } else if (ItemStack.isSameItemSameComponents(current, result)
                         && current.getCount() + result.getCount() <= current.getMaxStackSize()) {
                     current.grow(result.getCount());
+                } else {
+                    // Output slot can't hold result — stay at max progress and wait
+                    be.craftingProgress = be.craftingTotalTime;
+                    be.setChanged();
+                    return;
                 }
-                // If output slot can't hold, items are lost — server should pre-validate
             }
             be.craftingProgress = 0;
             be.craftingTotalTime = 0;

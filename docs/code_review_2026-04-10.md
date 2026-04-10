@@ -31,16 +31,16 @@
 
 | # | 模块 | 问题 | 位置 | 建议修复 |
 |---|------|------|------|---------|
-| 4 | item | **发烟筒方块放置绕过保护** — `level.setBlock()` 未检查 `level.mayInteract()`，可在出生保护/领地保护区内放置不可破坏的烟幕方块 | SmokeCandleItem.java:41 | 添加 `if (!level.mayInteract(player, target)) continue;` |
-| 5 | item | **发烟筒无冷却** — 16耐久无CD，可在不到1秒内放置288个烟幕方块 | SmokeCandleItem.java:27 | 添加 `player.getCooldowns().addCooldown(this, 20)` |
-| 6 | entity | **照明弹方块放置绕过保护** — 同发烟筒问题，照明弹可射入保护区域放置光源方块 | FlareProjectileEntity.java:59-68 | 放置前检查 `level.mayInteract(owner, placePos)` |
-| 7 | item | **冈格尼尔无冷却** — 投掷→返回→再投掷循环可实现机关枪式输出 | GungnirItem.java:39-55 | 添加 `player.getCooldowns().addCooldown(this, 20)` |
-| 8 | block | **武器合成台物品复制** — 破坏方块时 `onRemove` 掉落物品 + `Menu.removed()` 退还物品，GUI打开时破坏方块导致物品翻倍 | WeaponWorkbenchBlock.java:110-124 + WeaponWorkbenchMenu.java:161-177 | `onRemove` ��跳过掉落（Menu.removed()已处理），或 `onRemove` 用 `extractItem` 清空槽位 |
-| 9 | network | **弹药合成台数量无上限** — 恶意客户端可发 `quantity=999`，消耗999份材料但只产出64个物品（ItemStack上限截断） | AmmoWorkbenchCraftPayload.java:47 | 添加 `int qty = Math.min(64, Math.max(1, payload.quantity))` |
-| 10 | entity | **DeepOceanProjectileEntity 双重引爆** — `onHit()` 中 `super.onHit()` 触发 `detonate()`，随后 `onHit()` 又调用 `discard()`，近炸引信+命中可能产生两次爆炸 | DeepOceanProjectileEntity.java:123-147 | `onHit()` 顶部添加 `if (exploded) return;` |
-| 11 | npc | **航母放飞系统不可用** — `AircraftLaunchGoal` 生成的飞机无 owner/target/AI配置，立即被 `AircraftEntity.tick()` 回收。`activeAircraft` 计数器只增不减，达到上限后航母永久停飞 | AircraftLaunchGoal.java:50-74 | 使用 autonomous 模式初始化飞机，设置 owner 和 target，或改为生成 `DeepOceanProjectileEntity` 模拟空袭 |
-| 12 | aircraft | **反潜机无GUI模式无默认载荷** — `launchAircraftInventoryMode` 缺少 `case ASW` 分支，ASW飞机默认 `hasBullets=true`，行为等同战斗机而非投深弹 | ShipCoreItem.java:1334-1339 | 添加 `case ASW -> { payloadType = "piranport:depth_charge"; hasBullets = false; }` |
-| 13 | aircraft | **反潜机目标范围过宽** — `isAswTarget()` 对所有 `Monster && isInWater()` 返回 true，浅水中的僵尸/骷髅/苦力怕都会被攻击 | AircraftEntity.java:893 | 限定为 `DeepOceanSubmarineEntity`/`WaterAnimal`/`Guardian`，或至少改用 `isUnderWater()`（眼睛没入水中） |
+| 4 | item | **发烟筒方块放置绕过保护** — `level.setBlock()` 未检查 `level.mayInteract()`，可在出生保护/领地保护区内放置不可破坏的烟幕方块 | SmokeCandleItem.java:41 | ✅ 已修复 |
+| 5 | item | **发烟筒无冷却** — 16耐久无CD，可在不到1秒内放置288个烟幕方块 | SmokeCandleItem.java:27 | ✅ 已修复 |
+| 6 | entity | **照明弹方块放置绕过保护** — 同发烟筒问题，照明弹可射入保护区域放置光源方块 | FlareProjectileEntity.java:59-68 | ✅ 已修复 |
+| 7 | item | **冈格尼尔无冷却** — 投掷→返回→再投掷循环可实现机关枪式输出 | GungnirItem.java:39-55 | ✅ 已修复 |
+| 8 | block | **武器合成台物品复制** — 破坏方块时 `onRemove` 掉落物品 + `Menu.removed()` 退还物品，GUI打开时破坏方块导致物品翻倍 | WeaponWorkbenchBlock.java:110-124 + WeaponWorkbenchMenu.java:161-177 | ✅ 已修复 |
+| 9 | network | **弹药合成台数量无上限** — 恶意客户端可发 `quantity=999`，消耗999份材料但只产出64个物品（ItemStack上限截断） | AmmoWorkbenchCraftPayload.java:47 | ✅ 已修复 |
+| 10 | entity | **DeepOceanProjectileEntity 双重引爆** — `onHit()` 中 `super.onHit()` 触发 `detonate()`，随后 `onHit()` 又调用 `discard()`，近炸引信+命中可能产生两次爆炸 | DeepOceanProjectileEntity.java:123-147 | ✅ 已修复 |
+| 11 | npc | **航母放飞系统不可用** — `AircraftLaunchGoal` 生成的飞机无 owner/target/AI配置，立即被 `AircraftEntity.tick()` 回收。`activeAircraft` 计数器只增不减，达到上限后航母永久停飞 | AircraftLaunchGoal.java:50-74 | ✅ 已修复：改为DeepOceanProjectileEntity抛物线齐射模拟空袭 |
+| 12 | aircraft | **反潜机无GUI模式无默认载荷** — `launchAircraftInventoryMode` 缺少 `case ASW` 分支，ASW飞机默认 `hasBullets=true`，行为等同战斗机而非投深弹 | ShipCoreItem.java:1334-1339 | ✅ 已修复 |
+| 13 | aircraft | **反潜机目标范围过宽** — `isAswTarget()` 对所有 `Monster && isInWater()` 返回 true，浅水中的僵尸/骷髅/苦力怕都会被攻击 | AircraftEntity.java:893 | ✅ 已修复：改用isUnderWater() |
 
 ---
 

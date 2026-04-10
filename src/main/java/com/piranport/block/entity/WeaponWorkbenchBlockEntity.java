@@ -5,6 +5,8 @@ import com.piranport.crafting.WeaponWorkbenchRecipeRegistry;
 import com.piranport.menu.WeaponWorkbenchMenu;
 import com.piranport.registry.ModBlockEntityTypes;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.MenuProvider;
@@ -196,6 +198,30 @@ public class WeaponWorkbenchBlockEntity extends BlockEntity implements MenuProvi
             be.craftingTotalTime = 0;
         }
         be.setChanged();
+    }
+
+    // ===== Persistence =====
+
+    @Override
+    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+        super.saveAdditional(tag, registries);
+        tag.put("inventory", itemHandler.serializeNBT(registries));
+        tag.putInt("selectedTab", selectedTab);
+        tag.putInt("selectedRecipe", selectedRecipe);
+        tag.putInt("craftingProgress", craftingProgress);
+        tag.putInt("craftingTotalTime", craftingTotalTime);
+        tag.putBoolean("isCrafting", isCrafting);
+    }
+
+    @Override
+    protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+        super.loadAdditional(tag, registries);
+        if (tag.contains("inventory")) itemHandler.deserializeNBT(registries, tag.getCompound("inventory"));
+        selectedTab = tag.getInt("selectedTab");
+        selectedRecipe = tag.getInt("selectedRecipe");
+        craftingProgress = tag.getInt("craftingProgress");
+        craftingTotalTime = tag.getInt("craftingTotalTime");
+        isCrafting = tag.getBoolean("isCrafting");
     }
 
     // ===== MenuProvider =====

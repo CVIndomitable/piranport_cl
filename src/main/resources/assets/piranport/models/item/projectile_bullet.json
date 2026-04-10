@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "piranport:item/projectile_bullet"
+    "layer0": "piranport:item/zd"
   }
 }

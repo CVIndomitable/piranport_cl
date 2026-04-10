@@ -235,6 +235,7 @@ public class ModCreativeTabs {
                         output.accept(ModItems.NAVAL_CURRY.get());
                         output.accept(ModItems.FRIED_FISH_AND_CHIPS.get());
                         output.accept(ModItems.SCONE.get());
+                        output.accept(ModItems.APPLE_PIE.get());
                         output.accept(ModItems.SALTED_EGG_TOFU.get());
                         output.accept(ModItems.SURSTROMMING.get());
                         output.accept(ModItems.AMERICAN_BURGER.get());

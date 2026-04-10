@@ -391,6 +391,11 @@ public class ModItems {
                     .food(fp(3, 3.8f).build())
                     .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 4))));
 
+    public static final DeferredItem<ModFoodItem> APPLE_PIE = ITEMS.register("apple_pie",
+            () -> new ModFoodItem(new Item.Properties()
+                    .food(fp(5, 6f).build())
+                    .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 2))));
+
     public static final DeferredItem<ModFoodItem> SALTED_EGG_TOFU = ITEMS.register("salted_egg_tofu",
             () -> new ModFoodItem(new Item.Properties()
                     .food(fp(3, 3.8f).build())

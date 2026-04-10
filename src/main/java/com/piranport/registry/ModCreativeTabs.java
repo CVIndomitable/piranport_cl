@@ -192,7 +192,7 @@ public class ModCreativeTabs {
             CREATIVE_TABS.register("kitchen_tab", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.piranport.kitchen"))
                     .withTabsBefore(CreativeModeTabs.COMBAT)
-                    .icon(() -> ModItems.COOKING_POT.get().getDefaultInstance())
+                    .icon(() -> ModItems.TOAST_BREAD.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
                         // Processing Blocks
                         output.accept(ModItems.STONE_MILL.get());

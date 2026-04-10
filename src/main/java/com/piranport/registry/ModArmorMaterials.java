@@ -7,7 +7,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ArmorMaterial;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
@@ -30,7 +29,7 @@ public class ModArmorMaterials {
                     }),
                     12,
                     SoundEvents.ARMOR_EQUIP_CHAIN,
-                    () -> Ingredient.of(Items.LEATHER),
+                    () -> Ingredient.of(ModItems.ALUMINUM_INGOT.get()),
                     List.of(new ArmorMaterial.Layer(
                             ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "football"))),
                     0.0F,

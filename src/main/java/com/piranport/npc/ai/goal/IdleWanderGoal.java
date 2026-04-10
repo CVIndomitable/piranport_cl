@@ -32,12 +32,17 @@ public class IdleWanderGoal extends RandomStrollGoal {
     @Override
     @Nullable
     protected Vec3 getPosition() {
-        // Try to find a water surface position within radius
         Vec3 pos = DefaultRandomPos.getPos(this.mob, 10, 7);
         if (pos == null) return null;
 
-        // Clamp to max wander radius from initial position
-        // (use current position as reference since we don't track spawn point separately)
+        if (maxWanderRadius > 0) {
+            Vec3 home = deepOcean.getRestrictCenter() != null
+                    ? Vec3.atCenterOf(deepOcean.getRestrictCenter())
+                    : deepOcean.position();
+            if (pos.distanceTo(home) > maxWanderRadius) {
+                return null;
+            }
+        }
         return pos;
     }
 }

@@ -30,6 +30,9 @@ public final class ParabolicCalculator {
                                   double maxRange) {
         // Lead prediction: estimate flight time, then predict target position
         double hDist = horizontalDistance(from, targetPos);
+        if (hDist < 0.5) {
+            return new Vec3(0, 0.5, 0);
+        }
         double estimatedFlightTime = hDist / speed; // rough estimate
         Vec3 predictedPos = targetPos.add(targetVel.scale(estimatedFlightTime));
 

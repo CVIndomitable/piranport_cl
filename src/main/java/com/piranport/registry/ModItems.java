@@ -1018,7 +1018,7 @@ public class ModItems {
     // ===== Repair Kit =====
     public static final DeferredItem<RepairKitItem> REPAIR_KIT =
             ITEMS.register("repair_kit",
-                    () -> new RepairKitItem(new Item.Properties().stacksTo(1)));
+                    () -> new RepairKitItem(new Item.Properties().stacksTo(1).durability(256)));
 
     // ===== Kirin Headband =====
     public static final DeferredItem<KirinHeadbandItem> KIRIN_HEADBAND =

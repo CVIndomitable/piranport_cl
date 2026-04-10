@@ -71,7 +71,10 @@ public class AbyssalSpawnerBlockEntity extends BlockEntity {
 
         for (int i = 0; i < be.count; i++) {
             Entity entity = type.create(serverLevel);
-            if (entity == null) continue;
+            if (entity == null) {
+                com.piranport.PiranPort.LOGGER.warn("AbyssalSpawner: failed to create entity '{}' at {}", be.entityTypeId, pos);
+                continue;
+            }
 
             double offsetX = (level.random.nextDouble() - 0.5) * 4.0;
             double offsetZ = (level.random.nextDouble() - 0.5) * 4.0;

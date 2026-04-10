@@ -1336,6 +1336,7 @@ public class ShipCoreItem extends Item {
             switch (launchInfo.aircraftType()) {
                 case TORPEDO_BOMBER -> { payloadType = "piranport:aerial_torpedo"; hasBullets = false; }
                 case DIVE_BOMBER, LEVEL_BOMBER -> { payloadType = "piranport:aerial_bomb"; hasBullets = false; }
+                case ASW -> { payloadType = "piranport:depth_charge"; hasBullets = false; }
                 default -> { }
             }
         }

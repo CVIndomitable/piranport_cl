@@ -60,10 +60,18 @@ public class FlareProjectileEntity extends ThrowableItemProjectile {
             // Place flare light on the hit face
             Direction face = result.getDirection();
             BlockPos placePos = result.getBlockPos().relative(face);
-            BlockState existing = level().getBlockState(placePos);
-            if (existing.isAir() || existing.canBeReplaced()) {
-                level().setBlock(placePos, ModBlocks.FLARE_LIGHT.get().defaultBlockState(),
-                        Block.UPDATE_ALL);
+            // Check protection: only place if the owner is allowed to interact here
+            Entity owner = getOwner();
+            boolean mayPlace = true;
+            if (owner instanceof net.minecraft.world.entity.player.Player p) {
+                mayPlace = level().mayInteract(p, placePos);
+            }
+            if (mayPlace) {
+                BlockState existing = level().getBlockState(placePos);
+                if (existing.isAir() || existing.canBeReplaced()) {
+                    level().setBlock(placePos, ModBlocks.FLARE_LIGHT.get().defaultBlockState(),
+                            Block.UPDATE_ALL);
+                }
             }
             discard();
         }

@@ -3,7 +3,6 @@ package com.piranport.network;
 import com.piranport.PiranPort;
 import com.piranport.aviation.ClientReconData;
 import io.netty.buffer.ByteBuf;
-import net.minecraft.client.Minecraft;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
@@ -24,14 +23,6 @@ public record ReconEndPayload() implements CustomPacketPayload {
     public Type<? extends CustomPacketPayload> type() { return TYPE; }
 
     public static void handle(ReconEndPayload payload, IPayloadContext ctx) {
-        ctx.enqueueWork(() -> {
-            Minecraft mc = Minecraft.getInstance();
-            if (mc.player != null) {
-                mc.setCameraEntity(mc.player);
-                mc.player.displayClientMessage(
-                        net.minecraft.network.chat.Component.translatable("message.piranport.recon_exit"), true);
-            }
-            ClientReconData.clearRecon();
-        });
+        ctx.enqueueWork(() -> ClientReconData.handleReconEnd());
     }
 }

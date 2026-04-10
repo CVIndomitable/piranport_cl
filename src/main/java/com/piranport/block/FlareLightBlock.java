@@ -62,4 +62,16 @@ public class FlareLightBlock extends Block {
     public void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
         level.removeBlock(pos, false);
     }
+
+    @Override
+    protected boolean isRandomlyTicking(BlockState state) {
+        return true;
+    }
+
+    @Override
+    protected void randomTick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
+        if (!level.getBlockTicks().hasScheduledTick(pos, this)) {
+            level.removeBlock(pos, false);
+        }
+    }
 }

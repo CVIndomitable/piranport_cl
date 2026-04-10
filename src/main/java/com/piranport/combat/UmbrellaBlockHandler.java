@@ -34,13 +34,16 @@ public class UmbrellaBlockHandler {
 
         // Don't block unblockable damage
         if (event.getSource().is(DamageTypeTags.BYPASSES_INVULNERABILITY)) return;
+        if (event.getSource().is(DamageTypeTags.BYPASSES_SHIELD)) return;
 
         Vec3 sourcePos = event.getSource().getSourcePosition();
         if (sourcePos == null) return;
 
         // Direction from player center to damage source
         Vec3 playerCenter = player.position().add(0, player.getBbHeight() * 0.5, 0);
-        Vec3 dirToSource = sourcePos.subtract(playerCenter).normalize();
+        Vec3 dirToSource = sourcePos.subtract(playerCenter);
+        if (dirToSource.lengthSqr() < 1e-6) return;
+        dirToSource = dirToSource.normalize();
 
         // Check if the source is within the 150-degree cone from above.
         // dot(dirToSource, UP) = dirToSource.y

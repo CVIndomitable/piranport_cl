@@ -246,7 +246,7 @@ public final class PiranPortCommands {
 
         int finalFired = fired;
         source.sendSuccess(() -> Component.literal(
-                finalFired + " 个浮动靶子向你发射了导弹！"), true);
+                "§c⚠ " + finalFired + " 个浮动靶子向你发射了导弹！注意躲避！"), true);
         return fired;
     }
 

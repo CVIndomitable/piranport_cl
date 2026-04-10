@@ -46,6 +46,8 @@ public class GungnirItem extends Item {
 
             level.playSound(null, player.blockPosition(), SoundEvents.TRIDENT_THROW.value(),
                     SoundSource.PLAYERS, 1.0f, 1.0f);
+
+            player.getCooldowns().addCooldown(this, 20);
         }
 
         // Remove item from hand (entity carries it)

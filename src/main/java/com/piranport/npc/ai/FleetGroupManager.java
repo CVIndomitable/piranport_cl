@@ -103,26 +103,16 @@ public class FleetGroupManager extends SavedData {
         group.setSharedTarget(target.getUUID());
         setDirty();
 
-        // Propagate to IDLE members in the same level
-        ServerLevel level = null;
+        // Propagate to IDLE members across all levels
         for (UUID memberUuid : group.getMembers()) {
             if (memberUuid.equals(discovererUuid)) continue;
-            // We need the level to look up entities — get it from any member
-            if (level == null) {
-                // Try to find level from any loaded entity
-                for (ServerLevel sl : target.getServer().getAllLevels()) {
-                    Entity e = sl.getEntity(memberUuid);
-                    if (e != null) {
-                        level = sl;
-                        break;
+            for (ServerLevel sl : target.getServer().getAllLevels()) {
+                Entity member = sl.getEntity(memberUuid);
+                if (member instanceof AbstractDeepOceanEntity deepOcean) {
+                    if (deepOcean.getTarget() == null) {
+                        deepOcean.setTarget(target);
                     }
-                }
-                if (level == null) level = (ServerLevel) target.level();
-            }
-            Entity member = level.getEntity(memberUuid);
-            if (member instanceof AbstractDeepOceanEntity deepOcean) {
-                if (deepOcean.getTarget() == null) {
-                    deepOcean.setTarget(target);
+                    break;
                 }
             }
         }
@@ -148,14 +138,17 @@ public class FleetGroupManager extends SavedData {
 
     /**
      * Clean up groups with no living members (call periodically, not every tick).
+     * Searches all server levels to handle cross-dimension membership.
      */
-    public void cleanup(ServerLevel level) {
+    public void cleanup(net.minecraft.server.MinecraftServer server) {
         groups.entrySet().removeIf(entry -> {
             FleetGroup group = entry.getValue();
-            // Remove members that are no longer loaded or alive
-            group.getMembers().removeIf(uuid -> {
-                Entity e = level.getEntity(uuid);
-                return e == null || !e.isAlive();
+            group.removeDeadMembers(uuid -> {
+                for (ServerLevel sl : server.getAllLevels()) {
+                    Entity e = sl.getEntity(uuid);
+                    if (e != null) return !e.isAlive();
+                }
+                return true; // not loaded in any level → consider dead
             });
             return group.isEmpty();
         });

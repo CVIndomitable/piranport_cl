@@ -132,7 +132,7 @@ public class GungnirEntity extends ThrowableItemProjectile {
         net.minecraft.core.BlockPos pos = blockPosition();
         BlockState state = level().getBlockState(pos);
         if (state.is(BlockTags.LEAVES)) {
-            level().destroyBlock(pos, true);
+            level().destroyBlock(pos, false);
         }
     }
 
@@ -142,7 +142,7 @@ public class GungnirEntity extends ThrowableItemProjectile {
             BlockState state = level().getBlockState(result.getBlockPos());
             if (state.is(BlockTags.LEAVES)) {
                 // Destroy leaf and keep flying
-                level().destroyBlock(result.getBlockPos(), true);
+                level().destroyBlock(result.getBlockPos(), false);
             } else {
                 // Non-leaf block — start returning
                 setReturning(true);

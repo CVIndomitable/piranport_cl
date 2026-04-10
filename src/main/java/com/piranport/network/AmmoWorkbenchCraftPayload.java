@@ -26,7 +26,7 @@ public record AmmoWorkbenchCraftPayload(BlockPos pos, String recipeId, int quant
     public static final StreamCodec<FriendlyByteBuf, AmmoWorkbenchCraftPayload> STREAM_CODEC =
             StreamCodec.of(
                     (buf, p) -> { buf.writeBlockPos(p.pos); buf.writeUtf(p.recipeId); buf.writeVarInt(p.quantity); },
-                    buf -> new AmmoWorkbenchCraftPayload(buf.readBlockPos(), buf.readUtf(), buf.readVarInt())
+                    buf -> new AmmoWorkbenchCraftPayload(buf.readBlockPos(), buf.readUtf(256), buf.readVarInt())
             );
 
     @Override
@@ -37,6 +37,7 @@ public record AmmoWorkbenchCraftPayload(BlockPos pos, String recipeId, int quant
             if (!(context.player() instanceof ServerPlayer player)) return;
 
             // Validate block entity
+            if (player.distanceToSqr(net.minecraft.world.phys.Vec3.atCenterOf(payload.pos)) > 64.0) return;
             if (!(player.level().getBlockEntity(payload.pos) instanceof AmmoWorkbenchBlockEntity be)) return;
             if (be.isCrafting()) return;
 
@@ -44,7 +45,7 @@ public record AmmoWorkbenchCraftPayload(BlockPos pos, String recipeId, int quant
             AmmoRecipe recipe = AmmoRecipeRegistry.findById(payload.recipeId);
             if (recipe == null) return;
 
-            int qty = Math.max(1, payload.quantity);
+            int qty = Math.min(64, Math.max(1, payload.quantity));
 
             // Check output slot can hold result
             ItemStack pendingResult = recipe.getResultStack(qty);

@@ -34,13 +34,16 @@ public class EugenShieldBlockHandler {
 
         // Don't block unblockable damage
         if (event.getSource().is(DamageTypeTags.BYPASSES_INVULNERABILITY)) return;
+        if (event.getSource().is(DamageTypeTags.BYPASSES_SHIELD)) return;
 
         Vec3 sourcePos = event.getSource().getSourcePosition();
         if (sourcePos == null) return;
 
         // Player look direction (horizontal only)
         Vec3 lookDir = player.getViewVector(1.0F);
-        Vec3 lookHorizontal = new Vec3(lookDir.x, 0, lookDir.z).normalize();
+        Vec3 lookHorizontal = new Vec3(lookDir.x, 0, lookDir.z);
+        if (lookHorizontal.lengthSqr() < 1e-6) return;
+        lookHorizontal = lookHorizontal.normalize();
 
         // Direction from player to damage source (horizontal only)
         Vec3 playerCenter = player.position().add(0, player.getBbHeight() * 0.5, 0);

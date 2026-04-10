@@ -1,32 +1,33 @@
 package com.piranport.npc.ai.goal;
 
-import com.piranport.entity.AircraftEntity;
+import com.piranport.entity.DeepOceanProjectileEntity;
 import com.piranport.npc.deepocean.AbstractDeepOceanEntity;
-import com.piranport.registry.ModEntityTypes;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.EnumSet;
 
 /**
- * Carrier-specific goal: launches aircraft to attack the target.
+ * Carrier-specific goal: simulates air strikes against the target using parabolic projectiles.
  * Respects deck capacity and readying interval.
  */
 public class AircraftLaunchGoal extends Goal {
 
     private final AbstractDeepOceanEntity mob;
     private int readyCooldown = 0;
-    private int activeAircraft = 0;
+    private int activeStrikes = 0;
 
-    /** Interval between launches (ticks). */
     private static final int READY_INTERVAL = 300; // 15 seconds
-    /** Initial delay before first launch. */
     private static final int INITIAL_DELAY = 100;
+    private static final float STRIKE_DAMAGE = 12.0f;
+    private static final float STRIKE_EXPLOSION = 2.0f;
+    private static final int SALVO_SIZE = 3;
 
     public AircraftLaunchGoal(AbstractDeepOceanEntity mob) {
         this.mob = mob;
         this.readyCooldown = INITIAL_DELAY;
-        setFlags(EnumSet.noneOf(Flag.class)); // Does not block movement
+        setFlags(EnumSet.noneOf(Flag.class));
     }
 
     @Override
@@ -48,35 +49,43 @@ public class AircraftLaunchGoal extends Goal {
             return;
         }
 
-        if (activeAircraft >= mob.getMaxAircraft()) return;
+        if (activeStrikes >= mob.getMaxAircraft()) return;
 
         LivingEntity target = mob.getTarget();
         if (target == null) return;
 
-        launchAircraft(target);
+        launchAirStrike(target);
         readyCooldown = READY_INTERVAL;
     }
 
-    private void launchAircraft(LivingEntity target) {
+    private void launchAirStrike(LivingEntity target) {
         if (mob.level().isClientSide()) return;
 
-        // AircraftEntity is designed for player use with a factory method.
-        // For deep ocean carriers, we spawn the aircraft as a hostile entity
-        // and let it fly toward the target. Full integration will come in a later phase.
-        AircraftEntity aircraft = new AircraftEntity(ModEntityTypes.AIRCRAFT_ENTITY.get(), mob.level());
-        aircraft.setPos(mob.getX(), mob.getY() + 1.5, mob.getZ());
-        // Give it initial velocity toward target
-        net.minecraft.world.phys.Vec3 dir = target.position().subtract(mob.position()).normalize();
-        aircraft.setDeltaMovement(dir.x * 0.5, 0.3, dir.z * 0.5);
+        Vec3 launchPos = mob.position().add(0, 2.0, 0);
+        Vec3 toTarget = target.position().subtract(launchPos);
+        double dist = toTarget.horizontalDistance();
 
-        mob.level().addFreshEntity(aircraft);
-        activeAircraft++;
+        for (int i = 0; i < SALVO_SIZE; i++) {
+            DeepOceanProjectileEntity proj = new DeepOceanProjectileEntity(
+                    mob.level(), mob, STRIKE_DAMAGE, STRIKE_EXPLOSION,
+                    DeepOceanProjectileEntity.BallisticType.PARABOLIC);
+            proj.setPos(launchPos.x, launchPos.y, launchPos.z);
+
+            double speed = 1.2;
+            double arcHeight = Math.min(dist * 0.15, 8.0);
+            Vec3 dir = toTarget.normalize();
+            double spread = (i - 1) * 0.1;
+            proj.setDeltaMovement(
+                    dir.x * speed + spread,
+                    arcHeight * 0.3 + 0.5,
+                    dir.z * speed + spread);
+
+            mob.level().addFreshEntity(proj);
+        }
+        activeStrikes++;
     }
 
-    /**
-     * Called when an aircraft launched by this carrier is destroyed.
-     */
     public void onAircraftLost() {
-        if (activeAircraft > 0) activeAircraft--;
+        if (activeStrikes > 0) activeStrikes--;
     }
 }

@@ -102,6 +102,27 @@ public abstract class AbstractDeepOceanEntity extends Monster {
 
     @Override
     public void tick() {
+        // Sinking death animation — skip all AI and water-walking
+        if (isSinking) {
+            sinkingTicks++;
+            if (level().isClientSide()) {
+                for (int i = 0; i < 3; i++) {
+                    level().addParticle(ParticleTypes.BUBBLE,
+                            getX() + (random.nextDouble() - 0.5) * getBbWidth(),
+                            getY() + random.nextDouble() * getBbHeight(),
+                            getZ() + (random.nextDouble() - 0.5) * getBbWidth(),
+                            0, 0.05, 0);
+                }
+            }
+            setDeltaMovement(0, -0.05, 0);
+            setPos(getX(), getY() - 0.05, getZ());
+            if (sinkingTicks >= SINKING_DURATION) {
+                isSinking = false;
+                remove(RemovalReason.KILLED);
+            }
+            return;
+        }
+
         super.tick();
 
         if (!level().isClientSide()) {
@@ -123,27 +144,6 @@ public abstract class AbstractDeepOceanEntity extends Monster {
             // Sync fleet state
             if (tickCount % 10 == 0) {
                 syncFleetState();
-            }
-        }
-
-        // Sinking death animation
-        if (isSinking) {
-            sinkingTicks++;
-            if (level().isClientSide()) {
-                // Bubble particles while sinking
-                for (int i = 0; i < 3; i++) {
-                    level().addParticle(ParticleTypes.BUBBLE,
-                            getX() + (random.nextDouble() - 0.5) * getBbWidth(),
-                            getY() + random.nextDouble() * getBbHeight(),
-                            getZ() + (random.nextDouble() - 0.5) * getBbWidth(),
-                            0, 0.05, 0);
-                }
-            }
-            // Force sink downward
-            setDeltaMovement(0, -0.05, 0);
-            if (sinkingTicks >= SINKING_DURATION) {
-                isSinking = false;
-                remove(RemovalReason.KILLED);
             }
         }
 

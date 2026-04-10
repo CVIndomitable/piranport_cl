@@ -37,6 +37,7 @@ public class SmokeCandleItem extends Item {
                 for (int dz = -1; dz <= 1; dz++) {
                     for (int dy = 0; dy <= 1; dy++) {
                         BlockPos target = headPos.offset(dx, dy, dz);
+                        if (!level.mayInteract(player, target)) continue;
                         if (canReplace(level, target)) {
                             level.setBlock(target, smokeState, Block.UPDATE_ALL);
                             placed = true;
@@ -47,6 +48,7 @@ public class SmokeCandleItem extends Item {
 
             if (placed) {
                 stack.hurtAndBreak(1, player, player.getEquipmentSlotForItem(stack));
+                player.getCooldowns().addCooldown(this, 20);
             }
         }
 

@@ -12,6 +12,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.minecraft.world.level.Level;
+import net.neoforged.neoforge.common.ItemAbility;
+import net.neoforged.neoforge.common.ItemAbilities;
 
 /**
  * 大凤的伞 — 盾牌型武器。
@@ -39,6 +41,11 @@ public class TaihouUmbrellaItem extends Item {
         ItemStack stack = player.getItemInHand(hand);
         player.startUsingItem(hand);
         return InteractionResultHolder.consume(stack);
+    }
+
+    @Override
+    public boolean canPerformAction(ItemStack stack, ItemAbility itemAbility) {
+        return itemAbility == ItemAbilities.SHIELD_BLOCK;
     }
 
     public static ItemAttributeModifiers createAttributes() {

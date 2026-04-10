@@ -51,11 +51,12 @@ public class GameEvents {
         Player player = event.getEntity();
 
         // Kirin Headband: permanent invisibility when worn on head (server only)
-        if (!player.level().isClientSide()
-                && player.getItemBySlot(EquipmentSlot.HEAD).getItem()
-                instanceof com.piranport.item.KirinHeadbandItem) {
-            player.addEffect(new MobEffectInstance(
-                    MobEffects.INVISIBILITY, 60, 0, false, false, true));
+        if (!player.level().isClientSide()) {
+            if (player.getItemBySlot(EquipmentSlot.HEAD).getItem()
+                    instanceof com.piranport.item.KirinHeadbandItem) {
+                player.addEffect(new MobEffectInstance(
+                        MobEffects.INVISIBILITY, 25, 0, false, false, true));
+            }
         }
 
         // Football Superstar Set: experience boost when any piece is worn
@@ -69,7 +70,7 @@ public class GameEvents {
             }
             if (hasFootball) {
                 player.addEffect(new MobEffectInstance(
-                        com.piranport.registry.ModMobEffects.EXPERIENCE_BOOST, 100, 0, false, false, true));
+                        com.piranport.registry.ModMobEffects.EXPERIENCE_BOOST, 25, 0, false, false, true));
             }
         }
 
@@ -305,13 +306,13 @@ public class GameEvents {
     // Cache of last-known weapon load per player (for no-GUI inventory mode).
     // Only recalculate attributes when the value actually changes.
     private static final java.util.Map<UUID, Integer> lastWeaponLoad =
-            new java.util.concurrent.ConcurrentHashMap<>();
+            new java.util.HashMap<>();
 
     // Fuel consumption: track distance moved per player (server-side only).
     private static final java.util.Map<UUID, Vec3> lastPlayerPos =
-            new java.util.concurrent.ConcurrentHashMap<>();
+            new java.util.HashMap<>();
     private static final java.util.Map<UUID, Double> accumulatedDistance =
-            new java.util.concurrent.ConcurrentHashMap<>();
+            new java.util.HashMap<>();
 
     /**
      * Consume fuel based on distance moved while transformed.
@@ -535,6 +536,12 @@ public class GameEvents {
         if (dungeonLevel != null) {
             com.piranport.dungeon.script.DungeonScriptManager.tickAll(dungeonLevel);
         }
+
+        // Fleet group cleanup every 6000 ticks (5 minutes)
+        if (event.getServer().getTickCount() % 6000 == 0) {
+            ServerLevel overworld = event.getServer().overworld();
+            com.piranport.npc.ai.FleetGroupManager.get(overworld).cleanup(event.getServer());
+        }
     }
 
     /**
@@ -556,6 +563,72 @@ public class GameEvents {
                     com.piranport.dungeon.script.DungeonScriptManager.onEntityDeath(instanceId, entity);
                 } catch (IllegalArgumentException ignored) {}
                 break;
+            }
+        }
+    }
+
+    /**
+     * When a dungeon flagship dies (non-scripted battles), check if all flagships for
+     * that node are dead. If so, spawn a completion portal.
+     */
+    @SubscribeEvent
+    public static void onDungeonFlagshipDeath(LivingDeathEvent event) {
+        if (event.getEntity().level().isClientSide()) return;
+        if (!(event.getEntity().level() instanceof ServerLevel sl)) return;
+        LivingEntity entity = event.getEntity();
+        if (!entity.getTags().contains("dungeon_flagship")) return;
+
+        java.util.UUID instanceId = null;
+        String nodeId = null;
+        for (String tag : entity.getTags()) {
+            if (tag.startsWith("dungeon_instance_")) {
+                try {
+                    instanceId = java.util.UUID.fromString(tag.substring("dungeon_instance_".length()));
+                } catch (IllegalArgumentException ignored) {}
+            } else if (tag.startsWith("dungeon_node_")) {
+                nodeId = tag.substring("dungeon_node_".length());
+            }
+        }
+        if (instanceId == null || nodeId == null) return;
+
+        // If a script is active for this instance, let the script handle it
+        if (com.piranport.dungeon.script.DungeonScriptManager.get(instanceId) != null) return;
+
+        // Check if any other flagships for this node/instance are still alive
+        String matchTag = "dungeon_instance_" + instanceId;
+        String nodeTag = "dungeon_node_" + nodeId;
+        net.minecraft.world.phys.AABB scanBox = entity.getBoundingBox().inflate(200);
+        boolean anyFlagshipAlive = sl.getEntitiesOfClass(LivingEntity.class, scanBox,
+                e -> e != entity && e.isAlive()
+                        && e.getTags().contains("dungeon_flagship")
+                        && e.getTags().contains(matchTag)
+                        && e.getTags().contains(nodeTag)).stream().findAny().isPresent();
+
+        if (!anyFlagshipAlive) {
+            // All flagships dead — spawn completion portal
+            com.piranport.dungeon.instance.DungeonInstanceManager mgr =
+                    com.piranport.dungeon.instance.DungeonInstanceManager.get(sl);
+            com.piranport.dungeon.instance.DungeonInstance instance = mgr.getInstance(instanceId);
+            if (instance == null) return;
+
+            net.minecraft.core.BlockPos portalPos = entity.blockPosition();
+            com.piranport.dungeon.entity.DungeonPortalEntity portal =
+                    com.piranport.dungeon.entity.DungeonPortalEntity.create(
+                            sl, instanceId, nodeId,
+                            portalPos.getX() + 0.5,
+                            com.piranport.dungeon.DungeonConstants.SPAWN_Y,
+                            portalPos.getZ() + 0.5);
+            sl.addFreshEntity(portal);
+
+            // Notify players
+            for (java.util.UUID playerUuid : instance.getPlayerUuids()) {
+                net.minecraft.server.level.ServerPlayer player =
+                        sl.getServer().getPlayerList().getPlayer(playerUuid);
+                if (player != null) {
+                    player.displayClientMessage(
+                            net.minecraft.network.chat.Component.translatable(
+                                    "dungeon.piranport.node_cleared"), true);
+                }
             }
         }
     }

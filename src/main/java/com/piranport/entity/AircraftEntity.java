@@ -570,10 +570,16 @@ public class AircraftEntity extends Entity {
             return;
         }
 
+        // Minimum 20 ticks in ATTACKING before allowing fallback to CRUISING
+        boolean canFallback = stateTicks >= 20;
+
         // 子弹优先：使用战斗机AI
         if (hasBullets) {
             Entity target = resolveFighterTarget(owner);
-            if (target == null) { setState(FlightState.CRUISING); return; }
+            if (target == null) {
+                if (canFallback) setState(FlightState.CRUISING);
+                return;
+            }
             tickFighterAttack(owner, target);
             return;
         }
@@ -582,12 +588,18 @@ public class AircraftEntity extends Entity {
         switch (payloadType) {
             case "piranport:aerial_torpedo" -> {
                 LivingEntity target = resolveTarget(owner);
-                if (target == null) { setState(FlightState.CRUISING); return; }
+                if (target == null) {
+                    if (canFallback) setState(FlightState.CRUISING);
+                    return;
+                }
                 tickTorpedoBomberAttack(owner, target);
             }
             case "piranport:aerial_bomb" -> {
                 LivingEntity target = resolveTarget(owner);
-                if (target == null) { setState(FlightState.CRUISING); return; }
+                if (target == null) {
+                    if (canFallback) setState(FlightState.CRUISING);
+                    return;
+                }
                 if (bombingMode == AircraftInfo.BombingMode.LEVEL) {
                     tickLevelBomberAttack(owner, target);
                 } else {
@@ -596,10 +608,13 @@ public class AircraftEntity extends Entity {
             }
             case "piranport:depth_charge" -> {
                 LivingEntity target = resolveASWTarget(owner);
-                if (target == null) { setState(FlightState.CRUISING); return; }
+                if (target == null) {
+                    if (canFallback) setState(FlightState.CRUISING);
+                    return;
+                }
                 tickASWAttack(owner, target);
             }
-            default -> startReturning("no_payload"); // 无挂载，不攻击
+            default -> startReturning("no_payload");
         }
     }
 
@@ -890,7 +905,7 @@ public class AircraftEntity extends Entity {
         if (e instanceof WaterAnimal) return true;
         if (e instanceof Guardian) return true;
         // Any monster currently submerged in water
-        if (e instanceof Monster && e.isInWater()) return true;
+        if (e instanceof Monster && e.isUnderWater()) return true;
         return false;
     }
 
@@ -1222,6 +1237,7 @@ public class AircraftEntity extends Entity {
                 bomb.setPos(getX(), getY(), getZ());
                 bomb.setDeltaMovement(getDeltaMovement().x * 0.1, -0.1, getDeltaMovement().z * 0.1);
                 bomb.setSourceAircraftName(getDisplayName());
+                if (getOwner() != null) bomb.setOwner(getOwner());
                 level().addFreshEntity(bomb);
                 remainingAmmo--;
                 attackCooldown = 40;

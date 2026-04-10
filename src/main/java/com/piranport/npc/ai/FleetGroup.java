@@ -36,7 +36,11 @@ public class FleetGroup {
     }
 
     public Set<UUID> getMembers() {
-        return members;
+        return java.util.Collections.unmodifiableSet(members);
+    }
+
+    public void removeDeadMembers(java.util.function.Predicate<UUID> isDead) {
+        members.removeIf(isDead);
     }
 
     public void addMember(UUID entityUuid) {

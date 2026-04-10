@@ -139,6 +139,7 @@ public class DeepOceanProjectileEntity extends ThrowableItemProjectile {
 
     @Override
     protected void onHit(HitResult result) {
+        if (exploded) return;
         super.onHit(result);
         if (!level().isClientSide && !exploded) {
             level().broadcastEntityEvent(this, (byte) 3);

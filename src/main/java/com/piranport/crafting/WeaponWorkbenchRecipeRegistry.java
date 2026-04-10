@@ -14,12 +14,17 @@ import java.util.List;
  * 客户端和服务端共享同一份数据，通过 tab + index 定位配方。
  */
 public class WeaponWorkbenchRecipeRegistry {
-    private static List<WeaponWorkbenchRecipe> ALL_RECIPES;
+    private static volatile List<WeaponWorkbenchRecipe> ALL_RECIPES;
 
     public static List<WeaponWorkbenchRecipe> getAllRecipes() {
         if (ALL_RECIPES == null) {
-            ALL_RECIPES = new ArrayList<>();
-            registerAll();
+            synchronized (WeaponWorkbenchRecipeRegistry.class) {
+                if (ALL_RECIPES == null) {
+                    List<WeaponWorkbenchRecipe> recipes = new ArrayList<>();
+                    ALL_RECIPES = recipes;
+                    registerAll();
+                }
+            }
         }
         return ALL_RECIPES;
     }

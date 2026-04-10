@@ -113,7 +113,7 @@ public class WeaponWorkbenchBlock extends BaseEntityBlock {
             BlockEntity be = level.getBlockEntity(pos);
             if (be instanceof WeaponWorkbenchBlockEntity wb) {
                 for (int i = 0; i < WeaponWorkbenchBlockEntity.TOTAL_SLOTS; i++) {
-                    net.minecraft.world.item.ItemStack stack = wb.getItemHandler().getStackInSlot(i);
+                    net.minecraft.world.item.ItemStack stack = wb.getItemHandler().extractItem(i, Integer.MAX_VALUE, false);
                     if (!stack.isEmpty()) {
                         Containers.dropItemStack(level, pos.getX(), pos.getY(), pos.getZ(), stack);
                     }

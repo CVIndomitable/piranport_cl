@@ -1,11 +1,9 @@
 package com.piranport.npc.ai.goal;
 
-import com.piranport.entity.CannonProjectileEntity;
+import com.piranport.entity.DeepOceanProjectileEntity;
 import com.piranport.npc.deepocean.AbstractDeepOceanEntity;
-import com.piranport.registry.ModItems;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.goal.Goal;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.EnumSet;
@@ -68,20 +66,21 @@ public class CannonAttackGoal extends Goal {
                     + mob.getRandom().nextInt(mob.getTrackingIntervalMax() - mob.getTrackingIntervalMin() + 1);
         }
 
-        CannonProjectileEntity shell = new CannonProjectileEntity(
-                mob.level(), mob,
-                new ItemStack(ModItems.SMALL_HE_SHELL.get()),
-                mob.getShellDamage(), true, mob.getExplosionPower());
+        DeepOceanProjectileEntity.BallisticType ballistic = tracking
+                ? DeepOceanProjectileEntity.BallisticType.PARABOLIC_TRACKING
+                : DeepOceanProjectileEntity.BallisticType.PARABOLIC;
+        DeepOceanProjectileEntity shell = new DeepOceanProjectileEntity(
+                mob.level(), mob, mob.getShellDamage(), mob.getExplosionPower(), ballistic);
+
+        if (tracking) {
+            shell.setTrackingTarget(target.getId());
+        }
 
         // Aim with arc compensation
         Vec3 aim = target.getEyePosition().subtract(mob.getEyePosition());
         double hDist = aim.horizontalDistance();
-        double arcY = hDist * 0.05; // parabolic drop compensation
+        double arcY = hDist * 0.05;
         shell.shoot(aim.x, aim.y + arcY, aim.z, SHELL_SPEED, SHELL_INACCURACY);
-
-        if (tracking) {
-            shell.setTracking(target.getId());
-        }
 
         mob.level().addFreshEntity(shell);
     }

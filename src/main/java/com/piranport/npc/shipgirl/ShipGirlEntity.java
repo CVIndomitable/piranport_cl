@@ -50,9 +50,11 @@ public class ShipGirlEntity extends PathfinderMob {
         this.goalSelector.addGoal(7, new RandomLookAroundGoal(this));
 
         // Target deep ocean enemies if combat AI is on
-        this.targetSelector.addGoal(1, new NearestAttackableTargetGoal<>(
-                this, LivingEntity.class, 10, true, false,
-                e -> e instanceof AbstractDeepOceanEntity));
+        if (combatAiEnabled) {
+            this.targetSelector.addGoal(1, new NearestAttackableTargetGoal<>(
+                    this, LivingEntity.class, 10, true, false,
+                    e -> e instanceof AbstractDeepOceanEntity));
+        }
     }
 
     // --- Interaction ---
@@ -71,10 +73,8 @@ public class ShipGirlEntity extends PathfinderMob {
 
     @Override
     public boolean hurt(net.minecraft.world.damagesource.DamageSource source, float amount) {
-        // Don't fight back against players
         if (source.getEntity() instanceof Player) {
-            // Take damage but don't set target to player
-            return super.hurt(source, amount);
+            setTarget(null);
         }
         return super.hurt(source, amount);
     }

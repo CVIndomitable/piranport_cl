@@ -63,9 +63,10 @@ public class RepairKitItem extends Item {
 
         target.addEffect(new MobEffectInstance(MobEffects.REGENERATION, REGEN_DURATION, REGEN_AMPLIFIER, false, true));
 
-        // Play sound every 20 ticks (1 second)
+        // Consume durability every 20 ticks (1 second)
         int usedTicks = getUseDuration(stack, user) - remainingUseDuration;
         if (usedTicks % 20 == 0) {
+            stack.hurtAndBreak(1, player, player.getEquipmentSlotForItem(stack));
             level.playSound(null, target.blockPosition(), SoundEvents.IRON_GOLEM_REPAIR,
                     SoundSource.PLAYERS, 0.6F, 1.0F);
         }
@@ -79,7 +80,8 @@ public class RepairKitItem extends Item {
         AABB searchArea = player.getBoundingBox().expandTowards(lookVec.scale(RANGE)).inflate(1.0);
         EntityHitResult result = ProjectileUtil.getEntityHitResult(
                 player, eyePos, endPos, searchArea,
-                e -> e instanceof LivingEntity && !e.isSpectator() && e.isAlive(),
+                e -> e instanceof LivingEntity && !e.isSpectator() && e.isAlive()
+                        && !(e instanceof net.minecraft.world.entity.monster.Monster),
                 RANGE * RANGE
         );
         if (result != null && result.getEntity() instanceof LivingEntity living) {

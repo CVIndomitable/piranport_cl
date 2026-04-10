@@ -90,8 +90,27 @@ public record SelectNodePayload(BlockPos lecternPos, int keySlot, String nodeId)
                 if (instance.getState() == DungeonInstance.State.SUSPENDED) {
                     mgr.resumeInstance(instanceId);
                 }
+
+                // Validate node reachability: must not be already cleared,
+                // and must be reachable from a cleared node via stage edges
+                if (instance.getClearedNodes().contains(payload.nodeId())) return;
+                boolean reachable = false;
+                for (String cleared : instance.getClearedNodes()) {
+                    if (stage.getReachableFrom(cleared).contains(payload.nodeId())) {
+                        reachable = true;
+                        break;
+                    }
+                }
+                // If no nodes cleared yet, only start node is valid
+                if (instance.getClearedNodes().isEmpty()) {
+                    reachable = payload.nodeId().equals(stage.startNode());
+                }
+                if (!reachable) return;
             } else {
-                // First node selection: create new instance
+                // First node selection: only start node allowed
+                if (!payload.nodeId().equals(stage.startNode())) return;
+
+                // Create new instance
                 instance = mgr.createInstance(stageId, player,
                         payload.lecternPos(),
                         player.level().dimension().location().toString());

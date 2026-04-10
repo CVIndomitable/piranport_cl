@@ -10,9 +10,9 @@ import java.util.stream.Collectors;
 
 public class AmmoRecipeRegistry {
     private static final List<AmmoRecipe> ALL_RECIPES = new ArrayList<>();
-    private static boolean initialized = false;
+    private static volatile boolean initialized = false;
 
-    private static void ensureInitialized() {
+    private static synchronized void ensureInitialized() {
         if (initialized) return;
         initialized = true;
         registerShells();

@@ -15,6 +15,8 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.minecraft.world.level.Level;
+import net.neoforged.neoforge.common.ItemAbility;
+import net.neoforged.neoforge.common.ItemAbilities;
 
 import java.util.List;
 
@@ -44,6 +46,11 @@ public class EugenShieldItem extends Item {
         ItemStack stack = player.getItemInHand(hand);
         player.startUsingItem(hand);
         return InteractionResultHolder.consume(stack);
+    }
+
+    @Override
+    public boolean canPerformAction(ItemStack stack, ItemAbility itemAbility) {
+        return itemAbility == ItemAbilities.SHIELD_BLOCK;
     }
 
     @Override

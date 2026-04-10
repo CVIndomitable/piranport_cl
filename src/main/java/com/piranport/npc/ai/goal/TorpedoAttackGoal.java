@@ -73,6 +73,7 @@ public class TorpedoAttackGoal extends Goal {
             TorpedoEntity torpedo = new TorpedoEntity(ModEntityTypes.TORPEDO_ENTITY.get(), mob.level());
             torpedo.setPos(mob.getX(), mob.getY() + 0.2, mob.getZ());
             torpedo.setOwner(mob);
+            torpedo.setDamage((float) mob.getAttributeValue(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE));
 
             double dx = Math.cos(angle);
             double dz = Math.sin(angle);

@@ -7,6 +7,7 @@ import com.piranport.dungeon.lobby.DungeonLobbyManager;
 import com.piranport.dungeon.menu.DungeonBookMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.GlobalPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;

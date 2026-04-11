@@ -5,6 +5,7 @@ import com.piranport.dungeon.block.DungeonLecternBlock;
 import com.piranport.dungeon.lobby.DungeonLobbyManager;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.GlobalPos;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
@@ -38,8 +39,9 @@ public record JoinLobbyPayload(BlockPos lecternPos) implements CustomPacketPaylo
             // Validate lectern block exists at position
             if (!(player.level().getBlockState(pos).getBlock() instanceof DungeonLecternBlock)) return;
 
-            DungeonLobbyManager.INSTANCE.joinLobby(pos, player);
-            DungeonLobbyManager.INSTANCE.broadcastLobbyUpdate(player.server, pos);
+            GlobalPos globalPos = GlobalPos.of(player.level().dimension(), pos);
+            DungeonLobbyManager.INSTANCE.joinLobby(globalPos, player);
+            DungeonLobbyManager.INSTANCE.broadcastLobbyUpdate(player.server, globalPos);
         });
     }
 }

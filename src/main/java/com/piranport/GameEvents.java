@@ -458,12 +458,11 @@ public class GameEvents {
         if (player.level().isClientSide()) return;
         UUID ownerUUID = player.getUUID();
         for (ServerLevel sl : player.getServer().getAllLevels()) {
-            for (AircraftEntity aircraft : sl.getEntitiesOfClass(
-                    AircraftEntity.class,
-                    net.minecraft.world.phys.AABB.ofSize(
-                            net.minecraft.world.phys.Vec3.ZERO, Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE),
-                    a -> ownerUUID.equals(a.getOwnerUUID()))) {
-                aircraft.recallAndRemove();
+            // Use entity type filter instead of full world scan
+            for (net.minecraft.world.entity.Entity entity : sl.getAllEntities()) {
+                if (entity instanceof AircraftEntity aircraft && ownerUUID.equals(aircraft.getOwnerUUID())) {
+                    aircraft.recallAndRemove();
+                }
             }
         }
         FireControlManager.clearTargets(ownerUUID);

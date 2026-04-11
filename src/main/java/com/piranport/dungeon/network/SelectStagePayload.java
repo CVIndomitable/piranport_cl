@@ -7,6 +7,7 @@ import com.piranport.dungeon.lobby.DungeonLobbyManager;
 import com.piranport.registry.ModDataComponents;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.GlobalPos;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -57,8 +58,9 @@ public record SelectStagePayload(BlockPos lecternPos, int keySlot, String stageI
             if (payload.stageId().length() > 128) return;
             if (!DungeonRegistry.INSTANCE.hasStage(payload.stageId())) return;
 
+            GlobalPos globalPos = GlobalPos.of(player.level().dimension(), payload.lecternPos());
             DungeonLobbyManager.Lobby lobby =
-                    DungeonLobbyManager.INSTANCE.getLobby(payload.lecternPos());
+                    DungeonLobbyManager.INSTANCE.getLobby(globalPos);
             if (lobby != null && lobby.isFlagship(player.getUUID())) {
                 lobby.setSelectedStageId(payload.stageId());
 
@@ -67,7 +69,7 @@ public record SelectStagePayload(BlockPos lecternPos, int keySlot, String stageI
                 if (keyStack.getItem() instanceof DungeonKeyItem) {
                     keyStack.set(ModDataComponents.DUNGEON_STAGE_ID.get(), payload.stageId());
                 }
-                DungeonLobbyManager.INSTANCE.broadcastLobbyUpdate(player.server, payload.lecternPos());
+                DungeonLobbyManager.INSTANCE.broadcastLobbyUpdate(player.server, globalPos);
             }
         });
     }

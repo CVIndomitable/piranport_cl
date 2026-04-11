@@ -4,6 +4,7 @@ import com.piranport.PiranPort;
 import com.piranport.dungeon.lobby.DungeonLobbyManager;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.GlobalPos;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
@@ -34,8 +35,9 @@ public record LeaveLobbyPayload(BlockPos lecternPos) implements CustomPacketPayl
             if (player.distanceToSqr(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5) > 64.0) return;
             if (!(player.level().getBlockState(pos).getBlock()
                     instanceof com.piranport.dungeon.block.DungeonLecternBlock)) return;
-            DungeonLobbyManager.INSTANCE.leaveLobby(payload.lecternPos(), player.getUUID());
-            DungeonLobbyManager.INSTANCE.broadcastLobbyUpdate(player.server, payload.lecternPos());
+            GlobalPos globalPos = GlobalPos.of(player.level().dimension(), pos);
+            DungeonLobbyManager.INSTANCE.leaveLobby(globalPos, player.getUUID());
+            DungeonLobbyManager.INSTANCE.broadcastLobbyUpdate(player.server, globalPos);
         });
     }
 }

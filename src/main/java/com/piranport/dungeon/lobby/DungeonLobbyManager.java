@@ -2,6 +2,7 @@ package com.piranport.dungeon.lobby;
 
 import com.piranport.dungeon.network.LobbyUpdatePayload;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.GlobalPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -13,25 +14,25 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Manages dungeon lobbies. Each lectern BlockPos can have one active lobby.
+ * Manages dungeon lobbies. Each lectern GlobalPos can have one active lobby.
  * The first player to interact becomes the flagship (lobby leader).
  */
 public final class DungeonLobbyManager {
     public static final DungeonLobbyManager INSTANCE = new DungeonLobbyManager();
 
-    private final Map<BlockPos, Lobby> lobbies = new HashMap<>();
+    private final Map<GlobalPos, Lobby> lobbies = new HashMap<>();
 
     private DungeonLobbyManager() {}
 
     public static class Lobby {
-        private final BlockPos lecternPos;
+        private final GlobalPos lecternPos;
         private UUID flagshipUuid;
         private String flagshipName;
         private final List<UUID> memberUuids = new ArrayList<>();
         private final List<String> memberNames = new ArrayList<>();
         private String selectedStageId;
 
-        public Lobby(BlockPos pos, ServerPlayer flagship) {
+        public Lobby(GlobalPos pos, ServerPlayer flagship) {
             this.lecternPos = pos;
             this.flagshipUuid = flagship.getUUID();
             this.flagshipName = flagship.getGameProfile().getName();
@@ -39,7 +40,7 @@ public final class DungeonLobbyManager {
             this.memberNames.add(flagshipName);
         }
 
-        public BlockPos getLecternPos() { return lecternPos; }
+        public GlobalPos getLecternPos() { return lecternPos; }
         public UUID getFlagshipUuid() { return flagshipUuid; }
         public String getFlagshipName() { return flagshipName; }
         public List<UUID> getMemberUuids() { return List.copyOf(memberUuids); }
@@ -84,7 +85,7 @@ public final class DungeonLobbyManager {
         }
     }
 
-    public Lobby joinLobby(BlockPos lecternPos, ServerPlayer player) {
+    public Lobby joinLobby(GlobalPos lecternPos, ServerPlayer player) {
         Lobby lobby = lobbies.get(lecternPos);
         if (lobby == null) {
             lobby = new Lobby(lecternPos, player);
@@ -95,7 +96,7 @@ public final class DungeonLobbyManager {
         return lobby;
     }
 
-    public void leaveLobby(BlockPos lecternPos, UUID playerUuid) {
+    public void leaveLobby(GlobalPos lecternPos, UUID playerUuid) {
         Lobby lobby = lobbies.get(lecternPos);
         if (lobby != null) {
             lobby.removeMember(playerUuid);
@@ -105,16 +106,16 @@ public final class DungeonLobbyManager {
         }
     }
 
-    public Lobby getLobby(BlockPos lecternPos) {
+    public Lobby getLobby(GlobalPos lecternPos) {
         return lobbies.get(lecternPos);
     }
 
-    public void removeLobby(BlockPos lecternPos) {
+    public void removeLobby(GlobalPos lecternPos) {
         lobbies.remove(lecternPos);
     }
 
     /** Send current lobby state to all online members. */
-    public void broadcastLobbyUpdate(MinecraftServer server, BlockPos lecternPos) {
+    public void broadcastLobbyUpdate(MinecraftServer server, GlobalPos lecternPos) {
         Lobby lobby = lobbies.get(lecternPos);
         if (lobby == null) return;
         LobbyUpdatePayload payload = new LobbyUpdatePayload(

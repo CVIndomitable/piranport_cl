@@ -281,6 +281,10 @@ public abstract class AbstractDeepOceanEntity extends Monster {
 
     @Override
     public boolean isCurrentlyGlowing() {
+        // Submarines should not glow when submerged (breaks stealth)
+        if (canSubmerge() && isEyeInFluid(FluidTags.WATER)) {
+            return false;
+        }
         return true; // Always visible without custom model
     }
 

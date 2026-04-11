@@ -175,13 +175,26 @@ public class AircraftEntity extends Entity {
         // Default payload based on aircraft type when not explicitly configured
         if (entity.payloadType.isEmpty()) {
             switch (entity.aircraftType) {
-                case TORPEDO_BOMBER -> entity.payloadType = "piranport:aerial_torpedo";
-                case DIVE_BOMBER, LEVEL_BOMBER -> entity.payloadType = "piranport:aerial_bomb";
-                case ASW -> entity.payloadType = "piranport:depth_charge";
-                default -> { /* FIGHTER / RECON keep empty payload */ }
-            }
-            if (!entity.payloadType.isEmpty()) {
-                entity.hasBullets = false;
+                case TORPEDO_BOMBER -> {
+                    entity.payloadType = "piranport:aerial_torpedo";
+                    entity.hasBullets = false;
+                }
+                case DIVE_BOMBER, LEVEL_BOMBER -> {
+                    entity.payloadType = "piranport:aerial_bomb";
+                    entity.hasBullets = false;
+                }
+                case ASW -> {
+                    entity.payloadType = "piranport:depth_charge";
+                    entity.hasBullets = false;
+                }
+                case FIGHTER -> {
+                    // Fighters use bullets, no payload
+                    entity.hasBullets = true;
+                }
+                default -> {
+                    // RECON keeps empty payload and no bullets
+                    entity.hasBullets = false;
+                }
             }
         }
         entity.aircraftHealth = getMaxHealth(entity.aircraftType);
@@ -854,6 +867,10 @@ public class AircraftEntity extends Entity {
                 dc.setPos(getX(), getY(), getZ());
                 dc.setDeltaMovement(getDeltaMovement().x * 0.1, -0.1, getDeltaMovement().z * 0.1);
                 dc.setOwner(owner);
+                // Add kill attribution for ASW depth charges
+                if (dc instanceof com.piranport.entity.projectile.AttributableProjectile attributable) {
+                    attributable.setSourceAircraftName(originalStack.getHoverName().getString());
+                }
                 level().addFreshEntity(dc);
                 remainingAmmo--;
                 attackCooldown = 30;

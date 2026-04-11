@@ -305,6 +305,26 @@ public class ClientTickHandler {
     private static boolean isHighlightTarget(Entity entity, Player localPlayer) {
         // Bullets use setGlowingTag; torpedoes & bombs use isCurrentlyGlowing() override
         if (entity instanceof BulletEntity bl && bl.getOwner() == localPlayer) return true;
+
+        // Prioritize hostile entities over neutral/friendly ones
+        if (entity instanceof LivingEntity living && living != localPlayer) {
+            double distSq = entity.distanceToSqr(localPlayer);
+            // Only highlight entities within reasonable range (32 blocks)
+            if (distSq <= 32 * 32) {
+                // Priority: hostile > neutral > friendly
+                if (living.getLastHurtByMob() == localPlayer ||
+                    (living.getTarget() != null && living.getTarget() == localPlayer)) {
+                    return true; // Hostile - highest priority
+                }
+                if (living instanceof net.minecraft.world.entity.monster.Monster) {
+                    return true; // Monsters - high priority
+                }
+                if (living instanceof net.minecraft.world.entity.animal.Animal) {
+                    return distSq <= 16 * 16; // Animals - lower priority, closer range
+                }
+            }
+        }
+
         return false;
     }
 

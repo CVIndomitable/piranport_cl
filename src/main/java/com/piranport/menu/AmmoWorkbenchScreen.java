@@ -53,6 +53,10 @@ public class AmmoWorkbenchScreen extends AbstractContainerScreen<AmmoWorkbenchMe
     private List<String> currentCalibers = List.of();
     private AmmoRecipe currentRecipe;
 
+    // Cache player inventory scan to avoid double scanning per frame
+    private Map<Item, Integer> cachedInventory = new HashMap<>();
+    private long lastInventoryScan = 0;
+
     public AmmoWorkbenchScreen(AmmoWorkbenchMenu menu, Inventory inv, Component title) {
         super(menu, inv, title);
         this.imageWidth = 230;
@@ -117,15 +121,22 @@ public class AmmoWorkbenchScreen extends AbstractContainerScreen<AmmoWorkbenchMe
     // ===== Material checking =====
 
     private Map<Item, Integer> scanPlayerInventory() {
-        Map<Item, Integer> map = new HashMap<>();
+        long currentTime = System.currentTimeMillis();
+        // Cache inventory scan for 50ms to avoid double scanning per frame
+        if (currentTime - lastInventoryScan < 50 && !cachedInventory.isEmpty()) {
+            return cachedInventory;
+        }
+
+        cachedInventory.clear();
         Inventory inv = minecraft.player.getInventory();
         for (int i = 0; i < inv.getContainerSize(); i++) {
             ItemStack stack = inv.getItem(i);
             if (!stack.isEmpty()) {
-                map.merge(stack.getItem(), stack.getCount(), Integer::sum);
+                cachedInventory.merge(stack.getItem(), stack.getCount(), Integer::sum);
             }
         }
-        return map;
+        lastInventoryScan = currentTime;
+        return cachedInventory;
     }
 
     private boolean allMaterialsSufficient(Map<Item, Integer> available, int quantity) {

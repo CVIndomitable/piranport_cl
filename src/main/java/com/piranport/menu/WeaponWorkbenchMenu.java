@@ -113,16 +113,22 @@ public class WeaponWorkbenchMenu extends AbstractContainerMenu {
     @Override
     public boolean clickMenuButton(Player player, int id) {
         if (id >= 0 && id <= 4) {
+            // Prevent tab switching during crafting to avoid accidental cancellation
+            if (blockEntity.isCrafting()) {
+                return false;
+            }
             blockEntity.setSelectedTab(id);
             blockEntity.setSelectedRecipe(0);
-            blockEntity.cancelCrafting();
             return true;
         } else if (id >= 100 && id < 200) {
+            // Prevent recipe switching during crafting
+            if (blockEntity.isCrafting()) {
+                return false;
+            }
             int recipeIdx = id - 100;
             var recipes = WeaponWorkbenchRecipeRegistry.getRecipesForTab(blockEntity.getSelectedTab());
             if (recipeIdx >= 0 && recipeIdx < recipes.size()) {
                 blockEntity.setSelectedRecipe(recipeIdx);
-                if (blockEntity.isCrafting()) blockEntity.cancelCrafting();
             }
             return true;
         } else if (id == 200) {

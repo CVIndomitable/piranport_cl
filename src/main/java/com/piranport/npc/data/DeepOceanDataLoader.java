@@ -13,7 +13,7 @@ import net.minecraft.util.profiling.ProfilerFiller;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -23,7 +23,7 @@ import java.util.Map;
 public class DeepOceanDataLoader extends SimpleJsonResourceReloadListener {
     private static final Gson GSON = new GsonBuilder().create();
 
-    private static final Map<String, DeepOceanData> REGISTRY = new HashMap<>();
+    private static final Map<String, DeepOceanData> REGISTRY = new ConcurrentHashMap<>();
 
     public DeepOceanDataLoader() {
         super(GSON, "npc");
@@ -54,7 +54,16 @@ public class DeepOceanDataLoader extends SimpleJsonResourceReloadListener {
     }
 
     private DeepOceanData parseDeepOceanData(JsonObject json) {
+        // Required fields validation
+        if (!json.has("entity_id")) {
+            throw new IllegalArgumentException("Missing required field: entity_id");
+        }
+
         String entityId = json.get("entity_id").getAsString();
+        if (entityId.isEmpty()) {
+            throw new IllegalArgumentException("entity_id cannot be empty");
+        }
+
         double health = json.has("health") ? json.get("health").getAsDouble() : 50;
         double armor = json.has("armor") ? json.get("armor").getAsDouble() : 8;
         double speed = json.has("speed") ? json.get("speed").getAsDouble() : 0.25;

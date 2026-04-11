@@ -29,6 +29,9 @@ public class FleetGroupManager extends SavedData {
 
     private final Map<UUID, FleetGroup> groups = new HashMap<>();
 
+    // ThreadLocal flag to prevent recursion in alertGroup
+    private static final ThreadLocal<Boolean> alertInProgress = new ThreadLocal<>();
+
     public FleetGroupManager() {}
 
     // --- Group lifecycle ---
@@ -97,24 +100,31 @@ public class FleetGroupManager extends SavedData {
         if (group == null) return;
         if (target.getServer() == null) return;
 
-        // Prevent O(N^2) recursion: if group is already in COMBAT, skip propagation
-        if (group.getState() == FleetGroup.State.COMBAT) return;
+        // Robust recursion prevention: use a ThreadLocal flag
+        Boolean alerting = alertInProgress.get();
+        if (alerting != null && alerting) return;
 
-        group.setSharedTarget(target.getUUID());
-        setDirty();
+        try {
+            alertInProgress.set(true);
 
-        // Propagate to IDLE members across all levels
-        for (UUID memberUuid : group.getMembers()) {
-            if (memberUuid.equals(discovererUuid)) continue;
-            for (ServerLevel sl : target.getServer().getAllLevels()) {
-                Entity member = sl.getEntity(memberUuid);
-                if (member instanceof AbstractDeepOceanEntity deepOcean) {
-                    if (deepOcean.getTarget() == null) {
-                        deepOcean.setTarget(target);
+            group.setSharedTarget(target.getUUID());
+            setDirty();
+
+            // Propagate to IDLE members across all levels
+            for (UUID memberUuid : group.getMembers()) {
+                if (memberUuid.equals(discovererUuid)) continue;
+                for (ServerLevel sl : target.getServer().getAllLevels()) {
+                    Entity member = sl.getEntity(memberUuid);
+                    if (member instanceof AbstractDeepOceanEntity deepOcean) {
+                        if (deepOcean.getTarget() == null) {
+                            deepOcean.setTarget(target);
+                        }
+                        break;
                     }
-                    break;
                 }
             }
+        } finally {
+            alertInProgress.remove();
         }
     }
 

@@ -102,6 +102,8 @@ public class WeaponWorkbenchBlockEntity extends BlockEntity implements MenuProvi
                     return false;
                 }
             }
+            // Clear stale user reference
+            currentUser = null;
         }
         currentUser = player.getUUID();
         return true;
@@ -182,15 +184,23 @@ public class WeaponWorkbenchBlockEntity extends BlockEntity implements MenuProvi
         if (be.craftingProgress >= be.craftingTotalTime) {
             WeaponWorkbenchRecipe recipe =
                     WeaponWorkbenchRecipeRegistry.getRecipe(be.selectedTab, be.selectedRecipe);
-            if (recipe != null && be.canCraft(recipe)) {
-                be.consumeMaterials(recipe);
-                ItemStack result = recipe.getResultStack();
-                ItemStack current = be.itemHandler.getStackInSlot(OUTPUT_SLOT);
-                if (current.isEmpty()) {
-                    be.itemHandler.setStackInSlot(OUTPUT_SLOT, result);
+            if (recipe != null) {
+                // Check materials again before completion (in case they were removed)
+                if (be.canCraft(recipe)) {
+                    be.consumeMaterials(recipe);
+                    ItemStack result = recipe.getResultStack();
+                    ItemStack current = be.itemHandler.getStackInSlot(OUTPUT_SLOT);
+                    if (current.isEmpty()) {
+                        be.itemHandler.setStackInSlot(OUTPUT_SLOT, result);
+                    } else {
+                        be.itemHandler.setStackInSlot(OUTPUT_SLOT,
+                                current.copyWithCount(current.getCount() + result.getCount()));
+                    }
                 } else {
-                    be.itemHandler.setStackInSlot(OUTPUT_SLOT,
-                            current.copyWithCount(current.getCount() + result.getCount()));
+                    // Materials insufficient — cancel crafting instead of waiting
+                    be.cancelCrafting();
+                    be.setChanged();
+                    return;
                 }
             }
             be.isCrafting = false;

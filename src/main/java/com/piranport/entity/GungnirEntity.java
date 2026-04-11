@@ -108,7 +108,8 @@ public class GungnirEntity extends ThrowableItemProjectile {
             return;
         }
 
-        // Normal flight
+        // Normal flight — reset noPhysics for proper collision
+        noPhysics = false;
         super.tick();
 
         if (!level().isClientSide()) {
@@ -166,7 +167,8 @@ public class GungnirEntity extends ThrowableItemProjectile {
         ItemStack stack = getReturnStack();
         // Damage the item
         if (owner instanceof Player player) {
-            stack.hurtAndBreak(1, player, LivingEntity.getSlotForHand(player.getUsedItemHand()));
+            // Use main hand as default since we can't reliably track the original hand
+            stack.hurtAndBreak(1, player, LivingEntity.getSlotForHand(net.minecraft.world.InteractionHand.MAIN_HAND));
             if (!player.getInventory().add(stack)) {
                 player.drop(stack, false);
             }

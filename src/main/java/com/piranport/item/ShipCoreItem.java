@@ -1898,10 +1898,11 @@ public class ShipCoreItem extends Item {
      */
     private static int recallAllAircraft(ServerLevel level, Player player) {
         java.util.UUID ownerUUID = player.getUUID();
+        // Reduced recall range from 300 to 128 blocks for better performance
         java.util.List<AircraftEntity> aircraft = level.getEntitiesOfClass(
                 AircraftEntity.class,
-                new AABB(player.getX() - 300, player.getY() - 300, player.getZ() - 300,
-                         player.getX() + 300, player.getY() + 300, player.getZ() + 300),
+                new AABB(player.getX() - 128, player.getY() - 64, player.getZ() - 128,
+                         player.getX() + 128, player.getY() + 64, player.getZ() + 128),
                 a -> ownerUUID.equals(a.getOwnerUUID()) && a.isAlive());
         for (AircraftEntity a : aircraft) {
             a.startReturning("core_recall");

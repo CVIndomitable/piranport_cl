@@ -4,6 +4,7 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Client-side store for ASW sonar detections.
@@ -14,10 +15,10 @@ import java.util.*;
 public class ClientAswSonarData {
 
     /** aircraft entity ID → set of detected entity IDs from that aircraft's last scan */
-    private static final Map<Integer, Set<Integer>> detectionsByAircraft = new HashMap<>();
+    private static final Map<Integer, Set<Integer>> detectionsByAircraft = new ConcurrentHashMap<>();
 
     /** Tick counter for each aircraft's last update, used to prune stale entries. */
-    private static final Map<Integer, Long> lastUpdateTick = new HashMap<>();
+    private static final Map<Integer, Long> lastUpdateTick = new ConcurrentHashMap<>();
 
     private static long clientTick = 0;
 

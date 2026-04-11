@@ -30,10 +30,14 @@ public class UnicornHarpItem extends Item {
         ItemStack stack = player.getItemInHand(hand);
 
         if (!level.isClientSide()) {
-            // Apply Regeneration I to all players within 16 blocks
+            // Apply Regeneration I to friendly players within 16 blocks
             AABB area = player.getBoundingBox().inflate(RANGE);
             List<Player> nearby = level.getEntitiesOfClass(Player.class, area);
             for (Player target : nearby) {
+                // Skip hostile players in PvP (check if they can hurt each other)
+                if (target != player && player.canHarmPlayer(target)) {
+                    continue;
+                }
                 target.addEffect(new MobEffectInstance(MobEffects.REGENERATION, REGEN_DURATION, REGEN_AMPLIFIER));
             }
         }

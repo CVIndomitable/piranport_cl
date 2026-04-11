@@ -91,7 +91,9 @@ public class AmmoWorkbenchMenu extends AbstractContainerMenu {
 
     @Override
     public boolean stillValid(Player player) {
-        return stillValid(ContainerLevelAccess.create(level, blockEntity.getBlockPos()), player,
-                level.getBlockState(blockEntity.getBlockPos()).getBlock());
+        BlockState state = level.getBlockState(blockEntity.getBlockPos());
+        // Precise block type check
+        return state.getBlock() instanceof com.piranport.block.AmmoWorkbenchBlock
+                && stillValid(ContainerLevelAccess.create(level, blockEntity.getBlockPos()), player, state.getBlock());
     }
 }

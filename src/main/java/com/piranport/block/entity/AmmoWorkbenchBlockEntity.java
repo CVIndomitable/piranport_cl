@@ -73,7 +73,9 @@ public class AmmoWorkbenchBlockEntity extends BlockEntity implements MenuProvide
         this.craftingRecipeId = recipeId;
         this.craftingQuantity = quantity;
         this.craftingProgress = 0;
-        this.craftingTotalTime = recipe.craftTimeTicks() * quantity;
+        // Prevent integer overflow: cap total time at reasonable limit
+        long totalTime = (long) recipe.craftTimeTicks() * quantity;
+        this.craftingTotalTime = (int) Math.min(totalTime, Integer.MAX_VALUE / 2);
         setChanged();
     }
 

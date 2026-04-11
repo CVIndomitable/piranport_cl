@@ -29,8 +29,8 @@ public class QuickRepairItem extends Item {
         ItemStack stack = player.getItemInHand(hand);
 
         if (!level.isClientSide()) {
-            // Instant Health XV (amplifier 14 = level XV)
-            player.addEffect(new MobEffectInstance(MobEffects.HEAL, 1, 14));
+            // Instant Health II (amplifier 1 = level II) — reasonable healing amount
+            player.addEffect(new MobEffectInstance(MobEffects.HEAL, 1, 1));
 
             level.playSound(null, player.blockPosition(), SoundEvents.PLAYER_LEVELUP,
                     SoundSource.PLAYERS, 1.0F, 1.0F);

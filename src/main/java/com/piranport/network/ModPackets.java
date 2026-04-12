@@ -183,5 +183,10 @@ public class ModPackets {
                 com.piranport.dungeon.network.PlayerDiedInDungeonPayload.STREAM_CODEC,
                 com.piranport.dungeon.network.PlayerDiedInDungeonPayload::handle
         );
+        registrar.playToClient(
+                com.piranport.dungeon.network.DungeonRegistrySyncPayload.TYPE,
+                com.piranport.dungeon.network.DungeonRegistrySyncPayload.STREAM_CODEC,
+                com.piranport.dungeon.network.DungeonRegistrySyncPayload::handle
+        );
     }
 }

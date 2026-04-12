@@ -1,12 +1,12 @@
 package com.piranport.dungeon.client;
 
 import com.piranport.dungeon.data.ChapterData;
-import com.piranport.dungeon.data.DungeonRegistry;
 import com.piranport.dungeon.data.NodeData;
 import com.piranport.dungeon.data.StageData;
 import com.piranport.dungeon.key.DungeonKeyItem;
 import com.piranport.dungeon.key.DungeonProgress;
 import com.piranport.dungeon.menu.DungeonBookMenu;
+import com.piranport.dungeon.network.ClientDungeonData;
 import com.piranport.dungeon.network.SelectNodePayload;
 import com.piranport.dungeon.network.SelectStagePayload;
 import com.piranport.registry.ModDataComponents;
@@ -42,7 +42,7 @@ public class DungeonBookScreen extends AbstractContainerScreen<DungeonBookMenu> 
         this.imageHeight = 200;
         this.inventoryLabelY = 999; // hide
         this.titleLabelY = 999;    // hide
-        this.chapters = DungeonRegistry.INSTANCE.getSortedChapters();
+        this.chapters = ClientDungeonData.getSortedChapters();
     }
 
     @Override
@@ -79,7 +79,7 @@ public class DungeonBookScreen extends AbstractContainerScreen<DungeonBookMenu> 
             ChapterData chapter = chapters.get(selectedChapterIndex);
             int sy = y + 22;
             for (String stageId : chapter.stages()) {
-                StageData stage = DungeonRegistry.INSTANCE.getStage(stageId);
+                StageData stage = ClientDungeonData.getStage(stageId);
                 if (stage == null) continue;
                 String label = stage.displayName();
                 addRenderableWidget(Button.builder(

@@ -77,7 +77,8 @@ public class DungeonLecternBlock extends Block {
         }
 
         // Join or create lobby, then open the book GUI
-        DungeonLobbyManager.INSTANCE.joinLobby(pos, serverPlayer);
+        GlobalPos globalPos = GlobalPos.of(level.dimension(), pos);
+        DungeonLobbyManager.INSTANCE.joinLobby(globalPos, serverPlayer);
 
         serverPlayer.openMenu(
                 new SimpleMenuProvider(

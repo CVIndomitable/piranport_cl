@@ -313,7 +313,8 @@ public class ClientTickHandler {
             if (distSq <= 32 * 32) {
                 // Priority: hostile > neutral > friendly
                 if (living.getLastHurtByMob() == localPlayer ||
-                    (living.getTarget() != null && living.getTarget() == localPlayer)) {
+                    (living instanceof net.minecraft.world.entity.Mob mob
+                            && mob.getTarget() != null && mob.getTarget() == localPlayer)) {
                     return true; // Hostile - highest priority
                 }
                 if (living instanceof net.minecraft.world.entity.monster.Monster) {

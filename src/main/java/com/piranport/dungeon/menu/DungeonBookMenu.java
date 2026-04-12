@@ -2,6 +2,7 @@ package com.piranport.dungeon.menu;
 
 import com.piranport.registry.ModMenuTypes;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.GlobalPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -52,8 +53,9 @@ public class DungeonBookMenu extends AbstractContainerMenu {
         super.removed(player);
         // Leave lobby when closing the GUI
         if (!player.level().isClientSide()) {
+            GlobalPos globalPos = GlobalPos.of(player.level().dimension(), lecternPos);
             com.piranport.dungeon.lobby.DungeonLobbyManager.INSTANCE
-                    .leaveLobby(lecternPos, player.getUUID());
+                    .leaveLobby(globalPos, player.getUUID());
         }
     }
 }

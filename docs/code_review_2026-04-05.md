@@ -11,7 +11,7 @@
 |---------|------|--------|--------|
 | **P0 关键** | **5** | **0** | **5**（本次仅修 P1-P3） |
 | **P1 重要** | **18** | **17** | **1** |
-| **P2 一般** | **21** | **18** | **3** |
+| **P2 一般** | **21** | **21** | **0** |
 | **P3 建议** | **8** | **5** | **3** |
 
 ---
@@ -61,17 +61,20 @@
 
 ## P2 一般问题
 
-### 已修复 (18/21)
+### 已修复 (21/21)
 
 | # | 问题 | 状态 |
 |---|------|------|
 | 1 | DungeonLobbyManager 添加 MAX_LOBBY_SIZE=6 | FIXED |
+| 2 | DungeonLobbyManager BlockPos→GlobalPos 区分维度 | FIXED |
 | 3 | 副本死亡清除残留 DOT 效果 | FIXED |
+| 5 | DungeonBookScreen 客户端数据同步(S2C DungeonRegistrySyncPayload) | FIXED |
 | 7 | DungeonPortalEntity 移除客户端 SynchedEntityData 写入 | FIXED |
 | 8 | ReconControlPayload NaN 检查前置 | FIXED |
 | 9 | RecallAllAircraftPayload 添加20tick冷却 | FIXED |
 | 10 | SelectNodePayload/SelectStagePayload 字符串长度验证 | FIXED |
 | 11 | SkinOverlayLayer 限制 skinId 范围 | FIXED |
+| 13 | CookingPotMenu等5个Menu添加区块卸载isLoaded检查 | FIXED |
 | 14 | 所有 AircraftItem 自动注册 fueled property | FIXED |
 | 15 | 3个反舰/火箭发射器注册 WeaponReloadDecorator | FIXED |
 | 16 | VT近炸引信友军判断统一 FriendlyFireHelper | FIXED |
@@ -80,13 +83,9 @@
 | 20 | LoadedAmmo STREAM_CODEC 长度限制 | FIXED |
 | 21 | SaltEvaporationHandler isLoaded 检查 | FIXED |
 
-### 未修复 (3/21)
+### 未修复 (0/21)
 
-| # | 问题 | 原因 |
-|---|------|------|
-| 2 | DungeonLobbyManager BlockPos 不区分维度 | 需改用 GlobalPos 作为 key，影响面较大 |
-| 5 | DungeonBookScreen 客户端数据同步 | 需要架构变更（S2C 同步或共享数据包） |
-| 13 | CookingPotMenu/ReloadFacilityMenu 区块卸载异常 | 需要降级 Menu 设计，影响 GUI 框架 |
+全部已修复。
 
 ---
 

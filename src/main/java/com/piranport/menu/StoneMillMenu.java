@@ -80,6 +80,10 @@ public class StoneMillMenu extends AbstractContainerMenu {
     @Override
     public boolean stillValid(Player player) {
         if (blockEntity == null) return false;
+        // Check chunk is loaded before accessing block entity
+        if (!player.level().isLoaded(blockEntity.getBlockPos())) {
+            return false;
+        }
         return player.distanceToSqr(
                 blockEntity.getBlockPos().getX() + 0.5,
                 blockEntity.getBlockPos().getY() + 0.5,

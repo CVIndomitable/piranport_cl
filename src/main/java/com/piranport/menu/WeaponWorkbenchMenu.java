@@ -184,6 +184,10 @@ public class WeaponWorkbenchMenu extends AbstractContainerMenu {
 
     @Override
     public boolean stillValid(Player player) {
+        // Check chunk is loaded before accessing block entity
+        if (!level.isLoaded(blockEntity.getBlockPos())) {
+            return false;
+        }
         return stillValid(ContainerLevelAccess.create(level, blockEntity.getBlockPos()), player,
                 level.getBlockState(blockEntity.getBlockPos()).getBlock());
     }

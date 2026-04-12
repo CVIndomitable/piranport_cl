@@ -867,10 +867,7 @@ public class AircraftEntity extends Entity {
                 dc.setPos(getX(), getY(), getZ());
                 dc.setDeltaMovement(getDeltaMovement().x * 0.1, -0.1, getDeltaMovement().z * 0.1);
                 dc.setOwner(owner);
-                // Add kill attribution for ASW depth charges
-                if (dc instanceof com.piranport.entity.projectile.AttributableProjectile attributable) {
-                    attributable.setSourceAircraftName(originalStack.getHoverName().getString());
-                }
+                // Owner already set above for kill attribution
                 level().addFreshEntity(dc);
                 remainingAmmo--;
                 attackCooldown = 30;

@@ -11,6 +11,7 @@ import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.SlotItemHandler;
 
@@ -91,6 +92,10 @@ public class AmmoWorkbenchMenu extends AbstractContainerMenu {
 
     @Override
     public boolean stillValid(Player player) {
+        // Check chunk is loaded before accessing block entity
+        if (!level.isLoaded(blockEntity.getBlockPos())) {
+            return false;
+        }
         BlockState state = level.getBlockState(blockEntity.getBlockPos());
         // Precise block type check
         return state.getBlock() instanceof com.piranport.block.AmmoWorkbenchBlock

@@ -496,6 +496,11 @@ public class ModItems {
                     .food(fp(5, 6f).build())
                     .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 2))));
 
+    public static final DeferredItem<ModFoodItem> EGGS_BENEDICT = ITEMS.register("eggs_benedict",
+            () -> new ModFoodItem(new Item.Properties()
+                    .food(fp(5, 6f).build())
+                    .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 2))));
+
     // ===== Aircraft Squadrons (Phase 18) =====
     public static final DeferredItem<AircraftItem> FIGHTER_SQUADRON =
             ITEMS.register("fighter_squadron",

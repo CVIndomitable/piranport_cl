@@ -274,6 +274,10 @@ public class ModCreativeTabs {
                         output.accept(ModItems.THURINGER_ROSTBRATWURST_UND_BIER.get());
                         output.accept(ModItems.THURINGER_ROSTBRATWURST.get());
                         output.accept(ModItems.TRIPLE_SHELL_AMERICAN_BURGER.get());
+                        output.accept(ModItems.VENICE_CUTTLEFISH_NOODLES.get());
+                        output.accept(ModItems.WEISSWURST_MIT_DER_BAGEL.get());
+                        output.accept(ModItems.YOKAN.get());
+                        output.accept(ModItems.YORKSHIRE_PUDDING.get());
                         // Buff Foods
                         output.accept(ModItems.CHICKEN_TATSUTA.get());
                         output.accept(ModItems.TORPEDO_JUICE.get());

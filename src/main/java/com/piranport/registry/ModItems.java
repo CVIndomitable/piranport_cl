@@ -521,6 +521,11 @@ public class ModItems {
                     .food(fp(5, 6f).build())
                     .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 3))));
 
+    public static final DeferredItem<ModFoodItem> SALAMI_PIZZA = ITEMS.register("salami_pizza",
+            () -> new ModFoodItem(new Item.Properties()
+                    .food(fp(5, 6f).build())
+                    .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 2))));
+
     public static final DeferredItem<ModFoodItem> RYE_BREAD = ITEMS.register("rye_bread",
             () -> new ModFoodItem(new Item.Properties()
                     .food(fp(5, 6f).build())

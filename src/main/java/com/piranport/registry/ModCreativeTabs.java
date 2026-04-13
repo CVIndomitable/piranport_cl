@@ -249,6 +249,7 @@ public class ModCreativeTabs {
                         output.accept(ModItems.BARBECUE.get());
                         output.accept(ModItems.BLACK_FOREST_GATEAU.get());
                         output.accept(ModItems.BLACK_TEA_SANDWICH.get());
+                        output.accept(ModItems.BLACK_TEA_SCONE.get());
                         // Buff Foods
                         output.accept(ModItems.CHICKEN_TATSUTA.get());
                         output.accept(ModItems.TORPEDO_JUICE.get());

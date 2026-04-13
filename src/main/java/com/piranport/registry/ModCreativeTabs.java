@@ -257,6 +257,7 @@ public class ModCreativeTabs {
                         output.accept(ModItems.DOUBLE_SHELL_AMERICAN_BURGER.get());
                         output.accept(ModItems.EGGS_BENEDICT.get());
                         output.accept(ModItems.FRIED_FISH_MISO_SOUP.get());
+                        output.accept(ModItems.MACARON.get());
                         // Buff Foods
                         output.accept(ModItems.CHICKEN_TATSUTA.get());
                         output.accept(ModItems.TORPEDO_JUICE.get());

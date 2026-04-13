@@ -556,6 +556,41 @@ public class ModItems {
                     .food(fp(5, 6f).build())
                     .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 2))));
 
+    public static final DeferredItem<ModFoodItem> SOBA_NOODLE = ITEMS.register("soba_noodle",
+            () -> new ModFoodItem(new Item.Properties()
+                    .food(fp(5, 6f).build())
+                    .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("bowl", 2))));
+
+    public static final DeferredItem<ModFoodItem> TANGYUAN = ITEMS.register("tangyuan",
+            () -> new ModFoodItem(new Item.Properties()
+                    .food(fp(5, 6f).build())
+                    .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("bowl", 2))));
+
+    public static final DeferredItem<ModFoodItem> TARTE_TATIN = ITEMS.register("tarte_tatin",
+            () -> new ModFoodItem(new Item.Properties()
+                    .food(fp(5, 6f).build())
+                    .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 2))));
+
+    public static final DeferredItem<ModFoodItem> TEMPURA_SOBA_NOODLE = ITEMS.register("tempura_soba_noodle",
+            () -> new ModFoodItem(new Item.Properties()
+                    .food(fp(5, 6f).build())
+                    .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("bowl", 2))));
+
+    public static final DeferredItem<ModFoodItem> THURINGER_ROSTBRATWURST_UND_BIER = ITEMS.register("thuringer_rostbratwurst_und_bier",
+            () -> new ModFoodItem(new Item.Properties()
+                    .food(fp(5, 6f).build())
+                    .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 2))));
+
+    public static final DeferredItem<ModFoodItem> THURINGER_ROSTBRATWURST = ITEMS.register("thuringer_rostbratwurst",
+            () -> new ModFoodItem(new Item.Properties()
+                    .food(fp(5, 6f).build())
+                    .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 2))));
+
+    public static final DeferredItem<ModFoodItem> TRIPLE_SHELL_AMERICAN_BURGER = ITEMS.register("triple_shell_american_burger",
+            () -> new ModFoodItem(new Item.Properties()
+                    .food(fp(5, 6f).build())
+                    .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 2))));
+
     // ===== Aircraft Squadrons (Phase 18) =====
     public static final DeferredItem<AircraftItem> FIGHTER_SQUADRON =
             ITEMS.register("fighter_squadron",

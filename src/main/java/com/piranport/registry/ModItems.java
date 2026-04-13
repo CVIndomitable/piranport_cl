@@ -521,6 +521,26 @@ public class ModItems {
                     .food(fp(5, 6f).build())
                     .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 3))));
 
+    public static final DeferredItem<ModFoodItem> OKROSHKA = ITEMS.register("okroshka",
+            () -> new ModFoodItem(new Item.Properties()
+                    .food(fp(5, 6f).build())
+                    .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 2))));
+
+    public static final DeferredItem<ModFoodItem> PEA_SOUP_WITH_RYE_BREAD = ITEMS.register("pea_soup_with_rye_bread",
+            () -> new ModFoodItem(new Item.Properties()
+                    .food(fp(5, 6f).build())
+                    .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("bowl", 2))));
+
+    public static final DeferredItem<ModFoodItem> ROYAL_NAVAL_SALTED_BEEF = ITEMS.register("royal_naval_salted_beef",
+            () -> new ModFoodItem(new Item.Properties()
+                    .food(fp(5, 6f).build())
+                    .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 2))));
+
+    public static final DeferredItem<ModFoodItem> RUSSIAN_DUMPLING = ITEMS.register("russian_dumpling",
+            () -> new ModFoodItem(new Item.Properties()
+                    .food(fp(5, 6f).build())
+                    .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 2))));
+
     // ===== Aircraft Squadrons (Phase 18) =====
     public static final DeferredItem<AircraftItem> FIGHTER_SQUADRON =
             ITEMS.register("fighter_squadron",

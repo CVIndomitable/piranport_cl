@@ -501,6 +501,11 @@ public class ModItems {
                     .food(fp(5, 6f).build())
                     .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 2))));
 
+    public static final DeferredItem<ModFoodItem> FRIED_FISH_MISO_SOUP = ITEMS.register("fried_fish_miso_soup",
+            () -> new ModFoodItem(new Item.Properties()
+                    .food(fp(5, 6f).build())
+                    .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("bowl", 2))));
+
     // ===== Aircraft Squadrons (Phase 18) =====
     public static final DeferredItem<AircraftItem> FIGHTER_SQUADRON =
             ITEMS.register("fighter_squadron",

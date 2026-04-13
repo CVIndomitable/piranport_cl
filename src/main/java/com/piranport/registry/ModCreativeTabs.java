@@ -260,6 +260,7 @@ public class ModCreativeTabs {
                         output.accept(ModItems.MACARON.get());
                         output.accept(ModItems.MUSSOLINIS_OO.get());
                         output.accept(ModItems.NEW_RYE_BREAD.get());
+                        output.accept(ModItems.RYE_BREAD.get());
                         output.accept(ModItems.OKROSHKA.get());
                         output.accept(ModItems.PEA_SOUP_WITH_RYE_BREAD.get());
                         output.accept(ModItems.ROYAL_NAVAL_SALTED_BEEF.get());

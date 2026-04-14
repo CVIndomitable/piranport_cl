@@ -290,6 +290,8 @@
   "message.piranport.aircraft_shot_down_by": "%s Shot Down by %s",
   "message.piranport.weapon_hit": "%s Hit %s",
   "message.piranport.weapon_kill": "%s Killed %s",
+  "message.piranport.weapon_miss": "%s Missed",
+  "message.piranport.no_core": "Ship core not found!",
   "message.piranport.aircraft_recalled": "Recalled %s aircraft",
   "message.piranport.fighter_air_only_on": "Fighter Ground Attack OFF (Air Only)",
   "message.piranport.fighter_air_only_off": "Fighter Ground Attack ON",

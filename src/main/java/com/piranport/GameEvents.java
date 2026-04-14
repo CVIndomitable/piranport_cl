@@ -302,14 +302,14 @@ public class GameEvents {
             ShipCoreItem.tryAutoLaunchFighter(player.level(), player, coreStack, coreSlot);
         }
 
-        // Anti-air missiles: independently check for any hostile mob within 32 blocks
-        // (not limited to vanilla flying mobs — includes deep ocean NPCs etc.)
-        boolean hasNearbyHostile = !player.level().getEntitiesOfClass(
+        // Anti-air missiles: check for flying hostile mobs within 32 blocks
+        // Only trigger when airborne targets exist (to avoid wasting ammo on ground mobs)
+        boolean hasAirborneHostile = !player.level().getEntitiesOfClass(
                 Monster.class,
                 player.getBoundingBox().inflate(32.0),
-                e -> e.isAlive() && e.isPickable()
+                e -> e.isAlive() && e.isPickable() && !e.onGround() && !e.isUnderWater()
         ).isEmpty();
-        if (hasNearbyHostile) {
+        if (hasAirborneHostile) {
             ShipCoreItem.tryAutoFireAntiAirMissile(player.level(), player, coreStack, coreSlot);
         }
     }

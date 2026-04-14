@@ -70,6 +70,8 @@ public class MissileEntity extends ThrowableItemProjectile {
     private static final float MAX_TURN_DEG = 12.0f;
     /** Cached tracking target for guided missiles. */
     private Entity trackedTarget = null;
+    /** UUID of the tracked target, used for NBT persistence. */
+    private UUID trackedTargetUUID = null;
     /** When true, skip automatic target search and keep the manually assigned target. */
     private boolean manualTarget = false;
     /** Ticks until next target search (throttle). */
@@ -99,6 +101,7 @@ public class MissileEntity extends ThrowableItemProjectile {
     /** 手动指定追踪目标，跳过自动搜索逻辑。 */
     public void setTrackedTarget(Entity target) {
         this.trackedTarget = target;
+        this.trackedTargetUUID = target != null ? target.getUUID() : null;
         this.manualTarget = true;
     }
 
@@ -153,10 +156,21 @@ public class MissileEntity extends ThrowableItemProjectile {
                 }
             } else {
                 // 反舰/防空导弹：制导追踪（目标缓存，每5tick重新搜索）
+                // Restore target from UUID after chunk reload / server restart
+                if (trackedTarget == null && trackedTargetUUID != null
+                        && level() instanceof ServerLevel sl) {
+                    trackedTarget = sl.getEntity(trackedTargetUUID);
+                    if (trackedTarget == null) {
+                        trackedTargetUUID = null;
+                        manualTarget = false; // 目标不存在，允许自动搜索
+                    }
+                }
                 if (trackedTarget != null && (!trackedTarget.isAlive() || trackedTarget.isRemoved())) {
                     trackedTarget = null;
+                    trackedTargetUUID = null;
+                    manualTarget = false; // 手动目标死亡后重置，允许自动搜索
                 }
-                if (trackedTarget == null && !manualTarget && --targetSearchCooldown <= 0) {
+                if (trackedTarget == null && --targetSearchCooldown <= 0) {
                     trackedTarget = findTarget();
                     targetSearchCooldown = 5;
                 }
@@ -199,7 +213,6 @@ public class MissileEntity extends ThrowableItemProjectile {
         AABB searchBox = getBoundingBox().inflate(SEARCH_RANGE);
         Entity bestTarget = null;
         double bestDist = Double.MAX_VALUE;
-        boolean bestIsAirborne = false;
 
         for (Entity e : level().getEntities(this, searchBox, e -> {
             if (e == getOwner()) return false;
@@ -214,11 +227,9 @@ public class MissileEntity extends ThrowableItemProjectile {
             if ((missileType == MissileType.ANTI_SHIP || missileType == MissileType.ANTI_AIR)
                     && e.isUnderWater()) continue;
 
-            boolean isAirborne = !e.onGround();
-
             if (missileType == MissileType.ANTI_AIR) {
                 // 防空导弹自动锁定仅限飞行目标，地面目标需手动火控锁定
-                if (!isAirborne) continue;
+                if (e.onGround()) continue;
                 if (dist < bestDist) {
                     bestTarget = e;
                     bestDist = dist;
@@ -318,6 +329,7 @@ public class MissileEntity extends ThrowableItemProjectile {
                         ? Level.ExplosionInteraction.TNT : Level.ExplosionInteraction.NONE;
                 level().explode(this, getX(), getY(), getZ(), explosionPower, interaction);
             }
+            notifyOwnerMiss();
             discard();
         }
     }
@@ -330,6 +342,13 @@ public class MissileEntity extends ThrowableItemProjectile {
         player.sendSystemMessage(Component.translatable(key, weaponName, target.getDisplayName()));
     }
 
+    private void notifyOwnerMiss() {
+        Entity owner = getOwner();
+        if (!(owner instanceof Player player)) return;
+        Component weaponName = getDefaultItem().getDescription();
+        player.sendSystemMessage(Component.translatable("message.piranport.weapon_miss", weaponName));
+    }
+
     @Override
     public void addAdditionalSaveData(CompoundTag tag) {
         super.addAdditionalSaveData(tag);
@@ -339,6 +358,10 @@ public class MissileEntity extends ThrowableItemProjectile {
         tag.putFloat("ExplosionPower", explosionPower);
         tag.putFloat("CurrentSpeed", currentSpeed);
         tag.putString("DisplayItemId", displayItemId);
+        tag.putBoolean("ManualTarget", manualTarget);
+        if (trackedTargetUUID != null) {
+            tag.putUUID("TrackedTargetUUID", trackedTargetUUID);
+        }
     }
 
     @Override
@@ -353,5 +376,9 @@ public class MissileEntity extends ThrowableItemProjectile {
         currentSpeed = tag.getFloat("CurrentSpeed");
         if (currentSpeed <= 0) currentSpeed = missileType.initialSpeed;
         displayItemId = tag.getString("DisplayItemId");
+        manualTarget = tag.getBoolean("ManualTarget");
+        if (tag.hasUUID("TrackedTargetUUID")) {
+            trackedTargetUUID = tag.getUUID("TrackedTargetUUID");
+        }
     }
 }

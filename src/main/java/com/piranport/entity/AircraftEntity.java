@@ -438,16 +438,21 @@ public class AircraftEntity extends Entity {
                 PacketDistributor.sendToPlayer(sp, new ReconStartPayload(getId()));
             }
         } else if (from == FlightState.RECON_ACTIVE) {
-            ReconManager.endRecon(owner.getUUID());
-            if (appliedSlowness) {
-                owner.removeEffect(MobEffects.MOVEMENT_SLOWDOWN);
-                appliedSlowness = false;
-            }
-            releaseAllForcedChunks();
-            // Notify client to restore camera
-            if (owner instanceof ServerPlayer sp) {
-                PacketDistributor.sendToPlayer(sp, new ReconEndPayload());
-            }
+            cleanupReconState(owner);
+        }
+    }
+
+    /** 统一清理侦察机状态：结束侦察、移除减速、释放区块、通知客户端。 */
+    private void cleanupReconState(Player owner) {
+        ReconManager.endRecon(owner.getUUID());
+        if (appliedSlowness) {
+            owner.removeEffect(MobEffects.MOVEMENT_SLOWDOWN);
+            appliedSlowness = false;
+        }
+        releaseAllForcedChunks();
+        // Notify client to restore camera
+        if (owner instanceof ServerPlayer sp) {
+            PacketDistributor.sendToPlayer(sp, new ReconEndPayload());
         }
     }
 
@@ -990,7 +995,7 @@ public class AircraftEntity extends Entity {
                     MapItemSavedData mapData = MapItem.getSavedData(stack, level());
                     if (mapData != null && !mapData.locked) {
                         mapData.tickCarriedBy(owner, stack);
-                        mapItem.update(level(), this, mapData);
+                        mapItem.update(level(), owner, mapData);
                     }
                 }
             }
@@ -1041,8 +1046,9 @@ public class AircraftEntity extends Entity {
     /**
      * Sends pending chunks to the player (rate-limited to avoid network spikes).
      * Chunks that haven't finished generating yet remain in the queue.
-     * Note: uses vanilla ClientboundLevelChunkWithLightPacket directly because NeoForge's
+     * TECH DEBT: uses vanilla ClientboundLevelChunkWithLightPacket directly because NeoForge's
      * PacketDistributor has no equivalent for sending raw chunk data to a specific player.
+     * May break on NeoForge version upgrades — check when updating.
      */
     private void sendPendingChunks(ServerPlayer player) {
         if (reconPendingSend.isEmpty()) return;
@@ -1298,7 +1304,7 @@ public class AircraftEntity extends Entity {
             if (owner != null) {
                 // Clean up recon if active
                 if (getFlightState() == FlightState.RECON_ACTIVE) {
-                    handleStateTransition(FlightState.RECON_ACTIVE, FlightState.RETURNING, owner);
+                    cleanupReconState(owner);
                 }
                 // Action bar notification
                 Component aircraftName = buildReturnStack().getHoverName();
@@ -1561,7 +1567,7 @@ public class AircraftEntity extends Entity {
             // Clean up recon state if needed + notify owner
             Player owner = getOwner();
             if (state == FlightState.RECON_ACTIVE && ownerUUID != null) {
-                if (owner != null) handleStateTransition(FlightState.RECON_ACTIVE, FlightState.REMOVED, owner);
+                if (owner != null) cleanupReconState(owner);
                 else { ReconManager.endRecon(ownerUUID); releaseAllForcedChunks(); }
             }
             // Action bar shot-down notification

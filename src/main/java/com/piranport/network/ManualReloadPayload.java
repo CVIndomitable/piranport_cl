@@ -95,7 +95,10 @@ public record ManualReloadPayload() implements CustomPacketPayload {
                     coreSlot = 40;
                 }
             }
-            if (coreStack.isEmpty()) return;
+            if (coreStack.isEmpty()) {
+                player.displayClientMessage(Component.translatable("message.piranport.no_core"), true);
+                return;
+            }
 
             // Count total matching ammo in inventory
             int totalAmmo = 0;

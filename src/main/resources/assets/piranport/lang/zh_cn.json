@@ -290,6 +290,8 @@
   "message.piranport.aircraft_shot_down_by": "%s 被 %s 击落",
   "message.piranport.weapon_hit": "%s 命中 %s",
   "message.piranport.weapon_kill": "%s 击杀 %s",
+  "message.piranport.weapon_miss": "%s 未命中目标",
+  "message.piranport.no_core": "未找到舰装核心！",
   "message.piranport.aircraft_recalled": "已命令 %s 架舰载机返航",
   "message.piranport.fighter_air_only_on": "战斗机对地攻击 已关闭（仅对空）",
   "message.piranport.fighter_air_only_off": "战斗机对地攻击 已开启",

@@ -2191,7 +2191,7 @@ public class ShipCoreItem extends Item {
             List<UUID> fcTargets = FireControlManager.getTargets(player.getUUID());
             for (UUID targetUUID : fcTargets) {
                 net.minecraft.world.entity.Entity target = sl.getEntity(targetUUID);
-                if (target != null && target.isAlive()) {
+                if (target != null && target.isAlive() && !target.isUnderWater()) {
                     Vec3 toTarget = target.position().add(0, target.getBbHeight() * 0.5, 0)
                             .subtract(player.getEyePosition());
                     if (toTarget.lengthSqr() > 0.01) {
@@ -2206,7 +2206,7 @@ public class ShipCoreItem extends Item {
                 double bestDist = 32.0;
                 for (Mob mob : level.getEntitiesOfClass(Mob.class,
                         player.getBoundingBox().inflate(32.0),
-                        e -> e.isAlive() && e.isPickable())) {
+                        e -> e.isAlive() && e.isPickable() && !e.isUnderWater())) {
                     double d = player.distanceTo(mob);
                     if (d < bestDist) {
                         bestDist = d;

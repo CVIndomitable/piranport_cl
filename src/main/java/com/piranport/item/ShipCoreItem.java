@@ -28,6 +28,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.SimpleMenuProvider;
@@ -2191,7 +2192,8 @@ public class ShipCoreItem extends Item {
             List<UUID> fcTargets = FireControlManager.getTargets(player.getUUID());
             for (UUID targetUUID : fcTargets) {
                 net.minecraft.world.entity.Entity target = sl.getEntity(targetUUID);
-                if (target != null && target.isAlive() && !target.isUnderWater()) {
+                if (target != null && target.isAlive() && !target.isUnderWater()
+                        && !(target instanceof net.minecraft.world.Container)) {
                     Vec3 toTarget = target.position().add(0, target.getBbHeight() * 0.5, 0)
                             .subtract(player.getEyePosition());
                     if (toTarget.lengthSqr() > 0.01) {
@@ -2200,11 +2202,11 @@ public class ShipCoreItem extends Item {
                     break;
                 }
             }
-            // 2. No fire control lock — find nearest hostile mob
+            // 2. No fire control lock — find nearest hostile mob (Monster only)
             if (aimDir == null) {
-                Mob nearest = null;
+                Monster nearest = null;
                 double bestDist = 32.0;
-                for (Mob mob : level.getEntitiesOfClass(Mob.class,
+                for (Monster mob : level.getEntitiesOfClass(Monster.class,
                         player.getBoundingBox().inflate(32.0),
                         e -> e.isAlive() && e.isPickable() && !e.isUnderWater())) {
                     double d = player.distanceTo(mob);

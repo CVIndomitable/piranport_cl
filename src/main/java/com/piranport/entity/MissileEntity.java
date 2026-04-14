@@ -14,6 +14,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -184,6 +185,8 @@ public class MissileEntity extends ThrowableItemProjectile {
             for (UUID targetUUID : fcTargets) {
                 Entity target = serverLevel.getEntity(targetUUID);
                 if (target != null && target.isAlive()) {
+                    // 排除有容器的实体（箱子矿车等）
+                    if (target instanceof net.minecraft.world.Container) continue;
                     // 反舰/防空导弹不锁定水下目标
                     if ((missileType == MissileType.ANTI_SHIP || missileType == MissileType.ANTI_AIR)
                             && target.isUnderWater()) continue;
@@ -201,7 +204,8 @@ public class MissileEntity extends ThrowableItemProjectile {
         for (Entity e : level().getEntities(this, searchBox, e -> {
             if (e == getOwner()) return false;
             if (FriendlyFireHelper.shouldBlockHit(e, getOwner())) return false;
-            if (!(e instanceof Mob)) return false;
+            if (!(e instanceof Monster)) return false;
+            if (e instanceof net.minecraft.world.Container) return false;
             return e.isAlive() && e.isPickable();
         })) {
             double dist = distanceTo(e);

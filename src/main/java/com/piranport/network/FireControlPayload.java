@@ -69,6 +69,7 @@ public record FireControlPayload(FireAction action, UUID targetUUID) implements 
                 // Limit lock range to simulation distance (in blocks)
                 int simDistBlocks = player.serverLevel().getServer().getPlayerList().getSimulationDistance() * 16;
                 if (entity instanceof LivingEntity le && le.isAlive() && entity != player
+                        && !(entity instanceof net.minecraft.world.Container)
                         && player.distanceTo(entity) <= simDistBlocks) {
                     if (payload.action() == FireAction.LOCK) {
                         FireControlManager.lock(playerUUID, entity.getUUID());

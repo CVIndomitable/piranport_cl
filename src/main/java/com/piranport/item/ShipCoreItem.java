@@ -2203,12 +2203,15 @@ public class ShipCoreItem extends Item {
                 }
             }
             // 2. No fire control lock — find nearest hostile mob (Monster only)
+            //    防空导弹自动瞄准仅限飞行目标
+            final boolean antiAirOnly = launcher.getMissileType() == MissileEntity.MissileType.ANTI_AIR;
             if (aimDir == null) {
                 Monster nearest = null;
                 double bestDist = 32.0;
                 for (Monster mob : level.getEntitiesOfClass(Monster.class,
                         player.getBoundingBox().inflate(32.0),
                         e -> e.isAlive() && e.isPickable() && !e.isUnderWater())) {
+                    if (antiAirOnly && mob.onGround()) continue;
                     double d = player.distanceTo(mob);
                     if (d < bestDist) {
                         bestDist = d;

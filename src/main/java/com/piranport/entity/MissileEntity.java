@@ -217,15 +217,11 @@ public class MissileEntity extends ThrowableItemProjectile {
             boolean isAirborne = !e.onGround();
 
             if (missileType == MissileType.ANTI_AIR) {
-                // 防空导弹优先攻击空中单位
-                if (isAirborne && !bestIsAirborne) {
+                // 防空导弹自动锁定仅限飞行目标，地面目标需手动火控锁定
+                if (!isAirborne) continue;
+                if (dist < bestDist) {
                     bestTarget = e;
                     bestDist = dist;
-                    bestIsAirborne = true;
-                } else if (isAirborne == bestIsAirborne && dist < bestDist) {
-                    bestTarget = e;
-                    bestDist = dist;
-                    bestIsAirborne = isAirborne;
                 }
             } else {
                 if (dist < bestDist) {

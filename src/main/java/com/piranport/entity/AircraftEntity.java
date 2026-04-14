@@ -92,6 +92,11 @@ public class AircraftEntity extends Entity {
     private boolean hasFired = false;
     private boolean diveCommitted = false;  // true once dive bomber locks its drop point
     @Nullable private Vec3 diveTarget = null; // predicted bomb drop point (fixed after commit)
+
+    // Level bomber bombing run state
+    private boolean levelBombDropped = false;     // true once bomb dropped in current run
+    @Nullable private Vec3 levelRunDirection = null; // normalized direction of current run
+    @Nullable private Vec3 levelDropPoint = null;   // position where bomb was dropped
     private int autoSeekCooldown = 0; // P3 #30: throttle AABB queries
     private boolean autoSeekDone = false;    // true after first auto-seek scan (one-shot)
     private boolean hasEverHadFireControl = false; // true if FC target was ever assigned
@@ -801,8 +806,11 @@ public class AircraftEntity extends Entity {
     }
 
     /**
-     * LEVEL_BOMBER: climb to target+32 blocks, fly over and drop bombs.
-     * 8 rounds total; does not return until ammo depleted.
+     * LEVEL_BOMBER: bombing run pattern.
+     * 1. Climb to target+32 altitude
+     * 2. Fly straight over the target, drop bomb when overhead
+     * 3. Continue flying 10 blocks past the drop point
+     * 4. Check if target is alive — if so, start a new run
      */
     private void tickLevelBomberAttack(Player owner, LivingEntity target) {
         if (remainingAmmo <= 0) {
@@ -816,16 +824,42 @@ public class AircraftEntity extends Entity {
 
         double bombAltitude = target.getY() + 32.0;
 
+        // Phase 1: Climb to bombing altitude
         if (getY() < bombAltitude - 1.5) {
+            levelBombDropped = false;
+            levelRunDirection = null;
+            levelDropPoint = null;
             Vec3 toPoint = new Vec3(target.getX() - getX(), bombAltitude - getY(), target.getZ() - getZ());
             double dist = toPoint.length();
             setDeltaMovement(toPoint.normalize().scale(Math.min(panelSpeed * 0.4, dist)));
-        } else {
+            return;
+        }
+
+        // Establish run direction once at altitude (locked for this run)
+        if (levelRunDirection == null) {
             double dx = target.getX() - getX();
             double dz = target.getZ() - getZ();
             double horizDist = Math.sqrt(dx * dx + dz * dz);
+            if (horizDist < 0.1) {
+                // Already on top, pick arbitrary direction
+                levelRunDirection = new Vec3(1, 0, 0);
+            } else {
+                levelRunDirection = new Vec3(dx / horizDist, 0, dz / horizDist);
+            }
+            levelBombDropped = false;
+            levelDropPoint = null;
+        }
 
-            if (horizDist < 3.0 && attackCooldown <= 0) {
+        // Phase 2: Fly along the run direction
+        double yCorrect = (bombAltitude - getY()) * 0.15;
+        setDeltaMovement(levelRunDirection.x * panelSpeed * 0.4, yCorrect, levelRunDirection.z * panelSpeed * 0.4);
+
+        // Drop bomb when passing over target (within 3 blocks horizontal)
+        if (!levelBombDropped) {
+            double dx = target.getX() - getX();
+            double dz = target.getZ() - getZ();
+            double horizDist = Math.sqrt(dx * dx + dz * dz);
+            if (horizDist < 3.0) {
                 AerialBombEntity bomb = new AerialBombEntity(level(), panelDamage * 1.5f, 2.5f);
                 bomb.setPos(getX(), getY(), getZ());
                 bomb.setDeltaMovement(getDeltaMovement().x * 0.1, -0.1, getDeltaMovement().z * 0.1);
@@ -833,12 +867,21 @@ public class AircraftEntity extends Entity {
                 bomb.setSourceAircraftName(getDisplayName());
                 level().addFreshEntity(bomb);
                 remainingAmmo--;
-                attackCooldown = 40;
+                levelBombDropped = true;
+                levelDropPoint = position();
             }
+        }
 
-            Vec3 horizontal = new Vec3(dx, 0, dz).normalize().scale(Math.min(panelSpeed * 0.4, horizDist));
-            double yCorrect = (bombAltitude - getY()) * 0.15;
-            setDeltaMovement(horizontal.x, yCorrect, horizontal.z);
+        // Phase 3: After dropping, fly 10 blocks past drop point then reassess
+        if (levelBombDropped && levelDropPoint != null) {
+            double distFromDrop = position().subtract(levelDropPoint).horizontalDistance();
+            if (distFromDrop >= 10.0) {
+                // Reset run state for next pass
+                levelRunDirection = null;
+                levelDropPoint = null;
+                levelBombDropped = false;
+                // Target check happens in tickAttacking's resolveTarget on next tick
+            }
         }
     }
 
@@ -1254,15 +1297,42 @@ public class AircraftEntity extends Entity {
 
     private void tickAutonomousLevelBomb(LivingEntity target) {
         double bombAltitude = target.getY() + 32.0;
+
+        // Phase 1: Climb to bombing altitude
         if (getY() < bombAltitude - 1.5) {
+            levelBombDropped = false;
+            levelRunDirection = null;
+            levelDropPoint = null;
             Vec3 toPoint = new Vec3(target.getX() - getX(), bombAltitude - getY(), target.getZ() - getZ());
             double dist = toPoint.length();
             setDeltaMovement(toPoint.normalize().scale(Math.min(panelSpeed * 0.4, dist)));
-        } else {
+            return;
+        }
+
+        // Establish run direction once at altitude
+        if (levelRunDirection == null) {
             double dx = target.getX() - getX();
             double dz = target.getZ() - getZ();
             double horizDist = Math.sqrt(dx * dx + dz * dz);
-            if (horizDist < 3.0 && attackCooldown <= 0) {
+            if (horizDist < 0.1) {
+                levelRunDirection = new Vec3(1, 0, 0);
+            } else {
+                levelRunDirection = new Vec3(dx / horizDist, 0, dz / horizDist);
+            }
+            levelBombDropped = false;
+            levelDropPoint = null;
+        }
+
+        // Phase 2: Fly along the run direction
+        double yCorrect = (bombAltitude - getY()) * 0.15;
+        setDeltaMovement(levelRunDirection.x * panelSpeed * 0.4, yCorrect, levelRunDirection.z * panelSpeed * 0.4);
+
+        // Drop bomb when passing over target
+        if (!levelBombDropped) {
+            double dx = target.getX() - getX();
+            double dz = target.getZ() - getZ();
+            double horizDist = Math.sqrt(dx * dx + dz * dz);
+            if (horizDist < 3.0) {
                 AerialBombEntity bomb = new AerialBombEntity(level(), panelDamage * 1.5f, 2.5f);
                 bomb.setPos(getX(), getY(), getZ());
                 bomb.setDeltaMovement(getDeltaMovement().x * 0.1, -0.1, getDeltaMovement().z * 0.1);
@@ -1270,11 +1340,19 @@ public class AircraftEntity extends Entity {
                 if (getOwner() != null) bomb.setOwner(getOwner());
                 level().addFreshEntity(bomb);
                 remainingAmmo--;
-                attackCooldown = 40;
+                levelBombDropped = true;
+                levelDropPoint = position();
             }
-            Vec3 horizontal = new Vec3(dx, 0, dz).normalize().scale(Math.min(panelSpeed * 0.4, horizDist));
-            double yCorrect = (bombAltitude - getY()) * 0.15;
-            setDeltaMovement(horizontal.x, yCorrect, horizontal.z);
+        }
+
+        // Phase 3: After dropping, fly 10 blocks past then reassess
+        if (levelBombDropped && levelDropPoint != null) {
+            double distFromDrop = position().subtract(levelDropPoint).horizontalDistance();
+            if (distFromDrop >= 10.0) {
+                levelRunDirection = null;
+                levelDropPoint = null;
+                levelBombDropped = false;
+            }
         }
     }
 

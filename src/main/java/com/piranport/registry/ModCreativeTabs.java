@@ -342,9 +342,7 @@ public class ModCreativeTabs {
                     .icon(() -> ModItems.HENTAI_TROPHY.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
                         output.accept(ModItems.UNICORN_HARP.get());
-                        output.accept(ModItems.FLOATING_TARGET.get());
                         output.accept(ModItems.GUIDEBOOK.get());
-                        output.accept(ModItems.DUNGEON_LECTERN.get());
                         output.accept(ModItems.DUNGEON_KEY.get());
                         output.accept(ModItems.TOWN_SCROLL.get());
                         output.accept(ModItems.ELITE_DAMAGE_CONTROL.get());
@@ -390,6 +388,8 @@ public class ModCreativeTabs {
                         output.accept(ModItems.RELOAD_FACILITY.get());
                         output.accept(ModItems.AMMO_WORKBENCH.get());
                         output.accept(ModItems.WEAPON_WORKBENCH.get());
+                        output.accept(ModItems.DUNGEON_LECTERN.get());
+                        output.accept(ModItems.FLOATING_TARGET.get());
                         output.accept(ModItems.MEDIUM_GUN_BLUEPRINT.get());
                         output.accept(ModItems.LARGE_GUN_BLUEPRINT.get());
                     }).build());

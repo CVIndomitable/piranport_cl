@@ -627,7 +627,7 @@
   "piranport.book.cat.arsenal.desc": "导弹、深弹、特殊装备与武器合成设施。",
   "piranport.book.arsenal.missiles": "导弹系统",
   "piranport.book.arsenal.missiles.p1": "导弹分为三类：$(br)$(br)$(bold)反舰导弹：$()$(item)上游一号发射器$()（伤害30+6穿甲，连装2）和$(item)MK14鱼叉发射器$()（伤害24，连装4）。右键发射后自动追踪前方最近目标，或追踪火控锁定的目标。",
-  "piranport.book.arsenal.missiles.p2": "$(bold)防空导弹：$()$(item)小猎犬发射器$()、$(item)箭型防空导弹$()、$(item)海猫防空导弹$()。开启$(bold)[H]$()自动升空后可自动拦截空中目标。$(br)$(br)$(bold)火箭弹：$()$(item)舰载火箭弹$()，直射无制导。$(br)$(br)导弹冷却条为独立的黄色进度条。",
+  "piranport.book.arsenal.missiles.p2": "$(bold)防空导弹：$()$(item)小猎犬发射器$()、$(item)箭型防空导弹发射器$()、$(item)海猫防空导弹发射器$()。开启$(bold)[H]$()自动升空后可自动拦截空中目标。$(br)$(br)$(bold)火箭弹：$()$(item)舰载火箭弹发射器$()，直射无制导。$(br)$(br)导弹冷却条为独立的黄色进度条。",
   "piranport.book.arsenal.depth_charges": "深弹系统",
   "piranport.book.arsenal.depth_charges.p1": "$(item)深弹投射器$()投放$(item)深水炸弹$()攻击水下目标。三种型号：$(br)$(br)$(bold)深弹投射器$() — 1发，单发直投$(br)$(bold)深弹投射器·改$() — 2发，前后散布$(br)$(bold)深弹投射器·改二$() — 3发，三角散布$(br)$(br)深弹入水后自动下沉，$(bold)近炸引信$()在接近目标时触发爆炸，造成区域魔法伤害。",
   "piranport.book.arsenal.special": "特殊装备",

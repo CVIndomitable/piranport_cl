@@ -3,7 +3,6 @@ package com.piranport.client;
 import com.piranport.component.LoadedAmmo;
 import com.piranport.component.WeaponCooldown;
 import com.piranport.config.ModCommonConfig;
-import com.piranport.item.MissileLauncherItem;
 import com.piranport.item.TorpedoLauncherItem;
 import com.piranport.registry.ModDataComponents;
 import com.piranport.registry.ModItems;
@@ -61,8 +60,10 @@ public class WeaponReloadDecorator implements IItemDecorator {
                     || stack.getItem() instanceof TorpedoLauncherItem;
         }
         // Manual-reload missiles (anti-ship/rocket) always need LoadedAmmo regardless of config
-        if (stack.getItem() instanceof MissileLauncherItem ml && ml.isManualReload()) {
-            showEmptyBar = true;
+        if (!showEmptyBar) {
+            showEmptyBar = stack.is(ModItems.SY1_LAUNCHER.get())
+                    || stack.is(ModItems.MK14_HARPOON_LAUNCHER.get())
+                    || stack.is(ModItems.SHIP_ROCKET_LAUNCHER.get());
         }
 
         if (showEmptyBar) {

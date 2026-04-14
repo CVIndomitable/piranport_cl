@@ -30,6 +30,7 @@
   "item.piranport.medium_type3_shell": "Medium Type 3 Shell",
   "item.piranport.large_type3_shell": "Large Type 3 Shell",
   "entity.piranport.sanshiki_pellet": "Sanshiki Pellet",
+  "item.piranport.single_small_gun": "Single Small Gun",
   "item.piranport.small_gun": "Small Gun",
   "item.piranport.medium_gun": "Medium Gun",
   "item.piranport.large_gun": "Large Gun",
@@ -499,6 +500,7 @@
   "key.piranport.torpedo_steer_right": "Torpedo Steer Right [0]",
 
   "tooltip.piranport.shift_for_details": "Hold Shift for details",
+  "tooltip.piranport.cannon.barrel_count": "Barrels: %s",
   "tooltip.piranport.cannon.damage": "Damage: %s",
   "tooltip.piranport.cooldown": "Reload Time: %ss",
   "tooltip.piranport.launcher.tubes": "Tubes: %s",

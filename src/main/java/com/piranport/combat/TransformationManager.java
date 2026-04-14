@@ -465,6 +465,7 @@ public class TransformationManager {
     private static java.util.Map<net.minecraft.world.item.Item, Integer> getWeaponLoadMap() {
         if (weaponLoadMap == null) {
             weaponLoadMap = new java.util.IdentityHashMap<>();
+            weaponLoadMap.put(ModItems.SINGLE_SMALL_GUN.get(), 4);
             weaponLoadMap.put(ModItems.SMALL_GUN.get(), 6);
             weaponLoadMap.put(ModItems.MEDIUM_GUN.get(), 16);
             weaponLoadMap.put(ModItems.LARGE_GUN.get(), 30);

@@ -167,7 +167,7 @@ public class ClientTickHandler {
             }
         }
 
-        // R key — manual reload for medium/large cannons
+        // R key — manual reload for non-auto-resupply cannons
         while (ModKeyMappings.MANUAL_RELOAD.consumeClick()) {
             if (!transformed || inReconMode) continue;
             PacketDistributor.sendToServer(new ManualReloadPayload());

@@ -97,6 +97,7 @@ public class ClientEvents {
 
         // Weapon reload bar (no-GUI mode — durability-style bar on weapon items)
         WeaponReloadDecorator weaponDecorator = new WeaponReloadDecorator();
+        event.register(ModItems.SINGLE_SMALL_GUN.get(), weaponDecorator);
         event.register(ModItems.SMALL_GUN.get(), weaponDecorator);
         event.register(ModItems.MEDIUM_GUN.get(), weaponDecorator);
         event.register(ModItems.LARGE_GUN.get(), weaponDecorator);

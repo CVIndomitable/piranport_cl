@@ -33,6 +33,7 @@ public class ShipCoreMenu extends AbstractContainerMenu {
     private final SimpleContainer coreContainer;
 
     // Weight constants (public for use in TransformationManager HUD etc.)
+    public static final int SINGLE_SMALL_GUN_WEIGHT = 4;
     public static final int SMALL_GUN_WEIGHT = 6;
     public static final int MEDIUM_GUN_WEIGHT = 16;
     public static final int LARGE_GUN_WEIGHT = 30;
@@ -148,6 +149,7 @@ public class ShipCoreMenu extends AbstractContainerMenu {
     }
 
     public static int getWeight(ItemStack stack) {
+        if (stack.is(ModItems.SINGLE_SMALL_GUN.get())) return SINGLE_SMALL_GUN_WEIGHT;
         if (stack.is(ModItems.SMALL_GUN.get())) return SMALL_GUN_WEIGHT;
         if (stack.is(ModItems.MEDIUM_GUN.get())) return MEDIUM_GUN_WEIGHT;
         if (stack.is(ModItems.LARGE_GUN.get())) return LARGE_GUN_WEIGHT;
@@ -166,7 +168,8 @@ public class ShipCoreMenu extends AbstractContainerMenu {
     }
 
     public static boolean isWeapon(ItemStack stack) {
-        return stack.is(ModItems.SMALL_GUN.get())
+        return stack.is(ModItems.SINGLE_SMALL_GUN.get())
+                || stack.is(ModItems.SMALL_GUN.get())
                 || stack.is(ModItems.MEDIUM_GUN.get())
                 || stack.is(ModItems.LARGE_GUN.get())
                 || stack.getItem() instanceof TorpedoLauncherItem

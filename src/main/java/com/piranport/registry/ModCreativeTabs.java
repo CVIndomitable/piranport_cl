@@ -35,6 +35,7 @@ public class ModCreativeTabs {
                     .icon(() -> ModItems.MEDIUM_GUN.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
                         // Guns
+                        output.accept(ModItems.SINGLE_SMALL_GUN.get());
                         output.accept(ModItems.SMALL_GUN.get());
                         output.accept(ModItems.MEDIUM_GUN.get());
                         output.accept(ModItems.LARGE_GUN.get());

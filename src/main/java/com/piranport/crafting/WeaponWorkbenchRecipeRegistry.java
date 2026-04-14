@@ -51,6 +51,12 @@ public class WeaponWorkbenchRecipeRegistry {
 
     private static void registerAll() {
         // ===== Tab 0: 火炮 =====
+        add(0, ModItems.SINGLE_SMALL_GUN.get(), List.of(
+                new ItemStack(Items.IRON_INGOT, 3),
+                new ItemStack(Items.REDSTONE, 1),
+                new ItemStack(Items.GUNPOWDER, 1)
+        ), null, 80);
+
         add(0, ModItems.SMALL_GUN.get(), List.of(
                 new ItemStack(Items.IRON_INGOT, 4),
                 new ItemStack(Items.REDSTONE, 1),

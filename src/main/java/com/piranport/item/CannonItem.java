@@ -23,15 +23,18 @@ import java.util.List;
 public class CannonItem extends Item {
     private final float damage;
     private final int cooldownTicks;
+    private final int barrelCount;
 
-    public CannonItem(Properties properties, float damage, int cooldownTicks) {
+    public CannonItem(Properties properties, float damage, int cooldownTicks, int barrelCount) {
         super(properties);
         this.damage = damage;
         this.cooldownTicks = cooldownTicks;
+        this.barrelCount = barrelCount;
     }
 
     public float getDamage() { return damage; }
     public int getCooldownTicks() { return cooldownTicks; }
+    public int getBarrelCount() { return barrelCount; }
 
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
@@ -53,11 +56,13 @@ public class CannonItem extends Item {
         if (other.isEmpty() || !ShipCoreItem.matchesCaliber(other, stack)) return false;
 
         LoadedAmmo current = stack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
-        if (current.hasAmmo()) return false; // already loaded, one round max
+        if (current.hasAmmo()) return false; // already loaded
+
+        if (other.getCount() < barrelCount) return false; // not enough ammo for full salvo
 
         String ammoId = BuiltInRegistries.ITEM.getKey(other.getItem()).toString();
-        stack.set(ModDataComponents.LOADED_AMMO.get(), new LoadedAmmo(1, ammoId));
-        other.shrink(1);
+        stack.set(ModDataComponents.LOADED_AMMO.get(), new LoadedAmmo(barrelCount, ammoId));
+        other.shrink(barrelCount);
 
         if (!player.level().isClientSide()) {
             player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
@@ -76,6 +81,8 @@ public class CannonItem extends Item {
         }
         if (net.neoforged.fml.loading.FMLEnvironment.dist.isClient()) {
             if (net.minecraft.client.gui.screens.Screen.hasShiftDown()) {
+                tooltipComponents.add(Component.translatable("tooltip.piranport.cannon.barrel_count", barrelCount)
+                        .withStyle(net.minecraft.ChatFormatting.AQUA));
                 tooltipComponents.add(Component.translatable("tooltip.piranport.cannon.damage",
                         String.format("%.1f", damage)).withStyle(net.minecraft.ChatFormatting.RED));
                 tooltipComponents.add(Component.translatable("tooltip.piranport.cooldown",

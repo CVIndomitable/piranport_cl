@@ -506,31 +506,50 @@ public class ShipCoreItem extends Item {
             return;
         }
 
-        // Find matching ammo
-        int ammoSlot = -1;
+        // Determine barrel count
+        int barrelCount = getBarrelCount(weapon);
+
+        // Count total matching ammo across all ammo slots
         int ammoEnd = shipType.weaponSlots + shipType.ammoSlots;
+        int totalAmmo = 0;
         for (int i = shipType.weaponSlots; i < ammoEnd; i++) {
             ItemStack ammo = items.get(i);
             if (!ammo.isEmpty() && matchesCaliber(ammo, weapon)) {
-                ammoSlot = i;
-                break;
+                totalAmmo += ammo.getCount();
             }
         }
 
-        if (ammoSlot == -1) {
+        if (totalAmmo < barrelCount) {
             player.displayClientMessage(
                     Component.translatable("message.piranport.no_ammo"), true);
             return;
         }
 
-        ItemStack ammoStack = items.get(ammoSlot);
-        boolean isType3 = isType3Shell(ammoStack);
-        boolean isVT = isVTShell(ammoStack);
-        boolean isHE = isHEShell(ammoStack) || isVT;
-        ItemStack shellForRender = ammoStack.copyWithCount(1);
+        // Find first ammo stack for type determination
+        ItemStack firstAmmo = ItemStack.EMPTY;
+        for (int i = shipType.weaponSlots; i < ammoEnd; i++) {
+            ItemStack ammo = items.get(i);
+            if (!ammo.isEmpty() && matchesCaliber(ammo, weapon)) {
+                firstAmmo = ammo;
+                break;
+            }
+        }
 
-        // Consume ammo
-        ammoStack.shrink(1);
+        boolean isType3 = isType3Shell(firstAmmo);
+        boolean isVT = isVTShell(firstAmmo);
+        boolean isHE = isHEShell(firstAmmo) || isVT;
+        ItemStack shellForRender = firstAmmo.copyWithCount(1);
+
+        // Consume barrelCount ammo across slots
+        int toConsume = barrelCount;
+        for (int i = shipType.weaponSlots; i < ammoEnd && toConsume > 0; i++) {
+            ItemStack ammo = items.get(i);
+            if (!ammo.isEmpty() && matchesCaliber(ammo, weapon)) {
+                int take = Math.min(toConsume, ammo.getCount());
+                ammo.shrink(take);
+                toConsume -= take;
+            }
+        }
 
         // Cooldown (reduced by ReloadBoostEffect if active)
         int cooldownTicks = TransformationManager.boostedCooldown(player, getGunCooldown(weapon));
@@ -541,28 +560,14 @@ public class ShipCoreItem extends Item {
                 cooldowns.withSlotCooldown(weaponIndex, cooldownTicks, level.getGameTime()));
         TransformationManager.setWeaponIndex(stack, weaponIndex);
 
-        if (isType3) {
-            fireSanshikiSpread(level, player, weapon, shellForRender);
-        } else {
-            // Create and launch projectile
-            float damage = getGunDamage(weapon);
-            float explosionPower = getExplosionPower(weapon);
-            float velocity = getProjectileVelocity(weapon);
-            float inaccuracy = getProjectileInaccuracy(weapon);
-
-            CannonProjectileEntity projectile = new CannonProjectileEntity(
-                    level, player, shellForRender, damage, isHE, explosionPower);
-            if (isVT) projectile.setVT(true);
-            projectile.shootFromRotation(player, player.getXRot(), player.getYRot(),
-                    0.0f, velocity, inaccuracy);
-            level.addFreshEntity(projectile);
-        }
+        // Fire barrelCount projectiles
+        fireCannonSalvo(level, player, weapon, shellForRender, barrelCount, isType3, isVT, isHE);
 
         com.piranport.debug.PiranPortDebug.event(
-                "Fire | weapon={} ammo={} remaining={}",
+                "Fire | weapon={} ammo={} barrels={} remaining={}",
                 BuiltInRegistries.ITEM.getKey(weapon.getItem()).getPath(),
                 BuiltInRegistries.ITEM.getKey(shellForRender.getItem()).getPath(),
-                ammoStack.getCount());
+                barrelCount, totalAmmo - barrelCount);
 
         // Sound
         float pitch = getSoundPitch(weapon);
@@ -653,58 +658,81 @@ public class ShipCoreItem extends Item {
         }
 
         // Cannon
-        // Small gun always auto-reloads from inventory in no-GUI mode
+        // Small-caliber guns always auto-reload from inventory in no-GUI mode
         boolean cannonAutoMode = com.piranport.config.ModCommonConfig.AUTO_RESUPPLY_ENABLED.get()
-                || weapon.is(ModItems.SMALL_GUN.get());
+                || weapon.is(ModItems.SMALL_GUN.get()) || weapon.is(ModItems.SINGLE_SMALL_GUN.get());
         if (!cannonAutoMode) {
             // Manual mode: use LOADED_AMMO component on weapon item
             fireCannonManualMode(level, player, coreStack, weapon, weaponSlot, cooldowns);
         } else {
-            // Auto mode (or small gun): find matching ammo anywhere in inventory
-            int ammoSlot = -1;
+            int barrelCount = getBarrelCount(weapon);
+
+            // Count total matching ammo in inventory
+            int totalAmmo = 0;
             for (int i = 0; i < inv.items.size(); i++) {
                 if (i == coreInventorySlot || i == weaponSlot) continue;
                 ItemStack ammo = inv.items.get(i);
                 if (!ammo.isEmpty() && matchesCaliber(ammo, weapon)) {
-                    ammoSlot = i;
-                    break;
+                    totalAmmo += ammo.getCount();
                 }
             }
-            if (ammoSlot == -1 && weaponSlot != 40 && coreInventorySlot != 40) {
+            if (weaponSlot != 40 && coreInventorySlot != 40) {
                 ItemStack oh = inv.offhand.get(0);
                 if (!oh.isEmpty() && matchesCaliber(oh, weapon)) {
-                    ammoSlot = 40;
+                    totalAmmo += oh.getCount();
                 }
             }
 
-            if (ammoSlot == -1) {
+            if (totalAmmo < barrelCount) {
                 player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
                 return;
             }
 
-            ItemStack ammoStack = ammoSlot == 40 ? inv.offhand.get(0) : inv.items.get(ammoSlot);
-            boolean isType3 = isType3Shell(ammoStack);
-            boolean isVT = isVTShell(ammoStack);
-            boolean isHE = isHEShell(ammoStack) || isVT;
-            ItemStack shellForRender = ammoStack.copyWithCount(1);
-            ammoStack.shrink(1);
-
-            // Check if more ammo remains for next reload
-            boolean hasNextRound = false;
+            // Find first ammo for type determination
+            ItemStack firstAmmo = ItemStack.EMPTY;
             for (int i = 0; i < inv.items.size(); i++) {
                 if (i == coreInventorySlot || i == weaponSlot) continue;
-                ItemStack check = inv.items.get(i);
-                if (!check.isEmpty() && matchesCaliber(check, weapon)) {
-                    hasNextRound = true;
+                ItemStack ammo = inv.items.get(i);
+                if (!ammo.isEmpty() && matchesCaliber(ammo, weapon)) {
+                    firstAmmo = ammo;
                     break;
                 }
             }
-            if (!hasNextRound && weaponSlot != 40 && coreInventorySlot != 40) {
+            if (firstAmmo.isEmpty() && weaponSlot != 40 && coreInventorySlot != 40) {
                 ItemStack oh = inv.offhand.get(0);
                 if (!oh.isEmpty() && matchesCaliber(oh, weapon)) {
-                    hasNextRound = true;
+                    firstAmmo = oh;
                 }
             }
+
+            boolean isType3 = isType3Shell(firstAmmo);
+            boolean isVT = isVTShell(firstAmmo);
+            boolean isHE = isHEShell(firstAmmo) || isVT;
+            ItemStack shellForRender = firstAmmo.copyWithCount(1);
+
+            // Consume barrelCount ammo across inventory
+            int toConsume = barrelCount;
+            for (int i = 0; i < inv.items.size() && toConsume > 0; i++) {
+                if (i == coreInventorySlot || i == weaponSlot) continue;
+                ItemStack ammo = inv.items.get(i);
+                if (!ammo.isEmpty() && matchesCaliber(ammo, weapon)) {
+                    int take = Math.min(toConsume, ammo.getCount());
+                    ammo.shrink(take);
+                    toConsume -= take;
+                }
+            }
+            if (toConsume > 0 && weaponSlot != 40 && coreInventorySlot != 40) {
+                ItemStack oh = inv.offhand.get(0);
+                if (!oh.isEmpty() && matchesCaliber(oh, weapon)) {
+                    int take = Math.min(toConsume, oh.getCount());
+                    oh.shrink(take);
+                    toConsume -= take;
+                }
+            }
+
+            // Check if enough ammo remains for next salvo
+            int remainingAmmo = totalAmmo - barrelCount;
+            boolean hasNextRound = remainingAmmo >= barrelCount;
 
             if (hasNextRound) {
                 int cooldownTicks = TransformationManager.boostedCooldown(player, getGunCooldown(weapon));
@@ -721,26 +749,14 @@ public class ShipCoreItem extends Item {
                 player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
             }
 
-            if (isType3) {
-                fireSanshikiSpread(level, player, weapon, shellForRender);
-            } else {
-                float damage = getGunDamage(weapon);
-                float explosionPower = getExplosionPower(weapon);
-                float velocity = getProjectileVelocity(weapon);
-                float inaccuracy = getProjectileInaccuracy(weapon);
-
-                CannonProjectileEntity projectile = new CannonProjectileEntity(
-                        level, player, shellForRender, damage, isHE, explosionPower);
-                if (isVT) projectile.setVT(true);
-                projectile.shootFromRotation(player, player.getXRot(), player.getYRot(), 0.0f, velocity, inaccuracy);
-                level.addFreshEntity(projectile);
-            }
+            // Fire barrelCount projectiles
+            fireCannonSalvo(level, player, weapon, shellForRender, barrelCount, isType3, isVT, isHE);
 
             com.piranport.debug.PiranPortDebug.event(
-                    "Fire | weapon={} ammo={} remaining={}",
+                    "Fire | weapon={} ammo={} barrels={} remaining={}",
                     BuiltInRegistries.ITEM.getKey(weapon.getItem()).getPath(),
                     BuiltInRegistries.ITEM.getKey(shellForRender.getItem()).getPath(),
-                    ammoStack.getCount());
+                    barrelCount, remainingAmmo);
 
             float pitch = getSoundPitch(weapon);
             level.playSound(null, player.getX(), player.getY(), player.getZ(),
@@ -752,7 +768,8 @@ public class ShipCoreItem extends Item {
     private static void fireCannonManualMode(Level level, Player player, ItemStack coreStack,
             ItemStack weapon, int weaponSlot, SlotCooldowns cooldowns) {
         LoadedAmmo loaded = weapon.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
-        if (!loaded.hasAmmo()) {
+        int barrelCount = getBarrelCount(weapon);
+        if (!loaded.hasAmmo() || loaded.count() < barrelCount) {
             player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
             return;
         }
@@ -765,28 +782,16 @@ public class ShipCoreItem extends Item {
                 .orElse(net.minecraft.world.item.Items.AIR);
         ItemStack shellForRender = new ItemStack(shellItem, 1);
 
-        // Consume the loaded round (cooldown was already applied when R was pressed)
+        // Consume all loaded rounds (cooldown was already applied when R was pressed)
         weapon.remove(ModDataComponents.LOADED_AMMO.get());
 
-        if (isType3) {
-            fireSanshikiSpread(level, player, weapon, shellForRender);
-        } else {
-            float damage = getGunDamage(weapon);
-            float explosionPower = getExplosionPower(weapon);
-            float velocity = getProjectileVelocity(weapon);
-            float inaccuracy = getProjectileInaccuracy(weapon);
-
-            CannonProjectileEntity projectile = new CannonProjectileEntity(
-                    level, player, shellForRender, damage, isHE, explosionPower);
-            if (isVT) projectile.setVT(true);
-            projectile.shootFromRotation(player, player.getXRot(), player.getYRot(), 0.0f, velocity, inaccuracy);
-            level.addFreshEntity(projectile);
-        }
+        // Fire barrelCount projectiles
+        fireCannonSalvo(level, player, weapon, shellForRender, barrelCount, isType3, isVT, isHE);
 
         com.piranport.debug.PiranPortDebug.event(
-                "Fire (manual) | weapon={} ammo={}",
+                "Fire (manual) | weapon={} ammo={} barrels={}",
                 BuiltInRegistries.ITEM.getKey(weapon.getItem()).getPath(),
-                loaded.ammoItemId());
+                loaded.ammoItemId(), barrelCount);
 
         float pitch = getSoundPitch(weapon);
         level.playSound(null, player.getX(), player.getY(), player.getZ(),
@@ -1455,6 +1460,8 @@ public class ShipCoreItem extends Item {
             boolean hasAmmo;
             if (stack.getItem() instanceof TorpedoLauncherItem tl) {
                 hasAmmo = loaded.count() >= tl.getTubeCount();
+            } else if (stack.getItem() instanceof CannonItem ci) {
+                hasAmmo = loaded.count() >= ci.getBarrelCount();
             } else {
                 hasAmmo = loaded.hasAmmo();
             }
@@ -1475,7 +1482,7 @@ public class ShipCoreItem extends Item {
     // TODO: replace hardcoded item matching with item tags (e.g. piranport:small_caliber_ammo)
 
     public static boolean matchesCaliber(ItemStack ammo, ItemStack weapon) {
-        if (weapon.is(ModItems.SMALL_GUN.get())) {
+        if (weapon.is(ModItems.SMALL_GUN.get()) || weapon.is(ModItems.SINGLE_SMALL_GUN.get())) {
             return ammo.is(ModItems.SMALL_HE_SHELL.get()) || ammo.is(ModItems.SMALL_AP_SHELL.get())
                     || ammo.is(ModItems.SMALL_VT_SHELL.get()) || ammo.is(ModItems.SMALL_TYPE3_SHELL.get());
         } else if (weapon.is(ModItems.MEDIUM_GUN.get())) {
@@ -1573,32 +1580,62 @@ public class ShipCoreItem extends Item {
         return 30;
     }
 
+    private static int getBarrelCount(ItemStack weapon) {
+        if (weapon.getItem() instanceof CannonItem ci) return ci.getBarrelCount();
+        return 1;
+    }
+
+    private static boolean isSmallCaliber(ItemStack weapon) {
+        return weapon.is(ModItems.SMALL_GUN.get()) || weapon.is(ModItems.SINGLE_SMALL_GUN.get());
+    }
+
     private static float getExplosionPower(ItemStack weapon) {
-        if (weapon.is(ModItems.SMALL_GUN.get())) return 1.0f;
+        if (isSmallCaliber(weapon)) return 1.0f;
         if (weapon.is(ModItems.MEDIUM_GUN.get())) return 1.5f;
         if (weapon.is(ModItems.LARGE_GUN.get())) return 2.0f;
         return 1.0f;
     }
 
     private static float getProjectileVelocity(ItemStack weapon) {
-        if (weapon.is(ModItems.SMALL_GUN.get())) return 2.0f;
+        if (isSmallCaliber(weapon)) return 2.0f;
         if (weapon.is(ModItems.MEDIUM_GUN.get())) return 2.5f;
         if (weapon.is(ModItems.LARGE_GUN.get())) return 3.0f;
         return 2.0f;
     }
 
     private static float getProjectileInaccuracy(ItemStack weapon) {
-        if (weapon.is(ModItems.SMALL_GUN.get())) return 1.5f;
+        if (isSmallCaliber(weapon)) return 1.5f;
         if (weapon.is(ModItems.MEDIUM_GUN.get())) return 1.0f;
         if (weapon.is(ModItems.LARGE_GUN.get())) return 0.5f;
         return 1.0f;
     }
 
     private static float getSoundPitch(ItemStack weapon) {
-        if (weapon.is(ModItems.SMALL_GUN.get())) return 1.5f;
+        if (isSmallCaliber(weapon)) return 1.5f;
         if (weapon.is(ModItems.MEDIUM_GUN.get())) return 1.2f;
         if (weapon.is(ModItems.LARGE_GUN.get())) return 0.8f;
         return 1.0f;
+    }
+
+    /** Fire a cannon salvo: barrelCount projectiles with natural inaccuracy spread. */
+    private static void fireCannonSalvo(Level level, Player player, ItemStack weapon,
+            ItemStack shellForRender, int barrelCount, boolean isType3, boolean isVT, boolean isHE) {
+        for (int b = 0; b < barrelCount; b++) {
+            if (isType3) {
+                fireSanshikiSpread(level, player, weapon, shellForRender);
+            } else {
+                float damage = getGunDamage(weapon);
+                float explosionPower = getExplosionPower(weapon);
+                float velocity = getProjectileVelocity(weapon);
+                float inaccuracy = getProjectileInaccuracy(weapon);
+
+                CannonProjectileEntity projectile = new CannonProjectileEntity(
+                        level, player, shellForRender, damage, isHE, explosionPower);
+                if (isVT) projectile.setVT(true);
+                projectile.shootFromRotation(player, player.getXRot(), player.getYRot(), 0.0f, velocity, inaccuracy);
+                level.addFreshEntity(projectile);
+            }
+        }
     }
 
     // ===== Type 3 (Sanshiki) spread firing =====

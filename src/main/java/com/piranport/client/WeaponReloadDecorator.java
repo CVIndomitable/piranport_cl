@@ -55,9 +55,9 @@ public class WeaponReloadDecorator implements IItemDecorator {
         // 2. Empty bar for manual-reload weapons when not loaded
         boolean showEmptyBar = false;
         if (!ModCommonConfig.AUTO_RESUPPLY_ENABLED.get()) {
-            // Medium/large cannons and torpedo launchers use manual reload
-            showEmptyBar = stack.is(ModItems.MEDIUM_GUN.get())
-                    || stack.is(ModItems.LARGE_GUN.get())
+            // Non-small-caliber cannons and torpedo launchers use manual reload
+            showEmptyBar = (stack.getItem() instanceof com.piranport.item.CannonItem
+                    && !stack.is(ModItems.SMALL_GUN.get()) && !stack.is(ModItems.SINGLE_SMALL_GUN.get()))
                     || stack.getItem() instanceof TorpedoLauncherItem;
         }
         // Manual-reload missiles (anti-ship/rocket) always need LoadedAmmo regardless of config

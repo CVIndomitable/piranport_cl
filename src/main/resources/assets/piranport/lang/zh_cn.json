@@ -610,6 +610,7 @@
   "piranport.book.ruins.loot.p1": "每类遗迹都含有不同等级的战利品箱：$(br)$(br)§l传送门遗迹§r — 基础材料、少量传送门框架$(br)§l补给站§r — 小型装备、油弹钢铝、国旗、出击渠（稀有）$(br)§l前哨站§r — 中大型装备、舰载机、经验炮弹、无序意志碎片（稀有）",
   "piranport.book.ruins.loot.p2": "§l深海基地§r — 全等级装备、深海作战档案、无序意志碎片、传送门激活核心（稀有）$(br)$(br)无序意志碎片共有9种（α~ι），是未来激活深海传送门的关键材料。国旗可用于皮肤合成。",
 
+  "itemGroup.piranport.facility": "皮兰港设施",
   "itemGroup.piranport.decoration": "皮兰港装饰",
   "block.piranport.confidential_cargo": "机密货物",
   "block.piranport.confidential_cargo.tooltip": "太天真了，都说了是极密货物，怎么会有说明。",

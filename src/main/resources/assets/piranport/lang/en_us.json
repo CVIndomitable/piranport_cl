@@ -610,6 +610,7 @@
   "piranport.book.ruins.loot.p1": "Each ruin type contains different tiers of loot:$(br)$(br)§lPortal Ruins§r — Basic materials, some portal frame blocks$(br)§lSupply Depots§r — Small equipment, resources, flags, sortie channel (rare)$(br)§lOutposts§r — Medium/large equipment, aircraft, exp shells, chaos shards (rare)",
   "piranport.book.ruins.loot.p2": "§lAbyssal Bases§r — All tiers of equipment, abyssal reports, chaos shards, portal activation cores (rare)$(br)$(br)Chaos shards come in 9 varieties (α-ι), key materials for activating the deep sea portal in a future update. Flags can be used in skin crafting.",
 
+  "itemGroup.piranport.facility": "Piran Port: Facilities",
   "itemGroup.piranport.decoration": "Piran Port Decoration",
   "block.piranport.confidential_cargo": "Confidential Cargo",
   "block.piranport.confidential_cargo.tooltip": "Too naive. It's classified cargo — of course there's no description.",

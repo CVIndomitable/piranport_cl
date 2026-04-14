@@ -138,15 +138,6 @@ public class ModCreativeTabs {
                         output.accept(ModItems.SKIN_CORE_1.get());
                         output.accept(ModItems.SKIN_CORE_2.get());
                         output.accept(ModItems.SKIN_CORE_3.get());
-                        // Reload Facility
-                        output.accept(ModItems.RELOAD_FACILITY.get());
-                        // Ammo Workbench
-                        output.accept(ModItems.AMMO_WORKBENCH.get());
-                        // Weapon Workbench
-                        output.accept(ModItems.WEAPON_WORKBENCH.get());
-                        // Blueprints
-                        output.accept(ModItems.MEDIUM_GUN_BLUEPRINT.get());
-                        output.accept(ModItems.LARGE_GUN_BLUEPRINT.get());
                     }).build());
 
     // ===== 农业 — 矿石 / 材料 / 种子 / 作物 =====
@@ -386,6 +377,20 @@ public class ModCreativeTabs {
                         output.accept(ModItems.DEEP_OCEAN_CARRIER_SPAWN_EGG.get());
                         output.accept(ModItems.DEEP_OCEAN_SUBMARINE_SPAWN_EGG.get());
                         output.accept(ModItems.SHIP_GIRL_SPAWN_EGG.get());
+                    }).build());
+
+    // ===== 设施 — 装填设施 / 合成台 / 蓝图 =====
+    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> FACILITY_TAB =
+            CREATIVE_TABS.register("facility_tab", () -> CreativeModeTab.builder()
+                    .title(Component.translatable("itemGroup.piranport.facility"))
+                    .withTabsBefore(CreativeModeTabs.COMBAT)
+                    .icon(() -> ModItems.WEAPON_WORKBENCH.get().getDefaultInstance())
+                    .displayItems((parameters, output) -> {
+                        output.accept(ModItems.RELOAD_FACILITY.get());
+                        output.accept(ModItems.AMMO_WORKBENCH.get());
+                        output.accept(ModItems.WEAPON_WORKBENCH.get());
+                        output.accept(ModItems.MEDIUM_GUN_BLUEPRINT.get());
+                        output.accept(ModItems.LARGE_GUN_BLUEPRINT.get());
                     }).build());
 
     // ===== 装饰 — 家具/花卉/模型 =====

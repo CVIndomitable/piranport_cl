@@ -1436,12 +1436,15 @@ public class ShipCoreItem extends Item {
 
         boolean onCooldown = cooldowns.isOnCooldown(weaponSlot, gameTime);
         boolean isManualMode = !com.piranport.config.ModCommonConfig.AUTO_RESUPPLY_ENABLED.get();
+        // Auto-reload missiles (ANTI_AIR) consume ammo directly from inventory, never use LoadedAmmo
+        boolean isAutoReloadMissile = stack.getItem() instanceof MissileLauncherItem ml0 && !ml0.isManualReload();
         // Manual-reload missiles (ROCKET/ANTI_SHIP) always need LoadedAmmo regardless of config
-        boolean needsLoadedAmmo = (isManualMode && !(stack.getItem() instanceof AircraftItem))
-                || (stack.getItem() instanceof MissileLauncherItem ml && ml.isManualReload());
+        boolean needsLoadedAmmo = !isAutoReloadMissile
+                && ((isManualMode && !(stack.getItem() instanceof AircraftItem))
+                    || (stack.getItem() instanceof MissileLauncherItem ml && ml.isManualReload()));
 
         if (onCooldown) {
-            // Weapon with LoadedAmmo on cooldown = actively reloading
+            // Weapon on cooldown
             if (needsLoadedAmmo) {
                 LoadedAmmo reloading = stack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
                 if (reloading.hasAmmo()) {
@@ -1452,8 +1455,9 @@ public class ShipCoreItem extends Item {
                             .withStyle(net.minecraft.ChatFormatting.RED));
                 }
             } else {
-                tooltip.add(Component.translatable("tooltip.piranport.weapon_not_loaded")
-                        .withStyle(net.minecraft.ChatFormatting.RED));
+                // Auto-reload weapon on cooldown = actively reloading
+                tooltip.add(Component.translatable("tooltip.piranport.weapon_reloading")
+                        .withStyle(net.minecraft.ChatFormatting.YELLOW));
             }
         } else if (needsLoadedAmmo) {
             // Manual mode or manual-reload missile: require LOADED_AMMO to be present
@@ -1467,6 +1471,25 @@ public class ShipCoreItem extends Item {
                 hasAmmo = loaded.hasAmmo();
             }
             if (hasAmmo) {
+                tooltip.add(Component.translatable("tooltip.piranport.weapon_ready")
+                        .withStyle(net.minecraft.ChatFormatting.GREEN));
+            } else {
+                tooltip.add(Component.translatable("tooltip.piranport.weapon_not_loaded")
+                        .withStyle(net.minecraft.ChatFormatting.RED));
+            }
+        } else if (isAutoReloadMissile) {
+            // Auto-reload missile: check inventory for matching ammo
+            MissileLauncherItem mlCheck = (MissileLauncherItem) stack.getItem();
+            Item ammoItem = mlCheck.getAmmoItem();
+            boolean hasAmmoInInventory = false;
+            for (ItemStack s : inv.items) {
+                if (!s.isEmpty() && s.is(ammoItem)) { hasAmmoInInventory = true; break; }
+            }
+            if (!hasAmmoInInventory) {
+                ItemStack oh = inv.offhand.get(0);
+                if (!oh.isEmpty() && oh.is(ammoItem)) hasAmmoInInventory = true;
+            }
+            if (hasAmmoInInventory) {
                 tooltip.add(Component.translatable("tooltip.piranport.weapon_ready")
                         .withStyle(net.minecraft.ChatFormatting.GREEN));
             } else {

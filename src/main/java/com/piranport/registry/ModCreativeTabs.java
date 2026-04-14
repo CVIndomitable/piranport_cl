@@ -23,6 +23,8 @@ public class ModCreativeTabs {
                         output.accept(ModItems.MEDIUM_SHIP_CORE.get());
                         output.accept(ModItems.LARGE_SHIP_CORE.get());
                         output.accept(ModItems.SUBMARINE_CORE.get());
+                        // Fuel
+                        output.accept(ModItems.FUEL.get());
                     }).build());
 
     // ===== 炮雷 — 火炮 / 鱼雷发射器 =====
@@ -111,7 +113,7 @@ public class ModCreativeTabs {
                         output.accept(ModItems.ROCKET_AMMO.get());
                     }).build());
 
-    // ===== 强化 — 装甲 / 声纳 / 动力 / 皮肤 / 燃料 =====
+    // ===== 强化 — 装甲 / 声纳 / 动力 / 皮肤 =====
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> ENHANCEMENT_TAB =
             CREATIVE_TABS.register("enhancement_tab", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.piranport.enhancement"))
@@ -136,8 +138,6 @@ public class ModCreativeTabs {
                         output.accept(ModItems.SKIN_CORE_1.get());
                         output.accept(ModItems.SKIN_CORE_2.get());
                         output.accept(ModItems.SKIN_CORE_3.get());
-                        // Fuel
-                        output.accept(ModItems.FUEL.get());
                         // Reload Facility
                         output.accept(ModItems.RELOAD_FACILITY.get());
                         // Ammo Workbench

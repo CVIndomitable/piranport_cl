@@ -272,35 +272,46 @@ public class GameEvents {
     private static void tickAutoLaunchFighters(Player player, ItemStack coreStack, int coreSlot) {
         if (!coreStack.getOrDefault(ModDataComponents.SHIP_AUTO_LAUNCH.get(), false)) return;
 
-        // Find hostile flying mobs within 64 blocks
+        // Find hostile flying mobs within 64 blocks (for fighter auto-launch)
         List<LivingEntity> flyingHostiles = player.level().getEntitiesOfClass(
                 LivingEntity.class,
                 player.getBoundingBox().inflate(64.0),
                 e -> e.isAlive() && e instanceof Monster
                         && (e instanceof FlyingMob || e instanceof Phantom || e instanceof Vex)
         );
-        if (flyingHostiles.isEmpty()) return;
 
-        // Lock the nearest target only when there are no currently-alive fire control targets
-        if (player.level() instanceof ServerLevel sl) {
-            List<UUID> currentLocks = FireControlManager.getTargets(player.getUUID());
-            boolean hasActiveLock = currentLocks.stream().anyMatch(uuid -> {
-                Entity e = sl.getEntity(uuid);
-                return e != null && e.isAlive();
-            });
+        if (!flyingHostiles.isEmpty()) {
+            // Lock the nearest target only when there are no currently-alive fire control targets
+            if (player.level() instanceof ServerLevel sl) {
+                List<UUID> currentLocks = FireControlManager.getTargets(player.getUUID());
+                boolean hasActiveLock = currentLocks.stream().anyMatch(uuid -> {
+                    Entity e = sl.getEntity(uuid);
+                    return e != null && e.isAlive();
+                });
 
-            if (!hasActiveLock) {
-                LivingEntity nearest = flyingHostiles.stream()
-                        .min(Comparator.comparingDouble(player::distanceTo))
-                        .orElse(null);
-                if (nearest != null) {
-                    FireControlManager.lock(player.getUUID(), nearest.getUUID());
+                if (!hasActiveLock) {
+                    LivingEntity nearest = flyingHostiles.stream()
+                            .min(Comparator.comparingDouble(player::distanceTo))
+                            .orElse(null);
+                    if (nearest != null) {
+                        FireControlManager.lock(player.getUUID(), nearest.getUUID());
+                    }
                 }
             }
+
+            ShipCoreItem.tryAutoLaunchFighter(player.level(), player, coreStack, coreSlot);
         }
 
-        ShipCoreItem.tryAutoLaunchFighter(player.level(), player, coreStack, coreSlot);
-        ShipCoreItem.tryAutoFireAntiAirMissile(player.level(), player, coreStack, coreSlot);
+        // Anti-air missiles: independently check for any hostile mob within 32 blocks
+        // (not limited to vanilla flying mobs — includes deep ocean NPCs etc.)
+        boolean hasNearbyHostile = !player.level().getEntitiesOfClass(
+                Monster.class,
+                player.getBoundingBox().inflate(32.0),
+                e -> e.isAlive() && e.isPickable()
+        ).isEmpty();
+        if (hasNearbyHostile) {
+            ShipCoreItem.tryAutoFireAntiAirMissile(player.level(), player, coreStack, coreSlot);
+        }
     }
 
     // Cache of last-known weapon load per player (for no-GUI inventory mode).

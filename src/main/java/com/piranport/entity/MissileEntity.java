@@ -184,6 +184,8 @@ public class MissileEntity extends ThrowableItemProjectile {
             for (UUID targetUUID : fcTargets) {
                 Entity target = serverLevel.getEntity(targetUUID);
                 if (target != null && target.isAlive()) {
+                    // 反舰导弹不锁定水下目标
+                    if (missileType == MissileType.ANTI_SHIP && target.isUnderWater()) continue;
                     return target;
                 }
             }
@@ -203,6 +205,8 @@ public class MissileEntity extends ThrowableItemProjectile {
         })) {
             double dist = distanceTo(e);
             if (dist > SEARCH_RANGE) continue;
+            // 反舰导弹不锁定水下目标
+            if (missileType == MissileType.ANTI_SHIP && e.isUnderWater()) continue;
 
             boolean isAirborne = !e.onGround();
 

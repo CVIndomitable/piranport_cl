@@ -134,6 +134,7 @@ public class AircraftEntity extends Entity {
     // Autonomous mode: aircraft has no player owner (e.g. launched by floating target)
     private boolean autonomous = false;
     private Vec3 homePosition = Vec3.ZERO;
+    @Nullable private Vec3 lastHorizontalDir = null; // previous tick's horizontal direction for turn radius
 
     private static final int MAX_AIRTIME_TICKS = 12000;
     private static final double MAX_DIST_FROM_OWNER = 48.0;
@@ -145,6 +146,7 @@ public class AircraftEntity extends Entity {
     private static final double ORBIT_RADIUS = 8.0;
     private static final double RETURN_ARRIVAL_DIST = 3.0;
     private static final int FUEL_BURN_INTERVAL = 4; // burn 1 fuel every 4 ticks
+    private static final double TURN_RADIUS = 2.0; // horizontal turn arc radius in blocks
 
     public AircraftEntity(EntityType<?> type, Level level) {
         super(type, level);
@@ -414,6 +416,9 @@ public class AircraftEntity extends Entity {
                 && tickCount % 20 == 0) {
             tickAswSonar(owner);
         }
+
+        // === Turn radius constraint + no-hover enforcement ===
+        applyTurnRadiusConstraint(state);
 
         // Update rotation to face movement direction (nose forward)
         Vec3 vel = getDeltaMovement();
@@ -1286,6 +1291,9 @@ public class AircraftEntity extends Entity {
             default -> {}
         }
 
+        // === Turn radius constraint + no-hover enforcement ===
+        applyTurnRadiusConstraint(state);
+
         // Update rotation to face movement direction
         Vec3 vel = getDeltaMovement();
         double hDist = vel.horizontalDistance();
@@ -1293,6 +1301,9 @@ public class AircraftEntity extends Entity {
             setYRot((float) (Math.atan2(-vel.x, vel.z) * (180.0 / Math.PI)));
             setXRot((float) (Math.atan2(vel.y, hDist) * (180.0 / Math.PI)));
         }
+
+        // Apply movement (autonomous path — main tick's setPos is not reached)
+        setPos(getX() + vel.x, getY() + vel.y, getZ() + vel.z);
     }
 
     private void tickAutonomousLevelBomb(LivingEntity target) {
@@ -1354,6 +1365,79 @@ public class AircraftEntity extends Entity {
                 levelBombDropped = false;
             }
         }
+    }
+
+    // ===== Turn radius constraint =====
+
+    /**
+     * Enforces a circular arc turn with radius {@link #TURN_RADIUS} and prevents hovering.
+     * Called after each state's tick method sets the desired delta movement, and before
+     * rotation/position update.
+     */
+    private void applyTurnRadiusConstraint(FlightState state) {
+        Vec3 rawVel = getDeltaMovement();
+
+        // Enforce minimum horizontal speed (no hovering) — skip during LAUNCHING (vertical ascent)
+        if (state != FlightState.LAUNCHING && lastHorizontalDir != null) {
+            double rawHorizSpeed = rawVel.horizontalDistance();
+            double minSpeed = panelSpeed * 0.05;
+            if (rawHorizSpeed < minSpeed) {
+                rawVel = new Vec3(lastHorizontalDir.x * minSpeed, rawVel.y, lastHorizontalDir.z * minSpeed);
+                setDeltaMovement(rawVel);
+            }
+        }
+
+        // Apply turn radius constraint
+        Vec3 constrained = constrainTurnRadius(getDeltaMovement());
+        setDeltaMovement(constrained);
+
+        // Update stored horizontal direction for next tick
+        double hd = constrained.horizontalDistance();
+        if (hd > 0.001) {
+            lastHorizontalDir = new Vec3(constrained.x / hd, 0, constrained.z / hd);
+        }
+    }
+
+    /**
+     * Limits horizontal direction change to the maximum angular rate allowed by
+     * a circular arc of radius {@link #TURN_RADIUS}.
+     * Vertical (Y) component is passed through unchanged — altitude changes are not arc-limited.
+     */
+    private Vec3 constrainTurnRadius(Vec3 desiredVel) {
+        double desiredHorizSpeed = desiredVel.horizontalDistance();
+
+        // Too slow or no prior direction — allow free movement
+        if (desiredHorizSpeed < 0.001 || lastHorizontalDir == null) {
+            return desiredVel;
+        }
+
+        // Max yaw change per tick:  ω = v / r  (radians)
+        double maxAngle = desiredHorizSpeed / TURN_RADIUS;
+
+        // Desired horizontal direction
+        double invSpeed = 1.0 / desiredHorizSpeed;
+        double desiredDirX = desiredVel.x * invSpeed;
+        double desiredDirZ = desiredVel.z * invSpeed;
+
+        // Angle between last direction and desired direction
+        double dot = lastHorizontalDir.x * desiredDirX + lastHorizontalDir.z * desiredDirZ;
+        dot = Math.max(-1.0, Math.min(1.0, dot));
+        double angleDiff = Math.acos(dot);
+
+        // Within turn rate — no constraint needed
+        if (angleDiff <= maxAngle) {
+            return desiredVel;
+        }
+
+        // Determine turn direction via 2D cross product (positive = turn left / CCW)
+        double cross = lastHorizontalDir.x * desiredDirZ - lastHorizontalDir.z * desiredDirX;
+        double currentYawRad = Math.atan2(-lastHorizontalDir.x, lastHorizontalDir.z);
+        currentYawRad += (cross >= 0 ? maxAngle : -maxAngle);
+
+        double newX = -Math.sin(currentYawRad) * desiredHorizSpeed;
+        double newZ = Math.cos(currentYawRad) * desiredHorizSpeed;
+
+        return new Vec3(newX, desiredVel.y, newZ);
     }
 
     /**

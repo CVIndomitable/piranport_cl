@@ -3,6 +3,8 @@ package com.piranport.client;
 import com.piranport.component.LoadedAmmo;
 import com.piranport.component.WeaponCooldown;
 import com.piranport.config.ModCommonConfig;
+import com.piranport.item.MissileLauncherItem;
+import com.piranport.item.TorpedoLauncherItem;
 import com.piranport.registry.ModDataComponents;
 import com.piranport.registry.ModItems;
 import net.minecraft.client.Minecraft;
@@ -50,9 +52,20 @@ public class WeaponReloadDecorator implements IItemDecorator {
             }
         }
 
-        // 2. Empty bar for medium/large cannons when not loaded (manual reload mode)
-        if ((stack.is(ModItems.MEDIUM_GUN.get()) || stack.is(ModItems.LARGE_GUN.get()))
-                && !ModCommonConfig.AUTO_RESUPPLY_ENABLED.get()) {
+        // 2. Empty bar for manual-reload weapons when not loaded
+        boolean showEmptyBar = false;
+        if (!ModCommonConfig.AUTO_RESUPPLY_ENABLED.get()) {
+            // Medium/large cannons and torpedo launchers use manual reload
+            showEmptyBar = stack.is(ModItems.MEDIUM_GUN.get())
+                    || stack.is(ModItems.LARGE_GUN.get())
+                    || stack.getItem() instanceof TorpedoLauncherItem;
+        }
+        // Manual-reload missiles (anti-ship/rocket) always need LoadedAmmo regardless of config
+        if (stack.getItem() instanceof MissileLauncherItem ml && ml.isManualReload()) {
+            showEmptyBar = true;
+        }
+
+        if (showEmptyBar) {
             LoadedAmmo ammo = stack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
             if (!ammo.hasAmmo()) {
                 int barX = x + 2;

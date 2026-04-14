@@ -1,7 +1,10 @@
 package com.piranport.client;
 
+import com.piranport.component.LoadedAmmo;
 import com.piranport.component.WeaponCooldown;
+import com.piranport.config.ModCommonConfig;
 import com.piranport.registry.ModDataComponents;
+import com.piranport.registry.ModItems;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -20,30 +23,43 @@ public class WeaponReloadDecorator implements IItemDecorator {
 
     @Override
     public boolean render(GuiGraphics gui, Font font, ItemStack stack, int x, int y) {
+        // 1. Cooldown bar takes priority
         WeaponCooldown cd = stack.get(ModDataComponents.WEAPON_COOLDOWN.get());
-        if (cd == null) return false;
+        if (cd != null) {
+            Minecraft mc = Minecraft.getInstance();
+            long currentTick = mc.level != null ? mc.level.getGameTime() : 0L;
 
-        Minecraft mc = Minecraft.getInstance();
-        long currentTick = mc.level != null ? mc.level.getGameTime() : 0L;
+            float fraction = cd.getFraction(currentTick);
+            if (fraction > 0f) {
+                // progress: 0 = just started cooldown, 1 = about to be ready
+                float progress = 1f - fraction;
 
-        float fraction = cd.getFraction(currentTick);
-        if (fraction <= 0f) return false; // ready — no bar
+                // Vanilla-style color: red(0) → yellow(0.5) → green(1)
+                int color = Mth.hsvToRgb(progress / 3f, 1f, 1f) | 0xFF000000;
 
-        // progress: 0 = just started cooldown, 1 = about to be ready
-        float progress = 1f - fraction;
+                int fillW = Math.round(BAR_WIDTH * progress);
 
-        // Vanilla-style color: red(0) → yellow(0.5) → green(1)
-        // Hue: 0/3 (red) → 1/3 (green), saturation=1, value=1
-        int color = Mth.hsvToRgb(progress / 3f, 1f, 1f) | 0xFF000000;
+                int barX = x + 2;
+                int barY = y + 13;
 
-        int fillW = Math.round(BAR_WIDTH * progress);
+                gui.fill(barX, barY, barX + BAR_WIDTH, barY + 2, BG_COLOR);
+                if (fillW > 0) {
+                    gui.fill(barX, barY, barX + fillW, barY + 1, color);
+                }
+                return false;
+            }
+        }
 
-        int barX = x + 2;
-        int barY = y + 13;
-
-        gui.fill(barX, barY, barX + BAR_WIDTH, barY + 2, BG_COLOR);
-        if (fillW > 0) {
-            gui.fill(barX, barY, barX + fillW, barY + 1, color);
+        // 2. Empty bar for medium/large cannons when not loaded (manual reload mode)
+        if ((stack.is(ModItems.MEDIUM_GUN.get()) || stack.is(ModItems.LARGE_GUN.get()))
+                && !ModCommonConfig.AUTO_RESUPPLY_ENABLED.get()) {
+            LoadedAmmo ammo = stack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
+            if (!ammo.hasAmmo()) {
+                int barX = x + 2;
+                int barY = y + 13;
+                gui.fill(barX, barY, barX + BAR_WIDTH, barY + 2, BG_COLOR);
+                return false;
+            }
         }
 
         return false;

@@ -168,7 +168,7 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
 
     @Override
     protected Item getDefaultItem() {
-        return ModItems.PROJECTILE_BULLET.get();
+        return ModItems.SMALL_HE_SHELL.get();
     }
 
     @Override

@@ -137,8 +137,20 @@ public class AircraftEntity extends Entity {
     @Nullable private Vec3 lastHorizontalDir = null; // previous tick's horizontal direction for turn radius
 
     private static final int MAX_AIRTIME_TICKS = 12000;
-    private static final double MAX_DIST_FROM_OWNER = 48.0;
-    private static final double MAX_RECON_DIST = 200.0;  // Phase 32
+    private static final double MIN_DIST_FROM_OWNER = 48.0;
+    private static final double MIN_RECON_DIST = 200.0;  // Phase 32
+
+    /**
+     * 动态距离上限：取 max(最小值, (服务器模拟距离 - 1) × 16)。
+     * 留 1 区块余量防止飞机进入无法 tick 的边界。
+     */
+    private double getDistanceLimit(double minimum) {
+        int simDist = 10;
+        if (level() instanceof ServerLevel sl && sl.getServer() != null) {
+            simDist = sl.getServer().getPlayerList().getSimulationDistance();
+        }
+        return Math.max(minimum, (simDist - 1) * 16.0);
+    }
     private static final int STUCK_CHECK_INTERVAL = 60;
     private static final double STUCK_THRESHOLD = 0.1;
     private static final int LAUNCH_DURATION = 30;
@@ -382,7 +394,7 @@ public class AircraftEntity extends Entity {
         // FOLLOW mode uses extended range (recon plane may be 200 blocks away)
         double maxDist = (state == FlightState.RECON_ACTIVE
                 || attackMode == FlightGroupData.AttackMode.FOLLOW)
-                ? MAX_RECON_DIST : MAX_DIST_FROM_OWNER;
+                ? getDistanceLimit(MIN_RECON_DIST) : getDistanceLimit(MIN_DIST_FROM_OWNER);
         if (distanceTo(owner) > maxDist) {
             if (state == FlightState.RECON_ACTIVE) {
                 // Recon exceeded 200-block range — end recon and return
@@ -1243,7 +1255,7 @@ public class AircraftEntity extends Entity {
             if (currentFuel <= 0) { discard(); return; }
         }
         if (airtimeTicks >= MAX_AIRTIME_TICKS) { discard(); return; }
-        if (position().distanceTo(homePosition) > MAX_DIST_FROM_OWNER * 2) { discard(); return; }
+        if (position().distanceTo(homePosition) > getDistanceLimit(MIN_DIST_FROM_OWNER) * 2) { discard(); return; }
 
         if (attackCooldown > 0) attackCooldown--;
 

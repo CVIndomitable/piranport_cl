@@ -4,6 +4,7 @@ import com.piranport.aviation.ClientFireControlData;
 import com.piranport.aviation.ClientReconData;
 import com.piranport.combat.TransformationManager;
 import com.piranport.debug.PiranPortDebug;
+import com.piranport.network.DebugCooldownOverridePayload;
 import com.piranport.network.DebugTogglePayload;
 import com.piranport.network.SnapshotRequestPayload;
 import com.piranport.entity.AerialBombEntity;
@@ -48,6 +49,7 @@ public class ClientTickHandler {
     private static final double FIRE_CONTROL_RANGE = 80.0;
 
     private static boolean highlightEnabled = false;
+    private static boolean cooldownOverrideClientState = false;
 
     public static boolean isHighlightEnabled() { return highlightEnabled; }
     private static final Set<Integer> highlightedEntityIds = new HashSet<>();
@@ -74,6 +76,7 @@ public class ClientTickHandler {
     /** Reset all client-side static state (called on disconnect). */
     public static void resetClientState() {
         highlightEnabled = false;
+        cooldownOverrideClientState = false;
         highlightedEntityIds.clear();
         clearFcTeam(Minecraft.getInstance());
         clearAswTeam(Minecraft.getInstance());
@@ -198,6 +201,18 @@ public class ClientTickHandler {
                         net.minecraft.network.chat.Component.literal(
                                 nowEnabled ? "[PP DEBUG] ON" : "[PP DEBUG] OFF"), true);
             }
+        }
+
+        // Debug: toggle global cooldown override (clamps every cooldown to 5s)
+        while (ModKeyMappings.DEBUG_COOLDOWN_OVERRIDE.consumeClick()) {
+            cooldownOverrideClientState = !cooldownOverrideClientState;
+            boolean nowEnabled = cooldownOverrideClientState;
+            PacketDistributor.sendToServer(new DebugCooldownOverridePayload(nowEnabled));
+            mc.player.displayClientMessage(
+                    net.minecraft.network.chat.Component.translatable(
+                            nowEnabled ? "message.piranport.debug_cooldown_override_on"
+                                       : "message.piranport.debug_cooldown_override_off"),
+                    true);
         }
 
         // Toggle entity highlight (Y key)

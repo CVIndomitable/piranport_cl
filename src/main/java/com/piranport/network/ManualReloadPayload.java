@@ -137,7 +137,7 @@ public record ManualReloadPayload() implements CustomPacketPayload {
             int cooldownTicks = TransformationManager.boostedCooldown(player, baseCooldown);
             long gameTime = player.level().getGameTime();
             weapon.set(ModDataComponents.WEAPON_COOLDOWN.get(),
-                    new WeaponCooldown(gameTime + cooldownTicks, cooldownTicks));
+                    WeaponCooldown.of(gameTime, cooldownTicks));
             SlotCooldowns cooldowns = coreStack.getOrDefault(
                     ModDataComponents.SLOT_COOLDOWNS.get(), SlotCooldowns.EMPTY);
             coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),

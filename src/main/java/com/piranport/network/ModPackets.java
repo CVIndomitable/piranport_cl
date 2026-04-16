@@ -77,6 +77,11 @@ public class ModPackets {
                 SnapshotRequestPayload.STREAM_CODEC,
                 SnapshotRequestPayload::handle
         );
+        registrar.playToServer(
+                DebugCooldownOverridePayload.TYPE,
+                DebugCooldownOverridePayload.STREAM_CODEC,
+                DebugCooldownOverridePayload::handle
+        );
 
         // No-GUI mode: empty-hand recall all aircraft
         registrar.playToServer(

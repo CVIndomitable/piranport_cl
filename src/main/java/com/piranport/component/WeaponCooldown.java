@@ -14,6 +14,15 @@ public record WeaponCooldown(long endTick, int totalTick) {
 
     public static final WeaponCooldown EMPTY = new WeaponCooldown(0, 1);
 
+    /**
+     * Create a cooldown starting from {@code currentTick} lasting {@code ticks}.
+     * Applies the debug cooldown override so a single chokepoint covers all call sites.
+     */
+    public static WeaponCooldown of(long currentTick, int ticks) {
+        int adjusted = com.piranport.debug.PiranPortDebug.applyCooldownOverride(ticks);
+        return new WeaponCooldown(currentTick + adjusted, adjusted);
+    }
+
     public static final Codec<WeaponCooldown> CODEC = RecordCodecBuilder.create(inst -> inst.group(
             Codec.LONG.fieldOf("end_tick").forGetter(WeaponCooldown::endTick),
             Codec.INT.fieldOf("total_tick").forGetter(WeaponCooldown::totalTick)

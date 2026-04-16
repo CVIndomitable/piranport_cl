@@ -55,6 +55,11 @@ public final class PiranPortDebug {
     // Client-side toggle (set from ClientTickHandler F8 handler)
     private static volatile boolean clientEnabled = false;
 
+    // Debug-only: when true, all weapon/slot cooldowns are clamped to 5s (100 ticks).
+    // Server-side state, toggled via DebugCooldownOverridePayload.
+    private static volatile boolean cooldownOverrideEnabled = false;
+    public static final int COOLDOWN_OVERRIDE_TICKS = 100; // 5 seconds
+
     private static final DebugStats stats = new DebugStats();
 
     // -------------------------------------------------------------------------
@@ -83,6 +88,26 @@ public final class PiranPortDebug {
 
     public static boolean isServerEnabled() { return serverEnabled; }
     public static boolean isClientEnabled() { return clientEnabled; }
+
+    /** Debug cooldown override — clamps every weapon cooldown to 5 seconds on the server. */
+    public static void setCooldownOverride(boolean enabled) {
+        cooldownOverrideEnabled = enabled;
+        LOG.info("===== PiranPort Cooldown Override {} at {} =====",
+                enabled ? "ENABLED" : "DISABLED", LocalTime.now().format(TIME_FMT));
+    }
+
+    public static boolean isCooldownOverrideEnabled() { return cooldownOverrideEnabled; }
+
+    /**
+     * Applies the debug cooldown override. When enabled, clamps {@code ticks} to
+     * {@link #COOLDOWN_OVERRIDE_TICKS} (5 seconds). Otherwise returns {@code ticks} unchanged.
+     */
+    public static int applyCooldownOverride(int ticks) {
+        if (cooldownOverrideEnabled && ticks > COOLDOWN_OVERRIDE_TICKS) {
+            return COOLDOWN_OVERRIDE_TICKS;
+        }
+        return ticks;
+    }
 
     // -------------------------------------------------------------------------
     // Logging

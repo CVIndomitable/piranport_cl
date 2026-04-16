@@ -742,13 +742,13 @@ public class ShipCoreItem extends Item {
                 coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
                         cooldowns.withSlotCooldown(weaponSlot, cooldownTicks, level.getGameTime()));
                 weapon.set(ModDataComponents.WEAPON_COOLDOWN.get(),
-                        new WeaponCooldown(level.getGameTime() + cooldownTicks, cooldownTicks));
+                        WeaponCooldown.of(level.getGameTime(), cooldownTicks));
             } else {
                 int penaltyTicks = 10;
                 coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
                         cooldowns.withSlotCooldown(weaponSlot, penaltyTicks, level.getGameTime()));
                 weapon.set(ModDataComponents.WEAPON_COOLDOWN.get(),
-                        new WeaponCooldown(level.getGameTime() + penaltyTicks, penaltyTicks));
+                        WeaponCooldown.of(level.getGameTime(), penaltyTicks));
                 player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
             }
 
@@ -864,7 +864,7 @@ public class ShipCoreItem extends Item {
             coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
                     cooldowns.withSlotCooldown(weaponSlot, boostedCooldown, level.getGameTime()));
             launcherStack.set(ModDataComponents.WEAPON_COOLDOWN.get(),
-                    new WeaponCooldown(level.getGameTime() + boostedCooldown, boostedCooldown));
+                    WeaponCooldown.of(level.getGameTime(), boostedCooldown));
         }
 
         level.playSound(null, player.getX(), player.getY(), player.getZ(),
@@ -989,13 +989,13 @@ public class ShipCoreItem extends Item {
                 coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
                         cooldowns.withSlotCooldown(weaponSlot, boostedCooldown, level.getGameTime()));
                 launcherStack.set(ModDataComponents.WEAPON_COOLDOWN.get(),
-                        new WeaponCooldown(level.getGameTime() + boostedCooldown, boostedCooldown));
+                        WeaponCooldown.of(level.getGameTime(), boostedCooldown));
             } else {
                 int penaltyTicks = 10;
                 coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
                         cooldowns.withSlotCooldown(weaponSlot, penaltyTicks, level.getGameTime()));
                 launcherStack.set(ModDataComponents.WEAPON_COOLDOWN.get(),
-                        new WeaponCooldown(level.getGameTime() + penaltyTicks, penaltyTicks));
+                        WeaponCooldown.of(level.getGameTime(), penaltyTicks));
                 player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
             }
         }
@@ -1093,7 +1093,7 @@ public class ShipCoreItem extends Item {
             coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
                     cooldowns.withSlotCooldown(weaponSlot, boostedCooldown, level.getGameTime()));
             launcherStack.set(ModDataComponents.WEAPON_COOLDOWN.get(),
-                    new WeaponCooldown(level.getGameTime() + boostedCooldown, boostedCooldown));
+                    WeaponCooldown.of(level.getGameTime(), boostedCooldown));
         }
         TransformationManager.setWeaponIndex(coreStack, weaponSlot);
 
@@ -1222,13 +1222,13 @@ public class ShipCoreItem extends Item {
             coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
                     cooldowns.withSlotCooldown(weaponSlot, cd, level.getGameTime()));
             launcherStack.set(ModDataComponents.WEAPON_COOLDOWN.get(),
-                    new WeaponCooldown(level.getGameTime() + cd, cd));
+                    WeaponCooldown.of(level.getGameTime(), cd));
         } else {
             int penaltyTicks = 10;
             coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
                     cooldowns.withSlotCooldown(weaponSlot, penaltyTicks, level.getGameTime()));
             launcherStack.set(ModDataComponents.WEAPON_COOLDOWN.get(),
-                    new WeaponCooldown(level.getGameTime() + penaltyTicks, penaltyTicks));
+                    WeaponCooldown.of(level.getGameTime(), penaltyTicks));
             player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
         }
         TransformationManager.setWeaponIndex(coreStack, weaponSlot);
@@ -2170,7 +2170,7 @@ public class ShipCoreItem extends Item {
             coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
                     cooldowns.withSlotCooldown(slot, cd, gameTime));
             stack.set(ModDataComponents.WEAPON_COOLDOWN.get(),
-                    new WeaponCooldown(gameTime + cd, cd));
+                    WeaponCooldown.of(gameTime, cd));
 
             level.playSound(null, player.getX(), player.getY(), player.getZ(),
                     SoundEvents.FIREWORK_ROCKET_LAUNCH, SoundSource.PLAYERS, 1.0f, 0.8f);

@@ -38,4 +38,8 @@ public class ModKeyMappings {
 
     public static final KeyMapping TORPEDO_STEER_RIGHT =
             new KeyMapping("key.piranport.torpedo_steer_right", GLFW.GLFW_KEY_0, CATEGORY);
+
+    /** Debug-only: toggle a server-side override that clamps every cooldown to 5s. */
+    public static final KeyMapping DEBUG_COOLDOWN_OVERRIDE =
+            new KeyMapping("key.piranport.debug_cooldown_override", GLFW.GLFW_KEY_N, CATEGORY);
 }

@@ -313,6 +313,7 @@ src/main/java/com/piranport/
 | 彩色实体描边 | `entity.setGlowingTag` + team color 不同步 | 客户端记分板队伍 + `ChatFormatting.RED` 等颜色，每tick `syncFcTeam()` |
 | 自定义维度注册 | 代码注册 dimension | `data/piranport/dimension/` + `dimension_type/` JSON 文件 |
 | 导弹发射器构造NPE | `getDefaultItem()` 在 `super()` 期间 displayItemId 为 null | 延迟初始化或 null 检查 |
+| 防空导弹/H模式漏识别幻翼 | `Phantom extends FlyingMob`，不是 `Monster` 子类 | 敌对筛选用 `instanceof Enemy` 接口，覆盖 Monster/Phantom/Vex/Ghast |
 
 ### 关键技术要点
 

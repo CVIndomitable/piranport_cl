@@ -14,7 +14,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -217,7 +217,8 @@ public class MissileEntity extends ThrowableItemProjectile {
         for (Entity e : level().getEntities(this, searchBox, e -> {
             if (e == getOwner()) return false;
             if (FriendlyFireHelper.shouldBlockHit(e, getOwner())) return false;
-            if (!(e instanceof Monster)) return false;
+            // Phantom extends FlyingMob (not Monster) — use Enemy interface to cover all hostile mobs.
+            if (!(e instanceof Enemy)) return false;
             if (e instanceof net.minecraft.world.Container) return false;
             return e.isAlive() && e.isPickable();
         })) {

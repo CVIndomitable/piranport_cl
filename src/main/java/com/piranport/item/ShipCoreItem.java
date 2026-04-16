@@ -27,8 +27,9 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.SimpleMenuProvider;
@@ -2202,15 +2203,15 @@ public class ShipCoreItem extends Item {
                     break;
                 }
             }
-            // 2. No fire control lock — find nearest hostile mob (Monster only)
+            // 2. No fire control lock — find nearest hostile mob (Enemy interface covers Phantom/Vex/Monster)
             //    防空导弹自动瞄准仅限飞行目标
             final boolean antiAirOnly = launcher.getMissileType() == MissileEntity.MissileType.ANTI_AIR;
             if (aimDir == null) {
-                Monster nearest = null;
+                LivingEntity nearest = null;
                 double bestDist = 32.0;
-                for (Monster mob : level.getEntitiesOfClass(Monster.class,
+                for (LivingEntity mob : level.getEntitiesOfClass(LivingEntity.class,
                         player.getBoundingBox().inflate(32.0),
-                        e -> e.isAlive() && e.isPickable() && !e.isUnderWater())) {
+                        e -> e.isAlive() && e.isPickable() && e instanceof Enemy && !e.isUnderWater())) {
                     if (antiAirOnly && mob.onGround()) continue;
                     double d = player.distanceTo(mob);
                     if (d < bestDist) {

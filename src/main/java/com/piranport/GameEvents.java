@@ -21,7 +21,7 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.FlyingMob;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.ItemEntity;
-import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.monster.Phantom;
 import net.minecraft.world.entity.monster.Vex;
 import net.minecraft.world.entity.player.Inventory;
@@ -266,17 +266,18 @@ public class GameEvents {
     /**
      * Auto-launch fighters when hostile flying mobs are nearby.
      * Locks the nearest hostile flying mob as a fire control target and launches a fighter.
-     * "Hostile flying mob" = Monster that is a FlyingMob, Phantom, or Vex.
+     * "Hostile flying mob" = Enemy that is a FlyingMob, Phantom, or Vex.
      * If ammo/fuel is exhausted the fighter returns, refuels, and re-launches on the next check.
      */
     private static void tickAutoLaunchFighters(Player player, ItemStack coreStack, int coreSlot) {
         if (!coreStack.getOrDefault(ModDataComponents.SHIP_AUTO_LAUNCH.get(), false)) return;
 
         // Find hostile flying mobs within 64 blocks (for fighter auto-launch)
+        // Phantom extends FlyingMob (not Monster), so we check Enemy interface which all hostile mobs implement.
         List<LivingEntity> flyingHostiles = player.level().getEntitiesOfClass(
                 LivingEntity.class,
                 player.getBoundingBox().inflate(64.0),
-                e -> e.isAlive() && e instanceof Monster
+                e -> e.isAlive() && e instanceof Enemy
                         && (e instanceof FlyingMob || e instanceof Phantom || e instanceof Vex)
         );
 
@@ -303,11 +304,13 @@ public class GameEvents {
         }
 
         // Anti-air missiles: check for flying hostile mobs within 32 blocks
-        // Only trigger when airborne targets exist (to avoid wasting ammo on ground mobs)
+        // Only trigger when airborne targets exist (to avoid wasting ammo on ground mobs).
+        // Phantom is not Monster — use Enemy interface so phantoms count as airborne hostiles.
         boolean hasAirborneHostile = !player.level().getEntitiesOfClass(
-                Monster.class,
+                LivingEntity.class,
                 player.getBoundingBox().inflate(32.0),
-                e -> e.isAlive() && e.isPickable() && !e.onGround() && !e.isUnderWater()
+                e -> e.isAlive() && e.isPickable() && e instanceof Enemy
+                        && !e.onGround() && !e.isUnderWater()
         ).isEmpty();
         if (hasAirborneHostile) {
             ShipCoreItem.tryAutoFireAntiAirMissile(player.level(), player, coreStack, coreSlot);

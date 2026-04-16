@@ -437,7 +437,7 @@ public class AircraftEntity extends Entity {
         double hDist = vel.horizontalDistance();
         if (hDist > 0.001) {
             float targetYaw = (float) (Math.atan2(-vel.x, vel.z) * (180.0 / Math.PI));
-            float targetPitch = (float) (Math.atan2(vel.y, hDist) * (180.0 / Math.PI));
+            float targetPitch = (float) (Math.atan2(-vel.y, hDist) * (180.0 / Math.PI));
             setYRot(targetYaw);
             setXRot(targetPitch);
         }
@@ -792,8 +792,11 @@ public class AircraftEntity extends Entity {
         double dx = target.getX() - getX();
         double dz = target.getZ() - getZ();
         double horizDist = Math.sqrt(dx * dx + dz * dz);
+        double targetY = target.getY() + 2.0;
+        double altDelta = Math.abs(getY() - targetY);
 
-        if (horizDist >= 20 && horizDist <= 30) {
+        // Drop zone: horizDist 20-30 AND at low altitude (within 3 blocks of target.y+2)
+        if (horizDist >= 20 && horizDist <= 30 && altDelta <= 3.0) {
             TorpedoEntity torpedo = new TorpedoEntity(ModEntityTypes.TORPEDO_ENTITY.get(), level());
             Vec3 dir = new Vec3(dx, 0, dz).normalize();
             torpedo.setPos(getX(), getY(), getZ());
@@ -809,8 +812,6 @@ public class AircraftEntity extends Entity {
             return;
         }
 
-        double targetY = target.getY() + 2.0;
-
         if (horizDist < 20) {
             // Too close — fly away from target to set up attack run
             Vec3 awayDir = new Vec3(-dx, 0, -dz).normalize();
@@ -819,7 +820,7 @@ public class AircraftEntity extends Entity {
             return;
         }
 
-        // horizDist > 30 — approach at low altitude (target.y + 2)
+        // horizDist > 30, or in drop window but still too high — approach at low altitude (target.y + 2)
         Vec3 toTarget = new Vec3(dx, targetY - getY(), dz);
         double dist = toTarget.length();
         if (dist > 0.1) {
@@ -1316,7 +1317,7 @@ public class AircraftEntity extends Entity {
         double hDist = vel.horizontalDistance();
         if (hDist > 0.001) {
             setYRot((float) (Math.atan2(-vel.x, vel.z) * (180.0 / Math.PI)));
-            setXRot((float) (Math.atan2(vel.y, hDist) * (180.0 / Math.PI)));
+            setXRot((float) (Math.atan2(-vel.y, hDist) * (180.0 / Math.PI)));
         }
 
         // Apply movement (autonomous path — main tick's setPos is not reached)
@@ -1890,6 +1891,11 @@ public class AircraftEntity extends Entity {
             return AircraftGlowHelper.shouldGlow(this);
         }
         return false;
+    }
+
+    @Override
+    protected Component getTypeName() {
+        return Component.translatable("entity.piranport.aircraft." + aircraftType.getSerializedName());
     }
 
     @Override

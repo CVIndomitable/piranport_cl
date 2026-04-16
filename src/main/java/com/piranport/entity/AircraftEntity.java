@@ -472,7 +472,12 @@ public class AircraftEntity extends Entity {
         double targetY = owner.getY() + CRUISE_ALTITUDE;
         double dy = targetY - getY();
         double rise = Math.min(panelSpeed * 0.3, Math.abs(dy));
-        setDeltaMovement(getDeltaMovement().x * 0.5, dy > 0 ? rise : -rise, getDeltaMovement().z * 0.5);
+        // Horizontal velocity along launch direction (orbitAngle = player's facing at launch)
+        // so the aircraft climbs out diagonally instead of rocketing straight up.
+        double fwdSpeed = panelSpeed * 0.3;
+        double fwdX = Math.cos(orbitAngle) * fwdSpeed;
+        double fwdZ = Math.sin(orbitAngle) * fwdSpeed;
+        setDeltaMovement(fwdX, dy > 0 ? rise : -rise, fwdZ);
         if (stateTicks >= LAUNCH_DURATION || Math.abs(dy) < 1.5) {
             // RECON goes directly to RECON_ACTIVE; others go to CRUISING
             setState(aircraftType == AircraftInfo.AircraftType.RECON

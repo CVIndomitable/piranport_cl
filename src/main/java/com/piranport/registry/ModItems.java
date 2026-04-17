@@ -1048,23 +1048,23 @@ public class ModItems {
     public static final DeferredItem<MissileItem> SY1_MISSILE =
             ITEMS.register("sy1_missile",
                     () -> new MissileItem(new Item.Properties().stacksTo(16),
-                            MissileItem.MissileAmmoType.ANTI_SHIP, 30f, 6f));
+                            com.piranport.entity.MissileEntity.MissileType.ANTI_SHIP, 30f, 6f));
     public static final DeferredItem<MissileItem> HARPOON_MISSILE =
             ITEMS.register("harpoon_missile",
                     () -> new MissileItem(new Item.Properties().stacksTo(16),
-                            MissileItem.MissileAmmoType.ANTI_SHIP, 24f));
+                            com.piranport.entity.MissileEntity.MissileType.ANTI_SHIP, 24f));
     public static final DeferredItem<MissileItem> TERRIER_MISSILE =
             ITEMS.register("terrier_missile",
                     () -> new MissileItem(new Item.Properties().stacksTo(16),
-                            MissileItem.MissileAmmoType.ANTI_AIR, 9f));
+                            com.piranport.entity.MissileEntity.MissileType.ANTI_AIR, 9f));
     public static final DeferredItem<MissileItem> ANTI_AIR_MISSILE =
             ITEMS.register("anti_air_missile",
                     () -> new MissileItem(new Item.Properties().stacksTo(16),
-                            MissileItem.MissileAmmoType.ANTI_AIR, 6f));
+                            com.piranport.entity.MissileEntity.MissileType.ANTI_AIR, 6f));
     public static final DeferredItem<MissileItem> ROCKET_AMMO =
             ITEMS.register("rocket_ammo",
                     () -> new MissileItem(new Item.Properties().stacksTo(16),
-                            MissileItem.MissileAmmoType.ROCKET, 6f));
+                            com.piranport.entity.MissileEntity.MissileType.ROCKET, 6f));
 
     // ===== Missile Launchers =====
     // 上游一号（反舰导弹）: 伤害30+6穿甲, 连装2, 负重25

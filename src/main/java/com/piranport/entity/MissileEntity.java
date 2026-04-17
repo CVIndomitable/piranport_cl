@@ -20,6 +20,7 @@ import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.ThrowableItemProjectile;
+import net.minecraft.ChatFormatting;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
@@ -40,20 +41,28 @@ public class MissileEntity extends ThrowableItemProjectile {
 
     public enum MissileType {
         /** 反舰导弹: 初速0.04, +0.04/tick, max 2.4 */
-        ANTI_SHIP(0.04f, 0.04f, 2.4f),
+        ANTI_SHIP(0.04f, 0.04f, 2.4f,
+                "tooltip.piranport.missile.type.anti_ship", ChatFormatting.RED),
         /** 防空导弹: 初速0.05, +0.05/tick, max 3.0 */
-        ANTI_AIR(0.05f, 0.05f, 3.0f),
+        ANTI_AIR(0.05f, 0.05f, 3.0f,
+                "tooltip.piranport.missile.type.anti_air", ChatFormatting.AQUA),
         /** 火箭弹: 初速0.04, +0.04/tick, max 2.0 */
-        ROCKET(0.04f, 0.04f, 2.0f);
+        ROCKET(0.04f, 0.04f, 2.0f,
+                "tooltip.piranport.missile.type.rocket", ChatFormatting.GOLD);
 
         public final float initialSpeed;
         public final float speedIncrement;
         public final float maxSpeed;
+        public final String translationKey;
+        public final ChatFormatting color;
 
-        MissileType(float initial, float increment, float max) {
+        MissileType(float initial, float increment, float max,
+                    String translationKey, ChatFormatting color) {
             this.initialSpeed = initial;
             this.speedIncrement = increment;
             this.maxSpeed = max;
+            this.translationKey = translationKey;
+            this.color = color;
         }
     }
 
@@ -64,6 +73,8 @@ public class MissileEntity extends ThrowableItemProjectile {
     private float currentSpeed;
     /** Registry key of the display item (ammo item). */
     private String displayItemId = "";
+    /** Cached resolved display item (resolved lazily from displayItemId). */
+    private Item cachedDisplayItem = null;
     private static final int MAX_LIFETIME = 600; // 30 seconds
     private static final double SEARCH_RANGE = 32.0;
     /** Maximum turn rate per tick (degrees). */
@@ -77,8 +88,7 @@ public class MissileEntity extends ThrowableItemProjectile {
     /** Ticks until next target search (throttle). */
     private int targetSearchCooldown = 0;
 
-    private static final ResourceLocation AP_PEN_ID =
-            ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "missile_ap");
+    private static final String AP_PEN_PATH_PREFIX = "missile_ap/";
 
     /** Required by entity type registration. */
     public MissileEntity(EntityType<? extends MissileEntity> type, Level level) {
@@ -98,15 +108,21 @@ public class MissileEntity extends ThrowableItemProjectile {
         this.displayItemId = displayItemId;
     }
 
-    /** 手动指定追踪目标，跳过自动搜索逻辑。 */
+    /** 手动指定追踪目标，跳过自动搜索逻辑。传 null 仅清目标、恢复自动搜索。 */
     public void setTrackedTarget(Entity target) {
         this.trackedTarget = target;
         this.trackedTargetUUID = target != null ? target.getUUID() : null;
-        this.manualTarget = true;
+        this.manualTarget = (target != null);
     }
 
     @Override
     protected Item getDefaultItem() {
+        if (cachedDisplayItem != null) return cachedDisplayItem;
+        cachedDisplayItem = resolveDisplayItem();
+        return cachedDisplayItem;
+    }
+
+    private Item resolveDisplayItem() {
         if (displayItemId != null && !displayItemId.isEmpty()) {
             var rl = ResourceLocation.tryParse(displayItemId);
             if (rl != null) {
@@ -212,6 +228,10 @@ public class MissileEntity extends ThrowableItemProjectile {
         AABB searchBox = getBoundingBox().inflate(SEARCH_RANGE);
         Entity bestTarget = null;
         double bestDist = Double.MAX_VALUE;
+        // 反舰/防空导弹统一剔除水下目标
+        boolean excludeUnderwater = missileType == MissileType.ANTI_SHIP
+                || missileType == MissileType.ANTI_AIR;
+        boolean antiAirOnlyFlying = missileType == MissileType.ANTI_AIR;
 
         for (Entity e : level().getEntities(this, searchBox, e -> {
             if (e == getOwner()) return false;
@@ -219,26 +239,17 @@ public class MissileEntity extends ThrowableItemProjectile {
             // Phantom extends FlyingMob (not Monster) — use Enemy interface to cover all hostile mobs.
             if (!(e instanceof Enemy)) return false;
             if (e instanceof net.minecraft.world.Container) return false;
-            return e.isAlive() && e.isPickable();
+            if (!e.isAlive() || !e.isPickable()) return false;
+            if (excludeUnderwater && e.isUnderWater()) return false;
+            // 防空导弹自动锁定仅限飞行目标，地面目标需手动火控锁定
+            if (antiAirOnlyFlying && e.onGround()) return false;
+            return true;
         })) {
             double dist = distanceTo(e);
             if (dist > SEARCH_RANGE) continue;
-            // 反舰/防空导弹不锁定水下目标
-            if ((missileType == MissileType.ANTI_SHIP || missileType == MissileType.ANTI_AIR)
-                    && e.isUnderWater()) continue;
-
-            if (missileType == MissileType.ANTI_AIR) {
-                // 防空导弹自动锁定仅限飞行目标，地面目标需手动火控锁定
-                if (e.onGround()) continue;
-                if (dist < bestDist) {
-                    bestTarget = e;
-                    bestDist = dist;
-                }
-            } else {
-                if (dist < bestDist) {
-                    bestTarget = e;
-                    bestDist = dist;
-                }
+            if (dist < bestDist) {
+                bestTarget = e;
+                bestDist = dist;
             }
         }
         return bestTarget;
@@ -279,6 +290,8 @@ public class MissileEntity extends ThrowableItemProjectile {
     @Override
     protected boolean canHitEntity(Entity target) {
         if (FriendlyFireHelper.shouldBlockHit(target, getOwner())) return false;
+        // 与 findTarget 一致：导弹飞行路径上不应被箱子矿车/船等容器实体拦截
+        if (target instanceof net.minecraft.world.Container) return false;
         return super.canHitEntity(target);
     }
 
@@ -292,16 +305,23 @@ public class MissileEntity extends ThrowableItemProjectile {
                 // 反舰导弹：直接伤害 + 穿甲
                 if (armorPen > 0 && target instanceof LivingEntity living) {
                     AttributeInstance armorAttr = living.getAttribute(Attributes.ARMOR);
+                    // 每次命中用 entity UUID 生成唯一 ID，避免同 tick 多枚导弹命中同一目标时
+                    // addTransientModifier 因 ID 重复抛 IllegalArgumentException
+                    ResourceLocation apId = ResourceLocation.fromNamespaceAndPath(
+                            PiranPort.MOD_ID, AP_PEN_PATH_PREFIX + getUUID());
+                    boolean applied = false;
                     if (armorAttr != null) {
+                        armorAttr.removeModifier(apId);
                         armorAttr.addTransientModifier(new AttributeModifier(
-                                AP_PEN_ID, -armorPen,
+                                apId, -armorPen,
                                 AttributeModifier.Operation.ADD_VALUE));
+                        applied = true;
                     }
                     try {
                         living.hurt(damageSources().thrown(this, getOwner()), damage);
                     } finally {
-                        if (armorAttr != null) {
-                            armorAttr.removeModifier(AP_PEN_ID);
+                        if (applied) {
+                            armorAttr.removeModifier(apId);
                         }
                     }
                 } else {
@@ -322,6 +342,7 @@ public class MissileEntity extends ThrowableItemProjectile {
 
     @Override
     protected void onHitBlock(BlockHitResult result) {
+        super.onHitBlock(result);
         if (!level().isClientSide()) {
             if (missileType != MissileType.ANTI_SHIP) {
                 // 防空导弹 / 火箭弹：碰到方块爆炸
@@ -352,7 +373,8 @@ public class MissileEntity extends ThrowableItemProjectile {
     @Override
     public void addAdditionalSaveData(CompoundTag tag) {
         super.addAdditionalSaveData(tag);
-        tag.putInt("MissileType", missileType.ordinal());
+        // 写 name() 以避免枚举重排/新增时旧存档读成错误类型
+        tag.putString("MissileType", missileType.name());
         tag.putFloat("MissileDamage", damage);
         tag.putFloat("ArmorPen", armorPen);
         tag.putFloat("ExplosionPower", explosionPower);
@@ -367,18 +389,36 @@ public class MissileEntity extends ThrowableItemProjectile {
     @Override
     public void readAdditionalSaveData(CompoundTag tag) {
         super.readAdditionalSaveData(tag);
-        int typeOrd = tag.getInt("MissileType");
-        MissileType[] types = MissileType.values();
-        missileType = (typeOrd >= 0 && typeOrd < types.length) ? types[typeOrd] : MissileType.ANTI_SHIP;
+        missileType = readMissileType(tag);
         damage = tag.getFloat("MissileDamage");
         armorPen = tag.getFloat("ArmorPen");
         explosionPower = tag.getFloat("ExplosionPower");
         currentSpeed = tag.getFloat("CurrentSpeed");
         if (currentSpeed <= 0) currentSpeed = missileType.initialSpeed;
         displayItemId = tag.getString("DisplayItemId");
+        cachedDisplayItem = null;
         manualTarget = tag.getBoolean("ManualTarget");
         if (tag.hasUUID("TrackedTargetUUID")) {
             trackedTargetUUID = tag.getUUID("TrackedTargetUUID");
         }
+    }
+
+    private static MissileType readMissileType(CompoundTag tag) {
+        // 新存档（字符串 name）
+        if (tag.contains("MissileType", net.minecraft.nbt.Tag.TAG_STRING)) {
+            String name = tag.getString("MissileType");
+            try {
+                return MissileType.valueOf(name);
+            } catch (IllegalArgumentException ignored) {
+                return MissileType.ANTI_SHIP;
+            }
+        }
+        // 旧存档兼容（int ordinal）
+        if (tag.contains("MissileType", net.minecraft.nbt.Tag.TAG_ANY_NUMERIC)) {
+            int ord = tag.getInt("MissileType");
+            MissileType[] vals = MissileType.values();
+            if (ord >= 0 && ord < vals.length) return vals[ord];
+        }
+        return MissileType.ANTI_SHIP;
     }
 }

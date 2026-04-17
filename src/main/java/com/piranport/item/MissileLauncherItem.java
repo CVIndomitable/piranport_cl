@@ -70,12 +70,8 @@ public class MissileLauncherItem extends Item {
     public void appendHoverText(ItemStack stack, TooltipContext context,
                                 List<Component> tooltipComponents, TooltipFlag tooltipFlag) {
         // 导弹类型（always visible）
-        String typeKey = switch (missileType) {
-            case ANTI_SHIP -> "tooltip.piranport.missile.type.anti_ship";
-            case ANTI_AIR -> "tooltip.piranport.missile.type.anti_air";
-            case ROCKET -> "tooltip.piranport.missile.type.rocket";
-        };
-        tooltipComponents.add(Component.translatable(typeKey).withStyle(ChatFormatting.GRAY));
+        tooltipComponents.add(Component.translatable(missileType.translationKey)
+                .withStyle(ChatFormatting.GRAY));
 
         if (net.neoforged.fml.loading.FMLEnvironment.dist.isClient()) {
             if (net.minecraft.client.gui.screens.Screen.hasShiftDown()) {

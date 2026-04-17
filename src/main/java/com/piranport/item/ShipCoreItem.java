@@ -633,6 +633,11 @@ public class ShipCoreItem extends Item {
      * Scans inventory for an active (transformed) ship core, then fires the weapon at the given hand slot.
      * Returns true if firing was attempted (so the weapon can return CONSUME).
      */
+    /**
+     * 返回 true 表示本次"动作被消费"（走完了 fire 派发流程；各派发分支仍可能因弹药/装填原因失败并
+     * 自行提示玩家）。返回 false 表示动作未消费（未找到变身核心 / 被冷却静默阻断），以便调用方返回
+     * {@link InteractionResultHolder#pass} 而非 {@code consume}。
+     */
     public static boolean tryFireFromInventory(Level level, Player player, InteractionHand hand) {
         if (level.isClientSide || com.piranport.config.ModCommonConfig.isShipCoreGuiEnabled()) return false;
 
@@ -660,12 +665,14 @@ public class ShipCoreItem extends Item {
         }
         if (coreStack.isEmpty()) return false;
 
-        fireWeaponAtSlot(level, player, coreStack, weaponSlot, coreInventorySlot);
-        return true;
+        return fireWeaponAtSlot(level, player, coreStack, weaponSlot, coreInventorySlot);
     }
 
-    /** Fires the weapon at the given inventory slot using the ship core's ammo pool and cooldowns. */
-    private static void fireWeaponAtSlot(Level level, Player player, ItemStack coreStack, int weaponSlot, int coreInventorySlot) {
+    /**
+     * Fires the weapon at the given inventory slot using the ship core's ammo pool and cooldowns.
+     * 返回 true 表示已派发 fire 分支（动作被消费）；false 表示被冷却阻断，调用方不应 consume 动作。
+     */
+    private static boolean fireWeaponAtSlot(Level level, Player player, ItemStack coreStack, int weaponSlot, int coreInventorySlot) {
         Inventory inv = player.getInventory();
         ItemStack weapon = (weaponSlot == 40) ? inv.offhand.get(0) : inv.items.get(weaponSlot);
 
@@ -677,7 +684,7 @@ public class ShipCoreItem extends Item {
                     weaponSlot,
                     BuiltInRegistries.ITEM.getKey(weapon.getItem()).getPath(),
                     cooldowns.endTick().getOrDefault(weaponSlot, 0L) - level.getGameTime());
-            return;
+            return false;
         }
 
         // Torpedo launcher — requires 鱼雷再装填 enhancement for auto-reload
@@ -687,25 +694,25 @@ public class ShipCoreItem extends Item {
             } else {
                 fireTorpedosManualMode(level, player, coreStack, inv, weaponSlot, torpedoLauncher, cooldowns);
             }
-            return;
+            return true;
         }
 
         // Depth charge launcher
         if (weapon.getItem() instanceof DepthChargeLauncherItem dcLauncher) {
             fireDepthCharges(level, player, coreStack, inv, weaponSlot, coreInventorySlot, dcLauncher, cooldowns);
-            return;
+            return true;
         }
 
         // Missile launcher
         if (weapon.getItem() instanceof MissileLauncherItem missileLauncher) {
             fireMissiles(level, player, coreStack, inv, weaponSlot, coreInventorySlot, missileLauncher, cooldowns);
-            return;
+            return true;
         }
 
         // Aircraft
         if (weapon.getItem() instanceof AircraftItem) {
             launchAircraftInventoryMode(level, player, coreStack, inv, weaponSlot, coreInventorySlot, cooldowns);
-            return;
+            return true;
         }
 
         // Cannon
@@ -736,7 +743,7 @@ public class ShipCoreItem extends Item {
 
             if (totalAmmo < barrelCount) {
                 player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
-                return;
+                return true;
             }
 
             // Find first ammo for type determination
@@ -813,6 +820,7 @@ public class ShipCoreItem extends Item {
             level.playSound(null, player.getX(), player.getY(), player.getZ(),
                     SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 0.5f, pitch);
         }
+        return true;
     }
 
     /** Manual-mode cannon: consume LOADED_AMMO component on the weapon item. */
@@ -1345,17 +1353,28 @@ public class ShipCoreItem extends Item {
     /** 生成导弹实体：玩家前方0.5格处，沿视线方向发射。 */
     private static void spawnMissile(Level level, Player player,
                                       MissileLauncherItem launcher, String displayItemId) {
+        spawnMissileWithDir(level, player, launcher, displayItemId, player.getLookAngle());
+    }
+
+    /**
+     * 通用导弹生成：在玩家眼睛 + dir*0.5 处生成导弹，以 dir 方向按 initialSpeed 射出。
+     * dir 预期为单位向量；非单位向量将被规整化。
+     */
+    private static void spawnMissileWithDir(Level level, Player player,
+                                             MissileLauncherItem launcher, String displayItemId,
+                                             Vec3 dir) {
+        Vec3 d = dir.lengthSqr() > 1e-6 ? dir.normalize() : player.getLookAngle();
         MissileEntity missile = new MissileEntity(level, launcher.getMissileType(),
                 launcher.getDamage(), launcher.getArmorPen(),
                 launcher.getExplosionPower(), displayItemId);
-        Vec3 look = player.getLookAngle();
         missile.setOwner(player);
+        // Y 跟随 dir.y 偏移，避免抬头/俯冲时导弹从胸前喷出
         missile.setPos(
-                player.getX() + look.x * 0.5,
-                player.getEyeY() - 0.1,
-                player.getZ() + look.z * 0.5);
+                player.getX() + d.x * 0.5,
+                player.getEyeY() - 0.1 + d.y * 0.5,
+                player.getZ() + d.z * 0.5);
         float initSpeed = launcher.getMissileType().initialSpeed;
-        missile.setDeltaMovement(look.x * initSpeed, look.y * initSpeed, look.z * initSpeed);
+        missile.setDeltaMovement(d.x * initSpeed, d.y * initSpeed, d.z * initSpeed);
         level.addFreshEntity(missile);
     }
 
@@ -2230,11 +2249,6 @@ public class ShipCoreItem extends Item {
     /** Spawn a missile aimed toward the fire control target, nearest hostile, or upward. */
     private static void spawnMissileAutoAim(Level level, Player player,
                                              MissileLauncherItem launcher, String displayItemId) {
-        MissileEntity missile = new MissileEntity(level, launcher.getMissileType(),
-                launcher.getDamage(), launcher.getArmorPen(),
-                launcher.getExplosionPower(), displayItemId);
-        missile.setOwner(player);
-
         Vec3 aimDir = null;
         if (level instanceof ServerLevel sl) {
             // 1. Fire control target
@@ -2282,13 +2296,7 @@ public class ShipCoreItem extends Item {
             aimDir = new Vec3(look.x, Math.max(look.y, 0.5), look.z).normalize();
         }
 
-        missile.setPos(
-                player.getX() + aimDir.x * 0.5,
-                player.getEyeY() - 0.1,
-                player.getZ() + aimDir.z * 0.5);
-        float initSpeed = launcher.getMissileType().initialSpeed;
-        missile.setDeltaMovement(aimDir.x * initSpeed, aimDir.y * initSpeed, aimDir.z * initSpeed);
-        level.addFreshEntity(missile);
+        spawnMissileWithDir(level, player, launcher, displayItemId, aimDir);
     }
 
     /** Rotate a look vector around the Y axis by angleRad, project to horizontal plane, normalize. */

@@ -1,5 +1,6 @@
 package com.piranport.item;
 
+import com.piranport.entity.MissileEntity.MissileType;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
@@ -13,29 +14,15 @@ import java.util.List;
  */
 public class MissileItem extends Item {
 
-    public enum MissileAmmoType {
-        ANTI_SHIP("tooltip.piranport.missile.type.anti_ship", ChatFormatting.RED),
-        ANTI_AIR("tooltip.piranport.missile.type.anti_air", ChatFormatting.AQUA),
-        ROCKET("tooltip.piranport.missile.type.rocket", ChatFormatting.GOLD);
-
-        public final String translationKey;
-        public final ChatFormatting color;
-
-        MissileAmmoType(String key, ChatFormatting color) {
-            this.translationKey = key;
-            this.color = color;
-        }
-    }
-
-    private final MissileAmmoType ammoType;
+    private final MissileType ammoType;
     private final float displayDamage;
     private final float displayAP;
 
-    public MissileItem(Properties properties, MissileAmmoType ammoType, float displayDamage) {
+    public MissileItem(Properties properties, MissileType ammoType, float displayDamage) {
         this(properties, ammoType, displayDamage, 0f);
     }
 
-    public MissileItem(Properties properties, MissileAmmoType ammoType,
+    public MissileItem(Properties properties, MissileType ammoType,
                         float displayDamage, float displayAP) {
         super(properties);
         this.ammoType = ammoType;
@@ -43,7 +30,7 @@ public class MissileItem extends Item {
         this.displayAP = displayAP;
     }
 
-    public MissileAmmoType getAmmoType() {
+    public MissileType getAmmoType() {
         return ammoType;
     }
 

@@ -1,6 +1,9 @@
 package com.piranport.npc.deepocean;
 
-import com.piranport.npc.ai.goal.*;
+import com.piranport.npc.ai.goal.FleetAlertGoal;
+import com.piranport.npc.ai.goal.IdleWanderGoal;
+import com.piranport.npc.ai.goal.SubmergeGoal;
+import com.piranport.npc.ai.goal.TorpedoAttackGoal;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;

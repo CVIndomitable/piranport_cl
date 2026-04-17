@@ -1972,6 +1972,22 @@ public class AircraftEntity extends Entity {
     }
 
     @Override
+    public void onAddedToLevel() {
+        super.onAddedToLevel();
+        if (!level().isClientSide() && ownerUUID != null) {
+            com.piranport.aviation.AircraftIndex.add(ownerUUID, this);
+        }
+    }
+
+    @Override
+    public void onRemovedFromLevel() {
+        super.onRemovedFromLevel();
+        if (!level().isClientSide() && ownerUUID != null) {
+            com.piranport.aviation.AircraftIndex.remove(ownerUUID, this);
+        }
+    }
+
+    @Override
     protected void readAdditionalSaveData(CompoundTag tag) {
         if (tag.hasUUID("OwnerUUID")) ownerUUID = tag.getUUID("OwnerUUID");
         weaponSlotIndex = tag.getInt("WeaponSlot");
@@ -1994,7 +2010,12 @@ public class AircraftEntity extends Entity {
         lastForcedChunkX = tag.getInt("LastForcedChunkX");
         lastForcedChunkZ = tag.getInt("LastForcedChunkZ");
         if (!tag.contains("LastForcedChunkX")) lastForcedChunkX = Integer.MIN_VALUE;
-        // Release any forced chunks from a previous session (recon interrupted by restart)
+        // Release any forced chunks from the previous session and intentionally do NOT
+        // restore them into reconForcedChunks. Recon resumes from scratch on next tick:
+        // updateReconForcedChunks() will recompute the desired set and re-force the chunks
+        // around the aircraft's current position. If we restored the saved set here, those
+        // entries would be desynced from the (now-released) world state and the eviction
+        // diff in updateReconForcedChunks would leak chunks.
         if (tag.contains("ReconForcedChunks") && level() instanceof ServerLevel sl) {
             long[] saved = tag.getLongArray("ReconForcedChunks");
             for (long key : saved) {
@@ -2002,6 +2023,7 @@ public class AircraftEntity extends Entity {
                         net.minecraft.world.level.ChunkPos.getZ(key), false);
             }
         }
+        reconForcedChunks.clear();
         entityData.set(STATE, tag.getInt("FlightState"));
         entityData.set(AIRCRAFT_TYPE_DATA, aircraftType.ordinal());
         if (ownerUUID != null) entityData.set(OWNER_ID, Optional.of(ownerUUID));

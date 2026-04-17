@@ -78,12 +78,13 @@ public final class NodeBattleField {
         int radius = 30; // spawn enemies ~30 blocks from player spawn
 
         // Spawn regular enemies
+        var rng = dungeonLevel.getRandom();
         for (EnemySetData.SpawnEntry entry : enemySet.spawnList()) {
             for (int i = 0; i < entry.count(); i++) {
                 Entity entity = createEntity(dungeonLevel, entry.entity());
                 if (entity != null) {
-                    double angle = Math.random() * Math.PI * 2;
-                    double dist = radius + Math.random() * 20;
+                    double angle = rng.nextDouble() * Math.PI * 2;
+                    double dist = radius + rng.nextDouble() * 20;
                     double ex = center.getX() + Math.cos(angle) * dist;
                     double ez = center.getZ() + Math.sin(angle) * dist;
                     entity.setPos(ex, DungeonConstants.SPAWN_Y, ez);

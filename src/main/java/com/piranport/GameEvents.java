@@ -230,7 +230,7 @@ public class GameEvents {
             int armorLoad  = TransformationManager.getCoreArmorLoad(offhand);
             double engineBonus = TransformationManager.getCoreEngineSpeedBonus(offhand);
             int maxLoad    = ((ShipCoreItem) offhand.getItem()).getShipType().maxLoad;
-            int cacheKey   = (weaponLoad + armorLoad) * 1000 + maxLoad + (int)(engineBonus * 10000);
+            int cacheKey   = java.util.Objects.hash(weaponLoad, armorLoad, maxLoad, engineBonus);
             Integer cached = lastWeaponLoad.get(player.getUUID());
             if (cached == null || cached != cacheKey) {
                 lastWeaponLoad.put(player.getUUID(), cacheKey);
@@ -470,18 +470,22 @@ public class GameEvents {
         lastPlayerPos.remove(player.getUUID());
         accumulatedDistance.remove(player.getUUID());
         recallAircraftForPlayer(player);
+        // Drop the player from any lecturn lobby they were in, so the lobby roster
+        // doesn't show ghosts after disconnect.
+        var lobbyMgr = com.piranport.dungeon.lobby.DungeonLobbyManager.INSTANCE;
+        net.minecraft.core.GlobalPos lecternPos = lobbyMgr.findLobbyOf(player.getUUID());
+        if (lecternPos != null && player.getServer() != null) {
+            lobbyMgr.leaveLobby(lecternPos, player.getUUID());
+            lobbyMgr.broadcastLobbyUpdate(player.getServer(), lecternPos);
+        }
     }
 
     private static void recallAircraftForPlayer(Player player) {
         if (player.level().isClientSide()) return;
         UUID ownerUUID = player.getUUID();
-        for (ServerLevel sl : player.getServer().getAllLevels()) {
-            // Use entity type filter instead of full world scan
-            for (net.minecraft.world.entity.Entity entity : sl.getAllEntities()) {
-                if (entity instanceof AircraftEntity aircraft && ownerUUID.equals(aircraft.getOwnerUUID())) {
-                    aircraft.recallAndRemove();
-                }
-            }
+        // O(k) lookup via the owner-keyed index instead of a per-dim full entity scan.
+        for (AircraftEntity aircraft : com.piranport.aviation.AircraftIndex.snapshot(ownerUUID)) {
+            aircraft.recallAndRemove();
         }
         FireControlManager.clearTargets(ownerUUID);
         ReconManager.endRecon(ownerUUID);
@@ -551,7 +555,8 @@ public class GameEvents {
         ServerLevel dungeonLevel = event.getServer().getLevel(
                 com.piranport.dungeon.event.DungeonEventHandler.DUNGEON_DIMENSION);
         if (dungeonLevel != null) {
-            com.piranport.dungeon.script.DungeonScriptManager.tickAll(dungeonLevel);
+            com.piranport.dungeon.script.DungeonScriptManager.get(event.getServer())
+                    .tickAll(dungeonLevel);
         }
 
         // Fleet group cleanup every 6000 ticks (5 minutes)
@@ -567,7 +572,7 @@ public class GameEvents {
      */
     @SubscribeEvent
     public static void onDungeonMobDeath(LivingDeathEvent event) {
-        if (event.getEntity().level().isClientSide()) return;
+        if (!(event.getEntity().level() instanceof ServerLevel sl)) return;
         LivingEntity entity = event.getEntity();
         if (!entity.getTags().contains("dungeon_script")) return;
 
@@ -577,7 +582,8 @@ public class GameEvents {
                 try {
                     java.util.UUID instanceId = java.util.UUID.fromString(
                             tag.substring("dungeon_instance_".length()));
-                    com.piranport.dungeon.script.DungeonScriptManager.onEntityDeath(instanceId, entity);
+                    com.piranport.dungeon.script.DungeonScriptManager.get(sl.getServer())
+                            .onEntityDeath(instanceId, entity);
                 } catch (IllegalArgumentException ignored) {}
                 break;
             }
@@ -609,7 +615,8 @@ public class GameEvents {
         if (instanceId == null || nodeId == null) return;
 
         // If a script is active for this instance, let the script handle it
-        if (com.piranport.dungeon.script.DungeonScriptManager.get(instanceId) != null) return;
+        if (com.piranport.dungeon.script.DungeonScriptManager.get(sl.getServer())
+                .getScript(instanceId) != null) return;
 
         // Check if any other flagships for this node/instance are still alive
         String matchTag = "dungeon_instance_" + instanceId;
@@ -670,7 +677,8 @@ public class GameEvents {
     public static void onServerStopped(ServerStoppedEvent event) {
         FireControlManager.clearAll();
         ReconManager.clearAll();
-        com.piranport.dungeon.script.DungeonScriptManager.clearAll();
+        com.piranport.aviation.AircraftIndex.clearAll();
+        // DungeonScriptManager state is persisted as SavedData; nothing to clear here.
         lastWeaponLoad.clear();
         lastPlayerPos.clear();
         accumulatedDistance.clear();

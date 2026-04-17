@@ -21,8 +21,6 @@ public class SubmergeGoal extends Goal {
 
     /** Max time underwater before forced surface (ticks). */
     private static final int MAX_SUBMERGE_TIME = 600; // 30 seconds
-    /** Depth below water surface to maintain (blocks). */
-    private static final double SUBMERGE_DEPTH = 4.0;
 
     public SubmergeGoal(AbstractDeepOceanEntity mob) {
         this.mob = mob;
@@ -67,8 +65,6 @@ public class SubmergeGoal extends Goal {
         // Maintain depth
         Vec3 vel = mob.getDeltaMovement();
         if (mob.isInWater()) {
-            // Sink to target depth
-            double waterSurfaceY = mob.getY(); // approximate
             if (!mob.isUnderWater()) {
                 // Still at surface — push down
                 mob.setDeltaMovement(vel.x, -0.1, vel.z);

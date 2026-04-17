@@ -162,15 +162,14 @@ public class MissileEntity extends ThrowableItemProjectile {
                     trackedTarget = sl.getEntity(trackedTargetUUID);
                     if (trackedTarget == null) {
                         trackedTargetUUID = null;
-                        manualTarget = false; // 目标不存在，允许自动搜索
                     }
                 }
                 if (trackedTarget != null && (!trackedTarget.isAlive() || trackedTarget.isRemoved())) {
                     trackedTarget = null;
                     trackedTargetUUID = null;
-                    manualTarget = false; // 手动目标死亡后重置，允许自动搜索
                 }
-                if (trackedTarget == null && --targetSearchCooldown <= 0) {
+                // 手动制导导弹丢失目标后维持直线飞行，不自动重新搜索（与玩家锁定语义一致）
+                if (trackedTarget == null && !manualTarget && --targetSearchCooldown <= 0) {
                     trackedTarget = findTarget();
                     targetSearchCooldown = 5;
                 }

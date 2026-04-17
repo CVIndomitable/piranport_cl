@@ -17,6 +17,9 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.server.level.ServerLevel;
+
+import java.util.UUID;
 
 /**
  * Projectile fired by deep ocean enemies.
@@ -34,7 +37,7 @@ public class DeepOceanProjectileEntity extends ThrowableItemProjectile {
     private float damage = 5.0f;
     private float explosionPower = 1.5f;
     private BallisticType ballisticType = BallisticType.PARABOLIC;
-    private int trackingTargetId = -1;
+    private UUID trackingTargetUuid;
     private boolean pastApex = false;
     private Vec3 prevVelocity = Vec3.ZERO;
     private boolean exploded = false;
@@ -59,8 +62,8 @@ public class DeepOceanProjectileEntity extends ThrowableItemProjectile {
         this.ballisticType = ballisticType;
     }
 
-    public void setTrackingTarget(int entityId) {
-        this.trackingTargetId = entityId;
+    public void setTrackingTarget(Entity target) {
+        this.trackingTargetUuid = target != null ? target.getUUID() : null;
     }
 
     public void setProximityFuse(boolean enabled, double range) {
@@ -75,15 +78,19 @@ public class DeepOceanProjectileEntity extends ThrowableItemProjectile {
 
         if (!level().isClientSide) {
             // Tracking after apex (for PARABOLIC_TRACKING type)
-            if (ballisticType == BallisticType.PARABOLIC_TRACKING && trackingTargetId >= 0) {
+            if (ballisticType == BallisticType.PARABOLIC_TRACKING && trackingTargetUuid != null) {
                 if (!pastApex) {
                     pastApex = TrackingCalculator.hasPassedApex(getDeltaMovement(), prevVelocity);
                 }
-                if (pastApex) {
-                    Entity target = level().getEntity(trackingTargetId);
+                if (pastApex && level() instanceof ServerLevel sl) {
+                    Entity target = sl.getEntity(trackingTargetUuid);
                     if (target != null && target.isAlive()) {
                         Vec3 newVel = TrackingCalculator.steer(position(), getDeltaMovement(), target);
                         setDeltaMovement(newVel);
+                    } else {
+                        // Target gone — degrade to plain parabolic
+                        ballisticType = BallisticType.PARABOLIC;
+                        trackingTargetUuid = null;
                     }
                 }
             }
@@ -167,6 +174,8 @@ public class DeepOceanProjectileEntity extends ThrowableItemProjectile {
         tag.putInt("BallisticType", ballisticType.ordinal());
         tag.putBoolean("HasProxFuse", hasProximityFuse);
         tag.putDouble("ProxRange", proximityRange);
+        if (trackingTargetUuid != null) tag.putUUID("TrackingTarget", trackingTargetUuid);
+        tag.putBoolean("PastApex", pastApex);
     }
 
     @Override
@@ -180,5 +189,7 @@ public class DeepOceanProjectileEntity extends ThrowableItemProjectile {
         ballisticType = typeOrd >= 0 && typeOrd < types.length ? types[typeOrd] : BallisticType.PARABOLIC;
         hasProximityFuse = tag.getBoolean("HasProxFuse");
         proximityRange = tag.getDouble("ProxRange");
+        trackingTargetUuid = tag.hasUUID("TrackingTarget") ? tag.getUUID("TrackingTarget") : null;
+        pastApex = tag.getBoolean("PastApex");
     }
 }

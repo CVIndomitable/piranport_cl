@@ -163,7 +163,7 @@ public class DungeonEventHandler {
                                             ServerPlayer player, ItemStack keyStack) {
         // Give rewards directly
         for (NodeData.RewardEntry reward : node.rewards()) {
-            if (reward.chance() < 1.0f && Math.random() > reward.chance()) continue;
+            if (reward.chance() < 1.0f && player.getRandom().nextFloat() > reward.chance()) continue;
 
             ResourceLocation itemId = ResourceLocation.tryParse(reward.item());
             if (itemId == null) continue;
@@ -316,8 +316,8 @@ public class DungeonEventHandler {
         if ("artillery_intro".equals(node.script())) {
             var script = new com.piranport.dungeon.script.ArtilleryIntroScript(
                     instance, node.nodeId(), displayName, setup.playerUuids());
-            com.piranport.dungeon.script.DungeonScriptManager.start(
-                    instance.getInstanceId(), script);
+            com.piranport.dungeon.script.DungeonScriptManager.get(level.getServer())
+                    .start(instance.getInstanceId(), script);
         } else {
             PiranPort.LOGGER.warn("Unknown script: {}", node.script());
             // Fallback: spawn enemies normally

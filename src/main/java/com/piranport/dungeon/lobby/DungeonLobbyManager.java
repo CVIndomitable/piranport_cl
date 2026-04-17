@@ -110,6 +110,16 @@ public final class DungeonLobbyManager {
         return lobbies.get(lecternPos);
     }
 
+    /** Returns the lectern position of the lobby containing this player, or null. */
+    public GlobalPos findLobbyOf(UUID playerUuid) {
+        for (Map.Entry<GlobalPos, Lobby> entry : lobbies.entrySet()) {
+            if (entry.getValue().memberUuids.contains(playerUuid)) {
+                return entry.getKey();
+            }
+        }
+        return null;
+    }
+
     public void removeLobby(GlobalPos lecternPos) {
         lobbies.remove(lecternPos);
     }

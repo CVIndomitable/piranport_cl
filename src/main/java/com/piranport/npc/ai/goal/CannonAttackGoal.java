@@ -73,7 +73,7 @@ public class CannonAttackGoal extends Goal {
                 mob.level(), mob, mob.getShellDamage(), mob.getExplosionPower(), ballistic);
 
         if (tracking) {
-            shell.setTrackingTarget(target.getId());
+            shell.setTrackingTarget(target);
         }
 
         // Aim with arc compensation

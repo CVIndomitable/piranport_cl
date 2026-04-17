@@ -416,6 +416,10 @@ public class TorpedoEntity extends ThrowableItemProjectile {
             tag.putDouble("LaunchY", launchPos.y);
             tag.putDouble("LaunchZ", launchPos.z);
         }
+        if (sourceAircraftName != null) {
+            tag.putString("SourceAircraftName",
+                    Component.Serializer.toJson(sourceAircraftName, registryAccess()));
+        }
     }
 
     @Override
@@ -438,6 +442,14 @@ public class TorpedoEntity extends ThrowableItemProjectile {
         }
         if (tag.contains("LaunchX")) {
             launchPos = new Vec3(tag.getDouble("LaunchX"), tag.getDouble("LaunchY"), tag.getDouble("LaunchZ"));
+        }
+        if (tag.contains("SourceAircraftName")) {
+            try {
+                sourceAircraftName = Component.Serializer.fromJson(
+                        tag.getString("SourceAircraftName"), registryAccess());
+            } catch (Exception e) {
+                sourceAircraftName = null;
+            }
         }
     }
 }

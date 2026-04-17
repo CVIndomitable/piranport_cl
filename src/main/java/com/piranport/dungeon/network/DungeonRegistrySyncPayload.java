@@ -1,8 +1,15 @@
 package com.piranport.dungeon.network;
 
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.piranport.PiranPort;
-import com.piranport.dungeon.data.*;
+import com.piranport.dungeon.data.ChapterData;
+import com.piranport.dungeon.data.DungeonRegistry;
+import com.piranport.dungeon.data.NodeData;
+import com.piranport.dungeon.data.StageData;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
@@ -10,7 +17,10 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * S2C: Syncs dungeon registry (chapters + stages) to the client on login.

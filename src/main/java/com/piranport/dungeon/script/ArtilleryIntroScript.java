@@ -8,11 +8,15 @@ import com.piranport.dungeon.entity.LootShipEntity;
 import com.piranport.dungeon.event.DungeonEventHandler;
 import com.piranport.dungeon.instance.DungeonInstance;
 import com.piranport.entity.DungeonTransportPlaneEntity;
-import com.piranport.entity.LowTierDestroyerEntity;
 import com.piranport.item.ShipCoreItem;
 import com.piranport.registry.ModEntityTypes;
 import com.piranport.registry.ModItems;
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtUtils;
+import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket;
 import net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket;
@@ -22,7 +26,10 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 /**
  * Scripted 3-phase sequence for the artillery-introduction dungeon node.
@@ -40,8 +47,14 @@ import java.util.*;
  * Phase 3 (BATTLE): Destroyers spawn based on player ship type.
  *   - Large → 6, Medium → 4, Small/Submarine → 3 per player
  *   - When all destroyed → portal spawns at last kill location
+ *
+ * <p>Persisted via {@link DungeonScriptManager}. The transient entity references
+ * (transport plane and crate) are stored as UUIDs and re-resolved each tick so the
+ * script can survive a server restart mid-phase.</p>
  */
 public class ArtilleryIntroScript implements DungeonScript {
+
+    public static final String TYPE_ID = "artillery_intro";
 
     private enum Phase { AIRDROP, LOOTING, BATTLE, COMPLETED }
 
@@ -50,16 +63,17 @@ public class ArtilleryIntroScript implements DungeonScript {
     private final String stageDisplayName;
     private final List<UUID> playerUuids;
     private final BlockPos spawnPos;
+    private final BlockPos crateDropPos;
 
     private Phase phase = Phase.AIRDROP;
     private int tickCounter = 0;
 
-    // Phase 1 state
-    private DungeonTransportPlaneEntity transportPlane;
-    private LootShipEntity airdropCrate;
-    private BlockPos crateDropPos;
+    // Phase 1 state — entities are looked up from UUIDs each tick after reload
+    private UUID transportPlaneUuid;
+    private UUID airdropCrateUuid;
     private boolean crateLanded = false;
     private boolean titleSent = false;
+    private boolean crateSpawned = false;
 
     // Phase 2 state
     private int lootingTicks = 0;
@@ -69,7 +83,7 @@ public class ArtilleryIntroScript implements DungeonScript {
     private int destroyersKilled = 0;
     private BlockPos lastDestroyerDeathPos;
     private boolean portalSpawned = false;
-    private int battleStartTick = -1; // tick when battle phase began
+    private int battleStartTick = -1;
 
     private boolean finished = false;
 
@@ -81,13 +95,98 @@ public class ArtilleryIntroScript implements DungeonScript {
         this.playerUuids = List.copyOf(playerUuids);
         this.spawnPos = instance.getNodeSpawnPos(nodeId);
 
-        // Pick a random drop point 30-50 blocks from spawn
-        Random rng = new Random();
+        // Pick a random drop point 30-50 blocks from spawn. Use a per-instance Random
+        // so dungeon generation stays deterministic-ish without touching level RNG here.
+        java.util.Random rng = new java.util.Random(instanceId.getLeastSignificantBits()
+                ^ instanceId.getMostSignificantBits() ^ nodeId.hashCode());
         double angle = rng.nextDouble() * Math.PI * 2;
         double distance = 30 + rng.nextDouble() * 20;
         this.crateDropPos = spawnPos.offset(
                 (int) (Math.cos(angle) * distance), 0,
                 (int) (Math.sin(angle) * distance));
+    }
+
+    /** NBT-load constructor used by {@link DungeonScriptRegistry}. */
+    private ArtilleryIntroScript(CompoundTag tag) {
+        this.instanceId = NbtUtils.loadUUID(tag.get("InstanceId"));
+        this.nodeId = tag.getString("NodeId");
+        this.stageDisplayName = tag.getString("StageDisplayName");
+
+        List<UUID> players = new ArrayList<>();
+        ListTag plist = tag.getList("PlayerUuids", Tag.TAG_INT_ARRAY);
+        for (int i = 0; i < plist.size(); i++) {
+            players.add(NbtUtils.loadUUID(plist.get(i)));
+        }
+        this.playerUuids = List.copyOf(players);
+
+        this.spawnPos = NbtUtils.readBlockPos(tag, "SpawnPos").orElse(BlockPos.ZERO);
+        this.crateDropPos = NbtUtils.readBlockPos(tag, "CrateDropPos").orElse(spawnPos);
+
+        try {
+            this.phase = Phase.valueOf(tag.getString("Phase"));
+        } catch (IllegalArgumentException e) {
+            this.phase = Phase.AIRDROP;
+        }
+        this.tickCounter = tag.getInt("TickCounter");
+        if (tag.hasUUID("TransportPlaneUuid")) {
+            this.transportPlaneUuid = tag.getUUID("TransportPlaneUuid");
+        }
+        if (tag.hasUUID("AirdropCrateUuid")) {
+            this.airdropCrateUuid = tag.getUUID("AirdropCrateUuid");
+        }
+        this.crateLanded = tag.getBoolean("CrateLanded");
+        this.titleSent = tag.getBoolean("TitleSent");
+        this.crateSpawned = tag.getBoolean("CrateSpawned");
+        this.lootingTicks = tag.getInt("LootingTicks");
+        this.totalDestroyers = tag.getInt("TotalDestroyers");
+        this.destroyersKilled = tag.getInt("DestroyersKilled");
+        if (tag.contains("LastDestroyerDeathPos")) {
+            NbtUtils.readBlockPos(tag, "LastDestroyerDeathPos").ifPresent(p -> this.lastDestroyerDeathPos = p);
+        }
+        this.portalSpawned = tag.getBoolean("PortalSpawned");
+        this.battleStartTick = tag.contains("BattleStartTick") ? tag.getInt("BattleStartTick") : -1;
+        this.finished = tag.getBoolean("Finished");
+    }
+
+    public static ArtilleryIntroScript loadFromNbt(CompoundTag tag) {
+        return new ArtilleryIntroScript(tag);
+    }
+
+    @Override
+    public String typeId() {
+        return TYPE_ID;
+    }
+
+    @Override
+    public void writeNbt(CompoundTag tag) {
+        tag.put("InstanceId", NbtUtils.createUUID(instanceId));
+        tag.putString("NodeId", nodeId);
+        tag.putString("StageDisplayName", stageDisplayName);
+
+        ListTag plist = new ListTag();
+        for (UUID u : playerUuids) {
+            plist.add(NbtUtils.createUUID(u));
+        }
+        tag.put("PlayerUuids", plist);
+
+        tag.put("SpawnPos", NbtUtils.writeBlockPos(spawnPos));
+        tag.put("CrateDropPos", NbtUtils.writeBlockPos(crateDropPos));
+        tag.putString("Phase", phase.name());
+        tag.putInt("TickCounter", tickCounter);
+        if (transportPlaneUuid != null) tag.putUUID("TransportPlaneUuid", transportPlaneUuid);
+        if (airdropCrateUuid != null) tag.putUUID("AirdropCrateUuid", airdropCrateUuid);
+        tag.putBoolean("CrateLanded", crateLanded);
+        tag.putBoolean("TitleSent", titleSent);
+        tag.putBoolean("CrateSpawned", crateSpawned);
+        tag.putInt("LootingTicks", lootingTicks);
+        tag.putInt("TotalDestroyers", totalDestroyers);
+        tag.putInt("DestroyersKilled", destroyersKilled);
+        if (lastDestroyerDeathPos != null) {
+            tag.put("LastDestroyerDeathPos", NbtUtils.writeBlockPos(lastDestroyerDeathPos));
+        }
+        tag.putBoolean("PortalSpawned", portalSpawned);
+        tag.putInt("BattleStartTick", battleStartTick);
+        tag.putBoolean("Finished", finished);
     }
 
     @Override
@@ -104,14 +203,41 @@ public class ArtilleryIntroScript implements DungeonScript {
     // ========== Phase 1: Airdrop ==========
 
     private void tickAirdrop(ServerLevel level) {
-        // Tick 1: send title animation + spawn transport plane
-        if (tickCounter == 1) {
+        // Initial setup (tick 1 OR first tick after reload if nothing was spawned yet)
+        if (!titleSent) {
             sendTitleToAll(level);
-            spawnTransportPlane(level);
             sendActionBar(level, Component.translatable("dungeon.piranport.artillery_intro.incoming"));
         }
+        if (transportPlaneUuid == null && !crateSpawned) {
+            spawnTransportPlane(level);
+        }
 
-        // Check if crate has landed
+        // Resolve current entity references (post-reload safe)
+        Entity plane = transportPlaneUuid != null ? level.getEntity(transportPlaneUuid) : null;
+        if (plane != null && !plane.isAlive()) plane = null;
+        LootShipEntity crate = airdropCrateUuid != null
+                && level.getEntity(airdropCrateUuid) instanceof LootShipEntity c ? c : null;
+        if (crate != null && !crate.isAlive()) crate = null;
+
+        // If the plane has reached its drop point but we never spawned a crate
+        // (e.g. server restarted exactly between drop and crate spawn), do it now.
+        if (!crateSpawned) {
+            boolean planeDropped = plane instanceof DungeonTransportPlaneEntity dp && dp.hasDropped();
+            boolean planeGone = plane == null && transportPlaneUuid != null;
+            if (planeDropped || planeGone) {
+                dropCrate(level);
+                crate = airdropCrateUuid != null
+                        && level.getEntity(airdropCrateUuid) instanceof LootShipEntity c ? c : null;
+            }
+        }
+
+        // Detect landing without relying on the (non-persisted) callback.
+        if (!crateLanded && crate != null && !crate.isDropping()) {
+            crateLanded = true;
+            // Ensure inventory is filled (in case reload skipped the callback)
+            fillCrateSupplies(level, crate);
+        }
+
         if (crateLanded) {
             sendActionBar(level, Component.translatable("dungeon.piranport.artillery_intro.crate_landed"));
             phase = Phase.LOOTING;
@@ -129,10 +255,10 @@ public class ArtilleryIntroScript implements DungeonScript {
             player.connection.send(new ClientboundSetTitlesAnimationPacket(20, 40, 20));
             player.connection.send(new ClientboundSetTitleTextPacket(
                     Component.literal(stageDisplayName).withStyle(
-                            net.minecraft.ChatFormatting.GOLD, net.minecraft.ChatFormatting.BOLD)));
+                            ChatFormatting.GOLD, ChatFormatting.BOLD)));
             player.connection.send(new ClientboundSetSubtitleTextPacket(
                     Component.translatable("dungeon.piranport.artillery_intro.subtitle")
-                            .withStyle(net.minecraft.ChatFormatting.YELLOW)));
+                            .withStyle(ChatFormatting.YELLOW)));
         }
     }
 
@@ -145,33 +271,37 @@ public class ArtilleryIntroScript implements DungeonScript {
         double startX = spawnPos.getX() - (dx / len) * 60;
         double startZ = spawnPos.getZ() - (dz / len) * 60;
 
-        transportPlane = DungeonTransportPlaneEntity.create(level,
+        DungeonTransportPlaneEntity plane = DungeonTransportPlaneEntity.create(level,
                 startX, startZ,
                 crateDropPos.getX() + 0.5, crateDropPos.getZ() + 0.5,
                 () -> dropCrate(level));
 
-        level.addFreshEntity(transportPlane);
+        level.addFreshEntity(plane);
+        transportPlaneUuid = plane.getUUID();
     }
 
     private void dropCrate(ServerLevel level) {
+        if (crateSpawned) return; // idempotent — survives reload + plane callback re-fire
         // Create supply crate at transport plane's current position (high up), set dropping
-        airdropCrate = LootShipEntity.create(level,
+        LootShipEntity crate = LootShipEntity.create(level,
                 crateDropPos.getX() + 0.5,
                 DungeonConstants.SPAWN_Y + 15,
                 crateDropPos.getZ() + 0.5,
                 0);
-        airdropCrate.setDropping(true);
-        airdropCrate.setOnLanded(() -> {
+        crate.setDropping(true);
+        crate.setOnLanded(() -> {
             crateLanded = true;
-            // Fill crate with supplies for each player
-            fillCrateSupplies(level);
+            fillCrateSupplies(level, crate);
         });
 
-        level.addFreshEntity(airdropCrate);
+        level.addFreshEntity(crate);
+        airdropCrateUuid = crate.getUUID();
+        crateSpawned = true;
         sendActionBar(level, Component.translatable("dungeon.piranport.artillery_intro.crate_dropping"));
     }
 
-    private void fillCrateSupplies(ServerLevel level) {
+    private void fillCrateSupplies(ServerLevel level, LootShipEntity crate) {
+        if (crate == null) return;
         List<ItemStack> items = new ArrayList<>();
         for (UUID uuid : playerUuids) {
             ServerPlayer player = level.getServer().getPlayerList().getPlayer(uuid);
@@ -204,10 +334,7 @@ public class ArtilleryIntroScript implements DungeonScript {
             items.add(heAmmo);
             items.add(apAmmo);
         }
-
-        if (airdropCrate != null) {
-            airdropCrate.fillInventory(items);
-        }
+        crate.fillInventory(items);
     }
 
     // ========== Phase 2: Looting ==========
@@ -224,33 +351,40 @@ public class ArtilleryIntroScript implements DungeonScript {
         List<ServerPlayer> online = getOnlinePlayers(level);
         if (online.isEmpty()) return;
 
-        // Condition 2: any player > 20 blocks from crate
-        if (airdropCrate != null) {
-            for (ServerPlayer player : online) {
-                double dist = player.distanceToSqr(
-                        airdropCrate.getX(), airdropCrate.getY(), airdropCrate.getZ());
-                double threshold = DungeonConstants.ARTILLERY_INTRO_LEAVE_DISTANCE;
-                if (dist > threshold * threshold) {
-                    startBattle(level, "player_far");
-                    return;
-                }
-            }
+        // Resolve crate (UUID lookup, post-reload safe)
+        LootShipEntity crate = airdropCrateUuid != null
+                && level.getEntity(airdropCrateUuid) instanceof LootShipEntity c ? c : null;
 
-            // Condition 3: all players have opened the crate
-            Set<UUID> opened = airdropCrate.getOpenedBy();
-            boolean allOpened = true;
-            for (UUID uuid : playerUuids) {
-                ServerPlayer player = level.getServer().getPlayerList().getPlayer(uuid);
-                if (player != null && DungeonEventHandler.isInDungeon(player)
-                        && !opened.contains(uuid)) {
-                    allOpened = false;
-                    break;
-                }
-            }
-            if (allOpened) {
-                startBattle(level, "all_opened");
+        // If crate disappeared (despawned/destroyed after reload), advance to battle
+        if (crate == null) {
+            startBattle(level, "crate_missing");
+            return;
+        }
+
+        // Condition 2: any player > 20 blocks from crate
+        for (ServerPlayer player : online) {
+            double dist = player.distanceToSqr(crate.getX(), crate.getY(), crate.getZ());
+            double threshold = DungeonConstants.ARTILLERY_INTRO_LEAVE_DISTANCE;
+            if (dist > threshold * threshold) {
+                startBattle(level, "player_far");
                 return;
             }
+        }
+
+        // Condition 3: all players have opened the crate
+        Set<UUID> opened = crate.getOpenedBy();
+        boolean allOpened = true;
+        for (UUID uuid : playerUuids) {
+            ServerPlayer player = level.getServer().getPlayerList().getPlayer(uuid);
+            if (player != null && DungeonEventHandler.isInDungeon(player)
+                    && !opened.contains(uuid)) {
+                allOpened = false;
+                break;
+            }
+        }
+        if (allOpened) {
+            startBattle(level, "all_opened");
+            return;
         }
 
         // Periodic action bar reminder
@@ -272,7 +406,6 @@ public class ArtilleryIntroScript implements DungeonScript {
     // ========== Phase 3: Battle ==========
 
     private void spawnDestroyers(ServerLevel level) {
-        // Determine spawn count per player based on ship type
         List<ServerPlayer> online = getOnlinePlayers(level);
         totalDestroyers = 0;
         destroyersKilled = 0;
@@ -282,10 +415,10 @@ public class ArtilleryIntroScript implements DungeonScript {
         double dz = crateDropPos.getZ() - spawnPos.getZ();
         double len = Math.sqrt(dx * dx + dz * dz);
         if (len < 1) len = 1;
-        // Spawn destroyers 40 blocks past the crate
         double enemyBaseX = crateDropPos.getX() + (dx / len) * 40;
         double enemyBaseZ = crateDropPos.getZ() + (dz / len) * 40;
 
+        var rng = level.getRandom();
         for (ServerPlayer player : online) {
             ShipCoreItem.ShipType shipType = getPlayerShipType(player);
             int count = switch (shipType) {
@@ -298,14 +431,12 @@ public class ArtilleryIntroScript implements DungeonScript {
             for (int i = 0; i < count; i++) {
                 var destroyer = new com.piranport.entity.LowTierDestroyerEntity(
                         ModEntityTypes.LOW_TIER_DESTROYER.get(), level);
-                // Spread destroyers around enemy base
-                double angle = Math.random() * Math.PI * 2;
-                double spread = 5 + Math.random() * 15;
+                double angle = rng.nextDouble() * Math.PI * 2;
+                double spread = 5 + rng.nextDouble() * 15;
                 double ex = enemyBaseX + Math.cos(angle) * spread;
                 double ez = enemyBaseZ + Math.sin(angle) * spread;
                 destroyer.setPos(ex, DungeonConstants.SPAWN_Y, ez);
 
-                // Tag for tracking
                 destroyer.addTag("dungeon_script");
                 destroyer.addTag("dungeon_instance_" + instanceId);
                 destroyer.addTag("dungeon_node_" + nodeId);
@@ -314,7 +445,6 @@ public class ArtilleryIntroScript implements DungeonScript {
             }
         }
 
-        // If no destroyers were spawned (all players offline?), just complete
         if (totalDestroyers == 0) {
             spawnCompletionPortal(level);
         }
@@ -341,7 +471,6 @@ public class ArtilleryIntroScript implements DungeonScript {
         destroyersKilled++;
         lastDestroyerDeathPos = entity.blockPosition();
 
-        // Notify players of progress
         if (entity.level() instanceof ServerLevel sl) {
             int remaining = totalDestroyers - destroyersKilled;
             sendActionBar(sl, Component.translatable(
@@ -406,13 +535,12 @@ public class ArtilleryIntroScript implements DungeonScript {
         if (!core.isEmpty() && core.getItem() instanceof ShipCoreItem sci) {
             return sci.getShipType();
         }
-        // Not transformed — scan inventory for any ship core
         for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
             ItemStack stack = player.getInventory().getItem(i);
             if (stack.getItem() instanceof ShipCoreItem sci) {
                 return sci.getShipType();
             }
         }
-        return ShipCoreItem.ShipType.SMALL; // default
+        return ShipCoreItem.ShipType.SMALL;
     }
 }

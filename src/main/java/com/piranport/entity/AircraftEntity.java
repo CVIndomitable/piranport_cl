@@ -802,10 +802,18 @@ public class AircraftEntity extends Entity {
             double perpX = -dir.z;
             double perpZ = dir.x;
             int toFire = Math.max(1, remainingAmmo);
+            com.piranport.debug.PiranPortDebug.event(
+                    "Aircraft TORPEDO_SALVO | entityId={} capacity={} remaining={} firing={}",
+                    getId(), ammoCapacity, remainingAmmo, toFire);
             for (int i = 0; i < toFire; i++) {
-                double offset = (i - (toFire - 1) / 2.0) * 1.2;
+                // Lateral spread ±2.0 blocks, plus longitudinal stagger ±1.0 so the splashes
+                // are visually distinct rather than stacked on top of each other.
+                double lateral = (i - (toFire - 1) / 2.0) * 2.0;
+                double longitudinal = (i - (toFire - 1) / 2.0) * 1.0;
+                double spawnX = getX() + perpX * lateral + dir.x * longitudinal;
+                double spawnZ = getZ() + perpZ * lateral + dir.z * longitudinal;
                 TorpedoEntity torpedo = new TorpedoEntity(ModEntityTypes.TORPEDO_ENTITY.get(), level());
-                torpedo.setPos(getX() + perpX * offset, getY(), getZ() + perpZ * offset);
+                torpedo.setPos(spawnX, getY(), spawnZ);
                 // 投下鱼雷：垂直入水后再启动巡航
                 torpedo.setDeltaMovement(0, -0.6, 0);
                 torpedo.setAirDrop(true, dir);

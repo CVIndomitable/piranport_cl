@@ -60,6 +60,12 @@ public class ModBlockEntityTypes {
                             ModBlocks.ABYSSAL_SPAWNER.get())
                             .build(null));
 
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<com.piranport.block.entity.B25DebugBlockEntity>> B25_DEBUG =
+            BLOCK_ENTITY_TYPES.register("b25_debug", () ->
+                    BlockEntityType.Builder.of(com.piranport.block.entity.B25DebugBlockEntity::new,
+                            ModBlocks.B25_DEBUG.get())
+                            .build(null));
+
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<PlaceableFoodBlockEntity>> PLACEABLE_FOOD =
             BLOCK_ENTITY_TYPES.register("placeable_food", () ->
                     BlockEntityType.Builder.of(PlaceableFoodBlockEntity::new,

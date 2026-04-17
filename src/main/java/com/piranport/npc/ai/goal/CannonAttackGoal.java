@@ -26,7 +26,7 @@ public class CannonAttackGoal extends Goal {
         this.mob = mob;
         int span = Math.max(mob.getTrackingIntervalMax() - mob.getTrackingIntervalMin() + 1, 1);
         this.nextTrackingShotAt = mob.getTrackingIntervalMin() + mob.getRandom().nextInt(span);
-        setFlags(EnumSet.of(Flag.LOOK));
+        setFlags(EnumSet.noneOf(Flag.class));
     }
 
     @Override

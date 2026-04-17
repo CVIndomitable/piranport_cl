@@ -30,7 +30,7 @@ public class TorpedoAttackGoal extends Goal {
 
     public TorpedoAttackGoal(AbstractDeepOceanEntity mob) {
         this.mob = mob;
-        setFlags(EnumSet.of(Flag.LOOK));
+        setFlags(EnumSet.noneOf(Flag.class));
     }
 
     @Override

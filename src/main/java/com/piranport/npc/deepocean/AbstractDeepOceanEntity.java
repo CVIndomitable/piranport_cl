@@ -148,6 +148,20 @@ public abstract class AbstractDeepOceanEntity extends Monster {
             if (tickCount % 10 == 0) {
                 syncFleetState();
             }
+
+            // Fleet state particles (ALERT/COMBAT) — throttled, server-spawned so they sync to all clients
+            if (tickCount % 20 == 0 && level() instanceof ServerLevel sl) {
+                FleetGroup.State state = getFleetState();
+                if (state == FleetGroup.State.ALERT) {
+                    sl.sendParticles(ParticleTypes.WAX_ON,
+                            getX(), getY() + getBbHeight() + 0.5, getZ(),
+                            1, 0, 0.02, 0, 0);
+                } else if (state == FleetGroup.State.COMBAT) {
+                    sl.sendParticles(ParticleTypes.ANGRY_VILLAGER,
+                            getX(), getY() + getBbHeight() + 0.5, getZ(),
+                            1, 0, 0.02, 0, 0);
+                }
+            }
         }
 
         // Client splash particles (ship wake)
@@ -171,6 +185,14 @@ public abstract class AbstractDeepOceanEntity extends Monster {
         FleetGroup group = getFleetGroup();
         if (group != null) {
             setFleetState(group.getState());
+        }
+    }
+
+    @Override
+    public void onAddedToLevel() {
+        super.onAddedToLevel();
+        if (!level().isClientSide()) {
+            syncFleetState();
         }
     }
 

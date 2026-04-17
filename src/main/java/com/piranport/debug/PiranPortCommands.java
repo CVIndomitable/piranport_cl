@@ -194,6 +194,10 @@ public final class PiranPortCommands {
         }
 
         ServerLevel level = player.serverLevel();
+        java.util.UUID cluster = java.util.UUID.randomUUID();
+        com.piranport.npc.ai.FleetGroupManager mgr = com.piranport.npc.ai.FleetGroupManager.get(level);
+        mgr.createGroup(cluster);
+
         int spawned = 0;
         for (int i = 0; i < count; i++) {
             Entity entity = optType.get().create(level);
@@ -206,6 +210,11 @@ public final class PiranPortCommands {
             if (entity instanceof Mob mob) {
                 mob.finalizeSpawn(level, level.getCurrentDifficultyAt(player.blockPosition()),
                         MobSpawnType.COMMAND, null);
+            }
+
+            if (entity instanceof AbstractDeepOceanEntity abyssal) {
+                abyssal.setFleetGroupId(cluster);
+                mgr.addMember(cluster, abyssal.getUUID());
             }
 
             level.addFreshEntity(entity);

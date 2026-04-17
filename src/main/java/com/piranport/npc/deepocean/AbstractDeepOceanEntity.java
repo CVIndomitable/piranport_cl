@@ -102,7 +102,7 @@ public abstract class AbstractDeepOceanEntity extends Monster {
 
     @Override
     public void tick() {
-        // Sinking death animation — skip all AI and water-walking
+        // Sinking death animation — skip AI and water-walking, but keep baseTick
         if (isSinking) {
             sinkingTicks++;
             if (level().isClientSide()) {
@@ -115,7 +115,7 @@ public abstract class AbstractDeepOceanEntity extends Monster {
                 }
             }
             setDeltaMovement(0, -0.05, 0);
-            setPos(getX(), getY() - 0.05, getZ());
+            super.tick();
             if (sinkingTicks >= SINKING_DURATION) {
                 isSinking = false;
                 remove(RemovalReason.KILLED);
@@ -172,6 +172,12 @@ public abstract class AbstractDeepOceanEntity extends Monster {
     }
 
     // --- Death with sinking animation ---
+
+    @Override
+    public boolean hurt(DamageSource source, float amount) {
+        if (isSinking) return false;
+        return super.hurt(source, amount);
+    }
 
     @Override
     public void die(DamageSource source) {

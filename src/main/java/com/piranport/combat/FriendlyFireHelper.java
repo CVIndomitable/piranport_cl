@@ -2,6 +2,7 @@ package com.piranport.combat;
 
 import com.piranport.config.ModCommonConfig;
 import com.piranport.entity.AircraftEntity;
+import com.piranport.npc.deepocean.AbstractDeepOceanEntity;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 
@@ -19,6 +20,10 @@ public final class FriendlyFireHelper {
      * @return true if the hit should be blocked (target is friendly)
      */
     public static boolean shouldBlockHit(Entity target, Entity owner) {
+        // Deep ocean fratricide protection: deep ocean projectiles must not hit other deep ocean entities
+        if (target instanceof AbstractDeepOceanEntity && owner instanceof AbstractDeepOceanEntity) {
+            return true;
+        }
         // Friendly fire protection: skip other players when config disabled
         if (!ModCommonConfig.FRIENDLY_FIRE_ENABLED.get()
                 && target instanceof Player && owner instanceof Player) {

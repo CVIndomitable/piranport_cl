@@ -12,6 +12,8 @@ import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.neoforged.neoforge.common.NeoForgeMod;
+import net.neoforged.neoforge.fluids.FluidType;
 
 /**
  * 深海潜艇 — Submerges in combat, invisible, torpedoes only.
@@ -46,6 +48,12 @@ public class DeepOceanSubmarineEntity extends AbstractDeepOceanEntity {
     @Override
     protected boolean canSubmerge() {
         return true;
+    }
+
+    @Override
+    public boolean canDrownInFluidType(FluidType type) {
+        if (type == NeoForgeMod.WATER_TYPE.value()) return false;
+        return super.canDrownInFluidType(type);
     }
 
     @Override public boolean canUseTorpedoes() { return true; }

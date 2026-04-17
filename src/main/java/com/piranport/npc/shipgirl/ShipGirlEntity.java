@@ -49,12 +49,28 @@ public class ShipGirlEntity extends PathfinderMob {
         this.goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 8.0f));
         this.goalSelector.addGoal(7, new RandomLookAroundGoal(this));
 
-        // Target deep ocean enemies if combat AI is on
-        if (combatAiEnabled) {
-            this.targetSelector.addGoal(1, new NearestAttackableTargetGoal<>(
-                    this, LivingEntity.class, 10, true, false,
-                    e -> e instanceof AbstractDeepOceanEntity));
-        }
+        // Target deep ocean enemies — runtime-gated by combatAiEnabled
+        this.targetSelector.addGoal(1, new NearestAttackableTargetGoal<>(
+                this, LivingEntity.class, 10, true, false,
+                e -> e instanceof AbstractDeepOceanEntity) {
+            @Override
+            public boolean canUse() {
+                return ((ShipGirlEntity) this.mob).isCombatAiEnabled() && super.canUse();
+            }
+
+            @Override
+            public boolean canContinueToUse() {
+                return ((ShipGirlEntity) this.mob).isCombatAiEnabled() && super.canContinueToUse();
+            }
+        });
+    }
+
+    public boolean isCombatAiEnabled() {
+        return combatAiEnabled;
+    }
+
+    public void setCombatAiEnabled(boolean enabled) {
+        this.combatAiEnabled = enabled;
     }
 
     // --- Interaction ---

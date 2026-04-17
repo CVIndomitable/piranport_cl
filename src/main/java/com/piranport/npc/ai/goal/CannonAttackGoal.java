@@ -24,8 +24,8 @@ public class CannonAttackGoal extends Goal {
 
     public CannonAttackGoal(AbstractDeepOceanEntity mob) {
         this.mob = mob;
-        this.nextTrackingShotAt = mob.getTrackingIntervalMin()
-                + mob.getRandom().nextInt(mob.getTrackingIntervalMax() - mob.getTrackingIntervalMin() + 1);
+        int span = Math.max(mob.getTrackingIntervalMax() - mob.getTrackingIntervalMin() + 1, 1);
+        this.nextTrackingShotAt = mob.getTrackingIntervalMin() + mob.getRandom().nextInt(span);
         setFlags(EnumSet.of(Flag.LOOK));
     }
 
@@ -62,8 +62,9 @@ public class CannonAttackGoal extends Goal {
         shotsFired++;
         boolean tracking = (shotsFired >= nextTrackingShotAt);
         if (tracking) {
-            nextTrackingShotAt = shotsFired + mob.getTrackingIntervalMin()
-                    + mob.getRandom().nextInt(mob.getTrackingIntervalMax() - mob.getTrackingIntervalMin() + 1);
+            int span = Math.max(mob.getTrackingIntervalMax() - mob.getTrackingIntervalMin() + 1, 1);
+            shotsFired = 0;
+            nextTrackingShotAt = mob.getTrackingIntervalMin() + mob.getRandom().nextInt(span);
         }
 
         DeepOceanProjectileEntity.BallisticType ballistic = tracking

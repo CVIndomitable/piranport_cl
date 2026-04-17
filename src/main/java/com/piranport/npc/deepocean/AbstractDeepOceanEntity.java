@@ -2,6 +2,7 @@ package com.piranport.npc.deepocean;
 
 import com.piranport.npc.ai.FleetGroup;
 import com.piranport.npc.ai.FleetGroupManager;
+import com.piranport.registry.ModItems;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -14,6 +15,8 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.phys.Vec3;
@@ -206,10 +209,72 @@ public abstract class AbstractDeepOceanEntity extends Monster {
     public void setTarget(@Nullable LivingEntity target) {
         LivingEntity prev = getTarget();
         super.setTarget(target);
+        if (level().isClientSide() || fleetGroupId == null) return;
+        FleetGroupManager mgr = FleetGroupManager.get((ServerLevel) level());
         // Notify fleet group when we first acquire a target
-        if (target != null && prev == null && !level().isClientSide() && fleetGroupId != null) {
-            FleetGroupManager mgr = FleetGroupManager.get((ServerLevel) level());
+        if (target != null && prev == null) {
             mgr.alertGroup(fleetGroupId, target, getUUID());
+        } else if (target == null && prev != null) {
+            // If this entity was the group's discoverer, clear the shared target so other members go IDLE
+            FleetGroup group = mgr.getGroup(fleetGroupId);
+            if (group != null && prev.getUUID().equals(group.getSharedTargetUuid())) {
+                mgr.clearGroupTarget(fleetGroupId);
+            }
+        }
+    }
+
+    /**
+     * Drop ship-type-specific resources on death.
+     */
+    @Override
+    protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean recentlyHit) {
+        super.dropCustomDeathLoot(level, source, recentlyHit);
+        if (this instanceof DeepOceanSupplyEntity) {
+            spawnAtLocation(new ItemStack(ModItems.FUEL.get(), 2 + random.nextInt(3)));
+            spawnAtLocation(new ItemStack(Items.IRON_INGOT, 1 + random.nextInt(2)));
+        } else if (this instanceof DeepOceanDestroyerEntity) {
+            spawnAtLocation(new ItemStack(Items.IRON_INGOT, 1 + random.nextInt(2)));
+            spawnAtLocation(new ItemStack(Items.GUNPOWDER, 1 + random.nextInt(2)));
+        } else if (this instanceof DeepOceanLightCruiserEntity) {
+            spawnAtLocation(new ItemStack(Items.IRON_INGOT, 2 + random.nextInt(2)));
+            spawnAtLocation(new ItemStack(Items.GUNPOWDER, 2 + random.nextInt(2)));
+            spawnAtLocation(new ItemStack(ModItems.FUEL.get(), 1));
+        } else if (this instanceof DeepOceanHeavyCruiserEntity) {
+            spawnAtLocation(new ItemStack(Items.IRON_INGOT, 3 + random.nextInt(2)));
+            spawnAtLocation(new ItemStack(Items.GUNPOWDER, 2 + random.nextInt(3)));
+            spawnAtLocation(new ItemStack(ModItems.FUEL.get(), 1 + random.nextInt(2)));
+        } else if (this instanceof DeepOceanBattleCruiserEntity) {
+            spawnAtLocation(new ItemStack(Items.IRON_INGOT, 4 + random.nextInt(2)));
+            spawnAtLocation(new ItemStack(Items.GUNPOWDER, 3 + random.nextInt(2)));
+            spawnAtLocation(new ItemStack(ModItems.FUEL.get(), 2));
+            if (random.nextFloat() < 0.3f) {
+                spawnAtLocation(new ItemStack(ModItems.CHAOS_SHARD_ALPHA.get(), 1));
+            }
+        } else if (this instanceof DeepOceanBattleshipEntity) {
+            spawnAtLocation(new ItemStack(Items.IRON_INGOT, 4 + random.nextInt(3)));
+            spawnAtLocation(new ItemStack(Items.GUNPOWDER, 3 + random.nextInt(3)));
+            spawnAtLocation(new ItemStack(ModItems.FUEL.get(), 2 + random.nextInt(2)));
+            if (random.nextFloat() < 0.4f) {
+                spawnAtLocation(new ItemStack(ModItems.CHAOS_SHARD_BETA.get(), 1));
+            }
+        } else if (this instanceof DeepOceanLightCarrierEntity) {
+            spawnAtLocation(new ItemStack(Items.IRON_INGOT, 3 + random.nextInt(2)));
+            spawnAtLocation(new ItemStack(ModItems.FUEL.get(), 3 + random.nextInt(2)));
+            spawnAtLocation(new ItemStack(ModItems.AVIATION_FUEL.get(), 2 + random.nextInt(2)));
+            if (random.nextFloat() < 0.3f) {
+                spawnAtLocation(new ItemStack(ModItems.CHAOS_SHARD_GAMMA.get(), 1));
+            }
+        } else if (this instanceof DeepOceanCarrierEntity) {
+            spawnAtLocation(new ItemStack(Items.IRON_INGOT, 5 + random.nextInt(3)));
+            spawnAtLocation(new ItemStack(ModItems.FUEL.get(), 4 + random.nextInt(2)));
+            spawnAtLocation(new ItemStack(ModItems.AVIATION_FUEL.get(), 3 + random.nextInt(3)));
+            if (random.nextFloat() < 0.5f) {
+                spawnAtLocation(new ItemStack(ModItems.CHAOS_SHARD_DELTA.get(), 1));
+            }
+        } else if (this instanceof DeepOceanSubmarineEntity) {
+            spawnAtLocation(new ItemStack(Items.IRON_INGOT, 2 + random.nextInt(2)));
+            spawnAtLocation(new ItemStack(ModItems.FUEL.get(), 1 + random.nextInt(2)));
+            spawnAtLocation(new ItemStack(ModItems.CHAOS_SHARD_EPSILON.get(), 1));
         }
     }
 

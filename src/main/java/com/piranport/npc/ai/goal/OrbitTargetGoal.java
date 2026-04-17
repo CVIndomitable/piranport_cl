@@ -118,21 +118,26 @@ public class OrbitTargetGoal extends Goal {
         // Apply horizontal movement, keep vertical from physics
         Vec3 current = mob.getDeltaMovement();
 
-        // Basic collision check: don't move into solid blocks
-        Vec3 testPos = mob.position().add(finalMovement.x, 0, finalMovement.z);
-        if (mob.level().getBlockState(net.minecraft.core.BlockPos.containing(testPos)).isSolid()) {
-            // Try to move around the obstacle by adjusting the angle slightly
-            double adjustedAngle = orbitAngle + (mob.getRandom().nextBoolean() ? 0.5 : -0.5);
-            double ox = target.getX() + Math.cos(adjustedAngle) * orbitDist;
-            double oz = target.getZ() + Math.sin(adjustedAngle) * orbitDist;
-            Vec3 altMovement = new Vec3(ox - mob.getX(), 0, oz - mob.getZ()).normalize().scale(surfaceSpeed * 0.5);
+        // Basic collision check (ORBIT only): don't move into solid blocks
+        if (currentPhase == Phase.ORBIT && finalMovement.horizontalDistanceSqr() > 1e-6) {
+            double look = mob.getBbWidth() + 0.5;
+            Vec3 dir = finalMovement.normalize();
+            Vec3 testPos = mob.position().add(dir.x * look, 0, dir.z * look);
+            if (mob.level().getBlockState(net.minecraft.core.BlockPos.containing(testPos)).isSolid()) {
+                // Try to move around the obstacle by adjusting the orbit angle
+                double adjustedAngle = orbitAngle + (mob.getRandom().nextBoolean() ? 0.5 : -0.5);
+                double ox = target.getX() + Math.cos(adjustedAngle) * orbitDist;
+                double oz = target.getZ() + Math.sin(adjustedAngle) * orbitDist;
+                Vec3 altMovement = new Vec3(ox - mob.getX(), 0, oz - mob.getZ()).normalize().scale(surfaceSpeed * 0.5);
 
-            // If alternative path is also blocked, stop moving horizontally
-            Vec3 altTestPos = mob.position().add(altMovement.x, 0, altMovement.z);
-            if (!mob.level().getBlockState(net.minecraft.core.BlockPos.containing(altTestPos)).isSolid()) {
-                finalMovement = altMovement;
-            } else {
-                finalMovement = new Vec3(0, finalMovement.y, 0);
+                // If alternative path is also blocked, stop moving horizontally
+                Vec3 altDir = altMovement.normalize();
+                Vec3 altTestPos = mob.position().add(altDir.x * look, 0, altDir.z * look);
+                if (!mob.level().getBlockState(net.minecraft.core.BlockPos.containing(altTestPos)).isSolid()) {
+                    finalMovement = altMovement;
+                } else {
+                    finalMovement = new Vec3(0, finalMovement.y, 0);
+                }
             }
         }
 

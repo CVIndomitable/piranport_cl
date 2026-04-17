@@ -104,7 +104,11 @@ public class DeepOceanProjectileEntity extends ThrowableItemProjectile {
 
             // Discard after 200 ticks (10 seconds) to prevent leaks
             if (tickCount > 200) {
-                discard();
+                if (hasProximityFuse && !exploded) {
+                    detonate();
+                } else {
+                    discard();
+                }
             }
         }
     }
@@ -176,6 +180,9 @@ public class DeepOceanProjectileEntity extends ThrowableItemProjectile {
         tag.putDouble("ProxRange", proximityRange);
         if (trackingTargetUuid != null) tag.putUUID("TrackingTarget", trackingTargetUuid);
         tag.putBoolean("PastApex", pastApex);
+        tag.putDouble("PrevVelX", prevVelocity.x);
+        tag.putDouble("PrevVelY", prevVelocity.y);
+        tag.putDouble("PrevVelZ", prevVelocity.z);
     }
 
     @Override
@@ -184,12 +191,18 @@ public class DeepOceanProjectileEntity extends ThrowableItemProjectile {
         damage = tag.getFloat("Damage");
         if (damage <= 0) damage = 5.0f;
         explosionPower = tag.getFloat("ExplosionPower");
+        if (explosionPower < 0.1f) explosionPower = 0.1f;
         int typeOrd = tag.getInt("BallisticType");
         BallisticType[] types = BallisticType.values();
         ballisticType = typeOrd >= 0 && typeOrd < types.length ? types[typeOrd] : BallisticType.PARABOLIC;
         hasProximityFuse = tag.getBoolean("HasProxFuse");
         proximityRange = tag.getDouble("ProxRange");
+        if (proximityRange < 0) proximityRange = 0;
         trackingTargetUuid = tag.hasUUID("TrackingTarget") ? tag.getUUID("TrackingTarget") : null;
         pastApex = tag.getBoolean("PastApex");
+        prevVelocity = new Vec3(
+                tag.getDouble("PrevVelX"),
+                tag.getDouble("PrevVelY"),
+                tag.getDouble("PrevVelZ"));
     }
 }

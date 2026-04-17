@@ -16,7 +16,6 @@ public class AircraftLaunchGoal extends Goal {
 
     private final AbstractDeepOceanEntity mob;
     private int readyCooldown = 0;
-    private int activeStrikes = 0;
 
     private static final int READY_INTERVAL = 300; // 15 seconds
     private static final int INITIAL_DELAY = 100;
@@ -49,8 +48,6 @@ public class AircraftLaunchGoal extends Goal {
             return;
         }
 
-        if (activeStrikes >= mob.getMaxAircraft()) return;
-
         LivingEntity target = mob.getTarget();
         if (target == null) return;
 
@@ -82,10 +79,5 @@ public class AircraftLaunchGoal extends Goal {
 
             mob.level().addFreshEntity(proj);
         }
-        activeStrikes++;
-    }
-
-    public void onAircraftLost() {
-        if (activeStrikes > 0) activeStrikes--;
     }
 }

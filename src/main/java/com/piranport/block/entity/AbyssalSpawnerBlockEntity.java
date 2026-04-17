@@ -1,6 +1,5 @@
 package com.piranport.block.entity;
 
-import com.piranport.npc.ai.FleetGroup;
 import com.piranport.npc.ai.FleetGroupManager;
 import com.piranport.npc.deepocean.AbstractDeepOceanEntity;
 import com.piranport.registry.ModBlockEntityTypes;
@@ -83,11 +82,10 @@ public class AbyssalSpawnerBlockEntity extends BlockEntity {
             if (entity instanceof AbstractDeepOceanEntity abyssal) {
                 abyssal.setFleetGroupId(cluster);
                 FleetGroupManager mgr = FleetGroupManager.get(serverLevel);
-                FleetGroup group = mgr.getGroup(cluster);
-                if (group == null) {
-                    group = mgr.createGroup(cluster);
+                if (mgr.getGroup(cluster) == null) {
+                    mgr.createGroup(cluster);
                 }
-                group.addMember(abyssal.getUUID());
+                mgr.addMember(cluster, abyssal.getUUID());
             }
 
             if (entity instanceof Mob mob) {

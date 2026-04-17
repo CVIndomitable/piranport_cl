@@ -44,12 +44,8 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
     /** Blend factor: 0.05 = ~5% correction per tick (gentle curve). */
     private static final double TRACKING_STEER = 0.05;
 
-    /** Cone half-angle for VT proximity detection (30°). */
-    private static final double VT_CONE_COS = Math.cos(Math.toRadians(30));
-    /** Max search range for entities in the cone (blocks). */
-    private static final double VT_DETECT_RANGE = 5.0;
-    /** Distance at which VT detonates against entities (blocks). */
-    private static final double VT_DETONATE_DIST = 3.0;
+    /** Radius (blocks) within which any non-player living entity triggers VT detonation. */
+    private static final double VT_DETONATE_RADIUS = 3.0;
     /** Forward raycast length for block proximity detection (blocks). */
     private static final double VT_BLOCK_RANGE = 3.0;
     /** Grace period after launch before VT fuze arms (ticks). */
@@ -121,30 +117,27 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
     private void checkProximityFuze() {
         Vec3 velocity = getDeltaMovement();
         if (velocity.lengthSqr() < 0.01) return;
-        Vec3 forward = velocity.normalize();
         Vec3 pos = position();
 
-        // --- Entity proximity check ---
-        AABB searchBox = getBoundingBox().inflate(VT_DETECT_RANGE);
-        List<Entity> nearby = level().getEntities(this, searchBox, e -> {
-            if (e == getOwner()) return false;
-            // Use unified friendly fire logic (consistent with canHitEntity)
-            if (com.piranport.combat.FriendlyFireHelper.shouldBlockHit(e, getOwner())) return false;
-            return e.isAlive() && e.isPickable();
-        });
+        // --- Entity proximity check: omnidirectional, any non-player living entity ---
+        AABB searchBox = getBoundingBox().inflate(VT_DETONATE_RADIUS);
+        List<Entity> nearby = level().getEntities(this, searchBox, e ->
+                e instanceof LivingEntity
+                        && !(e instanceof Player)
+                        && e != getOwner()
+                        && e.isAlive());
 
+        double radiusSqr = VT_DETONATE_RADIUS * VT_DETONATE_RADIUS;
         for (Entity entity : nearby) {
             Vec3 toTarget = entity.position().add(0, entity.getBbHeight() * 0.5, 0).subtract(pos);
-            double dist = toTarget.length();
-            if (dist < 0.1 || dist > VT_DETECT_RANGE) continue;
-            double dot = toTarget.normalize().dot(forward);
-            if (dot >= VT_CONE_COS && dist <= VT_DETONATE_DIST) {
+            if (toTarget.lengthSqr() <= radiusSqr) {
                 proximityDetonate();
                 return;
             }
         }
 
         // --- Block proximity check (short raycast ahead) ---
+        Vec3 forward = velocity.normalize();
         Vec3 ahead = pos.add(forward.scale(VT_BLOCK_RANGE));
         BlockHitResult blockHit = level().clip(new ClipContext(
                 pos, ahead, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, this));

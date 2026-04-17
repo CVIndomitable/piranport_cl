@@ -528,6 +528,7 @@
   "tooltip.piranport.core.toughness": "Armor Toughness: %s",
   "tooltip.piranport.core.empty_speed": "Empty Speed: ×%s",
   "tooltip.piranport.core.full_speed": "Full-Load Speed: ×%s",
+  "tooltip.piranport.core.current_speed": "Current Speed: ×%s",
   "tooltip.piranport.missile.type.anti_ship": "Anti-Ship Missile",
   "tooltip.piranport.missile.type.anti_air": "Anti-Air Missile",
   "tooltip.piranport.missile.type.rocket": "Rocket",

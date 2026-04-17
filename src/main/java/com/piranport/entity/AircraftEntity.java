@@ -797,16 +797,23 @@ public class AircraftEntity extends Entity {
 
         // Drop zone: horizDist 20-30 AND at low altitude (within 3 blocks of target.y+2)
         if (horizDist >= 20 && horizDist <= 30 && altDelta <= 3.0) {
-            TorpedoEntity torpedo = new TorpedoEntity(ModEntityTypes.TORPEDO_ENTITY.get(), level());
             Vec3 dir = new Vec3(dx, 0, dz).normalize();
-            torpedo.setPos(getX(), getY(), getZ());
-            // 投下鱼雷：垂直入水后再启动巡航
-            torpedo.setDeltaMovement(0, -0.6, 0);
-            torpedo.setAirDrop(true, dir);
-            torpedo.setOwner(owner);
-            torpedo.setSourceAircraftName(getDisplayName());
-            level().addFreshEntity(torpedo);
-            remainingAmmo--;
+            // Perpendicular offset for spread (rotate dir 90° in XZ plane)
+            double perpX = -dir.z;
+            double perpZ = dir.x;
+            int toFire = Math.max(1, remainingAmmo);
+            for (int i = 0; i < toFire; i++) {
+                double offset = (i - (toFire - 1) / 2.0) * 1.2;
+                TorpedoEntity torpedo = new TorpedoEntity(ModEntityTypes.TORPEDO_ENTITY.get(), level());
+                torpedo.setPos(getX() + perpX * offset, getY(), getZ() + perpZ * offset);
+                // 投下鱼雷：垂直入水后再启动巡航
+                torpedo.setDeltaMovement(0, -0.6, 0);
+                torpedo.setAirDrop(true, dir);
+                torpedo.setOwner(owner);
+                torpedo.setSourceAircraftName(getDisplayName());
+                level().addFreshEntity(torpedo);
+            }
+            remainingAmmo = 0;
             hasFired = true;
             startReturning("torpedo_launched");
             return;

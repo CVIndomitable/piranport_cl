@@ -389,9 +389,9 @@ public class TransformationManager {
             player.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, duration, 1, false, false, true));
             player.removeEffect(MobEffects.POISON);
         } else if (cost < -20) {
-            // Mining Fatigue I
+            // Mining Fatigue I + Weakness I
             player.addEffect(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, duration, 0, false, false, true));
-            player.removeEffect(MobEffects.WEAKNESS);
+            player.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, duration, 0, false, false, true));
             player.removeEffect(MobEffects.POISON);
         }
     }

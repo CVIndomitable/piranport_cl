@@ -41,12 +41,17 @@ public class AircraftRenderer extends EntityRenderer<AircraftEntity> {
                        PoseStack poseStack, MultiBufferSource bufferSource, int packedLight) {
         poseStack.pushPose();
 
-        // Rotate to face entity yaw and pitch (nose forward)
-        poseStack.mulPose(Axis.YP.rotationDegrees(-entityYaw));
+        // Canonical MC entity rotation: YP(180 - yaw) with scale(-1, -1, 1).
+        // The model is authored facing -Z (nose at Z=-5); this rotates the
+        // nose to +Z at yaw=0 (entity facing south) and flips the upside-down
+        // Blockbench Y/X convention.
+        poseStack.mulPose(Axis.YP.rotationDegrees(180.0f - entityYaw));
         float pitch = net.minecraft.util.Mth.lerp(partialTick, entity.xRotO, entity.getXRot());
-        poseStack.mulPose(Axis.XP.rotationDegrees(pitch));
-        // Flip model (Minecraft entity models are upside-down by convention) and scale up
-        poseStack.scale(1.5f, -1.5f, -1.5f);
+        // Pitch flips sign because the model's forward (+Z after Y rotation) is
+        // achieved via a 180° flip; a positive Minecraft xRot (nose-down) must
+        // rotate the model's local nose downward.
+        poseStack.mulPose(Axis.XP.rotationDegrees(-pitch));
+        poseStack.scale(-1.5f, -1.5f, 1.5f);
         poseStack.translate(0.0, -1.501, 0.0);
 
         EntityModel<AircraftEntity> model;

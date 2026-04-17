@@ -260,6 +260,43 @@ public class ShipCoreItem extends Item {
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context,
                                 List<Component> tooltipComponents, TooltipFlag tooltipFlag) {
+        // Compute current load + engine bonus so the shift-details block can show
+        // real-time current speed alongside empty/full-load speeds.
+        int currentTotalLoad = 0;
+        double currentEngineSpeedBonus = 0;
+        boolean hasCurrentLoad = false;
+        if (!com.piranport.config.ModCommonConfig.isShipCoreGuiEnabled()) {
+            if (net.neoforged.fml.loading.FMLEnvironment.dist.isClient()) {
+                net.minecraft.world.entity.player.Player cp =
+                        net.minecraft.client.Minecraft.getInstance().player;
+                if (cp != null) {
+                    currentTotalLoad = com.piranport.combat.TransformationManager
+                            .getInventoryWeaponLoad(cp.getInventory())
+                            + com.piranport.combat.TransformationManager.getCoreArmorLoad(stack);
+                    currentEngineSpeedBonus = com.piranport.combat.TransformationManager
+                            .getCoreEngineSpeedBonus(stack);
+                    hasCurrentLoad = true;
+                }
+            }
+        } else {
+            ItemContainerContents c = stack.getOrDefault(
+                    ModDataComponents.SHIP_CORE_CONTENTS.get(), ItemContainerContents.EMPTY);
+            NonNullList<ItemStack> it = NonNullList.withSize(shipType.totalSlots(), ItemStack.EMPTY);
+            c.copyInto(it);
+            for (int i = 0; i < shipType.weaponSlots; i++) {
+                currentTotalLoad += com.piranport.combat.TransformationManager.getItemLoad(it.get(i));
+            }
+            int es = shipType.weaponSlots + shipType.ammoSlots;
+            for (int i = es; i < shipType.totalSlots(); i++) {
+                ItemStack s = it.get(i);
+                currentTotalLoad += com.piranport.combat.TransformationManager.getItemLoad(s);
+                if (s.getItem() instanceof com.piranport.item.EngineItem engine) {
+                    currentEngineSpeedBonus += engine.getSpeedBonus();
+                }
+            }
+            hasCurrentLoad = true;
+        }
+
         if (!com.piranport.config.ModCommonConfig.isShipCoreGuiEnabled()) {
             // No-GUI mode: find the best (highest maxLoad) core in inventory.
             // If this core is the best (effective) one, show load info; otherwise show "不生效".
@@ -349,6 +386,17 @@ public class ShipCoreItem extends Item {
                         String.format("%.2f", shipType.emptySpeed)).withStyle(net.minecraft.ChatFormatting.GREEN));
                 tooltipComponents.add(Component.translatable("tooltip.piranport.core.full_speed",
                         String.format("%.2f", shipType.fullLoadSpeed)).withStyle(net.minecraft.ChatFormatting.YELLOW));
+                if (hasCurrentLoad) {
+                    double loadRatio = shipType.maxLoad > 0
+                            ? (double) currentTotalLoad / shipType.maxLoad : 0;
+                    double currentSpeed = shipType.emptySpeed
+                            - (shipType.emptySpeed - shipType.fullLoadSpeed)
+                                    * Math.min(loadRatio, 1.0)
+                            + currentEngineSpeedBonus;
+                    tooltipComponents.add(Component.translatable("tooltip.piranport.core.current_speed",
+                                    String.format("%.2f", currentSpeed))
+                            .withStyle(net.minecraft.ChatFormatting.AQUA));
+                }
             } else {
                 tooltipComponents.add(Component.translatable("tooltip.piranport.shift_for_details")
                         .withStyle(net.minecraft.ChatFormatting.DARK_GRAY));

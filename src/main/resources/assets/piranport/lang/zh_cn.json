@@ -528,6 +528,7 @@
   "tooltip.piranport.core.toughness": "护甲韧性: %s",
   "tooltip.piranport.core.empty_speed": "空载航速: ×%s",
   "tooltip.piranport.core.full_speed": "满载航速: ×%s",
+  "tooltip.piranport.core.current_speed": "当前航速: ×%s",
   "tooltip.piranport.missile.type.anti_ship": "反舰导弹",
   "tooltip.piranport.missile.type.anti_air": "防空导弹",
   "tooltip.piranport.missile.type.rocket": "火箭弹",

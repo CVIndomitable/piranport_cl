@@ -87,6 +87,7 @@ public class ShipGirlEntity extends PathfinderMob {
 
     // --- Don't retaliate against players ---
 
+    // NOTE: 故意不加 HurtByTargetGoal —— ShipGirl 不应还手打玩家
     @Override
     public boolean hurt(net.minecraft.world.damagesource.DamageSource source, float amount) {
         if (source.getEntity() instanceof Player) {

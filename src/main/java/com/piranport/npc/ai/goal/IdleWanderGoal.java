@@ -36,7 +36,7 @@ public class IdleWanderGoal extends RandomStrollGoal {
         if (pos == null) return null;
 
         if (maxWanderRadius > 0) {
-            Vec3 home = deepOcean.getRestrictCenter() != null
+            Vec3 home = deepOcean.hasRestriction()
                     ? Vec3.atCenterOf(deepOcean.getRestrictCenter())
                     : deepOcean.position();
             if (pos.distanceTo(home) > maxWanderRadius) {

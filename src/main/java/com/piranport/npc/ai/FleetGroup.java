@@ -1,5 +1,6 @@
 package com.piranport.npc.ai;
 
+import com.piranport.PiranPort;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtUtils;
@@ -114,6 +115,10 @@ public class FleetGroup {
             group.sharedTargetUuid = tag.getUUID("SharedTarget");
         }
         ListTag memberList = tag.getList("Members", Tag.TAG_INT_ARRAY);
+        if (memberList.isEmpty() && tag.contains("Members")) {
+            PiranPort.LOGGER.warn("FleetGroup {}: Members tag exists but is empty or type mismatch",
+                    groupId);
+        }
         for (int i = 0; i < memberList.size(); i++) {
             group.members.add(NbtUtils.loadUUID(memberList.get(i)));
         }

@@ -94,6 +94,7 @@ public final class PiranPortCommands {
                         .then(Commands.argument("model", StringArgumentType.word())
                                 .suggests((ctx, builder) -> {
                                     builder.suggest("b25");
+                                    builder.suggest("f4f");
                                     return builder.buildFuture();
                                 })
                                 .executes(ctx -> modelDebug(ctx.getSource(),
@@ -306,8 +307,8 @@ public final class PiranPortCommands {
             source.sendFailure(Component.literal("Must be run by a player"));
             return 0;
         }
-        if (!"b25".equals(modelType)) {
-            source.sendFailure(Component.literal("Unknown model: " + modelType + " (supported: b25)"));
+        if (!"b25".equals(modelType) && !"f4f".equals(modelType)) {
+            source.sendFailure(Component.literal("Unknown model: " + modelType + " (supported: b25, f4f)"));
             return 0;
         }
 
@@ -324,8 +325,12 @@ public final class PiranPortCommands {
             }
         }
 
-        // Center: B25 debug block (renders static B25 model via BER)
-        level.setBlock(center, ModBlocks.B25_DEBUG.get().defaultBlockState(), 3);
+        // Center: model debug block (renders static entity model via BER)
+        level.setBlock(center, ModBlocks.MODEL_DEBUG.get().defaultBlockState(), 3);
+        BlockEntity centerBe = level.getBlockEntity(center);
+        if (centerBe instanceof com.piranport.block.entity.ModelDebugBlockEntity mdbe) {
+            mdbe.setModelType(modelType);
+        }
 
         // Support blocks so standing signs can survive
         BlockState support = Blocks.GLOWSTONE.defaultBlockState();
@@ -344,9 +349,10 @@ public final class PiranPortCommands {
         placeDirectionSign(level, center.offset(0,  4, 0),  0, "UP",    "+Y");
         placeDirectionSign(level, center.offset(0, -3, 0),  0, "DOWN",  "-Y");
 
+        String finalType = modelType;
         source.sendSuccess(() -> Component.literal(
-                "§a已在 " + center.toShortString() + " 放置 B25 方向核对结构。"
-                + "看模型机头指向的那块告示牌即可确认 yaw=0 的世界方向。"), true);
+                "§a已在 " + center.toShortString() + " 放置 " + finalType.toUpperCase()
+                + " 方向核对结构。看模型机头指向的那块告示牌即可确认 yaw=0 的世界方向。"), true);
         return 1;
     }
 

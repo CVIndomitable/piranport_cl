@@ -236,9 +236,9 @@ public class ModBlocks {
             BLOCKS.register("b25_model",
                     () -> new com.piranport.block.B25ModelBlock());
 
-    public static final DeferredBlock<com.piranport.block.B25DebugBlock> B25_DEBUG =
-            BLOCKS.register("b25_debug",
-                    () -> new com.piranport.block.B25DebugBlock());
+    public static final DeferredBlock<com.piranport.block.ModelDebugBlock> MODEL_DEBUG =
+            BLOCKS.register("model_debug",
+                    () -> new com.piranport.block.ModelDebugBlock());
 
     // ===== Dungeon System (v0.0.8) =====
     public static final DeferredBlock<com.piranport.dungeon.block.DungeonLecternBlock> DUNGEON_LECTERN =

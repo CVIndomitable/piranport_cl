@@ -1,6 +1,6 @@
 package com.piranport.block;
 
-import com.piranport.block.entity.B25DebugBlockEntity;
+import com.piranport.block.entity.ModelDebugBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.Block;
@@ -15,10 +15,10 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
-/** Debug-only block used by /ppd model_debug to render a static B25 model for orientation calibration. */
-public class B25DebugBlock extends Block implements EntityBlock {
+/** Debug-only block used by /ppd model_debug to render a static entity model for orientation calibration. */
+public class ModelDebugBlock extends Block implements EntityBlock {
 
-    public B25DebugBlock() {
+    public ModelDebugBlock() {
         super(BlockBehaviour.Properties.of()
                 .mapColor(MapColor.NONE)
                 .sound(SoundType.METAL)
@@ -46,6 +46,6 @@ public class B25DebugBlock extends Block implements EntityBlock {
     @Nullable
     @Override
     public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
-        return new B25DebugBlockEntity(pos, state);
+        return new ModelDebugBlockEntity(pos, state);
     }
 }

@@ -164,8 +164,8 @@ public class ClientEvents {
                 CuttingBoardRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntityTypes.PLACEABLE_FOOD.get(),
                 PlaceableFoodRenderer::new);
-        event.registerBlockEntityRenderer(ModBlockEntityTypes.B25_DEBUG.get(),
-                com.piranport.client.B25DebugBlockEntityRenderer::new);
+        event.registerBlockEntityRenderer(ModBlockEntityTypes.MODEL_DEBUG.get(),
+                com.piranport.client.ModelDebugBlockEntityRenderer::new);
         // Dungeon enemies
         event.registerEntityRenderer(ModEntityTypes.LOW_TIER_DESTROYER.get(),
                 com.piranport.client.LowTierDestroyerRenderer::new);

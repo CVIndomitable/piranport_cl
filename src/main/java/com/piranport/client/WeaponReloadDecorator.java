@@ -1,15 +1,20 @@
 package com.piranport.client;
 
+import com.piranport.combat.TransformationManager;
 import com.piranport.component.LoadedAmmo;
 import com.piranport.component.WeaponCooldown;
 import com.piranport.config.ModCommonConfig;
+import com.piranport.item.CannonItem;
+import com.piranport.item.ShipCoreItem;
 import com.piranport.item.TorpedoLauncherItem;
 import com.piranport.registry.ModDataComponents;
 import com.piranport.registry.ModItems;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.client.IItemDecorator;
 
@@ -24,9 +29,19 @@ public class WeaponReloadDecorator implements IItemDecorator {
 
     @Override
     public boolean render(GuiGraphics gui, Font font, ItemStack stack, int x, int y) {
-        // 1. Cooldown bar takes priority
+        // Torpedo launcher without a way to reload: cooldown bar is misleading
+        // (player would think it's reloading), so always show the empty bar instead.
+        boolean torpedoCannotReload = false;
+        if (stack.getItem() instanceof TorpedoLauncherItem) {
+            LoadedAmmo loaded = stack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
+            if (!loaded.hasAmmo() && !hasTorpedoReloadEquipped()) {
+                torpedoCannotReload = true;
+            }
+        }
+
+        // 1. Cooldown bar takes priority (except for torpedo launchers that can't reload)
         WeaponCooldown cd = stack.get(ModDataComponents.WEAPON_COOLDOWN.get());
-        if (cd != null) {
+        if (cd != null && !torpedoCannotReload) {
             Minecraft mc = Minecraft.getInstance();
             long currentTick = mc.level != null ? mc.level.getGameTime() : 0L;
 
@@ -76,6 +91,40 @@ public class WeaponReloadDecorator implements IItemDecorator {
             }
         }
 
+        // 3. Empty bar for auto-reload cannons when no matching ammo is in inventory.
+        // Small cannons always auto-reload; other cannons auto-reload when AUTO_RESUPPLY_ENABLED.
+        if (stack.getItem() instanceof CannonItem) {
+            boolean isAutoReloadCannon = stack.is(ModItems.SMALL_GUN.get())
+                    || stack.is(ModItems.SINGLE_SMALL_GUN.get())
+                    || ModCommonConfig.AUTO_RESUPPLY_ENABLED.get();
+            if (isAutoReloadCannon && !hasMatchingAmmoInInventory(stack)) {
+                int barX = x + 2;
+                int barY = y + 13;
+                gui.fill(barX, barY, barX + BAR_WIDTH, barY + 2, BG_COLOR);
+                return false;
+            }
+        }
+
         return false;
+    }
+
+    private static boolean hasMatchingAmmoInInventory(ItemStack weapon) {
+        LocalPlayer player = Minecraft.getInstance().player;
+        if (player == null) return true;
+        Inventory inv = player.getInventory();
+        for (ItemStack s : inv.items) {
+            if (!s.isEmpty() && ShipCoreItem.matchesCaliber(s, weapon)) return true;
+        }
+        ItemStack oh = inv.offhand.get(0);
+        if (!oh.isEmpty() && ShipCoreItem.matchesCaliber(oh, weapon)) return true;
+        return false;
+    }
+
+    private static boolean hasTorpedoReloadEquipped() {
+        LocalPlayer player = Minecraft.getInstance().player;
+        if (player == null) return false;
+        ItemStack core = TransformationManager.findTransformedCore(player);
+        if (core.isEmpty()) return false;
+        return TransformationManager.hasTorpedoReloadEquipped(player, core);
     }
 }

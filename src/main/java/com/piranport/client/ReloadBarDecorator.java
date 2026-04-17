@@ -1,8 +1,10 @@
 package com.piranport.client;
 
 import com.piranport.combat.TransformationManager;
+import com.piranport.component.LoadedAmmo;
 import com.piranport.component.SlotCooldowns;
 import com.piranport.item.AircraftItem;
+import com.piranport.item.CannonItem;
 import com.piranport.item.ShipCoreItem;
 import com.piranport.item.TorpedoLauncherItem;
 import com.piranport.registry.ModDataComponents;
@@ -86,6 +88,17 @@ public class ReloadBarDecorator implements IItemDecorator {
 
             float cd = cooldowns.getFraction(i, currentTick);
 
+            // Torpedo launcher with no loaded ammo and no reload item equipped can't
+            // actually reload — showing a moving cooldown bar would mislead the player
+            // into thinking it will be ready to fire. Force the empty/background bar.
+            boolean torpedoCannotReload = false;
+            if (weapon.getItem() instanceof TorpedoLauncherItem) {
+                LoadedAmmo loaded = weapon.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
+                if (!loaded.hasAmmo() && !TransformationManager.hasTorpedoReloadEquipped(player, stack)) {
+                    torpedoCannotReload = true;
+                }
+            }
+
             int loadingColor, readyColor;
             if (weapon.getItem() instanceof TorpedoLauncherItem) {
                 loadingColor = TORPEDO_LOADING;
@@ -99,9 +112,18 @@ public class ReloadBarDecorator implements IItemDecorator {
                 readyColor   = CANNON_READY;
             }
 
-            if (cd <= 0f) {
-                // Ready: solid bright color
-                gui.fill(barX, barY, barX + BAR_MAX_W, barY + 1, readyColor);
+            if (torpedoCannotReload) {
+                // empty bar: background already drawn above
+            } else if (cd <= 0f) {
+                // Ready: solid bright color — but only if ammo is actually available.
+                // For cannons, verify matching ammo exists in the core's ammo slots;
+                // otherwise leave the bar empty (background only) so the player can see
+                // they can't fire yet.
+                if (weapon.getItem() instanceof CannonItem && !hasCannonAmmoInPool(weapon, items, type)) {
+                    // empty bar: background already drawn above
+                } else {
+                    gui.fill(barX, barY, barX + BAR_MAX_W, barY + 1, readyColor);
+                }
             } else {
                 // Loading: partial fill shows reload progress (1 - remaining fraction)
                 int fillW = (int) (BAR_MAX_W * (1f - cd));
@@ -114,6 +136,19 @@ public class ReloadBarDecorator implements IItemDecorator {
         }
 
         // Return false so vanilla decorations (durability bar etc.) still render.
+        return false;
+    }
+
+    private static boolean hasCannonAmmoInPool(ItemStack weapon,
+                                               net.minecraft.core.NonNullList<ItemStack> items,
+                                               ShipCoreItem.ShipType type) {
+        int ammoEnd = type.weaponSlots + type.ammoSlots;
+        for (int i = type.weaponSlots; i < ammoEnd; i++) {
+            ItemStack ammo = items.get(i);
+            if (!ammo.isEmpty() && ShipCoreItem.matchesCaliber(ammo, weapon)) {
+                return true;
+            }
+        }
         return false;
     }
 }

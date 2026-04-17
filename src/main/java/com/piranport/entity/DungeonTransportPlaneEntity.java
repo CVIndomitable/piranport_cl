@@ -52,6 +52,15 @@ public class DungeonTransportPlaneEntity extends Entity {
         this.setNoGravity(true);
     }
 
+    @Override
+    public boolean shouldBeSaved() {
+        // Script-driven cutscene entity: the onDrop callback is a live Runnable that
+        // cannot be serialized, so persisting across chunk unload/reload would leave
+        // the plane stranded with a null callback. Skip saving and let it despawn
+        // naturally (MAX_LIFETIME = 600 ticks hard cap).
+        return false;
+    }
+
     /**
      * Creates and configures a transport plane.
      *

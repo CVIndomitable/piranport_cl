@@ -1,5 +1,6 @@
 package com.piranport.entity;
 
+import com.piranport.registry.ModEntityTypes;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
@@ -7,18 +8,17 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
-/**
- * 飞机击坠掉落物 — 类似下界之星：
- * 1. 不被爆炸摧毁
- * 2. 不沉入水中，浮在水面
- */
 public class AircraftDropEntity extends ItemEntity {
 
+    public AircraftDropEntity(EntityType<? extends AircraftDropEntity> type, Level level) {
+        super(type, level);
+    }
+
     public AircraftDropEntity(Level level, double x, double y, double z, ItemStack stack) {
-        super(EntityType.ITEM, level);
+        super(ModEntityTypes.AIRCRAFT_DROP.get(), level);
         setPos(x, y, z);
         setItem(stack);
-        setPickUpDelay(20); // 1秒拾取延迟
+        setPickUpDelay(20);
     }
 
     @Override
@@ -32,7 +32,6 @@ public class AircraftDropEntity extends ItemEntity {
     @Override
     public void tick() {
         super.tick();
-        // 水中浮力：在水里时向上推，浮到水面
         if (isInWater()) {
             setDeltaMovement(getDeltaMovement().add(0, 0.06, 0));
         }

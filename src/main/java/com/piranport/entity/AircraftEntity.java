@@ -120,6 +120,12 @@ public class AircraftEntity extends Entity {
     @Nullable private AircraftEntity cachedReconAircraft;
     private int reconCacheTick = 0;
 
+    // Recon map-slot cache: indices in owner's inventory that held a MapItem on last scan.
+    // Full-inventory scan (41 slots) is deferred to once per RECON_MAP_REFRESH_TICKS.
+    @Nullable private int[] cachedMapSlots;
+    private int mapSlotsRefreshTick = -RECON_MAP_REFRESH_TICKS;
+    private static final int RECON_MAP_REFRESH_TICKS = 100;
+
     // Client-side position interpolation (prevents camera stutter from raw setPos jumps)
     private int clientLerpSteps;
     private double clientLerpX, clientLerpY, clientLerpZ;
@@ -130,6 +136,9 @@ public class AircraftEntity extends Entity {
 
     // Phase 34: set to true when defense mechanisms force a recall (stuck, timeout, distance)
     private boolean isForcedReturn = false;
+
+    // AircraftIndex bookkeeping: true once added via onAddedToLevel or tick fallback
+    private boolean indexRegistered = false;
 
     // Autonomous mode: aircraft has no player owner (e.g. launched by floating target)
     private boolean autonomous = false;
@@ -325,6 +334,13 @@ public class AircraftEntity extends Entity {
                 level().addParticle(ParticleTypes.CLOUD, getX(), getY(), getZ(), 0, 0.02, 0);
             }
             return;
+        }
+
+        // Index fallback: if onAddedToLevel fired before ownerUUID was populated by
+        // readAdditionalSaveData, we'd be missing from AircraftIndex — recover here.
+        if (!indexRegistered && ownerUUID != null) {
+            com.piranport.aviation.AircraftIndex.add(ownerUUID, this);
+            indexRegistered = true;
         }
 
         FlightState state = getFlightState();
@@ -693,7 +709,7 @@ public class AircraftEntity extends Entity {
         if (attackCooldown <= 0 && dist < 24.0) {
             BulletEntity bullet = new BulletEntity(level(), panelDamage / 8f);
             Vec3 dir = toTarget.normalize();
-            bullet.setPos(getX(), getY() + 0.3, getZ());
+            bullet.moveTo(getX(), getY() + 0.3, getZ(), bullet.getYRot(), bullet.getXRot());
             bullet.setDeltaMovement(dir.scale(2.5));
             bullet.setOwner(owner);
             bullet.setSourceAircraftName(getDisplayName());
@@ -755,7 +771,7 @@ public class AircraftEntity extends Entity {
         // Drop bomb when close enough or when aircraft has descended past the drop point
         if (dist < 4.0 || getY() < diveTarget.y()) {
             AerialBombEntity bomb = new AerialBombEntity(level(), panelDamage * 1.5f, 2.5f);
-            bomb.setPos(getX(), getY(), getZ());
+            bomb.moveTo(getX(), getY(), getZ(), bomb.getYRot(), bomb.getXRot());
             bomb.setDeltaMovement(getDeltaMovement().x * 0.2, -0.3, getDeltaMovement().z * 0.2);
             bomb.setOwner(owner);
             bomb.setSourceAircraftName(getDisplayName());
@@ -813,7 +829,7 @@ public class AircraftEntity extends Entity {
                 double spawnX = getX() + perpX * lateral + dir.x * longitudinal;
                 double spawnZ = getZ() + perpZ * lateral + dir.z * longitudinal;
                 TorpedoEntity torpedo = new TorpedoEntity(ModEntityTypes.TORPEDO_ENTITY.get(), level());
-                torpedo.setPos(spawnX, getY(), spawnZ);
+                torpedo.moveTo(spawnX, getY(), spawnZ, torpedo.getYRot(), torpedo.getXRot());
                 // 投下鱼雷：垂直入水后再启动巡航
                 torpedo.setDeltaMovement(0, -0.6, 0);
                 torpedo.setAirDrop(true, dir);
@@ -899,7 +915,7 @@ public class AircraftEntity extends Entity {
             double horizDist = Math.sqrt(dx * dx + dz * dz);
             if (horizDist < 3.0) {
                 AerialBombEntity bomb = new AerialBombEntity(level(), panelDamage * 1.5f, 2.5f);
-                bomb.setPos(getX(), getY(), getZ());
+                bomb.moveTo(getX(), getY(), getZ(), bomb.getYRot(), bomb.getXRot());
                 bomb.setDeltaMovement(getDeltaMovement().x * 0.1, -0.1, getDeltaMovement().z * 0.1);
                 bomb.setOwner(owner);
                 bomb.setSourceAircraftName(getDisplayName());
@@ -950,7 +966,7 @@ public class AircraftEntity extends Entity {
 
             if (horizDist < 4.0 && attackCooldown <= 0) {
                 DepthChargeEntity dc = new DepthChargeEntity(level(), panelDamage * 1.5f, 3.0f);
-                dc.setPos(getX(), getY(), getZ());
+                dc.moveTo(getX(), getY(), getZ(), dc.getYRot(), dc.getXRot());
                 dc.setDeltaMovement(getDeltaMovement().x * 0.1, -0.1, getDeltaMovement().z * 0.1);
                 dc.setOwner(owner);
                 // Owner already set above for kill attribution
@@ -1068,19 +1084,42 @@ public class AircraftEntity extends Entity {
         double factor = hasInput ? 0.12 : 0.25;
         setDeltaMovement(current.lerp(target, factor));
 
-        // Update maps in owner's inventory using aircraft position (throttled to every 20 ticks)
+        // Update maps in owner's inventory using aircraft position (throttled to every 20 ticks).
+        // Full-inventory scan only runs every RECON_MAP_REFRESH_TICKS — in between we re-check
+        // the cached slot indices and skip any that no longer hold a map.
         if (!level().isClientSide && tickCount % 20 == 0) {
-            for (int i = 0; i < owner.getInventory().getContainerSize(); i++) {
-                ItemStack stack = owner.getInventory().getItem(i);
-                if (stack.getItem() instanceof MapItem mapItem) {
-                    MapItemSavedData mapData = MapItem.getSavedData(stack, level());
-                    if (mapData != null && !mapData.locked) {
-                        mapData.tickCarriedBy(owner, stack);
-                        mapItem.update(level(), owner, mapData);
+            if (cachedMapSlots == null || tickCount - mapSlotsRefreshTick >= RECON_MAP_REFRESH_TICKS) {
+                refreshCachedMapSlots(owner);
+                mapSlotsRefreshTick = tickCount;
+            }
+            if (cachedMapSlots != null) {
+                for (int slot : cachedMapSlots) {
+                    ItemStack stack = owner.getInventory().getItem(slot);
+                    if (stack.getItem() instanceof MapItem mapItem) {
+                        MapItemSavedData mapData = MapItem.getSavedData(stack, level());
+                        if (mapData != null && !mapData.locked) {
+                            mapData.tickCarriedBy(owner, stack);
+                            mapItem.update(level(), owner, mapData);
+                        }
                     }
                 }
             }
         }
+    }
+
+    private void refreshCachedMapSlots(Player owner) {
+        int size = owner.getInventory().getContainerSize();
+        int[] buf = new int[size];
+        int n = 0;
+        for (int i = 0; i < size; i++) {
+            if (owner.getInventory().getItem(i).getItem() instanceof MapItem) {
+                buf[n++] = i;
+            }
+        }
+        if (n == 0) { cachedMapSlots = null; return; }
+        int[] out = new int[n];
+        System.arraycopy(buf, 0, out, 0, n);
+        cachedMapSlots = out;
     }
 
     // ===== Chunk forcing (Phase 32) — view-distance-based for recon =====
@@ -1378,10 +1417,11 @@ public class AircraftEntity extends Entity {
             double horizDist = Math.sqrt(dx * dx + dz * dz);
             if (horizDist < 3.0) {
                 AerialBombEntity bomb = new AerialBombEntity(level(), panelDamage * 1.5f, 2.5f);
-                bomb.setPos(getX(), getY(), getZ());
+                bomb.moveTo(getX(), getY(), getZ(), bomb.getYRot(), bomb.getXRot());
                 bomb.setDeltaMovement(getDeltaMovement().x * 0.1, -0.1, getDeltaMovement().z * 0.1);
                 bomb.setSourceAircraftName(getDisplayName());
                 if (getOwner() != null) bomb.setOwner(getOwner());
+                else if (autonomous) bomb.setOwner(this);
                 level().addFreshEntity(bomb);
                 remainingAmmo--;
                 levelBombDropped = true;
@@ -1743,6 +1783,10 @@ public class AircraftEntity extends Entity {
             if (attacker instanceof Player p && ownerUUID.equals(p.getUUID())) return false;
             if (attacker instanceof AircraftEntity ac && ownerUUID.equals(ac.getOwnerUUID())) return false;
         }
+        // Autonomous fratricide: damage from another autonomous aircraft's projectile explosion
+        if (autonomous && attacker instanceof AircraftEntity ac && ac.isAutonomous() && ac != this) {
+            return false;
+        }
 
         aircraftHealth -= (int) Math.ceil(amount);
 
@@ -1836,10 +1880,11 @@ public class AircraftEntity extends Entity {
         autoSeekDone = true;
         AABB box = getBoundingBox().inflate(32.0);
 
-        // Enemy aircraft (non-same-owner, non-self)
+        // Enemy aircraft (non-same-owner, non-self, not fellow autonomous)
         List<AircraftEntity> enemyAircraft = sl.getEntitiesOfClass(AircraftEntity.class, box,
                 ae -> ae.isAlive() && ae != this
-                        && !(ownerUUID != null && ownerUUID.equals(ae.ownerUUID)));
+                        && !(ownerUUID != null && ownerUUID.equals(ae.ownerUUID))
+                        && !(this.autonomous && ae.autonomous));
         if (!enemyAircraft.isEmpty()) {
             return enemyAircraft.stream()
                     .min(Comparator.comparingDouble(this::distanceTo))
@@ -1889,6 +1934,13 @@ public class AircraftEntity extends Entity {
     @Nullable
     public UUID getOwnerUUID() { return ownerUUID; }
 
+    public boolean isAutonomous() { return autonomous; }
+
+    /**
+     * Returns the player owner of this aircraft, or null if offline or autonomous.
+     * NOTE: server-side only — always returns null on the client side. Client code
+     * that needs to know the owner UUID should use {@link #getOwnerUUID()} instead.
+     */
     @Nullable
     public Player getOwner() {
         if (ownerUUID == null) return null;
@@ -1991,6 +2043,7 @@ public class AircraftEntity extends Entity {
         super.onAddedToLevel();
         if (!level().isClientSide() && ownerUUID != null) {
             com.piranport.aviation.AircraftIndex.add(ownerUUID, this);
+            indexRegistered = true;
         }
     }
 
@@ -1999,6 +2052,7 @@ public class AircraftEntity extends Entity {
         super.onRemovedFromLevel();
         if (!level().isClientSide() && ownerUUID != null) {
             com.piranport.aviation.AircraftIndex.remove(ownerUUID, this);
+            indexRegistered = false;
         }
     }
 
@@ -2055,6 +2109,28 @@ public class AircraftEntity extends Entity {
         if (tag.contains("HomeX")) {
             homePosition = new Vec3(tag.getDouble("HomeX"), tag.getDouble("HomeY"), tag.getDouble("HomeZ"));
         }
+        stateTicks = tag.getInt("StateTicks");
+        attackCooldown = tag.getInt("AttackCooldown");
+        autoSeekDone = tag.getBoolean("AutoSeekDone");
+        hasEverHadFireControl = tag.getBoolean("HasEverHadFireControl");
+        diveCommitted = tag.getBoolean("DiveCommitted");
+        if (tag.contains("DiveTargetX")) {
+            diveTarget = new Vec3(tag.getDouble("DiveTargetX"), tag.getDouble("DiveTargetY"), tag.getDouble("DiveTargetZ"));
+        }
+        levelBombDropped = tag.getBoolean("LevelBombDropped");
+        if (tag.contains("LevelRunDirX")) {
+            levelRunDirection = new Vec3(tag.getDouble("LevelRunDirX"), tag.getDouble("LevelRunDirY"), tag.getDouble("LevelRunDirZ"));
+        }
+        if (tag.contains("LevelDropPointX")) {
+            levelDropPoint = new Vec3(tag.getDouble("LevelDropPointX"), tag.getDouble("LevelDropPointY"), tag.getDouble("LevelDropPointZ"));
+        }
+        appliedSlowness = tag.getBoolean("AppliedSlowness");
+        if (tag.contains("LastKnownState")) {
+            try { lastKnownState = FlightState.valueOf(tag.getString("LastKnownState")); }
+            catch (IllegalArgumentException e) { lastKnownState = FlightState.LAUNCHING; }
+        }
+        isForcedReturn = tag.getBoolean("IsForcedReturn");
+        if (tag.contains("OrbitAngle")) orbitAngle = tag.getDouble("OrbitAngle");
     }
 
     @Override
@@ -2095,5 +2171,31 @@ public class AircraftEntity extends Entity {
             tag.putDouble("HomeY", homePosition.y);
             tag.putDouble("HomeZ", homePosition.z);
         }
+        // Runtime-but-must-survive-chunk-unload fields
+        tag.putInt("StateTicks", stateTicks);
+        tag.putInt("AttackCooldown", attackCooldown);
+        tag.putBoolean("AutoSeekDone", autoSeekDone);
+        tag.putBoolean("HasEverHadFireControl", hasEverHadFireControl);
+        tag.putBoolean("DiveCommitted", diveCommitted);
+        if (diveTarget != null) {
+            tag.putDouble("DiveTargetX", diveTarget.x);
+            tag.putDouble("DiveTargetY", diveTarget.y);
+            tag.putDouble("DiveTargetZ", diveTarget.z);
+        }
+        tag.putBoolean("LevelBombDropped", levelBombDropped);
+        if (levelRunDirection != null) {
+            tag.putDouble("LevelRunDirX", levelRunDirection.x);
+            tag.putDouble("LevelRunDirY", levelRunDirection.y);
+            tag.putDouble("LevelRunDirZ", levelRunDirection.z);
+        }
+        if (levelDropPoint != null) {
+            tag.putDouble("LevelDropPointX", levelDropPoint.x);
+            tag.putDouble("LevelDropPointY", levelDropPoint.y);
+            tag.putDouble("LevelDropPointZ", levelDropPoint.z);
+        }
+        tag.putBoolean("AppliedSlowness", appliedSlowness);
+        tag.putString("LastKnownState", lastKnownState.name());
+        tag.putBoolean("IsForcedReturn", isForcedReturn);
+        tag.putDouble("OrbitAngle", orbitAngle);
     }
 }

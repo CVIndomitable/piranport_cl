@@ -33,6 +33,13 @@ public final class FriendlyFireHelper {
                 return true; // protect other players' aircraft when FF disabled
             }
         }
+        // Autonomous fratricide protection: one autonomous aircraft's projectile
+        // (owner = the firing AircraftEntity) hitting another autonomous aircraft
+        if (target instanceof AircraftEntity targetAir && targetAir.isAutonomous()
+                && owner instanceof AircraftEntity ownerAir && ownerAir.isAutonomous()
+                && owner != target) {
+            return true;
+        }
         return false;
     }
 }

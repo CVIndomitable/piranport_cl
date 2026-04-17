@@ -2,6 +2,7 @@ package com.piranport.registry;
 
 import com.piranport.PiranPort;
 import com.piranport.entity.AerialBombEntity;
+import com.piranport.entity.AircraftDropEntity;
 import com.piranport.entity.AircraftEntity;
 import com.piranport.entity.BulletEntity;
 import com.piranport.entity.CannonProjectileEntity;
@@ -49,6 +50,14 @@ public class ModEntityTypes {
                     .clientTrackingRange(16)
                     .updateInterval(1)
                     .build("piranport:aircraft_entity"));
+
+    public static final DeferredHolder<EntityType<?>, EntityType<AircraftDropEntity>>
+            AIRCRAFT_DROP = ENTITY_TYPES.register("aircraft_drop",
+            () -> EntityType.Builder.<AircraftDropEntity>of(AircraftDropEntity::new, MobCategory.MISC)
+                    .sized(0.25f, 0.25f)
+                    .clientTrackingRange(6)
+                    .updateInterval(20)
+                    .build("piranport:aircraft_drop"));
 
     public static final DeferredHolder<EntityType<?>, EntityType<FloatingTargetEntity>>
             FLOATING_TARGET = ENTITY_TYPES.register("floating_target",

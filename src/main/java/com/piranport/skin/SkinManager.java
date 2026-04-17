@@ -1,30 +1,26 @@
 package com.piranport.skin;
 
 import com.piranport.network.SkinSyncPayload;
+import com.piranport.registry.ModAttachmentTypes;
 import com.piranport.registry.ModItems;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.PacketDistributor;
 
-// TODO: migrate from getPersistentData() (legacy NBT) to NeoForge Entity Attachments
-//       for proper data isolation and lifecycle management.
 public class SkinManager {
-    private static final String SKIN_KEY = "piranport_active_skin";
 
     public static int getActiveSkin(Player player) {
-        CompoundTag data = player.getPersistentData();
-        return data.getInt(SKIN_KEY);
+        return player.getData(ModAttachmentTypes.ACTIVE_SKIN.get());
     }
 
     public static void setActiveSkin(ServerPlayer player, int skinId) {
-        player.getPersistentData().putInt(SKIN_KEY, skinId);
+        player.setData(ModAttachmentTypes.ACTIVE_SKIN.get(), skinId);
         PacketDistributor.sendToAllPlayers(new SkinSyncPayload(player.getUUID(), skinId));
     }
 
     public static void clearActiveSkin(ServerPlayer player) {
-        player.getPersistentData().putInt(SKIN_KEY, 0);
+        player.setData(ModAttachmentTypes.ACTIVE_SKIN.get(), 0);
         PacketDistributor.sendToAllPlayers(new SkinSyncPayload(player.getUUID(), 0));
     }
 

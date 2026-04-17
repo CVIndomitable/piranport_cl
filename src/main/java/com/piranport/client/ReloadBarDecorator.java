@@ -5,6 +5,7 @@ import com.piranport.component.LoadedAmmo;
 import com.piranport.component.SlotCooldowns;
 import com.piranport.item.AircraftItem;
 import com.piranport.item.CannonItem;
+import com.piranport.item.MissileLauncherItem;
 import com.piranport.item.ShipCoreItem;
 import com.piranport.item.TorpedoLauncherItem;
 import com.piranport.registry.ModDataComponents;
@@ -88,14 +89,20 @@ public class ReloadBarDecorator implements IItemDecorator {
 
             float cd = cooldowns.getFraction(i, currentTick);
 
-            // Torpedo launcher with no loaded ammo and no reload item equipped can't
-            // actually reload — showing a moving cooldown bar would mislead the player
-            // into thinking it will be ready to fire. Force the empty/background bar.
-            boolean torpedoCannotReload = false;
+            // Manual-reload launcher with no loaded ammo can't actually fire —
+            // showing a moving cooldown bar would mislead the player.
+            // Torpedo launcher also needs a reload item to auto-reload from inventory;
+            // anti-ship/rocket missiles only reload at the Reload Facility block.
+            boolean launcherCannotReload = false;
             if (weapon.getItem() instanceof TorpedoLauncherItem) {
                 LoadedAmmo loaded = weapon.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
                 if (!loaded.hasAmmo() && !TransformationManager.hasTorpedoReloadEquipped(player, stack)) {
-                    torpedoCannotReload = true;
+                    launcherCannotReload = true;
+                }
+            } else if (weapon.getItem() instanceof MissileLauncherItem ml && ml.isManualReload()) {
+                LoadedAmmo loaded = weapon.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
+                if (!loaded.hasAmmo() && !TransformationManager.hasTorpedoReloadEquipped(player, stack)) {
+                    launcherCannotReload = true;
                 }
             }
 
@@ -107,12 +114,12 @@ public class ReloadBarDecorator implements IItemDecorator {
                 loadingColor = AIRCRAFT_LOADING;
                 readyColor   = AIRCRAFT_READY;
             } else {
-                // cannons (and anything else)
+                // cannons, missiles, and anything else
                 loadingColor = CANNON_LOADING;
                 readyColor   = CANNON_READY;
             }
 
-            if (torpedoCannotReload) {
+            if (launcherCannotReload) {
                 // empty bar: background already drawn above
             } else if (cd <= 0f) {
                 // Ready: solid bright color — but only if ammo is actually available.

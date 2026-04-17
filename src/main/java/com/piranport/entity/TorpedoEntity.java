@@ -223,28 +223,33 @@ public class TorpedoEntity extends ThrowableItemProjectile {
 
         Vec3 motion = getDeltaMovement();
 
-        // 2. 恢复水平速度（抵消 super.tick() 施加的 0.99 空气阻力）
-        double currentH = Math.sqrt(motion.x * motion.x + motion.z * motion.z);
-        if (currentH > 0.001) {
-            double scale = torpedoSpeed / currentH;
-            motion = new Vec3(motion.x * scale, motion.y, motion.z * scale);
-        }
-
-        // 3. 水面贴合 AI
+        // 水面贴合 AI
         BlockPos pos = blockPosition();
         boolean inAir = level().getBlockState(pos).isAir();
         boolean waterBelow = level().getBlockState(pos.below()).getFluidState().is(Fluids.WATER);
         boolean inWater = level().getBlockState(pos).getFluidState().is(Fluids.WATER);
 
         if (inAir && waterBelow) {
-            // 水面航行：清除垂直速度
-            setDeltaMovement(motion.x, 0, motion.z);
+            // 水面航行：恢复水平速度，清除垂直速度
+            double currentH = Math.sqrt(motion.x * motion.x + motion.z * motion.z);
+            if (currentH > 0.001) {
+                double scale = torpedoSpeed / currentH;
+                setDeltaMovement(motion.x * scale, 0, motion.z * scale);
+            } else {
+                setDeltaMovement(motion.x, 0, motion.z);
+            }
         } else if (inWater) {
-            // 在水中：向上浮
-            setDeltaMovement(motion.x, motion.y + 0.04, motion.z);
+            // 在水中：恢复水平速度并向上浮
+            double currentH = Math.sqrt(motion.x * motion.x + motion.z * motion.z);
+            if (currentH > 0.001) {
+                double scale = torpedoSpeed / currentH;
+                setDeltaMovement(motion.x * scale, motion.y + 0.04, motion.z * scale);
+            } else {
+                setDeltaMovement(motion.x, motion.y + 0.04, motion.z);
+            }
         } else {
-            // 空中：向下坠落
-            setDeltaMovement(motion.x, motion.y - 0.06, motion.z);
+            // 空中自由下落：水平急速衰减 + 强重力，让鱼雷在 ~3 格内入水
+            setDeltaMovement(motion.x * 0.70, motion.y - 0.25, motion.z * 0.70);
         }
     }
 

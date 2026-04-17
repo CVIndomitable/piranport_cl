@@ -386,6 +386,7 @@ public class ModCreativeTabs {
                         output.accept(ModItems.FLOATING_TARGET.get());
                         output.accept(ModItems.MEDIUM_GUN_BLUEPRINT.get());
                         output.accept(ModItems.LARGE_GUN_BLUEPRINT.get());
+                        output.accept(ModItems.CREATIVE_BLUEPRINT.get());
                     }).build());
 
     // ===== 装饰 — 家具/花卉/模型 =====

@@ -84,9 +84,12 @@ public class WeaponWorkbenchScreen extends AbstractContainerScreen<WeaponWorkben
         for (ItemStack required : recipe.materials()) {
             if (!hasEnoughMaterial(required)) return false;
         }
-        if (recipe.requiredBlueprint() != null) {
-            ItemStack bp = menu.getSlot(0).getItem();
-            if (bp.isEmpty() || !bp.is(recipe.requiredBlueprint())) return false;
+        ItemStack bp = menu.getSlot(0).getItem();
+        if (bp.isEmpty()) return false;
+        boolean isCreativeBp = bp.is(ModItems.CREATIVE_BLUEPRINT.get());
+        if (!isCreativeBp) {
+            if (recipe.requiredBlueprint() == null) return false;
+            if (!bp.is(recipe.requiredBlueprint())) return false;
         }
         ItemStack output = menu.getSlot(7).getItem();
         if (!output.isEmpty()) {
@@ -212,30 +215,59 @@ public class WeaponWorkbenchScreen extends AbstractContainerScreen<WeaponWorkben
         WeaponWorkbenchRecipe recipe = getCurrentRecipe();
         if (recipe == null) return;
 
-        int ry = y + 100;
+        int headerY = y + 100;
         g.drawString(font, Component.translatable("gui.piranport.workbench.requires"),
-                x + 8, ry, 0xFF404040, false);
-        ry += 12;
+                x + 8, headerY, 0xFF404040, false);
+
+        // 每列最多 ROWS_PER_COL 行，超过换列，避免第三行侵入背包栏位
+        final int ROWS_PER_COL = 2;
+        final int COL_W = 70;
+        final int ROW_H = 16;
+        final int LIST_Y0 = headerY + 12;
+        int rowIdx = 0;
 
         for (ItemStack required : recipe.materials()) {
-            g.renderItem(required, x + 8, ry - 1);
+            int col = rowIdx / ROWS_PER_COL;
+            int row = rowIdx % ROWS_PER_COL;
+            int itemX = x + 8 + col * COL_W;
+            int itemY = LIST_Y0 + row * ROW_H;
+            g.renderItem(required, itemX, itemY - 1);
             boolean enough = hasEnoughMaterial(required);
             int color = enough ? 0xFF00AA00 : 0xFFAA0000;
             String txt = "x" + required.getCount() + " "
                     + required.getHoverName().getString();
-            g.drawString(font, txt, x + 26, ry + 3, color, false);
-            ry += 16;
+            if (font.width(txt) > COL_W - 20) {
+                txt = font.plainSubstrByWidth(txt, COL_W - 24) + "..";
+            }
+            g.drawString(font, txt, itemX + 18, itemY + 3, color, false);
+            rowIdx++;
         }
 
+        // 蓝图行：无论是否指定特定蓝图，都显示要求（未指定时只接受创造模式蓝图）
+        ItemStack bpSlot = menu.getSlot(0).getItem();
+        ItemStack bpStack;
+        boolean hasBp;
         if (recipe.requiredBlueprint() != null) {
-            ItemStack bpStack = new ItemStack(recipe.requiredBlueprint());
-            boolean hasBp = !menu.getSlot(0).getItem().isEmpty()
-                    && menu.getSlot(0).getItem().is(recipe.requiredBlueprint());
-            int color = hasBp ? 0xFF00AA00 : 0xFFAA0000;
-            g.renderItem(bpStack, x + 8, ry - 1);
-            g.drawString(font, bpStack.getHoverName().getString(),
-                    x + 26, ry + 3, color, false);
+            bpStack = new ItemStack(recipe.requiredBlueprint());
+            hasBp = !bpSlot.isEmpty()
+                    && (bpSlot.is(recipe.requiredBlueprint())
+                        || bpSlot.is(com.piranport.registry.ModItems.CREATIVE_BLUEPRINT.get()));
+        } else {
+            bpStack = new ItemStack(com.piranport.registry.ModItems.CREATIVE_BLUEPRINT.get());
+            hasBp = !bpSlot.isEmpty()
+                    && bpSlot.is(com.piranport.registry.ModItems.CREATIVE_BLUEPRINT.get());
         }
+        int color = hasBp ? 0xFF00AA00 : 0xFFAA0000;
+        int col = rowIdx / ROWS_PER_COL;
+        int row = rowIdx % ROWS_PER_COL;
+        int itemX = x + 8 + col * COL_W;
+        int itemY = LIST_Y0 + row * ROW_H;
+        g.renderItem(bpStack, itemX, itemY - 1);
+        String bpName = bpStack.getHoverName().getString();
+        if (font.width(bpName) > COL_W - 20) {
+            bpName = font.plainSubstrByWidth(bpName, COL_W - 24) + "..";
+        }
+        g.drawString(font, bpName, itemX + 18, itemY + 3, color, false);
     }
 
     private void renderCraftButton(GuiGraphics g, int x, int y, int mx, int my) {
@@ -296,6 +328,10 @@ public class WeaponWorkbenchScreen extends AbstractContainerScreen<WeaponWorkben
         int visibleCount = Math.min(recipes.size() - dropdownScroll, DD_MAX_VISIBLE);
         int listHeight = visibleCount * DD_ITEM_H;
 
+        // 下拉需置于最上层：抬高 Z 以盖住预览图标/槽位物品（物品渲染 Z≈100~200）
+        g.pose().pushPose();
+        g.pose().translate(0, 0, 400);
+
         // 背景
         g.fill(x - 1, y - 1, x + DD_W + 1, y + listHeight + 1, 0xFF373737);
         g.fill(x, y, x + DD_W, y + listHeight, 0xFFE8E8E8);
@@ -327,6 +363,8 @@ public class WeaponWorkbenchScreen extends AbstractContainerScreen<WeaponWorkben
         if (dropdownScroll + DD_MAX_VISIBLE < recipes.size()) {
             g.drawString(font, "\u25BC", x + DD_W - 10, y + listHeight - 10, 0xFF808080, false);
         }
+
+        g.pose().popPose();
     }
 
     @Override

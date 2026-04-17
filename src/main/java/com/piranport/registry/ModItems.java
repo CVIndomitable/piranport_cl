@@ -333,6 +333,9 @@ public class ModItems {
             ITEMS.registerSimpleItem("medium_gun_blueprint", new Item.Properties().stacksTo(1));
     public static final DeferredItem<Item> LARGE_GUN_BLUEPRINT =
             ITEMS.registerSimpleItem("large_gun_blueprint", new Item.Properties().stacksTo(1));
+    public static final DeferredItem<Item> CREATIVE_BLUEPRINT =
+            ITEMS.registerSimpleItem("creative_blueprint",
+                    new Item.Properties().stacksTo(1).rarity(net.minecraft.world.item.Rarity.EPIC));
 
     // ===== Intermediate Products (Phase 13/16) =====
     public static final DeferredItem<Item> SAUSAGE            = ITEMS.registerSimpleItem("sausage");

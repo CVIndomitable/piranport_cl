@@ -164,6 +164,8 @@
   "container.piranport.weapon_workbench": "Weapon Workbench",
   "item.piranport.medium_gun_blueprint": "Medium Gun Blueprint",
   "item.piranport.large_gun_blueprint": "Large Gun Blueprint",
+  "item.piranport.creative_blueprint": "Creative Mode Blueprint",
+  "item.piranport.creative_blueprint.tooltip": "Debug: substitutes for any required blueprint",
   "gui.piranport.workbench.tab.cannon": "Cannons",
   "gui.piranport.workbench.tab.torpedo": "Torpedo Launchers",
   "gui.piranport.workbench.tab.missile": "Missile Launchers",

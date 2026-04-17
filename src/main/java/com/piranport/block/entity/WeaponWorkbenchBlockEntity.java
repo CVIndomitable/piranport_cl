@@ -4,6 +4,7 @@ import com.piranport.crafting.WeaponWorkbenchRecipe;
 import com.piranport.crafting.WeaponWorkbenchRecipeRegistry;
 import com.piranport.menu.WeaponWorkbenchMenu;
 import com.piranport.registry.ModBlockEntityTypes;
+import com.piranport.registry.ModItems;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
@@ -134,12 +135,13 @@ public class WeaponWorkbenchBlockEntity extends BlockEntity implements MenuProvi
     }
 
     public boolean canCraft(WeaponWorkbenchRecipe recipe) {
-        // 蓝图检查
-        if (recipe.requiredBlueprint() != null) {
-            ItemStack bp = itemHandler.getStackInSlot(BLUEPRINT_SLOT);
-            if (bp.isEmpty() || !bp.is(recipe.requiredBlueprint())) {
-                return false;
-            }
+        // 蓝图检查：槽位必须有蓝图（创造蓝图可作为通用替代）
+        ItemStack bp = itemHandler.getStackInSlot(BLUEPRINT_SLOT);
+        if (bp.isEmpty()) return false;
+        boolean isCreativeBp = bp.is(ModItems.CREATIVE_BLUEPRINT.get());
+        if (!isCreativeBp) {
+            if (recipe.requiredBlueprint() == null) return false;
+            if (!bp.is(recipe.requiredBlueprint())) return false;
         }
         // 原料检查
         for (ItemStack required : recipe.materials()) {

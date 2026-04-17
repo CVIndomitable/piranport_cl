@@ -164,6 +164,8 @@
   "container.piranport.weapon_workbench": "武器合成台",
   "item.piranport.medium_gun_blueprint": "中型火炮蓝图",
   "item.piranport.large_gun_blueprint": "大型火炮蓝图",
+  "item.piranport.creative_blueprint": "创造模式蓝图",
+  "item.piranport.creative_blueprint.tooltip": "调试用：可替代任意配方所需蓝图",
   "gui.piranport.workbench.tab.cannon": "火炮",
   "gui.piranport.workbench.tab.torpedo": "鱼雷发射器",
   "gui.piranport.workbench.tab.missile": "导弹发射器",

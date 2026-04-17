@@ -307,6 +307,11 @@ public final class PiranPortCommands {
             source.sendFailure(Component.literal("Must be run by a player"));
             return 0;
         }
+        if (!PiranPortDebug.isServerEnabled()) {
+            source.sendFailure(Component.literal(
+                    "§c此指令需要先开启调试模式（按 F8 开启）"));
+            return 0;
+        }
         if (!"b25".equals(modelType) && !"f4f".equals(modelType)) {
             source.sendFailure(Component.literal("Unknown model: " + modelType + " (supported: b25, f4f)"));
             return 0;

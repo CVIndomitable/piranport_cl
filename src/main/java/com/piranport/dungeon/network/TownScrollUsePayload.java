@@ -41,39 +41,54 @@ public record TownScrollUsePayload() implements CustomPacketPayload {
             if (!player.level().dimension().equals(
                     com.piranport.dungeon.event.DungeonEventHandler.DUNGEON_DIMENSION)) return;
 
-            // Find and consume town scroll
-            Inventory inv = player.getInventory();
-            boolean found = false;
-            for (int i = 0; i < inv.getContainerSize(); i++) {
-                ItemStack stack = inv.getItem(i);
-                if (stack.getItem() instanceof com.piranport.dungeon.item.TownScrollItem) {
-                    stack.shrink(1);
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) return;
+            // Require a recent server-side right-click intent so a hand-crafted
+            // payload from a tampered client cannot trigger the teleport on its own.
+            com.piranport.dungeon.item.TownScrollItem.Intent intent =
+                    com.piranport.dungeon.item.TownScrollItem.consumeIntent(player.getUUID());
+            if (intent == null) return;
 
-            // Find active instance via key
+            Inventory inv = player.getInventory();
+
+            // Pre-check: player must hold an active dungeon instance via key, otherwise
+            // refund the intent (no consume) so the totem-equivalent isn't burned.
+            DungeonInstanceManager mgr = DungeonInstanceManager.get((ServerLevel) player.level());
+            DungeonInstance targetInstance = null;
             for (int i = 0; i < inv.getContainerSize(); i++) {
                 ItemStack stack = inv.getItem(i);
                 if (stack.getItem() instanceof DungeonKeyItem) {
                     java.util.UUID instanceId = DungeonKeyItem.getInstanceId(stack);
                     if (instanceId == null) continue;
-
-                    DungeonInstanceManager mgr = DungeonInstanceManager.get(
-                            (ServerLevel) player.level());
-                    DungeonInstance instance = mgr.getInstance(instanceId);
-                    if (instance == null) continue;
-
-                    // Teleport back to lectern
-                    DungeonEventHandler.teleportToLectern(player, instance);
-
-                    // Check if dungeon is now empty
-                    DungeonEventHandler.checkAndSuspendIfEmpty(player.server, instance);
-                    return;
+                    DungeonInstance inst = mgr.getInstance(instanceId);
+                    if (inst != null) {
+                        targetInstance = inst;
+                        break;
+                    }
                 }
             }
+            if (targetInstance == null) return;
+
+            // Try to consume the exact slot the player right-clicked. Fall back to
+            // any TownScrollItem in inventory if the slot moved (e.g. drag).
+            int slot = intent.slot();
+            ItemStack chosen = (slot >= 0 && slot < inv.getContainerSize())
+                    ? inv.getItem(slot) : ItemStack.EMPTY;
+            if (!(chosen.getItem() instanceof com.piranport.dungeon.item.TownScrollItem)) {
+                int fallback = -1;
+                for (int i = 0; i < inv.getContainerSize(); i++) {
+                    if (inv.getItem(i).getItem()
+                            instanceof com.piranport.dungeon.item.TownScrollItem) {
+                        fallback = i;
+                        break;
+                    }
+                }
+                if (fallback < 0) return;
+                chosen = inv.getItem(fallback);
+            }
+
+            chosen.shrink(1);
+
+            DungeonEventHandler.teleportToLectern(player, targetInstance);
+            DungeonEventHandler.checkAndSuspendIfEmpty(player.server, targetInstance);
         });
     }
 }

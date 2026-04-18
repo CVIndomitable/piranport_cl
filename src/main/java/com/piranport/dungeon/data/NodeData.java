@@ -1,5 +1,9 @@
 package com.piranport.dungeon.data;
 
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Item;
+
 import java.util.List;
 
 /**
@@ -34,7 +38,20 @@ public record NodeData(
         public RewardEntry(String item, int count) {
             this(item, count, 1.0f);
         }
+
+        /** Resolves the registered Item once at access (registries already populated by data load). */
+        public Item resolvedItem() {
+            ResourceLocation id = ResourceLocation.tryParse(item);
+            if (id == null) return null;
+            return BuiltInRegistries.ITEM.getOptional(id).orElse(null);
+        }
     }
 
-    public record CostEntry(String item, int count) {}
+    public record CostEntry(String item, int count) {
+        public Item resolvedItem() {
+            ResourceLocation id = ResourceLocation.tryParse(item);
+            if (id == null) return null;
+            return BuiltInRegistries.ITEM.getOptional(id).orElse(null);
+        }
+    }
 }

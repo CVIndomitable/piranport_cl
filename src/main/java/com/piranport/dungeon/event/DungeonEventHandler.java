@@ -86,9 +86,17 @@ public class DungeonEventHandler {
         event.setCanceled(true);
         player.setHealth(player.getMaxHealth());
         player.invulnerableTime = 40; // 2 seconds of damage immunity frames
-        // Clear residual DOT effects (fire, poison, wither) to prevent re-death after teleport
+        // Clear residual DOT effects only — preserve buffs from food / 装填加速 / 高速规避 etc.
         player.clearFire();
-        player.removeAllEffects();
+        java.util.List<net.minecraft.core.Holder<net.minecraft.world.effect.MobEffect>> harmful =
+                new java.util.ArrayList<>();
+        for (var inst : player.getActiveEffects()) {
+            if (inst.getEffect().value().getCategory()
+                    == net.minecraft.world.effect.MobEffectCategory.HARMFUL) {
+                harmful.add(inst.getEffect());
+            }
+        }
+        for (var h : harmful) player.removeEffect(h);
 
         // Find the player's instance and teleport to lectern
         DungeonInstanceManager mgr = DungeonInstanceManager.get((ServerLevel) player.level());
@@ -112,10 +120,12 @@ public class DungeonEventHandler {
     @SubscribeEvent
     public static void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
-        if (!isInDungeon(player)) return;
 
-        // Check active instance and handle flagship transfer
-        DungeonInstanceManager mgr = DungeonInstanceManager.get((ServerLevel) player.level());
+        // Always sweep the player's keys: a player may log out from the lectern
+        // (overworld) after returning via town scroll, in which case the early
+        // isInDungeon() guard previously left the instance permanently ACTIVE.
+        DungeonInstanceManager mgr = DungeonInstanceManager.get(player.server.overworld());
+        UUID leavingId = player.getUUID();
         for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
             ItemStack stack = player.getInventory().getItem(i);
             if (stack.getItem() instanceof DungeonKeyItem) {
@@ -123,10 +133,44 @@ public class DungeonEventHandler {
                 if (instanceId == null) continue;
                 DungeonInstance instance = mgr.getInstance(instanceId);
                 if (instance != null) {
+                    // If the leaving player is the flagship, hand off to another
+                    // online member so the dungeon can continue.
+                    if (leavingId.equals(instance.getFlagshipUuid())) {
+                        ServerPlayer next = pickNextFlagshipPlayer(player.server, instance, leavingId);
+                        if (next != null) {
+                            instance.setFlagshipUuid(next.getUUID());
+                            mgr.setDirty();
+                            // Stamp the instanceId onto the new flagship's key so they can
+                            // continue selecting nodes (SelectNodePayload reads instanceId
+                            // from the key stack).
+                            int newKeySlot = FlagshipManager.findAnyKeySlot(next);
+                            if (newKeySlot >= 0) {
+                                ItemStack newKeyStack = next.getInventory().getItem(newKeySlot);
+                                DungeonKeyItem.setInstanceId(newKeyStack, instanceId);
+                                String stageId = DungeonKeyItem.getStageId(stack);
+                                if (stageId != null && !stageId.isEmpty()) {
+                                    newKeyStack.set(com.piranport.registry.ModDataComponents.DUNGEON_STAGE_ID.get(), stageId);
+                                }
+                            }
+                            next.sendSystemMessage(Component.translatable(
+                                    "dungeon.piranport.flagship_promoted"));
+                        }
+                    }
                     checkAndSuspendIfEmpty(player.server, instance);
                 }
             }
         }
+    }
+
+    /** Find another online instance member to take over the flagship role. */
+    private static ServerPlayer pickNextFlagshipPlayer(MinecraftServer server,
+                                                         DungeonInstance instance, UUID leaving) {
+        for (UUID uuid : instance.getPlayerUuids()) {
+            if (uuid.equals(leaving)) continue;
+            ServerPlayer p = server.getPlayerList().getPlayer(uuid);
+            if (p != null) return p;
+        }
+        return null;
     }
 
     @SubscribeEvent
@@ -134,195 +178,17 @@ public class DungeonEventHandler {
         DungeonLobbyManager.INSTANCE.clearAll();
     }
 
-    // ===== Node Entry Logic =====
+    // ===== Node Entry Logic — delegated to DungeonNodeRouter =====
 
-    /**
-     * Called when the flagship selects a node to enter.
-     */
+    /** Called when the flagship selects a node to enter. */
     public static void enterNode(ServerLevel level, DungeonInstance instance,
                                    NodeData node, StageData stage,
                                    ServerPlayer flagship, ItemStack keyStack,
                                    DungeonLobbyManager.Lobby lobby) {
-        switch (node.type()) {
-            case RESOURCE -> handleResourceNode(instance, node, flagship, keyStack);
-            case COST -> handleCostNode(instance, node, flagship, keyStack);
-            case BATTLE, BOSS -> {
-                if (node.script() != null && !node.script().isEmpty()) {
-                    handleScriptedBattleNode(level, instance, node, stage,
-                            flagship, keyStack, lobby);
-                } else {
-                    handleBattleNode(level, instance, node, stage,
-                            flagship, keyStack, lobby);
-                }
-            }
-        }
+        DungeonNodeRouter.enterNode(level, instance, node, stage, flagship, keyStack, lobby);
     }
 
-    private static void handleResourceNode(DungeonInstance instance, NodeData node,
-                                            ServerPlayer player, ItemStack keyStack) {
-        // Give rewards directly
-        for (NodeData.RewardEntry reward : node.rewards()) {
-            if (reward.chance() < 1.0f && player.getRandom().nextFloat() > reward.chance()) continue;
-
-            ResourceLocation itemId = ResourceLocation.tryParse(reward.item());
-            if (itemId == null) continue;
-            var itemType = net.minecraft.core.registries.BuiltInRegistries.ITEM.getOptional(itemId);
-            if (itemType.isEmpty()) continue;
-
-            ItemStack rewardStack = new ItemStack(itemType.get(), reward.count());
-            if (!player.getInventory().add(rewardStack)) {
-                player.drop(rewardStack, false);
-            }
-        }
-
-        player.sendSystemMessage(Component.translatable("dungeon.piranport.resource_collected"));
-
-        // Mark node cleared
-        DungeonInstanceManager mgr = DungeonInstanceManager.get((ServerLevel) player.level());
-        mgr.advanceNode(instance.getInstanceId(), node.nodeId(), keyStack);
-    }
-
-    private static void handleCostNode(DungeonInstance instance, NodeData node,
-                                        ServerPlayer player, ItemStack keyStack) {
-        // Check costs
-        for (NodeData.CostEntry cost : node.cost()) {
-            ResourceLocation itemId = ResourceLocation.tryParse(cost.item());
-            if (itemId == null) continue;
-            var itemType = net.minecraft.core.registries.BuiltInRegistries.ITEM.getOptional(itemId);
-            if (itemType.isEmpty()) continue;
-
-            int count = countItem(player, itemType.get());
-            if (count < cost.count()) {
-                player.sendSystemMessage(Component.translatable("dungeon.piranport.insufficient_cost",
-                        cost.count(), itemType.get().getDescription()));
-                return;
-            }
-        }
-
-        // Deduct costs
-        for (NodeData.CostEntry cost : node.cost()) {
-            ResourceLocation itemId = ResourceLocation.tryParse(cost.item());
-            if (itemId == null) continue;
-            var itemType = net.minecraft.core.registries.BuiltInRegistries.ITEM.getOptional(itemId);
-            if (itemType.isEmpty()) continue;
-            removeItems(player, itemType.get(), cost.count());
-        }
-
-        if (!node.costMessage().isEmpty()) {
-            player.sendSystemMessage(Component.literal(node.costMessage()));
-        }
-
-        // Mark node cleared
-        DungeonInstanceManager mgr = DungeonInstanceManager.get((ServerLevel) player.level());
-        mgr.advanceNode(instance.getInstanceId(), node.nodeId(), keyStack);
-    }
-
-    /**
-     * Shared setup for battle nodes: validate dimension, advance progress, generate terrain,
-     * gather and teleport players, close lobby. Returns the teleported players (and their UUIDs),
-     * or null if the dungeon dimension is not available.
-     */
-    private record BattleSetupResult(ServerLevel dungeonLevel, List<ServerPlayer> players, List<UUID> playerUuids) {}
-
-    private static BattleSetupResult prepareBattleNode(ServerLevel level, DungeonInstance instance,
-                                                        NodeData node, ServerPlayer flagship,
-                                                        ItemStack keyStack, DungeonLobbyManager.Lobby lobby) {
-        ServerLevel dungeonLevel = getDungeonLevel(level.getServer());
-        if (dungeonLevel == null) {
-            PiranPort.LOGGER.error("Dungeon dimension not found!");
-            flagship.sendSystemMessage(Component.literal("Error: Dungeon dimension not available"));
-            return null;
-        }
-
-        // Update instance progress
-        DungeonInstanceManager mgr = DungeonInstanceManager.get(level);
-        mgr.advanceNode(instance.getInstanceId(), node.nodeId(), keyStack);
-
-        // Generate battlefield
-        NodeBattleField.generateTerrain(dungeonLevel, instance, node.nodeId());
-
-        // Gather all lobby members
-        BlockPos spawn = instance.getNodeSpawnPos(node.nodeId());
-        List<ServerPlayer> toTeleport = new ArrayList<>();
-        List<UUID> playerUuids = new ArrayList<>();
-        toTeleport.add(flagship);
-        playerUuids.add(flagship.getUUID());
-
-        if (lobby != null) {
-            for (UUID memberUuid : lobby.getMemberUuids()) {
-                if (memberUuid.equals(flagship.getUUID())) continue;
-                ServerPlayer member = level.getServer().getPlayerList().getPlayer(memberUuid);
-                if (member != null) {
-                    toTeleport.add(member);
-                    playerUuids.add(memberUuid);
-                    instance.addPlayer(memberUuid);
-                }
-            }
-        }
-
-        // Teleport and sync
-        for (ServerPlayer player : toTeleport) {
-            ItemStack scroll = new ItemStack(ModItems.TOWN_SCROLL.get());
-            if (!player.getInventory().add(scroll)) {
-                player.drop(scroll, false);
-            }
-
-            player.teleportTo(dungeonLevel,
-                    spawn.getX() + 0.5, spawn.getY(), spawn.getZ() + 0.5,
-                    player.getYRot(), player.getXRot());
-
-            StageData stageData = DungeonRegistry.INSTANCE.getStage(instance.getStageId());
-            String stageName = stageData != null ? stageData.displayName() : instance.getStageId();
-            PacketDistributor.sendToPlayer(player,
-                    new DungeonStatePayload(stageName, node.nodeId(),
-                            instance.getStartTimeMillis()));
-        }
-
-        // Close lobby after entering dungeon
-        if (lobby != null) {
-            DungeonLobbyManager.INSTANCE.removeLobby(lobby.getLecternPos());
-        }
-
-        return new BattleSetupResult(dungeonLevel, toTeleport, playerUuids);
-    }
-
-    private static void handleBattleNode(ServerLevel level, DungeonInstance instance,
-                                          NodeData node, StageData stage,
-                                          ServerPlayer flagship, ItemStack keyStack,
-                                          DungeonLobbyManager.Lobby lobby) {
-        BattleSetupResult setup = prepareBattleNode(level, instance, node, flagship, keyStack, lobby);
-        if (setup == null) return;
-
-        // Spawn enemies for standard battle
-        NodeBattleField.spawnEnemies(setup.dungeonLevel(), instance, node);
-    }
-
-    /**
-     * Handles battle nodes with a script field (e.g. "artillery_intro").
-     * Teleports players to the battlefield first, then starts the script.
-     */
-    private static void handleScriptedBattleNode(ServerLevel level, DungeonInstance instance,
-                                                   NodeData node, StageData stage,
-                                                   ServerPlayer flagship, ItemStack keyStack,
-                                                   DungeonLobbyManager.Lobby lobby) {
-        BattleSetupResult setup = prepareBattleNode(level, instance, node, flagship, keyStack, lobby);
-        if (setup == null) return;
-
-        // Start the script
-        StageData stageData = DungeonRegistry.INSTANCE.getStage(instance.getStageId());
-        String displayName = stageData != null ? stageData.displayName() : instance.getStageId();
-
-        if ("artillery_intro".equals(node.script())) {
-            var script = new com.piranport.dungeon.script.ArtilleryIntroScript(
-                    instance, node.nodeId(), displayName, setup.playerUuids());
-            com.piranport.dungeon.script.DungeonScriptManager.get(level.getServer())
-                    .start(instance.getInstanceId(), script);
-        } else {
-            PiranPort.LOGGER.warn("Unknown script: {}", node.script());
-            // Fallback: spawn enemies normally
-            NodeBattleField.spawnEnemies(setup.dungeonLevel(), instance, node);
-        }
-    }
+    // (Battle / Resource / Cost / Scripted handlers live in DungeonNodeRouter.)
 
     // ===== Portal Completion =====
 
@@ -377,18 +243,8 @@ public class DungeonEventHandler {
             List<String> rewardNames = new ArrayList<>();
             if (isFirstClear) {
                 savedData.markFirstCleared(stage.stageId(), playerUuid);
-                // Give first clear rewards
                 for (NodeData.RewardEntry reward : stage.firstClearRewards()) {
-                    ResourceLocation itemId = ResourceLocation.tryParse(reward.item());
-                    if (itemId == null) continue;
-                    var itemType = net.minecraft.core.registries.BuiltInRegistries.ITEM.getOptional(itemId);
-                    if (itemType.isEmpty()) continue;
-
-                    ItemStack rewardStack = new ItemStack(itemType.get(), reward.count());
-                    rewardNames.add(rewardStack.getHoverName().getString() + " x" + reward.count());
-                    if (!player.getInventory().add(rewardStack)) {
-                        player.drop(rewardStack, false);
-                    }
+                    RewardDispatcher.give(player, reward, rewardNames);
                 }
             }
 
@@ -420,15 +276,19 @@ public class DungeonEventHandler {
         }
 
         String dimKey = instance.getLecternDimension();
-        ServerLevel targetLevel;
+        ServerLevel targetLevel = null;
         if (dimKey != null) {
-            ResourceKey<Level> targetDim = ResourceKey.create(Registries.DIMENSION,
-                    ResourceLocation.tryParse(dimKey));
-            targetLevel = player.server.getLevel(targetDim);
-        } else {
-            targetLevel = player.server.overworld();
+            ResourceLocation parsed = ResourceLocation.tryParse(dimKey);
+            if (parsed != null) {
+                ResourceKey<Level> targetDim = ResourceKey.create(Registries.DIMENSION, parsed);
+                targetLevel = player.server.getLevel(targetDim);
+            }
+            if (targetLevel == null) {
+                PiranPort.LOGGER.warn(
+                        "Could not resolve lectern dimension '{}' for instance {} — falling back to overworld",
+                        dimKey, instance.getInstanceId());
+            }
         }
-
         if (targetLevel == null) {
             targetLevel = player.server.overworld();
         }
@@ -468,27 +328,4 @@ public class DungeonEventHandler {
         }
     }
 
-    private static int countItem(ServerPlayer player, net.minecraft.world.item.Item item) {
-        int count = 0;
-        for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
-            ItemStack stack = player.getInventory().getItem(i);
-            if (stack.getItem() == item) {
-                count += stack.getCount();
-            }
-        }
-        return count;
-    }
-
-    private static void removeItems(ServerPlayer player, net.minecraft.world.item.Item item,
-                                     int amount) {
-        int remaining = amount;
-        for (int i = 0; i < player.getInventory().getContainerSize() && remaining > 0; i++) {
-            ItemStack stack = player.getInventory().getItem(i);
-            if (stack.getItem() == item) {
-                int take = Math.min(remaining, stack.getCount());
-                stack.shrink(take);
-                remaining -= take;
-            }
-        }
-    }
 }

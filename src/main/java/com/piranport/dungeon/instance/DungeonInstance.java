@@ -25,6 +25,7 @@ public class DungeonInstance {
     private String currentNode;
     private final Set<String> clearedNodes = new HashSet<>();
     private final Set<UUID> playerUuids = new HashSet<>(); // all players who participated
+    private UUID flagshipUuid; // persistent flagship — survives lobby teardown
     private BlockPos lecternPos; // the lectern block that opened this instance
     private String lecternDimension; // dimension key of the lectern
     private long startTimeMillis;
@@ -44,8 +45,9 @@ public class DungeonInstance {
     public int getInstanceIndex() { return instanceIndex; }
     public State getState() { return state; }
     public String getCurrentNode() { return currentNode; }
-    public Set<String> getClearedNodes() { return Set.copyOf(clearedNodes); }
-    public Set<UUID> getPlayerUuids() { return Set.copyOf(playerUuids); }
+    public Set<String> getClearedNodes() { return java.util.Collections.unmodifiableSet(clearedNodes); }
+    public Set<UUID> getPlayerUuids() { return java.util.Collections.unmodifiableSet(playerUuids); }
+    public UUID getFlagshipUuid() { return flagshipUuid; }
     public BlockPos getLecternPos() { return lecternPos; }
     public String getLecternDimension() { return lecternDimension; }
     public long getStartTimeMillis() { return startTimeMillis; }
@@ -67,20 +69,25 @@ public class DungeonInstance {
 
     /**
      * Returns the spawn position for players entering this instance's current node.
+     * Uses the stage's deterministic lexicographic node index when available so
+     * nodeIds like "boss1"/"boss2" don't collide. Falls back to first-letter
+     * mapping for legacy single-letter ids when the stage hasn't loaded yet.
      */
     public BlockPos getNodeSpawnPos(String nodeId) {
-        // Nodes are laid out in a grid within the instance region.
-        // Simple: A=0, B=1, C=2, ... along X axis with NODE_AREA_SIZE spacing.
         int nodeIndex = 0;
-        if (nodeId != null && !nodeId.isEmpty()) {
+        com.piranport.dungeon.data.StageData stage =
+                com.piranport.dungeon.data.DungeonRegistry.INSTANCE.getStage(stageId);
+        if (stage != null && nodeId != null) {
+            nodeIndex = stage.nodeIndexOf(nodeId);
+        } else if (nodeId != null && !nodeId.isEmpty()) {
             char ch = nodeId.charAt(0);
             if (ch >= 'A' && ch <= 'Z') {
                 nodeIndex = ch - 'A';
             } else if (ch >= 'a' && ch <= 'z') {
                 nodeIndex = ch - 'a';
             } else {
-                // Fallback: use hashCode for non-letter nodeIds (floorMod avoids Integer.MIN_VALUE issue)
-                nodeIndex = Math.floorMod(nodeId.hashCode(), com.piranport.dungeon.DungeonConstants.MAX_NODES_PER_STAGE);
+                nodeIndex = Math.floorMod(nodeId.hashCode(),
+                        com.piranport.dungeon.DungeonConstants.MAX_NODES_PER_STAGE);
             }
         }
         int nodeX = getRegionOriginX() + nodeIndex * com.piranport.dungeon.DungeonConstants.NODE_AREA_SIZE
@@ -95,6 +102,7 @@ public class DungeonInstance {
     public void setCurrentNode(String node) { this.currentNode = node; }
     public void addClearedNode(String node) { clearedNodes.add(node); }
     public void addPlayer(UUID uuid) { playerUuids.add(uuid); }
+    public void setFlagshipUuid(UUID uuid) { this.flagshipUuid = uuid; }
     public void setLecternPos(BlockPos pos) { this.lecternPos = pos; }
     public void setLecternDimension(String dim) { this.lecternDimension = dim; }
     public void setStartTimeMillis(long t) { this.startTimeMillis = t; }
@@ -124,6 +132,9 @@ public class DungeonInstance {
         }
         tag.put("Players", playerList);
 
+        if (flagshipUuid != null) {
+            tag.putUUID("FlagshipUuid", flagshipUuid);
+        }
         if (lecternPos != null) {
             tag.put("LecternPos", NbtUtils.writeBlockPos(lecternPos));
         }
@@ -161,6 +172,9 @@ public class DungeonInstance {
             inst.playerUuids.add(NbtUtils.loadUUID(playerList.get(i)));
         }
 
+        if (tag.hasUUID("FlagshipUuid")) {
+            inst.flagshipUuid = tag.getUUID("FlagshipUuid");
+        }
         if (tag.contains("LecternPos")) {
             NbtUtils.readBlockPos(tag, "LecternPos").ifPresent(inst::setLecternPos);
         }

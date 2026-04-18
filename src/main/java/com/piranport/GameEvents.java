@@ -564,6 +564,13 @@ public class GameEvents {
             ServerLevel overworld = event.getServer().overworld();
             com.piranport.npc.ai.FleetGroupManager.get(overworld).cleanup(event.getServer());
         }
+
+        // Dungeon instance leak sweep every 12000 ticks (10 minutes):
+        // promotes pending freed indices and auto-cleans stale SUSPENDED instances.
+        if (event.getServer().getTickCount() % 12000 == 0) {
+            com.piranport.dungeon.instance.DungeonInstanceManager.get(event.getServer().overworld())
+                    .sweepLeaks(dungeonLevel);
+        }
     }
 
     /**

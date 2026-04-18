@@ -468,6 +468,10 @@
 
   "dungeon.piranport.resource_collected": "补给已收集！",
   "dungeon.piranport.insufficient_cost": "资源不足，需要 %s 个 %s",
+  "dungeon.piranport.stage_locked": "副本进行中，无法切换关卡。请先完成或放弃当前副本。",
+  "dungeon.piranport.revive_unavailable": "无法复活：未找到正在进行的副本。",
+  "dungeon.piranport.revive_no_totem": "复活需要 1 个不死图腾。",
+  "dungeon.piranport.flagship_promoted": "你已被指定为新的旗手，钥匙已转移到你的副本上。",
 
   "jei.piranport.cooking_pot": "厨锅",
   "jei.piranport.stone_mill": "石磨",

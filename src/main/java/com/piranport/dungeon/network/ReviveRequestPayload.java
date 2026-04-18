@@ -36,55 +36,64 @@ public record ReviveRequestPayload() implements CustomPacketPayload {
             // Only valid when player is NOT in the dungeon (teleported out on death)
             if (player.level().dimension().equals(
                     com.piranport.dungeon.event.DungeonEventHandler.DUNGEON_DIMENSION)) return;
-
-            // Player must be alive (they were teleported out on death) — verify they have an active instance key
             if (!player.isAlive()) return;
 
-            // Find and consume totem
             Inventory inv = player.getInventory();
-            boolean found = false;
-            for (int i = 0; i < inv.getContainerSize(); i++) {
-                ItemStack stack = inv.getItem(i);
-                if (stack.is(Items.TOTEM_OF_UNDYING)) {
-                    stack.shrink(1);
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) return;
-
-            // Find the player's active dungeon instance and teleport to node spawn
-            // For now, we look through all instances for one containing this player
             DungeonInstanceManager mgr = DungeonInstanceManager.get((ServerLevel) player.level());
-            // Player should have a tag or we iterate — use a simple approach
-            // The player was teleported back to the lectern on death, so they're in overworld now
-            // We need to find their instance and teleport them back to the battlefield
-            ServerLevel overworld = player.server.overworld();
-            // Search through instances (not ideal but workable for now)
-            // A better approach would store the instance ID on the player
-            // For now, check key in inventory
+
+            // Locate the active dungeon instance + spawn target FIRST. Only after we
+            // know the revive can succeed do we consume the totem of undying.
+            DungeonInstance targetInstance = null;
+            String targetNode = null;
             for (int i = 0; i < inv.getContainerSize(); i++) {
                 ItemStack stack = inv.getItem(i);
                 if (stack.getItem() instanceof com.piranport.dungeon.key.DungeonKeyItem) {
-                    java.util.UUID instanceId = com.piranport.dungeon.key.DungeonKeyItem.getInstanceId(stack);
+                    java.util.UUID instanceId =
+                            com.piranport.dungeon.key.DungeonKeyItem.getInstanceId(stack);
                     if (instanceId == null) continue;
                     DungeonInstance instance = mgr.getInstance(instanceId);
                     if (instance == null || instance.getState() != DungeonInstance.State.ACTIVE) continue;
-
                     String nodeId = instance.getCurrentNode();
                     if (nodeId == null) continue;
-
-                    BlockPos spawn = instance.getNodeSpawnPos(nodeId);
-                    // Get dungeon dimension
-                    ServerLevel dungeonLevel = com.piranport.dungeon.event.DungeonEventHandler
-                            .getDungeonLevel(player.server);
-                    if (dungeonLevel != null) {
-                        player.teleportTo(dungeonLevel, spawn.getX() + 0.5, spawn.getY(),
-                                spawn.getZ() + 0.5, player.getYRot(), player.getXRot());
-                    }
-                    return;
+                    targetInstance = instance;
+                    targetNode = nodeId;
+                    break;
                 }
             }
+
+            ServerLevel dungeonLevel = com.piranport.dungeon.event.DungeonEventHandler
+                    .getDungeonLevel(player.server);
+            if (targetInstance == null || dungeonLevel == null) {
+                player.sendSystemMessage(net.minecraft.network.chat.Component.translatable(
+                        "dungeon.piranport.revive_unavailable"));
+                // Re-open the revive screen so the player can choose to give up
+                net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player,
+                        new com.piranport.dungeon.network.PlayerDiedInDungeonPayload());
+                return;
+            }
+
+            // Find a totem
+            int totemSlot = -1;
+            for (int i = 0; i < inv.getContainerSize(); i++) {
+                if (inv.getItem(i).is(Items.TOTEM_OF_UNDYING)) {
+                    totemSlot = i;
+                    break;
+                }
+            }
+            if (totemSlot < 0) {
+                player.sendSystemMessage(net.minecraft.network.chat.Component.translatable(
+                        "dungeon.piranport.revive_no_totem"));
+                net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player,
+                        new com.piranport.dungeon.network.PlayerDiedInDungeonPayload());
+                return;
+            }
+
+            // All preconditions met — consume totem and teleport
+            inv.getItem(totemSlot).shrink(1);
+            BlockPos spawn = targetInstance.getNodeSpawnPos(targetNode);
+            player.teleportTo(dungeonLevel,
+                    spawn.getX() + 0.5, spawn.getY(), spawn.getZ() + 0.5,
+                    player.getYRot(), player.getXRot());
         });
     }
 }

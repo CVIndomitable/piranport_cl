@@ -190,26 +190,31 @@ public class ArtilleryIntroScript implements DungeonScript {
     }
 
     @Override
-    public void tick(ServerLevel dungeonLevel) {
+    public boolean tick(ServerLevel dungeonLevel) {
         tickCounter++;
-        switch (phase) {
+        Phase before = phase;
+        boolean stateMutated = switch (phase) {
             case AIRDROP -> tickAirdrop(dungeonLevel);
             case LOOTING -> tickLooting(dungeonLevel);
             case BATTLE -> tickBattle(dungeonLevel);
-            case COMPLETED -> {} // no-op
-        }
+            case COMPLETED -> false;
+        };
+        return stateMutated || phase != before;
     }
 
     // ========== Phase 1: Airdrop ==========
 
-    private void tickAirdrop(ServerLevel level) {
+    private boolean tickAirdrop(ServerLevel level) {
+        boolean changed = false;
         // Initial setup (tick 1 OR first tick after reload if nothing was spawned yet)
         if (!titleSent) {
             sendTitleToAll(level);
             sendActionBar(level, Component.translatable("dungeon.piranport.artillery_intro.incoming"));
+            changed = true;
         }
         if (transportPlaneUuid == null && !crateSpawned) {
             spawnTransportPlane(level);
+            changed = true;
         }
 
         // Resolve current entity references (post-reload safe)
@@ -228,6 +233,7 @@ public class ArtilleryIntroScript implements DungeonScript {
                 dropCrate(level);
                 crate = airdropCrateUuid != null
                         && level.getEntity(airdropCrateUuid) instanceof LootShipEntity c ? c : null;
+                changed = true;
             }
         }
 
@@ -236,6 +242,7 @@ public class ArtilleryIntroScript implements DungeonScript {
             crateLanded = true;
             // Ensure inventory is filled (in case reload skipped the callback)
             fillCrateSupplies(level, crate);
+            changed = true;
         }
 
         if (crateLanded) {
@@ -243,7 +250,9 @@ public class ArtilleryIntroScript implements DungeonScript {
             phase = Phase.LOOTING;
             lootingTicks = 0;
             PiranPort.LOGGER.info("[ArtilleryIntro] Phase 1 → 2 (crate landed), instance={}", instanceId);
+            changed = true;
         }
+        return changed;
     }
 
     private void sendTitleToAll(ServerLevel level) {
@@ -339,17 +348,17 @@ public class ArtilleryIntroScript implements DungeonScript {
 
     // ========== Phase 2: Looting ==========
 
-    private void tickLooting(ServerLevel level) {
+    private boolean tickLooting(ServerLevel level) {
         lootingTicks++;
 
         // Condition 1: timeout
         if (lootingTicks >= DungeonConstants.ARTILLERY_INTRO_LOOTING_TIMEOUT) {
             startBattle(level, "timeout");
-            return;
+            return true;
         }
 
         List<ServerPlayer> online = getOnlinePlayers(level);
-        if (online.isEmpty()) return;
+        if (online.isEmpty()) return false;
 
         // Resolve crate (UUID lookup, post-reload safe)
         LootShipEntity crate = airdropCrateUuid != null
@@ -358,7 +367,7 @@ public class ArtilleryIntroScript implements DungeonScript {
         // If crate disappeared (despawned/destroyed after reload), advance to battle
         if (crate == null) {
             startBattle(level, "crate_missing");
-            return;
+            return true;
         }
 
         // Condition 2: any player > 20 blocks from crate
@@ -367,7 +376,7 @@ public class ArtilleryIntroScript implements DungeonScript {
             double threshold = DungeonConstants.ARTILLERY_INTRO_LEAVE_DISTANCE;
             if (dist > threshold * threshold) {
                 startBattle(level, "player_far");
-                return;
+                return true;
             }
         }
 
@@ -384,7 +393,7 @@ public class ArtilleryIntroScript implements DungeonScript {
         }
         if (allOpened) {
             startBattle(level, "all_opened");
-            return;
+            return true;
         }
 
         // Periodic action bar reminder
@@ -393,6 +402,7 @@ public class ArtilleryIntroScript implements DungeonScript {
             sendActionBar(level, Component.translatable(
                     "dungeon.piranport.artillery_intro.looting", remaining));
         }
+        return false;
     }
 
     private void startBattle(ServerLevel level, String reason) {
@@ -453,20 +463,22 @@ public class ArtilleryIntroScript implements DungeonScript {
                 totalDestroyers, online.size());
     }
 
-    private void tickBattle(ServerLevel level) {
+    private boolean tickBattle(ServerLevel level) {
         // Battle progress is driven by onEntityDeath() calls.
         // Safety timeout: 10 minutes from battle start
         if (battleStartTick >= 0 && (tickCounter - battleStartTick) > 12000 && !portalSpawned) {
             PiranPort.LOGGER.warn("[ArtilleryIntro] Battle timeout, forcing portal spawn");
             spawnCompletionPortal(level);
+            return true;
         }
+        return false;
     }
 
     @Override
-    public void onEntityDeath(Entity entity) {
-        if (phase != Phase.BATTLE) return;
-        if (!entity.getTags().contains("dungeon_script")) return;
-        if (!entity.getTags().contains("dungeon_instance_" + instanceId)) return;
+    public boolean onEntityDeath(Entity entity) {
+        if (phase != Phase.BATTLE) return false;
+        if (!entity.getTags().contains("dungeon_script")) return false;
+        if (!entity.getTags().contains("dungeon_instance_" + instanceId)) return false;
 
         destroyersKilled++;
         lastDestroyerDeathPos = entity.blockPosition();
@@ -481,6 +493,7 @@ public class ArtilleryIntroScript implements DungeonScript {
                 spawnCompletionPortal(sl);
             }
         }
+        return true;
     }
 
     private void spawnCompletionPortal(ServerLevel level) {

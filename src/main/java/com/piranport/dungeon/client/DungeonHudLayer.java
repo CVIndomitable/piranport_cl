@@ -52,6 +52,16 @@ public class DungeonHudLayer implements LayeredDraw.Layer {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
 
+        // Auto-clear when the local player is no longer in the dungeon dimension
+        // (e.g. used a town scroll). Avoids the timer running indefinitely after
+        // returning to the lectern in the overworld.
+        net.minecraft.resources.ResourceKey<net.minecraft.world.level.Level> dim =
+                mc.player.level().dimension();
+        if (!dim.equals(com.piranport.dungeon.event.DungeonEventHandler.DUNGEON_DIMENSION)) {
+            clearDungeonState();
+            return;
+        }
+
         int screenWidth = gfx.guiWidth();
         var font = mc.font;
 

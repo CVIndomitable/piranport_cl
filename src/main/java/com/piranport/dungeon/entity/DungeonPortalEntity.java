@@ -28,9 +28,14 @@ public class DungeonPortalEntity extends Entity {
     private static final EntityDataAccessor<Integer> SPIN_TICK =
             SynchedEntityData.defineId(DungeonPortalEntity.class, EntityDataSerializers.INT);
 
+    /** Auto-discard a portal that nobody touches in 10 minutes — prevents orphan portals
+     *  if NBT was corrupted (instanceId == null) or instance was cleaned up early. */
+    private static final int ORPHAN_DESPAWN_TICKS = 10 * 60 * 20;
+
     private UUID instanceId;
     private String nodeId;
     private final Set<UUID> enteredPlayers = new HashSet<>();
+    private int orphanTicks = 0;
 
     public DungeonPortalEntity(EntityType<?> type, Level level) {
         super(type, level);
@@ -70,6 +75,18 @@ public class DungeonPortalEntity extends Entity {
             return;
         }
 
+        // Despawn orphan portals (broken NBT / cleaned-up instance) to avoid
+        // leaving permanently-stuck entities in the dungeon dimension.
+        if (instanceId == null) {
+            discard();
+            return;
+        }
+        DungeonInstanceManager mgrCheck = DungeonInstanceManager.get((ServerLevel) level());
+        if (mgrCheck.getInstance(instanceId) == null) {
+            discard();
+            return;
+        }
+
         // Server-side: check for nearby players every 10 ticks instead of every tick
         if (tickCount % 10 != 0) return;
 
@@ -81,9 +98,19 @@ public class DungeonPortalEntity extends Entity {
             enteredPlayers.add(player.getUUID());
         }
 
+        if (enteredPlayers.isEmpty()) {
+            orphanTicks += 10;
+            if (orphanTicks > ORPHAN_DESPAWN_TICKS) {
+                discard();
+                return;
+            }
+        } else {
+            orphanTicks = 0;
+        }
+
         // Check if all dungeon players have entered
-        if (instanceId != null && !enteredPlayers.isEmpty()) {
-            DungeonInstanceManager mgr = DungeonInstanceManager.get((ServerLevel) level());
+        if (!enteredPlayers.isEmpty()) {
+            DungeonInstanceManager mgr = mgrCheck;
             DungeonInstance instance = mgr.getInstance(instanceId);
             if (instance != null) {
                 Set<UUID> allPlayers = instance.getPlayerUuids();

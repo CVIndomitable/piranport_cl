@@ -468,6 +468,10 @@
 
   "dungeon.piranport.resource_collected": "Supplies collected!",
   "dungeon.piranport.insufficient_cost": "Insufficient: need %s x %s",
+  "dungeon.piranport.stage_locked": "Cannot change stage: a dungeon run is in progress on this key.",
+  "dungeon.piranport.revive_unavailable": "Cannot revive: no active dungeon found.",
+  "dungeon.piranport.revive_no_totem": "Revive requires 1 Totem of Undying.",
+  "dungeon.piranport.flagship_promoted": "You are now the flagship; the dungeon key has been transferred to your copy.",
 
   "jei.piranport.cooking_pot": "Cooking Pot",
   "jei.piranport.stone_mill": "Stone Mill",

@@ -62,13 +62,19 @@ public record SelectStagePayload(BlockPos lecternPos, int keySlot, String stageI
             DungeonLobbyManager.Lobby lobby =
                     DungeonLobbyManager.INSTANCE.getLobby(globalPos);
             if (lobby != null && lobby.isFlagship(player.getUUID())) {
-                lobby.setSelectedStageId(payload.stageId());
-
-                // Write stage ID onto the key so SelectNodePayload can read it later
                 ItemStack keyStack = player.getInventory().getItem(keySlot);
                 if (keyStack.getItem() instanceof DungeonKeyItem) {
+                    // Refuse to overwrite stageId if a dungeon instance is already in progress
+                    // on this key — otherwise next SelectNode would look up the new stage's
+                    // node tree against the running instance and corrupt node validation.
+                    if (DungeonKeyItem.getInstanceId(keyStack) != null) {
+                        player.sendSystemMessage(net.minecraft.network.chat.Component.translatable(
+                                "dungeon.piranport.stage_locked"));
+                        return;
+                    }
                     keyStack.set(ModDataComponents.DUNGEON_STAGE_ID.get(), payload.stageId());
                 }
+                lobby.setSelectedStageId(payload.stageId());
                 DungeonLobbyManager.INSTANCE.broadcastLobbyUpdate(player.server, globalPos);
             }
         });

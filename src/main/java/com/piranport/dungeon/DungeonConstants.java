@@ -21,6 +21,9 @@ public final class DungeonConstants {
     /** Town scroll cooldown in ticks (3 seconds). */
     public static final int TOWN_SCROLL_COOLDOWN_TICKS = 3 * 20;
 
+    /** Window in milliseconds during which a TownScrollUsePayload is accepted after right-click. */
+    public static final long TOWN_SCROLL_INTENT_WINDOW_MS = 10_000L;
+
     /** Maximum nodes per stage. */
     public static final int MAX_NODES_PER_STAGE = 26;
 

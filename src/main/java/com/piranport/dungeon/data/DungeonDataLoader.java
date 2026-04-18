@@ -80,6 +80,8 @@ public class DungeonDataLoader extends SimpleJsonResourceReloadListener {
         }
 
         DungeonRegistry.INSTANCE.load(chapters, stages, enemySets);
+        // Stage adjacency / node-index caches must be rebuilt against the new stage data.
+        StageData.invalidateCaches();
         PiranPort.LOGGER.info("Loaded dungeon data: {} chapters, {} stages, {} enemy sets",
                 chapters.size(), stages.size(), enemySets.size());
     }

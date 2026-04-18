@@ -40,6 +40,7 @@ public class LootShipEntity extends Entity {
 
     private final SimpleContainer inventory = new SimpleContainer(27);
     private boolean lootGenerated = false;
+    private boolean filled = false;
     private int despawnTimer = 0;
     /** Set of player UUIDs who have opened this crate (for scripted tracking). */
     private final java.util.Set<java.util.UUID> openedBy = new java.util.HashSet<>();
@@ -167,11 +168,17 @@ public class LootShipEntity extends Entity {
         this.onLanded = callback;
     }
 
-    /** Pre-fill inventory with given stacks (bypasses loot table). */
+    /** Pre-fill inventory with given stacks (bypasses loot table). Idempotent — only
+     *  fills empty slots so a re-trigger after reload cannot overwrite items the player
+     *  has already moved into the crate. */
     public void fillInventory(List<ItemStack> items) {
+        if (filled) return;
         for (int i = 0; i < items.size() && i < inventory.getContainerSize(); i++) {
-            inventory.setItem(i, items.get(i));
+            if (inventory.getItem(i).isEmpty()) {
+                inventory.setItem(i, items.get(i));
+            }
         }
+        filled = true;
         lootGenerated = true; // prevent loot table from overwriting
     }
 
@@ -187,6 +194,7 @@ public class LootShipEntity extends Entity {
     protected void addAdditionalSaveData(CompoundTag tag) {
         tag.putInt("ShipTier", entityData.get(SHIP_TIER));
         tag.putBoolean("LootGenerated", lootGenerated);
+        tag.putBoolean("Filled", filled);
         tag.putInt("DespawnTimer", despawnTimer);
         tag.putBoolean("Dropping", entityData.get(DROPPING));
         // Persist openedBy UUIDs
@@ -199,14 +207,14 @@ public class LootShipEntity extends Entity {
             }
             tag.put("OpenedBy", openedList);
         }
-        // Save inventory
+        // Save inventory using vanilla ContainerHelper for components / mod-item compat.
         CompoundTag invTag = new CompoundTag();
+        net.minecraft.core.NonNullList<ItemStack> nlist = net.minecraft.core.NonNullList.withSize(
+                inventory.getContainerSize(), ItemStack.EMPTY);
         for (int i = 0; i < inventory.getContainerSize(); i++) {
-            ItemStack stack = inventory.getItem(i);
-            if (!stack.isEmpty()) {
-                invTag.put("Slot" + i, stack.save(level().registryAccess()));
-            }
+            nlist.set(i, inventory.getItem(i));
         }
+        net.minecraft.world.ContainerHelper.saveAllItems(invTag, nlist, level().registryAccess());
         tag.put("Inventory", invTag);
     }
 
@@ -214,6 +222,7 @@ public class LootShipEntity extends Entity {
     protected void readAdditionalSaveData(CompoundTag tag) {
         entityData.set(SHIP_TIER, tag.getInt("ShipTier"));
         lootGenerated = tag.getBoolean("LootGenerated");
+        filled = tag.getBoolean("Filled");
         despawnTimer = tag.getInt("DespawnTimer");
         if (tag.getBoolean("Dropping")) {
             entityData.set(DROPPING, true);
@@ -230,13 +239,11 @@ public class LootShipEntity extends Entity {
         }
         if (tag.contains("Inventory")) {
             CompoundTag invTag = tag.getCompound("Inventory");
-            for (int i = 0; i < inventory.getContainerSize(); i++) {
-                String key = "Slot" + i;
-                if (invTag.contains(key)) {
-                    final int slot = i;
-                    ItemStack.parse(level().registryAccess(), invTag.getCompound(key))
-                            .ifPresent(stack -> inventory.setItem(slot, stack));
-                }
+            net.minecraft.core.NonNullList<ItemStack> nlist = net.minecraft.core.NonNullList.withSize(
+                    inventory.getContainerSize(), ItemStack.EMPTY);
+            net.minecraft.world.ContainerHelper.loadAllItems(invTag, nlist, level().registryAccess());
+            for (int i = 0; i < nlist.size(); i++) {
+                inventory.setItem(i, nlist.get(i));
             }
         }
     }

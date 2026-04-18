@@ -51,11 +51,8 @@ public class DungeonBookMenu extends AbstractContainerMenu {
     @Override
     public void removed(Player player) {
         super.removed(player);
-        // Leave lobby when closing the GUI
-        if (!player.level().isClientSide()) {
-            GlobalPos globalPos = GlobalPos.of(player.level().dimension(), lecternPos);
-            com.piranport.dungeon.lobby.DungeonLobbyManager.INSTANCE
-                    .leaveLobby(globalPos, player.getUUID());
-        }
+        // Do NOT auto-leave the lobby on GUI close — pressing ESC used to instantly
+        // dissolve multi-player lobbies. Players now leave explicitly via the "Leave"
+        // button (LeaveLobbyPayload) or by logging out.
     }
 }

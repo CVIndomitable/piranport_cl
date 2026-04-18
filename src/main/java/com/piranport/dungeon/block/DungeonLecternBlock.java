@@ -76,8 +76,14 @@ public class DungeonLecternBlock extends Block {
             return InteractionResult.CONSUME;
         }
 
-        // Join or create lobby, then open the book GUI
+        // Leave any other lobby first to avoid the player being a "phantom" member
+        // in two lobbies at once (broadcasts go to ghost players, MAX_LOBBY_SIZE inflated).
         GlobalPos globalPos = GlobalPos.of(level.dimension(), pos);
+        GlobalPos existing = DungeonLobbyManager.INSTANCE.findLobbyOf(serverPlayer.getUUID());
+        if (existing != null && !existing.equals(globalPos)) {
+            DungeonLobbyManager.INSTANCE.leaveLobby(existing, serverPlayer.getUUID());
+            DungeonLobbyManager.INSTANCE.broadcastLobbyUpdate(serverPlayer.server, existing);
+        }
         DungeonLobbyManager.INSTANCE.joinLobby(globalPos, serverPlayer);
 
         serverPlayer.openMenu(

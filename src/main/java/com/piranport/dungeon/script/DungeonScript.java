@@ -12,11 +12,11 @@ import net.minecraft.world.entity.Entity;
  * survive server restart (otherwise players would be stranded mid-dungeon).
  */
 public interface DungeonScript {
-    /** Called once per server tick. */
-    void tick(ServerLevel dungeonLevel);
+    /** Called once per server tick. Returns true if persistent state changed this tick. */
+    boolean tick(ServerLevel dungeonLevel);
 
-    /** Called when a tagged dungeon entity dies. */
-    void onEntityDeath(Entity entity);
+    /** Called when a tagged dungeon entity dies. Returns true if persistent state changed. */
+    boolean onEntityDeath(Entity entity);
 
     /** Returns true when the script has completed and should be removed. */
     boolean isFinished();

@@ -34,7 +34,7 @@
 | v0.0.11-alpha | Ruins | ✅ DONE | 主世界四类遗迹(传送门/补给站/前哨站/深海基地) + 9种深海NPC + 集群AI + 抛物线/追踪弹道 + 战利品系统 + 占位物品(国旗/碎片/档案) + 调试命令 + 舰娘NPC框架 |
 
 > 已完成 Phase 详情见 `docs/phases_archive.md`
-> 代码审查修复详情见 `docs/code_review_2026-03-31.md`、`docs/code_review_2026-04-04.md`、`docs/code_review_2026-04-05.md`、`docs/code_review_missile_2026-04-18.md`、`docs/code_review_kitchen_2026-04-18.md`、`docs/code_review_workbench_2026-04-18.md`
+> 代码审查修复详情见 `docs/code_review_2026-03-31.md`、`docs/code_review_2026-04-04.md`、`docs/code_review_2026-04-05.md`、`docs/code_review_missile_2026-04-18.md`、`docs/code_review_kitchen_2026-04-18.md`、`docs/code_review_workbench_2026-04-18.md`、`docs/code_review_dungeon_2026-04-18.md`
 
 ---
 

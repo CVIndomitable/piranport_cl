@@ -67,11 +67,9 @@ public record SelectNodePayload(BlockPos lecternPos, int keySlot, String nodeId)
             ItemStack keyStack = player.getInventory().getItem(keySlot);
             if (!(keyStack.getItem() instanceof DungeonKeyItem)) return;
 
-            // Validate flagship permission
             GlobalPos globalPos = GlobalPos.of(player.level().dimension(), payload.lecternPos());
             DungeonLobbyManager.Lobby lobby =
                     DungeonLobbyManager.INSTANCE.getLobby(globalPos);
-            if (lobby != null && !lobby.isFlagship(player.getUUID())) return;
 
             String stageId = DungeonKeyItem.getStageId(keyStack);
             StageData stage = DungeonRegistry.INSTANCE.getStage(stageId);
@@ -89,6 +87,17 @@ public record SelectNodePayload(BlockPos lecternPos, int keySlot, String nodeId)
             if (instanceId != null) {
                 instance = mgr.getInstance(instanceId);
                 if (instance == null) return;
+
+                // Flagship validation: prefer the persistent flagship on the instance
+                // so that lobby teardown after entering a battle node does not allow any
+                // co-key holder to advance the dungeon.
+                java.util.UUID flagshipUuid = instance.getFlagshipUuid();
+                if (flagshipUuid != null) {
+                    if (!flagshipUuid.equals(player.getUUID())) return;
+                } else if (lobby != null && !lobby.isFlagship(player.getUUID())) {
+                    return;
+                }
+
                 if (instance.getState() == DungeonInstance.State.SUSPENDED) {
                     mgr.resumeInstance(instanceId);
                 }
@@ -96,19 +105,24 @@ public record SelectNodePayload(BlockPos lecternPos, int keySlot, String nodeId)
                 // Validate node reachability: must not be already cleared,
                 // and must be reachable from a cleared node via stage edges
                 if (instance.getClearedNodes().contains(payload.nodeId())) return;
-                boolean reachable = false;
-                for (String cleared : instance.getClearedNodes()) {
-                    if (stage.getReachableFrom(cleared).contains(payload.nodeId())) {
-                        reachable = true;
-                        break;
-                    }
-                }
-                // If no nodes cleared yet, only start node is valid
+                boolean reachable;
                 if (instance.getClearedNodes().isEmpty()) {
+                    // If no nodes cleared yet, only start node is valid
                     reachable = payload.nodeId().equals(stage.startNode());
+                } else {
+                    reachable = false;
+                    for (String cleared : instance.getClearedNodes()) {
+                        if (stage.getReachableFrom(cleared).contains(payload.nodeId())) {
+                            reachable = true;
+                            break;
+                        }
+                    }
                 }
                 if (!reachable) return;
             } else {
+                // No instance yet — flagship must come from the lobby
+                if (lobby != null && !lobby.isFlagship(player.getUUID())) return;
+
                 // First node selection: only start node allowed
                 if (!payload.nodeId().equals(stage.startNode())) return;
 

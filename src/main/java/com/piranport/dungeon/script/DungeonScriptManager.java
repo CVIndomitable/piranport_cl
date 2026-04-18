@@ -29,10 +29,10 @@ public final class DungeonScriptManager extends SavedData {
     public DungeonScriptManager() {}
 
     public static DungeonScriptManager get(MinecraftServer server) {
-        ServerLevel dungeonLevel = server.getLevel(
-                com.piranport.dungeon.event.DungeonEventHandler.DUNGEON_DIMENSION);
-        ServerLevel storage = dungeonLevel != null ? dungeonLevel : server.overworld();
-        return storage.getDataStorage().computeIfAbsent(
+        // Always store on overworld dataStorage (consistent with DungeonInstanceManager).
+        // Storing on the dungeon dimension caused state to split between two SavedData files
+        // depending on whether that dimension was loaded at access time.
+        return server.overworld().getDataStorage().computeIfAbsent(
                 new SavedData.Factory<>(DungeonScriptManager::new,
                         DungeonScriptManager::load, null),
                 DATA_NAME);
@@ -62,24 +62,26 @@ public final class DungeonScriptManager extends SavedData {
 
     /** Tick all active scripts. Called from ServerTickEvent. */
     public void tickAll(ServerLevel dungeonLevel) {
+        boolean changed = false;
         Iterator<Map.Entry<UUID, DungeonScript>> iter = activeScripts.entrySet().iterator();
         while (iter.hasNext()) {
             Map.Entry<UUID, DungeonScript> entry = iter.next();
             DungeonScript script = entry.getValue();
             try {
-                script.tick(dungeonLevel);
+                if (script.tick(dungeonLevel)) changed = true;
                 if (script.isFinished()) {
                     iter.remove();
+                    changed = true;
                     PiranPort.LOGGER.info("Dungeon script finished for instance {}", entry.getKey());
                 }
             } catch (Exception e) {
                 PiranPort.LOGGER.error("Error ticking dungeon script for instance {}",
                         entry.getKey(), e);
                 iter.remove();
+                changed = true;
             }
         }
-        // Scripts mutate phase state every tick — mark dirty so the next world save captures it.
-        if (!activeScripts.isEmpty()) setDirty();
+        if (changed) setDirty();
     }
 
     /**
@@ -87,8 +89,7 @@ public final class DungeonScriptManager extends SavedData {
      */
     public void onEntityDeath(UUID instanceId, Entity entity) {
         DungeonScript script = activeScripts.get(instanceId);
-        if (script != null) {
-            script.onEntityDeath(entity);
+        if (script != null && script.onEntityDeath(entity)) {
             setDirty();
         }
     }

@@ -9,7 +9,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -20,14 +19,10 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.items.ItemStackHandler;
+import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import java.util.UUID;
 
-/**
- * 武器合成台方块实体。
- * 不持久化物品（"不需要缓存"）：关闭GUI时物品归还玩家。
- */
 public class WeaponWorkbenchBlockEntity extends BlockEntity implements MenuProvider {
     public static final int BLUEPRINT_SLOT = 0;
     public static final int MATERIAL_START = 1;
@@ -35,10 +30,33 @@ public class WeaponWorkbenchBlockEntity extends BlockEntity implements MenuProvi
     public static final int OUTPUT_SLOT = 7;
     public static final int TOTAL_SLOTS = 8;
 
+    private static final int DATA_SIZE = 5;
+    private static final int SAVE_INTERVAL_TICKS = 20;
+    private static final int TAB_COUNT = 5;
+
     private final ItemStackHandler itemHandler = new ItemStackHandler(TOTAL_SLOTS) {
         @Override
         protected void onContentsChanged(int slot) {
             setChanged();
+        }
+
+        @Override
+        public boolean isItemValid(int slot, ItemStack stack) {
+            if (slot == OUTPUT_SLOT) return false;
+            return super.isItemValid(slot, stack);
+        }
+
+        @Override
+        public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
+            if (slot == OUTPUT_SLOT) return stack;
+            if (isCrafting) return stack;
+            return super.insertItem(slot, stack, simulate);
+        }
+
+        @Override
+        public ItemStack extractItem(int slot, int amount, boolean simulate) {
+            if (isCrafting && slot != OUTPUT_SLOT) return ItemStack.EMPTY;
+            return super.extractItem(slot, amount, simulate);
         }
     };
 
@@ -48,13 +66,25 @@ public class WeaponWorkbenchBlockEntity extends BlockEntity implements MenuProvi
     private int craftingTotalTime = 0;
     private boolean isCrafting = false;
 
-    public int getSelectedTab() { return selectedTab; }
-    public void setSelectedTab(int v) { selectedTab = v; }
-    public int getSelectedRecipe() { return selectedRecipe; }
-    public void setSelectedRecipe(int v) { selectedRecipe = v; }
-
+    // transient, not persisted — used for multi-player mutex only
     @Nullable
     private UUID currentUser;
+
+    public int getSelectedTab() { return selectedTab; }
+
+    public void setSelectedTab(int v) {
+        if (v < 0 || v >= TAB_COUNT) return;
+        selectedTab = v;
+    }
+
+    public int getSelectedRecipe() { return selectedRecipe; }
+
+    public void setSelectedRecipe(int v) {
+        if (v < 0) return;
+        int size = WeaponWorkbenchRecipeRegistry.getRecipesForTab(selectedTab).size();
+        if (v >= size) return;
+        selectedRecipe = v;
+    }
 
     public final ContainerData dataAccess = new ContainerData() {
         @Override
@@ -71,6 +101,8 @@ public class WeaponWorkbenchBlockEntity extends BlockEntity implements MenuProvi
 
         @Override
         public void set(int index, int value) {
+            // Server-authoritative: ignore writes on server side; accept on client (vanilla sync)
+            if (level != null && !level.isClientSide) return;
             switch (index) {
                 case 0 -> selectedTab = value;
                 case 1 -> selectedRecipe = value;
@@ -81,7 +113,7 @@ public class WeaponWorkbenchBlockEntity extends BlockEntity implements MenuProvi
         }
 
         @Override
-        public int getCount() { return 5; }
+        public int getCount() { return DATA_SIZE; }
     };
 
     public WeaponWorkbenchBlockEntity(BlockPos pos, BlockState state) {
@@ -103,7 +135,6 @@ public class WeaponWorkbenchBlockEntity extends BlockEntity implements MenuProvi
                     return false;
                 }
             }
-            // Clear stale user reference
             currentUser = null;
         }
         currentUser = player.getUUID();
@@ -135,7 +166,6 @@ public class WeaponWorkbenchBlockEntity extends BlockEntity implements MenuProvi
     }
 
     public boolean canCraft(WeaponWorkbenchRecipe recipe) {
-        // 蓝图检查：槽位必须有蓝图（创造蓝图可作为通用替代）
         ItemStack bp = itemHandler.getStackInSlot(BLUEPRINT_SLOT);
         if (bp.isEmpty()) return false;
         boolean isCreativeBp = bp.is(ModItems.CREATIVE_BLUEPRINT.get());
@@ -143,7 +173,6 @@ public class WeaponWorkbenchBlockEntity extends BlockEntity implements MenuProvi
             if (recipe.requiredBlueprint() == null) return false;
             if (!bp.is(recipe.requiredBlueprint())) return false;
         }
-        // 原料检查
         for (ItemStack required : recipe.materials()) {
             int needed = required.getCount();
             for (int i = MATERIAL_START; i <= MATERIAL_END; i++) {
@@ -154,11 +183,10 @@ public class WeaponWorkbenchBlockEntity extends BlockEntity implements MenuProvi
             }
             if (needed > 0) return false;
         }
-        // 产物格检查
         ItemStack output = itemHandler.getStackInSlot(OUTPUT_SLOT);
-        ItemStack result = recipe.getResultStack();
         if (!output.isEmpty()) {
-            if (!ItemStack.isSameItemSameComponents(output, result)) return false;
+            ItemStack result = recipe.getResultStack();
+            if (!ItemStack.isSameItem(output, result)) return false;
             if (output.getCount() + result.getCount() > output.getMaxStackSize()) return false;
         }
         return true;
@@ -171,7 +199,8 @@ public class WeaponWorkbenchBlockEntity extends BlockEntity implements MenuProvi
                 ItemStack inSlot = itemHandler.getStackInSlot(i);
                 if (inSlot.is(required.getItem())) {
                     int consume = Math.min(toConsume, inSlot.getCount());
-                    itemHandler.setStackInSlot(i, inSlot.copyWithCount(inSlot.getCount() - consume));
+                    inSlot.shrink(consume);
+                    itemHandler.setStackInSlot(i, inSlot);
                     toConsume -= consume;
                 }
             }
@@ -182,34 +211,39 @@ public class WeaponWorkbenchBlockEntity extends BlockEntity implements MenuProvi
                                   WeaponWorkbenchBlockEntity be) {
         if (!be.isCrafting) return;
 
-        be.craftingProgress++;
+        if (be.craftingProgress < be.craftingTotalTime) {
+            be.craftingProgress++;
+        }
+
         if (be.craftingProgress >= be.craftingTotalTime) {
             WeaponWorkbenchRecipe recipe =
                     WeaponWorkbenchRecipeRegistry.getRecipe(be.selectedTab, be.selectedRecipe);
-            if (recipe != null) {
-                // Check materials again before completion (in case they were removed)
-                if (be.canCraft(recipe)) {
-                    be.consumeMaterials(recipe);
-                    ItemStack result = recipe.getResultStack();
-                    ItemStack current = be.itemHandler.getStackInSlot(OUTPUT_SLOT);
-                    if (current.isEmpty()) {
-                        be.itemHandler.setStackInSlot(OUTPUT_SLOT, result);
-                    } else {
-                        be.itemHandler.setStackInSlot(OUTPUT_SLOT,
-                                current.copyWithCount(current.getCount() + result.getCount()));
-                    }
+            if (recipe == null) {
+                // Recipe disappeared (mod update) — safely cancel, no materials deducted yet.
+                be.cancelCrafting();
+            } else if (be.canCraft(recipe)) {
+                be.consumeMaterials(recipe);
+                ItemStack result = recipe.getResultStack();
+                ItemStack current = be.itemHandler.getStackInSlot(OUTPUT_SLOT);
+                if (current.isEmpty()) {
+                    be.itemHandler.setStackInSlot(OUTPUT_SLOT, result);
                 } else {
-                    // Materials insufficient — cancel crafting instead of waiting
-                    be.cancelCrafting();
-                    be.setChanged();
-                    return;
+                    current.grow(result.getCount());
+                    be.itemHandler.setStackInSlot(OUTPUT_SLOT, current);
                 }
+                be.isCrafting = false;
+                be.craftingProgress = 0;
+                be.craftingTotalTime = 0;
             }
-            be.isCrafting = false;
-            be.craftingProgress = 0;
-            be.craftingTotalTime = 0;
+            // else: hold at max progress until player unblocks (clears output / restores materials)
         }
-        be.setChanged();
+
+        // Throttle setChanged to avoid flooding chunk-save queue every tick.
+        if (be.craftingProgress == 0
+                || be.craftingProgress >= be.craftingTotalTime
+                || be.craftingProgress % SAVE_INTERVAL_TICKS == 0) {
+            be.setChanged();
+        }
     }
 
     // ===== Persistence =====
@@ -229,11 +263,13 @@ public class WeaponWorkbenchBlockEntity extends BlockEntity implements MenuProvi
     protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
         if (tag.contains("inventory")) itemHandler.deserializeNBT(registries, tag.getCompound("inventory"));
-        selectedTab = tag.getInt("selectedTab");
-        selectedRecipe = tag.getInt("selectedRecipe");
-        craftingProgress = tag.getInt("craftingProgress");
-        craftingTotalTime = tag.getInt("craftingTotalTime");
+        selectedTab = Math.max(0, Math.min(TAB_COUNT - 1, tag.getInt("selectedTab")));
+        selectedRecipe = Math.max(0, tag.getInt("selectedRecipe"));
+        craftingProgress = Math.max(0, tag.getInt("craftingProgress"));
+        craftingTotalTime = Math.max(0, tag.getInt("craftingTotalTime"));
         isCrafting = tag.getBoolean("isCrafting");
+        // currentUser is transient — ensure null after load
+        currentUser = null;
     }
 
     // ===== MenuProvider =====
@@ -246,9 +282,5 @@ public class WeaponWorkbenchBlockEntity extends BlockEntity implements MenuProvi
     @Override
     public AbstractContainerMenu createMenu(int containerId, Inventory playerInventory, Player player) {
         return new WeaponWorkbenchMenu(containerId, playerInventory, this);
-    }
-
-    public void writeScreenOpeningData(ServerPlayer player, net.minecraft.network.FriendlyByteBuf buf) {
-        buf.writeBlockPos(this.worldPosition);
     }
 }

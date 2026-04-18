@@ -6,7 +6,6 @@ import com.piranport.registry.ModBlockEntityTypes;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.Containers;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.context.BlockPlaceContext;
@@ -97,12 +96,7 @@ public class AmmoWorkbenchBlock extends BaseEntityBlock {
         if (!state.is(newState.getBlock())) {
             BlockEntity be = level.getBlockEntity(pos);
             if (be instanceof AmmoWorkbenchBlockEntity wb) {
-                for (int i = 0; i < AmmoWorkbenchBlockEntity.TOTAL_SLOTS; i++) {
-                    net.minecraft.world.item.ItemStack stack = wb.getItemHandler().getStackInSlot(i);
-                    if (!stack.isEmpty()) {
-                        Containers.dropItemStack(level, pos.getX(), pos.getY(), pos.getZ(), stack);
-                    }
-                }
+                wb.dumpContentsOnBreak();
             }
         }
         super.onRemove(state, level, pos, newState, movedByPiston);

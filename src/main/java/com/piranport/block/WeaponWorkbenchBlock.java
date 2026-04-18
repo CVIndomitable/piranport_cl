@@ -112,6 +112,8 @@ public class WeaponWorkbenchBlock extends BaseEntityBlock {
         if (!state.is(newState.getBlock())) {
             BlockEntity be = level.getBlockEntity(pos);
             if (be instanceof WeaponWorkbenchBlockEntity wb) {
+                // Cancel any active craft so the handler stops blocking extracts.
+                wb.cancelCrafting();
                 for (int i = 0; i < WeaponWorkbenchBlockEntity.TOTAL_SLOTS; i++) {
                     net.minecraft.world.item.ItemStack stack = wb.getItemHandler().extractItem(i, Integer.MAX_VALUE, false);
                     if (!stack.isEmpty()) {

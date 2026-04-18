@@ -21,41 +21,36 @@ import java.util.function.Supplier;
 
 public class AmmoWorkbenchScreen extends AbstractContainerScreen<AmmoWorkbenchMenu> {
 
-    // Layout constants
     private static final int TAB_W = 26, TAB_H = 24;
     private static final int INV_X = 34;
+    private static final int DROPDOWN_VISIBLE = 8;
+    private static final String ARROW_UP = "\u25B2";
+    private static final String ARROW_DOWN = "\u25BC";
 
-    // Category tab icons (items to render as tab icons)
-    @SuppressWarnings("unchecked")
-    private static final Supplier<Item>[] TAB_ICONS = new Supplier[]{
+    private static final List<Supplier<Item>> TAB_ICONS = List.of(
             () -> ModItems.SMALL_HE_SHELL.get(),
             () -> ModItems.TORPEDO_533MM.get(),
             () -> ModItems.AERIAL_BOMB.get(),
             () -> ModItems.DEPTH_CHARGE.get(),
             () -> ModItems.SY1_MISSILE.get()
-    };
+    );
 
-    // State
     private AmmoCategory selectedCategory = AmmoCategory.SHELL;
     private int selectedTypeIndex = 0;
     private int selectedCaliberIndex = 0;
     private EditBox quantityField;
 
-    // Dropdown state
     private boolean typeDropdownOpen = false;
     private boolean caliberDropdownOpen = false;
     private int typeScrollOffset = 0;
     private int caliberScrollOffset = 0;
-    private static final int DROPDOWN_VISIBLE = 8;
 
-    // Cached data
     private List<String> currentTypes = List.of();
     private List<String> currentCalibers = List.of();
     private AmmoRecipe currentRecipe;
 
-    // Cache player inventory scan to avoid double scanning per frame
-    private Map<Item, Integer> cachedInventory = new HashMap<>();
-    private long lastInventoryScan = 0;
+    private final Map<Item, Integer> cachedInventory = new HashMap<>();
+    private int lastScanTick = -1;
 
     public AmmoWorkbenchScreen(AmmoWorkbenchMenu menu, Inventory inv, Component title) {
         super(menu, inv, title);
@@ -118,15 +113,12 @@ public class AmmoWorkbenchScreen extends AbstractContainerScreen<AmmoWorkbenchMe
         }
     }
 
-    // ===== Material checking =====
-
     private Map<Item, Integer> scanPlayerInventory() {
-        long currentTime = System.currentTimeMillis();
-        // Cache inventory scan for 50ms to avoid double scanning per frame
-        if (currentTime - lastInventoryScan < 50 && !cachedInventory.isEmpty()) {
+        if (minecraft == null || minecraft.player == null) return Map.of();
+        int tick = minecraft.player.tickCount;
+        if (tick == lastScanTick && !cachedInventory.isEmpty()) {
             return cachedInventory;
         }
-
         cachedInventory.clear();
         Inventory inv = minecraft.player.getInventory();
         for (int i = 0; i < inv.getContainerSize(); i++) {
@@ -135,7 +127,7 @@ public class AmmoWorkbenchScreen extends AbstractContainerScreen<AmmoWorkbenchMe
                 cachedInventory.merge(stack.getItem(), stack.getCount(), Integer::sum);
             }
         }
-        lastInventoryScan = currentTime;
+        lastScanTick = tick;
         return cachedInventory;
     }
 
@@ -149,71 +141,51 @@ public class AmmoWorkbenchScreen extends AbstractContainerScreen<AmmoWorkbenchMe
         return true;
     }
 
-    // ===== Rendering =====
-
     @Override
     protected void renderBg(GuiGraphics g, float partialTick, int mouseX, int mouseY) {
         int x = leftPos;
         int y = topPos;
 
-        // Main panel background
         g.fill(x, y, x + imageWidth, y + imageHeight, 0xFF8B8B8B);
         g.fill(x + 1, y + 1, x + imageWidth - 1, y + imageHeight - 1, 0xFFC6C6C6);
 
-        // === Tabs (outside left) ===
         renderTabs(g, x, y, mouseX, mouseY);
 
-        // === Dropdown buttons ===
         renderDropdownButton(g, x + 6, y + 7, 96, 14,
-                currentTypes.isEmpty() ? "---" : currentTypes.get(selectedTypeIndex),
-                "种类");
+                currentTypes.isEmpty() ? "---" : currentTypes.get(selectedTypeIndex));
         renderDropdownButton(g, x + 106, y + 7, 96, 14,
-                currentCalibers.isEmpty() ? "---" : currentCalibers.get(selectedCaliberIndex),
-                "口径");
+                currentCalibers.isEmpty() ? "---" : currentCalibers.get(selectedCaliberIndex));
 
-        // === Quantity label ===
-        g.drawString(font, "数量:", x + 6, y + 31, 0xFF404040, false);
+        g.drawString(font, Component.translatable("gui.piranport.ammo_workbench.quantity"),
+                x + 6, y + 31, 0xFF404040, false);
 
-        // === Preview ===
         if (currentRecipe != null) {
             int qty = getQuantity();
             ItemStack preview = currentRecipe.getResultStack(qty);
             g.renderItem(preview, x + 110, y + 32);
             g.renderItemDecorations(font, preview, x + 110, y + 32);
-            // Item name
             Component name = currentRecipe.getResultName();
             int nameW = font.width(name);
             g.drawString(font, name, x + (imageWidth - nameW) / 2, y + 55, 0xFF404040, false);
-            // Output count
             String countText = "×" + (currentRecipe.outputCount() * qty);
             g.drawString(font, countText, x + 128, y + 37, 0xFF606060, false);
         }
 
-        // === Divider ===
         g.fill(x + 4, y + 70, x + imageWidth - 4, y + 71, 0xFF8B8B8B);
 
-        // === Material bars ===
         renderMaterialBars(g, x, y);
-
-        // === Craft button ===
         renderCraftButton(g, x, y, mouseX, mouseY);
-
-        // === Progress bar ===
         renderProgressBar(g, x, y);
 
-        // === Output slot ===
         drawSlotBg(g, x + 206, y + 130);
 
-        // === Divider before inventory ===
         g.fill(x + 4, y + 144, x + imageWidth - 4, y + 145, 0xFF8B8B8B);
 
-        // === Player inventory slots ===
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
                 drawSlotBg(g, x + INV_X - 1 + col * 18, y + 147 + row * 18);
             }
         }
-        // Hotbar
         for (int col = 0; col < 9; col++) {
             drawSlotBg(g, x + INV_X - 1 + col * 18, y + 205);
         }
@@ -226,7 +198,6 @@ public class AmmoWorkbenchScreen extends AbstractContainerScreen<AmmoWorkbenchMe
             int ty = y + 4 + i * (TAB_H + 2);
             boolean selected = cats[i] == selectedCategory;
 
-            // Tab background
             if (selected) {
                 g.fill(tx, ty, tx + TAB_W + 1, ty + TAB_H, 0xFFC6C6C6);
                 g.fill(tx - 1, ty - 1, tx + TAB_W + 1, ty, 0xFF8B8B8B);
@@ -239,29 +210,28 @@ public class AmmoWorkbenchScreen extends AbstractContainerScreen<AmmoWorkbenchMe
                 g.fill(tx + 1, ty - 1, tx + 2, ty + TAB_H + 1, 0xFF8B8B8B);
             }
 
-            // Tab icon
-            ItemStack icon = new ItemStack(TAB_ICONS[i].get());
-            g.renderItem(icon, tx + 5, ty + 4);
+            if (i < TAB_ICONS.size()) {
+                ItemStack icon = new ItemStack(TAB_ICONS.get(i).get());
+                g.renderItem(icon, tx + 5, ty + 4);
+            }
         }
     }
 
-    private void renderDropdownButton(GuiGraphics g, int x, int y, int w, int h,
-                                       String text, String label) {
-        // Border
+    private void renderDropdownButton(GuiGraphics g, int x, int y, int w, int h, String text) {
         g.fill(x, y, x + w, y + h, 0xFF373737);
         g.fill(x + 1, y + 1, x + w - 1, y + h - 1, 0xFFFFFFFF);
-        // Text
         String display = font.width(text) > w - 14 ? font.plainSubstrByWidth(text, w - 14) + ".." : text;
         g.drawString(font, display, x + 3, y + 3, 0xFF000000, false);
-        // Arrow
-        g.drawString(font, "\u25BC", x + w - 10, y + 3, 0xFF606060, false);
+        g.drawString(font, ARROW_DOWN, x + w - 10, y + 3, 0xFF606060, false);
     }
 
     private void renderMaterialBars(GuiGraphics g, int x, int y) {
-        g.drawString(font, "所需材料", x + 6, y + 74, 0xFF404040, false);
+        g.drawString(font, Component.translatable("gui.piranport.ammo_workbench.materials"),
+                x + 6, y + 74, 0xFF404040, false);
 
         if (currentRecipe == null) {
-            g.drawString(font, "请选择弹药类型", x + 6, y + 88, 0xFF808080, false);
+            g.drawString(font, Component.translatable("gui.piranport.ammo_workbench.select_type"),
+                    x + 6, y + 88, 0xFF808080, false);
             return;
         }
 
@@ -276,7 +246,6 @@ public class AmmoWorkbenchScreen extends AbstractContainerScreen<AmmoWorkbenchMe
             int has = available.getOrDefault(mat.item().get(), 0);
             boolean sufficient = has >= required;
 
-            // Material icon (small)
             ItemStack icon = new ItemStack(mat.item().get());
             g.pose().pushPose();
             g.pose().translate(x + 6, barY - 2, 0);
@@ -284,14 +253,12 @@ public class AmmoWorkbenchScreen extends AbstractContainerScreen<AmmoWorkbenchMe
             g.renderItem(icon, 0, 0);
             g.pose().popPose();
 
-            // Bar background
             int barX = x + 60;
             int barW = 100;
             int barH = 8;
             g.fill(barX, barY, barX + barW, barY + barH, 0xFF373737);
             g.fill(barX + 1, barY + 1, barX + barW - 1, barY + barH - 1, 0xFF555555);
 
-            // Bar fill
             float ratio = required > 0 ? Math.min((float) has / required, 1.0f) : 0;
             int fillW = (int) ((barW - 2) * ratio);
             int fillColor = sufficient ? 0xFF44CC44 : 0xFFCC4444;
@@ -299,7 +266,6 @@ public class AmmoWorkbenchScreen extends AbstractContainerScreen<AmmoWorkbenchMe
                 g.fill(barX + 1, barY + 1, barX + 1 + fillW, barY + barH - 1, fillColor);
             }
 
-            // Count text
             String countText = has + "/" + required;
             int textColor = sufficient ? 0xFF208020 : 0xFFCC2020;
             g.drawString(font, countText, barX + barW + 4, barY, textColor, false);
@@ -319,7 +285,9 @@ public class AmmoWorkbenchScreen extends AbstractContainerScreen<AmmoWorkbenchMe
         g.fill(bx, by, bx + bw, by + bh, 0xFF373737);
         g.fill(bx + 1, by + 1, bx + bw - 1, by + bh - 1, bgColor);
 
-        String label = crafting ? "合成中..." : "合成";
+        Component label = crafting
+                ? Component.translatable("gui.piranport.ammo_workbench.crafting")
+                : Component.translatable("gui.piranport.ammo_workbench.craft");
         int textColor = canCraft ? 0xFFFFFFFF : 0xFFCCCCCC;
         int labelW = font.width(label);
         g.drawString(font, label, bx + (bw - labelW) / 2, by + 3, textColor, false);
@@ -337,7 +305,6 @@ public class AmmoWorkbenchScreen extends AbstractContainerScreen<AmmoWorkbenchMe
         int fillW = (int) ((barW - 2f) * progress / total);
         g.fill(barX + 1, barY + 1, barX + 1 + fillW, barY + barH - 1, 0xFF44AAFF);
 
-        // Percentage text
         int pct = (int) (100f * progress / total);
         String pctText = pct + "%";
         g.drawString(font, pctText, barX + barW + 4, barY, 0xFF404040, false);
@@ -352,7 +319,6 @@ public class AmmoWorkbenchScreen extends AbstractContainerScreen<AmmoWorkbenchMe
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         super.render(g, mouseX, mouseY, partialTick);
 
-        // Render dropdown overlays (on top of everything)
         if (typeDropdownOpen) {
             renderDropdownList(g, leftPos + 6, topPos + 21, 96, currentTypes, selectedTypeIndex,
                     typeScrollOffset, mouseX, mouseY);
@@ -362,7 +328,6 @@ public class AmmoWorkbenchScreen extends AbstractContainerScreen<AmmoWorkbenchMe
                     selectedCaliberIndex, caliberScrollOffset, mouseX, mouseY);
         }
 
-        // Tab tooltips
         AmmoCategory[] cats = AmmoCategory.values();
         for (int i = 0; i < cats.length; i++) {
             int tx = leftPos - TAB_W;
@@ -382,7 +347,6 @@ public class AmmoWorkbenchScreen extends AbstractContainerScreen<AmmoWorkbenchMe
 
         int listH = visible * 12 + 2;
 
-        // Background with border
         g.fill(x - 1, y - 1, x + w + 1, y + listH + 1, 0xFF373737);
         g.fill(x, y, x + w, y + listH, 0xFFFFFFFF);
 
@@ -406,12 +370,11 @@ public class AmmoWorkbenchScreen extends AbstractContainerScreen<AmmoWorkbenchMe
             g.drawString(font, text, x + 3, iy + 2, textColor, false);
         }
 
-        // Scroll indicators
         if (scrollOffset > 0) {
-            g.drawString(font, "\u25B2", x + w - 10, y + 1, 0xFF808080, false);
+            g.drawString(font, ARROW_UP, x + w - 10, y + 1, 0xFF808080, false);
         }
         if (scrollOffset + DROPDOWN_VISIBLE < items.size()) {
-            g.drawString(font, "\u25BC", x + w - 10, y + listH - 10, 0xFF808080, false);
+            g.drawString(font, ARROW_DOWN, x + w - 10, y + listH - 10, 0xFF808080, false);
         }
     }
 
@@ -421,8 +384,6 @@ public class AmmoWorkbenchScreen extends AbstractContainerScreen<AmmoWorkbenchMe
         g.drawString(font, playerInventoryTitle, inventoryLabelX, inventoryLabelY, 0xFF404040, false);
     }
 
-    // ===== Input handling =====
-
     @Override
     public boolean mouseClicked(double mx, double my, int button) {
         if (button != 0) return super.mouseClicked(mx, my, button);
@@ -430,7 +391,6 @@ public class AmmoWorkbenchScreen extends AbstractContainerScreen<AmmoWorkbenchMe
         int x = leftPos;
         int y = topPos;
 
-        // Handle open dropdown clicks first (capture click)
         if (typeDropdownOpen) {
             if (handleDropdownClick(x + 6, y + 21, 96, currentTypes, typeScrollOffset,
                     (int) mx, (int) my, true)) {
@@ -448,7 +408,6 @@ public class AmmoWorkbenchScreen extends AbstractContainerScreen<AmmoWorkbenchMe
             return true;
         }
 
-        // Tab clicks
         AmmoCategory[] cats = AmmoCategory.values();
         for (int i = 0; i < cats.length; i++) {
             int tx = x - TAB_W;
@@ -462,21 +421,18 @@ public class AmmoWorkbenchScreen extends AbstractContainerScreen<AmmoWorkbenchMe
             }
         }
 
-        // Type dropdown button
         if (mx >= x + 6 && mx < x + 102 && my >= y + 7 && my < y + 21) {
             typeDropdownOpen = true;
             caliberDropdownOpen = false;
             return true;
         }
 
-        // Caliber dropdown button
         if (mx >= x + 106 && mx < x + 202 && my >= y + 7 && my < y + 21) {
             caliberDropdownOpen = true;
             typeDropdownOpen = false;
             return true;
         }
 
-        // Craft button
         int bx = x + 6, by = y + 128, bw = 56, bh = 14;
         if (mx >= bx && mx < bx + bw && my >= by && my < by + bh) {
             if (!menu.isCrafting() && currentRecipe != null) {
@@ -535,9 +491,8 @@ public class AmmoWorkbenchScreen extends AbstractContainerScreen<AmmoWorkbenchMe
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        // Let EditBox handle input when focused
         if (quantityField.isFocused()) {
-            if (keyCode == 256) { // ESC
+            if (keyCode == 256) { // ESC — first clears focus, second closes (vanilla)
                 quantityField.setFocused(false);
                 return true;
             }

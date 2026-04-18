@@ -156,7 +156,10 @@ public class CookingPotBlockEntity extends BlockEntity implements MenuProvider {
             }
 
             CookingPotRecipe recipe = opt.get().value();
-            if (be.currentRecipe == null
+            if (be.currentRecipe == null && opt.get().id().equals(be.currentRecipeId)) {
+                // Resume after load: same recipe id, keep saved progress
+                be.currentRecipe = recipe;
+            } else if (be.currentRecipe == null
                     || !opt.get().id().equals(be.currentRecipeId)) {
                 be.currentRecipe = recipe;
                 be.currentRecipeId = opt.get().id();
@@ -234,6 +237,9 @@ public class CookingPotBlockEntity extends BlockEntity implements MenuProvider {
         tag.put("inventory", itemHandler.serializeNBT(registries));
         tag.putInt("cookingProgress", cookingProgress);
         tag.putInt("cookingTotalTime", cookingTotalTime);
+        if (currentRecipeId != null) {
+            tag.putString("currentRecipeId", currentRecipeId.toString());
+        }
     }
 
     @Override
@@ -242,6 +248,9 @@ public class CookingPotBlockEntity extends BlockEntity implements MenuProvider {
         if (tag.contains("inventory")) itemHandler.deserializeNBT(registries, tag.getCompound("inventory"));
         cookingProgress = tag.getInt("cookingProgress");
         cookingTotalTime = tag.getInt("cookingTotalTime");
+        if (tag.contains("currentRecipeId")) {
+            currentRecipeId = net.minecraft.resources.ResourceLocation.tryParse(tag.getString("currentRecipeId"));
+        }
     }
 
     @Override

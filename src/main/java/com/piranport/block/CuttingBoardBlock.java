@@ -2,6 +2,7 @@ package com.piranport.block;
 
 import com.mojang.serialization.MapCodec;
 import com.piranport.block.entity.CuttingBoardBlockEntity;
+import com.piranport.registry.ModRecipeTypes;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.Containers;
@@ -11,6 +12,7 @@ import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.item.crafting.SingleRecipeInput;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseEntityBlock;
@@ -80,19 +82,25 @@ public class CuttingBoardBlock extends BaseEntityBlock {
     @Override
     protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos,
                                               Player player, InteractionHand hand, BlockHitResult hit) {
-        if (!level.isClientSide) {
-            BlockEntity be = level.getBlockEntity(pos);
-            if (be instanceof CuttingBoardBlockEntity board && board.getStoredItem().isEmpty() && !stack.isEmpty()) {
-                board.setStoredItem(stack.split(1));
-                board.setChanged();
-                level.sendBlockUpdated(pos, state, state, 3);
-                return ItemInteractionResult.SUCCESS;
-            }
-        } else if (level.getBlockEntity(pos) instanceof CuttingBoardBlockEntity board
-                && board.getStoredItem().isEmpty() && !stack.isEmpty()) {
-            return ItemInteractionResult.SUCCESS;
+        if (stack.isEmpty()) return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        BlockEntity be = level.getBlockEntity(pos);
+        if (!(be instanceof CuttingBoardBlockEntity board) || !board.getStoredItem().isEmpty()) {
+            return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
-        return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        // Only accept items that have a cutting recipe — prevents tools/valuables from being placed by mistake
+        if (level.getRecipeManager().getRecipeFor(ModRecipeTypes.CUTTING_BOARD_TYPE.get(),
+                new SingleRecipeInput(stack), level).isEmpty()) {
+            return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        }
+        if (!level.isClientSide) {
+            board.setStoredItem(stack.copyWithCount(1));
+            if (!player.isCreative()) {
+                stack.shrink(1);
+            }
+            board.setChanged();
+            level.sendBlockUpdated(pos, state, state, 3);
+        }
+        return ItemInteractionResult.sidedSuccess(level.isClientSide);
     }
 
     @Override

@@ -7,17 +7,21 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.inventory.ContainerLevelAccess;
-import net.minecraft.world.inventory.DataSlot;
+import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.items.IItemHandler;
+import net.neoforged.neoforge.items.ItemStackHandler;
 import net.neoforged.neoforge.items.SlotItemHandler;
+import org.jetbrains.annotations.Nullable;
 
 public class CookingPotMenu extends AbstractContainerMenu {
-    private final CookingPotBlockEntity blockEntity;
+    private final @Nullable CookingPotBlockEntity blockEntity;
     private final Level level;
+    private final ContainerData dataAccess;
 
     // Output-only slot
     private static class OutputSlot extends SlotItemHandler {
@@ -30,18 +34,18 @@ public class CookingPotMenu extends AbstractContainerMenu {
 
     public static CookingPotMenu fromNetwork(int containerId, Inventory playerInventory, FriendlyByteBuf buf) {
         BlockPos pos = buf.readBlockPos();
-        if (playerInventory.player.level().getBlockEntity(pos) instanceof CookingPotBlockEntity be) {
-            return new CookingPotMenu(containerId, playerInventory, be);
-        }
-        throw new IllegalStateException("CookingPotBlockEntity not found at " + pos);
+        CookingPotBlockEntity be = playerInventory.player.level().getBlockEntity(pos) instanceof CookingPotBlockEntity pot
+                ? pot : null;
+        return new CookingPotMenu(containerId, playerInventory, be);
     }
 
-    public CookingPotMenu(int containerId, Inventory playerInventory, CookingPotBlockEntity be) {
+    public CookingPotMenu(int containerId, Inventory playerInventory, @Nullable CookingPotBlockEntity be) {
         super(ModMenuTypes.COOKING_POT_MENU.get(), containerId);
         this.blockEntity = be;
         this.level = playerInventory.player.level();
 
-        IItemHandler handler = be.getItemHandler();
+        IItemHandler handler = be != null ? be.getItemHandler() : new ItemStackHandler(CookingPotBlockEntity.TOTAL_SLOTS);
+        this.dataAccess = be != null ? be.dataAccess : new SimpleContainerData(2);
 
         // Input slots 0-8 (3x3 grid), slot indices 0-8
         for (int row = 0; row < 3; row++) {
@@ -63,11 +67,11 @@ public class CookingPotMenu extends AbstractContainerMenu {
             addSlot(new Slot(playerInventory, col, 8 + col * 18, 142));
         }
 
-        addDataSlots(be.dataAccess);
+        addDataSlots(this.dataAccess);
     }
 
-    public int getProgress() { return blockEntity.dataAccess.get(0); }
-    public int getTotalTime() { return blockEntity.dataAccess.get(1); }
+    public int getProgress() { return dataAccess.get(0); }
+    public int getTotalTime() { return dataAccess.get(1); }
 
     @Override
     public ItemStack quickMoveStack(Player player, int index) {
@@ -91,6 +95,7 @@ public class CookingPotMenu extends AbstractContainerMenu {
 
     @Override
     public boolean stillValid(Player player) {
+        if (blockEntity == null) return false;
         // Check chunk is loaded before accessing block entity
         if (!level.isLoaded(blockEntity.getBlockPos())) {
             return false;

@@ -49,15 +49,23 @@ public class PlaceableFoodBlockEntity extends BlockEntity {
         FoodProperties food = new ItemStack(foodItem).getFoodProperties(player);
         if (food == null) return;
 
-        int nutritionPerBite = (int) Math.ceil((double) food.nutrition() / totalServings);
-        float satModPerBite = (float) Math.ceil(food.saturation() / totalServings * 10) / 10f;
+        // Cumulative allocation — guarantees Σ(bites) == original food value.
+        int bitesDone = totalServings - remainingServings;
+        int nutritionPerBite = (int) ((long) food.nutrition() * (bitesDone + 1) / totalServings)
+                - (int) ((long) food.nutrition() * bitesDone / totalServings);
+        float satModPerBite = food.saturation() * (bitesDone + 1) / totalServings
+                - food.saturation() * bitesDone / totalServings;
         player.getFoodData().eat(nutritionPerBite, satModPerBite);
 
-        for (FoodProperties.PossibleEffect pe : food.effects()) {
-            MobEffectInstance orig = pe.effect();
-            int dur = (int) Math.ceil((double) orig.getDuration() / totalServings);
-            if (player.getRandom().nextFloat() < pe.probability()) {
-                player.addEffect(new MobEffectInstance(orig.getEffect(), dur, orig.getAmplifier()));
+        // Effects: roll once on the last bite with full duration — matches vanilla single-use semantics.
+        boolean isLastBite = (remainingServings == 1);
+        if (isLastBite) {
+            for (FoodProperties.PossibleEffect pe : food.effects()) {
+                MobEffectInstance orig = pe.effect();
+                if (player.getRandom().nextFloat() < pe.probability()) {
+                    player.addEffect(new MobEffectInstance(orig.getEffect(),
+                            orig.getDuration(), orig.getAmplifier()));
+                }
             }
         }
 

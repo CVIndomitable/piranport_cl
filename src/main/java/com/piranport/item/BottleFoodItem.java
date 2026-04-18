@@ -24,8 +24,11 @@ public class BottleFoodItem extends Item {
             if (result.isEmpty()) {
                 return new ItemStack(Items.GLASS_BOTTLE);
             }
-            // Stack had count > 1 — return glass bottle to inventory
-            player.getInventory().add(new ItemStack(Items.GLASS_BOTTLE));
+            // Stack had count > 1 — return glass bottle to inventory, drop if full
+            ItemStack bottle = new ItemStack(Items.GLASS_BOTTLE);
+            if (!player.getInventory().add(bottle)) {
+                player.drop(bottle, false);
+            }
         }
         return result;
     }

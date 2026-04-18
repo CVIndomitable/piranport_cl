@@ -17,6 +17,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeHolder;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.items.IItemHandler;
@@ -33,6 +34,7 @@ public class StoneMillBlockEntity extends BlockEntity implements MenuProvider {
     public static final int TOTAL_SLOTS = INPUT_SLOTS + OUTPUT_SLOTS;
 
     private boolean processing = false;
+    private boolean needsReprocess = true;
 
     private final ItemStackHandler itemHandler = new ItemStackHandler(TOTAL_SLOTS) {
         @Override
@@ -80,6 +82,14 @@ public class StoneMillBlockEntity extends BlockEntity implements MenuProvider {
 
     public StoneMillBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntityTypes.STONE_MILL.get(), pos, state);
+    }
+
+    /** Runs once after chunk load to catch up processing stalled by full output / server restart. */
+    public static void serverTick(Level level, BlockPos pos, BlockState state, StoneMillBlockEntity be) {
+        if (be.needsReprocess) {
+            be.needsReprocess = false;
+            be.processRecipes();
+        }
     }
 
     public ItemStackHandler getItemHandler() {
@@ -164,18 +174,20 @@ public class StoneMillBlockEntity extends BlockEntity implements MenuProvider {
     }
 
     private void consumeIngredients(List<net.minecraft.world.item.crafting.Ingredient> ingredients) {
+        // Aligned with CookingPotBlockEntity.craftItem — one slot can satisfy multiple same-type ingredients.
         List<net.minecraft.world.item.crafting.Ingredient> remaining = new ArrayList<>(ingredients);
         for (int i = 0; i < INPUT_SLOTS && !remaining.isEmpty(); i++) {
             ItemStack slot = itemHandler.getStackInSlot(i);
             if (slot.isEmpty()) continue;
-            for (int j = 0; j < remaining.size(); j++) {
+            int consumed = 0;
+            for (int j = remaining.size() - 1; j >= 0 && consumed < slot.getCount(); j--) {
                 if (remaining.get(j).test(slot)) {
-                    ItemStack updated = slot.copy();
-                    updated.shrink(1);
-                    itemHandler.setStackInSlot(i, updated);
                     remaining.remove(j);
-                    break;
+                    consumed++;
                 }
+            }
+            if (consumed > 0) {
+                itemHandler.setStackInSlot(i, slot.copyWithCount(slot.getCount() - consumed));
             }
         }
     }

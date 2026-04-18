@@ -2,7 +2,7 @@
   "name": "piranport.book.intro.transform",
   "category": "piranport:1_intro",
   "icon": "piranport:medium_ship_core",
-  "sortnum": 1,
+  "sortnum": 2,
   "pages": [
     {
       "type": "patchouli:text",

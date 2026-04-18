@@ -1,0 +1,20 @@
+{
+  "name": "piranport.book.intro.getting_started",
+  "category": "piranport:1_intro",
+  "icon": "piranport:aluminum_ingot",
+  "sortnum": 0,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "piranport.book.intro.getting_started.p1"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "piranport.book.intro.getting_started.p2"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "piranport.book.intro.getting_started.p3"
+    }
+  ]
+}

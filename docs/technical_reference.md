@@ -1,6 +1,8 @@
 # 皮兰港技术参考手册
 
-> 本文件是从 `CLAUDE.md` 剥离出的详细技术参考。CLAUDE.md 只保留项目身份与路线图等高频信息，本文件汇集完整目录结构、NeoForge API 注意事项、关键技术要点、配置系统与外部依赖。
+> 本文件汇集完整目录结构、NeoForge API 注意事项、关键技术要点、配置系统与外部依赖。
+> 版本路线图见 `version_roadmap.md`，已完成 Phase 记录见 `phases_archive.md`。
+> 当前覆盖版本：v0.0.11 Ruins（2026-04-18）。
 
 ---
 
@@ -351,6 +353,28 @@ src/main/java/com/piranport/
 
 **Patchouli 1.21.1-93-NEOFORGE**（教程手册，软依赖）：
 - `localRuntime` + BlameJared maven，Java 反射调用 API
+- 手册结构：`assets/piranport/patchouli_books/guidebook/en_us/{categories,entries}`（i18n 通过 lang 文件覆盖）
+- 类别编号顺序：`1_intro` → `2_cannons` → `3_torpedoes` → `4_cooking` → `5_aviation` → `6_combat` → `7_dungeon` → `8_ruins` → `9_arsenal`
 
 **JEI (Just Enough Items)**（配方查看，软依赖）：
 - `localRuntime`，`PiranPortJEIPlugin` 注册加工站配方Category
+
+---
+
+## 相关文档索引
+
+| 主题 | 文件 |
+|------|------|
+| 版本路线图 | `version_roadmap.md` |
+| 已完成 Phase 归档 | `phases_archive.md` |
+| 火控/制导详细流程 | `火控逻辑.md` |
+| 鱼雷物品表/实体行为 | `鱼雷流程.md` |
+| 飞机状态机/编队 | `航空流程.md` |
+| 数值/存储结构 | `数据架构设计.md` |
+| 策划视角版本总结 | `写给策划.md` |
+| 玩家上手操作 | `模组教程.md` |
+| 调试命令速查 | `命令.md` |
+| 配置项解释 | `CONFIG.md` |
+| 副本系统详解 | `dungeon_system_spec.md` |
+| v0.0.11 遗迹 Phase 计划 | `phase_0.0.11_ruins.md` |
+| NPC 技术方案 | `v0.0.11-npc-plan.md` |

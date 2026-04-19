@@ -1,0 +1,9 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {"item": "piranport:rye"},
+    {"item": "piranport:rye"},
+    {"item": "minecraft:wheat"}
+  ],
+  "result": {"id": "piranport:new_rye_bread", "count": 1}
+}

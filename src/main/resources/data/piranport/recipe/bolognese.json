@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {"item": "piranport:pork_paste"},
+    {"item": "piranport:edible_oil"},
+    {"item": "piranport:garlic"},
+    {"item": "piranport:chili_powder"},
+    {"item": "piranport:salt"}
+  ],
+  "result": {"id": "piranport:bolognese", "count": 3}
+}

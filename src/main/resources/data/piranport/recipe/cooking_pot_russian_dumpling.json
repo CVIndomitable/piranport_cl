@@ -1,0 +1,14 @@
+{
+  "type": "piranport:cooking_pot",
+  "ingredients": [
+    {"item": "piranport:flour"},
+    {"item": "minecraft:egg"},
+    {"item": "minecraft:brown_mushroom"},
+    {"item": "minecraft:beef"},
+    {"item": "minecraft:mutton"},
+    {"item": "minecraft:porkchop"},
+    {"item": "piranport:onion"}
+  ],
+  "result": {"id": "piranport:russian_dumpling", "count": 5},
+  "cookingTime": 300
+}

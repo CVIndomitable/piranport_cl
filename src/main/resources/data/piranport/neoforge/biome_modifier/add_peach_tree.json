@@ -1,0 +1,6 @@
+{
+  "type": "neoforge:add_features",
+  "biomes": ["minecraft:forest", "minecraft:flower_forest", "minecraft:birch_forest", "minecraft:old_growth_birch_forest", "minecraft:plains", "minecraft:meadow", "minecraft:sunflower_plains"],
+  "features": "piranport:peach_tree_placed",
+  "step": "vegetal_decoration"
+}

@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {"item": "piranport:sausage"},
+    {"item": "piranport:bagel"}
+  ],
+  "result": {"id": "piranport:weisswurst_mit_der_bagel", "count": 1}
+}

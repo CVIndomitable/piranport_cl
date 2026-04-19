@@ -1,0 +1,8 @@
+{
+  "type": "piranport:cooking_pot",
+  "ingredients": [
+    {"item": "piranport:embryo_of_apple_pie"}
+  ],
+  "result": {"id": "piranport:apple_pie", "count": 1},
+  "cookingTime": 180
+}

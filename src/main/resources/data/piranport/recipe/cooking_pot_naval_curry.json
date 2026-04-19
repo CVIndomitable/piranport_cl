@@ -1,10 +1,11 @@
 {
   "type": "piranport:cooking_pot",
   "ingredients": [
-    {"item": "minecraft:potato"},
+    {"item": "piranport:curry_powder"},
     {"item": "minecraft:carrot"},
-    {"item": "minecraft:cooked_beef"}
+    {"item": "minecraft:potato"},
+    {"item": "piranport:cooked_rice"}
   ],
-  "result": {"id": "piranport:naval_curry", "count": 1},
-  "cookingTime": 300
+  "result": {"id": "piranport:naval_curry", "count": 2},
+  "cookingTime": 240
 }

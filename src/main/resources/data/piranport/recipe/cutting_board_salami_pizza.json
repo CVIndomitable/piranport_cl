@@ -1,0 +1,6 @@
+{
+  "type": "piranport:cutting_board",
+  "ingredient": {"item": "piranport:salami_pizza"},
+  "result": {"id": "piranport:salami_pizza_pieces", "count": 8},
+  "cuts": 4
+}

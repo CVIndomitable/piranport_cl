@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {"item": "piranport:cream"},
+    {"item": "piranport:yeast"}
+  ],
+  "result": {"id": "piranport:cheese", "count": 1}
+}

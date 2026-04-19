@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {"item": "piranport:black_tea"},
+    {"item": "piranport:egg_sandwich"}
+  ],
+  "result": {"id": "piranport:black_tea_sandwich", "count": 1}
+}

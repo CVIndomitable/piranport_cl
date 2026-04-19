@@ -1,0 +1,10 @@
+{
+  "type": "piranport:cooking_pot",
+  "ingredients": [
+    {"item": "piranport:ormosia"},
+    {"item": "piranport:flour"},
+    {"item": "minecraft:water_bucket"}
+  ],
+  "result": {"id": "piranport:yokan", "count": 3},
+  "cookingTime": 200
+}

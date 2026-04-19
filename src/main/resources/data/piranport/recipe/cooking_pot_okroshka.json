@@ -1,0 +1,10 @@
+{
+  "type": "piranport:cooking_pot",
+  "ingredients": [
+    {"item": "minecraft:water_bucket"},
+    {"item": "minecraft:chicken"},
+    {"item": "minecraft:porkchop"}
+  ],
+  "result": {"id": "piranport:okroshka", "count": 1},
+  "cookingTime": 200
+}

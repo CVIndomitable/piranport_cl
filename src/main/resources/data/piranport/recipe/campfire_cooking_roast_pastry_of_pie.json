@@ -1,0 +1,7 @@
+{
+  "type": "minecraft:campfire_cooking",
+  "ingredient": {"item": "piranport:pie_crust"},
+  "result": {"id": "piranport:roast_pastry_of_pie", "count": 1},
+  "experience": 0.2,
+  "cookingtime": 200
+}

@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "B  ",
+    "M  ",
+    "T  "
+  ],
+  "key": {
+    "B": {"item": "piranport:round_bun"},
+    "M": {"item": "minecraft:beef"},
+    "T": {"item": "piranport:tomato"}
+  },
+  "result": {"id": "piranport:american_burger", "count": 1}
+}

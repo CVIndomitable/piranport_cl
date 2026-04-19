@@ -1,0 +1,7 @@
+{
+  "type": "piranport:stone_mill",
+  "ingredients": [
+    {"item": "piranport:walnut"}
+  ],
+  "result": {"id": "piranport:walnut_powder", "count": 1}
+}

@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "SES",
+    "ASA",
+    "SDS"
+  ],
+  "key": {
+    "S": {"item": "minecraft:sugar"},
+    "A": {"item": "piranport:almond_powder"},
+    "E": {"item": "minecraft:egg"},
+    "D": {"tag": "c:dyes"}
+  },
+  "result": {"id": "piranport:macaron", "count": 8}
+}

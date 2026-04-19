@@ -1386,4 +1386,163 @@ public class ModItems {
             ITEMS.register("ship_girl_spawn_egg",
                     () -> new net.minecraft.world.item.SpawnEggItem(ModEntityTypes.SHIP_GIRL.get(),
                             0xFFDDCC, 0x4488FF, new Item.Properties()));
+
+    // ===== Phase 28: Shipgirl Food Expansion — Crops (produce) =====
+    public static final DeferredItem<Item> LABLAB_BEAN =
+            ITEMS.register("lablab_bean", () -> new Item(new Item.Properties().food(fp(1, 1.5f).build())));
+    public static final DeferredItem<Item> ORMOSIA =
+            ITEMS.register("ormosia", () -> new Item(new Item.Properties().food(fp(1, 1.5f).build())));
+    public static final DeferredItem<Item> CELERY =
+            ITEMS.register("celery", () -> new Item(new Item.Properties().food(fp(1, 1.5f).build())));
+    public static final DeferredItem<Item> RYE =
+            ITEMS.registerSimpleItem("rye");
+    public static final DeferredItem<Item> PEACH =
+            ITEMS.register("peach", () -> new Item(new Item.Properties().food(fp(1, 1.5f).build())));
+
+    // ===== Phase 28: Seeds =====
+    public static final DeferredItem<net.minecraft.world.item.ItemNameBlockItem> LABLAB_BEAN_SEEDS =
+            ITEMS.register("lablab_bean_seeds", () -> new net.minecraft.world.item.ItemNameBlockItem(
+                    ModBlocks.LABLAB_BEAN_CROP.get(), new Item.Properties()));
+    public static final DeferredItem<net.minecraft.world.item.ItemNameBlockItem> ORMOSIA_SEEDS =
+            ITEMS.register("ormosia_seeds", () -> new net.minecraft.world.item.ItemNameBlockItem(
+                    ModBlocks.ORMOSIA_CROP.get(), new Item.Properties()));
+    public static final DeferredItem<net.minecraft.world.item.ItemNameBlockItem> CELERY_SEEDS =
+            ITEMS.register("celery_seeds", () -> new net.minecraft.world.item.ItemNameBlockItem(
+                    ModBlocks.CELERY_CROP.get(), new Item.Properties()));
+    public static final DeferredItem<net.minecraft.world.item.ItemNameBlockItem> RYE_SEEDS =
+            ITEMS.register("rye_seeds", () -> new net.minecraft.world.item.ItemNameBlockItem(
+                    ModBlocks.RYE_CROP.get(), new Item.Properties()));
+
+    // ===== Phase 28: Peach tree block items =====
+    public static final DeferredItem<BlockItem> PEACH_LOG =
+            ITEMS.registerSimpleBlockItem(ModBlocks.PEACH_LOG);
+    public static final DeferredItem<BlockItem> PEACH_LEAVES =
+            ITEMS.registerSimpleBlockItem(ModBlocks.PEACH_LEAVES);
+    public static final DeferredItem<BlockItem> PEACH_SAPLING =
+            ITEMS.registerSimpleBlockItem(ModBlocks.PEACH_SAPLING);
+
+    // ===== Phase 28: New Ingredients/Condiments =====
+    public static final DeferredItem<Item> MILK_ICE_CREAM      = ITEMS.registerSimpleItem("milk_ice_cream");
+    public static final DeferredItem<Item> WALNUT              = ITEMS.registerSimpleItem("walnut");
+    public static final DeferredItem<Item> WALNUT_POWDER       = ITEMS.registerSimpleItem("walnut_powder");
+    public static final DeferredItem<Item> EMBRYO_OF_APPLE_PIE = ITEMS.registerSimpleItem("embryo_of_apple_pie");
+    public static final DeferredItem<Item> EMBRYO_OF_SALAMI_PIZZA = ITEMS.registerSimpleItem("embryo_of_salami_pizza");
+    public static final DeferredItem<Item> BLACK_PEPPER        = ITEMS.registerSimpleItem("black_pepper");
+    public static final DeferredItem<Item> WHITE_PEPPER        = ITEMS.registerSimpleItem("white_pepper");
+    public static final DeferredItem<Item> CURRY_POWDER        = ITEMS.registerSimpleItem("curry_powder");
+    public static final DeferredItem<Item> GINGER              = ITEMS.registerSimpleItem("ginger");
+    public static final DeferredItem<Item> BLACK_TEA           = ITEMS.registerSimpleItem("black_tea");
+    public static final DeferredItem<Item> SALAMI              = ITEMS.registerSimpleItem("salami");
+    public static final DeferredItem<Item> SLICED_SALAMI       = ITEMS.registerSimpleItem("sliced_salami");
+    public static final DeferredItem<Item> ALMOND              = ITEMS.registerSimpleItem("almond");
+    public static final DeferredItem<Item> ALMOND_POWDER       = ITEMS.registerSimpleItem("almond_powder");
+    public static final DeferredItem<Item> WOODEN_BOWL         = ITEMS.registerSimpleItem("wooden_bowl");
+    public static final DeferredItem<Item> WOODEN_BARREL       = ITEMS.registerSimpleItem("wooden_barrel");
+
+    // ===== Phase 28: Intermediate Products =====
+    public static final DeferredItem<Item> BEANS_CAN           = ITEMS.register("beans_can",
+            () -> new Item(new Item.Properties().food(fp(4, 5f).build())));
+    public static final DeferredItem<Item> CATCHUP             = ITEMS.register("catchup",
+            () -> new Item(new Item.Properties().food(fp(1, 1.5f).build())));
+    public static final DeferredItem<Item> BOLOGNESE           = ITEMS.register("bolognese",
+            () -> new Item(new Item.Properties().food(fp(3, 3.8f).build())));
+    public static final DeferredItem<Item> BAGEL               = ITEMS.register("bagel",
+            () -> new Item(new Item.Properties().food(fp(5, 6.3f).build())));
+    public static final DeferredItem<Item> LABLAB_SOUP         = ITEMS.register("lablab_soup",
+            () -> new Item(new Item.Properties().stacksTo(16).food(fp(4, 5f).build())));
+    public static final DeferredItem<Item> ROAST_PASTRY_OF_PIE = ITEMS.register("roast_pastry_of_pie",
+            () -> new Item(new Item.Properties().food(fp(3, 3.8f).build())));
+
+    // ===== Phase 28: Juices and Jams (bottled, returns glass bottle) =====
+    public static final DeferredItem<BottleFoodItem> APPLE_JUICE =
+            ITEMS.register("apple_juice", () -> new BottleFoodItem(
+                    new Item.Properties().stacksTo(16).food(fp(2, 2.5f).build())));
+    public static final DeferredItem<BottleFoodItem> APPLE_JAM =
+            ITEMS.register("apple_jam", () -> new BottleFoodItem(
+                    new Item.Properties().stacksTo(16).food(fp(2, 2.5f).build())));
+    public static final DeferredItem<BottleFoodItem> WATERMELON_JUICE =
+            ITEMS.register("watermelon_juice", () -> new BottleFoodItem(
+                    new Item.Properties().stacksTo(16).food(fp(2, 2.5f).build())));
+    public static final DeferredItem<BottleFoodItem> WATERMELON_JAM =
+            ITEMS.register("watermelon_jam", () -> new BottleFoodItem(
+                    new Item.Properties().stacksTo(16).food(fp(2, 2.5f).build())));
+    public static final DeferredItem<BottleFoodItem> PINEAPPLE_JAM =
+            ITEMS.register("pineapple_jam", () -> new BottleFoodItem(
+                    new Item.Properties().stacksTo(16).food(fp(2, 2.5f).build())));
+    public static final DeferredItem<BottleFoodItem> CHORUS_FRUIT_JAM =
+            ITEMS.register("chorus_fruit_jam", () -> new BottleFoodItem(
+                    new Item.Properties().stacksTo(16).food(fp(2, 2.5f).build())));
+
+    // ===== Phase 28: New Dishes =====
+    /** Taptap冰激凌 — 幸运 I 5min + 抗火 I 2min */
+    public static final DeferredItem<ModFoodItem> TAPTAP_ICE_CREAM = ITEMS.register("taptap_ice_cream",
+            () -> new ModFoodItem(new Item.Properties()
+                    .food(fp(1, 1f)
+                            .effect(new MobEffectInstance(MobEffects.LUCK, 6000, 0), 1.0f)
+                            .effect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 2400, 0), 1.0f)
+                            .build())
+                    .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 1))));
+
+    /** 合味道 — 生命提升 II × 20min，流浪商人购买 */
+    public static final DeferredItem<ModFoodItem> HE_WEI_DAO = ITEMS.register("he_wei_dao",
+            () -> new ModFoodItem(new Item.Properties()
+                    .food(fp(12, 16f)
+                            .effect(new MobEffectInstance(MobEffects.HEALTH_BOOST, 24000, 1), 1.0f)
+                            .build())
+                    .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 3))));
+
+    /** 咸豆花 — 力量 I + 水下呼吸 I × 3min，碗装 */
+    public static final DeferredItem<ModFoodItem> SALTY_BEAN_CURD = ITEMS.register("salty_bean_curd",
+            () -> new ModFoodItem(new Item.Properties()
+                    .food(fp(3, 3.8f)
+                            .effect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 3600, 0), 1.0f)
+                            .effect(new MobEffectInstance(MobEffects.WATER_BREATHING, 3600, 0), 1.0f)
+                            .build())
+                    .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("bowl", 1))));
+
+    /** 盘装皇家海军咸牛肉 — 生命提升 I × 3min，碗右键方块形式获得 */
+    public static final DeferredItem<ModFoodItem> PLATED_ROYAL_NAVAL_SALTED_BEEF = ITEMS.register("plated_royal_naval_salted_beef",
+            () -> new ModFoodItem(new Item.Properties()
+                    .food(fp(8, 10f)
+                            .effect(new MobEffectInstance(MobEffects.HEALTH_BOOST, 3600, 0), 1.0f)
+                            .build())
+                    .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("bowl", 1))));
+
+    /** 仰望星空派 — 凋零 II 2s + 反胃 IV 14s + 急迫 III 40s */
+    public static final DeferredItem<ModFoodItem> STARGAZY_PIE = ITEMS.register("stargazy_pie",
+            () -> new ModFoodItem(new Item.Properties()
+                    .food(fp(6, 7.5f)
+                            .effect(new MobEffectInstance(MobEffects.WITHER, 40, 1), 1.0f)
+                            .effect(new MobEffectInstance(MobEffects.CONFUSION, 280, 3), 1.0f)
+                            .effect(new MobEffectInstance(MobEffects.DIG_SPEED, 800, 2), 1.0f)
+                            .build())
+                    .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 3))));
+
+    /** 鸡蛋三明治 */
+    public static final DeferredItem<ModFoodItem> EGG_SANDWICH = ITEMS.register("egg_sandwich",
+            () -> new ModFoodItem(new Item.Properties()
+                    .food(fp(5, 6.3f).build())
+                    .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 2))));
+
+    /** 培根三明治 */
+    public static final DeferredItem<ModFoodItem> BACON_SANDWICH = ITEMS.register("bacon_sandwich",
+            () -> new ModFoodItem(new Item.Properties()
+                    .food(fp(6, 7.5f).build())
+                    .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 2))));
+
+    /** 切片萨拉米披萨 — 力量 I × 2min */
+    public static final DeferredItem<ModFoodItem> SALAMI_PIZZA_PIECES = ITEMS.register("salami_pizza_pieces",
+            () -> new ModFoodItem(new Item.Properties()
+                    .food(fp(3, 3.8f)
+                            .effect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 2400, 0), 1.0f)
+                            .build())
+                    .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 1))));
+
+    /** 番茄肉酱意面 — 速度 I × 3min */
+    public static final DeferredItem<ModFoodItem> BOLOGNESE_LINGUINE_RECIPE = ITEMS.register("bolognese_linguine_recipe",
+            () -> new ModFoodItem(new Item.Properties()
+                    .food(fp(8, 10f)
+                            .effect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 3600, 0), 1.0f)
+                            .build())
+                    .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 2))));
 }

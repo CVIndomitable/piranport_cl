@@ -1,0 +1,7 @@
+{
+  "type": "minecraft:smoking",
+  "ingredient": {"item": "piranport:rice"},
+  "result": {"id": "piranport:cooked_rice", "count": 1},
+  "experience": 0.2,
+  "cookingtime": 200
+}

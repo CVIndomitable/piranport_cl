@@ -13,15 +13,25 @@ import com.piranport.block.SmokeScreenBlock;
 import com.piranport.block.StoneMillBlock;
 import com.piranport.block.ThreeStageCropBlock;
 import com.piranport.block.YubariWaterBucketBlock;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.valueproviders.UniformInt;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.DropExperienceBlock;
+import net.minecraft.world.level.block.LeavesBlock;
+import net.minecraft.world.level.block.RotatedPillarBlock;
+import net.minecraft.world.level.block.SaplingBlock;
 import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.grower.TreeGrower;
 import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
 import net.minecraft.world.level.material.MapColor;
 import net.neoforged.neoforge.registries.DeferredBlock;
 import net.neoforged.neoforge.registries.DeferredRegister;
+
+import java.util.Optional;
 
 public class ModBlocks {
     public static final DeferredRegister.Blocks BLOCKS =
@@ -77,6 +87,37 @@ public class ModBlocks {
     // Phase 27: Pineapple crop
     public static final DeferredBlock<FourStageCropBlock> PINEAPPLE_CROP =
             BLOCKS.register("pineapple_crop", () -> new FourStageCropBlock(cropProps(), () -> ModItems.PINEAPPLE_SEED.get()));
+
+    // ===== Phase 28: Shipgirl Food Expansion Crops =====
+    public static final DeferredBlock<FourStageCropBlock> LABLAB_BEAN_CROP =
+            BLOCKS.register("lablab_bean_crop", () -> new FourStageCropBlock(cropProps(), () -> ModItems.LABLAB_BEAN_SEEDS.get()));
+    public static final DeferredBlock<FourStageCropBlock> ORMOSIA_CROP =
+            BLOCKS.register("ormosia_crop", () -> new FourStageCropBlock(cropProps(), () -> ModItems.ORMOSIA_SEEDS.get()));
+    public static final DeferredBlock<FourStageCropBlock> CELERY_CROP =
+            BLOCKS.register("celery_crop", () -> new FourStageCropBlock(cropProps(), () -> ModItems.CELERY_SEEDS.get()));
+    public static final DeferredBlock<FourStageCropBlock> RYE_CROP =
+            BLOCKS.register("rye_crop", () -> new FourStageCropBlock(cropProps(), () -> ModItems.RYE_SEEDS.get()));
+
+    // ===== Phase 28: Peach Tree =====
+    public static final ResourceKey<ConfiguredFeature<?, ?>> PEACH_TREE_FEATURE_KEY =
+            ResourceKey.create(Registries.CONFIGURED_FEATURE,
+                    ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "peach_tree"));
+
+    public static final DeferredBlock<RotatedPillarBlock> PEACH_LOG =
+            BLOCKS.register("peach_log", () -> new RotatedPillarBlock(
+                    BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_LOG)));
+
+    public static final DeferredBlock<LeavesBlock> PEACH_LEAVES =
+            BLOCKS.register("peach_leaves", () -> new LeavesBlock(
+                    BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_LEAVES)));
+
+    public static final DeferredBlock<SaplingBlock> PEACH_SAPLING =
+            BLOCKS.register("peach_sapling", () -> new SaplingBlock(
+                    new TreeGrower("piranport:peach",
+                            Optional.empty(),
+                            Optional.of(PEACH_TREE_FEATURE_KEY),
+                            Optional.empty()),
+                    BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_SAPLING)));
 
     // ===== Functional Blocks (Phase 12) =====
     public static final DeferredBlock<StoneMillBlock> STONE_MILL =

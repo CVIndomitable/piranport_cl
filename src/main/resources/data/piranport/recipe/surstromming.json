@@ -1,0 +1,9 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {"item": "piranport:fermented_fish"},
+    {"item": "piranport:fermented_fish"},
+    {"item": "minecraft:iron_nugget"}
+  ],
+  "result": {"id": "piranport:surstromming", "count": 1}
+}

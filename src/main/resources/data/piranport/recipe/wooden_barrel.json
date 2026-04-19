@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "PSP",
+    "P P",
+    "PSP"
+  ],
+  "key": {
+    "P": {"tag": "minecraft:planks"},
+    "S": {"tag": "minecraft:wooden_slabs"}
+  },
+  "result": {"id": "piranport:wooden_barrel", "count": 1}
+}

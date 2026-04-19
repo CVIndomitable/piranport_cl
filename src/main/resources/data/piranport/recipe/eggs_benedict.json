@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "TBE",
+    "EUS",
+    "T  "
+  ],
+  "key": {
+    "T": {"item": "piranport:toast_bread"},
+    "B": {"item": "piranport:bacon"},
+    "E": {"item": "minecraft:egg"},
+    "U": {"item": "piranport:butter"},
+    "S": {"item": "piranport:salt"}
+  },
+  "result": {"id": "piranport:eggs_benedict", "count": 3}
+}

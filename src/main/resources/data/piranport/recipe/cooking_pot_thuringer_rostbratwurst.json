@@ -1,0 +1,13 @@
+{
+  "type": "piranport:cooking_pot",
+  "ingredients": [
+    {"item": "minecraft:cooked_porkchop"},
+    {"item": "piranport:salt"},
+    {"item": "piranport:white_pepper"},
+    {"item": "minecraft:cooked_beef"},
+    {"item": "piranport:celery_seeds"},
+    {"item": "minecraft:charcoal"}
+  ],
+  "result": {"id": "piranport:thuringer_rostbratwurst", "count": 3},
+  "cookingTime": 240
+}

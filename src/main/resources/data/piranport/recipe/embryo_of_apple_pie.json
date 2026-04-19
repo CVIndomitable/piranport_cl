@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "PAP"
+  ],
+  "key": {
+    "P": {"item": "piranport:pie_crust"},
+    "A": {"item": "minecraft:apple"}
+  },
+  "result": {"id": "piranport:embryo_of_apple_pie", "count": 1}
+}

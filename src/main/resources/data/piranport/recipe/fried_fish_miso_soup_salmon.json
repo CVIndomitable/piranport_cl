@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {"item": "minecraft:cooked_salmon"},
+    {"item": "piranport:miso_soup"}
+  ],
+  "result": {"id": "piranport:fried_fish_miso_soup", "count": 1}
+}

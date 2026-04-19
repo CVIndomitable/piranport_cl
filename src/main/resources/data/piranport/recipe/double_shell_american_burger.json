@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "B  ",
+    "M  ",
+    "BL "
+  ],
+  "key": {
+    "B": {"item": "piranport:round_bun"},
+    "M": {"item": "minecraft:beef"},
+    "L": {"item": "piranport:lettuce"}
+  },
+  "result": {"id": "piranport:double_shell_american_burger", "count": 1}
+}

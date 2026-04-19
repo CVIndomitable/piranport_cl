@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "piranport:item/roast_pastry_of_pie"
+  }
+}

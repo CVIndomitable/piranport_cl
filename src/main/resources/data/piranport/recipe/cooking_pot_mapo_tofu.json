@@ -2,8 +2,12 @@
   "type": "piranport:cooking_pot",
   "ingredients": [
     {"item": "piranport:tofu"},
+    {"item": "piranport:tofu"},
+    {"item": "piranport:pork_paste"},
+    {"item": "piranport:salt"},
     {"item": "piranport:chili_powder"},
-    {"item": "piranport:soy_sauce"}
+    {"item": "piranport:soy_sauce"},
+    {"item": "minecraft:sugar"}
   ],
   "result": {"id": "piranport:mapo_tofu", "count": 1},
   "cookingTime": 300

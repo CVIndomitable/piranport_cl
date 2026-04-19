@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " B ",
+    "B B",
+    " B "
+  ],
+  "key": {
+    "B": {"item": "minecraft:bread"}
+  },
+  "result": {"id": "piranport:bagel", "count": 4}
+}

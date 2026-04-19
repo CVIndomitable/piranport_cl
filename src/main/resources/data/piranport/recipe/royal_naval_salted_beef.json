@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "BBB",
+    "WBS",
+    "SSS"
+  ],
+  "key": {
+    "B": {"item": "minecraft:beef"},
+    "W": {"item": "piranport:wooden_barrel"},
+    "S": {"item": "piranport:salt"}
+  },
+  "result": {"id": "piranport:royal_naval_salted_beef", "count": 1}
+}

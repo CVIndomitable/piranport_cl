@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {"item": "piranport:flour"},
+    {"item": "piranport:flour"},
+    {"item": "minecraft:water_bucket"},
+    {"item": "piranport:salt"}
+  ],
+  "result": {"id": "piranport:raw_pasta", "count": 1}
+}

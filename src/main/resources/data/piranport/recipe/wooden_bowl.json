@@ -1,0 +1,7 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {"item": "minecraft:bowl"}
+  ],
+  "result": {"id": "piranport:wooden_bowl", "count": 1}
+}

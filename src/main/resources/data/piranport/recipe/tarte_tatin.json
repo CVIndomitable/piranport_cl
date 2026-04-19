@@ -1,0 +1,9 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {"item": "piranport:roast_pastry_of_pie"},
+    {"item": "minecraft:apple"},
+    {"item": "piranport:apple_jam"}
+  ],
+  "result": {"id": "piranport:tarte_tatin", "count": 1}
+}

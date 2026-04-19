@@ -1,0 +1,15 @@
+{
+  "type": "piranport:cooking_pot",
+  "ingredients": [
+    {"item": "piranport:butter"},
+    {"item": "minecraft:brown_mushroom"},
+    {"item": "piranport:cheese"},
+    {"item": "piranport:bacon"},
+    {"item": "minecraft:egg"},
+    {"item": "minecraft:cod"},
+    {"item": "minecraft:salmon"},
+    {"item": "piranport:pie_crust"}
+  ],
+  "result": {"id": "piranport:stargazy_pie", "count": 4},
+  "cookingTime": 300
+}

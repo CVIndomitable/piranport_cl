@@ -19,14 +19,14 @@
 
 ## Version Roadmap
 
-完整版本列表与每版核心内容见 **`docs/version_roadmap.md`**。
-当前已发布：v0.0.11-alpha (Ruins)。Phase 细节归档于 `docs/phases_archive.md`。
+完整版本列表与每版核心内容见 **`docs/皮兰港 版本路线图.md`**。
+当前已发布：v0.0.11-alpha (Ruins)。
 
 ---
 
 ## Technical Reference
 
-完整的目录结构、NeoForge 21.1.220 API 坑、关键技术要点、配置系统、外部依赖均已移至 **`docs/technical_reference.md`**。开发前请先查阅该文件。
+完整的目录结构、NeoForge 21.1.220 API 坑、关键技术要点、配置系统、外部依赖均已移至 **`docs/皮兰港技术参考手册.md`**。开发前请先查阅该文件。
 
 ---
 

@@ -19,14 +19,14 @@
 
 ## Version Roadmap
 
-完整版本列表与每版核心内容见 **`docs/皮兰港 版本路线图.md`**。
+完整版本列表与每版核心内容见 **`../docs/皮兰港 版本路线图.md`**。
 当前已发布：v0.0.11-alpha (Ruins)。
 
 ---
 
 ## Technical Reference
 
-完整的目录结构、NeoForge 21.1.220 API 坑、关键技术要点、配置系统、外部依赖均已移至 **`docs/皮兰港技术参考手册.md`**。开发前请先查阅该文件。
+完整的目录结构、NeoForge 21.1.220 API 坑、关键技术要点、配置系统、外部依赖均已移至 **`../docs/皮兰港技术参考手册.md`**。开发前请先查阅该文件。
 
 ---
 
@@ -76,5 +76,6 @@ neo_version=21.1.220
 - MDK Template: https://github.com/NeoForgeMDKs/MDK-1.21.1-ModDevGradle
 - Minecraft Wiki: https://minecraft.wiki/
 - Patchouli Wiki: https://vazkiimods.github.io/Patchouli/
-- 原始策划案：`docs/总策划案.docx`
+- 原始策划案：`../docs/总策划案.docx`
+- 所有文档统一在仓库根目录 `../docs/`，本仓库不保留 docs/
 - GitHub: https://github.com/CVIndomitable/piranport_cl.git

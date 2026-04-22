@@ -269,8 +269,6 @@ public class ModItems {
     // ===== Functional Block Items (Phase 12-14) =====
     public static final DeferredItem<BlockItem> RELOAD_FACILITY =
             ITEMS.registerSimpleBlockItem(ModBlocks.RELOAD_FACILITY);
-    public static final DeferredItem<BlockItem> YUBARI_WATER_BUCKET =
-            ITEMS.registerSimpleBlockItem(ModBlocks.YUBARI_WATER_BUCKET);
 
     // ===== Intermediate Products (Phase 13/16) =====
     public static final DeferredItem<Item> SAUSAGE            = ITEMS.registerSimpleItem("sausage");
@@ -806,12 +804,6 @@ public class ModItems {
                             new Item.Properties().stacksTo(1).durability(48)
                                     .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.DEPTH_CHARGE),
                             2, 80, DepthChargeLauncherItem.SpreadPattern.FRONT_BACK));
-    public static final DeferredItem<DepthChargeLauncherItem> DEPTH_CHARGE_LAUNCHER_ADVANCED =
-            ITEMS.register("depth_charge_launcher_advanced",
-                    () -> new DepthChargeLauncherItem(
-                            new Item.Properties().stacksTo(1).durability(32)
-                                    .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.DEPTH_CHARGE),
-                            3, 100, DepthChargeLauncherItem.SpreadPattern.TRIANGLE));
 
     // ===== Missile / Rocket Ammo =====
     public static final DeferredItem<MissileItem> SY1_MISSILE =

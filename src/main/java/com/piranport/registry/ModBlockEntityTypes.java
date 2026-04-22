@@ -3,7 +3,6 @@ package com.piranport.registry;
 import com.piranport.PiranPort;
 import com.piranport.block.entity.PlaceableFoodBlockEntity;
 import com.piranport.block.entity.ReloadFacilityBlockEntity;
-import com.piranport.block.entity.YubariWaterBucketBlockEntity;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.neoforged.neoforge.registries.DeferredHolder;
@@ -16,11 +15,6 @@ public class ModBlockEntityTypes {
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<ReloadFacilityBlockEntity>> RELOAD_FACILITY =
             BLOCK_ENTITY_TYPES.register("reload_facility", () ->
                     BlockEntityType.Builder.of(ReloadFacilityBlockEntity::new, ModBlocks.RELOAD_FACILITY.get())
-                            .build(null));
-
-    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<YubariWaterBucketBlockEntity>> YUBARI_WATER_BUCKET =
-            BLOCK_ENTITY_TYPES.register("yubari_water_bucket", () ->
-                    BlockEntityType.Builder.of(YubariWaterBucketBlockEntity::new, ModBlocks.YUBARI_WATER_BUCKET.get())
                             .build(null));
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<com.piranport.block.entity.ModelDebugBlockEntity>> MODEL_DEBUG =

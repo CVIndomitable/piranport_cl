@@ -87,7 +87,6 @@ public class ClientEvents {
         event.register(ModItems.QUAD_TORPEDO_LAUNCHER.get(), weaponDecorator);
         event.register(ModItems.DEPTH_CHARGE_LAUNCHER.get(), weaponDecorator);
         event.register(ModItems.DEPTH_CHARGE_LAUNCHER_IMPROVED.get(), weaponDecorator);
-        event.register(ModItems.DEPTH_CHARGE_LAUNCHER_ADVANCED.get(), weaponDecorator);
         // Missile launchers — all types get cooldown bar
         event.register(ModItems.TERRIER_LAUNCHER.get(), weaponDecorator);
         event.register(ModItems.SEA_DART_LAUNCHER.get(), weaponDecorator);

@@ -25,6 +25,8 @@ public class ModCreativeTabs {
                         output.accept(ModItems.SUBMARINE_CORE.get());
                         // Fuel
                         output.accept(ModItems.FUEL.get());
+                        // Guidebook
+                        output.accept(ModItems.GUIDEBOOK.get());
                     }).build());
 
     // ===== 炮雷 — 火炮 / 鱼雷发射器 =====
@@ -45,7 +47,6 @@ public class ModCreativeTabs {
                         output.accept(ModItems.QUAD_TORPEDO_LAUNCHER.get());
                         output.accept(ModItems.DEPTH_CHARGE_LAUNCHER.get());
                         output.accept(ModItems.DEPTH_CHARGE_LAUNCHER_IMPROVED.get());
-                        output.accept(ModItems.DEPTH_CHARGE_LAUNCHER_ADVANCED.get());
                     }).build());
 
     // ===== 航空 — 飞机编队 =====
@@ -151,8 +152,6 @@ public class ModCreativeTabs {
                     .withTabsBefore(CreativeModeTabs.COMBAT)
                     .icon(() -> ModItems.TOAST_BREAD.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
-                        // --- 加工方块 ---
-                        output.accept(ModItems.YUBARI_WATER_BUCKET.get());
                         // --- 食材/调料 ---
                         output.accept(ModItems.FLOUR.get());
                         output.accept(ModItems.BLACK_PEPPER.get());
@@ -319,7 +318,6 @@ public class ModCreativeTabs {
                     .icon(() -> ModItems.HENTAI_TROPHY.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
                         output.accept(ModItems.UNICORN_HARP.get());
-                        output.accept(ModItems.GUIDEBOOK.get());
                         output.accept(ModItems.ELITE_DAMAGE_CONTROL.get());
                         output.accept(ModItems.DAMAGE_CONTROL.get());
                         output.accept(ModItems.QUICK_REPAIR.get());

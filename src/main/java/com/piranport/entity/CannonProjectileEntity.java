@@ -189,17 +189,22 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
                 float apDamage = damage * 1.3f * speedRatio;
                 if (target instanceof LivingEntity living) {
                     AttributeInstance armorAttr = living.getAttribute(Attributes.ARMOR);
+                    // 每次命中用炮弹 UUID 生成唯一 ID，避免同 tick 多枚 AP 弹（齐射）
+                    // 命中同一目标时 addTransientModifier 因 ID 重复抛 IllegalArgumentException 崩服
                     ResourceLocation apPenId = ResourceLocation.fromNamespaceAndPath(
-                            PiranPort.MOD_ID, "ap_penetration");
+                            PiranPort.MOD_ID, "ap_penetration/" + getUUID());
+                    boolean applied = false;
                     if (armorAttr != null) {
+                        armorAttr.removeModifier(apPenId);
                         double halfArmor = living.getAttributeValue(Attributes.ARMOR) * 0.5;
                         armorAttr.addTransientModifier(new AttributeModifier(
                                 apPenId, -halfArmor, AttributeModifier.Operation.ADD_VALUE));
+                        applied = true;
                     }
                     try {
                         living.hurt(damageSources().thrown(this, getOwner()), apDamage);
                     } finally {
-                        if (armorAttr != null) {
+                        if (applied) {
                             armorAttr.removeModifier(apPenId);
                         }
                     }

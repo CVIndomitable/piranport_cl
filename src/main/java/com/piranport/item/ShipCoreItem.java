@@ -1414,6 +1414,14 @@ public class ShipCoreItem extends Item {
                     break;
                 }
             }
+            // 与 fireMissiles / fireTorpedosInventoryMode 保持一致：兼检副手
+            if (!consumed && weaponSlot != 40 && coreInventorySlot != 40) {
+                ItemStack oh = inv.offhand.get(0);
+                if (!oh.isEmpty() && oh.getItem() == payloadItem) {
+                    oh.shrink(1);
+                    consumed = true;
+                }
+            }
             if (!consumed) {
                 player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
                 return;

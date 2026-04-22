@@ -463,7 +463,8 @@ public class ClientTickHandler {
         final Entity cam = cameraEntity;
         EntityHitResult hit = ProjectileUtil.getEntityHitResult(
                 mc.level, mc.player, eyePos, end, searchBox,
-                e -> e instanceof LivingEntity && e.isAlive() && e != mc.player && e != cam
+                e -> (e instanceof LivingEntity || e instanceof AircraftEntity)
+                        && e.isAlive() && e != mc.player && e != cam
                         && !(e instanceof net.minecraft.world.Container),
                 0.0f);
 

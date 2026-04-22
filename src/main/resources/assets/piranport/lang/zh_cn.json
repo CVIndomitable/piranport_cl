@@ -254,6 +254,7 @@
   "message.piranport.already_reloading": "装填中！",
   "message.piranport.reload_complete": "装填完毕！",
   "message.piranport.reload_start": "开始装填！",
+  "message.piranport.use_reload_facility": "鱼雷/导弹发射器请使用装填设施",
   "tooltip.piranport.torpedo.damage": "伤害: %s",
   "tooltip.piranport.torpedo.range": "航程: %s",
   "tooltip.piranport.torpedo.speed": "速度: %s",

@@ -266,6 +266,7 @@
   "message.piranport.already_reloading": "Reloading!",
   "message.piranport.reload_complete": "Reload complete!",
   "message.piranport.reload_start": "Reloading...",
+  "message.piranport.use_reload_facility": "Use the Reload Facility for torpedo/missile launchers",
   "tooltip.piranport.torpedo.damage": "Damage: %s",
   "tooltip.piranport.torpedo.range": "Range: %s",
   "tooltip.piranport.torpedo.speed": "Speed: %s",

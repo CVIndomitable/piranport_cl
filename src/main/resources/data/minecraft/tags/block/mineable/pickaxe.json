@@ -2,7 +2,6 @@
   "replace": false,
   "values": [
     "piranport:bauxite_ore",
-    "piranport:aluminum_block",
-    "piranport:abyssal_portal_frame"
+    "piranport:aluminum_block"
   ]
 }

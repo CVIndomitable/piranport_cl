@@ -374,7 +374,7 @@
   "piranport.book.cat.aviation": "航空",
   "piranport.book.cat.aviation.desc": "飞机编队、编组与火控。",
   "piranport.book.intro.getting_started": "入门五步",
-  "piranport.book.intro.getting_started.p1": "欢迎来到皮兰港！按下列顺序行动，半小时就能出海开炮：$(br)$(br)$(bold)①挖矿：$()在地表/山体中找$(item)矾土矿$()，挖出$(item)粗铝矿$()（精准采集掉落$(item)矾土矿$()本身）。烧炼得到$(item)铝锭$()。$(br)$(bold)②收盐：$()击杀僵尸偶尔掉落$(item)盐$()，或在沙漠/河流生物群系找$(item)盐块$()。也可用熔炉蒸发水源制盐（见"制盐与稻田"条目）。",
+  "piranport.book.intro.getting_started.p1": "欢迎来到皮兰港！按下列顺序行动，半小时就能出海开炮：$(br)$(br)$(bold)①挖矿：$()在地表/山体中找$(item)矾土矿$()，挖出$(item)粗铝矿$()（精准采集掉落$(item)矾土矿$()本身）。烧炼得到$(item)铝锭$()。$(br)$(bold)②收盐：$()击杀僵尸偶尔掉落$(item)盐$()，或在沙漠/河流生物群系找$(item)盐块$()。也可用熔炉蒸发水源制盐（见「制盐与稻田」条目）。",
   "piranport.book.intro.getting_started.p2": "$(bold)③合成核心：$()铝锭+盐+原木合成$(item)舰装核心$()。建议先用$(item)小型舰装核心$()起步，消耗低、机动好。更大的核心可后期再升级。$(br)$(bold)④装配武器：$()手持核心$(bold)右键$()打开舰装GUI。武器栏放$(item)小型火炮$()等，弹药舱放对应$(item)炮弹$()。点左下按钮加$(item)燃料$()。$(br)$(bold)⑤变身出击：$()$(bold)Shift+右键$()核心变身——你就是舰娘了！持核心$(bold)右键$()发射，$(bold)V$()切换武器槽，再次$(bold)Shift+右键$()卸除。",
   "piranport.book.intro.getting_started.p3": "$(bold)常用快捷键速查：$()$(br)$(item)V$() — 切换武器槽 / 退出侦察机$(br)$(item)U$() — 打开编组 GUI$(br)$(item)P$() — 单体火控锁定$(br)$(item)O$() — 加选火控目标$(br)$(item)I$() — 清空火控锁定$(br)$(item)H$() — 自动升空开关$(br)$(item)Y$() — 战场高亮切换$(br)$(item)9 / 0$() — 线导鱼雷左/右转向$(br)$(br)看不懂先别慌，每个功能在后续章节都有详解。$(bold)建议阅读顺序：$()舰炮 → 鱼雷 → 烹饪 → 航空 → 战斗 → 副本 → 遗迹 → 武器库。",
   "piranport.book.intro.overview": "概述",

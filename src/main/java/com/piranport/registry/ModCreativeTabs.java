@@ -152,37 +152,6 @@ public class ModCreativeTabs {
                     .withTabsBefore(CreativeModeTabs.COMBAT)
                     .icon(() -> ModItems.TOAST_BREAD.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
-                        // --- 种子 ---
-                        output.accept(ModItems.TOMATO_SEEDS.get());
-                        output.accept(ModItems.SOYBEAN_SEEDS.get());
-                        output.accept(ModItems.CHILI_SEEDS.get());
-                        output.accept(ModItems.ONION_SEEDS.get());
-                        output.accept(ModItems.RICE_SEEDS.get());
-                        output.accept(ModItems.LETTUCE_SEEDS.get());
-                        output.accept(ModItems.GARLIC_SEEDS.get());
-                        output.accept(ModItems.PINEAPPLE_SEED.get());
-                        output.accept(ModItems.LABLAB_BEAN_SEEDS.get());
-                        output.accept(ModItems.ORMOSIA_SEEDS.get());
-                        output.accept(ModItems.CELERY_SEEDS.get());
-                        output.accept(ModItems.RYE_SEEDS.get());
-                        output.accept(ModItems.PEACH_SAPLING.get());
-                        // --- 桃树材料 ---
-                        output.accept(ModItems.PEACH_LOG.get());
-                        output.accept(ModItems.PEACH_LEAVES.get());
-                        // --- 作物产出 ---
-                        output.accept(ModItems.TOMATO.get());
-                        output.accept(ModItems.SOYBEAN.get());
-                        output.accept(ModItems.CHILI.get());
-                        output.accept(ModItems.ONION.get());
-                        output.accept(ModItems.RICE.get());
-                        output.accept(ModItems.LETTUCE.get());
-                        output.accept(ModItems.GARLIC.get());
-                        output.accept(ModItems.PINEAPPLE.get());
-                        output.accept(ModItems.LABLAB_BEAN.get());
-                        output.accept(ModItems.ORMOSIA.get());
-                        output.accept(ModItems.CELERY.get());
-                        output.accept(ModItems.RYE.get());
-                        output.accept(ModItems.PEACH.get());
                         // --- 食材/调料 ---
                         output.accept(ModItems.FLOUR.get());
                         output.accept(ModItems.RICE_FLOUR.get());

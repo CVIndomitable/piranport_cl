@@ -272,38 +272,6 @@ public class ModItems {
     public static final DeferredItem<Item> GYPSUM_CHIP     = ITEMS.registerSimpleItem("gypsum_chip");
     public static final DeferredItem<Item> QUICKLIME       = ITEMS.registerSimpleItem("quicklime");
 
-    // ===== Crop Produce (Phase 11b) =====
-    public static final DeferredItem<Item> TOMATO  = ITEMS.registerSimpleItem("tomato");
-    public static final DeferredItem<Item> SOYBEAN = ITEMS.registerSimpleItem("soybean");
-    public static final DeferredItem<Item> CHILI   = ITEMS.registerSimpleItem("chili");
-    public static final DeferredItem<Item> LETTUCE = ITEMS.registerSimpleItem("lettuce");
-    public static final DeferredItem<Item> RICE    = ITEMS.registerSimpleItem("rice");
-    public static final DeferredItem<Item> ONION   = ITEMS.registerSimpleItem("onion");
-    public static final DeferredItem<Item> GARLIC  = ITEMS.registerSimpleItem("garlic");
-
-    // ===== Crop Seeds (Phase 11b) =====
-    public static final DeferredItem<net.minecraft.world.item.ItemNameBlockItem> TOMATO_SEEDS =
-            ITEMS.register("tomato_seeds", () -> new net.minecraft.world.item.ItemNameBlockItem(
-                    ModBlocks.TOMATO_CROP.get(), new Item.Properties()));
-    public static final DeferredItem<net.minecraft.world.item.ItemNameBlockItem> SOYBEAN_SEEDS =
-            ITEMS.register("soybean_seeds", () -> new net.minecraft.world.item.ItemNameBlockItem(
-                    ModBlocks.SOYBEAN_CROP.get(), new Item.Properties()));
-    public static final DeferredItem<net.minecraft.world.item.ItemNameBlockItem> CHILI_SEEDS =
-            ITEMS.register("chili_seeds", () -> new net.minecraft.world.item.ItemNameBlockItem(
-                    ModBlocks.CHILI_CROP.get(), new Item.Properties()));
-    public static final DeferredItem<net.minecraft.world.item.ItemNameBlockItem> ONION_SEEDS =
-            ITEMS.register("onion_seeds", () -> new net.minecraft.world.item.ItemNameBlockItem(
-                    ModBlocks.ONION_CROP.get(), new Item.Properties()));
-    public static final DeferredItem<net.minecraft.world.item.ItemNameBlockItem> RICE_SEEDS =
-            ITEMS.register("rice_seeds", () -> new net.minecraft.world.item.ItemNameBlockItem(
-                    ModBlocks.RICE_CROP.get(), new Item.Properties()));
-    public static final DeferredItem<net.minecraft.world.item.ItemNameBlockItem> LETTUCE_SEEDS =
-            ITEMS.register("lettuce_seeds", () -> new net.minecraft.world.item.ItemNameBlockItem(
-                    ModBlocks.LETTUCE_CROP.get(), new Item.Properties()));
-    public static final DeferredItem<net.minecraft.world.item.ItemNameBlockItem> GARLIC_SEEDS =
-            ITEMS.register("garlic_seeds", () -> new net.minecraft.world.item.ItemNameBlockItem(
-                    ModBlocks.GARLIC_CROP.get(), new Item.Properties()));
-
     // ===== Functional Block Items (Phase 12-14) =====
     public static final DeferredItem<BlockItem> RELOAD_FACILITY =
             ITEMS.registerSimpleBlockItem(ModBlocks.RELOAD_FACILITY);
@@ -815,12 +783,6 @@ public class ModItems {
                     () -> new com.piranport.item.GuidebookItem(new Item.Properties().stacksTo(1)));
 
     // ===== Phase 27: Pineapple chain =====
-    public static final DeferredItem<net.minecraft.world.item.ItemNameBlockItem> PINEAPPLE_SEED =
-            ITEMS.register("pineapple_seed", () -> new net.minecraft.world.item.ItemNameBlockItem(
-                    ModBlocks.PINEAPPLE_CROP.get(), new Item.Properties()));
-    public static final DeferredItem<Item> PINEAPPLE =
-            ITEMS.register("pineapple",
-                    () -> new Item(new Item.Properties().food(fp(3, 3.8f).build())));
     public static final DeferredItem<Item> PINEAPPLE_JUICE =
             ITEMS.register("pineapple_juice",
                     () -> new Item(new Item.Properties().food(fp(2, 2.5f).build())));
@@ -1128,40 +1090,6 @@ public class ModItems {
                             .durability(512)
                             .attributes(GungnirItem.createAttributes())
                             .stacksTo(1)));
-
-    // ===== Phase 28: Shipgirl Food Expansion — Crops (produce) =====
-    public static final DeferredItem<Item> LABLAB_BEAN =
-            ITEMS.register("lablab_bean", () -> new Item(new Item.Properties().food(fp(1, 1.5f).build())));
-    public static final DeferredItem<Item> ORMOSIA =
-            ITEMS.register("ormosia", () -> new Item(new Item.Properties().food(fp(1, 1.5f).build())));
-    public static final DeferredItem<Item> CELERY =
-            ITEMS.register("celery", () -> new Item(new Item.Properties().food(fp(1, 1.5f).build())));
-    public static final DeferredItem<Item> RYE =
-            ITEMS.registerSimpleItem("rye");
-    public static final DeferredItem<Item> PEACH =
-            ITEMS.register("peach", () -> new Item(new Item.Properties().food(fp(1, 1.5f).build())));
-
-    // ===== Phase 28: Seeds =====
-    public static final DeferredItem<net.minecraft.world.item.ItemNameBlockItem> LABLAB_BEAN_SEEDS =
-            ITEMS.register("lablab_bean_seeds", () -> new net.minecraft.world.item.ItemNameBlockItem(
-                    ModBlocks.LABLAB_BEAN_CROP.get(), new Item.Properties()));
-    public static final DeferredItem<net.minecraft.world.item.ItemNameBlockItem> ORMOSIA_SEEDS =
-            ITEMS.register("ormosia_seeds", () -> new net.minecraft.world.item.ItemNameBlockItem(
-                    ModBlocks.ORMOSIA_CROP.get(), new Item.Properties()));
-    public static final DeferredItem<net.minecraft.world.item.ItemNameBlockItem> CELERY_SEEDS =
-            ITEMS.register("celery_seeds", () -> new net.minecraft.world.item.ItemNameBlockItem(
-                    ModBlocks.CELERY_CROP.get(), new Item.Properties()));
-    public static final DeferredItem<net.minecraft.world.item.ItemNameBlockItem> RYE_SEEDS =
-            ITEMS.register("rye_seeds", () -> new net.minecraft.world.item.ItemNameBlockItem(
-                    ModBlocks.RYE_CROP.get(), new Item.Properties()));
-
-    // ===== Phase 28: Peach tree block items =====
-    public static final DeferredItem<BlockItem> PEACH_LOG =
-            ITEMS.registerSimpleBlockItem(ModBlocks.PEACH_LOG);
-    public static final DeferredItem<BlockItem> PEACH_LEAVES =
-            ITEMS.registerSimpleBlockItem(ModBlocks.PEACH_LEAVES);
-    public static final DeferredItem<BlockItem> PEACH_SAPLING =
-            ITEMS.registerSimpleBlockItem(ModBlocks.PEACH_SAPLING);
 
     // ===== Phase 28: New Ingredients/Condiments =====
     public static final DeferredItem<Item> MILK_ICE_CREAM      = ITEMS.registerSimpleItem("milk_ice_cream");

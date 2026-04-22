@@ -18,15 +18,6 @@ public class ModBrewingRecipes {
         // Water bottle + salt → brine
         builder.addRecipe(waterBottleTo(ModItems.SALT.get(), ModItems.BRINE.get()));
 
-        // Brine + soybean → miso
-        builder.addRecipe(customTo(ModItems.BRINE.get(), ModItems.SOYBEAN.get(), ModItems.MISO.get()));
-
-        // Yeast + soybean → soy sauce
-        builder.addRecipe(customTo(ModItems.YEAST.get(), ModItems.SOYBEAN.get(), ModItems.SOY_SAUCE.get()));
-
-        // Yeast + rice → vinegar
-        builder.addRecipe(customTo(ModItems.YEAST.get(), ModItems.RICE.get(), ModItems.VINEGAR.get()));
-
         // Yeast + rice_flour → cooking wine
         builder.addRecipe(customTo(ModItems.YEAST.get(), ModItems.RICE_FLOUR.get(), ModItems.COOKING_WINE.get()));
 

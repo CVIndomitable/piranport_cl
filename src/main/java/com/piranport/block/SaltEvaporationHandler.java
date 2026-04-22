@@ -107,7 +107,6 @@ public class SaltEvaporationHandler {
                     dirty = true;
                 } else {
                     entry.setValue(remaining);
-                    dirty = true;
                 }
             }
             if (dirty) data.setDirty();

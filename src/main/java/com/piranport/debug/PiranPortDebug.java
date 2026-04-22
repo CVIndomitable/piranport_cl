@@ -50,7 +50,7 @@ public final class PiranPortDebug {
     private static final DateTimeFormatter TIME_FMT = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
 
     // Server-side toggle (set from DebugTogglePayload handler)
-    private static volatile boolean serverEnabled = true;
+    private static volatile boolean serverEnabled = false;
 
     // Client-side toggle (set from ClientTickHandler F8 handler)
     private static volatile boolean clientEnabled = false;

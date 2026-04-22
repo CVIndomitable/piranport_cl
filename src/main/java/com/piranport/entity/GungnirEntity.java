@@ -159,7 +159,7 @@ public class GungnirEntity extends ThrowableItemProjectile {
             // Don't hurt the owner
             if (target == owner) return;
             // Friendly fire protection
-            if (com.piranport.combat.FriendlyFireHelper.shouldBlockHit(owner, target)) return;
+            if (com.piranport.combat.FriendlyFireHelper.shouldBlockHit(target, owner)) return;
             target.hurt(damageSources().thrown(this, owner), THROW_DAMAGE);
         }
         // Continue flying after hitting an entity (doesn't trigger return)

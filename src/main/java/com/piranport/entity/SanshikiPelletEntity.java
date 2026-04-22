@@ -35,7 +35,7 @@ public class SanshikiPelletEntity extends ThrowableItemProjectile {
         super(ModEntityTypes.SANSHIKI_PELLET.get(), shooter, level);
         this.damage = damage;
         this.shellForRender = shellForRender.copyWithCount(1);
-        setItem(shellForRender);
+        setItem(this.shellForRender);
     }
 
     @Override

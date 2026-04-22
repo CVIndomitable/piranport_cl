@@ -144,13 +144,15 @@ public class ModCreativeTabs {
                         output.accept(ModItems.QUICKLIME.get());
                     }).build());
 
-    // ===== 舰娘食物 — 对照 7.1 食物表汇总所有食材/调料/中间品/菜品/作物产出 =====
-    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> SHIPGIRL_FOOD_TAB =
-            CREATIVE_TABS.register("shipgirl_food_tab", () -> CreativeModeTab.builder()
-                    .title(Component.translatable("itemGroup.piranport.shipgirl_food"))
+    // ===== 厨房 — 加工方块 / 食材 / 调料 / 中间品 / 菜品（按地区）/ Buff 食物 =====
+    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> KITCHEN_TAB =
+            CREATIVE_TABS.register("kitchen_tab", () -> CreativeModeTab.builder()
+                    .title(Component.translatable("itemGroup.piranport.kitchen"))
                     .withTabsBefore(CreativeModeTabs.COMBAT)
                     .icon(() -> ModItems.TOAST_BREAD.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
+                        // --- 加工方块 ---
+                        output.accept(ModItems.YUBARI_WATER_BUCKET.get());
                         // --- 食材/调料 ---
                         output.accept(ModItems.FLOUR.get());
                         output.accept(ModItems.BLACK_PEPPER.get());
@@ -220,6 +222,7 @@ public class ModCreativeTabs {
                         output.accept(ModItems.BACON_SANDWICH.get());
                         output.accept(ModItems.ROYAL_NAVAL_SALTED_BEEF.get());
                         output.accept(ModItems.YORKSHIRE_PUDDING.get());
+                        output.accept(ModItems.EGGS_BENEDICT.get());
                         output.accept(ModItems.APPLE_PIE.get());
                         output.accept(ModItems.TARTE_TATIN.get());
                         // --- 菜品：美式 ---
@@ -250,82 +253,6 @@ public class ModCreativeTabs {
                         output.accept(ModItems.TAPTAP_ICE_CREAM.get());
                         // --- Buff 食物/饮料 ---
                         output.accept(ModItems.TORPEDO_JUICE.get());
-                    }).build());
-
-    // ===== 厨房 — 加工站 / 食材 / 中间品 / 食物 =====
-    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> KITCHEN_TAB =
-            CREATIVE_TABS.register("kitchen_tab", () -> CreativeModeTab.builder()
-                    .title(Component.translatable("itemGroup.piranport.kitchen"))
-                    .withTabsBefore(CreativeModeTabs.COMBAT)
-                    .icon(() -> ModItems.TOAST_BREAD.get().getDefaultInstance())
-                    .displayItems((parameters, output) -> {
-                        // Processing Blocks
-                        output.accept(ModItems.YUBARI_WATER_BUCKET.get());
-                        // Food Ingredients
-                        output.accept(ModItems.FLOUR.get());
-                        output.accept(ModItems.EDIBLE_OIL.get());
-                        output.accept(ModItems.BUTTER.get());
-                        output.accept(ModItems.CREAM.get());
-                        output.accept(ModItems.CHEESE.get());
-                        output.accept(ModItems.YEAST.get());
-                        output.accept(ModItems.SOY_SAUCE.get());
-                        output.accept(ModItems.VINEGAR.get());
-                        output.accept(ModItems.COOKING_WINE.get());
-                        output.accept(ModItems.MISO.get());
-                        output.accept(ModItems.BRINE.get());
-                        output.accept(ModItems.PIE_CRUST.get());
-                        output.accept(ModItems.RAW_PASTA.get());
-                        output.accept(ModItems.FERMENTED_FISH.get());
-                        output.accept(ModItems.PIZZA_BASE.get());
-                        // Intermediate Products
-                        output.accept(ModItems.SAUSAGE.get());
-                        output.accept(ModItems.SLICED_SAUSAGE.get());
-                        output.accept(ModItems.BACON.get());
-                        output.accept(ModItems.TOAST_BREAD_SLICES.get());
-                        output.accept(ModItems.BEER.get());
-                        output.accept(ModItems.ROUND_BUN.get());
-                        // Food Items
-                        output.accept(ModItems.TOAST_BREAD.get());
-                        output.accept(ModItems.NAVAL_CURRY.get());
-                        output.accept(ModItems.FRIED_FISH_AND_CHIPS.get());
-                        output.accept(ModItems.SCONE.get());
-                        output.accept(ModItems.APPLE_PIE.get());
-                        output.accept(ModItems.ASSORTED_CHAR_SIU_FRIED_RICE.get());
-                        output.accept(ModItems.SURSTROMMING.get());
-                        output.accept(ModItems.AMERICAN_BURGER.get());
-                        output.accept(ModItems.HOTDOG.get());
-                        output.accept(ModItems.PASTA.get());
-                        output.accept(ModItems.MISO_SOUP.get());
-                        output.accept(ModItems.BARBECUE.get());
-                        output.accept(ModItems.BLACK_FOREST_GATEAU.get());
-                        output.accept(ModItems.BLACK_TEA_SANDWICH.get());
-                        output.accept(ModItems.BLACK_TEA_SCONE.get());
-                        output.accept(ModItems.BORSCHT.get());
-                        output.accept(ModItems.BOUILLABAISSE.get());
-                        output.accept(ModItems.DONGPO_PORK.get());
-                        output.accept(ModItems.DOUBLE_SHELL_AMERICAN_BURGER.get());
-                        output.accept(ModItems.EGGS_BENEDICT.get());
-                        output.accept(ModItems.FRIED_FISH_MISO_SOUP.get());
-                        output.accept(ModItems.MUSSOLINIS_OO.get());
-                        output.accept(ModItems.SCHWEINSHAXE.get());
-                        output.accept(ModItems.SALAMI_PIZZA.get());
-                        output.accept(ModItems.OKROSHKA.get());
-                        output.accept(ModItems.ROYAL_NAVAL_SALTED_BEEF.get());
-                        output.accept(ModItems.RUSSIAN_DUMPLING.get());
-                        output.accept(ModItems.SOBA_NOODLE.get());
-                        output.accept(ModItems.TARTE_TATIN.get());
-                        output.accept(ModItems.TEMPURA_SOBA_NOODLE.get());
-                        output.accept(ModItems.THURINGER_ROSTBRATWURST_UND_BIER.get());
-                        output.accept(ModItems.THURINGER_ROSTBRATWURST.get());
-                        output.accept(ModItems.TRIPLE_SHELL_AMERICAN_BURGER.get());
-                        output.accept(ModItems.VENICE_CUTTLEFISH_NOODLES.get());
-                        output.accept(ModItems.WEISSWURST_MIT_DER_BAGEL.get());
-                        output.accept(ModItems.YORKSHIRE_PUDDING.get());
-                        // Buff Foods
-                        output.accept(ModItems.CHICKEN_TATSUTA.get());
-                        output.accept(ModItems.TORPEDO_JUICE.get());
-                        output.accept(ModItems.TEMPURA.get());
-                        output.accept(ModItems.KVASS.get());
                     }).build());
 
     // ===== 弹药 — 炮弹 / 鱼雷弹药 / 航空弹药 =====

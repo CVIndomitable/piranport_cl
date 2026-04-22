@@ -449,7 +449,6 @@
   "piranport.book.torpedoes.named": "Named Torpedoes",
   "piranport.book.torpedoes.named.p1": "Multiple torpedo variants exist, each with unique damage, range, and speed.$(br)$(br)$(bold)533mm Series:$() Standard, Magnetic (magnetic fuze), Acoustic (homing), Wire-Guided (press $(bold)[9]/[0]$() to steer manually).$(br)$(br)$(bold)German G7 Series:$() G7a standard/magnetic, G7e electric magnetic/acoustic/wire-guided.",
   "piranport.book.torpedoes.named.p2": "$(bold)US MK Series:$() MK14 standard, MK16/MK17 hydrogen peroxide, MK27 acoustic.$(br)$(br)$(bold)Japanese Series:$() Type 91 610mm, Type 93 Mk1 high-speed / Mk3 long-range (oxygen torpedoes), Type 95 530mm/610mm submarine torpedoes, Type 0 720mm heavy torpedo.$(br)$(br)Hover over a torpedo item to view its specific damage/range/speed stats.",
-  "itemGroup.piranport.shipgirl_food": "Shipgirl Food",
   "item.piranport.milk_ice_cream": "Raw Ice Cream",
   "item.piranport.embryo_of_apple_pie": "Apple Pie Embryo",
   "item.piranport.embryo_of_salami_pizza": "Salami Pizza Embryo",

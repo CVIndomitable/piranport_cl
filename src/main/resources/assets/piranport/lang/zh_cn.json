@@ -437,7 +437,6 @@
   "piranport.book.torpedoes.named": "命名鱼雷",
   "piranport.book.torpedoes.named.p1": "模组中有多种不同型号鱼雷，各有独立的伤害、航程和速度。$(br)$(br)$(bold)533mm系列：$()标准鱼雷、磁性鱼雷（磁性引信）、声导鱼雷（声导追踪）、线导鱼雷（按$(bold)[9]/[0]$()手动操纵偏航）。$(br)$(br)$(bold)德制G7系列：$()G7a常规/磁性，G7e电动磁性/声导/线导。",
   "piranport.book.torpedoes.named.p2": "$(bold)美制MK系列：$()MK14常规、MK16/MK17过氧化氢、MK27声导。$(br)$(br)$(bold)日制系列：$()九一式610mm、九三式一型高速/三型长程（氧气鱼雷）、九五式530mm/610mm潜艇鱼雷、零式720mm大型鱼雷。$(br)$(br)悬停鱼雷物品可查看具体的伤害/航程/速度参数。",
-  "itemGroup.piranport.shipgirl_food": "舰娘食物",
   "item.piranport.milk_ice_cream": "原料冰激凌",
   "item.piranport.embryo_of_apple_pie": "苹果派胚",
   "item.piranport.embryo_of_salami_pizza": "萨拉米披萨胚",

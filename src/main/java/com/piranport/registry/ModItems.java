@@ -689,7 +689,7 @@ public class ModItems {
                                     new AircraftInfo(AircraftInfo.AircraftType.ASW,
                                             1200, 4, 0, 8f, 0.9f, 18, AircraftInfo.BombingMode.LEVEL))));
 
-    /** 天山（鱼雷）— 610鱼雷24, HP4, 64�� */
+    /** 天山（鱼雷）— 610鱼雷24, HP4, 64节 */
     public static final DeferredItem<AircraftItem> TENZAN_TORPEDO =
             ITEMS.register("tenzan_torpedo",
                     () -> new AircraftItem(new Item.Properties().stacksTo(1)

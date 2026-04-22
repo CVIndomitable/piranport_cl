@@ -96,6 +96,7 @@ public class AerialBombEntity extends ThrowableItemProjectile {
 
     @Override
     protected void onHitBlock(BlockHitResult result) {
+        super.onHitBlock(result);
         if (!level().isClientSide() && !exploded) {
             exploded = true;
             Level.ExplosionInteraction interaction = ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get()

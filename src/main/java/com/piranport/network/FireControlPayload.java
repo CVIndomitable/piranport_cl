@@ -8,6 +8,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import com.piranport.entity.AircraftEntity;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -68,9 +69,12 @@ public record FireControlPayload(FireAction action, UUID targetUUID) implements 
                 Entity entity = player.serverLevel().getEntity(payload.targetUUID());
                 // Limit lock range to simulation distance (in blocks)
                 int simDistBlocks = player.serverLevel().getServer().getPlayerList().getSimulationDistance() * 16;
-                if (entity instanceof LivingEntity le && le.isAlive() && entity != player
+                // 允许锁 LivingEntity（怪/玩家/动物）和 AircraftEntity（敌方飞机）；
+                // AircraftEntity 不继承 LivingEntity，需单独放行，否则火控无法对空
+                boolean validTarget = entity != null && entity.isAlive() && entity != player
                         && !(entity instanceof net.minecraft.world.Container)
-                        && player.distanceTo(entity) <= simDistBlocks) {
+                        && (entity instanceof LivingEntity || entity instanceof AircraftEntity);
+                if (validTarget && player.distanceTo(entity) <= simDistBlocks) {
                     if (payload.action() == FireAction.LOCK) {
                         FireControlManager.lock(playerUUID, entity.getUUID());
                     } else {

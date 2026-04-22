@@ -34,6 +34,12 @@ public record RecallAllAircraftPayload() implements CustomPacketPayload {
     /** Per-player cooldown: minimum 20 ticks between recall attempts. */
     private static final java.util.Map<UUID, Long> lastRecallTick = new java.util.concurrent.ConcurrentHashMap<>();
 
+    /** 玩家退出时清理 rate-limit 记录，防止长生命周期服务器内存泄漏。
+     *  由 GameEvents.onPlayerLogout 调用。 */
+    public static void onPlayerDisconnect(UUID playerUUID) {
+        lastRecallTick.remove(playerUUID);
+    }
+
     public static void handle(RecallAllAircraftPayload payload, IPayloadContext context) {
         context.enqueueWork(() -> {
             if (!(context.player() instanceof ServerPlayer sp)) return;

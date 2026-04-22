@@ -6,7 +6,9 @@ import com.piranport.component.LoadedAmmo;
 import com.piranport.component.SlotCooldowns;
 import com.piranport.component.WeaponCooldown;
 import com.piranport.item.CannonItem;
+import com.piranport.item.MissileLauncherItem;
 import com.piranport.item.ShipCoreItem;
+import com.piranport.item.TorpedoLauncherItem;
 import com.piranport.registry.ModDataComponents;
 import com.piranport.registry.ModItems;
 import io.netty.buffer.ByteBuf;
@@ -59,7 +61,18 @@ public record ManualReloadPayload() implements CustomPacketPayload {
                     weaponSlot = 40;
                 }
             }
-            if (weapon.isEmpty()) return;
+            if (weapon.isEmpty()) {
+                // 玩家手持发射器（鱼雷/导弹）按 R 时给出明确反馈，避免静默无响应；
+                // 鱼雷/导弹发射器须用装填设施重装，不支持随身 R 键
+                ItemStack mh = player.getMainHandItem();
+                ItemStack oh = inv.offhand.get(0);
+                if (mh.getItem() instanceof TorpedoLauncherItem || oh.getItem() instanceof TorpedoLauncherItem
+                        || mh.getItem() instanceof MissileLauncherItem || oh.getItem() instanceof MissileLauncherItem) {
+                    player.displayClientMessage(
+                            Component.translatable("message.piranport.use_reload_facility"), true);
+                }
+                return;
+            }
 
             CannonItem cannonItem = (CannonItem) weapon.getItem();
             int barrelCount = cannonItem.getBarrelCount();

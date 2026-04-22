@@ -331,6 +331,7 @@
   "gui.piranport.payload_torpedo": "鱼雷",
   "gui.piranport.payload_bomb": "航弹",
   "container.piranport.available_aircraft": "可用飞机:",
+  "message.piranport.use_reload_facility": "鱼雷/导弹发射器请使用装填设施",
   "tooltip.piranport.torpedo.damage": "伤害: %s",
   "tooltip.piranport.torpedo.range": "航程: %s",
   "tooltip.piranport.torpedo.speed": "速度: %s",

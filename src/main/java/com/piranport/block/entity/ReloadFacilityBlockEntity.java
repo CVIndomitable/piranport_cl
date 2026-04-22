@@ -29,7 +29,7 @@ import net.neoforged.neoforge.items.ItemStackHandler;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * 装填��施方块实体 — 将鱼雷装入鱼雷发射器。
+ * 装填设施方块实体 — 将鱼雷装入鱼雷发射器。
  * 槽位0: 鱼雷发射器（原料槽1，顶面漏斗输入）
  * 槽位1: 鱼雷弹药（原料槽2，侧面漏斗输入）
  * 槽位2: 装填完毕的发射器（产品槽，底部漏斗输出）
@@ -165,11 +165,18 @@ public class ReloadFacilityBlockEntity extends BlockEntity implements MenuProvid
         int needed;
         boolean validCombo;
 
+        // 部分装填补齐时，必须与现有弹种一致；不同弹种禁止混装，避免旧弹被静默替换
+        String ammoIdNow = ammoStack.isEmpty() ? "" : BuiltInRegistries.ITEM.getKey(ammoStack.getItem()).toString();
+
         if (launcherStack.getItem() instanceof TorpedoLauncherItem torpedoLauncher) {
             // Torpedo launcher reload
             LoadedAmmo existing = launcherStack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
             maxLoad = torpedoLauncher.getTubeCount();
             if (existing.hasAmmo() && existing.count() >= maxLoad) {
+                be.resetProgress();
+                return;
+            }
+            if (existing.hasAmmo() && !existing.ammoItemId().equals(ammoIdNow)) {
                 be.resetProgress();
                 return;
             }
@@ -182,6 +189,10 @@ public class ReloadFacilityBlockEntity extends BlockEntity implements MenuProvid
             LoadedAmmo existing = launcherStack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
             maxLoad = missileLauncher.getBurstCount();
             if (existing.hasAmmo() && existing.count() >= maxLoad) {
+                be.resetProgress();
+                return;
+            }
+            if (existing.hasAmmo() && !existing.ammoItemId().equals(ammoIdNow)) {
                 be.resetProgress();
                 return;
             }

@@ -1,7 +1,7 @@
 {
   "name": "piranport.book.aviation.recon",
   "category": "piranport:5_aviation",
-  "icon": "piranport:recon_squadron",
+  "icon": "piranport:type0_recon",
   "sortnum": 2,
   "pages": [
     {

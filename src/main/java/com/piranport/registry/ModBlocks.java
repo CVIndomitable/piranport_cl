@@ -1,8 +1,6 @@
 package com.piranport.registry;
 
 import com.piranport.PiranPort;
-import com.piranport.block.CookingPotBlock;
-import com.piranport.block.CuttingBoardBlock;
 import com.piranport.block.FlareLightBlock;
 import com.piranport.block.ReloadFacilityBlock;
 import com.piranport.block.FourStageCropBlock;
@@ -10,7 +8,6 @@ import com.piranport.block.PlaceableFoodBlock;
 import com.piranport.block.RiceCropBlock;
 import com.piranport.block.SaltChipBlock;
 import com.piranport.block.SmokeScreenBlock;
-import com.piranport.block.StoneMillBlock;
 import com.piranport.block.ThreeStageCropBlock;
 import com.piranport.block.YubariWaterBucketBlock;
 import net.minecraft.core.registries.Registries;
@@ -118,34 +115,6 @@ public class ModBlocks {
                             Optional.of(PEACH_TREE_FEATURE_KEY),
                             Optional.empty()),
                     BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_SAPLING)));
-
-    // ===== Functional Blocks (Phase 12) =====
-    public static final DeferredBlock<StoneMillBlock> STONE_MILL =
-            BLOCKS.register("stone_mill", () -> new StoneMillBlock(
-                    BlockBehaviour.Properties.of()
-                            .mapColor(MapColor.STONE)
-                            .strength(3.5f, 10.0f)
-                            .requiresCorrectToolForDrops()
-                            .sound(SoundType.STONE)));
-
-    // ===== Functional Blocks (Phase 13) =====
-    public static final DeferredBlock<CuttingBoardBlock> CUTTING_BOARD =
-            BLOCKS.register("cutting_board", () -> new CuttingBoardBlock(
-                    BlockBehaviour.Properties.of()
-                            .mapColor(MapColor.WOOD)
-                            .strength(2.0f, 3.0f)
-                            .sound(SoundType.WOOD)
-                            .noOcclusion()));
-
-    // ===== Functional Blocks (Phase 14) =====
-    public static final DeferredBlock<CookingPotBlock> COOKING_POT =
-            BLOCKS.register("cooking_pot", () -> new CookingPotBlock(
-                    BlockBehaviour.Properties.of()
-                            .mapColor(MapColor.METAL)
-                            .strength(3.0f, 6.0f)
-                            .requiresCorrectToolForDrops()
-                            .sound(SoundType.METAL)
-                            .noOcclusion()));
 
     // ===== Placeable Food Blocks (Phase 16) =====
     private static BlockBehaviour.Properties foodBlockProps() {

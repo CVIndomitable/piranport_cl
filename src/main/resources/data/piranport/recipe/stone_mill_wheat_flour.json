@@ -1,7 +1,0 @@
-{
-  "type": "piranport:stone_mill",
-  "ingredients": [
-    {"item": "minecraft:wheat"}
-  ],
-  "result": {"id": "piranport:flour", "count": 1}
-}

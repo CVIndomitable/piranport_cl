@@ -1,8 +1,0 @@
-{
-  "variants": {
-    "facing=north": { "model": "piranport:block/cutting_board" },
-    "facing=south": { "model": "piranport:block/cutting_board", "y": 180 },
-    "facing=east":  { "model": "piranport:block/cutting_board", "y": 90 },
-    "facing=west":  { "model": "piranport:block/cutting_board", "y": 270 }
-  }
-}

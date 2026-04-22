@@ -1,7 +1,0 @@
-{
-  "type": "piranport:stone_mill",
-  "ingredients": [
-    {"item": "piranport:rice"}
-  ],
-  "result": {"id": "piranport:rice_flour", "count": 1}
-}

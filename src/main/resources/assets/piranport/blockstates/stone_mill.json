@@ -1,8 +1,0 @@
-{
-  "variants": {
-    "facing=north": {"model": "piranport:block/stone_mill"},
-    "facing=south": {"model": "piranport:block/stone_mill", "y": 180},
-    "facing=east":  {"model": "piranport:block/stone_mill", "y": 90},
-    "facing=west":  {"model": "piranport:block/stone_mill", "y": 270}
-  }
-}

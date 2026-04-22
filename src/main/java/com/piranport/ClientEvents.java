@@ -1,14 +1,11 @@
 package com.piranport;
 
 import com.piranport.client.AircraftRenderer;
-import com.piranport.client.CuttingBoardRenderer;
 import com.piranport.client.PlaceableFoodRenderer;
 import com.piranport.client.ReloadBarDecorator;
 import com.piranport.client.WeaponReloadDecorator;
 import com.piranport.component.AircraftInfo;
-import com.piranport.menu.CookingPotScreen;
 import com.piranport.menu.ReloadFacilityScreen;
-import com.piranport.menu.StoneMillScreen;
 import com.piranport.registry.ModBlockEntityTypes;
 import com.piranport.registry.ModDataComponents;
 import com.piranport.registry.ModEntityTypes;
@@ -55,8 +52,6 @@ public class ClientEvents {
 
     @SubscribeEvent
     public static void registerScreens(RegisterMenuScreensEvent event) {
-        event.register(ModMenuTypes.STONE_MILL_MENU.get(), StoneMillScreen::new);
-        event.register(ModMenuTypes.COOKING_POT_MENU.get(), CookingPotScreen::new);
         event.register(ModMenuTypes.RELOAD_FACILITY_MENU.get(), ReloadFacilityScreen::new);
     }
 
@@ -145,8 +140,6 @@ public class ClientEvents {
                 ThrownItemRenderer::new);
         event.registerEntityRenderer(ModEntityTypes.RAILGUN_PROJECTILE.get(),
                 ThrownItemRenderer::new);
-        event.registerBlockEntityRenderer(ModBlockEntityTypes.CUTTING_BOARD.get(),
-                CuttingBoardRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntityTypes.PLACEABLE_FOOD.get(),
                 PlaceableFoodRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntityTypes.MODEL_DEBUG.get(),

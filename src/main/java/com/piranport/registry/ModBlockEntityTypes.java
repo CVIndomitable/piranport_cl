@@ -1,11 +1,8 @@
 package com.piranport.registry;
 
 import com.piranport.PiranPort;
-import com.piranport.block.entity.CookingPotBlockEntity;
-import com.piranport.block.entity.CuttingBoardBlockEntity;
 import com.piranport.block.entity.PlaceableFoodBlockEntity;
 import com.piranport.block.entity.ReloadFacilityBlockEntity;
-import com.piranport.block.entity.StoneMillBlockEntity;
 import com.piranport.block.entity.YubariWaterBucketBlockEntity;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -15,21 +12,6 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 public class ModBlockEntityTypes {
     public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITY_TYPES =
             DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, PiranPort.MOD_ID);
-
-    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<StoneMillBlockEntity>> STONE_MILL =
-            BLOCK_ENTITY_TYPES.register("stone_mill", () ->
-                    BlockEntityType.Builder.of(StoneMillBlockEntity::new, ModBlocks.STONE_MILL.get())
-                            .build(null));
-
-    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<CuttingBoardBlockEntity>> CUTTING_BOARD =
-            BLOCK_ENTITY_TYPES.register("cutting_board", () ->
-                    BlockEntityType.Builder.of(CuttingBoardBlockEntity::new, ModBlocks.CUTTING_BOARD.get())
-                            .build(null));
-
-    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<CookingPotBlockEntity>> COOKING_POT =
-            BLOCK_ENTITY_TYPES.register("cooking_pot", () ->
-                    BlockEntityType.Builder.of(CookingPotBlockEntity::new, ModBlocks.COOKING_POT.get())
-                            .build(null));
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<ReloadFacilityBlockEntity>> RELOAD_FACILITY =
             BLOCK_ENTITY_TYPES.register("reload_facility", () ->

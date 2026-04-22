@@ -1,9 +1,0 @@
-{
-  "type": "piranport:cooking_pot",
-  "ingredients": [
-    {"item": "piranport:rice_flour"},
-    {"item": "minecraft:sugar"}
-  ],
-  "result": {"id": "piranport:tangyuan", "count": 2},
-  "cookingTime": 180
-}

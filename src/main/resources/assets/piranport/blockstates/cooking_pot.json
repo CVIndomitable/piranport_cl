@@ -1,8 +1,0 @@
-{
-  "variants": {
-    "facing=north": { "model": "piranport:block/cooking_pot" },
-    "facing=south": { "model": "piranport:block/cooking_pot", "y": 180 },
-    "facing=east":  { "model": "piranport:block/cooking_pot", "y": 90 },
-    "facing=west":  { "model": "piranport:block/cooking_pot", "y": 270 }
-  }
-}

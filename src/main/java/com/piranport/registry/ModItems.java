@@ -305,12 +305,6 @@ public class ModItems {
                     ModBlocks.GARLIC_CROP.get(), new Item.Properties()));
 
     // ===== Functional Block Items (Phase 12-14) =====
-    public static final DeferredItem<BlockItem> STONE_MILL =
-            ITEMS.registerSimpleBlockItem(ModBlocks.STONE_MILL);
-    public static final DeferredItem<BlockItem> CUTTING_BOARD =
-            ITEMS.registerSimpleBlockItem(ModBlocks.CUTTING_BOARD);
-    public static final DeferredItem<BlockItem> COOKING_POT =
-            ITEMS.registerSimpleBlockItem(ModBlocks.COOKING_POT);
     public static final DeferredItem<BlockItem> RELOAD_FACILITY =
             ITEMS.registerSimpleBlockItem(ModBlocks.RELOAD_FACILITY);
     public static final DeferredItem<BlockItem> YUBARI_WATER_BUCKET =

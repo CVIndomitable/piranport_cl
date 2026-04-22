@@ -58,8 +58,6 @@ public class ModCreativeTabs {
                         // Generic squadrons
                         output.accept(ModItems.FIGHTER_SQUADRON.get());
                         output.accept(ModItems.DIVE_BOMBER_SQUADRON.get());
-
-                        output.accept(ModItems.XTB2D.get());
                         output.accept(ModItems.RECON_SQUADRON.get());
                         // Torpedo bombers
                         output.accept(ModItems.SWORDFISH_TORPEDO.get());

@@ -609,40 +609,6 @@ public class ModItems {
                     .food(fp(5, 6f).build())
                     .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 2))));
 
-    // ===== Aircraft Squadrons (Phase 18) =====
-    public static final DeferredItem<AircraftItem> FIGHTER_SQUADRON =
-            ITEMS.register("fighter_squadron",
-                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
-                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
-                                    new AircraftInfo(AircraftInfo.AircraftType.FIGHTER,
-                                            1200, 64, 0, 18f, 1.8f, 12, AircraftInfo.BombingMode.DIVE))));
-
-    public static final DeferredItem<AircraftItem> DIVE_BOMBER_SQUADRON =
-            ITEMS.register("dive_bomber_squadron",
-                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
-                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
-                                    new AircraftInfo(AircraftInfo.AircraftType.DIVE_BOMBER,
-                                            1200, 1, 0, 24f, 1.4f, 16, AircraftInfo.BombingMode.DIVE))));
-
-    public static final DeferredItem<AircraftItem> XTB2D =
-            ITEMS.register("xtb2d",
-                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
-                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
-                                    new AircraftInfo(AircraftInfo.AircraftType.TORPEDO_BOMBER,
-                                            1200, 4, 0, 30f, 1.2f, 22, AircraftInfo.BombingMode.DIVE))));
-
-
-    public static final DeferredItem<AircraftItem> RECON_SQUADRON =
-            ITEMS.register("recon_squadron",
-                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
-                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
-                                    new AircraftInfo(AircraftInfo.AircraftType.RECON,
-                                            1500, 0, 0, 0f, 1.5f, 8, AircraftInfo.BombingMode.DIVE))));
-
     // ===== Named Aircraft =====
 
     // --- 鱼雷机 ---

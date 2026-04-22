@@ -691,9 +691,6 @@ public class AircraftEntity extends Entity {
      * Phase 33: target may be a LivingEntity or an enemy AircraftEntity.
      */
     private void tickFighterAttack(Player owner, Entity target) {
-        boolean ammoEnabled = ModCommonConfig.FIGHTER_AMMO_ENABLED.get();
-        if (ammoEnabled && remainingAmmo <= 0) { startReturning("fighter_ammo_depleted"); return; }
-
         Vec3 toTarget = target.getEyePosition().subtract(position());
         double dist = toTarget.length();
         double preferredDist = 11.0;
@@ -715,17 +712,6 @@ public class AircraftEntity extends Entity {
             bullet.setSourceAircraftName(getDisplayName());
             level().addFreshEntity(bullet);
             attackCooldown = 5;
-
-            if (ammoEnabled) {
-                remainingAmmo--;
-                if (remainingAmmo <= 0) {
-                    if (ModCommonConfig.AUTO_RESUPPLY_ENABLED.get() && tryAutoResupplyAmmo(owner)) {
-                        // Ammo restored (payload type must be set) — continue
-                    } else {
-                        startReturning("fighter_ammo_depleted");
-                    }
-                }
-            }
         }
     }
 

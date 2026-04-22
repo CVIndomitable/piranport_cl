@@ -471,7 +471,6 @@ public class ModCreativeTabs {
                         output.accept(ModItems.AERIAL_BOMB.get());
                         output.accept(ModItems.AERIAL_TORPEDO.get());
                         output.accept(ModItems.DEPTH_CHARGE.get());
-                        output.accept(ModItems.FIGHTER_AMMO.get());
                         // Missile / Rocket Ammo
                         output.accept(ModItems.SY1_MISSILE.get());
                         output.accept(ModItems.HARPOON_MISSILE.get());

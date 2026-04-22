@@ -8,14 +8,6 @@ public class ModCommonConfig {
 
     // ===== Equipment & Resupply (装备与补给) =====
 
-    public static final ModConfigSpec.BooleanValue FIGHTER_AMMO_ENABLED =
-            BUILDER
-                    .comment(
-                            "Enable ammo consumption for fighter aircraft (战斗机).",
-                            "Default: false (fighters have unlimited bullets, only fuel is consumed).",
-                            "Set to true to enable finite bullet count per sortie. (战斗机子弹消耗，默认关闭)")
-                    .define("equipment.fighterAmmoEnabled", false);
-
     public static final ModConfigSpec.BooleanValue AUTO_RESUPPLY_ENABLED =
             BUILDER
                     .comment(

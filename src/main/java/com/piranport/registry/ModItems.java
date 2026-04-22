@@ -888,10 +888,6 @@ public class ModItems {
     public static final DeferredItem<Item> DEPTH_CHARGE =
             ITEMS.register("depth_charge",
                     () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.depth_charge"));
-    // Fighter ammo (子弹)
-    public static final DeferredItem<Item> FIGHTER_AMMO =
-            ITEMS.register("fighter_ammo",
-                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.fighter_ammo"));
 
     // 弹丸渲染用隐藏物品（不加入创造模式标签页）
     public static final DeferredItem<Item> PROJECTILE_BULLET =

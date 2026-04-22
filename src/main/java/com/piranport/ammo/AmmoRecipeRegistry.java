@@ -228,9 +228,6 @@ public class AmmoRecipeRegistry {
         add("aerial_torpedo", AmmoCategory.AERIAL, "航空鱼雷", "标准",
                 () -> ModItems.AERIAL_TORPEDO.get(), 4, 60,
                 mat(iron, 3), mat(gp, 2), mat(fuel, 1));
-        add("fighter_ammo", AmmoCategory.AERIAL, "机枪弹", "标准",
-                () -> ModItems.FIGHTER_AMMO.get(), 16, 40,
-                mat(iron, 1), mat(gp, 1));
     }
 
     // ===== Depth Charges =====

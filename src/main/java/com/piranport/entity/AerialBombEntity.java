@@ -110,6 +110,10 @@ public class AerialBombEntity extends ThrowableItemProjectile {
         super.addAdditionalSaveData(tag);
         tag.putFloat("BombDamage", damage);
         tag.putFloat("ExplosionPower", explosionPower);
+        if (sourceAircraftName != null) {
+            tag.putString("SourceAircraftName",
+                    Component.Serializer.toJson(sourceAircraftName, registryAccess()));
+        }
     }
 
     @Override
@@ -117,5 +121,13 @@ public class AerialBombEntity extends ThrowableItemProjectile {
         super.readAdditionalSaveData(tag);
         if (tag.contains("BombDamage")) damage = tag.getFloat("BombDamage");
         if (tag.contains("ExplosionPower")) explosionPower = tag.getFloat("ExplosionPower");
+        if (tag.contains("SourceAircraftName")) {
+            try {
+                sourceAircraftName = Component.Serializer.fromJson(
+                        tag.getString("SourceAircraftName"), registryAccess());
+            } catch (Exception e) {
+                sourceAircraftName = null;
+            }
+        }
     }
 }

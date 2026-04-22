@@ -87,11 +87,23 @@ public class BulletEntity extends ThrowableItemProjectile {
     public void addAdditionalSaveData(CompoundTag tag) {
         super.addAdditionalSaveData(tag);
         tag.putFloat("BulletDamage", damage);
+        if (sourceAircraftName != null) {
+            tag.putString("SourceAircraftName",
+                    Component.Serializer.toJson(sourceAircraftName, registryAccess()));
+        }
     }
 
     @Override
     public void readAdditionalSaveData(CompoundTag tag) {
         super.readAdditionalSaveData(tag);
         if (tag.contains("BulletDamage")) damage = tag.getFloat("BulletDamage");
+        if (tag.contains("SourceAircraftName")) {
+            try {
+                sourceAircraftName = Component.Serializer.fromJson(
+                        tag.getString("SourceAircraftName"), registryAccess());
+            } catch (Exception e) {
+                sourceAircraftName = null;
+            }
+        }
     }
 }

@@ -490,6 +490,7 @@ public class GameEvents {
         }
         FireControlManager.clearTargets(ownerUUID);
         ReconManager.endRecon(ownerUUID);
+        com.piranport.combat.TorpedoGuidanceManager.endGuidance(ownerUUID);
     }
 
     /**

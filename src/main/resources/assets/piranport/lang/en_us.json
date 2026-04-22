@@ -524,8 +524,8 @@
 
   "item.piranport.wire_guided_torpedo_533mm": "533mm Wire-Guided Torpedo",
   "message.piranport.torpedo_wire_lost": "Torpedo wire lost!",
-  "key.piranport.torpedo_steer_left": "Torpedo Steer Left [9]",
-  "key.piranport.torpedo_steer_right": "Torpedo Steer Right [0]",
+  "message.piranport.torpedo_guidance_enter": "Wire-Guided Torpedo View [V to Cut Wire]",
+  "message.piranport.torpedo_guidance_exit": "Torpedo wire cut",
   "key.piranport.debug_cooldown_override": "Debug: Force 5s Cooldown [N]",
   "message.piranport.debug_cooldown_override_on": "[DEBUG] Global cooldown -> 5s ON",
   "message.piranport.debug_cooldown_override_off": "[DEBUG] Global cooldown -> 5s OFF",

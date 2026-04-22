@@ -2,6 +2,7 @@ package com.piranport;
 
 import com.piranport.aviation.ClientFireControlData;
 import com.piranport.aviation.ClientReconData;
+import com.piranport.combat.ClientTorpedoGuidance;
 import com.piranport.combat.TransformationManager;
 import com.piranport.debug.PiranPortDebug;
 import com.piranport.network.DebugCooldownOverridePayload;
@@ -17,9 +18,10 @@ import com.piranport.network.CycleWeaponPayload;
 import com.piranport.network.FireControlPayload;
 import com.piranport.network.ManualReloadPayload;
 import com.piranport.network.OpenFlightGroupPayload;
-import com.piranport.network.TorpedoSteerPayload;
 import com.piranport.network.ReconControlPayload;
 import com.piranport.network.ReconExitPayload;
+import com.piranport.network.TorpedoGuidanceExitPayload;
+import com.piranport.network.TorpedoGuidanceInputPayload;
 import com.piranport.registry.ModKeyMappings;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
@@ -81,6 +83,7 @@ public class ClientTickHandler {
         clearFcTeam(Minecraft.getInstance());
         clearAswTeam(Minecraft.getInstance());
         com.piranport.aviation.ClientAswSonarData.resetClientState();
+        ClientTorpedoGuidance.resetClientState();
     }
 
     @SubscribeEvent
@@ -88,9 +91,11 @@ public class ClientTickHandler {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
 
-        // V key — exits recon mode, or cycles weapon in GUI mode only
+        // V key — drops torpedo wire, exits recon mode, or cycles weapon in GUI mode only
         while (ModKeyMappings.CYCLE_WEAPON.consumeClick()) {
-            if (ClientReconData.isInReconMode()) {
+            if (ClientTorpedoGuidance.isActive()) {
+                PacketDistributor.sendToServer(new TorpedoGuidanceExitPayload());
+            } else if (ClientReconData.isInReconMode()) {
                 PacketDistributor.sendToServer(new ReconExitPayload());
             } else {
                 // Let the server decide if GUI mode is active — avoids reading Common config on client
@@ -100,6 +105,32 @@ public class ClientTickHandler {
                 }
             }
             // No-GUI mode: weapon is the other-hand item, V key does nothing here
+        }
+
+        // Torpedo guidance mode: mirror player rotation to torpedo and stream look direction to server
+        boolean inTorpedoGuidance = ClientTorpedoGuidance.isActive();
+        if (inTorpedoGuidance) {
+            if (mc.level != null) {
+                Entity torpedoEntity = mc.level.getEntity(ClientTorpedoGuidance.getTorpedoEntityId());
+                if (torpedoEntity != null) {
+                    if (mc.getCameraEntity() != torpedoEntity) {
+                        mc.setCameraEntity(torpedoEntity);
+                    }
+                    torpedoEntity.setXRot(mc.player.getXRot());
+                    torpedoEntity.setYRot(mc.player.getYRot());
+                    torpedoEntity.xRotO = mc.player.xRotO;
+                    torpedoEntity.yRotO = mc.player.yRotO;
+                } else {
+                    // Torpedo despawned on client — bail out
+                    ClientTorpedoGuidance.handleEnd();
+                    inTorpedoGuidance = false;
+                }
+            }
+            if (inTorpedoGuidance && mc.player.tickCount % 2 == 0) {
+                Vec3 look = mc.player.getLookAngle();
+                PacketDistributor.sendToServer(new TorpedoGuidanceInputPayload(
+                        (float) look.x, (float) look.y, (float) look.z));
+            }
         }
 
         // Phase 32: recon aircraft WASD control (throttled to every 2 ticks to reduce network traffic)
@@ -174,16 +205,6 @@ public class ClientTickHandler {
         while (ModKeyMappings.MANUAL_RELOAD.consumeClick()) {
             if (!transformed || inReconMode) continue;
             PacketDistributor.sendToServer(new ManualReloadPayload());
-        }
-
-        // 9/0 keys — wire-guided torpedo steering
-        while (ModKeyMappings.TORPEDO_STEER_LEFT.consumeClick()) {
-            if (!transformed || inReconMode) continue;
-            PacketDistributor.sendToServer(new TorpedoSteerPayload(-1));
-        }
-        while (ModKeyMappings.TORPEDO_STEER_RIGHT.consumeClick()) {
-            if (!transformed || inReconMode) continue;
-            PacketDistributor.sendToServer(new TorpedoSteerPayload(1));
         }
 
         // F8 / Shift+F8: debug toggle / snapshot

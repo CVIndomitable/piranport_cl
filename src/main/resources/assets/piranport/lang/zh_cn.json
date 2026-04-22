@@ -524,8 +524,8 @@
 
   "item.piranport.wire_guided_torpedo_533mm": "533mm线导鱼雷",
   "message.piranport.torpedo_wire_lost": "鱼雷掉线",
-  "key.piranport.torpedo_steer_left": "鱼雷左偏航 [9]",
-  "key.piranport.torpedo_steer_right": "鱼雷右偏航 [0]",
+  "message.piranport.torpedo_guidance_enter": "进入线导鱼雷视角 [V 切线]",
+  "message.piranport.torpedo_guidance_exit": "切断鱼雷线导",
   "key.piranport.debug_cooldown_override": "调试：冷却降至5秒 [N]",
   "message.piranport.debug_cooldown_override_on": "[调试] 全局冷却 → 5秒 已开启",
   "message.piranport.debug_cooldown_override_off": "[调试] 全局冷却 → 5秒 已关闭",

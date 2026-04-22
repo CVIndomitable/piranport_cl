@@ -35,10 +35,8 @@ public class TorpedoEntity extends ThrowableItemProjectile {
     /** Wire-guided torpedo state. */
     private boolean wireGuided = false;
     private Vec3 launchPos = null;
-    /** Maximum wire control distance in blocks. */
-    private static final double WIRE_MAX_RANGE = 16.0;
-    /** Yaw adjustment per steer input (degrees). */
-    private static final float WIRE_STEER_DEGREES = 8.0f;
+    /** Fallback wire range in blocks when simulation distance is unavailable. */
+    private static final double WIRE_FALLBACK_RANGE = 16.0;
 
     /** Acoustic homing torpedo state. */
     private boolean acoustic = false;
@@ -123,19 +121,59 @@ public class TorpedoEntity extends ThrowableItemProjectile {
         }
     }
 
+    /** Drop the wire: torpedo continues ballistic cruising without player input. */
+    public void cutWire() {
+        wireGuided = false;
+    }
+
+    /** Wire length in blocks — equal to server simulation distance so the torpedo disconnects
+     *  precisely when it leaves the ticking zone around the owning player. */
+    private double getWireMaxRange() {
+        if (level().getServer() != null) {
+            int simChunks = level().getServer().getPlayerList().getSimulationDistance();
+            if (simChunks > 0) return simChunks * 16.0;
+        }
+        return WIRE_FALLBACK_RANGE;
+    }
+
     /**
-     * Steer the torpedo left or right by adjusting its horizontal velocity direction.
-     * @param direction -1 for left, +1 for right
+     * Player-guided movement: follows the latest direction input at full torpedoSpeed,
+     * blocked from surfacing (the block above must be water). Returns true if guided this tick
+     * (caller should skip the cruise AI).
      */
-    public void steer(int direction) {
-        if (!wireGuided) return;
-        Vec3 motion = getDeltaMovement();
-        double angleRad = Math.toRadians(WIRE_STEER_DEGREES * direction);
-        double cos = Math.cos(angleRad);
-        double sin = Math.sin(angleRad);
-        double newX = motion.x * cos - motion.z * sin;
-        double newZ = motion.x * sin + motion.z * cos;
-        setDeltaMovement(newX, motion.y, newZ);
+    private boolean applyGuidedMovement() {
+        Entity owner = getOwner();
+        if (!(owner instanceof net.minecraft.server.level.ServerPlayer sp)) return false;
+        java.util.UUID guided = com.piranport.combat.TorpedoGuidanceManager.getGuidedTorpedo(sp.getUUID());
+        if (guided == null || !guided.equals(getUUID())) return false;
+
+        float[] input = com.piranport.combat.TorpedoGuidanceManager.consumeInput(sp.getUUID());
+        Vec3 dir;
+        if (input != null && (input[0] != 0 || input[1] != 0 || input[2] != 0)) {
+            double len = Math.sqrt(input[0] * input[0] + input[1] * input[1] + input[2] * input[2]);
+            if (len < 0.001) dir = headingFromMotion();
+            else dir = new Vec3(input[0] / len, input[1] / len, input[2] / len);
+        } else {
+            dir = headingFromMotion();
+        }
+
+        // Prevent surfacing: if the block directly above is not water, forbid upward velocity.
+        BlockPos above = BlockPos.containing(getX(), getY() + 0.5, getZ());
+        boolean waterAbove = level().getBlockState(above).getFluidState().is(Fluids.WATER);
+        double vy = dir.y;
+        if (!waterAbove && vy > 0) vy = 0;
+
+        double speed = torpedoSpeed;
+        setDeltaMovement(dir.x * speed, vy * speed, dir.z * speed);
+        return true;
+    }
+
+    /** Current unit heading derived from velocity; falls back to +Z if motionless. */
+    private Vec3 headingFromMotion() {
+        Vec3 m = getDeltaMovement();
+        double len = m.length();
+        if (len < 0.001) return new Vec3(0, 0, 1);
+        return m.scale(1.0 / len);
     }
 
     @Override
@@ -181,20 +219,28 @@ public class TorpedoEntity extends ThrowableItemProjectile {
             if (exploded) return;
         }
 
-        // 1.6. 线导鱼雷掉线检测 — launchPos lazily initialized after setPos
+        // 1.6. 线导鱼雷掉线检测 — 距离 owner 超过模拟距离时切线
         if (!level().isClientSide() && wireGuided && launchPos == null) {
             launchPos = position();
         }
-        if (!level().isClientSide() && wireGuided && launchPos != null) {
-            double dist = position().distanceTo(launchPos);
-            if (dist > WIRE_MAX_RANGE) {
+        if (!level().isClientSide() && wireGuided) {
+            double maxRange = getWireMaxRange();
+            Entity owner = getOwner();
+            double dist = owner != null ? position().distanceTo(owner.position())
+                    : (launchPos != null ? position().distanceTo(launchPos) : 0.0);
+            if (dist > maxRange) {
                 wireGuided = false;
-                Entity owner = getOwner();
-                if (owner instanceof Player player) {
-                    player.displayClientMessage(
+                if (owner instanceof net.minecraft.server.level.ServerPlayer sp) {
+                    com.piranport.combat.TorpedoGuidanceManager.endGuidance(sp);
+                    sp.displayClientMessage(
                             Component.translatable("message.piranport.torpedo_wire_lost"), true);
                 }
             }
+        }
+
+        // 1.65. 线导鱼雷玩家制导：覆盖巡航 AI，维持速度并限制不得出水面
+        if (!level().isClientSide() && wireGuided) {
+            if (applyGuidedMovement()) return;
         }
 
         // 1.7. 声导鱼雷追踪
@@ -398,6 +444,20 @@ public class TorpedoEntity extends ThrowableItemProjectile {
     @Override
     protected double getDefaultGravity() {
         return 0.0; // 重力由 tick() 中的自定义逻辑控制
+    }
+
+    @Override
+    public void remove(RemovalReason reason) {
+        if (!level().isClientSide() && wireGuided) {
+            Entity owner = getOwner();
+            if (owner instanceof net.minecraft.server.level.ServerPlayer sp) {
+                java.util.UUID guided = com.piranport.combat.TorpedoGuidanceManager.getGuidedTorpedo(sp.getUUID());
+                if (guided != null && guided.equals(getUUID())) {
+                    com.piranport.combat.TorpedoGuidanceManager.endGuidance(sp);
+                }
+            }
+        }
+        super.remove(reason);
     }
 
     @Override

@@ -881,6 +881,7 @@ public class ShipCoreItem extends Item {
         float[] angles = getSpreadAngles(tubeCount);
         Vec3 look = player.getLookAngle();
 
+        TorpedoEntity primaryGuided = null;
         for (float angle : angles) {
             Vec3 dir = rotateHorizontal(look, Math.toRadians(angle));
             TorpedoEntity torpedo = new TorpedoEntity(level, player, caliber);
@@ -895,6 +896,10 @@ public class ShipCoreItem extends Item {
             torpedo.setPos(player.getX() + dir.x * 0.5, player.getEyeY() - 0.3, player.getZ() + dir.z * 0.5);
             torpedo.setDeltaMovement(dir.x * torpedoSpeed, 0, dir.z * torpedoSpeed);
             level.addFreshEntity(torpedo);
+            if (wireGuided && primaryGuided == null) primaryGuided = torpedo;
+        }
+        if (primaryGuided != null && player instanceof net.minecraft.server.level.ServerPlayer sp) {
+            com.piranport.combat.TorpedoGuidanceManager.startGuidance(sp, primaryGuided);
         }
 
         // Consume all loaded torpedoes
@@ -991,6 +996,7 @@ public class ShipCoreItem extends Item {
         float[] angles = getSpreadAngles(tubeCount);
         Vec3 look = player.getLookAngle();
 
+        TorpedoEntity primaryGuided = null;
         for (float angle : angles) {
             Vec3 dir = rotateHorizontal(look, Math.toRadians(angle));
             TorpedoEntity torpedo = new TorpedoEntity(level, player, caliber);
@@ -1005,6 +1011,10 @@ public class ShipCoreItem extends Item {
             torpedo.setPos(player.getX() + dir.x * 0.5, player.getEyeY() - 0.3, player.getZ() + dir.z * 0.5);
             torpedo.setDeltaMovement(dir.x * torpedoSpeed, 0, dir.z * torpedoSpeed);
             level.addFreshEntity(torpedo);
+            if (wireGuided && primaryGuided == null) primaryGuided = torpedo;
+        }
+        if (primaryGuided != null && player instanceof net.minecraft.server.level.ServerPlayer sp) {
+            com.piranport.combat.TorpedoGuidanceManager.startGuidance(sp, primaryGuided);
         }
 
         // Damage launcher in-inventory
@@ -1828,6 +1838,7 @@ public class ShipCoreItem extends Item {
         float[] angles = getSpreadAngles(tubeCount);
         Vec3 look = player.getLookAngle();
 
+        TorpedoEntity primaryGuided = null;
         for (float angle : angles) {
             Vec3 dir = rotateHorizontal(look, Math.toRadians(angle));
             TorpedoEntity torpedo = new TorpedoEntity(level, player, caliber);
@@ -1845,6 +1856,10 @@ public class ShipCoreItem extends Item {
                     player.getZ() + dir.z * 0.5);
             torpedo.setDeltaMovement(dir.x * torpedoSpeed, 0, dir.z * torpedoSpeed);
             level.addFreshEntity(torpedo);
+            if (wireGuided && primaryGuided == null) primaryGuided = torpedo;
+        }
+        if (primaryGuided != null && player instanceof net.minecraft.server.level.ServerPlayer sp) {
+            com.piranport.combat.TorpedoGuidanceManager.startGuidance(sp, primaryGuided);
         }
 
         // Damage launcher (manual, since it lives in a container slot)

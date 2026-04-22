@@ -84,8 +84,6 @@ public class ClientEvents {
         event.register(ModKeyMappings.TOGGLE_AUTO_LAUNCH);
         event.register(ModKeyMappings.DEBUG_TOGGLE);
         event.register(ModKeyMappings.MANUAL_RELOAD);
-        event.register(ModKeyMappings.TORPEDO_STEER_LEFT);
-        event.register(ModKeyMappings.TORPEDO_STEER_RIGHT);
         event.register(ModKeyMappings.DEBUG_COOLDOWN_OVERRIDE);
     }
 

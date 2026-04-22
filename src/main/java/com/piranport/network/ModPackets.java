@@ -97,11 +97,26 @@ public class ModPackets {
                 ManualReloadPayload::handle
         );
 
-        // Wire-guided torpedo steering (9/0 keys)
+        // Wire-guided torpedo guidance (view-control mode)
         registrar.playToServer(
-                TorpedoSteerPayload.TYPE,
-                TorpedoSteerPayload.STREAM_CODEC,
-                TorpedoSteerPayload::handle
+                TorpedoGuidanceInputPayload.TYPE,
+                TorpedoGuidanceInputPayload.STREAM_CODEC,
+                TorpedoGuidanceInputPayload::handle
+        );
+        registrar.playToServer(
+                TorpedoGuidanceExitPayload.TYPE,
+                TorpedoGuidanceExitPayload.STREAM_CODEC,
+                TorpedoGuidanceExitPayload::handle
+        );
+        registrar.playToClient(
+                TorpedoGuidanceStartPayload.TYPE,
+                TorpedoGuidanceStartPayload.STREAM_CODEC,
+                TorpedoGuidanceStartPayload::handle
+        );
+        registrar.playToClient(
+                TorpedoGuidanceEndPayload.TYPE,
+                TorpedoGuidanceEndPayload.STREAM_CODEC,
+                TorpedoGuidanceEndPayload::handle
         );
 
         // ===== ASW Sonar =====

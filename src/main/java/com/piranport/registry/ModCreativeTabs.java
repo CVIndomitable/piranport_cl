@@ -53,12 +53,8 @@ public class ModCreativeTabs {
             CREATIVE_TABS.register("aviation_tab", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.piranport.aviation"))
                     .withTabsBefore(CreativeModeTabs.COMBAT)
-                    .icon(() -> ModItems.FIGHTER_SQUADRON.get().getDefaultInstance())
+                    .icon(() -> ModItems.B25_BOMBER.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
-                        // Generic squadrons
-                        output.accept(ModItems.FIGHTER_SQUADRON.get());
-                        output.accept(ModItems.DIVE_BOMBER_SQUADRON.get());
-                        output.accept(ModItems.RECON_SQUADRON.get());
                         // Torpedo bombers
                         output.accept(ModItems.SWORDFISH_TORPEDO.get());
                         output.accept(ModItems.SWORDFISH_ASW.get());

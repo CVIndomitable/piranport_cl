@@ -83,6 +83,9 @@ dependencies {
     compileOnly "mezz.jei:jei-1.21.1-common-api:19.27.0.340"
     compileOnly "mezz.jei:jei-1.21.1-neoforge-api:19.27.0.340"
     localRuntime "mezz.jei:jei-1.21.1-neoforge:19.27.0.340"
+
+    // Farmer's Delight — soft dependency, runtime only (crops/kitchen replacement)
+    localRuntime files("../FarmersDelight-1.21.1-1.2.11.jar")
 }
 
 var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {

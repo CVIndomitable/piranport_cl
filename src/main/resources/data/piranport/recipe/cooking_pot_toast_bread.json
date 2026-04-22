@@ -1,0 +1,12 @@
+{
+  "type": "farmersdelight:cooking",
+  "experience": 1.0,
+  "cookingtime": 200,
+  "recipe_book_tab": "meals",
+  "ingredients": [
+    {"item": "piranport:flour"},
+    {"item": "piranport:flour"},
+    {"item": "piranport:butter"}
+  ],
+  "result": {"id": "piranport:toast_bread", "count": 1}
+}

@@ -1,0 +1,13 @@
+{
+  "type": "farmersdelight:cooking",
+  "experience": 1.0,
+  "cookingtime": 200,
+  "recipe_book_tab": "meals",
+  "ingredients": [
+    {"item": "minecraft:cod"},
+    {"item": "piranport:flour"},
+    {"item": "minecraft:water_bucket"},
+    {"item": "piranport:edible_oil"}
+  ],
+  "result": {"id": "piranport:tempura", "count": 1}
+}

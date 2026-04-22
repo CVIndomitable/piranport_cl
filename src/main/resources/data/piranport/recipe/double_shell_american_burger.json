@@ -8,7 +8,7 @@
   "key": {
     "B": {"item": "piranport:round_bun"},
     "M": {"item": "minecraft:beef"},
-    "L": {"item": "piranport:lettuce"}
+    "L": {"item": "farmersdelight:cabbage_leaf"}
   },
   "result": {"id": "piranport:double_shell_american_burger", "count": 1}
 }

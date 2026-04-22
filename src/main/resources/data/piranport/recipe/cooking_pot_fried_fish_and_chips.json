@@ -1,0 +1,12 @@
+{
+  "type": "farmersdelight:cooking",
+  "experience": 1.0,
+  "cookingtime": 200,
+  "recipe_book_tab": "meals",
+  "ingredients": [
+    {"item": "minecraft:cod"},
+    {"item": "minecraft:potato"},
+    {"item": "piranport:edible_oil"}
+  ],
+  "result": {"id": "piranport:fried_fish_and_chips", "count": 1}
+}

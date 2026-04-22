@@ -33,3 +33,10 @@ Minecraft mod based on Warship Girls R (战舰少女R).
     versionRange="[19.0,)"
     ordering="AFTER"
     side="CLIENT"
+
+[[dependencies.${mod_id}]]
+    modId="farmersdelight"
+    type="optional"
+    versionRange="[1.2.11,)"
+    ordering="AFTER"
+    side="BOTH"

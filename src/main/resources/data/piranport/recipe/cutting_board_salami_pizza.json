@@ -1,0 +1,10 @@
+{
+  "type": "farmersdelight:cutting",
+  "ingredients": [
+    {"item": "piranport:salami_pizza"}
+  ],
+  "result": [
+    {"item": {"count": 8, "id": "piranport:salami_pizza_pieces"}}
+  ],
+  "tool": {"tag": "c:tools/knife"}
+}

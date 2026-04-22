@@ -1,0 +1,12 @@
+{
+  "type": "farmersdelight:cooking",
+  "experience": 1.0,
+  "cookingtime": 200,
+  "recipe_book_tab": "drinks",
+  "ingredients": [
+    {"item": "minecraft:bread"},
+    {"item": "piranport:yeast"},
+    {"item": "minecraft:water_bucket"}
+  ],
+  "result": {"id": "piranport:kvass", "count": 1}
+}

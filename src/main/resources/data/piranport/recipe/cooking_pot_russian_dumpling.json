@@ -1,0 +1,16 @@
+{
+  "type": "farmersdelight:cooking",
+  "experience": 1.0,
+  "cookingtime": 300,
+  "recipe_book_tab": "meals",
+  "ingredients": [
+    {"item": "piranport:flour"},
+    {"item": "minecraft:egg"},
+    {"item": "minecraft:brown_mushroom"},
+    {"item": "minecraft:beef"},
+    {"item": "minecraft:mutton"},
+    {"item": "minecraft:porkchop"},
+    {"item": "farmersdelight:onion"}
+  ],
+  "result": {"id": "piranport:russian_dumpling", "count": 5}
+}

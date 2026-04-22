@@ -1,8 +1,0 @@
-{
-  "type": "minecraft:crafting_shapeless",
-  "ingredients": [
-    {"item": "piranport:soybean"},
-    {"item": "minecraft:glass_bottle"}
-  ],
-  "result": {"id": "piranport:soybean_milk", "count": 1}
-}

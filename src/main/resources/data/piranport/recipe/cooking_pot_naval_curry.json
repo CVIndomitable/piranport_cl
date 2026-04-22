@@ -1,0 +1,14 @@
+{
+  "type": "farmersdelight:cooking",
+  "experience": 1.0,
+  "cookingtime": 240,
+  "recipe_book_tab": "meals",
+  "ingredients": [
+    {"item": "farmersdelight:onion"},
+    {"item": "minecraft:carrot"},
+    {"item": "minecraft:potato"},
+    {"item": "farmersdelight:cooked_rice"},
+    {"item": "piranport:ginger"}
+  ],
+  "result": {"id": "piranport:naval_curry", "count": 2}
+}

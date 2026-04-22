@@ -6,7 +6,7 @@
     {"item": "piranport:cheese"},
     {"item": "minecraft:brown_mushroom"},
     {"item": "minecraft:brown_mushroom"},
-    {"item": "piranport:onion"},
+    {"item": "farmersdelight:onion"},
     {"item": "piranport:pizza_base"}
   ],
   "result": {"id": "piranport:embryo_of_salami_pizza", "count": 1}

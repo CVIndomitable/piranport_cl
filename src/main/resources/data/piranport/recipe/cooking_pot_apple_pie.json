@@ -1,0 +1,10 @@
+{
+  "type": "farmersdelight:cooking",
+  "experience": 1.0,
+  "cookingtime": 180,
+  "recipe_book_tab": "meals",
+  "ingredients": [
+    {"item": "piranport:embryo_of_apple_pie"}
+  ],
+  "result": {"id": "piranport:apple_pie", "count": 1}
+}

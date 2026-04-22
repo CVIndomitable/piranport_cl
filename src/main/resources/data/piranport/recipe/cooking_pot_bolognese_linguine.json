@@ -1,0 +1,13 @@
+{
+  "type": "farmersdelight:cooking",
+  "experience": 1.0,
+  "cookingtime": 200,
+  "recipe_book_tab": "meals",
+  "ingredients": [
+    {"item": "piranport:raw_pasta"},
+    {"item": "farmersdelight:tomato_sauce"},
+    {"item": "farmersdelight:minced_beef"},
+    {"item": "farmersdelight:onion"}
+  ],
+  "result": {"id": "piranport:bolognese_linguine_recipe", "count": 2}
+}

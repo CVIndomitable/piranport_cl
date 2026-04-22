@@ -1,0 +1,10 @@
+{
+  "type": "farmersdelight:cutting",
+  "ingredients": [
+    {"item": "piranport:sausage"}
+  ],
+  "result": [
+    {"item": {"count": 4, "id": "piranport:sliced_sausage"}}
+  ],
+  "tool": {"tag": "c:tools/knife"}
+}

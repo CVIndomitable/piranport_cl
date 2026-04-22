@@ -1,0 +1,10 @@
+{
+  "type": "farmersdelight:cutting",
+  "ingredients": [
+    {"item": "minecraft:bread"}
+  ],
+  "result": [
+    {"item": {"count": 3, "id": "piranport:toast_bread_slices"}}
+  ],
+  "tool": {"tag": "c:tools/knife"}
+}

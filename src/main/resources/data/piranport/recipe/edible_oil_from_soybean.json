@@ -1,7 +1,0 @@
-{
-  "type": "minecraft:crafting_shapeless",
-  "ingredients": [
-    {"item": "piranport:soybean"}
-  ],
-  "result": {"id": "piranport:edible_oil", "count": 1}
-}

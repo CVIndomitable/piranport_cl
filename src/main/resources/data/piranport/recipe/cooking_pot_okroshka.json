@@ -1,0 +1,12 @@
+{
+  "type": "farmersdelight:cooking",
+  "experience": 1.0,
+  "cookingtime": 200,
+  "recipe_book_tab": "soups_stews",
+  "ingredients": [
+    {"item": "minecraft:water_bucket"},
+    {"item": "minecraft:chicken"},
+    {"item": "minecraft:porkchop"}
+  ],
+  "result": {"id": "piranport:okroshka", "count": 1}
+}

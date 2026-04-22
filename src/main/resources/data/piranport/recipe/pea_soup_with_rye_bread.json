@@ -1,8 +1,0 @@
-{
-  "type": "minecraft:crafting_shapeless",
-  "ingredients": [
-    {"item": "piranport:rye_bread"},
-    {"item": "piranport:lablab_soup"}
-  ],
-  "result": {"id": "piranport:pea_soup_with_rye_bread", "count": 1}
-}

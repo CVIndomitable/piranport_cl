@@ -10,23 +10,21 @@ import net.neoforged.neoforge.common.brewing.IBrewingRecipe;
 
 public class ModBrewingRecipes {
     public static void register(PotionBrewing.Builder builder) {
-        // Water bottle + flour/rice_flour/sugar → yeast
+        // Water bottle + flour/sugar → yeast
         builder.addRecipe(waterBottleTo(ModItems.FLOUR.get(), ModItems.YEAST.get()));
-        builder.addRecipe(waterBottleTo(ModItems.RICE_FLOUR.get(), ModItems.YEAST.get()));
         builder.addRecipe(waterBottleTo(Items.SUGAR, ModItems.YEAST.get()));
 
         // Water bottle + salt → brine
         builder.addRecipe(waterBottleTo(ModItems.SALT.get(), ModItems.BRINE.get()));
 
-        // Yeast + rice_flour → cooking wine
-        builder.addRecipe(customTo(ModItems.YEAST.get(), ModItems.RICE_FLOUR.get(), ModItems.COOKING_WINE.get()));
+        // Yeast + apple → cooking wine (rice_flour was removed)
+        builder.addRecipe(customTo(ModItems.YEAST.get(), Items.APPLE, ModItems.COOKING_WINE.get()));
 
         // Yeast + wheat → beer
         builder.addRecipe(customTo(ModItems.YEAST.get(), Items.WHEAT, ModItems.BEER.get()));
 
         // Phase 28: bread-based kvass (replaces/augments cooking_pot kvass)
         builder.addRecipe(customTo(ModItems.YEAST.get(), Items.BREAD, ModItems.KVASS.get()));
-        builder.addRecipe(customTo(ModItems.YEAST.get(), ModItems.NEW_RYE_BREAD.get(), ModItems.KVASS.get()));
     }
 
     private static IBrewingRecipe waterBottleTo(net.minecraft.world.item.Item ingredient,

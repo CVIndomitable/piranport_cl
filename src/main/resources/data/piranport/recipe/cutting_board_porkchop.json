@@ -1,0 +1,10 @@
+{
+  "type": "farmersdelight:cutting",
+  "ingredients": [
+    {"item": "minecraft:cooked_porkchop"}
+  ],
+  "result": [
+    {"item": {"count": 4, "id": "piranport:bacon"}}
+  ],
+  "tool": {"tag": "c:tools/knife"}
+}

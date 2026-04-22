@@ -250,14 +250,9 @@ public class ModItems {
 
     // ===== Food Ingredients (Phase 11a) =====
     public static final DeferredItem<Item> FLOUR           = ITEMS.registerSimpleItem("flour");
-    public static final DeferredItem<Item> RICE_FLOUR      = ITEMS.registerSimpleItem("rice_flour");
-    public static final DeferredItem<Item> CHILI_POWDER    = ITEMS.registerSimpleItem("chili_powder");
-    public static final DeferredItem<Item> PORK_PASTE      = ITEMS.registerSimpleItem("pork_paste");
     public static final DeferredItem<Item> EDIBLE_OIL      = ITEMS.registerSimpleItem("edible_oil");
     public static final DeferredItem<Item> BUTTER          = ITEMS.registerSimpleItem("butter");
     public static final DeferredItem<Item> CREAM           = ITEMS.registerSimpleItem("cream");
-    public static final DeferredItem<Item> SOYBEAN_MILK    = ITEMS.registerSimpleItem("soybean_milk");
-    public static final DeferredItem<Item> TOFU            = ITEMS.registerSimpleItem("tofu");
     public static final DeferredItem<Item> CHEESE          = ITEMS.registerSimpleItem("cheese");
     public static final DeferredItem<Item> YEAST           = ITEMS.registerSimpleItem("yeast");
     public static final DeferredItem<Item> SOY_SAUCE       = ITEMS.registerSimpleItem("soy_sauce");
@@ -269,7 +264,6 @@ public class ModItems {
     public static final DeferredItem<Item> RAW_PASTA       = ITEMS.registerSimpleItem("raw_pasta");
     public static final DeferredItem<Item> FERMENTED_FISH  = ITEMS.registerSimpleItem("fermented_fish");
     public static final DeferredItem<Item> PIZZA_BASE      = ITEMS.registerSimpleItem("pizza_base");
-    public static final DeferredItem<Item> GYPSUM_CHIP     = ITEMS.registerSimpleItem("gypsum_chip");
     public static final DeferredItem<Item> QUICKLIME       = ITEMS.registerSimpleItem("quicklime");
 
     // ===== Functional Block Items (Phase 12-14) =====
@@ -297,26 +291,6 @@ public class ModItems {
     public static final DeferredItem<ModFoodItem> TOAST_BREAD = ITEMS.register("toast_bread",
             () -> new ModFoodItem(new Item.Properties()
                     .food(fp(15, 18.8f).build())
-                    .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 3))));
-
-    public static final DeferredItem<ModFoodItem> NAVAL_BAKED_BEANS = ITEMS.register("naval_baked_beans",
-            () -> new ModFoodItem(new Item.Properties()
-                    .food(fp(4, 5f).build())
-                    .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 2))));
-
-    public static final DeferredItem<ModFoodItem> LATIAO = ITEMS.register("latiao",
-            () -> new ModFoodItem(new Item.Properties()
-                    .food(fp(2, 2.5f)
-                            .effect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 1800, 2), 1.0f)
-                            .build())
-                    .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 2))));
-
-    public static final DeferredItem<ModFoodItem> MAPO_TOFU = ITEMS.register("mapo_tofu",
-            () -> new ModFoodItem(new Item.Properties()
-                    .food(fp(4, 5f)
-                            .effect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 3600, 1), 1.0f)
-                            .effect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 3600, 0), 1.0f)
-                            .build())
                     .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 3))));
 
     public static final DeferredItem<ModFoodItem> NAVAL_CURRY = ITEMS.register("naval_curry",
@@ -348,11 +322,6 @@ public class ModItems {
                     .food(fp(5, 6f).build())
                     .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 2))));
 
-    public static final DeferredItem<ModFoodItem> SALTED_EGG_TOFU = ITEMS.register("salted_egg_tofu",
-            () -> new ModFoodItem(new Item.Properties()
-                    .food(fp(3, 3.8f).build())
-                    .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 1))));
-
     public static final DeferredItem<ModFoodItem> SURSTROMMING = ITEMS.register("surstromming",
             () -> new ModFoodItem(new Item.Properties()
                     .food(fp(4, 5f)
@@ -379,19 +348,6 @@ public class ModItems {
             () -> new ModFoodItem(new Item.Properties()
                     .food(fp(4, 5f).build())
                     .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 2))));
-
-    public static final DeferredItem<ModFoodItem> COOKED_RICE = ITEMS.register("cooked_rice",
-            () -> new ModFoodItem(new Item.Properties()
-                    .food(fp(5, 6.3f).build())
-                    .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 2))));
-
-    public static final DeferredItem<ModFoodItem> BEET_BLOSSOM = ITEMS.register("beet_blossom",
-            () -> new ModFoodItem(new Item.Properties()
-                    .food(fp(3, 3.8f)
-                            .effect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 3600, 0), 1.0f)
-                            .effect(new MobEffectInstance(MobEffects.WATER_BREATHING, 3600, 0), 1.0f)
-                            .build())
-                    .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("bowl", 1))));
 
     public static final DeferredItem<ModFoodItem> MISO_SOUP = ITEMS.register("miso_soup",
             () -> new ModFoodItem(new Item.Properties()
@@ -428,11 +384,6 @@ public class ModItems {
                     .food(fp(5, 6f).build())
                     .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("bowl", 2))));
 
-    public static final DeferredItem<ModFoodItem> DELUXE_BAOZI = ITEMS.register("deluxe_baozi",
-            () -> new ModFoodItem(new Item.Properties()
-                    .food(fp(5, 6f).build())
-                    .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 2))));
-
     public static final DeferredItem<ModFoodItem> DONGPO_PORK = ITEMS.register("dongpo_pork",
             () -> new ModFoodItem(new Item.Properties()
                     .food(fp(5, 6f).build())
@@ -453,20 +404,10 @@ public class ModItems {
                     .food(fp(5, 6f).build())
                     .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("bowl", 2))));
 
-    public static final DeferredItem<ModFoodItem> MACARON = ITEMS.register("macaron",
-            () -> new ModFoodItem(new Item.Properties()
-                    .food(fp(5, 6f).build())
-                    .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 2))));
-
     public static final DeferredItem<ModFoodItem> MUSSOLINIS_OO = ITEMS.register("mussolinis_oo",
             () -> new ModFoodItem(new Item.Properties()
                     .food(fp(5, 6f).build())
                     .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 2))));
-
-    public static final DeferredItem<ModFoodItem> NEW_RYE_BREAD = ITEMS.register("new_rye_bread",
-            () -> new ModFoodItem(new Item.Properties()
-                    .food(fp(5, 6f).build())
-                    .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 3))));
 
     public static final DeferredItem<ModFoodItem> SCHWEINSHAXE = ITEMS.register("schweinshaxe",
             () -> new ModFoodItem(new Item.Properties()
@@ -478,20 +419,10 @@ public class ModItems {
                     .food(fp(5, 6f).build())
                     .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 2))));
 
-    public static final DeferredItem<ModFoodItem> RYE_BREAD = ITEMS.register("rye_bread",
-            () -> new ModFoodItem(new Item.Properties()
-                    .food(fp(5, 6f).build())
-                    .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 2))));
-
     public static final DeferredItem<ModFoodItem> OKROSHKA = ITEMS.register("okroshka",
             () -> new ModFoodItem(new Item.Properties()
                     .food(fp(5, 6f).build())
                     .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 2))));
-
-    public static final DeferredItem<ModFoodItem> PEA_SOUP_WITH_RYE_BREAD = ITEMS.register("pea_soup_with_rye_bread",
-            () -> new ModFoodItem(new Item.Properties()
-                    .food(fp(5, 6f).build())
-                    .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("bowl", 2))));
 
     public static final DeferredItem<ModFoodItem> ROYAL_NAVAL_SALTED_BEEF = ITEMS.register("royal_naval_salted_beef",
             () -> new ModFoodItem(new Item.Properties()
@@ -504,11 +435,6 @@ public class ModItems {
                     .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 2))));
 
     public static final DeferredItem<ModFoodItem> SOBA_NOODLE = ITEMS.register("soba_noodle",
-            () -> new ModFoodItem(new Item.Properties()
-                    .food(fp(5, 6f).build())
-                    .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("bowl", 2))));
-
-    public static final DeferredItem<ModFoodItem> TANGYUAN = ITEMS.register("tangyuan",
             () -> new ModFoodItem(new Item.Properties()
                     .food(fp(5, 6f).build())
                     .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("bowl", 2))));
@@ -544,11 +470,6 @@ public class ModItems {
                     .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 2))));
 
     public static final DeferredItem<ModFoodItem> WEISSWURST_MIT_DER_BAGEL = ITEMS.register("weisswurst_mit_der_bagel",
-            () -> new ModFoodItem(new Item.Properties()
-                    .food(fp(5, 6f).build())
-                    .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 2))));
-
-    public static final DeferredItem<ModFoodItem> YOKAN = ITEMS.register("yokan",
             () -> new ModFoodItem(new Item.Properties()
                     .food(fp(5, 6f).build())
                     .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 2))));
@@ -781,11 +702,6 @@ public class ModItems {
     public static final DeferredItem<com.piranport.item.GuidebookItem> GUIDEBOOK =
             ITEMS.register("guidebook",
                     () -> new com.piranport.item.GuidebookItem(new Item.Properties().stacksTo(1)));
-
-    // ===== Phase 27: Pineapple chain =====
-    public static final DeferredItem<Item> PINEAPPLE_JUICE =
-            ITEMS.register("pineapple_juice",
-                    () -> new Item(new Item.Properties().food(fp(2, 2.5f).build())));
 
     // ===== Phase 27: Buff foods =====
 
@@ -1093,33 +1009,22 @@ public class ModItems {
 
     // ===== Phase 28: New Ingredients/Condiments =====
     public static final DeferredItem<Item> MILK_ICE_CREAM      = ITEMS.registerSimpleItem("milk_ice_cream");
-    public static final DeferredItem<Item> WALNUT              = ITEMS.registerSimpleItem("walnut");
-    public static final DeferredItem<Item> WALNUT_POWDER       = ITEMS.registerSimpleItem("walnut_powder");
     public static final DeferredItem<Item> EMBRYO_OF_APPLE_PIE = ITEMS.registerSimpleItem("embryo_of_apple_pie");
     public static final DeferredItem<Item> EMBRYO_OF_SALAMI_PIZZA = ITEMS.registerSimpleItem("embryo_of_salami_pizza");
     public static final DeferredItem<Item> BLACK_PEPPER        = ITEMS.registerSimpleItem("black_pepper");
     public static final DeferredItem<Item> WHITE_PEPPER        = ITEMS.registerSimpleItem("white_pepper");
-    public static final DeferredItem<Item> CURRY_POWDER        = ITEMS.registerSimpleItem("curry_powder");
     public static final DeferredItem<Item> GINGER              = ITEMS.registerSimpleItem("ginger");
     public static final DeferredItem<Item> BLACK_TEA           = ITEMS.registerSimpleItem("black_tea");
     public static final DeferredItem<Item> SALAMI              = ITEMS.registerSimpleItem("salami");
     public static final DeferredItem<Item> SLICED_SALAMI       = ITEMS.registerSimpleItem("sliced_salami");
-    public static final DeferredItem<Item> ALMOND              = ITEMS.registerSimpleItem("almond");
-    public static final DeferredItem<Item> ALMOND_POWDER       = ITEMS.registerSimpleItem("almond_powder");
     public static final DeferredItem<Item> WOODEN_BOWL         = ITEMS.registerSimpleItem("wooden_bowl");
     public static final DeferredItem<Item> WOODEN_BARREL       = ITEMS.registerSimpleItem("wooden_barrel");
 
     // ===== Phase 28: Intermediate Products =====
     public static final DeferredItem<Item> BEANS_CAN           = ITEMS.register("beans_can",
             () -> new Item(new Item.Properties().food(fp(4, 5f).build())));
-    public static final DeferredItem<Item> CATCHUP             = ITEMS.register("catchup",
-            () -> new Item(new Item.Properties().food(fp(1, 1.5f).build())));
-    public static final DeferredItem<Item> BOLOGNESE           = ITEMS.register("bolognese",
-            () -> new Item(new Item.Properties().food(fp(3, 3.8f).build())));
     public static final DeferredItem<Item> BAGEL               = ITEMS.register("bagel",
             () -> new Item(new Item.Properties().food(fp(5, 6.3f).build())));
-    public static final DeferredItem<Item> LABLAB_SOUP         = ITEMS.register("lablab_soup",
-            () -> new Item(new Item.Properties().stacksTo(16).food(fp(4, 5f).build())));
     public static final DeferredItem<Item> ROAST_PASTRY_OF_PIE = ITEMS.register("roast_pastry_of_pie",
             () -> new Item(new Item.Properties().food(fp(3, 3.8f).build())));
 
@@ -1135,9 +1040,6 @@ public class ModItems {
                     new Item.Properties().stacksTo(16).food(fp(2, 2.5f).build())));
     public static final DeferredItem<BottleFoodItem> WATERMELON_JAM =
             ITEMS.register("watermelon_jam", () -> new BottleFoodItem(
-                    new Item.Properties().stacksTo(16).food(fp(2, 2.5f).build())));
-    public static final DeferredItem<BottleFoodItem> PINEAPPLE_JAM =
-            ITEMS.register("pineapple_jam", () -> new BottleFoodItem(
                     new Item.Properties().stacksTo(16).food(fp(2, 2.5f).build())));
     public static final DeferredItem<BottleFoodItem> CHORUS_FRUIT_JAM =
             ITEMS.register("chorus_fruit_jam", () -> new BottleFoodItem(
@@ -1158,33 +1060,6 @@ public class ModItems {
             () -> new ModFoodItem(new Item.Properties()
                     .food(fp(12, 16f)
                             .effect(new MobEffectInstance(MobEffects.HEALTH_BOOST, 24000, 1), 1.0f)
-                            .build())
-                    .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 3))));
-
-    /** 咸豆花 — 力量 I + 水下呼吸 I × 3min，碗装 */
-    public static final DeferredItem<ModFoodItem> SALTY_BEAN_CURD = ITEMS.register("salty_bean_curd",
-            () -> new ModFoodItem(new Item.Properties()
-                    .food(fp(3, 3.8f)
-                            .effect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 3600, 0), 1.0f)
-                            .effect(new MobEffectInstance(MobEffects.WATER_BREATHING, 3600, 0), 1.0f)
-                            .build())
-                    .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("bowl", 1))));
-
-    /** 盘装皇家海军咸牛肉 — 生命提升 I × 3min，碗右键方块形式获得 */
-    public static final DeferredItem<ModFoodItem> PLATED_ROYAL_NAVAL_SALTED_BEEF = ITEMS.register("plated_royal_naval_salted_beef",
-            () -> new ModFoodItem(new Item.Properties()
-                    .food(fp(8, 10f)
-                            .effect(new MobEffectInstance(MobEffects.HEALTH_BOOST, 3600, 0), 1.0f)
-                            .build())
-                    .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("bowl", 1))));
-
-    /** 仰望星空派 — 凋零 II 2s + 反胃 IV 14s + 急迫 III 40s */
-    public static final DeferredItem<ModFoodItem> STARGAZY_PIE = ITEMS.register("stargazy_pie",
-            () -> new ModFoodItem(new Item.Properties()
-                    .food(fp(6, 7.5f)
-                            .effect(new MobEffectInstance(MobEffects.WITHER, 40, 1), 1.0f)
-                            .effect(new MobEffectInstance(MobEffects.CONFUSION, 280, 3), 1.0f)
-                            .effect(new MobEffectInstance(MobEffects.DIG_SPEED, 800, 2), 1.0f)
                             .build())
                     .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 3))));
 

@@ -1,0 +1,17 @@
+{
+  "type": "farmersdelight:cooking",
+  "experience": 1.0,
+  "cookingtime": 300,
+  "recipe_book_tab": "soups_stews",
+  "ingredients": [
+    {"item": "minecraft:beetroot"},
+    {"item": "farmersdelight:onion"},
+    {"item": "farmersdelight:cabbage_leaf"},
+    {"item": "minecraft:cooked_beef"},
+    {"item": "minecraft:cooked_porkchop"},
+    {"item": "piranport:salt"},
+    {"item": "minecraft:carrot"},
+    {"item": "minecraft:potato"}
+  ],
+  "result": {"id": "piranport:borscht", "count": 1}
+}

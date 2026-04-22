@@ -1,0 +1,12 @@
+{
+  "type": "farmersdelight:cooking",
+  "experience": 1.0,
+  "cookingtime": 200,
+  "recipe_book_tab": "meals",
+  "ingredients": [
+    {"item": "piranport:flour"},
+    {"item": "piranport:cream"},
+    {"item": "minecraft:sugar"}
+  ],
+  "result": {"id": "piranport:scone", "count": 1}
+}

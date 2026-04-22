@@ -1,0 +1,10 @@
+{
+  "type": "farmersdelight:cooking",
+  "experience": 1.0,
+  "cookingtime": 240,
+  "recipe_book_tab": "meals",
+  "ingredients": [
+    {"item": "piranport:embryo_of_salami_pizza"}
+  ],
+  "result": {"id": "piranport:salami_pizza", "count": 1}
+}

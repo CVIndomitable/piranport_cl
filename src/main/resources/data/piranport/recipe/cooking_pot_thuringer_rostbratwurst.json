@@ -1,0 +1,14 @@
+{
+  "type": "farmersdelight:cooking",
+  "experience": 1.0,
+  "cookingtime": 240,
+  "recipe_book_tab": "meals",
+  "ingredients": [
+    {"item": "minecraft:cooked_porkchop"},
+    {"item": "piranport:salt"},
+    {"item": "piranport:white_pepper"},
+    {"item": "minecraft:cooked_beef"},
+    {"item": "minecraft:charcoal"}
+  ],
+  "result": {"id": "piranport:thuringer_rostbratwurst", "count": 3}
+}

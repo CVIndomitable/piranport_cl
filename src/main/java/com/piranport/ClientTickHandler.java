@@ -12,11 +12,9 @@ import com.piranport.entity.AircraftEntity;
 import com.piranport.entity.BulletEntity;
 import com.piranport.entity.TorpedoEntity;
 import com.piranport.item.ShipCoreItem;
-import com.piranport.network.AutoLaunchTogglePayload;
 import com.piranport.network.CycleWeaponPayload;
 import com.piranport.network.FireControlPayload;
 import com.piranport.network.ManualReloadPayload;
-import com.piranport.network.OpenFlightGroupPayload;
 import com.piranport.network.TorpedoSteerPayload;
 import com.piranport.network.ReconControlPayload;
 import com.piranport.network.ReconExitPayload;
@@ -150,24 +148,6 @@ public class ClientTickHandler {
         while (ModKeyMappings.FIRE_CONTROL_CANCEL.consumeClick()) {
             PacketDistributor.sendToServer(FireControlPayload.cancel());
             ClientFireControlData.clear();
-        }
-
-        // Open flight group GUI (U key) — only while transformed, not in recon mode
-        while (ModKeyMappings.OPEN_FLIGHT_GROUP.consumeClick()) {
-            if (!transformed || inReconMode) continue;
-            int coreSlot = findCoreSlot(mc.player);
-            if (coreSlot >= 0) {
-                PacketDistributor.sendToServer(new OpenFlightGroupPayload(coreSlot));
-            }
-        }
-
-        // H key — toggle fighter auto-launch (no-GUI mode)
-        while (ModKeyMappings.TOGGLE_AUTO_LAUNCH.consumeClick()) {
-            if (!transformed || inReconMode) continue;
-            int autoSlot = findCoreSlot(mc.player);
-            if (autoSlot >= 0) {
-                PacketDistributor.sendToServer(new AutoLaunchTogglePayload(autoSlot));
-            }
         }
 
         // R key — manual reload for non-auto-resupply cannons
@@ -464,26 +444,6 @@ public class ClientTickHandler {
         }
         aswTeamMembers.clear();
         aswHighlightedEntityIds.clear();
-    }
-
-    /** Find the inventory slot of the active transformed ship core. Returns -1 if not found. */
-    private static int findCoreSlot(Player player) {
-        int slot = player.getInventory().selected;
-        ItemStack mh = player.getMainHandItem();
-        if (mh.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(mh)) {
-            return slot;
-        }
-        for (int i = 0; i < player.getInventory().items.size(); i++) {
-            ItemStack s = player.getInventory().items.get(i);
-            if (s.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(s)) {
-                return i;
-            }
-        }
-        ItemStack oh = player.getInventory().offhand.get(0);
-        if (oh.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(oh)) {
-            return 40;
-        }
-        return -1;
     }
 
     @Nullable

@@ -8,9 +8,7 @@ import com.piranport.client.WeaponReloadDecorator;
 import com.piranport.component.AircraftInfo;
 import com.piranport.menu.AmmoWorkbenchScreen;
 import com.piranport.menu.CookingPotScreen;
-import com.piranport.menu.FlightGroupScreen;
 import com.piranport.menu.ReloadFacilityScreen;
-import com.piranport.menu.ShipCoreScreen;
 import com.piranport.menu.StoneMillScreen;
 import com.piranport.registry.ModBlockEntityTypes;
 import com.piranport.registry.ModDataComponents;
@@ -58,19 +56,11 @@ public class ClientEvents {
 
     @SubscribeEvent
     public static void registerScreens(RegisterMenuScreensEvent event) {
-        event.register(ModMenuTypes.SHIP_CORE_MENU.get(), ShipCoreScreen::new);
         event.register(ModMenuTypes.STONE_MILL_MENU.get(), StoneMillScreen::new);
         event.register(ModMenuTypes.COOKING_POT_MENU.get(), CookingPotScreen::new);
-        event.register(ModMenuTypes.FLIGHT_GROUP_MENU.get(), FlightGroupScreen::new);
         event.register(ModMenuTypes.RELOAD_FACILITY_MENU.get(), ReloadFacilityScreen::new);
         // Ammo Workbench
         event.register(ModMenuTypes.AMMO_WORKBENCH_MENU.get(), AmmoWorkbenchScreen::new);
-        // Weapon Workbench
-        event.register(ModMenuTypes.WEAPON_WORKBENCH_MENU.get(),
-                com.piranport.menu.WeaponWorkbenchScreen::new);
-        // Dungeon
-        event.register(ModMenuTypes.DUNGEON_BOOK_MENU.get(),
-                com.piranport.dungeon.client.DungeonBookScreen::new);
     }
 
     @SubscribeEvent
@@ -79,9 +69,7 @@ public class ClientEvents {
         event.register(ModKeyMappings.FIRE_CONTROL_LOCK);
         event.register(ModKeyMappings.FIRE_CONTROL_ADD);
         event.register(ModKeyMappings.FIRE_CONTROL_CANCEL);
-        event.register(ModKeyMappings.OPEN_FLIGHT_GROUP);
         event.register(ModKeyMappings.HIGHLIGHT_ENTITIES);
-        event.register(ModKeyMappings.TOGGLE_AUTO_LAUNCH);
         event.register(ModKeyMappings.DEBUG_TOGGLE);
         event.register(ModKeyMappings.MANUAL_RELOAD);
         event.register(ModKeyMappings.TORPEDO_STEER_LEFT);
@@ -166,44 +154,8 @@ public class ClientEvents {
                 PlaceableFoodRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntityTypes.MODEL_DEBUG.get(),
                 com.piranport.client.ModelDebugBlockEntityRenderer::new);
-        // Dungeon enemies
-        event.registerEntityRenderer(ModEntityTypes.LOW_TIER_DESTROYER.get(),
-                com.piranport.client.LowTierDestroyerRenderer::new);
-        // Dungeon transport plane (artillery intro script)
-        event.registerEntityRenderer(ModEntityTypes.DUNGEON_TRANSPORT_PLANE.get(),
-                com.piranport.client.DungeonTransportPlaneRenderer::new);
-        // Dungeon entities (use NoopRenderer for now — visual effects are done via particles in tick())
-        event.registerEntityRenderer(ModEntityTypes.DUNGEON_PORTAL.get(),
-                com.piranport.dungeon.client.DungeonPortalRenderer::new);
-        event.registerEntityRenderer(ModEntityTypes.LOOT_SHIP.get(),
-                com.piranport.dungeon.client.LootShipRenderer::new);
         // Gungnir
         event.registerEntityRenderer(ModEntityTypes.GUNGNIR.get(),
                 ThrownItemRenderer::new);
-        // Deep Ocean projectile
-        event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_PROJECTILE.get(),
-                ThrownItemRenderer::new);
-        // Deep Ocean NPC entities (placeholder renderer with fleet state particles)
-        event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_SUPPLY.get(),
-                com.piranport.client.DeepOceanRenderer::new);
-        event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_DESTROYER.get(),
-                com.piranport.client.DeepOceanRenderer::new);
-        event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_LIGHT_CRUISER.get(),
-                com.piranport.client.DeepOceanRenderer::new);
-        event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_HEAVY_CRUISER.get(),
-                com.piranport.client.DeepOceanRenderer::new);
-        event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_BATTLE_CRUISER.get(),
-                com.piranport.client.DeepOceanRenderer::new);
-        event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_BATTLESHIP.get(),
-                com.piranport.client.DeepOceanRenderer::new);
-        event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_LIGHT_CARRIER.get(),
-                com.piranport.client.DeepOceanRenderer::new);
-        event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_CARRIER.get(),
-                com.piranport.client.DeepOceanRenderer::new);
-        event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_SUBMARINE.get(),
-                com.piranport.client.DeepOceanRenderer::new);
-        // Ship Girl NPC
-        event.registerEntityRenderer(ModEntityTypes.SHIP_GIRL.get(),
-                com.piranport.client.ShipGirlRenderer::new);
     }
 }

@@ -34,14 +34,6 @@ public class ModCommonConfig {
 
     // ===== GUI & Inventory (界面与背包) =====
 
-    public static final ModConfigSpec.BooleanValue SHIP_CORE_GUI_ENABLED =
-            BUILDER
-                    .comment(
-                            "Enable the Ship Core GUI (舰装核心界面).",
-                            "Default: false (right-click does not open GUI; only fires/transforms).",
-                            "Set to true to allow opening the ship core inventory screen. (舰装核心GUI开关，默认关闭)")
-                    .define("gui.shipCoreGuiEnabled", false);
-
     public static final ModConfigSpec.BooleanValue WEAPON_PICKUP_TO_INVENTORY =
             BUILDER
                     .comment(
@@ -83,14 +75,6 @@ public class ModCommonConfig {
 
     // ===== Game Mode (游戏模式) =====
 
-    public static final ModConfigSpec.BooleanValue KANSEN_MODE =
-            BUILDER
-                    .comment(
-                            "Enable Kansen Mode (舰R模式).",
-                            "Default: true. When enabled, forces no-GUI mode (overrides shipCoreGuiEnabled).",
-                            "舰R模式，默认开启。开启时强制使用无GUI模式。")
-                    .define("gameMode.kansenMode", true);
-
     public static final ModConfigSpec.BooleanValue SLAV_PRISON_MODE =
             BUILDER
                     .comment(
@@ -109,12 +93,9 @@ public class ModCommonConfig {
 
     public static final ModConfigSpec SPEC = BUILDER.build();
 
-    /**
-     * Helper: returns true only if the Ship Core GUI is truly enabled.
-     * Kansen Mode overrides GUI to disabled.
-     */
+    /** GUI mode removed in 1.0 cleanup — always no-GUI now. */
     public static boolean isShipCoreGuiEnabled() {
-        return SHIP_CORE_GUI_ENABLED.get() && !KANSEN_MODE.get();
+        return false;
     }
 
     /**

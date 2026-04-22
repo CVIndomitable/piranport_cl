@@ -16,7 +16,6 @@ import com.piranport.registry.ModMobEffects;
 import com.piranport.registry.ModArmorMaterials;
 import com.piranport.registry.ModAttachmentTypes;
 import com.piranport.registry.ModRecipeTypes;
-import com.piranport.worldgen.ModStructureProcessors;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
@@ -42,7 +41,6 @@ public class PiranPort {
         ModRecipeTypes.RECIPE_TYPES.register(modEventBus);
         ModRecipeTypes.RECIPE_SERIALIZERS.register(modEventBus);
         ModBiomeModifiers.BIOME_MODIFIER_SERIALIZERS.register(modEventBus);
-        ModStructureProcessors.STRUCTURE_PROCESSORS.register(modEventBus);
         ModArmorMaterials.ARMOR_MATERIALS.register(modEventBus);
         ModAttachmentTypes.ATTACHMENT_TYPES.register(modEventBus);
         NeoForge.EVENT_BUS.addListener(this::registerBrewingRecipes);

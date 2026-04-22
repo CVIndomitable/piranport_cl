@@ -120,56 +120,13 @@ public class TransformationManager {
 
     /**
      * Apply armor and speed attribute modifiers based on current ship core equipment.
-     * Call when player transforms or when GUI closes (to recalculate after changes).
-     *
-     * When SHIP_CORE_GUI_ENABLED is false: the ship core with the highest maxLoad in the
-     * player's inventory provides the capacity; all weapon items in the inventory consume load.
-     * When SHIP_CORE_GUI_ENABLED is true: reads weapons/armor from the core's ItemContainerContents.
+     * The ship core with the highest maxLoad in the player's inventory provides capacity;
+     * all weapon items in the inventory consume load.
      */
     public static void applyTransformationAttributes(Player player, ItemStack coreStack) {
         if (player.level().isClientSide()) return;
         if (!(coreStack.getItem() instanceof ShipCoreItem)) return;
-
-        if (!com.piranport.config.ModCommonConfig.isShipCoreGuiEnabled()) {
-            applyAttributesInventoryMode(player);
-            return;
-        }
-
-        // GUI mode: read equipment from the core's container slots
-        ShipCoreItem sci = (ShipCoreItem) coreStack.getItem();
-        ShipCoreItem.ShipType type = sci.getShipType();
-        ItemContainerContents contents = coreStack.getOrDefault(
-                ModDataComponents.SHIP_CORE_CONTENTS.get(), ItemContainerContents.EMPTY);
-        NonNullList<ItemStack> items = NonNullList.withSize(type.totalSlots(), ItemStack.EMPTY);
-        contents.copyInto(items);
-
-        int armorBonus = 0;
-        double engineSpeedBonus = 0;
-        int totalLoad = 0;
-
-        // Weapon slots contribute to load
-        for (int i = 0; i < type.weaponSlots; i++) {
-            totalLoad += getItemLoad(items.get(i));
-        }
-        // Enhancement slots contribute to load, armor, and engine speed
-        int eStart = type.weaponSlots + type.ammoSlots;
-        for (int i = eStart; i < type.totalSlots(); i++) {
-            ItemStack item = items.get(i);
-            totalLoad += getItemLoad(item);
-            if (item.getItem() instanceof ArmorPlateItem plate) {
-                armorBonus += plate.getArmorBonus();
-            } else if (item.getItem() instanceof EngineItem engine) {
-                engineSpeedBonus += engine.getSpeedBonus();
-            }
-        }
-
-        double loadRatio = type.maxLoad > 0 ? (double) totalLoad / type.maxLoad : 0;
-        double speedMult = type.emptySpeed - (type.emptySpeed - type.fullLoadSpeed) * Math.min(loadRatio, 1.0);
-        speedMult += engineSpeedBonus;
-
-        removeTransformationAttributes(player);
-        applyTypeAttributes(player, type, armorBonus, speedMult);
-        applyOverweightPenalty(player, totalLoad, type.maxLoad);
+        applyAttributesInventoryMode(player);
     }
 
     /** Hotbar slot count (slots 0–8 in Inventory.items). */

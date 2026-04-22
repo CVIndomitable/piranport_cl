@@ -14,7 +14,6 @@ import com.piranport.entity.SanshikiPelletEntity;
 import com.piranport.entity.DepthChargeEntity;
 import com.piranport.entity.MissileEntity;
 import com.piranport.entity.TorpedoEntity;
-import com.piranport.menu.ShipCoreMenu;
 import com.piranport.registry.ModDataComponents;
 import com.piranport.registry.ModItems;
 import com.piranport.registry.ModMobEffects;
@@ -32,7 +31,6 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
-import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -481,20 +479,6 @@ public class ShipCoreItem extends Item {
             return InteractionResultHolder.pass(stack);
         }
 
-        // Open GUI (guarded by config)
-        if (!level.isClientSide && player instanceof ServerPlayer serverPlayer
-                && com.piranport.config.ModCommonConfig.isShipCoreGuiEnabled()) {
-            int slot = hand == InteractionHand.MAIN_HAND
-                    ? player.getInventory().selected
-                    : Inventory.SLOT_OFFHAND;
-            serverPlayer.openMenu(
-                    new SimpleMenuProvider(
-                            (containerId, playerInv, p) -> new ShipCoreMenu(containerId, playerInv, slot),
-                            stack.getHoverName()
-                    ),
-                    buf -> buf.writeVarInt(slot)
-            );
-        }
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
     }
 

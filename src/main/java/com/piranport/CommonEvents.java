@@ -5,17 +5,6 @@ import com.piranport.block.entity.CuttingBoardBlockEntity;
 import com.piranport.block.entity.StoneMillBlockEntity;
 import com.piranport.block.entity.YubariWaterBucketBlockEntity;
 import com.piranport.entity.FloatingTargetEntity;
-import com.piranport.entity.LowTierDestroyerEntity;
-import com.piranport.npc.deepocean.DeepOceanBattleCruiserEntity;
-import com.piranport.npc.deepocean.DeepOceanBattleshipEntity;
-import com.piranport.npc.deepocean.DeepOceanCarrierEntity;
-import com.piranport.npc.deepocean.DeepOceanDestroyerEntity;
-import com.piranport.npc.deepocean.DeepOceanHeavyCruiserEntity;
-import com.piranport.npc.deepocean.DeepOceanLightCarrierEntity;
-import com.piranport.npc.deepocean.DeepOceanLightCruiserEntity;
-import com.piranport.npc.deepocean.DeepOceanSubmarineEntity;
-import com.piranport.npc.deepocean.DeepOceanSupplyEntity;
-import com.piranport.npc.shipgirl.ShipGirlEntity;
 import com.piranport.registry.ModBlockEntityTypes;
 import com.piranport.registry.ModEntityTypes;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -57,29 +46,5 @@ public class CommonEvents {
     public static void registerEntityAttributes(EntityAttributeCreationEvent event) {
         event.put(ModEntityTypes.FLOATING_TARGET.get(),
                 FloatingTargetEntity.createAttributes().build());
-        event.put(ModEntityTypes.LOW_TIER_DESTROYER.get(),
-                LowTierDestroyerEntity.createAttributes().build());
-        // Deep Ocean NPC entities
-        event.put(ModEntityTypes.DEEP_OCEAN_SUPPLY.get(),
-                DeepOceanSupplyEntity.createAttributes().build());
-        event.put(ModEntityTypes.DEEP_OCEAN_DESTROYER.get(),
-                DeepOceanDestroyerEntity.createAttributes().build());
-        event.put(ModEntityTypes.DEEP_OCEAN_LIGHT_CRUISER.get(),
-                DeepOceanLightCruiserEntity.createAttributes().build());
-        event.put(ModEntityTypes.DEEP_OCEAN_HEAVY_CRUISER.get(),
-                DeepOceanHeavyCruiserEntity.createAttributes().build());
-        event.put(ModEntityTypes.DEEP_OCEAN_BATTLE_CRUISER.get(),
-                DeepOceanBattleCruiserEntity.createAttributes().build());
-        event.put(ModEntityTypes.DEEP_OCEAN_BATTLESHIP.get(),
-                DeepOceanBattleshipEntity.createAttributes().build());
-        event.put(ModEntityTypes.DEEP_OCEAN_LIGHT_CARRIER.get(),
-                DeepOceanLightCarrierEntity.createAttributes().build());
-        event.put(ModEntityTypes.DEEP_OCEAN_CARRIER.get(),
-                DeepOceanCarrierEntity.createAttributes().build());
-        event.put(ModEntityTypes.DEEP_OCEAN_SUBMARINE.get(),
-                DeepOceanSubmarineEntity.createAttributes().build());
-        // Ship Girl NPC
-        event.put(ModEntityTypes.SHIP_GIRL.get(),
-                ShipGirlEntity.createAttributes().build());
     }
 }

@@ -489,8 +489,6 @@ public class ModCreativeTabs {
                     .displayItems((parameters, output) -> {
                         output.accept(ModItems.UNICORN_HARP.get());
                         output.accept(ModItems.GUIDEBOOK.get());
-                        output.accept(ModItems.DUNGEON_KEY.get());
-                        output.accept(ModItems.TOWN_SCROLL.get());
                         output.accept(ModItems.ELITE_DAMAGE_CONTROL.get());
                         output.accept(ModItems.DAMAGE_CONTROL.get());
                         output.accept(ModItems.QUICK_REPAIR.get());
@@ -511,30 +509,17 @@ public class ModCreativeTabs {
                         output.accept(ModItems.HATSUYUKI_MAIN_GUN.get());
                         // Gungnir
                         output.accept(ModItems.GUNGNIR.get());
-                        // Deep Ocean Spawn Eggs
-                        output.accept(ModItems.DEEP_OCEAN_SUPPLY_SPAWN_EGG.get());
-                        output.accept(ModItems.DEEP_OCEAN_DESTROYER_SPAWN_EGG.get());
-                        output.accept(ModItems.DEEP_OCEAN_LIGHT_CRUISER_SPAWN_EGG.get());
-                        output.accept(ModItems.DEEP_OCEAN_HEAVY_CRUISER_SPAWN_EGG.get());
-                        output.accept(ModItems.DEEP_OCEAN_BATTLE_CRUISER_SPAWN_EGG.get());
-                        output.accept(ModItems.DEEP_OCEAN_BATTLESHIP_SPAWN_EGG.get());
-                        output.accept(ModItems.DEEP_OCEAN_LIGHT_CARRIER_SPAWN_EGG.get());
-                        output.accept(ModItems.DEEP_OCEAN_CARRIER_SPAWN_EGG.get());
-                        output.accept(ModItems.DEEP_OCEAN_SUBMARINE_SPAWN_EGG.get());
-                        output.accept(ModItems.SHIP_GIRL_SPAWN_EGG.get());
                     }).build());
 
-    // ===== 设施 — 装填设施 / 合成台 / 蓝图 =====
+    // ===== 设施 — 装填设施 / 弹药台 / 蓝图 =====
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> FACILITY_TAB =
             CREATIVE_TABS.register("facility_tab", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.piranport.facility"))
                     .withTabsBefore(CreativeModeTabs.COMBAT)
-                    .icon(() -> ModItems.WEAPON_WORKBENCH.get().getDefaultInstance())
+                    .icon(() -> ModItems.AMMO_WORKBENCH.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
                         output.accept(ModItems.RELOAD_FACILITY.get());
                         output.accept(ModItems.AMMO_WORKBENCH.get());
-                        output.accept(ModItems.WEAPON_WORKBENCH.get());
-                        output.accept(ModItems.DUNGEON_LECTERN.get());
                         output.accept(ModItems.FLOATING_TARGET.get());
                         output.accept(ModItems.MEDIUM_GUN_BLUEPRINT.get());
                         output.accept(ModItems.LARGE_GUN_BLUEPRINT.get());
@@ -554,37 +539,4 @@ public class ModCreativeTabs {
                         output.accept(ModItems.B25_MODEL.get());
                     }).build());
 
-    // ===== 遗迹 — 传送门/碎片/国旗/档案 =====
-    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> RUINS_TAB =
-            CREATIVE_TABS.register("ruins_tab", () -> CreativeModeTab.builder()
-                    .title(Component.translatable("itemGroup.piranport.ruins"))
-                    .withTabsBefore(CreativeModeTabs.COMBAT)
-                    .icon(() -> ModItems.ABYSSAL_PORTAL_FRAME.get().getDefaultInstance())
-                    .displayItems((parameters, output) -> {
-                        // Blocks
-                        output.accept(ModItems.ABYSSAL_PORTAL_FRAME.get());
-                        output.accept(ModItems.ABYSSAL_SPAWNER.get());
-                        // Placeholder items
-                        output.accept(ModItems.ABYSSAL_REPORT.get());
-                        output.accept(ModItems.PORTAL_ACTIVATION_CORE.get());
-                        output.accept(ModItems.EXP_SHELL.get());
-                        // Chaos Shards
-                        output.accept(ModItems.CHAOS_SHARD_ALPHA.get());
-                        output.accept(ModItems.CHAOS_SHARD_BETA.get());
-                        output.accept(ModItems.CHAOS_SHARD_GAMMA.get());
-                        output.accept(ModItems.CHAOS_SHARD_DELTA.get());
-                        output.accept(ModItems.CHAOS_SHARD_EPSILON.get());
-                        output.accept(ModItems.CHAOS_SHARD_ZETA.get());
-                        output.accept(ModItems.CHAOS_SHARD_ETA.get());
-                        output.accept(ModItems.CHAOS_SHARD_THETA.get());
-                        output.accept(ModItems.CHAOS_SHARD_IOTA.get());
-                        // National Flags
-                        output.accept(ModItems.FLAG_J.get());
-                        output.accept(ModItems.FLAG_E.get());
-                        output.accept(ModItems.FLAG_U.get());
-                        output.accept(ModItems.FLAG_G.get());
-                        output.accept(ModItems.FLAG_F.get());
-                        output.accept(ModItems.FLAG_I.get());
-                        output.accept(ModItems.FLAG_C.get());
-                    }).build());
 }

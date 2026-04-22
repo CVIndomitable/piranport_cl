@@ -47,19 +47,6 @@ public class ModBlockEntityTypes {
                             ModBlocks.AMMO_WORKBENCH.get())
                             .build(null));
 
-    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<com.piranport.block.entity.WeaponWorkbenchBlockEntity>> WEAPON_WORKBENCH =
-            BLOCK_ENTITY_TYPES.register("weapon_workbench", () ->
-                    BlockEntityType.Builder.of(com.piranport.block.entity.WeaponWorkbenchBlockEntity::new,
-                            ModBlocks.WEAPON_WORKBENCH.get())
-                            .build(null));
-
-    // Abyssal Spawner (v0.0.11)
-    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<com.piranport.block.entity.AbyssalSpawnerBlockEntity>> ABYSSAL_SPAWNER =
-            BLOCK_ENTITY_TYPES.register("abyssal_spawner", () ->
-                    BlockEntityType.Builder.of(com.piranport.block.entity.AbyssalSpawnerBlockEntity::new,
-                            ModBlocks.ABYSSAL_SPAWNER.get())
-                            .build(null));
-
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<com.piranport.block.entity.ModelDebugBlockEntity>> MODEL_DEBUG =
             BLOCK_ENTITY_TYPES.register("model_debug", () ->
                     BlockEntityType.Builder.of(com.piranport.block.entity.ModelDebugBlockEntity::new,

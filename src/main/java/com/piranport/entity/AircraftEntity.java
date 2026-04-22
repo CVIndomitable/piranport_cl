@@ -1020,12 +1020,10 @@ public class AircraftEntity extends Entity {
                 .orElse(null);
     }
 
-    /** Returns true if the entity qualifies as an ASW target (submarine or aquatic creature). */
+    /** Returns true if the entity qualifies as an ASW target (aquatic creature or submerged monster). */
     private static boolean isAswTarget(Entity e) {
-        if (e instanceof com.piranport.npc.deepocean.DeepOceanSubmarineEntity) return true;
         if (e instanceof WaterAnimal) return true;
         if (e instanceof Guardian) return true;
-        // Any monster currently submerged in water
         if (e instanceof Monster && e.isUnderWater()) return true;
         return false;
     }

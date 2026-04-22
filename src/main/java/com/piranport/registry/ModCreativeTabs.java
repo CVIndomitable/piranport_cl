@@ -64,13 +64,10 @@ public class ModCreativeTabs {
                         output.accept(ModItems.TYPE97_TORPEDO.get());
                         output.accept(ModItems.SKY_PIRATE_TORPEDO.get());
                         // Dive bombers
-                        output.accept(ModItems.PETREL_BOMBER.get());
-                        output.accept(ModItems.TYPE99_DIVE_BOMBER.get());
                         output.accept(ModItems.SBD_DAUNTLESS.get());
                         output.accept(ModItems.FIREFLY_AS_MK5.get());
                         output.accept(ModItems.SUISEI_BOMBER.get());
                         // Level bombers
-                        output.accept(ModItems.SEIUN_BOMBER.get());
                         output.accept(ModItems.B25_BOMBER.get());
                         output.accept(ModItems.XA2J_BOMBER.get());
                         // Fighters
@@ -84,7 +81,6 @@ public class ModCreativeTabs {
                         // Recon
                         output.accept(ModItems.TYPE0_RECON.get());
                         output.accept(ModItems.C1_RECON.get());
-                        output.accept(ModItems.SAIUN_RECON.get());
                     }).build());
 
     // ===== 导弹 — 导弹发射器 =====

@@ -107,12 +107,5 @@ public class ModPackets {
                 SkinRevertPayload::handle
         );
 
-        // ===== Ammo Workbench =====
-        registrar.playToServer(
-                AmmoWorkbenchCraftPayload.TYPE,
-                AmmoWorkbenchCraftPayload.STREAM_CODEC,
-                AmmoWorkbenchCraftPayload::handle
-        );
-
     }
 }

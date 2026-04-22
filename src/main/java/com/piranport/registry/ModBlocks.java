@@ -182,15 +182,6 @@ public class ModBlocks {
                             .sound(SoundType.WOOD)
                             .noOcclusion()));
 
-    // ===== Ammo Workbench =====
-    public static final DeferredBlock<com.piranport.block.AmmoWorkbenchBlock> AMMO_WORKBENCH =
-            BLOCKS.register("ammo_workbench", () -> new com.piranport.block.AmmoWorkbenchBlock(
-                    BlockBehaviour.Properties.of()
-                            .mapColor(MapColor.METAL)
-                            .strength(3.5f, 6.0f)
-                            .requiresCorrectToolForDrops()
-                            .sound(SoundType.METAL)));
-
     // ===== Smoke Screen =====
     public static final DeferredBlock<SmokeScreenBlock> SMOKE_SCREEN =
             BLOCKS.register("smoke_screen", () -> new SmokeScreenBlock(

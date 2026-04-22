@@ -484,7 +484,6 @@ public class ModCreativeTabs {
                         output.accept(ModItems.SMOKE_CANDLE.get());
                         output.accept(ModItems.FLARE_LAUNCHER.get());
                         output.accept(ModItems.KIRIN_HEADBAND.get());
-                        output.accept(ModItems.REPAIR_KIT.get());
                         output.accept(ModItems.MYSTERIOUS_WEAPON.get());
                         output.accept(ModItems.RICHELIEU_COMMAND_SWORD.get());
                         output.accept(ModItems.TAIHOU_UMBRELLA.get());
@@ -500,19 +499,15 @@ public class ModCreativeTabs {
                         output.accept(ModItems.GUNGNIR.get());
                     }).build());
 
-    // ===== 设施 — 装填设施 / 弹药台 / 蓝图 =====
+    // ===== 设施 — 装填设施 =====
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> FACILITY_TAB =
             CREATIVE_TABS.register("facility_tab", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.piranport.facility"))
                     .withTabsBefore(CreativeModeTabs.COMBAT)
-                    .icon(() -> ModItems.AMMO_WORKBENCH.get().getDefaultInstance())
+                    .icon(() -> ModItems.RELOAD_FACILITY.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
                         output.accept(ModItems.RELOAD_FACILITY.get());
-                        output.accept(ModItems.AMMO_WORKBENCH.get());
                         output.accept(ModItems.FLOATING_TARGET.get());
-                        output.accept(ModItems.MEDIUM_GUN_BLUEPRINT.get());
-                        output.accept(ModItems.LARGE_GUN_BLUEPRINT.get());
-                        output.accept(ModItems.CREATIVE_BLUEPRINT.get());
                     }).build());
 
     // ===== 装饰 — 家具/花卉/模型 =====

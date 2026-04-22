@@ -24,7 +24,6 @@ import com.piranport.item.MissileLauncherItem;
 import com.piranport.item.FlareLauncherItem;
 import com.piranport.item.DamageControlItem;
 import com.piranport.item.KirinHeadbandItem;
-import com.piranport.item.RepairKitItem;
 import com.piranport.item.FootballArmorItem;
 import com.piranport.item.GungnirItem;
 import com.piranport.item.HatsuyukiMainGunItem;
@@ -316,18 +315,6 @@ public class ModItems {
             ITEMS.registerSimpleBlockItem(ModBlocks.RELOAD_FACILITY);
     public static final DeferredItem<BlockItem> YUBARI_WATER_BUCKET =
             ITEMS.registerSimpleBlockItem(ModBlocks.YUBARI_WATER_BUCKET);
-
-    public static final DeferredItem<BlockItem> AMMO_WORKBENCH =
-            ITEMS.registerSimpleBlockItem(ModBlocks.AMMO_WORKBENCH);
-
-    // ===== Blueprints =====
-    public static final DeferredItem<Item> MEDIUM_GUN_BLUEPRINT =
-            ITEMS.registerSimpleItem("medium_gun_blueprint", new Item.Properties().stacksTo(1));
-    public static final DeferredItem<Item> LARGE_GUN_BLUEPRINT =
-            ITEMS.registerSimpleItem("large_gun_blueprint", new Item.Properties().stacksTo(1));
-    public static final DeferredItem<Item> CREATIVE_BLUEPRINT =
-            ITEMS.registerSimpleItem("creative_blueprint",
-                    new Item.Properties().stacksTo(1).rarity(net.minecraft.world.item.Rarity.EPIC));
 
     // ===== Intermediate Products (Phase 13/16) =====
     public static final DeferredItem<Item> SAUSAGE            = ITEMS.registerSimpleItem("sausage");
@@ -1075,11 +1062,6 @@ public class ModItems {
     public static final DeferredItem<FlareLauncherItem> FLARE_LAUNCHER =
             ITEMS.register("flare_launcher",
                     () -> new FlareLauncherItem(new Item.Properties().stacksTo(1).durability(4096)));
-
-    // ===== Repair Kit =====
-    public static final DeferredItem<RepairKitItem> REPAIR_KIT =
-            ITEMS.register("repair_kit",
-                    () -> new RepairKitItem(new Item.Properties().stacksTo(1).durability(256)));
 
     // ===== Kirin Headband =====
     public static final DeferredItem<KirinHeadbandItem> KIRIN_HEADBAND =

@@ -6,7 +6,6 @@ import com.piranport.client.PlaceableFoodRenderer;
 import com.piranport.client.ReloadBarDecorator;
 import com.piranport.client.WeaponReloadDecorator;
 import com.piranport.component.AircraftInfo;
-import com.piranport.menu.AmmoWorkbenchScreen;
 import com.piranport.menu.CookingPotScreen;
 import com.piranport.menu.ReloadFacilityScreen;
 import com.piranport.menu.StoneMillScreen;
@@ -59,8 +58,6 @@ public class ClientEvents {
         event.register(ModMenuTypes.STONE_MILL_MENU.get(), StoneMillScreen::new);
         event.register(ModMenuTypes.COOKING_POT_MENU.get(), CookingPotScreen::new);
         event.register(ModMenuTypes.RELOAD_FACILITY_MENU.get(), ReloadFacilityScreen::new);
-        // Ammo Workbench
-        event.register(ModMenuTypes.AMMO_WORKBENCH_MENU.get(), AmmoWorkbenchScreen::new);
     }
 
     @SubscribeEvent

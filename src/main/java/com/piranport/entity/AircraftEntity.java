@@ -704,6 +704,20 @@ public class AircraftEntity extends Entity {
     }
 
     /**
+     * 按目标当前血量与单发伤害决定本次齐射的弹药数。
+     * 忽略护甲与伤害减免，用 ceil(HP/damage) 保底能击杀，再与剩余弹量取 min，至少 1 发。
+     * damagePerShot <= 0 时回退为全投剩余弹药。
+     */
+    private int computeSalvoSize(LivingEntity target, float damagePerShot) {
+        if (remainingAmmo <= 0) return 0;
+        if (damagePerShot <= 0.01f) return Math.max(1, remainingAmmo);
+        float hp = target.getHealth();
+        if (hp <= 0f) return 1;
+        int needed = (int) Math.ceil(hp / damagePerShot);
+        return Math.max(1, Math.min(remainingAmmo, needed));
+    }
+
+    /**
      * FIGHTER: hover at ~11 blocks and fire bullets.
      * When fighterAmmoEnabled=false (default), ammo is unlimited and the fighter
      * never returns due to depletion. When true, 64 rounds total (ammoCapacity).
@@ -769,12 +783,13 @@ public class AircraftEntity extends Entity {
         double altDelta = getY() - desiredY;
 
         // Salvo window: horizDist 12-22, and aircraft roughly above desired altitude (0..+8)
-        if (horizDist >= 12 && horizDist <= 22 && altDelta >= -2.0 && altDelta <= 8.0) {
+        if (horizDist >= 12 && horizDist <= 22 && altDelta >= -2.0 && altDelta <= 8.0 && attackCooldown <= 0) {
             Vec3 dir = new Vec3(dx, target.getEyeY() + 0.5 - getY(), dz).normalize();
-            int toFire = Math.max(1, remainingAmmo);
+            float rocketDamage = panelDamage * 1.2f;
+            int toFire = computeSalvoSize(target, rocketDamage);
             com.piranport.debug.PiranPortDebug.event(
-                    "Aircraft ROCKET_SALVO | entityId={} capacity={} remaining={} firing={}",
-                    getId(), ammoCapacity, remainingAmmo, toFire);
+                    "Aircraft ROCKET_SALVO | entityId={} capacity={} remaining={} firing={} targetHP={}",
+                    getId(), ammoCapacity, remainingAmmo, toFire, target.getHealth());
             float initSpeed = MissileEntity.MissileType.ROCKET.initialSpeed;
             for (int i = 0; i < toFire; i++) {
                 // Small horizontal fan so rockets spread across the target area
@@ -788,15 +803,20 @@ public class AircraftEntity extends Entity {
                 ).normalize();
                 MissileEntity rocket = new MissileEntity(level(),
                         MissileEntity.MissileType.ROCKET,
-                        panelDamage * 1.2f, 0f, 2.0f,
+                        rocketDamage, 0f, 2.0f,
                         "piranport:rocket_ammo");
                 rocket.moveTo(getX(), getY() + 0.2, getZ(), rocket.getYRot(), rocket.getXRot());
                 rocket.setDeltaMovement(fanDir.x * initSpeed, fanDir.y * initSpeed, fanDir.z * initSpeed);
                 rocket.setOwner(owner);
                 level().addFreshEntity(rocket);
             }
-            remainingAmmo = 0;
-            hasFired = true;
+            remainingAmmo -= toFire;
+            if (remainingAmmo <= 0) {
+                hasFired = true;
+            } else {
+                // 还有余弹：冷却后再做一次攻击判定（目标若已死，下一 tick 会由 resolveTarget 回落）
+                attackCooldown = 40;
+            }
             return;
         }
 
@@ -891,15 +911,17 @@ public class AircraftEntity extends Entity {
         double altDelta = Math.abs(getY() - targetY);
 
         // Drop zone: horizDist 20-30 AND at low altitude (within 3 blocks of target.y+2)
-        if (horizDist >= 20 && horizDist <= 30 && altDelta <= 3.0) {
+        if (horizDist >= 20 && horizDist <= 30 && altDelta <= 3.0 && attackCooldown <= 0) {
             Vec3 dir = new Vec3(dx, 0, dz).normalize();
             // Perpendicular offset for spread (rotate dir 90° in XZ plane)
             double perpX = -dir.z;
             double perpZ = dir.x;
-            int toFire = Math.max(1, remainingAmmo);
+            // TorpedoEntity 默认 damage=18f（aircraft 端未调用 setDamage，实际入水伤害即 18）
+            final float torpedoDamage = 18f;
+            int toFire = computeSalvoSize(target, torpedoDamage);
             com.piranport.debug.PiranPortDebug.event(
-                    "Aircraft TORPEDO_SALVO | entityId={} capacity={} remaining={} firing={}",
-                    getId(), ammoCapacity, remainingAmmo, toFire);
+                    "Aircraft TORPEDO_SALVO | entityId={} capacity={} remaining={} firing={} targetHP={}",
+                    getId(), ammoCapacity, remainingAmmo, toFire, target.getHealth());
             for (int i = 0; i < toFire; i++) {
                 // Lateral spread ±2.0 blocks, plus longitudinal stagger ±1.0 so the splashes
                 // are visually distinct rather than stacked on top of each other.
@@ -916,9 +938,15 @@ public class AircraftEntity extends Entity {
                 torpedo.setSourceAircraftName(getDisplayName());
                 level().addFreshEntity(torpedo);
             }
-            remainingAmmo = 0;
-            hasFired = true;
-            startReturning("torpedo_launched");
+            remainingAmmo -= toFire;
+            if (remainingAmmo <= 0) {
+                hasFired = true;
+                startReturning("torpedo_launched");
+            } else {
+                // 还有余弹：冷却后重新进入攻击循环，target 若已死 resolveTarget 会返回 null
+                attackCooldown = 40;
+                stateTicks = 0;  // 重置以延长 attack-run 超时
+            }
             return;
         }
 
@@ -1010,13 +1038,24 @@ public class AircraftEntity extends Entity {
             double stepLen = panelSpeed * 0.4;
             boolean flewPastButClose = signedProj <= 0 && horizDist < Math.max(stepLen + 2.0, 6.0);
             if (atDropWindow || flewPastButClose) {
-                AerialBombEntity bomb = new AerialBombEntity(level(), panelDamage * 1.5f, 2.5f);
-                bomb.moveTo(getX(), getY(), getZ(), bomb.getYRot(), bomb.getXRot());
-                bomb.setDeltaMovement(getDeltaMovement().x * 0.1, -0.1, getDeltaMovement().z * 0.1);
-                bomb.setOwner(owner);
-                bomb.setSourceAircraftName(getDisplayName());
-                level().addFreshEntity(bomb);
-                remainingAmmo--;
+                float bombDamage = panelDamage * 1.5f;
+                int toFire = computeSalvoSize(target, bombDamage);
+                com.piranport.debug.PiranPortDebug.event(
+                        "Aircraft LEVEL_SALVO | entityId={} capacity={} remaining={} firing={} targetHP={}",
+                        getId(), ammoCapacity, remainingAmmo, toFire, target.getHealth());
+                for (int i = 0; i < toFire; i++) {
+                    // 沿航向纵向错开 0.8 格，避免多枚航弹叠在同一像素
+                    double offset = (i - (toFire - 1) / 2.0) * 0.8;
+                    double spawnX = getX() + levelRunDirection.x * offset;
+                    double spawnZ = getZ() + levelRunDirection.z * offset;
+                    AerialBombEntity bomb = new AerialBombEntity(level(), bombDamage, 2.5f);
+                    bomb.moveTo(spawnX, getY(), spawnZ, bomb.getYRot(), bomb.getXRot());
+                    bomb.setDeltaMovement(getDeltaMovement().x * 0.1, -0.1, getDeltaMovement().z * 0.1);
+                    bomb.setOwner(owner);
+                    bomb.setSourceAircraftName(getDisplayName());
+                    level().addFreshEntity(bomb);
+                }
+                remainingAmmo -= toFire;
                 levelBombDropped = true;
                 levelDropPoint = position();
             } else if (signedProj <= 0) {
@@ -1067,13 +1106,26 @@ public class AircraftEntity extends Entity {
             double horizDist = Math.sqrt(dx * dx + dz * dz);
 
             if (horizDist < 4.0 && attackCooldown <= 0) {
-                DepthChargeEntity dc = new DepthChargeEntity(level(), panelDamage * 1.5f, 3.0f);
-                dc.moveTo(getX(), getY(), getZ(), dc.getYRot(), dc.getXRot());
-                dc.setDeltaMovement(getDeltaMovement().x * 0.1, -0.1, getDeltaMovement().z * 0.1);
-                dc.setOwner(owner);
-                // Owner already set above for kill attribution
-                level().addFreshEntity(dc);
-                remainingAmmo--;
+                float dcDamage = panelDamage * 1.5f;
+                int toFire = computeSalvoSize(target, dcDamage);
+                com.piranport.debug.PiranPortDebug.event(
+                        "Aircraft ASW_SALVO | entityId={} capacity={} remaining={} firing={} targetHP={}",
+                        getId(), ammoCapacity, remainingAmmo, toFire, target.getHealth());
+                Vec3 hv = getDeltaMovement();
+                double hvLen = hv.horizontalDistance();
+                Vec3 forward = hvLen > 0.01 ? new Vec3(hv.x / hvLen, 0, hv.z / hvLen) : new Vec3(1, 0, 0);
+                for (int i = 0; i < toFire; i++) {
+                    // 沿航向错开 0.8 格，多枚深弹依次入水
+                    double offset = (i - (toFire - 1) / 2.0) * 0.8;
+                    double spawnX = getX() + forward.x * offset;
+                    double spawnZ = getZ() + forward.z * offset;
+                    DepthChargeEntity dc = new DepthChargeEntity(level(), dcDamage, 3.0f);
+                    dc.moveTo(spawnX, getY(), spawnZ, dc.getYRot(), dc.getXRot());
+                    dc.setDeltaMovement(getDeltaMovement().x * 0.1, -0.1, getDeltaMovement().z * 0.1);
+                    dc.setOwner(owner);
+                    level().addFreshEntity(dc);
+                }
+                remainingAmmo -= toFire;
                 attackCooldown = 30;
             }
 
@@ -1531,14 +1583,21 @@ public class AircraftEntity extends Entity {
             double stepLen = panelSpeed * 0.4;
             boolean flewPastButClose = signedProj <= 0 && horizDist < Math.max(stepLen + 2.0, 6.0);
             if (atDropWindow || flewPastButClose) {
-                AerialBombEntity bomb = new AerialBombEntity(level(), panelDamage * 1.5f, 2.5f);
-                bomb.moveTo(getX(), getY(), getZ(), bomb.getYRot(), bomb.getXRot());
-                bomb.setDeltaMovement(getDeltaMovement().x * 0.1, -0.1, getDeltaMovement().z * 0.1);
-                bomb.setSourceAircraftName(getDisplayName());
-                if (getOwner() != null) bomb.setOwner(getOwner());
-                else if (autonomous) bomb.setOwner(this);
-                level().addFreshEntity(bomb);
-                remainingAmmo--;
+                float bombDamage = panelDamage * 1.5f;
+                int toFire = computeSalvoSize(target, bombDamage);
+                for (int i = 0; i < toFire; i++) {
+                    double offset = (i - (toFire - 1) / 2.0) * 0.8;
+                    double spawnX = getX() + levelRunDirection.x * offset;
+                    double spawnZ = getZ() + levelRunDirection.z * offset;
+                    AerialBombEntity bomb = new AerialBombEntity(level(), bombDamage, 2.5f);
+                    bomb.moveTo(spawnX, getY(), spawnZ, bomb.getYRot(), bomb.getXRot());
+                    bomb.setDeltaMovement(getDeltaMovement().x * 0.1, -0.1, getDeltaMovement().z * 0.1);
+                    bomb.setSourceAircraftName(getDisplayName());
+                    if (getOwner() != null) bomb.setOwner(getOwner());
+                    else if (autonomous) bomb.setOwner(this);
+                    level().addFreshEntity(bomb);
+                }
+                remainingAmmo -= toFire;
                 levelBombDropped = true;
                 levelDropPoint = position();
             } else if (signedProj <= 0) {

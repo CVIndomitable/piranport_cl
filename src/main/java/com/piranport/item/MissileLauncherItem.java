@@ -57,6 +57,15 @@ public class MissileLauncherItem extends Item {
                 || missileType == MissileEntity.MissileType.ROCKET;
     }
 
+    /**
+     * 装填设施是否可装填此发射器。
+     * 防空导弹发射器自动装填，明确禁止放入装填设施以防玩家误操作。
+     */
+    public boolean canReloadInFacility() {
+        return missileType != MissileEntity.MissileType.ANTI_AIR
+                && isManualReload();
+    }
+
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);

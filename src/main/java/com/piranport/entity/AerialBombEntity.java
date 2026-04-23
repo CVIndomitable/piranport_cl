@@ -74,7 +74,7 @@ public class AerialBombEntity extends ThrowableItemProjectile {
         if (!level().isClientSide() && !exploded) {
             exploded = true;
             Entity target = result.getEntity();
-            target.hurt(damageSources().thrown(this, getOwner()), damage);
+            target.hurt(damageSources().thrown(this, getOwner()), damage * 2f);
             Level.ExplosionInteraction interaction = ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get()
                     ? Level.ExplosionInteraction.TNT : Level.ExplosionInteraction.NONE;
             level().explode(this, getX(), getY(), getZ(), explosionPower, interaction);

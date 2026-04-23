@@ -319,18 +319,18 @@ public class MissileEntity extends ThrowableItemProjectile {
                         applied = true;
                     }
                     try {
-                        living.hurt(damageSources().thrown(this, getOwner()), damage);
+                        living.hurt(damageSources().thrown(this, getOwner()), damage * 4f);
                     } finally {
                         if (applied) {
                             armorAttr.removeModifier(apId);
                         }
                     }
                 } else {
-                    target.hurt(damageSources().thrown(this, getOwner()), damage);
+                    target.hurt(damageSources().thrown(this, getOwner()), damage * 4f);
                 }
             } else {
                 // 防空导弹 / 火箭弹：爆炸
-                target.hurt(damageSources().explosion(this, getOwner()), damage);
+                target.hurt(damageSources().explosion(this, getOwner()), damage * 4f);
                 Level.ExplosionInteraction interaction = ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get()
                         ? Level.ExplosionInteraction.TNT : Level.ExplosionInteraction.NONE;
                 level().explode(this, getX(), getY(), getZ(), explosionPower, interaction);

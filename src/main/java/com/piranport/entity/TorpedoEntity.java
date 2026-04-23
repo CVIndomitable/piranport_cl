@@ -349,10 +349,10 @@ public class TorpedoEntity extends ThrowableItemProjectile {
             Entity target = result.getEntity();
             if (magnetic) {
                 // 磁性鱼雷：HE式爆炸
-                target.hurt(damageSources().explosion(this, getOwner()), damage);
+                target.hurt(damageSources().explosion(this, getOwner()), damage * 4f);
                 magneticDetonate();
             } else {
-                target.hurt(damageSources().thrown(this, getOwner()), damage);
+                target.hurt(damageSources().thrown(this, getOwner()), damage * 4f);
                 // 附加进水 debuff（3秒，每秒 1 点魔法伤害）
                 if (target instanceof LivingEntity living) {
                     living.addEffect(new MobEffectInstance(ModMobEffects.FLOODING, 60, 0));

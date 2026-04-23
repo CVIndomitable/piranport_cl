@@ -99,6 +99,15 @@ public final class PiranPortDebug {
     public static boolean isCooldownOverrideEnabled() { return cooldownOverrideEnabled; }
 
     /**
+     * 测试模式（F8 debug ON）创造背包装填：调用方原本要 stack.shrink(count)，
+     * 此处在测试模式下跳过消耗，等价于弹药/载荷无限。
+     * 非测试模式时等价于 stack.shrink(count)。
+     */
+    public static void consumeAmmo(ItemStack stack, int count) {
+        if (!serverEnabled) stack.shrink(count);
+    }
+
+    /**
      * Applies the debug cooldown override. When enabled, clamps {@code ticks} to
      * {@link #COOLDOWN_OVERRIDE_TICKS} (5 seconds). Otherwise returns {@code ticks} unchanged.
      */

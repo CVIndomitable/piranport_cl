@@ -32,11 +32,11 @@ public class DepthChargeEntity extends ThrowableItemProjectile {
     /** 近炸引信起爆前的安全延迟（ticks）。 */
     private static final int ARM_TICKS = 5;
     /** 近炸检测距离（blocks）。 */
-    private static final double DETECT_RANGE = 3.0;
+    private static final double DETECT_RANGE = 5.0;
     /** 爆炸后水平伤害半径（blocks）。 */
-    private static final double BLAST_RADIUS = 5.0;
+    private static final double BLAST_RADIUS = 8.0;
     /** 爆炸后垂直伤害容差（blocks，上下各此值）。 */
-    private static final double BLAST_HEIGHT = 2.0;
+    private static final double BLAST_HEIGHT = 4.0;
 
     /** Required by entity type registration. */
     public DepthChargeEntity(EntityType<? extends DepthChargeEntity> type, Level level) {
@@ -132,6 +132,8 @@ public class DepthChargeEntity extends ThrowableItemProjectile {
                     (target.getX() - cx) * (target.getX() - cx) +
                     (target.getZ() - cz) * (target.getZ() - cz));
             float ratio = 1.0f - (float) (dist / BLAST_RADIUS) * 0.5f;
+            // 多枚深弹齐投：重置无敌帧保证每枚都造成伤害
+            target.invulnerableTime = 0;
             target.hurt(damageSources().indirectMagic(this, getOwner()), damage * Math.max(ratio, 0.5f));
             notifyOwner(target);
         }

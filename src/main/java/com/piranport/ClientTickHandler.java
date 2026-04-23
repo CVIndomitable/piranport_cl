@@ -159,6 +159,16 @@ public class ClientTickHandler {
 
         boolean transformed = TransformationManager.isPlayerTransformed(mc.player);
 
+        // 大型船变身态：本地客户端持续压平 hurtTime/hurtDuration，移除受击视野抖动
+        if (transformed) {
+            ItemStack coreStack = TransformationManager.findTransformedCore(mc.player);
+            if (!coreStack.isEmpty() && coreStack.getItem() instanceof ShipCoreItem sci
+                    && sci.getShipType() == ShipCoreItem.ShipType.LARGE) {
+                if (mc.player.hurtTime > 0) mc.player.hurtTime = 0;
+                if (mc.player.hurtDuration > 0) mc.player.hurtDuration = 0;
+            }
+        }
+
         // Fire control — while transformed or in recon mode
         while (ModKeyMappings.FIRE_CONTROL_LOCK.consumeClick()) {
             if (!transformed && !inReconMode) continue;

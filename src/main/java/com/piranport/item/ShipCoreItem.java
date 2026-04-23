@@ -597,7 +597,7 @@ public class ShipCoreItem extends Item {
             ItemStack ammo = items.get(i);
             if (!ammo.isEmpty() && matchesCaliber(ammo, weapon)) {
                 int take = Math.min(toConsume, ammo.getCount());
-                ammo.shrink(take);
+                com.piranport.debug.PiranPortDebug.consumeAmmo(ammo, take);
                 toConsume -= take;
             }
         }
@@ -775,7 +775,7 @@ public class ShipCoreItem extends Item {
                 ItemStack ammo = inv.items.get(i);
                 if (!ammo.isEmpty() && matchesCaliber(ammo, weapon)) {
                     int take = Math.min(toConsume, ammo.getCount());
-                    ammo.shrink(take);
+                    com.piranport.debug.PiranPortDebug.consumeAmmo(ammo, take);
                     toConsume -= take;
                 }
             }
@@ -783,7 +783,7 @@ public class ShipCoreItem extends Item {
                 ItemStack oh = inv.offhand.get(0);
                 if (!oh.isEmpty() && matchesCaliber(oh, weapon)) {
                     int take = Math.min(toConsume, oh.getCount());
-                    oh.shrink(take);
+                    com.piranport.debug.PiranPortDebug.consumeAmmo(oh, take);
                     toConsume -= take;
                 }
             }
@@ -975,7 +975,7 @@ public class ShipCoreItem extends Item {
                 if (ti.isAcoustic()) acousticHoming = true;
                 if (ti.isWireGuided()) wireGuided = true;
                 int take = Math.min(toConsume, s.getCount());
-                s.shrink(take);
+                com.piranport.debug.PiranPortDebug.consumeAmmo(s, take);
                 toConsume -= take;
             }
         }
@@ -987,7 +987,7 @@ public class ShipCoreItem extends Item {
                 if (ti.isAcoustic()) acousticHoming = true;
                 if (ti.isWireGuided()) wireGuided = true;
                 int take = Math.min(toConsume, oh.getCount());
-                oh.shrink(take);
+                com.piranport.debug.PiranPortDebug.consumeAmmo(oh, take);
                 toConsume -= take;
             }
         }
@@ -1105,7 +1105,7 @@ public class ShipCoreItem extends Item {
             ItemStack s = inv.items.get(i);
             if (!s.isEmpty() && s.is(ModItems.DEPTH_CHARGE.get())) {
                 int take = Math.min(toConsume, s.getCount());
-                s.shrink(take);
+                com.piranport.debug.PiranPortDebug.consumeAmmo(s, take);
                 toConsume -= take;
             }
         }
@@ -1113,7 +1113,7 @@ public class ShipCoreItem extends Item {
             ItemStack oh = inv.offhand.get(0);
             if (!oh.isEmpty() && oh.is(ModItems.DEPTH_CHARGE.get())) {
                 int take = Math.min(toConsume, oh.getCount());
-                oh.shrink(take);
+                com.piranport.debug.PiranPortDebug.consumeAmmo(oh, take);
                 toConsume -= take;
             }
         }
@@ -1260,7 +1260,8 @@ public class ShipCoreItem extends Item {
 
         // 消耗1枚弹药
         String ammoId = BuiltInRegistries.ITEM.getKey(ammoItem).toString();
-        (ammoSlot == 40 ? inv.offhand.get(0) : inv.items.get(ammoSlot)).shrink(1);
+        com.piranport.debug.PiranPortDebug.consumeAmmo(
+                ammoSlot == 40 ? inv.offhand.get(0) : inv.items.get(ammoSlot), 1);
 
         // 发射
         spawnMissile(level, player, launcher, ammoId);
@@ -1345,7 +1346,7 @@ public class ShipCoreItem extends Item {
             }
 
             String ammoId = BuiltInRegistries.ITEM.getKey(ammoItem).toString();
-            items.get(ammoSlot).shrink(1);
+            com.piranport.debug.PiranPortDebug.consumeAmmo(items.get(ammoSlot), 1);
 
             spawnMissile(level, player, launcher, ammoId);
 
@@ -1435,7 +1436,7 @@ public class ShipCoreItem extends Item {
                 if (i == coreInventorySlot || i == weaponSlot) continue;
                 ItemStack s = inv.items.get(i);
                 if (!s.isEmpty() && s.getItem() == payloadItem) {
-                    s.shrink(1);
+                    com.piranport.debug.PiranPortDebug.consumeAmmo(s, 1);
                     consumed = true;
                     break;
                 }
@@ -1444,7 +1445,7 @@ public class ShipCoreItem extends Item {
             if (!consumed && weaponSlot != 40 && coreInventorySlot != 40) {
                 ItemStack oh = inv.offhand.get(0);
                 if (!oh.isEmpty() && oh.getItem() == payloadItem) {
-                    oh.shrink(1);
+                    com.piranport.debug.PiranPortDebug.consumeAmmo(oh, 1);
                     consumed = true;
                 }
             }
@@ -1828,7 +1829,7 @@ public class ShipCoreItem extends Item {
                 if (ti.isAcoustic()) acousticHoming = true;
                 if (ti.isWireGuided()) wireGuided = true;
                 int take = Math.min(toConsume, ammo.getCount());
-                ammo.shrink(take);
+                com.piranport.debug.PiranPortDebug.consumeAmmo(ammo, take);
                 toConsume -= take;
             }
         }
@@ -1917,7 +1918,7 @@ public class ShipCoreItem extends Item {
             ItemStack ammo = items.get(i);
             if (!ammo.isEmpty() && ammo.is(ModItems.DEPTH_CHARGE.get())) {
                 int take = Math.min(toConsume, ammo.getCount());
-                ammo.shrink(take);
+                com.piranport.debug.PiranPortDebug.consumeAmmo(ammo, take);
                 toConsume -= take;
             }
         }
@@ -2008,7 +2009,7 @@ public class ShipCoreItem extends Item {
                 if (!ammoStack.isEmpty()) {
                     String itemId = BuiltInRegistries.ITEM.getKey(ammoStack.getItem()).toString();
                     if (payloadType.equals(itemId)) {
-                        ammoStack.shrink(1);
+                        com.piranport.debug.PiranPortDebug.consumeAmmo(ammoStack, 1);
                         consumed = true;
                         break;
                     }
@@ -2102,7 +2103,7 @@ public class ShipCoreItem extends Item {
             for (int ai = ammoStart; ai < ammoEnd; ai++) {
                 ItemStack ammo = items.get(ai);
                 if (ammo.is(ModItems.AVIATION_FUEL.get()) && ammo.getCount() > 0) {
-                    ammo.shrink(1);
+                    com.piranport.debug.PiranPortDebug.consumeAmmo(ammo, 1);
                     weapon.set(ModDataComponents.AIRCRAFT_INFO.get(),
                             info.withCurrentFuel(info.fuelCapacity()));
                     contentsChanged = true;
@@ -2144,7 +2145,7 @@ public class ShipCoreItem extends Item {
             // Find aviation_fuel in inventory
             for (ItemStack ammo : inv.items) {
                 if (ammo.is(ModItems.AVIATION_FUEL.get()) && ammo.getCount() > 0) {
-                    ammo.shrink(1);
+                    com.piranport.debug.PiranPortDebug.consumeAmmo(ammo, 1);
                     weapon.set(ModDataComponents.AIRCRAFT_INFO.get(),
                             info.withCurrentFuel(info.fuelCapacity()));
                     hasFueled = true;
@@ -2251,7 +2252,8 @@ public class ShipCoreItem extends Item {
 
             // Consume 1 ammo
             String ammoId = BuiltInRegistries.ITEM.getKey(ammoItem).toString();
-            (ammoSlot == 40 ? inv.offhand.get(0) : inv.items.get(ammoSlot)).shrink(1);
+            com.piranport.debug.PiranPortDebug.consumeAmmo(
+                    ammoSlot == 40 ? inv.offhand.get(0) : inv.items.get(ammoSlot), 1);
 
             // Spawn missile aimed at fire control target
             spawnMissileAutoAim(level, player, launcher, ammoId);

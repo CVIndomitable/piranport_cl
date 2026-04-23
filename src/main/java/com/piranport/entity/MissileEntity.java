@@ -300,6 +300,8 @@ public class MissileEntity extends ThrowableItemProjectile {
         super.onHitEntity(result);
         if (!level().isClientSide()) {
             Entity target = result.getEntity();
+            // 齐射/多发命中同目标：清无敌帧让每发满伤
+            target.invulnerableTime = 0;
 
             if (missileType == MissileType.ANTI_SHIP) {
                 // 反舰导弹：直接伤害 + 穿甲

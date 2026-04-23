@@ -31,6 +31,8 @@ public class TransformationManager {
             ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "ship_core_health");
     public static final ResourceLocation TOUGHNESS_MODIFIER_ID =
             ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "ship_core_toughness");
+    public static final ResourceLocation WATER_SPEED_MODIFIER_ID =
+            ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "ship_core_water_speed");
 
     public static boolean isTransformed(ItemStack coreStack) {
         return coreStack.getOrDefault(ModDataComponents.SHIP_CORE_TRANSFORMED.get(), false);
@@ -409,10 +411,12 @@ public class TransformationManager {
         AttributeInstance speedAttr = player.getAttribute(Attributes.MOVEMENT_SPEED);
         AttributeInstance healthAttr = player.getAttribute(Attributes.MAX_HEALTH);
         AttributeInstance toughnessAttr = player.getAttribute(Attributes.ARMOR_TOUGHNESS);
+        AttributeInstance waterAttr = player.getAttribute(Attributes.WATER_MOVEMENT_EFFICIENCY);
         if (armorAttr != null) armorAttr.removeModifier(ARMOR_MODIFIER_ID);
         if (speedAttr != null) speedAttr.removeModifier(SPEED_MODIFIER_ID);
         if (healthAttr != null) healthAttr.removeModifier(HEALTH_MODIFIER_ID);
         if (toughnessAttr != null) toughnessAttr.removeModifier(TOUGHNESS_MODIFIER_ID);
+        if (waterAttr != null) waterAttr.removeModifier(WATER_SPEED_MODIFIER_ID);
     }
 
     /**
@@ -441,6 +445,13 @@ public class TransformationManager {
         if (speedAttr != null && speedMult != 1.0) {
             speedAttr.addTransientModifier(new AttributeModifier(
                     SPEED_MODIFIER_ID, speedMult - 1.0, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
+        }
+        // 舰娘变身态：免除水阻力。WATER_MOVEMENT_EFFICIENCY 原版 0，设 1 表示水中与陆地同速。
+        AttributeInstance waterAttr = player.getAttribute(Attributes.WATER_MOVEMENT_EFFICIENCY);
+        if (waterAttr != null) {
+            waterAttr.removeModifier(WATER_SPEED_MODIFIER_ID);
+            waterAttr.addTransientModifier(new AttributeModifier(
+                    WATER_SPEED_MODIFIER_ID, 1.0, AttributeModifier.Operation.ADD_VALUE));
         }
     }
 

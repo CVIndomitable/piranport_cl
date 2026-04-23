@@ -1446,7 +1446,8 @@ public class AircraftEntity extends Entity {
         Vec3 toOwner = owner.getEyePosition().subtract(position());
         double dist = toOwner.length();
         if (dist < RETURN_ARRIVAL_DIST) { recallAndRemove(); return; }
-        setDeltaMovement(toOwner.normalize().scale(Math.min(panelSpeed * 0.4, dist)));
+        // 返航增速 30%：0.4 × 1.3 = 0.52
+        setDeltaMovement(toOwner.normalize().scale(Math.min(panelSpeed * 0.52, dist)));
     }
 
     // ===== Autonomous (no player owner) tick =====

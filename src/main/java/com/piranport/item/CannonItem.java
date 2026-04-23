@@ -62,7 +62,7 @@ public class CannonItem extends Item {
 
         String ammoId = BuiltInRegistries.ITEM.getKey(other.getItem()).toString();
         stack.set(ModDataComponents.LOADED_AMMO.get(), new LoadedAmmo(barrelCount, ammoId));
-        other.shrink(barrelCount);
+        com.piranport.debug.PiranPortDebug.consumeAmmo(other, barrelCount);
 
         if (!player.level().isClientSide()) {
             player.level().playSound(null, player.getX(), player.getY(), player.getZ(),

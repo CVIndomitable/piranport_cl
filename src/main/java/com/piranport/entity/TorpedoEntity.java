@@ -219,6 +219,16 @@ public class TorpedoEntity extends ThrowableItemProjectile {
             if (exploded) return;
         }
 
+        // 1.55. 扁平 hitbox (0.5×0.25) 会让鱼雷从船体下方/甲板上方滑过而不触发 vanilla 扫掠碰撞；
+        // 空投落水/水面巡航阶段主动近炸：发现有效目标就当作命中处理。
+        if (!level().isClientSide() && !exploded && !airDrop && tickCount > 2) {
+            Entity nearby = findProximityHitTarget();
+            if (nearby != null) {
+                onHitEntity(new EntityHitResult(nearby));
+                if (isRemoved() || exploded) return;
+            }
+        }
+
         // 1.6. 线导鱼雷掉线检测 — 距离 owner 超过模拟距离时切线
         if (!level().isClientSide() && wireGuided && launchPos == null) {
             launchPos = position();
@@ -297,6 +307,29 @@ public class TorpedoEntity extends ThrowableItemProjectile {
             // 空中自由下落：水平急速衰减 + 强重力，让鱼雷在 ~3 格内入水
             setDeltaMovement(motion.x * 0.70, motion.y - 0.25, motion.z * 0.70);
         }
+    }
+
+    /**
+     * 扫描鱼雷周围的有效命中目标（垂直 ±1.2 格容忍甲板/船桥高差，水平 0.8 格容忍擦身）。
+     * 返回最近的一个用于触发 onHitEntity；无目标返回 null。
+     */
+    private Entity findProximityHitTarget() {
+        AABB scanBox = getBoundingBox().inflate(0.8, 1.2, 0.8);
+        Entity best = null;
+        double bestDistSq = Double.MAX_VALUE;
+        for (Entity e : level().getEntities(this, scanBox, e -> {
+            if (e == getOwner()) return false;
+            if (!e.isAlive() || !e.isPickable()) return false;
+            if (com.piranport.combat.FriendlyFireHelper.shouldBlockHit(e, getOwner())) return false;
+            return true;
+        })) {
+            double d = distanceToSqr(e);
+            if (d < bestDistSq) {
+                bestDistSq = d;
+                best = e;
+            }
+        }
+        return best;
     }
 
     private void checkMagneticProximity() {

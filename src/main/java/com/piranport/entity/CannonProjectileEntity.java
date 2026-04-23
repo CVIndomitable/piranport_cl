@@ -175,6 +175,8 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         super.onHitEntity(result);
         if (!level().isClientSide && !exploded) {
             Entity target = result.getEntity();
+            // 联装炮齐射：同 tick 多发命中同目标时，重置无敌帧让每发都造成伤害
+            target.invulnerableTime = 0;
             if (isHE) {
                 // HE: direct hit damage + area explosion for splash
                 target.hurt(damageSources().explosion(this, getOwner()), damage);

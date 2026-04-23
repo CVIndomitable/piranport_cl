@@ -52,7 +52,7 @@ public class ReloadFacilityBlockEntity extends BlockEntity implements MenuProvid
         public boolean isItemValid(int slot, ItemStack stack) {
             return switch (slot) {
                 case LAUNCHER_SLOT -> stack.getItem() instanceof TorpedoLauncherItem
-                        || (stack.getItem() instanceof MissileLauncherItem ml && ml.isManualReload());
+                        || (stack.getItem() instanceof MissileLauncherItem ml && ml.canReloadInFacility());
                 case AMMO_SLOT -> stack.getItem() instanceof TorpedoItem
                         || stack.getItem() instanceof MissileItem;
                 case OUTPUT_SLOT -> false; // output only
@@ -73,14 +73,14 @@ public class ReloadFacilityBlockEntity extends BlockEntity implements MenuProvid
         @Override public ItemStack getStackInSlot(int slot) { return itemHandler.getStackInSlot(LAUNCHER_SLOT); }
         @Override public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
             if (!(stack.getItem() instanceof TorpedoLauncherItem)
-                    && !(stack.getItem() instanceof MissileLauncherItem ml && ml.isManualReload())) return stack;
+                    && !(stack.getItem() instanceof MissileLauncherItem ml && ml.canReloadInFacility())) return stack;
             return itemHandler.insertItem(LAUNCHER_SLOT, stack, simulate);
         }
         @Override public ItemStack extractItem(int slot, int amount, boolean simulate) { return ItemStack.EMPTY; }
         @Override public int getSlotLimit(int slot) { return 1; }
         @Override public boolean isItemValid(int slot, ItemStack stack) {
             return stack.getItem() instanceof TorpedoLauncherItem
-                    || (stack.getItem() instanceof MissileLauncherItem ml && ml.isManualReload());
+                    || (stack.getItem() instanceof MissileLauncherItem ml && ml.canReloadInFacility());
         }
     };
 
@@ -184,8 +184,8 @@ public class ReloadFacilityBlockEntity extends BlockEntity implements MenuProvid
             validCombo = ammoStack.getItem() instanceof TorpedoItem torpedo
                     && torpedo.getCaliber() == torpedoLauncher.getCaliber();
         } else if (launcherStack.getItem() instanceof MissileLauncherItem missileLauncher
-                && missileLauncher.isManualReload()) {
-            // Missile launcher reload (anti-ship / rocket)
+                && missileLauncher.canReloadInFacility()) {
+            // Missile launcher reload (anti-ship / rocket); anti-air 发射器自动装填，禁止走这里
             LoadedAmmo existing = launcherStack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
             maxLoad = missileLauncher.getBurstCount();
             if (existing.hasAmmo() && existing.count() >= maxLoad) {

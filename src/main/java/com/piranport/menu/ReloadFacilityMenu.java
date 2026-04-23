@@ -23,6 +23,7 @@ public class ReloadFacilityMenu extends AbstractContainerMenu {
     private final Level level;
 
     // Slot that accepts torpedo launchers and manual-reload missile launchers
+    // (anti-air missile launchers are auto-reload and explicitly excluded)
     private static class LauncherSlot extends SlotItemHandler {
         public LauncherSlot(IItemHandler handler, int index, int x, int y) {
             super(handler, index, x, y);
@@ -30,7 +31,7 @@ public class ReloadFacilityMenu extends AbstractContainerMenu {
         @Override
         public boolean mayPlace(ItemStack stack) {
             return stack.getItem() instanceof TorpedoLauncherItem
-                    || (stack.getItem() instanceof MissileLauncherItem ml && ml.isManualReload());
+                    || (stack.getItem() instanceof MissileLauncherItem ml && ml.canReloadInFacility());
         }
         @Override
         public int getMaxStackSize() { return 1; }
@@ -109,7 +110,7 @@ public class ReloadFacilityMenu extends AbstractContainerMenu {
             } else {
                 // From player to machine
                 if (stack.getItem() instanceof TorpedoLauncherItem
-                        || (stack.getItem() instanceof MissileLauncherItem ml && ml.isManualReload())) {
+                        || (stack.getItem() instanceof MissileLauncherItem ml && ml.canReloadInFacility())) {
                     if (!moveItemStackTo(stack, 0, 1, false)) return ItemStack.EMPTY;
                 } else if (stack.getItem() instanceof TorpedoItem
                         || stack.getItem() instanceof MissileItem) {

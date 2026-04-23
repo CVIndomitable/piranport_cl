@@ -1,6 +1,7 @@
 package com.piranport;
 
 import com.mojang.logging.LogUtils;
+import com.piranport.compat.ModCompats;
 import com.piranport.config.ModClientConfig;
 import com.piranport.config.ModCommonConfig;
 import com.piranport.recipe.ModBrewingRecipes;
@@ -48,6 +49,8 @@ public class PiranPort {
         NeoForge.EVENT_BUS.addListener(this::registerBrewingRecipes);
         modContainer.registerConfig(ModConfig.Type.CLIENT, ModClientConfig.SPEC);
         modContainer.registerConfig(ModConfig.Type.COMMON, ModCommonConfig.SPEC);
+
+        ModCompats.initialize(modEventBus);
 
         LOGGER.info("Piran Port mod initialized!");
     }

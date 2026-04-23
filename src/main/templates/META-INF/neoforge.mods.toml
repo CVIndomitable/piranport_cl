@@ -33,3 +33,10 @@ Minecraft mod based on Warship Girls R (战舰少女R).
     versionRange="[19.0,)"
     ordering="AFTER"
     side="CLIENT"
+
+[[dependencies.${mod_id}]]
+    modId="touhou_little_maid"
+    type="optional"
+    versionRange="[1.5.2,)"
+    ordering="AFTER"
+    side="BOTH"

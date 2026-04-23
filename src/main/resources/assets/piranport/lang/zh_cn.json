@@ -727,5 +727,13 @@
   "item.piranport.egg_sandwich": "鸡蛋三明治",
   "item.piranport.bacon_sandwich": "培根三明治",
   "item.piranport.salami_pizza_pieces": "切片萨拉米披萨",
-  "item.piranport.bolognese_linguine_recipe": "番茄肉酱意面"
+  "item.piranport.bolognese_linguine_recipe": "番茄肉酱意面",
+
+  "task.piranport.maid_rigging.name": "舰装作战",
+  "task.piranport.maid_rigging.desc": "使用皮兰港舰装武器战斗",
+  "command.piranport.maidstats.header": "§6=== %s 的战斗统计 ===",
+  "command.piranport.maidstats.kills": "§e击杀数: §f%d",
+  "command.piranport.maidstats.damage": "§c总伤害: §f%.1f",
+  "command.piranport.maidstats.shots": "§b射击次数: §f%d",
+  "command.piranport.maidstats.reset": "§a已重置 %s 的战斗统计"
 }

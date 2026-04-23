@@ -727,5 +727,13 @@
   "item.piranport.egg_sandwich": "Egg Sandwich",
   "item.piranport.bacon_sandwich": "Bacon Sandwich",
   "item.piranport.salami_pizza_pieces": "Salami Pizza Slice",
-  "item.piranport.bolognese_linguine_recipe": "Bolognese Linguine"
+  "item.piranport.bolognese_linguine_recipe": "Bolognese Linguine",
+
+  "task.piranport.maid_rigging.name": "Ship Rigging",
+  "task.piranport.maid_rigging.desc": "Fight with PiranPort rigging weapons",
+  "command.piranport.maidstats.header": "§6=== Combat Stats for %s ===",
+  "command.piranport.maidstats.kills": "§eKills: §f%d",
+  "command.piranport.maidstats.damage": "§cTotal Damage: §f%.1f",
+  "command.piranport.maidstats.shots": "§bShots Fired: §f%d",
+  "command.piranport.maidstats.reset": "§aReset combat stats for %s"
 }

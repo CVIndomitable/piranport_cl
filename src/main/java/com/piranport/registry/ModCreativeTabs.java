@@ -16,7 +16,7 @@ public class ModCreativeTabs {
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> CORE_TAB =
             CREATIVE_TABS.register("core_tab", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.piranport.core"))
-                    .withTabsBefore(CreativeModeTabs.COMBAT)
+                    .withTabsAfter(CreativeModeTabs.SPAWN_EGGS)
                     .icon(() -> ModItems.MEDIUM_SHIP_CORE.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
                         output.accept(ModItems.SMALL_SHIP_CORE.get());
@@ -33,7 +33,7 @@ public class ModCreativeTabs {
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> CANNON_TORPEDO_TAB =
             CREATIVE_TABS.register("cannon_torpedo_tab", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.piranport.cannon_torpedo"))
-                    .withTabsBefore(CreativeModeTabs.COMBAT)
+                    .withTabsAfter(CreativeModeTabs.SPAWN_EGGS)
                     .icon(() -> ModItems.MEDIUM_GUN.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
                         // Guns
@@ -53,7 +53,7 @@ public class ModCreativeTabs {
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> AVIATION_TAB =
             CREATIVE_TABS.register("aviation_tab", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.piranport.aviation"))
-                    .withTabsBefore(CreativeModeTabs.COMBAT)
+                    .withTabsAfter(CreativeModeTabs.SPAWN_EGGS)
                     .icon(() -> ModItems.B25_BOMBER.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
                         // Torpedo bombers
@@ -88,7 +88,7 @@ public class ModCreativeTabs {
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> MISSILE_TAB =
             CREATIVE_TABS.register("missile_tab", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.piranport.missile"))
-                    .withTabsBefore(CreativeModeTabs.COMBAT)
+                    .withTabsAfter(CreativeModeTabs.SPAWN_EGGS)
                     .icon(() -> ModItems.SY1_LAUNCHER.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
                         output.accept(ModItems.SY1_LAUNCHER.get());
@@ -103,7 +103,7 @@ public class ModCreativeTabs {
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> ENHANCEMENT_TAB =
             CREATIVE_TABS.register("enhancement_tab", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.piranport.enhancement"))
-                    .withTabsBefore(CreativeModeTabs.COMBAT)
+                    .withTabsAfter(CreativeModeTabs.SPAWN_EGGS)
                     .icon(() -> ModItems.MEDIUM_ARMOR_PLATE.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
                         // Armor Plates
@@ -130,7 +130,7 @@ public class ModCreativeTabs {
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> AGRICULTURE_TAB =
             CREATIVE_TABS.register("agriculture_tab", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.piranport.agriculture"))
-                    .withTabsBefore(CreativeModeTabs.COMBAT)
+                    .withTabsAfter(CreativeModeTabs.SPAWN_EGGS)
                     .icon(() -> ModItems.RAW_ALUMINUM.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
                         // Blocks
@@ -149,7 +149,7 @@ public class ModCreativeTabs {
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> KITCHEN_TAB =
             CREATIVE_TABS.register("kitchen_tab", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.piranport.kitchen"))
-                    .withTabsBefore(CreativeModeTabs.COMBAT)
+                    .withTabsAfter(CreativeModeTabs.SPAWN_EGGS)
                     .icon(() -> ModItems.TOAST_BREAD.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
                         // --- 食材/调料 ---
@@ -258,7 +258,7 @@ public class ModCreativeTabs {
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> AMMO_TAB =
             CREATIVE_TABS.register("ammo_tab", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.piranport.ammo"))
-                    .withTabsBefore(CreativeModeTabs.COMBAT)
+                    .withTabsAfter(CreativeModeTabs.SPAWN_EGGS)
                     .icon(() -> ModItems.MEDIUM_HE_SHELL.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
                         // HE Shells
@@ -314,7 +314,7 @@ public class ModCreativeTabs {
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> PROPS_TAB =
             CREATIVE_TABS.register("props_tab", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.piranport.props"))
-                    .withTabsBefore(CreativeModeTabs.COMBAT)
+                    .withTabsAfter(CreativeModeTabs.SPAWN_EGGS)
                     .icon(() -> ModItems.HENTAI_TROPHY.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
                         output.accept(ModItems.UNICORN_HARP.get());
@@ -343,7 +343,7 @@ public class ModCreativeTabs {
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> FACILITY_TAB =
             CREATIVE_TABS.register("facility_tab", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.piranport.facility"))
-                    .withTabsBefore(CreativeModeTabs.COMBAT)
+                    .withTabsAfter(CreativeModeTabs.SPAWN_EGGS)
                     .icon(() -> ModItems.RELOAD_FACILITY.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
                         output.accept(ModItems.RELOAD_FACILITY.get());
@@ -354,7 +354,7 @@ public class ModCreativeTabs {
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> DECORATION_TAB =
             CREATIVE_TABS.register("decoration_tab", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.piranport.decoration"))
-                    .withTabsBefore(CreativeModeTabs.COMBAT)
+                    .withTabsAfter(CreativeModeTabs.SPAWN_EGGS)
                     .icon(() -> ModItems.CONFIDENTIAL_CARGO.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
                         output.accept(ModItems.CONFIDENTIAL_CARGO.get());

@@ -67,6 +67,7 @@ public class ClientEvents {
         event.register(ModKeyMappings.TORPEDO_STEER_LEFT);
         event.register(ModKeyMappings.TORPEDO_STEER_RIGHT);
         event.register(ModKeyMappings.DEBUG_COOLDOWN_OVERRIDE);
+        event.register(ModKeyMappings.HIT_DISPLAY_TOGGLE);
     }
 
     @SubscribeEvent

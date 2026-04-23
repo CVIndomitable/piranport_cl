@@ -1,5 +1,6 @@
 package com.piranport.entity;
 
+import com.piranport.combat.HitNotifier;
 import com.piranport.config.ModCommonConfig;
 import com.piranport.registry.ModEntityTypes;
 import com.piranport.registry.ModItems;
@@ -160,7 +161,7 @@ public class DepthChargeEntity extends ThrowableItemProjectile {
         if (!(owner instanceof Player player)) return;
         Component weaponName = getDefaultItem().getDescription();
         String key = target.isAlive() ? "message.piranport.weapon_hit" : "message.piranport.weapon_kill";
-        player.sendSystemMessage(Component.translatable(key, weaponName, target.getDisplayName()));
+        HitNotifier.send(player, Component.translatable(key, weaponName, target.getDisplayName()));
     }
 
     @Override

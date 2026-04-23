@@ -465,6 +465,7 @@ public class GameEvents {
         lastWeaponLoad.remove(player.getUUID());
         lastPlayerPos.remove(player.getUUID());
         accumulatedDistance.remove(player.getUUID());
+        com.piranport.combat.HitNotifier.onPlayerLogout(player.getUUID());
         com.piranport.network.RecallAllAircraftPayload.onPlayerDisconnect(player.getUUID());
         recallAircraftForPlayer(player);
     }

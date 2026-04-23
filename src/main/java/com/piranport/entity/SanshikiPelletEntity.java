@@ -1,5 +1,6 @@
 package com.piranport.entity;
 
+import com.piranport.combat.HitNotifier;
 import com.piranport.registry.ModEntityTypes;
 import com.piranport.registry.ModItems;
 import net.minecraft.nbt.CompoundTag;
@@ -80,7 +81,7 @@ public class SanshikiPelletEntity extends ThrowableItemProjectile {
                 ? getDefaultItem().getDescription()
                 : shellForRender.getHoverName();
         String key = target.isAlive() ? "message.piranport.weapon_hit" : "message.piranport.weapon_kill";
-        player.sendSystemMessage(Component.translatable(key, weaponName, target.getDisplayName()));
+        HitNotifier.send(player, Component.translatable(key, weaponName, target.getDisplayName()));
     }
 
     @Override

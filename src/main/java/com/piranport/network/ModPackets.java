@@ -107,5 +107,12 @@ public class ModPackets {
                 SkinRevertPayload::handle
         );
 
+        // Hit display (hit/kill/miss chat) toggle
+        registrar.playToServer(
+                HitDisplayTogglePayload.TYPE,
+                HitDisplayTogglePayload.STREAM_CODEC,
+                HitDisplayTogglePayload::handle
+        );
+
     }
 }

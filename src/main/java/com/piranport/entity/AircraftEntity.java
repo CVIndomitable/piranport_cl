@@ -97,6 +97,7 @@ public class AircraftEntity extends Entity {
     private boolean levelBombDropped = false;     // true once bomb dropped in current run
     @Nullable private Vec3 levelRunDirection = null; // normalized direction of current run
     @Nullable private Vec3 levelDropPoint = null;   // position where bomb was dropped
+    private int levelRunTicks = 0;   // ticks spent in current Phase 2 run (fail-safe against runaway bombers)
     private int autoSeekCooldown = 0; // P3 #30: throttle AABB queries
     private boolean autoSeekDone = false;    // true after first auto-seek scan (one-shot)
     private boolean hasEverHadFireControl = false; // true if FC target was ever assigned
@@ -961,6 +962,7 @@ public class AircraftEntity extends Entity {
             levelBombDropped = false;
             levelRunDirection = null;
             levelDropPoint = null;
+            levelRunTicks = 0;
             Vec3 toPoint = new Vec3(target.getX() - getX(), bombAltitude - getY(), target.getZ() - getZ());
             double dist = toPoint.length();
             setDeltaMovement(toPoint.normalize().scale(Math.min(panelSpeed * 0.4, dist)));
@@ -980,18 +982,34 @@ public class AircraftEntity extends Entity {
             }
             levelBombDropped = false;
             levelDropPoint = null;
+            levelRunTicks = 0;
         }
 
         // Phase 2: Fly along the run direction
         double yCorrect = (bombAltitude - getY()) * 0.15;
         setDeltaMovement(levelRunDirection.x * panelSpeed * 0.4, yCorrect, levelRunDirection.z * panelSpeed * 0.4);
+        levelRunTicks++;
 
-        // Drop bomb when passing over target (within 3 blocks horizontal)
+        // Fail-safe: single run must not drag on forever (target dodging, direction drift, etc.)
+        if (!levelBombDropped && levelRunTicks > 200) {
+            startReturning("level_bomber_run_timeout");
+            return;
+        }
+
+        // Drop bomb when over target, or when we just overflew it without a drop
         if (!levelBombDropped) {
             double dx = target.getX() - getX();
             double dz = target.getZ() - getZ();
             double horizDist = Math.sqrt(dx * dx + dz * dz);
-            if (horizDist < 3.0) {
+            // Signed projection of (target - aircraft) onto run direction.
+            // <= 0 means the target is now behind the aircraft.
+            double signedProj = dx * levelRunDirection.x + dz * levelRunDirection.z;
+            boolean atDropWindow = horizDist < 3.0;
+            // Widened drop window once we've already flown past: tolerates a high-speed
+            // aircraft stepping over the 3-block window in a single tick.
+            double stepLen = panelSpeed * 0.4;
+            boolean flewPastButClose = signedProj <= 0 && horizDist < Math.max(stepLen + 2.0, 6.0);
+            if (atDropWindow || flewPastButClose) {
                 AerialBombEntity bomb = new AerialBombEntity(level(), panelDamage * 1.5f, 2.5f);
                 bomb.moveTo(getX(), getY(), getZ(), bomb.getYRot(), bomb.getXRot());
                 bomb.setDeltaMovement(getDeltaMovement().x * 0.1, -0.1, getDeltaMovement().z * 0.1);
@@ -1001,6 +1019,11 @@ public class AircraftEntity extends Entity {
                 remainingAmmo--;
                 levelBombDropped = true;
                 levelDropPoint = position();
+            } else if (signedProj <= 0) {
+                // Flew past target but still out of drop range — target must have moved.
+                // Drop the locked direction so the next tick can re-plan toward the target.
+                levelRunDirection = null;
+                return;
             }
         }
 
@@ -1012,6 +1035,7 @@ public class AircraftEntity extends Entity {
                 levelRunDirection = null;
                 levelDropPoint = null;
                 levelBombDropped = false;
+                levelRunTicks = 0;
                 // Target check happens in tickAttacking's resolveTarget on next tick
             }
         }
@@ -1464,6 +1488,7 @@ public class AircraftEntity extends Entity {
             levelBombDropped = false;
             levelRunDirection = null;
             levelDropPoint = null;
+            levelRunTicks = 0;
             Vec3 toPoint = new Vec3(target.getX() - getX(), bombAltitude - getY(), target.getZ() - getZ());
             double dist = toPoint.length();
             setDeltaMovement(toPoint.normalize().scale(Math.min(panelSpeed * 0.4, dist)));
@@ -1482,18 +1507,30 @@ public class AircraftEntity extends Entity {
             }
             levelBombDropped = false;
             levelDropPoint = null;
+            levelRunTicks = 0;
         }
 
         // Phase 2: Fly along the run direction
         double yCorrect = (bombAltitude - getY()) * 0.15;
         setDeltaMovement(levelRunDirection.x * panelSpeed * 0.4, yCorrect, levelRunDirection.z * panelSpeed * 0.4);
+        levelRunTicks++;
 
-        // Drop bomb when passing over target
+        // Fail-safe: abandon a run that drags on forever (autonomous bombers self-destruct on return)
+        if (!levelBombDropped && levelRunTicks > 200) {
+            discard();
+            return;
+        }
+
+        // Drop bomb when over target, or when we just overflew it without a drop
         if (!levelBombDropped) {
             double dx = target.getX() - getX();
             double dz = target.getZ() - getZ();
             double horizDist = Math.sqrt(dx * dx + dz * dz);
-            if (horizDist < 3.0) {
+            double signedProj = dx * levelRunDirection.x + dz * levelRunDirection.z;
+            boolean atDropWindow = horizDist < 3.0;
+            double stepLen = panelSpeed * 0.4;
+            boolean flewPastButClose = signedProj <= 0 && horizDist < Math.max(stepLen + 2.0, 6.0);
+            if (atDropWindow || flewPastButClose) {
                 AerialBombEntity bomb = new AerialBombEntity(level(), panelDamage * 1.5f, 2.5f);
                 bomb.moveTo(getX(), getY(), getZ(), bomb.getYRot(), bomb.getXRot());
                 bomb.setDeltaMovement(getDeltaMovement().x * 0.1, -0.1, getDeltaMovement().z * 0.1);
@@ -1504,6 +1541,10 @@ public class AircraftEntity extends Entity {
                 remainingAmmo--;
                 levelBombDropped = true;
                 levelDropPoint = position();
+            } else if (signedProj <= 0) {
+                // Flew past target but still out of drop range — re-plan next tick
+                levelRunDirection = null;
+                return;
             }
         }
 
@@ -1514,6 +1555,7 @@ public class AircraftEntity extends Entity {
                 levelRunDirection = null;
                 levelDropPoint = null;
                 levelBombDropped = false;
+                levelRunTicks = 0;
             }
         }
     }

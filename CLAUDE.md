@@ -81,3 +81,4 @@ neo_version=21.1.220
 - 原始策划案：`../docs/总策划案.docx`
 - 所有文档统一在仓库根目录 `../docs/`，本仓库不保留 docs/
 - GitHub: https://github.com/CVIndomitable/piranport_cl.git
+- **踩坑记录**：`/Users/lianran/IndomitableCache/ai记忆/mc模组开发踩坑记录.md` — 统一的 MC 模组开发踩坑经验库

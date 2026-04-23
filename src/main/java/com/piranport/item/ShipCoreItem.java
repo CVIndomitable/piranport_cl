@@ -265,14 +265,10 @@ public class ShipCoreItem extends Item {
         boolean hasCurrentLoad = false;
         if (!com.piranport.config.ModCommonConfig.isShipCoreGuiEnabled()) {
             if (net.neoforged.fml.loading.FMLEnvironment.dist.isClient()) {
-                net.minecraft.world.entity.player.Player cp =
-                        net.minecraft.client.Minecraft.getInstance().player;
-                if (cp != null) {
-                    currentTotalLoad = com.piranport.combat.TransformationManager
-                            .getInventoryWeaponLoad(cp.getInventory())
-                            + com.piranport.combat.TransformationManager.getCoreArmorLoad(stack);
-                    currentEngineSpeedBonus = com.piranport.combat.TransformationManager
-                            .getCoreEngineSpeedBonus(stack);
+                ShipCoreClientTooltip.LoadInfo info = ShipCoreClientTooltip.currentLoadAndBonus(stack);
+                if (info != null) {
+                    currentTotalLoad = info.totalLoad();
+                    currentEngineSpeedBonus = info.engineSpeedBonus();
                     hasCurrentLoad = true;
                 }
             }
@@ -300,47 +296,7 @@ public class ShipCoreItem extends Item {
             // If this core is the best (effective) one, show load info; otherwise show "不生效".
             // Safe: FMLEnvironment.dist check prevents Minecraft.getInstance() from loading on server
             if (net.neoforged.fml.loading.FMLEnvironment.dist.isClient()) {
-                net.minecraft.world.entity.player.Player clientPlayer =
-                        net.minecraft.client.Minecraft.getInstance().player;
-                if (clientPlayer != null) {
-                    Inventory inv = clientPlayer.getInventory();
-                    int bestMaxLoad = 0;
-                    for (ItemStack s : inv.items) {
-                        if (s.getItem() instanceof ShipCoreItem sci2) {
-                            bestMaxLoad = Math.max(bestMaxLoad, sci2.getShipType().maxLoad);
-                        }
-                    }
-                    ItemStack offhand = inv.offhand.get(0);
-                    if (offhand.getItem() instanceof ShipCoreItem sci2) {
-                        bestMaxLoad = Math.max(bestMaxLoad, sci2.getShipType().maxLoad);
-                    }
-                    boolean isActive = shipType.maxLoad >= bestMaxLoad;
-                    if (!isActive) {
-                        tooltipComponents.add(Component.translatable("tooltip.piranport.core_inactive")
-                                .withStyle(net.minecraft.ChatFormatting.DARK_GRAY));
-                    }
-                    int weaponLoad = com.piranport.combat.TransformationManager
-                            .getInventoryWeaponLoad(inv);
-                    int armorLoad = com.piranport.combat.TransformationManager
-                            .getCoreArmorLoad(stack);
-                    tooltipComponents.add(Component.translatable(
-                            "container.piranport.load", weaponLoad + armorLoad,
-                            isActive ? bestMaxLoad : shipType.maxLoad));
-                    // Show stored armor plates
-                    int capacity = shipType.enhancementSlots;
-                    ItemContainerContents armorContents = stack.getOrDefault(
-                            ModDataComponents.SHIP_CORE_ARMOR.get(), ItemContainerContents.EMPTY);
-                    NonNullList<ItemStack> storedArmor = NonNullList.withSize(capacity, ItemStack.EMPTY);
-                    armorContents.copyInto(storedArmor);
-                    int armorBonus = com.piranport.combat.TransformationManager.getCoreArmorBonus(stack);
-                    tooltipComponents.add(Component.translatable(
-                            "tooltip.piranport.core_armor_slots", armorBonus, capacity));
-                    for (ItemStack s : storedArmor) {
-                        if (!s.isEmpty()) {
-                            tooltipComponents.add(Component.literal("  • ").append(s.getHoverName()));
-                        }
-                    }
-                }
+                ShipCoreClientTooltip.appendNoGuiLoadTooltip(stack, shipType, tooltipComponents);
             }
         } else {
             // GUI mode: show load from this core's equipped container slots.
@@ -1462,105 +1418,7 @@ public class ShipCoreItem extends Item {
      */
     public static void appendWeaponCooldownTooltip(ItemStack stack, List<Component> tooltip) {
         if (!net.neoforged.fml.loading.FMLEnvironment.dist.isClient()) return;
-        net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
-        if (mc.player == null || mc.level == null) return;
-
-        Inventory inv = mc.player.getInventory();
-
-        // Find the active (transformed) ship core
-        ItemStack coreStack = ItemStack.EMPTY;
-        for (ItemStack s : inv.items) {
-            if (s.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(s)) {
-                coreStack = s;
-                break;
-            }
-        }
-        if (coreStack.isEmpty()) {
-            ItemStack offhand = inv.offhand.get(0);
-            if (offhand.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(offhand)) {
-                coreStack = offhand;
-            }
-        }
-        if (coreStack.isEmpty()) return;
-
-        // Find weapon slot by object identity (only works when item is directly in player's inventory)
-        int weaponSlot = -1;
-        for (int i = 0; i < inv.items.size(); i++) {
-            if (inv.items.get(i) == stack) { weaponSlot = i; break; }
-        }
-        if (weaponSlot == -1 && inv.offhand.get(0) == stack) weaponSlot = 40;
-        if (weaponSlot == -1) return;
-
-        SlotCooldowns cooldowns = coreStack.getOrDefault(
-                ModDataComponents.SLOT_COOLDOWNS.get(), SlotCooldowns.EMPTY);
-        long gameTime = mc.level.getGameTime();
-
-        boolean onCooldown = cooldowns.isOnCooldown(weaponSlot, gameTime);
-        boolean isManualMode = !com.piranport.config.ModCommonConfig.AUTO_RESUPPLY_ENABLED.get();
-        // Auto-reload missiles (ANTI_AIR) consume ammo directly from inventory, never use LoadedAmmo
-        boolean isAutoReloadMissile = stack.getItem() instanceof MissileLauncherItem ml0 && !ml0.isManualReload();
-        // Manual-reload missiles (ROCKET/ANTI_SHIP) always need LoadedAmmo regardless of config
-        boolean needsLoadedAmmo = !isAutoReloadMissile
-                && ((isManualMode && !(stack.getItem() instanceof AircraftItem))
-                    || (stack.getItem() instanceof MissileLauncherItem ml && ml.isManualReload()));
-
-        if (onCooldown) {
-            // Weapon on cooldown
-            if (needsLoadedAmmo) {
-                LoadedAmmo reloading = stack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
-                if (reloading.hasAmmo()) {
-                    tooltip.add(Component.translatable("tooltip.piranport.weapon_reloading")
-                            .withStyle(net.minecraft.ChatFormatting.YELLOW));
-                } else {
-                    tooltip.add(Component.translatable("tooltip.piranport.weapon_not_loaded")
-                            .withStyle(net.minecraft.ChatFormatting.RED));
-                }
-            } else {
-                // Auto-reload weapon on cooldown = actively reloading
-                tooltip.add(Component.translatable("tooltip.piranport.weapon_reloading")
-                        .withStyle(net.minecraft.ChatFormatting.YELLOW));
-            }
-        } else if (needsLoadedAmmo) {
-            // Manual mode or manual-reload missile: require LOADED_AMMO to be present
-            LoadedAmmo loaded = stack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
-            boolean hasAmmo;
-            if (stack.getItem() instanceof TorpedoLauncherItem tl) {
-                hasAmmo = loaded.count() >= tl.getTubeCount();
-            } else if (stack.getItem() instanceof CannonItem ci) {
-                hasAmmo = loaded.count() >= ci.getBarrelCount();
-            } else {
-                hasAmmo = loaded.hasAmmo();
-            }
-            if (hasAmmo) {
-                tooltip.add(Component.translatable("tooltip.piranport.weapon_ready")
-                        .withStyle(net.minecraft.ChatFormatting.GREEN));
-            } else {
-                tooltip.add(Component.translatable("tooltip.piranport.weapon_not_loaded")
-                        .withStyle(net.minecraft.ChatFormatting.RED));
-            }
-        } else if (isAutoReloadMissile) {
-            // Auto-reload missile: check inventory for matching ammo
-            MissileLauncherItem mlCheck = (MissileLauncherItem) stack.getItem();
-            Item ammoItem = mlCheck.getAmmoItem();
-            boolean hasAmmoInInventory = false;
-            for (ItemStack s : inv.items) {
-                if (!s.isEmpty() && s.is(ammoItem)) { hasAmmoInInventory = true; break; }
-            }
-            if (!hasAmmoInInventory) {
-                ItemStack oh = inv.offhand.get(0);
-                if (!oh.isEmpty() && oh.is(ammoItem)) hasAmmoInInventory = true;
-            }
-            if (hasAmmoInInventory) {
-                tooltip.add(Component.translatable("tooltip.piranport.weapon_ready")
-                        .withStyle(net.minecraft.ChatFormatting.GREEN));
-            } else {
-                tooltip.add(Component.translatable("tooltip.piranport.weapon_not_loaded")
-                        .withStyle(net.minecraft.ChatFormatting.RED));
-            }
-        } else {
-            tooltip.add(Component.translatable("tooltip.piranport.weapon_ready")
-                    .withStyle(net.minecraft.ChatFormatting.GREEN));
-        }
+        ShipCoreClientTooltip.appendWeaponCooldownTooltip(stack, tooltip);
     }
 
     // ===== Caliber matching =====

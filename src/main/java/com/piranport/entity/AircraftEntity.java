@@ -639,6 +639,24 @@ public class AircraftEntity extends Entity {
         // Minimum 20 ticks in ATTACKING before allowing fallback to CRUISING
         boolean canFallback = stateTicks >= 20;
 
+        // 火箭机：未发射时优先对地/海火箭弹齐射，之后回退为子弹对空
+        if (aircraftType == AircraftInfo.AircraftType.ROCKET_FIGHTER) {
+            if (!hasFired && remainingAmmo > 0) {
+                LivingEntity groundTarget = resolveTarget(owner);
+                if (groundTarget != null) {
+                    tickRocketFighterMissileRun(owner, groundTarget);
+                    return;
+                }
+            }
+            Entity airTarget = resolveFighterTarget(owner);
+            if (airTarget == null) {
+                if (canFallback) setState(FlightState.CRUISING);
+                return;
+            }
+            tickFighterAttack(owner, airTarget);
+            return;
+        }
+
         // 子弹优先：使用战斗机AI
         if (hasBullets) {
             Entity target = resolveFighterTarget(owner);
@@ -691,7 +709,9 @@ public class AircraftEntity extends Entity {
      * Phase 33: target may be a LivingEntity or an enemy AircraftEntity.
      */
     private void tickFighterAttack(Player owner, Entity target) {
-        boolean ammoEnabled = ModCommonConfig.FIGHTER_AMMO_ENABLED.get();
+        // ROCKET_FIGHTER 的 ammo 专供火箭弹，子弹不受 FIGHTER_AMMO_ENABLED 约束
+        boolean ammoEnabled = ModCommonConfig.FIGHTER_AMMO_ENABLED.get()
+                && aircraftType != AircraftInfo.AircraftType.ROCKET_FIGHTER;
         if (ammoEnabled && remainingAmmo <= 0) { startReturning("fighter_ammo_depleted"); return; }
 
         Vec3 toTarget = target.getEyePosition().subtract(position());
@@ -726,6 +746,64 @@ public class AircraftEntity extends Entity {
                     }
                 }
             }
+        }
+    }
+
+    /**
+     * ROCKET_FIGHTER: approach a ground/surface target from altitude, salvo all rockets at once.
+     * After hasFired=true, the aircraft falls back to bullets-only fighter logic against air targets.
+     */
+    private void tickRocketFighterMissileRun(Player owner, LivingEntity target) {
+        // Timeout guard: if approach drags on, mark as fired so we fall back to air combat
+        if (stateTicks > 200) {
+            hasFired = true;
+            remainingAmmo = 0;
+            return;
+        }
+
+        double dx = target.getX() - getX();
+        double dz = target.getZ() - getZ();
+        double horizDist = Math.sqrt(dx * dx + dz * dz);
+        double desiredY = target.getY() + 8.0;
+        double altDelta = getY() - desiredY;
+
+        // Salvo window: horizDist 12-22, and aircraft roughly above desired altitude (0..+8)
+        if (horizDist >= 12 && horizDist <= 22 && altDelta >= -2.0 && altDelta <= 8.0) {
+            Vec3 dir = new Vec3(dx, target.getEyeY() + 0.5 - getY(), dz).normalize();
+            int toFire = Math.max(1, remainingAmmo);
+            com.piranport.debug.PiranPortDebug.event(
+                    "Aircraft ROCKET_SALVO | entityId={} capacity={} remaining={} firing={}",
+                    getId(), ammoCapacity, remainingAmmo, toFire);
+            float initSpeed = MissileEntity.MissileType.ROCKET.initialSpeed;
+            for (int i = 0; i < toFire; i++) {
+                // Small horizontal fan so rockets spread across the target area
+                double spread = (i - (toFire - 1) / 2.0) * 0.07;
+                double cos = Math.cos(spread);
+                double sin = Math.sin(spread);
+                Vec3 fanDir = new Vec3(
+                        dir.x * cos - dir.z * sin,
+                        dir.y,
+                        dir.x * sin + dir.z * cos
+                ).normalize();
+                MissileEntity rocket = new MissileEntity(level(),
+                        MissileEntity.MissileType.ROCKET,
+                        panelDamage * 1.2f, 0f, 2.0f,
+                        "piranport:rocket_ammo");
+                rocket.moveTo(getX(), getY() + 0.2, getZ(), rocket.getYRot(), rocket.getXRot());
+                rocket.setDeltaMovement(fanDir.x * initSpeed, fanDir.y * initSpeed, fanDir.z * initSpeed);
+                rocket.setOwner(owner);
+                level().addFreshEntity(rocket);
+            }
+            remainingAmmo = 0;
+            hasFired = true;
+            return;
+        }
+
+        // Approach the drop altitude at moderate speed
+        Vec3 toTarget = new Vec3(dx, desiredY - getY(), dz);
+        double dist = toTarget.length();
+        if (dist > 0.1) {
+            setDeltaMovement(toTarget.normalize().scale(Math.min(panelSpeed * 0.5, dist)));
         }
     }
 
@@ -1630,6 +1708,7 @@ public class AircraftEntity extends Entity {
                 case LEVEL_BOMBER   -> new ItemStack(ModItems.B25_BOMBER.get());
                 case ASW            -> new ItemStack(ModItems.SWORDFISH_ASW.get());
                 case RECON          -> new ItemStack(ModItems.RECON_SQUADRON.get());
+                case ROCKET_FIGHTER -> new ItemStack(ModItems.F6F_HELLCAT_ROCKET.get());
             };
         }
         // Intentionally reset fuel to 0: returning aircraft must be refueled before next sortie
@@ -1763,6 +1842,7 @@ public class AircraftEntity extends Entity {
             case LEVEL_BOMBER   -> 12;
             case ASW            -> 12;
             case RECON          -> 10;
+            case ROCKET_FIGHTER -> 20;
         };
     }
 

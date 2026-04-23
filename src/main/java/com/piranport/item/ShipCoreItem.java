@@ -2188,8 +2188,9 @@ public class ShipCoreItem extends Item {
             AircraftInfo info = weapon.get(ModDataComponents.AIRCRAFT_INFO.get());
             if (info == null || info.currentFuel() <= 0) continue;
 
-            // 战斗机默认有子弹（与手动发射一致）；非战斗机默认无子弹
-            boolean isFighter = info.aircraftType() == AircraftInfo.AircraftType.FIGHTER;
+            // 战斗机/火箭机默认有子弹（与手动发射一致）；非战斗机默认无子弹
+            boolean isFighter = info.aircraftType() == AircraftInfo.AircraftType.FIGHTER
+                    || info.aircraftType() == AircraftInfo.AircraftType.ROCKET_FIGHTER;
             boolean hasBullets = isFighter; // default: fighters use bullets
             for (FlightGroupData.FlightGroup group : groupData.groups()) {
                 if (group.slotIndices().contains(wi)) {

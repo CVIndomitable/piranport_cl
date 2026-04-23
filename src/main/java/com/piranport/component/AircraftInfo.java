@@ -23,7 +23,8 @@ public record AircraftInfo(
         TORPEDO_BOMBER("torpedo_bomber"),
         LEVEL_BOMBER("level_bomber"),
         ASW("asw"),
-        RECON("recon");
+        RECON("recon"),
+        ROCKET_FIGHTER("rocket_fighter");
 
         private final String serializedName;
 

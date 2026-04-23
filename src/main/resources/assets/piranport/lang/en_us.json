@@ -354,6 +354,7 @@
   "tooltip.piranport.aircraft_type.level_bomber": "Level Bomber",
   "tooltip.piranport.aircraft_type.asw": "ASW",
   "tooltip.piranport.aircraft_type.recon": "Recon",
+  "tooltip.piranport.aircraft_type.rocket_fighter": "Rocket Fighter",
   "tooltip.piranport.aircraft_ammo_capacity": "Ammo Capacity: %s",
   "tooltip.piranport.aircraft_damage": "Damage: %s",
   "tooltip.piranport.aircraft_speed": "Speed: %s",

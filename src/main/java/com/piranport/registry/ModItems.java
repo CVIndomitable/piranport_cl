@@ -791,13 +791,13 @@ public class ModItems {
                                             1200, 32, 0, 46f, 1.3f, 20, AircraftInfo.BombingMode.LEVEL))));
 
     // --- 战斗机 ---
-    /** F6F地狱猫（火箭弹）— 2/咬+6×火箭弹6, HP6, 72节 */
+    /** F6F地狱猫（火箭弹）— 火箭机：对空子弹(2/咬)+对地/海6枚火箭弹(6爆炸伤害), HP6, 72节 */
     public static final DeferredItem<AircraftItem> F6F_HELLCAT_ROCKET =
             ITEMS.register("f6f_hellcat_rocket",
                     () -> new AircraftItem(new Item.Properties().stacksTo(1)
                             .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
                             .component(ModDataComponents.AIRCRAFT_INFO.get(),
-                                    new AircraftInfo(AircraftInfo.AircraftType.FIGHTER,
+                                    new AircraftInfo(AircraftInfo.AircraftType.ROCKET_FIGHTER,
                                             1200, 6, 0, 6f, 1.3f, 14, AircraftInfo.BombingMode.DIVE))));
 
     /** 海喷火 — 3/咬, HP5, 80节 */

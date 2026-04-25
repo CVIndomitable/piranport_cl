@@ -146,6 +146,10 @@ public class ShipCoreItem extends Item {
         if (!other.isEmpty() && other.is(net.minecraft.world.item.Items.LAVA_BUCKET)) {
             FuelData fuel = stack.getOrDefault(ModDataComponents.SHIP_CORE_FUEL.get(),
                     new FuelData(0, shipType.fuelCapacity));
+            // Validate fuel data integrity before calculation
+            if (fuel.maxFuel() < 0 || fuel.currentFuel() < 0) {
+                fuel = new FuelData(0, shipType.fuelCapacity);
+            }
             if (!fuel.isFull()) {
                 stack.set(ModDataComponents.SHIP_CORE_FUEL.get(),
                         fuel.withCurrentFuel(fuel.currentFuel() + 1));
@@ -164,8 +168,13 @@ public class ShipCoreItem extends Item {
         if (!other.isEmpty() && other.is(net.minecraft.world.item.Items.COAL)) {
             FuelData fuel = stack.getOrDefault(ModDataComponents.SHIP_CORE_FUEL.get(),
                     new FuelData(0, shipType.fuelCapacity));
+            // Validate fuel data integrity before calculation
+            if (fuel.maxFuel() < 0 || fuel.currentFuel() < 0) {
+                fuel = new FuelData(0, shipType.fuelCapacity);
+            }
             if (!fuel.isFull()) {
                 int space = fuel.maxFuel() - fuel.currentFuel();
+                if (space <= 0) return false;
                 int toAdd = Math.min(space, other.getCount());
                 stack.set(ModDataComponents.SHIP_CORE_FUEL.get(),
                         fuel.withCurrentFuel(fuel.currentFuel() + toAdd));
@@ -183,8 +192,13 @@ public class ShipCoreItem extends Item {
         if (!other.isEmpty() && other.is(net.minecraft.world.item.Items.BLAZE_ROD)) {
             FuelData fuel = stack.getOrDefault(ModDataComponents.SHIP_CORE_FUEL.get(),
                     new FuelData(0, shipType.fuelCapacity));
+            // Validate fuel data integrity before calculation
+            if (fuel.maxFuel() < 0 || fuel.currentFuel() < 0) {
+                fuel = new FuelData(0, shipType.fuelCapacity);
+            }
             if (!fuel.isFull()) {
                 int space = fuel.maxFuel() - fuel.currentFuel();
+                if (space <= 0) return false;
                 int toAdd = Math.min(space, other.getCount());
                 stack.set(ModDataComponents.SHIP_CORE_FUEL.get(),
                         fuel.withCurrentFuel(fuel.currentFuel() + toAdd));
@@ -202,8 +216,13 @@ public class ShipCoreItem extends Item {
         if (!other.isEmpty() && other.is(ModItems.FUEL.get())) {
             FuelData fuel = stack.getOrDefault(ModDataComponents.SHIP_CORE_FUEL.get(),
                     new FuelData(0, shipType.fuelCapacity));
+            // Validate fuel data integrity before calculation
+            if (fuel.maxFuel() < 0 || fuel.currentFuel() < 0) {
+                fuel = new FuelData(0, shipType.fuelCapacity);
+            }
             if (!fuel.isFull()) {
                 int space = fuel.maxFuel() - fuel.currentFuel();
+                if (space <= 0) return false;
                 int toAdd = Math.min(space, other.getCount());
                 stack.set(ModDataComponents.SHIP_CORE_FUEL.get(),
                         fuel.withCurrentFuel(fuel.currentFuel() + toAdd));

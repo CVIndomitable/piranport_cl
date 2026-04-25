@@ -22,7 +22,9 @@ public record CycleWeaponPayload() implements CustomPacketPayload {
 
     public static void handle(CycleWeaponPayload payload, IPayloadContext context) {
         context.enqueueWork(() -> {
-            if (context.player() != null) TransformationManager.cycleWeapon(context.player());
+            if (context.player() != null && TransformationManager.isPlayerTransformed(context.player())) {
+                TransformationManager.cycleWeapon(context.player());
+            }
         });
     }
 }

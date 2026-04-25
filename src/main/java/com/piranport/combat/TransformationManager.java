@@ -92,11 +92,18 @@ public class TransformationManager {
         NonNullList<ItemStack> items = NonNullList.withSize(sci.getShipType().totalSlots(), ItemStack.EMPTY);
         contents.copyInto(items);
 
+        // Validate weaponSlots against actual container size to prevent index overflow
+        if (weaponSlots > items.size()) {
+            com.piranport.PiranPort.LOGGER.warn("Weapon slots ({}) exceeds container size ({}) for core {}",
+                    weaponSlots, items.size(), sci.getShipType());
+            weaponSlots = items.size();
+        }
+
         int current = getWeaponIndex(mainHand);
         int next = -1;
         for (int i = 1; i <= weaponSlots; i++) {
             int candidate = (current + i) % weaponSlots;
-            if (candidate < items.size() && !items.get(candidate).isEmpty()) {
+            if (candidate >= 0 && candidate < items.size() && !items.get(candidate).isEmpty()) {
                 next = candidate;
                 break;
             }

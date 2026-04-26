@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "YRR",
+    "RRR",
+    "PPP"
+  ],
+  "key": {
+    "Y": "minecraft:yellow_dye",
+    "R": "minecraft:red_dye",
+    "P": "minecraft:paper"
+  },
+  "result": {
+    "id": "piranport:flag_c"
+  }
+}

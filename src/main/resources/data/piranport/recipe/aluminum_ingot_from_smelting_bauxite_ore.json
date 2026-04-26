@@ -2,7 +2,9 @@
   "type": "minecraft:smelting",
   "category": "misc",
   "group": "aluminum_ingot",
-  "ingredient": "piranport:bauxite_ore",
+  "ingredient": {
+    "item": "piranport:bauxite_ore"
+  },
   "result": {
     "id": "piranport:aluminum_ingot"
   },

@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "BRR",
+    "WWW",
+    "PPP"
+  ],
+  "key": {
+    "B": "minecraft:blue_dye",
+    "R": "minecraft:red_dye",
+    "W": "minecraft:white_dye",
+    "P": "minecraft:paper"
+  },
+  "result": {
+    "id": "piranport:flag_u"
+  }
+}

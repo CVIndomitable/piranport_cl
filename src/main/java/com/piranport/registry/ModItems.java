@@ -151,6 +151,9 @@ public class ModItems {
     public static final DeferredItem<Item> LARGE_GUN =
             ITEMS.register("large_gun", () -> new CannonItem(new Item.Properties().stacksTo(1)
                     .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.CANNON), 20f, 80, 3));
+    public static final DeferredItem<Item> FRENCH_QUAD_380MM_GUN =
+            ITEMS.register("french_quad_380mm_gun", () -> new CannonItem(new Item.Properties().stacksTo(1)
+                    .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.CANNON), 20f, 60, 4));
 
     // ===== Torpedo Ammo (legacy generic) =====
     public static final DeferredItem<TorpedoItem> TORPEDO_533MM =
@@ -707,10 +710,6 @@ public class ModItems {
             ITEMS.register("harpoon_missile",
                     () -> new MissileItem(new Item.Properties().stacksTo(16),
                             com.piranport.entity.MissileEntity.MissileType.ANTI_SHIP, 24f));
-    public static final DeferredItem<MissileItem> TERRIER_MISSILE =
-            ITEMS.register("terrier_missile",
-                    () -> new MissileItem(new Item.Properties().stacksTo(16),
-                            com.piranport.entity.MissileEntity.MissileType.ANTI_AIR, 9f));
     public static final DeferredItem<MissileItem> ANTI_AIR_MISSILE =
             ITEMS.register("anti_air_missile",
                     () -> new MissileItem(new Item.Properties().stacksTo(16),
@@ -739,15 +738,6 @@ public class ModItems {
                             com.piranport.entity.MissileEntity.MissileType.ANTI_SHIP,
                             24f, 0f, 0f, 4, 0,
                             () -> ModItems.HARPOON_MISSILE.get()));
-    // 小猎犬（防空导弹）: 伤害9, 冷却60s, 负重14
-    public static final DeferredItem<MissileLauncherItem> TERRIER_LAUNCHER =
-            ITEMS.register("terrier_launcher",
-                    () -> new MissileLauncherItem(
-                            new Item.Properties().stacksTo(1)
-                                    .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.MISSILE),
-                            com.piranport.entity.MissileEntity.MissileType.ANTI_AIR,
-                            9f, 0f, 2.0f, 1, 1200,
-                            () -> ModItems.TERRIER_MISSILE.get()));
     // 舰载火箭弹: 伤害6, 连装6, 负重32
     public static final DeferredItem<MissileLauncherItem> SHIP_ROCKET_LAUNCHER =
             ITEMS.register("ship_rocket_launcher",

@@ -7,10 +7,18 @@
     "IRI"
   ],
   "key": {
-    "I": "minecraft:iron_ingot",
-    "A": "piranport:aluminum_ingot",
-    "R": "minecraft:redstone",
-    "P": "minecraft:gunpowder"
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "A": {
+      "item": "piranport:aluminum_ingot"
+    },
+    "R": {
+      "item": "minecraft:redstone"
+    },
+    "P": {
+      "item": "minecraft:gunpowder"
+    }
   },
   "result": {
     "id": "piranport:torpedo_610mm",

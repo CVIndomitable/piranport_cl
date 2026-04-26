@@ -3,7 +3,9 @@
   "category": "misc",
   "group": "aluminum_ingot",
   "ingredients": [
-    "piranport:aluminum_block"
+    {
+      "item": "piranport:aluminum_block"
+    }
   ],
   "result": {
     "id": "piranport:aluminum_ingot",

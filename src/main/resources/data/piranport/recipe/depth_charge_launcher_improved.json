@@ -7,9 +7,15 @@
     "III"
   ],
   "key": {
-    "I": "minecraft:iron_ingot",
-    "R": "minecraft:redstone",
-    "D": "piranport:depth_charge_launcher"
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "R": {
+      "item": "minecraft:redstone"
+    },
+    "D": {
+      "item": "piranport:depth_charge_launcher"
+    }
   },
   "result": {
     "id": "piranport:depth_charge_launcher_improved",

@@ -7,9 +7,15 @@
     "IRI"
   ],
   "key": {
-    "I": "minecraft:iron_ingot",
-    "A": "piranport:aluminum_ingot",
-    "R": "minecraft:redstone"
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "A": {
+      "item": "piranport:aluminum_ingot"
+    },
+    "R": {
+      "item": "minecraft:redstone"
+    }
   },
   "result": {
     "id": "piranport:triple_torpedo_launcher"

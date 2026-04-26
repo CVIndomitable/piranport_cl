@@ -7,7 +7,9 @@
     "SSS"
   ],
   "key": {
-    "S": "piranport:salt"
+    "S": {
+      "item": "piranport:salt"
+    }
   },
   "result": {
     "id": "piranport:salt_block"

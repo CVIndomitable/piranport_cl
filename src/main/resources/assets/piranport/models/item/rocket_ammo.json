@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "piranport:item/rocket_ammo"
+    "layer0": "piranport:item/sy1_missile"
   }
 }

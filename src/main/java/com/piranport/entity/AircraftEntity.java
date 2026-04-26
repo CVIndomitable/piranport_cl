@@ -1652,10 +1652,10 @@ public class AircraftEntity extends Entity {
             stack = switch (aircraftType) {
                 case FIGHTER        -> new ItemStack(ModItems.F4F_WILDCAT.get());
                 case DIVE_BOMBER    -> new ItemStack(ModItems.SBD_DAUNTLESS.get());
-                case TORPEDO_BOMBER -> new ItemStack(ModItems.SWORDFISH_TORPEDO.get());
+                case TORPEDO_BOMBER -> new ItemStack(ModItems.TBF_TORPEDO.get());
                 case LEVEL_BOMBER   -> new ItemStack(ModItems.B25_BOMBER.get());
-                case ASW            -> new ItemStack(ModItems.SWORDFISH_ASW.get());
-                case RECON          -> new ItemStack(ModItems.TYPE0_RECON.get());
+                case ASW            -> new ItemStack(ModItems.TBF_ASW.get());
+                case RECON          -> ItemStack.EMPTY;
             };
         }
         // Intentionally reset fuel to 0: returning aircraft must be refueled before next sortie

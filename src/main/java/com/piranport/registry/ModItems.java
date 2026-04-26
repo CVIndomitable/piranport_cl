@@ -479,23 +479,6 @@ public class ModItems {
     // ===== Named Aircraft =====
 
     // --- 鱼雷机 ---
-    public static final DeferredItem<AircraftItem> SWORDFISH_TORPEDO =
-            ITEMS.register("swordfish_torpedo",
-                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
-                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
-                                    new AircraftInfo(AircraftInfo.AircraftType.TORPEDO_BOMBER,
-                                            1200, 1, 0, 18f, 0.8f, 18, AircraftInfo.BombingMode.DIVE))));
-
-    /** 剑鱼（反潜）— 6×深弹8, HP4, 52节 */
-    public static final DeferredItem<AircraftItem> SWORDFISH_ASW =
-            ITEMS.register("swordfish_asw",
-                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
-                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
-                                    new AircraftInfo(AircraftInfo.AircraftType.ASW,
-                                            1200, 6, 0, 8f, 0.8f, 16, AircraftInfo.BombingMode.LEVEL))));
-
     /** TBF（鱼雷）— 1×533鱼雷21, HP5, 56节 */
     public static final DeferredItem<AircraftItem> TBF_TORPEDO =
             ITEMS.register("tbf_torpedo",
@@ -513,24 +496,6 @@ public class ModItems {
                             .component(ModDataComponents.AIRCRAFT_INFO.get(),
                                     new AircraftInfo(AircraftInfo.AircraftType.ASW,
                                             1200, 4, 0, 8f, 0.9f, 18, AircraftInfo.BombingMode.LEVEL))));
-
-    /** 天山（鱼雷）— 610鱼雷24, HP4, 64节 */
-    public static final DeferredItem<AircraftItem> TENZAN_TORPEDO =
-            ITEMS.register("tenzan_torpedo",
-                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
-                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
-                                    new AircraftInfo(AircraftInfo.AircraftType.TORPEDO_BOMBER,
-                                            1200, 1, 0, 24f, 1.1f, 20, AircraftInfo.BombingMode.DIVE))));
-
-    /** 九七舰攻（鱼雷）— 610鱼雷21, HP4, 64节 */
-    public static final DeferredItem<AircraftItem> TYPE97_TORPEDO =
-            ITEMS.register("type97_torpedo",
-                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
-                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
-                                    new AircraftInfo(AircraftInfo.AircraftType.TORPEDO_BOMBER,
-                                            1200, 1, 0, 21f, 1.1f, 18, AircraftInfo.BombingMode.DIVE))));
 
     /** 空中海盗（鱼雷）— 4×533鱼雷12, HP9, 64节 */
     public static final DeferredItem<AircraftItem> SKY_PIRATE_TORPEDO =
@@ -560,15 +525,6 @@ public class ModItems {
                                     new AircraftInfo(AircraftInfo.AircraftType.DIVE_BOMBER,
                                             1200, 1, 0, 14f, 1.1f, 18, AircraftInfo.BombingMode.DIVE))));
 
-    /** 彗星（轰炸）— 俯冲轰炸18, HP4, 72节 */
-    public static final DeferredItem<AircraftItem> SUISEI_BOMBER =
-            ITEMS.register("suisei_bomber",
-                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
-                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
-                                    new AircraftInfo(AircraftInfo.AircraftType.DIVE_BOMBER,
-                                            1200, 1, 0, 18f, 1.3f, 16, AircraftInfo.BombingMode.DIVE))));
-
     // --- 水平轰炸机 ---
     /** B25（轰炸）— 水平轰炸30, HP15, 64节 */
     public static final DeferredItem<AircraftItem> B25_BOMBER =
@@ -579,15 +535,6 @@ public class ModItems {
                                     new AircraftInfo(AircraftInfo.AircraftType.LEVEL_BOMBER,
                                             1200, 32, 0, 30f, 1.1f, 24, AircraftInfo.BombingMode.LEVEL))));
 
-    /** XA2J（轰炸）— 水平轰炸46, HP15, 72节 */
-    public static final DeferredItem<AircraftItem> XA2J_BOMBER =
-            ITEMS.register("xa2j_bomber",
-                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
-                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
-                                    new AircraftInfo(AircraftInfo.AircraftType.LEVEL_BOMBER,
-                                            1200, 32, 0, 46f, 1.3f, 20, AircraftInfo.BombingMode.LEVEL))));
-
     // --- 战斗机 ---
     /** F6F地狱猫（火箭弹）— 2/咬+6×火箭弹6, HP6, 72节 */
     public static final DeferredItem<AircraftItem> F6F_HELLCAT_ROCKET =
@@ -597,24 +544,6 @@ public class ModItems {
                             .component(ModDataComponents.AIRCRAFT_INFO.get(),
                                     new AircraftInfo(AircraftInfo.AircraftType.FIGHTER,
                                             1200, 6, 0, 6f, 1.3f, 14, AircraftInfo.BombingMode.DIVE))));
-
-    /** 海喷火 — 3/咬, HP5, 80节 */
-    public static final DeferredItem<AircraftItem> SEAFIRE =
-            ITEMS.register("seafire",
-                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
-                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
-                                    new AircraftInfo(AircraftInfo.AircraftType.FIGHTER,
-                                            1200, 64, 0, 3f, 1.5f, 12, AircraftInfo.BombingMode.DIVE))));
-
-    /** 零战五二型 — 2/咬, HP5, 80节 */
-    public static final DeferredItem<AircraftItem> ZERO_MODEL52 =
-            ITEMS.register("zero_model52",
-                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
-                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
-                                    new AircraftInfo(AircraftInfo.AircraftType.FIGHTER,
-                                            1200, 64, 0, 2f, 1.5f, 10, AircraftInfo.BombingMode.DIVE))));
 
     /** F4F野猫 — 2/咬, HP5, 72节 */
     public static final DeferredItem<AircraftItem> F4F_WILDCAT =
@@ -642,34 +571,6 @@ public class ModItems {
                             .component(ModDataComponents.AIRCRAFT_INFO.get(),
                                     new AircraftInfo(AircraftInfo.AircraftType.FIGHTER,
                                             1200, 64, 0, 3f, 1.5f, 14, AircraftInfo.BombingMode.DIVE))));
-
-    /** F2H女妖 — 5/咬, HP8, 100节 */
-    public static final DeferredItem<AircraftItem> F2H_BANSHEE =
-            ITEMS.register("f2h_banshee",
-                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
-                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
-                                    new AircraftInfo(AircraftInfo.AircraftType.FIGHTER,
-                                            1200, 64, 0, 5f, 2.0f, 14, AircraftInfo.BombingMode.DIVE))));
-
-    // --- 侦察机 ---
-    /** 零式水侦 — HP4, 航程10240, 160节 */
-    public static final DeferredItem<AircraftItem> TYPE0_RECON =
-            ITEMS.register("type0_recon",
-                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
-                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
-                                    new AircraftInfo(AircraftInfo.AircraftType.RECON,
-                                            10240, 0, 0, 0f, 3.5f, 8, AircraftInfo.BombingMode.DIVE))));
-
-    /** C-1侦察机 — HP5, 航程12800, 120节 */
-    public static final DeferredItem<AircraftItem> C1_RECON =
-            ITEMS.register("c1_recon",
-                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
-                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
-                                    new AircraftInfo(AircraftInfo.AircraftType.RECON,
-                                            12800, 0, 0, 0f, 2.5f, 8, AircraftInfo.BombingMode.DIVE))));
 
     // ===== Aviation Ammo (Phase 18) =====
     public static final DeferredItem<Item> AVIATION_FUEL =

@@ -7,8 +7,12 @@
     "AI"
   ],
   "key": {
-    "I": "minecraft:iron_ingot",
-    "A": "piranport:aluminum_ingot"
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "A": {
+      "item": "piranport:aluminum_ingot"
+    }
   },
   "result": {
     "id": "piranport:medium_ship_core"

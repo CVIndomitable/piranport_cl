@@ -7,8 +7,12 @@
     " A "
   ],
   "key": {
-    "A": "piranport:aluminum_ingot",
-    "I": "minecraft:iron_ingot"
+    "A": {
+      "item": "piranport:aluminum_ingot"
+    },
+    "I": {
+      "item": "minecraft:iron_ingot"
+    }
   },
   "result": {
     "id": "piranport:fighter_squadron"

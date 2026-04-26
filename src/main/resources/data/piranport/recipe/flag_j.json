@@ -7,9 +7,15 @@
     "WPW"
   ],
   "key": {
-    "W": "minecraft:white_dye",
-    "R": "minecraft:red_dye",
-    "P": "minecraft:paper"
+    "W": {
+      "item": "minecraft:white_dye"
+    },
+    "R": {
+      "item": "minecraft:red_dye"
+    },
+    "P": {
+      "item": "minecraft:paper"
+    }
   },
   "result": {
     "id": "piranport:flag_j"

@@ -7,8 +7,12 @@
     "AAA"
   ],
   "key": {
-    "A": "piranport:aluminum_ingot",
-    "T": "piranport:torpedo_533mm"
+    "A": {
+      "item": "piranport:aluminum_ingot"
+    },
+    "T": {
+      "item": "piranport:torpedo_533mm"
+    }
   },
   "result": {
     "id": "piranport:aerial_torpedo",

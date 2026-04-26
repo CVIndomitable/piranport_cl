@@ -7,7 +7,9 @@
     " II"
   ],
   "key": {
-    "I": "minecraft:iron_ingot"
+    "I": {
+      "item": "minecraft:iron_ingot"
+    }
   },
   "result": {
     "id": "piranport:gungnir"

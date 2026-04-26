@@ -7,10 +7,18 @@
     "PPP"
   ],
   "key": {
-    "B": "minecraft:blue_dye",
-    "W": "minecraft:white_dye",
-    "R": "minecraft:red_dye",
-    "P": "minecraft:paper"
+    "B": {
+      "item": "minecraft:blue_dye"
+    },
+    "W": {
+      "item": "minecraft:white_dye"
+    },
+    "R": {
+      "item": "minecraft:red_dye"
+    },
+    "P": {
+      "item": "minecraft:paper"
+    }
   },
   "result": {
     "id": "piranport:flag_f"

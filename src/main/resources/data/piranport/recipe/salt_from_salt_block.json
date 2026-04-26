@@ -3,7 +3,9 @@
   "category": "misc",
   "group": "salt",
   "ingredients": [
-    "piranport:salt_block"
+    {
+      "item": "piranport:salt_block"
+    }
   ],
   "result": {
     "id": "piranport:salt",

@@ -6,8 +6,12 @@
     " G "
   ],
   "key": {
-    "A": "piranport:aluminum_ingot",
-    "G": "minecraft:glass"
+    "A": {
+      "item": "piranport:aluminum_ingot"
+    },
+    "G": {
+      "item": "minecraft:glass"
+    }
   },
   "result": {
     "id": "piranport:recon_squadron"

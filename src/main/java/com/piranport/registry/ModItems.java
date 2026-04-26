@@ -12,7 +12,6 @@ import com.piranport.item.CannonItem;
 import com.piranport.item.BottleFoodItem;
 import com.piranport.item.ModFoodItem;
 import com.piranport.item.ShipCoreItem;
-import com.piranport.item.SkinCoreItem;
 import com.piranport.item.SonarItem;
 import com.piranport.item.EngineItem;
 import com.piranport.item.TorpedoItem;
@@ -882,17 +881,6 @@ public class ModItems {
                             com.piranport.entity.MissileEntity.MissileType.ANTI_AIR,
                             6f, 0f, 1.5f, 1, 1200,
                             () -> ModItems.ANTI_AIR_MISSILE.get()));
-
-    // ===== Skin Cores =====
-    public static final DeferredItem<SkinCoreItem> SKIN_CORE_1 =
-            ITEMS.register("skin_core_1",
-                    () -> new SkinCoreItem(new Item.Properties().stacksTo(1), 1));
-    public static final DeferredItem<SkinCoreItem> SKIN_CORE_2 =
-            ITEMS.register("skin_core_2",
-                    () -> new SkinCoreItem(new Item.Properties().stacksTo(1), 2));
-    public static final DeferredItem<SkinCoreItem> SKIN_CORE_3 =
-            ITEMS.register("skin_core_3",
-                    () -> new SkinCoreItem(new Item.Properties().stacksTo(1), 3));
 
     // ===== Fuel =====
     public static final DeferredItem<Item> FUEL =

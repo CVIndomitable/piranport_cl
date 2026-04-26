@@ -5,8 +5,6 @@ import com.piranport.aviation.ClientReconData;
 import com.piranport.combat.TransformationManager;
 import com.piranport.config.ModCommonConfig;
 import com.piranport.network.RecallAllAircraftPayload;
-import com.piranport.network.SkinRevertPayload;
-import com.piranport.skin.ClientSkinData;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -33,20 +31,13 @@ public class ClientGameEvents {
         );
     }
 
-    /** Empty hand + shift + right click → revert skin and return core. */
     /** Empty hand + right click (no shift, no-GUI, transformed) → recall all aircraft. */
     @SubscribeEvent
     public static void onRightClickEmpty(PlayerInteractEvent.RightClickEmpty event) {
         // Block all empty-hand actions while in recon mode to prevent errors
         if (ClientReconData.isInReconMode()) return;
 
-        if (event.getEntity().isShiftKeyDown()) {
-            int currentSkin = ClientSkinData.getActiveSkin(event.getEntity().getUUID());
-            if (currentSkin > 0) {
-                PacketDistributor.sendToServer(new SkinRevertPayload());
-            }
-            return;
-        }
+        if (event.getEntity().isShiftKeyDown()) return;
         // No-GUI mode: empty hand right-click → recall all aircraft
         if (!ModCommonConfig.isShipCoreGuiEnabled()
                 && TransformationManager.isPlayerTransformed(event.getEntity())) {
@@ -68,7 +59,6 @@ public class ClientGameEvents {
         ClientFireControlData.clear();
         ClientReconData.clearRecon();
         ClientTickHandler.resetClientState();
-        ClientSkinData.clear();
         com.piranport.client.FireControlHudLayer.clearCache();
     }
 }

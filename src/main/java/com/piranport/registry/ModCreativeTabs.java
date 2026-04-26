@@ -120,10 +120,6 @@ public class ModCreativeTabs {
                         output.accept(ModItems.DIESEL_ENGINE.get());
                         // Torpedo Reload
                         output.accept(ModItems.TORPEDO_RELOAD.get());
-                        // Skin Cores
-                        output.accept(ModItems.SKIN_CORE_1.get());
-                        output.accept(ModItems.SKIN_CORE_2.get());
-                        output.accept(ModItems.SKIN_CORE_3.get());
                     }).build());
 
     // ===== 农业 — 矿石 / 材料（作物类归入"舰娘食物"标签页）=====

@@ -19,8 +19,6 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
-import net.minecraft.client.renderer.entity.player.PlayerRenderer;
-import net.minecraft.client.resources.PlayerSkin;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.RegisterItemDecorationsEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
@@ -95,17 +93,6 @@ public class ClientEvents {
         event.register(ModItems.SY1_LAUNCHER.get(), weaponDecorator);
         event.register(ModItems.MK14_HARPOON_LAUNCHER.get(), weaponDecorator);
         event.register(ModItems.SHIP_ROCKET_LAUNCHER.get(), weaponDecorator);
-    }
-
-    @SubscribeEvent
-    public static void onAddLayers(EntityRenderersEvent.AddLayers event) {
-        for (PlayerSkin.Model skinModel : event.getSkins()) {
-            var renderer = event.getSkin(skinModel);
-            if (renderer instanceof PlayerRenderer playerRenderer) {
-                playerRenderer.addLayer(
-                        new com.piranport.client.SkinOverlayLayer(playerRenderer));
-            }
-        }
     }
 
     @SubscribeEvent

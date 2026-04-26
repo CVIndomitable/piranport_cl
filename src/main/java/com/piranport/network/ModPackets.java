@@ -95,18 +95,6 @@ public class ModPackets {
                 AswSonarSyncPayload::handle
         );
 
-        // ===== Skin System =====
-        registrar.playToClient(
-                SkinSyncPayload.TYPE,
-                SkinSyncPayload.STREAM_CODEC,
-                SkinSyncPayload::handle
-        );
-        registrar.playToServer(
-                SkinRevertPayload.TYPE,
-                SkinRevertPayload.STREAM_CODEC,
-                SkinRevertPayload::handle
-        );
-
         // Hit display (hit/kill/miss chat) toggle
         registrar.playToServer(
                 HitDisplayTogglePayload.TYPE,

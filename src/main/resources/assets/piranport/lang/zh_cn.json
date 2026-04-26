@@ -433,5 +433,7 @@
   "item.piranport.egg_sandwich": "鸡蛋三明治",
   "item.piranport.bacon_sandwich": "培根三明治",
   "item.piranport.salami_pizza_pieces": "切片萨拉米披萨",
-  "item.piranport.bolognese_linguine_recipe": "番茄肉酱意面"
+  "item.piranport.bolognese_linguine_recipe": "番茄肉酱意面",
+
+  "entity.minecraft.villager.piranport.aila": "艾拉"
 }

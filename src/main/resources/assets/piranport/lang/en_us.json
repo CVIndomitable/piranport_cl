@@ -445,5 +445,7 @@
   "item.piranport.egg_sandwich": "Egg Sandwich",
   "item.piranport.bacon_sandwich": "Bacon Sandwich",
   "item.piranport.salami_pizza_pieces": "Salami Pizza Slice",
-  "item.piranport.bolognese_linguine_recipe": "Bolognese Linguine"
+  "item.piranport.bolognese_linguine_recipe": "Bolognese Linguine",
+
+  "entity.minecraft.villager.piranport.aila": "Aila"
 }

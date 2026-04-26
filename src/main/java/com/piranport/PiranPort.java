@@ -11,10 +11,14 @@ import com.piranport.registry.ModCreativeTabs;
 import com.piranport.registry.ModDataComponents;
 import com.piranport.registry.ModEntityTypes;
 import com.piranport.registry.ModItems;
+import com.piranport.registry.ModLootModifiers;
 import com.piranport.registry.ModMenuTypes;
 import com.piranport.registry.ModMobEffects;
 import com.piranport.registry.ModArmorMaterials;
+import com.piranport.registry.ModPoiTypes;
 import com.piranport.registry.ModRecipeTypes;
+import com.piranport.registry.ModVillagerProfessions;
+import net.minecraft.resources.ResourceLocation;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
@@ -27,6 +31,10 @@ import org.slf4j.Logger;
 public class PiranPort {
     public static final String MOD_ID = "piranport";
     public static final Logger LOGGER = LogUtils.getLogger();
+
+    public static ResourceLocation id(String path) {
+        return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
+    }
 
     public PiranPort(IEventBus modEventBus, ModContainer modContainer) {
         ModDataComponents.DATA_COMPONENTS.register(modEventBus);
@@ -41,6 +49,9 @@ public class PiranPort {
         ModRecipeTypes.RECIPE_SERIALIZERS.register(modEventBus);
         ModBiomeModifiers.BIOME_MODIFIER_SERIALIZERS.register(modEventBus);
         ModArmorMaterials.ARMOR_MATERIALS.register(modEventBus);
+        ModLootModifiers.LOOT_MODIFIER_SERIALIZERS.register(modEventBus);
+        ModPoiTypes.POI_TYPES.register(modEventBus);
+        ModVillagerProfessions.VILLAGER_PROFESSIONS.register(modEventBus);
         NeoForge.EVENT_BUS.addListener(this::registerBrewingRecipes);
         modContainer.registerConfig(ModConfig.Type.CLIENT, ModClientConfig.SPEC);
         modContainer.registerConfig(ModConfig.Type.COMMON, ModCommonConfig.SPEC);

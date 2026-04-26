@@ -34,13 +34,16 @@ public class ModCreativeTabs {
             CREATIVE_TABS.register("cannon_torpedo_tab", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.piranport.cannon_torpedo"))
                     .withTabsAfter(CreativeModeTabs.SPAWN_EGGS)
-                    .icon(() -> ModItems.MEDIUM_GUN.get().getDefaultInstance())
+                    .icon(() -> ModItems.SMALL_GUN.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
                         // Guns
                         output.accept(ModItems.SINGLE_SMALL_GUN.get());
                         output.accept(ModItems.SMALL_GUN.get());
-                        output.accept(ModItems.MEDIUM_GUN.get());
-                        output.accept(ModItems.LARGE_GUN.get());
+                        output.accept(ModItems.FRENCH_QUAD_380MM_GUN.get());
+                        output.accept(ModItems.BRITISH_TRIPLE_8INCH_GUN.get());
+                        output.accept(ModItems.BRITISH_SINGLE_18INCH_GUN.get());
+                        output.accept(ModItems.MK16_TRIPLE_8INCH_AUTO_GUN.get());
+                        output.accept(ModItems.MK16DP_TWIN_6INCH_AA_GUN.get());
                         // Torpedo Launchers
                         output.accept(ModItems.TWIN_TORPEDO_LAUNCHER.get());
                         output.accept(ModItems.TRIPLE_TORPEDO_LAUNCHER.get());
@@ -81,7 +84,6 @@ public class ModCreativeTabs {
                     .displayItems((parameters, output) -> {
                         output.accept(ModItems.SY1_LAUNCHER.get());
                         output.accept(ModItems.MK14_HARPOON_LAUNCHER.get());
-                        output.accept(ModItems.TERRIER_LAUNCHER.get());
                         output.accept(ModItems.SHIP_ROCKET_LAUNCHER.get());
                         output.accept(ModItems.SEA_DART_LAUNCHER.get());
                         output.accept(ModItems.SEACAT_LAUNCHER.get());
@@ -288,7 +290,6 @@ public class ModCreativeTabs {
                         // Missile / Rocket Ammo
                         output.accept(ModItems.SY1_MISSILE.get());
                         output.accept(ModItems.HARPOON_MISSILE.get());
-                        output.accept(ModItems.TERRIER_MISSILE.get());
                         output.accept(ModItems.ANTI_AIR_MISSILE.get());
                         output.accept(ModItems.ROCKET_AMMO.get());
                     }).build());
@@ -320,6 +321,8 @@ public class ModCreativeTabs {
                         output.accept(ModItems.HATSUYUKI_MAIN_GUN.get());
                         // Gungnir
                         output.accept(ModItems.GUNGNIR.get());
+                        // 战利品
+                        output.accept(ModItems.HENTAI_TROPHY.get());
                     }).build());
 
     // ===== 设施 — 装填设施 =====

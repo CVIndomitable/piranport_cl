@@ -1425,13 +1425,13 @@ public class ShipCoreItem extends Item {
     // TODO: replace hardcoded item matching with item tags (e.g. piranport:small_caliber_ammo)
 
     public static boolean matchesCaliber(ItemStack ammo, ItemStack weapon) {
-        if (weapon.is(ModItems.SMALL_GUN.get()) || weapon.is(ModItems.SINGLE_SMALL_GUN.get())) {
+        if (isSmallCaliber(weapon)) {
             return ammo.is(ModItems.SMALL_HE_SHELL.get()) || ammo.is(ModItems.SMALL_AP_SHELL.get())
                     || ammo.is(ModItems.SMALL_VT_SHELL.get()) || ammo.is(ModItems.SMALL_TYPE3_SHELL.get());
-        } else if (weapon.is(ModItems.MEDIUM_GUN.get())) {
+        } else if (isMediumCaliber(weapon)) {
             return ammo.is(ModItems.MEDIUM_HE_SHELL.get()) || ammo.is(ModItems.MEDIUM_AP_SHELL.get())
                     || ammo.is(ModItems.MEDIUM_TYPE3_SHELL.get());
-        } else if (weapon.is(ModItems.LARGE_GUN.get())) {
+        } else if (isLargeCaliber(weapon)) {
             return ammo.is(ModItems.LARGE_HE_SHELL.get()) || ammo.is(ModItems.LARGE_AP_SHELL.get())
                     || ammo.is(ModItems.LARGE_TYPE3_SHELL.get());
         }
@@ -1532,31 +1532,42 @@ public class ShipCoreItem extends Item {
         return weapon.is(ModItems.SMALL_GUN.get()) || weapon.is(ModItems.SINGLE_SMALL_GUN.get());
     }
 
+    private static boolean isMediumCaliber(ItemStack weapon) {
+        return weapon.is(ModItems.BRITISH_TRIPLE_8INCH_GUN.get())
+                || weapon.is(ModItems.MK16_TRIPLE_8INCH_AUTO_GUN.get())
+                || weapon.is(ModItems.MK16DP_TWIN_6INCH_AA_GUN.get());
+    }
+
+    private static boolean isLargeCaliber(ItemStack weapon) {
+        return weapon.is(ModItems.FRENCH_QUAD_380MM_GUN.get())
+                || weapon.is(ModItems.BRITISH_SINGLE_18INCH_GUN.get());
+    }
+
     private static float getExplosionPower(ItemStack weapon) {
         if (isSmallCaliber(weapon)) return 1.0f;
-        if (weapon.is(ModItems.MEDIUM_GUN.get())) return 1.5f;
-        if (weapon.is(ModItems.LARGE_GUN.get())) return 2.0f;
+        if (isMediumCaliber(weapon)) return 1.5f;
+        if (isLargeCaliber(weapon)) return 2.0f;
         return 1.0f;
     }
 
     private static float getProjectileVelocity(ItemStack weapon) {
         if (isSmallCaliber(weapon)) return 2.0f;
-        if (weapon.is(ModItems.MEDIUM_GUN.get())) return 2.5f;
-        if (weapon.is(ModItems.LARGE_GUN.get())) return 3.0f;
+        if (isMediumCaliber(weapon)) return 2.5f;
+        if (isLargeCaliber(weapon)) return 3.0f;
         return 2.0f;
     }
 
     private static float getProjectileInaccuracy(ItemStack weapon) {
         if (isSmallCaliber(weapon)) return 1.5f;
-        if (weapon.is(ModItems.MEDIUM_GUN.get())) return 1.0f;
-        if (weapon.is(ModItems.LARGE_GUN.get())) return 0.5f;
+        if (isMediumCaliber(weapon)) return 1.0f;
+        if (isLargeCaliber(weapon)) return 0.5f;
         return 1.0f;
     }
 
     private static float getSoundPitch(ItemStack weapon) {
         if (isSmallCaliber(weapon)) return 1.5f;
-        if (weapon.is(ModItems.MEDIUM_GUN.get())) return 1.2f;
-        if (weapon.is(ModItems.LARGE_GUN.get())) return 0.8f;
+        if (isMediumCaliber(weapon)) return 1.2f;
+        if (isLargeCaliber(weapon)) return 0.8f;
         return 1.0f;
     }
 

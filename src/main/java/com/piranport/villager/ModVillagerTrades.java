@@ -62,7 +62,6 @@ public class ModVillagerTrades {
                 trophyForItem(ModItems.LARGE_HE_SHELL.get(), 8, 12, 16, 20),
                 trophyForItem(ModItems.LARGE_AP_SHELL.get(), 8, 12, 16, 20),
                 trophyForItem(ModItems.TORPEDO_610MM.get(), 6, 15, 16, 20),
-                trophyForItem(ModItems.MEDIUM_GUN.get(), 1, 56, 6, 20),
                 trophyForItem(ModItems.TRIPLE_TORPEDO_LAUNCHER.get(), 1, 48, 6, 20),
                 trophyForItem(ModItems.MEDIUM_ARMOR_PLATE.get(), 1, 48, 6, 20)
         ));
@@ -73,7 +72,6 @@ public class ModVillagerTrades {
                 trophyForItem(ModItems.SMALL_TYPE3_SHELL.get(), 12, 12, 16, 30),
                 trophyForItem(ModItems.MEDIUM_TYPE3_SHELL.get(), 8, 16, 16, 30),
                 trophyForItem(ModItems.MAGNETIC_TORPEDO_533MM.get(), 6, 18, 16, 30),
-                trophyForItem(ModItems.LARGE_GUN.get(), 1, 80, 6, 30),
                 trophyForItem(ModItems.DEPTH_CHARGE_LAUNCHER.get(), 1, 40, 6, 30),
                 trophyForItem(ModItems.LARGE_ARMOR_PLATE.get(), 1, 64, 6, 30)
         ));
@@ -113,7 +111,6 @@ public class ModVillagerTrades {
                 emeraldForItem(ModItems.LARGE_HE_SHELL.get(), 8, 4, 12, 20),
                 emeraldForItem(ModItems.LARGE_AP_SHELL.get(), 8, 4, 12, 20),
                 emeraldForItem(ModItems.TORPEDO_610MM.get(), 6, 5, 12, 20),
-                emeraldForItem(ModItems.MEDIUM_GUN.get(), 1, 14, 3, 20),
                 emeraldForItem(ModItems.TRIPLE_TORPEDO_LAUNCHER.get(), 1, 12, 3, 20),
                 emeraldForItem(ModItems.MEDIUM_ARMOR_PLATE.get(), 1, 12, 3, 20)
         ));
@@ -124,7 +121,6 @@ public class ModVillagerTrades {
                 emeraldForItem(ModItems.SMALL_TYPE3_SHELL.get(), 12, 4, 12, 30),
                 emeraldForItem(ModItems.MEDIUM_TYPE3_SHELL.get(), 8, 5, 12, 30),
                 emeraldForItem(ModItems.MAGNETIC_TORPEDO_533MM.get(), 6, 6, 12, 30),
-                emeraldForItem(ModItems.LARGE_GUN.get(), 1, 20, 3, 30),
                 emeraldForItem(ModItems.DEPTH_CHARGE_LAUNCHER.get(), 1, 10, 3, 30),
                 emeraldForItem(ModItems.LARGE_ARMOR_PLATE.get(), 1, 16, 3, 30)
         ));

@@ -79,15 +79,17 @@ public class ClientEvents {
         WeaponReloadDecorator weaponDecorator = new WeaponReloadDecorator();
         event.register(ModItems.SINGLE_SMALL_GUN.get(), weaponDecorator);
         event.register(ModItems.SMALL_GUN.get(), weaponDecorator);
-        event.register(ModItems.MEDIUM_GUN.get(), weaponDecorator);
-        event.register(ModItems.LARGE_GUN.get(), weaponDecorator);
+        event.register(ModItems.FRENCH_QUAD_380MM_GUN.get(), weaponDecorator);
+        event.register(ModItems.BRITISH_TRIPLE_8INCH_GUN.get(), weaponDecorator);
+        event.register(ModItems.BRITISH_SINGLE_18INCH_GUN.get(), weaponDecorator);
+        event.register(ModItems.MK16_TRIPLE_8INCH_AUTO_GUN.get(), weaponDecorator);
+        event.register(ModItems.MK16DP_TWIN_6INCH_AA_GUN.get(), weaponDecorator);
         event.register(ModItems.TWIN_TORPEDO_LAUNCHER.get(), weaponDecorator);
         event.register(ModItems.TRIPLE_TORPEDO_LAUNCHER.get(), weaponDecorator);
         event.register(ModItems.QUAD_TORPEDO_LAUNCHER.get(), weaponDecorator);
         event.register(ModItems.DEPTH_CHARGE_LAUNCHER.get(), weaponDecorator);
         event.register(ModItems.DEPTH_CHARGE_LAUNCHER_IMPROVED.get(), weaponDecorator);
         // Missile launchers — all types get cooldown bar
-        event.register(ModItems.TERRIER_LAUNCHER.get(), weaponDecorator);
         event.register(ModItems.SEA_DART_LAUNCHER.get(), weaponDecorator);
         event.register(ModItems.SEACAT_LAUNCHER.get(), weaponDecorator);
         event.register(ModItems.SY1_LAUNCHER.get(), weaponDecorator);

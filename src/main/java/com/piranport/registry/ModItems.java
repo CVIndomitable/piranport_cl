@@ -154,6 +154,12 @@ public class ModItems {
     public static final DeferredItem<Item> FRENCH_QUAD_380MM_GUN =
             ITEMS.register("french_quad_380mm_gun", () -> new CannonItem(new Item.Properties().stacksTo(1)
                     .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.CANNON), 20f, 60, 4));
+    public static final DeferredItem<Item> BRITISH_TRIPLE_8INCH_GUN =
+            ITEMS.register("british_triple_8inch_gun", () -> new CannonItem(new Item.Properties().stacksTo(1)
+                    .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.CANNON), 12f, 40, 3));
+    public static final DeferredItem<Item> BRITISH_SINGLE_18INCH_GUN =
+            ITEMS.register("british_single_18inch_gun", () -> new CannonItem(new Item.Properties().stacksTo(1)
+                    .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.CANNON), 20f, 30, 1));
 
     // ===== Torpedo Ammo (legacy generic) =====
     public static final DeferredItem<TorpedoItem> TORPEDO_533MM =

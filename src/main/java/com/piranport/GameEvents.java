@@ -38,6 +38,12 @@ import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.server.ServerStoppedEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
+import net.neoforged.neoforge.event.village.VillagerTradesEvent;
+import net.minecraft.world.entity.npc.VillagerProfession;
+import net.minecraft.world.item.trading.ItemCost;
+import net.minecraft.world.item.trading.MerchantOffer;
+import net.minecraft.world.item.Items;
+import com.piranport.registry.ModItems;
 
 import java.util.Comparator;
 import java.util.List;
@@ -691,5 +697,105 @@ public class GameEvents {
         lastWeaponLoad.clear();
         lastPlayerPos.clear();
         accumulatedDistance.clear();
+    }
+
+    /**
+     * Add custom trades to Farmer villagers.
+     * Sells food ingredients and dishes that have no crafting recipe.
+     */
+    @SubscribeEvent
+    public static void onVillagerTrades(VillagerTradesEvent event) {
+        if (event.getType() != VillagerProfession.FARMER) return;
+
+        var trades = event.getTrades();
+        // Level 1 trades (1-2 emeralds)
+        trades.get(1).add((trader, rand) -> new MerchantOffer(
+                new ItemCost(Items.EMERALD, 1),
+                new ItemStack(ModItems.GYPSUM_CHIP.get(), 4),
+                16, 2, 0.05f));
+        trades.get(1).add((trader, rand) -> new MerchantOffer(
+                new ItemCost(Items.EMERALD, 1),
+                new ItemStack(ModItems.QUICKLIME.get(), 4),
+                16, 2, 0.05f));
+        trades.get(1).add((trader, rand) -> new MerchantOffer(
+                new ItemCost(Items.EMERALD, 1),
+                new ItemStack(ModItems.BLACK_PEPPER.get(), 2),
+                16, 2, 0.05f));
+        trades.get(1).add((trader, rand) -> new MerchantOffer(
+                new ItemCost(Items.EMERALD, 1),
+                new ItemStack(ModItems.WHITE_PEPPER.get(), 2),
+                16, 2, 0.05f));
+        trades.get(1).add((trader, rand) -> new MerchantOffer(
+                new ItemCost(Items.EMERALD, 1),
+                new ItemStack(ModItems.GINGER.get(), 3),
+                16, 2, 0.05f));
+        trades.get(1).add((trader, rand) -> new MerchantOffer(
+                new ItemCost(Items.EMERALD, 1),
+                new ItemStack(ModItems.BLACK_TEA.get(), 2),
+                16, 2, 0.05f));
+        trades.get(1).add((trader, rand) -> new MerchantOffer(
+                new ItemCost(Items.EMERALD, 1),
+                new ItemStack(ModItems.ALMOND.get(), 3),
+                16, 2, 0.05f));
+
+        // Level 2 trades (3-5 emeralds)
+        trades.get(2).add((trader, rand) -> new MerchantOffer(
+                new ItemCost(Items.EMERALD, 3),
+                new ItemStack(ModItems.SAUSAGE.get(), 1),
+                12, 5, 0.05f));
+        trades.get(2).add((trader, rand) -> new MerchantOffer(
+                new ItemCost(Items.EMERALD, 2),
+                new ItemStack(ModItems.SLICED_SALAMI.get(), 2),
+                12, 5, 0.05f));
+
+        // Level 3 trades (5-8 emeralds) - prepared dishes
+        trades.get(3).add((trader, rand) -> new MerchantOffer(
+                new ItemCost(Items.EMERALD, 5),
+                new ItemStack(ModItems.ASSORTED_CHAR_SIU_FRIED_RICE.get(), 1),
+                8, 10, 0.05f));
+        trades.get(3).add((trader, rand) -> new MerchantOffer(
+                new ItemCost(Items.EMERALD, 4),
+                new ItemStack(ModItems.MISO_SOUP.get(), 1),
+                8, 10, 0.05f));
+        trades.get(3).add((trader, rand) -> new MerchantOffer(
+                new ItemCost(Items.EMERALD, 5),
+                new ItemStack(ModItems.BARBECUE.get(), 1),
+                8, 10, 0.05f));
+        trades.get(3).add((trader, rand) -> new MerchantOffer(
+                new ItemCost(Items.EMERALD, 4),
+                new ItemStack(ModItems.SOBA_NOODLE.get(), 1),
+                8, 10, 0.05f));
+        trades.get(3).add((trader, rand) -> new MerchantOffer(
+                new ItemCost(Items.EMERALD, 4),
+                new ItemStack(ModItems.YORKSHIRE_PUDDING.get(), 1),
+                8, 10, 0.05f));
+
+        // Level 4 trades (8-12 emeralds) - premium dishes
+        trades.get(4).add((trader, rand) -> new MerchantOffer(
+                new ItemCost(Items.EMERALD, 8),
+                new ItemStack(ModItems.BLACK_FOREST_GATEAU.get(), 1),
+                6, 15, 0.05f));
+        trades.get(4).add((trader, rand) -> new MerchantOffer(
+                new ItemCost(Items.EMERALD, 7),
+                new ItemStack(ModItems.SCHWEINSHAXE.get(), 1),
+                6, 15, 0.05f));
+        trades.get(4).add((trader, rand) -> new MerchantOffer(
+                new ItemCost(Items.EMERALD, 6),
+                new ItemStack(ModItems.TEMPURA_SOBA_NOODLE.get(), 1),
+                6, 15, 0.05f));
+        trades.get(4).add((trader, rand) -> new MerchantOffer(
+                new ItemCost(Items.EMERALD, 7),
+                new ItemStack(ModItems.VENICE_CUTTLEFISH_NOODLES.get(), 1),
+                6, 15, 0.05f));
+
+        // Level 5 trades (10-15 emeralds) - special items
+        trades.get(5).add((trader, rand) -> new MerchantOffer(
+                new ItemCost(Items.EMERALD, 10),
+                new ItemStack(ModItems.HE_WEI_DAO.get(), 1),
+                4, 20, 0.05f));
+        trades.get(5).add((trader, rand) -> new MerchantOffer(
+                new ItemCost(Items.EMERALD, 12),
+                new ItemStack(ModItems.PLATED_ROYAL_NAVAL_SALTED_BEEF.get(), 1),
+                4, 20, 0.05f));
     }
 }

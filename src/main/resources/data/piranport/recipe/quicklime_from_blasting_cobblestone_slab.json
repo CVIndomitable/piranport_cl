@@ -2,7 +2,9 @@
   "type": "minecraft:blasting",
   "category": "misc",
   "group": "quicklime",
-  "ingredient": "minecraft:cobblestone_slab",
+  "ingredient": {
+    "item": "minecraft:cobblestone_slab"
+  },
   "result": {
     "id": "piranport:quicklime"
   },

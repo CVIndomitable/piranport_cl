@@ -2,7 +2,9 @@
   "type": "minecraft:smelting",
   "category": "misc",
   "group": "salt",
-  "ingredient": "minecraft:water_bucket",
+  "ingredient": {
+    "item": "minecraft:water_bucket"
+  },
   "result": {
     "id": "piranport:salt"
   },

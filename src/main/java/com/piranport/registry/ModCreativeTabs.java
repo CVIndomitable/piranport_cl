@@ -33,7 +33,7 @@ public class ModCreativeTabs {
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> CANNON_TORPEDO_TAB =
             CREATIVE_TABS.register("cannon_torpedo_tab", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.piranport.cannon_torpedo"))
-                    .withTabsAfter(CreativeModeTabs.SPAWN_EGGS)
+                    .withTabsAfter(CORE_TAB.getKey())
                     .icon(() -> ModItems.SMALL_GUN.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
                         // Guns
@@ -56,7 +56,7 @@ public class ModCreativeTabs {
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> AVIATION_TAB =
             CREATIVE_TABS.register("aviation_tab", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.piranport.aviation"))
-                    .withTabsAfter(CreativeModeTabs.SPAWN_EGGS)
+                    .withTabsAfter(CANNON_TORPEDO_TAB.getKey())
                     .icon(() -> ModItems.B25_BOMBER.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
                         // Torpedo bombers
@@ -79,7 +79,7 @@ public class ModCreativeTabs {
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> MISSILE_TAB =
             CREATIVE_TABS.register("missile_tab", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.piranport.missile"))
-                    .withTabsAfter(CreativeModeTabs.SPAWN_EGGS)
+                    .withTabsAfter(AVIATION_TAB.getKey())
                     .icon(() -> ModItems.SY1_LAUNCHER.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
                         output.accept(ModItems.SY1_LAUNCHER.get());
@@ -93,7 +93,7 @@ public class ModCreativeTabs {
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> ENHANCEMENT_TAB =
             CREATIVE_TABS.register("enhancement_tab", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.piranport.enhancement"))
-                    .withTabsAfter(CreativeModeTabs.SPAWN_EGGS)
+                    .withTabsAfter(MISSILE_TAB.getKey())
                     .icon(() -> ModItems.MEDIUM_ARMOR_PLATE.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
                         // Armor Plates
@@ -116,7 +116,7 @@ public class ModCreativeTabs {
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> AGRICULTURE_TAB =
             CREATIVE_TABS.register("agriculture_tab", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.piranport.agriculture"))
-                    .withTabsAfter(CreativeModeTabs.SPAWN_EGGS)
+                    .withTabsAfter(ENHANCEMENT_TAB.getKey())
                     .icon(() -> ModItems.RAW_ALUMINUM.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
                         // Blocks
@@ -134,7 +134,7 @@ public class ModCreativeTabs {
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> KITCHEN_TAB =
             CREATIVE_TABS.register("kitchen_tab", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.piranport.kitchen"))
-                    .withTabsAfter(CreativeModeTabs.SPAWN_EGGS)
+                    .withTabsAfter(AGRICULTURE_TAB.getKey())
                     .icon(() -> ModItems.TOAST_BREAD.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
                         // --- 食材/调料 ---
@@ -243,7 +243,7 @@ public class ModCreativeTabs {
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> AMMO_TAB =
             CREATIVE_TABS.register("ammo_tab", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.piranport.ammo"))
-                    .withTabsAfter(CreativeModeTabs.SPAWN_EGGS)
+                    .withTabsAfter(KITCHEN_TAB.getKey())
                     .icon(() -> ModItems.MEDIUM_HE_SHELL.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
                         // HE Shells
@@ -298,7 +298,7 @@ public class ModCreativeTabs {
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> PROPS_TAB =
             CREATIVE_TABS.register("props_tab", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.piranport.props"))
-                    .withTabsAfter(CreativeModeTabs.SPAWN_EGGS)
+                    .withTabsAfter(AMMO_TAB.getKey())
                     .icon(() -> ModItems.HENTAI_TROPHY.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
                         output.accept(ModItems.UNICORN_HARP.get());
@@ -329,7 +329,7 @@ public class ModCreativeTabs {
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> FACILITY_TAB =
             CREATIVE_TABS.register("facility_tab", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.piranport.facility"))
-                    .withTabsAfter(CreativeModeTabs.SPAWN_EGGS)
+                    .withTabsAfter(PROPS_TAB.getKey())
                     .icon(() -> ModItems.RELOAD_FACILITY.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
                         output.accept(ModItems.RELOAD_FACILITY.get());
@@ -339,7 +339,7 @@ public class ModCreativeTabs {
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> DECORATION_TAB =
             CREATIVE_TABS.register("decoration_tab", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.piranport.decoration"))
-                    .withTabsAfter(CreativeModeTabs.SPAWN_EGGS)
+                    .withTabsAfter(FACILITY_TAB.getKey())
                     .icon(() -> ModItems.CONFIDENTIAL_CARGO.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
                         output.accept(ModItems.CONFIDENTIAL_CARGO.get());

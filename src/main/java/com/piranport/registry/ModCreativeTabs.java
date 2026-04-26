@@ -121,7 +121,6 @@ public class ModCreativeTabs {
                         output.accept(ModItems.BAUXITE_ORE.get());
                         output.accept(ModItems.ALUMINUM_BLOCK.get());
                         output.accept(ModItems.SALT_BLOCK.get());
-                        output.accept(ModItems.SALT_CHIP.get());
                         // Materials
                         output.accept(ModItems.RAW_ALUMINUM.get());
                         output.accept(ModItems.ALUMINUM_INGOT.get());
@@ -331,7 +330,6 @@ public class ModCreativeTabs {
                     .icon(() -> ModItems.RELOAD_FACILITY.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
                         output.accept(ModItems.RELOAD_FACILITY.get());
-                        output.accept(ModItems.FLOATING_TARGET.get());
                     }).build());
 
     // ===== 装饰 — 家具/花卉/模型 =====

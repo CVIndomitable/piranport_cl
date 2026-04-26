@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:blasting",
+  "category": "misc",
+  "group": "quicklime",
+  "ingredient": "minecraft:cobblestone_slab",
+  "result": {
+    "id": "piranport:quicklime"
+  },
+  "experience": 0.1,
+  "cookingtime": 100
+}

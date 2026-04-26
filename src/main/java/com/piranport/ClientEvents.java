@@ -111,8 +111,6 @@ public class ClientEvents {
                 ThrownItemRenderer::new);
         event.registerEntityRenderer(ModEntityTypes.AIRCRAFT_ENTITY.get(),
                 AircraftRenderer::new);
-        event.registerEntityRenderer(ModEntityTypes.FLOATING_TARGET.get(),
-                net.minecraft.client.renderer.entity.ArmorStandRenderer::new);
         event.registerEntityRenderer(ModEntityTypes.AERIAL_BOMB.get(),
                 ThrownItemRenderer::new);
         event.registerEntityRenderer(ModEntityTypes.BULLET.get(),

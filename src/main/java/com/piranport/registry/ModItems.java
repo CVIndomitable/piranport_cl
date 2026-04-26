@@ -51,8 +51,6 @@ public class ModItems {
             ITEMS.registerSimpleBlockItem(ModBlocks.ALUMINUM_BLOCK);
     public static final DeferredItem<BlockItem> SALT_BLOCK =
             ITEMS.registerSimpleBlockItem(ModBlocks.SALT_BLOCK);
-    public static final DeferredItem<BlockItem> SALT_CHIP =
-            ITEMS.registerSimpleBlockItem(ModBlocks.SALT_CHIP);
 
     // ===== Decorative Blocks (from sheropshire) =====
     public static final DeferredItem<BlockItem> CONFIDENTIAL_CARGO =
@@ -590,11 +588,6 @@ public class ModItems {
     // 弹丸渲染用隐藏物品（不加入创造模式标签页）
     public static final DeferredItem<Item> PROJECTILE_BULLET =
             ITEMS.register("projectile_bullet", () -> new Item(new Item.Properties()));
-
-    // ===== Phase 19: Floating Target =====
-    public static final DeferredItem<com.piranport.item.FloatingTargetItem> FLOATING_TARGET =
-            ITEMS.register("floating_target",
-                    () -> new com.piranport.item.FloatingTargetItem(new Item.Properties().stacksTo(16)));
 
     // ===== Phase 23: Guidebook =====
     public static final DeferredItem<com.piranport.item.GuidebookItem> GUIDEBOOK =

@@ -10,7 +10,6 @@ import com.piranport.entity.FlareProjectileEntity;
 import com.piranport.entity.GungnirEntity;
 import com.piranport.entity.RailgunProjectileEntity;
 import com.piranport.entity.SanshikiPelletEntity;
-import com.piranport.entity.FloatingTargetEntity;
 import com.piranport.entity.DepthChargeEntity;
 import com.piranport.entity.MissileEntity;
 import com.piranport.entity.TorpedoEntity;
@@ -56,13 +55,6 @@ public class ModEntityTypes {
                     .clientTrackingRange(6)
                     .updateInterval(20)
                     .build("piranport:aircraft_drop"));
-
-    public static final DeferredHolder<EntityType<?>, EntityType<FloatingTargetEntity>>
-            FLOATING_TARGET = ENTITY_TYPES.register("floating_target",
-            () -> EntityType.Builder.<FloatingTargetEntity>of(FloatingTargetEntity::new, MobCategory.MISC)
-                    .sized(0.5f, 1.975f)
-                    .clientTrackingRange(10)
-                    .build("piranport:floating_target"));
 
     // Phase 21
     public static final DeferredHolder<EntityType<?>, EntityType<AerialBombEntity>>

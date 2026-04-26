@@ -96,10 +96,7 @@ public class SaltEvaporationHandler {
                 }
 
                 if (remaining <= 0) {
-                    boolean isSource = waterState.getFluidState().isSource();
-                    BlockState salt = isSource
-                            ? ModBlocks.SALT_BLOCK.get().defaultBlockState()
-                            : ModBlocks.SALT_CHIP.get().defaultBlockState();
+                    BlockState salt = ModBlocks.SALT_BLOCK.get().defaultBlockState();
                     level.setBlockAndUpdate(pos, salt);
                     level.playSound(null, pos, SoundEvents.FIRE_EXTINGUISH,
                             SoundSource.BLOCKS, 0.5f, 1.2f);

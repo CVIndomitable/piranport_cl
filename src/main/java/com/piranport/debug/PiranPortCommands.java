@@ -2,29 +2,20 @@ package com.piranport.debug;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
-import com.piranport.entity.AircraftEntity;
-import com.piranport.entity.FloatingTargetEntity;
-import com.piranport.entity.MissileEntity;
 import com.piranport.registry.ModBlocks;
-import com.piranport.registry.ModItems;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.SignBlockEntity;
 import net.minecraft.world.level.block.entity.SignText;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-
-import java.util.List;
 
 /**
  * Debug commands for PiranPort mod.
@@ -38,14 +29,6 @@ public final class PiranPortCommands {
         dispatcher.register(Commands.literal("ppd")
                 .requires(src -> src.hasPermission(2))
 
-                // /ppd target_fire
-                .then(Commands.literal("target_fire")
-                        .executes(ctx -> targetFire(ctx.getSource())))
-
-                // /ppd target_b25
-                .then(Commands.literal("target_b25")
-                        .executes(ctx -> targetB25(ctx.getSource())))
-
                 // /ppd model_debug <model>
                 .then(Commands.literal("model_debug")
                         .then(Commands.argument("model", StringArgumentType.word())
@@ -57,90 +40,6 @@ public final class PiranPortCommands {
                                 .executes(ctx -> modelDebug(ctx.getSource(),
                                         StringArgumentType.getString(ctx, "model")))))
         );
-    }
-
-    private static int targetFire(CommandSourceStack source) {
-        ServerPlayer player = source.getPlayer();
-        if (player == null) {
-            source.sendFailure(Component.literal("Must be run by a player"));
-            return 0;
-        }
-
-        ServerLevel level = player.serverLevel();
-        double range = 32.0;
-        AABB searchBox = player.getBoundingBox().inflate(range);
-        List<FloatingTargetEntity> targets = level.getEntitiesOfClass(
-                FloatingTargetEntity.class, searchBox, Entity::isAlive);
-
-        if (targets.isEmpty()) {
-            source.sendFailure(Component.literal("附近没有浮动靶子"));
-            return 0;
-        }
-
-        int fired = 0;
-        for (FloatingTargetEntity target : targets) {
-            MissileEntity missile = new MissileEntity(level,
-                    MissileEntity.MissileType.ANTI_SHIP, 20f, 0f, 2.0f,
-                    "piranport:sy1_missile");
-
-            double startX = target.getX();
-            double startY = target.getY() + target.getBbHeight() / 2;
-            double startZ = target.getZ();
-            missile.setPos(startX, startY, startZ);
-            missile.setOwner(target);
-
-            Vec3 toPlayer = player.position()
-                    .add(0, player.getBbHeight() / 2, 0)
-                    .subtract(startX, startY, startZ)
-                    .normalize();
-            float speed = MissileEntity.MissileType.ANTI_SHIP.initialSpeed;
-            missile.setDeltaMovement(toPlayer.scale(speed));
-            missile.setTrackedTarget(player);
-
-            level.addFreshEntity(missile);
-            fired++;
-        }
-
-        int finalFired = fired;
-        source.sendSuccess(() -> Component.literal(
-                "§c⚠ " + finalFired + " 个浮动靶子向你发射了导弹！注意躲避！"), true);
-        return fired;
-    }
-
-    private static int targetB25(CommandSourceStack source) {
-        ServerPlayer player = source.getPlayer();
-        if (player == null) {
-            source.sendFailure(Component.literal("Must be run by a player"));
-            return 0;
-        }
-
-        ServerLevel level = player.serverLevel();
-        double range = 32.0;
-        AABB searchBox = player.getBoundingBox().inflate(range);
-        List<FloatingTargetEntity> targets = level.getEntitiesOfClass(
-                FloatingTargetEntity.class, searchBox, Entity::isAlive);
-
-        if (targets.isEmpty()) {
-            source.sendFailure(Component.literal("附近没有浮动靶子"));
-            return 0;
-        }
-
-        int launched = 0;
-        for (FloatingTargetEntity target : targets) {
-            ItemStack b25Stack = new ItemStack(ModItems.B25_BOMBER.get());
-            Vec3 spawnPos = new Vec3(target.getX(),
-                    target.getY() + target.getBbHeight() + 1.0,
-                    target.getZ());
-
-            AircraftEntity aircraft = AircraftEntity.createAutonomous(level, spawnPos, b25Stack);
-            level.addFreshEntity(aircraft);
-            launched++;
-        }
-
-        int finalLaunched = launched;
-        source.sendSuccess(() -> Component.literal(
-                finalLaunched + " 个浮动靶子放飞了B25轰炸机！"), true);
-        return launched;
     }
 
     private static int modelDebug(CommandSourceStack source, String modelType) {

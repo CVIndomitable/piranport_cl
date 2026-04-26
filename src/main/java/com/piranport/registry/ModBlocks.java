@@ -4,7 +4,6 @@ import com.piranport.PiranPort;
 import com.piranport.block.FlareLightBlock;
 import com.piranport.block.ReloadFacilityBlock;
 import com.piranport.block.PlaceableFoodBlock;
-import com.piranport.block.SaltChipBlock;
 import com.piranport.block.SmokeScreenBlock;
 import net.minecraft.util.valueproviders.UniformInt;
 import net.minecraft.world.level.block.Block;
@@ -39,13 +38,6 @@ public class ModBlocks {
                     .mapColor(MapColor.SAND)
                     .strength(0.5f)
                     .sound(SoundType.SAND));
-
-    public static final DeferredBlock<SaltChipBlock> SALT_CHIP = BLOCKS.register("salt_chip",
-            () -> new SaltChipBlock(BlockBehaviour.Properties.of()
-                    .mapColor(MapColor.SAND)
-                    .strength(0.3f)
-                    .sound(SoundType.SAND)
-                    .noOcclusion()));
 
     // ===== Placeable Food Blocks (Phase 16) =====
     private static BlockBehaviour.Properties foodBlockProps() {

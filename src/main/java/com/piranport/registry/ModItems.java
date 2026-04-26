@@ -161,6 +161,9 @@ public class ModItems {
     public static final DeferredItem<Item> LARGE_GUN =
             ITEMS.register("large_gun", () -> new CannonItem(new Item.Properties().stacksTo(1)
                     .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.CANNON), 20f, 80, 3));
+    public static final DeferredItem<Item> FRENCH_QUAD_380MM_GUN =
+            ITEMS.register("french_quad_380mm_gun", () -> new CannonItem(new Item.Properties().stacksTo(1)
+                    .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.CANNON), 20f, 60, 4));
 
     // ===== Torpedo Ammo (legacy generic) =====
     public static final DeferredItem<TorpedoItem> TORPEDO_533MM =

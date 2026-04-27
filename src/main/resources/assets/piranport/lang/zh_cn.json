@@ -531,6 +531,9 @@
   "key.piranport.debug_cooldown_override": "调试：冷却降至5秒 [N]",
   "message.piranport.debug_cooldown_override_on": "[调试] 全局冷却 → 5秒 已开启",
   "message.piranport.debug_cooldown_override_off": "[调试] 全局冷却 → 5秒 已关闭",
+  "key.piranport.hit_display_toggle": "命中显示开关 [J]",
+  "message.piranport.hit_display_on": "命中显示 已开启",
+  "message.piranport.hit_display_off": "命中显示 已关闭",
 
   "tooltip.piranport.shift_for_details": "按住 Shift 查看详情",
   "tooltip.piranport.cannon.barrel_count": "联装数: %s",

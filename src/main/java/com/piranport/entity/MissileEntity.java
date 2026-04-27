@@ -362,14 +362,14 @@ public class MissileEntity extends ThrowableItemProjectile {
         if (!(owner instanceof Player player)) return;
         Component weaponName = getDefaultItem().getDescription();
         String key = target.isAlive() ? "message.piranport.weapon_hit" : "message.piranport.weapon_kill";
-        player.sendSystemMessage(Component.translatable(key, weaponName, target.getDisplayName()));
+        com.piranport.combat.HitNotifier.send(player, Component.translatable(key, weaponName, target.getDisplayName()));
     }
 
     private void notifyOwnerMiss() {
         Entity owner = getOwner();
         if (!(owner instanceof Player player)) return;
         Component weaponName = getDefaultItem().getDescription();
-        player.sendSystemMessage(Component.translatable("message.piranport.weapon_miss", weaponName));
+        com.piranport.combat.HitNotifier.send(player, Component.translatable("message.piranport.weapon_miss", weaponName));
     }
 
     @Override

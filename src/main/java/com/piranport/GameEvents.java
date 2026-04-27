@@ -475,6 +475,7 @@ public class GameEvents {
         lastWeaponLoad.remove(player.getUUID());
         lastPlayerPos.remove(player.getUUID());
         accumulatedDistance.remove(player.getUUID());
+        com.piranport.combat.HitNotifier.onPlayerLogout(player.getUUID());
         com.piranport.network.RecallAllAircraftPayload.onPlayerDisconnect(player.getUUID());
         recallAircraftForPlayer(player);
         // Drop the player from any lecturn lobby they were in, so the lobby roster

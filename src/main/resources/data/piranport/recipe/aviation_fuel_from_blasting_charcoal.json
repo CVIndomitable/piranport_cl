@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:blasting",
+  "category": "misc",
+  "group": "aviation_fuel",
+  "ingredient": {
+    "item": "minecraft:charcoal"
+  },
+  "result": {
+    "id": "piranport:aviation_fuel"
+  },
+  "experience": 0.1,
+  "cookingtime": 100
+}

@@ -7,6 +7,7 @@ import com.piranport.combat.TransformationManager;
 import com.piranport.debug.PiranPortDebug;
 import com.piranport.network.DebugCooldownOverridePayload;
 import com.piranport.network.DebugTogglePayload;
+import com.piranport.network.HitDisplayTogglePayload;
 import com.piranport.network.SnapshotRequestPayload;
 import com.piranport.entity.AerialBombEntity;
 import com.piranport.entity.AircraftEntity;
@@ -52,6 +53,7 @@ public class ClientTickHandler {
 
     private static boolean highlightEnabled = false;
     private static boolean cooldownOverrideClientState = false;
+    private static boolean hitDisplayEnabled = true;
 
     public static boolean isHighlightEnabled() { return highlightEnabled; }
     private static final Set<Integer> highlightedEntityIds = new HashSet<>();
@@ -243,6 +245,17 @@ public class ClientTickHandler {
                     net.minecraft.network.chat.Component.translatable(
                             nowEnabled ? "message.piranport.debug_cooldown_override_on"
                                        : "message.piranport.debug_cooldown_override_off"),
+                    true);
+        }
+
+        // J key — toggle weapon hit/kill/miss chat notifications
+        while (ModKeyMappings.HIT_DISPLAY_TOGGLE.consumeClick()) {
+            hitDisplayEnabled = !hitDisplayEnabled;
+            PacketDistributor.sendToServer(new HitDisplayTogglePayload(hitDisplayEnabled));
+            mc.player.displayClientMessage(
+                    net.minecraft.network.chat.Component.translatable(
+                            hitDisplayEnabled ? "message.piranport.hit_display_on"
+                                              : "message.piranport.hit_display_off"),
                     true);
         }
 

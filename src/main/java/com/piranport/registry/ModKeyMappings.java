@@ -36,4 +36,7 @@ public class ModKeyMappings {
     /** Debug-only: toggle a server-side override that clamps every cooldown to 5s. */
     public static final KeyMapping DEBUG_COOLDOWN_OVERRIDE =
             new KeyMapping("key.piranport.debug_cooldown_override", GLFW.GLFW_KEY_N, CATEGORY);
+
+    public static final KeyMapping HIT_DISPLAY_TOGGLE =
+            new KeyMapping("key.piranport.hit_display_toggle", GLFW.GLFW_KEY_J, CATEGORY);
 }

@@ -85,6 +85,7 @@ public class ClientEvents {
         event.register(ModKeyMappings.DEBUG_TOGGLE);
         event.register(ModKeyMappings.MANUAL_RELOAD);
         event.register(ModKeyMappings.DEBUG_COOLDOWN_OVERRIDE);
+        event.register(ModKeyMappings.HIT_DISPLAY_TOGGLE);
     }
 
     @SubscribeEvent

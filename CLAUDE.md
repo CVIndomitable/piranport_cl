@@ -24,6 +24,8 @@
 
 **1.0 不包含的内容**（从 dev 线或未来版本引入）：舰装 GUI、编组 GUI、副本系统、武器合成台、遗迹结构、深海 NPC、舰娘 NPC、传送门。
 
+**无 GUI 模式限制**（设计决策）：1.0 版本采用无 GUI 模式，不支持编组配置和自动升空功能。飞机通过右键直接发射，武器通过副手槽切换。
+
 ---
 
 ## Technical Reference
@@ -45,6 +47,11 @@
 - 物品数据用 `DataComponents`，不用旧版 NBT
 - Client-only 放 `@Mod.EventBusSubscriber(value = Dist.CLIENT)`
 - 同时维护 `zh_cn.json` 和 `en_us.json`
+
+### 术语规范
+- **飞机分类**：攻击机 = 轰炸机（dive/level bomber）+ 鱼雷机（torpedo bomber）；轰炸机 = 水平轰炸机 + 俯冲轰炸机
+- **海军术语**：联装数 = 管数/弹夹容量（magazine capacity），再装填 = reload，鱼雷管数 = tubeCount
+- **高亮优先级**：原版高亮（Glowing effect）> 玩法高亮（火控）> Y键战场高亮
 
 ---
 

@@ -551,7 +551,7 @@ public class AircraftEntity extends Entity {
             }
         }
 
-        // Auto-seek for attack aircraft (bombers + torpedo bombers) without fire-control locks:
+        // Auto-seek for attack aircraft (dive/level bombers + torpedo bombers) without fire-control locks:
         // Only search ONCE after launch; if FC target died, just keep orbiting.
         if (!payloadType.isEmpty()
                 && aircraftType != AircraftInfo.AircraftType.RECON

@@ -418,6 +418,7 @@ public class AircraftEntity extends Entity {
                 isForcedReturn = true;
                 startReturning("recon_max_distance");
             } else {
+                releaseAllForcedChunks();
                 Vec3 near = owner.position().add(
                         (random.nextDouble() - 0.5) * 4, 3, (random.nextDouble() - 0.5) * 4);
                 setPos(near.x, near.y, near.z);
@@ -439,10 +440,10 @@ public class AircraftEntity extends Entity {
             case RECON_ACTIVE   -> tickReconActive(owner);
         }
 
-        // ASW sonar scan: every 20 ticks while cruising or attacking
+        // ASW sonar scan: every 40 ticks while cruising or attacking (reduced from 20 for performance)
         if (aircraftType == AircraftInfo.AircraftType.ASW
                 && (state == FlightState.CRUISING || state == FlightState.ATTACKING)
-                && tickCount % 20 == 0) {
+                && tickCount % 40 == 0) {
             tickAswSonar(owner);
         }
 
@@ -1140,6 +1141,7 @@ public class AircraftEntity extends Entity {
     private void updateReconChunkLoading(Player owner, int cx, int cz) {
         if (!(level() instanceof ServerLevel sl)) return;
         int radius = Math.min(sl.getServer().getPlayerList().getViewDistance(), 5);
+        ForcedChunkData data = ForcedChunkData.get(sl);
 
         java.util.Set<Long> desired = new java.util.HashSet<>();
         for (int dx = -radius; dx <= radius; dx++) {
@@ -1153,8 +1155,10 @@ public class AircraftEntity extends Entity {
         while (it.hasNext()) {
             long key = it.next();
             if (!desired.contains(key)) {
-                sl.setChunkForced(net.minecraft.world.level.ChunkPos.getX(key),
-                        net.minecraft.world.level.ChunkPos.getZ(key), false);
+                int x = net.minecraft.world.level.ChunkPos.getX(key);
+                int z = net.minecraft.world.level.ChunkPos.getZ(key);
+                sl.setChunkForced(x, z, false);
+                data.removeChunk(x, z);
                 it.remove();
             }
         }
@@ -1165,6 +1169,7 @@ public class AircraftEntity extends Entity {
                 int x = net.minecraft.world.level.ChunkPos.getX(key);
                 int z = net.minecraft.world.level.ChunkPos.getZ(key);
                 sl.setChunkForced(x, z, true);
+                data.addChunk(x, z);
                 reconForcedChunks.add(key);
                 reconPendingSend.add(key);
             }
@@ -1206,9 +1211,12 @@ public class AircraftEntity extends Entity {
             lastForcedChunkZ = Integer.MIN_VALUE;
             return;
         }
+        ForcedChunkData data = ForcedChunkData.get(sl);
         for (long key : reconForcedChunks) {
-            sl.setChunkForced(net.minecraft.world.level.ChunkPos.getX(key),
-                    net.minecraft.world.level.ChunkPos.getZ(key), false);
+            int x = net.minecraft.world.level.ChunkPos.getX(key);
+            int z = net.minecraft.world.level.ChunkPos.getZ(key);
+            sl.setChunkForced(x, z, false);
+            data.removeChunk(x, z);
         }
         reconForcedChunks.clear();
         reconPendingSend.clear();
@@ -2076,9 +2084,12 @@ public class AircraftEntity extends Entity {
     @Override
     public void onRemovedFromLevel() {
         super.onRemovedFromLevel();
-        if (!level().isClientSide() && ownerUUID != null) {
-            com.piranport.aviation.AircraftIndex.remove(ownerUUID, this);
-            indexRegistered = false;
+        if (!level().isClientSide()) {
+            releaseAllForcedChunks();
+            if (ownerUUID != null) {
+                com.piranport.aviation.AircraftIndex.remove(ownerUUID, this);
+                indexRegistered = false;
+            }
         }
     }
 

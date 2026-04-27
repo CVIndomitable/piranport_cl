@@ -551,6 +551,20 @@ public class GameEvents {
     }
 
     @SubscribeEvent
+    public static void onServerStarting(net.neoforged.neoforge.event.server.ServerStartingEvent event) {
+        // Clean up orphaned forced chunks from previous server crashes
+        for (ServerLevel level : event.getServer().getAllLevels()) {
+            com.piranport.entity.ForcedChunkData data = com.piranport.entity.ForcedChunkData.get(level);
+            for (long chunkKey : data.getForcedChunks()) {
+                int x = net.minecraft.world.level.ChunkPos.getX(chunkKey);
+                int z = net.minecraft.world.level.ChunkPos.getZ(chunkKey);
+                level.setChunkForced(x, z, false);
+            }
+            data.clear();
+        }
+    }
+
+    @SubscribeEvent
     public static void onServerStopped(ServerStoppedEvent event) {
         FireControlManager.clearAll();
         ReconManager.clearAll();

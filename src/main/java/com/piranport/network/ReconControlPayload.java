@@ -35,8 +35,8 @@ public record ReconControlPayload(float dx, float dy, float dz) implements Custo
     public static void handle(ReconControlPayload payload, IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
             if (ctx.player() == null) return;
-            // NaN check must come before clamp (clamp converts NaN to min value)
-            if (Float.isNaN(payload.dx()) || Float.isNaN(payload.dy()) || Float.isNaN(payload.dz())) return;
+            // Check for NaN and Infinity before clamp (clamp converts NaN to min value, Infinity bypasses range check)
+            if (!Float.isFinite(payload.dx()) || !Float.isFinite(payload.dy()) || !Float.isFinite(payload.dz())) return;
             float dx = Mth.clamp(payload.dx(), -1.0f, 1.0f);
             float dy = Mth.clamp(payload.dy(), -1.0f, 1.0f);
             float dz = Mth.clamp(payload.dz(), -1.0f, 1.0f);

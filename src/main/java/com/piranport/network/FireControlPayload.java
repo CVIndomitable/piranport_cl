@@ -74,7 +74,22 @@ public record FireControlPayload(FireAction action, UUID targetUUID) implements 
                 boolean validTarget = entity != null && entity.isAlive() && entity != player
                         && !(entity instanceof net.minecraft.world.Container)
                         && (entity instanceof LivingEntity || entity instanceof AircraftEntity);
+
+                // Line-of-sight check: prevent locking targets through walls
+                boolean hasLineOfSight = false;
                 if (validTarget && player.distanceTo(entity) <= simDistBlocks) {
+                    net.minecraft.world.level.ClipContext clipCtx = new net.minecraft.world.level.ClipContext(
+                            player.getEyePosition(),
+                            entity.position().add(0, entity.getBbHeight() * 0.5, 0),
+                            net.minecraft.world.level.ClipContext.Block.COLLIDER,
+                            net.minecraft.world.level.ClipContext.Fluid.NONE,
+                            player
+                    );
+                    net.minecraft.world.phys.BlockHitResult hit = player.level().clip(clipCtx);
+                    hasLineOfSight = hit.getType() == net.minecraft.world.phys.HitResult.Type.MISS;
+                }
+
+                if (validTarget && hasLineOfSight) {
                     if (payload.action() == FireAction.LOCK) {
                         FireControlManager.lock(playerUUID, entity.getUUID());
                     } else {

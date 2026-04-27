@@ -257,9 +257,6 @@ public class AmmoRecipeRegistry {
         add("missile_harpoon", AmmoCategory.MISSILE, "反舰导弹", "鱼叉",
                 () -> ModItems.HARPOON_MISSILE.get(), 2, 100,
                 mat(iron, 4), mat(gp, 2), mat(fuel, 1), mat(rs, 2), mat(comp, 1));
-        add("missile_terrier", AmmoCategory.MISSILE, "防空导弹", "小猎犬",
-                () -> ModItems.TERRIER_MISSILE.get(), 2, 80,
-                mat(iron, 3), mat(gp, 2), mat(rs, 2), mat(comp, 1));
         add("missile_aa", AmmoCategory.MISSILE, "防空导弹", "通用",
                 () -> ModItems.ANTI_AIR_MISSILE.get(), 4, 80,
                 mat(iron, 2), mat(gp, 1), mat(rs, 2), mat(comp, 1));

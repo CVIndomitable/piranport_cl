@@ -18,6 +18,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.item.ItemStack;
@@ -33,14 +34,16 @@ import org.jetbrains.annotations.Nullable;
  * 槽位0: 鱼雷发射器（原料槽1，顶面漏斗输入）
  * 槽位1: 鱼雷弹药（原料槽2，侧面漏斗输入）
  * 槽位2: 装填完毕的发射器（产品槽，底部漏斗输出）
- * 装填时间: 200 ticks (10秒)
+ * 装填时间: 水中 400 ticks (20秒)，陆地 100 ticks (5秒)
  */
 public class ReloadFacilityBlockEntity extends BlockEntity implements MenuProvider {
     public static final int LAUNCHER_SLOT = 0;
     public static final int AMMO_SLOT = 1;
     public static final int OUTPUT_SLOT = 2;
     public static final int TOTAL_SLOTS = 3;
-    public static final int RELOAD_TIME = 200; // 10 seconds
+    public static final int RELOAD_TIME_WATER = 400;  // 20 seconds (2× slower)
+    public static final int RELOAD_TIME_LAND = 100;   // 5 seconds (2× faster)
+    public static final int RELOAD_TIME_DEFAULT = 200; // 10 seconds (fallback, unused)
 
     private final ItemStackHandler itemHandler = new ItemStackHandler(TOTAL_SLOTS) {
         @Override
@@ -210,7 +213,8 @@ public class ReloadFacilityBlockEntity extends BlockEntity implements MenuProvid
 
         // Start/continue processing
         if (be.reloadTotalTime == 0) {
-            be.reloadTotalTime = RELOAD_TIME;
+            boolean inWater = be.isInWater();
+            be.reloadTotalTime = inWater ? RELOAD_TIME_WATER : RELOAD_TIME_LAND;
             be.reloadProgress = 0;
         }
 
@@ -237,6 +241,11 @@ public class ReloadFacilityBlockEntity extends BlockEntity implements MenuProvid
             reloadTotalTime = 0;
             setChanged();
         }
+    }
+
+    private boolean isInWater() {
+        if (level == null) return false;
+        return level.getFluidState(worldPosition).is(Fluids.WATER);
     }
 
     /** Comparator output: 15 when output slot has item, 0 otherwise. */

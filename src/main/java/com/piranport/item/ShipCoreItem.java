@@ -985,18 +985,39 @@ public class ShipCoreItem extends Item {
         int tubeCount = launcher.getTubeCount();
         int cooldown = launcher.getCooldownTicks();
 
-        // Count available torpedo ammo in inventory
-        int available = 0;
+        // Find first matching torpedo to determine type (strict: only consume same item type)
+        TorpedoItem torpedoType = null;
         for (int i = 0; i < inv.items.size(); i++) {
             if (i == coreSlot || i == weaponSlot) continue;
             ItemStack s = inv.items.get(i);
             if (!s.isEmpty() && s.getItem() instanceof TorpedoItem ti && ti.getCaliber() == caliber) {
+                torpedoType = ti;
+                break;
+            }
+        }
+        if (torpedoType == null && weaponSlot != 40 && coreSlot != 40) {
+            ItemStack oh = inv.offhand.get(0);
+            if (!oh.isEmpty() && oh.getItem() instanceof TorpedoItem ti && ti.getCaliber() == caliber) {
+                torpedoType = ti;
+            }
+        }
+        if (torpedoType == null) {
+            player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
+            return;
+        }
+
+        // Count available ammo of the same type
+        int available = 0;
+        for (int i = 0; i < inv.items.size(); i++) {
+            if (i == coreSlot || i == weaponSlot) continue;
+            ItemStack s = inv.items.get(i);
+            if (!s.isEmpty() && s.getItem() == torpedoType) {
                 available += s.getCount();
             }
         }
         if (weaponSlot != 40 && coreSlot != 40) {
             ItemStack oh = inv.offhand.get(0);
-            if (!oh.isEmpty() && oh.getItem() instanceof TorpedoItem ti && ti.getCaliber() == caliber) {
+            if (!oh.isEmpty() && oh.getItem() == torpedoType) {
                 available += oh.getCount();
             }
         }
@@ -1007,19 +1028,11 @@ public class ShipCoreItem extends Item {
         }
 
         // Consume ammo before spawning entities (prevent TOCTOU)
-        boolean magnetic = false;
-        boolean acousticHoming = false;
-        boolean wireGuided = false;
-        TorpedoItem firstTorpedo = null;
         int toConsume = tubeCount;
         for (int i = 0; i < inv.items.size() && toConsume > 0; i++) {
             if (i == coreSlot || i == weaponSlot) continue;
             ItemStack s = inv.items.get(i);
-            if (!s.isEmpty() && s.getItem() instanceof TorpedoItem ti && ti.getCaliber() == caliber) {
-                if (firstTorpedo == null) firstTorpedo = ti;
-                if (ti.isMagnetic()) magnetic = true;
-                if (ti.isAcoustic()) acousticHoming = true;
-                if (ti.isWireGuided()) wireGuided = true;
+            if (!s.isEmpty() && s.getItem() == torpedoType) {
                 int take = Math.min(toConsume, s.getCount());
                 com.piranport.debug.PiranPortDebug.consumeAmmo(s, take);
                 toConsume -= take;
@@ -1027,18 +1040,17 @@ public class ShipCoreItem extends Item {
         }
         if (toConsume > 0 && weaponSlot != 40 && coreSlot != 40) {
             ItemStack oh = inv.offhand.get(0);
-            if (!oh.isEmpty() && oh.getItem() instanceof TorpedoItem ti && ti.getCaliber() == caliber) {
-                if (firstTorpedo == null) firstTorpedo = ti;
-                if (ti.isMagnetic()) magnetic = true;
-                if (ti.isAcoustic()) acousticHoming = true;
-                if (ti.isWireGuided()) wireGuided = true;
+            if (!oh.isEmpty() && oh.getItem() == torpedoType) {
                 int take = Math.min(toConsume, oh.getCount());
                 com.piranport.debug.PiranPortDebug.consumeAmmo(oh, take);
                 toConsume -= take;
             }
         }
 
-        float torpedoSpeed = firstTorpedo != null ? firstTorpedo.getSpeed() : (caliber == 610 ? 1.0f : 1.2f);
+        boolean magnetic = torpedoType.isMagnetic();
+        boolean acousticHoming = torpedoType.isAcoustic();
+        boolean wireGuided = torpedoType.isWireGuided();
+        float torpedoSpeed = torpedoType.getSpeed();
         float[] angles = getSpreadAngles(tubeCount);
         Vec3 look = player.getLookAngle();
 
@@ -1046,11 +1058,9 @@ public class ShipCoreItem extends Item {
         for (float angle : angles) {
             Vec3 dir = rotateHorizontal(look, Math.toRadians(angle));
             TorpedoEntity torpedo = new TorpedoEntity(level, player, caliber);
-            if (firstTorpedo != null) {
-                torpedo.setDamage(firstTorpedo.getDamage());
-                torpedo.setSpeed(firstTorpedo.getSpeed());
-                torpedo.setLifetime(firstTorpedo.getLifetimeTicks());
-            }
+            torpedo.setDamage(torpedoType.getDamage());
+            torpedo.setSpeed(torpedoType.getSpeed());
+            torpedo.setLifetime(torpedoType.getLifetimeTicks());
             if (magnetic) torpedo.setMagnetic(true);
             if (acousticHoming) torpedo.setAcoustic(true);
             if (wireGuided) torpedo.setWireGuided(true);

@@ -70,6 +70,19 @@ public class TorpedoLauncherItem extends Item {
             tooltipComponents.add(Component.translatable("tooltip.piranport.weapon_category." + cat.getSerializedName())
                     .withStyle(net.minecraft.ChatFormatting.DARK_GREEN));
         }
+
+        LoadedAmmo loadedAmmo = stack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
+        if (loadedAmmo.hasAmmo()) {
+            String ammoName = BuiltInRegistries.ITEM.get(net.minecraft.resources.ResourceLocation.parse(loadedAmmo.ammoItemId()))
+                    .getDescription().getString();
+            tooltipComponents.add(Component.translatable("tooltip.piranport.launcher.loaded_ammo",
+                    loadedAmmo.count(), ammoName)
+                    .withStyle(net.minecraft.ChatFormatting.GREEN));
+        } else if (!com.piranport.config.ModCommonConfig.AUTO_RESUPPLY_ENABLED.get()) {
+            tooltipComponents.add(Component.translatable("tooltip.piranport.launcher.no_ammo_loaded")
+                    .withStyle(net.minecraft.ChatFormatting.GRAY));
+        }
+
         if (net.neoforged.fml.loading.FMLEnvironment.dist.isClient()) {
             if (net.minecraft.client.gui.screens.Screen.hasShiftDown()) {
                 tooltipComponents.add(Component.translatable("tooltip.piranport.launcher.caliber", caliber)

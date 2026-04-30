@@ -45,6 +45,7 @@
   "message.piranport.untransformed": "Transformation deactivated",
   "message.piranport.no_weapon": "No weapon equipped!",
   "message.piranport.no_ammo": "No ammo!",
+  "message.piranport.insufficient_same_ammo": "Insufficient ammo of the same type!",
   "message.piranport.need_torpedo_reload": "Torpedo Reload enhancement required!",
   "message.piranport.weapon_selected": "Selected: %s",
   "tooltip.piranport.armor_bonus": "Armor: +%s",

@@ -45,6 +45,7 @@
   "message.piranport.untransformed": "舰装解除",
   "message.piranport.no_weapon": "未装备武器！",
   "message.piranport.no_ammo": "弹药不足！",
+  "message.piranport.insufficient_same_ammo": "同种弹药不足！",
   "message.piranport.need_torpedo_reload": "需要安装鱼雷再装填部件！",
   "message.piranport.weapon_selected": "已选择: %s",
   "tooltip.piranport.armor_bonus": "护甲: +%s",

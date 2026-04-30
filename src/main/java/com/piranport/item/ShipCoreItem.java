@@ -1023,7 +1023,7 @@ public class ShipCoreItem extends Item {
         }
 
         if (available < tubeCount) {
-            player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
+            player.displayClientMessage(Component.translatable("message.piranport.insufficient_same_ammo"), true);
             return;
         }
 

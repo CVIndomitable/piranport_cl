@@ -972,6 +972,15 @@ public class ShipCoreItem extends Item {
     private static void fireTorpedosInventoryMode(Level level, Player player, ItemStack coreStack,
                                             Inventory inv, int weaponSlot, int coreSlot,
                                             TorpedoLauncherItem launcher, SlotCooldowns cooldowns) {
+        ItemStack launcherStack = weaponSlot == 40 ? inv.offhand.get(0) : inv.items.get(weaponSlot);
+        LoadedAmmo loaded = launcherStack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
+
+        // 优先使用已装填弹药（装填设施装的），用完后才自动从背包装填
+        if (loaded.hasAmmo() && loaded.count() >= launcher.getTubeCount()) {
+            fireTorpedosManualMode(level, player, coreStack, inv, weaponSlot, launcher, cooldowns);
+            return;
+        }
+
         int caliber = launcher.getCaliber();
         int tubeCount = launcher.getTubeCount();
         int cooldown = launcher.getCooldownTicks();
@@ -1055,7 +1064,6 @@ public class ShipCoreItem extends Item {
         }
 
         // Damage launcher in-inventory
-        ItemStack launcherStack = weaponSlot == 40 ? inv.offhand.get(0) : inv.items.get(weaponSlot);
         boolean launcherBroken = false;
         if (!launcherStack.isEmpty()) {
             int newDamage = launcherStack.getDamageValue() + 1;
@@ -1217,23 +1225,10 @@ public class ShipCoreItem extends Item {
                                       Inventory inv, int weaponSlot, int coreSlot,
                                       MissileLauncherItem launcher, SlotCooldowns cooldowns) {
         if (launcher.isManualReload()) {
-            // 已装填的发射器（LOADED_AMMO）优先使用手动发射路径，无论是否有鱼雷再装填
-            ItemStack launcherStack = weaponSlot == 40 ? inv.offhand.get(0) : inv.items.get(weaponSlot);
-            LoadedAmmo loaded = launcherStack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
-            com.piranport.debug.PiranPortDebug.event(
-                    "fireMissiles | type={} manualReload=true loaded={} count={} ammo={}",
-                    launcher.getMissileType(), loaded.hasAmmo(), loaded.count(), loaded.ammoItemId());
-            if (loaded.hasAmmo()) {
-                fireMissileManual(level, player, coreStack, inv, weaponSlot, launcher, cooldowns);
-                return;
-            }
-            // 无已装填弹药：有鱼雷再装填则走自动路径，否则提示弹药不足
-            if (TransformationManager.hasTorpedoReloadEquipped(player, coreStack)) {
-                fireMissileAutoReload(level, player, coreStack, inv, weaponSlot, coreSlot, launcher, cooldowns);
-            } else {
-                fireMissileManual(level, player, coreStack, inv, weaponSlot, launcher, cooldowns);
-            }
+            // 反舰导弹/火箭弹：仅手动装填（装填设施），不受鱼雷再装填强化影响
+            fireMissileManual(level, player, coreStack, inv, weaponSlot, launcher, cooldowns);
         } else {
+            // 防空导弹：自动从背包装填
             fireMissileAutoReload(level, player, coreStack, inv, weaponSlot, coreSlot, launcher, cooldowns);
         }
     }
@@ -1268,7 +1263,7 @@ public class ShipCoreItem extends Item {
                 SoundEvents.FIREWORK_ROCKET_LAUNCH, SoundSource.PLAYERS, 1.0f, 0.8f);
     }
 
-    /** 导弹自动装填：从背包消耗弹药，发射后进入冷却。有鱼雷再装填时反舰/火箭也走此路径。 */
+    /** 导弹自动装填：从背包消耗弹药，发射后进入冷却。防空导弹专用。 */
     private static void fireMissileAutoReload(Level level, Player player, ItemStack coreStack,
                                                Inventory inv, int weaponSlot, int coreSlot,
                                                MissileLauncherItem launcher, SlotCooldowns cooldowns) {

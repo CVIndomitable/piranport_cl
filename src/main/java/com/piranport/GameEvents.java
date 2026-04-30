@@ -117,6 +117,21 @@ public class GameEvents {
                 player.setDeltaMovement(vel.x, 0.0, vel.z);
             }
             player.resetFallDistance();
+
+            // 水平加速补偿：基于玩家当前移动方向施加加速度，补偿流体阻力
+            double accel = ModCommonConfig.WATER_WALKING_ACCELERATION.get();
+            if (accel > 0.0001) {
+                Vec3 currentVel = player.getDeltaMovement();
+                double horizontalSpeed = Math.sqrt(currentVel.x * currentVel.x + currentVel.z * currentVel.z);
+
+                // 只在玩家有水平移动时施加加速（避免静止时自动加速）
+                if (horizontalSpeed > 0.001) {
+                    // 沿当前移动方向施加加速度
+                    double accelX = (currentVel.x / horizontalSpeed) * accel;
+                    double accelZ = (currentVel.z / horizontalSpeed) * accel;
+                    player.setDeltaMovement(currentVel.x + accelX, currentVel.y, currentVel.z + accelZ);
+                }
+            }
         }
 
         // 潜艇核心：无限水下呼吸 + 水下隐身

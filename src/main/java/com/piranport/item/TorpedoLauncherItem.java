@@ -91,23 +91,36 @@ public class TorpedoLauncherItem extends Item {
             return false;
         }
 
-        // Check ammo type consistency (prevent mixing different torpedo types)
+        // Check ammo type consistency
+        String newAmmoId = BuiltInRegistries.ITEM.getKey(other.getItem()).toString();
         if (loaded.hasAmmo()) {
             String existingAmmoId = loaded.ammoItemId();
-            String newAmmoId = BuiltInRegistries.ITEM.getKey(other.getItem()).toString();
             if (!existingAmmoId.equals(newAmmoId)) {
+                // Eject existing torpedoes and load new type
+                Item existingItem = BuiltInRegistries.ITEM.get(net.minecraft.resources.ResourceLocation.parse(existingAmmoId));
+                ItemStack ejectedStack = new ItemStack(existingItem, loaded.count());
+                if (!player.getInventory().add(ejectedStack)) {
+                    player.drop(ejectedStack, false);
+                }
                 player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
-                        SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 0.5f, 1.0f);
-                return false;
+                        SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.5f, 0.8f);
+
+                // Load new torpedoes
+                int toLoad = Math.min(tubeCount, other.getCount());
+                stack.set(ModDataComponents.LOADED_AMMO.get(), new LoadedAmmo(toLoad, newAmmoId));
+                other.shrink(toLoad);
+
+                player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+                        SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.5f, 1.4f);
+                return true;
             }
         }
 
-        // Load torpedoes
+        // Load torpedoes (same type or empty launcher)
         int currentCount = loaded.hasAmmo() ? loaded.count() : 0;
         int space = tubeCount - currentCount;
         int toLoad = Math.min(space, other.getCount());
-        String ammoId = BuiltInRegistries.ITEM.getKey(other.getItem()).toString();
-        stack.set(ModDataComponents.LOADED_AMMO.get(), new LoadedAmmo(currentCount + toLoad, ammoId));
+        stack.set(ModDataComponents.LOADED_AMMO.get(), new LoadedAmmo(currentCount + toLoad, newAmmoId));
         other.shrink(toLoad);
 
         player.level().playSound(null, player.getX(), player.getY(), player.getZ(),

@@ -169,7 +169,8 @@ public class ReloadFacilityBlockEntity extends BlockEntity implements MenuProvid
         boolean validCombo;
 
         // 部分装填补齐时，必须与现有弹种一致；不同弹种禁止混装，避免旧弹被静默替换
-        String ammoIdNow = ammoStack.isEmpty() ? "" : BuiltInRegistries.ITEM.getKey(ammoStack.getItem()).toString();
+        ItemStack ammoSnapshot = ammoStack.copy();
+        String ammoIdNow = ammoSnapshot.isEmpty() ? "" : BuiltInRegistries.ITEM.getKey(ammoSnapshot.getItem()).toString();
 
         if (launcherStack.getItem() instanceof TorpedoLauncherItem torpedoLauncher) {
             // Torpedo launcher reload

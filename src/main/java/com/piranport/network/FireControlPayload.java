@@ -67,8 +67,10 @@ public record FireControlPayload(FireAction action, UUID targetUUID) implements 
                 FireControlManager.clearTargets(playerUUID);
             } else {
                 Entity entity = player.serverLevel().getEntity(payload.targetUUID());
+                // Cross-dimension protection
+                if (entity != null && entity.level() != player.level()) return;
                 // Limit lock range to simulation distance (in blocks)
-                int simDistBlocks = player.serverLevel().getServer().getPlayerList().getSimulationDistance() * 16;
+                int simDistBlocks = Math.max(10, player.serverLevel().getServer().getPlayerList().getSimulationDistance()) * 16;
                 // 允许锁 LivingEntity（怪/玩家/动物）和 AircraftEntity（敌方飞机）；
                 // AircraftEntity 不继承 LivingEntity，需单独放行，否则火控无法对空
                 boolean validTarget = entity != null && entity.isAlive() && entity != player

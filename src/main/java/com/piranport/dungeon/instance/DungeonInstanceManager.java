@@ -169,6 +169,10 @@ public class DungeonInstanceManager extends SavedData {
         // Idempotent guard against duplicate SelectNodePayload / re-entry races.
         if (inst.getClearedNodes().contains(nodeId)) return false;
 
+        // Verify key's instanceId matches current instance
+        UUID keyInstanceId = keyStack.get(com.piranport.registry.ModDataComponents.DUNGEON_INSTANCE_ID.get());
+        if (keyInstanceId == null || !keyInstanceId.equals(instanceId)) return false;
+
         inst.setCurrentNode(nodeId);
         inst.addClearedNode(nodeId);
 

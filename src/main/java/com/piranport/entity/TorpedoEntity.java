@@ -223,11 +223,11 @@ public class TorpedoEntity extends ThrowableItemProjectile {
 
         // 1.55. 扁平 hitbox (0.5×0.25) 会让鱼雷从船体下方/甲板上方滑过而不触发 vanilla 扫掠碰撞；
         // 空投落水/水面巡航阶段主动近炸：发现有效目标就当作命中处理。
-        if (!level().isClientSide() && !exploded && !airDrop && tickCount > 2) {
+        if (!level().isClientSide() && !exploded && !airDrop && tickCount > 2 && !isRemoved()) {
             Entity nearby = findProximityHitTarget();
             if (nearby != null) {
                 onHitEntity(new EntityHitResult(nearby));
-                if (isRemoved() || exploded) return;
+                return;
             }
         }
 
@@ -400,8 +400,13 @@ public class TorpedoEntity extends ThrowableItemProjectile {
         while (deltaYaw < -Math.PI) deltaYaw += 2 * Math.PI;
 
         double maxTurnRad = Math.toRadians(ACOUSTIC_MAX_TURN_DEG);
-        if (deltaYaw > maxTurnRad) deltaYaw = maxTurnRad;
-        if (deltaYaw < -maxTurnRad) deltaYaw = -maxTurnRad;
+        // 如果目标在正后方（|deltaYaw| 接近 π），随机选择左转或右转打破僵局
+        if (Math.abs(Math.abs(deltaYaw) - Math.PI) < 0.1) {
+            deltaYaw = (random.nextBoolean() ? 1 : -1) * maxTurnRad;
+        } else {
+            if (deltaYaw > maxTurnRad) deltaYaw = maxTurnRad;
+            if (deltaYaw < -maxTurnRad) deltaYaw = -maxTurnRad;
+        }
 
         double newYaw = currentYaw + deltaYaw;
         setDeltaMovement(Math.cos(newYaw) * hSpeed, motion.y, Math.sin(newYaw) * hSpeed);

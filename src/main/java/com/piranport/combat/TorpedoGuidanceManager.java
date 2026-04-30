@@ -21,6 +21,7 @@ public class TorpedoGuidanceManager {
         UUID prev = activeGuidance.put(playerUUID, torpedo.getUUID());
         if (prev != null && !prev.equals(torpedo.getUUID())) {
             pendingInput.remove(playerUUID);
+            PacketDistributor.sendToPlayer(player, new com.piranport.network.TorpedoGuidanceEndPayload());
         }
         PacketDistributor.sendToPlayer(player, new TorpedoGuidanceStartPayload(torpedo.getId()));
     }

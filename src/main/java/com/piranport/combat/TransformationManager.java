@@ -99,7 +99,7 @@ public class TransformationManager {
             weaponSlots = items.size();
         }
 
-        int current = getWeaponIndex(mainHand);
+        int current = Math.min(getWeaponIndex(mainHand), weaponSlots - 1);
         int next = -1;
         for (int i = 1; i <= weaponSlots; i++) {
             int candidate = (current + i) % weaponSlots;
@@ -475,36 +475,33 @@ public class TransformationManager {
         return Math.max(1, baseTicks / divisor);
     }
 
-    // P3 #36: data-driven weapon load map (lazy initialized)
+    // P3 #36: data-driven weapon load map (static initialization for thread safety)
     // IdentityHashMap is correct here: Item instances are registry singletons,
     // so reference equality (==) is both safe and faster than hashCode/equals.
-    private static java.util.Map<net.minecraft.world.item.Item, Integer> weaponLoadMap;
+    private static final java.util.Map<net.minecraft.world.item.Item, Integer> WEAPON_LOAD_MAP;
 
-    private static java.util.Map<net.minecraft.world.item.Item, Integer> getWeaponLoadMap() {
-        if (weaponLoadMap == null) {
-            weaponLoadMap = new java.util.IdentityHashMap<>();
-            weaponLoadMap.put(ModItems.SINGLE_SMALL_GUN.get(), 4);
-            weaponLoadMap.put(ModItems.SMALL_GUN.get(), 6);
-            weaponLoadMap.put(ModItems.MEDIUM_GUN.get(), 16);
-            weaponLoadMap.put(ModItems.LARGE_GUN.get(), 30);
-            weaponLoadMap.put(ModItems.TWIN_TORPEDO_LAUNCHER.get(), 8);
-            weaponLoadMap.put(ModItems.TRIPLE_TORPEDO_LAUNCHER.get(), 12);
-            weaponLoadMap.put(ModItems.QUAD_TORPEDO_LAUNCHER.get(), 20);
-            weaponLoadMap.put(ModItems.SY1_LAUNCHER.get(), 14);
-            weaponLoadMap.put(ModItems.MK14_HARPOON_LAUNCHER.get(), 16);
-            weaponLoadMap.put(ModItems.TERRIER_LAUNCHER.get(), 10);
-            weaponLoadMap.put(ModItems.SHIP_ROCKET_LAUNCHER.get(), 8);
-            weaponLoadMap.put(ModItems.SEA_DART_LAUNCHER.get(), 12);
-            weaponLoadMap.put(ModItems.SEACAT_LAUNCHER.get(), 6);
-            weaponLoadMap.put(ModItems.DEPTH_CHARGE_LAUNCHER.get(), 2);
-            weaponLoadMap.put(ModItems.DEPTH_CHARGE_LAUNCHER_IMPROVED.get(), 3);
-            weaponLoadMap.put(ModItems.DEPTH_CHARGE_LAUNCHER_ADVANCED.get(), 5);
-        }
-        return weaponLoadMap;
+    static {
+        WEAPON_LOAD_MAP = new java.util.IdentityHashMap<>();
+        WEAPON_LOAD_MAP.put(ModItems.SINGLE_SMALL_GUN.get(), 4);
+        WEAPON_LOAD_MAP.put(ModItems.SMALL_GUN.get(), 6);
+        WEAPON_LOAD_MAP.put(ModItems.MEDIUM_GUN.get(), 16);
+        WEAPON_LOAD_MAP.put(ModItems.LARGE_GUN.get(), 30);
+        WEAPON_LOAD_MAP.put(ModItems.TWIN_TORPEDO_LAUNCHER.get(), 8);
+        WEAPON_LOAD_MAP.put(ModItems.TRIPLE_TORPEDO_LAUNCHER.get(), 12);
+        WEAPON_LOAD_MAP.put(ModItems.QUAD_TORPEDO_LAUNCHER.get(), 20);
+        WEAPON_LOAD_MAP.put(ModItems.SY1_LAUNCHER.get(), 14);
+        WEAPON_LOAD_MAP.put(ModItems.MK14_HARPOON_LAUNCHER.get(), 16);
+        WEAPON_LOAD_MAP.put(ModItems.TERRIER_LAUNCHER.get(), 10);
+        WEAPON_LOAD_MAP.put(ModItems.SHIP_ROCKET_LAUNCHER.get(), 8);
+        WEAPON_LOAD_MAP.put(ModItems.SEA_DART_LAUNCHER.get(), 12);
+        WEAPON_LOAD_MAP.put(ModItems.SEACAT_LAUNCHER.get(), 6);
+        WEAPON_LOAD_MAP.put(ModItems.DEPTH_CHARGE_LAUNCHER.get(), 2);
+        WEAPON_LOAD_MAP.put(ModItems.DEPTH_CHARGE_LAUNCHER_IMPROVED.get(), 3);
+        WEAPON_LOAD_MAP.put(ModItems.DEPTH_CHARGE_LAUNCHER_ADVANCED.get(), 5);
     }
 
     public static int getItemLoad(ItemStack stack) {
-        Integer load = getWeaponLoadMap().get(stack.getItem());
+        Integer load = WEAPON_LOAD_MAP.get(stack.getItem());
         if (load != null) return load;
         if (stack.getItem() instanceof ArmorPlateItem plate) return plate.getWeight();
         if (stack.getItem() instanceof SonarItem sonar) return sonar.getWeight();

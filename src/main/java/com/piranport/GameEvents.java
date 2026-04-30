@@ -145,9 +145,10 @@ public class GameEvents {
         // 声纳效果：装备声纳时，24格内敌对生物持续获得发光效果（每20tick刷新一次）
         if (!player.level().isClientSide() && player.tickCount % 20 == 0) {
             if (TransformationManager.hasSonarEquipped(player, transformedCore)) {
+                AABB scanBox = player.getBoundingBox().inflate(24.0, 8.0, 24.0);
                 List<LivingEntity> nearby = player.level().getEntitiesOfClass(
                         LivingEntity.class,
-                        player.getBoundingBox().inflate(24.0),
+                        scanBox,
                         e -> e.isAlive() && e != player && !(e instanceof Player));
                 for (LivingEntity entity : nearby) {
                     entity.addEffect(new MobEffectInstance(MobEffects.GLOWING, 40, 0, false, false, false));
@@ -217,12 +218,18 @@ public class GameEvents {
                         new FuelData(0, ((ShipCoreItem) offhand.getItem()).getShipType().fuelCapacity));
                 if (fuel.isEmpty()) {
                     // Show message only once (not every tick)
-                    if (!lastWeaponLoad.containsKey(player.getUUID())) {
+                    Integer cached = lastWeaponLoad.get(player.getUUID());
+                    if (cached == null || cached != -999) {
                         lastWeaponLoad.put(player.getUUID(), -999);
                         player.displayClientMessage(
                                 Component.translatable("message.piranport.no_fuel"), true);
                     }
                     return;
+                }
+                // Clear -999 marker when fuel is sufficient
+                Integer cached = lastWeaponLoad.get(player.getUUID());
+                if (cached != null && cached == -999) {
+                    lastWeaponLoad.remove(player.getUUID());
                 }
                 TransformationManager.setTransformed(offhand, true);
                 TransformationManager.applyTransformationAttributes(player, offhand);
@@ -307,10 +314,9 @@ public class GameEvents {
             // Lock the nearest target only when there are no currently-alive fire control targets
             if (player.level() instanceof ServerLevel sl) {
                 List<UUID> currentLocks = FireControlManager.getTargets(player.getUUID());
-                boolean hasActiveLock = currentLocks.stream().anyMatch(uuid -> {
-                    Entity e = sl.getEntity(uuid);
-                    return e != null && e.isAlive();
-                });
+                boolean hasActiveLock = currentLocks.stream()
+                        .map(sl::getEntity)
+                        .anyMatch(e -> e != null && e.isAlive());
 
                 if (!hasActiveLock) {
                     LivingEntity nearest = flyingHostiles.stream()
@@ -363,7 +369,13 @@ public class GameEvents {
         if (lastPos == null) return; // first tick — no distance yet
 
         double dist = currentPos.distanceTo(lastPos);
-        if (dist > 10.0 || dist < 0.001) return; // ignore teleports and standing still
+        if (dist > 10.0) {
+            // Teleport detected — reset baseline and clear accumulation
+            lastPlayerPos.put(uuid, currentPos);
+            accumulatedDistance.remove(uuid);
+            return;
+        }
+        if (dist < 0.001) return; // standing still
 
         ItemStack core = TransformationManager.findTransformedCore(player);
         if (!(core.getItem() instanceof ShipCoreItem sci)) return;

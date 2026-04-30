@@ -39,6 +39,13 @@ public record TorpedoGuidanceInputPayload(float dx, float dy, float dz) implemen
             float dx = Mth.clamp(payload.dx(), -1.0f, 1.0f);
             float dy = Mth.clamp(payload.dy(), -1.0f, 1.0f);
             float dz = Mth.clamp(payload.dz(), -1.0f, 1.0f);
+            // Normalize vector to prevent client from sending oversized input
+            double len = Math.sqrt(dx*dx + dy*dy + dz*dz);
+            if (len > 1.0) {
+                dx /= len;
+                dy /= len;
+                dz /= len;
+            }
             TorpedoGuidanceManager.handleInput(ctx.player().getUUID(), dx, dy, dz);
         });
     }

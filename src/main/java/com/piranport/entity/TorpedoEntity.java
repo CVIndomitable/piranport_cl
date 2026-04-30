@@ -17,6 +17,8 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
@@ -455,10 +457,15 @@ public class TorpedoEntity extends ThrowableItemProjectile {
 
     @Override
     protected void onHitBlock(BlockHitResult result) {
+        BlockState hitState = level().getBlockState(result.getBlockPos());
+        if (isPassThroughForTorpedo(hitState)) {
+            return;
+        }
+
         super.onHitBlock(result);
         if (!level().isClientSide() && !exploded) {
             // 水中命中方块：静默消失，不爆炸
-            if (level().getBlockState(result.getBlockPos()).getFluidState().is(Fluids.WATER)) {
+            if (hitState.getFluidState().is(Fluids.WATER)) {
                 discard();
                 return;
             }
@@ -472,6 +479,10 @@ public class TorpedoEntity extends ThrowableItemProjectile {
                 discard();
             }
         }
+    }
+
+    private static boolean isPassThroughForTorpedo(BlockState state) {
+        return state.is(Blocks.KELP) || state.is(Blocks.KELP_PLANT);
     }
 
     @Override

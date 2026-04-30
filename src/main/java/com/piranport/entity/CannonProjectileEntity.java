@@ -18,6 +18,7 @@ import net.minecraft.world.entity.projectile.ThrowableItemProjectile;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -240,8 +241,11 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
                 if (ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get() && !isInWater()) {
                     BlockPos pos = result.getBlockPos();
                     BlockState state = level().getBlockState(pos);
-                    float obsidianResistance = Blocks.OBSIDIAN.getExplosionResistance();
-                    if (state.getBlock().getExplosionResistance() < obsidianResistance) {
+                    BlockState obsidianState = Blocks.OBSIDIAN.defaultBlockState();
+                    Explosion resistanceContext = new Explosion(level(), this, getX(), getY(), getZ(),
+                            explosionPower, false, Explosion.BlockInteraction.KEEP);
+                    float obsidianResistance = obsidianState.getExplosionResistance(level(), pos, resistanceContext);
+                    if (state.getExplosionResistance(level(), pos, resistanceContext) < obsidianResistance) {
                         level().destroyBlock(pos, true);
                     }
                 }

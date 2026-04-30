@@ -35,13 +35,14 @@ public class LootChestProcessor extends StructureProcessor {
 
     @Nullable
     @Override
-    public StructureTemplate.StructureBlockInfo processBlock(
+    public StructureTemplate.StructureBlockInfo process(
             LevelReader level,
             BlockPos offset,
             BlockPos pos,
             StructureTemplate.StructureBlockInfo blockInfo,
             StructureTemplate.StructureBlockInfo relativeBlockInfo,
-            StructurePlaceSettings settings) {
+            StructurePlaceSettings settings,
+            @Nullable StructureTemplate template) {
 
         if (relativeBlockInfo.state().is(Blocks.CHEST)) {
             CompoundTag nbt = relativeBlockInfo.nbt() != null

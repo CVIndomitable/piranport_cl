@@ -34,13 +34,14 @@ public class RuinDegradationProcessor extends StructureProcessor {
 
     @Nullable
     @Override
-    public StructureTemplate.StructureBlockInfo processBlock(
+    public StructureTemplate.StructureBlockInfo process(
             LevelReader level,
             BlockPos offset,
             BlockPos pos,
             StructureTemplate.StructureBlockInfo blockInfo,
             StructureTemplate.StructureBlockInfo relativeBlockInfo,
-            StructurePlaceSettings settings) {
+            StructurePlaceSettings settings,
+            @Nullable StructureTemplate template) {
 
         RandomSource random = settings.getRandom(relativeBlockInfo.pos());
 

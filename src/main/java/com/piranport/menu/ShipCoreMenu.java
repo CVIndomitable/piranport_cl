@@ -182,6 +182,7 @@ public class ShipCoreMenu extends AbstractContainerMenu {
                 || stack.is(ModItems.DEPTH_CHARGE.get()) || isAviationAmmo(stack);
     }
 
+    @SuppressWarnings("deprecation") // Legacy bomb items are still accepted for world compatibility.
     public static boolean isAviationAmmo(ItemStack stack) {
         return stack.is(ModItems.AVIATION_FUEL.get())
                 || stack.is(ModItems.AERIAL_BOMB_SMALL.get())

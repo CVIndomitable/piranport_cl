@@ -30,6 +30,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.neoforge.event.EventHooks;
 
 import java.util.List;
 import java.util.Optional;
@@ -208,7 +209,7 @@ public final class PiranPortCommands {
             entity.setPos(player.getX() + offsetX, player.getY(), player.getZ() + offsetZ);
 
             if (entity instanceof Mob mob) {
-                mob.finalizeSpawn(level, level.getCurrentDifficultyAt(player.blockPosition()),
+                EventHooks.finalizeMobSpawn(mob, level, level.getCurrentDifficultyAt(player.blockPosition()),
                         MobSpawnType.COMMAND, null);
             }
 

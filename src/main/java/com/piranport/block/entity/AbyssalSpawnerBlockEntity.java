@@ -17,6 +17,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.neoforged.neoforge.event.EventHooks;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -89,7 +90,7 @@ public class AbyssalSpawnerBlockEntity extends BlockEntity {
             }
 
             if (entity instanceof Mob mob) {
-                mob.finalizeSpawn(serverLevel, serverLevel.getCurrentDifficultyAt(pos),
+                EventHooks.finalizeMobSpawn(mob, serverLevel, serverLevel.getCurrentDifficultyAt(pos),
                         MobSpawnType.STRUCTURE, null);
                 mob.setPersistenceRequired();
             }

@@ -405,6 +405,10 @@ public class ShipCoreItem extends Item {
                         String.format("%.2f", shipType.emptySpeed)).withStyle(net.minecraft.ChatFormatting.GREEN));
                 tooltipComponents.add(Component.translatable("tooltip.piranport.core.full_speed",
                         String.format("%.2f", shipType.fullLoadSpeed)).withStyle(net.minecraft.ChatFormatting.YELLOW));
+                if (currentEngineSpeedBonus > 0) {
+                    tooltipComponents.add(Component.translatable("tooltip.piranport.engine.speed_bonus",
+                            String.format("%.0f", currentEngineSpeedBonus * 100)).withStyle(net.minecraft.ChatFormatting.GREEN));
+                }
                 if (hasCurrentLoad) {
                     double loadRatio = shipType.maxLoad > 0
                             ? (double) currentTotalLoad / shipType.maxLoad : 0;

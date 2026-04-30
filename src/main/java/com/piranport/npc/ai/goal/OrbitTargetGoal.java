@@ -1,6 +1,7 @@
 package com.piranport.npc.ai.goal;
 
 import com.piranport.npc.deepocean.AbstractDeepOceanEntity;
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.phys.Vec3;
@@ -123,7 +124,7 @@ public class OrbitTargetGoal extends Goal {
             double look = mob.getBbWidth() + 0.5;
             Vec3 dir = finalMovement.normalize();
             Vec3 testPos = mob.position().add(dir.x * look, 0, dir.z * look);
-            if (mob.level().getBlockState(net.minecraft.core.BlockPos.containing(testPos)).isSolid()) {
+            if (hasCollision(testPos)) {
                 // Try to move around the obstacle by adjusting the orbit angle
                 double adjustedAngle = orbitAngle + (mob.getRandom().nextBoolean() ? 0.5 : -0.5);
                 double ox = target.getX() + Math.cos(adjustedAngle) * orbitDist;
@@ -133,7 +134,7 @@ public class OrbitTargetGoal extends Goal {
                 // If alternative path is also blocked, stop moving horizontally
                 Vec3 altDir = altMovement.normalize();
                 Vec3 altTestPos = mob.position().add(altDir.x * look, 0, altDir.z * look);
-                if (!mob.level().getBlockState(net.minecraft.core.BlockPos.containing(altTestPos)).isSolid()) {
+                if (!hasCollision(altTestPos)) {
                     finalMovement = altMovement;
                 } else {
                     finalMovement = new Vec3(0, finalMovement.y, 0);
@@ -142,5 +143,10 @@ public class OrbitTargetGoal extends Goal {
         }
 
         mob.setDeltaMovement(finalMovement.x, current.y, finalMovement.z);
+    }
+
+    private boolean hasCollision(Vec3 testPos) {
+        BlockPos blockPos = BlockPos.containing(testPos);
+        return !mob.level().getBlockState(blockPos).getCollisionShape(mob.level(), blockPos).isEmpty();
     }
 }

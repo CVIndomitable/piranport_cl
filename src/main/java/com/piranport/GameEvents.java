@@ -15,7 +15,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.stats.Stats;
-import net.minecraft.tags.FluidTags;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.FlyingMob;
@@ -30,6 +29,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.neoforge.common.NeoForgeMod;
 import net.neoforged.neoforge.common.util.TriState;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
@@ -110,7 +110,8 @@ public class GameEvents {
 
         // 水面行走：脚踩水但眼睛未入水时，取消下沉速度（潜艇核心不适用）
         // 水中摩擦力比陆地低，保留滑行惯性，模拟舰船水面移动手感
-        if (!isSubmarine && player.isInWater() && !player.isEyeInFluid(FluidTags.WATER)) {
+        if (!isSubmarine && player.isInWater()
+                && !player.isEyeInFluidType(NeoForgeMod.WATER_TYPE.value())) {
             Vec3 vel = player.getDeltaMovement();
             if (vel.y < 0) {
                 player.setDeltaMovement(vel.x, 0.0, vel.z);
@@ -121,7 +122,7 @@ public class GameEvents {
         // 潜艇核心：无限水下呼吸 + 水下隐身
         if (isSubmarine && !player.level().isClientSide()) {
             player.addEffect(new MobEffectInstance(MobEffects.WATER_BREATHING, 400, 0, false, false, true));
-            if (player.isEyeInFluid(FluidTags.WATER)) {
+            if (player.isEyeInFluidType(NeoForgeMod.WATER_TYPE.value())) {
                 player.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 40, 0, false, false, true));
             }
         }

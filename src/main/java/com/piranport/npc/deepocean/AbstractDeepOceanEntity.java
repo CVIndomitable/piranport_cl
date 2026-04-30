@@ -8,7 +8,6 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
-import net.minecraft.tags.FluidTags;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -20,6 +19,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.neoforge.common.NeoForgeMod;
 
 import javax.annotation.Nullable;
 import java.util.UUID;
@@ -130,7 +130,7 @@ public abstract class AbstractDeepOceanEntity extends Monster {
 
         if (!level().isClientSide()) {
             // Float on water surface (same pattern as LowTierDestroyerEntity)
-            if (isInWater() && !isEyeInFluid(FluidTags.WATER)) {
+            if (isInWater() && !isEyeInFluidType(NeoForgeMod.WATER_TYPE.value())) {
                 Vec3 vel = getDeltaMovement();
                 if (vel.y < 0) {
                     setDeltaMovement(vel.x, 0.0, vel.z);
@@ -375,7 +375,7 @@ public abstract class AbstractDeepOceanEntity extends Monster {
     @Override
     public boolean isCurrentlyGlowing() {
         // Submarines should not glow when submerged (breaks stealth)
-        if (canSubmerge() && isEyeInFluid(FluidTags.WATER)) {
+        if (canSubmerge() && isEyeInFluidType(NeoForgeMod.WATER_TYPE.value())) {
             return false;
         }
         return true; // Always visible without custom model

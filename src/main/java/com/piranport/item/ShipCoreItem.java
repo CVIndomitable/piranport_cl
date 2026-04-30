@@ -762,7 +762,55 @@ public class ShipCoreItem extends Item {
         } else {
             int barrelCount = getBarrelCount(weapon);
 
-            // Count total matching ammo in inventory
+            // Creative mode: find any matching ammo without consuming
+            if (player.getAbilities().instabuild) {
+                ItemStack firstAmmo = ItemStack.EMPTY;
+                for (int i = 0; i < inv.items.size(); i++) {
+                    if (i == coreInventorySlot || i == weaponSlot) continue;
+                    ItemStack ammo = inv.items.get(i);
+                    if (!ammo.isEmpty() && matchesCaliber(ammo, weapon)) {
+                        firstAmmo = ammo;
+                        break;
+                    }
+                }
+                if (firstAmmo.isEmpty() && weaponSlot != 40 && coreInventorySlot != 40) {
+                    ItemStack oh = inv.offhand.get(0);
+                    if (!oh.isEmpty() && matchesCaliber(oh, weapon)) {
+                        firstAmmo = oh;
+                    }
+                }
+
+                if (firstAmmo.isEmpty()) {
+                    player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
+                    return true;
+                }
+
+                boolean isType3 = isType3Shell(firstAmmo);
+                boolean isVT = isVTShell(firstAmmo);
+                boolean isHE = isHEShell(firstAmmo) || isVT;
+                ItemStack shellForRender = firstAmmo.copyWithCount(1);
+
+                int cooldownTicks = TransformationManager.boostedCooldown(player, getGunCooldown(weapon));
+                coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
+                        cooldowns.withSlotCooldown(weaponSlot, cooldownTicks, level.getGameTime()));
+                weapon.set(ModDataComponents.WEAPON_COOLDOWN.get(),
+                        WeaponCooldown.of(level.getGameTime(), cooldownTicks));
+
+                fireCannonSalvo(level, player, weapon, shellForRender, barrelCount, isType3, isVT, isHE);
+
+                com.piranport.debug.PiranPortDebug.event(
+                        "Fire (creative) | weapon={} ammo={} barrels={}",
+                        BuiltInRegistries.ITEM.getKey(weapon.getItem()).getPath(),
+                        BuiltInRegistries.ITEM.getKey(shellForRender.getItem()).getPath(),
+                        barrelCount);
+
+                float pitch = getSoundPitch(weapon);
+                level.playSound(null, player.getX(), player.getY(), player.getZ(),
+                        SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 0.5f, pitch);
+                return true;
+            }
+
+            // Survival mode: count and consume ammo
             int totalAmmo = 0;
             for (int i = 0; i < inv.items.size(); i++) {
                 if (i == coreInventorySlot || i == weaponSlot) continue;
@@ -1006,44 +1054,47 @@ public class ShipCoreItem extends Item {
             return;
         }
 
-        // Count available ammo of the same type
-        int available = 0;
-        for (int i = 0; i < inv.items.size(); i++) {
-            if (i == coreSlot || i == weaponSlot) continue;
-            ItemStack s = inv.items.get(i);
-            if (!s.isEmpty() && s.getItem() == torpedoType) {
-                available += s.getCount();
+        // Creative mode: skip ammo consumption
+        if (!player.getAbilities().instabuild) {
+            // Count available ammo of the same type
+            int available = 0;
+            for (int i = 0; i < inv.items.size(); i++) {
+                if (i == coreSlot || i == weaponSlot) continue;
+                ItemStack s = inv.items.get(i);
+                if (!s.isEmpty() && s.getItem() == torpedoType) {
+                    available += s.getCount();
+                }
             }
-        }
-        if (weaponSlot != 40 && coreSlot != 40) {
-            ItemStack oh = inv.offhand.get(0);
-            if (!oh.isEmpty() && oh.getItem() == torpedoType) {
-                available += oh.getCount();
+            if (weaponSlot != 40 && coreSlot != 40) {
+                ItemStack oh = inv.offhand.get(0);
+                if (!oh.isEmpty() && oh.getItem() == torpedoType) {
+                    available += oh.getCount();
+                }
             }
-        }
 
-        if (available < tubeCount) {
-            player.displayClientMessage(Component.translatable("message.piranport.insufficient_same_ammo"), true);
-            return;
-        }
-
-        // Consume ammo before spawning entities (prevent TOCTOU)
-        int toConsume = tubeCount;
-        for (int i = 0; i < inv.items.size() && toConsume > 0; i++) {
-            if (i == coreSlot || i == weaponSlot) continue;
-            ItemStack s = inv.items.get(i);
-            if (!s.isEmpty() && s.getItem() == torpedoType) {
-                int take = Math.min(toConsume, s.getCount());
-                com.piranport.debug.PiranPortDebug.consumeAmmo(s, take);
-                toConsume -= take;
+            if (available < tubeCount) {
+                player.displayClientMessage(Component.translatable("message.piranport.insufficient_same_ammo"), true);
+                return;
             }
-        }
-        if (toConsume > 0 && weaponSlot != 40 && coreSlot != 40) {
-            ItemStack oh = inv.offhand.get(0);
-            if (!oh.isEmpty() && oh.getItem() == torpedoType) {
-                int take = Math.min(toConsume, oh.getCount());
-                com.piranport.debug.PiranPortDebug.consumeAmmo(oh, take);
-                toConsume -= take;
+
+            // Consume ammo before spawning entities (prevent TOCTOU)
+            int toConsume = tubeCount;
+            for (int i = 0; i < inv.items.size() && toConsume > 0; i++) {
+                if (i == coreSlot || i == weaponSlot) continue;
+                ItemStack s = inv.items.get(i);
+                if (!s.isEmpty() && s.getItem() == torpedoType) {
+                    int take = Math.min(toConsume, s.getCount());
+                    com.piranport.debug.PiranPortDebug.consumeAmmo(s, take);
+                    toConsume -= take;
+                }
+            }
+            if (toConsume > 0 && weaponSlot != 40 && coreSlot != 40) {
+                ItemStack oh = inv.offhand.get(0);
+                if (!oh.isEmpty() && oh.getItem() == torpedoType) {
+                    int take = Math.min(toConsume, oh.getCount());
+                    com.piranport.debug.PiranPortDebug.consumeAmmo(oh, take);
+                    toConsume -= take;
+                }
             }
         }
 
@@ -1112,12 +1163,12 @@ public class ShipCoreItem extends Item {
                 launcherStack.set(ModDataComponents.WEAPON_COOLDOWN.get(),
                         WeaponCooldown.of(level.getGameTime(), boostedCooldown));
             } else {
+                // 背包弹药不足，设置短冷却提示玩家需要补充弹药
                 int penaltyTicks = 10;
                 coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
                         cooldowns.withSlotCooldown(weaponSlot, penaltyTicks, level.getGameTime()));
                 launcherStack.set(ModDataComponents.WEAPON_COOLDOWN.get(),
                         WeaponCooldown.of(level.getGameTime(), penaltyTicks));
-                player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
             }
         }
         TransformationManager.setWeaponIndex(coreStack, weaponSlot);
@@ -1132,44 +1183,68 @@ public class ShipCoreItem extends Item {
         int chargeCount = launcher.getChargeCount();
         int cooldown = launcher.getCooldownTicks();
 
-        // Count available depth charge ammo in inventory
-        int available = 0;
-        for (int i = 0; i < inv.items.size(); i++) {
-            if (i == coreSlot || i == weaponSlot) continue;
-            ItemStack s = inv.items.get(i);
-            if (!s.isEmpty() && s.is(ModItems.DEPTH_CHARGE.get())) {
-                available += s.getCount();
+        // Creative mode: skip ammo check and consumption
+        if (!player.getAbilities().instabuild) {
+            // Count available depth charge ammo in inventory
+            int available = 0;
+            for (int i = 0; i < inv.items.size(); i++) {
+                if (i == coreSlot || i == weaponSlot) continue;
+                ItemStack s = inv.items.get(i);
+                if (!s.isEmpty() && s.is(ModItems.DEPTH_CHARGE.get())) {
+                    available += s.getCount();
+                }
             }
-        }
-        if (weaponSlot != 40 && coreSlot != 40) {
-            ItemStack oh = inv.offhand.get(0);
-            if (!oh.isEmpty() && oh.is(ModItems.DEPTH_CHARGE.get())) {
-                available += oh.getCount();
+            if (weaponSlot != 40 && coreSlot != 40) {
+                ItemStack oh = inv.offhand.get(0);
+                if (!oh.isEmpty() && oh.is(ModItems.DEPTH_CHARGE.get())) {
+                    available += oh.getCount();
+                }
             }
-        }
 
-        if (available < chargeCount) {
-            player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
-            return;
-        }
-
-        // Consume ammo
-        int toConsume = chargeCount;
-        for (int i = 0; i < inv.items.size() && toConsume > 0; i++) {
-            if (i == coreSlot || i == weaponSlot) continue;
-            ItemStack s = inv.items.get(i);
-            if (!s.isEmpty() && s.is(ModItems.DEPTH_CHARGE.get())) {
-                int take = Math.min(toConsume, s.getCount());
-                com.piranport.debug.PiranPortDebug.consumeAmmo(s, take);
-                toConsume -= take;
+            if (available < chargeCount) {
+                player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
+                return;
             }
-        }
-        if (toConsume > 0 && weaponSlot != 40 && coreSlot != 40) {
-            ItemStack oh = inv.offhand.get(0);
-            if (!oh.isEmpty() && oh.is(ModItems.DEPTH_CHARGE.get())) {
-                int take = Math.min(toConsume, oh.getCount());
-                com.piranport.debug.PiranPortDebug.consumeAmmo(oh, take);
-                toConsume -= take;
+
+            // Consume ammo
+            int toConsume = chargeCount;
+            for (int i = 0; i < inv.items.size() && toConsume > 0; i++) {
+                if (i == coreSlot || i == weaponSlot) continue;
+                ItemStack s = inv.items.get(i);
+                if (!s.isEmpty() && s.is(ModItems.DEPTH_CHARGE.get())) {
+                    int take = Math.min(toConsume, s.getCount());
+                    com.piranport.debug.PiranPortDebug.consumeAmmo(s, take);
+                    toConsume -= take;
+                }
+            }
+            if (toConsume > 0 && weaponSlot != 40 && coreSlot != 40) {
+                ItemStack oh = inv.offhand.get(0);
+                if (!oh.isEmpty() && oh.is(ModItems.DEPTH_CHARGE.get())) {
+                    int take = Math.min(toConsume, oh.getCount());
+                    com.piranport.debug.PiranPortDebug.consumeAmmo(oh, take);
+                    toConsume -= take;
+                }
+            }
+        } else {
+            // Creative mode: verify at least one depth charge exists in inventory
+            boolean hasAmmo = false;
+            for (int i = 0; i < inv.items.size(); i++) {
+                if (i == coreSlot || i == weaponSlot) continue;
+                ItemStack s = inv.items.get(i);
+                if (!s.isEmpty() && s.is(ModItems.DEPTH_CHARGE.get())) {
+                    hasAmmo = true;
+                    break;
+                }
+            }
+            if (!hasAmmo && weaponSlot != 40 && coreSlot != 40) {
+                ItemStack oh = inv.offhand.get(0);
+                if (!oh.isEmpty() && oh.is(ModItems.DEPTH_CHARGE.get())) {
+                    hasAmmo = true;
+                }
+            }
+            if (!hasAmmo) {
+                player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
+                return;
             }
         }
 
@@ -1300,10 +1375,13 @@ public class ShipCoreItem extends Item {
             return;
         }
 
-        // 消耗1枚弹药
+        // Creative mode: skip ammo consumption
         String ammoId = BuiltInRegistries.ITEM.getKey(ammoItem).toString();
-        com.piranport.debug.PiranPortDebug.consumeAmmo(
-                ammoSlot == 40 ? inv.offhand.get(0) : inv.items.get(ammoSlot), 1);
+        if (!player.getAbilities().instabuild) {
+            // 消耗1枚弹药
+            com.piranport.debug.PiranPortDebug.consumeAmmo(
+                    ammoSlot == 40 ? inv.offhand.get(0) : inv.items.get(ammoSlot), 1);
+        }
 
         // 发射
         spawnMissile(level, player, launcher, ammoId);
@@ -1322,6 +1400,11 @@ public class ShipCoreItem extends Item {
             if (!oh.isEmpty() && oh.is(ammoItem)) {
                 nextAvailable += oh.getCount();
             }
+        }
+
+        // Creative mode: always has next round
+        if (player.getAbilities().instabuild) {
+            nextAvailable = 1;
         }
 
         // 应用冷却
@@ -1473,27 +1556,51 @@ public class ShipCoreItem extends Item {
         if (!payloadType.isEmpty() && !hasBullets) {
             net.minecraft.world.item.Item payloadItem = net.minecraft.core.registries.BuiltInRegistries.ITEM.get(
                     net.minecraft.resources.ResourceLocation.parse(payloadType));
-            boolean consumed = false;
-            for (int i = 0; i < inv.items.size(); i++) {
-                if (i == coreInventorySlot || i == weaponSlot) continue;
-                ItemStack s = inv.items.get(i);
-                if (!s.isEmpty() && s.getItem() == payloadItem) {
-                    com.piranport.debug.PiranPortDebug.consumeAmmo(s, 1);
-                    consumed = true;
-                    break;
+
+            // Creative mode: skip payload consumption but verify it exists
+            if (player.getAbilities().instabuild) {
+                boolean hasPayload = false;
+                for (int i = 0; i < inv.items.size(); i++) {
+                    if (i == coreInventorySlot || i == weaponSlot) continue;
+                    ItemStack s = inv.items.get(i);
+                    if (!s.isEmpty() && s.getItem() == payloadItem) {
+                        hasPayload = true;
+                        break;
+                    }
                 }
-            }
-            // 与 fireMissiles / fireTorpedosInventoryMode 保持一致：兼检副手
-            if (!consumed && weaponSlot != 40 && coreInventorySlot != 40) {
-                ItemStack oh = inv.offhand.get(0);
-                if (!oh.isEmpty() && oh.getItem() == payloadItem) {
-                    com.piranport.debug.PiranPortDebug.consumeAmmo(oh, 1);
-                    consumed = true;
+                if (!hasPayload && weaponSlot != 40 && coreInventorySlot != 40) {
+                    ItemStack oh = inv.offhand.get(0);
+                    if (!oh.isEmpty() && oh.getItem() == payloadItem) {
+                        hasPayload = true;
+                    }
                 }
-            }
-            if (!consumed) {
-                player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
-                return;
+                if (!hasPayload) {
+                    player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
+                    return;
+                }
+            } else {
+                // Survival mode: consume payload
+                boolean consumed = false;
+                for (int i = 0; i < inv.items.size(); i++) {
+                    if (i == coreInventorySlot || i == weaponSlot) continue;
+                    ItemStack s = inv.items.get(i);
+                    if (!s.isEmpty() && s.getItem() == payloadItem) {
+                        com.piranport.debug.PiranPortDebug.consumeAmmo(s, 1);
+                        consumed = true;
+                        break;
+                    }
+                }
+                if (!consumed && weaponSlot != 40 && coreInventorySlot != 40) {
+                    ItemStack oh = inv.offhand.get(0);
+                    if (!oh.isEmpty() && oh.getItem() == payloadItem) {
+                        com.piranport.debug.PiranPortDebug.consumeAmmo(oh, 1);
+                        consumed = true;
+                    }
+                }
+                if (!consumed) {
+                    player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
+                    return;
+                }
             }
         }
 

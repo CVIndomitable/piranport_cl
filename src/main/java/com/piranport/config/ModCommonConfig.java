@@ -50,6 +50,17 @@ public class ModCommonConfig {
                             "Set to true to redirect guns/torpedoes/aircraft/armor plates to slots 9-35 on pickup. (武器拾取自动进入背包而非快捷栏，默认关闭)")
                     .define("gui.weaponPickupToInventory", false);
 
+    // ===== Movement (移动) =====
+
+    public static final ModConfigSpec.DoubleValue WATER_WALKING_ACCELERATION =
+            BUILDER
+                    .comment(
+                            "Horizontal acceleration boost when walking on water surface (水面行走水平加速度补偿).",
+                            "Default: 0.03. Higher values = faster acceleration, lower = more sliding.",
+                            "Range: 0.0 (disabled) to 0.05 (very responsive).",
+                            "默认0.03。数值越高加速越快，越低越滑。范围0.0（禁用）到0.05（非常灵敏）")
+                    .defineInRange("movement.waterWalkingAcceleration", 0.03, 0.0, 0.05);
+
     // ===== Combat (战斗) =====
 
     public static final ModConfigSpec.BooleanValue FRIENDLY_FIRE_ENABLED =

@@ -354,8 +354,14 @@ public class ShipCoreItem extends Item {
                     NonNullList<ItemStack> storedArmor = NonNullList.withSize(capacity, ItemStack.EMPTY);
                     armorContents.copyInto(storedArmor);
                     int armorBonus = com.piranport.combat.TransformationManager.getCoreArmorBonus(stack);
-                    tooltipComponents.add(Component.translatable(
-                            "tooltip.piranport.core_armor_slots", armorBonus, capacity));
+                    int totalArmor = shipType.baseArmor + armorBonus;
+                    if (armorBonus > 0) {
+                        tooltipComponents.add(Component.translatable(
+                                "tooltip.piranport.core_armor_with_bonus", totalArmor, armorBonus, capacity));
+                    } else {
+                        tooltipComponents.add(Component.translatable(
+                                "tooltip.piranport.core_armor_slots", totalArmor, capacity));
+                    }
                     for (ItemStack s : storedArmor) {
                         if (!s.isEmpty()) {
                             tooltipComponents.add(Component.literal("  • ").append(s.getHoverName()));
@@ -395,8 +401,16 @@ public class ShipCoreItem extends Item {
                 }
                 tooltipComponents.add(Component.translatable("tooltip.piranport.core.max_load", shipType.maxLoad)
                         .withStyle(net.minecraft.ChatFormatting.GOLD));
-                tooltipComponents.add(Component.translatable("tooltip.piranport.core.armor", shipType.baseArmor)
-                        .withStyle(net.minecraft.ChatFormatting.BLUE));
+                int armorBonus = com.piranport.combat.TransformationManager.getCoreArmorBonus(stack);
+                int totalArmor = shipType.baseArmor + armorBonus;
+                if (armorBonus > 0) {
+                    tooltipComponents.add(Component.translatable("tooltip.piranport.core.armor_with_bonus",
+                            totalArmor, armorBonus)
+                            .withStyle(net.minecraft.ChatFormatting.BLUE));
+                } else {
+                    tooltipComponents.add(Component.translatable("tooltip.piranport.core.armor", totalArmor)
+                            .withStyle(net.minecraft.ChatFormatting.BLUE));
+                }
                 if (shipType.armorToughness > 0) {
                     tooltipComponents.add(Component.translatable("tooltip.piranport.core.toughness", shipType.armorToughness)
                             .withStyle(net.minecraft.ChatFormatting.AQUA));

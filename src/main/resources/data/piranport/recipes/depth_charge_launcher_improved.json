@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "IDI",
+    "IRI",
+    "III"
+  ],
+  "key": {
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "R": {
+      "item": "minecraft:redstone"
+    },
+    "D": {
+      "item": "piranport:depth_charge_launcher"
+    }
+  },
+  "result": "piranport:depth_charge_launcher_improved"
+}

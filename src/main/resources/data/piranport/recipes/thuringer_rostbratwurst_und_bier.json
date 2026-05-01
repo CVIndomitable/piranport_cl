@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "piranport:thuringer_rostbratwurst"
+    },
+    {
+      "item": "piranport:beer"
+    }
+  ],
+  "result": "piranport:thuringer_rostbratwurst_und_bier"
+}

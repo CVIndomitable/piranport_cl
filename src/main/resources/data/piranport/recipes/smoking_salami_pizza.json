@@ -1,0 +1,9 @@
+{
+  "type": "minecraft:smoking",
+  "ingredient": {
+    "item": "piranport:embryo_of_salami_pizza"
+  },
+  "result": "piranport:salami_pizza",
+  "experience": 0.45,
+  "cookingtime": 200
+}

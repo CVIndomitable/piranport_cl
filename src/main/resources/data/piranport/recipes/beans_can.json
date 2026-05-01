@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "minecraft:wheat_seeds"
+    },
+    {
+      "item": "minecraft:wheat_seeds"
+    },
+    {
+      "item": "minecraft:wheat_seeds"
+    },
+    {
+      "item": "farmersdelight:tomato"
+    },
+    {
+      "item": "minecraft:iron_ingot"
+    },
+    {
+      "item": "piranport:salt"
+    }
+  ],
+  "result": {
+    "item": "piranport:beans_can",
+    "count": 3
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:smelting",
+  "category": "misc",
+  "group": "quicklime",
+  "ingredient": {
+    "item": "minecraft:cobblestone_slab"
+  },
+  "result": "piranport:quicklime",
+  "experience": 0.1,
+  "cookingtime": 200
+}

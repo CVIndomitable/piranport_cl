@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "III",
+    "IAI",
+    "IRI"
+  ],
+  "key": {
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "A": {
+      "item": "piranport:aluminum_ingot"
+    },
+    "R": {
+      "item": "minecraft:redstone"
+    }
+  },
+  "result": "piranport:triple_torpedo_launcher"
+}

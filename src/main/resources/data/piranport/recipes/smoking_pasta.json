@@ -1,0 +1,9 @@
+{
+  "type": "minecraft:smoking",
+  "ingredient": {
+    "item": "piranport:raw_pasta"
+  },
+  "result": "piranport:pasta",
+  "experience": 0.2,
+  "cookingtime": 200
+}

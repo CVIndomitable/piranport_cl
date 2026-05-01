@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "IIA",
+    "AIA",
+    "AII"
+  ],
+  "key": {
+    "A": {
+      "item": "piranport:aluminum_ingot"
+    },
+    "I": {
+      "item": "minecraft:iron_ingot"
+    }
+  },
+  "result": "piranport:b25_bomber"
+}

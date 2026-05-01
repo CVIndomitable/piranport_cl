@@ -1,0 +1,9 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "minecraft:salmon"
+    }
+  ],
+  "result": "piranport:edible_oil"
+}

@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "AAA",
+    "ATA",
+    "AAA"
+  ],
+  "key": {
+    "A": {
+      "item": "piranport:aluminum_ingot"
+    },
+    "T": {
+      "item": "piranport:torpedo_533mm"
+    }
+  },
+  "result": {
+    "item": "piranport:aerial_torpedo",
+    "count": 4
+  }
+}

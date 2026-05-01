@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+    <Appenders>
+        <!-- PiranPort debug log: separate file, cleared on each launch -->
+        <File name="PiranPortDebug" fileName="logs/piranport-debug.log" append="false">
+            <PatternLayout pattern="[%d{HH:mm:ss.SSS}] %msg%n"/>
+        </File>
+    </Appenders>
+    <Loggers>
+        <!-- Route only PiranPortDebug logger to the debug file; suppress from root log -->
+        <Logger name="PiranPortDebug" level="INFO" additivity="false">
+            <AppenderRef ref="PiranPortDebug"/>
+        </Logger>
+    </Loggers>
+</Configuration>

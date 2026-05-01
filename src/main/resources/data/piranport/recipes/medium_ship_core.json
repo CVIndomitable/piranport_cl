@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "AI",
+    "IA",
+    "AI"
+  ],
+  "key": {
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "A": {
+      "item": "piranport:aluminum_ingot"
+    }
+  },
+  "result": "piranport:medium_ship_core"
+}

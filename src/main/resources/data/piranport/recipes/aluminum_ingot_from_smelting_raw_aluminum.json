@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:smelting",
+  "category": "misc",
+  "group": "aluminum_ingot",
+  "ingredient": {
+    "item": "piranport:raw_aluminum"
+  },
+  "result": "piranport:aluminum_ingot",
+  "experience": 0.7,
+  "cookingtime": 200
+}

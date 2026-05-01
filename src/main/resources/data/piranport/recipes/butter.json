@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "piranport:edible_oil"
+    },
+    {
+      "item": "piranport:salt"
+    }
+  ],
+  "result": "piranport:butter"
+}

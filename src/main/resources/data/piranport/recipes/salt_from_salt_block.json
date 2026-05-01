@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "group": "salt",
+  "ingredients": [
+    {
+      "item": "piranport:salt_block"
+    }
+  ],
+  "result": {
+    "item": "piranport:salt",
+    "count": 9
+  }
+}

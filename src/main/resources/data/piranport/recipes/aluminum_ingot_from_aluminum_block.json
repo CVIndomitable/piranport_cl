@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "group": "aluminum_ingot",
+  "ingredients": [
+    {
+      "item": "piranport:aluminum_block"
+    }
+  ],
+  "result": {
+    "item": "piranport:aluminum_ingot",
+    "count": 9
+  }
+}

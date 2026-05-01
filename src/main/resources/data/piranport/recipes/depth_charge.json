@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    " I ",
+    "GTG",
+    " I "
+  ],
+  "key": {
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "G": {
+      "item": "minecraft:gunpowder"
+    },
+    "T": {
+      "item": "minecraft:tnt"
+    }
+  },
+  "result": {
+    "item": "piranport:depth_charge",
+    "count": 4
+  }
+}

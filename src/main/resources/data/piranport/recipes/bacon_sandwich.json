@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "piranport:toast_bread_slices"
+    },
+    {
+      "item": "piranport:bacon"
+    },
+    {
+      "item": "piranport:toast_bread_slices"
+    }
+  ],
+  "result": {
+    "item": "piranport:bacon_sandwich",
+    "count": 2
+  }
+}

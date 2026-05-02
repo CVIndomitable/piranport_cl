@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "piranport:item/f4_u_corsair_ice"
+  }
+}

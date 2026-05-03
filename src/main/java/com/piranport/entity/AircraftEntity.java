@@ -705,7 +705,7 @@ public class AircraftEntity extends Entity {
 
     /**
      * 按目标当前血量与单发伤害决定本次齐射的弹药数。
-     * 忽略护甲与伤害减免，用 ceil(HP/damage) 保底能击杀，再与剩余弹量取 min，至少 1 发。
+     * 简化算法：忽略护甲与伤害减免，用 ceil(HP/damage) 保底能击杀，再与剩余弹量取 min，至少 1 发。
      * damagePerShot <= 0 时回退为全投剩余弹药。
      */
     private int computeSalvoSize(LivingEntity target, float damagePerShot) {
@@ -1177,10 +1177,9 @@ public class AircraftEntity extends Entity {
     /** Returns true if the entity qualifies as an ASW target (submarine or aquatic creature). */
     private static boolean isAswTarget(Entity e) {
         if (e instanceof com.piranport.npc.deepocean.DeepOceanSubmarineEntity) return true;
-        if (e instanceof WaterAnimal) return true;
-        if (e instanceof Guardian) return true;
-        // Any monster currently submerged in water
-        if (e instanceof Monster && e.isUnderWater()) return true;
+        if (e.getType().is(net.minecraft.tags.EntityTypeTags.AQUATIC)) return true;
+        if (e instanceof net.minecraft.world.entity.monster.Guardian) return true;
+        if (e instanceof net.minecraft.world.entity.monster.Monster && e.isUnderWater()) return true;
         return false;
     }
 

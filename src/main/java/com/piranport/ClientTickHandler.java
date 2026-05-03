@@ -96,9 +96,13 @@ public class ClientTickHandler {
         // V key — drops torpedo wire, exits recon mode, or cycles weapon in GUI mode only
         while (ModKeyMappings.CYCLE_WEAPON.consumeClick()) {
             if (ClientTorpedoGuidance.isActive()) {
-                PacketDistributor.sendToServer(new TorpedoGuidanceExitPayload());
+                if (mc.getConnection() != null) {
+                    PacketDistributor.sendToServer(new TorpedoGuidanceExitPayload());
+                }
             } else if (ClientReconData.isInReconMode()) {
-                PacketDistributor.sendToServer(new ReconExitPayload());
+                if (mc.getConnection() != null) {
+                    PacketDistributor.sendToServer(new ReconExitPayload());
+                }
             } else {
                 // Let the server decide if GUI mode is active — avoids reading Common config on client
                 ItemStack hand = mc.player.getMainHandItem();

@@ -63,10 +63,17 @@ public record ReviveRequestPayload() implements CustomPacketPayload {
 
             ServerLevel dungeonLevel = com.piranport.dungeon.event.DungeonEventHandler
                     .getDungeonLevel(player.server);
-            if (targetInstance == null || dungeonLevel == null) {
+            if (targetInstance == null) {
                 player.sendSystemMessage(net.minecraft.network.chat.Component.translatable(
                         "dungeon.piranport.revive_unavailable"));
                 // Re-open the revive screen so the player can choose to give up
+                net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player,
+                        new com.piranport.dungeon.network.PlayerDiedInDungeonPayload());
+                return;
+            }
+            if (dungeonLevel == null) {
+                player.sendSystemMessage(net.minecraft.network.chat.Component.translatable(
+                        "dungeon.piranport.revive_unavailable"));
                 net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player,
                         new com.piranport.dungeon.network.PlayerDiedInDungeonPayload());
                 return;

@@ -132,6 +132,19 @@ public class ShipCoreItem extends Item {
     }
 
     /**
+     * Validate and fix fuel data integrity. Returns corrected FuelData.
+     */
+    private FuelData validateAndFixFuelData(ItemStack stack) {
+        FuelData fuel = stack.getOrDefault(ModDataComponents.SHIP_CORE_FUEL.get(),
+                new FuelData(0, shipType.fuelCapacity));
+        if (fuel.maxFuel() < 0 || fuel.currentFuel() < 0) {
+            fuel = new FuelData(0, shipType.fuelCapacity);
+            stack.set(ModDataComponents.SHIP_CORE_FUEL.get(), fuel);
+        }
+        return fuel;
+    }
+
+    /**
      * Bundle-like armor storage for no-GUI mode.
      * - Right-click an ArmorPlateItem onto the core in inventory → stores the plate inside the core.
      * - Right-click the core with an empty cursor → extracts the last stored plate back to cursor.
@@ -144,13 +157,7 @@ public class ShipCoreItem extends Item {
 
         // Fuel refueling: lava bucket → +1b fuel (works in both GUI and no-GUI modes)
         if (!other.isEmpty() && other.is(net.minecraft.world.item.Items.LAVA_BUCKET)) {
-            FuelData fuel = stack.getOrDefault(ModDataComponents.SHIP_CORE_FUEL.get(),
-                    new FuelData(0, shipType.fuelCapacity));
-            // Validate fuel data integrity before calculation
-            if (fuel.maxFuel() < 0 || fuel.currentFuel() < 0) {
-                fuel = new FuelData(0, shipType.fuelCapacity);
-                stack.set(ModDataComponents.SHIP_CORE_FUEL.get(), fuel);
-            }
+            FuelData fuel = validateAndFixFuelData(stack);
             if (!fuel.isFull()) {
                 stack.set(ModDataComponents.SHIP_CORE_FUEL.get(),
                         fuel.withCurrentFuel(fuel.currentFuel() + 1));
@@ -167,13 +174,7 @@ public class ShipCoreItem extends Item {
 
         // Fuel refueling: coal → +1 fuel per item (works in both GUI and no-GUI modes)
         if (!other.isEmpty() && other.is(net.minecraft.world.item.Items.COAL)) {
-            FuelData fuel = stack.getOrDefault(ModDataComponents.SHIP_CORE_FUEL.get(),
-                    new FuelData(0, shipType.fuelCapacity));
-            // Validate fuel data integrity before calculation
-            if (fuel.maxFuel() < 0 || fuel.currentFuel() < 0) {
-                fuel = new FuelData(0, shipType.fuelCapacity);
-                stack.set(ModDataComponents.SHIP_CORE_FUEL.get(), fuel);
-            }
+            FuelData fuel = validateAndFixFuelData(stack);
             if (!fuel.isFull()) {
                 int space = fuel.maxFuel() - fuel.currentFuel();
                 if (space <= 0) return false;
@@ -192,13 +193,7 @@ public class ShipCoreItem extends Item {
 
         // Fuel refueling: blaze rod → +1 fuel per item (works in both GUI and no-GUI modes)
         if (!other.isEmpty() && other.is(net.minecraft.world.item.Items.BLAZE_ROD)) {
-            FuelData fuel = stack.getOrDefault(ModDataComponents.SHIP_CORE_FUEL.get(),
-                    new FuelData(0, shipType.fuelCapacity));
-            // Validate fuel data integrity before calculation
-            if (fuel.maxFuel() < 0 || fuel.currentFuel() < 0) {
-                fuel = new FuelData(0, shipType.fuelCapacity);
-                stack.set(ModDataComponents.SHIP_CORE_FUEL.get(), fuel);
-            }
+            FuelData fuel = validateAndFixFuelData(stack);
             if (!fuel.isFull()) {
                 int space = fuel.maxFuel() - fuel.currentFuel();
                 if (space <= 0) return false;
@@ -217,13 +212,7 @@ public class ShipCoreItem extends Item {
 
         // Fuel refueling: fuel item → batch fill (works in both GUI and no-GUI modes)
         if (!other.isEmpty() && other.is(ModItems.FUEL.get())) {
-            FuelData fuel = stack.getOrDefault(ModDataComponents.SHIP_CORE_FUEL.get(),
-                    new FuelData(0, shipType.fuelCapacity));
-            // Validate fuel data integrity before calculation
-            if (fuel.maxFuel() < 0 || fuel.currentFuel() < 0) {
-                fuel = new FuelData(0, shipType.fuelCapacity);
-                stack.set(ModDataComponents.SHIP_CORE_FUEL.get(), fuel);
-            }
+            FuelData fuel = validateAndFixFuelData(stack);
             if (!fuel.isFull()) {
                 int space = fuel.maxFuel() - fuel.currentFuel();
                 if (space <= 0) return false;

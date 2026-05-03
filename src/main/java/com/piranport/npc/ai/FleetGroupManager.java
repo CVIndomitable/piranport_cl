@@ -104,9 +104,8 @@ public class FleetGroupManager extends SavedData {
         Boolean alerting = alertInProgress.get();
         if (alerting != null && alerting) return;
 
+        alertInProgress.set(true);
         try {
-            alertInProgress.set(true);
-
             group.setSharedTarget(target.getUUID());
             setDirty();
 

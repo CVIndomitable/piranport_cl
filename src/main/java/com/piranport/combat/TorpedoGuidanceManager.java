@@ -27,18 +27,13 @@ public class TorpedoGuidanceManager {
     }
 
     public static void endGuidance(UUID playerUUID) {
-        UUID removed = activeGuidance.remove(playerUUID);
+        activeGuidance.remove(playerUUID);
         pendingInput.remove(playerUUID);
-        if (removed == null) return;
     }
 
     /** End guidance and notify the client to restore its camera. */
     public static void endGuidance(ServerPlayer player) {
-        if (activeGuidance.remove(player.getUUID()) == null) {
-            pendingInput.remove(player.getUUID());
-            return;
-        }
-        pendingInput.remove(player.getUUID());
+        endGuidance(player.getUUID());
         PacketDistributor.sendToPlayer(player, new TorpedoGuidanceEndPayload());
     }
 

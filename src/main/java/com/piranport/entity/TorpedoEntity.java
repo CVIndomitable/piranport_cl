@@ -401,8 +401,17 @@ public class TorpedoEntity extends ThrowableItemProjectile {
 
         double maxTurnRad = Math.toRadians(ACOUSTIC_MAX_TURN_DEG);
         // 如果目标在正后方（|deltaYaw| 接近 π），随机选择左转或右转打破僵局
+        // 优先选择无障碍方向
         if (Math.abs(Math.abs(deltaYaw) - Math.PI) < 0.1) {
-            deltaYaw = (random.nextBoolean() ? 1 : -1) * maxTurnRad;
+            boolean leftClear = !hasObstacleInDirection(currentYaw - maxTurnRad, hSpeed);
+            boolean rightClear = !hasObstacleInDirection(currentYaw + maxTurnRad, hSpeed);
+            if (leftClear && !rightClear) {
+                deltaYaw = -maxTurnRad;
+            } else if (rightClear && !leftClear) {
+                deltaYaw = maxTurnRad;
+            } else {
+                deltaYaw = (random.nextBoolean() ? 1 : -1) * maxTurnRad;
+            }
         } else {
             if (deltaYaw > maxTurnRad) deltaYaw = maxTurnRad;
             if (deltaYaw < -maxTurnRad) deltaYaw = -maxTurnRad;
@@ -410,6 +419,16 @@ public class TorpedoEntity extends ThrowableItemProjectile {
 
         double newYaw = currentYaw + deltaYaw;
         setDeltaMovement(Math.cos(newYaw) * hSpeed, motion.y, Math.sin(newYaw) * hSpeed);
+    }
+
+    private boolean hasObstacleInDirection(double yaw, double distance) {
+        Vec3 start = position();
+        Vec3 end = start.add(Math.cos(yaw) * distance, 0, Math.sin(yaw) * distance);
+        net.minecraft.world.phys.BlockHitResult hit = level().clip(
+                new net.minecraft.world.level.ClipContext(start, end,
+                        net.minecraft.world.level.ClipContext.Block.COLLIDER,
+                        net.minecraft.world.level.ClipContext.Fluid.NONE, this));
+        return hit.getType() != net.minecraft.world.phys.HitResult.Type.MISS;
     }
 
     private void magneticDetonate() {

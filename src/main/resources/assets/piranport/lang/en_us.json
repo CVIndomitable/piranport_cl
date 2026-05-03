@@ -48,6 +48,7 @@
   "message.piranport.insufficient_same_ammo": "Insufficient ammo of the same type!",
   "message.piranport.need_torpedo_reload": "Torpedo Reload enhancement required!",
   "message.piranport.weapon_selected": "Selected: %s",
+  "piranport.ship_core.data_corrupted": "Ship core data corrupted, auto-repaired",
   "tooltip.piranport.armor_bonus": "Armor: +%s",
   "tooltip.piranport.protection_level": "Protection %s",
   "tooltip.piranport.weight": "Weight: %s",

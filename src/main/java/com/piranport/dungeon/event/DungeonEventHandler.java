@@ -91,9 +91,11 @@ public class DungeonEventHandler {
         java.util.List<net.minecraft.core.Holder<net.minecraft.world.effect.MobEffect>> harmful =
                 new java.util.ArrayList<>();
         for (var inst : player.getActiveEffects()) {
-            if (inst.getEffect().value().getCategory()
+            net.minecraft.core.Holder<net.minecraft.world.effect.MobEffect> effectHolder = inst.getEffect();
+            if (effectHolder != null && effectHolder.value() != null
+                    && effectHolder.value().getCategory()
                     == net.minecraft.world.effect.MobEffectCategory.HARMFUL) {
-                harmful.add(inst.getEffect());
+                harmful.add(effectHolder);
             }
         }
         for (var h : harmful) player.removeEffect(h);

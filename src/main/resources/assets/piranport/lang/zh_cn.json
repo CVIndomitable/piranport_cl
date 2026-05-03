@@ -48,6 +48,7 @@
   "message.piranport.insufficient_same_ammo": "同种弹药不足！",
   "message.piranport.need_torpedo_reload": "需要安装鱼雷再装填部件！",
   "message.piranport.weapon_selected": "已选择: %s",
+  "piranport.ship_core.data_corrupted": "舰装核心数据损坏，已自动修复",
   "tooltip.piranport.armor_bonus": "护甲: +%s",
   "tooltip.piranport.protection_level": "保护 %s",
   "tooltip.piranport.weight": "负重: %s",

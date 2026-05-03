@@ -267,8 +267,8 @@ public class AmmoWorkbenchBlockEntity extends BlockEntity implements MenuProvide
     protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
         if (tag.contains("inventory")) itemHandler.deserializeNBT(registries, tag.getCompound("inventory"));
-        craftingProgress = Math.max(0, tag.getInt("craftingProgress"));
-        craftingTotalTime = Math.max(0, tag.getInt("craftingTotalTime"));
+        craftingProgress = Math.max(0, Math.min(Integer.MAX_VALUE / 2, tag.getInt("craftingProgress")));
+        craftingTotalTime = Math.max(0, Math.min(Integer.MAX_VALUE / 2, tag.getInt("craftingTotalTime")));
         craftingRecipeId = tag.getString("craftingRecipeId");
         craftingQuantity = Math.max(0, tag.getInt("craftingQuantity"));
         craftingOwner = tag.hasUUID("craftingOwner") ? tag.getUUID("craftingOwner") : null;

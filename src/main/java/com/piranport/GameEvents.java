@@ -142,8 +142,8 @@ public class GameEvents {
             }
         }
 
-        // 声纳效果：装备声纳时，24格内敌对生物持续获得发光效果（每20tick刷新一次）
-        if (!player.level().isClientSide() && player.tickCount % 20 == 0) {
+        // 声纳效果：装备声纳时，24格内敌对生物持续获得发光效果（每40tick刷新一次）
+        if (!player.level().isClientSide() && player.tickCount % 40 == 0) {
             if (TransformationManager.hasSonarEquipped(player, transformedCore)) {
                 AABB scanBox = player.getBoundingBox().inflate(24.0, 8.0, 24.0);
                 List<LivingEntity> nearby = player.level().getEntitiesOfClass(
@@ -596,8 +596,8 @@ public class GameEvents {
                     .tickAll(dungeonLevel);
         }
 
-        // Fleet group cleanup every 6000 ticks (5 minutes)
-        if (event.getServer().getTickCount() % 6000 == 0) {
+        // Fleet group cleanup every 12000 ticks (10 minutes)
+        if (event.getServer().getTickCount() % 12000 == 0) {
             ServerLevel overworld = event.getServer().overworld();
             com.piranport.npc.ai.FleetGroupManager.get(overworld).cleanup(event.getServer());
         }

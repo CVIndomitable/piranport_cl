@@ -59,7 +59,7 @@ public record AmmoWorkbenchCraftPayload(BlockPos pos, String recipeId, int quant
             if (!player.level().isLoaded(pos)) return;
             int minY = player.level().getMinBuildHeight();
             int maxY = player.level().getMaxBuildHeight();
-            if (pos.getY() < minY || pos.getY() > maxY) return;
+            if (pos.getY() < minY || pos.getY() >= maxY) return;
             if (player.distanceToSqr(net.minecraft.world.phys.Vec3.atCenterOf(pos)) > 64.0) return;
 
             // Must have the corresponding menu open and bound to this position.

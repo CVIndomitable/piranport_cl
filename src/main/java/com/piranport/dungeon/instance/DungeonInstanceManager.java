@@ -173,6 +173,10 @@ public class DungeonInstanceManager extends SavedData {
         UUID keyInstanceId = keyStack.get(com.piranport.registry.ModDataComponents.DUNGEON_INSTANCE_ID.get());
         if (keyInstanceId == null || !keyInstanceId.equals(instanceId)) return false;
 
+        // Verify nodeId belongs to current stage
+        StageData stage = DungeonRegistry.INSTANCE.getStage(inst.getStageId());
+        if (stage == null || !stage.nodes().containsKey(nodeId)) return false;
+
         inst.setCurrentNode(nodeId);
         inst.addClearedNode(nodeId);
 

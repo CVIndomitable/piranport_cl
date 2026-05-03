@@ -94,8 +94,10 @@ public class TransformationManager {
 
         // Validate weaponSlots against actual container size to prevent index overflow
         if (weaponSlots > items.size()) {
-            com.piranport.PiranPort.LOGGER.warn("Weapon slots ({}) exceeds container size ({}) for core {}",
+            com.piranport.PiranPort.LOGGER.warn("Weapon slots ({}) exceeds container size ({}) for core {}. Data may be corrupted.",
                     weaponSlots, items.size(), sci.getShipType());
+            player.sendSystemMessage(net.minecraft.network.chat.Component.translatable(
+                    "piranport.ship_core.data_corrupted"));
             weaponSlots = items.size();
         }
 

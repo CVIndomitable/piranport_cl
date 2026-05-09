@@ -102,6 +102,7 @@ public class AircraftEntity extends Entity {
     private int levelRunTicks = 0;   // ticks spent in current Phase 2 run (fail-safe against runaway bombers)
     private int autoSeekCooldown = 0; // P3 #30: throttle AABB queries
     private boolean autoSeekDone = false;    // true after first auto-seek scan (one-shot)
+    private boolean appliedSlowness = false; // tracks if slowness effect was applied to target
     private boolean hasEverHadFireControl = false; // true if FC target was ever assigned
     private transient net.minecraft.world.item.Item cachedPayloadItem; // P3 #31: cached Item reference
 

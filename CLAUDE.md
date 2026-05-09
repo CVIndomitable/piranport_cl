@@ -159,6 +159,45 @@ pip install openpyxl
 
 ---
 
+## Known Issues & Investigation
+
+### 砧板配方JEI不显示问题（待测试确认）
+
+**问题描述**：测试版中砧板配方在JEI中不显示
+
+**排查情况**（2026-05-10）：
+- ✅ 配方文件存在：5个砧板配方文件位于 `src/main/resources/data/piranport/recipe/cutting_board_*.json`
+- ✅ 配方格式正确：使用 `{"id": "...", "count": ...}` 格式，与料理锅、石磨配方一致
+- ✅ 配方类型已注册：`ModRecipeTypes.CUTTING_BOARD_TYPE` 和 `CUTTING_BOARD_SERIALIZER` 已在主类注册到事件总线
+- ✅ JEI插件配置正确：`PiranPortJEIPlugin` 类有 `@JeiPlugin` 注解，实现了 `IModPlugin` 接口
+- ✅ JEI类别已注册：`CuttingBoardRecipeCategory` 在 `registerCategories` 中注册
+- ✅ JEI配方已注册：在 `registerRecipes` 中通过 `ModRecipeTypes.CUTTING_BOARD_TYPE.get()` 获取配方
+- ✅ JEI催化剂已注册：砧板方块在 `registerRecipeCatalysts` 中注册
+- ✅ 砧板方块已注册：`ModBlocks.CUTTING_BOARD` 存在
+- ✅ 语言文件包含翻译：`jei.piranport.cutting_board` 在 `zh_cn.json` 和 `en_us.json` 中
+- ✅ JEI依赖正确配置：`build.gradle` 中有 compileOnly 和 localRuntime 依赖，`neoforge.mods.toml` 中声明为可选依赖
+- ✅ 配方文件已打包：`build/resources/main/data/piranport/recipe/` 中包含所有砧板配方
+- ✅ 构建无错误：`./gradlew clean build` 无警告或错误
+- ⚠️ 游戏日志无信息：`run/logs/latest.log` 中完全没有砧板相关的加载信息（既无成功也无错误）
+
+**可能原因**：
+1. 配方目录命名问题：当前使用 `recipe`（单数），Minecraft 1.13+ 标准可能要求 `recipes`（复数）
+2. 如果目录名是问题，则所有自定义配方（料理锅、石磨、砧板）都会受影响
+
+**待确认**：
+- 料理锅和石磨的配方在JEI中是否能正常显示？
+- 如果它们能显示，则问题特定于砧板配方，需要深入对比差异
+- 如果它们也不显示，则可能是配方目录命名或JEI插件整体问题
+
+**相关文件**：
+- 配方文件：`src/main/resources/data/piranport/recipe/cutting_board_*.json`
+- 配方类：`src/main/java/com/piranport/recipe/CuttingBoardRecipe.java`
+- 配方类型注册：`src/main/java/com/piranport/registry/ModRecipeTypes.java`
+- JEI插件：`src/main/java/com/piranport/compat/jei/PiranPortJEIPlugin.java`
+- JEI类别：`src/main/java/com/piranport/compat/jei/CuttingBoardRecipeCategory.java`
+
+---
+
 ## Recent Changes (1.1.2-dev)
 
 最近更新（2026-05-10）:

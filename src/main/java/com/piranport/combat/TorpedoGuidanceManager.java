@@ -11,7 +11,11 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-/** Server-side: tracks which player is guiding which torpedo and their pending direction input. */
+/**
+ * Server-side: tracks which player is guiding which torpedo and their pending direction input.
+ * Cleanup: Entries are removed when guidance ends (torpedo destroyed, wire cut, player logout),
+ * and on server shutdown (GameEvents.onServerStopped).
+ */
 public class TorpedoGuidanceManager {
     private static final Map<UUID, UUID> activeGuidance = new ConcurrentHashMap<>();
     private static final Map<UUID, float[]> pendingInput = new ConcurrentHashMap<>();

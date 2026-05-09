@@ -726,6 +726,7 @@ public class GameEvents {
         FireControlManager.clearAll();
         ReconManager.clearAll();
         com.piranport.aviation.AircraftIndex.clearAll();
+        com.piranport.combat.TorpedoGuidanceManager.clearAll();
         // DungeonScriptManager state is persisted as SavedData; nothing to clear here.
         lastWeaponLoad.clear();
         lastPlayerPos.clear();

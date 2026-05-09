@@ -16,6 +16,9 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * <p>Updated by {@link AircraftEntity}'s join/leave hooks. Server-thread access is
  * the norm, but ConcurrentHashMap keeps shutdown clearAll() and async listeners safe.</p>
+ *
+ * <p>Cleanup: Entries are removed when aircraft are recalled/destroyed (via remove()),
+ * when players log out (GameEvents.onPlayerLogout), and on server shutdown (GameEvents.onServerStopped).</p>
  */
 public final class AircraftIndex {
     private AircraftIndex() {}

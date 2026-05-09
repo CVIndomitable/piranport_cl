@@ -331,14 +331,18 @@ public class GameEvents {
             ShipCoreItem.tryAutoLaunchFighter(player.level(), player, coreStack, coreSlot);
         }
 
-        // Anti-air missiles: check for flying hostile mobs within 32 blocks
-        // Only trigger when airborne targets exist (to avoid wasting ammo on ground mobs).
+        // Anti-air missiles: check for airborne hostile mobs within 32 blocks
+        // Target must be at least 2 blocks above ground (excludes jumping ground mobs, includes all flying hostiles).
         // Phantom is not Monster — use Enemy interface so phantoms count as airborne hostiles.
         boolean hasAirborneHostile = !player.level().getEntitiesOfClass(
                 LivingEntity.class,
                 player.getBoundingBox().inflate(32.0),
-                e -> e.isAlive() && e.isPickable() && e instanceof Enemy
-                        && !e.onGround() && !e.isUnderWater()
+                e -> {
+                    if (!e.isAlive() || !e.isPickable() || !(e instanceof Enemy) || e.isUnderWater()) return false;
+                    // Check if entity is at least 2 blocks above the ground
+                    net.minecraft.core.BlockPos below = e.blockPosition().below(2);
+                    return !e.onGround() && !player.level().getBlockState(below).isSolid();
+                }
         ).isEmpty();
         if (hasAirborneHostile) {
             ShipCoreItem.tryAutoFireAntiAirMissile(player.level(), player, coreStack, coreSlot);

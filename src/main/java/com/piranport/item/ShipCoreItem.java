@@ -2488,7 +2488,7 @@ public class ShipCoreItem extends Item {
                 }
             }
             // 2. No fire control lock — find nearest hostile mob (Enemy interface covers Phantom/Vex/Monster)
-            //    防空导弹自动瞄准仅限飞行目标
+            //    防空导弹自动瞄准仅限飞行目标（离地至少2格的空中目标）
             final boolean antiAirOnly = launcher.getMissileType() == MissileEntity.MissileType.ANTI_AIR;
             if (aimDir == null) {
                 LivingEntity nearest = null;
@@ -2496,7 +2496,13 @@ public class ShipCoreItem extends Item {
                 for (LivingEntity mob : level.getEntitiesOfClass(LivingEntity.class,
                         player.getBoundingBox().inflate(32.0),
                         e -> e.isAlive() && e.isPickable() && e instanceof Enemy && !e.isUnderWater())) {
-                    if (antiAirOnly && mob.onGround()) continue;
+                    if (antiAirOnly) {
+                        // Anti-air missiles only target airborne enemies (at least 2 blocks above ground)
+                        net.minecraft.core.BlockPos below = mob.blockPosition().below(2);
+                        if (mob.onGround() || level.getBlockState(below).isSolid()) {
+                            continue;
+                        }
+                    }
                     double d = player.distanceTo(mob);
                     if (d < bestDist) {
                         bestDist = d;

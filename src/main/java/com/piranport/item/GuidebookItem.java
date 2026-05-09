@@ -31,6 +31,7 @@ public class GuidebookItem extends Item {
                        .getMethod("openBookGUI", ResourceLocation.class)
                        .invoke(api, BOOK_ID);
                 } catch (Exception e) {
+                    com.piranport.PiranPort.LOGGER.debug("Failed to open Patchouli book", e);
                     player.displayClientMessage(
                             Component.translatable("message.piranport.patchouli_required"), true);
                 }

@@ -270,7 +270,7 @@ public class ClientTickHandler {
                 // Remove glow from highlight-only entities; keep FC targets and vanilla glowing
                 if (mc.level != null) {
                     java.util.Set<UUID> fcTargets = new java.util.HashSet<>(ClientFireControlData.getTargets());
-                    for (int id : new HashSet<>(highlightedEntityIds)) {
+                    for (int id : List.copyOf(highlightedEntityIds)) {
                         Entity e = mc.level.getEntity(id);
                         if (e != null && !fcTargets.contains(e.getUUID()) && !hasVanillaGlow(e)) {
                             e.setGlowingTag(false);
@@ -289,7 +289,9 @@ public class ClientTickHandler {
         // Apply/maintain highlight and fire-control glow each tick
         if (mc.level != null) {
             Player localPlayer = mc.player;
-            java.util.Set<UUID> lockedTargets = new java.util.HashSet<>(ClientFireControlData.getTargets());
+            java.util.Set<UUID> lockedTargets = ClientFireControlData.getTargets().isEmpty()
+                ? java.util.Collections.emptySet()
+                : new java.util.HashSet<>(ClientFireControlData.getTargets());
             boolean hasFcTargets = !lockedTargets.isEmpty();
 
             Set<String> currentFcMembers = new HashSet<>();
@@ -333,7 +335,9 @@ public class ClientTickHandler {
         if (mc.level != null) {
             Set<Integer> aswDetected = com.piranport.aviation.ClientAswSonarData.getAllDetected();
             Set<String> currentAswMembers = new HashSet<>();
-            java.util.Set<UUID> lockedTargets2 = new java.util.HashSet<>(ClientFireControlData.getTargets());
+            java.util.Set<UUID> lockedTargets2 = ClientFireControlData.getTargets().isEmpty()
+                ? java.util.Collections.emptySet()
+                : new java.util.HashSet<>(ClientFireControlData.getTargets());
 
             // Apply glow to newly detected entities
             for (int eid : aswDetected) {

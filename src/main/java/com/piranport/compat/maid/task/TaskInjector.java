@@ -59,6 +59,7 @@ public final class TaskInjector {
         } catch (NoSuchFieldException | IllegalAccessException e) {
             PiranPort.LOGGER.error("[Compat/Maid] Failed to inject maid task via reflection (TLM internal change?)", e);
             failedPermanently = true;
+            ourTask = null;
             return false;
         }
     }

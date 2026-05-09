@@ -128,6 +128,7 @@ public class AerialBombEntity extends ThrowableItemProjectile {
                 sourceAircraftName = Component.Serializer.fromJson(
                         tag.getString("SourceAircraftName"), registryAccess());
             } catch (Exception e) {
+                com.piranport.PiranPort.LOGGER.warn("Failed to deserialize SourceAircraftName: {}", tag.getString("SourceAircraftName"), e);
                 sourceAircraftName = null;
             }
         }

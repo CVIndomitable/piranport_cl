@@ -20,7 +20,7 @@
 ## Version Roadmap
 
 完整版本列表与每版核心内容见 **`../docs/皮兰港 版本路线图.md`**。
-- **当前版本**: v1.1.1-dev (测试版)
+- **当前版本**: v1.1.2-dev (测试版)
 - **稳定版本**: v1.0.0 (main 分支，仅修 bug)
 - **开发策略**: main = 稳定版，dev = 测试版新玩法
 
@@ -87,7 +87,7 @@
 ```bash
 ./gradlew runClient    # 运行客户端
 ./gradlew runData      # DataGen
-./gradlew build        # 构建 → build/libs/piranport-1.1.1-dev.jar
+./gradlew build        # 构建 → build/libs/piranport-1.1.2-dev.jar
 ```
 
 ### gradle.properties
@@ -96,7 +96,7 @@
 mod_id=piranport
 mod_name=Piran Port
 mod_license=All Rights Reserved
-mod_version=1.1.1-dev
+mod_version=1.1.2-dev
 mod_group_id=com.piranport
 mod_authors=PiranPort Dev Team
 mod_description=Minecraft mod based on Warship Girls R
@@ -118,20 +118,13 @@ neo_version=21.1.220
 - 所有文档统一在仓库根目录 `../docs/`，本仓库不保留 docs/
 - GitHub: https://github.com/CVIndomitable/piranport_cl.git
 - **踩坑记录**：`/Users/lianran/IndomitableCache/ai记忆/mc模组开发踩坑记录.md` — 统一的 MC 模组开发踩坑经验库
-- **更新日志**: `../docs/CHANGELOG-1.1.1-dev.md` — 详细的版本变更记录
+- **更新日志**: `../docs/CHANGELOG-1.1.2-dev.md` — 详细的版本变更记录
 
 ---
 
-## Recent Changes (1.1.1-dev)
+## Recent Changes (1.1.2-dev)
 
-最近更新（2026-05-01）:
-- 修复代码审查发现的 17 个问题（P0-P3 级别）
-- 水面行走加速补偿
-- 移除鱼雷再装填强化的误导性弹药不足提示
-- 再装填设施水陆差异化装填时间
-- 鱼雷发射器支持更换弹药类型
-- 装备鱼雷再装填设施后支持按 R 键和拖动装填鱼雷
-- 同步 1.0 版本美术资源：补全缺失贴图
-- 补全缺失的物品模型文件
+最近更新（2026-05-09）:
+- 版本升级至 1.1.2-dev
 
-完整变更记录见 `../docs/CHANGELOG-1.1.1-dev.md`。
+完整变更记录见 `../docs/CHANGELOG-1.1.2-dev.md`。

@@ -169,6 +169,9 @@ public class LowTierDestroyerEntity extends Monster {
     /** Always show glowing outline so the entity is visible without a custom model. */
     @Override
     public boolean isCurrentlyGlowing() {
+        // Respect vanilla glow priority
+        if (super.isCurrentlyGlowing()) return true;
+        // Dungeon entities always glow by default
         return true;
     }
 

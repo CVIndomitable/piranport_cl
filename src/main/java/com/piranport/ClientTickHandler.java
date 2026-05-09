@@ -432,6 +432,8 @@ public class ClientTickHandler {
         if (mc.level == null) return;
         net.minecraft.world.scores.Scoreboard scoreboard = mc.level.getScoreboard();
         net.minecraft.world.scores.PlayerTeam team = scoreboard.getPlayerTeam(FC_TEAM_NAME);
+        net.minecraft.world.scores.PlayerTeam aswTeam = scoreboard.getPlayerTeam(ASW_TEAM_NAME);
+
         if (team == null && !currentMembers.isEmpty()) {
             team = scoreboard.addPlayerTeam(FC_TEAM_NAME);
             team.setColor(net.minecraft.ChatFormatting.RED);
@@ -446,9 +448,21 @@ public class ClientTickHandler {
                 scoreboard.removePlayerFromTeam(name, team);
             }
         }
-        // Add new members
+        // Add new members and remove from ASW team (FC has higher priority)
         for (String name : currentMembers) {
             if (!fcTeamMembers.contains(name)) {
+                // Remove from ASW team if present (FC priority > ASW priority)
+                if (aswTeam != null && aswTeamMembers.contains(name)) {
+                    scoreboard.removePlayerFromTeam(name, aswTeam);
+                    aswTeamMembers.remove(name);
+                    // Also remove from ASW highlight tracking
+                    if (mc.level != null) {
+                        aswHighlightedEntityIds.removeIf(id -> {
+                            Entity e = mc.level.getEntity(id);
+                            return e != null && e.getStringUUID().equals(name);
+                        });
+                    }
+                }
                 scoreboard.addPlayerToTeam(name, team);
             }
         }

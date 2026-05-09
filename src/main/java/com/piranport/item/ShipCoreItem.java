@@ -28,6 +28,9 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.Item;
+import java.util.HashSet;
+import java.util.Set;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.InteractionHand;
@@ -757,25 +760,30 @@ public class ShipCoreItem extends Item {
 
             // Creative mode: find any matching ammo without consuming
             if (player.getAbilities().instabuild) {
+                // 查找第一个数量足够的弹药类型
+                Item selectedAmmoType = findSufficientAmmoType(inv, weapon, barrelCount,
+                        coreInventorySlot, weaponSlot);
+
+                if (selectedAmmoType == null) {
+                    player.displayClientMessage(Component.translatable("message.piranport.insufficient_same_ammo"), true);
+                    return true;
+                }
+
+                // 获取该类型的第一个弹药用于渲染
                 ItemStack firstAmmo = ItemStack.EMPTY;
                 for (int i = 0; i < inv.items.size(); i++) {
                     if (i == coreInventorySlot || i == weaponSlot) continue;
                     ItemStack ammo = inv.items.get(i);
-                    if (!ammo.isEmpty() && matchesCaliber(ammo, weapon)) {
+                    if (!ammo.isEmpty() && ammo.getItem() == selectedAmmoType) {
                         firstAmmo = ammo;
                         break;
                     }
                 }
                 if (firstAmmo.isEmpty() && weaponSlot != 40 && coreInventorySlot != 40) {
                     ItemStack oh = inv.offhand.get(0);
-                    if (!oh.isEmpty() && matchesCaliber(oh, weapon)) {
+                    if (!oh.isEmpty() && oh.getItem() == selectedAmmoType) {
                         firstAmmo = oh;
                     }
-                }
-
-                if (firstAmmo.isEmpty()) {
-                    player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
-                    return true;
                 }
 
                 boolean isType3 = isType3Shell(firstAmmo);
@@ -803,40 +811,44 @@ public class ShipCoreItem extends Item {
                 return true;
             }
 
-            // Survival mode: count and consume ammo
+            // Survival mode: find sufficient ammo type and consume
+            Item selectedAmmoType = findSufficientAmmoType(inv, weapon, barrelCount,
+                    coreInventorySlot, weaponSlot);
+
+            if (selectedAmmoType == null) {
+                player.displayClientMessage(Component.translatable("message.piranport.insufficient_same_ammo"), true);
+                return true;
+            }
+
+            // 只统计选定类型的弹药
             int totalAmmo = 0;
             for (int i = 0; i < inv.items.size(); i++) {
                 if (i == coreInventorySlot || i == weaponSlot) continue;
                 ItemStack ammo = inv.items.get(i);
-                if (!ammo.isEmpty() && matchesCaliber(ammo, weapon)) {
+                if (!ammo.isEmpty() && ammo.getItem() == selectedAmmoType) {
                     totalAmmo += ammo.getCount();
                 }
             }
             if (weaponSlot != 40 && coreInventorySlot != 40) {
                 ItemStack oh = inv.offhand.get(0);
-                if (!oh.isEmpty() && matchesCaliber(oh, weapon)) {
+                if (!oh.isEmpty() && oh.getItem() == selectedAmmoType) {
                     totalAmmo += oh.getCount();
                 }
             }
 
-            if (totalAmmo < barrelCount) {
-                player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
-                return true;
-            }
-
-            // Find first ammo for type determination
+            // 获取第一个选定类型的弹药用于类型判断和渲染
             ItemStack firstAmmo = ItemStack.EMPTY;
             for (int i = 0; i < inv.items.size(); i++) {
                 if (i == coreInventorySlot || i == weaponSlot) continue;
                 ItemStack ammo = inv.items.get(i);
-                if (!ammo.isEmpty() && matchesCaliber(ammo, weapon)) {
+                if (!ammo.isEmpty() && ammo.getItem() == selectedAmmoType) {
                     firstAmmo = ammo;
                     break;
                 }
             }
             if (firstAmmo.isEmpty() && weaponSlot != 40 && coreInventorySlot != 40) {
                 ItemStack oh = inv.offhand.get(0);
-                if (!oh.isEmpty() && matchesCaliber(oh, weapon)) {
+                if (!oh.isEmpty() && oh.getItem() == selectedAmmoType) {
                     firstAmmo = oh;
                 }
             }
@@ -846,12 +858,12 @@ public class ShipCoreItem extends Item {
             boolean isHE = isHEShell(firstAmmo) || isVT;
             ItemStack shellForRender = firstAmmo.copyWithCount(1);
 
-            // Consume barrelCount ammo across inventory
+            // 只消耗选定类型的弹药
             int toConsume = barrelCount;
             for (int i = 0; i < inv.items.size() && toConsume > 0; i++) {
                 if (i == coreInventorySlot || i == weaponSlot) continue;
                 ItemStack ammo = inv.items.get(i);
-                if (!ammo.isEmpty() && matchesCaliber(ammo, weapon)) {
+                if (!ammo.isEmpty() && ammo.getItem() == selectedAmmoType) {
                     int take = Math.min(toConsume, ammo.getCount());
                     com.piranport.debug.PiranPortDebug.consumeAmmo(ammo, take);
                     toConsume -= take;
@@ -859,7 +871,7 @@ public class ShipCoreItem extends Item {
             }
             if (toConsume > 0 && weaponSlot != 40 && coreInventorySlot != 40) {
                 ItemStack oh = inv.offhand.get(0);
-                if (!oh.isEmpty() && matchesCaliber(oh, weapon)) {
+                if (!oh.isEmpty() && oh.getItem() == selectedAmmoType) {
                     int take = Math.min(toConsume, oh.getCount());
                     com.piranport.debug.PiranPortDebug.consumeAmmo(oh, take);
                     toConsume -= take;
@@ -1734,6 +1746,53 @@ public class ShipCoreItem extends Item {
 
     // ===== Caliber matching =====
     // TODO: replace hardcoded item matching with item tags (e.g. piranport:small_caliber_ammo)
+
+    /**
+     * 查找背包中第一个数量足够的弹药类型
+     * @return 数量足够的弹药类型，如果没有则返回 null
+     */
+    private static Item findSufficientAmmoType(Inventory inv, ItemStack weapon,
+                                                int required, int coreSlot, int weaponSlot) {
+        // 收集所有匹配口径的弹药类型
+        Set<Item> candidateTypes = new HashSet<>();
+        for (int i = 0; i < inv.items.size(); i++) {
+            if (i == coreSlot || i == weaponSlot) continue;
+            ItemStack ammo = inv.items.get(i);
+            if (!ammo.isEmpty() && matchesCaliber(ammo, weapon)) {
+                candidateTypes.add(ammo.getItem());
+            }
+        }
+        if (weaponSlot != 40 && coreSlot != 40) {
+            ItemStack oh = inv.offhand.get(0);
+            if (!oh.isEmpty() && matchesCaliber(oh, weapon)) {
+                candidateTypes.add(oh.getItem());
+            }
+        }
+
+        // 对每种类型统计数量，返回第一个数量足够的
+        for (Item candidateType : candidateTypes) {
+            int count = 0;
+            for (int i = 0; i < inv.items.size(); i++) {
+                if (i == coreSlot || i == weaponSlot) continue;
+                ItemStack s = inv.items.get(i);
+                if (!s.isEmpty() && s.getItem() == candidateType) {
+                    count += s.getCount();
+                }
+            }
+            if (weaponSlot != 40 && coreSlot != 40) {
+                ItemStack oh = inv.offhand.get(0);
+                if (!oh.isEmpty() && oh.getItem() == candidateType) {
+                    count += oh.getCount();
+                }
+            }
+
+            if (count >= required) {
+                return candidateType; // 找到第一个数量足够的类型
+            }
+        }
+
+        return null; // 没有类型满足数量要求
+    }
 
     public static boolean matchesCaliber(ItemStack ammo, ItemStack weapon) {
         if (weapon.is(ModItems.SMALL_GUN.get()) || weapon.is(ModItems.SINGLE_SMALL_GUN.get())) {

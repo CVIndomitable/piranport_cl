@@ -22,6 +22,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
@@ -129,13 +130,30 @@ public record ManualReloadPayload() implements CustomPacketPayload {
                 return;
             }
 
-            // Count total matching ammo in inventory
+            // Count total matching ammo in inventory - only same type
+            // 找到第一个匹配口径的弹药类型
+            Item selectedAmmoType = null;
+            for (int i = 0; i < inv.items.size(); i++) {
+                if (i == coreSlot || i == weaponSlot) continue;
+                ItemStack ammo = inv.items.get(i);
+                if (!ammo.isEmpty() && ShipCoreItem.matchesCaliber(ammo, weapon)) {
+                    selectedAmmoType = ammo.getItem();
+                    break;
+                }
+            }
+
+            if (selectedAmmoType == null) {
+                player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
+                return;
+            }
+
+            // 只统计该特定类型的弹药
             int totalAmmo = 0;
             String ammoId = "";
             for (int i = 0; i < inv.items.size(); i++) {
                 if (i == coreSlot || i == weaponSlot) continue;
                 ItemStack ammo = inv.items.get(i);
-                if (!ammo.isEmpty() && ShipCoreItem.matchesCaliber(ammo, weapon)) {
+                if (!ammo.isEmpty() && ammo.getItem() == selectedAmmoType) {
                     totalAmmo += ammo.getCount();
                     if (ammoId.isEmpty()) {
                         ammoId = BuiltInRegistries.ITEM.getKey(ammo.getItem()).toString();
@@ -144,16 +162,16 @@ public record ManualReloadPayload() implements CustomPacketPayload {
             }
 
             if (totalAmmo < barrelCount) {
-                player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
+                player.displayClientMessage(Component.translatable("message.piranport.insufficient_same_ammo"), true);
                 return;
             }
 
-            // Consume barrelCount ammo across inventory
+            // 只消耗该特定类型的弹药
             int toConsume = barrelCount;
             for (int i = 0; i < inv.items.size() && toConsume > 0; i++) {
                 if (i == coreSlot || i == weaponSlot) continue;
                 ItemStack ammo = inv.items.get(i);
-                if (!ammo.isEmpty() && ShipCoreItem.matchesCaliber(ammo, weapon)) {
+                if (!ammo.isEmpty() && ammo.getItem() == selectedAmmoType) {
                     int take = Math.min(toConsume, ammo.getCount());
                     ammo.shrink(take);
                     toConsume -= take;

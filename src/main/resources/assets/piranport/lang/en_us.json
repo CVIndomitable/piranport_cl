@@ -46,6 +46,8 @@
   "message.piranport.no_weapon": "No weapon equipped!",
   "message.piranport.no_ammo": "No ammo!",
   "message.piranport.insufficient_same_ammo": "Insufficient ammo of the same type!",
+  "message.piranport.must_be_empty_to_reload": "Must be completely empty to reload!",
+  "message.piranport.insufficient_ammo_for_full_load": "Insufficient ammo for full load!",
   "message.piranport.need_torpedo_reload": "Torpedo Reload enhancement required!",
   "message.piranport.weapon_selected": "Selected: %s",
   "piranport.ship_core.data_corrupted": "Ship core data corrupted, auto-repaired",

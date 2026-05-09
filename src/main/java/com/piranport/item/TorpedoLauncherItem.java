@@ -85,19 +85,20 @@ public class TorpedoLauncherItem extends Item {
 
         // Check if already fully loaded
         LoadedAmmo loaded = stack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
-        if (loaded.hasAmmo() && loaded.count() >= tubeCount) {
-            player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
-                    SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 0.5f, 1.0f);
-            return false;
-        }
-
-        // Check ammo type consistency
+        int currentCount = loaded.hasAmmo() ? loaded.count() : 0;
         String newAmmoId = BuiltInRegistries.ITEM.getKey(other.getItem()).toString();
-        if (loaded.hasAmmo()) {
-            String existingAmmoId = loaded.ammoItemId();
-            if (!existingAmmoId.equals(newAmmoId)) {
-                // Eject existing torpedoes and load new type
-                Item existingItem = BuiltInRegistries.ITEM.get(net.minecraft.resources.ResourceLocation.parse(existingAmmoId));
+
+        // 全满换弹：已装满且弹药类型不同
+        if (currentCount >= tubeCount) {
+            if (loaded.hasAmmo() && !loaded.ammoItemId().equals(newAmmoId)) {
+                // 要求新弹药数量足够完全装填
+                if (other.getCount() < tubeCount) {
+                    player.displayClientMessage(Component.translatable("message.piranport.insufficient_ammo_for_full_load"), true);
+                    return false;
+                }
+
+                // 弹出现有弹药
+                Item existingItem = BuiltInRegistries.ITEM.get(net.minecraft.resources.ResourceLocation.parse(loaded.ammoItemId()));
                 ItemStack ejectedStack = new ItemStack(existingItem, loaded.count());
                 if (!player.getInventory().add(ejectedStack)) {
                     player.drop(ejectedStack, false);
@@ -105,23 +106,35 @@ public class TorpedoLauncherItem extends Item {
                 player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
                         SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.5f, 0.8f);
 
-                // Load new torpedoes
-                int toLoad = Math.min(tubeCount, other.getCount());
-                stack.set(ModDataComponents.LOADED_AMMO.get(), new LoadedAmmo(toLoad, newAmmoId));
-                other.shrink(toLoad);
+                // 装填新弹药（满管）
+                stack.set(ModDataComponents.LOADED_AMMO.get(), new LoadedAmmo(tubeCount, newAmmoId));
+                other.shrink(tubeCount);
 
                 player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
                         SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.5f, 1.4f);
                 return true;
             }
+            // 已满且同类型，拒绝
+            player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+                    SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 0.5f, 1.0f);
+            return false;
         }
 
-        // Load torpedoes (same type or empty launcher)
-        int currentCount = loaded.hasAmmo() ? loaded.count() : 0;
-        int space = tubeCount - currentCount;
-        int toLoad = Math.min(space, other.getCount());
-        stack.set(ModDataComponents.LOADED_AMMO.get(), new LoadedAmmo(currentCount + toLoad, newAmmoId));
-        other.shrink(toLoad);
+        // 部分装填状态：拒绝装填
+        if (currentCount > 0) {
+            player.displayClientMessage(Component.translatable("message.piranport.must_be_empty_to_reload"), true);
+            return false;
+        }
+
+        // 空载：要求完全装填
+        if (other.getCount() < tubeCount) {
+            player.displayClientMessage(Component.translatable("message.piranport.insufficient_ammo_for_full_load"), true);
+            return false;
+        }
+
+        // 装填满管
+        stack.set(ModDataComponents.LOADED_AMMO.get(), new LoadedAmmo(tubeCount, newAmmoId));
+        other.shrink(tubeCount);
 
         player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
                 SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.5f, 1.4f);

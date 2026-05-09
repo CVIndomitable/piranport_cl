@@ -176,15 +176,21 @@ public class ReloadFacilityBlockEntity extends BlockEntity implements MenuProvid
             // Torpedo launcher reload
             LoadedAmmo existing = launcherStack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
             maxLoad = torpedoLauncher.getTubeCount();
+
+            // 已满：拒绝
             if (existing.hasAmmo() && existing.count() >= maxLoad) {
                 be.resetProgress();
                 return;
             }
-            if (existing.hasAmmo() && !existing.ammoItemId().equals(ammoIdNow)) {
+
+            // 部分装填：拒绝（新增检查）
+            if (existing.hasAmmo() && existing.count() > 0) {
                 be.resetProgress();
                 return;
             }
-            needed = maxLoad - (existing.hasAmmo() ? existing.count() : 0);
+
+            // 空载：要求完全装填
+            needed = maxLoad;
             validCombo = ammoStack.getItem() instanceof TorpedoItem torpedo
                     && torpedo.getCaliber() == torpedoLauncher.getCaliber();
         } else if (launcherStack.getItem() instanceof MissileLauncherItem missileLauncher
@@ -192,15 +198,21 @@ public class ReloadFacilityBlockEntity extends BlockEntity implements MenuProvid
             // Missile launcher reload (anti-ship / rocket); anti-air 发射器自动装填，禁止走这里
             LoadedAmmo existing = launcherStack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
             maxLoad = missileLauncher.getBurstCount();
+
+            // 已满：拒绝
             if (existing.hasAmmo() && existing.count() >= maxLoad) {
                 be.resetProgress();
                 return;
             }
-            if (existing.hasAmmo() && !existing.ammoItemId().equals(ammoIdNow)) {
+
+            // 部分装填：拒绝（新增检查）
+            if (existing.hasAmmo() && existing.count() > 0) {
                 be.resetProgress();
                 return;
             }
-            needed = maxLoad - (existing.hasAmmo() ? existing.count() : 0);
+
+            // 空载：要求完全装填
+            needed = maxLoad;
             validCombo = ammoStack.is(missileLauncher.getAmmoItem());
         } else {
             be.resetProgress();

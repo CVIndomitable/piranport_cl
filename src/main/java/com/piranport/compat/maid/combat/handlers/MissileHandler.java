@@ -41,6 +41,15 @@ public class MissileHandler implements WeaponHandler {
     @Override
     public void fire(EntityMaid maid, LivingEntity target, ItemStack stack) {
         if (!(stack.getItem() instanceof MissileLauncherItem launcher)) return;
+
+        // 防空导弹目标预检查
+        if (launcher.getMissileType() == MissileEntity.MissileType.ANTI_AIR) {
+            if (target.onGround() || target.isInWater()) {
+                // 防空导弹无法攻击地面/水中目标，静默跳过
+                return;
+            }
+        }
+
         Player owner = AmmoConsumer.ownerPlayer(maid);
         int burst = Math.max(1, launcher.getBurstCount());
         Item ammo = launcher.getAmmoItem();

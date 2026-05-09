@@ -110,6 +110,17 @@ public class MissileEntity extends ThrowableItemProjectile {
 
     /** 手动指定追踪目标，跳过自动搜索逻辑。传 null 仅清目标、恢复自动搜索。 */
     public void setTrackedTarget(Entity target) {
+        if (target != null && !isValidTarget(target)) {
+            // 防空导弹特殊提示
+            if (missileType == MissileType.ANTI_AIR && target.onGround()) {
+                com.piranport.debug.PiranPortDebug.warn(
+                    "防空导弹无法锁定地面目标: {} (onGround=true)",
+                    target.getDisplayName().getString());
+            }
+            // 静默失败，不设置目标（保持向后兼容）
+            return;
+        }
+
         this.trackedTarget = target;
         this.trackedTargetUUID = target != null ? target.getUUID() : null;
         this.manualTarget = (target != null);
@@ -180,7 +191,8 @@ public class MissileEntity extends ThrowableItemProjectile {
                         trackedTargetUUID = null;
                     }
                 }
-                if (trackedTarget != null && (!trackedTarget.isAlive() || trackedTarget.isRemoved())) {
+                // 验证目标有效性（包括防空导弹的空中检查）
+                if (trackedTarget != null && !isValidTarget(trackedTarget)) {
                     trackedTarget = null;
                     trackedTargetUUID = null;
                 }
@@ -204,6 +216,36 @@ public class MissileEntity extends ThrowableItemProjectile {
     }
 
     /**
+     * 验证目标是否符合导弹类型的攻击条件。
+     *
+     * @param target 待验证的目标实体
+     * @return true 如果目标合法，false 否则
+     */
+    private boolean isValidTarget(Entity target) {
+        if (target == null || !target.isAlive() || target.isRemoved()) {
+            return false;
+        }
+
+        // 排除容器实体（箱子矿车等）
+        if (target instanceof net.minecraft.world.Container) {
+            return false;
+        }
+
+        // 反舰/防空导弹不攻击水下目标
+        if ((missileType == MissileType.ANTI_SHIP || missileType == MissileType.ANTI_AIR)
+                && target.isUnderWater()) {
+            return false;
+        }
+
+        // 防空导弹只攻击空中目标（不在地面且不在水中）
+        if (missileType == MissileType.ANTI_AIR) {
+            return !target.onGround() && !target.isInWater();
+        }
+
+        return true;
+    }
+
+    /**
      * 寻找目标：优先火控锁定 → 最近敌对生物（防空优先空中单位）
      */
     private Entity findTarget() {
@@ -213,12 +255,7 @@ public class MissileEntity extends ThrowableItemProjectile {
             List<UUID> fcTargets = FireControlManager.getTargets(player.getUUID());
             for (UUID targetUUID : fcTargets) {
                 Entity target = serverLevel.getEntity(targetUUID);
-                if (target != null && target.isAlive()) {
-                    // 排除有容器的实体（箱子矿车等）
-                    if (target instanceof net.minecraft.world.Container) continue;
-                    // 反舰/防空导弹不锁定水下目标
-                    if ((missileType == MissileType.ANTI_SHIP || missileType == MissileType.ANTI_AIR)
-                            && target.isUnderWater()) continue;
+                if (target != null && isValidTarget(target)) {
                     return target;
                 }
             }
@@ -228,22 +265,14 @@ public class MissileEntity extends ThrowableItemProjectile {
         AABB searchBox = getBoundingBox().inflate(SEARCH_RANGE);
         Entity bestTarget = null;
         double bestDist = Double.MAX_VALUE;
-        // 反舰/防空导弹统一剔除水下目标
-        boolean excludeUnderwater = missileType == MissileType.ANTI_SHIP
-                || missileType == MissileType.ANTI_AIR;
-        boolean antiAirOnlyFlying = missileType == MissileType.ANTI_AIR;
 
         for (Entity e : level().getEntities(this, searchBox, e -> {
             if (e == getOwner()) return false;
             if (FriendlyFireHelper.shouldBlockHit(e, getOwner())) return false;
             // Phantom extends FlyingMob (not Monster) — use Enemy interface to cover all hostile mobs.
             if (!(e instanceof Enemy)) return false;
-            if (e instanceof net.minecraft.world.Container) return false;
-            if (!e.isAlive() || !e.isPickable()) return false;
-            if (excludeUnderwater && e.isUnderWater()) return false;
-            // 防空导弹自动锁定仅限飞行目标，地面目标需手动火控锁定
-            if (antiAirOnlyFlying && e.onGround()) return false;
-            return true;
+            if (!e.isPickable()) return false;
+            return isValidTarget(e);
         })) {
             double dist = distanceTo(e);
             if (dist > SEARCH_RANGE) continue;

@@ -4,6 +4,7 @@ import com.piranport.recipe.CuttingBoardRecipe;
 import com.piranport.registry.ModBlockEntityTypes;
 import com.piranport.registry.ModRecipeTypes;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
@@ -53,7 +54,7 @@ public class CuttingBoardBlockEntity extends BlockEntity {
         @Override public boolean isItemValid(int slot, ItemStack stack) { return storedItem.isEmpty(); }
     };
 
-    public IItemHandler getItemHandler() { return itemHandler; }
+    public IItemHandler getItemHandler(@Nullable Direction side) { return itemHandler; }
 
     public CuttingBoardBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntityTypes.CUTTING_BOARD.get(), pos, state);

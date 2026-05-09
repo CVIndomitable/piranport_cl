@@ -43,7 +43,7 @@ public class CommonEvents {
         event.registerBlockEntity(
                 Capabilities.ItemHandler.BLOCK,
                 ModBlockEntityTypes.CUTTING_BOARD.get(),
-                (be, direction) -> be.getItemHandler()
+                CuttingBoardBlockEntity::getItemHandler
         );
         // Yubari Water Bucket: infinite water source for pipes/tanks
         event.registerBlockEntity(

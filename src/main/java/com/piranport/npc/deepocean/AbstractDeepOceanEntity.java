@@ -374,11 +374,13 @@ public abstract class AbstractDeepOceanEntity extends Monster {
 
     @Override
     public boolean isCurrentlyGlowing() {
-        // Submarines should not glow when submerged (breaks stealth)
+        // Let client-side highlight system control glow via setGlowingTag()
+        // Only override for submarines: hide glow when submerged (stealth)
         if (canSubmerge() && isEyeInFluidType(NeoForgeMod.WATER_TYPE.value())) {
             return false;
         }
-        return true; // Always visible without custom model
+        // Use vanilla glow logic: check hasGlowingTag() set by client highlight system
+        return super.isCurrentlyGlowing();
     }
 
     @Override

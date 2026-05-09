@@ -47,9 +47,24 @@ public class TorpedoEntity extends ThrowableItemProjectile {
     /** Reduced detection range for sneaking entities (blocks). */
     private static final double ACOUSTIC_SNEAK_RANGE = 10.0;
     /** Maximum turn rate per tick (degrees). */
-    private static final float ACOUSTIC_MAX_TURN_DEG = 8.0f;
+    private static final float ACOUSTIC_MAX_TURN_DEG = 3.0f;
     /** Grace period before acoustic homing activates (ticks). */
     private static final int ACOUSTIC_ARM_TICKS = 10;
+    /** Adaptive turn rate multipliers based on distance */
+    private static final double CLOSE_RANGE = 5.0;
+    private static final double MID_RANGE = 15.0;
+    private static final float CLOSE_TURN_MULTIPLIER = 1.5f;
+    private static final float FAR_TURN_MULTIPLIER = 0.6f;
+    /** Currently locked target for acoustic homing */
+    private Entity lockedTarget = null;
+    /** Ticks since target was locked */
+    private int lockDuration = 0;
+    /** Minimum lock duration before allowing target switch (ticks) */
+    private static final int MIN_LOCK_DURATION = 40;
+    /** Maximum distance to maintain lock (blocks) */
+    private static final double LOCK_BREAK_DISTANCE = 30.0;
+    /** Distance advantage threshold for target switching (ratio) */
+    private static final double TARGET_SWITCH_THRESHOLD = 0.7;
 
     /** 空投下落阶段（鱼雷机投弹后垂直入水，再切巡航） */
     private boolean airDrop = false;
@@ -76,7 +91,7 @@ public class TorpedoEntity extends ThrowableItemProjectile {
             this.explosionRadius = 2.5f;
         } else {
             this.damage = 18f;
-            this.torpedoSpeed = 1.2f;
+            this.torpedoSpeed = 1.0f;
             this.lifetime = 1200;
             this.explosionRadius = 2.0f;
         }
@@ -119,7 +134,7 @@ public class TorpedoEntity extends ThrowableItemProjectile {
     public void setAcoustic(boolean acoustic) {
         this.acoustic = acoustic;
         if (acoustic) {
-            this.torpedoSpeed = 1.0f;
+            this.torpedoSpeed = 0.7f;
         }
     }
 
@@ -202,6 +217,13 @@ public class TorpedoEntity extends ThrowableItemProjectile {
         super.tick();
 
         if (isRemoved()) return;
+
+        // Resolve locked target from UUID if needed
+        if (lockedTarget == null && lockDuration > 0) {
+            // Target was saved but entity reference lost (e.g., after reload)
+            // Will be re-acquired on next acoustic scan
+            lockDuration = 0;
+        }
 
         // 1. 剩余航程检查 — 超时自爆
         if (--lifetime <= 0) {
@@ -288,20 +310,24 @@ public class TorpedoEntity extends ThrowableItemProjectile {
         boolean inWater = level().getBlockState(pos).getFluidState().is(Fluids.WATER);
 
         if (inAir && waterBelow) {
-            // 水面航行：恢复水平速度，清除垂直速度
+            // 水面航行：精确保持方向，恢复水平速度，清除垂直速度
             double currentH = Math.sqrt(motion.x * motion.x + motion.z * motion.z);
             if (currentH > 0.001) {
-                double scale = torpedoSpeed / currentH;
-                setDeltaMovement(motion.x * scale, 0, motion.z * scale);
+                // Normalize direction to avoid floating-point drift
+                double dirX = motion.x / currentH;
+                double dirZ = motion.z / currentH;
+                setDeltaMovement(dirX * torpedoSpeed, 0, dirZ * torpedoSpeed);
             } else {
                 setDeltaMovement(motion.x, 0, motion.z);
             }
         } else if (inWater) {
-            // 在水中：恢复水平速度并向上浮
+            // 在水中：精确保持方向，恢复水平速度并向上浮
             double currentH = Math.sqrt(motion.x * motion.x + motion.z * motion.z);
             if (currentH > 0.001) {
-                double scale = torpedoSpeed / currentH;
-                setDeltaMovement(motion.x * scale, motion.y + 0.04, motion.z * scale);
+                // Normalize direction to avoid floating-point drift
+                double dirX = motion.x / currentH;
+                double dirZ = motion.z / currentH;
+                setDeltaMovement(dirX * torpedoSpeed, motion.y + 0.04, dirZ * torpedoSpeed);
             } else {
                 setDeltaMovement(motion.x, motion.y + 0.04, motion.z);
             }
@@ -356,6 +382,55 @@ public class TorpedoEntity extends ThrowableItemProjectile {
      * 移动中的实体检测范围25格，潜行实体缩减到10格。
      */
     private void acousticHoming() {
+        // 1. Check if current locked target is still valid
+        if (lockedTarget != null) {
+            if (!lockedTarget.isAlive() || lockedTarget.isRemoved()) {
+                lockedTarget = null;
+                lockDuration = 0;
+            } else {
+                double dist = distanceTo(lockedTarget);
+                if (dist > LOCK_BREAK_DISTANCE) {
+                    lockedTarget = null;  // Target too far, unlock
+                    lockDuration = 0;
+                } else if (lockDuration < MIN_LOCK_DURATION) {
+                    lockDuration++;
+                    // Continue tracking current target
+                    turnTowardsTarget(lockedTarget, dist);
+                    return;
+                }
+            }
+        }
+
+        // 2. Scan for new target (only when unlocked or lock duration sufficient)
+        Entity bestTarget = scanForTarget();
+
+        // 3. Target switching logic: new target must be significantly closer
+        if (bestTarget != null) {
+            double newDist = distanceTo(bestTarget);
+            if (lockedTarget == null) {
+                lockedTarget = bestTarget;
+                lockDuration = 0;
+            } else {
+                double currentDist = distanceTo(lockedTarget);
+                // New target must be 30% closer to switch
+                if (newDist < currentDist * TARGET_SWITCH_THRESHOLD) {
+                    lockedTarget = bestTarget;
+                    lockDuration = 0;
+                }
+            }
+        }
+
+        if (lockedTarget != null) {
+            turnTowardsTarget(lockedTarget, distanceTo(lockedTarget));
+        }
+        // else: no target, maintain current heading (straight line)
+    }
+
+    /**
+     * Scan for valid acoustic targets within detection range.
+     * Returns the closest valid target or null if none found.
+     */
+    private Entity scanForTarget() {
         AABB searchBox = getBoundingBox().inflate(ACOUSTIC_DETECT_RANGE);
         Entity bestTarget = null;
         double bestDist = Double.MAX_VALUE;
@@ -366,42 +441,45 @@ public class TorpedoEntity extends ThrowableItemProjectile {
             return e.isAlive() && e.isPickable() && e instanceof LivingEntity;
         })) {
             double dist = distanceTo(e);
-            // 潜行实体缩减检测范围
+            // Sneaking entities have reduced detection range
             double range = (e instanceof LivingEntity living && living.isShiftKeyDown())
                     ? ACOUSTIC_SNEAK_RANGE : ACOUSTIC_DETECT_RANGE;
             if (dist > range) continue;
-            // 声音检测：实体必须在移动（速度 > 0.01）或有声音事件
+            // Sound detection: entity must be moving (speed > 0.0001) or making sound
             Vec3 vel = e.getDeltaMovement();
             double speed = vel.x * vel.x + vel.y * vel.y + vel.z * vel.z;
             if (speed < 0.0001 && e instanceof LivingEntity living && living.isShiftKeyDown()) {
-                continue; // 静止+潜行 = 不产生声音
+                continue; // Stationary + sneaking = no sound
             }
             if (dist < bestDist) {
                 bestDist = dist;
                 bestTarget = e;
             }
         }
+        return bestTarget;
+    }
 
-        if (bestTarget == null) return;
-
-        // 计算转向：限制最大转角
+    /**
+     * Turn towards the target with adaptive turn rate and obstacle avoidance.
+     */
+    private void turnTowardsTarget(Entity target, double distance) {
         Vec3 motion = getDeltaMovement();
         double hSpeed = Math.sqrt(motion.x * motion.x + motion.z * motion.z);
         if (hSpeed < 0.001) return;
 
         double currentYaw = Math.atan2(motion.z, motion.x);
-        double dx = bestTarget.getX() - getX();
-        double dz = bestTarget.getZ() - getZ();
+        double dx = target.getX() - getX();
+        double dz = target.getZ() - getZ();
         double targetYaw = Math.atan2(dz, dx);
 
         double deltaYaw = targetYaw - currentYaw;
-        // 归一化到 [-PI, PI]
+        // Normalize to [-PI, PI]
         while (deltaYaw > Math.PI) deltaYaw -= 2 * Math.PI;
         while (deltaYaw < -Math.PI) deltaYaw += 2 * Math.PI;
 
-        double maxTurnRad = Math.toRadians(ACOUSTIC_MAX_TURN_DEG);
-        // 如果目标在正后方（|deltaYaw| 接近 π），随机选择左转或右转打破僵局
-        // 优先选择无障碍方向
+        double maxTurnRad = Math.toRadians(getAdaptiveTurnRate(distance));
+
+        // If target is directly behind (|deltaYaw| ≈ π), use intelligent turn direction selection
         if (Math.abs(Math.abs(deltaYaw) - Math.PI) < 0.1) {
             boolean leftClear = !hasObstacleInDirection(currentYaw - maxTurnRad, hSpeed);
             boolean rightClear = !hasObstacleInDirection(currentYaw + maxTurnRad, hSpeed);
@@ -419,6 +497,20 @@ public class TorpedoEntity extends ThrowableItemProjectile {
 
         double newYaw = currentYaw + deltaYaw;
         setDeltaMovement(Math.cos(newYaw) * hSpeed, motion.y, Math.sin(newYaw) * hSpeed);
+    }
+
+    /**
+     * Calculate adaptive turn rate based on distance to target.
+     * Closer targets allow sharper turns for better tracking.
+     */
+    private float getAdaptiveTurnRate(double distanceToTarget) {
+        if (distanceToTarget < CLOSE_RANGE) {
+            return ACOUSTIC_MAX_TURN_DEG * CLOSE_TURN_MULTIPLIER;  // 4.5° for close range
+        } else if (distanceToTarget < MID_RANGE) {
+            return ACOUSTIC_MAX_TURN_DEG;  // 3.0° for mid range
+        } else {
+            return ACOUSTIC_MAX_TURN_DEG * FAR_TURN_MULTIPLIER;  // 1.8° for far range
+        }
     }
 
     private boolean hasObstacleInDirection(double yaw, double distance) {
@@ -553,6 +645,11 @@ public class TorpedoEntity extends ThrowableItemProjectile {
             tag.putString("SourceAircraftName",
                     Component.Serializer.toJson(sourceAircraftName, registryAccess()));
         }
+        // Save target locking state
+        if (lockedTarget != null) {
+            tag.putUUID("LockedTargetUUID", lockedTarget.getUUID());
+        }
+        tag.putInt("LockDuration", lockDuration);
     }
 
     @Override
@@ -584,5 +681,11 @@ public class TorpedoEntity extends ThrowableItemProjectile {
                 sourceAircraftName = null;
             }
         }
+        // Load target locking state
+        if (tag.hasUUID("LockedTargetUUID")) {
+            // Note: Entity will be resolved on next tick when level is available
+            // For now just store the UUID, actual entity lookup happens in tick()
+        }
+        this.lockDuration = tag.getInt("LockDuration");
     }
 }

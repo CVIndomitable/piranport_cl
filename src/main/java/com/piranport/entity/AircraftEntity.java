@@ -65,10 +65,12 @@ public class AircraftEntity extends Entity {
             SynchedEntityData.defineId(AircraftEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Optional<UUID>> OWNER_ID =
             SynchedEntityData.defineId(AircraftEntity.class, EntityDataSerializers.OPTIONAL_UUID);
+    private static final EntityDataAccessor<Integer> WEAPON_SLOT_INDEX =
+            SynchedEntityData.defineId(AircraftEntity.class, EntityDataSerializers.INT);
 
     // Saved to NBT
     @Nullable private UUID ownerUUID;
-    private int weaponSlotIndex;
+    private int weaponSlotIndex = -1;  // -1表示未设置，避免误用默认值0
     private int coreInventorySlot = 0;
     private AircraftInfo.AircraftType aircraftType = AircraftInfo.AircraftType.FIGHTER;
     private FlightGroupData.AttackMode attackMode = FlightGroupData.AttackMode.FOCUS;
@@ -230,6 +232,7 @@ public class AircraftEntity extends Entity {
         entity.originalStack = aircraftStack.copy();
         entity.entityData.set(AIRCRAFT_TYPE_DATA, entity.aircraftType.ordinal());
         entity.entityData.set(OWNER_ID, Optional.of(owner.getUUID()));
+        entity.entityData.set(WEAPON_SLOT_INDEX, weaponSlotIndex);
 
         Vec3 look = owner.getLookAngle();
         entity.setPos(owner.getX() + look.x * 0.8, owner.getEyeY(), owner.getZ() + look.z * 0.8);
@@ -274,6 +277,7 @@ public class AircraftEntity extends Entity {
         builder.define(STATE, FlightState.LAUNCHING.ordinal());
         builder.define(AIRCRAFT_TYPE_DATA, 0);
         builder.define(OWNER_ID, Optional.empty());
+        builder.define(WEAPON_SLOT_INDEX, -1);
     }
 
     /**
@@ -1737,6 +1741,11 @@ public class AircraftEntity extends Entity {
     }
 
     private void returnItemToOwner(Player player) {
+        if (autonomous) {
+            // 自主飞机不返回物品栏，直接掉落物品
+            Block.popResource(player.level(), player.blockPosition(), buildReturnStack());
+            return;
+        }
         if (!com.piranport.config.ModCommonConfig.isShipCoreGuiEnabled()) {
             // Inventory mode: return aircraft directly to the inventory slot it was launched from
             ItemStack returnStack = buildReturnStack();
@@ -2241,6 +2250,9 @@ public class AircraftEntity extends Entity {
     protected void readAdditionalSaveData(CompoundTag tag) {
         if (tag.hasUUID("OwnerUUID")) ownerUUID = tag.getUUID("OwnerUUID");
         weaponSlotIndex = tag.getInt("WeaponSlot");
+        if (!level().isClientSide) {
+            entityData.set(WEAPON_SLOT_INDEX, weaponSlotIndex);
+        }
         coreInventorySlot = tag.getInt("CoreSlot");
         try { aircraftType = AircraftInfo.AircraftType.valueOf(tag.getString("AircraftType")); }
         catch (IllegalArgumentException e) { aircraftType = AircraftInfo.AircraftType.FIGHTER; }

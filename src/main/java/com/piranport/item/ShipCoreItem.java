@@ -480,11 +480,11 @@ public class ShipCoreItem extends Item {
             return InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
         }
 
-        // Right-click (no shift) while transformed → recall all airborne aircraft
+        // Right-click (no shift) → recall all airborne aircraft
         // Only when core is in main hand — in no-GUI mode the core sits in offhand and
         // the offhand use() fires after every weapon use(), which would immediately recall
         // any aircraft that was just launched by the main-hand weapon item.
-        if (isTransformed && hand == InteractionHand.MAIN_HAND
+        if (hand == InteractionHand.MAIN_HAND
                 && !level.isClientSide && level instanceof ServerLevel sl) {
             int recalled = recallAllAircraft(sl, player);
             if (recalled > 0) {

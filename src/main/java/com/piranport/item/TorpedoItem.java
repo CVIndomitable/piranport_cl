@@ -19,22 +19,22 @@ public class TorpedoItem extends Item {
 
     public TorpedoItem(Properties properties, int caliber) {
         this(properties, caliber, caliber >= 610 ? 28f : 18f,
-                60, caliber >= 610 ? 1.0f : 1.2f, false, false, false);
+                60, caliber >= 610 ? 1.0f : 1.0f, false, false, false);
     }
 
     public TorpedoItem(Properties properties, int caliber, boolean magnetic) {
         this(properties, caliber, caliber >= 610 ? 28f : 18f,
-                60, caliber >= 610 ? 1.0f : 1.2f, magnetic, false, false);
+                60, caliber >= 610 ? 1.0f : 1.0f, magnetic, false, false);
     }
 
     public TorpedoItem(Properties properties, int caliber, boolean magnetic, boolean wireGuided) {
         this(properties, caliber, caliber >= 610 ? 28f : 18f,
-                60, caliber >= 610 ? 1.0f : 1.2f, magnetic, wireGuided, false);
+                60, caliber >= 610 ? 1.0f : 1.0f, magnetic, wireGuided, false);
     }
 
     public TorpedoItem(Properties properties, int caliber, boolean magnetic, boolean wireGuided, boolean acoustic) {
         this(properties, caliber, caliber >= 610 ? 28f : 18f,
-                60, acoustic ? 1.0f : (caliber >= 610 ? 1.0f : 1.2f), magnetic, wireGuided, acoustic);
+                60, acoustic ? 0.7f : (caliber >= 610 ? 1.0f : 1.0f), magnetic, wireGuided, acoustic);
     }
 
     public TorpedoItem(Properties properties, int caliber, float damage, int range, float speed,

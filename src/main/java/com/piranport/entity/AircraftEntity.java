@@ -222,6 +222,10 @@ public class AircraftEntity extends Entity {
                     // Fighters use bullets, no payload
                     entity.hasBullets = true;
                 }
+                case ROCKET_FIGHTER -> {
+                    entity.payloadType = "piranport:rocket_ammo";
+                    entity.hasBullets = true;
+                }
                 default -> {
                     // RECON keeps empty payload and no bullets
                     entity.hasBullets = false;

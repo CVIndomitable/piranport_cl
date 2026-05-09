@@ -71,14 +71,27 @@ public class FireControlHudLayer {
 
         GuiGraphics gui = event.getGuiGraphics();
         int sw = mc.getWindow().getGuiScaledWidth();
-
-        int panelX = sw - PANEL_WIDTH - 5;
-        int panelY = 8;
+        int sh = mc.getWindow().getGuiScaledHeight();
         int rows = targets.size();
+        int panelHeight = rows * LINE_HEIGHT + 4;
+
+        // Calculate panel position using the new layout system
+        HudPosition mode = com.piranport.config.ModClientConfig.FIRE_CONTROL_POSITION.get();
+        int offsetX = com.piranport.config.ModClientConfig.FIRE_CONTROL_OFFSET_X.get();
+        int offsetY = com.piranport.config.ModClientConfig.FIRE_CONTROL_OFFSET_Y.get();
+
+        PanelPosition pos = FireControlLayoutCalculator.calculatePosition(
+                sw, sh, PANEL_WIDTH, panelHeight, mode, offsetX, offsetY
+        );
+
+        int panelX = pos.x();
+        int panelY = pos.y();
+        boolean isRightAligned = pos.alignment() == PanelPosition.Alignment.RIGHT_TOP
+                || pos.alignment() == PanelPosition.Alignment.RIGHT_BOTTOM;
 
         // Background
         gui.fill(panelX - 3, panelY - 2,
-                sw - 2, panelY + rows * LINE_HEIGHT + 2,
+                panelX + PANEL_WIDTH + 3, panelY + panelHeight - 2,
                 0x99000000);
 
         for (int i = 0; i < rows; i++) {
@@ -90,7 +103,15 @@ public class FireControlHudLayer {
                 // Target marker + name
                 String label = "◆ " + living.getDisplayName().getString();
                 if (label.length() > 14) label = label.substring(0, 13) + "…";
-                gui.drawString(mc.font, label, panelX, y, 0xFF55AAFF, false);
+
+                if (isRightAligned) {
+                    // Right-aligned: draw text from right edge
+                    int textW = mc.font.width(label);
+                    gui.drawString(mc.font, label, panelX + PANEL_WIDTH - textW, y, 0xFF55AAFF, false);
+                } else {
+                    // Left-aligned: draw text from left edge
+                    gui.drawString(mc.font, label, panelX, y, 0xFF55AAFF, false);
+                }
 
                 // HP bar
                 float hpRatio = Math.max(0, living.getHealth() / living.getMaxHealth());
@@ -105,13 +126,19 @@ public class FireControlHudLayer {
                     gui.fill(panelX, barY, panelX + fillW, barY + 3, color);
                 }
 
-                // HP text (right-aligned)
+                // HP text (always right-aligned within the bar)
                 String hpText = (int)living.getHealth() + "/" + (int)living.getMaxHealth();
                 int textW = mc.font.width(hpText);
                 gui.drawString(mc.font, hpText, panelX + barW - textW, y, 0xFFAAAAAA, false);
             } else {
                 // Target lost / dead
-                gui.drawString(mc.font, "◇ [---]", panelX, y, 0xFF777777, false);
+                String lostLabel = "◇ [---]";
+                if (isRightAligned) {
+                    int textW = mc.font.width(lostLabel);
+                    gui.drawString(mc.font, lostLabel, panelX + PANEL_WIDTH - textW, y, 0xFF777777, false);
+                } else {
+                    gui.drawString(mc.font, lostLabel, panelX, y, 0xFF777777, false);
+                }
             }
         }
     }

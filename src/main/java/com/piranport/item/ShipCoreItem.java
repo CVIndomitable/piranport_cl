@@ -313,25 +313,21 @@ public class ShipCoreItem extends Item {
         }
 
         if (!com.piranport.config.ModCommonConfig.isShipCoreGuiEnabled()) {
-            // No-GUI mode: find the best (highest maxLoad) core in inventory.
-            // If this core is the best (effective) one, show load info; otherwise show "不生效".
+            // No-GUI mode: only the offhand core is active.
             // Safe: FMLEnvironment.dist check prevents Minecraft.getInstance() from loading on server
             if (net.neoforged.fml.loading.FMLEnvironment.dist.isClient()) {
                 net.minecraft.world.entity.player.Player clientPlayer =
                         net.minecraft.client.Minecraft.getInstance().player;
                 if (clientPlayer != null) {
                     Inventory inv = clientPlayer.getInventory();
-                    int bestMaxLoad = 0;
-                    for (ItemStack s : inv.items) {
-                        if (s.getItem() instanceof ShipCoreItem sci2) {
-                            bestMaxLoad = Math.max(bestMaxLoad, sci2.getShipType().maxLoad);
-                        }
-                    }
                     ItemStack offhand = inv.offhand.get(0);
-                    if (offhand.getItem() instanceof ShipCoreItem sci2) {
-                        bestMaxLoad = Math.max(bestMaxLoad, sci2.getShipType().maxLoad);
+                    boolean isActive = offhand.getItem() instanceof ShipCoreItem
+                            && offhand.getItem() == stack.getItem()
+                            && ItemStack.isSameItemSameComponents(offhand, stack);
+                    if (!isActive) {
+                        tooltipComponents.add(Component.translatable("tooltip.piranport.core_inactive")
+                                .withStyle(net.minecraft.ChatFormatting.DARK_GRAY));
                     }
-                    boolean isActive = shipType.maxLoad >= bestMaxLoad;
                     if (!isActive) {
                         tooltipComponents.add(Component.translatable("tooltip.piranport.core_inactive")
                                 .withStyle(net.minecraft.ChatFormatting.DARK_GRAY));
@@ -341,8 +337,7 @@ public class ShipCoreItem extends Item {
                     int armorLoad = com.piranport.combat.TransformationManager
                             .getCoreArmorLoad(stack);
                     tooltipComponents.add(Component.translatable(
-                            "container.piranport.load", weaponLoad + armorLoad,
-                            isActive ? bestMaxLoad : shipType.maxLoad));
+                            "container.piranport.load", weaponLoad + armorLoad, shipType.maxLoad));
                     // Show stored armor plates
                     int capacity = shipType.enhancementSlots;
                     ItemContainerContents armorContents = stack.getOrDefault(

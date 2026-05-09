@@ -879,6 +879,7 @@ public class AircraftEntity extends Entity {
             bomb.setDeltaMovement(getDeltaMovement().x * 0.2, -0.3, getDeltaMovement().z * 0.2);
             bomb.setOwner(owner);
             bomb.setSourceAircraftName(getDisplayName());
+            bomb.setSourceAircraft(this);
             level().addFreshEntity(bomb);
             hasFired = true;
             startReturning("dive_bomb_dropped");
@@ -941,6 +942,7 @@ public class AircraftEntity extends Entity {
                 torpedo.setAirDrop(true, dir);
                 torpedo.setOwner(owner);
                 torpedo.setSourceAircraftName(getDisplayName());
+                torpedo.setSourceAircraft(this);
                 level().addFreshEntity(torpedo);
             }
             remainingAmmo -= toFire;
@@ -1058,6 +1060,7 @@ public class AircraftEntity extends Entity {
                     bomb.setDeltaMovement(getDeltaMovement().x * 0.1, -0.1, getDeltaMovement().z * 0.1);
                     bomb.setOwner(owner);
                     bomb.setSourceAircraftName(getDisplayName());
+                    bomb.setSourceAircraft(this);
                     level().addFreshEntity(bomb);
                 }
                 remainingAmmo -= toFire;
@@ -1598,6 +1601,7 @@ public class AircraftEntity extends Entity {
                     bomb.moveTo(spawnX, getY(), spawnZ, bomb.getYRot(), bomb.getXRot());
                     bomb.setDeltaMovement(getDeltaMovement().x * 0.1, -0.1, getDeltaMovement().z * 0.1);
                     bomb.setSourceAircraftName(getDisplayName());
+                    bomb.setSourceAircraft(this);
                     if (getOwner() != null) bomb.setOwner(getOwner());
                     else if (autonomous) bomb.setOwner(this);
                     level().addFreshEntity(bomb);

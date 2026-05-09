@@ -33,6 +33,7 @@ public class TorpedoEntity extends ThrowableItemProjectile {
     private boolean magnetic = false;
     private boolean exploded = false;
     private Component sourceAircraftName;
+    private Entity sourceAircraft;
 
     /** Wire-guided torpedo state. */
     private boolean wireGuided = false;
@@ -544,24 +545,38 @@ public class TorpedoEntity extends ThrowableItemProjectile {
         super.onHitEntity(result);
         if (!level().isClientSide() && !exploded) {
             Entity target = result.getEntity();
+
+            // Use the aircraft as the direct source if available, otherwise use this torpedo
+            Entity directSource = sourceAircraft != null ? sourceAircraft : this;
+
             if (magnetic) {
                 // 磁性鱼雷：HE式爆炸
-                target.hurt(damageSources().explosion(this, getOwner()), damage);
+                target.hurt(damageSources().explosion(directSource, getOwner()), damage);
                 magneticDetonate();
             } else {
-                target.hurt(damageSources().thrown(this, getOwner()), damage);
+                target.hurt(damageSources().thrown(directSource, getOwner()), damage);
                 // 附加进水 debuff（3秒，每秒 1 点魔法伤害）
                 if (target instanceof LivingEntity living) {
                     living.addEffect(new MobEffectInstance(ModMobEffects.FLOODING, 60, 0));
                 }
                 discard();
             }
+
+            // Explicitly set last hurt by mob to make hostile mobs aggressive
+            if (target instanceof LivingEntity living && getOwner() instanceof LivingEntity owner) {
+                living.setLastHurtByMob(owner);
+            }
+
             notifyOwner(target);
         }
     }
 
     public void setSourceAircraftName(Component name) {
         this.sourceAircraftName = name;
+    }
+
+    public void setSourceAircraft(Entity aircraft) {
+        this.sourceAircraft = aircraft;
     }
 
     private void notifyOwner(Entity target) {

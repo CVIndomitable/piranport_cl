@@ -21,6 +21,7 @@ public class AerialBombEntity extends ThrowableItemProjectile {
     private float explosionPower = 2.5f;
     private boolean exploded = false;
     private Component sourceAircraftName;
+    private Entity sourceAircraft;
 
     /** Required by entity type registration. */
     public AerialBombEntity(EntityType<? extends AerialBombEntity> type, Level level) {
@@ -74,10 +75,20 @@ public class AerialBombEntity extends ThrowableItemProjectile {
             exploded = true;
             Entity target = result.getEntity();
             target.invulnerableTime = 0;
-            target.hurt(damageSources().thrown(this, getOwner()), damage);
+
+            // Use the aircraft as the direct source if available, otherwise use this bomb
+            Entity directSource = sourceAircraft != null ? sourceAircraft : this;
+            target.hurt(damageSources().thrown(directSource, getOwner()), damage);
+
             Level.ExplosionInteraction interaction = ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get()
                     ? Level.ExplosionInteraction.TNT : Level.ExplosionInteraction.NONE;
             level().explode(this, getX(), getY(), getZ(), explosionPower, interaction);
+
+            // Explicitly set last hurt by mob to make hostile mobs aggressive
+            if (target instanceof net.minecraft.world.entity.LivingEntity living && getOwner() instanceof net.minecraft.world.entity.LivingEntity owner) {
+                living.setLastHurtByMob(owner);
+            }
+
             notifyOwner(target);
             discard();
         }
@@ -85,6 +96,10 @@ public class AerialBombEntity extends ThrowableItemProjectile {
 
     public void setSourceAircraftName(Component name) {
         this.sourceAircraftName = name;
+    }
+
+    public void setSourceAircraft(Entity aircraft) {
+        this.sourceAircraft = aircraft;
     }
 
     private void notifyOwner(Entity target) {

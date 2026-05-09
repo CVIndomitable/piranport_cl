@@ -234,9 +234,12 @@ public class DungeonBookScreen extends AbstractContainerScreen<DungeonBookMenu> 
         int sy = y1 < y2 ? 1 : -1;
         int err = dx - dy;
 
+        int maxIterations = 10000; // Safety limit for abnormal input
+        int iterations = 0;
         while (true) {
             gfx.fill(x1, y1, x1 + 1, y1 + 1, color);
             if (x1 == x2 && y1 == y2) break;
+            if (++iterations > maxIterations) break; // Prevent infinite loop
             int e2 = 2 * err;
             if (e2 > -dy) { err -= dy; x1 += sx; }
             if (e2 < dx) { err += dx; y1 += sy; }

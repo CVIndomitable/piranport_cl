@@ -63,7 +63,8 @@ public class ClientTickHandler {
     private static final String ASW_TEAM_NAME = "pp_asw_sonar";
     private static final Set<String> aswTeamMembers = new HashSet<>();
     private static final Set<Integer> aswHighlightedEntityIds = new HashSet<>();
-    /** Throttle full entity scan to every 4 ticks when only highlight (not FC) is active. */
+    /** Throttle full entity scan to every N ticks when only highlight (not FC) is active. */
+    private static final int ENTITY_SCAN_INTERVAL = 4;
     private static int entityScanCooldown = 0;
 
     /**
@@ -297,10 +298,10 @@ public class ClientTickHandler {
             Set<String> currentFcMembers = new HashSet<>();
 
             // Always process FC targets; process highlight targets only when Y-key enabled
-            // Throttle full entity scan: FC targets use targeted lookup; highlight scans every 4 ticks
+            // Throttle full entity scan: FC targets use targeted lookup; highlight scans every N ticks
             if (hasFcTargets || highlightEnabled || !highlightedEntityIds.isEmpty()) {
                 boolean doFullScan = highlightEnabled && (entityScanCooldown <= 0);
-                if (doFullScan) entityScanCooldown = 4;
+                if (doFullScan) entityScanCooldown = ENTITY_SCAN_INTERVAL;
 
                 if (doFullScan || hasFcTargets) {
                     for (Entity entity : mc.level.entitiesForRendering()) {

@@ -10,16 +10,17 @@ import java.util.Map;
 
 /**
  * Client-side storage for dungeon state synced via S2C payloads.
+ * Thread safety: All fields are reassigned atomically on the client render thread.
  */
 public final class ClientDungeonData {
     private ClientDungeonData() {}
 
-    // Lobby data
+    // Lobby data (reassigned atomically, no concurrent modification)
     private static List<String> lobbyMembers = List.of();
     private static String lobbyFlagshipName = "";
     private static String lobbySelectedStage = "";
 
-    // Synced registry data (from DungeonRegistrySyncPayload)
+    // Synced registry data (from DungeonRegistrySyncPayload, reassigned atomically)
     private static Map<String, ChapterData> chapters = Map.of();
     private static Map<String, StageData> stages = Map.of();
     private static List<ChapterData> sortedChapters = List.of();

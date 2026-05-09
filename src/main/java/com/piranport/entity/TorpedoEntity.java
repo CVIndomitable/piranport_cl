@@ -147,6 +147,7 @@ public class TorpedoEntity extends ThrowableItemProjectile {
      *  precisely when it leaves the ticking zone around the owning player. */
     private double getWireMaxRange() {
         if (level().getServer() != null) {
+            // getPlayerList() is never null on a valid server instance
             int simChunks = level().getServer().getPlayerList().getSimulationDistance();
             if (simChunks > 0) return simChunks * 16.0;
         }

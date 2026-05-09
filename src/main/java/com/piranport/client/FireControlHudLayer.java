@@ -35,23 +35,28 @@ public class FireControlHudLayer {
     // Cache UUID→Entity mappings, rebuild every 20 game ticks (not per-call)
     private static final Map<UUID, Entity> entityCache = new HashMap<>();
     private static long lastRebuildTick = -1;
+    private static final int CACHE_REBUILD_INTERVAL = 20;
 
     public static void clearCache() { entityCache.clear(); lastRebuildTick = -1; }
 
     @Nullable
     private static Entity findEntityByUUID(Minecraft mc, UUID uuid) {
         if (mc.level == null) return null;
-        // Rebuild cache once per 20 game ticks regardless of call count
+        // Check cache first before rebuilding
+        Entity cached = entityCache.get(uuid);
+        if (cached != null && cached.isAlive()) return cached;
+
+        // Rebuild cache once per 20 game ticks only if target not found
         long currentTick = mc.level.getGameTime();
-        if (currentTick - lastRebuildTick >= 20) {
+        if (currentTick - lastRebuildTick >= CACHE_REBUILD_INTERVAL) {
             lastRebuildTick = currentTick;
             entityCache.clear();
             for (Entity e : mc.level.entitiesForRendering()) {
                 entityCache.put(e.getUUID(), e);
             }
+            cached = entityCache.get(uuid);
+            if (cached != null) return cached;
         }
-        Entity cached = entityCache.get(uuid);
-        if (cached != null) return cached;
         // Fast path for players (always accessible)
         return mc.level.getPlayerByUUID(uuid);
     }

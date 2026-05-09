@@ -55,8 +55,9 @@ public class WeaponReloadDecorator implements IItemDecorator {
 
                 int fillW = Math.round(BAR_WIDTH * progress);
 
+                boolean hasDurability = stack.isDamageableItem();
                 int barX = x + 2;
-                int barY = y + 13;
+                int barY = hasDurability ? (y + 11) : (y + 13);
 
                 gui.fill(barX, barY, barX + BAR_WIDTH, barY + 2, BG_COLOR);
                 if (fillW > 0) {
@@ -84,8 +85,9 @@ public class WeaponReloadDecorator implements IItemDecorator {
         if (showEmptyBar) {
             LoadedAmmo ammo = stack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
             if (!ammo.hasAmmo()) {
+                boolean hasDurability = stack.isDamageableItem();
                 int barX = x + 2;
-                int barY = y + 13;
+                int barY = hasDurability ? (y + 11) : (y + 13);
                 gui.fill(barX, barY, barX + BAR_WIDTH, barY + 2, BG_COLOR);
                 return false;
             }
@@ -98,8 +100,9 @@ public class WeaponReloadDecorator implements IItemDecorator {
                     || stack.is(ModItems.SINGLE_SMALL_GUN.get())
                     || ModCommonConfig.AUTO_RESUPPLY_ENABLED.get();
             if (isAutoReloadCannon && !hasMatchingAmmoInInventory(stack)) {
+                boolean hasDurability = stack.isDamageableItem();
                 int barX = x + 2;
-                int barY = y + 13;
+                int barY = hasDurability ? (y + 11) : (y + 13);
                 gui.fill(barX, barY, barX + BAR_WIDTH, barY + 2, BG_COLOR);
                 return false;
             }

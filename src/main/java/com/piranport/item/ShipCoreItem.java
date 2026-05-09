@@ -172,8 +172,8 @@ public class ShipCoreItem extends Item {
             return false;
         }
 
-        // Fuel refueling: coal → +1 fuel per item (works in both GUI and no-GUI modes)
-        if (!other.isEmpty() && other.is(net.minecraft.world.item.Items.COAL)) {
+        // Fuel refueling: coal/charcoal → +1 fuel per item (works in both GUI and no-GUI modes)
+        if (!other.isEmpty() && (other.is(net.minecraft.world.item.Items.COAL) || other.is(net.minecraft.world.item.Items.CHARCOAL))) {
             FuelData fuel = validateAndFixFuelData(stack);
             if (!fuel.isFull()) {
                 int space = fuel.maxFuel() - fuel.currentFuel();

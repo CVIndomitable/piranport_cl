@@ -109,7 +109,6 @@ public class AircraftEntity extends Entity {
     private FlightState lastKnownState = FlightState.LAUNCHING;
     private int lastForcedChunkX = Integer.MIN_VALUE;
     private int lastForcedChunkZ = Integer.MIN_VALUE;
-    private boolean appliedSlowness = false;
 
     // Recon chunk loading: view-distance-based force loading + chunk sending
     private final java.util.Set<Long> reconForcedChunks = new java.util.HashSet<>();
@@ -476,26 +475,21 @@ public class AircraftEntity extends Entity {
     private void handleStateTransition(FlightState from, FlightState to, Player owner) {
         if (to == FlightState.RECON_ACTIVE) {
             ReconManager.startRecon(owner.getUUID(), getUUID());
-            // Lock player body with max slowness
-            owner.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN,
-                    Integer.MAX_VALUE, 9, false, false));
-            appliedSlowness = true;
+            // Player body locking is now handled in GameEvents.onPlayerTick
             // Notify client to switch camera
             if (owner instanceof ServerPlayer sp) {
                 PacketDistributor.sendToPlayer(sp, new ReconStartPayload(getId()));
+                com.piranport.PiranPort.LOGGER.info(
+                    "Aircraft RECON_START | entityId={} sent ReconStartPayload to player", getId());
             }
         } else if (from == FlightState.RECON_ACTIVE) {
             cleanupReconState(owner);
         }
     }
 
-    /** 统一清理侦察机状态：结束侦察、移除减速、释放区块、通知客户端。 */
+    /** 统一清理侦察机状态：结束侦察、释放区块、通知客户端。 */
     private void cleanupReconState(Player owner) {
         ReconManager.endRecon(owner.getUUID());
-        if (appliedSlowness) {
-            owner.removeEffect(MobEffects.MOVEMENT_SLOWDOWN);
-            appliedSlowness = false;
-        }
         releaseAllForcedChunks();
         // Notify client to restore camera
         if (owner instanceof ServerPlayer sp) {
@@ -1241,6 +1235,13 @@ public class AircraftEntity extends Entity {
      * Maintains chunk forcing around current position (view-distance radius, like a player).
      */
     private void tickReconActive(Player owner) {
+        // Defensive check: ensure ReconManager state is synchronized
+        if (!ReconManager.isInRecon(owner.getUUID())) {
+            com.piranport.PiranPort.LOGGER.warn(
+                "Aircraft RECON_DESYNC | entityId={} ownerNotInRecon, forcing state sync", getId());
+            ReconManager.startRecon(owner.getUUID(), getUUID());
+        }
+
         // Maintain forced chunks around current position (view-distance radius)
         int cx = getBlockX() >> 4;
         int cz = getBlockZ() >> 4;

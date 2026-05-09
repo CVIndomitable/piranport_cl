@@ -87,6 +87,25 @@ public class GameEvents {
             tickInventoryLoadCheck(player);
         }
 
+        // Recon mode body locking: must execute before transformation check
+        if (!player.level().isClientSide() && com.piranport.aviation.ReconManager.isInRecon(player.getUUID())) {
+            // Cancel all movement velocity
+            Vec3 vel = player.getDeltaMovement();
+            double newY = vel.y > 0 ? 0 : vel.y;  // Keep gravity but cancel jumping
+            player.setDeltaMovement(0, newY, 0);
+
+            // Reset input values (doesn't affect client key reading)
+            player.xxa = 0;
+            player.zza = 0;
+
+            // Keep player on water surface if in water
+            if (player.isInWater() && !player.isEyeInFluidType(net.neoforged.neoforge.common.NeoForgeMod.WATER_TYPE.value())) {
+                player.setDeltaMovement(0, 0, 0);
+                player.resetFallDistance();
+            }
+            // Don't return — let subsequent transformation logic continue
+        }
+
         if (!TransformationManager.isPlayerTransformed(player)) {
             // Not transformed — clear distance tracking
             if (!player.level().isClientSide()) {

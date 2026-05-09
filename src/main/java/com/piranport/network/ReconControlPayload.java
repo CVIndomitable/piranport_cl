@@ -34,12 +34,23 @@ public record ReconControlPayload(float dx, float dy, float dz) implements Custo
 
     public static void handle(ReconControlPayload payload, IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
-            if (ctx.player() == null) return;
+            if (ctx.player() == null) {
+                com.piranport.PiranPort.LOGGER.warn("ReconControl REJECTED | player is null");
+                return;
+            }
             // NaN check must come before clamp (clamp converts NaN to min value)
-            if (Float.isNaN(payload.dx()) || Float.isNaN(payload.dy()) || Float.isNaN(payload.dz())) return;
+            if (Float.isNaN(payload.dx()) || Float.isNaN(payload.dy()) || Float.isNaN(payload.dz())) {
+                com.piranport.PiranPort.LOGGER.warn("ReconControl REJECTED | NaN values player={}",
+                    ctx.player().getUUID());
+                return;
+            }
             float dx = Mth.clamp(payload.dx(), -1.0f, 1.0f);
             float dy = Mth.clamp(payload.dy(), -1.0f, 1.0f);
             float dz = Mth.clamp(payload.dz(), -1.0f, 1.0f);
+
+            com.piranport.PiranPort.LOGGER.debug("ReconControl RECEIVED | player={} dx={} dy={} dz={}",
+                ctx.player().getUUID(), dx, dy, dz);
+
             ReconManager.handleControl(ctx.player().getUUID(), dx, dy, dz);
         });
     }

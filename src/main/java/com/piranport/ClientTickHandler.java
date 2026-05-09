@@ -403,6 +403,22 @@ public class ClientTickHandler {
      */
     private static void handleReconInput(Minecraft mc) {
         if (mc.player == null) return;
+
+        // Verify client state
+        if (!ClientReconData.isInReconMode()) {
+            return;
+        }
+
+        // Verify entity exists
+        int entityId = ClientReconData.getReconEntityId();
+        if (mc.level != null) {
+            Entity reconEntity = mc.level.getEntity(entityId);
+            if (reconEntity == null) {
+                com.piranport.PiranPort.LOGGER.warn("ClientReconInput ENTITY_MISSING | entityId={}", entityId);
+                return;
+            }
+        }
+
         Options opts = mc.options;
         boolean anyKey = opts.keyUp.isDown() || opts.keyDown.isDown()
                 || opts.keyLeft.isDown() || opts.keyRight.isDown()

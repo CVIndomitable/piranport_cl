@@ -918,7 +918,16 @@ public class AircraftEntity extends Entity {
 
         // Drop zone: horizDist 20-30 AND at low altitude (within 3 blocks of target.y+2)
         if (horizDist >= 20 && horizDist <= 30 && altDelta <= 3.0 && attackCooldown <= 0) {
-            Vec3 dir = new Vec3(dx, 0, dz).normalize();
+            // 使用飞机的实际飞行方向，而不是指向目标的方向
+            Vec3 motion = getDeltaMovement();
+            Vec3 dir = new Vec3(motion.x, 0, motion.z);
+            double dirLen = dir.length();
+            if (dirLen > 0.001) {
+                dir = dir.scale(1.0 / dirLen);  // 归一化
+            } else {
+                // 飞机静止时的后备方案：使用朝向目标的方向
+                dir = new Vec3(dx, 0, dz).normalize();
+            }
             // Perpendicular offset for spread (rotate dir 90° in XZ plane)
             double perpX = -dir.z;
             double perpZ = dir.x;
@@ -1078,6 +1087,11 @@ public class AircraftEntity extends Entity {
         if (levelBombDropped && levelDropPoint != null) {
             double distFromDrop = position().subtract(levelDropPoint).horizontalDistance();
             if (distFromDrop >= 10.0) {
+                // Check if target is still alive before resetting for next run
+                if (!target.isAlive()) {
+                    startReturning("level_bomber_target_eliminated");
+                    return;
+                }
                 // Reset run state for next pass
                 levelRunDirection = null;
                 levelDropPoint = null;

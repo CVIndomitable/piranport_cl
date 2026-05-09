@@ -61,6 +61,16 @@ public class ModCommonConfig {
                             "默认0.03。数值越高加速越快，越低越滑。范围0.0（禁用）到0.05（非常灵敏）")
                     .defineInRange("movement.waterWalkingAcceleration", 0.03, 0.0, 0.05);
 
+    public static final ModConfigSpec.DoubleValue WATER_WALKING_DECELERATION =
+            BUILDER
+                    .comment(
+                            "Deceleration factor when no input on water surface (水面行走无输入时减速系数).",
+                            "Default: 0.85. Each tick retains this fraction of velocity (每tick保留此比例的速度).",
+                            "Higher values = slower deceleration (more sliding), lower = faster stop.",
+                            "Range: 0.5 (quick stop) to 0.95 (long slide).",
+                            "默认0.85。数值越高减速越慢（更滑），越低停得越快。范围0.5（快速停止）到0.95（长距离滑行）")
+                    .defineInRange("movement.waterWalkingDeceleration", 0.85, 0.5, 0.95);
+
     // ===== Combat (战斗) =====
 
     public static final ModConfigSpec.BooleanValue FRIENDLY_FIRE_ENABLED =

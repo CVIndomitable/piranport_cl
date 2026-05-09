@@ -118,18 +118,43 @@ public class GameEvents {
             }
             player.resetFallDistance();
 
-            // 水平加速补偿：基于玩家当前移动方向施加加速度，补偿流体阻力
+            // 水平加速补偿：基于玩家输入方向施加加速度，无输入时施加减速
             double accel = ModCommonConfig.WATER_WALKING_ACCELERATION.get();
             if (accel > 0.0001) {
                 Vec3 currentVel = player.getDeltaMovement();
-                double horizontalSpeed = Math.sqrt(currentVel.x * currentVel.x + currentVel.z * currentVel.z);
 
-                // 只在玩家有水平移动时施加加速（避免静止时自动加速）
-                if (horizontalSpeed > 0.001) {
-                    // 沿当前移动方向施加加速度
-                    double accelX = (currentVel.x / horizontalSpeed) * accel;
-                    double accelZ = (currentVel.z / horizontalSpeed) * accel;
-                    player.setDeltaMovement(currentVel.x + accelX, currentVel.y, currentVel.z + accelZ);
+                // 获取玩家输入方向（xxa=左右，zza=前后）
+                float inputX = player.xxa;  // 左负右正
+                float inputZ = player.zza;  // 后负前正
+
+                boolean hasInput = Math.abs(inputX) > 0.01f || Math.abs(inputZ) > 0.01f;
+
+                if (hasInput) {
+                    // 有输入：将输入转换为世界坐标系方向，施加加速
+                    float yaw = player.getYRot() * ((float)Math.PI / 180f);
+                    double dirX = -Math.sin(yaw) * inputZ + Math.cos(yaw) * inputX;
+                    double dirZ = Math.cos(yaw) * inputZ + Math.sin(yaw) * inputX;
+                    double dirLen = Math.sqrt(dirX * dirX + dirZ * dirZ);
+                    if (dirLen > 0.001) {
+                        dirX /= dirLen;
+                        dirZ /= dirLen;
+                        player.setDeltaMovement(
+                            currentVel.x + dirX * accel,
+                            currentVel.y,
+                            currentVel.z + dirZ * accel
+                        );
+                    }
+                } else {
+                    // 无输入：施加减速（摩擦力）
+                    double horizontalSpeed = Math.sqrt(currentVel.x * currentVel.x + currentVel.z * currentVel.z);
+                    if (horizontalSpeed > 0.001) {
+                        double deceleration = ModCommonConfig.WATER_WALKING_DECELERATION.get();
+                        player.setDeltaMovement(
+                            currentVel.x * deceleration,
+                            currentVel.y,
+                            currentVel.z * deceleration
+                        );
+                    }
                 }
             }
         }

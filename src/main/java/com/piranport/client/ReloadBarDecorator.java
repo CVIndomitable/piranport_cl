@@ -94,14 +94,20 @@ public class ReloadBarDecorator implements IItemDecorator {
             // Torpedo launcher also needs a reload item to auto-reload from inventory;
             // anti-ship/rocket missiles only reload at the Reload Facility block.
             boolean launcherCannotReload = false;
-            if (weapon.getItem() instanceof TorpedoLauncherItem) {
+            if (weapon.getItem() instanceof TorpedoLauncherItem tl) {
                 LoadedAmmo loaded = weapon.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
-                if (!loaded.hasAmmo() && !TransformationManager.hasTorpedoReloadEquipped(player, stack)) {
+                // 如果已装填且数量足够，可以发射；否则检查是否有再装填设施强化
+                if (loaded.hasAmmo() && loaded.count() >= tl.getTubeCount()) {
+                    launcherCannotReload = false;
+                } else if (!loaded.hasAmmo() && !TransformationManager.hasTorpedoReloadEquipped(player, stack)) {
                     launcherCannotReload = true;
                 }
             } else if (weapon.getItem() instanceof MissileLauncherItem ml && ml.isManualReload()) {
                 LoadedAmmo loaded = weapon.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
-                if (!loaded.hasAmmo() && !TransformationManager.hasTorpedoReloadEquipped(player, stack)) {
+                // 如果已装填，可以发射；否则检查是否有再装填设施强化
+                if (loaded.hasAmmo()) {
+                    launcherCannotReload = false;
+                } else if (!TransformationManager.hasTorpedoReloadEquipped(player, stack)) {
                     launcherCannotReload = true;
                 }
             }
@@ -123,11 +129,22 @@ public class ReloadBarDecorator implements IItemDecorator {
                 // empty bar: background already drawn above
             } else if (cd <= 0f) {
                 // Ready: solid bright color — but only if ammo is actually available.
-                // For cannons, verify matching ammo exists in the core's ammo slots;
-                // otherwise leave the bar empty (background only) so the player can see
-                // they can't fire yet.
-                if (weapon.getItem() instanceof CannonItem && !hasCannonAmmoInPool(weapon, items, type)) {
-                    // empty bar: background already drawn above
+                // For cannons in auto-resupply mode, verify matching ammo exists in the core's ammo slots;
+                // in manual mode, check if the weapon has loaded ammo.
+                if (weapon.getItem() instanceof CannonItem ci) {
+                    boolean hasAmmo = false;
+                    if (com.piranport.config.ModCommonConfig.AUTO_RESUPPLY_ENABLED.get()) {
+                        // Auto mode: check ammo pool
+                        hasAmmo = hasCannonAmmoInPool(weapon, items, type);
+                    } else {
+                        // Manual mode: check LOADED_AMMO component
+                        LoadedAmmo loaded = weapon.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
+                        hasAmmo = loaded.hasAmmo() && loaded.count() >= ci.getBarrelCount();
+                    }
+                    if (hasAmmo) {
+                        gui.fill(barX, barY, barX + BAR_MAX_W, barY + 1, readyColor);
+                    }
+                    // else: empty bar (background already drawn above)
                 } else {
                     gui.fill(barX, barY, barX + BAR_MAX_W, barY + 1, readyColor);
                 }

@@ -122,9 +122,46 @@ neo_version=21.1.220
 
 ---
 
+## Development Tools
+
+### Excel数据表管理工具
+
+位置：`../小工具/update_excel_from_code.py`
+
+**功能**：
+1. 从Java代码（`ShropshireModItems.java`）中提取已注册的物品ID
+2. 自动更新Excel表格中的"是否已实现"状态
+3. 翻译合成配方中的英文ID为中文名称（如 `aluminum_ingot` → `铝锭`）
+4. 生成实现情况统计报告
+
+**使用方法**：
+```bash
+cd /Users/lianran/apps/皮兰港实验/小工具
+python3 update_excel_from_code.py
+```
+
+**依赖**：
+```bash
+pip install openpyxl
+```
+
+**工作原理**：
+- 通过正则表达式 `REGISTRY\.register\("([^"]+)"` 提取Java代码中所有注册的物品ID
+- 对比Excel表格中的物品ID列，更新"是否已实现"状态
+- 使用ID映射表（包含mod物品和原版物品）翻译合成配方
+- 支持格式：`物品ID×数量` 或 `物品ID`
+
+**注意事项**：
+- Excel文件路径硬编码在脚本中，修改项目结构时需同步更新
+- 原版物品映射表需手动维护，新增原版物品时需添加到 `vanilla_items` 字典
+- 合成配方格式必须符合 `item_id×数量` 或 `item_id` 的模式
+
+---
+
 ## Recent Changes (1.1.2-dev)
 
 最近更新（2026-05-09）:
 - 版本升级至 1.1.2-dev
+- 新增Excel数据表管理工具
 
 完整变更记录见 `../docs/CHANGELOG-1.1.2-dev.md`。

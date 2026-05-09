@@ -6,6 +6,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.ThrowableItemProjectile;
 import net.minecraft.world.item.Item;
@@ -18,6 +19,7 @@ public class BulletEntity extends ThrowableItemProjectile {
 
     private float damage = 2f;
     private Component sourceAircraftName;
+    private Entity sourceAircraft;
 
     public BulletEntity(EntityType<? extends BulletEntity> type, Level level) {
         super(type, level);
@@ -57,7 +59,16 @@ public class BulletEntity extends ThrowableItemProjectile {
         super.onHitEntity(result);
         if (!level().isClientSide()) {
             Entity target = result.getEntity();
-            target.hurt(damageSources().thrown(this, getOwner()), damage);
+
+            // Use the aircraft as the direct source if available, otherwise use owner
+            Entity directSource = sourceAircraft != null ? sourceAircraft : this;
+            target.hurt(damageSources().thrown(directSource, getOwner()), damage);
+
+            // Explicitly set last hurt by mob to make hostile mobs aggressive
+            if (target instanceof LivingEntity living && getOwner() instanceof LivingEntity owner) {
+                living.setLastHurtByMob(owner);
+            }
+
             notifyOwner(target);
             discard();
         }
@@ -65,6 +76,10 @@ public class BulletEntity extends ThrowableItemProjectile {
 
     public void setSourceAircraftName(Component name) {
         this.sourceAircraftName = name;
+    }
+
+    public void setSourceAircraft(Entity aircraft) {
+        this.sourceAircraft = aircraft;
     }
 
     private void notifyOwner(Entity target) {

@@ -919,8 +919,77 @@ public class ShipCoreItem extends Item {
     /** Manual-mode cannon: consume LOADED_AMMO component on the weapon item. */
     private static void fireCannonManualMode(Level level, Player player, ItemStack coreStack,
             ItemStack weapon, int weaponSlot, SlotCooldowns cooldowns) {
-        LoadedAmmo loaded = weapon.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
         int barrelCount = getBarrelCount(weapon);
+
+        // Creative mode: auto-find ammo from inventory
+        if (player.getAbilities().instabuild) {
+            Inventory inv = player.getInventory();
+            int coreInventorySlot = -1;
+            for (int i = 0; i < inv.items.size(); i++) {
+                if (i == weaponSlot) continue;
+                ItemStack s = inv.items.get(i);
+                if (s.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(s)) {
+                    coreInventorySlot = i;
+                    break;
+                }
+            }
+
+            Item selectedAmmoType = findSufficientAmmoType(inv, weapon, barrelCount,
+                    coreInventorySlot, weaponSlot);
+            if (selectedAmmoType == null) {
+                selectedAmmoType = getDefaultAmmoForWeapon(weapon);
+                if (selectedAmmoType == null) {
+                    player.displayClientMessage(Component.translatable("message.piranport.insufficient_same_ammo"), true);
+                    return;
+                }
+            }
+
+            ItemStack firstAmmo = ItemStack.EMPTY;
+            for (int i = 0; i < inv.items.size(); i++) {
+                if (i == coreInventorySlot || i == weaponSlot) continue;
+                ItemStack ammo = inv.items.get(i);
+                if (!ammo.isEmpty() && ammo.getItem() == selectedAmmoType) {
+                    firstAmmo = ammo;
+                    break;
+                }
+            }
+            if (firstAmmo.isEmpty() && weaponSlot != 40 && coreInventorySlot != 40) {
+                ItemStack oh = inv.offhand.get(0);
+                if (!oh.isEmpty() && oh.getItem() == selectedAmmoType) {
+                    firstAmmo = oh;
+                }
+            }
+            if (firstAmmo.isEmpty()) {
+                firstAmmo = new ItemStack(selectedAmmoType);
+            }
+
+            boolean isType3 = isType3Shell(firstAmmo);
+            boolean isVT = isVTShell(firstAmmo);
+            boolean isHE = isHEShell(firstAmmo) || isVT;
+            ItemStack shellForRender = firstAmmo.copyWithCount(1);
+
+            int cooldownTicks = TransformationManager.boostedCooldown(player, getGunCooldown(weapon));
+            coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
+                    cooldowns.withSlotCooldown(weaponSlot, cooldownTicks, level.getGameTime()));
+            weapon.set(ModDataComponents.WEAPON_COOLDOWN.get(),
+                    WeaponCooldown.of(level.getGameTime(), cooldownTicks));
+
+            fireCannonSalvo(level, player, weapon, shellForRender, barrelCount, isType3, isVT, isHE);
+
+            com.piranport.debug.PiranPortDebug.event(
+                    "Fire (manual-creative) | weapon={} ammo={} barrels={}",
+                    BuiltInRegistries.ITEM.getKey(weapon.getItem()).getPath(),
+                    BuiltInRegistries.ITEM.getKey(shellForRender.getItem()).getPath(),
+                    barrelCount);
+
+            float pitch = getSoundPitch(weapon);
+            level.playSound(null, player.getX(), player.getY(), player.getZ(),
+                    SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 0.5f, pitch);
+            return;
+        }
+
+        // Survival mode: use LOADED_AMMO component
+        LoadedAmmo loaded = weapon.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
         if (!loaded.hasAmmo() || loaded.count() < barrelCount) {
             player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
             return;
@@ -954,15 +1023,82 @@ public class ShipCoreItem extends Item {
     private static void fireTorpedosManualMode(Level level, Player player, ItemStack coreStack,
             Inventory inv, int weaponSlot, TorpedoLauncherItem launcher, SlotCooldowns cooldowns) {
         ItemStack launcherStack = weaponSlot == 40 ? inv.offhand.get(0) : inv.items.get(weaponSlot);
-        LoadedAmmo loaded = launcherStack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
-
         int tubeCount = launcher.getTubeCount();
+        int caliber = launcher.getCaliber();
+
+        // Creative mode: auto-find torpedo from inventory
+        if (player.getAbilities().instabuild) {
+            TorpedoItem torpedoType = null;
+            int coreSlot = -1;
+            for (int i = 0; i < inv.items.size(); i++) {
+                if (i == weaponSlot) continue;
+                ItemStack s = inv.items.get(i);
+                if (s.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(s)) {
+                    coreSlot = i;
+                }
+                if (torpedoType == null && s.getItem() instanceof TorpedoItem ti && ti.getCaliber() == caliber) {
+                    torpedoType = ti;
+                }
+            }
+            if (torpedoType == null && weaponSlot != 40 && coreSlot != 40) {
+                ItemStack oh = inv.offhand.get(0);
+                if (oh.getItem() instanceof TorpedoItem ti && ti.getCaliber() == caliber) {
+                    torpedoType = ti;
+                }
+            }
+
+            if (torpedoType == null) {
+                player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
+                return;
+            }
+
+            String ammoId = BuiltInRegistries.ITEM.getKey(torpedoType).toString();
+            boolean magnetic = isMagneticTorpedo(ammoId);
+            boolean wireGuided = isWireGuidedTorpedo(ammoId);
+            boolean acousticHoming = isAcousticTorpedo(ammoId);
+            float torpedoSpeed = torpedoType.getSpeed();
+            float[] angles = getSpreadAngles(tubeCount);
+            Vec3 look = player.getLookAngle();
+
+            TorpedoEntity primaryGuided = null;
+            for (float angle : angles) {
+                Vec3 dir = rotateHorizontal(look, Math.toRadians(angle));
+                TorpedoEntity torpedo = new TorpedoEntity(level, player, caliber);
+                torpedo.setDamage(torpedoType.getDamage());
+                torpedo.setSpeed(torpedoType.getSpeed());
+                torpedo.setLifetime(torpedoType.getLifetimeTicks());
+                if (magnetic) torpedo.setMagnetic(true);
+                if (wireGuided) torpedo.setWireGuided(true);
+                if (acousticHoming) torpedo.setAcoustic(true);
+                torpedo.setPos(player.getX() + dir.x * 0.5, player.getEyeY() - 0.3, player.getZ() + dir.z * 0.5);
+                torpedo.setDeltaMovement(dir.x * torpedoSpeed, 0, dir.z * torpedoSpeed);
+                level.addFreshEntity(torpedo);
+                if (wireGuided && primaryGuided == null) primaryGuided = torpedo;
+            }
+            if (primaryGuided != null && player instanceof net.minecraft.server.level.ServerPlayer sp) {
+                com.piranport.combat.TorpedoGuidanceManager.startGuidance(sp, primaryGuided);
+            }
+
+            int cooldown = launcher.getCooldownTicks();
+            int boostedCooldown = TransformationManager.boostedCooldown(player, cooldown);
+            coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
+                    cooldowns.withSlotCooldown(weaponSlot, boostedCooldown, level.getGameTime()));
+            launcherStack.set(ModDataComponents.WEAPON_COOLDOWN.get(),
+                    WeaponCooldown.of(level.getGameTime(), boostedCooldown));
+
+            level.playSound(null, player.getX(), player.getY(), player.getZ(),
+                    SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 0.4f, 0.4f);
+            return;
+        }
+
+        // Survival mode: use LOADED_AMMO component
+        LoadedAmmo loaded = launcherStack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
         if (!loaded.hasAmmo() || loaded.count() < tubeCount) {
             player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
             return;
         }
 
-        int caliber = launcher.getCaliber();
+        // Use caliber from method start
         int cooldown = launcher.getCooldownTicks();
         boolean magnetic = isMagneticTorpedo(loaded.ammoItemId());
         boolean wireGuided = isWireGuidedTorpedo(loaded.ammoItemId());
@@ -1323,6 +1459,46 @@ public class ShipCoreItem extends Item {
                                            Inventory inv, int weaponSlot,
                                            MissileLauncherItem launcher, SlotCooldowns cooldowns) {
         ItemStack launcherStack = weaponSlot == 40 ? inv.offhand.get(0) : inv.items.get(weaponSlot);
+
+        // Creative mode: auto-find missile from inventory
+        if (player.getAbilities().instabuild) {
+            Item ammoItem = launcher.getAmmoItem();
+            int coreSlot = -1;
+            int ammoSlot = -1;
+
+            for (int i = 0; i < inv.items.size(); i++) {
+                if (i == weaponSlot) continue;
+                ItemStack s = inv.items.get(i);
+                if (s.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(s)) {
+                    coreSlot = i;
+                }
+                if (ammoSlot == -1 && !s.isEmpty() && s.is(ammoItem)) {
+                    ammoSlot = i;
+                }
+            }
+            if (ammoSlot == -1 && weaponSlot != 40 && coreSlot != 40) {
+                ItemStack oh = inv.offhand.get(0);
+                if (!oh.isEmpty() && oh.is(ammoItem)) {
+                    ammoSlot = 40;
+                }
+            }
+
+            String ammoId;
+            if (ammoSlot == -1) {
+                // 创造模式：使用默认弹药
+                ammoId = BuiltInRegistries.ITEM.getKey(ammoItem).toString();
+            } else {
+                ammoId = BuiltInRegistries.ITEM.getKey(ammoItem).toString();
+            }
+
+            spawnMissile(level, player, launcher, ammoId);
+            TransformationManager.setWeaponIndex(coreStack, weaponSlot);
+            level.playSound(null, player.getX(), player.getY(), player.getZ(),
+                    SoundEvents.FIREWORK_ROCKET_LAUNCH, SoundSource.PLAYERS, 1.0f, 0.8f);
+            return;
+        }
+
+        // Survival mode: use LOADED_AMMO component
         LoadedAmmo loaded = launcherStack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
         if (!loaded.hasAmmo()) {
             player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);

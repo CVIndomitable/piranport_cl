@@ -6,6 +6,7 @@ import com.piranport.block.CuttingBoardBlock;
 import com.piranport.block.FlareLightBlock;
 import com.piranport.block.ReloadFacilityBlock;
 import com.piranport.block.FourStageCropBlock;
+import com.piranport.block.PeachLeavesBlock;
 import com.piranport.block.PlaceableFoodBlock;
 import com.piranport.block.RiceCropBlock;
 import com.piranport.block.SaltChipBlock;
@@ -107,8 +108,8 @@ public class ModBlocks {
             BLOCKS.register("peach_log", () -> new RotatedPillarBlock(
                     BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_LOG)));
 
-    public static final DeferredBlock<LeavesBlock> PEACH_LEAVES =
-            BLOCKS.register("peach_leaves", () -> new LeavesBlock(
+    public static final DeferredBlock<PeachLeavesBlock> PEACH_LEAVES =
+            BLOCKS.register("peach_leaves", () -> new PeachLeavesBlock(
                     BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_LEAVES)));
 
     public static final DeferredBlock<SaplingBlock> PEACH_SAPLING =

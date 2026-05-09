@@ -32,7 +32,7 @@ public class DepthChargeEntity extends ThrowableItemProjectile {
     /** 近炸引信起爆前的安全延迟（ticks）。 */
     private static final int ARM_TICKS = 5;
     /** 近炸检测距离（blocks）。 */
-    private static final double DETECT_RANGE = 5.0;
+    private static final double DETECT_RANGE = 8.0;
     /** 爆炸后水平伤害半径（blocks）。 */
     private static final double BLAST_RADIUS = 8.0;
     /** 爆炸后垂直伤害容差（blocks，上下各此值）。 */

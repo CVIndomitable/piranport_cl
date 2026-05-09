@@ -1120,7 +1120,12 @@ public class AircraftEntity extends Entity {
             }
         }
 
-        double bombAltitude = target.getY() + 20.0;
+        // 对水下目标：飞行在海平面上方15格（约75米巡航高度）
+        // 对水面/陆地目标：保持原逻辑
+        double seaLevel = level().getSeaLevel();
+        double bombAltitude = target.isUnderWater()
+            ? seaLevel + 15.0
+            : target.getY() + 20.0;
 
         if (getY() < bombAltitude - 1.5) {
             Vec3 toPoint = new Vec3(target.getX() - getX(), bombAltitude - getY(), target.getZ() - getZ());
@@ -1131,7 +1136,11 @@ public class AircraftEntity extends Entity {
             double dz = target.getZ() - getZ();
             double horizDist = Math.sqrt(dx * dx + dz * dz);
 
-            if (horizDist < 4.0 && attackCooldown <= 0) {
+            // 计算目标深度和提前投弹距离
+            double targetDepth = Math.max(0, seaLevel - target.getY());
+            double leadDistance = targetDepth * 0.15;
+
+            if (horizDist < (4.0 + leadDistance) && attackCooldown <= 0) {
                 float dcDamage = panelDamage * 1.5f;
                 int toFire = computeSalvoSize(target, dcDamage);
                 com.piranport.debug.PiranPortDebug.event(

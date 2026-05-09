@@ -34,9 +34,23 @@ public class StoneMillScreen extends AbstractContainerScreen<StoneMillMenu> {
         drawSlotBg(gfx, x + 7, y + 37);
         drawSlotBg(gfx, x + 25, y + 37);
 
-        // Arrow →
+        // Arrow → with progress
+        int progress = menu.getProcessingProgress();
+        int total = menu.getProcessingTimeTotal();
+        int arrowWidth = total > 0 ? (progress * 30 / total) : 0;
+
+        // Background arrow (gray)
         gfx.fill(x + 46, y + 28, x + 76, y + 30, 0xFF808080);
         gfx.fill(x + 70, y + 25, x + 76, y + 33, 0xFF808080);
+
+        // Progress arrow (green)
+        if (arrowWidth > 0) {
+            gfx.fill(x + 46, y + 28, x + 46 + arrowWidth, y + 30, 0xFF00FF00);
+            if (arrowWidth >= 24) {
+                int arrowHeadWidth = Math.min(arrowWidth - 24, 6);
+                gfx.fill(x + 70, y + 25, x + 70 + arrowHeadWidth, y + 33, 0xFF00FF00);
+            }
+        }
 
         // Output slots: at (77,19),(77,37)
         drawSlotBg(gfx, x + 77, y + 19);

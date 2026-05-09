@@ -113,7 +113,7 @@ public class MissileEntity extends ThrowableItemProjectile {
         if (target != null && !isValidTarget(target)) {
             // 防空导弹特殊提示
             if (missileType == MissileType.ANTI_AIR && target.onGround()) {
-                com.piranport.debug.PiranPortDebug.warn(
+                com.piranport.debug.PiranPortDebug.event(
                     "防空导弹无法锁定地面目标: {} (onGround=true)",
                     target.getDisplayName().getString());
             }

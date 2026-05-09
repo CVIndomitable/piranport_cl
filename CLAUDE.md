@@ -160,8 +160,11 @@ pip install openpyxl
 
 ## Recent Changes (1.1.2-dev)
 
+最近更新（2026-05-10）:
+- 修复鱼雷机发射鱼雷方向反向bug（飞机远离敌舰时向机尾发射）
+
 最近更新（2026-05-09）:
 - 版本升级至 1.1.2-dev
 - 新增Excel数据表管理工具
 
-完整变更记录见 `../docs/CHANGELOG-1.1.2-dev.md`。
+完整变更记录见 `../docs/版本记录/CHANGELOG-1.1.2-dev.md`。

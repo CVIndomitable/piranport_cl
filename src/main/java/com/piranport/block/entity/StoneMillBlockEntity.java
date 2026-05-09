@@ -15,6 +15,7 @@ import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.Level;
@@ -35,15 +36,42 @@ public class StoneMillBlockEntity extends BlockEntity implements MenuProvider {
 
     private boolean processing = false;
     private boolean needsReprocess = true;
+    private int processingProgress = 0;
+    private int processingTimeTotal = 0;
+    private StoneMillRecipe currentRecipe = null;
+
+    private final ContainerData data = new ContainerData() {
+        @Override
+        public int get(int index) {
+            return switch (index) {
+                case 0 -> processingProgress;
+                case 1 -> processingTimeTotal;
+                default -> 0;
+            };
+        }
+
+        @Override
+        public void set(int index, int value) {
+            switch (index) {
+                case 0 -> processingProgress = value;
+                case 1 -> processingTimeTotal = value;
+            }
+        }
+
+        @Override
+        public int getCount() {
+            return 2;
+        }
+    };
 
     private final ItemStackHandler itemHandler = new ItemStackHandler(TOTAL_SLOTS) {
         @Override
         protected void onContentsChanged(int slot) {
             setChanged();
-            // Recursion safe: processing flag prevents re-entry from insertOutput/consumeIngredients;
-            // the while loop in processRecipes() re-checks after each successful recipe.
             if (level != null && !level.isClientSide() && !processing) {
-                processRecipes();
+                if (slot < INPUT_SLOTS) {
+                    checkAndStartRecipe();
+                }
             }
         }
     };
@@ -88,7 +116,16 @@ public class StoneMillBlockEntity extends BlockEntity implements MenuProvider {
     public static void serverTick(Level level, BlockPos pos, BlockState state, StoneMillBlockEntity be) {
         if (be.needsReprocess) {
             be.needsReprocess = false;
-            be.processRecipes();
+            be.checkAndStartRecipe();
+        }
+
+        if (be.currentRecipe != null) {
+            be.processingProgress++;
+            be.setChanged();
+
+            if (be.processingProgress >= be.processingTimeTotal) {
+                be.finishRecipe();
+            }
         }
     }
 
@@ -116,6 +153,60 @@ public class StoneMillBlockEntity extends BlockEntity implements MenuProvider {
         } finally {
             processing = false;
         }
+    }
+
+    private void checkAndStartRecipe() {
+        if (currentRecipe != null) return;
+
+        List<ItemStack> inputs = new ArrayList<>();
+        for (int i = 0; i < INPUT_SLOTS; i++) {
+            ItemStack s = itemHandler.getStackInSlot(i);
+            if (!s.isEmpty()) inputs.add(s);
+        }
+        if (inputs.isEmpty()) return;
+
+        StoneMillRecipeInput input = new StoneMillRecipeInput(inputs);
+        Optional<RecipeHolder<StoneMillRecipe>> opt =
+                level.getRecipeManager().getRecipeFor(ModRecipeTypes.STONE_MILL_TYPE.get(), input, level);
+        if (opt.isEmpty()) return;
+
+        StoneMillRecipe recipe = opt.get().value();
+        ItemStack result = recipe.assemble(input, level.registryAccess());
+
+        if (!canInsertOutput(result)) return;
+
+        currentRecipe = recipe;
+        processingProgress = 0;
+        processingTimeTotal = recipe.getProcessingTime();
+        setChanged();
+    }
+
+    private void finishRecipe() {
+        if (currentRecipe == null) return;
+
+        ItemStack result = currentRecipe.assemble(
+                new StoneMillRecipeInput(getInputStacks()), level.registryAccess());
+
+        if (canInsertOutput(result)) {
+            consumeIngredients(currentRecipe.getIngredients());
+            insertOutput(result);
+        }
+
+        currentRecipe = null;
+        processingProgress = 0;
+        processingTimeTotal = 0;
+        setChanged();
+
+        checkAndStartRecipe();
+    }
+
+    private List<ItemStack> getInputStacks() {
+        List<ItemStack> inputs = new ArrayList<>();
+        for (int i = 0; i < INPUT_SLOTS; i++) {
+            ItemStack s = itemHandler.getStackInSlot(i);
+            if (!s.isEmpty()) inputs.add(s);
+        }
+        return inputs;
     }
 
     private boolean processOneRecipe() {
@@ -196,6 +287,8 @@ public class StoneMillBlockEntity extends BlockEntity implements MenuProvider {
     protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
         tag.put("inventory", itemHandler.serializeNBT(registries));
+        tag.putInt("ProcessingProgress", processingProgress);
+        tag.putInt("ProcessingTimeTotal", processingTimeTotal);
     }
 
     @Override
@@ -204,6 +297,8 @@ public class StoneMillBlockEntity extends BlockEntity implements MenuProvider {
         if (tag.contains("inventory")) {
             itemHandler.deserializeNBT(registries, tag.getCompound("inventory"));
         }
+        processingProgress = tag.getInt("ProcessingProgress");
+        processingTimeTotal = tag.getInt("ProcessingTimeTotal");
     }
 
     @Override
@@ -213,7 +308,7 @@ public class StoneMillBlockEntity extends BlockEntity implements MenuProvider {
 
     @Override
     public AbstractContainerMenu createMenu(int containerId, Inventory playerInventory, Player player) {
-        return new StoneMillMenu(containerId, playerInventory, this);
+        return new StoneMillMenu(containerId, playerInventory, this, data);
     }
 
     public void writeScreenOpeningData(ServerPlayer player, net.minecraft.network.FriendlyByteBuf buf) {

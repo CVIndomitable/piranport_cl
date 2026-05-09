@@ -3,5 +3,6 @@
   "ingredients": [
     {"item": "piranport:walnut"}
   ],
-  "result": {"id": "piranport:walnut_powder", "count": 1}
+  "result": {"id": "piranport:walnut_powder", "count": 1},
+  "processingtime": 200
 }

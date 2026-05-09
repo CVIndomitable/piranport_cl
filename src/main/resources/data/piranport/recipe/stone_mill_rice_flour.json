@@ -3,5 +3,6 @@
   "ingredients": [
     {"item": "piranport:rice"}
   ],
-  "result": {"id": "piranport:rice_flour", "count": 1}
+  "result": {"id": "piranport:rice_flour", "count": 1},
+  "processingtime": 200
 }

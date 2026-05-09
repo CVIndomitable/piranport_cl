@@ -7,6 +7,8 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ContainerData;
+import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.items.ItemStackHandler;
@@ -16,20 +18,24 @@ import org.jetbrains.annotations.Nullable;
 public class StoneMillMenu extends AbstractContainerMenu {
     private final @Nullable StoneMillBlockEntity blockEntity;
     private final ItemStackHandler itemHandler;
+    private final ContainerData data;
 
     // Client-side constructor (from network)
     public static StoneMillMenu fromNetwork(int id, Inventory inv, FriendlyByteBuf buf) {
         BlockPos pos = buf.readBlockPos();
         var be = inv.player.level().getBlockEntity(pos);
         StoneMillBlockEntity mill = be instanceof StoneMillBlockEntity m ? m : null;
-        return new StoneMillMenu(id, inv, mill);
+        return new StoneMillMenu(id, inv, mill, new SimpleContainerData(2));
     }
 
     // Server-side constructor
-    public StoneMillMenu(int containerId, Inventory playerInventory, @Nullable StoneMillBlockEntity blockEntity) {
+    public StoneMillMenu(int containerId, Inventory playerInventory, @Nullable StoneMillBlockEntity blockEntity, ContainerData data) {
         super(ModMenuTypes.STONE_MILL_MENU.get(), containerId);
         this.blockEntity = blockEntity;
         this.itemHandler = blockEntity != null ? blockEntity.getItemHandler() : new ItemStackHandler(6);
+        this.data = data;
+
+        addDataSlots(data);
 
         // Input slots 0-3: 2×2 grid at (8,20),(26,20),(8,38),(26,38)
         addSlot(new SlotItemHandler(itemHandler, 0, 8, 20));
@@ -88,6 +94,14 @@ public class StoneMillMenu extends AbstractContainerMenu {
                 blockEntity.getBlockPos().getX() + 0.5,
                 blockEntity.getBlockPos().getY() + 0.5,
                 blockEntity.getBlockPos().getZ() + 0.5) <= 64.0;
+    }
+
+    public int getProcessingProgress() {
+        return data.get(0);
+    }
+
+    public int getProcessingTimeTotal() {
+        return data.get(1);
     }
 
     private static class OutputSlot extends SlotItemHandler {

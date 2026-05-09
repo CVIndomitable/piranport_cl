@@ -20,12 +20,18 @@ import java.util.List;
 public class StoneMillRecipe implements Recipe<StoneMillRecipeInput> {
     private final NonNullList<Ingredient> ingredients;
     private final ItemStack result;
+    private final int processingTime;
 
-    public StoneMillRecipe(List<Ingredient> ingredients, ItemStack result) {
+    public StoneMillRecipe(List<Ingredient> ingredients, ItemStack result, int processingTime) {
         NonNullList<Ingredient> nnl = NonNullList.create();
         nnl.addAll(ingredients);
         this.ingredients = nnl;
         this.result = result;
+        this.processingTime = processingTime;
+    }
+
+    public int getProcessingTime() {
+        return processingTime;
     }
 
     @Override
@@ -87,7 +93,8 @@ public class StoneMillRecipe implements Recipe<StoneMillRecipeInput> {
 
     public static final MapCodec<StoneMillRecipe> CODEC = RecordCodecBuilder.mapCodec(i -> i.group(
             Ingredient.CODEC_NONEMPTY.listOf().fieldOf("ingredients").forGetter(StoneMillRecipe::getIngredients),
-            ItemStack.STRICT_CODEC.fieldOf("result").forGetter(StoneMillRecipe::getResult)
+            ItemStack.STRICT_CODEC.fieldOf("result").forGetter(StoneMillRecipe::getResult),
+            net.minecraft.util.ExtraCodecs.POSITIVE_INT.optionalFieldOf("processingtime", 200).forGetter(StoneMillRecipe::getProcessingTime)
     ).apply(i, StoneMillRecipe::new));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, StoneMillRecipe> STREAM_CODEC =
@@ -100,7 +107,8 @@ public class StoneMillRecipe implements Recipe<StoneMillRecipeInput> {
                         ings.add(Ingredient.CONTENTS_STREAM_CODEC.decode(buf));
                     }
                     ItemStack result = ItemStack.STREAM_CODEC.decode(buf);
-                    return new StoneMillRecipe(ings, result);
+                    int processingTime = buf.readVarInt();
+                    return new StoneMillRecipe(ings, result, processingTime);
                 }
 
                 @Override
@@ -110,6 +118,7 @@ public class StoneMillRecipe implements Recipe<StoneMillRecipeInput> {
                         Ingredient.CONTENTS_STREAM_CODEC.encode(buf, ing);
                     }
                     ItemStack.STREAM_CODEC.encode(buf, recipe.result);
+                    buf.writeVarInt(recipe.processingTime);
                 }
             };
 

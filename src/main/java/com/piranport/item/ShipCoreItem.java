@@ -760,11 +760,15 @@ public class ShipCoreItem extends Item {
                         coreInventorySlot, weaponSlot);
 
                 if (selectedAmmoType == null) {
-                    player.displayClientMessage(Component.translatable("message.piranport.insufficient_same_ammo"), true);
-                    return true;
+                    // 创造模式：使用默认弹药类型（从武器定义获取）
+                    selectedAmmoType = getDefaultAmmoForWeapon(weapon);
+                    if (selectedAmmoType == null) {
+                        player.displayClientMessage(Component.translatable("message.piranport.insufficient_same_ammo"), true);
+                        return true;
+                    }
                 }
 
-                // 获取该类型的第一个弹药用于渲染
+                // 获取该类型的第一个弹药用于渲染（如果物品栏有的话）
                 ItemStack firstAmmo = ItemStack.EMPTY;
                 for (int i = 0; i < inv.items.size(); i++) {
                     if (i == coreInventorySlot || i == weaponSlot) continue;
@@ -779,6 +783,10 @@ public class ShipCoreItem extends Item {
                     if (!oh.isEmpty() && oh.getItem() == selectedAmmoType) {
                         firstAmmo = oh;
                     }
+                }
+                // 如果物品栏没有，创建一个用于渲染
+                if (firstAmmo.isEmpty()) {
+                    firstAmmo = new ItemStack(selectedAmmoType);
                 }
 
                 boolean isType3 = isType3Shell(firstAmmo);
@@ -1049,9 +1057,19 @@ public class ShipCoreItem extends Item {
                 torpedoType = ti;
             }
         }
+
+        // 创造模式：如果没有鱼雷，使用默认鱼雷类型
         if (torpedoType == null) {
-            player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
-            return;
+            if (!player.getAbilities().instabuild) {
+                player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
+                return;
+            }
+            // 创造模式：使用默认鱼雷
+            torpedoType = getDefaultTorpedoForCaliber(caliber);
+            if (torpedoType == null) {
+                player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
+                return;
+            }
         }
 
         // Creative mode: skip ammo consumption
@@ -1226,26 +1244,8 @@ public class ShipCoreItem extends Item {
                 }
             }
         } else {
-            // Creative mode: verify at least one depth charge exists in inventory
-            boolean hasAmmo = false;
-            for (int i = 0; i < inv.items.size(); i++) {
-                if (i == coreSlot || i == weaponSlot) continue;
-                ItemStack s = inv.items.get(i);
-                if (!s.isEmpty() && s.is(ModItems.DEPTH_CHARGE.get())) {
-                    hasAmmo = true;
-                    break;
-                }
-            }
-            if (!hasAmmo && weaponSlot != 40 && coreSlot != 40) {
-                ItemStack oh = inv.offhand.get(0);
-                if (!oh.isEmpty() && oh.is(ModItems.DEPTH_CHARGE.get())) {
-                    hasAmmo = true;
-                }
-            }
-            if (!hasAmmo) {
-                player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
-                return;
-            }
+            // 创造模式：即使没有深弹也允许发射（使用默认深弹）
+            // 无需额外检查，直接发射
         }
 
         // Spawn depth charges based on spread pattern
@@ -1370,17 +1370,24 @@ public class ShipCoreItem extends Item {
                 ammoSlot = 40;
             }
         }
-        if (ammoSlot == -1) {
-            player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
-            return;
-        }
 
-        // Creative mode: skip ammo consumption
-        String ammoId = BuiltInRegistries.ITEM.getKey(ammoItem).toString();
-        if (!player.getAbilities().instabuild) {
-            // 消耗1枚弹药
-            com.piranport.debug.PiranPortDebug.consumeAmmo(
-                    ammoSlot == 40 ? inv.offhand.get(0) : inv.items.get(ammoSlot), 1);
+        // 创造模式：如果没有弹药，使用默认弹药ID
+        String ammoId;
+        if (ammoSlot == -1) {
+            if (!player.getAbilities().instabuild) {
+                player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
+                return;
+            }
+            // 创造模式：使用默认弹药
+            ammoId = BuiltInRegistries.ITEM.getKey(ammoItem).toString();
+        } else {
+            // 有弹药：使用物品栏中的弹药类型
+            ammoId = BuiltInRegistries.ITEM.getKey(ammoItem).toString();
+            // 创造模式：不消耗弹药
+            if (!player.getAbilities().instabuild) {
+                com.piranport.debug.PiranPortDebug.consumeAmmo(
+                        ammoSlot == 40 ? inv.offhand.get(0) : inv.items.get(ammoSlot), 1);
+            }
         }
 
         // 发射
@@ -1557,28 +1564,9 @@ public class ShipCoreItem extends Item {
             net.minecraft.world.item.Item payloadItem = net.minecraft.core.registries.BuiltInRegistries.ITEM.get(
                     net.minecraft.resources.ResourceLocation.parse(payloadType));
 
-            // Creative mode: skip payload consumption but verify it exists
-            if (player.getAbilities().instabuild) {
-                boolean hasPayload = false;
-                for (int i = 0; i < inv.items.size(); i++) {
-                    if (i == coreInventorySlot || i == weaponSlot) continue;
-                    ItemStack s = inv.items.get(i);
-                    if (!s.isEmpty() && s.getItem() == payloadItem) {
-                        hasPayload = true;
-                        break;
-                    }
-                }
-                if (!hasPayload && weaponSlot != 40 && coreInventorySlot != 40) {
-                    ItemStack oh = inv.offhand.get(0);
-                    if (!oh.isEmpty() && oh.getItem() == payloadItem) {
-                        hasPayload = true;
-                    }
-                }
-                if (!hasPayload) {
-                    player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
-                    return;
-                }
-            } else {
+            // 创造模式：即使没有挂载物也允许发射（使用默认挂载物）
+            // 生存模式：消耗挂载物
+            if (!player.getAbilities().instabuild) {
                 // Survival mode: consume payload
                 boolean consumed = false;
                 for (int i = 0; i < inv.items.size(); i++) {
@@ -2535,5 +2523,31 @@ public class ShipCoreItem extends Item {
         double nz = look.x * sin + look.z * cos;
         Vec3 result = new Vec3(nx, 0, nz);
         return result.lengthSqr() > 0 ? result.normalize() : new Vec3(1, 0, 0);
+    }
+
+    /**
+     * 获取指定武器的默认弹药类型（创造模式使用）
+     */
+    private static Item getDefaultAmmoForWeapon(ItemStack weapon) {
+        Item weaponItem = weapon.getItem();
+        if (weaponItem == ModItems.SMALL_GUN.get() || weaponItem == ModItems.SINGLE_SMALL_GUN.get()) {
+            return ModItems.SMALL_AP_SHELL.get();
+        } else if (weaponItem == ModItems.MEDIUM_GUN.get()) {
+            return ModItems.MEDIUM_AP_SHELL.get();
+        } else if (weaponItem == ModItems.LARGE_GUN.get()) {
+            return ModItems.LARGE_AP_SHELL.get();
+        }
+        return null;
+    }
+
+    /**
+     * 获取指定口径的默认鱼雷类型（创造模式使用）
+     */
+    private static TorpedoItem getDefaultTorpedoForCaliber(int caliber) {
+        return switch (caliber) {
+            case 533 -> (TorpedoItem) ModItems.TORPEDO_533MM.get();
+            case 610 -> (TorpedoItem) ModItems.TORPEDO_610MM.get();
+            default -> null;
+        };
     }
 }

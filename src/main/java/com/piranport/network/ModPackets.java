@@ -149,6 +149,11 @@ public class ModPackets {
                 AmmoWorkbenchCraftPayload.STREAM_CODEC,
                 AmmoWorkbenchCraftPayload::handle
         );
+        registrar.playToServer(
+                AmmoWorkbenchCancelPayload.TYPE,
+                AmmoWorkbenchCancelPayload.STREAM_CODEC,
+                AmmoWorkbenchCancelPayload::handle
+        );
 
         // ===== Dungeon System =====
         // C2S

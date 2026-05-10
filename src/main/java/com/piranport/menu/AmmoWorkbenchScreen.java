@@ -3,6 +3,7 @@ package com.piranport.menu;
 import com.piranport.ammo.AmmoCategory;
 import com.piranport.ammo.AmmoRecipe;
 import com.piranport.ammo.AmmoRecipeRegistry;
+import com.piranport.network.AmmoWorkbenchCancelPayload;
 import com.piranport.network.AmmoWorkbenchCraftPayload;
 import com.piranport.registry.ModItems;
 import net.minecraft.client.gui.GuiGraphics;
@@ -66,7 +67,7 @@ public class AmmoWorkbenchScreen extends AbstractContainerScreen<AmmoWorkbenchMe
         quantityField = new EditBox(font, leftPos + 38, topPos + 28, 36, 14,
                 Component.literal(""));
         quantityField.setValue("1");
-        quantityField.setMaxLength(3);
+        quantityField.setMaxLength(2);
         quantityField.setFilter(s -> s.isEmpty() || s.matches("\\d+"));
         quantityField.setResponder(s -> updateRecipe());
         addRenderableWidget(quantityField);
@@ -107,7 +108,7 @@ public class AmmoWorkbenchScreen extends AbstractContainerScreen<AmmoWorkbenchMe
     private int getQuantity() {
         try {
             int q = Integer.parseInt(quantityField.getValue());
-            return Math.max(1, q);
+            return Math.min(64, Math.max(1, q));
         } catch (NumberFormatException e) {
             return 1;
         }
@@ -139,6 +140,13 @@ public class AmmoWorkbenchScreen extends AbstractContainerScreen<AmmoWorkbenchMe
             if (has < required) return false;
         }
         return true;
+    }
+
+    private boolean canOutputAcceptResult(ItemStack result) {
+        ItemStack existing = menu.getSlot(0).getItem();
+        if (existing.isEmpty()) return true;
+        if (!ItemStack.isSameItem(existing, result)) return false;
+        return existing.getCount() + result.getCount() <= existing.getMaxStackSize();
     }
 
     @Override
@@ -175,6 +183,7 @@ public class AmmoWorkbenchScreen extends AbstractContainerScreen<AmmoWorkbenchMe
 
         renderMaterialBars(g, x, y);
         renderCraftButton(g, x, y, mouseX, mouseY);
+        renderCancelButton(g, x, y, mouseX, mouseY);
         renderProgressBar(g, x, y);
 
         drawSlotBg(g, x + 206, y + 130);
@@ -276,8 +285,11 @@ public class AmmoWorkbenchScreen extends AbstractContainerScreen<AmmoWorkbenchMe
         int bx = x + 6, by = y + 128, bw = 56, bh = 14;
         boolean crafting = menu.isCrafting();
         Map<Item, Integer> available = scanPlayerInventory();
+        int qty = getQuantity();
+        ItemStack result = currentRecipe != null ? currentRecipe.getResultStack(qty) : ItemStack.EMPTY;
         boolean canCraft = !crafting && currentRecipe != null
-                && allMaterialsSufficient(available, getQuantity());
+                && allMaterialsSufficient(available, qty)
+                && canOutputAcceptResult(result);
 
         boolean hovered = mouseX >= bx && mouseX < bx + bw && mouseY >= by && mouseY < by + bh;
 
@@ -291,6 +303,22 @@ public class AmmoWorkbenchScreen extends AbstractContainerScreen<AmmoWorkbenchMe
         int textColor = canCraft ? 0xFFFFFFFF : 0xFFCCCCCC;
         int labelW = font.width(label);
         g.drawString(font, label, bx + (bw - labelW) / 2, by + 3, textColor, false);
+    }
+
+    private void renderCancelButton(GuiGraphics g, int x, int y, int mouseX, int mouseY) {
+        boolean crafting = menu.isCrafting();
+        if (!crafting) return;
+
+        int bx = x + 66, by = y + 128, bw = 56, bh = 14;
+        boolean hovered = mouseX >= bx && mouseX < bx + bw && mouseY >= by && mouseY < by + bh;
+
+        int bgColor = hovered ? 0xFFCC5555 : 0xFFBB4444;
+        g.fill(bx, by, bx + bw, by + bh, 0xFF373737);
+        g.fill(bx + 1, by + 1, bx + bw - 1, by + bh - 1, bgColor);
+
+        Component label = Component.translatable("gui.piranport.ammo_workbench.cancel");
+        int labelW = font.width(label);
+        g.drawString(font, label, bx + (bw - labelW) / 2, by + 3, 0xFFFFFFFF, false);
     }
 
     private void renderProgressBar(GuiGraphics g, int x, int y) {
@@ -438,11 +466,22 @@ public class AmmoWorkbenchScreen extends AbstractContainerScreen<AmmoWorkbenchMe
             if (!menu.isCrafting() && currentRecipe != null) {
                 int qty = getQuantity();
                 Map<Item, Integer> available = scanPlayerInventory();
-                if (allMaterialsSufficient(available, qty)) {
+                ItemStack result = currentRecipe.getResultStack(qty);
+                if (allMaterialsSufficient(available, qty) && canOutputAcceptResult(result)) {
                     PacketDistributor.sendToServer(
                             new AmmoWorkbenchCraftPayload(menu.getBlockPos(),
                                     currentRecipe.id(), qty));
                 }
+            }
+            return true;
+        }
+
+        // Cancel button
+        int cbx = x + 66, cby = y + 128, cbw = 56, cbh = 14;
+        if (mx >= cbx && mx < cbx + cbw && my >= cby && my < cby + cbh) {
+            if (menu.isCrafting()) {
+                PacketDistributor.sendToServer(
+                        new AmmoWorkbenchCancelPayload(menu.getBlockPos()));
             }
             return true;
         }

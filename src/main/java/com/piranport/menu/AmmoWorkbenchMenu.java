@@ -121,4 +121,15 @@ public class AmmoWorkbenchMenu extends AbstractContainerMenu {
         if (!(state.getBlock() instanceof AmmoWorkbenchBlock)) return false;
         return stillValid(ContainerLevelAccess.create(level, pos), player, state.getBlock());
     }
+
+    @Override
+    public void removed(Player player) {
+        super.removed(player);
+        if (!player.level().isClientSide) {
+            // Cancel any in-progress crafting and refund materials
+            if (blockEntity.isCrafting()) {
+                blockEntity.cancelCrafting();
+            }
+        }
+    }
 }

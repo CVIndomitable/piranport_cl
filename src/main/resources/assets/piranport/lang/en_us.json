@@ -185,6 +185,7 @@
   "gui.piranport.ammo_workbench.select_type": "Select an ammo type",
   "gui.piranport.ammo_workbench.craft": "Craft",
   "gui.piranport.ammo_workbench.crafting": "Crafting...",
+  "gui.piranport.ammo_workbench.cancel": "Cancel",
   "message.piranport.workbench_in_use": "Workbench is in use by another player",
   "block.piranport.plate_food": "Plate",
   "block.piranport.bowl_food": "Bowl",

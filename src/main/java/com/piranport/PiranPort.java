@@ -4,6 +4,11 @@ import com.mojang.logging.LogUtils;
 import com.piranport.compat.ModCompats;
 import com.piranport.config.ModClientConfig;
 import com.piranport.config.ModCommonConfig;
+import com.piranport.config.ModWeaponsConfig;
+import com.piranport.config.ModAircraftConfig;
+import com.piranport.config.ModShipsConfig;
+import com.piranport.config.ModProjectilesConfig;
+import com.piranport.config.ModEquipmentConfig;
 import com.piranport.recipe.ModBrewingRecipes;
 import com.piranport.registry.ModBiomeModifiers;
 import com.piranport.registry.ModBlockEntityTypes;
@@ -49,6 +54,11 @@ public class PiranPort {
         NeoForge.EVENT_BUS.addListener(this::registerBrewingRecipes);
         modContainer.registerConfig(ModConfig.Type.CLIENT, ModClientConfig.SPEC);
         modContainer.registerConfig(ModConfig.Type.COMMON, ModCommonConfig.SPEC);
+        modContainer.registerConfig(ModConfig.Type.COMMON, ModWeaponsConfig.SPEC, "piranport-weapons.toml");
+        modContainer.registerConfig(ModConfig.Type.COMMON, ModAircraftConfig.SPEC, "piranport-aircraft.toml");
+        modContainer.registerConfig(ModConfig.Type.COMMON, ModShipsConfig.SPEC, "piranport-ships.toml");
+        modContainer.registerConfig(ModConfig.Type.COMMON, ModProjectilesConfig.SPEC, "piranport-projectiles.toml");
+        modContainer.registerConfig(ModConfig.Type.COMMON, ModEquipmentConfig.SPEC, "piranport-equipment.toml");
 
         ModCompats.initialize(modEventBus);
 

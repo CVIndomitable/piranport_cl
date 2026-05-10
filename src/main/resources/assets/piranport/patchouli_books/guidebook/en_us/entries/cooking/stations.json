@@ -9,8 +9,27 @@
       "text": "piranport.book.cooking.stations.p1"
     },
     {
+      "type": "patchouli:crafting",
+      "recipe": "piranport:cooking_pot",
+      "text": "piranport.book.cooking.stations.cooking_pot"
+    },
+    {
       "type": "patchouli:text",
       "text": "piranport.book.cooking.stations.p2"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "piranport:stone_mill",
+      "text": "piranport.book.cooking.stations.stone_mill"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "piranport.book.cooking.stations.p3"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "piranport:cutting_board",
+      "text": "piranport.book.cooking.stations.cutting_board"
     }
   ]
 }

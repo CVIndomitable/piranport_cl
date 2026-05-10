@@ -12,6 +12,16 @@
       "type": "patchouli:crafting",
       "recipe": "piranport:small_ship_core",
       "text": "piranport.book.intro.overview.craft"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "piranport:medium_ship_core",
+      "text": "piranport.book.intro.overview.medium_craft"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "piranport:large_ship_core",
+      "text": "piranport.book.intro.overview.large_craft"
     }
   ]
 }

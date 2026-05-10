@@ -9,6 +9,16 @@
       "text": "piranport.book.intro.transform.p1"
     },
     {
+      "type": "patchouli:crafting",
+      "recipe": "piranport:medium_ship_core",
+      "text": "piranport.book.intro.transform.medium_core"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "piranport:large_ship_core",
+      "text": "piranport.book.intro.transform.large_core"
+    },
+    {
       "type": "patchouli:text",
       "text": "piranport.book.intro.transform.p2"
     }

@@ -12,6 +12,16 @@
       "type": "patchouli:crafting",
       "recipe": "piranport:twin_torpedo_launcher",
       "text": "piranport.book.torpedoes.basics.craft"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "piranport:triple_torpedo_launcher",
+      "text": "piranport.book.torpedoes.basics.triple_craft"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "piranport:quad_torpedo_launcher",
+      "text": "piranport.book.torpedoes.basics.quad_craft"
     }
   ]
 }

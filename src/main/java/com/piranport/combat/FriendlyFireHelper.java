@@ -1,9 +1,11 @@
 package com.piranport.combat;
 
+import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import com.piranport.config.ModCommonConfig;
 import com.piranport.entity.AircraftEntity;
 import com.piranport.npc.deepocean.AbstractDeepOceanEntity;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 
 /**
@@ -23,6 +25,18 @@ public final class FriendlyFireHelper {
         // Deep ocean fratricide protection: deep ocean projectiles must not hit other deep ocean entities
         if (target instanceof AbstractDeepOceanEntity && owner instanceof AbstractDeepOceanEntity) {
             return true;
+        }
+        // Maid self-damage protection: maids cannot be hurt by their own projectiles
+        if (target instanceof EntityMaid && owner instanceof EntityMaid && target == owner) {
+            return true;
+        }
+        // Maid friendly fire protection: maids with the same owner cannot hurt each other
+        if (target instanceof EntityMaid targetMaid && owner instanceof EntityMaid ownerMaid) {
+            LivingEntity targetOwner = targetMaid.getOwner();
+            LivingEntity ownerOwner = ownerMaid.getOwner();
+            if (targetOwner != null && ownerOwner != null && targetOwner.getUUID().equals(ownerOwner.getUUID())) {
+                return true;
+            }
         }
         // Friendly fire protection: skip other players when config disabled
         if (!ModCommonConfig.FRIENDLY_FIRE_ENABLED.get()

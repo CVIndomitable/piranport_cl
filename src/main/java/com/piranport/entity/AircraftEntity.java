@@ -143,10 +143,11 @@ public class AircraftEntity extends Entity {
     // AircraftIndex bookkeeping: true once added via onAddedToLevel or tick fallback
     private boolean indexRegistered = false;
 
-    // Autonomous mode: aircraft has no player owner (e.g. launched by floating target)
+    // Autonomous mode: aircraft has no player owner (e.g. launched by floating target or maid)
     private boolean autonomous = false;
     private Vec3 homePosition = Vec3.ZERO;
     @Nullable private Vec3 lastHorizontalDir = null; // previous tick's horizontal direction for turn radius
+    @Nullable private LivingEntity autonomousTarget = null; // target for autonomous aircraft
 
     private static final int MAX_AIRTIME_TICKS = 12000;
     private static final double MIN_DIST_FROM_OWNER = 48.0;
@@ -249,10 +250,11 @@ public class AircraftEntity extends Entity {
      * Factory for autonomous aircraft (no player owner).
      * Used by debug commands to spawn aircraft from non-player entities (e.g. floating targets).
      */
-    public static AircraftEntity createAutonomous(Level level, Vec3 spawnPos, ItemStack aircraftStack) {
+    public static AircraftEntity createAutonomous(Level level, Vec3 spawnPos, ItemStack aircraftStack, @Nullable LivingEntity target) {
         AircraftEntity entity = new AircraftEntity(ModEntityTypes.AIRCRAFT_ENTITY.get(), level);
         entity.autonomous = true;
         entity.homePosition = spawnPos;
+        entity.autonomousTarget = target;
 
         AircraftInfo info = aircraftStack.get(ModDataComponents.AIRCRAFT_INFO.get());
         if (info != null) {
@@ -635,6 +637,12 @@ public class AircraftEntity extends Entity {
     // ===== ATTACKING dispatch =====
 
     private void tickAttacking(Player owner) {
+        // Autonomous mode: use independent target system
+        if (autonomous && autonomousTarget != null) {
+            tickAutonomousAttacking();
+            return;
+        }
+
         if (aircraftType == AircraftInfo.AircraftType.RECON) {
             startReturning("recon_no_attack");
             return;
@@ -702,6 +710,43 @@ public class AircraftEntity extends Entity {
                 }
                 tickASWAttack(owner, target);
             }
+            default -> startReturning("no_payload");
+        }
+    }
+
+    private void tickAutonomousAttacking() {
+        if (autonomousTarget == null || !autonomousTarget.isAlive() || autonomousTarget.isRemoved()) {
+            startReturning("target_lost");
+            return;
+        }
+
+        // 火箭机：未发射时优先对地/海火箭弹齐射，之后回退为子弹对空
+        if (aircraftType == AircraftInfo.AircraftType.ROCKET_FIGHTER) {
+            if (!hasFired && remainingAmmo > 0) {
+                tickRocketFighterMissileRun(null, autonomousTarget);
+                return;
+            }
+            tickFighterAttack(null, autonomousTarget);
+            return;
+        }
+
+        // 子弹优先：使用战斗机AI
+        if (hasBullets) {
+            tickFighterAttack(null, autonomousTarget);
+            return;
+        }
+
+        // 无子弹时按挂载类型决定攻击行为
+        switch (payloadType) {
+            case "piranport:aerial_torpedo" -> tickTorpedoBomberAttack(null, autonomousTarget);
+            case "piranport:aerial_bomb" -> {
+                if (bombingMode == AircraftInfo.BombingMode.LEVEL) {
+                    tickLevelBomberAttack(null, autonomousTarget);
+                } else {
+                    tickDiveBomberAttack(null, autonomousTarget);
+                }
+            }
+            case "piranport:depth_charge" -> tickASWAttack(null, autonomousTarget);
             default -> startReturning("no_payload");
         }
     }

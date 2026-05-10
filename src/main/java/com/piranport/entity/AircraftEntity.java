@@ -771,7 +771,7 @@ public class AircraftEntity extends Entity {
      * never returns due to depletion. When true, 64 rounds total (ammoCapacity).
      * Phase 33: target may be a LivingEntity or an enemy AircraftEntity.
      */
-    private void tickFighterAttack(Player owner, Entity target) {
+    private void tickFighterAttack(@Nullable Player owner, Entity target) {
         // ROCKET_FIGHTER 的 ammo 专供火箭弹，子弹不受 FIGHTER_AMMO_ENABLED 约束
         boolean ammoEnabled = ModCommonConfig.FIGHTER_AMMO_ENABLED.get()
                 && aircraftType != AircraftInfo.AircraftType.ROCKET_FIGHTER;
@@ -803,7 +803,7 @@ public class AircraftEntity extends Entity {
             if (ammoEnabled) {
                 remainingAmmo--;
                 if (remainingAmmo <= 0) {
-                    if (ModCommonConfig.AUTO_RESUPPLY_ENABLED.get() && tryAutoResupplyAmmo(owner)) {
+                    if (owner != null && ModCommonConfig.AUTO_RESUPPLY_ENABLED.get() && tryAutoResupplyAmmo(owner)) {
                         // Ammo restored (payload type must be set) — continue
                     } else {
                         startReturning("fighter_ammo_depleted");
@@ -817,7 +817,7 @@ public class AircraftEntity extends Entity {
      * ROCKET_FIGHTER: approach a ground/surface target from altitude, salvo all rockets at once.
      * After hasFired=true, the aircraft falls back to bullets-only fighter logic against air targets.
      */
-    private void tickRocketFighterMissileRun(Player owner, LivingEntity target) {
+    private void tickRocketFighterMissileRun(@Nullable Player owner, LivingEntity target) {
         // Timeout guard: if approach drags on, mark as fired so we fall back to air combat
         if (stateTicks > 200) {
             hasFired = true;
@@ -881,9 +881,9 @@ public class AircraftEntity extends Entity {
      * DIVE_BOMBER: climb to target+18 blocks, then commit to a dive with lead prediction.
      * Once the dive is committed, the drop point is fixed — no more recalculation.
      */
-    private void tickDiveBomberAttack(Player owner, LivingEntity target) {
+    private void tickDiveBomberAttack(@Nullable Player owner, LivingEntity target) {
         if (hasFired) {
-            if (ModCommonConfig.AUTO_RESUPPLY_ENABLED.get() && tryAutoResupplyAmmo(owner)) {
+            if (owner != null && ModCommonConfig.AUTO_RESUPPLY_ENABLED.get() && tryAutoResupplyAmmo(owner)) {
                 setState(FlightState.CRUISING);
             } else {
                 startReturning("dive_bomber_done");
@@ -937,9 +937,9 @@ public class AircraftEntity extends Entity {
      * TORPEDO_BOMBER: fly low, fire torpedo when 20-30 blocks from target.
      * If too close, flies away first to set up a proper attack run.
      */
-    private void tickTorpedoBomberAttack(Player owner, LivingEntity target) {
+    private void tickTorpedoBomberAttack(@Nullable Player owner, LivingEntity target) {
         if (hasFired) {
-            if (ModCommonConfig.AUTO_RESUPPLY_ENABLED.get() && tryAutoResupplyAmmo(owner)) {
+            if (owner != null && ModCommonConfig.AUTO_RESUPPLY_ENABLED.get() && tryAutoResupplyAmmo(owner)) {
                 setState(FlightState.CRUISING);
             } else {
                 startReturning("torpedo_bomber_done");
@@ -1033,9 +1033,9 @@ public class AircraftEntity extends Entity {
      * 3. Continue flying 10 blocks past the drop point
      * 4. Check if target is alive — if so, start a new run
      */
-    private void tickLevelBomberAttack(Player owner, LivingEntity target) {
+    private void tickLevelBomberAttack(@Nullable Player owner, LivingEntity target) {
         if (remainingAmmo <= 0) {
-            if (ModCommonConfig.AUTO_RESUPPLY_ENABLED.get() && tryAutoResupplyAmmo(owner)) {
+            if (owner != null && ModCommonConfig.AUTO_RESUPPLY_ENABLED.get() && tryAutoResupplyAmmo(owner)) {
                 // Ammo restored — continue attacking
             } else {
                 startReturning("level_bomber_ammo_depleted");
@@ -1150,9 +1150,9 @@ public class AircraftEntity extends Entity {
      * ASW: fly at target+20 altitude, drop depth charges when over target.
      * Similar to level bomber but lower altitude and uses DepthChargeEntity.
      */
-    private void tickASWAttack(Player owner, LivingEntity target) {
+    private void tickASWAttack(@Nullable Player owner, LivingEntity target) {
         if (remainingAmmo <= 0) {
-            if (ModCommonConfig.AUTO_RESUPPLY_ENABLED.get() && tryAutoResupplyAmmo(owner)) {
+            if (owner != null && ModCommonConfig.AUTO_RESUPPLY_ENABLED.get() && tryAutoResupplyAmmo(owner)) {
                 // Ammo restored — continue attacking
             } else {
                 startReturning("asw_ammo_depleted");

@@ -43,7 +43,7 @@ public class AircraftHandler implements WeaponHandler {
         Level level = maid.level();
         Vec3 spawn = maid.position().add(0, 2.0, 0);
         try {
-            AircraftEntity plane = AircraftEntity.createAutonomous(level, spawn, stack.copy());
+            AircraftEntity plane = AircraftEntity.createAutonomous(level, spawn, stack.copy(), target);
             if (plane != null) {
                 level.addFreshEntity(plane);
             }

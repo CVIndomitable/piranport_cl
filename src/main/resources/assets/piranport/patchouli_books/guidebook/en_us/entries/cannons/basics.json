@@ -12,6 +12,16 @@
       "type": "patchouli:crafting",
       "recipe": "piranport:small_gun",
       "text": "piranport.book.cannons.basics.craft"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "piranport:medium_gun",
+      "text": "piranport.book.cannons.basics.medium"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "piranport:large_gun",
+      "text": "piranport.book.cannons.basics.large"
     }
   ]
 }

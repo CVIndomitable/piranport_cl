@@ -7,6 +7,10 @@
     {
       "type": "patchouli:text",
       "text": "piranport.book.cooking.crops.p1"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "piranport.book.cooking.crops.p2"
     }
   ]
 }

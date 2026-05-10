@@ -30,25 +30,51 @@ public class ModCreativeTabs {
                         output.accept(ModItems.FUEL.get());
                     }).build());
 
-    // ===== 炮雷 — 火炮 / 鱼雷发射器 =====
-    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> CANNON_TORPEDO_TAB =
-            CREATIVE_TABS.register("cannon_torpedo_tab", () -> CreativeModeTab.builder()
-                    .title(Component.translatable("itemGroup.piranport.cannon_torpedo"))
+    // ===== 武器 — 火炮 / 鱼雷发射器 / 导弹发射器（空武器和满装填武器混合）=====
+    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> WEAPONS_TAB =
+            CREATIVE_TABS.register("weapons_tab", () -> CreativeModeTab.builder()
+                    .title(Component.translatable("itemGroup.piranport.weapons"))
                     .withTabsBefore(CreativeModeTabs.COMBAT)
                     .icon(() -> ModItems.MEDIUM_GUN.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
-                        // Guns
+                        // Guns (empty + loaded)
                         output.accept(ModItems.SINGLE_SMALL_GUN.get());
+                        addPreloadedWeapon(output, ModItems.SINGLE_SMALL_GUN.get(), "piranport:small_he_shell", 1);
                         output.accept(ModItems.SMALL_GUN.get());
+                        addPreloadedWeapon(output, ModItems.SMALL_GUN.get(), "piranport:small_he_shell", 2);
                         output.accept(ModItems.MEDIUM_GUN.get());
+                        addPreloadedWeapon(output, ModItems.MEDIUM_GUN.get(), "piranport:medium_he_shell", 2);
                         output.accept(ModItems.LARGE_GUN.get());
-                        // Torpedo Launchers
+                        addPreloadedWeapon(output, ModItems.LARGE_GUN.get(), "piranport:large_he_shell", 3);
+
+                        // Torpedo Launchers (empty + loaded)
                         output.accept(ModItems.TWIN_TORPEDO_LAUNCHER.get());
+                        addPreloadedWeapon(output, ModItems.TWIN_TORPEDO_LAUNCHER.get(), "piranport:torpedo_533mm_g7a", 2);
+                        addPreloadedWeapon(output, ModItems.TWIN_TORPEDO_LAUNCHER.get(), "piranport:magnetic_torpedo_533mm_g7a", 2);
                         output.accept(ModItems.TRIPLE_TORPEDO_LAUNCHER.get());
+                        addPreloadedWeapon(output, ModItems.TRIPLE_TORPEDO_LAUNCHER.get(), "piranport:torpedo_533mm_g7a", 3);
+                        addPreloadedWeapon(output, ModItems.TRIPLE_TORPEDO_LAUNCHER.get(), "piranport:acoustic_torpedo_533mm_g7e", 3);
                         output.accept(ModItems.QUAD_TORPEDO_LAUNCHER.get());
+                        addPreloadedWeapon(output, ModItems.QUAD_TORPEDO_LAUNCHER.get(), "piranport:torpedo_610mm_type93_mk3", 4);
+
+                        // Depth Charge Launchers (empty + loaded)
                         output.accept(ModItems.DEPTH_CHARGE_LAUNCHER.get());
+                        addPreloadedWeapon(output, ModItems.DEPTH_CHARGE_LAUNCHER.get(), "piranport:depth_charge", 1);
                         output.accept(ModItems.DEPTH_CHARGE_LAUNCHER_IMPROVED.get());
+                        addPreloadedWeapon(output, ModItems.DEPTH_CHARGE_LAUNCHER_IMPROVED.get(), "piranport:depth_charge", 2);
                         output.accept(ModItems.DEPTH_CHARGE_LAUNCHER_ADVANCED.get());
+                        addPreloadedWeapon(output, ModItems.DEPTH_CHARGE_LAUNCHER_ADVANCED.get(), "piranport:depth_charge", 3);
+
+                        // Missile Launchers (empty + loaded)
+                        output.accept(ModItems.SY1_LAUNCHER.get());
+                        addPreloadedWeapon(output, ModItems.SY1_LAUNCHER.get(), "piranport:sy1_missile", 4);
+                        output.accept(ModItems.MK14_HARPOON_LAUNCHER.get());
+                        addPreloadedWeapon(output, ModItems.MK14_HARPOON_LAUNCHER.get(), "piranport:harpoon_missile", 4);
+                        output.accept(ModItems.TERRIER_LAUNCHER.get());
+                        output.accept(ModItems.SHIP_ROCKET_LAUNCHER.get());
+                        addPreloadedWeapon(output, ModItems.SHIP_ROCKET_LAUNCHER.get(), "piranport:rocket_ammo", 8);
+                        output.accept(ModItems.SEA_DART_LAUNCHER.get());
+                        output.accept(ModItems.SEACAT_LAUNCHER.get());
                     }).build());
 
     // ===== 航空 — 飞机编队 =====
@@ -94,21 +120,6 @@ public class ModCreativeTabs {
                         output.accept(ModItems.TYPE0_RECON.get());
                         output.accept(ModItems.C1_RECON.get());
                         output.accept(ModItems.SAIUN_RECON.get());
-                    }).build());
-
-    // ===== 导弹 — 导弹发射器 =====
-    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> MISSILE_TAB =
-            CREATIVE_TABS.register("missile_tab", () -> CreativeModeTab.builder()
-                    .title(Component.translatable("itemGroup.piranport.missile"))
-                    .withTabsBefore(CreativeModeTabs.COMBAT)
-                    .icon(() -> ModItems.SY1_LAUNCHER.get().getDefaultInstance())
-                    .displayItems((parameters, output) -> {
-                        output.accept(ModItems.SY1_LAUNCHER.get());
-                        output.accept(ModItems.MK14_HARPOON_LAUNCHER.get());
-                        output.accept(ModItems.TERRIER_LAUNCHER.get());
-                        output.accept(ModItems.SHIP_ROCKET_LAUNCHER.get());
-                        output.accept(ModItems.SEA_DART_LAUNCHER.get());
-                        output.accept(ModItems.SEACAT_LAUNCHER.get());
                     }).build());
 
     // ===== 强化 — 装甲 / 声纳 / 动力 / 皮肤 =====
@@ -158,13 +169,18 @@ public class ModCreativeTabs {
                         output.accept(ModItems.QUICKLIME.get());
                     }).build());
 
-    // ===== 舰娘食物 — 对照 7.1 食物表汇总所有食材/调料/中间品/菜品/作物产出 =====
-    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> SHIPGIRL_FOOD_TAB =
-            CREATIVE_TABS.register("shipgirl_food_tab", () -> CreativeModeTab.builder()
-                    .title(Component.translatable("itemGroup.piranport.shipgirl_food"))
+    // ===== 食物 — 种子/作物/食材/调料/中间品/菜品/加工站（合并原"舰娘食物"和"厨房"）=====
+    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> FOOD_TAB =
+            CREATIVE_TABS.register("food_tab", () -> CreativeModeTab.builder()
+                    .title(Component.translatable("itemGroup.piranport.food"))
                     .withTabsBefore(CreativeModeTabs.COMBAT)
                     .icon(() -> ModItems.TOAST_BREAD.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
+                        // --- 加工站 ---
+                        output.accept(ModItems.STONE_MILL.get());
+                        output.accept(ModItems.CUTTING_BOARD.get());
+                        output.accept(ModItems.COOKING_POT.get());
+                        output.accept(ModItems.YUBARI_WATER_BUCKET.get());
                         // --- 种子 ---
                         output.accept(ModItems.TOMATO_SEEDS.get());
                         output.accept(ModItems.SOYBEAN_SEEDS.get());
@@ -328,104 +344,6 @@ public class ModCreativeTabs {
                         output.accept(ModItems.TORPEDO_JUICE.get());
                     }).build());
 
-    // ===== 厨房 — 加工站 / 食材 / 中间品 / 食物 =====
-    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> KITCHEN_TAB =
-            CREATIVE_TABS.register("kitchen_tab", () -> CreativeModeTab.builder()
-                    .title(Component.translatable("itemGroup.piranport.kitchen"))
-                    .withTabsBefore(CreativeModeTabs.COMBAT)
-                    .icon(() -> ModItems.TOAST_BREAD.get().getDefaultInstance())
-                    .displayItems((parameters, output) -> {
-                        // Processing Blocks
-                        output.accept(ModItems.STONE_MILL.get());
-                        output.accept(ModItems.CUTTING_BOARD.get());
-                        output.accept(ModItems.COOKING_POT.get());
-                        output.accept(ModItems.YUBARI_WATER_BUCKET.get());
-                        // Food Ingredients
-                        output.accept(ModItems.FLOUR.get());
-                        output.accept(ModItems.RICE_FLOUR.get());
-                        output.accept(ModItems.CHILI_POWDER.get());
-                        output.accept(ModItems.PORK_PASTE.get());
-                        output.accept(ModItems.EDIBLE_OIL.get());
-                        output.accept(ModItems.BUTTER.get());
-                        output.accept(ModItems.CREAM.get());
-                        output.accept(ModItems.SOYBEAN_MILK.get());
-                        output.accept(ModItems.TOFU.get());
-                        output.accept(ModItems.CHEESE.get());
-                        output.accept(ModItems.YEAST.get());
-                        output.accept(ModItems.SOY_SAUCE.get());
-                        output.accept(ModItems.VINEGAR.get());
-                        output.accept(ModItems.COOKING_WINE.get());
-                        output.accept(ModItems.MISO.get());
-                        output.accept(ModItems.BRINE.get());
-                        output.accept(ModItems.PIE_CRUST.get());
-                        output.accept(ModItems.RAW_PASTA.get());
-                        output.accept(ModItems.FERMENTED_FISH.get());
-                        output.accept(ModItems.PIZZA_BASE.get());
-                        // Intermediate Products
-                        output.accept(ModItems.SAUSAGE.get());
-                        output.accept(ModItems.SLICED_SAUSAGE.get());
-                        output.accept(ModItems.BACON.get());
-                        output.accept(ModItems.TOAST_BREAD_SLICES.get());
-                        output.accept(ModItems.BEER.get());
-                        output.accept(ModItems.ROUND_BUN.get());
-                        // Food Items
-                        output.accept(ModItems.TOAST_BREAD.get());
-                        output.accept(ModItems.NAVAL_BAKED_BEANS.get());
-                        output.accept(ModItems.LATIAO.get());
-                        output.accept(ModItems.MAPO_TOFU.get());
-                        output.accept(ModItems.NAVAL_CURRY.get());
-                        output.accept(ModItems.FRIED_FISH_AND_CHIPS.get());
-                        output.accept(ModItems.SCONE.get());
-                        output.accept(ModItems.APPLE_PIE.get());
-                        output.accept(ModItems.ASSORTED_CHAR_SIU_FRIED_RICE.get());
-                        output.accept(ModItems.SALTED_EGG_TOFU.get());
-                        output.accept(ModItems.SURSTROMMING.get());
-                        output.accept(ModItems.AMERICAN_BURGER.get());
-                        output.accept(ModItems.HOTDOG.get());
-                        output.accept(ModItems.PASTA.get());
-                        output.accept(ModItems.COOKED_RICE.get());
-                        output.accept(ModItems.BEET_BLOSSOM.get());
-                        output.accept(ModItems.MISO_SOUP.get());
-                        output.accept(ModItems.PINEAPPLE_JUICE.get());
-                        output.accept(ModItems.BARBECUE.get());
-                        output.accept(ModItems.BLACK_FOREST_GATEAU.get());
-                        output.accept(ModItems.BLACK_TEA_SANDWICH.get());
-                        output.accept(ModItems.BLACK_TEA_SCONE.get());
-                        output.accept(ModItems.BORSCHT.get());
-                        output.accept(ModItems.BOUILLABAISSE.get());
-                        output.accept(ModItems.DELUXE_BAOZI.get());
-                        output.accept(ModItems.DONGPO_PORK.get());
-                        output.accept(ModItems.DOUBLE_SHELL_AMERICAN_BURGER.get());
-                        output.accept(ModItems.EGGS_BENEDICT.get());
-                        output.accept(ModItems.FRIED_FISH_MISO_SOUP.get());
-                        output.accept(ModItems.MACARON.get());
-                        output.accept(ModItems.MUSSOLINIS_OO.get());
-                        output.accept(ModItems.NEW_RYE_BREAD.get());
-                        output.accept(ModItems.SCHWEINSHAXE.get());
-                        output.accept(ModItems.SALAMI_PIZZA.get());
-                        output.accept(ModItems.RYE_BREAD.get());
-                        output.accept(ModItems.OKROSHKA.get());
-                        output.accept(ModItems.PEA_SOUP_WITH_RYE_BREAD.get());
-                        output.accept(ModItems.ROYAL_NAVAL_SALTED_BEEF.get());
-                        output.accept(ModItems.RUSSIAN_DUMPLING.get());
-                        output.accept(ModItems.SOBA_NOODLE.get());
-                        output.accept(ModItems.TANGYUAN.get());
-                        output.accept(ModItems.TARTE_TATIN.get());
-                        output.accept(ModItems.TEMPURA_SOBA_NOODLE.get());
-                        output.accept(ModItems.THURINGER_ROSTBRATWURST_UND_BIER.get());
-                        output.accept(ModItems.THURINGER_ROSTBRATWURST.get());
-                        output.accept(ModItems.TRIPLE_SHELL_AMERICAN_BURGER.get());
-                        output.accept(ModItems.VENICE_CUTTLEFISH_NOODLES.get());
-                        output.accept(ModItems.WEISSWURST_MIT_DER_BAGEL.get());
-                        output.accept(ModItems.YOKAN.get());
-                        output.accept(ModItems.YORKSHIRE_PUDDING.get());
-                        // Buff Foods
-                        output.accept(ModItems.CHICKEN_TATSUTA.get());
-                        output.accept(ModItems.TORPEDO_JUICE.get());
-                        output.accept(ModItems.TEMPURA.get());
-                        output.accept(ModItems.KVASS.get());
-                    }).build());
-
     // ===== 弹药 — 炮弹 / 鱼雷弹药 / 航空弹药 =====
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> AMMO_TAB =
             CREATIVE_TABS.register("ammo_tab", () -> CreativeModeTab.builder()
@@ -514,17 +432,6 @@ public class ModCreativeTabs {
                         output.accept(ModItems.HATSUYUKI_MAIN_GUN.get());
                         // Gungnir
                         output.accept(ModItems.GUNGNIR.get());
-                        // Deep Ocean Spawn Eggs
-                        output.accept(ModItems.DEEP_OCEAN_SUPPLY_SPAWN_EGG.get());
-                        output.accept(ModItems.DEEP_OCEAN_DESTROYER_SPAWN_EGG.get());
-                        output.accept(ModItems.DEEP_OCEAN_LIGHT_CRUISER_SPAWN_EGG.get());
-                        output.accept(ModItems.DEEP_OCEAN_HEAVY_CRUISER_SPAWN_EGG.get());
-                        output.accept(ModItems.DEEP_OCEAN_BATTLE_CRUISER_SPAWN_EGG.get());
-                        output.accept(ModItems.DEEP_OCEAN_BATTLESHIP_SPAWN_EGG.get());
-                        output.accept(ModItems.DEEP_OCEAN_LIGHT_CARRIER_SPAWN_EGG.get());
-                        output.accept(ModItems.DEEP_OCEAN_CARRIER_SPAWN_EGG.get());
-                        output.accept(ModItems.DEEP_OCEAN_SUBMARINE_SPAWN_EGG.get());
-                        output.accept(ModItems.SHIP_GIRL_SPAWN_EGG.get());
                     }).build());
 
     // ===== 设施 — 装填设施 / 合成台 / 蓝图 =====
@@ -591,42 +498,24 @@ public class ModCreativeTabs {
                         output.accept(ModItems.FLAG_C.get());
                     }).build());
 
-    // ===== 测试武器 — 预装填武器（便于测试）=====
-    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> TEST_WEAPONS_TAB =
-            CREATIVE_TABS.register("test_weapons_tab", () -> CreativeModeTab.builder()
-                    .title(Component.translatable("itemGroup.piranport.test_weapons"))
+    // ===== 刷怪蛋 — 所有刷怪蛋 =====
+    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> SPAWN_EGGS_TAB =
+            CREATIVE_TABS.register("spawn_eggs_tab", () -> CreativeModeTab.builder()
+                    .title(Component.translatable("itemGroup.piranport.spawn_eggs"))
                     .withTabsBefore(CreativeModeTabs.COMBAT)
-                    .icon(() -> {
-                        ItemStack icon = ModItems.TRIPLE_TORPEDO_LAUNCHER.get().getDefaultInstance();
-                        icon.set(ModDataComponents.LOADED_AMMO.get(),
-                                new LoadedAmmo(3, "piranport:torpedo_533mm_g7a"));
-                        return icon;
-                    })
+                    .icon(() -> ModItems.SHIP_GIRL_SPAWN_EGG.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
-                        // 预装填火炮
-                        addPreloadedWeapon(output, ModItems.SINGLE_SMALL_GUN.get(), "piranport:small_he_shell", 1);
-                        addPreloadedWeapon(output, ModItems.SMALL_GUN.get(), "piranport:small_he_shell", 2);
-                        addPreloadedWeapon(output, ModItems.MEDIUM_GUN.get(), "piranport:medium_he_shell", 2);
-                        addPreloadedWeapon(output, ModItems.LARGE_GUN.get(), "piranport:large_he_shell", 3);
-
-                        // 预装填鱼雷发射器（533mm系列）
-                        addPreloadedWeapon(output, ModItems.TWIN_TORPEDO_LAUNCHER.get(), "piranport:torpedo_533mm_g7a", 2);
-                        addPreloadedWeapon(output, ModItems.TRIPLE_TORPEDO_LAUNCHER.get(), "piranport:torpedo_533mm_g7a", 3);
-                        addPreloadedWeapon(output, ModItems.TWIN_TORPEDO_LAUNCHER.get(), "piranport:magnetic_torpedo_533mm_g7a", 2);
-                        addPreloadedWeapon(output, ModItems.TRIPLE_TORPEDO_LAUNCHER.get(), "piranport:acoustic_torpedo_533mm_g7e", 3);
-
-                        // 预装填鱼雷发射器（610mm系列）
-                        addPreloadedWeapon(output, ModItems.QUAD_TORPEDO_LAUNCHER.get(), "piranport:torpedo_610mm_type93_mk3", 4);
-
-                        // 预装填深水炸弹发射器
-                        addPreloadedWeapon(output, ModItems.DEPTH_CHARGE_LAUNCHER.get(), "piranport:depth_charge", 1);
-                        addPreloadedWeapon(output, ModItems.DEPTH_CHARGE_LAUNCHER_IMPROVED.get(), "piranport:depth_charge", 2);
-                        addPreloadedWeapon(output, ModItems.DEPTH_CHARGE_LAUNCHER_ADVANCED.get(), "piranport:depth_charge", 3);
-
-                        // 预装填导弹发射器（手动装填型）
-                        addPreloadedWeapon(output, ModItems.SY1_LAUNCHER.get(), "piranport:sy1_missile", 4);
-                        addPreloadedWeapon(output, ModItems.MK14_HARPOON_LAUNCHER.get(), "piranport:harpoon_missile", 4);
-                        addPreloadedWeapon(output, ModItems.SHIP_ROCKET_LAUNCHER.get(), "piranport:rocket_ammo", 8);
+                        // Deep Ocean Spawn Eggs
+                        output.accept(ModItems.DEEP_OCEAN_SUPPLY_SPAWN_EGG.get());
+                        output.accept(ModItems.DEEP_OCEAN_DESTROYER_SPAWN_EGG.get());
+                        output.accept(ModItems.DEEP_OCEAN_LIGHT_CRUISER_SPAWN_EGG.get());
+                        output.accept(ModItems.DEEP_OCEAN_HEAVY_CRUISER_SPAWN_EGG.get());
+                        output.accept(ModItems.DEEP_OCEAN_BATTLE_CRUISER_SPAWN_EGG.get());
+                        output.accept(ModItems.DEEP_OCEAN_BATTLESHIP_SPAWN_EGG.get());
+                        output.accept(ModItems.DEEP_OCEAN_LIGHT_CARRIER_SPAWN_EGG.get());
+                        output.accept(ModItems.DEEP_OCEAN_CARRIER_SPAWN_EGG.get());
+                        output.accept(ModItems.DEEP_OCEAN_SUBMARINE_SPAWN_EGG.get());
+                        output.accept(ModItems.SHIP_GIRL_SPAWN_EGG.get());
                     }).build());
 
     private static void addPreloadedWeapon(CreativeModeTab.Output output, Item weapon, String ammoId, int count) {

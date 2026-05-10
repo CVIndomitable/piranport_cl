@@ -20,7 +20,7 @@
 ## Version Roadmap
 
 完整版本列表与每版核心内容见 **`../docs/皮兰港 版本路线图.md`**。
-- **当前版本**: v1.1.2-dev (测试版)
+- **当前版本**: v1.1.4-dev (测试版)
 - **稳定版本**: v1.0.0 (main 分支，仅修 bug)
 - **开发策略**: main = 稳定版，dev = 测试版新玩法
 
@@ -97,7 +97,7 @@
 mod_id=piranport
 mod_name=Piran Port
 mod_license=All Rights Reserved
-mod_version=1.1.2-dev
+mod_version=1.1.4-dev
 mod_group_id=com.piranport
 mod_authors=PiranPort Dev Team
 mod_description=Minecraft mod based on Warship Girls R

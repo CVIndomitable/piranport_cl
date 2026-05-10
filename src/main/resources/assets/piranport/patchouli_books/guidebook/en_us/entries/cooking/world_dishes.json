@@ -11,6 +11,46 @@
     {
       "type": "patchouli:text",
       "text": "piranport.book.cooking.world_dishes.p2"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "piranport:american_burger",
+      "text": "piranport.book.cooking.world_dishes.burger_craft"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "piranport:embryo_of_apple_pie",
+      "text": "piranport.book.cooking.world_dishes.apple_pie_embryo"
+    },
+    {
+      "type": "patchouli:campfire_cooking",
+      "recipe": "piranport:campfire_cooking_apple_pie",
+      "text": "piranport.book.cooking.world_dishes.apple_pie_cook"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "piranport:embryo_of_salami_pizza",
+      "text": "piranport.book.cooking.world_dishes.pizza_embryo"
+    },
+    {
+      "type": "patchouli:campfire_cooking",
+      "recipe": "piranport:campfire_cooking_salami_pizza",
+      "text": "piranport.book.cooking.world_dishes.pizza_cook"
+    },
+    {
+      "type": "patchouli:campfire_cooking",
+      "recipe": "piranport:campfire_cooking_cooked_rice",
+      "text": "piranport.book.cooking.world_dishes.rice_cook"
+    },
+    {
+      "type": "patchouli:campfire_cooking",
+      "recipe": "piranport:campfire_cooking_pasta",
+      "text": "piranport.book.cooking.world_dishes.pasta_cook"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "piranport:rye_bread",
+      "text": "piranport.book.cooking.world_dishes.rye_bread_craft"
     }
   ]
 }

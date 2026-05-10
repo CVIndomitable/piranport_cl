@@ -32,10 +32,9 @@ public class CannonHandler implements WeaponHandler {
         Player owner = AmmoConsumer.ownerPlayer(maid);
         if (owner == null) return false;
         int need = Math.max(1, c.getBarrelCount());
-        int have = 0;
-        for (Item shell : shellsFor(c.getDamage())) {
-            have += AmmoConsumer.count(owner, s -> !s.isEmpty() && s.is(shell));
-            if (have >= need) return true;
+        Item preferred = AmmoConsumer.getPreferredAmmo(owner, shellsFor(c.getDamage()));
+        if (preferred != null) {
+            return AmmoConsumer.hasItem(owner, preferred, need) || AmmoConsumer.isFreebie(owner);
         }
         return AmmoConsumer.isFreebie(owner);
     }
@@ -45,7 +44,21 @@ public class CannonHandler implements WeaponHandler {
         if (!(stack.getItem() instanceof CannonItem cannon)) return;
         Player owner = AmmoConsumer.ownerPlayer(maid);
         int barrels = Math.max(1, cannon.getBarrelCount());
-        int loaded = consumeShells(owner, cannon.getDamage(), barrels);
+
+        // Try to use player's preferred ammo type first
+        List<Item> candidates = shellsFor(cannon.getDamage());
+        Item preferred = AmmoConsumer.getPreferredAmmo(owner, candidates);
+        int loaded = 0;
+
+        if (preferred != null) {
+            loaded = AmmoConsumer.consumeItem(owner, preferred, barrels);
+        }
+
+        // If preferred ammo not enough, fall back to any available type
+        if (loaded < barrels) {
+            loaded += consumeShells(owner, cannon.getDamage(), barrels - loaded);
+        }
+
         if (loaded <= 0) return;
 
         Level level = maid.level();

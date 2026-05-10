@@ -6,6 +6,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
+import java.util.List;
 import java.util.function.Predicate;
 
 public final class AmmoConsumer {
@@ -58,5 +59,32 @@ public final class AmmoConsumer {
 
     public static int consumeItem(Player player, Item item, int amount) {
         return consume(player, s -> !s.isEmpty() && s.is(item), amount);
+    }
+
+    /**
+     * Get player's preferred ammo type from a list of candidates.
+     * Priority: offhand item > first available item in list.
+     * Returns null if player has none of the candidate ammo types.
+     */
+    public static Item getPreferredAmmo(Player player, List<Item> candidates) {
+        if (player == null || candidates.isEmpty()) return null;
+
+        // Check offhand first - if player is holding ammo, use that type
+        ItemStack offhand = player.getOffhandItem();
+        if (!offhand.isEmpty()) {
+            Item offhandItem = offhand.getItem();
+            if (candidates.contains(offhandItem) && hasItem(player, offhandItem, 1)) {
+                return offhandItem;
+            }
+        }
+
+        // Otherwise, return first available ammo type from candidates
+        for (Item candidate : candidates) {
+            if (hasItem(player, candidate, 1)) {
+                return candidate;
+            }
+        }
+
+        return null;
     }
 }

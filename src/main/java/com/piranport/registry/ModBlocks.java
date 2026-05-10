@@ -220,7 +220,6 @@ public class ModBlocks {
             BLOCKS.register("flare_light", () -> new FlareLightBlock(
                     BlockBehaviour.Properties.of()
                             .mapColor(MapColor.NONE)
-                            .noCollission()
                             .noOcclusion()
                             .noLootTable()
                             .replaceable()

@@ -13,13 +13,14 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 /**
- * Flare light block — invisible, no collision, emits light level 14,
+ * Flare light block — invisible, small collision box for selection, emits light level 14,
  * auto-removes after 60 seconds (1200 ticks).
  * Similar to Twilight Forest's moonworm light.
  */
 public class FlareLightBlock extends Block {
 
     private static final int LIFETIME_TICKS = 1200; // 60 seconds
+    private static final VoxelShape SHAPE = Block.box(6, 6, 6, 10, 10, 10);
 
     public FlareLightBlock(Properties properties) {
         super(properties);
@@ -27,7 +28,7 @@ public class FlareLightBlock extends Block {
 
     @Override
     public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext ctx) {
-        return Shapes.empty();
+        return SHAPE;
     }
 
     @Override

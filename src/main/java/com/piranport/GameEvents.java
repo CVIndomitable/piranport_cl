@@ -76,7 +76,7 @@ public class GameEvents {
             }
             if (hasFootball) {
                 player.addEffect(new MobEffectInstance(
-                        com.piranport.registry.ModMobEffects.EXPERIENCE_BOOST, 25, 0, false, false, true));
+                        com.piranport.registry.ModMobEffects.EXPERIENCE_BOOST, 40, 0, false, false, true));
             }
         }
 

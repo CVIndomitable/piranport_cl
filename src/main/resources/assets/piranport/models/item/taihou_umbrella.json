@@ -2,5 +2,13 @@
   "parent": "item/handheld",
   "textures": {
     "layer0": "piranport:item/taihou_umbrella"
-  }
+  },
+  "overrides": [
+    {
+      "predicate": {
+        "blocking": 1
+      },
+      "model": "piranport:item/taihou_umbrella_blocking"
+    }
+  ]
 }

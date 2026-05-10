@@ -45,8 +45,11 @@ public class UmbrellaBlockHandler {
         if (dirToSource.lengthSqr() < 1e-6) return;
         dirToSource = dirToSource.normalize();
 
-        // Check if the source is within the 150-degree cone from above.
-        // dot(dirToSource, UP) = dirToSource.y
+        // Check if the source is within the 150-degree cone from directly above.
+        // The umbrella protects against attacks coming from above (anti-air).
+        // We check the angle between dirToSource and the UP vector (0, 1, 0).
+        // dot(dirToSource, UP) = dirToSource.y = cos(angle)
+        // If angle <= 75° (half of 150°), then cos(angle) >= cos(75°)
         if (dirToSource.y >= COS_HALF_ANGLE) {
             // Block the damage
             event.setCanceled(true);

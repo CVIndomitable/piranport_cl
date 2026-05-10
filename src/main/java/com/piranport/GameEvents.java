@@ -65,8 +65,8 @@ public class GameEvents {
             }
         }
 
-        // Football Superstar Set: experience boost when any piece is worn
-        if (!player.level().isClientSide() && player.tickCount % 20 == 0) {
+        // Football Superstar Set: experience boost when any piece is worn (server only)
+        if (!player.level().isClientSide()) {
             boolean hasFootball = false;
             for (ItemStack armor : player.getArmorSlots()) {
                 if (armor.getItem() instanceof com.piranport.item.FootballArmorItem) {
@@ -76,7 +76,7 @@ public class GameEvents {
             }
             if (hasFootball) {
                 player.addEffect(new MobEffectInstance(
-                        com.piranport.registry.ModMobEffects.EXPERIENCE_BOOST, 40, 0, false, false, true));
+                        com.piranport.registry.ModMobEffects.EXPERIENCE_BOOST, 25, 0, false, false, true));
             }
         }
 

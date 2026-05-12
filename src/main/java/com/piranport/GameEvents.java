@@ -129,7 +129,8 @@ public class GameEvents {
 
         // 水面行走：脚踩水但眼睛未入水时，取消下沉速度（潜艇核心不适用）
         // 水中摩擦力比陆地低，保留滑行惯性，模拟舰船水面移动手感
-        if (!isSubmarine && player.isInWater()
+        if (!player.level().isClientSide()
+                && !isSubmarine && player.isInWater()
                 && !player.isEyeInFluidType(NeoForgeMod.WATER_TYPE.value())) {
             Vec3 vel = player.getDeltaMovement();
             if (vel.y < 0) {
@@ -501,6 +502,7 @@ public class GameEvents {
     public static void onPlayerDeath(LivingDeathEvent event) {
         if (event.getEntity().level().isClientSide()) return;
         if (!(event.getEntity() instanceof Player player)) return;
+        if (event.isCanceled()) return;
         recallAircraftForPlayer(player);
     }
 
@@ -652,7 +654,7 @@ public class GameEvents {
 
         // Dungeon instance leak sweep every 12000 ticks (10 minutes):
         // promotes pending freed indices and auto-cleans stale SUSPENDED instances.
-        if (event.getServer().getTickCount() % 12000 == 0) {
+        if (event.getServer().getTickCount() % 12000 == 0 && dungeonLevel != null) {
             com.piranport.dungeon.instance.DungeonInstanceManager.get(event.getServer().overworld())
                     .sweepLeaks(dungeonLevel);
         }
@@ -734,7 +736,9 @@ public class GameEvents {
                             portalPos.getX() + 0.5,
                             com.piranport.dungeon.DungeonConstants.SPAWN_Y,
                             portalPos.getZ() + 0.5);
-            sl.addFreshEntity(portal);
+            if (portal != null) {
+                sl.addFreshEntity(portal);
+            }
 
             // Notify players
             for (java.util.UUID playerUuid : instance.getPlayerUuids()) {

@@ -1,7 +1,7 @@
 package com.piranport.compat.maid.task;
 
 import com.github.tartaricacid.touhoulittlemaid.api.task.IRangedAttackTask;
-import com.github.tartaricacid.touhoulittlemaid.entity.ai.brain.task.MaidRangedWalkToTarget;
+import com.piranport.compat.maid.brain.RiggingMovementTask;
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import com.google.common.collect.Lists;
 import com.mojang.datafixers.util.Pair;
@@ -78,7 +78,7 @@ public class TaskMaidRigging implements IRangedAttackTask {
                 TaskMaidRigging::findTarget);
         BehaviorControl<EntityMaid> stopAttack = StopAttackingIfTargetInvalid.create(
                 target -> !hasOffensiveWeapon(maid) || farAway(target, maid) || fireControlOverridden(maid, target));
-        BehaviorControl<EntityMaid> walkToTarget = MaidRangedWalkToTarget.create(0.6f);
+        BehaviorControl<EntityMaid> walkToTarget = new RiggingMovementTask();
         BehaviorControl<EntityMaid> shoot = new RiggingShootTask();
 
         return Lists.newArrayList(

@@ -894,7 +894,9 @@ public class AircraftEntity extends Entity {
         double climbY = target.getY() + 18.0;
 
         // Phase 1: Climb — ascend above the target until altitude reached or timeout
-        if (!diveCommitted && getY() < climbY - 1.0 && stateTicks < 80) {
+        double heightDiff = Math.max(0, climbY - getY());
+        int climbTimeout = Math.max(80, (int)Math.ceil(heightDiff / (panelSpeed * 0.4)));
+        if (!diveCommitted && getY() < climbY - 1.0 && stateTicks < climbTimeout) {
             Vec3 toClimb = new Vec3(target.getX() - getX(), climbY - getY(), target.getZ() - getZ());
             double dist = toClimb.length();
             setDeltaMovement(toClimb.normalize().scale(Math.min(panelSpeed * 0.4, dist)));
@@ -926,6 +928,7 @@ public class AircraftEntity extends Entity {
             bomb.setSourceAircraft(this);
             level().addFreshEntity(bomb);
             hasFired = true;
+            remainingAmmo--;
             startReturning("dive_bomb_dropped");
             return;
         }

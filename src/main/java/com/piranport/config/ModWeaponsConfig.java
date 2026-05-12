@@ -51,6 +51,12 @@ public class ModWeaponsConfig {
     public static final ModConfigSpec.DoubleValue TRIPLE_LARGE_GUN_VELOCITY;
     public static final ModConfigSpec.DoubleValue TRIPLE_LARGE_GUN_INACCURACY;
 
+    // ==================== 四联装大口径炮 ====================
+    public static final ModConfigSpec.DoubleValue QUAD_LARGE_GUN_DAMAGE;
+    public static final ModConfigSpec.IntValue QUAD_LARGE_GUN_COOLDOWN;
+    public static final ModConfigSpec.DoubleValue QUAD_LARGE_GUN_VELOCITY;
+    public static final ModConfigSpec.DoubleValue QUAD_LARGE_GUN_INACCURACY;
+
     static {
         // ==================== 单装小口径炮 ====================
         BUILDER.push("cannon");
@@ -100,11 +106,11 @@ public class ModWeaponsConfig {
 
         MEDIUM_GUN_DAMAGE = BUILDER
             .comment("Damage per shell (每发炮弹伤害)")
-            .defineInRange("damage", 10.0, 0.1, 1000.0);
+            .defineInRange("damage", 12.0, 0.1, 1000.0);
 
         MEDIUM_GUN_COOLDOWN = BUILDER
             .comment("Cooldown in ticks (20 ticks = 1 second) (冷却时间，20 tick = 1秒)")
-            .defineInRange("cooldown_ticks", 40, 1, 6000);
+            .defineInRange("cooldown_ticks", 50, 1, 6000);
 
         MEDIUM_GUN_VELOCITY = BUILDER
             .comment("Projectile velocity (弹丸速度)")
@@ -121,11 +127,11 @@ public class ModWeaponsConfig {
 
         TWIN_MEDIUM_GUN_DAMAGE = BUILDER
             .comment("Damage per shell (每发炮弹伤害)")
-            .defineInRange("damage", 10.0, 0.1, 1000.0);
+            .defineInRange("damage", 12.0, 0.1, 1000.0);
 
         TWIN_MEDIUM_GUN_COOLDOWN = BUILDER
             .comment("Cooldown in ticks (20 ticks = 1 second) (冷却时间，20 tick = 1秒)")
-            .defineInRange("cooldown_ticks", 40, 1, 6000);
+            .defineInRange("cooldown_ticks", 50, 1, 6000);
 
         TWIN_MEDIUM_GUN_VELOCITY = BUILDER
             .comment("Projectile velocity (弹丸速度)")
@@ -163,11 +169,11 @@ public class ModWeaponsConfig {
 
         TWIN_LARGE_GUN_DAMAGE = BUILDER
             .comment("Damage per shell (每发炮弹伤害)")
-            .defineInRange("damage", 15.0, 0.1, 1000.0);
+            .defineInRange("damage", 20.0, 0.1, 1000.0);
 
         TWIN_LARGE_GUN_COOLDOWN = BUILDER
             .comment("Cooldown in ticks (20 ticks = 1 second) (冷却时间，20 tick = 1秒)")
-            .defineInRange("cooldown_ticks", 60, 1, 6000);
+            .defineInRange("cooldown_ticks", 80, 1, 6000);
 
         TWIN_LARGE_GUN_VELOCITY = BUILDER
             .comment("Projectile velocity (弹丸速度)")
@@ -184,17 +190,39 @@ public class ModWeaponsConfig {
 
         TRIPLE_LARGE_GUN_DAMAGE = BUILDER
             .comment("Damage per shell (每发炮弹伤害)")
-            .defineInRange("damage", 15.0, 0.1, 1000.0);
+            .defineInRange("damage", 20.0, 0.1, 1000.0);
 
         TRIPLE_LARGE_GUN_COOLDOWN = BUILDER
             .comment("Cooldown in ticks (20 ticks = 1 second) (冷却时间，20 tick = 1秒)")
-            .defineInRange("cooldown_ticks", 60, 1, 6000);
+            .defineInRange("cooldown_ticks", 80, 1, 6000);
 
         TRIPLE_LARGE_GUN_VELOCITY = BUILDER
             .comment("Projectile velocity (弹丸速度)")
             .defineInRange("velocity", 4.0, 0.1, 10.0);
 
         TRIPLE_LARGE_GUN_INACCURACY = BUILDER
+            .comment("Firing inaccuracy (射击精度偏差)")
+            .defineInRange("inaccuracy", 0.5, 0.0, 10.0);
+
+        BUILDER.pop();
+        BUILDER.pop();
+
+        // ==================== 四联装大口径炮 ====================
+        BUILDER.push("quad_large_gun");
+
+        QUAD_LARGE_GUN_DAMAGE = BUILDER
+            .comment("Damage per shell (每发炮弹伤害)")
+            .defineInRange("damage", 20.0, 0.1, 1000.0);
+
+        QUAD_LARGE_GUN_COOLDOWN = BUILDER
+            .comment("Cooldown in ticks (20 ticks = 1 second) (冷却时间，20 tick = 1秒)")
+            .defineInRange("cooldown_ticks", 60, 1, 6000);
+
+        QUAD_LARGE_GUN_VELOCITY = BUILDER
+            .comment("Projectile velocity (弹丸速度)")
+            .defineInRange("velocity", 4.0, 0.1, 10.0);
+
+        QUAD_LARGE_GUN_INACCURACY = BUILDER
             .comment("Firing inaccuracy (射击精度偏差)")
             .defineInRange("inaccuracy", 0.5, 0.0, 10.0);
 

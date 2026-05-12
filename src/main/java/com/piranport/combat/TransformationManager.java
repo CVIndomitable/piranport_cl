@@ -101,6 +101,9 @@ public class TransformationManager {
             weaponSlots = items.size();
         }
 
+        // Guard against zero-division in the % operator below
+        if (weaponSlots <= 0) weaponSlots = 1;
+
         int current = Math.min(getWeaponIndex(mainHand), weaponSlots - 1);
         int next = -1;
         for (int i = 1; i <= weaponSlots; i++) {
@@ -394,12 +397,12 @@ public class TransformationManager {
             player.addEffect(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, duration, 2, false, false, true));
             player.addEffect(new MobEffectInstance(MobEffects.POISON, duration, 1, false, false, true));
             player.removeEffect(MobEffects.WEAKNESS);
-        } else if (cost < -50) {
+        } else if (cost <= -50) {
             // Mining Fatigue III + Weakness II
             player.addEffect(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, duration, 2, false, false, true));
             player.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, duration, 1, false, false, true));
             player.removeEffect(MobEffects.POISON);
-        } else if (cost < -20) {
+        } else if (cost <= -20) {
             // Mining Fatigue I + Weakness I
             player.addEffect(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, duration, 0, false, false, true));
             player.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, duration, 0, false, false, true));

@@ -1,0 +1,6 @@
+{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "piranport:block/abyss_red_spider_lily"
+  }
+}

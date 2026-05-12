@@ -72,7 +72,7 @@ public class RailgunProjectileEntity extends ThrowableItemProjectile {
         if (!(owner instanceof Player player)) return;
         Component weaponName = Component.translatable("item.piranport.mysterious_weapon");
         String key = target.isAlive() ? "message.piranport.weapon_hit" : "message.piranport.weapon_kill";
-        player.sendSystemMessage(Component.translatable(key, weaponName, target.getDisplayName()));
+        com.piranport.combat.HitNotifier.send(player, Component.translatable(key, weaponName, target.getDisplayName()));
     }
 
     @Override

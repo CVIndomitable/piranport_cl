@@ -8,6 +8,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.player.Player;
+import java.util.UUID;
 import net.minecraft.world.entity.projectile.ThrowableItemProjectile;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -21,7 +22,7 @@ public class AerialBombEntity extends ThrowableItemProjectile {
     private float explosionPower = 2.5f;
     private boolean exploded = false;
     private Component sourceAircraftName;
-    private Entity sourceAircraft;
+    private UUID sourceAircraftUuid;
 
     /** Required by entity type registration. */
     public AerialBombEntity(EntityType<? extends AerialBombEntity> type, Level level) {
@@ -77,7 +78,11 @@ public class AerialBombEntity extends ThrowableItemProjectile {
             target.invulnerableTime = 0;
 
             // Use the aircraft as the direct source if available, otherwise use this bomb
-            Entity directSource = sourceAircraft != null ? sourceAircraft : this;
+            Entity directSource = this;
+            if (sourceAircraftUuid != null && level() instanceof net.minecraft.server.level.ServerLevel sl) {
+                Entity aircraft = sl.getEntity(sourceAircraftUuid);
+                if (aircraft != null) directSource = aircraft;
+            }
             target.hurt(damageSources().thrown(directSource, getOwner()), damage);
 
             Level.ExplosionInteraction interaction = ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get()
@@ -85,8 +90,13 @@ public class AerialBombEntity extends ThrowableItemProjectile {
             level().explode(this, getX(), getY(), getZ(), explosionPower, interaction);
 
             // Explicitly set last hurt by mob to make hostile mobs aggressive
-            if (target instanceof net.minecraft.world.entity.LivingEntity living && getOwner() instanceof net.minecraft.world.entity.LivingEntity owner) {
-                living.setLastHurtByMob(owner);
+            if (target instanceof net.minecraft.world.entity.LivingEntity living) {
+                Entity ownerEntity = getOwner();
+                if (ownerEntity instanceof net.minecraft.world.entity.LivingEntity lo) {
+                    living.setLastHurtByMob(lo);
+                } else if (ownerEntity instanceof AircraftEntity ac && ac.getOwner() instanceof net.minecraft.world.entity.LivingEntity lo) {
+                    living.setLastHurtByMob(lo);
+                }
             }
 
             notifyOwner(target);
@@ -99,7 +109,7 @@ public class AerialBombEntity extends ThrowableItemProjectile {
     }
 
     public void setSourceAircraft(Entity aircraft) {
-        this.sourceAircraft = aircraft;
+        this.sourceAircraftUuid = aircraft.getUUID();
     }
 
     private void notifyOwner(Entity target) {
@@ -107,7 +117,7 @@ public class AerialBombEntity extends ThrowableItemProjectile {
         if (!(owner instanceof Player player)) return;
         Component weaponName = sourceAircraftName != null ? sourceAircraftName : getDefaultItem().getDescription();
         String key = target.isAlive() ? "message.piranport.weapon_hit" : "message.piranport.weapon_kill";
-        player.sendSystemMessage(Component.translatable(key, weaponName, target.getDisplayName()));
+        com.piranport.combat.HitNotifier.send(player, Component.translatable(key, weaponName, target.getDisplayName()));
     }
 
     @Override
@@ -131,6 +141,9 @@ public class AerialBombEntity extends ThrowableItemProjectile {
             tag.putString("SourceAircraftName",
                     Component.Serializer.toJson(sourceAircraftName, registryAccess()));
         }
+        if (sourceAircraftUuid != null) {
+            tag.putUUID("SourceAircraftUUID", sourceAircraftUuid);
+        }
     }
 
     @Override
@@ -146,6 +159,9 @@ public class AerialBombEntity extends ThrowableItemProjectile {
                 com.piranport.PiranPort.LOGGER.warn("Failed to deserialize SourceAircraftName: {}", tag.getString("SourceAircraftName"), e);
                 sourceAircraftName = null;
             }
+        }
+        if (tag.hasUUID("SourceAircraftUUID")) {
+            sourceAircraftUuid = tag.getUUID("SourceAircraftUUID");
         }
     }
 }

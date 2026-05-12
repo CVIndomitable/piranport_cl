@@ -12,6 +12,7 @@ import net.minecraft.world.entity.projectile.ThrowableItemProjectile;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import java.util.UUID;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
 
@@ -19,7 +20,7 @@ public class BulletEntity extends ThrowableItemProjectile {
 
     private float damage = 2f;
     private Component sourceAircraftName;
-    private Entity sourceAircraft;
+    private UUID sourceAircraftUuid;
 
     public BulletEntity(EntityType<? extends BulletEntity> type, Level level) {
         super(type, level);
@@ -61,12 +62,21 @@ public class BulletEntity extends ThrowableItemProjectile {
             Entity target = result.getEntity();
 
             // Use the aircraft as the direct source if available, otherwise use owner
-            Entity directSource = sourceAircraft != null ? sourceAircraft : this;
+            Entity directSource = this;
+            if (sourceAircraftUuid != null && level() instanceof net.minecraft.server.level.ServerLevel sl) {
+                Entity aircraft = sl.getEntity(sourceAircraftUuid);
+                if (aircraft != null) directSource = aircraft;
+            }
             target.hurt(damageSources().thrown(directSource, getOwner()), damage);
 
             // Explicitly set last hurt by mob to make hostile mobs aggressive
-            if (target instanceof LivingEntity living && getOwner() instanceof LivingEntity owner) {
-                living.setLastHurtByMob(owner);
+            if (target instanceof LivingEntity living) {
+                Entity ownerEntity = getOwner();
+                if (ownerEntity instanceof LivingEntity lo) {
+                    living.setLastHurtByMob(lo);
+                } else if (ownerEntity instanceof AircraftEntity ac && ac.getOwner() instanceof LivingEntity lo) {
+                    living.setLastHurtByMob(lo);
+                }
             }
 
             notifyOwner(target);
@@ -79,7 +89,7 @@ public class BulletEntity extends ThrowableItemProjectile {
     }
 
     public void setSourceAircraft(Entity aircraft) {
-        this.sourceAircraft = aircraft;
+        this.sourceAircraftUuid = aircraft.getUUID();
     }
 
     private void notifyOwner(Entity target) {
@@ -87,7 +97,7 @@ public class BulletEntity extends ThrowableItemProjectile {
         if (!(owner instanceof Player player)) return;
         Component weaponName = sourceAircraftName != null ? sourceAircraftName : getDefaultItem().getDescription();
         String key = target.isAlive() ? "message.piranport.weapon_hit" : "message.piranport.weapon_kill";
-        player.sendSystemMessage(Component.translatable(key, weaponName, target.getDisplayName()));
+        com.piranport.combat.HitNotifier.send(player, Component.translatable(key, weaponName, target.getDisplayName()));
     }
 
     @Override
@@ -106,12 +116,18 @@ public class BulletEntity extends ThrowableItemProjectile {
             tag.putString("SourceAircraftName",
                     Component.Serializer.toJson(sourceAircraftName, registryAccess()));
         }
+        if (sourceAircraftUuid != null) {
+            tag.putUUID("SourceAircraftUUID", sourceAircraftUuid);
+        }
     }
 
     @Override
     public void readAdditionalSaveData(CompoundTag tag) {
         super.readAdditionalSaveData(tag);
         if (tag.contains("BulletDamage")) damage = tag.getFloat("BulletDamage");
+        if (tag.hasUUID("SourceAircraftUUID")) {
+            sourceAircraftUuid = tag.getUUID("SourceAircraftUUID");
+        }
         if (tag.contains("SourceAircraftName")) {
             try {
                 sourceAircraftName = Component.Serializer.fromJson(

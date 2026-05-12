@@ -24,6 +24,8 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.Vec3;
 
+import java.util.UUID;
+
 public class TorpedoEntity extends ThrowableItemProjectile {
     private int caliber = 533;
     private float damage = 18f;
@@ -58,6 +60,8 @@ public class TorpedoEntity extends ThrowableItemProjectile {
     private static final float FAR_TURN_MULTIPLIER = 0.6f;
     /** Currently locked target for acoustic homing */
     private Entity lockedTarget = null;
+    /** Persisted UUID of locked target for cross-load entity resolution */
+    private UUID lockedTargetUuid = null;
     /** Ticks since target was locked */
     private int lockDuration = 0;
     /** Minimum lock duration before allowing target switch (ticks) */
@@ -220,11 +224,17 @@ public class TorpedoEntity extends ThrowableItemProjectile {
 
         if (isRemoved()) return;
 
-        // Resolve locked target from UUID if needed
-        if (lockedTarget == null && lockDuration > 0) {
-            // Target was saved but entity reference lost (e.g., after reload)
-            // Will be re-acquired on next acoustic scan
-            lockDuration = 0;
+        // Resolve locked target from UUID if needed (e.g., after chunk reload)
+        if (lockedTarget == null && lockedTargetUuid != null
+                && level() instanceof net.minecraft.server.level.ServerLevel sl) {
+            Entity entity = sl.getEntity(lockedTargetUuid);
+            if (entity instanceof LivingEntity living && living.isAlive()) {
+                lockedTarget = living;
+                lockedTargetUuid = null; // resolved
+            } else {
+                lockedTargetUuid = null; // target gone
+                lockDuration = 0;
+            }
         }
 
         // 1. 剩余航程检查 — 超时自爆
@@ -563,8 +573,13 @@ public class TorpedoEntity extends ThrowableItemProjectile {
             }
 
             // Explicitly set last hurt by mob to make hostile mobs aggressive
-            if (target instanceof LivingEntity living && getOwner() instanceof LivingEntity owner) {
-                living.setLastHurtByMob(owner);
+            if (target instanceof LivingEntity living) {
+                Entity ownerEntity = getOwner();
+                if (ownerEntity instanceof LivingEntity lo) {
+                    living.setLastHurtByMob(lo);
+                } else if (ownerEntity instanceof AircraftEntity ac && ac.getOwner() instanceof LivingEntity lo) {
+                    living.setLastHurtByMob(lo);
+                }
             }
 
             notifyOwner(target);
@@ -661,9 +676,11 @@ public class TorpedoEntity extends ThrowableItemProjectile {
             tag.putString("SourceAircraftName",
                     Component.Serializer.toJson(sourceAircraftName, registryAccess()));
         }
-        // Save target locking state
+        // Save target locking state (prefer live reference, fall back to persisted UUID)
         if (lockedTarget != null) {
             tag.putUUID("LockedTargetUUID", lockedTarget.getUUID());
+        } else if (lockedTargetUuid != null) {
+            tag.putUUID("LockedTargetUUID", lockedTargetUuid);
         }
         tag.putInt("LockDuration", lockDuration);
     }
@@ -698,10 +715,9 @@ public class TorpedoEntity extends ThrowableItemProjectile {
                 sourceAircraftName = null;
             }
         }
-        // Load target locking state
+        // Load target locking state; entity is resolved in tick() when level is ready
         if (tag.hasUUID("LockedTargetUUID")) {
-            // Note: Entity will be resolved on next tick when level is available
-            // For now just store the UUID, actual entity lookup happens in tick()
+            this.lockedTargetUuid = tag.getUUID("LockedTargetUUID");
         }
         this.lockDuration = tag.getInt("LockDuration");
     }

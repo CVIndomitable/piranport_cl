@@ -37,6 +37,11 @@ public class ModProjectilesConfig {
     public static final ModConfigSpec.DoubleValue ROCKET_SPEED;
     public static final ModConfigSpec.DoubleValue ROCKET_EXPLOSION_RADIUS;
 
+    // ==================== 鱼雷发射管 ====================
+    public static final ModConfigSpec.IntValue TWIN_TORPEDO_LAUNCHER_COOLDOWN;
+    public static final ModConfigSpec.IntValue TRIPLE_TORPEDO_LAUNCHER_COOLDOWN;
+    public static final ModConfigSpec.IntValue QUAD_TORPEDO_LAUNCHER_COOLDOWN;
+
     static {
         // ==================== 鱼雷 ====================
         BUILDER.push("projectiles");
@@ -133,6 +138,23 @@ public class ModProjectilesConfig {
         ROCKET_EXPLOSION_RADIUS = BUILDER
             .comment("Explosion radius (爆炸半径)")
             .defineInRange("explosion_radius", 2.5, 0.1, 20.0);
+
+        BUILDER.pop();
+
+        // ==================== 鱼雷发射管 ====================
+        BUILDER.push("torpedo_launcher");
+
+        TWIN_TORPEDO_LAUNCHER_COOLDOWN = BUILDER
+            .comment("Twin torpedo launcher cooldown in ticks (双联鱼雷发射器冷却)")
+            .defineInRange("twin_cooldown_ticks", 100, 1, 6000);
+
+        TRIPLE_TORPEDO_LAUNCHER_COOLDOWN = BUILDER
+            .comment("Triple torpedo launcher cooldown in ticks (三联鱼雷发射器冷却)")
+            .defineInRange("triple_cooldown_ticks", 100, 1, 6000);
+
+        QUAD_TORPEDO_LAUNCHER_COOLDOWN = BUILDER
+            .comment("Quad torpedo launcher cooldown in ticks (四联鱼雷发射器冷却)")
+            .defineInRange("quad_cooldown_ticks", 120, 1, 6000);
 
         BUILDER.pop();
         BUILDER.pop();

@@ -2,6 +2,7 @@ package com.piranport;
 
 import com.piranport.aviation.ClientFireControlData;
 import com.piranport.aviation.ClientReconData;
+import com.piranport.client.EntityUuidCache;
 import com.piranport.combat.ClientTorpedoGuidance;
 import com.piranport.combat.TransformationManager;
 import com.piranport.debug.PiranPortDebug;
@@ -67,6 +68,9 @@ public class ClientTickHandler {
     private static final int ENTITY_SCAN_INTERVAL = 4;
     private static int entityScanCooldown = 0;
 
+    /** Cache for UUID→Entity lookup, avoids iterating all entities for known targets. */
+    private static final EntityUuidCache entityCache = new EntityUuidCache();
+
     /**
      * Returns true if the entity has vanilla-level glowing (e.g. Glowing MobEffect, spectral arrow).
      * Vanilla glow has the highest priority and must never be removed by our mod.
@@ -83,6 +87,7 @@ public class ClientTickHandler {
         highlightEnabled = false;
         cooldownOverrideClientState = false;
         highlightedEntityIds.clear();
+        entityCache.clear();
         clearFcTeam(Minecraft.getInstance());
         clearAswTeam(Minecraft.getInstance());
         com.piranport.aviation.ClientAswSonarData.resetClientState();
@@ -297,38 +302,49 @@ public class ClientTickHandler {
 
             Set<String> currentFcMembers = new HashSet<>();
 
-            // Always process FC targets; process highlight targets only when Y-key enabled
-            // Throttle full entity scan: FC targets use targeted lookup; highlight scans every N ticks
-            if (hasFcTargets || highlightEnabled || !highlightedEntityIds.isEmpty()) {
-                boolean doFullScan = highlightEnabled && (entityScanCooldown <= 0);
-                if (doFullScan) entityScanCooldown = ENTITY_SCAN_INTERVAL;
-
-                if (doFullScan || hasFcTargets) {
-                    for (Entity entity : mc.level.entitiesForRendering()) {
-                        boolean isFcTarget = lockedTargets.contains(entity.getUUID());
-                        boolean isHighlight = doFullScan && isHighlightTarget(entity, localPlayer);
-                        boolean shouldGlow = isFcTarget || isHighlight;
-                        if (shouldGlow) {
-                            entity.setGlowingTag(true);
-                            highlightedEntityIds.add(entity.getId());
-                            if (isFcTarget && !(entity instanceof AircraftEntity)) {
-                                currentFcMembers.add(entity.getStringUUID());
-                            }
-                        } else if (highlightedEntityIds.contains(entity.getId())) {
-                            // Respect vanilla glow priority — don't remove if entity has Glowing effect
-                            if (!hasVanillaGlow(entity)) {
-                                entity.setGlowingTag(false);
-                            }
-                            highlightedEntityIds.remove(entity.getId());
+            // Phase 1: FC targets — O(k) targeted lookup via UUID cache, no full entity scan
+            if (hasFcTargets) {
+                for (UUID uuid : lockedTargets) {
+                    Entity entity = entityCache.get(mc.level, uuid);
+                    if (entity != null && entity.isAlive()) {
+                        entity.setGlowingTag(true);
+                        highlightedEntityIds.add(entity.getId());
+                        if (!(entity instanceof AircraftEntity)) {
+                            currentFcMembers.add(entity.getStringUUID());
                         }
                     }
                 }
-                entityScanCooldown--;
+            }
+
+            // Phase 2: Y-key battlefield highlight — full scan throttled to ENTITY_SCAN_INTERVAL
+            boolean doFullScan = highlightEnabled && (entityScanCooldown <= 0);
+            if (doFullScan) {
+                entityScanCooldown = ENTITY_SCAN_INTERVAL;
+                for (Entity entity : mc.level.entitiesForRendering()) {
+                    if (!lockedTargets.contains(entity.getUUID()) && isHighlightTarget(entity, localPlayer)) {
+                        entity.setGlowingTag(true);
+                        highlightedEntityIds.add(entity.getId());
+                    }
+                }
+            }
+            if (highlightEnabled) entityScanCooldown--;
+
+            // Phase 3: Remove glow from entities no longer in any active highlight set.
+            // Only iterates previously-highlighted IDs (O(k)) instead of all entities.
+            if (!highlightedEntityIds.isEmpty()) {
+                highlightedEntityIds.removeIf(id -> {
+                    Entity entity = mc.level.getEntity(id);
+                    if (entity == null) return true;
+                    UUID uuid = entity.getUUID();
+                    if (lockedTargets.contains(uuid)) return false;
+                    if (highlightEnabled && isHighlightTarget(entity, localPlayer)) return false;
+                    if (hasVanillaGlow(entity)) return false;
+                    entity.setGlowingTag(false);
+                    return true;
+                });
             }
             // Sync client-side scoreboard team for red outline on FC targets
             syncFcTeam(mc, currentFcMembers);
-            // Clean up IDs for despawned entities
-            highlightedEntityIds.removeIf(id -> mc.level.getEntity(id) == null);
         }
 
         // ASW sonar highlight — independent of Y-key, uses yellow outline

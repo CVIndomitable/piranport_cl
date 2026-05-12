@@ -1276,7 +1276,9 @@ public class AircraftEntity extends Entity {
             detectedIds.add(e.getId());
             if (detectedIds.size() >= 128) break;
         }
-        PacketDistributor.sendToPlayer(sp, new AswSonarSyncPayload(getId(), detectedIds));
+        if (!detectedIds.isEmpty()) {
+            PacketDistributor.sendToPlayer(sp, new AswSonarSyncPayload(getId(), detectedIds));
+        }
     }
 
     /**

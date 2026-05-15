@@ -205,7 +205,6 @@ public class ModWeaponsConfig {
             .defineInRange("inaccuracy", 0.5, 0.0, 10.0);
 
         BUILDER.pop();
-        BUILDER.pop();
 
         // ==================== 四联装大口径炮 ====================
         BUILDER.push("quad_large_gun");

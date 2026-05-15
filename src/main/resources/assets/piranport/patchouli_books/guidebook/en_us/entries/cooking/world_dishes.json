@@ -23,7 +23,7 @@
       "text": "piranport.book.cooking.world_dishes.apple_pie_embryo"
     },
     {
-      "type": "patchouli:campfire_cooking",
+      "type": "patchouli:campfire",
       "recipe": "piranport:campfire_cooking_apple_pie",
       "text": "piranport.book.cooking.world_dishes.apple_pie_cook"
     },
@@ -33,17 +33,17 @@
       "text": "piranport.book.cooking.world_dishes.pizza_embryo"
     },
     {
-      "type": "patchouli:campfire_cooking",
+      "type": "patchouli:campfire",
       "recipe": "piranport:campfire_cooking_salami_pizza",
       "text": "piranport.book.cooking.world_dishes.pizza_cook"
     },
     {
-      "type": "patchouli:campfire_cooking",
+      "type": "patchouli:campfire",
       "recipe": "piranport:campfire_cooking_cooked_rice",
       "text": "piranport.book.cooking.world_dishes.rice_cook"
     },
     {
-      "type": "patchouli:campfire_cooking",
+      "type": "patchouli:campfire",
       "recipe": "piranport:campfire_cooking_pasta",
       "text": "piranport.book.cooking.world_dishes.pasta_cook"
     },

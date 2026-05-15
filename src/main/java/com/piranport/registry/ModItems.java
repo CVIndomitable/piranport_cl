@@ -156,28 +156,28 @@ public class ModItems {
     public static final DeferredItem<Item> SINGLE_SMALL_GUN =
             ITEMS.register("single_small_gun", () -> new CannonItem(new Item.Properties().stacksTo(1)
                     .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.CANNON),
-                    (float)ModWeaponsConfig.SMALL_GUN_DAMAGE.getAsDouble(),
-                    ModWeaponsConfig.SMALL_GUN_COOLDOWN.get(), 1));
+                    ModWeaponsConfig.SMALL_GUN_DAMAGE::getAsDouble,
+                    ModWeaponsConfig.SMALL_GUN_COOLDOWN::get, 1));
     public static final DeferredItem<Item> SMALL_GUN =
             ITEMS.register("small_gun", () -> new CannonItem(new Item.Properties().stacksTo(1)
                     .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.CANNON),
-                    (float)ModWeaponsConfig.TWIN_SMALL_GUN_DAMAGE.getAsDouble(),
-                    ModWeaponsConfig.TWIN_SMALL_GUN_COOLDOWN.get(), 2));
+                    ModWeaponsConfig.TWIN_SMALL_GUN_DAMAGE::getAsDouble,
+                    ModWeaponsConfig.TWIN_SMALL_GUN_COOLDOWN::get, 2));
     public static final DeferredItem<Item> MEDIUM_GUN =
             ITEMS.register("medium_gun", () -> new CannonItem(new Item.Properties().stacksTo(1)
                     .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.CANNON),
-                    (float)ModWeaponsConfig.MEDIUM_GUN_DAMAGE.getAsDouble(),
-                    ModWeaponsConfig.MEDIUM_GUN_COOLDOWN.get(), 1));
+                    ModWeaponsConfig.MEDIUM_GUN_DAMAGE::getAsDouble,
+                    ModWeaponsConfig.MEDIUM_GUN_COOLDOWN::get, 1));
     public static final DeferredItem<Item> LARGE_GUN =
             ITEMS.register("large_gun", () -> new CannonItem(new Item.Properties().stacksTo(1)
                     .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.CANNON),
-                    (float)ModWeaponsConfig.TRIPLE_LARGE_GUN_DAMAGE.getAsDouble(),
-                    ModWeaponsConfig.TRIPLE_LARGE_GUN_COOLDOWN.get(), 3));
+                    ModWeaponsConfig.TRIPLE_LARGE_GUN_DAMAGE::getAsDouble,
+                    ModWeaponsConfig.TRIPLE_LARGE_GUN_COOLDOWN::get, 3));
     public static final DeferredItem<Item> FRENCH_QUAD_380MM_GUN =
             ITEMS.register("french_quad_380mm_gun", () -> new CannonItem(new Item.Properties().stacksTo(1)
                     .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.CANNON),
-                    (float)ModWeaponsConfig.QUAD_LARGE_GUN_DAMAGE.getAsDouble(),
-                    ModWeaponsConfig.QUAD_LARGE_GUN_COOLDOWN.get(), 4));
+                    ModWeaponsConfig.QUAD_LARGE_GUN_DAMAGE::getAsDouble,
+                    ModWeaponsConfig.QUAD_LARGE_GUN_COOLDOWN::get, 4));
 
     // ===== Torpedo Ammo (legacy generic) =====
     public static final DeferredItem<TorpedoItem> TORPEDO_533MM =
@@ -1027,19 +1027,19 @@ public class ModItems {
                     () -> new TorpedoLauncherItem(
                             new Item.Properties().stacksTo(1).durability(64)
                                     .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.TORPEDO),
-                            533, 2, ModProjectilesConfig.TWIN_TORPEDO_LAUNCHER_COOLDOWN.get()));
+                            533, 2, ModProjectilesConfig.TWIN_TORPEDO_LAUNCHER_COOLDOWN::get));
     public static final DeferredItem<TorpedoLauncherItem> TRIPLE_TORPEDO_LAUNCHER =
             ITEMS.register("triple_torpedo_launcher",
                     () -> new TorpedoLauncherItem(
                             new Item.Properties().stacksTo(1).durability(48)
                                     .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.TORPEDO),
-                            533, 3, ModProjectilesConfig.TRIPLE_TORPEDO_LAUNCHER_COOLDOWN.get()));
+                            533, 3, ModProjectilesConfig.TRIPLE_TORPEDO_LAUNCHER_COOLDOWN::get));
     public static final DeferredItem<TorpedoLauncherItem> QUAD_TORPEDO_LAUNCHER =
             ITEMS.register("quad_torpedo_launcher",
                     () -> new TorpedoLauncherItem(
                             new Item.Properties().stacksTo(1).durability(32)
                                     .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.TORPEDO),
-                            610, 4, ModProjectilesConfig.QUAD_TORPEDO_LAUNCHER_COOLDOWN.get()));
+                            610, 4, ModProjectilesConfig.QUAD_TORPEDO_LAUNCHER_COOLDOWN::get));
 
     // ===== Depth Charge Launchers =====
     public static final DeferredItem<DepthChargeLauncherItem> DEPTH_CHARGE_LAUNCHER =

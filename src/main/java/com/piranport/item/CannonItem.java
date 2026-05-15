@@ -3,6 +3,9 @@ package com.piranport.item;
 import com.piranport.component.LoadedAmmo;
 import com.piranport.registry.ModDataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
+
+import java.util.function.DoubleSupplier;
+import java.util.function.IntSupplier;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -21,19 +24,19 @@ import com.piranport.component.WeaponCategory;
 import java.util.List;
 
 public class CannonItem extends Item {
-    private final float damage;
-    private final int cooldownTicks;
+    private final DoubleSupplier damageSupplier;
+    private final IntSupplier cooldownSupplier;
     private final int barrelCount;
 
-    public CannonItem(Properties properties, float damage, int cooldownTicks, int barrelCount) {
+    public CannonItem(Properties properties, DoubleSupplier damageSupplier, IntSupplier cooldownSupplier, int barrelCount) {
         super(properties);
-        this.damage = damage;
-        this.cooldownTicks = cooldownTicks;
+        this.damageSupplier = damageSupplier;
+        this.cooldownSupplier = cooldownSupplier;
         this.barrelCount = barrelCount;
     }
 
-    public float getDamage() { return damage; }
-    public int getCooldownTicks() { return cooldownTicks; }
+    public float getDamage() { return (float) damageSupplier.getAsDouble(); }
+    public int getCooldownTicks() { return cooldownSupplier.getAsInt(); }
     public int getBarrelCount() { return barrelCount; }
 
     @Override
@@ -97,9 +100,9 @@ public class CannonItem extends Item {
                 tooltipComponents.add(Component.translatable("tooltip.piranport.cannon.barrel_count", barrelCount)
                         .withStyle(net.minecraft.ChatFormatting.AQUA));
                 tooltipComponents.add(Component.translatable("tooltip.piranport.cannon.damage",
-                        String.format("%.1f", damage)).withStyle(net.minecraft.ChatFormatting.RED));
+                        String.format("%.1f", getDamage())).withStyle(net.minecraft.ChatFormatting.RED));
                 tooltipComponents.add(Component.translatable("tooltip.piranport.cooldown",
-                        String.format("%.1f", cooldownTicks / 20.0)).withStyle(net.minecraft.ChatFormatting.YELLOW));
+                        String.format("%.1f", getCooldownTicks() / 20.0)).withStyle(net.minecraft.ChatFormatting.YELLOW));
             } else {
                 tooltipComponents.add(Component.translatable("tooltip.piranport.shift_for_details")
                         .withStyle(net.minecraft.ChatFormatting.DARK_GRAY));

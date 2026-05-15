@@ -702,7 +702,7 @@
   "piranport.book.aviation.asw.p1": "$(item)反潜机$()专门用于攻击水下目标。目前有$(item)剑鱼MK3$()和$(item)TBF（反潜）$()两种型号。$(br)$(br)$(bold)攻击特性：$()仅攻击潜艇和水生生物，飞至目标上空投放$(item)深水炸弹$()。$(br)$(br)$(bold)声呐探测：$()反潜机每秒扫描周围水下实体，被探测到的目标会显示$(bold)黄色高亮描边$()，帮助发现水下威胁。声呐高亮独立于火控和Y键高亮。",
   "piranport.book.torpedoes.named": "命名鱼雷",
   "piranport.book.torpedoes.named.p1": "模组中有多种不同型号鱼雷，各有独立的伤害、航程和速度。$(br)$(br)$(bold)533mm系列：$()标准鱼雷、磁性鱼雷（磁性引信）、声导鱼雷（声导追踪）、线导鱼雷（按$(bold)[9]/[0]$()手动操纵偏航）。$(br)$(br)$(bold)德制G7系列：$()G7a常规/磁性，G7e电动磁性/声导/线导。",
-  "piranport.book.torpedoes.named.p2": "$(bold)美制MK系列：$()MK14常规、MK16/MK17过氧化氢、MK27声导。$(br)$(br)$(bold)日制系列：$()九一式610mm、九三式一型高速/三型长程（氧气鱼雷）、九五式530mm/610mm潜艇鱼雷、零式720mm大型鱼雷。$(br)$(br)悬停鱼雷物品可查看具体的伤害/航程/速度参数。"
+  "piranport.book.torpedoes.named.p2": "$(bold)美制MK系列：$()MK14常规、MK16/MK17过氧化氢、MK27声导。$(br)$(br)$(bold)日制系列：$()九一式610mm、九三式一型高速/三型长程（氧气鱼雷）、九五式530mm/610mm潜艇鱼雷、零式720mm大型鱼雷。$(br)$(br)悬停鱼雷物品可查看具体的伤害/航程/速度参数。",
   "item.piranport.lablab_bean_seeds": "扁豆种子",
   "item.piranport.ormosia_seeds": "红豆种子",
   "item.piranport.celery_seeds": "芹菜种子",

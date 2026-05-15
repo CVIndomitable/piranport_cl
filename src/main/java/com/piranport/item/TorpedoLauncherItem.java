@@ -19,17 +19,18 @@ import net.minecraft.world.level.Level;
 import com.piranport.component.WeaponCategory;
 
 import java.util.List;
+import java.util.function.IntSupplier;
 
 public class TorpedoLauncherItem extends Item {
     private final int caliber;
     private final int tubeCount;
-    private final int cooldownTicks;
+    private final IntSupplier cooldownSupplier;
 
-    public TorpedoLauncherItem(Properties properties, int caliber, int tubeCount, int cooldownTicks) {
+    public TorpedoLauncherItem(Properties properties, int caliber, int tubeCount, IntSupplier cooldownSupplier) {
         super(properties);
         this.caliber = caliber;
         this.tubeCount = tubeCount;
-        this.cooldownTicks = cooldownTicks;
+        this.cooldownSupplier = cooldownSupplier;
     }
 
     public int getCaliber() {
@@ -41,7 +42,7 @@ public class TorpedoLauncherItem extends Item {
     }
 
     public int getCooldownTicks() {
-        return cooldownTicks;
+        return cooldownSupplier.getAsInt();
     }
 
     @Override
@@ -169,7 +170,7 @@ public class TorpedoLauncherItem extends Item {
                 tooltipComponents.add(Component.translatable("tooltip.piranport.launcher.tubes", tubeCount)
                         .withStyle(net.minecraft.ChatFormatting.AQUA));
                 tooltipComponents.add(Component.translatable("tooltip.piranport.cooldown",
-                        String.format("%.1f", cooldownTicks / 20.0)).withStyle(net.minecraft.ChatFormatting.YELLOW));
+                        String.format("%.1f", getCooldownTicks() / 20.0)).withStyle(net.minecraft.ChatFormatting.YELLOW));
                 if (stack.isDamageableItem()) {
                     tooltipComponents.add(Component.translatable("tooltip.piranport.durability",
                             stack.getMaxDamage() - stack.getDamageValue(), stack.getMaxDamage())

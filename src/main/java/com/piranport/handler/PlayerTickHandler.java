@@ -343,7 +343,9 @@ public class PlayerTickHandler {
         if (lastPos == null) return;
 
         double dist = currentPos.distanceTo(lastPos);
-        if (dist > 10.0) {
+        // P0 #5: 传送检测改为合理阈值，防止频繁传送绕过燃料消耗
+        // 10格过于宽松，改为检测维度变化或超过模拟距离
+        if (dist > 128.0) {  // 8个区块的距离，超过此值视为传送
             lastPlayerPos.put(uuid, currentPos);
             accumulatedDistance.remove(uuid);
             return;

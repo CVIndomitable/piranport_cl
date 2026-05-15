@@ -200,6 +200,10 @@ public class DungeonInstanceManager extends SavedData {
         if (!freedIndices.isEmpty()) {
             tag.putIntArray("FreedIndices", freedIndices.stream().mapToInt(Integer::intValue).toArray());
         }
+        // P0 #2: 持久化 pendingFreedIndices 防止服务器崩溃时索引永久丢失
+        if (!pendingFreedIndices.isEmpty()) {
+            tag.putIntArray("PendingFreedIndices", pendingFreedIndices.stream().mapToInt(Integer::intValue).toArray());
+        }
         ListTag list = new ListTag();
         for (DungeonInstance inst : instances.values()) {
             list.add(inst.save());
@@ -214,6 +218,12 @@ public class DungeonInstanceManager extends SavedData {
         if (tag.contains("FreedIndices")) {
             for (int idx : tag.getIntArray("FreedIndices")) {
                 mgr.freedIndices.add(idx);
+            }
+        }
+        // P0 #2: 恢复 pendingFreedIndices
+        if (tag.contains("PendingFreedIndices")) {
+            for (int idx : tag.getIntArray("PendingFreedIndices")) {
+                mgr.pendingFreedIndices.add(idx);
             }
         }
         ListTag list = tag.getList("Instances", Tag.TAG_COMPOUND);

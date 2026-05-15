@@ -74,8 +74,10 @@ public class SaltEvaporationHandler {
                 Map.Entry<BlockPos, Integer> entry = it.next();
                 BlockPos pos = entry.getKey();
 
-                // Skip unloaded chunks to avoid forcing chunk loads
-                if (!level.isLoaded(pos)) continue;
+                // P1 #11: 使用区块加载检查避免触发区块加载
+                int chunkX = pos.getX() >> 4;
+                int chunkZ = pos.getZ() >> 4;
+                if (!level.getChunkSource().hasChunk(chunkX, chunkZ)) continue;
 
                 // Validate conditions still hold
                 BlockState waterState = level.getBlockState(pos);

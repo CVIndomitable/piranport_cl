@@ -156,6 +156,7 @@ public class StoneMillBlockEntity extends BlockEntity implements MenuProvider {
     }
 
     private void checkAndStartRecipe() {
+        if (level == null) return;
         if (currentRecipe != null) return;
 
         List<ItemStack> inputs = new ArrayList<>();

@@ -28,7 +28,7 @@ public class ClientAswSonarData {
     public static void update(int aircraftEntityId, List<Integer> detectedIds) {
         Set<Integer> newSet = new HashSet<>(detectedIds);
         Set<Integer> oldSet = detectionsByAircraft.get(aircraftEntityId);
-        if (oldSet != null && oldSet.equals(newSet)) return; // no change, skip UI update
+        if (oldSet != null && oldSet.equals(newSet)) return;
         detectionsByAircraft.put(aircraftEntityId, newSet);
         lastUpdateTick.put(aircraftEntityId, clientTick);
     }

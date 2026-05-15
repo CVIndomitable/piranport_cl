@@ -170,7 +170,8 @@ public class DungeonEventHandler {
         for (UUID uuid : instance.getPlayerUuids()) {
             if (uuid.equals(leaving)) continue;
             ServerPlayer p = server.getPlayerList().getPlayer(uuid);
-            if (p != null) return p;
+            // P1 #13: 验证新旗舰是否在地牢维度内
+            if (p != null && isInDungeon(p)) return p;
         }
         return null;
     }

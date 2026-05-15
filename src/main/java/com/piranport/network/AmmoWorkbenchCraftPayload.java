@@ -108,6 +108,10 @@ public record AmmoWorkbenchCraftPayload(BlockPos pos, String recipeId, int quant
                         int take = Math.min(toConsume, stack.getCount());
                         ItemStack movedPart = stack.copyWithCount(take);
                         stack.shrink(take);
+                        // P0 #3: 扣除后检查并清空空槽位，防止负数堆叠导致物品复制
+                        if (stack.getCount() <= 0) {
+                            player.getInventory().setItem(i, ItemStack.EMPTY);
+                        }
                         taken.add(movedPart);
                         toConsume -= take;
                     }

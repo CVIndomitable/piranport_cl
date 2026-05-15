@@ -107,6 +107,8 @@ public record SelectNodePayload(BlockPos lecternPos, int keySlot, String nodeId)
                 if (instance.getClearedNodes().contains(payload.nodeId())) return;
                 boolean reachable;
                 if (instance.getClearedNodes().isEmpty()) {
+                    // P1 #10: 首次进入时验证 startNode 是否在 stage.nodes() 中存在
+                    if (!stage.nodes().containsKey(stage.startNode())) return;
                     // If no nodes cleared yet, only start node is valid
                     reachable = payload.nodeId().equals(stage.startNode());
                 } else {

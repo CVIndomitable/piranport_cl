@@ -242,7 +242,8 @@ public class MissileEntity extends ThrowableItemProjectile {
 
         // 防空导弹只攻击空中目标（不在地面且不在水中）
         if (missileType == MissileType.ANTI_AIR) {
-            return !target.onGround() && !target.isInWater();
+            // P1 #9: 增加垂直速度检测，避免漏掉悬停在方块上方的实体
+            return (!target.onGround() && !target.isInWater()) || target.getDeltaMovement().y != 0;
         }
 
         return true;

@@ -131,9 +131,12 @@ public class AmmoWorkbenchBlockEntity extends BlockEntity implements MenuProvide
         Player owner = craftingOwner != null ? level.getPlayerByUUID(craftingOwner) : null;
         for (ItemStack stack : pendingMaterials) {
             if (stack.isEmpty()) continue;
-            if (owner != null && owner.isAlive() && !owner.addItem(stack)) {
-                owner.drop(stack, false);
-            } else if (owner == null || !owner.isAlive()) {
+            // P1 #12: 玩家离线或背包满时直接掉落到工作台位置，不依赖玩家
+            if (owner != null && owner.isAlive()) {
+                if (!owner.addItem(stack)) {
+                    owner.drop(stack, false);
+                }
+            } else {
                 Containers.dropItemStack(level, worldPosition.getX(), worldPosition.getY(),
                         worldPosition.getZ(), stack);
             }

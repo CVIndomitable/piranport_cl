@@ -98,6 +98,7 @@ public class FleetGroupManager extends SavedData {
     public void alertGroup(UUID groupId, LivingEntity target, UUID discovererUuid) {
         FleetGroup group = groups.get(groupId);
         if (group == null) return;
+        // P1 #7: 将可能抛异常的检查移到 try 块外，防止 ThreadLocal 泄漏
         if (target.getServer() == null) return;
 
         // Robust recursion prevention: use a ThreadLocal flag

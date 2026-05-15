@@ -84,3 +84,27 @@ neo_version=21.1.220
 - **原始策划案**: `../docs/总策划案.docx`
 - **所有文档**: `../docs/` — 文档统一在仓库根目录，本仓库不保留 docs/
 - **踩坑记录**: `/Users/lianran/IndomitableCache/ai记忆/mc模组开发踩坑记录.md` — 统一的 MC 模组开发踩坑经验库
+
+---
+
+## Tools & Scripts
+
+### 文档处理工具
+
+**处理 Word 文档 (.docx)**：
+- **工具**: `python-docx` 库
+- **安装**: 由于 macOS 使用 externally-managed-environment，需要创建虚拟环境：
+  ```bash
+  python3 -m venv .venv_docx
+  source .venv_docx/bin/activate
+  pip install python-docx
+  ```
+- **脚本位置**: `../小工具/` 目录
+- **可用样式**: 使用前先检查文档中的可用样式（运行 `check_styles.py`）
+  - 常用样式: `Normal`, `Subtitle`, `List Paragraph`, `Heading 1-5`
+  - 避免使用: `List Bullet`, `List Number`（可能不存在）
+- **注意事项**:
+  - 不能直接用 Read 工具读取 .docx（二进制格式）
+  - 必须使用 python-docx 库处理
+  - 样式名称区分大小写，使用前需验证
+  - 修改文档后记得保存到新文件，避免覆盖原文件

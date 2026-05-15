@@ -50,7 +50,8 @@ public class EvasionHandler {
             event.setCanceled(true);
             com.piranport.debug.PiranPortDebug.event(
                     "Evasion DODGE | chance={}% roll={} source={}",
-                    String.format("%.0f", dodgeChance * 100), String.format("%.2f", roll),
+                    Math.round(dodgeChance * 100),
+                    Math.round(roll * 100.0) / 100.0,
                     event.getSource().type().msgId());
 
             // Sound — broadcast to nearby players

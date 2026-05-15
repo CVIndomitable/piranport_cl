@@ -1,587 +1,48 @@
 package com.piranport;
 
+import com.piranport.aviation.AircraftIndex;
 import com.piranport.aviation.FireControlManager;
 import com.piranport.aviation.ReconManager;
-import net.minecraft.network.chat.Component;
+import com.piranport.combat.TorpedoGuidanceManager;
 import com.piranport.combat.TransformationManager;
-import com.piranport.component.FuelData;
 import com.piranport.config.ModCommonConfig;
-import com.piranport.entity.AircraftEntity;
-import com.piranport.item.ShipCoreItem;
-import com.piranport.registry.ModDataComponents;
-import net.minecraft.core.particles.ParticleTypes;
+import com.piranport.debug.PiranPortCommands;
+import com.piranport.dungeon.DungeonConstants;
+import com.piranport.dungeon.entity.DungeonPortalEntity;
+import com.piranport.dungeon.event.DungeonEventHandler;
+import com.piranport.dungeon.instance.DungeonInstance;
+import com.piranport.dungeon.instance.DungeonInstanceManager;
+import com.piranport.dungeon.script.DungeonScriptManager;
+import com.piranport.handler.PlayerTickHandler;
+import com.piranport.npc.ai.FleetGroupManager;
+import com.piranport.registry.ModMobEffects;
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.effect.MobEffects;
 import net.minecraft.stats.Stats;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.entity.FlyingMob;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.ItemEntity;
-import net.minecraft.world.entity.monster.Enemy;
-import net.minecraft.world.entity.monster.Phantom;
-import net.minecraft.world.entity.monster.Vex;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.neoforge.common.NeoForgeMod;
-import net.neoforged.neoforge.common.util.TriState;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.common.util.TriState;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
+import net.neoforged.neoforge.event.entity.living.LivingExperienceDropEvent;
 import net.neoforged.neoforge.event.entity.player.ItemEntityPickupEvent;
-import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.server.ServerStoppedEvent;
-import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
-import net.neoforged.neoforge.event.village.VillagerTradesEvent;
-import net.minecraft.world.entity.npc.VillagerProfession;
-import net.minecraft.world.item.trading.ItemCost;
-import net.minecraft.world.item.trading.MerchantOffer;
-import net.minecraft.world.item.Items;
-import com.piranport.registry.ModItems;
 
-import java.util.Comparator;
-import java.util.List;
 import java.util.UUID;
 
 @EventBusSubscriber(modid = PiranPort.MOD_ID)
 public class GameEvents {
 
-    @SubscribeEvent
-    public static void onPlayerTick(PlayerTickEvent.Post event) {
-        Player player = event.getEntity();
-
-        // Kirin Headband: permanent invisibility when worn on head (server only)
-        if (!player.level().isClientSide()) {
-            if (player.getItemBySlot(EquipmentSlot.HEAD).getItem()
-                    instanceof com.piranport.item.KirinHeadbandItem) {
-                player.addEffect(new MobEffectInstance(
-                        MobEffects.INVISIBILITY, 25, 0, false, false, true));
-            }
-        }
-
-        // Football Superstar Set: experience boost when any piece is worn (server only)
-        if (!player.level().isClientSide()) {
-            boolean hasFootball = false;
-            for (ItemStack armor : player.getArmorSlots()) {
-                if (armor.getItem() instanceof com.piranport.item.FootballArmorItem) {
-                    hasFootball = true;
-                    break;
-                }
-            }
-            if (hasFootball) {
-                player.addEffect(new MobEffectInstance(
-                        com.piranport.registry.ModMobEffects.EXPERIENCE_BOOST, 25, 0, false, false, true));
-            }
-        }
-
-        // No-GUI mode: detect inventory weapon-load changes and recalculate attributes.
-        // The scan is O(36) per tick but attribute recalculation only happens when the value changes.
-        if (!player.level().isClientSide()
-                && !com.piranport.config.ModCommonConfig.isShipCoreGuiEnabled()) {
-            tickInventoryLoadCheck(player);
-        }
-
-        // Recon mode body locking: must execute before transformation check
-        if (!player.level().isClientSide() && com.piranport.aviation.ReconManager.isInRecon(player.getUUID())) {
-            // Cancel all movement velocity
-            Vec3 vel = player.getDeltaMovement();
-            double newY = vel.y > 0 ? 0 : vel.y;  // Keep gravity but cancel jumping
-            player.setDeltaMovement(0, newY, 0);
-
-            // Reset input values (doesn't affect client key reading)
-            player.xxa = 0;
-            player.zza = 0;
-
-            // Keep player on water surface if in water
-            if (player.isInWater() && !player.isEyeInFluidType(net.neoforged.neoforge.common.NeoForgeMod.WATER_TYPE.value())) {
-                player.setDeltaMovement(0, 0, 0);
-                player.resetFallDistance();
-            }
-            // Don't return — let subsequent transformation logic continue
-        }
-
-        if (!TransformationManager.isPlayerTransformed(player)) {
-            // Not transformed — clear distance tracking
-            if (!player.level().isClientSide()) {
-                lastPlayerPos.remove(player.getUUID());
-                accumulatedDistance.remove(player.getUUID());
-            }
-            return;
-        }
-
-        // Fuel consumption based on distance moved (server only)
-        if (!player.level().isClientSide()) {
-            tickFuelConsumption(player);
-            // Re-check — fuel depletion may have caused untransform
-            if (!TransformationManager.isPlayerTransformed(player)) return;
-        }
-
-        // Check core type for submarine-specific behavior
-        ItemStack transformedCore = TransformationManager.findTransformedCore(player);
-        boolean isSubmarine = transformedCore.getItem() instanceof ShipCoreItem sci
-                && sci.getShipType() == ShipCoreItem.ShipType.SUBMARINE;
-
-        // 水面行走：脚踩水但眼睛未入水时，取消下沉速度（潜艇核心不适用）
-        // 水中摩擦力比陆地低，保留滑行惯性，模拟舰船水面移动手感
-        if (!player.level().isClientSide()
-                && !isSubmarine && player.isInWater()
-                && !player.isEyeInFluidType(NeoForgeMod.WATER_TYPE.value())) {
-            Vec3 vel = player.getDeltaMovement();
-            if (vel.y < 0) {
-                player.setDeltaMovement(vel.x, 0.0, vel.z);
-            }
-            player.resetFallDistance();
-
-            // 水平加速补偿：基于玩家输入方向施加加速度，无输入时施加减速
-            double accel = ModCommonConfig.WATER_WALKING_ACCELERATION.get();
-            if (accel > 0.0001) {
-                Vec3 currentVel = player.getDeltaMovement();
-
-                // 获取玩家输入方向（xxa=左右，zza=前后）
-                float inputX = player.xxa;  // 左负右正
-                float inputZ = player.zza;  // 后负前正
-
-                boolean hasInput = Math.abs(inputX) > 0.01f || Math.abs(inputZ) > 0.01f;
-
-                if (hasInput) {
-                    // 有输入：将输入转换为世界坐标系方向，施加加速
-                    float yaw = player.getYRot() * ((float)Math.PI / 180f);
-                    double dirX = -Math.sin(yaw) * inputZ + Math.cos(yaw) * inputX;
-                    double dirZ = Math.cos(yaw) * inputZ + Math.sin(yaw) * inputX;
-                    double dirLen = Math.sqrt(dirX * dirX + dirZ * dirZ);
-                    if (dirLen > 0.001) {
-                        dirX /= dirLen;
-                        dirZ /= dirLen;
-                        player.setDeltaMovement(
-                            currentVel.x + dirX * accel,
-                            currentVel.y,
-                            currentVel.z + dirZ * accel
-                        );
-                    }
-                } else {
-                    // 无输入：施加减速（摩擦力）
-                    double horizontalSpeed = Math.sqrt(currentVel.x * currentVel.x + currentVel.z * currentVel.z);
-                    if (horizontalSpeed > 0.001) {
-                        double deceleration = ModCommonConfig.WATER_WALKING_DECELERATION.get();
-                        player.setDeltaMovement(
-                            currentVel.x * deceleration,
-                            currentVel.y,
-                            currentVel.z * deceleration
-                        );
-                    }
-                }
-            }
-        }
-
-        // 潜艇核心：无限水下呼吸 + 水下隐身
-        if (isSubmarine && !player.level().isClientSide()) {
-            player.addEffect(new MobEffectInstance(MobEffects.WATER_BREATHING, 400, 0, false, false, true));
-            if (player.isEyeInFluidType(NeoForgeMod.WATER_TYPE.value())) {
-                player.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 40, 0, false, false, true));
-            }
-        }
-
-        // 声纳效果：装备声纳时，24格内敌对生物持续获得发光效果（每40tick刷新一次）
-        if (!player.level().isClientSide() && player.tickCount % 40 == 0) {
-            if (TransformationManager.hasSonarEquipped(player, transformedCore)) {
-                AABB scanBox = player.getBoundingBox().inflate(24.0, 8.0, 24.0);
-                List<LivingEntity> nearby = player.level().getEntitiesOfClass(
-                        LivingEntity.class,
-                        scanBox,
-                        e -> e.isAlive() && e != player && !(e instanceof Player));
-                for (LivingEntity entity : nearby) {
-                    entity.addEffect(new MobEffectInstance(MobEffects.GLOWING, 40, 0, false, false, false));
-                }
-            }
-        }
-
-        // Safety net: remove recon slowness if no active recon (server only, every 20 ticks)
-        if (!player.level().isClientSide() && player.tickCount % 20 == 0) {
-            MobEffectInstance slowness = player.getEffect(MobEffects.MOVEMENT_SLOWDOWN);
-            if (slowness != null && slowness.getAmplifier() >= 9
-                    && !ReconManager.isInRecon(player.getUUID())) {
-                player.removeEffect(MobEffects.MOVEMENT_SLOWDOWN);
-            }
-        }
-
-        // 战斗机自动升空 — server only, checked every 40 ticks (2 s)
-        if (!player.level().isClientSide() && player.tickCount % 40 == 0) {
-            // Find the actual transformed core and its slot for auto-launch
-            ItemStack autoLaunchCore = ItemStack.EMPTY;
-            int autoLaunchSlot = -1;
-            ItemStack mh = player.getMainHandItem();
-            if (mh.getItem() instanceof ShipCoreItem
-                    && TransformationManager.isTransformed(mh)) {
-                autoLaunchCore = mh;
-                autoLaunchSlot = player.getInventory().selected;
-            } else {
-                Inventory inv2 = player.getInventory();
-                for (int i = 0; i < inv2.items.size(); i++) {
-                    ItemStack s = inv2.items.get(i);
-                    if (s.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(s)) {
-                        autoLaunchCore = s;
-                        autoLaunchSlot = i;
-                        break;
-                    }
-                }
-                if (autoLaunchCore.isEmpty()) {
-                    ItemStack offh = inv2.offhand.get(0);
-                    if (offh.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(offh)) {
-                        autoLaunchCore = offh;
-                        autoLaunchSlot = 40;
-                    }
-                }
-            }
-            if (!autoLaunchCore.isEmpty()) {
-                tickAutoLaunchFighters(player, autoLaunchCore, autoLaunchSlot);
-            }
-        }
-    }
-
     /**
-     * No-GUI mode: transformation is driven entirely by the offhand slot.
-     * - ShipCoreItem enters offhand  → auto-transform (apply attributes, refill fuel, message).
-     * - ShipCoreItem leaves offhand  → auto-un-transform (remove attributes, recall aircraft, message).
-     * - Core stays in offhand        → recalculate attributes only when weapon load changes.
-     */
-    private static void tickInventoryLoadCheck(Player player) {
-        net.minecraft.world.entity.player.Inventory inv = player.getInventory();
-        ItemStack offhand = inv.offhand.get(0);
-        boolean coreInOffhand = offhand.getItem() instanceof ShipCoreItem;
-
-        if (coreInOffhand) {
-            // Auto-transform when core is placed in offhand
-            if (!TransformationManager.isTransformed(offhand)) {
-                // Check fuel — don't auto-transform with empty tank
-                FuelData fuel = offhand.getOrDefault(ModDataComponents.SHIP_CORE_FUEL.get(),
-                        new FuelData(0, ((ShipCoreItem) offhand.getItem()).getShipType().fuelCapacity));
-                if (fuel.isEmpty()) {
-                    // Show message only once (not every tick)
-                    Integer cached = lastWeaponLoad.get(player.getUUID());
-                    if (cached == null || cached != -999) {
-                        lastWeaponLoad.put(player.getUUID(), -999);
-                        player.displayClientMessage(
-                                Component.translatable("message.piranport.no_fuel"), true);
-                    }
-                    return;
-                }
-                // Clear -999 marker when fuel is sufficient
-                Integer cached = lastWeaponLoad.get(player.getUUID());
-                if (cached != null && cached == -999) {
-                    lastWeaponLoad.remove(player.getUUID());
-                }
-                TransformationManager.setTransformed(offhand, true);
-                TransformationManager.applyTransformationAttributes(player, offhand);
-                ShipCoreItem.refillAircraftFuel(player, offhand);
-                player.displayClientMessage(
-                        Component.translatable("message.piranport.transformed"), true);
-                // Spawn green plant-growth particles (bone meal effect) around the player
-                if (player.level() instanceof ServerLevel sl) {
-                    double px = player.getX();
-                    double py = player.getY() + 0.5;
-                    double pz = player.getZ();
-                    for (int i = 0; i < 30; i++) {
-                        double ox = (player.getRandom().nextDouble() - 0.5) * 1.5;
-                        double oy = player.getRandom().nextDouble() * 2.0;
-                        double oz = (player.getRandom().nextDouble() - 0.5) * 1.5;
-                        sl.sendParticles(ParticleTypes.HAPPY_VILLAGER,
-                                px + ox, py + oy, pz + oz,
-                                1, 0, 0, 0, 0);
-                    }
-                }
-                lastWeaponLoad.put(player.getUUID(), -1); // force attribute recalc next tick
-                return;
-            }
-
-            // Core already transformed — recalculate attributes only when load/engine changes
-            int weaponLoad = TransformationManager.getInventoryWeaponLoad(inv);
-            int armorLoad  = TransformationManager.getCoreArmorLoad(offhand);
-            double engineBonus = TransformationManager.getCoreEngineSpeedBonus(offhand);
-            int maxLoad    = ((ShipCoreItem) offhand.getItem()).getShipType().maxLoad;
-            int cacheKey   = java.util.Objects.hash(weaponLoad, armorLoad, maxLoad, engineBonus);
-            Integer cached = lastWeaponLoad.get(player.getUUID());
-            if (cached == null || cached != cacheKey) {
-                lastWeaponLoad.put(player.getUUID(), cacheKey);
-                TransformationManager.applyTransformationAttributes(player, offhand);
-            } else {
-                // Reapply overweight debuffs every 40 ticks to keep them active
-                int totalLoad = weaponLoad + armorLoad;
-                if (totalLoad > maxLoad && player.tickCount % 40 == 0) {
-                    TransformationManager.applyOverweightPenalty(player, totalLoad, maxLoad);
-                }
-            }
-        } else {
-            // No core in offhand — clear isTransformed flag on any core still in inventory
-            for (ItemStack stack : inv.items) {
-                if (stack.getItem() instanceof ShipCoreItem
-                        && TransformationManager.isTransformed(stack)) {
-                    TransformationManager.setTransformed(stack, false);
-                }
-            }
-            // Auto-un-transform if we were previously transformed
-            if (lastWeaponLoad.remove(player.getUUID()) != null) {
-                TransformationManager.removeTransformationAttributes(player);
-                TransformationManager.removeOverweightPenalty(player);
-                player.removeEffect(com.piranport.registry.ModMobEffects.FLAMMABLE);
-                player.removeEffect(MobEffects.WATER_BREATHING);
-                recallAircraftForPlayer(player);
-                player.displayClientMessage(
-                        Component.translatable("message.piranport.untransformed"), true);
-            }
-        }
-    }
-
-    /**
-     * Auto-launch fighters when hostile flying mobs are nearby.
-     * Locks the nearest hostile flying mob as a fire control target and launches a fighter.
-     * "Hostile flying mob" = Enemy that is a FlyingMob, Phantom, or Vex.
-     * If ammo/fuel is exhausted the fighter returns, refuels, and re-launches on the next check.
-     */
-    private static void tickAutoLaunchFighters(Player player, ItemStack coreStack, int coreSlot) {
-        if (!coreStack.getOrDefault(ModDataComponents.SHIP_AUTO_LAUNCH.get(), false)) return;
-
-        // Find hostile flying mobs within 64 blocks (for fighter auto-launch)
-        // Phantom extends FlyingMob (not Monster), so we check Enemy interface which all hostile mobs implement.
-        List<LivingEntity> flyingHostiles = player.level().getEntitiesOfClass(
-                LivingEntity.class,
-                player.getBoundingBox().inflate(64.0),
-                e -> e.isAlive() && e instanceof Enemy
-                        && (e instanceof FlyingMob || e instanceof Phantom || e instanceof Vex)
-        );
-
-        if (!flyingHostiles.isEmpty()) {
-            // Lock the nearest target only when there are no currently-alive fire control targets
-            if (player.level() instanceof ServerLevel sl) {
-                List<UUID> currentLocks = FireControlManager.getTargets(player.getUUID());
-                boolean hasActiveLock = currentLocks.stream()
-                        .map(sl::getEntity)
-                        .anyMatch(e -> e != null && e.isAlive());
-
-                if (!hasActiveLock) {
-                    LivingEntity nearest = flyingHostiles.stream()
-                            .min(Comparator.comparingDouble(player::distanceTo))
-                            .orElse(null);
-                    if (nearest != null) {
-                        FireControlManager.lock(player.getUUID(), nearest.getUUID());
-                    }
-                }
-            }
-
-            ShipCoreItem.tryAutoLaunchFighter(player.level(), player, coreStack, coreSlot);
-        }
-
-        // Anti-air missiles: check for airborne hostile mobs within 32 blocks
-        // Target must be at least 2 blocks above ground (excludes jumping ground mobs, includes all flying hostiles).
-        // Phantom is not Monster — use Enemy interface so phantoms count as airborne hostiles.
-        boolean hasAirborneHostile = !player.level().getEntitiesOfClass(
-                LivingEntity.class,
-                player.getBoundingBox().inflate(32.0),
-                e -> {
-                    if (!e.isAlive() || !e.isPickable() || !(e instanceof Enemy) || e.isUnderWater()) return false;
-                    // Check if entity is at least 2 blocks above the ground
-                    net.minecraft.core.BlockPos below = e.blockPosition().below(2);
-                    return !e.onGround() && !player.level().getBlockState(below).isSolid();
-                }
-        ).isEmpty();
-        if (hasAirborneHostile) {
-            ShipCoreItem.tryAutoFireAntiAirMissile(player.level(), player, coreStack, coreSlot);
-        }
-    }
-
-    // Cache of last-known weapon load per player (for no-GUI inventory mode).
-    // Only recalculate attributes when the value actually changes.
-    private static final java.util.Map<UUID, Integer> lastWeaponLoad =
-            new java.util.HashMap<>();
-
-    // Fuel consumption: track distance moved per player (server-side only).
-    private static final java.util.Map<UUID, Vec3> lastPlayerPos =
-            new java.util.HashMap<>();
-    private static final java.util.Map<UUID, Double> accumulatedDistance =
-            new java.util.HashMap<>();
-
-    /**
-     * Consume fuel based on distance moved while transformed.
-     * Each ShipType defines distancePerFuel (blocks per 1b consumed).
-     * When fuel reaches 0, auto-untransform and recall aircraft.
-     */
-    private static void tickFuelConsumption(Player player) {
-        UUID uuid = player.getUUID();
-        Vec3 currentPos = player.position();
-        Vec3 lastPos = lastPlayerPos.put(uuid, currentPos);
-
-        if (lastPos == null) return; // first tick — no distance yet
-
-        double dist = currentPos.distanceTo(lastPos);
-        if (dist > 10.0) {
-            // Teleport detected — reset baseline and clear accumulation
-            lastPlayerPos.put(uuid, currentPos);
-            accumulatedDistance.remove(uuid);
-            return;
-        }
-        if (dist < 0.001) return; // standing still
-
-        ItemStack core = TransformationManager.findTransformedCore(player);
-        if (!(core.getItem() instanceof ShipCoreItem sci)) return;
-
-        double threshold = sci.getShipType().distancePerFuel;
-        double acc = accumulatedDistance.getOrDefault(uuid, 0.0) + dist;
-
-        FuelData fuel = core.getOrDefault(ModDataComponents.SHIP_CORE_FUEL.get(),
-                new FuelData(0, sci.getShipType().fuelCapacity));
-
-        while (acc >= threshold && fuel.currentFuel() > 0) {
-            acc -= threshold;
-            fuel = fuel.withCurrentFuel(fuel.currentFuel() - 1);
-        }
-        core.set(ModDataComponents.SHIP_CORE_FUEL.get(), fuel);
-
-        if (fuel.isEmpty()) {
-            // Fuel depleted — auto-untransform
-            TransformationManager.setTransformed(core, false);
-            TransformationManager.removeTransformationAttributes(player);
-            TransformationManager.removeOverweightPenalty(player);
-            player.removeEffect(com.piranport.registry.ModMobEffects.FLAMMABLE);
-            recallAircraftForPlayer(player);
-            lastWeaponLoad.remove(uuid);
-            accumulatedDistance.remove(uuid);
-            lastPlayerPos.remove(uuid);
-            player.displayClientMessage(
-                    Component.translatable("message.piranport.fuel_depleted"), true);
-            return;
-        }
-
-        accumulatedDistance.put(uuid, acc);
-    }
-
-    /**
-     * Elite Damage Control Squad: prevent lethal damage if the player has one in inventory.
-     * Consumes the item, sets health to 1, and grants Resistance II (30s),
-     * Fire Resistance (30s), Regeneration II (6s). Plays totem animation.
-     */
-    @SubscribeEvent(priority = net.neoforged.bus.api.EventPriority.HIGHEST)
-    public static void onEliteDamageControl(LivingDeathEvent event) {
-        if (event.getEntity().level().isClientSide()) return;
-        if (!(event.getEntity() instanceof ServerPlayer player)) return;
-
-        Inventory inv = player.getInventory();
-        int foundSlot = -1;
-        for (int i = 0; i < inv.getContainerSize(); i++) {
-            if (inv.getItem(i).is(com.piranport.registry.ModItems.ELITE_DAMAGE_CONTROL.get())) {
-                foundSlot = i;
-                break;
-            }
-        }
-        if (foundSlot < 0) return;
-
-        // Consume the item
-        inv.getItem(foundSlot).shrink(1);
-
-        // Cancel death
-        event.setCanceled(true);
-
-        // Restore to 1 HP
-        player.setHealth(1.0f);
-
-        // Apply buffs: Resistance II 30s, Fire Resistance 30s, Regeneration II 6s
-        player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 600, 1));
-        player.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 600, 0));
-        player.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 120, 1));
-
-        // Totem-style animation
-        player.level().broadcastEntityEvent(player, (byte) 35);
-    }
-
-    /** When a player dies, recall all their airborne aircraft. */
-    @SubscribeEvent
-    public static void onPlayerDeath(LivingDeathEvent event) {
-        if (event.getEntity().level().isClientSide()) return;
-        if (!(event.getEntity() instanceof Player player)) return;
-        if (event.isCanceled()) return;
-        recallAircraftForPlayer(player);
-    }
-
-    /** When a player changes dimension, recall all aircraft and clear fire control state. */
-    @SubscribeEvent
-    public static void onDimensionChange(PlayerEvent.PlayerChangedDimensionEvent event) {
-        if (!(event.getEntity() instanceof Player player)) return;
-        if (player.level().isClientSide()) return;
-        recallAircraftForPlayer(player);
-    }
-
-    /** When a player logs in, sync skins, give guidebook, sync dungeon registry, and clean up stale recon slowness. */
-    @SubscribeEvent
-    public static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
-        if (!(event.getEntity() instanceof ServerPlayer joiner)) return;
-        com.piranport.skin.SkinManager.syncAllSkinsToPlayer(joiner);
-
-        // Sync dungeon registry data to client
-        net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(joiner,
-                com.piranport.dungeon.network.DungeonRegistrySyncPayload.fromRegistry());
-
-        // Safety net: remove residual recon slowness (amplifier 9) left by server crash
-        var slowness = joiner.getEffect(MobEffects.MOVEMENT_SLOWDOWN);
-        if (slowness != null && slowness.getAmplifier() >= 9) {
-            joiner.removeEffect(MobEffects.MOVEMENT_SLOWDOWN);
-        }
-
-        // Give guidebook on first join
-        if (ModCommonConfig.GIVE_GUIDEBOOK_ON_FIRST_JOIN.get()) {
-            net.minecraft.nbt.CompoundTag persisted = joiner.getPersistentData();
-            String tag = "piranport:received_guidebook";
-            if (!persisted.getBoolean(tag)) {
-                persisted.putBoolean(tag, true);
-                ItemStack guidebook = new ItemStack(
-                        com.piranport.registry.ModItems.GUIDEBOOK.get());
-                if (!joiner.getInventory().add(guidebook)) {
-                    joiner.drop(guidebook, false);
-                }
-            }
-        }
-    }
-
-    /** When a player logs out, recall all their airborne aircraft and clear cached load. */
-    @SubscribeEvent
-    public static void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
-        if (!(event.getEntity() instanceof Player player)) return;
-        if (player.level().isClientSide()) return;
-        lastWeaponLoad.remove(player.getUUID());
-        lastPlayerPos.remove(player.getUUID());
-        accumulatedDistance.remove(player.getUUID());
-        com.piranport.combat.HitNotifier.onPlayerLogout(player.getUUID());
-        com.piranport.network.RecallAllAircraftPayload.onPlayerDisconnect(player.getUUID());
-        recallAircraftForPlayer(player);
-        // Drop the player from any lecturn lobby they were in, so the lobby roster
-        // doesn't show ghosts after disconnect.
-        var lobbyMgr = com.piranport.dungeon.lobby.DungeonLobbyManager.INSTANCE;
-        net.minecraft.core.GlobalPos lecternPos = lobbyMgr.findLobbyOf(player.getUUID());
-        if (lecternPos != null && player.getServer() != null) {
-            lobbyMgr.leaveLobby(lecternPos, player.getUUID());
-            lobbyMgr.broadcastLobbyUpdate(player.getServer(), lecternPos);
-        }
-    }
-
-    private static void recallAircraftForPlayer(Player player) {
-        if (player.level().isClientSide()) return;
-        UUID ownerUUID = player.getUUID();
-        // O(k) lookup via the owner-keyed index instead of a per-dim full entity scan.
-        for (AircraftEntity aircraft : com.piranport.aviation.AircraftIndex.snapshot(ownerUUID)) {
-            aircraft.recallAndRemove();
-        }
-        FireControlManager.clearTargets(ownerUUID);
-        ReconManager.endRecon(ownerUUID);
-        com.piranport.combat.TorpedoGuidanceManager.endGuidance(ownerUUID);
-    }
-
-    /**
-     * Redirect weapon item pickups to main inventory (slots 9–35) instead of hotbar.
-     * Enabled by the weaponPickupToInventory config flag.
-     * Falls back to vanilla (hotbar-first) when main inventory is full.
+     * 将武器类物品拾取定向到主背包（9-35格）而非快捷栏。
+     * 主背包满时回退原版行为。
      */
     @SubscribeEvent
     public static void onWeaponPickup(ItemEntityPickupEvent.Pre event) {
@@ -595,7 +56,7 @@ public class GameEvents {
         int total = stack.getCount();
         int taken = 0;
 
-        // Phase 1: merge with existing partial stacks in main inventory (slots 9–35)
+        // 第一轮：合并到主背包已有叠堆
         for (int i = 9; i < 36 && taken < total; i++) {
             ItemStack existing = inv.getItem(i);
             if (ItemStack.isSameItemSameComponents(existing, stack)
@@ -607,7 +68,7 @@ public class GameEvents {
             }
         }
 
-        // Phase 2: place remainder in empty main inventory slots (slots 9–35)
+        // 第二轮：放入主背包空格
         for (int i = 9; i < 36 && taken < total; i++) {
             if (inv.getItem(i).isEmpty()) {
                 int add = Math.min(stack.getMaxStackSize(), total - taken);
@@ -616,67 +77,55 @@ public class GameEvents {
             }
         }
 
-        if (taken == 0) return; // main inventory full, fall back to vanilla (hotbar)
+        if (taken == 0) return;
 
-        // Award pickup stats
         if (player instanceof ServerPlayer sp) {
             sp.awardStat(Stats.ITEM_PICKED_UP.get(stack.getItem()), taken);
         }
 
-        // Shrink / discard the item entity
         stack.shrink(taken);
         if (stack.isEmpty()) {
             itemEntity.discard();
         }
 
-        // Prevent vanilla from adding to hotbar
         event.setCanPickup(TriState.FALSE);
     }
 
-    /**
-     * Tick all active dungeon scripts once per server tick.
-     * Scripts run in the dungeon dimension level.
-     */
+    /** 每 tick 驱动地牢脚本 */
     @SubscribeEvent
     public static void onServerTick(ServerTickEvent.Post event) {
         ServerLevel dungeonLevel = event.getServer().getLevel(
-                com.piranport.dungeon.event.DungeonEventHandler.DUNGEON_DIMENSION);
+                DungeonEventHandler.DUNGEON_DIMENSION);
         if (dungeonLevel != null) {
-            com.piranport.dungeon.script.DungeonScriptManager.get(event.getServer())
-                    .tickAll(dungeonLevel);
+            DungeonScriptManager.get(event.getServer()).tickAll(dungeonLevel);
         }
 
-        // Fleet group cleanup every 12000 ticks (10 minutes)
+        // 舰队编队清理（每10分钟）
         if (event.getServer().getTickCount() % 12000 == 0) {
             ServerLevel overworld = event.getServer().overworld();
-            com.piranport.npc.ai.FleetGroupManager.get(overworld).cleanup(event.getServer());
+            FleetGroupManager.get(overworld).cleanup(event.getServer());
         }
 
-        // Dungeon instance leak sweep every 12000 ticks (10 minutes):
-        // promotes pending freed indices and auto-cleans stale SUSPENDED instances.
+        // 地牢实例泄漏清理（每10分钟）
         if (event.getServer().getTickCount() % 12000 == 0 && dungeonLevel != null) {
-            com.piranport.dungeon.instance.DungeonInstanceManager.get(event.getServer().overworld())
+            DungeonInstanceManager.get(event.getServer().overworld())
                     .sweepLeaks(dungeonLevel);
         }
     }
 
-    /**
-     * When a dungeon-tagged mob dies, notify the script manager.
-     * This handles destroyers and other scripted enemies.
-     */
+    /** 地牢脚本标记的生物死亡时通知脚本管理器 */
     @SubscribeEvent
     public static void onDungeonMobDeath(LivingDeathEvent event) {
         if (!(event.getEntity().level() instanceof ServerLevel sl)) return;
         LivingEntity entity = event.getEntity();
         if (!entity.getTags().contains("dungeon_script")) return;
 
-        // Extract instance UUID from tags
         for (String tag : entity.getTags()) {
             if (tag.startsWith("dungeon_instance_")) {
                 try {
-                    java.util.UUID instanceId = java.util.UUID.fromString(
+                    UUID instanceId = UUID.fromString(
                             tag.substring("dungeon_instance_".length()));
-                    com.piranport.dungeon.script.DungeonScriptManager.get(sl.getServer())
+                    DungeonScriptManager.get(sl.getServer())
                             .onEntityDeath(instanceId, entity);
                 } catch (IllegalArgumentException ignored) {}
                 break;
@@ -684,10 +133,7 @@ public class GameEvents {
         }
     }
 
-    /**
-     * When a dungeon flagship dies (non-scripted battles), check if all flagships for
-     * that node are dead. If so, spawn a completion portal.
-     */
+    /** 地牢旗舰死亡时检查同节点所有旗舰，全灭则生成传送门 */
     @SubscribeEvent
     public static void onDungeonFlagshipDeath(LivingDeathEvent event) {
         if (event.getEntity().level().isClientSide()) return;
@@ -695,12 +141,12 @@ public class GameEvents {
         LivingEntity entity = event.getEntity();
         if (!entity.getTags().contains("dungeon_flagship")) return;
 
-        java.util.UUID instanceId = null;
+        UUID instanceId = null;
         String nodeId = null;
         for (String tag : entity.getTags()) {
             if (tag.startsWith("dungeon_instance_")) {
                 try {
-                    instanceId = java.util.UUID.fromString(tag.substring("dungeon_instance_".length()));
+                    instanceId = UUID.fromString(tag.substring("dungeon_instance_".length()));
                 } catch (IllegalArgumentException ignored) {}
             } else if (tag.startsWith("dungeon_node_")) {
                 nodeId = tag.substring("dungeon_node_".length());
@@ -708,14 +154,11 @@ public class GameEvents {
         }
         if (instanceId == null || nodeId == null) return;
 
-        // If a script is active for this instance, let the script handle it
-        if (com.piranport.dungeon.script.DungeonScriptManager.get(sl.getServer())
-                .getScript(instanceId) != null) return;
+        if (DungeonScriptManager.get(sl.getServer()).getScript(instanceId) != null) return;
 
-        // Check if any other flagships for this node/instance are still alive
         String matchTag = "dungeon_instance_" + instanceId;
         String nodeTag = "dungeon_node_" + nodeId;
-        net.minecraft.world.phys.AABB scanBox = entity.getBoundingBox().inflate(200);
+        AABB scanBox = entity.getBoundingBox().inflate(200);
         boolean anyFlagshipAlive = sl.getEntitiesOfClass(LivingEntity.class, scanBox,
                 e -> e != entity && e.isAlive()
                         && e.getTags().contains("dungeon_flagship")
@@ -723,27 +166,22 @@ public class GameEvents {
                         && e.getTags().contains(nodeTag)).stream().findAny().isPresent();
 
         if (!anyFlagshipAlive) {
-            // All flagships dead — spawn completion portal
-            com.piranport.dungeon.instance.DungeonInstanceManager mgr =
-                    com.piranport.dungeon.instance.DungeonInstanceManager.get(sl);
-            com.piranport.dungeon.instance.DungeonInstance instance = mgr.getInstance(instanceId);
+            DungeonInstanceManager mgr = DungeonInstanceManager.get(sl);
+            DungeonInstance instance = mgr.getInstance(instanceId);
             if (instance == null) return;
 
-            net.minecraft.core.BlockPos portalPos = entity.blockPosition();
-            com.piranport.dungeon.entity.DungeonPortalEntity portal =
-                    com.piranport.dungeon.entity.DungeonPortalEntity.create(
-                            sl, instanceId, nodeId,
-                            portalPos.getX() + 0.5,
-                            com.piranport.dungeon.DungeonConstants.SPAWN_Y,
-                            portalPos.getZ() + 0.5);
+            BlockPos portalPos = entity.blockPosition();
+            DungeonPortalEntity portal = DungeonPortalEntity.create(
+                    sl, instanceId, nodeId,
+                    portalPos.getX() + 0.5,
+                    DungeonConstants.SPAWN_Y,
+                    portalPos.getZ() + 0.5);
             if (portal != null) {
                 sl.addFreshEntity(portal);
             }
 
-            // Notify players
-            for (java.util.UUID playerUuid : instance.getPlayerUuids()) {
-                net.minecraft.server.level.ServerPlayer player =
-                        sl.getServer().getPlayerList().getPlayer(playerUuid);
+            for (UUID playerUuid : instance.getPlayerUuids()) {
+                ServerPlayer player = sl.getServer().getPlayerList().getPlayer(playerUuid);
                 if (player != null) {
                     player.displayClientMessage(
                             net.minecraft.network.chat.Component.translatable(
@@ -753,12 +191,11 @@ public class GameEvents {
         }
     }
 
-    // See also: DungeonEventHandler.onServerStopping for dungeon-specific cleanup
-    /** 经验提升Buff: 怪物掉落经验 +50% */
+    /** 经验提升Buff：怪物掉落经验 +50% */
     @SubscribeEvent
-    public static void onXpDrop(net.neoforged.neoforge.event.entity.living.LivingExperienceDropEvent event) {
+    public static void onXpDrop(LivingExperienceDropEvent event) {
         Player attacker = event.getAttackingPlayer();
-        if (attacker != null && attacker.hasEffect(com.piranport.registry.ModMobEffects.EXPERIENCE_BOOST)) {
+        if (attacker != null && attacker.hasEffect(ModMobEffects.EXPERIENCE_BOOST)) {
             int original = event.getDroppedExperience();
             event.setDroppedExperience((int) (original * 1.5));
         }
@@ -766,118 +203,15 @@ public class GameEvents {
 
     @SubscribeEvent
     public static void onRegisterCommands(net.neoforged.neoforge.event.RegisterCommandsEvent event) {
-        com.piranport.debug.PiranPortCommands.register(event.getDispatcher());
+        PiranPortCommands.register(event.getDispatcher());
     }
 
     @SubscribeEvent
     public static void onServerStopped(ServerStoppedEvent event) {
         FireControlManager.clearAll();
         ReconManager.clearAll();
-        com.piranport.aviation.AircraftIndex.clearAll();
-        com.piranport.combat.TorpedoGuidanceManager.clearAll();
-        // DungeonScriptManager state is persisted as SavedData; nothing to clear here.
-        lastWeaponLoad.clear();
-        lastPlayerPos.clear();
-        accumulatedDistance.clear();
-    }
-
-    /**
-     * Add custom trades to Farmer villagers.
-     * Sells food ingredients and dishes that have no crafting recipe.
-     */
-    @SubscribeEvent
-    public static void onVillagerTrades(VillagerTradesEvent event) {
-        if (event.getType() != VillagerProfession.FARMER) return;
-
-        var trades = event.getTrades();
-        // Level 1 trades (1-2 emeralds)
-        trades.get(1).add((trader, rand) -> new MerchantOffer(
-                new ItemCost(Items.EMERALD, 1),
-                new ItemStack(ModItems.GYPSUM_CHIP.get(), 4),
-                16, 2, 0.05f));
-        trades.get(1).add((trader, rand) -> new MerchantOffer(
-                new ItemCost(Items.EMERALD, 1),
-                new ItemStack(ModItems.QUICKLIME.get(), 4),
-                16, 2, 0.05f));
-        trades.get(1).add((trader, rand) -> new MerchantOffer(
-                new ItemCost(Items.EMERALD, 1),
-                new ItemStack(ModItems.BLACK_PEPPER.get(), 2),
-                16, 2, 0.05f));
-        trades.get(1).add((trader, rand) -> new MerchantOffer(
-                new ItemCost(Items.EMERALD, 1),
-                new ItemStack(ModItems.WHITE_PEPPER.get(), 2),
-                16, 2, 0.05f));
-        trades.get(1).add((trader, rand) -> new MerchantOffer(
-                new ItemCost(Items.EMERALD, 1),
-                new ItemStack(ModItems.GINGER.get(), 3),
-                16, 2, 0.05f));
-        trades.get(1).add((trader, rand) -> new MerchantOffer(
-                new ItemCost(Items.EMERALD, 1),
-                new ItemStack(ModItems.BLACK_TEA.get(), 2),
-                16, 2, 0.05f));
-        trades.get(1).add((trader, rand) -> new MerchantOffer(
-                new ItemCost(Items.EMERALD, 1),
-                new ItemStack(ModItems.ALMOND.get(), 3),
-                16, 2, 0.05f));
-
-        // Level 2 trades (3-5 emeralds)
-        trades.get(2).add((trader, rand) -> new MerchantOffer(
-                new ItemCost(Items.EMERALD, 3),
-                new ItemStack(ModItems.SAUSAGE.get(), 1),
-                12, 5, 0.05f));
-        trades.get(2).add((trader, rand) -> new MerchantOffer(
-                new ItemCost(Items.EMERALD, 2),
-                new ItemStack(ModItems.SLICED_SALAMI.get(), 2),
-                12, 5, 0.05f));
-
-        // Level 3 trades (5-8 emeralds) - prepared dishes
-        trades.get(3).add((trader, rand) -> new MerchantOffer(
-                new ItemCost(Items.EMERALD, 5),
-                new ItemStack(ModItems.ASSORTED_CHAR_SIU_FRIED_RICE.get(), 1),
-                8, 10, 0.05f));
-        trades.get(3).add((trader, rand) -> new MerchantOffer(
-                new ItemCost(Items.EMERALD, 4),
-                new ItemStack(ModItems.MISO_SOUP.get(), 1),
-                8, 10, 0.05f));
-        trades.get(3).add((trader, rand) -> new MerchantOffer(
-                new ItemCost(Items.EMERALD, 5),
-                new ItemStack(ModItems.BARBECUE.get(), 1),
-                8, 10, 0.05f));
-        trades.get(3).add((trader, rand) -> new MerchantOffer(
-                new ItemCost(Items.EMERALD, 4),
-                new ItemStack(ModItems.SOBA_NOODLE.get(), 1),
-                8, 10, 0.05f));
-        trades.get(3).add((trader, rand) -> new MerchantOffer(
-                new ItemCost(Items.EMERALD, 4),
-                new ItemStack(ModItems.YORKSHIRE_PUDDING.get(), 1),
-                8, 10, 0.05f));
-
-        // Level 4 trades (8-12 emeralds) - premium dishes
-        trades.get(4).add((trader, rand) -> new MerchantOffer(
-                new ItemCost(Items.EMERALD, 8),
-                new ItemStack(ModItems.BLACK_FOREST_GATEAU.get(), 1),
-                6, 15, 0.05f));
-        trades.get(4).add((trader, rand) -> new MerchantOffer(
-                new ItemCost(Items.EMERALD, 7),
-                new ItemStack(ModItems.SCHWEINSHAXE.get(), 1),
-                6, 15, 0.05f));
-        trades.get(4).add((trader, rand) -> new MerchantOffer(
-                new ItemCost(Items.EMERALD, 6),
-                new ItemStack(ModItems.TEMPURA_SOBA_NOODLE.get(), 1),
-                6, 15, 0.05f));
-        trades.get(4).add((trader, rand) -> new MerchantOffer(
-                new ItemCost(Items.EMERALD, 7),
-                new ItemStack(ModItems.VENICE_CUTTLEFISH_NOODLES.get(), 1),
-                6, 15, 0.05f));
-
-        // Level 5 trades (10-15 emeralds) - special items
-        trades.get(5).add((trader, rand) -> new MerchantOffer(
-                new ItemCost(Items.EMERALD, 10),
-                new ItemStack(ModItems.HE_WEI_DAO.get(), 1),
-                4, 20, 0.05f));
-        trades.get(5).add((trader, rand) -> new MerchantOffer(
-                new ItemCost(Items.EMERALD, 12),
-                new ItemStack(ModItems.PLATED_ROYAL_NAVAL_SALTED_BEEF.get(), 1),
-                4, 20, 0.05f));
+        AircraftIndex.clearAll();
+        TorpedoGuidanceManager.clearAll();
+        PlayerTickHandler.clearCaches();
     }
 }

@@ -181,6 +181,19 @@ public class TorpedoEntity extends ThrowableItemProjectile {
 
     // ==================== tick 方法 ====================
 
+    /**
+     * Tick 调用链（短路执行，首次匹配成功的模式接管本 tick）：
+     *   resolveLockedTarget → tickLifetime → tickMagneticProximity → tickProximityHit
+     *   → tickWireGuidance【线导激活时 return，跳过声导和后续】
+     *   → tickAcousticHoming
+     *   → tickAirDrop【空投阶段强制接管运动，跳过水面AI】
+     *   → tickSurfaceAI
+     *
+     * 模式互斥关系：
+     *   - 线导激活时：声导归位被线导 return 短路
+     *   - 空投阶段：接管运动控制，跳过水面巡航
+     *   - 磁性近炸：独立于运动模式，只检查是否引爆，不接管运动
+     */
     @Override
     public void tick() {
         super.tick();

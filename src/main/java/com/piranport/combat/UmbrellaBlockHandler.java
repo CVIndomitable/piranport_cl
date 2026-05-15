@@ -27,7 +27,7 @@ public class UmbrellaBlockHandler {
         if (!(event.getEntity() instanceof Player player)) return;
         if (player.level().isClientSide()) return;
 
-        // Must be actively using the umbrella
+        // 必须正在使用伞
         if (!player.isUsingItem()) return;
         ItemStack useItem = player.getUseItem();
         if (!(useItem.getItem() instanceof TaihouUmbrellaItem)) return;
@@ -39,25 +39,25 @@ public class UmbrellaBlockHandler {
         Vec3 sourcePos = event.getSource().getSourcePosition();
         if (sourcePos == null) return;
 
-        // Direction from player center to damage source
+        // 玩家中心到伤害源的方向
         Vec3 playerCenter = player.position().add(0, player.getBbHeight() * 0.5, 0);
         Vec3 dirToSource = sourcePos.subtract(playerCenter);
         if (dirToSource.lengthSqr() < 1e-6) return;
         dirToSource = dirToSource.normalize();
 
-        // Check if the source is within the 150-degree cone from directly above.
+        // 检查伤害源是否在正上方 150 度锥形内
         // The umbrella protects against attacks coming from above (anti-air).
         // We check the angle between dirToSource and the UP vector (0, 1, 0).
         // dot(dirToSource, UP) = dirToSource.y = cos(angle)
         // If angle <= 75° (half of 150°), then cos(angle) >= cos(75°)
         if (dirToSource.y >= COS_HALF_ANGLE) {
-            // Block the damage
+            // 格挡伤害
             event.setCanceled(true);
 
-            // Consume durability
+            // 消耗耐久
             useItem.hurtAndBreak(1, player, player.getEquipmentSlotForItem(useItem));
 
-            // Shield block sound
+            // 盾牌格挡音效
             player.level().playSound(null, player.blockPosition(),
                     SoundEvents.SHIELD_BLOCK, SoundSource.PLAYERS, 1.0F, 1.0F);
         }

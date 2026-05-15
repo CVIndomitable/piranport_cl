@@ -49,7 +49,7 @@ public record RecallAllAircraftPayload() implements CustomPacketPayload {
             if (com.piranport.config.ModCommonConfig.isShipCoreGuiEnabled()) return;
             if (!com.piranport.combat.TransformationManager.isPlayerTransformed(sp)) return;
 
-            // Rate limit: 20 ticks between recalls
+            // 频率限制：两次召回间隔至少 20 tick
             long now = sp.level().getGameTime();
             Long last = lastRecallTick.get(sp.getUUID());
             if (last != null && now - last < 20) return;

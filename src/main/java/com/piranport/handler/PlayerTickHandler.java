@@ -6,7 +6,7 @@ import com.piranport.aviation.ReconManager;
 import com.piranport.combat.TransformationManager;
 import com.piranport.component.FuelData;
 import com.piranport.config.ModCommonConfig;
-import com.piranport.entity.AircraftEntity;
+
 import com.piranport.item.KirinHeadbandItem;
 import com.piranport.item.FootballArmorItem;
 import com.piranport.item.ShipCoreItem;
@@ -55,17 +55,47 @@ public class PlayerTickHandler {
         accumulatedDistance.clear();
     }
 
+    /** 玩家登出时清理该玩家的缓存条目，防止长时间运行内存泄漏 */
+    public static void onPlayerLogout(UUID uuid) {
+        lastWeaponLoad.remove(uuid);
+        lastPlayerPos.remove(uuid);
+        accumulatedDistance.remove(uuid);
+    }
+
     @SubscribeEvent
     public static void onPlayerTick(PlayerTickEvent.Post event) {
         Player player = event.getEntity();
         if (player.level().isClientSide()) return;
 
-        // 麒麟头巾：头部佩戴时永久隐身
+        tickEquipmentPassives(player);
+        tickInventoryLoadIfNoGui(player);
+        tickReconBodyLock(player);
+
+        if (!TransformationManager.isPlayerTransformed(player)) {
+            lastPlayerPos.remove(player.getUUID());
+            accumulatedDistance.remove(player.getUUID());
+            return;
+        }
+
+        tickFuelConsumption(player);
+        if (!TransformationManager.isPlayerTransformed(player)) return;
+
+        ItemStack transformedCore = TransformationManager.findTransformedCore(player);
+        boolean isSubmarine = transformedCore.getItem() instanceof ShipCoreItem sci
+                && sci.getShipType() == ShipCoreItem.ShipType.SUBMARINE;
+
+        handleWaterWalkingIfNeeded(player, isSubmarine);
+        tickSubmarineEffects(player, isSubmarine);
+        tickSonarGlow(player, transformedCore);
+        tickCleanupResidualSlowdown(player);
+        tickAutoCombatIfNeeded(player);
+    }
+
+    /** 麒麟头巾隐身 + 足球套装经验加成 */
+    private static void tickEquipmentPassives(Player player) {
         if (player.getItemBySlot(EquipmentSlot.HEAD).getItem() instanceof KirinHeadbandItem) {
             player.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 25, 0, false, false, true));
         }
-
-        // 足球套装：任意一件提供经验加成
         boolean hasFootball = false;
         for (ItemStack armor : player.getArmorSlots()) {
             if (armor.getItem() instanceof FootballArmorItem) {
@@ -76,13 +106,17 @@ public class PlayerTickHandler {
         if (hasFootball) {
             player.addEffect(new MobEffectInstance(ModMobEffects.EXPERIENCE_BOOST, 25, 0, false, false, true));
         }
+    }
 
-        // 无GUI模式：检测背包武器变化并重算属性
+    /** 无GUI模式：检测背包武器变化并重算属性 */
+    private static void tickInventoryLoadIfNoGui(Player player) {
         if (!ModCommonConfig.isShipCoreGuiEnabled()) {
             tickInventoryLoadCheck(player);
         }
+    }
 
-        // 侦察模式锁定身体：必须先于变身检查
+    /** 侦察模式：锁定玩家身体位置，阻止移动 */
+    private static void tickReconBodyLock(Player player) {
         if (ReconManager.isInRecon(player.getUUID())) {
             Vec3 vel = player.getDeltaMovement();
             double newY = vel.y > 0 ? 0 : vel.y;
@@ -94,58 +128,50 @@ public class PlayerTickHandler {
                 player.resetFallDistance();
             }
         }
+    }
 
-        // 未变身则清理距离追踪
-        if (!TransformationManager.isPlayerTransformed(player)) {
-            lastPlayerPos.remove(player.getUUID());
-            accumulatedDistance.remove(player.getUUID());
-            return;
-        }
-
-        // 燃料消耗
-        tickFuelConsumption(player);
-        if (!TransformationManager.isPlayerTransformed(player)) return;
-
-        ItemStack transformedCore = TransformationManager.findTransformedCore(player);
-        boolean isSubmarine = transformedCore.getItem() instanceof ShipCoreItem sci
-                && sci.getShipType() == ShipCoreItem.ShipType.SUBMARINE;
-
-        // 水面行走
+    /** 水面行走条件判断后委托给 handleWaterWalking */
+    private static void handleWaterWalkingIfNeeded(Player player, boolean isSubmarine) {
         if (!isSubmarine && player.isInWater() && !player.isEyeInFluidType(NeoForgeMod.WATER_TYPE.value())) {
             handleWaterWalking(player);
         }
+    }
 
-        // 潜艇核心：无限水下呼吸 + 水下隐身
+    /** 潜艇效果：无限水下呼吸 + 水下隐身 */
+    private static void tickSubmarineEffects(Player player, boolean isSubmarine) {
         if (isSubmarine) {
             player.addEffect(new MobEffectInstance(MobEffects.WATER_BREATHING, 400, 0, false, false, true));
             if (player.isEyeInFluidType(NeoForgeMod.WATER_TYPE.value())) {
                 player.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 40, 0, false, false, true));
             }
         }
+    }
 
-        // 声纳效果：24格内水生/敌对生物发光
-        if (player.tickCount % 40 == 0) {
-            if (TransformationManager.hasSonarEquipped(player, transformedCore)) {
-                AABB scanBox = player.getBoundingBox().inflate(24.0, 8.0, 24.0);
-                List<LivingEntity> nearby = player.level().getEntitiesOfClass(
-                        LivingEntity.class, scanBox,
-                        e -> e.isAlive() && e != player && !(e instanceof Player));
-                for (LivingEntity entity : nearby) {
-                    entity.addEffect(new MobEffectInstance(MobEffects.GLOWING, 40, 0, false, false, false));
-                }
-            }
+    /** 声纳效果：24格内水生/敌对生物发光（每40tick） */
+    private static void tickSonarGlow(Player player, ItemStack transformedCore) {
+        if (player.tickCount % 40 != 0) return;
+        if (!TransformationManager.hasSonarEquipped(player, transformedCore)) return;
+        AABB scanBox = player.getBoundingBox().inflate(24.0, 8.0, 24.0);
+        List<LivingEntity> nearby = player.level().getEntitiesOfClass(
+                LivingEntity.class, scanBox,
+                e -> e.isAlive() && e != player && !(e instanceof Player));
+        for (LivingEntity entity : nearby) {
+            entity.addEffect(new MobEffectInstance(MobEffects.GLOWING, 40, 0, false, false, false));
         }
+    }
 
-        // 清除残留的侦察减速
-        if (player.tickCount % 20 == 0) {
-            MobEffectInstance slowness = player.getEffect(MobEffects.MOVEMENT_SLOWDOWN);
-            if (slowness != null && slowness.getAmplifier() >= 9
-                    && !ReconManager.isInRecon(player.getUUID())) {
-                player.removeEffect(MobEffects.MOVEMENT_SLOWDOWN);
-            }
+    /** 清除侦察模式残留的减速效果（每20tick） */
+    private static void tickCleanupResidualSlowdown(Player player) {
+        if (player.tickCount % 20 != 0) return;
+        MobEffectInstance slowness = player.getEffect(MobEffects.MOVEMENT_SLOWDOWN);
+        if (slowness != null && slowness.getAmplifier() >= 9
+                && !ReconManager.isInRecon(player.getUUID())) {
+            player.removeEffect(MobEffects.MOVEMENT_SLOWDOWN);
         }
+    }
 
-        // 战斗机自动升空 + 防空导弹
+    /** 战斗机自动升空 + 防空导弹（每40tick） */
+    private static void tickAutoCombatIfNeeded(Player player) {
         if (player.tickCount % 40 == 0) {
             tickAutoCombat(player);
         }

@@ -6,7 +6,7 @@ import net.minecraft.world.entity.Entity;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 
-/** Client-side torpedo guidance state — camera is bound to a wire-guided torpedo. */
+/** 客户端线导鱼雷状态 — 摄像机绑定到线导鱼雷 */
 @OnlyIn(Dist.CLIENT)
 public class ClientTorpedoGuidance {
     private static boolean active = false;

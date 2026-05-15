@@ -29,7 +29,7 @@ public record AmmoWorkbenchCraftPayload(BlockPos pos, String recipeId, int quant
 
     private static final int MAX_RECIPE_ID_LEN = 64;
     private static final int MAX_QUANTITY = 64;
-    // Rate limit: one request per player per 10 ticks (~0.5s).
+    // 频率限制：每玩家每 10 tick 一次请求（约 0.5 秒）
     private static final long MIN_TICKS_BETWEEN_REQUESTS = 10L;
     private static final Map<UUID, Long> LAST_REQUEST_TICK = new WeakHashMap<>();
 
@@ -46,7 +46,7 @@ public record AmmoWorkbenchCraftPayload(BlockPos pos, String recipeId, int quant
         context.enqueueWork(() -> {
             if (!(context.player() instanceof ServerPlayer player)) return;
 
-            // Rate limiting
+            // 频率限制
             long now = player.level().getGameTime();
             UUID uuid = player.getUUID();
             synchronized (LAST_REQUEST_TICK) {

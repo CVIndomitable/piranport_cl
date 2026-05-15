@@ -40,11 +40,11 @@ public class ClientEvents {
 
     @SubscribeEvent
     public static void onClientSetup(FMLClientSetupEvent event) {
-        // Register "fueled" item property: 1.0 when aircraft has fuel, 0.0 otherwise.
-        // Models use this predicate to switch between loaded and empty textures.
+        // 注册 "fueled" 物品属性：有燃料时为 1.0，否则为 0.0。
+        // 模型使用此谓词在装载和空载纹理之间切换。
         ResourceLocation fueled = ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "fueled");
         event.enqueueWork(() -> {
-            // Register "fueled" property for ALL AircraftItem instances (including named variants)
+            // 为所有 AircraftItem 实例注册 "fueled" 属性（包括命名变体）
             for (var entry : ModItems.ITEMS.getEntries()) {
                 if (entry.get() instanceof com.piranport.item.AircraftItem) {
                     ItemProperties.register(entry.get(), fueled, (stack, level, entity, seed) -> {
@@ -63,12 +63,12 @@ public class ClientEvents {
         event.register(ModMenuTypes.COOKING_POT_MENU.get(), CookingPotScreen::new);
         event.register(ModMenuTypes.FLIGHT_GROUP_MENU.get(), FlightGroupScreen::new);
         event.register(ModMenuTypes.RELOAD_FACILITY_MENU.get(), ReloadFacilityScreen::new);
-        // Ammo Workbench
+        // 弹药工作台
         event.register(ModMenuTypes.AMMO_WORKBENCH_MENU.get(), AmmoWorkbenchScreen::new);
-        // Weapon Workbench
+        // 武器工作台
         event.register(ModMenuTypes.WEAPON_WORKBENCH_MENU.get(),
                 com.piranport.menu.WeaponWorkbenchScreen::new);
-        // Dungeon
+        // 副本
         event.register(ModMenuTypes.DUNGEON_BOOK_MENU.get(),
                 com.piranport.dungeon.client.DungeonBookScreen::new);
     }
@@ -95,7 +95,7 @@ public class ClientEvents {
         event.register(ModItems.MEDIUM_SHIP_CORE.get(), decorator);
         event.register(ModItems.LARGE_SHIP_CORE.get(), decorator);
 
-        // Weapon reload bar (no-GUI mode — durability-style bar on weapon items)
+        // 武器装填条（无GUI模式——武器物品上的耐久条样式）
         WeaponReloadDecorator weaponDecorator = new WeaponReloadDecorator();
         event.register(ModItems.SINGLE_SMALL_GUN.get(), weaponDecorator);
         event.register(ModItems.SMALL_GUN.get(), weaponDecorator);
@@ -107,7 +107,7 @@ public class ClientEvents {
         event.register(ModItems.DEPTH_CHARGE_LAUNCHER.get(), weaponDecorator);
         event.register(ModItems.DEPTH_CHARGE_LAUNCHER_IMPROVED.get(), weaponDecorator);
         event.register(ModItems.DEPTH_CHARGE_LAUNCHER_ADVANCED.get(), weaponDecorator);
-        // Missile launchers — all types get cooldown bar
+        // 导弹发射器——所有类型都显示冷却条
         event.register(ModItems.TERRIER_LAUNCHER.get(), weaponDecorator);
         event.register(ModItems.SEA_DART_LAUNCHER.get(), weaponDecorator);
         event.register(ModItems.SEACAT_LAUNCHER.get(), weaponDecorator);
@@ -165,24 +165,24 @@ public class ClientEvents {
                 PlaceableFoodRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntityTypes.MODEL_DEBUG.get(),
                 com.piranport.client.ModelDebugBlockEntityRenderer::new);
-        // Dungeon enemies
+        // 副本敌人
         event.registerEntityRenderer(ModEntityTypes.LOW_TIER_DESTROYER.get(),
                 com.piranport.client.LowTierDestroyerRenderer::new);
-        // Dungeon transport plane (artillery intro script)
+        // 副本运输机（炮击开场脚本）
         event.registerEntityRenderer(ModEntityTypes.DUNGEON_TRANSPORT_PLANE.get(),
                 com.piranport.client.DungeonTransportPlaneRenderer::new);
-        // Dungeon entities (use NoopRenderer for now — visual effects are done via particles in tick())
+        // 副本实体（目前使用 NoopRenderer——视觉效果通过 tick() 中的粒子实现）
         event.registerEntityRenderer(ModEntityTypes.DUNGEON_PORTAL.get(),
                 com.piranport.dungeon.client.DungeonPortalRenderer::new);
         event.registerEntityRenderer(ModEntityTypes.LOOT_SHIP.get(),
                 com.piranport.dungeon.client.LootShipRenderer::new);
-        // Gungnir
+        // 冈格尼尔
         event.registerEntityRenderer(ModEntityTypes.GUNGNIR.get(),
                 ThrownItemRenderer::new);
-        // Deep Ocean projectile
+        // 深海投射物
         event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_PROJECTILE.get(),
                 ThrownItemRenderer::new);
-        // Deep Ocean NPC entities (placeholder renderer with fleet state particles)
+        // 深海 NPC 实体（带舰队状态粒子的占位渲染器）
         event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_SUPPLY.get(),
                 com.piranport.client.DeepOceanRenderer::new);
         event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_DESTROYER.get(),
@@ -201,7 +201,7 @@ public class ClientEvents {
                 com.piranport.client.DeepOceanRenderer::new);
         event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_SUBMARINE.get(),
                 com.piranport.client.DeepOceanRenderer::new);
-        // Ship Girl NPC
+        // 舰娘 NPC
         event.registerEntityRenderer(ModEntityTypes.SHIP_GIRL.get(),
                 com.piranport.client.ShipGirlRenderer::new);
     }

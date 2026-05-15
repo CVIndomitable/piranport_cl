@@ -64,16 +64,16 @@ public class ClientTickHandler {
     private static final String ASW_TEAM_NAME = "pp_asw_sonar";
     private static final Set<String> aswTeamMembers = new HashSet<>();
     private static final Set<Integer> aswHighlightedEntityIds = new HashSet<>();
-    /** Throttle full entity scan to every N ticks when only highlight (not FC) is active. */
+    /** 仅高亮（非火控）激活时，每 N tick 进行一次完整实体扫描。 */
     private static final int ENTITY_SCAN_INTERVAL = 4;
     private static int entityScanCooldown = 0;
 
-    /** Cache for UUID→Entity lookup, avoids iterating all entities for known targets. */
+    /** UUID→实体查找缓存，避免遍历所有实体来查找已知目标。 */
     private static final EntityUuidCache entityCache = new EntityUuidCache();
 
     /**
-     * Returns true if the entity has vanilla-level glowing (e.g. Glowing MobEffect, spectral arrow).
-     * Vanilla glow has the highest priority and must never be removed by our mod.
+     * 如果实体拥有原版级发光效果（例如发光药水效果、光灵箭），返回 true。
+     * 原版发光拥有最高优先级，绝不能被本模组移除。
      */
     private static boolean hasVanillaGlow(Entity entity) {
         if (entity instanceof LivingEntity living) {
@@ -82,7 +82,7 @@ public class ClientTickHandler {
         return false;
     }
 
-    /** Reset all client-side static state (called on disconnect). */
+    /** 重置所有客户端静态状态（断开连接时调用）。 */
     public static void resetClientState() {
         highlightEnabled = false;
         cooldownOverrideClientState = false;
@@ -99,7 +99,7 @@ public class ClientTickHandler {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
 
-        // V key — drops torpedo wire, exits recon mode, or cycles weapon in GUI mode only
+        // V 键 — 丢弃鱼雷导线、退出侦察模式，或仅在 GUI 模式下切换武器
         while (ModKeyMappings.CYCLE_WEAPON.consumeClick()) {
             if (ClientTorpedoGuidance.isActive()) {
                 if (mc.getConnection() != null) {
@@ -110,16 +110,16 @@ public class ClientTickHandler {
                     PacketDistributor.sendToServer(new ReconExitPayload());
                 }
             } else {
-                // Let the server decide if GUI mode is active — avoids reading Common config on client
+                // 让服务端判断 GUI 模式是否激活 — 避免客户端读取 Common 配置
                 ItemStack hand = mc.player.getMainHandItem();
                 if (hand.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(hand)) {
                     PacketDistributor.sendToServer(new CycleWeaponPayload());
                 }
             }
-            // No-GUI mode: weapon is the other-hand item, V key does nothing here
+            // 无 GUI 模式：武器为副手物品，V 键在此不执行任何操作
         }
 
-        // Torpedo guidance mode: mirror player rotation to torpedo and stream look direction to server
+        // 鱼雷制导模式：将玩家旋转镜像到鱼雷，并将视线方向流式发送到服务端
         boolean inTorpedoGuidance = ClientTorpedoGuidance.isActive();
         if (inTorpedoGuidance) {
             if (mc.level != null) {
@@ -133,7 +133,7 @@ public class ClientTickHandler {
                     torpedoEntity.xRotO = mc.player.xRotO;
                     torpedoEntity.yRotO = mc.player.yRotO;
                 } else {
-                    // Torpedo despawned on client — bail out
+                    // 鱼雷在客户端已消失 — 退出制导
                     ClientTorpedoGuidance.handleEnd();
                     inTorpedoGuidance = false;
                 }
@@ -145,18 +145,18 @@ public class ClientTickHandler {
             }
         }
 
-        // Phase 32: recon aircraft WASD control (throttled to every 2 ticks to reduce network traffic)
+        // Phase 32：侦察机 WASD 操控（每 2 tick 发送一次以减少网络流量）
         boolean inReconMode = ClientReconData.isInReconMode();
         if (inReconMode) {
-            // Mirror player mouse rotation to the recon entity so the camera rotates with mouse input
+            // 将玩家鼠标旋转镜像到侦察实体，使镜头随鼠标输入旋转
             if (mc.level != null) {
                 Entity reconEntity = mc.level.getEntity(ClientReconData.getReconEntityId());
                 if (reconEntity != null) {
-                    // Maintain camera binding — Minecraft may reset it (e.g. entity re-sync)
+                    // 维持镜头绑定 — Minecraft 可能会重置它（例如实体重新同步）
                     if (mc.getCameraEntity() != reconEntity) {
                         mc.setCameraEntity(reconEntity);
                     }
-                    // Set both current and previous-tick rotation to prevent partialTick interpolation flicker
+                    // 同时设置当前和上一 tick 的旋转，防止 partialTick 插值闪烁
                     reconEntity.setXRot(mc.player.getXRot());
                     reconEntity.setYRot(mc.player.getYRot());
                     reconEntity.xRotO = mc.player.xRotO;
@@ -166,7 +166,7 @@ public class ClientTickHandler {
             if (mc.player.tickCount % 2 == 0) {
                 handleReconInput(mc);
             }
-            // Don't return — fire control and glow sync still need to run in recon mode
+            // 不返回 — 火控和高亮同步在侦察模式下仍需运行
         }
 
         boolean transformed = TransformationManager.isPlayerTransformed(mc.player);
@@ -181,7 +181,7 @@ public class ClientTickHandler {
             }
         }
 
-        // Fire control — while transformed or in recon mode
+        // 火控 — 变身态或侦察模式下
         while (ModKeyMappings.FIRE_CONTROL_LOCK.consumeClick()) {
             if (!transformed && !inReconMode) continue;
             Entity target = getTargetInCrosshair(mc, FIRE_CONTROL_RANGE);
@@ -205,7 +205,7 @@ public class ClientTickHandler {
             ClientFireControlData.clear();
         }
 
-        // Open flight group GUI (U key) — only while transformed, not in recon mode
+        // 打开飞行编队 GUI（U 键） — 仅变身态下，非侦察模式
         while (ModKeyMappings.OPEN_FLIGHT_GROUP.consumeClick()) {
             if (!transformed || inReconMode) continue;
             int coreSlot = findCoreSlot(mc.player);
@@ -214,7 +214,7 @@ public class ClientTickHandler {
             }
         }
 
-        // H key — toggle fighter auto-launch (no-GUI mode)
+        // H 键 — 切换战斗机自动升空（无 GUI 模式）
         while (ModKeyMappings.TOGGLE_AUTO_LAUNCH.consumeClick()) {
             if (!transformed || inReconMode) continue;
             int autoSlot = findCoreSlot(mc.player);
@@ -223,21 +223,21 @@ public class ClientTickHandler {
             }
         }
 
-        // R key — manual reload for non-auto-resupply cannons
+        // R 键 — 手动装填非自动补给的火炮
         while (ModKeyMappings.MANUAL_RELOAD.consumeClick()) {
             if (!transformed || inReconMode) continue;
             PacketDistributor.sendToServer(new ManualReloadPayload());
         }
 
-        // F8 / Shift+F8: debug toggle / snapshot
+        // F8 / Shift+F8：调试开关 / 快照
         while (ModKeyMappings.DEBUG_TOGGLE.consumeClick()) {
             if (net.minecraft.client.gui.screens.Screen.hasShiftDown()) {
-                // Shift+F8: request server snapshot (no enabled required)
+                // Shift+F8：请求服务端快照（无需启用调试）
                 PacketDistributor.sendToServer(new SnapshotRequestPayload());
                 mc.player.displayClientMessage(
                         net.minecraft.network.chat.Component.literal("[PP] Snapshot written to logs/piranport-debug.log"), true);
             } else {
-                // F8: toggle client watermark + notify server
+                // F8：切换客户端水印 + 通知服务端
                 boolean nowEnabled = PiranPortDebug.toggleClient();
                 PacketDistributor.sendToServer(new DebugTogglePayload(nowEnabled));
                 mc.player.displayClientMessage(
@@ -246,7 +246,7 @@ public class ClientTickHandler {
             }
         }
 
-        // Debug: toggle global cooldown override (clamps every cooldown to 5s)
+        // 调试：切换全局冷却覆盖（将所有冷却压缩到 5 秒）
         while (ModKeyMappings.DEBUG_COOLDOWN_OVERRIDE.consumeClick()) {
             cooldownOverrideClientState = !cooldownOverrideClientState;
             boolean nowEnabled = cooldownOverrideClientState;
@@ -258,7 +258,7 @@ public class ClientTickHandler {
                     true);
         }
 
-        // J key — toggle weapon hit/kill/miss chat notifications
+        // J 键 — 切换武器命中/击杀/未命中聊天通知
         while (ModKeyMappings.HIT_DISPLAY_TOGGLE.consumeClick()) {
             hitDisplayEnabled = !hitDisplayEnabled;
             PacketDistributor.sendToServer(new HitDisplayTogglePayload(hitDisplayEnabled));
@@ -269,11 +269,11 @@ public class ClientTickHandler {
                     true);
         }
 
-        // Toggle entity highlight (Y key)
+        // 切换实体高亮（Y 键）
         while (ModKeyMappings.HIGHLIGHT_ENTITIES.consumeClick()) {
             highlightEnabled = !highlightEnabled;
             if (!highlightEnabled) {
-                // Remove glow from highlight-only entities; keep FC targets and vanilla glowing
+                // 移除仅高亮的实体的发光效果；保留火控目标和原版发光
                 if (mc.level != null) {
                     java.util.Set<UUID> fcTargets = new java.util.HashSet<>(ClientFireControlData.getTargets());
                     for (int id : List.copyOf(highlightedEntityIds)) {
@@ -292,7 +292,7 @@ public class ClientTickHandler {
                     true);
         }
 
-        // Apply/maintain highlight and fire-control glow each tick
+        // 每 tick 应用/维持高亮和火控发光效果
         if (mc.level != null) {
             Player localPlayer = mc.player;
             java.util.Set<UUID> lockedTargets = ClientFireControlData.getTargets().isEmpty()
@@ -302,7 +302,7 @@ public class ClientTickHandler {
 
             Set<String> currentFcMembers = new HashSet<>();
 
-            // Phase 1: FC targets — O(k) targeted lookup via UUID cache, no full entity scan
+            // 阶段 1：火控目标 — 通过 UUID 缓存进行 O(k) 定向查找，无需完整实体扫描
             if (hasFcTargets) {
                 for (UUID uuid : lockedTargets) {
                     Entity entity = entityCache.get(mc.level, uuid);
@@ -316,7 +316,7 @@ public class ClientTickHandler {
                 }
             }
 
-            // Phase 2: Y-key battlefield highlight — full scan throttled to ENTITY_SCAN_INTERVAL
+            // 阶段 2：Y 键战场高亮 — 完整扫描按 ENTITY_SCAN_INTERVAL 节流
             boolean doFullScan = highlightEnabled && (entityScanCooldown <= 0);
             if (doFullScan) {
                 entityScanCooldown = ENTITY_SCAN_INTERVAL;
@@ -329,8 +329,8 @@ public class ClientTickHandler {
             }
             if (highlightEnabled) entityScanCooldown--;
 
-            // Phase 3: Remove glow from entities no longer in any active highlight set.
-            // Only iterates previously-highlighted IDs (O(k)) instead of all entities.
+            // 阶段 3：移除不再处于任何活跃高亮集合中的实体的发光效果。
+            // 仅遍历之前高亮过的 ID（O(k)），而不是所有实体。
             if (!highlightedEntityIds.isEmpty()) {
                 highlightedEntityIds.removeIf(id -> {
                     Entity entity = mc.level.getEntity(id);
@@ -343,11 +343,11 @@ public class ClientTickHandler {
                     return true;
                 });
             }
-            // Sync client-side scoreboard team for red outline on FC targets
+            // 同步客户端计分板队伍，为火控目标显示红色轮廓
             syncFcTeam(mc, currentFcMembers);
         }
 
-        // ASW sonar highlight — independent of Y-key, uses yellow outline
+        // 反潜声呐高亮 — 独立于 Y 键，使用黄色轮廓
         com.piranport.aviation.ClientAswSonarData.tick();
         if (mc.level != null) {
             Set<Integer> aswDetected = com.piranport.aviation.ClientAswSonarData.getAllDetected();
@@ -356,23 +356,23 @@ public class ClientTickHandler {
                 ? java.util.Collections.emptySet()
                 : new java.util.HashSet<>(ClientFireControlData.getTargets());
 
-            // Apply glow to newly detected entities
+            // 为新检测到的实体应用发光效果
             for (int eid : aswDetected) {
                 Entity entity = mc.level.getEntity(eid);
                 if (entity == null || !entity.isAlive()) continue;
                 entity.setGlowingTag(true);
                 aswHighlightedEntityIds.add(eid);
-                // FC team takes priority — don't add to ASW team if already FC target
+                // 火控队伍优先级更高 — 如果已是火控目标，不加入反潜队伍
                 if (!lockedTargets2.contains(entity.getUUID())) {
                     currentAswMembers.add(entity.getStringUUID());
                 }
             }
-            // Remove glow from entities no longer detected by sonar
+            // 移除不再被声呐检测到的实体的发光效果
             aswHighlightedEntityIds.removeIf(id -> {
                 if (aswDetected.contains(id)) return false;
                 Entity entity = mc.level.getEntity(id);
                 if (entity == null) return true;
-                // Don't remove glow if entity is highlighted by FC or Y-key or vanilla
+                // 如果实体被火控、Y 键或原版高亮，不移除发光效果
                 if (highlightedEntityIds.contains(id)) return true;
                 if (hasVanillaGlow(entity)) return true;
                 entity.setGlowingTag(false);
@@ -383,29 +383,29 @@ public class ClientTickHandler {
     }
 
     /**
-     * Returns true if the entity should glow when Y-key highlight is enabled.
-     * Does NOT include fire control targets — those are handled separately.
+     * 当 Y 键高亮启用时，判断实体是否应该发光。
+     * 不包含火控目标 — 火控目标单独处理。
      */
     private static boolean isHighlightTarget(Entity entity, Player localPlayer) {
-        // Bullets use setGlowingTag; torpedoes & bombs use isCurrentlyGlowing() override
+        // 子弹使用 setGlowingTag；鱼雷和炸弹使用 isCurrentlyGlowing() 覆写
         if (entity instanceof BulletEntity bl && bl.getOwner() == localPlayer) return true;
 
-        // Prioritize hostile entities over neutral/friendly ones
+        // 优先高亮敌对实体，其次中立/友好实体
         if (entity instanceof LivingEntity living && living != localPlayer) {
             double distSq = entity.distanceToSqr(localPlayer);
-            // Only highlight entities within reasonable range (32 blocks)
+            // 仅高亮合理范围内的实体（32 格）
             if (distSq <= 32 * 32) {
-                // Priority: hostile > neutral > friendly
+                // 优先级：敌对 > 中立 > 友好
                 if (living.getLastHurtByMob() == localPlayer ||
                     (living instanceof net.minecraft.world.entity.Mob mob
                             && mob.getTarget() != null && mob.getTarget() == localPlayer)) {
-                    return true; // Hostile - highest priority
+                    return true; // 敌对 - 最高优先级
                 }
                 if (living instanceof net.minecraft.world.entity.monster.Monster) {
-                    return true; // Monsters - high priority
+                    return true; // 怪物 - 高优先级
                 }
                 if (living instanceof net.minecraft.world.entity.animal.Animal) {
-                    return distSq <= 16 * 16; // Animals - lower priority, closer range
+                    return distSq <= 16 * 16; // 动物 - 较低优先级，更近距离
                 }
             }
         }
@@ -414,18 +414,18 @@ public class ClientTickHandler {
     }
 
     /**
-     * Phase 32: send WASD/Space/Sneak input to server for recon aircraft control.
-     * Movement direction is relative to the player's current look direction.
+     * Phase 32：将 WASD/空格/潜行输入发送到服务端，用于侦察机操控。
+     * 移动方向相对于玩家当前视线方向。
      */
     private static void handleReconInput(Minecraft mc) {
         if (mc.player == null) return;
 
-        // Verify client state
+        // 验证客户端状态
         if (!ClientReconData.isInReconMode()) {
             return;
         }
 
-        // Verify entity exists
+        // 验证实体存在
         int entityId = ClientReconData.getReconEntityId();
         if (mc.level != null) {
             Entity reconEntity = mc.level.getEntity(entityId);
@@ -442,12 +442,12 @@ public class ClientTickHandler {
         if (!anyKey) return;
 
         Vec3 look = mc.player.getLookAngle();
-        // Forward = horizontal look direction, Right = perpendicular horizontal
+        // 前向 = 水平视线方向，右向 = 水平垂直方向
         Vec3 fwd = new Vec3(look.x, 0, look.z);
         double fwdLen = fwd.length();
         if (fwdLen < 0.001) fwd = new Vec3(0, 0, 1);
         else fwd = fwd.scale(1.0 / fwdLen);
-        Vec3 right = new Vec3(-fwd.z, 0, fwd.x);  // 90° clockwise rotation of forward
+        Vec3 right = new Vec3(-fwd.z, 0, fwd.x);  // 前向顺时针旋转 90°
 
         float dx = 0, dy = 0, dz = 0;
         if (opts.keyUp.isDown())  { dx += (float) fwd.x;   dz += (float) fwd.z; }
@@ -457,14 +457,14 @@ public class ClientTickHandler {
         if (opts.keyJump.isDown())     dy += 1f;
         if (opts.keyShift.isDown())    dy -= 1f;
 
-        // Normalize horizontal to prevent diagonal speed boost
+        // 归一化水平分量，防止斜向加速
         float hLen = (float) Math.sqrt(dx * dx + dz * dz);
         if (hLen > 1f) { dx /= hLen; dz /= hLen; }
 
         PacketDistributor.sendToServer(new ReconControlPayload(dx, dy, dz));
     }
 
-    /** Sync the client-side FC target team: add new members, remove stale ones. */
+    /** 同步客户端 FC 目标队伍：添加新成员，移除过时成员 */
     private static void syncFcTeam(Minecraft mc, Set<String> currentMembers) {
         if (mc.level == null) return;
         net.minecraft.world.scores.Scoreboard scoreboard = mc.level.getScoreboard();
@@ -479,20 +479,20 @@ public class ClientTickHandler {
             fcTeamMembers.clear();
             return;
         }
-        // Remove members no longer targeted
+        // 移除不再锁定的成员
         for (String name : new HashSet<>(fcTeamMembers)) {
             if (!currentMembers.contains(name)) {
                 scoreboard.removePlayerFromTeam(name, team);
             }
         }
-        // Add new members and remove from ASW team (FC has higher priority)
+        // 添加新成员并从 ASW 队伍中移除（FC 优先级高于 ASW）
         for (String name : currentMembers) {
             if (!fcTeamMembers.contains(name)) {
-                // Remove from ASW team if present (FC priority > ASW priority)
+                // 如果存在于 ASW 队伍中则移除（FC 优先级 > ASW 优先级）
                 if (aswTeam != null && aswTeamMembers.contains(name)) {
                     scoreboard.removePlayerFromTeam(name, aswTeam);
                     aswTeamMembers.remove(name);
-                    // Also remove from ASW highlight tracking
+                    // 同时从 ASW 高亮跟踪中移除
                     if (mc.level != null) {
                         aswHighlightedEntityIds.removeIf(id -> {
                             Entity e = mc.level.getEntity(id);
@@ -507,7 +507,7 @@ public class ClientTickHandler {
         fcTeamMembers.addAll(currentMembers);
     }
 
-    /** Remove all FC team members and delete the team. */
+    /** 移除所有 FC 队伍成员并删除队伍 */
     private static void clearFcTeam(Minecraft mc) {
         if (mc.level == null || fcTeamMembers.isEmpty()) return;
         net.minecraft.world.scores.Scoreboard scoreboard = mc.level.getScoreboard();
@@ -521,7 +521,7 @@ public class ClientTickHandler {
         fcTeamMembers.clear();
     }
 
-    /** Sync the client-side ASW sonar team: yellow outline for detected underwater entities. */
+    /** 同步客户端 ASW 声呐队伍：已检测水下实体的黄色轮廓 */
     private static void syncAswTeam(Minecraft mc, Set<String> currentMembers) {
         if (mc.level == null) return;
         net.minecraft.world.scores.Scoreboard scoreboard = mc.level.getScoreboard();
@@ -534,13 +534,13 @@ public class ClientTickHandler {
             aswTeamMembers.clear();
             return;
         }
-        // Remove members no longer detected
+        // 移除不再检测到的成员
         for (String name : new HashSet<>(aswTeamMembers)) {
             if (!currentMembers.contains(name)) {
                 scoreboard.removePlayerFromTeam(name, team);
             }
         }
-        // Add new members
+        // 添加新成员
         for (String name : currentMembers) {
             if (!aswTeamMembers.contains(name)) {
                 scoreboard.addPlayerToTeam(name, team);
@@ -550,7 +550,7 @@ public class ClientTickHandler {
         aswTeamMembers.addAll(currentMembers);
     }
 
-    /** Remove all ASW team members and delete the team. */
+    /** 移除所有 ASW 队伍成员并删除队伍 */
     private static void clearAswTeam(Minecraft mc) {
         if (mc.level == null || aswTeamMembers.isEmpty()) return;
         net.minecraft.world.scores.Scoreboard scoreboard = mc.level.getScoreboard();
@@ -565,7 +565,7 @@ public class ClientTickHandler {
         aswHighlightedEntityIds.clear();
     }
 
-    /** Find the inventory slot of the active transformed ship core. Returns -1 if not found. */
+    /** 查找活跃变身核心所在的背包槽位，未找到返回 -1 */
     private static int findCoreSlot(Player player) {
         int slot = player.getInventory().selected;
         ItemStack mh = player.getMainHandItem();
@@ -588,7 +588,7 @@ public class ClientTickHandler {
     @Nullable
     private static Entity getTargetInCrosshair(Minecraft mc, double range) {
         if (mc.player == null || mc.level == null) return null;
-        // In recon mode, raycast from the camera entity (recon aircraft) position
+        // 侦察模式下，从摄像机实体（侦察机）位置射
         Entity cameraEntity = mc.getCameraEntity();
         if (cameraEntity == null) cameraEntity = mc.player;
         Vec3 eyePos = cameraEntity.getEyePosition();

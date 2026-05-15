@@ -57,10 +57,10 @@ public class FlareProjectileEntity extends ThrowableItemProjectile {
     protected void onHitBlock(BlockHitResult result) {
         super.onHitBlock(result);
         if (!level().isClientSide()) {
-            // Place flare light on the hit face
+            // 在命中面放置照明弹光源
             Direction face = result.getDirection();
             BlockPos placePos = result.getBlockPos().relative(face);
-            // Check protection: only place if the owner is allowed to interact here
+            // 检查保护：仅当发射者允许在此处交互时才放置
             Entity owner = getOwner();
             boolean mayPlace = true;
             if (owner instanceof net.minecraft.world.entity.player.Player p) {
@@ -82,11 +82,11 @@ public class FlareProjectileEntity extends ThrowableItemProjectile {
         super.onHitEntity(result);
         if (!level().isClientSide()) {
             Entity target = result.getEntity();
-            // Glowing 5 seconds
+            // 发光 5 秒
             if (target instanceof LivingEntity living) {
                 living.addEffect(new MobEffectInstance(MobEffects.GLOWING, 100, 0));
             }
-            // Knockback (no damage)
+            // 击退（无伤害）
             double knockStrength = 0.5;
             double dx = this.getX() - target.getX();
             double dz = this.getZ() - target.getZ();

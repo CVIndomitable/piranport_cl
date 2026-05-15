@@ -56,13 +56,13 @@ public class CuttingBoardRecipeCategory implements IRecipeCategory<CuttingBoardR
 
     @Override
     public void draw(CuttingBoardRecipe recipe, IRecipeSlotsView slotsView, GuiGraphics gfx, double mouseX, double mouseY) {
-        // Arrow shaft
+        // 箭头箭杆
         gfx.fill(26, 13, 60, 15, 0xFF808080);
-        // Arrow head
+        // 箭头头部
         gfx.fill(54, 10, 60, 18, 0xFF808080);
         gfx.fill(60, 11, 62, 17, 0xFF808080);
         gfx.fill(62, 12, 64, 16, 0xFF808080);
-        // Cuts count
+        // 切割次数
         gfx.drawString(Minecraft.getInstance().font, "\u00d7" + recipe.getCuts(),
                 66, 10, 0xFF808080, false);
     }

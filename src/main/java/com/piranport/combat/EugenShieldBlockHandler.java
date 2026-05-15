@@ -27,7 +27,7 @@ public class EugenShieldBlockHandler {
         if (!(event.getEntity() instanceof Player player)) return;
         if (player.level().isClientSide()) return;
 
-        // Must be actively using the shield
+        // 必须正在使用盾牌
         if (!player.isUsingItem()) return;
         ItemStack useItem = player.getUseItem();
         if (!(useItem.getItem() instanceof EugenShieldItem)) return;
@@ -39,13 +39,13 @@ public class EugenShieldBlockHandler {
         Vec3 sourcePos = event.getSource().getSourcePosition();
         if (sourcePos == null) return;
 
-        // Player look direction (horizontal only)
+        // 玩家视线方向（仅水平分量）
         Vec3 lookDir = player.getViewVector(1.0F);
         Vec3 lookHorizontal = new Vec3(lookDir.x, 0, lookDir.z);
         if (lookHorizontal.lengthSqr() < 1e-6) return;
         lookHorizontal = lookHorizontal.normalize();
 
-        // Direction from player to damage source (horizontal only)
+        // 玩家到伤害源的方向（仅水平分量）
         Vec3 playerCenter = player.position().add(0, player.getBbHeight() * 0.5, 0);
         Vec3 dirToSource = sourcePos.subtract(playerCenter);
         Vec3 dirHorizontal = new Vec3(dirToSource.x, 0, dirToSource.z);
@@ -53,16 +53,16 @@ public class EugenShieldBlockHandler {
         if (dirHorizontal.lengthSqr() < 1e-6) return; // source is at player center
         dirHorizontal = dirHorizontal.normalize();
 
-        // Check if the source is within the 150-degree frontal cone
+        // 检查伤害源是否在 150 度正面锥形内
         double dot = lookHorizontal.dot(dirHorizontal);
         if (dot >= COS_HALF_ANGLE) {
-            // Block the damage
+            // 格挡伤害
             event.setCanceled(true);
 
-            // Consume durability
+            // 消耗耐久
             useItem.hurtAndBreak(1, player, player.getEquipmentSlotForItem(useItem));
 
-            // Shield block sound
+            // 盾牌格挡音效
             player.level().playSound(null, player.blockPosition(),
                     SoundEvents.SHIELD_BLOCK, SoundSource.PLAYERS, 1.0F, 1.0F);
         }

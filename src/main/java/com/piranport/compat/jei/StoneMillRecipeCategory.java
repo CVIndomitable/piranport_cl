@@ -58,9 +58,9 @@ public class StoneMillRecipeCategory implements IRecipeCategory<StoneMillRecipe>
 
     @Override
     public void draw(StoneMillRecipe recipe, IRecipeSlotsView slotsView, GuiGraphics gfx, double mouseX, double mouseY) {
-        // Arrow shaft
+        // 箭头箭杆
         gfx.fill(44, 18, 78, 20, 0xFF808080);
-        // Arrow head
+        // 箭头头部
         gfx.fill(72, 15, 78, 23, 0xFF808080);
         gfx.fill(78, 16, 80, 22, 0xFF808080);
         gfx.fill(80, 17, 82, 21, 0xFF808080);

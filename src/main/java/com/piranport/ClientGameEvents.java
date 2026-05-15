@@ -33,11 +33,10 @@ public class ClientGameEvents {
         );
     }
 
-    /** Empty hand + shift + right click → revert skin and return core. */
-    /** Empty hand + right click (no shift, no-GUI, transformed) → recall all aircraft. */
+    /** 空手 + 蹲下 + 右键 → 恢复皮肤并返还核心；空手 + 右键（不蹲下、无GUI、已变身）→ 召回所有飞机 */
     @SubscribeEvent
     public static void onRightClickEmpty(PlayerInteractEvent.RightClickEmpty event) {
-        // Block all empty-hand actions while in recon mode to prevent errors
+        // 侦察模式下阻止所有空手操作以防止错误
         if (ClientReconData.isInReconMode()) return;
 
         if (event.getEntity().isShiftKeyDown()) {
@@ -47,14 +46,14 @@ public class ClientGameEvents {
             }
             return;
         }
-        // No-GUI mode: empty hand right-click → recall all aircraft
+        // 无GUI模式：空手右键 → 召回所有飞机
         if (!ModCommonConfig.isShipCoreGuiEnabled()
                 && TransformationManager.isPlayerTransformed(event.getEntity())) {
             PacketDistributor.sendToServer(new RecallAllAircraftPayload());
         }
     }
 
-    /** Hide player hands/arms while in recon mode — camera is on the aircraft. */
+    /** 侦察模式下隐藏玩家手/手臂 — 摄像机在飞机上 */
     @SubscribeEvent
     public static void onRenderHand(RenderHandEvent event) {
         if (ClientReconData.isInReconMode()) {
@@ -62,7 +61,7 @@ public class ClientGameEvents {
         }
     }
 
-    /** Clean up all client-side static state on disconnect to prevent cross-server leaks. */
+    /** 断开连接时清理所有客户端静态状态，防止跨服数据泄露 */
     @SubscribeEvent
     public static void onClientDisconnect(ClientPlayerNetworkEvent.LoggingOut event) {
         ClientFireControlData.clear();

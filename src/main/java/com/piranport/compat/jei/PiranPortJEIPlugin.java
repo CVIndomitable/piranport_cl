@@ -71,13 +71,13 @@ public class PiranPortJEIPlugin implements IModPlugin {
 
     @Override
     public void registerRecipeTransferHandlers(IRecipeTransferRegistration registration) {
-        // Cooking pot: input slots 0-8, player inventory starts at slot 10, 36 slots
+        // 烹饪锅：输入槽 0-8，玩家背包从槽 10 开始，共 36 槽
         registration.addRecipeTransferHandler(CookingPotMenu.class,
                 ModMenuTypes.COOKING_POT_MENU.get(),
                 CookingPotRecipeCategory.RECIPE_TYPE,
                 0, 9, 10, 36);
 
-        // Stone mill: input slots 0-3, player inventory starts at slot 6, 36 slots
+        // 石磨：输入槽 0-3，玩家背包从槽 6 开始，共 36 槽
         registration.addRecipeTransferHandler(StoneMillMenu.class,
                 ModMenuTypes.STONE_MILL_MENU.get(),
                 StoneMillRecipeCategory.RECIPE_TYPE,

@@ -32,13 +32,13 @@ public class EvasionHandler {
         if (event.getEntity().level().isClientSide()) return;
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
 
-        // Never dodge absolute/bypass damage types (void, /kill, starvation)
+        // 不可闪避绝对/穿透伤害类型（虚空、/kill、饥饿）
         if (event.getSource().is(net.minecraft.tags.DamageTypeTags.BYPASSES_INVULNERABILITY)
                 || event.getSource().is(net.minecraft.world.damagesource.DamageTypes.STARVE)) return;
 
         if (!TransformationManager.isPlayerTransformed(player)) return;
 
-        // Must have EvasionEffect active
+        // 必须激活规避效果
         MobEffectInstance effectInstance = player.getEffect(ModMobEffects.EVASION);
         if (effectInstance == null) return;
 
@@ -54,13 +54,13 @@ public class EvasionHandler {
                     Math.round(roll * 100.0) / 100.0,
                     event.getSource().type().msgId());
 
-            // Sound — broadcast to nearby players
+            // 音效 — 向附近玩家广播
             player.level().playSound(null,
                     player.getX(), player.getY(), player.getZ(),
                     SoundEvents.WITCH_CELEBRATE, SoundSource.PLAYERS,
                     0.8f, 1.5f);
 
-            // Particles (server-side send to clients)
+            // 粒子（服务端发送到客户端）
             if (player.level() instanceof ServerLevel serverLevel) {
                 serverLevel.sendParticles(ParticleTypes.CLOUD,
                         player.getX(), player.getY() + 1.0, player.getZ(),

@@ -23,7 +23,7 @@ public class ArmorProtectionHandler {
         if (event.getEntity().level().isClientSide()) return;
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
 
-        // Only bypass invulnerability damage (void, /kill)
+        // 仅忽略不可抗伤害（虚空、/kill）
         if (event.getSource().is(net.minecraft.tags.DamageTypeTags.BYPASSES_INVULNERABILITY)) return;
 
         if (!TransformationManager.isPlayerTransformed(player)) return;

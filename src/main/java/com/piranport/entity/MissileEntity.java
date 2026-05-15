@@ -32,21 +32,24 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * 导弹/火箭弹实体 — 三种模式：
- * ANTI_SHIP: 制导追踪 + 直伤 + 穿甲
- * ANTI_AIR:  制导追踪(优先空中) + 爆炸
- * ROCKET:    直线飞行 + 爆炸
+ * 导弹/火箭弹实体
+ *
+ * 所有速度单位：block/tick。加速度每 tick 累加至 maxSpeed。
+ * 玩家可感知行为：
+ *   ANTI_SHIP — 0→极速约 59 tick (3.0s)，极速下 100m 命中约 2.1s
+ *   ANTI_AIR  — 0→极速约 59 tick (3.0s)，更快截击
+ *   ROCKET    — 0→极速约 49 tick (2.5s)，短距直射爆发
  */
 public class MissileEntity extends ThrowableItemProjectile {
 
     public enum MissileType {
-        /** 反舰导弹: 初速0.04, +0.04/tick, max 2.4 */
+        /** 反舰导弹 — 中程制导武器，追踪水面目标，直伤+穿甲 */
         ANTI_SHIP(0.04f, 0.04f, 2.4f,
                 "tooltip.piranport.missile.type.anti_ship", ChatFormatting.RED),
-        /** 防空导弹: 初速0.05, +0.05/tick, max 3.0 */
+        /** 防空导弹 — 高速截击，只追踪空中目标(isValidTarget 限制)，爆炸伤害 */
         ANTI_AIR(0.05f, 0.05f, 3.0f,
                 "tooltip.piranport.missile.type.anti_air", ChatFormatting.AQUA),
-        /** 火箭弹: 初速0.04, +0.04/tick, max 2.0 */
+        /** 火箭弹 — 无制导直射，短距爆发，爆炸伤害 */
         ROCKET(0.04f, 0.04f, 2.0f,
                 "tooltip.piranport.missile.type.rocket", ChatFormatting.GOLD);
 
@@ -71,32 +74,32 @@ public class MissileEntity extends ThrowableItemProjectile {
     private float armorPen = 0f;
     private float explosionPower = 2.0f;
     private float currentSpeed;
-    /** Registry key of the display item (ammo item). */
+    /** 显示物品（弹药物品）的注册表键 */
     private String displayItemId = "";
-    /** Cached resolved display item (resolved lazily from displayItemId). */
+    /** 缓存的已解析显示物品（从 displayItemId 惰性解析） */
     private Item cachedDisplayItem = null;
     private static final int MAX_LIFETIME = 600; // 30 seconds
     private static final double SEARCH_RANGE = 32.0;
-    /** Maximum turn rate per tick (degrees). */
+    /** 每 tick 最大转向速率（度） */
     private static final float MAX_TURN_DEG = 12.0f;
-    /** Cached tracking target for guided missiles. */
+    /** 制导导弹的缓存追踪目标 */
     private Entity trackedTarget = null;
     /** UUID of the tracked target, used for NBT persistence. */
     private UUID trackedTargetUUID = null;
-    /** When true, skip automatic target search and keep the manually assigned target. */
+    /** 为 true 时跳过自动目标搜索，保留手动指定的目标 */
     private boolean manualTarget = false;
-    /** Ticks until next target search (throttle). */
+    /** 距下次目标搜索的 tick 数（节流） */
     private int targetSearchCooldown = 0;
 
     private static final String AP_PEN_PATH_PREFIX = "missile_ap/";
 
-    /** Required by entity type registration. */
+    /** 实体类型注册所需 */
     public MissileEntity(EntityType<? extends MissileEntity> type, Level level) {
         super(type, level);
         this.currentSpeed = MissileType.ANTI_SHIP.initialSpeed;
     }
 
-    /** Spawned by ShipCoreItem; position, velocity, and owner set externally. */
+    /** 由 ShipCoreItem 生成；位置、速度和所属者在外部设置 */
     public MissileEntity(Level level, MissileType type, float damage, float armorPen,
                           float explosionPower, String displayItemId) {
         super(ModEntityTypes.MISSILE_ENTITY.get(), level);
@@ -269,7 +272,7 @@ public class MissileEntity extends ThrowableItemProjectile {
         for (Entity e : level().getEntities(this, searchBox, e -> {
             if (e == getOwner()) return false;
             if (FriendlyFireHelper.shouldBlockHit(e, getOwner())) return false;
-            // Phantom extends FlyingMob (not Monster) — use Enemy interface to cover all hostile mobs.
+            // Phantom 继承 FlyingMob（非 Monster）— 用 Enemy 接口覆盖所有敌对生物
             if (!(e instanceof Enemy)) return false;
             if (!e.isPickable()) return false;
             return isValidTarget(e);

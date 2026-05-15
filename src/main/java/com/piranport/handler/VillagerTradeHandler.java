@@ -14,6 +14,9 @@ import net.neoforged.neoforge.event.village.VillagerTradesEvent;
 @EventBusSubscriber(modid = PiranPort.MOD_ID)
 public class VillagerTradeHandler {
 
+    // MerchantOffer(input, result, maxUses, xpReward, priceMultiplier)
+    // maxUses: 补货前最大交易次数  xpReward: 给予村民的经验值  priceMultiplier: 需求价格浮动乘数
+
     @SubscribeEvent
     public static void onVillagerTrades(VillagerTradesEvent event) {
         if (event.getType() != VillagerProfession.FARMER) return;

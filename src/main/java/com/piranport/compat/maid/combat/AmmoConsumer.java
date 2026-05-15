@@ -69,7 +69,7 @@ public final class AmmoConsumer {
     public static Item getPreferredAmmo(Player player, List<Item> candidates) {
         if (player == null || candidates.isEmpty()) return null;
 
-        // Check offhand first - if player is holding ammo, use that type
+        // 优先检查副手 — 若玩家手持弹药则使用该类型
         ItemStack offhand = player.getOffhandItem();
         if (!offhand.isEmpty()) {
             Item offhandItem = offhand.getItem();
@@ -78,7 +78,7 @@ public final class AmmoConsumer {
             }
         }
 
-        // Otherwise, return first available ammo type from candidates
+        // 否则，从候选中返回第一种可用弹药
         for (Item candidate : candidates) {
             if (hasItem(player, candidate, 1)) {
                 return candidate;

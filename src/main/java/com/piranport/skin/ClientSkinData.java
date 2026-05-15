@@ -5,7 +5,7 @@ import java.util.Map;
 import java.util.UUID;
 
 public class ClientSkinData {
-    // Client-only: accessed from the render thread, no concurrency needed
+    // 仅客户端：从渲染线程访问，无需并发控制
     private static final Map<UUID, Integer> activeSkins = new HashMap<>();
 
     public static int getActiveSkin(UUID playerUuid) {

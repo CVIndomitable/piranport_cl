@@ -69,7 +69,7 @@ public class BulletEntity extends ThrowableItemProjectile {
             }
             target.hurt(damageSources().thrown(directSource, getOwner()), damage);
 
-            // Explicitly set last hurt by mob to make hostile mobs aggressive
+            // 显式设置最后受伤来源，使敌对生物进入仇恨状态
             if (target instanceof LivingEntity living) {
                 Entity ownerEntity = getOwner();
                 if (ownerEntity instanceof LivingEntity lo) {

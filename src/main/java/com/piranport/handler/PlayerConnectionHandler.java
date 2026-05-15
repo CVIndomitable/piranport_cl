@@ -101,6 +101,7 @@ public class PlayerConnectionHandler {
         HitNotifier.onPlayerLogout(player.getUUID());
         RecallAllAircraftPayload.onPlayerDisconnect(player.getUUID());
         PlayerAircraftHelper.recallAircraftForPlayer(player);
+        PlayerTickHandler.onPlayerLogout(player.getUUID());
         var lobbyMgr = DungeonLobbyManager.INSTANCE;
         GlobalPos lecternPos = lobbyMgr.findLobbyOf(player.getUUID());
         if (lecternPos != null && player.getServer() != null) {

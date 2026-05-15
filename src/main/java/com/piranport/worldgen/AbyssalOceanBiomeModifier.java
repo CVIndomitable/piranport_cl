@@ -23,8 +23,8 @@ public record AbyssalOceanBiomeModifier(
 
     @Override
     public void modify(Holder<Biome> biome, Phase phase, ModifiableBiomeInfo.BiomeInfo.Builder builder) {
-        // Intentionally empty — reserved for future version.
-        // Will modify water_color, water_fog_color, fog_color for deep ocean biomes
+        // 有意为空 — 预留给未来版本
+        // 未来将修改深海生物群系的水色/水雾色/雾色
         // to create the abyssal atmosphere.
     }
 

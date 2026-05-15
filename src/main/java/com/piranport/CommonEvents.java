@@ -45,7 +45,7 @@ public class CommonEvents {
                 ModBlockEntityTypes.CUTTING_BOARD.get(),
                 CuttingBoardBlockEntity::getItemHandler
         );
-        // Yubari Water Bucket: infinite water source for pipes/tanks
+        // 夕张水桶：管道/水槽的无限水源
         event.registerBlockEntity(
                 Capabilities.FluidHandler.BLOCK,
                 ModBlockEntityTypes.YUBARI_WATER_BUCKET.get(),
@@ -59,7 +59,7 @@ public class CommonEvents {
                 FloatingTargetEntity.createAttributes().build());
         event.put(ModEntityTypes.LOW_TIER_DESTROYER.get(),
                 LowTierDestroyerEntity.createAttributes().build());
-        // Deep Ocean NPC entities
+        // 深海 NPC 实体
         event.put(ModEntityTypes.DEEP_OCEAN_SUPPLY.get(),
                 DeepOceanSupplyEntity.createAttributes().build());
         event.put(ModEntityTypes.DEEP_OCEAN_DESTROYER.get(),
@@ -78,7 +78,7 @@ public class CommonEvents {
                 DeepOceanCarrierEntity.createAttributes().build());
         event.put(ModEntityTypes.DEEP_OCEAN_SUBMARINE.get(),
                 DeepOceanSubmarineEntity.createAttributes().build());
-        // Ship Girl NPC
+        // 舰娘 NPC
         event.put(ModEntityTypes.SHIP_GIRL.get(),
                 ShipGirlEntity.createAttributes().build());
     }

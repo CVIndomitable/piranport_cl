@@ -24,12 +24,12 @@ public class AerialBombEntity extends ThrowableItemProjectile {
     private Component sourceAircraftName;
     private UUID sourceAircraftUuid;
 
-    /** Required by entity type registration. */
+    /** 实体类型注册所需 */
     public AerialBombEntity(EntityType<? extends AerialBombEntity> type, Level level) {
         super(type, level);
     }
 
-    /** Spawned by AircraftEntity; position and velocity set externally after construction. */
+    /** 由 AircraftEntity 生成；位置和速度在构造后由外部设置 */
     public AerialBombEntity(Level level, float damage, float explosionPower) {
         super(ModEntityTypes.AERIAL_BOMB.get(), level);
         this.damage = damage;
@@ -57,7 +57,7 @@ public class AerialBombEntity extends ThrowableItemProjectile {
         if (!level().isClientSide() && tickCount > MAX_LIFETIME) discard();
     }
 
-    /** Stronger gravity than default (0.03) to simulate free-fall bomb. */
+    /** 重力强于默认值(0.03)，模拟自由落体炸弹 */
     @Override
     protected double getDefaultGravity() {
         return 0.06;
@@ -89,7 +89,7 @@ public class AerialBombEntity extends ThrowableItemProjectile {
                     ? Level.ExplosionInteraction.TNT : Level.ExplosionInteraction.NONE;
             level().explode(this, getX(), getY(), getZ(), explosionPower, interaction);
 
-            // Explicitly set last hurt by mob to make hostile mobs aggressive
+            // 显式设置最后受伤来源，使敌对生物进入仇恨状态
             if (target instanceof net.minecraft.world.entity.LivingEntity living) {
                 Entity ownerEntity = getOwner();
                 if (ownerEntity instanceof net.minecraft.world.entity.LivingEntity lo) {

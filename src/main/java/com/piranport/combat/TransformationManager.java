@@ -21,6 +21,28 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemContainerContents;
 
+/**
+ * 变身管理器 — 管理玩家从"人类形态"到"舰娘形态"的切换及相关属性计算。
+ *
+ * 职责概览：
+ *   - 变身/解除变身（setTransformed / removeTransformationAttributes）
+ *   - 属性计算: applyTransformationAttributes（GUI 模式和非 GUI 模式双路径）
+ *   - 负重系统: WEAPON_LOAD_MAP 静态武器重量注册表 + getItemLoad 查询
+ *   - 超重惩罚: applyOverweightPenalty / removeOverweightPenalty
+ *   - 武器循环: cycleWeapon（GUI 模式下切换武器槽位）
+ *   - 装填加速: boostedCooldown（根据 RELOAD_BOOST 效果等级缩减冷却）
+ *   - 装备检测: hasSonarEquipped / hasTorpedoReloadEquipped / isFireableWeapon
+ *
+ * 两种模式的区分：
+ *   GUI 模式    (ModCommonConfig.SHIP_CORE_GUI_ENABLED=true):
+ *       武器和装甲通过核心物品内部的 ItemContainerContents 管理，玩家打开 GUI 拖放装备。
+ *   无GUI 模式  (ModCommonConfig.SHIP_CORE_GUI_ENABLED=false):
+ *       武器来自玩家快捷栏 (hotbar 0-8)，装甲/声纳/引擎存储在核心的 SHIP_CORE_ARMOR 组件中。
+ *
+ * 武器重量注册表 (WEAPON_LOAD_MAP)：
+ *   使用 IdentityHashMap（Item 是注册表单例，引用相等更高效）。
+ *   新增武器时在此注册表中添加条目。
+ */
 public class TransformationManager {
 
     public static final ResourceLocation ARMOR_MODIFIER_ID =
@@ -38,15 +60,15 @@ public class TransformationManager {
         return coreStack.getOrDefault(ModDataComponents.SHIP_CORE_TRANSFORMED.get(), false);
     }
 
-    /** Find the active transformed ship core. No-GUI mode: offhand only. GUI mode: main hand → inventory → offhand. */
+    /** 查找当前激活的变身核心。无GUI模式：仅副手。GUI模式：主手 → 背包 → 副手。 */
     public static ItemStack findTransformedCore(net.minecraft.world.entity.player.Player player) {
         if (!com.piranport.config.ModCommonConfig.isShipCoreGuiEnabled()) {
-            // No-GUI mode: only offhand core counts
+            // 无GUI模式：仅副手核心有效
             ItemStack offhand = player.getOffhandItem();
             if (offhand.getItem() instanceof ShipCoreItem && isTransformed(offhand)) return offhand;
             return ItemStack.EMPTY;
         }
-        // GUI mode: scan all slots
+        // GUI模式：扫描所有槽位
         ItemStack mainHand = player.getMainHandItem();
         if (mainHand.getItem() instanceof ShipCoreItem && isTransformed(mainHand)) return mainHand;
         for (ItemStack s : player.getInventory().items) {
@@ -57,7 +79,7 @@ public class TransformationManager {
         return ItemStack.EMPTY;
     }
 
-    /** Check if the player has any transformed ship core. */
+    /** 检查玩家是否持有任意已变身核心 */
     public static boolean isPlayerTransformed(net.minecraft.world.entity.player.Player player) {
         return !findTransformedCore(player).isEmpty();
     }
@@ -74,14 +96,14 @@ public class TransformationManager {
         coreStack.set(ModDataComponents.SHIP_CORE_WEAPON_INDEX.get(), index);
     }
 
-    /** Cycle to the next weapon slot, skipping empty slots. Called from server via network packet. */
+    /** 切换到下一个非空武器槽，由服务端通过网络包调用 */
     public static void cycleWeapon(Player player) {
         ItemStack mainHand = player.getMainHandItem();
         if (!(mainHand.getItem() instanceof ShipCoreItem)) return;
         if (!isTransformed(mainHand)) return;
 
         if (!com.piranport.config.ModCommonConfig.isShipCoreGuiEnabled()) {
-            // No-GUI mode: weapon is determined by what the player is holding, no cycling needed
+            // 无GUI模式：武器由玩家手持决定，不需要切换
             return;
         }
 
@@ -92,7 +114,7 @@ public class TransformationManager {
         NonNullList<ItemStack> items = NonNullList.withSize(sci.getShipType().totalSlots(), ItemStack.EMPTY);
         contents.copyInto(items);
 
-        // Validate weaponSlots against actual container size to prevent index overflow
+        // 校验 weaponSlots 不超过容器大小，防止索引溢出
         if (weaponSlots > items.size()) {
             com.piranport.PiranPort.LOGGER.warn("Weapon slots ({}) exceeds container size ({}) for core {}. Data may be corrupted.",
                     weaponSlots, items.size(), sci.getShipType());
@@ -101,7 +123,7 @@ public class TransformationManager {
             weaponSlots = items.size();
         }
 
-        // Guard against zero-division in the % operator below
+        // 防止下方取模运算出现除零
         if (weaponSlots <= 0) weaponSlots = 1;
 
         int current = Math.min(getWeaponIndex(mainHand), weaponSlots - 1);
@@ -120,7 +142,7 @@ public class TransformationManager {
                 Component.translatable("message.piranport.weapon_selected", items.get(next).getHoverName()), true);
     }
 
-    /** Returns true for items that can be fired/launched (guns, torpedo launchers, aircraft — not cores, armor, ammo). */
+    /** 返回 true 表示可发射/投放的物品（火炮、鱼雷发射器、飞机 — 不含核心、装甲、弹药） */
     public static boolean isFireableWeapon(ItemStack stack) {
         if (stack.isEmpty()) return false;
         if (stack.getItem() instanceof ShipCoreItem) return false;
@@ -128,7 +150,7 @@ public class TransformationManager {
         if (stack.getItem() instanceof SonarItem) return false;
         if (stack.getItem() instanceof EngineItem) return false;
         if (stack.getItem() instanceof TorpedoReloadItem) return false;
-        // Torpedo ammo, shells, and aviation consumables all have getItemLoad == 0, so excluded naturally
+        // 鱼雷弹药、炮弹、航空消耗品的 getItemLoad 均为 0，自然排除
         return getItemLoad(stack) > 0;
     }
 
@@ -149,7 +171,7 @@ public class TransformationManager {
             return;
         }
 
-        // GUI mode: read equipment from the core's container slots
+        // GUI模式：从核心容器槽读取装备
         ShipCoreItem sci = (ShipCoreItem) coreStack.getItem();
         ShipCoreItem.ShipType type = sci.getShipType();
         ItemContainerContents contents = coreStack.getOrDefault(
@@ -161,11 +183,11 @@ public class TransformationManager {
         double engineSpeedBonus = 0;
         int totalLoad = 0;
 
-        // Weapon slots contribute to load
+        // 武器槽计入负重
         for (int i = 0; i < type.weaponSlots; i++) {
             totalLoad += getItemLoad(items.get(i));
         }
-        // Enhancement slots contribute to load, armor, and engine speed
+        // 强化槽计入负重、护甲和引擎速度
         int eStart = type.weaponSlots + type.ammoSlots;
         for (int i = eStart; i < type.totalSlots(); i++) {
             ItemStack item = items.get(i);
@@ -186,7 +208,7 @@ public class TransformationManager {
         applyOverweightPenalty(player, totalLoad, type.maxLoad);
     }
 
-    /** Hotbar slot count (slots 0–8 in Inventory.items). */
+    /** 快捷栏槽位数（Inventory.items 的 0–8 号槽） */
     private static final int HOTBAR_SIZE = 9;
 
     /**
@@ -196,7 +218,7 @@ public class TransformationManager {
      */
     private static void applyAttributesInventoryMode(Player player) {
         net.minecraft.world.entity.player.Inventory inv = player.getInventory();
-        // Find the ship core with the highest maxLoad and track its ShipType
+        // 找到 maxLoad 最高的核心并记录其 ShipType
         ShipCoreItem.ShipType bestType = null;
         int scanLimit = HOTBAR_SIZE;
         for (int i = 0; i < scanLimit; i++) {
@@ -207,7 +229,7 @@ public class TransformationManager {
                 }
             }
         }
-        // Always check offhand — no-GUI mode requires the core to be in offhand
+        // 始终检查副手 — 无GUI模式要求核心在副手
         {
             ItemStack offhandStack = inv.offhand.get(0);
             if (offhandStack.getItem() instanceof ShipCoreItem sci) {
@@ -220,7 +242,7 @@ public class TransformationManager {
         removeTransformationAttributes(player);
         if (bestType == null) return;
 
-        // Armor & engine bonuses come from items stored inside the offhand core
+        // 护甲和引擎加成来自副手核心内存储的物品
         ItemStack offhandCore = inv.offhand.get(0);
         int armorBonus = getCoreArmorBonus(offhandCore);
         double engineSpeedBonus = getCoreEngineSpeedBonus(offhandCore);
@@ -248,8 +270,7 @@ public class TransformationManager {
         return total;
     }
 
-    /** Sum armor bonus from ArmorPlateItems in the player's hotbar. Used in inventory mode.
-     * Only scans hotbar slots (0–8). */
+    /** 统计玩家快捷栏中装甲板的护甲加成之和（仅扫描 0–8 号槽） */
     public static int getInventoryArmorBonus(net.minecraft.world.entity.player.Inventory inv) {
         int total = 0;
         for (int i = 0; i < HOTBAR_SIZE; i++) {
@@ -361,7 +382,7 @@ public class TransformationManager {
     private static boolean isLoadItem(ItemStack stack) {
         if (stack.isEmpty()) return false;
         if (stack.getItem() instanceof ShipCoreItem) return false;
-        // Enhancement items only count load when stored inside the core (SHIP_CORE_ARMOR)
+        // 强化物品仅在存入核心(SHIP_CORE_ARMOR)时计入负重
         if (stack.getItem() instanceof ArmorPlateItem) return false;
         if (stack.getItem() instanceof EngineItem) return false;
         if (stack.getItem() instanceof SonarItem) return false;
@@ -381,7 +402,7 @@ public class TransformationManager {
     public static void applyOverweightPenalty(Player player, int totalLoad, int maxLoad) {
         if (player.level().isClientSide()) return;
         int cost = maxLoad - totalLoad;
-        // Remove previous overweight debuffs if no longer overweight
+        // 不再超重时移除先前的超重惩罚
         if (cost >= -20) {
             player.removeEffect(MobEffects.DIG_SLOWDOWN);
         }
@@ -391,33 +412,33 @@ public class TransformationManager {
         }
         if (cost >= 0) return;
 
-        int duration = 60; // 3 seconds, refreshed each recalc
+        int duration = 60; // 3秒，每次重算刷新
         if (cost < -100) {
-            // Mining Fatigue III + Poison II
+            // 挖掘疲劳 III + 中毒 II
             player.addEffect(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, duration, 2, false, false, true));
             player.addEffect(new MobEffectInstance(MobEffects.POISON, duration, 1, false, false, true));
             player.removeEffect(MobEffects.WEAKNESS);
         } else if (cost <= -50) {
-            // Mining Fatigue III + Weakness II
+            // 挖掘疲劳 III + 虚弱 II
             player.addEffect(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, duration, 2, false, false, true));
             player.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, duration, 1, false, false, true));
             player.removeEffect(MobEffects.POISON);
         } else if (cost <= -20) {
-            // Mining Fatigue I + Weakness I
+            // 挖掘疲劳 I + 虚弱 I
             player.addEffect(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, duration, 0, false, false, true));
             player.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, duration, 0, false, false, true));
             player.removeEffect(MobEffects.POISON);
         }
     }
 
-    /** Remove overweight debuffs. Call when player un-transforms. */
+    /** 移除超重惩罚效果，应在玩家解除变身时调用 */
     public static void removeOverweightPenalty(Player player) {
         player.removeEffect(MobEffects.DIG_SLOWDOWN);
         player.removeEffect(MobEffects.WEAKNESS);
         player.removeEffect(MobEffects.POISON);
     }
 
-    /** Remove ship core attribute modifiers. Call when player un-transforms. */
+    /** 移除核心属性修饰器，应在玩家解除变身时调用 */
     public static void removeTransformationAttributes(Player player) {
         AttributeInstance armorAttr = player.getAttribute(Attributes.ARMOR);
         AttributeInstance speedAttr = player.getAttribute(Attributes.MOVEMENT_SPEED);
@@ -481,8 +502,7 @@ public class TransformationManager {
     }
 
     // P3 #36: data-driven weapon load map (static initialization for thread safety)
-    // IdentityHashMap is correct here: Item instances are registry singletons,
-    // so reference equality (==) is both safe and faster than hashCode/equals.
+    // IdentityHashMap 适用：Item 是注册表单例，引用相等(==)既安全又快于 hashCode/equals
     private static final java.util.Map<net.minecraft.world.item.Item, Integer> WEAPON_LOAD_MAP;
 
     static {
@@ -539,7 +559,7 @@ public class TransformationManager {
                 if (items.get(i).getItem() instanceof SonarItem) return true;
             }
         } else {
-            // No-GUI mode: check SHIP_CORE_ARMOR storage
+            // 无GUI模式：检查 SHIP_CORE_ARMOR 存储
             ItemContainerContents contents = coreStack.getOrDefault(
                     ModDataComponents.SHIP_CORE_ARMOR.get(), ItemContainerContents.EMPTY);
             NonNullList<ItemStack> stored = NonNullList.withSize(type.enhancementSlots, ItemStack.EMPTY);
@@ -570,7 +590,7 @@ public class TransformationManager {
                 if (items.get(i).getItem() instanceof TorpedoReloadItem) return true;
             }
         } else {
-            // No-GUI mode: check SHIP_CORE_ARMOR storage
+            // 无GUI模式：检查 SHIP_CORE_ARMOR 存储
             ItemContainerContents contents = coreStack.getOrDefault(
                     ModDataComponents.SHIP_CORE_ARMOR.get(), ItemContainerContents.EMPTY);
             NonNullList<ItemStack> stored = NonNullList.withSize(type.enhancementSlots, ItemStack.EMPTY);

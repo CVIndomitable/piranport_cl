@@ -25,9 +25,9 @@ public class DungeonTransportPlaneEntity extends Entity {
     private static final EntityDataAccessor<Boolean> HAS_DROPPED =
             SynchedEntityData.defineId(DungeonTransportPlaneEntity.class, EntityDataSerializers.BOOLEAN);
 
-    /** Horizontal flight speed in blocks/tick. */
+    /** 水平飞行速度（格/tick） */
     private static final double FLIGHT_SPEED = 0.8;
-    /** Climb rate after drop (tan 30° ≈ 0.577). */
+    /** 投放后爬升率（tan 30° ≈ 0.577） */
     private static final double CLIMB_RATE = 0.46;
     /** Max lifetime in ticks (safety net: 30 seconds). */
     private static final int MAX_LIFETIME = 600;
@@ -54,7 +54,7 @@ public class DungeonTransportPlaneEntity extends Entity {
 
     @Override
     public boolean shouldBeSaved() {
-        // Script-driven cutscene entity: the onDrop callback is a live Runnable that
+        // 脚本驱动过场实体：onDrop 回调是即时 Runnable，由
         // cannot be serialized, so persisting across chunk unload/reload would leave
         // the plane stranded with a null callback. Skip saving and let it despawn
         // naturally (MAX_LIFETIME = 600 ticks hard cap).
@@ -113,14 +113,14 @@ public class DungeonTransportPlaneEntity extends Entity {
         }
 
         if (!level().isClientSide()) {
-            // Server: fly forward
+            // 服务端：向前飞行
             double vx = dirX * FLIGHT_SPEED;
             double vz = dirZ * FLIGHT_SPEED;
             double vy = climbing ? FLIGHT_SPEED * CLIMB_RATE : 0.0;
             setDeltaMovement(vx, vy, vz);
             move(net.minecraft.world.entity.MoverType.SELF, getDeltaMovement());
 
-            // Check if over drop point
+            // 检查是否到达投放点
             if (!dropped) {
                 double hDist = Math.sqrt(
                         Math.pow(getX() - targetX, 2) + Math.pow(getZ() - targetZ, 2));
@@ -139,10 +139,10 @@ public class DungeonTransportPlaneEntity extends Entity {
                 climbing = true;
             }
         } else {
-            // Client: apply movement from server sync
+            // 客户端：应用服务端同步的移动
             move(net.minecraft.world.entity.MoverType.SELF, getDeltaMovement());
 
-            // Engine exhaust particles
+            // 引擎尾气粒子
             if (tickCount % 3 == 0) {
                 level().addParticle(ParticleTypes.CAMPFIRE_COSY_SMOKE,
                         getX() - dirX * 1.2, getY() + 0.2, getZ() - dirZ * 1.2,
@@ -157,9 +157,9 @@ public class DungeonTransportPlaneEntity extends Entity {
 
     @Override
     public boolean isCurrentlyGlowing() {
-        // Respect vanilla glow priority
+        // 尊重原版发光优先级
         if (super.isCurrentlyGlowing()) return true;
-        // Dungeon entities always glow by default
+        // 副本实体默认始终发光
         return true;
     }
 

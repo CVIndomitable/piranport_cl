@@ -9,28 +9,38 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 
 /**
- * Shared friendly-fire logic for all piranport projectiles.
- * Returns true if the projectile should skip hitting the given target.
+ * 皮兰港所有弹药的友军伤害判定逻辑。
+ * 返回 true 表示该弹药应跳过对此目标的命中。
+ *
+ * 决策树（首次匹配即返回）：
+ *   1. 深海实体 → 深海实体    → 拦截（禁止自相残杀）
+ *   2. 女仆 → 自身             → 拦截（禁止自伤）
+ *   3. 女仆 → 同主人女仆        → 拦截（禁止友伤）
+ *   4. 玩家 → 玩家（友伤关闭）   → 拦截（配置开关）
+ *   5. 玩家 → 自己的飞机        → 始终拦截
+ *   6. 玩家 → 他人飞机（友伤关闭）→ 拦截
+ *   7. 自主飞机 → 自主飞机      → 拦截（禁止AI飞机互相残杀）
+ *   8. 以上都不匹配             → 放行（允许命中）
  */
 public final class FriendlyFireHelper {
 
     private FriendlyFireHelper() {}
 
     /**
-     * @param target   the entity the projectile is about to hit
-     * @param owner    the entity that fired the projectile (may be null)
-     * @return true if the hit should be blocked (target is friendly)
+     * @param target 弹药将要命中的实体
+     * @param owner  发射弹药的实体（可为 null）
+     * @return true 表示应拦截（目标为友方）
      */
     public static boolean shouldBlockHit(Entity target, Entity owner) {
-        // Deep ocean fratricide protection: deep ocean projectiles must not hit other deep ocean entities
+        // 1. 深海实体禁止互相残杀
         if (target instanceof AbstractDeepOceanEntity && owner instanceof AbstractDeepOceanEntity) {
             return true;
         }
-        // Maid self-damage protection: maids cannot be hurt by their own projectiles
+        // 2. 女仆禁止被自己的弹药命中
         if (target instanceof EntityMaid && owner instanceof EntityMaid && target == owner) {
             return true;
         }
-        // Maid friendly fire protection: maids with the same owner cannot hurt each other
+        // 3. 同主人女仆禁止互相伤害
         if (target instanceof EntityMaid targetMaid && owner instanceof EntityMaid ownerMaid) {
             LivingEntity targetOwner = targetMaid.getOwner();
             LivingEntity ownerOwner = ownerMaid.getOwner();
@@ -38,27 +48,27 @@ public final class FriendlyFireHelper {
                 return true;
             }
         }
-        // Friendly fire protection: skip other players when config disabled
+        // 4. 玩家友伤关闭时禁止攻击其他玩家
         if (!ModCommonConfig.FRIENDLY_FIRE_ENABLED.get()
                 && target instanceof Player && owner instanceof Player) {
             return true;
         }
-        // Don't hit any player-owned aircraft when friendly fire is disabled
+        // 5-6. 飞机友伤保护
         if (target instanceof AircraftEntity aircraft && aircraft.getOwnerUUID() != null) {
             if (owner instanceof Player p && p.getUUID().equals(aircraft.getOwnerUUID())) {
-                return true; // always protect own aircraft
+                return true; // 始终保护自己的飞机
             }
             if (!ModCommonConfig.FRIENDLY_FIRE_ENABLED.get() && owner instanceof Player) {
-                return true; // protect other players' aircraft when FF disabled
+                return true; // 友伤关闭时保护他人飞机
             }
         }
-        // Autonomous fratricide protection: one autonomous aircraft's projectile
-        // (owner = the firing AircraftEntity) hitting another autonomous aircraft
+        // 7. 自主飞机之间禁止互相残杀
         if (target instanceof AircraftEntity targetAir && targetAir.isAutonomous()
                 && owner instanceof AircraftEntity ownerAir && ownerAir.isAutonomous()
                 && owner != target) {
             return true;
         }
+        // 8. 以上都不匹配，允许命中
         return false;
     }
 }

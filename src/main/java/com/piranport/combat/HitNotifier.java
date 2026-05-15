@@ -7,23 +7,23 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-/** Per-player opt-out state for weapon hit/kill/miss chat notifications. Default: enabled. */
+/** 武器命中/击杀/未命中聊天通知的按玩家开关状态，默认开启 */
 public final class HitNotifier {
     private HitNotifier() {}
 
-    private static final Set<UUID> disabled = ConcurrentHashMap.newKeySet();
+    private static final Set<UUID> optedOut = ConcurrentHashMap.newKeySet();
 
     public static boolean isEnabled(UUID playerId) {
-        return !disabled.contains(playerId);
+        return !optedOut.contains(playerId);
     }
 
     public static void setEnabled(UUID playerId, boolean enabled) {
-        if (enabled) disabled.remove(playerId);
-        else disabled.add(playerId);
+        if (enabled) optedOut.remove(playerId);
+        else optedOut.add(playerId);
     }
 
     public static void onPlayerLogout(UUID playerId) {
-        disabled.remove(playerId);
+        optedOut.remove(playerId);
     }
 
     public static void send(Player player, Component message) {

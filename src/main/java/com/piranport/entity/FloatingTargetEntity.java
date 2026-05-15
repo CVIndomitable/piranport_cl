@@ -31,7 +31,7 @@ public class FloatingTargetEntity extends ArmorStand {
         super.tick();
         if (!isAlive()) return;
 
-        // Water buoyancy: push upward while submerged
+        // 水浮力：浸没时上推
         if (!level().isClientSide() && isInWater()) {
             Vec3 vel = getDeltaMovement();
             if (vel.y < 0.05) {
@@ -39,7 +39,7 @@ public class FloatingTargetEntity extends ArmorStand {
             }
         }
 
-        // Splash particles on client
+        // 客户端水花粒子
         if (level().isClientSide() && tickCount % 15 == 0) {
             level().addParticle(ParticleTypes.SPLASH,
                     getX() + (random.nextDouble() - 0.5),

@@ -57,7 +57,7 @@ public class CookingPotRecipeCategory implements IRecipeCategory<CookingPotRecip
                 .addItemStack(recipe.getResult());
     }
 
-    // Arrow drawing constants
+    // 箭头绘制常量
     private static final int ARROW_COLOR = 0xFF808080;
     private static final int ARROW_X_START = 64;
     private static final int ARROW_X_END = 110;
@@ -65,13 +65,13 @@ public class CookingPotRecipeCategory implements IRecipeCategory<CookingPotRecip
 
     @Override
     public void draw(CookingPotRecipe recipe, IRecipeSlotsView slotsView, GuiGraphics gfx, double mouseX, double mouseY) {
-        // Arrow shaft
+        // 箭头箭杆
         gfx.fill(ARROW_X_START, ARROW_Y_CENTER - 1, ARROW_X_END - 4, ARROW_Y_CENTER + 1, ARROW_COLOR);
-        // Arrow head (3-layer triangle)
+        // 箭头头部 (3-layer triangle)
         gfx.fill(ARROW_X_END - 10, ARROW_Y_CENTER - 4, ARROW_X_END - 4, ARROW_Y_CENTER + 4, ARROW_COLOR);
         gfx.fill(ARROW_X_END - 4, ARROW_Y_CENTER - 3, ARROW_X_END - 2, ARROW_Y_CENTER + 3, ARROW_COLOR);
         gfx.fill(ARROW_X_END - 2, ARROW_Y_CENTER - 2, ARROW_X_END, ARROW_Y_CENTER + 2, ARROW_COLOR);
-        // Cooking time
+        // 烹饪时间
         String timeText = recipe.getCookingTime() / 20 + "s";
         gfx.drawString(Minecraft.getInstance().font, timeText, 78, 34, ARROW_COLOR, false);
     }

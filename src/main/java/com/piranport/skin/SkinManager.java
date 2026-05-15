@@ -24,7 +24,7 @@ public class SkinManager {
         PacketDistributor.sendToAllPlayers(new SkinSyncPayload(player.getUUID(), 0));
     }
 
-    /** Revert skin and return the stored core to inventory (used by empty-hand revert). */
+    /** 恢复皮肤并将存储的核心返还到背包（用于空手恢复）。 */
     public static void revertSkin(ServerPlayer player) {
         int currentSkin = getActiveSkin(player);
         if (currentSkin <= 0) return;
@@ -32,7 +32,7 @@ public class SkinManager {
         clearActiveSkin(player);
     }
 
-    /** Give the player a skin core item corresponding to the given skinId. */
+    /** 给玩家一个对应 skinId 的皮肤核心物品。 */
     public static void returnSkinCore(ServerPlayer player, int skinId) {
         ItemStack coreItem = getSkinCoreItem(skinId);
         if (!coreItem.isEmpty()) {
@@ -51,7 +51,7 @@ public class SkinManager {
         };
     }
 
-    /** Send all currently active skins to a player who just joined. */
+    /** 向刚加入的玩家发送所有当前激活的皮肤状态。 */
     public static void syncAllSkinsToPlayer(ServerPlayer joiner) {
         for (ServerPlayer other : joiner.server.getPlayerList().getPlayers()) {
             int skinId = getActiveSkin(other);

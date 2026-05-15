@@ -56,7 +56,7 @@ public class RuinDegradationProcessor extends StructureProcessor {
         if (random.nextFloat() > integrity) {
             // 70% chance → air, 30% chance → cobblestone (rubble)
             if (random.nextFloat() < 0.7f) {
-                return null; // Remove block
+                return null; // 移除方块
             } else {
                 return new StructureTemplate.StructureBlockInfo(
                         relativeBlockInfo.pos(), Blocks.COBBLESTONE.defaultBlockState(), null);

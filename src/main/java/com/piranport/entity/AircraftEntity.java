@@ -52,6 +52,28 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * 飞机实体 — 服务端权威控制，客户端插值渲染。
+ *
+ * 架构导航（维护者阅读入口）：
+ *   - 状态机:   tickLaunching → tickCruising → tickAttacking → tickReturning
+ *   - 战斗分发: tickAttacking 根据 payloadType 委托各攻击策略
+ *       战斗机对空扫射 / 火箭机齐射 / 俯冲轰炸 / 水平轰炸 / 鱼雷投掷 / 反潜深弹 / 侦察
+ *   - 火控:     resolveTarget / resolveASWTarget / resolveFighterTarget
+ *   - 侦察:     tickReconActive + ReconManager（服务端），ClientReconData（客户端）
+ *   - 区块加载: updateReconChunkLoading / sendPendingChunks（基于视距）
+ *   - 防御:     stuck 检测 / 距离限制 / 最大留空时间
+ *   - 持久化:   addAdditionalSaveData / readAdditionalSaveData（约 100 个字段）
+ *   - 客户端:   lerpTo 重写 + tick() 客户端分支（防镜头抖动）
+ *   - ASW 声呐: 水下目标搜索与标记
+ *
+ * 关键交互面:
+ *   - ReconManager（服务端侦察状态）
+ *   - FireControlManager（火控锁定）
+ *   - AircraftIndex（按 owner UUID 查找飞机）
+ *   - FlightGroupData.AttackMode（FOCUS / SPREAD / FOLLOW）
+ *   - AircraftInfo（从物品 NBT 读取面板伤害/速度/弹药）
+ */
 public class AircraftEntity extends Entity {
 
     public enum FlightState {
@@ -84,7 +106,7 @@ public class AircraftEntity extends Entity {
     private String payloadType = "";
     private AircraftInfo.BombingMode bombingMode = AircraftInfo.BombingMode.DIVE;
 
-    // Runtime (not saved)
+    // 运行时（不保存）
     private int airtimeTicks = 0;
     private int stuckTicks = 0;
     private Vec3 stuckCheckPos = Vec3.ZERO;
@@ -95,7 +117,7 @@ public class AircraftEntity extends Entity {
     private boolean diveCommitted = false;  // true once dive bomber locks its drop point
     @Nullable private Vec3 diveTarget = null; // predicted bomb drop point (fixed after commit)
 
-    // Level bomber bombing run state
+    // 水平轰炸机投弹状态
     private boolean levelBombDropped = false;     // true once bomb dropped in current run
     @Nullable private Vec3 levelRunDirection = null; // normalized direction of current run
     @Nullable private Vec3 levelDropPoint = null;   // position where bomb was dropped
@@ -111,7 +133,7 @@ public class AircraftEntity extends Entity {
     private int lastForcedChunkX = Integer.MIN_VALUE;
     private int lastForcedChunkZ = Integer.MIN_VALUE;
 
-    // Recon chunk loading: view-distance-based force loading + chunk sending
+    // 侦察区块加载：基于视距的强制加载 + 区块发送
     private final java.util.Set<Long> reconForcedChunks = new java.util.HashSet<>();
     private final java.util.Set<Long> reconPendingSend = new java.util.HashSet<>();
     private static final int RECON_CHUNK_SEND_RATE = 16; // max chunks to send per tick
@@ -123,13 +145,13 @@ public class AircraftEntity extends Entity {
     @Nullable private AircraftEntity cachedReconAircraft;
     private int reconCacheTick = 0;
 
-    // Recon map-slot cache: indices in owner's inventory that held a MapItem on last scan.
+    // 侦察地图槽缓存：上次扫描时拥有者背包中持有 MapItem 的槽位索引
     // Full-inventory scan (41 slots) is deferred to once per RECON_MAP_REFRESH_TICKS.
     @Nullable private int[] cachedMapSlots;
     private int mapSlotsRefreshTick = -RECON_MAP_REFRESH_TICKS;
     private static final int RECON_MAP_REFRESH_TICKS = 100;
 
-    // Client-side position interpolation (prevents camera stutter from raw setPos jumps)
+    // 客户端位置插值（防止原始 setPos 跳跃导致的镜头抖动）
     private int clientLerpSteps;
     private double clientLerpX, clientLerpY, clientLerpZ;
     private float clientLerpYRot, clientLerpXRot;
@@ -140,10 +162,10 @@ public class AircraftEntity extends Entity {
     // Phase 34: set to true when defense mechanisms force a recall (stuck, timeout, distance)
     private boolean isForcedReturn = false;
 
-    // AircraftIndex bookkeeping: true once added via onAddedToLevel or tick fallback
+    // AircraftIndex 登记：通过 onAddedToLevel 或 tick 回退添加后置为 true
     private boolean indexRegistered = false;
 
-    // Autonomous mode: aircraft has no player owner (e.g. launched by floating target or maid)
+    // 自主模式：飞机无玩家所属（如浮靶或女仆发射的飞机）
     private boolean autonomous = false;
     private Vec3 homePosition = Vec3.ZERO;
     @Nullable private Vec3 lastHorizontalDir = null; // previous tick's horizontal direction for turn radius
@@ -178,7 +200,7 @@ public class AircraftEntity extends Entity {
         this.noPhysics = true;
     }
 
-    /** Factory — call on server only. */
+    /** 工厂方法 — 仅在服务端调用 */
     public static AircraftEntity create(Level level, Player owner, int weaponSlotIndex,
                                         ItemStack aircraftStack,
                                         FlightGroupData.AttackMode attackMode,

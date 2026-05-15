@@ -12,9 +12,9 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Server-side: tracks which player is guiding which torpedo and their pending direction input.
- * Cleanup: Entries are removed when guidance ends (torpedo destroyed, wire cut, player logout),
- * and on server shutdown (GameEvents.onServerStopped).
+ * 服务端：追踪哪个玩家在引导哪枚鱼雷及其待处理的方向输入。
+ * 清理：引导结束时移除条目（鱼雷被摧毁、导线切断、玩家登出），
+ * 以及服务端关闭时（GameEvents.onServerStopped）。
  */
 public class TorpedoGuidanceManager {
     private static final Map<UUID, UUID> activeGuidance = new ConcurrentHashMap<>();
@@ -35,7 +35,7 @@ public class TorpedoGuidanceManager {
         pendingInput.remove(playerUUID);
     }
 
-    /** End guidance and notify the client to restore its camera. */
+    /** 结束引导并通知客户端恢复摄像机。 */
     public static void endGuidance(ServerPlayer player) {
         endGuidance(player.getUUID());
         PacketDistributor.sendToPlayer(player, new TorpedoGuidanceEndPayload());
@@ -56,13 +56,13 @@ public class TorpedoGuidanceManager {
         }
     }
 
-    /** Consume the latest direction input. Returns null if none (torpedo drifts). */
+    /** 消费最新的方向输入。如果没有输入则返回 null（鱼雷漂移）。 */
     @Nullable
     public static float[] consumeInput(UUID playerUUID) {
         return pendingInput.remove(playerUUID);
     }
 
-    /** Called when the guided torpedo is destroyed/wire-cut so we can tell the client to exit. */
+    /** 当被引导的鱼雷被摧毁/导线切断时调用，以便通知客户端退出引导。 */
     public static void onTorpedoGone(ServerPlayer player) {
         endGuidance(player);
     }

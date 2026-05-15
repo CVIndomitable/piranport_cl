@@ -37,27 +37,27 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
     private boolean isVT = false;
     private float explosionPower = 1.5f;
     private float initialSpeed = 2.0f;
-    /** Prevents VT proximity detonation + onHit from double-exploding in the same tick. */
+    /** 防止 VT 近炸引信 + onHit 在同一 tick 内双重爆炸。 */
     private boolean exploded = false;
 
-    /** Tracking (homing) shell: gently steers toward target each tick. */
+    /** 追踪（自导引）炮弹：每 tick 向目标轻微转向。 */
     private int trackingTargetId = -1;
-    /** Blend factor: 0.05 = ~5% correction per tick (gentle curve). */
+    /** 混合因子：0.05 = 每 tick 约 5% 修正（平缓曲线）。 */
     private static final double TRACKING_STEER = 0.05;
 
-    /** Radius (blocks) within which any non-player living entity triggers VT detonation. */
+    /** 在该半径（格）内任何非玩家的生物实体都会触发 VT 近炸。 */
     private static final double VT_DETONATE_RADIUS = 3.0;
-    /** Forward raycast length for block proximity detection (blocks). */
+    /** 方块接近检测的前方射线长度（格）。 */
     private static final double VT_BLOCK_RANGE = 3.0;
-    /** Grace period after launch before VT fuze arms (ticks). */
+    /** 发射后 VT 引信解锁前的宽限期（tick）。 */
     private static final int VT_ARM_TICKS = 5;
 
-    // Required constructor for entity type registration
+    // 实体类型注册所需的构造器
     public CannonProjectileEntity(EntityType<? extends CannonProjectileEntity> type, Level level) {
         super(type, level);
     }
 
-    // Constructor for firing
+    // 发射用构造器
     public CannonProjectileEntity(Level level, LivingEntity shooter,
                                    ItemStack shellItem, float damage,
                                    boolean isHE, float explosionPower) {
@@ -72,7 +72,7 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         this.isVT = vt;
     }
 
-    /** Enable tracking toward a specific entity (by runtime entity ID). */
+    /** 启用对特定实体的追踪（通过运行时实体 ID）。 */
     public void setTracking(int entityId) {
         this.trackingTargetId = entityId;
     }
@@ -97,7 +97,7 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         }
     }
 
-    /** Gently steer toward the tracked target each tick. */
+    /** 每 tick 向追踪目标轻微转向。 */
     private void tickTracking() {
         Entity target = level().getEntity(trackingTargetId);
         if (target == null || !target.isAlive()) {
@@ -120,7 +120,7 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         if (velocity.lengthSqr() < 0.01) return;
         Vec3 pos = position();
 
-        // --- Entity proximity check: omnidirectional, any non-player living entity ---
+        // --- 实体接近检测：全向，检测任何非玩家的生物实体 ---
         AABB searchBox = getBoundingBox().inflate(VT_DETONATE_RADIUS);
         List<Entity> nearby = level().getEntities(this, searchBox, e ->
                 e instanceof LivingEntity
@@ -137,7 +137,7 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
             }
         }
 
-        // --- Block proximity check (short raycast ahead) ---
+        // --- 方块接近检测（前方短射线） ---
         Vec3 forward = velocity.normalize();
         Vec3 ahead = pos.add(forward.scale(VT_BLOCK_RANGE));
         BlockHitResult blockHit = level().clip(new ClipContext(
@@ -179,14 +179,13 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
             // 联装炮齐射：同 tick 多发命中同目标时，重置无敌帧让每发都造成伤害
             target.invulnerableTime = 0;
             if (isHE) {
-                // HE: direct hit damage + area explosion for splash
+                // HE：直击伤害 + 范围爆炸溅射
                 target.hurt(damageSources().explosion(this, getOwner()), damage);
                 Level.ExplosionInteraction interaction = ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get()
                         ? Level.ExplosionInteraction.TNT : Level.ExplosionInteraction.NONE;
                 level().explode(this, getX(), getY(), getZ(), explosionPower, interaction);
             } else {
-                // AP: 130% base direct damage, velocity-decayed like vanilla arrows,
-                // ignores 50% of target armor
+                // AP：130% 基础直击伤害，与原版箭矢一样随速度衰减，忽略 50% 目标护甲
                 float currentSpeed = (float) getDeltaMovement().length();
                 float speedRatio = initialSpeed > 0 ? currentSpeed / initialSpeed : 1.0f;
                 float apDamage = damage * 1.3f * speedRatio;
@@ -236,8 +235,7 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
                         ? Level.ExplosionInteraction.TNT : Level.ExplosionInteraction.NONE;
                 level().explode(this, getX(), getY(), getZ(), explosionPower, interaction);
             } else {
-                // AP: destroy block and drop as item if resistance < obsidian;
-                // no block destruction when AP is in water
+                // AP：若抗性 < 黑曜石则破坏方块并以物品形式掉落；AP 在水中时不破坏方块
                 if (ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get() && !isInWater()) {
                     BlockPos pos = result.getBlockPos();
                     BlockState state = level().getBlockState(pos);
@@ -281,7 +279,7 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
     public void readAdditionalSaveData(CompoundTag tag) {
         super.readAdditionalSaveData(tag);
         damage = tag.getFloat("Damage");
-        if (damage <= 0) damage = 4.0f; // fallback: avoid zero-damage projectiles after world reload
+        if (damage <= 0) damage = 4.0f; // 兜底：避免世界重载后出现零伤害的投射物
         isHE = tag.getBoolean("IsHE");
         isVT = tag.getBoolean("IsVT");
         explosionPower = tag.getFloat("ExplosionPower");

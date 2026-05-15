@@ -94,7 +94,7 @@ public class RailgunProjectileEntity extends ThrowableItemProjectile {
         super.readAdditionalSaveData(tag);
         if (tag.contains("RailgunDamage")) {
             float loadedDamage = tag.getFloat("RailgunDamage");
-            // Validate damage range to prevent exploits
+            // 校验伤害范围，防止利用漏洞
             damage = Math.max(1.0f, Math.min(50.0f, loadedDamage));
         }
     }

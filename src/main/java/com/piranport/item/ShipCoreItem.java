@@ -1868,6 +1868,8 @@ public class ShipCoreItem extends Item {
                 hasAmmo = loaded.count() >= tl.getTubeCount();
             } else if (stack.getItem() instanceof CannonItem ci) {
                 hasAmmo = loaded.count() >= ci.getBarrelCount();
+            } else if (stack.getItem() instanceof com.piranport.artillery.ArtilleryItem ai) {
+                hasAmmo = loaded.count() >= ai.getBarrelCount();
             } else {
                 hasAmmo = loaded.hasAmmo();
             }
@@ -2043,17 +2045,23 @@ public class ShipCoreItem extends Item {
     // ===== Gun stats =====
 
     private static float getGunDamage(ItemStack weapon) {
-        if (weapon.getItem() instanceof CannonItem ci) return ci.getDamage();
+        Item item = weapon.getItem();
+        if (item instanceof com.piranport.artillery.ArtilleryItem ai) return ai.getDamage();
+        if (item instanceof CannonItem ci) return ci.getDamage();
         return 6f;
     }
 
     private static int getGunCooldown(ItemStack weapon) {
-        if (weapon.getItem() instanceof CannonItem ci) return ci.getCooldownTicks();
+        Item item = weapon.getItem();
+        if (item instanceof com.piranport.artillery.ArtilleryItem ai) return ai.getCooldownTicks();
+        if (item instanceof CannonItem ci) return ci.getCooldownTicks();
         return 30;
     }
 
     private static int getBarrelCount(ItemStack weapon) {
-        if (weapon.getItem() instanceof CannonItem ci) return ci.getBarrelCount();
+        Item item = weapon.getItem();
+        if (item instanceof com.piranport.artillery.ArtilleryItem ai) return ai.getBarrelCount();
+        if (item instanceof CannonItem ci) return ci.getBarrelCount();
         return 1;
     }
 

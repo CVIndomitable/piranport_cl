@@ -134,17 +134,25 @@ public class ReloadBarDecorator implements IItemDecorator {
                 if (weapon.getItem() instanceof CannonItem ci) {
                     boolean hasAmmo = false;
                     if (com.piranport.config.ModCommonConfig.AUTO_RESUPPLY_ENABLED.get()) {
-                        // Auto mode: check ammo pool
                         hasAmmo = hasCannonAmmoInPool(weapon, items, type);
                     } else {
-                        // Manual mode: check LOADED_AMMO component
                         LoadedAmmo loaded = weapon.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
                         hasAmmo = loaded.hasAmmo() && loaded.count() >= ci.getBarrelCount();
                     }
                     if (hasAmmo) {
                         gui.fill(barX, barY, barX + BAR_MAX_W, barY + 1, readyColor);
                     }
-                    // else: empty bar (background already drawn above)
+                } else if (weapon.getItem() instanceof com.piranport.artillery.ArtilleryItem ai) {
+                    boolean hasAmmo = false;
+                    if (com.piranport.config.ModCommonConfig.AUTO_RESUPPLY_ENABLED.get()) {
+                        hasAmmo = hasCannonAmmoInPool(weapon, items, type);
+                    } else {
+                        LoadedAmmo loaded = weapon.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
+                        hasAmmo = loaded.hasAmmo() && loaded.count() >= ai.getBarrelCount();
+                    }
+                    if (hasAmmo) {
+                        gui.fill(barX, barY, barX + BAR_MAX_W, barY + 1, readyColor);
+                    }
                 } else {
                     gui.fill(barX, barY, barX + BAR_MAX_W, barY + 1, readyColor);
                 }

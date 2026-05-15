@@ -106,7 +106,15 @@ public record ManualReloadPayload() implements CustomPacketPayload {
                     && !mainHand.is(ModItems.SMALL_GUN.get()) && !mainHand.is(ModItems.SINGLE_SMALL_GUN.get())) {
                 weapon = mainHand;
                 weaponSlot = inv.selected;
+            } else if (mainHand.getItem() instanceof com.piranport.artillery.ArtilleryItem
+                    && !mainHand.is(ModItems.SMALL_GUN.get()) && !mainHand.is(ModItems.SINGLE_SMALL_GUN.get())) {
+                weapon = mainHand;
+                weaponSlot = inv.selected;
             } else if (offHand.getItem() instanceof CannonItem
+                    && !offHand.is(ModItems.SMALL_GUN.get()) && !offHand.is(ModItems.SINGLE_SMALL_GUN.get())) {
+                weapon = offHand;
+                weaponSlot = 40;
+            } else if (offHand.getItem() instanceof com.piranport.artillery.ArtilleryItem
                     && !offHand.is(ModItems.SMALL_GUN.get()) && !offHand.is(ModItems.SINGLE_SMALL_GUN.get())) {
                 weapon = offHand;
                 weaponSlot = 40;
@@ -115,8 +123,10 @@ public record ManualReloadPayload() implements CustomPacketPayload {
                 return;
             }
 
-            CannonItem cannonItem = (CannonItem) weapon.getItem();
-            int barrelCount = cannonItem.getBarrelCount();
+            CannonItem cannonItem = weapon.getItem() instanceof CannonItem ci ? ci : null;
+            com.piranport.artillery.ArtilleryItem artilleryItem = weapon.getItem() instanceof com.piranport.artillery.ArtilleryItem ai ? ai : null;
+            if (cannonItem == null && artilleryItem == null) return;
+            int barrelCount = cannonItem != null ? cannonItem.getBarrelCount() : artilleryItem.getBarrelCount();
 
             // Already loaded or reloading
             LoadedAmmo current = weapon.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
@@ -180,7 +190,7 @@ public record ManualReloadPayload() implements CustomPacketPayload {
             weapon.set(ModDataComponents.LOADED_AMMO.get(), new LoadedAmmo(barrelCount, ammoId));
 
             // Set cooldown — reload time starts now, weapon ready when cooldown expires
-            int baseCooldown = ((CannonItem) weapon.getItem()).getCooldownTicks();
+            int baseCooldown = cannonItem != null ? cannonItem.getCooldownTicks() : artilleryItem.getCooldownTicks();
             int cooldownTicks = TransformationManager.boostedCooldown(player, baseCooldown);
             long gameTime = player.level().getGameTime();
             weapon.set(ModDataComponents.WEAPON_COOLDOWN.get(),

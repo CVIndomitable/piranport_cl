@@ -10,6 +10,10 @@ import com.piranport.config.ModWeaponsConfig;
 import com.piranport.item.AircraftItem;
 import com.piranport.item.AmmoItem;
 import com.piranport.item.ArmorPlateItem;
+import com.piranport.artillery.ArtilleryItem;
+import com.piranport.artillery.config.ArtilleryCannonData;
+import com.piranport.artillery.config.ArtilleryConfig;
+import com.piranport.artillery.config.MuzzlePos;
 import com.piranport.item.CannonItem;
 import com.piranport.item.BottleFoodItem;
 import com.piranport.item.ModFoodItem;
@@ -36,6 +40,7 @@ import com.piranport.item.SmokeCandleItem;
 import com.piranport.item.EugenShieldItem;
 import com.piranport.item.TaihouUmbrellaItem;
 import com.piranport.item.UnicornHarpItem;
+import java.util.List;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.food.FoodProperties;
@@ -154,30 +159,36 @@ public class ModItems {
 
     // ===== Guns =====
     public static final DeferredItem<Item> SINGLE_SMALL_GUN =
-            ITEMS.register("single_small_gun", () -> new CannonItem(new Item.Properties().stacksTo(1)
+            ITEMS.register("single_small_gun", () -> new ArtilleryItem(new Item.Properties().stacksTo(1)
                     .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.CANNON),
-                    ModWeaponsConfig.SMALL_GUN_DAMAGE::getAsDouble,
-                    ModWeaponsConfig.SMALL_GUN_COOLDOWN::get, 1));
+                    new ArtilleryCannonData(4, 1, 6.0f, 30, 500, 2.0f,
+                            List.of(new MuzzlePos(0.2, 0.15, 0)))));
     public static final DeferredItem<Item> SMALL_GUN =
-            ITEMS.register("small_gun", () -> new CannonItem(new Item.Properties().stacksTo(1)
+            ITEMS.register("small_gun", () -> new ArtilleryItem(new Item.Properties().stacksTo(1)
                     .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.CANNON),
-                    ModWeaponsConfig.TWIN_SMALL_GUN_DAMAGE::getAsDouble,
-                    ModWeaponsConfig.TWIN_SMALL_GUN_COOLDOWN::get, 2));
+                    new ArtilleryCannonData(4, 2, 6.0f, 30, 500, 2.0f,
+                            List.of(new MuzzlePos(0.3, 0.2, 0),
+                                    new MuzzlePos(-0.3, 0.2, 0)))));
     public static final DeferredItem<Item> MEDIUM_GUN =
-            ITEMS.register("medium_gun", () -> new CannonItem(new Item.Properties().stacksTo(1)
+            ITEMS.register("medium_gun", () -> new ArtilleryItem(new Item.Properties().stacksTo(1)
                     .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.CANNON),
-                    ModWeaponsConfig.MEDIUM_GUN_DAMAGE::getAsDouble,
-                    ModWeaponsConfig.MEDIUM_GUN_COOLDOWN::get, 1));
+                    new ArtilleryCannonData(8, 1, 12.0f, 50, 1000, 3.0f,
+                            List.of(new MuzzlePos(0.3, 0.2, 0)))));
     public static final DeferredItem<Item> LARGE_GUN =
-            ITEMS.register("large_gun", () -> new CannonItem(new Item.Properties().stacksTo(1)
+            ITEMS.register("large_gun", () -> new ArtilleryItem(new Item.Properties().stacksTo(1)
                     .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.CANNON),
-                    ModWeaponsConfig.TRIPLE_LARGE_GUN_DAMAGE::getAsDouble,
-                    ModWeaponsConfig.TRIPLE_LARGE_GUN_COOLDOWN::get, 3));
+                    new ArtilleryCannonData(16, 3, 20.0f, 80, 2000, 4.0f,
+                            List.of(new MuzzlePos(0.5, 0.25, 0),
+                                    new MuzzlePos(0, 0.25, 0),
+                                    new MuzzlePos(-0.5, 0.25, 0)))));
     public static final DeferredItem<Item> FRENCH_QUAD_380MM_GUN =
-            ITEMS.register("french_quad_380mm_gun", () -> new CannonItem(new Item.Properties().stacksTo(1)
+            ITEMS.register("french_quad_380mm_gun", () -> new ArtilleryItem(new Item.Properties().stacksTo(1)
                     .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.CANNON),
-                    ModWeaponsConfig.QUAD_LARGE_GUN_DAMAGE::getAsDouble,
-                    ModWeaponsConfig.QUAD_LARGE_GUN_COOLDOWN::get, 4));
+                    new ArtilleryCannonData(16, 4, 20.0f, 60, 2500, 4.0f,
+                            List.of(new MuzzlePos(0.6, 0.3, 0),
+                                    new MuzzlePos(0.2, 0.3, 0),
+                                    new MuzzlePos(-0.2, 0.3, 0),
+                                    new MuzzlePos(-0.6, 0.3, 0)))));
 
     // ===== Torpedo Ammo (legacy generic) =====
     public static final DeferredItem<TorpedoItem> TORPEDO_533MM =

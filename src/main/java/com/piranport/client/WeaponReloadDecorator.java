@@ -71,7 +71,8 @@ public class WeaponReloadDecorator implements IItemDecorator {
         boolean showEmptyBar = false;
         if (!ModCommonConfig.AUTO_RESUPPLY_ENABLED.get()) {
             // Non-small-caliber cannons and torpedo launchers use manual reload
-            showEmptyBar = (stack.getItem() instanceof com.piranport.item.CannonItem
+            showEmptyBar = ((stack.getItem() instanceof com.piranport.item.CannonItem
+                    || stack.getItem() instanceof com.piranport.artillery.ArtilleryItem)
                     && !stack.is(ModItems.SMALL_GUN.get()) && !stack.is(ModItems.SINGLE_SMALL_GUN.get()))
                     || stack.getItem() instanceof TorpedoLauncherItem;
         }
@@ -95,7 +96,7 @@ public class WeaponReloadDecorator implements IItemDecorator {
 
         // 3. Empty bar for auto-reload cannons when no matching ammo is in inventory.
         // Small cannons always auto-reload; other cannons auto-reload when AUTO_RESUPPLY_ENABLED.
-        if (stack.getItem() instanceof CannonItem) {
+        if (stack.getItem() instanceof CannonItem || stack.getItem() instanceof com.piranport.artillery.ArtilleryItem) {
             boolean isAutoReloadCannon = stack.is(ModItems.SMALL_GUN.get())
                     || stack.is(ModItems.SINGLE_SMALL_GUN.get())
                     || ModCommonConfig.AUTO_RESUPPLY_ENABLED.get();

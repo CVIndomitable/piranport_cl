@@ -1,0 +1,12 @@
+{
+  "caliber": 4,
+  "barrels": 2,
+  "damage": 6.0,
+  "reloadTime": 30,
+  "durability": 500,
+  "scopeZoom": 2.0,
+  "muzzles": [
+    {"x": 0.3, "y": 0.2, "z": 0},
+    {"x": -0.3, "y": 0.2, "z": 0}
+  ]
+}

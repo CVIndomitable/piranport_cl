@@ -137,6 +137,8 @@ public class ClientEvents {
 
     @SubscribeEvent
     public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
+        event.registerEntityRenderer(ModEntityTypes.SHELL_PROJECTILE.get(),
+                ThrownItemRenderer::new);
         event.registerEntityRenderer(ModEntityTypes.CANNON_PROJECTILE.get(),
                 ThrownItemRenderer::new);
         event.registerEntityRenderer(ModEntityTypes.TORPEDO_ENTITY.get(),

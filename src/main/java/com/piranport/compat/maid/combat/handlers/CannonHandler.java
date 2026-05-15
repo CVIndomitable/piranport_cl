@@ -18,7 +18,7 @@ import java.util.List;
 public class CannonHandler implements WeaponHandler {
     @Override
     public boolean handles(Item item) {
-        return item instanceof CannonItem;
+        return item instanceof CannonItem || item instanceof com.piranport.artillery.ArtilleryItem;
     }
 
     @Override

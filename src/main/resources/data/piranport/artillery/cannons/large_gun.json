@@ -1,0 +1,13 @@
+{
+  "caliber": 16,
+  "barrels": 3,
+  "damage": 20.0,
+  "reloadTime": 80,
+  "durability": 2000,
+  "scopeZoom": 4.0,
+  "muzzles": [
+    {"x": 0.5, "y": 0.25, "z": 0},
+    {"x": 0, "y": 0.25, "z": 0},
+    {"x": -0.5, "y": 0.25, "z": 0}
+  ]
+}

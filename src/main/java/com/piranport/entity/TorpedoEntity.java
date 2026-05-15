@@ -60,7 +60,8 @@ public class TorpedoEntity extends ThrowableItemProjectile {
     private int lockDuration = 0;
     private static final int MIN_LOCK_DURATION = 40;
     private static final double LOCK_BREAK_DISTANCE = 30.0;
-    private static final double TARGET_SWITCH_THRESHOLD = 0.7;
+    /** 声导鱼雷目标切换阈值：新目标距离需小于当前目标的此比例才切换 */
+    private static final double TARGET_SWITCH_THRESHOLD = 0.5; // P1 #8: 从 0.7 降至 0.5，减少多目标环境下的频繁摇摆
 
     // 空投下落阶段
     private boolean airDrop = false;
@@ -108,7 +109,13 @@ public class TorpedoEntity extends ThrowableItemProjectile {
 
     public void setAirDrop(boolean airDrop, Vec3 direction) {
         this.airDrop = airDrop;
-        this.airDropDirection = new Vec3(direction.x, 0, direction.z).normalize();
+        Vec3 horizontal = new Vec3(direction.x, 0, direction.z);
+        double horizontalLen = horizontal.length();
+        if (horizontalLen < 0.001) {
+            this.airDropDirection = new Vec3(0, 0, 1);
+        } else {
+            this.airDropDirection = horizontal.normalize();
+        }
     }
 
     public void setAcoustic(boolean acoustic) {
@@ -261,14 +268,17 @@ public class TorpedoEntity extends ThrowableItemProjectile {
         if (wireGuided) {
             double maxRange = getWireMaxRange();
             Entity owner = getOwner();
-            double dist = owner != null ? position().distanceTo(owner.position())
-                    : (launchPos != null ? position().distanceTo(launchPos) : 0.0);
-            if (dist > maxRange) {
+            if (owner == null) {
                 wireGuided = false;
-                if (owner instanceof ServerPlayer sp) {
-                    TorpedoGuidanceManager.endGuidance(sp);
-                    sp.displayClientMessage(
-                            Component.translatable("message.piranport.torpedo_wire_lost"), true);
+            } else {
+                double dist = position().distanceTo(owner.position());
+                if (dist > maxRange) {
+                    wireGuided = false;
+                    if (owner instanceof ServerPlayer sp) {
+                        TorpedoGuidanceManager.endGuidance(sp);
+                        sp.displayClientMessage(
+                                Component.translatable("message.piranport.torpedo_wire_lost"), true);
+                    }
                 }
             }
         }

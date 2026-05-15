@@ -46,6 +46,11 @@ public class FireControlHudLayer {
         Entity cached = entityCache.get(uuid);
         if (cached != null && cached.isAlive()) return cached;
 
+        // Remove dead entity from cache
+        if (cached != null && !cached.isAlive()) {
+            entityCache.remove(uuid);
+        }
+
         // Rebuild cache once per 20 game ticks only if target not found
         long currentTick = mc.level.getGameTime();
         if (currentTick - lastRebuildTick >= CACHE_REBUILD_INTERVAL) {
@@ -119,7 +124,8 @@ public class FireControlHudLayer {
                 }
 
                 // HP bar
-                float hpRatio = Math.max(0, living.getHealth() / living.getMaxHealth());
+                float maxHp = living.getMaxHealth();
+                float hpRatio = maxHp > 0 ? Math.max(0, Math.min(1, living.getHealth() / maxHp)) : 0;
                 int barY = y + mc.font.lineHeight + 1;
                 int barW = PANEL_WIDTH;
                 gui.fill(panelX, barY, panelX + barW, barY + 3, 0xFF444444);
@@ -131,10 +137,10 @@ public class FireControlHudLayer {
                     gui.fill(panelX, barY, panelX + fillW, barY + 3, color);
                 }
 
-                // HP text (always right-aligned within the bar)
-                String hpText = (int)living.getHealth() + "/" + (int)living.getMaxHealth();
-                int textW = mc.font.width(hpText);
-                gui.drawString(mc.font, hpText, panelX + barW - textW, y, 0xFFAAAAAA, false);
+                // HP text (below the bar, right-aligned)
+                String hpText = (int)living.getHealth() + "/" + (int)maxHp;
+                int hpTextW = mc.font.width(hpText);
+                gui.drawString(mc.font, hpText, panelX + barW - hpTextW, barY + 4, 0xFFAAAAAA, false);
             } else {
                 // Target lost / dead
                 String lostLabel = "◇ [---]";

@@ -315,6 +315,7 @@ public class ModCreativeTabs {
                         output.accept(ModItems.AMERICAN_BURGER.get());
                         output.accept(ModItems.DOUBLE_SHELL_AMERICAN_BURGER.get());
                         output.accept(ModItems.TRIPLE_SHELL_AMERICAN_BURGER.get());
+                        output.accept(ModItems.EGGS_BENEDICT.get());
                         output.accept(ModItems.HOTDOG.get());
                         output.accept(ModItems.BARBECUE.get());
                         // --- 菜品：德式 ---

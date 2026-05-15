@@ -394,40 +394,48 @@ public class TransformationManager {
      * Apply overweight debuffs based on how much totalLoad exceeds maxLoad.
      * cost = maxLoad - totalLoad. Negative cost means overweight.
      *   cost < 0:    (speed penalty only, no extra debuff)
-     *   cost < -20:  Mining Fatigue I
-     *   cost < -50:  Mining Fatigue III + Weakness II
-     *   cost < -100: Mining Fatigue III + Poison II
+     *   cost <= -20:  Mining Fatigue I + Weakness I
+     *   cost <= -50:  Mining Fatigue III + Weakness II
+     *   cost <= -100: Mining Fatigue III + Poison II
      * Effects last 60 ticks (3s), refreshed each recalculation.
      */
     public static void applyOverweightPenalty(Player player, int totalLoad, int maxLoad) {
         if (player.level().isClientSide()) return;
         int cost = maxLoad - totalLoad;
-        // 不再超重时移除先前的超重惩罚
-        if (cost >= -20) {
-            player.removeEffect(MobEffects.DIG_SLOWDOWN);
-        }
-        if (cost >= -50) {
-            player.removeEffect(MobEffects.WEAKNESS);
-            player.removeEffect(MobEffects.POISON);
-        }
-        if (cost >= 0) return;
 
         int duration = 60; // 3秒，每次重算刷新
-        if (cost < -100) {
+        if (cost <= -100) {
             // 挖掘疲劳 III + 中毒 II
             player.addEffect(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, duration, 2, false, false, true));
             player.addEffect(new MobEffectInstance(MobEffects.POISON, duration, 1, false, false, true));
-            player.removeEffect(MobEffects.WEAKNESS);
         } else if (cost <= -50) {
             // 挖掘疲劳 III + 虚弱 II
             player.addEffect(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, duration, 2, false, false, true));
             player.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, duration, 1, false, false, true));
-            player.removeEffect(MobEffects.POISON);
         } else if (cost <= -20) {
             // 挖掘疲劳 I + 虚弱 I
             player.addEffect(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, duration, 0, false, false, true));
             player.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, duration, 0, false, false, true));
-            player.removeEffect(MobEffects.POISON);
+        } else if (cost > -20) {
+            // 不再超重时移除所有超重惩罚（仅移除本系统施加的效果）
+            if (player.hasEffect(MobEffects.DIG_SLOWDOWN)) {
+                MobEffectInstance effect = player.getEffect(MobEffects.DIG_SLOWDOWN);
+                if (effect != null && effect.getAmplifier() <= 2 && effect.getDuration() <= duration) {
+                    player.removeEffect(MobEffects.DIG_SLOWDOWN);
+                }
+            }
+            if (player.hasEffect(MobEffects.WEAKNESS)) {
+                MobEffectInstance effect = player.getEffect(MobEffects.WEAKNESS);
+                if (effect != null && effect.getAmplifier() <= 1 && effect.getDuration() <= duration) {
+                    player.removeEffect(MobEffects.WEAKNESS);
+                }
+            }
+            if (player.hasEffect(MobEffects.POISON)) {
+                MobEffectInstance effect = player.getEffect(MobEffects.POISON);
+                if (effect != null && effect.getAmplifier() <= 1 && effect.getDuration() <= duration) {
+                    player.removeEffect(MobEffects.POISON);
+                }
+            }
         }
     }
 

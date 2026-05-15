@@ -176,8 +176,10 @@ public class ClientTickHandler {
             ItemStack coreStack = TransformationManager.findTransformedCore(mc.player);
             if (!coreStack.isEmpty() && coreStack.getItem() instanceof ShipCoreItem sci
                     && sci.getShipType() == ShipCoreItem.ShipType.LARGE) {
-                if (mc.player.hurtTime > 0) mc.player.hurtTime = 0;
-                if (mc.player.hurtDuration > 0) mc.player.hurtDuration = 0;
+                if (mc.player.hurtTime > 0) {
+                    mc.player.hurtTime = 0;
+                    mc.player.hurtDuration = 0;
+                }
             }
         }
 

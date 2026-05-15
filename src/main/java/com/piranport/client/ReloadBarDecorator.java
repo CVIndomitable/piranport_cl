@@ -150,7 +150,7 @@ public class ReloadBarDecorator implements IItemDecorator {
                 }
             } else {
                 // Loading: partial fill shows reload progress (1 - remaining fraction)
-                int fillW = (int) (BAR_MAX_W * (1f - cd));
+                int fillW = Float.isFinite(cd) ? (int) (BAR_MAX_W * (1f - cd)) : 0;
                 if (fillW > 0) {
                     gui.fill(barX, barY, barX + fillW, barY + 1, loadingColor);
                 }

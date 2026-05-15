@@ -64,6 +64,7 @@ public class ModEntityTypes {
             () -> EntityType.Builder.<FloatingTargetEntity>of(FloatingTargetEntity::new, MobCategory.MISC)
                     .sized(0.5f, 1.975f)
                     .clientTrackingRange(10)
+                    .updateInterval(3)
                     .build("piranport:floating_target"));
 
     // Phase 21

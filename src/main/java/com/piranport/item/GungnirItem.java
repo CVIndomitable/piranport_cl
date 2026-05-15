@@ -48,10 +48,10 @@ public class GungnirItem extends Item {
                     SoundSource.PLAYERS, 1.0f, 1.0f);
 
             player.getCooldowns().addCooldown(this, 20);
-        }
 
-        // Remove item from hand (entity carries it)
-        player.setItemInHand(hand, ItemStack.EMPTY);
+            // Remove item from hand (entity carries it)
+            player.setItemInHand(hand, ItemStack.EMPTY);
+        }
 
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
     }

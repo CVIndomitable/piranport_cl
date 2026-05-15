@@ -122,7 +122,7 @@ public class AircraftEntity extends Entity {
     @Nullable private Vec3 levelRunDirection = null; // normalized direction of current run
     @Nullable private Vec3 levelDropPoint = null;   // position where bomb was dropped
     private int levelRunTicks = 0;   // ticks spent in current Phase 2 run (fail-safe against runaway bombers)
-    private int autoSeekCooldown = 0; // P3 #30: throttle AABB queries
+    private int autoSeekCooldown = 20; // P1 #6: 初始化冷却时间，避免首次 tick 立即搜索
     private boolean autoSeekDone = false;    // true after first auto-seek scan (one-shot)
     private boolean appliedSlowness = false; // tracks if slowness effect was applied to target
     private boolean hasEverHadFireControl = false; // true if FC target was ever assigned
@@ -917,7 +917,7 @@ public class AircraftEntity extends Entity {
 
         // Phase 1: Climb — ascend above the target until altitude reached or timeout
         double heightDiff = Math.max(0, climbY - getY());
-        int climbTimeout = Math.max(80, (int)Math.ceil(heightDiff / (panelSpeed * 0.4)));
+        int climbTimeout = Math.max(80, (int)Math.ceil(heightDiff / Math.max(panelSpeed * 0.4, 0.1)));
         if (!diveCommitted && getY() < climbY - 1.0 && stateTicks < climbTimeout) {
             Vec3 toClimb = new Vec3(target.getX() - getX(), climbY - getY(), target.getZ() - getZ());
             double dist = toClimb.length();
@@ -950,7 +950,6 @@ public class AircraftEntity extends Entity {
             bomb.setSourceAircraft(this);
             level().addFreshEntity(bomb);
             hasFired = true;
-            remainingAmmo--;
             startReturning("dive_bomb_dropped");
             return;
         }
@@ -2299,8 +2298,16 @@ public class AircraftEntity extends Entity {
             if (aircraft.isOwnedByPlayer(mc.player)) {
                 return FRIENDLY_BLUE;
             }
+            // 检查是否为友方编队成员（同主人的飞机）
+            java.util.UUID ownerUUID = aircraft.getOwnerUUID();
+            if (ownerUUID != null && ownerUUID.equals(mc.player.getUUID())) {
+                return FRIENDLY_BLUE;
+            }
+            // 攻击中的飞机：仅当不是友方时才标红
             if (aircraft.getFlightState() == FlightState.ATTACKING) {
-                return HOSTILE_RED;
+                if (ownerUUID == null || !ownerUUID.equals(mc.player.getUUID())) {
+                    return HOSTILE_RED;
+                }
             }
             return ALLY_GREEN;
         }
@@ -2355,7 +2362,7 @@ public class AircraftEntity extends Entity {
     @Override
     protected void readAdditionalSaveData(CompoundTag tag) {
         if (tag.hasUUID("OwnerUUID")) ownerUUID = tag.getUUID("OwnerUUID");
-        weaponSlotIndex = tag.getInt("WeaponSlot");
+        weaponSlotIndex = tag.contains("WeaponSlot") ? tag.getInt("WeaponSlot") : -1;
         if (!level().isClientSide) {
             entityData.set(WEAPON_SLOT_INDEX, weaponSlotIndex);
         }

@@ -76,7 +76,7 @@ public class ShipCoreHudLayer {
                 gui.fill(bx, barY, bx + barWidth, barY + barHeight, 0xFF44CC44);
             } else {
                 // Cooling down: red/orange bar shrinks left-to-right as it cools
-                int fillWidth = Math.round(barWidth * (1f - cooldownFraction));
+                int fillWidth = Float.isFinite(cooldownFraction) ? Math.round(barWidth * (1f - cooldownFraction)) : 0;
                 // Gray = remaining cooldown
                 gui.fill(bx, barY, bx + barWidth, barY + barHeight, 0xFF555555);
                 // Color = progress toward ready

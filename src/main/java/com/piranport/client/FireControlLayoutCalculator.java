@@ -76,8 +76,14 @@ public class FireControlLayoutCalculator {
         int finalY = baseY + offsetY;
 
         // Step 4: Boundary check — ensure panel stays within screen bounds
-        finalX = Math.max(0, Math.min(finalX, screenWidth - panelWidth));
-        finalY = Math.max(0, Math.min(finalY, screenHeight - panelHeight));
+        if (panelWidth > screenWidth || panelHeight > screenHeight) {
+            // Panel too large: clamp to screen, preserve alignment preference
+            finalX = Math.max(0, Math.min(finalX, screenWidth - Math.min(panelWidth, screenWidth)));
+            finalY = Math.max(0, Math.min(finalY, screenHeight - Math.min(panelHeight, screenHeight)));
+        } else {
+            finalX = Math.max(0, Math.min(finalX, screenWidth - panelWidth));
+            finalY = Math.max(0, Math.min(finalY, screenHeight - panelHeight));
+        }
 
         return new PanelPosition(finalX, finalY, alignment);
     }

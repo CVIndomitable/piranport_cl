@@ -58,9 +58,24 @@ public final class FriendlyFireHelper {
             if (owner instanceof Player p && p.getUUID().equals(aircraft.getOwnerUUID())) {
                 return true; // 始终保护自己的飞机
             }
-            if (!ModCommonConfig.FRIENDLY_FIRE_ENABLED.get() && owner instanceof Player) {
-                return true; // 友伤关闭时保护他人飞机
+            if (owner instanceof AircraftEntity ownerAir && ownerAir.getOwnerUUID() != null
+                    && ownerAir.getOwnerUUID().equals(aircraft.getOwnerUUID())) {
+                return true; // 自航飞机保护同主人的玩家飞机
             }
+            if (!ModCommonConfig.FRIENDLY_FIRE_ENABLED.get()) {
+                if (owner instanceof Player) {
+                    return true; // 友伤关闭时玩家保护他人飞机
+                }
+                if (owner instanceof AircraftEntity ownerAir && ownerAir.getOwnerUUID() != null) {
+                    return true; // 友伤关闭时自航飞机保护所有玩家飞机
+                }
+            }
+        }
+        // 5b. 玩家飞机友伤保护（自航飞机攻击玩家飞机的情况）
+        if (target instanceof AircraftEntity targetAir && targetAir.getOwnerUUID() != null
+                && owner instanceof AircraftEntity ownerAir && ownerAir.isAutonomous()
+                && !ModCommonConfig.FRIENDLY_FIRE_ENABLED.get()) {
+            return true; // 友伤关闭时自航飞机不能攻击任何玩家飞机
         }
         // 7. 自主飞机之间禁止互相残杀
         if (target instanceof AircraftEntity targetAir && targetAir.isAutonomous()

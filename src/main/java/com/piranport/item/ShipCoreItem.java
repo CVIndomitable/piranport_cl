@@ -1906,7 +1906,7 @@ public class ShipCoreItem extends Item {
 
         // MC 偏航角：atan2(-dx, dz) 映射到 MC 坐标（yaw=0 = +Z）
         double yawRad = Math.atan2(-toTarget.x, toTarget.z);
-        double pitchRad = -optimalPitch; // 向上为正
+        double pitchRad = optimalPitch; // 方向向量，向上为正
 
         double cosP = Math.cos(pitchRad);
         return new Vec3(

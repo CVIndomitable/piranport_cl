@@ -25,6 +25,9 @@ import java.util.List;
 /**
  * 圆形轮盘弹种选择器：手持火炮时按住 Tab 键显示轮盘，鼠标方向选择弹种。
  * 图标排列在屏幕中央的圆形轮盘上，鼠标悬停项黄色高亮，当前选中项白色边框。
+ *
+ * 打开轮盘时会释放鼠标控制（releaseMouse），允许光标移动；
+ * 关闭轮盘时会重新抓取鼠标（grabMouse），恢复视角控制。
  */
 @EventBusSubscriber(modid = PiranPort.MOD_ID, value = Dist.CLIENT)
 public class AmmoSelectOverlay {
@@ -41,12 +44,27 @@ public class AmmoSelectOverlay {
         isOpen = true;
         hoveredAmmo = null;
         updateAvailableAmmos();
+
+        // 释放鼠标控制，允许光标在屏幕上移动选择弹药
+        Minecraft mc = Minecraft.getInstance();
+        mc.mouseHandler.releaseMouse();
     }
 
     public static void close() {
+        if (!isOpen) {
+            return;  // 已经关闭，避免重复操作
+        }
+
         isOpen = false;
         hoveredAmmo = null;
         availableAmmos.clear();
+
+        // 重新抓取鼠标，恢复视角控制
+        Minecraft mc = Minecraft.getInstance();
+        // 只有在没有其他 Screen 打开时才抓取鼠标（避免与暂停菜单等冲突）
+        if (mc.screen == null) {
+            mc.mouseHandler.grabMouse();
+        }
     }
 
     public static Item getHoveredAmmo() {

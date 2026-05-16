@@ -99,6 +99,12 @@ public class ClientTickHandler {
         com.piranport.aviation.ClientAswSonarData.resetClientState();
         ClientTorpedoGuidance.resetClientState();
         com.piranport.client.ClientScopeHandler.clear();
+
+        // 清理弹药选择轮盘状态
+        if (AmmoSelectOverlay.isOpen()) {
+            AmmoSelectOverlay.close();
+        }
+
         useWasDown = false;
         attackWasDown = false;
     }
@@ -107,6 +113,11 @@ public class ClientTickHandler {
     public static void onClientTick(ClientTickEvent.Post event) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
+
+        // 检测轮盘打开时玩家打开了其他 Screen（如 ESC 菜单、背包等）
+        if (AmmoSelectOverlay.isOpen() && mc.screen != null) {
+            AmmoSelectOverlay.close();
+        }
 
         CameraShakeHandler.tick();
 
@@ -133,6 +144,11 @@ public class ClientTickHandler {
         // 鱼雷制导模式：将玩家旋转镜像到鱼雷，并将视线方向流式发送到服务端
         boolean inTorpedoGuidance = ClientTorpedoGuidance.isActive();
         if (inTorpedoGuidance) {
+            // 强制关闭轮盘，避免与鱼雷制导的摄像机控制冲突
+            if (AmmoSelectOverlay.isOpen()) {
+                AmmoSelectOverlay.close();
+            }
+
             if (mc.level != null) {
                 Entity torpedoEntity = mc.level.getEntity(ClientTorpedoGuidance.getTorpedoEntityId());
                 if (torpedoEntity != null) {
@@ -159,6 +175,11 @@ public class ClientTickHandler {
         // Phase 32：侦察机 WASD 操控（每 2 tick 发送一次以减少网络流量）
         boolean inReconMode = ClientReconData.isInReconMode();
         if (inReconMode) {
+            // 强制关闭轮盘，避免与侦察模式的摄像机控制冲突
+            if (AmmoSelectOverlay.isOpen()) {
+                AmmoSelectOverlay.close();
+            }
+
             // 将玩家鼠标旋转镜像到侦察实体，使镜头随鼠标输入旋转
             if (mc.level != null) {
                 Entity reconEntity = mc.level.getEntity(ClientReconData.getReconEntityId());
@@ -433,6 +454,11 @@ public class ClientTickHandler {
             useWasDown = false;
             attackWasDown = false;
             return;
+        }
+
+        // 进入瞄准镜时关闭轮盘
+        if (isScoping && AmmoSelectOverlay.isOpen()) {
+            AmmoSelectOverlay.close();
         }
 
         // 右键：由 ArtilleryItem.use() 切换瞄准镜，此处只发网络包

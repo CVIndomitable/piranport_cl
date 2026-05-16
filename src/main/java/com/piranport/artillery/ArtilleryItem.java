@@ -7,7 +7,9 @@ import com.piranport.component.WeaponCooldown;
 import com.piranport.debug.PiranPortDebug;
 import com.piranport.item.ShipCoreItem;
 import com.piranport.registry.ModDataComponents;
+import com.piranport.registry.ModSounds;
 import net.minecraft.client.Minecraft;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -115,8 +117,32 @@ public class ArtilleryItem extends Item {
         shell.shoot(direction.x, direction.y, direction.z, speed, 0f);
         level.addFreshEntity(shell);
 
+        // Phase 10: 根据口径选择发射音效
+        net.minecraft.sounds.SoundEvent fireSound = getCaliber() <= 4
+                ? ModSounds.CANNON_FIRE_SMALL.get()
+                : getCaliber() <= 8 ? ModSounds.CANNON_FIRE_MEDIUM.get()
+                : ModSounds.CANNON_FIRE_LARGE.get();
         level.playSound(null, player.getX(), player.getY(), player.getZ(),
-                SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 0.5f, 1.5f);
+                fireSound, SoundSource.PLAYERS, 2.0f, 1.0f);
+
+        // Phase 10: 炮口火焰粒子
+        if (level instanceof net.minecraft.server.level.ServerLevel serverLevel) {
+            serverLevel.sendParticles(ParticleTypes.SOUL_FIRE_FLAME,
+                    player.getX() + direction.x * 1.5,
+                    player.getY() + player.getEyeHeight() + direction.y * 0.5,
+                    player.getZ() + direction.z * 1.5,
+                    8, 0.3, 0.3, 0.3, 0.05);
+            serverLevel.sendParticles(ParticleTypes.CLOUD,
+                    player.getX() + direction.x * 1.5,
+                    player.getY() + player.getEyeHeight() + direction.y * 0.5,
+                    player.getZ() + direction.z * 1.5,
+                    6, 0.4, 0.2, 0.4, 0.01);
+            serverLevel.sendParticles(ParticleTypes.LAVA,
+                    player.getX() + direction.x * 1.5,
+                    player.getY() + player.getEyeHeight() + direction.y * 0.5,
+                    player.getZ() + direction.z * 1.5,
+                    2, 0.2, 0.2, 0.2, 0);
+        }
 
         // Phase 2: 调试模式
         if (PiranPortDebug.isServerEnabled()) {

@@ -95,11 +95,18 @@ public class ModPackets {
                 RecallAllAircraftPayload::handle
         );
 
-        // Manual reload (R key)
+        // Manual reload (R key) — 仅鱼雷/导弹
         registrar.playToServer(
                 ManualReloadPayload.TYPE,
                 ManualReloadPayload.STREAM_CODEC,
                 ManualReloadPayload::handle
+        );
+
+        // Phase 4: ammo type switching (Tab key)
+        registrar.playToServer(
+                SwitchAmmoPayload.TYPE,
+                SwitchAmmoPayload.STREAM_CODEC,
+                SwitchAmmoPayload::handle
         );
 
         // Wire-guided torpedo guidance (view-control mode)
@@ -217,6 +224,25 @@ public class ModPackets {
                 com.piranport.dungeon.network.DungeonRegistrySyncPayload.TYPE,
                 com.piranport.dungeon.network.DungeonRegistrySyncPayload.STREAM_CODEC,
                 com.piranport.dungeon.network.DungeonRegistrySyncPayload::handle
+        );
+
+        // ===== Phase 5: Fire Control System (Scope) =====
+        registrar.playToServer(
+                ScopeEnterPayload.TYPE,
+                ScopeEnterPayload.STREAM_CODEC,
+                ScopeEnterPayload::handle
+        );
+        registrar.playToServer(
+                ScopeFirePayload.TYPE,
+                ScopeFirePayload.STREAM_CODEC,
+                ScopeFirePayload::handle
+        );
+
+        // ===== Phase 10: Screen Shake =====
+        registrar.playToClient(
+                ShakeEffectPayload.TYPE,
+                ShakeEffectPayload.STREAM_CODEC,
+                ShakeEffectPayload::handle
         );
     }
 }

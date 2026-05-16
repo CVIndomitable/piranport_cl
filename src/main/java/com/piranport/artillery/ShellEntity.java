@@ -5,9 +5,13 @@ import com.piranport.combat.FriendlyFireHelper;
 import com.piranport.config.ModCommonConfig;
 import com.piranport.config.ModProjectilesConfig;
 import com.piranport.registry.ModEntityTypes;
+import com.piranport.registry.ModSounds;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -17,7 +21,10 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.projectile.ThrowableItemProjectile;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
@@ -138,6 +145,8 @@ public class ShellEntity extends ThrowableItemProjectile {
         Level.ExplosionInteraction interaction = ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get()
                 ? Level.ExplosionInteraction.TNT : Level.ExplosionInteraction.NONE;
         level().explode(this, getX(), getY(), getZ(), radius, interaction);
+        level().playSound(null, getX(), getY(), getZ(),
+                ModSounds.CANNON_EXPLOSION.get(), SoundSource.PLAYERS, 2.0f, 0.9f + random.nextFloat() * 0.2f);
         doBlastDamage(radius);
     }
 
@@ -197,9 +206,45 @@ public class ShellEntity extends ThrowableItemProjectile {
     protected void onHitEntity(EntityHitResult result) {
         super.onHitEntity(result);
         if (!level().isClientSide) {
-            // Phase 3: 直击伤害 + 爆炸 + 范围伤害
-            result.getEntity().hurt(damageSources().thrown(this, getOwner()), damage);
-            doExplosion(false);
+            if ("AP".equals(shellType)) {
+                // Phase 6: AP 直接伤害（无爆炸），速度衰减影响伤害，护甲忽略
+                Entity target = result.getEntity();
+                float currentSpeed = (float) getDeltaMovement().length();
+                float speedRatio = initialSpeed > 0 ? currentSpeed / initialSpeed : 1.0f;
+                float apMultiplier = ModProjectilesConfig.AP_DAMAGE_MULTIPLIER.get().floatValue();
+                float apDamage = damage * apMultiplier * speedRatio;
+                float apArmorIgnore = ModProjectilesConfig.AP_ARMOR_IGNORE.get().floatValue();
+                if (apArmorIgnore < 0) apArmorIgnore = 0;
+                if (apArmorIgnore > 1) apArmorIgnore = 1;
+
+                level().playSound(null, getX(), getY(), getZ(),
+                        SoundEvents.ANVIL_LAND, SoundSource.PLAYERS, 0.5f, 1.2f);
+
+                if (target instanceof LivingEntity living) {
+                    AttributeInstance armorAttr = living.getAttribute(Attributes.ARMOR);
+                    ResourceLocation apPenId = ResourceLocation.fromNamespaceAndPath(
+                            PiranPort.MOD_ID, "ap_penetration/" + getUUID() + "_" + tickCount);
+                    boolean applied = false;
+                    if (armorAttr != null) {
+                        armorAttr.removeModifier(apPenId);
+                        double armorReduction = living.getAttributeValue(Attributes.ARMOR) * apArmorIgnore;
+                        armorAttr.addTransientModifier(new AttributeModifier(
+                                apPenId, -armorReduction, AttributeModifier.Operation.ADD_VALUE));
+                        applied = true;
+                    }
+                    try {
+                        living.hurt(damageSources().thrown(this, getOwner()), apDamage);
+                    } finally {
+                        if (applied) armorAttr.removeModifier(apPenId);
+                    }
+                } else {
+                    target.hurt(damageSources().thrown(this, getOwner()), apDamage);
+                }
+            } else {
+                // Phase 3: 直击伤害 + 爆炸 + 范围伤害
+                result.getEntity().hurt(damageSources().thrown(this, getOwner()), damage);
+                doExplosion(false);
+            }
             discard();
         }
     }
@@ -208,8 +253,23 @@ public class ShellEntity extends ThrowableItemProjectile {
     protected void onHitBlock(BlockHitResult result) {
         super.onHitBlock(result);
         if (!level().isClientSide) {
-            // Phase 3: 爆炸（方块破坏取决于 ModCommonConfig.EXPLOSION_BLOCK_DAMAGE）+ 范围伤害
-            doExplosion(false);
+            if ("AP".equals(shellType)) {
+                // Phase 6: AP 方块穿透
+                if (ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get() && !isInWater()) {
+                    BlockPos pos = result.getBlockPos();
+                    BlockState state = level().getBlockState(pos);
+                    Explosion resistanceContext = new Explosion(level(), this, getX(), getY(), getZ(),
+                            1.0f, false, Explosion.BlockInteraction.KEEP);
+                    float obsidianResistance = Blocks.OBSIDIAN.defaultBlockState()
+                            .getExplosionResistance(level(), pos, resistanceContext);
+                    if (state.getExplosionResistance(level(), pos, resistanceContext) < obsidianResistance) {
+                        level().destroyBlock(pos, true);
+                    }
+                }
+            } else {
+                // Phase 3: 爆炸（方块破坏取决于 ModCommonConfig.EXPLOSION_BLOCK_DAMAGE）+ 范围伤害
+                doExplosion(false);
+            }
             discard();
         }
     }

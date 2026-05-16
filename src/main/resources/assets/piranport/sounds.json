@@ -1,0 +1,54 @@
+{
+  "cannon_fire_small": {
+    "sounds": [
+      {
+        "name": "piranport:cannon_fire_small",
+        "attenuation_distance": 32
+      }
+    ]
+  },
+  "cannon_fire_medium": {
+    "sounds": [
+      {
+        "name": "piranport:cannon_fire_medium",
+        "attenuation_distance": 48
+      }
+    ]
+  },
+  "cannon_fire_large": {
+    "sounds": [
+      {
+        "name": "piranport:cannon_fire_large",
+        "attenuation_distance": 64
+      }
+    ]
+  },
+  "cannon_reload": {
+    "sounds": [
+      "piranport:cannon_reload"
+    ]
+  },
+  "cannon_explosion": {
+    "sounds": [
+      {
+        "name": "piranport:cannon_explosion",
+        "attenuation_distance": 48
+      }
+    ]
+  },
+  "shell_whistle": {
+    "sounds": [
+      "piranport:shell_whistle"
+    ]
+  },
+  "ammo_switch": {
+    "sounds": [
+      "piranport:ammo_switch"
+    ]
+  },
+  "muzzle_burn": {
+    "sounds": [
+      "piranport:muzzle_burn"
+    ]
+  }
+}

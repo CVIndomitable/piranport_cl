@@ -2,6 +2,7 @@ package com.piranport;
 
 import com.piranport.aviation.ClientFireControlData;
 import com.piranport.aviation.ClientReconData;
+import com.piranport.client.CameraShakeHandler;
 import com.piranport.client.EntityUuidCache;
 import com.piranport.combat.ClientTorpedoGuidance;
 import com.piranport.combat.TransformationManager;
@@ -18,9 +19,11 @@ import com.piranport.item.ShipCoreItem;
 import com.piranport.network.AutoLaunchTogglePayload;
 import com.piranport.network.CycleWeaponPayload;
 import com.piranport.network.FireControlPayload;
+import com.piranport.client.AmmoSelectOverlay;
 import com.piranport.network.ManualReloadPayload;
 import com.piranport.network.OpenFlightGroupPayload;
 import com.piranport.network.ReconControlPayload;
+import com.piranport.network.SwitchAmmoPayload;
 import com.piranport.network.ReconExitPayload;
 import com.piranport.network.TorpedoGuidanceExitPayload;
 import com.piranport.network.TorpedoGuidanceInputPayload;
@@ -92,12 +95,16 @@ public class ClientTickHandler {
         clearAswTeam(Minecraft.getInstance());
         com.piranport.aviation.ClientAswSonarData.resetClientState();
         ClientTorpedoGuidance.resetClientState();
+        com.piranport.client.ClientScopeHandler.clear();
+        scopeWasDown = false;
     }
 
     @SubscribeEvent
     public static void onClientTick(ClientTickEvent.Post event) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
+
+        CameraShakeHandler.tick();
 
         // V 键 — 丢弃鱼雷导线、退出侦察模式，或仅在 GUI 模式下切换武器
         while (ModKeyMappings.CYCLE_WEAPON.consumeClick()) {
@@ -225,10 +232,21 @@ public class ClientTickHandler {
             }
         }
 
-        // R 键 — 手动装填非自动补给的火炮
+        // R 键 — 手动装填（仅鱼雷/导弹，Phase 4 火炮不再响应）
         while (ModKeyMappings.MANUAL_RELOAD.consumeClick()) {
             if (!transformed || inReconMode) continue;
             PacketDistributor.sendToServer(new ManualReloadPayload());
+        }
+
+        // Tab 键 — 切换火炮偏好弹种
+        while (ModKeyMappings.SWITCH_AMMO.consumeClick()) {
+            if (!transformed || inReconMode) continue;
+            ItemStack hand = mc.player.getMainHandItem();
+            if (hand.getItem() instanceof com.piranport.artillery.ArtilleryItem
+                    || hand.getItem() instanceof com.piranport.item.CannonItem) {
+                PacketDistributor.sendToServer(new SwitchAmmoPayload());
+                AmmoSelectOverlay.bumpShow();
+            }
         }
 
         // F8 / Shift+F8：调试开关 / 快照
@@ -381,6 +399,65 @@ public class ClientTickHandler {
                 return true;
             });
             syncAswTeam(mc, currentAswMembers);
+        }
+
+        // ===== Phase 5: Scope mode right-click hold detection =====
+        handleScopeInput(mc);
+    }
+
+    /** Phase 5: 检测右键长按/释放，管理瞄准镜状态和开火。 */
+    private static boolean scopeWasDown = false;
+
+    private static void handleScopeInput(Minecraft mc) {
+        if (mc.player == null || mc.level == null) return;
+        boolean isDown = mc.options.keyUse.isDown();
+        boolean isHoldingCannon = com.piranport.client.ClientScopeHandler.isHoldingCannon(mc.player);
+        boolean isScoping = com.piranport.client.ClientScopeHandler.isScoping();
+
+        if (!isHoldingCannon && isScoping) {
+            // 切换物品后退出瞄准
+            com.piranport.client.ClientScopeHandler.exitScope();
+            scopeWasDown = false;
+            return;
+        }
+
+        if (isDown && !scopeWasDown) {
+            // 右键刚刚按下
+            if (isHoldingCannon) {
+                // ScopeEnterPayload 在 ArtilleryItem.use() 中已通过 ClientScopeHandler.enterScope 处理
+                // 这里只需发送网络包告诉服务端
+                if (mc.getConnection() != null) {
+                    PacketDistributor.sendToServer(new com.piranport.network.ScopeEnterPayload());
+                }
+            }
+            scopeWasDown = true;
+        } else if (!isDown && scopeWasDown) {
+            // 右键释放
+            if (isScoping) {
+                boolean isQuick = com.piranport.client.ClientScopeHandler.isQuickRelease();
+                if (isQuick) {
+                    // 快速点击 → 正常方向开火
+                    if (mc.getConnection() != null) {
+                        PacketDistributor.sendToServer(com.piranport.network.ScopeFirePayload.quickFire());
+                    }
+                } else {
+                    // 长按瞄准后释放 → 弹道解算开火
+                    net.minecraft.world.phys.Vec3 target = com.piranport.client.ClientScopeHandler.getAimedPosition();
+                    if (target != null && mc.getConnection() != null) {
+                        PacketDistributor.sendToServer(
+                                com.piranport.network.ScopeFirePayload.aimedFire(target.x, target.y, target.z));
+                    } else if (mc.getConnection() != null) {
+                        PacketDistributor.sendToServer(com.piranport.network.ScopeFirePayload.quickFire());
+                    }
+                }
+                com.piranport.client.ClientScopeHandler.exitScope();
+            }
+            scopeWasDown = false;
+        }
+
+        // 每 tick 更新瞄准状态（射线检测等）
+        if (isScoping) {
+            com.piranport.client.ClientScopeHandler.tick(mc.player, mc.player.getMainHandItem());
         }
     }
 

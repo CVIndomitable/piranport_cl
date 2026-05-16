@@ -5,6 +5,7 @@ import com.piranport.config.ModCommonConfig;
 import com.piranport.config.ModProjectilesConfig;
 import com.piranport.registry.ModEntityTypes;
 import com.piranport.registry.ModItems;
+import com.piranport.registry.ModSounds;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -21,6 +22,7 @@ import net.minecraft.world.entity.projectile.ThrowableItemProjectile;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
@@ -109,6 +111,24 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         }
 
         super.tick();
+
+        // Phase 10: 客户端尾迹粒子 + 飞行音效
+        if (level().isClientSide && tickCount % 2 == 0 && !isRemoved()) {
+            Vec3 pos = position();
+            Vec3 v = getDeltaMovement();
+            if (v.length() > 0.1) {
+                level().addParticle(ParticleTypes.CAMPFIRE_COSY_SMOKE,
+                        pos.x, pos.y, pos.z,
+                        -v.x * 0.05 + random.nextGaussian() * 0.01,
+                        -v.y * 0.05 + random.nextGaussian() * 0.01,
+                        -v.z * 0.05 + random.nextGaussian() * 0.01);
+                if (random.nextFloat() < 0.1f) {
+                    level().addParticle(ParticleTypes.SMALL_FLAME,
+                            pos.x, pos.y, pos.z, 0, 0, 0);
+                }
+            }
+        }
+
         if (!level().isClientSide) {
             if (isVT && tickCount > VT_ARM_TICKS) {
                 tickVT();
@@ -203,6 +223,8 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         Level.ExplosionInteraction interaction = ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get()
                 ? Level.ExplosionInteraction.TNT : Level.ExplosionInteraction.NONE;
         level().explode(this, getX(), getY(), getZ(), explosionPower, interaction);
+        level().playSound(null, getX(), getY(), getZ(),
+                ModSounds.CANNON_EXPLOSION.get(), SoundSource.PLAYERS, 2.0f, 0.9f + random.nextFloat() * 0.2f);
         level().broadcastEntityEvent(this, (byte) 3);
         discard();
     }
@@ -231,6 +253,8 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
                 Level.ExplosionInteraction interaction = ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get()
                         ? Level.ExplosionInteraction.TNT : Level.ExplosionInteraction.NONE;
                 level().explode(this, getX(), getY(), getZ(), explosionPower, interaction);
+                level().playSound(null, getX(), getY(), getZ(),
+                        ModSounds.CANNON_EXPLOSION.get(), SoundSource.PLAYERS, 2.0f, 0.9f + random.nextFloat() * 0.2f);
             } else {
                 // AP：130% 基础直击伤害，与原版箭矢一样随速度衰减，忽略 50% 目标护甲
                 float currentSpeed = (float) getDeltaMovement().length();
@@ -286,6 +310,8 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
                 Level.ExplosionInteraction interaction = ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get()
                         ? Level.ExplosionInteraction.TNT : Level.ExplosionInteraction.NONE;
                 level().explode(this, getX(), getY(), getZ(), explosionPower, interaction);
+                level().playSound(null, getX(), getY(), getZ(),
+                        ModSounds.CANNON_EXPLOSION.get(), SoundSource.PLAYERS, 2.0f, 0.9f + random.nextFloat() * 0.2f);
             } else {
                 // AP：若抗性 < 黑曜石则破坏方块并以物品形式掉落；AP 在水中时不破坏方块
                 if (ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get() && !isInWater()) {

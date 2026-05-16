@@ -2,13 +2,16 @@ package com.piranport;
 
 import com.piranport.aviation.ClientFireControlData;
 import com.piranport.aviation.ClientReconData;
+import com.piranport.client.CameraShakeHandler;
 import com.piranport.combat.TransformationManager;
+import com.piranport.config.ModClientConfig;
 import com.piranport.config.ModCommonConfig;
 import com.piranport.network.RecallAllAircraftPayload;
 import com.piranport.network.SkinRevertPayload;
 import com.piranport.skin.ClientSkinData;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.util.RandomSource;
 import net.minecraft.network.chat.Component;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -21,6 +24,32 @@ import net.neoforged.neoforge.network.PacketDistributor;
 
 @EventBusSubscriber(modid = PiranPort.MOD_ID, value = Dist.CLIENT)
 public class ClientGameEvents {
+
+    /** Phase 5: 瞄准镜模式下缩放 FOV */
+    @SubscribeEvent
+    public static void onComputeFov(net.neoforged.neoforge.client.event.ViewportEvent.ComputeFov event) {
+        if (com.piranport.client.ClientScopeHandler.isFullyScoped()) {
+            float zoom = com.piranport.client.ClientScopeHandler.getZoomLevel();
+            if (zoom > 0.1f) {
+                event.setFOV(event.getFOV() / zoom);
+            }
+        }
+    }
+
+    /** Phase 10: 屏幕震动 — 在相机角度计算后施加随机偏移 */
+    @SubscribeEvent
+    public static void onComputeCameraAngles(net.neoforged.neoforge.client.event.ViewportEvent.ComputeCameraAngles event) {
+        if (CameraShakeHandler.isShaking()) {
+            float intensity = CameraShakeHandler.getShakeIntensity()
+                    * ModClientConfig.SCREEN_SHAKE_MULTIPLIER.get().floatValue();
+            if (intensity > 0) {
+                RandomSource rand = RandomSource.create();
+                event.setYaw(event.getYaw() + (rand.nextFloat() - 0.5f) * intensity * 2);
+                event.setPitch(event.getPitch() + (rand.nextFloat() - 0.5f) * intensity * 2);
+                event.setRoll(event.getRoll() + (rand.nextFloat() - 0.5f) * intensity * 0.5f);
+            }
+        }
+    }
 
     @SubscribeEvent
     public static void onItemTooltip(ItemTooltipEvent event) {
@@ -69,6 +98,7 @@ public class ClientGameEvents {
         ClientTickHandler.resetClientState();
         ClientSkinData.clear();
         com.piranport.client.FireControlHudLayer.clearCache();
+        com.piranport.client.ClientScopeHandler.clear();
         com.piranport.dungeon.client.DungeonHudLayer.clearDungeonState();
         com.piranport.dungeon.network.ClientDungeonData.clear();
     }

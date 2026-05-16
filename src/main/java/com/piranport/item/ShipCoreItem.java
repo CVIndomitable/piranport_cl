@@ -16,15 +16,18 @@ import com.piranport.entity.DepthChargeEntity;
 import com.piranport.entity.MissileEntity;
 import com.piranport.entity.TorpedoEntity;
 import com.piranport.menu.ShipCoreMenu;
+import com.piranport.network.ShakeEffectPayload;
 import com.piranport.registry.ModDataComponents;
 import com.piranport.registry.ModItems;
 import com.piranport.registry.ModMobEffects;
+import com.piranport.registry.ModSounds;
 import net.minecraft.core.NonNullList;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.sounds.SoundSource;
@@ -55,6 +58,8 @@ import java.util.List;
 import java.util.UUID;
 
 import com.piranport.client.BallisticSolver;
+import net.minecraft.core.particles.ParticleTypes;
+import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.Nullable;
 
 public class ShipCoreItem extends Item {
@@ -2057,6 +2062,13 @@ public class ShipCoreItem extends Item {
         return 1.0f;
     }
 
+    /** Phase 10: 根据武器获取对应口径的发射音效。 */
+    private static SoundEvent getFireSound(ItemStack weapon) {
+        if (isSmallCaliber(weapon)) return ModSounds.CANNON_FIRE_SMALL.get();
+        if (weapon.is(ModItems.MEDIUM_GUN.get())) return ModSounds.CANNON_FIRE_MEDIUM.get();
+        return ModSounds.CANNON_FIRE_LARGE.get();
+    }
+
     /** Phase 5: 弹道解算瞄准目标位，由 fireFromScope→tryFireFromInventory→fireCannonSalvo 传递。 */
     private static final ThreadLocal<Vec3> pendingAimTarget = new ThreadLocal<>();
 
@@ -2103,6 +2115,36 @@ public class ShipCoreItem extends Item {
                     projectile.shootFromRotation(player, player.getXRot(), player.getYRot(), 0.0f, velocity, inaccuracy);
                 }
                 level.addFreshEntity(projectile);
+            }
+
+            // Phase 10: 只在第一个炮管播放音效 + 粒子 + 震动（避免齐射重复）
+            if (b == 0) {
+                // 发射音效
+                SoundEvent fireSound = getFireSound(weapon);
+                float pitch = getSoundPitch(weapon);
+                level.playSound(null, player.getX(), player.getY(), player.getZ(),
+                        fireSound, SoundSource.PLAYERS, 2.0f, pitch);
+
+                // 炮口火焰粒子（服务端广播）
+                if (level instanceof ServerLevel serverLevel) {
+                    Vec3 look = player.getLookAngle();
+                    double px = player.getX() + look.x * 1.5;
+                    double py = player.getY() + player.getEyeHeight() + look.y * 0.5;
+                    double pz = player.getZ() + look.z * 1.5;
+                    serverLevel.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, px, py, pz, 8,
+                            0.3, 0.3, 0.3, 0.05);
+                    serverLevel.sendParticles(ParticleTypes.CLOUD, px, py, pz, 6,
+                            0.4, 0.2, 0.4, 0.01);
+                    serverLevel.sendParticles(ParticleTypes.LAVA, px, py, pz, 2,
+                            0.2, 0.2, 0.2, 0);
+                }
+
+                // 发射屏幕震动（S2C）
+                float shakeIntensity = isSmallCaliber(weapon) ? 0.3f : 0.6f;
+                if (player instanceof ServerPlayer serverPlayer) {
+                    PacketDistributor.sendToPlayer(serverPlayer,
+                            new ShakeEffectPayload(shakeIntensity, 6));
+                }
             }
         }
     }

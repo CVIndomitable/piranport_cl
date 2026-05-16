@@ -71,5 +71,17 @@ public class ModClientConfig {
                             "Range: -500 to 500, Default: 0 (火控面板Y轴偏移)")
                     .defineInRange("fireControlOffsetY", 0, -500, 500);
 
+    /**
+     * Screen shake intensity multiplier.
+     * 0 = disabled, 1.0 = default intensity.
+     */
+    public static final ModConfigSpec.DoubleValue SCREEN_SHAKE_MULTIPLIER =
+            BUILDER
+                    .comment(
+                            "Screen shake intensity multiplier.",
+                            "0 = disabled, 1.0 = default.",
+                            "Range: 0.0 to 3.0, Default: 1.0 (屏幕震动强度倍率)")
+                    .defineInRange("screenShakeMultiplier", 1.0, 0.0, 3.0);
+
     public static final ModConfigSpec SPEC = BUILDER.build();
 }

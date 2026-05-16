@@ -2,6 +2,7 @@ package com.piranport.entity;
 
 import com.piranport.registry.ModEntityTypes;
 import com.piranport.registry.ModItems;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
@@ -12,6 +13,7 @@ import net.minecraft.world.entity.projectile.ThrowableItemProjectile;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
 
@@ -49,6 +51,19 @@ public class SanshikiPelletEntity extends ThrowableItemProjectile {
         if (!level().isClientSide() && tickCount > MAX_LIFETIME) discard();
         // 水中静默销毁：三式弹按AP处理
         if (!level().isClientSide() && isInWater()) discard();
+
+        // Phase 10: 霰弹尾迹粒子（低频率避免过多粒子）
+        if (level().isClientSide && tickCount % 3 == 0 && !isRemoved()) {
+            Vec3 pos = position();
+            Vec3 v = getDeltaMovement();
+            if (v.length() > 0.1) {
+                level().addParticle(ParticleTypes.CAMPFIRE_COSY_SMOKE,
+                        pos.x, pos.y, pos.z,
+                        -v.x * 0.03 + random.nextGaussian() * 0.005,
+                        -v.y * 0.03 + random.nextGaussian() * 0.005,
+                        -v.z * 0.03 + random.nextGaussian() * 0.005);
+            }
+        }
     }
 
     @Override

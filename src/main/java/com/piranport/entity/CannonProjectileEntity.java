@@ -2,11 +2,14 @@ package com.piranport.entity;
 
 import com.piranport.PiranPort;
 import com.piranport.config.ModCommonConfig;
+import com.piranport.config.ModProjectilesConfig;
 import com.piranport.registry.ModEntityTypes;
 import com.piranport.registry.ModItems;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -41,14 +44,20 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
     private float dragCoeff = 0.01f;
     /** 防止 VT 近炸引信 + onHit 在同一 tick 内双重爆炸。 */
     private boolean exploded = false;
+    /** VT 弹水下计时器（tick），水中累计超过60tick（3秒）后近炸。 */
+    private int underwaterTicks = 0;
 
     /** 追踪（自导引）炮弹：每 tick 向目标轻微转向。 */
     private int trackingTargetId = -1;
     /** 混合因子：0.05 = 每 tick 约 5% 修正（平缓曲线）。 */
     private static final double TRACKING_STEER = 0.05;
 
-    /** 在该半径（格）内任何非玩家的生物实体都会触发 VT 近炸。 */
-    private static final double VT_DETONATE_RADIUS = 3.0;
+    /** VT 锥形检测范围（格），弹头前方该距离内的目标才会触发近炸。 */
+    private static final double VT_DETECT_RANGE = 3.0;
+    /** VT 锥形半角（度），目标方向与弹头速度方向的夹角在此范围内才触发。 */
+    private static final double VT_CONE_HALF_ANGLE_DEG = 30.0;
+    /** VT 检测间隔（tick），每 N tick 执行一次锥形区域扫描。 */
+    private static final int VT_CHECK_INTERVAL = 5;
     /** 方块接近检测的前方射线长度（格）。 */
     private static final double VT_BLOCK_RANGE = 3.0;
     /** 发射后 VT 引信解锁前的宽限期（tick）。 */
@@ -102,7 +111,7 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         super.tick();
         if (!level().isClientSide) {
             if (isVT && tickCount > VT_ARM_TICKS) {
-                checkProximityFuze();
+                tickVT();
             }
             if (trackingTargetId >= 0) {
                 tickTracking();
@@ -128,29 +137,54 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         setDeltaMovement(newDir.scale(speed));
     }
 
+    /** 每 tick 调用，但实际引信检测按 VT_CHECK_INTERVAL 间隔执行。 */
+    private void tickVT() {
+        // VT 弹水中延时爆炸（按HE处理）
+        if (isInWater()) {
+            underwaterTicks++;
+            if (underwaterTicks >= 60) { // 3秒
+                proximityDetonate();
+            }
+            return;
+        }
+        underwaterTicks = 0;
+
+        // 检测频率控制：每 VT_CHECK_INTERVAL tick 执行一次
+        if (tickCount % VT_CHECK_INTERVAL != 0) return;
+
+        checkProximityFuze();
+    }
+
     private void checkProximityFuze() {
         Vec3 velocity = getDeltaMovement();
         if (velocity.lengthSqr() < 0.01) return;
         Vec3 pos = position();
 
-        // --- 实体接近检测：全向，检测任何非玩家的生物实体 ---
-        AABB searchBox = getBoundingBox().inflate(VT_DETONATE_RADIUS);
+        // 锥形区域检测：只检测弹头速度方向前方锥体内的实体
+        AABB searchBox = getBoundingBox().inflate(VT_DETECT_RANGE);
         List<Entity> nearby = level().getEntities(this, searchBox, e ->
                 e instanceof LivingEntity
                         && !(e instanceof Player)
                         && e != getOwner()
                         && e.isAlive());
 
-        double radiusSqr = VT_DETONATE_RADIUS * VT_DETONATE_RADIUS;
         for (Entity entity : nearby) {
             Vec3 toTarget = entity.position().add(0, entity.getBbHeight() * 0.5, 0).subtract(pos);
-            if (toTarget.lengthSqr() <= radiusSqr) {
+            double dist = toTarget.length();
+            if (dist > VT_DETECT_RANGE) continue;
+
+            // 锥形过滤：检查目标方向与弹头速度方向的夹角
+            Vec3 velNorm = velocity.normalize();
+            Vec3 targetDir = toTarget.normalize();
+            double dot = velNorm.dot(targetDir);
+            double angleDeg = Math.toDegrees(Math.acos(Math.max(-1, Math.min(1, dot))));
+            if (angleDeg <= VT_CONE_HALF_ANGLE_DEG) {
                 proximityDetonate();
                 return;
             }
         }
 
-        // --- 方块接近检测（前方短射线） ---
+        // 方块接近检测（前方短射线），保持原逻辑
         Vec3 forward = velocity.normalize();
         Vec3 ahead = pos.add(forward.scale(VT_BLOCK_RANGE));
         BlockHitResult blockHit = level().clip(new ClipContext(
@@ -201,7 +235,13 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
                 // AP：130% 基础直击伤害，与原版箭矢一样随速度衰减，忽略 50% 目标护甲
                 float currentSpeed = (float) getDeltaMovement().length();
                 float speedRatio = initialSpeed > 0 ? currentSpeed / initialSpeed : 1.0f;
-                float apDamage = damage * 1.3f * speedRatio;
+                float apMultiplier = ModProjectilesConfig.AP_DAMAGE_MULTIPLIER.get().floatValue();
+                float apDamage = damage * apMultiplier * speedRatio;
+                float apArmorIgnore = ModProjectilesConfig.AP_ARMOR_IGNORE.get().floatValue();
+                if (apArmorIgnore < 0) apArmorIgnore = 0;
+                if (apArmorIgnore > 1) apArmorIgnore = 1;
+                level().playSound(null, getX(), getY(), getZ(),
+                        SoundEvents.ANVIL_LAND, SoundSource.PLAYERS, 0.5f, 1.2f);
                 if (target instanceof LivingEntity living) {
                     AttributeInstance armorAttr = living.getAttribute(Attributes.ARMOR);
                     // P0 #4: 使用 UUID + tickCount 生成唯一 ID，避免同 tick 多枚 AP 弹齐射时 ID 冲突
@@ -210,7 +250,7 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
                     boolean applied = false;
                     if (armorAttr != null) {
                         armorAttr.removeModifier(apPenId);
-                        double halfArmor = living.getAttributeValue(Attributes.ARMOR) * 0.5;
+                        double halfArmor = living.getAttributeValue(Attributes.ARMOR) * apArmorIgnore;
                         armorAttr.addTransientModifier(new AttributeModifier(
                                 apPenId, -halfArmor, AttributeModifier.Operation.ADD_VALUE));
                         applied = true;
@@ -286,6 +326,7 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         tag.putFloat("ExplosionPower", explosionPower);
         tag.putFloat("InitialSpeed", initialSpeed);
         tag.putFloat("DragCoeff", dragCoeff);
+        tag.putInt("UnderwaterTicks", underwaterTicks);
     }
 
     @Override
@@ -301,6 +342,9 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         }
         if (tag.contains("DragCoeff")) {
             dragCoeff = tag.getFloat("DragCoeff");
+        }
+        if (tag.contains("UnderwaterTicks")) {
+            underwaterTicks = tag.getInt("UnderwaterTicks");
         }
     }
 }

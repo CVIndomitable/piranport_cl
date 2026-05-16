@@ -47,6 +47,8 @@ public class SanshikiPelletEntity extends ThrowableItemProjectile {
     public void tick() {
         super.tick();
         if (!level().isClientSide() && tickCount > MAX_LIFETIME) discard();
+        // 水中静默销毁：三式弹按AP处理
+        if (!level().isClientSide() && isInWater()) discard();
     }
 
     @Override

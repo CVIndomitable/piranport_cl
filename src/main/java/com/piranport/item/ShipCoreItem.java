@@ -6,6 +6,7 @@ import com.piranport.component.AircraftInfo;
 import com.piranport.component.FlightGroupData;
 import com.piranport.component.FuelData;
 import com.piranport.component.LoadedAmmo;
+import com.piranport.component.SelectedAmmoType;
 import com.piranport.component.SlotCooldowns;
 import com.piranport.component.WeaponCooldown;
 import com.piranport.entity.AircraftEntity;
@@ -47,10 +48,14 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.ItemContainerContents;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.List;
 import java.util.UUID;
+
+import com.piranport.client.BallisticSolver;
+import org.jetbrains.annotations.Nullable;
 
 public class ShipCoreItem extends Item {
 
@@ -743,222 +748,25 @@ public class ShipCoreItem extends Item {
             return true;
         }
 
-        // Cannon
-        // Small-caliber guns always auto-reload from inventory in no-GUI mode
-        boolean cannonAutoMode = com.piranport.config.ModCommonConfig.AUTO_RESUPPLY_ENABLED.get()
-                || weapon.is(ModItems.SMALL_GUN.get()) || weapon.is(ModItems.SINGLE_SMALL_GUN.get());
-        if (!cannonAutoMode) {
-            // Manual mode: use LOADED_AMMO component on weapon item
-            fireCannonManualMode(level, player, coreStack, weapon, weaponSlot, cooldowns);
-        } else {
-            int barrelCount = getBarrelCount(weapon);
-
-            // Creative mode: find any matching ammo without consuming
-            if (player.getAbilities().instabuild) {
-                // 查找第一个数量足够的弹药类型
-                Item selectedAmmoType = findSufficientAmmoType(inv, weapon, barrelCount,
-                        coreInventorySlot, weaponSlot);
-
-                if (selectedAmmoType == null) {
-                    // 创造模式：使用默认弹药类型（从武器定义获取）
-                    selectedAmmoType = getDefaultAmmoForWeapon(weapon);
-                    if (selectedAmmoType == null) {
-                        player.displayClientMessage(Component.translatable("message.piranport.insufficient_same_ammo"), true);
-                        return true;
-                    }
-                }
-
-                // 获取该类型的第一个弹药用于渲染（如果物品栏有的话）
-                ItemStack firstAmmo = ItemStack.EMPTY;
-                for (int i = 0; i < inv.items.size(); i++) {
-                    if (i == coreInventorySlot || i == weaponSlot) continue;
-                    ItemStack ammo = inv.items.get(i);
-                    if (!ammo.isEmpty() && ammo.getItem() == selectedAmmoType) {
-                        firstAmmo = ammo;
-                        break;
-                    }
-                }
-                if (firstAmmo.isEmpty() && weaponSlot != 40 && coreInventorySlot != 40) {
-                    ItemStack oh = inv.offhand.get(0);
-                    if (!oh.isEmpty() && oh.getItem() == selectedAmmoType) {
-                        firstAmmo = oh;
-                    }
-                }
-                // 如果物品栏没有，创建一个用于渲染
-                if (firstAmmo.isEmpty()) {
-                    firstAmmo = new ItemStack(selectedAmmoType);
-                }
-
-                boolean isType3 = isType3Shell(firstAmmo);
-                boolean isVT = isVTShell(firstAmmo);
-                boolean isHE = isHEShell(firstAmmo) || isVT;
-                ItemStack shellForRender = firstAmmo.copyWithCount(1);
-
-                int cooldownTicks = TransformationManager.boostedCooldown(player, getGunCooldown(weapon));
-                coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
-                        cooldowns.withSlotCooldown(weaponSlot, cooldownTicks, level.getGameTime()));
-                weapon.set(ModDataComponents.WEAPON_COOLDOWN.get(),
-                        WeaponCooldown.of(level.getGameTime(), cooldownTicks));
-
-                fireCannonSalvo(level, player, weapon, shellForRender, barrelCount, isType3, isVT, isHE);
-
-                com.piranport.debug.PiranPortDebug.event(
-                        "Fire (creative) | weapon={} ammo={} barrels={}",
-                        BuiltInRegistries.ITEM.getKey(weapon.getItem()).getPath(),
-                        BuiltInRegistries.ITEM.getKey(shellForRender.getItem()).getPath(),
-                        barrelCount);
-
-                float pitch = getSoundPitch(weapon);
-                level.playSound(null, player.getX(), player.getY(), player.getZ(),
-                        SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 0.5f, pitch);
-                return true;
-            }
-
-            // Survival mode: find sufficient ammo type and consume
-            Item selectedAmmoType = findSufficientAmmoType(inv, weapon, barrelCount,
-                    coreInventorySlot, weaponSlot);
-
-            if (selectedAmmoType == null) {
-                player.displayClientMessage(Component.translatable("message.piranport.insufficient_same_ammo"), true);
-                return true;
-            }
-
-            // 只统计选定类型的弹药
-            int totalAmmo = 0;
-            for (int i = 0; i < inv.items.size(); i++) {
-                if (i == coreInventorySlot || i == weaponSlot) continue;
-                ItemStack ammo = inv.items.get(i);
-                if (!ammo.isEmpty() && ammo.getItem() == selectedAmmoType) {
-                    totalAmmo += ammo.getCount();
-                }
-            }
-            if (weaponSlot != 40 && coreInventorySlot != 40) {
-                ItemStack oh = inv.offhand.get(0);
-                if (!oh.isEmpty() && oh.getItem() == selectedAmmoType) {
-                    totalAmmo += oh.getCount();
-                }
-            }
-
-            // 获取第一个选定类型的弹药用于类型判断和渲染
-            ItemStack firstAmmo = ItemStack.EMPTY;
-            for (int i = 0; i < inv.items.size(); i++) {
-                if (i == coreInventorySlot || i == weaponSlot) continue;
-                ItemStack ammo = inv.items.get(i);
-                if (!ammo.isEmpty() && ammo.getItem() == selectedAmmoType) {
-                    firstAmmo = ammo;
-                    break;
-                }
-            }
-            if (firstAmmo.isEmpty() && weaponSlot != 40 && coreInventorySlot != 40) {
-                ItemStack oh = inv.offhand.get(0);
-                if (!oh.isEmpty() && oh.getItem() == selectedAmmoType) {
-                    firstAmmo = oh;
-                }
-            }
-
-            boolean isType3 = isType3Shell(firstAmmo);
-            boolean isVT = isVTShell(firstAmmo);
-            boolean isHE = isHEShell(firstAmmo) || isVT;
-            ItemStack shellForRender = firstAmmo.copyWithCount(1);
-
-            // 只消耗选定类型的弹药
-            int toConsume = barrelCount;
-            for (int i = 0; i < inv.items.size() && toConsume > 0; i++) {
-                if (i == coreInventorySlot || i == weaponSlot) continue;
-                ItemStack ammo = inv.items.get(i);
-                if (!ammo.isEmpty() && ammo.getItem() == selectedAmmoType) {
-                    int take = Math.min(toConsume, ammo.getCount());
-                    com.piranport.debug.PiranPortDebug.consumeAmmo(ammo, take);
-                    toConsume -= take;
-                }
-            }
-            if (toConsume > 0 && weaponSlot != 40 && coreInventorySlot != 40) {
-                ItemStack oh = inv.offhand.get(0);
-                if (!oh.isEmpty() && oh.getItem() == selectedAmmoType) {
-                    int take = Math.min(toConsume, oh.getCount());
-                    com.piranport.debug.PiranPortDebug.consumeAmmo(oh, take);
-                    toConsume -= take;
-                }
-            }
-
-            // Check if enough ammo remains for next salvo
-            int remainingAmmo = totalAmmo - barrelCount;
-            boolean hasNextRound = remainingAmmo >= barrelCount;
-
-            if (hasNextRound) {
-                int cooldownTicks = TransformationManager.boostedCooldown(player, getGunCooldown(weapon));
-                coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
-                        cooldowns.withSlotCooldown(weaponSlot, cooldownTicks, level.getGameTime()));
-                weapon.set(ModDataComponents.WEAPON_COOLDOWN.get(),
-                        WeaponCooldown.of(level.getGameTime(), cooldownTicks));
-            } else {
-                int penaltyTicks = 10;
-                coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
-                        cooldowns.withSlotCooldown(weaponSlot, penaltyTicks, level.getGameTime()));
-                weapon.set(ModDataComponents.WEAPON_COOLDOWN.get(),
-                        WeaponCooldown.of(level.getGameTime(), penaltyTicks));
-                player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
-            }
-
-            // Fire barrelCount projectiles
-            fireCannonSalvo(level, player, weapon, shellForRender, barrelCount, isType3, isVT, isHE);
-
-            com.piranport.debug.PiranPortDebug.event(
-                    "Fire | weapon={} ammo={} barrels={} remaining={}",
-                    BuiltInRegistries.ITEM.getKey(weapon.getItem()).getPath(),
-                    BuiltInRegistries.ITEM.getKey(shellForRender.getItem()).getPath(),
-                    barrelCount, remainingAmmo);
-
-            float pitch = getSoundPitch(weapon);
-            level.playSound(null, player.getX(), player.getY(), player.getZ(),
-                    SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 0.5f, pitch);
-        }
-        return true;
-    }
-
-    /** Manual-mode cannon: consume LOADED_AMMO component on the weapon item. */
-    private static void fireCannonManualMode(Level level, Player player, ItemStack coreStack,
-            ItemStack weapon, int weaponSlot, SlotCooldowns cooldowns) {
+        // Cannon — always auto-resupply (Phase 4: manual mode removed)
         int barrelCount = getBarrelCount(weapon);
 
-        // Creative mode: auto-find ammo from inventory
+        // Creative mode: find any matching ammo without consuming
         if (player.getAbilities().instabuild) {
-            Inventory inv = player.getInventory();
-            int coreInventorySlot = -1;
-            for (int i = 0; i < inv.items.size(); i++) {
-                if (i == weaponSlot) continue;
-                ItemStack s = inv.items.get(i);
-                if (s.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(s)) {
-                    coreInventorySlot = i;
-                    break;
-                }
-            }
-
-            Item selectedAmmoType = findSufficientAmmoType(inv, weapon, barrelCount,
+            Item selectedAmmoType = findPreferredOrSufficientAmmo(inv, weapon, barrelCount,
                     coreInventorySlot, weaponSlot);
+
             if (selectedAmmoType == null) {
                 selectedAmmoType = getDefaultAmmoForWeapon(weapon);
                 if (selectedAmmoType == null) {
                     player.displayClientMessage(Component.translatable("message.piranport.insufficient_same_ammo"), true);
-                    return;
+                    return true;
                 }
             }
 
-            ItemStack firstAmmo = ItemStack.EMPTY;
-            for (int i = 0; i < inv.items.size(); i++) {
-                if (i == coreInventorySlot || i == weaponSlot) continue;
-                ItemStack ammo = inv.items.get(i);
-                if (!ammo.isEmpty() && ammo.getItem() == selectedAmmoType) {
-                    firstAmmo = ammo;
-                    break;
-                }
-            }
-            if (firstAmmo.isEmpty() && weaponSlot != 40 && coreInventorySlot != 40) {
-                ItemStack oh = inv.offhand.get(0);
-                if (!oh.isEmpty() && oh.getItem() == selectedAmmoType) {
-                    firstAmmo = oh;
-                }
-            }
+            recordCurrentAmmoType(weapon, selectedAmmoType);
+
+            ItemStack firstAmmo = findFirstAmmoStack(inv, selectedAmmoType, coreInventorySlot, weaponSlot);
             if (firstAmmo.isEmpty()) {
                 firstAmmo = new ItemStack(selectedAmmoType);
             }
@@ -977,7 +785,7 @@ public class ShipCoreItem extends Item {
             fireCannonSalvo(level, player, weapon, shellForRender, barrelCount, isType3, isVT, isHE);
 
             com.piranport.debug.PiranPortDebug.event(
-                    "Fire (manual-creative) | weapon={} ammo={} barrels={}",
+                    "Fire (creative) | weapon={} ammo={} barrels={}",
                     BuiltInRegistries.ITEM.getKey(weapon.getItem()).getPath(),
                     BuiltInRegistries.ITEM.getKey(shellForRender.getItem()).getPath(),
                     barrelCount);
@@ -985,38 +793,94 @@ public class ShipCoreItem extends Item {
             float pitch = getSoundPitch(weapon);
             level.playSound(null, player.getX(), player.getY(), player.getZ(),
                     SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 0.5f, pitch);
-            return;
+            return true;
         }
 
-        // Survival mode: use LOADED_AMMO component
-        LoadedAmmo loaded = weapon.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
-        if (!loaded.hasAmmo() || loaded.count() < barrelCount) {
+        // Survival mode: find sufficient ammo type and consume
+        Item selectedAmmoType = findPreferredOrSufficientAmmo(inv, weapon, barrelCount,
+                coreInventorySlot, weaponSlot);
+
+        if (selectedAmmoType == null) {
+            player.displayClientMessage(Component.translatable("message.piranport.insufficient_same_ammo"), true);
+            return true;
+        }
+
+        recordCurrentAmmoType(weapon, selectedAmmoType);
+
+        // 只统计选定类型的弹药
+        int totalAmmo = 0;
+        for (int i = 0; i < inv.items.size(); i++) {
+            if (i == coreInventorySlot || i == weaponSlot) continue;
+            ItemStack ammo = inv.items.get(i);
+            if (!ammo.isEmpty() && ammo.getItem() == selectedAmmoType) {
+                totalAmmo += ammo.getCount();
+            }
+        }
+        if (weaponSlot != 40 && coreInventorySlot != 40) {
+            ItemStack oh = inv.offhand.get(0);
+            if (!oh.isEmpty() && oh.getItem() == selectedAmmoType) {
+                totalAmmo += oh.getCount();
+            }
+        }
+
+        ItemStack firstAmmo = findFirstAmmoStack(inv, selectedAmmoType, coreInventorySlot, weaponSlot);
+
+        boolean isType3 = isType3Shell(firstAmmo);
+        boolean isVT = isVTShell(firstAmmo);
+        boolean isHE = isHEShell(firstAmmo) || isVT;
+        ItemStack shellForRender = firstAmmo.copyWithCount(1);
+
+        // 只消耗选定类型的弹药
+        int toConsume = barrelCount;
+        for (int i = 0; i < inv.items.size() && toConsume > 0; i++) {
+            if (i == coreInventorySlot || i == weaponSlot) continue;
+            ItemStack ammo = inv.items.get(i);
+            if (!ammo.isEmpty() && ammo.getItem() == selectedAmmoType) {
+                int take = Math.min(toConsume, ammo.getCount());
+                com.piranport.debug.PiranPortDebug.consumeAmmo(ammo, take);
+                toConsume -= take;
+            }
+        }
+        if (toConsume > 0 && weaponSlot != 40 && coreInventorySlot != 40) {
+            ItemStack oh = inv.offhand.get(0);
+            if (!oh.isEmpty() && oh.getItem() == selectedAmmoType) {
+                int take = Math.min(toConsume, oh.getCount());
+                com.piranport.debug.PiranPortDebug.consumeAmmo(oh, take);
+                toConsume -= take;
+            }
+        }
+
+        // Check if enough ammo remains for next salvo
+        int remainingAmmo = totalAmmo - barrelCount;
+        boolean hasNextRound = remainingAmmo >= barrelCount;
+
+        if (hasNextRound) {
+            int cooldownTicks = TransformationManager.boostedCooldown(player, getGunCooldown(weapon));
+            coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
+                    cooldowns.withSlotCooldown(weaponSlot, cooldownTicks, level.getGameTime()));
+            weapon.set(ModDataComponents.WEAPON_COOLDOWN.get(),
+                    WeaponCooldown.of(level.getGameTime(), cooldownTicks));
+        } else {
+            int penaltyTicks = 10;
+            coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
+                    cooldowns.withSlotCooldown(weaponSlot, penaltyTicks, level.getGameTime()));
+            weapon.set(ModDataComponents.WEAPON_COOLDOWN.get(),
+                    WeaponCooldown.of(level.getGameTime(), penaltyTicks));
             player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
-            return;
         }
 
-        boolean isType3 = isType3Shell(loaded.ammoItemId());
-        boolean isVT = isVTShell(loaded.ammoItemId());
-        boolean isHE = isHEShell(loaded.ammoItemId()) || isVT;
-        net.minecraft.world.item.Item shellItem = BuiltInRegistries.ITEM
-                .getOptional(ResourceLocation.tryParse(loaded.ammoItemId()))
-                .orElse(net.minecraft.world.item.Items.AIR);
-        ItemStack shellForRender = new ItemStack(shellItem, 1);
-
-        // Consume all loaded rounds (cooldown was already applied when R was pressed)
-        weapon.remove(ModDataComponents.LOADED_AMMO.get());
-
-        // Fire barrelCount projectiles
         fireCannonSalvo(level, player, weapon, shellForRender, barrelCount, isType3, isVT, isHE);
 
         com.piranport.debug.PiranPortDebug.event(
-                "Fire (manual) | weapon={} ammo={} barrels={}",
+                "Fire | weapon={} ammo={} barrels={} remaining={}",
                 BuiltInRegistries.ITEM.getKey(weapon.getItem()).getPath(),
-                loaded.ammoItemId(), barrelCount);
+                BuiltInRegistries.ITEM.getKey(shellForRender.getItem()).getPath(),
+                barrelCount, remainingAmmo);
 
         float pitch = getSoundPitch(weapon);
         level.playSound(null, player.getX(), player.getY(), player.getZ(),
                 SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 0.5f, pitch);
+        return true;
     }
 
     /** Manual-mode torpedo: consume LOADED_AMMO component on the launcher item. */
@@ -1969,6 +1833,68 @@ public class ShipCoreItem extends Item {
         return false;
     }
 
+    /**
+     * 根据 SelectedAmmoType 查找偏好弹种（优先），
+     * 偏好弹种不足时退回到 findSufficientAmmoType。
+     */
+    private static Item findPreferredOrSufficientAmmo(Inventory inv, ItemStack weapon,
+                                                       int required, int coreSlot, int weaponSlot) {
+        SelectedAmmoType preferred = weapon.getOrDefault(
+                ModDataComponents.SELECTED_AMMO_TYPE.get(), SelectedAmmoType.EMPTY);
+        if (preferred.hasSelection()) {
+            ResourceLocation rl = ResourceLocation.tryParse(preferred.ammoItemId());
+            if (rl != null) {
+                Item preferredItem = BuiltInRegistries.ITEM.get(rl);
+                if (preferredItem != null && preferredItem != net.minecraft.world.item.Items.AIR) {
+                    // 统计偏好弹种数量
+                    int count = 0;
+                    for (int i = 0; i < inv.items.size(); i++) {
+                        if (i == coreSlot || i == weaponSlot) continue;
+                        ItemStack s = inv.items.get(i);
+                        if (!s.isEmpty() && s.getItem() == preferredItem) {
+                            count += s.getCount();
+                        }
+                    }
+                    if (weaponSlot != 40 && coreSlot != 40) {
+                        ItemStack oh = inv.offhand.get(0);
+                        if (!oh.isEmpty() && oh.getItem() == preferredItem) {
+                            count += oh.getCount();
+                        }
+                    }
+                    if (count >= required) {
+                        return preferredItem;
+                    }
+                }
+            }
+        }
+        return findSufficientAmmoType(inv, weapon, required, coreSlot, weaponSlot);
+    }
+
+    /** 将当前消耗的弹种写入武器的 SelectedAmmoType DataComponent。 */
+    private static void recordCurrentAmmoType(ItemStack weapon, Item ammoItem) {
+        String id = BuiltInRegistries.ITEM.getKey(ammoItem).toString();
+        weapon.set(ModDataComponents.SELECTED_AMMO_TYPE.get(), new SelectedAmmoType(id));
+    }
+
+    /** 在背包中查找选定类型的第一个弹药堆叠。 */
+    private static ItemStack findFirstAmmoStack(Inventory inv, Item ammoType,
+                                                  int coreSlot, int weaponSlot) {
+        for (int i = 0; i < inv.items.size(); i++) {
+            if (i == coreSlot || i == weaponSlot) continue;
+            ItemStack ammo = inv.items.get(i);
+            if (!ammo.isEmpty() && ammo.getItem() == ammoType) {
+                return ammo;
+            }
+        }
+        if (weaponSlot != 40 && coreSlot != 40) {
+            ItemStack oh = inv.offhand.get(0);
+            if (!oh.isEmpty() && oh.getItem() == ammoType) {
+                return oh;
+            }
+        }
+        return ItemStack.EMPTY;
+    }
+
     static boolean isHEShell(ItemStack stack) {
         return stack.is(ModItems.SMALL_HE_SHELL.get())
                 || stack.is(ModItems.MEDIUM_HE_SHELL.get())
@@ -1999,6 +1925,18 @@ public class ShipCoreItem extends Item {
         return ammoItemId.equals(BuiltInRegistries.ITEM.getKey(ModItems.SMALL_TYPE3_SHELL.get()).toString())
                 || ammoItemId.equals(BuiltInRegistries.ITEM.getKey(ModItems.MEDIUM_TYPE3_SHELL.get()).toString())
                 || ammoItemId.equals(BuiltInRegistries.ITEM.getKey(ModItems.LARGE_TYPE3_SHELL.get()).toString());
+    }
+
+    static boolean isAPShell(ItemStack stack) {
+        return stack.is(ModItems.SMALL_AP_SHELL.get())
+                || stack.is(ModItems.MEDIUM_AP_SHELL.get())
+                || stack.is(ModItems.LARGE_AP_SHELL.get());
+    }
+
+    static boolean isAPShell(String ammoItemId) {
+        return ammoItemId.equals(BuiltInRegistries.ITEM.getKey(ModItems.SMALL_AP_SHELL.get()).toString())
+                || ammoItemId.equals(BuiltInRegistries.ITEM.getKey(ModItems.MEDIUM_AP_SHELL.get()).toString())
+                || ammoItemId.equals(BuiltInRegistries.ITEM.getKey(ModItems.LARGE_AP_SHELL.get()).toString());
     }
 
     static boolean isMagneticTorpedo(ItemStack stack) {
@@ -2107,9 +2045,24 @@ public class ShipCoreItem extends Item {
         return 1.0f;
     }
 
+    /** Phase 5: 弹道解算瞄准目标位，由 fireFromScope→tryFireFromInventory→fireCannonSalvo 传递。 */
+    private static final ThreadLocal<Vec3> pendingAimTarget = new ThreadLocal<>();
+
+    /** Phase 5: 从瞄准镜模式开火（由 ScopeFirePayload 调用）。复用 tryFireFromInventory 的弹药/冷却逻辑。 */
+    public static void fireFromScope(Player player, ItemStack weapon, double tx, double ty, double tz) {
+        Vec3 target = new Vec3(tx, ty, tz);
+        pendingAimTarget.set(target);
+        try {
+            tryFireFromInventory(player.level(), player, InteractionHand.MAIN_HAND);
+        } finally {
+            pendingAimTarget.remove();
+        }
+    }
+
     /** Fire a cannon salvo: barrelCount projectiles with natural inaccuracy spread. */
     private static void fireCannonSalvo(Level level, Player player, ItemStack weapon,
             ItemStack shellForRender, int barrelCount, boolean isType3, boolean isVT, boolean isHE) {
+        Vec3 aimTarget = pendingAimTarget.get(); // Phase 5: 非 null 时使用弹道解算
         for (int b = 0; b < barrelCount; b++) {
             if (isType3) {
                 fireSanshikiSpread(level, player, weapon, shellForRender);
@@ -2123,10 +2076,46 @@ public class ShipCoreItem extends Item {
                         level, player, shellForRender, damage, isHE, explosionPower);
                 if (isVT) projectile.setVT(true);
                 projectile.setDragCoeff(getProjectileDrag(weapon));
-                projectile.shootFromRotation(player, player.getXRot(), player.getYRot(), 0.0f, velocity, inaccuracy);
+
+                if (aimTarget != null && b == 0) {
+                    // Phase 5: 弹道解算瞄准（仅第一发使用精确角度，后续仍用散布，保持齐射散布自然）
+                    fireProjectileWithAim(projectile, player, weapon, velocity, aimTarget);
+                } else {
+                    projectile.shootFromRotation(player, player.getXRot(), player.getYRot(), 0.0f, velocity, inaccuracy);
+                }
                 level.addFreshEntity(projectile);
             }
         }
+    }
+
+    /** Phase 5: 弹道解算瞄准发射。计算从炮口到目标的发射仰角，使用 shootFromRotation 设置速度。 */
+    private static void fireProjectileWithAim(CannonProjectileEntity projectile, Player player,
+                                               ItemStack weapon, float velocity, Vec3 aimTarget) {
+        Vec3 eyePos = player.getEyePosition();
+        Vec3 lookDir = player.getLookAngle();
+        Vec3 muzzlePos = eyePos.add(lookDir.scale(1.5));
+
+        Vec3 toTarget = aimTarget.subtract(muzzlePos);
+        double horizontalDist = Math.sqrt(toTarget.x * toTarget.x + toTarget.z * toTarget.z);
+        double verticalDist = toTarget.y;
+
+        if (horizontalDist < 1.0) {
+            // 近距目标：直接朝准星方向发射
+            projectile.shootFromRotation(player, player.getXRot(), player.getYRot(), 0.0f, velocity, 0);
+            return;
+        }
+
+        // 弹道解算最佳仰角
+        float drag = getProjectileDrag(weapon);
+        double optimalPitch = BallisticSolver.solve(velocity, drag, BallisticSolver.DEFAULT_GRAVITY,
+                horizontalDist, verticalDist);
+
+        // MC 偏航角：atan2(-dx, dz) 映射到 MC 坐标（yaw=0 = +Z）
+        float yawDeg = (float) Math.toDegrees(Math.atan2(-toTarget.x, toTarget.z));
+        float pitchDeg = (float) Math.toDegrees(optimalPitch);
+
+        // shootFromRotation 会自动计算速度向量并记录 initialSpeed
+        projectile.shootFromRotation(player, -pitchDeg, yawDeg, 0.0f, velocity, 0);
     }
 
     // ===== Type 3 (Sanshiki) spread firing =====
@@ -2135,15 +2124,26 @@ public class ShipCoreItem extends Item {
      * Spawns 64 pellets in a circular spread pattern (sunflower/golden-angle distribution).
      * Each pellet deals 1/4 of the same-caliber HE base damage.
      */
+    /** 单次开火最多同时存在的三式弹霰弹数量。 */
+    private static final int SANSHIKI_MAX_PELLETS = 64;
+
     private static void fireSanshikiSpread(Level level, Player player, ItemStack weapon, ItemStack shellForRender) {
         float baseDamage = getGunDamage(weapon);
         float pelletDamage = baseDamage * 0.25f;
         float velocity = getProjectileVelocity(weapon);
 
+        // 霰弹数量限制：统计玩家附近256格内的现有霰弹数，超过上限则不发射
+        int existing = level.getEntitiesOfClass(
+                SanshikiPelletEntity.class,
+                new AABB(player.blockPosition()).inflate(256))
+                .size();
+        int canSpawn = SANSHIKI_MAX_PELLETS - existing;
+        if (canSpawn <= 0) return;
+        int pelletCount = Math.min(64, canSpawn);
+
         float baseYaw = player.getYRot();
         float basePitch = player.getXRot();
         float maxRadius = 7.0f; // degrees, same spread range as before
-        int pelletCount = 64;
         float goldenAngle = 2.39996323f; // ~137.508 degrees in radians
 
         for (int i = 0; i < pelletCount; i++) {

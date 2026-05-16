@@ -10,7 +10,12 @@ import java.util.List;
 /**
  * 炮弹物品基类。
  * Phase 1: 预留基类，功能与 AmmoItem 重叠，后续阶段扩展。
+ *
+ * @deprecated Phase 12: 功能与 {@link com.piranport.item.AmmoItem} 完全重叠，
+ * 未在任何地方被引用。所有炮弹注册使用 AmmoItem。保留以防存档兼容需要，
+ * 新代码不应使用此类。
  */
+@Deprecated(forRemoval = false)
 public class ShellItem extends Item {
     private final int caliber;
     private final String shellType; // HE, AP, VT, TYPE3

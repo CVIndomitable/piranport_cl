@@ -59,11 +59,22 @@ import java.util.List;
 import java.util.UUID;
 
 import com.piranport.client.BallisticSolver;
+import com.piranport.PiranPort;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.tags.TagKey;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.Nullable;
 
 public class ShipCoreItem extends Item {
+
+    // Phase 12: 口径弹药标签 — 数据包可通过添加物品到这些标签来扩展兼容弹药
+    private static final TagKey<Item> SMALL_SHELLS = TagKey.create(Registries.ITEM,
+            ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "small_shells"));
+    private static final TagKey<Item> MEDIUM_SHELLS = TagKey.create(Registries.ITEM,
+            ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "medium_shells"));
+    private static final TagKey<Item> LARGE_SHELLS = TagKey.create(Registries.ITEM,
+            ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "large_shells"));
 
     public enum ShipType {
         //                  hp   cost  wpn ammo enh fuel dist  满载  空载  护甲 韧性
@@ -685,6 +696,8 @@ public class ShipCoreItem extends Item {
      */
     public static boolean tryFireFromInventory(Level level, Player player, InteractionHand hand) {
         if (level.isClientSide || com.piranport.config.ModCommonConfig.isShipCoreGuiEnabled()) return false;
+        // Phase 12: 旁观者模式不开火
+        if (player.isSpectator()) return false;
 
         Inventory inv = player.getInventory();
         int weaponSlot = (hand == InteractionHand.MAIN_HAND) ? inv.selected : 40;
@@ -1788,7 +1801,7 @@ public class ShipCoreItem extends Item {
     }
 
     // ===== Caliber matching =====
-    // TODO: replace hardcoded item matching with item tags (e.g. piranport:small_caliber_ammo)
+    // Phase 12: 已迁移至 piranport:small_shells / medium_shells / large_shells 物品标签
 
     /**
      * 查找背包中第一个数量足够的弹药类型
@@ -1837,16 +1850,14 @@ public class ShipCoreItem extends Item {
         return null; // 没有类型满足数量要求
     }
 
+    /** Phase 12: 用物品标签匹配口径，替代硬编码物品列表。数据包可向标签添加物品来扩展。 */
     public static boolean matchesCaliber(ItemStack ammo, ItemStack weapon) {
         if (weapon.is(ModItems.SMALL_GUN.get()) || weapon.is(ModItems.SINGLE_SMALL_GUN.get())) {
-            return ammo.is(ModItems.SMALL_HE_SHELL.get()) || ammo.is(ModItems.SMALL_AP_SHELL.get())
-                    || ammo.is(ModItems.SMALL_VT_SHELL.get()) || ammo.is(ModItems.SMALL_TYPE3_SHELL.get());
+            return ammo.is(SMALL_SHELLS);
         } else if (weapon.is(ModItems.MEDIUM_GUN.get())) {
-            return ammo.is(ModItems.MEDIUM_HE_SHELL.get()) || ammo.is(ModItems.MEDIUM_AP_SHELL.get())
-                    || ammo.is(ModItems.MEDIUM_TYPE3_SHELL.get());
+            return ammo.is(MEDIUM_SHELLS);
         } else if (weapon.is(ModItems.LARGE_GUN.get())) {
-            return ammo.is(ModItems.LARGE_HE_SHELL.get()) || ammo.is(ModItems.LARGE_AP_SHELL.get())
-                    || ammo.is(ModItems.LARGE_TYPE3_SHELL.get());
+            return ammo.is(LARGE_SHELLS);
         }
         return false;
     }

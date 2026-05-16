@@ -69,9 +69,20 @@ public class ArtilleryItem extends Item {
         return repair.is(Items.IRON_INGOT);
     }
 
+    /** Phase 12: 附魔能力（支持耐久/经验修补等原版附魔）。 */
+    @Override
+    public int getEnchantmentValue() {
+        return 15;
+    }
+
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
+
+        // Phase 12: 旁观者模式不响应开火
+        if (player.isSpectator()) {
+            return InteractionResultHolder.fail(stack);
+        }
 
         // 耐久检测：耐久为0时阻止发射
         if (stack.isDamageableItem() && stack.getDamageValue() >= stack.getMaxDamage() - 1) {
@@ -99,7 +110,13 @@ public class ArtilleryItem extends Item {
         return InteractionResultHolder.pass(stack);
     }
 
-    /** Phase 2: 发射物理炮弹（抛物线 + 散布） */
+    /**
+     * Phase 2: 发射物理炮弹（抛物线 + 散布）。
+     * @deprecated Phase 12: 未在任何代码路径中被调用。
+     * 实际发射流程走 ShipCoreItem.fireCannonSalvo() → CannonProjectileEntity。
+     * 保留方法以防后续需要独立的 ArtilleryItem 开火路径。
+     */
+    @Deprecated(forRemoval = false)
     void fireShell(Level level, Player player, ItemStack stack) {
         ItemStack shellItem = new ItemStack(net.minecraft.world.item.Items.SNOWBALL);
         float speed = getInitialSpeed();

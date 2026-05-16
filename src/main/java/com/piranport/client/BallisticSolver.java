@@ -2,7 +2,9 @@ package com.piranport.client;
 
 import com.piranport.config.ModArtilleryConfig;
 import com.piranport.config.ModEquipmentConfig;
-import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * 弹道解算引擎：给定初速度、阻力、重力、目标距离，计算最佳发射仰角。
@@ -20,8 +22,18 @@ public final class BallisticSolver {
     /** 默认重力值（blocks/tick²），匹配 CannonProjectileEntity.getDefaultGravity() */
     public static final double DEFAULT_GRAVITY = 0.05;
 
-    private static final Object2DoubleOpenHashMap<SolutionKey> cache = new Object2DoubleOpenHashMap<>();
+    private static final Map<SolutionKey, Double> cache = createLRUCache();
     private static boolean cacheEnabled = true;
+
+    /** 创建 LRU 缓存，避免缓存满时直接清空导致性能抖动 */
+    private static Map<SolutionKey, Double> createLRUCache() {
+        return new LinkedHashMap<SolutionKey, Double>(16, 0.75f, true) {
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<SolutionKey, Double> eldest) {
+                return size() > ModEquipmentConfig.BALLISTIC_CACHE_SIZE.get();
+            }
+        };
+    }
 
     /** 缓存键量化步长（格）。0.1 格精度足够瞄准使用，可大幅提高缓存命中率。 */
     private static final double DISTANCE_QUANTUM = 0.1;
@@ -39,8 +51,8 @@ public final class BallisticSolver {
 
         if (isCacheEnabled()) {
             SolutionKey key = new SolutionKey(initialSpeed, dragCoeff, gravity, qHDist, qVDist);
-            double cached = cache.getOrDefault(key, Double.NaN);
-            if (!Double.isNaN(cached)) return cached;
+            Double cached = cache.get(key);
+            if (cached != null) return cached;
         }
 
         int maxIters = ModEquipmentConfig.BALLISTIC_MAX_ITERATIONS.get();
@@ -81,9 +93,7 @@ public final class BallisticSolver {
         }
 
         if (isCacheEnabled()) {
-            int cacheSize = ModEquipmentConfig.BALLISTIC_CACHE_SIZE.get();
             synchronized (cache) {
-                if (cache.size() >= cacheSize) cache.clear();
                 cache.put(new SolutionKey(initialSpeed, dragCoeff, gravity, qHDist, qVDist), bestAngle);
             }
         }

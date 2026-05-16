@@ -59,12 +59,9 @@ public class ArtilleryItem extends Item {
     public float getCustomGravity() { return data.gravity(); }
     public float getExplosionPower() { return data.explosionPower(); }
 
-    /** 根据口径计算散布角（度）。口径越大散布越小。 */
+    /** 获取散布角（度）。优先使用 JSON 配置，未配置时按口径计算。 */
     public float getDispersionAngle() {
-        int cal = getCaliber();
-        if (cal <= 4) return 1.5f;
-        if (cal <= 8) return 1.0f;
-        return 0.5f;
+        return data.dispersion();
     }
 
     @Override

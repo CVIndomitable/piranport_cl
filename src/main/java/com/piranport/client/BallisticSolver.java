@@ -91,7 +91,7 @@ public final class BallisticSolver {
     }
 
     /**
-     * 数值弹道模拟，步长 = 1 MC tick，模型匹配 CannonProjectileEntity。
+     * 数值弹道模拟，步长从 ModArtilleryConfig.BALLISTIC_SIMULATION_DT 读取，模型匹配 CannonProjectileEntity。
      * 最大步数从 ModEquipmentConfig.BALLISTIC_MAX_STEPS 读取。
      */
     private static double simulate(double v0, double angle, double dragCoeff, double gravity, double targetX) {
@@ -100,16 +100,15 @@ public final class BallisticSolver {
         double x = 0, y = 0;
         double factor = Math.max(0.1, 1.0 - dragCoeff);
         int maxSteps = ModEquipmentConfig.BALLISTIC_MAX_STEPS.get();
+        double dt = ModArtilleryConfig.BALLISTIC_SIMULATION_DT.get();
 
         for (int step = 0; step < maxSteps; step++) {
             // 阻力（与 CannonProjectileEntity.tick() 一致）
-            vx *= factor;
-            vy *= factor;
-            // 重力
-            vy -= gravity;
+            vx *= Math.pow(factor, dt);
+            vy = vy * Math.pow(factor, dt) - gravity * dt;
             // 位置更新
-            x += vx;
-            y += vy;
+            x += vx * dt;
+            y += vy * dt;
             // 到达目标水平距离
             if (x >= targetX) return y;
             // 落地（远低于发射点）

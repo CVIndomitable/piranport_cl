@@ -153,16 +153,7 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         if (!level().isClientSide) {
             // 水中弹药销毁：所有弹种通用（VT 弹在 tickVT 中另有近炸逻辑）
             if (!isVT && isInWater()) {
-                underwaterTicks++;
-                int maxTicks = (int) (ModArtilleryConfig.ARTILLERY_UNDERWATER_DESTROY_TIME.get() * 20);
-                if (underwaterTicks >= maxTicks) {
-                    if (isHE && ModProjectilesConfig.UNDERWATER_EXPLODE.get()) {
-                        Level.ExplosionInteraction interaction = ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get()
-                                ? Level.ExplosionInteraction.TNT : Level.ExplosionInteraction.NONE;
-                        level().explode(this, getX(), getY(), getZ(), explosionPower, interaction);
-                    }
-                    discard();
-                }
+                handleUnderwaterDestruction(isHE);
             }
             if (isVT && tickCount > vtArmTicks) {
                 tickVT();
@@ -171,6 +162,26 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
                 tickTracking();
             }
         }
+    }
+
+    /**
+     * 处理水中弹药销毁逻辑（所有弹种通用）。
+     * @param shouldExplode 是否在销毁时触发爆炸（HE弹为true，AP弹为false）
+     * @return 是否已达到销毁时间
+     */
+    private boolean handleUnderwaterDestruction(boolean shouldExplode) {
+        underwaterTicks++;
+        int maxTicks = (int) (ModArtilleryConfig.ARTILLERY_UNDERWATER_DESTROY_TIME.get() * 20);
+        if (underwaterTicks >= maxTicks) {
+            if (shouldExplode && ModProjectilesConfig.UNDERWATER_EXPLODE.get()) {
+                Level.ExplosionInteraction interaction = ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get()
+                        ? Level.ExplosionInteraction.TNT : Level.ExplosionInteraction.NONE;
+                level().explode(this, getX(), getY(), getZ(), explosionPower, interaction);
+            }
+            discard();
+            return true;
+        }
+        return false;
     }
 
     /** 每 tick 向追踪目标轻微转向。 */
@@ -193,11 +204,9 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
 
     /** 每 tick 调用，但实际引信检测按 vtCheckInterval 间隔执行。 */
     private void tickVT() {
-        // VT 弹水中延时爆炸（按HE处理）
+        // VT 弹水中延时爆炸（使用近炸引信）
         if (isInWater()) {
-            underwaterTicks++;
-            int maxUnderwater = (int) (ModArtilleryConfig.ARTILLERY_UNDERWATER_DESTROY_TIME.get() * 20);
-            if (underwaterTicks >= maxUnderwater) {
+            if (handleUnderwaterDestruction(false)) {
                 proximityDetonate();
             }
             return;
@@ -302,9 +311,9 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
                         SoundEvents.ANVIL_LAND, SoundSource.PLAYERS, 0.5f, 1.2f);
                 if (target instanceof LivingEntity living) {
                     AttributeInstance armorAttr = living.getAttribute(Attributes.ARMOR);
-                    // P0 #4: 使用 UUID + tickCount 生成唯一 ID，避免同 tick 多枚 AP 弹齐射时 ID 冲突
+                    // 使用 UUID + tickCount + random 生成唯一 ID，避免同 tick 多枚 AP 弹齐射时 ID 冲突
                     ResourceLocation apPenId = ResourceLocation.fromNamespaceAndPath(
-                            PiranPort.MOD_ID, "ap_penetration/" + getUUID() + "_" + tickCount);
+                            PiranPort.MOD_ID, "ap_penetration/" + getUUID() + "_" + tickCount + "_" + random.nextInt(10000));
                     boolean applied = false;
                     if (armorAttr != null) {
                         armorAttr.removeModifier(apPenId);

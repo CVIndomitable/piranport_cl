@@ -219,7 +219,6 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         AABB searchBox = getBoundingBox().inflate(vtDetectRange);
         List<Entity> nearby = level().getEntities(this, searchBox, e ->
                 e instanceof LivingEntity
-                        && !(e instanceof Player)
                         && e != getOwner()
                         && e.isAlive());
 

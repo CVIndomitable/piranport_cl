@@ -1758,6 +1758,43 @@ public class ShipCoreItem extends Item {
         }
     }
 
+    /** 获取武器的炮口位置列表。如果武器是 ArtilleryItem，从配置读取；否则返回默认单炮口。 */
+    private static java.util.List<com.piranport.artillery.config.MuzzlePos> getMuzzlePositions(ItemStack weapon) {
+        Item item = weapon.getItem();
+        if (item instanceof com.piranport.artillery.ArtilleryItem ai) {
+            return ai.getData().muzzles();
+        }
+        // 默认单炮口位置（向前1.5格）
+        return java.util.List.of(new com.piranport.artillery.config.MuzzlePos(0, 0, 1.5));
+    }
+
+    /** 将炮口位置从武器本地坐标系旋转到玩家视角坐标系。 */
+    private static Vec3 rotateMuzzleByPlayerView(Player player, com.piranport.artillery.config.MuzzlePos muzzle) {
+        // 炮口位置定义：x=左右，y=上下，z=前后（相对武器）
+        Vec3 localOffset = new Vec3(muzzle.x(), muzzle.y(), muzzle.z());
+
+        // 获取玩家视角方向
+        float yaw = player.getYRot();
+        float pitch = player.getXRot();
+
+        // 转换为弧度
+        double yawRad = Math.toRadians(yaw);
+        double pitchRad = Math.toRadians(pitch);
+
+        // 构建旋转矩阵（先俯仰后偏航）
+        double cosYaw = Math.cos(yawRad);
+        double sinYaw = Math.sin(yawRad);
+        double cosPitch = Math.cos(pitchRad);
+        double sinPitch = Math.sin(pitchRad);
+
+        // 应用旋转变换
+        double x = localOffset.x * cosYaw - localOffset.z * sinYaw;
+        double y = localOffset.y * cosPitch + localOffset.z * sinPitch;
+        double z = localOffset.x * sinYaw + localOffset.z * cosYaw * cosPitch;
+
+        return new Vec3(x, y, z);
+    }
+
     /** Fire a cannon salvo: barrelCount projectiles with natural inaccuracy spread. */
     private static void fireCannonSalvo(Level level, Player player, ItemStack weapon,
             ItemStack shellForRender, int barrelCount, boolean isType3, boolean isVT, boolean isHE) {
@@ -1774,11 +1811,20 @@ public class ShipCoreItem extends Item {
                 weapon.setDamageValue(curDamage + 1);
             }
         }
+
+        // 获取炮口位置数据
+        java.util.List<com.piranport.artillery.config.MuzzlePos> muzzles = getMuzzlePositions(weapon);
+
         Vec3 aimTarget = pendingAimTarget.get(); // Phase 5: 非 null 时使用弹道解算
         float dispersionDeg = getProjectileInaccuracy(weapon);
         for (int b = 0; b < barrelCount; b++) {
+            // 计算当前炮管的炮口位置
+            com.piranport.artillery.config.MuzzlePos muzzle = muzzles.get(b % muzzles.size());
+            Vec3 muzzleOffset = rotateMuzzleByPlayerView(player, muzzle);
+            Vec3 spawnPos = player.getEyePosition().add(muzzleOffset);
+
             if (isType3) {
-                fireSanshikiSpread(level, player, weapon, shellForRender);
+                fireSanshikiSpread(level, player, weapon, shellForRender, spawnPos);
             } else {
                 float damage = getGunDamage(weapon);
                 float explosionPower = getExplosionPower(weapon);
@@ -1792,14 +1838,17 @@ public class ShipCoreItem extends Item {
 
                 Vec3 direction;
                 if (aimTarget != null) {
-                    // 弹道解算瞄准：所有炮管都使用解算角度
-                    direction = computeAimDirection(player, weapon, velocity, aimTarget);
+                    // 弹道解算瞄准：从炮口位置到目标
+                    direction = computeAimDirection(player, weapon, velocity, aimTarget, spawnPos);
                 } else {
                     direction = player.getLookAngle();
                 }
                 // 高斯散布：在初速度垂面内偏移
                 direction = com.piranport.artillery.ArtilleryItem.applyDispersion(
                         direction, level.random, dispersionDeg);
+
+                // 设置炮弹生成位置
+                projectile.setPos(spawnPos);
                 projectile.shoot(direction.x, direction.y, direction.z, velocity, 0f);
                 level.addFreshEntity(projectile);
             }
@@ -1838,18 +1887,14 @@ public class ShipCoreItem extends Item {
 
     /** Phase 5: 弹道解算瞄准。计算从炮口到目标的最优发射方向向量。 */
     private static Vec3 computeAimDirection(Player player, ItemStack weapon,
-                                             float velocity, Vec3 aimTarget) {
-        Vec3 eyePos = player.getEyePosition();
-        Vec3 lookDir = player.getLookAngle();
-        Vec3 muzzlePos = eyePos.add(lookDir.scale(1.5));
-
+                                             float velocity, Vec3 aimTarget, Vec3 muzzlePos) {
         Vec3 toTarget = aimTarget.subtract(muzzlePos);
         double horizontalDist = Math.sqrt(toTarget.x * toTarget.x + toTarget.z * toTarget.z);
         double verticalDist = toTarget.y;
 
         if (horizontalDist < 1.0) {
             // 近距目标：直接朝准星方向发射
-            return lookDir;
+            return player.getLookAngle();
         }
 
         // 弹道解算最佳仰角
@@ -1895,12 +1940,13 @@ public class ShipCoreItem extends Item {
         return ModArtilleryConfig.PERF_SHRAPNEL_LIMIT.get();
     }
 
-    private static void fireSanshikiSpread(Level level, Player player, ItemStack weapon, ItemStack shellForRender) {
+    private static void fireSanshikiSpread(Level level, Player player, ItemStack weapon, ItemStack shellForRender, Vec3 spawnPos) {
         float baseDamage = getGunDamage(weapon);
         float pelletDamage = baseDamage * 0.25f;
         float velocity = getProjectileVelocity(weapon);
 
         // 霰弹数量限制：统计玩家附近256格内的现有霰弹数，超过上限则不发射
+        int targetCount = 64; // 三式弹固定发射64枚霰弹（设计文档要求）
         int limit = getShrapnelLimit();
         if (limit <= 0) return;
         int existing = level.getEntitiesOfClass(
@@ -1908,8 +1954,13 @@ public class ShipCoreItem extends Item {
                 new AABB(player.blockPosition()).inflate(256))
                 .size();
         int canSpawn = limit - existing;
-        if (canSpawn <= 0) return;
-        int pelletCount = Math.min(limit, canSpawn);
+        if (canSpawn < targetCount) {
+            // 霰弹数量不足，拒绝发射
+            player.displayClientMessage(
+                    Component.translatable("message.piranport.shrapnel_limit"), true);
+            return;
+        }
+        int pelletCount = targetCount;
 
         float baseYaw = player.getYRot();
         float basePitch = player.getXRot();
@@ -1924,6 +1975,7 @@ public class ShipCoreItem extends Item {
 
             SanshikiPelletEntity pellet = new SanshikiPelletEntity(
                     level, player, pelletDamage, shellForRender);
+            pellet.setPos(spawnPos);
             pellet.shootFromRotation(player,
                     basePitch + pitchOffset,
                     baseYaw + yawOffset,

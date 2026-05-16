@@ -9,6 +9,7 @@ import com.piranport.component.LoadedAmmo;
 import com.piranport.component.SelectedAmmoType;
 import com.piranport.component.SlotCooldowns;
 import com.piranport.component.WeaponCooldown;
+import com.piranport.config.ModArtilleryConfig;
 import com.piranport.entity.AircraftEntity;
 import com.piranport.entity.CannonProjectileEntity;
 import com.piranport.entity.SanshikiPelletEntity;
@@ -2086,6 +2087,12 @@ public class ShipCoreItem extends Item {
     /** Fire a cannon salvo: barrelCount projectiles with natural inaccuracy spread. */
     private static void fireCannonSalvo(Level level, Player player, ItemStack weapon,
             ItemStack shellForRender, int barrelCount, boolean isType3, boolean isVT, boolean isHE) {
+        // Phase 11: 全局炮弹上限检测
+        if (isShellLimitReached(level)) {
+            player.displayClientMessage(
+                    Component.translatable("message.piranport.max_projectiles"), true);
+            return;
+        }
         // Phase 9: 消耗耐久（创造模式不消耗）
         if (!player.getAbilities().instabuild && weapon.isDamageableItem()) {
             int curDamage = weapon.getDamageValue();
@@ -2179,14 +2186,29 @@ public class ShipCoreItem extends Item {
         projectile.shootFromRotation(player, -pitchDeg, yawDeg, 0.0f, velocity, 0);
     }
 
+    // ===== Global projectile limit (Phase 11) =====
+
+    /** 检查全局炮弹是否已达上限（CannonProjectileEntity 合计）。 */
+    private static boolean isShellLimitReached(Level level) {
+        int maxProjectiles = ModArtilleryConfig.ARTILLERY_MAX_PROJECTILES.get();
+        if (maxProjectiles <= 0) return false;
+        int count = level.getEntitiesOfClass(
+                CannonProjectileEntity.class,
+                new net.minecraft.world.phys.AABB(-3e7, -64, -3e7, 3e7, 320, 3e7)).size();
+        return count >= maxProjectiles;
+    }
+
     // ===== Type 3 (Sanshiki) spread firing =====
 
     /**
-     * Spawns 64 pellets in a circular spread pattern (sunflower/golden-angle distribution).
+     * Spawns pellets in a circular spread pattern (sunflower/golden-angle distribution).
      * Each pellet deals 1/4 of the same-caliber HE base damage.
+     * Pellet count is controlled by ModArtilleryConfig.PERF_SHRAPNEL_LIMIT.
      */
-    /** 单次开火最多同时存在的三式弹霰弹数量。 */
-    private static final int SANSHIKI_MAX_PELLETS = 64;
+    /** 单次开火最多同时存在的三式弹霰弹数量（从 ModArtilleryConfig 读取）。 */
+    private static int getShrapnelLimit() {
+        return ModArtilleryConfig.PERF_SHRAPNEL_LIMIT.get();
+    }
 
     private static void fireSanshikiSpread(Level level, Player player, ItemStack weapon, ItemStack shellForRender) {
         float baseDamage = getGunDamage(weapon);
@@ -2194,13 +2216,15 @@ public class ShipCoreItem extends Item {
         float velocity = getProjectileVelocity(weapon);
 
         // 霰弹数量限制：统计玩家附近256格内的现有霰弹数，超过上限则不发射
+        int limit = getShrapnelLimit();
+        if (limit <= 0) return;
         int existing = level.getEntitiesOfClass(
                 SanshikiPelletEntity.class,
                 new AABB(player.blockPosition()).inflate(256))
                 .size();
-        int canSpawn = SANSHIKI_MAX_PELLETS - existing;
+        int canSpawn = limit - existing;
         if (canSpawn <= 0) return;
-        int pelletCount = Math.min(64, canSpawn);
+        int pelletCount = Math.min(limit, canSpawn);
 
         float baseYaw = player.getYRot();
         float basePitch = player.getXRot();

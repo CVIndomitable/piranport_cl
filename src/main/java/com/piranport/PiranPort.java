@@ -9,6 +9,7 @@ import com.piranport.config.ModAircraftConfig;
 import com.piranport.config.ModShipsConfig;
 import com.piranport.config.ModProjectilesConfig;
 import com.piranport.config.ModEquipmentConfig;
+import com.piranport.config.ModArtilleryConfig;
 import com.piranport.recipe.ModBrewingRecipes;
 import com.piranport.registry.ModBiomeModifiers;
 import com.piranport.registry.ModBlockEntityTypes;
@@ -98,6 +99,7 @@ public class PiranPort {
         modContainer.registerConfig(ModConfig.Type.COMMON, ModShipsConfig.SPEC, "piranport-ships.toml");
         modContainer.registerConfig(ModConfig.Type.COMMON, ModProjectilesConfig.SPEC, "piranport-projectiles.toml");
         modContainer.registerConfig(ModConfig.Type.COMMON, ModEquipmentConfig.SPEC, "piranport-equipment.toml");
+        modContainer.registerConfig(ModConfig.Type.COMMON, ModArtilleryConfig.SPEC, "piranport-artillery.toml");
 
         ModCompats.initialize(modEventBus);
 

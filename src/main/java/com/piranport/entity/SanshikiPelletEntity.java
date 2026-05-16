@@ -1,5 +1,6 @@
 package com.piranport.entity;
 
+import com.piranport.config.ModArtilleryConfig;
 import com.piranport.registry.ModEntityTypes;
 import com.piranport.registry.ModItems;
 import net.minecraft.core.particles.ParticleTypes;
@@ -27,7 +28,8 @@ public class SanshikiPelletEntity extends ThrowableItemProjectile {
     private float damage = 1.5f;
     private ItemStack shellForRender = ItemStack.EMPTY;
 
-    private static final int MAX_LIFETIME = 200; // 10 seconds
+    /** 霰弹最大存活时间（tick，从 ModArtilleryConfig 读取）。 */
+    private int maxLifetime = ModArtilleryConfig.PELLET_MAX_LIFETIME.get();
 
     public SanshikiPelletEntity(EntityType<? extends SanshikiPelletEntity> type, Level level) {
         super(type, level);
@@ -48,7 +50,7 @@ public class SanshikiPelletEntity extends ThrowableItemProjectile {
     @Override
     public void tick() {
         super.tick();
-        if (!level().isClientSide() && tickCount > MAX_LIFETIME) discard();
+        if (!level().isClientSide() && tickCount > maxLifetime) discard();
         // 水中静默销毁：三式弹按AP处理
         if (!level().isClientSide() && isInWater()) discard();
 
@@ -112,11 +114,13 @@ public class SanshikiPelletEntity extends ThrowableItemProjectile {
     public void addAdditionalSaveData(CompoundTag tag) {
         super.addAdditionalSaveData(tag);
         tag.putFloat("PelletDamage", damage);
+        tag.putInt("MaxLifetime", maxLifetime);
     }
 
     @Override
     public void readAdditionalSaveData(CompoundTag tag) {
         super.readAdditionalSaveData(tag);
         if (tag.contains("PelletDamage")) damage = tag.getFloat("PelletDamage");
+        if (tag.contains("MaxLifetime")) maxLifetime = tag.getInt("MaxLifetime");
     }
 }

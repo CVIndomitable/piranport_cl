@@ -333,6 +333,7 @@
   "message.piranport.already_reloading": "装填中！",
   "message.piranport.reload_complete": "装填完毕！",
   "message.piranport.cannon_damaged": "火炮损坏，无法发射！",
+  "message.piranport.max_projectiles": "炮弹已达上限，无法继续发射！",
   "message.piranport.ammo_switched": "切换至: %s",
   "message.piranport.reload_start": "开始装填！",
   "container.piranport.flight_groups": "编组",

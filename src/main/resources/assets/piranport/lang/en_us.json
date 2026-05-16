@@ -333,6 +333,7 @@
   "message.piranport.already_reloading": "Reloading!",
   "message.piranport.reload_complete": "Reload complete!",
   "message.piranport.cannon_damaged": "Cannon damaged, cannot fire!",
+  "message.piranport.max_projectiles": "Shell limit reached, cannot fire!",
   "message.piranport.ammo_switched": "Switched to: %s",
   "message.piranport.reload_start": "Reloading...",
   "container.piranport.flight_groups": "Groups",

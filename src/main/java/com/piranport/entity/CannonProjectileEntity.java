@@ -1,6 +1,7 @@
 package com.piranport.entity;
 
 import com.piranport.PiranPort;
+import com.piranport.config.ModArtilleryConfig;
 import com.piranport.config.ModCommonConfig;
 import com.piranport.config.ModProjectilesConfig;
 import com.piranport.registry.ModEntityTypes;
@@ -54,16 +55,17 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
     /** 混合因子：0.05 = 每 tick 约 5% 修正（平缓曲线）。 */
     private static final double TRACKING_STEER = 0.05;
 
+    // ===== VT 近炸引信参数（从 ModArtilleryConfig 读取） =====
     /** VT 锥形检测范围（格），弹头前方该距离内的目标才会触发近炸。 */
-    private static final double VT_DETECT_RANGE = 3.0;
+    private double vtDetectRange = ModArtilleryConfig.VT_DETECT_RANGE.get();
     /** VT 锥形半角（度），目标方向与弹头速度方向的夹角在此范围内才触发。 */
-    private static final double VT_CONE_HALF_ANGLE_DEG = 30.0;
+    private double vtConeHalfAngleDeg = ModArtilleryConfig.VT_CONE_HALF_ANGLE.get();
     /** VT 检测间隔（tick），每 N tick 执行一次锥形区域扫描。 */
-    private static final int VT_CHECK_INTERVAL = 5;
+    private int vtCheckInterval = ModArtilleryConfig.PERF_VT_CHECK_INTERVAL.get();
     /** 方块接近检测的前方射线长度（格）。 */
-    private static final double VT_BLOCK_RANGE = 3.0;
+    private double vtBlockRange = ModArtilleryConfig.VT_BLOCK_RANGE.get();
     /** 发射后 VT 引信解锁前的宽限期（tick）。 */
-    private static final int VT_ARM_TICKS = 5;
+    private int vtArmTicks = ModArtilleryConfig.VT_ARM_TICKS.get();
 
     // 实体类型注册所需的构造器
     public CannonProjectileEntity(EntityType<? extends CannonProjectileEntity> type, Level level) {
@@ -130,7 +132,7 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         }
 
         if (!level().isClientSide) {
-            if (isVT && tickCount > VT_ARM_TICKS) {
+            if (isVT && tickCount > vtArmTicks) {
                 tickVT();
             }
             if (trackingTargetId >= 0) {
@@ -157,20 +159,21 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         setDeltaMovement(newDir.scale(speed));
     }
 
-    /** 每 tick 调用，但实际引信检测按 VT_CHECK_INTERVAL 间隔执行。 */
+    /** 每 tick 调用，但实际引信检测按 vtCheckInterval 间隔执行。 */
     private void tickVT() {
         // VT 弹水中延时爆炸（按HE处理）
         if (isInWater()) {
             underwaterTicks++;
-            if (underwaterTicks >= 60) { // 3秒
+            int maxUnderwater = (int) (ModArtilleryConfig.ARTILLERY_UNDERWATER_DESTROY_TIME.get() * 20);
+            if (underwaterTicks >= maxUnderwater) {
                 proximityDetonate();
             }
             return;
         }
         underwaterTicks = 0;
 
-        // 检测频率控制：每 VT_CHECK_INTERVAL tick 执行一次
-        if (tickCount % VT_CHECK_INTERVAL != 0) return;
+        // 检测频率控制：每 vtCheckInterval tick 执行一次
+        if (tickCount % vtCheckInterval != 0) return;
 
         checkProximityFuze();
     }
@@ -181,7 +184,7 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         Vec3 pos = position();
 
         // 锥形区域检测：只检测弹头速度方向前方锥体内的实体
-        AABB searchBox = getBoundingBox().inflate(VT_DETECT_RANGE);
+        AABB searchBox = getBoundingBox().inflate(vtDetectRange);
         List<Entity> nearby = level().getEntities(this, searchBox, e ->
                 e instanceof LivingEntity
                         && !(e instanceof Player)
@@ -191,14 +194,14 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         for (Entity entity : nearby) {
             Vec3 toTarget = entity.position().add(0, entity.getBbHeight() * 0.5, 0).subtract(pos);
             double dist = toTarget.length();
-            if (dist > VT_DETECT_RANGE) continue;
+            if (dist > vtDetectRange) continue;
 
             // 锥形过滤：检查目标方向与弹头速度方向的夹角
             Vec3 velNorm = velocity.normalize();
             Vec3 targetDir = toTarget.normalize();
             double dot = velNorm.dot(targetDir);
             double angleDeg = Math.toDegrees(Math.acos(Math.max(-1, Math.min(1, dot))));
-            if (angleDeg <= VT_CONE_HALF_ANGLE_DEG) {
+            if (angleDeg <= vtConeHalfAngleDeg) {
                 proximityDetonate();
                 return;
             }
@@ -206,12 +209,12 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
 
         // 方块接近检测（前方短射线），保持原逻辑
         Vec3 forward = velocity.normalize();
-        Vec3 ahead = pos.add(forward.scale(VT_BLOCK_RANGE));
+        Vec3 ahead = pos.add(forward.scale(vtBlockRange));
         BlockHitResult blockHit = level().clip(new ClipContext(
                 pos, ahead, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, this));
         if (blockHit.getType() == HitResult.Type.BLOCK) {
             double blockDist = blockHit.getLocation().distanceTo(pos);
-            if (blockDist <= VT_BLOCK_RANGE) {
+            if (blockDist <= vtBlockRange) {
                 proximityDetonate();
             }
         }

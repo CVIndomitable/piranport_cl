@@ -2,6 +2,7 @@ package com.piranport.artillery;
 
 import com.piranport.PiranPort;
 import com.piranport.combat.FriendlyFireHelper;
+import com.piranport.config.ModArtilleryConfig;
 import com.piranport.config.ModCommonConfig;
 import com.piranport.config.ModProjectilesConfig;
 import com.piranport.registry.ModEntityTypes;
@@ -119,10 +120,10 @@ public class ShellEntity extends ThrowableItemProjectile {
             }
         }
 
-        // Phase 3: 水中弹药销毁
+        // Phase 3: 水中弹药销毁（从 ModArtilleryConfig 读取秒数，换算为 tick）
         if (!level().isClientSide && !underwaterHandled && isInWater()) {
             underwaterTicks++;
-            int maxTicks = ModProjectilesConfig.UNDERWATER_DESTROY_TICKS.get();
+            int maxTicks = (int) (ModArtilleryConfig.ARTILLERY_UNDERWATER_DESTROY_TIME.get() * 20);
             if (underwaterTicks > maxTicks) {
                 underwaterHandled = true;
                 if (ModProjectilesConfig.UNDERWATER_EXPLODE.get()) {

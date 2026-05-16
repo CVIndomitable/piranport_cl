@@ -28,6 +28,7 @@ import com.piranport.network.ReconControlPayload;
 import com.piranport.network.SwitchAmmoPayload;
 import com.piranport.network.ReconExitPayload;
 import com.piranport.network.TorpedoGuidanceExitPayload;
+import net.minecraft.world.item.Item;
 import com.piranport.network.TorpedoGuidanceInputPayload;
 import com.piranport.registry.ModKeyMappings;
 import net.minecraft.client.Minecraft;
@@ -241,14 +242,25 @@ public class ClientTickHandler {
             PacketDistributor.sendToServer(new ManualReloadPayload());
         }
 
-        // Tab 键 — 切换火炮偏好弹种
-        while (ModKeyMappings.SWITCH_AMMO.consumeClick()) {
-            if (!transformed || inReconMode) continue;
-            ItemStack hand = mc.player.getMainHandItem();
-            if (hand.getItem() instanceof com.piranport.artillery.ArtilleryItem) {
-                PacketDistributor.sendToServer(new SwitchAmmoPayload());
-                AmmoSelectOverlay.bumpShow();
+        // Tab 键 — 打开/关闭火炮弹种选择轮盘
+        // 按下时打开轮盘，松开时确认选择
+        if (ModKeyMappings.SWITCH_AMMO.isDown() && !AmmoSelectOverlay.isOpen()) {
+            if (transformed && !inReconMode) {
+                ItemStack hand = mc.player.getMainHandItem();
+                if (hand.getItem() instanceof com.piranport.artillery.ArtilleryItem) {
+                    AmmoSelectOverlay.open();
+                }
             }
+        }
+
+        // 检测Tab键松开（确认选择）
+        if (!ModKeyMappings.SWITCH_AMMO.isDown() && AmmoSelectOverlay.isOpen()) {
+            Item selectedAmmo = AmmoSelectOverlay.getHoveredAmmo();
+            if (selectedAmmo != null) {
+                String ammoId = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(selectedAmmo).toString();
+                PacketDistributor.sendToServer(new SwitchAmmoPayload(ammoId));
+            }
+            AmmoSelectOverlay.close();
         }
 
         // F8 / Shift+F8：调试开关 / 快照

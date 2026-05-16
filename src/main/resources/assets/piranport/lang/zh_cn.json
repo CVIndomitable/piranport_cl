@@ -186,6 +186,7 @@
   "gui.piranport.ammo_workbench.craft": "合成",
   "gui.piranport.ammo_workbench.crafting": "合成中...",
   "gui.piranport.ammo_workbench.cancel": "取消",
+  "gui.piranport.ammo_select_hint": "移动鼠标选择弹种，松开Tab确认",
   "message.piranport.workbench_in_use": "合成台正在被其他玩家使用",
   "block.piranport.plate_food": "盘装食物",
   "block.piranport.bowl_food": "碗装食物",

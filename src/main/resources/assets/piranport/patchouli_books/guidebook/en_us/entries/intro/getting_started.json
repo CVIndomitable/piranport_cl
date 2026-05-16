@@ -15,6 +15,10 @@
     {
       "type": "patchouli:text",
       "text": "piranport.book.intro.getting_started.p3"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "piranport.book.intro.getting_started.p4"
     }
   ]
 }

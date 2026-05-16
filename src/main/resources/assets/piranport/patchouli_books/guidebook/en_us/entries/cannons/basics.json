@@ -22,6 +22,10 @@
       "type": "patchouli:crafting",
       "recipe": "piranport:large_gun",
       "text": "piranport.book.cannons.basics.large"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "piranport.book.cannons.basics.ops"
     }
   ]
 }

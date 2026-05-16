@@ -72,9 +72,11 @@ public class ModArtilleryConfig {
 
         BALLISTIC_SIMULATION_DT = BUILDER
             .comment(
-                "Ballistic simulation timestep in ticks (弹道模拟步长，tick为单位).",
-                "Smaller = higher precision but more CPU. 0.05 = 20 sub-steps per tick.",
-                "Range: 0.01-1.0, Default: 0.05 (步长0.05 tick)")
+                "[DEPRECATED] Ballistic simulation timestep in ticks (弹道模拟步长，tick为单位).",
+                "This parameter is no longer used. Simulation now uses fixed 1.0 tick timestep",
+                "to match CannonProjectileEntity physics exactly.",
+                "该参数已废弃。模拟现在使用固定的 1.0 tick 步长以匹配炮弹实体物理。",
+                "Range: 0.01-1.0, Default: 0.05 (已废弃)")
             .defineInRange("simulation_timestep", 0.05, 0.01, 1.0);
 
         BALLISTIC_NO_SOLUTION_THRESHOLD = BUILDER

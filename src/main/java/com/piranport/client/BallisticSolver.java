@@ -101,13 +101,15 @@ public final class BallisticSolver {
     }
 
     /**
-     * 数值弹道模拟，步长从 ModArtilleryConfig.BALLISTIC_SIMULATION_DT 读取，模型匹配 CannonProjectileEntity。
+     * 数值弹道模拟，模型与 CannonProjectileEntity.tick() 严格一致。
      * 最大步数从 ModEquipmentConfig.BALLISTIC_MAX_STEPS 读取。
      *
      * 物理模型与 CannonProjectileEntity.tick() 严格一致：
      * 1. 先应用阻力到速度（vx 和 vy 分别缩放）
      * 2. 再应用重力到 vy
      * 3. 最后更新位置
+     *
+     * 时间步长固定为 1.0 tick，与实体 tick 周期一致。
      */
     private static double simulate(double v0, double angle, double dragCoeff, double gravity, double targetX) {
         double vx = v0 * Math.cos(angle);
@@ -115,19 +117,18 @@ public final class BallisticSolver {
         double x = 0, y = 0;
         double dragFactor = Math.max(0.1, 1.0 - dragCoeff);
         int maxSteps = ModEquipmentConfig.BALLISTIC_MAX_STEPS.get();
-        double dt = ModArtilleryConfig.BALLISTIC_SIMULATION_DT.get();
 
         for (int step = 0; step < maxSteps; step++) {
             // 1. 应用阻力（与 CannonProjectileEntity.tick() 第130行一致）
-            vx *= Math.pow(dragFactor, dt);
-            vy *= Math.pow(dragFactor, dt);
+            vx *= dragFactor;
+            vy *= dragFactor;
 
             // 2. 应用重力（在阻力之后，与 super.tick() 顺序一致）
-            vy -= gravity * dt;
+            vy -= gravity;
 
             // 3. 位置更新
-            x += vx * dt;
-            y += vy * dt;
+            x += vx;
+            y += vy;
 
             // 到达目标水平距离
             if (x >= targetX) return y;

@@ -1,6 +1,8 @@
 package com.piranport.compat.jei;
 
 import com.piranport.PiranPort;
+import com.piranport.ammo.AmmoCategory;
+import com.piranport.ammo.AmmoRecipeRegistry;
 import com.piranport.menu.CookingPotMenu;
 import com.piranport.menu.StoneMillMenu;
 import com.piranport.recipe.CookingPotRecipe;
@@ -36,7 +38,8 @@ public class PiranPortJEIPlugin implements IModPlugin {
         registration.addRecipeCategories(
                 new CookingPotRecipeCategory(guiHelper),
                 new StoneMillRecipeCategory(guiHelper),
-                new CuttingBoardRecipeCategory(guiHelper)
+                new CuttingBoardRecipeCategory(guiHelper),
+                new AmmoWorkbenchRecipeCategory(guiHelper)
         );
     }
 
@@ -57,6 +60,12 @@ public class PiranPortJEIPlugin implements IModPlugin {
         registration.addRecipes(CuttingBoardRecipeCategory.RECIPE_TYPE,
                 rm.getAllRecipesFor(ModRecipeTypes.CUTTING_BOARD_TYPE.get())
                         .stream().map(RecipeHolder::value).toList());
+
+        // Ammo Workbench recipes (hardcoded registry)
+        registration.addRecipes(AmmoWorkbenchRecipeCategory.RECIPE_TYPE,
+                AmmoRecipeRegistry.getRecipesForCategory(AmmoCategory.SHELL).stream()
+                        .map(AmmoWorkbenchJEIRecipe::fromAmmoRecipe)
+                        .toList());
     }
 
     @Override
@@ -67,6 +76,8 @@ public class PiranPortJEIPlugin implements IModPlugin {
                 StoneMillRecipeCategory.RECIPE_TYPE);
         registration.addRecipeCatalyst(new ItemStack(ModBlocks.CUTTING_BOARD.get()),
                 CuttingBoardRecipeCategory.RECIPE_TYPE);
+        registration.addRecipeCatalyst(new ItemStack(ModBlocks.AMMO_WORKBENCH.get()),
+                AmmoWorkbenchRecipeCategory.RECIPE_TYPE);
     }
 
     @Override

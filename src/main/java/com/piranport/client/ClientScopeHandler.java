@@ -41,10 +41,11 @@ public final class ClientScopeHandler {
     /** 进入瞄准模式 */
     public static void enterScope(Player player, ItemStack weapon) {
         if (scoping) return;
+        zoomLevel = getZoomFromWeapon(weapon);
+        if (zoomLevel <= 0) return;
         scoping = true;
         holdTicks = 0;
         heldCannonBeforeScope = true;
-        zoomLevel = getZoomFromWeapon(weapon);
     }
 
     /** 退出瞄准模式 */

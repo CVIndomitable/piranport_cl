@@ -79,32 +79,20 @@ public class ArtilleryItem extends Item {
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
 
-        // Phase 12: 旁观者模式不响应开火
         if (player.isSpectator()) {
             return InteractionResultHolder.fail(stack);
         }
 
-        // 耐久检测：耐久为0时阻止发射
-        if (stack.isDamageableItem() && stack.getDamageValue() >= stack.getMaxDamage() - 1) {
-            if (!level.isClientSide) {
-                player.displayClientMessage(Component.translatable("message.piranport.cannon_damaged"), true);
-            }
-            return InteractionResultHolder.fail(stack);
-        }
-
-        // Phase 5: 客户端进入瞄准镜模式（返回 FAIL 阻止服务端调用 use()，开火通过 ScopeFirePayload）
         if (level.isClientSide) {
             if (com.piranport.combat.TransformationManager.isPlayerTransformed(player)) {
-                com.piranport.client.ClientScopeHandler.enterScope(player, stack);
+                if (com.piranport.client.ClientScopeHandler.isScoping()) {
+                    com.piranport.client.ClientScopeHandler.exitScope();
+                } else {
+                    com.piranport.client.ClientScopeHandler.enterScope(player, stack);
+                }
                 return InteractionResultHolder.fail(stack);
             }
             return InteractionResultHolder.pass(stack);
-        }
-
-        if (!com.piranport.config.ModCommonConfig.isShipCoreGuiEnabled()) {
-            if (ShipCoreItem.tryFireFromInventory(level, player, hand)) {
-                return InteractionResultHolder.consume(stack);
-            }
         }
 
         return InteractionResultHolder.pass(stack);
@@ -164,7 +152,7 @@ public class ArtilleryItem extends Item {
         // Phase 2: 调试模式
         if (PiranPortDebug.isServerEnabled()) {
             showDebugInfo(player, direction, speed, getDragCoeff(), getCustomGravity());
-            spawnPredictionTrail(level, player, direction, speed);
+            spawnPredictionTrail(level, player, direction, speed, getDragCoeff(), getCustomGravity());
         }
     }
 
@@ -196,18 +184,20 @@ public class ArtilleryItem extends Item {
                 true);
     }
 
-    /** 调试模式：用粒子绘制预测弹道。 */
-    private static void spawnPredictionTrail(Level level, Player player, Vec3 direction, float speed) {
+    /** 调试模式：用粒子绘制预测弹道（使用火炮实际物理参数）。 */
+    private static void spawnPredictionTrail(Level level, Player player, Vec3 direction, float speed,
+                                              float dragCoeff, float customGravity) {
         if (!(level instanceof net.minecraft.server.level.ServerLevel serverLevel)) return;
 
         double px = player.getX(), py = player.getY() + player.getEyeHeight(), pz = player.getZ();
         double vx = direction.x * speed, vy = direction.y * speed, vz = direction.z * speed;
-        double gravity = 0.05;
+        double drag = 1.0 - dragCoeff;
+        double gravity = customGravity / 196.0;
 
         for (int step = 0; step < 200; step++) {
-            vx *= 0.99;
-            vy = vy * 0.99 - gravity;
-            vz *= 0.99;
+            vx *= drag;
+            vy = vy * drag - gravity;
+            vz *= drag;
             px += vx; py += vy; pz += vz;
 
             if (step % 5 == 0) {

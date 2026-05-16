@@ -98,7 +98,8 @@ public class ClientTickHandler {
         com.piranport.aviation.ClientAswSonarData.resetClientState();
         ClientTorpedoGuidance.resetClientState();
         com.piranport.client.ClientScopeHandler.clear();
-        scopeWasDown = false;
+        useWasDown = false;
+        attackWasDown = false;
     }
 
     @SubscribeEvent
@@ -407,57 +408,51 @@ public class ClientTickHandler {
         handleScopeInput(mc);
     }
 
-    /** Phase 5: 检测右键长按/释放，管理瞄准镜状态和开火。 */
-    private static boolean scopeWasDown = false;
+    /** Phase 5: 右键切换瞄准镜，左键发射。 */
+    private static boolean attackWasDown = false;
+    private static boolean useWasDown = false;
 
     private static void handleScopeInput(Minecraft mc) {
         if (mc.player == null || mc.level == null) return;
-        boolean isDown = mc.options.keyUse.isDown();
-        boolean isHoldingCannon = com.piranport.client.ClientScopeHandler.isHoldingCannon(mc.player);
+        boolean holdingCannon = com.piranport.client.ClientScopeHandler.isHoldingCannon(mc.player);
         boolean isScoping = com.piranport.client.ClientScopeHandler.isScoping();
 
-        if (!isHoldingCannon && isScoping) {
-            // 切换物品后退出瞄准
+        if (!holdingCannon && isScoping) {
             com.piranport.client.ClientScopeHandler.exitScope();
-            scopeWasDown = false;
+            useWasDown = false;
+            attackWasDown = false;
             return;
         }
 
-        if (isDown && !scopeWasDown) {
-            // 右键刚刚按下
-            if (isHoldingCannon) {
-                // ScopeEnterPayload 在 ArtilleryItem.use() 中已通过 ClientScopeHandler.enterScope 处理
-                // 这里只需发送网络包告诉服务端
-                if (mc.getConnection() != null) {
-                    PacketDistributor.sendToServer(new com.piranport.network.ScopeEnterPayload());
-                }
+        // 右键：由 ArtilleryItem.use() 切换瞄准镜，此处只发网络包
+        boolean useDown = mc.options.keyUse.isDown();
+        if (useDown && !useWasDown && holdingCannon) {
+            if (mc.getConnection() != null) {
+                PacketDistributor.sendToServer(new com.piranport.network.ScopeEnterPayload(
+                        com.piranport.client.ClientScopeHandler.isScoping()));
             }
-            scopeWasDown = true;
-        } else if (!isDown && scopeWasDown) {
-            // 右键释放
-            if (isScoping) {
-                boolean isQuick = com.piranport.client.ClientScopeHandler.isQuickRelease();
-                if (isQuick) {
-                    // 快速点击 → 正常方向开火
-                    if (mc.getConnection() != null) {
+        }
+        useWasDown = useDown;
+
+        // 左键：开火
+        boolean attackDown = mc.options.keyAttack.isDown();
+        if (attackDown && !attackWasDown && holdingCannon) {
+            if (mc.getConnection() != null) {
+                if (isScoping) {
+                    net.minecraft.world.phys.Vec3 target = com.piranport.client.ClientScopeHandler.getAimedPosition();
+                    if (target != null) {
+                        PacketDistributor.sendToServer(
+                                com.piranport.network.ScopeFirePayload.aimedFire(target.x, target.y, target.z));
+                    } else {
                         PacketDistributor.sendToServer(com.piranport.network.ScopeFirePayload.quickFire());
                     }
                 } else {
-                    // 长按瞄准后释放 → 弹道解算开火
-                    net.minecraft.world.phys.Vec3 target = com.piranport.client.ClientScopeHandler.getAimedPosition();
-                    if (target != null && mc.getConnection() != null) {
-                        PacketDistributor.sendToServer(
-                                com.piranport.network.ScopeFirePayload.aimedFire(target.x, target.y, target.z));
-                    } else if (mc.getConnection() != null) {
-                        PacketDistributor.sendToServer(com.piranport.network.ScopeFirePayload.quickFire());
-                    }
+                    PacketDistributor.sendToServer(com.piranport.network.ScopeFirePayload.quickFire());
                 }
-                com.piranport.client.ClientScopeHandler.exitScope();
             }
-            scopeWasDown = false;
         }
+        attackWasDown = attackDown;
 
-        // 每 tick 更新瞄准状态（射线检测等）
         if (isScoping) {
             com.piranport.client.ClientScopeHandler.tick(mc.player, mc.player.getMainHandItem());
         }

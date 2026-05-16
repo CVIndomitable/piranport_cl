@@ -55,6 +55,9 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
     /** 混合因子：0.05 = 每 tick 约 5% 修正（平缓曲线）。 */
     private static final double TRACKING_STEER = 0.05;
 
+    /** 自定义重力（真实比例，使用时除以 196 换算为 MC 比例）。0 表示使用默认值。 */
+    private float customGravity = 0f;
+
     // ===== VT 近炸引信参数（从 ModArtilleryConfig 读取） =====
     /** VT 锥形检测范围（格），弹头前方该距离内的目标才会触发近炸。 */
     private double vtDetectRange = ModArtilleryConfig.VT_DETECT_RANGE.get();
@@ -94,6 +97,10 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
 
     public void setDragCoeff(float dragCoeff) {
         this.dragCoeff = dragCoeff;
+    }
+
+    public void setCustomGravity(float g) {
+        this.customGravity = g;
     }
 
     @Override
@@ -310,7 +317,8 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         super.onHitBlock(result);
         if (!level().isClientSide && !exploded) {
             if (isHE) {
-                Level.ExplosionInteraction interaction = ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get()
+                boolean breakBlocks = ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get() && !isInWater();
+                Level.ExplosionInteraction interaction = breakBlocks
                         ? Level.ExplosionInteraction.TNT : Level.ExplosionInteraction.NONE;
                 level().explode(this, getX(), getY(), getZ(), explosionPower, interaction);
                 level().playSound(null, getX(), getY(), getZ(),
@@ -343,7 +351,7 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
 
     @Override
     protected double getDefaultGravity() {
-        return 0.05;
+        return customGravity > 0f ? customGravity / 196.0 : 0.05;
     }
 
     @Override
@@ -356,6 +364,8 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         tag.putFloat("InitialSpeed", initialSpeed);
         tag.putFloat("DragCoeff", dragCoeff);
         tag.putInt("UnderwaterTicks", underwaterTicks);
+        tag.putBoolean("Exploded", exploded);
+        tag.putFloat("CustomGravity", customGravity);
     }
 
     @Override
@@ -374,6 +384,12 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         }
         if (tag.contains("UnderwaterTicks")) {
             underwaterTicks = tag.getInt("UnderwaterTicks");
+        }
+        if (tag.contains("Exploded")) {
+            exploded = tag.getBoolean("Exploded");
+        }
+        if (tag.contains("CustomGravity")) {
+            customGravity = tag.getFloat("CustomGravity");
         }
     }
 }

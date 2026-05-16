@@ -38,6 +38,8 @@ public class ModProjectilesConfig {
     public static final ModConfigSpec.DoubleValue ROCKET_EXPLOSION_RADIUS;
 
     // ==================== 炮弹 ====================
+    /** @deprecated 已废弃，请使用 ModArtilleryConfig.ARTILLERY_UNDERWATER_DESTROY_TIME。保留以兼容旧配置文件。 */
+    @Deprecated
     public static final ModConfigSpec.IntValue UNDERWATER_DESTROY_TICKS;
     public static final ModConfigSpec.DoubleValue UNDERWATER_EXPLOSION_MULTIPLIER;
     public static final ModConfigSpec.DoubleValue HE_ARMOR_PENETRATION;

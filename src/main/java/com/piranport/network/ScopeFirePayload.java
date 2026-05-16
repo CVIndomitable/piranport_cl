@@ -1,7 +1,6 @@
 package com.piranport.network;
 
 import com.piranport.PiranPort;
-import com.piranport.server.ScopingManager;
 import com.piranport.item.ShipCoreItem;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.network.codec.StreamCodec;
@@ -50,22 +49,26 @@ public record ScopeFirePayload(boolean useBallisticAim, double targetX, double t
     public static void handle(ScopeFirePayload payload, IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
             if (!(ctx.player() instanceof ServerPlayer player)) return;
-            ScopingManager.setScoping(player, false);
 
             ItemStack weapon = player.getItemInHand(InteractionHand.MAIN_HAND);
             if (weapon.isEmpty()) return;
 
             if (com.piranport.config.ModCommonConfig.isShipCoreGuiEnabled()) {
-                // GUI 模式：由 GUI 按钮开火，此处不做处理
                 return;
             }
 
             if (payload.useBallisticAim()) {
-                // 弹道解算瞄准开火
+                double dx = payload.targetX() - player.getX();
+                double dy = payload.targetY() - player.getY();
+                double dz = payload.targetZ() - player.getZ();
+                double distSq = dx * dx + dy * dy + dz * dz;
+                if (distSq > 300.0 * 300.0) {
+                    PiranPort.LOGGER.warn("ScopeFirePayload target too far ({}m), ignored", Math.sqrt(distSq));
+                    return;
+                }
                 ShipCoreItem.fireFromScope(player, weapon,
                         payload.targetX(), payload.targetY(), payload.targetZ());
             } else {
-                // 快速点击：正常方向开火
                 ShipCoreItem.tryFireFromInventory(player.level(), player, InteractionHand.MAIN_HAND);
             }
         });

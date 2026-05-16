@@ -362,8 +362,7 @@ public class ModCreativeTabs {
                         output.accept(ModItems.LARGE_AP_SHELL.get());
                         // VT Shell
                         output.accept(ModItems.SMALL_VT_SHELL.get());
-                        // Type 3 Shells
-                        output.accept(ModItems.SMALL_TYPE3_SHELL.get());
+                        // Type 3 Shells (8-21 口径，无小口径)
                         output.accept(ModItems.MEDIUM_TYPE3_SHELL.get());
                         output.accept(ModItems.LARGE_TYPE3_SHELL.get());
                         // Torpedo Ammo (legacy)

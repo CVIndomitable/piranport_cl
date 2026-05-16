@@ -4,7 +4,7 @@ import com.piranport.PiranPort;
 import com.piranport.component.SelectedAmmoType;
 import com.piranport.item.ShipCoreItem;
 import com.piranport.registry.ModDataComponents;
-import com.piranport.registry.ModKeyMappings;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.player.LocalPlayer;
@@ -23,18 +23,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * HUD 弹种选择器：手持火炮时按 Tab 键显示可用弹种。
- * 在热栏上方绘制弹种图标面板。
+ * 圆形轮盘弹种选择器：手持火炮时按 Tab 键在准星周围显示可选弹种。
+ * 图标排列在屏幕中央的圆形轮盘上，当前选中项高亮。
  */
 @EventBusSubscriber(modid = PiranPort.MOD_ID, value = Dist.CLIENT)
 public class AmmoSelectOverlay {
 
-    /** 松键后保持显示的 tick 数 */
     private static int showTicks = 0;
 
-    /** 键位处理器调用此方法"刷新"显示计时器。 */
     public static void bumpShow() {
-        showTicks = 40; // 2 秒（20 TPS）
+        showTicks = 40;
     }
 
     @SubscribeEvent
@@ -57,7 +55,6 @@ public class AmmoSelectOverlay {
             return;
         }
 
-        // 收集背包中可用的弹药类型
         List<Item> availableTypes = new ArrayList<>();
         for (ItemStack s : player.getInventory().items) {
             if (!s.isEmpty() && ShipCoreItem.matchesCaliber(s, weapon)) {
@@ -75,7 +72,6 @@ public class AmmoSelectOverlay {
 
         if (availableTypes.isEmpty()) return;
 
-        // 确定当前选中的弹种
         SelectedAmmoType selected = weapon.getOrDefault(ModDataComponents.SELECTED_AMMO_TYPE.get(), SelectedAmmoType.EMPTY);
         Item selectedItem = null;
         if (selected.hasSelection()) {
@@ -87,23 +83,26 @@ public class AmmoSelectOverlay {
 
         GuiGraphics gui = event.getGuiGraphics();
         int screenWidth = mc.getWindow().getGuiScaledWidth();
+        int screenHeight = mc.getWindow().getGuiScaledHeight();
+        int cx = screenWidth / 2;
+        int cy = screenHeight / 2;
 
-        // 在热栏上方绘制选择器面板
-        int panelY = mc.getWindow().getGuiScaledHeight() - 50;
+        int n = availableTypes.size();
+        double radius = 40.0;
         int slotSize = 18;
-        int gap = 2;
-        int totalWidth = availableTypes.size() * (slotSize + gap) - gap;
-        int startX = screenWidth / 2 - totalWidth / 2;
 
-        // Background for the whole panel
-        gui.fill(startX - 2, panelY - 2, startX + totalWidth + 2, panelY + slotSize + 12, 0xAA000000);
+        // 半透明背景遮罩
+        RenderSystem.enableBlend();
+        gui.fill(0, 0, screenWidth, screenHeight, 0x33000000);
 
-        for (int i = 0; i < availableTypes.size(); i++) {
+        for (int i = 0; i < n; i++) {
+            double angle = (2.0 * Math.PI * i / n) - Math.PI / 2.0;
+            int bx = (int) Math.round(cx + radius * Math.cos(angle) - slotSize / 2.0);
+            int by = (int) Math.round(cy + radius * Math.sin(angle) - slotSize / 2.0);
+
             Item ammoItem = availableTypes.get(i);
-            int bx = startX + i * (slotSize + gap);
             boolean isSelected = ammoItem == selectedItem;
 
-            // 背包中该弹种的数量
             int count = 0;
             for (ItemStack s : player.getInventory().items) {
                 if (s.getItem() == ammoItem) count += s.getCount();
@@ -111,24 +110,29 @@ public class AmmoSelectOverlay {
             ItemStack oh2 = player.getInventory().offhand.get(0);
             if (oh2.getItem() == ammoItem) count += oh2.getCount();
 
-            // Slot background
             if (isSelected) {
-                gui.fill(bx, panelY, bx + slotSize, panelY + slotSize, 0xFFFFFFFF);
-            } else {
-                gui.fill(bx, panelY, bx + slotSize, panelY + slotSize, 0x88666666);
+                gui.fill(bx - 1, by - 1, bx + slotSize + 1, by + slotSize + 1, 0xFFFFFFFF);
             }
+            gui.fill(bx, by, bx + slotSize, by + slotSize, 0xCC333333);
+            gui.renderFakeItem(new ItemStack(ammoItem, 1), bx, by);
 
-            // Item icon
-            gui.renderFakeItem(new ItemStack(ammoItem, 1), bx, panelY);
+            // 数量
+            String countStr = String.valueOf(count);
+            gui.drawString(mc.font, countStr,
+                    bx + slotSize - mc.font.width(countStr),
+                    by + slotSize - mc.font.lineHeight, 0xFFFFFF);
 
-            // Count text
-            gui.drawString(mc.font, String.valueOf(count), bx + slotSize - mc.font.width(String.valueOf(count)), panelY + slotSize, 0xFFFFFF);
-
-            // Name label below
+            // 名称在轮盘外侧
             String name = ammoItem.getDescription().getString();
             int nameW = mc.font.width(name);
-            int nameX = bx + (slotSize - nameW) / 2;
-            gui.drawString(mc.font, name, nameX, panelY + slotSize + 2, isSelected ? 0xFFFFFF : 0x888888);
+            double labelR = radius + slotSize + 4;
+            int lx = (int) Math.round(cx + labelR * Math.cos(angle) - nameW / 2.0);
+            int ly = (int) Math.round(cy + labelR * Math.sin(angle) - mc.font.lineHeight / 2.0);
+            gui.drawString(mc.font, name, lx, ly, isSelected ? 0xFFFFFF : 0xAAAAAA);
         }
+
+        // 中央提示文字
+        Component hint = Component.translatable("key.piranport.switch_ammo");
+        gui.drawCenteredString(mc.font, hint, cx, (int) Math.round(cy - radius - 20), 0xCCCCCC);
     }
 }

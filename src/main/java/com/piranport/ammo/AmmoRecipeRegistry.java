@@ -111,10 +111,7 @@ public class AmmoRecipeRegistry {
                 () -> ModItems.SMALL_VT_SHELL.get(), 4, 60,
                 mat(iron, 2), mat(gp, 1), mat(rs, 2), mat(comp, 1));
 
-        // Type 3
-        add("shell_t3_s", AmmoCategory.SHELL, "三式弹", "小口径",
-                () -> ModItems.SMALL_TYPE3_SHELL.get(), 8, 40,
-                mat(iron, 2), mat(gp, 2), mat(rs, 1));
+        // Type 3 (8-21 口径，无小口径配方)
         add("shell_t3_m", AmmoCategory.SHELL, "三式弹", "中口径",
                 () -> ModItems.MEDIUM_TYPE3_SHELL.get(), 8, 60,
                 mat(iron, 3), mat(gp, 3), mat(rs, 1));

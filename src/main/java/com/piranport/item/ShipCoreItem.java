@@ -1712,10 +1712,19 @@ public class ShipCoreItem extends Item {
     }
 
     private static float getProjectileInaccuracy(ItemStack weapon) {
+        Item item = weapon.getItem();
+        if (item instanceof com.piranport.artillery.ArtilleryItem ai) return ai.getDispersionAngle();
         if (isSmallCaliber(weapon)) return 1.5f;
         if (weapon.is(ModItems.MEDIUM_GUN.get())) return 1.0f;
         if (weapon.is(ModItems.LARGE_GUN.get())) return 0.5f;
         return 1.0f;
+    }
+
+    /** 从武器数据获取自定义重力（真实比例，0=使用默认）。 */
+    private static float getProjectileGravity(ItemStack weapon) {
+        Item item = weapon.getItem();
+        if (item instanceof com.piranport.artillery.ArtilleryItem ai) return ai.getCustomGravity();
+        return 0f;
     }
 
     /** Phase 2: 从武器数据获取阻力系数。 */
@@ -1786,6 +1795,7 @@ public class ShipCoreItem extends Item {
                         level, player, shellForRender, damage, isHE, explosionPower);
                 if (isVT) projectile.setVT(true);
                 projectile.setDragCoeff(getProjectileDrag(weapon));
+                projectile.setCustomGravity(getProjectileGravity(weapon));
 
                 if (aimTarget != null && b == 0) {
                     // Phase 5: 弹道解算瞄准（仅第一发使用精确角度，后续仍用散布，保持齐射散布自然）
@@ -1847,7 +1857,9 @@ public class ShipCoreItem extends Item {
 
         // 弹道解算最佳仰角
         float drag = getProjectileDrag(weapon);
-        double optimalPitch = BallisticSolver.solve(velocity, drag, BallisticSolver.DEFAULT_GRAVITY,
+        float gravity = getProjectileGravity(weapon);
+        double mcGravity = gravity > 0f ? gravity / 196.0 : BallisticSolver.DEFAULT_GRAVITY;
+        double optimalPitch = BallisticSolver.solve(velocity, drag, mcGravity,
                 horizontalDist, verticalDist);
 
         // MC 偏航角：atan2(-dx, dz) 映射到 MC 坐标（yaw=0 = +Z）

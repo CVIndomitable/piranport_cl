@@ -246,7 +246,6 @@ public class ShellEntity extends ThrowableItemProjectile {
                 result.getEntity().hurt(damageSources().thrown(this, getOwner()), damage);
                 doExplosion(false);
             }
-            discard();
         }
     }
 
@@ -255,7 +254,6 @@ public class ShellEntity extends ThrowableItemProjectile {
         super.onHitBlock(result);
         if (!level().isClientSide) {
             if ("AP".equals(shellType)) {
-                // Phase 6: AP 方块穿透
                 if (ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get() && !isInWater()) {
                     BlockPos pos = result.getBlockPos();
                     BlockState state = level().getBlockState(pos);
@@ -268,10 +266,8 @@ public class ShellEntity extends ThrowableItemProjectile {
                     }
                 }
             } else {
-                // Phase 3: 爆炸（方块破坏取决于 ModCommonConfig.EXPLOSION_BLOCK_DAMAGE）+ 范围伤害
                 doExplosion(false);
             }
-            discard();
         }
     }
 
@@ -280,7 +276,6 @@ public class ShellEntity extends ThrowableItemProjectile {
         super.onHit(result);
         if (!level().isClientSide) {
             level().broadcastEntityEvent(this, (byte) 3);
-            discard();
         }
     }
 

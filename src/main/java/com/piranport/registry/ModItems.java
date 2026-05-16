@@ -149,6 +149,9 @@ public class ModItems {
                     () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.vt_shell"));
 
     // ===== Type 3 (Sanshiki) Shells =====
+    // 设计方案三式弹口径范围 8~21，小口径三式弹已废弃（仅保留注册以兼容旧存档）
+    /** @deprecated 三式弹不应用于小口径（<7），仅保留注册兼容旧存档 */
+    @Deprecated
     public static final DeferredItem<Item> SMALL_TYPE3_SHELL =
             ITEMS.register("small_type3_shell",
                     () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.type3_shell"));

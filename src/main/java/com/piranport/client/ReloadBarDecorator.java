@@ -1,5 +1,7 @@
 package com.piranport.client;
 
+import com.piranport.item.ShipType;
+
 import com.piranport.combat.TransformationManager;
 import com.piranport.component.LoadedAmmo;
 import com.piranport.component.SlotCooldowns;
@@ -64,7 +66,7 @@ public class ReloadBarDecorator implements IItemDecorator {
         if (!(stack.getItem() instanceof ShipCoreItem sci)) return false;
         if (!TransformationManager.isTransformed(stack)) return false;
 
-        ShipCoreItem.ShipType type = sci.getShipType();
+        ShipType type = sci.getShipType();
         ItemContainerContents contents = stack.getOrDefault(
                 ModDataComponents.SHIP_CORE_CONTENTS.get(), ItemContainerContents.EMPTY);
         NonNullList<ItemStack> items = NonNullList.withSize(type.totalSlots(), ItemStack.EMPTY);
@@ -129,27 +131,9 @@ public class ReloadBarDecorator implements IItemDecorator {
                 // empty bar: background already drawn above
             } else if (cd <= 0f) {
                 // Ready: solid bright color — but only if ammo is actually available.
-                // For cannons in auto-resupply mode, verify matching ammo exists in the core's ammo slots;
-                // in manual mode, check if the weapon has loaded ammo.
-                if (weapon.getItem() instanceof CannonItem ci) {
-                    boolean hasAmmo = false;
-                    if (com.piranport.config.ModCommonConfig.AUTO_RESUPPLY_ENABLED.get()) {
-                        hasAmmo = hasCannonAmmoInPool(weapon, items, type);
-                    } else {
-                        LoadedAmmo loaded = weapon.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
-                        hasAmmo = loaded.hasAmmo() && loaded.count() >= ci.getBarrelCount();
-                    }
-                    if (hasAmmo) {
-                        gui.fill(barX, barY, barX + BAR_MAX_W, barY + 1, readyColor);
-                    }
-                } else if (weapon.getItem() instanceof com.piranport.artillery.ArtilleryItem ai) {
-                    boolean hasAmmo = false;
-                    if (com.piranport.config.ModCommonConfig.AUTO_RESUPPLY_ENABLED.get()) {
-                        hasAmmo = hasCannonAmmoInPool(weapon, items, type);
-                    } else {
-                        LoadedAmmo loaded = weapon.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
-                        hasAmmo = loaded.hasAmmo() && loaded.count() >= ai.getBarrelCount();
-                    }
+                // Phase 4: all cannons auto-resupply, check ammo pool on core.
+                if (weapon.getItem() instanceof CannonItem || weapon.getItem() instanceof com.piranport.artillery.ArtilleryItem) {
+                    boolean hasAmmo = hasCannonAmmoInPool(weapon, items, type);
                     if (hasAmmo) {
                         gui.fill(barX, barY, barX + BAR_MAX_W, barY + 1, readyColor);
                     }
@@ -173,7 +157,7 @@ public class ReloadBarDecorator implements IItemDecorator {
 
     private static boolean hasCannonAmmoInPool(ItemStack weapon,
                                                net.minecraft.core.NonNullList<ItemStack> items,
-                                               ShipCoreItem.ShipType type) {
+                                               ShipType type) {
         int ammoEnd = type.weaponSlots + type.ammoSlots;
         for (int i = type.weaponSlots; i < ammoEnd; i++) {
             ItemStack ammo = items.get(i);

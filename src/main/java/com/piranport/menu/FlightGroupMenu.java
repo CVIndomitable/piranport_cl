@@ -2,6 +2,7 @@ package com.piranport.menu;
 
 import com.piranport.component.FlightGroupData;
 import com.piranport.item.ShipCoreItem;
+import com.piranport.item.ShipType;
 import com.piranport.registry.ModDataComponents;
 import com.piranport.registry.ModMenuTypes;
 import net.minecraft.core.NonNullList;
@@ -39,7 +40,7 @@ public class FlightGroupMenu extends AbstractContainerMenu {
                 ModDataComponents.FLIGHT_GROUP_DATA.get(), FlightGroupData.empty());
 
         // Determine weapon slot count and load weapon items
-        ShipCoreItem.ShipType shipType = ShipCoreItem.ShipType.SMALL;
+        ShipType shipType = ShipType.SMALL;
         if (coreStack.getItem() instanceof ShipCoreItem sci) {
             shipType = sci.getShipType();
         }

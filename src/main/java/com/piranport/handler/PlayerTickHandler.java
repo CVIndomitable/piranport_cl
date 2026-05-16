@@ -1,5 +1,7 @@
 package com.piranport.handler;
 
+import com.piranport.item.ShipType;
+
 import com.piranport.PiranPort;
 import com.piranport.aviation.FireControlManager;
 import com.piranport.aviation.ReconManager;
@@ -82,7 +84,7 @@ public class PlayerTickHandler {
 
         ItemStack transformedCore = TransformationManager.findTransformedCore(player);
         boolean isSubmarine = transformedCore.getItem() instanceof ShipCoreItem sci
-                && sci.getShipType() == ShipCoreItem.ShipType.SUBMARINE;
+                && sci.getShipType() == ShipType.SUBMARINE;
 
         handleWaterWalkingIfNeeded(player, isSubmarine);
         tickSubmarineEffects(player, isSubmarine);

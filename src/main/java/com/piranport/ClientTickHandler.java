@@ -1,5 +1,7 @@
 package com.piranport;
 
+import com.piranport.item.ShipType;
+
 import com.piranport.aviation.ClientFireControlData;
 import com.piranport.aviation.ClientReconData;
 import com.piranport.client.CameraShakeHandler;
@@ -182,7 +184,7 @@ public class ClientTickHandler {
         if (transformed) {
             ItemStack coreStack = TransformationManager.findTransformedCore(mc.player);
             if (!coreStack.isEmpty() && coreStack.getItem() instanceof ShipCoreItem sci
-                    && sci.getShipType() == ShipCoreItem.ShipType.LARGE) {
+                    && sci.getShipType() == ShipType.LARGE) {
                 if (mc.player.hurtTime > 0) {
                     mc.player.hurtTime = 0;
                     mc.player.hurtDuration = 0;

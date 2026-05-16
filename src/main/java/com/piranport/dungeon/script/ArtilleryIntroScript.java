@@ -1,5 +1,7 @@
 package com.piranport.dungeon.script;
 
+import com.piranport.item.ShipType;
+
 import com.piranport.PiranPort;
 import com.piranport.combat.TransformationManager;
 import com.piranport.dungeon.DungeonConstants;
@@ -316,7 +318,7 @@ public class ArtilleryIntroScript implements DungeonScript {
             ServerPlayer player = level.getServer().getPlayerList().getPlayer(uuid);
             if (player == null) continue;
 
-            ShipCoreItem.ShipType shipType = getPlayerShipType(player);
+            ShipType shipType = getPlayerShipType(player);
 
             // Determine cannon and ammo based on ship type
             ItemStack cannon;
@@ -430,7 +432,7 @@ public class ArtilleryIntroScript implements DungeonScript {
 
         var rng = level.getRandom();
         for (ServerPlayer player : online) {
-            ShipCoreItem.ShipType shipType = getPlayerShipType(player);
+            ShipType shipType = getPlayerShipType(player);
             int count = switch (shipType) {
                 case LARGE -> 6;
                 case MEDIUM -> 4;
@@ -543,7 +545,7 @@ public class ArtilleryIntroScript implements DungeonScript {
     /**
      * Determine the player's current ship type. Falls back to SMALL if not transformed.
      */
-    private ShipCoreItem.ShipType getPlayerShipType(ServerPlayer player) {
+    private ShipType getPlayerShipType(ServerPlayer player) {
         ItemStack core = TransformationManager.findTransformedCore(player);
         if (!core.isEmpty() && core.getItem() instanceof ShipCoreItem sci) {
             return sci.getShipType();
@@ -554,6 +556,6 @@ public class ArtilleryIntroScript implements DungeonScript {
                 return sci.getShipType();
             }
         }
-        return ShipCoreItem.ShipType.SMALL;
+        return ShipType.SMALL;
     }
 }

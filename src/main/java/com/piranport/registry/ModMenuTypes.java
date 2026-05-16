@@ -1,7 +1,6 @@
 package com.piranport.registry;
 
 import com.piranport.PiranPort;
-import com.piranport.menu.ShipCoreMenu;
 import com.piranport.menu.CookingPotMenu;
 import com.piranport.menu.FlightGroupMenu;
 import com.piranport.menu.ReloadFacilityMenu;
@@ -15,10 +14,6 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 public class ModMenuTypes {
     public static final DeferredRegister<MenuType<?>> MENU_TYPES =
             DeferredRegister.create(Registries.MENU, PiranPort.MOD_ID);
-
-    public static final DeferredHolder<MenuType<?>, MenuType<ShipCoreMenu>> SHIP_CORE_MENU =
-            MENU_TYPES.register("ship_core",
-                    () -> IMenuTypeExtension.create(ShipCoreMenu::fromNetwork));
 
     public static final DeferredHolder<MenuType<?>, MenuType<StoneMillMenu>> STONE_MILL_MENU =
             MENU_TYPES.register("stone_mill",

@@ -3,6 +3,7 @@ package com.piranport.combat;
 import com.piranport.PiranPort;
 import com.piranport.item.ArmorPlateItem;
 import com.piranport.item.ShipCoreItem;
+import com.piranport.item.ShipType;
 import com.piranport.item.SonarItem;
 import com.piranport.item.TorpedoReloadItem;
 import com.piranport.item.EngineItem;
@@ -60,20 +61,9 @@ public class TransformationManager {
         return coreStack.getOrDefault(ModDataComponents.SHIP_CORE_TRANSFORMED.get(), false);
     }
 
-    /** 查找当前激活的变身核心。无GUI模式：仅副手。GUI模式：主手 → 背包 → 副手。 */
+    /** 查找当前激活的变身核心。无GUI模式：仅副手。 */
     public static ItemStack findTransformedCore(net.minecraft.world.entity.player.Player player) {
-        if (!com.piranport.config.ModCommonConfig.isShipCoreGuiEnabled()) {
-            // 无GUI模式：仅副手核心有效
-            ItemStack offhand = player.getOffhandItem();
-            if (offhand.getItem() instanceof ShipCoreItem && isTransformed(offhand)) return offhand;
-            return ItemStack.EMPTY;
-        }
-        // GUI模式：扫描所有槽位
-        ItemStack mainHand = player.getMainHandItem();
-        if (mainHand.getItem() instanceof ShipCoreItem && isTransformed(mainHand)) return mainHand;
-        for (ItemStack s : player.getInventory().items) {
-            if (s.getItem() instanceof ShipCoreItem && isTransformed(s)) return s;
-        }
+        // 无GUI模式：仅副手核心有效
         ItemStack offhand = player.getOffhandItem();
         if (offhand.getItem() instanceof ShipCoreItem && isTransformed(offhand)) return offhand;
         return ItemStack.EMPTY;
@@ -88,58 +78,8 @@ public class TransformationManager {
         coreStack.set(ModDataComponents.SHIP_CORE_TRANSFORMED.get(), transformed);
     }
 
-    public static int getWeaponIndex(ItemStack coreStack) {
-        return coreStack.getOrDefault(ModDataComponents.SHIP_CORE_WEAPON_INDEX.get(), 0);
-    }
-
-    public static void setWeaponIndex(ItemStack coreStack, int index) {
-        coreStack.set(ModDataComponents.SHIP_CORE_WEAPON_INDEX.get(), index);
-    }
-
-    /** 切换到下一个非空武器槽，由服务端通过网络包调用 */
     public static void cycleWeapon(Player player) {
-        ItemStack mainHand = player.getMainHandItem();
-        if (!(mainHand.getItem() instanceof ShipCoreItem)) return;
-        if (!isTransformed(mainHand)) return;
-
-        if (!com.piranport.config.ModCommonConfig.isShipCoreGuiEnabled()) {
-            // 无GUI模式：武器由玩家手持决定，不需要切换
-            return;
-        }
-
-        ShipCoreItem sci = (ShipCoreItem) mainHand.getItem();
-        int weaponSlots = sci.getShipType().weaponSlots;
-        ItemContainerContents contents = mainHand.getOrDefault(
-                ModDataComponents.SHIP_CORE_CONTENTS.get(), ItemContainerContents.EMPTY);
-        NonNullList<ItemStack> items = NonNullList.withSize(sci.getShipType().totalSlots(), ItemStack.EMPTY);
-        contents.copyInto(items);
-
-        // 校验 weaponSlots 不超过容器大小，防止索引溢出
-        if (weaponSlots > items.size()) {
-            com.piranport.PiranPort.LOGGER.warn("Weapon slots ({}) exceeds container size ({}) for core {}. Data may be corrupted.",
-                    weaponSlots, items.size(), sci.getShipType());
-            player.sendSystemMessage(net.minecraft.network.chat.Component.translatable(
-                    "piranport.ship_core.data_corrupted"));
-            weaponSlots = items.size();
-        }
-
-        // 防止下方取模运算出现除零
-        if (weaponSlots <= 0) weaponSlots = 1;
-
-        int current = Math.min(getWeaponIndex(mainHand), weaponSlots - 1);
-        int next = -1;
-        for (int i = 1; i <= weaponSlots; i++) {
-            int candidate = (current + i) % weaponSlots;
-            if (candidate >= 0 && candidate < items.size() && !items.get(candidate).isEmpty()) {
-                next = candidate;
-                break;
-            }
-        }
-        if (next == -1) return;
-
-        setWeaponIndex(mainHand, next);
-        player.displayClientMessage(
-                Component.translatable("message.piranport.weapon_selected", items.get(next).getHoverName()), true);
+        // 无GUI模式：武器由玩家手持决定，不需要切换
     }
 
     /** 返回 true 表示可发射/投放的物品（火炮、鱼雷发射器、飞机 — 不含核心、装甲、弹药） */
@@ -166,46 +106,7 @@ public class TransformationManager {
         if (player.level().isClientSide()) return;
         if (!(coreStack.getItem() instanceof ShipCoreItem)) return;
 
-        if (!com.piranport.config.ModCommonConfig.isShipCoreGuiEnabled()) {
-            applyAttributesInventoryMode(player);
-            return;
-        }
-
-        // GUI模式：从核心容器槽读取装备
-        ShipCoreItem sci = (ShipCoreItem) coreStack.getItem();
-        ShipCoreItem.ShipType type = sci.getShipType();
-        ItemContainerContents contents = coreStack.getOrDefault(
-                ModDataComponents.SHIP_CORE_CONTENTS.get(), ItemContainerContents.EMPTY);
-        NonNullList<ItemStack> items = NonNullList.withSize(type.totalSlots(), ItemStack.EMPTY);
-        contents.copyInto(items);
-
-        int armorBonus = 0;
-        double engineSpeedBonus = 0;
-        int totalLoad = 0;
-
-        // 武器槽计入负重
-        for (int i = 0; i < type.weaponSlots; i++) {
-            totalLoad += getItemLoad(items.get(i));
-        }
-        // 强化槽计入负重、护甲和引擎速度
-        int eStart = type.weaponSlots + type.ammoSlots;
-        for (int i = eStart; i < type.totalSlots(); i++) {
-            ItemStack item = items.get(i);
-            totalLoad += getItemLoad(item);
-            if (item.getItem() instanceof ArmorPlateItem plate) {
-                armorBonus += plate.getArmorBonus();
-            } else if (item.getItem() instanceof EngineItem engine) {
-                engineSpeedBonus += engine.getSpeedBonus();
-            }
-        }
-
-        double loadRatio = type.maxLoad > 0 ? (double) totalLoad / type.maxLoad : 0;
-        double speedMult = type.emptySpeed - (type.emptySpeed - type.fullLoadSpeed) * Math.min(loadRatio, 1.0);
-        speedMult += engineSpeedBonus;
-
-        removeTransformationAttributes(player);
-        applyTypeAttributes(player, type, armorBonus, speedMult);
-        applyOverweightPenalty(player, totalLoad, type.maxLoad);
+        applyAttributesInventoryMode(player);
     }
 
     /** 快捷栏槽位数（Inventory.items 的 0–8 号槽） */
@@ -219,7 +120,7 @@ public class TransformationManager {
     private static void applyAttributesInventoryMode(Player player) {
         net.minecraft.world.entity.player.Inventory inv = player.getInventory();
         // 找到 maxLoad 最高的核心并记录其 ShipType
-        ShipCoreItem.ShipType bestType = null;
+        ShipType bestType = null;
         int scanLimit = HOTBAR_SIZE;
         for (int i = 0; i < scanLimit; i++) {
             ItemStack stack = inv.items.get(i);
@@ -314,28 +215,9 @@ public class TransformationManager {
         return total;
     }
 
-    /**
-     * Returns the total protection level from ArmorPlateItems in GUI mode
-     * (read from SHIP_CORE_CONTENTS enhancement slots) or no-GUI mode (SHIP_CORE_ARMOR).
-     */
+    /** Returns the total protection level from ArmorPlateItems stored in SHIP_CORE_ARMOR. */
     public static int getEquippedProtectionLevel(Player player, ItemStack coreStack) {
-        if (!(coreStack.getItem() instanceof ShipCoreItem sci)) return 0;
-        ShipCoreItem.ShipType type = sci.getShipType();
-
-        if (com.piranport.config.ModCommonConfig.isShipCoreGuiEnabled()) {
-            ItemContainerContents contents = coreStack.getOrDefault(
-                    ModDataComponents.SHIP_CORE_CONTENTS.get(), ItemContainerContents.EMPTY);
-            NonNullList<ItemStack> items = NonNullList.withSize(type.totalSlots(), ItemStack.EMPTY);
-            contents.copyInto(items);
-            int total = 0;
-            int eStart = type.weaponSlots + type.ammoSlots;
-            for (int i = eStart; i < type.totalSlots(); i++) {
-                if (items.get(i).getItem() instanceof ArmorPlateItem plate) total += plate.getProtectionLevel();
-            }
-            return total;
-        } else {
-            return getCoreProtectionLevel(coreStack);
-        }
+        return getCoreProtectionLevel(coreStack);
     }
 
     /**
@@ -463,7 +345,7 @@ public class TransformationManager {
     /**
      * Apply all type-based attribute modifiers: health, armor (base + plates), toughness, speed.
      */
-    private static void applyTypeAttributes(Player player, ShipCoreItem.ShipType type,
+    private static void applyTypeAttributes(Player player, ShipType type,
                                              int plateArmorBonus, double speedMult) {
         AttributeInstance healthAttr = player.getAttribute(Attributes.MAX_HEALTH);
         AttributeInstance armorAttr = player.getAttribute(Attributes.ARMOR);
@@ -548,64 +430,28 @@ public class TransformationManager {
         return 0;
     }
 
-    /**
-     * Check if the transformed player has a SonarItem equipped in enhancement slots.
-     * Works in both GUI mode (SHIP_CORE_CONTENTS) and no-GUI mode (SHIP_CORE_ARMOR).
-     */
+    /** Check if a SonarItem is stored in SHIP_CORE_ARMOR. */
     public static boolean hasSonarEquipped(Player player, ItemStack coreStack) {
         if (!(coreStack.getItem() instanceof ShipCoreItem sci)) return false;
-        ShipCoreItem.ShipType type = sci.getShipType();
-
-        if (com.piranport.config.ModCommonConfig.isShipCoreGuiEnabled()) {
-            // GUI mode: check enhancement slots in SHIP_CORE_CONTENTS
-            ItemContainerContents contents = coreStack.getOrDefault(
-                    ModDataComponents.SHIP_CORE_CONTENTS.get(), ItemContainerContents.EMPTY);
-            NonNullList<ItemStack> items = NonNullList.withSize(type.totalSlots(), ItemStack.EMPTY);
-            contents.copyInto(items);
-            int eStart = type.weaponSlots + type.ammoSlots;
-            for (int i = eStart; i < type.totalSlots(); i++) {
-                if (items.get(i).getItem() instanceof SonarItem) return true;
-            }
-        } else {
-            // 无GUI模式：检查 SHIP_CORE_ARMOR 存储
-            ItemContainerContents contents = coreStack.getOrDefault(
-                    ModDataComponents.SHIP_CORE_ARMOR.get(), ItemContainerContents.EMPTY);
-            NonNullList<ItemStack> stored = NonNullList.withSize(type.enhancementSlots, ItemStack.EMPTY);
-            contents.copyInto(stored);
-            for (ItemStack s : stored) {
-                if (s.getItem() instanceof SonarItem) return true;
-            }
+        ItemContainerContents contents = coreStack.getOrDefault(
+                ModDataComponents.SHIP_CORE_ARMOR.get(), ItemContainerContents.EMPTY);
+        NonNullList<ItemStack> stored = NonNullList.withSize(sci.getShipType().enhancementSlots, ItemStack.EMPTY);
+        contents.copyInto(stored);
+        for (ItemStack s : stored) {
+            if (s.getItem() instanceof SonarItem) return true;
         }
         return false;
     }
 
-    /**
-     * Check if the transformed player has a TorpedoReloadItem equipped in enhancement slots.
-     * Works in both GUI mode (SHIP_CORE_CONTENTS) and no-GUI mode (SHIP_CORE_ARMOR).
-     */
+    /** Check if a TorpedoReloadItem is stored in SHIP_CORE_ARMOR. */
     public static boolean hasTorpedoReloadEquipped(Player player, ItemStack coreStack) {
         if (!(coreStack.getItem() instanceof ShipCoreItem sci)) return false;
-        ShipCoreItem.ShipType type = sci.getShipType();
-
-        if (com.piranport.config.ModCommonConfig.isShipCoreGuiEnabled()) {
-            // GUI mode: check enhancement slots in SHIP_CORE_CONTENTS
-            ItemContainerContents contents = coreStack.getOrDefault(
-                    ModDataComponents.SHIP_CORE_CONTENTS.get(), ItemContainerContents.EMPTY);
-            NonNullList<ItemStack> items = NonNullList.withSize(type.totalSlots(), ItemStack.EMPTY);
-            contents.copyInto(items);
-            int eStart = type.weaponSlots + type.ammoSlots;
-            for (int i = eStart; i < type.totalSlots(); i++) {
-                if (items.get(i).getItem() instanceof TorpedoReloadItem) return true;
-            }
-        } else {
-            // 无GUI模式：检查 SHIP_CORE_ARMOR 存储
-            ItemContainerContents contents = coreStack.getOrDefault(
-                    ModDataComponents.SHIP_CORE_ARMOR.get(), ItemContainerContents.EMPTY);
-            NonNullList<ItemStack> stored = NonNullList.withSize(type.enhancementSlots, ItemStack.EMPTY);
-            contents.copyInto(stored);
-            for (ItemStack s : stored) {
-                if (s.getItem() instanceof TorpedoReloadItem) return true;
-            }
+        ItemContainerContents contents = coreStack.getOrDefault(
+                ModDataComponents.SHIP_CORE_ARMOR.get(), ItemContainerContents.EMPTY);
+        NonNullList<ItemStack> stored = NonNullList.withSize(sci.getShipType().enhancementSlots, ItemStack.EMPTY);
+        contents.copyInto(stored);
+        for (ItemStack s : stored) {
+            if (s.getItem() instanceof TorpedoReloadItem) return true;
         }
         return false;
     }

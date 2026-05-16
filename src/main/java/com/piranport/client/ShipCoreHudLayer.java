@@ -1,5 +1,7 @@
 package com.piranport.client;
 
+import com.piranport.item.ShipType;
+
 import com.piranport.PiranPort;
 import com.piranport.combat.TransformationManager;
 import com.piranport.component.SlotCooldowns;
@@ -35,7 +37,7 @@ public class ShipCoreHudLayer {
         if (!(mainHand.getItem() instanceof ShipCoreItem sci)) return;
         if (!TransformationManager.isTransformed(mainHand)) return;
 
-        ShipCoreItem.ShipType type = sci.getShipType();
+        ShipType type = sci.getShipType();
         ItemContainerContents contents = mainHand.getOrDefault(
                 ModDataComponents.SHIP_CORE_CONTENTS.get(), ItemContainerContents.EMPTY);
         NonNullList<ItemStack> items = NonNullList.withSize(type.totalSlots(), ItemStack.EMPTY);

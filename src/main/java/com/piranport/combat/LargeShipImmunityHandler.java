@@ -2,6 +2,7 @@ package com.piranport.combat;
 
 import com.piranport.PiranPort;
 import com.piranport.item.ShipCoreItem;
+import com.piranport.item.ShipType;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
@@ -45,6 +46,6 @@ public final class LargeShipImmunityHandler {
         ItemStack coreStack = TransformationManager.findTransformedCore(player);
         if (coreStack.isEmpty()) return false;
         if (!(coreStack.getItem() instanceof ShipCoreItem sci)) return false;
-        return sci.getShipType() == ShipCoreItem.ShipType.LARGE;
+        return sci.getShipType() == ShipType.LARGE;
     }
 }

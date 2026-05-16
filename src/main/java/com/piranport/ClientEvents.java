@@ -10,7 +10,7 @@ import com.piranport.menu.AmmoWorkbenchScreen;
 import com.piranport.menu.CookingPotScreen;
 import com.piranport.menu.FlightGroupScreen;
 import com.piranport.menu.ReloadFacilityScreen;
-import com.piranport.menu.ShipCoreScreen;
+
 import com.piranport.menu.StoneMillScreen;
 import com.piranport.registry.ModBlockEntityTypes;
 import com.piranport.registry.ModDataComponents;
@@ -58,7 +58,6 @@ public class ClientEvents {
 
     @SubscribeEvent
     public static void registerScreens(RegisterMenuScreensEvent event) {
-        event.register(ModMenuTypes.SHIP_CORE_MENU.get(), ShipCoreScreen::new);
         event.register(ModMenuTypes.STONE_MILL_MENU.get(), StoneMillScreen::new);
         event.register(ModMenuTypes.COOKING_POT_MENU.get(), CookingPotScreen::new);
         event.register(ModMenuTypes.FLIGHT_GROUP_MENU.get(), FlightGroupScreen::new);
@@ -84,6 +83,7 @@ public class ClientEvents {
         event.register(ModKeyMappings.TOGGLE_AUTO_LAUNCH);
         event.register(ModKeyMappings.DEBUG_TOGGLE);
         event.register(ModKeyMappings.MANUAL_RELOAD);
+        event.register(ModKeyMappings.SWITCH_AMMO);
         event.register(ModKeyMappings.DEBUG_COOLDOWN_OVERRIDE);
         event.register(ModKeyMappings.HIT_DISPLAY_TOGGLE);
     }

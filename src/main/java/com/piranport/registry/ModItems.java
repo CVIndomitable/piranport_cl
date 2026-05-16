@@ -1,5 +1,7 @@
 package com.piranport.registry;
 
+import com.piranport.item.ShipType;
+
 import com.piranport.PiranPort;
 import com.piranport.component.AircraftInfo;
 import com.piranport.component.FuelData;
@@ -98,26 +100,26 @@ public class ModItems {
             ITEMS.register("small_ship_core",
                     () -> new ShipCoreItem(new Item.Properties().stacksTo(1)
                             .component(ModDataComponents.SHIP_CORE_FUEL.get(),
-                                    new FuelData(0, ShipCoreItem.ShipType.SMALL.fuelCapacity)),
-                            ShipCoreItem.ShipType.SMALL));
+                                    new FuelData(0, ShipType.SMALL.fuelCapacity)),
+                            ShipType.SMALL));
     public static final DeferredItem<ShipCoreItem> MEDIUM_SHIP_CORE =
             ITEMS.register("medium_ship_core",
                     () -> new ShipCoreItem(new Item.Properties().stacksTo(1)
                             .component(ModDataComponents.SHIP_CORE_FUEL.get(),
-                                    new FuelData(0, ShipCoreItem.ShipType.MEDIUM.fuelCapacity)),
-                            ShipCoreItem.ShipType.MEDIUM));
+                                    new FuelData(0, ShipType.MEDIUM.fuelCapacity)),
+                            ShipType.MEDIUM));
     public static final DeferredItem<ShipCoreItem> LARGE_SHIP_CORE =
             ITEMS.register("large_ship_core",
                     () -> new ShipCoreItem(new Item.Properties().stacksTo(1)
                             .component(ModDataComponents.SHIP_CORE_FUEL.get(),
-                                    new FuelData(0, ShipCoreItem.ShipType.LARGE.fuelCapacity)),
-                            ShipCoreItem.ShipType.LARGE));
+                                    new FuelData(0, ShipType.LARGE.fuelCapacity)),
+                            ShipType.LARGE));
     public static final DeferredItem<ShipCoreItem> SUBMARINE_CORE =
             ITEMS.register("submarine_core",
                     () -> new ShipCoreItem(new Item.Properties().stacksTo(1)
                             .component(ModDataComponents.SHIP_CORE_FUEL.get(),
-                                    new FuelData(0, ShipCoreItem.ShipType.SUBMARINE.fuelCapacity)),
-                            ShipCoreItem.ShipType.SUBMARINE));
+                                    new FuelData(0, ShipType.SUBMARINE.fuelCapacity)),
+                            ShipType.SUBMARINE));
 
     // ===== HE Shells =====
     public static final DeferredItem<Item> SMALL_HE_SHELL =

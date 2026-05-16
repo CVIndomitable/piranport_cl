@@ -32,6 +32,18 @@ public class ModEquipmentConfig {
     public static final ModConfigSpec.DoubleValue ARMOR_PLATE_PROTECTION;
     public static final ModConfigSpec.DoubleValue ARMOR_PLATE_TOUGHNESS;
 
+    // ==================== Phase 5: 弹道解算 ====================
+    /** 二分法最大迭代次数 */
+    public static final ModConfigSpec.IntValue BALLISTIC_MAX_ITERATIONS;
+    /** 弹道模拟步长（MC tick） */
+    public static final ModConfigSpec.IntValue BALLISTIC_MAX_STEPS;
+    /** 精度阈值（格） */
+    public static final ModConfigSpec.DoubleValue BALLISTIC_ACCURACY;
+    /** 最大缓存解数量 */
+    public static final ModConfigSpec.IntValue BALLISTIC_CACHE_SIZE;
+    /** 进入瞄准所需最小长按 tick 数 */
+    public static final ModConfigSpec.IntValue SCOPE_ACTIVATION_TICKS;
+
     static {
         // ==================== 再装填设施 ====================
         BUILDER.push("equipment");
@@ -95,6 +107,31 @@ public class ModEquipmentConfig {
         FIRE_CONTROL_COOLDOWN = BUILDER
             .comment("Cooldown in ticks (20 ticks = 1 second) (冷却时间，20 tick = 1秒)")
             .defineInRange("cooldown_ticks", 200, 20, 6000);
+
+        BUILDER.pop();
+
+        // ==================== Phase 5: 弹道解算 ====================
+        BUILDER.push("ballistic");
+
+        BALLISTIC_MAX_ITERATIONS = BUILDER
+            .comment("Maximum bisection iterations (二分法最大迭代次数)")
+            .defineInRange("max_iterations", 20, 5, 100);
+
+        BALLISTIC_MAX_STEPS = BUILDER
+            .comment("Maximum simulation steps per trajectory (弹道模拟最大步数)")
+            .defineInRange("max_steps", 200, 50, 1000);
+
+        BALLISTIC_ACCURACY = BUILDER
+            .comment("Accuracy threshold in blocks (弹道解算精度阈值，格)")
+            .defineInRange("accuracy", 0.5, 0.1, 5.0);
+
+        BALLISTIC_CACHE_SIZE = BUILDER
+            .comment("Ballistic cache size (弹道解算缓存大小)")
+            .defineInRange("cache_size", 32, 1, 256);
+
+        SCOPE_ACTIVATION_TICKS = BUILDER
+            .comment("Minimum right-click hold ticks to activate scope (瞄准激活所需长按 tick 数)")
+            .defineInRange("activation_ticks", 5, 1, 40);
 
         BUILDER.pop();
 

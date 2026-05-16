@@ -3,7 +3,6 @@ package com.piranport.client;
 import com.piranport.combat.TransformationManager;
 import com.piranport.component.LoadedAmmo;
 import com.piranport.component.WeaponCooldown;
-import com.piranport.config.ModCommonConfig;
 import com.piranport.item.CannonItem;
 import com.piranport.item.ShipCoreItem;
 import com.piranport.item.TorpedoLauncherItem;
@@ -19,8 +18,8 @@ import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.client.IItemDecorator;
 
 /**
- * Renders a durability-bar-style reload progress bar on weapon items (no-GUI mode).
- * Color transitions red → yellow → green as cooldown progresses, like vanilla durability.
+ * 在武器物品图标上绘制耐久条样式的装填进度条。
+ * 冷却进度红→黄→绿渐变，类似原版耐久条。
  */
 public class WeaponReloadDecorator implements IItemDecorator {
 
@@ -47,10 +46,8 @@ public class WeaponReloadDecorator implements IItemDecorator {
 
             float fraction = cd.getFraction(currentTick);
             if (fraction > 0f) {
-                // progress: 0 = just started cooldown, 1 = about to be ready
                 float progress = 1f - fraction;
 
-                // Vanilla-style color: red(0) → yellow(0.5) → green(1)
                 int color = Mth.hsvToRgb(progress / 3f, 1f, 1f) | 0xFF000000;
 
                 int fillW = Math.round(BAR_WIDTH * progress);
@@ -67,40 +64,26 @@ public class WeaponReloadDecorator implements IItemDecorator {
             }
         }
 
-        // 2. Empty bar for manual-reload weapons when not loaded
-        boolean showEmptyBar = false;
-        if (!ModCommonConfig.AUTO_RESUPPLY_ENABLED.get()) {
-            // Non-small-caliber cannons and torpedo launchers use manual reload
-            showEmptyBar = ((stack.getItem() instanceof com.piranport.item.CannonItem
-                    || stack.getItem() instanceof com.piranport.artillery.ArtilleryItem)
-                    && !stack.is(ModItems.SMALL_GUN.get()) && !stack.is(ModItems.SINGLE_SMALL_GUN.get()))
-                    || stack.getItem() instanceof TorpedoLauncherItem;
-        }
-        // Manual-reload missiles (anti-ship/rocket) always need LoadedAmmo regardless of config
-        if (!showEmptyBar) {
-            showEmptyBar = stack.is(ModItems.SY1_LAUNCHER.get())
-                    || stack.is(ModItems.MK14_HARPOON_LAUNCHER.get())
-                    || stack.is(ModItems.SHIP_ROCKET_LAUNCHER.get());
-        }
-
-        if (showEmptyBar) {
-            LoadedAmmo ammo = stack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
-            if (!ammo.hasAmmo()) {
+        // 2. Phase 4: all cannons auto-resupply — show empty bar when no matching ammo in inventory
+        if (stack.getItem() instanceof CannonItem || stack.getItem() instanceof com.piranport.artillery.ArtilleryItem) {
+            if (!hasMatchingAmmoInInventory(stack)) {
                 boolean hasDurability = stack.isDamageableItem();
                 int barX = x + 2;
                 int barY = hasDurability ? (y + 11) : (y + 13);
                 gui.fill(barX, barY, barX + BAR_WIDTH, barY + 2, BG_COLOR);
-                return false;
             }
+            return false;
         }
 
-        // 3. Empty bar for auto-reload cannons when no matching ammo is in inventory.
-        // Small cannons always auto-reload; other cannons auto-reload when AUTO_RESUPPLY_ENABLED.
-        if (stack.getItem() instanceof CannonItem || stack.getItem() instanceof com.piranport.artillery.ArtilleryItem) {
-            boolean isAutoReloadCannon = stack.is(ModItems.SMALL_GUN.get())
-                    || stack.is(ModItems.SINGLE_SMALL_GUN.get())
-                    || ModCommonConfig.AUTO_RESUPPLY_ENABLED.get();
-            if (isAutoReloadCannon && !hasMatchingAmmoInInventory(stack)) {
+        // 3. Manual-reload launchers (torpedo, missile) — show empty bar when not loaded
+        boolean showEmptyBar = stack.getItem() instanceof TorpedoLauncherItem
+                || stack.is(ModItems.SY1_LAUNCHER.get())
+                || stack.is(ModItems.MK14_HARPOON_LAUNCHER.get())
+                || stack.is(ModItems.SHIP_ROCKET_LAUNCHER.get());
+
+        if (showEmptyBar) {
+            LoadedAmmo ammo = stack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
+            if (!ammo.hasAmmo()) {
                 boolean hasDurability = stack.isDamageableItem();
                 int barX = x + 2;
                 int barY = hasDurability ? (y + 11) : (y + 13);

@@ -7,6 +7,7 @@ import com.piranport.component.FlightGroupData;
 import com.piranport.component.FuelData;
 import com.piranport.component.LoadedAmmo;
 import com.piranport.component.PlaceableInfo;
+import com.piranport.component.SelectedAmmoType;
 import com.piranport.component.SlotCooldowns;
 import com.piranport.component.WeaponCategory;
 import com.piranport.component.WeaponCooldown;
@@ -108,6 +109,15 @@ public class ModDataComponents {
             () -> DataComponentType.<LoadedAmmo>builder()
                     .persistent(LoadedAmmo.CODEC)
                     .networkSynchronized(LoadedAmmo.STREAM_CODEC)
+                    .build());
+
+    // ===== 偏好弹种（Phase 4 自动装填） =====
+
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<SelectedAmmoType>>
+            SELECTED_AMMO_TYPE = DATA_COMPONENTS.register("selected_ammo_type",
+            () -> DataComponentType.<SelectedAmmoType>builder()
+                    .persistent(SelectedAmmoType.CODEC)
+                    .networkSynchronized(SelectedAmmoType.STREAM_CODEC)
                     .build());
 
     // ===== 无GUI模式舰装核心储存护甲板 =====

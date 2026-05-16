@@ -102,6 +102,9 @@ public class PlayerConnectionHandler {
         RecallAllAircraftPayload.onPlayerDisconnect(player.getUUID());
         PlayerAircraftHelper.recallAircraftForPlayer(player);
         PlayerTickHandler.onPlayerLogout(player.getUUID());
+        if (player instanceof net.minecraft.server.level.ServerPlayer sp) {
+            com.piranport.server.ScopingManager.handleDisconnect(sp);
+        }
         var lobbyMgr = DungeonLobbyManager.INSTANCE;
         GlobalPos lecternPos = lobbyMgr.findLobbyOf(player.getUUID());
         if (lecternPos != null && player.getServer() != null) {

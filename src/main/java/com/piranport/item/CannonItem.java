@@ -42,6 +42,16 @@ public class CannonItem extends Item {
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
+
+        // Phase 5: 客户端进入瞄准镜模式
+        if (level.isClientSide) {
+            if (com.piranport.combat.TransformationManager.isPlayerTransformed(player)) {
+                com.piranport.client.ClientScopeHandler.enterScope(player, stack);
+                return InteractionResultHolder.fail(stack);
+            }
+            return InteractionResultHolder.pass(stack);
+        }
+
         if (ShipCoreItem.tryFireFromInventory(level, player, hand)) {
             return InteractionResultHolder.consume(stack);
         }

@@ -44,6 +44,10 @@ public class ModProjectilesConfig {
     public static final ModConfigSpec.BooleanValue HE_DAMAGE_FALLOFF;
     public static final ModConfigSpec.BooleanValue UNDERWATER_EXPLODE;
 
+    // ==================== AP弹 ====================
+    public static final ModConfigSpec.DoubleValue AP_DAMAGE_MULTIPLIER;
+    public static final ModConfigSpec.DoubleValue AP_ARMOR_IGNORE;
+
     // ==================== 鱼雷发射管 ====================
     public static final ModConfigSpec.IntValue TWIN_TORPEDO_LAUNCHER_COOLDOWN;
     public static final ModConfigSpec.IntValue TRIPLE_TORPEDO_LAUNCHER_COOLDOWN;
@@ -188,6 +192,21 @@ public class ModProjectilesConfig {
                 "Default: false (silent removal). true = explode at reduced radius.",
                 "默认关闭（静默销毁），开启后到期在水中爆炸")
             .define("underwater_explode", false);
+
+        // ==================== AP弹 ====================
+        AP_DAMAGE_MULTIPLIER = BUILDER
+            .comment(
+                "AP shell damage multiplier relative to base gun damage (AP弹伤害倍率，相对火炮基础伤害).",
+                "Default: 1.3 (130% of base). AP shell damage = base * multiplier * speed_ratio.",
+                "默认1.3，AP弹伤害 = 基础伤害 × 倍率 × 速度比")
+            .defineInRange("ap_damage_multiplier", 1.3, 0.1, 5.0);
+
+        AP_ARMOR_IGNORE = BUILDER
+            .comment(
+                "AP shell armor ignore ratio 0-1 (AP弹护甲忽略比例).",
+                "Default: 0.5 (ignores 50% of target armor).",
+                "默认0.5，忽略目标50%护甲")
+            .defineInRange("ap_armor_ignore", 0.5, 0.0, 1.0);
 
         BUILDER.pop();
 

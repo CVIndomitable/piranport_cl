@@ -48,9 +48,10 @@ public class ModCommonConfig {
 
         AUTO_RESUPPLY_ENABLED = BUILDER
                 .comment(
-                        "Enable automatic ammo resupply for all weapons (自动装填模式).",
-                        "Default: false (manual reload — right-click ammo onto weapon slot to load, 手动装填).",
-                        "Set to true to auto-consume ammo from inventory on each shot. (自动从背包消耗弹药，默认关闭)")
+                        "Enable automatic ammo resupply (自动装填模式).",
+                        "Default: false (manual reload for torpedoes/aircraft).",
+                        "Set to true to auto-consume ammo from inventory on each shot.",
+                        "Note: cannons always auto-resupply since Phase 4.")
                 .define("autoResupplyEnabled", false);
 
         FLAMMABLE_EFFECT_ENABLED = BUILDER

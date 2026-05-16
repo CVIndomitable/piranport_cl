@@ -11,7 +11,6 @@ import com.piranport.item.ShipCoreItem;
 import com.piranport.item.TorpedoItem;
 import com.piranport.item.TorpedoLauncherItem;
 import com.piranport.registry.ModDataComponents;
-import com.piranport.registry.ModItems;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
@@ -22,7 +21,6 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
@@ -70,8 +68,6 @@ public record ManualReloadPayload() implements CustomPacketPayload {
             }
 
             // Find weapon in main hand or off hand
-            ItemStack weapon = ItemStack.EMPTY;
-            int weaponSlot = -1;
             ItemStack mainHand = player.getMainHandItem();
             ItemStack offHand = inv.offhand.get(0);
 
@@ -101,108 +97,15 @@ public record ManualReloadPayload() implements CustomPacketPayload {
                 return;
             }
 
-            // Find a manually-reloading cannon (small-caliber guns auto-reload and don't use R key)
+            // Cannon auto-resupply in Phase 4 — R key does nothing for cannons
             if (mainHand.getItem() instanceof CannonItem
-                    && !mainHand.is(ModItems.SMALL_GUN.get()) && !mainHand.is(ModItems.SINGLE_SMALL_GUN.get())) {
-                weapon = mainHand;
-                weaponSlot = inv.selected;
-            } else if (mainHand.getItem() instanceof com.piranport.artillery.ArtilleryItem
-                    && !mainHand.is(ModItems.SMALL_GUN.get()) && !mainHand.is(ModItems.SINGLE_SMALL_GUN.get())) {
-                weapon = mainHand;
-                weaponSlot = inv.selected;
-            } else if (offHand.getItem() instanceof CannonItem
-                    && !offHand.is(ModItems.SMALL_GUN.get()) && !offHand.is(ModItems.SINGLE_SMALL_GUN.get())) {
-                weapon = offHand;
-                weaponSlot = 40;
-            } else if (offHand.getItem() instanceof com.piranport.artillery.ArtilleryItem
-                    && !offHand.is(ModItems.SMALL_GUN.get()) && !offHand.is(ModItems.SINGLE_SMALL_GUN.get())) {
-                weapon = offHand;
-                weaponSlot = 40;
-            }
-            if (weapon.isEmpty()) {
+                    || mainHand.getItem() instanceof com.piranport.artillery.ArtilleryItem
+                    || offHand.getItem() instanceof CannonItem
+                    || offHand.getItem() instanceof com.piranport.artillery.ArtilleryItem) {
                 return;
             }
 
-            CannonItem cannonItem = weapon.getItem() instanceof CannonItem ci ? ci : null;
-            com.piranport.artillery.ArtilleryItem artilleryItem = weapon.getItem() instanceof com.piranport.artillery.ArtilleryItem ai ? ai : null;
-            if (cannonItem == null && artilleryItem == null) return;
-            int barrelCount = cannonItem != null ? cannonItem.getBarrelCount() : artilleryItem.getBarrelCount();
-
-            // Already loaded or reloading
-            LoadedAmmo current = weapon.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
-            if (current.hasAmmo() && current.count() >= barrelCount) {
-                WeaponCooldown wc = weapon.getOrDefault(ModDataComponents.WEAPON_COOLDOWN.get(), WeaponCooldown.EMPTY);
-                if (wc.isOnCooldown(player.level().getGameTime())) {
-                    player.displayClientMessage(Component.translatable("message.piranport.already_reloading"), true);
-                } else {
-                    player.displayClientMessage(Component.translatable("message.piranport.already_loaded"), true);
-                }
-                return;
-            }
-
-            // Count total matching ammo in inventory - only same type
-            // 找到第一个匹配口径的弹药类型
-            Item selectedAmmoType = null;
-            for (int i = 0; i < inv.items.size(); i++) {
-                if (i == coreSlot || i == weaponSlot) continue;
-                ItemStack ammo = inv.items.get(i);
-                if (!ammo.isEmpty() && ShipCoreItem.matchesCaliber(ammo, weapon)) {
-                    selectedAmmoType = ammo.getItem();
-                    break;
-                }
-            }
-
-            if (selectedAmmoType == null) {
-                player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
-                return;
-            }
-
-            // 只统计该特定类型的弹药
-            int totalAmmo = 0;
-            String ammoId = "";
-            for (int i = 0; i < inv.items.size(); i++) {
-                if (i == coreSlot || i == weaponSlot) continue;
-                ItemStack ammo = inv.items.get(i);
-                if (!ammo.isEmpty() && ammo.getItem() == selectedAmmoType) {
-                    totalAmmo += ammo.getCount();
-                    if (ammoId.isEmpty()) {
-                        ammoId = BuiltInRegistries.ITEM.getKey(ammo.getItem()).toString();
-                    }
-                }
-            }
-
-            if (totalAmmo < barrelCount) {
-                player.displayClientMessage(Component.translatable("message.piranport.insufficient_same_ammo"), true);
-                return;
-            }
-
-            // 只消耗该特定类型的弹药
-            int toConsume = barrelCount;
-            for (int i = 0; i < inv.items.size() && toConsume > 0; i++) {
-                if (i == coreSlot || i == weaponSlot) continue;
-                ItemStack ammo = inv.items.get(i);
-                if (!ammo.isEmpty() && ammo.getItem() == selectedAmmoType) {
-                    int take = Math.min(toConsume, ammo.getCount());
-                    ammo.shrink(take);
-                    toConsume -= take;
-                }
-            }
-            weapon.set(ModDataComponents.LOADED_AMMO.get(), new LoadedAmmo(barrelCount, ammoId));
-
-            // Set cooldown — reload time starts now, weapon ready when cooldown expires
-            int baseCooldown = cannonItem != null ? cannonItem.getCooldownTicks() : artilleryItem.getCooldownTicks();
-            int cooldownTicks = TransformationManager.boostedCooldown(player, baseCooldown);
-            long gameTime = player.level().getGameTime();
-            weapon.set(ModDataComponents.WEAPON_COOLDOWN.get(),
-                    WeaponCooldown.of(gameTime, cooldownTicks));
-            SlotCooldowns cooldowns = coreStack.getOrDefault(
-                    ModDataComponents.SLOT_COOLDOWNS.get(), SlotCooldowns.EMPTY);
-            coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
-                    cooldowns.withSlotCooldown(weaponSlot, cooldownTicks, gameTime));
-
-            player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
-                    SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.5f, 1.4f);
-            player.displayClientMessage(Component.translatable("message.piranport.reload_start"), true);
+            // Nothing else to handle here — torpedo reload is in reloadTorpedoLauncher()
         });
     }
 

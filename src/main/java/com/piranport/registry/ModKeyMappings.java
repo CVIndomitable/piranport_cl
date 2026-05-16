@@ -33,6 +33,10 @@ public class ModKeyMappings {
     public static final KeyMapping MANUAL_RELOAD =
             new KeyMapping("key.piranport.manual_reload", GLFW.GLFW_KEY_R, CATEGORY);
 
+    /** Phase 4: 切换弹种（Tab） */
+    public static final KeyMapping SWITCH_AMMO =
+            new KeyMapping("key.piranport.switch_ammo", GLFW.GLFW_KEY_TAB, CATEGORY);
+
     /** Debug-only: toggle a server-side override that clamps every cooldown to 5s. */
     public static final KeyMapping DEBUG_COOLDOWN_OVERRIDE =
             new KeyMapping("key.piranport.debug_cooldown_override", GLFW.GLFW_KEY_N, CATEGORY);

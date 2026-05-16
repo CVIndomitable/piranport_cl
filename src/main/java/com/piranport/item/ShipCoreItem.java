@@ -593,6 +593,12 @@ public class ShipCoreItem extends Item {
         // Determine barrel count
         int barrelCount = getBarrelCount(weapon);
 
+        // Phase 9: 耐久检测
+        if (weapon.isDamageableItem() && weapon.getDamageValue() >= weapon.getMaxDamage() - 1) {
+            player.displayClientMessage(Component.translatable("message.piranport.cannon_damaged"), true);
+            return;
+        }
+
         // Count total matching ammo across all ammo slots
         int ammoEnd = shipType.weaponSlots + shipType.ammoSlots;
         int totalAmmo = 0;
@@ -750,6 +756,12 @@ public class ShipCoreItem extends Item {
 
         // Cannon — always auto-resupply (Phase 4: manual mode removed)
         int barrelCount = getBarrelCount(weapon);
+
+        // Phase 9: 耐久检测
+        if (weapon.isDamageableItem() && weapon.getDamageValue() >= weapon.getMaxDamage() - 1) {
+            player.displayClientMessage(Component.translatable("message.piranport.cannon_damaged"), true);
+            return true;
+        }
 
         // Creative mode: find any matching ammo without consuming
         if (player.getAbilities().instabuild) {
@@ -2062,6 +2074,13 @@ public class ShipCoreItem extends Item {
     /** Fire a cannon salvo: barrelCount projectiles with natural inaccuracy spread. */
     private static void fireCannonSalvo(Level level, Player player, ItemStack weapon,
             ItemStack shellForRender, int barrelCount, boolean isType3, boolean isVT, boolean isHE) {
+        // Phase 9: 消耗耐久（创造模式不消耗）
+        if (!player.getAbilities().instabuild && weapon.isDamageableItem()) {
+            int curDamage = weapon.getDamageValue();
+            if (curDamage < weapon.getMaxDamage() - 1) {
+                weapon.setDamageValue(curDamage + 1);
+            }
+        }
         Vec3 aimTarget = pendingAimTarget.get(); // Phase 5: 非 null 时使用弹道解算
         for (int b = 0; b < barrelCount; b++) {
             if (isType3) {

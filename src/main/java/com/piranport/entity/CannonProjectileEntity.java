@@ -85,6 +85,7 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
     // 实体类型注册所需的构造器
     public CannonProjectileEntity(EntityType<? extends CannonProjectileEntity> type, Level level) {
         super(type, level);
+        this.noCulling = true;
     }
 
     // 发射用构造器

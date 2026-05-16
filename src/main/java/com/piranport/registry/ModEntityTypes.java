@@ -31,8 +31,8 @@ public class ModEntityTypes {
             CANNON_PROJECTILE = ENTITY_TYPES.register("cannon_projectile",
             () -> EntityType.Builder.<CannonProjectileEntity>of(CannonProjectileEntity::new, MobCategory.MISC)
                     .sized(0.25f, 0.25f)
-                    .clientTrackingRange(4)
-                    .updateInterval(10)
+                    .clientTrackingRange(8)
+                    .updateInterval(2)
                     .build("piranport:cannon_projectile"));
 
     public static final DeferredHolder<EntityType<?>, EntityType<TorpedoEntity>>
@@ -98,7 +98,7 @@ public class ModEntityTypes {
             SANSHIKI_PELLET = ENTITY_TYPES.register("sanshiki_pellet",
             () -> EntityType.Builder.<SanshikiPelletEntity>of(SanshikiPelletEntity::new, MobCategory.MISC)
                     .sized(0.15f, 0.15f)
-                    .clientTrackingRange(4)
+                    .clientTrackingRange(8)
                     .updateInterval(5)
                     .build("piranport:sanshiki_pellet"));
 
@@ -181,8 +181,8 @@ public class ModEntityTypes {
             () -> EntityType.Builder.<com.piranport.entity.DeepOceanProjectileEntity>of(
                             com.piranport.entity.DeepOceanProjectileEntity::new, MobCategory.MISC)
                     .sized(0.25f, 0.25f)
-                    .clientTrackingRange(4)
-                    .updateInterval(10)
+                    .clientTrackingRange(8)
+                    .updateInterval(2)
                     .build("piranport:deep_ocean_projectile"));
 
     // --- Deep Ocean NPC Entities ---

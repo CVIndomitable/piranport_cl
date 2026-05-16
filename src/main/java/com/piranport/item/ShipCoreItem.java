@@ -2090,6 +2090,16 @@ public class ShipCoreItem extends Item {
         return 1.0f;
     }
 
+    /** Phase 2: 从武器数据获取阻力系数。 */
+    private static float getProjectileDrag(ItemStack weapon) {
+        Item item = weapon.getItem();
+        if (item instanceof com.piranport.artillery.ArtilleryItem ai) return ai.getDragCoeff();
+        if (isSmallCaliber(weapon)) return 0.015f;
+        if (weapon.is(ModItems.MEDIUM_GUN.get())) return 0.01f;
+        if (weapon.is(ModItems.LARGE_GUN.get())) return 0.008f;
+        return 0.01f;
+    }
+
     private static float getSoundPitch(ItemStack weapon) {
         if (isSmallCaliber(weapon)) return 1.5f;
         if (weapon.is(ModItems.MEDIUM_GUN.get())) return 1.2f;
@@ -2112,6 +2122,7 @@ public class ShipCoreItem extends Item {
                 CannonProjectileEntity projectile = new CannonProjectileEntity(
                         level, player, shellForRender, damage, isHE, explosionPower);
                 if (isVT) projectile.setVT(true);
+                projectile.setDragCoeff(getProjectileDrag(weapon));
                 projectile.shootFromRotation(player, player.getXRot(), player.getYRot(), 0.0f, velocity, inaccuracy);
                 level.addFreshEntity(projectile);
             }

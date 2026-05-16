@@ -5,6 +5,9 @@
   "reloadTime": 80,
   "durability": 2000,
   "scopeZoom": 4.0,
+  "initialSpeed": 3.5,
+  "dragCoeff": 0.008,
+  "gravity": 9.8,
   "muzzles": [
     {"x": 0.5, "y": 0.25, "z": 0},
     {"x": 0, "y": 0.25, "z": 0},

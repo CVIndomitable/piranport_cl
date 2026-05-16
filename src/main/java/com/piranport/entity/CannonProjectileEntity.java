@@ -37,6 +37,8 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
     private boolean isVT = false;
     private float explosionPower = 1.5f;
     private float initialSpeed = 2.0f;
+    /** Phase 2: 阻力系数（每 tick 速度保留比例 = 1 - dragCoeff） */
+    private float dragCoeff = 0.01f;
     /** 防止 VT 近炸引信 + onHit 在同一 tick 内双重爆炸。 */
     private boolean exploded = false;
 
@@ -77,6 +79,10 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         this.trackingTargetId = entityId;
     }
 
+    public void setDragCoeff(float dragCoeff) {
+        this.dragCoeff = dragCoeff;
+    }
+
     @Override
     public void shootFromRotation(Entity shooter, float xRot, float yRot,
                                    float zRot, float speed, float inaccuracy) {
@@ -86,6 +92,13 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
 
     @Override
     public void tick() {
+        // Phase 2: 应用阻力（在 super.tick() 的重力生效前）
+        Vec3 vel = getDeltaMovement();
+        if (vel.length() > 0.01 && dragCoeff > 0) {
+            vel = vel.scale(Math.max(0.1, 1.0 - dragCoeff));
+            setDeltaMovement(vel);
+        }
+
         super.tick();
         if (!level().isClientSide) {
             if (isVT && tickCount > VT_ARM_TICKS) {
@@ -272,6 +285,7 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         tag.putBoolean("IsVT", isVT);
         tag.putFloat("ExplosionPower", explosionPower);
         tag.putFloat("InitialSpeed", initialSpeed);
+        tag.putFloat("DragCoeff", dragCoeff);
     }
 
     @Override
@@ -284,6 +298,9 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         explosionPower = tag.getFloat("ExplosionPower");
         if (tag.contains("InitialSpeed")) {
             initialSpeed = tag.getFloat("InitialSpeed");
+        }
+        if (tag.contains("DragCoeff")) {
+            dragCoeff = tag.getFloat("DragCoeff");
         }
     }
 }

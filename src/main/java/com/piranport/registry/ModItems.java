@@ -162,25 +162,29 @@ public class ModItems {
             ITEMS.register("single_small_gun", () -> new ArtilleryItem(new Item.Properties().stacksTo(1)
                     .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.CANNON),
                     new ArtilleryCannonData(4, 1, 6.0f, 30, 500, 2.0f,
-                            List.of(new MuzzlePos(0.2, 0.15, 0)))));
+                            List.of(new MuzzlePos(0.2, 0.15, 0)),
+                            2.5f, 0.015f, 9.8f)));
     public static final DeferredItem<Item> SMALL_GUN =
             ITEMS.register("small_gun", () -> new ArtilleryItem(new Item.Properties().stacksTo(1)
                     .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.CANNON),
                     new ArtilleryCannonData(4, 2, 6.0f, 30, 500, 2.0f,
                             List.of(new MuzzlePos(0.3, 0.2, 0),
-                                    new MuzzlePos(-0.3, 0.2, 0)))));
+                                    new MuzzlePos(-0.3, 0.2, 0)),
+                            2.5f, 0.015f, 9.8f)));
     public static final DeferredItem<Item> MEDIUM_GUN =
             ITEMS.register("medium_gun", () -> new ArtilleryItem(new Item.Properties().stacksTo(1)
                     .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.CANNON),
                     new ArtilleryCannonData(8, 1, 12.0f, 50, 1000, 3.0f,
-                            List.of(new MuzzlePos(0.3, 0.2, 0)))));
+                            List.of(new MuzzlePos(0.3, 0.2, 0)),
+                            3.0f, 0.01f, 9.8f)));
     public static final DeferredItem<Item> LARGE_GUN =
             ITEMS.register("large_gun", () -> new ArtilleryItem(new Item.Properties().stacksTo(1)
                     .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.CANNON),
                     new ArtilleryCannonData(16, 3, 20.0f, 80, 2000, 4.0f,
                             List.of(new MuzzlePos(0.5, 0.25, 0),
                                     new MuzzlePos(0, 0.25, 0),
-                                    new MuzzlePos(-0.5, 0.25, 0)))));
+                                    new MuzzlePos(-0.5, 0.25, 0)),
+                            3.5f, 0.008f, 9.8f)));
     public static final DeferredItem<Item> FRENCH_QUAD_380MM_GUN =
             ITEMS.register("french_quad_380mm_gun", () -> new ArtilleryItem(new Item.Properties().stacksTo(1)
                     .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.CANNON),
@@ -188,7 +192,8 @@ public class ModItems {
                             List.of(new MuzzlePos(0.6, 0.3, 0),
                                     new MuzzlePos(0.2, 0.3, 0),
                                     new MuzzlePos(-0.2, 0.3, 0),
-                                    new MuzzlePos(-0.6, 0.3, 0)))));
+                                    new MuzzlePos(-0.6, 0.3, 0)),
+                            3.5f, 0.008f, 9.8f)));
 
     // ===== Torpedo Ammo (legacy generic) =====
     public static final DeferredItem<TorpedoItem> TORPEDO_533MM =

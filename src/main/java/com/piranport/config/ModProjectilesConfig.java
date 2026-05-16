@@ -37,6 +37,13 @@ public class ModProjectilesConfig {
     public static final ModConfigSpec.DoubleValue ROCKET_SPEED;
     public static final ModConfigSpec.DoubleValue ROCKET_EXPLOSION_RADIUS;
 
+    // ==================== 炮弹 ====================
+    public static final ModConfigSpec.IntValue UNDERWATER_DESTROY_TICKS;
+    public static final ModConfigSpec.DoubleValue UNDERWATER_EXPLOSION_MULTIPLIER;
+    public static final ModConfigSpec.DoubleValue HE_ARMOR_PENETRATION;
+    public static final ModConfigSpec.BooleanValue HE_DAMAGE_FALLOFF;
+    public static final ModConfigSpec.BooleanValue UNDERWATER_EXPLODE;
+
     // ==================== 鱼雷发射管 ====================
     public static final ModConfigSpec.IntValue TWIN_TORPEDO_LAUNCHER_COOLDOWN;
     public static final ModConfigSpec.IntValue TRIPLE_TORPEDO_LAUNCHER_COOLDOWN;
@@ -138,6 +145,49 @@ public class ModProjectilesConfig {
         ROCKET_EXPLOSION_RADIUS = BUILDER
             .comment("Explosion radius (爆炸半径)")
             .defineInRange("explosion_radius", 2.5, 0.1, 20.0);
+
+        BUILDER.pop();
+
+        // ==================== 炮弹（Shell） ====================
+        BUILDER.push("shell");
+
+        UNDERWATER_DESTROY_TICKS = BUILDER
+            .comment(
+                "Ticks before shell is destroyed underwater (水中弹药销毁时间，20 tick = 1秒).",
+                "Default: 60 (3 seconds). After this many ticks underwater the shell",
+                "is either silently removed or explodes depending on underwater_explode.",
+                "默认60 tick（3秒），水中弹药到期后根据 underwater_explode 决定静默销毁或爆炸")
+            .defineInRange("underwater_destroy_ticks", 60, 1, 600);
+
+        UNDERWATER_EXPLOSION_MULTIPLIER = BUILDER
+            .comment(
+                "Explosion radius multiplier when detonating underwater (水中爆炸半径倍率).",
+                "Default: 0.5 (half radius). Water dampens the blast.",
+                "默认0.5，水中爆炸半径减半")
+            .defineInRange("underwater_explosion_multiplier", 0.5, 0.0, 2.0);
+
+        HE_ARMOR_PENETRATION = BUILDER
+            .comment(
+                "HE shell armor penetration ratio 0-1 (HE弹护甲穿透比例).",
+                "Default: 0.3. PER tick reduces target armor by this fraction before dealing",
+                "explosion damage. 0 = no penetration, 1 = full armor ignore.",
+                "默认0.3，爆炸伤害临时忽略目标30%护甲")
+            .defineInRange("he_armor_penetration", 0.3, 0.0, 1.0);
+
+        HE_DAMAGE_FALLOFF = BUILDER
+            .comment(
+                "Enable distance-based damage falloff for HE explosions (HE弹爆炸伤害距离衰减).",
+                "Default: true. Damage = base * (1 - distance/radius).",
+                "Set to false for uniform damage across the entire blast radius.",
+                "默认开启，伤害随距离线性衰减")
+            .define("he_damage_falloff", true);
+
+        UNDERWATER_EXPLODE = BUILDER
+            .comment(
+                "When true, underwater shell explodes when timer expires (水中弹药到期爆炸).",
+                "Default: false (silent removal). true = explode at reduced radius.",
+                "默认关闭（静默销毁），开启后到期在水中爆炸")
+            .define("underwater_explode", false);
 
         BUILDER.pop();
 

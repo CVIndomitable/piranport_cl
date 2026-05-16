@@ -6,7 +6,7 @@ import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
 
 /**
  * 弹道解算引擎：给定初速度、阻力、重力、目标距离，计算最佳发射仰角。
- * 使用二分法搜索 [0°, 89°]，每次迭代模拟数值弹道。
+ * 使用三分法搜索 [0°, 45°]（低弹道），每次迭代模拟数值弹道。
  * 阻力/重力模型与 {@link com.piranport.entity.CannonProjectileEntity} 一致。
  *
  * <p>参数来源（按优先级）：
@@ -23,6 +23,9 @@ public final class BallisticSolver {
     private static final Object2DoubleOpenHashMap<SolutionKey> cache = new Object2DoubleOpenHashMap<>();
     private static boolean cacheEnabled = true;
 
+    /** 缓存键量化步长（格）。0.1 格精度足够瞄准使用，可大幅提高缓存命中率。 */
+    private static final double DISTANCE_QUANTUM = 0.1;
+
     private BallisticSolver() {}
 
     /** 弹道解算入口。从 ModEquipmentConfig / ModArtilleryConfig 读取参数。 */
@@ -30,8 +33,12 @@ public final class BallisticSolver {
                                 double horizontalDist, double verticalDist) {
         if (initialSpeed <= 0 || horizontalDist <= 0) return 45.0 * Math.PI / 180.0;
 
+        // 量化距离以提高缓存命中率
+        double qHDist = quantize(horizontalDist);
+        double qVDist = quantize(verticalDist);
+
         if (isCacheEnabled()) {
-            SolutionKey key = new SolutionKey(initialSpeed, dragCoeff, gravity, horizontalDist, verticalDist);
+            SolutionKey key = new SolutionKey(initialSpeed, dragCoeff, gravity, qHDist, qVDist);
             double cached = cache.getOrDefault(key, Double.NaN);
             if (!Double.isNaN(cached)) return cached;
         }
@@ -40,32 +47,35 @@ public final class BallisticSolver {
         double accuracyThreshold = ModEquipmentConfig.BALLISTIC_ACCURACY.get();
         double noSolutionThreshold = ModArtilleryConfig.BALLISTIC_NO_SOLUTION_THRESHOLD.get();
 
-        double minAngle = 0;
-        double maxAngle = Math.PI / 2 - 0.01; // ~89°
+        // 三分法搜索误差绝对值最小的仰角（避免二分法在非单调函数上的精度问题）
+        double lowAngle = 0;
+        double highAngle = Math.PI / 4; // 45°：只搜低弹道
         double bestAngle = 45.0 * Math.PI / 180.0;
         double minError = Double.MAX_VALUE;
 
         for (int iter = 0; iter < maxIters; iter++) {
-            double angle = (minAngle + maxAngle) / 2;
-            double finalY = simulate(initialSpeed, angle, dragCoeff, gravity, horizontalDist);
-            double error = finalY - verticalDist;
+            if (highAngle - lowAngle < 1e-6) break;
 
-            double absError = Math.abs(error);
-            if (absError < minError) {
-                minError = absError;
-                bestAngle = angle;
-            }
+            double mid1 = lowAngle + (highAngle - lowAngle) / 3;
+            double mid2 = highAngle - (highAngle - lowAngle) / 3;
 
-            if (error < 0) {
-                minAngle = angle;
+            double err1 = Math.abs(simulate(initialSpeed, mid1, dragCoeff, gravity, horizontalDist) - verticalDist);
+            double err2 = Math.abs(simulate(initialSpeed, mid2, dragCoeff, gravity, horizontalDist) - verticalDist);
+
+            if (err1 < minError) { minError = err1; bestAngle = mid1; }
+            if (err2 < minError) { minError = err2; bestAngle = mid2; }
+
+            if (err1 < accuracyThreshold || err2 < accuracyThreshold) break;
+
+            // 三分法缩小区间：淘汰误差更大的一侧
+            if (err1 > err2) {
+                lowAngle = mid1;
             } else {
-                maxAngle = angle;
+                highAngle = mid2;
             }
-
-            if (absError < accuracyThreshold) break;
         }
 
-        // 无解（打不到目标）时返回最大射程角 ≈ 45°（受阻力影响往稍高处偏移）
+        // 无解（打不到目标）时返回最大射程角
         if (minError > noSolutionThreshold) {
             bestAngle = calculateMaxRangeAngle(initialSpeed, dragCoeff, gravity);
         }
@@ -74,7 +84,7 @@ public final class BallisticSolver {
             int cacheSize = ModEquipmentConfig.BALLISTIC_CACHE_SIZE.get();
             synchronized (cache) {
                 if (cache.size() >= cacheSize) cache.clear();
-                cache.put(new SolutionKey(initialSpeed, dragCoeff, gravity, horizontalDist, verticalDist), bestAngle);
+                cache.put(new SolutionKey(initialSpeed, dragCoeff, gravity, qHDist, qVDist), bestAngle);
             }
         }
         return bestAngle;
@@ -115,6 +125,11 @@ public final class BallisticSolver {
         return (45.0 + offset) * Math.PI / 180.0;
     }
 
+    /** 将距离量化到 DISTANCE_QUANTUM 精度，提高缓存命中率。 */
+    private static double quantize(double value) {
+        return Math.round(value / DISTANCE_QUANTUM) * DISTANCE_QUANTUM;
+    }
+
     /** 从 ModArtilleryConfig 读取缓存开关。 */
     private static boolean isCacheEnabled() {
         return cacheEnabled && ModArtilleryConfig.PERF_CACHE_SOLUTIONS.get();
@@ -130,6 +145,6 @@ public final class BallisticSolver {
         cache.clear();
     }
 
-    /** 缓存键：包含所有影响弹道的参数 */
+    /** 缓存键：包含所有影响弹道的参数，距离已量化 */
     private record SolutionKey(double speed, double drag, double gravity, double hDist, double vDist) {}
 }

@@ -245,8 +245,7 @@ public class ClientTickHandler {
         while (ModKeyMappings.SWITCH_AMMO.consumeClick()) {
             if (!transformed || inReconMode) continue;
             ItemStack hand = mc.player.getMainHandItem();
-            if (hand.getItem() instanceof com.piranport.artillery.ArtilleryItem
-                    || hand.getItem() instanceof com.piranport.item.CannonItem) {
+            if (hand.getItem() instanceof com.piranport.artillery.ArtilleryItem) {
                 PacketDistributor.sendToServer(new SwitchAmmoPayload());
                 AmmoSelectOverlay.bumpShow();
             }

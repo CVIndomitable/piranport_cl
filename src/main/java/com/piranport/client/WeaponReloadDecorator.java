@@ -3,7 +3,6 @@ package com.piranport.client;
 import com.piranport.combat.TransformationManager;
 import com.piranport.component.LoadedAmmo;
 import com.piranport.component.WeaponCooldown;
-import com.piranport.item.CannonItem;
 import com.piranport.item.ShipCoreItem;
 import com.piranport.item.TorpedoLauncherItem;
 import com.piranport.registry.ModDataComponents;
@@ -65,7 +64,7 @@ public class WeaponReloadDecorator implements IItemDecorator {
         }
 
         // 2. Phase 4: all cannons auto-resupply — show empty bar when no matching ammo in inventory
-        if (stack.getItem() instanceof CannonItem || stack.getItem() instanceof com.piranport.artillery.ArtilleryItem) {
+        if (stack.getItem() instanceof com.piranport.artillery.ArtilleryItem) {
             if (!hasMatchingAmmoInInventory(stack)) {
                 boolean hasDurability = stack.isDamageableItem();
                 int barX = x + 2;

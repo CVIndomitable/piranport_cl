@@ -58,6 +58,18 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
     /** 自定义重力（真实比例，使用时除以 196 换算为 MC 比例）。0 表示使用默认值。 */
     private float customGravity = 0f;
 
+    /** 缓存的黑曜石爆炸抗性，避免每次碰撞都创建 Explosion 对象。 */
+    private static float cachedObsidianResistance = -1f;
+    private static float getObsidianResistance(Level level, BlockPos pos) {
+        if (cachedObsidianResistance < 0) {
+            Explosion ctx = new Explosion(level, null, 0, 0, 0,
+                    1.0f, false, Explosion.BlockInteraction.KEEP);
+            cachedObsidianResistance = Blocks.OBSIDIAN.defaultBlockState()
+                    .getExplosionResistance(level, pos, ctx);
+        }
+        return cachedObsidianResistance;
+    }
+
     // ===== VT 近炸引信参数（从 ModArtilleryConfig 读取） =====
     /** VT 锥形检测范围（格），弹头前方该距离内的目标才会触发近炸。 */
     private double vtDetectRange = ModArtilleryConfig.VT_DETECT_RANGE.get();
@@ -139,6 +151,19 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         }
 
         if (!level().isClientSide) {
+            // 水中弹药销毁：所有弹种通用（VT 弹在 tickVT 中另有近炸逻辑）
+            if (!isVT && isInWater()) {
+                underwaterTicks++;
+                int maxTicks = (int) (ModArtilleryConfig.ARTILLERY_UNDERWATER_DESTROY_TIME.get() * 20);
+                if (underwaterTicks >= maxTicks) {
+                    if (isHE && ModProjectilesConfig.UNDERWATER_EXPLODE.get()) {
+                        Level.ExplosionInteraction interaction = ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get()
+                                ? Level.ExplosionInteraction.TNT : Level.ExplosionInteraction.NONE;
+                        level().explode(this, getX(), getY(), getZ(), explosionPower, interaction);
+                    }
+                    discard();
+                }
+            }
             if (isVT && tickCount > vtArmTicks) {
                 tickVT();
             }
@@ -328,11 +353,7 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
                 if (ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get() && !isInWater()) {
                     BlockPos pos = result.getBlockPos();
                     BlockState state = level().getBlockState(pos);
-                    BlockState obsidianState = Blocks.OBSIDIAN.defaultBlockState();
-                    Explosion resistanceContext = new Explosion(level(), this, getX(), getY(), getZ(),
-                            explosionPower, false, Explosion.BlockInteraction.KEEP);
-                    float obsidianResistance = obsidianState.getExplosionResistance(level(), pos, resistanceContext);
-                    if (state.getExplosionResistance(level(), pos, resistanceContext) < obsidianResistance) {
+                    if (state.getExplosionResistance(level(), pos, null) < getObsidianResistance(level(), pos)) {
                         level().destroyBlock(pos, true);
                     }
                 }
@@ -351,7 +372,8 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
 
     @Override
     protected double getDefaultGravity() {
-        return customGravity > 0f ? customGravity / 196.0 : 0.05;
+        // customGravity 是真实比例（如 9.8），除以 196 换算为 MC 内部比例
+        return customGravity > 0f ? customGravity / 196.0 : 9.8 / 196.0;
     }
 
     @Override

@@ -2,7 +2,13 @@ package com.piranport.config;
 
 import net.neoforged.neoforge.common.ModConfigSpec;
 
-/** 武器系统数值配置 */
+/**
+ * 武器系统数值配置（旧版）。
+ *
+ * @deprecated 已废弃。新版火炮使用 {@link com.piranport.artillery.config.ArtilleryCannonData} 从 JSON 加载配置。
+ * 本类不再被任何代码引用，保留仅为 TOML 文件兼容。不再添加本类条目。
+ */
+@Deprecated
 public class ModWeaponsConfig {
     private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
 

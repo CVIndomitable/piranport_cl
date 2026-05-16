@@ -19,6 +19,8 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.ClickAction;
+import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -55,6 +57,7 @@ public class ArtilleryItem extends Item {
     public float getInitialSpeed() { return data.initialSpeed(); }
     public float getDragCoeff() { return data.dragCoeff(); }
     public float getCustomGravity() { return data.gravity(); }
+    public float getExplosionPower() { return data.explosionPower(); }
 
     /** 根据口径计算散布角（度）。口径越大散布越小。 */
     public float getDispersionAngle() {
@@ -98,66 +101,32 @@ public class ArtilleryItem extends Item {
         return InteractionResultHolder.pass(stack);
     }
 
-    /**
-     * Phase 2: 发射物理炮弹（抛物线 + 散布）。
-     * @deprecated Phase 12: 未在任何代码路径中被调用。
-     * 实际发射流程走 ShipCoreItem.fireCannonSalvo() → CannonProjectileEntity。
-     * 保留方法以防后续需要独立的 ArtilleryItem 开火路径。
-     */
-    @Deprecated(forRemoval = false)
-    void fireShell(Level level, Player player, ItemStack stack) {
-        ItemStack shellItem = new ItemStack(net.minecraft.world.item.Items.SNOWBALL);
-        float speed = getInitialSpeed();
-        float dispersion = getDispersionAngle();
+    /** 右键手动装弹（手动补给模式下，右键弹药到火炮上装填一轮）。 */
+    @Override
+    public boolean overrideOtherStackedOnMe(ItemStack stack, ItemStack other, Slot slot,
+            ClickAction action, Player player, net.minecraft.world.entity.SlotAccess access) {
+        if (action != ClickAction.SECONDARY) return false;
+        if (com.piranport.config.ModCommonConfig.AUTO_RESUPPLY_ENABLED.get()) return false;
+        if (other.isEmpty() || !ShipCoreItem.matchesCaliber(other, stack)) return false;
 
-        // 计算初速度方向（带散布）
-        Vec3 direction = player.getLookAngle();
-        if (dispersion > 0) {
-            direction = applyDispersion(direction, level.random, dispersion);
+        LoadedAmmo current = stack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
+        if (current.hasAmmo()) return false;
+
+        if (other.getCount() < getBarrelCount()) return false;
+
+        String ammoId = BuiltInRegistries.ITEM.getKey(other.getItem()).toString();
+        stack.set(ModDataComponents.LOADED_AMMO.get(), new LoadedAmmo(getBarrelCount(), ammoId));
+        com.piranport.debug.PiranPortDebug.consumeAmmo(other, getBarrelCount());
+
+        if (!player.level().isClientSide()) {
+            player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+                    SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.5f, 1.4f);
         }
-
-        // 创建物理炮弹
-        ShellEntity shell = new ShellEntity(level, player, shellItem, getDamage(),
-                speed, getDragCoeff(), getCustomGravity());
-        shell.shoot(direction.x, direction.y, direction.z, speed, 0f);
-        level.addFreshEntity(shell);
-
-        // Phase 10: 根据口径选择发射音效
-        net.minecraft.sounds.SoundEvent fireSound = getCaliber() <= 4
-                ? ModSounds.CANNON_FIRE_SMALL.get()
-                : getCaliber() <= 8 ? ModSounds.CANNON_FIRE_MEDIUM.get()
-                : ModSounds.CANNON_FIRE_LARGE.get();
-        level.playSound(null, player.getX(), player.getY(), player.getZ(),
-                fireSound, SoundSource.PLAYERS, 2.0f, 1.0f);
-
-        // Phase 10: 炮口火焰粒子
-        if (level instanceof net.minecraft.server.level.ServerLevel serverLevel) {
-            serverLevel.sendParticles(ParticleTypes.SOUL_FIRE_FLAME,
-                    player.getX() + direction.x * 1.5,
-                    player.getY() + player.getEyeHeight() + direction.y * 0.5,
-                    player.getZ() + direction.z * 1.5,
-                    8, 0.3, 0.3, 0.3, 0.05);
-            serverLevel.sendParticles(ParticleTypes.CLOUD,
-                    player.getX() + direction.x * 1.5,
-                    player.getY() + player.getEyeHeight() + direction.y * 0.5,
-                    player.getZ() + direction.z * 1.5,
-                    6, 0.4, 0.2, 0.4, 0.01);
-            serverLevel.sendParticles(ParticleTypes.LAVA,
-                    player.getX() + direction.x * 1.5,
-                    player.getY() + player.getEyeHeight() + direction.y * 0.5,
-                    player.getZ() + direction.z * 1.5,
-                    2, 0.2, 0.2, 0.2, 0);
-        }
-
-        // Phase 2: 调试模式
-        if (PiranPortDebug.isServerEnabled()) {
-            showDebugInfo(player, direction, speed, getDragCoeff(), getCustomGravity());
-            spawnPredictionTrail(level, player, direction, speed, getDragCoeff(), getCustomGravity());
-        }
+        return true;
     }
 
-    /** 在初速度垂面内进行高斯散布偏移。 */
-    private static Vec3 applyDispersion(Vec3 direction, RandomSource random, float dispersionDeg) {
+    /** 在初速度垂面内进行高斯散布偏移。散布角单位为度。 */
+    public static Vec3 applyDispersion(Vec3 direction, RandomSource random, float dispersionDeg) {
         Vec3 right = new Vec3(0, 1, 0).cross(direction).normalize();
         if (right.lengthSqr() < 0.001) {
             right = new Vec3(1, 0, 0);
@@ -170,44 +139,6 @@ public class ArtilleryItem extends Item {
                 .add(right.scale(r * Math.cos(theta)))
                 .add(up.scale(r * Math.sin(theta)))
                 .normalize();
-    }
-
-    /** 调试信息：在 actionbar 显示弹道参数。 */
-    private static void showDebugInfo(Player player, Vec3 direction,
-                                       float speed, float drag, float gravity) {
-        player.displayClientMessage(
-                Component.literal(String.format(
-                        "§7[弹道] v₀=%.1f  drag=%.3f  g=%.1f  θ=%.1f°",
-                        speed, drag, gravity,
-                        Math.toDegrees(Math.asin(direction.y))))
-                        .withStyle(net.minecraft.ChatFormatting.GRAY),
-                true);
-    }
-
-    /** 调试模式：用粒子绘制预测弹道（使用火炮实际物理参数）。 */
-    private static void spawnPredictionTrail(Level level, Player player, Vec3 direction, float speed,
-                                              float dragCoeff, float customGravity) {
-        if (!(level instanceof net.minecraft.server.level.ServerLevel serverLevel)) return;
-
-        double px = player.getX(), py = player.getY() + player.getEyeHeight(), pz = player.getZ();
-        double vx = direction.x * speed, vy = direction.y * speed, vz = direction.z * speed;
-        double drag = 1.0 - dragCoeff;
-        double gravity = customGravity / 196.0;
-
-        for (int step = 0; step < 200; step++) {
-            vx *= drag;
-            vy = vy * drag - gravity;
-            vz *= drag;
-            px += vx; py += vy; pz += vz;
-
-            if (step % 5 == 0) {
-                serverLevel.sendParticles(
-                        net.minecraft.core.particles.ParticleTypes.END_ROD,
-                        px, py, pz, 1, 0, 0, 0, 0);
-            }
-
-            if (py < player.getY() - 1 || step > 150) break;
-        }
     }
 
     @Override

@@ -41,8 +41,7 @@ public record SwitchAmmoPayload() implements CustomPacketPayload {
             if (player == null) return;
 
             ItemStack weapon = player.getMainHandItem();
-            if (!(weapon.getItem() instanceof com.piranport.artillery.ArtilleryItem
-                    || weapon.getItem() instanceof com.piranport.item.CannonItem)) {
+            if (!(weapon.getItem() instanceof com.piranport.artillery.ArtilleryItem)) {
                 return;
             }
 

@@ -1,10 +1,10 @@
 package com.piranport.compat.maid.combat.handlers;
 
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
+import com.piranport.artillery.ArtilleryItem;
 import com.piranport.compat.maid.combat.AmmoConsumer;
 import com.piranport.compat.maid.combat.WeaponHandler;
 import com.piranport.entity.CannonProjectileEntity;
-import com.piranport.item.CannonItem;
 import com.piranport.registry.ModItems;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -18,35 +18,47 @@ import java.util.List;
 public class CannonHandler implements WeaponHandler {
     @Override
     public boolean handles(Item item) {
-        return item instanceof CannonItem || item instanceof com.piranport.artillery.ArtilleryItem;
+        return item instanceof ArtilleryItem;
     }
 
     @Override
     public int cooldownTicks(ItemStack stack) {
-        return stack.getItem() instanceof CannonItem c ? c.getCooldownTicks() : 30;
+        if (stack.getItem() instanceof ArtilleryItem ai) return ai.getCooldownTicks();
+        return 30;
     }
 
     @Override
     public boolean hasAmmo(EntityMaid maid, ItemStack stack) {
-        if (!(stack.getItem() instanceof CannonItem c)) return false;
+        int barrels;
+        List<Item> candidates;
+        if (stack.getItem() instanceof ArtilleryItem ai) {
+            barrels = Math.max(1, ai.getBarrelCount());
+            candidates = shellsFor(ai.getDamage());
+        } else {
+            return false;
+        }
         Player owner = AmmoConsumer.ownerPlayer(maid);
         if (owner == null) return false;
-        int need = Math.max(1, c.getBarrelCount());
-        Item preferred = AmmoConsumer.getPreferredAmmo(owner, shellsFor(c.getDamage()));
+        Item preferred = AmmoConsumer.getPreferredAmmo(owner, candidates);
         if (preferred != null) {
-            return AmmoConsumer.hasItem(owner, preferred, need) || AmmoConsumer.isFreebie(owner);
+            return AmmoConsumer.hasItem(owner, preferred, barrels) || AmmoConsumer.isFreebie(owner);
         }
         return AmmoConsumer.isFreebie(owner);
     }
 
     @Override
     public void fire(EntityMaid maid, LivingEntity target, ItemStack stack) {
-        if (!(stack.getItem() instanceof CannonItem cannon)) return;
-        Player owner = AmmoConsumer.ownerPlayer(maid);
-        int barrels = Math.max(1, cannon.getBarrelCount());
+        int barrels;
+        float damage;
+        if (stack.getItem() instanceof ArtilleryItem ai) {
+            barrels = Math.max(1, ai.getBarrelCount());
+            damage = ai.getDamage();
+        } else {
+            return;
+        }
 
-        // Try to use player's preferred ammo type first
-        List<Item> candidates = shellsFor(cannon.getDamage());
+        Player owner = AmmoConsumer.ownerPlayer(maid);
+        List<Item> candidates = shellsFor(damage);
         Item preferred = AmmoConsumer.getPreferredAmmo(owner, candidates);
         int loaded = 0;
 
@@ -54,15 +66,13 @@ public class CannonHandler implements WeaponHandler {
             loaded = AmmoConsumer.consumeItem(owner, preferred, barrels);
         }
 
-        // If preferred ammo not enough, fall back to any available type
         if (loaded < barrels) {
-            loaded += consumeShells(owner, cannon.getDamage(), barrels - loaded);
+            loaded += consumeShells(owner, damage, barrels - loaded);
         }
 
         if (loaded <= 0) return;
 
         Level level = maid.level();
-        float damage = cannon.getDamage();
         float explosion = guessExplosion(damage);
         float velocity = guessVelocity(damage);
         float inaccuracy = guessInaccuracy(damage);

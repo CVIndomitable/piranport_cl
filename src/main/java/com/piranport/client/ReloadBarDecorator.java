@@ -6,7 +6,6 @@ import com.piranport.combat.TransformationManager;
 import com.piranport.component.LoadedAmmo;
 import com.piranport.component.SlotCooldowns;
 import com.piranport.item.AircraftItem;
-import com.piranport.item.CannonItem;
 import com.piranport.item.MissileLauncherItem;
 import com.piranport.item.ShipCoreItem;
 import com.piranport.item.TorpedoLauncherItem;
@@ -132,7 +131,7 @@ public class ReloadBarDecorator implements IItemDecorator {
             } else if (cd <= 0f) {
                 // Ready: solid bright color — but only if ammo is actually available.
                 // Phase 4: all cannons auto-resupply, check ammo pool on core.
-                if (weapon.getItem() instanceof CannonItem || weapon.getItem() instanceof com.piranport.artillery.ArtilleryItem) {
+                if (weapon.getItem() instanceof com.piranport.artillery.ArtilleryItem) {
                     boolean hasAmmo = hasCannonAmmoInPool(weapon, items, type);
                     if (hasAmmo) {
                         gui.fill(barX, barY, barX + BAR_MAX_W, barY + 1, readyColor);

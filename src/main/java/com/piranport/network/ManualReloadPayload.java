@@ -5,7 +5,6 @@ import com.piranport.combat.TransformationManager;
 import com.piranport.component.LoadedAmmo;
 import com.piranport.component.SlotCooldowns;
 import com.piranport.component.WeaponCooldown;
-import com.piranport.item.CannonItem;
 import com.piranport.item.MissileLauncherItem;
 import com.piranport.item.ShipCoreItem;
 import com.piranport.item.TorpedoItem;
@@ -98,9 +97,7 @@ public record ManualReloadPayload() implements CustomPacketPayload {
             }
 
             // Cannon auto-resupply in Phase 4 — R key does nothing for cannons
-            if (mainHand.getItem() instanceof CannonItem
-                    || mainHand.getItem() instanceof com.piranport.artillery.ArtilleryItem
-                    || offHand.getItem() instanceof CannonItem
+            if (mainHand.getItem() instanceof com.piranport.artillery.ArtilleryItem
                     || offHand.getItem() instanceof com.piranport.artillery.ArtilleryItem) {
                 return;
             }

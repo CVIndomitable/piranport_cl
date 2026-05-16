@@ -158,8 +158,7 @@ public final class ClientScopeHandler {
     /** 判断玩家是否手持火炮 */
     public static boolean isHoldingCannon(Player player) {
         ItemStack main = player.getMainHandItem();
-        return main.getItem() instanceof ArtilleryItem
-                || main.getItem() instanceof com.piranport.item.CannonItem;
+        return main.getItem() instanceof ArtilleryItem;
     }
 
     /** 断开连接等场景清理状态 */

@@ -8,5 +8,6 @@
   "initialSpeed": 2.5,
   "dragCoeff": 0.015,
   "gravity": 9.8,
+  "explosionPower": 1.0,
   "muzzles": [{"x": 0.2, "y": 0.15, "z": 0}]
 }

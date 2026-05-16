@@ -1422,8 +1422,6 @@ public class ShipCoreItem extends Item {
             boolean hasAmmo;
             if (stack.getItem() instanceof TorpedoLauncherItem tl) {
                 hasAmmo = loaded.count() >= tl.getTubeCount();
-            } else if (stack.getItem() instanceof CannonItem ci) {
-                hasAmmo = loaded.count() >= ci.getBarrelCount();
             } else if (stack.getItem() instanceof com.piranport.artillery.ArtilleryItem ai) {
                 hasAmmo = loaded.count() >= ai.getBarrelCount();
             } else {
@@ -1675,21 +1673,18 @@ public class ShipCoreItem extends Item {
     private static float getGunDamage(ItemStack weapon) {
         Item item = weapon.getItem();
         if (item instanceof com.piranport.artillery.ArtilleryItem ai) return ai.getDamage();
-        if (item instanceof CannonItem ci) return ci.getDamage();
         return 6f;
     }
 
     private static int getGunCooldown(ItemStack weapon) {
         Item item = weapon.getItem();
         if (item instanceof com.piranport.artillery.ArtilleryItem ai) return ai.getCooldownTicks();
-        if (item instanceof CannonItem ci) return ci.getCooldownTicks();
         return 30;
     }
 
     private static int getBarrelCount(ItemStack weapon) {
         Item item = weapon.getItem();
         if (item instanceof com.piranport.artillery.ArtilleryItem ai) return ai.getBarrelCount();
-        if (item instanceof CannonItem ci) return ci.getBarrelCount();
         return 1;
     }
 
@@ -1698,16 +1693,14 @@ public class ShipCoreItem extends Item {
     }
 
     private static float getExplosionPower(ItemStack weapon) {
-        if (isSmallCaliber(weapon)) return 1.0f;
-        if (weapon.is(ModItems.MEDIUM_GUN.get())) return 1.5f;
-        if (weapon.is(ModItems.LARGE_GUN.get())) return 2.0f;
+        Item item = weapon.getItem();
+        if (item instanceof com.piranport.artillery.ArtilleryItem ai) return ai.getExplosionPower();
         return 1.0f;
     }
 
     private static float getProjectileVelocity(ItemStack weapon) {
-        if (isSmallCaliber(weapon)) return 2.0f;
-        if (weapon.is(ModItems.MEDIUM_GUN.get())) return 2.5f;
-        if (weapon.is(ModItems.LARGE_GUN.get())) return 3.0f;
+        Item item = weapon.getItem();
+        if (item instanceof com.piranport.artillery.ArtilleryItem ai) return ai.getInitialSpeed();
         return 2.0f;
     }
 
@@ -1782,6 +1775,7 @@ public class ShipCoreItem extends Item {
             }
         }
         Vec3 aimTarget = pendingAimTarget.get(); // Phase 5: 非 null 时使用弹道解算
+        float dispersionDeg = getProjectileInaccuracy(weapon);
         for (int b = 0; b < barrelCount; b++) {
             if (isType3) {
                 fireSanshikiSpread(level, player, weapon, shellForRender);
@@ -1789,7 +1783,6 @@ public class ShipCoreItem extends Item {
                 float damage = getGunDamage(weapon);
                 float explosionPower = getExplosionPower(weapon);
                 float velocity = getProjectileVelocity(weapon);
-                float inaccuracy = getProjectileInaccuracy(weapon);
 
                 CannonProjectileEntity projectile = new CannonProjectileEntity(
                         level, player, shellForRender, damage, isHE, explosionPower);
@@ -1797,12 +1790,17 @@ public class ShipCoreItem extends Item {
                 projectile.setDragCoeff(getProjectileDrag(weapon));
                 projectile.setCustomGravity(getProjectileGravity(weapon));
 
-                if (aimTarget != null && b == 0) {
-                    // Phase 5: 弹道解算瞄准（仅第一发使用精确角度，后续仍用散布，保持齐射散布自然）
-                    fireProjectileWithAim(projectile, player, weapon, velocity, aimTarget);
+                Vec3 direction;
+                if (aimTarget != null) {
+                    // 弹道解算瞄准：所有炮管都使用解算角度
+                    direction = computeAimDirection(player, weapon, velocity, aimTarget);
                 } else {
-                    projectile.shootFromRotation(player, player.getXRot(), player.getYRot(), 0.0f, velocity, inaccuracy);
+                    direction = player.getLookAngle();
                 }
+                // 高斯散布：在初速度垂面内偏移
+                direction = com.piranport.artillery.ArtilleryItem.applyDispersion(
+                        direction, level.random, dispersionDeg);
+                projectile.shoot(direction.x, direction.y, direction.z, velocity, 0f);
                 level.addFreshEntity(projectile);
             }
 
@@ -1838,9 +1836,9 @@ public class ShipCoreItem extends Item {
         }
     }
 
-    /** Phase 5: 弹道解算瞄准发射。计算从炮口到目标的发射仰角，使用 shootFromRotation 设置速度。 */
-    private static void fireProjectileWithAim(CannonProjectileEntity projectile, Player player,
-                                               ItemStack weapon, float velocity, Vec3 aimTarget) {
+    /** Phase 5: 弹道解算瞄准。计算从炮口到目标的最优发射方向向量。 */
+    private static Vec3 computeAimDirection(Player player, ItemStack weapon,
+                                             float velocity, Vec3 aimTarget) {
         Vec3 eyePos = player.getEyePosition();
         Vec3 lookDir = player.getLookAngle();
         Vec3 muzzlePos = eyePos.add(lookDir.scale(1.5));
@@ -1851,8 +1849,7 @@ public class ShipCoreItem extends Item {
 
         if (horizontalDist < 1.0) {
             // 近距目标：直接朝准星方向发射
-            projectile.shootFromRotation(player, player.getXRot(), player.getYRot(), 0.0f, velocity, 0);
-            return;
+            return lookDir;
         }
 
         // 弹道解算最佳仰角
@@ -1863,11 +1860,15 @@ public class ShipCoreItem extends Item {
                 horizontalDist, verticalDist);
 
         // MC 偏航角：atan2(-dx, dz) 映射到 MC 坐标（yaw=0 = +Z）
-        float yawDeg = (float) Math.toDegrees(Math.atan2(-toTarget.x, toTarget.z));
-        float pitchDeg = (float) Math.toDegrees(optimalPitch);
+        double yawRad = Math.atan2(-toTarget.x, toTarget.z);
+        double pitchRad = -optimalPitch; // 向上为正
 
-        // shootFromRotation 会自动计算速度向量并记录 initialSpeed
-        projectile.shootFromRotation(player, -pitchDeg, yawDeg, 0.0f, velocity, 0);
+        double cosP = Math.cos(pitchRad);
+        return new Vec3(
+                -Math.sin(yawRad) * cosP,
+                Math.sin(pitchRad),
+                Math.cos(yawRad) * cosP
+        ).normalize();
     }
 
     // ===== Global projectile limit (Phase 11) =====

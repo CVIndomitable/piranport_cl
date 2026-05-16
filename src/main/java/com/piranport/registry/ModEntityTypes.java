@@ -1,7 +1,6 @@
 package com.piranport.registry;
 
 import com.piranport.PiranPort;
-import com.piranport.artillery.ShellEntity;
 import com.piranport.entity.AerialBombEntity;
 import com.piranport.entity.AircraftDropEntity;
 import com.piranport.entity.AircraftEntity;
@@ -28,14 +27,6 @@ public class ModEntityTypes {
             DeferredRegister.create(Registries.ENTITY_TYPE, PiranPort.MOD_ID);
 
     // ===== Phase 27: Artillery System =====
-    public static final DeferredHolder<EntityType<?>, EntityType<ShellEntity>>
-            SHELL_PROJECTILE = ENTITY_TYPES.register("shell_projectile",
-            () -> EntityType.Builder.<ShellEntity>of(ShellEntity::new, MobCategory.MISC)
-                    .sized(0.25f, 0.25f)
-                    .clientTrackingRange(4)
-                    .updateInterval(10)
-                    .build("piranport:shell_projectile"));
-
     public static final DeferredHolder<EntityType<?>, EntityType<CannonProjectileEntity>>
             CANNON_PROJECTILE = ENTITY_TYPES.register("cannon_projectile",
             () -> EntityType.Builder.<CannonProjectileEntity>of(CannonProjectileEntity::new, MobCategory.MISC)

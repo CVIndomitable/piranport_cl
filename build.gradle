@@ -23,7 +23,10 @@ repositories {
         name = "BlameJared"
         url = "https://maven.blamejared.com"
     }
-    flatDir { dirs 'libs' }
+    maven {
+        name = "Modrinth"
+        url = "https://api.modrinth.com/maven"
+    }
 }
 
 base {
@@ -86,8 +89,8 @@ dependencies {
     localRuntime "mezz.jei:jei-1.21.1-neoforge:19.27.0.340"
 
     // Touhou Little Maid — soft dependency for maid rigging compat (optional at runtime)
-    compileOnly files('libs/touhoulittlemaid-1.5.2-neoforge+mc1.21.1.jar')
-    localRuntime files('libs/touhoulittlemaid-1.5.2-neoforge+mc1.21.1.jar')
+    compileOnly "maven.modrinth:touhou-little-maid:1.5.2-neoforge+mc1.21.1"
+    localRuntime "maven.modrinth:touhou-little-maid:1.5.2-neoforge+mc1.21.1"
 }
 
 var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {

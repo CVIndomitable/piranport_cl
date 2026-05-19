@@ -73,4 +73,11 @@ public class ModBlockEntityTypes {
                             ModBlocks.BOWL_FOOD.get(),
                             ModBlocks.CAKE_FOOD.get())
                             .build(null));
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<com.piranport.block.entity.SmokeScreenBlockEntity>> SMOKE_SCREEN =
+            BLOCK_ENTITY_TYPES.register("smoke_screen", () ->
+                    BlockEntityType.Builder.of(
+                            com.piranport.block.entity.SmokeScreenBlockEntity::new,
+                            ModBlocks.SMOKE_SCREEN.get()
+                    ).build(null));
 }

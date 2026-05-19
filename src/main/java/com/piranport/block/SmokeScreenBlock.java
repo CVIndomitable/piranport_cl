@@ -1,5 +1,7 @@
 package com.piranport.block;
 
+import com.mojang.serialization.MapCodec;
+import com.piranport.block.entity.SmokeScreenBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
@@ -10,25 +12,40 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.RenderShape;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Smoke screen block — opaque texture, transparent rendering, no collision,
  * indestructible (except creative), blocks mob line of sight,
  * auto-removes after 120 seconds (2400 ticks).
  */
-public class SmokeScreenBlock extends Block {
+public class SmokeScreenBlock extends BaseEntityBlock {
 
     /** Ticks before auto-removal: 120 seconds × 20 ticks = 2400 */
     private static final int LIFETIME_TICKS = 2400;
 
+    public static final MapCodec<SmokeScreenBlock> CODEC = simpleCodec(SmokeScreenBlock::new);
+
     public SmokeScreenBlock(Properties properties) {
         super(properties);
+    }
+
+    @Override
+    protected MapCodec<? extends BaseEntityBlock> codec() {
+        return CODEC;
+    }
+
+    @Nullable
+    @Override
+    public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
+        return new SmokeScreenBlockEntity(pos, state);
     }
 
     /* ---- Shape: no collision, full-cube outline ---- */
@@ -57,7 +74,7 @@ public class SmokeScreenBlock extends Block {
 
     @Override
     public RenderShape getRenderShape(BlockState state) {
-        return RenderShape.MODEL;
+        return RenderShape.ENTITYBLOCK_ANIMATED;
     }
 
     @Override
@@ -96,6 +113,16 @@ public class SmokeScreenBlock extends Block {
     protected void randomTick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
         if (!level.getBlockTicks().hasScheduledTick(pos, this)) {
             level.removeBlock(pos, false);
+        }
+    }
+
+    /* ---- BlockEntity cleanup ---- */
+
+    @Override
+    public void onRemove(BlockState state, Level level, BlockPos pos,
+                        BlockState newState, boolean isMoving) {
+        if (!state.is(newState.getBlock())) {
+            super.onRemove(state, level, pos, newState, isMoving);
         }
     }
 }

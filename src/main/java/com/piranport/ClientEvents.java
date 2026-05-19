@@ -165,6 +165,8 @@ public class ClientEvents {
                 PlaceableFoodRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntityTypes.MODEL_DEBUG.get(),
                 com.piranport.client.ModelDebugBlockEntityRenderer::new);
+        event.registerBlockEntityRenderer(ModBlockEntityTypes.SMOKE_SCREEN.get(),
+                com.piranport.client.SmokeScreenRenderer::new);
         // 副本敌人
         event.registerEntityRenderer(ModEntityTypes.LOW_TIER_DESTROYER.get(),
                 com.piranport.client.LowTierDestroyerRenderer::new);

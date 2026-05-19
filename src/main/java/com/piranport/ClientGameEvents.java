@@ -10,14 +10,17 @@ import com.piranport.network.RecallAllAircraftPayload;
 import com.piranport.network.SkinRevertPayload;
 import com.piranport.skin.ClientSkinData;
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.util.RandomSource;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.effect.MobEffects;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.RenderHandEvent;
+import net.neoforged.neoforge.client.event.RenderLivingEvent;
 import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -86,6 +89,15 @@ public class ClientGameEvents {
     @SubscribeEvent
     public static void onRenderHand(RenderHandEvent event) {
         if (ClientReconData.isInReconMode()) {
+            event.setCanceled(true);
+        }
+    }
+
+    /** 烟雾隐身：观察者有隐身效果（身处烟雾）时不渲染其他实体 */
+    @SubscribeEvent
+    public static void onRenderLiving(RenderLivingEvent.Pre<?, ?> event) {
+        var viewer = Minecraft.getInstance().player;
+        if (viewer != null && viewer.hasEffect(MobEffects.INVISIBILITY) && event.getEntity() != viewer) {
             event.setCanceled(true);
         }
     }

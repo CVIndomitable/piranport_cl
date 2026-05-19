@@ -3,6 +3,10 @@ package com.piranport.block;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
@@ -34,13 +38,19 @@ public class SmokeScreenBlock extends Block {
         return Shapes.empty();
     }
 
-    /**
-     * Visual shape is used for line-of-sight raycasts (ClipContext.Block.VISUAL).
-     * Return full cube so mobs cannot see through smoke.
-     */
     @Override
     public VoxelShape getVisualShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext ctx) {
         return Shapes.block();
+    }
+
+    /* ---- Invisibility while inside smoke ---- */
+
+    @Override
+    public void entityInside(BlockState state, Level level, BlockPos pos, Entity entity) {
+        if (!level.isClientSide && entity instanceof LivingEntity living) {
+            // 40 ticks (2s), refreshed each tick → lasts until 2s after leaving smoke
+            living.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 40, 0, false, false, true));
+        }
     }
 
     /* ---- Rendering ---- */

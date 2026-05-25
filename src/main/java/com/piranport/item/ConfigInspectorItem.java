@@ -43,19 +43,8 @@ public class ConfigInspectorItem extends Item {
     private void addSummaryTooltip(List<Component> tooltip) {
         tooltip.add(Component.literal("━━━━━━━━━━━━━━━━").withStyle(ChatFormatting.DARK_GRAY));
 
-        // 游戏模式
-        tooltip.add(Component.literal("[游戏模式]").withStyle(ChatFormatting.GOLD));
-        tooltip.add(Component.literal("  舰R模式: " + formatBoolean(ModCommonConfig.KANSEN_MODE.get()))
-                .withStyle(ChatFormatting.GRAY));
-        tooltip.add(Component.literal("  斯拉夫大牢: " + formatBoolean(ModCommonConfig.SLAV_PRISON_MODE.get()))
-                .withStyle(ChatFormatting.GRAY));
-
-        tooltip.add(Component.literal("")); // 空行
-
         // 核心开关
         tooltip.add(Component.literal("[核心开关]").withStyle(ChatFormatting.GOLD));
-        tooltip.add(Component.literal("  舰装GUI: " + formatBoolean(ModCommonConfig.isShipCoreGuiEnabled()))
-                .withStyle(ChatFormatting.GRAY));
         tooltip.add(Component.literal("  友军伤害: " + formatBoolean(ModCommonConfig.FRIENDLY_FIRE_ENABLED.get()))
                 .withStyle(ChatFormatting.GRAY));
         tooltip.add(Component.literal("  爆炸破坏: " + formatBoolean(ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get()))
@@ -78,33 +67,13 @@ public class ConfigInspectorItem extends Item {
 
         // 1. 游戏模式与核心开关
         addSection(player, "游戏模式与核心开关");
-        addConfigLine(player, "舰R模式", formatBoolean(ModCommonConfig.KANSEN_MODE.get()));
-        addConfigLine(player, "斯拉夫大牢", formatBoolean(ModCommonConfig.SLAV_PRISON_MODE.get()));
         addConfigLine(player, "首次赠书", formatBoolean(ModCommonConfig.GIVE_GUIDEBOOK_ON_FIRST_JOIN.get()));
-
-        // 舰装GUI特殊处理
-        boolean guiEnabled = ModCommonConfig.isShipCoreGuiEnabled();
-        boolean kansenMode = ModCommonConfig.KANSEN_MODE.get();
-        String guiStatus = formatBoolean(guiEnabled);
-        if (kansenMode && !guiEnabled) {
-            guiStatus += " (被舰R模式覆盖)";
-        }
-        addConfigLine(player, "舰装GUI", guiStatus);
-
         addConfigLine(player, "舰装槽位", ModCommonConfig.SHIP_CORE_SLOT_MODE.get());
         addConfigLine(player, "友军伤害", formatBoolean(ModCommonConfig.FRIENDLY_FIRE_ENABLED.get()));
         addConfigLine(player, "爆炸破坏", formatBoolean(ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get()));
         addConfigLine(player, "自动装填", formatBoolean(ModCommonConfig.AUTO_RESUPPLY_ENABLED.get()));
         addConfigLine(player, "战斗机弹药", formatBoolean(ModCommonConfig.FIGHTER_AMMO_ENABLED.get()));
-
-        // 易燃易爆特殊处理
-        boolean flammableEnabled = ModCommonConfig.isFlammableEffectActive();
-        boolean slavMode = ModCommonConfig.SLAV_PRISON_MODE.get();
-        String flammableStatus = formatBoolean(flammableEnabled);
-        if (slavMode && flammableEnabled) {
-            flammableStatus += " (被斯拉夫大牢强制开启)";
-        }
-        addConfigLine(player, "易燃易爆", flammableStatus);
+        addConfigLine(player, "易燃易爆", formatBoolean(ModCommonConfig.isFlammableEffectActive()));
 
         // 2. 舰装属性
         addSection(player, "舰装属性");

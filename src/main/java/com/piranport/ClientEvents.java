@@ -74,7 +74,6 @@ public class ClientEvents {
 
     @SubscribeEvent
     public static void registerKeyMappings(RegisterKeyMappingsEvent event) {
-        event.register(ModKeyMappings.CYCLE_WEAPON);
         event.register(ModKeyMappings.FIRE_CONTROL_LOCK);
         event.register(ModKeyMappings.FIRE_CONTROL_ADD);
         event.register(ModKeyMappings.FIRE_CONTROL_CANCEL);

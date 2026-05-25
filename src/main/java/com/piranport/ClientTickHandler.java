@@ -121,26 +121,6 @@ public class ClientTickHandler {
 
         CameraShakeHandler.tick();
 
-        // V 键 — 丢弃鱼雷导线、退出侦察模式，或仅在 GUI 模式下切换武器
-        while (ModKeyMappings.CYCLE_WEAPON.consumeClick()) {
-            if (ClientTorpedoGuidance.isActive()) {
-                if (mc.getConnection() != null) {
-                    PacketDistributor.sendToServer(new TorpedoGuidanceExitPayload());
-                }
-            } else if (ClientReconData.isInReconMode()) {
-                if (mc.getConnection() != null) {
-                    PacketDistributor.sendToServer(new ReconExitPayload());
-                }
-            } else {
-                // 让服务端判断 GUI 模式是否激活 — 避免客户端读取 Common 配置
-                ItemStack hand = mc.player.getMainHandItem();
-                if (hand.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(hand)) {
-                    PacketDistributor.sendToServer(new CycleWeaponPayload());
-                }
-            }
-            // 无 GUI 模式：武器为副手物品，V 键在此不执行任何操作
-        }
-
         // 鱼雷制导模式：将玩家旋转镜像到鱼雷，并将视线方向流式发送到服务端
         boolean inTorpedoGuidance = ClientTorpedoGuidance.isActive();
         if (inTorpedoGuidance) {

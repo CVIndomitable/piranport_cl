@@ -29,18 +29,11 @@ import net.minecraft.world.item.component.ItemContainerContents;
  *
  * 职责概览：
  *   - 变身/解除变身（setTransformed / removeTransformationAttributes）
- *   - 属性计算: applyTransformationAttributes（GUI 模式和非 GUI 模式双路径）
+ *   - 属性计算: applyTransformationAttributes（基于快捷栏武器）
  *   - 负重系统: WEAPON_LOAD_MAP 静态武器重量注册表 + getItemLoad 查询
  *   - 超重惩罚: applyOverweightPenalty / removeOverweightPenalty
- *   - 武器循环: cycleWeapon（GUI 模式下切换武器槽位）
  *   - 装填加速: boostedCooldown（根据 RELOAD_BOOST 效果等级缩减冷却）
  *   - 装备检测: hasSonarEquipped / hasTorpedoReloadEquipped / isFireableWeapon
- *
- * 两种模式的区分：
- *   GUI 模式    (ModCommonConfig.SHIP_CORE_GUI_ENABLED=true):
- *       武器和装甲通过核心物品内部的 ItemContainerContents 管理，玩家打开 GUI 拖放装备。
- *   无GUI 模式  (ModCommonConfig.SHIP_CORE_GUI_ENABLED=false):
- *       武器来自玩家快捷栏 (hotbar 0-8)，装甲/声纳/引擎存储在核心的 SHIP_CORE_ARMOR 组件中。
  *
  * 武器重量注册表 (WEAPON_LOAD_MAP)：
  *   使用 IdentityHashMap（Item 是注册表单例，引用相等更高效）。
@@ -99,10 +92,6 @@ public class TransformationManager {
         coreStack.set(ModDataComponents.SHIP_CORE_TRANSFORMED.get(), transformed);
     }
 
-    public static void cycleWeapon(Player player) {
-        // 无GUI模式：武器由玩家手持决定，不需要切换
-    }
-
     /** 返回 true 表示可发射/投放的物品（火炮、鱼雷发射器、飞机 — 不含核心、装甲、弹药） */
     public static boolean isFireableWeapon(ItemStack stack) {
         if (stack.isEmpty()) return false;
@@ -117,11 +106,7 @@ public class TransformationManager {
 
     /**
      * Apply armor and speed attribute modifiers based on current ship core equipment.
-     * Call when player transforms or when GUI closes (to recalculate after changes).
-     *
-     * When SHIP_CORE_GUI_ENABLED is false: the ship core with the highest maxLoad in the
-     * player's inventory provides the capacity; all weapon items in the inventory consume load.
-     * When SHIP_CORE_GUI_ENABLED is true: reads weapons/armor from the core's ItemContainerContents.
+     * Scans the player's hotbar for weapons and calculates load/attributes.
      */
     public static void applyTransformationAttributes(Player player, ItemStack coreStack) {
         if (player.level().isClientSide()) return;

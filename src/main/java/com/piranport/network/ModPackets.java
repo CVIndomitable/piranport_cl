@@ -14,11 +14,6 @@ public class ModPackets {
     public static void register(RegisterPayloadHandlersEvent event) {
         PayloadRegistrar registrar = event.registrar(PROTOCOL_VERSION);
         registrar.playToServer(
-                CycleWeaponPayload.TYPE,
-                CycleWeaponPayload.STREAM_CODEC,
-                CycleWeaponPayload::handle
-        );
-        registrar.playToServer(
                 OpenFlightGroupPayload.TYPE,
                 OpenFlightGroupPayload.STREAM_CODEC,
                 OpenFlightGroupPayload::handle

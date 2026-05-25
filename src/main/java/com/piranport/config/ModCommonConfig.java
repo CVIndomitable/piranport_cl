@@ -14,7 +14,6 @@ public class ModCommonConfig {
 
     // ===== GUI & Inventory (界面与背包) =====
 
-    public static final ModConfigSpec.BooleanValue SHIP_CORE_GUI_ENABLED;
     public static final ModConfigSpec.ConfigValue<String> SHIP_CORE_SLOT_MODE;
     public static final ModConfigSpec.BooleanValue WEAPON_PICKUP_TO_INVENTORY;
 
@@ -34,8 +33,6 @@ public class ModCommonConfig {
 
     // ===== Game Mode (游戏模式) =====
 
-    public static final ModConfigSpec.BooleanValue KANSEN_MODE;
-    public static final ModConfigSpec.BooleanValue SLAV_PRISON_MODE;
     public static final ModConfigSpec.BooleanValue GIVE_GUIDEBOOK_ON_FIRST_JOIN;
 
     static {
@@ -64,13 +61,6 @@ public class ModCommonConfig {
         BUILDER.pop();
 
         BUILDER.push("gui");
-        SHIP_CORE_GUI_ENABLED = BUILDER
-                .comment(
-                        "Enable the Ship Core GUI (舰装核心界面).",
-                        "Default: false (right-click does not open GUI; only fires/transforms).",
-                        "Set to true to allow opening the ship core inventory screen. (舰装核心GUI开关，默认关闭)")
-                .define("shipCoreGuiEnabled", false);
-
         SHIP_CORE_SLOT_MODE = BUILDER
                 .comment(
                         "Ship Core equipment slot mode (舰装核心装备槽位模式).",
@@ -134,20 +124,6 @@ public class ModCommonConfig {
         BUILDER.pop();
 
         BUILDER.push("gameMode");
-        KANSEN_MODE = BUILDER
-                .comment(
-                        "Enable Kansen Mode (舰R模式).",
-                        "Default: true. When enabled, forces no-GUI mode (overrides shipCoreGuiEnabled).",
-                        "舰R模式，默认开启。开启时强制使用无GUI模式。")
-                .define("kansenMode", true);
-
-        SLAV_PRISON_MODE = BUILDER
-                .comment(
-                        "Enable Slav Prison Mode (斯拉夫大牢模式).",
-                        "Default: false. When enabled, also activates flammableEffectEnabled.",
-                        "斯拉夫大牢模式，默认关闭。开启时同时启用易燃易爆效果。")
-                .define("slavPrisonMode", false);
-
         GIVE_GUIDEBOOK_ON_FIRST_JOIN = BUILDER
                 .comment(
                         "Give players a Guidebook when they first join the world (首次进入世界赠送教程书).",
@@ -160,18 +136,9 @@ public class ModCommonConfig {
     public static final ModConfigSpec SPEC = BUILDER.build();
 
     /**
-     * Helper: returns true only if the Ship Core GUI is truly enabled.
-     * Kansen Mode overrides GUI to disabled.
-     */
-    public static boolean isShipCoreGuiEnabled() {
-        return SHIP_CORE_GUI_ENABLED.get() && !KANSEN_MODE.get();
-    }
-
-    /**
      * Helper: returns true if the flammable effect should be active.
-     * Slav Prison Mode forces this on.
      */
     public static boolean isFlammableEffectActive() {
-        return FLAMMABLE_EFFECT_ENABLED.get() || SLAV_PRISON_MODE.get();
+        return FLAMMABLE_EFFECT_ENABLED.get();
     }
 }

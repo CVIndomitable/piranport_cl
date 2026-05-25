@@ -1,12 +1,12 @@
 package com.piranport.combat;
 
-import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import com.piranport.config.ModCommonConfig;
 import com.piranport.entity.AircraftEntity;
 import com.piranport.npc.deepocean.AbstractDeepOceanEntity;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
+import net.neoforged.fml.ModList;
 
 /**
  * 皮兰港所有弹药的友军伤害判定逻辑。
@@ -24,6 +24,8 @@ import net.minecraft.world.entity.player.Player;
  */
 public final class FriendlyFireHelper {
 
+    private static final boolean MAID_MOD_LOADED = ModList.get().isLoaded("touhou_little_maid");
+
     private FriendlyFireHelper() {}
 
     /**
@@ -36,17 +38,9 @@ public final class FriendlyFireHelper {
         if (target instanceof AbstractDeepOceanEntity && owner instanceof AbstractDeepOceanEntity) {
             return true;
         }
-        // 2. 女仆禁止被自己的弹药命中
-        if (target instanceof EntityMaid && owner instanceof EntityMaid && target == owner) {
+        // 2-3. 女仆友伤保护（仅在女仆mod加载时检查）
+        if (MAID_MOD_LOADED && checkMaidFriendlyFire(target, owner)) {
             return true;
-        }
-        // 3. 同主人女仆禁止互相伤害
-        if (target instanceof EntityMaid targetMaid && owner instanceof EntityMaid ownerMaid) {
-            LivingEntity targetOwner = targetMaid.getOwner();
-            LivingEntity ownerOwner = ownerMaid.getOwner();
-            if (targetOwner != null && ownerOwner != null && targetOwner.getUUID().equals(ownerOwner.getUUID())) {
-                return true;
-            }
         }
         // 4. 玩家友伤关闭时禁止攻击其他玩家
         if (!ModCommonConfig.FRIENDLY_FIRE_ENABLED.get()
@@ -84,6 +78,33 @@ public final class FriendlyFireHelper {
             return true;
         }
         // 8. 以上都不匹配，允许命中
+        return false;
+    }
+
+    /**
+     * 女仆友伤检查（通过反射调用，避免硬依赖）
+     * @return true 表示应拦截
+     */
+    private static boolean checkMaidFriendlyFire(Entity target, Entity owner) {
+        try {
+            Class<?> maidClass = Class.forName("com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid");
+            if (!maidClass.isInstance(target) || !maidClass.isInstance(owner)) {
+                return false;
+            }
+            // 2. 女仆禁止被自己的弹药命中
+            if (target == owner) {
+                return true;
+            }
+            // 3. 同主人女仆禁止互相伤害
+            var getOwnerMethod = maidClass.getMethod("getOwner");
+            LivingEntity targetOwner = (LivingEntity) getOwnerMethod.invoke(target);
+            LivingEntity ownerOwner = (LivingEntity) getOwnerMethod.invoke(owner);
+            if (targetOwner != null && ownerOwner != null && targetOwner.getUUID().equals(ownerOwner.getUUID())) {
+                return true;
+            }
+        } catch (Exception e) {
+            // 反射失败时静默忽略，不影响其他逻辑
+        }
         return false;
     }
 }

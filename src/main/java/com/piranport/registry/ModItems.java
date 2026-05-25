@@ -28,6 +28,7 @@ import com.piranport.item.DepthChargeLauncherItem;
 import com.piranport.item.MissileItem;
 import com.piranport.item.MissileLauncherItem;
 import com.piranport.item.FlareLauncherItem;
+import com.piranport.item.ConfigInspectorItem;
 import com.piranport.item.DamageControlItem;
 import com.piranport.item.KirinHeadbandItem;
 import com.piranport.item.RepairKitItem;
@@ -1248,6 +1249,11 @@ public class ModItems {
     public static final DeferredItem<com.piranport.item.QuickRepairItem> QUICK_REPAIR =
             ITEMS.register("quick_repair",
                     () -> new com.piranport.item.QuickRepairItem(new Item.Properties().stacksTo(1)));
+
+    // ===== Config Inspector =====
+    public static final DeferredItem<ConfigInspectorItem> CONFIG_INSPECTOR =
+            ITEMS.register("config_inspector",
+                    () -> new ConfigInspectorItem(new Item.Properties().stacksTo(1)));
 
     // ===== Smoke Candle =====
     public static final DeferredItem<SmokeCandleItem> SMOKE_CANDLE =

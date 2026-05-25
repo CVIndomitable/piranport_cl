@@ -525,6 +525,8 @@
   "item.piranport.hentai_trophy": "Hentai Trophy",
   "item.piranport.elite_damage_control": "Elite Damage Control Squad",
   "item.piranport.damage_control": "Damage Control",
+  "item.piranport.config_inspector": "Config Inspector",
+  "tooltip.piranport.config_inspector.use": "Right-click to view full config report",
   "item.piranport.smoke_candle": "Smoke Candle",
   "item.piranport.kirin_headband": "Kirin-class Headband",
   "block.piranport.smoke_screen": "Smoke Screen",

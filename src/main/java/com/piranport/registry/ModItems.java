@@ -203,6 +203,43 @@ public class ModItems {
                                     new MuzzlePos(-0.6, 0.3, 0)),
                             3.5f, 0.008f, 9.8f, 2.0f, 0.0f)));
 
+    /**
+     * 七联装主炮群 — 测试用极限齐射火炮。
+     * 用途：测试齐射数值、散布系统、负重平衡。
+     *
+     * 参数说明：
+     * - 齐射数：7发（barrels=7）
+     * - 散布角：1.5度（可调整测试不同精度）
+     * - 装填时间：100tick（5秒，可调整测试DPS）
+     * - 武器重量：35（比large_gun的30更重）
+     */
+    public static final DeferredItem<Item> SEVEN_BARREL_GUN =
+            ITEMS.register("seven_barrel_gun", () -> new ArtilleryItem(new Item.Properties().stacksTo(1)
+                    .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.CANNON)
+                    .durability(3000),
+                    new ArtilleryCannonData(
+                            16,      // caliber: 大口径
+                            7,       // barrels: 7联装
+                            20.0f,   // damage: 与large_gun相同
+                            100,     // reloadTime: 5秒装填
+                            3000,    // durability: 高耐久
+                            4.0f,    // scopeZoom: 与large_gun相同
+                            List.of( // muzzles: 7个炮口横向排列
+                                    new MuzzlePos(0.9, 0.3, 0),
+                                    new MuzzlePos(0.6, 0.3, 0),
+                                    new MuzzlePos(0.3, 0.3, 0),
+                                    new MuzzlePos(0.0, 0.3, 0),
+                                    new MuzzlePos(-0.3, 0.3, 0),
+                                    new MuzzlePos(-0.6, 0.3, 0),
+                                    new MuzzlePos(-0.9, 0.3, 0)
+                            ),
+                            3.5f,    // initialSpeed: 与large_gun相同
+                            0.008f,  // dragCoeff: 与large_gun相同
+                            9.8f,    // gravity: 标准重力
+                            2.0f,    // explosionPower: 与large_gun相同
+                            1.5f     // dispersion: 1.5度散布
+                    )));
+
     // ===== Torpedo Ammo (legacy generic) =====
     public static final DeferredItem<TorpedoItem> TORPEDO_533MM =
             ITEMS.register("torpedo_533mm",

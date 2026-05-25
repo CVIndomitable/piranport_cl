@@ -82,7 +82,7 @@ public class PlayerConnectionHandler {
 
         if (ModCommonConfig.GIVE_GUIDEBOOK_ON_FIRST_JOIN.get()) {
             CompoundTag persisted = joiner.getPersistentData();
-            String tag = "piranport:received_guidebook";
+            String tag = PlayerDataHelper.NBT_KEY_RECEIVED_GUIDEBOOK;
             if (!persisted.getBoolean(tag)) {
                 persisted.putBoolean(tag, true);
                 ItemStack guidebook = new ItemStack(ModItems.GUIDEBOOK.get());

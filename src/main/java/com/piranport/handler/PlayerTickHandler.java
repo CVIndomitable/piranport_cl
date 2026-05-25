@@ -8,6 +8,7 @@ import com.piranport.aviation.ReconManager;
 import com.piranport.combat.TransformationManager;
 import com.piranport.component.FuelData;
 import com.piranport.config.ModCommonConfig;
+import net.minecraft.nbt.CompoundTag;
 
 import com.piranport.item.KirinHeadbandItem;
 import com.piranport.item.FootballArmorItem;
@@ -226,11 +227,28 @@ public class PlayerTickHandler {
                 FuelData fuel = coreStack.getOrDefault(ModDataComponents.SHIP_CORE_FUEL.get(),
                         new FuelData(0, ((ShipCoreItem) coreStack.getItem()).getShipType().fuelCapacity));
                 if (fuel.isEmpty()) {
+                    // 检查是否首次看到燃料不足
+                    CompoundTag persisted = player.getPersistentData();
+                    boolean seenGuide = persisted.getBoolean(PlayerDataHelper.NBT_KEY_SEEN_FUEL_GUIDE);
+
+                    if (!seenGuide) {
+                        // 首次引导：聊天框详细说明 + 动作栏简短提示
+                        player.sendSystemMessage(
+                            Component.translatable("message.piranport.first_fuel_guide"));
+                        player.displayClientMessage(
+                            Component.translatable("message.piranport.first_fuel_guide_actionbar"), true);
+                        persisted.putBoolean(PlayerDataHelper.NBT_KEY_SEEN_FUEL_GUIDE, true);
+                        return;
+                    }
+
+                    // 已看过引导：增强提示（聊天框 + 动作栏）
                     Integer cached = lastWeaponLoad.get(player.getUUID());
                     if (cached == null || cached != -999) {
                         lastWeaponLoad.put(player.getUUID(), -999);
+                        player.sendSystemMessage(
+                            Component.translatable("message.piranport.no_fuel_enhanced"));
                         player.displayClientMessage(
-                                Component.translatable("message.piranport.no_fuel"), true);
+                            Component.translatable("message.piranport.no_fuel"), true);
                     }
                     return;
                 }

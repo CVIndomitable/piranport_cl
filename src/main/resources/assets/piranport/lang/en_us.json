@@ -460,8 +460,6 @@
   "tooltip.piranport.fuel_tank": "Fuel Tank: %sb / %sb",
   "message.piranport.no_fuel": "No fuel! Use a fuel bucket to refuel",
   "message.piranport.fuel_depleted": "Fuel depleted, transformation ended!",
-  "message.piranport.first_fuel_guide": "§e【Ship Core Guide】§r\n§7Ship cores require fuel to activate transformation.§r\n§7Use these items to refuel:§r\n§6• Lava Bucket §7(large amount)§r\n§6• Coal/Charcoal §7(small amount)§r\n§6• Blaze Rod §7(small amount)§r\n§7Right-click fuel items onto the core in your inventory.§r",
-  "message.piranport.first_fuel_guide_actionbar": "§cNo fuel! Please refuel first (check chat for details)",
   "message.piranport.no_fuel_enhanced": "§cNo fuel!§r\n§7Use lava bucket, coal, or blaze rod to refuel.§r",
 
   "block.piranport.dungeon_lectern": "Dungeon Lectern",

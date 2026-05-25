@@ -8,8 +8,5 @@ public class PlayerDataHelper {
     /** 玩家是否已收到指南书 */
     public static final String NBT_KEY_RECEIVED_GUIDEBOOK = "piranport:received_guidebook";
 
-    /** 玩家是否已看过燃料引导消息 */
-    public static final String NBT_KEY_SEEN_FUEL_GUIDE = "piranport:seen_fuel_guide";
-
     private PlayerDataHelper() {}
 }

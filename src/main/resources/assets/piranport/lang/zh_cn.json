@@ -465,8 +465,6 @@
   "tooltip.piranport.fuel_tank": "燃料库: %sb / %sb",
   "message.piranport.no_fuel": "燃料不足！请使用燃料桶补充燃料",
   "message.piranport.fuel_depleted": "燃料耗尽，舰装解除！",
-  "message.piranport.first_fuel_guide": "§e【舰装核心使用指南】§r\n§7舰装核心需要燃料才能启动变身。§r\n§7请使用以下物品补充燃料：§r\n§6• 熔岩桶 §7(大量燃料)§r\n§6• 煤炭/木炭 §7(少量燃料)§r\n§6• 烈焰棒 §7(少量燃料)§r\n§7在背包界面中，将燃料物品右键点击核心即可加注。§r",
-  "message.piranport.first_fuel_guide_actionbar": "§c燃料不足！请先补充燃料（查看聊天框了解详情）",
   "message.piranport.no_fuel_enhanced": "§c燃料不足！§r\n§7请使用熔岩桶、煤炭或烈焰棒补充燃料。§r",
 
   "block.piranport.dungeon_lectern": "海域出击书台",

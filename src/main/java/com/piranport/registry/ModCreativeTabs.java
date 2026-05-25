@@ -46,6 +46,8 @@ public class ModCreativeTabs {
                         addPreloadedWeapon(output, ModItems.MEDIUM_GUN.get(), "piranport:medium_he_shell", 2);
                         output.accept(ModItems.LARGE_GUN.get());
                         addPreloadedWeapon(output, ModItems.LARGE_GUN.get(), "piranport:large_he_shell", 3);
+                        output.accept(ModItems.SALVO_TEST_GUN.get());
+                        addPreloadedWeapon(output, ModItems.SALVO_TEST_GUN.get(), "piranport:large_he_shell", 12);
 
                         // Torpedo Launchers (empty + loaded)
                         output.accept(ModItems.TWIN_TORPEDO_LAUNCHER.get());

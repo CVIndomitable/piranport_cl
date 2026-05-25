@@ -241,6 +241,49 @@ public class ModItems {
                             1.5f     // dispersion: 1.5度散布
                     )));
 
+    /**
+     * 齐射测试 — 三倍大型火炮数值，12联装。
+     * 用途：测试极限齐射性能和散布系统。
+     *
+     * 参数说明：
+     * - 齐射数：12发（barrels=12）
+     * - 伤害：60.0（大型火炮的3倍）
+     * - 装填时间：80tick（与大型火炮相同）
+     * - 初速：10.5（大型火炮的3倍）
+     * - 爆炸威力：6.0（大型火炮的3倍）
+     */
+    public static final DeferredItem<Item> SALVO_TEST_GUN =
+            ITEMS.register("salvo_test_gun", () -> new ArtilleryItem(new Item.Properties().stacksTo(1)
+                    .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.CANNON)
+                    .durability(2000),
+                    new ArtilleryCannonData(
+                            16,      // caliber: 大口径
+                            12,      // barrels: 12联装
+                            60.0f,   // damage: 大型火炮的3倍
+                            80,      // reloadTime: 与大型火炮相同
+                            2000,    // durability: 与大型火炮相同
+                            4.0f,    // scopeZoom: 与大型火炮相同
+                            List.of( // muzzles: 12个炮口横向排列
+                                    new MuzzlePos(1.65, 0.3, 0),
+                                    new MuzzlePos(1.35, 0.3, 0),
+                                    new MuzzlePos(1.05, 0.3, 0),
+                                    new MuzzlePos(0.75, 0.3, 0),
+                                    new MuzzlePos(0.45, 0.3, 0),
+                                    new MuzzlePos(0.15, 0.3, 0),
+                                    new MuzzlePos(-0.15, 0.3, 0),
+                                    new MuzzlePos(-0.45, 0.3, 0),
+                                    new MuzzlePos(-0.75, 0.3, 0),
+                                    new MuzzlePos(-1.05, 0.3, 0),
+                                    new MuzzlePos(-1.35, 0.3, 0),
+                                    new MuzzlePos(-1.65, 0.3, 0)
+                            ),
+                            10.5f,   // initialSpeed: 大型火炮的3倍
+                            0.008f,  // dragCoeff: 与大型火炮相同
+                            9.8f,    // gravity: 标准重力
+                            6.0f,    // explosionPower: 大型火炮的3倍
+                            0.5f     // dispersion: 默认散布
+                    )));
+
     // ===== Torpedo Ammo (legacy generic) =====
     public static final DeferredItem<TorpedoItem> TORPEDO_533MM =
             ITEMS.register("torpedo_533mm",

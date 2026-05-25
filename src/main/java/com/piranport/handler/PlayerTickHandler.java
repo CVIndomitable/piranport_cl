@@ -213,18 +213,18 @@ public class PlayerTickHandler {
     }
 
     /**
-     * 无GUI模式：通过副手槽驱动变身。
-     * 副手放入核心 → 自动变身；副手移除核心 → 自动解除；核心不动 → 仅武器变化时重算属性。
+     * 无GUI模式：通过配置的槽位驱动变身。
+     * 配置槽位放入核心 → 自动变身；移除核心 → 自动解除；核心不动 → 仅武器变化时重算属性。
      */
     private static void tickInventoryLoadCheck(Player player) {
         Inventory inv = player.getInventory();
-        ItemStack offhand = inv.offhand.get(0);
-        boolean coreInOffhand = offhand.getItem() instanceof ShipCoreItem;
+        ItemStack coreStack = TransformationManager.getCoreFromConfiguredSlot(player);
+        boolean hasCoreEquipped = coreStack.getItem() instanceof ShipCoreItem;
 
-        if (coreInOffhand) {
-            if (!TransformationManager.isTransformed(offhand)) {
-                FuelData fuel = offhand.getOrDefault(ModDataComponents.SHIP_CORE_FUEL.get(),
-                        new FuelData(0, ((ShipCoreItem) offhand.getItem()).getShipType().fuelCapacity));
+        if (hasCoreEquipped) {
+            if (!TransformationManager.isTransformed(coreStack)) {
+                FuelData fuel = coreStack.getOrDefault(ModDataComponents.SHIP_CORE_FUEL.get(),
+                        new FuelData(0, ((ShipCoreItem) coreStack.getItem()).getShipType().fuelCapacity));
                 if (fuel.isEmpty()) {
                     Integer cached = lastWeaponLoad.get(player.getUUID());
                     if (cached == null || cached != -999) {
@@ -238,9 +238,9 @@ public class PlayerTickHandler {
                 if (cached != null && cached == -999) {
                     lastWeaponLoad.remove(player.getUUID());
                 }
-                TransformationManager.setTransformed(offhand, true);
-                TransformationManager.applyTransformationAttributes(player, offhand);
-                ShipCoreItem.refillAircraftFuel(player, offhand);
+                TransformationManager.setTransformed(coreStack, true);
+                TransformationManager.applyTransformationAttributes(player, coreStack);
+                ShipCoreItem.refillAircraftFuel(player, coreStack);
                 player.displayClientMessage(
                         Component.translatable("message.piranport.transformed"), true);
                 if (player.level() instanceof ServerLevel sl) {
@@ -261,14 +261,14 @@ public class PlayerTickHandler {
             }
 
             int weaponLoad = TransformationManager.getInventoryWeaponLoad(inv);
-            int armorLoad  = TransformationManager.getCoreArmorLoad(offhand);
-            double engineBonus = TransformationManager.getCoreEngineSpeedBonus(offhand);
-            int maxLoad    = ((ShipCoreItem) offhand.getItem()).getShipType().maxLoad;
+            int armorLoad  = TransformationManager.getCoreArmorLoad(coreStack);
+            double engineBonus = TransformationManager.getCoreEngineSpeedBonus(coreStack);
+            int maxLoad    = ((ShipCoreItem) coreStack.getItem()).getShipType().maxLoad;
             int cacheKey   = java.util.Objects.hash(weaponLoad, armorLoad, maxLoad, engineBonus);
             Integer cached = lastWeaponLoad.get(player.getUUID());
             if (cached == null || cached != cacheKey) {
                 lastWeaponLoad.put(player.getUUID(), cacheKey);
-                TransformationManager.applyTransformationAttributes(player, offhand);
+                TransformationManager.applyTransformationAttributes(player, coreStack);
             } else {
                 int totalLoad = weaponLoad + armorLoad;
                 if (totalLoad > maxLoad && player.tickCount % 40 == 0) {

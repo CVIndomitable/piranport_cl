@@ -34,6 +34,7 @@
   "item.piranport.medium_gun": "Medium Gun",
   "item.piranport.large_gun": "Large Gun",
   "item.piranport.french_quad_380mm_gun": "French Quad 380mm Gun",
+  "item.piranport.seven_barrel_gun": "Seven-Barrel Gun",
   "container.piranport.weapons": "Weapons",
   "container.piranport.ammo": "Ammo",
   "container.piranport.enhancement": "Enhancement",
@@ -764,6 +765,11 @@
   "item.piranport.bacon_sandwich": "Bacon Sandwich",
   "item.piranport.salami_pizza_pieces": "Salami Pizza Slice",
   "item.piranport.bolognese_linguine_recipe": "Bolognese Linguine",
+
+  "config.piranport.shipCoreSlotMode": "Ship Core Slot Mode",
+  "config.piranport.shipCoreSlotMode.tooltip": "offhand=Offhand Mode, chest=Chestplate Mode",
+  "tooltip.piranport.ship_core.slot_hint.offhand": "Hold in offhand to activate rigging",
+  "tooltip.piranport.ship_core.slot_hint.chest": "Equip to chest slot to activate rigging",
 
   "task.piranport.maid_rigging.name": "Ship Rigging",
   "task.piranport.maid_rigging.desc": "Fight with PiranPort rigging weapons",

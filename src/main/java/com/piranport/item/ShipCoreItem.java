@@ -63,10 +63,13 @@ import com.piranport.PiranPort;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.tags.TagKey;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.world.item.Equipable;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.Nullable;
 
-public class ShipCoreItem extends Item {
+public class ShipCoreItem extends Item implements Equipable {
 
     // Phase 12: 口径弹药标签 — 数据包可通过添加物品到这些标签来扩展兼容弹药
     private static final TagKey<Item> SMALL_SHELLS = TagKey.create(Registries.ITEM,
@@ -85,6 +88,18 @@ public class ShipCoreItem extends Item {
 
     public ShipType getShipType() {
         return shipType;
+    }
+
+    // ===== Equipable 接口实现（支持胸甲槽位） =====
+
+    @Override
+    public EquipmentSlot getEquipmentSlot() {
+        return EquipmentSlot.CHEST;
+    }
+
+    @Override
+    public net.minecraft.core.Holder<SoundEvent> getEquipSound() {
+        return SoundEvents.ARMOR_EQUIP_IRON;
     }
 
     // ===== Fuel bar (durability-style) =====

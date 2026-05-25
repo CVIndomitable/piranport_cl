@@ -34,6 +34,7 @@
   "item.piranport.medium_gun": "中型火炮",
   "item.piranport.large_gun": "大型火炮",
   "item.piranport.french_quad_380mm_gun": "法国四联380毫米炮",
+  "item.piranport.seven_barrel_gun": "七联装主炮群",
   "container.piranport.weapons": "武器栏",
   "container.piranport.ammo": "弹药库",
   "container.piranport.enhancement": "强化栏",
@@ -770,6 +771,11 @@
   "item.piranport.bacon_sandwich": "培根三明治",
   "item.piranport.salami_pizza_pieces": "切片萨拉米披萨",
   "item.piranport.bolognese_linguine_recipe": "番茄肉酱意面",
+
+  "config.piranport.shipCoreSlotMode": "舰装核心槽位模式",
+  "config.piranport.shipCoreSlotMode.tooltip": "offhand=副手模式，chest=胸甲模式",
+  "tooltip.piranport.ship_core.slot_hint.offhand": "放入副手以激活舰装",
+  "tooltip.piranport.ship_core.slot_hint.chest": "装备到胸甲槽位以激活舰装",
 
   "task.piranport.maid_rigging.name": "舰装作战",
   "task.piranport.maid_rigging.desc": "使用皮兰港舰装武器战斗",

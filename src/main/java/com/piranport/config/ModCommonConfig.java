@@ -15,6 +15,7 @@ public class ModCommonConfig {
     // ===== GUI & Inventory (界面与背包) =====
 
     public static final ModConfigSpec.BooleanValue SHIP_CORE_GUI_ENABLED;
+    public static final ModConfigSpec.ConfigValue<String> SHIP_CORE_SLOT_MODE;
     public static final ModConfigSpec.BooleanValue WEAPON_PICKUP_TO_INVENTORY;
 
     // ===== Movement (移动) =====
@@ -69,6 +70,16 @@ public class ModCommonConfig {
                         "Default: false (right-click does not open GUI; only fires/transforms).",
                         "Set to true to allow opening the ship core inventory screen. (舰装核心GUI开关，默认关闭)")
                 .define("shipCoreGuiEnabled", false);
+
+        SHIP_CORE_SLOT_MODE = BUILDER
+                .comment(
+                        "Ship Core equipment slot mode (舰装核心装备槽位模式).",
+                        "Options: 'offhand' or 'chest'.",
+                        "  - offhand: Ship core must be held in offhand (default, current behavior).",
+                        "  - chest: Ship core must be equipped in chest armor slot.",
+                        "Default: 'offhand' (副手模式，当前行为).",
+                        "Set to 'chest' to enable chestplate mode (设为'chest'启用胸甲模式).")
+                .define("shipCoreSlotMode", "offhand");
 
         WEAPON_PICKUP_TO_INVENTORY = BUILDER
                 .comment(

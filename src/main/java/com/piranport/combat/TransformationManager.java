@@ -1,6 +1,7 @@
 package com.piranport.combat;
 
 import com.piranport.PiranPort;
+import com.piranport.config.ModCommonConfig;
 import com.piranport.item.ArmorPlateItem;
 import com.piranport.item.ShipCoreItem;
 import com.piranport.item.ShipType;
@@ -15,6 +16,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -61,11 +63,30 @@ public class TransformationManager {
         return coreStack.getOrDefault(ModDataComponents.SHIP_CORE_TRANSFORMED.get(), false);
     }
 
-    /** 查找当前激活的变身核心。无GUI模式：仅副手。 */
+    /**
+     * 根据配置获取舰装核心所在槽位的物品。
+     *
+     * @param player 玩家
+     * @return 核心物品栈，如果未装备则返回 ItemStack.EMPTY
+     */
+    public static ItemStack getCoreFromConfiguredSlot(Player player) {
+        String slotMode = ModCommonConfig.SHIP_CORE_SLOT_MODE.get();
+
+        if ("chest".equalsIgnoreCase(slotMode)) {
+            // 胸甲模式：检测胸甲槽位
+            return player.getItemBySlot(EquipmentSlot.CHEST);
+        } else {
+            // 副手模式（默认）：检测副手槽位
+            return player.getOffhandItem();
+        }
+    }
+
+    /** 查找当前激活的变身核心。根据配置检测副手或胸甲槽位。 */
     public static ItemStack findTransformedCore(net.minecraft.world.entity.player.Player player) {
-        // 无GUI模式：仅副手核心有效
-        ItemStack offhand = player.getOffhandItem();
-        if (offhand.getItem() instanceof ShipCoreItem && isTransformed(offhand)) return offhand;
+        ItemStack coreStack = getCoreFromConfiguredSlot(player);
+        if (coreStack.getItem() instanceof ShipCoreItem && isTransformed(coreStack)) {
+            return coreStack;
+        }
         return ItemStack.EMPTY;
     }
 
@@ -130,10 +151,10 @@ public class TransformationManager {
                 }
             }
         }
-        // 始终检查副手 — 无GUI模式要求核心在副手
+        // 始终检查配置的核心槽位 — 无GUI模式要求核心在配置的槽位
         {
-            ItemStack offhandStack = inv.offhand.get(0);
-            if (offhandStack.getItem() instanceof ShipCoreItem sci) {
+            ItemStack coreStack = getCoreFromConfiguredSlot(player);
+            if (coreStack.getItem() instanceof ShipCoreItem sci) {
                 if (bestType == null || sci.getShipType().maxLoad > bestType.maxLoad) {
                     bestType = sci.getShipType();
                 }
@@ -143,11 +164,11 @@ public class TransformationManager {
         removeTransformationAttributes(player);
         if (bestType == null) return;
 
-        // 护甲和引擎加成来自副手核心内存储的物品
-        ItemStack offhandCore = inv.offhand.get(0);
-        int armorBonus = getCoreArmorBonus(offhandCore);
-        double engineSpeedBonus = getCoreEngineSpeedBonus(offhandCore);
-        int armorLoad  = getCoreArmorLoad(offhandCore);
+        // 护甲和引擎加成来自配置槽位核心内存储的物品
+        ItemStack coreStack = getCoreFromConfiguredSlot(player);
+        int armorBonus = getCoreArmorBonus(coreStack);
+        double engineSpeedBonus = getCoreEngineSpeedBonus(coreStack);
+        int armorLoad  = getCoreArmorLoad(coreStack);
         int totalLoad  = getInventoryWeaponLoad(inv) + armorLoad;
 
         double loadRatio = bestType.maxLoad > 0 ? (double) totalLoad / bestType.maxLoad : 0;
@@ -401,6 +422,7 @@ public class TransformationManager {
         WEAPON_LOAD_MAP.put(ModItems.SMALL_GUN.get(), 6);
         WEAPON_LOAD_MAP.put(ModItems.MEDIUM_GUN.get(), 16);
         WEAPON_LOAD_MAP.put(ModItems.LARGE_GUN.get(), 30);
+        WEAPON_LOAD_MAP.put(ModItems.SEVEN_BARREL_GUN.get(), 35);
         WEAPON_LOAD_MAP.put(ModItems.TWIN_TORPEDO_LAUNCHER.get(), 8);
         WEAPON_LOAD_MAP.put(ModItems.TRIPLE_TORPEDO_LAUNCHER.get(), 12);
         WEAPON_LOAD_MAP.put(ModItems.QUAD_TORPEDO_LAUNCHER.get(), 20);

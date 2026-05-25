@@ -41,6 +41,8 @@ import net.minecraft.world.item.component.ItemContainerContents;
  */
 public class TransformationManager {
 
+    private static boolean chestModeWarningLogged = false;
+
     public static final ResourceLocation ARMOR_MODIFIER_ID =
             ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "ship_core_armor");
     public static final ResourceLocation SPEED_MODIFIER_ID =
@@ -65,11 +67,18 @@ public class TransformationManager {
     public static ItemStack getCoreFromConfiguredSlot(Player player) {
         String slotMode = ModCommonConfig.SHIP_CORE_SLOT_MODE.get();
 
+        // 向后兼容：将旧的 "chest" 配置自动映射到 "helmet"
         if ("chest".equalsIgnoreCase(slotMode)) {
-            // 胸甲模式：检测胸甲槽位
-            return player.getItemBySlot(EquipmentSlot.CHEST);
+            if (!chestModeWarningLogged) {
+                PiranPort.LOGGER.warn("Config value 'chest' for shipCoreSlotMode is deprecated. " +
+                        "Please update to 'helmet'. Auto-migrating to helmet slot.");
+                chestModeWarningLogged = true;
+            }
+            return player.getItemBySlot(EquipmentSlot.HEAD);
+        } else if ("helmet".equalsIgnoreCase(slotMode)) {
+            return player.getItemBySlot(EquipmentSlot.HEAD);
         } else {
-            // 副手模式（默认）：检测副手槽位
+            // 默认：副手模式
             return player.getOffhandItem();
         }
     }

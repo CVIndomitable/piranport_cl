@@ -14,6 +14,7 @@ public class ModCommonConfig {
 
     // ===== GUI & Inventory (界面与背包) =====
 
+    public static final ModConfigSpec.BooleanValue SHIP_CORE_GUI_ENABLED;
     public static final ModConfigSpec.ConfigValue<String> SHIP_CORE_SLOT_MODE;
     public static final ModConfigSpec.BooleanValue WEAPON_PICKUP_TO_INVENTORY;
 
@@ -61,14 +62,26 @@ public class ModCommonConfig {
         BUILDER.pop();
 
         BUILDER.push("gui");
+        SHIP_CORE_GUI_ENABLED = BUILDER
+                .comment(
+                        "Enable GUI mode for ship core equipment (舰装核心GUI模式).",
+                        "Default: false (inventory mode - weapons in hotbar, enhancements in core).",
+                        "Set to true to enable GUI-based equipment management.",
+                        "默认false（无GUI模式-武器在快捷栏，强化在核心内）。",
+                        "设为true启用GUI装备管理界面。",
+                        "WARNING: Changing this requires server restart and may migrate equipment data.",
+                        "警告：更改此项需要重启服务器，可能会迁移装备数据。")
+                .define("shipCoreGuiEnabled", false);
+
         SHIP_CORE_SLOT_MODE = BUILDER
                 .comment(
                         "Ship Core equipment slot mode (舰装核心装备槽位模式).",
-                        "Options: 'offhand' or 'chest'.",
+                        "Options: 'offhand' or 'helmet'.",
                         "  - offhand: Ship core must be held in offhand (default, current behavior).",
-                        "  - chest: Ship core must be equipped in chest armor slot.",
+                        "  - helmet: Ship core must be equipped in helmet armor slot.",
                         "Default: 'offhand' (副手模式，当前行为).",
-                        "Set to 'chest' to enable chestplate mode (设为'chest'启用胸甲模式).")
+                        "Set to 'helmet' to enable helmet mode (设为'helmet'启用头盔模式).",
+                        "Note: 'chest' is deprecated and will be auto-migrated to 'helmet' (注意：'chest'已弃用，将自动迁移到'helmet').")
                 .define("shipCoreSlotMode", "offhand");
 
         WEAPON_PICKUP_TO_INVENTORY = BUILDER
@@ -140,5 +153,12 @@ public class ModCommonConfig {
      */
     public static boolean isFlammableEffectActive() {
         return FLAMMABLE_EFFECT_ENABLED.get();
+    }
+
+    /**
+     * Helper: returns true if ship core GUI mode is enabled.
+     */
+    public static boolean isShipCoreGuiEnabled() {
+        return SHIP_CORE_GUI_ENABLED.get();
     }
 }

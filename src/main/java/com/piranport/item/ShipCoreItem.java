@@ -10,6 +10,7 @@ import com.piranport.component.SelectedAmmoType;
 import com.piranport.component.SlotCooldowns;
 import com.piranport.component.WeaponCooldown;
 import com.piranport.config.ModArtilleryConfig;
+import com.piranport.config.ModCommonConfig;
 import com.piranport.entity.AircraftEntity;
 import com.piranport.entity.CannonProjectileEntity;
 import com.piranport.entity.SanshikiPelletEntity;
@@ -90,16 +91,42 @@ public class ShipCoreItem extends Item implements Equipable {
         return shipType;
     }
 
-    // ===== Equipable 接口实现（支持胸甲槽位） =====
+    // ===== Equipable 接口实现（支持头盔槽位） =====
 
     @Override
     public EquipmentSlot getEquipmentSlot() {
-        return EquipmentSlot.CHEST;
+        // 根据配置返回正确的装备槽位
+        String slotMode = ModCommonConfig.SHIP_CORE_SLOT_MODE.get();
+        if ("helmet".equalsIgnoreCase(slotMode) || "chest".equalsIgnoreCase(slotMode)) {
+            return EquipmentSlot.HEAD;  // chest 已弃用，映射到 helmet
+        }
+        // offhand 模式下也返回 HEAD，因为玩家会手动放入副手而非右键装备
+        return EquipmentSlot.HEAD;
     }
 
     @Override
     public net.minecraft.core.Holder<SoundEvent> getEquipSound() {
         return SoundEvents.ARMOR_EQUIP_IRON;
+    }
+
+    // ===== 附魔支持 =====
+
+    @Override
+    public int getEnchantmentValue() {
+        // 返回附魔能力值，类似于铁盔甲（9）或钻石盔甲（10）
+        // 根据舰型返回不同的附魔能力值
+        return switch (shipType) {
+            case SMALL -> 8;      // 驱逐舰：类似锁链甲
+            case MEDIUM -> 9;     // 巡洋舰：类似铁甲
+            case LARGE -> 10;     // 战列舰：类似钻石甲
+            case SUBMARINE -> 7;  // 潜艇：较低附魔能力
+        };
+    }
+
+    @Override
+    public boolean isEnchantable(ItemStack stack) {
+        // 允许在附魔台附魔
+        return true;
     }
 
     // ===== Fuel bar (durability-style) =====
@@ -380,6 +407,14 @@ public class ShipCoreItem extends Item implements Equipable {
                 tooltipComponents.add(Component.translatable("tooltip.piranport.shift_for_details")
                         .withStyle(net.minecraft.ChatFormatting.DARK_GRAY));
             }
+
+            // 显示槽位提示
+            String slotMode = ModCommonConfig.SHIP_CORE_SLOT_MODE.get();
+            String hintKey = "tooltip.piranport.ship_core.slot_hint." +
+                ("chest".equalsIgnoreCase(slotMode) ? "chest" :
+                 "helmet".equalsIgnoreCase(slotMode) ? "helmet" : "offhand");
+            tooltipComponents.add(Component.translatable(hintKey)
+                    .withStyle(net.minecraft.ChatFormatting.GRAY));
         }
     }
 

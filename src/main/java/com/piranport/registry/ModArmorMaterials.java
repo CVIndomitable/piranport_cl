@@ -40,7 +40,7 @@ public class ModArmorMaterials {
     public static final DeferredHolder<ArmorMaterial, ArmorMaterial> SMALL_SHIP_CORE =
             ARMOR_MATERIALS.register("small_ship_core", () -> new ArmorMaterial(
                     Util.make(new EnumMap<>(ArmorItem.Type.class), map -> {
-                        map.put(ArmorItem.Type.CHESTPLATE, 8);  // ShipType.SMALL.baseArmor
+                        map.put(ArmorItem.Type.HELMET, 8);  // ShipType.SMALL.baseArmor
                     }),
                     15,
                     SoundEvents.ARMOR_EQUIP_IRON,
@@ -55,7 +55,7 @@ public class ModArmorMaterials {
     public static final DeferredHolder<ArmorMaterial, ArmorMaterial> MEDIUM_SHIP_CORE =
             ARMOR_MATERIALS.register("medium_ship_core", () -> new ArmorMaterial(
                     Util.make(new EnumMap<>(ArmorItem.Type.class), map -> {
-                        map.put(ArmorItem.Type.CHESTPLATE, 12);
+                        map.put(ArmorItem.Type.HELMET, 12);
                     }),
                     15,
                     SoundEvents.ARMOR_EQUIP_IRON,
@@ -70,7 +70,7 @@ public class ModArmorMaterials {
     public static final DeferredHolder<ArmorMaterial, ArmorMaterial> LARGE_SHIP_CORE =
             ARMOR_MATERIALS.register("large_ship_core", () -> new ArmorMaterial(
                     Util.make(new EnumMap<>(ArmorItem.Type.class), map -> {
-                        map.put(ArmorItem.Type.CHESTPLATE, 16);
+                        map.put(ArmorItem.Type.HELMET, 16);
                     }),
                     15,
                     SoundEvents.ARMOR_EQUIP_IRON,
@@ -85,7 +85,7 @@ public class ModArmorMaterials {
     public static final DeferredHolder<ArmorMaterial, ArmorMaterial> SUBMARINE_CORE =
             ARMOR_MATERIALS.register("submarine_core", () -> new ArmorMaterial(
                     Util.make(new EnumMap<>(ArmorItem.Type.class), map -> {
-                        map.put(ArmorItem.Type.CHESTPLATE, 4);
+                        map.put(ArmorItem.Type.HELMET, 4);
                     }),
                     15,
                     SoundEvents.ARMOR_EQUIP_IRON,

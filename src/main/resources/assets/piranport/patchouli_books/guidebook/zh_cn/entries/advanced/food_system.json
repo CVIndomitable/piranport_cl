@@ -1,0 +1,24 @@
+{
+  "name": "食物系统",
+  "category": "piranport:5_advanced_production",
+  "icon": "piranport:cooking_pot",
+  "sortnum": 2,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)农业与烹饪$()$(br2)皮兰港有完整的食物系统：$(br2)• $(item)水稻$()：3阶段水生作物$(br)• $(item)盐$()：熔炉上方水蒸发产生$(br)• $(item)烹饪锅$()：烹饪食物$(br)• $(item)石磨$()：研磨材料$(br)• $(item)砧板$()：切割食材"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)水稻种植$()$(br2)$(item)水稻$()是特殊的水生作物：$(br)• 必须种在水中$(br)• 有3个生长阶段$(br)• 成熟后收获稻米$(br2)$(bold)种植方法：$()$(br)1. 在水边耕地$(br)2. 确保有水$(br)3. 种植水稻种子$(br)4. 等待成熟"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)盐的生产$()$(br2)盐通过$(bold)蒸发$()获得：$(br2)1. 放置熔炉并点燃$(br)2. 在熔炉上方放置水$(br)3. 水会蒸发，产生$(item)盐片$()$(br)4. 收集盐片$(br2)$(bold)盐片$()是薄层方块，可以堆叠。"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)烹饪系统$()$(br2)使用$(item)烹饪锅$()、$(item)石磨$()、$(item)砧板$()可以制作各种食物。$(br2)$(bold)世界各地的菜肴：$()$(br)模组包含多种真实菜肴配方，提供不同的饱食度和效果。$(br2)$(bold)提示：$()$(br)高级食物提供更好的饱食度和增益效果。"
+    }
+  ]
+}

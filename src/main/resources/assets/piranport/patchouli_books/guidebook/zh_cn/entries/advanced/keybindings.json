@@ -1,0 +1,16 @@
+{
+  "name": "按键绑定",
+  "category": "piranport:7_advanced_config",
+  "icon": "minecraft:oak_button",
+  "sortnum": 0,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)完整按键列表$()$(br2)$(bold)火控系统：$()$(br)• $(bold)P键$()：锁定目标$(br)• $(bold)O键$()：切换目标$(br)• $(bold)I键$()：取消锁定$(br2)$(bold)飞机控制：$()$(br)• $(bold)V键$()：侦察机视角切换$(br)• $(bold)U键$()：编组飞机$(br)• $(bold)H键$()：自动升空"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)战场辅助：$()$(br)• $(bold)Y键$()：战场高亮$(br2)$(bold)调试工具：$()$(br)• $(bold)F8键$()：调试模式$(br)• $(bold)F9键$()：命中提示开关$(br2)$(bold)提示：$()$(br)所有按键都可以在游戏设置中重新绑定。"
+    }
+  ]
+}

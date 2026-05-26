@@ -1,0 +1,26 @@
+{
+  "name": "装甲板与引擎",
+  "category": "piranport:4_advanced_equipment",
+  "icon": "piranport:armor_plate",
+  "sortnum": 0,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)强化装备系统$()$(br2)舰娘可以装备强化装备，提升战斗能力：$(br2)• $(item)装甲板$()：提升防御$(br)• $(item)引擎$()：提升速度$(br)• $(item)声呐$()：探测水下目标$(br)• $(item)鱼雷快速装填$()：加快鱼雷装填"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "piranport:armor_plate",
+      "text": "装甲板的合成配方"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "piranport:engine",
+      "text": "引擎的合成配方"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)装备搭配$()$(br2)根据战斗风格选择装备：$(br2)$(bold)坦克流：$()$(br)多个装甲板，提高生存能力。$(br2)$(bold)速度流：$()$(br)多个引擎，快速机动。$(br2)$(bold)反潜流：$()$(br)声呐 + 鱼雷快速装填，专打水下目标。"
+    }
+  ]
+}

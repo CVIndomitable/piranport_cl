@@ -1,0 +1,21 @@
+{
+  "name": "装填设施",
+  "category": "piranport:5_advanced_production",
+  "icon": "piranport:reload_facility",
+  "sortnum": 1,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)自动装填系统$()$(br2)$(item)装填设施$()是一个自动化方块，可以：$(br)• 存储弹药$(br)• 自动装填武器$(br)• 提供弹药补给$(br2)$(bold)使用方法：$()$(br)1. 放置装填设施$(br)2. 放入弹药$(br)3. 靠近时自动装填"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "piranport:reload_facility",
+      "text": "装填设施的合成配方"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)战术部署$()$(br2)$(bold)前线补给站：$()$(br)在战场前线部署装填设施，提供持续弹药补给。$(br2)$(bold)基地仓库：$()$(br)在基地集中存储弹药，战前装填。$(br2)$(bold)提示：$()$(br)装填设施可以存储大量弹药，比背包更高效。"
+    }
+  ]
+}

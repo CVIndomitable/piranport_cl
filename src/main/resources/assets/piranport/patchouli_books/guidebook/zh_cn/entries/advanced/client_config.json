@@ -1,0 +1,20 @@
+{
+  "name": "客户端配置",
+  "category": "piranport:7_advanced_config",
+  "icon": "minecraft:writable_book",
+  "sortnum": 1,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)客户端配置选项$()$(br2)皮兰港提供多个客户端配置选项，可以在配置文件中修改：$(br2)• $(o)showLegacyReloadHud$()：显示旧版装填HUD$(br)• $(o)flightGroupEnabled$()：启用飞机编组功能"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)旧版装填HUD$()$(br2)$(o)showLegacyReloadHud$()控制是否显示旧版的装填进度HUD。$(br2)$(bold)开启：$()$(br)在屏幕上显示武器装填进度条。$(br2)$(bold)关闭：$()$(br)使用简化的装填提示。$(br2)根据个人喜好选择。"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)飞机编组开关$()$(br2)$(o)flightGroupEnabled$()控制是否启用飞机编组功能。$(br2)$(bold)开启：$()$(br)可以使用$(bold)U键$()编组飞机。$(br2)$(bold)关闭：$()$(br)U键无效，飞机独立行动。$(br2)$(bold)注意：$()$(br)无GUI模式下编组功能始终不可用。"
+    }
+  ]
+}

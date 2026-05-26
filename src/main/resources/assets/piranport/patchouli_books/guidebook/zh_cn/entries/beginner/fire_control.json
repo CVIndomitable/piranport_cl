@@ -1,0 +1,20 @@
+{
+  "name": "火控系统",
+  "category": "piranport:0_beginner",
+  "icon": "minecraft:target",
+  "sortnum": 4,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)什么是火控？$()$(br2)火控系统让你精准锁定敌人，提高命中率。锁定后，你的武器会自动瞄准目标。$(br2)$(bold)按键操作：$()$(br)• $(bold)P键$()：锁定准星指向的目标$(br)• $(bold)O键$()：切换到下一个目标$(br)• $(bold)I键$()：取消锁定"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)如何使用？$()$(br2)1. 将准星对准敌人$(br)2. 按$(bold)P键$()锁定$(br)3. 准星变成$(4)红色$()表示锁定成功$(br)4. 此时发射武器会自动瞄准$(br)5. 按$(bold)I键$()取消锁定$(br2)$(bold)提示：$()锁定需要视线，障碍物会阻挡锁定！"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)多目标切换$()$(br2)如果周围有多个敌人，可以用$(bold)O键$()快速切换锁定目标。$(br2)$(bold)高亮显示$()$(br)锁定的目标会有$(bold)红色高亮$()轮廓，方便你在混战中识别。$(br2)详细机制请查看$(l:piranport:1_advanced_weapons/fire_control_detail)进阶：火控系统详解$(/l)。"
+    }
+  ]
+}

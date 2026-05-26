@@ -1,0 +1,24 @@
+{
+  "name": "航空燃料管理",
+  "category": "piranport:2_advanced_aviation",
+  "icon": "piranport:aviation_fuel",
+  "sortnum": 2,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)燃料消耗机制$()$(br2)飞机在飞行时会持续消耗燃料。消耗速度取决于：$(br)• 飞机类型$(br)• 飞行状态（巡航/攻击）$(br)• 负载重量$(br2)$(bold)边界检查：$()$(br)系统会检查燃料容量是否为0，避免除零错误。"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)手动加油$()$(br2)将$(item)航空燃料$()拖到$(item)飞机物品$()上，松开鼠标即可加油。$(br2)这使用了$(o)overrideOtherStackedOnMe$()方法实现。$(br2)$(bold)提示：$()$(br)飞机物品的耐久条显示剩余燃料百分比。"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)无GUI模式背包扫描$()$(br2)在无GUI模式下，飞机会自动扫描你的背包寻找燃料并加油。$(br2)$(bold)扫描频率：$()$(br)为了性能考虑，背包扫描不是每tick都执行，而是有一定间隔。$(br2)$(bold)建议：$()$(br)在背包中常备航空燃料，确保飞机能自动补给。"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)燃料耗尽$()$(br2)当飞机燃料耗尽时：$(br)1. 飞机会尝试返航$(br)2. 如果无法返航，会坠落$(br)3. 坠落后变回物品$(br2)$(bold)避免燃料耗尽：$()$(br)• 出发前检查燃料$(br)• 长途任务携带备用燃料$(br)• 及时召回低燃料飞机"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "name": "斯拉夫大牢模式",
+  "category": "piranport:6_advanced_dungeon",
+  "icon": "minecraft:tnt",
+  "sortnum": 1,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)易燃易爆模式$()$(br2)$(bold)斯拉夫大牢模式$()是一个特殊的联动玩法。开启后，会启用$(bold)易燃易爆效果$()。$(br2)$(bold)效果：$()$(br)$(item)易燃效果$()会让目标更容易被点燃，并造成额外的火焰伤害。"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)如何开启？$()$(br2)斯拉夫大牢模式需要在配置文件中开启$(o)flammableEffectEnabled$()选项。$(br2)$(bold)警告：$()$(br)这个模式会大幅提高战斗难度！敌人的火焰攻击会变得非常危险。$(br2)$(bold)建议：$()$(br)准备好$(l:piranport:0_beginner/survival)损害管制$(/l)应对火焰。"
+    }
+  ]
+}

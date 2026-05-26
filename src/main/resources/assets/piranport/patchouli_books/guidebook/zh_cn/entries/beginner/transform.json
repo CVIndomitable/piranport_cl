@@ -1,0 +1,25 @@
+{
+  "name": "变身与基础",
+  "category": "piranport:0_beginner",
+  "icon": "piranport:small_ship_core",
+  "sortnum": 1,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)如何变身为舰娘$()$(br2)使用$(item)舰娘核心$()右键即可变身。变身后你将获得：$(br)• 水上行走能力$(br)• 装备舰载武器的能力$(br)• 召唤舰载机的能力$(br2)再次右键可以解除变身。"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "piranport:small_ship_core",
+      "text": "小型舰娘核心的合成配方"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)舰娘核心类型$()$(br2)$(li)$(item)小型舰娘核心$()：基础型，适合新手$(br)$(li)$(item)中型舰娘核心$()：增强型$(br)$(li)$(item)大型舰娘核心$()：最强型$(br2)不同核心影响你的负重能力和装备槽位。"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)基础属性$()$(br2)变身后，你的属性会发生变化：$(br)• $(bold)负重$()：决定你能携带多少武器和飞机$(br)• $(bold)装备槽$()：可以装备装甲板、引擎等强化装备$(br2)注意：携带过多物品会导致$(4)超重$()，移动速度大幅降低！"
+    }
+  ]
+}

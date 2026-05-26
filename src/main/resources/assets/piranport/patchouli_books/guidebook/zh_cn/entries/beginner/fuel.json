@@ -1,0 +1,26 @@
+{
+  "name": "燃料系统入门",
+  "category": "piranport:0_beginner",
+  "icon": "piranport:ship_fuel",
+  "sortnum": 3,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)为什么需要燃料？$()$(br2)舰载机需要燃料才能起飞和飞行。没有燃料的飞机无法召唤。$(br2)$(bold)两种燃料：$()$(br)• $(item)舰娘燃料$()：给舰娘核心使用$(br)• $(item)航空燃料$()：给舰载机使用"
+    },
+    {
+      "type": "patchouli:smelting",
+      "recipe": "piranport:ship_fuel",
+      "text": "舰娘燃料：木炭/煤炭 + 熔炉"
+    },
+    {
+      "type": "patchouli:smelting",
+      "recipe": "piranport:aviation_fuel",
+      "text": "航空燃料：木炭 + 高炉"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)如何加油？$()$(br2)$(bold)方法一：手动加油$()$(br)将$(item)航空燃料$()拖到$(item)飞机物品$()上，松开鼠标即可加油。$(br2)$(bold)方法二：自动加油$()$(br)变身后，飞机会自动从背包中寻找燃料并加油。$(br2)$(bold)提示：$()飞机物品的耐久条显示剩余燃料量。"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "name": "导弹系统",
+  "category": "piranport:1_advanced_weapons",
+  "icon": "piranport:anti_ship_missile",
+  "sortnum": 3,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)导弹类型$()$(br2)皮兰港有三种导弹：$(br2)• $(item)反舰导弹$()：攻击水面目标$(br)• $(item)防空导弹$()：攻击空中目标$(br)• $(item)火箭弹$()：无制导，直线飞行$(br2)使用$(item)导弹发射器$()或$(item)火箭发射器$()发射。"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "piranport:anti_ship_missile",
+      "text": "反舰导弹的合成配方"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "piranport:anti_air_missile",
+      "text": "防空导弹的合成配方"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)制导追踪$()$(br2)反舰导弹和防空导弹具有智能制导能力，发射后会自动追踪锁定的目标。$(br2)$(bold)火箭弹$()$(br)火箭弹没有制导，发射后直线飞行。但是：$(br)• 飞行速度快$(br)• 成本低$(br)• 适合近距离饱和攻击"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)使用建议$()$(br2)$(bold)反舰导弹：$()$(br)对付水面的大型敌人，如深海战舰。$(br2)$(bold)防空导弹：$()$(br)拦截敌方飞机和飞行生物。$(br2)$(bold)火箭弹：$()$(br)快速清理近距离的小型敌人，或进行火力压制。"
+    }
+  ]
+}

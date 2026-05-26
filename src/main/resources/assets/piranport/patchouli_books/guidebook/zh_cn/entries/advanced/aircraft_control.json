@@ -1,0 +1,24 @@
+{
+  "name": "飞机AI与控制",
+  "category": "piranport:2_advanced_aviation",
+  "icon": "minecraft:command_block",
+  "sortnum": 1,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)飞机状态机$()$(br2)每架飞机都有一个状态机，控制其行为：$(br)• 起飞$(br)• 巡航$(br)• 攻击$(br)• 返航$(br)• 降落$(br2)飞机会根据战场情况自动切换状态。"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)编组系统 (U键)$()$(br2)按$(bold)U键$()可以将飞机编组，统一指挥。$(br2)$(bold)注意：$()$(br)编组功能需要在配置中启用$(o)flightGroupEnabled$()。$(br2)$(bold)无GUI模式$()下，编组功能$(4)不可用$()，这是设计决策，不是bug。"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)自动升空 (H键)$()$(br2)按$(bold)H键$()可以让飞机自动升空到安全高度。$(br2)$(bold)注意：$()$(br)自动升空功能在$(bold)无GUI模式$()下$(4)不可用$()，这是设计决策，不是bug。$(br2)$(bold)原因：$()$(br)无GUI模式强调手动控制，不提供自动化功能。"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)飞机高亮$()$(br2)飞机会根据状态显示不同颜色的高亮：$(br2)• $(2)绿色$()：友方飞机$(br)• $(4)红色$()：敌方飞机$(br)• $(6)黄色$()：中立飞机$(br2)通过$(o)isCurrentlyGlowing()$()和$(o)getTeamColor()$()方法实现。"
+    }
+  ]
+}

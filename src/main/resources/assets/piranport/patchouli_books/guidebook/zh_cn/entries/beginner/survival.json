@@ -1,0 +1,34 @@
+{
+  "name": "生存要点",
+  "category": "piranport:0_beginner",
+  "icon": "piranport:quick_repair",
+  "sortnum": 6,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)战斗中的生存$()$(br2)战斗中受伤是常事，掌握这些道具能让你活得更久：$(br2)• $(item)快速修复$()：瞬间恢复大量生命$(br)• $(item)损害管制$()：清除负面效果+灭火$(br)• $(item)维修台$()：持续恢复生命"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "piranport:quick_repair",
+      "text": "快速修复的合成配方"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "piranport:damage_control",
+      "text": "损害管制的合成配方"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)快速修复$()$(br2)一次性消耗品，右键使用后立即恢复$(2)10颗心$()的生命值。$(br2)$(bold)建议：$()$(br)战斗前在快捷栏准备2-3个，危急时刻能救命！"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)损害管制$()$(br2)右键使用后：$(br)• 清除所有负面效果$(br)• 立即灭火$(br)• 恢复少量生命$(br2)$(bold)特别有用的场景：$()$(br)• 被$(item)易燃效果$()点燃时$(br)• 中了$(item)进水效果$()时$(br)• 被敌人施加debuff时"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)维修台$()$(br2)手持维修台对准友方生物（包括自己），长按右键持续恢复生命。$(br2)$(bold)特点：$()$(br)• 可重复使用$(br)• 恢复速度较慢$(br)• 需要持续对准目标$(br2)$(bold)适合：$()战斗间隙恢复，或给队友治疗。"
+    }
+  ]
+}

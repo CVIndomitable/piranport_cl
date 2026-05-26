@@ -1,0 +1,34 @@
+{
+  "name": "工作台系统",
+  "category": "piranport:5_advanced_production",
+  "icon": "piranport:weapon_workbench",
+  "sortnum": 0,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)三种工作台$()$(br2)皮兰港有三种专用工作台：$(br2)• $(item)弹药工作台$()：合成弹药$(br)• $(item)武器工作台$()：合成武器$(br)• $(item)装填设施$()：自动装填弹药"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "piranport:ammo_workbench",
+      "text": "弹药工作台的合成配方"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "piranport:weapon_workbench",
+      "text": "武器工作台的合成配方"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)弹药工作台$()$(br2)用于合成各类弹药：$(br)• 炮弹$(br)• 鱼雷$(br)• 导弹$(br)• 深水炸弹$(br)• 航空炸弹$(br2)右键打开界面，按配方放入材料即可合成。"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)武器工作台$()$(br2)用于合成武器和装备。$(br2)$(bold)5标签页系统：$()$(br)武器工作台有5个标签页，分类显示不同类型的配方。$(br2)$(bold)下拉菜单：$()$(br)每个标签页内可以通过下拉菜单选择具体配方。"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)蓝图与定时合成$()$(br2)$(bold)蓝图系统：$()$(br)某些高级武器需要蓝图才能合成。$(br2)$(bold)定时合成：$()$(br)部分配方需要等待一段时间才能完成，模拟真实的生产过程。$(br2)$(bold)提示：$()$(br)定时合成期间可以离开，工作台会自动完成。"
+    }
+  ]
+}

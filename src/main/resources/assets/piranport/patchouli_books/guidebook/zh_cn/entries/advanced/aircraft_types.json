@@ -1,0 +1,28 @@
+{
+  "name": "舰载机类型",
+  "category": "piranport:2_advanced_aviation",
+  "icon": "piranport:bomber",
+  "sortnum": 0,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)五种舰载机$()$(br2)每种飞机都有独特的AI和战术用途：$(br2)• $(item)战斗机$()：空战专家$(br)• $(item)轰炸机$()：对地攻击$(br)• $(item)鱼雷机$()：反舰反潜$(br)• $(item)侦察机$()：视野支援$(br)• $(item)运输机$()：物资空投"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)战斗机$()$(br2)专门攻击空中目标，包括：$(br)• 敌对飞行生物$(br)• 敌方飞机$(br)• 幻翼等空中怪物$(br2)$(bold)AI行为：$()$(br)自动搜索并追击空中敌人，保持空中优势。$(br2)$(bold)战术定位：$()$(br)护航、制空、拦截"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)轰炸机与鱼雷机$()$(br2)$(bold)术语说明：$()$(br)• 轰炸机 = 水平轰炸机 + 俯冲轰炸机$(br)• 攻击机 = 轰炸机 + 鱼雷机$(br2)$(bold)轰炸机：$()$(br)投掷炸弹攻击地面目标，造成爆炸伤害。$(br2)$(bold)鱼雷机：$()$(br)发射鱼雷攻击水面和水下目标。"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)侦察机$()$(br2)侦察机不参与战斗，专注于提供视野。$(br2)$(bold)V键控制：$()$(br)• 第一次按V：切换到侦察机视角$(br)• 再次按V：切换到下一架侦察机$(br)• 长按V：退出侦察模式$(br2)$(bold)用途：$()$(br)探索地形、观察战场、寻找敌人。"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)运输机$()$(br2)运输机可以空投物品到指定位置。$(br2)$(bold)使用方法：$()$(br)1. 给运输机装载物品$(br)2. 发射运输机$(br)3. 运输机会飞到目标位置空投$(br2)$(bold)用途：$()$(br)远程补给、物资运输、战术投放。"
+    }
+  ]
+}

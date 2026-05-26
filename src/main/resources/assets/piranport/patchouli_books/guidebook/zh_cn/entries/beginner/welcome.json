@@ -1,0 +1,20 @@
+{
+  "name": "欢迎来到皮兰港",
+  "category": "piranport:0_beginner",
+  "icon": "piranport:guidebook",
+  "sortnum": 0,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "欢迎，提督！$(br2)皮兰港是一个基于战舰少女R世界观的综合性模组。在这里，你可以：$(br)• 变身为舰娘，装备强大的舰载武器$(br)• 召唤舰载机编队，掌控天空$(br)• 与深海敌人战斗，探索神秘副本$(br)• 建造工厂，生产弹药与装备"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)模组特色$()$(br2)$(li)真实的舰载武器系统：火炮、鱼雷、导弹、深弹$(br)$(li)完整的航空系统：五种飞机类型与AI控制$(br)$(li)火控系统：精准锁定目标$(br)$(li)燃料管理：舰娘燃料与航空燃料$(br)$(li)副本挑战：深海传送门与Boss战"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)新手建议$()$(br2)1. 先阅读$(l:piranport:0_beginner/transform)变身与基础$(/l)，了解如何成为舰娘$(br2)2. 制作$(l:piranport:0_beginner/first_weapon)你的第一把武器$(/l)$(br2)3. 学习$(l:piranport:0_beginner/fire_control)火控系统$(/l)锁定敌人$(br2)4. 准备好后，挑战深海副本！"
+    }
+  ]
+}

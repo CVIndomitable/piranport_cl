@@ -23,6 +23,10 @@ import java.util.UUID;
 
 /**
  * Manages all active dungeon instances. Persisted as world SavedData.
+ *
+ * <p><b>性能注意</b>: {@link #handlePlayerDisconnect(UUID)} 遍历所有副本实例查找玩家作为旗舰的副本。
+ * 当前实现为 O(n)，适用于副本数量较少的场景（< 100）。如果副本数量很大（1000+），
+ * 建议添加反向索引 {@code Map<UUID, Set<UUID>> playerToInstances} 优化为 O(1) 查找。
  */
 public class DungeonInstanceManager extends SavedData {
     private static final String DATA_NAME = "piranport_instances";

@@ -31,6 +31,10 @@ public class EntityUuidCache {
         return entity;
     }
 
+    /**
+     * 清理所有缓存条目。WeakReference 会自动释放内存，
+     * 此方法立即清空 Map 以确保不保留任何引用。
+     */
     public void clear() {
         cache.clear();
     }

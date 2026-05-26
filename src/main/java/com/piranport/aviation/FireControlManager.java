@@ -10,8 +10,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 /**
  * 服务端火控状态 — 管理玩家→锁定目标的映射。
  *
- * <p><b>线程模型</b>: 服务端主线程（主要访问），ConcurrentHashMap 和 CopyOnWriteArrayList
- * 保护 shutdown 期间 clearAll() 的并发访问。
+ * <p><b>线程模型</b>: 服务端主线程（主要访问）。ConcurrentHashMap 和 CopyOnWriteArrayList
+ * 是防御性设计，实际运行时为单线程访问（服务端 tick 线程），shutdown 期间所有 tick 已停止。
  * <p><b>生命周期</b>: 玩家登出时通过 {@link #clearTargets(UUID)} 清理，
  * 服务端关闭时通过 {@link #clearAll()} 清理。
  * <p><b>容量限制</b>: 每个玩家最多 {@value #MAX_TARGETS} 个目标。

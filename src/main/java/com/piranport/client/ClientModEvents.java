@@ -1,5 +1,6 @@
-package com.piranport;
+package com.piranport.client;
 
+import com.piranport.PiranPort;
 import com.piranport.client.AircraftRenderer;
 import com.piranport.client.CuttingBoardRenderer;
 import com.piranport.client.PlaceableFoodRenderer;
@@ -10,7 +11,7 @@ import com.piranport.menu.AmmoWorkbenchScreen;
 import com.piranport.menu.CookingPotScreen;
 import com.piranport.menu.FlightGroupScreen;
 import com.piranport.menu.ReloadFacilityScreen;
-
+import com.piranport.menu.ShipCoreEquipmentScreen;
 import com.piranport.menu.StoneMillScreen;
 import com.piranport.registry.ModBlockEntityTypes;
 import com.piranport.registry.ModDataComponents;
@@ -34,7 +35,7 @@ import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import org.lwjgl.glfw.GLFW;
 
 @EventBusSubscriber(modid = PiranPort.MOD_ID, value = Dist.CLIENT)
-public class ClientEvents {
+public class ClientModEvents {
 
 
 
@@ -62,6 +63,8 @@ public class ClientEvents {
         event.register(ModMenuTypes.COOKING_POT_MENU.get(), CookingPotScreen::new);
         event.register(ModMenuTypes.FLIGHT_GROUP_MENU.get(), FlightGroupScreen::new);
         event.register(ModMenuTypes.RELOAD_FACILITY_MENU.get(), ReloadFacilityScreen::new);
+        event.register(ModMenuTypes.SHIP_CORE_EQUIPMENT_MENU.get(), ShipCoreEquipmentScreen::new);
+        event.register(ModMenuTypes.SHIP_CORE_MODIFIER_MENU.get(), com.piranport.menu.ShipCoreModifierScreen::new);
         // 弹药工作台
         event.register(ModMenuTypes.AMMO_WORKBENCH_MENU.get(), AmmoWorkbenchScreen::new);
         // 武器工作台
@@ -85,6 +88,7 @@ public class ClientEvents {
         event.register(ModKeyMappings.SWITCH_AMMO);
         event.register(ModKeyMappings.DEBUG_COOLDOWN_OVERRIDE);
         event.register(ModKeyMappings.HIT_DISPLAY_TOGGLE);
+        event.register(ModKeyMappings.OPEN_SHIP_EQUIPMENT);
     }
 
     @SubscribeEvent

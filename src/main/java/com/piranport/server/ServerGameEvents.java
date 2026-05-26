@@ -1,5 +1,6 @@
-package com.piranport;
+package com.piranport.server;
 
+import com.piranport.PiranPort;
 import com.piranport.aviation.AircraftIndex;
 import com.piranport.aviation.FireControlManager;
 import com.piranport.aviation.ReconManager;
@@ -38,7 +39,7 @@ import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import java.util.UUID;
 
 @EventBusSubscriber(modid = PiranPort.MOD_ID)
-public class GameEvents {
+public class ServerGameEvents {
 
     /**
      * 将武器类物品拾取定向到主背包（9-35格）而非快捷栏。

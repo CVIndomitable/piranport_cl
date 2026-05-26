@@ -1,4 +1,4 @@
-package com.piranport;
+package com.piranport.client;
 
 import com.piranport.aviation.ClientFireControlData;
 import com.piranport.aviation.ClientReconData;
@@ -6,6 +6,8 @@ import com.piranport.client.CameraShakeHandler;
 import com.piranport.combat.TransformationManager;
 import com.piranport.config.ModClientConfig;
 import com.piranport.config.ModCommonConfig;
+import com.piranport.ClientTickHandler;
+import com.piranport.PiranPort;
 import com.piranport.network.RecallAllAircraftPayload;
 import com.piranport.network.SkinRevertPayload;
 import com.piranport.skin.ClientSkinData;

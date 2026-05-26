@@ -32,7 +32,7 @@ import java.util.UUID;
  * </ol>
  *
  * <p><b>线程模型</b>: 客户端渲染线程（单线程），无需同步。
- * <p><b>生命周期</b>: 在 {@link com.piranport.ClientGameEvents#onClientDisconnect} 中通过 {@link #reset()} 清理。
+ * <p><b>生命周期</b>: 在 {@link com.piranport.client.ClientGameEvents#onClientDisconnect} 中通过 {@link #reset()} 清理。
  * <p><b>高亮优先级</b>: 原版发光 > 火控(玩法高亮) > Y键战场高亮
  */
 public class EntityHighlightHandler {

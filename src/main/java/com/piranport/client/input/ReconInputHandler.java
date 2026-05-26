@@ -14,7 +14,7 @@ import net.neoforged.neoforge.network.PacketDistributor;
  *
  * <p><b>线程模型</b>: 客户端渲染线程（单线程），无需同步。
  * <p><b>生命周期</b>: 状态在 {@link ClientReconData} 中管理，
- *   在 {@link com.piranport.ClientGameEvents#onClientDisconnect} 中清理。
+ *   在 {@link com.piranport.client.ClientGameEvents#onClientDisconnect} 中清理。
  */
 public class ReconInputHandler {
 

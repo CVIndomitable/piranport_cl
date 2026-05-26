@@ -28,23 +28,27 @@ import java.lang.invoke.MethodType;
  */
 public final class FriendlyFireHelper {
 
-    private static final boolean MAID_MOD_LOADED = ModList.get().isLoaded("touhou_little_maid");
-
+    private static Boolean maidModLoaded;
     private static Class<?> maidClass;
     private static MethodHandle getOwnerHandle;
     private static boolean maidReflectionReady;
 
-    static {
-        if (MAID_MOD_LOADED) {
-            try {
-                maidClass = Class.forName("com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid");
-                getOwnerHandle = MethodHandles.lookup().findVirtual(maidClass, "getOwner",
-                        MethodType.methodType(LivingEntity.class));
-                maidReflectionReady = true;
-            } catch (Throwable e) {
-                maidReflectionReady = false;
+    /** 延迟初始化：检查女仆模组是否加载（避免静态初始化时访问 ModList）*/
+    private static boolean isMaidModLoaded() {
+        if (maidModLoaded == null) {
+            maidModLoaded = ModList.get().isLoaded("touhou_little_maid");
+            if (maidModLoaded) {
+                try {
+                    maidClass = Class.forName("com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid");
+                    getOwnerHandle = MethodHandles.lookup().findVirtual(maidClass, "getOwner",
+                            MethodType.methodType(LivingEntity.class));
+                    maidReflectionReady = true;
+                } catch (Throwable e) {
+                    maidReflectionReady = false;
+                }
             }
         }
+        return maidModLoaded;
     }
 
     private FriendlyFireHelper() {}
@@ -60,7 +64,7 @@ public final class FriendlyFireHelper {
             return true;
         }
         // 2-3. 女仆友伤保护（仅在女仆mod加载时检查）
-        if (MAID_MOD_LOADED && checkMaidFriendlyFire(target, owner)) {
+        if (isMaidModLoaded() && checkMaidFriendlyFire(target, owner)) {
             return true;
         }
         // 4. 玩家友伤关闭时禁止攻击其他玩家

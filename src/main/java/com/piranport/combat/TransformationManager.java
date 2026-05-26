@@ -410,35 +410,39 @@ public class TransformationManager {
         return Math.max(1, baseTicks / divisor);
     }
 
-    // P3 #36: data-driven weapon load map (static initialization for thread safety)
+    // P3 #36: data-driven weapon load map (延迟初始化，避免类加载时访问注册表)
     // IdentityHashMap 适用：Item 是注册表单例，引用相等(==)既安全又快于 hashCode/equals
     // 使用 unmodifiableMap 包装以明确只读语义，防止误修改
-    private static final java.util.Map<net.minecraft.world.item.Item, Integer> WEAPON_LOAD_MAP;
+    private static java.util.Map<net.minecraft.world.item.Item, Integer> weaponLoadMap;
 
-    static {
-        java.util.Map<net.minecraft.world.item.Item, Integer> temp = new java.util.IdentityHashMap<>();
-        temp.put(ModItems.SINGLE_SMALL_GUN.get(), 4);
-        temp.put(ModItems.SMALL_GUN.get(), 6);
-        temp.put(ModItems.MEDIUM_GUN.get(), 16);
-        temp.put(ModItems.LARGE_GUN.get(), 30);
-        temp.put(ModItems.SEVEN_BARREL_GUN.get(), 35);
-        temp.put(ModItems.TWIN_TORPEDO_LAUNCHER.get(), 8);
-        temp.put(ModItems.TRIPLE_TORPEDO_LAUNCHER.get(), 12);
-        temp.put(ModItems.QUAD_TORPEDO_LAUNCHER.get(), 20);
-        temp.put(ModItems.SY1_LAUNCHER.get(), 14);
-        temp.put(ModItems.MK14_HARPOON_LAUNCHER.get(), 16);
-        temp.put(ModItems.TERRIER_LAUNCHER.get(), 10);
-        temp.put(ModItems.SHIP_ROCKET_LAUNCHER.get(), 8);
-        temp.put(ModItems.SEA_DART_LAUNCHER.get(), 12);
-        temp.put(ModItems.SEACAT_LAUNCHER.get(), 6);
-        temp.put(ModItems.DEPTH_CHARGE_LAUNCHER.get(), 2);
-        temp.put(ModItems.DEPTH_CHARGE_LAUNCHER_IMPROVED.get(), 3);
-        temp.put(ModItems.DEPTH_CHARGE_LAUNCHER_ADVANCED.get(), 5);
-        WEAPON_LOAD_MAP = java.util.Collections.unmodifiableMap(temp);
+    /** 延迟初始化武器载重映射表（避免静态初始化时访问注册表）*/
+    private static java.util.Map<net.minecraft.world.item.Item, Integer> getWeaponLoadMap() {
+        if (weaponLoadMap == null) {
+            java.util.Map<net.minecraft.world.item.Item, Integer> temp = new java.util.IdentityHashMap<>();
+            temp.put(ModItems.SINGLE_SMALL_GUN.get(), 4);
+            temp.put(ModItems.SMALL_GUN.get(), 6);
+            temp.put(ModItems.MEDIUM_GUN.get(), 16);
+            temp.put(ModItems.LARGE_GUN.get(), 30);
+            temp.put(ModItems.SEVEN_BARREL_GUN.get(), 35);
+            temp.put(ModItems.TWIN_TORPEDO_LAUNCHER.get(), 8);
+            temp.put(ModItems.TRIPLE_TORPEDO_LAUNCHER.get(), 12);
+            temp.put(ModItems.QUAD_TORPEDO_LAUNCHER.get(), 20);
+            temp.put(ModItems.SY1_LAUNCHER.get(), 14);
+            temp.put(ModItems.MK14_HARPOON_LAUNCHER.get(), 16);
+            temp.put(ModItems.TERRIER_LAUNCHER.get(), 10);
+            temp.put(ModItems.SHIP_ROCKET_LAUNCHER.get(), 8);
+            temp.put(ModItems.SEA_DART_LAUNCHER.get(), 12);
+            temp.put(ModItems.SEACAT_LAUNCHER.get(), 6);
+            temp.put(ModItems.DEPTH_CHARGE_LAUNCHER.get(), 2);
+            temp.put(ModItems.DEPTH_CHARGE_LAUNCHER_IMPROVED.get(), 3);
+            temp.put(ModItems.DEPTH_CHARGE_LAUNCHER_ADVANCED.get(), 5);
+            weaponLoadMap = java.util.Collections.unmodifiableMap(temp);
+        }
+        return weaponLoadMap;
     }
 
     public static int getItemLoad(ItemStack stack) {
-        Integer load = WEAPON_LOAD_MAP.get(stack.getItem());
+        Integer load = getWeaponLoadMap().get(stack.getItem());
         if (load != null) return load;
         if (stack.getItem() instanceof ArmorPlateItem plate) return plate.getWeight();
         if (stack.getItem() instanceof SonarItem sonar) return sonar.getWeight();

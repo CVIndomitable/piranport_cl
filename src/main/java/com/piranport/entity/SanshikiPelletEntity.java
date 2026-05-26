@@ -29,10 +29,11 @@ public class SanshikiPelletEntity extends ThrowableItemProjectile {
     private ItemStack shellForRender = ItemStack.EMPTY;
 
     /** 霰弹最大存活时间（tick，从 ModArtilleryConfig 读取）。 */
-    private int maxLifetime = ModArtilleryConfig.PELLET_MAX_LIFETIME.get();
+    private int maxLifetime;
 
     public SanshikiPelletEntity(EntityType<? extends SanshikiPelletEntity> type, Level level) {
         super(type, level);
+        this.maxLifetime = ModArtilleryConfig.PELLET_MAX_LIFETIME.get();
     }
 
     public SanshikiPelletEntity(Level level, LivingEntity shooter, float damage, ItemStack shellForRender) {
@@ -40,6 +41,7 @@ public class SanshikiPelletEntity extends ThrowableItemProjectile {
         this.damage = damage;
         this.shellForRender = shellForRender.copyWithCount(1);
         setItem(this.shellForRender);
+        this.maxLifetime = ModArtilleryConfig.PELLET_MAX_LIFETIME.get();
     }
 
     @Override

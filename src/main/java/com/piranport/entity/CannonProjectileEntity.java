@@ -72,20 +72,21 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
 
     // ===== VT 近炸引信参数（从 ModArtilleryConfig 读取） =====
     /** VT 锥形检测范围（格），弹头前方该距离内的目标才会触发近炸。 */
-    private double vtDetectRange = ModArtilleryConfig.VT_DETECT_RANGE.get();
+    private double vtDetectRange;
     /** VT 锥形半角（度），目标方向与弹头速度方向的夹角在此范围内才触发。 */
-    private double vtConeHalfAngleDeg = ModArtilleryConfig.VT_CONE_HALF_ANGLE.get();
+    private double vtConeHalfAngleDeg;
     /** VT 检测间隔（tick），每 N tick 执行一次锥形区域扫描。 */
-    private int vtCheckInterval = ModArtilleryConfig.PERF_VT_CHECK_INTERVAL.get();
+    private int vtCheckInterval;
     /** 方块接近检测的前方射线长度（格）。 */
-    private double vtBlockRange = ModArtilleryConfig.VT_BLOCK_RANGE.get();
+    private double vtBlockRange;
     /** 发射后 VT 引信解锁前的宽限期（tick）。 */
-    private int vtArmTicks = ModArtilleryConfig.VT_ARM_TICKS.get();
+    private int vtArmTicks;
 
     // 实体类型注册所需的构造器
     public CannonProjectileEntity(EntityType<? extends CannonProjectileEntity> type, Level level) {
         super(type, level);
         this.noCulling = true;
+        loadVtConfigValues();
     }
 
     // 发射用构造器
@@ -97,6 +98,16 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         this.damage = damage;
         this.isHE = isHE;
         this.explosionPower = explosionPower;
+        loadVtConfigValues();
+    }
+
+    /** 从配置加载VT引信参数（在构造函数中调用，避免静态初始化时访问配置）*/
+    private void loadVtConfigValues() {
+        this.vtDetectRange = ModArtilleryConfig.VT_DETECT_RANGE.get();
+        this.vtConeHalfAngleDeg = ModArtilleryConfig.VT_CONE_HALF_ANGLE.get();
+        this.vtCheckInterval = ModArtilleryConfig.PERF_VT_CHECK_INTERVAL.get();
+        this.vtBlockRange = ModArtilleryConfig.VT_BLOCK_RANGE.get();
+        this.vtArmTicks = ModArtilleryConfig.VT_ARM_TICKS.get();
     }
 
     public void setVT(boolean vt) {

@@ -825,5 +825,6 @@
   "tooltip.piranport.artillery_config_tool.creative_only": "Creative Mode Only",
   "message.piranport.config_parse_failed": "Config parse failed [%s]: %s",
   "message.piranport.config_exported": "Config exported to: %s",
-  "message.piranport.config_export_failed": "Export failed: %s"
+  "message.piranport.config_export_failed": "Export failed: %s",
+  "message.piranport.reset_not_implemented": "Reset feature not implemented yet"
 }

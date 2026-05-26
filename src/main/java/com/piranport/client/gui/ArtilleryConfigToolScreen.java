@@ -1,8 +1,14 @@
 package com.piranport.client.gui;
 
+import com.piranport.artillery.config.ArtilleryCannonData;
+import com.piranport.artillery.config.ArtilleryConfig;
+import com.piranport.artillery.config.override.ClientConfigCache;
 import com.piranport.menu.ArtilleryConfigToolMenu;
 import com.piranport.network.ExportConfigPayload;
+import com.piranport.network.UpdateConfigOverridePayload;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
@@ -11,14 +17,44 @@ import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.*;
+
 /**
  * 火炮配置工具界面（客户端渲染）
  *
  * <p>显示火炮和弹药配置的GUI，支持实时编辑和导出。
- * <p>当前版本：基础框架，完整GUI功能开发中
  */
 @OnlyIn(Dist.CLIENT)
 public class ArtilleryConfigToolScreen extends AbstractContainerScreen<ArtilleryConfigToolMenu> {
+
+    // 标签页
+    private static final int TAB_CANNONS = 0;
+    private static final int TAB_PROJECTILES = 1;
+    private int currentTab = TAB_CANNONS;
+
+    // 滚动相关
+    private int scrollOffset = 0;
+    private static final int VISIBLE_ROWS = 8;
+    private static final int ROW_HEIGHT = 20;
+
+    // 编辑框缓存
+    private final Map<String, EditBox> editBoxes = new HashMap<>();
+
+    // 数据缓存
+    private List<String> cannonNames = new ArrayList<>();
+    private List<String> projectileKeys = Arrays.asList(
+            "HE_ARMOR_PENETRATION",
+            "HE_DAMAGE_FALLOFF",
+            "AP_DAMAGE_MULTIPLIER",
+            "AP_ARMOR_IGNORE",
+            "UNDERWATER_EXPLOSION_MULTIPLIER",
+            "UNDERWATER_EXPLODE"
+    );
+
+    // 可编辑字段
+    private static final String[] CANNON_FIELDS = {
+            "damage", "reloadTime", "initialSpeed", "dragCoeff", "explosionPower", "dispersion"
+    };
 
     public ArtilleryConfigToolScreen(ArtilleryConfigToolMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
@@ -33,43 +69,262 @@ public class ArtilleryConfigToolScreen extends AbstractContainerScreen<Artillery
         int x = (this.width - this.imageWidth) / 2;
         int y = (this.height - this.imageHeight) / 2;
 
-        // 添加导出按钮（临时位置）
-        this.addRenderableWidget(net.minecraft.client.gui.components.Button.builder(
+        // 加载火炮列表
+        cannonNames = new ArrayList<>(ArtilleryConfig.getAllCannonNames());
+        Collections.sort(cannonNames);
+
+        // 标签页按钮
+        this.addRenderableWidget(Button.builder(
+                Component.translatable("gui.piranport.config_tool.tab.cannons"),
+                button -> switchTab(TAB_CANNONS)
+        ).bounds(x + 10, y + 25, 60, 20).build());
+
+        this.addRenderableWidget(Button.builder(
+                Component.translatable("gui.piranport.config_tool.tab.projectiles"),
+                button -> switchTab(TAB_PROJECTILES)
+        ).bounds(x + 75, y + 25, 60, 20).build());
+
+        // 滚动按钮
+        this.addRenderableWidget(Button.builder(
+                Component.literal("▲"),
+                button -> scrollUp()
+        ).bounds(x + 235, y + 50, 15, 15).build());
+
+        this.addRenderableWidget(Button.builder(
+                Component.literal("▼"),
+                button -> scrollDown()
+        ).bounds(x + 235, y + 195, 15, 15).build());
+
+        // 底部按钮
+        this.addRenderableWidget(Button.builder(
                 Component.translatable("gui.piranport.config_tool.export"),
                 button -> onExportClicked()
-        ).bounds(x + 10, y + 210, 80, 20).build());
+        ).bounds(x + 10, y + 215, 70, 20).build());
 
-        // TODO: 添加滚动列表组件
-        // TODO: 添加编辑框
-        // TODO: 添加标签页切换按钮
-        // TODO: 添加重置按钮
+        this.addRenderableWidget(Button.builder(
+                Component.translatable("gui.piranport.config_tool.reset_all"),
+                button -> onResetAllClicked()
+        ).bounds(x + 85, y + 215, 70, 20).build());
+
+        // 创建编辑框
+        createEditBoxes();
+    }
+
+    /**
+     * 创建编辑框
+     */
+    private void createEditBoxes() {
+        editBoxes.clear();
+        int x = (this.width - this.imageWidth) / 2;
+        int y = (this.height - this.imageHeight) / 2;
+
+        if (currentTab == TAB_CANNONS) {
+            // 为每个可见的火炮创建编辑框
+            for (int i = 0; i < Math.min(VISIBLE_ROWS, cannonNames.size() - scrollOffset); i++) {
+                int index = scrollOffset + i;
+                if (index >= cannonNames.size()) break;
+
+                String cannonName = cannonNames.get(index);
+                ArtilleryCannonData data = ArtilleryConfig.get(cannonName);
+
+                for (int fieldIdx = 0; fieldIdx < CANNON_FIELDS.length; fieldIdx++) {
+                    String field = CANNON_FIELDS[fieldIdx];
+                    String key = cannonName + ":" + field;
+
+                    EditBox editBox = new EditBox(
+                            this.font,
+                            x + 120 + (fieldIdx % 3) * 40,
+                            y + 52 + i * ROW_HEIGHT + (fieldIdx / 3) * 10,
+                            35,
+                            12,
+                            Component.empty()
+                    );
+
+                    // 设置当前值
+                    String currentValue = getCurrentValue(cannonName, field, data);
+                    editBox.setValue(currentValue);
+                    editBox.setMaxLength(10);
+
+                    editBoxes.put(key, editBox);
+                    this.addRenderableWidget(editBox);
+                }
+            }
+        } else {
+            // 弹药配置编辑框
+            for (int i = 0; i < Math.min(VISIBLE_ROWS, projectileKeys.size() - scrollOffset); i++) {
+                int index = scrollOffset + i;
+                if (index >= projectileKeys.size()) break;
+
+                String key = projectileKeys.get(index);
+
+                EditBox editBox = new EditBox(
+                        this.font,
+                        x + 150,
+                        y + 52 + i * ROW_HEIGHT,
+                        80,
+                        16,
+                        Component.empty()
+                );
+
+                // 设置当前值
+                String currentValue = getProjectileValue(key);
+                editBox.setValue(currentValue);
+                editBox.setMaxLength(15);
+
+                editBoxes.put(key, editBox);
+                this.addRenderableWidget(editBox);
+            }
+        }
+    }
+
+    /**
+     * 获取火炮字段当前值
+     */
+    private String getCurrentValue(String cannonName, String field, ArtilleryCannonData data) {
+        // 优先从缓存读取覆盖值
+        Optional<String> override = ClientConfigCache.getCannonOverride(cannonName, field);
+        if (override.isPresent()) {
+            return override.get();
+        }
+
+        // 否则使用原始配置值
+        return switch (field) {
+            case "damage" -> String.format("%.1f", data.damage());
+            case "reloadTime" -> String.valueOf(data.reloadTime());
+            case "initialSpeed" -> String.format("%.2f", data.initialSpeed());
+            case "dragCoeff" -> String.format("%.4f", data.dragCoeff());
+            case "explosionPower" -> String.format("%.1f", data.explosionPower());
+            case "dispersion" -> String.format("%.2f", data.dispersion());
+            default -> "";
+        };
+    }
+
+    /**
+     * 获取弹药配置当前值
+     */
+    private String getProjectileValue(String key) {
+        // 优先从缓存读取
+        Optional<String> override = ClientConfigCache.getProjectileOverride(key);
+        if (override.isPresent()) {
+            return override.get();
+        }
+
+        // 否则使用默认值
+        return switch (key) {
+            case "HE_ARMOR_PENETRATION" -> "0.3";
+            case "HE_DAMAGE_FALLOFF" -> "true";
+            case "AP_DAMAGE_MULTIPLIER" -> "1.3";
+            case "AP_ARMOR_IGNORE" -> "0.5";
+            case "UNDERWATER_EXPLOSION_MULTIPLIER" -> "0.5";
+            case "UNDERWATER_EXPLODE" -> "false";
+            default -> "";
+        };
+    }
+
+    /**
+     * 切换标签页
+     */
+    private void switchTab(int tab) {
+        if (currentTab != tab) {
+            currentTab = tab;
+            scrollOffset = 0;
+            this.rebuildWidgets();
+        }
+    }
+
+    /**
+     * 向上滚动
+     */
+    private void scrollUp() {
+        if (scrollOffset > 0) {
+            scrollOffset--;
+            this.rebuildWidgets();
+        }
+    }
+
+    /**
+     * 向下滚动
+     */
+    private void scrollDown() {
+        int maxItems = currentTab == TAB_CANNONS ? cannonNames.size() : projectileKeys.size();
+        if (scrollOffset < maxItems - VISIBLE_ROWS) {
+            scrollOffset++;
+            this.rebuildWidgets();
+        }
     }
 
     @Override
     protected void renderBg(@NotNull GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
-        // 绘制背景
         int x = (this.width - this.imageWidth) / 2;
         int y = (this.height - this.imageHeight) / 2;
 
-        // 简单的灰色背景
+        // 主背景
         graphics.fill(x, y, x + this.imageWidth, y + this.imageHeight, 0xFF8B8B8B);
 
-        // 绘制标题区域
+        // 标题区域
         graphics.fill(x, y, x + this.imageWidth, y + 20, 0xFF5A5A5A);
+
+        // 列表区域背景
+        graphics.fill(x + 5, y + 50, x + 230, y + 210, 0xFF6B6B6B);
     }
 
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         super.render(graphics, mouseX, mouseY, partialTick);
 
-        // 绘制标题
         int x = (this.width - this.imageWidth) / 2;
         int y = (this.height - this.imageHeight) / 2;
+
+        // 绘制标题
         graphics.drawString(this.font, this.title, x + 8, y + 6, 0xFFFFFF, false);
 
-        // TODO: 绘制火炮列表
-        // TODO: 绘制编辑区域
-        // TODO: 绘制按钮
+        // 绘制列表内容
+        if (currentTab == TAB_CANNONS) {
+            renderCannonList(graphics, x, y);
+        } else {
+            renderProjectileList(graphics, x, y);
+        }
+    }
+
+    /**
+     * 渲染火炮列表
+     */
+    private void renderCannonList(GuiGraphics graphics, int x, int y) {
+        for (int i = 0; i < Math.min(VISIBLE_ROWS, cannonNames.size() - scrollOffset); i++) {
+            int index = scrollOffset + i;
+            if (index >= cannonNames.size()) break;
+
+            String cannonName = cannonNames.get(index);
+            int rowY = y + 52 + i * ROW_HEIGHT;
+
+            // 绘制火炮名称
+            String displayName = getCannonDisplayName(cannonName);
+            graphics.drawString(this.font, displayName, x + 10, rowY + 2, 0xFFFFFF, false);
+        }
+    }
+
+    /**
+     * 渲染弹药配置列表
+     */
+    private void renderProjectileList(GuiGraphics graphics, int x, int y) {
+        for (int i = 0; i < Math.min(VISIBLE_ROWS, projectileKeys.size() - scrollOffset); i++) {
+            int index = scrollOffset + i;
+            if (index >= projectileKeys.size()) break;
+
+            String key = projectileKeys.get(index);
+            int rowY = y + 52 + i * ROW_HEIGHT;
+
+            // 绘制配置名称
+            String displayName = Component.translatable("config.piranport." + key.toLowerCase()).getString();
+            graphics.drawString(this.font, displayName, x + 10, rowY + 4, 0xFFFFFF, false);
+        }
+    }
+
+    /**
+     * 获取火炮显示名称
+     */
+    private String getCannonDisplayName(String cannonName) {
+        return Component.translatable("item.piranport." + cannonName).getString();
     }
 
     @Override
@@ -82,10 +337,60 @@ public class ArtilleryConfigToolScreen extends AbstractContainerScreen<Artillery
         return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
+    @Override
+    public void removed() {
+        super.removed();
+        // 关闭时应用所有修改
+        applyAllChanges();
+    }
+
+    /**
+     * 应用所有修改
+     */
+    private void applyAllChanges() {
+        if (currentTab == TAB_CANNONS) {
+            for (String cannonName : cannonNames) {
+                for (String field : CANNON_FIELDS) {
+                    String key = cannonName + ":" + field;
+                    EditBox editBox = editBoxes.get(key);
+                    if (editBox != null && !editBox.getValue().isEmpty()) {
+                        sendUpdate("cannon", cannonName, field, editBox.getValue());
+                    }
+                }
+            }
+        } else {
+            for (String configKey : projectileKeys) {
+                EditBox editBox = editBoxes.get(configKey);
+                if (editBox != null && !editBox.getValue().isEmpty()) {
+                    sendUpdate("projectile", configKey, "", editBox.getValue());
+                }
+            }
+        }
+    }
+
+    /**
+     * 发送更新到服务端
+     */
+    private void sendUpdate(String category, String key, String field, String value) {
+        PacketDistributor.sendToServer(new UpdateConfigOverridePayload(category, key, field, value));
+    }
+
     /**
      * 导出CSV按钮回调
      */
     private void onExportClicked() {
+        applyAllChanges();
         PacketDistributor.sendToServer(new ExportConfigPayload());
+    }
+
+    /**
+     * 重置全部按钮回调
+     */
+    private void onResetAllClicked() {
+        // TODO: 实现重置功能（需要添加网络包）
+        this.minecraft.player.sendSystemMessage(
+                Component.translatable("message.piranport.reset_not_implemented")
+                        .withStyle(net.minecraft.ChatFormatting.YELLOW)
+        );
     }
 }

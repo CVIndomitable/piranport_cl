@@ -95,11 +95,11 @@ public class AircraftEntity extends Entity {
     private int weaponSlotIndex = -1;  // -1表示未设置，避免误用默认值0
     private int coreInventorySlot = 0;
     private AircraftInfo.AircraftType aircraftType = AircraftInfo.AircraftType.FIGHTER;
-    private FlightGroupData.AttackMode attackMode = FlightGroupData.AttackMode.FOCUS;
-    private float panelDamage;
-    private float panelSpeed;
-    private int remainingAmmo = 0;
-    private int ammoCapacity = 0;
+    FlightGroupData.AttackMode attackMode = FlightGroupData.AttackMode.FOCUS;
+    float panelDamage;
+    float panelSpeed;
+    int remainingAmmo = 0;
+    int ammoCapacity = 0;
     private int currentFuel = 0;
     private int fuelCapacity = 1;
     private boolean hasBullets = false;
@@ -112,7 +112,7 @@ public class AircraftEntity extends Entity {
     private Vec3 stuckCheckPos = Vec3.ZERO;
     private double orbitAngle = 0;
     private int stateTicks = 0;
-    private int attackCooldown = 0;
+    int attackCooldown = 0;
     private boolean hasFired = false;
     private boolean diveCommitted = false;  // true once dive bomber locks its drop point
     @Nullable private Vec3 diveTarget = null; // predicted bomb drop point (fixed after commit)
@@ -122,20 +122,20 @@ public class AircraftEntity extends Entity {
     @Nullable private Vec3 levelRunDirection = null; // normalized direction of current run
     @Nullable private Vec3 levelDropPoint = null;   // position where bomb was dropped
     private int levelRunTicks = 0;   // ticks spent in current Phase 2 run (fail-safe against runaway bombers)
-    private int autoSeekCooldown = 20; // P1 #6: 初始化冷却时间，避免首次 tick 立即搜索
-    private boolean autoSeekDone = false;    // true after first auto-seek scan (one-shot)
+    int autoSeekCooldown = 20; // P1 #6: 初始化冷却时间，避免首次 tick 立即搜索
+    boolean autoSeekDone = false;    // true after first auto-seek scan (one-shot)
     private boolean appliedSlowness = false; // tracks if slowness effect was applied to target
-    private boolean hasEverHadFireControl = false; // true if FC target was ever assigned
+    boolean hasEverHadFireControl = false; // true if FC target was ever assigned
     private transient net.minecraft.world.item.Item cachedPayloadItem; // P3 #31: cached Item reference
 
     // Phase 32 runtime fields
     private FlightState lastKnownState = FlightState.LAUNCHING;
-    private int lastForcedChunkX = Integer.MIN_VALUE;
-    private int lastForcedChunkZ = Integer.MIN_VALUE;
+    int lastForcedChunkX = Integer.MIN_VALUE;
+    int lastForcedChunkZ = Integer.MIN_VALUE;
 
     // 侦察区块加载：基于视距的强制加载 + 区块发送
-    private final java.util.Set<Long> reconForcedChunks = new java.util.HashSet<>();
-    private final java.util.Set<Long> reconPendingSend = new java.util.HashSet<>();
+    final java.util.Set<Long> reconForcedChunks = new java.util.HashSet<>();
+    final java.util.Set<Long> reconPendingSend = new java.util.HashSet<>();
     private static final int RECON_CHUNK_SEND_RATE = 16; // max chunks to send per tick
 
     // Phase 33: aircraft health (persisted to NBT)
@@ -147,8 +147,8 @@ public class AircraftEntity extends Entity {
 
     // 侦察地图槽缓存：上次扫描时拥有者背包中持有 MapItem 的槽位索引
     // Full-inventory scan (41 slots) is deferred to once per RECON_MAP_REFRESH_TICKS.
-    @Nullable private int[] cachedMapSlots;
-    private int mapSlotsRefreshTick = -RECON_MAP_REFRESH_TICKS;
+    @Nullable int[] cachedMapSlots;
+    int mapSlotsRefreshTick = -RECON_MAP_REFRESH_TICKS;
     private static final int RECON_MAP_REFRESH_TICKS = 100;
 
     // 客户端位置插值（防止原始 setPos 跳跃导致的镜头抖动）
@@ -778,7 +778,7 @@ public class AircraftEntity extends Entity {
      * 简化算法：忽略护甲与伤害减免，用 ceil(HP/damage) 保底能击杀，再与剩余弹量取 min，至少 1 发。
      * damagePerShot <= 0 时回退为全投剩余弹药。
      */
-    private int computeSalvoSize(LivingEntity target, float damagePerShot) {
+    int computeSalvoSize(LivingEntity target, float damagePerShot) {
         if (remainingAmmo <= 0) return 0;
         if (damagePerShot <= 0.01f) return Math.max(1, remainingAmmo);
         float hp = target.getHealth();
@@ -1175,63 +1175,7 @@ public class AircraftEntity extends Entity {
      * Similar to level bomber but lower altitude and uses DepthChargeEntity.
      */
     private void tickASWAttack(@Nullable Player owner, LivingEntity target) {
-        if (remainingAmmo <= 0) {
-            if (owner != null && ModCommonConfig.AUTO_RESUPPLY_ENABLED.get() && tryAutoResupplyAmmo(owner)) {
-                // Ammo restored — continue attacking
-            } else {
-                startReturning("asw_ammo_depleted");
-                return;
-            }
-        }
-
-        // 对水下目标：飞行在海平面上方15格（约75米巡航高度）
-        // 对水面/陆地目标：保持原逻辑
-        double seaLevel = level().getSeaLevel();
-        double bombAltitude = target.isUnderWater()
-            ? seaLevel + 15.0
-            : target.getY() + 20.0;
-
-        if (getY() < bombAltitude - 1.5) {
-            Vec3 toPoint = new Vec3(target.getX() - getX(), bombAltitude - getY(), target.getZ() - getZ());
-            double dist = toPoint.length();
-            setDeltaMovement(toPoint.normalize().scale(Math.min(panelSpeed * 0.4, dist)));
-        } else {
-            double dx = target.getX() - getX();
-            double dz = target.getZ() - getZ();
-            double horizDist = Math.sqrt(dx * dx + dz * dz);
-
-            // 计算目标深度和提前投弹距离
-            double targetDepth = Math.max(0, seaLevel - target.getY());
-            double leadDistance = targetDepth * 0.15;
-
-            if (horizDist < (4.0 + leadDistance) && attackCooldown <= 0) {
-                float dcDamage = panelDamage * 1.5f;
-                int toFire = computeSalvoSize(target, dcDamage);
-                com.piranport.debug.PiranPortDebug.event(
-                        "Aircraft ASW_SALVO | entityId={} capacity={} remaining={} firing={} targetHP={}",
-                        getId(), ammoCapacity, remainingAmmo, toFire, target.getHealth());
-                Vec3 hv = getDeltaMovement();
-                double hvLen = hv.horizontalDistance();
-                Vec3 forward = hvLen > 0.01 ? new Vec3(hv.x / hvLen, 0, hv.z / hvLen) : new Vec3(1, 0, 0);
-                for (int i = 0; i < toFire; i++) {
-                    // 沿航向错开 0.8 格，多枚深弹依次入水
-                    double offset = (i - (toFire - 1) / 2.0) * 0.8;
-                    double spawnX = getX() + forward.x * offset;
-                    double spawnZ = getZ() + forward.z * offset;
-                    DepthChargeEntity dc = new DepthChargeEntity(level(), dcDamage, 3.0f);
-                    dc.moveTo(spawnX, getY(), spawnZ, dc.getYRot(), dc.getXRot());
-                    dc.setDeltaMovement(getDeltaMovement().x * 0.1, -0.1, getDeltaMovement().z * 0.1);
-                    dc.setOwner(owner);
-                    level().addFreshEntity(dc);
-                }
-                remainingAmmo -= toFire;
-                attackCooldown = 30;
-            }
-
-            Vec3 horizontal = new Vec3(dx, 0, dz).normalize().scale(Math.min(panelSpeed * 0.4, horizDist));
-            double yCorrect = (bombAltitude - getY()) * 0.15;
-            setDeltaMovement(horizontal.x, yCorrect, horizontal.z);
-        }
+        AircraftAswRecon.tickASWAttack(this, owner, target);
     }
 
     /**
@@ -1241,45 +1185,12 @@ public class AircraftEntity extends Entity {
      */
     @Nullable
     private LivingEntity resolveASWTarget(Player owner) {
-        if (!(level() instanceof ServerLevel sl)) return null;
-
-        List<UUID> locks = FireControlManager.getTargets(owner.getUUID());
-        if (!locks.isEmpty()) {
-            if (attackMode == FlightGroupData.AttackMode.SPREAD) {
-                return locks.stream()
-                        .map(sl::getEntity)
-                        .filter(e -> e instanceof LivingEntity le && le.isAlive() && isAswTarget(le))
-                        .map(e -> (LivingEntity) e)
-                        .min(Comparator.comparingDouble(this::distanceTo))
-                        .orElse(null);
-            } else {
-                for (UUID uuid : locks) {
-                    Entity e = sl.getEntity(uuid);
-                    if (e instanceof LivingEntity le && le.isAlive() && isAswTarget(le)) return le;
-                }
-                return null;
-            }
-        }
-
-        // Auto-seek: only once after launch
-        if (hasEverHadFireControl || autoSeekDone) return null;
-        if (autoSeekCooldown > 0) { autoSeekCooldown--; return null; }
-        autoSeekDone = true;
-        AABB box = getBoundingBox().inflate(32.0);
-        return sl.getEntitiesOfClass(LivingEntity.class, box,
-                e -> e.isAlive() && e != owner && isAswTarget(e))
-                .stream()
-                .min(Comparator.comparingDouble(this::distanceTo))
-                .orElse(null);
+        return AircraftAswRecon.resolveASWTarget(this, owner);
     }
 
     /** Returns true if the entity qualifies as an ASW target (submarine or aquatic creature). */
     private static boolean isAswTarget(Entity e) {
-        if (e instanceof com.piranport.npc.deepocean.DeepOceanSubmarineEntity) return true;
-        if (e.getType().is(net.minecraft.tags.EntityTypeTags.AQUATIC)) return true;
-        if (e instanceof net.minecraft.world.entity.monster.Guardian) return true;
-        if (e instanceof net.minecraft.world.entity.monster.Monster && e.isUnderWater()) return true;
-        return false;
+        return AircraftAswRecon.isAswTarget(e);
     }
 
     /**
@@ -1287,19 +1198,7 @@ public class AircraftEntity extends Entity {
      * Called from main tick every 20 ticks while ASW aircraft is active (CRUISING or ATTACKING).
      */
     private void tickAswSonar(Player owner) {
-        if (!(level() instanceof ServerLevel sl)) return;
-        if (!(owner instanceof ServerPlayer sp)) return;
-
-        AABB sonarBox = getBoundingBox().inflate(16.0);
-        List<Integer> detectedIds = new java.util.ArrayList<>();
-        for (LivingEntity e : sl.getEntitiesOfClass(LivingEntity.class, sonarBox,
-                le -> le.isAlive() && le != owner && (le.isInWater() || isAswTarget(le)))) {
-            detectedIds.add(e.getId());
-            if (detectedIds.size() >= 128) break;
-        }
-        if (!detectedIds.isEmpty()) {
-            PacketDistributor.sendToPlayer(sp, new AswSonarSyncPayload(getId(), detectedIds));
-        }
+        AircraftAswRecon.tickAswSonar(this, owner);
     }
 
     /**
@@ -1307,166 +1206,14 @@ public class AircraftEntity extends Entity {
      * Maintains chunk forcing around current position (view-distance radius, like a player).
      */
     private void tickReconActive(Player owner) {
-        // Defensive check: ensure ReconManager state is synchronized
-        if (!ReconManager.isInRecon(owner.getUUID())) {
-            com.piranport.PiranPort.LOGGER.warn(
-                "Aircraft RECON_DESYNC | entityId={} ownerNotInRecon, forcing state sync", getId());
-            ReconManager.startRecon(owner.getUUID(), getUUID());
-        }
-
-        // Maintain forced chunks around current position (view-distance radius)
-        int cx = getBlockX() >> 4;
-        int cz = getBlockZ() >> 4;
-        if (cx != lastForcedChunkX || cz != lastForcedChunkZ) {
-            updateReconChunkLoading(owner, cx, cz);
-            lastForcedChunkX = cx;
-            lastForcedChunkZ = cz;
-        }
-        // Send pending chunks to player each tick (rate limited)
-        if (owner instanceof ServerPlayer sp) {
-            sendPendingChunks(sp);
-        }
-
-        // Apply pending movement input from client (lerp for smooth acceleration/deceleration)
-        float[] input = ReconManager.consumeInput(owner.getUUID());
-        boolean hasInput = input != null && (input[0] != 0 || input[1] != 0 || input[2] != 0);
-        double speed = panelSpeed * 0.5;
-        Vec3 target;
-        if (hasInput) {
-            target = new Vec3(input[0] * speed, input[1] * speed, input[2] * speed);
-        } else {
-            // No hovering — drift forward at minimum speed along current yaw
-            double minSpeed = speed * 0.15;
-            float yawRad = (float) Math.toRadians(getYRot());
-            target = new Vec3(-Math.sin(yawRad) * minSpeed, 0, Math.cos(yawRad) * minSpeed);
-        }
-        Vec3 current = getDeltaMovement();
-        // Accelerate slowly (inertia), decelerate faster (responsiveness)
-        double factor = hasInput ? 0.12 : 0.25;
-        setDeltaMovement(current.lerp(target, factor));
-
-        // Update maps in owner's inventory using aircraft position (throttled to every 20 ticks).
-        // Full-inventory scan only runs every RECON_MAP_REFRESH_TICKS — in between we re-check
-        // the cached slot indices and skip any that no longer hold a map.
-        if (!level().isClientSide && tickCount % 20 == 0) {
-            if (cachedMapSlots == null || tickCount - mapSlotsRefreshTick >= RECON_MAP_REFRESH_TICKS) {
-                refreshCachedMapSlots(owner);
-                mapSlotsRefreshTick = tickCount;
-            }
-            if (cachedMapSlots != null) {
-                for (int slot : cachedMapSlots) {
-                    ItemStack stack = owner.getInventory().getItem(slot);
-                    if (stack.getItem() instanceof MapItem mapItem) {
-                        MapItemSavedData mapData = MapItem.getSavedData(stack, level());
-                        if (mapData != null && !mapData.locked) {
-                            mapData.tickCarriedBy(owner, stack);
-                            mapItem.update(level(), owner, mapData);
-                        }
-                    }
-                }
-            }
-        }
+        AircraftAswRecon.tickReconActive(this, owner);
     }
 
-    private void refreshCachedMapSlots(Player owner) {
-        int size = owner.getInventory().getContainerSize();
-        int[] buf = new int[size];
-        int n = 0;
-        for (int i = 0; i < size; i++) {
-            if (owner.getInventory().getItem(i).getItem() instanceof MapItem) {
-                buf[n++] = i;
-            }
-        }
-        if (n == 0) { cachedMapSlots = null; return; }
-        int[] out = new int[n];
-        System.arraycopy(buf, 0, out, 0, n);
-        cachedMapSlots = out;
-    }
-
-    // ===== Chunk forcing (Phase 32) — view-distance-based for recon =====
-
-    /**
-     * Updates forced chunks around the recon aircraft to match the server view distance.
-     * Diffs with the previous set to only force/release changed chunks.
-     * New chunks are queued for sending to the player.
-     */
-    private void updateReconChunkLoading(Player owner, int cx, int cz) {
-        if (!(level() instanceof ServerLevel sl)) return;
-        int radius = Math.min(sl.getServer().getPlayerList().getViewDistance(), 5);
-
-        java.util.Set<Long> desired = new java.util.HashSet<>();
-        for (int dx = -radius; dx <= radius; dx++) {
-            for (int dz = -radius; dz <= radius; dz++) {
-                desired.add(net.minecraft.world.level.ChunkPos.asLong(cx + dx, cz + dz));
-            }
-        }
-
-        // Release chunks no longer in range
-        java.util.Iterator<Long> it = reconForcedChunks.iterator();
-        while (it.hasNext()) {
-            long key = it.next();
-            if (!desired.contains(key)) {
-                sl.setChunkForced(net.minecraft.world.level.ChunkPos.getX(key),
-                        net.minecraft.world.level.ChunkPos.getZ(key), false);
-                it.remove();
-            }
-        }
-
-        // Force-load new chunks and queue them for sending
-        for (long key : desired) {
-            if (!reconForcedChunks.contains(key)) {
-                int x = net.minecraft.world.level.ChunkPos.getX(key);
-                int z = net.minecraft.world.level.ChunkPos.getZ(key);
-                sl.setChunkForced(x, z, true);
-                reconForcedChunks.add(key);
-                reconPendingSend.add(key);
-            }
-        }
-    }
-
-    /**
-     * Sends pending chunks to the player (rate-limited to avoid network spikes).
-     * Chunks that haven't finished generating yet remain in the queue.
-     * TECH DEBT: uses vanilla ClientboundLevelChunkWithLightPacket directly because NeoForge's
-     * PacketDistributor has no equivalent for sending raw chunk data to a specific player.
-     * May break on NeoForge version upgrades — check when updating.
-     */
-    private void sendPendingChunks(ServerPlayer player) {
-        if (reconPendingSend.isEmpty()) return;
-        if (!(level() instanceof ServerLevel sl)) return;
-
-        java.util.Iterator<Long> it = reconPendingSend.iterator();
-        int sent = 0;
-        while (it.hasNext() && sent < RECON_CHUNK_SEND_RATE) {
-            long key = it.next();
-            int x = net.minecraft.world.level.ChunkPos.getX(key);
-            int z = net.minecraft.world.level.ChunkPos.getZ(key);
-            net.minecraft.world.level.chunk.LevelChunk chunk = sl.getChunkSource().getChunkNow(x, z);
-            if (chunk != null) {
-                player.connection.send(new net.minecraft.network.protocol.game.ClientboundLevelChunkWithLightPacket(
-                        chunk, sl.getLightEngine(), null, null));
-                it.remove();
-                sent++;
-            }
-        }
-    }
+    // refreshCachedMapSlots, updateReconChunkLoading, sendPendingChunks
+    // moved to AircraftAswRecon
 
     private void releaseAllForcedChunks() {
-        if (!(level() instanceof ServerLevel sl)) {
-            reconForcedChunks.clear();
-            reconPendingSend.clear();
-            lastForcedChunkX = Integer.MIN_VALUE;
-            lastForcedChunkZ = Integer.MIN_VALUE;
-            return;
-        }
-        for (long key : reconForcedChunks) {
-            sl.setChunkForced(net.minecraft.world.level.ChunkPos.getX(key),
-                    net.minecraft.world.level.ChunkPos.getZ(key), false);
-        }
-        reconForcedChunks.clear();
-        reconPendingSend.clear();
-        lastForcedChunkX = Integer.MIN_VALUE;
-        lastForcedChunkZ = Integer.MIN_VALUE;
+        AircraftAswRecon.releaseAllForcedChunks(this);
     }
 
     // ===== Target resolution =====
@@ -1988,7 +1735,7 @@ public class AircraftEntity extends Entity {
         return cachedPayloadItem;
     }
 
-    private boolean tryAutoResupplyAmmo(Player owner) {
+    boolean tryAutoResupplyAmmo(Player owner) {
         if (payloadType.isEmpty()) return false;
         ItemStack coreStack = findCoreStack(owner);
         if (!(coreStack.getItem() instanceof ShipCoreItem sci)) return false;

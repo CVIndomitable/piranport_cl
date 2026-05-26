@@ -104,7 +104,8 @@ class ArchitectureTest {
                         "..combat..",
                         "..dungeon..",
                         "..npc..",
-                        "..skin..")
+                        "..skin..",
+                        "..config..")
                 .because("Managers hold server-side state; should not be in client-only packages")
                 .check(CLASSES);
     }

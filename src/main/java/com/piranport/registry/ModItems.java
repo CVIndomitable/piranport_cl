@@ -29,6 +29,7 @@ import com.piranport.item.MissileItem;
 import com.piranport.item.MissileLauncherItem;
 import com.piranport.item.FlareLauncherItem;
 import com.piranport.item.ConfigInspectorItem;
+import com.piranport.item.ArtilleryConfigToolItem;
 import com.piranport.item.DamageControlItem;
 import com.piranport.item.KirinHeadbandItem;
 import com.piranport.item.RepairKitItem;
@@ -1299,6 +1300,11 @@ public class ModItems {
     public static final DeferredItem<ConfigInspectorItem> CONFIG_INSPECTOR =
             ITEMS.register("config_inspector",
                     () -> new ConfigInspectorItem(new Item.Properties().stacksTo(1)));
+
+    // ===== Artillery Config Tool =====
+    public static final DeferredItem<ArtilleryConfigToolItem> ARTILLERY_CONFIG_TOOL =
+            ITEMS.register("artillery_config_tool",
+                    () -> new ArtilleryConfigToolItem(new Item.Properties().stacksTo(1)));
 
     // ===== Smoke Candle =====
     public static final DeferredItem<SmokeCandleItem> SMOKE_CANDLE =

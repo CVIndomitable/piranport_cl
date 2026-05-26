@@ -239,5 +239,22 @@ public class ModPackets {
                 ShakeEffectPayload.STREAM_CODEC,
                 ShakeEffectPayload::handle
         );
+
+        // ===== Artillery Config Tool =====
+        registrar.playToServer(
+                UpdateConfigOverridePayload.TYPE,
+                UpdateConfigOverridePayload.STREAM_CODEC,
+                UpdateConfigOverridePayload::handle
+        );
+        registrar.playToServer(
+                ExportConfigPayload.TYPE,
+                ExportConfigPayload.STREAM_CODEC,
+                ExportConfigPayload::handle
+        );
+        registrar.playToClient(
+                SyncConfigOverridesPayload.TYPE,
+                SyncConfigOverridesPayload.STREAM_CODEC,
+                SyncConfigOverridesPayload::handle
+        );
     }
 }

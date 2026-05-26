@@ -6,6 +6,7 @@ import com.piranport.menu.FlightGroupMenu;
 import com.piranport.menu.ReloadFacilityMenu;
 import com.piranport.menu.ShipCoreEquipmentMenu;
 import com.piranport.menu.StoneMillMenu;
+import com.piranport.menu.ArtilleryConfigToolMenu;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.inventory.MenuType;
 import net.neoforged.neoforge.common.extensions.IMenuTypeExtension;
@@ -52,4 +53,9 @@ public class ModMenuTypes {
     public static final DeferredHolder<MenuType<?>, MenuType<com.piranport.dungeon.menu.DungeonBookMenu>>
             DUNGEON_BOOK_MENU = MENU_TYPES.register("dungeon_book",
                     () -> IMenuTypeExtension.create(com.piranport.dungeon.menu.DungeonBookMenu::fromNetwork));
+
+    // Artillery Config Tool
+    public static final DeferredHolder<MenuType<?>, MenuType<ArtilleryConfigToolMenu>>
+            ARTILLERY_CONFIG_TOOL_MENU = MENU_TYPES.register("artillery_config_tool",
+                    () -> IMenuTypeExtension.create(ArtilleryConfigToolMenu::new));
 }

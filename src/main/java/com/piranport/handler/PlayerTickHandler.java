@@ -44,12 +44,25 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * 玩家 Tick 处理器 — 服务端每 tick 驱动燃料消耗、水上行走、声呐、自动战斗等。
+ *
+ * <p><b>线程模型</b>: 服务端主线程，HashMap 缓存由单线程访问无需同步。
+ * <p><b>缓存生命周期</b>:
+ *   {@link #lastWeaponLoad} / {@link #lastPlayerPos} / {@link #accumulatedDistance} —
+ *   在 {@link #onPlayerLogout(UUID)} 中清理以单向释放内存，
+ *   全局清理通过 {@link #clearCaches()} 在 {@link com.piranport.server.ServerGameEvents#onServerStopped} 中调用。
+ * <p><b>访问限制</b>: 仅在服务端运行，客户端不会触发。
+ */
 @EventBusSubscriber(modid = PiranPort.MOD_ID)
 public class PlayerTickHandler {
 
     // ==================== 缓存 Maps ====================
+    /** 玩家 UUID → 上次背包武器总载重。用于无GUI模式下的属性重算检测。 */
     private static final Map<UUID, Integer> lastWeaponLoad = new HashMap<>();
+    /** 玩家 UUID → 上次 tick 位置。用于计算移动距离（燃料消耗用）。 */
     private static final Map<UUID, Vec3> lastPlayerPos = new HashMap<>();
+    /** 玩家 UUID → 累计移动距离。用于按距离驱动的燃料消耗。 */
     private static final Map<UUID, Double> accumulatedDistance = new HashMap<>();
 
     public static void clearCaches() {

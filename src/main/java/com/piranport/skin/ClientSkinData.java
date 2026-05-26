@@ -4,8 +4,15 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * 客户端皮肤数据 — 追踪玩家当前使用的皮肤 ID。
+ *
+ * <p><b>线程模型</b>: 客户端渲染线程（单线程），HashMap 无需同步。
+ * <p><b>生命周期</b>: 在 {@link com.piranport.client.ClientGameEvents#onClientDisconnect} 中通过 {@link #clear()} 清理。
+ * <p><b>访问限制</b>: 仅限客户端，服务端不可访问。
+ */
 public class ClientSkinData {
-    // 仅客户端：从渲染线程访问，无需并发控制
+
     private static final Map<UUID, Integer> activeSkins = new HashMap<>();
 
     public static int getActiveSkin(UUID playerUuid) {

@@ -442,6 +442,8 @@ public class ModItems {
             ITEMS.registerSimpleBlockItem(ModBlocks.COOKING_POT);
     public static final DeferredItem<BlockItem> RELOAD_FACILITY =
             ITEMS.registerSimpleBlockItem(ModBlocks.RELOAD_FACILITY);
+    public static final DeferredItem<BlockItem> SHIP_CORE_MODIFIER =
+            ITEMS.registerSimpleBlockItem(ModBlocks.SHIP_CORE_MODIFIER);
     public static final DeferredItem<BlockItem> YUBARI_WATER_BUCKET =
             ITEMS.registerSimpleBlockItem(ModBlocks.YUBARI_WATER_BUCKET);
 

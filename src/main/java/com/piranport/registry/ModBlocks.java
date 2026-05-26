@@ -174,6 +174,15 @@ public class ModBlocks {
                             .requiresCorrectToolForDrops()
                             .sound(SoundType.METAL)));
 
+    // ===== Ship Core Modifier =====
+    public static final DeferredBlock<com.piranport.block.ShipCoreModifierBlock> SHIP_CORE_MODIFIER =
+            BLOCKS.register("ship_core_modifier", () -> new com.piranport.block.ShipCoreModifierBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.METAL)
+                            .strength(3.5f, 6.0f)
+                            .requiresCorrectToolForDrops()
+                            .sound(SoundType.METAL)));
+
     // ===== Yubari Water Bucket =====
     public static final DeferredBlock<YubariWaterBucketBlock> YUBARI_WATER_BUCKET =
             BLOCKS.register("yubari_water_bucket", () -> new YubariWaterBucketBlock(

@@ -4,6 +4,7 @@ import com.piranport.PiranPort;
 import com.piranport.menu.CookingPotMenu;
 import com.piranport.menu.FlightGroupMenu;
 import com.piranport.menu.ReloadFacilityMenu;
+import com.piranport.menu.ShipCoreEquipmentMenu;
 import com.piranport.menu.StoneMillMenu;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.inventory.MenuType;
@@ -30,6 +31,14 @@ public class ModMenuTypes {
     public static final DeferredHolder<MenuType<?>, MenuType<FlightGroupMenu>> FLIGHT_GROUP_MENU =
             MENU_TYPES.register("flight_group",
                     () -> IMenuTypeExtension.create(FlightGroupMenu::fromNetwork));
+
+    public static final DeferredHolder<MenuType<?>, MenuType<ShipCoreEquipmentMenu>> SHIP_CORE_EQUIPMENT_MENU =
+            MENU_TYPES.register("ship_core_equipment",
+                    () -> IMenuTypeExtension.create(ShipCoreEquipmentMenu::fromNetwork));
+
+    public static final DeferredHolder<MenuType<?>, MenuType<com.piranport.menu.ShipCoreModifierMenu>> SHIP_CORE_MODIFIER_MENU =
+            MENU_TYPES.register("ship_core_modifier",
+                    () -> IMenuTypeExtension.create(com.piranport.menu.ShipCoreModifierMenu::new));
 
     public static final DeferredHolder<MenuType<?>, MenuType<com.piranport.menu.AmmoWorkbenchMenu>> AMMO_WORKBENCH_MENU =
             MENU_TYPES.register("ammo_workbench",

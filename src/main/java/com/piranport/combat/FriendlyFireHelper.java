@@ -8,6 +8,10 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.fml.ModList;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
+
 /**
  * 皮兰港所有弹药的友军伤害判定逻辑。
  * 返回 true 表示该弹药应跳过对此目标的命中。
@@ -25,6 +29,23 @@ import net.neoforged.fml.ModList;
 public final class FriendlyFireHelper {
 
     private static final boolean MAID_MOD_LOADED = ModList.get().isLoaded("touhou_little_maid");
+
+    private static Class<?> maidClass;
+    private static MethodHandle getOwnerHandle;
+    private static boolean maidReflectionReady;
+
+    static {
+        if (MAID_MOD_LOADED) {
+            try {
+                maidClass = Class.forName("com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid");
+                getOwnerHandle = MethodHandles.lookup().findVirtual(maidClass, "getOwner",
+                        MethodType.methodType(LivingEntity.class));
+                maidReflectionReady = true;
+            } catch (Exception e) {
+                maidReflectionReady = false;
+            }
+        }
+    }
 
     private FriendlyFireHelper() {}
 
@@ -86,24 +107,21 @@ public final class FriendlyFireHelper {
      * @return true 表示应拦截
      */
     private static boolean checkMaidFriendlyFire(Entity target, Entity owner) {
+        if (!maidReflectionReady) return false;
+        if (!maidClass.isInstance(target) || !maidClass.isInstance(owner)) {
+            return false;
+        }
+        if (target == owner) {
+            return true;
+        }
         try {
-            Class<?> maidClass = Class.forName("com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid");
-            if (!maidClass.isInstance(target) || !maidClass.isInstance(owner)) {
-                return false;
-            }
-            // 2. 女仆禁止被自己的弹药命中
-            if (target == owner) {
-                return true;
-            }
-            // 3. 同主人女仆禁止互相伤害
-            var getOwnerMethod = maidClass.getMethod("getOwner");
-            LivingEntity targetOwner = (LivingEntity) getOwnerMethod.invoke(target);
-            LivingEntity ownerOwner = (LivingEntity) getOwnerMethod.invoke(owner);
+            LivingEntity targetOwner = (LivingEntity) getOwnerHandle.invoke(target);
+            LivingEntity ownerOwner = (LivingEntity) getOwnerHandle.invoke(owner);
             if (targetOwner != null && ownerOwner != null && targetOwner.getUUID().equals(ownerOwner.getUUID())) {
                 return true;
             }
-        } catch (Exception e) {
-            // 反射失败时静默忽略，不影响其他逻辑
+        } catch (Throwable e) {
+            // 反射失败时静默忽略
         }
         return false;
     }

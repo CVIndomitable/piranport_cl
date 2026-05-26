@@ -36,6 +36,11 @@ public class ModBlockEntityTypes {
                     BlockEntityType.Builder.of(ReloadFacilityBlockEntity::new, ModBlocks.RELOAD_FACILITY.get())
                             .build(null));
 
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<com.piranport.block.entity.ShipCoreModifierBlockEntity>> SHIP_CORE_MODIFIER =
+            BLOCK_ENTITY_TYPES.register("ship_core_modifier", () ->
+                    BlockEntityType.Builder.of(com.piranport.block.entity.ShipCoreModifierBlockEntity::new, ModBlocks.SHIP_CORE_MODIFIER.get())
+                            .build(null));
+
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<YubariWaterBucketBlockEntity>> YUBARI_WATER_BUCKET =
             BLOCK_ENTITY_TYPES.register("yubari_water_bucket", () ->
                     BlockEntityType.Builder.of(YubariWaterBucketBlockEntity::new, ModBlocks.YUBARI_WATER_BUCKET.get())

@@ -95,13 +95,11 @@ public class ShipCoreItem extends Item implements Equipable {
 
     @Override
     public EquipmentSlot getEquipmentSlot() {
-        // 根据配置返回正确的装备槽位
         String slotMode = ModCommonConfig.SHIP_CORE_SLOT_MODE.get();
         if ("helmet".equalsIgnoreCase(slotMode) || "chest".equalsIgnoreCase(slotMode)) {
-            return EquipmentSlot.HEAD;  // chest 已弃用，映射到 helmet
+            return EquipmentSlot.HEAD;
         }
-        // offhand 模式下也返回 HEAD，因为玩家会手动放入副手而非右键装备
-        return EquipmentSlot.HEAD;
+        return EquipmentSlot.OFFHAND;
     }
 
     @Override

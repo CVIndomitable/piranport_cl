@@ -7,8 +7,15 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-/** Server-side fire control state. Maps player UUID → locked entity UUIDs.
- *  Primarily accessed on server thread; ConcurrentHashMap guards clearAll() during shutdown. */
+/**
+ * 服务端火控状态 — 管理玩家→锁定目标的映射。
+ *
+ * <p><b>线程模型</b>: 服务端主线程（主要访问），ConcurrentHashMap 和 CopyOnWriteArrayList
+ * 保护 shutdown 期间 clearAll() 的并发访问。
+ * <p><b>生命周期</b>: 玩家登出时通过 {@link #clearTargets(UUID)} 清理，
+ * 服务端关闭时通过 {@link #clearAll()} 清理。
+ * <p><b>容量限制</b>: 每个玩家最多 {@value #MAX_TARGETS} 个目标。
+ */
 public class FireControlManager {
 
     private static final Map<UUID, List<UUID>> LOCKED_TARGETS = new ConcurrentHashMap<>();

@@ -12,9 +12,15 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * 服务端：追踪哪个玩家在引导哪枚鱼雷及其待处理的方向输入。
- * 清理：引导结束时移除条目（鱼雷被摧毁、导线切断、玩家登出），
- * 以及服务端关闭时（GameEvents.onServerStopped）。
+ * 服务端鱼雷制导管理器 — 追踪哪个玩家在引导哪枚鱼雷及其待处理的方向输入。
+ *
+ * <p><b>线程模型</b>: 服务端主线程（主要访问），ConcurrentHashMap 保护 shutdown 时的并发。
+ * <p><b>生命周期</b>:
+ *   引导结束时移除条目（鱼雷被摧毁、导线切断、玩家登出 {@link #endGuidance(UUID)}），
+ *   服务端关闭时通过 {@link #clearAll()} 在
+ *   {@link com.piranport.server.ServerGameEvents#onServerStopped} 中清理。
+ * <p><b>网络同步</b>: 通过 {@link com.piranport.network.TorpedoGuidanceInputPayload} 接收客户端输入，
+ *   通过 {@link com.piranport.network.TorpedoGuidanceStartPayload} / EndPayload 通知客户端。
  */
 public class TorpedoGuidanceManager {
     private static final Map<UUID, UUID> activeGuidance = new ConcurrentHashMap<>();

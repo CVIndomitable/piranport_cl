@@ -6,8 +6,14 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-/** Server-side: tracks which player is in recon mode and their pending movement input.
- *  Primarily accessed on server thread; ConcurrentHashMap guards clearAll() during shutdown. */
+/**
+ * 服务端侦察模式管理器 — 追踪哪个玩家在侦察模式及其待处理的移动输入。
+ *
+ * <p><b>线程模型</b>: 服务端主线程（主要访问），ConcurrentHashMap 保护 shutdown 时的并发。
+ * <p><b>生命周期</b>: 玩家退出侦察模式时调用 {@link #endRecon(UUID)} 清理，
+ * 服务端关闭时通过 {@link #clearAll()} 清理。
+ * <p><b>数据</b>: activeRecon (playerUUID → reconEntityUUID), pendingInput (playerUUID → [dx, dy, dz])。
+ */
 public class ReconManager {
     // playerUUID → reconEntityUUID
     private static final Map<UUID, UUID> activeRecon = new ConcurrentHashMap<>();

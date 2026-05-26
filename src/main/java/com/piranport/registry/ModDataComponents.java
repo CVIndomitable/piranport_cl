@@ -3,6 +3,7 @@ package com.piranport.registry;
 import com.mojang.serialization.Codec;
 import com.piranport.PiranPort;
 import com.piranport.component.AircraftInfo;
+import com.piranport.component.CustomCoreConfig;
 import com.piranport.component.FlightGroupData;
 import com.piranport.component.FuelData;
 import com.piranport.component.LoadedAmmo;
@@ -137,6 +138,16 @@ public class ModDataComponents {
             () -> DataComponentType.<FuelData>builder()
                     .persistent(FuelData.CODEC)
                     .networkSynchronized(FuelData.STREAM_CODEC)
+                    .build());
+
+    // ===== 自定义核心配置（改装器） =====
+
+    /** 自定义核心配置，存储改装后的槽位数量和舰型 */
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<CustomCoreConfig>>
+            CUSTOM_CORE_CONFIG = DATA_COMPONENTS.register("custom_core_config",
+            () -> DataComponentType.<CustomCoreConfig>builder()
+                    .persistent(CustomCoreConfig.CODEC)
+                    .networkSynchronized(CustomCoreConfig.STREAM_CODEC)
                     .build());
 
     // ===== v0.0.8 Dungeon DataComponents =====

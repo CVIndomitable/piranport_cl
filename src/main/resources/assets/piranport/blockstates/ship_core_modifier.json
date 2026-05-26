@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "piranport:block/ship_core_modifier" },
+    "facing=south": { "model": "piranport:block/ship_core_modifier", "y": 180 },
+    "facing=east":  { "model": "piranport:block/ship_core_modifier", "y": 90 },
+    "facing=west":  { "model": "piranport:block/ship_core_modifier", "y": 270 }
+  }
+}

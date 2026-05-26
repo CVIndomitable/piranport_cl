@@ -19,6 +19,16 @@ public class ModPackets {
                 OpenFlightGroupPayload::handle
         );
         registrar.playToServer(
+                OpenShipEquipmentPayload.TYPE,
+                OpenShipEquipmentPayload.STREAM_CODEC,
+                OpenShipEquipmentPayload::handle
+        );
+        registrar.playToServer(
+                ApplyModificationPayload.TYPE,
+                ApplyModificationPayload.STREAM_CODEC,
+                ApplyModificationPayload::handle
+        );
+        registrar.playToServer(
                 FlightGroupUpdatePayload.TYPE,
                 FlightGroupUpdatePayload.STREAM_CODEC,
                 FlightGroupUpdatePayload::handle

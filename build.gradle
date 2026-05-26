@@ -91,6 +91,15 @@ dependencies {
     // Touhou Little Maid — soft dependency for maid rigging compat (optional at runtime)
     compileOnly "maven.modrinth:touhou-little-maid:1.5.2-neoforge+mc1.21.1"
     localRuntime "maven.modrinth:touhou-little-maid:1.5.2-neoforge+mc1.21.1"
+
+    // ArchUnit — 架构约束测试
+    testImplementation "org.junit.jupiter:junit-jupiter:5.11.0"
+    testImplementation "com.tngtech.archunit:archunit-junit5:1.3.0"
+    testRuntimeOnly "org.junit.platform:junit-platform-launcher"
+}
+
+tasks.named('test', Test).configure {
+    useJUnitPlatform()
 }
 
 var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {

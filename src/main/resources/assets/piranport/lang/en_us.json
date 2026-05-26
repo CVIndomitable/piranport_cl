@@ -826,5 +826,6 @@
   "message.piranport.config_parse_failed": "Config parse failed [%s]: %s",
   "message.piranport.config_exported": "Config exported to: %s",
   "message.piranport.config_export_failed": "Export failed: %s",
+  "message.piranport.config_reset": "All config overrides have been reset",
   "message.piranport.reset_not_implemented": "Reset feature not implemented yet"
 }

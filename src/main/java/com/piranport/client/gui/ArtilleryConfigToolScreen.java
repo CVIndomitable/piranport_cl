@@ -5,6 +5,7 @@ import com.piranport.artillery.config.ArtilleryConfig;
 import com.piranport.artillery.config.override.ClientConfigCache;
 import com.piranport.menu.ArtilleryConfigToolMenu;
 import com.piranport.network.ExportConfigPayload;
+import com.piranport.network.ResetConfigPayload;
 import com.piranport.network.UpdateConfigOverridePayload;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -387,10 +388,19 @@ public class ArtilleryConfigToolScreen extends AbstractContainerScreen<Artillery
      * 重置全部按钮回调
      */
     private void onResetAllClicked() {
-        // TODO: 实现重置功能（需要添加网络包）
+        // 发送重置请求到服务端
+        PacketDistributor.sendToServer(new ResetConfigPayload());
+
+        // 清空客户端缓存
+        ClientConfigCache.clearCache();
+
+        // 重建GUI以显示原始值
+        this.rebuildWidgets();
+
+        // 显示提示消息
         this.minecraft.player.sendSystemMessage(
-                Component.translatable("message.piranport.reset_not_implemented")
-                        .withStyle(net.minecraft.ChatFormatting.YELLOW)
+                Component.translatable("message.piranport.config_reset")
+                        .withStyle(net.minecraft.ChatFormatting.GREEN)
         );
     }
 }

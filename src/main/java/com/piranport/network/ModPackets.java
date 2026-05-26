@@ -251,6 +251,11 @@ public class ModPackets {
                 ExportConfigPayload.STREAM_CODEC,
                 ExportConfigPayload::handle
         );
+        registrar.playToServer(
+                ResetConfigPayload.TYPE,
+                ResetConfigPayload.STREAM_CODEC,
+                ResetConfigPayload::handle
+        );
         registrar.playToClient(
                 SyncConfigOverridesPayload.TYPE,
                 SyncConfigOverridesPayload.STREAM_CODEC,

@@ -826,5 +826,6 @@
   "message.piranport.config_parse_failed": "配置解析失败 [%s]: %s",
   "message.piranport.config_exported": "配置已导出到: %s",
   "message.piranport.config_export_failed": "导出失败: %s",
+  "message.piranport.config_reset": "已重置所有配置覆盖",
   "message.piranport.reset_not_implemented": "重置功能开发中"
 }

@@ -81,8 +81,16 @@ public class PlayerTickHandler {
     private static final Map<UUID, Float> lastYaw = new ConcurrentHashMap<>();
     /** 玩家 UUID → 缓存的方向向量。用于水面行走加速。 */
     private static final Map<UUID, Vec3> cachedDirection = new ConcurrentHashMap<>();
-    /** 缓存的配置值：是否启用舰核GUI */
-    private static boolean cachedShipCoreGuiEnabled = ModCommonConfig.isShipCoreGuiEnabled();
+    /** 缓存的配置值：是否启用舰核GUI（延迟初始化，避免配置加载顺序问题）*/
+    private static Boolean cachedShipCoreGuiEnabled = null;
+
+    /** 获取舰核GUI配置（延迟初始化） */
+    private static boolean isShipCoreGuiEnabled() {
+        if (cachedShipCoreGuiEnabled == null) {
+            cachedShipCoreGuiEnabled = ModCommonConfig.isShipCoreGuiEnabled();
+        }
+        return cachedShipCoreGuiEnabled;
+    }
 
     /** 清理所有缓存（服务器关闭时调用）*/
     public static void clearCaches() {
@@ -91,6 +99,7 @@ public class PlayerTickHandler {
         accumulatedDistance.clear();
         lastYaw.clear();
         cachedDirection.clear();
+        cachedShipCoreGuiEnabled = null;
     }
 
     /** 玩家登出时清理该玩家的缓存条目，防止长时间运行内存泄漏 */
@@ -164,7 +173,7 @@ public class PlayerTickHandler {
     /** 无GUI模式：检测背包武器变化并重算属性 */
     private static void tickInventoryLoadIfNoGui(Player player) {
         // 降低检查频率至每5tick，减少重复计算
-        if (!cachedShipCoreGuiEnabled && player.tickCount % INVENTORY_LOAD_CHECK_INTERVAL == 0) {
+        if (!isShipCoreGuiEnabled() && player.tickCount % INVENTORY_LOAD_CHECK_INTERVAL == 0) {
             tickInventoryLoadCheck(player);
         }
     }

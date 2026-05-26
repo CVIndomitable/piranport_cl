@@ -46,7 +46,16 @@ public class EntityHighlightHandler {
     private static final String ASW_TEAM_NAME = "pp_asw_sonar";
     private static final Set<String> aswTeamMembers = new HashSet<>();
 
-    private static final int ENTITY_SCAN_INTERVAL = 4;
+    /**
+     * Y 键战场高亮全量扫描间隔（tick）。
+     *
+     * <p>每 20 tick（≈1 秒）扫描一次可见实体。原值 4 tick（0.2 秒）过于频繁，
+     * 因为 {@link #isHighlightTarget} 对每个实体执行多次 instanceof 和距离计算，
+     * 大量实体时开销显著。1 秒的刷新延迟对玩家体验无感知。
+     *
+     * @see #tick(Minecraft, Set, boolean)
+     */
+    private static final int ENTITY_SCAN_INTERVAL = 20;
     private static int entityScanCooldown = 0;
     private static final EntityUuidCache entityCache = new EntityUuidCache();
 

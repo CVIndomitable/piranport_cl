@@ -107,10 +107,15 @@ public class ServerGameEvents {
             FleetGroupManager.get(overworld).cleanup(event.getServer());
         }
 
-        // 地牢实例泄漏清理（每10分钟）
-        if (event.getServer().getTickCount() % 12000 == 0 && dungeonLevel != null) {
+        // 地牢实例泄漏清理（每1分钟）
+        if (event.getServer().getTickCount() % 1200 == 0 && dungeonLevel != null) {
             DungeonInstanceManager.get(event.getServer().overworld())
                     .sweepLeaks(dungeonLevel);
+        }
+
+        // 离线玩家缓存清理（每小时）
+        if (event.getServer().getTickCount() % 72000 == 0) {
+            PlayerTickHandler.cleanupOfflinePlayers(event.getServer());
         }
     }
 

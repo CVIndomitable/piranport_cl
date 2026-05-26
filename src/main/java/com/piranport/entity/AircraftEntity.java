@@ -1491,7 +1491,7 @@ public class AircraftEntity extends Entity {
             // Fire control locked targets always glow
             if (isFcTarget(aircraft)) return true;
             // Highlight mode (Y key): glow any player-owned aircraft
-            if (!com.piranport.ClientTickHandler.isHighlightEnabled()) return false;
+            if (!com.piranport.client.input.EntityHighlightHandler.isHighlightEnabled()) return false;
             net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
             if (mc == null || mc.player == null) return false;
             return aircraft.entityData.get(OWNER_ID).isPresent();

@@ -18,15 +18,16 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.saveddata.SavedData;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 /**
  * Manages all active dungeon instances. Persisted as world SavedData.
  *
- * <p><b>性能注意</b>: {@link #handlePlayerDisconnect(UUID)} 遍历所有副本实例查找玩家作为旗舰的副本。
- * 当前实现为 O(n)，适用于副本数量较少的场景（< 100）。如果副本数量很大（1000+），
- * 建议添加反向索引 {@code Map<UUID, Set<UUID>> playerToInstances} 优化为 O(1) 查找。
+ * <p><b>性能优化</b>: 使用反向索引 {@link #playerToInstances} 将 {@link #handlePlayerDisconnect(UUID)}
+ * 从 O(n) 优化为 O(1) 查找。适用于大量副本实例的场景（1000+）。
  */
 public class DungeonInstanceManager extends SavedData {
     private static final String DATA_NAME = "piranport_instances";
@@ -35,6 +36,8 @@ public class DungeonInstanceManager extends SavedData {
     public static final long SUSPENDED_CLEANUP_MILLIS = 24L * 60L * 60L * 1000L;
 
     private final Map<UUID, DungeonInstance> instances = new HashMap<>();
+    /** 反向索引：玩家UUID → 该玩家作为旗舰的副本ID集合 */
+    private final Map<UUID, Set<UUID>> playerToInstances = new HashMap<>();
     private int nextIndex = 0;
     private final java.util.Queue<Integer> freedIndices = new java.util.ArrayDeque<>();
     /** Indices freed this tick — moved to freedIndices on next sweepLeaks() call so
@@ -67,6 +70,8 @@ public class DungeonInstanceManager extends SavedData {
         instance.setFlagshipUuid(flagship.getUUID());
 
         instances.put(instanceId, instance);
+        // 更新反向索引
+        playerToInstances.computeIfAbsent(flagship.getUUID(), k -> new HashSet<>()).add(instanceId);
         setDirty();
 
         PiranPort.LOGGER.info("Created dungeon instance {} for stage {} (index {})",
@@ -126,6 +131,17 @@ public class DungeonInstanceManager extends SavedData {
         if (inst != null) {
             pendingFreedIndices.add(inst.getInstanceIndex());
             inst.setState(DungeonInstance.State.CLEANUP);
+            // 清理反向索引
+            UUID flagship = inst.getFlagshipUuid();
+            if (flagship != null) {
+                Set<UUID> playerInstances = playerToInstances.get(flagship);
+                if (playerInstances != null) {
+                    playerInstances.remove(instanceId);
+                    if (playerInstances.isEmpty()) {
+                        playerToInstances.remove(flagship);
+                    }
+                }
+            }
             setDirty();
             PiranPort.LOGGER.info("Cleaned up dungeon instance {}", instanceId);
         }
@@ -234,6 +250,12 @@ public class DungeonInstanceManager extends SavedData {
         for (int i = 0; i < list.size(); i++) {
             DungeonInstance inst = DungeonInstance.load(list.getCompound(i));
             mgr.instances.put(inst.getInstanceId(), inst);
+            // 重建反向索引
+            UUID flagship = inst.getFlagshipUuid();
+            if (flagship != null) {
+                mgr.playerToInstances.computeIfAbsent(flagship, k -> new HashSet<>())
+                        .add(inst.getInstanceId());
+            }
         }
         return mgr;
     }
@@ -247,16 +269,19 @@ public class DungeonInstanceManager extends SavedData {
 
     /**
      * 玩家断连时清理其所在副本状态：暂停该玩家作为旗舰的所有活跃副本，
-     * 防止跨服状态残留或内存泄漏。
+     * 防止跨服状态残留或内存泄漏。使用反向索引优化为 O(1) 查找。
      */
     public void handlePlayerDisconnect(UUID playerUuid) {
-        for (DungeonInstance inst : instances.values()) {
-            if (inst.getState() != DungeonInstance.State.ACTIVE) continue;
-            UUID flagship = inst.getFlagshipUuid();
-            if (playerUuid.equals(flagship)) {
-                suspendInstance(inst.getInstanceId());
+        Set<UUID> playerInstances = playerToInstances.get(playerUuid);
+        if (playerInstances == null || playerInstances.isEmpty()) return;
+
+        // 复制集合避免并发修改异常（suspendInstance 可能触发其他操作）
+        for (UUID instanceId : new HashSet<>(playerInstances)) {
+            DungeonInstance inst = instances.get(instanceId);
+            if (inst != null && inst.getState() == DungeonInstance.State.ACTIVE) {
+                suspendInstance(instanceId);
                 PiranPort.LOGGER.debug("Suspended instance {} due to player disconnect: {}",
-                        inst.getInstanceId(), playerUuid);
+                        instanceId, playerUuid);
             }
         }
     }

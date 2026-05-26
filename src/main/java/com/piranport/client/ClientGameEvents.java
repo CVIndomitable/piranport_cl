@@ -6,7 +6,7 @@ import com.piranport.client.CameraShakeHandler;
 import com.piranport.combat.TransformationManager;
 import com.piranport.config.ModClientConfig;
 import com.piranport.config.ModCommonConfig;
-import com.piranport.ClientTickHandler;
+import com.piranport.client.input.ClientInputCoordinator;
 import com.piranport.PiranPort;
 import com.piranport.network.RecallAllAircraftPayload;
 import com.piranport.network.SkinRevertPayload;
@@ -109,7 +109,7 @@ public class ClientGameEvents {
     public static void onClientDisconnect(ClientPlayerNetworkEvent.LoggingOut event) {
         ClientFireControlData.clear();
         ClientReconData.clearRecon();
-        ClientTickHandler.resetClientState();
+        ClientInputCoordinator.resetClientState();
         ClientSkinData.clear();
         com.piranport.client.FireControlHudLayer.clearCache();
         com.piranport.client.ClientScopeHandler.clear();

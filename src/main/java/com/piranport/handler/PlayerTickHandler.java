@@ -40,15 +40,15 @@ import net.neoforged.neoforge.common.NeoForgeMod;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 玩家 Tick 处理器 — 服务端每 tick 驱动燃料消耗、水上行走、声呐、自动战斗等。
  *
- * <p><b>线程模型</b>: 服务端主线程，HashMap 缓存由单线程访问无需同步。
+ * <p><b>线程模型</b>: 服务端主线程，使用 ConcurrentHashMap 防御服务器关闭时的竞态条件。
  * <p><b>缓存生命周期</b>:
  *   {@link #lastWeaponLoad} / {@link #lastPlayerPos} / {@link #accumulatedDistance} —
  *   在 {@link #onPlayerLogout(UUID)} 中清理以单向释放内存，
@@ -60,11 +60,11 @@ public class PlayerTickHandler {
 
     // ==================== 缓存 Maps ====================
     /** 玩家 UUID → 上次背包武器总载重。用于无GUI模式下的属性重算检测。 */
-    private static final Map<UUID, Integer> lastWeaponLoad = new HashMap<>();
+    private static final Map<UUID, Integer> lastWeaponLoad = new ConcurrentHashMap<>();
     /** 玩家 UUID → 上次 tick 位置。用于计算移动距离（燃料消耗用）。 */
-    private static final Map<UUID, Vec3> lastPlayerPos = new HashMap<>();
+    private static final Map<UUID, Vec3> lastPlayerPos = new ConcurrentHashMap<>();
     /** 玩家 UUID → 累计移动距离。用于按距离驱动的燃料消耗。 */
-    private static final Map<UUID, Double> accumulatedDistance = new HashMap<>();
+    private static final Map<UUID, Double> accumulatedDistance = new ConcurrentHashMap<>();
 
     public static void clearCaches() {
         lastWeaponLoad.clear();
@@ -77,6 +77,17 @@ public class PlayerTickHandler {
         lastWeaponLoad.remove(uuid);
         lastPlayerPos.remove(uuid);
         accumulatedDistance.remove(uuid);
+    }
+
+    /** 定期清理离线玩家的缓存条目，防止服务器崩溃导致的内存泄漏 */
+    public static void cleanupOfflinePlayers(net.minecraft.server.MinecraftServer server) {
+        java.util.Set<UUID> onlineUuids = server.getPlayerList().getPlayers().stream()
+                .map(net.minecraft.world.entity.Entity::getUUID)
+                .collect(java.util.stream.Collectors.toSet());
+
+        lastWeaponLoad.keySet().removeIf(uuid -> !onlineUuids.contains(uuid));
+        lastPlayerPos.keySet().removeIf(uuid -> !onlineUuids.contains(uuid));
+        accumulatedDistance.keySet().removeIf(uuid -> !onlineUuids.contains(uuid));
     }
 
     @SubscribeEvent
@@ -164,9 +175,10 @@ public class PlayerTickHandler {
         }
     }
 
-    /** 声纳效果：24格内水生/敌对生物发光（每40tick） */
+    /** 声纳效果：24格内水生/敌对生物发光（每40tick，错峰执行） */
     private static void tickSonarGlow(Player player, ItemStack transformedCore) {
-        if (player.tickCount % 40 != 0) return;
+        // 错峰执行：不同玩家在不同tick执行，避免同时扫描
+        if ((player.tickCount + player.getId()) % 40 != 0) return;
         if (!TransformationManager.hasSonarEquipped(player, transformedCore)) return;
         AABB scanBox = player.getBoundingBox().inflate(24.0, 8.0, 24.0);
         List<LivingEntity> nearby = player.level().getEntitiesOfClass(
@@ -187,9 +199,10 @@ public class PlayerTickHandler {
         }
     }
 
-    /** 战斗机自动升空 + 防空导弹（每40tick） */
+    /** 战斗机自动升空 + 防空导弹（每40tick，错峰执行） */
     private static void tickAutoCombatIfNeeded(Player player) {
-        if (player.tickCount % 40 == 0) {
+        // 错峰执行：不同玩家在不同tick执行
+        if ((player.tickCount + player.getId()) % 40 == 0) {
             tickAutoCombat(player);
         }
     }
@@ -355,17 +368,19 @@ public class PlayerTickHandler {
         }
     }
 
-    /** 燃料消耗：基于移动距离，耗尽时自动解除变身 */
+    /** 燃料消耗：基于移动距离，耗尽时自动解除变身（每5tick计算一次） */
     private static void tickFuelConsumption(Player player) {
+        // 性能优化：每5tick计算一次燃料消耗
+        if (player.tickCount % 5 != 0) return;
+
         UUID uuid = player.getUUID();
         Vec3 currentPos = player.position();
         Vec3 lastPos = lastPlayerPos.put(uuid, currentPos);
         if (lastPos == null) return;
 
         double dist = currentPos.distanceTo(lastPos);
-        // P0 #5: 传送检测改为合理阈值，防止频繁传送绕过燃料消耗
-        // 10格过于宽松，改为检测维度变化或超过模拟距离
-        if (dist > 128.0) {  // 8个区块的距离，超过此值视为传送
+        // 传送检测：超过128格（8个区块）视为传送，重置累计距离
+        if (dist > 128.0) {
             lastPlayerPos.put(uuid, currentPos);
             accumulatedDistance.remove(uuid);
             return;

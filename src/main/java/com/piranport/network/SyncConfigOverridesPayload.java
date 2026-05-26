@@ -94,7 +94,11 @@ public record SyncConfigOverridesPayload(
             PiranPort.LOGGER.debug("Received config overrides: {} cannons, {} projectiles",
                     payload.cannonOverrides.size(), payload.projectileOverrides.size());
 
-            // TODO: 存储到客户端临时缓存（在GUI类中实现）
+            // 存储到客户端缓存
+            com.piranport.artillery.config.override.ClientConfigCache.updateCache(
+                    payload.cannonOverrides,
+                    payload.projectileOverrides
+            );
         });
     }
 }

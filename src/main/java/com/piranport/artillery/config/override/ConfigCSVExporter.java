@@ -154,20 +154,14 @@ public class ConfigCSVExporter {
     }
 
     /**
-     * 获取所有火炮名称（从JSON配置目录扫描）
+     * 获取所有火炮名称（从ArtilleryConfig动态获取）
      */
     private static Set<String> getAllCannonNames() {
         // 使用TreeSet自动排序
         Set<String> names = new TreeSet<>();
 
-        // 已知的火炮列表（从ModItems推断）
-        names.add("single_small_gun");
-        names.add("small_gun");
-        names.add("medium_gun");
-        names.add("large_gun");
-        names.add("french_quad_380mm_gun");
-        names.add("seven_barrel_gun");
-        names.add("salvo_test_gun");
+        // 从ArtilleryConfig动态获取所有已加载的火炮
+        names.addAll(ArtilleryConfig.getAllCannonNames());
 
         return names;
     }

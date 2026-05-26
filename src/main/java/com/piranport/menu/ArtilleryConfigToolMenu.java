@@ -61,8 +61,8 @@ public class ArtilleryConfigToolMenu extends AbstractContainerMenu {
 
     @Override
     public boolean stillValid(@NotNull Player player) {
-        // 始终有效（不依赖方块或物品）
-        return true;
+        // 仅创造模式可用
+        return player.isCreative();
     }
 
     @Override

@@ -49,9 +49,9 @@ public record UpdateConfigOverridePayload(
                 return;
             }
 
-            // 仅创造模式可用
-            if (!serverPlayer.isCreative()) {
-                PiranPort.LOGGER.warn("Player {} tried to update config without creative mode", serverPlayer.getName().getString());
+            // 仅创造模式或OP可用
+            if (!serverPlayer.isCreative() && !serverPlayer.hasPermissions(2)) {
+                PiranPort.LOGGER.warn("Player {} tried to update config without creative mode or OP permission", serverPlayer.getName().getString());
                 return;
             }
 
@@ -100,12 +100,16 @@ public record UpdateConfigOverridePayload(
 
     /**
      * 解析弹药配置值
+     *
+     * <p>支持类型: boolean, double
+     * <p>注意: 当前弹药配置不包含int类型，如需扩展请在此添加分支
      */
     private static Object parseProjectileValue(String valueStr, String key) {
         // 根据配置键判断类型
         if (key.equals("HE_DAMAGE_FALLOFF") || key.equals("UNDERWATER_EXPLODE")) {
             return Boolean.parseBoolean(valueStr);
         } else {
+            // 默认为double类型（HE_ARMOR_PENETRATION, AP_DAMAGE_MULTIPLIER等）
             return Double.parseDouble(valueStr);
         }
     }

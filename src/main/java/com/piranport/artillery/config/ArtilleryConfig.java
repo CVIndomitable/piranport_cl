@@ -54,6 +54,13 @@ public class ArtilleryConfig extends SimplePreparableReloadListener<Map<String, 
         return CANNON_DATA.getOrDefault(name, ArtilleryCannonData.DEFAULT);
     }
 
+    /**
+     * 获取所有已加载的火炮名称（用于CSV导出等）
+     */
+    public static java.util.Set<String> getAllCannonNames() {
+        return CANNON_DATA.keySet();
+    }
+
     @SubscribeEvent
     public static void onAddReloadListeners(AddReloadListenerEvent event) {
         event.addListener(new ArtilleryConfig());

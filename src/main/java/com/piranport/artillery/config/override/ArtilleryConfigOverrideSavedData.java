@@ -253,11 +253,11 @@ public class ArtilleryConfigOverrideSavedData extends SavedData {
     private static Object loadValue(CompoundTag tag, String key) {
         byte type = tag.getTagType(key);
         return switch (type) {
-            case 5 -> tag.getFloat(key);      // TAG_FLOAT
-            case 6 -> tag.getDouble(key);     // TAG_DOUBLE
-            case 3 -> tag.getInt(key);        // TAG_INT
-            case 1 -> tag.getBoolean(key);    // TAG_BYTE (boolean)
-            case 8 -> tag.getString(key);     // TAG_STRING
+            case net.minecraft.nbt.Tag.TAG_FLOAT -> tag.getFloat(key);
+            case net.minecraft.nbt.Tag.TAG_DOUBLE -> tag.getDouble(key);
+            case net.minecraft.nbt.Tag.TAG_INT -> tag.getInt(key);
+            case net.minecraft.nbt.Tag.TAG_BYTE -> tag.getBoolean(key);
+            case net.minecraft.nbt.Tag.TAG_STRING -> tag.getString(key);
             default -> {
                 PiranPort.LOGGER.warn("Unknown NBT type {} for key {}", type, key);
                 yield null;

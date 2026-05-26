@@ -15,7 +15,7 @@ import org.jetbrains.annotations.NotNull;
  * 火炮配置工具界面（客户端渲染）
  *
  * <p>显示火炮和弹药配置的GUI，支持实时编辑和导出。
- * <p>TODO: 完整实现滚动列表、编辑框、标签页切换等功能
+ * <p>当前版本：基础框架，完整GUI功能开发中
  */
 @OnlyIn(Dist.CLIENT)
 public class ArtilleryConfigToolScreen extends AbstractContainerScreen<ArtilleryConfigToolMenu> {
@@ -30,9 +30,19 @@ public class ArtilleryConfigToolScreen extends AbstractContainerScreen<Artillery
     protected void init() {
         super.init();
 
+        int x = (this.width - this.imageWidth) / 2;
+        int y = (this.height - this.imageHeight) / 2;
+
+        // 添加导出按钮（临时位置）
+        this.addRenderableWidget(net.minecraft.client.gui.components.Button.builder(
+                Component.translatable("gui.piranport.config_tool.export"),
+                button -> onExportClicked()
+        ).bounds(x + 10, y + 210, 80, 20).build());
+
         // TODO: 添加滚动列表组件
         // TODO: 添加编辑框
-        // TODO: 添加按钮（导出、重置等）
+        // TODO: 添加标签页切换按钮
+        // TODO: 添加重置按钮
     }
 
     @Override
@@ -65,7 +75,7 @@ public class ArtilleryConfigToolScreen extends AbstractContainerScreen<Artillery
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         // ESC键关闭
-        if (keyCode == 256) { // GLFW.GLFW_KEY_ESCAPE
+        if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE) {
             this.onClose();
             return true;
         }
@@ -73,7 +83,7 @@ public class ArtilleryConfigToolScreen extends AbstractContainerScreen<Artillery
     }
 
     /**
-     * 测试：导出CSV按钮
+     * 导出CSV按钮回调
      */
     private void onExportClicked() {
         PacketDistributor.sendToServer(new ExportConfigPayload());

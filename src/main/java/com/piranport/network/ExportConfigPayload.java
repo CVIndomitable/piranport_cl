@@ -42,9 +42,9 @@ public record ExportConfigPayload() implements CustomPacketPayload {
                 return;
             }
 
-            // 仅创造模式可用
-            if (!serverPlayer.isCreative()) {
-                PiranPort.LOGGER.warn("Player {} tried to export config without creative mode", serverPlayer.getName().getString());
+            // 仅创造模式或OP可用
+            if (!serverPlayer.isCreative() && !serverPlayer.hasPermissions(2)) {
+                PiranPort.LOGGER.warn("Player {} tried to export config without creative mode or OP permission", serverPlayer.getName().getString());
                 return;
             }
 

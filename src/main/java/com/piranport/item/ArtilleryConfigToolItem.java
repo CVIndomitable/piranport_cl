@@ -44,6 +44,8 @@ public class ArtilleryConfigToolItem extends Item {
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
         tooltip.add(Component.translatable("tooltip.piranport.artillery_config_tool.desc")
                 .withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.translatable("tooltip.piranport.artillery_config_tool.wip")
+                .withStyle(ChatFormatting.YELLOW, ChatFormatting.ITALIC));
         tooltip.add(Component.translatable("tooltip.piranport.artillery_config_tool.creative_only")
                 .withStyle(ChatFormatting.RED, ChatFormatting.ITALIC));
     }

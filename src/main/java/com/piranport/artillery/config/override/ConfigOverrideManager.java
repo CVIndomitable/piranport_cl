@@ -10,7 +10,7 @@ import org.jetbrains.annotations.Nullable;
  * 配置覆盖管理器 - 运行时拦截层
  *
  * <p>在数据读取点应用存档级别的覆盖值，不修改原始配置系统。
- * <p>线程模型: 服务端主线程
+ * <p>线程模型: 服务端主线程（服务端），客户端主线程（客户端缓存）
  * <p>使用方式: 替换所有 {@code ArtilleryConfig.get()} 调用为 {@code ConfigOverrideManager.getCannonData()}
  */
 public class ConfigOverrideManager {
@@ -25,16 +25,21 @@ public class ConfigOverrideManager {
      * 获取应用覆盖后的火炮数据
      *
      * @param name 火炮注册ID（如 "medium_gun"）
-     * @param level 世界实例（客户端或null时返回原始值）
+     * @param level 世界实例（null时返回原始值）
      * @return 应用覆盖后的火炮数据
      */
     public static ArtilleryCannonData getCannonData(String name, @Nullable Level level) {
         // 获取原始数据
         ArtilleryCannonData original = ArtilleryConfig.get(name);
 
-        // 客户端或null时直接返回原始值
-        if (level == null || level.isClientSide()) {
+        // null时直接返回原始值
+        if (level == null) {
             return original;
+        }
+
+        // 客户端：从缓存读取（仅用于GUI显示，实际战斗逻辑在服务端）
+        if (level.isClientSide()) {
+            return applyCannonOverridesFromCache(original, name);
         }
 
         // 服务端：应用覆盖
@@ -45,7 +50,7 @@ public class ConfigOverrideManager {
     }
 
     /**
-     * 应用火炮覆盖（重新构造record实例）
+     * 应用火炮覆盖（重新构造record实例）- 服务端版本
      */
     private static ArtilleryCannonData applyCannonOverrides(
             ArtilleryCannonData original,
@@ -80,6 +85,55 @@ public class ConfigOverrideManager {
 
         float dispersion = overrides.getCannonOverride(name, "dispersion")
                 .map(v -> ((Number) v).floatValue())
+                .orElse(original.dispersion());
+
+        // 重新构造实例（record不可变）
+        return new ArtilleryCannonData(
+                original.caliber(),
+                original.barrels(),
+                damage,
+                reloadTime,
+                original.durability(),
+                original.scopeZoom(),
+                original.muzzles(),
+                initialSpeed,
+                dragCoeff,
+                original.gravity(),
+                explosionPower,
+                dispersion
+        );
+    }
+
+    /**
+     * 应用火炮覆盖（客户端缓存版本）- 仅用于GUI显示
+     */
+    private static ArtilleryCannonData applyCannonOverridesFromCache(
+            ArtilleryCannonData original,
+            String name) {
+
+        // 尝试从客户端缓存读取
+        float damage = ClientConfigCache.getCannonOverride(name, "damage")
+                .map(Float::parseFloat)
+                .orElse(original.damage());
+
+        int reloadTime = ClientConfigCache.getCannonOverride(name, "reloadTime")
+                .map(Integer::parseInt)
+                .orElse(original.reloadTime());
+
+        float initialSpeed = ClientConfigCache.getCannonOverride(name, "initialSpeed")
+                .map(Float::parseFloat)
+                .orElse(original.initialSpeed());
+
+        float dragCoeff = ClientConfigCache.getCannonOverride(name, "dragCoeff")
+                .map(Float::parseFloat)
+                .orElse(original.dragCoeff());
+
+        float explosionPower = ClientConfigCache.getCannonOverride(name, "explosionPower")
+                .map(Float::parseFloat)
+                .orElse(original.explosionPower());
+
+        float dispersion = ClientConfigCache.getCannonOverride(name, "dispersion")
+                .map(Float::parseFloat)
                 .orElse(original.dispersion());
 
         // 重新构造实例（record不可变）

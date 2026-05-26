@@ -56,14 +56,9 @@ public class ModPackets {
                 ReconExitPayload::handle
         );
         registrar.playToClient(
-                ReconStartPayload.TYPE,
-                ReconStartPayload.STREAM_CODEC,
-                ReconStartPayload::handle
-        );
-        registrar.playToClient(
-                ReconEndPayload.TYPE,
-                ReconEndPayload.STREAM_CODEC,
-                ReconEndPayload::handle
+                ReconStatePayload.TYPE,
+                ReconStatePayload.STREAM_CODEC,
+                ReconStatePayload::handle
         );
         // Phase 36: ship config
         registrar.playToServer(
@@ -126,14 +121,9 @@ public class ModPackets {
                 TorpedoGuidanceExitPayload::handle
         );
         registrar.playToClient(
-                TorpedoGuidanceStartPayload.TYPE,
-                TorpedoGuidanceStartPayload.STREAM_CODEC,
-                TorpedoGuidanceStartPayload::handle
-        );
-        registrar.playToClient(
-                TorpedoGuidanceEndPayload.TYPE,
-                TorpedoGuidanceEndPayload.STREAM_CODEC,
-                TorpedoGuidanceEndPayload::handle
+                TorpedoGuidanceStatePayload.TYPE,
+                TorpedoGuidanceStatePayload.STREAM_CODEC,
+                TorpedoGuidanceStatePayload::handle
         );
 
         // ===== ASW Sonar =====

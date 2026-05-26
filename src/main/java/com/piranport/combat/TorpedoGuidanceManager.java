@@ -1,8 +1,7 @@
 package com.piranport.combat;
 
 import com.piranport.entity.TorpedoEntity;
-import com.piranport.network.TorpedoGuidanceEndPayload;
-import com.piranport.network.TorpedoGuidanceStartPayload;
+import com.piranport.network.TorpedoGuidanceStatePayload;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.Nullable;
@@ -20,7 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *   服务端关闭时通过 {@link #clearAll()} 在
  *   {@link com.piranport.server.ServerGameEvents#onServerStopped} 中清理。
  * <p><b>网络同步</b>: 通过 {@link com.piranport.network.TorpedoGuidanceInputPayload} 接收客户端输入，
- *   通过 {@link com.piranport.network.TorpedoGuidanceStartPayload} / EndPayload 通知客户端。
+ *   通过 {@link com.piranport.network.TorpedoGuidanceStatePayload} 通知客户端开始/结束。
  */
 public class TorpedoGuidanceManager {
     private static final Map<UUID, UUID> activeGuidance = new ConcurrentHashMap<>();
@@ -31,9 +30,9 @@ public class TorpedoGuidanceManager {
         UUID prev = activeGuidance.put(playerUUID, torpedo.getUUID());
         if (prev != null && !prev.equals(torpedo.getUUID())) {
             pendingInput.remove(playerUUID);
-            PacketDistributor.sendToPlayer(player, new com.piranport.network.TorpedoGuidanceEndPayload());
+            PacketDistributor.sendToPlayer(player, new TorpedoGuidanceStatePayload(false, 0));
         }
-        PacketDistributor.sendToPlayer(player, new TorpedoGuidanceStartPayload(torpedo.getId()));
+        PacketDistributor.sendToPlayer(player, new TorpedoGuidanceStatePayload(true, torpedo.getId()));
     }
 
     public static void endGuidance(UUID playerUUID) {
@@ -44,7 +43,7 @@ public class TorpedoGuidanceManager {
     /** 结束引导并通知客户端恢复摄像机。 */
     public static void endGuidance(ServerPlayer player) {
         endGuidance(player.getUUID());
-        PacketDistributor.sendToPlayer(player, new TorpedoGuidanceEndPayload());
+        PacketDistributor.sendToPlayer(player, new TorpedoGuidanceStatePayload(false, 0));
     }
 
     public static boolean isGuiding(UUID playerUUID) {

@@ -1,23 +1,16 @@
 package com.piranport.network;
 
 import com.piranport.PiranPort;
+import com.piranport.combat.ReloadHelper;
 import com.piranport.combat.TransformationManager;
-import com.piranport.component.LoadedAmmo;
-import com.piranport.component.SlotCooldowns;
-import com.piranport.component.WeaponCooldown;
 import com.piranport.item.MissileLauncherItem;
 import com.piranport.item.ShipCoreItem;
-import com.piranport.item.TorpedoItem;
 import com.piranport.item.TorpedoLauncherItem;
-import com.piranport.registry.ModDataComponents;
 import io.netty.buffer.ByteBuf;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -43,7 +36,7 @@ public record ManualReloadPayload() implements CustomPacketPayload {
 
             Inventory inv = player.getInventory();
 
-            // Find transformed core first (needed for torpedo reload check)
+            // 查找已变身的舰装核心
             ItemStack coreStack = ItemStack.EMPTY;
             int coreSlot = -1;
             for (int i = 0; i < inv.items.size(); i++) {
@@ -66,14 +59,13 @@ public record ManualReloadPayload() implements CustomPacketPayload {
                 return;
             }
 
-            // Find weapon in main hand or off hand
             ItemStack mainHand = player.getMainHandItem();
             ItemStack offHand = inv.offhand.get(0);
 
-            // Check for torpedo launcher with 鱼雷再装填 enhancement
+            // 鱼雷发射器：需要装备"鱼雷再装填"增强
             if (mainHand.getItem() instanceof TorpedoLauncherItem) {
                 if (TransformationManager.hasTorpedoReloadEquipped(player, coreStack)) {
-                    reloadTorpedoLauncher(player, inv, mainHand, inv.selected, coreStack, coreSlot);
+                    ReloadHelper.reloadTorpedoLauncher(player, inv, mainHand, inv.selected, coreStack, coreSlot);
                 } else {
                     player.displayClientMessage(
                             Component.translatable("message.piranport.use_reload_facility"), true);
@@ -81,7 +73,7 @@ public record ManualReloadPayload() implements CustomPacketPayload {
                 return;
             } else if (offHand.getItem() instanceof TorpedoLauncherItem) {
                 if (TransformationManager.hasTorpedoReloadEquipped(player, coreStack)) {
-                    reloadTorpedoLauncher(player, inv, offHand, 40, coreStack, coreSlot);
+                    ReloadHelper.reloadTorpedoLauncher(player, inv, offHand, 40, coreStack, coreSlot);
                 } else {
                     player.displayClientMessage(
                             Component.translatable("message.piranport.use_reload_facility"), true);
@@ -89,124 +81,19 @@ public record ManualReloadPayload() implements CustomPacketPayload {
                 return;
             }
 
-            // Check for missile launcher (always requires reload facility)
+            // 导弹发射器：必须使用装填设施
             if (mainHand.getItem() instanceof MissileLauncherItem || offHand.getItem() instanceof MissileLauncherItem) {
                 player.displayClientMessage(
                         Component.translatable("message.piranport.use_reload_facility"), true);
                 return;
             }
 
-            // Cannon auto-resupply in Phase 4 — R key does nothing for cannons
+            // 火炮在 Phase 4 自动补给，R 键无效
             if (mainHand.getItem() instanceof com.piranport.artillery.ArtilleryItem
                     || offHand.getItem() instanceof com.piranport.artillery.ArtilleryItem) {
                 return;
             }
-
-            // Nothing else to handle here — torpedo reload is in reloadTorpedoLauncher()
         });
     }
-
-    /**
-     * Reload torpedo launcher from inventory when 鱼雷再装填 enhancement is equipped.
-     */
-    private static void reloadTorpedoLauncher(Player player, Inventory inv, ItemStack launcherStack,
-                                               int weaponSlot, ItemStack coreStack, int coreSlot) {
-        if (!(launcherStack.getItem() instanceof TorpedoLauncherItem launcher)) return;
-
-        int tubeCount = launcher.getTubeCount();
-        int caliber = launcher.getCaliber();
-
-        // Check if already fully loaded
-        LoadedAmmo current = launcherStack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
-        if (current.hasAmmo() && current.count() >= tubeCount) {
-            WeaponCooldown wc = launcherStack.getOrDefault(ModDataComponents.WEAPON_COOLDOWN.get(), WeaponCooldown.EMPTY);
-            if (wc.isOnCooldown(player.level().getGameTime())) {
-                player.displayClientMessage(Component.translatable("message.piranport.already_reloading"), true);
-            } else {
-                player.displayClientMessage(Component.translatable("message.piranport.already_loaded"), true);
-            }
-            return;
-        }
-
-        // Find first matching torpedo to determine type (strict: only consume same item type)
-        TorpedoItem torpedoType = null;
-        for (int i = 0; i < inv.items.size(); i++) {
-            if (i == coreSlot || i == weaponSlot) continue;
-            ItemStack s = inv.items.get(i);
-            if (!s.isEmpty() && s.getItem() instanceof TorpedoItem ti && ti.getCaliber() == caliber) {
-                torpedoType = ti;
-                break;
-            }
-        }
-        if (torpedoType == null && weaponSlot != 40 && coreSlot != 40) {
-            ItemStack oh = inv.offhand.get(0);
-            if (!oh.isEmpty() && oh.getItem() instanceof TorpedoItem ti && ti.getCaliber() == caliber) {
-                torpedoType = ti;
-            }
-        }
-        if (torpedoType == null) {
-            player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
-            return;
-        }
-
-        // Count available ammo of the same type
-        int needed = tubeCount - (current.hasAmmo() ? current.count() : 0);
-        int available = 0;
-        for (int i = 0; i < inv.items.size(); i++) {
-            if (i == coreSlot || i == weaponSlot) continue;
-            ItemStack s = inv.items.get(i);
-            if (!s.isEmpty() && s.getItem() == torpedoType) {
-                available += s.getCount();
-            }
-        }
-        if (weaponSlot != 40 && coreSlot != 40) {
-            ItemStack oh = inv.offhand.get(0);
-            if (!oh.isEmpty() && oh.getItem() == torpedoType) {
-                available += oh.getCount();
-            }
-        }
-
-        if (available < needed) {
-            player.displayClientMessage(Component.translatable("message.piranport.insufficient_same_ammo"), true);
-            return;
-        }
-
-        // Consume needed ammo across inventory
-        int toConsume = needed;
-        for (int i = 0; i < inv.items.size() && toConsume > 0; i++) {
-            if (i == coreSlot || i == weaponSlot) continue;
-            ItemStack s = inv.items.get(i);
-            if (!s.isEmpty() && s.getItem() == torpedoType) {
-                int take = Math.min(toConsume, s.getCount());
-                s.shrink(take);
-                toConsume -= take;
-            }
-        }
-        if (toConsume > 0 && weaponSlot != 40 && coreSlot != 40) {
-            ItemStack oh = inv.offhand.get(0);
-            if (!oh.isEmpty() && oh.getItem() == torpedoType) {
-                int take = Math.min(toConsume, oh.getCount());
-                oh.shrink(take);
-                toConsume -= take;
-            }
-        }
-
-        // Set loaded ammo
-        String ammoId = BuiltInRegistries.ITEM.getKey(torpedoType).toString();
-        launcherStack.set(ModDataComponents.LOADED_AMMO.get(), new LoadedAmmo(tubeCount, ammoId));
-
-        // Set cooldown — reload time starts now, weapon ready when cooldown expires
-        int cooldownTicks = TransformationManager.boostedCooldown(player, launcher.getCooldownTicks());
-        long gameTime = player.level().getGameTime();
-        launcherStack.set(ModDataComponents.WEAPON_COOLDOWN.get(),
-                WeaponCooldown.of(gameTime, cooldownTicks));
-        SlotCooldowns cooldowns = coreStack.getOrDefault(
-                ModDataComponents.SLOT_COOLDOWNS.get(), SlotCooldowns.EMPTY);
-        coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
-                cooldowns.withSlotCooldown(weaponSlot, cooldownTicks, gameTime));
-
-        player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
-                SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.5f, 1.4f);
-        player.displayClientMessage(Component.translatable("message.piranport.reload_start"), true);
-    }
 }
+

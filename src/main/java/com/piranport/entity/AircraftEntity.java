@@ -8,8 +8,7 @@ import com.piranport.component.AircraftInfo;
 import com.piranport.component.FlightGroupData;
 import com.piranport.item.ShipCoreItem;
 import com.piranport.network.AswSonarSyncPayload;
-import com.piranport.network.ReconEndPayload;
-import com.piranport.network.ReconStartPayload;
+import com.piranport.network.ReconStatePayload;
 import com.piranport.registry.ModDataComponents;
 import com.piranport.registry.ModEntityTypes;
 import com.piranport.registry.ModItems;
@@ -315,7 +314,7 @@ public class AircraftEntity extends Entity {
      *    setOldPosAndRot → no partial-tick interpolation).
      * 2. In recon mode, ignore server rotation (client controls camera via mouse).
      *    Uses ClientReconData instead of getFlightState() to avoid race with entity
-     *    data sync — the ReconStartPayload arrives before the STATE data packet.
+     *    data sync — the ReconStatePayload arrives before the STATE data packet.
      */
     @Override
     public void lerpTo(double x, double y, double z, float yRot, float xRot, int steps) {
@@ -503,9 +502,9 @@ public class AircraftEntity extends Entity {
             // Player body locking is now handled in GameEvents.onPlayerTick
             // Notify client to switch camera
             if (owner instanceof ServerPlayer sp) {
-                PacketDistributor.sendToPlayer(sp, new ReconStartPayload(getId()));
+                PacketDistributor.sendToPlayer(sp, new ReconStatePayload(true, getId()));
                 com.piranport.PiranPort.LOGGER.info(
-                    "Aircraft RECON_START | entityId={} sent ReconStartPayload to player", getId());
+                    "Aircraft RECON_START | entityId={} sent ReconStatePayload to player", getId());
             }
         } else if (from == FlightState.RECON_ACTIVE) {
             cleanupReconState(owner);
@@ -518,7 +517,7 @@ public class AircraftEntity extends Entity {
         releaseAllForcedChunks();
         // Notify client to restore camera
         if (owner instanceof ServerPlayer sp) {
-            PacketDistributor.sendToPlayer(sp, new ReconEndPayload());
+            PacketDistributor.sendToPlayer(sp, new ReconStatePayload(false, 0));
         }
     }
 

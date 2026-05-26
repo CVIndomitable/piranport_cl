@@ -1,4 +1,4 @@
-package com.piranport.block;
+package com.piranport.worldgen;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;

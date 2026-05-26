@@ -1,8 +1,15 @@
 package com.piranport.handler;
 
+import java.util.UUID;
+
 import com.piranport.PiranPort;
+import com.piranport.aviation.AircraftIndex;
+import com.piranport.aviation.FireControlManager;
+import com.piranport.aviation.ReconManager;
 import com.piranport.combat.HitNotifier;
+import com.piranport.combat.TorpedoGuidanceManager;
 import com.piranport.config.ModCommonConfig;
+import com.piranport.dungeon.instance.DungeonInstanceManager;
 import com.piranport.dungeon.lobby.DungeonLobbyManager;
 import com.piranport.dungeon.network.DungeonRegistrySyncPayload;
 import com.piranport.network.RecallAllAircraftPayload;
@@ -10,6 +17,7 @@ import com.piranport.registry.ModItems;
 import com.piranport.skin.SkinManager;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -93,18 +101,42 @@ public class PlayerConnectionHandler {
         }
     }
 
-    /** 登出时召回战机、清理缓存和讲台大厅 */
+    /** 登出时召回战机、清理战斗状态、缓存和讲台大厅 */
     @SubscribeEvent
     public static void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
         if (!(event.getEntity() instanceof Player player)) return;
         if (player.level().isClientSide()) return;
-        HitNotifier.onPlayerLogout(player.getUUID());
-        RecallAllAircraftPayload.onPlayerDisconnect(player.getUUID());
-        PlayerAircraftHelper.recallAircraftForPlayer(player);
-        PlayerTickHandler.onPlayerLogout(player.getUUID());
+
+        UUID uuid = player.getUUID();
+
+        // 清理战斗系统状态
+        FireControlManager.clearTargets(uuid);
+        ReconManager.endRecon(uuid);
+        TorpedoGuidanceManager.endGuidance(uuid);
+
+        // 清理玩家 Tick 缓存
+        PlayerTickHandler.onPlayerLogout(uuid);
+
+        // 清理飞机索引
+        AircraftIndex.removePlayerAircraft(uuid);
+
+        // 清理瞄准状态
         if (player instanceof net.minecraft.server.level.ServerPlayer sp) {
             com.piranport.server.ScopingManager.handleDisconnect(sp);
         }
+
+        // 清理副本状态（如果在副本中）
+        if (player instanceof ServerPlayer sp) {
+            DungeonInstanceManager mgr = DungeonInstanceManager.get(sp.serverLevel());
+            mgr.handlePlayerDisconnect(uuid);
+        }
+
+        // 登出通知
+        HitNotifier.onPlayerLogout(uuid);
+        RecallAllAircraftPayload.onPlayerDisconnect(uuid);
+        PlayerAircraftHelper.recallAircraftForPlayer(player);
+
+        // 清理讲台大厅
         var lobbyMgr = DungeonLobbyManager.INSTANCE;
         GlobalPos lecternPos = lobbyMgr.findLobbyOf(player.getUUID());
         if (lecternPos != null && player.getServer() != null) {

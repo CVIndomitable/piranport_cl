@@ -240,4 +240,20 @@ public class DungeonInstanceManager extends SavedData {
                         DungeonInstanceManager::load, null),
                 DATA_NAME);
     }
+
+    /**
+     * 玩家断连时清理其所在副本状态：暂停该玩家作为旗舰的所有活跃副本，
+     * 防止跨服状态残留或内存泄漏。
+     */
+    public void handlePlayerDisconnect(UUID playerUuid) {
+        for (DungeonInstance inst : instances.values()) {
+            if (inst.getState() != DungeonInstance.State.ACTIVE) continue;
+            UUID flagship = inst.getFlagshipUuid();
+            if (playerUuid.equals(flagship)) {
+                suspendInstance(inst.getInstanceId());
+                PiranPort.LOGGER.debug("Suspended instance {} due to player disconnect: {}",
+                        inst.getInstanceId(), playerUuid);
+            }
+        }
+    }
 }

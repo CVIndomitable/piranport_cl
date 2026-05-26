@@ -44,6 +44,11 @@ public final class AircraftIndex {
         return set == null ? Collections.emptySet() : Set.copyOf(set);
     }
 
+    /** 移除某名玩家的所有飞机索引条目（玩家登出时调用）。 */
+    public static void removePlayerAircraft(UUID ownerUuid) {
+        BY_OWNER.remove(ownerUuid);
+    }
+
     public static void clearAll() {
         BY_OWNER.clear();
     }

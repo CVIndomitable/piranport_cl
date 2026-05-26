@@ -64,7 +64,7 @@ public class DepthChargeEntity extends ThrowableItemProjectile {
 
     @Override
     public boolean isCurrentlyGlowing() {
-        if (level().isClientSide() && com.piranport.client.input.EntityHighlightHandler.isHighlightEnabled()) {
+        if (level().isClientSide() && com.piranport.ClientTickHandler.isHighlightEnabled()) {
             return true;
         }
         return super.isCurrentlyGlowing();

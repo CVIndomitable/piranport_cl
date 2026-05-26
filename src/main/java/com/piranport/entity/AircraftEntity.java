@@ -94,7 +94,7 @@ public class AircraftEntity extends Entity {
     @Nullable private UUID ownerUUID;
     private int weaponSlotIndex = -1;  // -1表示未设置，避免误用默认值0
     private int coreInventorySlot = 0;
-    private AircraftInfo.AircraftType aircraftType = AircraftInfo.AircraftType.FIGHTER;
+    AircraftInfo.AircraftType aircraftType = AircraftInfo.AircraftType.FIGHTER;
     FlightGroupData.AttackMode attackMode = FlightGroupData.AttackMode.FOCUS;
     float panelDamage;
     float panelSpeed;
@@ -102,26 +102,26 @@ public class AircraftEntity extends Entity {
     int ammoCapacity = 0;
     private int currentFuel = 0;
     private int fuelCapacity = 1;
-    private boolean hasBullets = false;
-    private String payloadType = "";
-    private AircraftInfo.BombingMode bombingMode = AircraftInfo.BombingMode.DIVE;
+    boolean hasBullets = false;
+    String payloadType = "";
+    AircraftInfo.BombingMode bombingMode = AircraftInfo.BombingMode.DIVE;
 
     // 运行时（不保存）
     private int airtimeTicks = 0;
     private int stuckTicks = 0;
     private Vec3 stuckCheckPos = Vec3.ZERO;
     private double orbitAngle = 0;
-    private int stateTicks = 0;
+    int stateTicks = 0;
     int attackCooldown = 0;
-    private boolean hasFired = false;
-    private boolean diveCommitted = false;  // true once dive bomber locks its drop point
-    @Nullable private Vec3 diveTarget = null; // predicted bomb drop point (fixed after commit)
+    boolean hasFired = false;
+    boolean diveCommitted = false;
+    @Nullable Vec3 diveTarget = null;
 
     // 水平轰炸机投弹状态
-    private boolean levelBombDropped = false;     // true once bomb dropped in current run
-    @Nullable private Vec3 levelRunDirection = null; // normalized direction of current run
-    @Nullable private Vec3 levelDropPoint = null;   // position where bomb was dropped
-    private int levelRunTicks = 0;   // ticks spent in current Phase 2 run (fail-safe against runaway bombers)
+    boolean levelBombDropped = false;
+    @Nullable Vec3 levelRunDirection = null;
+    @Nullable Vec3 levelDropPoint = null;
+    int levelRunTicks = 0;
     int autoSeekCooldown = 20; // P1 #6: 初始化冷却时间，避免首次 tick 立即搜索
     boolean autoSeekDone = false;    // true after first auto-seek scan (one-shot)
     private boolean appliedSlowness = false; // tracks if slowness effect was applied to target
@@ -139,7 +139,7 @@ public class AircraftEntity extends Entity {
     private static final int RECON_CHUNK_SEND_RATE = 16; // max chunks to send per tick
 
     // Phase 33: aircraft health (persisted to NBT)
-    private int aircraftHealth = 20;
+    int aircraftHealth = 20;
 
     // P3 #6: cached recon aircraft reference for FOLLOW mode (refreshed every 20 ticks)
     @Nullable private AircraftEntity cachedReconAircraft;
@@ -166,10 +166,10 @@ public class AircraftEntity extends Entity {
     private boolean indexRegistered = false;
 
     // 自主模式：飞机无玩家所属（如浮靶或女仆发射的飞机）
-    private boolean autonomous = false;
-    private Vec3 homePosition = Vec3.ZERO;
+    boolean autonomous = false;
+    Vec3 homePosition = Vec3.ZERO;
     @Nullable private Vec3 lastHorizontalDir = null; // previous tick's horizontal direction for turn radius
-    @Nullable private LivingEntity autonomousTarget = null; // target for autonomous aircraft
+    @Nullable LivingEntity autonomousTarget = null;
 
     private static final int MAX_AIRTIME_TICKS = 12000;
     private static final double MIN_DIST_FROM_OWNER = 48.0;
@@ -659,118 +659,11 @@ public class AircraftEntity extends Entity {
     // ===== ATTACKING dispatch =====
 
     private void tickAttacking(Player owner) {
-        // Autonomous mode: use independent target system
-        if (autonomous && autonomousTarget != null) {
-            tickAutonomousAttacking();
-            return;
-        }
-
-        if (aircraftType == AircraftInfo.AircraftType.RECON) {
-            startReturning("recon_no_attack");
-            return;
-        }
-
-        // Minimum 20 ticks in ATTACKING before allowing fallback to CRUISING
-        boolean canFallback = stateTicks >= 20;
-
-        // 火箭机：未发射时优先对地/海火箭弹齐射，之后回退为子弹对空
-        if (aircraftType == AircraftInfo.AircraftType.ROCKET_FIGHTER) {
-            if (!hasFired && remainingAmmo > 0) {
-                LivingEntity groundTarget = resolveTarget(owner);
-                if (groundTarget != null) {
-                    tickRocketFighterMissileRun(owner, groundTarget);
-                    return;
-                }
-            }
-            Entity airTarget = resolveFighterTarget(owner);
-            if (airTarget == null) {
-                if (canFallback) setState(FlightState.CRUISING);
-                return;
-            }
-            tickFighterAttack(owner, airTarget);
-            return;
-        }
-
-        // 子弹优先：使用战斗机AI
-        if (hasBullets) {
-            Entity target = resolveFighterTarget(owner);
-            if (target == null) {
-                if (canFallback) setState(FlightState.CRUISING);
-                return;
-            }
-            tickFighterAttack(owner, target);
-            return;
-        }
-
-        // 无子弹时按挂载类型决定攻击行为
-        switch (payloadType) {
-            case "piranport:aerial_torpedo" -> {
-                LivingEntity target = resolveTarget(owner);
-                if (target == null) {
-                    if (canFallback) setState(FlightState.CRUISING);
-                    return;
-                }
-                tickTorpedoBomberAttack(owner, target);
-            }
-            case "piranport:aerial_bomb" -> {
-                LivingEntity target = resolveTarget(owner);
-                if (target == null) {
-                    if (canFallback) setState(FlightState.CRUISING);
-                    return;
-                }
-                if (bombingMode == AircraftInfo.BombingMode.LEVEL) {
-                    tickLevelBomberAttack(owner, target);
-                } else {
-                    tickDiveBomberAttack(owner, target);
-                }
-            }
-            case "piranport:depth_charge" -> {
-                LivingEntity target = resolveASWTarget(owner);
-                if (target == null) {
-                    if (canFallback) setState(FlightState.CRUISING);
-                    return;
-                }
-                tickASWAttack(owner, target);
-            }
-            default -> startReturning("no_payload");
-        }
+        AircraftCombat.tickAttacking(this, owner);
     }
 
     private void tickAutonomousAttacking() {
-        if (autonomousTarget == null || !autonomousTarget.isAlive() || autonomousTarget.isRemoved()) {
-            startReturning("target_lost");
-            return;
-        }
-
-        // 火箭机：未发射时优先对地/海火箭弹齐射，之后回退为子弹对空
-        if (aircraftType == AircraftInfo.AircraftType.ROCKET_FIGHTER) {
-            if (!hasFired && remainingAmmo > 0) {
-                tickRocketFighterMissileRun(null, autonomousTarget);
-                return;
-            }
-            tickFighterAttack(null, autonomousTarget);
-            return;
-        }
-
-        // 子弹优先：使用战斗机AI
-        if (hasBullets) {
-            tickFighterAttack(null, autonomousTarget);
-            return;
-        }
-
-        // 无子弹时按挂载类型决定攻击行为
-        switch (payloadType) {
-            case "piranport:aerial_torpedo" -> tickTorpedoBomberAttack(null, autonomousTarget);
-            case "piranport:aerial_bomb" -> {
-                if (bombingMode == AircraftInfo.BombingMode.LEVEL) {
-                    tickLevelBomberAttack(null, autonomousTarget);
-                } else {
-                    tickDiveBomberAttack(null, autonomousTarget);
-                }
-            }
-            case "piranport:depth_charge" -> tickASWAttack(null, autonomousTarget);
-            default -> startReturning("no_payload");
-        }
+        AircraftCombat.tickAutonomousAttacking(this);
     }
 
     /**
@@ -794,45 +687,7 @@ public class AircraftEntity extends Entity {
      * Phase 33: target may be a LivingEntity or an enemy AircraftEntity.
      */
     private void tickFighterAttack(@Nullable Player owner, Entity target) {
-        // ROCKET_FIGHTER 的 ammo 专供火箭弹，子弹不受 FIGHTER_AMMO_ENABLED 约束
-        boolean ammoEnabled = ModCommonConfig.FIGHTER_AMMO_ENABLED.get()
-                && aircraftType != AircraftInfo.AircraftType.ROCKET_FIGHTER;
-        if (ammoEnabled && remainingAmmo <= 0) { startReturning("fighter_ammo_depleted"); return; }
-
-        Vec3 toTarget = target.getEyePosition().subtract(position());
-        double dist = toTarget.length();
-        double preferredDist = 11.0;
-
-        if (dist > preferredDist + 3) {
-            setDeltaMovement(toTarget.normalize().scale(Math.min(panelSpeed * 0.5, dist)));
-        } else if (dist < preferredDist - 3) {
-            setDeltaMovement(toTarget.normalize().scale(-panelSpeed * 0.2));
-        } else {
-            setDeltaMovement(getDeltaMovement().scale(0.8));
-        }
-
-        if (attackCooldown <= 0 && dist < 24.0) {
-            BulletEntity bullet = new BulletEntity(level(), panelDamage / 8f);
-            Vec3 dir = toTarget.normalize();
-            bullet.moveTo(getX(), getY() + 0.3, getZ(), bullet.getYRot(), bullet.getXRot());
-            bullet.setDeltaMovement(dir.scale(2.5));
-            bullet.setOwner(owner);
-            bullet.setSourceAircraftName(getDisplayName());
-            bullet.setSourceAircraft(this);
-            level().addFreshEntity(bullet);
-            attackCooldown = 5;
-
-            if (ammoEnabled) {
-                remainingAmmo--;
-                if (remainingAmmo <= 0) {
-                    if (owner != null && ModCommonConfig.AUTO_RESUPPLY_ENABLED.get() && tryAutoResupplyAmmo(owner)) {
-                        // Ammo restored (payload type must be set) — continue
-                    } else {
-                        startReturning("fighter_ammo_depleted");
-                    }
-                }
-            }
-        }
+        AircraftCombat.tickFighterAttack(this, owner, target);
     }
 
     /**
@@ -840,63 +695,7 @@ public class AircraftEntity extends Entity {
      * After hasFired=true, the aircraft falls back to bullets-only fighter logic against air targets.
      */
     private void tickRocketFighterMissileRun(@Nullable Player owner, LivingEntity target) {
-        // Timeout guard: if approach drags on, mark as fired so we fall back to air combat
-        if (stateTicks > 200) {
-            hasFired = true;
-            remainingAmmo = 0;
-            return;
-        }
-
-        double dx = target.getX() - getX();
-        double dz = target.getZ() - getZ();
-        double horizDist = Math.sqrt(dx * dx + dz * dz);
-        double desiredY = target.getY() + 8.0;
-        double altDelta = getY() - desiredY;
-
-        // Salvo window: horizDist 12-22, and aircraft roughly above desired altitude (0..+8)
-        if (horizDist >= 12 && horizDist <= 22 && altDelta >= -2.0 && altDelta <= 8.0 && attackCooldown <= 0) {
-            Vec3 dir = new Vec3(dx, target.getEyeY() + 0.5 - getY(), dz).normalize();
-            float rocketDamage = panelDamage * 1.2f;
-            int toFire = computeSalvoSize(target, rocketDamage);
-            com.piranport.debug.PiranPortDebug.event(
-                    "Aircraft ROCKET_SALVO | entityId={} capacity={} remaining={} firing={} targetHP={}",
-                    getId(), ammoCapacity, remainingAmmo, toFire, target.getHealth());
-            float initSpeed = MissileEntity.MissileType.ROCKET.initialSpeed;
-            for (int i = 0; i < toFire; i++) {
-                // Small horizontal fan so rockets spread across the target area
-                double spread = (i - (toFire - 1) / 2.0) * 0.07;
-                double cos = Math.cos(spread);
-                double sin = Math.sin(spread);
-                Vec3 fanDir = new Vec3(
-                        dir.x * cos - dir.z * sin,
-                        dir.y,
-                        dir.x * sin + dir.z * cos
-                ).normalize();
-                MissileEntity rocket = new MissileEntity(level(),
-                        MissileEntity.MissileType.ROCKET,
-                        rocketDamage, 0f, 2.0f,
-                        "piranport:rocket_ammo");
-                rocket.moveTo(getX(), getY() + 0.2, getZ(), rocket.getYRot(), rocket.getXRot());
-                rocket.setDeltaMovement(fanDir.x * initSpeed, fanDir.y * initSpeed, fanDir.z * initSpeed);
-                rocket.setOwner(owner);
-                level().addFreshEntity(rocket);
-            }
-            remainingAmmo -= toFire;
-            if (remainingAmmo <= 0) {
-                hasFired = true;
-            } else {
-                // 还有余弹：冷却后再做一次攻击判定（目标若已死，下一 tick 会由 resolveTarget 回落）
-                attackCooldown = 40;
-            }
-            return;
-        }
-
-        // Approach the drop altitude at moderate speed
-        Vec3 toTarget = new Vec3(dx, desiredY - getY(), dz);
-        double dist = toTarget.length();
-        if (dist > 0.1) {
-            setDeltaMovement(toTarget.normalize().scale(Math.min(panelSpeed * 0.5, dist)));
-        }
+        AircraftCombat.tickRocketFighterMissileRun(this, owner, target);
     }
 
     /**
@@ -904,271 +703,25 @@ public class AircraftEntity extends Entity {
      * Once the dive is committed, the drop point is fixed — no more recalculation.
      */
     private void tickDiveBomberAttack(@Nullable Player owner, LivingEntity target) {
-        if (hasFired) {
-            if (owner != null && ModCommonConfig.AUTO_RESUPPLY_ENABLED.get() && tryAutoResupplyAmmo(owner)) {
-                setState(FlightState.CRUISING);
-            } else {
-                startReturning("dive_bomber_done");
-            }
-            return;
-        }
-
-        double climbY = target.getY() + 18.0;
-
-        // Phase 1: Climb — ascend above the target until altitude reached or timeout
-        double heightDiff = Math.max(0, climbY - getY());
-        int climbTimeout = Math.max(80, (int)Math.ceil(heightDiff / Math.max(panelSpeed * 0.4, 0.1)));
-        if (!diveCommitted && getY() < climbY - 1.0 && stateTicks < climbTimeout) {
-            Vec3 toClimb = new Vec3(target.getX() - getX(), climbY - getY(), target.getZ() - getZ());
-            double dist = toClimb.length();
-            setDeltaMovement(toClimb.normalize().scale(Math.min(panelSpeed * 0.4, dist)));
-            return;
-        }
-
-        // Phase 2: Commit — lock the predicted drop point once
-        if (!diveCommitted) {
-            diveCommitted = true;
-            Vec3 targetPos = target.getEyePosition();
-            double estimatedDist = position().distanceTo(targetPos);
-            double diveSpeed = Math.max(panelSpeed * 0.6, 0.1);
-            double estimatedTicks = estimatedDist / diveSpeed;
-            Vec3 targetVel = target.getDeltaMovement();
-            diveTarget = targetPos.add(targetVel.scale(estimatedTicks));
-        }
-
-        // Phase 3: Dive — fly toward the fixed predicted point
-        Vec3 toTarget = diveTarget.subtract(position());
-        double dist = toTarget.length();
-
-        // Drop bomb when close enough or when aircraft has descended past the drop point
-        if (dist < 4.0 || getY() < diveTarget.y()) {
-            AerialBombEntity bomb = new AerialBombEntity(level(), panelDamage * 1.5f, 2.5f);
-            bomb.moveTo(getX(), getY(), getZ(), bomb.getYRot(), bomb.getXRot());
-            bomb.setDeltaMovement(getDeltaMovement().x * 0.2, -0.3, getDeltaMovement().z * 0.2);
-            bomb.setOwner(owner);
-            bomb.setSourceAircraftName(getDisplayName());
-            bomb.setSourceAircraft(this);
-            level().addFreshEntity(bomb);
-            hasFired = true;
-            startReturning("dive_bomb_dropped");
-            return;
-        }
-
-        setDeltaMovement(toTarget.normalize().scale(Math.min(panelSpeed * 0.6, dist)));
+        AircraftCombat.tickDiveBomberAttack(this, owner, target);
     }
 
-    /**
-     * TORPEDO_BOMBER: fly low, fire torpedo when 20-30 blocks from target.
-     * If too close, flies away first to set up a proper attack run.
-     */
     private void tickTorpedoBomberAttack(@Nullable Player owner, LivingEntity target) {
-        if (hasFired) {
-            if (owner != null && ModCommonConfig.AUTO_RESUPPLY_ENABLED.get() && tryAutoResupplyAmmo(owner)) {
-                setState(FlightState.CRUISING);
-            } else {
-                startReturning("torpedo_bomber_done");
-            }
-            return;
-        }
-
-        // Timeout — if attack run takes too long, abort
-        if (stateTicks > 200) {
-            hasFired = true;
-            startReturning("torpedo_attack_timeout");
-            return;
-        }
-
-        double dx = target.getX() - getX();
-        double dz = target.getZ() - getZ();
-        double horizDist = Math.sqrt(dx * dx + dz * dz);
-        double targetY = target.getY() + 2.0;
-        double altDelta = Math.abs(getY() - targetY);
-
-        // Drop zone: horizDist 20-30 AND at low altitude (within 3 blocks of target.y+2)
-        if (horizDist >= 20 && horizDist <= 30 && altDelta <= 3.0 && attackCooldown <= 0) {
-            // 使用飞机的实际飞行方向，而不是指向目标的方向
-            Vec3 motion = getDeltaMovement();
-            Vec3 dir = new Vec3(motion.x, 0, motion.z);
-            double dirLen = dir.length();
-            if (dirLen > 0.001) {
-                dir = dir.scale(1.0 / dirLen);  // 归一化
-            } else {
-                // 飞机静止时的后备方案：使用朝向目标的方向
-                dir = new Vec3(dx, 0, dz).normalize();
-            }
-            // Perpendicular offset for spread (rotate dir 90° in XZ plane)
-            double perpX = -dir.z;
-            double perpZ = dir.x;
-            // TorpedoEntity 默认 damage=18f（aircraft 端未调用 setDamage，实际入水伤害即 18）
-            final float torpedoDamage = 18f;
-            int toFire = computeSalvoSize(target, torpedoDamage);
-            com.piranport.debug.PiranPortDebug.event(
-                    "Aircraft TORPEDO_SALVO | entityId={} capacity={} remaining={} firing={} targetHP={}",
-                    getId(), ammoCapacity, remainingAmmo, toFire, target.getHealth());
-            for (int i = 0; i < toFire; i++) {
-                // Lateral spread ±2.0 blocks, plus longitudinal stagger ±1.0 so the splashes
-                // are visually distinct rather than stacked on top of each other.
-                double lateral = (i - (toFire - 1) / 2.0) * 2.0;
-                double longitudinal = (i - (toFire - 1) / 2.0) * 1.0;
-                double spawnX = getX() + perpX * lateral + dir.x * longitudinal;
-                double spawnZ = getZ() + perpZ * lateral + dir.z * longitudinal;
-                TorpedoEntity torpedo = new TorpedoEntity(ModEntityTypes.TORPEDO_ENTITY.get(), level());
-                torpedo.moveTo(spawnX, getY(), spawnZ, torpedo.getYRot(), torpedo.getXRot());
-                // 投下鱼雷：垂直入水后再启动巡航
-                torpedo.setDeltaMovement(0, -0.6, 0);
-                torpedo.setAirDrop(true, dir);
-                torpedo.setOwner(owner);
-                torpedo.setSourceAircraftName(getDisplayName());
-                torpedo.setSourceAircraft(this);
-                level().addFreshEntity(torpedo);
-            }
-            remainingAmmo -= toFire;
-            if (remainingAmmo <= 0) {
-                hasFired = true;
-                startReturning("torpedo_launched");
-            } else {
-                // 还有余弹：冷却后重新进入攻击循环，target 若已死 resolveTarget 会返回 null
-                attackCooldown = 40;
-                stateTicks = 0;  // 重置以延长 attack-run 超时
-            }
-            return;
-        }
-
-        if (horizDist < 20) {
-            // Too close — fly away from target to set up attack run
-            Vec3 awayDir = new Vec3(-dx, 0, -dz).normalize();
-            double yDelta = (targetY - getY()) * 0.1;
-            setDeltaMovement(awayDir.scale(panelSpeed * 0.4).add(0, yDelta, 0));
-            return;
-        }
-
-        // horizDist > 30, or in drop window but still too high — approach at low altitude (target.y + 2)
-        Vec3 toTarget = new Vec3(dx, targetY - getY(), dz);
-        double dist = toTarget.length();
-        if (dist > 0.1) {
-            setDeltaMovement(toTarget.normalize().scale(Math.min(panelSpeed * 0.4, dist)));
-        }
+        AircraftCombat.tickTorpedoBomberAttack(this, owner, target);
     }
 
-    /**
-     * LEVEL_BOMBER: bombing run pattern.
-     * 1. Climb to target+32 altitude
-     * 2. Fly straight over the target, drop bomb when overhead
-     * 3. Continue flying 10 blocks past the drop point
-     * 4. Check if target is alive — if so, start a new run
-     */
     private void tickLevelBomberAttack(@Nullable Player owner, LivingEntity target) {
-        if (remainingAmmo <= 0) {
-            if (owner != null && ModCommonConfig.AUTO_RESUPPLY_ENABLED.get() && tryAutoResupplyAmmo(owner)) {
-                // Ammo restored — continue attacking
-            } else {
-                startReturning("level_bomber_ammo_depleted");
-                return;
-            }
-        }
-
-        double bombAltitude = target.getY() + 32.0;
-
-        // Phase 1: Climb to bombing altitude
-        if (getY() < bombAltitude - 1.5) {
-            levelBombDropped = false;
-            levelRunDirection = null;
-            levelDropPoint = null;
-            levelRunTicks = 0;
-            Vec3 toPoint = new Vec3(target.getX() - getX(), bombAltitude - getY(), target.getZ() - getZ());
-            double dist = toPoint.length();
-            setDeltaMovement(toPoint.normalize().scale(Math.min(panelSpeed * 0.4, dist)));
-            return;
-        }
-
-        // Establish run direction once at altitude (locked for this run)
-        if (levelRunDirection == null) {
-            double dx = target.getX() - getX();
-            double dz = target.getZ() - getZ();
-            double horizDist = Math.sqrt(dx * dx + dz * dz);
-            if (horizDist < 0.1) {
-                // Already on top, pick arbitrary direction
-                levelRunDirection = new Vec3(1, 0, 0);
-            } else {
-                levelRunDirection = new Vec3(dx / horizDist, 0, dz / horizDist);
-            }
-            levelBombDropped = false;
-            levelDropPoint = null;
-            levelRunTicks = 0;
-        }
-
-        // Phase 2: Fly along the run direction
-        double yCorrect = (bombAltitude - getY()) * 0.15;
-        setDeltaMovement(levelRunDirection.x * panelSpeed * 0.4, yCorrect, levelRunDirection.z * panelSpeed * 0.4);
-        levelRunTicks++;
-
-        // Fail-safe: single run must not drag on forever (target dodging, direction drift, etc.)
-        if (!levelBombDropped && levelRunTicks > 200) {
-            startReturning("level_bomber_run_timeout");
-            return;
-        }
-
-        // Drop bomb when over target, or when we just overflew it without a drop
-        if (!levelBombDropped) {
-            double dx = target.getX() - getX();
-            double dz = target.getZ() - getZ();
-            double horizDist = Math.sqrt(dx * dx + dz * dz);
-            // Signed projection of (target - aircraft) onto run direction.
-            // <= 0 means the target is now behind the aircraft.
-            double signedProj = dx * levelRunDirection.x + dz * levelRunDirection.z;
-            boolean atDropWindow = horizDist < 3.0;
-            // Widened drop window once we've already flown past: tolerates a high-speed
-            // aircraft stepping over the 3-block window in a single tick.
-            double stepLen = panelSpeed * 0.4;
-            boolean flewPastButClose = signedProj <= 0 && horizDist < Math.max(stepLen + 2.0, 6.0);
-            if (atDropWindow || flewPastButClose) {
-                float bombDamage = panelDamage * 1.5f;
-                int toFire = computeSalvoSize(target, bombDamage);
-                com.piranport.debug.PiranPortDebug.event(
-                        "Aircraft LEVEL_SALVO | entityId={} capacity={} remaining={} firing={} targetHP={}",
-                        getId(), ammoCapacity, remainingAmmo, toFire, target.getHealth());
-                for (int i = 0; i < toFire; i++) {
-                    // 沿航向纵向错开 0.8 格，避免多枚航弹叠在同一像素
-                    double offset = (i - (toFire - 1) / 2.0) * 0.8;
-                    double spawnX = getX() + levelRunDirection.x * offset;
-                    double spawnZ = getZ() + levelRunDirection.z * offset;
-                    AerialBombEntity bomb = new AerialBombEntity(level(), bombDamage, 2.5f);
-                    bomb.moveTo(spawnX, getY(), spawnZ, bomb.getYRot(), bomb.getXRot());
-                    bomb.setDeltaMovement(getDeltaMovement().x * 0.1, -0.1, getDeltaMovement().z * 0.1);
-                    bomb.setOwner(owner);
-                    bomb.setSourceAircraftName(getDisplayName());
-                    bomb.setSourceAircraft(this);
-                    level().addFreshEntity(bomb);
-                }
-                remainingAmmo -= toFire;
-                levelBombDropped = true;
-                levelDropPoint = position();
-            } else if (signedProj <= 0) {
-                // Flew past target but still out of drop range — target must have moved.
-                // Drop the locked direction so the next tick can re-plan toward the target.
-                levelRunDirection = null;
-                return;
-            }
-        }
-
-        // Phase 3: After dropping, fly 10 blocks past drop point then reassess
-        if (levelBombDropped && levelDropPoint != null) {
-            double distFromDrop = position().subtract(levelDropPoint).horizontalDistance();
-            if (distFromDrop >= 10.0) {
-                // Check if target is still alive before resetting for next run
-                if (!target.isAlive()) {
-                    startReturning("level_bomber_target_eliminated");
-                    return;
-                }
-                // Reset run state for next pass
-                levelRunDirection = null;
-                levelDropPoint = null;
-                levelBombDropped = false;
-                levelRunTicks = 0;
-                // Target check happens in tickAttacking's resolveTarget on next tick
-            }
-        }
+        AircraftCombat.tickLevelBomberAttack(this, owner, target);
     }
+
+    private LivingEntity resolveTarget(Player owner) { return AircraftCombat.resolveTarget(this, owner); }
+
+    private static boolean isAirborneTarget(Entity e) { return AircraftCombat.isAirborneTarget(e); }
+
+    private Entity resolveFighterTarget(Player owner) { return AircraftCombat.resolveFighterTarget(this, owner); }
+
+    // [combat/target methods moved to AircraftCombat and AircraftAswRecon]
+
 
     /**
      * ASW: fly at target+20 altitude, drop depth charges when over target.
@@ -1223,42 +776,6 @@ public class AircraftEntity extends Entity {
      * Attack aircraft (bombers/torpedo bombers) skip airborne targets — only fighters engage air targets.
      */
     @Nullable
-    private LivingEntity resolveTarget(Player owner) {
-        if (!(level() instanceof ServerLevel sl)) return null;
-
-        List<UUID> locks = FireControlManager.getTargets(owner.getUUID());
-        if (!locks.isEmpty()) {
-            if (attackMode == FlightGroupData.AttackMode.SPREAD) {
-                return locks.stream()
-                        .map(uuid -> sl.getEntity(uuid))
-                        .filter(e -> e instanceof LivingEntity le && le.isAlive()
-                                && !isAirborneTarget(le) && !le.isUnderWater())
-                        .map(e -> (LivingEntity) e)
-                        .min(Comparator.comparingDouble(e -> distanceTo(e)))
-                        .orElse(null);
-            } else {
-                // FOCUS: find first non-airborne, non-underwater alive target
-                for (UUID uuid : locks) {
-                    Entity e = sl.getEntity(uuid);
-                    if (e instanceof LivingEntity le && le.isAlive()
-                            && !isAirborneTarget(le) && !le.isUnderWater()) return le;
-                }
-                return null;
-            }
-        }
-
-        // Auto-seek: only if never had FC target and first scan not yet done
-        if (hasEverHadFireControl || autoSeekDone) return null;
-        if (autoSeekCooldown > 0) { autoSeekCooldown--; return null; }
-        autoSeekDone = true;
-        AABB box = getBoundingBox().inflate(32.0);
-        return sl.getEntitiesOfClass(LivingEntity.class, box,
-                e -> e.isAlive() && e != owner && e instanceof Monster
-                        && !isAirborneTarget(e) && !e.isUnderWater())
-                .stream()
-                .min(Comparator.comparingDouble(e -> distanceTo(e)))
-                .orElse(null);
-    }
 
     /** Check if any locked target UUID still resolves to an alive entity. */
     private boolean hasAliveLockedTarget(Player owner) {
@@ -1292,9 +809,6 @@ public class AircraftEntity extends Entity {
     }
 
     /** An entity is considered airborne if it is not on the ground and not in water. */
-    private static boolean isAirborneTarget(Entity e) {
-        return !e.onGround() && !e.isInWater();
-    }
 
     private void tickReturning(Player owner) {
         Vec3 toOwner = owner.getEyePosition().subtract(position());
@@ -1887,59 +1401,6 @@ public class AircraftEntity extends Entity {
      * When fighter-air-only mode is active, only FC-locked airborne targets are considered.
      */
     @Nullable
-    private Entity resolveFighterTarget(Player owner) {
-        if (!(level() instanceof ServerLevel sl)) return null;
-
-        boolean airOnly = FireControlManager.isFighterAirOnly(owner.getUUID());
-
-        List<UUID> locks = FireControlManager.getTargets(owner.getUUID());
-        if (!locks.isEmpty()) {
-            if (attackMode == FlightGroupData.AttackMode.SPREAD) {
-                return locks.stream()
-                        .map(sl::getEntity)
-                        .filter(e -> e != null && e.isAlive()
-                                && (!airOnly || e instanceof AircraftEntity || isAirborneTarget(e)))
-                        .min(Comparator.comparingDouble(this::distanceTo))
-                        .orElse(null);
-            } else {
-                for (UUID uuid : locks) {
-                    Entity e = sl.getEntity(uuid);
-                    if (e != null && e.isAlive()
-                            && (!airOnly || e instanceof AircraftEntity || isAirborneTarget(e))) {
-                        return e;
-                    }
-                }
-                return null;
-            }
-        }
-
-        // Air-only mode: no auto-seek at all
-        if (airOnly) return null;
-
-        // Auto-seek: only if never had FC target and first scan not yet done
-        if (hasEverHadFireControl || autoSeekDone) return null;
-        if (autoSeekCooldown > 0) { autoSeekCooldown--; return null; }
-        autoSeekDone = true;
-        AABB box = getBoundingBox().inflate(32.0);
-
-        // Enemy aircraft (non-same-owner, non-self, not fellow autonomous)
-        List<AircraftEntity> enemyAircraft = sl.getEntitiesOfClass(AircraftEntity.class, box,
-                ae -> ae.isAlive() && ae != this
-                        && !(ownerUUID != null && ownerUUID.equals(ae.ownerUUID))
-                        && !(this.autonomous && ae.autonomous));
-        if (!enemyAircraft.isEmpty()) {
-            return enemyAircraft.stream()
-                    .min(Comparator.comparingDouble(this::distanceTo))
-                    .orElse(null);
-        }
-
-        // Hostile mobs fallback
-        return sl.getEntitiesOfClass(LivingEntity.class, box,
-                e -> e.isAlive() && e != owner && e instanceof Monster)
-                .stream()
-                .min(Comparator.comparingDouble(this::distanceTo))
-                .orElse(null);
-    }
 
     public void setState(FlightState newState) {
         if (newState == FlightState.ATTACKING) {

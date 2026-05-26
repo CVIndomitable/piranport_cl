@@ -41,7 +41,7 @@ public final class FriendlyFireHelper {
                 getOwnerHandle = MethodHandles.lookup().findVirtual(maidClass, "getOwner",
                         MethodType.methodType(LivingEntity.class));
                 maidReflectionReady = true;
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 maidReflectionReady = false;
             }
         }

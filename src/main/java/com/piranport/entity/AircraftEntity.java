@@ -122,7 +122,7 @@ public class AircraftEntity extends Entity {
     @Nullable Vec3 levelRunDirection = null;
     @Nullable Vec3 levelDropPoint = null;
     int levelRunTicks = 0;
-    int autoSeekCooldown = 20; // P1 #6: 初始化冷却时间，避免首次 tick 立即搜索
+    int autoSeekCooldown = 20; // 运行时状态，避免首次 tick 立即搜索（不持久化，每次加载重置为 20）
     boolean autoSeekDone = false;    // true after first auto-seek scan (one-shot)
     private boolean appliedSlowness = false; // tracks if slowness effect was applied to target
     boolean hasEverHadFireControl = false; // true if FC target was ever assigned

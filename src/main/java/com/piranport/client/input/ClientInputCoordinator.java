@@ -19,6 +19,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -43,6 +44,9 @@ public class ClientInputCoordinator {
 
     /** 重置所有客户端静态状态（断开连接时调用）。 */
     public static void resetClientState() {
+        if (AmmoSelectOverlay.isOpen()) {
+            AmmoSelectOverlay.close();
+        }
         EntityHighlightHandler.reset();
         com.piranport.aviation.ClientAswSonarData.resetClientState();
         ClientTorpedoGuidance.resetClientState();
@@ -101,9 +105,10 @@ public class ClientInputCoordinator {
         // 8) 实体高亮 (Y键 + 火控 + 声呐)
         if (mc.level != null) {
             Player localPlayer = mc.player;
-            Set<UUID> lockedTargets = ClientFireControlData.getTargets().isEmpty()
+            List<UUID> fcTargets = ClientFireControlData.getTargets();
+            Set<UUID> lockedTargets = fcTargets.isEmpty()
                     ? java.util.Collections.emptySet()
-                    : new HashSet<>(ClientFireControlData.getTargets());
+                    : new HashSet<>(fcTargets);
             boolean hasFcTargets = !lockedTargets.isEmpty();
 
             // 处理 Y 键切换

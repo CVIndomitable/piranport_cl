@@ -120,13 +120,9 @@ public class PlayerConnectionHandler {
         // 清理飞机索引
         AircraftIndex.removePlayerAircraft(uuid);
 
-        // 清理瞄准状态
-        if (player instanceof net.minecraft.server.level.ServerPlayer sp) {
-            com.piranport.server.ScopingManager.handleDisconnect(sp);
-        }
-
-        // 清理副本状态（如果在副本中）
+        // 清理瞄准状态和副本状态（合并重复的 instanceof 检查）
         if (player instanceof ServerPlayer sp) {
+            com.piranport.server.ScopingManager.handleDisconnect(sp);
             DungeonInstanceManager mgr = DungeonInstanceManager.get(sp.serverLevel());
             mgr.handlePlayerDisconnect(uuid);
         }

@@ -77,11 +77,11 @@ import org.jetbrains.annotations.Nullable;
  * <ol>
  *   <li><b>装备/附魔/燃料条</b> (getEquipmentSlot ~ getBarColor) — Equipable 接口、附魔、燃料耐久条</li>
  *   <li><b>物品交互</b> (overrideOtherStackedOnMe) — 燃料添加、装甲板/装备存储</li>
- *   <li><b>Tooltip</b> (appendHoverText ~ appendWeaponCooldownTooltip) — 物品提示、武器冷却条</li>
+ *   <li><b>Tooltip</b> (appendHoverText) — 物品提示</li>
  *   <li><b>右键使用</b> (use) — 变身/取消变身、GUI模式切换、无GUI开火</li>
- *   <li><b>武器发射</b> (tryFireFromInventory ~ fireSanshikiSpread) — 火炮/鱼雷/深弹/导弹发射</li>
- *   <li><b>飞机系统</b> (launchAircraftInventoryMode ~ tryAutoFireAntiAirMissile) — 飞机起飞、燃料补充、自动战斗</li>
- *   <li><b>武器属性辅助</b> (getGunDamage ~ getDefaultTorpedoForCaliber) — 武器参数查询</li>
+ *   <li><b>武器发射</b> — 已提取到 {@link ShipCoreCombat}，本类仅保留 use() 入口</li>
+ *   <li><b>飞机系统</b> — 已提取到 {@link ShipCoreCombat}，本类仅保留 use() 入口</li>
+ *   <li><b>武器属性辅助</b> — 已提取到 {@link ShipCoreCombat}</li>
  * </ol>
  *
  * <p><b>线程模型</b>: 服务端主线程。所有方法通过 {@link net.neoforged.neoforge.event.tick.PlayerTickEvent}

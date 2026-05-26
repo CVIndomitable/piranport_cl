@@ -13,6 +13,7 @@ import net.minecraft.nbt.CompoundTag;
 import com.piranport.item.KirinHeadbandItem;
 import com.piranport.item.FootballArmorItem;
 import com.piranport.item.ShipCoreItem;
+import com.piranport.item.ShipCoreCombat;
 import com.piranport.registry.ModDataComponents;
 import com.piranport.registry.ModMobEffects;
 import net.minecraft.core.BlockPos;
@@ -257,7 +258,7 @@ public class PlayerTickHandler {
                 }
                 TransformationManager.setTransformed(coreStack, true);
                 TransformationManager.applyTransformationAttributes(player, coreStack);
-                ShipCoreItem.refillAircraftFuel(player, coreStack);
+                ShipCoreCombat.refillAircraftFuel(player, coreStack);
                 player.displayClientMessage(
                         Component.translatable("message.piranport.transformed"), true);
                 if (player.level() instanceof ServerLevel sl) {
@@ -426,7 +427,7 @@ public class PlayerTickHandler {
                 }
             }
         }
-        ShipCoreItem.tryAutoLaunchFighter(player.level(), player, coreStack, coreSlot);
+        ShipCoreCombat.tryAutoLaunchFighter(player.level(), player, coreStack, coreSlot);
     }
 
     /** 防空导弹：检测32格内空中敌对目标 */
@@ -440,7 +441,7 @@ public class PlayerTickHandler {
                     return !e.onGround() && !player.level().getBlockState(below).isSolid();
                 }).isEmpty();
         if (hasAirborneHostile) {
-            ShipCoreItem.tryAutoFireAntiAirMissile(player.level(), player, coreStack, coreSlot);
+            ShipCoreCombat.tryAutoFireAntiAirMissile(player.level(), player, coreStack, coreSlot);
         }
     }
 }

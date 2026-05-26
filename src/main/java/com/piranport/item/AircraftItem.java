@@ -32,7 +32,7 @@ public class AircraftItem extends Item {
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
-        if (ShipCoreItem.tryFireFromInventory(level, player, hand)) {
+        if (ShipCoreCombat.tryFireFromInventory(level, player, hand)) {
             return InteractionResultHolder.consume(stack);
         }
         return InteractionResultHolder.pass(stack);
@@ -107,6 +107,6 @@ public class AircraftItem extends Item {
                         .withStyle(net.minecraft.ChatFormatting.DARK_GRAY));
             }
         }
-        ShipCoreItem.appendWeaponCooldownTooltip(stack, tooltipComponents);
+        ShipCoreCombat.appendWeaponCooldownTooltip(stack, tooltipComponents);
     }
 }

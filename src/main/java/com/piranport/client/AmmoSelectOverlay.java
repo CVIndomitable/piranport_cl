@@ -3,6 +3,7 @@ package com.piranport.client;
 import com.piranport.PiranPort;
 import com.piranport.component.SelectedAmmoType;
 import com.piranport.item.ShipCoreItem;
+import com.piranport.item.ShipCoreCombat;
 import com.piranport.registry.ModDataComponents;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
@@ -84,14 +85,14 @@ public class AmmoSelectOverlay {
 
         // 扫描背包中匹配口径的弹药
         for (ItemStack s : player.getInventory().items) {
-            if (!s.isEmpty() && ShipCoreItem.matchesCaliber(s, weapon)) {
+            if (!s.isEmpty() && ShipCoreCombat.matchesCaliber(s, weapon)) {
                 if (!availableAmmos.contains(s.getItem())) {
                     availableAmmos.add(s.getItem());
                 }
             }
         }
         ItemStack oh = player.getInventory().offhand.get(0);
-        if (!oh.isEmpty() && ShipCoreItem.matchesCaliber(oh, weapon)) {
+        if (!oh.isEmpty() && ShipCoreCombat.matchesCaliber(oh, weapon)) {
             if (!availableAmmos.contains(oh.getItem())) {
                 availableAmmos.add(oh.getItem());
             }

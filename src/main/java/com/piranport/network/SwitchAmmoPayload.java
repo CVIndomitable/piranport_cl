@@ -3,6 +3,7 @@ package com.piranport.network;
 import com.piranport.PiranPort;
 import com.piranport.component.SelectedAmmoType;
 import com.piranport.item.ShipCoreItem;
+import com.piranport.item.ShipCoreCombat;
 import com.piranport.registry.ModDataComponents;
 import com.piranport.registry.ModSounds;
 import io.netty.buffer.ByteBuf;
@@ -57,14 +58,14 @@ public record SwitchAmmoPayload(String ammoItemId) implements CustomPacketPayloa
             Inventory inv = player.getInventory();
             boolean hasAmmo = false;
             for (ItemStack s : inv.items) {
-                if (s.getItem() == ammoItem && ShipCoreItem.matchesCaliber(s, weapon)) {
+                if (s.getItem() == ammoItem && ShipCoreCombat.matchesCaliber(s, weapon)) {
                     hasAmmo = true;
                     break;
                 }
             }
             if (!hasAmmo) {
                 ItemStack offhand = inv.offhand.get(0);
-                if (offhand.getItem() == ammoItem && ShipCoreItem.matchesCaliber(offhand, weapon)) {
+                if (offhand.getItem() == ammoItem && ShipCoreCombat.matchesCaliber(offhand, weapon)) {
                     hasAmmo = true;
                 }
             }

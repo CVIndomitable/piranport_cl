@@ -4,6 +4,7 @@ import com.piranport.combat.TransformationManager;
 import com.piranport.component.LoadedAmmo;
 import com.piranport.component.WeaponCooldown;
 import com.piranport.item.ShipCoreItem;
+import com.piranport.item.ShipCoreCombat;
 import com.piranport.item.TorpedoLauncherItem;
 import com.piranport.registry.ModDataComponents;
 import com.piranport.registry.ModItems;
@@ -99,10 +100,10 @@ public class WeaponReloadDecorator implements IItemDecorator {
         if (player == null) return true;
         Inventory inv = player.getInventory();
         for (ItemStack s : inv.items) {
-            if (!s.isEmpty() && ShipCoreItem.matchesCaliber(s, weapon)) return true;
+            if (!s.isEmpty() && ShipCoreCombat.matchesCaliber(s, weapon)) return true;
         }
         ItemStack oh = inv.offhand.get(0);
-        if (!oh.isEmpty() && ShipCoreItem.matchesCaliber(oh, weapon)) return true;
+        if (!oh.isEmpty() && ShipCoreCombat.matchesCaliber(oh, weapon)) return true;
         return false;
     }
 

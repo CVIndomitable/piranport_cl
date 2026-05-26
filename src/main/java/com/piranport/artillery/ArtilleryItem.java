@@ -6,6 +6,7 @@ import com.piranport.component.SelectedAmmoType;
 import com.piranport.component.WeaponCooldown;
 import com.piranport.debug.PiranPortDebug;
 import com.piranport.item.ShipCoreItem;
+import com.piranport.item.ShipCoreCombat;
 import com.piranport.registry.ModDataComponents;
 import com.piranport.registry.ModSounds;
 import net.minecraft.client.Minecraft;
@@ -104,7 +105,7 @@ public class ArtilleryItem extends Item {
             ClickAction action, Player player, net.minecraft.world.entity.SlotAccess access) {
         if (action != ClickAction.SECONDARY) return false;
         if (com.piranport.config.ModCommonConfig.AUTO_RESUPPLY_ENABLED.get()) return false;
-        if (other.isEmpty() || !ShipCoreItem.matchesCaliber(other, stack)) return false;
+        if (other.isEmpty() || !ShipCoreCombat.matchesCaliber(other, stack)) return false;
 
         LoadedAmmo current = stack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
         if (current.hasAmmo()) return false;
@@ -204,6 +205,6 @@ public class ArtilleryItem extends Item {
                         .withStyle(net.minecraft.ChatFormatting.DARK_GRAY));
             }
         }
-        ShipCoreItem.appendWeaponCooldownTooltip(stack, tooltipComponents);
+        ShipCoreCombat.appendWeaponCooldownTooltip(stack, tooltipComponents);
     }
 }

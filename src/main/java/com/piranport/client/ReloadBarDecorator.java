@@ -8,6 +8,7 @@ import com.piranport.component.SlotCooldowns;
 import com.piranport.item.AircraftItem;
 import com.piranport.item.MissileLauncherItem;
 import com.piranport.item.ShipCoreItem;
+import com.piranport.item.ShipCoreCombat;
 import com.piranport.item.TorpedoLauncherItem;
 import com.piranport.registry.ModDataComponents;
 import net.minecraft.client.Minecraft;
@@ -160,7 +161,7 @@ public class ReloadBarDecorator implements IItemDecorator {
         int ammoEnd = type.weaponSlots + type.ammoSlots;
         for (int i = type.weaponSlots; i < ammoEnd; i++) {
             ItemStack ammo = items.get(i);
-            if (!ammo.isEmpty() && ShipCoreItem.matchesCaliber(ammo, weapon)) {
+            if (!ammo.isEmpty() && ShipCoreCombat.matchesCaliber(ammo, weapon)) {
                 return true;
             }
         }

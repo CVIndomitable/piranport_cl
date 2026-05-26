@@ -2,6 +2,7 @@ package com.piranport.network;
 
 import com.piranport.PiranPort;
 import com.piranport.item.ShipCoreItem;
+import com.piranport.item.ShipCoreCombat;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -66,10 +67,10 @@ public record ScopeFirePayload(boolean useBallisticAim, double targetX, double t
                     PiranPort.LOGGER.warn("ScopeFirePayload target too far ({}m), ignored", Math.sqrt(distSq));
                     return;
                 }
-                ShipCoreItem.fireFromScope(player, weapon,
+                ShipCoreCombat.fireFromScope(player, weapon,
                         payload.targetX(), payload.targetY(), payload.targetZ());
             } else {
-                ShipCoreItem.tryFireFromInventory(player.level(), player, InteractionHand.MAIN_HAND);
+                ShipCoreCombat.tryFireFromInventory(player.level(), player, InteractionHand.MAIN_HAND);
             }
         });
     }

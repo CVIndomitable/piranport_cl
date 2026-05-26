@@ -5,6 +5,7 @@ import com.piranport.artillery.config.ArtilleryConfig;
 import com.piranport.artillery.config.override.ClientConfigCache;
 import com.piranport.menu.ArtilleryConfigToolMenu;
 import com.piranport.network.ExportConfigPayload;
+import com.piranport.network.ImportConfigPayload;
 import com.piranport.network.ResetConfigPayload;
 import com.piranport.network.UpdateConfigOverridePayload;
 import net.minecraft.client.gui.GuiGraphics;
@@ -100,12 +101,17 @@ public class ArtilleryConfigToolScreen extends AbstractContainerScreen<Artillery
         this.addRenderableWidget(Button.builder(
                 Component.translatable("gui.piranport.config_tool.export"),
                 button -> onExportClicked()
-        ).bounds(x + 10, y + 215, 70, 20).build());
+        ).bounds(x + 10, y + 215, 50, 20).build());
+
+        this.addRenderableWidget(Button.builder(
+                Component.translatable("gui.piranport.config_tool.import"),
+                button -> onImportClicked()
+        ).bounds(x + 65, y + 215, 50, 20).build());
 
         this.addRenderableWidget(Button.builder(
                 Component.translatable("gui.piranport.config_tool.reset_all"),
                 button -> onResetAllClicked()
-        ).bounds(x + 85, y + 215, 70, 20).build());
+        ).bounds(x + 120, y + 215, 60, 20).build());
 
         // 创建编辑框
         createEditBoxes();
@@ -385,6 +391,14 @@ public class ArtilleryConfigToolScreen extends AbstractContainerScreen<Artillery
     }
 
     /**
+     * 导入CSV按钮回调
+     */
+    private void onImportClicked() {
+        // 打开文件选择对话框
+        this.minecraft.setScreen(new ImportFileSelectionScreen(this));
+    }
+
+    /**
      * 重置全部按钮回调
      */
     private void onResetAllClicked() {
@@ -402,5 +416,106 @@ public class ArtilleryConfigToolScreen extends AbstractContainerScreen<Artillery
                 Component.translatable("message.piranport.config_reset")
                         .withStyle(net.minecraft.ChatFormatting.GREEN)
         );
+    }
+
+    /**
+     * 文件选择界面
+     */
+    @OnlyIn(Dist.CLIENT)
+    private static class ImportFileSelectionScreen extends net.minecraft.client.gui.screens.Screen {
+        private final ArtilleryConfigToolScreen parent;
+        private EditBox cannonFileBox;
+        private EditBox projectileFileBox;
+
+        protected ImportFileSelectionScreen(ArtilleryConfigToolScreen parent) {
+            super(Component.translatable("gui.piranport.config_tool.import_files"));
+            this.parent = parent;
+        }
+
+        @Override
+        protected void init() {
+            int x = (this.width - 300) / 2;
+            int y = (this.height - 150) / 2;
+
+            // 火炮配置文件输入框
+            this.addRenderableWidget(Button.builder(
+                    Component.translatable("gui.piranport.config_tool.cannon_file"),
+                    button -> {}
+            ).bounds(x + 10, y + 30, 100, 20).build());
+
+            cannonFileBox = new EditBox(this.font, x + 115, y + 30, 175, 20, Component.empty());
+            cannonFileBox.setMaxLength(100);
+            cannonFileBox.setValue("cannons_latest.csv");
+            this.addRenderableWidget(cannonFileBox);
+
+            // 弹药配置文件输入框
+            this.addRenderableWidget(Button.builder(
+                    Component.translatable("gui.piranport.config_tool.projectile_file"),
+                    button -> {}
+            ).bounds(x + 10, y + 60, 100, 20).build());
+
+            projectileFileBox = new EditBox(this.font, x + 115, y + 60, 175, 20, Component.empty());
+            projectileFileBox.setMaxLength(100);
+            projectileFileBox.setValue("projectiles_latest.csv");
+            this.addRenderableWidget(projectileFileBox);
+
+            // 确认按钮
+            this.addRenderableWidget(Button.builder(
+                    Component.translatable("gui.piranport.config_tool.confirm_import"),
+                    button -> onConfirmImport()
+            ).bounds(x + 50, y + 100, 80, 20).build());
+
+            // 取消按钮
+            this.addRenderableWidget(Button.builder(
+                    Component.translatable("gui.done"),
+                    button -> this.minecraft.setScreen(parent)
+            ).bounds(x + 170, y + 100, 80, 20).build());
+        }
+
+        @Override
+        public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+            super.render(graphics, mouseX, mouseY, partialTick);
+
+            int x = (this.width - 300) / 2;
+            int y = (this.height - 150) / 2;
+
+            // 背景
+            graphics.fill(x, y, x + 300, y + 150, 0xFF8B8B8B);
+            graphics.fill(x, y, x + 300, y + 20, 0xFF5A5A5A);
+
+            // 标题
+            graphics.drawString(this.font, this.title, x + 10, y + 6, 0xFFFFFF, false);
+
+            // 提示文本
+            graphics.drawString(this.font,
+                    Component.translatable("gui.piranport.config_tool.import_hint"),
+                    x + 10, y + 130, 0xFFFFFF, false);
+        }
+
+        private void onConfirmImport() {
+            String cannonFile = cannonFileBox.getValue().trim();
+            String projectileFile = projectileFileBox.getValue().trim();
+
+            if (cannonFile.isEmpty() && projectileFile.isEmpty()) {
+                // 显示错误消息
+                this.minecraft.player.sendSystemMessage(
+                        Component.translatable("message.piranport.import_no_files")
+                                .withStyle(net.minecraft.ChatFormatting.RED)
+                );
+                return;
+            }
+
+            // 发送导入请求
+            PacketDistributor.sendToServer(new ImportConfigPayload(cannonFile, projectileFile));
+
+            // 返回主界面
+            this.minecraft.setScreen(parent);
+
+            // 显示提示消息
+            this.minecraft.player.sendSystemMessage(
+                    Component.translatable("message.piranport.import_requested")
+                            .withStyle(net.minecraft.ChatFormatting.YELLOW)
+            );
+        }
     }
 }

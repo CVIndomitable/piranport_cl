@@ -827,5 +827,18 @@
   "message.piranport.config_exported": "配置已导出到: %s",
   "message.piranport.config_export_failed": "导出失败: %s",
   "message.piranport.config_reset": "已重置所有配置覆盖",
-  "message.piranport.reset_not_implemented": "重置功能开发中"
+  "message.piranport.reset_not_implemented": "重置功能开发中",
+  "gui.piranport.config_tool.import_files": "选择导入文件",
+  "gui.piranport.config_tool.cannon_file": "火炮配置:",
+  "gui.piranport.config_tool.projectile_file": "弹药配置:",
+  "gui.piranport.config_tool.confirm_import": "确认导入",
+  "gui.piranport.config_tool.import_hint": "文件位于 config/piranport/exports/ 目录",
+  "message.piranport.import_requested": "已请求导入配置...",
+  "message.piranport.import_no_files": "请至少指定一个文件",
+  "message.piranport.import_dir_not_found": "导入目录不存在: %s",
+  "message.piranport.file_not_found": "文件不存在: %s",
+  "message.piranport.cannon_imported": "火炮配置导入完成: 成功 %s 项，失败 %s 项",
+  "message.piranport.projectile_imported": "弹药配置导入完成: 成功 %s 项，失败 %s 项",
+  "message.piranport.config_imported_summary": "配置导入总计: 成功 %s 项，失败 %s 项",
+  "message.piranport.config_import_failed": "导入失败: %s"
 }

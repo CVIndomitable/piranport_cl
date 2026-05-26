@@ -58,10 +58,10 @@ public class TorpedoEntity extends ThrowableItemProjectile {
     private Entity lockedTarget = null;
     private UUID lockedTargetUuid = null;
     private int lockDuration = 0;
-    private static final int MIN_LOCK_DURATION = 40;
+    private static final int MIN_LOCK_DURATION = 60;
     private static final double LOCK_BREAK_DISTANCE = 30.0;
     /** 声导鱼雷目标切换阈值：新目标距离需小于当前目标的此比例才切换 */
-    private static final double TARGET_SWITCH_THRESHOLD = 0.5; // P1 #8: 从 0.7 降至 0.5，减少多目标环境下的频繁摇摆
+    private static final double TARGET_SWITCH_THRESHOLD = 0.7;
 
     // 空投下落阶段
     private boolean airDrop = false;
@@ -389,23 +389,21 @@ public class TorpedoEntity extends ThrowableItemProjectile {
 
     /** 声导追踪：向最近的有声目标转向 */
     private void acousticHoming() {
-        if (lockedTarget != null) {
-            if (!lockedTarget.isAlive() || lockedTarget.isRemoved()) {
-                lockedTarget = null;
-                lockDuration = 0;
-            } else {
-                double dist = distanceTo(lockedTarget);
-                if (dist > LOCK_BREAK_DISTANCE) {
-                    lockedTarget = null;
-                    lockDuration = 0;
-                } else if (lockDuration < MIN_LOCK_DURATION) {
-                    lockDuration++;
-                    turnTowardsTarget(lockedTarget, dist);
-                    return;
-                }
-            }
+        // 验证当前锁定目标是否仍然有效
+        if (lockedTarget != null && (!lockedTarget.isAlive() || lockedTarget.isRemoved()
+                || distanceTo(lockedTarget) > LOCK_BREAK_DISTANCE)) {
+            lockedTarget = null;
+            lockDuration = 0;
         }
 
+        // 如果有锁定目标且在稳定期内，继续追踪
+        if (lockedTarget != null && lockDuration < MIN_LOCK_DURATION) {
+            lockDuration++;
+            turnTowardsTarget(lockedTarget, distanceTo(lockedTarget));
+            return;
+        }
+
+        // 扫描新目标
         Entity bestTarget = scanForTarget();
         if (bestTarget != null) {
             double newDist = distanceTo(bestTarget);
@@ -421,6 +419,7 @@ public class TorpedoEntity extends ThrowableItemProjectile {
             }
         }
 
+        // 转向锁定目标
         if (lockedTarget != null) {
             turnTowardsTarget(lockedTarget, distanceTo(lockedTarget));
         }

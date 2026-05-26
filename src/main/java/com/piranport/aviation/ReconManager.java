@@ -15,6 +15,11 @@ import java.util.concurrent.ConcurrentHashMap;
  * <p><b>数据</b>: activeRecon (playerUUID → reconEntityUUID), pendingInput (playerUUID → [dx, dy, dz])。
  */
 public class ReconManager {
+
+    private ReconManager() {
+        throw new UnsupportedOperationException("Utility class");
+    }
+
     // playerUUID → reconEntityUUID
     private static final Map<UUID, UUID> activeRecon = new ConcurrentHashMap<>();
     // playerUUID → [dx, dy, dz]

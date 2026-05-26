@@ -214,10 +214,14 @@ public class ServerGameEvents {
 
     @SubscribeEvent
     public static void onServerStopped(ServerStoppedEvent event) {
+        // 清理顺序说明：
+        // 1. 先清理战斗系统状态（火控、侦察、鱼雷制导），这些依赖玩家和实体
+        // 2. 再清理飞机索引（依赖玩家UUID）
+        // 3. 最后清理玩家Tick缓存（独立数据，无依赖）
         FireControlManager.clearAll();
         ReconManager.clearAll();
-        AircraftIndex.clearAll();
         TorpedoGuidanceManager.clearAll();
+        AircraftIndex.clearAll();
         PlayerTickHandler.clearCaches();
     }
 }

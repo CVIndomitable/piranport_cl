@@ -58,6 +58,18 @@ import java.util.concurrent.ConcurrentHashMap;
 @EventBusSubscriber(modid = PiranPort.MOD_ID)
 public class PlayerTickHandler {
 
+    // ==================== Tick 间隔常量 ====================
+    /** 声呐扫描间隔（tick）*/
+    private static final int SONAR_SCAN_INTERVAL = 40;
+    /** 减速效果清理间隔（tick）*/
+    private static final int SLOWNESS_CLEANUP_INTERVAL = 20;
+    /** 自动战斗检查间隔（tick）*/
+    private static final int AUTO_COMBAT_INTERVAL = 40;
+    /** 无GUI模式负重检查间隔（tick）- 降低频率以提升性能 */
+    private static final int INVENTORY_LOAD_CHECK_INTERVAL = 5;
+    /** 传送检测距离阈值（格）- 降低以避免误判鞘翅飞行 */
+    private static final double TELEPORT_DETECTION_THRESHOLD = 64.0;
+
     // ==================== 缓存 Maps ====================
     /** 玩家 UUID → 上次背包武器总载重。用于无GUI模式下的属性重算检测。 */
     private static final Map<UUID, Integer> lastWeaponLoad = new ConcurrentHashMap<>();
@@ -65,11 +77,20 @@ public class PlayerTickHandler {
     private static final Map<UUID, Vec3> lastPlayerPos = new ConcurrentHashMap<>();
     /** 玩家 UUID → 累计移动距离。用于按距离驱动的燃料消耗。 */
     private static final Map<UUID, Double> accumulatedDistance = new ConcurrentHashMap<>();
+    /** 玩家 UUID → 上次计算的 yaw 角度。用于缓存水面行走的三角函数计算。 */
+    private static final Map<UUID, Float> lastYaw = new ConcurrentHashMap<>();
+    /** 玩家 UUID → 缓存的方向向量。用于水面行走加速。 */
+    private static final Map<UUID, Vec3> cachedDirection = new ConcurrentHashMap<>();
+    /** 缓存的配置值：是否启用舰核GUI */
+    private static boolean cachedShipCoreGuiEnabled = ModCommonConfig.isShipCoreGuiEnabled();
 
+    /** 清理所有缓存（服务器关闭时调用）*/
     public static void clearCaches() {
         lastWeaponLoad.clear();
         lastPlayerPos.clear();
         accumulatedDistance.clear();
+        lastYaw.clear();
+        cachedDirection.clear();
     }
 
     /** 玩家登出时清理该玩家的缓存条目，防止长时间运行内存泄漏 */
@@ -77,6 +98,8 @@ public class PlayerTickHandler {
         lastWeaponLoad.remove(uuid);
         lastPlayerPos.remove(uuid);
         accumulatedDistance.remove(uuid);
+        lastYaw.remove(uuid);
+        cachedDirection.remove(uuid);
     }
 
     /** 定期清理离线玩家的缓存条目，防止服务器崩溃导致的内存泄漏 */
@@ -88,6 +111,8 @@ public class PlayerTickHandler {
         lastWeaponLoad.keySet().removeIf(uuid -> !onlineUuids.contains(uuid));
         lastPlayerPos.keySet().removeIf(uuid -> !onlineUuids.contains(uuid));
         accumulatedDistance.keySet().removeIf(uuid -> !onlineUuids.contains(uuid));
+        lastYaw.keySet().removeIf(uuid -> !onlineUuids.contains(uuid));
+        cachedDirection.keySet().removeIf(uuid -> !onlineUuids.contains(uuid));
     }
 
     @SubscribeEvent
@@ -138,7 +163,8 @@ public class PlayerTickHandler {
 
     /** 无GUI模式：检测背包武器变化并重算属性 */
     private static void tickInventoryLoadIfNoGui(Player player) {
-        if (!ModCommonConfig.isShipCoreGuiEnabled()) {
+        // 降低检查频率至每5tick，减少重复计算
+        if (!cachedShipCoreGuiEnabled && player.tickCount % INVENTORY_LOAD_CHECK_INTERVAL == 0) {
             tickInventoryLoadCheck(player);
         }
     }
@@ -177,21 +203,26 @@ public class PlayerTickHandler {
 
     /** 声纳效果：24格内水生/敌对生物发光（每40tick，错峰执行） */
     private static void tickSonarGlow(Player player, ItemStack transformedCore) {
-        // 错峰执行：不同玩家在不同tick执行，避免同时扫描
-        if ((player.tickCount + player.getId()) % 40 != 0) return;
+        // 错峰执行：使用UUID哈希避免玩家ID连续分配导致的碰撞
+        if ((player.tickCount + player.getUUID().hashCode()) % SONAR_SCAN_INTERVAL != 0) return;
         if (!TransformationManager.hasSonarEquipped(player, transformedCore)) return;
-        AABB scanBox = player.getBoundingBox().inflate(24.0, 8.0, 24.0);
+
+        // 动态限制扫描范围，避免超出服务器模拟距离
+        int simDist = ((ServerLevel) player.level()).getServer().getPlayerList().getSimulationDistance();
+        double maxRange = Math.min(24.0, simDist * 16.0 - 8.0);
+
+        AABB scanBox = player.getBoundingBox().inflate(maxRange, 8.0, maxRange);
         List<LivingEntity> nearby = player.level().getEntitiesOfClass(
                 LivingEntity.class, scanBox,
                 e -> e.isAlive() && e != player && !(e instanceof Player));
         for (LivingEntity entity : nearby) {
-            entity.addEffect(new MobEffectInstance(MobEffects.GLOWING, 40, 0, false, false, false));
+            entity.addEffect(new MobEffectInstance(MobEffects.GLOWING, SONAR_SCAN_INTERVAL, 0, false, false, false));
         }
     }
 
     /** 清除侦察模式残留的减速效果（每20tick） */
     private static void tickCleanupResidualSlowdown(Player player) {
-        if (player.tickCount % 20 != 0) return;
+        if (player.tickCount % SLOWNESS_CLEANUP_INTERVAL != 0) return;
         MobEffectInstance slowness = player.getEffect(MobEffects.MOVEMENT_SLOWDOWN);
         if (slowness != null && slowness.getAmplifier() >= 9
                 && !ReconManager.isInRecon(player.getUUID())) {
@@ -201,8 +232,8 @@ public class PlayerTickHandler {
 
     /** 战斗机自动升空 + 防空导弹（每40tick，错峰执行） */
     private static void tickAutoCombatIfNeeded(Player player) {
-        // 错峰执行：不同玩家在不同tick执行
-        if ((player.tickCount + player.getId()) % 40 == 0) {
+        // 错峰执行：使用UUID哈希避免玩家ID连续分配导致的碰撞
+        if ((player.tickCount + player.getUUID().hashCode()) % AUTO_COMBAT_INTERVAL == 0) {
             tickAutoCombat(player);
         }
     }
@@ -342,9 +373,23 @@ public class PlayerTickHandler {
         boolean hasInput = Math.abs(inputX) > 0.01f || Math.abs(inputZ) > 0.01f;
 
         if (hasInput) {
-            float yaw = player.getYRot() * ((float) Math.PI / 180f);
-            double dirX = -Math.sin(yaw) * inputZ + Math.cos(yaw) * inputX;
-            double dirZ = Math.cos(yaw) * inputZ + Math.sin(yaw) * inputX;
+            float yaw = player.getYRot();
+            UUID uuid = player.getUUID();
+
+            // 缓存三角函数计算：仅在yaw变化超过5度时重算
+            Float cachedYaw = lastYaw.get(uuid);
+            Vec3 direction = cachedDirection.get(uuid);
+            if (cachedYaw == null || Math.abs(yaw - cachedYaw) > 5.0f || direction == null) {
+                float yawRad = yaw * ((float) Math.PI / 180f);
+                double sinYaw = Math.sin(yawRad);
+                double cosYaw = Math.cos(yawRad);
+                direction = new Vec3(-sinYaw, 0, cosYaw);
+                lastYaw.put(uuid, yaw);
+                cachedDirection.put(uuid, direction);
+            }
+
+            double dirX = direction.x * inputZ + direction.z * inputX;
+            double dirZ = direction.z * inputZ - direction.x * inputX;
             double dirLen = Math.sqrt(dirX * dirX + dirZ * dirZ);
             if (dirLen > 0.001) {
                 dirX /= dirLen;
@@ -379,8 +424,8 @@ public class PlayerTickHandler {
         if (lastPos == null) return;
 
         double dist = currentPos.distanceTo(lastPos);
-        // 传送检测：超过128格（8个区块）视为传送，重置累计距离
-        if (dist > 128.0) {
+        // 传送检测：降低阈值至64格，避免误判鞘翅飞行或末影珍珠
+        if (dist > TELEPORT_DETECTION_THRESHOLD || player.isFallFlying()) {
             lastPlayerPos.put(uuid, currentPos);
             accumulatedDistance.remove(uuid);
             return;
@@ -402,20 +447,27 @@ public class PlayerTickHandler {
         core.set(ModDataComponents.SHIP_CORE_FUEL.get(), fuel);
 
         if (fuel.isEmpty()) {
+            cleanupPlayerState(uuid);
             TransformationManager.setTransformed(core, false);
             TransformationManager.removeTransformationAttributes(player);
             TransformationManager.removeOverweightPenalty(player);
             player.removeEffect(ModMobEffects.FLAMMABLE);
             PlayerAircraftHelper.recallAircraftForPlayer(player);
-            lastWeaponLoad.remove(uuid);
-            accumulatedDistance.remove(uuid);
-            lastPlayerPos.remove(uuid);
             player.displayClientMessage(
                     Component.translatable("message.piranport.fuel_depleted"), true);
             return;
         }
 
         accumulatedDistance.put(uuid, acc);
+    }
+
+    /** 清理玩家状态缓存（燃料耗尽、登出等场景统一调用）*/
+    private static void cleanupPlayerState(UUID uuid) {
+        lastWeaponLoad.remove(uuid);
+        accumulatedDistance.remove(uuid);
+        lastPlayerPos.remove(uuid);
+        lastYaw.remove(uuid);
+        cachedDirection.remove(uuid);
     }
 
     /** 自动发射战斗机锁定附近飞行敌对生物 */

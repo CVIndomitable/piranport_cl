@@ -27,7 +27,7 @@ import net.minecraft.world.item.component.ItemContainerContents;
 /**
  * 变身管理器 — 管理玩家从"人类形态"到"舰娘形态"的切换及相关属性计算。
  *
- * 职责概览：
+ * 职责概览:
  *   - 变身/解除变身（setTransformed / removeTransformationAttributes）
  *   - 属性计算: applyTransformationAttributes（基于快捷栏武器）
  *   - 负重系统: WEAPON_LOAD_MAP 静态武器重量注册表 + getItemLoad 查询
@@ -40,6 +40,10 @@ import net.minecraft.world.item.component.ItemContainerContents;
  *   新增武器时在此注册表中添加条目。
  */
 public class TransformationManager {
+
+    private TransformationManager() {
+        throw new UnsupportedOperationException("Utility class");
+    }
 
     private static boolean chestModeWarningLogged = false;
 
@@ -408,27 +412,29 @@ public class TransformationManager {
 
     // P3 #36: data-driven weapon load map (static initialization for thread safety)
     // IdentityHashMap 适用：Item 是注册表单例，引用相等(==)既安全又快于 hashCode/equals
+    // 使用 unmodifiableMap 包装以明确只读语义，防止误修改
     private static final java.util.Map<net.minecraft.world.item.Item, Integer> WEAPON_LOAD_MAP;
 
     static {
-        WEAPON_LOAD_MAP = new java.util.IdentityHashMap<>();
-        WEAPON_LOAD_MAP.put(ModItems.SINGLE_SMALL_GUN.get(), 4);
-        WEAPON_LOAD_MAP.put(ModItems.SMALL_GUN.get(), 6);
-        WEAPON_LOAD_MAP.put(ModItems.MEDIUM_GUN.get(), 16);
-        WEAPON_LOAD_MAP.put(ModItems.LARGE_GUN.get(), 30);
-        WEAPON_LOAD_MAP.put(ModItems.SEVEN_BARREL_GUN.get(), 35);
-        WEAPON_LOAD_MAP.put(ModItems.TWIN_TORPEDO_LAUNCHER.get(), 8);
-        WEAPON_LOAD_MAP.put(ModItems.TRIPLE_TORPEDO_LAUNCHER.get(), 12);
-        WEAPON_LOAD_MAP.put(ModItems.QUAD_TORPEDO_LAUNCHER.get(), 20);
-        WEAPON_LOAD_MAP.put(ModItems.SY1_LAUNCHER.get(), 14);
-        WEAPON_LOAD_MAP.put(ModItems.MK14_HARPOON_LAUNCHER.get(), 16);
-        WEAPON_LOAD_MAP.put(ModItems.TERRIER_LAUNCHER.get(), 10);
-        WEAPON_LOAD_MAP.put(ModItems.SHIP_ROCKET_LAUNCHER.get(), 8);
-        WEAPON_LOAD_MAP.put(ModItems.SEA_DART_LAUNCHER.get(), 12);
-        WEAPON_LOAD_MAP.put(ModItems.SEACAT_LAUNCHER.get(), 6);
-        WEAPON_LOAD_MAP.put(ModItems.DEPTH_CHARGE_LAUNCHER.get(), 2);
-        WEAPON_LOAD_MAP.put(ModItems.DEPTH_CHARGE_LAUNCHER_IMPROVED.get(), 3);
-        WEAPON_LOAD_MAP.put(ModItems.DEPTH_CHARGE_LAUNCHER_ADVANCED.get(), 5);
+        java.util.Map<net.minecraft.world.item.Item, Integer> temp = new java.util.IdentityHashMap<>();
+        temp.put(ModItems.SINGLE_SMALL_GUN.get(), 4);
+        temp.put(ModItems.SMALL_GUN.get(), 6);
+        temp.put(ModItems.MEDIUM_GUN.get(), 16);
+        temp.put(ModItems.LARGE_GUN.get(), 30);
+        temp.put(ModItems.SEVEN_BARREL_GUN.get(), 35);
+        temp.put(ModItems.TWIN_TORPEDO_LAUNCHER.get(), 8);
+        temp.put(ModItems.TRIPLE_TORPEDO_LAUNCHER.get(), 12);
+        temp.put(ModItems.QUAD_TORPEDO_LAUNCHER.get(), 20);
+        temp.put(ModItems.SY1_LAUNCHER.get(), 14);
+        temp.put(ModItems.MK14_HARPOON_LAUNCHER.get(), 16);
+        temp.put(ModItems.TERRIER_LAUNCHER.get(), 10);
+        temp.put(ModItems.SHIP_ROCKET_LAUNCHER.get(), 8);
+        temp.put(ModItems.SEA_DART_LAUNCHER.get(), 12);
+        temp.put(ModItems.SEACAT_LAUNCHER.get(), 6);
+        temp.put(ModItems.DEPTH_CHARGE_LAUNCHER.get(), 2);
+        temp.put(ModItems.DEPTH_CHARGE_LAUNCHER_IMPROVED.get(), 3);
+        temp.put(ModItems.DEPTH_CHARGE_LAUNCHER_ADVANCED.get(), 5);
+        WEAPON_LOAD_MAP = java.util.Collections.unmodifiableMap(temp);
     }
 
     public static int getItemLoad(ItemStack stack) {

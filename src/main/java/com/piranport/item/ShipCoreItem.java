@@ -168,16 +168,15 @@ public class ShipCoreItem extends Item implements Equipable {
     }
 
     /**
-     * Validate and fix fuel data integrity. Returns corrected FuelData.
+     * 验证并修正燃料数据完整性。直接修改 ItemStack，无返回值。
      */
-    private FuelData validateAndFixFuelData(ItemStack stack) {
+    private void validateAndFixFuelData(ItemStack stack) {
         FuelData fuel = stack.getOrDefault(ModDataComponents.SHIP_CORE_FUEL.get(),
                 new FuelData(0, shipType.fuelCapacity));
         if (fuel.maxFuel() < 0 || fuel.currentFuel() < 0) {
             fuel = new FuelData(0, shipType.fuelCapacity);
             stack.set(ModDataComponents.SHIP_CORE_FUEL.get(), fuel);
         }
-        return fuel;
     }
 
     /**
@@ -193,7 +192,8 @@ public class ShipCoreItem extends Item implements Equipable {
 
         // Fuel refueling: lava bucket → +1b fuel (works in both GUI and no-GUI modes)
         if (!other.isEmpty() && other.is(net.minecraft.world.item.Items.LAVA_BUCKET)) {
-            FuelData fuel = validateAndFixFuelData(stack);
+            validateAndFixFuelData(stack);
+            FuelData fuel = stack.get(ModDataComponents.SHIP_CORE_FUEL.get());
             if (!fuel.isFull()) {
                 stack.set(ModDataComponents.SHIP_CORE_FUEL.get(),
                         fuel.withCurrentFuel(fuel.currentFuel() + 1));
@@ -210,7 +210,8 @@ public class ShipCoreItem extends Item implements Equipable {
 
         // Fuel refueling: coal/charcoal → +1 fuel per item (works in both GUI and no-GUI modes)
         if (!other.isEmpty() && (other.is(net.minecraft.world.item.Items.COAL) || other.is(net.minecraft.world.item.Items.CHARCOAL))) {
-            FuelData fuel = validateAndFixFuelData(stack);
+            validateAndFixFuelData(stack);
+            FuelData fuel = stack.get(ModDataComponents.SHIP_CORE_FUEL.get());
             if (!fuel.isFull()) {
                 int space = fuel.maxFuel() - fuel.currentFuel();
                 if (space <= 0) return false;
@@ -229,7 +230,8 @@ public class ShipCoreItem extends Item implements Equipable {
 
         // Fuel refueling: blaze rod → +1 fuel per item (works in both GUI and no-GUI modes)
         if (!other.isEmpty() && other.is(net.minecraft.world.item.Items.BLAZE_ROD)) {
-            FuelData fuel = validateAndFixFuelData(stack);
+            validateAndFixFuelData(stack);
+            FuelData fuel = stack.get(ModDataComponents.SHIP_CORE_FUEL.get());
             if (!fuel.isFull()) {
                 int space = fuel.maxFuel() - fuel.currentFuel();
                 if (space <= 0) return false;
@@ -248,7 +250,8 @@ public class ShipCoreItem extends Item implements Equipable {
 
         // Fuel refueling: fuel item → batch fill (works in both GUI and no-GUI modes)
         if (!other.isEmpty() && other.is(ModItems.FUEL.get())) {
-            FuelData fuel = validateAndFixFuelData(stack);
+            validateAndFixFuelData(stack);
+            FuelData fuel = stack.get(ModDataComponents.SHIP_CORE_FUEL.get());
             if (!fuel.isFull()) {
                 int space = fuel.maxFuel() - fuel.currentFuel();
                 if (space <= 0) return false;

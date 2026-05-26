@@ -404,7 +404,8 @@ public class AircraftEntity extends Entity {
 
         // Fuel consumption: burn 1 fuel per FUEL_BURN_INTERVAL ticks during active flight
         if (state == FlightState.CRUISING || state == FlightState.ATTACKING || state == FlightState.RECON_ACTIVE) {
-            if (currentFuel > 0 && airtimeTicks % FUEL_BURN_INTERVAL == 0) {
+            // 防止燃料容量为0时除零（特殊配置的飞机如侦察机）
+            if (fuelCapacity > 0 && currentFuel > 0 && airtimeTicks % FUEL_BURN_INTERVAL == 0) {
                 currentFuel--;
             }
             if (currentFuel <= 0) {
@@ -828,7 +829,8 @@ public class AircraftEntity extends Entity {
 
         // Fuel consumption
         if (state == FlightState.CRUISING || state == FlightState.ATTACKING) {
-            if (currentFuel > 0 && airtimeTicks % FUEL_BURN_INTERVAL == 0) currentFuel--;
+            // 防止燃料容量为0时除零
+            if (fuelCapacity > 0 && currentFuel > 0 && airtimeTicks % FUEL_BURN_INTERVAL == 0) currentFuel--;
             if (currentFuel <= 0) { discard(); return; }
         }
         if (airtimeTicks >= MAX_AIRTIME_TICKS) { discard(); return; }

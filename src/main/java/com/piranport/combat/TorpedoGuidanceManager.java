@@ -22,8 +22,17 @@ import java.util.concurrent.ConcurrentHashMap;
  *   通过 {@link com.piranport.network.TorpedoGuidanceStatePayload} 通知客户端开始/结束。
  */
 public class TorpedoGuidanceManager {
+
+    private TorpedoGuidanceManager() {
+        throw new UnsupportedOperationException("Utility class");
+    }
+
     private static final Map<UUID, UUID> activeGuidance = new ConcurrentHashMap<>();
     private static final Map<UUID, float[]> pendingInput = new ConcurrentHashMap<>();
+    /** 频率限制：记录每个玩家上次输入的时间戳（毫秒），防止 DoS 攻击 */
+    private static final Map<UUID, Long> lastInputTime = new ConcurrentHashMap<>();
+    /** 最小输入间隔（毫秒）：50ms = 2.5tick，限制客户端发包频率 */
+    private static final long MIN_INPUT_INTERVAL_MS = 50;
 
     public static void startGuidance(ServerPlayer player, TorpedoEntity torpedo) {
         UUID playerUUID = player.getUUID();
@@ -38,6 +47,7 @@ public class TorpedoGuidanceManager {
     public static void endGuidance(UUID playerUUID) {
         activeGuidance.remove(playerUUID);
         pendingInput.remove(playerUUID);
+        lastInputTime.remove(playerUUID);
     }
 
     /** 结束引导并通知客户端恢复摄像机。 */
@@ -56,9 +66,17 @@ public class TorpedoGuidanceManager {
     }
 
     public static void handleInput(UUID playerUUID, float dx, float dy, float dz) {
-        if (activeGuidance.containsKey(playerUUID)) {
-            pendingInput.put(playerUUID, new float[]{dx, dy, dz});
+        if (!activeGuidance.containsKey(playerUUID)) return;
+
+        // 频率限制：防止客户端每tick发送输入导致服务端卡顿
+        long now = System.currentTimeMillis();
+        Long lastTime = lastInputTime.get(playerUUID);
+        if (lastTime != null && now - lastTime < MIN_INPUT_INTERVAL_MS) {
+            return; // 拒绝过于频繁的输入
         }
+
+        lastInputTime.put(playerUUID, now);
+        pendingInput.put(playerUUID, new float[]{dx, dy, dz});
     }
 
     /** 消费最新的方向输入。如果没有输入则返回 null（鱼雷漂移）。 */
@@ -75,5 +93,6 @@ public class TorpedoGuidanceManager {
     public static void clearAll() {
         activeGuidance.clear();
         pendingInput.clear();
+        lastInputTime.clear();
     }
 }

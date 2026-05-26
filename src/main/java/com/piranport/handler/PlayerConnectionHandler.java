@@ -109,6 +109,9 @@ public class PlayerConnectionHandler {
 
         UUID uuid = player.getUUID();
 
+        // 先召回飞机，防止飞机自动战斗逻辑重新设置火控目标
+        PlayerAircraftHelper.recallAircraftForPlayer(player);
+
         // 清理战斗系统状态
         FireControlManager.clearTargets(uuid);
         ReconManager.endRecon(uuid);
@@ -130,7 +133,6 @@ public class PlayerConnectionHandler {
         // 登出通知
         HitNotifier.onPlayerLogout(uuid);
         RecallAllAircraftPayload.onPlayerDisconnect(uuid);
-        PlayerAircraftHelper.recallAircraftForPlayer(player);
 
         // 清理讲台大厅
         var lobbyMgr = DungeonLobbyManager.INSTANCE;

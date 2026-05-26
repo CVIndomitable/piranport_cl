@@ -11,6 +11,9 @@ import net.minecraft.server.level.ServerPlayer;
 import com.piranport.entity.AircraftEntity;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
@@ -77,6 +80,21 @@ public record FireControlPayload(FireAction action, UUID targetUUID) implements 
                         && !(entity instanceof net.minecraft.world.Container)
                         && (entity instanceof LivingEntity || entity instanceof AircraftEntity);
                 if (validTarget && player.distanceTo(entity) <= simDistBlocks) {
+                    // 视线检查：防止客户端伪造透视锁定
+                    Vec3 eyePos = player.getEyePosition();
+                    Vec3 targetPos = entity.position().add(0, entity.getBbHeight() * 0.5, 0);
+                    ClipContext clipContext = new ClipContext(
+                            eyePos, targetPos,
+                            ClipContext.Block.COLLIDER,
+                            ClipContext.Fluid.NONE,
+                            player
+                    );
+                    HitResult hitResult = player.level().clip(clipContext);
+                    if (hitResult.getType() != HitResult.Type.MISS) {
+                        // 被方块遮挡，拒绝锁定
+                        return;
+                    }
+
                     if (payload.action() == FireAction.LOCK) {
                         FireControlManager.lock(playerUUID, entity.getUUID());
                     } else {

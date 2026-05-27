@@ -300,6 +300,8 @@ public class StoneMillBlockEntity extends BlockEntity implements MenuProvider {
         }
         processingProgress = tag.getInt("ProcessingProgress");
         processingTimeTotal = tag.getInt("ProcessingTimeTotal");
+        // 区块重载后需要检查配方是否仍然有效（配方可能因数据包变更而移除）
+        needsReprocess = true;
     }
 
     @Override

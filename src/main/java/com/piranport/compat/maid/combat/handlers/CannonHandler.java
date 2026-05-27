@@ -50,9 +50,19 @@ public class CannonHandler implements WeaponHandler {
     public void fire(EntityMaid maid, LivingEntity target, ItemStack stack) {
         int barrels;
         float damage;
+        float explosion;
+        float velocity;
+        float inaccuracy;
+
         if (stack.getItem() instanceof ArtilleryItem ai) {
-            barrels = Math.max(1, ai.getBarrelCount());
-            damage = ai.getDamage();
+            // 使用有效数据（考虑配置覆盖）
+            var effectiveData = ai.getEffectiveData(maid.level());
+            barrels = Math.max(1, effectiveData.barrels());
+            damage = effectiveData.damage();
+            explosion = effectiveData.explosionPower();
+            velocity = effectiveData.initialSpeed();
+            // 根据散布角计算不精确度（简化映射）
+            inaccuracy = effectiveData.dispersion();
         } else {
             return;
         }
@@ -73,9 +83,6 @@ public class CannonHandler implements WeaponHandler {
         if (loaded <= 0) return;
 
         Level level = maid.level();
-        float explosion = guessExplosion(damage);
-        float velocity = guessVelocity(damage);
-        float inaccuracy = guessInaccuracy(damage);
 
         Vec3 origin = maid.getEyePosition();
         Vec3 aim = target.getBoundingBox().getCenter().subtract(origin);

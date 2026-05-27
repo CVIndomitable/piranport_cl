@@ -90,13 +90,16 @@ public record AmmoWorkbenchCraftPayload(BlockPos pos, String recipeId, int quant
                 if (existing.getCount() + pendingResult.getCount() > existing.getMaxStackSize()) return;
             }
 
-            // Count materials in player inventory
-            Map<Item, Integer> available = new HashMap<>();
-            for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
-                ItemStack stack = player.getInventory().getItem(i);
+            // 扫描材料：仅遍历主背包（36格）+ 副手，排除盔甲槽
+            for (int i = 0; i < player.getInventory().items.size(); i++) {
+                ItemStack stack = player.getInventory().items.get(i);
                 if (!stack.isEmpty()) {
                     available.merge(stack.getItem(), stack.getCount(), Integer::sum);
                 }
+            }
+            ItemStack offhandStack = player.getInventory().offhand.get(0);
+            if (!offhandStack.isEmpty()) {
+                available.merge(offhandStack.getItem(), offhandStack.getCount(), Integer::sum);
             }
             for (AmmoRecipe.MaterialRequirement mat : recipe.materials()) {
                 int required = mat.getRequired(qty);
@@ -108,8 +111,9 @@ public record AmmoWorkbenchCraftPayload(BlockPos pos, String recipeId, int quant
             NonNullList<ItemStack> taken = NonNullList.create();
             for (AmmoRecipe.MaterialRequirement mat : recipe.materials()) {
                 int toConsume = mat.getRequired(qty);
-                for (int i = 0; i < player.getInventory().getContainerSize() && toConsume > 0; i++) {
-                    ItemStack stack = player.getInventory().getItem(i);
+                // 仅遍历主背包（items, 0-35）+ 副手，排除盔甲槽
+                for (int i = 0; i < player.getInventory().items.size() && toConsume > 0; i++) {
+                    ItemStack stack = player.getInventory().items.get(i);
                     if (stack.is(mat.item().get())) {
                         int take = Math.min(toConsume, stack.getCount());
                         ItemStack movedPart = stack.copyWithCount(take);
@@ -117,6 +121,20 @@ public record AmmoWorkbenchCraftPayload(BlockPos pos, String recipeId, int quant
                         // P0 #3: 扣除后检查并清空空槽位，防止负数堆叠导致物品复制
                         if (stack.getCount() <= 0) {
                             player.getInventory().setItem(i, ItemStack.EMPTY);
+                        }
+                        taken.add(movedPart);
+                        toConsume -= take;
+                    }
+                }
+                // 检查副手
+                if (toConsume > 0) {
+                    ItemStack oh = player.getInventory().offhand.get(0);
+                    if (oh.is(mat.item().get())) {
+                        int take = Math.min(toConsume, oh.getCount());
+                        ItemStack movedPart = oh.copyWithCount(take);
+                        oh.shrink(take);
+                        if (oh.getCount() <= 0) {
+                            player.getInventory().offhand.set(0, ItemStack.EMPTY);
                         }
                         taken.add(movedPart);
                         toConsume -= take;

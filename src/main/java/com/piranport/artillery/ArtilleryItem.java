@@ -40,6 +40,9 @@ import java.util.List;
  * Phase 4: 统一自动装填，删除手动装填路径
  */
 public class ArtilleryItem extends Item {
+    /** 散布角度到速度偏移的缩放系数（高斯分布标准差） */
+    private static final double DISPERSION_SCALE_FACTOR = 0.02;
+
     private final ArtilleryCannonData data;
     private final String cannonName;
 
@@ -136,11 +139,13 @@ public class ArtilleryItem extends Item {
         LoadedAmmo current = stack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
         if (current.hasAmmo()) return false;
 
-        if (other.getCount() < getBarrelCount()) return false;
+        // 使用有效数据（考虑配置覆盖）的弹管数，与开火逻辑保持一致
+        int effectiveBarrels = getEffectiveData(player.level()).barrels();
+        if (other.getCount() < effectiveBarrels) return false;
 
         String ammoId = BuiltInRegistries.ITEM.getKey(other.getItem()).toString();
-        stack.set(ModDataComponents.LOADED_AMMO.get(), new LoadedAmmo(getBarrelCount(), ammoId));
-        com.piranport.debug.PiranPortDebug.consumeAmmo(other, getBarrelCount());
+        stack.set(ModDataComponents.LOADED_AMMO.get(), new LoadedAmmo(effectiveBarrels, ammoId));
+        com.piranport.debug.PiranPortDebug.consumeAmmo(other, effectiveBarrels);
 
         if (!player.level().isClientSide()) {
             player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
@@ -158,7 +163,7 @@ public class ArtilleryItem extends Item {
         Vec3 up = direction.cross(right).normalize();
 
         double theta = random.nextDouble() * 2 * Math.PI;
-        double r = random.nextGaussian() * dispersionDeg * 0.02;
+        double r = random.nextGaussian() * dispersionDeg * DISPERSION_SCALE_FACTOR;
         return direction
                 .add(right.scale(r * Math.cos(theta)))
                 .add(up.scale(r * Math.sin(theta)))

@@ -26,12 +26,11 @@ public class ArmorProtectionHandler {
         // 仅忽略不可抗伤害（虚空、/kill）
         if (event.getSource().is(net.minecraft.tags.DamageTypeTags.BYPASSES_INVULNERABILITY)) return;
 
-        if (!TransformationManager.isPlayerTransformed(player)) return;
-
+        // 合并 findTransformedCore 调用，避免重复背包扫描
         ItemStack coreStack = TransformationManager.findTransformedCore(player);
         if (coreStack.isEmpty()) return;
 
-        int protLevel = TransformationManager.getEquippedProtectionLevel(player, coreStack);
+        int protLevel = TransformationManager.getEquippedProtectionLevel(coreStack);
         if (protLevel <= 0) return;
 
         int capped = Math.min(protLevel, 20);

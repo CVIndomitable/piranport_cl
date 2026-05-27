@@ -103,6 +103,7 @@ public class TorpedoEntity extends ThrowableItemProjectile {
 
     public void setWireGuided(boolean wireGuided) {
         this.wireGuided = wireGuided;
+        if (wireGuided) wireMaxRange = -1; // 重置缓存，下次使用时重新读取模拟距离
     }
 
     public boolean isWireGuided() { return wireGuided; }
@@ -125,13 +126,15 @@ public class TorpedoEntity extends ThrowableItemProjectile {
 
     public void cutWire() { wireGuided = false; }
 
-    /** 线长等于服务器模拟距离，超出时断开 */
+    /** 线长等于服务器模拟距离，超出时断开（缓存值，避免每tick访问Server→PlayerList） */
+    private double wireMaxRange = -1;
+
     private double getWireMaxRange() {
-        if (level().getServer() != null) {
+        if (wireMaxRange < 0 && level().getServer() != null) {
             int simChunks = level().getServer().getPlayerList().getSimulationDistance();
-            if (simChunks > 0) return simChunks * 16.0;
+            wireMaxRange = simChunks > 0 ? simChunks * 16.0 : WIRE_FALLBACK_RANGE;
         }
-        return WIRE_FALLBACK_RANGE;
+        return wireMaxRange > 0 ? wireMaxRange : WIRE_FALLBACK_RANGE;
     }
 
     /** 玩家制导：跟随最新方向输入，限制不得出水面 */

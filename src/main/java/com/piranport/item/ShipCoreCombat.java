@@ -1503,7 +1503,7 @@ public class ShipCoreCombat {
     private static void fireCannonSalvo(Level level, Player player, ItemStack weapon,
             ItemStack shellForRender, int barrelCount, boolean isType3, boolean isVT, boolean isHE) {
         // Phase 11: 全局炮弹上限检测
-        if (isShellLimitReached(level)) {
+        if (isShellLimitReached(level, player)) {
             player.displayClientMessage(
                     Component.translatable("message.piranport.max_projectiles"), true);
             return;
@@ -1621,12 +1621,13 @@ public class ShipCoreCombat {
     // ===== Global projectile limit (Phase 11) =====
 
     /** 检查全局炮弹是否已达上限（CannonProjectileEntity 合计）。 */
-    private static boolean isShellLimitReached(Level level) {
+    private static boolean isShellLimitReached(Level level, Player player) {
         int maxProjectiles = ModArtilleryConfig.ARTILLERY_MAX_PROJECTILES.get();
         if (maxProjectiles <= 0) return false;
+        // 仅在玩家附近搜索（模拟距离范围），避免使用全图(-3e7~3e7) AABB 遍历
         int count = level.getEntitiesOfClass(
                 CannonProjectileEntity.class,
-                new net.minecraft.world.phys.AABB(-3e7, -64, -3e7, 3e7, 320, 3e7)).size();
+                new net.minecraft.world.phys.AABB(player.blockPosition()).inflate(256)).size();
         return count >= maxProjectiles;
     }
 
@@ -1802,8 +1803,8 @@ public class ShipCoreCombat {
             }
             if (!hasBullets) continue;
 
-            // TODO: rewrite auto-launch for no-GUI mode
-            return false;
+            // TODO: rewrite auto-launch for no-GUI mode (currently disabled)
+            return false; // 始终返回 false — 自动起飞逻辑尚未实现
         }
         return false;
     }

@@ -36,7 +36,7 @@ public final class NodeBattleField {
         int startX = spawn.getX() - halfSize;
         int startZ = spawn.getZ() - halfSize;
 
-        // Flag 2 = send to clients, 16 = skip neighbor updates, 64 = skip light updates (performance)
+        // Flag 2 = send to clients, 16 = skip neighbor updates, 64 = suppress drops (performance)
         int flags = 2 | 16 | 64;
         for (int x = 0; x < DungeonConstants.NODE_AREA_SIZE; x++) {
             for (int z = 0; z < DungeonConstants.NODE_AREA_SIZE; z++) {

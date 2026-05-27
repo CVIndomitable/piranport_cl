@@ -148,6 +148,7 @@ public class AircraftCombat {
 
         Vec3 toTarget = target.getEyePosition().subtract(craft.position());
         double dist = toTarget.length();
+        if (dist < 0.01) return; // 零距离保护：防止 normalize 产生 NaN
         double preferredDist = 11.0;
 
         if (dist > preferredDist + 3) {

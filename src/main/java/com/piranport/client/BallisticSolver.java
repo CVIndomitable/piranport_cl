@@ -25,7 +25,7 @@ public final class BallisticSolver {
     private static final Map<SolutionKey, Double> cache = createLRUCache();
     private static boolean cacheEnabled = true;
 
-    /** 创建 LRU 缓存，避免缓存满时直接清空导致性能抖动 */
+    /** 创建 LRU 缓存 */
     private static Map<SolutionKey, Double> createLRUCache() {
         return new LinkedHashMap<SolutionKey, Double>(16, 0.75f, true) {
             @Override
@@ -33,6 +33,16 @@ public final class BallisticSolver {
                 return size() > ModEquipmentConfig.BALLISTIC_CACHE_SIZE.get();
             }
         };
+    }
+
+    /** 线程安全的缓存读（弹道解算可能从多个渲染线程调用） */
+    private static Double cacheGet(SolutionKey key) {
+        synchronized (cache) { return cache.get(key); }
+    }
+
+    /** 线程安全的缓存写 */
+    private static void cachePut(SolutionKey key, double value) {
+        synchronized (cache) { cache.put(key, value); }
     }
 
     /** 缓存键量化步长（格）。0.1 格精度足够瞄准使用，可大幅提高缓存命中率。 */
@@ -51,7 +61,7 @@ public final class BallisticSolver {
 
         if (isCacheEnabled()) {
             SolutionKey key = new SolutionKey(initialSpeed, dragCoeff, gravity, qHDist, qVDist);
-            Double cached = cache.get(key);
+            Double cached = cacheGet(key);
             if (cached != null) return cached;
         }
 
@@ -114,9 +124,7 @@ public final class BallisticSolver {
         }
 
         if (isCacheEnabled()) {
-            synchronized (cache) {
-                cache.put(new SolutionKey(initialSpeed, dragCoeff, gravity, qHDist, qVDist), bestAngle);
-            }
+            cachePut(new SolutionKey(initialSpeed, dragCoeff, gravity, qHDist, qVDist), bestAngle);
         }
         return bestAngle;
     }

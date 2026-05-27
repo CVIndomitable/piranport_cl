@@ -58,35 +58,46 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
     /** 自定义重力（真实比例，使用时除以 196 换算为 MC 比例）。0 表示使用默认值。 */
     private float customGravity = 0f;
 
-    /** 缓存的黑曜石爆炸抗性，避免每次碰撞都创建 Explosion 对象。 */
-    private static float cachedObsidianResistance = -1f;
-    private static float getObsidianResistance(Level level, BlockPos pos) {
-        if (cachedObsidianResistance < 0) {
-            Explosion ctx = new Explosion(level, null, 0, 0, 0,
-                    1.0f, false, Explosion.BlockInteraction.KEEP);
-            cachedObsidianResistance = Blocks.OBSIDIAN.defaultBlockState()
-                    .getExplosionResistance(level, pos, ctx);
-        }
-        return cachedObsidianResistance;
+    /** 缓存的黑曜石爆炸抗性，避免每次碰撞都创建 Explosion 对象。初始化在构造函数中完成。 */
+    private final float cachedObsidianResistance;
+
+    private float initObsidianResistance(Level level) {
+        Explosion ctx = new Explosion(level, null, 0, 0, 0,
+                1.0f, false, Explosion.BlockInteraction.KEEP);
+        return Blocks.OBSIDIAN.defaultBlockState()
+                .getExplosionResistance(level, BlockPos.ZERO, ctx);
     }
 
-    // ===== VT 近炸引信参数（从 ModArtilleryConfig 读取） =====
+    // ===== VT 近炸引信参数（静态配置，所有炮弹共享） =====
     /** VT 锥形检测范围（格），弹头前方该距离内的目标才会触发近炸。 */
-    private double vtDetectRange;
+    private static double vtDetectRange;
     /** VT 锥形半角（度），目标方向与弹头速度方向的夹角在此范围内才触发。 */
-    private double vtConeHalfAngleDeg;
+    private static double vtConeHalfAngleDeg;
     /** VT 检测间隔（tick），每 N tick 执行一次锥形区域扫描。 */
-    private int vtCheckInterval;
+    private static int vtCheckInterval;
     /** 方块接近检测的前方射线长度（格）。 */
-    private double vtBlockRange;
+    private static double vtBlockRange;
     /** 发射后 VT 引信解锁前的宽限期（tick）。 */
-    private int vtArmTicks;
+    private static int vtArmTicks;
+
+    static {
+        loadVtConfigValues();
+    }
+
+    /** 从配置加载VT引信参数（静态初始化，所有实例共享）*/
+    private static void loadVtConfigValues() {
+        vtDetectRange = ModArtilleryConfig.VT_DETECT_RANGE.get();
+        vtConeHalfAngleDeg = ModArtilleryConfig.VT_CONE_HALF_ANGLE.get();
+        vtCheckInterval = Math.max(1, ModArtilleryConfig.PERF_VT_CHECK_INTERVAL.get());
+        vtBlockRange = ModArtilleryConfig.VT_BLOCK_RANGE.get();
+        vtArmTicks = ModArtilleryConfig.VT_ARM_TICKS.get();
+    }
 
     // 实体类型注册所需的构造器
     public CannonProjectileEntity(EntityType<? extends CannonProjectileEntity> type, Level level) {
         super(type, level);
         this.noCulling = true;
-        loadVtConfigValues();
+        this.cachedObsidianResistance = initObsidianResistance(level);
     }
 
     // 发射用构造器
@@ -98,16 +109,7 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         this.damage = damage;
         this.isHE = isHE;
         this.explosionPower = explosionPower;
-        loadVtConfigValues();
-    }
-
-    /** 从配置加载VT引信参数（在构造函数中调用，避免静态初始化时访问配置）*/
-    private void loadVtConfigValues() {
-        this.vtDetectRange = ModArtilleryConfig.VT_DETECT_RANGE.get();
-        this.vtConeHalfAngleDeg = ModArtilleryConfig.VT_CONE_HALF_ANGLE.get();
-        this.vtCheckInterval = ModArtilleryConfig.PERF_VT_CHECK_INTERVAL.get();
-        this.vtBlockRange = ModArtilleryConfig.VT_BLOCK_RANGE.get();
-        this.vtArmTicks = ModArtilleryConfig.VT_ARM_TICKS.get();
+        this.cachedObsidianResistance = initObsidianResistance(level);
     }
 
     public void setVT(boolean vt) {
@@ -139,7 +141,7 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         // Phase 2: 应用阻力（在 super.tick() 的重力生效前）
         Vec3 vel = getDeltaMovement();
         if (vel.length() > 0.01 && dragCoeff > 0) {
-            vel = vel.scale(Math.max(0.1, 1.0 - dragCoeff));
+            vel = vel.scale(Math.max(0.0, 1.0 - dragCoeff));
             setDeltaMovement(vel);
         }
 
@@ -185,6 +187,7 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         underwaterTicks++;
         int maxTicks = (int) (ModArtilleryConfig.ARTILLERY_UNDERWATER_DESTROY_TIME.get() * 20);
         if (underwaterTicks >= maxTicks) {
+            exploded = true;
             if (shouldExplode && ModProjectilesConfig.UNDERWATER_EXPLODE.get()) {
                 Level.ExplosionInteraction interaction = ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get()
                         ? Level.ExplosionInteraction.TNT : Level.ExplosionInteraction.NONE;
@@ -205,7 +208,10 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         }
         Vec3 vel = getDeltaMovement();
         double speed = vel.length();
-        if (speed < 0.1) return;
+        if (speed < 0.1) {
+            trackingTargetId = -1;
+            return;
+        }
         Vec3 toTarget = target.position().add(0, target.getBbHeight() * 0.5, 0)
                 .subtract(position()).normalize();
         Vec3 currentDir = vel.normalize();
@@ -237,19 +243,22 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         Vec3 pos = position();
 
         // 锥形区域检测：只检测弹头速度方向前方锥体内的实体
-        AABB searchBox = getBoundingBox().inflate(vtDetectRange);
+        double rangeSquared = vtDetectRange * vtDetectRange;
+        AABB searchBox = new AABB(
+                pos.x - vtDetectRange, pos.y - vtDetectRange, pos.z - vtDetectRange,
+                pos.x + vtDetectRange, pos.y + vtDetectRange, pos.z + vtDetectRange);
         List<Entity> nearby = level().getEntities(this, searchBox, e ->
                 e instanceof LivingEntity
                         && e != getOwner()
                         && e.isAlive());
 
+        Vec3 velNorm = velocity.normalize();
         for (Entity entity : nearby) {
             Vec3 toTarget = entity.position().add(0, entity.getBbHeight() * 0.5, 0).subtract(pos);
-            double dist = toTarget.length();
-            if (dist > vtDetectRange) continue;
+            double distSquared = toTarget.lengthSqr();
+            if (distSquared > rangeSquared) continue;
 
             // 锥形过滤：检查目标方向与弹头速度方向的夹角
-            Vec3 velNorm = velocity.normalize();
             Vec3 targetDir = toTarget.normalize();
             double dot = velNorm.dot(targetDir);
             double angleDeg = Math.toDegrees(Math.acos(Math.max(-1, Math.min(1, dot))));
@@ -337,7 +346,7 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
                     try {
                         living.hurt(damageSources().thrown(this, getOwner()), apDamage);
                     } finally {
-                        if (applied) {
+                        if (applied && armorAttr != null) {
                             armorAttr.removeModifier(apPenId);
                         }
                     }
@@ -373,7 +382,7 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
                 if (ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get() && !isInWater()) {
                     BlockPos pos = result.getBlockPos();
                     BlockState state = level().getBlockState(pos);
-                    if (state.getExplosionResistance(level(), pos, null) < getObsidianResistance(level(), pos)) {
+                    if (state.getExplosionResistance(level(), pos, null) < cachedObsidianResistance) {
                         level().destroyBlock(pos, true);
                     }
                 }

@@ -77,9 +77,8 @@ public class SanshikiPelletEntity extends ThrowableItemProjectile {
 
     @Override
     protected boolean canHitEntity(Entity target) {
-        Entity owner = getOwner();
-        if (owner != null && target == owner) return false; // don't hit the firer
-        if (com.piranport.combat.FriendlyFireHelper.shouldBlockHit(target, owner)) return false;
+        // 友军伤害检测已在 FriendlyFireHelper.shouldBlockHit 中覆盖 owner 检查，无需额外 target == owner
+        if (com.piranport.combat.FriendlyFireHelper.shouldBlockHit(target, getOwner())) return false;
         return super.canHitEntity(target);
     }
 

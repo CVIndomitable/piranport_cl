@@ -60,11 +60,6 @@ public class AircraftItem extends Item {
         return true;
     }
 
-    /** Returns true if the player has any ship core in transformed state. */
-    private static boolean isPlayerTransformed(Player player) {
-        return TransformationManager.isPlayerTransformed(player);
-    }
-
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context,
                                 List<Component> tooltipComponents, TooltipFlag tooltipFlag) {

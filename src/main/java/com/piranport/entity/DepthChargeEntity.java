@@ -76,6 +76,8 @@ public class DepthChargeEntity extends ThrowableItemProjectile {
         return 0.08;
     }
 
+    private static final int PROXIMITY_CHECK_INTERVAL = 5; // 近炸检测每5tick执行一次，减少多枚深弹同时存在时的查询开销
+
     @Override
     public void tick() {
         super.tick();
@@ -87,8 +89,8 @@ public class DepthChargeEntity extends ThrowableItemProjectile {
                 discard();
                 return;
             }
-            // 近炸检测：安全延迟后扫描附近实体
-            if (tickCount > ARM_TICKS) {
+            // 近炸检测：安全延迟后扫描附近实体（错峰执行）
+            if (tickCount > ARM_TICKS && tickCount % PROXIMITY_CHECK_INTERVAL == 0) {
                 checkProximity();
             }
         }

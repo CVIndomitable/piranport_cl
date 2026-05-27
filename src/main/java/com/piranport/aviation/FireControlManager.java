@@ -54,7 +54,12 @@ public class FireControlManager {
     public static void removeDeadTargets(UUID playerUUID, java.util.function.Predicate<UUID> isDead) {
         List<UUID> list = LOCKED_TARGETS.get(playerUUID);
         if (list == null) return;
-        list.removeIf(isDead);
+        // 批量收集再移除，避免 CopyOnWriteArrayList.removeIf 在每次删除时复制整个数组
+        List<UUID> toRemove = new java.util.ArrayList<>();
+        for (UUID uuid : list) {
+            if (isDead.test(uuid)) toRemove.add(uuid);
+        }
+        list.removeAll(toRemove);
         if (list.isEmpty()) {
             LOCKED_TARGETS.remove(playerUUID);
         }

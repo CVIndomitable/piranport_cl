@@ -85,15 +85,9 @@ public class PlayerTickHandler {
     private static final Map<UUID, Double> waterSurfaceY = new ConcurrentHashMap<>();
     /** 玩家 UUID → 上次离开水面的tick。用于延迟清理水面Y缓存。 */
     private static final Map<UUID, Integer> lastWaterExitTick = new ConcurrentHashMap<>();
-    /** 缓存的配置值：是否启用舰核GUI（延迟初始化，避免配置加载顺序问题）*/
-    private static Boolean cachedShipCoreGuiEnabled = null;
-
-    /** 获取舰核GUI配置（延迟初始化） */
+    /** 是否启用舰核GUI — 每次直接读取配置，支持运行时 /reload 生效 */
     private static boolean isShipCoreGuiEnabled() {
-        if (cachedShipCoreGuiEnabled == null) {
-            cachedShipCoreGuiEnabled = ModCommonConfig.isShipCoreGuiEnabled();
-        }
-        return cachedShipCoreGuiEnabled;
+        return ModCommonConfig.isShipCoreGuiEnabled();
     }
 
     /** 清理所有缓存（服务器关闭时调用）*/
@@ -241,12 +235,18 @@ public class PlayerTickHandler {
         }
     }
 
-    /** 潜艇效果：无限水下呼吸 + 水下隐身 */
+    /** 潜艇效果：无限水下呼吸 + 水下隐身（仅在效果快过期时刷新，避免每tick发包） */
     private static void tickSubmarineEffects(Player player, boolean isSubmarine) {
         if (isSubmarine) {
-            player.addEffect(new MobEffectInstance(MobEffects.WATER_BREATHING, 400, 0, false, false, true));
+            MobEffectInstance waterBreathing = player.getEffect(MobEffects.WATER_BREATHING);
+            if (waterBreathing == null || waterBreathing.getDuration() <= 100) {
+                player.addEffect(new MobEffectInstance(MobEffects.WATER_BREATHING, 400, 0, false, false, true));
+            }
             if (player.isEyeInFluidType(NeoForgeMod.WATER_TYPE.value())) {
-                player.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 40, 0, false, false, true));
+                MobEffectInstance invis = player.getEffect(MobEffects.INVISIBILITY);
+                if (invis == null || invis.getDuration() <= 10) {
+                    player.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 40, 0, false, false, true));
+                }
             }
         }
     }
@@ -297,12 +297,21 @@ public class PlayerTickHandler {
         int autoLaunchSlot = -1;
         Inventory inv = player.getInventory();
         for (int i = 0; i < inv.items.size(); i++) {
-            if (inv.items.get(i) == autoLaunchCore) { autoLaunchSlot = i; break; }
+            ItemStack s = inv.items.get(i);
+            if (s == autoLaunchCore || (s.getItem() instanceof ShipCoreItem && ItemStack.isSameItemSameComponents(s, autoLaunchCore))) {
+                autoLaunchSlot = i; break;
+            }
         }
-        if (autoLaunchSlot == -1 && inv.offhand.get(0) == autoLaunchCore) autoLaunchSlot = 40;
-
-        tickAutoLaunchFighters(player, autoLaunchCore, autoLaunchSlot);
-        tickAntiAirMissiles(player, autoLaunchCore, autoLaunchSlot);
+        if (autoLaunchSlot == -1) {
+            ItemStack oh = inv.offhand.get(0);
+            if (oh == autoLaunchCore || (oh.getItem() instanceof ShipCoreItem && ItemStack.isSameItemSameComponents(oh, autoLaunchCore))) {
+                autoLaunchSlot = 40;
+            }
+        }
+        if (autoLaunchSlot >= 0) {
+            tickAutoLaunchFighters(player, autoLaunchCore, autoLaunchSlot);
+            tickAntiAirMissiles(player, autoLaunchCore, autoLaunchSlot);
+        }
     }
 
     /**
@@ -377,7 +386,7 @@ public class PlayerTickHandler {
                 if (stack.getItem() instanceof ShipCoreItem
                         && TransformationManager.isTransformed(stack)) {
                     TransformationManager.setTransformed(stack, false);
-                    inv.items.set(i, stack);  // 写回背包槽位
+                    // stack 本身就是 inv.items.get(i) 的引用，无需写回
                 }
             }
             if (lastWeaponLoad.remove(player.getUUID()) != null) {
@@ -496,7 +505,6 @@ public class PlayerTickHandler {
         }
     }
 
-    /** 燃料消耗：基于移动距离，耗尽时自动解除变身（每5tick计算一次） */
     /** 燃料消耗：基于移动距离，耗尽时自动解除变身（每5tick计算一次） */
     private static void tickFuelConsumption(Player player) {
         // 性能优化：每5tick计算一次燃料消耗

@@ -71,7 +71,10 @@ public record ScopeFirePayload(boolean useBallisticAim, double targetX, double t
                 double dy = payload.targetY() - player.getY();
                 double dz = payload.targetZ() - player.getZ();
                 double distSq = dx * dx + dy * dy + dz * dz;
-                if (distSq > 300.0 * 300.0) {
+                // 使用服务器模拟距离限制，而非硬编码300格
+                int simDist = player.server.getPlayerList().getSimulationDistance();
+                double maxRange = Math.max(64.0, simDist * 16.0);
+                if (distSq > maxRange * maxRange) {
                     PiranPort.LOGGER.warn("ScopeFirePayload target too far ({}m), ignored", Math.sqrt(distSq));
                     return;
                 }

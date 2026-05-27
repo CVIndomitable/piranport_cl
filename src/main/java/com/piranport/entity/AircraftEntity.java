@@ -1244,8 +1244,9 @@ public class AircraftEntity extends Entity {
     /** Lazily resolve the payload type string to an Item reference for fast comparison. */
     private net.minecraft.world.item.Item resolvePayloadItem() {
         if (cachedPayloadItem == null && !payloadType.isEmpty()) {
-            cachedPayloadItem = BuiltInRegistries.ITEM.get(
-                    net.minecraft.resources.ResourceLocation.parse(payloadType));
+            net.minecraft.resources.ResourceLocation loc =
+                    net.minecraft.resources.ResourceLocation.tryParse(payloadType);
+            cachedPayloadItem = loc != null ? BuiltInRegistries.ITEM.get(loc) : null;
         }
         return cachedPayloadItem;
     }

@@ -32,38 +32,44 @@ public class FireControlHudLayer {
     private static final int PANEL_WIDTH = 110;
     private static final int LINE_HEIGHT  = 18;
 
-    // Cache UUID→Entity mappings, rebuild every 20 game ticks (not per-call)
+    // Cache UUID→Entity mappings, incremental update (no full rebuild)
     private static final Map<UUID, Entity> entityCache = new HashMap<>();
-    private static long lastRebuildTick = -1;
-    private static final int CACHE_REBUILD_INTERVAL = 20;
+    private static final int EVICT_INTERVAL = 100;
+    private static int evictCounter = 0;
 
-    public static void clearCache() { entityCache.clear(); lastRebuildTick = -1; }
+    public static void clearCache() { entityCache.clear(); }
 
     @Nullable
     private static Entity findEntityByUUID(Minecraft mc, UUID uuid) {
         if (mc.level == null) return null;
-        // Check cache first before rebuilding
         Entity cached = entityCache.get(uuid);
         if (cached != null && cached.isAlive()) return cached;
 
-        // Remove dead entity from cache
         if (cached != null && !cached.isAlive()) {
             entityCache.remove(uuid);
         }
 
-        // Rebuild cache once per 20 game ticks only if target not found
-        long currentTick = mc.level.getGameTime();
-        if (currentTick - lastRebuildTick >= CACHE_REBUILD_INTERVAL) {
-            lastRebuildTick = currentTick;
-            entityCache.clear();
-            for (Entity e : mc.level.entitiesForRendering()) {
-                entityCache.put(e.getUUID(), e);
-            }
-            cached = entityCache.get(uuid);
-            if (cached != null) return cached;
+        // 增量插入：只添加当前缺失的 UUID，不遍历全量
+        Entity found = mc.level.getPlayerByUUID(uuid);
+        if (found != null && found.isAlive()) {
+            entityCache.put(uuid, found);
+            return found;
         }
-        // Fast path for players (always accessible)
-        return mc.level.getPlayerByUUID(uuid);
+        // Fallback: 从渲染实体列表查找（可能开销较大，但每个 UUID 最多一次）
+        for (Entity e : mc.level.entitiesForRendering()) {
+            if (e.getUUID().equals(uuid) && e.isAlive()) {
+                entityCache.put(uuid, e);
+                return e;
+            }
+        }
+
+        // 定期清理死实体（无需全量重建）
+        evictCounter++;
+        if (evictCounter >= EVICT_INTERVAL) {
+            evictCounter = 0;
+            entityCache.values().removeIf(e -> !e.isAlive());
+        }
+        return null;
     }
 
     @SubscribeEvent

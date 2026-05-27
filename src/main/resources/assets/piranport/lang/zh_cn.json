@@ -873,5 +873,16 @@
   "message.piranport.config_saved": "配置已保存",
   "message.piranport.invalid_number_format": "数值格式错误",
   "message.piranport.value_out_of_range": "%s 超出范围 (%s ~ %s)",
-  "message.piranport.min_elevation_must_be_less": "最小仰角必须小于最大仰角"
+  "message.piranport.min_elevation_must_be_less": "最小仰角必须小于最大仰角",
+  "gui.piranport.flight_group.mode.focus": "集火",
+  "gui.piranport.flight_group.mode.spread": "分散",
+  "gui.piranport.flight_group.mode.follow": "跟随",
+  "gui.piranport.flight_group.tooltip.bullets": "子弹: %s (左键切换)",
+  "gui.piranport.flight_group.tooltip.payload": "挂载: %s (右键循环)",
+  "gui.piranport.flight_group.yes": "是",
+  "gui.piranport.flight_group.no": "否",
+  "gui.piranport.ship_type.small": "驱逐舰",
+  "gui.piranport.ship_type.medium": "巡洋舰",
+  "gui.piranport.ship_type.large": "战列舰",
+  "gui.piranport.ship_type.submarine": "潜艇"
 }

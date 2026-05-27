@@ -36,8 +36,10 @@ public class QuickRepairItem extends Item {
                     SoundSource.PLAYERS, 1.0F, 1.0F);
         }
 
-        // Consume the item
-        stack.shrink(1);
+        // Consume the item (创造模式不消耗)
+        if (!player.getAbilities().instabuild) {
+            stack.shrink(1);
+        }
 
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
     }

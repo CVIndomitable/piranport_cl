@@ -79,6 +79,8 @@ public class ModCreativeTabs {
                         addPreloadedWeapon(output, ModItems.SHIP_ROCKET_LAUNCHER.get(), "piranport:rocket_ammo", 8);
                         output.accept(ModItems.SEA_DART_LAUNCHER.get());
                         output.accept(ModItems.SEACAT_LAUNCHER.get());
+                        output.accept(ModItems.FRENCH_QUAD_380MM_GUN.get());
+                        output.accept(ModItems.SEVEN_BARREL_GUN.get());
                     }).build());
 
     // ===== 航空 — 飞机编队 =====
@@ -454,6 +456,8 @@ public class ModCreativeTabs {
                         output.accept(ModItems.LARGE_GUN_BLUEPRINT.get());
                         output.accept(ModItems.CREATIVE_BLUEPRINT.get());
                         output.accept(ModItems.ARTILLERY_CONFIG_TOOL.get());
+                        output.accept(ModItems.CONFIG_INSPECTOR.get());
+                        output.accept(ModItems.SHIP_CORE_MODIFIER.get());
                     }).build());
 
     // ===== 装饰 — 家具/花卉/模型 =====

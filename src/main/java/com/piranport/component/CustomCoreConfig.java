@@ -27,8 +27,10 @@ public record CustomCoreConfig(
     // ===== Codec 序列化 =====
     public static final Codec<CustomCoreConfig> CODEC = RecordCodecBuilder.create(instance ->
             instance.group(
-                    Codec.STRING.xmap(ShipType::valueOf, ShipType::name)
-                            .fieldOf("baseType").forGetter(CustomCoreConfig::baseType),
+                    Codec.STRING.xmap(
+                            name -> { try { return ShipType.valueOf(name); } catch (IllegalArgumentException e) { return ShipType.SMALL; } },
+                            ShipType::name
+                    ).fieldOf("baseType").forGetter(CustomCoreConfig::baseType),
                     Codec.INT.fieldOf("customWeaponSlots").forGetter(CustomCoreConfig::customWeaponSlots),
                     Codec.INT.fieldOf("customEnhancementSlots").forGetter(CustomCoreConfig::customEnhancementSlots),
                     Codec.BOOL.fieldOf("isCustomized").forGetter(CustomCoreConfig::isCustomized)

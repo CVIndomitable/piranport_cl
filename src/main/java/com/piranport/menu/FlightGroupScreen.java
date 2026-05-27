@@ -124,9 +124,9 @@ public class FlightGroupScreen extends AbstractContainerScreen<FlightGroupMenu> 
                 case FOLLOW  -> 0xFF338844;
             };
             String modeLabel = switch (mode) {
-                case FOCUS  -> "集火";
-                case SPREAD -> "分散";
-                case FOLLOW -> "跟随";
+                case FOCUS  -> net.minecraft.network.chat.Component.translatable("gui.piranport.flight_group.mode.focus").getString();
+                case SPREAD -> net.minecraft.network.chat.Component.translatable("gui.piranport.flight_group.mode.spread").getString();
+                case FOLLOW -> net.minecraft.network.chat.Component.translatable("gui.piranport.flight_group.mode.follow").getString();
             };
             gfx.fill(modeX, modeY, modeX + MODE_W, modeY + BTN_H, modeBg);
             gfx.fill(modeX + 1, modeY + 1, modeX + MODE_W - 1, modeY + BTN_H - 1, modeFg);
@@ -359,14 +359,15 @@ public class FlightGroupScreen extends AbstractContainerScreen<FlightGroupMenu> 
                 int sy = gy + AIRCRAFT_Y;
                 if (relX >= sx && relX < sx + 16 && relY >= sy && relY < sy + 16) {
                     if (group.slotIndices().contains(si) && si < weapons.size() && !weapons.get(si).isEmpty()) {
-                        String bulletStr = group.getSlotBullets(si) ? "是" : "否";
+                        String bulletStr = Component.translatable(
+                                group.getSlotBullets(si) ? "gui.piranport.flight_group.yes" : "gui.piranport.flight_group.no").getString();
                         String payloadLabel = getPayloadLabel(group.getSlotPayload(si));
                         gfx.renderTooltip(this.font,
                                 List.of(
                                         weapons.get(si).getHoverName(),
-                                        Component.literal("子弹: " + bulletStr + " (左键切换)")
+                                        Component.translatable("gui.piranport.flight_group.tooltip.bullets", bulletStr)
                                                 .withStyle(net.minecraft.ChatFormatting.GRAY),
-                                        Component.literal("挂载: " + payloadLabel + " (右键循环)")
+                                        Component.translatable("gui.piranport.flight_group.tooltip.payload", payloadLabel)
                                                 .withStyle(net.minecraft.ChatFormatting.GRAY)
                                 ),
                                 java.util.Optional.empty(), mouseX, mouseY);

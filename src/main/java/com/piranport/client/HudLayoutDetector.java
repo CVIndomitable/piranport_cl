@@ -45,9 +45,8 @@ public class HudLayoutDetector {
      * - Left-top: usually free or less crowded
      * - Bottom corners: less common for persistent HUD elements
      */
+    /** 启发式布局检测：首选左上角（避免常见的右上角小地图覆盖）。当前为静态实现。 */
     private static HudPosition detectUsingHeuristic() {
-        // Priority order: prefer left side over right, top over bottom
-        // This avoids the most common minimap position (right-top)
         return HudPosition.LEFT_TOP;
     }
 

@@ -35,6 +35,8 @@ public record ArtilleryCannonData(
 
     /** 旧构造器兼容（缺少物理参数时使用默认值） */
     public ArtilleryCannonData {
+        if (caliber <= 0) caliber = 1;
+        if (barrels <= 0) barrels = 1;
         if (initialSpeed <= 0) initialSpeed = 3.0f;
         if (dragCoeff <= 0) dragCoeff = 0.01f;
         if (gravity <= 0) gravity = 9.8f;
@@ -47,6 +49,12 @@ public record ArtilleryCannonData(
         if (verticalSpread < 0) verticalSpread = 0.5f;
         if (horizontalSpread < 0) horizontalSpread = 0.5f;
         if (turretSpeed <= 0) turretSpeed = 2.0f;
+        // 验证俯仰角范围：确保 maxElevation >= minElevation
+        if (maxElevation < minElevation) {
+            float temp = maxElevation;
+            maxElevation = minElevation;
+            minElevation = temp;
+        }
     }
 
     /** 根据口径计算默认散布角（度），保持向后兼容 */

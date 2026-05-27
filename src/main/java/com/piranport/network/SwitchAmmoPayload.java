@@ -52,7 +52,8 @@ public record SwitchAmmoPayload(String ammoItemId) implements CustomPacketPayloa
             if (ammoId == null) return;
 
             Item ammoItem = BuiltInRegistries.ITEM.get(ammoId);
-            if (ammoItem == null) return;
+            // BuiltInRegistries.ITEM.get() 在找不到时返回 Items.AIR 而非 null
+            if (ammoItem == null || ammoItem == net.minecraft.world.item.Items.AIR) return;
 
             // 验证玩家实际持有武器（防止伪造请求）
             boolean hasWeapon = false;

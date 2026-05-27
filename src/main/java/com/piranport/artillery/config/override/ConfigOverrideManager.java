@@ -64,68 +64,68 @@ public class ConfigOverrideManager {
 
         // 逐字段检查覆盖，未覆盖则使用原始值
         float damage = overrides.getCannonOverride(name, "damage")
-                .map(v -> ((Number) v).floatValue())
+                .map(v -> v instanceof Number n ? n.floatValue() : null)
                 .orElse(original.damage());
 
         int reloadTime = overrides.getCannonOverride(name, "reloadTime")
-                .map(v -> ((Number) v).intValue())
+                .map(v -> v instanceof Number n ? n.intValue() : null)
                 .orElse(original.reloadTime());
 
         float initialSpeed = overrides.getCannonOverride(name, "initialSpeed")
-                .map(v -> ((Number) v).floatValue())
+                .map(v -> v instanceof Number n ? n.floatValue() : null)
                 .orElse(original.initialSpeed());
 
         float dragCoeff = overrides.getCannonOverride(name, "dragCoeff")
-                .map(v -> ((Number) v).floatValue())
+                .map(v -> v instanceof Number n ? n.floatValue() : null)
                 .orElse(original.dragCoeff());
 
         float gravity = overrides.getCannonOverride(name, "gravity")
-                .map(v -> ((Number) v).floatValue())
+                .map(v -> v instanceof Number n ? n.floatValue() : null)
                 .orElse(original.gravity());
 
         float explosionPower = overrides.getCannonOverride(name, "explosionPower")
-                .map(v -> ((Number) v).floatValue())
+                .map(v -> v instanceof Number n ? n.floatValue() : null)
                 .orElse(original.explosionPower());
 
         float dispersion = overrides.getCannonOverride(name, "dispersion")
-                .map(v -> ((Number) v).floatValue())
+                .map(v -> v instanceof Number n ? n.floatValue() : null)
                 .orElse(original.dispersion());
 
         // 新增字段覆盖
         float projectileWeight = overrides.getCannonOverride(name, "projectileWeight")
-                .map(v -> ((Number) v).floatValue())
+                .map(v -> v instanceof Number n ? n.floatValue() : null)
                 .orElse(original.projectileWeight());
 
         int fireCooldown = overrides.getCannonOverride(name, "fireCooldown")
-                .map(v -> ((Number) v).intValue())
+                .map(v -> v instanceof Number n ? n.intValue() : null)
                 .orElse(original.fireCooldown());
 
         int salvoCount = overrides.getCannonOverride(name, "salvoCount")
-                .map(v -> ((Number) v).intValue())
+                .map(v -> v instanceof Number n ? n.intValue() : null)
                 .orElse(original.salvoCount());
 
         float salvoInterval = overrides.getCannonOverride(name, "salvoInterval")
-                .map(v -> ((Number) v).floatValue())
+                .map(v -> v instanceof Number n ? n.floatValue() : null)
                 .orElse(original.salvoInterval());
 
         float verticalSpread = overrides.getCannonOverride(name, "verticalSpread")
-                .map(v -> ((Number) v).floatValue())
+                .map(v -> v instanceof Number n ? n.floatValue() : null)
                 .orElse(original.verticalSpread());
 
         float horizontalSpread = overrides.getCannonOverride(name, "horizontalSpread")
-                .map(v -> ((Number) v).floatValue())
+                .map(v -> v instanceof Number n ? n.floatValue() : null)
                 .orElse(original.horizontalSpread());
 
         float maxElevation = overrides.getCannonOverride(name, "maxElevation")
-                .map(v -> ((Number) v).floatValue())
+                .map(v -> v instanceof Number n ? n.floatValue() : null)
                 .orElse(original.maxElevation());
 
         float minElevation = overrides.getCannonOverride(name, "minElevation")
-                .map(v -> ((Number) v).floatValue())
+                .map(v -> v instanceof Number n ? n.floatValue() : null)
                 .orElse(original.minElevation());
 
         float turretSpeed = overrides.getCannonOverride(name, "turretSpeed")
-                .map(v -> ((Number) v).floatValue())
+                .map(v -> v instanceof Number n ? n.floatValue() : null)
                 .orElse(original.turretSpeed());
 
         // 重新构造实例（record不可变）
@@ -161,70 +161,70 @@ public class ConfigOverrideManager {
             ArtilleryCannonData original,
             String name) {
 
-        // 尝试从客户端缓存读取
+        // 尝试从客户端缓存读取，解析失败时回退到原始值
         float damage = ClientConfigCache.getCannonOverride(name, "damage")
-                .map(Float::parseFloat)
+                .flatMap(s -> parseFloatSafe(s))
                 .orElse(original.damage());
 
         int reloadTime = ClientConfigCache.getCannonOverride(name, "reloadTime")
-                .map(Integer::parseInt)
+                .flatMap(s -> parseIntSafe(s))
                 .orElse(original.reloadTime());
 
         float initialSpeed = ClientConfigCache.getCannonOverride(name, "initialSpeed")
-                .map(Float::parseFloat)
+                .flatMap(s -> parseFloatSafe(s))
                 .orElse(original.initialSpeed());
 
         float dragCoeff = ClientConfigCache.getCannonOverride(name, "dragCoeff")
-                .map(Float::parseFloat)
+                .flatMap(s -> parseFloatSafe(s))
                 .orElse(original.dragCoeff());
 
         float gravity = ClientConfigCache.getCannonOverride(name, "gravity")
-                .map(Float::parseFloat)
+                .flatMap(s -> parseFloatSafe(s))
                 .orElse(original.gravity());
 
         float explosionPower = ClientConfigCache.getCannonOverride(name, "explosionPower")
-                .map(Float::parseFloat)
+                .flatMap(s -> parseFloatSafe(s))
                 .orElse(original.explosionPower());
 
         float dispersion = ClientConfigCache.getCannonOverride(name, "dispersion")
-                .map(Float::parseFloat)
+                .flatMap(s -> parseFloatSafe(s))
                 .orElse(original.dispersion());
 
         // 新增字段
         float projectileWeight = ClientConfigCache.getCannonOverride(name, "projectileWeight")
-                .map(Float::parseFloat)
+                .flatMap(s -> parseFloatSafe(s))
                 .orElse(original.projectileWeight());
 
         int fireCooldown = ClientConfigCache.getCannonOverride(name, "fireCooldown")
-                .map(Integer::parseInt)
+                .flatMap(s -> parseIntSafe(s))
                 .orElse(original.fireCooldown());
 
         int salvoCount = ClientConfigCache.getCannonOverride(name, "salvoCount")
-                .map(Integer::parseInt)
+                .flatMap(s -> parseIntSafe(s))
                 .orElse(original.salvoCount());
 
         float salvoInterval = ClientConfigCache.getCannonOverride(name, "salvoInterval")
-                .map(Float::parseFloat)
+                .flatMap(s -> parseFloatSafe(s))
                 .orElse(original.salvoInterval());
 
         float verticalSpread = ClientConfigCache.getCannonOverride(name, "verticalSpread")
-                .map(Float::parseFloat)
+                .flatMap(s -> parseFloatSafe(s))
                 .orElse(original.verticalSpread());
 
         float horizontalSpread = ClientConfigCache.getCannonOverride(name, "horizontalSpread")
-                .map(Float::parseFloat)
+                .flatMap(s -> parseFloatSafe(s))
                 .orElse(original.horizontalSpread());
 
         float maxElevation = ClientConfigCache.getCannonOverride(name, "maxElevation")
-                .map(Float::parseFloat)
+                .flatMap(s -> parseFloatSafe(s))
                 .orElse(original.maxElevation());
 
         float minElevation = ClientConfigCache.getCannonOverride(name, "minElevation")
-                .map(Float::parseFloat)
+                .flatMap(s -> parseFloatSafe(s))
                 .orElse(original.minElevation());
 
         float turretSpeed = ClientConfigCache.getCannonOverride(name, "turretSpeed")
-                .map(Float::parseFloat)
+                .flatMap(s -> parseFloatSafe(s))
                 .orElse(original.turretSpeed());
 
         // 重新构造实例（record不可变）
@@ -251,6 +251,24 @@ public class ConfigOverrideManager {
                 minElevation,
                 turretSpeed
         );
+    }
+
+    /** 安全解析 float，失败时返回 empty */
+    private static java.util.Optional<Float> parseFloatSafe(String s) {
+        try {
+            return java.util.Optional.of(Float.parseFloat(s));
+        } catch (NumberFormatException e) {
+            return java.util.Optional.empty();
+        }
+    }
+
+    /** 安全解析 int，失败时返回 empty */
+    private static java.util.Optional<Integer> parseIntSafe(String s) {
+        try {
+            return java.util.Optional.of(Integer.parseInt(s));
+        } catch (NumberFormatException e) {
+            return java.util.Optional.empty();
+        }
     }
 
     // ==================== 弹药配置覆盖 ====================

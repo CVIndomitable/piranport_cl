@@ -31,12 +31,18 @@ public final class LargeShipImmunityHandler {
         event.setCanceled(true);
     }
 
+    /**
+     * 清除受击抖动状态 —— hurtTime==0 时受击方向倾斜动画不渲染。
+     *
+     * 注意：ClientboundHurtAnimationPacket 在 hurt() 方法内部（事件触发前）已发送，
+     * 服务端修改 hurtTime 不会同步回客户端，因此客户端仍会看到一帧受击动画。
+     * 完美修复需要使用 Mixin 在 hurt() 发包前拦截，当前为已知限制。
+     */
     @SubscribeEvent
     public static void onDamagePost(LivingDamageEvent.Post event) {
         LivingEntity entity = event.getEntity();
         if (!(entity instanceof ServerPlayer player)) return;
         if (!isLargeShip(player)) return;
-        // 清除客户端会看到的受击抖动状态 —— hurtTime==0 时受击方向倾斜动画不渲染
         player.hurtTime = 0;
         player.hurtDuration = 0;
     }

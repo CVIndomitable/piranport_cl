@@ -232,17 +232,24 @@ public class TransformationManager {
     }
 
     /**
-     * Returns the total armor bonus from ArmorPlateItems stored inside a ship core's
-     * SHIP_CORE_ARMOR DataComponent (no-GUI mode).
+     * 读取 SHIP_CORE_ARMOR 中存储的内容列表（统一辅助方法，避免6处重复读取模式）
      */
-    public static int getCoreArmorBonus(ItemStack coreStack) {
-        if (!(coreStack.getItem() instanceof ShipCoreItem sci)) return 0;
+    private static NonNullList<ItemStack> getCoreStoredContents(ItemStack coreStack) {
+        if (!(coreStack.getItem() instanceof ShipCoreItem sci)) return NonNullList.create();
         ItemContainerContents contents = coreStack.getOrDefault(
                 ModDataComponents.SHIP_CORE_ARMOR.get(), ItemContainerContents.EMPTY);
         NonNullList<ItemStack> stored = NonNullList.withSize(sci.getShipType().enhancementSlots, ItemStack.EMPTY);
         contents.copyInto(stored);
+        return stored;
+    }
+
+    /**
+     * Returns the total armor bonus from ArmorPlateItems stored inside a ship core's
+     * SHIP_CORE_ARMOR DataComponent (no-GUI mode).
+     */
+    public static int getCoreArmorBonus(ItemStack coreStack) {
         int total = 0;
-        for (ItemStack s : stored) {
+        for (ItemStack s : getCoreStoredContents(coreStack)) {
             if (s.getItem() instanceof ArmorPlateItem plate) total += plate.getArmorBonus();
         }
         return total;
@@ -253,20 +260,15 @@ public class TransformationManager {
      * SHIP_CORE_ARMOR DataComponent (no-GUI mode).
      */
     public static int getCoreProtectionLevel(ItemStack coreStack) {
-        if (!(coreStack.getItem() instanceof ShipCoreItem sci)) return 0;
-        ItemContainerContents contents = coreStack.getOrDefault(
-                ModDataComponents.SHIP_CORE_ARMOR.get(), ItemContainerContents.EMPTY);
-        NonNullList<ItemStack> stored = NonNullList.withSize(sci.getShipType().enhancementSlots, ItemStack.EMPTY);
-        contents.copyInto(stored);
         int total = 0;
-        for (ItemStack s : stored) {
+        for (ItemStack s : getCoreStoredContents(coreStack)) {
             if (s.getItem() instanceof ArmorPlateItem plate) total += plate.getProtectionLevel();
         }
         return total;
     }
 
     /** Returns the total protection level from ArmorPlateItems stored in SHIP_CORE_ARMOR. */
-    public static int getEquippedProtectionLevel(Player player, ItemStack coreStack) {
+    public static int getEquippedProtectionLevel(ItemStack coreStack) {
         return getCoreProtectionLevel(coreStack);
     }
 
@@ -275,13 +277,8 @@ public class TransformationManager {
      * SHIP_CORE_ARMOR DataComponent (no-GUI mode).
      */
     public static int getCoreArmorLoad(ItemStack coreStack) {
-        if (!(coreStack.getItem() instanceof ShipCoreItem sci)) return 0;
-        ItemContainerContents contents = coreStack.getOrDefault(
-                ModDataComponents.SHIP_CORE_ARMOR.get(), ItemContainerContents.EMPTY);
-        NonNullList<ItemStack> stored = NonNullList.withSize(sci.getShipType().enhancementSlots, ItemStack.EMPTY);
-        contents.copyInto(stored);
         int total = 0;
-        for (ItemStack s : stored) {
+        for (ItemStack s : getCoreStoredContents(coreStack)) {
             if (s.getItem() instanceof ArmorPlateItem plate) total += plate.getWeight();
             else if (s.getItem() instanceof SonarItem sonar) total += sonar.getWeight();
             else if (s.getItem() instanceof EngineItem engine) total += engine.getWeight();
@@ -295,13 +292,8 @@ public class TransformationManager {
      * SHIP_CORE_ARMOR DataComponent (no-GUI mode).
      */
     public static double getCoreEngineSpeedBonus(ItemStack coreStack) {
-        if (!(coreStack.getItem() instanceof ShipCoreItem sci)) return 0;
-        ItemContainerContents contents = coreStack.getOrDefault(
-                ModDataComponents.SHIP_CORE_ARMOR.get(), ItemContainerContents.EMPTY);
-        NonNullList<ItemStack> stored = NonNullList.withSize(sci.getShipType().enhancementSlots, ItemStack.EMPTY);
-        contents.copyInto(stored);
         double total = 0;
-        for (ItemStack s : stored) {
+        for (ItemStack s : getCoreStoredContents(coreStack)) {
             if (s.getItem() instanceof EngineItem engine) total += engine.getSpeedBonus();
         }
         return total;
@@ -371,11 +363,24 @@ public class TransformationManager {
         }
     }
 
-    /** 移除超重惩罚效果，应在玩家解除变身时调用 */
+    /** 移除超重惩罚效果，应在玩家解除变身时调用。
+     *  仅移除由本系统施加的效果（通过 amplifier 和 duration 甄别），
+     *  避免无差别清除来自其他模组或原版的效果（如远古守卫者的挖掘疲劳）。 */
     public static void removeOverweightPenalty(Player player) {
-        player.removeEffect(MobEffects.DIG_SLOWDOWN);
-        player.removeEffect(MobEffects.WEAKNESS);
-        player.removeEffect(MobEffects.POISON);
+        int removalDuration = 60;
+        // 仅移除 amplifier <= 2 且 duration <= 60tick 的 DIG_SLOWDOWN（由本系统施加的强度）
+        MobEffectInstance dig = player.getEffect(MobEffects.DIG_SLOWDOWN);
+        if (dig != null && dig.getAmplifier() <= 2 && dig.getDuration() <= removalDuration) {
+            player.removeEffect(MobEffects.DIG_SLOWDOWN);
+        }
+        MobEffectInstance weak = player.getEffect(MobEffects.WEAKNESS);
+        if (weak != null && weak.getAmplifier() <= 1 && weak.getDuration() <= removalDuration) {
+            player.removeEffect(MobEffects.WEAKNESS);
+        }
+        MobEffectInstance poison = player.getEffect(MobEffects.POISON);
+        if (poison != null && poison.getAmplifier() <= 1 && poison.getDuration() <= removalDuration) {
+            player.removeEffect(MobEffects.POISON);
+        }
     }
 
     /** 移除核心属性修饰器，应在玩家解除变身时调用 */
@@ -491,12 +496,7 @@ public class TransformationManager {
 
     /** Check if a SonarItem is stored in SHIP_CORE_ARMOR. */
     public static boolean hasSonarEquipped(Player player, ItemStack coreStack) {
-        if (!(coreStack.getItem() instanceof ShipCoreItem sci)) return false;
-        ItemContainerContents contents = coreStack.getOrDefault(
-                ModDataComponents.SHIP_CORE_ARMOR.get(), ItemContainerContents.EMPTY);
-        NonNullList<ItemStack> stored = NonNullList.withSize(sci.getShipType().enhancementSlots, ItemStack.EMPTY);
-        contents.copyInto(stored);
-        for (ItemStack s : stored) {
+        for (ItemStack s : getCoreStoredContents(coreStack)) {
             if (s.getItem() instanceof SonarItem) return true;
         }
         return false;
@@ -504,12 +504,7 @@ public class TransformationManager {
 
     /** Check if a TorpedoReloadItem is stored in SHIP_CORE_ARMOR. */
     public static boolean hasTorpedoReloadEquipped(Player player, ItemStack coreStack) {
-        if (!(coreStack.getItem() instanceof ShipCoreItem sci)) return false;
-        ItemContainerContents contents = coreStack.getOrDefault(
-                ModDataComponents.SHIP_CORE_ARMOR.get(), ItemContainerContents.EMPTY);
-        NonNullList<ItemStack> stored = NonNullList.withSize(sci.getShipType().enhancementSlots, ItemStack.EMPTY);
-        contents.copyInto(stored);
-        for (ItemStack s : stored) {
+        for (ItemStack s : getCoreStoredContents(coreStack)) {
             if (s.getItem() instanceof TorpedoReloadItem) return true;
         }
         return false;

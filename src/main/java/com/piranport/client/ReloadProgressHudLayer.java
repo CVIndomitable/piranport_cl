@@ -33,7 +33,7 @@ public class ReloadProgressHudLayer {
     
     @SubscribeEvent
     public static void onRenderGuiLayer(RenderGuiLayerEvent.Post event) {
-        if (event.getName() != VanillaGuiLayers.HOTBAR) return;
+        if (!event.getName().equals(VanillaGuiLayers.HOTBAR)) return;
 
         // 检查配置
         ModClientConfig.ReloadHudStyle style = ModClientConfig.RELOAD_HUD_STYLE.get();

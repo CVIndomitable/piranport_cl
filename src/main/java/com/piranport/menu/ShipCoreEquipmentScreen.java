@@ -162,11 +162,6 @@ public class ShipCoreEquipmentScreen extends AbstractContainerScreen<ShipCoreEqu
      * 获取舰型显示名称
      */
     private String getShipTypeName(ShipType type) {
-        return switch (type) {
-            case SMALL -> "驱逐舰";
-            case MEDIUM -> "巡洋舰";
-            case LARGE -> "战列舰";
-            case SUBMARINE -> "潜艇";
-        };
+        return Component.translatable("gui.piranport.ship_type." + type.name().toLowerCase()).getString();
     }
 }

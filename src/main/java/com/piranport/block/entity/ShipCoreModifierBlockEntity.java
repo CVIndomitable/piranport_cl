@@ -84,7 +84,10 @@ public class ShipCoreModifierBlockEntity extends BlockEntity implements MenuProv
             switch (index) {
                 case 0 -> weaponSlots = value;
                 case 1 -> enhancementSlots = value;
-                case 2 -> shipType = ShipType.values()[value];
+                case 2 -> {
+                    int st = value;
+                    shipType = (st >= 0 && st < ShipType.values().length) ? ShipType.values()[st] : ShipType.SMALL;
+                }
             }
         }
 
@@ -181,7 +184,12 @@ public class ShipCoreModifierBlockEntity extends BlockEntity implements MenuProv
         itemHandler.deserializeNBT(registries, tag.getCompound("Inventory"));
         weaponSlots = tag.contains("WeaponSlots") ? tag.getInt("WeaponSlots") : 2;
         enhancementSlots = tag.contains("EnhancementSlots") ? tag.getInt("EnhancementSlots") : 1;
-        shipType = tag.contains("ShipType") ? ShipType.values()[tag.getInt("ShipType")] : ShipType.SMALL;
+        if (tag.contains("ShipType")) {
+            int st = tag.getInt("ShipType");
+            shipType = (st >= 0 && st < ShipType.values().length) ? ShipType.values()[st] : ShipType.SMALL;
+        } else {
+            shipType = ShipType.SMALL;
+        }
     }
 
     @Override

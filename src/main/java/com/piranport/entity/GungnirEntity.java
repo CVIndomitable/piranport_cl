@@ -76,9 +76,10 @@ public class GungnirEntity extends ThrowableItemProjectile {
     @Override
     public void tick() {
         if (isReturning()) {
-            // Bypass normal projectile tick — fly directly to owner
-            baseTick();
-            noPhysics = true; // pass through blocks while returning
+            // 调用 super.tick() 而非 baseTick()，确保 NeoForge 实体 tick 事件正确触发
+            setNoGravity(true);
+            noPhysics = true;
+            super.tick();
 
             Entity owner = getOwner();
             if (owner == null || !owner.isAlive()) {

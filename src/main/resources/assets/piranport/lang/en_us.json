@@ -873,5 +873,16 @@
   "message.piranport.config_saved": "Configuration saved",
   "message.piranport.invalid_number_format": "Invalid number format",
   "message.piranport.value_out_of_range": "%s out of range (%s ~ %s)",
-  "message.piranport.min_elevation_must_be_less": "Min elevation must be less than max elevation"
+  "message.piranport.min_elevation_must_be_less": "Min elevation must be less than max elevation",
+  "gui.piranport.flight_group.mode.focus": "Focus Fire",
+  "gui.piranport.flight_group.mode.spread": "Scatter",
+  "gui.piranport.flight_group.mode.follow": "Follow",
+  "gui.piranport.flight_group.tooltip.bullets": "Bullets: %s (Left-click toggle)",
+  "gui.piranport.flight_group.tooltip.payload": "Payload: %s (Right-click cycle)",
+  "gui.piranport.flight_group.yes": "Yes",
+  "gui.piranport.flight_group.no": "No",
+  "gui.piranport.ship_type.small": "Destroyer",
+  "gui.piranport.ship_type.medium": "Cruiser",
+  "gui.piranport.ship_type.large": "Battleship",
+  "gui.piranport.ship_type.submarine": "Submarine"
 }

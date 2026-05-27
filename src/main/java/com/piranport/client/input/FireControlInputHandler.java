@@ -146,7 +146,8 @@ public class FireControlInputHandler {
         Entity cameraEntity = mc.getCameraEntity();
         if (cameraEntity == null) cameraEntity = mc.player;
         Vec3 eyePos = cameraEntity.getEyePosition();
-        Vec3 lookDir = mc.player.getLookAngle();
+        // 在侦察模式下使用侦察机的视线方向，而非玩家身体的朝向
+        Vec3 lookDir = cameraEntity.getLookAngle();
         Vec3 end = eyePos.add(lookDir.scale(range));
 
         AABB searchBox = cameraEntity.getBoundingBox()

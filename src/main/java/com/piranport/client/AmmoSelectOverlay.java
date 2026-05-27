@@ -33,6 +33,13 @@ import java.util.List;
 @EventBusSubscriber(modid = PiranPort.MOD_ID, value = Dist.CLIENT)
 public class AmmoSelectOverlay {
 
+    /** 轮盘中心死区半径（像素）— 鼠标在此范围内视为未选择 */
+    private static final double DEAD_ZONE_RADIUS = 10.0;
+    /** 弹药图标排列的圆周半径（像素） */
+    private static final double WHEEL_RADIUS = 40.0;
+    /** 弹药图标大小（像素） */
+    private static final int SLOT_SIZE = 18;
+
     private static boolean isOpen = false;
     private static Item hoveredAmmo = null;
     private static List<Item> availableAmmos = new ArrayList<>();
@@ -111,8 +118,8 @@ public class AmmoSelectOverlay {
         double dy = mouseY - cy;
         double distance = Math.sqrt(dx * dx + dy * dy);
 
-        // 死区：鼠标距离中心小于10像素时不改变选择
-        if (distance < 10.0) {
+        // 死区：鼠标距离中心小于 DEAD_ZONE_RADIUS 像素时不改变选择
+        if (distance < DEAD_ZONE_RADIUS) {
             return;
         }
 
@@ -181,8 +188,8 @@ public class AmmoSelectOverlay {
         }
 
         int n = availableAmmos.size();
-        double radius = 40.0;
-        int slotSize = 18;
+        double radius = WHEEL_RADIUS;
+        int slotSize = SLOT_SIZE;
 
         // 半透明背景遮罩
         RenderSystem.enableBlend();

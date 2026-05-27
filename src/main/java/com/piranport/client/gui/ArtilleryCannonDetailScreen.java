@@ -30,7 +30,12 @@ public class ArtilleryCannonDetailScreen extends Screen {
     private final String cannonName;
     private final ArtilleryCannonData originalData;
 
-    // 13个编辑框
+    // 18个编辑框
+    private EditBox damageBox;
+    private EditBox explosionPowerBox;
+    private EditBox dispersionBox;
+    private EditBox dragCoeffBox;
+    private EditBox gravityBox;
     private EditBox projectileWeightBox;
     private EditBox initialSpeedBox;
     private EditBox reloadTimeBox;
@@ -47,13 +52,13 @@ public class ArtilleryCannonDetailScreen extends Screen {
 
     // 布局常量
     private static final int GUI_WIDTH = 230;
-    private static final int GUI_HEIGHT = 320;
+    private static final int GUI_HEIGHT = 340;
     private static final int LABEL_X_OFFSET = 10;
     private static final int INPUT_X_OFFSET = 110;
     private static final int INPUT_WIDTH = 100;
     private static final int ROW_HEIGHT = 19;
     private static final int FIELDS_START_Y = 40;
-    private static final int BUTTON_Y_OFFSET = 285;
+    private static final int BUTTON_Y_OFFSET = 305;
 
     /**
      * 字段定义：翻译键、字段名、是否为浮点数

@@ -54,8 +54,10 @@ public class ArtilleryConfigToolScreen extends AbstractContainerScreen<Artillery
     );
 
     // 可编辑字段
-    private static final String[] CANNON_FIELDS = {
-            "damage", "reloadTime", "initialSpeed", "dragCoeff", "gravity", "explosionPower", "dispersion"
+    @SuppressWarnings("unused")
+    private static final String[] PROJECTILE_FIELDS = {
+            "HE_ARMOR_PENETRATION", "HE_DAMAGE_FALLOFF", "AP_DAMAGE_MULTIPLIER",
+            "AP_ARMOR_IGNORE", "UNDERWATER_EXPLOSION_MULTIPLIER", "UNDERWATER_EXPLODE"
     };
 
     public ArtilleryConfigToolScreen(ArtilleryConfigToolMenu menu, Inventory playerInventory, Component title) {
@@ -113,98 +115,69 @@ public class ArtilleryConfigToolScreen extends AbstractContainerScreen<Artillery
                 button -> onResetAllClicked()
         ).bounds(x + 120, y + 215, 60, 20).build());
 
-        // 创建编辑框
-        createEditBoxes();
+        // 为每行火炮创建详情按钮
+        createDetailButtons();
+
+        // 创建弹药编辑框
+        createProjectileEditBoxes();
     }
 
     /**
-     * 创建编辑框
+     * 为每行火炮创建"火炮详情"按钮
      */
-    private void createEditBoxes() {
+    private void createDetailButtons() {
+        if (currentTab != TAB_CANNONS) return;
+
+        int x = (this.width - this.imageWidth) / 2;
+        int y = (this.height - this.imageHeight) / 2;
+
+        for (int i = 0; i < Math.min(VISIBLE_ROWS, cannonNames.size() - scrollOffset); i++) {
+            int index = scrollOffset + i;
+            if (index >= cannonNames.size()) break;
+
+            String cannonName = cannonNames.get(index);
+            int rowY = y + 52 + i * ROW_HEIGHT;
+
+            this.addRenderableWidget(Button.builder(
+                    Component.translatable("gui.piranport.config_tool.detail"),
+                    button -> openDetailScreen(cannonName)
+            ).bounds(x + 145, rowY, 80, 16).build());
+        }
+    }
+
+    /**
+     * 创建弹药配置编辑框
+     */
+    private void createProjectileEditBoxes() {
+        if (currentTab != TAB_PROJECTILES) return;
+
         editBoxes.clear();
         int x = (this.width - this.imageWidth) / 2;
         int y = (this.height - this.imageHeight) / 2;
 
-        if (currentTab == TAB_CANNONS) {
-            // 为每个可见的火炮创建编辑框
-            for (int i = 0; i < Math.min(VISIBLE_ROWS, cannonNames.size() - scrollOffset); i++) {
-                int index = scrollOffset + i;
-                if (index >= cannonNames.size()) break;
+        for (int i = 0; i < Math.min(VISIBLE_ROWS, projectileKeys.size() - scrollOffset); i++) {
+            int index = scrollOffset + i;
+            if (index >= projectileKeys.size()) break;
 
-                String cannonName = cannonNames.get(index);
-                ArtilleryCannonData data = ArtilleryConfig.get(cannonName);
+            String key = projectileKeys.get(index);
 
-                for (int fieldIdx = 0; fieldIdx < CANNON_FIELDS.length; fieldIdx++) {
-                    String field = CANNON_FIELDS[fieldIdx];
-                    String key = cannonName + ":" + field;
+            EditBox editBox = new EditBox(
+                    this.font,
+                    x + 150,
+                    y + 52 + i * ROW_HEIGHT,
+                    80,
+                    16,
+                    Component.empty()
+            );
 
-                    EditBox editBox = new EditBox(
-                            this.font,
-                            x + 120 + (fieldIdx % 3) * 40,
-                            y + 52 + i * ROW_HEIGHT + (fieldIdx / 3) * 10,
-                            35,
-                            12,
-                            Component.empty()
-                    );
+            // 设置当前值
+            String currentValue = getProjectileValue(key);
+            editBox.setValue(currentValue);
+            editBox.setMaxLength(15);
 
-                    // 设置当前值
-                    String currentValue = getCurrentValue(cannonName, field, data);
-                    editBox.setValue(currentValue);
-                    editBox.setMaxLength(10);
-
-                    editBoxes.put(key, editBox);
-                    this.addRenderableWidget(editBox);
-                }
-            }
-        } else {
-            // 弹药配置编辑框
-            for (int i = 0; i < Math.min(VISIBLE_ROWS, projectileKeys.size() - scrollOffset); i++) {
-                int index = scrollOffset + i;
-                if (index >= projectileKeys.size()) break;
-
-                String key = projectileKeys.get(index);
-
-                EditBox editBox = new EditBox(
-                        this.font,
-                        x + 150,
-                        y + 52 + i * ROW_HEIGHT,
-                        80,
-                        16,
-                        Component.empty()
-                );
-
-                // 设置当前值
-                String currentValue = getProjectileValue(key);
-                editBox.setValue(currentValue);
-                editBox.setMaxLength(15);
-
-                editBoxes.put(key, editBox);
-                this.addRenderableWidget(editBox);
-            }
+            editBoxes.put(key, editBox);
+            this.addRenderableWidget(editBox);
         }
-    }
-
-    /**
-     * 获取火炮字段当前值
-     */
-    private String getCurrentValue(String cannonName, String field, ArtilleryCannonData data) {
-        // 优先从缓存读取覆盖值
-        Optional<String> override = ClientConfigCache.getCannonOverride(cannonName, field);
-        if (override.isPresent()) {
-            return override.get();
-        }
-
-        // 否则使用原始配置值
-        return switch (field) {
-            case "damage" -> String.format("%.1f", data.damage());
-            case "reloadTime" -> String.valueOf(data.reloadTime());
-            case "initialSpeed" -> String.format("%.2f", data.initialSpeed());
-            case "dragCoeff" -> String.format("%.4f", data.dragCoeff());
-            case "explosionPower" -> String.format("%.1f", data.explosionPower());
-            case "gravity" -> String.format("%.2f", data.gravity());
-            case "dispersion" -> String.format("%.2f", data.dispersion());
-            default -> "";
-        };
     }
 
     /**
@@ -353,25 +326,21 @@ public class ArtilleryConfigToolScreen extends AbstractContainerScreen<Artillery
     }
 
     /**
-     * 应用所有修改
+     * 打开火炮详情编辑界面
+     */
+    private void openDetailScreen(String cannonName) {
+        ArtilleryCannonData data = ArtilleryConfig.get(cannonName);
+        this.minecraft.setScreen(new ArtilleryCannonDetailScreen(this, cannonName, data));
+    }
+
+    /**
+     * 应用所有修改（弹药配置）
      */
     private void applyAllChanges() {
-        if (currentTab == TAB_CANNONS) {
-            for (String cannonName : cannonNames) {
-                for (String field : CANNON_FIELDS) {
-                    String key = cannonName + ":" + field;
-                    EditBox editBox = editBoxes.get(key);
-                    if (editBox != null && !editBox.getValue().isEmpty()) {
-                        sendUpdate("cannon", cannonName, field, editBox.getValue());
-                    }
-                }
-            }
-        } else {
-            for (String configKey : projectileKeys) {
-                EditBox editBox = editBoxes.get(configKey);
-                if (editBox != null && !editBox.getValue().isEmpty()) {
-                    sendUpdate("projectile", configKey, "", editBox.getValue());
-                }
+        for (String configKey : projectileKeys) {
+            EditBox editBox = editBoxes.get(configKey);
+            if (editBox != null && !editBox.getValue().isEmpty()) {
+                sendUpdate("projectile", configKey, "", editBox.getValue());
             }
         }
     }

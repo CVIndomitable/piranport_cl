@@ -91,6 +91,43 @@ public class ConfigOverrideManager {
                 .map(v -> ((Number) v).floatValue())
                 .orElse(original.dispersion());
 
+        // 新增字段覆盖
+        float projectileWeight = overrides.getCannonOverride(name, "projectileWeight")
+                .map(v -> ((Number) v).floatValue())
+                .orElse(original.projectileWeight());
+
+        int fireCooldown = overrides.getCannonOverride(name, "fireCooldown")
+                .map(v -> ((Number) v).intValue())
+                .orElse(original.fireCooldown());
+
+        int salvoCount = overrides.getCannonOverride(name, "salvoCount")
+                .map(v -> ((Number) v).intValue())
+                .orElse(original.salvoCount());
+
+        float salvoInterval = overrides.getCannonOverride(name, "salvoInterval")
+                .map(v -> ((Number) v).floatValue())
+                .orElse(original.salvoInterval());
+
+        float verticalSpread = overrides.getCannonOverride(name, "verticalSpread")
+                .map(v -> ((Number) v).floatValue())
+                .orElse(original.verticalSpread());
+
+        float horizontalSpread = overrides.getCannonOverride(name, "horizontalSpread")
+                .map(v -> ((Number) v).floatValue())
+                .orElse(original.horizontalSpread());
+
+        float maxElevation = overrides.getCannonOverride(name, "maxElevation")
+                .map(v -> ((Number) v).floatValue())
+                .orElse(original.maxElevation());
+
+        float minElevation = overrides.getCannonOverride(name, "minElevation")
+                .map(v -> ((Number) v).floatValue())
+                .orElse(original.minElevation());
+
+        float turretSpeed = overrides.getCannonOverride(name, "turretSpeed")
+                .map(v -> ((Number) v).floatValue())
+                .orElse(original.turretSpeed());
+
         // 重新构造实例（record不可变）
         return new ArtilleryCannonData(
                 original.caliber(),
@@ -104,7 +141,16 @@ public class ConfigOverrideManager {
                 dragCoeff,
                 gravity,
                 explosionPower,
-                dispersion
+                dispersion,
+                projectileWeight,
+                fireCooldown,
+                salvoCount,
+                salvoInterval,
+                verticalSpread,
+                horizontalSpread,
+                maxElevation,
+                minElevation,
+                turretSpeed
         );
     }
 
@@ -144,6 +190,43 @@ public class ConfigOverrideManager {
                 .map(Float::parseFloat)
                 .orElse(original.dispersion());
 
+        // 新增字段
+        float projectileWeight = ClientConfigCache.getCannonOverride(name, "projectileWeight")
+                .map(Float::parseFloat)
+                .orElse(original.projectileWeight());
+
+        int fireCooldown = ClientConfigCache.getCannonOverride(name, "fireCooldown")
+                .map(Integer::parseInt)
+                .orElse(original.fireCooldown());
+
+        int salvoCount = ClientConfigCache.getCannonOverride(name, "salvoCount")
+                .map(Integer::parseInt)
+                .orElse(original.salvoCount());
+
+        float salvoInterval = ClientConfigCache.getCannonOverride(name, "salvoInterval")
+                .map(Float::parseFloat)
+                .orElse(original.salvoInterval());
+
+        float verticalSpread = ClientConfigCache.getCannonOverride(name, "verticalSpread")
+                .map(Float::parseFloat)
+                .orElse(original.verticalSpread());
+
+        float horizontalSpread = ClientConfigCache.getCannonOverride(name, "horizontalSpread")
+                .map(Float::parseFloat)
+                .orElse(original.horizontalSpread());
+
+        float maxElevation = ClientConfigCache.getCannonOverride(name, "maxElevation")
+                .map(Float::parseFloat)
+                .orElse(original.maxElevation());
+
+        float minElevation = ClientConfigCache.getCannonOverride(name, "minElevation")
+                .map(Float::parseFloat)
+                .orElse(original.minElevation());
+
+        float turretSpeed = ClientConfigCache.getCannonOverride(name, "turretSpeed")
+                .map(Float::parseFloat)
+                .orElse(original.turretSpeed());
+
         // 重新构造实例（record不可变）
         return new ArtilleryCannonData(
                 original.caliber(),
@@ -157,7 +240,16 @@ public class ConfigOverrideManager {
                 dragCoeff,
                 gravity,
                 explosionPower,
-                dispersion
+                dispersion,
+                projectileWeight,
+                fireCooldown,
+                salvoCount,
+                salvoInterval,
+                verticalSpread,
+                horizontalSpread,
+                maxElevation,
+                minElevation,
+                turretSpeed
         );
     }
 
@@ -258,6 +350,35 @@ public class ConfigOverrideManager {
             case "dispersion" -> {
                 float f = num.floatValue();
                 yield Math.max(0.0f, Math.min(10f, f));
+            }
+            // 新增字段
+            case "projectileWeight" -> {
+                float f = num.floatValue();
+                yield Math.max(0.1f, Math.min(10000f, f));
+            }
+            case "fireCooldown" -> {
+                int i = num.intValue();
+                yield Math.max(0, Math.min(6000, i));
+            }
+            case "salvoCount" -> {
+                int i = num.intValue();
+                yield Math.max(1, Math.min(20, i));
+            }
+            case "salvoInterval" -> {
+                float f = num.floatValue();
+                yield Math.max(0f, Math.min(100f, f));
+            }
+            case "verticalSpread", "horizontalSpread" -> {
+                float f = num.floatValue();
+                yield Math.max(0f, Math.min(10f, f));
+            }
+            case "maxElevation", "minElevation" -> {
+                float f = num.floatValue();
+                yield Math.max(-90f, Math.min(90f, f));
+            }
+            case "turretSpeed" -> {
+                float f = num.floatValue();
+                yield Math.max(0.1f, Math.min(20f, f));
             }
             default -> value;
         };

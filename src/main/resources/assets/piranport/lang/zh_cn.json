@@ -840,5 +840,27 @@
   "message.piranport.cannon_imported": "火炮配置导入完成: 成功 %s 项，失败 %s 项",
   "message.piranport.projectile_imported": "弹药配置导入完成: 成功 %s 项，失败 %s 项",
   "message.piranport.config_imported_summary": "配置导入总计: 成功 %s 项，失败 %s 项",
-  "message.piranport.config_import_failed": "导入失败: %s"
+  "message.piranport.config_import_failed": "导入失败: %s",
+
+  "gui.piranport.config_tool.detail": "火炮详情",
+  "gui.piranport.config_tool.cannon_detail_title": "火炮详情 - %s",
+  "gui.piranport.config_tool.save": "保存",
+  "gui.piranport.config_tool.cancel": "取消",
+  "gui.piranport.config_tool.projectile_weight": "弹丸重量",
+  "gui.piranport.config_tool.initial_speed": "弹丸初速",
+  "gui.piranport.config_tool.reload_time": "装填时间",
+  "gui.piranport.config_tool.fire_cooldown": "开火冷却",
+  "gui.piranport.config_tool.salvo_count": "齐射数量",
+  "gui.piranport.config_tool.salvo_interval": "齐射间距",
+  "gui.piranport.config_tool.vertical_spread": "纵向散布",
+  "gui.piranport.config_tool.horizontal_spread": "横向散布",
+  "gui.piranport.config_tool.max_elevation": "最大仰角",
+  "gui.piranport.config_tool.min_elevation": "最小仰角",
+  "gui.piranport.config_tool.turret_speed": "炮塔转速",
+  "gui.piranport.config_tool.durability": "身管寿命",
+  "gui.piranport.config_tool.barrels": "炮管数量",
+  "message.piranport.config_saved": "配置已保存",
+  "message.piranport.invalid_number_format": "数值格式错误",
+  "message.piranport.value_out_of_range": "%s 超出范围 (%s ~ %s)",
+  "message.piranport.min_elevation_must_be_less": "最小仰角必须小于最大仰角"
 }

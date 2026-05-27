@@ -72,6 +72,13 @@ public class ClientConfigCache {
     }
 
     /**
+     * 设置单门火炮的覆盖值并保留其余缓存
+     */
+    public static void setCannonOverrides(String cannonName, Map<String, String> fields) {
+        cannonOverrides.put(cannonName, new HashMap<>(fields));
+    }
+
+    /**
      * 获取所有弹药配置覆盖（用于GUI显示）
      */
     public static Map<String, String> getAllProjectileOverrides() {

@@ -15,11 +15,22 @@ public record ArtilleryCannonData(
         float dragCoeff,
         float gravity,
         float explosionPower,
-        float dispersion
+        float dispersion,
+        // 新增字段
+        float projectileWeight,
+        int fireCooldown,
+        int salvoCount,
+        float salvoInterval,
+        float verticalSpread,
+        float horizontalSpread,
+        float maxElevation,
+        float minElevation,
+        float turretSpeed
 ) {
     public static final ArtilleryCannonData DEFAULT = new ArtilleryCannonData(
             14, 1, 6f, 30, 500, 4.0f, List.of(new MuzzlePos(0, 0, 0)),
-            3.0f, 0.01f, 9.8f, 1.0f, 0.5f
+            3.0f, 0.01f, 9.8f, 1.0f, 0.5f,
+            100.0f, 20, 1, 5.0f, 0.5f, 0.5f, 45.0f, -5.0f, 2.0f
     );
 
     /** 旧构造器兼容（缺少物理参数时使用默认值） */
@@ -29,6 +40,13 @@ public record ArtilleryCannonData(
         if (gravity <= 0) gravity = 9.8f;
         if (explosionPower <= 0) explosionPower = 1.0f;
         if (dispersion <= 0) dispersion = getDefaultDispersion(caliber);
+        if (projectileWeight <= 0) projectileWeight = 100.0f;
+        if (fireCooldown < 0) fireCooldown = 20;
+        if (salvoCount < 1) salvoCount = 1;
+        if (salvoInterval < 0) salvoInterval = 5.0f;
+        if (verticalSpread < 0) verticalSpread = 0.5f;
+        if (horizontalSpread < 0) horizontalSpread = 0.5f;
+        if (turretSpeed <= 0) turretSpeed = 2.0f;
     }
 
     /** 根据口径计算默认散布角（度），保持向后兼容 */
@@ -42,6 +60,7 @@ public record ArtilleryCannonData(
     public static ArtilleryCannonData of(int caliber, int barrels, float damage, int reloadTime,
                                           int durability, float scopeZoom, List<MuzzlePos> muzzles) {
         return new ArtilleryCannonData(caliber, barrels, damage, reloadTime, durability,
-                scopeZoom, muzzles, 3.0f, 0.01f, 9.8f, 1.0f, 0.0f);
+                scopeZoom, muzzles, 3.0f, 0.01f, 9.8f, 1.0f, 0.0f,
+                100.0f, 20, 1, 5.0f, 0.5f, 0.5f, 45.0f, -5.0f, 2.0f);
     }
 }

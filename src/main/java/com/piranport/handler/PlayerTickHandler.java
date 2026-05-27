@@ -334,7 +334,7 @@ public class PlayerTickHandler {
                 if (cached != null && cached == -999) {
                     lastWeaponLoad.remove(player.getUUID());
                 }
-                TransformationManager.setTransformed(coreStack, true);
+                TransformationManager.setTransformedAndWriteBack(player, coreStack, true);
                 TransformationManager.applyTransformationAttributes(player, coreStack);
                 ShipCoreCombat.refillAircraftFuel(player, coreStack);
                 player.displayClientMessage(
@@ -372,10 +372,12 @@ public class PlayerTickHandler {
                 }
             }
         } else {
-            for (ItemStack stack : inv.items) {
+            for (int i = 0; i < inv.items.size(); i++) {
+                ItemStack stack = inv.items.get(i);
                 if (stack.getItem() instanceof ShipCoreItem
                         && TransformationManager.isTransformed(stack)) {
                     TransformationManager.setTransformed(stack, false);
+                    inv.items.set(i, stack);  // 写回背包槽位
                 }
             }
             if (lastWeaponLoad.remove(player.getUUID()) != null) {
@@ -528,9 +530,17 @@ public class PlayerTickHandler {
         }
         core.set(ModDataComponents.SHIP_CORE_FUEL.get(), fuel);
 
+        // 写回槽位以确保燃料数据同步
+        String slotMode = ModCommonConfig.SHIP_CORE_SLOT_MODE.get();
+        if ("helmet".equalsIgnoreCase(slotMode) || "chest".equalsIgnoreCase(slotMode)) {
+            player.setItemSlot(EquipmentSlot.HEAD, core);
+        } else {
+            player.getInventory().offhand.set(0, core);
+        }
+
         if (fuel.isEmpty()) {
             cleanupPlayerState(uuid);
-            TransformationManager.setTransformed(core, false);
+            TransformationManager.setTransformedAndWriteBack(player, core, false);
             TransformationManager.removeTransformationAttributes(player);
             TransformationManager.removeOverweightPenalty(player);
             PlayerAircraftHelper.recallAircraftForPlayer(player);

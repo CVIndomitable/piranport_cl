@@ -105,6 +105,37 @@ public class TransformationManager {
         coreStack.set(ModDataComponents.SHIP_CORE_TRANSFORMED.get(), transformed);
     }
 
+    /**
+     * 设置变身状态并将修改后的 ItemStack 写回配置的槽位。
+     *
+     * <p>在无GUI模式下，变身状态的修改必须显式写回槽位才能持久化。
+     * 本方法封装了"设置状态 + 写回槽位"的完整流程，确保变身状态正确同步。
+     *
+     * @param player 玩家
+     * @param coreStack 核心物品栈（必须是从 getCoreFromConfiguredSlot 获取的引用）
+     * @param transformed 变身状态
+     */
+    public static void setTransformedAndWriteBack(Player player, ItemStack coreStack, boolean transformed) {
+        // 设置变身状态
+        coreStack.set(ModDataComponents.SHIP_CORE_TRANSFORMED.get(), transformed);
+
+        // 根据配置的槽位模式写回
+        String slotMode = ModCommonConfig.SHIP_CORE_SLOT_MODE.get();
+
+        // 向后兼容：将旧的 "chest" 配置自动映射到 "helmet"
+        if ("chest".equalsIgnoreCase(slotMode)) {
+            slotMode = "helmet";
+        }
+
+        if ("helmet".equalsIgnoreCase(slotMode)) {
+            // 头盔模式：写回头盔槽位
+            player.setItemSlot(EquipmentSlot.HEAD, coreStack);
+        } else {
+            // 默认：副手模式
+            player.getInventory().offhand.set(0, coreStack);
+        }
+    }
+
     /** 返回 true 表示可发射/投放的物品（火炮、鱼雷发射器、飞机 — 不含核心、装甲、弹药） */
     public static boolean isFireableWeapon(ItemStack stack) {
         if (stack.isEmpty()) return false;

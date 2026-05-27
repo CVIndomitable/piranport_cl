@@ -788,6 +788,11 @@
 
   "config.piranport.shipCoreSlotMode": "舰装核心槽位模式",
   "config.piranport.shipCoreSlotMode.tooltip": "offhand=副手模式，helmet=头盔模式",
+  "config.piranport.reloadHudStyle": "装填进度条样式",
+  "config.piranport.reloadHudStyle.hotbar": "物品栏上方",
+  "config.piranport.reloadHudStyle.center": "屏幕中央",
+  "config.piranport.reloadHudStyle.hidden": "隐藏",
+  "config.piranport.reloadHudFadeAnimation": "装填进度条淡入淡出动画",
   "tooltip.piranport.ship_core.slot_hint.offhand": "放入副手以激活舰装",
   "tooltip.piranport.ship_core.slot_hint.helmet": "装备到头盔槽位以激活舰装",
   "tooltip.piranport.ship_core.slot_hint.chest": "装备到头盔槽位以激活舰装（配置已弃用）",

@@ -783,6 +783,11 @@
 
   "config.piranport.shipCoreSlotMode": "Ship Core Slot Mode",
   "config.piranport.shipCoreSlotMode.tooltip": "offhand=Offhand Mode, helmet=Helmet Mode",
+  "config.piranport.reloadHudStyle": "Reload HUD Style",
+  "config.piranport.reloadHudStyle.hotbar": "Above Hotbar",
+  "config.piranport.reloadHudStyle.center": "Screen Center",
+  "config.piranport.reloadHudStyle.hidden": "Hidden",
+  "config.piranport.reloadHudFadeAnimation": "Reload HUD Fade Animation",
   "tooltip.piranport.ship_core.slot_hint.offhand": "Hold in offhand to activate rigging",
   "tooltip.piranport.ship_core.slot_hint.helmet": "Equip to helmet slot to activate rigging",
   "tooltip.piranport.ship_core.slot_hint.chest": "Equip to helmet slot to activate rigging (deprecated config)",

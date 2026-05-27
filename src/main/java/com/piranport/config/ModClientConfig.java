@@ -20,6 +20,34 @@ public class ModClientConfig {
                     .define("showLegacyReloadHud", false);
 
     /**
+     * Reload progress bar display style.
+     * HOTBAR: above hotbar (default, like vanilla experience bar)
+     * CENTER: center of screen (legacy position)
+     * HIDDEN: completely hidden
+     */
+    public static final ModConfigSpec.EnumValue<ReloadHudStyle> RELOAD_HUD_STYLE =
+            BUILDER
+                    .comment(
+                            "Reload progress bar display style.",
+                            "HOTBAR: above hotbar (default, like vanilla experience bar)",
+                            "CENTER: center of screen (legacy position)",
+                            "HIDDEN: completely hidden",
+                            "Default: HOTBAR (装填进度条显示样式)")
+                    .defineEnum("reloadHudStyle", ReloadHudStyle.HOTBAR);
+
+    /**
+     * Enable fade-in/fade-out animation for reload progress bar.
+     * When true, the bar fades out 2 seconds after reload completes.
+     */
+    public static final ModConfigSpec.BooleanValue RELOAD_HUD_FADE_ANIMATION =
+            BUILDER
+                    .comment(
+                            "Enable fade-in/fade-out animation for reload progress bar.",
+                            "When true, the bar fades out 2 seconds after reload completes.",
+                            "Default: true (装填进度条淡入淡出动画)")
+                    .define("reloadHudFadeAnimation", true);
+
+    /**
      * When true, the "编组" (Flight Group) button is shown in the ship core GUI,
      * allowing players to configure aircraft flight groups.
      * Default false — disable until the feature is ready for use.
@@ -84,4 +112,10 @@ public class ModClientConfig {
                     .defineInRange("screenShakeMultiplier", 1.0, 0.0, 3.0);
 
     public static final ModConfigSpec SPEC = BUILDER.build();
+
+    public enum ReloadHudStyle {
+        HOTBAR,   // 物品栏上方（新默认）
+        CENTER,   // 屏幕中央（旧版）
+        HIDDEN    // 完全隐藏
+    }
 }

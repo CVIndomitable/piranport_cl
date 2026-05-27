@@ -52,13 +52,13 @@ public class ArtilleryCannonDetailScreen extends Screen {
 
     // 布局常量
     private static final int GUI_WIDTH = 230;
-    private static final int GUI_HEIGHT = 340;
+    private static final int GUI_HEIGHT = 435;
     private static final int LABEL_X_OFFSET = 10;
     private static final int INPUT_X_OFFSET = 110;
     private static final int INPUT_WIDTH = 100;
     private static final int ROW_HEIGHT = 19;
     private static final int FIELDS_START_Y = 40;
-    private static final int BUTTON_Y_OFFSET = 305;
+    private static final int BUTTON_Y_OFFSET = 400;
 
     /**
      * 字段定义：翻译键、字段名、是否为浮点数
@@ -66,6 +66,11 @@ public class ArtilleryCannonDetailScreen extends Screen {
     private record FieldDef(String transKey, String fieldName, boolean isFloat) {}
 
     private static final FieldDef[] FIELDS = {
+            new FieldDef("damage", "damage", true),
+            new FieldDef("explosion_power", "explosionPower", true),
+            new FieldDef("dispersion", "dispersion", true),
+            new FieldDef("drag_coeff", "dragCoeff", true),
+            new FieldDef("gravity", "gravity", true),
             new FieldDef("projectile_weight", "projectileWeight", true),
             new FieldDef("initial_speed", "initialSpeed", true),
             new FieldDef("reload_time", "reloadTime", false),
@@ -113,31 +118,41 @@ public class ArtilleryCannonDetailScreen extends Screen {
      * 创建所有编辑框并填充当前值
      */
     private void createEditBoxes(int guiX, int guiY) {
-        projectileWeightBox = createFieldBox(guiX + INPUT_X_OFFSET, guiY + FIELDS_START_Y + 0 * ROW_HEIGHT,
+        damageBox = createFieldBox(guiX + INPUT_X_OFFSET, guiY + FIELDS_START_Y + 0 * ROW_HEIGHT,
+                getFieldDisplayValue("damage", originalData.damage()));
+        explosionPowerBox = createFieldBox(guiX + INPUT_X_OFFSET, guiY + FIELDS_START_Y + 1 * ROW_HEIGHT,
+                getFieldDisplayValue("explosionPower", originalData.explosionPower()));
+        dispersionBox = createFieldBox(guiX + INPUT_X_OFFSET, guiY + FIELDS_START_Y + 2 * ROW_HEIGHT,
+                getFieldDisplayValue("dispersion", originalData.dispersion()));
+        dragCoeffBox = createFieldBox(guiX + INPUT_X_OFFSET, guiY + FIELDS_START_Y + 3 * ROW_HEIGHT,
+                getFieldDisplayValue("dragCoeff", originalData.dragCoeff()));
+        gravityBox = createFieldBox(guiX + INPUT_X_OFFSET, guiY + FIELDS_START_Y + 4 * ROW_HEIGHT,
+                getFieldDisplayValue("gravity", originalData.gravity()));
+        projectileWeightBox = createFieldBox(guiX + INPUT_X_OFFSET, guiY + FIELDS_START_Y + 5 * ROW_HEIGHT,
                 getFieldDisplayValue("projectileWeight", originalData.projectileWeight()));
-        initialSpeedBox = createFieldBox(guiX + INPUT_X_OFFSET, guiY + FIELDS_START_Y + 1 * ROW_HEIGHT,
+        initialSpeedBox = createFieldBox(guiX + INPUT_X_OFFSET, guiY + FIELDS_START_Y + 6 * ROW_HEIGHT,
                 getFieldDisplayValue("initialSpeed", originalData.initialSpeed()));
-        reloadTimeBox = createFieldBox(guiX + INPUT_X_OFFSET, guiY + FIELDS_START_Y + 2 * ROW_HEIGHT,
+        reloadTimeBox = createFieldBox(guiX + INPUT_X_OFFSET, guiY + FIELDS_START_Y + 7 * ROW_HEIGHT,
                 String.valueOf(getFieldIntValue("reloadTime", originalData.reloadTime())));
-        fireCooldownBox = createFieldBox(guiX + INPUT_X_OFFSET, guiY + FIELDS_START_Y + 3 * ROW_HEIGHT,
+        fireCooldownBox = createFieldBox(guiX + INPUT_X_OFFSET, guiY + FIELDS_START_Y + 8 * ROW_HEIGHT,
                 String.valueOf(getFieldIntValue("fireCooldown", originalData.fireCooldown())));
-        salvoCountBox = createFieldBox(guiX + INPUT_X_OFFSET, guiY + FIELDS_START_Y + 4 * ROW_HEIGHT,
+        salvoCountBox = createFieldBox(guiX + INPUT_X_OFFSET, guiY + FIELDS_START_Y + 9 * ROW_HEIGHT,
                 String.valueOf(getFieldIntValue("salvoCount", originalData.salvoCount())));
-        salvoIntervalBox = createFieldBox(guiX + INPUT_X_OFFSET, guiY + FIELDS_START_Y + 5 * ROW_HEIGHT,
+        salvoIntervalBox = createFieldBox(guiX + INPUT_X_OFFSET, guiY + FIELDS_START_Y + 10 * ROW_HEIGHT,
                 getFieldDisplayValue("salvoInterval", originalData.salvoInterval()));
-        verticalSpreadBox = createFieldBox(guiX + INPUT_X_OFFSET, guiY + FIELDS_START_Y + 6 * ROW_HEIGHT,
+        verticalSpreadBox = createFieldBox(guiX + INPUT_X_OFFSET, guiY + FIELDS_START_Y + 11 * ROW_HEIGHT,
                 getFieldDisplayValue("verticalSpread", originalData.verticalSpread()));
-        horizontalSpreadBox = createFieldBox(guiX + INPUT_X_OFFSET, guiY + FIELDS_START_Y + 7 * ROW_HEIGHT,
+        horizontalSpreadBox = createFieldBox(guiX + INPUT_X_OFFSET, guiY + FIELDS_START_Y + 12 * ROW_HEIGHT,
                 getFieldDisplayValue("horizontalSpread", originalData.horizontalSpread()));
-        maxElevationBox = createFieldBox(guiX + INPUT_X_OFFSET, guiY + FIELDS_START_Y + 8 * ROW_HEIGHT,
+        maxElevationBox = createFieldBox(guiX + INPUT_X_OFFSET, guiY + FIELDS_START_Y + 13 * ROW_HEIGHT,
                 getFieldDisplayValue("maxElevation", originalData.maxElevation()));
-        minElevationBox = createFieldBox(guiX + INPUT_X_OFFSET, guiY + FIELDS_START_Y + 9 * ROW_HEIGHT,
+        minElevationBox = createFieldBox(guiX + INPUT_X_OFFSET, guiY + FIELDS_START_Y + 14 * ROW_HEIGHT,
                 getFieldDisplayValue("minElevation", originalData.minElevation()));
-        turretSpeedBox = createFieldBox(guiX + INPUT_X_OFFSET, guiY + FIELDS_START_Y + 10 * ROW_HEIGHT,
+        turretSpeedBox = createFieldBox(guiX + INPUT_X_OFFSET, guiY + FIELDS_START_Y + 15 * ROW_HEIGHT,
                 getFieldDisplayValue("turretSpeed", originalData.turretSpeed()));
-        durabilityBox = createFieldBox(guiX + INPUT_X_OFFSET, guiY + FIELDS_START_Y + 11 * ROW_HEIGHT,
+        durabilityBox = createFieldBox(guiX + INPUT_X_OFFSET, guiY + FIELDS_START_Y + 16 * ROW_HEIGHT,
                 String.valueOf(getFieldIntValue("durability", originalData.durability())));
-        barrelsBox = createFieldBox(guiX + INPUT_X_OFFSET, guiY + FIELDS_START_Y + 12 * ROW_HEIGHT,
+        barrelsBox = createFieldBox(guiX + INPUT_X_OFFSET, guiY + FIELDS_START_Y + 17 * ROW_HEIGHT,
                 String.valueOf(getFieldIntValue("barrels", originalData.barrels())));
     }
 
@@ -202,7 +217,12 @@ public class ArtilleryCannonDetailScreen extends Screen {
             return;
         }
 
-        // 发送13个字段的更新到服务端
+        // 发送18个字段的更新到服务端
+        sendFieldUpdate("damage", damageBox.getValue());
+        sendFieldUpdate("explosionPower", explosionPowerBox.getValue());
+        sendFieldUpdate("dispersion", dispersionBox.getValue());
+        sendFieldUpdate("dragCoeff", dragCoeffBox.getValue());
+        sendFieldUpdate("gravity", gravityBox.getValue());
         sendFieldUpdate("projectileWeight", projectileWeightBox.getValue());
         sendFieldUpdate("initialSpeed", initialSpeedBox.getValue());
         sendFieldUpdate("reloadTime", reloadTimeBox.getValue());
@@ -244,6 +264,11 @@ public class ArtilleryCannonDetailScreen extends Screen {
      */
     private void updateClientCacheAfterSave() {
         Map<String, String> fields = new HashMap<>();
+        fields.put("damage", damageBox.getValue());
+        fields.put("explosionPower", explosionPowerBox.getValue());
+        fields.put("dispersion", dispersionBox.getValue());
+        fields.put("dragCoeff", dragCoeffBox.getValue());
+        fields.put("gravity", gravityBox.getValue());
         fields.put("projectileWeight", projectileWeightBox.getValue());
         fields.put("initialSpeed", initialSpeedBox.getValue());
         fields.put("reloadTime", reloadTimeBox.getValue());
@@ -266,6 +291,11 @@ public class ArtilleryCannonDetailScreen extends Screen {
      */
     private boolean validateAllInputs() {
         try {
+            validateFloat("damage", damageBox.getValue(), 0.1f, 1000f);
+            validateFloat("explosionPower", explosionPowerBox.getValue(), 0f, 20f);
+            validateFloat("dispersion", dispersionBox.getValue(), 0f, 10f);
+            validateFloat("dragCoeff", dragCoeffBox.getValue(), 0f, 1f);
+            validateFloat("gravity", gravityBox.getValue(), 0.1f, 100f);
             validateFloat("projectileWeight", projectileWeightBox.getValue(), 0.1f, 10000f);
             validateFloat("initialSpeed", initialSpeedBox.getValue(), 0.1f, 50f);
             validateInt("reloadTime", reloadTimeBox.getValue(), 1, 6000);

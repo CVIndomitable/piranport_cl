@@ -67,12 +67,9 @@ public class AmmoSelectOverlay {
         hoveredAmmo = null;
         availableAmmos.clear();
 
-        // 重新抓取鼠标，恢复视角控制
+        // P1修复: 无条件抓取鼠标，确保关闭轮盘后恢复视角控制
         Minecraft mc = Minecraft.getInstance();
-        // 只有在没有其他 Screen 打开时才抓取鼠标（避免与暂停菜单等冲突）
-        if (mc.screen == null) {
-            mc.mouseHandler.grabMouse();
-        }
+        mc.mouseHandler.grabMouse();
     }
 
     public static Item getHoveredAmmo() {
@@ -90,18 +87,32 @@ public class AmmoSelectOverlay {
             return;
         }
 
-        // 扫描背包中匹配口径的弹药
-        for (ItemStack s : player.getInventory().items) {
-            if (!s.isEmpty() && ShipCoreCombat.matchesCaliber(s, weapon)) {
-                if (!availableAmmos.contains(s.getItem())) {
-                    availableAmmos.add(s.getItem());
+        boolean isCreative = player.getAbilities().instabuild;
+
+        if (isCreative) {
+            // 创造模式：从注册表获取所有匹配口径的弹药
+            for (Item item : BuiltInRegistries.ITEM) {
+                ItemStack ammoStack = new ItemStack(item);
+                if (ShipCoreCombat.matchesCaliber(ammoStack, weapon)) {
+                    if (!availableAmmos.contains(item)) {
+                        availableAmmos.add(item);
+                    }
                 }
             }
-        }
-        ItemStack oh = player.getInventory().offhand.get(0);
-        if (!oh.isEmpty() && ShipCoreCombat.matchesCaliber(oh, weapon)) {
-            if (!availableAmmos.contains(oh.getItem())) {
-                availableAmmos.add(oh.getItem());
+        } else {
+            // 生存模式：扫描背包中匹配口径的弹药
+            for (ItemStack s : player.getInventory().items) {
+                if (!s.isEmpty() && ShipCoreCombat.matchesCaliber(s, weapon)) {
+                    if (!availableAmmos.contains(s.getItem())) {
+                        availableAmmos.add(s.getItem());
+                    }
+                }
+            }
+            ItemStack oh = player.getInventory().offhand.get(0);
+            if (!oh.isEmpty() && ShipCoreCombat.matchesCaliber(oh, weapon)) {
+                if (!availableAmmos.contains(oh.getItem())) {
+                    availableAmmos.add(oh.getItem());
+                }
             }
         }
 
@@ -207,11 +218,16 @@ public class AmmoSelectOverlay {
 
             // 统计弹药数量
             int count = 0;
-            for (ItemStack s : player.getInventory().items) {
-                if (s.getItem() == ammoItem) count += s.getCount();
+            boolean isCreative = player.getAbilities().instabuild;
+
+            if (!isCreative) {
+                // 生存模式：统计背包中的弹药数量
+                for (ItemStack s : player.getInventory().items) {
+                    if (s.getItem() == ammoItem) count += s.getCount();
+                }
+                ItemStack oh = player.getInventory().offhand.get(0);
+                if (oh.getItem() == ammoItem) count += oh.getCount();
             }
-            ItemStack oh = player.getInventory().offhand.get(0);
-            if (oh.getItem() == ammoItem) count += oh.getCount();
 
             // 边框：悬停=黄色高亮，已选中=白色细框
             if (isHovered) {
@@ -225,7 +241,7 @@ public class AmmoSelectOverlay {
             gui.renderFakeItem(new ItemStack(ammoItem, 1), bx, by);
 
             // 数量显示
-            String countStr = String.valueOf(count);
+            String countStr = isCreative ? "∞" : String.valueOf(count);
             gui.drawString(mc.font, countStr,
                     bx + slotSize - mc.font.width(countStr),
                     by + slotSize - mc.font.lineHeight, 0xFFFFFF);

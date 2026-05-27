@@ -90,11 +90,11 @@ import org.jetbrains.annotations.Nullable;
 public class ShipCoreItem extends Item implements Equipable {
 
     // Phase 12: 口径弹药标签 — 数据包可通过添加物品到这些标签来扩展兼容弹药
-    static final TagKey<Item> SMALL_SHELLS = TagKey.create(Registries.ITEM,
+    public static final TagKey<Item> SMALL_SHELLS = TagKey.create(Registries.ITEM,
             ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "small_shells"));
-    static final TagKey<Item> MEDIUM_SHELLS = TagKey.create(Registries.ITEM,
+    public static final TagKey<Item> MEDIUM_SHELLS = TagKey.create(Registries.ITEM,
             ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "medium_shells"));
-    static final TagKey<Item> LARGE_SHELLS = TagKey.create(Registries.ITEM,
+    public static final TagKey<Item> LARGE_SHELLS = TagKey.create(Registries.ITEM,
             ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "large_shells"));
 
     private final ShipType shipType;

@@ -66,23 +66,34 @@ public record SwitchAmmoPayload(String ammoItemId) implements CustomPacketPayloa
             }
             if (!hasWeapon) return;
 
-            // 验证背包中有该弹种且口径匹配
-            Inventory inv = player.getInventory();
-            boolean hasAmmo = false;
-            for (ItemStack s : inv.items) {
-                if (s.getItem() == ammoItem && ShipCoreCombat.matchesCaliber(s, weapon)) {
-                    hasAmmo = true;
-                    break;
-                }
-            }
-            if (!hasAmmo) {
-                ItemStack offhand = inv.offhand.get(0);
-                if (offhand.getItem() == ammoItem && ShipCoreCombat.matchesCaliber(offhand, weapon)) {
-                    hasAmmo = true;
-                }
+            // 验证口径匹配（防止客户端伪造不匹配口径的弹药）
+            ItemStack ammoStack = new ItemStack(ammoItem);
+            if (!ShipCoreCombat.matchesCaliber(ammoStack, weapon)) {
+                return;
             }
 
-            if (!hasAmmo) return;
+            // 创造模式：跳过背包弹药检查
+            boolean isCreative = player.getAbilities().instabuild;
+
+            if (!isCreative) {
+                // 生存模式：验证背包中有该弹种
+                Inventory inv = player.getInventory();
+                boolean hasAmmo = false;
+                for (ItemStack s : inv.items) {
+                    if (s.getItem() == ammoItem) {
+                        hasAmmo = true;
+                        break;
+                    }
+                }
+                if (!hasAmmo) {
+                    ItemStack offhand = inv.offhand.get(0);
+                    if (offhand.getItem() == ammoItem) {
+                        hasAmmo = true;
+                    }
+                }
+
+                if (!hasAmmo) return;
+            }
 
             // 设置选中弹种
             weapon.set(ModDataComponents.SELECTED_AMMO_TYPE.get(),

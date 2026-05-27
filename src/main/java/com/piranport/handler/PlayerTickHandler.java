@@ -83,6 +83,8 @@ public class PlayerTickHandler {
     private static final Map<UUID, Vec3> cachedDirection = new ConcurrentHashMap<>();
     /** 玩家 UUID → 水面 Y 坐标。用于水面行走位置锁定，防止下沉。 */
     private static final Map<UUID, Double> waterSurfaceY = new ConcurrentHashMap<>();
+    /** 玩家 UUID → 上次离开水面的tick。用于延迟清理水面Y缓存。 */
+    private static final Map<UUID, Integer> lastWaterExitTick = new ConcurrentHashMap<>();
     /** 缓存的配置值：是否启用舰核GUI（延迟初始化，避免配置加载顺序问题）*/
     private static Boolean cachedShipCoreGuiEnabled = null;
 
@@ -102,6 +104,7 @@ public class PlayerTickHandler {
         lastYaw.clear();
         cachedDirection.clear();
         waterSurfaceY.clear();
+        lastWaterExitTick.clear();
         cachedShipCoreGuiEnabled = null;
     }
 
@@ -113,6 +116,7 @@ public class PlayerTickHandler {
         lastYaw.remove(uuid);
         cachedDirection.remove(uuid);
         waterSurfaceY.remove(uuid);
+        lastWaterExitTick.remove(uuid);
     }
 
     /** 定期清理离线玩家的缓存条目，防止服务器崩溃导致的内存泄漏 */
@@ -127,6 +131,7 @@ public class PlayerTickHandler {
         lastYaw.keySet().removeIf(uuid -> !onlineUuids.contains(uuid));
         cachedDirection.keySet().removeIf(uuid -> !onlineUuids.contains(uuid));
         waterSurfaceY.keySet().removeIf(uuid -> !onlineUuids.contains(uuid));
+        lastWaterExitTick.keySet().removeIf(uuid -> !onlineUuids.contains(uuid));
     }
 
     @SubscribeEvent
@@ -141,6 +146,18 @@ public class PlayerTickHandler {
         if (!TransformationManager.isPlayerTransformed(player)) {
             lastPlayerPos.remove(player.getUUID());
             accumulatedDistance.remove(player.getUUID());
+
+            // 调试日志：帮助诊断变身检测失败
+            if (player.tickCount % 100 == 0 && player.isInWater()) {
+                ItemStack coreStack = TransformationManager.getCoreFromConfiguredSlot(player);
+                if (coreStack.getItem() instanceof ShipCoreItem) {
+                    boolean transformed = TransformationManager.isTransformed(coreStack);
+                    if (!transformed) {
+                        PiranPort.LOGGER.warn("Player {} has ship core in slot but not transformed. Core item: {}",
+                            player.getName().getString(), coreStack.getItem());
+                    }
+                }
+            }
             return;
         }
 
@@ -201,10 +218,23 @@ public class PlayerTickHandler {
     /** 水面行走条件判断后委托给 handleWaterWalking */
     private static void handleWaterWalkingIfNeeded(Player player, boolean isSubmarine) {
         if (isSubmarine) return;
+        UUID uuid = player.getUUID();
+
         if (!player.isInWater()) {
-            waterSurfaceY.remove(player.getUUID());
+            // 延迟清理缓存：离开水面后保留5秒，防止玩家短暂跳出水面时丢失位置记录
+            Integer lastWaterTick = lastWaterExitTick.get(uuid);
+            if (lastWaterTick == null) {
+                lastWaterExitTick.put(uuid, player.tickCount);
+            } else if (player.tickCount - lastWaterTick > 100) {  // 5秒后清理
+                waterSurfaceY.remove(uuid);
+                lastWaterExitTick.remove(uuid);
+            }
             return;
+        } else {
+            // 在水中：清除离开水面的记录
+            lastWaterExitTick.remove(uuid);
         }
+
         applyWaterSurfaceControl(player);
         if (!player.isEyeInFluidType(NeoForgeMod.WATER_TYPE.value())) {
             handleWaterWalking(player);
@@ -420,12 +450,21 @@ public class PlayerTickHandler {
     private static void applyWaterSurfaceControl(Player player) {
         UUID uuid = player.getUUID();
         Vec3 vel = player.getDeltaMovement();
+        double buoyancy = ModCommonConfig.WATER_SURFACE_BUOYANCY.get();
 
         if (player.isEyeInFluidType(NeoForgeMod.WATER_TYPE.value())) {
             // 眼睛在水下：强上推 + 记录水面位置
-            player.setDeltaMovement(vel.x, 0.3, vel.z);
+            player.setDeltaMovement(vel.x, buoyancy, vel.z);
             player.resetFallDistance();
-            waterSurfaceY.put(uuid, player.getY());
+
+            // 只在Y值更高时更新水面位置（防止下沉时错误记录低位置）
+            double currentY = player.getY();
+            double cachedY = waterSurfaceY.getOrDefault(uuid, currentY);
+            if (currentY > cachedY || cachedY - currentY > 2.0) {
+                // 更新条件：当前位置更高，或缓存值明显过高（说明传送/跳跃）
+                waterSurfaceY.put(uuid, currentY);
+            }
+
             if (player.level() instanceof ServerLevel serverLevel) {
                 serverLevel.sendParticles(ParticleTypes.BUBBLE_COLUMN_UP,
                     player.getX(), player.getY(), player.getZ(),
@@ -436,16 +475,22 @@ public class PlayerTickHandler {
             double currentY = player.getY();
             double surfaceY = waterSurfaceY.computeIfAbsent(uuid, k -> currentY);
 
-            if (vel.y <= 0 && currentY < surfaceY) {
-                // 正在下沉且低于水面：拉回水面位置
+            if (vel.y <= 0 && currentY < surfaceY - 0.15) {
+                // 正在下沉且明显低于水面：强制拉回水面位置
                 player.setPos(player.getX(), surfaceY, player.getZ());
                 player.setDeltaMovement(vel.x, 0, vel.z);
+                player.resetFallDistance();
             } else if (vel.y < 0) {
-                // 在水面或之上但仍有下沉速度：清零下沉速度
+                // 在水面附近但有下沉速度：清零下沉速度
                 player.setDeltaMovement(vel.x, 0, vel.z);
+                player.resetFallDistance();
             }
             // vel.y > 0（跳跃中）：不锁定 Y，让玩家正常跳起
-            player.resetFallDistance();
+
+            // 更新水面Y为当前较高值（玩家可能跳起后落回）
+            if (currentY > surfaceY) {
+                waterSurfaceY.put(uuid, currentY);
+            }
         }
     }
 

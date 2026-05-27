@@ -21,6 +21,7 @@ public class ModCommonConfig {
 
     public static final ModConfigSpec.DoubleValue WATER_WALKING_ACCELERATION;
     public static final ModConfigSpec.DoubleValue WATER_WALKING_DECELERATION;
+    public static final ModConfigSpec.DoubleValue WATER_SURFACE_BUOYANCY;
 
     // ===== Combat (战斗) =====
 
@@ -101,6 +102,14 @@ public class ModCommonConfig {
                         "Range: 0.5 (quick stop) to 0.95 (long slide).",
                         "默认0.85。数值越高减速越慢（更滑），越低停得越快。范围0.5（快速停止）到0.95（长距离滑行）")
                 .defineInRange("waterWalkingDeceleration", 0.85, 0.5, 0.95);
+
+        WATER_SURFACE_BUOYANCY = BUILDER
+                .comment(
+                        "Upward force when transformed player is underwater (变身玩家水下上浮力).",
+                        "Default: 0.5. Higher values = faster surfacing.",
+                        "Range: 0.3 (gentle) to 1.0 (very strong).",
+                        "默认0.5。数值越高上浮越快。范围0.3（温和）到1.0（非常强）")
+                .defineInRange("waterSurfaceBuoyancy", 0.5, 0.3, 1.0);
         BUILDER.pop();
 
         BUILDER.push("combat");

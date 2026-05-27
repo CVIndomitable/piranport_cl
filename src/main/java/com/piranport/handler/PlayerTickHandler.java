@@ -99,7 +99,6 @@ public class PlayerTickHandler {
         cachedDirection.clear();
         waterSurfaceY.clear();
         lastWaterExitTick.clear();
-        cachedShipCoreGuiEnabled = null;
     }
 
     /** 玩家登出时清理该玩家的缓存条目，防止长时间运行内存泄漏 */
@@ -147,8 +146,11 @@ public class PlayerTickHandler {
                 if (coreStack.getItem() instanceof ShipCoreItem) {
                     boolean transformed = TransformationManager.isTransformed(coreStack);
                     if (!transformed) {
-                        PiranPort.LOGGER.warn("Player {} has ship core in slot but not transformed. Core item: {}",
-                            player.getName().getString(), coreStack.getItem());
+                        PiranPort.LOGGER.warn("Player {} has ship core in slot but not transformed. Core: {}, Slot: {}, DataComponent: {}",
+                            player.getName().getString(),
+                            coreStack.getItem(),
+                            ModCommonConfig.SHIP_CORE_SLOT_MODE.get(),
+                            coreStack.get(ModDataComponents.SHIP_CORE_TRANSFORMED.get()));
                     }
                 }
             }
@@ -235,7 +237,7 @@ public class PlayerTickHandler {
         }
     }
 
-    /** 潜艇效果：无限水下呼吸 + 水下隐身（仅在效果快过期时刷新，避免每tick发包） */
+    /** 潜艇效果：无限水下呼吸 + 水下隐身 + 深海夜视（仅在效果快过期时刷新，避免每tick发包） */
     private static void tickSubmarineEffects(Player player, boolean isSubmarine) {
         if (isSubmarine) {
             MobEffectInstance waterBreathing = player.getEffect(MobEffects.WATER_BREATHING);
@@ -246,6 +248,13 @@ public class PlayerTickHandler {
                 MobEffectInstance invis = player.getEffect(MobEffects.INVISIBILITY);
                 if (invis == null || invis.getDuration() <= 10) {
                     player.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 40, 0, false, false, true));
+                }
+            }
+            // 深海夜视：仅在深水区（Y < 50）给予
+            if (player.isInWater() && player.getY() < 50) {
+                MobEffectInstance nightVision = player.getEffect(MobEffects.NIGHT_VISION);
+                if (nightVision == null || nightVision.getDuration() <= 60) {
+                    player.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, 240, 0, false, false, true));
                 }
             }
         }
@@ -344,6 +353,8 @@ public class PlayerTickHandler {
                     lastWeaponLoad.remove(player.getUUID());
                 }
                 TransformationManager.setTransformedAndWriteBack(player, coreStack, true);
+                // 重新读取核心以获取最新的ItemStack引用（DataComponents可能创建新实例）
+                coreStack = TransformationManager.getCoreFromConfiguredSlot(player);
                 TransformationManager.applyTransformationAttributes(player, coreStack);
                 ShipCoreCombat.refillAircraftFuel(player, coreStack);
                 player.displayClientMessage(
@@ -386,7 +397,8 @@ public class PlayerTickHandler {
                 if (stack.getItem() instanceof ShipCoreItem
                         && TransformationManager.isTransformed(stack)) {
                     TransformationManager.setTransformed(stack, false);
-                    // stack 本身就是 inv.items.get(i) 的引用，无需写回
+                    // P1修复: 显式写回以确保状态同步（DataComponents可能创建新ItemStack）
+                    inv.items.set(i, stack);
                 }
             }
             if (lastWeaponLoad.remove(player.getUUID()) != null) {
@@ -516,8 +528,9 @@ public class PlayerTickHandler {
         if (lastPos == null) return;
 
         double dist = currentPos.distanceTo(lastPos);
-        // 传送检测：降低阈值至64格，避免误判鞘翅飞行或末影珍珠
-        if (dist > TELEPORT_DETECTION_THRESHOLD || player.isFallFlying()) {
+        // P1修复: 降低传送检测阈值至32格，避免误判高速鞘翅飞行
+        final double TELEPORT_THRESHOLD = 32.0;
+        if (dist > TELEPORT_THRESHOLD || player.isFallFlying()) {
             lastPlayerPos.put(uuid, currentPos);
             accumulatedDistance.remove(uuid);
             return;
@@ -539,12 +552,7 @@ public class PlayerTickHandler {
         core.set(ModDataComponents.SHIP_CORE_FUEL.get(), fuel);
 
         // 写回槽位以确保燃料数据同步
-        String slotMode = ModCommonConfig.SHIP_CORE_SLOT_MODE.get();
-        if ("helmet".equalsIgnoreCase(slotMode) || "chest".equalsIgnoreCase(slotMode)) {
-            player.setItemSlot(EquipmentSlot.HEAD, core);
-        } else {
-            player.getInventory().offhand.set(0, core);
-        }
+        TransformationManager.writeCoreToConfiguredSlot(player, core);
 
         if (fuel.isEmpty()) {
             cleanupPlayerState(uuid);

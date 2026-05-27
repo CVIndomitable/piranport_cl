@@ -106,6 +106,28 @@ public class TransformationManager {
     }
 
     /**
+     * 将核心ItemStack写回配置的槽位。
+     *
+     * @param player 玩家
+     * @param coreStack 核心物品栈
+     */
+    public static void writeCoreToConfiguredSlot(Player player, ItemStack coreStack) {
+        String slotMode = ModCommonConfig.SHIP_CORE_SLOT_MODE.get();
+
+        // 向后兼容：将旧的 "chest" 配置自动映射到 "helmet"
+        if ("chest".equalsIgnoreCase(slotMode)) {
+            slotMode = "helmet";
+        }
+
+        if ("helmet".equalsIgnoreCase(slotMode)) {
+            player.setItemSlot(EquipmentSlot.HEAD, coreStack);
+        } else {
+            // 默认：副手模式
+            player.getInventory().offhand.set(0, coreStack);
+        }
+    }
+
+    /**
      * 设置变身状态并将修改后的 ItemStack 写回配置的槽位。
      *
      * <p>在无GUI模式下，变身状态的修改必须显式写回槽位才能持久化。
@@ -119,21 +141,8 @@ public class TransformationManager {
         // 设置变身状态
         coreStack.set(ModDataComponents.SHIP_CORE_TRANSFORMED.get(), transformed);
 
-        // 根据配置的槽位模式写回
-        String slotMode = ModCommonConfig.SHIP_CORE_SLOT_MODE.get();
-
-        // 向后兼容：将旧的 "chest" 配置自动映射到 "helmet"
-        if ("chest".equalsIgnoreCase(slotMode)) {
-            slotMode = "helmet";
-        }
-
-        if ("helmet".equalsIgnoreCase(slotMode)) {
-            // 头盔模式：写回头盔槽位
-            player.setItemSlot(EquipmentSlot.HEAD, coreStack);
-        } else {
-            // 默认：副手模式
-            player.getInventory().offhand.set(0, coreStack);
-        }
+        // 统一使用辅助方法写回
+        writeCoreToConfiguredSlot(player, coreStack);
     }
 
     /** 返回 true 表示可发射/投放的物品（火炮、鱼雷发射器、飞机 — 不含核心、装甲、弹药） */

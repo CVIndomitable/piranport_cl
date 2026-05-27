@@ -31,6 +31,9 @@ public class ReloadHelper {
      */
     public static void reloadTorpedoLauncher(Player player, Inventory inv, ItemStack launcherStack,
                                               int weaponSlot, ItemStack coreStack, int coreSlot) {
+        // P1修复: 添加服务器端验证
+        if (player.level().isClientSide()) return;
+
         if (!(launcherStack.getItem() instanceof TorpedoLauncherItem launcher)) return;
 
         int tubeCount = launcher.getTubeCount();

@@ -1,5 +1,5 @@
 {
   "variants": {
-    "": { "model": "piranport:block/b25_debug" }
+    "": { "model": "piranport:block/b25_model" }
   }
 }

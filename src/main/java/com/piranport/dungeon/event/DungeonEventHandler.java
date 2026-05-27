@@ -123,6 +123,13 @@ public class DungeonEventHandler {
     public static void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
 
+        // P1修复: 清理大厅状态，防止"幽灵玩家"
+        net.minecraft.core.GlobalPos lobbyPos = DungeonLobbyManager.INSTANCE.findLobbyOf(player.getUUID());
+        if (lobbyPos != null) {
+            DungeonLobbyManager.INSTANCE.leaveLobby(lobbyPos, player.getUUID());
+            DungeonLobbyManager.INSTANCE.broadcastLobbyUpdate(player.server, lobbyPos);
+        }
+
         // Always sweep the player's keys: a player may log out from the lectern
         // (overworld) after returning via town scroll, in which case the early
         // isInDungeon() guard previously left the instance permanently ACTIVE.
@@ -170,8 +177,13 @@ public class DungeonEventHandler {
         for (UUID uuid : instance.getPlayerUuids()) {
             if (uuid.equals(leaving)) continue;
             ServerPlayer p = server.getPlayerList().getPlayer(uuid);
-            // P1 #13: 验证新旗舰是否在地牢维度内
-            if (p != null && isInDungeon(p)) return p;
+            // P1修复: 验证新旗舰在地牢维度内且持有副本钥匙
+            if (p != null && isInDungeon(p)) {
+                // 验证新旗舰持有该副本的钥匙
+                if (com.piranport.dungeon.key.FlagshipManager.findKeySlot(p, instance.getInstanceId()) >= 0) {
+                    return p;
+                }
+            }
         }
         return null;
     }

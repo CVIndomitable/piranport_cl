@@ -178,14 +178,21 @@ public final class NodeBattleField {
         net.minecraft.world.phys.AABB regionBox = new net.minecraft.world.phys.AABB(
                 originX, -64, originZ, originX + size, 320, originZ + size);
 
-        // Discard dungeon-owned entities first (portals & crates) so their UUIDs
-        // can never be re-resolved by a future instance reusing this region index.
+        // P1修复: 清理所有副本专属实体类型，防止实体泄漏
         dungeonLevel.getEntitiesOfClass(
                 com.piranport.dungeon.entity.DungeonPortalEntity.class, regionBox)
                 .forEach(net.minecraft.world.entity.Entity::discard);
         dungeonLevel.getEntitiesOfClass(
                 com.piranport.dungeon.entity.LootShipEntity.class, regionBox)
                 .forEach(net.minecraft.world.entity.Entity::discard);
+
+        // 清理带副本标签的脚本生成实体
+        String instanceTag = "dungeon_instance_" + instance.getInstanceId();
+        dungeonLevel.getEntities().get(regionBox, entity -> {
+            if (entity.getTags().contains(instanceTag)) {
+                entity.discard();
+            }
+        });
 
         // Then sweep everything else.
         dungeonLevel.getEntities().get(regionBox, entity -> {

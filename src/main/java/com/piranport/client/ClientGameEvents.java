@@ -42,6 +42,9 @@ public class ClientGameEvents {
         }
     }
 
+    // P1修复: 使用静态RandomSource实例，避免每帧创建导致震动不连续
+    private static final RandomSource SHAKE_RANDOM = RandomSource.create();
+
     /** Phase 10: 屏幕震动 — 在相机角度计算后施加随机偏移 */
     @SubscribeEvent
     public static void onComputeCameraAngles(net.neoforged.neoforge.client.event.ViewportEvent.ComputeCameraAngles event) {
@@ -49,10 +52,9 @@ public class ClientGameEvents {
             float intensity = CameraShakeHandler.getShakeIntensity()
                     * ModClientConfig.SCREEN_SHAKE_MULTIPLIER.get().floatValue();
             if (intensity > 0) {
-                RandomSource rand = RandomSource.create();
-                event.setYaw(event.getYaw() + (rand.nextFloat() - 0.5f) * intensity * 2);
-                event.setPitch(event.getPitch() + (rand.nextFloat() - 0.5f) * intensity * 2);
-                event.setRoll(event.getRoll() + (rand.nextFloat() - 0.5f) * intensity * 0.5f);
+                event.setYaw(event.getYaw() + (SHAKE_RANDOM.nextFloat() - 0.5f) * intensity * 2);
+                event.setPitch(event.getPitch() + (SHAKE_RANDOM.nextFloat() - 0.5f) * intensity * 2);
+                event.setRoll(event.getRoll() + (SHAKE_RANDOM.nextFloat() - 0.5f) * intensity * 0.5f);
             }
         }
     }
@@ -128,5 +130,7 @@ public class ClientGameEvents {
         com.piranport.client.ClientScopeHandler.clear();
         com.piranport.dungeon.client.DungeonHudLayer.clearDungeonState();
         com.piranport.dungeon.network.ClientDungeonData.clear();
+        // P0修复: 清理配置缓存，防止跨服务器配置污染
+        com.piranport.artillery.config.override.ClientConfigCache.clearCache();
     }
 }

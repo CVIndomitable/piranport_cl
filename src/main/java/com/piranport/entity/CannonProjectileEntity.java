@@ -237,6 +237,9 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         checkProximityFuze();
     }
 
+    // P2优化: 预计算VT引信锥形检测的cos阈值，避免每次计算acos和toDegrees
+    private static final double VT_CONE_COS_THRESHOLD = Math.cos(Math.toRadians(30.0)); // 默认30度半角
+
     private void checkProximityFuze() {
         Vec3 velocity = getDeltaMovement();
         if (velocity.lengthSqr() < 0.01) return;
@@ -258,11 +261,10 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
             double distSquared = toTarget.lengthSqr();
             if (distSquared > rangeSquared) continue;
 
-            // 锥形过滤：检查目标方向与弹头速度方向的夹角
+            // P2优化: 直接比较点积与cos阈值，避免昂贵的acos和toDegrees计算
             Vec3 targetDir = toTarget.normalize();
             double dot = velNorm.dot(targetDir);
-            double angleDeg = Math.toDegrees(Math.acos(Math.max(-1, Math.min(1, dot))));
-            if (angleDeg <= vtConeHalfAngleDeg) {
+            if (dot >= VT_CONE_COS_THRESHOLD) {
                 proximityDetonate();
                 return;
             }

@@ -116,9 +116,9 @@ public class ReloadProgressHudLayer {
                 // 淡入阶段（首次显示）
                 long ticksSinceStart = currentTick - lastVisibleTick;
                 if (lastVisibleTick == 0 || ticksSinceStart > 100) {
-                    // 首次显示或长时间未显示
+                    // P1修复: 首次显示时alpha从0开始，避免突然出现
                     lastVisibleTick = currentTick;
-                    alpha = Math.min(1.0f, 1.0f / FADE_IN_TICKS);
+                    alpha = 0f;
                 } else if (ticksSinceStart < FADE_IN_TICKS) {
                     alpha = Math.min(1.0f, (float) ticksSinceStart / FADE_IN_TICKS);
                 }

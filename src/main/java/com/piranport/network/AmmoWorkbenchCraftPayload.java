@@ -91,6 +91,7 @@ public record AmmoWorkbenchCraftPayload(BlockPos pos, String recipeId, int quant
             }
 
             // 扫描材料：仅遍历主背包（36格）+ 副手，排除盔甲槽
+            Map<Item, Integer> available = new HashMap<>();
             for (int i = 0; i < player.getInventory().items.size(); i++) {
                 ItemStack stack = player.getInventory().items.get(i);
                 if (!stack.isEmpty()) {

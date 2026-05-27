@@ -41,6 +41,20 @@ public record ImportConfigPayload(String cannonFilename, String projectileFilena
     }
 
     /**
+     * 验证文件名是否安全（防止路径遍历攻击）
+     */
+    private static boolean isValidFilename(String filename) {
+        if (filename == null || filename.isEmpty()) {
+            return false;
+        }
+        // P0修复: 防止路径遍历漏洞
+        return !filename.contains("..")
+            && !filename.contains("/")
+            && !filename.contains("\\")
+            && filename.length() < 256;
+    }
+
+    /**
      * 处理网络包（服务端）
      */
     public static void handle(ImportConfigPayload payload, IPayloadContext context) {
@@ -53,6 +67,24 @@ public record ImportConfigPayload(String cannonFilename, String projectileFilena
             if (!serverPlayer.isCreative() && !serverPlayer.hasPermissions(2)) {
                 PiranPort.LOGGER.warn("Player {} tried to import config without creative mode or OP permission",
                         serverPlayer.getName().getString());
+                return;
+            }
+
+            // P0修复: 验证文件名安全性
+            if (!isValidFilename(payload.cannonFilename) && !payload.cannonFilename.isEmpty()) {
+                PiranPort.LOGGER.warn("Player {} tried to import config with invalid cannon filename: {}",
+                        serverPlayer.getName().getString(), payload.cannonFilename);
+                serverPlayer.sendSystemMessage(
+                        Component.literal("Invalid cannon filename").withStyle(ChatFormatting.RED)
+                );
+                return;
+            }
+            if (!isValidFilename(payload.projectileFilename) && !payload.projectileFilename.isEmpty()) {
+                PiranPort.LOGGER.warn("Player {} tried to import config with invalid projectile filename: {}",
+                        serverPlayer.getName().getString(), payload.projectileFilename);
+                serverPlayer.sendSystemMessage(
+                        Component.literal("Invalid projectile filename").withStyle(ChatFormatting.RED)
+                );
                 return;
             }
 

@@ -512,8 +512,11 @@ public class AircraftEntity extends Entity {
         }
     }
 
-    /** 统一清理侦察机状态：结束侦察、释放区块、通知客户端。 */
-    private void cleanupReconState(Player owner) {
+    /**
+     * 统一清理侦察机状态：结束侦察、释放区块、通知客户端。
+     * P0修复: 改为public以便在玩家登出时从外部调用
+     */
+    public void cleanupReconState(Player owner) {
         ReconManager.endRecon(owner.getUUID());
         releaseAllForcedChunks();
         // Notify client to restore camera
@@ -1612,6 +1615,19 @@ public class AircraftEntity extends Entity {
         entityData.set(STATE, tag.getInt("FlightState"));
         entityData.set(AIRCRAFT_TYPE_DATA, aircraftType.ordinal());
         if (ownerUUID != null) entityData.set(OWNER_ID, Optional.of(ownerUUID));
+
+        // P1修复: 如果重新加载后状态是RECON_ACTIVE但玩家不在线，强制切换到RETURNING
+        if (getFlightState() == FlightState.RECON_ACTIVE && level() instanceof ServerLevel sl) {
+            if (ownerUUID != null) {
+                ServerPlayer owner = sl.getServer().getPlayerList().getPlayer(ownerUUID);
+                if (owner == null) {
+                    // 玩家不在线，强制切换到返航状态
+                    setState(FlightState.RETURNING);
+                    com.piranport.PiranPort.LOGGER.info("Aircraft {} switched from RECON_ACTIVE to RETURNING (owner offline)", getId());
+                }
+            }
+        }
+
         airtimeTicks = tag.getInt("AirtimeTicks");
         hasFired = tag.getBoolean("HasFired");
         aircraftHealth = tag.contains("AircraftHealth")

@@ -27,11 +27,14 @@ public record UpdateConfigOverridePayload(
     public static final Type<UpdateConfigOverridePayload> TYPE =
             new Type<>(ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "update_config_override"));
 
+    // P0修复: 限制字符串长度防止内存耗尽
+    private static final int MAX_STRING_LENGTH = 256;
+
     public static final StreamCodec<ByteBuf, UpdateConfigOverridePayload> STREAM_CODEC = StreamCodec.composite(
-            ByteBufCodecs.STRING_UTF8, UpdateConfigOverridePayload::category,
-            ByteBufCodecs.STRING_UTF8, UpdateConfigOverridePayload::key,
-            ByteBufCodecs.STRING_UTF8, UpdateConfigOverridePayload::field,
-            ByteBufCodecs.STRING_UTF8, UpdateConfigOverridePayload::value,
+            ByteBufCodecs.stringUtf8(MAX_STRING_LENGTH), UpdateConfigOverridePayload::category,
+            ByteBufCodecs.stringUtf8(MAX_STRING_LENGTH), UpdateConfigOverridePayload::key,
+            ByteBufCodecs.stringUtf8(MAX_STRING_LENGTH), UpdateConfigOverridePayload::field,
+            ByteBufCodecs.stringUtf8(MAX_STRING_LENGTH), UpdateConfigOverridePayload::value,
             UpdateConfigOverridePayload::new
     );
 

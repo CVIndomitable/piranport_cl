@@ -30,35 +30,37 @@ public class ArtilleryCannonDetailScreen extends Screen {
     private final String cannonName;
     private final ArtilleryCannonData originalData;
 
-    // 18个编辑框
-    private EditBox damageBox;
-    private EditBox explosionPowerBox;
-    private EditBox dispersionBox;
-    private EditBox dragCoeffBox;
-    private EditBox gravityBox;
-    private EditBox projectileWeightBox;
-    private EditBox initialSpeedBox;
-    private EditBox reloadTimeBox;
-    private EditBox fireCooldownBox;
-    private EditBox salvoCountBox;
-    private EditBox salvoIntervalBox;
-    private EditBox verticalSpreadBox;
-    private EditBox horizontalSpreadBox;
-    private EditBox maxElevationBox;
-    private EditBox minElevationBox;
-    private EditBox turretSpeedBox;
-    private EditBox durabilityBox;
-    private EditBox barrelsBox;
+    // EditBox 引用数组（索引对应 FIELDS 数组）
+    private final EditBox[] editBoxRefs = new EditBox[18];
+
+    // 字段值缓存（用于滚动时保留用户输入）
+    private final Map<String, String> fieldValueCache = new HashMap<>();
+
+    // 动态布局参数（在 init() 中计算）
+    private int guiHeight;
+    private int visibleRows;
+    private int buttonYOffset;
+    private int maxScrollOffset;
+
+    // 滚动状态
+    private int scrollOffset = 0;
+
+    // 滚动按钮引用（可能为null，如果不需要滚动）
+    private Button scrollUpButton;
+    private Button scrollDownButton;
 
     // 布局常量
-    private static final int GUI_WIDTH = 230;
-    private static final int GUI_HEIGHT = 435;
+    private static final int GUI_WIDTH = 250;
     private static final int LABEL_X_OFFSET = 10;
     private static final int INPUT_X_OFFSET = 110;
     private static final int INPUT_WIDTH = 100;
     private static final int ROW_HEIGHT = 19;
     private static final int FIELDS_START_Y = 40;
-    private static final int BUTTON_Y_OFFSET = 400;
+    private static final int MIN_VISIBLE_ROWS = 6;
+    private static final int BUTTON_HEIGHT = 20;
+    private static final int BUTTON_MARGIN = 10;
+    private static final int GUI_PADDING = 20;
+    private static final int SCROLL_BUTTON_WIDTH = 15;
 
     /**
      * 字段定义：翻译键、字段名、是否为浮点数
@@ -96,75 +98,156 @@ public class ArtilleryCannonDetailScreen extends Screen {
 
     @Override
     protected void init() {
-        int x = (this.width - GUI_WIDTH) / 2;
-        int y = (this.height - GUI_HEIGHT) / 2;
+        // 计算可用于显示字段的最大高度
+        int availableHeight = this.height - GUI_PADDING * 2 - FIELDS_START_Y - BUTTON_HEIGHT - BUTTON_MARGIN;
 
-        createEditBoxes(x, y);
+        // 计算可见行数（至少6行，最多18行）
+        visibleRows = Math.max(MIN_VISIBLE_ROWS, Math.min(FIELDS.length, availableHeight / ROW_HEIGHT));
+
+        // 计算实际GUI高度
+        guiHeight = FIELDS_START_Y + visibleRows * ROW_HEIGHT + BUTTON_MARGIN + BUTTON_HEIGHT + GUI_PADDING;
+
+        // 计算按钮Y偏移
+        buttonYOffset = FIELDS_START_Y + visibleRows * ROW_HEIGHT + BUTTON_MARGIN;
+
+        // 计算最大滚动偏移
+        maxScrollOffset = Math.max(0, FIELDS.length - visibleRows);
+
+        int x = (this.width - GUI_WIDTH) / 2;
+        int y = (this.height - guiHeight) / 2;
+
+        // 只有需要滚动时才创建滚动按钮
+        if (maxScrollOffset > 0) {
+            scrollUpButton = Button.builder(
+                    Component.literal("▲"),
+                    button -> scrollUp()
+            ).bounds(x + GUI_WIDTH - SCROLL_BUTTON_WIDTH - 5, y + FIELDS_START_Y, SCROLL_BUTTON_WIDTH, 15).build();
+            this.addRenderableWidget(scrollUpButton);
+
+            scrollDownButton = Button.builder(
+                    Component.literal("▼"),
+                    button -> scrollDown()
+            ).bounds(x + GUI_WIDTH - SCROLL_BUTTON_WIDTH - 5, y + FIELDS_START_Y + visibleRows * ROW_HEIGHT - 15, SCROLL_BUTTON_WIDTH, 15).build();
+            this.addRenderableWidget(scrollDownButton);
+        }
 
         // 保存按钮
         this.addRenderableWidget(Button.builder(
                 Component.translatable("gui.piranport.config_tool.save"),
                 button -> onSave()
-        ).bounds(x + 20, y + BUTTON_Y_OFFSET, 80, 20).build());
+        ).bounds(x + 20, y + buttonYOffset, 80, 20).build());
 
         // 取消按钮
         this.addRenderableWidget(Button.builder(
                 Component.translatable("gui.piranport.config_tool.cancel"),
                 button -> onCancel()
-        ).bounds(x + 130, y + BUTTON_Y_OFFSET, 80, 20).build());
+        ).bounds(x + 130, y + buttonYOffset, 80, 20).build());
+
+        // 动态创建可见的编辑框
+        rebuildEditBoxes();
+
+        // 更新滚动按钮状态
+        if (maxScrollOffset > 0) {
+            updateScrollButtonStates();
+        }
     }
 
     /**
-     * 创建所有编辑框并填充当前值
+     * 根据当前滚动位置重建可见的编辑框
      */
-    private void createEditBoxes(int guiX, int guiY) {
-        damageBox = createFieldBox(guiX + INPUT_X_OFFSET, guiY + FIELDS_START_Y + 0 * ROW_HEIGHT,
-                getFieldDisplayValue("damage", originalData.damage()));
-        explosionPowerBox = createFieldBox(guiX + INPUT_X_OFFSET, guiY + FIELDS_START_Y + 1 * ROW_HEIGHT,
-                getFieldDisplayValue("explosionPower", originalData.explosionPower()));
-        dispersionBox = createFieldBox(guiX + INPUT_X_OFFSET, guiY + FIELDS_START_Y + 2 * ROW_HEIGHT,
-                getFieldDisplayValue("dispersion", originalData.dispersion()));
-        dragCoeffBox = createFieldBox(guiX + INPUT_X_OFFSET, guiY + FIELDS_START_Y + 3 * ROW_HEIGHT,
-                getFieldDisplayValue("dragCoeff", originalData.dragCoeff()));
-        gravityBox = createFieldBox(guiX + INPUT_X_OFFSET, guiY + FIELDS_START_Y + 4 * ROW_HEIGHT,
-                getFieldDisplayValue("gravity", originalData.gravity()));
-        projectileWeightBox = createFieldBox(guiX + INPUT_X_OFFSET, guiY + FIELDS_START_Y + 5 * ROW_HEIGHT,
-                getFieldDisplayValue("projectileWeight", originalData.projectileWeight()));
-        initialSpeedBox = createFieldBox(guiX + INPUT_X_OFFSET, guiY + FIELDS_START_Y + 6 * ROW_HEIGHT,
-                getFieldDisplayValue("initialSpeed", originalData.initialSpeed()));
-        reloadTimeBox = createFieldBox(guiX + INPUT_X_OFFSET, guiY + FIELDS_START_Y + 7 * ROW_HEIGHT,
-                String.valueOf(getFieldIntValue("reloadTime", originalData.reloadTime())));
-        fireCooldownBox = createFieldBox(guiX + INPUT_X_OFFSET, guiY + FIELDS_START_Y + 8 * ROW_HEIGHT,
-                String.valueOf(getFieldIntValue("fireCooldown", originalData.fireCooldown())));
-        salvoCountBox = createFieldBox(guiX + INPUT_X_OFFSET, guiY + FIELDS_START_Y + 9 * ROW_HEIGHT,
-                String.valueOf(getFieldIntValue("salvoCount", originalData.salvoCount())));
-        salvoIntervalBox = createFieldBox(guiX + INPUT_X_OFFSET, guiY + FIELDS_START_Y + 10 * ROW_HEIGHT,
-                getFieldDisplayValue("salvoInterval", originalData.salvoInterval()));
-        verticalSpreadBox = createFieldBox(guiX + INPUT_X_OFFSET, guiY + FIELDS_START_Y + 11 * ROW_HEIGHT,
-                getFieldDisplayValue("verticalSpread", originalData.verticalSpread()));
-        horizontalSpreadBox = createFieldBox(guiX + INPUT_X_OFFSET, guiY + FIELDS_START_Y + 12 * ROW_HEIGHT,
-                getFieldDisplayValue("horizontalSpread", originalData.horizontalSpread()));
-        maxElevationBox = createFieldBox(guiX + INPUT_X_OFFSET, guiY + FIELDS_START_Y + 13 * ROW_HEIGHT,
-                getFieldDisplayValue("maxElevation", originalData.maxElevation()));
-        minElevationBox = createFieldBox(guiX + INPUT_X_OFFSET, guiY + FIELDS_START_Y + 14 * ROW_HEIGHT,
-                getFieldDisplayValue("minElevation", originalData.minElevation()));
-        turretSpeedBox = createFieldBox(guiX + INPUT_X_OFFSET, guiY + FIELDS_START_Y + 15 * ROW_HEIGHT,
-                getFieldDisplayValue("turretSpeed", originalData.turretSpeed()));
-        durabilityBox = createFieldBox(guiX + INPUT_X_OFFSET, guiY + FIELDS_START_Y + 16 * ROW_HEIGHT,
-                String.valueOf(getFieldIntValue("durability", originalData.durability())));
-        barrelsBox = createFieldBox(guiX + INPUT_X_OFFSET, guiY + FIELDS_START_Y + 17 * ROW_HEIGHT,
-                String.valueOf(getFieldIntValue("barrels", originalData.barrels())));
+    private void rebuildEditBoxes() {
+        // 移除所有现有的 EditBox（保留按钮）
+        this.renderables.removeIf(widget -> widget instanceof EditBox);
+        this.children().removeIf(widget -> widget instanceof EditBox);
+
+        int x = (this.width - GUI_WIDTH) / 2;
+        int y = (this.height - guiHeight) / 2;
+
+        // 只创建可见范围内的 EditBox
+        for (int i = 0; i < visibleRows && (scrollOffset + i) < FIELDS.length; i++) {
+            int fieldIndex = scrollOffset + i;
+            FieldDef field = FIELDS[fieldIndex];
+
+            int boxY = y + FIELDS_START_Y + i * ROW_HEIGHT;
+            EditBox box = new EditBox(this.font, x + INPUT_X_OFFSET, boxY, INPUT_WIDTH, 16, Component.empty());
+
+            // 从缓存或原始数据获取当前值
+            String currentValue = getCachedFieldValue(field.fieldName(), field.isFloat());
+            box.setValue(currentValue);
+            box.setMaxLength(12);
+
+            this.addRenderableWidget(box);
+
+            // 将 EditBox 关联到对应的字段
+            editBoxRefs[fieldIndex] = box;
+        }
     }
 
     /**
-     * 创建单个编辑框
+     * 获取缓存的字段值（优先从缓存，否则从原始数据）
      */
-    private EditBox createFieldBox(int x, int y, String currentValue) {
-        EditBox box = new EditBox(this.font, x, y, INPUT_WIDTH, 16, Component.empty());
-        box.setValue(currentValue);
-        box.setMaxLength(12);
-        this.addRenderableWidget(box);
-        return box;
+    private String getCachedFieldValue(String fieldName, boolean isFloat) {
+        // 优先从缓存读取
+        if (fieldValueCache.containsKey(fieldName)) {
+            return fieldValueCache.get(fieldName);
+        }
+
+        // 否则从客户端缓存或原始数据读取
+        if (isFloat) {
+            return getFieldDisplayValue(fieldName, getOriginalFloatValue(fieldName));
+        } else {
+            return getFieldIntValue(fieldName, getOriginalIntValue(fieldName));
+        }
+    }
+
+    /**
+     * 从原始数据获取浮点值
+     */
+    private float getOriginalFloatValue(String fieldName) {
+        return switch (fieldName) {
+            case "damage" -> originalData.damage();
+            case "explosionPower" -> originalData.explosionPower();
+            case "dispersion" -> originalData.dispersion();
+            case "dragCoeff" -> originalData.dragCoeff();
+            case "gravity" -> originalData.gravity();
+            case "projectileWeight" -> originalData.projectileWeight();
+            case "initialSpeed" -> originalData.initialSpeed();
+            case "salvoInterval" -> originalData.salvoInterval();
+            case "verticalSpread" -> originalData.verticalSpread();
+            case "horizontalSpread" -> originalData.horizontalSpread();
+            case "maxElevation" -> originalData.maxElevation();
+            case "minElevation" -> originalData.minElevation();
+            case "turretSpeed" -> originalData.turretSpeed();
+            default -> 0f;
+        };
+    }
+
+    /**
+     * 从原始数据获取整数值
+     */
+    private int getOriginalIntValue(String fieldName) {
+        return switch (fieldName) {
+            case "reloadTime" -> originalData.reloadTime();
+            case "fireCooldown" -> originalData.fireCooldown();
+            case "salvoCount" -> originalData.salvoCount();
+            case "durability" -> originalData.durability();
+            case "barrels" -> originalData.barrels();
+            default -> 0;
+        };
+    }
+
+    /**
+     * 保存当前可见 EditBox 的值到缓存
+     */
+    private void cacheCurrentEditBoxValues() {
+        for (int i = 0; i < visibleRows && (scrollOffset + i) < FIELDS.length; i++) {
+            int fieldIndex = scrollOffset + i;
+            FieldDef field = FIELDS[fieldIndex];
+            EditBox box = editBoxRefs[fieldIndex];
+            if (box != null) {
+                fieldValueCache.put(field.fieldName(), box.getValue());
+            }
+        }
     }
 
     /**
@@ -183,61 +266,155 @@ public class ArtilleryCannonDetailScreen extends Screen {
         return override.orElse(String.valueOf(defaultValue));
     }
 
+    /**
+     * 向上滚动
+     */
+    private void scrollUp() {
+        if (scrollOffset > 0) {
+            // 保存当前可见字段的值
+            cacheCurrentEditBoxValues();
+
+            // 更新滚动偏移
+            scrollOffset--;
+
+            // 清空 EditBox 引用
+            java.util.Arrays.fill(editBoxRefs, null);
+
+            // 重建 EditBox
+            rebuildEditBoxes();
+
+            // 更新按钮状态
+            updateScrollButtonStates();
+        }
+    }
+
+    /**
+     * 向下滚动
+     */
+    private void scrollDown() {
+        if (scrollOffset < maxScrollOffset) {
+            // 保存当前可见字段的值
+            cacheCurrentEditBoxValues();
+
+            // 更新滚动偏移
+            scrollOffset++;
+
+            // 清空 EditBox 引用
+            java.util.Arrays.fill(editBoxRefs, null);
+
+            // 重建 EditBox
+            rebuildEditBoxes();
+
+            // 更新按钮状态
+            updateScrollButtonStates();
+        }
+    }
+
+    /**
+     * 更新滚动按钮的启用/禁用状态
+     */
+    private void updateScrollButtonStates() {
+        if (scrollUpButton != null) {
+            scrollUpButton.active = (scrollOffset > 0);
+        }
+        if (scrollDownButton != null) {
+            scrollDownButton.active = (scrollOffset < maxScrollOffset);
+        }
+    }
+
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         int x = (this.width - GUI_WIDTH) / 2;
-        int y = (this.height - GUI_HEIGHT) / 2;
+        int y = (this.height - guiHeight) / 2;
 
-        // 先绘制背景
-        graphics.fill(x, y, x + GUI_WIDTH, y + GUI_HEIGHT, 0xFF8B8B8B);
+        // 绘制背景
+        graphics.fill(x, y, x + GUI_WIDTH, y + guiHeight, 0xFF8B8B8B);
         graphics.fill(x, y, x + GUI_WIDTH, y + 20, 0xFF5A5A5A);
 
-        // 再调用 super.render() 渲染 widgets（包括 EditBox）
+        // 绘制滚动区域背景
+        int scrollAreaHeight = visibleRows * ROW_HEIGHT;
+        graphics.fill(x + 5, y + FIELDS_START_Y - 5, x + GUI_WIDTH - 25, y + FIELDS_START_Y + scrollAreaHeight + 5, 0xFF6B6B6B);
+
+        // 启用裁剪，限制渲染区域
+        graphics.enableScissor(
+                x,
+                y + FIELDS_START_Y,
+                x + GUI_WIDTH,
+                y + FIELDS_START_Y + scrollAreaHeight
+        );
+
+        // 调用 super.render() 渲染 widgets（包括 EditBox）
         super.render(graphics, mouseX, mouseY, partialTick);
 
-        // 最后绘制标题和标签（覆盖在最上层）
+        // 禁用裁剪
+        graphics.disableScissor();
+
+        // 绘制标题
         String title = Component.translatable("gui.piranport.config_tool.cannon_detail_title",
                 Component.translatable("item.piranport." + cannonName).getString()).getString();
         graphics.drawString(this.font, title, x + 8, y + 6, 0xFFFFFF, false);
 
-        // 绘制字段标签
-        for (int i = 0; i < FIELDS.length; i++) {
-            FieldDef field = FIELDS[i];
+        // 绘制可见字段的标签
+        for (int i = 0; i < visibleRows && (scrollOffset + i) < FIELDS.length; i++) {
+            int fieldIndex = scrollOffset + i;
+            FieldDef field = FIELDS[fieldIndex];
             int labelY = y + FIELDS_START_Y + i * ROW_HEIGHT + 2;
             String label = Component.translatable("gui.piranport.config_tool." + field.transKey()).getString();
             graphics.drawString(this.font, label, x + LABEL_X_OFFSET, labelY, 0xFFFFFF, false);
         }
+
+        // 绘制滚动指示器
+        if (maxScrollOffset > 0) {
+            renderScrollIndicators(graphics, x, y);
+        }
+    }
+
+    /**
+     * 渲染滚动指示器
+     */
+    private void renderScrollIndicators(GuiGraphics graphics, int x, int y) {
+        // 上方指示器（有更多内容）
+        if (scrollOffset > 0) {
+            String indicator = "▲ " + scrollOffset + " 更多";
+            graphics.drawString(this.font, indicator, x + 10, y + FIELDS_START_Y - 15, 0xFFFFAA, false);
+        }
+
+        // 下方指示器（有更多内容）
+        if (scrollOffset < maxScrollOffset) {
+            int remaining = FIELDS.length - scrollOffset - visibleRows;
+            String indicator = "▼ " + remaining + " 更多";
+            graphics.drawString(this.font, indicator, x + 10, y + FIELDS_START_Y + visibleRows * ROW_HEIGHT + 5, 0xFFFFAA, false);
+        }
+
+        // 滚动进度指示
+        String progress = String.format("%d-%d / %d",
+                scrollOffset + 1,
+                Math.min(scrollOffset + visibleRows, FIELDS.length),
+                FIELDS.length);
+        graphics.drawString(this.font, progress, x + 160, y + FIELDS_START_Y - 15, 0xAAAAAA, false);
     }
 
     /**
      * 保存按钮回调：验证并发送所有字段更新
      */
     private void onSave() {
-        if (!validateAllInputs()) {
+        // 先保存当前可见字段的值到缓存
+        cacheCurrentEditBoxValues();
+
+        // 验证所有字段
+        if (!validateAllInputsFromCache()) {
             return;
         }
 
-        // 发送18个字段的更新到服务端
-        sendFieldUpdate("damage", damageBox.getValue());
-        sendFieldUpdate("explosionPower", explosionPowerBox.getValue());
-        sendFieldUpdate("dispersion", dispersionBox.getValue());
-        sendFieldUpdate("dragCoeff", dragCoeffBox.getValue());
-        sendFieldUpdate("gravity", gravityBox.getValue());
-        sendFieldUpdate("projectileWeight", projectileWeightBox.getValue());
-        sendFieldUpdate("initialSpeed", initialSpeedBox.getValue());
-        sendFieldUpdate("reloadTime", reloadTimeBox.getValue());
-        sendFieldUpdate("fireCooldown", fireCooldownBox.getValue());
-        sendFieldUpdate("salvoCount", salvoCountBox.getValue());
-        sendFieldUpdate("salvoInterval", salvoIntervalBox.getValue());
-        sendFieldUpdate("verticalSpread", verticalSpreadBox.getValue());
-        sendFieldUpdate("horizontalSpread", horizontalSpreadBox.getValue());
-        sendFieldUpdate("maxElevation", maxElevationBox.getValue());
-        sendFieldUpdate("minElevation", minElevationBox.getValue());
-        sendFieldUpdate("turretSpeed", turretSpeedBox.getValue());
-        sendFieldUpdate("durability", durabilityBox.getValue());
-        sendFieldUpdate("barrels", barrelsBox.getValue());
+        // 发送18个字段的更新到服务端（从缓存读取）
+        for (FieldDef field : FIELDS) {
+            String value = fieldValueCache.get(field.fieldName());
+            if (value != null && !value.isEmpty()) {
+                sendFieldUpdate(field.fieldName(), value);
+            }
+        }
 
-        // 直接更新客户端缓存，主界面立即反映变更
+        // 更新客户端缓存
         updateClientCacheAfterSave();
 
         // 显示成功提示
@@ -264,55 +441,42 @@ public class ArtilleryCannonDetailScreen extends Screen {
      */
     private void updateClientCacheAfterSave() {
         Map<String, String> fields = new HashMap<>();
-        fields.put("damage", damageBox.getValue());
-        fields.put("explosionPower", explosionPowerBox.getValue());
-        fields.put("dispersion", dispersionBox.getValue());
-        fields.put("dragCoeff", dragCoeffBox.getValue());
-        fields.put("gravity", gravityBox.getValue());
-        fields.put("projectileWeight", projectileWeightBox.getValue());
-        fields.put("initialSpeed", initialSpeedBox.getValue());
-        fields.put("reloadTime", reloadTimeBox.getValue());
-        fields.put("fireCooldown", fireCooldownBox.getValue());
-        fields.put("salvoCount", salvoCountBox.getValue());
-        fields.put("salvoInterval", salvoIntervalBox.getValue());
-        fields.put("verticalSpread", verticalSpreadBox.getValue());
-        fields.put("horizontalSpread", horizontalSpreadBox.getValue());
-        fields.put("maxElevation", maxElevationBox.getValue());
-        fields.put("minElevation", minElevationBox.getValue());
-        fields.put("turretSpeed", turretSpeedBox.getValue());
-        fields.put("durability", durabilityBox.getValue());
-        fields.put("barrels", barrelsBox.getValue());
+
+        // 从缓存读取所有字段值
+        for (FieldDef field : FIELDS) {
+            String value = fieldValueCache.get(field.fieldName());
+            if (value != null) {
+                fields.put(field.fieldName(), value);
+            }
+        }
 
         ClientConfigCache.setCannonOverrides(cannonName, fields);
     }
 
     /**
-     * 验证所有输入值
+     * 从缓存验证所有输入值
      */
-    private boolean validateAllInputs() {
+    private boolean validateAllInputsFromCache() {
         try {
-            validateFloat("damage", damageBox.getValue(), 0.1f, 1000f);
-            validateFloat("explosionPower", explosionPowerBox.getValue(), 0f, 20f);
-            validateFloat("dispersion", dispersionBox.getValue(), 0f, 10f);
-            validateFloat("dragCoeff", dragCoeffBox.getValue(), 0f, 1f);
-            validateFloat("gravity", gravityBox.getValue(), 0.1f, 100f);
-            validateFloat("projectileWeight", projectileWeightBox.getValue(), 0.1f, 10000f);
-            validateFloat("initialSpeed", initialSpeedBox.getValue(), 0.1f, 50f);
-            validateInt("reloadTime", reloadTimeBox.getValue(), 1, 6000);
-            validateInt("fireCooldown", fireCooldownBox.getValue(), 0, 6000);
-            validateInt("salvoCount", salvoCountBox.getValue(), 1, 20);
-            validateFloat("salvoInterval", salvoIntervalBox.getValue(), 0f, 100f);
-            validateFloat("verticalSpread", verticalSpreadBox.getValue(), 0f, 10f);
-            validateFloat("horizontalSpread", horizontalSpreadBox.getValue(), 0f, 10f);
-            validateFloat("maxElevation", maxElevationBox.getValue(), -90f, 90f);
-            validateFloat("minElevation", minElevationBox.getValue(), -90f, 90f);
-            validateFloat("turretSpeed", turretSpeedBox.getValue(), 0.1f, 20f);
-            validateInt("durability", durabilityBox.getValue(), 1, 100000);
-            validateInt("barrels", barrelsBox.getValue(), 1, 20);
+            // 验证所有18个字段
+            for (FieldDef field : FIELDS) {
+                String value = fieldValueCache.get(field.fieldName());
+                if (value == null || value.isEmpty()) {
+                    showError("字段 " + field.transKey() + " 不能为空");
+                    return false;
+                }
+
+                // 根据字段类型验证
+                if (field.isFloat()) {
+                    validateFloatField(field.fieldName(), value);
+                } else {
+                    validateIntField(field.fieldName(), value);
+                }
+            }
 
             // 验证最小仰角 < 最大仰角
-            float minElev = Float.parseFloat(minElevationBox.getValue());
-            float maxElev = Float.parseFloat(maxElevationBox.getValue());
+            float minElev = Float.parseFloat(fieldValueCache.get("minElevation"));
+            float maxElev = Float.parseFloat(fieldValueCache.get("maxElevation"));
             if (minElev >= maxElev) {
                 showError("message.piranport.min_elevation_must_be_less");
                 return false;
@@ -321,10 +485,51 @@ public class ArtilleryCannonDetailScreen extends Screen {
             return true;
 
         } catch (IllegalArgumentException e) {
-            // 验证失败时显示具体错误信息
             showError(e.getMessage());
             return false;
         }
+    }
+
+    /**
+     * 验证浮点字段
+     */
+    private void validateFloatField(String fieldName, String valueStr) {
+        float min = 0f, max = 1000f;
+
+        // 根据字段设置范围
+        switch (fieldName) {
+            case "damage" -> { min = 0.1f; max = 1000f; }
+            case "explosionPower" -> { min = 0f; max = 20f; }
+            case "dispersion" -> { min = 0f; max = 10f; }
+            case "dragCoeff" -> { min = 0f; max = 1f; }
+            case "gravity" -> { min = 0.1f; max = 100f; }
+            case "projectileWeight" -> { min = 0.1f; max = 10000f; }
+            case "initialSpeed" -> { min = 0.1f; max = 50f; }
+            case "salvoInterval" -> { min = 0f; max = 100f; }
+            case "verticalSpread", "horizontalSpread" -> { min = 0f; max = 10f; }
+            case "maxElevation", "minElevation" -> { min = -90f; max = 90f; }
+            case "turretSpeed" -> { min = 0.1f; max = 20f; }
+        }
+
+        validateFloat(fieldName, valueStr, min, max);
+    }
+
+    /**
+     * 验证整数字段
+     */
+    private void validateIntField(String fieldName, String valueStr) {
+        int min = 1, max = 10000;
+
+        // 根据字段设置范围
+        switch (fieldName) {
+            case "reloadTime" -> { min = 1; max = 6000; }
+            case "fireCooldown" -> { min = 0; max = 6000; }
+            case "salvoCount" -> { min = 1; max = 20; }
+            case "durability" -> { min = 1; max = 100000; }
+            case "barrels" -> { min = 1; max = 20; }
+        }
+
+        validateInt(fieldName, valueStr, min, max);
     }
 
     /**
@@ -397,5 +602,37 @@ public class ArtilleryCannonDetailScreen extends Screen {
             return true;
         }
         return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        // 只有需要滚动时才处理
+        if (maxScrollOffset <= 0) {
+            return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+        }
+
+        // 检查鼠标是否在滚动区域内
+        int x = (this.width - GUI_WIDTH) / 2;
+        int y = (this.height - guiHeight) / 2;
+        int scrollAreaX = x;
+        int scrollAreaY = y + FIELDS_START_Y;
+        int scrollAreaWidth = GUI_WIDTH;
+        int scrollAreaHeight = visibleRows * ROW_HEIGHT;
+
+        if (mouseX >= scrollAreaX && mouseX < scrollAreaX + scrollAreaWidth &&
+                mouseY >= scrollAreaY && mouseY < scrollAreaY + scrollAreaHeight) {
+
+            if (scrollY > 0) {
+                // 向上滚动
+                scrollUp();
+                return true;
+            } else if (scrollY < 0) {
+                // 向下滚动
+                scrollDown();
+                return true;
+            }
+        }
+
+        return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
     }
 }

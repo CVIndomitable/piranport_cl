@@ -52,10 +52,20 @@ public record SyncConfigOverridesPayload(
         public SyncConfigOverridesPayload decode(ByteBuf buffer) {
             // 解码火炮覆盖
             int cannonCount = ByteBufCodecs.VAR_INT.decode(buffer);
+            // P0修复: 添加上限检查防止DoS攻击
+            if (cannonCount < 0 || cannonCount > 200) {
+                PiranPort.LOGGER.warn("Invalid cannonCount in SyncConfigOverridesPayload: {}", cannonCount);
+                cannonCount = 0;
+            }
             Map<String, Map<String, String>> cannonOverrides = new HashMap<>();
             for (int i = 0; i < cannonCount; i++) {
                 String cannonName = ByteBufCodecs.STRING_UTF8.decode(buffer);
                 int fieldCount = ByteBufCodecs.VAR_INT.decode(buffer);
+                // P0修复: 添加字段数量上限检查
+                if (fieldCount < 0 || fieldCount > 50) {
+                    PiranPort.LOGGER.warn("Invalid fieldCount for cannon {}: {}", cannonName, fieldCount);
+                    fieldCount = 0;
+                }
                 Map<String, String> fields = new HashMap<>();
                 for (int j = 0; j < fieldCount; j++) {
                     String fieldName = ByteBufCodecs.STRING_UTF8.decode(buffer);
@@ -67,6 +77,11 @@ public record SyncConfigOverridesPayload(
 
             // 解码弹药覆盖
             int projectileCount = ByteBufCodecs.VAR_INT.decode(buffer);
+            // P0修复: 添加上限检查防止DoS攻击
+            if (projectileCount < 0 || projectileCount > 100) {
+                PiranPort.LOGGER.warn("Invalid projectileCount in SyncConfigOverridesPayload: {}", projectileCount);
+                projectileCount = 0;
+            }
             Map<String, String> projectileOverrides = new HashMap<>();
             for (int i = 0; i < projectileCount; i++) {
                 String key = ByteBufCodecs.STRING_UTF8.decode(buffer);

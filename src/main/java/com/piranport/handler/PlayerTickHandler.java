@@ -32,6 +32,8 @@ import net.minecraft.world.entity.monster.Vex;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -215,6 +217,12 @@ public class PlayerTickHandler {
     private static void handleWaterWalkingIfNeeded(Player player, boolean isSubmarine) {
         if (isSubmarine) return;
         UUID uuid = player.getUUID();
+
+        // 调试日志：每5秒输出一次状态
+        if (player.tickCount % 100 == 0) {
+            PiranPort.LOGGER.info("Water walking check: player={}, isInWater={}, isSubmarine={}",
+                player.getName().getString(), player.isInWater(), isSubmarine);
+        }
 
         if (!player.isInWater()) {
             // 延迟清理缓存：离开水面后保留5秒，防止玩家短暂跳出水面时丢失位置记录
@@ -469,51 +477,19 @@ public class PlayerTickHandler {
         }
     }
 
-    /** 水面位置控制：防止下沉 + 上浮，同时修正位置和速度 */
+    /** 水面行走：给予轻微上浮效果保持在水面 */
     private static void applyWaterSurfaceControl(Player player) {
-        UUID uuid = player.getUUID();
-        Vec3 vel = player.getDeltaMovement();
-        double buoyancy = ModCommonConfig.WATER_SURFACE_BUOYANCY.get();
+        // 调试日志
+        if (player.tickCount % 20 == 0) {
+            PiranPort.LOGGER.info("Surface control: Y={}, vel.y={}",
+                player.getY(), player.getDeltaMovement().y);
+        }
 
-        if (player.isEyeInFluidType(NeoForgeMod.WATER_TYPE.value())) {
-            // 眼睛在水下：强上推 + 记录水面位置
-            player.setDeltaMovement(vel.x, buoyancy, vel.z);
-            player.resetFallDistance();
-
-            // 只在Y值更高时更新水面位置（防止下沉时错误记录低位置）
-            double currentY = player.getY();
-            double cachedY = waterSurfaceY.getOrDefault(uuid, currentY);
-            if (currentY > cachedY || cachedY - currentY > 2.0) {
-                // 更新条件：当前位置更高，或缓存值明显过高（说明传送/跳跃）
-                waterSurfaceY.put(uuid, currentY);
-            }
-
-            if (player.level() instanceof ServerLevel serverLevel) {
-                serverLevel.sendParticles(ParticleTypes.BUBBLE_COLUMN_UP,
-                    player.getX(), player.getY(), player.getZ(),
-                    3, 0.3, 0.5, 0.3, 0.02);
-            }
-        } else {
-            // 眼睛在水面之上：阻止下沉 + 位置锁定
-            double currentY = player.getY();
-            double surfaceY = waterSurfaceY.computeIfAbsent(uuid, k -> currentY);
-
-            if (vel.y <= 0 && currentY < surfaceY - 0.15) {
-                // 正在下沉且明显低于水面：强制拉回水面位置
-                player.setPos(player.getX(), surfaceY, player.getZ());
-                player.setDeltaMovement(vel.x, 0, vel.z);
-                player.resetFallDistance();
-            } else if (vel.y < 0) {
-                // 在水面附近但有下沉速度：清零下沉速度
-                player.setDeltaMovement(vel.x, 0, vel.z);
-                player.resetFallDistance();
-            }
-            // vel.y > 0（跳跃中）：不锁定 Y，让玩家正常跳起
-
-            // 更新水面Y为当前较高值（玩家可能跳起后落回）
-            if (currentY > surfaceY) {
-                waterSurfaceY.put(uuid, currentY);
-            }
+        // 给予非常轻微的漂浮效果（等级0），持续2秒
+        // 这会抵消水中的下沉，让玩家保持在水面
+        MobEffectInstance levitation = player.getEffect(MobEffects.LEVITATION);
+        if (levitation == null || levitation.getDuration() <= 10) {
+            player.addEffect(new MobEffectInstance(MobEffects.LEVITATION, 40, 0, false, false, false));
         }
     }
 

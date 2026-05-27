@@ -390,6 +390,9 @@ public class TorpedoEntity extends ThrowableItemProjectile {
         }
     }
 
+    // P2优化: 声导扫描节流，避免每tick扫描
+    private int acousticScanCooldown = 0;
+
     /** 声导追踪：向最近的有声目标转向 */
     private void acousticHoming() {
         // 验证当前锁定目标是否仍然有效
@@ -405,6 +408,13 @@ public class TorpedoEntity extends ThrowableItemProjectile {
             turnTowardsTarget(lockedTarget, distanceTo(lockedTarget));
             return;
         }
+
+        // P2优化: 如果有锁定目标且冷却中，继续追踪不扫描
+        if (lockedTarget != null && --acousticScanCooldown > 0) {
+            turnTowardsTarget(lockedTarget, distanceTo(lockedTarget));
+            return;
+        }
+        acousticScanCooldown = 5; // 每5tick扫描一次
 
         // 扫描新目标
         Entity bestTarget = scanForTarget();

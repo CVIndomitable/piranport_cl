@@ -140,8 +140,8 @@ public class ConfigCSVImporter {
 
         String cannonName = parts[0].trim();
 
-        // 验证火炮是否存在
-        if (ArtilleryConfig.get(cannonName) == null) {
+        // P1修复: 验证火炮是否存在（ArtilleryConfig.get()返回DEFAULT而不是null）
+        if (!ArtilleryConfig.getAllCannonNames().contains(cannonName)) {
             throw new IllegalArgumentException("未知的火炮: " + cannonName);
         }
 

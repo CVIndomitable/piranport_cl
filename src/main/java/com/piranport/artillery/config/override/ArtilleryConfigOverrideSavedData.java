@@ -90,9 +90,10 @@ public class ArtilleryConfigOverrideSavedData extends SavedData {
 
     /**
      * 获取有覆盖的火炮名称集合
+     * P0修复: 返回不可变副本，防止外部修改内部状态
      */
     public Set<String> getOverriddenCannonNames() {
-        return cannonOverrides.keySet();
+        return Set.copyOf(cannonOverrides.keySet());
     }
 
     // ==================== 弹药配置覆盖方法 ====================

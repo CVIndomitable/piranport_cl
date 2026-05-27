@@ -89,8 +89,8 @@ public class DepthChargeEntity extends ThrowableItemProjectile {
                 discard();
                 return;
             }
-            // 近炸检测：安全延迟后扫描附近实体（错峰执行）
-            if (tickCount > ARM_TICKS && tickCount % PROXIMITY_CHECK_INTERVAL == 0) {
+            // P2优化: 错峰执行近炸检测，避免齐投时同一tick内多次检测
+            if (tickCount > ARM_TICKS && (tickCount + getId()) % PROXIMITY_CHECK_INTERVAL == 0) {
                 checkProximity();
             }
         }

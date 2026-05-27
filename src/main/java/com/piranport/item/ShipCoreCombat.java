@@ -20,7 +20,6 @@ import com.piranport.entity.TorpedoEntity;
 import com.piranport.network.ShakeEffectPayload;
 import com.piranport.registry.ModDataComponents;
 import com.piranport.registry.ModItems;
-import com.piranport.registry.ModMobEffects;
 import com.piranport.registry.ModSounds;
 import net.minecraft.core.NonNullList;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -41,7 +40,6 @@ import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.SimpleMenuProvider;
-import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.SlotAccess;
@@ -1035,19 +1033,7 @@ public class ShipCoreCombat {
         Inventory inv = mc.player.getInventory();
 
         // Find the active (transformed) ship core
-        ItemStack coreStack = ItemStack.EMPTY;
-        for (ItemStack s : inv.items) {
-            if (s.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(s)) {
-                coreStack = s;
-                break;
-            }
-        }
-        if (coreStack.isEmpty()) {
-            ItemStack offhand = inv.offhand.get(0);
-            if (offhand.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(offhand)) {
-                coreStack = offhand;
-            }
-        }
+        ItemStack coreStack = TransformationManager.findTransformedCore(mc.player);
         if (coreStack.isEmpty()) return;
 
         // Find weapon slot by object identity (only works when item is directly in player's inventory)
@@ -1182,11 +1168,10 @@ public class ShipCoreCombat {
 
     /** Phase 12: 用物品标签匹配口径，替代硬编码物品列表。数据包可向标签添加物品来扩展。 */
     public static boolean matchesCaliber(ItemStack ammo, ItemStack weapon) {
-        if (weapon.is(ModItems.SMALL_GUN.get()) || weapon.is(ModItems.SINGLE_SMALL_GUN.get())) {
-            return ammo.is(ShipCoreItem.SMALL_SHELLS);
-        } else if (weapon.is(ModItems.MEDIUM_GUN.get())) {
-            return ammo.is(ShipCoreItem.MEDIUM_SHELLS);
-        } else if (weapon.is(ModItems.LARGE_GUN.get())) {
+        if (weapon.getItem() instanceof com.piranport.artillery.ArtilleryItem ai) {
+            int caliber = ai.getCaliber();
+            if (caliber <= 4) return ammo.is(ShipCoreItem.SMALL_SHELLS);
+            if (caliber <= 8) return ammo.is(ShipCoreItem.MEDIUM_SHELLS);
             return ammo.is(ShipCoreItem.LARGE_SHELLS);
         }
         return false;
@@ -1745,7 +1730,6 @@ public class ShipCoreCombat {
     /**
      * On transformation: consume aviation_fuel to fill aircraft.
      * One aviation_fuel item fills one aircraft to full fuelCapacity.
-     * Applies FlammableEffect if any aircraft ends up with fuel > 0.
      */
     public static void refillAircraftFuel(Player player, ItemStack coreStack) {
         if (!com.piranport.config.ModCommonConfig.AUTO_RESUPPLY_ENABLED.get()) return; // manual mode: no auto fuel
@@ -1760,13 +1744,11 @@ public class ShipCoreCombat {
      */
     private static void refillAircraftFuelInventoryMode(Player player) {
         Inventory inv = player.getInventory();
-        boolean hasFueled = false;
 
         for (ItemStack weapon : inv.items) {
             if (!(weapon.getItem() instanceof AircraftItem)) continue;
             AircraftInfo info = weapon.get(ModDataComponents.AIRCRAFT_INFO.get());
             if (info == null || info.currentFuel() >= info.fuelCapacity()) {
-                if (info != null && info.currentFuel() > 0) hasFueled = true;
                 continue;
             }
             // Find aviation_fuel in inventory
@@ -1775,14 +1757,9 @@ public class ShipCoreCombat {
                     com.piranport.debug.PiranPortDebug.consumeAmmo(ammo, 1);
                     weapon.set(ModDataComponents.AIRCRAFT_INFO.get(),
                             info.withCurrentFuel(info.fuelCapacity()));
-                    hasFueled = true;
                     break;
                 }
             }
-        }
-
-        if (hasFueled && com.piranport.config.ModCommonConfig.isFlammableEffectActive()) {
-            player.addEffect(new MobEffectInstance(ModMobEffects.FLAMMABLE, 999999, 0, false, true));
         }
     }
 
@@ -1972,12 +1949,10 @@ public class ShipCoreCombat {
      * 获取指定武器的默认弹药类型（创造模式使用）
      */
     private static Item getDefaultAmmoForWeapon(ItemStack weapon) {
-        Item weaponItem = weapon.getItem();
-        if (weaponItem == ModItems.SMALL_GUN.get() || weaponItem == ModItems.SINGLE_SMALL_GUN.get()) {
-            return ModItems.SMALL_AP_SHELL.get();
-        } else if (weaponItem == ModItems.MEDIUM_GUN.get()) {
-            return ModItems.MEDIUM_AP_SHELL.get();
-        } else if (weaponItem == ModItems.LARGE_GUN.get()) {
+        if (weapon.getItem() instanceof com.piranport.artillery.ArtilleryItem ai) {
+            int caliber = ai.getCaliber();
+            if (caliber <= 4) return ModItems.SMALL_AP_SHELL.get();
+            if (caliber <= 8) return ModItems.MEDIUM_AP_SHELL.get();
             return ModItems.LARGE_AP_SHELL.get();
         }
         return null;

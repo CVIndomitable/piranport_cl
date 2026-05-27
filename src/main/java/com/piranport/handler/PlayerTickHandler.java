@@ -260,32 +260,16 @@ public class PlayerTickHandler {
 
     /** 查找变身后的核心并执行自动战斗 */
     private static void tickAutoCombat(Player player) {
-        ItemStack autoLaunchCore = ItemStack.EMPTY;
-        int autoLaunchSlot = -1;
-        ItemStack mh = player.getMainHandItem();
-        Inventory inv = player.getInventory();
-        if (mh.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(mh)) {
-            autoLaunchCore = mh;
-            autoLaunchSlot = player.getInventory().selected;
-        } else {
-            for (int i = 0; i < inv.items.size(); i++) {
-                ItemStack s = inv.items.get(i);
-                if (s.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(s)) {
-                    autoLaunchCore = s;
-                    autoLaunchSlot = i;
-                    break;
-                }
-            }
-            if (autoLaunchCore.isEmpty()) {
-                ItemStack offh = inv.offhand.get(0);
-                if (offh.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(offh)) {
-                    autoLaunchCore = offh;
-                    autoLaunchSlot = 40;
-                }
-            }
-        }
+        ItemStack autoLaunchCore = TransformationManager.findTransformedCore(player);
         if (autoLaunchCore.isEmpty()) return;
         if (!autoLaunchCore.getOrDefault(ModDataComponents.SHIP_AUTO_LAUNCH.get(), false)) return;
+
+        int autoLaunchSlot = -1;
+        Inventory inv = player.getInventory();
+        for (int i = 0; i < inv.items.size(); i++) {
+            if (inv.items.get(i) == autoLaunchCore) { autoLaunchSlot = i; break; }
+        }
+        if (autoLaunchSlot == -1 && inv.offhand.get(0) == autoLaunchCore) autoLaunchSlot = 40;
 
         tickAutoLaunchFighters(player, autoLaunchCore, autoLaunchSlot);
         tickAntiAirMissiles(player, autoLaunchCore, autoLaunchSlot);
@@ -367,7 +351,6 @@ public class PlayerTickHandler {
             if (lastWeaponLoad.remove(player.getUUID()) != null) {
                 TransformationManager.removeTransformationAttributes(player);
                 TransformationManager.removeOverweightPenalty(player);
-                player.removeEffect(ModMobEffects.FLAMMABLE);
                 player.removeEffect(MobEffects.WATER_BREATHING);
                 PlayerAircraftHelper.recallAircraftForPlayer(player);
                 player.displayClientMessage(
@@ -505,7 +488,6 @@ public class PlayerTickHandler {
             TransformationManager.setTransformed(core, false);
             TransformationManager.removeTransformationAttributes(player);
             TransformationManager.removeOverweightPenalty(player);
-            player.removeEffect(ModMobEffects.FLAMMABLE);
             PlayerAircraftHelper.recallAircraftForPlayer(player);
             player.displayClientMessage(
                     Component.translatable("message.piranport.fuel_depleted"), true);

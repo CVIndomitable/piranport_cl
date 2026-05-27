@@ -5,13 +5,11 @@ import com.piranport.component.AircraftInfo;
 import com.piranport.component.WeaponCategory;
 import com.piranport.registry.ModDataComponents;
 import com.piranport.registry.ModItems;
-import com.piranport.registry.ModMobEffects;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
-import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.ClickAction;
@@ -58,12 +56,6 @@ public class AircraftItem extends Item {
         if (!player.level().isClientSide) {
             player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
                     SoundEvents.BUCKET_FILL, SoundSource.PLAYERS, 0.5f, 1.2f);
-
-            // Apply FlammableEffect if enabled and player is currently transformed
-            if (com.piranport.config.ModCommonConfig.isFlammableEffectActive()
-                    && isPlayerTransformed(player)) {
-                player.addEffect(new MobEffectInstance(ModMobEffects.FLAMMABLE, 999999, 0, false, true));
-            }
         }
         return true;
     }

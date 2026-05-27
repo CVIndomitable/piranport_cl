@@ -10,7 +10,6 @@ public class ModCommonConfig {
 
     public static final ModConfigSpec.BooleanValue FIGHTER_AMMO_ENABLED;
     public static final ModConfigSpec.BooleanValue AUTO_RESUPPLY_ENABLED;
-    public static final ModConfigSpec.BooleanValue FLAMMABLE_EFFECT_ENABLED;
 
     // ===== GUI & Inventory (界面与背包) =====
 
@@ -52,13 +51,6 @@ public class ModCommonConfig {
                         "Set to true to auto-consume ammo from inventory on each shot.",
                         "Note: cannons always auto-resupply since Phase 4.")
                 .define("autoResupplyEnabled", false);
-
-        FLAMMABLE_EFFECT_ENABLED = BUILDER
-                .comment(
-                        "When true, loading aviation fuel onto an aircraft applies the Flammable (易燃易爆) debuff.",
-                        "Default: false.",
-                        "Set to true to enable the fire-hazard penalty for fueled aircraft. (飞机装燃料触发易燃易爆，默认关闭)")
-                .define("flammableEffectEnabled", false);
         BUILDER.pop();
 
         BUILDER.push("gui");
@@ -147,13 +139,6 @@ public class ModCommonConfig {
     }
 
     public static final ModConfigSpec SPEC = BUILDER.build();
-
-    /**
-     * Helper: returns true if the flammable effect should be active.
-     */
-    public static boolean isFlammableEffectActive() {
-        return FLAMMABLE_EFFECT_ENABLED.get();
-    }
 
     /**
      * Helper: returns true if ship core GUI mode is enabled.

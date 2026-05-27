@@ -204,7 +204,6 @@
 | `shipCoreGuiEnabled` | `false` | `true` 启用GUI配装模式 |
 | `autoResupplyEnabled` | `false` | `true` 切换为自动装填（变身时自动扣弹药） |
 | `fighterAmmoEnabled` | `false` | `true` 战斗机消耗子弹 |
-| `flammableEffectEnabled` | `false` | `true` 开启飞机燃料易燃易爆惩罚 |
 | `saltGenerationEnabled` | `false` | `true` 启用河流盐矿自然生成 |
 | `weaponPickupToInventory` | `false` | `true` 武器拾取直接进背包 |
 | `ruinGenerationEnabled` | `true` | 主世界遗迹生成总开关 |

@@ -73,7 +73,6 @@ public class ConfigInspectorItem extends Item {
         addConfigLine(player, "爆炸破坏", formatBoolean(ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get()));
         addConfigLine(player, "自动装填", formatBoolean(ModCommonConfig.AUTO_RESUPPLY_ENABLED.get()));
         addConfigLine(player, "战斗机弹药", formatBoolean(ModCommonConfig.FIGHTER_AMMO_ENABLED.get()));
-        addConfigLine(player, "易燃易爆", formatBoolean(ModCommonConfig.isFlammableEffectActive()));
 
         // 2. 舰装属性
         addSection(player, "舰装属性");

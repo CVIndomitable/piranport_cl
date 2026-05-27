@@ -267,6 +267,12 @@ public class ArtilleryConfigToolScreen extends AbstractContainerScreen<Artillery
         }
     }
 
+    @Override
+    protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY) {
+        // 不调用 super.renderLabels()，避免渲染物品栏标签
+        // 标题已在 render() 方法中手动绘制，无需在此处理
+    }
+
     /**
      * 渲染火炮列表
      */

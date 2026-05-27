@@ -66,19 +66,7 @@ public class TorpedoLauncherItem extends Item {
         if (torpedo.getCaliber() != caliber) return false;
 
         // Check if player has transformed core with 鱼雷再装填 enhancement
-        ItemStack coreStack = ItemStack.EMPTY;
-        for (ItemStack s : player.getInventory().items) {
-            if (s.getItem() instanceof ShipCoreItem && com.piranport.combat.TransformationManager.isTransformed(s)) {
-                coreStack = s;
-                break;
-            }
-        }
-        if (coreStack.isEmpty()) {
-            ItemStack offhand = player.getInventory().offhand.get(0);
-            if (offhand.getItem() instanceof ShipCoreItem && com.piranport.combat.TransformationManager.isTransformed(offhand)) {
-                coreStack = offhand;
-            }
-        }
+        ItemStack coreStack = com.piranport.combat.TransformationManager.findTransformedCore(player);
         if (coreStack.isEmpty()) return false;
         if (!com.piranport.combat.TransformationManager.hasTorpedoReloadEquipped(player, coreStack)) {
             return false;

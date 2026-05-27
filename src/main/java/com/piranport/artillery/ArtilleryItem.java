@@ -174,6 +174,12 @@ public class ArtilleryItem extends Item {
                     .withStyle(net.minecraft.ChatFormatting.DARK_GREEN));
         }
 
+        // 口径分类
+        int caliber = getCaliber();
+        String calCat = caliber <= 4 ? "小口径" : (caliber <= 8 ? "中口径" : "大口径");
+        tooltipComponents.add(Component.literal(String.format("口径: %dmm (%s)", caliber, calCat))
+                .withStyle(net.minecraft.ChatFormatting.AQUA));
+
         // 耐久状态
         if (stack.isDamageableItem() && stack.getDamageValue() >= stack.getMaxDamage() - 1) {
             tooltipComponents.add(Component.translatable("tooltip.piranport.cannon.damaged")

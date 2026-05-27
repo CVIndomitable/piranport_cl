@@ -165,18 +165,17 @@ public class ArtilleryCannonDetailScreen extends Screen {
 
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        super.render(graphics, mouseX, mouseY, partialTick);
-
         int x = (this.width - GUI_WIDTH) / 2;
         int y = (this.height - GUI_HEIGHT) / 2;
 
-        // 主背景
+        // 先绘制背景
         graphics.fill(x, y, x + GUI_WIDTH, y + GUI_HEIGHT, 0xFF8B8B8B);
-
-        // 标题区域
         graphics.fill(x, y, x + GUI_WIDTH, y + 20, 0xFF5A5A5A);
 
-        // 标题
+        // 再调用 super.render() 渲染 widgets（包括 EditBox）
+        super.render(graphics, mouseX, mouseY, partialTick);
+
+        // 最后绘制标题和标签（覆盖在最上层）
         String title = Component.translatable("gui.piranport.config_tool.cannon_detail_title",
                 Component.translatable("item.piranport." + cannonName).getString()).getString();
         graphics.drawString(this.font, title, x + 8, y + 6, 0xFFFFFF, false);

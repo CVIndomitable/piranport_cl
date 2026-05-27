@@ -325,20 +325,16 @@ public class ShipCoreItem extends Item implements Equipable {
             }
         }
 
-        // No-GUI mode: only the offhand core is active.
+        // No-GUI mode: check core from configured slot (offhand or helmet)
         if (net.neoforged.fml.loading.FMLEnvironment.dist.isClient()) {
                 net.minecraft.world.entity.player.Player clientPlayer =
                         net.minecraft.client.Minecraft.getInstance().player;
                 if (clientPlayer != null) {
                     Inventory inv = clientPlayer.getInventory();
-                    ItemStack offhand = inv.offhand.get(0);
-                    boolean isActive = offhand.getItem() instanceof ShipCoreItem
-                            && offhand.getItem() == stack.getItem()
-                            && ItemStack.isSameItemSameComponents(offhand, stack);
-                    if (!isActive) {
-                        tooltipComponents.add(Component.translatable("tooltip.piranport.core_inactive")
-                                .withStyle(net.minecraft.ChatFormatting.DARK_GRAY));
-                    }
+                    ItemStack activeCore = com.piranport.combat.TransformationManager.getCoreFromConfiguredSlot(clientPlayer);
+                    boolean isActive = activeCore.getItem() instanceof ShipCoreItem
+                            && activeCore.getItem() == stack.getItem()
+                            && ItemStack.isSameItemSameComponents(activeCore, stack);
                     if (!isActive) {
                         tooltipComponents.add(Component.translatable("tooltip.piranport.core_inactive")
                                 .withStyle(net.minecraft.ChatFormatting.DARK_GRAY));

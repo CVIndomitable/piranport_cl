@@ -4,7 +4,6 @@ import com.piranport.PiranPort;
 import com.piranport.combat.ReloadHelper;
 import com.piranport.combat.TransformationManager;
 import com.piranport.item.MissileLauncherItem;
-import com.piranport.item.ShipCoreItem;
 import com.piranport.item.TorpedoLauncherItem;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.network.chat.Component;
@@ -37,26 +36,20 @@ public record ManualReloadPayload() implements CustomPacketPayload {
             Inventory inv = player.getInventory();
 
             // 查找已变身的舰装核心
-            ItemStack coreStack = ItemStack.EMPTY;
-            int coreSlot = -1;
-            for (int i = 0; i < inv.items.size(); i++) {
-                ItemStack s = inv.items.get(i);
-                if (s.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(s)) {
-                    coreStack = s;
-                    coreSlot = i;
-                    break;
-                }
-            }
-            if (coreStack.isEmpty()) {
-                ItemStack offhand = inv.offhand.get(0);
-                if (offhand.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(offhand)) {
-                    coreStack = offhand;
-                    coreSlot = 40;
-                }
-            }
+            ItemStack coreStack = TransformationManager.findTransformedCore(player);
             if (coreStack.isEmpty()) {
                 player.displayClientMessage(Component.translatable("message.piranport.no_core"), true);
                 return;
+            }
+            // 核心所在槽位：头盔模式传 -2（不在背包中，不参与背包扫描排除）
+            int coreSlot = 40;
+            {
+                boolean found = false;
+                for (int i = 0; i < inv.items.size(); i++) {
+                    if (inv.items.get(i) == coreStack) { coreSlot = i; found = true; break; }
+                }
+                if (!found && inv.offhand.get(0) == coreStack) { coreSlot = 40; found = true; }
+                if (!found) coreSlot = -2;
             }
 
             ItemStack mainHand = player.getMainHandItem();

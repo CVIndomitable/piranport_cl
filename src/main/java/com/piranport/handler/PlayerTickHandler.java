@@ -195,8 +195,14 @@ public class PlayerTickHandler {
 
     /** 水面行走条件判断后委托给 handleWaterWalking */
     private static void handleWaterWalkingIfNeeded(Player player, boolean isSubmarine) {
-        if (!isSubmarine && player.isInWater() && !player.isEyeInFluidType(NeoForgeMod.WATER_TYPE.value())) {
-            handleWaterWalking(player);
+        if (!isSubmarine) {
+            // Issue 5: Add buoyancy when underwater to prevent sinking
+            if (player.isInWater()) {
+                applyBuoyancy(player);
+                if (!player.isEyeInFluidType(NeoForgeMod.WATER_TYPE.value())) {
+                    handleWaterWalking(player);
+                }
+            }
         }
     }
 
@@ -422,6 +428,34 @@ public class PlayerTickHandler {
         }
     }
 
+    /** Issue 5: Apply buoyancy to keep transformed players on water surface */
+    private static void applyBuoyancy(Player player) {
+        Vec3 vel = player.getDeltaMovement();
+        
+        // If player is underwater (eyes submerged), push them up strongly
+        if (player.isEyeInFluidType(NeoForgeMod.WATER_TYPE.value())) {
+            // Strong upward force to bring player to surface
+            player.setDeltaMovement(vel.x, 0.3, vel.z);
+            player.resetFallDistance();
+            
+            // Spawn bubbles for visual effect
+            if (player.level() instanceof ServerLevel serverLevel) {
+                serverLevel.sendParticles(ParticleTypes.BUBBLE_COLUMN_UP,
+                    player.getX(), player.getY(), player.getZ(),
+                    3, 0.3, 0.5, 0.3, 0.02);
+            }
+        } 
+        // If player is in water but eyes are above, apply gentle buoyancy
+        else {
+            // Counteract downward velocity to keep player on surface
+            if (vel.y < 0) {
+                player.setDeltaMovement(vel.x, vel.y * 0.3, vel.z);
+            }
+            player.resetFallDistance();
+        }
+    }
+
+    /** 燃料消耗：基于移动距离，耗尽时自动解除变身（每5tick计算一次） */
     /** 燃料消耗：基于移动距离，耗尽时自动解除变身（每5tick计算一次） */
     private static void tickFuelConsumption(Player player) {
         // 性能优化：每5tick计算一次燃料消耗

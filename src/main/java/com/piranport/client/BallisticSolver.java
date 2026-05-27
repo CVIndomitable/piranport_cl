@@ -8,7 +8,7 @@ import java.util.Map;
 
 /**
  * 弹道解算引擎：给定初速度、阻力、重力、目标距离，计算最佳发射仰角。
- * 使用三分法搜索 [0°, 45°]（低弹道），每次迭代模拟数值弹道。
+ * 使用网格搜索 + 三分法搜索 [-45°, 45°]（含负仰角以支持高低差），每次迭代模拟数值弹道。
  * 阻力/重力模型与 {@link com.piranport.entity.CannonProjectileEntity} 一致。
  *
  * <p>参数来源（按优先级）：
@@ -59,31 +59,52 @@ public final class BallisticSolver {
         double accuracyThreshold = ModEquipmentConfig.BALLISTIC_ACCURACY.get();
         double noSolutionThreshold = ModArtilleryConfig.BALLISTIC_NO_SOLUTION_THRESHOLD.get();
 
-        // 三分法搜索误差绝对值最小的仰角（避免二分法在非单调函数上的精度问题）
-        double lowAngle = 0;
-        double highAngle = Math.PI / 4; // 45°：只搜低弹道
+        // 网格搜索 + 三分法：支持负仰角（高低差场景）
+        // 先用粗网格扫描找到误差最小区域，再用三分法精细搜索
+        double searchLow = -Math.PI / 4;   // -45°：允许俯射
+        double searchHigh = Math.PI / 4;   //  45°：低弹道上界
         double bestAngle = 45.0 * Math.PI / 180.0;
         double minError = Double.MAX_VALUE;
 
-        for (int iter = 0; iter < maxIters; iter++) {
-            if (highAngle - lowAngle < 1e-6) break;
+        // 粗网格扫描（64 步），找到全局最优区域
+        int gridSteps = 64;
+        double gridStep = (searchHigh - searchLow) / gridSteps;
+        double bestGridAngle = searchLow;
+        for (int g = 0; g <= gridSteps; g++) {
+            double a = searchLow + g * gridStep;
+            double err = Math.abs(simulate(initialSpeed, a, dragCoeff, gravity, horizontalDist) - verticalDist);
+            if (err < minError) {
+                minError = err;
+                bestAngle = a;
+                bestGridAngle = a;
+            }
+        }
 
-            double mid1 = lowAngle + (highAngle - lowAngle) / 3;
-            double mid2 = highAngle - (highAngle - lowAngle) / 3;
+        if (minError > accuracyThreshold) {
+            // 以网格最优点为中心，三分法精细搜索
+            double refineRadius = gridStep * 2;
+            double lowAngle = Math.max(searchLow, bestGridAngle - refineRadius);
+            double highAngle = Math.min(searchHigh, bestGridAngle + refineRadius);
 
-            double err1 = Math.abs(simulate(initialSpeed, mid1, dragCoeff, gravity, horizontalDist) - verticalDist);
-            double err2 = Math.abs(simulate(initialSpeed, mid2, dragCoeff, gravity, horizontalDist) - verticalDist);
+            for (int iter = 0; iter < maxIters; iter++) {
+                if (highAngle - lowAngle < 1e-7) break;
 
-            if (err1 < minError) { minError = err1; bestAngle = mid1; }
-            if (err2 < minError) { minError = err2; bestAngle = mid2; }
+                double mid1 = lowAngle + (highAngle - lowAngle) / 3;
+                double mid2 = highAngle - (highAngle - lowAngle) / 3;
 
-            if (err1 < accuracyThreshold || err2 < accuracyThreshold) break;
+                double err1 = Math.abs(simulate(initialSpeed, mid1, dragCoeff, gravity, horizontalDist) - verticalDist);
+                double err2 = Math.abs(simulate(initialSpeed, mid2, dragCoeff, gravity, horizontalDist) - verticalDist);
 
-            // 三分法缩小区间：淘汰误差更大的一侧
-            if (err1 > err2) {
-                lowAngle = mid1;
-            } else {
-                highAngle = mid2;
+                if (err1 < minError) { minError = err1; bestAngle = mid1; }
+                if (err2 < minError) { minError = err2; bestAngle = mid2; }
+
+                if (err1 < accuracyThreshold || err2 < accuracyThreshold) break;
+
+                if (err1 > err2) {
+                    lowAngle = mid1;
+                } else {
+                    highAngle = mid2;
+                }
             }
         }
 
@@ -132,8 +153,8 @@ public final class BallisticSolver {
 
             // 到达目标水平距离
             if (x >= targetX) return y;
-            // 落地（远低于发射点）
-            if (y < -10) break;
+            // 落地（远低于发射点，放宽以支持大高低差场景）
+            if (y < -300) break;
         }
         return y;
     }

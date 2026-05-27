@@ -38,6 +38,33 @@ public class ArtilleryConfigToolMenu extends AbstractContainerMenu {
      */
     public ArtilleryConfigToolMenu(int containerId, Inventory playerInventory) {
         this(containerId, playerInventory, new SimpleContainerData(1));
+        // 打开菜单时同步配置覆盖数据到客户端
+        if (playerInventory.player instanceof net.minecraft.server.level.ServerPlayer sp) {
+            syncOverridesToClient(sp);
+        }
+    }
+
+    private void syncOverridesToClient(net.minecraft.server.level.ServerPlayer sp) {
+        net.minecraft.server.level.ServerLevel level = sp.serverLevel();
+        com.piranport.artillery.config.override.ArtilleryConfigOverrideSavedData data =
+            com.piranport.artillery.config.override.ArtilleryConfigOverrideSavedData.get(level);
+
+        java.util.Map<String, java.util.Map<String, String>> cannonStrings = new java.util.HashMap<>();
+        for (var entry : data.getAllCannonOverrides().entrySet()) {
+            java.util.Map<String, String> fieldStrings = new java.util.HashMap<>();
+            for (var fEntry : entry.getValue().entrySet()) {
+                fieldStrings.put(fEntry.getKey(), String.valueOf(fEntry.getValue()));
+            }
+            cannonStrings.put(entry.getKey(), fieldStrings);
+        }
+
+        java.util.Map<String, String> projectileStrings = new java.util.HashMap<>();
+        for (var entry : data.getAllProjectileOverrides().entrySet()) {
+            projectileStrings.put(entry.getKey(), String.valueOf(entry.getValue()));
+        }
+
+        net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(sp,
+            new com.piranport.network.SyncConfigOverridesPayload(cannonStrings, projectileStrings));
     }
 
     /**

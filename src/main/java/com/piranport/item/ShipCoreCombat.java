@@ -1334,20 +1334,38 @@ public class ShipCoreCombat {
     // ===== Gun stats =====
 
     private static float getGunDamage(ItemStack weapon) {
+        return getGunDamage(weapon, null);
+    }
+    
+    private static float getGunDamage(ItemStack weapon, net.minecraft.world.level.Level level) {
         Item item = weapon.getItem();
-        if (item instanceof com.piranport.artillery.ArtilleryItem ai) return ai.getDamage();
+        if (item instanceof com.piranport.artillery.ArtilleryItem ai) {
+            return level != null ? ai.getEffectiveData(level).damage() : ai.getDamage();
+        }
         return 6f;
     }
 
     private static int getGunCooldown(ItemStack weapon) {
+        return getGunCooldown(weapon, null);
+    }
+    
+    private static int getGunCooldown(ItemStack weapon, net.minecraft.world.level.Level level) {
         Item item = weapon.getItem();
-        if (item instanceof com.piranport.artillery.ArtilleryItem ai) return ai.getCooldownTicks();
+        if (item instanceof com.piranport.artillery.ArtilleryItem ai) {
+            return level != null ? ai.getEffectiveData(level).reloadTime() : ai.getCooldownTicks();
+        }
         return 30;
     }
 
     private static int getBarrelCount(ItemStack weapon) {
+        return getBarrelCount(weapon, null);
+    }
+    
+    private static int getBarrelCount(ItemStack weapon, net.minecraft.world.level.Level level) {
         Item item = weapon.getItem();
-        if (item instanceof com.piranport.artillery.ArtilleryItem ai) return ai.getBarrelCount();
+        if (item instanceof com.piranport.artillery.ArtilleryItem ai) {
+            return level != null ? ai.getEffectiveData(level).barrels() : ai.getBarrelCount();
+        }
         return 1;
     }
 
@@ -1356,20 +1374,38 @@ public class ShipCoreCombat {
     }
 
     private static float getExplosionPower(ItemStack weapon) {
+        return getExplosionPower(weapon, null);
+    }
+    
+    private static float getExplosionPower(ItemStack weapon, net.minecraft.world.level.Level level) {
         Item item = weapon.getItem();
-        if (item instanceof com.piranport.artillery.ArtilleryItem ai) return ai.getExplosionPower();
+        if (item instanceof com.piranport.artillery.ArtilleryItem ai) {
+            return level != null ? ai.getEffectiveData(level).explosionPower() : ai.getExplosionPower();
+        }
         return 1.0f;
     }
 
     private static float getProjectileVelocity(ItemStack weapon) {
+        return getProjectileVelocity(weapon, null);
+    }
+    
+    private static float getProjectileVelocity(ItemStack weapon, net.minecraft.world.level.Level level) {
         Item item = weapon.getItem();
-        if (item instanceof com.piranport.artillery.ArtilleryItem ai) return ai.getInitialSpeed();
+        if (item instanceof com.piranport.artillery.ArtilleryItem ai) {
+            return level != null ? ai.getEffectiveData(level).initialSpeed() : ai.getInitialSpeed();
+        }
         return 2.0f;
     }
 
     private static float getProjectileInaccuracy(ItemStack weapon) {
+        return getProjectileInaccuracy(weapon, null);
+    }
+    
+    private static float getProjectileInaccuracy(ItemStack weapon, net.minecraft.world.level.Level level) {
         Item item = weapon.getItem();
-        if (item instanceof com.piranport.artillery.ArtilleryItem ai) return ai.getDispersionAngle();
+        if (item instanceof com.piranport.artillery.ArtilleryItem ai) {
+            return level != null ? ai.getEffectiveData(level).dispersion() : ai.getDispersionAngle();
+        }
         if (isSmallCaliber(weapon)) return 1.5f;
         if (weapon.is(ModItems.MEDIUM_GUN.get())) return 1.0f;
         if (weapon.is(ModItems.LARGE_GUN.get())) return 0.5f;
@@ -1378,15 +1414,27 @@ public class ShipCoreCombat {
 
     /** 从武器数据获取自定义重力（真实比例，0=使用默认）。 */
     private static float getProjectileGravity(ItemStack weapon) {
+        return getProjectileGravity(weapon, null);
+    }
+    
+    private static float getProjectileGravity(ItemStack weapon, net.minecraft.world.level.Level level) {
         Item item = weapon.getItem();
-        if (item instanceof com.piranport.artillery.ArtilleryItem ai) return ai.getCustomGravity();
+        if (item instanceof com.piranport.artillery.ArtilleryItem ai) {
+            return level != null ? ai.getEffectiveData(level).gravity() : ai.getCustomGravity();
+        }
         return 0f;
     }
 
     /** Phase 2: 从武器数据获取阻力系数。 */
     private static float getProjectileDrag(ItemStack weapon) {
+        return getProjectileDrag(weapon, null);
+    }
+    
+    private static float getProjectileDrag(ItemStack weapon, net.minecraft.world.level.Level level) {
         Item item = weapon.getItem();
-        if (item instanceof com.piranport.artillery.ArtilleryItem ai) return ai.getDragCoeff();
+        if (item instanceof com.piranport.artillery.ArtilleryItem ai) {
+            return level != null ? ai.getEffectiveData(level).dragCoeff() : ai.getDragCoeff();
+        }
         if (isSmallCaliber(weapon)) return 0.015f;
         if (weapon.is(ModItems.MEDIUM_GUN.get())) return 0.01f;
         if (weapon.is(ModItems.LARGE_GUN.get())) return 0.008f;
@@ -1479,7 +1527,7 @@ public class ShipCoreCombat {
         java.util.List<com.piranport.artillery.config.MuzzlePos> muzzles = getMuzzlePositions(weapon);
 
         Vec3 aimTarget = pendingAimTarget.get(); // Phase 5: 非 null 时使用弹道解算
-        float dispersionDeg = getProjectileInaccuracy(weapon);
+        float dispersionDeg = getProjectileInaccuracy(weapon, level);
         for (int b = 0; b < barrelCount; b++) {
             // 计算当前炮管的炮口位置
             com.piranport.artillery.config.MuzzlePos muzzle = muzzles.get(b % muzzles.size());
@@ -1489,15 +1537,15 @@ public class ShipCoreCombat {
             if (isType3) {
                 fireSanshikiSpread(level, player, weapon, shellForRender, spawnPos);
             } else {
-                float damage = getGunDamage(weapon);
-                float explosionPower = getExplosionPower(weapon);
-                float velocity = getProjectileVelocity(weapon);
+                float damage = getGunDamage(weapon, level);
+                float explosionPower = getExplosionPower(weapon, level);
+                float velocity = getProjectileVelocity(weapon, level);
 
                 CannonProjectileEntity projectile = new CannonProjectileEntity(
                         level, player, shellForRender, damage, isHE, explosionPower);
                 if (isVT) projectile.setVT(true);
-                projectile.setDragCoeff(getProjectileDrag(weapon));
-                projectile.setCustomGravity(getProjectileGravity(weapon));
+                projectile.setDragCoeff(getProjectileDrag(weapon, level));
+                projectile.setCustomGravity(getProjectileGravity(weapon, level));
 
                 Vec3 direction;
                 if (aimTarget != null) {
@@ -1524,18 +1572,21 @@ public class ShipCoreCombat {
                 level.playSound(null, player.getX(), player.getY(), player.getZ(),
                         fireSound, SoundSource.PLAYERS, 2.0f, pitch);
 
-                // 炮口火焰粒子（服务端广播）
+                // 炮口火焰粒子（服务端广播）— 偏移到玩家右手位置，避免烟雾遮挡视线
                 if (level instanceof ServerLevel serverLevel) {
                     Vec3 look = player.getLookAngle();
-                    double px = player.getX() + look.x * 1.5;
+                    float yawRad = (float) Math.toRadians(player.getYRot() + 90.0);
+                    double rightX = Math.cos(yawRad) * 0.5;
+                    double rightZ = Math.sin(yawRad) * 0.5;
+                    double px = player.getX() + look.x * 1.5 + rightX;
                     double py = player.getY() + player.getEyeHeight() + look.y * 0.5;
-                    double pz = player.getZ() + look.z * 1.5;
-                    serverLevel.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, px, py, pz, 8,
-                            0.3, 0.3, 0.3, 0.05);
-                    serverLevel.sendParticles(ParticleTypes.CLOUD, px, py, pz, 6,
-                            0.4, 0.2, 0.4, 0.01);
-                    serverLevel.sendParticles(ParticleTypes.LAVA, px, py, pz, 2,
-                            0.2, 0.2, 0.2, 0);
+                    double pz = player.getZ() + look.z * 1.5 + rightZ;
+                    serverLevel.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, px, py, pz, 4,
+                            0.2, 0.2, 0.2, 0.05);
+                    serverLevel.sendParticles(ParticleTypes.CLOUD, px, py, pz, 3,
+                            0.3, 0.15, 0.3, 0.01);
+                    serverLevel.sendParticles(ParticleTypes.LAVA, px, py, pz, 1,
+                            0.1, 0.1, 0.1, 0);
                 }
 
                 // 发射屏幕震动（S2C）
@@ -1556,13 +1607,11 @@ public class ShipCoreCombat {
         double verticalDist = toTarget.y;
 
         if (horizontalDist < 1.0) {
-            // 近距目标：直接朝准星方向发射
             return player.getLookAngle();
         }
 
-        // 弹道解算最佳仰角
-        float drag = getProjectileDrag(weapon);
-        float gravity = getProjectileGravity(weapon);
+        float drag = getProjectileDrag(weapon, player.level());
+        float gravity = getProjectileGravity(weapon, player.level());
         double mcGravity = gravity > 0f ? gravity / 196.0 : BallisticSolver.DEFAULT_GRAVITY;
         double optimalPitch = BallisticSolver.solve(velocity, drag, mcGravity,
                 horizontalDist, verticalDist);
@@ -1604,9 +1653,9 @@ public class ShipCoreCombat {
     }
 
     private static void fireSanshikiSpread(Level level, Player player, ItemStack weapon, ItemStack shellForRender, Vec3 spawnPos) {
-        float baseDamage = getGunDamage(weapon);
+        float baseDamage = getGunDamage(weapon, level);
         float pelletDamage = baseDamage * 0.25f;
-        float velocity = getProjectileVelocity(weapon);
+        float velocity = getProjectileVelocity(weapon, level);
 
         // 霰弹数量限制：统计玩家附近256格内的现有霰弹数，超过上限则不发射
         int targetCount = 64; // 三式弹固定发射64枚霰弹（设计文档要求）

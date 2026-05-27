@@ -13,6 +13,7 @@ import com.piranport.network.SkinRevertPayload;
 import com.piranport.skin.ClientSkinData;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.util.RandomSource;
 import net.minecraft.network.chat.Component;
@@ -100,6 +101,18 @@ public class ClientGameEvents {
     public static void onRenderLiving(RenderLivingEvent.Pre<?, ?> event) {
         var viewer = Minecraft.getInstance().player;
         if (viewer != null && viewer.hasEffect(MobEffects.INVISIBILITY) && event.getEntity() != viewer) {
+            event.setCanceled(true);
+        }
+    }
+
+    /** Issue 6: 手持火炮时屏蔽左键挖掘，防止装填时持续挖掘 */
+    @SubscribeEvent
+    public static void onLeftClickBlock(PlayerInteractEvent.LeftClickBlock event) {
+        var player = event.getEntity();
+        if (player == null) return;
+        
+        ItemStack mainHand = player.getMainHandItem();
+        if (mainHand.getItem() instanceof com.piranport.artillery.ArtilleryItem) {
             event.setCanceled(true);
         }
     }

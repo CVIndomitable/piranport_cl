@@ -79,6 +79,10 @@ public class ConfigOverrideManager {
                 .map(v -> ((Number) v).floatValue())
                 .orElse(original.dragCoeff());
 
+        float gravity = overrides.getCannonOverride(name, "gravity")
+                .map(v -> ((Number) v).floatValue())
+                .orElse(original.gravity());
+
         float explosionPower = overrides.getCannonOverride(name, "explosionPower")
                 .map(v -> ((Number) v).floatValue())
                 .orElse(original.explosionPower());
@@ -98,7 +102,7 @@ public class ConfigOverrideManager {
                 original.muzzles(),
                 initialSpeed,
                 dragCoeff,
-                original.gravity(),
+                gravity,
                 explosionPower,
                 dispersion
         );
@@ -128,6 +132,10 @@ public class ConfigOverrideManager {
                 .map(Float::parseFloat)
                 .orElse(original.dragCoeff());
 
+        float gravity = ClientConfigCache.getCannonOverride(name, "gravity")
+                .map(Float::parseFloat)
+                .orElse(original.gravity());
+
         float explosionPower = ClientConfigCache.getCannonOverride(name, "explosionPower")
                 .map(Float::parseFloat)
                 .orElse(original.explosionPower());
@@ -147,7 +155,7 @@ public class ConfigOverrideManager {
                 original.muzzles(),
                 initialSpeed,
                 dragCoeff,
-                original.gravity(),
+                gravity,
                 explosionPower,
                 dispersion
         );
@@ -238,6 +246,10 @@ public class ConfigOverrideManager {
             case "dragCoeff" -> {
                 float f = num.floatValue();
                 yield Math.max(0.0f, Math.min(1.0f, f));
+            }
+            case "gravity" -> {
+                float f = num.floatValue();
+                yield Math.max(0.1f, Math.min(100f, f));
             }
             case "explosionPower" -> {
                 float f = num.floatValue();

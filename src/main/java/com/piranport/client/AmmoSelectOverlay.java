@@ -120,9 +120,11 @@ public class AmmoSelectOverlay {
         // 计算角度（0度=右，逆时针增加）
         double angle = Math.atan2(dy, dx);
 
-        // 转换为0-2π范围，并调整起始角度为12点钟方向（-π/2）
-        angle = angle + Math.PI / 2.0;
+        // 转换为0-2π范围，调整起始角度为12点钟方向
+        // Issue 8: 修正角度计算，使其与渲染方向一致（顺时针）
+        angle = -angle + Math.PI / 2.0;
         if (angle < 0) angle += 2.0 * Math.PI;
+        if (angle >= 2.0 * Math.PI) angle -= 2.0 * Math.PI;
 
         // 计算对应的弹种索引
         int n = availableAmmos.size();

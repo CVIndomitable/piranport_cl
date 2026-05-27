@@ -39,14 +39,22 @@ import java.util.List;
  */
 public class ArtilleryItem extends Item {
     private final ArtilleryCannonData data;
+    private final String cannonName;
 
     public ArtilleryItem(Properties properties, ArtilleryCannonData data) {
         super(properties);
         this.data = data;
+        this.cannonName = null;
+    }
+
+    public ArtilleryItem(Properties properties, ArtilleryCannonData data, String cannonName) {
+        super(properties);
+        this.data = data;
+        this.cannonName = cannonName;
     }
 
     public ArtilleryItem(Properties properties) {
-        this(properties, ArtilleryCannonData.DEFAULT);
+        this(properties, ArtilleryCannonData.DEFAULT, null);
     }
 
     // ===== ShipCoreItem 兼容接口 =====
@@ -55,6 +63,16 @@ public class ArtilleryItem extends Item {
     public int getBarrelCount() { return data.barrels(); }
     public int getCaliber() { return data.caliber(); }
     public ArtilleryCannonData getData() { return data; }
+    
+    /** 获取应用配置覆盖后的有效数据 */
+    public ArtilleryCannonData getEffectiveData(net.minecraft.world.level.Level level) {
+        if (cannonName != null && level != null) {
+            return com.piranport.artillery.config.override.ConfigOverrideManager.getCannonData(cannonName, level);
+        }
+        return data;
+    }
+    
+    public String getCannonName() { return cannonName; }
     public float getInitialSpeed() { return data.initialSpeed(); }
     public float getDragCoeff() { return data.dragCoeff(); }
     public float getCustomGravity() { return data.gravity(); }

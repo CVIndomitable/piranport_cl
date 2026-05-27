@@ -55,7 +55,7 @@ public class ArtilleryConfigToolScreen extends AbstractContainerScreen<Artillery
 
     // 可编辑字段
     private static final String[] CANNON_FIELDS = {
-            "damage", "reloadTime", "initialSpeed", "dragCoeff", "explosionPower", "dispersion"
+            "damage", "reloadTime", "initialSpeed", "dragCoeff", "gravity", "explosionPower", "dispersion"
     };
 
     public ArtilleryConfigToolScreen(ArtilleryConfigToolMenu menu, Inventory playerInventory, Component title) {
@@ -201,6 +201,7 @@ public class ArtilleryConfigToolScreen extends AbstractContainerScreen<Artillery
             case "initialSpeed" -> String.format("%.2f", data.initialSpeed());
             case "dragCoeff" -> String.format("%.4f", data.dragCoeff());
             case "explosionPower" -> String.format("%.1f", data.explosionPower());
+            case "gravity" -> String.format("%.2f", data.gravity());
             case "dispersion" -> String.format("%.2f", data.dispersion());
             default -> "";
         };

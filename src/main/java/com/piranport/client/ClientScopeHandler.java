@@ -34,7 +34,7 @@ public final class ClientScopeHandler {
     /** 进入瞄准模式之前是否持有火炮 */
     private static boolean heldCannonBeforeScope = false;
 
-    private static final int SCOPE_THRESHOLD_TICKS = 5;
+    private static final int SCOPE_THRESHOLD_TICKS = 2;
 
     private ClientScopeHandler() {}
 

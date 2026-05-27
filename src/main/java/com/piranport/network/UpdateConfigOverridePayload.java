@@ -89,7 +89,7 @@ public record UpdateConfigOverridePayload(
      */
     private static Object parseValue(String valueStr, String field) {
         return switch (field) {
-            case "damage", "initialSpeed", "dragCoeff", "explosionPower", "dispersion" ->
+            case "damage", "initialSpeed", "dragCoeff", "gravity", "explosionPower", "dispersion" ->
                     Float.parseFloat(valueStr);
             case "reloadTime" ->
                     Integer.parseInt(valueStr);

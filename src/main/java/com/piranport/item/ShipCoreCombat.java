@@ -1557,30 +1557,27 @@ public class ShipCoreCombat {
                 level.addFreshEntity(projectile);
             }
 
-            // Phase 10: 只在第一个炮管播放音效 + 粒子 + 震动（避免齐射重复）
+            // 炮口火焰粒子（服务端广播）— 使用实际炮口位置
+            if (level instanceof ServerLevel serverLevel) {
+                Vec3 look = player.getLookAngle();
+                double px = spawnPos.x + look.x * 0.3;
+                double py = spawnPos.y + look.y * 0.3;
+                double pz = spawnPos.z + look.z * 0.3;
+                serverLevel.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, px, py, pz, 3,
+                        0.2, 0.2, 0.2, 0.05);
+                serverLevel.sendParticles(ParticleTypes.CLOUD, px, py, pz, 2,
+                        0.3, 0.15, 0.3, 0.01);
+                serverLevel.sendParticles(ParticleTypes.LAVA, px, py, pz, 1,
+                        0.1, 0.1, 0.1, 0);
+            }
+
+            // Phase 10: 只在第一个炮管播放音效 + 震动（避免齐射重复）
             if (b == 0) {
                 // 发射音效
                 SoundEvent fireSound = getFireSound(weapon);
                 float pitch = getSoundPitch(weapon);
                 level.playSound(null, player.getX(), player.getY(), player.getZ(),
                         fireSound, SoundSource.PLAYERS, 2.0f, pitch);
-
-                // 炮口火焰粒子（服务端广播）— 偏移到玩家右手位置，避免烟雾遮挡视线
-                if (level instanceof ServerLevel serverLevel) {
-                    Vec3 look = player.getLookAngle();
-                    float yawRad = (float) Math.toRadians(player.getYRot() + 90.0);
-                    double rightX = Math.cos(yawRad) * 0.5;
-                    double rightZ = Math.sin(yawRad) * 0.5;
-                    double px = player.getX() + look.x * 1.5 + rightX;
-                    double py = player.getY() + player.getEyeHeight() + look.y * 0.5;
-                    double pz = player.getZ() + look.z * 1.5 + rightZ;
-                    serverLevel.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, px, py, pz, 4,
-                            0.2, 0.2, 0.2, 0.05);
-                    serverLevel.sendParticles(ParticleTypes.CLOUD, px, py, pz, 3,
-                            0.3, 0.15, 0.3, 0.01);
-                    serverLevel.sendParticles(ParticleTypes.LAVA, px, py, pz, 1,
-                            0.1, 0.1, 0.1, 0);
-                }
 
                 // 发射屏幕震动（S2C）
                 float shakeIntensity = isSmallCaliber(weapon) ? 0.3f : 0.6f;

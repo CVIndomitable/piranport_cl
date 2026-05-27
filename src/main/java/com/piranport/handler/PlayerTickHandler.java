@@ -66,7 +66,7 @@ public class PlayerTickHandler {
     /** 自动战斗检查间隔（tick）*/
     private static final int AUTO_COMBAT_INTERVAL = 40;
     /** 无GUI模式负重检查间隔（tick）- 降低频率以提升性能 */
-    private static final int INVENTORY_LOAD_CHECK_INTERVAL = 5;
+    private static final int INVENTORY_LOAD_CHECK_INTERVAL = 10;
     /** 传送检测距离阈值（格）- 降低以避免误判鞘翅飞行 */
     private static final double TELEPORT_DETECTION_THRESHOLD = 64.0;
 
@@ -81,6 +81,8 @@ public class PlayerTickHandler {
     private static final Map<UUID, Float> lastYaw = new ConcurrentHashMap<>();
     /** 玩家 UUID → 缓存的方向向量。用于水面行走加速。 */
     private static final Map<UUID, Vec3> cachedDirection = new ConcurrentHashMap<>();
+    /** 玩家 UUID → 水面 Y 坐标。用于水面行走位置锁定，防止下沉。 */
+    private static final Map<UUID, Double> waterSurfaceY = new ConcurrentHashMap<>();
     /** 缓存的配置值：是否启用舰核GUI（延迟初始化，避免配置加载顺序问题）*/
     private static Boolean cachedShipCoreGuiEnabled = null;
 
@@ -99,6 +101,7 @@ public class PlayerTickHandler {
         accumulatedDistance.clear();
         lastYaw.clear();
         cachedDirection.clear();
+        waterSurfaceY.clear();
         cachedShipCoreGuiEnabled = null;
     }
 
@@ -109,6 +112,7 @@ public class PlayerTickHandler {
         accumulatedDistance.remove(uuid);
         lastYaw.remove(uuid);
         cachedDirection.remove(uuid);
+        waterSurfaceY.remove(uuid);
     }
 
     /** 定期清理离线玩家的缓存条目，防止服务器崩溃导致的内存泄漏 */
@@ -122,6 +126,7 @@ public class PlayerTickHandler {
         accumulatedDistance.keySet().removeIf(uuid -> !onlineUuids.contains(uuid));
         lastYaw.keySet().removeIf(uuid -> !onlineUuids.contains(uuid));
         cachedDirection.keySet().removeIf(uuid -> !onlineUuids.contains(uuid));
+        waterSurfaceY.keySet().removeIf(uuid -> !onlineUuids.contains(uuid));
     }
 
     @SubscribeEvent
@@ -195,14 +200,14 @@ public class PlayerTickHandler {
 
     /** 水面行走条件判断后委托给 handleWaterWalking */
     private static void handleWaterWalkingIfNeeded(Player player, boolean isSubmarine) {
-        if (!isSubmarine) {
-            // Issue 5: Add buoyancy when underwater to prevent sinking
-            if (player.isInWater()) {
-                applyBuoyancy(player);
-                if (!player.isEyeInFluidType(NeoForgeMod.WATER_TYPE.value())) {
-                    handleWaterWalking(player);
-                }
-            }
+        if (isSubmarine) return;
+        if (!player.isInWater()) {
+            waterSurfaceY.remove(player.getUUID());
+            return;
+        }
+        applyWaterSurfaceControl(player);
+        if (!player.isEyeInFluidType(NeoForgeMod.WATER_TYPE.value())) {
+            handleWaterWalking(player);
         }
     }
 
@@ -428,29 +433,35 @@ public class PlayerTickHandler {
         }
     }
 
-    /** Issue 5: Apply buoyancy to keep transformed players on water surface */
-    private static void applyBuoyancy(Player player) {
+    /** 水面位置控制：防止下沉 + 上浮，同时修正位置和速度 */
+    private static void applyWaterSurfaceControl(Player player) {
+        UUID uuid = player.getUUID();
         Vec3 vel = player.getDeltaMovement();
-        
-        // If player is underwater (eyes submerged), push them up strongly
+
         if (player.isEyeInFluidType(NeoForgeMod.WATER_TYPE.value())) {
-            // Strong upward force to bring player to surface
+            // 眼睛在水下：强上推 + 记录水面位置
             player.setDeltaMovement(vel.x, 0.3, vel.z);
             player.resetFallDistance();
-            
-            // Spawn bubbles for visual effect
+            waterSurfaceY.put(uuid, player.getY());
             if (player.level() instanceof ServerLevel serverLevel) {
                 serverLevel.sendParticles(ParticleTypes.BUBBLE_COLUMN_UP,
                     player.getX(), player.getY(), player.getZ(),
                     3, 0.3, 0.5, 0.3, 0.02);
             }
-        } 
-        // If player is in water but eyes are above, apply gentle buoyancy
-        else {
-            // Counteract downward velocity to keep player on surface
-            if (vel.y < 0) {
-                player.setDeltaMovement(vel.x, vel.y * 0.3, vel.z);
+        } else {
+            // 眼睛在水面之上：阻止下沉 + 位置锁定
+            double currentY = player.getY();
+            double surfaceY = waterSurfaceY.computeIfAbsent(uuid, k -> currentY);
+
+            if (vel.y <= 0 && currentY < surfaceY) {
+                // 正在下沉且低于水面：拉回水面位置
+                player.setPos(player.getX(), surfaceY, player.getZ());
+                player.setDeltaMovement(vel.x, 0, vel.z);
+            } else if (vel.y < 0) {
+                // 在水面或之上但仍有下沉速度：清零下沉速度
+                player.setDeltaMovement(vel.x, 0, vel.z);
             }
+            // vel.y > 0（跳跃中）：不锁定 Y，让玩家正常跳起
             player.resetFallDistance();
         }
     }
@@ -511,6 +522,7 @@ public class PlayerTickHandler {
         lastPlayerPos.remove(uuid);
         lastYaw.remove(uuid);
         cachedDirection.remove(uuid);
+        waterSurfaceY.remove(uuid);
     }
 
     /** 自动发射战斗机锁定附近飞行敌对生物 */

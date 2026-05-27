@@ -105,7 +105,7 @@ public class CookingPotBlock extends BaseEntityBlock {
             BlockEntity be = level.getBlockEntity(pos);
             if (be instanceof CookingPotBlockEntity pot) {
                 for (int i = 0; i < CookingPotBlockEntity.TOTAL_SLOTS; i++) {
-                    net.minecraft.world.item.ItemStack stack = pot.getItemHandler().getStackInSlot(i);
+                    net.minecraft.world.item.ItemStack stack = pot.getFullItemHandler().getStackInSlot(i);
                     if (!stack.isEmpty()) {
                         Containers.dropItemStack(level, pos.getX(), pos.getY(), pos.getZ(), stack);
                     }

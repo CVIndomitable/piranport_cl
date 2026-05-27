@@ -208,44 +208,31 @@ public class ShipCoreItem extends Item implements Equipable {
             return false;
         }
 
-        // Fuel refueling: coal/charcoal → +1 fuel per item (works in both GUI and no-GUI modes)
-        if (!other.isEmpty() && (other.is(net.minecraft.world.item.Items.COAL) || other.is(net.minecraft.world.item.Items.CHARCOAL))) {
-            validateAndFixFuelData(stack);
-            FuelData fuel = stack.get(ModDataComponents.SHIP_CORE_FUEL.get());
-            if (!fuel.isFull()) {
-                int space = fuel.maxFuel() - fuel.currentFuel();
-                if (space <= 0) return false;
-                int toAdd = Math.min(space, other.getCount());
-                stack.set(ModDataComponents.SHIP_CORE_FUEL.get(),
-                        fuel.withCurrentFuel(fuel.currentFuel() + toAdd));
-                other.shrink(toAdd);
+        // 通用燃料处理：烈焰粉、煤炭块 + 所有熔炉燃料（works in both GUI and no-GUI modes）
+        if (!other.isEmpty()) {
+            int fuelValue = getFuelValue(other);
+            if (fuelValue > 0) {
+                validateAndFixFuelData(stack);
+                FuelData fuel = stack.get(ModDataComponents.SHIP_CORE_FUEL.get());
+                if (!fuel.isFull()) {
+                    int totalAdded = 0;
+                    while (!other.isEmpty()) {
+                        int space = fuel.maxFuel() - fuel.currentFuel() - totalAdded;
+                        if (space <= 0) break;
+                        int gain = Math.min(fuelValue, space);
+                        totalAdded += gain;
+                        other.shrink(1);
+                    }
+                    stack.set(ModDataComponents.SHIP_CORE_FUEL.get(),
+                            fuel.withCurrentFuel(fuel.currentFuel() + totalAdded));
+                    player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+                            SoundEvents.BUCKET_EMPTY_LAVA, SoundSource.PLAYERS, 0.5f, 1.0f);
+                    return true;
+                }
                 player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
-                        SoundEvents.BUCKET_EMPTY_LAVA, SoundSource.PLAYERS, 0.5f, 1.0f);
-                return true;
+                        SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 0.5f, 1.0f);
+                return false;
             }
-            player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
-                    SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 0.5f, 1.0f);
-            return false;
-        }
-
-        // Fuel refueling: blaze rod → +1 fuel per item (works in both GUI and no-GUI modes)
-        if (!other.isEmpty() && other.is(net.minecraft.world.item.Items.BLAZE_ROD)) {
-            validateAndFixFuelData(stack);
-            FuelData fuel = stack.get(ModDataComponents.SHIP_CORE_FUEL.get());
-            if (!fuel.isFull()) {
-                int space = fuel.maxFuel() - fuel.currentFuel();
-                if (space <= 0) return false;
-                int toAdd = Math.min(space, other.getCount());
-                stack.set(ModDataComponents.SHIP_CORE_FUEL.get(),
-                        fuel.withCurrentFuel(fuel.currentFuel() + toAdd));
-                other.shrink(toAdd);
-                player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
-                        SoundEvents.BUCKET_EMPTY_LAVA, SoundSource.PLAYERS, 0.5f, 1.0f);
-                return true;
-            }
-            player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
-                    SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 0.5f, 1.0f);
-            return false;
         }
 
         // Fuel refueling: fuel item → batch fill (works in both GUI and no-GUI modes)
@@ -304,6 +291,17 @@ public class ShipCoreItem extends Item implements Equipable {
             }
             return false; // nothing stored
         }
+    }
+
+    // 辅助方法：获取物品的燃料值（基于熔炉燃烧时间）
+    // 烈焰粉特殊处理（不是熔炉燃料但作为燃料源）
+    private int getFuelValue(ItemStack stack) {
+        if (stack.is(net.minecraft.world.item.Items.BLAZE_POWDER)) return 1;
+        int burnTime = stack.getBurnTime(net.minecraft.world.item.crafting.RecipeType.SMELTING);
+        if (burnTime > 0) {
+            return Math.max(1, (burnTime + 1599) / 1600); // 向上取整
+        }
+        return 0;
     }
 
     @Override

@@ -54,6 +54,17 @@ public record SwitchAmmoPayload(String ammoItemId) implements CustomPacketPayloa
             Item ammoItem = BuiltInRegistries.ITEM.get(ammoId);
             if (ammoItem == null) return;
 
+            // 验证玩家实际持有武器（防止伪造请求）
+            boolean hasWeapon = false;
+            for (int i = 0; i < 9; i++) {
+                ItemStack slot = player.getInventory().getItem(i);
+                if (slot.getItem() instanceof com.piranport.artillery.ArtilleryItem) {
+                    hasWeapon = true;
+                    break;
+                }
+            }
+            if (!hasWeapon) return;
+
             // 验证背包中有该弹种且口径匹配
             Inventory inv = player.getInventory();
             boolean hasAmmo = false;

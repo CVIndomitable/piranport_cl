@@ -285,6 +285,52 @@ public class ModItems {
                             0.5f     // dispersion: 默认散布
                     )));
 
+    /**
+     * 一星期主炮群 — 14联装极限齐射火炮。
+     * 用途：测试更大规模齐射性能和散布系统。
+     *
+     * 参数说明（按 salvo_test_gun 的 3 倍缩放线性外推，14联装 ≈ 3.5倍大型火炮）：
+     * - 齐射数：14发（barrels=14）
+     * - 伤害：70.0（大型火炮的3.5倍）
+     * - 装填时间：80tick（与大型火炮相同）
+     * - 初速：12.25（大型火炮的3.5倍）
+     * - 爆炸威力：7.0（大型火炮的3.5倍）
+     * - 散布角：1.8度（比12联装稍大，补偿更多炮管）
+     */
+    public static final DeferredItem<Item> FOURTEEN_BARREL_GUN =
+            ITEMS.register("fourteen_barrel_gun", () -> new ArtilleryItem(new Item.Properties().stacksTo(1)
+                    .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.CANNON)
+                    .durability(3500),
+                    new ArtilleryCannonData(
+                            16,      // caliber: 大口径
+                            14,      // barrels: 14联装
+                            70.0f,   // damage: 大型火炮的3.5倍
+                            80,      // reloadTime: 与大型火炮相同
+                            3500,    // durability: 高耐久
+                            4.0f,    // scopeZoom: 与大型火炮相同
+                            List.of( // muzzles: 14个炮口横向排列，y=0.3，间距0.3
+                                    new MuzzlePos(1.95, 0.3, 0),
+                                    new MuzzlePos(1.65, 0.3, 0),
+                                    new MuzzlePos(1.35, 0.3, 0),
+                                    new MuzzlePos(1.05, 0.3, 0),
+                                    new MuzzlePos(0.75, 0.3, 0),
+                                    new MuzzlePos(0.45, 0.3, 0),
+                                    new MuzzlePos(0.15, 0.3, 0),
+                                    new MuzzlePos(-0.15, 0.3, 0),
+                                    new MuzzlePos(-0.45, 0.3, 0),
+                                    new MuzzlePos(-0.75, 0.3, 0),
+                                    new MuzzlePos(-1.05, 0.3, 0),
+                                    new MuzzlePos(-1.35, 0.3, 0),
+                                    new MuzzlePos(-1.65, 0.3, 0),
+                                    new MuzzlePos(-1.95, 0.3, 0)
+                            ),
+                            12.25f,  // initialSpeed: 大型火炮的3.5倍
+                            0.008f,  // dragCoeff: 与大型火炮相同
+                            9.8f,    // gravity: 标准重力
+                            7.0f,    // explosionPower: 大型火炮的3.5倍
+                            1.8f     // dispersion: 比12联装稍大
+                    )));
+
     // ===== Torpedo Ammo (legacy generic) =====
     public static final DeferredItem<TorpedoItem> TORPEDO_533MM =
             ITEMS.register("torpedo_533mm",

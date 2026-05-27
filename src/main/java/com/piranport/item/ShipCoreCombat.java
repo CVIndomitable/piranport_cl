@@ -102,6 +102,14 @@ public class ShipCoreCombat {
                 coreInventorySlot = 40;
             }
         }
+        // 头盔模式：检查配置的核心槽位（HEAD 装备槽不在 inv.items 中）
+        if (coreStack.isEmpty()) {
+            ItemStack configCore = TransformationManager.getCoreFromConfiguredSlot(player);
+            if (configCore.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(configCore)) {
+                coreStack = configCore;
+                coreInventorySlot = -2;
+            }
+        }
         if (coreStack.isEmpty()) return false;
 
         return fireWeaponAtSlot(level, player, coreStack, weaponSlot, coreInventorySlot);

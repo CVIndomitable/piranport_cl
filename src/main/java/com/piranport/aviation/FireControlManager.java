@@ -1,24 +1,24 @@
 package com.piranport.aviation;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.HashMap;
-import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+
 /**
  * 服务端火控状态 — 管理玩家→锁定目标的映射。
  *
- * <p><b>线程模型</b>: 服务端主线程单线程访问，无并发。
+ * <p><b>线程模型</b>: 服务端主线程访问为主，使用 ConcurrentHashMap / CopyOnWriteArrayList
+ * 防御服务器关闭时并发清理导致的竞态条件。
  * <p><b>生命周期</b>: 玩家登出时通过 {@link #clearTargets(UUID)} 清理，
  * 服务端关闭时通过 {@link #clearAll()} 清理。
  * <p><b>容量限制</b>: 每个玩家最多 {@value #MAX_TARGETS} 个目标。
  */
 public class FireControlManager {
 
-    private static final Map<UUID, List<UUID>> LOCKED_TARGETS = new HashMap<>();
+    private static final Map<UUID, List<UUID>> LOCKED_TARGETS = new ConcurrentHashMap<>();
     private static final int MAX_TARGETS = 4;
 
     private FireControlManager() {
@@ -27,7 +27,7 @@ public class FireControlManager {
 
     /** Replace the target list with a single target. */
     public static void lock(UUID playerUUID, UUID targetUUID) {
-        List<UUID> list = new ArrayList<>();
+        List<UUID> list = new CopyOnWriteArrayList<>();
         list.add(targetUUID);
         LOCKED_TARGETS.put(playerUUID, list);
         com.piranport.debug.PiranPortDebug.event(
@@ -36,7 +36,7 @@ public class FireControlManager {
 
     /** Append a target (up to MAX_TARGETS). Does nothing if already in list. */
     public static void addTarget(UUID playerUUID, UUID targetUUID) {
-        List<UUID> list = LOCKED_TARGETS.computeIfAbsent(playerUUID, k -> new ArrayList<>());
+        List<UUID> list = LOCKED_TARGETS.computeIfAbsent(playerUUID, k -> new CopyOnWriteArrayList<>());
         if (!list.contains(targetUUID) && list.size() < MAX_TARGETS) {
             list.add(targetUUID);
             com.piranport.debug.PiranPortDebug.event(
@@ -67,7 +67,7 @@ public class FireControlManager {
     }
 
     // ===== Fighter Ground-Attack Mode (default OFF = air-only) =====
-    private static final Set<UUID> FIGHTER_GROUND_ENABLED = new HashSet<>();
+    private static final Set<UUID> FIGHTER_GROUND_ENABLED = ConcurrentHashMap.newKeySet();
 
     /** Toggle fighter ground-attack mode. Returns true if ground attack is now enabled. */
     public static boolean toggleFighterGround(UUID playerUUID) {

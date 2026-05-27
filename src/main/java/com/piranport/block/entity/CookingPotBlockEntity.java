@@ -110,7 +110,9 @@ public class CookingPotBlockEntity extends BlockEntity implements MenuProvider {
         super(ModBlockEntityTypes.COOKING_POT.get(), pos, state);
     }
 
-    public ItemStackHandler getItemHandler() { return itemHandler; }
+    /** @deprecated Use {@link #getItemHandler(Direction)} for direction-aware access. */
+    @Deprecated
+    public ItemStackHandler getFullItemHandler() { return itemHandler; }
 
     /** Phase 29: Direction-aware handler — DOWN = output-only, others = input-only. */
     public IItemHandler getItemHandler(@Nullable Direction side) {

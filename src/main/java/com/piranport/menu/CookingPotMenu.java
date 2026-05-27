@@ -44,7 +44,7 @@ public class CookingPotMenu extends AbstractContainerMenu {
         this.blockEntity = be;
         this.level = playerInventory.player.level();
 
-        IItemHandler handler = be != null ? be.getItemHandler() : new ItemStackHandler(CookingPotBlockEntity.TOTAL_SLOTS);
+        IItemHandler handler = be != null ? be.getFullItemHandler() : new ItemStackHandler(CookingPotBlockEntity.TOTAL_SLOTS);
         this.dataAccess = be != null ? be.dataAccess : new SimpleContainerData(2);
 
         // Input slots 0-8 (3x3 grid), slot indices 0-8

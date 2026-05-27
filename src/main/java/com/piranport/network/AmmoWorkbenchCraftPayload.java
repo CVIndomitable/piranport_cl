@@ -19,7 +19,7 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import java.util.WeakHashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 public record AmmoWorkbenchCraftPayload(BlockPos pos, String recipeId, int quantity)
         implements CustomPacketPayload {
@@ -31,7 +31,10 @@ public record AmmoWorkbenchCraftPayload(BlockPos pos, String recipeId, int quant
     private static final int MAX_QUANTITY = 64;
     // 频率限制：每玩家每 10 tick 一次请求（约 0.5 秒）
     private static final long MIN_TICKS_BETWEEN_REQUESTS = 10L;
-    private static final Map<UUID, Long> LAST_REQUEST_TICK = new WeakHashMap<>();
+    private static final Map<UUID, Long> LAST_REQUEST_TICK = new ConcurrentHashMap<>();
+    // 每 6000 tick（约5分钟）清理离线玩家的过期条目
+    private static final long CLEANUP_INTERVAL_TICKS = 6000L;
+    private static long lastCleanupGameTick = 0;
 
     public static final StreamCodec<FriendlyByteBuf, AmmoWorkbenchCraftPayload> STREAM_CODEC =
             StreamCodec.of(
@@ -49,11 +52,14 @@ public record AmmoWorkbenchCraftPayload(BlockPos pos, String recipeId, int quant
             // 频率限制
             long now = player.level().getGameTime();
             UUID uuid = player.getUUID();
-            synchronized (LAST_REQUEST_TICK) {
-                Long last = LAST_REQUEST_TICK.get(uuid);
-                if (last != null && now - last < MIN_TICKS_BETWEEN_REQUESTS) return;
-                LAST_REQUEST_TICK.put(uuid, now);
+            // 定期清理过期条目
+            if (now - lastCleanupGameTick > CLEANUP_INTERVAL_TICKS) {
+                lastCleanupGameTick = now;
+                LAST_REQUEST_TICK.entrySet().removeIf(e -> now - e.getValue() > CLEANUP_INTERVAL_TICKS);
             }
+            Long last = LAST_REQUEST_TICK.get(uuid);
+            if (last != null && now - last < MIN_TICKS_BETWEEN_REQUESTS) return;
+            LAST_REQUEST_TICK.put(uuid, now);
 
             BlockPos pos = payload.pos;
             if (!player.level().isLoaded(pos)) return;

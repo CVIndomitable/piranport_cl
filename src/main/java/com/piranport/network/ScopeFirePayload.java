@@ -54,6 +54,14 @@ public record ScopeFirePayload(boolean useBallisticAim, double targetX, double t
             ItemStack weapon = player.getItemInHand(InteractionHand.MAIN_HAND);
             if (weapon.isEmpty()) return;
 
+            // 验证主手持有可发射武器（防止伪造请求）
+            boolean hasFireableWeapon = weapon.getItem() instanceof com.piranport.artillery.ArtilleryItem
+                    || weapon.getItem() instanceof com.piranport.item.TorpedoLauncherItem
+                    || weapon.getItem() instanceof com.piranport.item.MissileLauncherItem
+                    || weapon.getItem() instanceof com.piranport.item.DepthChargeLauncherItem
+                    || weapon.getItem() instanceof com.piranport.item.AircraftItem;
+            if (!hasFireableWeapon) return;
+
             if (com.piranport.config.ModCommonConfig.isShipCoreGuiEnabled()) {
                 return;
             }

@@ -1,12 +1,16 @@
 package com.piranport.item;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.TagKey;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.AxeItem;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.Tier;
 import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 
 /**
  * 初雪的主炮 — Hatsuyuki's Main Gun
@@ -26,5 +30,10 @@ public class HatsuyukiMainGunItem extends AxeItem {
     public HatsuyukiMainGunItem(Properties properties) {
         super(HATSUYUKI_TIER, properties
                 .attributes(AxeItem.createAttributes(HATSUYUKI_TIER, 11, -2.6f)));
+    }
+
+    @Override
+    public boolean canAttackBlock(BlockState state, Level level, BlockPos pos, Player player) {
+        return false;
     }
 }

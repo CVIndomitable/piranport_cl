@@ -43,6 +43,20 @@ public record WeaponCooldown(long endTick, int totalTick) {
     /**
      * Returns cooldown fraction [0, 1]: 0 = ready, 1 = just fired.
      */
+    /**
+     * Returns reload progress [0, 1]: 0 = just fired, 1 = ready.
+     */
+    public float getProgress(long currentTick) {
+        return 1f - getFraction(currentTick);
+    }
+
+    /**
+     * Returns remaining cooldown ticks (0 if ready).
+     */
+    public float getRemainingTicks(long currentTick) {
+        return Math.max(0, endTick - currentTick);
+    }
+
     public float getFraction(long currentTick) {
         if (endTick <= currentTick) return 0f;
         return Math.min(1f, (float) (endTick - currentTick) / totalTick);

@@ -36,6 +36,7 @@
   "item.piranport.french_quad_380mm_gun": "French Quad 380mm Gun",
   "item.piranport.seven_barrel_gun": "Seven-Barrel Gun",
   "item.piranport.salvo_test_gun": "Salvo Test Gun",
+  "item.piranport.fourteen_barrel_gun": "One Week Main Battery",
   "container.piranport.weapons": "Weapons",
   "container.piranport.ammo": "Ammo",
   "container.piranport.enhancement": "Enhancement",
@@ -471,7 +472,7 @@
   "tooltip.piranport.fuel_tank": "Fuel Tank: %sb / %sb",
   "message.piranport.no_fuel": "No fuel! Use a fuel bucket to refuel",
   "message.piranport.fuel_depleted": "Fuel depleted, transformation ended!",
-  "message.piranport.no_fuel_enhanced": "§cNo fuel!§r\n§7Use lava bucket, coal, or blaze rod to refuel.§r",
+  "message.piranport.no_fuel_enhanced": "§cNo fuel!§r\n§7Use lava bucket, fuel, or blaze powder to refuel.§r",
 
   "block.piranport.dungeon_lectern": "Dungeon Lectern",
   "item.piranport.dungeon_key": "Dungeon Key",

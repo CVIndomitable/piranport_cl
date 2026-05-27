@@ -107,30 +107,35 @@ public class AmmoSelectOverlay {
     private static void updateHoveredAmmo(int mouseX, int mouseY, int cx, int cy) {
         if (availableAmmos.isEmpty()) return;
 
-        // 计算鼠标相对中心的偏移
         double dx = mouseX - cx;
         double dy = mouseY - cy;
         double distance = Math.sqrt(dx * dx + dy * dy);
 
-        // 死区：鼠标距离中心小于20像素时不改变选择
-        if (distance < 20.0) {
+        // 死区：鼠标距离中心小于10像素时不改变选择
+        if (distance < 10.0) {
             return;
         }
 
-        // 计算角度（0度=右，逆时针增加）
-        double angle = Math.atan2(dy, dx);
+        // 鼠标方向角度（与渲染公式对齐：0=右，atan2 标准）
+        double mouseAngle = Math.atan2(dy, dx);
 
-        // 转换为0-2π范围，调整起始角度为12点钟方向（顺时针）
-        angle = angle + Math.PI / 2.0;
-        if (angle < 0) angle += 2.0 * Math.PI;
-        if (angle >= 2.0 * Math.PI) angle -= 2.0 * Math.PI;
-
-        // 计算对应的弹种索引
+        // 找角度最近的弹药项（与渲染角度公式一致）
         int n = availableAmmos.size();
-        int index = (int) Math.floor(angle / (2.0 * Math.PI / n));
-        index = Math.max(0, Math.min(index, n - 1));
+        int bestIndex = 0;
+        double bestDelta = Double.MAX_VALUE;
+        for (int i = 0; i < n; i++) {
+            double itemAngle = (2.0 * Math.PI * i / n) - Math.PI / 2.0;
+            double delta = mouseAngle - itemAngle;
+            // 归一化到 [-π, π]
+            delta = delta - 2.0 * Math.PI * Math.round(delta / (2.0 * Math.PI));
+            double absDelta = Math.abs(delta);
+            if (absDelta < bestDelta) {
+                bestDelta = absDelta;
+                bestIndex = i;
+            }
+        }
 
-        hoveredAmmo = availableAmmos.get(index);
+        hoveredAmmo = availableAmmos.get(bestIndex);
     }
 
     @SubscribeEvent

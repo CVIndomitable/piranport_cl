@@ -335,7 +335,12 @@ public class ArtilleryCannonDetailScreen extends Screen {
         int scrollAreaHeight = visibleRows * ROW_HEIGHT;
         graphics.fill(x + 5, y + FIELDS_START_Y - 5, x + GUI_WIDTH - 25, y + FIELDS_START_Y + scrollAreaHeight + 5, 0xFF6B6B6B);
 
-        // 启用裁剪，限制渲染区域
+        // 绘制标题
+        String title = Component.translatable("gui.piranport.config_tool.cannon_detail_title",
+                Component.translatable("item.piranport." + cannonName).getString()).getString();
+        graphics.drawString(this.font, title, x + 8, y + 6, 0xFFFFFF, false);
+
+        // 启用裁剪，限制 EditBox 渲染区域
         graphics.enableScissor(
                 x,
                 y + FIELDS_START_Y,
@@ -343,16 +348,14 @@ public class ArtilleryCannonDetailScreen extends Screen {
                 y + FIELDS_START_Y + scrollAreaHeight
         );
 
-        // 调用 super.render() 渲染 widgets（包括 EditBox）
-        super.render(graphics, mouseX, mouseY, partialTick);
-
-        // 禁用裁剪
-        graphics.disableScissor();
-
-        // 绘制标题
-        String title = Component.translatable("gui.piranport.config_tool.cannon_detail_title",
-                Component.translatable("item.piranport." + cannonName).getString()).getString();
-        graphics.drawString(this.font, title, x + 8, y + 6, 0xFFFFFF, false);
+        // 渲染 EditBox（在裁剪区域内）
+        for (int i = 0; i < visibleRows && (scrollOffset + i) < FIELDS.length; i++) {
+            int fieldIndex = scrollOffset + i;
+            EditBox box = editBoxRefs[fieldIndex];
+            if (box != null) {
+                box.render(graphics, mouseX, mouseY, partialTick);
+            }
+        }
 
         // 绘制可见字段的标签
         for (int i = 0; i < visibleRows && (scrollOffset + i) < FIELDS.length; i++) {
@@ -362,6 +365,16 @@ public class ArtilleryCannonDetailScreen extends Screen {
             String label = Component.translatable("gui.piranport.config_tool." + field.transKey()).getString();
             graphics.drawString(this.font, label, x + LABEL_X_OFFSET, labelY, 0xFFFFFF, false);
         }
+
+        // 禁用裁剪
+        graphics.disableScissor();
+
+        // 渲染按钮（在裁剪区域外，确保可见）
+        this.renderables.forEach(widget -> {
+            if (widget instanceof Button) {
+                widget.render(graphics, mouseX, mouseY, partialTick);
+            }
+        });
 
         // 绘制滚动指示器
         if (maxScrollOffset > 0) {

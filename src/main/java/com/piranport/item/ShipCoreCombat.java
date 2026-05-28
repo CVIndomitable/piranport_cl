@@ -73,7 +73,17 @@ public class ShipCoreCombat {
 
     private ShipCoreCombat() {}
 
+    // ===== 开火指令：在弹药/冷却管道中传递瞄准信息 =====
+    private sealed interface AimInstruction permits NoAim, Aimed, MaxRange {}
+    private record NoAim() implements AimInstruction {}
+    private record Aimed(Vec3 target) implements AimInstruction {}
+    private record MaxRange() implements AimInstruction {}
+
     public static boolean tryFireFromInventory(Level level, Player player, InteractionHand hand) {
+        return tryFireFromInventory(level, player, hand, new NoAim());
+    }
+
+    private static boolean tryFireFromInventory(Level level, Player player, InteractionHand hand, AimInstruction aim) {
         if (level.isClientSide) return false;
         // Phase 12: 旁观者模式不开火
         if (player.isSpectator()) return false;
@@ -110,14 +120,14 @@ public class ShipCoreCombat {
         }
         if (coreStack.isEmpty()) return false;
 
-        return fireWeaponAtSlot(level, player, coreStack, weaponSlot, coreInventorySlot);
+        return fireWeaponAtSlot(level, player, coreStack, weaponSlot, coreInventorySlot, aim);
     }
 
     /**
      * Fires the weapon at the given inventory slot using the ship core's ammo pool and cooldowns.
      * 返回 true 表示已派发 fire 分支（动作被消费）；false 表示被冷却阻断，调用方不应 consume 动作。
      */
-    private static boolean fireWeaponAtSlot(Level level, Player player, ItemStack coreStack, int weaponSlot, int coreInventorySlot) {
+    private static boolean fireWeaponAtSlot(Level level, Player player, ItemStack coreStack, int weaponSlot, int coreInventorySlot, AimInstruction aim) {
         Inventory inv = player.getInventory();
         ItemStack weapon = (weaponSlot == 40) ? inv.offhand.get(0) : inv.items.get(weaponSlot);
 
@@ -200,7 +210,7 @@ public class ShipCoreCombat {
             weapon.set(ModDataComponents.WEAPON_COOLDOWN.get(),
                     WeaponCooldown.of(level.getGameTime(), cooldownTicks));
 
-            fireCannonSalvo(level, player, weapon, shellForRender, barrelCount, isType3, isVT, isHE);
+            fireCannonSalvo(level, player, weapon, shellForRender, barrelCount, isType3, isVT, isHE, aim);
 
             com.piranport.debug.PiranPortDebug.event(
                     "Fire (creative) | weapon={} ammo={} barrels={}",
@@ -287,7 +297,7 @@ public class ShipCoreCombat {
             player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
         }
 
-        fireCannonSalvo(level, player, weapon, shellForRender, barrelCount, isType3, isVT, isHE);
+        fireCannonSalvo(level, player, weapon, shellForRender, barrelCount, isType3, isVT, isHE, aim);
 
         com.piranport.debug.PiranPortDebug.event(
                 "Fire | weapon={} ammo={} barrels={} remaining={}",
@@ -1460,6 +1470,11 @@ public class ShipCoreCombat {
         } finally {
             pendingAimTarget.remove();
         }
+    }
+
+    /** Phase 5: 目标超出射程时回退为最大射程射击（朝玩家朝向直线开火）。 */
+    public static void fireMaxRange(ServerPlayer player, ItemStack weapon) {
+        tryFireFromInventory(player.level(), player, InteractionHand.MAIN_HAND);
     }
 
     /** 获取武器的炮口位置列表。如果武器是 ArtilleryItem，从配置读取；否则返回默认单炮口。 */

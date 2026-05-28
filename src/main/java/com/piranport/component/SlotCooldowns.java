@@ -89,4 +89,16 @@ public record SlotCooldowns(Map<Integer, Long> endTick, Map<Integer, Integer> to
         newTotal.put(slot, adjusted);
         return new SlotCooldowns(Map.copyOf(newEnd), Map.copyOf(newTotal));
     }
+
+    /** Returns a new SlotCooldowns with the given slot's cooldown removed entirely. */
+    public SlotCooldowns withoutSlotCooldown(int slot) {
+        if (!endTick.containsKey(slot) && !totalTick.containsKey(slot)) {
+            return this;
+        }
+        Map<Integer, Long> newEnd = new HashMap<>(endTick);
+        Map<Integer, Integer> newTotal = new HashMap<>(totalTick);
+        newEnd.remove(slot);
+        newTotal.remove(slot);
+        return new SlotCooldowns(Map.copyOf(newEnd), Map.copyOf(newTotal));
+    }
 }

@@ -1,7 +1,10 @@
 package com.piranport.network;
 
 import com.piranport.PiranPort;
+import com.piranport.combat.TransformationManager;
 import com.piranport.component.SelectedAmmoType;
+import com.piranport.component.SlotCooldowns;
+import com.piranport.component.WeaponCooldown;
 import com.piranport.item.ShipCoreItem;
 import com.piranport.item.ShipCoreCombat;
 import com.piranport.registry.ModDataComponents;
@@ -98,6 +101,19 @@ public record SwitchAmmoPayload(String ammoItemId) implements CustomPacketPayloa
             // 设置选中弹种
             weapon.set(ModDataComponents.SELECTED_AMMO_TYPE.get(),
                     new SelectedAmmoType(payload.ammoItemId()));
+
+            // 切换弹种时重置装填进度
+            int weaponSlot = player.getInventory().selected;
+            ItemStack coreStack = TransformationManager.findTransformedCore(player);
+            if (!coreStack.isEmpty()) {
+                SlotCooldowns cooldowns = coreStack.getOrDefault(
+                        ModDataComponents.SLOT_COOLDOWNS.get(), SlotCooldowns.EMPTY);
+                SlotCooldowns updated = cooldowns.withoutSlotCooldown(weaponSlot);
+                if (updated != cooldowns) {
+                    coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(), updated);
+                }
+            }
+            weapon.set(ModDataComponents.WEAPON_COOLDOWN.get(), WeaponCooldown.EMPTY);
 
             // 播放音效和显示消息
             player.level().playSound(null, player.getX(), player.getY(), player.getZ(),

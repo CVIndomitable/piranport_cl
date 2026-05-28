@@ -1458,18 +1458,15 @@ public class ShipCoreCombat {
         return ModSounds.CANNON_FIRE_LARGE.get();
     }
 
-    /** Phase 5: 弹道解算瞄准目标位，由 fireFromScope→tryFireFromInventory→fireCannonSalvo 传递。 */
-    private static final ThreadLocal<Vec3> pendingAimTarget = new ThreadLocal<>();
-
     /** Phase 5: 从瞄准镜模式开火（由 ScopeFirePayload 调用）。复用 tryFireFromInventory 的弹药/冷却逻辑。 */
     public static void fireFromScope(Player player, ItemStack weapon, double tx, double ty, double tz) {
         Vec3 target = new Vec3(tx, ty, tz);
-        pendingAimTarget.set(target);
-        try {
-            tryFireFromInventory(player.level(), player, InteractionHand.MAIN_HAND);
-        } finally {
-            pendingAimTarget.remove();
-        }
+        tryFireFromInventory(player.level(), player, InteractionHand.MAIN_HAND, new Aimed(target));
+    }
+
+    /** Phase 5: 最大射程开火（由 ScopeFirePayload 调用）。使用最大射程仰角发射。 */
+    public static void fireMaxRange(Player player, ItemStack weapon) {
+        tryFireFromInventory(player.level(), player, InteractionHand.MAIN_HAND, new MaxRange());
     }
 
     /** Phase 5: 目标超出射程时回退为最大射程射击（朝玩家朝向直线开火）。 */
@@ -1516,7 +1513,8 @@ public class ShipCoreCombat {
 
     /** Fire a cannon salvo: barrelCount projectiles with natural inaccuracy spread. */
     private static void fireCannonSalvo(Level level, Player player, ItemStack weapon,
-            ItemStack shellForRender, int barrelCount, boolean isType3, boolean isVT, boolean isHE) {
+            ItemStack shellForRender, int barrelCount, boolean isType3, boolean isVT, boolean isHE,
+            AimInstruction aim) {
         // Phase 11: 全局炮弹上限检测
         if (isShellLimitReached(level, player)) {
             player.displayClientMessage(
@@ -1534,7 +1532,6 @@ public class ShipCoreCombat {
         // 获取炮口位置数据
         java.util.List<com.piranport.artillery.config.MuzzlePos> muzzles = getMuzzlePositions(weapon);
 
-        Vec3 aimTarget = pendingAimTarget.get(); // Phase 5: 非 null 时使用弹道解算
         float dispersionDeg = getProjectileInaccuracy(weapon, level);
         for (int b = 0; b < barrelCount; b++) {
             // 计算当前炮管的炮口位置
@@ -1548,17 +1545,27 @@ public class ShipCoreCombat {
                 float damage = getGunDamage(weapon, level);
                 float explosionPower = getExplosionPower(weapon, level);
                 float velocity = getProjectileVelocity(weapon, level);
+                float drag = getProjectileDrag(weapon, level);
+                float gravity = getProjectileGravity(weapon, level);
 
                 CannonProjectileEntity projectile = new CannonProjectileEntity(
                         level, player, shellForRender, damage, isHE, explosionPower);
                 if (isVT) projectile.setVT(true);
-                projectile.setDragCoeff(getProjectileDrag(weapon, level));
-                projectile.setCustomGravity(getProjectileGravity(weapon, level));
+                projectile.setDragCoeff(drag);
+                projectile.setCustomGravity(gravity);
 
                 Vec3 direction;
-                if (aimTarget != null) {
+                if (aim instanceof Aimed(Vec3 aimTarget)) {
                     // 弹道解算瞄准：从炮口位置到目标
                     direction = computeAimDirection(player, weapon, velocity, aimTarget, spawnPos);
+                } else if (aim instanceof MaxRange) {
+                    // 最大射程：使用玩家 yaw + 最大射程仰角
+                    double mcGravity = gravity > 0f ? gravity / 196.0 : BallisticSolver.DEFAULT_GRAVITY;
+                    double pitch = BallisticSolver.calculateMaxRangeAngle(velocity, drag, mcGravity);
+                    float yaw = player.getYRot();
+                    double yawRad = Math.toRadians(yaw);
+                    double cosP = Math.cos(pitch);
+                    direction = new Vec3(-Math.sin(yawRad) * cosP, Math.sin(pitch), Math.cos(yawRad) * cosP).normalize();
                 } else {
                     direction = player.getLookAngle();
                 }

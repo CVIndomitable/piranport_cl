@@ -59,11 +59,11 @@ public class ScopeInputHandler {
         if (attackDown && !attackWasDown && holdingCannon) {
             if (mc.getConnection() != null) {
                 if (isScoping) {
-                    Vec3 target = ClientScopeHandler.getAimedPosition();
-                    if (target != null) {
+                    if (ClientScopeHandler.hasValidTarget() && ClientScopeHandler.getAimedPosition() != null) {
+                        Vec3 target = ClientScopeHandler.getAimedPosition();
                         PacketDistributor.sendToServer(ScopeFirePayload.aimedFire(target.x, target.y, target.z));
                     } else {
-                        PacketDistributor.sendToServer(ScopeFirePayload.quickFire());
+                        PacketDistributor.sendToServer(ScopeFirePayload.maxRangeFire());
                     }
                 } else {
                     PacketDistributor.sendToServer(ScopeFirePayload.quickFire());

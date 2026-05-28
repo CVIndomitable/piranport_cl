@@ -251,6 +251,18 @@ public class ArtilleryCannonDetailScreen extends Screen {
     }
 
     /**
+     * 将所有未缓存的字段从原始数据填充到缓存
+     */
+    private void fillMissingFieldsToCache() {
+        for (FieldDef field : FIELDS) {
+            if (!fieldValueCache.containsKey(field.fieldName())) {
+                String value = getCachedFieldValue(field.fieldName(), field.isFloat());
+                fieldValueCache.put(field.fieldName(), value);
+            }
+        }
+    }
+
+    /**
      * 获取浮点字段的显示值（优先从客户端缓存读取覆盖）
      */
     private String getFieldDisplayValue(String fieldName, float defaultValue) {
@@ -413,6 +425,9 @@ public class ArtilleryCannonDetailScreen extends Screen {
     private void onSave() {
         // 先保存当前可见字段的值到缓存
         cacheCurrentEditBoxValues();
+
+        // 将所有未缓存的字段从原始数据填充到缓存
+        fillMissingFieldsToCache();
 
         // 验证所有字段
         if (!validateAllInputsFromCache()) {

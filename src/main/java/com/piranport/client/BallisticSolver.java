@@ -168,7 +168,7 @@ public final class BallisticSolver {
     }
 
     /** 计算最大射程发射角（有阻力时略高于 45°） */
-    private static double calculateMaxRangeAngle(double v0, double dragCoeff, double gravity) {
+    public static double calculateMaxRangeAngle(double v0, double dragCoeff, double gravity) {
         if (dragCoeff <= 0) return 45.0 * Math.PI / 180.0;
         double offset = Math.min(10, dragCoeff * 100);
         return (45.0 + offset) * Math.PI / 180.0;

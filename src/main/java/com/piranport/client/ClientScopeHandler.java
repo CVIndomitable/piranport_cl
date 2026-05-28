@@ -30,6 +30,8 @@ public final class ClientScopeHandler {
     private static double targetDistance = 0;
     /** 与目标的高度差（格） */
     private static double targetVertical = 0;
+    /** 当前 tick 射线是否命中有效目标（方块或实体），false 表示射线远端回退 */
+    private static boolean hasValidTarget = false;
 
     /** 进入瞄准模式之前是否持有火炮 */
     private static boolean heldCannonBeforeScope = false;
@@ -55,6 +57,7 @@ public final class ClientScopeHandler {
         aimedPosition = null;
         targetDistance = 0;
         targetVertical = 0;
+        hasValidTarget = false;
         heldCannonBeforeScope = false;
     }
 
@@ -106,11 +109,14 @@ public final class ClientScopeHandler {
             } else {
                 hitPos = entityHit.getLocation();
             }
+            hasValidTarget = true;
         } else if (blockHit.getType() == HitResult.Type.BLOCK) {
             hitPos = blockHit.getLocation();
+            hasValidTarget = true;
         } else {
             // 什么都没打到：取射线远端
             hitPos = end;
+            hasValidTarget = false;
         }
 
         aimedPosition = hitPos;
@@ -147,6 +153,9 @@ public final class ClientScopeHandler {
 
     public static double getTargetVertical() { return targetVertical; }
 
+    /** 当前 tick 的射线是否命中有效目标（方块或实体） */
+    public static boolean hasValidTarget() { return hasValidTarget; }
+
     /** 从武器 ItemStack 读取 scopeZoom */
     private static float getZoomFromWeapon(ItemStack weapon) {
         if (weapon.getItem() instanceof ArtilleryItem ai) {
@@ -169,6 +178,7 @@ public final class ClientScopeHandler {
         aimedPosition = null;
         targetDistance = 0;
         targetVertical = 0;
+        hasValidTarget = false;
         heldCannonBeforeScope = false;
     }
 }

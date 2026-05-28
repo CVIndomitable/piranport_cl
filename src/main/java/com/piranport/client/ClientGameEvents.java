@@ -12,6 +12,7 @@ import com.piranport.network.RecallAllAircraftPayload;
 import com.piranport.network.SkinRevertPayload;
 import com.piranport.skin.ClientSkinData;
 import net.minecraft.ChatFormatting;
+import com.piranport.artillery.ArtilleryItem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.client.gui.screens.Screen;
@@ -24,6 +25,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.RenderHandEvent;
 import net.neoforged.neoforge.client.event.RenderLivingEvent;
+import net.neoforged.neoforge.client.event.InputEvent;
 import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -104,6 +106,27 @@ public class ClientGameEvents {
         var viewer = Minecraft.getInstance().player;
         if (viewer != null && viewer.hasEffect(MobEffects.INVISIBILITY) && event.getEntity() != viewer) {
             event.setCanceled(true);
+        }
+    }
+
+    /**
+     * 手持火炮时在输入端完全屏蔽左键挖掘。
+     * 在 player.swing() 之前触发，能同时阻止手臂动画和进度条。
+     * 若需调试可取消下方 LOGGER 注释。
+     */
+    @SubscribeEvent
+    public static void onInteractionKeyMapping(InputEvent.InteractionKeyMappingTriggered event) {
+        if (!event.isAttack()) return;
+
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player == null) return;
+
+        ItemStack mainHand = mc.player.getMainHandItem();
+        if (mainHand.getItem() instanceof ArtilleryItem) {
+            event.setCanceled(true);
+            event.setSwingHand(false);
+            // 调试日志（如需启用，取消注释即可）：
+            // PiranPort.LOGGER.debug("Blocked mining attempt while holding artillery");
         }
     }
 

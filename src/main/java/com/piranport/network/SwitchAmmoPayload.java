@@ -102,18 +102,27 @@ public record SwitchAmmoPayload(String ammoItemId) implements CustomPacketPayloa
             weapon.set(ModDataComponents.SELECTED_AMMO_TYPE.get(),
                     new SelectedAmmoType(payload.ammoItemId()));
 
-            // 切换弹种时重置装填进度
+            // 切换弹种时重新开始装填
             int weaponSlot = player.getInventory().selected;
             ItemStack coreStack = TransformationManager.findTransformedCore(player);
+
+            // 获取武器的装填时间
+            int reloadTicks = 0;
+            if (weapon.getItem() instanceof com.piranport.artillery.ArtilleryItem artilleryItem) {
+                reloadTicks = artilleryItem.getCooldownTicks();
+            }
+            int boostedReloadTicks = TransformationManager.boostedCooldown(player, reloadTicks);
+            long currentTick = player.level().getGameTime();
+
+            // 设置槽位冷却和武器冷却，重新开始装填
             if (!coreStack.isEmpty()) {
                 SlotCooldowns cooldowns = coreStack.getOrDefault(
                         ModDataComponents.SLOT_COOLDOWNS.get(), SlotCooldowns.EMPTY);
-                SlotCooldowns updated = cooldowns.withoutSlotCooldown(weaponSlot);
-                if (updated != cooldowns) {
-                    coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(), updated);
-                }
+                SlotCooldowns updated = cooldowns.withSlotCooldown(weaponSlot, boostedReloadTicks, currentTick);
+                coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(), updated);
             }
-            weapon.set(ModDataComponents.WEAPON_COOLDOWN.get(), WeaponCooldown.EMPTY);
+            weapon.set(ModDataComponents.WEAPON_COOLDOWN.get(),
+                    WeaponCooldown.of(currentTick, boostedReloadTicks));
 
             // 播放音效和显示消息
             player.level().playSound(null, player.getX(), player.getY(), player.getZ(),

@@ -19,7 +19,7 @@
 
 ## Version & Documentation
 
-- **当前版本**: v1.1.12 (测试版)
+- **当前版本**: v1.1.14-dev (测试版)
 - **稳定版本**: v1.0.0 (main 分支，仅修 bug)
 - **开发策略**: main = 稳定版，dev = 测试版新玩法
 - **版本路线图**: `../docs/皮兰港 版本路线图.md`
@@ -54,7 +54,7 @@
 ```bash
 ./gradlew runClient    # 运行客户端
 ./gradlew runData      # DataGen
-./gradlew build        # 构建 → build/libs/piranport-1.1.12.jar
+./gradlew build        # 构建 → build/libs/piranport-1.1.14-dev.jar
 ```
 
 ### gradle.properties

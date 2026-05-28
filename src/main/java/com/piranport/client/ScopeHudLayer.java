@@ -64,16 +64,56 @@ public class ScopeHudLayer {
         buf.addVertex(mat, cx - 1, cy + 1, 0).setColor(255, 50, 50, 200);
 
         BufferUploader.drawWithShader(buf.buildOrThrow());
+
+        // ---- 横向刻度线 ----
+        int scaleY = cy;  // 刻度线 Y 坐标（与准星横线相同）
+        int totalScales = 21;  // -10 到 +10
+        int scaleRange = (int)(w * 0.7);  // 覆盖屏幕宽度的 70%
+        int scaleSpacing = scaleRange / 20;  // 每个刻度间距
+        int scaleStartX = cx - scaleRange / 2;  // 起始 X 坐标
+
+        Tesselator scaleTess = Tesselator.getInstance();
+        BufferBuilder scaleBuf = scaleTess.begin(VertexFormat.Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
+
+        for (int i = 0; i < totalScales; i++) {
+            int scaleValue = i - 10;  // -10 到 +10
+            int scaleX = scaleStartX + i * scaleSpacing;
+            boolean isMainScale = (scaleValue % 5 == 0);  // 主刻度判断
+
+            int scaleLength = isMainScale ? 10 : 5;
+            int alpha = isMainScale ? 230 : 180;
+
+            // 绘制垂直刻度线（向下延伸）
+            scaleBuf.addVertex(mat, scaleX, scaleY, 0).setColor(255, 255, 255, alpha);
+            scaleBuf.addVertex(mat, scaleX, scaleY + scaleLength, 0).setColor(255, 255, 255, alpha);
+        }
+
+        RenderSystem.lineWidth(1.5f);
+        BufferUploader.drawWithShader(scaleBuf.buildOrThrow());
         RenderSystem.disableBlend();
 
         pose.popPose();
+
+        // ---- 刻度线数字标注 ----
+        for (int i = 0; i < totalScales; i++) {
+            int scaleValue = i - 10;
+            if (scaleValue % 5 == 0) {  // 仅主刻度标注数字
+                int scaleX = scaleStartX + i * scaleSpacing;
+                String label = String.valueOf(scaleValue);
+                int labelWidth = mc.font.width(label);
+                graphics.drawString(mc.font, label,
+                        scaleX - labelWidth / 2,  // 居中对齐
+                        cy + 12,  // 刻度线下方 2 像素
+                        0xFFFFFF, true);  // 白色带阴影
+            }
+        }
 
         // ---- 距离信息 ----
         double dist = ClientScopeHandler.getTargetDistance();
         double vert = ClientScopeHandler.getTargetVertical();
         if (dist > 0) {
             String distText = String.format("§f距离: §e%.1f§fm  §7(Δy: §b%+.1f§7)", dist, vert);
-            graphics.drawString(mc.font, distText, cx - mc.font.width(distText) / 2, cy + 20, 0xFFFFFF, true);
+            graphics.drawString(mc.font, distText, cx - mc.font.width(distText) / 2, cy + 25, 0xFFFFFF, true);
         }
 
         // ---- 调试信息 ----
@@ -82,7 +122,7 @@ public class ScopeHudLayer {
                     ClientScopeHandler.getHoldTicks(),
                     ClientScopeHandler.getScopeThreshold(),
                     ClientScopeHandler.getZoomLevel());
-            graphics.drawString(mc.font, debugText, cx - mc.font.width(debugText) / 2, cy + 35, 0xFFFFFF, true);
+            graphics.drawString(mc.font, debugText, cx - mc.font.width(debugText) / 2, cy + 40, 0xFFFFFF, true);
         }
     }
 }

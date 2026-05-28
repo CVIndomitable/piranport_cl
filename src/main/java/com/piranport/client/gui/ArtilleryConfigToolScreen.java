@@ -239,8 +239,8 @@ public class ArtilleryConfigToolScreen extends AbstractContainerScreen<Artillery
         int x = (this.width - this.imageWidth) / 2;
         int y = (this.height - this.imageHeight) / 2;
 
-        // 主背景
-        graphics.fill(x, y, x + this.imageWidth, y + this.imageHeight, 0xFF8B8B8B);
+        // 主背景（不覆盖底部按钮区域）
+        graphics.fill(x, y, x + this.imageWidth, y + 210, 0xFF8B8B8B);
 
         // 标题区域
         graphics.fill(x, y, x + this.imageWidth, y + 20, 0xFF5A5A5A);

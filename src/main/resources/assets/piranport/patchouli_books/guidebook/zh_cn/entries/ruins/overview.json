@@ -1,0 +1,16 @@
+{
+  "name": "主世界遗迹",
+  "category": "piranport:8_ruins",
+  "icon": "piranport:abyssal_portal_frame",
+  "sortnum": 0,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)四类遗迹$()$(br2)主世界中随机生成四类深海遗迹：$(br2)• $(item)传送门遗迹$()：含传送门框架$(br)• $(item)补给站$()：物资储存点$(br)• $(item)前哨站$()：小型军事设施$(br)• $(item)深海基地$()：大型敌对据点"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)探索技巧$()$(br2)遗迹通常位于深海区域，需要：$(br2)• 潜艇核心或水下呼吸装备$(br)• 足够的武器弹药$(br)• 夜视药水或照明设备$(br2)$(bold)提示：$()使用侦察机可以先期侦察遗迹位置！"
+    }
+  ]
+}

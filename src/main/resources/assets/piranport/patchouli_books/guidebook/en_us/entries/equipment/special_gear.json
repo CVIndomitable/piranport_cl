@@ -1,0 +1,16 @@
+{
+  "name": "piranport.book.equipment.special",
+  "category": "piranport:10_equipment",
+  "icon": "piranport:skin_core",
+  "sortnum": 1,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)Special Equipment$()$(br2)Unique items with special effects:$(br2)• $(item)Skin Cores$(): Change your shipgirl appearance$(br)• $(item)Torpedo Reload Parts$(): Enable torpedo reloading$(br)• $(item)Quick Repair$(): Instant health recovery$(br)• $(item)Damage Control$(): Clear debuffs and extinguish fire"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)Equipment Slots$()$(br2)Your ship core has multiple equipment slots:$(br2)• Armor slots for protection$(br)• Engine slots for speed$(br)• Special slots for unique items$(br2)$(bold)Tip:$() Plan your loadout based on mission requirements!"
+    }
+  ]
+}

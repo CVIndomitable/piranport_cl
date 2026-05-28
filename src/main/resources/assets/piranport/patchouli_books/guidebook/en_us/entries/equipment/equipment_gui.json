@@ -1,0 +1,20 @@
+{
+  "name": "piranport.book.equipment.gui",
+  "category": "piranport:10_equipment",
+  "icon": "piranport:small_ship_core",
+  "sortnum": 3,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)Ship Core Equipment GUI$()$(br2)Right-click your ship core to open the equipment management interface.$(br2)$(bold)Sections:$()$(br)• $(bold)Weapon Slots$(): Equip cannons, torpedoes, missiles$(br)• $(bold)Ammo Bay$(): Store various ammunition types$(br)• $(bold)Enhancement Slots$(): Install armor plates, engines, etc."
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)Load System$()$(br2)The top of the interface shows current load: $(o)Load: X / Y$()$(br2)• Each equipment has a weight value$(br)• Overload reduces movement speed$(br)• Different cores have different load limits$(br2)$(bold)Tip:$() Balance your loadout carefully to avoid being overweight!"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)Weapon Switching$()$(br2)• $(bold)Scroll Wheel$(): Cycle through weapon slots$(br)• $(bold)Number Keys$(): Direct slot selection$(br)• $(bold)Offhand$(): Place ammo or support weapons$(br2)$(bold)Ammo Management:$()$(br)Ammo in the ammo bay automatically feeds corresponding weapons. Keep it stocked!"
+    }
+  ]
+}

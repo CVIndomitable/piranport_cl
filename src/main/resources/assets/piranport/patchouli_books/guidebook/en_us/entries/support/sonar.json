@@ -1,0 +1,16 @@
+{
+  "name": "piranport.book.support.sonar",
+  "category": "piranport:11_support",
+  "icon": "piranport:sonar",
+  "sortnum": 0,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)Sonar System$()$(br2)The sonar device detects submarines and underwater entities.$(br2)$(bold)Usage:$()$(br)• Hold the sonar item$(br)• Right-click to activate a ping$(br)• Nearby submarines will be highlighted$(br)• Effective range depends on sonar tier"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)ASW Sonar$()$(br2)Anti-submarine warfare sonar is mounted on aircraft.$(br2)$(bold)Features:$()$(br)• Automatically scans below aircraft$(br)• Detects submerged submarines$(br)• Shares detection data with allies$(br2)$(bold)Tip:$() Combine sonar with depth charges for effective ASW!"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "name": "piranport.book.intro.villager_trades",
+  "category": "piranport:1_intro",
+  "icon": "minecraft:emerald",
+  "sortnum": 9,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)Arms Dealer Villager$()$(br2)Piran Port adds a special villager profession: $(bold)Arms Dealer$().$(br2)$(bold)Trade Contents:$()$(br)• Ammunition and shells$(br)• Special weapon parts$(br)• Ship core materials$(br)• Rare blueprints"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)How to Find Arms Dealers$()$(br2)Arms dealers spawn naturally in villages or can be obtained through:$(br2)• Special workstations in villages$(br)• Trading with regular villagers to unlock$(br)• Special NPCs in dungeons$(br2)$(bold)Tip:$() Arms dealer prices fluctuate based on reputation. Trade frequently for discounts!"
+    }
+  ]
+}

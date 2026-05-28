@@ -473,7 +473,6 @@
   "message.piranport.no_fuel": "No fuel! Use a fuel bucket to refuel",
   "message.piranport.fuel_depleted": "Fuel depleted, transformation ended!",
   "message.piranport.no_fuel_enhanced": "§cNo fuel!§r\n§7Use lava bucket, fuel, or blaze powder to refuel.§r",
-
   "block.piranport.dungeon_lectern": "Dungeon Lectern",
   "item.piranport.dungeon_key": "Dungeon Key",
   "item.piranport.dungeon_key.progress": "Cleared Nodes: %s",
@@ -484,43 +483,35 @@
   "entity.piranport.loot_ship": "Loot Ship",
   "container.piranport.dungeon_book": "Sortie",
   "block.piranport.dungeon_lectern.no_key": "You need a Dungeon Key to use this lectern",
-
   "gui.piranport.dungeon_book.sortie": "Sortie",
   "gui.piranport.dungeon_book.exit": "Exit",
   "gui.piranport.dungeon_book.back": "Back",
-
   "gui.piranport.dungeon_revive.title": "Revive",
   "gui.piranport.dungeon_revive.died": "You have fallen!",
   "gui.piranport.dungeon_revive.cost": "Consume 1 Totem of Undying to return?",
   "gui.piranport.dungeon_revive.no_totem": "Totem of Undying required",
   "gui.piranport.dungeon_revive.revive": "Revive",
   "gui.piranport.dungeon_revive.giveup": "Give Up",
-
   "gui.piranport.dungeon_result.title": "Result",
   "gui.piranport.dungeon_result.clear": "Stage Cleared!",
   "gui.piranport.dungeon_result.time": "Time: %s",
   "gui.piranport.dungeon_result.first_clear": "★ First Clear ★",
   "gui.piranport.dungeon_result.close": "OK",
-
   "gui.piranport.town_scroll.title": "Return",
   "gui.piranport.town_scroll.question": "Leave dungeon?",
   "gui.piranport.town_scroll.confirm": "Confirm",
   "gui.piranport.town_scroll.cancel": "Cancel",
-
   "hud.piranport.dungeon.node": "Node: %s",
-
   "dungeon.piranport.resource_collected": "Supplies collected!",
   "dungeon.piranport.insufficient_cost": "Insufficient: need %s x %s",
   "dungeon.piranport.stage_locked": "Cannot change stage: a dungeon run is in progress on this key.",
   "dungeon.piranport.revive_unavailable": "Cannot revive: no active dungeon found.",
   "dungeon.piranport.revive_no_totem": "Revive requires 1 Totem of Undying.",
   "dungeon.piranport.flagship_promoted": "You are now the flagship; the dungeon key has been transferred to your copy.",
-
   "jei.piranport.cooking_pot": "Cooking Pot",
   "jei.piranport.stone_mill": "Stone Mill",
   "jei.piranport.cutting_board": "Cutting Board",
   "jei.piranport.ammo_workbench": "Ammo Workbench",
-
   "item.piranport.skin_core_1": "Skin Core I",
   "item.piranport.skin_core_2": "Skin Core II",
   "item.piranport.skin_core_3": "Skin Core III",
@@ -530,7 +521,6 @@
   "tooltip.piranport.skin_core": "%s — Shift+Right-click to toggle",
   "message.piranport.skin_applied": "%s equipped",
   "message.piranport.skin_removed": "Skin removed",
-
   "item.piranport.unicorn_harp": "Unicorn's Harp",
   "item.piranport.hentai_trophy": "Hentai Trophy",
   "item.piranport.elite_damage_control": "Elite Damage Control Squad",
@@ -540,17 +530,13 @@
   "item.piranport.smoke_candle": "Smoke Candle",
   "item.piranport.kirin_headband": "Kirin-class Headband",
   "block.piranport.smoke_screen": "Smoke Screen",
-
   "item.piranport.standard_sonar": "Standard Sonar",
-
   "item.piranport.standard_engine": "Standard Engine",
   "item.piranport.improved_engine": "Improved Engine",
   "item.piranport.advanced_engine": "Advanced Engine",
   "item.piranport.high_pressure_boiler": "High-Pressure Boiler",
   "item.piranport.diesel_engine": "Diesel Engine",
-
   "entity.piranport.low_tier_destroyer": "Low-Tier Destroyer",
-
   "entity.piranport.dungeon_transport_plane": "Transport Plane",
   "dungeon.piranport.artillery_intro.incoming": "Transport plane incoming — supplies on the way!",
   "dungeon.piranport.artillery_intro.subtitle": "Artillery Introduction",
@@ -560,9 +546,7 @@
   "dungeon.piranport.artillery_intro.battle_start": "Enemy destroyers approaching — engage!",
   "dungeon.piranport.artillery_intro.kills": "Destroyers sunk: %s/%s (%s remaining)",
   "dungeon.piranport.artillery_intro.cleared": "All enemies eliminated — portal opened!",
-
   "message.piranport.guidebook_received": "You received a Navigation Manual!",
-
   "item.piranport.wire_guided_torpedo_533mm": "533mm Wire-Guided Torpedo",
   "message.piranport.torpedo_wire_lost": "Torpedo wire lost!",
   "message.piranport.torpedo_guidance_enter": "Wire-Guided Torpedo View [V to Cut Wire]",
@@ -573,7 +557,6 @@
   "key.piranport.hit_display_toggle": "Hit Display Toggle [J]",
   "message.piranport.hit_display_on": "Hit Display ON",
   "message.piranport.hit_display_off": "Hit Display OFF",
-
   "tooltip.piranport.shift_for_details": "Hold Shift for details",
   "tooltip.piranport.cannon.barrel_count": "Barrels: %s",
   "tooltip.piranport.cannon.damage": "Damage: %s",
@@ -607,24 +590,19 @@
   "item.piranport.flare_launcher": "Flare Launcher",
   "block.piranport.flare_light": "Flare Light",
   "item.piranport.repair_kit": "Repair Kit",
-
   "item.piranport.spider_gloves": "Spider Gloves",
   "item.piranport.blue_jersey": "Blue Jersey",
   "item.piranport.red_black_socks": "Red & Black Socks",
   "item.piranport.miracle_boots": "Miracle Boots",
   "effect.piranport.experience_boost": "Experience Boost",
-
   "item.piranport.mysterious_weapon": "Mysterious Weapon",
   "item.piranport.richelieu_command_sword": "Richelieu's Command Sword",
   "item.piranport.taihou_umbrella": "Taihou's Umbrella",
-
   "item.piranport.hatsuyuki_main_gun": "Hatsuyuki's Main Gun",
   "item.piranport.gungnir": "Gungnir",
   "entity.piranport.gungnir": "Gungnir",
-
   "item.piranport.eugen_shield": "Eugen's Ship Shield",
   "tooltip.piranport.eugen_shield.block": "Blocks damage from a 150° frontal arc",
-
   "entity.piranport.deep_ocean_supply": "Abyssal Supply",
   "entity.piranport.deep_ocean_destroyer": "Abyssal Destroyer",
   "entity.piranport.deep_ocean_light_cruiser": "Abyssal Light Cruiser",
@@ -636,7 +614,6 @@
   "entity.piranport.deep_ocean_submarine": "Abyssal Submarine",
   "entity.piranport.deep_ocean_projectile": "Abyssal Shell",
   "entity.piranport.ship_girl": "Ship Girl",
-
   "item.piranport.deep_ocean_supply_spawn_egg": "Abyssal Supply Spawn Egg",
   "item.piranport.deep_ocean_destroyer_spawn_egg": "Abyssal Destroyer Spawn Egg",
   "item.piranport.deep_ocean_light_cruiser_spawn_egg": "Abyssal Light Cruiser Spawn Egg",
@@ -647,9 +624,7 @@
   "item.piranport.deep_ocean_carrier_spawn_egg": "Abyssal Carrier Spawn Egg",
   "item.piranport.deep_ocean_submarine_spawn_egg": "Abyssal Submarine Spawn Egg",
   "item.piranport.ship_girl_spawn_egg": "Ship Girl Spawn Egg",
-
   "message.piranport.ship_girl_greet": "Hello, Admiral! How can I help?",
-
   "itemGroup.piranport.ruins": "Piran Port Ruins",
   "itemGroup.piranport.spawn_eggs": "Piran Port: Spawn Eggs",
   "block.piranport.abyssal_portal_frame": "Abyssal Portal Frame",
@@ -684,7 +659,6 @@
   "structure.piranport.supply_depot": "Supply Depot",
   "structure.piranport.outpost": "Outpost",
   "structure.piranport.abyssal_base": "Abyssal Base",
-
   "piranport.book.cat.ruins": "Overworld Ruins",
   "piranport.book.cat.ruins.desc": "Four types of ruin structures scattered across the ocean: Portal Ruins, Supply Depots, Outposts, and Abyssal Bases.",
   "piranport.book.ruins.overview": "Ruins Overview",
@@ -696,7 +670,6 @@
   "piranport.book.ruins.loot": "Loot",
   "piranport.book.ruins.loot.p1": "Each ruin type contains different tiers of loot:$(br)$(br)§lPortal Ruins§r — Basic materials, some portal frame blocks$(br)§lSupply Depots§r — Small equipment, resources, flags, sortie channel (rare)$(br)§lOutposts§r — Medium/large equipment, aircraft, exp shells, chaos shards (rare)",
   "piranport.book.ruins.loot.p2": "§lAbyssal Bases§r — All tiers of equipment, abyssal reports, chaos shards, portal activation cores (rare)$(br)$(br)Chaos shards come in 9 varieties (α-ι), key materials for activating the deep sea portal in a future update. Flags can be used in skin crafting.",
-
   "itemGroup.piranport.facility": "Piran Port: Facilities",
   "itemGroup.piranport.decoration": "Piran Port Decoration",
   "block.piranport.confidential_cargo": "Confidential Cargo",
@@ -707,7 +680,6 @@
   "block.piranport.italian_dish_kit.tooltip": "An essential companion for enjoying Mediterranean sun and sea breeze.",
   "block.piranport.b25_model": "B25 Model",
   "block.piranport.b25_model.tooltip": "B25 model, cannot be launched",
-
   "piranport.book.cat.arsenal": "Arsenal",
   "piranport.book.cat.arsenal.desc": "Missiles, depth charges, special equipment, and weapon crafting facilities.",
   "piranport.book.arsenal.missiles": "Missile System",
@@ -780,7 +752,6 @@
   "item.piranport.bacon_sandwich": "Bacon Sandwich",
   "item.piranport.salami_pizza_pieces": "Salami Pizza Slice",
   "item.piranport.bolognese_linguine_recipe": "Bolognese Linguine",
-
   "config.piranport.shipCoreSlotMode": "Ship Core Slot Mode",
   "config.piranport.shipCoreSlotMode.tooltip": "offhand=Offhand Mode, helmet=Helmet Mode",
   "config.piranport.reloadHudStyle": "Reload HUD Style",
@@ -791,7 +762,6 @@
   "tooltip.piranport.ship_core.slot_hint.offhand": "Hold in offhand to activate rigging",
   "tooltip.piranport.ship_core.slot_hint.helmet": "Equip to helmet slot to activate rigging",
   "tooltip.piranport.ship_core.slot_hint.chest": "Equip to helmet slot to activate rigging (deprecated config)",
-
   "task.piranport.maid_rigging.name": "Ship Rigging",
   "task.piranport.maid_rigging.desc": "Fight with PiranPort rigging weapons",
   "command.piranport.maidstats.header": "§6=== Combat Stats for %s ===",
@@ -799,7 +769,6 @@
   "command.piranport.maidstats.damage": "§cTotal Damage: §f%.1f",
   "command.piranport.maidstats.shots": "§bShots Fired: §f%d",
   "command.piranport.maidstats.reset": "§aReset combat stats for %s",
-
   "item.piranport.artillery_config_tool": "Artillery Config Tool",
   "gui.piranport.artillery_config_tool": "Artillery Config Tool",
   "gui.piranport.config_tool.tab.cannons": "Cannons",
@@ -810,11 +779,6 @@
   "gui.piranport.config_tool.field.dragCoeff": "Drag Coefficient",
   "gui.piranport.config_tool.field.explosionPower": "Explosion Power",
   "gui.piranport.config_tool.field.dispersion": "Dispersion",
-  "gui.piranport.config_tool.apply": "Apply Changes",
-  "gui.piranport.config_tool.reset_item": "Reset Item",
-  "gui.piranport.config_tool.export": "Export CSV",
-  "gui.piranport.config_tool.import": "Import CSV",
-  "gui.piranport.config_tool.reset_all": "Reset All",
   "gui.piranport.config_tool.apply": "Apply Changes",
   "gui.piranport.config_tool.reset_item": "Reset Item",
   "gui.piranport.config_tool.export": "Export CSV",
@@ -847,7 +811,6 @@
   "message.piranport.projectile_imported": "Projectile config imported: %s success, %s failed",
   "message.piranport.config_imported_summary": "Config import total: %s success, %s failed",
   "message.piranport.config_import_failed": "Import failed: %s",
-
   "gui.piranport.config_tool.detail": "Cannon Details",
   "gui.piranport.config_tool.cannon_detail_title": "Cannon Details - %s",
   "gui.piranport.config_tool.save": "Save",
@@ -884,5 +847,20 @@
   "gui.piranport.ship_type.small": "Destroyer",
   "gui.piranport.ship_type.medium": "Cruiser",
   "gui.piranport.ship_type.large": "Battleship",
-  "gui.piranport.ship_type.submarine": "Submarine"
+  "gui.piranport.ship_type.submarine": "Submarine",
+  "piranport.book.cat.equipment": "Equipment",
+  "piranport.book.cat.equipment.desc": "Armor plates, engines, and special gear.",
+  "piranport.book.cat.support": "Support Systems",
+  "piranport.book.cat.support.desc": "Sonar, smoke screens, flares, and reload facilities.",
+  "piranport.book.cat.config": "Configuration",
+  "piranport.book.cat.config.desc": "Key bindings, client settings, and debug tools.",
+  "piranport.book.equipment.armor_engine": "Armor & Engines",
+  "piranport.book.equipment.special": "Special Equipment",
+  "piranport.book.support.sonar": "Sonar System",
+  "piranport.book.support.smoke_flare": "Smoke & Flares",
+  "piranport.book.support.highlight": "Entity Highlight",
+  "piranport.book.support.reload": "Reload Facility",
+  "piranport.book.config.keybindings": "Key Bindings",
+  "piranport.book.config.client": "Client Configuration",
+  "piranport.book.config.debug": "Debug Tools"
 }

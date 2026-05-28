@@ -1,0 +1,20 @@
+{
+  "name": "火炮配置工具",
+  "category": "piranport:7_advanced_config",
+  "icon": "piranport:artillery_config_tool",
+  "sortnum": 3,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)火炮配置工具$()$(br2)$(o)仅限创造模式$()的高级工具，用于在游戏内调整火炮和弹药数值。$(br2)$(bold)功能：$()$(br)• 调整伤害、装填时间、初速$(br)• 修改散布角、爆炸威力$(br)• 导入/导出CSV配置$(br)• 重置为默认值"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)使用方法$()$(br2)1. 在创造模式获取火炮配置工具$(br)2. 右键打开配置界面$(br)3. 选择要调整的火炮或弹药$(br)4. 修改数值参数$(br)5. 点击$(bold)应用修改$()$(br2)$(bold)警告：$()此工具仅供调试，生存模式不可用。"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)CSV导入导出$()$(br2)配置文件保存在 $(o)config/piranport/exports/$() 目录。$(br2)• $(bold)导出$()：将当前配置导出为CSV文件$(br)• $(bold)导入$()：从CSV文件批量加载配置$(br)• $(bold)重置$()：恢复所有默认值$(br2)$(bold)用途：$()批量调整数值平衡、备份配置、与其他玩家分享。"
+    }
+  ]
+}

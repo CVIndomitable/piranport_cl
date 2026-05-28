@@ -1,0 +1,21 @@
+{
+  "name": "舰装核心改造",
+  "category": "piranport:4_advanced_equipment",
+  "icon": "piranport:ship_core_modifier",
+  "sortnum": 3,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)舰装核心改造器$()$(br2)用于升级和改造舰装核心的特殊方块。$(br2)$(bold)功能：$()$(br)• 升级核心等级$(br)• 安装特殊模块$(br)• 调整核心属性$(br)• 解锁高级功能"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "piranport:ship_core_modifier",
+      "text": "舰装核心改造器的合成配方"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)使用方法$()$(br2)1. 放置舰装核心改造器$(br)2. 右键打开界面$(br)3. 放入需要改造的舰装核心$(br)4. 选择改造选项$(br)5. 消耗材料完成改造$(br2)$(bold)提示：$()改造需要特定材料，可通过副本和遗迹获取。"
+    }
+  ]
+}

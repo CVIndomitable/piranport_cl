@@ -1,0 +1,16 @@
+{
+  "name": "piranport.book.cannons.scoping",
+  "category": "piranport:2_cannons",
+  "icon": "minecraft:spyglass",
+  "sortnum": 3,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)Artillery Scope$()$(br2)Right-click while holding a cannon to enter scope mode for precision aiming.$(br2)$(bold)Features:$()$(br)• Magnified view for long-range targeting$(br)• Crosshair for precise aim$(br)• Ballistic prediction line$(br)• Range estimation"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)Controls:$()$(br)• Right-click: Enter scope mode$(br)• Mouse: Adjust aim$(br)• Scroll wheel: Adjust zoom level$(br)• Left-click: Fire$(br)• Right-click or Esc: Exit scope$(br2)$(bold)Tip:$() Scope mode reduces spread and improves accuracy. Use for long-range engagements!"
+    }
+  ]
+}

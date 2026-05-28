@@ -1,0 +1,16 @@
+{
+  "name": "piranport.book.support.highlight",
+  "category": "piranport:11_support",
+  "icon": "minecraft:glowstone",
+  "sortnum": 2,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)Entity Highlight$()$(br2)Press $(bold)Y$() to highlight battlefield entities with colored outlines.$(br2)$(bold)Color Coding:$()$(br)• $(2)Green$(): Friendly entities$(br)• $(4)Red$(): Hostile entities$(br)• $(6)Yellow$(): Neutral entities$(br2)$(bold)Priority:$() Vanilla Glowing > Fire Control > Y-key highlight"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)Aircraft Highlight$()$(br2)Aircraft also display status-based colors:$(br2)• Color changes based on team affiliation$(br)• Helps identify friend from foe in chaotic battles$(br)• Controlled via $(o)isCurrentlyGlowing()$() and $(o)getTeamColor()$()$(br2)$(bold)Tip:$() Use highlights to track priority targets!"
+    }
+  ]
+}

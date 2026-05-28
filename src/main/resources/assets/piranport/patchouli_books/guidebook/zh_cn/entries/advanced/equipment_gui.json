@@ -1,0 +1,20 @@
+{
+  "name": "舰装装备界面",
+  "category": "piranport:4_advanced_equipment",
+  "icon": "piranport:medium_ship_core",
+  "sortnum": 4,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)装备界面$()$(br2)手持舰装核心按$(bold)右键$()打开装备界面，管理你的武器、弹药和强化部件。$(br2)$(bold)界面分区：$()$(br)• $(bold)武器栏$()：装备火炮、鱼雷、导弹$(br)• $(bold)弹药库$()：存放各类弹药$(br)• $(bold)强化栏$()：安装装甲板、引擎等"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)负重系统$()$(br2)界面顶部显示当前负重：$(o)负重: X / Y$()$(br2)• 每件装备都有负重值$(br)• 超重会降低移动速度$(br)• 不同核心负重上限不同$(br2)$(bold)提示：$()合理搭配装备，避免超重！"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)武器切换$()$(br2)• $(bold)滚轮$()：快速切换武器槽位$(br)• $(bold)数字键$()：直接选择武器槽$(br)• $(bold)副手$()：放置弹药或辅助武器$(br2)$(bold)弹药管理：$()$(br)弹药库中的弹药会自动供弹给对应武器。确保弹药充足！"
+    }
+  ]
+}

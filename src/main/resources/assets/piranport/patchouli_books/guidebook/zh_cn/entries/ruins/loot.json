@@ -1,0 +1,16 @@
+{
+  "name": "战利品系统",
+  "category": "piranport:8_ruins",
+  "icon": "minecraft:chest",
+  "sortnum": 1,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)遗迹战利品$()$(br2)击败深海NPC和探索遗迹可获得：$(br2)• $(item)弹药和武器$()：各类炮弹、鱼雷$(br)• $(item)强化部件$()：装甲板、引擎$(br)• $(item)特殊道具$()：蓝图、核心材料$(br)• $(item)食物和补给$()：恢复用品"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)战利品箱$()$(br2)遗迹中的箱子包含随机战利品，品质取决于：$(br2)• 遗迹类型（深海基地最丰富）$(br)• 击败的NPC等级$(br)• 是否使用钥匙开启特殊箱子$(br2)$(bold)提示：$()深海基地的战利品最丰厚，但难度也最高！"
+    }
+  ]
+}

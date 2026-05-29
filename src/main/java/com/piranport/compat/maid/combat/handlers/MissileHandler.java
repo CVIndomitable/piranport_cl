@@ -34,8 +34,7 @@ public class MissileHandler implements WeaponHandler {
         Item ammo = launcher.getAmmoItem();
         if (ammo == null) return true;
         Player owner = AmmoConsumer.ownerPlayer(maid);
-        int need = Math.max(1, launcher.getBurstCount());
-        return AmmoConsumer.hasItem(owner, ammo, need);
+        return AmmoConsumer.hasItem(owner, ammo, 1);
     }
 
     @Override

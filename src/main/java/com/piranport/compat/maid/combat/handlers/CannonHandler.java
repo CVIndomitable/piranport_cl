@@ -29,21 +29,11 @@ public class CannonHandler implements WeaponHandler {
 
     @Override
     public boolean hasAmmo(EntityMaid maid, ItemStack stack) {
-        int barrels;
-        List<Item> candidates;
-        if (stack.getItem() instanceof ArtilleryItem ai) {
-            barrels = Math.max(1, ai.getBarrelCount());
-            candidates = shellsFor(ai.getDamage());
-        } else {
-            return false;
-        }
+        if (!(stack.getItem() instanceof ArtilleryItem ai)) return false;
         Player owner = AmmoConsumer.ownerPlayer(maid);
-        if (owner == null) return false;
-        Item preferred = AmmoConsumer.getPreferredAmmo(owner, candidates);
-        if (preferred != null) {
-            return AmmoConsumer.hasItem(owner, preferred, barrels) || AmmoConsumer.isFreebie(owner);
-        }
-        return AmmoConsumer.isFreebie(owner);
+        if (AmmoConsumer.isFreebie(owner)) return true;
+        List<Item> candidates = shellsFor(ai.getDamage());
+        return AmmoConsumer.getPreferredAmmo(owner, candidates) != null;
     }
 
     @Override

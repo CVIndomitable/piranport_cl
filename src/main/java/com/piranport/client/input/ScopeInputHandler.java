@@ -64,9 +64,9 @@ public class ScopeInputHandler {
         }
         useWasDown = useDown;
 
-        // 左键：开火（单击 / 双击）
+        // 左键：开火（单击 / 双击）。弹药轮盘打开时禁止开炮，避免切弹药误触发射。
         boolean attackDown = mc.options.keyAttack.isDown();
-        if (attackDown && !attackWasDown && holdingCannon) {
+        if (attackDown && !attackWasDown && holdingCannon && !AmmoSelectOverlay.isOpen()) {
             boolean fired = false;
             ItemStack heldStack = mc.player.getMainHandItem();
             boolean isArtillery = heldStack.getItem() instanceof com.piranport.artillery.ArtilleryItem;

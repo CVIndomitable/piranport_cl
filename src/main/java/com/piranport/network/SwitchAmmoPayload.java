@@ -102,6 +102,9 @@ public record SwitchAmmoPayload(String ammoItemId) implements CustomPacketPayloa
             weapon.set(ModDataComponents.SELECTED_AMMO_TYPE.get(),
                     new SelectedAmmoType(payload.ammoItemId()));
 
+            // 同步弹种到所有同类型火炮
+            ShipCoreCombat.syncAmmoToSiblingGuns(player);
+
             // 切换弹种时重新开始装填
             int weaponSlot = player.getInventory().selected;
             ItemStack coreStack = TransformationManager.findTransformedCore(player);

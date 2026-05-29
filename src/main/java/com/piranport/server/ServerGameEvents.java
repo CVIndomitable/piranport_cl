@@ -4,6 +4,7 @@ import com.piranport.PiranPort;
 import com.piranport.aviation.AircraftIndex;
 import com.piranport.aviation.FireControlManager;
 import com.piranport.aviation.ReconManager;
+import com.piranport.combat.SalvoManager;
 import com.piranport.combat.TorpedoGuidanceManager;
 import com.piranport.combat.TransformationManager;
 import com.piranport.config.ModCommonConfig;
@@ -221,6 +222,7 @@ public class ServerGameEvents {
         FireControlManager.clearAll();
         ReconManager.clearAll();
         TorpedoGuidanceManager.clearAll();
+        SalvoManager.clearAll();
         AircraftIndex.clearAll();
         PlayerTickHandler.clearCaches();
     }

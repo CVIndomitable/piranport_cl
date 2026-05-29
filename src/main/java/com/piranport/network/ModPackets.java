@@ -233,6 +233,13 @@ public class ModPackets {
                 ScopeFirePayload::handle
         );
 
+        // ===== Salvo Fire (double-click) =====
+        registrar.playToServer(
+                SalvoFirePayload.TYPE,
+                SalvoFirePayload.STREAM_CODEC,
+                SalvoFirePayload::handle
+        );
+
         // ===== Phase 10: Screen Shake =====
         registrar.playToClient(
                 ShakeEffectPayload.TYPE,

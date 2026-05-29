@@ -34,6 +34,8 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.Item;
 import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.monster.Enemy;
@@ -50,7 +52,6 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.ItemContainerContents;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
-import java.util.List;
 import java.util.UUID;
 import com.piranport.client.BallisticSolver;
 import com.piranport.PiranPort;
@@ -79,6 +80,11 @@ public class ShipCoreCombat {
     private record Aimed(Vec3 target) implements AimInstruction {}
     private record MaxRange() implements AimInstruction {}
 
+    // 齐射 aim 模式常量（对外公开，供 SalvoManager 延迟射击用）
+    public static final int ARTILLERY_AIM_NONE = 0;
+    public static final int ARTILLERY_AIM_TARGET = 1;
+    public static final int ARTILLERY_AIM_MAX_RANGE = 2;
+
     public static boolean tryFireFromInventory(Level level, Player player, InteractionHand hand) {
         return tryFireFromInventory(level, player, hand, new NoAim());
     }
@@ -90,35 +96,29 @@ public class ShipCoreCombat {
 
         Inventory inv = player.getInventory();
         int weaponSlot = (hand == InteractionHand.MAIN_HAND) ? inv.selected : 40;
+        ItemStack weapon = (weaponSlot == 40) ? inv.offhand.get(0) : inv.items.get(weaponSlot);
 
-        // Find transformed core (skip the weapon's own slot)
-        ItemStack coreStack = ItemStack.EMPTY;
-        int coreInventorySlot = -1;
-        for (int i = 0; i < inv.items.size(); i++) {
-            if (i == weaponSlot) continue;
-            ItemStack s = inv.items.get(i);
-            if (s.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(s)) {
-                coreStack = s;
-                coreInventorySlot = i;
-                break;
-            }
-        }
-        if (coreStack.isEmpty() && weaponSlot != 40) {
-            ItemStack offhand = inv.offhand.get(0);
-            if (offhand.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(offhand)) {
-                coreStack = offhand;
-                coreInventorySlot = 40;
-            }
-        }
-        // 头盔模式：检查配置的核心槽位（HEAD 装备槽不在 inv.items 中）
-        if (coreStack.isEmpty()) {
-            ItemStack configCore = TransformationManager.getCoreFromConfiguredSlot(player);
-            if (configCore.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(configCore)) {
-                coreStack = configCore;
-                coreInventorySlot = -2;
-            }
+        // Find transformed core
+        int coreInventorySlot = findCoreSlotIndex(inv, player, weaponSlot);
+        if (coreInventorySlot == -1) return false;
+        ItemStack coreStack;
+        if (coreInventorySlot == 40) {
+            coreStack = inv.offhand.get(0);
+        } else if (coreInventorySlot == -2) {
+            coreStack = TransformationManager.getCoreFromConfiguredSlot(player);
+        } else {
+            coreStack = inv.items.get(coreInventorySlot);
         }
         if (coreStack.isEmpty()) return false;
+
+        // 火炮单击优化：手持冷却时自动找同类型可用炮
+        if (weapon.getItem() instanceof com.piranport.artillery.ArtilleryItem) {
+            int[] best = findBestArtillerySlot(player, weapon.getItem(), coreStack);
+            if (best != null) {
+                weaponSlot = best[0];
+                coreInventorySlot = best[1];
+            }
+        }
 
         return fireWeaponAtSlot(level, player, coreStack, weaponSlot, coreInventorySlot, aim);
     }
@@ -1986,6 +1986,205 @@ public class ShipCoreCombat {
             case 533 -> (TorpedoItem) ModItems.TORPEDO_533MM.get();
             case 610 -> (TorpedoItem) ModItems.TORPEDO_610MM.get();
             default -> null;
+        };
+    }
+
+    // ===== 齐射系统 =====
+
+    /** 提取核心查找逻辑。返回核心所在格子（-2=头盔/config槽，-1=未找到）。 */
+    private static int findCoreSlotIndex(Inventory inv, Player player, int weaponSlot) {
+        for (int i = 0; i < inv.items.size(); i++) {
+            if (i == weaponSlot) continue;
+            ItemStack s = inv.items.get(i);
+            if (s.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(s)) {
+                return i;
+            }
+        }
+        if (weaponSlot != 40) {
+            ItemStack oh = inv.offhand.get(0);
+            if (oh.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(oh)) {
+                return 40;
+            }
+        }
+        ItemStack configCore = TransformationManager.getCoreFromConfiguredSlot(player);
+        if (configCore.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(configCore)) {
+            return -2;
+        }
+        return -1;
+    }
+
+    /**
+     * 单击最佳槽位：优先手持炮（同类型+未冷却），否则从左到右扫第一门同型可用炮。
+     * @return {weaponSlot, coreSlot} 或 null
+     */
+    @Nullable
+    public static int[] findBestArtillerySlot(Player player, Item weaponType, ItemStack coreStack) {
+        Inventory inv = player.getInventory();
+        SlotCooldowns cooldowns = coreStack.getOrDefault(
+                ModDataComponents.SLOT_COOLDOWNS.get(), SlotCooldowns.EMPTY);
+        long now = player.level().getGameTime();
+
+        // 优先手持
+        int heldSlot = inv.selected;
+        ItemStack held = inv.items.get(heldSlot);
+        if (held.getItem() == weaponType && !cooldowns.isOnCooldown(heldSlot, now)) {
+            int coreSlot = findCoreSlotIndex(inv, player, heldSlot);
+            return new int[]{heldSlot, coreSlot};
+        }
+
+        // 从左到右扫描
+        for (int i = 0; i < inv.items.size(); i++) {
+            if (i == heldSlot) continue;
+            ItemStack stack = inv.items.get(i);
+            if (stack.getItem() == weaponType && !cooldowns.isOnCooldown(i, now)) {
+                int coreSlot = findCoreSlotIndex(inv, player, i);
+                return new int[]{i, coreSlot};
+            }
+        }
+
+        // 副手
+        ItemStack offhand = inv.offhand.get(0);
+        if (offhand.getItem() == weaponType && !cooldowns.isOnCooldown(40, now)) {
+            int coreSlot = findCoreSlotIndex(inv, player, 40);
+            return new int[]{40, coreSlot};
+        }
+
+        return null;
+    }
+
+    /**
+     * 收集物品栏中所有同类型且未冷却的火炮槽位。
+     * @return 非空 {weaponSlot, coreSlot} 对列表
+     */
+    public static List<int[]> findMatchingArtillerySlots(Player player, Item weaponType, ItemStack coreStack) {
+        List<int[]> result = new ArrayList<>();
+        Inventory inv = player.getInventory();
+        SlotCooldowns cooldowns = coreStack.getOrDefault(
+                ModDataComponents.SLOT_COOLDOWNS.get(), SlotCooldowns.EMPTY);
+        long now = player.level().getGameTime();
+
+        for (int i = 0; i < inv.items.size(); i++) {
+            ItemStack stack = inv.items.get(i);
+            if (stack.getItem() == weaponType && !cooldowns.isOnCooldown(i, now)) {
+                int coreSlot = findCoreSlotIndex(inv, player, i);
+                result.add(new int[]{i, coreSlot});
+            }
+        }
+
+        ItemStack offhand = inv.offhand.get(0);
+        if (offhand.getItem() == weaponType && !cooldowns.isOnCooldown(40, now)) {
+            int coreSlot = findCoreSlotIndex(inv, player, 40);
+            result.add(new int[]{40, coreSlot});
+        }
+
+        return result;
+    }
+
+    /** 将手持火炮的 SELECTED_AMMO_TYPE 同步到物品栏中所有同类型火炮。 */
+    public static void syncAmmoToSiblingGuns(Player player) {
+        ItemStack held = player.getMainHandItem();
+        if (!(held.getItem() instanceof com.piranport.artillery.ArtilleryItem)) return;
+
+        Item heldType = held.getItem();
+        SelectedAmmoType selected = held.getOrDefault(
+                ModDataComponents.SELECTED_AMMO_TYPE.get(), SelectedAmmoType.EMPTY);
+
+        Inventory inv = player.getInventory();
+        for (int i = 0; i < inv.items.size(); i++) {
+            ItemStack stack = inv.items.get(i);
+            if (stack != held && stack.getItem() == heldType) {
+                stack.set(ModDataComponents.SELECTED_AMMO_TYPE.get(), selected);
+            }
+        }
+        ItemStack offhand = inv.offhand.get(0);
+        if (offhand.getItem() == heldType) {
+            offhand.set(ModDataComponents.SELECTED_AMMO_TYPE.get(), selected);
+        }
+    }
+
+    /**
+     * 齐射入口（由 SalvoFirePayload.handle 的 enqueueWork 调用）。
+     * 1) 弹种同步 2) 收集可发射槽位 3) 第一个立即发射 4) 剩余 → SalvoManager 延迟。
+     */
+    public static void beginSalvo(ServerPlayer player, Item weaponType,
+                                   int aimMode, double ax, double ay, double az) {
+        Inventory inv = player.getInventory();
+        int weaponSlot = inv.selected;
+        int coreSlot = findCoreSlotIndex(inv, player, weaponSlot);
+        if (coreSlot == -1) return;
+
+        ItemStack coreStack;
+        if (coreSlot == 40) {
+            coreStack = inv.offhand.get(0);
+        } else if (coreSlot == -2) {
+            coreStack = TransformationManager.getCoreFromConfiguredSlot(player);
+        } else {
+            coreStack = inv.items.get(coreSlot);
+        }
+        if (coreStack.isEmpty()) return;
+
+        // 弹种同步
+        syncAmmoToSiblingGuns(player);
+
+        // 收集同型可用槽位
+        List<int[]> allSlots = findMatchingArtillerySlots(player, weaponType, coreStack);
+        if (allSlots.isEmpty()) {
+            player.displayClientMessage(
+                    Component.translatable("message.piranport.no_ready_gun"), true);
+            return;
+        }
+
+        // 第一个立即发射
+        int[] first = allSlots.remove(0);
+        AimInstruction aim = decodeAim(aimMode, ax, ay, az);
+        fireWeaponAtSlot(player.level(), player, coreStack, first[0], first[1], aim);
+
+        // 剩余 → 延迟调度
+        if (!allSlots.isEmpty()) {
+            com.piranport.combat.SalvoManager.schedule(player, weaponType, allSlots,
+                    aimMode, ax, ay, az);
+        }
+    }
+
+    /**
+     * 由 SalvoManager 逐 tick 调用，执行单门炮的延迟射击。
+     * 执行前严格校验：玩家存活、未跨维度、武器仍在且类型匹配、核心仍在。
+     */
+    public static void executeSalvoFire(ServerLevel level, ServerPlayer player,
+                                         int weaponSlot, int coreSlot, Item expectedWeaponType,
+                                         int aimMode, double ax, double ay, double az) {
+        if (!player.isAlive()) return;
+        if (player.level() != level) return;
+
+        Inventory inv = player.getInventory();
+        ItemStack weapon = (weaponSlot == 40) ? inv.offhand.get(0) : inv.items.get(weaponSlot);
+        if (weapon.isEmpty() || weapon.getItem() != expectedWeaponType) return;
+
+        ItemStack coreStack;
+        if (coreSlot == 40) {
+            coreStack = inv.offhand.get(0);
+        } else if (coreSlot == -2) {
+            coreStack = TransformationManager.getCoreFromConfiguredSlot(player);
+        } else {
+            coreStack = inv.items.get(coreSlot);
+        }
+        if (coreStack.isEmpty() || !(coreStack.getItem() instanceof ShipCoreItem)
+                || !TransformationManager.isTransformed(coreStack)) return;
+
+        SlotCooldowns cooldowns = coreStack.getOrDefault(
+                ModDataComponents.SLOT_COOLDOWNS.get(), SlotCooldowns.EMPTY);
+        if (cooldowns.isOnCooldown(weaponSlot, level.getGameTime())) return;
+
+        AimInstruction aim = decodeAim(aimMode, ax, ay, az);
+        fireWeaponAtSlot(level, player, coreStack, weaponSlot, coreSlot, aim);
+    }
+
+    /** 将 aim 模式 int 常量转为 sealed AimInstruction。 */
+    private static AimInstruction decodeAim(int aimMode, double ax, double ay, double az) {
+        return switch (aimMode) {
+            case ARTILLERY_AIM_TARGET -> new Aimed(new Vec3(ax, ay, az));
+            case ARTILLERY_AIM_MAX_RANGE -> new MaxRange();
+            default -> new NoAim();
         };
     }
 }

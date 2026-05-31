@@ -5,7 +5,6 @@ import com.piranport.aviation.ClientReconData;
 import com.piranport.client.CameraShakeHandler;
 import com.piranport.combat.TransformationManager;
 import com.piranport.config.ModClientConfig;
-import com.piranport.config.ModCommonConfig;
 import com.piranport.client.input.ClientInputCoordinator;
 import com.piranport.PiranPort;
 import com.piranport.network.RecallAllAircraftPayload;
@@ -72,7 +71,7 @@ public class ClientGameEvents {
         );
     }
 
-    /** 空手 + 蹲下 + 右键 → 恢复皮肤并返还核心；空手 + 右键（不蹲下、无GUI、已变身）→ 召回所有飞机 */
+    /** 空手 + 蹲下 + 右键 → 恢复皮肤并返还核心；空手 + 右键（不蹲下、已变身）→ 召回所有飞机 */
     @SubscribeEvent
     public static void onRightClickEmpty(PlayerInteractEvent.RightClickEmpty event) {
         // 侦察模式下阻止所有空手操作以防止错误
@@ -85,9 +84,8 @@ public class ClientGameEvents {
             }
             return;
         }
-        // 无GUI模式：空手右键 → 召回所有飞机
-        if (!ModCommonConfig.isShipCoreGuiEnabled()
-                && TransformationManager.isPlayerTransformed(event.getEntity())) {
+        // 空手右键 → 召回所有飞机
+        if (TransformationManager.isPlayerTransformed(event.getEntity())) {
             PacketDistributor.sendToServer(new RecallAllAircraftPayload());
         }
     }

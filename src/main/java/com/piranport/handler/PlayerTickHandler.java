@@ -67,13 +67,13 @@ public class PlayerTickHandler {
     private static final int SLOWNESS_CLEANUP_INTERVAL = 20;
     /** 自动战斗检查间隔（tick）*/
     private static final int AUTO_COMBAT_INTERVAL = 40;
-    /** 无GUI模式负重检查间隔（tick）- 降低频率以提升性能 */
+    /** 负重检查间隔（tick）- 降低频率以提升性能 */
     private static final int INVENTORY_LOAD_CHECK_INTERVAL = 10;
     /** 传送检测距离阈值（格）- 降低以避免误判鞘翅飞行 */
     private static final double TELEPORT_DETECTION_THRESHOLD = 64.0;
 
     // ==================== 缓存 Maps ====================
-    /** 玩家 UUID → 上次背包武器总载重。用于无GUI模式下的属性重算检测。 */
+    /** 玩家 UUID → 上次背包武器总载重。用于属性重算检测。 */
     private static final Map<UUID, Integer> lastWeaponLoad = new ConcurrentHashMap<>();
     /** 玩家 UUID → 上次 tick 位置。用于计算移动距离（燃料消耗用）。 */
     private static final Map<UUID, Vec3> lastPlayerPos = new ConcurrentHashMap<>();
@@ -87,11 +87,6 @@ public class PlayerTickHandler {
     private static final Map<UUID, Double> waterSurfaceY = new ConcurrentHashMap<>();
     /** 玩家 UUID → 上次离开水面的tick。用于延迟清理水面Y缓存。 */
     private static final Map<UUID, Integer> lastWaterExitTick = new ConcurrentHashMap<>();
-    /** 是否启用舰核GUI — 每次直接读取配置，支持运行时 /reload 生效 */
-    private static boolean isShipCoreGuiEnabled() {
-        return ModCommonConfig.isShipCoreGuiEnabled();
-    }
-
     /** 清理所有缓存（服务器关闭时调用）*/
     public static void clearCaches() {
         lastWeaponLoad.clear();
@@ -138,17 +133,14 @@ public class PlayerTickHandler {
         // 其他逻辑只在服务端执行
         if (!isClientSide) {
             tickEquipmentPassives(player);
-            tickInventoryLoadIfNoGui(player);
+            tickInventoryLoad(player);
             tickReconBodyLock(player);
         }
 
         boolean isTransformed = TransformationManager.isPlayerTransformed(player);
 
-        // 调试日志：每5秒输出一次变身状态
-        if (player.tickCount % 100 == 0) {
-            PiranPort.LOGGER.info("[主循环] 玩家 {} | 变身状态={}",
+        com.piranport.debug.PiranPortDebug.event("PlayerTick | player={} transformed={}",
                 player.getName().getString(), isTransformed);
-        }
 
         if (!isTransformed) {
             if (!isClientSide) {
@@ -183,11 +175,8 @@ public class PlayerTickHandler {
         boolean isSubmarine = transformedCore.getItem() instanceof ShipCoreItem sci
                 && sci.getShipType() == ShipType.SUBMARINE;
 
-        // 调试日志：确认到达水上行走调用点
-        if (!isClientSide && player.tickCount % 100 == 0) {
-            PiranPort.LOGGER.info("[主循环] 玩家 {} 已变身，准备调用水上行走 | 是否潜艇={}",
+        com.piranport.debug.PiranPortDebug.event("WaterWalkCheck | player={} submarine={}",
                 player.getName().getString(), isSubmarine);
-        }
 
         // 水上行走：客户端和服务端都需要执行
         handleWaterWalkingIfNeeded(player, isSubmarine);
@@ -218,10 +207,10 @@ public class PlayerTickHandler {
         }
     }
 
-    /** 无GUI模式：检测背包武器变化并重算属性 */
-    private static void tickInventoryLoadIfNoGui(Player player) {
+    /** 检测背包武器变化并重算属性 */
+    private static void tickInventoryLoad(Player player) {
         // 降低检查频率至每5tick，减少重复计算
-        if (!isShipCoreGuiEnabled() && player.tickCount % INVENTORY_LOAD_CHECK_INTERVAL == 0) {
+        if (player.tickCount % INVENTORY_LOAD_CHECK_INTERVAL == 0) {
             tickInventoryLoadCheck(player);
         }
     }
@@ -244,29 +233,22 @@ public class PlayerTickHandler {
     /** 水面行走条件判断后委托给 handleWaterWalking */
     private static void handleWaterWalkingIfNeeded(Player player, boolean isSubmarine) {
         if (isSubmarine) {
-            if (player.tickCount % 100 == 0) {
-                PiranPort.LOGGER.info("[水上行走] 玩家 {} 是潜艇，跳过水上行走", player.getName().getString());
-            }
             return;
         }
 
         boolean inWater = player.isInWater();
         boolean eyeInWater = player.isEyeInFluidType(NeoForgeMod.WATER_TYPE.value());
 
-        // 每秒输出一次状态
-        if (player.tickCount % 20 == 0) {
-            PiranPort.LOGGER.info("[水上行走] 玩家 {} | 在水中={} | 眼睛在水中={} | Y速度={} | Y位置={}",
-                player.getName().getString(), inWater, eyeInWater, player.getDeltaMovement().y, player.getY());
+        if (inWater && eyeInWater) {
+            applyUnderwaterBuoyancy(player);
+            waterSurfaceY.remove(player.getUUID());
+            return;
         }
 
-        // 完全按照稳定版的逻辑：身体在水中 + 眼睛不在水中 = 站在水面上
-        if (inWater && !eyeInWater) {
+        if (inWater) {
             Vec3 vel = player.getDeltaMovement();
 
-            // 方法1：设置速度为0
             if (vel.y < 0) {
-                PiranPort.LOGGER.info("[水上行走] 取消下沉！玩家 {} | 原Y速度={} → 设为0",
-                    player.getName().getString(), vel.y);
                 player.setDeltaMovement(vel.x, 0.0, vel.z);
             }
 
@@ -281,8 +263,6 @@ public class PlayerTickHandler {
                 waterSurfaceY.put(uuid, currentY);
             } else if (currentY < surfaceY - 0.1) {
                 // 如果下沉超过0.1格，强制拉回
-                PiranPort.LOGGER.info("[水上行走] 强制拉回！玩家 {} | 当前Y={} → 拉回到Y={}",
-                    player.getName().getString(), currentY, surfaceY);
                 player.setPos(player.getX(), surfaceY, player.getZ());
                 player.setDeltaMovement(vel.x, 0.0, vel.z);
             }
@@ -292,9 +272,18 @@ public class PlayerTickHandler {
             // 水平移动加速
             handleWaterWalking(player);
         } else {
-            // 离开水面或眼睛进水，清除记录
+            // 离开水面，清除记录
             waterSurfaceY.remove(player.getUUID());
         }
+    }
+
+    private static void applyUnderwaterBuoyancy(Player player) {
+        Vec3 vel = player.getDeltaMovement();
+        double buoyancy = ModCommonConfig.WATER_SURFACE_BUOYANCY.get();
+        double maxRiseSpeed = Math.max(0.05, Math.min(0.6, buoyancy));
+        double rise = Math.min(maxRiseSpeed, Math.max(vel.y, 0.0) + buoyancy * 0.08);
+        player.setDeltaMovement(vel.x, rise, vel.z);
+        player.resetFallDistance();
     }
 
     /** 潜艇效果：无限水下呼吸 + 水下隐身 + 深海夜视（仅在效果快过期时刷新，避免每tick发包） */
@@ -384,7 +373,7 @@ public class PlayerTickHandler {
     }
 
     /**
-     * 无GUI模式：通过配置的槽位驱动变身。
+     * 通过配置的槽位驱动变身。
      * 配置槽位放入核心 → 自动变身；移除核心 → 自动解除；核心不动 → 仅武器变化时重算属性。
      */
     private static void tickInventoryLoadCheck(Player player) {
@@ -416,8 +405,7 @@ public class PlayerTickHandler {
                 // 重新读取核心以获取最新的ItemStack引用（DataComponents可能创建新实例）
                 coreStack = TransformationManager.getCoreFromConfiguredSlot(player);
 
-                // 调试日志：确认变身成功
-                PiranPort.LOGGER.info("[变身] 玩家 {} 变身成功！核心类型={} | 变身状态={}",
+                com.piranport.debug.PiranPortDebug.event("Transform ON | player={} core={} transformed={}",
                     player.getName().getString(),
                     coreStack.getItem().getClass().getSimpleName(),
                     TransformationManager.isTransformed(coreStack));
@@ -533,26 +521,6 @@ public class PlayerTickHandler {
                     currentVel.z * deceleration
                 );
             }
-        }
-    }
-
-    /** 水面行走：脚踩水但眼睛未入水时，取消下沉速度（参考稳定版实现） */
-    private static void applyWaterSurfaceControl(Player player) {
-        Vec3 vel = player.getDeltaMovement();
-
-        // 调试日志
-        if (player.tickCount % 20 == 0) {
-            PiranPort.LOGGER.info("Surface control: vel.y={}, eyeInWater={}",
-                vel.y, player.isEyeInFluidType(NeoForgeMod.WATER_TYPE.value()));
-        }
-
-        // 关键：只有眼睛不在水中时才取消下沉（站在水面上）
-        // 如果眼睛也在水中，说明玩家完全沉入水下，不应该阻止
-        if (!player.isEyeInFluidType(NeoForgeMod.WATER_TYPE.value())) {
-            if (vel.y < 0) {
-                player.setDeltaMovement(vel.x, 0.0, vel.z);
-            }
-            player.resetFallDistance();
         }
     }
 

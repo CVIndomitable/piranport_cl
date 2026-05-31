@@ -7,7 +7,7 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 
 /**
- * Stores cooldown state directly on a weapon item (no-GUI mode).
+ * Stores cooldown state directly on a weapon item.
  * Rendered as a durability-style bar by WeaponReloadDecorator.
  */
 public record WeaponCooldown(long endTick, int totalTick) {

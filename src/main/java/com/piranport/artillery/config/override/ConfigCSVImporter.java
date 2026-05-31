@@ -145,12 +145,17 @@ public class ConfigCSVImporter {
             throw new IllegalArgumentException("未知的火炮: " + cannonName);
         }
 
-        // 解析数值字段（跳过 display_name, caliber, barrels, durability, scopeZoom）
+        // 解析数值字段（跳过 display_name）
         try {
+            int caliber = Integer.parseInt(parts[2]);
+            int barrels = Integer.parseInt(parts[3]);
             float damage = Float.parseFloat(parts[4]);
             int reloadTime = Integer.parseInt(parts[5]);
+            int durability = Integer.parseInt(parts[6]);
+            float scopeZoom = Float.parseFloat(parts[7]);
             float initialSpeed = Float.parseFloat(parts[8]);
             float dragCoeff = Float.parseFloat(parts[9]);
+            float gravity = Float.parseFloat(parts[10]);
             float explosionPower = Float.parseFloat(parts[11]);
             float dispersion = Float.parseFloat(parts[12]);
 
@@ -166,10 +171,15 @@ public class ConfigCSVImporter {
             float turretSpeed = Float.parseFloat(parts[21]);
 
             // 应用验证和范围限制
+            caliber = (int) ConfigOverrideManager.validateValue("caliber", caliber);
+            barrels = (int) ConfigOverrideManager.validateValue("barrels", barrels);
             damage = (float) ConfigOverrideManager.validateValue("damage", damage);
             reloadTime = (int) ConfigOverrideManager.validateValue("reloadTime", reloadTime);
+            durability = (int) ConfigOverrideManager.validateValue("durability", durability);
+            scopeZoom = (float) ConfigOverrideManager.validateValue("scopeZoom", scopeZoom);
             initialSpeed = (float) ConfigOverrideManager.validateValue("initialSpeed", initialSpeed);
             dragCoeff = (float) ConfigOverrideManager.validateValue("dragCoeff", dragCoeff);
+            gravity = (float) ConfigOverrideManager.validateValue("gravity", gravity);
             explosionPower = (float) ConfigOverrideManager.validateValue("explosionPower", explosionPower);
             dispersion = (float) ConfigOverrideManager.validateValue("dispersion", dispersion);
             projectileWeight = (float) ConfigOverrideManager.validateValue("projectileWeight", projectileWeight);
@@ -183,10 +193,15 @@ public class ConfigCSVImporter {
             turretSpeed = (float) ConfigOverrideManager.validateValue("turretSpeed", turretSpeed);
 
             // 写入覆盖数据
+            overrides.setCannonOverride(cannonName, "caliber", caliber);
+            overrides.setCannonOverride(cannonName, "barrels", barrels);
             overrides.setCannonOverride(cannonName, "damage", damage);
             overrides.setCannonOverride(cannonName, "reloadTime", reloadTime);
+            overrides.setCannonOverride(cannonName, "durability", durability);
+            overrides.setCannonOverride(cannonName, "scopeZoom", scopeZoom);
             overrides.setCannonOverride(cannonName, "initialSpeed", initialSpeed);
             overrides.setCannonOverride(cannonName, "dragCoeff", dragCoeff);
+            overrides.setCannonOverride(cannonName, "gravity", gravity);
             overrides.setCannonOverride(cannonName, "explosionPower", explosionPower);
             overrides.setCannonOverride(cannonName, "dispersion", dispersion);
             overrides.setCannonOverride(cannonName, "projectileWeight", projectileWeight);

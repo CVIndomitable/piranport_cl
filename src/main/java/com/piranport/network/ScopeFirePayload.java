@@ -73,10 +73,6 @@ public record ScopeFirePayload(FireMode mode, double targetX, double targetY, do
                     || weapon.getItem() instanceof com.piranport.item.AircraftItem;
             if (!hasFireableWeapon) return;
 
-            if (com.piranport.config.ModCommonConfig.isShipCoreGuiEnabled()) {
-                return;
-            }
-
             switch (payload.mode()) {
                 case MAX_RANGE -> {
                     ShipCoreCombat.fireMaxRange(player, weapon);

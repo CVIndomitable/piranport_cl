@@ -1,9 +1,12 @@
 package com.piranport.entity;
 
 import com.piranport.PiranPort;
+import com.piranport.artillery.config.override.ConfigOverrideManager;
+import com.piranport.combat.CannonImpactEffectBroadcaster;
 import com.piranport.config.ModArtilleryConfig;
 import com.piranport.config.ModCommonConfig;
 import com.piranport.config.ModProjectilesConfig;
+import com.piranport.network.CannonImpactEffectPayload;
 import com.piranport.registry.ModEntityTypes;
 import com.piranport.registry.ModItems;
 import com.piranport.registry.ModSounds;
@@ -188,10 +191,14 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         int maxTicks = (int) (ModArtilleryConfig.ARTILLERY_UNDERWATER_DESTROY_TIME.get() * 20);
         if (underwaterTicks >= maxTicks) {
             exploded = true;
-            if (shouldExplode && ModProjectilesConfig.UNDERWATER_EXPLODE.get()) {
+            if (shouldExplode && getProjectileBoolean("UNDERWATER_EXPLODE", ModProjectilesConfig.UNDERWATER_EXPLODE.get())) {
                 Level.ExplosionInteraction interaction = ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get()
                         ? Level.ExplosionInteraction.TNT : Level.ExplosionInteraction.NONE;
-                level().explode(this, getX(), getY(), getZ(), explosionPower, interaction);
+                double multiplier = getProjectileDouble("UNDERWATER_EXPLOSION_MULTIPLIER",
+                        ModProjectilesConfig.UNDERWATER_EXPLOSION_MULTIPLIER.get());
+                float scaledPower = explosionPower * (float) multiplier;
+                level().explode(this, getX(), getY(), getZ(), scaledPower, interaction);
+                sendImpactEffect(CannonImpactEffectPayload.Kind.HE, scaledPower);
             }
             discard();
             return true;
@@ -222,6 +229,7 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
 
     /** 每 tick 调用，但实际引信检测按 vtCheckInterval 间隔执行。 */
     private void tickVT() {
+        loadVtConfigValues();
         // VT 弹水中延时爆炸（使用近炸引信）
         if (isInWater()) {
             if (handleUnderwaterDestruction(false)) {
@@ -237,8 +245,13 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         checkProximityFuze();
     }
 
-    // P2优化: 预计算VT引信锥形检测的cos阈值，避免每次计算acos和toDegrees
-    private static final double VT_CONE_COS_THRESHOLD = Math.cos(Math.toRadians(30.0)); // 默认30度半角
+    private static double getVtConeCosThreshold() {
+        double angle = vtConeHalfAngleDeg;
+        if (!Double.isFinite(angle) || angle <= 0.0 || angle >= 180.0) {
+            angle = 30.0;
+        }
+        return Math.cos(Math.toRadians(angle));
+    }
 
     private void checkProximityFuze() {
         Vec3 velocity = getDeltaMovement();
@@ -264,7 +277,7 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
             // P2优化: 直接比较点积与cos阈值，避免昂贵的acos和toDegrees计算
             Vec3 targetDir = toTarget.normalize();
             double dot = velNorm.dot(targetDir);
-            if (dot >= VT_CONE_COS_THRESHOLD) {
+            if (dot >= getVtConeCosThreshold()) {
                 proximityDetonate();
                 return;
             }
@@ -289,6 +302,7 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         Level.ExplosionInteraction interaction = ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get()
                 ? Level.ExplosionInteraction.TNT : Level.ExplosionInteraction.NONE;
         level().explode(this, getX(), getY(), getZ(), explosionPower, interaction);
+        sendImpactEffect(CannonImpactEffectPayload.Kind.VT, explosionPower);
         level().playSound(null, getX(), getY(), getZ(),
                 ModSounds.CANNON_EXPLOSION.get(), SoundSource.PLAYERS, 2.0f, 0.9f + random.nextFloat() * 0.2f);
         level().broadcastEntityEvent(this, (byte) 3);
@@ -319,15 +333,18 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
                 Level.ExplosionInteraction interaction = ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get()
                         ? Level.ExplosionInteraction.TNT : Level.ExplosionInteraction.NONE;
                 level().explode(this, getX(), getY(), getZ(), explosionPower, interaction);
+                sendImpactEffect(CannonImpactEffectPayload.Kind.HE, explosionPower);
                 level().playSound(null, getX(), getY(), getZ(),
                         ModSounds.CANNON_EXPLOSION.get(), SoundSource.PLAYERS, 2.0f, 0.9f + random.nextFloat() * 0.2f);
             } else {
                 // AP：130% 基础直击伤害，与原版箭矢一样随速度衰减，忽略 50% 目标护甲
                 float currentSpeed = (float) getDeltaMovement().length();
                 float speedRatio = initialSpeed > 0 ? currentSpeed / initialSpeed : 1.0f;
-                float apMultiplier = ModProjectilesConfig.AP_DAMAGE_MULTIPLIER.get().floatValue();
+                float apMultiplier = (float) getProjectileDouble("AP_DAMAGE_MULTIPLIER",
+                        ModProjectilesConfig.AP_DAMAGE_MULTIPLIER.get());
                 float apDamage = damage * apMultiplier * speedRatio;
-                float apArmorIgnore = ModProjectilesConfig.AP_ARMOR_IGNORE.get().floatValue();
+                float apArmorIgnore = (float) getProjectileDouble("AP_ARMOR_IGNORE",
+                        ModProjectilesConfig.AP_ARMOR_IGNORE.get());
                 if (apArmorIgnore < 0) apArmorIgnore = 0;
                 if (apArmorIgnore > 1) apArmorIgnore = 1;
                 level().playSound(null, getX(), getY(), getZ(),
@@ -355,6 +372,7 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
                 } else {
                     target.hurt(damageSources().thrown(this, getOwner()), apDamage);
                 }
+                sendImpactEffect(CannonImpactEffectPayload.Kind.AP, Math.max(0.5f, explosionPower * 0.45f));
             }
             notifyOwner(target);
         }
@@ -368,6 +386,14 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         com.piranport.combat.HitNotifier.send(player, Component.translatable(key, weaponName, target.getDisplayName()));
     }
 
+    private double getProjectileDouble(String key, double defaultValue) {
+        return ConfigOverrideManager.getProjectileConfigDouble(key, defaultValue, level());
+    }
+
+    private boolean getProjectileBoolean(String key, boolean defaultValue) {
+        return ConfigOverrideManager.getProjectileConfigBoolean(key, defaultValue, level());
+    }
+
     @Override
     protected void onHitBlock(BlockHitResult result) {
         super.onHitBlock(result);
@@ -377,6 +403,7 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
                 Level.ExplosionInteraction interaction = breakBlocks
                         ? Level.ExplosionInteraction.TNT : Level.ExplosionInteraction.NONE;
                 level().explode(this, getX(), getY(), getZ(), explosionPower, interaction);
+                sendImpactEffect(CannonImpactEffectPayload.Kind.HE, explosionPower);
                 level().playSound(null, getX(), getY(), getZ(),
                         ModSounds.CANNON_EXPLOSION.get(), SoundSource.PLAYERS, 2.0f, 0.9f + random.nextFloat() * 0.2f);
             } else {
@@ -388,8 +415,13 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
                         level().destroyBlock(pos, true);
                     }
                 }
+                sendImpactEffect(CannonImpactEffectPayload.Kind.AP, Math.max(0.5f, explosionPower * 0.45f));
             }
         }
+    }
+
+    private void sendImpactEffect(CannonImpactEffectPayload.Kind kind, float power) {
+        CannonImpactEffectBroadcaster.send(level(), getX(), getY(), getZ(), power, kind);
     }
 
     @Override

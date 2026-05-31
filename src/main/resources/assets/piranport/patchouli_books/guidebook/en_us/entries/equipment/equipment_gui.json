@@ -1,20 +1,20 @@
 {
-  "name": "piranport.book.equipment.gui",
+  "name": "Ship Core Loadout",
   "category": "piranport:10_equipment",
   "icon": "piranport:small_ship_core",
   "sortnum": 3,
   "pages": [
     {
       "type": "patchouli:text",
-      "text": "$(bold)Ship Core Equipment GUI$()$(br2)Right-click your ship core to open the equipment management interface.$(br2)$(bold)Sections:$()$(br)• $(bold)Weapon Slots$(): Equip cannons, torpedoes, missiles$(br)• $(bold)Ammo Bay$(): Store various ammunition types$(br)• $(bold)Enhancement Slots$(): Install armor plates, engines, etc."
+      "text": "$(bold)Loadout Basics$()$(br2)Ship cores do not need a separate equipment screen. Put cannons, torpedo launchers, missile launchers, or aircraft on your hotbar, then right-click the held item while transformed. Keep shells, torpedoes, missiles, bombs, and aviation fuel in your inventory so weapons can draw from them."
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)Load System$()$(br2)The top of the interface shows current load: $(o)Load: X / Y$()$(br2)• Each equipment has a weight value$(br)• Overload reduces movement speed$(br)• Different cores have different load limits$(br2)$(bold)Tip:$() Balance your loadout carefully to avoid being overweight!"
+      "text": "$(bold)Load System$()$(br2)The ship core tooltip shows current load: $(o)Load: X / Y$().$(br2)• Hotbar weapons count toward load$(br)• Enhancements stored in the core count toward load$(br)• Overload reduces movement speed$(br)• Different cores have different load limits$(br2)$(bold)Tip:$() Balance your loadout carefully to avoid being overweight!"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)Weapon Switching$()$(br2)• $(bold)Scroll Wheel$(): Cycle through weapon slots$(br)• $(bold)Number Keys$(): Direct slot selection$(br)• $(bold)Offhand$(): Place ammo or support weapons$(br2)$(bold)Ammo Management:$()$(br)Ammo in the ammo bay automatically feeds corresponding weapons. Keep it stocked!"
+      "text": "$(bold)Weapons & Enhancements$()$(br2)• $(bold)Scroll Wheel$(): Cycle hotbar weapons$(br)• $(bold)Number Keys$(): Select a hotbar slot directly$(br)• $(bold)Offhand$(): Holds the ship core by default to maintain transformation$(br2)Drag armor plates, engines, sonar, or torpedo reload parts onto the core in your inventory to store them. Right-click the core with an empty cursor to retrieve the last stored enhancement."
     }
   ]
 }

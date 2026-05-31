@@ -63,8 +63,6 @@ public record SalvoFirePayload(byte mode, double targetX, double targetY, double
             if (weapon.isEmpty()) return;
             if (!(weapon.getItem() instanceof ArtilleryItem)) return;
 
-            if (com.piranport.config.ModCommonConfig.isShipCoreGuiEnabled()) return;
-
             Item weaponType = weapon.getItem();
 
             switch (payload.mode()) {

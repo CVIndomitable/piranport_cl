@@ -4,7 +4,6 @@ import com.mojang.serialization.Codec;
 import com.piranport.PiranPort;
 import com.piranport.component.AircraftInfo;
 import com.piranport.component.CustomCoreConfig;
-import com.piranport.component.FlightGroupData;
 import com.piranport.component.FuelData;
 import com.piranport.component.LoadedAmmo;
 import com.piranport.component.PlaceableInfo;
@@ -23,25 +22,11 @@ public class ModDataComponents {
     public static final DeferredRegister<DataComponentType<?>> DATA_COMPONENTS =
             DeferredRegister.create(Registries.DATA_COMPONENT_TYPE, PiranPort.MOD_ID);
 
-    public static final DeferredHolder<DataComponentType<?>, DataComponentType<ItemContainerContents>>
-            SHIP_CORE_CONTENTS = DATA_COMPONENTS.register("ship_core_contents",
-            () -> DataComponentType.<ItemContainerContents>builder()
-                    .persistent(ItemContainerContents.CODEC)
-                    .networkSynchronized(ItemContainerContents.STREAM_CODEC)
-                    .build());
-
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<Boolean>>
             SHIP_CORE_TRANSFORMED = DATA_COMPONENTS.register("ship_core_transformed",
             () -> DataComponentType.<Boolean>builder()
                     .persistent(Codec.BOOL)
                     .networkSynchronized(ByteBufCodecs.BOOL)
-                    .build());
-
-    public static final DeferredHolder<DataComponentType<?>, DataComponentType<Integer>>
-            SHIP_CORE_WEAPON_INDEX = DATA_COMPONENTS.register("ship_core_weapon_index",
-            () -> DataComponentType.<Integer>builder()
-                    .persistent(Codec.INT)
-                    .networkSynchronized(ByteBufCodecs.VAR_INT)
                     .build());
 
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<PlaceableInfo>>
@@ -58,13 +43,6 @@ public class ModDataComponents {
             () -> DataComponentType.<AircraftInfo>builder()
                     .persistent(AircraftInfo.CODEC)
                     .networkSynchronized(AircraftInfo.STREAM_CODEC)
-                    .build());
-
-    public static final DeferredHolder<DataComponentType<?>, DataComponentType<FlightGroupData>>
-            FLIGHT_GROUP_DATA = DATA_COMPONENTS.register("flight_group_data",
-            () -> DataComponentType.<FlightGroupData>builder()
-                    .persistent(FlightGroupData.CODEC)
-                    .networkSynchronized(FlightGroupData.STREAM_CODEC)
                     .build());
 
     // ===== v0.0.7 Ship Config DataComponents =====
@@ -94,7 +72,7 @@ public class ModDataComponents {
                     .networkSynchronized(SlotCooldowns.STREAM_CODEC)
                     .build());
 
-    // ===== 武器冷却（无GUI模式，直接存在武器物品上） =====
+    // ===== 武器冷却（直接存在武器物品上） =====
 
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<WeaponCooldown>>
             WEAPON_COOLDOWN = DATA_COMPONENTS.register("weapon_cooldown",
@@ -121,9 +99,9 @@ public class ModDataComponents {
                     .networkSynchronized(SelectedAmmoType.STREAM_CODEC)
                     .build());
 
-    // ===== 无GUI模式舰装核心储存护甲板 =====
+    // ===== 舰装核心储存强化件 =====
 
-    /** Stores ArmorPlateItems slotted into the ship core (no-GUI mode only). */
+    /** Stores enhancement items slotted into the ship core. */
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<ItemContainerContents>>
             SHIP_CORE_ARMOR = DATA_COMPONENTS.register("ship_core_armor",
             () -> DataComponentType.<ItemContainerContents>builder()

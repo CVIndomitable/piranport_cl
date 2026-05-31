@@ -1,6 +1,7 @@
 package com.piranport.entity;
 
 import com.piranport.component.AircraftInfo;
+import com.piranport.component.AircraftAttackMode;
 import com.piranport.config.ModCommonConfig;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
@@ -418,7 +419,7 @@ public class AircraftCombat {
 
         java.util.List<java.util.UUID> locks = com.piranport.aviation.FireControlManager.getTargets(owner.getUUID());
         if (!locks.isEmpty()) {
-            if (craft.attackMode == com.piranport.component.FlightGroupData.AttackMode.SPREAD) {
+            if (craft.attackMode == AircraftAttackMode.SPREAD) {
                 return locks.stream()
                         .map(sl::getEntity)
                         .filter(e -> e instanceof LivingEntity le && le.isAlive() && !isAirborneTarget(e))

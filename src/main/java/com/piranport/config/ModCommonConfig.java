@@ -11,9 +11,8 @@ public class ModCommonConfig {
     public static final ModConfigSpec.BooleanValue FIGHTER_AMMO_ENABLED;
     public static final ModConfigSpec.BooleanValue AUTO_RESUPPLY_ENABLED;
 
-    // ===== GUI & Inventory (界面与背包) =====
+    // ===== Inventory (背包) =====
 
-    public static final ModConfigSpec.BooleanValue SHIP_CORE_GUI_ENABLED;
     public static final ModConfigSpec.ConfigValue<String> SHIP_CORE_SLOT_MODE;
     public static final ModConfigSpec.BooleanValue WEAPON_PICKUP_TO_INVENTORY;
 
@@ -54,18 +53,7 @@ public class ModCommonConfig {
                 .define("autoResupplyEnabled", false);
         BUILDER.pop();
 
-        BUILDER.push("gui");
-        SHIP_CORE_GUI_ENABLED = BUILDER
-                .comment(
-                        "Enable GUI mode for ship core equipment (舰装核心GUI模式).",
-                        "Default: false (inventory mode - weapons in hotbar, enhancements in core).",
-                        "Set to true to enable GUI-based equipment management.",
-                        "默认false（无GUI模式-武器在快捷栏，强化在核心内）。",
-                        "设为true启用GUI装备管理界面。",
-                        "WARNING: Changing this requires server restart and may migrate equipment data.",
-                        "警告：更改此项需要重启服务器，可能会迁移装备数据。")
-                .define("shipCoreGuiEnabled", false);
-
+        BUILDER.push("inventory");
         SHIP_CORE_SLOT_MODE = BUILDER
                 .comment(
                         "Ship Core equipment slot mode (舰装核心装备槽位模式).",
@@ -148,11 +136,4 @@ public class ModCommonConfig {
     }
 
     public static final ModConfigSpec SPEC = BUILDER.build();
-
-    /**
-     * Helper: returns true if ship core GUI mode is enabled.
-     */
-    public static boolean isShipCoreGuiEnabled() {
-        return SHIP_CORE_GUI_ENABLED.get();
-    }
 }

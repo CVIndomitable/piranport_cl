@@ -4,15 +4,12 @@ import com.piranport.PiranPort;
 import com.piranport.client.AircraftRenderer;
 import com.piranport.client.CuttingBoardRenderer;
 import com.piranport.client.PlaceableFoodRenderer;
-import com.piranport.client.ReloadBarDecorator;
 import com.piranport.client.WeaponReloadDecorator;
 import com.piranport.client.gui.ArtilleryConfigToolScreen;
 import com.piranport.component.AircraftInfo;
 import com.piranport.menu.AmmoWorkbenchScreen;
 import com.piranport.menu.CookingPotScreen;
-import com.piranport.menu.FlightGroupScreen;
 import com.piranport.menu.ReloadFacilityScreen;
-import com.piranport.menu.ShipCoreEquipmentScreen;
 import com.piranport.menu.StoneMillScreen;
 import com.piranport.registry.ModBlockEntityTypes;
 import com.piranport.registry.ModDataComponents;
@@ -62,9 +59,7 @@ public class ClientModEvents {
     public static void registerScreens(RegisterMenuScreensEvent event) {
         event.register(ModMenuTypes.STONE_MILL_MENU.get(), StoneMillScreen::new);
         event.register(ModMenuTypes.COOKING_POT_MENU.get(), CookingPotScreen::new);
-        event.register(ModMenuTypes.FLIGHT_GROUP_MENU.get(), FlightGroupScreen::new);
         event.register(ModMenuTypes.RELOAD_FACILITY_MENU.get(), ReloadFacilityScreen::new);
-        event.register(ModMenuTypes.SHIP_CORE_EQUIPMENT_MENU.get(), ShipCoreEquipmentScreen::new);
         event.register(ModMenuTypes.SHIP_CORE_MODIFIER_MENU.get(), com.piranport.menu.ShipCoreModifierScreen::new);
         // 弹药工作台
         event.register(ModMenuTypes.AMMO_WORKBENCH_MENU.get(), AmmoWorkbenchScreen::new);
@@ -84,7 +79,7 @@ public class ClientModEvents {
         event.register(ModKeyMappings.FIRE_CONTROL_LOCK);
         event.register(ModKeyMappings.FIRE_CONTROL_ADD);
         event.register(ModKeyMappings.FIRE_CONTROL_CANCEL);
-        event.register(ModKeyMappings.OPEN_FLIGHT_GROUP);
+        event.register(ModKeyMappings.TOGGLE_FIGHTER_GROUND_ATTACK);
         event.register(ModKeyMappings.HIGHLIGHT_ENTITIES);
         event.register(ModKeyMappings.TOGGLE_AUTO_LAUNCH);
         event.register(ModKeyMappings.DEBUG_TOGGLE);
@@ -92,17 +87,11 @@ public class ClientModEvents {
         event.register(ModKeyMappings.SWITCH_AMMO);
         event.register(ModKeyMappings.DEBUG_COOLDOWN_OVERRIDE);
         event.register(ModKeyMappings.HIT_DISPLAY_TOGGLE);
-        event.register(ModKeyMappings.OPEN_SHIP_EQUIPMENT);
     }
 
     @SubscribeEvent
     public static void registerItemDecorations(RegisterItemDecorationsEvent event) {
-        ReloadBarDecorator decorator = new ReloadBarDecorator();
-        event.register(ModItems.SMALL_SHIP_CORE.get(), decorator);
-        event.register(ModItems.MEDIUM_SHIP_CORE.get(), decorator);
-        event.register(ModItems.LARGE_SHIP_CORE.get(), decorator);
-
-        // 武器装填条（无GUI模式——武器物品上的耐久条样式）
+        // 武器装填条（武器物品上的耐久条样式）
         WeaponReloadDecorator weaponDecorator = new WeaponReloadDecorator();
         event.register(ModItems.SINGLE_SMALL_GUN.get(), weaponDecorator);
         event.register(ModItems.SMALL_GUN.get(), weaponDecorator);

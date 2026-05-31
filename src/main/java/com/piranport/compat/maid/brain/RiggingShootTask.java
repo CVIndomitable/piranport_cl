@@ -2,6 +2,7 @@ package com.piranport.compat.maid.brain;
 
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import com.google.common.collect.ImmutableMap;
+import com.piranport.compat.maid.combat.FireControlHelper;
 import com.piranport.compat.maid.combat.MaidWeaponFirer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
@@ -31,7 +32,7 @@ public class RiggingShootTask extends Behavior<EntityMaid> {
         Optional<LivingEntity> target = maid.getBrain().getMemory(MemoryModuleType.ATTACK_TARGET);
         if (target.isEmpty()) return false;
         LivingEntity t = target.get();
-        return t.isAlive() && !t.isRemoved() && maid.canSee(t);
+        return canShootTarget(maid, t);
     }
 
     @Override
@@ -58,7 +59,7 @@ public class RiggingShootTask extends Behavior<EntityMaid> {
         maid.getBrain().setMemory(MemoryModuleType.LOOK_TARGET, new EntityTracker(t, true));
         if (cooldownTick-- > 0) return;
         cooldownTick = FIRE_INTERVAL;
-        if (!maid.canSee(t)) return;
+        if (!canShootTarget(maid, t)) return;
         ItemStack weapon = maid.getMainHandItem();
         if (MaidWeaponFirer.canFire(maid, weapon)) {
             MaidWeaponFirer.fire(maid, t);
@@ -68,5 +69,13 @@ public class RiggingShootTask extends Behavior<EntityMaid> {
     @Override
     protected void stop(ServerLevel level, EntityMaid maid, long gameTime) {
         maid.setSwingingArms(false);
+    }
+
+    private static boolean canShootTarget(EntityMaid maid, LivingEntity target) {
+        if (!target.isAlive() || target.isRemoved() || target.level() != maid.level()) return false;
+        boolean fireControlTarget = FireControlHelper.getOwnerFireControlTarget(maid)
+                .filter(target::equals)
+                .isPresent();
+        return fireControlTarget ? maid.hasLineOfSight(target) : maid.canSee(target);
     }
 }

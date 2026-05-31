@@ -147,8 +147,7 @@ public class ConfigInspectorItem extends Item {
 
         // 6. 客户端显示
         addSection(player, "客户端显示");
-        addConfigLine(player, "旧版装填HUD", formatBoolean(ModClientConfig.SHOW_LEGACY_RELOAD_HUD.get()));
-        addConfigLine(player, "编组按钮", formatBoolean(ModClientConfig.FLIGHT_GROUP_ENABLED.get()));
+        addConfigLine(player, "装填HUD样式", ModClientConfig.RELOAD_HUD_STYLE.get().toString());
         addConfigLine(player, "火控位置", ModClientConfig.FIRE_CONTROL_POSITION.get().toString());
         addConfigLine(player, "屏幕震动", ModClientConfig.SCREEN_SHAKE_MULTIPLIER.get() + "x");
 

@@ -8,18 +8,6 @@ public class ModClientConfig {
     private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
 
     /**
-     * When true, the legacy HUD reload bar (displayed above the hotbar) is shown.
-     * Default false — replaced by the item decorator on the ship core icon.
-     */
-    public static final ModConfigSpec.BooleanValue SHOW_LEGACY_RELOAD_HUD =
-            BUILDER
-                    .comment(
-                            "Show the legacy reload progress HUD bar above the hotbar.",
-                            "Default: false (replaced by item decorator on the ship core icon).",
-                            "Set to true to restore the old HUD bar. (旧版装填HUD条，默认关闭)")
-                    .define("showLegacyReloadHud", false);
-
-    /**
      * Reload progress bar display style.
      * HOTBAR: above hotbar (default, like vanilla experience bar)
      * CENTER: center of screen (legacy position)
@@ -46,19 +34,6 @@ public class ModClientConfig {
                             "When true, the bar fades out 2 seconds after reload completes.",
                             "Default: true (装填进度条淡入淡出动画)")
                     .define("reloadHudFadeAnimation", true);
-
-    /**
-     * When true, the "编组" (Flight Group) button is shown in the ship core GUI,
-     * allowing players to configure aircraft flight groups.
-     * Default false — disable until the feature is ready for use.
-     */
-    public static final ModConfigSpec.BooleanValue FLIGHT_GROUP_ENABLED =
-            BUILDER
-                    .comment(
-                            "Enable the Flight Group (编组) button in the ship core GUI.",
-                            "Default: false (hidden by default).",
-                            "Set to true to show the flight group configuration screen. (飞机编组功能，默认关闭)")
-                    .define("flightGroupEnabled", false);
 
     /**
      * Fire control panel position on screen.

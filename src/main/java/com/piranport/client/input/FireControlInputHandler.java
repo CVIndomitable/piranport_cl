@@ -3,11 +3,10 @@ package com.piranport.client.input;
 import com.piranport.aviation.ClientFireControlData;
 import com.piranport.combat.TransformationManager;
 import com.piranport.item.ShipCoreItem;
-import com.piranport.network.FireControlPayload;
-import com.piranport.network.OpenFlightGroupPayload;
-import com.piranport.network.OpenShipEquipmentPayload;
 import com.piranport.network.AutoLaunchTogglePayload;
+import com.piranport.network.FireControlPayload;
 import com.piranport.network.ManualReloadPayload;
+import com.piranport.network.ToggleFighterGroundAttackPayload;
 import com.piranport.registry.ModKeyMappings;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.Entity;
@@ -22,7 +21,7 @@ import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * 火控按键处理（P/O/I键）和飞行编队/装备/升空/装填功能键（U/K/H/R键）。
+ * 火控按键处理（P/O/I键）和战斗机对地/升空/装填功能键（U/H/R键）。
  *
  * <p><b>线程模型</b>: 客户端渲染线程（单线程），无需同步。
  */
@@ -60,27 +59,12 @@ public class FireControlInputHandler {
         }
     }
 
-    /** 处理 U 键 — 打开飞行编队 GUI。 */
-    public static void handleFlightGroupKey(Minecraft mc, boolean transformed, boolean inReconMode) {
+    /** 处理 U 键 — 切换战斗机是否攻击地面目标。 */
+    public static void handleFighterGroundAttackKey(Minecraft mc, boolean transformed, boolean inReconMode) {
         if (mc.player == null) return;
-        while (ModKeyMappings.OPEN_FLIGHT_GROUP.consumeClick()) {
+        while (ModKeyMappings.TOGGLE_FIGHTER_GROUND_ATTACK.consumeClick()) {
             if (!transformed || inReconMode) continue;
-            int coreSlot = findCoreSlot(mc.player);
-            if (coreSlot >= 0) {
-                PacketDistributor.sendToServer(new OpenFlightGroupPayload(coreSlot));
-            }
-        }
-    }
-
-    /** 处理 K 键 — 打开舰装核心装备界面。 */
-    public static void handleEquipmentKey(Minecraft mc, boolean inReconMode) {
-        if (mc.player == null) return;
-        while (ModKeyMappings.OPEN_SHIP_EQUIPMENT.consumeClick()) {
-            if (inReconMode) continue;
-            int equipSlot = findShipCoreInInventory(mc.player);
-            if (equipSlot >= 0) {
-                PacketDistributor.sendToServer(new OpenShipEquipmentPayload(equipSlot));
-            }
+            PacketDistributor.sendToServer(new ToggleFighterGroundAttackPayload());
         }
     }
 
@@ -121,21 +105,6 @@ public class FireControlInputHandler {
         ItemStack oh = player.getInventory().offhand.get(0);
         if (oh.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(oh)) {
             return 40;
-        }
-        return -1;
-    }
-
-    /** 查找背包中任意舰装核心所在的槽位（用于打开装备界面），未找到返回 -1。 */
-    public static int findShipCoreInInventory(Player player) {
-        ItemStack oh = player.getInventory().offhand.get(0);
-        if (oh.getItem() instanceof ShipCoreItem) {
-            return 40;
-        }
-        for (int i = 0; i < player.getInventory().items.size(); i++) {
-            ItemStack s = player.getInventory().items.get(i);
-            if (s.getItem() instanceof ShipCoreItem) {
-                return i;
-            }
         }
         return -1;
     }

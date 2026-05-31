@@ -6,15 +6,11 @@
   "pages": [
     {
       "type": "patchouli:text",
-      "text": "$(bold)客户端配置选项$()$(br2)皮兰港提供多个客户端配置选项，可以在配置文件中修改：$(br2)• $(o)showLegacyReloadHud$()：显示旧版装填HUD$(br)• $(o)flightGroupEnabled$()：启用飞机编组功能"
+      "text": "$(bold)客户端配置选项$()$(br2)皮兰港提供多个客户端配置选项，可以在配置文件中修改：$(br2)• $(o)reloadHudStyle$()：调整装填条显示位置$(br)• $(o)reloadHudFadeAnimation$()：调整装填完成后的淡出动画$(br)• 火控面板位置与屏幕震动强度等显示选项"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)旧版装填HUD$()$(br2)$(o)showLegacyReloadHud$()控制是否显示旧版的装填进度HUD。$(br2)$(bold)开启：$()$(br)在屏幕上显示武器装填进度条。$(br2)$(bold)关闭：$()$(br)使用简化的装填提示。$(br2)根据个人喜好选择。"
-    },
-    {
-      "type": "patchouli:text",
-      "text": "$(bold)飞机编组开关$()$(br2)$(o)flightGroupEnabled$()控制是否启用飞机编组功能。$(br2)$(bold)开启：$()$(br)可以使用$(bold)U键$()编组飞机。$(br2)$(bold)关闭：$()$(br)U键无效，飞机独立行动。$(br2)$(bold)注意：$()$(br)无GUI模式下编组功能始终不可用。"
+      "text": "$(bold)装填条显示$()$(br2)$(o)reloadHudStyle$()控制装填进度条位置：$(br)• $(o)HOTBAR$()：显示在快捷栏上方$(br)• $(o)CENTER$()：显示在屏幕中央$(br)• $(o)HIDDEN$()：隐藏装填条$(br2)也可以通过$(o)reloadHudFadeAnimation$()调整装填完成后的淡出动画。"
     }
   ]
 }

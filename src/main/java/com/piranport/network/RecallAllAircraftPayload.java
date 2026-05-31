@@ -17,7 +17,7 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * C2S: no-GUI mode empty-hand right-click → recall all airborne aircraft.
+ * C2S: empty-hand right-click → recall all airborne aircraft.
  */
 public record RecallAllAircraftPayload() implements CustomPacketPayload {
     public static final Type<RecallAllAircraftPayload> TYPE =
@@ -45,8 +45,7 @@ public record RecallAllAircraftPayload() implements CustomPacketPayload {
             if (!(context.player() instanceof ServerPlayer sp)) return;
             if (sp.level().isClientSide()) return;
 
-            // Only in no-GUI mode + transformed
-            if (com.piranport.config.ModCommonConfig.isShipCoreGuiEnabled()) return;
+            // Only transformed players may recall their aircraft.
             if (!com.piranport.combat.TransformationManager.isPlayerTransformed(sp)) return;
 
             // 频率限制：两次召回间隔至少 20 tick

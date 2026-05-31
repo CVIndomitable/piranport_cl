@@ -2,8 +2,8 @@ package com.piranport.item;
 
 import com.piranport.aviation.FireControlManager;
 import com.piranport.combat.TransformationManager;
+import com.piranport.component.AircraftAttackMode;
 import com.piranport.component.AircraftInfo;
-import com.piranport.component.FlightGroupData;
 import com.piranport.component.FuelData;
 import com.piranport.component.LoadedAmmo;
 import com.piranport.component.SelectedAmmoType;
@@ -21,7 +21,6 @@ import com.piranport.network.ShakeEffectPayload;
 import com.piranport.registry.ModDataComponents;
 import com.piranport.registry.ModItems;
 import com.piranport.registry.ModSounds;
-import net.minecraft.core.NonNullList;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -49,7 +48,6 @@ import net.minecraft.world.inventory.ClickAction;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
-import net.minecraft.world.item.component.ItemContainerContents;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import java.util.UUID;
@@ -171,10 +169,10 @@ public class ShipCoreCombat {
         }
 
         // Cannon — always auto-resupply (Phase 4: manual mode removed)
-        int barrelCount = getBarrelCount(weapon);
+        int barrelCount = getBarrelCount(weapon, level);
 
         // Phase 9: 耐久检测
-        if (weapon.isDamageableItem() && weapon.getDamageValue() >= weapon.getMaxDamage() - 1) {
+        if (isCannonDamaged(weapon, level)) {
             player.displayClientMessage(Component.translatable("message.piranport.cannon_damaged"), true);
             return true;
         }
@@ -182,10 +180,10 @@ public class ShipCoreCombat {
         // Creative mode: find any matching ammo without consuming
         if (player.getAbilities().instabuild) {
             Item selectedAmmoType = findPreferredOrSufficientAmmo(inv, weapon, barrelCount,
-                    coreInventorySlot, weaponSlot);
+                    coreInventorySlot, weaponSlot, level);
 
             if (selectedAmmoType == null) {
-                selectedAmmoType = getDefaultAmmoForWeapon(weapon);
+                selectedAmmoType = getDefaultAmmoForWeapon(weapon, level);
                 if (selectedAmmoType == null) {
                     player.displayClientMessage(Component.translatable("message.piranport.insufficient_same_ammo"), true);
                     return true;
@@ -204,7 +202,7 @@ public class ShipCoreCombat {
             boolean isHE = isHEShell(firstAmmo) || isVT;
             ItemStack shellForRender = firstAmmo.copyWithCount(1);
 
-            int cooldownTicks = TransformationManager.boostedCooldown(player, getGunCooldown(weapon));
+            int cooldownTicks = TransformationManager.boostedCooldown(player, getGunCooldown(weapon, level));
             coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
                     cooldowns.withSlotCooldown(weaponSlot, cooldownTicks, level.getGameTime()));
             weapon.set(ModDataComponents.WEAPON_COOLDOWN.get(),
@@ -226,7 +224,7 @@ public class ShipCoreCombat {
 
         // Survival mode: find sufficient ammo type and consume
         Item selectedAmmoType = findPreferredOrSufficientAmmo(inv, weapon, barrelCount,
-                coreInventorySlot, weaponSlot);
+                coreInventorySlot, weaponSlot, level);
 
         if (selectedAmmoType == null) {
             player.displayClientMessage(Component.translatable("message.piranport.insufficient_same_ammo"), true);
@@ -283,7 +281,7 @@ public class ShipCoreCombat {
         boolean hasNextRound = remainingAmmo >= barrelCount;
 
         if (hasNextRound) {
-            int cooldownTicks = TransformationManager.boostedCooldown(player, getGunCooldown(weapon));
+            int cooldownTicks = TransformationManager.boostedCooldown(player, getGunCooldown(weapon, level));
             coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
                     cooldowns.withSlotCooldown(weaponSlot, cooldownTicks, level.getGameTime()));
             weapon.set(ModDataComponents.WEAPON_COOLDOWN.get(),
@@ -732,7 +730,7 @@ public class ShipCoreCombat {
         level.addFreshEntity(dc);
     }
 
-    // ===== Missile firing (no-GUI mode) =====
+    // ===== Missile firing =====
 
     private static void fireMissiles(Level level, Player player, ItemStack coreStack,
                                       Inventory inv, int weaponSlot, int coreSlot,
@@ -944,30 +942,16 @@ public class ShipCoreCombat {
             return;
         }
 
-        // In no-GUI mode, use FlightGroupData if present (indexed by inventory slot).
-        // Since group slotIndices map to inventory slot numbers in this mode, look them up.
-        FlightGroupData groupData = coreStack.getOrDefault(
-                ModDataComponents.FLIGHT_GROUP_DATA.get(), FlightGroupData.empty());
-        FlightGroupData.AttackMode attackMode = FlightGroupData.AttackMode.FOCUS;
-        boolean hasBullets = true; // default: fighters use bullets
+        AircraftAttackMode attackMode = AircraftAttackMode.FOCUS;
+        boolean hasBullets = launchInfo.aircraftType() == AircraftInfo.AircraftType.FIGHTER
+                || launchInfo.aircraftType() == AircraftInfo.AircraftType.ROCKET_FIGHTER;
         String payloadType = "";
-        for (FlightGroupData.FlightGroup group : groupData.groups()) {
-            if (group.slotIndices().contains(weaponSlot)) {
-                attackMode = group.attackMode();
-                hasBullets = group.getSlotBullets(weaponSlot);
-                payloadType = group.getSlotPayload(weaponSlot);
-                break;
-            }
-        }
 
-        // Apply default payload for bombers when no flight group configured
-        if (payloadType.isEmpty() && launchInfo != null) {
-            switch (launchInfo.aircraftType()) {
-                case TORPEDO_BOMBER -> { payloadType = "piranport:aerial_torpedo"; hasBullets = false; }
-                case DIVE_BOMBER, LEVEL_BOMBER -> { payloadType = "piranport:aerial_bomb"; hasBullets = false; }
-                case ASW -> { payloadType = "piranport:depth_charge"; hasBullets = false; }
-                default -> { }
-            }
+        switch (launchInfo.aircraftType()) {
+            case TORPEDO_BOMBER -> { payloadType = "piranport:aerial_torpedo"; hasBullets = false; }
+            case DIVE_BOMBER, LEVEL_BOMBER -> { payloadType = "piranport:aerial_bomb"; hasBullets = false; }
+            case ASW -> { payloadType = "piranport:depth_charge"; hasBullets = false; }
+            default -> { }
         }
 
         // Consume payload from inventory if needed
@@ -1090,7 +1074,7 @@ public class ShipCoreCombat {
             if (stack.getItem() instanceof TorpedoLauncherItem tl) {
                 hasAmmo = loaded.count() >= tl.getTubeCount();
             } else if (stack.getItem() instanceof com.piranport.artillery.ArtilleryItem ai) {
-                hasAmmo = loaded.count() >= ai.getBarrelCount();
+                hasAmmo = loaded.count() >= ai.getEffectiveData(mc.level).barrels();
             } else {
                 hasAmmo = loaded.hasAmmo();
             }
@@ -1134,19 +1118,20 @@ public class ShipCoreCombat {
      * @return 数量足够的弹药类型，如果没有则返回 null
      */
     private static Item findSufficientAmmoType(Inventory inv, ItemStack weapon,
-                                                int required, int coreSlot, int weaponSlot) {
+                                                int required, int coreSlot, int weaponSlot,
+                                                @Nullable Level level) {
         // 收集所有匹配口径的弹药类型
         Set<Item> candidateTypes = new HashSet<>();
         for (int i = 0; i < inv.items.size(); i++) {
             if (i == coreSlot || i == weaponSlot) continue;
             ItemStack ammo = inv.items.get(i);
-            if (!ammo.isEmpty() && matchesCaliber(ammo, weapon)) {
+            if (!ammo.isEmpty() && matchesCaliber(ammo, weapon, level)) {
                 candidateTypes.add(ammo.getItem());
             }
         }
         if (weaponSlot != 40 && coreSlot != 40) {
             ItemStack oh = inv.offhand.get(0);
-            if (!oh.isEmpty() && matchesCaliber(oh, weapon)) {
+            if (!oh.isEmpty() && matchesCaliber(oh, weapon, level)) {
                 candidateTypes.add(oh.getItem());
             }
         }
@@ -1178,8 +1163,13 @@ public class ShipCoreCombat {
 
     /** Phase 12: 用物品标签匹配口径，替代硬编码物品列表。数据包可向标签添加物品来扩展。 */
     public static boolean matchesCaliber(ItemStack ammo, ItemStack weapon) {
+        return matchesCaliber(ammo, weapon, null);
+    }
+
+    /** Phase 12: 用物品标签匹配有效口径，替代硬编码物品列表。数据包可向标签添加物品来扩展。 */
+    public static boolean matchesCaliber(ItemStack ammo, ItemStack weapon, @Nullable Level level) {
         if (weapon.getItem() instanceof com.piranport.artillery.ArtilleryItem ai) {
-            int caliber = ai.getCaliber();
+            int caliber = level != null ? ai.getEffectiveData(level).caliber() : ai.getCaliber();
             if (caliber <= 4) return ammo.is(ShipCoreItem.SMALL_SHELLS);
             if (caliber <= 8) return ammo.is(ShipCoreItem.MEDIUM_SHELLS);
             return ammo.is(ShipCoreItem.LARGE_SHELLS);
@@ -1192,7 +1182,8 @@ public class ShipCoreCombat {
      * 偏好弹种不足时退回到 findSufficientAmmoType。
      */
     private static Item findPreferredOrSufficientAmmo(Inventory inv, ItemStack weapon,
-                                                       int required, int coreSlot, int weaponSlot) {
+                                                       int required, int coreSlot, int weaponSlot,
+                                                       @Nullable Level level) {
         SelectedAmmoType preferred = weapon.getOrDefault(
                 ModDataComponents.SELECTED_AMMO_TYPE.get(), SelectedAmmoType.EMPTY);
         if (preferred.hasSelection()) {
@@ -1221,7 +1212,7 @@ public class ShipCoreCombat {
                 }
             }
         }
-        return findSufficientAmmoType(inv, weapon, required, coreSlot, weaponSlot);
+        return findSufficientAmmoType(inv, weapon, required, coreSlot, weaponSlot, level);
     }
 
     /** 将当前消耗的弹种写入武器的 SelectedAmmoType DataComponent。 */
@@ -1372,6 +1363,20 @@ public class ShipCoreCombat {
         return 1;
     }
 
+    private static int getCannonDurability(ItemStack weapon, net.minecraft.world.level.Level level) {
+        Item item = weapon.getItem();
+        if (item instanceof com.piranport.artillery.ArtilleryItem ai) {
+            return level != null ? ai.getEffectiveData(level).durability() : ai.getData().durability();
+        }
+        return weapon.getMaxDamage();
+    }
+
+    private static boolean isCannonDamaged(ItemStack weapon, net.minecraft.world.level.Level level) {
+        if (!weapon.isDamageableItem()) return false;
+        int effectiveDurability = getCannonDurability(weapon, level);
+        return weapon.getDamageValue() >= effectiveDurability - 1;
+    }
+
     private static boolean isSmallCaliber(ItemStack weapon) {
         return weapon.is(ModItems.SMALL_GUN.get()) || weapon.is(ModItems.SINGLE_SMALL_GUN.get());
     }
@@ -1475,10 +1480,14 @@ public class ShipCoreCombat {
     }
 
     /** 获取武器的炮口位置列表。如果武器是 ArtilleryItem，从配置读取；否则返回默认单炮口。 */
-    private static java.util.List<com.piranport.artillery.config.MuzzlePos> getMuzzlePositions(ItemStack weapon) {
+    private static java.util.List<com.piranport.artillery.config.MuzzlePos> getMuzzlePositions(ItemStack weapon, net.minecraft.world.level.Level level) {
         Item item = weapon.getItem();
         if (item instanceof com.piranport.artillery.ArtilleryItem ai) {
-            return ai.getData().muzzles();
+            java.util.List<com.piranport.artillery.config.MuzzlePos> muzzles =
+                    level != null ? ai.getEffectiveData(level).muzzles() : ai.getData().muzzles();
+            if (!muzzles.isEmpty()) {
+                return muzzles;
+            }
         }
         // 默认单炮口位置（向前1.5格）
         return java.util.List.of(new com.piranport.artillery.config.MuzzlePos(0, 0, 1.5));
@@ -1524,13 +1533,14 @@ public class ShipCoreCombat {
         // Phase 9: 消耗耐久（创造模式不消耗）
         if (!player.getAbilities().instabuild && weapon.isDamageableItem()) {
             int curDamage = weapon.getDamageValue();
-            if (curDamage < weapon.getMaxDamage() - 1) {
+            int effectiveDurability = getCannonDurability(weapon, level);
+            if (curDamage < effectiveDurability - 1) {
                 weapon.setDamageValue(curDamage + 1);
             }
         }
 
         // 获取炮口位置数据
-        java.util.List<com.piranport.artillery.config.MuzzlePos> muzzles = getMuzzlePositions(weapon);
+        java.util.List<com.piranport.artillery.config.MuzzlePos> muzzles = getMuzzlePositions(weapon, level);
 
         float dispersionDeg = getProjectileInaccuracy(weapon, level);
         for (int b = 0; b < barrelCount; b++) {
@@ -1791,41 +1801,25 @@ public class ShipCoreCombat {
      * Returns true if a fighter was launched.
      */
     public static boolean tryAutoLaunchFighter(Level level, Player player, ItemStack coreStack, int coreSlot) {
-        if (!(coreStack.getItem() instanceof ShipCoreItem sci)) return false;
+        if (!(coreStack.getItem() instanceof ShipCoreItem)) return false;
         if (level.isClientSide()) return false;
 
-        // Refuel aircraft before checking (consumes aviation_fuel from ammo slots)
+        // Refuel aircraft before checking.
         refillAircraftFuel(player, coreStack);
 
-        // Re-read contents after refuel
-        ItemContainerContents contents = coreStack.getOrDefault(
-                ModDataComponents.SHIP_CORE_CONTENTS.get(), ItemContainerContents.EMPTY);
-        int totalSlots = sci.getShipType().totalSlots();
-        NonNullList<ItemStack> items = NonNullList.withSize(totalSlots, ItemStack.EMPTY);
-        contents.copyInto(items);
-
-        FlightGroupData groupData = coreStack.getOrDefault(
-                ModDataComponents.FLIGHT_GROUP_DATA.get(), FlightGroupData.empty());
-
-        for (int wi = 0; wi < sci.getShipType().weaponSlots; wi++) {
-            ItemStack weapon = items.get(wi);
+        Inventory inv = player.getInventory();
+        for (int wi = 0; wi < 9; wi++) {
+            if (wi == coreSlot) continue;
+            ItemStack weapon = inv.items.get(wi);
             if (weapon.isEmpty() || !(weapon.getItem() instanceof AircraftItem)) continue;
             AircraftInfo info = weapon.get(ModDataComponents.AIRCRAFT_INFO.get());
             if (info == null || info.currentFuel() <= 0) continue;
 
-            // 战斗机/火箭机默认有子弹（与手动发射一致）；非战斗机默认无子弹
             boolean isFighter = info.aircraftType() == AircraftInfo.AircraftType.FIGHTER
                     || info.aircraftType() == AircraftInfo.AircraftType.ROCKET_FIGHTER;
-            boolean hasBullets = isFighter; // default: fighters use bullets
-            for (FlightGroupData.FlightGroup group : groupData.groups()) {
-                if (group.slotIndices().contains(wi)) {
-                    hasBullets = group.getSlotBullets(wi);
-                    break;
-                }
-            }
-            if (!hasBullets) continue;
+            if (!isFighter) continue;
 
-            // TODO: rewrite auto-launch for no-GUI mode (currently disabled)
+            // TODO: implement hotbar fighter auto-launch.
             return false; // 始终返回 false — 自动起飞逻辑尚未实现
         }
         return false;
@@ -1969,8 +1963,12 @@ public class ShipCoreCombat {
      * 获取指定武器的默认弹药类型（创造模式使用）
      */
     private static Item getDefaultAmmoForWeapon(ItemStack weapon) {
+        return getDefaultAmmoForWeapon(weapon, null);
+    }
+
+    private static Item getDefaultAmmoForWeapon(ItemStack weapon, @Nullable Level level) {
         if (weapon.getItem() instanceof com.piranport.artillery.ArtilleryItem ai) {
-            int caliber = ai.getCaliber();
+            int caliber = level != null ? ai.getEffectiveData(level).caliber() : ai.getCaliber();
             if (caliber <= 4) return ModItems.SMALL_AP_SHELL.get();
             if (caliber <= 8) return ModItems.MEDIUM_AP_SHELL.get();
             return ModItems.LARGE_AP_SHELL.get();

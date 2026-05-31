@@ -1,18 +1,15 @@
 package com.piranport.entity;
 
 import com.piranport.aviation.FireControlManager;
-import com.piranport.config.ModCommonConfig;
 import net.minecraft.core.registries.BuiltInRegistries;
 import com.piranport.aviation.ReconManager;
+import com.piranport.component.AircraftAttackMode;
 import com.piranport.component.AircraftInfo;
-import com.piranport.component.FlightGroupData;
-import com.piranport.item.ShipCoreItem;
 import com.piranport.network.AswSonarSyncPayload;
 import com.piranport.network.ReconStatePayload;
 import com.piranport.registry.ModDataComponents;
 import com.piranport.registry.ModEntityTypes;
 import com.piranport.registry.ModItems;
-import net.minecraft.core.NonNullList;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -36,7 +33,6 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.ItemContainerContents;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.item.MapItem;
@@ -70,7 +66,7 @@ import java.util.UUID;
  *   - ReconManager（服务端侦察状态）
  *   - FireControlManager（火控锁定）
  *   - AircraftIndex（按 owner UUID 查找飞机）
- *   - FlightGroupData.AttackMode（FOCUS / SPREAD / FOLLOW）
+ *   - AircraftAttackMode（FOCUS / SPREAD / FOLLOW）
  *   - AircraftInfo（从物品 NBT 读取面板伤害/速度/弹药）
  */
 public class AircraftEntity extends Entity {
@@ -94,7 +90,7 @@ public class AircraftEntity extends Entity {
     private int weaponSlotIndex = -1;  // -1表示未设置，避免误用默认值0
     private int coreInventorySlot = 0;
     AircraftInfo.AircraftType aircraftType = AircraftInfo.AircraftType.FIGHTER;
-    FlightGroupData.AttackMode attackMode = FlightGroupData.AttackMode.FOCUS;
+    AircraftAttackMode attackMode = AircraftAttackMode.FOCUS;
     float panelDamage;
     float panelSpeed;
     int remainingAmmo = 0;
@@ -202,7 +198,7 @@ public class AircraftEntity extends Entity {
     /** 工厂方法 — 仅在服务端调用 */
     public static AircraftEntity create(Level level, Player owner, int weaponSlotIndex,
                                         ItemStack aircraftStack,
-                                        FlightGroupData.AttackMode attackMode,
+                                        AircraftAttackMode attackMode,
                                         int coreInventorySlot,
                                         boolean hasBullets,
                                         String payloadType) {
@@ -442,7 +438,7 @@ public class AircraftEntity extends Entity {
         // Defense: distance limit
         // FOLLOW mode uses extended range (recon plane may be 200 blocks away)
         double maxDist = (state == FlightState.RECON_ACTIVE
-                || attackMode == FlightGroupData.AttackMode.FOLLOW)
+                || attackMode == AircraftAttackMode.FOLLOW)
                 ? getDistanceLimit(MIN_RECON_DIST) : getDistanceLimit(MIN_DIST_FROM_OWNER);
         if (distanceTo(owner) > maxDist) {
             if (state == FlightState.RECON_ACTIVE) {
@@ -611,7 +607,7 @@ public class AircraftEntity extends Entity {
         }
 
         // FOLLOW mode: orbit the owner's active recon aircraft, or fall back to player
-        if (attackMode == FlightGroupData.AttackMode.FOLLOW) {
+        if (attackMode == AircraftAttackMode.FOLLOW) {
             // Refresh cache every 20 ticks to avoid per-tick entity lookup
             if (tickCount - reconCacheTick > 20 || cachedReconAircraft != null && cachedReconAircraft.isRemoved()) {
                 cachedReconAircraft = findOwnerReconAircraft(owner);
@@ -1116,63 +1112,23 @@ public class AircraftEntity extends Entity {
             Block.popResource(player.level(), player.blockPosition(), buildReturnStack());
             return;
         }
-        if (!com.piranport.config.ModCommonConfig.isShipCoreGuiEnabled()) {
-            // Inventory mode: return aircraft directly to the inventory slot it was launched from
-            ItemStack returnStack = buildReturnStack();
-            if (weaponSlotIndex == 40) {
-                if (player.getInventory().offhand.get(0).isEmpty()) {
-                    player.getInventory().offhand.set(0, returnStack);
-                } else {
-                    player.getInventory().placeItemBackInInventory(returnStack);
-                }
-            } else if (weaponSlotIndex >= 0 && weaponSlotIndex < player.getInventory().items.size()) {
-                if (player.getInventory().items.get(weaponSlotIndex).isEmpty()) {
-                    player.getInventory().items.set(weaponSlotIndex, returnStack);
-                } else {
-                    player.getInventory().placeItemBackInInventory(returnStack);
-                }
+
+        ItemStack returnStack = buildReturnStack();
+        if (weaponSlotIndex == 40) {
+            if (player.getInventory().offhand.get(0).isEmpty()) {
+                player.getInventory().offhand.set(0, returnStack);
             } else {
                 player.getInventory().placeItemBackInInventory(returnStack);
             }
-            return;
-        }
-
-        ItemStack coreStack = findCoreStack(player);
-        if (!(coreStack.getItem() instanceof ShipCoreItem sci)) return;
-
-        ItemContainerContents contents = coreStack.getOrDefault(
-                ModDataComponents.SHIP_CORE_CONTENTS.get(), ItemContainerContents.EMPTY);
-        NonNullList<ItemStack> items = NonNullList.withSize(sci.getShipType().totalSlots(), ItemStack.EMPTY);
-        contents.copyInto(items);
-
-        if (weaponSlotIndex < sci.getShipType().weaponSlots) {
-            ItemStack returnStack = buildReturnStack();
-            if (items.get(weaponSlotIndex).isEmpty()) {
-                items.set(weaponSlotIndex, returnStack);
+        } else if (weaponSlotIndex >= 0 && weaponSlotIndex < player.getInventory().items.size()) {
+            if (player.getInventory().items.get(weaponSlotIndex).isEmpty()) {
+                player.getInventory().items.set(weaponSlotIndex, returnStack);
             } else {
-                // Slot occupied — try to put in player's inventory instead
-                if (!player.getInventory().add(returnStack)) {
-                    Block.popResource(player.level(), player.blockPosition(), returnStack);
-                }
+                player.getInventory().placeItemBackInInventory(returnStack);
             }
-            coreStack.set(ModDataComponents.SHIP_CORE_CONTENTS.get(),
-                    ItemContainerContents.fromItems(items));
+        } else {
+            player.getInventory().placeItemBackInInventory(returnStack);
         }
-    }
-
-    private ItemStack findCoreStack(Player player) {
-        int size = player.getInventory().getContainerSize();
-        if (coreInventorySlot >= 0 && coreInventorySlot < size) {
-            ItemStack s = player.getInventory().getItem(coreInventorySlot);
-            if (s.getItem() instanceof ShipCoreItem) return s;
-        }
-        if (player.getMainHandItem().getItem() instanceof ShipCoreItem) return player.getMainHandItem();
-        if (player.getOffhandItem().getItem() instanceof ShipCoreItem) return player.getOffhandItem();
-        // Fallback: scan entire inventory (no-GUI mode, core can be anywhere)
-        for (ItemStack s : player.getInventory().items) {
-            if (s.getItem() instanceof ShipCoreItem) return s;
-        }
-        return ItemStack.EMPTY;
     }
 
     private ItemStack buildReturnStack() {
@@ -1241,8 +1197,7 @@ public class AircraftEntity extends Entity {
     }
 
     /**
-     * Attempt to draw one unit of the aircraft's payload item from the owner's
-     * ship core ammo slots. Returns true if successful.
+     * Attempt to draw payload items from the owner's inventory. Returns true if successful.
      */
     /** Lazily resolve the payload type string to an Item reference for fast comparison. */
     private net.minecraft.world.item.Item resolvePayloadItem() {
@@ -1256,29 +1211,27 @@ public class AircraftEntity extends Entity {
 
     boolean tryAutoResupplyAmmo(Player owner) {
         if (payloadType.isEmpty()) return false;
-        ItemStack coreStack = findCoreStack(owner);
-        if (!(coreStack.getItem() instanceof ShipCoreItem sci)) return false;
-
-        ItemContainerContents contents = coreStack.getOrDefault(
-                ModDataComponents.SHIP_CORE_CONTENTS.get(), ItemContainerContents.EMPTY);
-        NonNullList<ItemStack> items = NonNullList.withSize(sci.getShipType().totalSlots(), ItemStack.EMPTY);
-        contents.copyInto(items);
+        net.minecraft.world.item.Item payloadItem = resolvePayloadItem();
+        if (payloadItem == null) return false;
 
         int needed = ammoCapacity - remainingAmmo;
         int loaded = 0;
-        int ammoStart = sci.getShipType().weaponSlots;
-        int ammoEnd = ammoStart + sci.getShipType().ammoSlots;
-        for (int ai = ammoStart; ai < ammoEnd && needed > 0; ai++) {
-            ItemStack ammo = items.get(ai);
-            if (!ammo.isEmpty() && ammo.getItem() == resolvePayloadItem()) {
+        for (ItemStack ammo : owner.getInventory().items) {
+            if (needed <= 0) break;
+            if (!ammo.isEmpty() && ammo.getItem() == payloadItem) {
                 int take = Math.min(needed, ammo.getCount());
                 ammo.shrink(take);
                 needed -= take;
                 loaded += take;
             }
         }
+        ItemStack offhand = owner.getInventory().offhand.get(0);
+        if (needed > 0 && !offhand.isEmpty() && offhand.getItem() == payloadItem) {
+            int take = Math.min(needed, offhand.getCount());
+            offhand.shrink(take);
+            loaded += take;
+        }
         if (loaded > 0) {
-            coreStack.set(ModDataComponents.SHIP_CORE_CONTENTS.get(), ItemContainerContents.fromItems(items));
             remainingAmmo += loaded;
             hasFired = false;
             return true;
@@ -1287,28 +1240,22 @@ public class AircraftEntity extends Entity {
     }
 
     /**
-     * Attempt to draw one aviation_fuel from the owner's ship core ammo slots.
+     * Attempt to draw one aviation_fuel from the owner's inventory.
      * Returns true if successful.
      */
     private boolean tryAutoResupplyFuel(Player owner) {
-        ItemStack coreStack = findCoreStack(owner);
-        if (!(coreStack.getItem() instanceof ShipCoreItem sci)) return false;
-
-        ItemContainerContents contents = coreStack.getOrDefault(
-                ModDataComponents.SHIP_CORE_CONTENTS.get(), ItemContainerContents.EMPTY);
-        NonNullList<ItemStack> items = NonNullList.withSize(sci.getShipType().totalSlots(), ItemStack.EMPTY);
-        contents.copyInto(items);
-
-        int ammoStart = sci.getShipType().weaponSlots;
-        int ammoEnd = ammoStart + sci.getShipType().ammoSlots;
-        for (int ai = ammoStart; ai < ammoEnd; ai++) {
-            ItemStack ammo = items.get(ai);
+        for (ItemStack ammo : owner.getInventory().items) {
             if (ammo.is(ModItems.AVIATION_FUEL.get()) && ammo.getCount() > 0) {
                 ammo.shrink(1);
-                coreStack.set(ModDataComponents.SHIP_CORE_CONTENTS.get(), ItemContainerContents.fromItems(items));
                 currentFuel = fuelCapacity;
                 return true;
             }
+        }
+        ItemStack offhand = owner.getInventory().offhand.get(0);
+        if (offhand.is(ModItems.AVIATION_FUEL.get()) && offhand.getCount() > 0) {
+            offhand.shrink(1);
+            currentFuel = fuelCapacity;
+            return true;
         }
         return false;
     }
@@ -1582,8 +1529,8 @@ public class AircraftEntity extends Entity {
         coreInventorySlot = tag.getInt("CoreSlot");
         try { aircraftType = AircraftInfo.AircraftType.valueOf(tag.getString("AircraftType")); }
         catch (IllegalArgumentException e) { aircraftType = AircraftInfo.AircraftType.FIGHTER; }
-        try { attackMode = FlightGroupData.AttackMode.valueOf(tag.getString("AttackMode")); }
-        catch (IllegalArgumentException e) { attackMode = FlightGroupData.AttackMode.FOCUS; }
+        try { attackMode = AircraftAttackMode.valueOf(tag.getString("AttackMode")); }
+        catch (IllegalArgumentException e) { attackMode = AircraftAttackMode.FOCUS; }
         panelDamage = tag.getFloat("PanelDamage");
         panelSpeed  = tag.getFloat("PanelSpeed");
         remainingAmmo = tag.getInt("RemainingAmmo");

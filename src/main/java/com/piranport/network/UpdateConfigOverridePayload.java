@@ -94,9 +94,9 @@ public record UpdateConfigOverridePayload(
         return switch (field) {
             case "damage", "initialSpeed", "dragCoeff", "gravity", "explosionPower", "dispersion",
                  "projectileWeight", "salvoInterval", "verticalSpread", "horizontalSpread",
-                 "maxElevation", "minElevation", "turretSpeed" ->
+                 "maxElevation", "minElevation", "turretSpeed", "scopeZoom" ->
                     Float.parseFloat(valueStr);
-            case "reloadTime", "fireCooldown", "salvoCount" ->
+            case "caliber", "barrels", "reloadTime", "durability", "fireCooldown", "salvoCount" ->
                     Integer.parseInt(valueStr);
             default ->
                     valueStr;

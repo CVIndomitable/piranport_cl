@@ -2,9 +2,13 @@ package com.piranport.artillery.config.override;
 
 import com.piranport.artillery.config.ArtilleryCannonData;
 import com.piranport.artillery.config.ArtilleryConfig;
+import com.piranport.artillery.config.MuzzlePos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.List;
+import java.util.Optional;
 
 /**
  * 配置覆盖管理器 - 运行时拦截层
@@ -63,6 +67,14 @@ public class ConfigOverrideManager {
         }
 
         // 逐字段检查覆盖，未覆盖则使用原始值
+        int caliber = overrides.getCannonOverride(name, "caliber")
+                .map(v -> v instanceof Number n ? n.intValue() : null)
+                .orElse(original.caliber());
+
+        int barrels = overrides.getCannonOverride(name, "barrels")
+                .map(v -> v instanceof Number n ? n.intValue() : null)
+                .orElse(original.barrels());
+
         float damage = overrides.getCannonOverride(name, "damage")
                 .map(v -> v instanceof Number n ? n.floatValue() : null)
                 .orElse(original.damage());
@@ -70,6 +82,14 @@ public class ConfigOverrideManager {
         int reloadTime = overrides.getCannonOverride(name, "reloadTime")
                 .map(v -> v instanceof Number n ? n.intValue() : null)
                 .orElse(original.reloadTime());
+
+        int durability = overrides.getCannonOverride(name, "durability")
+                .map(v -> v instanceof Number n ? n.intValue() : null)
+                .orElse(original.durability());
+
+        float scopeZoom = overrides.getCannonOverride(name, "scopeZoom")
+                .map(v -> v instanceof Number n ? n.floatValue() : null)
+                .orElse(original.scopeZoom());
 
         float initialSpeed = overrides.getCannonOverride(name, "initialSpeed")
                 .map(v -> v instanceof Number n ? n.floatValue() : null)
@@ -128,15 +148,19 @@ public class ConfigOverrideManager {
                 .map(v -> v instanceof Number n ? n.floatValue() : null)
                 .orElse(original.turretSpeed());
 
+        List<MuzzlePos> muzzles = overrides.getCannonOverride(name, "muzzles")
+                .flatMap(ConfigOverrideManager::parseMuzzlesOverride)
+                .orElse(original.muzzles());
+
         // 重新构造实例（record不可变）
         return new ArtilleryCannonData(
-                original.caliber(),
-                original.barrels(),
+                caliber,
+                barrels,
                 damage,
                 reloadTime,
-                original.durability(),
-                original.scopeZoom(),
-                original.muzzles(),
+                durability,
+                scopeZoom,
+                muzzles,
                 initialSpeed,
                 dragCoeff,
                 gravity,
@@ -162,6 +186,14 @@ public class ConfigOverrideManager {
             String name) {
 
         // 尝试从客户端缓存读取，解析失败时回退到原始值
+        int caliber = ClientConfigCache.getCannonOverride(name, "caliber")
+                .flatMap(s -> parseIntSafe(s))
+                .orElse(original.caliber());
+
+        int barrels = ClientConfigCache.getCannonOverride(name, "barrels")
+                .flatMap(s -> parseIntSafe(s))
+                .orElse(original.barrels());
+
         float damage = ClientConfigCache.getCannonOverride(name, "damage")
                 .flatMap(s -> parseFloatSafe(s))
                 .orElse(original.damage());
@@ -169,6 +201,14 @@ public class ConfigOverrideManager {
         int reloadTime = ClientConfigCache.getCannonOverride(name, "reloadTime")
                 .flatMap(s -> parseIntSafe(s))
                 .orElse(original.reloadTime());
+
+        int durability = ClientConfigCache.getCannonOverride(name, "durability")
+                .flatMap(s -> parseIntSafe(s))
+                .orElse(original.durability());
+
+        float scopeZoom = ClientConfigCache.getCannonOverride(name, "scopeZoom")
+                .flatMap(s -> parseFloatSafe(s))
+                .orElse(original.scopeZoom());
 
         float initialSpeed = ClientConfigCache.getCannonOverride(name, "initialSpeed")
                 .flatMap(s -> parseFloatSafe(s))
@@ -227,15 +267,19 @@ public class ConfigOverrideManager {
                 .flatMap(s -> parseFloatSafe(s))
                 .orElse(original.turretSpeed());
 
+        List<MuzzlePos> muzzles = ClientConfigCache.getCannonOverride(name, "muzzles")
+                .flatMap(ConfigOverrideManager::parseMuzzlesString)
+                .orElse(original.muzzles());
+
         // 重新构造实例（record不可变）
         return new ArtilleryCannonData(
-                original.caliber(),
-                original.barrels(),
+                caliber,
+                barrels,
                 damage,
                 reloadTime,
-                original.durability(),
-                original.scopeZoom(),
-                original.muzzles(),
+                durability,
+                scopeZoom,
+                muzzles,
                 initialSpeed,
                 dragCoeff,
                 gravity,
@@ -268,6 +312,43 @@ public class ConfigOverrideManager {
             return java.util.Optional.of(Integer.parseInt(s));
         } catch (NumberFormatException e) {
             return java.util.Optional.empty();
+        }
+    }
+
+    private static Optional<List<MuzzlePos>> parseMuzzlesOverride(Object value) {
+        if (value instanceof String s) {
+            return parseMuzzlesString(s);
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * 解析炮口覆写字符串，格式为 x:y:z;x:y:z。
+     * 例如双联装可写为 -0.35:0:1.5;0.35:0:1.5。
+     */
+    private static Optional<List<MuzzlePos>> parseMuzzlesString(String value) {
+        if (value == null || value.isBlank()) {
+            return Optional.empty();
+        }
+
+        try {
+            List<MuzzlePos> muzzles = java.util.Arrays.stream(value.split(";"))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .map(part -> {
+                        String[] coords = part.split(":");
+                        if (coords.length != 3) {
+                            throw new IllegalArgumentException("Invalid muzzle position: " + part);
+                        }
+                        return new MuzzlePos(
+                                Double.parseDouble(coords[0].trim()),
+                                Double.parseDouble(coords[1].trim()),
+                                Double.parseDouble(coords[2].trim()));
+                    })
+                    .toList();
+            return muzzles.isEmpty() ? Optional.empty() : Optional.of(muzzles);
+        } catch (RuntimeException e) {
+            return Optional.empty();
         }
     }
 
@@ -341,6 +422,14 @@ public class ConfigOverrideManager {
         }
 
         return switch (field) {
+            case "caliber" -> {
+                int i = num.intValue();
+                yield Math.max(1, Math.min(1000, i));
+            }
+            case "barrels" -> {
+                int i = num.intValue();
+                yield Math.max(1, Math.min(20, i));
+            }
             case "damage" -> {
                 float f = num.floatValue();
                 yield Math.max(0.1f, Math.min(1000f, f));
@@ -348,6 +437,14 @@ public class ConfigOverrideManager {
             case "reloadTime" -> {
                 int i = num.intValue();
                 yield Math.max(1, Math.min(6000, i));
+            }
+            case "durability" -> {
+                int i = num.intValue();
+                yield Math.max(1, Math.min(100000, i));
+            }
+            case "scopeZoom" -> {
+                float f = num.floatValue();
+                yield Math.max(1.0f, Math.min(20.0f, f));
             }
             case "initialSpeed" -> {
                 float f = num.floatValue();

@@ -4,6 +4,7 @@ import com.piranport.aviation.ClientFireControlData;
 import com.piranport.aviation.ClientReconData;
 import com.piranport.client.AmmoSelectOverlay;
 import com.piranport.client.CameraShakeHandler;
+import com.piranport.client.CannonImpactEffects;
 import com.piranport.client.EntityUuidCache;
 import com.piranport.combat.ClientTorpedoGuidance;
 import com.piranport.combat.TransformationManager;
@@ -51,6 +52,7 @@ public class ClientInputCoordinator {
         com.piranport.aviation.ClientAswSonarData.resetClientState();
         ClientTorpedoGuidance.resetClientState();
         com.piranport.client.ClientScopeHandler.clear();
+        CannonImpactEffects.clear();
         DebugInputHandler.reset();
         ScopeInputHandler.reset();
     }
@@ -66,6 +68,7 @@ public class ClientInputCoordinator {
         }
 
         CameraShakeHandler.tick();
+        CannonImpactEffects.tick();
 
         // 1) 鱼雷制导模式
         boolean inTorpedoGuidance = TorpedoGuidanceInputHandler.tick(mc);
@@ -90,9 +93,8 @@ public class ClientInputCoordinator {
         // 4) 火控按键 (P/O/I)
         FireControlInputHandler.handleFireControlKeys(mc, transformed, inReconMode);
 
-        // 5) 功能键 (U/K/H/R)
-        FireControlInputHandler.handleFlightGroupKey(mc, transformed, inReconMode);
-        FireControlInputHandler.handleEquipmentKey(mc, inReconMode);
+        // 5) 功能键 (U/H/R)
+        FireControlInputHandler.handleFighterGroundAttackKey(mc, transformed, inReconMode);
         FireControlInputHandler.handleAutoLaunchKey(mc, transformed, inReconMode);
         FireControlInputHandler.handleManualReloadKey(mc, transformed, inReconMode);
 

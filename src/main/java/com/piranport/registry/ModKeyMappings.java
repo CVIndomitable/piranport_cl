@@ -15,8 +15,8 @@ public class ModKeyMappings {
     public static final KeyMapping FIRE_CONTROL_CANCEL =
             new KeyMapping("key.piranport.fire_control_cancel", GLFW.GLFW_KEY_I, CATEGORY);
 
-    public static final KeyMapping OPEN_FLIGHT_GROUP =
-            new KeyMapping("key.piranport.open_flight_group", GLFW.GLFW_KEY_U, CATEGORY);
+    public static final KeyMapping TOGGLE_FIGHTER_GROUND_ATTACK =
+            new KeyMapping("key.piranport.toggle_fighter_ground_attack", GLFW.GLFW_KEY_U, CATEGORY);
 
     public static final KeyMapping HIGHLIGHT_ENTITIES =
             new KeyMapping("key.piranport.highlight_entities", GLFW.GLFW_KEY_Y, CATEGORY);
@@ -40,7 +40,4 @@ public class ModKeyMappings {
 
     public static final KeyMapping HIT_DISPLAY_TOGGLE =
             new KeyMapping("key.piranport.hit_display_toggle", GLFW.GLFW_KEY_J, CATEGORY);
-
-    public static final KeyMapping OPEN_SHIP_EQUIPMENT =
-            new KeyMapping("key.piranport.open_ship_equipment", GLFW.GLFW_KEY_K, CATEGORY);
 }

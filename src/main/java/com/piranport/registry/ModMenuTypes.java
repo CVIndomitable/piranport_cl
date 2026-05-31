@@ -2,9 +2,7 @@ package com.piranport.registry;
 
 import com.piranport.PiranPort;
 import com.piranport.menu.CookingPotMenu;
-import com.piranport.menu.FlightGroupMenu;
 import com.piranport.menu.ReloadFacilityMenu;
-import com.piranport.menu.ShipCoreEquipmentMenu;
 import com.piranport.menu.StoneMillMenu;
 import com.piranport.menu.ArtilleryConfigToolMenu;
 import net.minecraft.core.registries.Registries;
@@ -28,14 +26,6 @@ public class ModMenuTypes {
     public static final DeferredHolder<MenuType<?>, MenuType<ReloadFacilityMenu>> RELOAD_FACILITY_MENU =
             MENU_TYPES.register("reload_facility",
                     () -> IMenuTypeExtension.create(ReloadFacilityMenu::fromNetwork));
-
-    public static final DeferredHolder<MenuType<?>, MenuType<FlightGroupMenu>> FLIGHT_GROUP_MENU =
-            MENU_TYPES.register("flight_group",
-                    () -> IMenuTypeExtension.create(FlightGroupMenu::fromNetwork));
-
-    public static final DeferredHolder<MenuType<?>, MenuType<ShipCoreEquipmentMenu>> SHIP_CORE_EQUIPMENT_MENU =
-            MENU_TYPES.register("ship_core_equipment",
-                    () -> IMenuTypeExtension.create(ShipCoreEquipmentMenu::fromNetwork));
 
     public static final DeferredHolder<MenuType<?>, MenuType<com.piranport.menu.ShipCoreModifierMenu>> SHIP_CORE_MODIFIER_MENU =
             MENU_TYPES.register("ship_core_modifier",

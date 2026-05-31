@@ -93,7 +93,7 @@ public class AmmoSelectOverlay {
             // 创造模式：从注册表获取所有匹配口径的弹药
             for (Item item : BuiltInRegistries.ITEM) {
                 ItemStack ammoStack = new ItemStack(item);
-                if (ShipCoreCombat.matchesCaliber(ammoStack, weapon)) {
+                if (ShipCoreCombat.matchesCaliber(ammoStack, weapon, player.level())) {
                     if (!availableAmmos.contains(item)) {
                         availableAmmos.add(item);
                     }
@@ -102,14 +102,14 @@ public class AmmoSelectOverlay {
         } else {
             // 生存模式：扫描背包中匹配口径的弹药
             for (ItemStack s : player.getInventory().items) {
-                if (!s.isEmpty() && ShipCoreCombat.matchesCaliber(s, weapon)) {
+                if (!s.isEmpty() && ShipCoreCombat.matchesCaliber(s, weapon, player.level())) {
                     if (!availableAmmos.contains(s.getItem())) {
                         availableAmmos.add(s.getItem());
                     }
                 }
             }
             ItemStack oh = player.getInventory().offhand.get(0);
-            if (!oh.isEmpty() && ShipCoreCombat.matchesCaliber(oh, weapon)) {
+            if (!oh.isEmpty() && ShipCoreCombat.matchesCaliber(oh, weapon, player.level())) {
                 if (!availableAmmos.contains(oh.getItem())) {
                     availableAmmos.add(oh.getItem());
                 }

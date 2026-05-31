@@ -130,7 +130,7 @@ public class TransformationManager {
     /**
      * 设置变身状态并将修改后的 ItemStack 写回配置的槽位。
      *
-     * <p>在无GUI模式下，变身状态的修改必须显式写回槽位才能持久化。
+     * <p>变身状态的修改必须显式写回配置槽位才能持久化。
      * 本方法封装了"设置状态 + 写回槽位"的完整流程，确保变身状态正确同步。
      *
      * @param player 玩家
@@ -165,7 +165,7 @@ public class TransformationManager {
         if (player.level().isClientSide()) return;
         if (!(coreStack.getItem() instanceof ShipCoreItem)) return;
 
-        applyAttributesInventoryMode(player);
+        applyAttributesInventoryMode(player, coreStack);
     }
 
     /** 快捷栏槽位数（Inventory.items 的 0–8 号槽） */
@@ -174,47 +174,25 @@ public class TransformationManager {
     /**
      * Inventory mode (GUI disabled): scan the player's inventory for load and attributes.
      * Only hotbar slots (0–8) are considered for weight calculation.
-     * The ship core with the highest maxLoad provides the weight capacity.
+     * The transformed core passed by the caller provides the weight capacity and base attributes.
      */
-    private static void applyAttributesInventoryMode(Player player) {
+    private static void applyAttributesInventoryMode(Player player, ItemStack coreStack) {
         net.minecraft.world.entity.player.Inventory inv = player.getInventory();
-        // 找到 maxLoad 最高的核心并记录其 ShipType
-        ShipType bestType = null;
-        int scanLimit = HOTBAR_SIZE;
-        for (int i = 0; i < scanLimit; i++) {
-            ItemStack stack = inv.items.get(i);
-            if (stack.getItem() instanceof ShipCoreItem sci) {
-                if (bestType == null || sci.getShipType().maxLoad > bestType.maxLoad) {
-                    bestType = sci.getShipType();
-                }
-            }
-        }
-        // 始终检查配置的核心槽位 — 无GUI模式要求核心在配置的槽位
-        {
-            ItemStack coreStack = getCoreFromConfiguredSlot(player);
-            if (coreStack.getItem() instanceof ShipCoreItem sci) {
-                if (bestType == null || sci.getShipType().maxLoad > bestType.maxLoad) {
-                    bestType = sci.getShipType();
-                }
-            }
-        }
+        ShipType activeType = ((ShipCoreItem) coreStack.getItem()).getShipType();
 
         removeTransformationAttributes(player);
-        if (bestType == null) return;
 
-        // 护甲和引擎加成来自配置槽位核心内存储的物品
-        ItemStack coreStack = getCoreFromConfiguredSlot(player);
         int armorBonus = getCoreArmorBonus(coreStack);
         double engineSpeedBonus = getCoreEngineSpeedBonus(coreStack);
         int armorLoad  = getCoreArmorLoad(coreStack);
         int totalLoad  = getInventoryWeaponLoad(inv) + armorLoad;
 
-        double loadRatio = bestType.maxLoad > 0 ? (double) totalLoad / bestType.maxLoad : 0;
-        double speedMult = bestType.emptySpeed - (bestType.emptySpeed - bestType.fullLoadSpeed) * Math.min(loadRatio, 1.0);
+        double loadRatio = activeType.maxLoad > 0 ? (double) totalLoad / activeType.maxLoad : 0;
+        double speedMult = activeType.emptySpeed - (activeType.emptySpeed - activeType.fullLoadSpeed) * Math.min(loadRatio, 1.0);
         speedMult += engineSpeedBonus;
 
-        applyTypeAttributes(player, bestType, armorBonus, speedMult);
-        applyOverweightPenalty(player, totalLoad, bestType.maxLoad);
+        applyTypeAttributes(player, activeType, armorBonus, speedMult);
+        applyOverweightPenalty(player, totalLoad, activeType.maxLoad);
     }
 
     /**
@@ -240,21 +218,28 @@ public class TransformationManager {
         return total;
     }
 
-    /**
-     * 读取 SHIP_CORE_ARMOR 中存储的内容列表（统一辅助方法，避免6处重复读取模式）
-     */
+    /** 读取核心内的有效强化件列表。 */
     private static NonNullList<ItemStack> getCoreStoredContents(ItemStack coreStack) {
         if (!(coreStack.getItem() instanceof ShipCoreItem sci)) return NonNullList.create();
+        int enhancementSlots = getCoreEnhancementSlots(coreStack, sci);
+        NonNullList<ItemStack> stored = NonNullList.withSize(enhancementSlots, ItemStack.EMPTY);
         ItemContainerContents contents = coreStack.getOrDefault(
                 ModDataComponents.SHIP_CORE_ARMOR.get(), ItemContainerContents.EMPTY);
-        NonNullList<ItemStack> stored = NonNullList.withSize(sci.getShipType().enhancementSlots, ItemStack.EMPTY);
         contents.copyInto(stored);
         return stored;
     }
 
+    private static int getCoreEnhancementSlots(ItemStack coreStack, ShipCoreItem sci) {
+        com.piranport.component.CustomCoreConfig config =
+                coreStack.get(ModDataComponents.CUSTOM_CORE_CONFIG.get());
+        return config != null && config.isCustomized()
+                ? config.getEnhancementSlots()
+                : sci.getShipType().enhancementSlots;
+    }
+
     /**
      * Returns the total armor bonus from ArmorPlateItems stored inside a ship core's
-     * SHIP_CORE_ARMOR DataComponent (no-GUI mode).
+     * SHIP_CORE_ARMOR DataComponent.
      */
     public static int getCoreArmorBonus(ItemStack coreStack) {
         int total = 0;
@@ -266,7 +251,7 @@ public class TransformationManager {
 
     /**
      * Returns the total protection level from ArmorPlateItems stored inside a ship core's
-     * SHIP_CORE_ARMOR DataComponent (no-GUI mode).
+     * SHIP_CORE_ARMOR DataComponent.
      */
     public static int getCoreProtectionLevel(ItemStack coreStack) {
         int total = 0;
@@ -283,7 +268,7 @@ public class TransformationManager {
 
     /**
      * Returns the total load contributed by ArmorPlateItems stored inside a ship core's
-     * SHIP_CORE_ARMOR DataComponent (no-GUI mode).
+     * SHIP_CORE_ARMOR DataComponent.
      */
     public static int getCoreArmorLoad(ItemStack coreStack) {
         int total = 0;
@@ -298,7 +283,7 @@ public class TransformationManager {
 
     /**
      * Returns the total speed bonus from EngineItems stored inside a ship core's
-     * SHIP_CORE_ARMOR DataComponent (no-GUI mode).
+     * SHIP_CORE_ARMOR DataComponent.
      */
     public static double getCoreEngineSpeedBonus(ItemStack coreStack) {
         double total = 0;

@@ -1,12 +1,13 @@
 package com.piranport.compat.maid.task;
 
 import com.github.tartaricacid.touhoulittlemaid.api.task.IRangedAttackTask;
+import com.piranport.compat.maid.brain.RiggingFireControlTargetTask;
 import com.piranport.compat.maid.brain.RiggingMovementTask;
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import com.google.common.collect.Lists;
 import com.mojang.datafixers.util.Pair;
 import com.piranport.compat.maid.brain.RiggingShootTask;
-import com.piranport.compat.maid.combat.FireControlHelper;
+import com.piranport.compat.maid.brain.RiggingStopAttackTask;
 import com.piranport.compat.maid.combat.MaidWeaponFirer;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
@@ -17,7 +18,6 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.behavior.BehaviorControl;
 import net.minecraft.world.entity.ai.behavior.StartAttacking;
-import net.minecraft.world.entity.ai.behavior.StopAttackingIfTargetInvalid;
 import net.minecraft.world.entity.ai.targeting.TargetingConditions;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -73,15 +73,16 @@ public class TaskMaidRigging implements IRangedAttackTask {
 
     @Override
     public List<Pair<Integer, BehaviorControl<? super EntityMaid>>> createBrainTasks(EntityMaid maid) {
+        BehaviorControl<EntityMaid> fireControlTarget = new RiggingFireControlTargetTask();
         BehaviorControl<EntityMaid> startAttack = StartAttacking.create(
                 this::hasOffensiveWeapon,
                 TaskMaidRigging::findTarget);
-        BehaviorControl<EntityMaid> stopAttack = StopAttackingIfTargetInvalid.create(
-                target -> !hasOffensiveWeapon(maid) || farAway(target, maid) || fireControlOverridden(maid, target));
+        BehaviorControl<EntityMaid> stopAttack = new RiggingStopAttackTask();
         BehaviorControl<EntityMaid> walkToTarget = new RiggingMovementTask();
         BehaviorControl<EntityMaid> shoot = new RiggingShootTask();
 
         return Lists.newArrayList(
+                Pair.of(4, fireControlTarget),
                 Pair.of(5, startAttack),
                 Pair.of(5, stopAttack),
                 Pair.of(5, walkToTarget),
@@ -91,13 +92,14 @@ public class TaskMaidRigging implements IRangedAttackTask {
 
     @Override
     public List<Pair<Integer, BehaviorControl<? super EntityMaid>>> createRideBrainTasks(EntityMaid maid) {
+        BehaviorControl<EntityMaid> fireControlTarget = new RiggingFireControlTargetTask();
         BehaviorControl<EntityMaid> startAttack = StartAttacking.create(
                 this::hasOffensiveWeapon,
                 TaskMaidRigging::findTarget);
-        BehaviorControl<EntityMaid> stopAttack = StopAttackingIfTargetInvalid.create(
-                target -> !hasOffensiveWeapon(maid) || farAway(target, maid) || fireControlOverridden(maid, target));
+        BehaviorControl<EntityMaid> stopAttack = new RiggingStopAttackTask();
         BehaviorControl<EntityMaid> shoot = new RiggingShootTask();
         return Lists.newArrayList(
+                Pair.of(4, fireControlTarget),
                 Pair.of(5, startAttack),
                 Pair.of(5, stopAttack),
                 Pair.of(5, shoot)
@@ -134,18 +136,7 @@ public class TaskMaidRigging implements IRangedAttackTask {
         return MaidWeaponFirer.isOffensiveWeapon(maid.getMainHandItem());
     }
 
-    private boolean farAway(LivingEntity target, EntityMaid maid) {
-        return maid.distanceTo(target) > SEARCH_RADIUS;
-    }
-
     private static Optional<? extends LivingEntity> findTarget(EntityMaid maid) {
-        Optional<LivingEntity> fc = FireControlHelper.getOwnerFireControlTarget(maid);
-        if (fc.isPresent()) return fc;
         return IRangedAttackTask.findFirstValidAttackTarget(maid);
-    }
-
-    private static boolean fireControlOverridden(EntityMaid maid, LivingEntity current) {
-        Optional<LivingEntity> fc = FireControlHelper.getOwnerFireControlTarget(maid);
-        return fc.isPresent() && fc.get() != current;
     }
 }

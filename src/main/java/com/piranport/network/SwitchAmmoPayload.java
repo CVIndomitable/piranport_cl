@@ -71,7 +71,7 @@ public record SwitchAmmoPayload(String ammoItemId) implements CustomPacketPayloa
 
             // 验证口径匹配（防止客户端伪造不匹配口径的弹药）
             ItemStack ammoStack = new ItemStack(ammoItem);
-            if (!ShipCoreCombat.matchesCaliber(ammoStack, weapon)) {
+            if (!ShipCoreCombat.matchesCaliber(ammoStack, weapon, player.level())) {
                 return;
             }
 
@@ -112,7 +112,7 @@ public record SwitchAmmoPayload(String ammoItemId) implements CustomPacketPayloa
             // 获取武器的装填时间
             int reloadTicks = 0;
             if (weapon.getItem() instanceof com.piranport.artillery.ArtilleryItem artilleryItem) {
-                reloadTicks = artilleryItem.getCooldownTicks();
+                reloadTicks = artilleryItem.getEffectiveData(player.level()).reloadTime();
             }
             int boostedReloadTicks = TransformationManager.boostedCooldown(player, reloadTicks);
             long currentTick = player.level().getGameTime();

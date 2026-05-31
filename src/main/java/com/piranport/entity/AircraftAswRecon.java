@@ -1,7 +1,7 @@
 package com.piranport.entity;
 
 import com.piranport.aviation.FireControlManager;
-import com.piranport.component.FlightGroupData;
+import com.piranport.component.AircraftAttackMode;
 import com.piranport.aviation.ReconManager;
 import com.piranport.config.ModCommonConfig;
 import com.piranport.network.AswSonarSyncPayload;
@@ -106,7 +106,7 @@ public class AircraftAswRecon {
 
         List<UUID> locks = FireControlManager.getTargets(owner.getUUID());
         if (!locks.isEmpty()) {
-            if (craft.attackMode == FlightGroupData.AttackMode.SPREAD) {
+            if (craft.attackMode == AircraftAttackMode.SPREAD) {
                 return locks.stream()
                         .map(sl::getEntity)
                         .filter(e -> e instanceof LivingEntity le && le.isAlive() && isAswTarget(le))

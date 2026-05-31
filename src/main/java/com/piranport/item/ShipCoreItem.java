@@ -3,7 +3,6 @@ package com.piranport.item;
 import com.piranport.aviation.FireControlManager;
 import com.piranport.combat.TransformationManager;
 import com.piranport.component.AircraftInfo;
-import com.piranport.component.FlightGroupData;
 import com.piranport.component.FuelData;
 import com.piranport.component.LoadedAmmo;
 import com.piranport.component.SelectedAmmoType;
@@ -78,7 +77,7 @@ import org.jetbrains.annotations.Nullable;
  *   <li><b>装备/附魔/燃料条</b> (getEquipmentSlot ~ getBarColor) — Equipable 接口、附魔、燃料耐久条</li>
  *   <li><b>物品交互</b> (overrideOtherStackedOnMe) — 燃料添加、装甲板/装备存储</li>
  *   <li><b>Tooltip</b> (appendHoverText) — 物品提示</li>
- *   <li><b>右键使用</b> (use) — 变身/取消变身、GUI模式切换、无GUI开火</li>
+ *   <li><b>右键使用</b> (use) — 召回飞机；变身由配置槽位自动驱动</li>
  *   <li><b>武器发射</b> — 已提取到 {@link ShipCoreCombat}，本类仅保留 use() 入口</li>
  *   <li><b>飞机系统</b> — 已提取到 {@link ShipCoreCombat}，本类仅保留 use() 入口</li>
  *   <li><b>武器属性辅助</b> — 已提取到 {@link ShipCoreCombat}</li>
@@ -171,16 +170,19 @@ public class ShipCoreItem extends Item implements Equipable {
      * 验证并修正燃料数据完整性。直接修改 ItemStack，无返回值。
      */
     private void validateAndFixFuelData(ItemStack stack) {
-        FuelData fuel = stack.getOrDefault(ModDataComponents.SHIP_CORE_FUEL.get(),
-                new FuelData(0, shipType.fuelCapacity));
-        if (fuel.maxFuel() < 0 || fuel.currentFuel() < 0) {
+        FuelData fuel = stack.get(ModDataComponents.SHIP_CORE_FUEL.get());
+        if (fuel == null || fuel.maxFuel() <= 0 || fuel.currentFuel() < 0) {
             fuel = new FuelData(0, shipType.fuelCapacity);
+        } else if (fuel.currentFuel() > fuel.maxFuel()) {
+            fuel = fuel.withCurrentFuel(fuel.maxFuel());
+        }
+        if (stack.get(ModDataComponents.SHIP_CORE_FUEL.get()) != fuel) {
             stack.set(ModDataComponents.SHIP_CORE_FUEL.get(), fuel);
         }
     }
 
     /**
-     * Bundle-like armor storage for no-GUI mode.
+     * Bundle-like enhancement storage on the ship core.
      * - Right-click an ArmorPlateItem onto the core in inventory → stores the plate inside the core.
      * - Right-click the core with an empty cursor → extracts the last stored plate back to cursor.
      * Capacity = shipType.enhancementSlots (2–4 plates).
@@ -190,7 +192,7 @@ public class ShipCoreItem extends Item implements Equipable {
             Slot slot, ClickAction action, Player player, SlotAccess access) {
         if (action != ClickAction.SECONDARY) return false;
 
-        // Fuel refueling: lava bucket → +1b fuel (works in both GUI and no-GUI modes)
+        // Fuel refueling: lava bucket -> +1b fuel.
         if (!other.isEmpty() && other.is(net.minecraft.world.item.Items.LAVA_BUCKET)) {
             validateAndFixFuelData(stack);
             FuelData fuel = stack.get(ModDataComponents.SHIP_CORE_FUEL.get());
@@ -208,7 +210,7 @@ public class ShipCoreItem extends Item implements Equipable {
             return false;
         }
 
-        // 通用燃料处理：烈焰粉、煤炭块 + 所有熔炉燃料（works in both GUI and no-GUI modes）
+        // 通用燃料处理：烈焰粉、煤炭块 + 所有熔炉燃料。
         if (!other.isEmpty()) {
             int fuelValue = getFuelValue(other);
             if (fuelValue > 0) {
@@ -235,7 +237,7 @@ public class ShipCoreItem extends Item implements Equipable {
             }
         }
 
-        // Fuel refueling: fuel item → batch fill (works in both GUI and no-GUI modes)
+        // Fuel refueling: fuel item -> batch fill.
         if (!other.isEmpty() && other.is(ModItems.FUEL.get())) {
             validateAndFixFuelData(stack);
             FuelData fuel = stack.get(ModDataComponents.SHIP_CORE_FUEL.get());
@@ -325,7 +327,7 @@ public class ShipCoreItem extends Item implements Equipable {
             }
         }
 
-        // No-GUI mode: check core from configured slot (offhand or helmet)
+        // Check core from configured slot (offhand or helmet).
         if (net.neoforged.fml.loading.FMLEnvironment.dist.isClient()) {
                 net.minecraft.world.entity.player.Player clientPlayer =
                         net.minecraft.client.Minecraft.getInstance().player;
@@ -430,7 +432,7 @@ public class ShipCoreItem extends Item implements Equipable {
         }
     }
 
-    // ===== 右键使用：变身/取消变身/GUI/无GUI开火 =====
+    // ===== 右键使用：召回飞机 =====
 
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
@@ -438,12 +440,12 @@ public class ShipCoreItem extends Item implements Equipable {
         boolean isTransformed = TransformationManager.isTransformed(stack);
 
         if (player.isShiftKeyDown()) {
-            // No-GUI mode: transformation is automatic (offhand-driven), manual toggle disabled
+            // Transformation is automatic from the configured slot; no manual toggle here.
             return InteractionResultHolder.pass(stack);
         }
 
         // Right-click (no shift) → recall all airborne aircraft
-        // Only when core is in main hand — in no-GUI mode the core sits in offhand and
+        // Only when core is in main hand. In the default slot setup, the core sits in offhand and
         // the offhand use() fires after every weapon use(), which would immediately recall
         // any aircraft that was just launched by the main-hand weapon item.
         if (hand == InteractionHand.MAIN_HAND
@@ -457,7 +459,7 @@ public class ShipCoreItem extends Item implements Equipable {
         }
 
         if (isTransformed) {
-            // No-GUI mode: weapons fire via their own use(); return pass so offhand may trigger
+            // Weapons fire via their own use(); return pass so offhand may trigger.
             return InteractionResultHolder.pass(stack);
         }
 
@@ -470,10 +472,10 @@ public class ShipCoreItem extends Item implements Equipable {
     // TODO: 提取到 ShipCoreCombat.java
     // ====================================================================
 
-    // ===== Inventory-mode firing =====
+    // ===== Hotbar/inventory firing =====
 
     /**
-     * Entry point for weapon items' use() in no-GUI mode.
+     * Entry point for weapon items' use().
      * Scans inventory for an active (transformed) ship core, then fires the weapon at the given hand slot.
      * Returns true if firing was attempted (so the weapon can return CONSUME).
      */

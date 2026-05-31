@@ -14,24 +14,14 @@ public class ModPackets {
     public static void register(RegisterPayloadHandlersEvent event) {
         PayloadRegistrar registrar = event.registrar(PROTOCOL_VERSION);
         registrar.playToServer(
-                OpenFlightGroupPayload.TYPE,
-                OpenFlightGroupPayload.STREAM_CODEC,
-                OpenFlightGroupPayload::handle
-        );
-        registrar.playToServer(
-                OpenShipEquipmentPayload.TYPE,
-                OpenShipEquipmentPayload.STREAM_CODEC,
-                OpenShipEquipmentPayload::handle
-        );
-        registrar.playToServer(
                 ApplyModificationPayload.TYPE,
                 ApplyModificationPayload.STREAM_CODEC,
                 ApplyModificationPayload::handle
         );
         registrar.playToServer(
-                FlightGroupUpdatePayload.TYPE,
-                FlightGroupUpdatePayload.STREAM_CODEC,
-                FlightGroupUpdatePayload::handle
+                ToggleFighterGroundAttackPayload.TYPE,
+                ToggleFighterGroundAttackPayload.STREAM_CODEC,
+                ToggleFighterGroundAttackPayload::handle
         );
         // Phase 20: fire control
         registrar.playToServer(
@@ -88,7 +78,7 @@ public class ModPackets {
                 HitDisplayTogglePayload::handle
         );
 
-        // No-GUI mode: empty-hand recall all aircraft
+        // Empty-hand recall all aircraft
         registrar.playToServer(
                 RecallAllAircraftPayload.TYPE,
                 RecallAllAircraftPayload.STREAM_CODEC,
@@ -245,6 +235,11 @@ public class ModPackets {
                 ShakeEffectPayload.TYPE,
                 ShakeEffectPayload.STREAM_CODEC,
                 ShakeEffectPayload::handle
+        );
+        registrar.playToClient(
+                CannonImpactEffectPayload.TYPE,
+                CannonImpactEffectPayload.STREAM_CODEC,
+                CannonImpactEffectPayload::handle
         );
 
         // ===== Artillery Config Tool =====

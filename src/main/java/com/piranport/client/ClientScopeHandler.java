@@ -159,7 +159,8 @@ public final class ClientScopeHandler {
     /** 从武器 ItemStack 读取 scopeZoom */
     private static float getZoomFromWeapon(ItemStack weapon) {
         if (weapon.getItem() instanceof ArtilleryItem ai) {
-            return ai.getData().scopeZoom();
+            Level level = Minecraft.getInstance().level;
+            return level != null ? ai.getEffectiveData(level).scopeZoom() : ai.getData().scopeZoom();
         }
         return 2.0f;
     }

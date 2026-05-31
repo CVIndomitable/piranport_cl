@@ -100,10 +100,10 @@ public class WeaponReloadDecorator implements IItemDecorator {
         if (player == null) return true;
         Inventory inv = player.getInventory();
         for (ItemStack s : inv.items) {
-            if (!s.isEmpty() && ShipCoreCombat.matchesCaliber(s, weapon)) return true;
+            if (!s.isEmpty() && ShipCoreCombat.matchesCaliber(s, weapon, player.level())) return true;
         }
         ItemStack oh = inv.offhand.get(0);
-        if (!oh.isEmpty() && ShipCoreCombat.matchesCaliber(oh, weapon)) return true;
+        if (!oh.isEmpty() && ShipCoreCombat.matchesCaliber(oh, weapon, player.level())) return true;
         return false;
     }
 

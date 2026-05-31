@@ -1,24 +1,24 @@
 {
-  "name": "烟幕与照明",
+  "name": "piranport.book.advanced.smoke_flare",
   "category": "piranport:3_advanced_support",
   "icon": "piranport:smoke_candle",
   "sortnum": 1,
   "pages": [
     {
       "type": "patchouli:text",
-      "text": "$(bold)发烟筒$()$(br2)$(item)发烟筒$()可以释放烟幕，遮蔽视线。$(br2)$(bold)使用方法：$()$(br)右键使用发烟筒，会在地面生成$(item)烟幕方块$()。$(br2)$(bold)特点：$()$(br)• 烟幕是方块，不是实体$(br)• 会自然消散$(br)• 阻挡视线"
+      "text": "piranport.book.advanced.smoke_flare.p1"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)战术用途$()$(br2)$(bold)防御：$()$(br)• 掩护撤退$(br)• 阻挡敌人视线$(br)• 打断敌人锁定$(br2)$(bold)进攻：$()$(br)• 隐蔽接近$(br)• 突袭准备$(br)• 分割战场"
+      "text": "piranport.book.advanced.smoke_flare.p2"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)照明弹$()$(br2)$(item)照明弹发射器$()可以发射照明弹，照亮大范围区域。$(br2)$(bold)照明弹效果：$()$(br)• 附着在方块上生成$(item)照明弹光源方块$()$(br)• 命中生物造成发光效果和击退$(br)• 持续照明一段时间"
+      "text": "piranport.book.advanced.smoke_flare.p3"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)照明战术$()$(br2)$(bold)夜战支援：$()$(br)照亮战场，发现隐藏的敌人。$(br2)$(bold)标记目标：$()$(br)命中的敌人会发光，方便队友集火。$(br2)$(bold)探索：$()$(br)照亮洞穴、海底等黑暗区域。"
+      "text": "piranport.book.advanced.smoke_flare.p4"
     }
   ]
 }

@@ -1,16 +1,16 @@
 {
-  "name": "皮肤核心",
+  "name": "piranport.book.advanced.skin_core",
   "category": "piranport:4_advanced_equipment",
   "icon": "piranport:skin_core_1",
   "sortnum": 2,
   "pages": [
     {
       "type": "patchouli:text",
-      "text": "$(bold)皮肤系统$()$(br2)$(item)皮肤核心$()可以改变你的变身外观。$(br2)$(bold)三种变体：$()$(br)• 类型1皮肤核心$(br)• 类型2皮肤核心$(br)• 类型3皮肤核心$(br2)每种核心对应不同的外观风格。"
+      "text": "piranport.book.advanced.skin_core.p1"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)使用方法$()$(br2)1. 手持皮肤核心$(br)2. 按住潜行并右键使用$(br)3. 会应用对应外观并消耗该皮肤核心$(br)4. 如果已经是同一皮肤，再次潜行右键会移除皮肤且不消耗手中核心$(br2)切换到其他皮肤时，旧皮肤核心会返还给玩家。"
+      "text": "piranport.book.advanced.skin_core.p2"
     }
   ]
 }

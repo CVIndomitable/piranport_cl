@@ -1,20 +1,20 @@
 {
-  "name": "弹药选择系统",
+  "name": "piranport.book.advanced.ammo_selection",
   "category": "piranport:1_advanced_weapons",
   "icon": "piranport:small_he_shell",
   "sortnum": 6,
   "pages": [
     {
       "type": "patchouli:text",
-      "text": "$(bold)弹药切换$()$(br2)火炮支持多种弹药类型，可通过弹药轮盘快速切换。$(br2)$(bold)操作方式：$()$(br)• 变身后手持火炮$(br)• 按住$(bold)Tab键$()打开弹药轮盘$(br)• 移动鼠标指向弹种$(br)• 松开Tab确认选择$(br2)$(bold)R键$()是手动装填键，不用于弹药选择。"
+      "text": "piranport.book.advanced.ammo_selection.p1"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)弹药类型对比$()$(br2)• $(item)高爆弹$()：爆炸与溅射，适合软目标$(br)• $(item)穿甲弹$()：适合重甲目标$(br)• $(item)近炸引信弹$()：适合防空与高速目标$(br)• $(item)三式弹$()：散射弹丸，形成弹幕覆盖"
+      "text": "piranport.book.advanced.ammo_selection.p2"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)战术选择$()$(br2)• 对付集群敌人：高爆弹或三式弹$(br)• 对付重甲舰船：穿甲弹$(br)• 拦截飞机编队：近炸引信弹$(br)• 近距压制：三式弹$(br2)背包中必须有对应口径的弹药，选择后才有弹可用。"
+      "text": "piranport.book.advanced.ammo_selection.p3"
     }
   ]
 }

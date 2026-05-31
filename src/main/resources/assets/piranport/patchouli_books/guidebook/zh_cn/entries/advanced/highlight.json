@@ -1,20 +1,20 @@
 {
-  "name": "高亮系统",
+  "name": "piranport.book.advanced.highlight",
   "category": "piranport:3_advanced_support",
   "icon": "minecraft:glowstone",
   "sortnum": 2,
   "pages": [
     {
       "type": "patchouli:text",
-      "text": "$(bold)Y键战场高亮$()$(br2)按$(bold)Y键$()可以高亮显示战场上的所有生物，方便识别敌友。$(br2)$(bold)高亮颜色：$()$(br)• $(2)绿色$()：友方$(br)• $(4)红色$()：敌方$(br)• $(6)黄色$()：中立"
+      "text": "piranport.book.advanced.highlight.p1"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)高亮优先级$()$(br2)游戏中有多种高亮效果，它们有优先级顺序：$(br2)1. $(bold)原版高亮$()（最高）$(br)2. $(bold)火控锁定高亮$()（中）$(br)3. $(bold)Y键战场高亮$()（最低）$(br2)高优先级的高亮会覆盖低优先级的。"
+      "text": "piranport.book.advanced.highlight.p2"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)实战应用$()$(br2)$(bold)混战识别：$()$(br)在混乱的战场上快速识别敌友。$(br2)$(bold)夜战辅助：$()$(br)夜晚或黑暗环境下发现敌人。$(br2)$(bold)远距离观察：$()$(br)远距离观察战场态势。"
+      "text": "piranport.book.advanced.highlight.p3"
     }
   ]
 }

@@ -1,6 +1,6 @@
 {
-  "name": "进阶：航空系统",
-  "description": "舰载机类型、自动控制与燃料管理",
+  "name": "piranport.book.cat.2_advanced_aviation",
+  "description": "piranport.book.cat.2_advanced_aviation.desc",
   "icon": "piranport:fighter_squadron",
   "sortnum": 2
 }

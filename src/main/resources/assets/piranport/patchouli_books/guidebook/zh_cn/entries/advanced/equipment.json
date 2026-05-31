@@ -1,24 +1,24 @@
 {
-  "name": "装甲板与引擎",
+  "name": "piranport.book.advanced.equipment",
   "category": "piranport:4_advanced_equipment",
   "icon": "piranport:small_armor_plate",
   "sortnum": 0,
   "pages": [
     {
       "type": "patchouli:text",
-      "text": "$(bold)强化装备系统$()$(br2)舰装核心可以存入强化件，提升变身后的战斗能力：$(br2)• $(item)装甲板$()：提升护甲，增加负重$(br)• $(item)引擎$()：提升速度，也会占用负重$(br)• $(item)标准型声呐$()：周期性让附近非玩家生物发光$(br)• $(item)鱼雷再装填$()：允许背包内手动装填鱼雷发射器"
+      "text": "piranport.book.advanced.equipment.p1"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)装甲板$()$(br2)装甲板分为小型、中型、大型三档。档位越高，提供的护甲越多，占用的负重也越高。$(br2)适合在需要正面承伤时使用。"
+      "text": "piranport.book.advanced.equipment.p2"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)引擎$()$(br2)标准引擎、改良引擎、先进引擎、高压锅炉和柴油引擎提供不同速度加成与负重成本。$(br2)引擎适合高速机动、快速接敌或脱离战场。"
+      "text": "piranport.book.advanced.equipment.p3"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)存入与取回$()$(br2)在背包中把装甲板、引擎、声呐或鱼雷再装填件右键拖到舰装核心上，即可存入第一个空强化槽。$(br2)光标为空时右键核心，会取回最后存入的强化件。强化槽数量由舰型和核心改装决定。"
+      "text": "piranport.book.advanced.equipment.p4"
     }
   ]
 }

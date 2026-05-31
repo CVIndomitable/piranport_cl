@@ -1,20 +1,20 @@
 {
-  "name": "调试工具",
+  "name": "piranport.book.advanced.debug_tools",
   "category": "piranport:7_advanced_config",
   "icon": "minecraft:debug_stick",
   "sortnum": 2,
   "pages": [
     {
       "type": "patchouli:text",
-      "text": "$(bold)F8调试模式$()$(br2)按$(bold)F8键$()可以切换皮兰港调试模式。按$(bold)Shift+F8$()会向日志写入调试快照。$(br2)$(bold)用途：$()$(br)开发测试、问题排查、性能分析。"
+      "text": "piranport.book.advanced.debug_tools.p1"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)J键命中提示$()$(br2)按$(bold)J键$()可以切换命中提示显示。$(br2)$(bold)开启：$()$(br)武器命中目标时显示伤害数字和提示。$(br2)$(bold)关闭：$()$(br)不显示命中提示，保持界面简洁。"
+      "text": "piranport.book.advanced.debug_tools.p2"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)N键冷却覆盖$()$(br2)调试环境下按$(bold)N键$()可以切换服务器侧冷却覆盖，把武器冷却压到便于测试的时间。$(br2)该功能用于开发验证，不建议在正常生存玩法中使用。"
+      "text": "piranport.book.advanced.debug_tools.p3"
     }
   ]
 }

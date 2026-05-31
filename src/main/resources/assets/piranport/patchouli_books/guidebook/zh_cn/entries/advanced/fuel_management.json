@@ -1,24 +1,24 @@
 {
-  "name": "航空燃料管理",
+  "name": "piranport.book.advanced.fuel_management",
   "category": "piranport:2_advanced_aviation",
   "icon": "piranport:aviation_fuel",
   "sortnum": 2,
   "pages": [
     {
       "type": "patchouli:text",
-      "text": "$(bold)燃料消耗机制$()$(br2)飞机在飞行时会持续消耗燃料。飞机物品会显示是否已加注，未加注的飞机不能起飞。$(br2)出击前请检查航空燃料储备，尤其是侦察机和长航程任务。"
+      "text": "piranport.book.advanced.fuel_management.p1"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)手动加油$()$(br2)关闭自动补给时，在背包中把$(item)航空燃料$()右键拖到飞机物品上，即可把这架飞机补满。$(br2)每个航空燃料补满一架未满燃料的飞机。"
+      "text": "piranport.book.advanced.fuel_management.p2"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)背包自动补给$()$(br2)启用自动补给时，变身后系统会扫描背包，为需要燃料的飞机消耗航空燃料并补满。$(br2)$(bold)建议：$()$(br)在背包中常备航空燃料，确保飞机能自动补给。"
+      "text": "piranport.book.advanced.fuel_management.p3"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)燃料耗尽$()$(br2)当飞机燃料耗尽时：$(br)1. 飞机会尝试返航$(br)2. 如果无法返航，会坠落$(br)3. 坠落后变回物品$(br2)$(bold)避免燃料耗尽：$()$(br)• 出发前检查燃料$(br)• 长途任务携带备用燃料$(br)• 及时召回低燃料飞机"
+      "text": "piranport.book.advanced.fuel_management.p4"
     }
   ]
 }

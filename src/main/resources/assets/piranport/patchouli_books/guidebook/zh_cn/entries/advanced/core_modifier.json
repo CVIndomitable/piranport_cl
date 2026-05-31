@@ -1,20 +1,20 @@
 {
-  "name": "舰装核心改造",
+  "name": "piranport.book.advanced.core_modifier",
   "category": "piranport:4_advanced_equipment",
   "icon": "piranport:ship_core_modifier",
   "sortnum": 3,
   "pages": [
     {
       "type": "patchouli:text",
-      "text": "$(bold)舰装核心改装器$()$(br2)用于调整舰装核心的武器槽和强化槽数量。它不会升级核心等级，也不会安装特殊模块。$(br2)当前支持：$(br)• 武器槽：2到8个$(br)• 强化槽：1到6个"
+      "text": "piranport.book.advanced.core_modifier.p1"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)改装费用$()$(br2)把舰装核心放入改装器后，界面会读取该舰型的默认槽位。每比默认总槽位多1个槽位，需要额外消耗5级经验。$(br2)低于或等于默认总槽位时不会产生额外经验费用。"
+      "text": "piranport.book.advanced.core_modifier.p2"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)使用方法$()$(br2)1. 放置舰装核心改装器$(br)2. 右键打开界面$(br)3. 放入需要改装的舰装核心$(br)4. 调整武器槽和强化槽数量$(br)5. 点击应用并支付经验等级$(br2)改装结果会直接写入核心。"
+      "text": "piranport.book.advanced.core_modifier.p3"
     }
   ]
 }

@@ -1,16 +1,16 @@
 {
-  "name": "炮术视角",
+  "name": "piranport.book.advanced.scoping",
   "category": "piranport:1_advanced_weapons",
   "icon": "minecraft:spyglass",
   "sortnum": 7,
   "pages": [
     {
       "type": "patchouli:text",
-      "text": "$(bold)炮术视角$()$(br2)变身后手持火炮，按$(bold)右键$()进入或退出炮术视角。炮术视角会根据火炮配置放大视野，并显示当前准星命中的距离和高度差。$(br2)未命中方块或实体时，会按远端方向开火。"
+      "text": "piranport.book.advanced.scoping.p1"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)操作方法$()$(br2)• $(bold)右键$()：进入或退出炮术视角$(br)• $(bold)鼠标移动$()：调整瞄准方向$(br)• $(bold)左键$()：开火$(br)• $(bold)快速双击左键$()：同型火炮齐射$(br)• 切走火炮会自动退出炮术视角$(br2)弹药轮盘打开时无法开炮。"
+      "text": "piranport.book.advanced.scoping.p2"
     }
   ]
 }

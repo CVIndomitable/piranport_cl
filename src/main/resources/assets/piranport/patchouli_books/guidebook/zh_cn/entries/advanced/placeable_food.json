@@ -1,16 +1,16 @@
 {
-  "name": "放置食物",
+  "name": "piranport.book.advanced.placeable_food",
   "category": "piranport:5_advanced_production",
   "icon": "piranport:plate_food",
   "sortnum": 3,
   "pages": [
     {
       "type": "patchouli:text",
-      "text": "$(bold)可放置的食物$()$(br2)某些食物可以放置在世界中作为装饰或分享：$(br2)• $(item)盘子食物$()：放置在方块上$(br)• $(item)碗装食物$()：可放置的汤类$(br)• $(item)蛋糕$()：多层可食用蛋糕$(br2)右键放置，再次右键食用。"
+      "text": "piranport.book.advanced.placeable_food.p1"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)多人分享$()$(br2)放置的食物可以被其他玩家食用，适合：$(br2)• 多人游戏中的聚餐$(br)• 基地装饰$(br)• 食物展示$(br2)$(bold)提示：$()不同食物有不同的食用次数和恢复效果。"
+      "text": "piranport.book.advanced.placeable_food.p2"
     }
   ]
 }

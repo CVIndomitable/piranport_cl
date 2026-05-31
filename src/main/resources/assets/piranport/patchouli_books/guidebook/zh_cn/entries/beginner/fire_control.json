@@ -1,20 +1,20 @@
 {
-  "name": "火控系统",
+  "name": "piranport.book.beginner.fire_control",
   "category": "piranport:0_beginner",
   "icon": "minecraft:target",
   "sortnum": 4,
   "pages": [
     {
       "type": "patchouli:text",
-      "text": "$(bold)什么是火控？$()$(br2)火控系统让你记录准星指向的目标，供飞机、导弹和其他战斗系统使用。锁定距离约80格。$(br2)$(bold)按键操作：$()$(br)• $(bold)P键$()：锁定准星指向的目标$(br)• $(bold)O键$()：追加准星指向的目标$(br)• $(bold)I键$()：取消当前火控目标"
+      "text": "piranport.book.beginner.fire_control.p1"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)如何使用？$()$(br2)1. 将准星对准活体目标或飞机$(br)2. 按$(bold)P键$()建立火控锁定$(br)3. 需要多目标时，对准新目标按$(bold)O键$()追加$(br)4. 按$(bold)I键$()清除锁定$(br2)火控可以在变身状态或侦察模式下使用。"
+      "text": "piranport.book.beginner.fire_control.p2"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)多目标管理$()$(br2)O键不是切换目标，而是把准星指向的新目标加入火控列表；当前最多保留4个目标。$(br2)锁定目标会显示红色高亮，方便在混战中识别。$(br2)详细机制请查看$(l:piranport:advanced/fire_control_detail)进阶：火控系统详解$(/l)。"
+      "text": "piranport.book.beginner.fire_control.p3"
     }
   ]
 }

@@ -1,24 +1,24 @@
 {
-  "name": "深海敌人图鉴",
+  "name": "piranport.book.zhr.enemies",
   "category": "piranport:8_ruins",
   "icon": "minecraft:trident",
   "sortnum": 2,
   "pages": [
     {
       "type": "patchouli:text",
-      "text": "$(bold)9种深海敌人$()$(br2)深海遗迹由多种敌对舰船守卫：$(br2)• $(item)驱逐舰$()：快速、鱼雷攻击$(br)• $(item)轻巡洋舰$()：中型火力$(br)• $(item)重巡洋舰$()：重型火炮$(br)• $(item)轻航母$()：舰载机支援"
+      "text": "piranport.book.zhr.enemies.p1"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)高级敌人$()$(br2)• $(item)战列巡洋舰$()：高伤害远程炮击$(br)• $(item)战列舰$()：最强火力与装甲$(br)• $(item)航母$()：大量舰载机$(br)• $(item)潜艇$()：隐蔽鱼雷攻击$(br)• $(item)补给舰$()：运输物资"
+      "text": "piranport.book.zhr.enemies.p2"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)集群战术$()$(br2)深海敌人采用$(bold)舰队编组$()战术：$(br2)• 多艘舰船协同作战$(br)• 驱逐舰负责近防和鱼雷$(br)• 巡洋舰提供中距离火力$(br)• 战列舰远程炮击$(br)• 航母提供空中支援"
+      "text": "piranport.book.zhr.enemies.p3"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)战斗建议$()$(br2)• 优先消灭航母和潜艇$(br)• 使用导弹和鱼雷对付大型舰船$(br)• 用火炮压制轻型目标$(br)• 深弹对付潜艇特别有效$(br)• 组队作战更安全！"
+      "text": "piranport.book.zhr.enemies.p4"
     }
   ]
 }

@@ -1,24 +1,24 @@
 {
-  "name": "深海副本",
+  "name": "piranport.book.advanced.dungeon",
   "category": "piranport:6_advanced_dungeon",
   "icon": "piranport:abyssal_portal",
   "sortnum": 0,
   "pages": [
     {
       "type": "patchouli:text",
-      "text": "$(bold)深海传送门$()$(br2)深海副本是高难度挑战区域，需要通过$(item)深海传送门$()进入。$(br2)$(bold)传送门构建：$()$(br)1. 用$(item)传送门框架方块$()搭建框架$(br)2. 使用$(item)副本钥匙$()激活$(br)3. 进入传送门"
+      "text": "piranport.book.advanced.dungeon.p1"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)副本钥匙$()$(br2)副本有三个难度等级：$(br)• $(item)一级副本钥匙$()：简单$(br)• $(item)二级副本钥匙$()：中等$(br)• $(item)三级副本钥匙$()：困难$(br2)不同等级的副本有不同的敌人和奖励。"
+      "text": "piranport.book.advanced.dungeon.p2"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)深海敌人$()$(br2)副本中有9种深海敌人：$(br)• 低级驱逐舰$(br)• 中级驱逐舰$(br)• 高级驱逐舰$(br)• 轻巡洋舰$(br)• 重巡洋舰$(br)• 战列舰$(br)• 航空母舰$(br)• 潜艇$(br)• 首领级敌人"
+      "text": "piranport.book.advanced.dungeon.p3"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)深海弹丸$()$(br2)深海敌人使用$(item)深海弹丸$()攻击，有三种模式：$(br)• $(bold)抛物线$()：远距离曲射$(br)• $(bold)追踪$()：自动追踪目标$(br)• $(bold)直射$()：高速直线攻击$(br2)$(bold)提示：$()$(br)观察弹丸轨迹，及时闪避！"
+      "text": "piranport.book.advanced.dungeon.p4"
     }
   ]
 }

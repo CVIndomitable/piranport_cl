@@ -1,28 +1,28 @@
 {
-  "name": "导弹系统",
+  "name": "piranport.book.advanced.missiles",
   "category": "piranport:1_advanced_weapons",
   "icon": "piranport:sy1_missile",
   "sortnum": 3,
   "pages": [
     {
       "type": "patchouli:text",
-      "text": "$(bold)导弹类型$()$(br2)皮兰港有三类导弹武器：$(br2)• $(item)反舰导弹$()：鹰击一号、鱼叉等，攻击水面目标$(br)• $(item)防空导弹$()：防空发射器自动消耗防空导弹$(br)• $(item)火箭弹$()：火箭发射器使用，偏向近中距离压制"
+      "text": "piranport.book.advanced.missiles.p1"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)反舰与火箭装填$()$(br2)反舰导弹发射器和火箭发射器属于手动装填武器。把空发射器与对应导弹放入$(item)装填设施$()，等待完成后取出满弹发射器。"
+      "text": "piranport.book.advanced.missiles.p2"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)防空导弹$()$(br2)防空导弹发射器不放入装填设施。它们发射时会自动从背包中消耗对应防空导弹，并按发射器冷却时间再次准备。$(br2)开启自动升空后，防空导弹也会参与自动防空。"
+      "text": "piranport.book.advanced.missiles.p3"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)制导追踪$()$(br2)反舰导弹和防空导弹具有智能制导能力，发射后会自动追踪锁定的目标。$(br2)$(bold)火箭弹$()$(br)火箭弹没有制导，发射后直线飞行。但是：$(br)• 飞行速度快$(br)• 成本低$(br)• 适合近距离饱和攻击"
+      "text": "piranport.book.advanced.missiles.p4"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)使用建议$()$(br2)$(bold)反舰导弹：$()$(br)对付水面的大型敌人。$(br2)$(bold)防空导弹：$()$(br)拦截敌方飞机和飞行生物，适合常备在快捷栏。$(br2)$(bold)火箭弹：$()$(br)快速清理近距离的小型敌人，或进行火力压制。"
+      "text": "piranport.book.advanced.missiles.p5"
     }
   ]
 }

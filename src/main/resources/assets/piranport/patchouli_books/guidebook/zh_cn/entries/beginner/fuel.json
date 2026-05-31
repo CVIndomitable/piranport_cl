@@ -1,30 +1,30 @@
 {
-  "name": "燃料系统入门",
+  "name": "piranport.book.beginner.fuel",
   "category": "piranport:0_beginner",
   "icon": "piranport:fuel",
   "sortnum": 3,
   "pages": [
     {
       "type": "patchouli:text",
-      "text": "$(bold)为什么需要燃料？$()$(br2)舰装核心需要燃料维持变身，舰载机需要航空燃料才能起飞和飞行。$(br2)$(bold)两种燃料：$()$(br)• $(item)燃料$()：给舰装核心使用$(br)• $(item)航空燃料$()：给舰载机使用"
+      "text": "piranport.book.beginner.fuel.p1"
     },
     {
       "type": "patchouli:crafting",
       "recipe": "piranport:fuel_from_charcoal",
-      "text": "燃料可以由木炭直接制作，也可以通过烧炼木炭或煤炭获得。"
+      "text": "piranport.book.beginner.fuel.p2"
     },
     {
       "type": "patchouli:smelting",
       "recipe": "piranport:aviation_fuel_from_blasting_charcoal",
-      "text": "航空燃料：木炭 + 高炉"
+      "text": "piranport.book.beginner.fuel.p3"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)如何给核心加油？$()$(br2)在背包中把燃料物品右键拖到舰装核心上即可加注。熔岩桶会增加1点燃料并返还空桶；煤炭、木炭、烈焰粉和其他熔炉燃料会按燃烧时间换算。$(br2)核心的耐久条样式会显示燃料比例。"
+      "text": "piranport.book.beginner.fuel.p4"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)如何给飞机加油？$()$(br2)启用自动补给时，变身和放飞前会自动消耗背包中的航空燃料。关闭自动补给时，在背包中把$(item)航空燃料$()右键拖到飞机物品上，每个航空燃料会把一架飞机补满。$(br2)飞机物品提示会显示已加注或未加注。"
+      "text": "piranport.book.beginner.fuel.p5"
     }
   ]
 }

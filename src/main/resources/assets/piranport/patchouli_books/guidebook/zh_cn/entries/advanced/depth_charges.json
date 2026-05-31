@@ -1,24 +1,24 @@
 {
-  "name": "深水炸弹",
+  "name": "piranport.book.advanced.depth_charges",
   "category": "piranport:1_advanced_weapons",
   "icon": "piranport:depth_charge_launcher",
   "sortnum": 4,
   "pages": [
     {
       "type": "patchouli:text",
-      "text": "$(bold)深水炸弹系统$()$(br2)深水炸弹是专门对付水下目标的武器。发射器会消耗背包中的$(item)深水炸弹$()并向前投射。$(br2)$(bold)三种发射器：$()$(br)• 基础型：单枚直投$(br)• 改良型：两枚前后散布$(br)• 先进型：三枚三角散布"
+      "text": "piranport.book.advanced.depth_charges.p1"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)近炸引信$()$(br2)深水炸弹使用$(bold)近炸引信$()技术，当检测到附近有敌人时自动引爆。$(br2)不需要直接命中目标，只要进入引爆范围即可。$(br2)$(bold)引爆条件：$()$(br)• 检测到敌对生物$(br)• 或达到最大存活时间"
+      "text": "piranport.book.advanced.depth_charges.p2"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)区域魔法伤害$()$(br2)深水炸弹引爆时造成$(bold)区域魔法伤害$()，范围内的所有敌人都会受到伤害。$(br2)$(bold)特点：$()$(br)• 无视护甲$(br)• 水下威力不减$(br)• 范围伤害$(br2)$(bold)适合：$()清理密集的水下敌人。"
+      "text": "piranport.book.advanced.depth_charges.p3"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)使用技巧$()$(br2)1. 用声呐或目视确认水下目标$(br)2. 靠近目标航线投射深水炸弹$(br)3. 根据发射器散布模式调整距离$(br2)$(bold)提示：$()$(br)配合$(l:piranport:advanced/sonar)声呐系统$(/l)使用，可以更容易定位水下敌人。"
+      "text": "piranport.book.advanced.depth_charges.p4"
     }
   ]
 }

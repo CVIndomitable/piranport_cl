@@ -1,24 +1,24 @@
 {
-  "name": "火控系统详解",
+  "name": "piranport.book.advanced.fire_control_detail",
   "category": "piranport:1_advanced_weapons",
   "icon": "minecraft:redstone",
   "sortnum": 0,
   "pages": [
     {
       "type": "patchouli:text",
-      "text": "$(bold)火控系统机制$()$(br2)火控按键会读取准星约80格内命中的活体目标或飞机。P键建立目标列表，O键把准星指向的新目标追加进去，I键清空当前火控。$(br2)火控可在变身状态和侦察模式下使用。"
+      "text": "piranport.book.advanced.fire_control_detail.p1"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)高亮优先级$()$(br2)游戏中有多种高亮效果，它们有优先级顺序：$(br2)1. $(bold)原版高亮$()（最高优先级）$(br)2. $(bold)火控锁定高亮$()（红色）$(br)3. $(bold)Y键战场高亮$()（最低优先级）$(br2)高优先级的高亮会覆盖低优先级的。"
+      "text": "piranport.book.advanced.fire_control_detail.p2"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)玩家登出清理$()$(br2)当玩家退出游戏时，系统会按顺序清理：$(br)1. 先清理火控状态$(br)2. 再清理其他数据$(br2)这防止了火控状态泄漏到其他玩家。$(br2)$(bold)安全设计$()$(br)所有火控数据都在服务端验证，客户端无法伪造。"
+      "text": "piranport.book.advanced.fire_control_detail.p3"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)按键操作总结$()$(br2)• $(bold)P键$()：锁定准星指向的目标$(br)• $(bold)O键$()：追加准星指向的目标，最多4个$(br)• $(bold)I键$()：取消锁定$(br2)锁定目标会有红色高亮轮廓，方便在混战中识别。"
+      "text": "piranport.book.advanced.fire_control_detail.p4"
     }
   ]
 }

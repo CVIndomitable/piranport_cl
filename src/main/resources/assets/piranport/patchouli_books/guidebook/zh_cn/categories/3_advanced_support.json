@@ -1,6 +1,6 @@
 {
-  "name": "进阶：辅助系统",
-  "description": "声呐、烟幕、照明与高亮系统",
+  "name": "piranport.book.cat.3_advanced_support",
+  "description": "piranport.book.cat.3_advanced_support.desc",
   "icon": "piranport:standard_sonar",
   "sortnum": 3
 }

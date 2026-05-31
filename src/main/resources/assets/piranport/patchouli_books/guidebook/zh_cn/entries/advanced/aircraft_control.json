@@ -1,24 +1,24 @@
 {
-  "name": "飞机控制",
+  "name": "piranport.book.advanced.aircraft_control",
   "category": "piranport:2_advanced_aviation",
   "icon": "piranport:fighter_squadron",
   "sortnum": 1,
   "pages": [
     {
       "type": "patchouli:text",
-      "text": "$(bold)飞机状态$()$(br2)每架飞机都会在起飞、巡航、攻击、返航和降落之间自动切换。玩家主要负责准备燃料、放飞飞机、设置火控目标和在需要时召回。"
+      "text": "piranport.book.advanced.aircraft_control.p1"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)战斗机对地开关 (U键)$()$(br2)变身后按$(bold)U键$()可切换战斗机是否攻击地面目标。$(br2)$(bold)开启对地：$()战斗机会尝试攻击地面/水面敌人。$(br2)$(bold)关闭对地：$()战斗机只负责对空作战。"
+      "text": "piranport.book.advanced.aircraft_control.p2"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)自动升空 (H键)$()$(br2)变身后按$(bold)H键$()可切换战斗机自动升空。开启后，满足条件的战斗机会自动出击；关闭后，需要手持飞机物品右键放飞。$(br2)具体状态会显示在动作栏提示中。"
+      "text": "piranport.book.advanced.aircraft_control.p3"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)飞机高亮$()$(br2)开启战场高亮后，飞机会按归属和状态显示不同颜色。火控锁定目标拥有更高优先级，会覆盖普通战场高亮。$(br2)反潜声呐的目标提示会以独立颜色显示。"
+      "text": "piranport.book.advanced.aircraft_control.p4"
     }
   ]
 }

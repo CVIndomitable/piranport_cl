@@ -1,33 +1,33 @@
 {
-  "name": "工作台系统",
+  "name": "piranport.book.advanced.workbenches",
   "category": "piranport:5_advanced_production",
   "icon": "piranport:weapon_workbench",
   "sortnum": 0,
   "pages": [
     {
       "type": "patchouli:text",
-      "text": "$(bold)生产方块$()$(br2)皮兰港有多种专用生产方块：$(br2)• $(item)弹药工作台$()：批量生产炮弹等弹药$(br)• $(item)武器合成台$()：按分类制作武器和装备$(br)• $(item)装填设施$()：把鱼雷或手动导弹装入发射器"
+      "text": "piranport.book.advanced.workbenches.p1"
     },
     {
       "type": "patchouli:crafting",
       "recipe": "piranport:ammo_workbench",
-      "text": "弹药工作台的合成配方"
+      "text": "piranport.book.advanced.workbenches.p2"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)武器合成台$()$(br2)武器合成台存在方块和界面，用于制作武器与装备。它的制作和配方由专用界面处理，不使用普通工作台配方页展示。"
+      "text": "piranport.book.advanced.workbenches.p3"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)弹药工作台$()$(br2)用于批量生产各类弹药：$(br)• 高爆弹、穿甲弹、近炸引信弹、三式弹$(br)• 鱼雷、导弹、深水炸弹$(br)• 航空炸弹与航空鱼雷$(br2)右键打开界面，选择弹种和数量后开始制作。"
+      "text": "piranport.book.advanced.workbenches.p4"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)武器合成台$()$(br2)用于制作武器和装备。界面按分类显示配方，选择目标后放入材料即可制作。$(br2)部分高级配方可能需要对应蓝图。"
+      "text": "piranport.book.advanced.workbenches.p5"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)蓝图与制作时间$()$(br2)某些高级武器需要蓝图才能制作。弹药工作台和武器合成台都可能有制作时间，开始后等待进度完成即可取出成品。$(br2)输出槽不足时，请先取走成品再继续生产。"
+      "text": "piranport.book.advanced.workbenches.p6"
     }
   ]
 }

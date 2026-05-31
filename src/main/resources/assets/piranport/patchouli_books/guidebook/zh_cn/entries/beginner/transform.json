@@ -1,29 +1,29 @@
 {
-  "name": "变身与基础",
+  "name": "piranport.book.beginner.transform",
   "category": "piranport:0_beginner",
   "icon": "piranport:small_ship_core",
   "sortnum": 1,
   "pages": [
     {
       "type": "patchouli:text",
-      "text": "$(bold)如何变身为舰娘$()$(br2)默认将$(item)舰装核心$()放入副手即可自动变身；如果在配置中启用头盔模式，则把核心装备到头盔槽位。变身后你将获得：$(br)• 水上行走能力$(br)• 使用舰载武器的能力$(br)• 召唤舰载机的能力$(br2)取下核心或燃料耗尽时会自动解除变身。"
+      "text": "piranport.book.beginner.transform.p1"
     },
     {
       "type": "patchouli:crafting",
       "recipe": "piranport:small_ship_core",
-      "text": "小型舰娘核心的合成配方"
+      "text": "piranport.book.beginner.transform.p2"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)舰娘核心类型$()$(br2)$(li)$(item)小型舰娘核心$()：基础型，适合新手$(br)$(li)$(item)中型舰娘核心$()：增强型$(br)$(li)$(item)大型舰娘核心$()：最强型$(br)$(li)$(item)潜艇核心$()：深海侦察型$(br2)不同核心影响你的负重能力和装备槽位。"
+      "text": "piranport.book.beginner.transform.p3"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)潜艇核心特性$()$(br2)$(item)潜艇核心$()拥有独特的水下能力：$(br)• $(bold)水下呼吸$()：无限水下呼吸$(br)• $(bold)水下隐身$()：眼睛在水中时自动隐身$(br)• $(bold)深海夜视$()：深水区(Y<50)自动获得夜视效果$(br2)$(italic)适合深海侦察和潜行战术$()$(br2)注意：潜艇核心生命值和负重较低，不适合正面战斗。"
+      "text": "piranport.book.beginner.transform.p4"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)基础属性$()$(br2)变身后，你的属性会发生变化：$(br)• $(bold)负重$()：决定你能携带多少武器和飞机$(br)• $(bold)装备槽$()：可以装备装甲板、引擎等强化装备$(br2)注意：携带过多物品会导致$(4)超重$()，移动速度大幅降低！"
+      "text": "piranport.book.beginner.transform.p5"
     }
   ]
 }

@@ -1,20 +1,20 @@
 {
-  "name": "装填设施",
+  "name": "piranport.book.advanced.reload_facility",
   "category": "piranport:5_advanced_production",
   "icon": "piranport:reload_facility",
   "sortnum": 1,
   "pages": [
     {
       "type": "patchouli:text",
-      "text": "$(bold)装填设施$()$(br2)$(item)装填设施$()用于把鱼雷或手动装填导弹装入发射器。它不会给靠近的玩家自动补给，也不是弹药仓库。$(br2)界面有三个槽位：发射器输入、弹药输入、已装填输出。"
+      "text": "piranport.book.advanced.reload_facility.p1"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)可装填内容$()$(br2)• 鱼雷发射器 + 口径匹配的鱼雷$(br)• 反舰导弹发射器 + 对应导弹$(br)• 火箭发射器 + 对应火箭弹$(br2)防空导弹发射器会自动从背包消耗弹药，不能放入装填设施。"
+      "text": "piranport.book.advanced.reload_facility.p2"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)规则与速度$()$(br2)装填设施只产出满弹发射器；已满或部分装填的发射器会被拒绝。输出槽必须为空才能继续工作。$(br2)陆地装填约5秒，水中装填约20秒。上方漏斗输入发射器，侧面输入弹药，底部取出成品。"
+      "text": "piranport.book.advanced.reload_facility.p3"
     }
   ]
 }

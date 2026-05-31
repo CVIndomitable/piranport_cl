@@ -1,24 +1,24 @@
 {
-  "name": "特殊武器",
+  "name": "piranport.book.advanced.special_weapons",
   "category": "piranport:1_advanced_weapons",
   "icon": "piranport:gungnir",
   "sortnum": 5,
   "pages": [
     {
       "type": "patchouli:text",
-      "text": "$(bold)电磁炮$()$(br2)$(item)神秘武器$()是一种电磁炮，发射$(bold)无视重力$()的高速弹丸。$(br2)$(bold)特点：$()$(br)• 弹道完全笔直$(br)• 飞行速度极快$(br)• 适合超远距离狙击$(br2)$(italic)科技的力量！$()$(br)"
+      "text": "piranport.book.advanced.special_weapons.p1"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)冈格尼尔$()$(br2)$(item)冈格尼尔$()是投掷武器，投出后会飞向目标并自动返回。$(br2)$(bold)重要：$()$(br)冈格尼尔$(4)没有友军伤害保护$()！这是正常的玩法设计，使用时注意不要误伤队友。$(br2)$(bold)特点：$()$(br)• 高伤害$(br)• 自动返回$(br)• 可穿透多个敌人"
+      "text": "piranport.book.advanced.special_weapons.p2"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)三式弹$()$(br2)三式弹是一种特殊炮弹，命中后会$(bold)散射$()出多个小弹丸，形成弹幕。$(br2)$(bold)适合：$()$(br)• 对付密集的敌群$(br)• 拦截敌方飞机编队$(br)• 区域压制"
+      "text": "piranport.book.advanced.special_weapons.p3"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)角色专属武器$()$(br2)• $(item)黎塞留的指挥刀$()：近战武器$(br)• $(item)初雪的主炮$()：斧类武器$(br)• $(item)欧根的舰盾$()：150度格挡范围$(br)• $(item)大凤的伞$()：特殊效果$(br)• $(item)独角兽的竖琴$()：辅助武器$(br2)这些武器有独特的机制和效果。"
+      "text": "piranport.book.advanced.special_weapons.p4"
     }
   ]
 }

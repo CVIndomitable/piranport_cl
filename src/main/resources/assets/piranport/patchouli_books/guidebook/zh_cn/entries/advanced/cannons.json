@@ -1,28 +1,28 @@
 {
-  "name": "火炮详解",
+  "name": "piranport.book.advanced.cannons",
   "category": "piranport:1_advanced_weapons",
   "icon": "piranport:large_gun",
   "sortnum": 1,
   "pages": [
     {
       "type": "patchouli:text",
-      "text": "$(bold)火炮类型对比$()$(br2)皮兰港有多种基础火炮：$(br2)• $(item)单装小型火炮$()：负重低，入门友好$(br)• $(item)小型火炮$()：双联装小口径$(br)• $(item)中型火炮$()：中口径，弹道更重$(br)• $(item)大型火炮$()：三联装大口径，威力高但更重"
+      "text": "piranport.book.advanced.cannons.p1"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)操作方式$()$(br2)变身后手持火炮：$(br)• 右键进入或退出炮术视角$(br)• 左键开火$(br)• 快速双击左键可让同型火炮齐射$(br)• 按住Tab打开弹药轮盘，松开确认弹种$(br2)手持火炮时左键挖掘会被屏蔽。"
+      "text": "piranport.book.advanced.cannons.p2"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)弹药与口径$()$(br2)火炮按口径匹配炮弹：小口径、中口径和大口径各有高爆弹、穿甲弹等弹种。$(br2)炮弹主要通过$(item)弹药工作台$()生产；背包中没有匹配弹药时，火炮无法正常开火。"
+      "text": "piranport.book.advanced.cannons.p3"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)齐射机制$()$(br2)联装火炮会在短时间内连续发射多发炮弹，形成齐射。$(br2)$(bold)散布系统$()$(br)齐射的炮弹会有一定散布，不会完全重叠。散布范围随距离增加。$(br2)$(bold)战术建议：$()$(br)• 近距离：散布小，集中火力$(br)• 远距离：散布大，覆盖面积"
+      "text": "piranport.book.advanced.cannons.p4"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)命中与高亮$()$(br2)炮弹命中后会根据弹种造成直接伤害、爆炸或特殊弹幕效果。命中提示可用$(bold)J键$()开关。$(br2)$(bold)提示：$()$(br)配合$(l:piranport:beginner/fire_control)火控系统$(/l)使用，可以更稳定地追踪战场目标。"
+      "text": "piranport.book.advanced.cannons.p5"
     }
   ]
 }

@@ -1,20 +1,20 @@
 {
-  "name": "特殊装备",
+  "name": "piranport.book.advanced.special_equipment",
   "category": "piranport:4_advanced_equipment",
   "icon": "piranport:eugen_shield",
   "sortnum": 1,
   "pages": [
     {
       "type": "patchouli:text",
-      "text": "$(bold)角色专属装备$()$(br2)某些角色有专属装备，具有独特效果：$(br2)• $(item)欧根的舰盾$()：150度格挡范围$(br)• $(item)黎塞留的指挥刀$()：近战武器$(br)• $(item)初雪的主炮$()：斧类武器$(br)• $(item)大凤的伞$()：特殊效果$(br)• $(item)独角兽的竖琴$()：辅助武器"
+      "text": "piranport.book.advanced.special_equipment.p1"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)足球巨星套装$()$(br2)$(item)足球巨星套装$()是一套特殊护甲，穿戴后获得$(bold)经验提升增益$()。$(br2)$(bold)效果：$()$(br)击杀怪物和完成任务时获得更多经验。$(br2)$(bold)适合：$()$(br)快速升级、附魔准备。"
+      "text": "piranport.book.advanced.special_equipment.p2"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)基林级发带$()$(br2)$(item)基林级发带$()是头部装备，提供$(bold)恒定隐身$()效果。$(br2)$(bold)战术用途：$()$(br)• 潜行接近敌人$(br)• 避免被发现$(br)• 突袭战术$(br2)$(bold)注意：$()$(br)攻击时会暂时显形。"
+      "text": "piranport.book.advanced.special_equipment.p3"
     }
   ]
 }

@@ -1,28 +1,28 @@
 {
-  "name": "鱼雷战术",
+  "name": "piranport.book.advanced.torpedoes",
   "category": "piranport:1_advanced_weapons",
   "icon": "piranport:twin_torpedo_launcher",
   "sortnum": 2,
   "pages": [
     {
       "type": "patchouli:text",
-      "text": "$(bold)鱼雷系统$()$(br2)鱼雷是水下武器。发射器按口径和管数工作，必须装入足够数量、口径匹配的鱼雷后才能齐射。$(br2)常见发射器包括双联装533毫米、三联装533毫米和四联装610毫米。"
+      "text": "piranport.book.advanced.torpedoes.p1"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)制导系统$()$(br2)鱼雷发射后会自动追踪锁定的目标。$(br2)$(bold)锁定阈值：0.7$()$(br)当鱼雷与目标的角度偏差小于0.7弧度时，才会开始追踪。$(br2)$(bold)稳定期：60游戏刻（3秒）$()$(br)锁定后保持瞄准3秒，可以提高命中率。"
+      "text": "piranport.book.advanced.torpedoes.p2"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)潜艇水下发射$()$(br2)这$(bold)不是错误$()，而是设计的玩法特性。$(br2)潜艇可以在水下发射鱼雷，鱼雷会正常追踪目标。这是真实的潜艇战术。$(br2)$(bold)战术建议：$()$(br)• 潜入水下隐蔽接近$(br)• 锁定目标后发射鱼雷$(br)• 快速脱离战场"
+      "text": "piranport.book.advanced.torpedoes.p3"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)鱼雷管数$()$(br2)鱼雷发射器的管数决定一次齐射消耗的鱼雷数量：$(br)• 双联装533毫米：2枚$(br)• 三联装533毫米：3枚$(br)• 四联装610毫米：4枚$(br2)发射后还需要等待发射器冷却结束。"
+      "text": "piranport.book.advanced.torpedoes.p4"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)装填方式$()$(br2)最稳定的方式是使用$(item)装填设施$()：放入空发射器和对应鱼雷，产出满管发射器。$(br2)如果正在变身的核心中存有$(item)鱼雷再装填$()强化件，也可以在背包中把鱼雷右键拖到空发射器上手动装满。部分装填状态不能补齐。"
+      "text": "piranport.book.advanced.torpedoes.p5"
     }
   ]
 }

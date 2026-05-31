@@ -12,9 +12,9 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
-import net.neoforged.neoforge.items.ItemStackHandler;
 import net.neoforged.neoforge.items.SlotItemHandler;
 
 public class ShipCoreModifierMenu extends AbstractContainerMenu {
@@ -22,28 +22,64 @@ public class ShipCoreModifierMenu extends AbstractContainerMenu {
     private final BlockPos blockPos;
     private final ContainerData data;
 
+    private record ClientMenuData(BlockPos pos, @Nullable ShipCoreModifierBlockEntity blockEntity,
+                                  ContainerData data) {}
+
     // 客户端构造器（从网络数据）
     public ShipCoreModifierMenu(int containerId, Inventory playerInv, FriendlyByteBuf extraData) {
-        this(containerId, playerInv, null, new SimpleContainerData(3));
+        this(containerId, playerInv, readClientMenuData(playerInv, extraData));
     }
 
     // 服务端构造器
     public ShipCoreModifierMenu(int containerId, Inventory playerInv, ShipCoreModifierBlockEntity blockEntity, ContainerData data) {
+        this(containerId, playerInv, blockEntity, data,
+                blockEntity != null ? blockEntity.getBlockPos() : BlockPos.ZERO);
+    }
+
+    private ShipCoreModifierMenu(int containerId, Inventory playerInv, ClientMenuData clientData) {
+        this(containerId, playerInv, clientData.blockEntity(), clientData.data(), clientData.pos());
+    }
+
+    private static ClientMenuData readClientMenuData(Inventory playerInv, FriendlyByteBuf extraData) {
+        BlockPos pos = extraData.readBlockPos();
+        if (playerInv.player.level().getBlockEntity(pos) instanceof ShipCoreModifierBlockEntity be) {
+            return new ClientMenuData(pos, be, be.getDataAccess());
+        }
+        SimpleContainerData fallback = new SimpleContainerData(3);
+        fallback.set(0, ShipType.SMALL.weaponSlots);
+        fallback.set(1, ShipType.SMALL.enhancementSlots);
+        fallback.set(2, ShipType.SMALL.ordinal());
+        return new ClientMenuData(pos, null, fallback);
+    }
+
+    private ShipCoreModifierMenu(int containerId, Inventory playerInv,
+                                 @Nullable ShipCoreModifierBlockEntity blockEntity,
+                                 ContainerData data, BlockPos blockPos) {
         super(ModMenuTypes.SHIP_CORE_MODIFIER_MENU.get(), containerId);
         this.blockEntity = blockEntity;
-        this.blockPos = blockEntity != null ? blockEntity.getBlockPos() : BlockPos.ZERO;
+        this.blockPos = blockPos;
         this.data = data;
 
         addDataSlots(data);
 
         if (blockEntity != null) {
-            ItemStackHandler handler = blockEntity.getItemHandler();
-
             // 核心槽位（中央位置）
-            addSlot(new SlotItemHandler(handler, ShipCoreModifierBlockEntity.CORE_SLOT, 80, 35) {
+            addSlot(new SlotItemHandler(blockEntity.getItemHandler(), ShipCoreModifierBlockEntity.CORE_SLOT, 80, 35) {
                 @Override
                 public boolean mayPlace(ItemStack stack) {
                     return stack.getItem() instanceof ShipCoreItem;
+                }
+            });
+        } else {
+            addSlot(new Slot(new SimpleContainer(1), 0, 80, 35) {
+                @Override
+                public boolean mayPlace(ItemStack stack) {
+                    return false;
+                }
+
+                @Override
+                public boolean mayPickup(Player player) {
+                    return false;
                 }
             });
         }
@@ -70,7 +106,9 @@ public class ShipCoreModifierMenu extends AbstractContainerMenu {
     }
 
     public ShipType getShipType() {
-        return ShipType.values()[data.get(2)];
+        int index = data.get(2);
+        ShipType[] values = ShipType.values();
+        return index >= 0 && index < values.length ? values[index] : ShipType.SMALL;
     }
 
     public BlockPos getBlockPos() {
@@ -134,6 +172,6 @@ public class ShipCoreModifierMenu extends AbstractContainerMenu {
             BlockPos pos = blockEntity.getBlockPos();
             return player.distanceToSqr(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5) <= 64.0;
         }
-        return true; // 客户端始终有效
+        return true; // 客户端占位菜单只负责渲染与数据同步
     }
 }

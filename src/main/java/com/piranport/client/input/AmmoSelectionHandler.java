@@ -2,7 +2,7 @@ package com.piranport.client.input;
 
 import com.piranport.client.AmmoSelectOverlay;
 import com.piranport.network.SwitchAmmoPayload;
-import com.piranport.registry.ModKeyMappings;
+import com.piranport.client.ModKeyMappings;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.player.Player;

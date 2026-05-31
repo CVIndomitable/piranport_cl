@@ -1,7 +1,7 @@
 package com.piranport.network;
 
 import com.piranport.PiranPort;
-import com.piranport.aviation.ClientFireControlData;
+import com.piranport.platform.ClientHooks;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
@@ -43,6 +43,6 @@ public record FireControlSyncPayload(List<UUID> targetUUIDs) implements CustomPa
     // ===== Client-side handler =====
 
     public static void handle(FireControlSyncPayload payload, IPayloadContext ctx) {
-        ctx.enqueueWork(() -> ClientFireControlData.setTargets(payload.targetUUIDs()));
+        ctx.enqueueWork(() -> ClientHooks.setFireControlTargets(payload.targetUUIDs()));
     }
 }

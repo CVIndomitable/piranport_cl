@@ -39,7 +39,7 @@ public record CustomCoreConfig(
 
     // ===== StreamCodec 网络传输 =====
     public static final StreamCodec<ByteBuf, CustomCoreConfig> STREAM_CODEC = StreamCodec.composite(
-            ByteBufCodecs.VAR_INT.map(i -> ShipType.values()[i], Enum::ordinal),
+            ByteBufCodecs.VAR_INT.map(CustomCoreConfig::shipTypeByOrdinal, Enum::ordinal),
             CustomCoreConfig::baseType,
             ByteBufCodecs.VAR_INT,
             CustomCoreConfig::customWeaponSlots,
@@ -49,6 +49,11 @@ public record CustomCoreConfig(
             CustomCoreConfig::isCustomized,
             CustomCoreConfig::new
     );
+
+    private static ShipType shipTypeByOrdinal(int index) {
+        ShipType[] values = ShipType.values();
+        return index >= 0 && index < values.length ? values[index] : ShipType.SMALL;
+    }
 
     // ===== 工厂方法 =====
 

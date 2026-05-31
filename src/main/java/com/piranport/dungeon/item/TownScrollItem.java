@@ -2,6 +2,7 @@ package com.piranport.dungeon.item;
 
 import com.piranport.aviation.ReconManager;
 import com.piranport.dungeon.DungeonConstants;
+import com.piranport.platform.ClientHooks;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
@@ -51,14 +52,13 @@ public class TownScrollItem extends Item {
 
         // Block usage while in recon mode to prevent aircraft loss
         if (level.isClientSide()) {
-            if (com.piranport.aviation.ClientReconData.isInReconMode()) {
+            if (ClientHooks.isInReconMode()) {
                 player.displayClientMessage(
                         Component.translatable("item.piranport.town_scroll.recon_blocked"), true);
                 return InteractionResultHolder.fail(stack);
             }
             // Open confirmation screen client-side
-            net.minecraft.client.Minecraft.getInstance().setScreen(
-                    new com.piranport.dungeon.client.TownScrollScreen());
+            ClientHooks.openTownScrollScreen();
             return InteractionResultHolder.success(stack);
         }
 

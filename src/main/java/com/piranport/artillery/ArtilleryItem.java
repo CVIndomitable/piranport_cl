@@ -7,10 +7,9 @@ import com.piranport.component.WeaponCooldown;
 import com.piranport.debug.PiranPortDebug;
 import com.piranport.item.ShipCoreItem;
 import com.piranport.item.ShipCoreCombat;
+import com.piranport.platform.ClientHooks;
 import com.piranport.registry.ModDataComponents;
 import com.piranport.registry.ModSounds;
-import net.minecraft.client.Minecraft;
-import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -115,11 +114,7 @@ public class ArtilleryItem extends Item {
 
         if (level.isClientSide) {
             if (com.piranport.combat.TransformationManager.isPlayerTransformed(player)) {
-                if (com.piranport.client.ClientScopeHandler.isScoping()) {
-                    com.piranport.client.ClientScopeHandler.exitScope();
-                } else {
-                    com.piranport.client.ClientScopeHandler.enterScope(player, stack);
-                }
+                ClientHooks.toggleArtilleryScope(player, stack);
                 return InteractionResultHolder.fail(stack);
             }
             return InteractionResultHolder.pass(stack);
@@ -206,8 +201,8 @@ public class ArtilleryItem extends Item {
                     .withStyle(net.minecraft.ChatFormatting.YELLOW));
         }
 
-        if (net.neoforged.fml.loading.FMLEnvironment.dist.isClient()) {
-            if (net.minecraft.client.gui.screens.Screen.hasShiftDown()) {
+        if (ClientHooks.isClient()) {
+            if (ClientHooks.hasShiftDown()) {
                 tooltipComponents.add(Component.translatable("tooltip.piranport.cannon.barrel_count", getBarrelCount())
                         .withStyle(net.minecraft.ChatFormatting.AQUA));
                 tooltipComponents.add(Component.translatable("tooltip.piranport.cannon.damage",
@@ -218,9 +213,9 @@ public class ArtilleryItem extends Item {
                 // 装填进度
                 WeaponCooldown cd = stack.get(ModDataComponents.WEAPON_COOLDOWN.get());
                 if (cd != null) {
-                    Minecraft mc = Minecraft.getInstance();
-                    if (mc.level != null) {
-                        float fraction = cd.getFraction(mc.level.getGameTime());
+                    long gameTime = ClientHooks.getClientGameTime();
+                    if (gameTime >= 0) {
+                        float fraction = cd.getFraction(gameTime);
                         if (fraction > 0f) {
                             int pct = Math.round((1f - fraction) * 100);
                             tooltipComponents.add(Component.translatable("tooltip.piranport.cannon.reload_progress",

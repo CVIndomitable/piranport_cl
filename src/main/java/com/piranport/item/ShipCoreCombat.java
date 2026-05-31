@@ -51,7 +51,8 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import java.util.UUID;
-import com.piranport.client.BallisticSolver;
+import com.piranport.combat.BallisticSolver;
+import com.piranport.platform.ClientHooks;
 import com.piranport.PiranPort;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.Registries;
@@ -1020,94 +1021,7 @@ public class ShipCoreCombat {
      * Only shows when the player is transformed and the weapon is physically in their inventory.
      */
     public static void appendWeaponCooldownTooltip(ItemStack stack, List<Component> tooltip) {
-        if (!net.neoforged.fml.loading.FMLEnvironment.dist.isClient()) return;
-        net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
-        if (mc.player == null || mc.level == null) return;
-
-        Inventory inv = mc.player.getInventory();
-
-        // Find the active (transformed) ship core
-        ItemStack coreStack = TransformationManager.findTransformedCore(mc.player);
-        if (coreStack.isEmpty()) return;
-
-        // Find weapon slot by object identity (only works when item is directly in player's inventory)
-        int weaponSlot = -1;
-        for (int i = 0; i < inv.items.size(); i++) {
-            if (inv.items.get(i) == stack) { weaponSlot = i; break; }
-        }
-        if (weaponSlot == -1 && inv.offhand.get(0) == stack) weaponSlot = 40;
-        if (weaponSlot == -1) return;
-
-        SlotCooldowns cooldowns = coreStack.getOrDefault(
-                ModDataComponents.SLOT_COOLDOWNS.get(), SlotCooldowns.EMPTY);
-        long gameTime = mc.level.getGameTime();
-
-        boolean onCooldown = cooldowns.isOnCooldown(weaponSlot, gameTime);
-        boolean isManualMode = !com.piranport.config.ModCommonConfig.AUTO_RESUPPLY_ENABLED.get();
-        // Auto-reload missiles (ANTI_AIR) consume ammo directly from inventory, never use LoadedAmmo
-        boolean isAutoReloadMissile = stack.getItem() instanceof MissileLauncherItem ml0 && !ml0.isManualReload();
-        // Manual-reload missiles (ROCKET/ANTI_SHIP) always need LoadedAmmo regardless of config
-        boolean needsLoadedAmmo = !isAutoReloadMissile
-                && ((isManualMode && !(stack.getItem() instanceof AircraftItem))
-                    || (stack.getItem() instanceof MissileLauncherItem ml && ml.isManualReload()));
-
-        if (onCooldown) {
-            // Weapon on cooldown
-            if (needsLoadedAmmo) {
-                LoadedAmmo reloading = stack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
-                if (reloading.hasAmmo()) {
-                    tooltip.add(Component.translatable("tooltip.piranport.weapon_reloading")
-                            .withStyle(net.minecraft.ChatFormatting.YELLOW));
-                } else {
-                    tooltip.add(Component.translatable("tooltip.piranport.weapon_not_loaded")
-                            .withStyle(net.minecraft.ChatFormatting.RED));
-                }
-            } else {
-                // Auto-reload weapon on cooldown = actively reloading
-                tooltip.add(Component.translatable("tooltip.piranport.weapon_reloading")
-                        .withStyle(net.minecraft.ChatFormatting.YELLOW));
-            }
-        } else if (needsLoadedAmmo) {
-            // Manual mode or manual-reload missile: require LOADED_AMMO to be present
-            LoadedAmmo loaded = stack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
-            boolean hasAmmo;
-            if (stack.getItem() instanceof TorpedoLauncherItem tl) {
-                hasAmmo = loaded.count() >= tl.getTubeCount();
-            } else if (stack.getItem() instanceof com.piranport.artillery.ArtilleryItem ai) {
-                hasAmmo = loaded.count() >= ai.getEffectiveData(mc.level).barrels();
-            } else {
-                hasAmmo = loaded.hasAmmo();
-            }
-            if (hasAmmo) {
-                tooltip.add(Component.translatable("tooltip.piranport.weapon_ready")
-                        .withStyle(net.minecraft.ChatFormatting.GREEN));
-            } else {
-                tooltip.add(Component.translatable("tooltip.piranport.weapon_not_loaded")
-                        .withStyle(net.minecraft.ChatFormatting.RED));
-            }
-        } else if (isAutoReloadMissile) {
-            // Auto-reload missile: check inventory for matching ammo
-            MissileLauncherItem mlCheck = (MissileLauncherItem) stack.getItem();
-            Item ammoItem = mlCheck.getAmmoItem();
-            boolean hasAmmoInInventory = false;
-            for (ItemStack s : inv.items) {
-                if (!s.isEmpty() && s.is(ammoItem)) { hasAmmoInInventory = true; break; }
-            }
-            if (!hasAmmoInInventory) {
-                ItemStack oh = inv.offhand.get(0);
-                if (!oh.isEmpty() && oh.is(ammoItem)) hasAmmoInInventory = true;
-            }
-            if (hasAmmoInInventory) {
-                tooltip.add(Component.translatable("tooltip.piranport.weapon_ready")
-                        .withStyle(net.minecraft.ChatFormatting.GREEN));
-            } else {
-                tooltip.add(Component.translatable("tooltip.piranport.weapon_not_loaded")
-                        .withStyle(net.minecraft.ChatFormatting.RED));
-            }
-        } else {
-            tooltip.add(Component.translatable("tooltip.piranport.weapon_ready")
-                    .withStyle(net.minecraft.ChatFormatting.GREEN));
-        }
+        ClientHooks.appendWeaponCooldownTooltip(stack, tooltip);
     }
 
     // ===== Caliber matching =====

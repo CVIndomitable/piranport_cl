@@ -2,6 +2,7 @@ package com.piranport.network;
 
 import com.piranport.PiranPort;
 import com.piranport.artillery.config.override.ArtilleryConfigOverrideSavedData;
+import com.piranport.config.ConfigToolPermissions;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -36,9 +37,8 @@ public record ResetConfigPayload() implements CustomPacketPayload {
                 return;
             }
 
-            // 仅创造模式或OP可用
-            if (!serverPlayer.isCreative() && !serverPlayer.hasPermissions(2)) {
-                PiranPort.LOGGER.warn("Player {} tried to reset config without creative mode or OP permission",
+            if (!ConfigToolPermissions.canUse(serverPlayer)) {
+                PiranPort.LOGGER.warn("Player {} tried to reset config without admin permission",
                         serverPlayer.getName().getString());
                 return;
             }

@@ -58,7 +58,7 @@ import net.minecraft.world.phys.Vec3;
 import java.util.List;
 import java.util.UUID;
 
-import com.piranport.client.BallisticSolver;
+import com.piranport.platform.ClientHooks;
 import com.piranport.PiranPort;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.Registries;
@@ -314,69 +314,60 @@ public class ShipCoreItem extends Item implements Equipable {
         int currentTotalLoad = 0;
         double currentEngineSpeedBonus = 0;
         boolean hasCurrentLoad = false;
-        if (net.neoforged.fml.loading.FMLEnvironment.dist.isClient()) {
-            net.minecraft.world.entity.player.Player cp =
-                    net.minecraft.client.Minecraft.getInstance().player;
-            if (cp != null) {
-                currentTotalLoad = com.piranport.combat.TransformationManager
-                        .getInventoryWeaponLoad(cp.getInventory())
-                        + com.piranport.combat.TransformationManager.getCoreArmorLoad(stack);
-                currentEngineSpeedBonus = com.piranport.combat.TransformationManager
-                        .getCoreEngineSpeedBonus(stack);
-                hasCurrentLoad = true;
-            }
+        Player clientPlayer = ClientHooks.getClientPlayer();
+        if (clientPlayer != null) {
+            currentTotalLoad = com.piranport.combat.TransformationManager
+                    .getInventoryWeaponLoad(clientPlayer.getInventory())
+                    + com.piranport.combat.TransformationManager.getCoreArmorLoad(stack);
+            currentEngineSpeedBonus = com.piranport.combat.TransformationManager
+                    .getCoreEngineSpeedBonus(stack);
+            hasCurrentLoad = true;
         }
 
         // Check core from configured slot (offhand or helmet).
-        if (net.neoforged.fml.loading.FMLEnvironment.dist.isClient()) {
-                net.minecraft.world.entity.player.Player clientPlayer =
-                        net.minecraft.client.Minecraft.getInstance().player;
-                if (clientPlayer != null) {
-                    Inventory inv = clientPlayer.getInventory();
-                    ItemStack activeCore = com.piranport.combat.TransformationManager.getCoreFromConfiguredSlot(clientPlayer);
-                    boolean isActive = activeCore.getItem() instanceof ShipCoreItem
-                            && activeCore.getItem() == stack.getItem()
-                            && ItemStack.isSameItemSameComponents(activeCore, stack);
-                    if (!isActive) {
-                        tooltipComponents.add(Component.translatable("tooltip.piranport.core_inactive")
-                                .withStyle(net.minecraft.ChatFormatting.DARK_GRAY));
-                    }
-                    int weaponLoad = com.piranport.combat.TransformationManager
-                            .getInventoryWeaponLoad(inv);
-                    int armorLoad = com.piranport.combat.TransformationManager
-                            .getCoreArmorLoad(stack);
-                    tooltipComponents.add(Component.translatable(
-                            "container.piranport.load", weaponLoad + armorLoad, shipType.maxLoad));
-                    // Show stored armor plates
-                    int capacity = shipType.enhancementSlots;
-                    ItemContainerContents armorContents = stack.getOrDefault(
-                            ModDataComponents.SHIP_CORE_ARMOR.get(), ItemContainerContents.EMPTY);
-                    NonNullList<ItemStack> storedArmor = NonNullList.withSize(capacity, ItemStack.EMPTY);
-                    armorContents.copyInto(storedArmor);
-                    int armorBonus = com.piranport.combat.TransformationManager.getCoreArmorBonus(stack);
-                    int totalArmor = shipType.baseArmor + armorBonus;
-                    if (armorBonus > 0) {
-                        tooltipComponents.add(Component.translatable(
-                                "tooltip.piranport.core_armor_with_bonus", totalArmor, armorBonus, capacity));
-                    } else {
-                        tooltipComponents.add(Component.translatable(
-                                "tooltip.piranport.core_armor_slots", totalArmor, capacity));
-                    }
-                    for (ItemStack s : storedArmor) {
-                        if (!s.isEmpty()) {
-                            tooltipComponents.add(Component.literal("  • ").append(s.getHoverName()));
-                        }
-                    }
+        if (clientPlayer != null) {
+            Inventory inv = clientPlayer.getInventory();
+            ItemStack activeCore = com.piranport.combat.TransformationManager.getCoreFromConfiguredSlot(clientPlayer);
+            boolean isActive = activeCore.getItem() instanceof ShipCoreItem
+                    && activeCore.getItem() == stack.getItem()
+                    && ItemStack.isSameItemSameComponents(activeCore, stack);
+            if (!isActive) {
+                tooltipComponents.add(Component.translatable("tooltip.piranport.core_inactive")
+                        .withStyle(net.minecraft.ChatFormatting.DARK_GRAY));
+            }
+            int weaponLoad = com.piranport.combat.TransformationManager.getInventoryWeaponLoad(inv);
+            int armorLoad = com.piranport.combat.TransformationManager.getCoreArmorLoad(stack);
+            tooltipComponents.add(Component.translatable(
+                    "container.piranport.load", weaponLoad + armorLoad, shipType.maxLoad));
+            // Show stored armor plates
+            int capacity = shipType.enhancementSlots;
+            ItemContainerContents armorContents = stack.getOrDefault(
+                    ModDataComponents.SHIP_CORE_ARMOR.get(), ItemContainerContents.EMPTY);
+            NonNullList<ItemStack> storedArmor = NonNullList.withSize(capacity, ItemStack.EMPTY);
+            armorContents.copyInto(storedArmor);
+            int armorBonus = com.piranport.combat.TransformationManager.getCoreArmorBonus(stack);
+            int totalArmor = shipType.baseArmor + armorBonus;
+            if (armorBonus > 0) {
+                tooltipComponents.add(Component.translatable(
+                        "tooltip.piranport.core_armor_with_bonus", totalArmor, armorBonus, capacity));
+            } else {
+                tooltipComponents.add(Component.translatable(
+                        "tooltip.piranport.core_armor_slots", totalArmor, capacity));
+            }
+            for (ItemStack s : storedArmor) {
+                if (!s.isEmpty()) {
+                    tooltipComponents.add(Component.literal("  • ").append(s.getHoverName()));
                 }
             }
+        }
         // Fuel tank info (both modes)
         FuelData fuel = stack.getOrDefault(ModDataComponents.SHIP_CORE_FUEL.get(),
                 new FuelData(0, shipType.fuelCapacity));
         tooltipComponents.add(Component.translatable(
                 "tooltip.piranport.fuel_tank", fuel.currentFuel(), fuel.maxFuel()));
         // Shift: core stats
-        if (net.neoforged.fml.loading.FMLEnvironment.dist.isClient()) {
-            if (net.minecraft.client.gui.screens.Screen.hasShiftDown()) {
+        if (ClientHooks.isClient()) {
+            if (ClientHooks.hasShiftDown()) {
                 if (shipType.healthBonus != 0) {
                     tooltipComponents.add(Component.translatable("tooltip.piranport.core.health_bonus",
                             (shipType.healthBonus > 0 ? "+" : "") + shipType.healthBonus)

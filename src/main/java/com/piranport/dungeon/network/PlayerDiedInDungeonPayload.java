@@ -1,9 +1,8 @@
 package com.piranport.dungeon.network;
 
 import com.piranport.PiranPort;
-import com.piranport.dungeon.client.DungeonReviveScreen;
+import com.piranport.platform.ClientHooks;
 import io.netty.buffer.ByteBuf;
-import net.minecraft.client.Minecraft;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
@@ -25,7 +24,7 @@ public record PlayerDiedInDungeonPayload() implements CustomPacketPayload {
 
     public static void handle(PlayerDiedInDungeonPayload payload, IPayloadContext context) {
         context.enqueueWork(() -> {
-            Minecraft.getInstance().setScreen(new DungeonReviveScreen());
+            ClientHooks.openDungeonReviveScreen();
         });
     }
 }

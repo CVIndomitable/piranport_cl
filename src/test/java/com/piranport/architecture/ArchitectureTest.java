@@ -1,6 +1,5 @@
 package com.piranport.architecture;
 
-import com.tngtech.archunit.base.DescribedPredicate;
 import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
@@ -11,6 +10,9 @@ import com.tngtech.archunit.lang.SimpleConditionEvent;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -19,6 +21,8 @@ import java.util.Set;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.*;
 import static com.tngtech.archunit.core.domain.properties.CanBeAnnotated.Predicates.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ArchitectureTest {
 
@@ -53,26 +57,34 @@ class ArchitectureTest {
                 .check(CLASSES);
     }
 
-    /**
-     * entity 包不应引用 client 包 — 实体是共享层。
-     *
-     * <p>已知技术债务：{@code AircraftEntity$AircraftGlowHelper} 内联在实体类中但引用
-     * {@code Minecraft.getInstance()}，应提取到 {@code client} 包。此处用内部类豁免标记。
-     */
+    /** entity 包不应引用 client 包 — 实体是共享层。 */
     @Test
     void entityShouldNotDependOnClient() {
         noClasses()
                 .that().resideInAPackage("..entity..")
-                .and(DescribedPredicate.not(
-                        new DescribedPredicate<JavaClass>("inner classes (tech debt to extract)") {
-                            @Override
-                            public boolean test(JavaClass input) {
-                                return input.getName().contains("$");
-                            }
-                        }))
                 .should().dependOnClassesThat().resideInAnyPackage("..client..")
-                .because("Entity classes must not reference client-only classes; "
-                        + "inner glow helper is known tech debt to extract")
+                .because("Entity classes must not reference client-only classes")
+                .check(CLASSES);
+    }
+
+    /**
+     * 高频共享包不得直接依赖 Minecraft 客户端类。
+     *
+     * <p>若共享物品/实体需要读取本地客户端状态，应通过 {@code platform.ClientHooks}
+     * 反射桥接到 client 包，避免 dedicated server 类加载崩溃。
+     */
+    @Test
+    void sharedGameplayPackagesShouldNotDependOnMinecraftClient() {
+        noClasses()
+                .that().resideInAnyPackage(
+                        "..artillery..",
+                        "..combat..",
+                        "..entity..",
+                        "..item..",
+                        "..network..",
+                        "..registry..")
+                .should().dependOnClassesThat().resideInAnyPackage("net.minecraft.client..")
+                .because("Shared gameplay classes must not load Minecraft client-only classes")
                 .check(CLASSES);
     }
 
@@ -153,26 +165,44 @@ class ArchitectureTest {
 
     // ===== 网络层 =====
 
-    /**
-     * 网络包（不含 *Payload 类）不应依赖 client 包。
-     * <p>
-     * Payload 类遵循 NeoForge 内联客户端处理模式，
-     * handle() 方法中引用 client 类是标准做法。其余网络代码应保持端无关。
-     */
+    /** 网络包不应依赖 client 包。客户端效果应通过 platform.ClientHooks 桥接。 */
     @Test
     void networkShouldNotDependOnClient() {
         noClasses()
                 .that().resideInAPackage("com.piranport.network..")
-                .and(DescribedPredicate.not(
-                        new DescribedPredicate<JavaClass>("Payload classes (inline handler pattern)") {
-                            @Override
-                            public boolean test(JavaClass input) {
-                                return input.getSimpleName().endsWith("Payload");
-                            }
-                        }))
                 .should().dependOnClassesThat().resideInAnyPackage("..client..")
-                .because("Network code (except Payload inline handlers) must be client/server agnostic")
+                .because("Network code must be client/server agnostic")
                 .check(CLASSES);
+    }
+
+    /** 配置覆盖入口必须走统一管理员权限，不得用创造模式替代管理权限。 */
+    @Test
+    void configMutationPayloadsShouldUseAdminPermissionGate() throws IOException {
+        String permissionSource = Files.readString(
+                Path.of("src/main/java/com/piranport/config/ConfigToolPermissions.java"));
+        assertTrue(permissionSource.contains("CONFIG_ADMIN_PERMISSION_LEVEL = 2"),
+                "ConfigToolPermissions must keep config-admin access at permission level 2");
+        assertTrue(permissionSource.contains("hasPermissions(CONFIG_ADMIN_PERMISSION_LEVEL)"),
+                "ConfigToolPermissions must accept OP-level players");
+        assertTrue(permissionSource.contains("isSingleplayerOwner"),
+                "ConfigToolPermissions must keep no-cheats singleplayer owner testing available");
+
+        String[] files = {
+                "src/main/java/com/piranport/network/UpdateConfigOverridePayload.java",
+                "src/main/java/com/piranport/network/ImportConfigPayload.java",
+                "src/main/java/com/piranport/network/ExportConfigPayload.java",
+                "src/main/java/com/piranport/network/ResetConfigPayload.java",
+                "src/main/java/com/piranport/item/ArtilleryConfigToolItem.java",
+                "src/main/java/com/piranport/menu/ArtilleryConfigToolMenu.java"
+        };
+
+        for (String file : files) {
+            String source = Files.readString(Path.of(file));
+            assertTrue(source.contains("ConfigToolPermissions.canUse"),
+                    file + " must gate config mutation through ConfigToolPermissions");
+            assertFalse(source.contains("isCreative()"),
+                    file + " must not treat creative mode as config-admin permission");
+        }
     }
 
     // ===== 弹药与注册 =====

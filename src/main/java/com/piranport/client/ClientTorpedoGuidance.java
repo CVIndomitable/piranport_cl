@@ -1,4 +1,4 @@
-package com.piranport.combat;
+package com.piranport.client;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;

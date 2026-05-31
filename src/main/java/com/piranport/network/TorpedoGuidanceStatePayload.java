@@ -1,7 +1,7 @@
 package com.piranport.network;
 
 import com.piranport.PiranPort;
-import com.piranport.combat.ClientTorpedoGuidance;
+import com.piranport.platform.ClientHooks;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
@@ -31,11 +31,7 @@ public record TorpedoGuidanceStatePayload(boolean isActive, int entityId) implem
 
     public static void handle(TorpedoGuidanceStatePayload payload, IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
-            if (payload.isActive()) {
-                ClientTorpedoGuidance.handleStart(payload.entityId());
-            } else {
-                ClientTorpedoGuidance.handleEnd();
-            }
+            ClientHooks.handleTorpedoGuidanceState(payload.isActive(), payload.entityId());
         });
     }
 }

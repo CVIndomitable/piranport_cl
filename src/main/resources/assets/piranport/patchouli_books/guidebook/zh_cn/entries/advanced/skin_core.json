@@ -1,7 +1,7 @@
 {
   "name": "皮肤核心",
   "category": "piranport:4_advanced_equipment",
-  "icon": "piranport:skin_core_type1",
+  "icon": "piranport:skin_core_1",
   "sortnum": 2,
   "pages": [
     {
@@ -10,7 +10,7 @@
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)使用方法$()$(br2)1. 获得皮肤核心$(br)2. 右键使用皮肤核心$(br)3. 你的外观会改变$(br)4. 再次使用可以切换回原样$(br2)$(bold)提示：$()$(br)皮肤核心可以重复使用，不会消耗。"
+      "text": "$(bold)使用方法$()$(br2)1. 手持皮肤核心$(br)2. 按住潜行并右键使用$(br)3. 会应用对应外观并消耗该皮肤核心$(br)4. 如果已经是同一皮肤，再次潜行右键会移除皮肤且不消耗手中核心$(br2)切换到其他皮肤时，旧皮肤核心会返还给玩家。"
     }
   ]
 }

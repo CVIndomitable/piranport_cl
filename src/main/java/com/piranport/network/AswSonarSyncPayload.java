@@ -1,7 +1,7 @@
 package com.piranport.network;
 
 import com.piranport.PiranPort;
-import com.piranport.aviation.ClientAswSonarData;
+import com.piranport.platform.ClientHooks;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
@@ -46,6 +46,6 @@ public record AswSonarSyncPayload(int aircraftEntityId, List<Integer> detectedEn
     public Type<? extends CustomPacketPayload> type() { return TYPE; }
 
     public static void handle(AswSonarSyncPayload payload, IPayloadContext ctx) {
-        ctx.enqueueWork(() -> ClientAswSonarData.update(payload.aircraftEntityId(), payload.detectedEntityIds()));
+        ctx.enqueueWork(() -> ClientHooks.updateAswSonar(payload.aircraftEntityId(), payload.detectedEntityIds()));
     }
 }

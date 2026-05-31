@@ -1,4 +1,4 @@
-package com.piranport.registry;
+package com.piranport.client;
 
 import net.minecraft.client.KeyMapping;
 import org.lwjgl.glfw.GLFW;

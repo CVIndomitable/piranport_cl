@@ -1,6 +1,7 @@
 package com.piranport.item;
 
 import com.piranport.component.WeaponCategory;
+import com.piranport.platform.ClientHooks;
 import com.piranport.registry.ModDataComponents;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -33,8 +34,8 @@ public class TorpedoReloadItem extends Item {
             tooltip.add(Component.translatable("tooltip.piranport.weapon_category." + cat.getSerializedName())
                     .withStyle(ChatFormatting.DARK_GREEN));
         }
-        if (net.neoforged.fml.loading.FMLEnvironment.dist.isClient()) {
-            if (!net.minecraft.client.gui.screens.Screen.hasShiftDown()) {
+        if (ClientHooks.isClient()) {
+            if (!ClientHooks.hasShiftDown()) {
                 tooltip.add(Component.translatable("tooltip.piranport.shift_for_details")
                         .withStyle(ChatFormatting.DARK_GRAY));
             }

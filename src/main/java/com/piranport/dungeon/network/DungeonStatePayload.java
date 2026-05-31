@@ -1,7 +1,7 @@
 package com.piranport.dungeon.network;
 
 import com.piranport.PiranPort;
-import com.piranport.dungeon.client.DungeonHudLayer;
+import com.piranport.platform.ClientHooks;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
@@ -35,7 +35,7 @@ public record DungeonStatePayload(String stageName, String nodeId, long timerSta
 
     public static void handle(DungeonStatePayload payload, IPayloadContext context) {
         context.enqueueWork(() -> {
-            DungeonHudLayer.setDungeonState(payload.stageName(), payload.nodeId(),
+            ClientHooks.setDungeonState(payload.stageName(), payload.nodeId(),
                     payload.timerStartMillis());
         });
     }

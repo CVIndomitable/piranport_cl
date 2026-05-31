@@ -2,6 +2,7 @@ package com.piranport.network;
 
 import com.piranport.PiranPort;
 import com.piranport.artillery.config.override.ConfigCSVImporter;
+import com.piranport.config.ConfigToolPermissions;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -63,9 +64,8 @@ public record ImportConfigPayload(String cannonFilename, String projectileFilena
                 return;
             }
 
-            // 仅创造模式或OP可用
-            if (!serverPlayer.isCreative() && !serverPlayer.hasPermissions(2)) {
-                PiranPort.LOGGER.warn("Player {} tried to import config without creative mode or OP permission",
+            if (!ConfigToolPermissions.canUse(serverPlayer)) {
+                PiranPort.LOGGER.warn("Player {} tried to import config without admin permission",
                         serverPlayer.getName().getString());
                 return;
             }

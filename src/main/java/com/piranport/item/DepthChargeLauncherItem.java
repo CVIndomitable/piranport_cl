@@ -11,6 +11,7 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 
 import com.piranport.component.WeaponCategory;
+import com.piranport.platform.ClientHooks;
 import com.piranport.registry.ModDataComponents;
 
 import java.util.List;
@@ -71,8 +72,8 @@ public class DepthChargeLauncherItem extends Item {
             tooltipComponents.add(Component.translatable("tooltip.piranport.weapon_category." + cat.getSerializedName())
                     .withStyle(ChatFormatting.DARK_GREEN));
         }
-        if (net.neoforged.fml.loading.FMLEnvironment.dist.isClient()) {
-            if (net.minecraft.client.gui.screens.Screen.hasShiftDown()) {
+        if (ClientHooks.isClient()) {
+            if (ClientHooks.hasShiftDown()) {
                 tooltipComponents.add(Component.translatable("tooltip.piranport.dc_launcher.count", chargeCount)
                         .withStyle(ChatFormatting.AQUA));
                 String patternKey = switch (spreadPattern) {

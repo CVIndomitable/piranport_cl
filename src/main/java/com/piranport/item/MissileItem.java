@@ -1,6 +1,7 @@
 package com.piranport.item;
 
 import com.piranport.entity.MissileEntity.MissileType;
+import com.piranport.platform.ClientHooks;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
@@ -39,8 +40,8 @@ public class MissileItem extends Item {
                                 List<Component> tooltipComponents, TooltipFlag tooltipFlag) {
         tooltipComponents.add(Component.translatable(ammoType.translationKey)
                 .withStyle(ammoType.color));
-        if (net.neoforged.fml.loading.FMLEnvironment.dist.isClient()) {
-            if (net.minecraft.client.gui.screens.Screen.hasShiftDown()) {
+        if (ClientHooks.isClient()) {
+            if (ClientHooks.hasShiftDown()) {
                 if (displayAP > 0) {
                     tooltipComponents.add(Component.translatable("tooltip.piranport.missile.damage_ap",
                             String.format("%.0f", displayDamage), String.format("%.0f", displayAP))

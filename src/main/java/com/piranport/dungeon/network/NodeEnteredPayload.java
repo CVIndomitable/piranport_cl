@@ -1,7 +1,7 @@
 package com.piranport.dungeon.network;
 
 import com.piranport.PiranPort;
-import com.piranport.dungeon.client.DungeonHudLayer;
+import com.piranport.platform.ClientHooks;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
@@ -30,7 +30,7 @@ public record NodeEnteredPayload(String nodeId, String nodeType) implements Cust
     public static void handle(NodeEnteredPayload payload, IPayloadContext context) {
         context.enqueueWork(() -> {
             // Immediate feedback: update HUD node display before full DungeonStatePayload arrives
-            DungeonHudLayer.updateNode(payload.nodeId);
+            ClientHooks.updateDungeonNode(payload.nodeId);
         });
     }
 }

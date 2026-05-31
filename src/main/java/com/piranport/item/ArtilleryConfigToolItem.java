@@ -1,5 +1,6 @@
 package com.piranport.item;
 
+import com.piranport.config.ConfigToolPermissions;
 import com.piranport.menu.ArtilleryConfigToolMenu;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -16,7 +17,7 @@ import net.minecraft.world.level.Level;
 import java.util.List;
 
 /**
- * 火炮配置工具 - 创造模式专用
+ * 火炮配置工具 - 管理员专用
  *
  * <p>右键使用打开GUI，可在游戏内调整火炮和弹药数值。
  * <p>修改仅在当前存档生效，可导出为CSV文件。
@@ -29,7 +30,15 @@ public class ArtilleryConfigToolItem extends Item {
 
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
+        ItemStack stack = player.getItemInHand(hand);
         if (!level.isClientSide() && player instanceof ServerPlayer serverPlayer) {
+            if (!ConfigToolPermissions.canUse(serverPlayer)) {
+                serverPlayer.sendSystemMessage(
+                        Component.translatable("message.piranport.artillery_config_tool.admin_required")
+                                .withStyle(ChatFormatting.RED));
+                return InteractionResultHolder.fail(stack);
+            }
+
             // 打开配置GUI
             serverPlayer.openMenu(new SimpleMenuProvider(
                     (id, inv, p) -> new ArtilleryConfigToolMenu(id, inv),
@@ -37,7 +46,7 @@ public class ArtilleryConfigToolItem extends Item {
             ));
         }
 
-        return InteractionResultHolder.sidedSuccess(player.getItemInHand(hand), level.isClientSide());
+        return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
     }
 
     @Override
@@ -46,7 +55,7 @@ public class ArtilleryConfigToolItem extends Item {
                 .withStyle(ChatFormatting.GRAY));
         tooltip.add(Component.translatable("tooltip.piranport.artillery_config_tool.wip")
                 .withStyle(ChatFormatting.YELLOW, ChatFormatting.ITALIC));
-        tooltip.add(Component.translatable("tooltip.piranport.artillery_config_tool.creative_only")
+        tooltip.add(Component.translatable("tooltip.piranport.artillery_config_tool.admin_only")
                 .withStyle(ChatFormatting.RED, ChatFormatting.ITALIC));
     }
 }

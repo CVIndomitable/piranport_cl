@@ -7,6 +7,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 
 import com.piranport.component.WeaponCategory;
+import com.piranport.platform.ClientHooks;
 import com.piranport.registry.ModDataComponents;
 
 import java.util.List;
@@ -35,8 +36,8 @@ public class ArmorPlateItem extends Item {
             tooltip.add(Component.translatable("tooltip.piranport.weapon_category." + cat.getSerializedName())
                     .withStyle(ChatFormatting.DARK_GREEN));
         }
-        if (net.neoforged.fml.loading.FMLEnvironment.dist.isClient()) {
-            if (net.minecraft.client.gui.screens.Screen.hasShiftDown()) {
+        if (ClientHooks.isClient()) {
+            if (ClientHooks.hasShiftDown()) {
                 tooltip.add(Component.translatable("tooltip.piranport.armor_bonus", armorBonus)
                         .withStyle(ChatFormatting.BLUE));
                 if (protectionLevel > 0) {

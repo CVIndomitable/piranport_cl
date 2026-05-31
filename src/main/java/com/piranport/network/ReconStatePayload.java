@@ -1,7 +1,7 @@
 package com.piranport.network;
 
 import com.piranport.PiranPort;
-import com.piranport.aviation.ClientReconData;
+import com.piranport.platform.ClientHooks;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
@@ -31,11 +31,7 @@ public record ReconStatePayload(boolean isActive, int entityId) implements Custo
 
     public static void handle(ReconStatePayload payload, IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
-            if (payload.isActive()) {
-                ClientReconData.handleReconStart(payload.entityId());
-            } else {
-                ClientReconData.handleReconEnd();
-            }
+            ClientHooks.handleReconState(payload.isActive(), payload.entityId());
         });
     }
 }

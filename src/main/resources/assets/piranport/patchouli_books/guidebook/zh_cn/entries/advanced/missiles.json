@@ -1,22 +1,20 @@
 {
   "name": "导弹系统",
   "category": "piranport:1_advanced_weapons",
-  "icon": "piranport:anti_ship_missile",
+  "icon": "piranport:sy1_missile",
   "sortnum": 3,
   "pages": [
     {
       "type": "patchouli:text",
-      "text": "$(bold)导弹类型$()$(br2)皮兰港有三种导弹：$(br2)• $(item)反舰导弹$()：攻击水面目标$(br)• $(item)防空导弹$()：攻击空中目标$(br)• $(item)火箭弹$()：无制导，直线飞行$(br2)使用$(item)导弹发射器$()或$(item)火箭发射器$()发射。"
+      "text": "$(bold)导弹类型$()$(br2)皮兰港有三类导弹武器：$(br2)• $(item)反舰导弹$()：鹰击一号、鱼叉等，攻击水面目标$(br)• $(item)防空导弹$()：防空发射器自动消耗防空导弹$(br)• $(item)火箭弹$()：火箭发射器使用，偏向近中距离压制"
     },
     {
-      "type": "patchouli:crafting",
-      "recipe": "piranport:anti_ship_missile",
-      "text": "反舰导弹的合成配方"
+      "type": "patchouli:text",
+      "text": "$(bold)反舰与火箭装填$()$(br2)反舰导弹发射器和火箭发射器属于手动装填武器。把空发射器与对应导弹放入$(item)装填设施$()，等待完成后取出满弹发射器。"
     },
     {
-      "type": "patchouli:crafting",
-      "recipe": "piranport:anti_air_missile",
-      "text": "防空导弹的合成配方"
+      "type": "patchouli:text",
+      "text": "$(bold)防空导弹$()$(br2)防空导弹发射器不放入装填设施。它们发射时会自动从背包中消耗对应防空导弹，并按发射器冷却时间再次准备。$(br2)开启自动升空后，防空导弹也会参与自动防空。"
     },
     {
       "type": "patchouli:text",
@@ -24,7 +22,7 @@
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)使用建议$()$(br2)$(bold)反舰导弹：$()$(br)对付水面的大型敌人，如深海战舰。$(br2)$(bold)防空导弹：$()$(br)拦截敌方飞机和飞行生物。$(br2)$(bold)火箭弹：$()$(br)快速清理近距离的小型敌人，或进行火力压制。"
+      "text": "$(bold)使用建议$()$(br2)$(bold)反舰导弹：$()$(br)对付水面的大型敌人。$(br2)$(bold)防空导弹：$()$(br)拦截敌方飞机和飞行生物，适合常备在快捷栏。$(br2)$(bold)火箭弹：$()$(br)快速清理近距离的小型敌人，或进行火力压制。"
     }
   ]
 }

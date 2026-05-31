@@ -1,7 +1,7 @@
 {
   "name": "放置食物",
   "category": "piranport:5_advanced_production",
-  "icon": "piranport:placeable_food",
+  "icon": "piranport:plate_food",
   "sortnum": 3,
   "pages": [
     {

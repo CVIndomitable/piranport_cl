@@ -3,6 +3,7 @@ package com.piranport.item;
 import com.piranport.combat.TransformationManager;
 import com.piranport.component.AircraftInfo;
 import com.piranport.component.WeaponCategory;
+import com.piranport.platform.ClientHooks;
 import com.piranport.registry.ModDataComponents;
 import com.piranport.registry.ModItems;
 import net.minecraft.network.chat.Component;
@@ -72,8 +73,7 @@ public class AircraftItem extends Item {
         if (info != null) {
             tooltipComponents.add(Component.translatable("tooltip.piranport.aircraft_type." + info.aircraftType().getSerializedName())
                     .withStyle(net.minecraft.ChatFormatting.GOLD));
-            if (net.neoforged.fml.loading.FMLEnvironment.dist.isClient()
-                    && net.minecraft.client.gui.screens.Screen.hasShiftDown()) {
+            if (ClientHooks.isClient() && ClientHooks.hasShiftDown()) {
                 if (info.panelDamage() > 0) {
                     tooltipComponents.add(Component.translatable("tooltip.piranport.aircraft_damage",
                             String.format("%.1f", info.panelDamage())).withStyle(net.minecraft.ChatFormatting.RED));
@@ -89,7 +89,7 @@ public class AircraftItem extends Item {
                     tooltipComponents.add(Component.translatable("tooltip.piranport.aircraft_not_fueled")
                             .withStyle(net.minecraft.ChatFormatting.RED));
                 }
-            } else if (net.neoforged.fml.loading.FMLEnvironment.dist.isClient()) {
+            } else if (ClientHooks.isClient()) {
                 tooltipComponents.add(Component.translatable("tooltip.piranport.shift_for_details")
                         .withStyle(net.minecraft.ChatFormatting.DARK_GRAY));
             }

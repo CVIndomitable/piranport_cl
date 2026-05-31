@@ -7,7 +7,7 @@ import com.piranport.network.AutoLaunchTogglePayload;
 import com.piranport.network.FireControlPayload;
 import com.piranport.network.ManualReloadPayload;
 import com.piranport.network.ToggleFighterGroundAttackPayload;
-import com.piranport.registry.ModKeyMappings;
+import com.piranport.client.ModKeyMappings;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;

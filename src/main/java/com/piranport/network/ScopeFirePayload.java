@@ -32,7 +32,11 @@ public record ScopeFirePayload(FireMode mode, double targetX, double targetY, do
                 buf.writeDouble(p.targetZ());
             },
             buf -> {
-                FireMode mode = FireMode.values()[buf.readByte()];
+                int modeIndex = Byte.toUnsignedInt(buf.readByte());
+                FireMode[] modes = FireMode.values();
+                FireMode mode = modeIndex >= 0 && modeIndex < modes.length
+                        ? modes[modeIndex]
+                        : FireMode.QUICK_FIRE;
                 double tx = buf.readDouble();
                 double ty = buf.readDouble();
                 double tz = buf.readDouble();

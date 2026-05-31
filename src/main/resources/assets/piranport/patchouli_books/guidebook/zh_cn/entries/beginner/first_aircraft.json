@@ -1,29 +1,29 @@
 {
   "name": "召唤你的第一架飞机",
   "category": "piranport:0_beginner",
-  "icon": "piranport:fighter",
+  "icon": "piranport:fighter_squadron",
   "sortnum": 5,
   "pages": [
     {
       "type": "patchouli:text",
-      "text": "$(bold)舰载机基础$()$(br2)舰载机是强大的空中支援力量。它们可以自动攻击敌人、侦察地形、运输物品。$(br2)$(bold)召唤飞机：$()$(br)1. 确保已变身为舰娘$(br)2. 手持飞机物品$(br)3. 确保飞机有燃料$(br)4. 右键发射"
+      "text": "$(bold)舰载机基础$()$(br2)舰载机是强大的空中支援力量。变身后手持飞机物品，确保飞机已经加注航空燃料，再右键放飞。$(br2)飞机会按自身类型执行空战、轰炸、鱼雷攻击或侦察任务。"
     },
     {
       "type": "patchouli:crafting",
-      "recipe": "piranport:fighter",
-      "text": "战斗机的合成配方"
+      "recipe": "piranport:fighter_squadron",
+      "text": "战斗机编队的合成配方"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)飞机类型$()$(br2)• $(item)战斗机$()：空战专家，攻击敌对飞行生物$(br)• $(item)轰炸机$()：投掷炸弹攻击地面目标$(br)• $(item)鱼雷机$()：发射鱼雷攻击水中目标$(br)• $(item)侦察机$()：提供视野，不参与战斗$(br)• $(item)运输机$()：空投物品"
+      "text": "$(bold)飞机类型$()$(br2)• $(item)战斗机$()：空战专家，可用U键切换是否攻击地面目标$(br)• $(item)轰炸机$()：水平轰炸或俯冲轰炸$(br)• $(item)鱼雷机$()：投放航空鱼雷$(br)• $(item)侦察机$()：进入侦察视角并提供远距离观察$(br)• $(item)反潜机$()：使用反潜探测与反潜武器"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)控制飞机$()$(br2)$(bold)V键$()：切换侦察机视角$(br)• 第一次按：切换到侦察机视角$(br)• 再次按：切换到下一架侦察机$(br)• 长按：退出侦察模式$(br2)$(bold)召回飞机：$()$(br)手持$(item)舰娘核心$()右键，所有飞机会返回并变回物品。"
+      "text": "$(bold)控制飞机$()$(br2)放飞侦察机后会进入侦察视角。侦察模式下用移动键控制侦察机方向，空格上升，潜行下降。$(br2)$(bold)召回飞机：$()$(br)已变身时空手右键，或主手持舰装核心右键，可以召回正在飞行的飞机。"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)燃料消耗$()$(br2)飞机在飞行时会持续消耗燃料。燃料耗尽后，飞机会自动返回并坠落。$(br2)$(bold)提示：$()$(br)• 出发前检查飞机燃料$(br)• 长途飞行准备备用燃料$(br)• 及时召回低燃料飞机$(br2)详细内容见$(l:piranport:2_advanced_aviation/aircraft_types)进阶：舰载机类型$(/l)。"
+      "text": "$(bold)燃料消耗$()$(br2)飞机必须有航空燃料才能起飞。启用自动补给时，系统会消耗背包里的航空燃料为飞机补满；关闭自动补给时，需要在背包中把航空燃料右键拖到飞机物品上。$(br2)详细内容见$(l:piranport:advanced/aircraft_types)进阶：舰载机类型$(/l)。"
     }
   ]
 }

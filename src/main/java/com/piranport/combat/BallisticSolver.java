@@ -1,4 +1,4 @@
-package com.piranport.client;
+package com.piranport.combat;
 
 import com.piranport.config.ModArtilleryConfig;
 import com.piranport.config.ModEquipmentConfig;

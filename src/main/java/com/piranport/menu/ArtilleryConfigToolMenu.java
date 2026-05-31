@@ -1,5 +1,6 @@
 package com.piranport.menu;
 
+import com.piranport.config.ConfigToolPermissions;
 import com.piranport.registry.ModMenuTypes;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
@@ -88,8 +89,10 @@ public class ArtilleryConfigToolMenu extends AbstractContainerMenu {
 
     @Override
     public boolean stillValid(@NotNull Player player) {
-        // 仅创造模式可用
-        return player.isCreative();
+        if (player.level().isClientSide()) {
+            return true;
+        }
+        return ConfigToolPermissions.canUse(player);
     }
 
     @Override

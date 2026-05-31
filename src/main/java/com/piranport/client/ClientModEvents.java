@@ -15,7 +15,6 @@ import com.piranport.registry.ModBlockEntityTypes;
 import com.piranport.registry.ModDataComponents;
 import com.piranport.registry.ModEntityTypes;
 import com.piranport.registry.ModItems;
-import com.piranport.registry.ModKeyMappings;
 import com.piranport.registry.ModMenuTypes;
 import net.minecraft.client.renderer.entity.ThrownItemRenderer;
 import net.minecraft.client.renderer.item.ItemProperties;

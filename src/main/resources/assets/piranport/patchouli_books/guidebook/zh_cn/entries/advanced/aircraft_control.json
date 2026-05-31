@@ -1,12 +1,12 @@
 {
-  "name": "飞机AI与控制",
+  "name": "飞机控制",
   "category": "piranport:2_advanced_aviation",
-  "icon": "minecraft:command_block",
+  "icon": "piranport:fighter_squadron",
   "sortnum": 1,
   "pages": [
     {
       "type": "patchouli:text",
-      "text": "$(bold)飞机状态机$()$(br2)每架飞机都有一个状态机，控制其行为：$(br)• 起飞$(br)• 巡航$(br)• 攻击$(br)• 返航$(br)• 降落$(br2)飞机会根据战场情况自动切换状态。"
+      "text": "$(bold)飞机状态$()$(br2)每架飞机都会在起飞、巡航、攻击、返航和降落之间自动切换。玩家主要负责准备燃料、放飞飞机、设置火控目标和在需要时召回。"
     },
     {
       "type": "patchouli:text",
@@ -18,7 +18,7 @@
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)飞机高亮$()$(br2)飞机会根据状态显示不同颜色的高亮：$(br2)• $(2)绿色$()：友方飞机$(br)• $(4)红色$()：敌方飞机$(br)• $(6)黄色$()：中立飞机$(br2)通过$(o)isCurrentlyGlowing()$()和$(o)getTeamColor()$()方法实现。"
+      "text": "$(bold)飞机高亮$()$(br2)开启战场高亮后，飞机会按归属和状态显示不同颜色。火控锁定目标拥有更高优先级，会覆盖普通战场高亮。$(br2)反潜声呐的目标提示会以独立颜色显示。"
     }
   ]
 }

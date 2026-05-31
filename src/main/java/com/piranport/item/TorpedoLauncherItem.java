@@ -1,6 +1,7 @@
 package com.piranport.item;
 
 import com.piranport.component.LoadedAmmo;
+import com.piranport.platform.ClientHooks;
 import com.piranport.registry.ModDataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
@@ -151,8 +152,8 @@ public class TorpedoLauncherItem extends Item {
                     .withStyle(net.minecraft.ChatFormatting.GRAY));
         }
 
-        if (net.neoforged.fml.loading.FMLEnvironment.dist.isClient()) {
-            if (net.minecraft.client.gui.screens.Screen.hasShiftDown()) {
+        if (ClientHooks.isClient()) {
+            if (ClientHooks.hasShiftDown()) {
                 tooltipComponents.add(Component.translatable("tooltip.piranport.launcher.caliber", caliber)
                         .withStyle(net.minecraft.ChatFormatting.GRAY));
                 tooltipComponents.add(Component.translatable("tooltip.piranport.launcher.tubes", tubeCount)

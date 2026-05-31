@@ -1,7 +1,7 @@
 package com.piranport.client.input;
 
 import com.piranport.client.AmmoSelectOverlay;
-import com.piranport.combat.ClientTorpedoGuidance;
+import com.piranport.client.ClientTorpedoGuidance;
 import com.piranport.network.TorpedoGuidanceInputPayload;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.Entity;

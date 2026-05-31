@@ -5,8 +5,9 @@ import com.piranport.aviation.ClientReconData;
 import com.piranport.client.AmmoSelectOverlay;
 import com.piranport.client.CameraShakeHandler;
 import com.piranport.client.CannonImpactEffects;
+import com.piranport.client.ClientTorpedoGuidance;
 import com.piranport.client.EntityUuidCache;
-import com.piranport.combat.ClientTorpedoGuidance;
+import com.piranport.client.ModKeyMappings;
 import com.piranport.combat.TransformationManager;
 import com.piranport.item.ShipCoreItem;
 import com.piranport.item.ShipType;
@@ -114,7 +115,7 @@ public class ClientInputCoordinator {
             boolean hasFcTargets = !lockedTargets.isEmpty();
 
             // 处理 Y 键切换
-            while (com.piranport.registry.ModKeyMappings.HIGHLIGHT_ENTITIES.consumeClick()) {
+            while (ModKeyMappings.HIGHLIGHT_ENTITIES.consumeClick()) {
                 EntityHighlightHandler.toggleHighlight(mc);
             }
 

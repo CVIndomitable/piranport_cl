@@ -1,24 +1,24 @@
 {
   "name": "声呐系统",
   "category": "piranport:3_advanced_support",
-  "icon": "piranport:sonar",
+  "icon": "piranport:standard_sonar",
   "sortnum": 0,
   "pages": [
     {
       "type": "patchouli:text",
-      "text": "$(bold)声呐探测$()$(br2)$(item)声呐$()可以探测水下目标，并在地图上标记它们的位置。$(br2)$(bold)装备方法：$()$(br)将声呐装备到舰娘的装备槽中，即可自动工作。"
+      "text": "$(bold)声呐探测$()$(br2)$(item)标准型声呐$()存入正在变身的舰装核心后会自动工作。它不会在地图上生成标记，而是周期性给附近目标施加发光效果，方便肉眼发现。"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)探测范围$()$(br2)声呐有一定的探测范围。为了性能考虑，系统会$(bold)动态限制$()扫描范围，避免超出服务器模拟距离。$(br2)$(bold)性能优化：$()$(br)声呐扫描不是每tick都执行，而是有一定间隔，减少服务器负担。"
+      "text": "$(bold)探测范围$()$(br2)声呐每40游戏刻扫描一次。水平范围最多24格，并会受服务器模拟距离限制；垂直范围约8格。$(br2)扫描范围内的活体非玩家目标会短暂发光。"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)标记所有水生生物$()$(br2)$(bold)重要：$()$(br)声呐会标记$(bold)所有$()水生生物，包括：$(br)• 敌对生物（溺尸、守卫者）$(br)• 友方生物（鱼、海豚）$(br)• 水中的玩家$(br2)这是$(2)预期玩法$()，不是bug！"
+      "text": "$(bold)标记目标$()$(br2)标准型声呐会标记附近活体生物，但不会标记玩家，也不会区分敌友。$(br2)它适合在水下、夜间或混战环境中快速确认附近是否有目标。"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)战术运用$()$(br2)声呐最适合配合$(l:piranport:1_advanced_weapons/torpedoes)鱼雷$(/l)和$(l:piranport:1_advanced_weapons/depth_charges)深水炸弹$(/l)使用。$(br2)$(bold)战术流程：$()$(br)1. 装备声呐探测水下敌人$(br)2. 锁定目标$(br)3. 发射鱼雷或深弹$(br)4. 观察声呐确认击杀"
+      "text": "$(bold)战术运用$()$(br2)声呐最适合配合$(l:piranport:advanced/torpedoes)鱼雷$(/l)和$(l:piranport:advanced/depth_charges)深水炸弹$(/l)使用。$(br2)先用声呐确认水下目标，再用火控锁定或靠近投射深弹，可以显著降低漏判。"
     }
   ]
 }

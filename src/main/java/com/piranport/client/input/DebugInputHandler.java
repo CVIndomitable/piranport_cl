@@ -5,7 +5,7 @@ import com.piranport.network.DebugCooldownOverridePayload;
 import com.piranport.network.DebugTogglePayload;
 import com.piranport.network.HitDisplayTogglePayload;
 import com.piranport.network.SnapshotRequestPayload;
-import com.piranport.registry.ModKeyMappings;
+import com.piranport.client.ModKeyMappings;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;

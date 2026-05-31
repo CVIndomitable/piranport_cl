@@ -1,10 +1,8 @@
 package com.piranport.dungeon.network;
 
 import com.piranport.PiranPort;
-import com.piranport.dungeon.client.DungeonHudLayer;
-import com.piranport.dungeon.client.DungeonResultScreen;
+import com.piranport.platform.ClientHooks;
 import io.netty.buffer.ByteBuf;
-import net.minecraft.client.Minecraft;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -53,10 +51,9 @@ public record DungeonResultPayload(String stageName, long timeMillis,
 
     public static void handle(DungeonResultPayload payload, IPayloadContext context) {
         context.enqueueWork(() -> {
-            DungeonHudLayer.clearDungeonState();
-            Minecraft.getInstance().setScreen(new DungeonResultScreen(
+            ClientHooks.openDungeonResultScreen(
                     payload.stageName(), payload.timeMillis(),
-                    payload.isFirstClear(), payload.rewardNames()));
+                    payload.isFirstClear(), payload.rewardNames());
         });
     }
 }

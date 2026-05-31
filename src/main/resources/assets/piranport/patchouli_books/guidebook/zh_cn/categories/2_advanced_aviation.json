@@ -1,6 +1,6 @@
 {
   "name": "进阶：航空系统",
-  "description": "舰载机类型、AI控制与燃料管理",
-  "icon": "piranport:fighter",
+  "description": "舰载机类型、自动控制与燃料管理",
+  "icon": "piranport:fighter_squadron",
   "sortnum": 2
 }

@@ -2,6 +2,7 @@ package com.piranport.network;
 
 import com.piranport.PiranPort;
 import com.piranport.block.entity.ShipCoreModifierBlockEntity;
+import com.piranport.menu.ShipCoreModifierMenu;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -34,28 +35,28 @@ public record ApplyModificationPayload(BlockPos pos, int weaponSlots, int enhanc
 
     public static void handle(ApplyModificationPayload payload, IPayloadContext context) {
         context.enqueueWork(() -> {
-            if (context.player() instanceof ServerPlayer player) {
-                BlockEntity be = player.level().getBlockEntity(payload.pos);
-                if (be instanceof ShipCoreModifierBlockEntity modifier) {
-                    // 验证玩家在范围内
-                    if (player.distanceToSqr(payload.pos.getX() + 0.5, payload.pos.getY() + 0.5, payload.pos.getZ() + 0.5) > 64.0) {
-                        return;
-                    }
+            if (!(context.player() instanceof ServerPlayer player)) return;
 
-                    // 设置配置
-                    modifier.setWeaponSlots(payload.weaponSlots);
-                    modifier.setEnhancementSlots(payload.enhancementSlots);
+            if (!(player.containerMenu instanceof ShipCoreModifierMenu menu)) return;
+            if (!menu.getBlockPos().equals(payload.pos)) return;
+            if (!menu.stillValid(player)) return;
 
-                    // 应用改装
-                    boolean success = modifier.applyModification(player);
-                    if (success) {
-                        player.displayClientMessage(
-                                Component.translatable("message.piranport.modification_applied"), true);
-                    } else {
-                        player.displayClientMessage(
-                                Component.translatable("message.piranport.modification_failed"), true);
-                    }
-                }
+            BlockEntity be = player.level().getBlockEntity(payload.pos);
+            if (!(be instanceof ShipCoreModifierBlockEntity modifier)) return;
+            if (menu.getBlockEntity() != modifier) return;
+
+            // 设置配置
+            modifier.setWeaponSlots(payload.weaponSlots);
+            modifier.setEnhancementSlots(payload.enhancementSlots);
+
+            // 应用改装
+            boolean success = modifier.applyModification(player);
+            if (success) {
+                player.displayClientMessage(
+                        Component.translatable("message.piranport.modification_applied"), true);
+            } else {
+                player.displayClientMessage(
+                        Component.translatable("message.piranport.modification_failed"), true);
             }
         });
     }

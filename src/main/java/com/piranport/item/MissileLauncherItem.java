@@ -1,6 +1,7 @@
 package com.piranport.item;
 
 import com.piranport.entity.MissileEntity;
+import com.piranport.platform.ClientHooks;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
@@ -82,8 +83,8 @@ public class MissileLauncherItem extends Item {
         tooltipComponents.add(Component.translatable(missileType.translationKey)
                 .withStyle(ChatFormatting.GRAY));
 
-        if (net.neoforged.fml.loading.FMLEnvironment.dist.isClient()) {
-            if (net.minecraft.client.gui.screens.Screen.hasShiftDown()) {
+        if (ClientHooks.isClient()) {
+            if (ClientHooks.hasShiftDown()) {
                 // 伤害
                 if (armorPen > 0) {
                     tooltipComponents.add(Component.translatable("tooltip.piranport.missile.damage_ap",

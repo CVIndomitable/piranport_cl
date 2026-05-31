@@ -1,30 +1,29 @@
 {
   "name": "你的第一把武器",
   "category": "piranport:0_beginner",
-  "icon": "piranport:small_cannon",
+  "icon": "piranport:small_gun",
   "sortnum": 2,
   "pages": [
     {
       "type": "patchouli:text",
-      "text": "$(bold)火炮基础$()$(br2)火炮是最基础的武器。右键发射炮弹，击中目标造成伤害和爆炸。$(br2)$(bold)使用方法：$()$(br)1. 手持火炮$(br)2. 准备好弹药（炮弹物品）$(br)3. 右键发射$(br)4. 等待装填完成后再次发射"
+      "text": "$(bold)火炮基础$()$(br2)火炮是最基础的舰载武器。变身后手持火炮，右键进入或退出炮术视角，左键开火。$(br2)弹药会从背包中按口径自动寻找；手持火炮时左键不会破坏方块。"
     },
     {
       "type": "patchouli:crafting",
-      "recipe": "piranport:small_cannon",
+      "recipe": "piranport:small_gun",
       "text": "小型火炮的合成配方"
     },
     {
-      "type": "patchouli:crafting",
-      "recipe": "piranport:cannon_shell",
-      "text": "炮弹的合成配方"
+      "type": "patchouli:text",
+      "text": "$(bold)炮弹来源$()$(br2)小口径、中口径和大口径炮弹不是普通工作台配方，请使用$(item)弹药工作台$()制作。$(br2)常用弹种包括高爆弹、穿甲弹、近炸引信弹和三式弹。变身后手持火炮，按住$(bold)Tab键$()打开弹药轮盘，松开确认选择。"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)弹药装填$()$(br2)火炮需要弹药才能发射。确保背包里有对应的弹药物品。$(br2)$(bold)火炮类型：$()$(br)• $(item)小型火炮$()：单管，装填快$(br)• $(item)中型火炮$()：双联装，威力中等$(br)• $(item)大型火炮$()：三联装，威力强大$(br2)联装数越多，一次齐射的炮弹越多！"
+      "text": "$(bold)火炮类型$()$(br2)• $(item)单装小型火炮$()：单管，负重最低$(br)• $(item)小型火炮$()：双联装，适合入门$(br)• $(item)中型火炮$()：中口径，威力更高$(br)• $(item)大型火炮$()：三联装大口径，装填更慢$(br2)联装数越多，一次齐射的炮弹越多。"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)鱼雷入门$()$(br2)鱼雷是水下武器，对水中目标特别有效。$(br2)$(item)鱼雷发射器$()可以更换弹药类型，支持不同的鱼雷。$(br2)鱼雷会在水中追踪目标，命中后造成大量伤害。$(br2)详细机制请查看$(l:piranport:1_advanced_weapons/torpedoes)进阶：鱼雷战术$(/l)。"
+      "text": "$(bold)鱼雷入门$()$(br2)鱼雷是水下武器，对水中目标特别有效。鱼雷发射器需要先装满对应口径的鱼雷，之后才能齐射。$(br2)详细机制请查看$(l:piranport:advanced/torpedoes)进阶：鱼雷战术$(/l)。"
     }
   ]
 }

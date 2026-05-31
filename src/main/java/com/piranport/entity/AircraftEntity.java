@@ -7,6 +7,7 @@ import com.piranport.component.AircraftAttackMode;
 import com.piranport.component.AircraftInfo;
 import com.piranport.network.AswSonarSyncPayload;
 import com.piranport.network.ReconStatePayload;
+import com.piranport.platform.ClientHooks;
 import com.piranport.registry.ModDataComponents;
 import com.piranport.registry.ModEntityTypes;
 import com.piranport.registry.ModItems;
@@ -309,7 +310,7 @@ public class AircraftEntity extends Entity {
      *    position directly in lerpTo, which causes camera stutter since xo==x after
      *    setOldPosAndRot → no partial-tick interpolation).
      * 2. In recon mode, ignore server rotation (client controls camera via mouse).
-     *    Uses ClientReconData instead of getFlightState() to avoid race with entity
+     *    Uses client recon state instead of getFlightState() to avoid race with entity
      *    data sync — the ReconStatePayload arrives before the STATE data packet.
      */
     @Override
@@ -321,8 +322,7 @@ public class AircraftEntity extends Entity {
             this.clientLerpY = y;
             this.clientLerpZ = z;
             // In recon mode, keep client-controlled rotation
-            if (com.piranport.aviation.ClientReconData.isInReconMode()
-                    && com.piranport.aviation.ClientReconData.getReconEntityId() == getId()) {
+            if (ClientHooks.isReconEntity(getId())) {
                 return;
             }
             // Non-recon: store target rotation for smooth lerping in tick()
@@ -1410,7 +1410,7 @@ public class AircraftEntity extends Entity {
         // Vanilla glow has highest priority
         if (super.isCurrentlyGlowing()) return true;
         if (level().isClientSide()) {
-            return AircraftGlowHelper.shouldGlow(this);
+            return ClientHooks.shouldAircraftGlow(this);
         }
         return false;
     }
@@ -1427,54 +1427,9 @@ public class AircraftEntity extends Entity {
             if (super.isCurrentlyGlowing()) {
                 return super.getTeamColor();
             }
-            return AircraftGlowHelper.getGlowColor(this);
+            return ClientHooks.getAircraftGlowColor(this, super.getTeamColor());
         }
         return super.getTeamColor();
-    }
-
-    /** Isolates client-only class references to avoid NoClassDefFoundError on dedicated servers. */
-    @net.neoforged.api.distmarker.OnlyIn(net.neoforged.api.distmarker.Dist.CLIENT)
-    private static class AircraftGlowHelper {
-        private static final int FRIENDLY_BLUE = 0x3399FF;
-        private static final int HOSTILE_RED = 0xFF3333;
-        private static final int FC_TARGET_RED = 0xFF0000;
-        private static final int ALLY_GREEN = 0x33FF33;
-
-        static boolean shouldGlow(AircraftEntity aircraft) {
-            // Fire control locked targets always glow
-            if (isFcTarget(aircraft)) return true;
-            // Highlight mode (Y key): glow any player-owned aircraft
-            if (!com.piranport.ClientTickHandler.isHighlightEnabled()) return false;
-            net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
-            if (mc == null || mc.player == null) return false;
-            return aircraft.entityData.get(OWNER_ID).isPresent();
-        }
-
-        static int getGlowColor(AircraftEntity aircraft) {
-            // Fire control targets are always red
-            if (isFcTarget(aircraft)) return FC_TARGET_RED;
-            net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
-            if (mc == null || mc.player == null) return 0xFFFFFF;
-            if (aircraft.isOwnedByPlayer(mc.player)) {
-                return FRIENDLY_BLUE;
-            }
-            // 检查是否为友方编队成员（同主人的飞机）
-            java.util.UUID ownerUUID = aircraft.getOwnerUUID();
-            if (ownerUUID != null && ownerUUID.equals(mc.player.getUUID())) {
-                return FRIENDLY_BLUE;
-            }
-            // 攻击中的飞机：仅当不是友方时才标红
-            if (aircraft.getFlightState() == FlightState.ATTACKING) {
-                if (ownerUUID == null || !ownerUUID.equals(mc.player.getUUID())) {
-                    return HOSTILE_RED;
-                }
-            }
-            return ALLY_GREEN;
-        }
-
-        private static boolean isFcTarget(AircraftEntity aircraft) {
-            return com.piranport.aviation.ClientFireControlData.getTargets().contains(aircraft.getUUID());
-        }
     }
 
     @Override

@@ -1,7 +1,7 @@
 package com.piranport.network;
 
 import com.piranport.PiranPort;
-import com.piranport.client.CameraShakeHandler;
+import com.piranport.platform.ClientHooks;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -31,6 +31,6 @@ public record ShakeEffectPayload(float intensity, int durationTicks) implements 
     }
 
     public static void handle(ShakeEffectPayload payload, IPayloadContext ctx) {
-        ctx.enqueueWork(() -> CameraShakeHandler.trigger(payload.intensity(), payload.durationTicks()));
+        ctx.enqueueWork(() -> ClientHooks.triggerCameraShake(payload.intensity(), payload.durationTicks()));
     }
 }

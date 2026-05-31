@@ -1,20 +1,20 @@
 {
   "name": "火炮详解",
   "category": "piranport:1_advanced_weapons",
-  "icon": "piranport:large_cannon",
+  "icon": "piranport:large_gun",
   "sortnum": 1,
   "pages": [
     {
       "type": "patchouli:text",
-      "text": "$(bold)火炮类型对比$()$(br2)皮兰港有三种基础火炮，联装数和威力递增：$(br2)• $(item)小型火炮$()：单管，装填快$(br)• $(item)中型火炮$()：双联装$(br)• $(item)大型火炮$()：三联装，威力最强"
+      "text": "$(bold)火炮类型对比$()$(br2)皮兰港有多种基础火炮：$(br2)• $(item)单装小型火炮$()：负重低，入门友好$(br)• $(item)小型火炮$()：双联装小口径$(br)• $(item)中型火炮$()：中口径，弹道更重$(br)• $(item)大型火炮$()：三联装大口径，威力高但更重"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)火炮数据表$()$(br2)$(bold)小型火炮$()$(br)联装数：1$(br)伤害：8.0$(br)装填时间：40 tick (2秒)$(br)初速：3.5$(br)爆炸威力：2.0$(br2)$(bold)中型火炮$()$(br)联装数：2$(br)伤害：15.0$(br)装填时间：60 tick (3秒)$(br)初速：4.5$(br)爆炸威力：3.0"
+      "text": "$(bold)操作方式$()$(br2)变身后手持火炮：$(br)• 右键进入或退出炮术视角$(br)• 左键开火$(br)• 快速双击左键可让同型火炮齐射$(br)• 按住Tab打开弹药轮盘，松开确认弹种$(br2)手持火炮时左键挖掘会被屏蔽。"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)大型火炮$()$(br)联装数：3$(br)伤害：20.0$(br)装填时间：80 tick (4秒)$(br)初速：5.0$(br)爆炸威力：4.0$(br2)$(bold)齐射测试炮$()$(br)联装数：12$(br)伤害：60.0$(br)装填时间：80 tick (4秒)$(br)初速：10.5$(br)爆炸威力：6.0$(br)$(italic)测试用极限齐射火炮$()$(br)"
+      "text": "$(bold)弹药与口径$()$(br2)火炮按口径匹配炮弹：小口径、中口径和大口径各有高爆弹、穿甲弹等弹种。$(br2)炮弹主要通过$(item)弹药工作台$()生产；背包中没有匹配弹药时，火炮无法正常开火。"
     },
     {
       "type": "patchouli:text",
@@ -22,7 +22,7 @@
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)友军伤害防护$()$(br2)炮弹有友军伤害防护机制，不会误伤队友。$(br2)$(bold)击落归因$()$(br)如果你的炮弹击落了敌方飞机，会正确记录为你的击杀。$(br2)$(bold)提示：$()$(br)配合$(l:piranport:0_beginner/fire_control)火控系统$(/l)使用，可以大幅提高命中率！"
+      "text": "$(bold)命中与高亮$()$(br2)炮弹命中后会根据弹种造成直接伤害、爆炸或特殊弹幕效果。命中提示可用$(bold)J键$()开关。$(br2)$(bold)提示：$()$(br)配合$(l:piranport:beginner/fire_control)火控系统$(/l)使用，可以更稳定地追踪战场目标。"
     }
   ]
 }

@@ -2,6 +2,7 @@ package com.piranport.network;
 
 import com.piranport.PiranPort;
 import com.piranport.artillery.config.override.ConfigCSVExporter;
+import com.piranport.config.ConfigToolPermissions;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -42,9 +43,9 @@ public record ExportConfigPayload() implements CustomPacketPayload {
                 return;
             }
 
-            // 仅创造模式或OP可用
-            if (!serverPlayer.isCreative() && !serverPlayer.hasPermissions(2)) {
-                PiranPort.LOGGER.warn("Player {} tried to export config without creative mode or OP permission", serverPlayer.getName().getString());
+            if (!ConfigToolPermissions.canUse(serverPlayer)) {
+                PiranPort.LOGGER.warn("Player {} tried to export config without admin permission",
+                        serverPlayer.getName().getString());
                 return;
             }
 

@@ -1,5 +1,6 @@
 package com.piranport.item;
 
+import com.piranport.platform.ClientHooks;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
@@ -87,8 +88,8 @@ public class TorpedoItem extends Item {
                                 List<Component> tooltipComponents, TooltipFlag tooltipFlag) {
         tooltipComponents.add(Component.translatable("tooltip.piranport.ammo_type.torpedo")
                 .withStyle(ChatFormatting.DARK_GREEN));
-        if (net.neoforged.fml.loading.FMLEnvironment.dist.isClient()) {
-            if (net.minecraft.client.gui.screens.Screen.hasShiftDown()) {
+        if (ClientHooks.isClient()) {
+            if (ClientHooks.hasShiftDown()) {
                 tooltipComponents.add(Component.translatable("tooltip.piranport.torpedo.damage",
                         String.format("%.1f", damage)).withStyle(ChatFormatting.RED));
                 tooltipComponents.add(Component.translatable("tooltip.piranport.torpedo.range",

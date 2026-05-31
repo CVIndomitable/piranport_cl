@@ -1,7 +1,7 @@
 package com.piranport.network;
 
 import com.piranport.PiranPort;
-import com.piranport.client.CannonImpactEffects;
+import com.piranport.platform.ClientHooks;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -47,6 +47,6 @@ public record CannonImpactEffectPayload(double x, double y, double z, float powe
     }
 
     public static void handle(CannonImpactEffectPayload payload, IPayloadContext ctx) {
-        ctx.enqueueWork(() -> CannonImpactEffects.spawn(payload));
+        ctx.enqueueWork(() -> ClientHooks.spawnCannonImpactEffect(payload));
     }
 }

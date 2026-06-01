@@ -1,5 +1,6 @@
 package com.piranport.client;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.piranport.PiranPort;
@@ -31,13 +32,16 @@ public class SkinCoreItemRenderer extends BlockEntityWithoutLevelRenderer {
 
     @Override
     public void renderByItem(ItemStack stack, ItemDisplayContext displayContext,
-                                PoseStack poseStack, MultiBufferSource bufferSource,
-                                int packedLight, int packedOverlay) {
+                             PoseStack poseStack, MultiBufferSource bufferSource,
+                             int packedLight, int packedOverlay) {
         if (!(stack.getItem() instanceof SkinCoreItem skinCore)) return;
 
         int skinId = skinCore.getSkinId();
         ResourceLocation skinTexture = ResourceLocation.fromNamespaceAndPath(
                 PiranPort.MOD_ID, "textures/skin/skin_" + skinId + ".png");
+
+        // Bind the texture using RenderSystem
+        RenderSystem.setShaderTexture(0, skinTexture);
 
         poseStack.pushPose();
         poseStack.translate(0.5F, 0.25F, 0.5F);
@@ -45,7 +49,8 @@ public class SkinCoreItemRenderer extends BlockEntityWithoutLevelRenderer {
         float scale = 0.625F;
         poseStack.scale(scale, -scale, -scale);
 
-        VertexConsumer vc = bufferSource.getBuffer(RenderType.entityTranslucent(skinTexture));
+        // Use entityCutoutNoCull for better compatibility
+        VertexConsumer vc = bufferSource.getBuffer(RenderType.entityCutoutNoCull(skinTexture));
         this.headModel.renderToBuffer(poseStack, vc, packedLight, packedOverlay, -1);
 
         poseStack.popPose();

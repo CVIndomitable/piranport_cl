@@ -34,16 +34,11 @@ public class SkinCoreItemRenderer extends BlockEntityWithoutLevelRenderer {
     public void renderByItem(ItemStack stack, ItemDisplayContext displayContext,
                              PoseStack poseStack, MultiBufferSource bufferSource,
                              int packedLight, int packedOverlay) {
-        if (!(stack.getItem() instanceof SkinCoreItem skinCore)) {
-            PiranPort.LOGGER.warn("SkinCoreItemRenderer called with non-SkinCoreItem: {}", stack.getItem());
-            return;
-        }
+        if (!(stack.getItem() instanceof SkinCoreItem skinCore)) return;
 
         int skinId = skinCore.getSkinId();
         ResourceLocation skinTexture = ResourceLocation.fromNamespaceAndPath(
                 PiranPort.MOD_ID, "textures/skin/skin_" + skinId + ".png");
-
-        PiranPort.LOGGER.debug("Rendering skin core {} with texture {}", skinId, skinTexture);
 
         poseStack.pushPose();
         poseStack.translate(0.5F, 0.25F, 0.5F);
@@ -51,7 +46,6 @@ public class SkinCoreItemRenderer extends BlockEntityWithoutLevelRenderer {
         float scale = 0.625F;
         poseStack.scale(scale, -scale, -scale);
 
-        // Use entityCutoutNoCull for better compatibility
         VertexConsumer vc = bufferSource.getBuffer(RenderType.entityCutoutNoCull(skinTexture));
         this.headModel.renderToBuffer(poseStack, vc, packedLight, packedOverlay, -1);
 

@@ -42,7 +42,6 @@ public class SkinCoreItem extends Item {
                     this.renderer = new SkinCoreItemRenderer(
                             Minecraft.getInstance().getBlockEntityRenderDispatcher(),
                             Minecraft.getInstance().getEntityModels());
-                    com.piranport.PiranPort.LOGGER.info("Created SkinCoreItemRenderer for skin {}", skinId);
                 }
                 return this.renderer;
             }

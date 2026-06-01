@@ -49,6 +49,15 @@ public class SkinManager {
             case 3 -> new ItemStack(ModItems.SKIN_CORE_3.get());
             case 4 -> new ItemStack(ModItems.SKIN_CORE_4.get());
             case 5 -> new ItemStack(ModItems.SKIN_CORE_5.get());
+            case 6 -> new ItemStack(ModItems.SKIN_CORE_6.get());
+            case 7 -> new ItemStack(ModItems.SKIN_CORE_7.get());
+            case 8 -> new ItemStack(ModItems.SKIN_CORE_8.get());
+            case 9 -> new ItemStack(ModItems.SKIN_CORE_9.get());
+            case 10 -> new ItemStack(ModItems.SKIN_CORE_10.get());
+            case 11 -> new ItemStack(ModItems.SKIN_CORE_11.get());
+            case 12 -> new ItemStack(ModItems.SKIN_CORE_12.get());
+            case 13 -> new ItemStack(ModItems.SKIN_CORE_13.get());
+            case 14 -> new ItemStack(ModItems.SKIN_CORE_14.get());
             default -> ItemStack.EMPTY;
         };
     }

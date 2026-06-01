@@ -1356,6 +1356,33 @@ public class ModItems {
     public static final DeferredItem<SkinCoreItem> SKIN_CORE_5 =
             ITEMS.register("skin_core_5",
                     () -> new SkinCoreItem(new Item.Properties().stacksTo(1), 5));
+    public static final DeferredItem<SkinCoreItem> SKIN_CORE_6 =
+            ITEMS.register("skin_core_6",
+                    () -> new SkinCoreItem(new Item.Properties().stacksTo(1), 6));
+    public static final DeferredItem<SkinCoreItem> SKIN_CORE_7 =
+            ITEMS.register("skin_core_7",
+                    () -> new SkinCoreItem(new Item.Properties().stacksTo(1), 7));
+    public static final DeferredItem<SkinCoreItem> SKIN_CORE_8 =
+            ITEMS.register("skin_core_8",
+                    () -> new SkinCoreItem(new Item.Properties().stacksTo(1), 8));
+    public static final DeferredItem<SkinCoreItem> SKIN_CORE_9 =
+            ITEMS.register("skin_core_9",
+                    () -> new SkinCoreItem(new Item.Properties().stacksTo(1), 9));
+    public static final DeferredItem<SkinCoreItem> SKIN_CORE_10 =
+            ITEMS.register("skin_core_10",
+                    () -> new SkinCoreItem(new Item.Properties().stacksTo(1), 10));
+    public static final DeferredItem<SkinCoreItem> SKIN_CORE_11 =
+            ITEMS.register("skin_core_11",
+                    () -> new SkinCoreItem(new Item.Properties().stacksTo(1), 11));
+    public static final DeferredItem<SkinCoreItem> SKIN_CORE_12 =
+            ITEMS.register("skin_core_12",
+                    () -> new SkinCoreItem(new Item.Properties().stacksTo(1), 12));
+    public static final DeferredItem<SkinCoreItem> SKIN_CORE_13 =
+            ITEMS.register("skin_core_13",
+                    () -> new SkinCoreItem(new Item.Properties().stacksTo(1), 13));
+    public static final DeferredItem<SkinCoreItem> SKIN_CORE_14 =
+            ITEMS.register("skin_core_14",
+                    () -> new SkinCoreItem(new Item.Properties().stacksTo(1), 14));
 
     // ===== Fuel =====
     public static final DeferredItem<Item> FUEL =

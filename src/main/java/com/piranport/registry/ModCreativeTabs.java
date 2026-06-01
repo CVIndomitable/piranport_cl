@@ -155,6 +155,15 @@ public class ModCreativeTabs {
                         output.accept(ModItems.SKIN_CORE_3.get());
                         output.accept(ModItems.SKIN_CORE_4.get());
                         output.accept(ModItems.SKIN_CORE_5.get());
+                        output.accept(ModItems.SKIN_CORE_6.get());
+                        output.accept(ModItems.SKIN_CORE_7.get());
+                        output.accept(ModItems.SKIN_CORE_8.get());
+                        output.accept(ModItems.SKIN_CORE_9.get());
+                        output.accept(ModItems.SKIN_CORE_10.get());
+                        output.accept(ModItems.SKIN_CORE_11.get());
+                        output.accept(ModItems.SKIN_CORE_12.get());
+                        output.accept(ModItems.SKIN_CORE_13.get());
+                        output.accept(ModItems.SKIN_CORE_14.get());
                     }).build());
 
     // ===== 农业 — 矿石 / 材料（作物类归入"舰娘食物"标签页）=====

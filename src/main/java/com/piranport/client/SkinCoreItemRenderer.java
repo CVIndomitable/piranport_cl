@@ -34,14 +34,16 @@ public class SkinCoreItemRenderer extends BlockEntityWithoutLevelRenderer {
     public void renderByItem(ItemStack stack, ItemDisplayContext displayContext,
                              PoseStack poseStack, MultiBufferSource bufferSource,
                              int packedLight, int packedOverlay) {
-        if (!(stack.getItem() instanceof SkinCoreItem skinCore)) return;
+        if (!(stack.getItem() instanceof SkinCoreItem skinCore)) {
+            PiranPort.LOGGER.warn("SkinCoreItemRenderer called with non-SkinCoreItem: {}", stack.getItem());
+            return;
+        }
 
         int skinId = skinCore.getSkinId();
         ResourceLocation skinTexture = ResourceLocation.fromNamespaceAndPath(
                 PiranPort.MOD_ID, "textures/skin/skin_" + skinId + ".png");
 
-        // Bind the texture using RenderSystem
-        RenderSystem.setShaderTexture(0, skinTexture);
+        PiranPort.LOGGER.debug("Rendering skin core {} with texture {}", skinId, skinTexture);
 
         poseStack.pushPose();
         poseStack.translate(0.5F, 0.25F, 0.5F);

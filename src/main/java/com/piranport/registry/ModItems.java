@@ -1350,6 +1350,12 @@ public class ModItems {
     public static final DeferredItem<SkinCoreItem> SKIN_CORE_3 =
             ITEMS.register("skin_core_3",
                     () -> new SkinCoreItem(new Item.Properties().stacksTo(1), 3));
+    public static final DeferredItem<SkinCoreItem> SKIN_CORE_4 =
+            ITEMS.register("skin_core_4",
+                    () -> new SkinCoreItem(new Item.Properties().stacksTo(1), 4));
+    public static final DeferredItem<SkinCoreItem> SKIN_CORE_5 =
+            ITEMS.register("skin_core_5",
+                    () -> new SkinCoreItem(new Item.Properties().stacksTo(1), 5));
 
     // ===== Fuel =====
     public static final DeferredItem<Item> FUEL =

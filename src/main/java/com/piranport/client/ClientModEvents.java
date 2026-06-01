@@ -30,7 +30,9 @@ import net.neoforged.neoforge.client.event.RegisterItemDecorationsEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import org.lwjgl.glfw.GLFW;
+import net.neoforged.fml.common.EventBusSubscriber.Bus;
 
+@EventBusSubscriber(modid = PiranPort.MOD_ID, value = Dist.CLIENT, bus = Bus.MOD)
 public class ClientModEvents {
 
 

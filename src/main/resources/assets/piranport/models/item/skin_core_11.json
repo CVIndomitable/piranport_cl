@@ -1,6 +1,3 @@
 {
-  "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "piranport:item/skin_core_11"
-  }
+  "parent": "minecraft:item/builtin/entity"
 }

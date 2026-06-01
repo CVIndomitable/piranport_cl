@@ -92,6 +92,10 @@ public class PiranPort {
         ModAttachmentTypes.ATTACHMENT_TYPES.register(modEventBus);
         ModSounds.SOUND_EVENTS.register(modEventBus);
         NeoForge.EVENT_BUS.addListener(this::registerBrewingRecipes);
+
+        // 注册客户端 MOD 总线事件
+        modEventBus.register(com.piranport.client.ClientModEvents.class);
+
         modContainer.registerConfig(ModConfig.Type.CLIENT, ModClientConfig.SPEC);
         modContainer.registerConfig(ModConfig.Type.COMMON, ModCommonConfig.SPEC);
         modContainer.registerConfig(ModConfig.Type.COMMON, ModWeaponsConfig.SPEC, "piranport-weapons.toml");

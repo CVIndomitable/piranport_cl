@@ -39,6 +39,11 @@ public class ClientModEvents {
 
     @SubscribeEvent
     public static void onClientSetup(FMLClientSetupEvent event) {
+        // 初始化皮肤核心物品渲染器（3D 玩家头）。
+        // enqueueWork 确保在主线程执行，避免并发出问题。
+        // FIXME: ModelLayers.PLAYER_HEAD 在 1.21.1 中不可用，暂时禁用 3D 渲染
+        // event.enqueueWork(SkinCoreItemRenderer::init);
+
         // 注册 "fueled" 物品属性：有燃料时为 1.0，否则为 0.0。
         // 模型使用此谓词在装载和空载纹理之间切换。
         ResourceLocation fueled = ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "fueled");

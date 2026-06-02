@@ -1,10 +1,10 @@
 package com.piranport.client;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.piranport.PiranPort;
 import com.piranport.item.SkinCoreItem;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.SkullModel;
 import net.minecraft.client.model.SkullModelBase;
 import net.minecraft.client.model.geom.EntityModelSet;
@@ -16,6 +16,7 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
 
 /**
  * Custom renderer for SkinCoreItem that displays a 3D player head
@@ -23,11 +24,49 @@ import net.minecraft.world.item.ItemStack;
  */
 public class SkinCoreItemRenderer extends BlockEntityWithoutLevelRenderer {
 
+    private static SkinCoreItemRenderer INSTANCE;
+
+    /**
+     * IClientItemExtensions 实例供 SkinCoreItem.initializeClient() 使用。
+     * getCustomRenderer() 返回渲染器单例，所有皮肤核心共用一个渲染器。
+     */
+    public static final IClientItemExtensions CLIENT_EXTENSIONS = new IClientItemExtensions() {
+        @Override
+        public BlockEntityWithoutLevelRenderer getCustomRenderer() {
+            return SkinCoreItemRenderer.getInstance();
+        }
+    };
+
     private final SkullModelBase headModel;
 
     public SkinCoreItemRenderer(BlockEntityRenderDispatcher dispatcher, EntityModelSet modelSet) {
         super(dispatcher, modelSet);
         this.headModel = new SkullModel(modelSet.bakeLayer(ModelLayers.PLAYER_HEAD));
+    }
+
+    /**
+     * 初始化渲染器单例。必须在 FMLClientSetupEvent 中显式调用，
+     * 避免在模型烘焙等阶段因 EntityModelSet 未就绪而崩溃。
+     */
+    public static void init() {
+        if (INSTANCE == null) {
+            Minecraft mc = Minecraft.getInstance();
+            INSTANCE = new SkinCoreItemRenderer(
+                    mc.getBlockEntityRenderDispatcher(),
+                    mc.getEntityModels()
+            );
+        }
+    }
+
+    /**
+     * 获取渲染器单例。调用前必须先调用 {@link #init()}，否则抛异常。
+     */
+    public static SkinCoreItemRenderer getInstance() {
+        if (INSTANCE == null) {
+            throw new IllegalStateException(
+                    "SkinCoreItemRenderer not initialized — call init() in FMLClientSetupEvent");
+        }
+        return INSTANCE;
     }
 
     @Override

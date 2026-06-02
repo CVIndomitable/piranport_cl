@@ -37,16 +37,29 @@ public class SkinCoreItemRenderer extends BlockEntityWithoutLevelRenderer {
         }
     };
 
-    private final SkullModelBase headModel;
+    // 延迟初始化：EntityModelSet 在资源加载时才填充，
+    // FMLClientSetupEvent 阶段 roots 为空，直接 bakeLayer 会崩溃。
+    private SkullModelBase headModel;
 
     public SkinCoreItemRenderer(BlockEntityRenderDispatcher dispatcher, EntityModelSet modelSet) {
         super(dispatcher, modelSet);
-        this.headModel = new SkullModel(modelSet.bakeLayer(ModelLayers.PLAYER_HEAD));
     }
 
     /**
-     * 初始化渲染器单例。必须在 FMLClientSetupEvent 中显式调用，
-     * 避免在模型烘焙等阶段因 EntityModelSet 未就绪而崩溃。
+     * 延迟获取头颅模型。首次渲染时 EntityModelSet 已就绪，此时安全调用 bakeLayer。
+     */
+    private SkullModelBase getHeadModel() {
+        if (this.headModel == null) {
+            EntityModelSet modelSet = Minecraft.getInstance().getEntityModels();
+            this.headModel = new SkullModel(modelSet.bakeLayer(ModelLayers.PLAYER_HEAD));
+            PiranPort.LOGGER.info("SkinCoreItemRenderer head model initialized");
+        }
+        return this.headModel;
+    }
+
+    /**
+     * 初始化渲染器单例。在 FMLClientSetupEvent 中调用，仅创建渲染器实例。
+     * 头颅模型延迟到首次渲染时初始化（等待 EntityModelSet 就绪）。
      */
     public static void init() {
         PiranPort.LOGGER.info("SkinCoreItemRenderer initializing...");
@@ -56,8 +69,7 @@ public class SkinCoreItemRenderer extends BlockEntityWithoutLevelRenderer {
                     mc.getBlockEntityRenderDispatcher(),
                     mc.getEntityModels()
             );
-            PiranPort.LOGGER.info("SkinCoreItemRenderer initialized with model: {}",
-                    INSTANCE.headModel.getClass().getName());
+            PiranPort.LOGGER.info("SkinCoreItemRenderer singleton created (model deferred)");
         }
     }
 
@@ -89,7 +101,7 @@ public class SkinCoreItemRenderer extends BlockEntityWithoutLevelRenderer {
         poseStack.scale(scale, -scale, -scale);
 
         VertexConsumer vc = bufferSource.getBuffer(RenderType.entityCutoutNoCull(skinTexture));
-        this.headModel.renderToBuffer(poseStack, vc, packedLight, packedOverlay, -1);
+        getHeadModel().renderToBuffer(poseStack, vc, packedLight, packedOverlay, -1);
 
         poseStack.popPose();
     }

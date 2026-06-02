@@ -1383,6 +1383,30 @@ public class ModItems {
     public static final DeferredItem<SkinCoreItem> SKIN_CORE_14 =
             ITEMS.register("skin_core_14",
                     () -> new SkinCoreItem(new Item.Properties().stacksTo(1), 14));
+    public static final DeferredItem<SkinCoreItem> SKIN_CORE_15 =
+            ITEMS.register("skin_core_15",
+                    () -> new SkinCoreItem(new Item.Properties().stacksTo(1), 15));
+    public static final DeferredItem<SkinCoreItem> SKIN_CORE_16 =
+            ITEMS.register("skin_core_16",
+                    () -> new SkinCoreItem(new Item.Properties().stacksTo(1), 16));
+    public static final DeferredItem<SkinCoreItem> SKIN_CORE_17 =
+            ITEMS.register("skin_core_17",
+                    () -> new SkinCoreItem(new Item.Properties().stacksTo(1), 17));
+    public static final DeferredItem<SkinCoreItem> SKIN_CORE_18 =
+            ITEMS.register("skin_core_18",
+                    () -> new SkinCoreItem(new Item.Properties().stacksTo(1), 18));
+    public static final DeferredItem<SkinCoreItem> SKIN_CORE_19 =
+            ITEMS.register("skin_core_19",
+                    () -> new SkinCoreItem(new Item.Properties().stacksTo(1), 19));
+    public static final DeferredItem<SkinCoreItem> SKIN_CORE_20 =
+            ITEMS.register("skin_core_20",
+                    () -> new SkinCoreItem(new Item.Properties().stacksTo(1), 20));
+    public static final DeferredItem<SkinCoreItem> SKIN_CORE_21 =
+            ITEMS.register("skin_core_21",
+                    () -> new SkinCoreItem(new Item.Properties().stacksTo(1), 21));
+    public static final DeferredItem<SkinCoreItem> SKIN_CORE_22 =
+            ITEMS.register("skin_core_22",
+                    () -> new SkinCoreItem(new Item.Properties().stacksTo(1), 22));
 
     // ===== Fuel =====
     public static final DeferredItem<Item> FUEL =

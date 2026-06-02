@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/template_skull",
+  "textures": {
+    "layer0": "piranport:item/skin_core_15"
+  }
+}

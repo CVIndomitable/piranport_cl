@@ -49,12 +49,15 @@ public class SkinCoreItemRenderer extends BlockEntityWithoutLevelRenderer {
      * 避免在模型烘焙等阶段因 EntityModelSet 未就绪而崩溃。
      */
     public static void init() {
+        PiranPort.LOGGER.info("SkinCoreItemRenderer initializing...");
         if (INSTANCE == null) {
             Minecraft mc = Minecraft.getInstance();
             INSTANCE = new SkinCoreItemRenderer(
                     mc.getBlockEntityRenderDispatcher(),
                     mc.getEntityModels()
             );
+            PiranPort.LOGGER.info("SkinCoreItemRenderer initialized with model: {}",
+                    INSTANCE.headModel.getClass().getName());
         }
     }
 

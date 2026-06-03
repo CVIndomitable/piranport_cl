@@ -577,9 +577,10 @@ public class AircraftEntity extends Entity {
             }
         }
 
-        // Auto-seek for attack aircraft (bombers + torpedo bombers) without fire-control locks:
+        // Auto-seek without fire-control locks:
         // Only search ONCE after launch; if FC target died, just keep orbiting.
-        if (!payloadType.isEmpty()
+        // Fighters (hasBullets with empty payload) are included via hasBullets check.
+        if ((hasBullets || !payloadType.isEmpty())
                 && aircraftType != AircraftInfo.AircraftType.RECON
                 && !hasEverHadFireControl && !autoSeekDone
                 && FireControlManager.getTargets(owner.getUUID()).isEmpty()) {
@@ -593,6 +594,15 @@ public class AircraftEntity extends Entity {
                     if (isAsw) {
                         hasNearbyTarget = !sl.getEntitiesOfClass(LivingEntity.class, box,
                                 e -> e.isAlive() && e != owner && isAswTarget(e)).isEmpty();
+                    } else if (aircraftType == AircraftInfo.AircraftType.FIGHTER
+                            || aircraftType == AircraftInfo.AircraftType.ROCKET_FIGHTER) {
+                        // Fighters: hostile mobs OR enemy aircraft
+                        boolean hasHostile = !sl.getEntitiesOfClass(LivingEntity.class, box,
+                                e -> e.isAlive() && e != owner && e instanceof Monster).isEmpty();
+                        boolean hasEnemyAircraft = !sl.getEntitiesOfClass(AircraftEntity.class, box,
+                                e -> e.isAlive() && e.getOwnerUUID() != null
+                                        && !e.getOwnerUUID().equals(owner.getUUID())).isEmpty();
+                        hasNearbyTarget = hasHostile || hasEnemyAircraft;
                     } else {
                         hasNearbyTarget = !sl.getEntitiesOfClass(LivingEntity.class, box,
                                 e -> e.isAlive() && e != owner && e instanceof Monster && !isAirborneTarget(e)).isEmpty();

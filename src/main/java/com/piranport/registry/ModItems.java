@@ -1341,15 +1341,6 @@ public class ModItems {
             ITEMS.registerSimpleBlockItem(ModBlocks.DUNGEON_LECTERN);
 
     // ===== Skin Cores =====
-    public static final DeferredItem<SkinCoreItem> SKIN_CORE_1 =
-            ITEMS.register("skin_core_1",
-                    () -> new SkinCoreItem(new Item.Properties().stacksTo(1), 1));
-    public static final DeferredItem<SkinCoreItem> SKIN_CORE_2 =
-            ITEMS.register("skin_core_2",
-                    () -> new SkinCoreItem(new Item.Properties().stacksTo(1), 2));
-    public static final DeferredItem<SkinCoreItem> SKIN_CORE_3 =
-            ITEMS.register("skin_core_3",
-                    () -> new SkinCoreItem(new Item.Properties().stacksTo(1), 3));
     public static final DeferredItem<SkinCoreItem> SKIN_CORE_4 =
             ITEMS.register("skin_core_4",
                     () -> new SkinCoreItem(new Item.Properties().stacksTo(1), 4));

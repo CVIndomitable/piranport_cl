@@ -2,7 +2,9 @@ package com.piranport.client.input;
 
 import com.piranport.aviation.ClientReconData;
 import com.piranport.client.AmmoSelectOverlay;
+import com.piranport.client.ModKeyMappings;
 import com.piranport.network.ReconControlPayload;
+import com.piranport.network.ReconExitPayload;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
 import net.minecraft.world.entity.Entity;
@@ -42,6 +44,11 @@ public class ReconInputHandler {
                 reconEntity.xRotO = mc.player.xRotO;
                 reconEntity.yRotO = mc.player.yRotO;
             }
+        }
+
+        // V 键退出侦察模式
+        while (ModKeyMappings.RECON_EXIT.consumeClick()) {
+            PacketDistributor.sendToServer(new ReconExitPayload());
         }
 
         if (mc.player.tickCount % 2 == 0) {

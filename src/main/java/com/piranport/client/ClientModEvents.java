@@ -90,6 +90,7 @@ public class ClientModEvents {
         event.register(ModKeyMappings.SWITCH_AMMO);
         event.register(ModKeyMappings.DEBUG_COOLDOWN_OVERRIDE);
         event.register(ModKeyMappings.HIT_DISPLAY_TOGGLE);
+        event.register(ModKeyMappings.RECON_EXIT);
     }
 
     @SubscribeEvent

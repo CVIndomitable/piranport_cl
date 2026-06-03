@@ -40,4 +40,8 @@ public class ModKeyMappings {
 
     public static final KeyMapping HIT_DISPLAY_TOGGLE =
             new KeyMapping("key.piranport.hit_display_toggle", GLFW.GLFW_KEY_J, CATEGORY);
+
+    /** 退出侦察模式（V） */
+    public static final KeyMapping RECON_EXIT =
+            new KeyMapping("key.piranport.recon_exit", GLFW.GLFW_KEY_V, CATEGORY);
 }

@@ -471,15 +471,28 @@ public class AircraftCombat {
             if (closest != null) return closest;
         }
 
-        // Auto-seek: scan for airborne or ground targets
+        // Auto-seek: hostile mobs and enemy aircraft only (not all living entities)
         net.minecraft.world.phys.AABB box = craft.getBoundingBox().inflate(48.0);
-        return sl.getEntitiesOfClass(Entity.class, box,
-                        e -> e.isAlive() && e != owner && e != craft
-                                && !(e instanceof Player)
-                                && !(e instanceof net.minecraft.world.Container)
-                                && (e instanceof LivingEntity || e instanceof AircraftEntity))
+        // Search for hostile mobs
+        LivingEntity hostileTarget = sl.getEntitiesOfClass(LivingEntity.class, box,
+                        e -> e.isAlive() && e != owner
+                                && e instanceof net.minecraft.world.entity.monster.Monster)
                 .stream()
                 .min(java.util.Comparator.comparingDouble(craft::distanceToSqr))
                 .orElse(null);
+        // Search for enemy aircraft
+        AircraftEntity airTarget = sl.getEntitiesOfClass(AircraftEntity.class, box,
+                        e -> e.isAlive() && e != craft
+                                && e.getOwnerUUID() != null
+                                && !e.getOwnerUUID().equals(owner.getUUID()))
+                .stream()
+                .min(java.util.Comparator.comparingDouble(craft::distanceToSqr))
+                .orElse(null);
+        // Return whichever is closer
+        if (hostileTarget != null && airTarget != null) {
+            return craft.distanceToSqr(hostileTarget) <= craft.distanceToSqr(airTarget)
+                    ? hostileTarget : airTarget;
+        }
+        return hostileTarget != null ? hostileTarget : airTarget;
     }
 }

@@ -73,6 +73,9 @@ public record SelectStagePayload(BlockPos lecternPos, int keySlot, String stageI
                         return;
                     }
                     keyStack.set(ModDataComponents.DUNGEON_STAGE_ID.get(), payload.stageId());
+                    // 切关卡时清空旧进度，防止上一关的 clearedNodes 泄漏到新关卡
+                    keyStack.set(ModDataComponents.DUNGEON_PROGRESS.get(),
+                            com.piranport.dungeon.key.DungeonProgress.EMPTY);
                 }
                 lobby.setSelectedStageId(payload.stageId());
                 DungeonLobbyManager.INSTANCE.broadcastLobbyUpdate(player.server, globalPos);

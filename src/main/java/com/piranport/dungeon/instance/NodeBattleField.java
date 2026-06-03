@@ -187,19 +187,24 @@ public final class NodeBattleField {
                 .forEach(net.minecraft.world.entity.Entity::discard);
 
         // 清理带副本标签的脚本生成实体
+        // 先收集再删除，避免 ConcurrentModificationException
         String instanceTag = "dungeon_instance_" + instance.getInstanceId();
+        java.util.List<net.minecraft.world.entity.Entity> tagged = new java.util.ArrayList<>();
         dungeonLevel.getEntities().get(regionBox, entity -> {
             if (entity.getTags().contains(instanceTag)) {
-                entity.discard();
+                tagged.add(entity);
             }
         });
+        tagged.forEach(net.minecraft.world.entity.Entity::discard);
 
         // Then sweep everything else.
+        java.util.List<net.minecraft.world.entity.Entity> remaining = new java.util.ArrayList<>();
         dungeonLevel.getEntities().get(regionBox, entity -> {
             if (!(entity instanceof net.minecraft.server.level.ServerPlayer)) {
-                entity.discard();
+                remaining.add(entity);
             }
         });
+        remaining.forEach(net.minecraft.world.entity.Entity::discard);
 
         // Note: we don't clear blocks here to avoid lag.
         // The region will be overwritten by future instances or left as-is.

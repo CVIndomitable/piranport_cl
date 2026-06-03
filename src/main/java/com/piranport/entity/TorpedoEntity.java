@@ -22,6 +22,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluids;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
@@ -592,6 +594,13 @@ public class TorpedoEntity extends ThrowableItemProjectile {
 
     @Override
     protected double getDefaultGravity() { return 0.0; }
+
+    /** 鱼雷免疫爆炸击退，防止多枚鱼雷互相干扰弹道 */
+    @Override
+    public boolean isInvulnerableTo(DamageSource source) {
+        if (source.is(DamageTypeTags.IS_EXPLOSION)) return true;
+        return super.isInvulnerableTo(source);
+    }
 
     @Override
     public void remove(RemovalReason reason) {

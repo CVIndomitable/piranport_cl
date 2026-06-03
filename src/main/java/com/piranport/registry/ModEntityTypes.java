@@ -135,7 +135,7 @@ public class ModEntityTypes {
             () -> EntityType.Builder.<com.piranport.dungeon.entity.DungeonPortalEntity>of(
                             com.piranport.dungeon.entity.DungeonPortalEntity::new, MobCategory.MISC)
                     .sized(2.0f, 3.0f)
-                    .clientTrackingRange(16)
+                    .clientTrackingRange(64)
                     .updateInterval(5)
                     .build("piranport:dungeon_portal"));
 

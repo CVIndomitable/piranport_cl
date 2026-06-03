@@ -39,7 +39,7 @@ public class SkinOverlayLayer extends RenderLayer<AbstractClientPlayer, PlayerMo
         ResourceLocation skinTexture = ResourceLocation.fromNamespaceAndPath(
                 PiranPort.MOD_ID, "textures/skin/skin_" + skinId + ".png");
 
-        VertexConsumer vc = bufferSource.getBuffer(RenderType.entityTranslucent(skinTexture));
+        VertexConsumer vc = bufferSource.getBuffer(RenderType.entityCutout(skinTexture));
         this.getParentModel().renderToBuffer(poseStack, vc, packedLight,
                 OverlayTexture.NO_OVERLAY, -1);
     }

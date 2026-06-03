@@ -26,7 +26,6 @@ import net.minecraft.world.phys.EntityHitResult;
 public class SanshikiPelletEntity extends ThrowableItemProjectile {
 
     private float damage = 1.5f;
-    private ItemStack shellForRender = ItemStack.EMPTY;
 
     /** 霰弹最大存活时间（tick，从 ModArtilleryConfig 读取）。 */
     private int maxLifetime;
@@ -39,8 +38,7 @@ public class SanshikiPelletEntity extends ThrowableItemProjectile {
     public SanshikiPelletEntity(Level level, LivingEntity shooter, float damage, ItemStack shellForRender) {
         super(ModEntityTypes.SANSHIKI_PELLET.get(), shooter, level);
         this.damage = damage;
-        this.shellForRender = shellForRender.copyWithCount(1);
-        setItem(this.shellForRender);
+        setItem(shellForRender.copyWithCount(1));
         this.maxLifetime = ModArtilleryConfig.PELLET_MAX_LIFETIME.get();
     }
 
@@ -96,9 +94,7 @@ public class SanshikiPelletEntity extends ThrowableItemProjectile {
     private void notifyOwner(Entity target) {
         Entity owner = getOwner();
         if (!(owner instanceof Player player)) return;
-        Component weaponName = shellForRender.isEmpty()
-                ? getDefaultItem().getDescription()
-                : shellForRender.getHoverName();
+        Component weaponName = getItem().getHoverName();
         String key = target.isAlive() ? "message.piranport.weapon_hit" : "message.piranport.weapon_kill";
         com.piranport.combat.HitNotifier.send(player, Component.translatable(key, weaponName, target.getDisplayName()));
     }

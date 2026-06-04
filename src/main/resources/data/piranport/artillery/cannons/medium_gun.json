@@ -9,6 +9,7 @@
   "dragCoeff": 0.01,
   "gravity": 9.8,
   "explosionPower": 1.5,
+  "dispersion": 1.0,
   "projectileWeight": 200.0,
   "fireCooldown": 15,
   "salvoCount": 1,

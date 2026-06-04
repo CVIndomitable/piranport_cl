@@ -141,11 +141,11 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
 
     @Override
     public void tick() {
-        // Phase 2: 应用阻力（在 super.tick() 的重力生效前）
+        // Phase 2: 应用阻力（仅作用于水平速度，不影响重力）
         Vec3 vel = getDeltaMovement();
-        if (vel.length() > 0.01 && dragCoeff > 0) {
-            vel = vel.scale(Math.max(0.0, 1.0 - dragCoeff));
-            setDeltaMovement(vel);
+        if (dragCoeff > 0) {
+            double factor = Math.max(0.0, 1.0 - dragCoeff);
+            setDeltaMovement(vel.x * factor, vel.y, vel.z * factor);
         }
 
         super.tick();

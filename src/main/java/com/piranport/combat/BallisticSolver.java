@@ -148,9 +148,8 @@ public final class BallisticSolver {
         int maxSteps = ModEquipmentConfig.BALLISTIC_MAX_STEPS.get();
 
         for (int step = 0; step < maxSteps; step++) {
-            // 1. 应用阻力（与 CannonProjectileEntity.tick() 第130行一致）
+            // 1. 应用阻力（仅作用于水平速度，不影响重力）
             vx *= dragFactor;
-            vy *= dragFactor;
 
             // 2. 应用重力（在阻力之后，与 super.tick() 顺序一致）
             vy -= gravity;

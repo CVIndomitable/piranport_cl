@@ -8,7 +8,7 @@ import java.util.Map;
 
 /**
  * 弹道解算引擎：给定初速度、阻力、重力、目标距离，计算最佳发射仰角。
- * 使用网格搜索 + 三分法搜索 [-45°, 45°]（含负仰角以支持高低差），每次迭代模拟数值弹道。
+ * 使用三分法和牛顿迭代法同时计算，取最精确结果。
  * 阻力/重力模型与 {@link com.piranport.entity.CannonProjectileEntity} 一致。
  *
  * <p>参数来源（按优先级）：
@@ -69,8 +69,62 @@ public final class BallisticSolver {
         double accuracyThreshold = ModEquipmentConfig.BALLISTIC_ACCURACY.get();
         double noSolutionThreshold = ModArtilleryConfig.BALLISTIC_NO_SOLUTION_THRESHOLD.get();
 
-        // 网格搜索 + 三分法：支持负仰角（高低差场景）
-        // 先用粗网格扫描找到误差最小区域，再用三分法精细搜索
+        BallisticSolverStats stats = BallisticSolverStats.getInstance();
+
+        // ===== 三分法求解 =====
+        long ternaryStart = System.nanoTime();
+        double ternaryAngle = solveTernary(initialSpeed, dragCoeff, gravity, horizontalDist, verticalDist,
+                maxIters, accuracyThreshold, noSolutionThreshold);
+        long ternaryElapsed = System.nanoTime() - ternaryStart;
+
+        // 计算三分法精度（误差）
+        double ternaryError = Math.abs(simulate(initialSpeed, ternaryAngle, dragCoeff, gravity, horizontalDist) - verticalDist);
+        stats.recordTernary(ternaryElapsed, ternaryError);
+
+        // ===== 牛顿迭代法求解 =====
+        long newtonStart = System.nanoTime();
+        double newtonAngle = solveNewton(initialSpeed, dragCoeff, gravity, horizontalDist, verticalDist,
+                maxIters, accuracyThreshold, noSolutionThreshold);
+        long newtonElapsed = System.nanoTime() - newtonStart;
+
+        // 计算牛顿法精度（误差）
+        double newtonError = Math.abs(simulate(initialSpeed, newtonAngle, dragCoeff, gravity, horizontalDist) - verticalDist);
+        stats.recordNewton(newtonElapsed, newtonError);
+
+        // ===== 取最精确的结果 =====
+        double bestAngle;
+        double bestError;
+        BallisticSolverStats.Algorithm chosen;
+
+        if (newtonError < ternaryError) {
+            bestAngle = newtonAngle;
+            bestError = newtonError;
+            chosen = BallisticSolverStats.Algorithm.NEWTON;
+        } else {
+            bestAngle = ternaryAngle;
+            bestError = ternaryError;
+            chosen = BallisticSolverStats.Algorithm.TERNARY;
+        }
+
+        stats.recordCombined(bestError, chosen);
+
+        // 无解（打不到目标）时返回最大射程角
+        if (bestError > noSolutionThreshold) {
+            bestAngle = calculateMaxRangeAngle(initialSpeed, dragCoeff, gravity);
+        }
+
+        if (isCacheEnabled()) {
+            cachePut(new SolutionKey(initialSpeed, dragCoeff, gravity, qHDist, qVDist), bestAngle);
+        }
+        return bestAngle;
+    }
+
+    /**
+     * 三分法求解：网格搜索 + 三分法精细搜索
+     */
+    private static double solveTernary(double initialSpeed, double dragCoeff, double gravity,
+                                        double horizontalDist, double verticalDist,
+                                        int maxIters, double accuracyThreshold, double noSolutionThreshold) {
         double searchLow = -Math.PI / 4;   // -45°：允许俯射
         double searchHigh = Math.PI / 4;   //  45°：低弹道上界
         double bestAngle = 45.0 * Math.PI / 180.0;
@@ -118,15 +172,53 @@ public final class BallisticSolver {
             }
         }
 
-        // 无解（打不到目标）时返回最大射程角
-        if (minError > noSolutionThreshold) {
-            bestAngle = calculateMaxRangeAngle(initialSpeed, dragCoeff, gravity);
+        return bestAngle;
+    }
+
+    /**
+     * 牛顿迭代法求解：使用数值导数进行迭代
+     */
+    private static double solveNewton(double initialSpeed, double dragCoeff, double gravity,
+                                       double horizontalDist, double verticalDist,
+                                       int maxIters, double accuracyThreshold, double noSolutionThreshold) {
+        // 初始猜测：使用最大射程角的一半
+        double angle = 22.5 * Math.PI / 180.0;
+        double delta = 1e-5; // 数值导数的微小增量
+
+        for (int iter = 0; iter < maxIters; iter++) {
+            double f = simulate(initialSpeed, angle, dragCoeff, gravity, horizontalDist) - verticalDist;
+
+            // 检查是否满足精度要求
+            if (Math.abs(f) < accuracyThreshold) {
+                return angle;
+            }
+
+            // 数值导数：f'(x) ≈ (f(x+δ) - f(x-δ)) / (2δ)
+            double fPlus = simulate(initialSpeed, angle + delta, dragCoeff, gravity, horizontalDist) - verticalDist;
+            double fMinus = simulate(initialSpeed, angle - delta, dragCoeff, gravity, horizontalDist) - verticalDist;
+            double derivative = (fPlus - fMinus) / (2 * delta);
+
+            // 避免除以零
+            if (Math.abs(derivative) < 1e-10) {
+                break;
+            }
+
+            // 牛顿迭代：x_{n+1} = x_n - f(x_n) / f'(x_n)
+            double newAngle = angle - f / derivative;
+
+            // 限制角度范围 [-45°, 45°]
+            newAngle = Math.max(-Math.PI / 4, Math.min(Math.PI / 4, newAngle));
+
+            // 检查收敛
+            if (Math.abs(newAngle - angle) < 1e-10) {
+                return newAngle;
+            }
+
+            angle = newAngle;
         }
 
-        if (isCacheEnabled()) {
-            cachePut(new SolutionKey(initialSpeed, dragCoeff, gravity, qHDist, qVDist), bestAngle);
-        }
-        return bestAngle;
+        // 牛顿法未收敛，返回当前最佳估计
+        return angle;
     }
 
     /**

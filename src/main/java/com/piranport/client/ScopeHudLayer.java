@@ -2,6 +2,8 @@ package com.piranport.client;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
+import com.piranport.combat.BallisticSolver;
+import com.piranport.combat.BallisticSolverStats;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
@@ -14,7 +16,7 @@ import org.joml.Matrix4f;
 
 /**
  * 瞄准镜准星 HUD 覆盖层。
- * 在瞄准模式下绘制十字准星、距离信息。
+ * 在瞄准模式下绘制十字准星、距离信息、算法性能统计。
  */
 @EventBusSubscriber(value = Dist.CLIENT)
 public class ScopeHudLayer {
@@ -116,6 +118,9 @@ public class ScopeHudLayer {
             graphics.drawString(mc.font, distText, cx - mc.font.width(distText) / 2, cy + 25, 0xFFFFFF, true);
         }
 
+        // ---- 算法性能统计 ----
+        drawAlgorithmStats(graphics, mc, cx, cy);
+
         // ---- 调试信息 ----
         if (com.piranport.debug.PiranPortDebug.isClientEnabled()) {
             String debugText = String.format("§7[火控] 长按: %dt/%dt  zoom: %.1f",
@@ -124,5 +129,49 @@ public class ScopeHudLayer {
                     ClientScopeHandler.getZoomLevel());
             graphics.drawString(mc.font, debugText, cx - mc.font.width(debugText) / 2, cy + 40, 0xFFFFFF, true);
         }
+    }
+
+    /**
+     * 绘制算法性能统计信息
+     */
+    private static void drawAlgorithmStats(GuiGraphics graphics, Minecraft mc, int cx, int cy) {
+        BallisticSolverStats stats = BallisticSolverStats.getInstance();
+
+        int startY = cy + 50; // 距离信息下方
+        int lineHeight = 12;
+        int textColor = 0xAAAAAA; // 灰色
+        int highlightColor = 0x55FF55; // 绿色（被选中的算法）
+        int accuracyColor = 0xFFFF55; // 黄色（精度）
+
+        // 标题
+        String title = "§6[弹道解算性能]";
+        graphics.drawString(mc.font, title, cx - mc.font.width(title) / 2, startY, 0xFFFFFF, true);
+        startY += lineHeight + 2;
+
+        // 三分法统计
+        boolean ternaryChosen = stats.getLastChosen() == BallisticSolverStats.Algorithm.TERNARY;
+        int ternaryColor = ternaryChosen ? highlightColor : textColor;
+        String ternaryStats = String.format("§7三分法: §f%3d/%3d/%3d§7µs  §e误差:§f%.3f§7格 %s",
+                stats.getTernaryMinUs(), stats.getTernaryAvgUs(), stats.getTernaryMaxUs(),
+                stats.getTernaryAccuracy(),
+                ternaryChosen ? "§a✓" : "");
+        graphics.drawString(mc.font, ternaryStats, cx - mc.font.width(ternaryStats) / 2, startY, ternaryColor, true);
+        startY += lineHeight;
+
+        // 牛顿迭代法统计
+        boolean newtonChosen = stats.getLastChosen() == BallisticSolverStats.Algorithm.NEWTON;
+        int newtonColor = newtonChosen ? highlightColor : textColor;
+        String newtonStats = String.format("§7牛顿法: §f%3d/%3d/%3d§7µs  §e误差:§f%.3f§7格 %s",
+                stats.getNewtonMinUs(), stats.getNewtonAvgUs(), stats.getNewtonMaxUs(),
+                stats.getNewtonAccuracy(),
+                newtonChosen ? "§a✓" : "");
+        graphics.drawString(mc.font, newtonStats, cx - mc.font.width(newtonStats) / 2, startY, newtonColor, newtonColor != textColor);
+        startY += lineHeight;
+
+        // 组合结果
+        String combinedInfo = String.format("§7最终精度: §f%.3f§7格  §7选择: §f%s",
+                stats.getCombinedAccuracy(),
+                stats.getLastChosen().getDisplayName());
+        graphics.drawString(mc.font, combinedInfo, cx - mc.font.width(combinedInfo) / 2, startY, accuracyColor, true);
     }
 }

@@ -164,10 +164,8 @@ public class ConfigCSVImporter {
             int fireCooldown = Integer.parseInt(parts[14]);
             int salvoCount = Integer.parseInt(parts[15]);
             float salvoInterval = Float.parseFloat(parts[16]);
-            float verticalSpread = Float.parseFloat(parts[17]);
-            float horizontalSpread = Float.parseFloat(parts[18]);
-            float maxElevation = Float.parseFloat(parts[19]);
-            float minElevation = Float.parseFloat(parts[20]);
+            float maxElevation = Float.parseFloat(parts[17]);
+            float minElevation = Float.parseFloat(parts[18]);
 
             // 应用验证和范围限制
             caliber = (int) ConfigOverrideManager.validateValue("caliber", caliber);
@@ -185,8 +183,6 @@ public class ConfigCSVImporter {
             fireCooldown = (int) ConfigOverrideManager.validateValue("fireCooldown", fireCooldown);
             salvoCount = (int) ConfigOverrideManager.validateValue("salvoCount", salvoCount);
             salvoInterval = (float) ConfigOverrideManager.validateValue("salvoInterval", salvoInterval);
-            verticalSpread = (float) ConfigOverrideManager.validateValue("verticalSpread", verticalSpread);
-            horizontalSpread = (float) ConfigOverrideManager.validateValue("horizontalSpread", horizontalSpread);
             maxElevation = (float) ConfigOverrideManager.validateValue("maxElevation", maxElevation);
             minElevation = (float) ConfigOverrideManager.validateValue("minElevation", minElevation);
 
@@ -206,8 +202,6 @@ public class ConfigCSVImporter {
             overrides.setCannonOverride(cannonName, "fireCooldown", fireCooldown);
             overrides.setCannonOverride(cannonName, "salvoCount", salvoCount);
             overrides.setCannonOverride(cannonName, "salvoInterval", salvoInterval);
-            overrides.setCannonOverride(cannonName, "verticalSpread", verticalSpread);
-            overrides.setCannonOverride(cannonName, "horizontalSpread", horizontalSpread);
             overrides.setCannonOverride(cannonName, "maxElevation", maxElevation);
             overrides.setCannonOverride(cannonName, "minElevation", minElevation);
 

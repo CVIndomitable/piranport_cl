@@ -849,8 +849,6 @@
   "gui.piranport.config_tool.fire_cooldown": "开火冷却",
   "gui.piranport.config_tool.salvo_count": "齐射数量",
   "gui.piranport.config_tool.salvo_interval": "齐射间距",
-  "gui.piranport.config_tool.vertical_spread": "纵向散布",
-  "gui.piranport.config_tool.horizontal_spread": "横向散布",
   "gui.piranport.config_tool.max_elevation": "最大仰角",
   "gui.piranport.config_tool.min_elevation": "最小仰角",
   "gui.piranport.config_tool.durability": "身管寿命",

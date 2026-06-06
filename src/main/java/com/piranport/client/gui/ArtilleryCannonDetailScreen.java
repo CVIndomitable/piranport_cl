@@ -79,8 +79,6 @@ public class ArtilleryCannonDetailScreen extends Screen {
             new FieldDef("fire_cooldown", "fireCooldown", false),
             new FieldDef("salvo_count", "salvoCount", false),
             new FieldDef("salvo_interval", "salvoInterval", true),
-            new FieldDef("vertical_spread", "verticalSpread", true),
-            new FieldDef("horizontal_spread", "horizontalSpread", true),
             new FieldDef("max_elevation", "maxElevation", true),
             new FieldDef("min_elevation", "minElevation", true),
             new FieldDef("durability", "durability", false),
@@ -212,8 +210,6 @@ public class ArtilleryCannonDetailScreen extends Screen {
             case "projectileWeight" -> originalData.projectileWeight();
             case "initialSpeed" -> originalData.initialSpeed();
             case "salvoInterval" -> originalData.salvoInterval();
-            case "verticalSpread" -> originalData.verticalSpread();
-            case "horizontalSpread" -> originalData.horizontalSpread();
             case "maxElevation" -> originalData.maxElevation();
             case "minElevation" -> originalData.minElevation();
             default -> 0f;
@@ -532,7 +528,6 @@ public class ArtilleryCannonDetailScreen extends Screen {
             case "projectileWeight" -> { min = 0.1f; max = 10000f; }
             case "initialSpeed" -> { min = 0.1f; max = 50f; }
             case "salvoInterval" -> { min = 0f; max = 100f; }
-            case "verticalSpread", "horizontalSpread" -> { min = 0f; max = 10f; }
             case "maxElevation", "minElevation" -> { min = -90f; max = 90f; }
         }
 

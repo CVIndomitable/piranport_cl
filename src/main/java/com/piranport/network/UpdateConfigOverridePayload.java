@@ -94,7 +94,7 @@ public record UpdateConfigOverridePayload(
     private static Object parseValue(String valueStr, String field) {
         return switch (field) {
             case "damage", "initialSpeed", "dragCoeff", "gravity", "explosionPower", "dispersion",
-                 "projectileWeight", "salvoInterval", "verticalSpread", "horizontalSpread",
+                 "projectileWeight", "salvoInterval",
                  "maxElevation", "minElevation", "scopeZoom" ->
                     Float.parseFloat(valueStr);
             case "caliber", "barrels", "reloadTime", "durability", "fireCooldown", "salvoCount" ->

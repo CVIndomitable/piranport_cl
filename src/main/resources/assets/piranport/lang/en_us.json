@@ -844,8 +844,6 @@
   "gui.piranport.config_tool.fire_cooldown": "Fire Cooldown",
   "gui.piranport.config_tool.salvo_count": "Salvo Count",
   "gui.piranport.config_tool.salvo_interval": "Salvo Interval",
-  "gui.piranport.config_tool.vertical_spread": "Vertical Spread",
-  "gui.piranport.config_tool.horizontal_spread": "Horizontal Spread",
   "gui.piranport.config_tool.max_elevation": "Max Elevation",
   "gui.piranport.config_tool.min_elevation": "Min Elevation",
   "gui.piranport.config_tool.durability": "Durability",

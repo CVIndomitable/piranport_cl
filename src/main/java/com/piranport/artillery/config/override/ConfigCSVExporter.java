@@ -30,7 +30,7 @@ public class ConfigCSVExporter {
             "durability", "scopeZoom", "initialSpeed", "dragCoeff", "gravity",
             "explosionPower", "dispersion",
             "projectileWeight", "fireCooldown", "salvoCount", "salvoInterval",
-            "verticalSpread", "horizontalSpread", "maxElevation", "minElevation"
+            "maxElevation", "minElevation"
     };
 
     private static final String[] PROJECTILE_HEADERS = {
@@ -133,8 +133,6 @@ public class ConfigCSVExporter {
                 data.fireCooldown(),
                 data.salvoCount(),
                 data.salvoInterval(),
-                data.verticalSpread(),
-                data.horizontalSpread(),
                 data.maxElevation(),
                 data.minElevation()
         );

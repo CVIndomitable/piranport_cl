@@ -14,8 +14,6 @@
   "fireCooldown": 15,
   "salvoCount": 7,
   "salvoInterval": 3.0,
-  "verticalSpread": 1.5,
-  "horizontalSpread": 1.5,
   "maxElevation": 45.0,
   "minElevation": -5.0,
   "muzzles": [

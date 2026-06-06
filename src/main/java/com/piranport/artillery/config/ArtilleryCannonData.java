@@ -63,6 +63,6 @@ public record ArtilleryCannonData(
                                           int durability, float scopeZoom, List<MuzzlePos> muzzles) {
         return new ArtilleryCannonData(caliber, barrels, damage, reloadTime, durability,
                 scopeZoom, muzzles, 3.0f, 0.01f, 9.8f, 1.0f, 0.0f,
-                100.0f, 20, 1, 5.0f, 0.5f, 0.5f, 45.0f, -5.0f);
+                100.0f, 20, 1, 5.0f, 45.0f, -5.0f);
     }
 }

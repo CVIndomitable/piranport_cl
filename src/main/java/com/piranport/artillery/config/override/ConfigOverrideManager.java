@@ -128,14 +128,6 @@ public class ConfigOverrideManager {
                 .map(v -> v instanceof Number n ? n.floatValue() : null)
                 .orElse(original.salvoInterval());
 
-        float verticalSpread = overrides.getCannonOverride(name, "verticalSpread")
-                .map(v -> v instanceof Number n ? n.floatValue() : null)
-                .orElse(original.verticalSpread());
-
-        float horizontalSpread = overrides.getCannonOverride(name, "horizontalSpread")
-                .map(v -> v instanceof Number n ? n.floatValue() : null)
-                .orElse(original.horizontalSpread());
-
         float maxElevation = overrides.getCannonOverride(name, "maxElevation")
                 .map(v -> v instanceof Number n ? n.floatValue() : null)
                 .orElse(original.maxElevation());
@@ -166,8 +158,6 @@ public class ConfigOverrideManager {
                 fireCooldown,
                 salvoCount,
                 salvoInterval,
-                verticalSpread,
-                horizontalSpread,
                 maxElevation,
                 minElevation
         );
@@ -242,14 +232,6 @@ public class ConfigOverrideManager {
                 .flatMap(s -> parseFloatSafe(s))
                 .orElse(original.salvoInterval());
 
-        float verticalSpread = ClientConfigCache.getCannonOverride(name, "verticalSpread")
-                .flatMap(s -> parseFloatSafe(s))
-                .orElse(original.verticalSpread());
-
-        float horizontalSpread = ClientConfigCache.getCannonOverride(name, "horizontalSpread")
-                .flatMap(s -> parseFloatSafe(s))
-                .orElse(original.horizontalSpread());
-
         float maxElevation = ClientConfigCache.getCannonOverride(name, "maxElevation")
                 .flatMap(s -> parseFloatSafe(s))
                 .orElse(original.maxElevation());
@@ -280,8 +262,6 @@ public class ConfigOverrideManager {
                 fireCooldown,
                 salvoCount,
                 salvoInterval,
-                verticalSpread,
-                horizontalSpread,
                 maxElevation,
                 minElevation
         );
@@ -472,10 +452,6 @@ public class ConfigOverrideManager {
             case "salvoInterval" -> {
                 float f = num.floatValue();
                 yield Math.max(0f, Math.min(100f, f));
-            }
-            case "verticalSpread", "horizontalSpread" -> {
-                float f = num.floatValue();
-                yield Math.max(0f, Math.min(10f, f));
             }
             case "maxElevation", "minElevation" -> {
                 float f = num.floatValue();

@@ -1,0 +1,32 @@
+{
+  "name": "piranport.book.intro.materials",
+  "category": "piranport:1_intro",
+  "icon": "piranport:aluminum_ingot",
+  "sortnum": 5,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "piranport.book.intro.materials.p1"
+    },
+    {
+      "type": "patchouli:smelting",
+      "recipe": "piranport:aluminum_ingot_from_smelting_bauxite_ore",
+      "text": "piranport.book.intro.materials.bauxite_smelting"
+    },
+    {
+      "type": "patchouli:blasting",
+      "recipe": "piranport:aluminum_ingot_from_blasting_bauxite_ore",
+      "text": "piranport.book.intro.materials.bauxite_blasting"
+    },
+    {
+      "type": "patchouli:smelting",
+      "recipe": "piranport:aluminum_ingot_from_smelting_raw_aluminum",
+      "text": "piranport.book.intro.materials.raw_smelting"
+    },
+    {
+      "type": "patchouli:blasting",
+      "recipe": "piranport:aluminum_ingot_from_blasting_raw_aluminum",
+      "text": "piranport.book.intro.materials.raw_blasting"
+    }
+  ]
+}

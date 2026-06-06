@@ -1,0 +1,16 @@
+{
+  "name": "piranport.book.config.client",
+  "category": "piranport:12_config",
+  "icon": "minecraft:writable_book",
+  "sortnum": 1,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)Client Configuration$()$(br2)Located in $(o).minecraft/config/piranport-client.toml$()$(br2)$(bold)Options:$()$(br)• HUD position and visibility$(br)• Camera shake intensity$(br)• Reload bar display$(br)• Entity highlight colors"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)HUD Settings$()$(br2)Adjust the heads-up display:$(br2)• Fire control panel position$(br)• Weapon reload indicators$(br)• Ship core status display$(br)• Scope overlay opacity$(br2)$(bold)Tip:$() Use the HUD layout detector to find optimal positions!"
+    }
+  ]
+}

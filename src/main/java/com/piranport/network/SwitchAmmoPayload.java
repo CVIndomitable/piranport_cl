@@ -5,7 +5,6 @@ import com.piranport.combat.TransformationManager;
 import com.piranport.component.SelectedAmmoType;
 import com.piranport.component.SlotCooldowns;
 import com.piranport.component.WeaponCooldown;
-import com.piranport.item.ShipCoreItem;
 import com.piranport.item.ShipCoreCombat;
 import com.piranport.registry.ModDataComponents;
 import com.piranport.registry.ModSounds;
@@ -105,9 +104,9 @@ public record SwitchAmmoPayload(String ammoItemId) implements CustomPacketPayloa
             // 同步弹种到所有同类型火炮
             ShipCoreCombat.syncAmmoToSiblingGuns(player);
 
-            // 切换弹种时重新开始装填
-            int weaponSlot = player.getInventory().selected;
+            // 切换弹种时重新开始装填（所有同类型火炮一起重置）
             ItemStack coreStack = TransformationManager.findTransformedCore(player);
+            if (coreStack.isEmpty()) return;
 
             // 获取武器的装填时间
             int reloadTicks = 0;
@@ -117,15 +116,28 @@ public record SwitchAmmoPayload(String ammoItemId) implements CustomPacketPayloa
             int boostedReloadTicks = TransformationManager.boostedCooldown(player, reloadTicks);
             long currentTick = player.level().getGameTime();
 
-            // 设置槽位冷却和武器冷却，重新开始装填
-            if (!coreStack.isEmpty()) {
-                SlotCooldowns cooldowns = coreStack.getOrDefault(
-                        ModDataComponents.SLOT_COOLDOWNS.get(), SlotCooldowns.EMPTY);
-                SlotCooldowns updated = cooldowns.withSlotCooldown(weaponSlot, boostedReloadTicks, currentTick);
-                coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(), updated);
+            // 遍历所有同类型火炮槽位，重置装填时间
+            Inventory inv = player.getInventory();
+            SlotCooldowns cooldowns = coreStack.getOrDefault(
+                    ModDataComponents.SLOT_COOLDOWNS.get(), SlotCooldowns.EMPTY);
+            SlotCooldowns updated = cooldowns;
+
+            for (int i = 0; i < inv.items.size(); i++) {
+                ItemStack slot = inv.items.get(i);
+                if (slot.getItem() == weapon.getItem()) {
+                    updated = updated.withSlotCooldown(i, boostedReloadTicks, currentTick);
+                    slot.set(ModDataComponents.WEAPON_COOLDOWN.get(),
+                            WeaponCooldown.of(currentTick, boostedReloadTicks));
+                }
             }
-            weapon.set(ModDataComponents.WEAPON_COOLDOWN.get(),
-                    WeaponCooldown.of(currentTick, boostedReloadTicks));
+            ItemStack offhand = inv.offhand.get(0);
+            if (offhand.getItem() == weapon.getItem()) {
+                updated = updated.withSlotCooldown(40, boostedReloadTicks, currentTick);
+                offhand.set(ModDataComponents.WEAPON_COOLDOWN.get(),
+                        WeaponCooldown.of(currentTick, boostedReloadTicks));
+            }
+
+            coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(), updated);
 
             // 播放音效和显示消息
             player.level().playSound(null, player.getX(), player.getY(), player.getZ(),

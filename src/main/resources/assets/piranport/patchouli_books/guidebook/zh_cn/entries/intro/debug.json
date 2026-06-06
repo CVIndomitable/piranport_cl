@@ -1,0 +1,16 @@
+{
+  "name": "piranport.book.intro.debug",
+  "category": "piranport:1_intro",
+  "icon": "piranport:creative_blueprint",
+  "sortnum": 8,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "piranport.book.intro.debug.p1"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "piranport.book.intro.debug.p2"
+    }
+  ]
+}

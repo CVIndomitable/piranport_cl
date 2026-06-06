@@ -39,8 +39,6 @@ import java.util.List;
  * Phase 4: 统一自动装填，删除手动装填路径
  */
 public class ArtilleryItem extends Item {
-    /** 散布角度到速度偏移的缩放系数（高斯分布标准差） */
-    private static final double DISPERSION_SCALE_FACTOR = 0.02;
 
     private final ArtilleryCannonData data;
     private final String cannonName;
@@ -149,20 +147,30 @@ public class ArtilleryItem extends Item {
         return true;
     }
 
-    /** 在初速度垂面内进行高斯散布偏移。散布角单位为度。 */
-    public static Vec3 applyDispersion(Vec3 direction, RandomSource random, float dispersionDeg) {
-        Vec3 right = new Vec3(0, 1, 0).cross(direction).normalize();
+    /**
+     * 在初速度垂面内叠加高斯散布速度偏移。
+     * 散布是一个随机方向（垂直于初速度）的速度矢量，大小服从高斯分布，标准差 = dispersion（blocks/tick）。
+     * @param velocity 初速度矢量（direction * speed）
+     * @param random 随机源
+     * @param dispersion 散布速度标准差（blocks/tick）
+     * @return 叠加散布后的速度矢量
+     */
+    public static Vec3 applyDispersion(Vec3 velocity, RandomSource random, float dispersion) {
+        double speed = velocity.length();
+        if (speed < 1e-9) return velocity;
+
+        Vec3 forward = velocity.normalize();
+        Vec3 right = new Vec3(0, 1, 0).cross(forward).normalize();
         if (right.lengthSqr() < 0.001) {
             right = new Vec3(1, 0, 0);
         }
-        Vec3 up = direction.cross(right).normalize();
+        Vec3 up = forward.cross(right).normalize();
 
         double theta = random.nextDouble() * 2 * Math.PI;
-        double r = random.nextGaussian() * dispersionDeg * DISPERSION_SCALE_FACTOR;
-        return direction
+        double r = random.nextGaussian() * dispersion;
+        return velocity
                 .add(right.scale(r * Math.cos(theta)))
-                .add(up.scale(r * Math.sin(theta)))
-                .normalize();
+                .add(up.scale(r * Math.sin(theta)));
     }
 
     @Override

@@ -1,0 +1,16 @@
+{
+  "name": "piranport.book.cooking.placeable_food",
+  "category": "piranport:4_cooking",
+  "icon": "piranport:placeable_food",
+  "sortnum": 4,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)Placeable Food$()$(br2)Some dishes can be placed in the world as decorations or for sharing.$(br2)$(bold)Types:$()$(br)• $(item)Plated Dishes$(): Place on blocks$(br)• $(item)Bowled Soups$(): Placeable soup containers$(br)• $(item)Cakes$(): Multi-layer edible cakes$(br2)Right-click to place, right-click again to eat."
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)Multiplayer Sharing$()$(br2)Placed food can be consumed by other players, perfect for:$(br2)• Multiplayer dining parties$(br)• Base decoration$(br)• Food displays$(br2)$(bold)Tip:$() Different foods have different serving counts and restoration effects!"
+    }
+  ]
+}

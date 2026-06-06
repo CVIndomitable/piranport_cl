@@ -6,6 +6,7 @@ import com.piranport.client.AmmoSelectOverlay;
 import com.piranport.client.CameraShakeHandler;
 import com.piranport.client.CannonImpactEffects;
 import com.piranport.client.ClientTorpedoGuidance;
+import com.piranport.client.ClientScopeHandler;
 import com.piranport.client.EntityUuidCache;
 import com.piranport.client.ModKeyMappings;
 import com.piranport.combat.TransformationManager;
@@ -128,5 +129,10 @@ public class ClientInputCoordinator {
 
         // 9) 瞄准镜输入
         ScopeInputHandler.tick(mc);
+
+        // 10) 手持火炮时压制原版攻击挥臂动画
+        if (ClientScopeHandler.isHoldingCannon(mc.player)) {
+            mc.player.attackAnim = 0;
+        }
     }
 }

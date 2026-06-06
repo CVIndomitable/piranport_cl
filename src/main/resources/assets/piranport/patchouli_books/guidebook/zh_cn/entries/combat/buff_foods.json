@@ -1,0 +1,12 @@
+{
+  "name": "piranport.book.combat.buff_foods",
+  "category": "piranport:6_combat",
+  "icon": "piranport:chicken_tatsuta",
+  "sortnum": 1,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "piranport.book.combat.buff_foods.p1"
+    }
+  ]
+}

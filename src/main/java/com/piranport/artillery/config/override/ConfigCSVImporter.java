@@ -168,7 +168,6 @@ public class ConfigCSVImporter {
             float horizontalSpread = Float.parseFloat(parts[18]);
             float maxElevation = Float.parseFloat(parts[19]);
             float minElevation = Float.parseFloat(parts[20]);
-            float turretSpeed = Float.parseFloat(parts[21]);
 
             // 应用验证和范围限制
             caliber = (int) ConfigOverrideManager.validateValue("caliber", caliber);
@@ -190,7 +189,6 @@ public class ConfigCSVImporter {
             horizontalSpread = (float) ConfigOverrideManager.validateValue("horizontalSpread", horizontalSpread);
             maxElevation = (float) ConfigOverrideManager.validateValue("maxElevation", maxElevation);
             minElevation = (float) ConfigOverrideManager.validateValue("minElevation", minElevation);
-            turretSpeed = (float) ConfigOverrideManager.validateValue("turretSpeed", turretSpeed);
 
             // 写入覆盖数据
             overrides.setCannonOverride(cannonName, "caliber", caliber);
@@ -212,7 +210,6 @@ public class ConfigCSVImporter {
             overrides.setCannonOverride(cannonName, "horizontalSpread", horizontalSpread);
             overrides.setCannonOverride(cannonName, "maxElevation", maxElevation);
             overrides.setCannonOverride(cannonName, "minElevation", minElevation);
-            overrides.setCannonOverride(cannonName, "turretSpeed", turretSpeed);
 
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("数值格式错误: " + e.getMessage());

@@ -79,6 +79,11 @@ public final class ClientHooks {
         invoke("setFireControlTargets", new Class<?>[] { List.class }, targetUUIDs);
     }
 
+    public static void setServerSolverStats(int ternaryIters, int newtonIters) {
+        invoke("setServerSolverStats",
+                new Class<?>[] { int.class, int.class }, ternaryIters, newtonIters);
+    }
+
     public static boolean isReconEntity(int entityId) {
         Object result = invoke("isReconEntity",
                 new Class<?>[] { int.class }, entityId);

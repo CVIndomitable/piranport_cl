@@ -1,0 +1,16 @@
+{
+  "name": "piranport.book.equipment.armor_engine",
+  "category": "piranport:10_equipment",
+  "icon": "piranport:armor_plate",
+  "sortnum": 0,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)Armor Plates$()$(br2)Armor plates increase your damage resistance when equipped in the ship core equipment slots.$(br2)$(bold)Effects:$()$(br)• Reduces incoming damage$(br)• Multiple plates stack$(br)• Different tiers available"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)Engines$()$(br2)Engine upgrades improve your movement speed and agility.$(br2)$(bold)Effects:$()$(br)• Increased movement speed$(br)• Better evasion capability$(br)• Reduced weight penalty$(br2)$(bold)Tip:$() Combine armor and engines for balanced performance!"
+    }
+  ]
+}

@@ -83,7 +83,6 @@ public class ArtilleryCannonDetailScreen extends Screen {
             new FieldDef("horizontal_spread", "horizontalSpread", true),
             new FieldDef("max_elevation", "maxElevation", true),
             new FieldDef("min_elevation", "minElevation", true),
-            new FieldDef("turret_speed", "turretSpeed", true),
             new FieldDef("durability", "durability", false),
             new FieldDef("barrels", "barrels", false)
     };
@@ -217,7 +216,6 @@ public class ArtilleryCannonDetailScreen extends Screen {
             case "horizontalSpread" -> originalData.horizontalSpread();
             case "maxElevation" -> originalData.maxElevation();
             case "minElevation" -> originalData.minElevation();
-            case "turretSpeed" -> originalData.turretSpeed();
             default -> 0f;
         };
     }
@@ -536,7 +534,6 @@ public class ArtilleryCannonDetailScreen extends Screen {
             case "salvoInterval" -> { min = 0f; max = 100f; }
             case "verticalSpread", "horizontalSpread" -> { min = 0f; max = 10f; }
             case "maxElevation", "minElevation" -> { min = -90f; max = 90f; }
-            case "turretSpeed" -> { min = 0.1f; max = 20f; }
         }
 
         validateFloat(fieldName, valueStr, min, max);

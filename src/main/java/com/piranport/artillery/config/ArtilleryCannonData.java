@@ -21,16 +21,13 @@ public record ArtilleryCannonData(
         int fireCooldown,
         int salvoCount,
         float salvoInterval,
-        float verticalSpread,
-        float horizontalSpread,
         float maxElevation,
-        float minElevation,
-        float turretSpeed
+        float minElevation
 ) {
     public static final ArtilleryCannonData DEFAULT = new ArtilleryCannonData(
             14, 1, 6f, 30, 500, 4.0f, List.of(new MuzzlePos(0, 0, 0)),
             3.0f, 0.01f, 9.8f, 1.0f, 0.5f,
-            100.0f, 20, 1, 5.0f, 0.5f, 0.5f, 45.0f, -5.0f, 2.0f
+            100.0f, 20, 1, 5.0f, 45.0f, -5.0f
     );
 
     /** 旧构造器兼容（缺少物理参数时使用默认值） */
@@ -46,9 +43,6 @@ public record ArtilleryCannonData(
         if (fireCooldown < 0) fireCooldown = 20;
         if (salvoCount < 1) salvoCount = 1;
         if (salvoInterval < 0) salvoInterval = 5.0f;
-        if (verticalSpread < 0) verticalSpread = 0.5f;
-        if (horizontalSpread < 0) horizontalSpread = 0.5f;
-        if (turretSpeed <= 0) turretSpeed = 2.0f;
         // 验证俯仰角范围：确保 maxElevation >= minElevation
         if (maxElevation < minElevation) {
             float temp = maxElevation;
@@ -69,6 +63,6 @@ public record ArtilleryCannonData(
                                           int durability, float scopeZoom, List<MuzzlePos> muzzles) {
         return new ArtilleryCannonData(caliber, barrels, damage, reloadTime, durability,
                 scopeZoom, muzzles, 3.0f, 0.01f, 9.8f, 1.0f, 0.0f,
-                100.0f, 20, 1, 5.0f, 0.5f, 0.5f, 45.0f, -5.0f, 2.0f);
+                100.0f, 20, 1, 5.0f, 0.5f, 0.5f, 45.0f, -5.0f);
     }
 }

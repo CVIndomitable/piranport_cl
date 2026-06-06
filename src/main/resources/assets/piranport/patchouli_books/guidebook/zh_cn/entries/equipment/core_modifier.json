@@ -1,0 +1,16 @@
+{
+  "name": "piranport.book.equipment.core_modifier",
+  "category": "piranport:10_equipment",
+  "icon": "piranport:core_modifier",
+  "sortnum": 2,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)Core Modifier Block$()$(br2)A special workbench for upgrading and customizing ship cores.$(br2)$(bold)Features:$()$(br)• Upgrade core tier (Small → Medium → Large)$(br)• Install enhancement modules$(br)• Modify core attributes$(br)• Unlock advanced capabilities"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)Usage:$()$(br)1. Craft and place a Core Modifier block$(br)2. Right-click to open the interface$(br)3. Insert your ship core$(br)4. Select upgrade options$(br)5. Provide required materials$(br)6. Complete the modification$(br2)$(bold)Tip:$() Higher-tier upgrades require rare materials from dungeons and ruins!"
+    }
+  ]
+}

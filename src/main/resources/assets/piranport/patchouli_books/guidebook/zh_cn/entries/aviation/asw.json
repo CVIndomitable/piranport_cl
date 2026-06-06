@@ -1,0 +1,12 @@
+{
+  "name": "piranport.book.aviation.asw",
+  "category": "piranport:5_aviation",
+  "icon": "piranport:swordfish_asw",
+  "sortnum": 3,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "piranport.book.aviation.asw.p1"
+    }
+  ]
+}

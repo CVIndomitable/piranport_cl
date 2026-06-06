@@ -236,6 +236,12 @@ public class ModPackets {
                 ShakeEffectPayload.STREAM_CODEC,
                 ShakeEffectPayload::handle
         );
+        // 弹道解算统计（服务端→客户端）
+        registrar.playToClient(
+                SolverStatsPayload.TYPE,
+                SolverStatsPayload.STREAM_CODEC,
+                SolverStatsPayload::handle
+        );
         registrar.playToClient(
                 CannonImpactEffectPayload.TYPE,
                 CannonImpactEffectPayload.STREAM_CODEC,

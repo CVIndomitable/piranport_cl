@@ -1,0 +1,12 @@
+{
+  "name": "piranport.book.aviation.recon",
+  "category": "piranport:5_aviation",
+  "icon": "piranport:recon_squadron",
+  "sortnum": 2,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "piranport.book.aviation.recon.p1"
+    }
+  ]
+}

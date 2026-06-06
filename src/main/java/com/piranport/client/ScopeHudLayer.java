@@ -118,6 +118,12 @@ public class ScopeHudLayer {
             graphics.drawString(mc.font, distText, cx - mc.font.width(distText) / 2, cy + 25, 0xFFFFFF, true);
         }
 
+        // ---- 超出射程提示 ----
+        if (ClientScopeHandler.hasSolved() && ClientScopeHandler.isLastOutOfRange()) {
+            String warnText = "§c⚠ 超出射程";
+            graphics.drawString(mc.font, warnText, cx - mc.font.width(warnText) / 2, cy + 37, 0xFF5555, true);
+        }
+
         // ---- 算法性能统计 ----
         drawAlgorithmStats(graphics, mc, cx, cy);
 
@@ -173,5 +179,12 @@ public class ScopeHudLayer {
                 stats.getCombinedAccuracy(),
                 stats.getLastChosen().getDisplayName());
         graphics.drawString(mc.font, combinedInfo, cx - mc.font.width(combinedInfo) / 2, startY, accuracyColor, true);
+        startY += lineHeight;
+
+        // 服务端迭代次数
+        int sTern = ClientScopeHandler.getServerTernaryIters();
+        int sNewt = ClientScopeHandler.getServerNewtonIters();
+        String serverInfo = String.format("§7服务端迭代: §f三分法 %d§7次  §f牛顿法 %d§7次", sTern, sNewt);
+        graphics.drawString(mc.font, serverInfo, cx - mc.font.width(serverInfo) / 2, startY, accuracyColor, true);
     }
 }

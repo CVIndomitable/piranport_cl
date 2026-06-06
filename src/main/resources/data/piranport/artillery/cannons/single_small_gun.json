@@ -18,6 +18,5 @@
   "horizontalSpread": 1.5,
   "maxElevation": 60.0,
   "minElevation": -10.0,
-  "turretSpeed": 4.0,
   "muzzles": [{"x": 0.2, "y": 0.15, "z": 0}]
 }

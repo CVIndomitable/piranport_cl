@@ -1,24 +1,16 @@
 {
-  "name": "piranport.book.zhr.enemies",
+  "name": "piranport.book.ruins.enemies",
   "category": "piranport:8_ruins",
-  "icon": "minecraft:trident",
-  "sortnum": 2,
+  "icon": "piranport:deep_ocean_destroyer_spawn_egg",
+  "sortnum": 1,
   "pages": [
     {
       "type": "patchouli:text",
-      "text": "piranport.book.zhr.enemies.p1"
+      "text": "piranport.book.ruins.enemies.p1"
     },
     {
       "type": "patchouli:text",
-      "text": "piranport.book.zhr.enemies.p2"
-    },
-    {
-      "type": "patchouli:text",
-      "text": "piranport.book.zhr.enemies.p3"
-    },
-    {
-      "type": "patchouli:text",
-      "text": "piranport.book.zhr.enemies.p4"
+      "text": "piranport.book.ruins.enemies.p2"
     }
   ]
 }

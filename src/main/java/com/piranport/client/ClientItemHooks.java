@@ -89,6 +89,10 @@ public final class ClientItemHooks {
         com.piranport.aviation.ClientFireControlData.setTargets(targetUUIDs);
     }
 
+    public static void setServerSolverStats(int ternaryIters, int newtonIters) {
+        ClientScopeHandler.setServerSolverStats(ternaryIters, newtonIters);
+    }
+
     public static boolean isReconEntity(int entityId) {
         return com.piranport.aviation.ClientReconData.isInReconMode()
                 && com.piranport.aviation.ClientReconData.getReconEntityId() == entityId;

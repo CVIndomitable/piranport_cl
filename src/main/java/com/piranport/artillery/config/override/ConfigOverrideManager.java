@@ -144,10 +144,6 @@ public class ConfigOverrideManager {
                 .map(v -> v instanceof Number n ? n.floatValue() : null)
                 .orElse(original.minElevation());
 
-        float turretSpeed = overrides.getCannonOverride(name, "turretSpeed")
-                .map(v -> v instanceof Number n ? n.floatValue() : null)
-                .orElse(original.turretSpeed());
-
         List<MuzzlePos> muzzles = overrides.getCannonOverride(name, "muzzles")
                 .flatMap(ConfigOverrideManager::parseMuzzlesOverride)
                 .orElse(original.muzzles());
@@ -173,8 +169,7 @@ public class ConfigOverrideManager {
                 verticalSpread,
                 horizontalSpread,
                 maxElevation,
-                minElevation,
-                turretSpeed
+                minElevation
         );
     }
 
@@ -263,10 +258,6 @@ public class ConfigOverrideManager {
                 .flatMap(s -> parseFloatSafe(s))
                 .orElse(original.minElevation());
 
-        float turretSpeed = ClientConfigCache.getCannonOverride(name, "turretSpeed")
-                .flatMap(s -> parseFloatSafe(s))
-                .orElse(original.turretSpeed());
-
         List<MuzzlePos> muzzles = ClientConfigCache.getCannonOverride(name, "muzzles")
                 .flatMap(ConfigOverrideManager::parseMuzzlesString)
                 .orElse(original.muzzles());
@@ -292,8 +283,7 @@ public class ConfigOverrideManager {
                 verticalSpread,
                 horizontalSpread,
                 maxElevation,
-                minElevation,
-                turretSpeed
+                minElevation
         );
     }
 
@@ -490,10 +480,6 @@ public class ConfigOverrideManager {
             case "maxElevation", "minElevation" -> {
                 float f = num.floatValue();
                 yield Math.max(-90f, Math.min(90f, f));
-            }
-            case "turretSpeed" -> {
-                float f = num.floatValue();
-                yield Math.max(0.1f, Math.min(20f, f));
             }
             default -> value;
         };

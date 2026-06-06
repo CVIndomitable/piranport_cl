@@ -1,0 +1,16 @@
+{
+  "name": "piranport.book.cannons.artillery_tool",
+  "category": "piranport:2_cannons",
+  "icon": "piranport:artillery_tool",
+  "sortnum": 4,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)Artillery Configuration Tool$()$(br2)$(o)Creative mode only$() - A debug tool for fine-tuning cannon parameters.$(br2)$(bold)Adjustable Parameters:$()$(br)• Damage and explosion power$(br)• Reload time and firing cooldown$(br)• Projectile velocity and drag$(br)• Dispersion angle$(br)• Fuse delay and penetration"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)Usage:$()$(br)1. Obtain from creative menu$(br)2. Right-click to open configuration GUI$(br)3. Adjust sliders and values$(br)4. Click 'Apply' to save changes$(br)5. Export/Import CSV for batch editing$(br2)$(bold)Note:$() This tool is for modpack developers and testing. Changes persist in world data."
+    }
+  ]
+}

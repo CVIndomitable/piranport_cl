@@ -1,0 +1,21 @@
+{
+  "name": "piranport.book.support.reload",
+  "category": "piranport:11_support",
+  "icon": "piranport:reload_facility",
+  "sortnum": 3,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)Reload Facility$()$(br2)An automated station that reloads ammunition into your weapons.$(br2)$(bold)Features:$()$(br)• Automatically reloads weapons in range$(br)• Supports all ammo types$(br)• Faster than manual reloading$(br)• Requires power/fuel to operate"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "piranport:reload_facility",
+      "text": "Reload Facility crafting recipe"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)Usage$()$(br2)1. Place the reload facility$(br)2. Right-click to open the interface$(br)3. Insert ammunition into the input slots$(br)4. Stand nearby with weapons$(br)5. Weapons reload automatically$(br2)$(bold)Tip:$() Build reload facilities near your base for quick rearming!"
+    }
+  ]
+}

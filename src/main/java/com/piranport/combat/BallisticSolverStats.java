@@ -36,6 +36,10 @@ public final class BallisticSolverStats {
     // ===== 最终选择的算法 =====
     private Algorithm lastChosen = Algorithm.TERNARY;
 
+    // ===== 最近一次解算的实际迭代次数 =====
+    private int lastTernaryIters = 0;
+    private int lastNewtonIters = 0;
+
     private static final BallisticSolverStats INSTANCE = new BallisticSolverStats();
 
     private BallisticSolverStats() {}
@@ -83,6 +87,12 @@ public final class BallisticSolverStats {
     public double getCombinedAccuracy() { return combinedAccuracy; }
     public Algorithm getLastChosen() { return lastChosen; }
 
+    // ===== 迭代次数 =====
+    public void setLastTernaryIters(int iters) { lastTernaryIters = iters; }
+    public void setLastNewtonIters(int iters) { lastNewtonIters = iters; }
+    public int getLastTernaryIters() { return lastTernaryIters; }
+    public int getLastNewtonIters() { return lastNewtonIters; }
+
     /** 重置统计（用于新一轮测量） */
     public void reset() {
         ternaryMinNs = Long.MAX_VALUE;
@@ -97,5 +107,7 @@ public final class BallisticSolverStats {
         newtonAccuracy = Double.MAX_VALUE;
         combinedAccuracy = Double.MAX_VALUE;
         lastChosen = Algorithm.TERNARY;
+        lastTernaryIters = 0;
+        lastNewtonIters = 0;
     }
 }

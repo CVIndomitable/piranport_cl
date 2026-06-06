@@ -1,0 +1,20 @@
+{
+  "name": "piranport.book.config.debug",
+  "category": "piranport:12_config",
+  "icon": "minecraft:command_block",
+  "sortnum": 2,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)Debug Tools$()$(br2)$(o)Creative mode and operator only.$()$(br2)$(bold)Commands:$()$(br)• $(o)/ppd spawn_ruin <type>$(): Spawn a ruin structure$(br)• $(o)/ppd debug_toggle$(): Toggle debug mode$(br)• $(o)/ppd cooldown_override$(): Bypass weapon cooldowns"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)Config Inspector$()$(br2)A special item that displays entity and block data.$(br2)$(bold)Usage:$()$(br)• Hold the config inspector$(br)• Right-click any entity or block$(br)• View detailed debug information$(br)• Useful for modpack developers"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)Model Debug Block$()$(br2)A special block for testing model rendering.$(br2)$(bold)Features:$()$(br)• Displays model information$(br)• Shows animation states$(br)• Helps troubleshoot rendering issues$(br2)$(bold)Note:$() These tools are for development and testing only."
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "name": "piranport.book.config.keybindings",
+  "category": "piranport:12_config",
+  "icon": "minecraft:book",
+  "sortnum": 0,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)Key Bindings$()$(br2)All PiranPort keys can be customized in Controls > Key Binds.$(br2)$(bold)Default Keys:$()$(br)• $(bold)P$(): Lock fire control target$(br)• $(bold)O$(): Cycle next target$(br)• $(bold)I$(): Cancel lock$(br)• $(bold)V$(): Recon aircraft view"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)More Keys:$()$(br)• $(bold)U$(): Toggle fighter ground attack$(br)• $(bold)H$(): Fighter auto-launch$(br)• $(bold)Y$(): Entity highlight toggle$(br)• $(bold)R$(): Manual reload$(br)• $(bold)Tab$(): Ammo selection$(br)• $(bold)Right-click$(): Fire held weapon or launch held aircraft while transformed$(br2)$(bold)Tip:$() Rebind keys that conflict with other mods!"
+    }
+  ]
+}

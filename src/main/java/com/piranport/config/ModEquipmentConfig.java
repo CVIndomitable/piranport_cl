@@ -115,15 +115,15 @@ public class ModEquipmentConfig {
 
         BALLISTIC_MAX_ITERATIONS = BUILDER
             .comment("Maximum bisection iterations (二分法最大迭代次数)")
-            .defineInRange("max_iterations", 20, 5, 100);
+            .defineInRange("max_iterations", 100, 5, 200);
 
         BALLISTIC_MAX_STEPS = BUILDER
             .comment("Maximum simulation steps per trajectory (弹道模拟最大步数)")
             .defineInRange("max_steps", 200, 50, 1000);
 
         BALLISTIC_ACCURACY = BUILDER
-            .comment("Accuracy threshold in blocks (弹道解算精度阈值，格)")
-            .defineInRange("accuracy", 0.5, 0.1, 5.0);
+            .comment("Accuracy threshold in blocks, 0 = absolute precision (弹道解算精度阈值，0=绝对精确)")
+            .defineInRange("accuracy", 0.0, 0.0, 5.0);
 
         BALLISTIC_CACHE_SIZE = BUILDER
             .comment("Ballistic cache size (弹道解算缓存大小)")

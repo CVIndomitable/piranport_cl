@@ -1,0 +1,16 @@
+{
+  "name": "piranport.book.cannons.ammo_selection",
+  "category": "piranport:2_cannons",
+  "icon": "piranport:small_he_shell",
+  "sortnum": 2,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)Ammo Selection$()$(br2)Hold a cannon and press $(bold)[R]$() to open the ammo selection overlay.$(br2)$(bold)Controls:$()$(br)• Move mouse to pick ammo type$(br)• Release R to confirm$(br)• Ammo is pulled from your ammo bay"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)Ammo Types:$()$(br)• $(item)HE Shell$() — Explosive area damage$(br)• $(item)AP Shell$() — Armor piercing, higher single-target damage$(br)• $(item)VT Shell$() — Proximity fuze, anti-air$(br)• $(item)Type 3 Shell$() — Pellet spread, crowd control$(br2)$(bold)Tip:$() The required ammo type must be in your ammo bay before switching!"
+    }
+  ]
+}

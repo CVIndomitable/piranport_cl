@@ -1,0 +1,31 @@
+{
+  "name": "piranport.book.intro.fuel",
+  "category": "piranport:1_intro",
+  "icon": "piranport:fuel",
+  "sortnum": 3,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "piranport.book.intro.fuel.p1"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "piranport:fuel_from_charcoal",
+      "text": "piranport.book.intro.fuel.craft_shapeless"
+    },
+    {
+      "type": "patchouli:smelting",
+      "recipe": "piranport:fuel_from_smelting_charcoal",
+      "text": "piranport.book.intro.fuel.craft_smelting"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "piranport.book.intro.fuel.p2"
+    },
+    {
+      "type": "patchouli:blasting",
+      "recipe": "piranport:aviation_fuel_from_blasting_charcoal",
+      "text": "piranport.book.intro.fuel.aviation_fuel"
+    }
+  ]
+}

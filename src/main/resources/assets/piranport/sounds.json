@@ -2,7 +2,7 @@
   "cannon_fire_small": {
     "sounds": [
       {
-        "name": "piranport:cannon_fire_small",
+        "name": "minecraft:entity/generic/explode",
         "attenuation_distance": 32
       }
     ]
@@ -10,7 +10,7 @@
   "cannon_fire_medium": {
     "sounds": [
       {
-        "name": "piranport:cannon_fire_medium",
+        "name": "minecraft:entity/generic/explode",
         "attenuation_distance": 48
       }
     ]
@@ -18,37 +18,45 @@
   "cannon_fire_large": {
     "sounds": [
       {
-        "name": "piranport:cannon_fire_large",
+        "name": "minecraft:entity/generic/explode",
         "attenuation_distance": 64
       }
     ]
   },
   "cannon_reload": {
     "sounds": [
-      "piranport:cannon_reload"
+      {
+        "name": "minecraft:item/armor/equip_iron"
+      }
     ]
   },
   "cannon_explosion": {
     "sounds": [
       {
-        "name": "piranport:cannon_explosion",
+        "name": "minecraft:entity/generic/explode",
         "attenuation_distance": 48
       }
     ]
   },
   "shell_whistle": {
     "sounds": [
-      "piranport:shell_whistle"
+      {
+        "name": "minecraft:entity/firework_rocket/launch"
+      }
     ]
   },
   "ammo_switch": {
     "sounds": [
-      "piranport:ammo_switch"
+      {
+        "name": "minecraft:item/armor/equip_chain"
+      }
     ]
   },
   "muzzle_burn": {
     "sounds": [
-      "piranport:muzzle_burn"
+      {
+        "name": "minecraft:item/firecharge/use"
+      }
     ]
   }
 }

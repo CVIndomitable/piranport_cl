@@ -45,12 +45,18 @@ public final class ClientScopeHandler {
     // ===== 客户端弹道解算相关 =====
     /** 上一次解算的结果（发射仰角，弧度） */
     private static double lastSolvedAngle = 0;
+    /** 上一次解算是否判定为目标超出射程 */
+    private static boolean lastOutOfRange = false;
     /** 是否已完成至少一次解算 */
     private static boolean hasSolved = false;
     /** 解算间隔（ticks）：避免每 tick 都解算，降低性能开销 */
     private static final int SOLVE_INTERVAL = 5;
     /** 上一次解算的 tick */
     private static int lastSolveTick = 0;
+
+    // ===== 服务端解算统计（由 S2C 载荷更新） =====
+    private static int serverTernaryIters = 0;
+    private static int serverNewtonIters = 0;
 
     private ClientScopeHandler() {}
 
@@ -63,6 +69,7 @@ public final class ClientScopeHandler {
         holdTicks = 0;
         heldCannonBeforeScope = true;
         hasSolved = false;
+        lastOutOfRange = false;
         lastSolveTick = 0;
     }
 
@@ -76,6 +83,7 @@ public final class ClientScopeHandler {
         hasValidTarget = false;
         heldCannonBeforeScope = false;
         hasSolved = false;
+        lastOutOfRange = false;
     }
 
     /** 每客户端 tick 调用，更新长按计数和射线检测 */
@@ -106,11 +114,14 @@ public final class ClientScopeHandler {
         float velocity = effectiveData.initialSpeed();
         float drag = effectiveData.dragCoeff();
         float gravity = effectiveData.gravity();
+        double mcGravity = gravity > 0f ? gravity / 196.0 : BallisticSolver.DEFAULT_GRAVITY;
 
         if (velocity <= 0 || drag < 0) return;
 
         // 运行解算（会自动记录性能统计到 BallisticSolverStats）
-        lastSolvedAngle = BallisticSolver.solve(velocity, drag, gravity, targetDistance, targetVertical);
+        BallisticSolver.Result result = BallisticSolver.solve(velocity, drag, mcGravity, targetDistance, targetVertical, 0.0);
+        lastSolvedAngle = result.angle();
+        lastOutOfRange = result.outOfRange();
         hasSolved = true;
     }
 
@@ -203,8 +214,19 @@ public final class ClientScopeHandler {
     /** 上一次客户端解算的发射仰角（弧度） */
     public static double getLastSolvedAngle() { return lastSolvedAngle; }
 
+    /** 上一次解算是否判定为目标超出射程 */
+    public static boolean isLastOutOfRange() { return lastOutOfRange; }
+
     /** 是否已完成至少一次客户端解算 */
     public static boolean hasSolved() { return hasSolved; }
+
+    // ===== 服务端解算统计 =====
+    public static void setServerSolverStats(int ternaryIters, int newtonIters) {
+        serverTernaryIters = ternaryIters;
+        serverNewtonIters = newtonIters;
+    }
+    public static int getServerTernaryIters() { return serverTernaryIters; }
+    public static int getServerNewtonIters() { return serverNewtonIters; }
 
     /** 从武器 ItemStack 读取 scopeZoom */
     private static float getZoomFromWeapon(ItemStack weapon) {
@@ -232,5 +254,6 @@ public final class ClientScopeHandler {
         hasValidTarget = false;
         heldCannonBeforeScope = false;
         hasSolved = false;
+        lastOutOfRange = false;
     }
 }

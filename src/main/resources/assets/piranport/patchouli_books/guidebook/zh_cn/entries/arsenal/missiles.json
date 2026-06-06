@@ -1,0 +1,16 @@
+{
+  "name": "piranport.book.arsenal.missiles",
+  "category": "piranport:9_arsenal",
+  "icon": "piranport:sy1_launcher",
+  "sortnum": 0,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "piranport.book.arsenal.missiles.p1"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "piranport.book.arsenal.missiles.p2"
+    }
+  ]
+}

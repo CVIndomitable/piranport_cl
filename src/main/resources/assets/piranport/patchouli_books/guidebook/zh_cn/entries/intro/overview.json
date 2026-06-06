@@ -1,0 +1,27 @@
+{
+  "name": "piranport.book.intro.overview",
+  "category": "piranport:1_intro",
+  "icon": "piranport:small_ship_core",
+  "sortnum": 1,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "piranport.book.intro.overview.p1"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "piranport:small_ship_core",
+      "text": "piranport.book.intro.overview.craft"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "piranport:medium_ship_core",
+      "text": "piranport.book.intro.overview.medium_craft"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "piranport:large_ship_core",
+      "text": "piranport.book.intro.overview.large_craft"
+    }
+  ]
+}

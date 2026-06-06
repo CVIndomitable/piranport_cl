@@ -1,0 +1,6 @@
+{
+  "name": "piranport.book.cat.config",
+  "description": "piranport.book.cat.config.desc",
+  "icon": "minecraft:command_block",
+  "sortnum": 11
+}

@@ -217,9 +217,6 @@ public class ShipCoreCombat {
                     BuiltInRegistries.ITEM.getKey(shellForRender.getItem()).getPath(),
                     barrelCount);
 
-            float pitch = getSoundPitch(weapon);
-            level.playSound(null, player.getX(), player.getY(), player.getZ(),
-                    SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 0.5f, pitch);
             return true;
         }
 
@@ -304,9 +301,6 @@ public class ShipCoreCombat {
                 BuiltInRegistries.ITEM.getKey(shellForRender.getItem()).getPath(),
                 barrelCount, remainingAmmo);
 
-        float pitch = getSoundPitch(weapon);
-        level.playSound(null, player.getX(), player.getY(), player.getZ(),
-                SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 0.5f, pitch);
         return true;
     }
 
@@ -1493,13 +1487,14 @@ public class ShipCoreCombat {
                 } else {
                     direction = player.getLookAngle();
                 }
-                // 高斯散布：在初速度垂面内偏移
-                direction = com.piranport.artillery.ArtilleryItem.applyDispersion(
-                        direction, level.random, dispersionDeg);
+                // 高斯散布：在初速度垂面内叠加速度偏移
+                Vec3 velocityVec = direction.scale(velocity);
+                velocityVec = com.piranport.artillery.ArtilleryItem.applyDispersion(
+                        velocityVec, level.random, dispersionDeg);
 
-                // 设置炮弹生成位置
+                // 设置炮弹生成位置和速度
                 projectile.setPos(spawnPos);
-                projectile.shoot(direction.x, direction.y, direction.z, velocity, 0f);
+                projectile.shoot(velocityVec.x, velocityVec.y, velocityVec.z, (float) velocityVec.length(), 0f);
                 level.addFreshEntity(projectile);
             }
 
@@ -1549,8 +1544,21 @@ public class ShipCoreCombat {
         float drag = getProjectileDrag(weapon, player.level());
         float gravity = getProjectileGravity(weapon, player.level());
         double mcGravity = gravity > 0f ? gravity / 196.0 : BallisticSolver.DEFAULT_GRAVITY;
-        double optimalPitch = BallisticSolver.solve(velocity, drag, mcGravity,
-                horizontalDist, verticalDist);
+        BallisticSolver.Result result = BallisticSolver.solve(velocity, drag, mcGravity,
+                horizontalDist, verticalDist, 0.0);
+        double optimalPitch = result.angle();
+
+        if (result.outOfRange()) {
+            player.displayClientMessage(
+                    Component.translatable("message.piranport.out_of_range"), true);
+        }
+
+        // 将服务端解算统计发送给客户端
+        if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+            com.piranport.combat.BallisticSolverStats stats = com.piranport.combat.BallisticSolverStats.getInstance();
+            net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(serverPlayer,
+                    new com.piranport.network.SolverStatsPayload(stats.getLastTernaryIters(), stats.getLastNewtonIters()));
+        }
 
         // MC 偏航角：atan2(-dx, dz) 映射到 MC 坐标（yaw=0 = +Z）
         double yawRad = Math.atan2(-toTarget.x, toTarget.z);

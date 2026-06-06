@@ -1,0 +1,20 @@
+{
+  "name": "Ship Core Loadout",
+  "category": "piranport:10_equipment",
+  "icon": "piranport:small_ship_core",
+  "sortnum": 3,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)Loadout Basics$()$(br2)Ship cores do not need a separate equipment screen. Put cannons, torpedo launchers, missile launchers, or aircraft on your hotbar, then right-click the held item while transformed. Keep shells, torpedoes, missiles, bombs, and aviation fuel in your inventory so weapons can draw from them."
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)Load System$()$(br2)The ship core tooltip shows current load: $(o)Load: X / Y$().$(br2)• Hotbar weapons count toward load$(br)• Enhancements stored in the core count toward load$(br)• Overload reduces movement speed$(br)• Different cores have different load limits$(br2)$(bold)Tip:$() Balance your loadout carefully to avoid being overweight!"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)Weapons & Enhancements$()$(br2)• $(bold)Scroll Wheel$(): Cycle hotbar weapons$(br)• $(bold)Number Keys$(): Select a hotbar slot directly$(br)• $(bold)Offhand$(): Holds the ship core by default to maintain transformation$(br2)Drag armor plates, engines, sonar, or torpedo reload parts onto the core in your inventory to store them. Right-click the core with an empty cursor to retrieve the last stored enhancement."
+    }
+  ]
+}

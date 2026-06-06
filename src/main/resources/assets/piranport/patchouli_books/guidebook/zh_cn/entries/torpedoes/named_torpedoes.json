@@ -1,0 +1,16 @@
+{
+  "name": "piranport.book.torpedoes.named",
+  "category": "piranport:3_torpedoes",
+  "icon": "piranport:torpedo_610mm_type93_mk1",
+  "sortnum": 1,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "piranport.book.torpedoes.named.p1"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "piranport.book.torpedoes.named.p2"
+    }
+  ]
+}

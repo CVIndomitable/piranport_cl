@@ -252,8 +252,7 @@ public class ModItems {
                             1.5f,    // verticalSpread
                             1.5f,    // horizontalSpread
                             45.0f,   // maxElevation
-                            -5.0f,   // minElevation
-                            2.5f     // turretSpeed
+                            -5.0f    // minElevation
                     ), "seven_barrel_gun"));
 
     /**
@@ -304,8 +303,7 @@ public class ModItems {
                             1.0f,    // verticalSpread
                             1.0f,    // horizontalSpread
                             45.0f,   // maxElevation
-                            -5.0f,   // minElevation
-                            3.0f     // turretSpeed
+                            -5.0f    // minElevation
                     ), "salvo_test_gun"));
 
     /**
@@ -359,8 +357,7 @@ public class ModItems {
                             1.8f,    // verticalSpread
                             1.8f,    // horizontalSpread
                             45.0f,   // maxElevation
-                            -5.0f,   // minElevation
-                            3.0f     // turretSpeed
+                            -5.0f    // minElevation
                     ), "fourteen_barrel_gun"));
 
     // ===== Torpedo Ammo (legacy generic) =====

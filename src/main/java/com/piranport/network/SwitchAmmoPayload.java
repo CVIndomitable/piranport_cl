@@ -2,6 +2,7 @@ package com.piranport.network;
 
 import com.piranport.PiranPort;
 import com.piranport.combat.TransformationManager;
+import com.piranport.component.LoadedAmmo;
 import com.piranport.component.SelectedAmmoType;
 import com.piranport.component.SlotCooldowns;
 import com.piranport.component.WeaponCooldown;
@@ -116,7 +117,7 @@ public record SwitchAmmoPayload(String ammoItemId) implements CustomPacketPayloa
             int boostedReloadTicks = TransformationManager.boostedCooldown(player, reloadTicks);
             long currentTick = player.level().getGameTime();
 
-            // 遍历所有同类型火炮槽位，重置装填时间
+            // 遍历所有同类型火炮槽位，仅重置正在装填中的火炮；已装填完成的火炮不受影响。
             Inventory inv = player.getInventory();
             SlotCooldowns cooldowns = coreStack.getOrDefault(
                     ModDataComponents.SLOT_COOLDOWNS.get(), SlotCooldowns.EMPTY);
@@ -124,14 +125,16 @@ public record SwitchAmmoPayload(String ammoItemId) implements CustomPacketPayloa
 
             for (int i = 0; i < inv.items.size(); i++) {
                 ItemStack slot = inv.items.get(i);
-                if (slot.getItem() == weapon.getItem()) {
+                if (slot.getItem() == weapon.getItem()
+                        && isReloadingUnloadedCannon(slot, updated, i, currentTick, player.level())) {
                     updated = updated.withSlotCooldown(i, boostedReloadTicks, currentTick);
                     slot.set(ModDataComponents.WEAPON_COOLDOWN.get(),
                             WeaponCooldown.of(currentTick, boostedReloadTicks));
                 }
             }
             ItemStack offhand = inv.offhand.get(0);
-            if (offhand.getItem() == weapon.getItem()) {
+            if (offhand.getItem() == weapon.getItem()
+                    && isReloadingUnloadedCannon(offhand, updated, 40, currentTick, player.level())) {
                 updated = updated.withSlotCooldown(40, boostedReloadTicks, currentTick);
                 offhand.set(ModDataComponents.WEAPON_COOLDOWN.get(),
                         WeaponCooldown.of(currentTick, boostedReloadTicks));
@@ -146,5 +149,20 @@ public record SwitchAmmoPayload(String ammoItemId) implements CustomPacketPayloa
                     Component.translatable("message.piranport.ammo_switched",
                             ammoItem.getDescription()), true);
         });
+    }
+
+    private static boolean isReloadingUnloadedCannon(ItemStack stack, SlotCooldowns cooldowns,
+            int slotIndex, long currentTick, net.minecraft.world.level.Level level) {
+        if (!(stack.getItem() instanceof com.piranport.artillery.ArtilleryItem artilleryItem)) {
+            return false;
+        }
+        int barrels = artilleryItem.getEffectiveData(level).barrels();
+        LoadedAmmo loaded = stack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
+        if (loaded.hasAmmo() && loaded.count() >= barrels) {
+            return false;
+        }
+        WeaponCooldown itemCooldown = stack.get(ModDataComponents.WEAPON_COOLDOWN.get());
+        return cooldowns.isOnCooldown(slotIndex, currentTick)
+                || (itemCooldown != null && itemCooldown.isOnCooldown(currentTick));
     }
 }

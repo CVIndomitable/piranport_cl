@@ -114,7 +114,10 @@ public class ScopeHudLayer {
         double dist = ClientScopeHandler.getTargetDistance();
         double vert = ClientScopeHandler.getTargetVertical();
         if (dist > 0) {
-            String distText = String.format("§f距离: §e%.1f§fm  §7(Δy: §b%+.1f§7)", dist, vert);
+            String angleText = ClientScopeHandler.hasSolved()
+                    ? String.format("  §7仰角: §b%.1f°", Math.toDegrees(ClientScopeHandler.getLastSolvedAngle()))
+                    : "";
+            String distText = String.format("§f距离: §e%.1f§fm  §7(相对高度: §b%+.1f§7)%s", dist, vert, angleText);
             graphics.drawString(mc.font, distText, cx - mc.font.width(distText) / 2, cy + 25, 0xFFFFFF, true);
         }
 
@@ -157,9 +160,11 @@ public class ScopeHudLayer {
         // 三分法统计
         boolean ternaryChosen = stats.getLastChosen() == BallisticSolverStats.Algorithm.TERNARY;
         int ternaryColor = ternaryChosen ? highlightColor : textColor;
-        String ternaryStats = String.format("§7三分法: §f%3d/%3d/%3d§7µs  §e误差:§f%.3f§7格 %s",
+        String ternaryStats = String.format("§7三分法: §f%d§7µs  §8(%d/%d/%d)  §e垂:§f%s§7格 §e水:§f%s§7格 %s",
+                stats.getLastTernaryUs(),
                 stats.getTernaryMinUs(), stats.getTernaryAvgUs(), stats.getTernaryMaxUs(),
-                stats.getTernaryAccuracy(),
+                formatBlocks(stats.getTernaryVerticalError()),
+                formatBlocks(stats.getTernaryHorizontalError()),
                 ternaryChosen ? "§a✓" : "");
         graphics.drawString(mc.font, ternaryStats, cx - mc.font.width(ternaryStats) / 2, startY, ternaryColor, true);
         startY += lineHeight;
@@ -167,16 +172,21 @@ public class ScopeHudLayer {
         // 牛顿迭代法统计
         boolean newtonChosen = stats.getLastChosen() == BallisticSolverStats.Algorithm.NEWTON;
         int newtonColor = newtonChosen ? highlightColor : textColor;
-        String newtonStats = String.format("§7牛顿法: §f%3d/%3d/%3d§7µs  §e误差:§f%.3f§7格 %s",
+        String newtonStats = String.format("§7牛顿法: §f%d§7µs  §8(%d/%d/%d)  §e垂:§f%s§7格 §e水:§f%s§7格 %s",
+                stats.getLastNewtonUs(),
                 stats.getNewtonMinUs(), stats.getNewtonAvgUs(), stats.getNewtonMaxUs(),
-                stats.getNewtonAccuracy(),
+                formatBlocks(stats.getNewtonVerticalError()),
+                formatBlocks(stats.getNewtonHorizontalError()),
                 newtonChosen ? "§a✓" : "");
         graphics.drawString(mc.font, newtonStats, cx - mc.font.width(newtonStats) / 2, startY, newtonColor, newtonColor != textColor);
         startY += lineHeight;
 
         // 组合结果
-        String combinedInfo = String.format("§7最终精度: §f%.3f§7格  §7选择: §f%s",
-                stats.getCombinedAccuracy(),
+        String combinedInfo = String.format("§7总耗时: §f%d§7µs  §7最终: 垂§f%s§7格 水§f%s§7格 总§f%s§7格  §7选择: §f%s",
+                stats.getLastTotalUs(),
+                formatBlocks(stats.getCombinedVerticalError()),
+                formatBlocks(stats.getCombinedHorizontalError()),
+                formatBlocks(stats.getCombinedTotalError()),
                 stats.getLastChosen().getDisplayName());
         graphics.drawString(mc.font, combinedInfo, cx - mc.font.width(combinedInfo) / 2, startY, accuracyColor, true);
         startY += lineHeight;
@@ -184,7 +194,17 @@ public class ScopeHudLayer {
         // 服务端迭代次数
         int sTern = ClientScopeHandler.getServerTernaryIters();
         int sNewt = ClientScopeHandler.getServerNewtonIters();
-        String serverInfo = String.format("§7服务端迭代: §f三分法 %d§7次  §f牛顿法 %d§7次", sTern, sNewt);
+        String serverInfo = String.format("§7服务端: §f%d§7µs  §7仰角§f%.1f°  §7垂§f%s§7格 水§f%s§7格  §7迭代: §f%d/%d",
+                ClientScopeHandler.getServerTotalUs(),
+                ClientScopeHandler.getServerAngleDeg(),
+                formatBlocks(ClientScopeHandler.getServerVerticalError()),
+                formatBlocks(ClientScopeHandler.getServerHorizontalError()),
+                sTern, sNewt);
         graphics.drawString(mc.font, serverInfo, cx - mc.font.width(serverInfo) / 2, startY, accuracyColor, true);
+    }
+
+    private static String formatBlocks(double value) {
+        if (!Double.isFinite(value) || value == Double.MAX_VALUE) return "--";
+        return String.format("%.2f", value);
     }
 }

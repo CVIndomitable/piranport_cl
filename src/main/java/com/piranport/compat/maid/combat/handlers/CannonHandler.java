@@ -118,7 +118,8 @@ public class CannonHandler implements WeaponHandler {
         return List.of(
                 ModItems.SMALL_HE_SHELL.get(),
                 ModItems.SMALL_AP_SHELL.get(),
-                ModItems.SMALL_VT_SHELL.get()
+                ModItems.SMALL_VT_SHELL.get(),
+                ModItems.SMALL_TYPE3_SHELL.get()
         );
     }
 

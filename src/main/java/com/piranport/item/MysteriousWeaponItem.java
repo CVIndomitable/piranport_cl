@@ -1,5 +1,6 @@
 package com.piranport.item;
 
+import com.piranport.combat.TransformationManager;
 import com.piranport.entity.RailgunProjectileEntity;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -37,7 +38,7 @@ public class MysteriousWeaponItem extends Item {
                     SoundEvents.FIREWORK_ROCKET_BLAST, SoundSource.PLAYERS, 1.5f, 0.5f);
         }
 
-        player.getCooldowns().addCooldown(this, 30); // 1.5s cooldown
+        player.getCooldowns().addCooldown(this, TransformationManager.boostedCooldown(player, 30));
 
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
     }

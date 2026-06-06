@@ -148,16 +148,17 @@ public class ArtilleryItem extends Item {
     }
 
     /**
-     * 在初速度垂面内叠加高斯散布速度偏移。
-     * 散布是一个随机方向（垂直于初速度）的速度矢量，大小服从高斯分布，标准差 = dispersion（blocks/tick）。
+     * 在初速度方向上叠加角度散布。
+     * 散布配置单位为度，标准差 = dispersionDeg。
      * @param velocity 初速度矢量（direction * speed）
      * @param random 随机源
-     * @param dispersion 散布速度标准差（blocks/tick）
+     * @param dispersionDeg 散布角标准差（度）
      * @return 叠加散布后的速度矢量
      */
-    public static Vec3 applyDispersion(Vec3 velocity, RandomSource random, float dispersion) {
+    public static Vec3 applyDispersion(Vec3 velocity, RandomSource random, float dispersionDeg) {
         double speed = velocity.length();
         if (speed < 1e-9) return velocity;
+        if (dispersionDeg <= 0f) return velocity;
 
         Vec3 forward = velocity.normalize();
         Vec3 right = new Vec3(0, 1, 0).cross(forward).normalize();
@@ -167,10 +168,15 @@ public class ArtilleryItem extends Item {
         Vec3 up = forward.cross(right).normalize();
 
         double theta = random.nextDouble() * 2 * Math.PI;
-        double r = random.nextGaussian() * dispersion;
-        return velocity
-                .add(right.scale(r * Math.cos(theta)))
-                .add(up.scale(r * Math.sin(theta)));
+        double sigma = Math.toRadians(dispersionDeg);
+        double r = random.nextGaussian() * sigma;
+        r = Math.max(-sigma * 3.0, Math.min(sigma * 3.0, r));
+        double offset = Math.tan(r);
+        Vec3 dispersedDir = forward
+                .add(right.scale(offset * Math.cos(theta)))
+                .add(up.scale(offset * Math.sin(theta)))
+                .normalize();
+        return dispersedDir.scale(speed);
     }
 
     @Override
@@ -233,7 +239,7 @@ public class ArtilleryItem extends Item {
                 }
 
                 if (PiranPortDebug.isClientEnabled()) {
-                    tooltipComponents.add(Component.literal(String.format("§8v₀=%.1f drag=%.3f g=%.1f",
+                    tooltipComponents.add(Component.literal(String.format("§8v₀=%.1f loss=%.3f g=%.1f",
                             getInitialSpeed(), getDragCoeff(), getCustomGravity()))
                             .withStyle(net.minecraft.ChatFormatting.DARK_GRAY));
                     tooltipComponents.add(Component.literal(String.format("§8散布=%.1f° 口径=%d",

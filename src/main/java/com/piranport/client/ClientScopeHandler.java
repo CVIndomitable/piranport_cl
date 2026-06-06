@@ -4,6 +4,7 @@ import com.piranport.artillery.ArtilleryItem;
 import com.piranport.artillery.config.ArtilleryCannonData;
 import com.piranport.combat.BallisticSolver;
 import com.piranport.combat.BallisticSolverStats;
+import com.piranport.config.ModEquipmentConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
@@ -40,8 +41,6 @@ public final class ClientScopeHandler {
     /** 进入瞄准模式之前是否持有火炮 */
     private static boolean heldCannonBeforeScope = false;
 
-    private static final int SCOPE_THRESHOLD_TICKS = 2;
-
     // ===== 客户端弹道解算相关 =====
     /** 上一次解算的结果（发射仰角，弧度） */
     private static double lastSolvedAngle = 0;
@@ -57,6 +56,10 @@ public final class ClientScopeHandler {
     // ===== 服务端解算统计（由 S2C 载荷更新） =====
     private static int serverTernaryIters = 0;
     private static int serverNewtonIters = 0;
+    private static long serverTotalUs = 0;
+    private static double serverVerticalError = 0.0;
+    private static double serverHorizontalError = 0.0;
+    private static double serverAngleDeg = 0.0;
 
     private ClientScopeHandler() {}
 
@@ -70,6 +73,10 @@ public final class ClientScopeHandler {
         heldCannonBeforeScope = true;
         hasSolved = false;
         lastOutOfRange = false;
+        serverTotalUs = 0;
+        serverVerticalError = 0.0;
+        serverHorizontalError = 0.0;
+        serverAngleDeg = 0.0;
         lastSolveTick = 0;
     }
 
@@ -84,6 +91,10 @@ public final class ClientScopeHandler {
         heldCannonBeforeScope = false;
         hasSolved = false;
         lastOutOfRange = false;
+        serverTotalUs = 0;
+        serverVerticalError = 0.0;
+        serverHorizontalError = 0.0;
+        serverAngleDeg = 0.0;
     }
 
     /** 每客户端 tick 调用，更新长按计数和射线检测 */
@@ -119,7 +130,8 @@ public final class ClientScopeHandler {
         if (velocity <= 0 || drag < 0) return;
 
         // 运行解算（会自动记录性能统计到 BallisticSolverStats）
-        BallisticSolver.Result result = BallisticSolver.solve(velocity, drag, mcGravity, targetDistance, targetVertical, 0.0);
+        BallisticSolver.Result result = BallisticSolver.solve(
+                velocity, drag, mcGravity, targetDistance, targetVertical, 0.0);
         lastSolvedAngle = result.angle();
         lastOutOfRange = result.outOfRange();
         hasSolved = true;
@@ -187,17 +199,17 @@ public final class ClientScopeHandler {
 
     /** 是否已长按达到瞄准阈值（完全进入瞄准模式） */
     public static boolean isFullyScoped() {
-        return scoping && holdTicks >= SCOPE_THRESHOLD_TICKS;
+        return scoping && holdTicks >= getScopeActivationTicks();
     }
 
     /** 是否为快速点击（短按未达到瞄准阈值） */
     public static boolean isQuickRelease() {
-        return scoping && holdTicks < SCOPE_THRESHOLD_TICKS;
+        return scoping && holdTicks < getScopeActivationTicks();
     }
 
     public static int getHoldTicks() { return holdTicks; }
 
-    public static int getScopeThreshold() { return SCOPE_THRESHOLD_TICKS; }
+    public static int getScopeThreshold() { return getScopeActivationTicks(); }
 
     public static float getZoomLevel() { return zoomLevel; }
 
@@ -225,8 +237,23 @@ public final class ClientScopeHandler {
         serverTernaryIters = ternaryIters;
         serverNewtonIters = newtonIters;
     }
+
+    public static void setServerSolverStats(int ternaryIters, int newtonIters, long totalUs,
+                                            double verticalError, double horizontalError, double angleDeg) {
+        serverTernaryIters = ternaryIters;
+        serverNewtonIters = newtonIters;
+        serverTotalUs = totalUs;
+        serverVerticalError = verticalError;
+        serverHorizontalError = horizontalError;
+        serverAngleDeg = angleDeg;
+    }
+
     public static int getServerTernaryIters() { return serverTernaryIters; }
     public static int getServerNewtonIters() { return serverNewtonIters; }
+    public static long getServerTotalUs() { return serverTotalUs; }
+    public static double getServerVerticalError() { return serverVerticalError; }
+    public static double getServerHorizontalError() { return serverHorizontalError; }
+    public static double getServerAngleDeg() { return serverAngleDeg; }
 
     /** 从武器 ItemStack 读取 scopeZoom */
     private static float getZoomFromWeapon(ItemStack weapon) {
@@ -235,6 +262,10 @@ public final class ClientScopeHandler {
             return level != null ? ai.getEffectiveData(level).scopeZoom() : ai.getData().scopeZoom();
         }
         return 2.0f;
+    }
+
+    private static int getScopeActivationTicks() {
+        return ModEquipmentConfig.SCOPE_ACTIVATION_TICKS.get();
     }
 
     /** 判断玩家是否手持火炮 */

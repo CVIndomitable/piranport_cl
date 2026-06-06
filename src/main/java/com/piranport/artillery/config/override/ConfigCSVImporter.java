@@ -134,8 +134,8 @@ public class ConfigCSVImporter {
     private static void importCannonLine(String line, ArtilleryConfigOverrideSavedData overrides) {
         String[] parts = parseCSVLine(line);
 
-        if (parts.length < 22) {
-            throw new IllegalArgumentException("字段数量不足（需要22个字段）");
+        if (parts.length < 16) {
+            throw new IllegalArgumentException("字段数量不足（需要16个字段）");
         }
 
         String cannonName = parts[0].trim();
@@ -160,12 +160,9 @@ public class ConfigCSVImporter {
             float dispersion = Float.parseFloat(parts[12]);
 
             // 解析新增字段
-            float projectileWeight = Float.parseFloat(parts[13]);
-            int fireCooldown = Integer.parseInt(parts[14]);
-            int salvoCount = Integer.parseInt(parts[15]);
-            float salvoInterval = Float.parseFloat(parts[16]);
-            float maxElevation = Float.parseFloat(parts[17]);
-            float minElevation = Float.parseFloat(parts[18]);
+            int fireCooldown = Integer.parseInt(parts[13]);
+            int salvoCount = Integer.parseInt(parts[14]);
+            float salvoInterval = Float.parseFloat(parts[15]);
 
             // 应用验证和范围限制
             caliber = (int) ConfigOverrideManager.validateValue("caliber", caliber);
@@ -179,12 +176,9 @@ public class ConfigCSVImporter {
             gravity = (float) ConfigOverrideManager.validateValue("gravity", gravity);
             explosionPower = (float) ConfigOverrideManager.validateValue("explosionPower", explosionPower);
             dispersion = (float) ConfigOverrideManager.validateValue("dispersion", dispersion);
-            projectileWeight = (float) ConfigOverrideManager.validateValue("projectileWeight", projectileWeight);
             fireCooldown = (int) ConfigOverrideManager.validateValue("fireCooldown", fireCooldown);
             salvoCount = (int) ConfigOverrideManager.validateValue("salvoCount", salvoCount);
             salvoInterval = (float) ConfigOverrideManager.validateValue("salvoInterval", salvoInterval);
-            maxElevation = (float) ConfigOverrideManager.validateValue("maxElevation", maxElevation);
-            minElevation = (float) ConfigOverrideManager.validateValue("minElevation", minElevation);
 
             // 写入覆盖数据
             overrides.setCannonOverride(cannonName, "caliber", caliber);
@@ -198,12 +192,9 @@ public class ConfigCSVImporter {
             overrides.setCannonOverride(cannonName, "gravity", gravity);
             overrides.setCannonOverride(cannonName, "explosionPower", explosionPower);
             overrides.setCannonOverride(cannonName, "dispersion", dispersion);
-            overrides.setCannonOverride(cannonName, "projectileWeight", projectileWeight);
             overrides.setCannonOverride(cannonName, "fireCooldown", fireCooldown);
             overrides.setCannonOverride(cannonName, "salvoCount", salvoCount);
             overrides.setCannonOverride(cannonName, "salvoInterval", salvoInterval);
-            overrides.setCannonOverride(cannonName, "maxElevation", maxElevation);
-            overrides.setCannonOverride(cannonName, "minElevation", minElevation);
 
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("数值格式错误: " + e.getMessage());

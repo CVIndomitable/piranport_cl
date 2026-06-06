@@ -111,11 +111,6 @@ public class ConfigOverrideManager {
                 .map(v -> v instanceof Number n ? n.floatValue() : null)
                 .orElse(original.dispersion());
 
-        // 新增字段覆盖
-        float projectileWeight = overrides.getCannonOverride(name, "projectileWeight")
-                .map(v -> v instanceof Number n ? n.floatValue() : null)
-                .orElse(original.projectileWeight());
-
         int fireCooldown = overrides.getCannonOverride(name, "fireCooldown")
                 .map(v -> v instanceof Number n ? n.intValue() : null)
                 .orElse(original.fireCooldown());
@@ -127,14 +122,6 @@ public class ConfigOverrideManager {
         float salvoInterval = overrides.getCannonOverride(name, "salvoInterval")
                 .map(v -> v instanceof Number n ? n.floatValue() : null)
                 .orElse(original.salvoInterval());
-
-        float maxElevation = overrides.getCannonOverride(name, "maxElevation")
-                .map(v -> v instanceof Number n ? n.floatValue() : null)
-                .orElse(original.maxElevation());
-
-        float minElevation = overrides.getCannonOverride(name, "minElevation")
-                .map(v -> v instanceof Number n ? n.floatValue() : null)
-                .orElse(original.minElevation());
 
         List<MuzzlePos> muzzles = overrides.getCannonOverride(name, "muzzles")
                 .flatMap(ConfigOverrideManager::parseMuzzlesOverride)
@@ -154,12 +141,9 @@ public class ConfigOverrideManager {
                 gravity,
                 explosionPower,
                 dispersion,
-                projectileWeight,
                 fireCooldown,
                 salvoCount,
-                salvoInterval,
-                maxElevation,
-                minElevation
+                salvoInterval
         );
     }
 
@@ -215,11 +199,6 @@ public class ConfigOverrideManager {
                 .flatMap(s -> parseFloatSafe(s))
                 .orElse(original.dispersion());
 
-        // 新增字段
-        float projectileWeight = ClientConfigCache.getCannonOverride(name, "projectileWeight")
-                .flatMap(s -> parseFloatSafe(s))
-                .orElse(original.projectileWeight());
-
         int fireCooldown = ClientConfigCache.getCannonOverride(name, "fireCooldown")
                 .flatMap(s -> parseIntSafe(s))
                 .orElse(original.fireCooldown());
@@ -231,14 +210,6 @@ public class ConfigOverrideManager {
         float salvoInterval = ClientConfigCache.getCannonOverride(name, "salvoInterval")
                 .flatMap(s -> parseFloatSafe(s))
                 .orElse(original.salvoInterval());
-
-        float maxElevation = ClientConfigCache.getCannonOverride(name, "maxElevation")
-                .flatMap(s -> parseFloatSafe(s))
-                .orElse(original.maxElevation());
-
-        float minElevation = ClientConfigCache.getCannonOverride(name, "minElevation")
-                .flatMap(s -> parseFloatSafe(s))
-                .orElse(original.minElevation());
 
         List<MuzzlePos> muzzles = ClientConfigCache.getCannonOverride(name, "muzzles")
                 .flatMap(ConfigOverrideManager::parseMuzzlesString)
@@ -258,12 +229,9 @@ public class ConfigOverrideManager {
                 gravity,
                 explosionPower,
                 dispersion,
-                projectileWeight,
                 fireCooldown,
                 salvoCount,
-                salvoInterval,
-                maxElevation,
-                minElevation
+                salvoInterval
         );
     }
 
@@ -422,7 +390,7 @@ public class ConfigOverrideManager {
             }
             case "dragCoeff" -> {
                 float f = num.floatValue();
-                yield Math.max(0.0f, Math.min(1.0f, f));
+                yield Math.max(0.0f, Math.min(50.0f, f));
             }
             case "gravity" -> {
                 float f = num.floatValue();
@@ -436,11 +404,6 @@ public class ConfigOverrideManager {
                 float f = num.floatValue();
                 yield Math.max(0.0f, Math.min(10f, f));
             }
-            // 新增字段
-            case "projectileWeight" -> {
-                float f = num.floatValue();
-                yield Math.max(0.1f, Math.min(10000f, f));
-            }
             case "fireCooldown" -> {
                 int i = num.intValue();
                 yield Math.max(0, Math.min(6000, i));
@@ -452,10 +415,6 @@ public class ConfigOverrideManager {
             case "salvoInterval" -> {
                 float f = num.floatValue();
                 yield Math.max(0f, Math.min(100f, f));
-            }
-            case "maxElevation", "minElevation" -> {
-                float f = num.floatValue();
-                yield Math.max(-90f, Math.min(90f, f));
             }
             default -> value;
         };

@@ -10,11 +10,8 @@
   "gravity": 9.8,
   "explosionPower": 1.5,
   "dispersion": 1.0,
-  "projectileWeight": 200.0,
   "fireCooldown": 15,
   "salvoCount": 1,
   "salvoInterval": 0.0,
-  "maxElevation": 50.0,
-  "minElevation": -5.0,
   "muzzles": [{"x": 0.3, "y": 0.2, "z": 0}]
 }

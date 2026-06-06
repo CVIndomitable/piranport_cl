@@ -66,7 +66,8 @@ public class WeaponReloadDecorator implements IItemDecorator {
 
         // 2. Phase 4: all cannons auto-resupply — show empty bar when no matching ammo in inventory
         if (stack.getItem() instanceof com.piranport.artillery.ArtilleryItem) {
-            if (!hasMatchingAmmoInInventory(stack)) {
+            LoadedAmmo loaded = stack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
+            if (!loaded.hasAmmo() && !hasMatchingAmmoInInventory(stack)) {
                 boolean hasDurability = stack.isDamageableItem();
                 int barX = x + 2;
                 int barY = hasDurability ? (y + 11) : (y + 13);

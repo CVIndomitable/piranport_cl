@@ -8,9 +8,7 @@ import net.minecraft.world.effect.MobEffectCategory;
  *
  * BENEFICIAL effect — cyan 0x00C8C8.
  * The actual reload acceleration is applied in TransformationManager.boostedCooldown():
- *   Level I  (amplifier 0) → 2× reload speed (cooldown ÷ 2)
- *   Level II (amplifier 1) → 3× reload speed (cooldown ÷ 3)
- * Only takes effect while the player is transformed.
+ *   Level I/II/III (amplifier 0/1/2) → 0.9/0.8/0.7x original time
  */
 public class ReloadBoostEffect extends MobEffect {
 
@@ -18,5 +16,5 @@ public class ReloadBoostEffect extends MobEffect {
         super(MobEffectCategory.BENEFICIAL, 0x00C8C8);
     }
 
-    // No tick logic — the boost is applied at fire time via TransformationManager.boostedCooldown().
+    // No tick logic — cooldown/draw-time hooks read the effect when needed.
 }

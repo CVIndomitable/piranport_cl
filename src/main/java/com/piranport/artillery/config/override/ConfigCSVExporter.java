@@ -29,8 +29,7 @@ public class ConfigCSVExporter {
             "cannon_name", "display_name", "caliber", "barrels", "damage", "reloadTime",
             "durability", "scopeZoom", "initialSpeed", "dragCoeff", "gravity",
             "explosionPower", "dispersion",
-            "projectileWeight", "fireCooldown", "salvoCount", "salvoInterval",
-            "maxElevation", "minElevation"
+            "fireCooldown", "salvoCount", "salvoInterval"
     };
 
     private static final String[] PROJECTILE_HEADERS = {
@@ -115,7 +114,7 @@ public class ConfigCSVExporter {
      * 格式化火炮数据行
      */
     private static String formatCannonRow(String name, String displayName, ArtilleryCannonData data) {
-        return String.format("%s,%s,%d,%d,%.1f,%d,%d,%.1f,%.2f,%.4f,%.1f,%.1f,%.2f,%.1f,%d,%d,%.1f,%.2f,%.2f,%.1f,%.1f,%.1f",
+        return String.format("%s,%s,%d,%d,%.1f,%d,%d,%.1f,%.2f,%.4f,%.1f,%.1f,%.2f,%d,%d,%.1f",
                 name,
                 escapeCSV(displayName),
                 data.caliber(),
@@ -129,12 +128,9 @@ public class ConfigCSVExporter {
                 data.gravity(),
                 data.explosionPower(),
                 data.dispersion(),
-                data.projectileWeight(),
                 data.fireCooldown(),
                 data.salvoCount(),
-                data.salvoInterval(),
-                data.maxElevation(),
-                data.minElevation()
+                data.salvoInterval()
         );
     }
 

@@ -84,6 +84,13 @@ public final class ClientHooks {
                 new Class<?>[] { int.class, int.class }, ternaryIters, newtonIters);
     }
 
+    public static void setServerSolverStats(int ternaryIters, int newtonIters, long totalUs,
+                                            double verticalError, double horizontalError, double angleDeg) {
+        invoke("setServerSolverStats",
+                new Class<?>[] { int.class, int.class, long.class, double.class, double.class, double.class },
+                ternaryIters, newtonIters, totalUs, verticalError, horizontalError, angleDeg);
+    }
+
     public static boolean isReconEntity(int entityId) {
         Object result = invoke("isReconEntity",
                 new Class<?>[] { int.class }, entityId);

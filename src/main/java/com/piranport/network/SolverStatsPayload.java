@@ -12,7 +12,9 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
  * S2C 弹道解算统计包。
  * 服务端在火炮解算后发送给客户端，携带实际迭代次数等信息。
  */
-public record SolverStatsPayload(int ternaryIters, int newtonIters) implements CustomPacketPayload {
+public record SolverStatsPayload(int ternaryIters, int newtonIters,
+                                 long totalUs, double verticalError,
+                                 double horizontalError, double angleDeg) implements CustomPacketPayload {
     public static final CustomPacketPayload.Type<SolverStatsPayload> TYPE =
             new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "solver_stats"));
 
@@ -21,8 +23,18 @@ public record SolverStatsPayload(int ternaryIters, int newtonIters) implements C
                     (p, buf) -> {
                         buf.writeVarInt(p.ternaryIters);
                         buf.writeVarInt(p.newtonIters);
+                        buf.writeVarLong(p.totalUs);
+                        buf.writeDouble(p.verticalError);
+                        buf.writeDouble(p.horizontalError);
+                        buf.writeDouble(p.angleDeg);
                     },
-                    buf -> new SolverStatsPayload(buf.readVarInt(), buf.readVarInt())
+                    buf -> new SolverStatsPayload(
+                            buf.readVarInt(),
+                            buf.readVarInt(),
+                            buf.readVarLong(),
+                            buf.readDouble(),
+                            buf.readDouble(),
+                            buf.readDouble())
             );
 
     @Override
@@ -32,6 +44,7 @@ public record SolverStatsPayload(int ternaryIters, int newtonIters) implements C
 
     public static void handle(SolverStatsPayload payload, IPayloadContext ctx) {
         ctx.enqueueWork(() -> ClientHooks.setServerSolverStats(
-                payload.ternaryIters(), payload.newtonIters()));
+                payload.ternaryIters(), payload.newtonIters(), payload.totalUs(),
+                payload.verticalError(), payload.horizontalError(), payload.angleDeg()));
     }
 }

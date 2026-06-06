@@ -30,57 +30,40 @@ public class ModCreativeTabs {
                         output.accept(ModItems.FUEL.get());
                     }).build());
 
-    // ===== 武器 — 火炮 / 鱼雷发射器 / 导弹发射器（空武器和满装填武器混合）=====
+    // ===== 武器 — 火炮 / 鱼雷发射器 / 导弹发射器 =====
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> WEAPONS_TAB =
             CREATIVE_TABS.register("weapons_tab", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.piranport.weapons"))
                     .withTabsBefore(CreativeModeTabs.COMBAT)
                     .icon(() -> ModItems.MEDIUM_GUN.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
-                        // Guns (empty + loaded)
+                        // Guns
                         output.accept(ModItems.SINGLE_SMALL_GUN.get());
-                        addPreloadedWeapon(output, ModItems.SINGLE_SMALL_GUN.get(), "piranport:small_he_shell", 1);
                         output.accept(ModItems.SMALL_GUN.get());
-                        addPreloadedWeapon(output, ModItems.SMALL_GUN.get(), "piranport:small_he_shell", 2);
                         output.accept(ModItems.MEDIUM_GUN.get());
-                        addPreloadedWeapon(output, ModItems.MEDIUM_GUN.get(), "piranport:medium_he_shell", 2);
                         output.accept(ModItems.LARGE_GUN.get());
-                        addPreloadedWeapon(output, ModItems.LARGE_GUN.get(), "piranport:large_he_shell", 3);
-                        output.accept(ModItems.SALVO_TEST_GUN.get());
-                        addPreloadedWeapon(output, ModItems.SALVO_TEST_GUN.get(), "piranport:large_he_shell", 12);
-                        output.accept(ModItems.FOURTEEN_BARREL_GUN.get());
-                        addPreloadedWeapon(output, ModItems.FOURTEEN_BARREL_GUN.get(), "piranport:large_he_shell", 14);
-
-                        // Torpedo Launchers (empty + loaded)
-                        output.accept(ModItems.TWIN_TORPEDO_LAUNCHER.get());
-                        addPreloadedWeapon(output, ModItems.TWIN_TORPEDO_LAUNCHER.get(), "piranport:torpedo_533mm_g7a", 2);
-                        addPreloadedWeapon(output, ModItems.TWIN_TORPEDO_LAUNCHER.get(), "piranport:magnetic_torpedo_533mm_g7a", 2);
-                        output.accept(ModItems.TRIPLE_TORPEDO_LAUNCHER.get());
-                        addPreloadedWeapon(output, ModItems.TRIPLE_TORPEDO_LAUNCHER.get(), "piranport:torpedo_533mm_g7a", 3);
-                        addPreloadedWeapon(output, ModItems.TRIPLE_TORPEDO_LAUNCHER.get(), "piranport:acoustic_torpedo_533mm_g7e", 3);
-                        output.accept(ModItems.QUAD_TORPEDO_LAUNCHER.get());
-                        addPreloadedWeapon(output, ModItems.QUAD_TORPEDO_LAUNCHER.get(), "piranport:torpedo_610mm_type93_mk3", 4);
-
-                        // Depth Charge Launchers (empty + loaded)
-                        output.accept(ModItems.DEPTH_CHARGE_LAUNCHER.get());
-                        addPreloadedWeapon(output, ModItems.DEPTH_CHARGE_LAUNCHER.get(), "piranport:depth_charge", 1);
-                        output.accept(ModItems.DEPTH_CHARGE_LAUNCHER_IMPROVED.get());
-                        addPreloadedWeapon(output, ModItems.DEPTH_CHARGE_LAUNCHER_IMPROVED.get(), "piranport:depth_charge", 2);
-                        output.accept(ModItems.DEPTH_CHARGE_LAUNCHER_ADVANCED.get());
-                        addPreloadedWeapon(output, ModItems.DEPTH_CHARGE_LAUNCHER_ADVANCED.get(), "piranport:depth_charge", 3);
-
-                        // Missile Launchers (empty + loaded)
-                        output.accept(ModItems.SY1_LAUNCHER.get());
-                        addPreloadedWeapon(output, ModItems.SY1_LAUNCHER.get(), "piranport:sy1_missile", 4);
-                        output.accept(ModItems.MK14_HARPOON_LAUNCHER.get());
-                        addPreloadedWeapon(output, ModItems.MK14_HARPOON_LAUNCHER.get(), "piranport:harpoon_missile", 4);
-                        output.accept(ModItems.TERRIER_LAUNCHER.get());
-                        output.accept(ModItems.SHIP_ROCKET_LAUNCHER.get());
-                        addPreloadedWeapon(output, ModItems.SHIP_ROCKET_LAUNCHER.get(), "piranport:rocket_ammo", 8);
-                        output.accept(ModItems.SEA_DART_LAUNCHER.get());
-                        output.accept(ModItems.SEACAT_LAUNCHER.get());
                         output.accept(ModItems.FRENCH_QUAD_380MM_GUN.get());
                         output.accept(ModItems.SEVEN_BARREL_GUN.get());
+                        output.accept(ModItems.SALVO_TEST_GUN.get());
+                        output.accept(ModItems.FOURTEEN_BARREL_GUN.get());
+
+                        // Torpedo Launchers
+                        output.accept(ModItems.TWIN_TORPEDO_LAUNCHER.get());
+                        output.accept(ModItems.TRIPLE_TORPEDO_LAUNCHER.get());
+                        output.accept(ModItems.QUAD_TORPEDO_LAUNCHER.get());
+
+                        // Depth Charge Launchers
+                        output.accept(ModItems.DEPTH_CHARGE_LAUNCHER.get());
+                        output.accept(ModItems.DEPTH_CHARGE_LAUNCHER_IMPROVED.get());
+                        output.accept(ModItems.DEPTH_CHARGE_LAUNCHER_ADVANCED.get());
+
+                        // Missile Launchers
+                        output.accept(ModItems.SY1_LAUNCHER.get());
+                        output.accept(ModItems.MK14_HARPOON_LAUNCHER.get());
+                        output.accept(ModItems.TERRIER_LAUNCHER.get());
+                        output.accept(ModItems.SHIP_ROCKET_LAUNCHER.get());
+                        output.accept(ModItems.SEA_DART_LAUNCHER.get());
+                        output.accept(ModItems.SEACAT_LAUNCHER.get());
                     }).build());
 
     // ===== 航空 — 飞机编队 =====
@@ -377,7 +360,8 @@ public class ModCreativeTabs {
                         output.accept(ModItems.LARGE_AP_SHELL.get());
                         // VT Shell
                         output.accept(ModItems.SMALL_VT_SHELL.get());
-                        // Type 3 Shells (8-21 口径，无小口径)
+                        // Type 3 Shells
+                        output.accept(ModItems.SMALL_TYPE3_SHELL.get());
                         output.accept(ModItems.MEDIUM_TYPE3_SHELL.get());
                         output.accept(ModItems.LARGE_TYPE3_SHELL.get());
                         // Torpedo Ammo (legacy)
@@ -536,9 +520,42 @@ public class ModCreativeTabs {
                         output.accept(ModItems.SHIP_GIRL_SPAWN_EGG.get());
                     }).build());
 
+    // ===== 测试武器 — 预装填版本 =====
+    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> TEST_WEAPONS_TAB =
+            CREATIVE_TABS.register("test_weapons_tab", () -> CreativeModeTab.builder()
+                    .title(Component.translatable("itemGroup.piranport.test_weapons"))
+                    .withTabsBefore(CreativeModeTabs.COMBAT)
+                    .icon(() -> createPreloadedWeapon(ModItems.LARGE_GUN.get(), "piranport:large_he_shell", 3))
+                    .displayItems((parameters, output) -> {
+                        // Preloaded cannons listed in the design doc.
+                        addPreloadedWeapon(output, ModItems.SINGLE_SMALL_GUN.get(), "piranport:small_he_shell", 1);
+                        addPreloadedWeapon(output, ModItems.SMALL_GUN.get(), "piranport:small_he_shell", 2);
+                        addPreloadedWeapon(output, ModItems.MEDIUM_GUN.get(), "piranport:medium_he_shell", 1);
+                        addPreloadedWeapon(output, ModItems.LARGE_GUN.get(), "piranport:large_he_shell", 3);
+
+                        // Other preloaded test weapons already supported by the current test build.
+                        addPreloadedWeapon(output, ModItems.TWIN_TORPEDO_LAUNCHER.get(), "piranport:torpedo_533mm_g7a", 2);
+                        addPreloadedWeapon(output, ModItems.TWIN_TORPEDO_LAUNCHER.get(), "piranport:magnetic_torpedo_533mm_g7a", 2);
+                        addPreloadedWeapon(output, ModItems.TRIPLE_TORPEDO_LAUNCHER.get(), "piranport:torpedo_533mm_g7a", 3);
+                        addPreloadedWeapon(output, ModItems.TRIPLE_TORPEDO_LAUNCHER.get(), "piranport:acoustic_torpedo_533mm_g7e", 3);
+                        addPreloadedWeapon(output, ModItems.QUAD_TORPEDO_LAUNCHER.get(), "piranport:torpedo_610mm_type93_mk3", 4);
+
+                        addPreloadedWeapon(output, ModItems.DEPTH_CHARGE_LAUNCHER.get(), "piranport:depth_charge", 1);
+                        addPreloadedWeapon(output, ModItems.DEPTH_CHARGE_LAUNCHER_IMPROVED.get(), "piranport:depth_charge", 2);
+                        addPreloadedWeapon(output, ModItems.DEPTH_CHARGE_LAUNCHER_ADVANCED.get(), "piranport:depth_charge", 3);
+
+                        addPreloadedWeapon(output, ModItems.SY1_LAUNCHER.get(), "piranport:sy1_missile", 4);
+                        addPreloadedWeapon(output, ModItems.MK14_HARPOON_LAUNCHER.get(), "piranport:harpoon_missile", 4);
+                        addPreloadedWeapon(output, ModItems.SHIP_ROCKET_LAUNCHER.get(), "piranport:rocket_ammo", 8);
+                    }).build());
+
     private static void addPreloadedWeapon(CreativeModeTab.Output output, Item weapon, String ammoId, int count) {
+        output.accept(createPreloadedWeapon(weapon, ammoId, count));
+    }
+
+    private static ItemStack createPreloadedWeapon(Item weapon, String ammoId, int count) {
         ItemStack stack = weapon.getDefaultInstance();
         stack.set(ModDataComponents.LOADED_AMMO.get(), new LoadedAmmo(count, ammoId));
-        output.accept(stack);
+        return stack;
     }
 }

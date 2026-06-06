@@ -46,7 +46,7 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
     private boolean isVT = false;
     private float explosionPower = 1.5f;
     private float initialSpeed = 2.0f;
-    /** Phase 2: 阻力系数（每 tick 速度保留比例 = 1 - dragCoeff） */
+    /** Phase 2: 自定义阻力（每 tick 沿速度反方向扣除的速度量）。 */
     private float dragCoeff = 0.01f;
     /** 防止 VT 近炸引信 + onHit 在同一 tick 内双重爆炸。 */
     private boolean exploded = false;
@@ -63,6 +63,10 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
 
     /** 缓存的黑曜石爆炸抗性，避免每次碰撞都创建 Explosion 对象。初始化在构造函数中完成。 */
     private final float cachedObsidianResistance;
+
+    // 客户端位置插值（防止服务端位置同步跳跃导致的抖动）
+    private int clientLerpSteps;
+    private double clientLerpX, clientLerpY, clientLerpZ;
 
     private float initObsidianResistance(Level level) {
         Explosion ctx = new Explosion(level, null, 0, 0, 0,
@@ -132,6 +136,27 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         this.customGravity = g;
     }
 
+    /**
+     * 客户端位置插值：存储目标位置，在 tick() 中平滑过渡。
+     * 解决 Entity 默认 lerpTo 直接 setPos 导致 xo/yo/zo 与 x/y/z 相同、
+     * partial-tick 插值失效的镜头抖动问题。
+     */
+    @Override
+    public void lerpTo(double x, double y, double z, float yRot, float xRot, int steps) {
+        if (level().isClientSide()) {
+            this.clientLerpSteps = steps + 2;
+            this.clientLerpX = x;
+            this.clientLerpY = y;
+            this.clientLerpZ = z;
+            return;
+        }
+        super.lerpTo(x, y, z, yRot, xRot, steps);
+    }
+
+    @Override public double lerpTargetX() { return clientLerpSteps > 0 ? clientLerpX : getX(); }
+    @Override public double lerpTargetY() { return clientLerpSteps > 0 ? clientLerpY : getY(); }
+    @Override public double lerpTargetZ() { return clientLerpSteps > 0 ? clientLerpZ : getZ(); }
+
     @Override
     public void shootFromRotation(Entity shooter, float xRot, float yRot,
                                    float zRot, float speed, float inaccuracy) {
@@ -141,19 +166,21 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
 
     @Override
     public void tick() {
-        // Phase 2: 应用阻力（与速度矢量反向，大小恒定 = dragCoeff）
+        // Phase 2: 应用自定义阻力，按策划要求沿速度反方向扣除固定速度量。
         if (dragCoeff > 0) {
-            Vec3 vel = getDeltaMovement();
-            double speed = vel.length();
-            if (speed > 1e-9) {
-                double dx = vel.x - dragCoeff * (vel.x / speed);
-                double dy = vel.y - dragCoeff * (vel.y / speed);
-                double dz = vel.z - dragCoeff * (vel.z / speed);
-                setDeltaMovement(dx, dy, dz);
-            }
+            setDeltaMovement(applyLinearDrag(getDeltaMovement(), dragCoeff));
         }
 
         super.tick();
+
+        // 客户端位置插值：每 tick 向目标位置靠近一步
+        if (level().isClientSide && clientLerpSteps > 0) {
+            double d = 1.0 / (double) clientLerpSteps;
+            setPos(getX() + (clientLerpX - getX()) * d,
+                   getY() + (clientLerpY - getY()) * d,
+                   getZ() + (clientLerpZ - getZ()) * d);
+            clientLerpSteps--;
+        }
 
         // Phase 10: 客户端尾迹粒子 + 飞行音效
         if (level().isClientSide && tickCount % 2 == 0 && !isRemoved()) {
@@ -184,6 +211,15 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
                 tickTracking();
             }
         }
+    }
+
+    private static Vec3 applyLinearDrag(Vec3 velocity, float dragCoeff) {
+        if (!Float.isFinite(dragCoeff) || dragCoeff <= 0f) return velocity;
+        double speed = velocity.length();
+        if (speed <= 1.0e-9) return Vec3.ZERO;
+        double drag = Math.max(0.0, dragCoeff);
+        if (speed <= drag) return Vec3.ZERO;
+        return velocity.scale((speed - drag) / speed);
     }
 
     /**

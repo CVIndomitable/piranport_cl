@@ -149,9 +149,6 @@ public class ModItems {
                     () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.vt_shell"));
 
     // ===== Type 3 (Sanshiki) Shells =====
-    // 设计方案三式弹口径范围 8~21，小口径三式弹已废弃（仅保留注册以兼容旧存档）
-    /** @deprecated 三式弹不应用于小口径（<7），仅保留注册兼容旧存档 */
-    @Deprecated
     public static final DeferredItem<Item> SMALL_TYPE3_SHELL =
             ITEMS.register("small_type3_shell",
                     () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.type3_shell"));
@@ -170,7 +167,7 @@ public class ModItems {
                     new ArtilleryCannonData(4, 1, 6.0f, 30, 500, 2.0f,
                             List.of(new MuzzlePos(0.2, 0.15, 0)),
                             2.5f, 0.015f, 9.8f, 1.0f, 0.0f,
-                            50.0f, 10, 1, 0.0f, 60.0f, -10.0f), "single_small_gun"));
+                            10, 1, 0.0f), "single_small_gun"));
     public static final DeferredItem<Item> SMALL_GUN =
             ITEMS.register("small_gun", () -> new ArtilleryItem(new Item.Properties().stacksTo(1)
                     .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.CANNON)
@@ -179,7 +176,7 @@ public class ModItems {
                             List.of(new MuzzlePos(0.3, 0.2, 0),
                                     new MuzzlePos(-0.3, 0.2, 0)),
                             2.5f, 0.015f, 9.8f, 1.0f, 0.0f,
-                            50.0f, 10, 1, 5.0f, 60.0f, -10.0f), "small_gun"));
+                            10, 1, 5.0f), "small_gun"));
     public static final DeferredItem<Item> MEDIUM_GUN =
             ITEMS.register("medium_gun", () -> new ArtilleryItem(new Item.Properties().stacksTo(1)
                     .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.CANNON)
@@ -187,7 +184,7 @@ public class ModItems {
                     new ArtilleryCannonData(8, 1, 12.0f, 50, 1000, 3.0f,
                             List.of(new MuzzlePos(0.3, 0.2, 0)),
                             3.0f, 0.01f, 9.8f, 1.5f, 0.0f,
-                            200.0f, 15, 1, 0.0f, 50.0f, -5.0f), "medium_gun"));
+                            15, 1, 0.0f), "medium_gun"));
     public static final DeferredItem<Item> LARGE_GUN =
             ITEMS.register("large_gun", () -> new ArtilleryItem(new Item.Properties().stacksTo(1)
                     .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.CANNON)
@@ -197,7 +194,7 @@ public class ModItems {
                                     new MuzzlePos(0, 0.25, 0),
                                     new MuzzlePos(-0.5, 0.25, 0)),
                             3.5f, 0.008f, 9.8f, 2.0f, 0.0f,
-                            800.0f, 20, 3, 5.0f, 45.0f, -5.0f), "large_gun"));
+                            20, 3, 5.0f), "large_gun"));
     public static final DeferredItem<Item> FRENCH_QUAD_380MM_GUN =
             ITEMS.register("french_quad_380mm_gun", () -> new ArtilleryItem(new Item.Properties().stacksTo(1)
                     .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.CANNON)
@@ -208,7 +205,7 @@ public class ModItems {
                                     new MuzzlePos(-0.2, 0.3, 0),
                                     new MuzzlePos(-0.6, 0.3, 0)),
                             3.5f, 0.008f, 9.8f, 2.0f, 0.0f,
-                            800.0f, 20, 4, 3.0f, 40.0f, -5.0f), "french_quad_380mm_gun"));
+                            20, 4, 3.0f), "french_quad_380mm_gun"));
 
     /**
      * 七联装主炮群 — 测试用极限齐射火炮。
@@ -245,12 +242,9 @@ public class ModItems {
                             9.8f,    // gravity: 标准重力
                             2.0f,    // explosionPower: 与large_gun相同
                             1.5f,    // dispersion: 1.5度散布
-                            800.0f,  // projectileWeight
                             15,      // fireCooldown
                             7,       // salvoCount
-                            3.0f,    // salvoInterval
-                            45.0f,   // maxElevation
-                            -5.0f    // minElevation
+                            3.0f     // salvoInterval
                     ), "seven_barrel_gun"));
 
     /**
@@ -294,12 +288,9 @@ public class ModItems {
                             9.8f,    // gravity: 标准重力
                             6.0f,    // explosionPower: 大型火炮的3倍
                             0.5f,    // dispersion: 默认散布
-                            800.0f,  // projectileWeight
                             10,      // fireCooldown
                             12,      // salvoCount
-                            2.0f,    // salvoInterval
-                            45.0f,   // maxElevation
-                            -5.0f    // minElevation
+                            2.0f     // salvoInterval
                     ), "salvo_test_gun"));
 
     /**
@@ -346,12 +337,9 @@ public class ModItems {
                             9.8f,    // gravity: 标准重力
                             7.0f,    // explosionPower: 大型火炮的3.5倍
                             1.8f,    // dispersion: 比12联装稍大
-                            800.0f,  // projectileWeight
                             10,      // fireCooldown
                             14,      // salvoCount
-                            2.0f,    // salvoInterval
-                            45.0f,   // maxElevation
-                            -5.0f    // minElevation
+                            2.0f     // salvoInterval
                     ), "fourteen_barrel_gun"));
 
     // ===== Torpedo Ammo (legacy generic) =====

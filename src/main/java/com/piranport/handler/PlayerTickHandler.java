@@ -184,6 +184,7 @@ public class PlayerTickHandler {
         // 以下逻辑只在服务端执行
         if (!isClientSide) {
             tickSubmarineEffects(player, isSubmarine);
+            ShipCoreCombat.tickCannonAutoReload(player, transformedCore);
             tickSonarGlow(player, transformedCore);
             tickCleanupResidualSlowdown(player);
             tickAutoCombatIfNeeded(player);

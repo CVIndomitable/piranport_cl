@@ -428,16 +428,26 @@ public class TransformationManager {
     }
 
     /**
-     * Phase 26: Apply RELOAD_BOOST effect to a base cooldown duration.
-     *   Level I  (amplifier 0) → cooldown ÷ 2  (2× reload speed)
-     *   Level II (amplifier 1) → cooldown ÷ 3  (3× reload speed)
-     * Only effective while the player is transformed (checked at call sites in ShipCoreItem).
+     * Apply RELOAD_BOOST to a base cooldown duration.
+     * Design values: I/II/III => 0.9/0.8/0.7x original time.
      */
     public static int boostedCooldown(Player player, int baseTicks) {
+        if (baseTicks <= 0) return baseTicks;
+        return Math.max(1, (int) Math.ceil(baseTicks * reloadBoostMultiplier(player)));
+    }
+
+    /** Returns the design time multiplier for RELOAD_BOOST: no effect = 1.0, I/II/III = 0.9/0.8/0.7. */
+    public static double reloadBoostMultiplier(Player player) {
         var effect = player.getEffect(ModMobEffects.RELOAD_BOOST);
-        if (effect == null) return baseTicks;
-        int divisor = effect.getAmplifier() + 2; // I=÷2, II=÷3
-        return Math.max(1, baseTicks / divisor);
+        if (effect == null) return 1.0D;
+        int level = Math.min(2, Math.max(0, effect.getAmplifier()));
+        return 0.9D - level * 0.1D;
+    }
+
+    /** Converts actual draw/use ticks into boosted effective progress ticks. */
+    public static int boostedUseProgress(Player player, int elapsedTicks) {
+        if (elapsedTicks <= 0) return elapsedTicks;
+        return Math.max(1, (int) Math.floor(elapsedTicks / reloadBoostMultiplier(player)));
     }
 
     // P3 #36: data-driven weapon load map (延迟初始化，避免类加载时访问注册表)

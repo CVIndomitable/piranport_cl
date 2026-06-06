@@ -93,6 +93,12 @@ public final class ClientItemHooks {
         ClientScopeHandler.setServerSolverStats(ternaryIters, newtonIters);
     }
 
+    public static void setServerSolverStats(int ternaryIters, int newtonIters, long totalUs,
+                                            double verticalError, double horizontalError, double angleDeg) {
+        ClientScopeHandler.setServerSolverStats(
+                ternaryIters, newtonIters, totalUs, verticalError, horizontalError, angleDeg);
+    }
+
     public static boolean isReconEntity(int entityId) {
         return com.piranport.aviation.ClientReconData.isInReconMode()
                 && com.piranport.aviation.ClientReconData.getReconEntityId() == entityId;
@@ -194,12 +200,17 @@ public final class ClientItemHooks {
         boolean onCooldown = cooldowns.isOnCooldown(weaponSlot, gameTime);
         boolean isManualMode = !com.piranport.config.ModCommonConfig.AUTO_RESUPPLY_ENABLED.get();
         boolean isAutoReloadMissile = stack.getItem() instanceof MissileLauncherItem ml0 && !ml0.isManualReload();
+        boolean isCannon = stack.getItem() instanceof com.piranport.artillery.ArtilleryItem;
         boolean needsLoadedAmmo = !isAutoReloadMissile
-                && ((isManualMode && !(stack.getItem() instanceof AircraftItem))
+                && (isCannon
+                || (isManualMode && !(stack.getItem() instanceof AircraftItem))
                 || (stack.getItem() instanceof MissileLauncherItem ml && ml.isManualReload()));
 
         if (onCooldown) {
-            if (needsLoadedAmmo) {
+            if (isCannon) {
+                tooltip.add(Component.translatable("tooltip.piranport.weapon_reloading")
+                        .withStyle(ChatFormatting.YELLOW));
+            } else if (needsLoadedAmmo) {
                 LoadedAmmo reloading = stack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
                 tooltip.add(Component.translatable(reloading.hasAmmo()
                                 ? "tooltip.piranport.weapon_reloading"

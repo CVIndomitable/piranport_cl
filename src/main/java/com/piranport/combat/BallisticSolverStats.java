@@ -29,9 +29,15 @@ public final class BallisticSolverStats {
     private int newtonCount = 0;
 
     // ===== 计算精度（误差，格） =====
-    private double ternaryAccuracy = Double.MAX_VALUE;
-    private double newtonAccuracy = Double.MAX_VALUE;
-    private double combinedAccuracy = Double.MAX_VALUE;
+    private double ternaryVerticalError = Double.MAX_VALUE;
+    private double ternaryHorizontalError = Double.MAX_VALUE;
+    private double newtonVerticalError = Double.MAX_VALUE;
+    private double newtonHorizontalError = Double.MAX_VALUE;
+    private double combinedVerticalError = Double.MAX_VALUE;
+    private double combinedHorizontalError = Double.MAX_VALUE;
+    private long lastTernaryNs = 0;
+    private long lastNewtonNs = 0;
+    private long lastTotalNs = 0;
 
     // ===== 最终选择的算法 =====
     private Algorithm lastChosen = Algorithm.TERNARY;
@@ -47,27 +53,33 @@ public final class BallisticSolverStats {
     public static BallisticSolverStats getInstance() { return INSTANCE; }
 
     /** 记录三分法计算 */
-    public void recordTernary(long elapsedNs, double accuracy) {
+    public void recordTernary(long elapsedNs, double verticalError, double horizontalError) {
         ternaryMinNs = Math.min(ternaryMinNs, elapsedNs);
         ternaryMaxNs = Math.max(ternaryMaxNs, elapsedNs);
         ternaryTotalNs += elapsedNs;
         ternaryCount++;
-        ternaryAccuracy = accuracy;
+        lastTernaryNs = elapsedNs;
+        ternaryVerticalError = verticalError;
+        ternaryHorizontalError = horizontalError;
     }
 
     /** 记录牛顿迭代计算 */
-    public void recordNewton(long elapsedNs, double accuracy) {
+    public void recordNewton(long elapsedNs, double verticalError, double horizontalError) {
         newtonMinNs = Math.min(newtonMinNs, elapsedNs);
         newtonMaxNs = Math.max(newtonMaxNs, elapsedNs);
         newtonTotalNs += elapsedNs;
         newtonCount++;
-        newtonAccuracy = accuracy;
+        lastNewtonNs = elapsedNs;
+        newtonVerticalError = verticalError;
+        newtonHorizontalError = horizontalError;
     }
 
     /** 记录组合解算的最终精度和选择 */
-    public void recordCombined(double accuracy, Algorithm chosen) {
-        combinedAccuracy = accuracy;
+    public void recordCombined(double verticalError, double horizontalError, Algorithm chosen, long totalNs) {
+        combinedVerticalError = verticalError;
+        combinedHorizontalError = horizontalError;
         lastChosen = chosen;
+        lastTotalNs = totalNs;
     }
 
     // ===== Getters =====
@@ -76,15 +88,25 @@ public final class BallisticSolverStats {
     public long getTernaryMaxUs() { return ternaryMaxNs / 1000; }
     public long getTernaryAvgUs() { return ternaryCount == 0 ? 0 : (ternaryTotalNs / ternaryCount) / 1000; }
     public int getTernaryCount() { return ternaryCount; }
-    public double getTernaryAccuracy() { return ternaryAccuracy; }
+    public double getTernaryAccuracy() { return getTernaryVerticalError(); }
+    public double getTernaryVerticalError() { return ternaryVerticalError; }
+    public double getTernaryHorizontalError() { return ternaryHorizontalError; }
+    public long getLastTernaryUs() { return lastTernaryNs / 1000; }
 
     public long getNewtonMinUs() { return newtonMinNs == Long.MAX_VALUE ? 0 : newtonMinNs / 1000; }
     public long getNewtonMaxUs() { return newtonMaxNs / 1000; }
     public long getNewtonAvgUs() { return newtonCount == 0 ? 0 : (newtonTotalNs / newtonCount) / 1000; }
     public int getNewtonCount() { return newtonCount; }
-    public double getNewtonAccuracy() { return newtonAccuracy; }
+    public double getNewtonAccuracy() { return getNewtonVerticalError(); }
+    public double getNewtonVerticalError() { return newtonVerticalError; }
+    public double getNewtonHorizontalError() { return newtonHorizontalError; }
+    public long getLastNewtonUs() { return lastNewtonNs / 1000; }
 
-    public double getCombinedAccuracy() { return combinedAccuracy; }
+    public double getCombinedAccuracy() { return getCombinedTotalError(); }
+    public double getCombinedVerticalError() { return combinedVerticalError; }
+    public double getCombinedHorizontalError() { return combinedHorizontalError; }
+    public double getCombinedTotalError() { return Math.hypot(combinedVerticalError, combinedHorizontalError); }
+    public long getLastTotalUs() { return lastTotalNs / 1000; }
     public Algorithm getLastChosen() { return lastChosen; }
 
     // ===== 迭代次数 =====
@@ -103,9 +125,15 @@ public final class BallisticSolverStats {
         newtonMaxNs = 0;
         newtonTotalNs = 0;
         newtonCount = 0;
-        ternaryAccuracy = Double.MAX_VALUE;
-        newtonAccuracy = Double.MAX_VALUE;
-        combinedAccuracy = Double.MAX_VALUE;
+        ternaryVerticalError = Double.MAX_VALUE;
+        ternaryHorizontalError = Double.MAX_VALUE;
+        newtonVerticalError = Double.MAX_VALUE;
+        newtonHorizontalError = Double.MAX_VALUE;
+        combinedVerticalError = Double.MAX_VALUE;
+        combinedHorizontalError = Double.MAX_VALUE;
+        lastTernaryNs = 0;
+        lastNewtonNs = 0;
+        lastTotalNs = 0;
         lastChosen = Algorithm.TERNARY;
         lastTernaryIters = 0;
         lastNewtonIters = 0;

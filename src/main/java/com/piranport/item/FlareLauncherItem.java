@@ -1,5 +1,6 @@
 package com.piranport.item;
 
+import com.piranport.combat.TransformationManager;
 import com.piranport.entity.FlareProjectileEntity;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -36,7 +37,7 @@ public class FlareLauncherItem extends Item {
                     SoundEvents.FIREWORK_ROCKET_LAUNCH, SoundSource.PLAYERS, 1.0f, 1.2f);
         }
 
-        player.getCooldowns().addCooldown(this, 10); // 0.5s cooldown
+        player.getCooldowns().addCooldown(this, TransformationManager.boostedCooldown(player, 10));
 
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
     }

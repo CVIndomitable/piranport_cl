@@ -1,5 +1,6 @@
 package com.piranport.item;
 
+import com.piranport.combat.TransformationManager;
 import com.piranport.registry.ModBlocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionHand;
@@ -48,7 +49,7 @@ public class SmokeCandleItem extends Item {
 
             if (placed) {
                 stack.hurtAndBreak(1, player, player.getEquipmentSlotForItem(stack));
-                player.getCooldowns().addCooldown(this, 20);
+                player.getCooldowns().addCooldown(this, TransformationManager.boostedCooldown(player, 20));
             }
         }
 

@@ -1,5 +1,6 @@
 package com.piranport.item;
 
+import com.piranport.combat.TransformationManager;
 import com.piranport.entity.GungnirEntity;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
@@ -47,7 +48,7 @@ public class GungnirItem extends Item {
             level.playSound(null, player.blockPosition(), SoundEvents.TRIDENT_THROW.value(),
                     SoundSource.PLAYERS, 1.0f, 1.0f);
 
-            player.getCooldowns().addCooldown(this, 20);
+            player.getCooldowns().addCooldown(this, TransformationManager.boostedCooldown(player, 20));
 
             // Remove item from hand (entity carries it)
             player.setItemInHand(hand, ItemStack.EMPTY);

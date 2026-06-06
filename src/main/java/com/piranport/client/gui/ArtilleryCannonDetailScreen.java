@@ -73,14 +73,11 @@ public class ArtilleryCannonDetailScreen extends Screen {
             new FieldDef("dispersion", "dispersion", true),
             new FieldDef("drag_coeff", "dragCoeff", true),
             new FieldDef("gravity", "gravity", true),
-            new FieldDef("projectile_weight", "projectileWeight", true),
             new FieldDef("initial_speed", "initialSpeed", true),
             new FieldDef("reload_time", "reloadTime", false),
             new FieldDef("fire_cooldown", "fireCooldown", false),
             new FieldDef("salvo_count", "salvoCount", false),
             new FieldDef("salvo_interval", "salvoInterval", true),
-            new FieldDef("max_elevation", "maxElevation", true),
-            new FieldDef("min_elevation", "minElevation", true),
             new FieldDef("durability", "durability", false),
             new FieldDef("barrels", "barrels", false)
     };
@@ -207,11 +204,8 @@ public class ArtilleryCannonDetailScreen extends Screen {
             case "dispersion" -> originalData.dispersion();
             case "dragCoeff" -> originalData.dragCoeff();
             case "gravity" -> originalData.gravity();
-            case "projectileWeight" -> originalData.projectileWeight();
             case "initialSpeed" -> originalData.initialSpeed();
             case "salvoInterval" -> originalData.salvoInterval();
-            case "maxElevation" -> originalData.maxElevation();
-            case "minElevation" -> originalData.minElevation();
             default -> 0f;
         };
     }
@@ -496,14 +490,6 @@ public class ArtilleryCannonDetailScreen extends Screen {
                 }
             }
 
-            // 验证最小仰角 < 最大仰角
-            float minElev = Float.parseFloat(fieldValueCache.get("minElevation"));
-            float maxElev = Float.parseFloat(fieldValueCache.get("maxElevation"));
-            if (minElev >= maxElev) {
-                showError("message.piranport.min_elevation_must_be_less");
-                return false;
-            }
-
             return true;
 
         } catch (IllegalArgumentException e) {
@@ -523,12 +509,10 @@ public class ArtilleryCannonDetailScreen extends Screen {
             case "damage" -> { min = 0.1f; max = 1000f; }
             case "explosionPower" -> { min = 0f; max = 20f; }
             case "dispersion" -> { min = 0f; max = 10f; }
-            case "dragCoeff" -> { min = 0f; max = 1f; }
+            case "dragCoeff" -> { min = 0f; max = 50f; }
             case "gravity" -> { min = 0.1f; max = 100f; }
-            case "projectileWeight" -> { min = 0.1f; max = 10000f; }
             case "initialSpeed" -> { min = 0.1f; max = 50f; }
             case "salvoInterval" -> { min = 0f; max = 100f; }
-            case "maxElevation", "minElevation" -> { min = -90f; max = 90f; }
         }
 
         validateFloat(fieldName, valueStr, min, max);

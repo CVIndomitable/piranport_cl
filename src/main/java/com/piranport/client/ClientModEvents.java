@@ -140,6 +140,8 @@ public class ClientModEvents {
                 com.piranport.client.model.F4FModel::createBodyLayer);
         event.registerLayerDefinition(com.piranport.client.model.UnicornModel.LAYER_LOCATION,
                 com.piranport.client.model.UnicornModel::createBodyLayer);
+        event.registerLayerDefinition(com.piranport.client.model.KitchenGoddessModel.LAYER_LOCATION,
+                com.piranport.client.model.KitchenGoddessModel::createBodyLayer);
         event.registerLayerDefinition(com.piranport.client.model.DeepOceanDestroyerModel.LAYER_LOCATION,
                 com.piranport.client.model.DeepOceanDestroyerModel::createBodyLayer);
         event.registerLayerDefinition(com.piranport.client.model.DeepOceanSupplyModel.LAYER_LOCATION,

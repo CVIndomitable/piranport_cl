@@ -2,6 +2,7 @@ package com.piranport.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.piranport.PiranPort;
+import com.piranport.client.model.KitchenGoddessModel;
 import com.piranport.client.model.UnicornModel;
 import com.piranport.npc.shipgirl.ShipGirlEntity;
 import net.minecraft.client.model.PlayerModel;
@@ -17,11 +18,13 @@ import net.minecraft.resources.ResourceLocation;
 public class ShipGirlRenderer extends MobRenderer<ShipGirlEntity, PlayerModel<ShipGirlEntity>> {
     private final PlayerModel<ShipGirlEntity> defaultModel;
     private final UnicornModel unicornModel;
+    private final KitchenGoddessModel kitchenGoddessModel;
 
     public ShipGirlRenderer(EntityRendererProvider.Context context) {
         super(context, new PlayerModel<>(context.bakeLayer(ModelLayers.PLAYER), false), 0.5f);
         this.defaultModel = this.model;
         this.unicornModel = new UnicornModel(context.bakeLayer(UnicornModel.LAYER_LOCATION));
+        this.kitchenGoddessModel = new KitchenGoddessModel(context.bakeLayer(KitchenGoddessModel.LAYER_LOCATION));
         addLayer(new ShipGirlRiggingLayer(this));
     }
 
@@ -29,7 +32,14 @@ public class ShipGirlRenderer extends MobRenderer<ShipGirlEntity, PlayerModel<Sh
     public void render(ShipGirlEntity entity, float entityYaw, float partialTick,
                        PoseStack poseStack, MultiBufferSource bufferSource, int packedLight) {
         PlayerModel<ShipGirlEntity> previousModel = this.model;
-        this.model = entity.getSkinVariant() == UnicornModel.SKIN_ID ? this.unicornModel : this.defaultModel;
+        int skinId = entity.getSkinVariant();
+        if (skinId == UnicornModel.SKIN_ID) {
+            this.model = this.unicornModel;
+        } else if (skinId == KitchenGoddessModel.SKIN_ID) {
+            this.model = this.kitchenGoddessModel;
+        } else {
+            this.model = this.defaultModel;
+        }
         try {
             super.render(entity, entityYaw, partialTick, poseStack, bufferSource, packedLight);
         } finally {
@@ -39,10 +49,13 @@ public class ShipGirlRenderer extends MobRenderer<ShipGirlEntity, PlayerModel<Sh
 
     @Override
     public ResourceLocation getTextureLocation(ShipGirlEntity entity) {
-        if (entity.getSkinVariant() == UnicornModel.SKIN_ID) {
+        int skin = entity.getSkinVariant();
+        if (skin == UnicornModel.SKIN_ID) {
             return UnicornModel.TEXTURE_LOCATION;
         }
-        int skin = entity.getSkinVariant();
+        if (skin == KitchenGoddessModel.SKIN_ID) {
+            return KitchenGoddessModel.TEXTURE_LOCATION;
+        }
         if (skin <= 0) {
             skin = 4;
         }

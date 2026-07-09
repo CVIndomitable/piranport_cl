@@ -1,0 +1,34 @@
+{
+  "parent": "piranport:story/activate_abyssal_portal",
+  "display": {
+    "icon": {
+      "count": 1,
+      "id": "piranport:abyssal_portal_frame"
+    },
+    "title": {
+      "translate": "advancements.piranport.enter_abyssal_world.title"
+    },
+    "description": {
+      "translate": "advancements.piranport.enter_abyssal_world.description"
+    },
+    "frame": "goal"
+  },
+  "criteria": {
+    "done": {
+      "conditions": {
+        "items": [
+          {
+            "items": "minecraft:bedrock"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "requirements": [
+    [
+      "done"
+    ]
+  ],
+  "sends_telemetry_event": false
+}

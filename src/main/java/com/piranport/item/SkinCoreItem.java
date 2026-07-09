@@ -1,6 +1,6 @@
 package com.piranport.item;
 
-import com.piranport.client.SkinCoreItemRenderer;
+import com.piranport.platform.ClientHooks;
 import com.piranport.skin.SkinManager;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -12,7 +12,6 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
-import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -29,9 +28,10 @@ public class SkinCoreItem extends Item {
         return skinId;
     }
 
+    @SuppressWarnings({"rawtypes", "unchecked"})
     @Override
-    public void initializeClient(Consumer<IClientItemExtensions> consumer) {
-        consumer.accept(SkinCoreItemRenderer.CLIENT_EXTENSIONS);
+    public void initializeClient(Consumer consumer) {
+        ClientHooks.initializeSkinCoreItemClient(consumer);
     }
 
     @Override

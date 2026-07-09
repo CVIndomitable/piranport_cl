@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "season=spring": {
+      "model": "piranport:block/chinese_plum_leaves_spring"
+    },
+    "season=summer": {
+      "model": "piranport:block/chinese_plum_leaves_summer"
+    },
+    "season=autumn": {
+      "model": "piranport:block/chinese_plum_leaves_autumn"
+    },
+    "season=winter": {
+      "model": "piranport:block/chinese_plum_leaves_winter"
+    }
+  }
+}

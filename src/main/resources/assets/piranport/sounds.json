@@ -2,68 +2,129 @@
   "cannon_fire_small": {
     "sounds": [
       {
-        "name": "minecraft:entity.generic.explode",
-        "type": "event",
+        "name": "piranport:artillery/cannon_fire_small",
         "attenuation_distance": 32
+      }
+    ]
+  },
+  "cannon_fire_small_tail": {
+    "sounds": [
+      {
+        "name": "piranport:artillery/cannon_fire_small_tail",
+        "attenuation_distance": 48
       }
     ]
   },
   "cannon_fire_medium": {
     "sounds": [
       {
-        "name": "minecraft:entity.generic.explode",
-        "type": "event",
+        "name": "piranport:artillery/cannon_fire_medium",
         "attenuation_distance": 48
+      }
+    ]
+  },
+  "cannon_fire_medium_tail": {
+    "sounds": [
+      {
+        "name": "piranport:artillery/cannon_fire_medium_tail",
+        "attenuation_distance": 72
+      }
+    ]
+  },
+  "cannon_fire_medium_distant": {
+    "sounds": [
+      {
+        "name": "piranport:artillery/cannon_fire_medium_distant",
+        "attenuation_distance": 128
       }
     ]
   },
   "cannon_fire_large": {
     "sounds": [
       {
-        "name": "minecraft:entity.generic.explode",
-        "type": "event",
+        "name": "piranport:artillery/cannon_fire_large",
         "attenuation_distance": 64
+      }
+    ]
+  },
+  "cannon_fire_large_tail": {
+    "sounds": [
+      {
+        "name": "piranport:artillery/cannon_fire_large_tail",
+        "attenuation_distance": 96
+      }
+    ]
+  },
+  "cannon_fire_large_distant": {
+    "sounds": [
+      {
+        "name": "piranport:artillery/cannon_fire_large_distant",
+        "attenuation_distance": 160
       }
     ]
   },
   "cannon_reload": {
     "sounds": [
       {
-        "name": "minecraft:item.armor.equip_iron",
-        "type": "event"
+        "name": "piranport:artillery/cannon_reload"
+      }
+    ]
+  },
+  "cannon_reload_breech": {
+    "sounds": [
+      {
+        "name": "piranport:artillery/cannon_reload_breech"
       }
     ]
   },
   "cannon_explosion": {
     "sounds": [
       {
-        "name": "minecraft:entity.generic.explode",
-        "type": "event",
+        "name": "piranport:artillery/cannon_explosion",
         "attenuation_distance": 48
+      }
+    ]
+  },
+  "cannon_explosion_distant": {
+    "sounds": [
+      {
+        "name": "piranport:artillery/cannon_explosion_distant",
+        "attenuation_distance": 144
       }
     ]
   },
   "shell_whistle": {
     "sounds": [
       {
-        "name": "minecraft:entity.firework_rocket.launch",
-        "type": "event"
+        "name": "piranport:artillery/shell_whistle"
+      }
+    ]
+  },
+  "shell_whistle_fast": {
+    "sounds": [
+      {
+        "name": "piranport:artillery/shell_whistle_fast"
+      }
+    ]
+  },
+  "shell_whistle_heavy": {
+    "sounds": [
+      {
+        "name": "piranport:artillery/shell_whistle_heavy"
       }
     ]
   },
   "ammo_switch": {
     "sounds": [
       {
-        "name": "minecraft:item.armor.equip_chain",
-        "type": "event"
+        "name": "piranport:artillery/ammo_switch"
       }
     ]
   },
   "muzzle_burn": {
     "sounds": [
       {
-        "name": "minecraft:item.firecharge.use",
-        "type": "event"
+        "name": "piranport:artillery/muzzle_burn"
       }
     ]
   }

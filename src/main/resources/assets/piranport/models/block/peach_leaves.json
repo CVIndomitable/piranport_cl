@@ -1,6 +1,3 @@
 {
-  "parent": "minecraft:block/leaves",
-  "textures": {
-    "all": "piranport:block/peach_leaves"
-  }
+  "parent": "piranport:block/peach_leaves_summer"
 }

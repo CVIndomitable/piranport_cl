@@ -36,18 +36,19 @@ public class SalvoManager {
     ) {}
 
     /**
-     * 调度一批槽位的延迟射击。每个槽位间隔 1~4 tick。
+     * 调度一批槽位的延迟射击。间隔来自火炮配置的 salvoInterval。
      */
     public static void schedule(ServerPlayer player, Item expectedType, List<int[]> slotPairs,
-                                 int aimMode, double ax, double ay, double az) {
+                                 int aimMode, double ax, double ay, double az, int intervalTicks) {
         long now = player.serverLevel().getGameTime();
-        long nextTick = now + 1 + player.getRandom().nextInt(4);
+        int interval = Math.max(1, intervalTicks);
+        long nextTick = now + interval;
         ArrayDeque<SalvoTask> queue = new ArrayDeque<>();
 
         for (int[] pair : slotPairs) {
             queue.add(new SalvoTask(pair[0], pair[1], expectedType,
                     aimMode, ax, ay, az, nextTick));
-            nextTick += 1 + player.getRandom().nextInt(4);
+            nextTick += interval;
         }
 
         PENDING.put(player.getUUID(), queue);

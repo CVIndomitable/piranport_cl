@@ -29,7 +29,7 @@ import java.util.List;
  */
 public class LowTierDestroyerEntity extends Monster {
 
-    // --- Constants (placeholder values, tune later) ---
+    // --- Constants ---
 
     /** Detection / aggro range in blocks. */
     private static final double DETECTION_RANGE = 30.0;

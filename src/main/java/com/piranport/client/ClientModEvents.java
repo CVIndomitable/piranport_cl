@@ -69,6 +69,9 @@ public class ClientModEvents {
         // 武器工作台
         event.register(ModMenuTypes.WEAPON_WORKBENCH_MENU.get(),
                 com.piranport.menu.WeaponWorkbenchScreen::new);
+        // 蓝图收纳箱
+        event.register(ModMenuTypes.BLUEPRINT_CHEST_MENU.get(),
+                com.piranport.menu.BlueprintChestScreen::new);
         // 副本
         event.register(ModMenuTypes.DUNGEON_BOOK_MENU.get(),
                 com.piranport.dungeon.client.DungeonBookScreen::new);
@@ -123,6 +126,8 @@ public class ClientModEvents {
             if (renderer instanceof PlayerRenderer playerRenderer) {
                 playerRenderer.addLayer(
                         new com.piranport.client.SkinOverlayLayer(playerRenderer));
+                playerRenderer.addLayer(
+                        new com.piranport.client.ShipRiggingLayer(playerRenderer));
             }
         }
     }
@@ -133,12 +138,28 @@ public class ClientModEvents {
                 com.piranport.client.model.B25Model::createBodyLayer);
         event.registerLayerDefinition(com.piranport.client.model.F4FModel.LAYER_LOCATION,
                 com.piranport.client.model.F4FModel::createBodyLayer);
+        event.registerLayerDefinition(com.piranport.client.model.UnicornModel.LAYER_LOCATION,
+                com.piranport.client.model.UnicornModel::createBodyLayer);
+        event.registerLayerDefinition(com.piranport.client.model.DeepOceanDestroyerModel.LAYER_LOCATION,
+                com.piranport.client.model.DeepOceanDestroyerModel::createBodyLayer);
+        event.registerLayerDefinition(com.piranport.client.model.DeepOceanSupplyModel.LAYER_LOCATION,
+                com.piranport.client.model.DeepOceanSupplyModel::createBodyLayer);
+        event.registerLayerDefinition(com.piranport.client.model.DeepOceanHeavyCruiserModel.LAYER_LOCATION,
+                com.piranport.client.model.DeepOceanHeavyCruiserModel::createBodyLayer);
+        event.registerLayerDefinition(com.piranport.client.model.DeepOceanSubmarineModel.LAYER_LOCATION,
+                com.piranport.client.model.DeepOceanSubmarineModel::createBodyLayer);
+        event.registerLayerDefinition(com.piranport.client.model.DeepOceanBattleCruiserModel.LAYER_LOCATION,
+                com.piranport.client.model.DeepOceanBattleCruiserModel::createBodyLayer);
+        event.registerLayerDefinition(com.piranport.client.model.DeepOceanBattleshipModel.LAYER_LOCATION,
+                com.piranport.client.model.DeepOceanBattleshipModel::createBodyLayer);
+        event.registerLayerDefinition(com.piranport.client.model.DeepOceanLightCarrierModel.LAYER_LOCATION,
+                com.piranport.client.model.DeepOceanLightCarrierModel::createBodyLayer);
     }
 
     @SubscribeEvent
     public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(ModEntityTypes.CANNON_PROJECTILE.get(),
-                ThrownItemRenderer::new);
+                CannonProjectileRenderer::new);
         event.registerEntityRenderer(ModEntityTypes.TORPEDO_ENTITY.get(),
                 ThrownItemRenderer::new);
         event.registerEntityRenderer(ModEntityTypes.AIRCRAFT_ENTITY.get(),
@@ -184,24 +205,34 @@ public class ClientModEvents {
         // 深海投射物
         event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_PROJECTILE.get(),
                 ThrownItemRenderer::new);
-        // 深海 NPC 实体（带舰队状态粒子的占位渲染器）
+        // 深海 NPC 实体（基础舰种贴图 + 程序化舰装轮廓）
         event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_SUPPLY.get(),
+                com.piranport.client.DeepOceanSupplyRenderer::new);
+        event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_ARCHIVIST.get(),
+                com.piranport.client.DeepOceanRenderer::new);
+        event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_ENGINEER.get(),
+                com.piranport.client.DeepOceanRenderer::new);
+        event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_NAVIGATOR.get(),
+                com.piranport.client.DeepOceanRenderer::new);
+        event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_QUARTERMASTER.get(),
                 com.piranport.client.DeepOceanRenderer::new);
         event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_DESTROYER.get(),
-                com.piranport.client.DeepOceanRenderer::new);
+                com.piranport.client.DeepOceanDestroyerRenderer::new);
         event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_LIGHT_CRUISER.get(),
                 com.piranport.client.DeepOceanRenderer::new);
         event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_HEAVY_CRUISER.get(),
-                com.piranport.client.DeepOceanRenderer::new);
+                com.piranport.client.DeepOceanHeavyCruiserRenderer::new);
         event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_BATTLE_CRUISER.get(),
-                com.piranport.client.DeepOceanRenderer::new);
+                com.piranport.client.DeepOceanBattleCruiserRenderer::new);
         event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_BATTLESHIP.get(),
-                com.piranport.client.DeepOceanRenderer::new);
+                com.piranport.client.DeepOceanBattleshipRenderer::new);
         event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_LIGHT_CARRIER.get(),
-                com.piranport.client.DeepOceanRenderer::new);
+                com.piranport.client.DeepOceanLightCarrierRenderer::new);
         event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_CARRIER.get(),
                 com.piranport.client.DeepOceanRenderer::new);
         event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_SUBMARINE.get(),
+                com.piranport.client.DeepOceanSubmarineRenderer::new);
+        event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_FLAGSHIP.get(),
                 com.piranport.client.DeepOceanRenderer::new);
         // 舰娘 NPC
         event.registerEntityRenderer(ModEntityTypes.SHIP_GIRL.get(),

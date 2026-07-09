@@ -2,20 +2,25 @@ package com.piranport.client;
 
 import com.piranport.artillery.ArtilleryItem;
 import com.piranport.artillery.config.ArtilleryCannonData;
+import com.piranport.artillery.config.MuzzlePos;
 import com.piranport.combat.BallisticSolver;
 import com.piranport.combat.BallisticSolverStats;
 import com.piranport.config.ModEquipmentConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.*;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.List;
 
 /**
  * 客户端瞄准镜状态管理。
@@ -41,6 +46,13 @@ public final class ClientScopeHandler {
     /** 进入瞄准模式之前是否持有火炮 */
     private static boolean heldCannonBeforeScope = false;
 
+    /** 手持火炮的“炮塔”朝向。turretSpeed 按每 tick 可转过的角度使用。 */
+    private static boolean hasTurretAim = false;
+    private static float turretAimYaw = 0.0f;
+    private static float turretAimPitch = 0.0f;
+    @Nullable
+    private static Item turretAimWeapon = null;
+
     // ===== 客户端弹道解算相关 =====
     /** 上一次解算的结果（发射仰角，弧度） */
     private static double lastSolvedAngle = 0;
@@ -50,6 +62,8 @@ public final class ClientScopeHandler {
     private static boolean hasSolved = false;
     /** 解算间隔（ticks）：避免每 tick 都解算，降低性能开销 */
     private static final int SOLVE_INTERVAL = 5;
+    /** 瞄准镜射线最大距离（格）。 */
+    private static final double SCOPE_RAYCAST_RANGE = 500.0;
     /** 上一次解算的 tick */
     private static int lastSolveTick = 0;
 
@@ -78,6 +92,7 @@ public final class ClientScopeHandler {
         serverHorizontalError = 0.0;
         serverAngleDeg = 0.0;
         lastSolveTick = 0;
+        resetTurretAim();
     }
 
     /** 退出瞄准模式 */
@@ -95,6 +110,7 @@ public final class ClientScopeHandler {
         serverVerticalError = 0.0;
         serverHorizontalError = 0.0;
         serverAngleDeg = 0.0;
+        resetTurretAim();
     }
 
     /** 每客户端 tick 调用，更新长按计数和射线检测 */
@@ -103,13 +119,29 @@ public final class ClientScopeHandler {
         holdTicks++;
 
         // 每 tick 更新射线检测，获取目标位置
-        updateAimedPosition(player);
+        updateAimedPosition(player, weapon);
 
         // 定期进行客户端弹道解算（用于性能统计）
         if (hasValidTarget && targetDistance > 0 && (holdTicks - lastSolveTick >= SOLVE_INTERVAL)) {
             solveBallisticsClient(weapon);
             lastSolveTick = holdTicks;
         }
+    }
+
+    /** 非瞄准镜状态下维护炮塔滞后射线，用于快速点击开火。 */
+    public static void tickQuickAim(Player player, ItemStack weapon) {
+        if (scoping) return;
+        updateAimedPosition(player, weapon);
+    }
+
+    /** 玩家不再持有火炮时清理非瞄准镜快速瞄准状态。 */
+    public static void clearQuickAim() {
+        if (scoping) return;
+        aimedPosition = null;
+        targetDistance = 0;
+        targetVertical = 0;
+        hasValidTarget = false;
+        resetTurretAim();
     }
 
     /**
@@ -131,21 +163,24 @@ public final class ClientScopeHandler {
 
         // 运行解算（会自动记录性能统计到 BallisticSolverStats）
         BallisticSolver.Result result = BallisticSolver.solve(
-                velocity, drag, mcGravity, targetDistance, targetVertical, 0.0);
+                velocity, drag, mcGravity, targetDistance, targetVertical, 0.0,
+                Math.toRadians(effectiveData.minElevation()),
+                Math.toRadians(effectiveData.maxElevation()));
         lastSolvedAngle = result.angle();
         lastOutOfRange = result.outOfRange();
         hasSolved = true;
     }
 
     /** 从玩家视角发射射线，获取准星指向的命中点坐标 */
-    private static void updateAimedPosition(Player player) {
+    private static void updateAimedPosition(Player player, ItemStack weapon) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.level == null || mc.getCameraEntity() == null) return;
 
         Entity camera = mc.getCameraEntity();
         Vec3 eyePos = camera.getEyePosition();
-        Vec3 lookDir = player.getLookAngle();
-        double range = 256.0; // 火控最大射程
+        Vec3 ballisticOrigin = getReferenceMuzzlePosition(player, weapon, mc.level);
+        Vec3 lookDir = getTurretLimitedLookDirection(player, weapon, mc.level);
+        double range = SCOPE_RAYCAST_RANGE;
 
         Vec3 end = eyePos.add(lookDir.scale(range));
 
@@ -188,9 +223,92 @@ public final class ClientScopeHandler {
 
         aimedPosition = hitPos;
         targetDistance = Math.sqrt(
-                (hitPos.x - eyePos.x) * (hitPos.x - eyePos.x) +
-                (hitPos.z - eyePos.z) * (hitPos.z - eyePos.z));
-        targetVertical = hitPos.y - eyePos.y;
+                (hitPos.x - ballisticOrigin.x) * (hitPos.x - ballisticOrigin.x) +
+                (hitPos.z - ballisticOrigin.z) * (hitPos.z - ballisticOrigin.z));
+        targetVertical = hitPos.y - ballisticOrigin.y;
+    }
+
+    private static Vec3 getTurretLimitedLookDirection(Player player, ItemStack weapon, Level level) {
+        if (!(weapon.getItem() instanceof ArtilleryItem ai)) {
+            resetTurretAim();
+            return player.getLookAngle();
+        }
+
+        Item weaponItem = weapon.getItem();
+        if (!hasTurretAim || turretAimWeapon != weaponItem) {
+            hasTurretAim = true;
+            turretAimWeapon = weaponItem;
+            turretAimYaw = player.getYRot();
+            turretAimPitch = player.getXRot();
+            return player.getLookAngle();
+        }
+
+        ArtilleryCannonData effectiveData = ai.getEffectiveData(level);
+        float maxStepDeg = effectiveData.turretSpeed();
+        if (maxStepDeg <= 0.0f || maxStepDeg >= 180.0f) {
+            turretAimYaw = player.getYRot();
+            turretAimPitch = player.getXRot();
+            return player.getLookAngle();
+        }
+
+        turretAimYaw = approachDegrees(turretAimYaw, player.getYRot(), maxStepDeg);
+        turretAimPitch = approachDegrees(turretAimPitch, player.getXRot(), maxStepDeg);
+        turretAimPitch = Mth.clamp(turretAimPitch, -90.0f, 90.0f);
+        return directionFromYawPitch(turretAimYaw, turretAimPitch);
+    }
+
+    private static float approachDegrees(float current, float target, float maxStepDeg) {
+        float delta = Mth.wrapDegrees(target - current);
+        if (delta > maxStepDeg) {
+            delta = maxStepDeg;
+        } else if (delta < -maxStepDeg) {
+            delta = -maxStepDeg;
+        }
+        return current + delta;
+    }
+
+    private static Vec3 directionFromYawPitch(float yaw, float pitch) {
+        double yawRad = Math.toRadians(yaw);
+        double pitchRad = Math.toRadians(pitch);
+        double cosPitch = Math.cos(pitchRad);
+        return new Vec3(
+                -Math.sin(yawRad) * cosPitch,
+                -Math.sin(pitchRad),
+                Math.cos(yawRad) * cosPitch
+        ).normalize();
+    }
+
+    private static void resetTurretAim() {
+        hasTurretAim = false;
+        turretAimYaw = 0.0f;
+        turretAimPitch = 0.0f;
+        turretAimWeapon = null;
+    }
+
+    private static Vec3 getReferenceMuzzlePosition(Player player, ItemStack weapon, Level level) {
+        Vec3 eyePos = player.getEyePosition();
+        if (!(weapon.getItem() instanceof ArtilleryItem ai)) return eyePos;
+
+        ArtilleryCannonData effectiveData = ai.getEffectiveData(level);
+        List<MuzzlePos> muzzles = effectiveData.muzzles();
+        MuzzlePos muzzle = muzzles.isEmpty() ? new MuzzlePos(0, 0, 1.5) : muzzles.get((muzzles.size() - 1) / 2);
+        return eyePos.add(rotateMuzzleByPlayerView(player, muzzle));
+    }
+
+    private static Vec3 rotateMuzzleByPlayerView(Player player, MuzzlePos muzzle) {
+        double yawRad = Math.toRadians(player.getYRot());
+        double pitchRad = Math.toRadians(player.getXRot());
+
+        double cosYaw = Math.cos(yawRad);
+        double sinYaw = Math.sin(yawRad);
+        double cosPitch = Math.cos(pitchRad);
+        double sinPitch = Math.sin(pitchRad);
+
+        double x = muzzle.x() * cosYaw - muzzle.z() * sinYaw;
+        double y = muzzle.y() * cosPitch + muzzle.z() * sinPitch;
+        double z = muzzle.x() * sinYaw + muzzle.z() * cosYaw * cosPitch;
+
+        return new Vec3(x, y, z);
     }
 
     // ===== Getters =====
@@ -286,5 +404,6 @@ public final class ClientScopeHandler {
         heldCannonBeforeScope = false;
         hasSolved = false;
         lastOutOfRange = false;
+        resetTurretAim();
     }
 }

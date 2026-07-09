@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "piranport:flag_g"
+    },
+    {
+      "item": "piranport:abyssal_report"
+    },
+    {
+      "item": "minecraft:paper"
+    },
+    {
+      "item": "minecraft:glow_ink_sac"
+    }
+  ],
+  "result": {
+    "id": "piranport:skin_core_17"
+  }
+}

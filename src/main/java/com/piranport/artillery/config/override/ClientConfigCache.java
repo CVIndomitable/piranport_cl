@@ -79,6 +79,20 @@ public class ClientConfigCache {
     }
 
     /**
+     * Remove all cached overrides for one cannon.
+     */
+    public static void removeCannonOverrides(String cannonName) {
+        cannonOverrides.remove(cannonName);
+    }
+
+    /**
+     * Remove one cached projectile override.
+     */
+    public static void removeProjectileOverride(String configKey) {
+        projectileOverrides.remove(configKey);
+    }
+
+    /**
      * 获取所有弹药配置覆盖（用于GUI显示）
      */
     public static Map<String, String> getAllProjectileOverrides() {

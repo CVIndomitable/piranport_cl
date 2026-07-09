@@ -76,7 +76,7 @@ public class ConfigOverrideManager {
                 .orElse(original.barrels());
 
         float damage = overrides.getCannonOverride(name, "damage")
-                .map(v -> v instanceof Number n ? n.floatValue() : null)
+                .flatMap(ConfigOverrideManager::finiteFloatOverride)
                 .orElse(original.damage());
 
         int reloadTime = overrides.getCannonOverride(name, "reloadTime")
@@ -88,27 +88,29 @@ public class ConfigOverrideManager {
                 .orElse(original.durability());
 
         float scopeZoom = overrides.getCannonOverride(name, "scopeZoom")
-                .map(v -> v instanceof Number n ? n.floatValue() : null)
+                .flatMap(ConfigOverrideManager::finiteFloatOverride)
                 .orElse(original.scopeZoom());
 
         float initialSpeed = overrides.getCannonOverride(name, "initialSpeed")
-                .map(v -> v instanceof Number n ? n.floatValue() : null)
+                .flatMap(ConfigOverrideManager::finiteFloatOverride)
                 .orElse(original.initialSpeed());
 
         float dragCoeff = overrides.getCannonOverride(name, "dragCoeff")
-                .map(v -> v instanceof Number n ? n.floatValue() : null)
+                .flatMap(ConfigOverrideManager::finiteFloatOverride)
+                .map(ConfigOverrideManager::normalizeDragCoeff)
                 .orElse(original.dragCoeff());
 
         float gravity = overrides.getCannonOverride(name, "gravity")
-                .map(v -> v instanceof Number n ? n.floatValue() : null)
+                .flatMap(ConfigOverrideManager::finiteFloatOverride)
                 .orElse(original.gravity());
 
         float explosionPower = overrides.getCannonOverride(name, "explosionPower")
-                .map(v -> v instanceof Number n ? n.floatValue() : null)
+                .flatMap(ConfigOverrideManager::finiteFloatOverride)
                 .orElse(original.explosionPower());
 
         float dispersion = overrides.getCannonOverride(name, "dispersion")
-                .map(v -> v instanceof Number n ? n.floatValue() : null)
+                .flatMap(ConfigOverrideManager::finiteFloatOverride)
+                .map(ConfigOverrideManager::normalizeDispersion)
                 .orElse(original.dispersion());
 
         int fireCooldown = overrides.getCannonOverride(name, "fireCooldown")
@@ -120,8 +122,34 @@ public class ConfigOverrideManager {
                 .orElse(original.salvoCount());
 
         float salvoInterval = overrides.getCannonOverride(name, "salvoInterval")
-                .map(v -> v instanceof Number n ? n.floatValue() : null)
+                .flatMap(ConfigOverrideManager::finiteFloatOverride)
                 .orElse(original.salvoInterval());
+
+        float projectileWeight = overrides.getCannonOverride(name, "projectileWeight")
+                .flatMap(ConfigOverrideManager::finiteFloatOverride)
+                .orElse(original.projectileWeight());
+
+        float verticalSpread = overrides.getCannonOverride(name, "verticalSpread")
+                .flatMap(ConfigOverrideManager::finiteFloatOverride)
+                .map(ConfigOverrideManager::normalizeDispersion)
+                .orElse(original.verticalSpread());
+
+        float horizontalSpread = overrides.getCannonOverride(name, "horizontalSpread")
+                .flatMap(ConfigOverrideManager::finiteFloatOverride)
+                .map(ConfigOverrideManager::normalizeDispersion)
+                .orElse(original.horizontalSpread());
+
+        float maxElevation = overrides.getCannonOverride(name, "maxElevation")
+                .flatMap(ConfigOverrideManager::finiteFloatOverride)
+                .orElse(original.maxElevation());
+
+        float minElevation = overrides.getCannonOverride(name, "minElevation")
+                .flatMap(ConfigOverrideManager::finiteFloatOverride)
+                .orElse(original.minElevation());
+
+        float turretSpeed = overrides.getCannonOverride(name, "turretSpeed")
+                .flatMap(ConfigOverrideManager::finiteFloatOverride)
+                .orElse(original.turretSpeed());
 
         List<MuzzlePos> muzzles = overrides.getCannonOverride(name, "muzzles")
                 .flatMap(ConfigOverrideManager::parseMuzzlesOverride)
@@ -143,7 +171,13 @@ public class ConfigOverrideManager {
                 dispersion,
                 fireCooldown,
                 salvoCount,
-                salvoInterval
+                salvoInterval,
+                projectileWeight,
+                verticalSpread,
+                horizontalSpread,
+                maxElevation,
+                minElevation,
+                turretSpeed
         );
     }
 
@@ -185,6 +219,7 @@ public class ConfigOverrideManager {
 
         float dragCoeff = ClientConfigCache.getCannonOverride(name, "dragCoeff")
                 .flatMap(s -> parseFloatSafe(s))
+                .map(ConfigOverrideManager::normalizeDragCoeff)
                 .orElse(original.dragCoeff());
 
         float gravity = ClientConfigCache.getCannonOverride(name, "gravity")
@@ -197,6 +232,7 @@ public class ConfigOverrideManager {
 
         float dispersion = ClientConfigCache.getCannonOverride(name, "dispersion")
                 .flatMap(s -> parseFloatSafe(s))
+                .map(ConfigOverrideManager::normalizeDispersion)
                 .orElse(original.dispersion());
 
         int fireCooldown = ClientConfigCache.getCannonOverride(name, "fireCooldown")
@@ -210,6 +246,32 @@ public class ConfigOverrideManager {
         float salvoInterval = ClientConfigCache.getCannonOverride(name, "salvoInterval")
                 .flatMap(s -> parseFloatSafe(s))
                 .orElse(original.salvoInterval());
+
+        float projectileWeight = ClientConfigCache.getCannonOverride(name, "projectileWeight")
+                .flatMap(s -> parseFloatSafe(s))
+                .orElse(original.projectileWeight());
+
+        float verticalSpread = ClientConfigCache.getCannonOverride(name, "verticalSpread")
+                .flatMap(s -> parseFloatSafe(s))
+                .map(ConfigOverrideManager::normalizeDispersion)
+                .orElse(original.verticalSpread());
+
+        float horizontalSpread = ClientConfigCache.getCannonOverride(name, "horizontalSpread")
+                .flatMap(s -> parseFloatSafe(s))
+                .map(ConfigOverrideManager::normalizeDispersion)
+                .orElse(original.horizontalSpread());
+
+        float maxElevation = ClientConfigCache.getCannonOverride(name, "maxElevation")
+                .flatMap(s -> parseFloatSafe(s))
+                .orElse(original.maxElevation());
+
+        float minElevation = ClientConfigCache.getCannonOverride(name, "minElevation")
+                .flatMap(s -> parseFloatSafe(s))
+                .orElse(original.minElevation());
+
+        float turretSpeed = ClientConfigCache.getCannonOverride(name, "turretSpeed")
+                .flatMap(s -> parseFloatSafe(s))
+                .orElse(original.turretSpeed());
 
         List<MuzzlePos> muzzles = ClientConfigCache.getCannonOverride(name, "muzzles")
                 .flatMap(ConfigOverrideManager::parseMuzzlesString)
@@ -231,16 +293,23 @@ public class ConfigOverrideManager {
                 dispersion,
                 fireCooldown,
                 salvoCount,
-                salvoInterval
+                salvoInterval,
+                projectileWeight,
+                verticalSpread,
+                horizontalSpread,
+                maxElevation,
+                minElevation,
+                turretSpeed
         );
     }
 
     /** 安全解析 float，失败时返回 empty */
     private static java.util.Optional<Float> parseFloatSafe(String s) {
         try {
-            return java.util.Optional.of(Float.parseFloat(s));
+            float value = Float.parseFloat(s);
+            return Float.isFinite(value) ? Optional.of(value) : Optional.empty();
         } catch (NumberFormatException e) {
-            return java.util.Optional.empty();
+            return Optional.empty();
         }
     }
 
@@ -251,6 +320,28 @@ public class ConfigOverrideManager {
         } catch (NumberFormatException e) {
             return java.util.Optional.empty();
         }
+    }
+
+    private static Optional<Float> finiteFloatOverride(Object value) {
+        if (value instanceof Number number) {
+            float parsed = number.floatValue();
+            return Float.isFinite(parsed) ? Optional.of(parsed) : Optional.empty();
+        }
+        return Optional.empty();
+    }
+
+    private static float normalizeDispersion(float dispersion) {
+        if (!Float.isFinite(dispersion)) {
+            return 0.01f;
+        }
+        return dispersion <= 0.01f ? 0.01f : dispersion;
+    }
+
+    private static float normalizeDragCoeff(float dragCoeff) {
+        if (!Float.isFinite(dragCoeff)) {
+            return 0.0001f;
+        }
+        return dragCoeff <= 0.0001f ? 0.0001f : dragCoeff;
     }
 
     private static Optional<List<MuzzlePos>> parseMuzzlesOverride(Object value) {
@@ -278,10 +369,13 @@ public class ConfigOverrideManager {
                         if (coords.length != 3) {
                             throw new IllegalArgumentException("Invalid muzzle position: " + part);
                         }
-                        return new MuzzlePos(
-                                Double.parseDouble(coords[0].trim()),
-                                Double.parseDouble(coords[1].trim()),
-                                Double.parseDouble(coords[2].trim()));
+                        double x = Double.parseDouble(coords[0].trim());
+                        double y = Double.parseDouble(coords[1].trim());
+                        double z = Double.parseDouble(coords[2].trim());
+                        if (!Double.isFinite(x) || !Double.isFinite(y) || !Double.isFinite(z)) {
+                            throw new IllegalArgumentException("Non-finite muzzle position: " + part);
+                        }
+                        return new MuzzlePos(x, y, z);
                     })
                     .toList();
             return muzzles.isEmpty() ? Optional.empty() : Optional.of(muzzles);
@@ -310,6 +404,7 @@ public class ConfigOverrideManager {
 
         return overrides.getProjectileOverride(key)
                 .map(v -> ((Number) v).doubleValue())
+                .filter(Double::isFinite)
                 .orElse(defaultValue);
     }
 
@@ -355,6 +450,13 @@ public class ConfigOverrideManager {
      * @return 验证后的值
      */
     public static Object validateValue(String field, Object value) {
+        if ("muzzles".equals(field)) {
+            if (value instanceof String s && parseMuzzlesString(s).isPresent()) {
+                return s;
+            }
+            throw new IllegalArgumentException("Invalid muzzle override");
+        }
+
         if (!(value instanceof Number num)) {
             return value;
         }
@@ -370,7 +472,7 @@ public class ConfigOverrideManager {
             }
             case "damage" -> {
                 float f = num.floatValue();
-                yield Math.max(0.1f, Math.min(1000f, f));
+                yield clampFinite(f, 0.1f, 1000f, field);
             }
             case "reloadTime" -> {
                 int i = num.intValue();
@@ -382,27 +484,27 @@ public class ConfigOverrideManager {
             }
             case "scopeZoom" -> {
                 float f = num.floatValue();
-                yield Math.max(1.0f, Math.min(20.0f, f));
+                yield clampFinite(f, 1.0f, 20.0f, field);
             }
             case "initialSpeed" -> {
                 float f = num.floatValue();
-                yield Math.max(0.1f, Math.min(50f, f));
+                yield clampFinite(f, 0.1f, 50f, field);
             }
             case "dragCoeff" -> {
                 float f = num.floatValue();
-                yield Math.max(0.0f, Math.min(50.0f, f));
+                yield clampFinite(f, 0.0001f, 50.0f, field);
             }
             case "gravity" -> {
                 float f = num.floatValue();
-                yield Math.max(0.1f, Math.min(100f, f));
+                yield clampFinite(f, 0.1f, 100f, field);
             }
             case "explosionPower" -> {
                 float f = num.floatValue();
-                yield Math.max(0.0f, Math.min(20f, f));
+                yield clampFinite(f, 0.0f, 20f, field);
             }
             case "dispersion" -> {
                 float f = num.floatValue();
-                yield Math.max(0.0f, Math.min(10f, f));
+                yield clampFinite(f, 0.01f, 10f, field);
             }
             case "fireCooldown" -> {
                 int i = num.intValue();
@@ -414,9 +516,34 @@ public class ConfigOverrideManager {
             }
             case "salvoInterval" -> {
                 float f = num.floatValue();
-                yield Math.max(0f, Math.min(100f, f));
+                yield clampFinite(f, 0f, 100f, field);
             }
-            default -> value;
+            case "projectileWeight" -> {
+                float f = num.floatValue();
+                yield clampFinite(f, 1f, 100000f, field);
+            }
+            case "verticalSpread", "horizontalSpread" -> {
+                float f = num.floatValue();
+                yield clampFinite(f, 0.01f, 30f, field);
+            }
+            case "maxElevation" -> {
+                float f = num.floatValue();
+                yield clampFinite(f, -89f, 89f, field);
+            }
+            case "minElevation" -> {
+                float f = num.floatValue();
+                yield clampFinite(f, -89f, 89f, field);
+            }
+            case "turretSpeed" -> {
+                float f = num.floatValue();
+                yield clampFinite(f, 0.1f, 180f, field);
+            }
+            default -> {
+                if (!Double.isFinite(num.doubleValue())) {
+                    throw new IllegalArgumentException("Non-finite config value for " + field);
+                }
+                yield value;
+            }
         };
     }
 
@@ -431,17 +558,36 @@ public class ConfigOverrideManager {
         return switch (key) {
             case "HE_ARMOR_PENETRATION", "AP_ARMOR_IGNORE" -> {
                 double d = num.doubleValue();
-                yield Math.max(0.0, Math.min(1.0, d));
+                yield clampFinite(d, 0.0, 1.0, key);
             }
             case "AP_DAMAGE_MULTIPLIER" -> {
                 double d = num.doubleValue();
-                yield Math.max(0.1, Math.min(10.0, d));
+                yield clampFinite(d, 0.1, 10.0, key);
             }
             case "UNDERWATER_EXPLOSION_MULTIPLIER" -> {
                 double d = num.doubleValue();
-                yield Math.max(0.0, Math.min(2.0, d));
+                yield clampFinite(d, 0.0, 2.0, key);
             }
-            default -> value;
+            default -> {
+                if (!Double.isFinite(num.doubleValue())) {
+                    throw new IllegalArgumentException("Non-finite projectile config value for " + key);
+                }
+                yield value;
+            }
         };
+    }
+
+    private static float clampFinite(float value, float min, float max, String field) {
+        if (!Float.isFinite(value)) {
+            throw new IllegalArgumentException("Non-finite config value for " + field);
+        }
+        return Math.max(min, Math.min(max, value));
+    }
+
+    private static double clampFinite(double value, double min, double max, String key) {
+        if (!Double.isFinite(value)) {
+            throw new IllegalArgumentException("Non-finite projectile config value for " + key);
+        }
+        return Math.max(min, Math.min(max, value));
     }
 }

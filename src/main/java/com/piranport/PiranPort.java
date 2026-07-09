@@ -17,6 +17,7 @@ import com.piranport.registry.ModBlocks;
 import com.piranport.registry.ModCreativeTabs;
 import com.piranport.registry.ModDataComponents;
 import com.piranport.registry.ModEntityTypes;
+import com.piranport.registry.ModFeatures;
 import com.piranport.registry.ModItems;
 import com.piranport.registry.ModMenuTypes;
 import com.piranport.registry.ModMobEffects;
@@ -46,11 +47,12 @@ import org.slf4j.Logger;
  *   7. ModMobEffects         — 药水效果（规避/装填加速/经验加成等）
  *   8. ModBlockEntityTypes   — 方块实体
  *   9. ModRecipeTypes        — 自定义配方与序列化器
- *  10. ModBiomeModifiers     — 生物群系修改器（盐矿/深海）
- *  11. ModStructureProcessors— 结构处理器（废墟劣化/战利品箱）
- *  12. ModArmorMaterials     — 护甲材料
- *  13. ModAttachmentTypes    — 数据附着类型
- *  14. ModCompats             — 第三方模组兼容（女仆/地牢等）
+ *  10. ModBiomeModifiers     — 生物群系修改器（深海）
+ *  11. ModFeatures           — 自定义世界生成特征
+ *  12. ModStructureProcessors— 结构处理器（废墟劣化/战利品箱）
+ *  13. ModArmorMaterials     — 护甲材料
+ *  14. ModAttachmentTypes    — 数据附着类型
+ *  15. ModCompats             — 第三方模组兼容（女仆/地牢等）
  *
  * 配置文件（COMMON 类型，运行时热重载安全）：
  *   piranport-common.toml       — 通用开关（友伤/爆炸破坏/水面行走等）
@@ -87,6 +89,7 @@ public class PiranPort {
         ModRecipeTypes.RECIPE_TYPES.register(modEventBus);
         ModRecipeTypes.RECIPE_SERIALIZERS.register(modEventBus);
         ModBiomeModifiers.BIOME_MODIFIER_SERIALIZERS.register(modEventBus);
+        ModFeatures.FEATURES.register(modEventBus);
         ModStructureProcessors.STRUCTURE_PROCESSORS.register(modEventBus);
         ModArmorMaterials.ARMOR_MATERIALS.register(modEventBus);
         ModAttachmentTypes.ATTACHMENT_TYPES.register(modEventBus);

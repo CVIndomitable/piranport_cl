@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "stage=0": {
+      "model": "piranport:block/slime_tree_sapling"
+    },
+    "stage=1": {
+      "model": "piranport:block/slime_tree_sapling"
+    }
+  }
+}

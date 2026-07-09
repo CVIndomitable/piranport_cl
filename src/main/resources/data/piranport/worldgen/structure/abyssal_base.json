@@ -1,6 +1,6 @@
 {
   "type": "minecraft:jigsaw",
-  "biomes": "#minecraft:is_deep_ocean",
+  "biomes": "#piranport:has_abyssal_base",
   "step": "surface_structures",
   "spawn_overrides": {},
   "terrain_adaptation": "beard_box",

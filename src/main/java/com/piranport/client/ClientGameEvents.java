@@ -7,6 +7,8 @@ import com.piranport.combat.TransformationManager;
 import com.piranport.config.ModClientConfig;
 import com.piranport.client.input.ClientInputCoordinator;
 import com.piranport.PiranPort;
+import com.piranport.entitycore.ClientEntityCoreData;
+import com.piranport.network.EntityCoreRevertPayload;
 import com.piranport.network.RecallAllAircraftPayload;
 import com.piranport.network.SkinRevertPayload;
 import com.piranport.skin.ClientSkinData;
@@ -78,6 +80,11 @@ public class ClientGameEvents {
         if (ClientReconData.isInReconMode()) return;
 
         if (event.getEntity().isShiftKeyDown()) {
+            int currentEntityCore = ClientEntityCoreData.getActiveEntityCore(event.getEntity().getUUID());
+            if (currentEntityCore > 0) {
+                PacketDistributor.sendToServer(new EntityCoreRevertPayload());
+                return;
+            }
             int currentSkin = ClientSkinData.getActiveSkin(event.getEntity().getUUID());
             if (currentSkin > 0) {
                 PacketDistributor.sendToServer(new SkinRevertPayload());
@@ -147,6 +154,8 @@ public class ClientGameEvents {
         ClientReconData.clearRecon();
         ClientInputCoordinator.resetClientState();
         ClientSkinData.clear();
+        ClientEntityCoreData.clear();
+        EntityCorePlayerRenderHandler.clearCache();
         com.piranport.client.FireControlHudLayer.clearCache();
         com.piranport.client.ClientScopeHandler.clear();
         com.piranport.dungeon.client.DungeonHudLayer.clearDungeonState();

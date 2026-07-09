@@ -1,5 +1,6 @@
 package com.piranport.npc.deepocean;
 
+import com.piranport.advancement.ModAdvancements;
 import com.piranport.npc.ai.FleetGroup;
 import com.piranport.npc.ai.FleetGroupManager;
 import com.piranport.registry.ModItems;
@@ -18,6 +19,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.common.NeoForgeMod;
 
@@ -251,24 +253,67 @@ public abstract class AbstractDeepOceanEntity extends Monster {
     @Override
     protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean recentlyHit) {
         super.dropCustomDeathLoot(level, source, recentlyHit);
-        if (this instanceof DeepOceanSupplyEntity) {
+        if (this instanceof DeepOceanFlagshipEntity) {
+            if (source.getEntity() instanceof ServerPlayer player) {
+                ModAdvancements.award(player, "story/defeat_abyssal_flagship");
+            }
+            spawnAtLocation(new ItemStack(ModItems.RAW_ALUMINUM.get(), 8 + random.nextInt(9)));
+            spawnAtLocation(new ItemStack(Items.DIAMOND, 2 + random.nextInt(3)));
+            spawnAtLocation(new ItemStack(ModItems.ABYSSAL_REPORT.get(), 1));
+            spawnAtLocation(new ItemStack(ModItems.EXP_SHELL.get(), 2 + random.nextInt(2)));
+            spawnAtLocation(new ItemStack(ModItems.PORTAL_ACTIVATION_CORE.get(), 1));
+            spawnAtLocation(new ItemStack(ModItems.CHAOS_SHARD_IOTA.get(), 1));
+        } else if (this instanceof DeepOceanSupplyEntity) {
             spawnAtLocation(new ItemStack(ModItems.FUEL.get(), 2 + random.nextInt(3)));
             spawnAtLocation(new ItemStack(Items.IRON_INGOT, 1 + random.nextInt(2)));
+        } else if (this instanceof DeepOceanArchivistEntity) {
+            spawnAtLocation(new ItemStack(ModItems.ABYSSAL_REPORT.get(), 1));
+            spawnAtLocation(new ItemStack(Items.PAPER, 3 + random.nextInt(4)));
+            if (random.nextFloat() < 0.35f) {
+                spawnAtLocation(new ItemStack(ModItems.EXP_SHELL.get(), 1));
+            }
+        } else if (this instanceof DeepOceanEngineerEntity) {
+            spawnAtLocation(new ItemStack(ModItems.RAW_ALUMINUM.get(), 3 + random.nextInt(4)));
+            spawnAtLocation(new ItemStack(Items.REDSTONE, 1 + random.nextInt(3)));
+            if (random.nextFloat() < 0.35f) {
+                spawnAtLocation(new ItemStack(ModItems.REPAIR_KIT.get(), 1));
+            }
+        } else if (this instanceof DeepOceanNavigatorEntity) {
+            spawnAtLocation(new ItemStack(Items.MAP, 1));
+            spawnAtLocation(new ItemStack(Items.COMPASS, 1));
+            if (random.nextFloat() < 0.45f) {
+                spawnAtLocation(new ItemStack(ModItems.ABYSSAL_REPORT.get(), 1));
+            }
+        } else if (this instanceof DeepOceanQuartermasterEntity) {
+            spawnAtLocation(new ItemStack(ModItems.FUEL.get(), 1 + random.nextInt(2)));
+            spawnAtLocation(new ItemStack(ModItems.MEDIUM_HE_SHELL.get(), 4 + random.nextInt(5)));
+            spawnAtLocation(new ItemStack(ModItems.AVIATION_FUEL.get(), 1 + random.nextInt(2)));
+            if (random.nextFloat() < 0.35f) {
+                spawnAtLocation(new ItemStack(ModItems.EXP_SHELL.get(), 1));
+            }
         } else if (this instanceof DeepOceanDestroyerEntity) {
             spawnAtLocation(new ItemStack(Items.IRON_INGOT, 1 + random.nextInt(2)));
+            if (random.nextFloat() < 0.25f) {
+                spawnAtLocation(new ItemStack(ModItems.RAW_ALUMINUM.get(), 1 + random.nextInt(2)));
+            }
             spawnAtLocation(new ItemStack(Items.GUNPOWDER, 1 + random.nextInt(2)));
         } else if (this instanceof DeepOceanLightCruiserEntity) {
             spawnAtLocation(new ItemStack(Items.IRON_INGOT, 2 + random.nextInt(2)));
             spawnAtLocation(new ItemStack(Items.GUNPOWDER, 2 + random.nextInt(2)));
             spawnAtLocation(new ItemStack(ModItems.FUEL.get(), 1));
+            if (random.nextFloat() < 0.35f) {
+                spawnAtLocation(new ItemStack(ModItems.RAW_ALUMINUM.get(), 1 + random.nextInt(2)));
+            }
         } else if (this instanceof DeepOceanHeavyCruiserEntity) {
             spawnAtLocation(new ItemStack(Items.IRON_INGOT, 3 + random.nextInt(2)));
             spawnAtLocation(new ItemStack(Items.GUNPOWDER, 2 + random.nextInt(3)));
             spawnAtLocation(new ItemStack(ModItems.FUEL.get(), 1 + random.nextInt(2)));
+            spawnAtLocation(new ItemStack(ModItems.RAW_ALUMINUM.get(), 1 + random.nextInt(3)));
         } else if (this instanceof DeepOceanBattleCruiserEntity) {
             spawnAtLocation(new ItemStack(Items.IRON_INGOT, 4 + random.nextInt(2)));
             spawnAtLocation(new ItemStack(Items.GUNPOWDER, 3 + random.nextInt(2)));
             spawnAtLocation(new ItemStack(ModItems.FUEL.get(), 2));
+            spawnAtLocation(new ItemStack(ModItems.RAW_ALUMINUM.get(), 2 + random.nextInt(3)));
             if (random.nextFloat() < 0.3f) {
                 spawnAtLocation(new ItemStack(ModItems.CHAOS_SHARD_ALPHA.get(), 1));
             }
@@ -276,6 +321,7 @@ public abstract class AbstractDeepOceanEntity extends Monster {
             spawnAtLocation(new ItemStack(Items.IRON_INGOT, 4 + random.nextInt(3)));
             spawnAtLocation(new ItemStack(Items.GUNPOWDER, 3 + random.nextInt(3)));
             spawnAtLocation(new ItemStack(ModItems.FUEL.get(), 2 + random.nextInt(2)));
+            spawnAtLocation(new ItemStack(ModItems.RAW_ALUMINUM.get(), 3 + random.nextInt(4)));
             if (random.nextFloat() < 0.4f) {
                 spawnAtLocation(new ItemStack(ModItems.CHAOS_SHARD_BETA.get(), 1));
             }
@@ -283,6 +329,7 @@ public abstract class AbstractDeepOceanEntity extends Monster {
             spawnAtLocation(new ItemStack(Items.IRON_INGOT, 3 + random.nextInt(2)));
             spawnAtLocation(new ItemStack(ModItems.FUEL.get(), 3 + random.nextInt(2)));
             spawnAtLocation(new ItemStack(ModItems.AVIATION_FUEL.get(), 2 + random.nextInt(2)));
+            spawnAtLocation(new ItemStack(ModItems.RAW_ALUMINUM.get(), 2 + random.nextInt(3)));
             if (random.nextFloat() < 0.3f) {
                 spawnAtLocation(new ItemStack(ModItems.CHAOS_SHARD_GAMMA.get(), 1));
             }
@@ -290,6 +337,7 @@ public abstract class AbstractDeepOceanEntity extends Monster {
             spawnAtLocation(new ItemStack(Items.IRON_INGOT, 5 + random.nextInt(3)));
             spawnAtLocation(new ItemStack(ModItems.FUEL.get(), 4 + random.nextInt(2)));
             spawnAtLocation(new ItemStack(ModItems.AVIATION_FUEL.get(), 3 + random.nextInt(3)));
+            spawnAtLocation(new ItemStack(ModItems.RAW_ALUMINUM.get(), 4 + random.nextInt(5)));
             if (random.nextFloat() < 0.5f) {
                 spawnAtLocation(new ItemStack(ModItems.CHAOS_SHARD_DELTA.get(), 1));
             }

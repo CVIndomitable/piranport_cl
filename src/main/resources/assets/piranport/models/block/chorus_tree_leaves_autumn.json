@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/leaves",
+  "textures": {
+    "all": "piranport:block/chorus_tree_leaves_autumn"
+  }
+}

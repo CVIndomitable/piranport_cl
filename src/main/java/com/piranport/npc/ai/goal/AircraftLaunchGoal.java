@@ -1,10 +1,13 @@
 package com.piranport.npc.ai.goal;
 
 import com.piranport.entity.DeepOceanProjectileEntity;
+import com.piranport.network.AircraftLaunchPosePayload;
 import com.piranport.npc.deepocean.AbstractDeepOceanEntity;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.EnumSet;
 
@@ -61,6 +64,15 @@ public class AircraftLaunchGoal extends Goal {
         Vec3 launchPos = mob.position().add(0, 2.0, 0);
         Vec3 toTarget = target.position().subtract(launchPos);
         double dist = toTarget.horizontalDistance();
+        if (mob.level() instanceof ServerLevel serverLevel) {
+            double radius = serverLevel.getServer().getPlayerList().getSimulationDistance() * 16.0;
+            PacketDistributor.sendToPlayersNear(
+                    serverLevel,
+                    null,
+                    mob.getX(), mob.getY(), mob.getZ(),
+                    Math.max(48.0, radius),
+                    new AircraftLaunchPosePayload(mob.getId(), 0, 22));
+        }
 
         for (int i = 0; i < SALVO_SIZE; i++) {
             DeepOceanProjectileEntity proj = new DeepOceanProjectileEntity(

@@ -20,6 +20,7 @@ import net.minecraft.resources.ResourceLocation;
  * These should be standard 64x64 player skin format PNG files.
  */
 public class SkinOverlayLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> {
+    private static final int MAX_SKIN_ID = 23;
 
     public SkinOverlayLayer(RenderLayerParent<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> renderer) {
         super(renderer);
@@ -30,8 +31,8 @@ public class SkinOverlayLayer extends RenderLayer<AbstractClientPlayer, PlayerMo
                        AbstractClientPlayer player, float limbSwing, float limbSwingAmount,
                        float partialTick, float ageInTicks, float netHeadYaw, float headPitch) {
         int skinId = ClientSkinData.getActiveSkin(player.getUUID());
-        if (skinId <= 0 || skinId > 14) {
-            PiranPort.LOGGER.warn("Invalid skin ID: {}, expected 1-14", skinId);
+        if (skinId <= 0 || skinId > MAX_SKIN_ID) {
+            PiranPort.LOGGER.warn("Invalid skin ID: {}, expected 1-{}", skinId, MAX_SKIN_ID);
             return;
         }
         if (player.isInvisible()) return;

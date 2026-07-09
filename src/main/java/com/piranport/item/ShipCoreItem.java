@@ -458,9 +458,8 @@ public class ShipCoreItem extends Item implements Equipable {
     }
 
     // ====================================================================
-    // 武器发射系统 — 火炮/鱼雷/深弹/导弹
+    // 武器发射系统入口 — 具体实现已迁入 ShipCoreCombat
     // 共享 SMALL_SHELLS / MEDIUM_SHELLS / LARGE_SHELLS 标签
-    // TODO: 提取到 ShipCoreCombat.java
     // ====================================================================
 
     // ===== Hotbar/inventory firing =====

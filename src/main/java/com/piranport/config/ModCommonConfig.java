@@ -29,7 +29,7 @@ public class ModCommonConfig {
 
     // ===== World Generation (世界生成) =====
 
-    public static final ModConfigSpec.BooleanValue SALT_GENERATION_ENABLED;
+    public static final ModConfigSpec.BooleanValue SEASONAL_LEAF_COLOR_ENABLED;
 
     // ===== Game Mode (游戏模式) =====
 
@@ -117,12 +117,12 @@ public class ModCommonConfig {
         BUILDER.pop();
 
         BUILDER.push("worldgen");
-        SALT_GENERATION_ENABLED = BUILDER
+        SEASONAL_LEAF_COLOR_ENABLED = BUILDER
                 .comment(
-                        "Enable natural salt block generation in river biomes (河床盐矿生成).",
-                        "Default: false (salt blocks do not generate naturally, 盐矿不自然生成).",
-                        "Set to true to enable salt disk features in rivers. (开启后河流底部会生成盐块)")
-                .define("saltGenerationEnabled", false);
+                        "Enable seasonal color changes for Piran Port tree leaves (树叶季节变色).",
+                        "Default: false. When enabled, leaf blocks update by random tick and switch season every 90 Minecraft days.",
+                        "默认关闭。开启后树叶通过随机刻按每 90 个 Minecraft 日切换春夏秋冬状态。")
+                .define("seasonalLeafColorEnabled", false);
         BUILDER.pop();
 
         BUILDER.push("gameMode");

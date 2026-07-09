@@ -1,0 +1,34 @@
+{
+  "parent": "piranport:story/ship_girl_story_preparation",
+  "display": {
+    "icon": {
+      "count": 1,
+      "id": "piranport:ship_girl_contract"
+    },
+    "title": {
+      "translate": "advancements.piranport.ship_girl_story_complete.title"
+    },
+    "description": {
+      "translate": "advancements.piranport.ship_girl_story_complete.description"
+    },
+    "frame": "goal"
+  },
+  "criteria": {
+    "done": {
+      "conditions": {
+        "items": [
+          {
+            "items": "minecraft:bedrock"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "requirements": [
+    [
+      "done"
+    ]
+  ],
+  "sends_telemetry_event": false
+}

@@ -10,6 +10,15 @@
         "processors": "piranport:abyssal_base_processors",
         "projection": "rigid"
       }
+    },
+    {
+      "weight": 1,
+      "element": {
+        "element_type": "minecraft:single_pool_element",
+        "location": "piranport:abyssal_base_2",
+        "processors": "piranport:abyssal_base_processors",
+        "projection": "rigid"
+      }
     }
   ]
 }

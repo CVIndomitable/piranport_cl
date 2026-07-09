@@ -10,6 +10,15 @@
         "processors": "piranport:supply_depot_processors",
         "projection": "rigid"
       }
+    },
+    {
+      "weight": 1,
+      "element": {
+        "element_type": "minecraft:single_pool_element",
+        "location": "piranport:supply_depot_2",
+        "processors": "piranport:supply_depot_processors",
+        "projection": "rigid"
+      }
     }
   ]
 }

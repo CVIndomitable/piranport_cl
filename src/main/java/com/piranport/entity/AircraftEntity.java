@@ -5,6 +5,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import com.piranport.aviation.ReconManager;
 import com.piranport.component.AircraftAttackMode;
 import com.piranport.component.AircraftInfo;
+import com.piranport.item.ExperienceShellItem;
 import com.piranport.network.AswSonarSyncPayload;
 import com.piranport.network.ReconStatePayload;
 import com.piranport.platform.ClientHooks;
@@ -214,8 +215,8 @@ public class AircraftEntity extends Entity {
         AircraftInfo info = aircraftStack.get(ModDataComponents.AIRCRAFT_INFO.get());
         if (info != null) {
             entity.aircraftType = info.aircraftType();
-            entity.panelDamage = info.panelDamage();
-            entity.panelSpeed = info.panelSpeed();
+            entity.panelDamage = ExperienceShellItem.applyAircraftPanelDamageBonus(aircraftStack, info.panelDamage());
+            entity.panelSpeed = ExperienceShellItem.applyAircraftPanelSpeedBonus(aircraftStack, info.panelSpeed());
             entity.ammoCapacity = info.ammoCapacity();
             entity.remainingAmmo = info.ammoCapacity();
             entity.fuelCapacity = info.fuelCapacity();
@@ -277,8 +278,8 @@ public class AircraftEntity extends Entity {
         AircraftInfo info = aircraftStack.get(ModDataComponents.AIRCRAFT_INFO.get());
         if (info != null) {
             entity.aircraftType = info.aircraftType();
-            entity.panelDamage = info.panelDamage();
-            entity.panelSpeed = info.panelSpeed();
+            entity.panelDamage = ExperienceShellItem.applyAircraftPanelDamageBonus(aircraftStack, info.panelDamage());
+            entity.panelSpeed = ExperienceShellItem.applyAircraftPanelSpeedBonus(aircraftStack, info.panelSpeed());
             entity.ammoCapacity = info.ammoCapacity();
             entity.remainingAmmo = info.ammoCapacity();
             entity.fuelCapacity = info.fuelCapacity();

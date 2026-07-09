@@ -8,19 +8,25 @@ import com.piranport.component.FuelData;
 import com.piranport.component.PlaceableInfo;
 import com.piranport.component.WeaponCategory;
 import com.piranport.config.ModProjectilesConfig;
+import com.piranport.entitycore.EntityCoreDefinitions;
 import com.piranport.item.AircraftItem;
 import com.piranport.item.AmmoItem;
+import com.piranport.item.AbyssalReportItem;
 import com.piranport.item.ArmorPlateItem;
 import com.piranport.artillery.ArtilleryItem;
 import com.piranport.artillery.config.ArtilleryCannonData;
 import com.piranport.artillery.config.ArtilleryConfig;
 import com.piranport.artillery.config.MuzzlePos;
 import com.piranport.item.BottleFoodItem;
+import com.piranport.item.EntityCoreItem;
 import com.piranport.item.ModFoodItem;
 import com.piranport.item.ShipCoreItem;
+import com.piranport.item.ShipGirlContractItem;
 import com.piranport.item.SkinCoreItem;
 import com.piranport.item.SonarItem;
+import com.piranport.item.TooltipItem;
 import com.piranport.item.EngineItem;
+import com.piranport.item.ExperienceShellItem;
 import com.piranport.item.TorpedoItem;
 import com.piranport.item.TorpedoLauncherItem;
 import com.piranport.item.TorpedoReloadItem;
@@ -72,6 +78,8 @@ public class ModItems {
             ITEMS.registerSimpleBlockItem(ModBlocks.ABYSSAL_PORTAL_FRAME);
     public static final DeferredItem<BlockItem> ABYSSAL_SPAWNER =
             ITEMS.registerSimpleBlockItem(ModBlocks.ABYSSAL_SPAWNER);
+    public static final DeferredItem<BlockItem> ABYSSAL_SEEP =
+            ITEMS.registerSimpleBlockItem(ModBlocks.ABYSSAL_SEEP);
 
     // ===== Decorative Blocks (from sheropshire) =====
     public static final DeferredItem<BlockItem> CONFIDENTIAL_CARGO =
@@ -142,6 +150,37 @@ public class ModItems {
     public static final DeferredItem<Item> LARGE_AP_SHELL =
             ITEMS.register("large_ap_shell",
                     () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.ap_shell"));
+
+    // ===== Grenade Shells (low direct damage, large blast) =====
+    public static final DeferredItem<Item> SMALL_GRENADE_SHELL =
+            ITEMS.register("small_grenade_shell",
+                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.grenade_shell"));
+    public static final DeferredItem<Item> MEDIUM_GRENADE_SHELL =
+            ITEMS.register("medium_grenade_shell",
+                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.grenade_shell"));
+    public static final DeferredItem<Item> LARGE_GRENADE_SHELL =
+            ITEMS.register("large_grenade_shell",
+                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.grenade_shell"));
+
+    // ===== Special Support Shells =====
+    public static final DeferredItem<Item> SMALL_FLARE_SHELL =
+            ITEMS.register("small_flare_shell",
+                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.flare_shell"));
+    public static final DeferredItem<Item> MEDIUM_FLARE_SHELL =
+            ITEMS.register("medium_flare_shell",
+                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.flare_shell"));
+    public static final DeferredItem<Item> LARGE_FLARE_SHELL =
+            ITEMS.register("large_flare_shell",
+                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.flare_shell"));
+    public static final DeferredItem<Item> SMALL_SMOKE_SHELL =
+            ITEMS.register("small_smoke_shell",
+                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.smoke_shell"));
+    public static final DeferredItem<Item> MEDIUM_SMOKE_SHELL =
+            ITEMS.register("medium_smoke_shell",
+                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.smoke_shell"));
+    public static final DeferredItem<Item> LARGE_SMOKE_SHELL =
+            ITEMS.register("large_smoke_shell",
+                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.smoke_shell"));
 
     // ===== VT Shells (proximity fuze, small caliber only) =====
     public static final DeferredItem<Item> SMALL_VT_SHELL =
@@ -490,6 +529,8 @@ public class ModItems {
     public static final DeferredItem<net.minecraft.world.item.ItemNameBlockItem> GARLIC_SEEDS =
             ITEMS.register("garlic_seeds", () -> new net.minecraft.world.item.ItemNameBlockItem(
                     ModBlocks.GARLIC_CROP.get(), new Item.Properties()));
+    public static final DeferredItem<BlockItem> WILD_GARDEN =
+            ITEMS.registerSimpleBlockItem(ModBlocks.WILD_GARDEN);
 
     // ===== Functional Block Items (Phase 12-14) =====
     public static final DeferredItem<BlockItem> STONE_MILL =
@@ -498,6 +539,8 @@ public class ModItems {
             ITEMS.registerSimpleBlockItem(ModBlocks.CUTTING_BOARD);
     public static final DeferredItem<BlockItem> COOKING_POT =
             ITEMS.registerSimpleBlockItem(ModBlocks.COOKING_POT);
+    public static final DeferredItem<BlockItem> STOVE =
+            ITEMS.registerSimpleBlockItem(ModBlocks.STOVE);
     public static final DeferredItem<BlockItem> RELOAD_FACILITY =
             ITEMS.registerSimpleBlockItem(ModBlocks.RELOAD_FACILITY);
     public static final DeferredItem<BlockItem> SHIP_CORE_MODIFIER =
@@ -509,6 +552,8 @@ public class ModItems {
             ITEMS.registerSimpleBlockItem(ModBlocks.AMMO_WORKBENCH);
     public static final DeferredItem<BlockItem> WEAPON_WORKBENCH =
             ITEMS.registerSimpleBlockItem(ModBlocks.WEAPON_WORKBENCH);
+    public static final DeferredItem<BlockItem> BLUEPRINT_CHEST =
+            ITEMS.registerSimpleBlockItem(ModBlocks.BLUEPRINT_CHEST);
 
     // ===== Blueprints =====
     public static final DeferredItem<Item> MEDIUM_GUN_BLUEPRINT =
@@ -1377,6 +1422,71 @@ public class ModItems {
     public static final DeferredItem<SkinCoreItem> SKIN_CORE_22 =
             ITEMS.register("skin_core_22",
                     () -> new SkinCoreItem(new Item.Properties().stacksTo(1), 22));
+    public static final DeferredItem<SkinCoreItem> SKIN_CORE_23 =
+            ITEMS.register("skin_core_23",
+                    () -> new SkinCoreItem(new Item.Properties().stacksTo(1), 23));
+
+    // ===== Entity Cores =====
+    public static final DeferredItem<EntityCoreItem> ENTITY_CORE_DEEP_OCEAN_SUPPLY =
+            ITEMS.register("entity_core_deep_ocean_supply",
+                    () -> new EntityCoreItem(new Item.Properties().stacksTo(1),
+                            EntityCoreDefinitions.DEEP_OCEAN_SUPPLY));
+    public static final DeferredItem<EntityCoreItem> ENTITY_CORE_DEEP_OCEAN_ARCHIVIST =
+            ITEMS.register("entity_core_deep_ocean_archivist",
+                    () -> new EntityCoreItem(new Item.Properties().stacksTo(1),
+                            EntityCoreDefinitions.DEEP_OCEAN_ARCHIVIST));
+    public static final DeferredItem<EntityCoreItem> ENTITY_CORE_DEEP_OCEAN_ENGINEER =
+            ITEMS.register("entity_core_deep_ocean_engineer",
+                    () -> new EntityCoreItem(new Item.Properties().stacksTo(1),
+                            EntityCoreDefinitions.DEEP_OCEAN_ENGINEER));
+    public static final DeferredItem<EntityCoreItem> ENTITY_CORE_DEEP_OCEAN_NAVIGATOR =
+            ITEMS.register("entity_core_deep_ocean_navigator",
+                    () -> new EntityCoreItem(new Item.Properties().stacksTo(1),
+                            EntityCoreDefinitions.DEEP_OCEAN_NAVIGATOR));
+    public static final DeferredItem<EntityCoreItem> ENTITY_CORE_DEEP_OCEAN_QUARTERMASTER =
+            ITEMS.register("entity_core_deep_ocean_quartermaster",
+                    () -> new EntityCoreItem(new Item.Properties().stacksTo(1),
+                            EntityCoreDefinitions.DEEP_OCEAN_QUARTERMASTER));
+    public static final DeferredItem<EntityCoreItem> ENTITY_CORE_DEEP_OCEAN_DESTROYER =
+            ITEMS.register("entity_core_deep_ocean_destroyer",
+                    () -> new EntityCoreItem(new Item.Properties().stacksTo(1),
+                            EntityCoreDefinitions.DEEP_OCEAN_DESTROYER));
+    public static final DeferredItem<EntityCoreItem> ENTITY_CORE_DEEP_OCEAN_LIGHT_CRUISER =
+            ITEMS.register("entity_core_deep_ocean_light_cruiser",
+                    () -> new EntityCoreItem(new Item.Properties().stacksTo(1),
+                            EntityCoreDefinitions.DEEP_OCEAN_LIGHT_CRUISER));
+    public static final DeferredItem<EntityCoreItem> ENTITY_CORE_DEEP_OCEAN_HEAVY_CRUISER =
+            ITEMS.register("entity_core_deep_ocean_heavy_cruiser",
+                    () -> new EntityCoreItem(new Item.Properties().stacksTo(1),
+                            EntityCoreDefinitions.DEEP_OCEAN_HEAVY_CRUISER));
+    public static final DeferredItem<EntityCoreItem> ENTITY_CORE_DEEP_OCEAN_BATTLE_CRUISER =
+            ITEMS.register("entity_core_deep_ocean_battle_cruiser",
+                    () -> new EntityCoreItem(new Item.Properties().stacksTo(1),
+                            EntityCoreDefinitions.DEEP_OCEAN_BATTLE_CRUISER));
+    public static final DeferredItem<EntityCoreItem> ENTITY_CORE_DEEP_OCEAN_BATTLESHIP =
+            ITEMS.register("entity_core_deep_ocean_battleship",
+                    () -> new EntityCoreItem(new Item.Properties().stacksTo(1),
+                            EntityCoreDefinitions.DEEP_OCEAN_BATTLESHIP));
+    public static final DeferredItem<EntityCoreItem> ENTITY_CORE_DEEP_OCEAN_LIGHT_CARRIER =
+            ITEMS.register("entity_core_deep_ocean_light_carrier",
+                    () -> new EntityCoreItem(new Item.Properties().stacksTo(1),
+                            EntityCoreDefinitions.DEEP_OCEAN_LIGHT_CARRIER));
+    public static final DeferredItem<EntityCoreItem> ENTITY_CORE_DEEP_OCEAN_CARRIER =
+            ITEMS.register("entity_core_deep_ocean_carrier",
+                    () -> new EntityCoreItem(new Item.Properties().stacksTo(1),
+                            EntityCoreDefinitions.DEEP_OCEAN_CARRIER));
+    public static final DeferredItem<EntityCoreItem> ENTITY_CORE_DEEP_OCEAN_SUBMARINE =
+            ITEMS.register("entity_core_deep_ocean_submarine",
+                    () -> new EntityCoreItem(new Item.Properties().stacksTo(1),
+                            EntityCoreDefinitions.DEEP_OCEAN_SUBMARINE));
+    public static final DeferredItem<EntityCoreItem> ENTITY_CORE_DEEP_OCEAN_FLAGSHIP =
+            ITEMS.register("entity_core_deep_ocean_flagship",
+                    () -> new EntityCoreItem(new Item.Properties().stacksTo(1),
+                            EntityCoreDefinitions.DEEP_OCEAN_FLAGSHIP));
+    public static final DeferredItem<EntityCoreItem> ENTITY_CORE_SHIP_GIRL =
+            ITEMS.register("entity_core_ship_girl",
+                    () -> new EntityCoreItem(new Item.Properties().stacksTo(1),
+                            EntityCoreDefinitions.SHIP_GIRL));
 
     // ===== Fuel =====
     public static final DeferredItem<Item> FUEL =
@@ -1441,6 +1551,12 @@ public class ModItems {
             ITEMS.register("richelieu_command_sword",
                     () -> new CommandSwordItem(new Item.Properties().stacksTo(1)));
 
+    // ===== Ship Girl Contract =====
+    public static final DeferredItem<ShipGirlContractItem> SHIP_GIRL_CONTRACT =
+            ITEMS.register("ship_girl_contract",
+                    () -> new ShipGirlContractItem(new Item.Properties().stacksTo(1),
+                            "tooltip.piranport.ship_girl_contract"));
+
     // ===== Taihou's Umbrella (Shield) =====
     public static final DeferredItem<TaihouUmbrellaItem> TAIHOU_UMBRELLA =
             ITEMS.register("taihou_umbrella",
@@ -1498,91 +1614,91 @@ public class ModItems {
                             .attributes(GungnirItem.createAttributes())
                             .stacksTo(1)));
 
-    // ===== v0.0.11 Ruins — Placeholder Items =====
+    // ===== v0.0.11 Ruins — Reward Items =====
     // Abyssal Report (深海作战档案)
-    public static final DeferredItem<com.piranport.item.PlaceholderItem> ABYSSAL_REPORT =
+    public static final DeferredItem<AbyssalReportItem> ABYSSAL_REPORT =
             ITEMS.register("abyssal_report",
-                    () -> new com.piranport.item.PlaceholderItem(new Item.Properties(),
+                    () -> new AbyssalReportItem(new Item.Properties().stacksTo(16),
                             "tooltip.piranport.abyssal_report"));
 
     // Chaos Shards (无序意志碎片 α~ι)
-    public static final DeferredItem<com.piranport.item.PlaceholderItem> CHAOS_SHARD_ALPHA =
+    public static final DeferredItem<TooltipItem> CHAOS_SHARD_ALPHA =
             ITEMS.register("chaos_shard_alpha",
-                    () -> new com.piranport.item.PlaceholderItem(new Item.Properties(),
+                    () -> new TooltipItem(new Item.Properties(),
                             "tooltip.piranport.chaos_shard"));
-    public static final DeferredItem<com.piranport.item.PlaceholderItem> CHAOS_SHARD_BETA =
+    public static final DeferredItem<TooltipItem> CHAOS_SHARD_BETA =
             ITEMS.register("chaos_shard_beta",
-                    () -> new com.piranport.item.PlaceholderItem(new Item.Properties(),
+                    () -> new TooltipItem(new Item.Properties(),
                             "tooltip.piranport.chaos_shard"));
-    public static final DeferredItem<com.piranport.item.PlaceholderItem> CHAOS_SHARD_GAMMA =
+    public static final DeferredItem<TooltipItem> CHAOS_SHARD_GAMMA =
             ITEMS.register("chaos_shard_gamma",
-                    () -> new com.piranport.item.PlaceholderItem(new Item.Properties(),
+                    () -> new TooltipItem(new Item.Properties(),
                             "tooltip.piranport.chaos_shard"));
-    public static final DeferredItem<com.piranport.item.PlaceholderItem> CHAOS_SHARD_DELTA =
+    public static final DeferredItem<TooltipItem> CHAOS_SHARD_DELTA =
             ITEMS.register("chaos_shard_delta",
-                    () -> new com.piranport.item.PlaceholderItem(new Item.Properties(),
+                    () -> new TooltipItem(new Item.Properties(),
                             "tooltip.piranport.chaos_shard"));
-    public static final DeferredItem<com.piranport.item.PlaceholderItem> CHAOS_SHARD_EPSILON =
+    public static final DeferredItem<TooltipItem> CHAOS_SHARD_EPSILON =
             ITEMS.register("chaos_shard_epsilon",
-                    () -> new com.piranport.item.PlaceholderItem(new Item.Properties(),
+                    () -> new TooltipItem(new Item.Properties(),
                             "tooltip.piranport.chaos_shard"));
-    public static final DeferredItem<com.piranport.item.PlaceholderItem> CHAOS_SHARD_ZETA =
+    public static final DeferredItem<TooltipItem> CHAOS_SHARD_ZETA =
             ITEMS.register("chaos_shard_zeta",
-                    () -> new com.piranport.item.PlaceholderItem(new Item.Properties(),
+                    () -> new TooltipItem(new Item.Properties(),
                             "tooltip.piranport.chaos_shard"));
-    public static final DeferredItem<com.piranport.item.PlaceholderItem> CHAOS_SHARD_ETA =
+    public static final DeferredItem<TooltipItem> CHAOS_SHARD_ETA =
             ITEMS.register("chaos_shard_eta",
-                    () -> new com.piranport.item.PlaceholderItem(new Item.Properties(),
+                    () -> new TooltipItem(new Item.Properties(),
                             "tooltip.piranport.chaos_shard"));
-    public static final DeferredItem<com.piranport.item.PlaceholderItem> CHAOS_SHARD_THETA =
+    public static final DeferredItem<TooltipItem> CHAOS_SHARD_THETA =
             ITEMS.register("chaos_shard_theta",
-                    () -> new com.piranport.item.PlaceholderItem(new Item.Properties(),
+                    () -> new TooltipItem(new Item.Properties(),
                             "tooltip.piranport.chaos_shard"));
-    public static final DeferredItem<com.piranport.item.PlaceholderItem> CHAOS_SHARD_IOTA =
+    public static final DeferredItem<TooltipItem> CHAOS_SHARD_IOTA =
             ITEMS.register("chaos_shard_iota",
-                    () -> new com.piranport.item.PlaceholderItem(new Item.Properties(),
+                    () -> new TooltipItem(new Item.Properties(),
                             "tooltip.piranport.chaos_shard"));
 
     // Portal Activation Core (传送门激活核心)
-    public static final DeferredItem<com.piranport.item.PlaceholderItem> PORTAL_ACTIVATION_CORE =
+    public static final DeferredItem<TooltipItem> PORTAL_ACTIVATION_CORE =
             ITEMS.register("portal_activation_core",
-                    () -> new com.piranport.item.PlaceholderItem(new Item.Properties(),
+                    () -> new TooltipItem(new Item.Properties(),
                             "tooltip.piranport.portal_activation_core"));
 
     // National Flags (各国国旗)
-    public static final DeferredItem<com.piranport.item.PlaceholderItem> FLAG_J =
+    public static final DeferredItem<TooltipItem> FLAG_J =
             ITEMS.register("flag_j",
-                    () -> new com.piranport.item.PlaceholderItem(new Item.Properties(),
+                    () -> new TooltipItem(new Item.Properties(),
                             "tooltip.piranport.flag"));
-    public static final DeferredItem<com.piranport.item.PlaceholderItem> FLAG_E =
+    public static final DeferredItem<TooltipItem> FLAG_E =
             ITEMS.register("flag_e",
-                    () -> new com.piranport.item.PlaceholderItem(new Item.Properties(),
+                    () -> new TooltipItem(new Item.Properties(),
                             "tooltip.piranport.flag"));
-    public static final DeferredItem<com.piranport.item.PlaceholderItem> FLAG_U =
+    public static final DeferredItem<TooltipItem> FLAG_U =
             ITEMS.register("flag_u",
-                    () -> new com.piranport.item.PlaceholderItem(new Item.Properties(),
+                    () -> new TooltipItem(new Item.Properties(),
                             "tooltip.piranport.flag"));
-    public static final DeferredItem<com.piranport.item.PlaceholderItem> FLAG_G =
+    public static final DeferredItem<TooltipItem> FLAG_G =
             ITEMS.register("flag_g",
-                    () -> new com.piranport.item.PlaceholderItem(new Item.Properties(),
+                    () -> new TooltipItem(new Item.Properties(),
                             "tooltip.piranport.flag"));
-    public static final DeferredItem<com.piranport.item.PlaceholderItem> FLAG_F =
+    public static final DeferredItem<TooltipItem> FLAG_F =
             ITEMS.register("flag_f",
-                    () -> new com.piranport.item.PlaceholderItem(new Item.Properties(),
+                    () -> new TooltipItem(new Item.Properties(),
                             "tooltip.piranport.flag"));
-    public static final DeferredItem<com.piranport.item.PlaceholderItem> FLAG_I =
+    public static final DeferredItem<TooltipItem> FLAG_I =
             ITEMS.register("flag_i",
-                    () -> new com.piranport.item.PlaceholderItem(new Item.Properties(),
+                    () -> new TooltipItem(new Item.Properties(),
                             "tooltip.piranport.flag"));
-    public static final DeferredItem<com.piranport.item.PlaceholderItem> FLAG_C =
+    public static final DeferredItem<TooltipItem> FLAG_C =
             ITEMS.register("flag_c",
-                    () -> new com.piranport.item.PlaceholderItem(new Item.Properties(),
+                    () -> new TooltipItem(new Item.Properties(),
                             "tooltip.piranport.flag"));
 
     // Experience Shell (经验炮弹)
-    public static final DeferredItem<com.piranport.item.PlaceholderItem> EXP_SHELL =
+    public static final DeferredItem<ExperienceShellItem> EXP_SHELL =
             ITEMS.register("exp_shell",
-                    () -> new com.piranport.item.PlaceholderItem(new Item.Properties(),
+                    () -> new ExperienceShellItem(new Item.Properties(),
                             "tooltip.piranport.exp_shell"));
 
     // ===== Deep Ocean Spawn Eggs (深海生成蛋) =====
@@ -1590,6 +1706,22 @@ public class ModItems {
             ITEMS.register("deep_ocean_supply_spawn_egg",
                     () -> new DeferredSpawnEggItem(ModEntityTypes.DEEP_OCEAN_SUPPLY,
                             0x2D2D3D, 0x8888AA, new Item.Properties()));
+    public static final DeferredItem<SpawnEggItem> DEEP_OCEAN_ARCHIVIST_SPAWN_EGG =
+            ITEMS.register("deep_ocean_archivist_spawn_egg",
+                    () -> new DeferredSpawnEggItem(ModEntityTypes.DEEP_OCEAN_ARCHIVIST,
+                            0x1C2638, 0xB8A6FF, new Item.Properties()));
+    public static final DeferredItem<SpawnEggItem> DEEP_OCEAN_ENGINEER_SPAWN_EGG =
+            ITEMS.register("deep_ocean_engineer_spawn_egg",
+                    () -> new DeferredSpawnEggItem(ModEntityTypes.DEEP_OCEAN_ENGINEER,
+                            0x202A2D, 0x66D6C8, new Item.Properties()));
+    public static final DeferredItem<SpawnEggItem> DEEP_OCEAN_NAVIGATOR_SPAWN_EGG =
+            ITEMS.register("deep_ocean_navigator_spawn_egg",
+                    () -> new DeferredSpawnEggItem(ModEntityTypes.DEEP_OCEAN_NAVIGATOR,
+                            0x17223D, 0x77B7FF, new Item.Properties()));
+    public static final DeferredItem<SpawnEggItem> DEEP_OCEAN_QUARTERMASTER_SPAWN_EGG =
+            ITEMS.register("deep_ocean_quartermaster_spawn_egg",
+                    () -> new DeferredSpawnEggItem(ModEntityTypes.DEEP_OCEAN_QUARTERMASTER,
+                            0x242735, 0xE3B85A, new Item.Properties()));
     public static final DeferredItem<SpawnEggItem> DEEP_OCEAN_DESTROYER_SPAWN_EGG =
             ITEMS.register("deep_ocean_destroyer_spawn_egg",
                     () -> new DeferredSpawnEggItem(ModEntityTypes.DEEP_OCEAN_DESTROYER,
@@ -1622,6 +1754,10 @@ public class ModItems {
             ITEMS.register("deep_ocean_submarine_spawn_egg",
                     () -> new DeferredSpawnEggItem(ModEntityTypes.DEEP_OCEAN_SUBMARINE,
                             0x2D2D3D, 0x334466, new Item.Properties()));
+    public static final DeferredItem<SpawnEggItem> DEEP_OCEAN_FLAGSHIP_SPAWN_EGG =
+            ITEMS.register("deep_ocean_flagship_spawn_egg",
+                    () -> new DeferredSpawnEggItem(ModEntityTypes.DEEP_OCEAN_FLAGSHIP,
+                            0x161624, 0xD9D1FF, new Item.Properties()));
     public static final DeferredItem<SpawnEggItem> SHIP_GIRL_SPAWN_EGG =
             ITEMS.register("ship_girl_spawn_egg",
                     () -> new DeferredSpawnEggItem(ModEntityTypes.SHIP_GIRL,
@@ -1660,6 +1796,62 @@ public class ModItems {
             ITEMS.registerSimpleBlockItem(ModBlocks.PEACH_LEAVES);
     public static final DeferredItem<BlockItem> PEACH_SAPLING =
             ITEMS.registerSimpleBlockItem(ModBlocks.PEACH_SAPLING);
+
+    public static final DeferredItem<BlockItem> MAIDENHAIR_LOG =
+            ITEMS.registerSimpleBlockItem(ModBlocks.MAIDENHAIR_LOG);
+    public static final DeferredItem<BlockItem> MAIDENHAIR_LEAVES =
+            ITEMS.registerSimpleBlockItem(ModBlocks.MAIDENHAIR_LEAVES);
+    public static final DeferredItem<BlockItem> MAIDENHAIR_SAPLING =
+            ITEMS.registerSimpleBlockItem(ModBlocks.MAIDENHAIR_SAPLING);
+
+    public static final DeferredItem<BlockItem> SAGO_PALM_LOG =
+            ITEMS.registerSimpleBlockItem(ModBlocks.SAGO_PALM_LOG);
+    public static final DeferredItem<BlockItem> SAGO_PALM_LEAVES =
+            ITEMS.registerSimpleBlockItem(ModBlocks.SAGO_PALM_LEAVES);
+    public static final DeferredItem<BlockItem> SAGO_PALM_SAPLING =
+            ITEMS.registerSimpleBlockItem(ModBlocks.SAGO_PALM_SAPLING);
+
+    public static final DeferredItem<BlockItem> GARDENIA_LOG =
+            ITEMS.registerSimpleBlockItem(ModBlocks.GARDENIA_LOG);
+    public static final DeferredItem<BlockItem> GARDENIA_LEAVES =
+            ITEMS.registerSimpleBlockItem(ModBlocks.GARDENIA_LEAVES);
+    public static final DeferredItem<BlockItem> GARDENIA_SAPLING =
+            ITEMS.registerSimpleBlockItem(ModBlocks.GARDENIA_SAPLING);
+
+    public static final DeferredItem<BlockItem> CHINESE_PLUM_LOG =
+            ITEMS.registerSimpleBlockItem(ModBlocks.CHINESE_PLUM_LOG);
+    public static final DeferredItem<BlockItem> CHINESE_PLUM_LEAVES =
+            ITEMS.registerSimpleBlockItem(ModBlocks.CHINESE_PLUM_LEAVES);
+    public static final DeferredItem<BlockItem> CHINESE_PLUM_SAPLING =
+            ITEMS.registerSimpleBlockItem(ModBlocks.CHINESE_PLUM_SAPLING);
+
+    public static final DeferredItem<BlockItem> MAPPLE_LOG =
+            ITEMS.registerSimpleBlockItem(ModBlocks.MAPPLE_LOG);
+    public static final DeferredItem<BlockItem> MAPPLE_LEAVES =
+            ITEMS.registerSimpleBlockItem(ModBlocks.MAPPLE_LEAVES);
+    public static final DeferredItem<BlockItem> MAPPLE_SAPLING =
+            ITEMS.registerSimpleBlockItem(ModBlocks.MAPPLE_SAPLING);
+
+    public static final DeferredItem<BlockItem> CHORUS_TREE_LOG =
+            ITEMS.registerSimpleBlockItem(ModBlocks.CHORUS_TREE_LOG);
+    public static final DeferredItem<BlockItem> CHORUS_TREE_LEAVES =
+            ITEMS.registerSimpleBlockItem(ModBlocks.CHORUS_TREE_LEAVES);
+    public static final DeferredItem<BlockItem> CHORUS_TREE_SAPLING =
+            ITEMS.registerSimpleBlockItem(ModBlocks.CHORUS_TREE_SAPLING);
+
+    public static final DeferredItem<BlockItem> SLIME_TREE_LOG =
+            ITEMS.registerSimpleBlockItem(ModBlocks.SLIME_TREE_LOG);
+    public static final DeferredItem<BlockItem> SLIME_TREE_LEAVES =
+            ITEMS.registerSimpleBlockItem(ModBlocks.SLIME_TREE_LEAVES);
+    public static final DeferredItem<BlockItem> SLIME_TREE_SAPLING =
+            ITEMS.registerSimpleBlockItem(ModBlocks.SLIME_TREE_SAPLING);
+
+    public static final DeferredItem<BlockItem> LAVA_SLIME_TREE_LOG =
+            ITEMS.registerSimpleBlockItem(ModBlocks.LAVA_SLIME_TREE_LOG);
+    public static final DeferredItem<BlockItem> LAVA_SLIME_TREE_LEAVES =
+            ITEMS.registerSimpleBlockItem(ModBlocks.LAVA_SLIME_TREE_LEAVES);
+    public static final DeferredItem<BlockItem> LAVA_SLIME_TREE_SAPLING =
+            ITEMS.registerSimpleBlockItem(ModBlocks.LAVA_SLIME_TREE_SAPLING);
 
     // ===== Phase 28: New Ingredients/Condiments =====
     public static final DeferredItem<Item> MILK_ICE_CREAM      = ITEMS.registerSimpleItem("milk_ice_cream");

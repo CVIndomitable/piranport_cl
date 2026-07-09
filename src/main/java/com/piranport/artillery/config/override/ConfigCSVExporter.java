@@ -28,8 +28,9 @@ public class ConfigCSVExporter {
     private static final String[] CANNON_HEADERS = {
             "cannon_name", "display_name", "caliber", "barrels", "damage", "reloadTime",
             "durability", "scopeZoom", "initialSpeed", "dragCoeff", "gravity",
-            "explosionPower", "dispersion",
-            "fireCooldown", "salvoCount", "salvoInterval"
+            "explosionPower", "dispersion", "projectileWeight",
+            "fireCooldown", "salvoCount", "salvoInterval",
+            "verticalSpread", "horizontalSpread", "maxElevation", "minElevation", "turretSpeed"
     };
 
     private static final String[] PROJECTILE_HEADERS = {
@@ -114,7 +115,7 @@ public class ConfigCSVExporter {
      * 格式化火炮数据行
      */
     private static String formatCannonRow(String name, String displayName, ArtilleryCannonData data) {
-        return String.format("%s,%s,%d,%d,%.1f,%d,%d,%.1f,%.2f,%.4f,%.1f,%.1f,%.2f,%d,%d,%.1f",
+        return String.format("%s,%s,%d,%d,%.1f,%d,%d,%.1f,%.2f,%.4f,%.1f,%.1f,%.2f,%.1f,%d,%d,%.1f,%.2f,%.2f,%.1f,%.1f,%.1f",
                 name,
                 escapeCSV(displayName),
                 data.caliber(),
@@ -128,9 +129,15 @@ public class ConfigCSVExporter {
                 data.gravity(),
                 data.explosionPower(),
                 data.dispersion(),
+                data.projectileWeight(),
                 data.fireCooldown(),
                 data.salvoCount(),
-                data.salvoInterval()
+                data.salvoInterval(),
+                data.verticalSpread(),
+                data.horizontalSpread(),
+                data.maxElevation(),
+                data.minElevation(),
+                data.turretSpeed()
         );
     }
 
@@ -172,7 +179,7 @@ public class ConfigCSVExporter {
 
     /**
      * 获取显示名称（从翻译键）
-     * 注意：服务端无法直接访问翻译，这里返回翻译键作为占位
+     * 注意：服务端无法直接访问翻译，这里使用内置映射并在未知键时回退到翻译键
      */
     private static String getDisplayName(String translationKey) {
         // 服务端环境下，Component.translatable 无法获取实际翻译
@@ -185,6 +192,7 @@ public class ConfigCSVExporter {
             case "item.piranport.french_quad_380mm_gun" -> "法国四联380毫米炮";
             case "item.piranport.seven_barrel_gun" -> "七联装主炮群";
             case "item.piranport.salvo_test_gun" -> "齐射测试";
+            case "item.piranport.fourteen_barrel_gun" -> "一星期主炮群";
             case "config.piranport.he_armor_penetration" -> "HE弹护甲穿透";
             case "config.piranport.he_damage_falloff" -> "HE弹距离衰减";
             case "config.piranport.ap_damage_multiplier" -> "AP弹伤害倍率";

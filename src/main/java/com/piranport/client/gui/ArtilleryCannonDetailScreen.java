@@ -2,6 +2,7 @@ package com.piranport.client.gui;
 
 import com.piranport.artillery.config.ArtilleryCannonData;
 import com.piranport.artillery.config.override.ClientConfigCache;
+import com.piranport.network.ResetSingleConfigPayload;
 import com.piranport.network.UpdateConfigOverridePayload;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -20,7 +21,7 @@ import java.util.Optional;
 /**
  * 火炮详情编辑界面
  *
- * <p>显示13个可配置字段，支持输入验证和保存到服务端。
+ * <p>显示火炮可配置字段，支持输入验证和保存到服务端。
  * <p>从火炮配置工具主界面通过"火炮详情"按钮打开。
  */
 @OnlyIn(Dist.CLIENT)
@@ -31,7 +32,7 @@ public class ArtilleryCannonDetailScreen extends Screen {
     private final ArtilleryCannonData originalData;
 
     // EditBox 引用数组（索引对应 FIELDS 数组）
-    private final EditBox[] editBoxRefs = new EditBox[18];
+    private final EditBox[] editBoxRefs = new EditBox[32];
 
     // 字段值缓存（用于滚动时保留用户输入）
     private final Map<String, String> fieldValueCache = new HashMap<>();
@@ -68,12 +69,20 @@ public class ArtilleryCannonDetailScreen extends Screen {
     private record FieldDef(String transKey, String fieldName, boolean isFloat) {}
 
     private static final FieldDef[] FIELDS = {
+            new FieldDef("caliber", "caliber", false),
             new FieldDef("damage", "damage", true),
             new FieldDef("explosion_power", "explosionPower", true),
             new FieldDef("dispersion", "dispersion", true),
+            new FieldDef("vertical_spread", "verticalSpread", true),
+            new FieldDef("horizontal_spread", "horizontalSpread", true),
             new FieldDef("drag_coeff", "dragCoeff", true),
             new FieldDef("gravity", "gravity", true),
             new FieldDef("initial_speed", "initialSpeed", true),
+            new FieldDef("projectile_weight", "projectileWeight", true),
+            new FieldDef("max_elevation", "maxElevation", true),
+            new FieldDef("min_elevation", "minElevation", true),
+            new FieldDef("turret_speed", "turretSpeed", true),
+            new FieldDef("scope_zoom", "scopeZoom", true),
             new FieldDef("reload_time", "reloadTime", false),
             new FieldDef("fire_cooldown", "fireCooldown", false),
             new FieldDef("salvo_count", "salvoCount", false),
@@ -129,13 +138,19 @@ public class ArtilleryCannonDetailScreen extends Screen {
         this.addRenderableWidget(Button.builder(
                 Component.translatable("gui.piranport.config_tool.save"),
                 button -> onSave()
-        ).bounds(x + 20, y + buttonYOffset, 80, 20).build());
+        ).bounds(x + 10, y + buttonYOffset, 65, 20).build());
+
+        // 重置当前火炮按钮
+        this.addRenderableWidget(Button.builder(
+                Component.translatable("gui.piranport.config_tool.reset_item"),
+                button -> onResetThisCannon()
+        ).bounds(x + 90, y + buttonYOffset, 70, 20).build());
 
         // 取消按钮
         this.addRenderableWidget(Button.builder(
                 Component.translatable("gui.piranport.config_tool.cancel"),
                 button -> onCancel()
-        ).bounds(x + 130, y + buttonYOffset, 80, 20).build());
+        ).bounds(x + 175, y + buttonYOffset, 65, 20).build());
 
         // 动态创建可见的编辑框
         rebuildEditBoxes();
@@ -202,9 +217,16 @@ public class ArtilleryCannonDetailScreen extends Screen {
             case "damage" -> originalData.damage();
             case "explosionPower" -> originalData.explosionPower();
             case "dispersion" -> originalData.dispersion();
+            case "verticalSpread" -> originalData.verticalSpread();
+            case "horizontalSpread" -> originalData.horizontalSpread();
             case "dragCoeff" -> originalData.dragCoeff();
             case "gravity" -> originalData.gravity();
             case "initialSpeed" -> originalData.initialSpeed();
+            case "projectileWeight" -> originalData.projectileWeight();
+            case "maxElevation" -> originalData.maxElevation();
+            case "minElevation" -> originalData.minElevation();
+            case "turretSpeed" -> originalData.turretSpeed();
+            case "scopeZoom" -> originalData.scopeZoom();
             case "salvoInterval" -> originalData.salvoInterval();
             default -> 0f;
         };
@@ -215,6 +237,7 @@ public class ArtilleryCannonDetailScreen extends Screen {
      */
     private int getOriginalIntValue(String fieldName) {
         return switch (fieldName) {
+            case "caliber" -> originalData.caliber();
             case "reloadTime" -> originalData.reloadTime();
             case "fireCooldown" -> originalData.fireCooldown();
             case "salvoCount" -> originalData.salvoCount();
@@ -422,10 +445,12 @@ public class ArtilleryCannonDetailScreen extends Screen {
             return;
         }
 
-        // 发送18个字段的更新到服务端（从缓存读取）
+        // 发送所有字段的更新到服务端（从缓存读取）
         for (FieldDef field : FIELDS) {
             String value = fieldValueCache.get(field.fieldName());
             if (value != null && !value.isEmpty()) {
+                value = normalizeFieldValue(field.fieldName(), value);
+                fieldValueCache.put(field.fieldName(), value);
                 sendFieldUpdate(field.fieldName(), value);
             }
         }
@@ -453,6 +478,44 @@ public class ArtilleryCannonDetailScreen extends Screen {
     }
 
     /**
+     * Reset this cannon's overrides and refresh visible fields to datapack defaults.
+     */
+    private void onResetThisCannon() {
+        PacketDistributor.sendToServer(new ResetSingleConfigPayload("cannon", cannonName));
+        ClientConfigCache.removeCannonOverrides(cannonName);
+        fieldValueCache.clear();
+        java.util.Arrays.fill(editBoxRefs, null);
+        rebuildEditBoxes();
+
+        this.minecraft.player.sendSystemMessage(
+                Component.translatable("message.piranport.config_item_reset", cannonName)
+                        .withStyle(net.minecraft.ChatFormatting.GREEN)
+        );
+    }
+
+    /**
+     * 将策划输入的边界值转为实际可用值。
+     */
+    private String normalizeFieldValue(String fieldName, String value) {
+        try {
+            float parsedValue = Float.parseFloat(value);
+            if ("dispersion".equals(fieldName) && parsedValue <= 0.01f) {
+                return "0.01";
+            }
+            if (("verticalSpread".equals(fieldName) || "horizontalSpread".equals(fieldName))
+                    && parsedValue <= 0.01f) {
+                return "0.01";
+            }
+            if ("dragCoeff".equals(fieldName) && parsedValue <= 0.0001f) {
+                return "0.0001";
+            }
+        } catch (NumberFormatException ignored) {
+            // validateAllInputsFromCache() 已经拦截格式错误，这里只保留原值。
+        }
+        return value;
+    }
+
+    /**
      * 保存后直接更新客户端缓存，避免等待服务端同步
      */
     private void updateClientCacheAfterSave() {
@@ -474,7 +537,6 @@ public class ArtilleryCannonDetailScreen extends Screen {
      */
     private boolean validateAllInputsFromCache() {
         try {
-            // 验证所有18个字段
             for (FieldDef field : FIELDS) {
                 String value = fieldValueCache.get(field.fieldName());
                 if (value == null || value.isEmpty()) {
@@ -509,9 +571,14 @@ public class ArtilleryCannonDetailScreen extends Screen {
             case "damage" -> { min = 0.1f; max = 1000f; }
             case "explosionPower" -> { min = 0f; max = 20f; }
             case "dispersion" -> { min = 0f; max = 10f; }
+            case "verticalSpread", "horizontalSpread" -> { min = 0f; max = 30f; }
             case "dragCoeff" -> { min = 0f; max = 50f; }
             case "gravity" -> { min = 0.1f; max = 100f; }
             case "initialSpeed" -> { min = 0.1f; max = 50f; }
+            case "projectileWeight" -> { min = 1f; max = 100000f; }
+            case "maxElevation", "minElevation" -> { min = -89f; max = 89f; }
+            case "turretSpeed" -> { min = 0.1f; max = 180f; }
+            case "scopeZoom" -> { min = 1.0f; max = 20.0f; }
             case "salvoInterval" -> { min = 0f; max = 100f; }
         }
 
@@ -526,6 +593,7 @@ public class ArtilleryCannonDetailScreen extends Screen {
 
         // 根据字段设置范围
         switch (fieldName) {
+            case "caliber" -> { min = 1; max = 1000; }
             case "reloadTime" -> { min = 1; max = 6000; }
             case "fireCooldown" -> { min = 0; max = 6000; }
             case "salvoCount" -> { min = 1; max = 20; }

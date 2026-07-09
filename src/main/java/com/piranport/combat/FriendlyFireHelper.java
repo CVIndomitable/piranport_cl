@@ -20,11 +20,12 @@ import java.lang.invoke.MethodType;
  *   1. 深海实体 → 深海实体    → 拦截（禁止自相残杀）
  *   2. 女仆 → 自身             → 拦截（禁止自伤）
  *   3. 女仆 → 同主人女仆        → 拦截（禁止友伤）
- *   4. 玩家 → 玩家（友伤关闭）   → 拦截（配置开关）
- *   5. 玩家 → 自己的飞机        → 始终拦截
- *   6. 玩家 → 他人飞机（友伤关闭）→ 拦截
- *   7. 自主飞机 → 自主飞机      → 拦截（禁止AI飞机互相残杀）
- *   8. 以上都不匹配             → 放行（允许命中）
+ *   4. 玩家 → 自己的女仆        → 拦截（禁止友伤）
+ *   5. 玩家 → 玩家（友伤关闭）   → 拦截（配置开关）
+ *   6. 玩家 → 自己的飞机        → 始终拦截
+ *   7. 玩家 → 他人飞机（友伤关闭）→ 拦截
+ *   8. 自主飞机 → 自主飞机      → 拦截（禁止AI飞机互相残杀）
+ *   9. 以上都不匹配             → 放行（允许命中）
  */
 public final class FriendlyFireHelper {
 
@@ -112,21 +113,37 @@ public final class FriendlyFireHelper {
      */
     private static boolean checkMaidFriendlyFire(Entity target, Entity owner) {
         if (!maidReflectionReady) return false;
-        if (!maidClass.isInstance(target) || !maidClass.isInstance(owner)) {
+        if (!maidClass.isInstance(target)) {
             return false;
         }
         if (target == owner) {
             return true;
         }
-        try {
-            LivingEntity targetOwner = (LivingEntity) getOwnerHandle.invoke(target);
-            LivingEntity ownerOwner = (LivingEntity) getOwnerHandle.invoke(owner);
+
+        LivingEntity targetOwner = getMaidOwner(target);
+        if (targetOwner == null) {
+            return false;
+        }
+
+        if (owner instanceof Player player) {
+            return targetOwner.getUUID().equals(player.getUUID());
+        }
+
+        if (maidClass.isInstance(owner)) {
+            LivingEntity ownerOwner = getMaidOwner(owner);
             if (targetOwner != null && ownerOwner != null && targetOwner.getUUID().equals(ownerOwner.getUUID())) {
                 return true;
             }
-        } catch (Throwable e) {
-            // 反射失败时静默忽略
         }
         return false;
+    }
+
+    private static LivingEntity getMaidOwner(Entity maid) {
+        try {
+            return (LivingEntity) getOwnerHandle.invoke(maid);
+        } catch (Throwable e) {
+            // 反射失败时静默忽略
+            return null;
+        }
     }
 }

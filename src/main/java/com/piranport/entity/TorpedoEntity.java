@@ -175,7 +175,7 @@ public class TorpedoEntity extends ThrowableItemProjectile {
 
     @Override
     public boolean isCurrentlyGlowing() {
-        if (level().isClientSide() && com.piranport.ClientTickHandler.isHighlightEnabled()) {
+        if (level().isClientSide() && com.piranport.platform.ClientHooks.isHighlightEnabled()) {
             return true;
         }
         return super.isCurrentlyGlowing();

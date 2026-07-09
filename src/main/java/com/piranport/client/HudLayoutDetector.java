@@ -1,5 +1,6 @@
 package com.piranport.client;
 
+import com.piranport.config.HudPosition;
 import net.minecraft.client.Minecraft;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;

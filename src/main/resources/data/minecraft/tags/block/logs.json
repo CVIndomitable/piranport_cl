@@ -1,0 +1,14 @@
+{
+  "replace": false,
+  "values": [
+    "piranport:peach_log",
+    "piranport:maidenhair_log",
+    "piranport:sago_palm_log",
+    "piranport:gardenia_log",
+    "piranport:chinese_plum_log",
+    "piranport:mapple_log",
+    "piranport:chorus_tree_log",
+    "piranport:slime_tree_log",
+    "piranport:lava_slime_tree_log"
+  ]
+}

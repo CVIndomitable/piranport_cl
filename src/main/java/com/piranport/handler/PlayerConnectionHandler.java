@@ -12,12 +12,12 @@ import com.piranport.config.ModCommonConfig;
 import com.piranport.dungeon.instance.DungeonInstanceManager;
 import com.piranport.dungeon.lobby.DungeonLobbyManager;
 import com.piranport.dungeon.network.DungeonRegistrySyncPayload;
+import com.piranport.entitycore.EntityCoreState;
 import com.piranport.network.RecallAllAircraftPayload;
 import com.piranport.registry.ModItems;
 import com.piranport.skin.SkinManager;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -81,6 +81,7 @@ public class PlayerConnectionHandler {
     public static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
         if (!(event.getEntity() instanceof ServerPlayer joiner)) return;
         SkinManager.syncAllSkinsToPlayer(joiner);
+        EntityCoreState.syncAllEntityCoresToPlayer(joiner);
         PacketDistributor.sendToPlayer(joiner, DungeonRegistrySyncPayload.fromRegistry());
 
         var slowness = joiner.getEffect(MobEffects.MOVEMENT_SLOWDOWN);

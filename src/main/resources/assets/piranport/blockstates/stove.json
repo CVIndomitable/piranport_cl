@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "piranport:block/stove" },
+    "facing=south": { "model": "piranport:block/stove", "y": 180 },
+    "facing=east":  { "model": "piranport:block/stove", "y": 90 },
+    "facing=west":  { "model": "piranport:block/stove", "y": 270 }
+  }
+}

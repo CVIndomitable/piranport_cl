@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "axis=x": {
+      "model": "piranport:block/maidenhair_log_horizontal",
+      "x": 90,
+      "y": 90
+    },
+    "axis=y": {
+      "model": "piranport:block/maidenhair_log"
+    },
+    "axis=z": {
+      "model": "piranport:block/maidenhair_log_horizontal",
+      "x": 90
+    }
+  }
+}

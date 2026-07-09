@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "season=spring": {
+      "model": "piranport:block/lava_slime_tree_leaves_spring"
+    },
+    "season=summer": {
+      "model": "piranport:block/lava_slime_tree_leaves_summer"
+    },
+    "season=autumn": {
+      "model": "piranport:block/lava_slime_tree_leaves_autumn"
+    },
+    "season=winter": {
+      "model": "piranport:block/lava_slime_tree_leaves_winter"
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "replace": false,
+  "values": [
+    "piranport:peach_leaves",
+    "piranport:maidenhair_leaves",
+    "piranport:sago_palm_leaves",
+    "piranport:gardenia_leaves",
+    "piranport:chinese_plum_leaves",
+    "piranport:mapple_leaves",
+    "piranport:chorus_tree_leaves",
+    "piranport:slime_tree_leaves",
+    "piranport:lava_slime_tree_leaves"
+  ]
+}

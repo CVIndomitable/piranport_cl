@@ -4,13 +4,11 @@ package com.piranport.worldgen;
  * Registry helper for structure-related worldgen.
  * <p>
  * Structure definitions are data-driven (JSON files under worldgen/structure/).
- * NBT templates (portal_ruin_1.nbt, supply_depot_1.nbt, outpost_1.nbt, abyssal_base_1.nbt)
- * must be created manually using structure blocks in-game, then placed in
- * {@code data/piranport/structure/}.
- * <p>
- * Until proper NBT templates are created, the structures will fail to generate
- * silently (template pool references non-existent .nbt files).
- * Use the debug command {@code /ppd spawn_ruin <type>} to test with programmatic generation.
+ * NBT templates are included under {@code data/piranport/structure/}.
+ * They can still be replaced by final structure-block exports when art/design
+ * supplies hand-authored versions.
+ * Use the debug command {@code /ppd spawn_ruin <type>} to place the same NBT
+ * templates used by world generation for direct validation.
  */
 public final class ModStructures {
 

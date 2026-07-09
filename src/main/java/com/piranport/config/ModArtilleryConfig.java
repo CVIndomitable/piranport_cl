@@ -28,7 +28,7 @@ public class ModArtilleryConfig {
     public static final ModConfigSpec.DoubleValue BALLISTIC_NO_SOLUTION_THRESHOLD;
 
     // ==================== Performance (性能) ====================
-    /** 是否启用异步弹道计算（占位，暂未实现）。 */
+    /** 预留的异步弹道计算开关；当前解算器保持同步执行以匹配开火与瞄准路径。 */
     public static final ModConfigSpec.BooleanValue PERF_ASYNC_BALLISTICS;
     /** 是否启用弹道解算缓存。关闭后每次解算都重新计算。 */
     public static final ModConfigSpec.BooleanValue PERF_CACHE_SOLUTIONS;
@@ -93,10 +93,12 @@ public class ModArtilleryConfig {
 
         PERF_ASYNC_BALLISTICS = BUILDER
             .comment(
-                "Enable async ballistic computation (异步弹道计算，暂未实现).",
-                "Placeholder for future async implementation.",
-                "Default: true (占位，默认开启)")
-            .define("async_ballistics", true);
+                "[RESERVED] Async ballistic computation switch.",
+                "Current solver runs synchronously so aiming and firing share the same deterministic result.",
+                "This key is kept for config compatibility and is not read by gameplay code.",
+                "当前版本保持同步弹道解算；该键仅为配置兼容保留，不影响玩法。",
+                "Default: false")
+            .define("async_ballistics", false);
 
         PERF_CACHE_SOLUTIONS = BUILDER
             .comment(

@@ -172,6 +172,6 @@ public class ShipCoreModifierMenu extends AbstractContainerMenu {
             BlockPos pos = blockEntity.getBlockPos();
             return player.distanceToSqr(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5) <= 64.0;
         }
-        return true; // 客户端占位菜单只负责渲染与数据同步
+        return true; // 客户端菜单没有方块实体位置约束
     }
 }

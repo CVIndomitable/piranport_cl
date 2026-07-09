@@ -1,0 +1,29 @@
+{
+  "type": "piranport:abyssal_world",
+  "generator": {
+    "type": "minecraft:flat",
+    "settings": {
+      "biome": "piranport:abyssal_ocean",
+      "lakes": false,
+      "features": true,
+      "layers": [
+        {
+          "block": "minecraft:bedrock",
+          "height": 1
+        },
+        {
+          "block": "minecraft:deepslate",
+          "height": 48
+        },
+        {
+          "block": "minecraft:gravel",
+          "height": 3
+        },
+        {
+          "block": "minecraft:water",
+          "height": 96
+        }
+      ]
+    }
+  }
+}

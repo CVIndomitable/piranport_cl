@@ -1,0 +1,34 @@
+{
+  "parent": "piranport:story/ship_girl_story_flagship_debrief",
+  "display": {
+    "icon": {
+      "count": 1,
+      "id": "piranport:chaos_shard_iota"
+    },
+    "title": {
+      "translate": "advancements.piranport.ship_girl_story_shard_stabilization.title"
+    },
+    "description": {
+      "translate": "advancements.piranport.ship_girl_story_shard_stabilization.description"
+    },
+    "frame": "task"
+  },
+  "criteria": {
+    "done": {
+      "conditions": {
+        "items": [
+          {
+            "items": "minecraft:bedrock"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "requirements": [
+    [
+      "done"
+    ]
+  ],
+  "sends_telemetry_event": false
+}

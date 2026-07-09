@@ -12,13 +12,15 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
-/** C2S：玩家从瞄准镜模式开火。mode 区分快速点击、弹道解算、最大射程三种模式。 */
+/** C2S：玩家从瞄准镜/火炮输入开火。mode 区分快速点击、弹道解算、最大射程和直射目标。 */
 public record ScopeFirePayload(FireMode mode, double targetX, double targetY, double targetZ) implements CustomPacketPayload {
+    private static final double MIN_AIMED_FIRE_RANGE = 500.0;
 
     public enum FireMode {
         QUICK_FIRE,   // 正常方向开火（使用玩家视线）
         AIMED,        // 弹道解算瞄准
-        MAX_RANGE     // 最大射程仰角开火
+        MAX_RANGE,    // 最大射程仰角开火
+        DIRECT_FIRE   // 直射目标点（用于快速点击的炮塔转速滞后）
     }
 
     public static final Type<ScopeFirePayload> TYPE =
@@ -52,6 +54,11 @@ public record ScopeFirePayload(FireMode mode, double targetX, double targetY, do
         return new ScopeFirePayload(FireMode.QUICK_FIRE, 0, 0, 0);
     }
 
+    /** 快捷工厂：快速点击直射目标。 */
+    public static ScopeFirePayload directFire(double x, double y, double z) {
+        return new ScopeFirePayload(FireMode.DIRECT_FIRE, x, y, z);
+    }
+
     /** 快捷工厂：瞄准开火（弹道解算） */
     public static ScopeFirePayload aimedFire(double x, double y, double z) {
         return new ScopeFirePayload(FireMode.AIMED, x, y, z);
@@ -60,6 +67,12 @@ public record ScopeFirePayload(FireMode mode, double targetX, double targetY, do
     /** 快捷工厂：最大射程开火 */
     public static ScopeFirePayload maxRangeFire() {
         return new ScopeFirePayload(FireMode.MAX_RANGE, 0, 0, 0);
+    }
+
+    private boolean hasFiniteTarget() {
+        return Double.isFinite(targetX)
+                && Double.isFinite(targetY)
+                && Double.isFinite(targetZ);
     }
 
     public static void handle(ScopeFirePayload payload, IPayloadContext ctx) {
@@ -82,13 +95,14 @@ public record ScopeFirePayload(FireMode mode, double targetX, double targetY, do
                     ShipCoreCombat.fireMaxRange(player, weapon);
                 }
                 case AIMED -> {
+                    if (!payload.hasFiniteTarget()) return;
                     double dx = payload.targetX() - player.getX();
                     double dy = payload.targetY() - player.getY();
                     double dz = payload.targetZ() - player.getZ();
                     double distSq = dx * dx + dy * dy + dz * dz;
                     // 使用服务器模拟距离限制，而非硬编码300格
                     int simDist = player.server.getPlayerList().getSimulationDistance();
-                    double maxRange = Math.max(64.0, simDist * 16.0);
+                    double maxRange = Math.max(MIN_AIMED_FIRE_RANGE, simDist * 16.0);
                     if (distSq > maxRange * maxRange) {
                         PiranPort.LOGGER.warn("ScopeFirePayload target too far ({}m), fallback to max-range", Math.sqrt(distSq));
                         ShipCoreCombat.fireMaxRange(player, weapon);
@@ -99,6 +113,21 @@ public record ScopeFirePayload(FireMode mode, double targetX, double targetY, do
                 }
                 case QUICK_FIRE -> {
                     ShipCoreCombat.tryFireFromInventory(player.level(), player, InteractionHand.MAIN_HAND);
+                }
+                case DIRECT_FIRE -> {
+                    if (!payload.hasFiniteTarget()) return;
+                    double dx = payload.targetX() - player.getX();
+                    double dy = payload.targetY() - player.getY();
+                    double dz = payload.targetZ() - player.getZ();
+                    double distSq = dx * dx + dy * dy + dz * dz;
+                    int simDist = player.server.getPlayerList().getSimulationDistance();
+                    double maxRange = Math.max(MIN_AIMED_FIRE_RANGE, simDist * 16.0);
+                    if (distSq > maxRange * maxRange) {
+                        ShipCoreCombat.tryFireFromInventory(player.level(), player, InteractionHand.MAIN_HAND);
+                    } else {
+                        ShipCoreCombat.fireDirectAt(player, weapon,
+                                payload.targetX(), payload.targetY(), payload.targetZ());
+                    }
                 }
             }
         });

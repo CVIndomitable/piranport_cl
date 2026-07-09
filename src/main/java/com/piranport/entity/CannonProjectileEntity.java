@@ -7,12 +7,14 @@ import com.piranport.config.ModArtilleryConfig;
 import com.piranport.config.ModCommonConfig;
 import com.piranport.config.ModProjectilesConfig;
 import com.piranport.network.CannonImpactEffectPayload;
+import com.piranport.registry.ModBlocks;
 import com.piranport.registry.ModEntityTypes;
 import com.piranport.registry.ModItems;
 import com.piranport.registry.ModSounds;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
@@ -30,6 +32,7 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
@@ -46,12 +49,20 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
     private boolean isVT = false;
     private float explosionPower = 1.5f;
     private float initialSpeed = 2.0f;
-    /** Phase 2: 自定义阻力（每 tick 沿速度反方向扣除的速度量）。 */
+    /** Phase 2: 自定义阻力系数（每 tick 按比例衰减速度）。 */
     private float dragCoeff = 0.01f;
     /** 防止 VT 近炸引信 + onHit 在同一 tick 内双重爆炸。 */
     private boolean exploded = false;
     /** VT 弹水下计时器（tick），水中累计超过60tick（3秒）后近炸。 */
     private int underwaterTicks = 0;
+    /** 炮弹首次入水反馈只播放一次。 */
+    private boolean waterEntryEffectSent = false;
+    /** 破空音效节流，避免齐射时每 tick 刷声音。 */
+    private int lastWhistleTick = -1000;
+    /** 特殊炮弹：命中后部署照明，而不是造成常规伤害。 */
+    private boolean flareShell = false;
+    /** 特殊炮弹：命中后部署烟幕，而不是造成常规伤害。 */
+    private boolean smokeShell = false;
 
     /** 追踪（自导引）炮弹：每 tick 向目标轻微转向。 */
     private int trackingTargetId = -1;
@@ -136,6 +147,14 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         this.customGravity = g;
     }
 
+    public void setFlareShell(boolean flareShell) {
+        this.flareShell = flareShell;
+    }
+
+    public void setSmokeShell(boolean smokeShell) {
+        this.smokeShell = smokeShell;
+    }
+
     /**
      * 客户端位置插值：存储目标位置，在 tick() 中平滑过渡。
      * 解决 Entity 默认 lerpTo 直接 setPos 导致 xo/yo/zo 与 x/y/z 相同、
@@ -165,10 +184,16 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
     }
 
     @Override
+    public void shoot(double x, double y, double z, float velocity, float inaccuracy) {
+        super.shoot(x, y, z, velocity, inaccuracy);
+        this.initialSpeed = velocity;
+    }
+
+    @Override
     public void tick() {
-        // Phase 2: 应用自定义阻力，按策划要求沿速度反方向扣除固定速度量。
+        // Phase 2: 应用自定义阻力系数。阻力只衰减速度，不会把炮弹直接钉停在空中。
         if (dragCoeff > 0) {
-            setDeltaMovement(applyLinearDrag(getDeltaMovement(), dragCoeff));
+            setDeltaMovement(applyDragCoefficient(getDeltaMovement(), dragCoeff));
         }
 
         super.tick();
@@ -202,24 +227,64 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         if (!level().isClientSide) {
             // 水中弹药销毁：所有弹种通用（VT 弹在 tickVT 中另有近炸逻辑）
             if (!isVT && isInWater()) {
+                sendWaterEntryEffectIfNeeded();
                 handleUnderwaterDestruction(isHE);
             }
             if (isVT && tickCount > vtArmTicks) {
                 tickVT();
             }
+            tickWhistleSound();
             if (trackingTargetId >= 0) {
                 tickTracking();
             }
         }
     }
 
-    private static Vec3 applyLinearDrag(Vec3 velocity, float dragCoeff) {
+    private void tickWhistleSound() {
+        if (tickCount < 8 || tickCount - lastWhistleTick < 24) return;
+        double speed = getDeltaMovement().length();
+        if (speed < 1.6) return;
+        lastWhistleTick = tickCount;
+        SoundEvent whistle = getWhistleSound(speed);
+        float volume = (float) Math.min(1.6, 0.25 + speed * 0.2 + explosionPower * 0.04f);
+        float pitch = getWhistlePitch(whistle);
+        level().playSound(null, getX(), getY(), getZ(),
+                whistle, SoundSource.PLAYERS, volume, pitch);
+    }
+
+    private SoundEvent getWhistleSound(double speed) {
+        if (speed >= 4.2) return ModSounds.SHELL_WHISTLE_FAST.get();
+        if (explosionPower >= 3.5f || initialSpeed >= 3.2f) return ModSounds.SHELL_WHISTLE_HEAVY.get();
+        return ModSounds.SHELL_WHISTLE.get();
+    }
+
+    private float getWhistlePitch(SoundEvent whistle) {
+        if (whistle == ModSounds.SHELL_WHISTLE_FAST.get()) {
+            return 1.08f + random.nextFloat() * 0.22f;
+        }
+        if (whistle == ModSounds.SHELL_WHISTLE_HEAVY.get()) {
+            return 0.66f + random.nextFloat() * 0.16f;
+        }
+        return 0.8f + random.nextFloat() * 0.25f;
+    }
+
+    private void sendWaterEntryEffectIfNeeded() {
+        if (waterEntryEffectSent) return;
+        waterEntryEffectSent = true;
+        float scale = Math.max(0.6f, Math.min(4.0f,
+                explosionPower * 0.55f + (float) getDeltaMovement().length() * 0.35f));
+        sendImpactEffect(CannonImpactEffectPayload.Kind.WATER, scale);
+        level().playSound(null, getX(), getY(), getZ(),
+                SoundEvents.GENERIC_SPLASH, SoundSource.PLAYERS,
+                Math.min(2.0f, 0.8f + scale * 0.2f), 0.75f + random.nextFloat() * 0.15f);
+    }
+
+    private static Vec3 applyDragCoefficient(Vec3 velocity, float dragCoeff) {
         if (!Float.isFinite(dragCoeff) || dragCoeff <= 0f) return velocity;
         double speed = velocity.length();
         if (speed <= 1.0e-9) return Vec3.ZERO;
-        double drag = Math.max(0.0, dragCoeff);
-        if (speed <= drag) return Vec3.ZERO;
-        return velocity.scale((speed - drag) / speed);
+        double scale = 1.0 / (1.0 + Math.max(0.0, dragCoeff));
+        return velocity.scale(scale);
     }
 
     /**
@@ -273,6 +338,7 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         loadVtConfigValues();
         // VT 弹水中延时爆炸（使用近炸引信）
         if (isInWater()) {
+            sendWaterEntryEffectIfNeeded();
             if (handleUnderwaterDestruction(false)) {
                 proximityDetonate();
             }
@@ -307,7 +373,8 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         List<Entity> nearby = level().getEntities(this, searchBox, e ->
                 e instanceof LivingEntity
                         && e != getOwner()
-                        && e.isAlive());
+                        && e.isAlive()
+                        && !com.piranport.combat.FriendlyFireHelper.shouldBlockHit(e, getOwner()));
 
         Vec3 velNorm = velocity.normalize();
         for (Entity entity : nearby) {
@@ -366,6 +433,20 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         super.onHitEntity(result);
         if (!level().isClientSide && !exploded) {
             Entity target = result.getEntity();
+            if (flareShell) {
+                handleFlareImpact(target.blockPosition().above(), result.getLocation());
+                if (target instanceof LivingEntity living) {
+                    living.addEffect(new net.minecraft.world.effect.MobEffectInstance(
+                            net.minecraft.world.effect.MobEffects.GLOWING, 20 * 12, 0));
+                }
+                notifyOwner(target);
+                return;
+            }
+            if (smokeShell) {
+                handleSmokeImpact(target.blockPosition(), result.getLocation());
+                notifyOwner(target);
+                return;
+            }
             // 联装炮齐射：同 tick 多发命中同目标时，重置无敌帧让每发都造成伤害
             target.invulnerableTime = 0;
             if (isHE) {
@@ -439,7 +520,18 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
     protected void onHitBlock(BlockHitResult result) {
         super.onHitBlock(result);
         if (!level().isClientSide && !exploded) {
+            if (flareShell) {
+                handleFlareImpact(result.getBlockPos().relative(result.getDirection()), result.getLocation());
+                return;
+            }
+            if (smokeShell) {
+                handleSmokeImpact(result.getBlockPos().relative(result.getDirection()), result.getLocation());
+                return;
+            }
             if (isHE) {
+                if (isInWater()) {
+                    sendWaterEntryEffectIfNeeded();
+                }
                 boolean breakBlocks = ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get() && !isInWater();
                 Level.ExplosionInteraction interaction = breakBlocks
                         ? Level.ExplosionInteraction.TNT : Level.ExplosionInteraction.NONE;
@@ -463,6 +555,73 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
 
     private void sendImpactEffect(CannonImpactEffectPayload.Kind kind, float power) {
         CannonImpactEffectBroadcaster.send(level(), getX(), getY(), getZ(), power, kind);
+    }
+
+    private void handleFlareImpact(BlockPos preferredPos, Vec3 effectPos) {
+        if (exploded) return;
+        exploded = true;
+        BlockPos placePos = findReplaceableNear(preferredPos, 1);
+        if (placePos != null) {
+            level().setBlock(placePos, ModBlocks.FLARE_LIGHT.get().defaultBlockState(), Block.UPDATE_ALL);
+        }
+        CannonImpactEffectBroadcaster.send(level(), effectPos.x, effectPos.y, effectPos.z,
+                Math.max(0.6f, explosionPower * 0.4f), CannonImpactEffectPayload.Kind.VT);
+        level().playSound(null, effectPos.x, effectPos.y, effectPos.z,
+                SoundEvents.FIREWORK_ROCKET_TWINKLE, SoundSource.PLAYERS, 1.0f, 1.25f);
+    }
+
+    private void handleSmokeImpact(BlockPos center, Vec3 effectPos) {
+        if (exploded) return;
+        exploded = true;
+        BlockState smokeState = ModBlocks.SMOKE_SCREEN.get().defaultBlockState();
+        int radius = explosionPower >= 2.0f ? 2 : 1;
+        int placed = 0;
+        for (int dx = -radius; dx <= radius; dx++) {
+            for (int dz = -radius; dz <= radius; dz++) {
+                for (int dy = 0; dy <= 1; dy++) {
+                    BlockPos target = center.offset(dx, dy, dz);
+                    if (canSmokeReplace(target)) {
+                        level().setBlock(target, smokeState, Block.UPDATE_ALL);
+                        placed++;
+                    }
+                }
+            }
+        }
+        if (placed > 0) {
+            CannonImpactEffectBroadcaster.send(level(), effectPos.x, effectPos.y, effectPos.z,
+                    Math.max(0.7f, explosionPower * 0.55f), CannonImpactEffectPayload.Kind.VT);
+            level().playSound(null, effectPos.x, effectPos.y, effectPos.z,
+                    SoundEvents.FIRE_EXTINGUISH, SoundSource.PLAYERS, 1.1f, 0.7f);
+        }
+    }
+
+    private BlockPos findReplaceableNear(BlockPos origin, int radius) {
+        if (canFlareReplace(origin)) return origin;
+        for (int dy = -radius; dy <= radius; dy++) {
+            for (int dx = -radius; dx <= radius; dx++) {
+                for (int dz = -radius; dz <= radius; dz++) {
+                    BlockPos pos = origin.offset(dx, dy, dz);
+                    if (canFlareReplace(pos)) return pos;
+                }
+            }
+        }
+        return null;
+    }
+
+    private boolean canFlareReplace(BlockPos pos) {
+        BlockState state = level().getBlockState(pos);
+        return state.isAir() || state.canBeReplaced();
+    }
+
+    private boolean canSmokeReplace(BlockPos pos) {
+        BlockState state = level().getBlockState(pos);
+        Block block = state.getBlock();
+        return state.isAir()
+                || block == Blocks.SHORT_GRASS
+                || block == Blocks.TALL_GRASS
+                || block == Blocks.FERN
+                || block == Blocks.LARGE_FERN
+                || block == ModBlocks.SMOKE_SCREEN.get();
     }
 
     @Override
@@ -492,6 +651,8 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         tag.putInt("UnderwaterTicks", underwaterTicks);
         tag.putBoolean("Exploded", exploded);
         tag.putFloat("CustomGravity", customGravity);
+        tag.putBoolean("FlareShell", flareShell);
+        tag.putBoolean("SmokeShell", smokeShell);
     }
 
     @Override
@@ -516,6 +677,12 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         }
         if (tag.contains("CustomGravity")) {
             customGravity = tag.getFloat("CustomGravity");
+        }
+        if (tag.contains("FlareShell")) {
+            flareShell = tag.getBoolean("FlareShell");
+        }
+        if (tag.contains("SmokeShell")) {
+            smokeShell = tag.getBoolean("SmokeShell");
         }
     }
 }

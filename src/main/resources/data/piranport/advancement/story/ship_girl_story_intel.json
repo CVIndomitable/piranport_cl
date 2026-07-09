@@ -1,0 +1,34 @@
+{
+  "parent": "piranport:story/turn_in_intel",
+  "display": {
+    "icon": {
+      "count": 1,
+      "id": "piranport:abyssal_report"
+    },
+    "title": {
+      "translate": "advancements.piranport.ship_girl_story_intel.title"
+    },
+    "description": {
+      "translate": "advancements.piranport.ship_girl_story_intel.description"
+    },
+    "frame": "task"
+  },
+  "criteria": {
+    "done": {
+      "conditions": {
+        "items": [
+          {
+            "items": "minecraft:bedrock"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "requirements": [
+    [
+      "done"
+    ]
+  ],
+  "sends_telemetry_event": false
+}

@@ -1,6 +1,5 @@
 package com.piranport.config;
 
-import com.piranport.client.HudPosition;
 import net.neoforged.neoforge.common.ModConfigSpec;
 
 public class ModClientConfig {

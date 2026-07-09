@@ -1,6 +1,3 @@
 {
-  "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "piranport:block/peach_sapling"
-  }
+  "parent": "piranport:block/peach_sapling"
 }

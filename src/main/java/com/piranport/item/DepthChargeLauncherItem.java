@@ -67,6 +67,8 @@ public class DepthChargeLauncherItem extends Item {
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context,
                                 List<Component> tooltipComponents, TooltipFlag tooltipFlag) {
+        ExperienceShellItem.appendEnhancementTooltip(stack, tooltipComponents);
+
         WeaponCategory cat = stack.get(ModDataComponents.WEAPON_CATEGORY.get());
         if (cat != null) {
             tooltipComponents.add(Component.translatable("tooltip.piranport.weapon_category." + cat.getSerializedName())

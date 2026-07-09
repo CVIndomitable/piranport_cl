@@ -44,8 +44,12 @@ public class ConfigCSVImporter {
                 throw new IOException("CSV文件为空");
             }
 
+            String[] headers = parseCSVLine(headerLine);
+            Map<String, Integer> columns = indexColumns(headers);
+
             // 验证表头
-            if (!headerLine.startsWith("cannon_name,display_name,caliber,barrels")) {
+            if (!columns.containsKey("cannon_name") || !columns.containsKey("caliber")
+                    || !columns.containsKey("barrels")) {
                 throw new IOException("CSV格式错误：表头不匹配");
             }
 
@@ -58,7 +62,7 @@ public class ConfigCSVImporter {
                 }
 
                 try {
-                    importCannonLine(line, overrides);
+                    importCannonLine(line, columns, overrides);
                     successCount++;
                 } catch (Exception e) {
                     PiranPort.LOGGER.warn("Failed to import cannon at line {}: {}", lineNumber, e.getMessage());
@@ -131,38 +135,45 @@ public class ConfigCSVImporter {
     /**
      * 解析并导入单行火炮数据
      */
-    private static void importCannonLine(String line, ArtilleryConfigOverrideSavedData overrides) {
+    private static void importCannonLine(String line, Map<String, Integer> columns,
+                                         ArtilleryConfigOverrideSavedData overrides) {
         String[] parts = parseCSVLine(line);
 
-        if (parts.length < 16) {
-            throw new IllegalArgumentException("字段数量不足（需要16个字段）");
+        if (parts.length < columns.size()) {
+            throw new IllegalArgumentException("字段数量不足");
         }
 
-        String cannonName = parts[0].trim();
+        String cannonName = getString(parts, columns, "cannon_name");
 
         // P1修复: 验证火炮是否存在（ArtilleryConfig.get()返回DEFAULT而不是null）
         if (!ArtilleryConfig.getAllCannonNames().contains(cannonName)) {
             throw new IllegalArgumentException("未知的火炮: " + cannonName);
         }
 
+        var original = ArtilleryConfig.get(cannonName);
+
         // 解析数值字段（跳过 display_name）
         try {
-            int caliber = Integer.parseInt(parts[2]);
-            int barrels = Integer.parseInt(parts[3]);
-            float damage = Float.parseFloat(parts[4]);
-            int reloadTime = Integer.parseInt(parts[5]);
-            int durability = Integer.parseInt(parts[6]);
-            float scopeZoom = Float.parseFloat(parts[7]);
-            float initialSpeed = Float.parseFloat(parts[8]);
-            float dragCoeff = Float.parseFloat(parts[9]);
-            float gravity = Float.parseFloat(parts[10]);
-            float explosionPower = Float.parseFloat(parts[11]);
-            float dispersion = Float.parseFloat(parts[12]);
-
-            // 解析新增字段
-            int fireCooldown = Integer.parseInt(parts[13]);
-            int salvoCount = Integer.parseInt(parts[14]);
-            float salvoInterval = Float.parseFloat(parts[15]);
+            int caliber = getInt(parts, columns, "caliber", original.caliber());
+            int barrels = getInt(parts, columns, "barrels", original.barrels());
+            float damage = getFloat(parts, columns, "damage", original.damage());
+            int reloadTime = getInt(parts, columns, "reloadTime", original.reloadTime());
+            int durability = getInt(parts, columns, "durability", original.durability());
+            float scopeZoom = getFloat(parts, columns, "scopeZoom", original.scopeZoom());
+            float initialSpeed = getFloat(parts, columns, "initialSpeed", original.initialSpeed());
+            float dragCoeff = getFloat(parts, columns, "dragCoeff", original.dragCoeff());
+            float gravity = getFloat(parts, columns, "gravity", original.gravity());
+            float explosionPower = getFloat(parts, columns, "explosionPower", original.explosionPower());
+            float dispersion = getFloat(parts, columns, "dispersion", original.dispersion());
+            float projectileWeight = getFloat(parts, columns, "projectileWeight", original.projectileWeight());
+            int fireCooldown = getInt(parts, columns, "fireCooldown", original.fireCooldown());
+            int salvoCount = getInt(parts, columns, "salvoCount", original.salvoCount());
+            float salvoInterval = getFloat(parts, columns, "salvoInterval", original.salvoInterval());
+            float verticalSpread = getFloat(parts, columns, "verticalSpread", original.verticalSpread());
+            float horizontalSpread = getFloat(parts, columns, "horizontalSpread", original.horizontalSpread());
+            float maxElevation = getFloat(parts, columns, "maxElevation", original.maxElevation());
+            float minElevation = getFloat(parts, columns, "minElevation", original.minElevation());
+            float turretSpeed = getFloat(parts, columns, "turretSpeed", original.turretSpeed());
 
             // 应用验证和范围限制
             caliber = (int) ConfigOverrideManager.validateValue("caliber", caliber);
@@ -176,9 +187,15 @@ public class ConfigCSVImporter {
             gravity = (float) ConfigOverrideManager.validateValue("gravity", gravity);
             explosionPower = (float) ConfigOverrideManager.validateValue("explosionPower", explosionPower);
             dispersion = (float) ConfigOverrideManager.validateValue("dispersion", dispersion);
+            projectileWeight = (float) ConfigOverrideManager.validateValue("projectileWeight", projectileWeight);
             fireCooldown = (int) ConfigOverrideManager.validateValue("fireCooldown", fireCooldown);
             salvoCount = (int) ConfigOverrideManager.validateValue("salvoCount", salvoCount);
             salvoInterval = (float) ConfigOverrideManager.validateValue("salvoInterval", salvoInterval);
+            verticalSpread = (float) ConfigOverrideManager.validateValue("verticalSpread", verticalSpread);
+            horizontalSpread = (float) ConfigOverrideManager.validateValue("horizontalSpread", horizontalSpread);
+            maxElevation = (float) ConfigOverrideManager.validateValue("maxElevation", maxElevation);
+            minElevation = (float) ConfigOverrideManager.validateValue("minElevation", minElevation);
+            turretSpeed = (float) ConfigOverrideManager.validateValue("turretSpeed", turretSpeed);
 
             // 写入覆盖数据
             overrides.setCannonOverride(cannonName, "caliber", caliber);
@@ -192,9 +209,15 @@ public class ConfigCSVImporter {
             overrides.setCannonOverride(cannonName, "gravity", gravity);
             overrides.setCannonOverride(cannonName, "explosionPower", explosionPower);
             overrides.setCannonOverride(cannonName, "dispersion", dispersion);
+            overrides.setCannonOverride(cannonName, "projectileWeight", projectileWeight);
             overrides.setCannonOverride(cannonName, "fireCooldown", fireCooldown);
             overrides.setCannonOverride(cannonName, "salvoCount", salvoCount);
             overrides.setCannonOverride(cannonName, "salvoInterval", salvoInterval);
+            overrides.setCannonOverride(cannonName, "verticalSpread", verticalSpread);
+            overrides.setCannonOverride(cannonName, "horizontalSpread", horizontalSpread);
+            overrides.setCannonOverride(cannonName, "maxElevation", maxElevation);
+            overrides.setCannonOverride(cannonName, "minElevation", minElevation);
+            overrides.setCannonOverride(cannonName, "turretSpeed", turretSpeed);
 
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("数值格式错误: " + e.getMessage());
@@ -266,6 +289,38 @@ public class ConfigCSVImporter {
         fields.add(currentField.toString());
 
         return fields.toArray(new String[0]);
+    }
+
+    private static Map<String, Integer> indexColumns(String[] headers) {
+        Map<String, Integer> columns = new HashMap<>();
+        for (int i = 0; i < headers.length; i++) {
+            columns.put(headers[i].trim(), i);
+        }
+        return columns;
+    }
+
+    private static String getString(String[] parts, Map<String, Integer> columns, String name) {
+        Integer idx = columns.get(name);
+        if (idx == null || idx < 0 || idx >= parts.length) {
+            throw new IllegalArgumentException("缺少字段: " + name);
+        }
+        return parts[idx].trim();
+    }
+
+    private static int getInt(String[] parts, Map<String, Integer> columns, String name, int defaultValue) {
+        Integer idx = columns.get(name);
+        if (idx == null || idx < 0 || idx >= parts.length || parts[idx].isBlank()) {
+            return defaultValue;
+        }
+        return Integer.parseInt(parts[idx].trim());
+    }
+
+    private static float getFloat(String[] parts, Map<String, Integer> columns, String name, float defaultValue) {
+        Integer idx = columns.get(name);
+        if (idx == null || idx < 0 || idx >= parts.length || parts[idx].isBlank()) {
+            return defaultValue;
+        }
+        return Float.parseFloat(parts[idx].trim());
     }
 
     /**

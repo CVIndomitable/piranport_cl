@@ -9,9 +9,12 @@ import com.piranport.entity.MissileEntity;
 import com.piranport.npc.deepocean.AbstractDeepOceanEntity;
 import com.piranport.registry.ModBlocks;
 import com.piranport.registry.ModItems;
+import com.piranport.worldgen.LootChestProcessor;
+import com.piranport.worldgen.RuinDegradationProcessor;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Vec3i;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -22,12 +25,18 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.SignBlockEntity;
 import net.minecraft.world.level.block.entity.SignText;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.Mirror;
+import net.minecraft.world.level.block.Rotation;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.event.EventHooks;
@@ -65,6 +74,10 @@ public final class PiranPortCommands {
                         .then(Commands.argument("entity_type", StringArgumentType.word())
                                 .suggests((ctx, builder) -> {
                                     builder.suggest("deep_ocean_supply");
+                                    builder.suggest("deep_ocean_archivist");
+                                    builder.suggest("deep_ocean_engineer");
+                                    builder.suggest("deep_ocean_navigator");
+                                    builder.suggest("deep_ocean_quartermaster");
                                     builder.suggest("deep_ocean_destroyer");
                                     builder.suggest("deep_ocean_light_cruiser");
                                     builder.suggest("deep_ocean_heavy_cruiser");
@@ -73,6 +86,7 @@ public final class PiranPortCommands {
                                     builder.suggest("deep_ocean_light_carrier");
                                     builder.suggest("deep_ocean_carrier");
                                     builder.suggest("deep_ocean_submarine");
+                                    builder.suggest("deep_ocean_flagship");
                                     return builder.buildFuture();
                                 })
                                 .executes(ctx -> spawnAbyssal(ctx.getSource(),
@@ -96,10 +110,28 @@ public final class PiranPortCommands {
                                 .suggests((ctx, builder) -> {
                                     builder.suggest("b25");
                                     builder.suggest("f4f");
+                                    builder.suggest("heavy_cruiser");
+                                    builder.suggest("light_carrier");
                                     return builder.buildFuture();
                                 })
                                 .executes(ctx -> modelDebug(ctx.getSource(),
                                         StringArgumentType.getString(ctx, "model")))))
+
+                // /ppd acceptance_kit <type>
+                .then(Commands.literal("acceptance_kit")
+                        .then(Commands.argument("type", StringArgumentType.word())
+                                .suggests((ctx, builder) -> {
+                                    builder.suggest("blueprint_chest");
+                                    builder.suggest("stove");
+                                    builder.suggest("artillery");
+                                    builder.suggest("deep_ocean");
+                                    builder.suggest("ship_girl");
+                                    builder.suggest("trees");
+                                    builder.suggest("all");
+                                    return builder.buildFuture();
+                                })
+                                .executes(ctx -> acceptanceKit(ctx.getSource(),
+                                        StringArgumentType.getString(ctx, "type")))))
 
                 // /ppd locate_ruin <type>
                 .then(Commands.literal("locate_ruin")
@@ -124,60 +156,56 @@ public final class PiranPortCommands {
         }
 
         ServerLevel level = player.serverLevel();
-        BlockPos center = player.blockPosition();
-
-        // Build a simple placeholder structure at the player's position
-        int size;
-        switch (type) {
-            case "portal_ruin" -> size = 8;
-            case "supply_depot" -> size = 12;
-            case "outpost" -> size = 24;
-            case "abyssal_base" -> size = 40;
+        int variantCount = switch (type) {
+            case "portal_ruin", "supply_depot", "outpost", "abyssal_base" -> 2;
             default -> {
                 source.sendFailure(Component.literal("Unknown ruin type: " + type
                         + ". Use: portal_ruin, supply_depot, outpost, abyssal_base"));
-                return 0;
+                yield 0;
             }
+        };
+        if (variantCount <= 0) return 0;
+
+        int variant = 1 + level.random.nextInt(variantCount);
+        ResourceLocation templateId = ResourceLocation.fromNamespaceAndPath("piranport", type + "_" + variant);
+
+        Optional<StructureTemplate> template = level.getStructureManager().get(templateId);
+        if (template.isEmpty()) {
+            source.sendFailure(Component.literal("Missing structure template: " + templateId));
+            return 0;
         }
 
-        // Build a simple stone brick platform with walls
-        BlockState floor = Blocks.STONE_BRICKS.defaultBlockState();
-        BlockState wall = Blocks.MOSSY_STONE_BRICKS.defaultBlockState();
-        BlockState frame = ModBlocks.ABYSSAL_PORTAL_FRAME.get().defaultBlockState();
-
-        for (int x = -size / 2; x <= size / 2; x++) {
-            for (int z = -size / 2; z <= size / 2; z++) {
-                BlockPos floorPos = center.offset(x, -1, z);
-                level.setBlock(floorPos, floor, 3);
-
-                // Walls on perimeter
-                boolean isEdge = x == -size / 2 || x == size / 2 || z == -size / 2 || z == size / 2;
-                if (isEdge) {
-                    for (int y = 0; y < 3; y++) {
-                        level.setBlock(floorPos.above(y + 1), wall, 3);
-                    }
-                }
-            }
+        Vec3i size = template.get().getSize();
+        BlockPos origin = player.blockPosition().offset(-size.getX() / 2, -1, -size.getZ() / 2);
+        StructurePlaceSettings settings = new StructurePlaceSettings()
+                .setMirror(Mirror.NONE)
+                .setRotation(Rotation.NONE)
+                .setIgnoreEntities(false)
+                .addProcessor(new LootChestProcessor(lootTableForRuin(type)))
+                .addProcessor(new RuinDegradationProcessor(integrityForRuin(type)));
+        boolean placed = template.get().placeInWorld(level, origin, origin, settings, level.random, 3);
+        if (!placed) {
+            source.sendFailure(Component.literal("Failed to place structure template: " + templateId));
+            return 0;
         }
 
-        // Place portal frame corners for portal_ruin type
-        if ("portal_ruin".equals(type)) {
-            for (int y = 0; y < 4; y++) {
-                level.setBlock(center.offset(-2, y, 0), frame, 3);
-                level.setBlock(center.offset(2, y, 0), frame, 3);
-            }
-            level.setBlock(center.offset(-1, 3, 0), frame, 3);
-            level.setBlock(center.offset(0, 3, 0), frame, 3);
-            level.setBlock(center.offset(1, 3, 0), frame, 3);
-        }
-
-        // Place a chest with the appropriate loot table
-        BlockPos chestPos = center.offset(size / 4, 0, size / 4);
-        level.setBlock(chestPos, Blocks.CHEST.defaultBlockState(), 3);
-
-        source.sendSuccess(() -> Component.literal("Spawned placeholder " + type
-                + " at " + center.toShortString()), true);
+        source.sendSuccess(() -> Component.literal("Placed " + templateId
+                + " at " + origin.toShortString() + " size " + size.getX() + "x" + size.getY() + "x" + size.getZ()), true);
         return 1;
+    }
+
+    private static ResourceLocation lootTableForRuin(String type) {
+        return ResourceLocation.fromNamespaceAndPath("piranport", "chests/" + type);
+    }
+
+    private static float integrityForRuin(String type) {
+        return switch (type) {
+            case "portal_ruin" -> 0.85f;
+            case "supply_depot" -> 0.80f;
+            case "outpost" -> 0.75f;
+            case "abyssal_base" -> 0.70f;
+            default -> 1.0f;
+        };
     }
 
     private static int spawnAbyssal(CommandSourceStack source, String entityId, int count) {
@@ -385,6 +413,251 @@ public final class PiranPortCommands {
             sign.setChanged();
             level.sendBlockUpdated(pos, signState, signState, 3);
         }
+    }
+
+    private static int acceptanceKit(CommandSourceStack source, String type) {
+        ServerPlayer player = source.getPlayer();
+        if (player == null) {
+            source.sendFailure(Component.literal("Must be run by a player"));
+            return 0;
+        }
+
+        int stacks;
+        switch (type) {
+            case "blueprint_chest" -> stacks = giveBlueprintChestKit(player);
+            case "stove" -> stacks = giveStoveKit(player);
+            case "artillery" -> stacks = giveArtilleryKit(player);
+            case "deep_ocean" -> stacks = giveDeepOceanKit(player);
+            case "ship_girl" -> stacks = giveShipGirlKit(player);
+            case "trees" -> stacks = giveTreesKit(player);
+            case "all" -> {
+                stacks = 0;
+                stacks += giveBlueprintChestKit(player);
+                stacks += giveStoveKit(player);
+                stacks += giveArtilleryKit(player);
+                stacks += giveDeepOceanKit(player);
+                stacks += giveShipGirlKit(player);
+                stacks += giveTreesKit(player);
+            }
+            default -> {
+                source.sendFailure(Component.literal("Unknown acceptance kit: " + type
+                        + ". Use: blueprint_chest, stove, artillery, deep_ocean, ship_girl, trees, all"));
+                return 0;
+            }
+        }
+
+        int finalStacks = stacks;
+        source.sendSuccess(() -> Component.literal("已发放 " + type
+                + " 验收套件（" + finalStacks + " 组物品，背包满则掉落在脚边）"), true);
+        return stacks;
+    }
+
+    private static int giveBlueprintChestKit(ServerPlayer player) {
+        int stacks = 0;
+        stacks += give(player, ModItems.BLUEPRINT_CHEST.get(), 1);
+        stacks += give(player, ModItems.WEAPON_WORKBENCH.get(), 1);
+        stacks += give(player, ModItems.MEDIUM_GUN_BLUEPRINT.get(), 2);
+        stacks += give(player, ModItems.LARGE_GUN_BLUEPRINT.get(), 2);
+        stacks += give(player, ModItems.CREATIVE_BLUEPRINT.get(), 2);
+        stacks += give(player, Items.PAPER, 32);
+        return stacks;
+    }
+
+    private static int giveStoveKit(ServerPlayer player) {
+        int stacks = 0;
+        stacks += give(player, ModItems.STOVE.get(), 1);
+        stacks += give(player, ModItems.COOKING_POT.get(), 1);
+        stacks += give(player, Items.BEEF, 8);
+        stacks += give(player, Items.PORKCHOP, 8);
+        stacks += give(player, Items.CHICKEN, 8);
+        stacks += give(player, Items.COD, 8);
+        stacks += give(player, Items.POTATO, 8);
+        stacks += give(player, Items.HOPPER, 2);
+        return stacks;
+    }
+
+    private static int giveArtilleryKit(ServerPlayer player) {
+        int stacks = 0;
+        stacks += give(player, ModItems.SMALL_SHIP_CORE.get(), 1);
+        stacks += give(player, ModItems.LARGE_SHIP_CORE.get(), 1);
+        stacks += give(player, ModItems.FUEL.get(), 16);
+        stacks += give(player, ModItems.ARTILLERY_CONFIG_TOOL.get(), 1);
+        stacks += give(player, ModItems.SMALL_GUN.get(), 1);
+        stacks += give(player, ModItems.MEDIUM_GUN.get(), 1);
+        stacks += give(player, ModItems.LARGE_GUN.get(), 1);
+        stacks += give(player, ModItems.FRENCH_QUAD_380MM_GUN.get(), 1);
+        stacks += give(player, ModItems.SALVO_TEST_GUN.get(), 1);
+        stacks += give(player, ModItems.FLOATING_TARGET.get(), 8);
+        stacks += giveArtilleryShells(player, ModItems.SMALL_HE_SHELL.get(), ModItems.SMALL_AP_SHELL.get(),
+                ModItems.SMALL_GRENADE_SHELL.get(), ModItems.SMALL_FLARE_SHELL.get(), ModItems.SMALL_SMOKE_SHELL.get());
+        stacks += giveArtilleryShells(player, ModItems.MEDIUM_HE_SHELL.get(), ModItems.MEDIUM_AP_SHELL.get(),
+                ModItems.MEDIUM_GRENADE_SHELL.get(), ModItems.MEDIUM_FLARE_SHELL.get(), ModItems.MEDIUM_SMOKE_SHELL.get());
+        stacks += giveArtilleryShells(player, ModItems.LARGE_HE_SHELL.get(), ModItems.LARGE_AP_SHELL.get(),
+                ModItems.LARGE_GRENADE_SHELL.get(), ModItems.LARGE_FLARE_SHELL.get(), ModItems.LARGE_SMOKE_SHELL.get());
+        return stacks;
+    }
+
+    private static int giveArtilleryShells(ServerPlayer player, ItemLike he, ItemLike ap,
+                                           ItemLike grenade, ItemLike flare, ItemLike smoke) {
+        int stacks = 0;
+        stacks += give(player, he, 32);
+        stacks += give(player, ap, 32);
+        stacks += give(player, grenade, 32);
+        stacks += give(player, flare, 16);
+        stacks += give(player, smoke, 16);
+        return stacks;
+    }
+
+    private static int giveDeepOceanKit(ServerPlayer player) {
+        int stacks = 0;
+        stacks += give(player, ModItems.ABYSSAL_PORTAL_FRAME.get(), 8);
+        stacks += give(player, ModItems.PORTAL_ACTIVATION_CORE.get(), 2);
+        stacks += give(player, ModItems.ABYSSAL_SEEP.get(), 8);
+        stacks += give(player, ModItems.ABYSSAL_REPORT.get(), 16);
+        stacks += give(player, ModItems.RAW_ALUMINUM.get(), 32);
+        stacks += give(player, ModItems.ALUMINUM_INGOT.get(), 16);
+        stacks += give(player, ModItems.AVIATION_FUEL.get(), 16);
+        stacks += give(player, ModItems.REPAIR_KIT.get(), 3);
+        stacks += give(player, ModItems.EXP_SHELL.get(), 8);
+        stacks += giveChaosShards(player, 2);
+        stacks += giveFlags(player);
+        stacks += give(player, ModItems.DEEP_OCEAN_SUPPLY_SPAWN_EGG.get(), 2);
+        stacks += give(player, ModItems.DEEP_OCEAN_ARCHIVIST_SPAWN_EGG.get(), 2);
+        stacks += give(player, ModItems.DEEP_OCEAN_ENGINEER_SPAWN_EGG.get(), 2);
+        stacks += give(player, ModItems.DEEP_OCEAN_NAVIGATOR_SPAWN_EGG.get(), 2);
+        stacks += give(player, ModItems.DEEP_OCEAN_QUARTERMASTER_SPAWN_EGG.get(), 2);
+        stacks += give(player, ModItems.DEEP_OCEAN_DESTROYER_SPAWN_EGG.get(), 2);
+        stacks += give(player, ModItems.DEEP_OCEAN_BATTLESHIP_SPAWN_EGG.get(), 1);
+        stacks += give(player, ModItems.DEEP_OCEAN_CARRIER_SPAWN_EGG.get(), 1);
+        stacks += give(player, ModItems.DEEP_OCEAN_SUBMARINE_SPAWN_EGG.get(), 1);
+        stacks += give(player, ModItems.DEEP_OCEAN_FLAGSHIP_SPAWN_EGG.get(), 1);
+        return stacks;
+    }
+
+    private static int giveShipGirlKit(ServerPlayer player) {
+        int stacks = 0;
+        stacks += give(player, ModItems.SHIP_GIRL_SPAWN_EGG.get(), 2);
+        stacks += give(player, ModItems.SHIP_GIRL_CONTRACT.get(), 2);
+        stacks += give(player, ModItems.RICHELIEU_COMMAND_SWORD.get(), 1);
+        stacks += give(player, ModItems.ABYSSAL_REPORT.get(), 16);
+        stacks += give(player, ModItems.REPAIR_KIT.get(), 3);
+        stacks += give(player, ModItems.PORTAL_ACTIVATION_CORE.get(), 2);
+        stacks += give(player, ModItems.EXP_SHELL.get(), 16);
+        stacks += give(player, ModItems.AVIATION_FUEL.get(), 16);
+        stacks += giveChaosShards(player, 2);
+        stacks += giveFlags(player);
+        stacks += giveSkinCores(player);
+        return stacks;
+    }
+
+    private static int giveTreesKit(ServerPlayer player) {
+        int stacks = 0;
+        stacks += give(player, ModItems.WILD_GARDEN.get(), 16);
+        stacks += give(player, Items.BONE_MEAL, 64);
+        stacks += giveCropSeeds(player);
+        stacks += giveTreeSet(player, ModItems.PEACH_LOG.get(), ModItems.PEACH_LEAVES.get(), ModItems.PEACH_SAPLING.get());
+        stacks += giveTreeSet(player, ModItems.MAIDENHAIR_LOG.get(), ModItems.MAIDENHAIR_LEAVES.get(), ModItems.MAIDENHAIR_SAPLING.get());
+        stacks += giveTreeSet(player, ModItems.SAGO_PALM_LOG.get(), ModItems.SAGO_PALM_LEAVES.get(), ModItems.SAGO_PALM_SAPLING.get());
+        stacks += giveTreeSet(player, ModItems.GARDENIA_LOG.get(), ModItems.GARDENIA_LEAVES.get(), ModItems.GARDENIA_SAPLING.get());
+        stacks += giveTreeSet(player, ModItems.CHINESE_PLUM_LOG.get(), ModItems.CHINESE_PLUM_LEAVES.get(), ModItems.CHINESE_PLUM_SAPLING.get());
+        stacks += giveTreeSet(player, ModItems.MAPPLE_LOG.get(), ModItems.MAPPLE_LEAVES.get(), ModItems.MAPPLE_SAPLING.get());
+        stacks += giveTreeSet(player, ModItems.CHORUS_TREE_LOG.get(), ModItems.CHORUS_TREE_LEAVES.get(), ModItems.CHORUS_TREE_SAPLING.get());
+        stacks += giveTreeSet(player, ModItems.SLIME_TREE_LOG.get(), ModItems.SLIME_TREE_LEAVES.get(), ModItems.SLIME_TREE_SAPLING.get());
+        stacks += giveTreeSet(player, ModItems.LAVA_SLIME_TREE_LOG.get(), ModItems.LAVA_SLIME_TREE_LEAVES.get(), ModItems.LAVA_SLIME_TREE_SAPLING.get());
+        return stacks;
+    }
+
+    private static int giveCropSeeds(ServerPlayer player) {
+        int stacks = 0;
+        stacks += give(player, ModItems.TOMATO_SEEDS.get(), 8);
+        stacks += give(player, ModItems.SOYBEAN_SEEDS.get(), 8);
+        stacks += give(player, ModItems.CHILI_SEEDS.get(), 8);
+        stacks += give(player, ModItems.ONION_SEEDS.get(), 8);
+        stacks += give(player, ModItems.RICE_SEEDS.get(), 8);
+        stacks += give(player, ModItems.LETTUCE_SEEDS.get(), 8);
+        stacks += give(player, ModItems.GARLIC_SEEDS.get(), 8);
+        stacks += give(player, ModItems.PINEAPPLE_SEED.get(), 8);
+        stacks += give(player, ModItems.LABLAB_BEAN_SEEDS.get(), 8);
+        stacks += give(player, ModItems.ORMOSIA_SEEDS.get(), 8);
+        stacks += give(player, ModItems.CELERY_SEEDS.get(), 8);
+        stacks += give(player, ModItems.RYE_SEEDS.get(), 8);
+        return stacks;
+    }
+
+    private static int giveTreeSet(ServerPlayer player, ItemLike log, ItemLike leaves, ItemLike sapling) {
+        int stacks = 0;
+        stacks += give(player, log, 8);
+        stacks += give(player, leaves, 8);
+        stacks += give(player, sapling, 4);
+        return stacks;
+    }
+
+    private static int giveChaosShards(ServerPlayer player, int count) {
+        int stacks = 0;
+        stacks += give(player, ModItems.CHAOS_SHARD_ALPHA.get(), count);
+        stacks += give(player, ModItems.CHAOS_SHARD_BETA.get(), count);
+        stacks += give(player, ModItems.CHAOS_SHARD_GAMMA.get(), count);
+        stacks += give(player, ModItems.CHAOS_SHARD_DELTA.get(), count);
+        stacks += give(player, ModItems.CHAOS_SHARD_EPSILON.get(), count);
+        stacks += give(player, ModItems.CHAOS_SHARD_ZETA.get(), count);
+        stacks += give(player, ModItems.CHAOS_SHARD_ETA.get(), count);
+        stacks += give(player, ModItems.CHAOS_SHARD_THETA.get(), count);
+        stacks += give(player, ModItems.CHAOS_SHARD_IOTA.get(), count);
+        return stacks;
+    }
+
+    private static int giveFlags(ServerPlayer player) {
+        int stacks = 0;
+        stacks += give(player, ModItems.FLAG_J.get(), 1);
+        stacks += give(player, ModItems.FLAG_E.get(), 1);
+        stacks += give(player, ModItems.FLAG_U.get(), 1);
+        stacks += give(player, ModItems.FLAG_G.get(), 1);
+        stacks += give(player, ModItems.FLAG_F.get(), 1);
+        stacks += give(player, ModItems.FLAG_I.get(), 1);
+        stacks += give(player, ModItems.FLAG_C.get(), 1);
+        return stacks;
+    }
+
+    private static int giveSkinCores(ServerPlayer player) {
+        int stacks = 0;
+        stacks += give(player, ModItems.SKIN_CORE_4.get(), 1);
+        stacks += give(player, ModItems.SKIN_CORE_5.get(), 1);
+        stacks += give(player, ModItems.SKIN_CORE_6.get(), 1);
+        stacks += give(player, ModItems.SKIN_CORE_7.get(), 1);
+        stacks += give(player, ModItems.SKIN_CORE_8.get(), 1);
+        stacks += give(player, ModItems.SKIN_CORE_9.get(), 1);
+        stacks += give(player, ModItems.SKIN_CORE_10.get(), 1);
+        stacks += give(player, ModItems.SKIN_CORE_11.get(), 1);
+        stacks += give(player, ModItems.SKIN_CORE_12.get(), 1);
+        stacks += give(player, ModItems.SKIN_CORE_13.get(), 1);
+        stacks += give(player, ModItems.SKIN_CORE_14.get(), 1);
+        stacks += give(player, ModItems.SKIN_CORE_15.get(), 1);
+        stacks += give(player, ModItems.SKIN_CORE_16.get(), 1);
+        stacks += give(player, ModItems.SKIN_CORE_17.get(), 1);
+        stacks += give(player, ModItems.SKIN_CORE_18.get(), 1);
+        stacks += give(player, ModItems.SKIN_CORE_19.get(), 1);
+        stacks += give(player, ModItems.SKIN_CORE_20.get(), 1);
+        stacks += give(player, ModItems.SKIN_CORE_21.get(), 1);
+        stacks += give(player, ModItems.SKIN_CORE_22.get(), 1);
+        stacks += give(player, ModItems.SKIN_CORE_23.get(), 1);
+        return stacks;
+    }
+
+    private static int give(ServerPlayer player, ItemLike item, int count) {
+        return give(player, new ItemStack(item, count));
+    }
+
+    private static int give(ServerPlayer player, ItemStack stack) {
+        if (stack.isEmpty()) {
+            return 0;
+        }
+
+        ItemStack remaining = stack.copy();
+        boolean accepted = player.getInventory().add(remaining);
+        if (!accepted && !remaining.isEmpty()) {
+            player.drop(remaining, false);
+        }
+        return 1;
     }
 
     private static int locateRuin(CommandSourceStack source, String type) {

@@ -15,7 +15,8 @@ public record CannonImpactEffectPayload(double x, double y, double z, float powe
     public enum Kind {
         HE,
         AP,
-        VT
+        VT,
+        WATER
     }
 
     public static final Type<CannonImpactEffectPayload> TYPE =

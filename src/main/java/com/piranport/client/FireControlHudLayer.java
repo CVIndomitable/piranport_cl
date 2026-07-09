@@ -3,6 +3,7 @@ package com.piranport.client;
 import com.piranport.PiranPort;
 import com.piranport.aviation.ClientFireControlData;
 import com.piranport.combat.TransformationManager;
+import com.piranport.config.HudPosition;
 import com.piranport.item.ShipCoreItem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;

@@ -63,6 +63,15 @@ public class ModDataComponents {
                     .networkSynchronized(WeaponCategory.STREAM_CODEC)
                     .build());
 
+    // ===== 装备强化等级 =====
+
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<Integer>>
+            EQUIPMENT_ENHANCEMENT_LEVEL = DATA_COMPONENTS.register("equipment_enhancement_level",
+            () -> DataComponentType.<Integer>builder()
+                    .persistent(Codec.INT)
+                    .networkSynchronized(ByteBufCodecs.VAR_INT)
+                    .build());
+
     // ===== 分槽冷却 =====
 
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<SlotCooldowns>>

@@ -193,6 +193,34 @@ public class ModEntityTypes {
                     .sized(0.6f, 1.8f).clientTrackingRange(16).updateInterval(3)
                     .build("piranport:deep_ocean_supply"));
 
+    public static final DeferredHolder<EntityType<?>, EntityType<com.piranport.npc.deepocean.DeepOceanArchivistEntity>>
+            DEEP_OCEAN_ARCHIVIST = ENTITY_TYPES.register("deep_ocean_archivist",
+            () -> EntityType.Builder.<com.piranport.npc.deepocean.DeepOceanArchivistEntity>of(
+                            com.piranport.npc.deepocean.DeepOceanArchivistEntity::new, MobCategory.MONSTER)
+                    .sized(0.6f, 1.8f).clientTrackingRange(16).updateInterval(3)
+                    .build("piranport:deep_ocean_archivist"));
+
+    public static final DeferredHolder<EntityType<?>, EntityType<com.piranport.npc.deepocean.DeepOceanEngineerEntity>>
+            DEEP_OCEAN_ENGINEER = ENTITY_TYPES.register("deep_ocean_engineer",
+            () -> EntityType.Builder.<com.piranport.npc.deepocean.DeepOceanEngineerEntity>of(
+                            com.piranport.npc.deepocean.DeepOceanEngineerEntity::new, MobCategory.MONSTER)
+                    .sized(0.6f, 1.8f).clientTrackingRange(16).updateInterval(3)
+                    .build("piranport:deep_ocean_engineer"));
+
+    public static final DeferredHolder<EntityType<?>, EntityType<com.piranport.npc.deepocean.DeepOceanNavigatorEntity>>
+            DEEP_OCEAN_NAVIGATOR = ENTITY_TYPES.register("deep_ocean_navigator",
+            () -> EntityType.Builder.<com.piranport.npc.deepocean.DeepOceanNavigatorEntity>of(
+                            com.piranport.npc.deepocean.DeepOceanNavigatorEntity::new, MobCategory.MONSTER)
+                    .sized(0.6f, 1.8f).clientTrackingRange(16).updateInterval(3)
+                    .build("piranport:deep_ocean_navigator"));
+
+    public static final DeferredHolder<EntityType<?>, EntityType<com.piranport.npc.deepocean.DeepOceanQuartermasterEntity>>
+            DEEP_OCEAN_QUARTERMASTER = ENTITY_TYPES.register("deep_ocean_quartermaster",
+            () -> EntityType.Builder.<com.piranport.npc.deepocean.DeepOceanQuartermasterEntity>of(
+                            com.piranport.npc.deepocean.DeepOceanQuartermasterEntity::new, MobCategory.MONSTER)
+                    .sized(0.6f, 1.8f).clientTrackingRange(16).updateInterval(3)
+                    .build("piranport:deep_ocean_quartermaster"));
+
     public static final DeferredHolder<EntityType<?>, EntityType<com.piranport.npc.deepocean.DeepOceanDestroyerEntity>>
             DEEP_OCEAN_DESTROYER = ENTITY_TYPES.register("deep_ocean_destroyer",
             () -> EntityType.Builder.<com.piranport.npc.deepocean.DeepOceanDestroyerEntity>of(
@@ -248,6 +276,13 @@ public class ModEntityTypes {
                             com.piranport.npc.deepocean.DeepOceanSubmarineEntity::new, MobCategory.MONSTER)
                     .sized(0.6f, 1.8f).clientTrackingRange(16).updateInterval(3)
                     .build("piranport:deep_ocean_submarine"));
+
+    public static final DeferredHolder<EntityType<?>, EntityType<com.piranport.npc.deepocean.DeepOceanFlagshipEntity>>
+            DEEP_OCEAN_FLAGSHIP = ENTITY_TYPES.register("deep_ocean_flagship",
+            () -> EntityType.Builder.<com.piranport.npc.deepocean.DeepOceanFlagshipEntity>of(
+                            com.piranport.npc.deepocean.DeepOceanFlagshipEntity::new, MobCategory.MONSTER)
+                    .sized(1.0f, 2.2f).clientTrackingRange(20).updateInterval(3)
+                    .build("piranport:deep_ocean_flagship"));
 
     // --- Ship Girl NPC ---
     public static final DeferredHolder<EntityType<?>, EntityType<com.piranport.npc.shipgirl.ShipGirlEntity>>

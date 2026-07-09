@@ -3,6 +3,8 @@ package com.piranport.client;
 import com.piranport.combat.TransformationManager;
 import com.piranport.component.LoadedAmmo;
 import com.piranport.component.SlotCooldowns;
+import com.piranport.client.input.ClientInputCoordinator;
+import com.piranport.client.input.EntityHighlightHandler;
 import com.piranport.dungeon.client.DungeonHudLayer;
 import com.piranport.dungeon.client.DungeonResultScreen;
 import com.piranport.dungeon.client.DungeonReviveScreen;
@@ -46,10 +48,23 @@ public final class ClientItemHooks {
         return mc.level != null ? mc.level.getGameTime() : -1L;
     }
 
+    public static void resetClientState() {
+        ClientInputCoordinator.resetClientState();
+    }
+
+    public static boolean isHighlightEnabled() {
+        return EntityHighlightHandler.isHighlightEnabled();
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public static void initializeSkinCoreItemClient(Object consumer) {
+        if (consumer instanceof java.util.function.Consumer rawConsumer) {
+            rawConsumer.accept(SkinCoreItemRenderer.CLIENT_EXTENSIONS);
+        }
+    }
+
     public static boolean toggleArtilleryScope(Player player, ItemStack stack) {
-        if (ClientScopeHandler.isScoping()) {
-            ClientScopeHandler.exitScope();
-        } else {
+        if (!ClientScopeHandler.isScoping()) {
             ClientScopeHandler.enterScope(player, stack);
         }
         return true;
@@ -73,6 +88,10 @@ public final class ClientItemHooks {
 
     public static void triggerCameraShake(float intensity, int durationTicks) {
         CameraShakeHandler.trigger(intensity, durationTicks);
+    }
+
+    public static void triggerAircraftLaunchPose(int entityId, int skinId, int durationTicks) {
+        AircraftLaunchPoseClientState.trigger(entityId, skinId, durationTicks);
     }
 
     public static void spawnCannonImpactEffect(Object payload) {
@@ -135,7 +154,7 @@ public final class ClientItemHooks {
         if (isFireControlTarget(aircraft)) {
             return true;
         }
-        if (!com.piranport.ClientTickHandler.isHighlightEnabled()) {
+        if (!EntityHighlightHandler.isHighlightEnabled()) {
             return false;
         }
         Minecraft mc = Minecraft.getInstance();

@@ -1,0 +1,34 @@
+{
+  "parent": "piranport:root",
+  "display": {
+    "icon": {
+      "count": 1,
+      "id": "piranport:portal_activation_core"
+    },
+    "title": {
+      "translate": "advancements.piranport.activate_abyssal_portal.title"
+    },
+    "description": {
+      "translate": "advancements.piranport.activate_abyssal_portal.description"
+    },
+    "frame": "task"
+  },
+  "criteria": {
+    "done": {
+      "conditions": {
+        "items": [
+          {
+            "items": "minecraft:bedrock"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "requirements": [
+    [
+      "done"
+    ]
+  ],
+  "sends_telemetry_event": false
+}

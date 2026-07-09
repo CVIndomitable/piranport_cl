@@ -3,6 +3,7 @@ package com.piranport.block.entity;
 import com.piranport.menu.CookingPotMenu;
 import com.piranport.recipe.CookingPotRecipe;
 import com.piranport.recipe.CookingPotRecipeInput;
+import com.piranport.registry.ModBlocks;
 import com.piranport.registry.ModBlockEntityTypes;
 import com.piranport.registry.ModRecipeTypes;
 import net.minecraft.core.BlockPos;
@@ -223,6 +224,7 @@ public class CookingPotBlockEntity extends BlockEntity implements MenuProvider {
         BlockPos below = pos.below();
         BlockState bs = level.getBlockState(below);
         if (bs.is(Blocks.FIRE) || bs.is(Blocks.SOUL_FIRE)) return true;
+        if (bs.is(ModBlocks.STOVE.get())) return true;
         if (bs.is(Blocks.MAGMA_BLOCK)) return true;
         if (bs.getFluidState().is(Fluids.LAVA)) return true;
         if (bs.is(Blocks.CAMPFIRE) && bs.getValue(CampfireBlock.LIT)) return true;

@@ -63,6 +63,7 @@ public class SkinManager {
             case 20 -> new ItemStack(ModItems.SKIN_CORE_20.get());
             case 21 -> new ItemStack(ModItems.SKIN_CORE_21.get());
             case 22 -> new ItemStack(ModItems.SKIN_CORE_22.get());
+            case 23 -> new ItemStack(ModItems.SKIN_CORE_23.get());
             default -> ItemStack.EMPTY;
         };
     }

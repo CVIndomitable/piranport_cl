@@ -83,8 +83,26 @@ class ArchitectureTest {
                         "..item..",
                         "..network..",
                         "..registry..")
-                .should().dependOnClassesThat().resideInAnyPackage("net.minecraft.client..")
+                .should().dependOnClassesThat().resideInAnyPackage(
+                        "net.minecraft.client..",
+                        "net.neoforged.neoforge.client..")
                 .because("Shared gameplay classes must not load Minecraft client-only classes")
+                .check(CLASSES);
+    }
+
+    /** 高频共享包不得直接依赖本项目 client 包，应通过 platform.ClientHooks 桥接。 */
+    @Test
+    void sharedGameplayPackagesShouldNotDependOnOwnClientPackage() {
+        noClasses()
+                .that().resideInAnyPackage(
+                        "..artillery..",
+                        "..combat..",
+                        "..entity..",
+                        "..item..",
+                        "..network..",
+                        "..registry..")
+                .should().dependOnClassesThat().resideInAnyPackage("..client..")
+                .because("Shared gameplay classes must use platform.ClientHooks for client-only helpers")
                 .check(CLASSES);
     }
 

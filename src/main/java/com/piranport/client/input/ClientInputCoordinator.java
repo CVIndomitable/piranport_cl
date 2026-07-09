@@ -132,7 +132,10 @@ public class ClientInputCoordinator {
 
         // 10) 手持火炮时压制原版攻击挥臂动画
         if (ClientScopeHandler.isHoldingCannon(mc.player)) {
-            mc.player.attackAnim = 0;
+            mc.player.attackAnim = 0.0f;
+            mc.player.oAttackAnim = 0.0f;
+            mc.player.swinging = false;
+            mc.player.swingTime = 0;
         }
     }
 }

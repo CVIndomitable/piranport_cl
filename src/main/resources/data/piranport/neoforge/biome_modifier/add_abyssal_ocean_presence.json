@@ -1,0 +1,4 @@
+{
+  "type": "piranport:abyssal_ocean",
+  "target_biomes": "#minecraft:is_deep_ocean"
+}

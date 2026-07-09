@@ -1,0 +1,34 @@
+{
+  "parent": "piranport:story/read_abyssal_report",
+  "display": {
+    "icon": {
+      "count": 1,
+      "id": "piranport:exp_shell"
+    },
+    "title": {
+      "translate": "advancements.piranport.turn_in_intel.title"
+    },
+    "description": {
+      "translate": "advancements.piranport.turn_in_intel.description"
+    },
+    "frame": "task"
+  },
+  "criteria": {
+    "done": {
+      "conditions": {
+        "items": [
+          {
+            "items": "minecraft:bedrock"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "requirements": [
+    [
+      "done"
+    ]
+  ],
+  "sends_telemetry_event": false
+}

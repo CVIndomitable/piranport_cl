@@ -1,18 +1,22 @@
 package com.piranport.registry;
 
 import com.piranport.PiranPort;
+import com.piranport.block.AbyssalSeepBlock;
+import com.piranport.block.BlueprintChestBlock;
 import com.piranport.block.CookingPotBlock;
 import com.piranport.block.CuttingBoardBlock;
 import com.piranport.block.FlareLightBlock;
 import com.piranport.block.ReloadFacilityBlock;
 import com.piranport.block.FourStageCropBlock;
-import com.piranport.block.PeachLeavesBlock;
 import com.piranport.block.PlaceableFoodBlock;
 import com.piranport.block.RiceCropBlock;
 import com.piranport.block.SaltChipBlock;
+import com.piranport.block.SeasonalLeavesBlock;
 import com.piranport.block.SmokeScreenBlock;
 import com.piranport.block.StoneMillBlock;
+import com.piranport.block.StoveBlock;
 import com.piranport.block.ThreeStageCropBlock;
+import com.piranport.block.WildGardenBlock;
 import com.piranport.block.YubariWaterBucketBlock;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
@@ -89,6 +93,13 @@ public class ModBlocks {
     public static final DeferredBlock<FourStageCropBlock> PINEAPPLE_CROP =
             BLOCKS.register("pineapple_crop", () -> new FourStageCropBlock(cropProps(), () -> ModItems.PINEAPPLE_SEED.get()));
 
+    public static final DeferredBlock<WildGardenBlock> WILD_GARDEN =
+            BLOCKS.register("wild_garden", () -> new WildGardenBlock(
+                    BlockBehaviour.Properties.ofFullCopy(Blocks.SHORT_GRASS)
+                            .noCollission()
+                            .instabreak()
+                            .sound(SoundType.GRASS)));
+
     // ===== Phase 28: Shipgirl Food Expansion Crops =====
     public static final DeferredBlock<FourStageCropBlock> LABLAB_BEAN_CROP =
             BLOCKS.register("lablab_bean_crop", () -> new FourStageCropBlock(cropProps(), () -> ModItems.LABLAB_BEAN_SEEDS.get()));
@@ -100,6 +111,33 @@ public class ModBlocks {
             BLOCKS.register("rye_crop", () -> new FourStageCropBlock(cropProps(), () -> ModItems.RYE_SEEDS.get()));
 
     // ===== Phase 28: Peach Tree =====
+    private static ResourceKey<ConfiguredFeature<?, ?>> treeFeatureKey(String name) {
+        return ResourceKey.create(Registries.CONFIGURED_FEATURE,
+                ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, name));
+    }
+
+    private static DeferredBlock<RotatedPillarBlock> registerTreeLog(String name) {
+        return BLOCKS.register(name, () -> new RotatedPillarBlock(
+                BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_LOG)));
+    }
+
+    private static DeferredBlock<SeasonalLeavesBlock> registerSeasonalLeaves(String name) {
+        return BLOCKS.register(name, () -> new SeasonalLeavesBlock(
+                BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_LEAVES)));
+    }
+
+    private static DeferredBlock<SaplingBlock> registerTreeSapling(
+            String name,
+            String growerName,
+            ResourceKey<ConfiguredFeature<?, ?>> featureKey) {
+        return BLOCKS.register(name, () -> new SaplingBlock(
+                new TreeGrower("piranport:" + growerName,
+                        Optional.empty(),
+                        Optional.of(featureKey),
+                        Optional.empty()),
+                BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_SAPLING)));
+    }
+
     public static final ResourceKey<ConfiguredFeature<?, ?>> PEACH_TREE_FEATURE_KEY =
             ResourceKey.create(Registries.CONFIGURED_FEATURE,
                     ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "peach_tree"));
@@ -108,9 +146,8 @@ public class ModBlocks {
             BLOCKS.register("peach_log", () -> new RotatedPillarBlock(
                     BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_LOG)));
 
-    public static final DeferredBlock<PeachLeavesBlock> PEACH_LEAVES =
-            BLOCKS.register("peach_leaves", () -> new PeachLeavesBlock(
-                    BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_LEAVES)));
+    public static final DeferredBlock<SeasonalLeavesBlock> PEACH_LEAVES =
+            registerSeasonalLeaves("peach_leaves");
 
     public static final DeferredBlock<SaplingBlock> PEACH_SAPLING =
             BLOCKS.register("peach_sapling", () -> new SaplingBlock(
@@ -119,6 +156,78 @@ public class ModBlocks {
                             Optional.of(PEACH_TREE_FEATURE_KEY),
                             Optional.empty()),
                     BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_SAPLING)));
+
+    public static final ResourceKey<ConfiguredFeature<?, ?>> MAIDENHAIR_TREE_FEATURE_KEY =
+            treeFeatureKey("maidenhair_tree");
+    public static final DeferredBlock<RotatedPillarBlock> MAIDENHAIR_LOG =
+            registerTreeLog("maidenhair_log");
+    public static final DeferredBlock<SeasonalLeavesBlock> MAIDENHAIR_LEAVES =
+            registerSeasonalLeaves("maidenhair_leaves");
+    public static final DeferredBlock<SaplingBlock> MAIDENHAIR_SAPLING =
+            registerTreeSapling("maidenhair_sapling", "maidenhair", MAIDENHAIR_TREE_FEATURE_KEY);
+
+    public static final ResourceKey<ConfiguredFeature<?, ?>> SAGO_PALM_TREE_FEATURE_KEY =
+            treeFeatureKey("sago_palm_tree");
+    public static final DeferredBlock<RotatedPillarBlock> SAGO_PALM_LOG =
+            registerTreeLog("sago_palm_log");
+    public static final DeferredBlock<SeasonalLeavesBlock> SAGO_PALM_LEAVES =
+            registerSeasonalLeaves("sago_palm_leaves");
+    public static final DeferredBlock<SaplingBlock> SAGO_PALM_SAPLING =
+            registerTreeSapling("sago_palm_sapling", "sago_palm", SAGO_PALM_TREE_FEATURE_KEY);
+
+    public static final ResourceKey<ConfiguredFeature<?, ?>> GARDENIA_TREE_FEATURE_KEY =
+            treeFeatureKey("gardenia_tree");
+    public static final DeferredBlock<RotatedPillarBlock> GARDENIA_LOG =
+            registerTreeLog("gardenia_log");
+    public static final DeferredBlock<SeasonalLeavesBlock> GARDENIA_LEAVES =
+            registerSeasonalLeaves("gardenia_leaves");
+    public static final DeferredBlock<SaplingBlock> GARDENIA_SAPLING =
+            registerTreeSapling("gardenia_sapling", "gardenia", GARDENIA_TREE_FEATURE_KEY);
+
+    public static final ResourceKey<ConfiguredFeature<?, ?>> CHINESE_PLUM_TREE_FEATURE_KEY =
+            treeFeatureKey("chinese_plum_tree");
+    public static final DeferredBlock<RotatedPillarBlock> CHINESE_PLUM_LOG =
+            registerTreeLog("chinese_plum_log");
+    public static final DeferredBlock<SeasonalLeavesBlock> CHINESE_PLUM_LEAVES =
+            registerSeasonalLeaves("chinese_plum_leaves");
+    public static final DeferredBlock<SaplingBlock> CHINESE_PLUM_SAPLING =
+            registerTreeSapling("chinese_plum_sapling", "chinese_plum", CHINESE_PLUM_TREE_FEATURE_KEY);
+
+    public static final ResourceKey<ConfiguredFeature<?, ?>> MAPPLE_TREE_FEATURE_KEY =
+            treeFeatureKey("mapple_tree");
+    public static final DeferredBlock<RotatedPillarBlock> MAPPLE_LOG =
+            registerTreeLog("mapple_log");
+    public static final DeferredBlock<SeasonalLeavesBlock> MAPPLE_LEAVES =
+            registerSeasonalLeaves("mapple_leaves");
+    public static final DeferredBlock<SaplingBlock> MAPPLE_SAPLING =
+            registerTreeSapling("mapple_sapling", "mapple", MAPPLE_TREE_FEATURE_KEY);
+
+    public static final ResourceKey<ConfiguredFeature<?, ?>> CHORUS_TREE_FEATURE_KEY =
+            treeFeatureKey("chorus_tree");
+    public static final DeferredBlock<RotatedPillarBlock> CHORUS_TREE_LOG =
+            registerTreeLog("chorus_tree_log");
+    public static final DeferredBlock<SeasonalLeavesBlock> CHORUS_TREE_LEAVES =
+            registerSeasonalLeaves("chorus_tree_leaves");
+    public static final DeferredBlock<SaplingBlock> CHORUS_TREE_SAPLING =
+            registerTreeSapling("chorus_tree_sapling", "chorus_tree", CHORUS_TREE_FEATURE_KEY);
+
+    public static final ResourceKey<ConfiguredFeature<?, ?>> SLIME_TREE_FEATURE_KEY =
+            treeFeatureKey("slime_tree");
+    public static final DeferredBlock<RotatedPillarBlock> SLIME_TREE_LOG =
+            registerTreeLog("slime_tree_log");
+    public static final DeferredBlock<SeasonalLeavesBlock> SLIME_TREE_LEAVES =
+            registerSeasonalLeaves("slime_tree_leaves");
+    public static final DeferredBlock<SaplingBlock> SLIME_TREE_SAPLING =
+            registerTreeSapling("slime_tree_sapling", "slime_tree", SLIME_TREE_FEATURE_KEY);
+
+    public static final ResourceKey<ConfiguredFeature<?, ?>> LAVA_SLIME_TREE_FEATURE_KEY =
+            treeFeatureKey("lava_slime_tree");
+    public static final DeferredBlock<RotatedPillarBlock> LAVA_SLIME_TREE_LOG =
+            registerTreeLog("lava_slime_tree_log");
+    public static final DeferredBlock<SeasonalLeavesBlock> LAVA_SLIME_TREE_LEAVES =
+            registerSeasonalLeaves("lava_slime_tree_leaves");
+    public static final DeferredBlock<SaplingBlock> LAVA_SLIME_TREE_SAPLING =
+            registerTreeSapling("lava_slime_tree_sapling", "lava_slime_tree", LAVA_SLIME_TREE_FEATURE_KEY);
 
     // ===== Functional Blocks (Phase 12) =====
     public static final DeferredBlock<StoneMillBlock> STONE_MILL =
@@ -147,6 +256,16 @@ public class ModBlocks {
                             .requiresCorrectToolForDrops()
                             .sound(SoundType.METAL)
                             .noOcclusion()));
+
+    public static final DeferredBlock<StoveBlock> STOVE =
+            BLOCKS.register("stove", () -> new StoveBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.STONE)
+                            .strength(3.5f, 6.0f)
+                            .requiresCorrectToolForDrops()
+                            .sound(SoundType.STONE)
+                            .noOcclusion()
+                            .lightLevel(state -> 8)));
 
     // ===== Placeable Food Blocks (Phase 16) =====
     private static BlockBehaviour.Properties foodBlockProps() {
@@ -210,6 +329,14 @@ public class ModBlocks {
                             .requiresCorrectToolForDrops()
                             .sound(SoundType.METAL)));
 
+    public static final DeferredBlock<BlueprintChestBlock> BLUEPRINT_CHEST =
+            BLOCKS.register("blueprint_chest", () -> new BlueprintChestBlock(
+                    BlockBehaviour.Properties.of()
+                            .mapColor(MapColor.WOOD)
+                            .strength(2.5f, 4.0f)
+                            .sound(SoundType.WOOD)
+                            .noOcclusion()));
+
     // ===== Smoke Screen =====
     public static final DeferredBlock<SmokeScreenBlock> SMOKE_SCREEN =
             BLOCKS.register("smoke_screen", () -> new SmokeScreenBlock(
@@ -268,6 +395,16 @@ public class ModBlocks {
                                     .strength(-1.0f, 3600000.0f)
                                     .noLootTable()
                                     .noOcclusion()));
+
+    public static final DeferredBlock<AbyssalSeepBlock> ABYSSAL_SEEP =
+            BLOCKS.register("abyssal_seep",
+                    () -> new AbyssalSeepBlock(
+                            BlockBehaviour.Properties.of()
+                                    .mapColor(MapColor.COLOR_PURPLE)
+                                    .strength(4.0f, 9.0f)
+                                    .requiresCorrectToolForDrops()
+                                    .sound(SoundType.DEEPSLATE)
+                                    .lightLevel(state -> 6)));
 
     // ===== Decorative Blocks (from sheropshire) =====
     public static final DeferredBlock<com.piranport.block.ConfidentialCargoBlock> CONFIDENTIAL_CARGO =

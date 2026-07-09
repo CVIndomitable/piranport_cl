@@ -148,8 +148,8 @@ public final class NodeBattleField {
 
     /**
      * Returns null when the entity type is not registered. Callers must treat null
-     * as "skip" rather than substituting a placeholder, since untagged placeholder
-     * entities would never trigger node completion handlers.
+     * as "skip" rather than substituting an untagged fallback entity, since that
+     * would never trigger node completion handlers.
      */
     private static Entity createEntity(ServerLevel level, String entityId) {
         ResourceLocation rl = ResourceLocation.tryParse(entityId);

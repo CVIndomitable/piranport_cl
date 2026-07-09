@@ -1,0 +1,34 @@
+{
+  "parent": "piranport:story/read_abyssal_report",
+  "display": {
+    "icon": {
+      "count": 1,
+      "id": "piranport:ship_girl_contract"
+    },
+    "title": {
+      "translate": "advancements.piranport.trade_with_ship_girl.title"
+    },
+    "description": {
+      "translate": "advancements.piranport.trade_with_ship_girl.description"
+    },
+    "frame": "task"
+  },
+  "criteria": {
+    "done": {
+      "conditions": {
+        "items": [
+          {
+            "items": "minecraft:bedrock"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "requirements": [
+    [
+      "done"
+    ]
+  ],
+  "sends_telemetry_event": false
+}

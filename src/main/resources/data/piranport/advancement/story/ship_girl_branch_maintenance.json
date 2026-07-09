@@ -1,0 +1,37 @@
+{
+  "parent": "piranport:story/ship_girl_story_alliance",
+  "display": {
+    "icon": {
+      "count": 1,
+      "id": "piranport:repair_kit"
+    },
+    "title": {
+      "translate": "advancements.piranport.ship_girl_branch_maintenance.title"
+    },
+    "description": {
+      "translate": "advancements.piranport.ship_girl_branch_maintenance.description"
+    },
+    "frame": "task"
+  },
+  "criteria": {
+    "done": {
+      "conditions": {
+        "items": [
+          {
+            "items": "minecraft:bedrock"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "requirements": [
+    [
+      "done"
+    ]
+  ],
+  "rewards": {
+    "experience": 40
+  },
+  "sends_telemetry_event": false
+}

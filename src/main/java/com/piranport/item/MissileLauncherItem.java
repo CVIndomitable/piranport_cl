@@ -79,6 +79,8 @@ public class MissileLauncherItem extends Item {
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context,
                                 List<Component> tooltipComponents, TooltipFlag tooltipFlag) {
+        ExperienceShellItem.appendEnhancementTooltip(stack, tooltipComponents);
+
         // 导弹类型（always visible）
         tooltipComponents.add(Component.translatable(missileType.translationKey)
                 .withStyle(ChatFormatting.GRAY));

@@ -6,6 +6,8 @@ import com.mojang.math.Axis;
 import com.piranport.PiranPort;
 import com.piranport.block.entity.ModelDebugBlockEntity;
 import com.piranport.client.model.B25Model;
+import com.piranport.client.model.DeepOceanHeavyCruiserModel;
+import com.piranport.client.model.DeepOceanLightCarrierModel;
 import com.piranport.client.model.F4FModel;
 import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -28,22 +30,36 @@ public class ModelDebugBlockEntityRenderer implements BlockEntityRenderer<ModelD
             ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "textures/entity/b25.png");
     private static final ResourceLocation F4F_TEXTURE =
             ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "textures/entity/f4f.png");
+    private static final ResourceLocation HEAVY_CRUISER_TEXTURE =
+            ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID,
+                    "textures/entity/deep_ocean/heavy_cruiser_model.png");
+    private static final ResourceLocation LIGHT_CARRIER_TEXTURE =
+            ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID,
+                    "textures/entity/deep_ocean/light_carrier_model.png");
 
     private final B25Model<Entity> b25;
     private final F4FModel<Entity> f4f;
+    private final DeepOceanHeavyCruiserModel heavyCruiser;
+    private final DeepOceanLightCarrierModel lightCarrier;
 
     public ModelDebugBlockEntityRenderer(BlockEntityRendererProvider.Context ctx) {
         this.b25 = new B25Model<>(ctx.getModelSet().bakeLayer(B25Model.LAYER_LOCATION));
         this.f4f = new F4FModel<>(ctx.getModelSet().bakeLayer(F4FModel.LAYER_LOCATION));
+        this.heavyCruiser = new DeepOceanHeavyCruiserModel(
+                ctx.getModelSet().bakeLayer(DeepOceanHeavyCruiserModel.LAYER_LOCATION));
+        this.lightCarrier = new DeepOceanLightCarrierModel(
+                ctx.getModelSet().bakeLayer(DeepOceanLightCarrierModel.LAYER_LOCATION));
     }
 
     @Override
     public void render(ModelDebugBlockEntity be, float partialTick, PoseStack poseStack,
                        MultiBufferSource bufferSource, int packedLight, int packedOverlay) {
-        EntityModel<Entity> model;
+        EntityModel<?> model;
         ResourceLocation texture;
         switch (be.getModelType()) {
             case "f4f" -> { model = f4f; texture = F4F_TEXTURE; }
+            case "heavy_cruiser" -> { model = heavyCruiser; texture = HEAVY_CRUISER_TEXTURE; }
+            case "light_carrier" -> { model = lightCarrier; texture = LIGHT_CARRIER_TEXTURE; }
             case "b25" -> { model = b25; texture = B25_TEXTURE; }
             default    -> { model = b25; texture = B25_TEXTURE; }
         }

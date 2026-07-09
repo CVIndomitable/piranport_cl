@@ -40,6 +40,19 @@ public final class ClientHooks {
         return result instanceof Long value ? value : -1L;
     }
 
+    public static void resetClientState() {
+        invoke("resetClientState");
+    }
+
+    public static boolean isHighlightEnabled() {
+        Object result = invoke("isHighlightEnabled");
+        return result instanceof Boolean value && value;
+    }
+
+    public static void initializeSkinCoreItemClient(Object consumer) {
+        invoke("initializeSkinCoreItemClient", new Class<?>[] { Object.class }, consumer);
+    }
+
     public static boolean toggleArtilleryScope(Player player, ItemStack stack) {
         Object result = invoke("toggleArtilleryScope",
                 new Class<?>[] { Player.class, ItemStack.class }, player, stack);
@@ -64,6 +77,11 @@ public final class ClientHooks {
     public static void triggerCameraShake(float intensity, int durationTicks) {
         invoke("triggerCameraShake",
                 new Class<?>[] { float.class, int.class }, intensity, durationTicks);
+    }
+
+    public static void triggerAircraftLaunchPose(int entityId, int skinId, int durationTicks) {
+        invoke("triggerAircraftLaunchPose",
+                new Class<?>[] { int.class, int.class, int.class }, entityId, skinId, durationTicks);
     }
 
     public static void spawnCannonImpactEffect(Object payload) {

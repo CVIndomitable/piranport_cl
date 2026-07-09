@@ -145,6 +145,30 @@ public class ModCreativeTabs {
                         output.accept(ModItems.SKIN_CORE_13.get());
                         output.accept(ModItems.SKIN_CORE_14.get());
                         output.accept(ModItems.SKIN_CORE_15.get());
+                        output.accept(ModItems.SKIN_CORE_16.get());
+                        output.accept(ModItems.SKIN_CORE_17.get());
+                        output.accept(ModItems.SKIN_CORE_18.get());
+                        output.accept(ModItems.SKIN_CORE_19.get());
+                        output.accept(ModItems.SKIN_CORE_20.get());
+                        output.accept(ModItems.SKIN_CORE_21.get());
+                        output.accept(ModItems.SKIN_CORE_22.get());
+                        output.accept(ModItems.SKIN_CORE_23.get());
+                        // Entity Cores
+                        output.accept(ModItems.ENTITY_CORE_DEEP_OCEAN_SUPPLY.get());
+                        output.accept(ModItems.ENTITY_CORE_DEEP_OCEAN_ARCHIVIST.get());
+                        output.accept(ModItems.ENTITY_CORE_DEEP_OCEAN_ENGINEER.get());
+                        output.accept(ModItems.ENTITY_CORE_DEEP_OCEAN_NAVIGATOR.get());
+                        output.accept(ModItems.ENTITY_CORE_DEEP_OCEAN_QUARTERMASTER.get());
+                        output.accept(ModItems.ENTITY_CORE_DEEP_OCEAN_DESTROYER.get());
+                        output.accept(ModItems.ENTITY_CORE_DEEP_OCEAN_LIGHT_CRUISER.get());
+                        output.accept(ModItems.ENTITY_CORE_DEEP_OCEAN_HEAVY_CRUISER.get());
+                        output.accept(ModItems.ENTITY_CORE_DEEP_OCEAN_BATTLE_CRUISER.get());
+                        output.accept(ModItems.ENTITY_CORE_DEEP_OCEAN_BATTLESHIP.get());
+                        output.accept(ModItems.ENTITY_CORE_DEEP_OCEAN_LIGHT_CARRIER.get());
+                        output.accept(ModItems.ENTITY_CORE_DEEP_OCEAN_CARRIER.get());
+                        output.accept(ModItems.ENTITY_CORE_DEEP_OCEAN_SUBMARINE.get());
+                        output.accept(ModItems.ENTITY_CORE_DEEP_OCEAN_FLAGSHIP.get());
+                        output.accept(ModItems.ENTITY_CORE_SHIP_GIRL.get());
                     }).build());
 
     // ===== 农业 — 矿石 / 材料（作物类归入"舰娘食物"标签页）=====
@@ -165,6 +189,7 @@ public class ModCreativeTabs {
                         output.accept(ModItems.SALT.get());
                         output.accept(ModItems.GYPSUM_CHIP.get());
                         output.accept(ModItems.QUICKLIME.get());
+                        output.accept(ModItems.WILD_GARDEN.get());
                     }).build());
 
     // ===== 食物 — 种子/作物/食材/调料/中间品/菜品/加工站（合并原"舰娘食物"和"厨房"）=====
@@ -178,6 +203,7 @@ public class ModCreativeTabs {
                         output.accept(ModItems.STONE_MILL.get());
                         output.accept(ModItems.CUTTING_BOARD.get());
                         output.accept(ModItems.COOKING_POT.get());
+                        output.accept(ModItems.STOVE.get());
                         output.accept(ModItems.YUBARI_WATER_BUCKET.get());
                         // --- 种子 ---
                         output.accept(ModItems.TOMATO_SEEDS.get());
@@ -193,9 +219,33 @@ public class ModCreativeTabs {
                         output.accept(ModItems.CELERY_SEEDS.get());
                         output.accept(ModItems.RYE_SEEDS.get());
                         output.accept(ModItems.PEACH_SAPLING.get());
-                        // --- 桃树材料 ---
+                        output.accept(ModItems.MAIDENHAIR_SAPLING.get());
+                        output.accept(ModItems.SAGO_PALM_SAPLING.get());
+                        output.accept(ModItems.GARDENIA_SAPLING.get());
+                        output.accept(ModItems.CHINESE_PLUM_SAPLING.get());
+                        output.accept(ModItems.MAPPLE_SAPLING.get());
+                        output.accept(ModItems.CHORUS_TREE_SAPLING.get());
+                        output.accept(ModItems.SLIME_TREE_SAPLING.get());
+                        output.accept(ModItems.LAVA_SLIME_TREE_SAPLING.get());
+                        // --- 树木材料 ---
                         output.accept(ModItems.PEACH_LOG.get());
                         output.accept(ModItems.PEACH_LEAVES.get());
+                        output.accept(ModItems.MAIDENHAIR_LOG.get());
+                        output.accept(ModItems.MAIDENHAIR_LEAVES.get());
+                        output.accept(ModItems.SAGO_PALM_LOG.get());
+                        output.accept(ModItems.SAGO_PALM_LEAVES.get());
+                        output.accept(ModItems.GARDENIA_LOG.get());
+                        output.accept(ModItems.GARDENIA_LEAVES.get());
+                        output.accept(ModItems.CHINESE_PLUM_LOG.get());
+                        output.accept(ModItems.CHINESE_PLUM_LEAVES.get());
+                        output.accept(ModItems.MAPPLE_LOG.get());
+                        output.accept(ModItems.MAPPLE_LEAVES.get());
+                        output.accept(ModItems.CHORUS_TREE_LOG.get());
+                        output.accept(ModItems.CHORUS_TREE_LEAVES.get());
+                        output.accept(ModItems.SLIME_TREE_LOG.get());
+                        output.accept(ModItems.SLIME_TREE_LEAVES.get());
+                        output.accept(ModItems.LAVA_SLIME_TREE_LOG.get());
+                        output.accept(ModItems.LAVA_SLIME_TREE_LEAVES.get());
                         // --- 作物产出 ---
                         output.accept(ModItems.TOMATO.get());
                         output.accept(ModItems.SOYBEAN.get());
@@ -354,6 +404,17 @@ public class ModCreativeTabs {
                         output.accept(ModItems.SMALL_HE_SHELL.get());
                         output.accept(ModItems.MEDIUM_HE_SHELL.get());
                         output.accept(ModItems.LARGE_HE_SHELL.get());
+                        // Grenade Shells
+                        output.accept(ModItems.SMALL_GRENADE_SHELL.get());
+                        output.accept(ModItems.MEDIUM_GRENADE_SHELL.get());
+                        output.accept(ModItems.LARGE_GRENADE_SHELL.get());
+                        // Support Shells
+                        output.accept(ModItems.SMALL_FLARE_SHELL.get());
+                        output.accept(ModItems.MEDIUM_FLARE_SHELL.get());
+                        output.accept(ModItems.LARGE_FLARE_SHELL.get());
+                        output.accept(ModItems.SMALL_SMOKE_SHELL.get());
+                        output.accept(ModItems.MEDIUM_SMOKE_SHELL.get());
+                        output.accept(ModItems.LARGE_SMOKE_SHELL.get());
                         // AP Shells
                         output.accept(ModItems.SMALL_AP_SHELL.get());
                         output.accept(ModItems.MEDIUM_AP_SHELL.get());
@@ -420,6 +481,7 @@ public class ModCreativeTabs {
                         output.accept(ModItems.REPAIR_KIT.get());
                         output.accept(ModItems.MYSTERIOUS_WEAPON.get());
                         output.accept(ModItems.RICHELIEU_COMMAND_SWORD.get());
+                        output.accept(ModItems.SHIP_GIRL_CONTRACT.get());
                         output.accept(ModItems.TAIHOU_UMBRELLA.get());
                         output.accept(ModItems.EUGEN_SHIELD.get());
                         // Football Superstar Set
@@ -443,6 +505,7 @@ public class ModCreativeTabs {
                         output.accept(ModItems.RELOAD_FACILITY.get());
                         output.accept(ModItems.AMMO_WORKBENCH.get());
                         output.accept(ModItems.WEAPON_WORKBENCH.get());
+                        output.accept(ModItems.BLUEPRINT_CHEST.get());
                         output.accept(ModItems.DUNGEON_LECTERN.get());
                         output.accept(ModItems.FLOATING_TARGET.get());
                         output.accept(ModItems.MEDIUM_GUN_BLUEPRINT.get());
@@ -476,7 +539,8 @@ public class ModCreativeTabs {
                         // Blocks
                         output.accept(ModItems.ABYSSAL_PORTAL_FRAME.get());
                         output.accept(ModItems.ABYSSAL_SPAWNER.get());
-                        // Placeholder items
+                        output.accept(ModItems.ABYSSAL_SEEP.get());
+                        // Story and progression reward items
                         output.accept(ModItems.ABYSSAL_REPORT.get());
                         output.accept(ModItems.PORTAL_ACTIVATION_CORE.get());
                         output.accept(ModItems.EXP_SHELL.get());
@@ -509,6 +573,10 @@ public class ModCreativeTabs {
                     .displayItems((parameters, output) -> {
                         // Deep Ocean Spawn Eggs
                         output.accept(ModItems.DEEP_OCEAN_SUPPLY_SPAWN_EGG.get());
+                        output.accept(ModItems.DEEP_OCEAN_ARCHIVIST_SPAWN_EGG.get());
+                        output.accept(ModItems.DEEP_OCEAN_ENGINEER_SPAWN_EGG.get());
+                        output.accept(ModItems.DEEP_OCEAN_NAVIGATOR_SPAWN_EGG.get());
+                        output.accept(ModItems.DEEP_OCEAN_QUARTERMASTER_SPAWN_EGG.get());
                         output.accept(ModItems.DEEP_OCEAN_DESTROYER_SPAWN_EGG.get());
                         output.accept(ModItems.DEEP_OCEAN_LIGHT_CRUISER_SPAWN_EGG.get());
                         output.accept(ModItems.DEEP_OCEAN_HEAVY_CRUISER_SPAWN_EGG.get());
@@ -517,6 +585,7 @@ public class ModCreativeTabs {
                         output.accept(ModItems.DEEP_OCEAN_LIGHT_CARRIER_SPAWN_EGG.get());
                         output.accept(ModItems.DEEP_OCEAN_CARRIER_SPAWN_EGG.get());
                         output.accept(ModItems.DEEP_OCEAN_SUBMARINE_SPAWN_EGG.get());
+                        output.accept(ModItems.DEEP_OCEAN_FLAGSHIP_SPAWN_EGG.get());
                         output.accept(ModItems.SHIP_GIRL_SPAWN_EGG.get());
                     }).build());
 

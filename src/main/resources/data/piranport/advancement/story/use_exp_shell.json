@@ -1,0 +1,34 @@
+{
+  "parent": "piranport:story/turn_in_intel",
+  "display": {
+    "icon": {
+      "count": 1,
+      "id": "minecraft:experience_bottle"
+    },
+    "title": {
+      "translate": "advancements.piranport.use_exp_shell.title"
+    },
+    "description": {
+      "translate": "advancements.piranport.use_exp_shell.description"
+    },
+    "frame": "task"
+  },
+  "criteria": {
+    "done": {
+      "conditions": {
+        "items": [
+          {
+            "items": "minecraft:bedrock"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "requirements": [
+    [
+      "done"
+    ]
+  ],
+  "sends_telemetry_event": false
+}

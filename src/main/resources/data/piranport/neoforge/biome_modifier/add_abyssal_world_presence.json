@@ -1,0 +1,5 @@
+{
+  "type": "piranport:abyssal_ocean",
+  "target_biomes": "piranport:abyssal_ocean",
+  "deep_sea_forces": true
+}

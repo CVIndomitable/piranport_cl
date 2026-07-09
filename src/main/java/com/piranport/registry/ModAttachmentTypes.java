@@ -15,4 +15,8 @@ public class ModAttachmentTypes {
     public static final Supplier<AttachmentType<Integer>> ACTIVE_SKIN =
             ATTACHMENT_TYPES.register("active_skin",
                     () -> AttachmentType.builder(() -> 0).serialize(Codec.INT).build());
+
+    public static final Supplier<AttachmentType<Integer>> ACTIVE_ENTITY_CORE =
+            ATTACHMENT_TYPES.register("active_entity_core",
+                    () -> AttachmentType.builder(() -> 0).serialize(Codec.INT).build());
 }

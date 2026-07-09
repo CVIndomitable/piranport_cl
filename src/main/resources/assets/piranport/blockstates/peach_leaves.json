@@ -1,5 +1,16 @@
 {
   "variants": {
-    "": {"model": "piranport:block/peach_leaves"}
+    "season=spring": {
+      "model": "piranport:block/peach_leaves_spring"
+    },
+    "season=summer": {
+      "model": "piranport:block/peach_leaves_summer"
+    },
+    "season=autumn": {
+      "model": "piranport:block/peach_leaves_autumn"
+    },
+    "season=winter": {
+      "model": "piranport:block/peach_leaves_winter"
+    }
   }
 }

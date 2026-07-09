@@ -10,6 +10,15 @@
         "processors": "piranport:outpost_processors",
         "projection": "rigid"
       }
+    },
+    {
+      "weight": 1,
+      "element": {
+        "element_type": "minecraft:single_pool_element",
+        "location": "piranport:outpost_2",
+        "processors": "piranport:outpost_processors",
+        "projection": "rigid"
+      }
     }
   ]
 }

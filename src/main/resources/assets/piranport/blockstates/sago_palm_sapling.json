@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "stage=0": {
+      "model": "piranport:block/sago_palm_sapling"
+    },
+    "stage=1": {
+      "model": "piranport:block/sago_palm_sapling"
+    }
+  }
+}

@@ -12,7 +12,7 @@ import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 /**
- * 瞄准镜输入处理：右键切换瞄准镜，左键发射。
+ * 瞄准镜输入处理：按住右键进入瞄准镜，左键发射，松开右键退出。
  * 状态管理委托给 {@link ClientScopeHandler}。
  *
  * <p><b>线程模型</b>: 客户端渲染线程（单线程），无需同步。
@@ -45,9 +45,17 @@ public class ScopeInputHandler {
 
         if (!holdingCannon && isScoping) {
             ClientScopeHandler.exitScope();
+            if (mc.getConnection() != null) {
+                PacketDistributor.sendToServer(new ScopeEnterPayload(false));
+            }
             useWasDown = false;
             attackWasDown = false;
             return;
+        }
+        if (holdingCannon && !isScoping) {
+            ClientScopeHandler.tickQuickAim(mc.player, mc.player.getMainHandItem());
+        } else if (!holdingCannon) {
+            ClientScopeHandler.clearQuickAim();
         }
 
         // 进入瞄准镜时关闭弹药轮盘
@@ -55,11 +63,19 @@ public class ScopeInputHandler {
             AmmoSelectOverlay.close();
         }
 
-        // 右键：由 ArtilleryItem.use() 切换瞄准镜，此处只发网络包
+        // 右键：按住进入瞄准镜，松开退出；客户端状态由 ArtilleryItem.use() 和这里共同兜底。
         boolean useDown = mc.options.keyUse.isDown();
         if (useDown && !useWasDown && holdingCannon) {
+            if (!ClientScopeHandler.isScoping()) {
+                ClientScopeHandler.enterScope(mc.player, mc.player.getMainHandItem());
+            }
             if (mc.getConnection() != null) {
-                PacketDistributor.sendToServer(new ScopeEnterPayload(ClientScopeHandler.isScoping()));
+                PacketDistributor.sendToServer(new ScopeEnterPayload(true));
+            }
+        } else if (!useDown && useWasDown && isScoping) {
+            ClientScopeHandler.exitScope();
+            if (mc.getConnection() != null) {
+                PacketDistributor.sendToServer(new ScopeEnterPayload(false));
             }
         }
         useWasDown = useDown;
@@ -86,7 +102,12 @@ public class ScopeInputHandler {
                         PacketDistributor.sendToServer(SalvoFirePayload.maxRangeFire());
                     }
                 } else {
-                    PacketDistributor.sendToServer(SalvoFirePayload.quickFire());
+                    Vec3 target = ClientScopeHandler.getAimedPosition();
+                    if (target != null) {
+                        PacketDistributor.sendToServer(SalvoFirePayload.directFire(target.x, target.y, target.z));
+                    } else {
+                        PacketDistributor.sendToServer(SalvoFirePayload.quickFire());
+                    }
                 }
                 // 重置，防三击被当作新一轮双击
                 lastAttackClickTick = -1;
@@ -102,7 +123,12 @@ public class ScopeInputHandler {
                         PacketDistributor.sendToServer(ScopeFirePayload.maxRangeFire());
                     }
                 } else {
-                    PacketDistributor.sendToServer(ScopeFirePayload.quickFire());
+                    Vec3 target = ClientScopeHandler.getAimedPosition();
+                    if (isArtillery && target != null) {
+                        PacketDistributor.sendToServer(ScopeFirePayload.directFire(target.x, target.y, target.z));
+                    } else {
+                        PacketDistributor.sendToServer(ScopeFirePayload.quickFire());
+                    }
                 }
                 // 记录供双击检测
                 if (isArtillery) {
@@ -113,11 +139,23 @@ public class ScopeInputHandler {
                     lastAttackClickItemType = null;
                 }
             }
+
+            if (fired) {
+                suppressCannonHandAnimation(mc);
+            }
         }
         attackWasDown = attackDown;
 
         if (isScoping) {
             ClientScopeHandler.tick(mc.player, mc.player.getMainHandItem());
         }
+    }
+
+    private static void suppressCannonHandAnimation(Minecraft mc) {
+        if (mc.player == null) return;
+        mc.player.attackAnim = 0.0f;
+        mc.player.oAttackAnim = 0.0f;
+        mc.player.swinging = false;
+        mc.player.swingTime = 0;
     }
 }

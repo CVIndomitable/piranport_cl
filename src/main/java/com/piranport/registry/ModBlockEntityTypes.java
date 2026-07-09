@@ -1,11 +1,13 @@
 package com.piranport.registry;
 
 import com.piranport.PiranPort;
+import com.piranport.block.entity.BlueprintChestBlockEntity;
 import com.piranport.block.entity.CookingPotBlockEntity;
 import com.piranport.block.entity.CuttingBoardBlockEntity;
 import com.piranport.block.entity.PlaceableFoodBlockEntity;
 import com.piranport.block.entity.ReloadFacilityBlockEntity;
 import com.piranport.block.entity.StoneMillBlockEntity;
+import com.piranport.block.entity.StoveBlockEntity;
 import com.piranport.block.entity.YubariWaterBucketBlockEntity;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -29,6 +31,11 @@ public class ModBlockEntityTypes {
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<CookingPotBlockEntity>> COOKING_POT =
             BLOCK_ENTITY_TYPES.register("cooking_pot", () ->
                     BlockEntityType.Builder.of(CookingPotBlockEntity::new, ModBlocks.COOKING_POT.get())
+                            .build(null));
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<StoveBlockEntity>> STOVE =
+            BLOCK_ENTITY_TYPES.register("stove", () ->
+                    BlockEntityType.Builder.of(StoveBlockEntity::new, ModBlocks.STOVE.get())
                             .build(null));
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<ReloadFacilityBlockEntity>> RELOAD_FACILITY =
@@ -56,6 +63,12 @@ public class ModBlockEntityTypes {
             BLOCK_ENTITY_TYPES.register("weapon_workbench", () ->
                     BlockEntityType.Builder.of(com.piranport.block.entity.WeaponWorkbenchBlockEntity::new,
                             ModBlocks.WEAPON_WORKBENCH.get())
+                            .build(null));
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<BlueprintChestBlockEntity>> BLUEPRINT_CHEST =
+            BLOCK_ENTITY_TYPES.register("blueprint_chest", () ->
+                    BlockEntityType.Builder.of(BlueprintChestBlockEntity::new,
+                            ModBlocks.BLUEPRINT_CHEST.get())
                             .build(null));
 
     // Abyssal Spawner (v0.0.11)

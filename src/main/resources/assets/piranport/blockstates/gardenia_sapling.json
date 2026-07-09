@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "stage=0": {
+      "model": "piranport:block/gardenia_sapling"
+    },
+    "stage=1": {
+      "model": "piranport:block/gardenia_sapling"
+    }
+  }
+}

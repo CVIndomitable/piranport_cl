@@ -20,6 +20,7 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
  */
 public record SalvoFirePayload(byte mode, double targetX, double targetY, double targetZ)
         implements CustomPacketPayload {
+    private static final double MIN_AIMED_FIRE_RANGE = 500.0;
 
     public static final Type<SalvoFirePayload> TYPE =
             new Type<>(ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "salvo_fire"));
@@ -47,12 +48,22 @@ public record SalvoFirePayload(byte mode, double targetX, double targetY, double
         return new SalvoFirePayload((byte) 0, 0, 0, 0);
     }
 
+    public static SalvoFirePayload directFire(double x, double y, double z) {
+        return new SalvoFirePayload((byte) 3, x, y, z);
+    }
+
     public static SalvoFirePayload aimedFire(double x, double y, double z) {
         return new SalvoFirePayload((byte) 1, x, y, z);
     }
 
     public static SalvoFirePayload maxRangeFire() {
         return new SalvoFirePayload((byte) 2, 0, 0, 0);
+    }
+
+    private boolean hasFiniteTarget() {
+        return Double.isFinite(targetX)
+                && Double.isFinite(targetY)
+                && Double.isFinite(targetZ);
     }
 
     public static void handle(SalvoFirePayload payload, IPayloadContext ctx) {
@@ -71,12 +82,13 @@ public record SalvoFirePayload(byte mode, double targetX, double targetY, double
                             ShipCoreCombat.ARTILLERY_AIM_NONE, 0, 0, 0);
 
                 case 1 -> { // AIMED
+                    if (!payload.hasFiniteTarget()) return;
                     double dx = payload.targetX() - player.getX();
                     double dy = payload.targetY() - player.getY();
                     double dz = payload.targetZ() - player.getZ();
                     double distSq = dx * dx + dy * dy + dz * dz;
                     int simDist = player.server.getPlayerList().getSimulationDistance();
-                    double maxRange = Math.max(64.0, simDist * 16.0);
+                    double maxRange = Math.max(MIN_AIMED_FIRE_RANGE, simDist * 16.0);
                     if (distSq > maxRange * maxRange) {
                         PiranPort.LOGGER.warn("SalvoFirePayload target too far ({}m), fallback to max-range",
                                 Math.sqrt(distSq));
@@ -92,6 +104,24 @@ public record SalvoFirePayload(byte mode, double targetX, double targetY, double
                 case 2 -> // MAX_RANGE
                     ShipCoreCombat.beginSalvo(player, weaponType,
                             ShipCoreCombat.ARTILLERY_AIM_MAX_RANGE, 0, 0, 0);
+
+                case 3 -> { // DIRECT_FIRE
+                    if (!payload.hasFiniteTarget()) return;
+                    double dx = payload.targetX() - player.getX();
+                    double dy = payload.targetY() - player.getY();
+                    double dz = payload.targetZ() - player.getZ();
+                    double distSq = dx * dx + dy * dy + dz * dz;
+                    int simDist = player.server.getPlayerList().getSimulationDistance();
+                    double maxRange = Math.max(MIN_AIMED_FIRE_RANGE, simDist * 16.0);
+                    if (distSq > maxRange * maxRange) {
+                        ShipCoreCombat.beginSalvo(player, weaponType,
+                                ShipCoreCombat.ARTILLERY_AIM_NONE, 0, 0, 0);
+                    } else {
+                        ShipCoreCombat.beginSalvo(player, weaponType,
+                                ShipCoreCombat.ARTILLERY_AIM_DIRECT_TARGET,
+                                payload.targetX(), payload.targetY(), payload.targetZ());
+                    }
+                }
             }
         });
     }

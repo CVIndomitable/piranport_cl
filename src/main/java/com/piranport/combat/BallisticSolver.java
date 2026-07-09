@@ -23,6 +23,10 @@ public final class BallisticSolver {
     public static final double DEFAULT_GRAVITY = 0.05;
     private static final double UNRESTRICTED_MIN_ANGLE = Math.toRadians(-89.0);
     private static final double UNRESTRICTED_MAX_ANGLE = Math.toRadians(89.0);
+    private static final int PRECISE_SCAN_STEPS = 512;
+    private static final int PRECISE_REFINE_ITERS = 80;
+    private static final double PRECISE_VERTICAL_EPSILON = 1.0e-4;
+    private static final double PRECISE_ANGLE_EPSILON = 1.0e-9;
 
     private static final Map<SolutionKey, Result> cache = createLRUCache();
     private static boolean cacheEnabled = true;
@@ -155,6 +159,19 @@ public final class BallisticSolver {
             chosen = BallisticSolverStats.Algorithm.TERNARY;
         }
 
+        // ===== 精确解算 =====
+        // 三分法/牛顿法给出候选角后，再全范围找垂直根并以总误差收敛，避免高低弹道或局部解造成偏差。
+        SolveResult preciseResult = solvePrecise(initialSpeed, dragCoeff, gravity, horizontalDist, verticalDist,
+                maxIters, accuracyThreshold, vz0, minAngle, maxAngle);
+        double preciseAngle = preciseResult.angle();
+        ErrorMetrics preciseError = evaluateError(initialSpeed, preciseAngle, dragCoeff, gravity,
+                horizontalDist, verticalDist, vz0);
+        if (isBetter(preciseError, preciseAngle, bestError, bestAngle)) {
+            bestAngle = preciseAngle;
+            bestError = preciseError;
+            chosen = BallisticSolverStats.Algorithm.COMBINED;
+        }
+
         long totalElapsed = System.nanoTime() - solveStart;
         stats.recordCombined(bestError.vertical(), bestError.horizontal(), chosen, totalElapsed);
 
@@ -176,6 +193,172 @@ public final class BallisticSolver {
         double vertical = Math.abs(simulate(v0, angle, dragCoeff, gravity, targetX, vz0) - targetY);
         double horizontal = computeHorizontalError(v0, angle, dragCoeff, gravity, targetX, targetY, vz0);
         return new ErrorMetrics(vertical, horizontal);
+    }
+
+    private static SolveResult solvePrecise(double initialSpeed, double dragCoeff, double gravity,
+                                            double horizontalDist, double verticalDist,
+                                            int maxIters, double accuracyThreshold,
+                                            double vz0, double minAngle, double maxAngle) {
+        int totalIters = 0;
+        int scanSteps = Math.max(32, PRECISE_SCAN_STEPS);
+        double step = (maxAngle - minAngle) / scanSteps;
+        if (step <= 0.0) return new SolveResult(minAngle, 0);
+
+        double bestSampleAngle = minAngle;
+        double bestSampleAbs = Double.MAX_VALUE;
+        SolveResult bestRoot = null;
+        ErrorMetrics bestRootError = null;
+
+        double prevAngle = minAngle;
+        double prevF = verticalErrorSigned(initialSpeed, prevAngle, dragCoeff, gravity, horizontalDist, verticalDist, vz0);
+        totalIters++;
+        if (Double.isFinite(prevF)) {
+            bestSampleAbs = Math.abs(prevF);
+        }
+
+        for (int i = 1; i <= scanSteps; i++) {
+            double angle = minAngle + step * i;
+            double f = verticalErrorSigned(initialSpeed, angle, dragCoeff, gravity, horizontalDist, verticalDist, vz0);
+            totalIters++;
+
+            if (Double.isFinite(f) && Math.abs(f) < bestSampleAbs) {
+                bestSampleAbs = Math.abs(f);
+                bestSampleAngle = angle;
+            }
+
+            if (Double.isFinite(f) && Math.abs(f) <= PRECISE_VERTICAL_EPSILON) {
+                ErrorMetrics error = evaluateError(initialSpeed, angle, dragCoeff, gravity,
+                        horizontalDist, verticalDist, vz0);
+                if (bestRoot == null || isBetter(error, angle, bestRootError, bestRoot.angle())) {
+                    bestRoot = new SolveResult(angle, totalIters);
+                    bestRootError = error;
+                }
+            }
+
+            if (Double.isFinite(prevF) && Double.isFinite(f) && prevF * f < 0.0) {
+                SolveResult root = solveVerticalRootBisection(initialSpeed, dragCoeff, gravity,
+                        horizontalDist, verticalDist, vz0, prevAngle, angle, prevF, f,
+                        Math.max(maxIters, PRECISE_REFINE_ITERS),
+                        Math.min(accuracyThreshold, PRECISE_VERTICAL_EPSILON));
+                totalIters += root.iterations();
+                ErrorMetrics error = evaluateError(initialSpeed, root.angle(), dragCoeff, gravity,
+                        horizontalDist, verticalDist, vz0);
+                if (bestRoot == null || isBetter(error, root.angle(), bestRootError, bestRoot.angle())) {
+                    bestRoot = root;
+                    bestRootError = error;
+                }
+            }
+
+            prevAngle = angle;
+            prevF = f;
+        }
+
+        if (bestRoot != null) {
+            return new SolveResult(bestRoot.angle(), totalIters);
+        }
+
+        SolveResult minimized = minimizeTotalError(initialSpeed, dragCoeff, gravity, horizontalDist, verticalDist,
+                vz0, minAngle, maxAngle, bestSampleAngle);
+        return new SolveResult(minimized.angle(), totalIters + minimized.iterations());
+    }
+
+    private static SolveResult solveVerticalRootBisection(double initialSpeed, double dragCoeff, double gravity,
+                                                          double horizontalDist, double verticalDist, double vz0,
+                                                          double lowAngle, double highAngle,
+                                                          double lowF, double highF,
+                                                          int maxIters, double verticalEpsilon) {
+        double bestAngle = Math.abs(lowF) <= Math.abs(highF) ? lowAngle : highAngle;
+        double bestAbs = Math.min(Math.abs(lowF), Math.abs(highF));
+        int iters = 0;
+
+        for (int iter = 0; iter < maxIters; iter++) {
+            iters++;
+            double mid = (lowAngle + highAngle) * 0.5;
+            double f = verticalErrorSigned(initialSpeed, mid, dragCoeff, gravity, horizontalDist, verticalDist, vz0);
+            if (Double.isFinite(f) && Math.abs(f) < bestAbs) {
+                bestAbs = Math.abs(f);
+                bestAngle = mid;
+            }
+            if (!Double.isFinite(f) || Math.abs(f) <= verticalEpsilon || highAngle - lowAngle <= PRECISE_ANGLE_EPSILON) {
+                break;
+            }
+            if (lowF * f <= 0.0) {
+                highAngle = mid;
+                highF = f;
+            } else {
+                lowAngle = mid;
+                lowF = f;
+            }
+        }
+
+        return new SolveResult(bestAngle, iters);
+    }
+
+    private static SolveResult minimizeTotalError(double initialSpeed, double dragCoeff, double gravity,
+                                                  double horizontalDist, double verticalDist, double vz0,
+                                                  double minAngle, double maxAngle, double seedAngle) {
+        int iters = 0;
+        int gridSteps = Math.max(64, PRECISE_SCAN_STEPS / 2);
+        double gridStep = (maxAngle - minAngle) / gridSteps;
+        double bestAngle = clampAngle(seedAngle, minAngle, maxAngle);
+        ErrorMetrics bestError = evaluateError(initialSpeed, bestAngle, dragCoeff, gravity,
+                horizontalDist, verticalDist, vz0);
+        iters++;
+
+        for (int i = 0; i <= gridSteps; i++) {
+            double angle = minAngle + gridStep * i;
+            ErrorMetrics error = evaluateError(initialSpeed, angle, dragCoeff, gravity,
+                    horizontalDist, verticalDist, vz0);
+            iters++;
+            if (isBetter(error, angle, bestError, bestAngle)) {
+                bestAngle = angle;
+                bestError = error;
+            }
+        }
+
+        double low = Math.max(minAngle, bestAngle - gridStep * 2.0);
+        double high = Math.min(maxAngle, bestAngle + gridStep * 2.0);
+        for (int iter = 0; iter < PRECISE_REFINE_ITERS && high - low > PRECISE_ANGLE_EPSILON; iter++) {
+            iters += 2;
+            double mid1 = low + (high - low) / 3.0;
+            double mid2 = high - (high - low) / 3.0;
+            ErrorMetrics e1 = evaluateError(initialSpeed, mid1, dragCoeff, gravity, horizontalDist, verticalDist, vz0);
+            ErrorMetrics e2 = evaluateError(initialSpeed, mid2, dragCoeff, gravity, horizontalDist, verticalDist, vz0);
+
+            if (isBetter(e1, mid1, bestError, bestAngle)) {
+                bestAngle = mid1;
+                bestError = e1;
+            }
+            if (isBetter(e2, mid2, bestError, bestAngle)) {
+                bestAngle = mid2;
+                bestError = e2;
+            }
+
+            if (e1.total() > e2.total()) {
+                low = mid1;
+            } else {
+                high = mid2;
+            }
+        }
+
+        return new SolveResult(bestAngle, iters);
+    }
+
+    private static double verticalErrorSigned(double v0, double angle, double dragCoeff, double gravity,
+                                              double targetX, double targetY, double vz0) {
+        return simulate(v0, angle, dragCoeff, gravity, targetX, vz0) - targetY;
+    }
+
+    private static boolean isBetter(ErrorMetrics candidate, double candidateAngle,
+                                    ErrorMetrics current, double currentAngle) {
+        if (current == null) return true;
+        double candidateTotal = candidate.total();
+        double currentTotal = current.total();
+        if (candidateTotal < currentTotal - 1.0e-6) return true;
+        if (Math.abs(candidateTotal - currentTotal) <= 1.0e-6) {
+            return Math.abs(candidateAngle) < Math.abs(currentAngle);
+        }
+        return false;
     }
 
     /**
@@ -293,7 +476,7 @@ public final class BallisticSolver {
      * 最大步数从 ModEquipmentConfig.BALLISTIC_MAX_STEPS 读取。
      *
      * 物理模型：
-     * 1. 自定义阻力：每 tick 沿速度反方向扣除 dragCoeff 的速度量
+     * 1. 自定义阻力：每 tick 按 dragCoeff 做比例阻尼
      * 2. 位置更新与碰撞检测使用阻力后的当前速度
      * 3. 原版空气阻力 0.99 与重力在位置更新后影响下一 tick 速度
      *
@@ -305,7 +488,7 @@ public final class BallisticSolver {
         double vy = v0 * Math.sin(angle);
         double vz = vz0;
         double x = 0, y = 0;
-        int maxSteps = ModEquipmentConfig.BALLISTIC_MAX_STEPS.get();
+        int maxSteps = simulationStepLimit(v0, targetX);
 
         for (int step = 0; step < maxSteps; step++) {
             double prevX = x;
@@ -351,7 +534,7 @@ public final class BallisticSolver {
         double bestCrossingError = Double.MAX_VALUE;
         double bestFallbackX = 0.0;
         double bestFallbackVertical = Math.abs(targetY);
-        int maxSteps = ModEquipmentConfig.BALLISTIC_MAX_STEPS.get();
+        int maxSteps = simulationStepLimit(v0, targetX);
 
         for (int step = 0; step < maxSteps; step++) {
             double prevX = x;
@@ -457,7 +640,7 @@ public final class BallisticSolver {
         double vz = vz0;
         double x = 0.0;
         double y = 0.0;
-        int maxSteps = ModEquipmentConfig.BALLISTIC_MAX_STEPS.get();
+        int maxSteps = Math.max(ModEquipmentConfig.BALLISTIC_MAX_STEPS.get(), 1000);
 
         for (int step = 0; step < maxSteps; step++) {
             double prevX = x;
@@ -490,10 +673,17 @@ public final class BallisticSolver {
         if (!Double.isFinite(dragCoeff) || dragCoeff <= 0.0) return new Velocity(vx, vy, vz);
         double speed = Math.sqrt(vx * vx + vy * vy + vz * vz);
         if (speed <= 1.0e-9) return new Velocity(0.0, 0.0, 0.0);
-        double drag = Math.max(0.0, dragCoeff);
-        if (speed <= drag) return new Velocity(0.0, 0.0, 0.0);
-        double scale = (speed - drag) / speed;
+        double scale = 1.0 / (1.0 + Math.max(0.0, dragCoeff));
         return new Velocity(vx * scale, vy * scale, vz * scale);
+    }
+
+    private static int simulationStepLimit(double initialSpeed, double targetX) {
+        int configured = ModEquipmentConfig.BALLISTIC_MAX_STEPS.get();
+        if (targetX <= 0.0 || initialSpeed <= 0.0) return configured;
+
+        double conservativeHorizontalSpeed = Math.max(0.05, initialSpeed * 0.15);
+        int distanceDriven = (int) Math.ceil(targetX / conservativeHorizontalSpeed) + 200;
+        return Math.min(4000, Math.max(configured, distanceDriven));
     }
 
     private static double clampAngle(double angle, double minAngle, double maxAngle) {

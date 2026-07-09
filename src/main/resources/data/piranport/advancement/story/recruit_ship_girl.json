@@ -1,0 +1,34 @@
+{
+  "parent": "piranport:story/trade_with_ship_girl",
+  "display": {
+    "icon": {
+      "count": 1,
+      "id": "piranport:ship_girl_spawn_egg"
+    },
+    "title": {
+      "translate": "advancements.piranport.recruit_ship_girl.title"
+    },
+    "description": {
+      "translate": "advancements.piranport.recruit_ship_girl.description"
+    },
+    "frame": "goal"
+  },
+  "criteria": {
+    "done": {
+      "conditions": {
+        "items": [
+          {
+            "items": "minecraft:bedrock"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "requirements": [
+    [
+      "done"
+    ]
+  ],
+  "sends_telemetry_event": false
+}

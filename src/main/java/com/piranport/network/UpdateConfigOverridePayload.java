@@ -94,8 +94,9 @@ public record UpdateConfigOverridePayload(
     private static Object parseValue(String valueStr, String field) {
         return switch (field) {
             case "damage", "initialSpeed", "dragCoeff", "gravity", "explosionPower", "dispersion",
-                 "salvoInterval", "scopeZoom" ->
-                    Float.parseFloat(valueStr);
+                 "salvoInterval", "scopeZoom", "projectileWeight", "verticalSpread",
+                 "horizontalSpread", "maxElevation", "minElevation", "turretSpeed" ->
+                    parseFiniteFloat(valueStr);
             case "caliber", "barrels", "reloadTime", "durability", "fireCooldown", "salvoCount" ->
                     Integer.parseInt(valueStr);
             default ->
@@ -115,7 +116,23 @@ public record UpdateConfigOverridePayload(
             return Boolean.parseBoolean(valueStr);
         } else {
             // 默认为double类型（HE_ARMOR_PENETRATION, AP_DAMAGE_MULTIPLIER等）
-            return Double.parseDouble(valueStr);
+            return parseFiniteDouble(valueStr);
         }
+    }
+
+    private static float parseFiniteFloat(String valueStr) {
+        float value = Float.parseFloat(valueStr);
+        if (!Float.isFinite(value)) {
+            throw new IllegalArgumentException("Non-finite float config value: " + valueStr);
+        }
+        return value;
+    }
+
+    private static double parseFiniteDouble(String valueStr) {
+        double value = Double.parseDouble(valueStr);
+        if (!Double.isFinite(value)) {
+            throw new IllegalArgumentException("Non-finite double config value: " + valueStr);
+        }
+        return value;
     }
 }

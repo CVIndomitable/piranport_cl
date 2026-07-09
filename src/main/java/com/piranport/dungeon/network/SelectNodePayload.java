@@ -4,6 +4,7 @@ import com.piranport.PiranPort;
 import com.piranport.dungeon.data.DungeonRegistry;
 import com.piranport.dungeon.data.NodeData;
 import com.piranport.dungeon.data.StageData;
+import com.piranport.dungeon.block.DungeonLecternBlock;
 import com.piranport.dungeon.event.DungeonEventHandler;
 import com.piranport.dungeon.instance.DungeonInstance;
 import com.piranport.dungeon.instance.DungeonInstanceManager;
@@ -58,16 +59,18 @@ public record SelectNodePayload(BlockPos lecternPos, int keySlot, String nodeId)
             // Validate nodeId length
             if (payload.nodeId().length() > 128) return;
 
+            BlockPos lecternPos = payload.lecternPos();
             // Validate distance to lectern
-            if (player.distanceToSqr(payload.lecternPos().getX() + 0.5,
-                    payload.lecternPos().getY() + 0.5,
-                    payload.lecternPos().getZ() + 0.5) > 64.0) return;
+            if (player.distanceToSqr(lecternPos.getX() + 0.5,
+                    lecternPos.getY() + 0.5,
+                    lecternPos.getZ() + 0.5) > 64.0) return;
+            if (!(player.level().getBlockState(lecternPos).getBlock() instanceof DungeonLecternBlock)) return;
 
             // Validate key
             ItemStack keyStack = player.getInventory().getItem(keySlot);
             if (!(keyStack.getItem() instanceof DungeonKeyItem)) return;
 
-            GlobalPos globalPos = GlobalPos.of(player.level().dimension(), payload.lecternPos());
+            GlobalPos globalPos = GlobalPos.of(player.level().dimension(), lecternPos);
             DungeonLobbyManager.Lobby lobby =
                     DungeonLobbyManager.INSTANCE.getLobby(globalPos);
 
@@ -87,6 +90,8 @@ public record SelectNodePayload(BlockPos lecternPos, int keySlot, String nodeId)
             if (instanceId != null) {
                 instance = mgr.getInstance(instanceId);
                 if (instance == null) return;
+                if (!stageId.equals(instance.getStageId())) return;
+                if (!matchesInstanceLectern(instance, globalPos)) return;
 
                 // Flagship validation: prefer the persistent flagship on the instance
                 // so that lobby teardown after entering a battle node does not allow any
@@ -94,7 +99,7 @@ public record SelectNodePayload(BlockPos lecternPos, int keySlot, String nodeId)
                 java.util.UUID flagshipUuid = instance.getFlagshipUuid();
                 if (flagshipUuid != null) {
                     if (!flagshipUuid.equals(player.getUUID())) return;
-                } else if (lobby != null && !lobby.isFlagship(player.getUUID())) {
+                } else if (lobby == null || !lobby.isFlagship(player.getUUID())) {
                     return;
                 }
 
@@ -124,14 +129,14 @@ public record SelectNodePayload(BlockPos lecternPos, int keySlot, String nodeId)
                 if (!reachable) return;
             } else {
                 // No instance yet — flagship must come from the lobby
-                if (lobby != null && !lobby.isFlagship(player.getUUID())) return;
+                if (lobby == null || !lobby.isFlagship(player.getUUID())) return;
 
                 // First node selection: only start node allowed
                 if (!payload.nodeId().equals(stage.startNode())) return;
 
                 // Create new instance
                 instance = mgr.createInstance(stageId, player,
-                        payload.lecternPos(),
+                        lecternPos,
                         player.level().dimension().location().toString());
                 if (instance == null) return;
                 DungeonKeyItem.setInstanceId(keyStack, instance.getInstanceId());
@@ -141,5 +146,16 @@ public record SelectNodePayload(BlockPos lecternPos, int keySlot, String nodeId)
             DungeonEventHandler.enterNode(serverLevel, instance, node, stage,
                     player, keyStack, lobby);
         });
+    }
+
+    private static boolean matchesInstanceLectern(DungeonInstance instance, GlobalPos lecternPos) {
+        BlockPos instancePos = instance.getLecternPos();
+        if (instancePos != null && !instancePos.equals(lecternPos.pos())) {
+            return false;
+        }
+
+        String instanceDimension = instance.getLecternDimension();
+        return instanceDimension == null
+                || instanceDimension.equals(lecternPos.dimension().location().toString());
     }
 }

@@ -135,6 +135,18 @@ public class ModPackets {
                 SkinRevertPayload::handle
         );
 
+        // ===== Entity Core System =====
+        registrar.playToClient(
+                EntityCoreSyncPayload.TYPE,
+                EntityCoreSyncPayload.STREAM_CODEC,
+                EntityCoreSyncPayload::handle
+        );
+        registrar.playToServer(
+                EntityCoreRevertPayload.TYPE,
+                EntityCoreRevertPayload.STREAM_CODEC,
+                EntityCoreRevertPayload::handle
+        );
+
         // ===== Ammo Workbench =====
         registrar.playToServer(
                 AmmoWorkbenchCraftPayload.TYPE,
@@ -236,6 +248,11 @@ public class ModPackets {
                 ShakeEffectPayload.STREAM_CODEC,
                 ShakeEffectPayload::handle
         );
+        registrar.playToClient(
+                AircraftLaunchPosePayload.TYPE,
+                AircraftLaunchPosePayload.STREAM_CODEC,
+                AircraftLaunchPosePayload::handle
+        );
         // 弹道解算统计（服务端→客户端）
         registrar.playToClient(
                 SolverStatsPayload.TYPE,
@@ -268,6 +285,11 @@ public class ModPackets {
                 ResetConfigPayload.TYPE,
                 ResetConfigPayload.STREAM_CODEC,
                 ResetConfigPayload::handle
+        );
+        registrar.playToServer(
+                ResetSingleConfigPayload.TYPE,
+                ResetSingleConfigPayload.STREAM_CODEC,
+                ResetSingleConfigPayload::handle
         );
         registrar.playToClient(
                 SyncConfigOverridesPayload.TYPE,

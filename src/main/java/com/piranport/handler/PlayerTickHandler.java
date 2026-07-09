@@ -411,23 +411,12 @@ public class PlayerTickHandler {
                     coreStack.getItem().getClass().getSimpleName(),
                     TransformationManager.isTransformed(coreStack));
 
-                TransformationManager.applyTransformationAttributes(player, coreStack);
+                // 发布变身激活事件 (监听器会处理属性/消息/粒子)
+                com.piranport.event.EventBus.getInstance().post(
+                        new com.piranport.event.TransformationEvent(player, coreStack, true));
+
+                // 非监听器处理的逻辑保留在这里
                 ShipCoreCombat.refillAircraftFuel(player, coreStack);
-                player.displayClientMessage(
-                        Component.translatable("message.piranport.transformed"), true);
-                if (player.level() instanceof ServerLevel sl) {
-                    double px = player.getX();
-                    double py = player.getY() + 0.5;
-                    double pz = player.getZ();
-                    for (int i = 0; i < 30; i++) {
-                        double ox = (player.getRandom().nextDouble() - 0.5) * 1.5;
-                        double oy = player.getRandom().nextDouble() * 2.0;
-                        double oz = (player.getRandom().nextDouble() - 0.5) * 1.5;
-                        sl.sendParticles(ParticleTypes.HAPPY_VILLAGER,
-                                px + ox, py + oy, pz + oz,
-                                1, 0, 0, 0, 0);
-                    }
-                }
                 lastWeaponLoad.put(player.getUUID(), -1);
                 return;
             }
@@ -458,12 +447,16 @@ public class PlayerTickHandler {
                 }
             }
             if (lastWeaponLoad.remove(player.getUUID()) != null) {
-                TransformationManager.removeTransformationAttributes(player);
-                TransformationManager.removeOverweightPenalty(player);
+                // 发布变身解除事件 (监听器会处理属性/消息)
+                ItemStack core = TransformationManager.findTransformedCore(player);
+                if (!core.isEmpty()) {
+                    com.piranport.event.EventBus.getInstance().post(
+                            new com.piranport.event.TransformationEvent(player, core, false));
+                }
+
+                // 非监听器处理的逻辑保留在这里
                 player.removeEffect(MobEffects.WATER_BREATHING);
                 PlayerAircraftHelper.recallAircraftForPlayer(player);
-                player.displayClientMessage(
-                        Component.translatable("message.piranport.untransformed"), true);
             }
         }
     }
@@ -565,8 +558,16 @@ public class PlayerTickHandler {
         if (fuel.isEmpty()) {
             cleanupPlayerState(uuid);
             TransformationManager.setTransformedAndWriteBack(player, core, false);
-            TransformationManager.removeTransformationAttributes(player);
-            TransformationManager.removeOverweightPenalty(player);
+
+            // 发布燃料耗尽事件
+            com.piranport.event.EventBus.getInstance().post(
+                    new com.piranport.event.FuelDepletedEvent(player, core));
+
+            // 发布变身解除事件
+            com.piranport.event.EventBus.getInstance().post(
+                    new com.piranport.event.TransformationEvent(player, core, false));
+
+            // 非监听器处理的逻辑
             PlayerAircraftHelper.recallAircraftForPlayer(player);
             player.displayClientMessage(
                     Component.translatable("message.piranport.fuel_depleted"), true);

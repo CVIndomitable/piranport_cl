@@ -106,6 +106,11 @@ public class PiranPort {
 
         ModCompats.initialize(modEventBus);
 
+        // 注册领域事件监听器
+        com.piranport.event.listener.TransformationAttributeListener.register();
+        com.piranport.event.listener.TransformationMessageListener.register();
+        com.piranport.event.listener.TransformationParticleListener.register();
+
         LOGGER.info("Piran Port mod initialized!");
     }
 

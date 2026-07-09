@@ -132,9 +132,8 @@ public class KitchenGoddessModel extends PlayerModel<ShipGirlEntity> {
         this.ponytail.xRot = ponytailSway;
         this.ponytail.zRot = Mth.cos(ageInTicks * 0.08F) * 0.03F;
 
-        // Hair accessory slight bob
-        float accessoryBob = Mth.sin(ageInTicks * 0.12F) * 0.02F;
-        this.hairAccessory.y = accessoryBob;
+        // Hair accessory slight bob (using yRot for subtle animation)
+        this.hairAccessory.yRot = Mth.sin(ageInTicks * 0.12F) * 0.02F;
 
         // Apron slight movement when walking
         this.apron.xRot = Mth.cos(limbSwing * 0.6F) * limbSwingAmount * 0.1F;

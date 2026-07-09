@@ -1,4 +1,4 @@
-package com.piranport;
+package com.piranport.event;
 
 import com.piranport.platform.ClientHooks;
 

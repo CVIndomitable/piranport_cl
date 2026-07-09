@@ -1,4 +1,6 @@
-package com.piranport;
+package com.piranport.event;
+
+import com.piranport.PiranPort;
 
 import com.piranport.block.entity.CookingPotBlockEntity;
 import com.piranport.block.entity.CuttingBoardBlockEntity;
@@ -29,8 +31,24 @@ import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
 
+/**
+ * 模组生命周期事件 — 注册 Capability 和实体属性。
+ *
+ * <p>本类监听 NeoForge Mod EventBus 的初始化事件:
+ * <ul>
+ *   <li>{@link RegisterCapabilitiesEvent} — 注册方块实体的物品/流体容器能力</li>
+ *   <li>{@link EntityAttributeCreationEvent} — 注册实体的默认属性(血量/速度等)</li>
+ * </ul>
+ *
+ * <h2>重构历史</h2>
+ * <p>原 {@code CommonModEvents} 类,重命名为 {@code ModLifecycleEvents} 以明确职责范围。
+ *
+ * @see com.piranport.registry.ModBlockEntityTypes
+ * @see com.piranport.registry.ModEntityTypes
+ * @since 1.0.0
+ */
 @EventBusSubscriber(modid = PiranPort.MOD_ID)
-public class CommonModEvents {
+public class ModLifecycleEvents {
 
     @SubscribeEvent
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {

@@ -15,7 +15,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 
 /**
- * Kitchen Goddess (女灶神) model: Alex-shaped body with hair accessories and apron.
+ * Kitchen Goddess (女灶神) model: Alex-shaped body with hair accessories and open coat tails.
  */
 public class KitchenGoddessModel extends PlayerModel<ShipGirlEntity> {
     public static final int SKIN_ID = 9857;
@@ -27,13 +27,15 @@ public class KitchenGoddessModel extends PlayerModel<ShipGirlEntity> {
             ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "textures/entity/shipgirl/kitchen_goddess.png");
 
     private final ModelPart hairAccessory;
-    private final ModelPart apron;
+    private final ModelPart leftCoatTail;
+    private final ModelPart rightCoatTail;
     private final ModelPart ponytail;
 
     public KitchenGoddessModel(ModelPart root) {
         super(root, true);
         this.hairAccessory = this.head.getChild("hair_accessory");
-        this.apron = this.body.getChild("apron");
+        this.leftCoatTail = this.body.getChild("left_coat_tail");
+        this.rightCoatTail = this.body.getChild("right_coat_tail");
         this.ponytail = this.head.getChild("ponytail");
     }
 
@@ -106,13 +108,18 @@ public class KitchenGoddessModel extends PlayerModel<ShipGirlEntity> {
                         .texOffs(192, 27).addBox(-1.0F, 2.0F, 4.5F, 2.0F, 5.0F, 2.0F, new CubeDeformation(0.0F)),
                 PartPose.ZERO);
 
-        // Apron tied to body
-        body.addOrReplaceChild("apron",
+        // Left coat tail (open coat flowing down the left side)
+        body.addOrReplaceChild("left_coat_tail",
                 CubeListBuilder.create()
-                        .texOffs(192, 48).addBox(-4.2F, 2.0F, -2.6F, 8.4F, 10.0F, 0.4F, new CubeDeformation(0.0F))
-                        .texOffs(192, 64).addBox(-3.0F, 0.5F, -2.5F, 6.0F, 1.5F, 0.3F, new CubeDeformation(0.0F))
-                        .texOffs(192, 70).addBox(-4.5F, 0.8F, -0.5F, 1.0F, 0.8F, 1.0F, new CubeDeformation(0.0F))
-                        .texOffs(192, 70).addBox(3.5F, 0.8F, -0.5F, 1.0F, 0.8F, 1.0F, new CubeDeformation(0.0F)),
+                        .texOffs(192, 48).addBox(0.2F, 6.0F, -2.5F, 3.8F, 9.0F, 0.4F, new CubeDeformation(0.0F))
+                        .texOffs(192, 58).addBox(0.5F, 15.0F, -2.4F, 3.2F, 3.0F, 0.3F, new CubeDeformation(0.0F)),
+                PartPose.ZERO);
+
+        // Right coat tail (open coat flowing down the right side)
+        body.addOrReplaceChild("right_coat_tail",
+                CubeListBuilder.create()
+                        .texOffs(192, 64).addBox(-4.0F, 6.0F, -2.5F, 3.8F, 9.0F, 0.4F, new CubeDeformation(0.0F))
+                        .texOffs(192, 74).addBox(-3.7F, 15.0F, -2.4F, 3.2F, 3.0F, 0.3F, new CubeDeformation(0.0F)),
                 PartPose.ZERO);
 
         return LayerDefinition.create(mesh, 256, 256);
@@ -135,8 +142,13 @@ public class KitchenGoddessModel extends PlayerModel<ShipGirlEntity> {
         // Hair accessory slight bob (using yRot for subtle animation)
         this.hairAccessory.yRot = Mth.sin(ageInTicks * 0.12F) * 0.02F;
 
-        // Apron slight movement when walking
-        this.apron.xRot = Mth.cos(limbSwing * 0.6F) * limbSwingAmount * 0.1F;
+        // Coat tails flutter when walking
+        float coatFlutter = Mth.cos(limbSwing * 0.6662F) * limbSwingAmount;
+        this.leftCoatTail.xRot = coatFlutter * 0.15F;
+        this.rightCoatTail.xRot = coatFlutter * 0.15F;
+        // Asymmetric sway for natural look
+        this.leftCoatTail.zRot = Mth.sin(ageInTicks * 0.09F) * 0.03F + coatFlutter * 0.05F;
+        this.rightCoatTail.zRot = -Mth.sin(ageInTicks * 0.09F) * 0.03F - coatFlutter * 0.05F;
     }
 }
 

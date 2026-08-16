@@ -1197,6 +1197,9 @@
   "block.piranport.slime_tree_sapling": "Slime Tree Sapling",
   "block.piranport.slime_tree_log": "Slime Tree Log",
   "block.piranport.slime_tree_leaves": "Slime Tree Leaves",
+  "block.piranport.apple_log": "Apple Log",
+  "block.piranport.apple_leaves": "Apple Leaves",
+  "block.piranport.apple_sapling": "Apple Sapling",
   "block.piranport.lava_slime_tree_sapling": "Lava Slime Tree Sapling",
   "block.piranport.lava_slime_tree_log": "Lava Slime Tree Log",
   "block.piranport.lava_slime_tree_leaves": "Lava Slime Tree Leaves"

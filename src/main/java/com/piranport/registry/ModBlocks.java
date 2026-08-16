@@ -229,6 +229,16 @@ public class ModBlocks {
     public static final DeferredBlock<SaplingBlock> LAVA_SLIME_TREE_SAPLING =
             registerTreeSapling("lava_slime_tree_sapling", "lava_slime_tree", LAVA_SLIME_TREE_FEATURE_KEY);
 
+    // Phase 30: Apple tree (策划要求注册苹果树)
+    public static final ResourceKey<ConfiguredFeature<?, ?>> APPLE_TREE_FEATURE_KEY =
+            treeFeatureKey("apple_tree");
+    public static final DeferredBlock<RotatedPillarBlock> APPLE_LOG =
+            registerTreeLog("apple_log");
+    public static final DeferredBlock<SeasonalLeavesBlock> APPLE_LEAVES =
+            registerSeasonalLeaves("apple_leaves");
+    public static final DeferredBlock<SaplingBlock> APPLE_SAPLING =
+            registerTreeSapling("apple_sapling", "apple", APPLE_TREE_FEATURE_KEY);
+
     // ===== Functional Blocks (Phase 12) =====
     public static final DeferredBlock<StoneMillBlock> STONE_MILL =
             BLOCKS.register("stone_mill", () -> new StoneMillBlock(

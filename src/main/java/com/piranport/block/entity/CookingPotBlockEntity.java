@@ -126,6 +126,11 @@ public class CookingPotBlockEntity extends BlockEntity implements MenuProvider {
     public void markInputsDirty() { this.inputsDirty = true; }
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, CookingPotBlockEntity be) {
+        // Phase 30: 每 20 tick 吸取上方掉落物到输入槽
+        if (level.getGameTime() % 20 == 0) {
+            be.suckAboveDrops();
+        }
+
         if (!hasHeatSource(level, pos)) {
             if (be.cookingProgress > 0) {
                 be.cookingProgress = 0;
@@ -218,6 +223,33 @@ public class CookingPotBlockEntity extends BlockEntity implements MenuProvider {
         } else {
             itemHandler.setStackInSlot(OUTPUT_SLOT, current.copyWithCount(current.getCount() + result.getCount()));
         }
+    }
+
+    /** Phase 30: 锅自动吸取上方掉落物 — 把上方块的 EntityItem 拉入第一个空输入槽。 */
+    private void suckAboveDrops() {
+        if (level == null) return;
+        BlockPos abovePos = worldPosition.above();
+        List<net.minecraft.world.entity.item.ItemEntity> items =
+                level.getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class,
+                        new net.minecraft.world.phys.AABB(abovePos),
+                        e -> e.isAlive() && !e.getItem().isEmpty());
+        for (var itemEntity : items) {
+            ItemStack stack = itemEntity.getItem();
+            if (stack.isEmpty()) continue;
+            ItemStack remainder = itemHandler.insertItem(firstEmptyInputSlot(), stack, false);
+            if (remainder.isEmpty()) {
+                itemEntity.discard();
+            } else if (remainder.getCount() < stack.getCount()) {
+                itemEntity.setItem(remainder);
+            }
+        }
+    }
+
+    private int firstEmptyInputSlot() {
+        for (int i = 0; i < INPUT_SLOTS; i++) {
+            if (itemHandler.getStackInSlot(i).isEmpty()) return i;
+        }
+        return 0; // 满时回到 slot 0 让 insertItem 自然返回原 stack
     }
 
     private static boolean hasHeatSource(Level level, BlockPos pos) {

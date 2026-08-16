@@ -50,8 +50,9 @@ public class AmmoWorkbenchBlockEntity extends BlockEntity implements MenuProvide
         }
     };
 
-    int craftingProgress = 0;
-    int craftingTotalTime = 0;
+    // H5: 与 WeaponWorkbenchBlockEntity 风格一致，字段保持 private 并暴露 getter
+    private int craftingProgress = 0;
+    private int craftingTotalTime = 0;
     private String craftingRecipeId = "";
     private int craftingQuantity = 0;
 
@@ -92,6 +93,12 @@ public class AmmoWorkbenchBlockEntity extends BlockEntity implements MenuProvide
     public ItemStackHandler getItemHandler() { return itemHandler; }
 
     public boolean isCrafting() { return craftingTotalTime > 0; }
+
+    /** @return 当前合成进度（tick） */
+    public int getCraftingProgress() { return craftingProgress; }
+
+    /** @return 当前合成总耗时（tick） */
+    public int getCraftingTotalTime() { return craftingTotalTime; }
 
     @Nullable
     public UUID getCraftingOwner() { return craftingOwner; }

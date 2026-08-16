@@ -5,22 +5,32 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class AmmoRecipeRegistry {
-    private static final List<AmmoRecipe> ALL_RECIPES = new ArrayList<>();
+    // H11: ALL_RECIPES 改为 synchronizedList，确保多线程下 register/查询安全
+    private static final List<AmmoRecipe> ALL_RECIPES = Collections.synchronizedList(new ArrayList<>());
     private static volatile boolean initialized = false;
 
     private static synchronized void ensureInitialized() {
         if (initialized) return;
-        initialized = true;
-        registerShells();
-        registerTorpedoes();
-        registerAerialAmmo();
-        registerDepthCharges();
-        registerMissiles();
+        // H1: 注册成功后才置 initialized=true；任何 register 抛错时重置为 false 让下一次重试，
+        // 避免「注册部分成功后永久跳过剩余 register」导致配方永久缺失。
+        try {
+            registerShells();
+            registerTorpedoes();
+            registerAerialAmmo();
+            registerDepthCharges();
+            registerMissiles();
+            initialized = true;
+        } catch (RuntimeException e) {
+            // 清空已注册的部分（synchronizedList 内部已同步），下次调用会重试
+            ALL_RECIPES.clear();
+            throw e;
+        }
     }
 
     // ===== Query methods =====

@@ -7,7 +7,9 @@ import com.piranport.entity.AircraftEntity;
 import com.piranport.entity.FloatingTargetEntity;
 import com.piranport.entity.MissileEntity;
 import com.piranport.npc.deepocean.AbstractDeepOceanEntity;
+import com.piranport.npc.shipgirl.ShipGirlEntity;
 import com.piranport.registry.ModBlocks;
+import com.piranport.registry.ModEntityTypes;
 import com.piranport.registry.ModItems;
 import com.piranport.worldgen.LootChestProcessor;
 import com.piranport.worldgen.RuinDegradationProcessor;
@@ -96,6 +98,21 @@ public final class PiranPortCommands {
                                                 StringArgumentType.getString(ctx, "entity_type"),
                                                 IntegerArgumentType.getInteger(ctx, "count"))))))
 
+                // /ppd spawn_ship_girl <variant>
+                .then(Commands.literal("spawn_ship_girl")
+                        .then(Commands.argument("variant", StringArgumentType.word())
+                                .suggests((ctx, builder) -> {
+                                    builder.suggest("random");
+                                    builder.suggest("fubuki");
+                                    builder.suggest("fubuki_g");
+                                    builder.suggest("unicorn");
+                                    builder.suggest("kitchen_goddess");
+                                    builder.suggest("hood");
+                                    return builder.buildFuture();
+                                })
+                                .executes(ctx -> spawnShipGirl(ctx.getSource(),
+                                        StringArgumentType.getString(ctx, "variant")))))
+
                 // /ppd target_fire
                 .then(Commands.literal("target_fire")
                         .executes(ctx -> targetFire(ctx.getSource())))
@@ -146,6 +163,51 @@ public final class PiranPortCommands {
                                 .executes(ctx -> locateRuin(ctx.getSource(),
                                         StringArgumentType.getString(ctx, "type")))))
         );
+    }
+
+    private static int spawnShipGirl(CommandSourceStack source, String variant) {
+        ServerPlayer player = source.getPlayer();
+        if (player == null) {
+            source.sendFailure(Component.literal("Must be run by a player"));
+            return 0;
+        }
+
+        int skinId = switch (variant) {
+            case "random" -> 0;
+            case "fubuki" -> 8;
+            case "fubuki_g" -> 9;
+            case "unicorn" -> 18;
+            case "kitchen_goddess" -> ShipGirlEntity.KITCHEN_GODDESS_VARIANT;
+            case "hood" -> 23;
+            default -> {
+                source.sendFailure(Component.literal("Unknown ship girl variant: " + variant
+                        + ". Use: random, fubuki, fubuki_g, unicorn, kitchen_goddess, hood"));
+                yield -1;
+            }
+        };
+        if (skinId < 0) {
+            return 0;
+        }
+
+        ServerLevel level = player.serverLevel();
+        ShipGirlEntity shipGirl = ModEntityTypes.SHIP_GIRL.get().create(level);
+        if (shipGirl == null) {
+            source.sendFailure(Component.literal("Failed to create ship girl"));
+            return 0;
+        }
+        BlockPos pos = player.blockPosition().relative(player.getDirection(), 2);
+        shipGirl.moveTo(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5,
+                player.getYRot() + 180.0F, 0.0F);
+        if (skinId > 0) {
+            shipGirl.setSkinVariant(skinId);
+        }
+        if (!level.noCollision(shipGirl)) {
+            source.sendFailure(Component.literal("No room to spawn ship girl"));
+            return 0;
+        }
+        level.addFreshEntity(shipGirl);
+        source.sendSuccess(() -> Component.literal("Spawned ship girl variant " + variant), false);
+        return 1;
     }
 
     private static int spawnRuin(CommandSourceStack source, String type) {

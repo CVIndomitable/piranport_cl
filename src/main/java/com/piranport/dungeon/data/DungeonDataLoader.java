@@ -173,8 +173,19 @@ public class DungeonDataLoader extends SimpleJsonResourceReloadListener {
 
     private List<NodeData.RewardEntry> parseRewards(JsonArray arr) {
         List<NodeData.RewardEntry> list = new ArrayList<>();
-        for (JsonElement e : arr) {
+        for (int i = 0; i < arr.size(); i++) {
+            JsonElement e = arr.get(i);
+            if (!e.isJsonObject()) {
+                PiranPort.LOGGER.warn("Skipping non-object reward entry at index {}", i);
+                continue;
+            }
             JsonObject obj = e.getAsJsonObject();
+            // H2: 缺字段时跳过该 entry 并 log WARN，避免一条坏数据让整份 stage 加载失败
+            if (!obj.has("item") || obj.get("item").isJsonNull()
+                    || !obj.has("count") || obj.get("count").isJsonNull()) {
+                PiranPort.LOGGER.warn("Skipping reward entry missing required field 'item' or 'count' at index {}", i);
+                continue;
+            }
             String item = obj.get("item").getAsString();
             int count = obj.get("count").getAsInt();
             float chance = obj.has("chance") ? obj.get("chance").getAsFloat() : 1.0f;
@@ -185,8 +196,18 @@ public class DungeonDataLoader extends SimpleJsonResourceReloadListener {
 
     private List<NodeData.CostEntry> parseCosts(JsonArray arr) {
         List<NodeData.CostEntry> list = new ArrayList<>();
-        for (JsonElement e : arr) {
+        for (int i = 0; i < arr.size(); i++) {
+            JsonElement e = arr.get(i);
+            if (!e.isJsonObject()) {
+                PiranPort.LOGGER.warn("Skipping non-object cost entry at index {}", i);
+                continue;
+            }
             JsonObject obj = e.getAsJsonObject();
+            if (!obj.has("item") || obj.get("item").isJsonNull()
+                    || !obj.has("count") || obj.get("count").isJsonNull()) {
+                PiranPort.LOGGER.warn("Skipping cost entry missing required field 'item' or 'count' at index {}", i);
+                continue;
+            }
             list.add(new NodeData.CostEntry(
                     obj.get("item").getAsString(),
                     obj.get("count").getAsInt()));
@@ -199,18 +220,33 @@ public class DungeonDataLoader extends SimpleJsonResourceReloadListener {
         requireField(json, "spawn_list", "enemy_set");
         String id = json.get("enemy_set_id").getAsString();
         List<EnemySetData.SpawnEntry> spawnList = new ArrayList<>();
-        for (JsonElement e : json.getAsJsonArray("spawn_list")) {
+        for (int i = 0; i < json.getAsJsonArray("spawn_list").size(); i++) {
+            JsonElement e = json.getAsJsonArray("spawn_list").get(i);
+            if (!e.isJsonObject()) {
+                PiranPort.LOGGER.warn("Skipping non-object spawn_list entry at index {} in enemy_set {}", i, id);
+                continue;
+            }
             JsonObject obj = e.getAsJsonObject();
+            if (!obj.has("entity") || obj.get("entity").isJsonNull()
+                    || !obj.has("count") || obj.get("count").isJsonNull()) {
+                PiranPort.LOGGER.warn("Skipping spawn_list entry missing required field 'entity' or 'count' at index {} in enemy_set {}", i, id);
+                continue;
+            }
             spawnList.add(new EnemySetData.SpawnEntry(
                     obj.get("entity").getAsString(),
                     obj.get("count").getAsInt()));
         }
         EnemySetData.SpawnEntry flagship = null;
-        if (json.has("flagship")) {
+        if (json.has("flagship") && !json.get("flagship").isJsonNull()) {
             JsonObject fObj = json.getAsJsonObject("flagship");
-            flagship = new EnemySetData.SpawnEntry(
-                    fObj.get("entity").getAsString(),
-                    fObj.get("count").getAsInt());
+            if (fObj.has("entity") && !fObj.get("entity").isJsonNull()
+                    && fObj.has("count") && !fObj.get("count").isJsonNull()) {
+                flagship = new EnemySetData.SpawnEntry(
+                        fObj.get("entity").getAsString(),
+                        fObj.get("count").getAsInt());
+            } else {
+                PiranPort.LOGGER.warn("Skipping flagship entry missing required field in enemy_set {}", id);
+            }
         }
         return new EnemySetData(id, List.copyOf(spawnList), flagship);
     }

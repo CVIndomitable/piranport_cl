@@ -3,6 +3,7 @@ package com.piranport.client;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.piranport.client.model.UnicornModel;
+import com.piranport.client.model.KitchenGoddessModel;
 import com.piranport.npc.shipgirl.ShipGirlEntity;
 import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -48,7 +49,9 @@ public class ShipGirlRiggingLayer extends RenderLayer<ShipGirlEntity, PlayerMode
         }
 
         int skinId = entity.getSkinVariant();
-        if (skinId == UnicornModel.SKIN_ID) {
+        if (skinId == UnicornModel.SKIN_ID
+                || skinId == KitchenGoddessModel.SKIN_ID
+                || FubukiShipGirlRiggingLayer.supports(skinId)) {
             return;
         }
         int rapport = entity.getRapport();

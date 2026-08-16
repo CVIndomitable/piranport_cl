@@ -82,7 +82,7 @@ neo_version=21.1.220
 - Minecraft Wiki: https://minecraft.wiki/
 - Patchouli Wiki: https://vazkiimods.github.io/Patchouli/
 - GitHub: https://github.com/CVIndomitable/piranport_cl.git
-- **原始策划案**: `../docs/总策划案.docx`
+- **原始策划案**: `../文档/总策划案20260510.md`
 - **所有文档**: `../docs/` — 文档统一在仓库根目录，本仓库不保留 docs/
 - **踩坑记录**: `/Users/lianran/IndomitableCache/ai记忆/mc模组开发踩坑记录.md` — 统一的 MC 模组开发踩坑经验库
 

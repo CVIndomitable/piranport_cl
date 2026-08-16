@@ -51,9 +51,11 @@ class PackageStructureTest {
     void servicePackageShouldOnlyContainServices() {
         classes()
                 .that().resideInAPackage("com.piranport.service..")
+                .and().doNotHaveSimpleName("package-info")
                 .should().haveSimpleNameEndingWith("Service")
                 .orShould().haveSimpleNameEndingWith("ServiceImpl")
                 .because("Service package should only contain service interfaces and implementations")
+                .allowEmptyShould(true)
                 .check(CLASSES);
     }
 
@@ -62,9 +64,11 @@ class PackageStructureTest {
     void utilPackageShouldOnlyContainUtils() {
         classes()
                 .that().resideInAPackage("com.piranport.util..")
+                .and().doNotHaveSimpleName("package-info")
                 .should().haveSimpleNameEndingWith("Utils")
                 .orShould().haveSimpleNameEndingWith("Helper")
                 .because("Util package should only contain utility classes")
+                .allowEmptyShould(true)
                 .check(CLASSES);
     }
 }

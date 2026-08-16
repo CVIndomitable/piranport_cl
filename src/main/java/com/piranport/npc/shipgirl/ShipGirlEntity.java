@@ -52,7 +52,12 @@ public class ShipGirlEntity extends PathfinderMob implements Merchant {
     private static final EntityDataAccessor<Integer> DATA_RAPPORT =
             SynchedEntityData.defineId(ShipGirlEntity.class, EntityDataSerializers.INT);
     private static final int FIRST_SHIPGIRL_SKIN = 4;
-    private static final int LAST_SHIPGIRL_SKIN = 22;
+    private static final int LAST_SHIPGIRL_SKIN = 23;
+    public static final int KITCHEN_GODDESS_VARIANT = 9857;
+    private static final int[] DEFAULT_SKIN_VARIANTS = {
+            4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
+            KITCHEN_GODDESS_VARIANT
+    };
     private static final int MAX_RAPPORT = 100;
     private static final int BRANCH_RECON = 1;
     private static final int BRANCH_MAINTENANCE = 1 << 1;
@@ -288,16 +293,18 @@ public class ShipGirlEntity extends PathfinderMob implements Merchant {
         return entityData.get(DATA_RAPPORT);
     }
 
-    private void setSkinVariant(int skinVariant) {
+    public void setSkinVariant(int skinVariant) {
         entityData.set(DATA_SKIN_VARIANT, clampSkinVariant(skinVariant));
     }
 
     private int pickDefaultSkinVariant() {
-        int count = LAST_SHIPGIRL_SKIN - FIRST_SHIPGIRL_SKIN + 1;
-        return FIRST_SHIPGIRL_SKIN + Math.floorMod(getUUID().hashCode(), count);
+        return DEFAULT_SKIN_VARIANTS[Math.floorMod(getUUID().hashCode(), DEFAULT_SKIN_VARIANTS.length)];
     }
 
     private static int clampSkinVariant(int skinVariant) {
+        if (skinVariant == KITCHEN_GODDESS_VARIANT) {
+            return skinVariant;
+        }
         if (skinVariant < FIRST_SHIPGIRL_SKIN || skinVariant > LAST_SHIPGIRL_SKIN) {
             return FIRST_SHIPGIRL_SKIN;
         }

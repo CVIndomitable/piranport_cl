@@ -18,7 +18,7 @@ import net.minecraft.util.Mth;
  * Kitchen Goddess (女灶神) model: Alex-shaped body with hair accessories and open coat tails.
  */
 public class KitchenGoddessModel extends PlayerModel<ShipGirlEntity> {
-    public static final int SKIN_ID = 9857;
+    public static final int SKIN_ID = ShipGirlEntity.KITCHEN_GODDESS_VARIANT;
     private static final float PLAYER_UV_SCALE = 0.25F;
 
     public static final ModelLayerLocation LAYER_LOCATION =
@@ -151,4 +151,3 @@ public class KitchenGoddessModel extends PlayerModel<ShipGirlEntity> {
         this.rightCoatTail.zRot = -Mth.sin(ageInTicks * 0.09F) * 0.03F - coatFlutter * 0.05F;
     }
 }
-

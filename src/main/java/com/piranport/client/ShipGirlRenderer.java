@@ -17,15 +17,18 @@ import net.minecraft.resources.ResourceLocation;
  */
 public class ShipGirlRenderer extends MobRenderer<ShipGirlEntity, PlayerModel<ShipGirlEntity>> {
     private final PlayerModel<ShipGirlEntity> defaultModel;
+    private final PlayerModel<ShipGirlEntity> slimModel;
     private final UnicornModel unicornModel;
     private final KitchenGoddessModel kitchenGoddessModel;
 
     public ShipGirlRenderer(EntityRendererProvider.Context context) {
         super(context, new PlayerModel<>(context.bakeLayer(ModelLayers.PLAYER), false), 0.5f);
         this.defaultModel = this.model;
+        this.slimModel = new PlayerModel<>(context.bakeLayer(ModelLayers.PLAYER_SLIM), true);
         this.unicornModel = new UnicornModel(context.bakeLayer(UnicornModel.LAYER_LOCATION));
         this.kitchenGoddessModel = new KitchenGoddessModel(context.bakeLayer(KitchenGoddessModel.LAYER_LOCATION));
         addLayer(new ShipGirlRiggingLayer(this));
+        addLayer(new FubukiShipGirlRiggingLayer(this));
     }
 
     @Override
@@ -37,6 +40,8 @@ public class ShipGirlRenderer extends MobRenderer<ShipGirlEntity, PlayerModel<Sh
             this.model = this.unicornModel;
         } else if (skinId == KitchenGoddessModel.SKIN_ID) {
             this.model = this.kitchenGoddessModel;
+        } else if (FubukiShipGirlRiggingLayer.supports(skinId)) {
+            this.model = this.slimModel;
         } else {
             this.model = this.defaultModel;
         }

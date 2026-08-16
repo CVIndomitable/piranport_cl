@@ -14,6 +14,8 @@ import org.joml.Matrix4f;
  * 吹雪专用舰装层；人体保持原版 Alex/slim 玩家模型。
  */
 public class FubukiShipGirlRiggingLayer extends RenderLayer<ShipGirlEntity, PlayerModel<ShipGirlEntity>> {
+    private static final int FUBUKI_WINTER_SKIN = 8;
+    private static final int FUBUKI_WINTER_G_SKIN = 9;
     private static final float METAL_R = 0.44F;
     private static final float METAL_G = 0.45F;
     private static final float METAL_B = 0.40F;
@@ -31,11 +33,15 @@ public class FubukiShipGirlRiggingLayer extends RenderLayer<ShipGirlEntity, Play
         super(renderer);
     }
 
+    public static boolean supports(int skinId) {
+        return skinId == FUBUKI_WINTER_SKIN || skinId == FUBUKI_WINTER_G_SKIN;
+    }
+
     @Override
     public void render(PoseStack poseStack, MultiBufferSource bufferSource, int packedLight,
                        ShipGirlEntity entity, float limbSwing, float limbSwingAmount,
                        float partialTick, float ageInTicks, float netHeadYaw, float headPitch) {
-        if (entity.isInvisible()) {
+        if (entity.isInvisible() || !supports(entity.getSkinVariant())) {
             return;
         }
 

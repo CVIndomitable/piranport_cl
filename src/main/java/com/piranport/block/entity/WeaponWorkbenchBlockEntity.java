@@ -33,6 +33,9 @@ public class WeaponWorkbenchBlockEntity extends BlockEntity implements MenuProvi
     private static final int DATA_SIZE = 5;
     private static final int SAVE_INTERVAL_TICKS = 20;
     private static final int TAB_COUNT = 5;
+    // H4: 如果 tryOpen 锁住后玩家异常退出（断线/crash/menu 关闭事件未送达），
+    // 用一个服务端 tick 超时强制释放 currentUser，避免永久锁死工作台。
+    private static final int IDLE_RELEASE_TICKS = 100;
 
     private final ItemStackHandler itemHandler = new ItemStackHandler(TOTAL_SLOTS) {
         @Override
@@ -69,6 +72,8 @@ public class WeaponWorkbenchBlockEntity extends BlockEntity implements MenuProvi
     // transient, not persisted — used for multi-player mutex only
     @Nullable
     private UUID currentUser;
+    // H4: 记录当前用户最后一次成功 tryOpen 的服务端 tick；用于 idle 超时强制释放
+    private long currentUserSinceTick = 0;
 
     public int getSelectedTab() { return selectedTab; }
 
@@ -130,19 +135,29 @@ public class WeaponWorkbenchBlockEntity extends BlockEntity implements MenuProvi
         if (currentUser != null) {
             if (level != null) {
                 Player existing = level.getPlayerByUUID(currentUser);
+                // H4: 三道闸门 — 1) 玩家已不存在；2) 玩家已死亡；3) 玩家容器菜单不再是工作台；
+                // 4) idle 超时（断线/crash/menu close 事件未送达时的兜底）
+                long gameTime = level.getGameTime();
+                boolean stale = (gameTime - currentUserSinceTick) > IDLE_RELEASE_TICKS;
                 if (existing != null && existing.isAlive()
-                        && existing.containerMenu instanceof WeaponWorkbenchMenu) {
+                        && existing.containerMenu instanceof WeaponWorkbenchMenu
+                        && !stale) {
                     return false;
                 }
             }
             currentUser = null;
         }
         currentUser = player.getUUID();
+        if (level != null) {
+            currentUserSinceTick = level.getGameTime();
+        }
         return true;
     }
 
     public void setCurrentUser(@Nullable UUID uuid) {
         this.currentUser = uuid;
+        // H4: 显式释放时（如 Menu.removed）立即清零计时，避免下次 tryOpen 因超时立即释放
+        this.currentUserSinceTick = uuid == null ? 0L : (level != null ? level.getGameTime() : 0L);
     }
 
     // ===== 合成逻辑 =====
@@ -170,6 +185,7 @@ public class WeaponWorkbenchBlockEntity extends BlockEntity implements MenuProvi
         if (bp.isEmpty()) return false;
         boolean isCreativeBp = bp.is(ModItems.CREATIVE_BLUEPRINT.get());
         if (!isCreativeBp) {
+            // H3: requiredBlueprint 可能为 null（旧配方或被禁用的配方），bp.is(null) 会抛 NPE
             if (recipe.requiredBlueprint() == null) return false;
             if (!bp.is(recipe.requiredBlueprint())) return false;
         }

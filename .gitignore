@@ -17,3 +17,14 @@ docs/
 .claude/
 sheropshire工程231122/
 libs/*.jar
+
+# Python 缓存（art/工具脚本会自带）
+__pycache__/
+*.pyc
+*.pyo
+
+# 工具脚本的临时渲染输入/输出（不要入库；src/ 里的 Java 渲染器源码要保留）
+tools/unicorn-render/input.png
+tools/unicorn-render/input.webp
+tools/unicorn-render/out/
+tools/unicorn-render/output/

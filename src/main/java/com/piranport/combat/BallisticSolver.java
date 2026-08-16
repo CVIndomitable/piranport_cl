@@ -31,12 +31,75 @@ public final class BallisticSolver {
     private static final Map<SolutionKey, Result> cache = createLRUCache();
     private static boolean cacheEnabled = true;
 
+    // ===== 可注入的 config supplier（默认懒加载指向 ModEquipmentConfig / ModArtilleryConfig，
+    //       测试可通过 setConfigSuppliers 替换为常量，避免触发 MC 类静态初始化）=====
+    // 注意：方法引用会强制加载目标类，因此必须用 lambda 包裹以延迟初始化到首次调用时
+    private static java.util.function.IntSupplier maxIterationsSupplier = () -> {
+        try { return ModEquipmentConfig.BALLISTIC_MAX_ITERATIONS.get(); }
+        catch (Throwable t) { return 100; }
+    };
+    private static java.util.function.IntSupplier maxStepsSupplier = () -> {
+        try { return ModEquipmentConfig.BALLISTIC_MAX_STEPS.get(); }
+        catch (Throwable t) { return 200; }
+    };
+    private static java.util.function.DoubleSupplier accuracySupplier = () -> {
+        try { return ModEquipmentConfig.BALLISTIC_ACCURACY.get(); }
+        catch (Throwable t) { return 0.01; }
+    };
+    private static java.util.function.DoubleSupplier noSolutionThresholdSupplier = () -> {
+        try { return ModArtilleryConfig.BALLISTIC_NO_SOLUTION_THRESHOLD.get(); }
+        catch (Throwable t) { return 50.0; }
+    };
+    private static java.util.function.IntSupplier cacheSizeSupplier = () -> {
+        try { return ModEquipmentConfig.BALLISTIC_CACHE_SIZE.get(); }
+        catch (Throwable t) { return 32; }
+    };
+    private static java.util.function.BooleanSupplier perfCacheEnabledSupplier = () -> {
+        try { return ModArtilleryConfig.PERF_CACHE_SOLUTIONS.get(); }
+        catch (Throwable t) { return true; }
+    };
+
+    /** 测试钩子：替换所有 config supplier。返回原 supplier 用于恢复。 */
+    public static ConfigSuppliers setConfigSuppliers(int maxIters, int maxSteps,
+                                                       double accuracy, double noSolutionThreshold,
+                                                       int cacheSize, boolean perfCacheEnabled) {
+        ConfigSuppliers prev = new ConfigSuppliers(
+                maxIterationsSupplier, maxStepsSupplier, accuracySupplier,
+                noSolutionThresholdSupplier, cacheSizeSupplier, perfCacheEnabledSupplier);
+        maxIterationsSupplier = () -> maxIters;
+        maxStepsSupplier = () -> maxSteps;
+        accuracySupplier = () -> accuracy;
+        noSolutionThresholdSupplier = () -> noSolutionThreshold;
+        cacheSizeSupplier = () -> cacheSize;
+        perfCacheEnabledSupplier = () -> perfCacheEnabled;
+        // 重建缓存以应用新的 cacheSize
+        return prev;
+    }
+
+    /** 保存原始 supplier 以便恢复。 */
+    public record ConfigSuppliers(
+            java.util.function.IntSupplier maxIterations,
+            java.util.function.IntSupplier maxSteps,
+            java.util.function.DoubleSupplier accuracy,
+            java.util.function.DoubleSupplier noSolutionThreshold,
+            java.util.function.IntSupplier cacheSize,
+            java.util.function.BooleanSupplier perfCacheEnabled) {
+        public void restore() {
+            maxIterationsSupplier = maxIterations;
+            maxStepsSupplier = maxSteps;
+            accuracySupplier = accuracy;
+            noSolutionThresholdSupplier = noSolutionThreshold;
+            cacheSizeSupplier = cacheSize;
+            perfCacheEnabledSupplier = perfCacheEnabled;
+        }
+    }
+
     /** 创建 LRU 缓存 */
     private static Map<SolutionKey, Result> createLRUCache() {
         return new LinkedHashMap<SolutionKey, Result>(16, 0.75f, true) {
             @Override
             protected boolean removeEldestEntry(Map.Entry<SolutionKey, Result> eldest) {
-                return size() > ModEquipmentConfig.BALLISTIC_CACHE_SIZE.get();
+                return size() > cacheSizeSupplier.getAsInt();
             }
         };
     }
@@ -111,10 +174,10 @@ public final class BallisticSolver {
         }
 
         long solveStart = System.nanoTime();
-        int maxIters = ModEquipmentConfig.BALLISTIC_MAX_ITERATIONS.get();
-        double accuracyThreshold = ModEquipmentConfig.BALLISTIC_ACCURACY.get();
+        int maxIters = maxIterationsSupplier.getAsInt();
+        double accuracyThreshold = accuracySupplier.getAsDouble();
         if (accuracyThreshold <= 0.0) accuracyThreshold = 0.01;
-        double noSolutionThreshold = ModArtilleryConfig.BALLISTIC_NO_SOLUTION_THRESHOLD.get();
+        double noSolutionThreshold = noSolutionThresholdSupplier.getAsDouble();
 
         BallisticSolverStats stats = BallisticSolverStats.getInstance();
 
@@ -640,7 +703,7 @@ public final class BallisticSolver {
         double vz = vz0;
         double x = 0.0;
         double y = 0.0;
-        int maxSteps = Math.max(ModEquipmentConfig.BALLISTIC_MAX_STEPS.get(), 1000);
+        int maxSteps = Math.max(maxStepsSupplier.getAsInt(), 1000);
 
         for (int step = 0; step < maxSteps; step++) {
             double prevX = x;
@@ -678,7 +741,7 @@ public final class BallisticSolver {
     }
 
     private static int simulationStepLimit(double initialSpeed, double targetX) {
-        int configured = ModEquipmentConfig.BALLISTIC_MAX_STEPS.get();
+        int configured = maxStepsSupplier.getAsInt();
         if (targetX <= 0.0 || initialSpeed <= 0.0) return configured;
 
         double conservativeHorizontalSpeed = Math.max(0.05, initialSpeed * 0.15);
@@ -703,7 +766,7 @@ public final class BallisticSolver {
 
     /** 从 ModArtilleryConfig 读取缓存开关。 */
     private static boolean isCacheEnabled() {
-        return cacheEnabled && ModArtilleryConfig.PERF_CACHE_SOLUTIONS.get();
+        return cacheEnabled && perfCacheEnabledSupplier.getAsBoolean();
     }
 
     /** 强制开关缓存（用于调试/性能测试）。 */

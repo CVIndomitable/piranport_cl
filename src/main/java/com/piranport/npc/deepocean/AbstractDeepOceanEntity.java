@@ -216,6 +216,12 @@ public abstract class AbstractDeepOceanEntity extends Monster {
             if (fleetGroupId != null) {
                 FleetGroupManager mgr = FleetGroupManager.get((ServerLevel) level());
                 mgr.removeMember(fleetGroupId, getUUID());
+                // H14 修复：若本实体正是舰队共享目标的提供者/锁定者，需要清除共享 target
+                // 避免舰队其他成员继续攻击一个已经死亡的 UUID（不会自动清理，会卡住）
+                FleetGroup group = mgr.getGroup(fleetGroupId);
+                if (group != null && getUUID().equals(group.getSharedTargetUuid())) {
+                    mgr.clearGroupTarget(fleetGroupId);
+                }
             }
             // Still call super to trigger drops/xp
             super.die(source);

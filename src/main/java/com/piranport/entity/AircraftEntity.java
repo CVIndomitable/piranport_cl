@@ -259,7 +259,9 @@ public class AircraftEntity extends Entity {
         entity.entityData.set(WEAPON_SLOT_INDEX, weaponSlotIndex);
 
         Vec3 look = owner.getLookAngle();
-        entity.setPos(owner.getX() + look.x * 0.8, owner.getEyeY(), owner.getZ() + look.z * 0.8);
+        // 策划案：飞机在玩家前方 0.3–0.5 格生成，按皮肤微调：航母放飞稍远，潜艇更近
+        double spawnDistance = 0.45;
+        entity.setPos(owner.getX() + look.x * spawnDistance, owner.getEyeY() - 0.15, owner.getZ() + look.z * spawnDistance);
         entity.orbitAngle = Math.atan2(look.z, look.x);
         entity.stuckCheckPos = entity.position();
         return entity;

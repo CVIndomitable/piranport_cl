@@ -46,6 +46,8 @@ public class LootShipEntity extends Entity {
     private final java.util.Set<java.util.UUID> openedBy = new java.util.HashSet<>();
     /** Callback fired when the crate lands on water (dropping → stationary). */
     private Runnable onLanded;
+    /** Phase 27：标记此箱船为 Boss 击杀奖励物（红色烟雾信标） */
+    private boolean bossLootMarker = false;
 
     public LootShipEntity(EntityType<?> type, Level level) {
         super(type, level);
@@ -104,6 +106,14 @@ public class LootShipEntity extends Entity {
         if (despawnTimer > DungeonConstants.LOOT_SHIP_DESPAWN_TICKS) {
             discard();
         }
+
+        // Phase 27：策划 §10.7 - Boss 战利品箱船的红色烟雾信标
+        if (bossLootMarker && !level().isClientSide() && tickCount % 10 == 0) {
+            ((net.minecraft.server.level.ServerLevel) level()).sendParticles(
+                    net.minecraft.core.particles.ParticleTypes.SMOKE,
+                    getX(), getY() + 1.0, getZ(),
+                    6, 0.3, 0.2, 0.3, 0.02);
+        }
     }
 
     @Override
@@ -111,7 +121,7 @@ public class LootShipEntity extends Entity {
         if (level().isClientSide()) return InteractionResult.SUCCESS;
 
         if (player instanceof ServerPlayer serverPlayer) {
-            if (!lootGenerated) {
+            if (!lootGenerated && !bossLootMarker) {
                 generateLoot(serverPlayer);
                 lootGenerated = true;
             }
@@ -161,6 +171,15 @@ public class LootShipEntity extends Entity {
 
     public boolean isDropping() {
         return entityData.get(DROPPING);
+    }
+
+    /** Phase 27：标记为 Boss 战利品箱船（启用红色烟雾信标 + 跳过 generateLoot） */
+    public void setBossLootMarker(boolean marker) {
+        this.bossLootMarker = marker;
+    }
+
+    public boolean isBossLootMarker() {
+        return this.bossLootMarker;
     }
 
     /** Set callback for when the crate finishes falling. */

@@ -510,12 +510,39 @@ public class ArtilleryIntroScript implements DungeonScript {
                 portalPos.getX() + 0.5, DungeonConstants.SPAWN_Y, portalPos.getZ() + 0.5);
         level.addFreshEntity(portal);
 
+        // Phase 27：策划 §10.7 - Boss 击杀后生成战利品箱船（红色烟雾信标）
+        spawnBossLootShip(level, portalPos);
+
         sendActionBar(level, Component.translatable("dungeon.piranport.artillery_intro.cleared"));
         phase = Phase.COMPLETED;
         finished = true;
 
         PiranPort.LOGGER.info("[ArtilleryIntro] All destroyers killed, portal spawned at {}",
                 portalPos);
+    }
+
+    /**
+     * 在 Boss 战结束位置生成一艘战利品箱船（飘浮水面，含红色烟雾信标）。
+     * 箱船材质沿用现有 LootShipEntity（策划 §10.7 要求"换皮"——后续美术替换贴图）。
+     */
+    private void spawnBossLootShip(ServerLevel level, BlockPos center) {
+        double x = center.getX() + 0.5;
+        double z = center.getZ() + 0.5;
+        double y = DungeonConstants.SPAWN_Y;
+        LootShipEntity lootShip = LootShipEntity.create(level, x, y, z, 0);
+        lootShip.setBossLootMarker(true);
+        // 用现有 fillInventory 填一份高级战利品（每个玩家一份大口径混合弹药 + 经验壳）
+        List<ItemStack> loot = new ArrayList<>();
+        for (int i = 0; i < playerUuids.size(); i++) {
+            loot.add(new ItemStack(ModItems.LARGE_GUN.get()));
+            loot.add(new ItemStack(ModItems.LARGE_HE_SHELL.get(), 64));
+            loot.add(new ItemStack(ModItems.LARGE_AP_SHELL.get(), 64));
+            loot.add(new ItemStack(ModItems.EXP_SHELL.get(), 4));
+            loot.add(new ItemStack(ModItems.QUICK_REPAIR.get(), 2));
+        }
+        lootShip.fillInventory(loot);
+        level.addFreshEntity(lootShip);
+        PiranPort.LOGGER.info("[ArtilleryIntro] Boss loot ship spawned at {}", center);
     }
 
     // ========== Utilities ==========

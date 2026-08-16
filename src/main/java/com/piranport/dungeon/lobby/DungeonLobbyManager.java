@@ -30,6 +30,8 @@ public final class DungeonLobbyManager {
         private String flagshipName;
         private final List<UUID> memberUuids = new ArrayList<>();
         private final List<String> memberNames = new ArrayList<>();
+        // Phase 27：每个成员的"准备"状态（默认 false）
+        private final Map<UUID, Boolean> readyStates = new HashMap<>();
         private String selectedStageId;
 
         public Lobby(GlobalPos pos, ServerPlayer flagship) {
@@ -38,6 +40,7 @@ public final class DungeonLobbyManager {
             this.flagshipName = flagship.getGameProfile().getName();
             this.memberUuids.add(flagship.getUUID());
             this.memberNames.add(flagshipName);
+            this.readyStates.put(flagship.getUUID(), false);
         }
 
         public GlobalPos getLecternPos() { return lecternPos; }
@@ -60,6 +63,7 @@ public final class DungeonLobbyManager {
             if (!memberUuids.contains(uuid) && memberUuids.size() < MAX_LOBBY_SIZE) {
                 memberUuids.add(uuid);
                 memberNames.add(player.getGameProfile().getName());
+                readyStates.put(uuid, false);
             }
         }
 
@@ -69,11 +73,31 @@ public final class DungeonLobbyManager {
                 memberUuids.remove(idx);
                 memberNames.remove(idx);
             }
+            readyStates.remove(uuid);
             // If flagship left and there are others, promote first member
             if (flagshipUuid.equals(uuid) && !memberUuids.isEmpty()) {
                 flagshipUuid = memberUuids.get(0);
                 flagshipName = memberNames.get(0);
             }
+        }
+
+        /** 切换成员的准备状态。幂等。 */
+        public void toggleReady(UUID uuid) {
+            if (!memberUuids.contains(uuid)) return;
+            readyStates.put(uuid, !readyStates.get(uuid));
+        }
+
+        public boolean isReady(UUID uuid) {
+            return readyStates.getOrDefault(uuid, false);
+        }
+
+        /** 返回所有成员与各自准备状态（与 memberUuids 顺序一致）。 */
+        public List<Boolean> getReadyStates() {
+            List<Boolean> out = new ArrayList<>(memberUuids.size());
+            for (UUID uuid : memberUuids) {
+                out.add(readyStates.getOrDefault(uuid, false));
+            }
+            return out;
         }
 
         public boolean isEmpty() {
@@ -130,7 +154,8 @@ public final class DungeonLobbyManager {
         if (lobby == null) return;
         LobbyUpdatePayload payload = new LobbyUpdatePayload(
                 lobby.getMemberNames(), lobby.getFlagshipName(),
-                lobby.getSelectedStageId() != null ? lobby.getSelectedStageId() : "");
+                lobby.getSelectedStageId() != null ? lobby.getSelectedStageId() : "",
+                lobby.getReadyStates());
         for (UUID uuid : lobby.getMemberUuids()) {
             ServerPlayer player = server.getPlayerList().getPlayer(uuid);
             if (player != null) {

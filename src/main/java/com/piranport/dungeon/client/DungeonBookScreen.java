@@ -9,6 +9,7 @@ import com.piranport.dungeon.menu.DungeonBookMenu;
 import com.piranport.dungeon.network.ClientDungeonData;
 import com.piranport.dungeon.network.SelectNodePayload;
 import com.piranport.dungeon.network.SelectStagePayload;
+import com.piranport.dungeon.network.ToggleReadyPayload;
 import com.piranport.registry.ModDataComponents;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -64,21 +65,66 @@ public class DungeonBookScreen extends AbstractContainerScreen<DungeonBookMenu> 
         int x = leftPos + 5;
         int y = topPos + 5;
 
-        // Chapter tabs
-        for (int i = 0; i < chapters.size(); i++) {
+        // ===== 章节页签 (含翻页：策划 §10.5 缺翻页) =====
+        // Phase 27：简单翻页 — 当前每屏显示 3 个章节页签；超过则用 "<" ">" 按钮翻页
+        int chapterPageSize = 3;
+        int chapterPages = (chapters.size() + chapterPageSize - 1) / chapterPageSize;
+        int chapterPage = selectedChapterIndex / Math.max(1, chapterPageSize);
+        if (chapterPages == 0) chapterPages = 1;
+        if (chapterPage >= chapterPages) chapterPage = chapterPages - 1;
+        int chapterStart = chapterPage * chapterPageSize;
+
+        for (int i = chapterStart; i < Math.min(chapterStart + chapterPageSize, chapters.size()); i++) {
             final int ci = i;
             ChapterData ch = chapters.get(i);
             addRenderableWidget(Button.builder(
                     Component.literal(ch.displayName()),
                     btn -> { selectedChapterIndex = ci; rebuildButtons(); }
-            ).bounds(x + i * 90, y, 85, 16).build());
+            ).bounds(x + (i - chapterStart) * 90, y, 85, 16).build());
+        }
+        // "<" ">" 翻页按钮
+        if (chapterPages > 1) {
+            int arrowY = y + 18;
+            if (chapterPage > 0) {
+                addRenderableWidget(Button.builder(
+                        Component.literal("<"),
+                        btn -> {
+                            selectedChapterIndex = Math.max(0, selectedChapterIndex - chapterPageSize);
+                            rebuildButtons();
+                        }
+                ).bounds(x, arrowY, 18, 14).build());
+            }
+            if (chapterPage < chapterPages - 1) {
+                addRenderableWidget(Button.builder(
+                        Component.literal(">"),
+                        btn -> {
+                            selectedChapterIndex = Math.min(chapters.size() - 1,
+                                    selectedChapterIndex + chapterPageSize);
+                            rebuildButtons();
+                        }
+                ).bounds(x + 18, arrowY, 18, 14).build());
+            }
         }
 
         // Stage buttons for selected chapter
         if (selectedChapterIndex < chapters.size()) {
             ChapterData chapter = chapters.get(selectedChapterIndex);
             int sy = y + 22;
-            for (String stageId : chapter.stages()) {
+            // Phase 27：关卡列表滚动 (策划 §10.5/§12.2 缺滚动)
+            List<String> stageIds = new ArrayList<>(chapter.stages());
+            int visibleStages = 5;
+            int stagePages = (stageIds.size() + visibleStages - 1) / visibleStages;
+            int stagePage = 0;
+            // 用 selectedStageId 推算当前页（保持体验连贯）
+            int curIdx = selectedStageId != null ? stageIds.indexOf(selectedStageId) : 0;
+            if (curIdx >= 0) stagePage = curIdx / visibleStages;
+            int stageStart = stagePage * visibleStages;
+            // 复制为 final 给 lambda 用
+            final int sp = stagePage;
+            final int sps = stagePages;
+
+            for (int si = stageStart; si < Math.min(stageStart + visibleStages, stageIds.size()); si++) {
+                String stageId = stageIds.get(si);
                 StageData stage = ClientDungeonData.getStage(stageId);
                 if (stage == null) continue;
                 String label = stage.displayName();
@@ -90,6 +136,38 @@ public class DungeonBookScreen extends AbstractContainerScreen<DungeonBookMenu> 
                         }
                 ).bounds(x + 10, sy, 200, 16).build());
                 sy += 20;
+            }
+            // 滚动箭头
+            if (sps > 1) {
+                int arrowX = x + 10;
+                if (sp > 0) {
+                    addRenderableWidget(Button.builder(
+                            Component.literal("∧"),
+                            btn -> {
+                                int newIdx = (sp - 1) * visibleStages;
+                                if (newIdx >= 0 && newIdx < stageIds.size()) {
+                                    String sid = stageIds.get(newIdx);
+                                    selectedStageId = sid;
+                                    selectedStage = ClientDungeonData.getStage(sid);
+                                }
+                                rebuildButtons();
+                            }
+                    ).bounds(arrowX, y + 22 - 14, 16, 12).build());
+                }
+                if (sp < sps - 1) {
+                    addRenderableWidget(Button.builder(
+                            Component.literal("∨"),
+                            btn -> {
+                                int newIdx = (sp + 1) * visibleStages;
+                                if (newIdx < stageIds.size()) {
+                                    String sid = stageIds.get(newIdx);
+                                    selectedStageId = sid;
+                                    selectedStage = ClientDungeonData.getStage(sid);
+                                }
+                                rebuildButtons();
+                            }
+                    ).bounds(arrowX + 18, y + 22 - 14, 16, 12).build());
+                }
             }
         }
 
@@ -111,6 +189,25 @@ public class DungeonBookScreen extends AbstractContainerScreen<DungeonBookMenu> 
                 Component.translatable("gui.piranport.dungeon_book.exit"),
                 btn -> onClose()
         ).bounds(leftPos + 140, topPos + imageHeight - 25, 60, 18).build());
+
+        // ===== Phase 27：策划 §10.2 切换准备按钮 (位于成员区右上) =====
+        List<String> members = ClientDungeonData.getLobbyMembers();
+        List<Boolean> readyStates = ClientDungeonData.getLobbyReadyStates();
+        boolean myReady = false;
+        if (minecraft != null && minecraft.player != null) {
+            String myName = minecraft.player.getGameProfile().getName();
+            int myIdx = members.indexOf(myName);
+            if (myIdx >= 0 && myIdx < readyStates.size()) {
+                myReady = readyStates.get(myIdx);
+            }
+        }
+        addRenderableWidget(Button.builder(
+                Component.translatable(myReady
+                        ? "gui.piranport.dungeon_book.unready"
+                        : "gui.piranport.dungeon_book.ready"),
+                btn -> PacketDistributor.sendToServer(
+                        new ToggleReadyPayload(menu.getLecternPos()))
+        ).bounds(leftPos + imageWidth - 70, topPos + imageHeight - 108, 65, 16).build());
     }
 
     private void buildNodeMapButtons() {
@@ -222,6 +319,24 @@ public class DungeonBookScreen extends AbstractContainerScreen<DungeonBookMenu> 
                 gfx.drawString(font, timeStr,
                         leftPos + imageWidth - font.width(timeStr) - 5, topPos + 5,
                         0xFFAAFFAA, false);
+            }
+        } else if (mode == ViewMode.STAGE_SELECT) {
+            // Phase 27：策划 §10.2 大厅成员列表 (策划 §10.5/§12.2 缺成员列表)
+            List<String> members = ClientDungeonData.getLobbyMembers();
+            List<Boolean> readyStates = ClientDungeonData.getLobbyReadyStates();
+            String flagship = ClientDungeonData.getLobbyFlagshipName();
+            gfx.drawString(font, Component.translatable("gui.piranport.dungeon_book.lobby_members").getString(),
+                    leftPos + 5, topPos + imageHeight - 105, 0xFFFFD700, false);
+            int memberY = topPos + imageHeight - 92;
+            for (int i = 0; i < members.size() && i < 6; i++) {
+                String name = members.get(i);
+                boolean isFlagship = name.equals(flagship);
+                boolean isReady = i < readyStates.size() && readyStates.get(i);
+                String prefix = isFlagship ? "★ " : "  ";
+                String readyMark = isReady ? " [✓]" : " [ ]";
+                int color = isReady ? 0xFF7CFF7C : (isFlagship ? 0xFFFFE08A : 0xFFCCCCCC);
+                gfx.drawString(font, prefix + name + readyMark,
+                        leftPos + 5, memberY + i * 12, color, false);
             }
         }
     }

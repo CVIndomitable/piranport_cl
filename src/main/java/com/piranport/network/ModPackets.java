@@ -191,6 +191,11 @@ public class ModPackets {
                 com.piranport.dungeon.network.TownScrollUsePayload.STREAM_CODEC,
                 com.piranport.dungeon.network.TownScrollUsePayload::handle
         );
+        registrar.playToServer(
+                com.piranport.dungeon.network.ToggleReadyPayload.TYPE,
+                com.piranport.dungeon.network.ToggleReadyPayload.STREAM_CODEC,
+                com.piranport.dungeon.network.ToggleReadyPayload::handle
+        );
         // S2C
         registrar.playToClient(
                 com.piranport.dungeon.network.LobbyUpdatePayload.TYPE,

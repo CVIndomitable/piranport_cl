@@ -506,6 +506,17 @@ public class TransformationManager {
         return false;
     }
 
+    /**
+     * Phase 27：策划 §3.6 表 3.2 - 取装备的声呐扫描半径。
+     * 优先取 first-found SonarItem.getRadius()；无装备返回标准型 24。
+     */
+    public static double getEquippedSonarRadius(Player player, ItemStack coreStack) {
+        for (ItemStack s : getCoreStoredContents(coreStack)) {
+            if (s.getItem() instanceof SonarItem sonar) return sonar.getRadius();
+        }
+        return 24.0;
+    }
+
     /** Check if a TorpedoReloadItem is stored in SHIP_CORE_ARMOR. */
     public static boolean hasTorpedoReloadEquipped(Player player, ItemStack coreStack) {
         for (ItemStack s : getCoreStoredContents(coreStack)) {

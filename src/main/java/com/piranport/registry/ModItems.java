@@ -1208,7 +1208,21 @@ public class ModItems {
     public static final DeferredItem<SonarItem> STANDARD_SONAR =
             ITEMS.register("standard_sonar",
                     () -> new SonarItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ARMOR), 10));
+                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ARMOR),
+                            10, 24));
+
+    // Phase 27：策划 §3.6 表 3.2 改进型/先进型声呐
+    public static final DeferredItem<SonarItem> IMPROVED_SONAR =
+            ITEMS.register("improved_sonar",
+                    () -> new SonarItem(new Item.Properties().stacksTo(1)
+                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ARMOR),
+                            3, 32));
+
+    public static final DeferredItem<SonarItem> ADVANCED_SONAR =
+            ITEMS.register("advanced_sonar",
+                    () -> new SonarItem(new Item.Properties().stacksTo(1)
+                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ARMOR),
+                            5, 40));
 
     // ===== Engines =====
     public static final DeferredItem<EngineItem> STANDARD_ENGINE =

@@ -318,7 +318,9 @@ public class PlayerTickHandler {
 
         // 动态限制扫描范围，避免超出服务器模拟距离
         int simDist = ((ServerLevel) player.level()).getServer().getPlayerList().getSimulationDistance();
-        double maxRange = Math.min(24.0, simDist * 16.0 - 8.0);
+        // Phase 27：策划 §3.6 - 声呐半径按 SonarItem.radius 决定 (标准 24/改进 32/先进 40)
+        double baseRadius = TransformationManager.getEquippedSonarRadius(player, transformedCore);
+        double maxRange = Math.min(baseRadius, simDist * 16.0 - 8.0);
 
         AABB scanBox = player.getBoundingBox().inflate(maxRange, 8.0, maxRange);
         List<LivingEntity> nearby = player.level().getEntitiesOfClass(

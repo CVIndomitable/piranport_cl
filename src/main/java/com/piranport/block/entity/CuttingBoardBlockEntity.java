@@ -25,6 +25,10 @@ import java.util.Optional;
 public class CuttingBoardBlockEntity extends BlockEntity {
     private ItemStack storedItem = ItemStack.EMPTY;
     private int progress = 0;
+    private int holdTicks = 0;       // Phase 30: 长按 tick 计数
+    private static final int HOLD_INTERVAL = 5; // 每 5 tick 切一次 (策划 4 秒 = 80 tick)
+    private static final int HOLDS_TO_CUT = 4;  // 4 次 hold 切 = 完成一次切割
+    private java.util.UUID holdingPlayer = null; // 当前在长按的玩家
 
     /**
      * Phase 30: Single-slot IItemHandler for hopper/pipe automation.
@@ -87,6 +91,41 @@ public class CuttingBoardBlockEntity extends BlockEntity {
         }
         setChanged();
         level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+    }
+
+    /** Phase 30: 标记玩家开始长按。每次 serverTick 自动+1 tick，达到 HOLDS_TO_CUT 完成切割。 */
+    public void startHold(java.util.UUID playerUuid) {
+        if (storedItem.isEmpty()) return;
+        this.holdingPlayer = playerUuid;
+        this.holdTicks = 0;
+    }
+
+    public void endHold(java.util.UUID playerUuid) {
+        if (playerUuid.equals(this.holdingPlayer)) {
+            this.holdingPlayer = null;
+            this.holdTicks = 0;
+        }
+    }
+
+    /** Phase 30: 服务端 tick — 检查长按玩家是否仍然靠近砧板，按 HOLD_INTERVAL 自动 cut。 */
+    public void serverTick(Level level) {
+        if (holdingPlayer == null) return;
+        if (storedItem.isEmpty()) {
+            holdingPlayer = null;
+            holdTicks = 0;
+            return;
+        }
+        net.minecraft.server.level.ServerPlayer player = level.getServer().getPlayerList().getPlayer(holdingPlayer);
+        if (player == null || player.distanceToSqr(worldPosition.getX() + 0.5, worldPosition.getY() + 0.5, worldPosition.getZ() + 0.5) > 25) {
+            holdingPlayer = null;
+            holdTicks = 0;
+            return;
+        }
+        holdTicks++;
+        if (holdTicks >= HOLD_INTERVAL) {
+            holdTicks = 0;
+            cut(level);
+        }
     }
 
     @Nullable

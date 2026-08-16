@@ -22,6 +22,8 @@ import net.minecraft.world.level.block.Mirror;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
@@ -48,7 +50,6 @@ public class CuttingBoardBlock extends BaseEntityBlock {
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         builder.add(FACING);
-    }
 
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext ctx) {
@@ -78,6 +79,16 @@ public class CuttingBoardBlock extends BaseEntityBlock {
 
     @Override
     public RenderShape getRenderShape(BlockState state) { return RenderShape.MODEL; }
+
+    @Nullable
+    @Override
+    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
+        if (level.isClientSide) return null;
+        if (type != com.piranport.registry.ModBlockEntityTypes.CUTTING_BOARD.get()) return null;
+        return (lvl, pos, st, be) -> {
+            if (be instanceof CuttingBoardBlockEntity cb) cb.serverTick(lvl);
+        };
+    }
 
     @Override
     protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos,
@@ -116,6 +127,7 @@ public class CuttingBoardBlock extends BaseEntityBlock {
                     level.sendBlockUpdated(pos, state, state, 3);
                 } else {
                     board.cut(level);
+                    board.startHold(player.getUUID()); // 策划：长按 4 秒 = 自动切割
                 }
             }
             return InteractionResult.sidedSuccess(level.isClientSide);

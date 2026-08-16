@@ -75,18 +75,20 @@ public class ReloadFacilityMenu extends AbstractContainerMenu {
 
         // Slot 0: Launcher input (left side)
         addSlot(new LauncherSlot(handler, 0, 35, 35));
-        // Slot 1: Ammo input (center)
+        // Slot 1: Ammo input (center-top)
         addSlot(new AmmoSlot(handler, 1, 71, 35));
-        // Slot 2: Output (right side)
-        addSlot(new OutputSlot(handler, 2, 131, 35));
+        // Slot 2: Extra ammo (策划 4 格)
+        addSlot(new AmmoSlot(handler, 2, 107, 35));
+        // Slot 3: Output (right side)
+        addSlot(new OutputSlot(handler, 3, 143, 35));
 
-        // Player inventory (slots 3-29)
+        // Player inventory (slots 4-30)
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
                 addSlot(new Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, 84 + row * 18));
             }
         }
-        // Player hotbar (slots 30-38)
+        // Player hotbar (slots 31-39)
         for (int col = 0; col < 9; col++) {
             addSlot(new Slot(playerInventory, col, 8 + col * 18, 142));
         }
@@ -104,9 +106,9 @@ public class ReloadFacilityMenu extends AbstractContainerMenu {
         if (slot.hasItem()) {
             ItemStack stack = slot.getItem();
             result = stack.copy();
-            if (index < 3) {
+            if (index < 4) {
                 // From machine to player
-                if (!moveItemStackTo(stack, 3, 39, true)) return ItemStack.EMPTY;
+                if (!moveItemStackTo(stack, 4, 40, true)) return ItemStack.EMPTY;
             } else {
                 // From player to machine
                 if (stack.getItem() instanceof TorpedoLauncherItem
@@ -114,7 +116,7 @@ public class ReloadFacilityMenu extends AbstractContainerMenu {
                     if (!moveItemStackTo(stack, 0, 1, false)) return ItemStack.EMPTY;
                 } else if (stack.getItem() instanceof TorpedoItem
                         || stack.getItem() instanceof MissileItem) {
-                    if (!moveItemStackTo(stack, 1, 2, false)) return ItemStack.EMPTY;
+                    if (!moveItemStackTo(stack, 1, 3, false)) return ItemStack.EMPTY;
                 } else {
                     return ItemStack.EMPTY;
                 }

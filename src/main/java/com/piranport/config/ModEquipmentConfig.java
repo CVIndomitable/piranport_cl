@@ -50,12 +50,12 @@ public class ModEquipmentConfig {
         BUILDER.push("reload_facility");
 
         RELOAD_FACILITY_LAND_TIME = BUILDER
-            .comment("Reload time on land in ticks (20 ticks = 1 second) (陆地装填时间，20 tick = 1秒)")
-            .defineInRange("land_reload_ticks", 100, 1, 6000);
+            .comment("Reload time on land in ticks (20 ticks = 1 second) (陆地装填时间，策划 10s = 200 tick)")
+            .defineInRange("land_reload_ticks", 200, 1, 6000);
 
         RELOAD_FACILITY_WATER_TIME = BUILDER
-            .comment("Reload time on water in ticks (20 ticks = 1 second) (水上装填时间，20 tick = 1秒)")
-            .defineInRange("water_reload_ticks", 60, 1, 6000);
+            .comment("Reload time on water in ticks (20 ticks = 1 second) (水上装填时间，策划 10s = 200 tick)")
+            .defineInRange("water_reload_ticks", 200, 1, 6000);
 
         BUILDER.pop();
 

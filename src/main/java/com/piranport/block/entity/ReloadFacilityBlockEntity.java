@@ -33,17 +33,19 @@ import org.jetbrains.annotations.Nullable;
  * 装填设施方块实体 — 将鱼雷装入鱼雷发射器。
  * 槽位0: 鱼雷发射器（原料槽1，顶面漏斗输入）
  * 槽位1: 鱼雷弹药（原料槽2，侧面漏斗输入）
- * 槽位2: 装填完毕的发射器（产品槽，底部漏斗输出）
- * 装填时间: 水中 400 ticks (20秒)，陆地 100 ticks (5秒)
+ * 槽位2: 备用弹药（原料槽3，策划 4 格）
+ * 槽位3: 装填完毕的发射器（产品槽，底部漏斗输出）
+ * 装填时间: 10 秒 (200 tick) — 策划要求
  */
 public class ReloadFacilityBlockEntity extends BlockEntity implements MenuProvider {
     public static final int LAUNCHER_SLOT = 0;
     public static final int AMMO_SLOT = 1;
-    public static final int OUTPUT_SLOT = 2;
-    public static final int TOTAL_SLOTS = 3;
-    public static final int RELOAD_TIME_WATER = 400;  // 20 seconds (2× slower)
-    public static final int RELOAD_TIME_LAND = 100;   // 5 seconds (2× faster)
-    public static final int RELOAD_TIME_DEFAULT = 200; // 10 seconds (fallback, unused)
+    public static final int EXTRA_AMMO_SLOT = 2;
+    public static final int OUTPUT_SLOT = 3;
+    public static final int TOTAL_SLOTS = 4;
+    public static final int RELOAD_TIME_WATER = 200;  // 10 seconds
+    public static final int RELOAD_TIME_LAND = 200;   // 10 seconds
+    public static final int RELOAD_TIME_DEFAULT = 200; // 10 seconds (fallback)
 
     private final ItemStackHandler itemHandler = new ItemStackHandler(TOTAL_SLOTS) {
         @Override
@@ -56,7 +58,7 @@ public class ReloadFacilityBlockEntity extends BlockEntity implements MenuProvid
             return switch (slot) {
                 case LAUNCHER_SLOT -> stack.getItem() instanceof TorpedoLauncherItem
                         || (stack.getItem() instanceof MissileLauncherItem ml && ml.canReloadInFacility());
-                case AMMO_SLOT -> stack.getItem() instanceof TorpedoItem
+                case AMMO_SLOT, EXTRA_AMMO_SLOT -> stack.getItem() instanceof TorpedoItem
                         || stack.getItem() instanceof MissileItem;
                 case OUTPUT_SLOT -> false; // output only
                 default -> false;
@@ -65,8 +67,8 @@ public class ReloadFacilityBlockEntity extends BlockEntity implements MenuProvid
 
         @Override
         public int getSlotLimit(int slot) {
-            // Launchers stack to 1, torpedoes stack to 16, output stack to 1
-            return slot == AMMO_SLOT ? 64 : 1;
+            // Launchers stack to 1, torpedoes stack to 64, output stack to 1
+            return slot == AMMO_SLOT || slot == EXTRA_AMMO_SLOT ? 64 : 1;
         }
     };
 
@@ -87,13 +89,16 @@ public class ReloadFacilityBlockEntity extends BlockEntity implements MenuProvid
         }
     };
 
-    // Side hopper → slot 1 (ammo) only
+    // Side hopper → slots 1-2 (ammo + extra ammo) only
     private final IItemHandler sideHandler = new IItemHandler() {
-        @Override public int getSlots() { return 1; }
-        @Override public ItemStack getStackInSlot(int slot) { return itemHandler.getStackInSlot(AMMO_SLOT); }
+        @Override public int getSlots() { return 2; }
+        @Override public ItemStack getStackInSlot(int slot) {
+            return slot == 0 ? itemHandler.getStackInSlot(AMMO_SLOT) : itemHandler.getStackInSlot(EXTRA_AMMO_SLOT);
+        }
         @Override public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
             if (!(stack.getItem() instanceof TorpedoItem) && !(stack.getItem() instanceof MissileItem)) return stack;
-            return itemHandler.insertItem(AMMO_SLOT, stack, simulate);
+            int targetSlot = slot == 0 ? AMMO_SLOT : EXTRA_AMMO_SLOT;
+            return itemHandler.insertItem(targetSlot, stack, simulate);
         }
         @Override public ItemStack extractItem(int slot, int amount, boolean simulate) { return ItemStack.EMPTY; }
         @Override public int getSlotLimit(int slot) { return 64; }
@@ -154,7 +159,6 @@ public class ReloadFacilityBlockEntity extends BlockEntity implements MenuProvid
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, ReloadFacilityBlockEntity be) {
         ItemStack launcherStack = be.itemHandler.getStackInSlot(LAUNCHER_SLOT);
-        ItemStack ammoStack = be.itemHandler.getStackInSlot(AMMO_SLOT);
         ItemStack outputStack = be.itemHandler.getStackInSlot(OUTPUT_SLOT);
 
         // Output must be empty (launchers don't stack)
@@ -168,9 +172,9 @@ public class ReloadFacilityBlockEntity extends BlockEntity implements MenuProvid
         int needed;
         boolean validCombo;
 
-        // 部分装填补齐时，必须与现有弹种一致；不同弹种禁止混装，避免旧弹被静默替换
-        ItemStack ammoSnapshot = ammoStack.copy();
-        String ammoIdNow = ammoSnapshot.isEmpty() ? "" : BuiltInRegistries.ITEM.getKey(ammoSnapshot.getItem()).toString();
+        // 合并两个弹药槽数量
+        int totalAmmoCount = be.itemHandler.getStackInSlot(AMMO_SLOT).getCount()
+                + be.itemHandler.getStackInSlot(EXTRA_AMMO_SLOT).getCount();
 
         if (launcherStack.getItem() instanceof TorpedoLauncherItem torpedoLauncher) {
             // Torpedo launcher reload
@@ -191,8 +195,13 @@ public class ReloadFacilityBlockEntity extends BlockEntity implements MenuProvid
 
             // 空载：要求完全装填
             needed = maxLoad;
-            validCombo = ammoStack.getItem() instanceof TorpedoItem torpedo
-                    && torpedo.getCaliber() == torpedoLauncher.getCaliber();
+            ItemStack ammo1 = be.itemHandler.getStackInSlot(AMMO_SLOT);
+            ItemStack ammo2 = be.itemHandler.getStackInSlot(EXTRA_AMMO_SLOT);
+            boolean ammo1Valid = !ammo1.isEmpty() && ammo1.getItem() instanceof TorpedoItem t1
+                    && t1.getCaliber() == torpedoLauncher.getCaliber();
+            boolean ammo2Valid = !ammo2.isEmpty() && ammo2.getItem() instanceof TorpedoItem t2
+                    && t2.getCaliber() == torpedoLauncher.getCaliber();
+            validCombo = (ammo1Valid || ammo2Valid);
         } else if (launcherStack.getItem() instanceof MissileLauncherItem missileLauncher
                 && missileLauncher.canReloadInFacility()) {
             // Missile launcher reload (anti-ship / rocket); anti-air 发射器自动装填，禁止走这里
@@ -213,13 +222,17 @@ public class ReloadFacilityBlockEntity extends BlockEntity implements MenuProvid
 
             // 空载：要求完全装填
             needed = maxLoad;
-            validCombo = ammoStack.is(missileLauncher.getAmmoItem());
+            ItemStack ammo1 = be.itemHandler.getStackInSlot(AMMO_SLOT);
+            ItemStack ammo2 = be.itemHandler.getStackInSlot(EXTRA_AMMO_SLOT);
+            boolean ammo1Valid = !ammo1.isEmpty() && ammo1.is(missileLauncher.getAmmoItem());
+            boolean ammo2Valid = !ammo2.isEmpty() && ammo2.is(missileLauncher.getAmmoItem());
+            validCombo = (ammo1Valid || ammo2Valid);
         } else {
             be.resetProgress();
             return;
         }
 
-        if (!validCombo || ammoStack.getCount() < needed) {
+        if (!validCombo || totalAmmoCount < needed) {
             be.resetProgress();
             return;
         }
@@ -233,14 +246,33 @@ public class ReloadFacilityBlockEntity extends BlockEntity implements MenuProvid
 
         be.reloadProgress++;
         if (be.reloadProgress >= be.reloadTotalTime) {
-            // Complete: produce loaded launcher
-            String ammoId = BuiltInRegistries.ITEM.getKey(ammoStack.getItem()).toString();
+            // Complete: produce loaded launcher. Prefer AMMO_SLOT first, then EXTRA_AMMO_SLOT.
+            ItemStack ammoSource = be.itemHandler.getStackInSlot(AMMO_SLOT).isEmpty()
+                    ? be.itemHandler.getStackInSlot(EXTRA_AMMO_SLOT)
+                    : be.itemHandler.getStackInSlot(AMMO_SLOT);
+            String ammoId = BuiltInRegistries.ITEM.getKey(ammoSource.getItem()).toString();
             ItemStack result = launcherStack.copy();
             result.set(ModDataComponents.LOADED_AMMO.get(), new LoadedAmmo(maxLoad, ammoId));
 
             be.itemHandler.setStackInSlot(OUTPUT_SLOT, result);
             be.itemHandler.setStackInSlot(LAUNCHER_SLOT, ItemStack.EMPTY);
-            ammoStack.shrink(needed);
+
+            // 优先消耗 AMMO_SLOT，不够时再消耗 EXTRA_AMMO_SLOT
+            int remaining = needed;
+            ItemStack a1 = be.itemHandler.getStackInSlot(AMMO_SLOT);
+            if (!a1.isEmpty()) {
+                int take = Math.min(remaining, a1.getCount());
+                be.itemHandler.setStackInSlot(AMMO_SLOT, a1.copyWithCount(a1.getCount() - take));
+                remaining -= take;
+            }
+            if (remaining > 0) {
+                ItemStack a2 = be.itemHandler.getStackInSlot(EXTRA_AMMO_SLOT);
+                if (!a2.isEmpty()) {
+                    int take = Math.min(remaining, a2.getCount());
+                    be.itemHandler.setStackInSlot(EXTRA_AMMO_SLOT, a2.copyWithCount(a2.getCount() - take));
+                    remaining -= take;
+                }
+            }
 
             be.reloadProgress = 0;
             be.reloadTotalTime = 0;

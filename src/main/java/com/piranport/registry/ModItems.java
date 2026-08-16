@@ -1252,6 +1252,14 @@ public class ModItems {
                                     .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.TORPEDO),
                             610, 4, ModProjectilesConfig.QUAD_TORPEDO_LAUNCHER_COOLDOWN::get));
 
+    // Phase 27：策划 §3.3 五联装鱼雷发射器
+    public static final DeferredItem<TorpedoLauncherItem> QUINTUPLE_TORPEDO_LAUNCHER =
+            ITEMS.register("quintuple_torpedo_launcher",
+                    () -> new TorpedoLauncherItem(
+                            new Item.Properties().stacksTo(1).durability(24)
+                                    .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.TORPEDO),
+                            610, 5, ModProjectilesConfig.QUINTUPLE_TORPEDO_LAUNCHER_COOLDOWN::get));
+
     // ===== Depth Charge Launchers =====
     public static final DeferredItem<DepthChargeLauncherItem> DEPTH_CHARGE_LAUNCHER =
             ITEMS.register("depth_charge_launcher",

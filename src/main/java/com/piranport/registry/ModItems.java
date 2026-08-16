@@ -89,6 +89,12 @@ public class ModItems {
             ITEMS.registerSimpleBlockItem(ModBlocks.ABYSS_RED_SPIDER_LILY);
     public static final DeferredItem<BlockItem> ITALIAN_DISH_KIT =
             ITEMS.registerSimpleBlockItem(ModBlocks.ITALIAN_DISH_KIT);
+
+    public static final DeferredItem<BlockItem> PIRATE_CHAIR =
+            ITEMS.registerSimpleBlockItem(ModBlocks.PIRATE_CHAIR);
+
+    public static final DeferredItem<BlockItem> PIRATE_TABLE =
+            ITEMS.registerSimpleBlockItem(ModBlocks.PIRATE_TABLE);
     public static final DeferredItem<BlockItem> B25_MODEL =
             ITEMS.registerSimpleBlockItem(ModBlocks.B25_MODEL);
 
@@ -1564,7 +1570,7 @@ public class ModItems {
     // ===== Smoke Candle =====
     public static final DeferredItem<SmokeCandleItem> SMOKE_CANDLE =
             ITEMS.register("smoke_candle",
-                    () -> new SmokeCandleItem(new Item.Properties().stacksTo(1).durability(16)));
+                    () -> new SmokeCandleItem(new Item.Properties().stacksTo(1).durability(128)));
 
     // ===== Flare Launcher =====
     public static final DeferredItem<FlareLauncherItem> FLARE_LAUNCHER =
@@ -1574,7 +1580,7 @@ public class ModItems {
     // ===== Repair Kit =====
     public static final DeferredItem<RepairKitItem> REPAIR_KIT =
             ITEMS.register("repair_kit",
-                    () -> new RepairKitItem(new Item.Properties().stacksTo(1).durability(256)));
+                    () -> new RepairKitItem(new Item.Properties().stacksTo(1)));
 
     // ===== Kirin Headband =====
     public static final DeferredItem<KirinHeadbandItem> KIRIN_HEADBAND =

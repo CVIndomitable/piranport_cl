@@ -63,10 +63,9 @@ public class RepairKitItem extends Item {
 
         target.addEffect(new MobEffectInstance(MobEffects.REGENERATION, REGEN_DURATION, REGEN_AMPLIFIER, false, true));
 
-        // Consume durability every 20 ticks (1 second)
+        // 策划要求维修台无耐久，仅播放音效，不再消耗耐久
         int usedTicks = getUseDuration(stack, user) - remainingUseDuration;
         if (usedTicks % 20 == 0) {
-            stack.hurtAndBreak(1, player, player.getEquipmentSlotForItem(stack));
             level.playSound(null, target.blockPosition(), SoundEvents.IRON_GOLEM_REPAIR,
                     SoundSource.PLAYERS, 0.6F, 1.0F);
         }

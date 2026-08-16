@@ -429,6 +429,14 @@ public class ModBlocks {
             BLOCKS.register("italian_dish_kit",
                     () -> new com.piranport.block.ItalianDishKitBlock());
 
+    public static final DeferredBlock<com.piranport.block.PirateChairBlock> PIRATE_CHAIR =
+            BLOCKS.register("pirate_chair",
+                    () -> new com.piranport.block.PirateChairBlock());
+
+    public static final DeferredBlock<com.piranport.block.PirateTableBlock> PIRATE_TABLE =
+            BLOCKS.register("pirate_table",
+                    () -> new com.piranport.block.PirateTableBlock());
+
     public static final DeferredBlock<com.piranport.block.B25ModelBlock> B25_MODEL =
             BLOCKS.register("b25_model",
                     () -> new com.piranport.block.B25ModelBlock());

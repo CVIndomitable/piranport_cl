@@ -17,12 +17,12 @@ import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
  * Phase 26: 高速规避 — dodge handler for EvasionEffect.
  *
  * When a transformed player takes damage and has EvasionEffect active,
- * there is a chance to completely negate the hit:
- *   Level I  (amplifier 0) → 15% dodge
- *   Level II (amplifier 1) → 25% dodge
- *   Level III(amplifier 2) → 35% dodge
+ * there is a chance to completely negate the hit (策划 §7.7 表):
+ *   Level I  (amplifier 0) → 10% dodge
+ *   Level II (amplifier 1) → 20% dodge
+ *   Level III(amplifier 2) → 30% dodge
  *
- * Formula: chance = (amplifier + 1) * 0.10 + 0.05
+ * Formula: chance = (amplifier + 1) * 0.10
  */
 @EventBusSubscriber(modid = PiranPort.MOD_ID)
 public class EvasionHandler {
@@ -43,7 +43,8 @@ public class EvasionHandler {
         if (effectInstance == null) return;
 
         int amplifier = effectInstance.getAmplifier();
-        float dodgeChance = (amplifier + 1) * 0.10f + 0.05f;
+        // 策划要求 10%/20%/30%，无额外偏移
+        float dodgeChance = (amplifier + 1) * 0.10f;
 
         float roll = player.getRandom().nextFloat();
         if (roll < dodgeChance) {

@@ -198,13 +198,23 @@ public class ServerGameEvents {
         }
     }
 
-    /** 经验提升Buff：怪物掉落经验 +50% */
+    /**
+     * 经验提升 Buff：按策划 §7.7 表，按等级缩放。
+     * <ul>
+     *   <li>等级 1 (amplifier=0) → ×1.2</li>
+     *   <li>等级 2 (amplifier=1) → ×1.4</li>
+     *   <li>等级 3 (amplifier=2) → ×1.6</li>
+     * </ul>
+     * 实际倍率 = 1.2 + amplifier * 0.2（amplifier 上限 clamp 到 2）。
+     */
     @SubscribeEvent
     public static void onXpDrop(LivingExperienceDropEvent event) {
         Player attacker = event.getAttackingPlayer();
         if (attacker != null && attacker.hasEffect(ModMobEffects.EXPERIENCE_BOOST)) {
+            int amp = Math.min(2, attacker.getEffect(ModMobEffects.EXPERIENCE_BOOST).getAmplifier());
+            double multiplier = 1.2 + amp * 0.2;
             int original = event.getDroppedExperience();
-            event.setDroppedExperience((int) (original * 1.5));
+            event.setDroppedExperience((int) (original * multiplier));
         }
     }
 

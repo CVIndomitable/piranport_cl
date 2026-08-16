@@ -129,6 +129,8 @@ public class CookingPotBlockEntity extends BlockEntity implements MenuProvider {
         // Phase 30: 每 20 tick 吸取上方掉落物到输入槽
         if (level.getGameTime() % 20 == 0) {
             be.suckAboveDrops();
+            // Phase 31: 每 20 tick 向相邻容器输出产物 (横向)
+            be.ejectToSideContainers();
         }
 
         if (!hasHeatSource(level, pos)) {
@@ -250,6 +252,38 @@ public class CookingPotBlockEntity extends BlockEntity implements MenuProvider {
             if (itemHandler.getStackInSlot(i).isEmpty()) return i;
         }
         return 0; // 满时回到 slot 0 让 insertItem 自然返回原 stack
+    }
+
+    /** Phase 31: 锅向相邻 (北/南/东/西) 容器输出产物。 */
+    private void ejectToSideContainers() {
+        if (level == null) return;
+        ItemStack output = itemHandler.getStackInSlot(OUTPUT_SLOT);
+        if (output.isEmpty()) return;
+        for (Direction side : Direction.Plane.HORIZONTAL) {
+            BlockPos neighborPos = worldPosition.relative(side);
+            net.minecraft.world.level.block.entity.BlockEntity neighbor =
+                    level.getBlockEntity(neighborPos);
+            if (!(neighbor instanceof net.minecraft.world.Container container)) continue;
+            if (container.isEmpty()) continue;
+            // 直接插入第一个能放的槽位
+            for (int slot = 0; slot < container.getContainerSize(); slot++) {
+                ItemStack inSlot = container.getItem(slot);
+                if (inSlot.isEmpty()) continue;
+                if (!ItemStack.isSameItemSameComponents(inSlot, output)) continue;
+                if (inSlot.getCount() >= inSlot.getMaxStackSize()) continue;
+                int space = inSlot.getMaxStackSize() - inSlot.getCount();
+                int move = Math.min(space, output.getCount());
+                if (move <= 0) continue;
+                container.setItem(slot, inSlot.copyWithCount(inSlot.getCount() + move));
+                output = output.copyWithCount(output.getCount() - move);
+                container.setChanged();
+                if (output.isEmpty()) break;
+            }
+            if (output.isEmpty()) break;
+        }
+        if (output.getCount() != itemHandler.getStackInSlot(OUTPUT_SLOT).getCount()) {
+            itemHandler.setStackInSlot(OUTPUT_SLOT, output);
+        }
     }
 
     private static boolean hasHeatSource(Level level, BlockPos pos) {

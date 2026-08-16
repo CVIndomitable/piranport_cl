@@ -54,6 +54,9 @@ public class TorpedoEntity extends ThrowableItemProjectile {
     private static final float ACOUSTIC_MAX_TURN_DEG = 3.0f;
     private static final int ACOUSTIC_ARM_TICKS = 10;
     private static final double CLOSE_RANGE = 5.0;
+
+    // Phase 27：策划 §3.3 氧气鱼雷状态（无可见航迹 + 高速）
+    private boolean oxygen = false;
     private static final double MID_RANGE = 15.0;
     private static final float CLOSE_TURN_MULTIPLIER = 1.5f;
     private static final float FAR_TURN_MULTIPLIER = 0.6f;
@@ -125,6 +128,17 @@ public class TorpedoEntity extends ThrowableItemProjectile {
         this.acoustic = acoustic;
         if (acoustic) this.torpedoSpeed = 0.7f;
     }
+
+    /** Phase 27：策划 §3.3 氧气鱼雷 — 高速且无可见航迹 */
+    public void setOxygen(boolean oxygen) {
+        this.oxygen = oxygen;
+        if (oxygen) {
+            // 氧气推进：航速 +30% (1.0 → 1.3 blocks/tick)
+            this.torpedoSpeed = this.torpedoSpeed * 1.3f;
+        }
+    }
+
+    public boolean isOxygen() { return oxygen; }
 
     public void cutWire() { wireGuided = false; }
 
@@ -627,6 +641,7 @@ public class TorpedoEntity extends ThrowableItemProjectile {
         tag.putBoolean("Magnetic", magnetic);
         tag.putBoolean("WireGuided", wireGuided);
         tag.putBoolean("Acoustic", acoustic);
+        tag.putBoolean("Oxygen", oxygen);
         tag.putBoolean("AirDrop", airDrop);
         if (airDrop) {
             tag.putDouble("AirDropDirX", airDropDirection.x);
@@ -663,6 +678,7 @@ public class TorpedoEntity extends ThrowableItemProjectile {
         magnetic = tag.getBoolean("Magnetic");
         wireGuided = tag.getBoolean("WireGuided");
         acoustic = tag.getBoolean("Acoustic");
+        oxygen = tag.getBoolean("Oxygen");
         airDrop = tag.getBoolean("AirDrop");
         if (airDrop && tag.contains("AirDropDirX")) {
             airDropDirection = new Vec3(tag.getDouble("AirDropDirX"), 0, tag.getDouble("AirDropDirZ"));

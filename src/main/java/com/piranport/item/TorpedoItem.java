@@ -17,29 +17,38 @@ public class TorpedoItem extends Item {
     private final boolean magnetic;
     private final boolean wireGuided;
     private final boolean acoustic;
+    private final boolean oxygen;   // Phase 27：策划 §3.3 氧气鱼雷
 
     public TorpedoItem(Properties properties, int caliber) {
         this(properties, caliber, caliber >= 610 ? 28f : 18f,
-                60, caliber >= 610 ? 1.0f : 1.0f, false, false, false);
+                60, caliber >= 610 ? 1.0f : 1.0f, false, false, false, false);
     }
 
     public TorpedoItem(Properties properties, int caliber, boolean magnetic) {
         this(properties, caliber, caliber >= 610 ? 28f : 18f,
-                60, caliber >= 610 ? 1.0f : 1.0f, magnetic, false, false);
+                60, caliber >= 610 ? 1.0f : 1.0f, magnetic, false, false, false);
     }
 
     public TorpedoItem(Properties properties, int caliber, boolean magnetic, boolean wireGuided) {
         this(properties, caliber, caliber >= 610 ? 28f : 18f,
-                60, caliber >= 610 ? 1.0f : 1.0f, magnetic, wireGuided, false);
+                60, caliber >= 610 ? 1.0f : 1.0f, magnetic, wireGuided, false, false);
     }
 
     public TorpedoItem(Properties properties, int caliber, boolean magnetic, boolean wireGuided, boolean acoustic) {
         this(properties, caliber, caliber >= 610 ? 28f : 18f,
-                60, acoustic ? 0.7f : (caliber >= 610 ? 1.0f : 1.0f), magnetic, wireGuided, acoustic);
+                60, acoustic ? 0.7f : (caliber >= 610 ? 1.0f : 1.0f),
+                magnetic, wireGuided, acoustic, false);
+    }
+
+    public TorpedoItem(Properties properties, int caliber, boolean magnetic, boolean wireGuided,
+                       boolean acoustic, boolean oxygen) {
+        this(properties, caliber, caliber >= 610 ? 28f : 18f,
+                60, acoustic ? 0.7f : (caliber >= 610 ? 1.0f : 1.0f),
+                magnetic, wireGuided, acoustic, oxygen);
     }
 
     public TorpedoItem(Properties properties, int caliber, float damage, int range, float speed,
-                        boolean magnetic, boolean wireGuided, boolean acoustic) {
+                        boolean magnetic, boolean wireGuided, boolean acoustic, boolean oxygen) {
         super(properties);
         this.caliber = caliber;
         this.damage = damage;
@@ -48,6 +57,7 @@ public class TorpedoItem extends Item {
         this.magnetic = magnetic;
         this.wireGuided = wireGuided;
         this.acoustic = acoustic;
+        this.oxygen = oxygen;
     }
 
     public int getCaliber() {
@@ -83,6 +93,10 @@ public class TorpedoItem extends Item {
         return acoustic;
     }
 
+    public boolean isOxygen() {
+        return oxygen;
+    }
+
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context,
                                 List<Component> tooltipComponents, TooltipFlag tooltipFlag) {
@@ -107,6 +121,10 @@ public class TorpedoItem extends Item {
                 if (acoustic) {
                     tooltipComponents.add(Component.translatable("tooltip.piranport.torpedo.acoustic")
                             .withStyle(ChatFormatting.GOLD));
+                }
+                if (oxygen) {
+                    tooltipComponents.add(Component.translatable("tooltip.piranport.torpedo.oxygen")
+                            .withStyle(ChatFormatting.AQUA, ChatFormatting.BOLD));
                 }
             } else {
                 tooltipComponents.add(Component.translatable("tooltip.piranport.shift_for_details")

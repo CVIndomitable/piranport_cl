@@ -614,6 +614,7 @@ public class ShipCoreCombat {
         boolean magnetic = torpedoType.isMagnetic();
         boolean acousticHoming = torpedoType.isAcoustic();
         boolean wireGuided = torpedoType.isWireGuided();
+        boolean oxygen = torpedoType.isOxygen();
         float torpedoSpeed = torpedoType.getSpeed();
         float[] angles = getSpreadAngles(tubeCount);
         Vec3 look = player.getLookAngle();
@@ -627,6 +628,7 @@ public class ShipCoreCombat {
             torpedo.setLifetime(torpedoType.getLifetimeTicks());
             if (magnetic) torpedo.setMagnetic(true);
             if (acousticHoming) torpedo.setAcoustic(true);
+            if (oxygen) torpedo.setOxygen(true);
             if (wireGuided) torpedo.setWireGuided(true);
             torpedo.setPos(player.getX() + dir.x * 0.5, player.getEyeY() - 0.3, player.getZ() + dir.z * 0.5);
             torpedo.setDeltaMovement(dir.x * torpedoSpeed, 0, dir.z * torpedoSpeed);

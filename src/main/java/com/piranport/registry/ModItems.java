@@ -399,67 +399,73 @@ public class ModItems {
             ITEMS.register("acoustic_torpedo_533mm",
                     () -> new TorpedoItem(new Item.Properties().stacksTo(16), 533, false, false, true));
 
+    // Phase 27：策划 §3.3 氧气鱼雷（95 式氧气鱼雷原型）
+    public static final DeferredItem<TorpedoItem> OXYGEN_TORPEDO_610MM =
+            ITEMS.register("oxygen_torpedo_610mm",
+                    () -> new TorpedoItem(new Item.Properties().stacksTo(16),
+                            610, 32f, 30, 1.0f, false, false, false, true));
+
     // ===== Torpedo Ammo (named variants) =====
     public static final DeferredItem<TorpedoItem> TORPEDO_533MM_G7A =
             ITEMS.register("torpedo_533mm_g7a",
                     () -> new TorpedoItem(new Item.Properties().stacksTo(16),
-                            533, 27f, 18, 0.817f, false, false, false));
+                            533, 27f, 18, 0.817f, false, false, false, false));
     public static final DeferredItem<TorpedoItem> MAGNETIC_TORPEDO_533MM_G7A =
             ITEMS.register("magnetic_torpedo_533mm_g7a",
                     () -> new TorpedoItem(new Item.Properties().stacksTo(16),
-                            533, 27f, 18, 0.817f, true, false, false));
+                            533, 27f, 18, 0.817f, true, false, false, false));
     public static final DeferredItem<TorpedoItem> TORPEDO_533MM_MK17 =
             ITEMS.register("torpedo_533mm_mk17",
                     () -> new TorpedoItem(new Item.Properties().stacksTo(16),
-                            533, 55.5f, 49, 0.854f, false, false, false));
+                            533, 55.5f, 49, 0.854f, false, false, false, false));
     public static final DeferredItem<TorpedoItem> TORPEDO_610MM_TYPE91 =
             ITEMS.register("torpedo_610mm_type91",
                     () -> new TorpedoItem(new Item.Properties().stacksTo(16),
-                            610, 49.5f, 30, 0.743f, false, false, false));
+                            610, 49.5f, 30, 0.743f, false, false, false, false));
     public static final DeferredItem<TorpedoItem> TORPEDO_610MM_TYPE93_MK1 =
             ITEMS.register("torpedo_610mm_type93_mk1",
                     () -> new TorpedoItem(new Item.Properties().stacksTo(16),
-                            610, 49.5f, 60, 0.929f, false, false, false));
+                            610, 49.5f, 60, 0.929f, false, false, false, false));
     public static final DeferredItem<TorpedoItem> TORPEDO_610MM_TYPE93_MK3 =
             ITEMS.register("torpedo_610mm_type93_mk3",
                     () -> new TorpedoItem(new Item.Properties().stacksTo(16),
-                            610, 78f, 90, 0.706f, false, false, false));
+                            610, 78f, 90, 0.706f, false, false, false, false));
     public static final DeferredItem<TorpedoItem> TORPEDO_720MM_TYPE0 =
             ITEMS.register("torpedo_720mm_type0",
                     () -> new TorpedoItem(new Item.Properties().stacksTo(16),
-                            720, 55.5f, 70, 0.743f, false, false, false));
+                            720, 55.5f, 70, 0.743f, false, false, false, false));
     public static final DeferredItem<TorpedoItem> TORPEDO_533MM_MK14 =
             ITEMS.register("torpedo_533mm_mk14",
                     () -> new TorpedoItem(new Item.Properties().stacksTo(16),
-                            533, 24f, 25, 0.576f, false, false, false));
+                            533, 24f, 25, 0.576f, false, false, false, false));
     public static final DeferredItem<TorpedoItem> TORPEDO_533MM_MK16 =
             ITEMS.register("torpedo_533mm_mk16",
                     () -> new TorpedoItem(new Item.Properties().stacksTo(16),
-                            533, 55.5f, 47, 0.854f, false, false, false));
+                            533, 55.5f, 47, 0.854f, false, false, false, false));
     public static final DeferredItem<TorpedoItem> MAGNETIC_TORPEDO_533MM_G7E =
             ITEMS.register("magnetic_torpedo_533mm_g7e",
                     () -> new TorpedoItem(new Item.Properties().stacksTo(16),
-                            533, 21f, 25, 0.669f, true, false, false));
+                            533, 21f, 25, 0.669f, true, false, false, false));
     public static final DeferredItem<TorpedoItem> ACOUSTIC_TORPEDO_533MM_G7E =
             ITEMS.register("acoustic_torpedo_533mm_g7e",
                     () -> new TorpedoItem(new Item.Properties().stacksTo(16),
-                            533, 21f, 17, 0.446f, false, false, true));
+                            533, 21f, 17, 0.446f, false, false, true, false));
     public static final DeferredItem<TorpedoItem> WIRE_GUIDED_TORPEDO_533MM_G7E =
             ITEMS.register("wire_guided_torpedo_533mm_g7e",
                     () -> new TorpedoItem(new Item.Properties().stacksTo(16),
-                            533, 21f, 15, 0.557f, false, true, false));
+                            533, 21f, 15, 0.557f, false, true, false, false));
     public static final DeferredItem<TorpedoItem> ACOUSTIC_TORPEDO_533MM_MK27 =
             ITEMS.register("acoustic_torpedo_533mm_mk27",
                     () -> new TorpedoItem(new Item.Properties().stacksTo(16),
-                            533, 24f, 25, 0.669f, false, false, true));
+                            533, 24f, 25, 0.669f, false, false, true, false));
     public static final DeferredItem<TorpedoItem> TORPEDO_530MM_TYPE95 =
             ITEMS.register("torpedo_530mm_type95",
                     () -> new TorpedoItem(new Item.Properties().stacksTo(16),
-                            530, 39f, 23, 0.854f, false, false, false));
+                            530, 39f, 23, 0.854f, false, false, false, false));
     public static final DeferredItem<TorpedoItem> TORPEDO_610MM_TYPE95_MK2 =
             ITEMS.register("torpedo_610mm_type95_mk2",
                     () -> new TorpedoItem(new Item.Properties().stacksTo(16),
-                            610, 55.5f, 45, 0.929f, false, false, false));
+                            610, 55.5f, 45, 0.929f, false, false, false, false));
 
     // ===== Armor Plates =====
     public static final DeferredItem<ArmorPlateItem> SMALL_ARMOR_PLATE =

@@ -37,7 +37,8 @@
       "rolls": 1,
       "entries": [
         { "type": "minecraft:item", "name": "piranport:dungeon_lectern", "weight": 2 },
-        { "type": "minecraft:empty", "weight": 18 }
+        { "type": "minecraft:item", "name": "piranport:dungeon_key", "weight": 2 },
+        { "type": "minecraft:empty", "weight": 16 }
       ]
     }
   ]

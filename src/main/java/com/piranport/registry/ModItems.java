@@ -152,6 +152,17 @@ public class ModItems {
             ITEMS.register("large_ap_shell",
                     () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.ap_shell"));
 
+    // Phase 27：策划 §3.1 表 3.1 命名 AP 炮弹 (91 式 14-21in, 一式 16-21in, 超重弹 7-16in)
+    public static final DeferredItem<Item> TYPE_91_AP_SHELL =
+            ITEMS.register("type_91_ap_shell",
+                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.ap_shell"));
+    public static final DeferredItem<Item> TYPE_1_AP_SHELL =
+            ITEMS.register("type_1_ap_shell",
+                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.ap_shell"));
+    public static final DeferredItem<Item> SUPER_HEAVY_AP_SHELL =
+            ITEMS.register("super_heavy_ap_shell",
+                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.ap_shell"));
+
     // ===== Grenade Shells (low direct damage, large blast) =====
     public static final DeferredItem<Item> SMALL_GRENADE_SHELL =
             ITEMS.register("small_grenade_shell",

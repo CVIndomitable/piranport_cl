@@ -16,7 +16,7 @@ import net.minecraft.world.level.Level;
 import java.util.List;
 
 /**
- * Quick Repair Kit: right-click to apply Instant Health XV, consumed on use.
+ * Quick Repair Kit: right-click to apply Instant Health XV (策划 §3.5), consumed on use.
  */
 public class QuickRepairItem extends Item {
 
@@ -29,8 +29,8 @@ public class QuickRepairItem extends Item {
         ItemStack stack = player.getItemInHand(hand);
 
         if (!level.isClientSide()) {
-            // Instant Health II (amplifier 1 = level II) — reasonable healing amount
-            player.addEffect(new MobEffectInstance(MobEffects.HEAL, 1, 1));
+            // 策划 §3.5：瞬间治疗 XV（amplifier = 14，duration=1 即立即生效一轮）
+            player.addEffect(new MobEffectInstance(MobEffects.HEAL, 1, 14));
 
             level.playSound(null, player.blockPosition(), SoundEvents.PLAYER_LEVELUP,
                     SoundSource.PLAYERS, 1.0F, 1.0F);

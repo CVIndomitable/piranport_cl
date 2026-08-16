@@ -22,6 +22,9 @@ public class BlueprintChestMenu extends AbstractContainerMenu {
     public static final int PLAYER_INV_START = 19;
     public static final int PLAYER_INV_END = 55;
 
+    /** 标签页 0=查看（蓝图/Paper） 1=复印（CopySlot）。由客户端 Screen 点击切换并同步。 */
+    private int currentTab = 0;
+
     private final BlueprintChestBlockEntity blockEntity;
 
     private static class BlueprintSlot extends SlotItemHandler {
@@ -118,6 +121,13 @@ public class BlueprintChestMenu extends AbstractContainerMenu {
     }
 
     public BlueprintChestBlockEntity getBlockEntity() { return blockEntity; }
+
+    public int getCurrentTab() { return currentTab; }
+
+    public void setCurrentTab(int tab) {
+        if (tab != 0 && tab != 1) return;
+        this.currentTab = tab;
+    }
 
     @Override
     public ItemStack quickMoveStack(Player player, int index) {

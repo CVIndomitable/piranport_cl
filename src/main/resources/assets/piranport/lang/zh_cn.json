@@ -195,6 +195,8 @@
   "gui.piranport.blueprint_chest.cache": "已收纳蓝图",
   "gui.piranport.blueprint_chest.paper": "纸张",
   "gui.piranport.blueprint_chest.copy": "蓝图复印",
+  "gui.piranport.blueprint_chest.tab_view": "查看",
+  "gui.piranport.blueprint_chest.tab_copy": "复印",
   "item.piranport.medium_gun_blueprint": "中型火炮蓝图",
   "item.piranport.large_gun_blueprint": "大型火炮蓝图",
   "item.piranport.creative_blueprint": "创造模式蓝图",

@@ -50,6 +50,7 @@ public class CuttingBoardBlock extends BaseEntityBlock {
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         builder.add(FACING);
+    }
 
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext ctx) {

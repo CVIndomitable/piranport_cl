@@ -46,6 +46,7 @@ import com.piranport.item.CommandSwordItem;
 import com.piranport.item.MysteriousWeaponItem;
 import com.piranport.item.SmokeCandleItem;
 import com.piranport.item.EugenShieldItem;
+import com.piranport.item.ShoukakuScytheItem;
 import com.piranport.item.TaihouUmbrellaItem;
 import com.piranport.item.UnicornHarpItem;
 import java.util.List;
@@ -1570,6 +1571,12 @@ public class ModItems {
                     () -> new EugenShieldItem(new Item.Properties().stacksTo(1)
                             .durability(1200)
                             .attributes(EugenShieldItem.createAttributes())));
+
+    // ===== Shoukaku's Scythe (策划 §3.5 表 3.5; 深海翔鹤/旗舰掉落) =====
+    public static final DeferredItem<ShoukakuScytheItem> SHOUKAKU_SCYTHE =
+            ITEMS.register("shoukaku_scythe",
+                    () -> new ShoukakuScytheItem(new Item.Properties().stacksTo(1)
+                            .durability(1024)));
 
     // ===== Props Tab Icon =====
     public static final DeferredItem<Item> HENTAI_TROPHY =

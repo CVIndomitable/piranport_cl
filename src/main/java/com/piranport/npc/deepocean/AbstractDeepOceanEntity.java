@@ -269,6 +269,15 @@ public abstract class AbstractDeepOceanEntity extends Monster {
             spawnAtLocation(new ItemStack(ModItems.EXP_SHELL.get(), 2 + random.nextInt(2)));
             spawnAtLocation(new ItemStack(ModItems.PORTAL_ACTIVATION_CORE.get(), 1));
             spawnAtLocation(new ItemStack(ModItems.CHAOS_SHARD_IOTA.get(), 1));
+            // 策划 §3.5 表 3.5：深海翔鹤/旗舰低概率掉落翔鹤的镰刀
+            if (random.nextFloat() < 0.05f) {
+                spawnAtLocation(new ItemStack(ModItems.SHOUKAKU_SCYTHE.get(), 1));
+            }
+        } else if (this instanceof DeepOceanCarrierEntity) {
+            // 深海翔鹤 Boss 替代为深海航母：1/20 概率必掉镰刀（旗舰主掉落之外的稳定来源）
+            if (random.nextFloat() < 0.05f) {
+                spawnAtLocation(new ItemStack(ModItems.SHOUKAKU_SCYTHE.get(), 1));
+            }
         } else if (this instanceof DeepOceanSupplyEntity) {
             spawnAtLocation(new ItemStack(ModItems.FUEL.get(), 2 + random.nextInt(3)));
             spawnAtLocation(new ItemStack(Items.IRON_INGOT, 1 + random.nextInt(2)));

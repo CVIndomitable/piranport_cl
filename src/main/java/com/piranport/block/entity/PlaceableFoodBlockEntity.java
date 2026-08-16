@@ -22,6 +22,12 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 
 public class PlaceableFoodBlockEntity extends BlockEntity {
+    /**
+     * 策划 §7.6：食物方块每口饱食度较手持更高，向上取整[总饱食度×加成/可使用次数]。
+     * 倍率 1.5x 与"锅内熟食 vs 生食"的常见设计一致。
+     */
+    private static final float PLACEABLE_FOOD_BONUS = 1.5f;
+
     private ResourceLocation foodItemId = ResourceLocation.withDefaultNamespace("air");
     private int remainingServings = 0;
     private int totalServings = 1;
@@ -49,12 +55,12 @@ public class PlaceableFoodBlockEntity extends BlockEntity {
         FoodProperties food = new ItemStack(foodItem).getFoodProperties(player);
         if (food == null) return;
 
-        // Cumulative allocation — guarantees Σ(bites) == original food value.
+        // Cumulative allocation — guarantees Σ(bites) == original food value (×PLACEABLE_FOOD_BONUS).
         int bitesDone = totalServings - remainingServings;
-        int nutritionPerBite = (int) ((long) food.nutrition() * (bitesDone + 1) / totalServings)
-                - (int) ((long) food.nutrition() * bitesDone / totalServings);
-        float satModPerBite = food.saturation() * (bitesDone + 1) / totalServings
-                - food.saturation() * bitesDone / totalServings;
+        int nutritionPerBite = (int) ((long) food.nutrition() * PLACEABLE_FOOD_BONUS * (bitesDone + 1) / totalServings)
+                - (int) ((long) food.nutrition() * PLACEABLE_FOOD_BONUS * bitesDone / totalServings);
+        float satModPerBite = food.saturation() * PLACEABLE_FOOD_BONUS * (bitesDone + 1) / totalServings
+                - food.saturation() * PLACEABLE_FOOD_BONUS * bitesDone / totalServings;
         player.getFoodData().eat(nutritionPerBite, satModPerBite);
 
         // Effects: roll once on the last bite with full duration — matches vanilla single-use semantics.

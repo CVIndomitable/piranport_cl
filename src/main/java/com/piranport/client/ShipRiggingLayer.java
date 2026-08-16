@@ -408,28 +408,132 @@ public class ShipRiggingLayer extends RenderLayer<AbstractClientPlayer, PlayerMo
         poseStack.pushPose();
         this.getParentModel().body.translateAndRotate(poseStack);
 
-        if (index == 0) {
-            poseStack.translate(0.0, 0.2 + launchPose * 0.025, 0.32 - launchPose * 0.070);
-            poseStack.mulPose(Axis.YP.rotationDegrees(180.0f));
-            poseStack.mulPose(Axis.XP.rotationDegrees(-7.0f * launchPose));
-            poseStack.mulPose(Axis.ZP.rotationDegrees(90.0f));
-            poseStack.scale(0.62f, 0.62f, 0.62f);
-        } else {
-            float side = index % 2 == 1 ? -1.0f : 1.0f;
-            float row = (index + 1) / 2;
-            poseStack.translate(side * (0.42 + launchPose * 0.025), 0.12 + row * 0.1,
-                    0.24 - launchPose * 0.035);
-            poseStack.mulPose(Axis.YP.rotationDegrees(180.0f + side * 18.0f));
-            poseStack.mulPose(Axis.XP.rotationDegrees(-4.0f * launchPose));
-            poseStack.mulPose(Axis.ZP.rotationDegrees(side * 58.0f));
-            poseStack.scale(0.42f, 0.42f, 0.42f);
-        }
+        HardpointPose pose = resolveHardpoint(
+                AircraftLaunchPoseClientState.skinId(
+                        player.getId(), ClientSkinData.getActiveSkin(player.getUUID())),
+                index, launchPose);
+
+        poseStack.translate(pose.x, pose.y, pose.z);
+        poseStack.mulPose(Axis.YP.rotationDegrees(pose.yaw));
+        poseStack.mulPose(Axis.XP.rotationDegrees(pose.pitch));
+        poseStack.mulPose(Axis.ZP.rotationDegrees(pose.roll));
+        poseStack.scale(pose.scale, pose.scale, pose.scale);
 
         Minecraft.getInstance().getItemRenderer().renderStatic(
                 stack, ItemDisplayContext.FIXED, packedLight, OverlayTexture.NO_OVERLAY,
                 poseStack, bufferSource, player.level(), player.getId() * 31 + index);
         poseStack.popPose();
     }
+
+    /** Per-skin weapon hardpoint pose. Index 0 = main weapon (front center). */
+    private static HardpointPose resolveHardpoint(int skinId, int index, float launchPose) {
+        // Skin-specific side gun layouts for carriers (deck-mounted turrets).
+        if (index >= 1) {
+            return switch (skinId) {
+                // 航母: 两侧弹药/挂载点 (deck-side hardpoints)
+                case 4, 18, 20 -> carrierSideHardpoint(index, launchPose);
+                // 驱逐舰: 鱼雷/防空两侧
+                case 5, 6, 7, 8, 9, 13, 14, 15, 21, 22 -> destroyerSideHardpoint(index, launchPose);
+                // 巡洋舰: 中型炮外侧
+                case 10, 11, 12, 16, 19 -> cruiserSideHardpoint(index, launchPose);
+                // 潜艇: 单侧
+                case 17 -> submarineSideHardpoint(index, launchPose);
+                default -> defaultSideHardpoint(index, launchPose);
+            };
+        }
+        // Main weapon (index 0): centered on bow, varies by hull profile.
+        return mainHardpoint(skinId, launchPose);
+    }
+
+    private static HardpointPose mainHardpoint(int skinId, float launchPose) {
+        // 航母主位放飞行甲板前缘；潜艇稍低；其他前置
+        float y = 0.20f + launchPose * 0.025f;
+        float z = 0.32f - launchPose * 0.070f;
+        float pitch = -7.0f * launchPose;
+        float scale = 0.62f;
+        float roll = 90.0f;
+        float yaw = 180.0f;
+        if (skinId == 17) { // 潜艇
+            y = 0.16f + launchPose * 0.020f;
+            z = 0.28f - launchPose * 0.060f;
+            scale = 0.58f;
+        } else if (skinId == 4 || skinId == 18 || skinId == 20) { // 航母
+            y = 0.32f + launchPose * 0.020f;
+            z = 0.30f - launchPose * 0.050f;
+        }
+        return new HardpointPose(0.0f, y, z, yaw, pitch, roll, scale);
+    }
+
+    private static HardpointPose carrierSideHardpoint(int index, float launchPose) {
+        // 航母: 甲板两侧，左右交替
+        float side = index % 2 == 1 ? -1.0f : 1.0f;
+        float row = (index + 1) / 2;
+        float x = side * (0.46f + launchPose * 0.025f);
+        float y = 0.22f + row * 0.08f;
+        float z = 0.22f - launchPose * 0.030f;
+        float yaw = 180.0f + side * 12.0f;
+        float pitch = -4.0f * launchPose;
+        float roll = side * 70.0f;
+        float scale = 0.40f;
+        return new HardpointPose(x, y, z, yaw, pitch, roll, scale);
+    }
+
+    private static HardpointPose destroyerSideHardpoint(int index, float launchPose) {
+        // 驱逐舰: 鱼雷/防空两侧稍低
+        float side = index % 2 == 1 ? -1.0f : 1.0f;
+        float row = (index + 1) / 2;
+        float x = side * (0.50f + launchPose * 0.025f);
+        float y = 0.12f + row * 0.10f;
+        float z = 0.22f - launchPose * 0.035f;
+        float yaw = 180.0f + side * 22.0f;
+        float pitch = -4.0f * launchPose;
+        float roll = side * 60.0f;
+        float scale = 0.40f;
+        return new HardpointPose(x, y, z, yaw, pitch, roll, scale);
+    }
+
+    private static HardpointPose cruiserSideHardpoint(int index, float launchPose) {
+        // 巡洋舰: 主炮塔外侧
+        float side = index % 2 == 1 ? -1.0f : 1.0f;
+        float row = (index + 1) / 2;
+        float x = side * (0.56f + launchPose * 0.025f);
+        float y = 0.16f + row * 0.10f;
+        float z = 0.24f - launchPose * 0.035f;
+        float yaw = 180.0f + side * 18.0f;
+        float pitch = -4.0f * launchPose;
+        float roll = side * 55.0f;
+        float scale = 0.44f;
+        return new HardpointPose(x, y, z, yaw, pitch, roll, scale);
+    }
+
+    private static HardpointPose submarineSideHardpoint(int index, float launchPose) {
+        // 潜艇: 鱼雷管发射口在舷侧靠后
+        float side = index % 2 == 1 ? -1.0f : 1.0f;
+        float row = (index + 1) / 2;
+        float x = side * (0.42f + launchPose * 0.020f);
+        float y = 0.08f + row * 0.06f;
+        float z = 0.18f - launchPose * 0.025f;
+        float yaw = 180.0f + side * 30.0f;
+        float pitch = -3.0f * launchPose;
+        float roll = side * 75.0f;
+        float scale = 0.36f;
+        return new HardpointPose(x, y, z, yaw, pitch, roll, scale);
+    }
+
+    private static HardpointPose defaultSideHardpoint(int index, float launchPose) {
+        float side = index % 2 == 1 ? -1.0f : 1.0f;
+        float row = (index + 1) / 2;
+        float x = side * (0.42f + launchPose * 0.025f);
+        float y = 0.12f + row * 0.10f;
+        float z = 0.24f - launchPose * 0.035f;
+        float yaw = 180.0f + side * 18.0f;
+        float pitch = -4.0f * launchPose;
+        float roll = side * 58.0f;
+        float scale = 0.42f;
+        return new HardpointPose(x, y, z, yaw, pitch, roll, scale);
+    }
+
+    private record HardpointPose(float x, float y, float z, float yaw, float pitch, float roll, float scale) {}
 
     private static ItemStack one(ItemStack stack) {
         ItemStack copy = stack.copy();

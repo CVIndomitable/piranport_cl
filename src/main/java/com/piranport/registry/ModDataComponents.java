@@ -140,11 +140,13 @@ public class ModDataComponents {
     // ===== v0.0.8 Dungeon DataComponents =====
 
     /** Stage ID stored on a dungeon key. */
+    private static final int MAX_DUNGEON_STAGE_ID_LENGTH = 128;
+
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<String>>
             DUNGEON_STAGE_ID = DATA_COMPONENTS.register("dungeon_stage_id",
             () -> DataComponentType.<String>builder()
                     .persistent(Codec.STRING)
-                    .networkSynchronized(ByteBufCodecs.STRING_UTF8)
+                    .networkSynchronized(ByteBufCodecs.stringUtf8(MAX_DUNGEON_STAGE_ID_LENGTH))
                     .build());
 
     /** Instance UUID stored on a dungeon key. */

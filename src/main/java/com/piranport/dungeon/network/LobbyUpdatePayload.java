@@ -2,6 +2,7 @@ package com.piranport.dungeon.network;
 
 import com.piranport.PiranPort;
 import io.netty.buffer.ByteBuf;
+import io.netty.handler.codec.DecoderException;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -19,6 +20,10 @@ import java.util.List;
 public record LobbyUpdatePayload(List<String> memberNames, String flagshipName,
                                    String selectedStageId, List<Boolean> readyStates)
         implements CustomPacketPayload {
+
+    private static final int MAX_MEMBERS = 64;
+    private static final int MAX_MEMBER_NAME_LENGTH = 32;
+    private static final int MAX_NAME_OR_STAGE_LENGTH = 128;
 
     public static final Type<LobbyUpdatePayload> TYPE =
             new Type<>(ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "lobby_update"));
@@ -38,19 +43,20 @@ public record LobbyUpdatePayload(List<String> memberNames, String flagshipName,
             },
             buf -> {
                 int size = ByteBufCodecs.VAR_INT.decode(buf);
-                if (size < 0 || size > 64) {
-                    throw new io.netty.handler.codec.DecoderException(
-                            "LobbyUpdatePayload size out of range: " + size);
+                if (size < 0 || size > MAX_MEMBERS) {
+                    throw new DecoderException(
+                            "Lobby member count out of range: " + size);
                 }
                 List<String> names = new ArrayList<>(size);
                 for (int i = 0; i < size; i++) {
-                    names.add(ByteBufCodecs.STRING_UTF8.decode(buf));
+                    String name = ByteBufCodecs.stringUtf8(MAX_MEMBER_NAME_LENGTH).decode(buf);
+                    names.add(name);
                 }
-                String flagship = ByteBufCodecs.STRING_UTF8.decode(buf);
-                String stage = ByteBufCodecs.STRING_UTF8.decode(buf);
+                String flagship = ByteBufCodecs.stringUtf8(MAX_NAME_OR_STAGE_LENGTH).decode(buf);
+                String stage = ByteBufCodecs.stringUtf8(MAX_NAME_OR_STAGE_LENGTH).decode(buf);
                 int rsize = ByteBufCodecs.VAR_INT.decode(buf);
-                if (rsize < 0 || rsize > 64 || rsize != size) {
-                    throw new io.netty.handler.codec.DecoderException(
+                if (rsize < 0 || rsize > MAX_MEMBERS || rsize != size) {
+                    throw new DecoderException(
                             "LobbyUpdatePayload readyStates size mismatch: " + rsize);
                 }
                 List<Boolean> ready = new ArrayList<>(rsize);

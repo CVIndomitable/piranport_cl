@@ -43,6 +43,11 @@ public final class ClientItemHooks {
         return Minecraft.getInstance().player;
     }
 
+    public static String getClientPlayerName() {
+        var player = Minecraft.getInstance().player;
+        return player != null ? player.getScoreboardName() : null;
+    }
+
     public static long getClientGameTime() {
         Minecraft mc = Minecraft.getInstance();
         return mc.level != null ? mc.level.getGameTime() : -1L;

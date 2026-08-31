@@ -13,6 +13,11 @@ import net.minecraft.network.codec.StreamCodec;
  */
 public record FuelData(int currentFuel, int maxFuel) {
 
+    public FuelData {
+        maxFuel = Math.max(0, maxFuel);
+        currentFuel = Math.max(0, Math.min(currentFuel, maxFuel));
+    }
+
     public static final Codec<FuelData> CODEC = RecordCodecBuilder.create(inst -> inst.group(
             Codec.INT.fieldOf("current_fuel").forGetter(FuelData::currentFuel),
             Codec.INT.fieldOf("max_fuel").forGetter(FuelData::maxFuel)
@@ -30,7 +35,7 @@ public record FuelData(int currentFuel, int maxFuel) {
     );
 
     public FuelData withCurrentFuel(int fuel) {
-        return new FuelData(Math.max(0, Math.min(fuel, maxFuel)), maxFuel);
+        return new FuelData(fuel, maxFuel);
     }
 
     /** Returns fuel fraction [0, 1]: 0 = empty, 1 = full. */

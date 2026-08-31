@@ -19,6 +19,7 @@ import com.piranport.dungeon.network.DungeonStatePayload;
 import com.piranport.dungeon.network.PlayerDiedInDungeonPayload;
 import com.piranport.dungeon.saved.DungeonLeaderboard;
 import com.piranport.dungeon.saved.DungeonSavedData;
+import com.piranport.dungeon.script.DungeonScriptManager;
 import com.piranport.registry.ModDataComponents;
 import com.piranport.registry.ModItems;
 import net.minecraft.core.BlockPos;
@@ -78,6 +79,7 @@ public class DungeonEventHandler {
 
     @SubscribeEvent
     public static void onPlayerDeath(LivingDeathEvent event) {
+        if (event.isCanceled()) return;
         if (event.getEntity().level().isClientSide()) return;
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
         if (!isInDungeon(player)) return;
@@ -279,6 +281,7 @@ public class DungeonEventHandler {
         // Cleanup instance
         NodeBattleField.cleanupRegion(dungeonLevel, instance);
         mgr.cleanupInstance(instance.getInstanceId());
+        DungeonScriptManager.get(server).remove(instance.getInstanceId());
     }
 
     // ===== Utility Methods =====

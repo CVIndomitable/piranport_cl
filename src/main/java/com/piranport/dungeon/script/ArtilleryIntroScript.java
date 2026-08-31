@@ -508,7 +508,9 @@ public class ArtilleryIntroScript implements DungeonScript {
 
         DungeonPortalEntity portal = DungeonPortalEntity.create(level, instanceId, nodeId,
                 portalPos.getX() + 0.5, DungeonConstants.SPAWN_Y, portalPos.getZ() + 0.5);
-        level.addFreshEntity(portal);
+        if (portal != null) {
+            level.addFreshEntity(portal);
+        }
 
         // Phase 27：策划 §10.7 - Boss 击杀后生成战利品箱船（红色烟雾信标）
         spawnBossLootShip(level, portalPos);

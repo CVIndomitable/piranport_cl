@@ -143,7 +143,9 @@ public final class NodeBattleField {
         var portal = com.piranport.dungeon.entity.DungeonPortalEntity.create(dungeonLevel,
                 instance.getInstanceId(), nodeId,
                 spawn.getX() + 0.5, DungeonConstants.SPAWN_Y, spawn.getZ() + 0.5);
-        dungeonLevel.addFreshEntity(portal);
+        if (portal != null) {
+            dungeonLevel.addFreshEntity(portal);
+        }
     }
 
     /**

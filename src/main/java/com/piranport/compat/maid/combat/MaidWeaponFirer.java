@@ -71,11 +71,11 @@ public final class MaidWeaponFirer {
             MaidCombatStats.recordShot(maid);
         } catch (Throwable t) {
             PiranPort.LOGGER.error("[Compat/Maid] Weapon fire failed for {}", stack.getItem(), t);
-            return;
-        }
-        int ticks = h.cooldownTicks(stack);
-        if (ticks > 0) {
-            stack.set(ModDataComponents.WEAPON_COOLDOWN.get(), WeaponCooldown.of(now + ticks, ticks));
+        } finally {
+            int ticks = h.cooldownTicks(stack);
+            if (ticks > 0) {
+                stack.set(ModDataComponents.WEAPON_COOLDOWN.get(), WeaponCooldown.of(now + ticks, ticks));
+            }
         }
     }
 }

@@ -17,6 +17,19 @@ public record CustomCoreConfig(
         int customEnhancementSlots,  // 自定义强化槽数量（1-6）
         boolean isCustomized         // 是否已改装
 ) {
+    public CustomCoreConfig {
+        baseType = baseType == null ? ShipType.SMALL : baseType;
+        customWeaponSlots = Math.clamp(customWeaponSlots, MIN_WEAPON_SLOTS, MAX_WEAPON_SLOTS);
+        customEnhancementSlots = Math.clamp(customEnhancementSlots, MIN_ENHANCEMENT_SLOTS, MAX_ENHANCEMENT_SLOTS);
+        while (customWeaponSlots + baseType.ammoSlots + customEnhancementSlots > MAX_TOTAL_SLOTS) {
+            if (customWeaponSlots > MIN_WEAPON_SLOTS) {
+                --customWeaponSlots;
+            } else {
+                --customEnhancementSlots;
+            }
+        }
+    }
+
     // ===== 槽位限制常量 =====
     public static final int MIN_WEAPON_SLOTS = 2;
     public static final int MAX_WEAPON_SLOTS = 8;

@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Client-side storage for dungeon state synced via S2C payloads.
@@ -39,9 +40,16 @@ public final class ClientDungeonData {
     public static String getLobbyFlagshipName() { return lobbyFlagshipName; }
     public static String getLobbySelectedStage() { return lobbySelectedStage; }
     public static List<Boolean> getLobbyReadyStates() { return lobbyReadyStates; }
-    /** 当前玩家是否已准备（根据名字匹配索引；同地图多人同名场景作 fallback 全部 false）。 */
+    /** 当前玩家是否已准备：按服务端同步的成员名定位本地玩家的真实 ready 状态。 */
     public static boolean amIReady() {
-        return false; // 客户端无法直接知道本地玩家 UUID，使用本地默认 false；切换按钮仍生效
+        String localName = com.piranport.platform.ClientHooks.getClientPlayerName();
+        if (localName == null) return false;
+        for (int i = 0; i < lobbyMembers.size() && i < lobbyReadyStates.size(); i++) {
+            if (Objects.equals(localName, lobbyMembers.get(i))) {
+                return Boolean.TRUE.equals(lobbyReadyStates.get(i));
+            }
+        }
+        return false;
     }
 
     public static void setRegistryData(Map<String, ChapterData> chapterMap,

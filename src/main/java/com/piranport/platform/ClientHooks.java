@@ -35,6 +35,12 @@ public final class ClientHooks {
         return result instanceof Player player ? player : null;
     }
 
+    /** Returns the local player's scoreboard name, or {@code null} when unavailable. */
+    public static String getClientPlayerName() {
+        Object result = invoke("getClientPlayerName");
+        return result instanceof String value ? value : null;
+    }
+
     public static long getClientGameTime() {
         Object result = invoke("getClientGameTime");
         return result instanceof Long value ? value : -1L;

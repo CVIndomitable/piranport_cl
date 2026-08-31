@@ -32,6 +32,9 @@ public class AmmoWorkbenchBlockEntity extends BlockEntity implements MenuProvide
 
     private static final int DATA_SIZE = 2;
     private static final int SAVE_INTERVAL_TICKS = 20;
+    private static final int MAX_CRAFT_QUANTITY = 1_000_000;
+    private static final java.util.function.Predicate<ItemStack> NON_EMPTY_STACK =
+            stack -> !stack.isEmpty();
 
     private final ItemStackHandler itemHandler = new ItemStackHandler(TOTAL_SLOTS) {
         @Override
@@ -122,6 +125,42 @@ public class AmmoWorkbenchBlockEntity extends BlockEntity implements MenuProvide
         setChanged();
     }
 
+    /**
+     * Validate a crafting job restored from NBT before it is allowed to progress.
+     * Called on the first server tick or when the menu is opened.
+     */
+    public void validateSavedCrafting() {
+        if (level == null || level.isClientSide || !isCrafting()) return;
+        validateActiveJob();
+    }
+
+    private boolean validateActiveJob() {
+        if (!isCrafting()) return false;
+
+        boolean recipeIdValid = !craftingRecipeId.isBlank()
+                && craftingRecipeId.length() <= 256
+                && AmmoRecipeRegistry.findById(craftingRecipeId) != null;
+        boolean quantityValid = craftingQuantity > 0 && craftingQuantity <= MAX_CRAFT_QUANTITY;
+        boolean timeValid = craftingTotalTime > 0 && craftingProgress >= 0
+                && craftingProgress <= craftingTotalTime;
+
+        if (!recipeIdValid || !quantityValid || !timeValid) {
+            cancelInvalidJob();
+            return false;
+        }
+        return true;
+    }
+
+    private void cancelInvalidJob() {
+        refundPendingMaterials();
+        craftingProgress = 0;
+        craftingTotalTime = 0;
+        craftingRecipeId = "";
+        craftingQuantity = 0;
+        craftingOwner = null;
+        setChanged();
+    }
+
     /** Refund pending materials to the owner (or drop to world) and clear crafting state. */
     public void cancelCrafting() {
         refundPendingMaterials();
@@ -188,6 +227,9 @@ public class AmmoWorkbenchBlockEntity extends BlockEntity implements MenuProvide
 
         if (be.craftingTotalTime <= 0) return;
 
+        // Read jobs are validated lazily after world load; invalid jobs refund materials.
+        if (!be.validateActiveJob()) return;
+
         if (be.craftingProgress < be.craftingTotalTime) {
             be.craftingProgress++;
         }
@@ -195,14 +237,7 @@ public class AmmoWorkbenchBlockEntity extends BlockEntity implements MenuProvide
         if (be.craftingProgress >= be.craftingTotalTime) {
             AmmoRecipe recipe = AmmoRecipeRegistry.findById(be.craftingRecipeId);
             if (recipe == null) {
-                // Recipe vanished mid-craft (mod update). Refund materials to the owner.
-                be.refundPendingMaterials();
-                be.craftingProgress = 0;
-                be.craftingTotalTime = 0;
-                be.craftingRecipeId = "";
-                be.craftingQuantity = 0;
-                be.craftingOwner = null;
-                be.setChanged();
+                be.cancelInvalidJob();
                 return;
             }
             ItemStack result = recipe.getResultStack(be.craftingQuantity);
@@ -287,7 +322,9 @@ public class AmmoWorkbenchBlockEntity extends BlockEntity implements MenuProvide
         if (tag.contains("pendingMaterials", Tag.TAG_LIST)) {
             ListTag list = tag.getList("pendingMaterials", Tag.TAG_COMPOUND);
             for (int i = 0; i < list.size(); i++) {
-                ItemStack.parse(registries, list.getCompound(i)).ifPresent(pendingMaterials::add);
+                ItemStack.parse(registries, list.getCompound(i))
+                        .filter(NON_EMPTY_STACK)
+                        .ifPresent(pendingMaterials::add);
             }
         }
 

@@ -66,20 +66,16 @@ public record UpdateConfigOverridePayload(
                 if ("cannon".equals(payload.category)) {
                     // 解析并验证值
                     Object parsedValue = parseValue(payload.value, payload.field);
-                    Object validatedValue = ConfigOverrideManager.validateValue(payload.field, parsedValue);
-
-                    data.setCannonOverride(payload.key, payload.field, validatedValue);
-                    PiranPort.LOGGER.info("Player {} updated cannon {} field {} to {}",
-                            serverPlayer.getName().getString(), payload.key, payload.field, validatedValue);
+                    data.setCannonOverride(payload.key, payload.field, parsedValue);
+                    PiranPort.LOGGER.info("Player {} updated cannon {} field {}",
+                            serverPlayer.getName().getString(), payload.key, payload.field);
 
                 } else if ("projectile".equals(payload.category)) {
                     // 解析并验证值
                     Object parsedValue = parseProjectileValue(payload.value, payload.key);
-                    Object validatedValue = ConfigOverrideManager.validateProjectileValue(payload.key, parsedValue);
-
-                    data.setProjectileOverride(payload.key, validatedValue);
-                    PiranPort.LOGGER.info("Player {} updated projectile config {} to {}",
-                            serverPlayer.getName().getString(), payload.key, validatedValue);
+                    data.setProjectileOverride(payload.key, parsedValue);
+                    PiranPort.LOGGER.info("Player {} updated projectile config {}",
+                            serverPlayer.getName().getString(), payload.key);
                 }
 
             } catch (Exception e) {

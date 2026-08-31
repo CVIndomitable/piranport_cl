@@ -37,6 +37,7 @@ public class PlayerConnectionHandler {
     /** 精英损管：背包内有损管时抵消致命伤害 */
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void onEliteDamageControl(LivingDeathEvent event) {
+        if (event.isCanceled()) return;
         if (event.getEntity().level().isClientSide()) return;
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
 

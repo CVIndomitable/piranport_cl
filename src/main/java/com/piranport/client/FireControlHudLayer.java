@@ -18,6 +18,7 @@ import net.neoforged.neoforge.client.event.RenderGuiLayerEvent;
 import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,8 +34,8 @@ public class FireControlHudLayer {
     private static final int PANEL_WIDTH = 110;
     private static final int LINE_HEIGHT  = 18;
 
-    // Cache UUID→Entity mappings, incremental update (no full rebuild)
-    private static final Map<UUID, Entity> entityCache = new HashMap<>();
+    // Cache UUID→Entity mappings. Weak references prevent retaining entities removed from the level.
+    private static final Map<UUID, WeakReference<Entity>> entityCache = new HashMap<>();
     private static final int EVICT_INTERVAL = 100;
     private static int evictCounter = 0;
 
@@ -43,32 +44,34 @@ public class FireControlHudLayer {
     @Nullable
     private static Entity findEntityByUUID(Minecraft mc, UUID uuid) {
         if (mc.level == null) return null;
-        Entity cached = entityCache.get(uuid);
-        if (cached != null && cached.isAlive()) return cached;
 
-        if (cached != null && !cached.isAlive()) {
-            entityCache.remove(uuid);
-        }
+        WeakReference<Entity> cachedRef = entityCache.get(uuid);
+        Entity cached = cachedRef != null ? cachedRef.get() : null;
+        if (cached != null && cached.isAlive()) return cached;
+        entityCache.remove(uuid);
 
         // 增量插入：只添加当前缺失的 UUID，不遍历全量
         Entity found = mc.level.getPlayerByUUID(uuid);
         if (found != null && found.isAlive()) {
-            entityCache.put(uuid, found);
+            entityCache.put(uuid, new WeakReference<>(found));
             return found;
         }
         // Fallback: 从渲染实体列表查找（可能开销较大，但每个 UUID 最多一次）
-        for (Entity e : mc.level.entitiesForRendering()) {
-            if (e.getUUID().equals(uuid) && e.isAlive()) {
-                entityCache.put(uuid, e);
-                return e;
+        for (Entity entity : mc.level.entitiesForRendering()) {
+            if (entity.getUUID().equals(uuid) && entity.isAlive()) {
+                entityCache.put(uuid, new WeakReference<>(entity));
+                return entity;
             }
         }
 
-        // 定期清理死实体（无需全量重建）
+        // 定期清理失效或已死亡实体（无需全量重建）
         evictCounter++;
         if (evictCounter >= EVICT_INTERVAL) {
             evictCounter = 0;
-            entityCache.values().removeIf(e -> !e.isAlive());
+            entityCache.values().removeIf(reference -> {
+                Entity entity = reference.get();
+                return entity == null || !entity.isAlive();
+            });
         }
         return null;
     }

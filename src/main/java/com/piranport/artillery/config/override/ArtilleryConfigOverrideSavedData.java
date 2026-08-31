@@ -3,6 +3,7 @@ package com.piranport.artillery.config.override;
 import com.piranport.PiranPort;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.saveddata.SavedData;
 import org.jetbrains.annotations.NotNull;
@@ -40,7 +41,8 @@ public class ArtilleryConfigOverrideSavedData extends SavedData {
      * @param value 覆盖值
      */
     public void setCannonOverride(String cannonName, String field, Object value) {
-        cannonOverrides.computeIfAbsent(cannonName, k -> new HashMap<>()).put(field, value);
+        Object validated = ConfigOverrideManager.validateValue(field, value);
+        cannonOverrides.computeIfAbsent(cannonName, k -> new HashMap<>()).put(field, validated);
         setDirty();
     }
 
@@ -104,7 +106,8 @@ public class ArtilleryConfigOverrideSavedData extends SavedData {
      * @param value 覆盖值
      */
     public void setProjectileOverride(String configKey, Object value) {
-        projectileOverrides.put(configKey, value);
+        projectileOverrides.put(configKey,
+                ConfigOverrideManager.validateProjectileValue(configKey, value));
         setDirty();
     }
 
@@ -214,17 +217,27 @@ public class ArtilleryConfigOverrideSavedData extends SavedData {
     public static ArtilleryConfigOverrideSavedData load(CompoundTag tag, HolderLookup.Provider registries) {
         ArtilleryConfigOverrideSavedData data = new ArtilleryConfigOverrideSavedData();
 
-        // 加载火炮覆盖
-        if (tag.contains("cannons")) {
+        // 加载火炮覆盖；损坏字段直接跳过，避免存档数据绕过运行时验证
+        if (tag.contains("cannons", Tag.TAG_COMPOUND)) {
             CompoundTag cannonsTag = tag.getCompound("cannons");
             for (String cannonName : cannonsTag.getAllKeys()) {
+                if (!cannonsTag.contains(cannonName, Tag.TAG_COMPOUND)) {
+                    PiranPort.LOGGER.warn("Skipping malformed cannon override container: {}", cannonName);
+                    continue;
+                }
                 CompoundTag fieldsTag = cannonsTag.getCompound(cannonName);
                 Map<String, Object> fields = new HashMap<>();
 
                 for (String fieldName : fieldsTag.getAllKeys()) {
                     Object value = loadValue(fieldsTag, fieldName);
-                    if (value != null) {
-                        fields.put(fieldName, value);
+                    if (value == null) {
+                        continue;
+                    }
+                    try {
+                        fields.put(fieldName, ConfigOverrideManager.validateValue(fieldName, value));
+                    } catch (RuntimeException e) {
+                        PiranPort.LOGGER.warn("Skipping invalid cannon override {}.{}: {}",
+                                cannonName, fieldName, e.getMessage());
                     }
                 }
 
@@ -232,17 +245,28 @@ public class ArtilleryConfigOverrideSavedData extends SavedData {
                     data.cannonOverrides.put(cannonName, fields);
                 }
             }
+        } else if (tag.contains("cannons")) {
+            PiranPort.LOGGER.warn("Skipping malformed cannon override root");
         }
 
-        // 加载弹药配置覆盖
-        if (tag.contains("projectiles")) {
+        // 加载弹药配置覆盖；白名单和类型校验失败的数据不进入运行时
+        if (tag.contains("projectiles", Tag.TAG_COMPOUND)) {
             CompoundTag projectilesTag = tag.getCompound("projectiles");
             for (String configKey : projectilesTag.getAllKeys()) {
                 Object value = loadValue(projectilesTag, configKey);
-                if (value != null) {
-                    data.projectileOverrides.put(configKey, value);
+                if (value == null) {
+                    continue;
+                }
+                try {
+                    data.projectileOverrides.put(configKey,
+                            ConfigOverrideManager.validateProjectileValue(configKey, value));
+                } catch (RuntimeException e) {
+                    PiranPort.LOGGER.warn("Skipping invalid projectile override {}: {}",
+                            configKey, e.getMessage());
                 }
             }
+        } else if (tag.contains("projectiles")) {
+            PiranPort.LOGGER.warn("Skipping malformed projectile override root");
         }
 
         return data;

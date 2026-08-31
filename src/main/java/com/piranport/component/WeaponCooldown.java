@@ -12,6 +12,11 @@ import net.minecraft.network.codec.StreamCodec;
  */
 public record WeaponCooldown(long endTick, int totalTick) {
 
+    public WeaponCooldown {
+        if (endTick < 0) endTick = 0;
+        if (totalTick < 1) totalTick = 1;
+    }
+
     public static final WeaponCooldown EMPTY = new WeaponCooldown(0, 1);
 
     /**

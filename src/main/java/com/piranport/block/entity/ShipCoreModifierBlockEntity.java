@@ -30,8 +30,8 @@ public class ShipCoreModifierBlockEntity extends BlockEntity implements MenuProv
     public static final int TOTAL_SLOTS = 1;
 
     // 配置参数（通过 ContainerData 同步到客户端）
-    private int weaponSlots = 2;      // 武器槽数量 (2-8)
-    private int enhancementSlots = 1; // 强化槽数量 (1-6)
+    private int weaponSlots = CustomCoreConfig.MIN_WEAPON_SLOTS;
+    private int enhancementSlots = CustomCoreConfig.MIN_ENHANCEMENT_SLOTS;
     private ShipType shipType = ShipType.SMALL;
 
     private final ItemStackHandler itemHandler = new ItemStackHandler(TOTAL_SLOTS) {
@@ -82,8 +82,8 @@ public class ShipCoreModifierBlockEntity extends BlockEntity implements MenuProv
         @Override
         public void set(int index, int value) {
             switch (index) {
-                case 0 -> weaponSlots = value;
-                case 1 -> enhancementSlots = value;
+                case 0 -> weaponSlots = normalizeWeaponSlots(value);
+                case 1 -> enhancementSlots = normalizeEnhancementSlots(value);
                 case 2 -> {
                     int st = value;
                     shipType = (st >= 0 && st < ShipType.values().length) ? ShipType.values()[st] : ShipType.SMALL;
@@ -121,13 +121,23 @@ public class ShipCoreModifierBlockEntity extends BlockEntity implements MenuProv
         return shipType;
     }
 
+    private static int normalizeWeaponSlots(int value) {
+        return Math.clamp(value,
+                CustomCoreConfig.MIN_WEAPON_SLOTS, CustomCoreConfig.MAX_WEAPON_SLOTS);
+    }
+
+    private static int normalizeEnhancementSlots(int value) {
+        return Math.clamp(value,
+                CustomCoreConfig.MIN_ENHANCEMENT_SLOTS, CustomCoreConfig.MAX_ENHANCEMENT_SLOTS);
+    }
+
     public void setWeaponSlots(int value) {
-        this.weaponSlots = Math.clamp(value, 2, 8);
+        this.weaponSlots = normalizeWeaponSlots(value);
         setChanged();
     }
 
     public void setEnhancementSlots(int value) {
-        this.enhancementSlots = Math.clamp(value, 1, 6);
+        this.enhancementSlots = normalizeEnhancementSlots(value);
         setChanged();
     }
 
@@ -139,6 +149,10 @@ public class ShipCoreModifierBlockEntity extends BlockEntity implements MenuProv
     public boolean applyModification(Player player) {
         ItemStack coreStack = itemHandler.getStackInSlot(CORE_SLOT);
         if (coreStack.isEmpty() || !(coreStack.getItem() instanceof ShipCoreItem sci)) {
+            return false;
+        }
+        CustomCoreConfig config = new CustomCoreConfig(shipType, weaponSlots, enhancementSlots, true);
+        if (!config.isValid()) {
             return false;
         }
 
@@ -157,12 +171,6 @@ public class ShipCoreModifierBlockEntity extends BlockEntity implements MenuProv
         player.giveExperienceLevels(-expCost);
 
         // 应用配置
-        CustomCoreConfig config = new CustomCoreConfig(
-                shipType,
-                weaponSlots,
-                enhancementSlots,
-                true
-        );
         coreStack.set(ModDataComponents.CUSTOM_CORE_CONFIG.get(), config);
 
         setChanged();
@@ -182,8 +190,10 @@ public class ShipCoreModifierBlockEntity extends BlockEntity implements MenuProv
     protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
         itemHandler.deserializeNBT(registries, tag.getCompound("Inventory"));
-        weaponSlots = tag.contains("WeaponSlots") ? tag.getInt("WeaponSlots") : 2;
-        enhancementSlots = tag.contains("EnhancementSlots") ? tag.getInt("EnhancementSlots") : 1;
+        weaponSlots = normalizeWeaponSlots(tag.contains("WeaponSlots")
+                ? tag.getInt("WeaponSlots") : shipType.weaponSlots);
+        enhancementSlots = normalizeEnhancementSlots(tag.contains("EnhancementSlots")
+                ? tag.getInt("EnhancementSlots") : shipType.enhancementSlots);
         if (tag.contains("ShipType")) {
             int st = tag.getInt("ShipType");
             shipType = (st >= 0 && st < ShipType.values().length) ? ShipType.values()[st] : ShipType.SMALL;

@@ -1,5 +1,6 @@
 package com.piranport.artillery.config.override;
 
+import com.piranport.PiranPort;
 import com.piranport.artillery.config.ArtilleryCannonData;
 import com.piranport.artillery.config.ArtilleryConfig;
 import com.piranport.artillery.config.MuzzlePos;
@@ -9,6 +10,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * 配置覆盖管理器 - 运行时拦截层
@@ -403,8 +405,7 @@ public class ConfigOverrideManager {
         ArtilleryConfigOverrideSavedData overrides = ArtilleryConfigOverrideSavedData.get(serverLevel);
 
         return overrides.getProjectileOverride(key)
-                .map(v -> ((Number) v).doubleValue())
-                .filter(Double::isFinite)
+                .flatMap(v -> finiteDoubleOverride(v))
                 .orElse(defaultValue);
     }
 
@@ -420,7 +421,7 @@ public class ConfigOverrideManager {
         ArtilleryConfigOverrideSavedData overrides = ArtilleryConfigOverrideSavedData.get(serverLevel);
 
         return overrides.getProjectileOverride(key)
-                .map(v -> (Boolean) v)
+                .flatMap(v -> booleanOverride(v))
                 .orElse(defaultValue);
     }
 
@@ -436,8 +437,42 @@ public class ConfigOverrideManager {
         ArtilleryConfigOverrideSavedData overrides = ArtilleryConfigOverrideSavedData.get(serverLevel);
 
         return overrides.getProjectileOverride(key)
-                .map(v -> ((Number) v).intValue())
+                .flatMap(v -> intOverride(v))
                 .orElse(defaultValue);
+    }
+
+    // ==================== 弹药覆盖安全读取 ====================
+
+    private static Optional<Double> finiteDoubleOverride(Object value) {
+        if (value instanceof Number number) {
+            double d = number.doubleValue();
+            if (Double.isFinite(d)) {
+                return Optional.of(d);
+            }
+            PiranPort.LOGGER.warn("Ignoring non-finite projectile override: {}", value);
+        } else {
+            PiranPort.LOGGER.warn("Ignoring invalid projectile override type {}: expected Number",
+                    value.getClass().getName());
+        }
+        return Optional.empty();
+    }
+
+    private static Optional<Boolean> booleanOverride(Object value) {
+        if (value instanceof Boolean b) {
+            return Optional.of(b);
+        }
+        PiranPort.LOGGER.warn("Ignoring invalid projectile override type {}: expected Boolean",
+                value.getClass().getName());
+        return Optional.empty();
+    }
+
+    private static Optional<Integer> intOverride(Object value) {
+        if (value instanceof Integer i) {
+            return Optional.of(i);
+        }
+        PiranPort.LOGGER.warn("Ignoring invalid projectile override type {}: expected Integer",
+                value.getClass().getName());
+        return Optional.empty();
     }
 
     // ==================== 数值验证 ====================
@@ -450,6 +485,10 @@ public class ConfigOverrideManager {
      * @return 验证后的值
      */
     public static Object validateValue(String field, Object value) {
+        if (!isKnownCannonField(field)) {
+            throw new IllegalArgumentException("Unknown cannon config field: " + field);
+        }
+
         if ("muzzles".equals(field)) {
             if (value instanceof String s && parseMuzzlesString(s).isPresent()) {
                 return s;
@@ -548,34 +587,96 @@ public class ConfigOverrideManager {
     }
 
     /**
-     * 验证弹药配置值
+     * 验证弹药配置值。加载存档和导入数据必须共用同一套白名单与类型检查。
      */
     public static Object validateProjectileValue(String key, Object value) {
-        if (!(value instanceof Number num)) {
-            return value;
+        if (!isKnownProjectileKey(key)) {
+            throw new IllegalArgumentException("Unknown projectile config key: " + key);
+        }
+        if (value == null) {
+            throw new IllegalArgumentException("Null projectile config value for " + key);
         }
 
-        return switch (key) {
-            case "HE_ARMOR_PENETRATION", "AP_ARMOR_IGNORE" -> {
-                double d = num.doubleValue();
-                yield clampFinite(d, 0.0, 1.0, key);
+        if (DOUBLE_PROJECTILE_KEYS.contains(key)) {
+            if (!(value instanceof Number number) || !Double.isFinite(number.doubleValue())) {
+                throw new IllegalArgumentException("Expected finite number for projectile config: " + key);
             }
-            case "AP_DAMAGE_MULTIPLIER" -> {
-                double d = num.doubleValue();
-                yield clampFinite(d, 0.1, 10.0, key);
+            return switch (key) {
+                case "HE_ARMOR_PENETRATION", "AP_ARMOR_IGNORE" ->
+                        clampFinite(number.doubleValue(), 0.0, 1.0, key);
+                case "AP_DAMAGE_MULTIPLIER" ->
+                        clampFinite(number.doubleValue(), 0.1, 10.0, key);
+                case "UNDERWATER_EXPLOSION_MULTIPLIER" ->
+                        clampFinite(number.doubleValue(), 0.0, 2.0, key);
+                default -> number.doubleValue();
+            };
+        }
+
+        if (BOOLEAN_PROJECTILE_KEYS.contains(key)) {
+            if (!(value instanceof Boolean b)) {
+                throw new IllegalArgumentException("Expected boolean for projectile config: " + key);
             }
-            case "UNDERWATER_EXPLOSION_MULTIPLIER" -> {
-                double d = num.doubleValue();
-                yield clampFinite(d, 0.0, 2.0, key);
+            return b;
+        }
+
+        if (INTEGER_PROJECTILE_KEYS.contains(key)) {
+            if (!(value instanceof Integer i)) {
+                throw new IllegalArgumentException("Expected integer for projectile config: " + key);
             }
-            default -> {
-                if (!Double.isFinite(num.doubleValue())) {
-                    throw new IllegalArgumentException("Non-finite projectile config value for " + key);
-                }
-                yield value;
+            return i;
+        }
+
+        if (STRING_PROJECTILE_KEYS.contains(key)) {
+            if (!(value instanceof String str)) {
+                throw new IllegalArgumentException("Expected string for projectile config: " + key);
             }
-        };
+            if (str.length() > MAX_PROJECTILE_STRING_LENGTH) {
+                throw new IllegalArgumentException("Projectile config string is too long: " + key);
+            }
+            return str;
+        }
+
+        // Every whitelisted key must declare its accepted type.
+        throw new IllegalArgumentException("Unsupported projectile config key: " + key);
     }
+
+    /** Cannon override fields accepted by the admin tool, CSV importer, and saved data. */
+    private static final Set<String> CANNON_FIELDS = Set.of(
+            "caliber", "barrels", "damage", "reloadTime", "durability", "scopeZoom",
+            "muzzles", "initialSpeed", "dragCoeff", "gravity", "explosionPower",
+            "dispersion", "fireCooldown", "salvoCount", "salvoInterval",
+            "projectileWeight", "verticalSpread", "horizontalSpread",
+            "maxElevation", "minElevation", "turretSpeed"
+    );
+
+    public static boolean isKnownCannonField(String field) {
+        return CANNON_FIELDS.contains(field);
+    }
+
+    public static boolean isKnownProjectileKey(String key) {
+        return DOUBLE_PROJECTILE_KEYS.contains(key)
+                || BOOLEAN_PROJECTILE_KEYS.contains(key)
+                || INTEGER_PROJECTILE_KEYS.contains(key)
+                || STRING_PROJECTILE_KEYS.contains(key);
+    }
+
+    private static final Set<String> DOUBLE_PROJECTILE_KEYS = Set.of(
+            "HE_ARMOR_PENETRATION",
+            "AP_DAMAGE_MULTIPLIER",
+            "AP_ARMOR_IGNORE",
+            "UNDERWATER_EXPLOSION_MULTIPLIER"
+    );
+
+    private static final Set<String> BOOLEAN_PROJECTILE_KEYS = Set.of(
+            "HE_DAMAGE_FALLOFF",
+            "UNDERWATER_EXPLODE"
+    );
+
+    private static final Set<String> INTEGER_PROJECTILE_KEYS = Set.of();
+
+    private static final Set<String> STRING_PROJECTILE_KEYS = Set.of();
+
+    private static final int MAX_PROJECTILE_STRING_LENGTH = 256;
 
     private static float clampFinite(float value, float min, float max, String field) {
         if (!Float.isFinite(value)) {

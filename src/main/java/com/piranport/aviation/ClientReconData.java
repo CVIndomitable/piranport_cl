@@ -22,6 +22,15 @@ public class ClientReconData {
         reconEntityId = -1;
     }
 
+    /** 断线重置：不发送游戏消息，但必须把相机交还给本地玩家。 */
+    public static void resetClientState() {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player != null && mc.getCameraEntity() != null) {
+            mc.setCameraEntity(mc.player);
+        }
+        clearRecon();
+    }
+
     public static boolean isInReconMode() { return inReconMode; }
     public static int getReconEntityId() { return reconEntityId; }
 

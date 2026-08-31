@@ -42,6 +42,7 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.level.ClipContext;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class CannonProjectileEntity extends ThrowableItemProjectile {
     private float damage = 6f;
@@ -74,6 +75,9 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
 
     /** 缓存的黑曜石爆炸抗性，避免每次碰撞都创建 Explosion 对象。初始化在构造函数中完成。 */
     private final float cachedObsidianResistance;
+
+    /** 进程内单调递增 ID，保证同 tick 齐射时临时属性名不重复。 */
+    private static final AtomicLong AP_MODIFIER_SEQUENCE = new AtomicLong();
 
     // 客户端位置插值（防止服务端位置同步跳跃导致的抖动）
     private int clientLerpSteps;
@@ -475,7 +479,8 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
                     AttributeInstance armorAttr = living.getAttribute(Attributes.ARMOR);
                     // 使用 UUID + tickCount + random 生成唯一 ID，避免同 tick 多枚 AP 弹齐射时 ID 冲突
                     ResourceLocation apPenId = ResourceLocation.fromNamespaceAndPath(
-                            PiranPort.MOD_ID, "ap_penetration/" + getUUID() + "_" + tickCount + "_" + random.nextInt(10000));
+                            PiranPort.MOD_ID, "ap_penetration/" + getUUID() + "_" + tickCount + "_"
+                                    + AP_MODIFIER_SEQUENCE.incrementAndGet());
                     boolean applied = false;
                     if (armorAttr != null) {
                         armorAttr.removeModifier(apPenId);

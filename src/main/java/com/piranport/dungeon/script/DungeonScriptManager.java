@@ -23,6 +23,8 @@ import java.util.UUID;
  */
 public final class DungeonScriptManager extends SavedData {
     private static final String DATA_NAME = "piranport_dungeon_scripts";
+    /** Defensive upper bound for scripts restored from one SavedData blob. */
+    private static final int MAX_SCRIPTS = 256;
 
     private final Map<UUID, DungeonScript> activeScripts = new HashMap<>();
 
@@ -119,16 +121,37 @@ public final class DungeonScriptManager extends SavedData {
     public static DungeonScriptManager load(CompoundTag tag, HolderLookup.Provider registries) {
         DungeonScriptManager mgr = new DungeonScriptManager();
         ListTag list = tag.getList("Scripts", Tag.TAG_COMPOUND);
-        for (int i = 0; i < list.size(); i++) {
+
+        // Bound restored scripts so corrupt or oversized saved data cannot exhaust memory.
+        int count = Math.min(list.size(), MAX_SCRIPTS);
+        if (list.size() > count) {
+            PiranPort.LOGGER.warn(
+                    "Dungeon script save contains {} entries; loading only first {}",
+                    list.size(), count);
+        }
+
+        for (int i = 0; i < count; i++) {
             CompoundTag e = list.getCompound(i);
-            UUID id = NbtUtils.loadUUID(e.get("InstanceId"));
-            String type = e.getString("Type");
-            CompoundTag data = e.getCompound("Data");
-            DungeonScript script = DungeonScriptRegistry.create(type, data);
-            if (script != null) {
+            UUID id = null;
+            try {
+                id = NbtUtils.loadUUID(e.get("InstanceId"));
+                String type = e.getString("Type");
+                CompoundTag data = e.getCompound("Data");
+
+                if (id == null || type == null || type.isBlank()) {
+                    PiranPort.LOGGER.warn("Invalid dungeon script entry {}: missing instance/type, skipping", i);
+                    continue;
+                }
+
+                DungeonScript script = DungeonScriptRegistry.create(type, data);
+                if (script == null) {
+                    PiranPort.LOGGER.warn(
+                            "Unknown dungeon script type '{}' for instance {}, skipping", type, id);
+                    continue;
+                }
                 mgr.activeScripts.put(id, script);
-            } else {
-                PiranPort.LOGGER.warn("Unknown dungeon script type '{}' for instance {}, skipping", type, id);
+            } catch (Exception ex) {
+                PiranPort.LOGGER.warn("Invalid dungeon script entry {}, skipping", i, ex);
             }
         }
         return mgr;

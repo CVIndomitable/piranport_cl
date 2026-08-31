@@ -13,6 +13,7 @@ import com.piranport.dungeon.key.DungeonProgress;
 import com.piranport.dungeon.lobby.DungeonLobbyManager;
 import com.piranport.registry.ModDataComponents;
 import io.netty.buffer.ByteBuf;
+import io.netty.handler.codec.DecoderException;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.network.codec.ByteBufCodecs;
@@ -30,6 +31,8 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 public record SelectNodePayload(BlockPos lecternPos, int keySlot, String nodeId)
         implements CustomPacketPayload {
 
+    private static final int MAX_ID_LENGTH = 128;
+
     public static final Type<SelectNodePayload> TYPE =
             new Type<>(ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "select_node"));
 
@@ -42,7 +45,7 @@ public record SelectNodePayload(BlockPos lecternPos, int keySlot, String nodeId)
             buf -> new SelectNodePayload(
                     BlockPos.of(buf.readLong()),
                     ByteBufCodecs.VAR_INT.decode(buf),
-                    ByteBufCodecs.STRING_UTF8.decode(buf))
+                    ByteBufCodecs.stringUtf8(MAX_ID_LENGTH).decode(buf))
     );
 
     @Override

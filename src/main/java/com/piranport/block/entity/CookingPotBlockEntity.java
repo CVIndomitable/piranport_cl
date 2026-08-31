@@ -223,7 +223,9 @@ public class CookingPotBlockEntity extends BlockEntity implements MenuProvider {
         if (current.isEmpty()) {
             itemHandler.setStackInSlot(OUTPUT_SLOT, result);
         } else {
-            itemHandler.setStackInSlot(OUTPUT_SLOT, current.copyWithCount(current.getCount() + result.getCount()));
+            int maxStackSize = Math.min(current.getMaxStackSize(), result.getMaxStackSize());
+            int mergedCount = Math.min(maxStackSize, current.getCount() + result.getCount());
+            itemHandler.setStackInSlot(OUTPUT_SLOT, current.copyWithCount(mergedCount));
         }
     }
 
@@ -264,21 +266,29 @@ public class CookingPotBlockEntity extends BlockEntity implements MenuProvider {
             net.minecraft.world.level.block.entity.BlockEntity neighbor =
                     level.getBlockEntity(neighborPos);
             if (!(neighbor instanceof net.minecraft.world.Container container)) continue;
-            if (container.isEmpty()) continue;
-            // 直接插入第一个能放的槽位
-            for (int slot = 0; slot < container.getContainerSize(); slot++) {
+
+            // 先合并到已有同类物品，再使用空槽位
+            for (int slot = 0; slot < container.getContainerSize() && !output.isEmpty(); slot++) {
                 ItemStack inSlot = container.getItem(slot);
                 if (inSlot.isEmpty()) continue;
                 if (!ItemStack.isSameItemSameComponents(inSlot, output)) continue;
-                if (inSlot.getCount() >= inSlot.getMaxStackSize()) continue;
-                int space = inSlot.getMaxStackSize() - inSlot.getCount();
+                int maxStackSize = Math.min(inSlot.getMaxStackSize(), output.getMaxStackSize());
+                int space = maxStackSize - inSlot.getCount();
+                if (space <= 0) continue;
                 int move = Math.min(space, output.getCount());
-                if (move <= 0) continue;
                 container.setItem(slot, inSlot.copyWithCount(inSlot.getCount() + move));
                 output = output.copyWithCount(output.getCount() - move);
                 container.setChanged();
-                if (output.isEmpty()) break;
             }
+
+            // 空槽位也必须可用，否则单格产物会滞留在锅底
+            for (int slot = 0; slot < container.getContainerSize() && !output.isEmpty(); slot++) {
+                if (!container.getItem(slot).isEmpty()) continue;
+                container.setItem(slot, output.copy());
+                output = ItemStack.EMPTY;
+                container.setChanged();
+            }
+
             if (output.isEmpty()) break;
         }
         if (output.getCount() != itemHandler.getStackInSlot(OUTPUT_SLOT).getCount()) {

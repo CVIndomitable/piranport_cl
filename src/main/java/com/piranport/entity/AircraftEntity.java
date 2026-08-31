@@ -1,5 +1,6 @@
 package com.piranport.entity;
 
+import com.piranport.PiranPort;
 import com.piranport.aviation.FireControlManager;
 import net.minecraft.core.registries.BuiltInRegistries;
 import com.piranport.aviation.ReconManager;
@@ -1381,10 +1382,14 @@ public class AircraftEntity extends Entity {
     private static final FlightState[] FLIGHT_STATE_VALUES = FlightState.values();
     private static final AircraftInfo.AircraftType[] AIRCRAFT_TYPE_VALUES = AircraftInfo.AircraftType.values();
 
+    /** Safely maps persisted/synced ordinals back to the enum, preserving save compatibility. */
+    private static FlightState stateByOrdinal(int ordinal) {
+        return ordinal >= 0 && ordinal < FLIGHT_STATE_VALUES.length
+                ? FLIGHT_STATE_VALUES[ordinal] : FlightState.REMOVED;
+    }
+
     public FlightState getFlightState() {
-        int ordinal = entityData.get(STATE);
-        if (ordinal < 0 || ordinal >= FLIGHT_STATE_VALUES.length) return FlightState.REMOVED;
-        return FLIGHT_STATE_VALUES[ordinal];
+        return stateByOrdinal(entityData.get(STATE));
     }
 
     public AircraftInfo.AircraftType getAircraftType() {
@@ -1527,7 +1532,13 @@ public class AircraftEntity extends Entity {
             }
         }
         reconForcedChunks.clear();
-        entityData.set(STATE, tag.getInt("FlightState"));
+        int savedOrdinal = tag.contains("FlightState") ? tag.getInt("FlightState") : 0;
+        FlightState savedState = stateByOrdinal(savedOrdinal);
+        if (savedState == FlightState.REMOVED && savedOrdinal != FlightState.REMOVED.ordinal()) {
+            PiranPort.LOGGER.warn("Invalid FlightState ordinal {} for aircraft {}; falling back to {}",
+                    savedOrdinal, getId(), savedState.name());
+        }
+        entityData.set(STATE, savedState.ordinal());
         entityData.set(AIRCRAFT_TYPE_DATA, aircraftType.ordinal());
         if (ownerUUID != null) entityData.set(OWNER_ID, Optional.of(ownerUUID));
 

@@ -1,5 +1,6 @@
 package com.piranport.dungeon.entity;
 
+import com.piranport.PiranPort;
 import com.piranport.dungeon.instance.DungeonInstance;
 import com.piranport.dungeon.instance.DungeonInstanceManager;
 import com.piranport.registry.ModEntityTypes;
@@ -31,6 +32,9 @@ public class DungeonPortalEntity extends Entity {
     /** Auto-discard a portal that nobody touches in 10 minutes — prevents orphan portals
      *  if NBT was corrupted (instanceId == null) or instance was cleaned up early. */
     private static final int ORPHAN_DESPAWN_TICKS = 10 * 60 * 20;
+    /** Defensive cap for persisted/observed portal entries. */
+    private static final int MAX_ENTERED_PLAYERS = 64;
+    private static final int MAX_NODE_ID_LENGTH = 128;
 
     private UUID instanceId;
     private String nodeId;
@@ -45,6 +49,12 @@ public class DungeonPortalEntity extends Entity {
 
     public static DungeonPortalEntity create(ServerLevel level, UUID instanceId, String nodeId,
                                               double x, double y, double z) {
+        if (instanceId == null || nodeId == null || nodeId.isBlank()
+                || nodeId.length() > MAX_NODE_ID_LENGTH) {
+            PiranPort.LOGGER.warn("Rejected invalid dungeon portal creation (instance={}, nodeLength={})",
+                    instanceId, nodeId == null ? -1 : nodeId.length());
+            return null;
+        }
         DungeonPortalEntity portal = new DungeonPortalEntity(
                 ModEntityTypes.DUNGEON_PORTAL.get(), level);
         portal.instanceId = instanceId;
@@ -77,12 +87,14 @@ public class DungeonPortalEntity extends Entity {
 
         // Despawn orphan portals (broken NBT / cleaned-up instance) to avoid
         // leaving permanently-stuck entities in the dungeon dimension.
-        if (instanceId == null) {
+        if (instanceId == null || nodeId == null || nodeId.isBlank()) {
+            PiranPort.LOGGER.warn("Discarding invalid dungeon portal {} (instance={}, nodeLength={})",
+                    getId(), instanceId, nodeId == null ? -1 : nodeId.length());
             discard();
             return;
         }
-        DungeonInstanceManager mgrCheck = DungeonInstanceManager.get((ServerLevel) level());
-        if (mgrCheck.getInstance(instanceId) == null) {
+        DungeonInstanceManager mgr = DungeonInstanceManager.get((ServerLevel) level());
+        if (mgr.getInstance(instanceId) == null) {
             discard();
             return;
         }
@@ -94,11 +106,24 @@ public class DungeonPortalEntity extends Entity {
         List<ServerPlayer> nearbyPlayers = ((ServerLevel) level())
                 .getEntitiesOfClass(ServerPlayer.class, area);
 
+        Set<UUID> members = mgr.getInstance(instanceId).getPlayerUuids();
         for (ServerPlayer player : nearbyPlayers) {
-            enteredPlayers.add(player.getUUID());
+            UUID playerId = player.getUUID();
+            if (!members.contains(playerId)) continue;
+            if (enteredPlayers.size() >= MAX_ENTERED_PLAYERS && !enteredPlayers.contains(playerId)) {
+                continue;
+            }
+            enteredPlayers.add(playerId);
         }
 
-        if (enteredPlayers.isEmpty()) {
+        boolean memberNearby = false;
+        for (UUID memberId : members) {
+            if (enteredPlayers.contains(memberId)) {
+                memberNearby = true;
+                break;
+            }
+        }
+        if (!memberNearby) {
             orphanTicks += 10;
             if (orphanTicks > ORPHAN_DESPAWN_TICKS) {
                 discard();
@@ -110,11 +135,10 @@ public class DungeonPortalEntity extends Entity {
 
         // Check if all dungeon players have entered
         if (!enteredPlayers.isEmpty()) {
-            DungeonInstanceManager mgr = mgrCheck;
             DungeonInstance instance = mgr.getInstance(instanceId);
             if (instance != null) {
                 Set<UUID> allPlayers = instance.getPlayerUuids();
-                // Check: every player who is currently online in the dungeon dimension has entered
+                // Check: every member who is currently online in this dimension has entered.
                 boolean allEntered = true;
                 for (UUID playerUuid : allPlayers) {
                     ServerPlayer onlinePlayer = ((ServerLevel) level()).getServer()
@@ -132,6 +156,7 @@ public class DungeonPortalEntity extends Entity {
                     com.piranport.dungeon.event.DungeonEventHandler.onPortalComplete(
                             (ServerLevel) level(), instance, nodeId);
                     discard();
+                    return;
                 }
             }
         }
@@ -162,10 +187,16 @@ public class DungeonPortalEntity extends Entity {
     @Override
     protected void readAdditionalSaveData(CompoundTag tag) {
         if (tag.hasUUID("InstanceId")) instanceId = tag.getUUID("InstanceId");
-        if (tag.contains("NodeId")) nodeId = tag.getString("NodeId");
+
+        if (tag.contains("NodeId", net.minecraft.nbt.Tag.TAG_STRING)) {
+            String loadedNodeId = tag.getString("NodeId");
+            nodeId = (loadedNodeId.isBlank() || loadedNodeId.length() > MAX_NODE_ID_LENGTH)
+                    ? null : loadedNodeId;
+        }
+
         if (tag.contains("EnteredPlayers")) {
             net.minecraft.nbt.ListTag list = tag.getList("EnteredPlayers", net.minecraft.nbt.Tag.TAG_COMPOUND);
-            for (int i = 0; i < list.size(); i++) {
+            for (int i = 0; i < list.size() && enteredPlayers.size() < MAX_ENTERED_PLAYERS; i++) {
                 CompoundTag entry = list.getCompound(i);
                 if (entry.hasUUID("UUID")) {
                     enteredPlayers.add(entry.getUUID("UUID"));

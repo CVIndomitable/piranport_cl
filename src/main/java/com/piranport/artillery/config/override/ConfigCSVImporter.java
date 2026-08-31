@@ -175,29 +175,7 @@ public class ConfigCSVImporter {
             float minElevation = getFloat(parts, columns, "minElevation", original.minElevation());
             float turretSpeed = getFloat(parts, columns, "turretSpeed", original.turretSpeed());
 
-            // 应用验证和范围限制
-            caliber = (int) ConfigOverrideManager.validateValue("caliber", caliber);
-            barrels = (int) ConfigOverrideManager.validateValue("barrels", barrels);
-            damage = (float) ConfigOverrideManager.validateValue("damage", damage);
-            reloadTime = (int) ConfigOverrideManager.validateValue("reloadTime", reloadTime);
-            durability = (int) ConfigOverrideManager.validateValue("durability", durability);
-            scopeZoom = (float) ConfigOverrideManager.validateValue("scopeZoom", scopeZoom);
-            initialSpeed = (float) ConfigOverrideManager.validateValue("initialSpeed", initialSpeed);
-            dragCoeff = (float) ConfigOverrideManager.validateValue("dragCoeff", dragCoeff);
-            gravity = (float) ConfigOverrideManager.validateValue("gravity", gravity);
-            explosionPower = (float) ConfigOverrideManager.validateValue("explosionPower", explosionPower);
-            dispersion = (float) ConfigOverrideManager.validateValue("dispersion", dispersion);
-            projectileWeight = (float) ConfigOverrideManager.validateValue("projectileWeight", projectileWeight);
-            fireCooldown = (int) ConfigOverrideManager.validateValue("fireCooldown", fireCooldown);
-            salvoCount = (int) ConfigOverrideManager.validateValue("salvoCount", salvoCount);
-            salvoInterval = (float) ConfigOverrideManager.validateValue("salvoInterval", salvoInterval);
-            verticalSpread = (float) ConfigOverrideManager.validateValue("verticalSpread", verticalSpread);
-            horizontalSpread = (float) ConfigOverrideManager.validateValue("horizontalSpread", horizontalSpread);
-            maxElevation = (float) ConfigOverrideManager.validateValue("maxElevation", maxElevation);
-            minElevation = (float) ConfigOverrideManager.validateValue("minElevation", minElevation);
-            turretSpeed = (float) ConfigOverrideManager.validateValue("turretSpeed", turretSpeed);
-
-            // 写入覆盖数据
+            // 写入覆盖数据；SavedData 写入点统一执行范围校验
             overrides.setCannonOverride(cannonName, "caliber", caliber);
             overrides.setCannonOverride(cannonName, "barrels", barrels);
             overrides.setCannonOverride(cannonName, "damage", damage);
@@ -237,18 +215,35 @@ public class ConfigCSVImporter {
         String configKey = parts[0].trim();
         String valueStr = parts[2].trim();
         String type = parts[3].trim();
+        if (!ConfigOverrideManager.isKnownProjectileKey(configKey)) {
+            throw new IllegalArgumentException("未知的弹药配置键: " + configKey);
+        }
 
         try {
-            Object value = switch (type) {
-                case "double" -> {
-                    double d = Double.parseDouble(valueStr);
-                    yield ConfigOverrideManager.validateProjectileValue(configKey, d);
+            Object value;
+            if ("double".equals(type)) {
+                double d = Double.parseDouble(valueStr);
+                if (!Double.isFinite(d)) {
+                    throw new IllegalArgumentException("非有限数值");
                 }
-                case "int" -> Integer.parseInt(valueStr);
-                case "boolean" -> Boolean.parseBoolean(valueStr);
-                case "string" -> valueStr;
-                default -> throw new IllegalArgumentException("未知的类型: " + type);
-            };
+                value = ConfigOverrideManager.validateProjectileValue(configKey, d);
+            } else if ("int".equals(type)) {
+                int i = Integer.parseInt(valueStr);
+                value = ConfigOverrideManager.validateProjectileValue(configKey, i);
+            } else if ("boolean".equals(type)) {
+                if (!valueStr.equalsIgnoreCase("true") && !valueStr.equalsIgnoreCase("false")) {
+                    throw new IllegalArgumentException("布尔值必须为 true 或 false");
+                }
+                value = Boolean.parseBoolean(valueStr);
+                value = ConfigOverrideManager.validateProjectileValue(configKey, value);
+            } else if ("string".equals(type)) {
+                if (valueStr.length() > 256) {
+                    throw new IllegalArgumentException("字符串过长");
+                }
+                value = ConfigOverrideManager.validateProjectileValue(configKey, valueStr);
+            } else {
+                throw new IllegalArgumentException("未知的类型: " + type);
+            }
 
             overrides.setProjectileOverride(configKey, value);
 

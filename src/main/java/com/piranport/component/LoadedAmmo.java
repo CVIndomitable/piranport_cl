@@ -13,6 +13,15 @@ import net.minecraft.network.codec.StreamCodec;
  */
 public record LoadedAmmo(int count, String ammoItemId) {
 
+    private static final int MAX_COUNT = 4096;
+    private static final int MAX_ITEM_ID_LENGTH = 256;
+
+    public LoadedAmmo {
+        count = Math.max(0, Math.min(count, MAX_COUNT));
+        if (ammoItemId == null) ammoItemId = "";
+        else if (ammoItemId.length() > MAX_ITEM_ID_LENGTH) throw new IllegalArgumentException("ammoItemId too long");
+    }
+
     public static final LoadedAmmo EMPTY = new LoadedAmmo(0, "");
 
     public boolean hasAmmo() {
@@ -31,8 +40,7 @@ public record LoadedAmmo(int count, String ammoItemId) {
             },
             buf -> {
                 int count = ByteBufCodecs.VAR_INT.decode(buf);
-                String ammoId = ByteBufCodecs.STRING_UTF8.decode(buf);
-                if (ammoId.length() > 256) throw new io.netty.handler.codec.DecoderException("ammoItemId too long");
+                String ammoId = ByteBufCodecs.stringUtf8(MAX_ITEM_ID_LENGTH).decode(buf);
                 return new LoadedAmmo(count, ammoId);
             }
     );

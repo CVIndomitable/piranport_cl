@@ -31,18 +31,27 @@ public class ClientTorpedoGuidance {
     }
 
     public static void handleEnd() {
+        restoreLocalCamera();
+        active = false;
+        torpedoEntityId = -1;
         Minecraft mc = Minecraft.getInstance();
         if (mc.player != null) {
-            mc.setCameraEntity(mc.player);
             mc.player.displayClientMessage(
                     Component.translatable("message.piranport.torpedo_guidance_exit"), true);
         }
+    }
+
+    /** 断线重置：不发送游戏消息，但必须把相机交还给本地玩家。 */
+    public static void resetClientState() {
+        restoreLocalCamera();
         active = false;
         torpedoEntityId = -1;
     }
 
-    public static void resetClientState() {
-        active = false;
-        torpedoEntityId = -1;
+    private static void restoreLocalCamera() {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player != null && mc.getCameraEntity() != null) {
+            mc.setCameraEntity(mc.player);
+        }
     }
 }

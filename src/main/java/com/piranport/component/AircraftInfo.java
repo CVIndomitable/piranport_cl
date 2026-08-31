@@ -17,6 +17,23 @@ public record AircraftInfo(
         int weight,
         BombingMode bombingMode
 ) {
+    private static final int MAX_CAPACITY = 32768;
+    private static final float MIN_PANEL_DAMAGE = 0.0F;
+    private static final float MAX_PANEL_DAMAGE = 100_000.0F;
+    private static final float MIN_PANEL_SPEED = 0.05F;
+    private static final float MAX_PANEL_SPEED = 100.0F;
+
+    public AircraftInfo {
+        fuelCapacity = Math.clamp(fuelCapacity, 1, MAX_CAPACITY);
+        ammoCapacity = Math.clamp(ammoCapacity, 0, MAX_CAPACITY);
+        currentFuel = Math.clamp(currentFuel, 0, fuelCapacity);
+        panelDamage = Float.isFinite(panelDamage)
+                ? Math.clamp(panelDamage, MIN_PANEL_DAMAGE, MAX_PANEL_DAMAGE) : MIN_PANEL_DAMAGE;
+        panelSpeed = Float.isFinite(panelSpeed)
+                ? Math.clamp(panelSpeed, MIN_PANEL_SPEED, MAX_PANEL_SPEED) : MIN_PANEL_SPEED;
+        weight = Math.clamp(weight, 0, MAX_CAPACITY);
+    }
+
     public enum AircraftType implements StringRepresentable {
         FIGHTER("fighter"),
         DIVE_BOMBER("dive_bomber"),

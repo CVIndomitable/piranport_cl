@@ -174,6 +174,7 @@ public class DungeonInstanceManager extends SavedData {
                 NodeBattleField.cleanupRegion(dungeonLevel, inst);
             }
             cleanupInstance(id);
+            com.piranport.dungeon.script.DungeonScriptManager.get(dungeonLevel.getServer()).remove(id);
             PiranPort.LOGGER.info("Auto-cleaned stale suspended instance {}", id);
         }
     }

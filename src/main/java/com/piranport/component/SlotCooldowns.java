@@ -16,6 +16,36 @@ import java.util.Map;
  */
 public record SlotCooldowns(Map<Integer, Long> endTick, Map<Integer, Integer> totalTick) {
 
+    private static final int MAX_ENTRIES = 64;
+    private static final int MAX_SLOT_INDEX = 999;
+
+    public SlotCooldowns(Map<Integer, Long> endTick, Map<Integer, Integer> totalTick) {
+        endTick = validateEndMap(endTick);
+        totalTick = validateTotalMap(totalTick);
+        this.endTick = Map.copyOf(endTick);
+        this.totalTick = Map.copyOf(totalTick);
+    }
+
+    private static Map<Integer, Long> validateEndMap(Map<Integer, Long> values) {
+        return validateSlots(values == null ? Map.of() : values);
+    }
+
+    private static Map<Integer, Integer> validateTotalMap(Map<Integer, Integer> values) {
+        Map<Integer, Integer> totals = validateSlots(values == null ? Map.of() : values);
+        for (Integer total : totals.values()) {
+            if (total < 1) throw new IllegalArgumentException("totalTick must be at least 1");
+        }
+        return totals;
+    }
+
+    private static <T> Map<Integer, T> validateSlots(Map<Integer, T> values) {
+        if (values.size() > MAX_ENTRIES) throw new IllegalArgumentException("Too many slot cooldown entries: " + values.size());
+        for (Integer slot : values.keySet()) {
+            if (slot == null || slot < 0 || slot > MAX_SLOT_INDEX) throw new IllegalArgumentException("Slot index out of range: " + slot);
+        }
+        return values;
+    }
+
     public static final SlotCooldowns EMPTY = new SlotCooldowns(Map.of(), Map.of());
 
     private static final Codec<Map<Integer, Long>> INT_LONG_MAP = Codec.unboundedMap(
@@ -45,19 +75,19 @@ public record SlotCooldowns(Map<Integer, Long> endTick, Map<Integer, Integer> to
             },
             buf -> {
                 int eCnt = ByteBufCodecs.VAR_INT.decode(buf);
-                if (eCnt < 0 || eCnt > 64) throw new io.netty.handler.codec.DecoderException("Too many endTick entries: " + eCnt);
+                if (eCnt < 0 || eCnt > MAX_ENTRIES) throw new io.netty.handler.codec.DecoderException("Too many endTick entries: " + eCnt);
                 Map<Integer, Long> endMap = new HashMap<>(eCnt);
                 for (int i = 0; i < eCnt; i++) {
                     int slot = ByteBufCodecs.VAR_INT.decode(buf);
-                    long tick = buf.readLong();
-                    endMap.put(slot, tick);
+                    endMap.put(slot, buf.readLong());
                 }
                 int tCnt = ByteBufCodecs.VAR_INT.decode(buf);
-                if (tCnt < 0 || tCnt > 64) throw new io.netty.handler.codec.DecoderException("Too many totalTick entries: " + tCnt);
+                if (tCnt < 0 || tCnt > MAX_ENTRIES) throw new io.netty.handler.codec.DecoderException("Too many totalTick entries: " + tCnt);
                 Map<Integer, Integer> totalMap = new HashMap<>(tCnt);
                 for (int i = 0; i < tCnt; i++) {
                     int slot = ByteBufCodecs.VAR_INT.decode(buf);
                     int total = ByteBufCodecs.VAR_INT.decode(buf);
+                    if (total < 1) throw new io.netty.handler.codec.DecoderException("totalTick must be at least 1: " + total);
                     totalMap.put(slot, total);
                 }
                 return new SlotCooldowns(Map.copyOf(endMap), Map.copyOf(totalMap));

@@ -37,6 +37,11 @@ public class LootShipEntity extends Entity {
             SynchedEntityData.defineId(LootShipEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Boolean> DROPPING =
             SynchedEntityData.defineId(LootShipEntity.class, EntityDataSerializers.BOOLEAN);
+    /** Valid dungeon loot tiers; malformed NBT is clamped into this range. */
+    private static final int MIN_SHIP_TIER = 0;
+    private static final int MAX_SHIP_TIER = 3;
+    /** Defensive cap for persisted opener IDs (scripted tracking only). */
+    private static final int MAX_OPENED_BY = 64;
 
     private final SimpleContainer inventory = new SimpleContainer(27);
     private boolean lootGenerated = false;
@@ -58,7 +63,7 @@ public class LootShipEntity extends Entity {
     public static LootShipEntity create(ServerLevel level, double x, double y, double z, int tier) {
         LootShipEntity ship = new LootShipEntity(ModEntityTypes.LOOT_SHIP.get(), level);
         ship.setPos(x, y, z);
-        ship.entityData.set(SHIP_TIER, tier);
+        ship.entityData.set(SHIP_TIER, clampTier(tier));
         return ship;
     }
 
@@ -105,6 +110,7 @@ public class LootShipEntity extends Entity {
         despawnTimer++;
         if (despawnTimer > DungeonConstants.LOOT_SHIP_DESPAWN_TICKS) {
             discard();
+            return;
         }
 
         // Phase 27：策划 §10.7 - Boss 战利品箱船的红色烟雾信标
@@ -125,13 +131,19 @@ public class LootShipEntity extends Entity {
                 generateLoot(serverPlayer);
                 lootGenerated = true;
             }
-            openedBy.add(serverPlayer.getUUID());
+            if (openedBy.size() < MAX_OPENED_BY || openedBy.contains(serverPlayer.getUUID())) {
+                openedBy.add(serverPlayer.getUUID());
+            }
             serverPlayer.openMenu(new SimpleMenuProvider(
                     (id, inv, p) -> ChestMenu.threeRows(id, inv, inventory),
                     Component.translatable("entity.piranport.loot_ship")
             ));
         }
         return InteractionResult.CONSUME;
+    }
+
+    private static int clampTier(int tier) {
+        return Math.max(MIN_SHIP_TIER, Math.min(MAX_SHIP_TIER, tier));
     }
 
     private void generateLoot(ServerPlayer player) {
@@ -162,6 +174,10 @@ public class LootShipEntity extends Entity {
 
     public int getShipTier() {
         return entityData.get(SHIP_TIER);
+    }
+
+    public void setShipTier(int tier) {
+        entityData.set(SHIP_TIER, clampTier(tier));
     }
 
     /** Start in dropping (airdrop) mode — falls to sea level. */
@@ -214,8 +230,9 @@ public class LootShipEntity extends Entity {
         tag.putInt("ShipTier", entityData.get(SHIP_TIER));
         tag.putBoolean("LootGenerated", lootGenerated);
         tag.putBoolean("Filled", filled);
-        tag.putInt("DespawnTimer", despawnTimer);
+        tag.putInt("DespawnTimer", Math.max(0, despawnTimer));
         tag.putBoolean("Dropping", entityData.get(DROPPING));
+        tag.putBoolean("BossLootMarker", bossLootMarker);
         // Persist openedBy UUIDs
         if (!openedBy.isEmpty()) {
             net.minecraft.nbt.ListTag openedList = new net.minecraft.nbt.ListTag();
@@ -239,17 +256,18 @@ public class LootShipEntity extends Entity {
 
     @Override
     protected void readAdditionalSaveData(CompoundTag tag) {
-        entityData.set(SHIP_TIER, tag.getInt("ShipTier"));
+        entityData.set(SHIP_TIER, clampTier(tag.getInt("ShipTier")));
         lootGenerated = tag.getBoolean("LootGenerated");
         filled = tag.getBoolean("Filled");
-        despawnTimer = tag.getInt("DespawnTimer");
+        despawnTimer = Math.max(0, tag.getInt("DespawnTimer"));
+        bossLootMarker = tag.getBoolean("BossLootMarker");
         if (tag.getBoolean("Dropping")) {
             entityData.set(DROPPING, true);
         }
-        // Restore openedBy UUIDs
+        // Restore openedBy UUIDs with a bounded list.
         if (tag.contains("OpenedBy")) {
             net.minecraft.nbt.ListTag openedList = tag.getList("OpenedBy", net.minecraft.nbt.Tag.TAG_COMPOUND);
-            for (int i = 0; i < openedList.size(); i++) {
+            for (int i = 0; i < openedList.size() && openedBy.size() < MAX_OPENED_BY; i++) {
                 CompoundTag entry = openedList.getCompound(i);
                 if (entry.hasUUID("UUID")) {
                     openedBy.add(entry.getUUID("UUID"));

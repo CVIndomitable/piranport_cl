@@ -25,12 +25,13 @@ import net.minecraft.world.phys.AABB;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class TaskMaidRigging implements IRangedAttackTask {
     public static final ResourceLocation UID = ResourceLocation.fromNamespaceAndPath("piranport", "maid_rigging");
     private static final float SEARCH_RADIUS = 32f;
     private static final TargetingConditions SIGHT_CONDITIONS = TargetingConditions.forCombat().range(SEARCH_RADIUS);
-    private static ItemStack icon;
+    private static final AtomicReference<ItemStack> ICON = new AtomicReference<>(ItemStack.EMPTY);
 
     @Override
     public ResourceLocation getUid() {
@@ -49,11 +50,16 @@ public class TaskMaidRigging implements IRangedAttackTask {
 
     @Override
     public ItemStack getIcon() {
-        if (icon == null || icon.isEmpty()) {
-            Item item = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("piranport", "medium_cannon"));
-            icon = (item != null) ? new ItemStack(item) : ItemStack.EMPTY;
-        }
-        return icon;
+        // Registry initialization and maid task registration can occur on different threads,
+        // so publish the resolved stack atomically instead of caching it in a plain field.
+        ICON.updateAndGet(current -> {
+            if (!current.isEmpty()) return current;
+
+            Item item = BuiltInRegistries.ITEM.get(
+                    ResourceLocation.fromNamespaceAndPath("piranport", "medium_cannon"));
+            return item != null ? new ItemStack(item) : ItemStack.EMPTY;
+        });
+        return ICON.get();
     }
 
     @Override

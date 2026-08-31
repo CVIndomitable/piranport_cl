@@ -6,6 +6,7 @@ import com.piranport.dungeon.key.DungeonKeyItem;
 import com.piranport.dungeon.lobby.DungeonLobbyManager;
 import com.piranport.registry.ModDataComponents;
 import io.netty.buffer.ByteBuf;
+import io.netty.handler.codec.DecoderException;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.network.codec.ByteBufCodecs;
@@ -22,6 +23,8 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 public record SelectStagePayload(BlockPos lecternPos, int keySlot, String stageId)
         implements CustomPacketPayload {
 
+    private static final int MAX_ID_LENGTH = 128;
+
     public static final Type<SelectStagePayload> TYPE =
             new Type<>(ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "select_stage"));
 
@@ -34,7 +37,7 @@ public record SelectStagePayload(BlockPos lecternPos, int keySlot, String stageI
             buf -> new SelectStagePayload(
                     BlockPos.of(buf.readLong()),
                     ByteBufCodecs.VAR_INT.decode(buf),
-                    ByteBufCodecs.STRING_UTF8.decode(buf))
+                    ByteBufCodecs.stringUtf8(MAX_ID_LENGTH).decode(buf))
     );
 
     @Override

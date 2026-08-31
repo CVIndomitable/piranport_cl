@@ -25,13 +25,15 @@ import java.nio.file.Path;
  */
 public record ImportConfigPayload(String cannonFilename, String projectileFilename) implements CustomPacketPayload {
 
+    private static final int MAX_FILENAME_LENGTH = 256;
+
     public static final Type<ImportConfigPayload> TYPE =
             new Type<>(ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "import_config"));
 
     public static final StreamCodec<ByteBuf, ImportConfigPayload> STREAM_CODEC = StreamCodec.composite(
-            ByteBufCodecs.STRING_UTF8,
+            ByteBufCodecs.stringUtf8(MAX_FILENAME_LENGTH),
             ImportConfigPayload::cannonFilename,
-            ByteBufCodecs.STRING_UTF8,
+            ByteBufCodecs.stringUtf8(MAX_FILENAME_LENGTH),
             ImportConfigPayload::projectileFilename,
             ImportConfigPayload::new
     );
@@ -52,7 +54,7 @@ public record ImportConfigPayload(String cannonFilename, String projectileFilena
         return !filename.contains("..")
             && !filename.contains("/")
             && !filename.contains("\\")
-            && filename.length() < 256;
+            && filename.length() <= MAX_FILENAME_LENGTH;
     }
 
     /**

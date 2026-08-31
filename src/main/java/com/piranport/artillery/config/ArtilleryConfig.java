@@ -13,8 +13,10 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.AddReloadListenerEvent;
 
 import java.io.BufferedReader;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /** 加载 data/piranport/artillery/cannons/ 下的火炮 JSON 配置 */
 @EventBusSubscriber(modid = PiranPort.MOD_ID)
@@ -57,8 +59,8 @@ public class ArtilleryConfig extends SimplePreparableReloadListener<Map<String, 
     /**
      * 获取所有已加载的火炮名称（用于CSV导出等）
      */
-    public static java.util.Set<String> getAllCannonNames() {
-        return CANNON_DATA.keySet();
+    public static Set<String> getAllCannonNames() {
+        return Collections.unmodifiableSet(CANNON_DATA.keySet());
     }
 
     @SubscribeEvent

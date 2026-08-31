@@ -21,6 +21,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.tags.DamageTypeTags;
@@ -587,12 +588,11 @@ public class TorpedoEntity extends ThrowableItemProjectile {
         BlockState hitState = level().getBlockState(result.getBlockPos());
         if (isPassThroughForTorpedo(hitState)) return;
 
+        // 纯水不是实体碰撞面；waterlogged 实心方块则仍按障碍物处理并爆炸
+        if (isPureWater(hitState)) return;
+
         super.onHitBlock(result);
         if (!level().isClientSide() && !exploded) {
-            if (hitState.getFluidState().is(Fluids.WATER)) {
-                discard();
-                return;
-            }
             if (magnetic) {
                 magneticDetonate();
             } else {
@@ -604,6 +604,13 @@ public class TorpedoEntity extends ThrowableItemProjectile {
 
     private static boolean isPassThroughForTorpedo(BlockState state) {
         return state.is(Blocks.KELP) || state.is(Blocks.KELP_PLANT);
+    }
+
+    private static boolean isPureWater(BlockState state) {
+        return state.getFluidState().is(Fluids.WATER)
+                && state.getFluidState().isSource()
+                && (!state.hasProperty(BlockStateProperties.WATERLOGGED)
+                        || !state.getValue(BlockStateProperties.WATERLOGGED));
     }
 
     @Override

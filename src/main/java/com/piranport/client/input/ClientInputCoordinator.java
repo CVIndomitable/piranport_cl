@@ -5,13 +5,14 @@ import com.piranport.aviation.ClientReconData;
 import com.piranport.client.AmmoSelectOverlay;
 import com.piranport.client.CameraShakeHandler;
 import com.piranport.client.CannonImpactEffects;
-import com.piranport.client.ClientTorpedoGuidance;
 import com.piranport.client.ClientScopeHandler;
+import com.piranport.client.ClientTorpedoGuidance;
 import com.piranport.client.EntityUuidCache;
 import com.piranport.client.ModKeyMappings;
 import com.piranport.combat.TransformationManager;
 import com.piranport.item.ShipCoreItem;
 import com.piranport.item.ShipType;
+import com.piranport.network.ScopeEnterPayload;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
@@ -20,6 +21,8 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
+import net.neoforged.neoforge.client.event.ScreenEvent;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.HashSet;
 import java.util.List;
@@ -45,15 +48,33 @@ public class ClientInputCoordinator {
 
     private ClientInputCoordinator() {}
 
+    /**
+     * 打开任何普通 GUI/Screen 前退出瞄准镜，并同步服务端状态。
+     * 同时重置按键边沿，避免关闭界面后残留的右键状态立刻重新进入。
+     */
+    @SubscribeEvent
+    public static void onScreenOpening(ScreenEvent.Opening event) {
+        if (event.getNewScreen() == null) return;
+        if (!ClientScopeHandler.isScoping()) return;
+
+        Minecraft mc = Minecraft.getInstance();
+        ClientScopeHandler.exitScope();
+        if (mc.getConnection() != null) {
+            PacketDistributor.sendToServer(new ScopeEnterPayload(false));
+        }
+        ScopeInputHandler.reset();
+    }
+
     /** 重置所有客户端静态状态（断开连接时调用）。 */
     public static void resetClientState() {
         if (AmmoSelectOverlay.isOpen()) {
             AmmoSelectOverlay.close();
         }
+        ClientReconData.resetClientState();
+        ClientTorpedoGuidance.resetClientState();
         EntityHighlightHandler.reset();
         com.piranport.aviation.ClientAswSonarData.resetClientState();
-        ClientTorpedoGuidance.resetClientState();
-        com.piranport.client.ClientScopeHandler.clear();
+        ClientScopeHandler.clear();
         CannonImpactEffects.clear();
         DebugInputHandler.reset();
         ScopeInputHandler.reset();

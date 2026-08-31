@@ -26,12 +26,14 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
  * C2S 包：玩家松开 Tab 键时发送选中的弹种ID，设置手持火炮的偏好弹种。
  */
 public record SwitchAmmoPayload(String ammoItemId) implements CustomPacketPayload {
+    private static final int MAX_AMMO_ITEM_ID_LENGTH = 256;
+
     public static final Type<SwitchAmmoPayload> TYPE =
             new Type<>(ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "switch_ammo"));
 
     public static final StreamCodec<ByteBuf, SwitchAmmoPayload> STREAM_CODEC =
             StreamCodec.composite(
-                    ByteBufCodecs.STRING_UTF8, SwitchAmmoPayload::ammoItemId,
+                    ByteBufCodecs.stringUtf8(MAX_AMMO_ITEM_ID_LENGTH), SwitchAmmoPayload::ammoItemId,
                     SwitchAmmoPayload::new
             );
 

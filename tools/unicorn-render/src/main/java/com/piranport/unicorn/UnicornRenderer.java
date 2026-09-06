@@ -1,5 +1,9 @@
 package com.piranport.unicorn;
 
+import java.awt.Color;
+import java.awt.GradientPaint;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.util.HashMap;
 import java.util.Map;
@@ -20,8 +24,8 @@ public class UnicornRenderer {
     public final int width, height;
     private final BufferedImage img;
     public final float fovDeg = 30f;
-    public final float camRotX = (float) Math.toRadians(15);
-    public final float camRotY = (float) Math.toRadians(-25);
+    public float camRotX = (float) Math.toRadians(8);
+    public float camRotY = (float) Math.toRadians(-12);
 
     public float focusY;       // 自适应
     public float scale;        // 自适应: 每 MC 像素 -> 屏幕像素 / 透视系数
@@ -38,6 +42,7 @@ public class UnicornRenderer {
 
     public void render(UnicornModel model) {
         model.resetAll();
+        clearCanvas();
 
         java.util.List<ModelPart.Quad> quads = new java.util.ArrayList<>();
         MatrixStack m = new MatrixStack();
@@ -65,15 +70,16 @@ public class UnicornRenderer {
         float modelW = maxX - minX;
         float modelD = maxZ - minZ;
 
-        // 相机距离: 让模型在屏幕占 ~75%
+        // 相机距离: 让模型在屏幕占 ~60%
         // 透视公式: screen_normalized_y = (y - focusY) / z / tanFov
-        // 半高占 0.4 -> maxHalf / z / tanFov = 0.4 -> z = maxHalf / tanFov / 0.4
+        // 半高占 0.55 -> maxHalf / z / tanFov = 0.55 -> z = maxHalf / tanFov / 0.55
         float maxHalf = Math.max(modelW, Math.max(modelH, modelD)) * 0.5f;
-        cameraDist = maxHalf / (float) Math.tan(Math.toRadians(fovDeg) * 0.5f) / 0.4f;
+        cameraDist = maxHalf / (float) Math.tan(Math.toRadians(fovDeg) * 0.5f) / 0.55f;
         // 防近裁: 至少留 maxHalf+5 距离
         cameraDist = Math.max(cameraDist, maxHalf + 5f);
         // scale = 1 (用 world 单位的原大小)
         scale = 1f;
+        drawGroundShadow(minY, modelW, modelD);
 
         // 排序
         quads.sort((a, b) -> Float.compare(b.centerZ, a.centerZ));
@@ -134,8 +140,7 @@ public class UnicornRenderer {
 
                 int tx = clampI((int) (uv[0] * (tex.getWidth() - 1)), 0, tex.getWidth() - 1);
                 int ty = clampI((int) (uv[1] * (tex.getHeight() - 1)), 0, tex.getHeight() - 1);
-                int rgb = tex.getRGB(tx, ty);
-                // alpha = 255 直接写
+                int rgb = shadeRgb(tex.getRGB(tx, ty), q.shade);
                 if (((rgb >>> 24) & 0xFF) > 0) {
                     px[py * width + pix] = rgb;
                 }
@@ -214,5 +219,39 @@ public class UnicornRenderer {
 
     public BufferedImage getImage() {
         return img;
+    }
+
+    private void clearCanvas() {
+        Graphics2D graphics = img.createGraphics();
+        graphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_SPEED);
+        graphics.setPaint(new GradientPaint(0, 0, new Color(246, 249, 252), 0, height,
+                new Color(218, 228, 239)));
+        graphics.fillRect(0, 0, width, height);
+        graphics.dispose();
+    }
+
+    private void drawGroundShadow(float minY, float modelW, float modelD) {
+        float[] center = project(new Vec3(0.0F, minY + 0.12F, 0.0F));
+        float[] xEdge = project(new Vec3(modelW * 0.48F, minY + 0.12F, 0.0F));
+        float[] zEdge = project(new Vec3(0.0F, minY + 0.12F, modelD * 0.48F));
+        float shadowWidth = Math.max(80.0F, Math.abs(xEdge[0] - center[0]) * 2.2F);
+        float shadowHeight = Math.max(22.0F, Math.abs(zEdge[1] - center[1]) * 1.4F);
+
+        Graphics2D graphics = img.createGraphics();
+        graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        graphics.setColor(new Color(47, 63, 84, 68));
+        graphics.fillOval(Math.round(center[0] - shadowWidth * 0.5F),
+                Math.round(center[1] - shadowHeight * 0.25F),
+                Math.round(shadowWidth), Math.round(shadowHeight));
+        graphics.dispose();
+    }
+
+    private static int shadeRgb(int argb, float shade) {
+        int alpha = (argb >>> 24) & 0xFF;
+        float factor = 0.78F + shade * 0.22F;
+        int red = Math.min(255, Math.round(((argb >>> 16) & 0xFF) * factor));
+        int green = Math.min(255, Math.round(((argb >>> 8) & 0xFF) * factor));
+        int blue = Math.min(255, Math.round((argb & 0xFF) * factor));
+        return (alpha << 24) | (red << 16) | (green << 8) | blue;
     }
 }

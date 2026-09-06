@@ -40,3 +40,10 @@ Minecraft mod based on Warship Girls R (战舰少女R).
     versionRange="[1.5.2,)"
     ordering="AFTER"
     side="BOTH"
+
+[[dependencies.${mod_id}]]
+    modId="ponderer"
+    type="optional"
+    versionRange="[1.10.6,)"
+    ordering="AFTER"
+    side="CLIENT"

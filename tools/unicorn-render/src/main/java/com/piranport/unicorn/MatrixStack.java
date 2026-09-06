@@ -41,8 +41,8 @@ public class MatrixStack {
     public void rotateZ(float a) { apply(makeRotateZ(a)); }
 
     /**
-     * 不修改 top: 直接把 stack[top] = n * stack[top]
-     * (累积变换, 后乘 = 局部坐标系下变换叠加)
+     * 不修改 top: 把当前矩阵右乘局部变换。
+     * 这样子节点的旋转只围绕自己的 pivot 生效，不会旋转父级平移。
      */
     private void apply(float[] n) {
         float[] m = stack[top];
@@ -51,7 +51,7 @@ public class MatrixStack {
             for (int row = 0; row < 4; row++) {
                 float sum = 0;
                 for (int k = 0; k < 4; k++) {
-                    sum += n[k * 4 + row] * m[col * 4 + k];
+                    sum += m[k * 4 + row] * n[col * 4 + k];
                 }
                 r[col * 4 + row] = sum;
             }

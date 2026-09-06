@@ -99,6 +99,7 @@ dependencies {
     testImplementation "org.junit.jupiter:junit-jupiter:5.11.0"
     testImplementation "com.tngtech.archunit:archunit-junit5:1.3.0"
     testImplementation "org.slf4j:slf4j-api:2.0.12"
+    testImplementation "maven.modrinth:the-ponderer:YzFWxoks"
     testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 }
 
@@ -115,8 +116,36 @@ configurations.testRuntimeClasspath {
     }
 }
 
+var pondererPack = tasks.register('pondererPack', Zip) {
+    from('ponderer') {
+        include 'pack.json', 'pack.mcmeta', 'data/**'
+    }
+    destinationDirectory = layout.projectDirectory.dir('ponderer')
+    archiveFileName = 'PiranPort-Ponderer-1.0.zip'
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
+}
+
+var installPondererPack = tasks.register('installPondererPack', Copy) {
+    from pondererPack
+    into layout.projectDirectory.dir('run/resourcepacks')
+    rename { '[Ponderer] Piran Port.zip' }
+}
+
+tasks.named('runClient').configure {
+    dependsOn installPondererPack
+}
+
+tasks.named('assemble').configure {
+    dependsOn pondererPack
+}
+
 tasks.named('test', Test).configure {
     useJUnitPlatform()
+    dependsOn pondererPack
+    inputs.files(pondererPack).withPropertyName('pondererTutorialPack')
+    systemProperty 'piranport.pondererPack', pondererPack.get().archiveFile.get().asFile.absolutePath
+    systemProperty 'piranport.pondererSource', layout.projectDirectory.dir('ponderer').asFile.absolutePath
 }
 
 var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {

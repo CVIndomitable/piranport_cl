@@ -1,0 +1,289 @@
+{
+  "id": "piranport:processing",
+  "items": [
+    "piranport:stone_mill",
+    "piranport:cooking_pot",
+    "piranport:cutting_board"
+  ],
+  "title": {
+    "zh_cn": "皮兰港加工设备",
+    "en_us": "Piran Port Processing"
+  },
+  "tags": ["piranport", "processing"],
+  "editable": false,
+  "scenes": [
+    {
+      "id": "stone_mill",
+      "title": {
+        "zh_cn": "石磨：输入、加工与输出",
+        "en_us": "Stone Mill: Input, Processing and Output"
+      },
+      "steps": [
+        {
+          "type": "show_structure",
+          "structure": "ponderer:basic"
+        },
+        {
+          "type": "idle",
+          "duration": 20
+        },
+        {
+          "type": "set_block",
+          "block": "piranport:stone_mill",
+          "blockPos": [2, 1, 2],
+          "attachKeyFrame": true
+        },
+        {
+          "type": "text",
+          "duration": 80,
+          "text": {
+            "zh_cn": "右键石磨打开界面，放入配方材料。小麦可以磨成面粉。",
+            "en_us": "Right-click the Stone Mill to open its inventory and insert recipe ingredients. Wheat can be ground into flour."
+          },
+          "point": [2.5, 2.2, 2.5],
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 90
+        },
+        {
+          "type": "set_block",
+          "block": "minecraft:hopper",
+          "blockPos": [2, 2, 2],
+          "blockProperties": {"facing": "down"}
+        },
+        {
+          "type": "text",
+          "duration": 80,
+          "text": {
+            "zh_cn": "自动化供料使用上方或侧面的漏斗。石磨不会直接吸收扔在上面的掉落物。",
+            "en_us": "Use hoppers above or beside the mill for automatic input. The mill does not collect loose items dropped onto it."
+          },
+          "point": [2.5, 1.4, 2.5],
+          "color": "input",
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 90
+        },
+        {
+          "type": "set_block",
+          "block": "minecraft:hopper",
+          "blockPos": [2, 0, 2],
+          "blockProperties": {"facing": "down"}
+        },
+        {
+          "type": "indicate_success",
+          "blockPos": [2, 0, 2],
+          "attachKeyFrame": true
+        },
+        {
+          "type": "text",
+          "duration": 80,
+          "text": {
+            "zh_cn": "自动化提示：用漏斗或其他物流设备从上方/侧面供料，从底部接收产物。",
+            "en_us": "Automation tip: feed from the top or sides and collect products from the bottom with hoppers or other logistics devices."
+          },
+          "point": [2.5, 0.8, 2.5],
+          "color": "green",
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 90
+        }
+      ]
+    },
+    {
+      "id": "cooking_pot",
+      "title": {
+        "zh_cn": "厨锅：热源与烹饪",
+        "en_us": "Cooking Pot: Heat and Cooking"
+      },
+      "steps": [
+        {
+          "type": "show_structure",
+          "structure": "ponderer:basic"
+        },
+        {
+          "type": "idle",
+          "duration": 20
+        },
+        {
+          "type": "set_block",
+          "block": "minecraft:campfire",
+          "blockPos": [2, 1, 2],
+          "attachKeyFrame": true
+        },
+        {
+          "type": "set_block",
+          "block": "piranport:cooking_pot",
+          "blockPos": [2, 2, 2],
+          "attachKeyFrame": true
+        },
+        {
+          "type": "text",
+          "duration": 80,
+          "text": {
+            "zh_cn": "厨锅必须放在有效热源上方，例如灶或已点燃的营火。",
+            "en_us": "The Cooking Pot needs a valid heat source underneath, such as a stove or a lit campfire."
+          },
+          "point": [2.5, 2.5, 2.5],
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 90
+        },
+        {
+          "type": "create_item_entity",
+          "pos": [2.5, 3.5, 2.5],
+          "motion": [0.0, -0.03, 0.0],
+          "count": 1,
+          "item": "minecraft:carrot",
+          "attachKeyFrame": true
+        },
+        {
+          "type": "text",
+          "duration": 80,
+          "text": {
+            "zh_cn": "按配方从上方投入食材，或用上方、侧面的漏斗供料。必须集齐配方材料才能烹饪。",
+            "en_us": "Drop recipe ingredients in from above, or feed them through top or side hoppers. Cooking requires the full recipe."
+          },
+          "point": [2.5, 3.2, 2.5],
+          "color": "input",
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 90
+        },
+        {
+          "type": "set_block",
+          "block": "minecraft:barrel",
+          "blockPos": [3, 2, 2]
+        },
+        {
+          "type": "indicate_success",
+          "blockPos": [2, 2, 2],
+          "attachKeyFrame": true
+        },
+        {
+          "type": "text",
+          "duration": 80,
+          "text": {
+            "zh_cn": "烹饪完成后，产物可以从侧面容器输出。",
+            "en_us": "When cooking is complete, products can be ejected into containers beside the pot."
+          },
+          "point": [3.5, 2.5, 2.5],
+          "color": "green",
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 90
+        }
+      ]
+    },
+    {
+      "id": "cutting_board",
+      "title": {
+        "zh_cn": "砧板：放置食材与空手切割",
+        "en_us": "Cutting Board: Placing Ingredients and Empty-Hand Cutting"
+      },
+      "steps": [
+        {
+          "type": "show_structure",
+          "structure": "ponderer:basic"
+        },
+        {
+          "type": "idle",
+          "duration": 20
+        },
+        {
+          "type": "set_block",
+          "block": "piranport:cutting_board",
+          "blockPos": [2, 1, 2],
+          "attachKeyFrame": true
+        },
+        {
+          "type": "text",
+          "duration": 80,
+          "text": {
+            "zh_cn": "手持有切割配方的食材右键砧板，放入一个食材。这里使用熟猪排。",
+            "en_us": "Hold an ingredient with a cutting recipe and right-click the board to place one item. This example uses cooked porkchop."
+          },
+          "point": [2.5, 1.6, 2.5],
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "show_controls",
+          "duration": 80,
+          "point": [2.5, 1.8, 2.5],
+          "direction": "down",
+          "action": "right",
+          "item": "minecraft:cooked_porkchop",
+          "attachKeyFrame": false
+        },
+        {
+          "type": "idle",
+          "duration": 90
+        },
+        {
+          "type": "show_controls",
+          "duration": 80,
+          "point": [2.5, 1.8, 2.5],
+          "direction": "down",
+          "action": "right",
+          "attachKeyFrame": true
+        },
+        {
+          "type": "text",
+          "duration": 80,
+          "text": {
+            "zh_cn": "切换到空手，右键进行切割，不需要刀或其他工具。熟猪排需要切割四次。",
+            "en_us": "Switch to an empty hand and right-click to cut. No knife or other tool is required. Cooked porkchop needs four cuts."
+          },
+          "point": [2.5, 1.8, 2.5],
+          "color": "input",
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 90
+        },
+        {
+          "type": "indicate_success",
+          "blockPos": [2, 1, 2],
+          "attachKeyFrame": true
+        },
+        {
+          "type": "text",
+          "duration": 80,
+          "text": {
+            "zh_cn": "完成后掉落四个培根。潜行并空手右键可以取回未完成的食材；其他配方请查看 JEI。",
+            "en_us": "Four bacon items drop when finished. Sneak and right-click with an empty hand to retrieve unfinished ingredients. Check JEI for other recipes."
+          },
+          "point": [2.5, 1.3, 2.5],
+          "color": "green",
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 90
+        }
+      ]
+    }
+  ]
+}

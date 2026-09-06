@@ -1,0 +1,186 @@
+{
+  "id": "piranport:ammo_workbench",
+  "items": [
+    "piranport:ammo_workbench"
+  ],
+  "title": {
+    "zh_cn": "皮兰港：弹药工作台",
+    "en_us": "Piran Port: Ammo Workbench"
+  },
+  "tags": ["piranport", "ammo", "crafting"],
+  "editable": false,
+  "scenes": [
+    {
+      "id": "ammo_categories",
+      "title": {
+        "zh_cn": "弹药合成：五大分类",
+        "en_us": "Ammo Synthesis: Five Categories"
+      },
+      "steps": [
+        {
+          "type": "show_structure",
+          "structure": "ponderer:basic"
+        },
+        {
+          "type": "idle",
+          "duration": 20
+        },
+        {
+          "type": "set_block",
+          "block": "piranport:ammo_workbench",
+          "blockPos": [2, 1, 2],
+          "attachKeyFrame": true
+        },
+        {
+          "type": "text",
+          "duration": 80,
+          "text": {
+            "zh_cn": "右键弹药工作台打开合成界面。所有弹药统一在这里生产。",
+            "en_us": "Right-click the Ammo Workbench to open the synthesis interface. All ammo is produced here."
+          },
+          "point": [2.5, 2.2, 2.5],
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 90
+        },
+        {
+          "type": "create_item_entity",
+          "pos": [2.5, 3.5, 2.5],
+          "motion": [0.0, -0.03, 0.0],
+          "count": 1,
+          "item": "minecraft:iron_ingot",
+          "attachKeyFrame": true
+        },
+        {
+          "type": "create_item_entity",
+          "pos": [1.5, 3.5, 2.5],
+          "motion": [0.0, -0.03, 0.0],
+          "count": 1,
+          "item": "minecraft:gunpowder",
+          "attachKeyFrame": false
+        },
+        {
+          "type": "text",
+          "duration": 80,
+          "text": {
+            "zh_cn": "界面顶部选择分类：炮弹、鱼雷、航弹、深弹、导弹。下方投入对应配方材料。",
+            "en_us": "Pick a category at the top: shells, torpedoes, bombs, depth charges, missiles. Slot the matching ingredients below."
+          },
+          "point": [2.5, 3.2, 2.5],
+          "color": "input",
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 90
+        },
+        {
+          "type": "create_item_entity",
+          "pos": [2.5, 3.5, 2.5],
+          "motion": [0.0, -0.03, 0.0],
+          "count": 4,
+          "item": "piranport:small_shell",
+          "attachKeyFrame": true
+        },
+        {
+          "type": "indicate_success",
+          "blockPos": [2, 1, 2],
+          "attachKeyFrame": true
+        },
+        {
+          "type": "text",
+          "duration": 80,
+          "text": {
+            "zh_cn": "合成完成后弹药进入输出槽。可以一次性合成多组，耗时按数量线性增加。",
+            "en_us": "Once finished the ammo lands in the output slot. You can craft many at once; time scales with quantity."
+          },
+          "point": [2.5, 1.5, 2.5],
+          "color": "green",
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 90
+        }
+      ]
+    },
+    {
+      "id": "ammo_automation",
+      "title": {
+        "zh_cn": "自动化：材料必须手动，产物可外接",
+        "en_us": "Automation: Manual Input, Extractable Output"
+      },
+      "steps": [
+        {
+          "type": "show_structure",
+          "structure": "ponderer:basic"
+        },
+        {
+          "type": "idle",
+          "duration": 20
+        },
+        {
+          "type": "set_block",
+          "block": "piranport:ammo_workbench",
+          "blockPos": [2, 1, 2],
+          "attachKeyFrame": true
+        },
+        {
+          "type": "set_block",
+          "block": "minecraft:hopper",
+          "blockPos": [2, 2, 2],
+          "blockProperties": {"facing": "down"},
+          "attachKeyFrame": false
+        },
+        {
+          "type": "text",
+          "duration": 80,
+          "text": {
+            "zh_cn": "工作台不直接接收漏斗送入的材料。漏斗上的物品不会被自动消耗，必须在 GUI 内手动点配方。",
+            "en_us": "The workbench does not pull ingredients from hoppers directly. Items dropped in by hoppers stay there until you pick the recipe manually."
+          },
+          "point": [2.5, 2.4, 2.5],
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 90
+        },
+        {
+          "type": "set_block",
+          "block": "minecraft:hopper",
+          "blockPos": [2, 0, 2],
+          "blockProperties": {"facing": "down"},
+          "attachKeyFrame": true
+        },
+        {
+          "type": "indicate_success",
+          "blockPos": [2, 0, 2],
+          "attachKeyFrame": true
+        },
+        {
+          "type": "text",
+          "duration": 80,
+          "text": {
+            "zh_cn": "产物（输出槽）可被下方漏斗取出，配合漏斗矿车或箱子形成自动化弹药供应线。",
+            "en_us": "The output slot feeds a hopper below — pair it with chests or minecarts for an automated ammo supply."
+          },
+          "point": [2.5, 0.8, 2.5],
+          "color": "green",
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 90
+        }
+      ]
+    }
+  ]
+}

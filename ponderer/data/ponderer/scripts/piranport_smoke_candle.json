@@ -1,0 +1,204 @@
+{
+  "id": "piranport:smoke_candle",
+  "items": [
+    "piranport:smoke_candle"
+  ],
+  "title": {
+    "zh_cn": "皮兰港：烟雾弹",
+    "en_us": "Piran Port: Smoke Candle"
+  },
+  "tags": ["piranport", "smoke", "utility"],
+  "editable": false,
+  "scenes": [
+    {
+      "id": "smoke_place",
+      "title": {
+        "zh_cn": "右键使用：3×3×2 烟雾区",
+        "en_us": "Right-Click Use: 3x3x2 Smoke Zone"
+      },
+      "steps": [
+        {
+          "type": "show_structure",
+          "structure": "ponderer:basic"
+        },
+        {
+          "type": "idle",
+          "duration": 20
+        },
+        {
+          "type": "show_controls",
+          "duration": 80,
+          "point": [2.5, 2.5, 2.5],
+          "direction": "up",
+          "action": "right",
+          "item": "piranport:smoke_candle",
+          "attachKeyFrame": true
+        },
+        {
+          "type": "text",
+          "duration": 80,
+          "text": {
+            "zh_cn": "手持烟雾弹右键：在玩家头部位置生成 3×3×2 的烟雾方块。消耗 1 点耐久，1 秒冷却。",
+            "en_us": "Right-click while holding a Smoke Candle to spawn a 3x3x2 smoke zone at head height. Costs 1 durability and a 1s cooldown."
+          },
+          "point": [2.5, 3.0, 2.5],
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 90
+        },
+        {
+          "type": "set_block",
+          "block": "piranport:smoke_screen",
+          "blockPos": [2, 2, 2],
+          "attachKeyFrame": true
+        },
+        {
+          "type": "set_block",
+          "block": "piranport:smoke_screen",
+          "blockPos": [1, 2, 2],
+          "attachKeyFrame": false
+        },
+        {
+          "type": "set_block",
+          "block": "piranport:smoke_screen",
+          "blockPos": [3, 2, 2],
+          "attachKeyFrame": false
+        },
+        {
+          "type": "set_block",
+          "block": "piranport:smoke_screen",
+          "blockPos": [2, 2, 1],
+          "attachKeyFrame": false
+        },
+        {
+          "type": "set_block",
+          "block": "piranport:smoke_screen",
+          "blockPos": [2, 2, 3],
+          "attachKeyFrame": false
+        },
+        {
+          "type": "set_block",
+          "block": "piranport:smoke_screen",
+          "blockPos": [1, 2, 1],
+          "attachKeyFrame": false
+        },
+        {
+          "type": "set_block",
+          "block": "piranport:smoke_screen",
+          "blockPos": [1, 2, 3],
+          "attachKeyFrame": false
+        },
+        {
+          "type": "set_block",
+          "block": "piranport:smoke_screen",
+          "blockPos": [3, 2, 1],
+          "attachKeyFrame": false
+        },
+        {
+          "type": "set_block",
+          "block": "piranport:smoke_screen",
+          "blockPos": [3, 2, 3],
+          "attachKeyFrame": false
+        },
+        {
+          "type": "set_block",
+          "block": "piranport:smoke_screen",
+          "blockPos": [2, 3, 2],
+          "attachKeyFrame": false
+        },
+        {
+          "type": "indicate_success",
+          "blockPos": [2, 2, 2],
+          "attachKeyFrame": true
+        },
+        {
+          "type": "text",
+          "duration": 80,
+          "text": {
+            "zh_cn": "烟雾只会覆盖空气、短草、蕨或原烟幕——不会破坏方块，也不会点燃火。",
+            "en_us": "Smoke only replaces air, short grass, ferns or existing smoke — it never breaks blocks or ignites fire."
+          },
+          "point": [2.5, 3.5, 2.5],
+          "color": "green",
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 90
+        }
+      ]
+    },
+    {
+      "id": "smoke_effect",
+      "title": {
+        "zh_cn": "隐身、衰减与自动消失",
+        "en_us": "Invisibility, Fade and Auto-Removal"
+      },
+      "steps": [
+        {
+          "type": "show_structure",
+          "structure": "ponderer:basic"
+        },
+        {
+          "type": "idle",
+          "duration": 20
+        },
+        {
+          "type": "set_block",
+          "block": "piranport:smoke_screen",
+          "blockPos": [2, 2, 2],
+          "attachKeyFrame": true
+        },
+        {
+          "type": "text",
+          "duration": 80,
+          "text": {
+            "zh_cn": "实体进入烟雾后获得 2 秒隐身效果，烟雾内外互不可见。适合紧急脱离战斗。",
+            "en_us": "Entities inside the smoke gain 2 seconds of Invisibility — players inside and outside cannot see each other. Great for emergency escapes."
+          },
+          "point": [2.5, 2.8, 2.5],
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 90
+        },
+        {
+          "type": "text",
+          "duration": 80,
+          "text": {
+            "zh_cn": "烟雾根据观察者距离自动调整透明度——远处烟雾近半透明，避免完全遮挡视野。",
+            "en_us": "Smoke auto-fades based on viewer distance — distant smoke is partially transparent so it never fully blanks your view."
+          },
+          "point": [2.5, 2.3, 2.5],
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 90
+        },
+        {
+          "type": "text",
+          "duration": 80,
+          "text": {
+            "zh_cn": "每团烟雾持续 120 秒后自动消失，且无法被破坏（创造模式除外）。",
+            "en_us": "Each cloud fades on its own after 120 seconds. It cannot be broken by hand (creative mode exempt)."
+          },
+          "point": [2.5, 1.8, 2.5],
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 90
+        }
+      ]
+    }
+  ]
+}

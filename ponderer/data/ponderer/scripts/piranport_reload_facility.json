@@ -1,0 +1,231 @@
+{
+  "id": "piranport:reload_facility",
+  "items": [
+    "piranport:reload_facility"
+  ],
+  "title": {
+    "zh_cn": "皮兰港：再装填设施",
+    "en_us": "Piran Port: Reload Facility"
+  },
+  "tags": ["piranport", "reload", "automation"],
+  "editable": false,
+  "scenes": [
+    {
+      "id": "reload_layout",
+      "title": {
+        "zh_cn": "方向感知的四槽布局",
+        "en_us": "Direction-Aware Four-Slot Layout"
+      },
+      "steps": [
+        {
+          "type": "show_structure",
+          "structure": "ponderer:basic"
+        },
+        {
+          "type": "idle",
+          "duration": 20
+        },
+        {
+          "type": "set_block",
+          "block": "piranport:reload_facility",
+          "blockPos": [2, 1, 2],
+          "attachKeyFrame": true
+        },
+        {
+          "type": "text",
+          "duration": 80,
+          "text": {
+            "zh_cn": "再装填设施有 4 个槽位，按接入方向分流——上方、侧面、下方各连不同的物流通道。",
+            "en_us": "The Reload Facility has four slots, routed by side: top, sides, and bottom each feed a different lane."
+          },
+          "point": [2.5, 2.2, 2.5],
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 90
+        },
+        {
+          "type": "set_block",
+          "block": "minecraft:hopper",
+          "blockPos": [2, 2, 2],
+          "blockProperties": {"facing": "down"},
+          "attachKeyFrame": true
+        },
+        {
+          "type": "text",
+          "duration": 80,
+          "text": {
+            "zh_cn": "上方漏斗 → 发射器槽（鱼雷发射器、可在此装填的反舰导弹发射器）。",
+            "en_us": "Hopper on top → launcher slot. Accepts torpedo launchers and reload-capable anti-ship missile launchers."
+          },
+          "point": [2.5, 2.6, 2.5],
+          "color": "input",
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 90
+        },
+        {
+          "type": "set_block",
+          "block": "minecraft:hopper",
+          "blockPos": [3, 1, 2],
+          "blockProperties": {"facing": "west"},
+          "attachKeyFrame": true
+        },
+        {
+          "type": "set_block",
+          "block": "minecraft:hopper",
+          "blockPos": [1, 1, 2],
+          "blockProperties": {"facing": "east"},
+          "attachKeyFrame": false
+        },
+        {
+          "type": "text",
+          "duration": 80,
+          "text": {
+            "zh_cn": "两个侧面漏斗 → 两个弹药槽（鱼雷或导弹）。两个槽的数量合并计算。",
+            "en_us": "Side hoppers → two ammo slots (torpedoes or missiles). Both slots' counts add up."
+          },
+          "point": [3.5, 1.5, 2.5],
+          "color": "input",
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 90
+        },
+        {
+          "type": "set_block",
+          "block": "minecraft:hopper",
+          "blockPos": [2, 0, 2],
+          "blockProperties": {"facing": "down"},
+          "attachKeyFrame": true
+        },
+        {
+          "type": "indicate_success",
+          "blockPos": [2, 0, 2],
+          "attachKeyFrame": true
+        },
+        {
+          "type": "text",
+          "duration": 80,
+          "text": {
+            "zh_cn": "下方漏斗 → 装填完毕的发射器出口。装填时间固定 10 秒（200 tick）。",
+            "en_us": "Hopper below → output slot. Reload takes a flat 10 seconds (200 ticks)."
+          },
+          "point": [2.5, 0.7, 2.5],
+          "color": "green",
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 90
+        }
+      ]
+    },
+    {
+      "id": "reload_rules",
+      "title": {
+        "zh_cn": "装填规则与红石比较器",
+        "en_us": "Reload Rules and Comparator Output"
+      },
+      "steps": [
+        {
+          "type": "show_structure",
+          "structure": "ponderer:basic"
+        },
+        {
+          "type": "idle",
+          "duration": 20
+        },
+        {
+          "type": "set_block",
+          "block": "piranport:reload_facility",
+          "blockPos": [2, 1, 2],
+          "attachKeyFrame": true
+        },
+        {
+          "type": "text",
+          "duration": 80,
+          "text": {
+            "zh_cn": "发射器必须完全空载或装满发射器允许的全部弹药。处于半装状态的发射器会被拒绝。",
+            "en_us": "A launcher must be empty or fully loaded — partially loaded launchers are rejected."
+          },
+          "point": [2.5, 2.2, 2.5],
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 90
+        },
+        {
+          "type": "create_item_entity",
+          "pos": [3.5, 2.5, 2.5],
+          "motion": [-0.02, 0.0, 0.0],
+          "count": 1,
+          "item": "piranport:torpedo_610",
+          "attachKeyFrame": true
+        },
+        {
+          "type": "create_item_entity",
+          "pos": [3.5, 2.5, 1.5],
+          "motion": [-0.02, 0.0, 0.0],
+          "count": 1,
+          "item": "piranport:torpedo_533",
+          "attachKeyFrame": false
+        },
+        {
+          "type": "text",
+          "duration": 80,
+          "text": {
+            "zh_cn": "鱼雷必须与发射器口径匹配——610 毫米发射器不接受 533 毫米鱼雷。",
+            "en_us": "Torpedoes must match the launcher's caliber — a 610mm launcher will not take 533mm fish."
+          },
+          "point": [3.5, 2.6, 2.0],
+          "color": "input",
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 90
+        },
+        {
+          "type": "set_block",
+          "block": "minecraft:comparator",
+          "blockPos": [2, 1, 3],
+          "blockProperties": {"facing": "north"},
+          "attachKeyFrame": true
+        },
+        {
+          "type": "indicate_success",
+          "blockPos": [2, 1, 3],
+          "attachKeyFrame": true
+        },
+        {
+          "type": "text",
+          "duration": 80,
+          "text": {
+            "zh_cn": "支持红石比较器：输出槽有物品时输出信号 15，空时为 0。可用于“装填完毕自动补给”逻辑。",
+            "en_us": "Outputs a redstone comparator signal — 15 when the output slot has a launcher, 0 when empty. Use this to chain restocks."
+          },
+          "point": [2.5, 1.8, 3.5],
+          "color": "green",
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 90
+        }
+      ]
+    }
+  ]
+}

@@ -10,10 +10,8 @@ import com.piranport.dungeon.instance.DungeonInstance;
 import com.piranport.dungeon.instance.DungeonInstanceManager;
 import com.piranport.dungeon.key.DungeonKeyItem;
 import com.piranport.dungeon.key.DungeonProgress;
-import com.piranport.dungeon.lobby.DungeonLobbyManager;
 import com.piranport.registry.ModDataComponents;
 import io.netty.buffer.ByteBuf;
-import io.netty.handler.codec.DecoderException;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.network.codec.ByteBufCodecs;
@@ -26,7 +24,10 @@ import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 /**
- * C2S: Flagship selects a node to enter in the node map.
+ * C2S: Player selects a node to enter in the node map.
+ *
+ * <p>整合版 §3.1 联机大厅已作废——任何持有同副本钥匙的玩家均可推进节点（无队长/无旗舰校验）。
+ * 多玩家时通过 instance.playerUuids 拉取所有参与玩家进入同一节点。</p>
  */
 public record SelectNodePayload(BlockPos lecternPos, int keySlot, String nodeId)
         implements CustomPacketPayload {
@@ -74,8 +75,6 @@ public record SelectNodePayload(BlockPos lecternPos, int keySlot, String nodeId)
             if (!(keyStack.getItem() instanceof DungeonKeyItem)) return;
 
             GlobalPos globalPos = GlobalPos.of(player.level().dimension(), lecternPos);
-            DungeonLobbyManager.Lobby lobby =
-                    DungeonLobbyManager.INSTANCE.getLobby(globalPos);
 
             String stageId = DungeonKeyItem.getStageId(keyStack);
             StageData stage = DungeonRegistry.INSTANCE.getStage(stageId);
@@ -96,14 +95,11 @@ public record SelectNodePayload(BlockPos lecternPos, int keySlot, String nodeId)
                 if (!stageId.equals(instance.getStageId())) return;
                 if (!matchesInstanceLectern(instance, globalPos)) return;
 
-                // Flagship validation: prefer the persistent flagship on the instance
-                // so that lobby teardown after entering a battle node does not allow any
-                // co-key holder to advance the dungeon.
-                java.util.UUID flagshipUuid = instance.getFlagshipUuid();
-                if (flagshipUuid != null) {
-                    if (!flagshipUuid.equals(player.getUUID())) return;
-                } else if (lobby == null || !lobby.isFlagship(player.getUUID())) {
-                    return;
+                // 整合版 §3.1：玩家在 instance.playerUuids 中即可推进节点（无 lobby/无旗舰权限检查）
+                if (!instance.getPlayerUuids().contains(player.getUUID())) {
+                    // 自动加入副本（多玩家同副本：起点固定 lecternPos）
+                    instance.addPlayer(player.getUUID());
+                    mgr.setDirty();
                 }
 
                 if (instance.getState() == DungeonInstance.State.SUSPENDED) {
@@ -115,10 +111,8 @@ public record SelectNodePayload(BlockPos lecternPos, int keySlot, String nodeId)
                 if (instance.getClearedNodes().contains(payload.nodeId())) return;
                 boolean reachable;
                 if (instance.getClearedNodes().isEmpty()) {
-                    // P1修复: 首次进入时验证 startNode 不为null且存在于节点列表中
                     String startNode = stage.startNode();
                     if (startNode == null || !stage.nodes().containsKey(startNode)) return;
-                    // If no nodes cleared yet, only start node is valid
                     reachable = payload.nodeId().equals(startNode);
                 } else {
                     reachable = false;
@@ -131,13 +125,9 @@ public record SelectNodePayload(BlockPos lecternPos, int keySlot, String nodeId)
                 }
                 if (!reachable) return;
             } else {
-                // No instance yet — flagship must come from the lobby
-                if (lobby == null || !lobby.isFlagship(player.getUUID())) return;
-
-                // First node selection: only start node allowed
+                // No instance yet — create new (整合版：任何玩家持钥匙即可创建)
                 if (!payload.nodeId().equals(stage.startNode())) return;
 
-                // Create new instance
                 instance = mgr.createInstance(stageId, player,
                         lecternPos,
                         player.level().dimension().location().toString());
@@ -147,7 +137,7 @@ public record SelectNodePayload(BlockPos lecternPos, int keySlot, String nodeId)
 
             // Handle node by type
             DungeonEventHandler.enterNode(serverLevel, instance, node, stage,
-                    player, keyStack, lobby);
+                    player, keyStack);
         });
     }
 

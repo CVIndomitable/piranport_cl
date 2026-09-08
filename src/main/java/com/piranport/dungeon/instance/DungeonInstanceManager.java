@@ -1,7 +1,6 @@
 package com.piranport.dungeon.instance;
 
 import com.piranport.PiranPort;
-import com.piranport.dungeon.DungeonConstants;
 import com.piranport.dungeon.data.DungeonRegistry;
 import com.piranport.dungeon.data.StageData;
 import com.piranport.dungeon.key.DungeonKeyItem;
@@ -18,7 +17,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.saveddata.SavedData;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -26,18 +24,17 @@ import java.util.UUID;
 /**
  * Manages all active dungeon instances. Persisted as world SavedData.
  *
- * <p><b>性能优化</b>: 使用反向索引 {@link #playerToInstances} 将 {@link #handlePlayerDisconnect(UUID)}
- * 从 O(n) 优化为 O(1) 查找。适用于大量副本实例的场景（1000+）。
+ * <p>整合版 §3.1 联机大厅与队长机制已作废（副本/10）：
+ * <ul>
+ *   <li>删除基于旗舰的反向索引，改为遍历 playerUuids 集合判断玩家是否在副本中</li>
+ *   <li>整合版 §3.4：副本永不自动删除，删除 SUSPENDED_CLEANUP_MILLIS 与 sweepLeaks 时间段</li>
+ * </ul>
+ * </p>
  */
 public class DungeonInstanceManager extends SavedData {
     private static final String DATA_NAME = "piranport_instances";
 
-    /** Suspended-instance auto-cleanup threshold (24 hours). */
-    public static final long SUSPENDED_CLEANUP_MILLIS = 24L * 60L * 60L * 1000L;
-
     private final Map<UUID, DungeonInstance> instances = new HashMap<>();
-    /** 反向索引：玩家UUID → 该玩家作为旗舰的副本ID集合 */
-    private final Map<UUID, Set<UUID>> playerToInstances = new HashMap<>();
     private int nextIndex = 0;
     private final java.util.Queue<Integer> freedIndices = new java.util.ArrayDeque<>();
     /** Indices freed this tick — moved to freedIndices on next sweepLeaks() call so
@@ -52,7 +49,7 @@ public class DungeonInstanceManager extends SavedData {
     /**
      * Creates a new dungeon instance for the given stage.
      */
-    public DungeonInstance createInstance(String stageId, ServerPlayer flagship,
+    public DungeonInstance createInstance(String stageId, ServerPlayer creator,
                                           BlockPos lecternPos, String lecternDimension) {
         StageData stage = DungeonRegistry.INSTANCE.getStage(stageId);
         if (stage == null) {
@@ -66,12 +63,9 @@ public class DungeonInstanceManager extends SavedData {
         instance.setState(DungeonInstance.State.ACTIVE);
         instance.setLecternPos(lecternPos);
         instance.setLecternDimension(lecternDimension);
-        instance.addPlayer(flagship.getUUID());
-        instance.setFlagshipUuid(flagship.getUUID());
+        instance.addPlayer(creator.getUUID());
 
         instances.put(instanceId, instance);
-        // 更新反向索引
-        playerToInstances.computeIfAbsent(flagship.getUUID(), k -> new HashSet<>()).add(instanceId);
         setDirty();
 
         PiranPort.LOGGER.info("Created dungeon instance {} for stage {} (index {})",
@@ -131,51 +125,21 @@ public class DungeonInstanceManager extends SavedData {
         if (inst != null) {
             pendingFreedIndices.add(inst.getInstanceIndex());
             inst.setState(DungeonInstance.State.CLEANUP);
-            // 清理反向索引
-            UUID flagship = inst.getFlagshipUuid();
-            if (flagship != null) {
-                Set<UUID> playerInstances = playerToInstances.get(flagship);
-                if (playerInstances != null) {
-                    playerInstances.remove(instanceId);
-                    if (playerInstances.isEmpty()) {
-                        playerToInstances.remove(flagship);
-                    }
-                }
-            }
             setDirty();
             PiranPort.LOGGER.info("Cleaned up dungeon instance {}", instanceId);
         }
     }
 
     /**
-     * Periodic sweep: promote pending freed indices to the freedIndices queue, and
-     * cleanup any SUSPENDED instances older than {@link #SUSPENDED_CLEANUP_MILLIS}
-     * to prevent the instances map from growing without bound.
+     * 整合版 §3.4：副本永远不会重置进度，也不会自动删除——唯一重开方式 = 钥匙取下+合成重置。
+     * 本方法仅将 pendingFreedIndices 提升为 freedIndices 供后续新实例复用区域索引；
+     * SUSPENDED 状态的实例永不被自动清理（区块卸载由原版 ChunkUnloadEvent 接管）。
      */
-    public void sweepLeaks(ServerLevel dungeonLevel) {
+    public void sweepLeaks() {
         if (!pendingFreedIndices.isEmpty()) {
             freedIndices.addAll(pendingFreedIndices);
             pendingFreedIndices.clear();
             setDirty();
-        }
-        long now = System.currentTimeMillis();
-        java.util.List<UUID> stale = new java.util.ArrayList<>();
-        for (DungeonInstance inst : instances.values()) {
-            if (inst.getState() == DungeonInstance.State.SUSPENDED) {
-                long ref = inst.getStartTimeMillis() > 0 ? inst.getStartTimeMillis() : now;
-                if (now - ref > SUSPENDED_CLEANUP_MILLIS) {
-                    stale.add(inst.getInstanceId());
-                }
-            }
-        }
-        for (UUID id : stale) {
-            DungeonInstance inst = instances.get(id);
-            if (inst != null && dungeonLevel != null) {
-                NodeBattleField.cleanupRegion(dungeonLevel, inst);
-            }
-            cleanupInstance(id);
-            com.piranport.dungeon.script.DungeonScriptManager.get(dungeonLevel.getServer()).remove(id);
-            PiranPort.LOGGER.info("Auto-cleaned stale suspended instance {}", id);
         }
     }
 
@@ -251,12 +215,7 @@ public class DungeonInstanceManager extends SavedData {
         for (int i = 0; i < list.size(); i++) {
             DungeonInstance inst = DungeonInstance.load(list.getCompound(i));
             mgr.instances.put(inst.getInstanceId(), inst);
-            // 重建反向索引
-            UUID flagship = inst.getFlagshipUuid();
-            if (flagship != null) {
-                mgr.playerToInstances.computeIfAbsent(flagship, k -> new HashSet<>())
-                        .add(inst.getInstanceId());
-            }
+            // 整合版 §3.1：不再基于旗舰重建反向索引
         }
         return mgr;
     }
@@ -269,21 +228,16 @@ public class DungeonInstanceManager extends SavedData {
     }
 
     /**
-     * 玩家断连时清理其所在副本状态：暂停该玩家作为旗舰的所有活跃副本，
-     * 防止跨服状态残留或内存泄漏。使用反向索引优化为 O(1) 查找。
+     * 玩家断连时遍历全部 ACTIVE 实例，暂停该玩家参与的所有副本。
+     * 整合版 §3.1：玩家不再绑定旗舰身份，任何参与副本的玩家离开都触发 SUSPENDED。
      */
     public void handlePlayerDisconnect(UUID playerUuid) {
-        Set<UUID> playerInstances = playerToInstances.get(playerUuid);
-        if (playerInstances == null || playerInstances.isEmpty()) return;
-
-        // 复制集合避免并发修改异常（suspendInstance 可能触发其他操作）
-        for (UUID instanceId : new HashSet<>(playerInstances)) {
-            DungeonInstance inst = instances.get(instanceId);
-            if (inst != null && inst.getState() == DungeonInstance.State.ACTIVE) {
-                suspendInstance(instanceId);
-                PiranPort.LOGGER.debug("Suspended instance {} due to player disconnect: {}",
-                        instanceId, playerUuid);
-            }
+        for (DungeonInstance inst : instances.values()) {
+            if (inst.getState() != DungeonInstance.State.ACTIVE) continue;
+            if (!inst.getPlayerUuids().contains(playerUuid)) continue;
+            suspendInstance(inst.getInstanceId());
+            PiranPort.LOGGER.debug("Suspended instance {} due to player disconnect: {}",
+                    inst.getInstanceId(), playerUuid);
         }
     }
 }

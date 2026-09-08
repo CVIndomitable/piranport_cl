@@ -8,8 +8,6 @@ import com.piranport.dungeon.key.DungeonProgress;
 import com.piranport.dungeon.menu.DungeonBookMenu;
 import com.piranport.dungeon.network.ClientDungeonData;
 import com.piranport.dungeon.network.SelectNodePayload;
-import com.piranport.dungeon.network.SelectStagePayload;
-import com.piranport.dungeon.network.ToggleReadyPayload;
 import com.piranport.registry.ModDataComponents;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -25,6 +23,14 @@ import java.util.Set;
 
 /**
  * Two-layer screen: stage selection → node map.
+ *
+ * <p>整合版 §3.1 联机大厅与队长机制已作废（副本/10）：
+ * <ul>
+ *   <li>删除大厅成员列表渲染（lobby 已不存在）</li>
+ *   <li>删除"切换准备"按钮（无准备机制）</li>
+ *   <li>Sortie 按钮直接发 SelectNodePayload 进入 stage 的 startNode（不再有 SelectStagePayload 中转）</li>
+ * </ul>
+ * 阶段 3（P1-B）会把这个 screen 替换为 DungeonContinueScreen（"继续/从头开始"对话框）。
  */
 public class DungeonBookScreen extends AbstractContainerScreen<DungeonBookMenu> {
     private enum ViewMode { STAGE_SELECT, NODE_MAP }
@@ -65,8 +71,7 @@ public class DungeonBookScreen extends AbstractContainerScreen<DungeonBookMenu> 
         int x = leftPos + 5;
         int y = topPos + 5;
 
-        // ===== 章节页签 (含翻页：策划 §10.5 缺翻页) =====
-        // Phase 27：简单翻页 — 当前每屏显示 3 个章节页签；超过则用 "<" ">" 按钮翻页
+        // 章节页签
         int chapterPageSize = 3;
         int chapterPages = (chapters.size() + chapterPageSize - 1) / chapterPageSize;
         int chapterPage = selectedChapterIndex / Math.max(1, chapterPageSize);
@@ -82,7 +87,6 @@ public class DungeonBookScreen extends AbstractContainerScreen<DungeonBookMenu> 
                     btn -> { selectedChapterIndex = ci; rebuildButtons(); }
             ).bounds(x + (i - chapterStart) * 90, y, 85, 16).build());
         }
-        // "<" ">" 翻页按钮
         if (chapterPages > 1) {
             int arrowY = y + 18;
             if (chapterPage > 0) {
@@ -110,16 +114,13 @@ public class DungeonBookScreen extends AbstractContainerScreen<DungeonBookMenu> 
         if (selectedChapterIndex < chapters.size()) {
             ChapterData chapter = chapters.get(selectedChapterIndex);
             int sy = y + 22;
-            // Phase 27：关卡列表滚动 (策划 §10.5/§12.2 缺滚动)
             List<String> stageIds = new ArrayList<>(chapter.stages());
             int visibleStages = 5;
             int stagePages = (stageIds.size() + visibleStages - 1) / visibleStages;
             int stagePage = 0;
-            // 用 selectedStageId 推算当前页（保持体验连贯）
             int curIdx = selectedStageId != null ? stageIds.indexOf(selectedStageId) : 0;
             if (curIdx >= 0) stagePage = curIdx / visibleStages;
             int stageStart = stagePage * visibleStages;
-            // 复制为 final 给 lambda 用
             final int sp = stagePage;
             final int sps = stagePages;
 
@@ -137,7 +138,6 @@ public class DungeonBookScreen extends AbstractContainerScreen<DungeonBookMenu> 
                 ).bounds(x + 10, sy, 200, 16).build());
                 sy += 20;
             }
-            // 滚动箭头
             if (sps > 1) {
                 int arrowX = x + 10;
                 if (sp > 0) {
@@ -171,13 +171,14 @@ public class DungeonBookScreen extends AbstractContainerScreen<DungeonBookMenu> 
             }
         }
 
-        // Sortie button
+        // 整合版 §3.1：Sortie 按钮直接发 SelectNodePayload 进入 stage 的 startNode（不再有 SelectStagePayload 中转）
         addRenderableWidget(Button.builder(
                 Component.translatable("gui.piranport.dungeon_book.sortie"),
                 btn -> {
-                    if (selectedStageId != null) {
-                        PacketDistributor.sendToServer(new SelectStagePayload(
-                                menu.getLecternPos(), menu.getKeySlot(), selectedStageId));
+                    if (selectedStageId != null && selectedStage != null
+                            && selectedStage.startNode() != null) {
+                        PacketDistributor.sendToServer(new SelectNodePayload(
+                                menu.getLecternPos(), menu.getKeySlot(), selectedStage.startNode()));
                         mode = ViewMode.NODE_MAP;
                         rebuildButtons();
                     }
@@ -190,24 +191,7 @@ public class DungeonBookScreen extends AbstractContainerScreen<DungeonBookMenu> 
                 btn -> onClose()
         ).bounds(leftPos + 140, topPos + imageHeight - 25, 60, 18).build());
 
-        // ===== Phase 27：策划 §10.2 切换准备按钮 (位于成员区右上) =====
-        List<String> members = ClientDungeonData.getLobbyMembers();
-        List<Boolean> readyStates = ClientDungeonData.getLobbyReadyStates();
-        boolean myReady = false;
-        if (minecraft != null && minecraft.player != null) {
-            String myName = minecraft.player.getGameProfile().getName();
-            int myIdx = members.indexOf(myName);
-            if (myIdx >= 0 && myIdx < readyStates.size()) {
-                myReady = readyStates.get(myIdx);
-            }
-        }
-        addRenderableWidget(Button.builder(
-                Component.translatable(myReady
-                        ? "gui.piranport.dungeon_book.unready"
-                        : "gui.piranport.dungeon_book.ready"),
-                btn -> PacketDistributor.sendToServer(
-                        new ToggleReadyPayload(menu.getLecternPos()))
-        ).bounds(leftPos + imageWidth - 70, topPos + imageHeight - 108, 65, 16).build());
+        // 整合版 §3.1：删除"切换准备"按钮（联机大厅作废，无准备机制）
     }
 
     private void buildNodeMapButtons() {
@@ -320,25 +304,8 @@ public class DungeonBookScreen extends AbstractContainerScreen<DungeonBookMenu> 
                         leftPos + imageWidth - font.width(timeStr) - 5, topPos + 5,
                         0xFFAAFFAA, false);
             }
-        } else if (mode == ViewMode.STAGE_SELECT) {
-            // Phase 27：策划 §10.2 大厅成员列表 (策划 §10.5/§12.2 缺成员列表)
-            List<String> members = ClientDungeonData.getLobbyMembers();
-            List<Boolean> readyStates = ClientDungeonData.getLobbyReadyStates();
-            String flagship = ClientDungeonData.getLobbyFlagshipName();
-            gfx.drawString(font, Component.translatable("gui.piranport.dungeon_book.lobby_members").getString(),
-                    leftPos + 5, topPos + imageHeight - 105, 0xFFFFD700, false);
-            int memberY = topPos + imageHeight - 92;
-            for (int i = 0; i < members.size() && i < 6; i++) {
-                String name = members.get(i);
-                boolean isFlagship = name.equals(flagship);
-                boolean isReady = i < readyStates.size() && readyStates.get(i);
-                String prefix = isFlagship ? "★ " : "  ";
-                String readyMark = isReady ? " [✓]" : " [ ]";
-                int color = isReady ? 0xFF7CFF7C : (isFlagship ? 0xFFFFE08A : 0xFFCCCCCC);
-                gfx.drawString(font, prefix + name + readyMark,
-                        leftPos + 5, memberY + i * 12, color, false);
-            }
         }
+        // 整合版 §3.1：删除 STAGE_SELECT 视图中的 lobby 成员列表渲染
     }
 
     private void drawLine(GuiGraphics gfx, int x1, int y1, int x2, int y2, int color) {

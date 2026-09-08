@@ -12,8 +12,6 @@ import com.piranport.dungeon.instance.DungeonInstanceManager;
 import com.piranport.dungeon.instance.NodeBattleField;
 import com.piranport.dungeon.key.DungeonKeyItem;
 import com.piranport.dungeon.key.DungeonProgress;
-import com.piranport.dungeon.key.FlagshipManager;
-import com.piranport.dungeon.lobby.DungeonLobbyManager;
 import com.piranport.dungeon.network.DungeonResultPayload;
 import com.piranport.dungeon.network.DungeonStatePayload;
 import com.piranport.dungeon.network.PlayerDiedInDungeonPayload;
@@ -38,7 +36,6 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.AddReloadListenerEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
-import net.neoforged.neoforge.event.server.ServerStoppingEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.ArrayList;
@@ -48,6 +45,15 @@ import java.util.UUID;
 /**
  * Central event handler for the dungeon system.
  * Handles death, logout, data reload, and node transition logic.
+ *
+ * <p>整合版副本系统总体设计 2026-09-07 修订口径：
+ * <ul>
+ *   <li>§2.2 钥匙插在讲台上，玩家不携带进副本（阶段 2 起切换为读讲台 BE）</li>
+ *   <li>§3.1 联机大厅/队长机制已作废（副本/10），所有玩家平等</li>
+ *   <li>§3.3 死亡回门口 lecternPos（不读 playerCheckpoints，记录点仅 ContinueScreen 用）</li>
+ *   <li>§3.3 不死图腾按原版逻辑在受致命伤害时结算（不取消事件）</li>
+ *   <li>§3.4 副本永不自动删除（SUSPENDED 自动清理已移除）</li>
+ * </ul>
  */
 @EventBusSubscriber(modid = PiranPort.MOD_ID)
 public class DungeonEventHandler {
@@ -84,11 +90,16 @@ public class DungeonEventHandler {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
         if (!isInDungeon(player)) return;
 
-        // Cancel death, keep inventory, add invulnerability frames to prevent re-damage before teleport
+        // 整合版 §3.3：不死图腾按原版逻辑在受致命伤害时结算——持有图腾时不取消事件，让原版 totem 流程触发
+        if (hasTotemOfUndying(player)) {
+            return;
+        }
+
+        // 取消死亡，保持库存（无论世界规则如何），加 40 tick 无敌帧
         event.setCanceled(true);
         player.setHealth(player.getMaxHealth());
         player.invulnerableTime = 40; // 2 seconds of damage immunity frames
-        // Clear residual DOT effects only — preserve buffs from food / 装填加速 / 高速规避 etc.
+        // 仅清除 HARMFUL 类别效果，保留装填加速/规避加成/食物 buff
         player.clearFire();
         java.util.List<net.minecraft.core.Holder<net.minecraft.world.effect.MobEffect>> harmful =
                 new java.util.ArrayList<>();
@@ -102,7 +113,8 @@ public class DungeonEventHandler {
         }
         for (var h : harmful) player.removeEffect(h);
 
-        // Find the player's instance and teleport to lectern
+        // 整合版 §3.3：死亡回门口（讲台）—— 不读 playerCheckpoints，记录点仅 ContinueScreen"继续"按钮使用。
+        // 当前阶段仍以"玩家背包钥匙的 instanceId"反查 instance；阶段 4 切换为通过 lecternPos 读讲台 BE。
         DungeonInstanceManager mgr = DungeonInstanceManager.get((ServerLevel) player.level());
         for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
             ItemStack stack = player.getInventory().getItem(i);
@@ -121,20 +133,26 @@ public class DungeonEventHandler {
         PacketDistributor.sendToPlayer(player, new PlayerDiedInDungeonPayload());
     }
 
+    /**
+     * 整合版 §3.3：不死图腾是减少死亡的设计，不是死亡后的处理。
+     * 受致命伤害时若持有图腾，按原版逻辑结算，此时并未实际死亡。
+     */
+    private static boolean hasTotemOfUndying(ServerPlayer player) {
+        for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
+            ItemStack stack = player.getInventory().getItem(i);
+            if (stack.is(Items.TOTEM_OF_UNDYING)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @SubscribeEvent
     public static void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
 
-        // P1修复: 清理大厅状态，防止"幽灵玩家"
-        net.minecraft.core.GlobalPos lobbyPos = DungeonLobbyManager.INSTANCE.findLobbyOf(player.getUUID());
-        if (lobbyPos != null) {
-            DungeonLobbyManager.INSTANCE.leaveLobby(lobbyPos, player.getUUID());
-            DungeonLobbyManager.INSTANCE.broadcastLobbyUpdate(player.server, lobbyPos);
-        }
-
-        // Always sweep the player's keys: a player may log out from the lectern
-        // (overworld) after returning via town scroll, in which case the early
-        // isInDungeon() guard previously left the instance permanently ACTIVE.
+        // 整合版 §3.1：联机大厅与队长机制已作废（副本/10），不再清理 lobby / 转让钥匙。
+        // 仅保留"实例为空则 SUSPENDED"检查（让原版区块卸载机制能正常卸载）。
         DungeonInstanceManager mgr = DungeonInstanceManager.get(player.server.overworld());
         UUID leavingId = player.getUUID();
         for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
@@ -144,65 +162,19 @@ public class DungeonEventHandler {
                 if (instanceId == null) continue;
                 DungeonInstance instance = mgr.getInstance(instanceId);
                 if (instance != null) {
-                    // If the leaving player is the flagship, hand off to another
-                    // online member so the dungeon can continue.
-                    if (leavingId.equals(instance.getFlagshipUuid())) {
-                        ServerPlayer next = pickNextFlagshipPlayer(player.server, instance, leavingId);
-                        if (next != null) {
-                            instance.setFlagshipUuid(next.getUUID());
-                            mgr.setDirty();
-                            // Stamp the instanceId onto the new flagship's key so they can
-                            // continue selecting nodes (SelectNodePayload reads instanceId
-                            // from the key stack).
-                            int newKeySlot = FlagshipManager.findAnyKeySlot(next);
-                            if (newKeySlot >= 0) {
-                                ItemStack newKeyStack = next.getInventory().getItem(newKeySlot);
-                                DungeonKeyItem.setInstanceId(newKeyStack, instanceId);
-                                String stageId = DungeonKeyItem.getStageId(stack);
-                                if (stageId != null && !stageId.isEmpty()) {
-                                    newKeyStack.set(com.piranport.registry.ModDataComponents.DUNGEON_STAGE_ID.get(), stageId);
-                                }
-                            }
-                            next.sendSystemMessage(Component.translatable(
-                                    "dungeon.piranport.flagship_promoted"));
-                        }
-                    }
                     checkAndSuspendIfEmpty(player.server, instance);
                 }
             }
         }
     }
 
-    /** Find another online instance member to take over the flagship role. */
-    private static ServerPlayer pickNextFlagshipPlayer(MinecraftServer server,
-                                                         DungeonInstance instance, UUID leaving) {
-        for (UUID uuid : instance.getPlayerUuids()) {
-            if (uuid.equals(leaving)) continue;
-            ServerPlayer p = server.getPlayerList().getPlayer(uuid);
-            // P1修复: 验证新旗舰在地牢维度内且持有副本钥匙
-            if (p != null && isInDungeon(p)) {
-                // 验证新旗舰持有该副本的钥匙
-                if (com.piranport.dungeon.key.FlagshipManager.findKeySlot(p, instance.getInstanceId()) >= 0) {
-                    return p;
-                }
-            }
-        }
-        return null;
-    }
-
-    @SubscribeEvent
-    public static void onServerStopping(net.neoforged.neoforge.event.server.ServerStoppingEvent event) {
-        DungeonLobbyManager.INSTANCE.clearAll();
-    }
-
     // ===== Node Entry Logic — delegated to DungeonNodeRouter =====
 
-    /** Called when the flagship selects a node to enter. */
+    /** Called when a player selects a node to enter. */
     public static void enterNode(ServerLevel level, DungeonInstance instance,
                                    NodeData node, StageData stage,
-                                   ServerPlayer flagship, ItemStack keyStack,
-                                   DungeonLobbyManager.Lobby lobby) {
-        DungeonNodeRouter.enterNode(level, instance, node, stage, flagship, keyStack, lobby);
+                                   ServerPlayer player, ItemStack keyStack) {
+        DungeonNodeRouter.enterNode(level, instance, node, stage, player, keyStack);
     }
 
     // (Battle / Resource / Cost / Scripted handlers live in DungeonNodeRouter.)

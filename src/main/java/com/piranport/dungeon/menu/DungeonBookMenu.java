@@ -51,8 +51,6 @@ public class DungeonBookMenu extends AbstractContainerMenu {
     @Override
     public void removed(Player player) {
         super.removed(player);
-        // Do NOT auto-leave the lobby on GUI close — pressing ESC used to instantly
-        // dissolve multi-player lobbies. Players now leave explicitly via the "Leave"
-        // button (LeaveLobbyPayload) or by logging out.
+        // 整合版 §3.1：联机大厅与队长机制已作废（副本/10），讲台 GUI 关闭不再清理任何大厅/队伍状态。
     }
 }

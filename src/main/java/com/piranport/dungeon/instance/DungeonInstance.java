@@ -12,6 +12,9 @@ import java.util.UUID;
 
 /**
  * Runtime state of a single dungeon instance.
+ *
+ * <p>整合版 §3.1 联机大厅与队长机制已作废（副本/10）：删除 flagshipUuid 字段，
+ * 不再有"队长/权限"概念——副本内所有玩家平等。</p>
  */
 public class DungeonInstance {
     public enum State {
@@ -25,7 +28,6 @@ public class DungeonInstance {
     private String currentNode;
     private final Set<String> clearedNodes = new HashSet<>();
     private final Set<UUID> playerUuids = new HashSet<>(); // all players who participated
-    private UUID flagshipUuid; // persistent flagship — survives lobby teardown
     private BlockPos lecternPos; // the lectern block that opened this instance
     private String lecternDimension; // dimension key of the lectern
     private long startTimeMillis;
@@ -47,7 +49,6 @@ public class DungeonInstance {
     public String getCurrentNode() { return currentNode; }
     public Set<String> getClearedNodes() { return java.util.Collections.unmodifiableSet(clearedNodes); }
     public Set<UUID> getPlayerUuids() { return java.util.Collections.unmodifiableSet(playerUuids); }
-    public UUID getFlagshipUuid() { return flagshipUuid; }
     public BlockPos getLecternPos() { return lecternPos; }
     public String getLecternDimension() { return lecternDimension; }
     public long getStartTimeMillis() { return startTimeMillis; }
@@ -102,7 +103,6 @@ public class DungeonInstance {
     public void setCurrentNode(String node) { this.currentNode = node; }
     public void addClearedNode(String node) { clearedNodes.add(node); }
     public void addPlayer(UUID uuid) { playerUuids.add(uuid); }
-    public void setFlagshipUuid(UUID uuid) { this.flagshipUuid = uuid; }
     public void setLecternPos(BlockPos pos) { this.lecternPos = pos; }
     public void setLecternDimension(String dim) { this.lecternDimension = dim; }
     public void setStartTimeMillis(long t) { this.startTimeMillis = t; }
@@ -132,9 +132,7 @@ public class DungeonInstance {
         }
         tag.put("Players", playerList);
 
-        if (flagshipUuid != null) {
-            tag.putUUID("FlagshipUuid", flagshipUuid);
-        }
+        // 整合版 §3.1：FlagshipUuid 字段不再写出（已删除玩家旗舰权限概念）
         if (lecternPos != null) {
             tag.put("LecternPos", NbtUtils.writeBlockPos(lecternPos));
         }
@@ -172,9 +170,7 @@ public class DungeonInstance {
             inst.playerUuids.add(NbtUtils.loadUUID(playerList.get(i)));
         }
 
-        if (tag.hasUUID("FlagshipUuid")) {
-            inst.flagshipUuid = tag.getUUID("FlagshipUuid");
-        }
+        // 整合版 §3.1：旧存档的 FlagshipUuid 字段读时忽略（不再需要），保证向前兼容
         if (tag.contains("LecternPos")) {
             NbtUtils.readBlockPos(tag, "LecternPos").ifPresent(inst::setLecternPos);
         }

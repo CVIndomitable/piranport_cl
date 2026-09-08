@@ -2,15 +2,11 @@ package com.piranport.dungeon.block;
 
 import com.mojang.serialization.MapCodec;
 import com.piranport.dungeon.key.DungeonKeyItem;
-import com.piranport.dungeon.key.FlagshipManager;
-import com.piranport.dungeon.lobby.DungeonLobbyManager;
 import com.piranport.dungeon.menu.DungeonBookMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.GlobalPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.player.Player;
@@ -26,6 +22,11 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
+/**
+ * 副本讲台方块。整合版 §2.2：钥匙插在讲台上，玩家不携带进副本。
+ * 当前阶段（P1-A 占位）：仍走玩家背包拿钥匙 + 打开 DungeonBookMenu。
+ * 阶段 2：升级为 BaseEntityBlock，新建 DungeonLecternBlockEntity 持有钥匙。
+ */
 public class DungeonLecternBlock extends Block {
     public static final MapCodec<DungeonLecternBlock> CODEC = simpleCodec(DungeonLecternBlock::new);
     public static final DirectionProperty FACING = HorizontalDirectionalBlock.FACING;
@@ -68,23 +69,16 @@ public class DungeonLecternBlock extends Block {
             return InteractionResult.PASS;
         }
 
-        // Check if player has a dungeon key
-        int keySlot = FlagshipManager.findAnyKeySlot(serverPlayer);
+        // 检查玩家背包中是否有任意一把钥匙（整合版 §2.2：过渡期仍以背包为钥匙来源；阶段 2 升级为讲台 BE 持有）
+        int keySlot = DungeonKeyItem.findAnyKeySlot(serverPlayer);
         if (keySlot < 0) {
             serverPlayer.sendSystemMessage(
                     Component.translatable("block.piranport.dungeon_lectern.no_key"));
             return InteractionResult.CONSUME;
         }
 
-        // Leave any other lobby first to avoid the player being a "phantom" member
-        // in two lobbies at once (broadcasts go to ghost players, MAX_LOBBY_SIZE inflated).
-        GlobalPos globalPos = GlobalPos.of(level.dimension(), pos);
-        GlobalPos existing = DungeonLobbyManager.INSTANCE.findLobbyOf(serverPlayer.getUUID());
-        if (existing != null && !existing.equals(globalPos)) {
-            DungeonLobbyManager.INSTANCE.leaveLobby(existing, serverPlayer.getUUID());
-            DungeonLobbyManager.INSTANCE.broadcastLobbyUpdate(serverPlayer.server, existing);
-        }
-        DungeonLobbyManager.INSTANCE.joinLobby(globalPos, serverPlayer);
+        // 整合版 §3.1：联机大厅与队长机制已作废（副本/10），不再 joinLobby / broadcastLobbyUpdate。
+        // 阶段 3（P1-B）将替换为"打开 DungeonContinueScreen"。
 
         serverPlayer.openMenu(
                 new SimpleMenuProvider(

@@ -10,13 +10,11 @@ import com.piranport.combat.HitNotifier;
 import com.piranport.combat.TorpedoGuidanceManager;
 import com.piranport.config.ModCommonConfig;
 import com.piranport.dungeon.instance.DungeonInstanceManager;
-import com.piranport.dungeon.lobby.DungeonLobbyManager;
 import com.piranport.dungeon.network.DungeonRegistrySyncPayload;
 import com.piranport.entitycore.EntityCoreState;
 import com.piranport.network.RecallAllAircraftPayload;
 import com.piranport.registry.ModItems;
 import com.piranport.skin.SkinManager;
-import net.minecraft.core.GlobalPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -136,12 +134,6 @@ public class PlayerConnectionHandler {
         HitNotifier.onPlayerLogout(uuid);
         RecallAllAircraftPayload.onPlayerDisconnect(uuid);
 
-        // 清理讲台大厅
-        var lobbyMgr = DungeonLobbyManager.INSTANCE;
-        GlobalPos lecternPos = lobbyMgr.findLobbyOf(player.getUUID());
-        if (lecternPos != null && player.getServer() != null) {
-            lobbyMgr.leaveLobby(lecternPos, player.getUUID());
-            lobbyMgr.broadcastLobbyUpdate(player.getServer(), lecternPos);
-        }
+        // 整合版 §3.1：联机大厅与队长机制已作废（副本/10），不再清理 lobby。
     }
 }

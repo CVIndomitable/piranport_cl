@@ -110,10 +110,9 @@ public class ServerGameEvents {
             FleetGroupManager.get(overworld).cleanup(event.getServer());
         }
 
-        // 地牢实例泄漏清理（每1分钟）
-        if (event.getServer().getTickCount() % 1200 == 0 && dungeonLevel != null) {
-            DungeonInstanceManager.get(event.getServer().overworld())
-                    .sweepLeaks(dungeonLevel);
+        // 整合版 §3.4：副本永不自动删除（删除 SUSPENDED 自动清理）；sweepLeaks 仅用于提升 pendingFreedIndices
+        if (event.getServer().getTickCount() % 1200 == 0) {
+            DungeonInstanceManager.get(event.getServer().overworld()).sweepLeaks();
         }
 
         // 离线玩家缓存清理（每小时）

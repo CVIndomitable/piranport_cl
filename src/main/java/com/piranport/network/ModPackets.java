@@ -165,23 +165,8 @@ public class ModPackets {
                 AmmoWorkbenchCancelPayload::handle
         );
 
-        // ===== Dungeon System =====
+        // ===== Dungeon System =====（整合版副本系统总体设计 2026-09-07：副本/10 联机大厅已作废）
         // C2S
-        registrar.playToServer(
-                com.piranport.dungeon.network.JoinLobbyPayload.TYPE,
-                com.piranport.dungeon.network.JoinLobbyPayload.STREAM_CODEC,
-                com.piranport.dungeon.network.JoinLobbyPayload::handle
-        );
-        registrar.playToServer(
-                com.piranport.dungeon.network.LeaveLobbyPayload.TYPE,
-                com.piranport.dungeon.network.LeaveLobbyPayload.STREAM_CODEC,
-                com.piranport.dungeon.network.LeaveLobbyPayload::handle
-        );
-        registrar.playToServer(
-                com.piranport.dungeon.network.SelectStagePayload.TYPE,
-                com.piranport.dungeon.network.SelectStagePayload.STREAM_CODEC,
-                com.piranport.dungeon.network.SelectStagePayload::handle
-        );
         registrar.playToServer(
                 com.piranport.dungeon.network.SelectNodePayload.TYPE,
                 com.piranport.dungeon.network.SelectNodePayload.STREAM_CODEC,
@@ -197,17 +182,7 @@ public class ModPackets {
                 com.piranport.dungeon.network.TownScrollUsePayload.STREAM_CODEC,
                 com.piranport.dungeon.network.TownScrollUsePayload::handle
         );
-        registrar.playToServer(
-                com.piranport.dungeon.network.ToggleReadyPayload.TYPE,
-                com.piranport.dungeon.network.ToggleReadyPayload.STREAM_CODEC,
-                com.piranport.dungeon.network.ToggleReadyPayload::handle
-        );
         // S2C
-        registrar.playToClient(
-                com.piranport.dungeon.network.LobbyUpdatePayload.TYPE,
-                com.piranport.dungeon.network.LobbyUpdatePayload.STREAM_CODEC,
-                com.piranport.dungeon.network.LobbyUpdatePayload::handle
-        );
         registrar.playToClient(
                 com.piranport.dungeon.network.DungeonStatePayload.TYPE,
                 com.piranport.dungeon.network.DungeonStatePayload.STREAM_CODEC,

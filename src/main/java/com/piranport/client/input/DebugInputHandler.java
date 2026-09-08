@@ -26,6 +26,8 @@ public class DebugInputHandler {
     private static boolean debugEnabledClientState = false;
     private static boolean cooldownOverrideClientState = false;
     private static boolean hitDisplayEnabled = true;
+    // P2-9: 测试模式水印同步（由 TestModeWatermarkPayload 校正）
+    private static boolean testModeClientState = false;
 
     private DebugInputHandler() {}
 
@@ -42,9 +44,19 @@ public class DebugInputHandler {
         debugEnabledClientState = enabled;
     }
 
+    /** P2-9: 由 TestModeWatermarkPayload 校正 */
+    public static void setTestModeClient(boolean enabled) {
+        testModeClientState = enabled;
+    }
+
+    public static boolean isTestModeClient() {
+        return testModeClientState;
+    }
+
     public static void reset() {
         debugEnabledClientState = false;
         cooldownOverrideClientState = false;
+        testModeClientState = false;
         hitDisplayEnabled = true;
     }
 

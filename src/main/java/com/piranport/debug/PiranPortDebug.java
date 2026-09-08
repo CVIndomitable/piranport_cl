@@ -118,8 +118,7 @@ public final class PiranPortDebug {
     /** 玩家最后一次快照时间戳（毫秒），用于限频 */
     private static final Map<UUID, Long> LAST_SNAPSHOT_MS = new ConcurrentHashMap<>();
 
-    /** 全局冷却覆盖标志（P9 测试工具水印） */
-    private static volatile boolean cooldownOverrideEnabled = false;
+    /** 冷却覆盖时长（5 秒 = 100 tick）— 由 {@link com.piranport.testtools.PiranPortTestTools} 实际使用 */
     public static final int COOLDOWN_OVERRIDE_TICKS = 100; // 5 seconds
 
     // Client-side toggle (set from ClientTickHandler F8 handler)
@@ -203,28 +202,46 @@ public final class PiranPortDebug {
     public enum CloseReason { USER, LOGOUT, TIMEOUT, SERVER_STOP, REPLACED }
 
     // -------------------------------------------------------------------------
-    // Debug cooldown override (test tool isolation, P2-9)
+    // Test tool isolation (P2-9) — 冷却覆盖已迁移到 PiranPortTestTools
+    // 此处保留向后兼容的 setCooldownOverride，内部委托给 TestTools。
     // -------------------------------------------------------------------------
 
+    /**
+     * @deprecated 冷却覆盖已迁移到 {@link com.piranport.testtools.PiranPortTestTools#toggleFor}，
+     * 保留此方法仅为向后兼容。
+     */
+    @Deprecated
     public static void setCooldownOverride(boolean enabled) {
-        cooldownOverrideEnabled = enabled;
-        LOG.info("[CONFIG] Cooldown override {}", enabled ? "ENABLED" : "DISABLED");
+        // 注意：此方法无法获取玩家 UUID，因此仅做日志记录，不切换实际状态。
+        // 新代码应通过 DebugCooldownOverridePayload 调用 PiranPortTestTools.toggleFor(uuid, enabled)。
+        LOG.warn("[PiranPortDebug] setCooldownOverride({}) is deprecated; "
+                + "use DebugCooldownOverridePayload with player UUID", enabled);
     }
 
-    public static boolean isCooldownOverrideEnabled() {
-        return cooldownOverrideEnabled;
-    }
-
+    /**
+     * @deprecated 冷却覆盖已迁移到 {@link com.piranport.testtools.PiranPortTestTools}，
+     * 调用方应改用 {@code PiranPortTestTools.applyCooldownOverride}。
+     * 保留此方法仅为向后兼容，内部委托到 TestTools。
+     */
+    @Deprecated
     public static int applyCooldownOverride(int ticks) {
-        if (cooldownOverrideEnabled && ticks > COOLDOWN_OVERRIDE_TICKS) {
-            return COOLDOWN_OVERRIDE_TICKS;
-        }
-        return ticks;
+        return com.piranport.testtools.PiranPortTestTools.applyCooldownOverride(ticks);
     }
 
-    // 测试模式水印：被消费类代码读取时叠加 [PP TEST MODE] 标签
+    /**
+     * @deprecated 同上，已迁移到 {@link com.piranport.testtools.PiranPortTestTools#isCooldownOverrideEnabled()}
+     */
+    @Deprecated
+    public static boolean isCooldownOverrideEnabled() {
+        return com.piranport.testtools.PiranPortTestTools.isCooldownOverrideEnabled();
+    }
+
+    /**
+     * @deprecated 已迁移到 {@link com.piranport.testtools.PiranPortTestTools#isTestModeActive()}
+     */
+    @Deprecated
     public static boolean isTestModeActive() {
-        return cooldownOverrideEnabled;
+        return com.piranport.testtools.PiranPortTestTools.isTestModeActive();
     }
 
     /**
@@ -232,8 +249,14 @@ public final class PiranPortDebug {
      * 此处在测试模式下跳过消耗，等价于弹药/载荷无限。
      * 非测试模式时等价于 {@code stack.shrink(count)}。
      */
+    /**
+     * @deprecated consumeAmmo 已迁移到 {@link com.piranport.testtools.PiranPortTestTools#consumeAmmo}，
+     * 调用方应改用 {@code PiranPortTestTools.consumeAmmo(stack, count)}。
+     * 保留此方法仅为向后兼容。
+     */
+    @Deprecated
     public static void consumeAmmo(ItemStack stack, int count) {
-        if (!isServerEnabled()) stack.shrink(count);
+        com.piranport.testtools.PiranPortTestTools.consumeAmmo(stack, count);
     }
 
     // -------------------------------------------------------------------------
@@ -706,7 +729,7 @@ public final class PiranPortDebug {
     // Helpers
     // -------------------------------------------------------------------------
 
-    private static String shortUuid(UUID uuid) {
+    public static String shortUuid(UUID uuid) {
         if (uuid == null) return "?";
         String s = uuid.toString().replace("-", "");
         return s.length() > 8 ? s.substring(0, 8) : s;

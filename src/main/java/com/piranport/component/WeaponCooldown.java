@@ -24,7 +24,7 @@ public record WeaponCooldown(long endTick, int totalTick) {
      * Applies the debug cooldown override so a single chokepoint covers all call sites.
      */
     public static WeaponCooldown of(long currentTick, int ticks) {
-        int adjusted = com.piranport.debug.PiranPortDebug.applyCooldownOverride(ticks);
+        int adjusted = com.piranport.testtools.PiranPortTestTools.applyCooldownOverride(ticks);
         return new WeaponCooldown(currentTick + adjusted, adjusted);
     }
 

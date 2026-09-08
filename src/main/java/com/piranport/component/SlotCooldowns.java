@@ -112,7 +112,7 @@ public record SlotCooldowns(Map<Integer, Long> endTick, Map<Integer, Integer> to
 
     /** Returns a new SlotCooldowns with the given slot's cooldown set. */
     public SlotCooldowns withSlotCooldown(int slot, int ticks, long currentTick) {
-        int adjusted = com.piranport.debug.PiranPortDebug.applyCooldownOverride(ticks);
+        int adjusted = com.piranport.testtools.PiranPortTestTools.applyCooldownOverride(ticks);
         Map<Integer, Long> newEnd = new HashMap<>(endTick);
         Map<Integer, Integer> newTotal = new HashMap<>(totalTick);
         newEnd.put(slot, currentTick + adjusted);

@@ -10,6 +10,7 @@ import com.piranport.combat.TransformationManager;
 import com.piranport.config.ModCommonConfig;
 import com.piranport.debug.PiranPortCommands;
 import com.piranport.debug.PiranPortDebug;
+import com.piranport.testtools.PiranPortTestTools;
 import com.piranport.dungeon.DungeonConstants;
 import com.piranport.dungeon.entity.DungeonPortalEntity;
 import com.piranport.dungeon.event.DungeonEventHandler;
@@ -228,10 +229,12 @@ public class ServerGameEvents {
     public static void onServerStopped(ServerStoppedEvent event) {
         // 清理顺序说明：
         // 1. 先关闭所有调试会话（写摘要、重命名归档文件）
-        // 2. 清理战斗系统状态（火控、侦察、鱼雷制导），这些依赖玩家和实体
-        // 3. 再清理飞机索引（依赖玩家UUID）
-        // 4. 最后清理玩家Tick缓存（独立数据，无依赖）
+        // 2. 强制关闭测试模式（与调试隔离的独立工具）
+        // 3. 清理战斗系统状态（火控、侦察、鱼雷制导），这些依赖玩家和实体
+        // 4. 再清理飞机索引（依赖玩家UUID）
+        // 5. 最后清理玩家Tick缓存（独立数据，无依赖）
         PiranPortDebug.closeAll(PiranPortDebug.CloseReason.SERVER_STOP);
+        PiranPortTestTools.closeAll();
         FireControlManager.clearAll();
         ReconManager.clearAll();
         TorpedoGuidanceManager.clearAll();
@@ -245,6 +248,8 @@ public class ServerGameEvents {
     public static void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
         if (event.getEntity() instanceof net.minecraft.server.level.ServerPlayer sp) {
             PiranPortDebug.closePlayer(sp.getUUID(), PiranPortDebug.CloseReason.LOGOUT);
+            // 测试模式水印：玩家登出时若是测试者，强制关闭
+            PiranPortTestTools.onPlayerLogout(sp.getUUID());
         }
     }
 

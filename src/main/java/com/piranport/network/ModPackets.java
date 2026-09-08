@@ -78,6 +78,12 @@ public class ModPackets {
                 DebugCooldownOverridePayload.STREAM_CODEC,
                 DebugCooldownOverridePayload::handle
         );
+        // S2C: 测试模式水印（与调试隔离的独立测试工具）
+        registrar.playToClient(
+                TestModeWatermarkPayload.TYPE,
+                TestModeWatermarkPayload.STREAM_CODEC,
+                TestModeWatermarkPayload::handle
+        );
         registrar.playToServer(
                 HitDisplayTogglePayload.TYPE,
                 HitDisplayTogglePayload.STREAM_CODEC,

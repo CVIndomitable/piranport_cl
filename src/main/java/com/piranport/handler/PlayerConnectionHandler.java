@@ -39,6 +39,10 @@ public class PlayerConnectionHandler {
         if (event.getEntity().level().isClientSide()) return;
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
 
+        // 整合版 §3.3：副本维度死亡由 DungeonEventHandler.onPlayerDeath 接管（totem 原版结算 +
+        // 取消事件 + 回 lectern），精英损管不在副本维度生效。
+        if (com.piranport.dungeon.event.DungeonEventHandler.isInDungeon(player)) return;
+
         Inventory inv = player.getInventory();
         int foundSlot = -1;
         for (int i = 0; i < inv.getContainerSize(); i++) {

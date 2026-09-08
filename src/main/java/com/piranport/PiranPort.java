@@ -88,6 +88,7 @@ public class PiranPort {
         ModBlockEntityTypes.BLOCK_ENTITY_TYPES.register(modEventBus);
         ModRecipeTypes.RECIPE_TYPES.register(modEventBus);
         ModRecipeTypes.RECIPE_SERIALIZERS.register(modEventBus);
+        com.piranport.dungeon.recipe.ModRecipeSerializers.RECIPE_SERIALIZERS.register(modEventBus);
         ModBiomeModifiers.BIOME_MODIFIER_SERIALIZERS.register(modEventBus);
         ModFeatures.FEATURES.register(modEventBus);
         ModStructureProcessors.STRUCTURE_PROCESSORS.register(modEventBus);

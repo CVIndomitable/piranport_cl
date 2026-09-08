@@ -13,10 +13,21 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
+
+import java.util.UUID;
 
 /**
  * C2S: Player requests to revive (costs one totem of undying).
+ *
+ * <p>整合版 §2.2：钥匙插在讲台上（玩家背包无钥匙）。复活时：
+ * <ol>
+ *   <li>在玩家位置附近（16 格半径）找 dungeon lectern BE</li>
+ *   <li>读 BE 的 keyStack → getInstanceId → 拉对应 DungeonInstance</li>
+ *   <li>消耗一个 totem，传送到 instance.currentNode 的 spawn pos</li>
+ * </ol>
+ * </p>
  */
 public record ReviveRequestPayload() implements CustomPacketPayload {
 
@@ -41,36 +52,45 @@ public record ReviveRequestPayload() implements CustomPacketPayload {
             Inventory inv = player.getInventory();
             DungeonInstanceManager mgr = DungeonInstanceManager.get((ServerLevel) player.level());
 
-            // Locate the active dungeon instance + spawn target FIRST. Only after we
-            // know the revive can succeed do we consume the totem of undying.
-            DungeonInstance targetInstance = null;
-            String targetNode = null;
-            for (int i = 0; i < inv.getContainerSize(); i++) {
-                ItemStack stack = inv.getItem(i);
-                if (stack.getItem() instanceof com.piranport.dungeon.key.DungeonKeyItem) {
-                    java.util.UUID instanceId =
-                            com.piranport.dungeon.key.DungeonKeyItem.getInstanceId(stack);
-                    if (instanceId == null) continue;
-                    DungeonInstance instance = mgr.getInstance(instanceId);
-                    if (instance == null || instance.getState() != DungeonInstance.State.ACTIVE) continue;
-                    String nodeId = instance.getCurrentNode();
-                    if (nodeId == null) continue;
-                    targetInstance = instance;
-                    targetNode = nodeId;
-                    break;
-                }
-            }
-
-            ServerLevel dungeonLevel = com.piranport.dungeon.event.DungeonEventHandler
-                    .getDungeonLevel(player.server);
-            if (targetInstance == null) {
+            // 整合版 §2.2：通过附近讲台 BE 找副本钥匙（不再扫玩家背包）
+            com.piranport.dungeon.block.DungeonLecternBlockEntity lecternBE = findNearbyLectern(player);
+            if (lecternBE == null || !lecternBE.hasKey()) {
                 player.sendSystemMessage(net.minecraft.network.chat.Component.translatable(
                         "dungeon.piranport.revive_unavailable"));
-                // Re-open the revive screen so the player can choose to give up
                 net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player,
                         new com.piranport.dungeon.network.PlayerDiedInDungeonPayload());
                 return;
             }
+
+            UUID instanceId = lecternBE.getDungeonInstanceUuid();
+            if (instanceId == null) {
+                player.sendSystemMessage(net.minecraft.network.chat.Component.translatable(
+                        "dungeon.piranport.revive_unavailable"));
+                net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player,
+                        new com.piranport.dungeon.network.PlayerDiedInDungeonPayload());
+                return;
+            }
+
+            DungeonInstance targetInstance = mgr.getInstance(instanceId);
+            if (targetInstance == null
+                    || targetInstance.getState() != DungeonInstance.State.ACTIVE) {
+                player.sendSystemMessage(net.minecraft.network.chat.Component.translatable(
+                        "dungeon.piranport.revive_unavailable"));
+                net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player,
+                        new com.piranport.dungeon.network.PlayerDiedInDungeonPayload());
+                return;
+            }
+            String targetNode = targetInstance.getCurrentNode();
+            if (targetNode == null) {
+                player.sendSystemMessage(net.minecraft.network.chat.Component.translatable(
+                        "dungeon.piranport.revive_unavailable"));
+                net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player,
+                        new com.piranport.dungeon.network.PlayerDiedInDungeonPayload());
+                return;
+            }
+
+            ServerLevel dungeonLevel = com.piranport.dungeon.event.DungeonEventHandler
+                    .getDungeonLevel(player.server);
             if (dungeonLevel == null) {
                 player.sendSystemMessage(net.minecraft.network.chat.Component.translatable(
                         "dungeon.piranport.revive_unavailable"));
@@ -102,5 +122,28 @@ public record ReviveRequestPayload() implements CustomPacketPayload {
                     spawn.getX() + 0.5, spawn.getY(), spawn.getZ() + 0.5,
                     player.getYRot(), player.getXRot());
         });
+    }
+
+    /**
+     * 整合版 §2.2：在玩家位置附近 16 格半径找 DungeonLecternBlockEntity。
+     */
+    private static com.piranport.dungeon.block.DungeonLecternBlockEntity findNearbyLectern(
+            ServerPlayer player) {
+        BlockPos playerPos = player.blockPosition();
+        for (int dx = -16; dx <= 16; dx += 4) {
+            for (int dy = -4; dy <= 4; dy += 4) {
+                for (int dz = -16; dz <= 16; dz += 4) {
+                    BlockPos check = playerPos.offset(dx, dy, dz);
+                    if (player.level().getBlockState(check).getBlock()
+                            instanceof com.piranport.dungeon.block.DungeonLecternBlock) {
+                        BlockEntity be = player.level().getBlockEntity(check);
+                        if (be instanceof com.piranport.dungeon.block.DungeonLecternBlockEntity lecternBE) {
+                            return lecternBE;
+                        }
+                    }
+                }
+            }
+        }
+        return null;
     }
 }

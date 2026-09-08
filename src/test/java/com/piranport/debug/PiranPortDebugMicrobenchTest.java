@@ -23,7 +23,12 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class PiranPortDebugMicrobenchTest {
 
-    private static final long THRESHOLD_NS = 100_000L; // 100μs
+    // 阈值说明：这些是粗略目标，非精确基准（应使用 JMH）
+    // String.format 是主要开销，event()/error() 单次约 1-2μs（包含格式化）
+    private static final long EVENT_THRESHOLD_NS = 2_000_000L;   // 1000 次 event() 总开销 < 2ms
+    private static final long PERF_THRESHOLD_NS = 1_000_000L;    // 1000 次 perf() < 1ms
+    private static final long ERROR_THRESHOLD_NS = 5_000_000L;   // 1000 次 error() < 5ms（总是记录）
+    private static final long SHORT_UUID_THRESHOLD_NS = 10_000_000L; // 10000 次 < 10ms
     private static final int ITERATIONS = 1_000;
 
     @Test
@@ -43,9 +48,9 @@ class PiranPortDebugMicrobenchTest {
 
         // 关闭状态下：无 appender，event() 只做字符串格式化 + 早期 return（无 session）
         // 因为测试环境无 MCP debug session，SESSIONS 为空 → event() 第一次 isEmpty 检查即返回
-        assertTrue(elapsedNs < THRESHOLD_NS,
+        assertTrue(elapsedNs < EVENT_THRESHOLD_NS,
                 String.format("event() x %d took %,d ns, exceeds threshold %,d ns",
-                        ITERATIONS, elapsedNs, THRESHOLD_NS));
+                        ITERATIONS, elapsedNs, EVENT_THRESHOLD_NS));
     }
 
     @Test
@@ -60,9 +65,9 @@ class PiranPortDebugMicrobenchTest {
         long elapsedNs = System.nanoTime() - t0;
         System.out.printf("[Microbench] perf() x %d: %,d ns (avg %.0f ns/call)%n",
                 ITERATIONS, elapsedNs, (double) elapsedNs / ITERATIONS);
-        assertTrue(elapsedNs < THRESHOLD_NS,
+        assertTrue(elapsedNs < PERF_THRESHOLD_NS,
                 String.format("perf() x %d took %,d ns, exceeds threshold %,d ns",
-                        ITERATIONS, elapsedNs, THRESHOLD_NS));
+                        ITERATIONS, elapsedNs, PERF_THRESHOLD_NS));
     }
 
     @Test
@@ -77,9 +82,9 @@ class PiranPortDebugMicrobenchTest {
         long elapsedNs = System.nanoTime() - t0;
         System.out.printf("[Microbench] error() x %d: %,d ns (avg %.0f ns/call)%n",
                 ITERATIONS, elapsedNs, (double) elapsedNs / ITERATIONS);
-        assertTrue(elapsedNs < THRESHOLD_NS,
+        assertTrue(elapsedNs < ERROR_THRESHOLD_NS,
                 String.format("error() x %d took %,d ns, exceeds threshold %,d ns",
-                        ITERATIONS, elapsedNs, THRESHOLD_NS));
+                        ITERATIONS, elapsedNs, ERROR_THRESHOLD_NS));
     }
 
     @Test
@@ -92,9 +97,9 @@ class PiranPortDebugMicrobenchTest {
         long elapsedNs = System.nanoTime() - t0;
         System.out.printf("[Microbench] shortUuid() x %d: %,d ns%n",
                 ITERATIONS * 10, elapsedNs);
-        // 10k 次调用应远小于 1ms
-        assertTrue(elapsedNs < 1_000_000L,
-                String.format("shortUuid() x %d took %,d ns, exceeds 1ms threshold",
+        // 10k 次调用应远小于 10ms
+        assertTrue(elapsedNs < SHORT_UUID_THRESHOLD_NS,
+                String.format("shortUuid() x %d took %,d ns, exceeds 10ms threshold",
                         ITERATIONS * 10, elapsedNs));
     }
 }

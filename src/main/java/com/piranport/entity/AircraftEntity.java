@@ -393,6 +393,10 @@ public class AircraftEntity extends Entity {
             return;
         }
 
+        // P2-8: PERF 埋点 — 飞机 tick（仅记录 > 5ms 的实例，避免噪声）
+        boolean perfEnabled = com.piranport.debug.PiranPortDebug.isServerEnabled();
+        long t0 = perfEnabled ? System.nanoTime() : 0L;
+
         // Index fallback: if onAddedToLevel fired before ownerUUID was populated by
         // readAdditionalSaveData, we'd be missing from AircraftIndex — recover here.
         if (!indexRegistered && ownerUUID != null) {
@@ -518,6 +522,16 @@ public class AircraftEntity extends Entity {
 
         // Apply movement
         setPos(getX() + vel.x, getY() + vel.y, getZ() + vel.z);
+
+        // P2-8: PERF 埋点 — 仅记录 > 5ms 的实例，避免噪声
+        if (perfEnabled) {
+            long ns = System.nanoTime() - t0;
+            if (ns > 5_000_000L) { // 5 ms
+                com.piranport.debug.PiranPortDebug.perf("AircraftTick", ns,
+                        "entityId=" + getId() + " state=" + state.name()
+                        + " type=" + aircraftType.name());
+            }
+        }
     }
 
     // ===== State transition hooks =====

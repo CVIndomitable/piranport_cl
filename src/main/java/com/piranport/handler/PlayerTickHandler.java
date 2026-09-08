@@ -591,13 +591,21 @@ public class PlayerTickHandler {
 
     /** 自动发射战斗机锁定附近飞行敌对生物 */
     private static void tickAutoLaunchFighters(Player player, ItemStack coreStack, int coreSlot) {
+        // P2-8: PERF 埋点 — 火控解算（每 tick 遍历目标）
+        boolean perfEnabled = com.piranport.debug.PiranPortDebug.isServerEnabled();
+        long t0 = perfEnabled ? System.nanoTime() : 0L;
+
         List<LivingEntity> flyingHostiles = player.level().getEntitiesOfClass(
                 LivingEntity.class,
                 player.getBoundingBox().inflate(64.0),
                 e -> e.isAlive() && e instanceof Enemy
                         && (e instanceof FlyingMob || e instanceof Phantom || e instanceof Vex));
 
-        if (flyingHostiles.isEmpty()) return;
+        if (flyingHostiles.isEmpty()) {
+            if (perfEnabled) com.piranport.debug.PiranPortDebug.perf("FireControlSolve", System.nanoTime() - t0,
+                    "player=" + player.getName().getString() + " targets=0");
+            return;
+        }
 
         if (player.level() instanceof ServerLevel sl) {
             List<UUID> currentLocks = FireControlManager.getTargets(player.getUUID());
@@ -614,6 +622,9 @@ public class PlayerTickHandler {
             }
         }
         ShipCoreCombat.tryAutoLaunchFighter(player.level(), player, coreStack, coreSlot);
+
+        if (perfEnabled) com.piranport.debug.PiranPortDebug.perf("FireControlSolve", System.nanoTime() - t0,
+                "player=" + player.getName().getString() + " targets=" + flyingHostiles.size());
     }
 
     /** 防空导弹：检测32格内空中敌对目标 */

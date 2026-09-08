@@ -177,6 +177,11 @@ public class TransformationManager {
      * The transformed core passed by the caller provides the weight capacity and base attributes.
      */
     private static void applyAttributesInventoryMode(Player player, ItemStack coreStack) {
+        // P2-8: PERF 埋点 — 仅在有任一会话激活时计时（门控）
+        long t0 = 0L;
+        boolean perfEnabled = com.piranport.debug.PiranPortDebug.isServerEnabled();
+        if (perfEnabled) t0 = System.nanoTime();
+
         net.minecraft.world.entity.player.Inventory inv = player.getInventory();
         ShipType activeType = ((ShipCoreItem) coreStack.getItem()).getShipType();
 
@@ -193,6 +198,13 @@ public class TransformationManager {
 
         applyTypeAttributes(player, activeType, armorBonus, speedMult);
         applyOverweightPenalty(player, totalLoad, activeType.maxLoad);
+
+        if (perfEnabled) {
+            long ns = System.nanoTime() - t0;
+            com.piranport.debug.PiranPortDebug.perf("WeightScan", ns,
+                    "player=" + (player == null ? "?" : player.getName().getString())
+                    + " load=" + totalLoad + "/" + activeType.maxLoad);
+        }
     }
 
     /**

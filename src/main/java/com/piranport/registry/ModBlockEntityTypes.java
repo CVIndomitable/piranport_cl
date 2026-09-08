@@ -1,13 +1,18 @@
 package com.piranport.registry;
 
 import com.piranport.PiranPort;
+import com.piranport.block.entity.AbyssalSpawnerBlockEntity;
+import com.piranport.block.entity.AmmoWorkbenchBlockEntity;
 import com.piranport.block.entity.BlueprintChestBlockEntity;
 import com.piranport.block.entity.CookingPotBlockEntity;
 import com.piranport.block.entity.CuttingBoardBlockEntity;
 import com.piranport.block.entity.PlaceableFoodBlockEntity;
 import com.piranport.block.entity.ReloadFacilityBlockEntity;
+import com.piranport.block.entity.ShipCoreModifierBlockEntity;
+import com.piranport.block.entity.SmokeScreenBlockEntity;
 import com.piranport.block.entity.StoneMillBlockEntity;
 import com.piranport.block.entity.StoveBlockEntity;
+import com.piranport.block.entity.WeaponWorkbenchBlockEntity;
 import com.piranport.block.entity.YubariWaterBucketBlockEntity;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -92,10 +97,18 @@ public class ModBlockEntityTypes {
                             ModBlocks.CAKE_FOOD.get())
                             .build(null));
 
-    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<com.piranport.block.entity.SmokeScreenBlockEntity>> SMOKE_SCREEN =
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<SmokeScreenBlockEntity>> SMOKE_SCREEN =
             BLOCK_ENTITY_TYPES.register("smoke_screen", () ->
                     BlockEntityType.Builder.of(
-                            com.piranport.block.entity.SmokeScreenBlockEntity::new,
+                            SmokeScreenBlockEntity::new,
                             ModBlocks.SMOKE_SCREEN.get()
+                    ).build(null));
+
+    // 副本讲台（整合版 §2.2：钥匙插在讲台上，BE 持有）
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<com.piranport.dungeon.block.DungeonLecternBlockEntity>> DUNGEON_LECTERN =
+            BLOCK_ENTITY_TYPES.register("dungeon_lectern", () ->
+                    BlockEntityType.Builder.of(
+                            com.piranport.dungeon.block.DungeonLecternBlockEntity::new,
+                            ModBlocks.DUNGEON_LECTERN.get()
                     ).build(null));
 }

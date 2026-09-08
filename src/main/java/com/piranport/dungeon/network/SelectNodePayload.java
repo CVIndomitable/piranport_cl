@@ -9,7 +9,6 @@ import com.piranport.dungeon.event.DungeonEventHandler;
 import com.piranport.dungeon.instance.DungeonInstance;
 import com.piranport.dungeon.instance.DungeonInstanceManager;
 import com.piranport.dungeon.key.DungeonKeyItem;
-import com.piranport.dungeon.key.DungeonProgress;
 import com.piranport.registry.ModDataComponents;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.core.BlockPos;
@@ -23,11 +22,16 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
+import java.util.UUID;
+
 /**
  * C2S: Player selects a node to enter in the node map.
  *
  * <p>整合版 §3.1 联机大厅已作废——任何持有同副本钥匙的玩家均可推进节点（无队长/无旗舰校验）。
  * 多玩家时通过 instance.playerUuids 拉取所有参与玩家进入同一节点。</p>
+ *
+ * <p>服务端共用入口 {@link #serverSideHandle}：既被本 payload 的 {@code handle} 调用，
+ * 也被 {@link DungeonLecternBlock} 服务端直接调用（钥匙在讲台 BE 上时）。</p>
  */
 public record SelectNodePayload(BlockPos lecternPos, int keySlot, String nodeId)
         implements CustomPacketPayload {
@@ -56,11 +60,9 @@ public record SelectNodePayload(BlockPos lecternPos, int keySlot, String nodeId)
         context.enqueueWork(() -> {
             if (!(context.player() instanceof ServerPlayer player)) return;
 
-            // Validate keySlot range
             int keySlot = payload.keySlot();
             if (keySlot < 0 || keySlot >= player.getInventory().getContainerSize()) return;
 
-            // Validate nodeId length
             if (payload.nodeId().length() > 128) return;
 
             BlockPos lecternPos = payload.lecternPos();
@@ -70,75 +72,92 @@ public record SelectNodePayload(BlockPos lecternPos, int keySlot, String nodeId)
                     lecternPos.getZ() + 0.5) > 64.0) return;
             if (!(player.level().getBlockState(lecternPos).getBlock() instanceof DungeonLecternBlock)) return;
 
-            // Validate key
             ItemStack keyStack = player.getInventory().getItem(keySlot);
             if (!(keyStack.getItem() instanceof DungeonKeyItem)) return;
 
-            GlobalPos globalPos = GlobalPos.of(player.level().dimension(), lecternPos);
+            UUID instanceIdHint = DungeonKeyItem.getInstanceId(keyStack);
+            serverSideHandle(player, lecternPos, keyStack, instanceIdHint, payload.nodeId());
+        });
+    }
 
-            String stageId = DungeonKeyItem.getStageId(keyStack);
-            StageData stage = DungeonRegistry.INSTANCE.getStage(stageId);
-            if (stage == null) return;
+    /**
+     * 服务端核心处理：校验节点可达性、获取/创建副本实例、推进节点。
+     *
+     * <p>调用方：</p>
+     * <ul>
+     *   <li>{@link #handle}：从玩家背包 keySlot 读取 keyStack</li>
+     *   <li>{@link DungeonLecternBlock#useWithoutItem}：从讲台 BE 读取 keyStack</li>
+     * </ul>
+     *
+     * @param player          进入副本的玩家
+     * @param lecternPos      讲台方块坐标
+     * @param keyStack        钥匙 ItemStack（讲台 BE 或玩家背包持有）
+     * @param instanceIdHint  keyStack 上的 instanceId（可空，表示新副本）
+     * @param nodeId          要进入的节点 ID
+     */
+    public static void serverSideHandle(ServerPlayer player, BlockPos lecternPos,
+                                          ItemStack keyStack, UUID instanceIdHint,
+                                          String nodeId) {
+        GlobalPos globalPos = GlobalPos.of(player.level().dimension(), lecternPos);
 
-            NodeData node = stage.nodes().get(payload.nodeId());
-            if (node == null) return;
+        String stageId = DungeonKeyItem.getStageId(keyStack);
+        StageData stage = DungeonRegistry.INSTANCE.getStage(stageId);
+        if (stage == null) return;
 
-            // Get or create instance
-            ServerLevel serverLevel = (ServerLevel) player.level();
-            DungeonInstanceManager mgr = DungeonInstanceManager.get(serverLevel);
-            java.util.UUID instanceId = DungeonKeyItem.getInstanceId(keyStack);
-            DungeonInstance instance;
+        NodeData node = stage.nodes().get(nodeId);
+        if (node == null) return;
 
-            if (instanceId != null) {
-                instance = mgr.getInstance(instanceId);
-                if (instance == null) return;
-                if (!stageId.equals(instance.getStageId())) return;
-                if (!matchesInstanceLectern(instance, globalPos)) return;
+        ServerLevel serverLevel = (ServerLevel) player.level();
+        DungeonInstanceManager mgr = DungeonInstanceManager.get(serverLevel);
+        UUID instanceId = instanceIdHint;
+        DungeonInstance instance;
 
-                // 整合版 §3.1：玩家在 instance.playerUuids 中即可推进节点（无 lobby/无旗舰权限检查）
-                if (!instance.getPlayerUuids().contains(player.getUUID())) {
-                    // 自动加入副本（多玩家同副本：起点固定 lecternPos）
-                    instance.addPlayer(player.getUUID());
-                    mgr.setDirty();
-                }
+        if (instanceId != null) {
+            instance = mgr.getInstance(instanceId);
+            if (instance == null) return;
+            if (!stageId.equals(instance.getStageId())) return;
+            if (!matchesInstanceLectern(instance, globalPos)) return;
 
-                if (instance.getState() == DungeonInstance.State.SUSPENDED) {
-                    mgr.resumeInstance(instanceId);
-                }
-
-                // Validate node reachability: must not be already cleared,
-                // and must be reachable from a cleared node via stage edges
-                if (instance.getClearedNodes().contains(payload.nodeId())) return;
-                boolean reachable;
-                if (instance.getClearedNodes().isEmpty()) {
-                    String startNode = stage.startNode();
-                    if (startNode == null || !stage.nodes().containsKey(startNode)) return;
-                    reachable = payload.nodeId().equals(startNode);
-                } else {
-                    reachable = false;
-                    for (String cleared : instance.getClearedNodes()) {
-                        if (stage.getReachableFrom(cleared).contains(payload.nodeId())) {
-                            reachable = true;
-                            break;
-                        }
-                    }
-                }
-                if (!reachable) return;
-            } else {
-                // No instance yet — create new (整合版：任何玩家持钥匙即可创建)
-                if (!payload.nodeId().equals(stage.startNode())) return;
-
-                instance = mgr.createInstance(stageId, player,
-                        lecternPos,
-                        player.level().dimension().location().toString());
-                if (instance == null) return;
-                DungeonKeyItem.setInstanceId(keyStack, instance.getInstanceId());
+            // 整合版 §3.1：玩家在 instance.playerUuids 中即可推进节点（无 lobby/无旗舰权限检查）
+            if (!instance.getPlayerUuids().contains(player.getUUID())) {
+                instance.addPlayer(player.getUUID());
+                mgr.setDirty();
             }
 
-            // Handle node by type
-            DungeonEventHandler.enterNode(serverLevel, instance, node, stage,
-                    player, keyStack);
-        });
+            if (instance.getState() == DungeonInstance.State.SUSPENDED) {
+                mgr.resumeInstance(instanceId);
+            }
+
+            // Validate node reachability
+            if (instance.getClearedNodes().contains(nodeId)) return;
+            boolean reachable;
+            if (instance.getClearedNodes().isEmpty()) {
+                String startNode = stage.startNode();
+                if (startNode == null || !stage.nodes().containsKey(startNode)) return;
+                reachable = nodeId.equals(startNode);
+            } else {
+                reachable = false;
+                for (String cleared : instance.getClearedNodes()) {
+                    if (stage.getReachableFrom(cleared).contains(nodeId)) {
+                        reachable = true;
+                        break;
+                    }
+                }
+            }
+            if (!reachable) return;
+        } else {
+            // No instance yet — create new
+            if (!nodeId.equals(stage.startNode())) return;
+
+            instance = mgr.createInstance(stageId, player,
+                    lecternPos,
+                    player.level().dimension().location().toString());
+            if (instance == null) return;
+            // 整合版 §2.2：钥匙在讲台 BE 上，instanceId 仅写入 BE；玩家背包 key 副本不持有 instanceId
+            // （若 keyStack 来自 BE，则 BE 已通过 tryInsertKey 同步持有 instanceId）
+        }
+
+        DungeonEventHandler.enterNode(serverLevel, instance, node, stage, player, keyStack);
     }
 
     private static boolean matchesInstanceLectern(DungeonInstance instance, GlobalPos lecternPos) {

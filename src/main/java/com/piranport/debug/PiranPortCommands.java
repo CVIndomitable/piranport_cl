@@ -162,8 +162,53 @@ public final class PiranPortCommands {
                                 })
                                 .executes(ctx -> locateRuin(ctx.getSource(),
                                         StringArgumentType.getString(ctx, "type")))))
+
+                // P2-10: TPS / 调试开销监控 — 对比调试开启 / 关闭时的差异
+                .then(Commands.literal("tps")
+                        .executes(ctx -> tpsReport(ctx.getSource())))
         );
     }
+
+    /**
+     * 输出当前服务端 TPS、平均 tick 耗时、调试会话数。
+     * 配合 F8 开关的多次采样，可以估算调试系统对主线程的影响。
+     */
+    private static int tpsReport(CommandSourceStack source) {
+        var server = source.getServer();
+        long tickCount = server.getTickCount();
+        long nanoTime = System.nanoTime();
+
+        // 用最近 N 秒的 tick 数估算 TPS（每次调用独立计算，简单且无副作用）
+        // 注意：这是粗略估算，MC 服务端 tick 时长应为 50ms（20 TPS）
+        long recentTicks;
+        long recentNanos;
+        synchronized (TPS_SAMPLE_LOCK) {
+            if (tpsSampleTick == -1 || nanoTime - tpsSampleNanos > TPS_SAMPLE_INTERVAL_NS) {
+                tpsSampleTick = tickCount;
+                tpsSampleNanos = nanoTime;
+            }
+            recentTicks = tickCount - tpsSampleTick;
+            recentNanos = nanoTime - tpsSampleNanos;
+        }
+        double tps = recentNanos > 0 ? (double) recentTicks * 1_000_000_000.0 / recentNanos : 0.0;
+        double avgTickMs = recentTicks > 0 ? (double) recentNanos / recentTicks / 1_000_000.0 : 0.0;
+
+        int sessionCount = com.piranport.debug.PiranPortDebug.isServerEnabled() ? 1 : 0;
+        boolean testMode = com.piranport.testtools.PiranPortTestTools.isTestModeActive();
+
+        String msg = String.format(
+                "§7[PP TPS] tick=%d tps=%.2f avgTick=%.2fms debugSession=%s testMode=%s",
+                tickCount, tps, avgTickMs,
+                sessionCount > 0 ? "ACTIVE" : "off",
+                testMode ? "§cON" : "off");
+        source.sendSuccess(() -> Component.literal(msg), false);
+        return 1;
+    }
+
+    private static final Object TPS_SAMPLE_LOCK = new Object();
+    private static long tpsSampleTick = -1L;
+    private static long tpsSampleNanos = -1L;
+    private static final long TPS_SAMPLE_INTERVAL_NS = 5_000_000_000L; // 每 5 秒重采样
 
     private static int spawnShipGirl(CommandSourceStack source, String variant) {
         ServerPlayer player = source.getPlayer();

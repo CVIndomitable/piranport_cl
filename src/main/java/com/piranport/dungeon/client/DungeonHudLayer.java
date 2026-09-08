@@ -6,12 +6,21 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.LayeredDraw;
 import net.minecraft.network.chat.Component;
+import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 import net.minecraft.resources.ResourceLocation;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
 
 /**
  * HUD overlay shown while the player is inside a dungeon.
  * Displays current node, timer, and instance info.
+ *
+ * <p>整合版 P3 修复：本类原本实现 {@link LayeredDraw.Layer} 但没有任何地方注册到
+ * {@link RegisterGuiLayersEvent}，HUD 实际从不显示。已在 {@link #onRegisterGuiLayers}
+ * 中显式注册到 HOTBAR 层上方。</p>
  */
+@EventBusSubscriber(modid = PiranPort.MOD_ID, value = net.neoforged.api.distmarker.Dist.CLIENT)
 public class DungeonHudLayer implements LayeredDraw.Layer {
     public static final ResourceLocation ID =
             ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "dungeon_hud");
@@ -29,6 +38,10 @@ public class DungeonHudLayer implements LayeredDraw.Layer {
         inDungeon = true;
     }
 
+    /**
+     * 整合版 P3 修复：仅当服务端明确通知（DungeonStatePayload / PlayerDiedInDungeonPayload /
+     * DungeonResultPayload 等）时才清；不在 render 里调用，避免每帧清除的隐性 bug。
+     */
     public static void clearDungeonState() {
         inDungeon = false;
         currentStageName = "";
@@ -45,22 +58,22 @@ public class DungeonHudLayer implements LayeredDraw.Layer {
         return inDungeon;
     }
 
+    @SubscribeEvent
+    public static void onRegisterGuiLayers(RegisterGuiLayersEvent event) {
+        event.registerAbove(
+                VanillaGuiLayers.HOTBAR,
+                ID,
+                new DungeonHudLayer());
+    }
+
     @Override
     public void render(GuiGraphics gfx, DeltaTracker deltaTracker) {
+        // 整合版 P3 修复：仅在 inDungeon=true 时绘制；不主动调用 clearDungeonState
+        // （离开副本维度由 DungeonStatePayload 处理，不在 render 中清除）
         if (!inDungeon) return;
 
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
-
-        // Auto-clear when the local player is no longer in the dungeon dimension
-        // (e.g. used a town scroll). Avoids the timer running indefinitely after
-        // returning to the lectern in the overworld.
-        net.minecraft.resources.ResourceKey<net.minecraft.world.level.Level> dim =
-                mc.player.level().dimension();
-        if (!dim.equals(com.piranport.dungeon.event.DungeonEventHandler.DUNGEON_DIMENSION)) {
-            clearDungeonState();
-            return;
-        }
 
         int screenWidth = gfx.guiWidth();
         var font = mc.font;

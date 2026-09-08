@@ -5,6 +5,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Parsed node configuration within a stage.
@@ -18,7 +19,9 @@ public record NodeData(
         String costMessage,       // cost node message
         int displayX,
         int displayY,
-        String script             // optional script ID (e.g. "artillery_intro") for scripted battle nodes
+        String script,            // optional script ID (e.g. "artillery_intro") for scripted battle nodes
+        Set<CombatRestriction> restrictions, // 整合版 §2.4 关卡公式 5 战斗限制
+        SceneData scene           // 整合版 §2.4 关卡公式 5 场景
 ) {
     public enum NodeType {
         BATTLE, BOSS, RESOURCE, COST;

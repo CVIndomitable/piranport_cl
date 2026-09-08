@@ -9,6 +9,7 @@ import com.piranport.PiranPort;
 import com.piranport.dungeon.data.CheckpointData;
 import com.piranport.dungeon.data.ChapterData;
 import com.piranport.dungeon.data.DungeonRegistry;
+import com.piranport.dungeon.data.SceneData;
 import com.piranport.dungeon.data.NodeData;
 import com.piranport.dungeon.data.StageData;
 import io.netty.buffer.ByteBuf;
@@ -22,6 +23,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * S2C: Syncs dungeon registry (chapters + stages) to the client on login.
@@ -126,7 +128,9 @@ public record DungeonRegistrySyncPayload(String jsonData,
                             nObj.has("costMessage") ? nObj.get("costMessage").getAsString() : "",
                             nObj.get("displayX").getAsInt(),
                             nObj.get("displayY").getAsInt(),
-                            nObj.has("script") ? nObj.get("script").getAsString() : null));
+                            nObj.has("script") ? nObj.get("script").getAsString() : null,
+                            Set.of(),
+                            SceneData.FOREST));
                 }
                 List<StageData.EdgeData> edges = new ArrayList<>();
                 for (JsonElement e : sObj.getAsJsonArray("edges")) {
@@ -165,7 +169,8 @@ public record DungeonRegistrySyncPayload(String jsonData,
                         sObj.get("startNode").getAsString(),
                         List.copyOf(bossNodes),
                         List.of(),
-                        List.copyOf(checkpoints)));
+                        List.copyOf(checkpoints),
+                        Set.of()));
             }
         } catch (Exception e) {
             PiranPort.LOGGER.warn("Failed to parse dungeon registry sync: {}", e.getMessage());

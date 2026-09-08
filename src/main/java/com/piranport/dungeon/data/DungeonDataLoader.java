@@ -13,8 +13,10 @@ import net.minecraft.util.profiling.ProfilerFiller;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Loads dungeon configuration JSON files from data packs.
@@ -180,10 +182,25 @@ public class DungeonDataLoader extends SimpleJsonResourceReloadListener {
             }
         }
 
+        // Parse victory conditions (整合版 §2.4 关卡公式 7×5×5)
+        Set<VictoryCondition> victoryConditions = new HashSet<>();
+        if (json.has("victory_conditions")) {
+            for (JsonElement vce : json.getAsJsonArray("victory_conditions")) {
+                String v = vce.getAsString();
+                VictoryCondition cond = VictoryCondition.fromString(v);
+                if (cond == null) {
+                    PiranPort.LOGGER.warn("Unknown victory_condition '{}' in stage {}", v, stageId);
+                } else {
+                    victoryConditions.add(cond);
+                }
+            }
+        }
+
         return new StageData(stageId, chapter, displayName,
                 Map.copyOf(nodes), List.copyOf(edges), startNode,
                 List.copyOf(bossNodes), List.copyOf(firstClearRewards),
-                List.copyOf(checkpoints));
+                List.copyOf(checkpoints),
+                Set.copyOf(victoryConditions));
     }
 
     private NodeData parseNode(String nodeId, JsonObject json) {
@@ -199,8 +216,34 @@ public class DungeonDataLoader extends SimpleJsonResourceReloadListener {
         int displayY = json.has("display_y") ? json.get("display_y").getAsInt() : 0;
         String script = json.has("script") ? json.get("script").getAsString() : null;
 
+        // 整合版 §2.4 战斗限制（5 种）
+        Set<CombatRestriction> restrictions = new HashSet<>();
+        if (json.has("restrictions")) {
+            for (JsonElement re : json.getAsJsonArray("restrictions")) {
+                String r = re.getAsString();
+                CombatRestriction cr = CombatRestriction.fromString(r);
+                if (cr == null) {
+                    PiranPort.LOGGER.warn("Unknown combat_restriction '{}' in node {}", r, nodeId);
+                } else {
+                    restrictions.add(cr);
+                }
+            }
+        }
+
+        // 整合版 §2.4 场景（5 种）
+        SceneData scene = SceneData.FOREST;
+        if (json.has("scene")) {
+            SceneData parsed = SceneData.fromString(json.get("scene").getAsString());
+            if (parsed != null) {
+                scene = parsed;
+            } else {
+                PiranPort.LOGGER.warn("Unknown scene '{}' in node {}", json.get("scene").getAsString(), nodeId);
+            }
+        }
+
         return new NodeData(nodeId, type, enemies, List.copyOf(rewards),
-                List.copyOf(cost), costMessage, displayX, displayY, script);
+                List.copyOf(cost), costMessage, displayX, displayY, script,
+                Set.copyOf(restrictions), scene);
     }
 
     private List<NodeData.RewardEntry> parseRewards(JsonArray arr) {

@@ -1059,6 +1059,9 @@ public class ShipCoreCombat {
                 }
                 if (!consumed) {
                     player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
+                    // P0-3: 起飞失败埋点（弹药不足）
+                    com.piranport.debug.PiranPortDebug.aircraftLaunchFailed(
+                            player, weaponSlot, aircraftStack, "NO_AMMO");
                     return;
                 }
             }
@@ -1068,6 +1071,10 @@ public class ShipCoreCombat {
                 attackMode, coreInventorySlot, hasBullets, payloadType);
         level.addFreshEntity(aircraft);
         spawnAircraftLaunchEffect(level, player, launchInfo.aircraftType());
+        // P0-3: 起飞成功埋点（带玩家短UUID、槽位、物品hash、payload、mode、entityId）
+        com.piranport.debug.PiranPortDebug.aircraftLaunched(
+                player, weaponSlot, aircraftStack, payloadType, attackMode.name(), aircraft.getId());
+        // 旧版事件保留，便于历史脚本兼容
         com.piranport.debug.PiranPortDebug.event(
                 "Aircraft LAUNCH | type={} entityId={} payload={} mode={}",
                 aircraft.getAircraftType().name(), aircraft.getId(), payloadType, attackMode.name());

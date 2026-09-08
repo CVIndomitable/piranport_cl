@@ -160,6 +160,12 @@ public class AircraftEntity extends Entity {
     // Phase 34: set to true when defense mechanisms force a recall (stuck, timeout, distance)
     private boolean isForcedReturn = false;
 
+    // P0-3: 飞机存活时间（毫秒），用于 REMOVED 埋点
+    private final long spawnTimeMs = System.currentTimeMillis();
+
+    // P0-3: 物品返还结果（SUCCESS / SLOT_FULL / OWNER_OFFLINE），供 REMOVED 关联
+    private String lastReturnResult = null;
+
     // AircraftIndex 登记：通过 onAddedToLevel 或 tick 回退添加后置为 true
     private boolean indexRegistered = false;
 
@@ -1086,6 +1092,11 @@ public class AircraftEntity extends Entity {
     public void startReturning(String reason) {
         FlightState cur = getFlightState();
         if (cur == FlightState.RETURNING || cur == FlightState.REMOVED) return;
+        // P0-3: 返航触发埋点（带原因/状态/位置/玩家）
+        String posStr = String.format("[%d,%d,%d]",
+                blockPosition().getX(), blockPosition().getY(), blockPosition().getZ());
+        com.piranport.debug.PiranPortDebug.aircraftReturnTriggered(
+                getId(), reason, getFlightState(), posStr);
         com.piranport.debug.PiranPortDebug.event(
                 "Aircraft RETURNING | type={} entityId={} reason={}",
                 aircraftType.name(), getId(), reason);
@@ -1097,6 +1108,7 @@ public class AircraftEntity extends Entity {
         com.piranport.debug.PiranPortDebug.event(
                 "Aircraft RETURN | type={} entityId={} forced={}",
                 aircraftType.name(), getId(), isForcedReturn);
+        boolean returned = false;
         if (!level().isClientSide() && ownerUUID != null && level() instanceof ServerLevel sl) {
             Player owner = sl.getServer().getPlayerList().getPlayer(ownerUUID);
             if (owner != null) {
@@ -1110,39 +1122,61 @@ public class AircraftEntity extends Entity {
                         ? "message.piranport.aircraft_lost"
                         : "message.piranport.aircraft_returned";
                 owner.displayClientMessage(Component.translatable(msgKey, aircraftName), true);
-                returnItemToOwner(owner);
+                returned = returnItemToOwner(owner);
             } else {
                 // Owner offline — still clean up recon state and chunks
                 ReconManager.endRecon(ownerUUID);
                 releaseAllForcedChunks();
+                lastReturnResult = "OWNER_OFFLINE";
             }
         }
+        // P0-3: 实体移除埋点（带回程是否成功、存活时长）
+        long lifetimeSec = (System.currentTimeMillis() - spawnTimeMs) / 1000L;
+        com.piranport.debug.PiranPortDebug.aircraftRemoved(
+                getId(), ownerUUID, returned, lifetimeSec);
         discard();
     }
 
-    private void returnItemToOwner(Player player) {
+    private boolean returnItemToOwner(Player player) {
         if (autonomous) {
             // 自主飞机不返回物品栏，直接掉落物品
             Block.popResource(player.level(), player.blockPosition(), buildReturnStack());
-            return;
+            lastReturnResult = "DROPPED";
+            com.piranport.debug.PiranPortDebug.aircraftReturnItem(
+                    getId(), ownerUUID, true, weaponSlotIndex, "DROPPED");
+            return true;
         }
 
         ItemStack returnStack = buildReturnStack();
+        // 直接尝试放回原武器槽：若空则成功，否则原版 placeItemBackInInventory 会自动入库/掉落
         if (weaponSlotIndex == 40) {
             if (player.getInventory().offhand.get(0).isEmpty()) {
                 player.getInventory().offhand.set(0, returnStack);
-            } else {
-                player.getInventory().placeItemBackInInventory(returnStack);
+                lastReturnResult = "SUCCESS";
+                com.piranport.debug.PiranPortDebug.aircraftReturnItem(
+                        getId(), ownerUUID, true, weaponSlotIndex, "SUCCESS");
+                return true;
             }
-        } else if (weaponSlotIndex >= 0 && weaponSlotIndex < player.getInventory().items.size()) {
-            if (player.getInventory().items.get(weaponSlotIndex).isEmpty()) {
-                player.getInventory().items.set(weaponSlotIndex, returnStack);
-            } else {
-                player.getInventory().placeItemBackInInventory(returnStack);
-            }
-        } else {
-            player.getInventory().placeItemBackInInventory(returnStack);
+        } else if (weaponSlotIndex >= 0 && weaponSlotIndex < player.getInventory().items.size()
+                && player.getInventory().items.get(weaponSlotIndex).isEmpty()) {
+            player.getInventory().items.set(weaponSlotIndex, returnStack);
+            lastReturnResult = "SUCCESS";
+            com.piranport.debug.PiranPortDebug.aircraftReturnItem(
+                    getId(), ownerUUID, true, weaponSlotIndex, "SUCCESS");
+            return true;
         }
+        // 槽位已满：placeItemBackInInventory 返回 void，要么合并要么掉落
+        // 通过调用前后槽位变化检测是否合并成功
+        int beforeCount = player.getInventory().items.stream()
+                .mapToInt(s -> s.isEmpty() ? 0 : s.getCount()).sum();
+        player.getInventory().placeItemBackInInventory(returnStack);
+        int afterCount = player.getInventory().items.stream()
+                .mapToInt(s -> s.isEmpty() ? 0 : s.getCount()).sum();
+        String result = afterCount > beforeCount ? "MERGED" : "SLOT_FULL";
+        lastReturnResult = result;
+        com.piranport.debug.PiranPortDebug.aircraftReturnItem(
+                getId(), ownerUUID, true, weaponSlotIndex, result);
+        return afterCount > beforeCount;
     }
 
     private ItemStack buildReturnStack() {

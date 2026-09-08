@@ -103,6 +103,10 @@ public final class ClientHooks {
         invoke("setFireControlTargets", new Class<?>[] { List.class }, targetUUIDs);
     }
 
+    public static void displayClientMessage(Component message) {
+        invoke("displayClientMessage", new Class<?>[] { Component.class }, message);
+    }
+
     public static void setServerSolverStats(int ternaryIters, int newtonIters) {
         invoke("setServerSolverStats",
                 new Class<?>[] { int.class, int.class }, ternaryIters, newtonIters);

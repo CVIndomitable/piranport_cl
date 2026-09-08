@@ -62,6 +62,12 @@ public class ModPackets {
                 DebugTogglePayload.STREAM_CODEC,
                 DebugTogglePayload::handle
         );
+        // S2C: 服务端确认调试开关结果
+        registrar.playToClient(
+                DebugToggleAckPayload.TYPE,
+                DebugToggleAckPayload.STREAM_CODEC,
+                DebugToggleAckPayload::handle
+        );
         registrar.playToServer(
                 SnapshotRequestPayload.TYPE,
                 SnapshotRequestPayload.STREAM_CODEC,

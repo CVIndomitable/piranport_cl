@@ -9,6 +9,7 @@ import com.piranport.combat.TorpedoGuidanceManager;
 import com.piranport.combat.TransformationManager;
 import com.piranport.config.ModCommonConfig;
 import com.piranport.debug.PiranPortCommands;
+import com.piranport.debug.PiranPortDebug;
 import com.piranport.dungeon.DungeonConstants;
 import com.piranport.dungeon.entity.DungeonPortalEntity;
 import com.piranport.dungeon.event.DungeonEventHandler;
@@ -34,6 +35,7 @@ import net.neoforged.neoforge.common.util.TriState;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.entity.living.LivingExperienceDropEvent;
 import net.neoforged.neoforge.event.entity.player.ItemEntityPickupEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.server.ServerStoppedEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
@@ -226,14 +228,31 @@ public class ServerGameEvents {
     @SubscribeEvent
     public static void onServerStopped(ServerStoppedEvent event) {
         // 清理顺序说明：
-        // 1. 先清理战斗系统状态（火控、侦察、鱼雷制导），这些依赖玩家和实体
-        // 2. 再清理飞机索引（依赖玩家UUID）
-        // 3. 最后清理玩家Tick缓存（独立数据，无依赖）
+        // 1. 先关闭所有调试会话（写摘要、重命名归档文件）
+        // 2. 清理战斗系统状态（火控、侦察、鱼雷制导），这些依赖玩家和实体
+        // 3. 再清理飞机索引（依赖玩家UUID）
+        // 4. 最后清理玩家Tick缓存（独立数据，无依赖）
+        PiranPortDebug.closeAll(PiranPortDebug.CloseReason.SERVER_STOP);
         FireControlManager.clearAll();
         ReconManager.clearAll();
         TorpedoGuidanceManager.clearAll();
         SalvoManager.clearAll();
         AircraftIndex.clearAll();
         PlayerTickHandler.clearCaches();
+    }
+
+    /** 玩家登出时关闭其调试会话，避免日志文件泄漏 */
+    @SubscribeEvent
+    public static void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
+        if (event.getEntity() instanceof net.minecraft.server.level.ServerPlayer sp) {
+            PiranPortDebug.closePlayer(sp.getUUID(), PiranPortDebug.CloseReason.LOGOUT);
+        }
+    }
+
+    /** 每 200 tick 检查一次会话超时（30 分钟） */
+    @SubscribeEvent
+    public static void onServerTickPost(ServerTickEvent.Post event) {
+        if ((event.getServer().getTickCount() & 0xFF) != 0) return;
+        PiranPortDebug.evictExpired();
     }
 }

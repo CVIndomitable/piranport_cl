@@ -113,6 +113,13 @@ public final class ClientItemHooks {
         com.piranport.aviation.ClientFireControlData.setTargets(targetUUIDs);
     }
 
+    public static void displayClientMessage(Component message) {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player != null) {
+            mc.player.displayClientMessage(message, true);
+        }
+    }
+
     public static void setServerSolverStats(int ternaryIters, int newtonIters) {
         ClientScopeHandler.setServerSolverStats(ternaryIters, newtonIters);
     }

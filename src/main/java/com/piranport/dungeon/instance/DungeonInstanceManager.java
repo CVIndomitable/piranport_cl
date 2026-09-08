@@ -81,6 +81,14 @@ public class DungeonInstanceManager extends SavedData {
     }
 
     /**
+     * 返回当前管理器中所有实例（拷贝）。
+     * 整合版 §3.2：用于 onCheckpointReached 按玩家反查所在 instance。
+     */
+    public java.util.Collection<DungeonInstance> getAllInstances() {
+        return java.util.Collections.unmodifiableCollection(instances.values());
+    }
+
+    /**
      * Suspends an instance (all players left).
      */
     public void suspendInstance(UUID instanceId) {

@@ -77,6 +77,13 @@ public class DungeonDataLoader extends SimpleJsonResourceReloadListener {
                 PiranPort.LOGGER.warn("Stage {} start_node '{}' does not exist in nodes",
                         stage.stageId(), stage.startNode());
             }
+            // Validate checkpoint nodeId references existing node
+            for (var cp : stage.checkpoints()) {
+                if (!stage.nodes().containsKey(cp.nodeId())) {
+                    PiranPort.LOGGER.warn("Stage {} checkpoint '{}' references missing node '{}'",
+                            stage.stageId(), cp.id(), cp.nodeId());
+                }
+            }
         }
 
         DungeonRegistry.INSTANCE.load(chapters, stages, enemySets);
@@ -149,9 +156,34 @@ public class DungeonDataLoader extends SimpleJsonResourceReloadListener {
             firstClearRewards = parseRewards(json.getAsJsonArray("first_clear_rewards"));
         }
 
+        // Parse checkpoints (整合版 §3.2：每关 1-2 个、Boss 节点前必设)
+        List<CheckpointData> checkpoints = new ArrayList<>();
+        if (json.has("checkpoints")) {
+            for (JsonElement ce : json.getAsJsonArray("checkpoints")) {
+                JsonObject cpObj = ce.getAsJsonObject();
+                if (!cpObj.has("id") || cpObj.get("id").isJsonNull()
+                        || !cpObj.has("node_id") || cpObj.get("node_id").isJsonNull()) {
+                    PiranPort.LOGGER.warn("Skipping checkpoint missing required field 'id' or 'node_id' in stage {}", stageId);
+                    continue;
+                }
+                int posX = cpObj.has("pos_x") ? cpObj.get("pos_x").getAsInt() : 0;
+                int posY = cpObj.has("pos_y") ? cpObj.get("pos_y").getAsInt() : 64;
+                int posZ = cpObj.has("pos_z") ? cpObj.get("pos_z").getAsInt() : 0;
+                String facing = cpObj.has("facing") ? cpObj.get("facing").getAsString() : "south";
+                String unlock = cpObj.has("unlock_condition")
+                        ? cpObj.get("unlock_condition").getAsString()
+                        : CheckpointData.UNLOCK_ANY;
+                checkpoints.add(new CheckpointData(
+                        cpObj.get("id").getAsString(),
+                        cpObj.get("node_id").getAsString(),
+                        posX, posY, posZ, facing, unlock));
+            }
+        }
+
         return new StageData(stageId, chapter, displayName,
                 Map.copyOf(nodes), List.copyOf(edges), startNode,
-                List.copyOf(bossNodes), List.copyOf(firstClearRewards));
+                List.copyOf(bossNodes), List.copyOf(firstClearRewards),
+                List.copyOf(checkpoints));
     }
 
     private NodeData parseNode(String nodeId, JsonObject json) {

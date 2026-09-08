@@ -318,4 +318,55 @@ public class DungeonEventHandler {
         }
     }
 
+    // ===== Checkpoint (整合版 §3.2) =====
+
+    /**
+     * 整合版 §3.2：玩家踩到记录点方块 → 标记玩家最新 checkpoint + S2C 反馈（光柱/标题/音效）。
+     * 解锁条件由 {@link com.piranport.dungeon.data.CheckpointData#isUnlocked} 判断。
+     */
+    public static void onCheckpointReached(net.minecraft.server.level.ServerPlayer player,
+                                              BlockPos pos) {
+        DungeonInstanceManager mgr = DungeonInstanceManager.get((ServerLevel) player.level());
+        UUID playerUuid = player.getUUID();
+        DungeonInstance instance = null;
+        for (DungeonInstance inst : mgr.getAllInstances()) {
+            if (inst.getPlayerUuids().contains(playerUuid)) {
+                instance = inst;
+                break;
+            }
+        }
+        if (instance == null) return;
+        if (!isInDungeon(player)) return;
+
+        com.piranport.dungeon.data.StageData stage =
+                com.piranport.dungeon.data.DungeonRegistry.INSTANCE.getStage(instance.getStageId());
+        if (stage == null) return;
+
+        com.piranport.dungeon.data.CheckpointData matched = null;
+        for (com.piranport.dungeon.data.CheckpointData cp : stage.checkpoints()) {
+            if (cp.posX() == pos.getX() && cp.posY() == pos.getY() && cp.posZ() == pos.getZ()) {
+                matched = cp;
+                break;
+            }
+        }
+        if (matched == null) return;
+
+        boolean nodeCleared = instance.getClearedNodes().contains(matched.nodeId());
+        if (!matched.isUnlocked(nodeCleared)) {
+            return;
+        }
+
+        String previousCpId = instance.getLatestCheckpointFor(playerUuid);
+        if (matched.id().equals(previousCpId)) {
+            return;
+        }
+        instance.markCheckpointReached(playerUuid, matched.id());
+        mgr.setDirty();
+
+        PacketDistributor.sendToPlayer(player,
+                new com.piranport.dungeon.network.CheckpointReachedPayload(
+                        stage.displayName(), matched.id()));
+        PiranPort.LOGGER.info("Player {} reached checkpoint '{}' in stage {}",
+                player.getName().getString(), matched.id(), instance.getStageId());
+    }
 }

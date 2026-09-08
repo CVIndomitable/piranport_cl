@@ -6,6 +6,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.piranport.PiranPort;
+import com.piranport.dungeon.data.CheckpointData;
 import com.piranport.dungeon.data.ChapterData;
 import com.piranport.dungeon.data.DungeonRegistry;
 import com.piranport.dungeon.data.NodeData;
@@ -138,6 +139,23 @@ public record DungeonRegistrySyncPayload(String jsonData,
                 for (JsonElement b : sObj.getAsJsonArray("bossNodes")) {
                     bossNodes.add(b.getAsString());
                 }
+                // 整合版 §3.2：还原记录点
+                List<CheckpointData> checkpoints = new ArrayList<>();
+                if (sObj.has("checkpoints")) {
+                    for (JsonElement ce : sObj.getAsJsonArray("checkpoints")) {
+                        JsonObject cpObj = ce.getAsJsonObject();
+                        checkpoints.add(new CheckpointData(
+                                cpObj.get("id").getAsString(),
+                                cpObj.get("nodeId").getAsString(),
+                                cpObj.get("posX").getAsInt(),
+                                cpObj.get("posY").getAsInt(),
+                                cpObj.get("posZ").getAsInt(),
+                                cpObj.has("facing") ? cpObj.get("facing").getAsString() : "south",
+                                cpObj.has("unlockCondition")
+                                        ? cpObj.get("unlockCondition").getAsString()
+                                        : CheckpointData.UNLOCK_ANY));
+                    }
+                }
                 stages.put(stageId, new StageData(
                         stageId,
                         sObj.get("chapter").getAsString(),
@@ -146,7 +164,8 @@ public record DungeonRegistrySyncPayload(String jsonData,
                         List.copyOf(edges),
                         sObj.get("startNode").getAsString(),
                         List.copyOf(bossNodes),
-                        List.of()));
+                        List.of(),
+                        List.copyOf(checkpoints)));
             }
         } catch (Exception e) {
             PiranPort.LOGGER.warn("Failed to parse dungeon registry sync: {}", e.getMessage());
@@ -245,6 +264,23 @@ public record DungeonRegistrySyncPayload(String jsonData,
             JsonArray bossArr = new JsonArray();
             for (String b : stage.bossNodes()) bossArr.add(b);
             sObj.add("bossNodes", bossArr);
+
+            // Checkpoints (整合版 §3.2)
+            if (!stage.checkpoints().isEmpty()) {
+                JsonArray cpArr = new JsonArray();
+                for (CheckpointData cp : stage.checkpoints()) {
+                    JsonObject cpObj = new JsonObject();
+                    cpObj.addProperty("id", cp.id());
+                    cpObj.addProperty("nodeId", cp.nodeId());
+                    cpObj.addProperty("posX", cp.posX());
+                    cpObj.addProperty("posY", cp.posY());
+                    cpObj.addProperty("posZ", cp.posZ());
+                    cpObj.addProperty("facing", cp.facing());
+                    cpObj.addProperty("unlockCondition", cp.unlockCondition());
+                    cpArr.add(cpObj);
+                }
+                sObj.add("checkpoints", cpArr);
+            }
 
             stagesObj.add(entry.getKey(), sObj);
         }

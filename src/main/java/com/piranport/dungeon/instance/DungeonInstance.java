@@ -6,7 +6,9 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.nbt.Tag;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -28,6 +30,8 @@ public class DungeonInstance {
     private String currentNode;
     private final Set<String> clearedNodes = new HashSet<>();
     private final Set<UUID> playerUuids = new HashSet<>(); // all players who participated
+    /** 整合版 §3.2：按玩家个人计算的"最新记录点 id"。每个玩家仅保留最新 checkpoint id。 */
+    private final Map<UUID, String> playerCheckpoints = new HashMap<>();
     private BlockPos lecternPos; // the lectern block that opened this instance
     private String lecternDimension; // dimension key of the lectern
     private long startTimeMillis;
@@ -49,6 +53,13 @@ public class DungeonInstance {
     public String getCurrentNode() { return currentNode; }
     public Set<String> getClearedNodes() { return java.util.Collections.unmodifiableSet(clearedNodes); }
     public Set<UUID> getPlayerUuids() { return java.util.Collections.unmodifiableSet(playerUuids); }
+    /** 整合版 §3.2：返回玩家个人最新记录点 id（null 表示尚未踩过任何 checkpoint）。 */
+    public String getLatestCheckpointFor(UUID playerUuid) { return playerCheckpoints.get(playerUuid); }
+    /** 整合版 §3.2：标记玩家踩到了某 checkpoint。 */
+    public void markCheckpointReached(UUID playerUuid, String checkpointId) {
+        if (playerUuid == null || checkpointId == null) return;
+        playerCheckpoints.put(playerUuid, checkpointId);
+    }
     public BlockPos getLecternPos() { return lecternPos; }
     public String getLecternDimension() { return lecternDimension; }
     public long getStartTimeMillis() { return startTimeMillis; }
@@ -132,6 +143,18 @@ public class DungeonInstance {
         }
         tag.put("Players", playerList);
 
+        // 整合版 §3.2：持久化每个玩家的最新 checkpoint id
+        if (!playerCheckpoints.isEmpty()) {
+            ListTag checkpointsList = new ListTag();
+            for (Map.Entry<UUID, String> e : playerCheckpoints.entrySet()) {
+                CompoundTag cpTag = new CompoundTag();
+                cpTag.putUUID("Player", e.getKey());
+                cpTag.putString("Checkpoint", e.getValue());
+                checkpointsList.add(cpTag);
+            }
+            tag.put("PlayerCheckpoints", checkpointsList);
+        }
+
         // 整合版 §3.1：FlagshipUuid 字段不再写出（已删除玩家旗舰权限概念）
         if (lecternPos != null) {
             tag.put("LecternPos", NbtUtils.writeBlockPos(lecternPos));
@@ -168,6 +191,17 @@ public class DungeonInstance {
         ListTag playerList = tag.getList("Players", Tag.TAG_INT_ARRAY);
         for (int i = 0; i < playerList.size(); i++) {
             inst.playerUuids.add(NbtUtils.loadUUID(playerList.get(i)));
+        }
+
+        // 整合版 §3.2：读玩家 checkpoint 进度
+        if (tag.contains("PlayerCheckpoints", Tag.TAG_LIST)) {
+            ListTag cpList = tag.getList("PlayerCheckpoints", Tag.TAG_COMPOUND);
+            for (int i = 0; i < cpList.size(); i++) {
+                CompoundTag cpTag = cpList.getCompound(i);
+                UUID playerUuid = cpTag.getUUID("Player");
+                String cpId = cpTag.getString("Checkpoint");
+                inst.playerCheckpoints.put(playerUuid, cpId);
+            }
         }
 
         // 整合版 §3.1：旧存档的 FlagshipUuid 字段读时忽略（不再需要），保证向前兼容

@@ -22,6 +22,8 @@ import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.UUID;
+
 /**
  * 副本讲台方块。整合版 §2.2：钥匙插在讲台上，玩家不携带进副本。
  *
@@ -101,19 +103,28 @@ public class DungeonLecternBlock extends BaseEntityBlock {
             return InteractionResult.CONSUME;
         }
 
-        // 整合版 §3.1：BE 有钥匙 → 进入副本（按 stage.startNode 起点固定传送）。
-        // 当前阶段（P1-A）走 SelectNodePayload 服务端处理；阶段 3 改为发 OpenContinueScreenPayload。
-        String stageId = com.piranport.dungeon.key.DungeonKeyItem.getStageId(lecternBE.getKeyStack());
-        com.piranport.dungeon.data.StageData stage =
-                com.piranport.dungeon.data.DungeonRegistry.INSTANCE.getStage(stageId);
-        if (stage != null && stage.startNode() != null) {
-            com.piranport.dungeon.network.SelectNodePayload.serverSideHandle(serverPlayer, pos,
-                    lecternBE.getKeyStack(), lecternBE.getDungeonInstanceUuid(),
-                    stage.startNode());
-        } else {
-            serverPlayer.sendSystemMessage(
-                    Component.literal("Error: dungeon stage data not loaded"));
+        // 整合版 §3.1：BE 有钥匙 → 弹"继续/从头开始"对话框（OpenContinueScreenPayload）
+        // 客户端打开 DungeonContinueScreen（独立 Screen，无 Menu）。
+        // 已通关节点为 0 时仍弹框，但 ContinueScreen 显示"直接进入"按钮。
+        net.minecraft.server.level.ServerLevel serverLevel = (net.minecraft.server.level.ServerLevel) level;
+        com.piranport.dungeon.instance.DungeonInstanceManager mgr =
+                com.piranport.dungeon.instance.DungeonInstanceManager.get(serverLevel);
+        String stageDisplay = "(unknown)";
+        int clearedCount = 0;
+        UUID instId = lecternBE.getDungeonInstanceUuid();
+        if (instId != null) {
+            com.piranport.dungeon.instance.DungeonInstance inst = mgr.getInstance(instId);
+            if (inst != null) {
+                clearedCount = inst.getClearedNodes().size();
+                com.piranport.dungeon.data.StageData stage =
+                        com.piranport.dungeon.data.DungeonRegistry.INSTANCE.getStage(inst.getStageId());
+                if (stage != null) {
+                    stageDisplay = stage.displayName();
+                }
+            }
         }
+        net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(serverPlayer,
+                new com.piranport.dungeon.network.OpenContinueScreenPayload(pos, stageDisplay, clearedCount));
         return InteractionResult.CONSUME;
     }
 }

@@ -19,7 +19,8 @@ public record StageData(
         List<EdgeData> edges,
         String startNode,
         List<String> bossNodes,
-        List<NodeData.RewardEntry> firstClearRewards
+        List<NodeData.RewardEntry> firstClearRewards,
+        List<CheckpointData> checkpoints
 ) {
     public record EdgeData(String from, String to) {}
 

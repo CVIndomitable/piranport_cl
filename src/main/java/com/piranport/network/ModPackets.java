@@ -188,7 +188,28 @@ public class ModPackets {
                 com.piranport.dungeon.network.TownScrollUsePayload.STREAM_CODEC,
                 com.piranport.dungeon.network.TownScrollUsePayload::handle
         );
+        // 整合版 §3.1：讲台入口"继续/从头开始"对话框（P1-B）
+        registrar.playToServer(
+                com.piranport.dungeon.network.ContinueFromCheckpointPayload.TYPE,
+                com.piranport.dungeon.network.ContinueFromCheckpointPayload.STREAM_CODEC,
+                com.piranport.dungeon.network.ContinueFromCheckpointPayload::handle
+        );
+        registrar.playToServer(
+                com.piranport.dungeon.network.RestartFromBeginningPayload.TYPE,
+                com.piranport.dungeon.network.RestartFromBeginningPayload.STREAM_CODEC,
+                com.piranport.dungeon.network.RestartFromBeginningPayload::handle
+        );
         // S2C
+        registrar.playToClient(
+                com.piranport.dungeon.network.OpenContinueScreenPayload.TYPE,
+                com.piranport.dungeon.network.OpenContinueScreenPayload.STREAM_CODEC,
+                com.piranport.dungeon.network.OpenContinueScreenPayload::handle
+        );
+        registrar.playToClient(
+                com.piranport.dungeon.network.CheckpointReachedPayload.TYPE,
+                com.piranport.dungeon.network.CheckpointReachedPayload.STREAM_CODEC,
+                com.piranport.dungeon.network.CheckpointReachedPayload::handle
+        );
         registrar.playToClient(
                 com.piranport.dungeon.network.DungeonStatePayload.TYPE,
                 com.piranport.dungeon.network.DungeonStatePayload.STREAM_CODEC,

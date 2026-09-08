@@ -143,7 +143,7 @@ public class ShipCoreItem extends Item implements Equipable {
 
     @Override
     public boolean isBarVisible(ItemStack stack) {
-        FuelData fuel = stack.get(ModDataComponents.SHIP_CORE_FUEL.get());
+        FuelData fuel = readFuelData(stack);
         return fuel != null && fuel.currentFuel() < fuel.maxFuel();
     }
 
@@ -166,7 +166,7 @@ public class ShipCoreItem extends Item implements Equipable {
      * 验证并修正燃料数据完整性。直接修改 ItemStack，无返回值。
      */
     private void validateAndFixFuelData(ItemStack stack) {
-        FuelData fuel = stack.get(ModDataComponents.SHIP_CORE_FUEL.get());
+        FuelData fuel = readFuelData(stack);
         if (fuel == null || fuel.maxFuel() <= 0 || fuel.currentFuel() < 0) {
             fuel = new FuelData(0, shipType.fuelCapacity);
         } else if (fuel.currentFuel() > fuel.maxFuel()) {
@@ -174,6 +174,18 @@ public class ShipCoreItem extends Item implements Equipable {
         }
         if (stack.get(ModDataComponents.SHIP_CORE_FUEL.get()) != fuel) {
             stack.set(ModDataComponents.SHIP_CORE_FUEL.get(), fuel);
+        }
+    }
+
+    /**
+     * P1-7: 安全读取 FuelData 组件，捕获异常并记录埋点。
+     */
+    private FuelData readFuelData(ItemStack stack) {
+        try {
+            return stack.get(ModDataComponents.SHIP_CORE_FUEL.get());
+        } catch (Throwable t) {
+            com.piranport.debug.PiranPortDebug.componentReadFailed("SHIP_CORE_FUEL", stack, t);
+            return null;
         }
     }
 

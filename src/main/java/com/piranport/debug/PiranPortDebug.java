@@ -335,6 +335,76 @@ public final class PiranPortDebug {
     }
 
     // -------------------------------------------------------------------------
+    // Failure embeds (P1-7)
+    // -------------------------------------------------------------------------
+
+    /**
+     * 重量超载记录（{@code error()} 等级，不受 enabled 门控）。
+     * 包含玩家短UUID、当前 / 最大重量、超载量、触发操作（可选）。
+     */
+    public static void weightOverload(net.minecraft.world.entity.player.Player player,
+                                      int currentLoad, int maxLoad) {
+        UUID uuid = player == null ? null : player.getUUID();
+        int over = currentLoad - maxLoad;
+        error("WeightScan OVERLOAD | player={} load={}/{} over={} dim={}",
+                shortUuid(uuid), currentLoad, maxLoad, over,
+                player == null ? "?" : player.level().dimension().location());
+    }
+
+    /**
+     * 数据组件读取失败记录。包含物品 ID、组件类型、异常消息。
+     */
+    public static void componentReadFailed(String componentType, ItemStack stack, Throwable t) {
+        String itemId = "empty";
+        if (stack != null && !stack.isEmpty()) {
+            itemId = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
+        }
+        String exMsg = t == null ? "?" : (t.getClass().getSimpleName() + ": " + t.getMessage());
+        error("Component READ FAIL | component={} item={} ex={}",
+                componentType, itemId, exMsg);
+    }
+
+    /**
+     * 数据组件读取失败的便捷重载（不传异常）。
+     */
+    public static void componentReadFailed(String componentType, ItemStack stack, String reason) {
+        String itemId = "empty";
+        if (stack != null && !stack.isEmpty()) {
+            itemId = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
+        }
+        error("Component READ FAIL | component={} item={} reason={}",
+                componentType, itemId, reason);
+    }
+
+    /**
+     * 网络包处理失败记录。包含包类型、玩家、异常类与消息。
+     */
+    public static void payloadFailed(String packetType,
+                                     net.minecraft.world.entity.player.Player player, Throwable t) {
+        UUID uuid = player == null ? null : player.getUUID();
+        String exMsg = t == null ? "?" : (t.getClass().getSimpleName() + ": " + t.getMessage());
+        error("Payload handler FAILED | type={} player={} ex={}",
+                packetType, shortUuid(uuid), exMsg);
+    }
+
+    /**
+     * 包裹一个 payload handler 主体，自动捕获并记录异常。
+     * 用法：{@code ctx.enqueueWork(() -> PiranPortDebug.runPayload("DebugToggle",
+     *         () -> PiranPortDebug.togglePlayer(...)));}
+     */
+    public static void runPayload(String packetType,
+                                  net.minecraft.world.entity.player.Player player,
+                                  Runnable body) {
+        try {
+            body.run();
+        } catch (Throwable t) {
+            payloadFailed(packetType, player, t);
+            if (t instanceof RuntimeException re) throw re;
+            throw new RuntimeException(t);
+        }
+    }
+
+    // -------------------------------------------------------------------------
     // Operation ID helper (P1-6)
     // -------------------------------------------------------------------------
 

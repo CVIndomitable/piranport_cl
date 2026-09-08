@@ -29,24 +29,27 @@ public record SnapshotRequestPayload(boolean acknowledged) implements CustomPack
     public Type<? extends CustomPacketPayload> type() { return TYPE; }
 
     public static void handle(SnapshotRequestPayload payload, IPayloadContext context) {
-        context.enqueueWork(() -> {
-            if (!(context.player() instanceof net.minecraft.server.level.ServerPlayer sp)) {
-                return;
-            }
-            if (!sp.hasPermissions(2)) {
-                ClientHooks.displayClientMessage(Component.literal("[PP] 调试需要 OP 权限"));
-                return;
-            }
-            long cooldownMs = PiranPortDebug.snapshot(sp);
-            if (payload.acknowledged()) {
-                if (cooldownMs > 0) {
-                    ClientHooks.displayClientMessage(Component.literal(
-                            String.format("[PP] 快照冷却中，剩余 %d ms", cooldownMs)));
-                } else {
-                    ClientHooks.displayClientMessage(Component.literal(
-                            "[PP] Snapshot written (会话日志)"));
-                }
-            }
-        });
+        context.enqueueWork(() -> com.piranport.debug.PiranPortDebug.runPayload(
+                "SnapshotRequest",
+                context.player(),
+                () -> {
+                    if (!(context.player() instanceof net.minecraft.server.level.ServerPlayer sp)) {
+                        return;
+                    }
+                    if (!sp.hasPermissions(2)) {
+                        ClientHooks.displayClientMessage(Component.literal("[PP] 调试需要 OP 权限"));
+                        return;
+                    }
+                    long cooldownMs = PiranPortDebug.snapshot(sp);
+                    if (payload.acknowledged()) {
+                        if (cooldownMs > 0) {
+                            ClientHooks.displayClientMessage(Component.literal(
+                                    String.format("[PP] 快照冷却中，剩余 %d ms", cooldownMs)));
+                        } else {
+                            ClientHooks.displayClientMessage(Component.literal(
+                                    "[PP] Snapshot written (会话日志)"));
+                        }
+                    }
+                }));
     }
 }

@@ -22,11 +22,12 @@ public record DebugCooldownOverridePayload(boolean enabled) implements CustomPac
     public Type<? extends CustomPacketPayload> type() { return TYPE; }
 
     public static void handle(DebugCooldownOverridePayload payload, IPayloadContext context) {
-        context.enqueueWork(() -> {
-            if (context.player() instanceof net.minecraft.server.level.ServerPlayer sp
-                    && sp.hasPermissions(2)) {
-                PiranPortDebug.setCooldownOverride(payload.enabled());
-            }
-        });
+        context.enqueueWork(() -> com.piranport.debug.PiranPortDebug.runPayload(
+                "DebugCooldownOverride", null, () -> {
+                    if (context.player() instanceof net.minecraft.server.level.ServerPlayer sp
+                            && sp.hasPermissions(2)) {
+                        PiranPortDebug.setCooldownOverride(payload.enabled());
+                    }
+                }));
     }
 }

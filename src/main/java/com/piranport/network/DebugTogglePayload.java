@@ -23,21 +23,22 @@ public record DebugTogglePayload(boolean enabled) implements CustomPacketPayload
     public Type<? extends CustomPacketPayload> type() { return TYPE; }
 
     public static void handle(DebugTogglePayload payload, IPayloadContext context) {
-        context.enqueueWork(() -> {
-            if (!(context.player() instanceof net.minecraft.server.level.ServerPlayer sp)) {
-                return;
-            }
-            if (!sp.hasPermissions(2)) {
-                // P0-1: 权限不足时显式反馈，避免假成功
-                PacketDistributor.sendToPlayer(sp,
-                        new DebugToggleAckPayload(false, -1L, "NO_PERMISSION"));
-                return;
-            }
-            var result = PiranPortDebug.togglePlayer(sp.getUUID(), sp.getScoreboardName(), payload.enabled());
-            String status = result.status();
-            long sid = result.sessionId();
-            PacketDistributor.sendToPlayer(sp,
-                    new DebugToggleAckPayload(payload.enabled(), sid, status));
-        });
+        context.enqueueWork(() -> com.piranport.debug.PiranPortDebug.runPayload(
+                "DebugToggle", null, () -> {
+                    if (!(context.player() instanceof net.minecraft.server.level.ServerPlayer sp)) {
+                        return;
+                    }
+                    if (!sp.hasPermissions(2)) {
+                        // P0-1: 权限不足时显式反馈，避免假成功
+                        PacketDistributor.sendToPlayer(sp,
+                                new DebugToggleAckPayload(false, -1L, "NO_PERMISSION"));
+                        return;
+                    }
+                    var result = PiranPortDebug.togglePlayer(sp.getUUID(), sp.getScoreboardName(), payload.enabled());
+                    String status = result.status();
+                    long sid = result.sessionId();
+                    PacketDistributor.sendToPlayer(sp,
+                            new DebugToggleAckPayload(payload.enabled(), sid, status));
+                }));
     }
 }

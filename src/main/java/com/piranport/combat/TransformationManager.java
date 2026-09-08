@@ -321,6 +321,11 @@ public class TransformationManager {
         if (player.level().isClientSide()) return;
         int cost = maxLoad - totalLoad;
 
+        // P1-7: 超载时记录 error 埋点（含玩家、当前/最大值、触发上下文）
+        if (totalLoad > maxLoad) {
+            com.piranport.debug.PiranPortDebug.weightOverload(player, totalLoad, maxLoad);
+        }
+
         int duration = 60; // 3秒，每次重算刷新
         if (cost <= -100) {
             // 挖掘疲劳 III + 中毒 II

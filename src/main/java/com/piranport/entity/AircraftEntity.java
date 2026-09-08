@@ -219,7 +219,15 @@ public class AircraftEntity extends Entity {
         entity.hasBullets = hasBullets;
         entity.payloadType = payloadType;
 
-        AircraftInfo info = aircraftStack.get(ModDataComponents.AIRCRAFT_INFO.get());
+        AircraftInfo info;
+        try {
+            info = aircraftStack.get(ModDataComponents.AIRCRAFT_INFO.get());
+        } catch (Throwable t) {
+            // P1-7: 数据组件读取失败
+            com.piranport.debug.PiranPortDebug.componentReadFailed(
+                    "AIRCRAFT_INFO", aircraftStack, t);
+            info = null;
+        }
         if (info != null) {
             entity.aircraftType = info.aircraftType();
             entity.panelDamage = ExperienceShellItem.applyAircraftPanelDamageBonus(aircraftStack, info.panelDamage());
@@ -229,6 +237,10 @@ public class AircraftEntity extends Entity {
             entity.fuelCapacity = info.fuelCapacity();
             entity.currentFuel = info.currentFuel();
             entity.bombingMode = info.bombingMode();
+        } else {
+            // P1-7: 组件缺失（飞机无 AIRCRAFT_INFO）属于异常
+            com.piranport.debug.PiranPortDebug.componentReadFailed(
+                    "AIRCRAFT_INFO", aircraftStack, "component is null");
         }
         // Default payload based on aircraft type when not explicitly configured
         if (entity.payloadType.isEmpty()) {
@@ -284,7 +296,14 @@ public class AircraftEntity extends Entity {
         entity.homePosition = spawnPos;
         entity.autonomousTarget = target;
 
-        AircraftInfo info = aircraftStack.get(ModDataComponents.AIRCRAFT_INFO.get());
+        AircraftInfo info;
+        try {
+            info = aircraftStack.get(ModDataComponents.AIRCRAFT_INFO.get());
+        } catch (Throwable t) {
+            com.piranport.debug.PiranPortDebug.componentReadFailed(
+                    "AIRCRAFT_INFO", aircraftStack, t);
+            info = null;
+        }
         if (info != null) {
             entity.aircraftType = info.aircraftType();
             entity.panelDamage = ExperienceShellItem.applyAircraftPanelDamageBonus(aircraftStack, info.panelDamage());

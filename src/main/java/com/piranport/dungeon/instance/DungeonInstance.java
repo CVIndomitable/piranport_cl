@@ -131,8 +131,9 @@ public class DungeonInstance {
      * nodeIds like "boss1"/"boss2" don't collide. Falls back to first-letter
      * mapping for legacy single-letter ids when the stage hasn't loaded yet.
      *
-     * <p>Nodes are laid out in a single row along the X axis within the centered
-     * 512x512 usable area; each node occupies a 128x128 battlefield tile.</p>
+     * <p>Nodes are laid out on a 4x4 grid (MAX_NODES_PER_USABLE_SIDE=4) within the centered
+     * 512x512 usable area; each node occupies a 128x128 battlefield tile. Single-instance
+     * capacity = 16 nodes, well above the 4-5 nodes used by stage 1-1..7-3 (副本/14).</p>
      */
     public BlockPos getNodeSpawnPos(String nodeId) {
         int nodeIndex = 0;
@@ -151,10 +152,13 @@ public class DungeonInstance {
                         com.piranport.dungeon.DungeonConstants.MAX_NODES_PER_STAGE);
             }
         }
-        // 将节点放置在 512×512 居中区域的首行（副本/01 §2.1：实际地图 512×512）
-        int nodeX = getUsableMinX() + nodeIndex * com.piranport.dungeon.DungeonConstants.NODE_AREA_SIZE
+        // 4×4 节点网格（512×512 可玩区内，每节点 128×128）
+        int gridX = Math.floorMod(nodeIndex, com.piranport.dungeon.DungeonConstants.MAX_NODES_PER_USABLE_SIDE);
+        int gridZ = Math.floorDiv(nodeIndex, com.piranport.dungeon.DungeonConstants.MAX_NODES_PER_USABLE_SIDE);
+        int nodeX = getUsableMinX() + gridX * com.piranport.dungeon.DungeonConstants.NODE_AREA_SIZE
                 + com.piranport.dungeon.DungeonConstants.NODE_AREA_SIZE / 2;
-        int nodeZ = getUsableMinZ() + com.piranport.dungeon.DungeonConstants.NODE_AREA_SIZE / 2;
+        int nodeZ = getUsableMinZ() + gridZ * com.piranport.dungeon.DungeonConstants.NODE_AREA_SIZE
+                + com.piranport.dungeon.DungeonConstants.NODE_AREA_SIZE / 2;
         return new BlockPos(nodeX, com.piranport.dungeon.DungeonConstants.SPAWN_Y, nodeZ);
     }
 

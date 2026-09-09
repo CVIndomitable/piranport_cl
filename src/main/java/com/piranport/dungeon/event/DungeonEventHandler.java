@@ -294,8 +294,12 @@ public class DungeonEventHandler {
     public static void teleportToLectern(ServerPlayer player, DungeonInstance instance) {
         BlockPos lecternPos = instance.getLecternPos();
         if (lecternPos == null) {
-            // Fallback to world spawn
-            lecternPos = player.server.overworld().getSharedSpawnPos();
+            // 整合版 §3.3：决策要求"重生到进入副本时的门口"——若实例未记录讲台位置
+            // （极异常路径：旧存档或被外部清空），拒绝传送并报错，避免错误兜底到主世界 spawn
+            // 导致玩家错误地认为副本丢失。改用 keepPosition+log，让玩家报告。
+            PiranPort.LOGGER.error("Instance {} has no lecternPos; refusing teleport-to-lectern for {}",
+                    instance.getInstanceId(), player.getName().getString());
+            return;
         }
 
         String dimKey = instance.getLecternDimension();

@@ -77,6 +77,47 @@ public class DungeonEventHandler {
         return player.level().dimension().equals(DUNGEON_DIMENSION);
     }
 
+    // ===== Key Authority Helpers (整合版 §2.2：钥匙插在讲台上) =====
+
+    /**
+     * 按玩家 UUID 反查其当前参与的第一个 ACTIVE 实例。
+     * 整合版 §2.2：玩家不再持有钥匙，身份归属以"玩家加入实例"为权威。
+     */
+    private static DungeonInstance findActiveInstanceForPlayer(DungeonInstanceManager mgr, UUID playerUuid) {
+        for (DungeonInstance inst : mgr.getAllInstances()) {
+            if (inst.getState() != DungeonInstance.State.ACTIVE) continue;
+            if (inst.getPlayerUuids().contains(playerUuid)) return inst;
+        }
+        return null;
+    }
+
+    /**
+     * 从副本实例对应的讲台 BE 读取钥匙 ItemStack。
+     * 整合版 §2.2：钥匙权威源是讲台 BE（讲台在 instance.lecternDimension 维度的 instance.lecternPos 位置），
+     * 不再扫玩家背包。读到的钥匙其 DUNGEON_INSTANCE_ID 应等于 instance.getInstanceId()。
+     *
+     * @return BE 中的钥匙；若讲台缺失或 BE 中无钥匙，返回 ItemStack.EMPTY
+     */
+    private static ItemStack readKeyFromLectern(DungeonInstance instance, MinecraftServer server) {
+        if (instance.getLecternPos() == null || instance.getLecternDimension() == null) {
+            return ItemStack.EMPTY;
+        }
+        ResourceLocation parsed = ResourceLocation.tryParse(instance.getLecternDimension());
+        if (parsed == null) return ItemStack.EMPTY;
+        ServerLevel lecternLevel = server.getLevel(
+                ResourceKey.create(Registries.DIMENSION, parsed));
+        if (lecternLevel == null) return ItemStack.EMPTY;
+
+        net.minecraft.world.level.block.entity.BlockEntity be =
+                lecternLevel.getBlockEntity(instance.getLecternPos());
+        if (!(be instanceof com.piranport.dungeon.block.DungeonLecternBlockEntity lectern)) {
+            return ItemStack.EMPTY;
+        }
+        ItemStack key = lectern.getKeyStack();
+        if (key.getItem() instanceof DungeonKeyItem) return key;
+        return ItemStack.EMPTY;
+    }
+
     // ===== Event Listeners =====
 
     @SubscribeEvent
@@ -114,18 +155,16 @@ public class DungeonEventHandler {
         }
         for (var h : harmful) player.removeEffect(h);
 
-        // 整合版 §3.3：死亡回门口（讲台）—— 不读 playerCheckpoints，记录点仅 ContinueScreen"继续"按钮使用。
-        // 当前阶段仍以"玩家背包钥匙的 instanceId"反查 instance；阶段 4 切换为通过 lecternPos 读讲台 BE。
+        // 整合版 §3.3：死亡回门口（讲台）—— 钥匙权威源在讲台 BE（整合版 §2.2），
+        // 通过 player → ACTIVE instance 反查讲台位置，再从 BE 读钥匙。
         DungeonInstanceManager mgr = DungeonInstanceManager.get((ServerLevel) player.level());
-        for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
-            ItemStack stack = player.getInventory().getItem(i);
-            if (stack.getItem() instanceof DungeonKeyItem) {
-                UUID instanceId = DungeonKeyItem.getInstanceId(stack);
-                if (instanceId == null) continue;
-                DungeonInstance instance = mgr.getInstance(instanceId);
-                if (instance != null) {
-                    teleportToLectern(player, instance);
-                    break;
+        DungeonInstance instance = findActiveInstanceForPlayer(mgr, player.getUUID());
+        if (instance != null) {
+            ItemStack key = readKeyFromLectern(instance, player.server);
+            if (key.getItem() instanceof DungeonKeyItem) {
+                UUID instanceId = DungeonKeyItem.getInstanceId(key);
+                if (instanceId != null && mgr.getInstance(instanceId) != null) {
+                    teleportToLectern(player, mgr.getInstance(instanceId));
                 }
             }
         }
@@ -156,16 +195,9 @@ public class DungeonEventHandler {
         // 仅保留"实例为空则 SUSPENDED"检查（让原版区块卸载机制能正常卸载）。
         DungeonInstanceManager mgr = DungeonInstanceManager.get(player.server.overworld());
         UUID leavingId = player.getUUID();
-        for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
-            ItemStack stack = player.getInventory().getItem(i);
-            if (stack.getItem() instanceof DungeonKeyItem) {
-                UUID instanceId = DungeonKeyItem.getInstanceId(stack);
-                if (instanceId == null) continue;
-                DungeonInstance instance = mgr.getInstance(instanceId);
-                if (instance != null) {
-                    checkAndSuspendIfEmpty(player.server, instance);
-                }
-            }
+        for (DungeonInstance inst : mgr.getAllInstances()) {
+            if (!inst.getPlayerUuids().contains(leavingId)) continue;
+            checkAndSuspendIfEmpty(player.server, inst);
         }
     }
 
@@ -331,16 +363,8 @@ public class DungeonEventHandler {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
         if (!isInDungeon(player)) return;
 
-        // 仅对 ACTIVE 实例做边界保护：SUSPENDED 的实例玩家本不应在其中（被传送回讲台）
-        UUID playerUuid = player.getUUID();
         DungeonInstanceManager mgr = DungeonInstanceManager.get((ServerLevel) player.level());
-        DungeonInstance instance = null;
-        for (DungeonInstance inst : mgr.getAllInstances()) {
-            if (inst.getPlayerUuids().contains(playerUuid) && inst.getState() == DungeonInstance.State.ACTIVE) {
-                instance = inst;
-                break;
-            }
-        }
+        DungeonInstance instance = findActiveInstanceForPlayer(mgr, player.getUUID());
         if (instance == null) return;
 
         BlockPos pos = player.blockPosition();

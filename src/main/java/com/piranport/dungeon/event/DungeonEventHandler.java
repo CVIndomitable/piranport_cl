@@ -386,8 +386,11 @@ public class DungeonEventHandler {
     // ===== Checkpoint (整合版 §3.2) =====
 
     /**
-     * 整合版 §3.2：玩家踩到记录点方块 → 标记玩家最新 checkpoint + S2C 反馈（光柱/标题/音效）。
+     * 整合版 §3.2：玩家踩到记录点方块 → 标记玩家最新 checkpoint + S2C 反馈（标题 + 轻快音效）。
      * 解锁条件由 {@link com.piranport.dungeon.data.CheckpointData#isUnlocked} 判断。
+     *
+     * <p>注：决策要求"信标光柱 + 屏幕标题 + 轻快音效"三件套；当前仅实现后两项（标题 + 音效）。
+     * 信标光柱属 MVP 后置（用户口径：MVP 聚焦维度/讲台钥匙/节点推进/怪物生成）。</p>
      */
     public static void onCheckpointReached(net.minecraft.server.level.ServerPlayer player,
                                               BlockPos pos) {

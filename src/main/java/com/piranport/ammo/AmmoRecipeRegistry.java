@@ -107,37 +107,6 @@ public class AmmoRecipeRegistry {
                 () -> ModItems.LARGE_HE_SHELL.get(), 4, 80,
                 mat(iron, 5), mat(gp, 3));
 
-        // Grenade shells: lower direct hit damage, larger blast radius in combat.
-        add("shell_grenade_s", AmmoCategory.SHELL, "榴弹", "小口径",
-                () -> ModItems.SMALL_GRENADE_SHELL.get(), 6, 50,
-                mat(iron, 2), mat(gp, 3));
-        add("shell_grenade_m", AmmoCategory.SHELL, "榴弹", "中口径",
-                () -> ModItems.MEDIUM_GRENADE_SHELL.get(), 6, 70,
-                mat(iron, 3), mat(gp, 4));
-        add("shell_grenade_l", AmmoCategory.SHELL, "榴弹", "大口径",
-                () -> ModItems.LARGE_GRENADE_SHELL.get(), 3, 90,
-                mat(iron, 5), mat(gp, 6));
-
-        // Support shells
-        add("shell_flare_s", AmmoCategory.SHELL, "照明弹", "小口径",
-                () -> ModItems.SMALL_FLARE_SHELL.get(), 6, 50,
-                mat(iron, 2), mat(gp, 1), mat(glow, 2));
-        add("shell_flare_m", AmmoCategory.SHELL, "照明弹", "中口径",
-                () -> ModItems.MEDIUM_FLARE_SHELL.get(), 6, 70,
-                mat(iron, 3), mat(gp, 2), mat(glow, 3));
-        add("shell_flare_l", AmmoCategory.SHELL, "照明弹", "大口径",
-                () -> ModItems.LARGE_FLARE_SHELL.get(), 3, 90,
-                mat(iron, 5), mat(gp, 3), mat(glow, 5));
-        add("shell_smoke_s", AmmoCategory.SHELL, "烟幕弹", "小口径",
-                () -> ModItems.SMALL_SMOKE_SHELL.get(), 6, 50,
-                mat(iron, 2), mat(gp, 1), mat(coal, 2));
-        add("shell_smoke_m", AmmoCategory.SHELL, "烟幕弹", "中口径",
-                () -> ModItems.MEDIUM_SMOKE_SHELL.get(), 6, 70,
-                mat(iron, 3), mat(gp, 2), mat(coal, 3));
-        add("shell_smoke_l", AmmoCategory.SHELL, "烟幕弹", "大口径",
-                () -> ModItems.LARGE_SMOKE_SHELL.get(), 3, 90,
-                mat(iron, 5), mat(gp, 3), mat(coal, 5));
-
         // AP
         add("shell_ap_s", AmmoCategory.SHELL, "AP弹", "小口径",
                 () -> ModItems.SMALL_AP_SHELL.get(), 8, 40,

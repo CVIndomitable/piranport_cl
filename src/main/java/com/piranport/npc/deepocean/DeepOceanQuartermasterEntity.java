@@ -76,7 +76,6 @@ public class DeepOceanQuartermasterEntity extends AbstractDeepOceanEntity {
             consume(player, held, 1);
             giveOrDrop(player, new ItemStack(ModItems.MEDIUM_HE_SHELL.get(), 8));
             giveOrDrop(player, new ItemStack(ModItems.MEDIUM_AP_SHELL.get(), 8));
-            giveOrDrop(player, new ItemStack(ModItems.SMALL_SMOKE_SHELL.get(), 4));
             player.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, 20 * 100, 0));
             player.sendSystemMessage(Component.translatable("message.piranport.deep_ocean_quartermaster_report_trade"));
             playSupplyFeedback();
@@ -108,9 +107,9 @@ public class DeepOceanQuartermasterEntity extends AbstractDeepOceanEntity {
 
         if (held.is(ModItems.EXP_SHELL.get())) {
             consume(player, held, 1);
-            giveOrDrop(player, new ItemStack(ModItems.LARGE_GRENADE_SHELL.get(), 3));
-            giveOrDrop(player, new ItemStack(ModItems.MEDIUM_FLARE_SHELL.get(), 4));
-            giveOrDrop(player, new ItemStack(ModItems.MEDIUM_SMOKE_SHELL.get(), 4));
+            giveOrDrop(player, new ItemStack(ModItems.REPAIR_KIT.get(), 1));
+            giveOrDrop(player, new ItemStack(ModItems.EXP_SHELL.get(), 2));
+            int supplied = resupplyNearbyFleet();
             player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 20 * 80, 0));
             player.sendSystemMessage(Component.translatable("message.piranport.deep_ocean_quartermaster_drill_trade"));
             playSupplyFeedback();
@@ -132,7 +131,6 @@ public class DeepOceanQuartermasterEntity extends AbstractDeepOceanEntity {
             consume(player, held, 1);
             giveOrDrop(player, new ItemStack(ModItems.PORTAL_ACTIVATION_CORE.get(), 1));
             giveOrDrop(player, new ItemStack(ModItems.EXP_SHELL.get(), 2));
-            giveOrDrop(player, new ItemStack(ModItems.LARGE_SMOKE_SHELL.get(), 3));
             int supplied = resupplyNearbyFleet();
             player.addEffect(new MobEffectInstance(MobEffects.CONDUIT_POWER, 20 * 120, 0));
             player.sendSystemMessage(Component.translatable(

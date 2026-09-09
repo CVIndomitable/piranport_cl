@@ -595,23 +595,16 @@ public final class PiranPortCommands {
         stacks += give(player, ModItems.FRENCH_QUAD_380MM_GUN.get(), 1);
         stacks += give(player, ModItems.SALVO_TEST_GUN.get(), 1);
         stacks += give(player, ModItems.FLOATING_TARGET.get(), 8);
-        stacks += giveArtilleryShells(player, ModItems.SMALL_HE_SHELL.get(), ModItems.SMALL_AP_SHELL.get(),
-                ModItems.SMALL_GRENADE_SHELL.get(), ModItems.SMALL_FLARE_SHELL.get(), ModItems.SMALL_SMOKE_SHELL.get());
-        stacks += giveArtilleryShells(player, ModItems.MEDIUM_HE_SHELL.get(), ModItems.MEDIUM_AP_SHELL.get(),
-                ModItems.MEDIUM_GRENADE_SHELL.get(), ModItems.MEDIUM_FLARE_SHELL.get(), ModItems.MEDIUM_SMOKE_SHELL.get());
-        stacks += giveArtilleryShells(player, ModItems.LARGE_HE_SHELL.get(), ModItems.LARGE_AP_SHELL.get(),
-                ModItems.LARGE_GRENADE_SHELL.get(), ModItems.LARGE_FLARE_SHELL.get(), ModItems.LARGE_SMOKE_SHELL.get());
+        stacks += giveArtilleryShells(player, ModItems.SMALL_HE_SHELL.get(), ModItems.SMALL_AP_SHELL.get());
+        stacks += giveArtilleryShells(player, ModItems.MEDIUM_HE_SHELL.get(), ModItems.MEDIUM_AP_SHELL.get());
+        stacks += giveArtilleryShells(player, ModItems.LARGE_HE_SHELL.get(), ModItems.LARGE_AP_SHELL.get());
         return stacks;
     }
 
-    private static int giveArtilleryShells(ServerPlayer player, ItemLike he, ItemLike ap,
-                                           ItemLike grenade, ItemLike flare, ItemLike smoke) {
+    private static int giveArtilleryShells(ServerPlayer player, ItemLike he, ItemLike ap) {
         int stacks = 0;
         stacks += give(player, he, 32);
         stacks += give(player, ap, 32);
-        stacks += give(player, grenade, 32);
-        stacks += give(player, flare, 16);
-        stacks += give(player, smoke, 16);
         return stacks;
     }
 

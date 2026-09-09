@@ -71,15 +71,8 @@ public class CannonHandler implements WeaponHandler {
         }
 
         if (loaded <= 0) return;
-        boolean grenadeShell = preferred != null && isGrenadeShell(preferred);
-        boolean flareShell = preferred != null && isFlareShell(preferred);
-        boolean smokeShell = preferred != null && isSmokeShell(preferred);
-        float shotDamage = grenadeShell ? damage * 0.55f : damage;
-        float shotExplosion = grenadeShell ? explosion * 1.8f : explosion;
-        if (flareShell || smokeShell) {
-            shotDamage = 0.0f;
-            shotExplosion = Math.max(0.8f, explosion * 0.55f);
-        }
+        float shotDamage = damage;
+        float shotExplosion = explosion;
 
         Level level = maid.level();
 
@@ -93,9 +86,7 @@ public class CannonHandler implements WeaponHandler {
         for (int i = 0; i < loaded; i++) {
             CannonProjectileEntity proj = new CannonProjectileEntity(level, maid,
                     preferred != null ? new ItemStack(preferred) : ItemStack.EMPTY,
-                    shotDamage, !(flareShell || smokeShell), shotExplosion);
-            proj.setFlareShell(flareShell);
-            proj.setSmokeShell(smokeShell);
+                    shotDamage, true, shotExplosion);
             proj.setPos(origin.x, origin.y, origin.z);
             proj.shootFromRotation(maid, pitch, yaw, 0f, velocity, inaccuracy);
             level.addFreshEntity(proj);
@@ -117,9 +108,6 @@ public class CannonHandler implements WeaponHandler {
         if (damage >= 20f) {
             return List.of(
                     ModItems.LARGE_HE_SHELL.get(),
-                    ModItems.LARGE_GRENADE_SHELL.get(),
-                    ModItems.LARGE_FLARE_SHELL.get(),
-                    ModItems.LARGE_SMOKE_SHELL.get(),
                     ModItems.LARGE_AP_SHELL.get(),
                     ModItems.LARGE_TYPE3_SHELL.get()
             );
@@ -127,40 +115,16 @@ public class CannonHandler implements WeaponHandler {
         if (damage >= 12f) {
             return List.of(
                     ModItems.MEDIUM_HE_SHELL.get(),
-                    ModItems.MEDIUM_GRENADE_SHELL.get(),
-                    ModItems.MEDIUM_FLARE_SHELL.get(),
-                    ModItems.MEDIUM_SMOKE_SHELL.get(),
                     ModItems.MEDIUM_AP_SHELL.get(),
                     ModItems.MEDIUM_TYPE3_SHELL.get()
             );
         }
         return List.of(
                 ModItems.SMALL_HE_SHELL.get(),
-                ModItems.SMALL_GRENADE_SHELL.get(),
-                ModItems.SMALL_FLARE_SHELL.get(),
-                ModItems.SMALL_SMOKE_SHELL.get(),
                 ModItems.SMALL_AP_SHELL.get(),
                 ModItems.SMALL_VT_SHELL.get(),
                 ModItems.SMALL_TYPE3_SHELL.get()
         );
-    }
-
-    private static boolean isGrenadeShell(Item item) {
-        return item == ModItems.SMALL_GRENADE_SHELL.get()
-                || item == ModItems.MEDIUM_GRENADE_SHELL.get()
-                || item == ModItems.LARGE_GRENADE_SHELL.get();
-    }
-
-    private static boolean isFlareShell(Item item) {
-        return item == ModItems.SMALL_FLARE_SHELL.get()
-                || item == ModItems.MEDIUM_FLARE_SHELL.get()
-                || item == ModItems.LARGE_FLARE_SHELL.get();
-    }
-
-    private static boolean isSmokeShell(Item item) {
-        return item == ModItems.SMALL_SMOKE_SHELL.get()
-                || item == ModItems.MEDIUM_SMOKE_SHELL.get()
-                || item == ModItems.LARGE_SMOKE_SHELL.get();
     }
 
     private static float guessExplosion(float damage) {

@@ -404,17 +404,6 @@ public class ModCreativeTabs {
                         output.accept(ModItems.SMALL_HE_SHELL.get());
                         output.accept(ModItems.MEDIUM_HE_SHELL.get());
                         output.accept(ModItems.LARGE_HE_SHELL.get());
-                        // Grenade Shells
-                        output.accept(ModItems.SMALL_GRENADE_SHELL.get());
-                        output.accept(ModItems.MEDIUM_GRENADE_SHELL.get());
-                        output.accept(ModItems.LARGE_GRENADE_SHELL.get());
-                        // Support Shells
-                        output.accept(ModItems.SMALL_FLARE_SHELL.get());
-                        output.accept(ModItems.MEDIUM_FLARE_SHELL.get());
-                        output.accept(ModItems.LARGE_FLARE_SHELL.get());
-                        output.accept(ModItems.SMALL_SMOKE_SHELL.get());
-                        output.accept(ModItems.MEDIUM_SMOKE_SHELL.get());
-                        output.accept(ModItems.LARGE_SMOKE_SHELL.get());
                         // AP Shells
                         output.accept(ModItems.SMALL_AP_SHELL.get());
                         output.accept(ModItems.MEDIUM_AP_SHELL.get());

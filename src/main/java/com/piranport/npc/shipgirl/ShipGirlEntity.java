@@ -670,8 +670,6 @@ public class ShipGirlEntity extends PathfinderMob implements Merchant {
     private void handleReconBranch(Player player, ItemStack held) {
         boolean first = markBranchCompleted(BRANCH_RECON);
         consumeOne(player, held);
-        giveOrDrop(player, new ItemStack(ModItems.SMALL_FLARE_SHELL.get(), first ? 6 : 2));
-        giveOrDrop(player, new ItemStack(ModItems.SMALL_SMOKE_SHELL.get(), first ? 6 : 2));
         player.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, 20 * 180, 0));
         player.addEffect(new MobEffectInstance(MobEffects.DOLPHINS_GRACE, 20 * 60, 0));
         addRapport(player, first ? 12 : 2);
@@ -731,7 +729,6 @@ public class ShipGirlEntity extends PathfinderMob implements Merchant {
         consumeOne(player, held);
         player.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING, 20 * 120, 0));
         player.addEffect(new MobEffectInstance(MobEffects.DOLPHINS_GRACE, 20 * 90, 0));
-        giveOrDrop(player, new ItemStack(ModItems.SMALL_FLARE_SHELL.get(), first ? 4 : 2));
         if (first) {
             giveOrDrop(player, new ItemStack(ModItems.ABYSSAL_REPORT.get(), 1));
         }

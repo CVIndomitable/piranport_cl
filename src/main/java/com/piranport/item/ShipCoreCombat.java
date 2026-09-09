@@ -207,15 +207,12 @@ public class ShipCoreCombat {
 
         boolean isType3 = isType3Shell(loaded.ammoItemId());
         boolean isVT = isVTShell(loaded.ammoItemId());
-        boolean isGrenade = isGrenadeShell(loaded.ammoItemId());
-        boolean isFlare = isFlareShell(loaded.ammoItemId());
-        boolean isSmoke = isSmokeShell(loaded.ammoItemId());
-        boolean isHE = (isHEShell(loaded.ammoItemId()) || isVT || isGrenade) && !isFlare && !isSmoke;
+        boolean isHE = isHEShell(loaded.ammoItemId()) || isVT;
         weapon.remove(ModDataComponents.LOADED_AMMO.get());
         recordCurrentAmmoType(weapon, shellForRender.getItem());
 
         boolean fired = fireCannonSalvo(level, player, weapon, shellForRender, barrelCount,
-                isType3, isVT, isGrenade, isFlare, isSmoke, isHE, aim);
+                isType3, isVT, isHE, aim);
         if (!fired) {
             weapon.set(ModDataComponents.LOADED_AMMO.get(), loaded);
             return true;
@@ -1557,42 +1554,6 @@ public class ShipCoreCombat {
                 || ammoItemId.equals(BuiltInRegistries.ITEM.getKey(ModItems.LARGE_HE_SHELL.get()).toString());
     }
 
-    static boolean isGrenadeShell(ItemStack stack) {
-        return stack.is(ModItems.SMALL_GRENADE_SHELL.get())
-                || stack.is(ModItems.MEDIUM_GRENADE_SHELL.get())
-                || stack.is(ModItems.LARGE_GRENADE_SHELL.get());
-    }
-
-    static boolean isGrenadeShell(String ammoItemId) {
-        return ammoItemId.equals(BuiltInRegistries.ITEM.getKey(ModItems.SMALL_GRENADE_SHELL.get()).toString())
-                || ammoItemId.equals(BuiltInRegistries.ITEM.getKey(ModItems.MEDIUM_GRENADE_SHELL.get()).toString())
-                || ammoItemId.equals(BuiltInRegistries.ITEM.getKey(ModItems.LARGE_GRENADE_SHELL.get()).toString());
-    }
-
-    static boolean isFlareShell(ItemStack stack) {
-        return stack.is(ModItems.SMALL_FLARE_SHELL.get())
-                || stack.is(ModItems.MEDIUM_FLARE_SHELL.get())
-                || stack.is(ModItems.LARGE_FLARE_SHELL.get());
-    }
-
-    static boolean isFlareShell(String ammoItemId) {
-        return ammoItemId.equals(BuiltInRegistries.ITEM.getKey(ModItems.SMALL_FLARE_SHELL.get()).toString())
-                || ammoItemId.equals(BuiltInRegistries.ITEM.getKey(ModItems.MEDIUM_FLARE_SHELL.get()).toString())
-                || ammoItemId.equals(BuiltInRegistries.ITEM.getKey(ModItems.LARGE_FLARE_SHELL.get()).toString());
-    }
-
-    static boolean isSmokeShell(ItemStack stack) {
-        return stack.is(ModItems.SMALL_SMOKE_SHELL.get())
-                || stack.is(ModItems.MEDIUM_SMOKE_SHELL.get())
-                || stack.is(ModItems.LARGE_SMOKE_SHELL.get());
-    }
-
-    static boolean isSmokeShell(String ammoItemId) {
-        return ammoItemId.equals(BuiltInRegistries.ITEM.getKey(ModItems.SMALL_SMOKE_SHELL.get()).toString())
-                || ammoItemId.equals(BuiltInRegistries.ITEM.getKey(ModItems.MEDIUM_SMOKE_SHELL.get()).toString())
-                || ammoItemId.equals(BuiltInRegistries.ITEM.getKey(ModItems.LARGE_SMOKE_SHELL.get()).toString());
-    }
-
     static boolean isVTShell(ItemStack stack) {
         return stack.is(ModItems.SMALL_VT_SHELL.get());
     }
@@ -1969,7 +1930,7 @@ public class ShipCoreCombat {
     /** Fire a cannon salvo: barrelCount projectiles with natural inaccuracy spread. */
     private static boolean fireCannonSalvo(Level level, Player player, ItemStack weapon,
             ItemStack shellForRender, int barrelCount, boolean isType3, boolean isVT,
-            boolean isGrenade, boolean isFlare, boolean isSmoke, boolean isHE, AimInstruction aim) {
+            boolean isHE, AimInstruction aim) {
         // Phase 11: 全局炮弹上限检测
         if (isShellLimitReached(level, player)) {
             player.displayClientMessage(
@@ -2006,13 +1967,6 @@ public class ShipCoreCombat {
             } else {
                 float damage = getGunDamage(weapon, level);
                 float explosionPower = getExplosionPower(weapon, level);
-                if (isGrenade) {
-                    damage *= 0.55f;
-                    explosionPower *= 1.8f;
-                } else if (isFlare || isSmoke) {
-                    damage = 0.0f;
-                    explosionPower = Math.max(0.8f, explosionPower * 0.55f);
-                }
                 float velocity = getProjectileVelocity(weapon, level);
                 float drag = getProjectileDrag(weapon, level);
                 float gravity = getProjectileGravity(weapon, level);
@@ -2020,8 +1974,6 @@ public class ShipCoreCombat {
                 CannonProjectileEntity projectile = new CannonProjectileEntity(
                         level, player, shellForRender, damage, isHE, explosionPower);
                 if (isVT) projectile.setVT(true);
-                projectile.setFlareShell(isFlare);
-                projectile.setSmokeShell(isSmoke);
                 projectile.setDragCoeff(drag);
                 projectile.setCustomGravity(gravity);
 

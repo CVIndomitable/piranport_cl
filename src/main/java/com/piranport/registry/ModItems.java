@@ -169,37 +169,6 @@ public class ModItems {
             ITEMS.register("super_heavy_ap_shell",
                     () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.ap_shell"));
 
-    // ===== Grenade Shells (low direct damage, large blast) =====
-    public static final DeferredItem<Item> SMALL_GRENADE_SHELL =
-            ITEMS.register("small_grenade_shell",
-                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.grenade_shell"));
-    public static final DeferredItem<Item> MEDIUM_GRENADE_SHELL =
-            ITEMS.register("medium_grenade_shell",
-                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.grenade_shell"));
-    public static final DeferredItem<Item> LARGE_GRENADE_SHELL =
-            ITEMS.register("large_grenade_shell",
-                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.grenade_shell"));
-
-    // ===== Special Support Shells =====
-    public static final DeferredItem<Item> SMALL_FLARE_SHELL =
-            ITEMS.register("small_flare_shell",
-                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.flare_shell"));
-    public static final DeferredItem<Item> MEDIUM_FLARE_SHELL =
-            ITEMS.register("medium_flare_shell",
-                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.flare_shell"));
-    public static final DeferredItem<Item> LARGE_FLARE_SHELL =
-            ITEMS.register("large_flare_shell",
-                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.flare_shell"));
-    public static final DeferredItem<Item> SMALL_SMOKE_SHELL =
-            ITEMS.register("small_smoke_shell",
-                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.smoke_shell"));
-    public static final DeferredItem<Item> MEDIUM_SMOKE_SHELL =
-            ITEMS.register("medium_smoke_shell",
-                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.smoke_shell"));
-    public static final DeferredItem<Item> LARGE_SMOKE_SHELL =
-            ITEMS.register("large_smoke_shell",
-                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.smoke_shell"));
-
     // ===== VT Shells (proximity fuze, small caliber only) =====
     public static final DeferredItem<Item> SMALL_VT_SHELL =
             ITEMS.register("small_vt_shell",

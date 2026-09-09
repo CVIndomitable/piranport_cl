@@ -75,8 +75,6 @@ public class DeepOceanNavigatorEntity extends AbstractDeepOceanEntity {
         if (held.is(ModItems.ABYSSAL_REPORT.get())) {
             consume(player, held, 1);
             giveOrDrop(player, new ItemStack(Items.MAP, 1));
-            giveOrDrop(player, new ItemStack(ModItems.SMALL_FLARE_SHELL.get(), 4));
-            giveOrDrop(player, new ItemStack(ModItems.SMALL_SMOKE_SHELL.get(), 4));
             int marked = markNearbyAbyssals(player, 18.0, 20 * 12);
             player.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, 20 * 150, 0));
             player.sendSystemMessage(Component.translatable(
@@ -112,8 +110,6 @@ public class DeepOceanNavigatorEntity extends AbstractDeepOceanEntity {
 
         if (held.is(ModItems.AVIATION_FUEL.get())) {
             consume(player, held, 1);
-            giveOrDrop(player, new ItemStack(ModItems.SMALL_FLARE_SHELL.get(), 6));
-            giveOrDrop(player, new ItemStack(ModItems.SMALL_SMOKE_SHELL.get(), 3));
             player.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING, 20 * 90, 0));
             player.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, 20 * 90, 0));
             player.sendSystemMessage(Component.translatable("message.piranport.deep_ocean_navigator_fuel_trade"));

@@ -230,8 +230,8 @@ public class DungeonDataLoader extends SimpleJsonResourceReloadListener {
             }
         }
 
-        // 整合版 §2.4 场景（5 种）
-        SceneData scene = SceneData.FOREST;
+        // 整合版 §2.4 场景（5 种：白天/夜战/雷雨/大雾/烈日）
+        SceneData scene = SceneData.DAY;
         if (json.has("scene")) {
             SceneData parsed = SceneData.fromString(json.get("scene").getAsString());
             if (parsed != null) {

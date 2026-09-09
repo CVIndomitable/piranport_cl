@@ -130,7 +130,7 @@ public record DungeonRegistrySyncPayload(String jsonData,
                             nObj.get("displayY").getAsInt(),
                             nObj.has("script") ? nObj.get("script").getAsString() : null,
                             Set.of(),
-                            SceneData.FOREST));
+                            SceneData.DAY));
                 }
                 List<StageData.EdgeData> edges = new ArrayList<>();
                 for (JsonElement e : sObj.getAsJsonArray("edges")) {

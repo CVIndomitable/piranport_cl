@@ -36,6 +36,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.AddReloadListenerEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.ArrayList;
@@ -316,6 +317,42 @@ public class DungeonEventHandler {
             DungeonInstanceManager mgr = DungeonInstanceManager.get(dungeonLevel);
             mgr.suspendInstance(instance.getInstanceId());
         }
+    }
+
+    // ===== Boundary Protection (整合版 §2.1 / 副本/01) =====
+
+    /**
+     * 副本/01 §2.1：每个实例分配 1024×1024 子区域（实际 512×512 居中）。
+     * 若玩家（因鞘翅/坐骑/推进器）跨过边界进入相邻实例子区域或走出可玩区，
+     * 每 tick 拉回当前实例的 512×512 可玩区最近点。避免出现"误入他人副本"的体验事故。
+     */
+    @SubscribeEvent
+    public static void onPlayerTick(PlayerTickEvent.Post event) {
+        if (!(event.getEntity() instanceof ServerPlayer player)) return;
+        if (!isInDungeon(player)) return;
+
+        // 仅对 ACTIVE 实例做边界保护：SUSPENDED 的实例玩家本不应在其中（被传送回讲台）
+        UUID playerUuid = player.getUUID();
+        DungeonInstanceManager mgr = DungeonInstanceManager.get((ServerLevel) player.level());
+        DungeonInstance instance = null;
+        for (DungeonInstance inst : mgr.getAllInstances()) {
+            if (inst.getPlayerUuids().contains(playerUuid) && inst.getState() == DungeonInstance.State.ACTIVE) {
+                instance = inst;
+                break;
+            }
+        }
+        if (instance == null) return;
+
+        BlockPos pos = player.blockPosition();
+        if (instance.isInsideUsableArea(pos)) return;
+
+        BlockPos clamped = instance.clampToUsableArea(pos);
+        // 仅修 X/Z 坐标，保留原 Y（防止从空中拉回水里）
+        player.teleportTo(player.server.getLevel(player.level().dimension()),
+                clamped.getX() + 0.5, player.getY(), clamped.getZ() + 0.5,
+                player.getYRot(), player.getXRot());
+        PiranPort.LOGGER.debug("Boundary-clamped player {} from {} to {} in instance {}",
+                player.getName().getString(), pos, clamped, instance.getInstanceId());
     }
 
     // ===== Checkpoint (整合版 §3.2) =====

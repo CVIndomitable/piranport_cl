@@ -67,16 +67,62 @@ public class DungeonInstance {
 
     /**
      * Returns the X offset of this instance's region in the dungeon dimension.
+     * Instances are laid out on a 2D grid (副本/01 §2.1) instead of a single
+     * X-axis line so the shared dimension's footprint stays compact.
      */
     public int getRegionOriginX() {
-        return instanceIndex * com.piranport.dungeon.DungeonConstants.REGION_SIZE;
+        int gridX = Math.floorMod(instanceIndex, com.piranport.dungeon.DungeonConstants.GRID_SIZE);
+        return gridX * com.piranport.dungeon.DungeonConstants.REGION_SIZE;
     }
 
     /**
-     * Returns the Z offset (always 0 for simplicity — instances line up along X axis).
+     * Returns the Z offset of this instance's region in the dungeon dimension.
+     * Previously hardcoded to 0; now varies along Z based on the 2D instance grid
+     * (副本/01 §2.1).
      */
     public int getRegionOriginZ() {
-        return 0;
+        int gridZ = Math.floorDiv(instanceIndex, com.piranport.dungeon.DungeonConstants.GRID_SIZE);
+        return gridZ * com.piranport.dungeon.DungeonConstants.REGION_SIZE;
+    }
+
+    /** Inclusive min corner of this instance's playable 512x512 area (副本/01 §2.1: 居中). */
+    public int getUsableMinX() {
+        return getRegionOriginX() + com.piranport.dungeon.DungeonConstants.MAP_BORDER_PADDING;
+    }
+
+    /** Inclusive max X corner of the playable area. */
+    public int getUsableMaxX() {
+        return getUsableMinX() + com.piranport.dungeon.DungeonConstants.MAP_USABLE_SIZE - 1;
+    }
+
+    /** Inclusive min Z corner of the playable area. */
+    public int getUsableMinZ() {
+        return getRegionOriginZ() + com.piranport.dungeon.DungeonConstants.MAP_BORDER_PADDING;
+    }
+
+    /** Inclusive max Z corner of the playable area. */
+    public int getUsableMaxZ() {
+        return getUsableMinZ() + com.piranport.dungeon.DungeonConstants.MAP_USABLE_SIZE - 1;
+    }
+
+    /**
+     * Returns true if the given block position is inside this instance's playable area.
+     * Used by the boundary-protection tick to push players back when they cross into the
+     * padding buffer surrounding the 512x512 usable region (副本/01 §2.1).
+     */
+    public boolean isInsideUsableArea(BlockPos pos) {
+        return pos.getX() >= getUsableMinX() && pos.getX() <= getUsableMaxX()
+                && pos.getZ() >= getUsableMinZ() && pos.getZ() <= getUsableMaxZ();
+    }
+
+    /**
+     * Clamp the given position to the nearest point inside the playable area. If the
+     * position is already inside it is returned unchanged. Used by boundary protection.
+     */
+    public BlockPos clampToUsableArea(BlockPos pos) {
+        int x = Math.max(getUsableMinX(), Math.min(getUsableMaxX(), pos.getX()));
+        int z = Math.max(getUsableMinZ(), Math.min(getUsableMaxZ(), pos.getZ()));
+        return new BlockPos(x, pos.getY(), z);
     }
 
     /**
@@ -84,6 +130,9 @@ public class DungeonInstance {
      * Uses the stage's deterministic lexicographic node index when available so
      * nodeIds like "boss1"/"boss2" don't collide. Falls back to first-letter
      * mapping for legacy single-letter ids when the stage hasn't loaded yet.
+     *
+     * <p>Nodes are laid out in a single row along the X axis within the centered
+     * 512x512 usable area; each node occupies a 128x128 battlefield tile.</p>
      */
     public BlockPos getNodeSpawnPos(String nodeId) {
         int nodeIndex = 0;
@@ -102,9 +151,10 @@ public class DungeonInstance {
                         com.piranport.dungeon.DungeonConstants.MAX_NODES_PER_STAGE);
             }
         }
-        int nodeX = getRegionOriginX() + nodeIndex * com.piranport.dungeon.DungeonConstants.NODE_AREA_SIZE
+        // 将节点放置在 512×512 居中区域的首行（副本/01 §2.1：实际地图 512×512）
+        int nodeX = getUsableMinX() + nodeIndex * com.piranport.dungeon.DungeonConstants.NODE_AREA_SIZE
                 + com.piranport.dungeon.DungeonConstants.NODE_AREA_SIZE / 2;
-        int nodeZ = getRegionOriginZ() + com.piranport.dungeon.DungeonConstants.NODE_AREA_SIZE / 2;
+        int nodeZ = getUsableMinZ() + com.piranport.dungeon.DungeonConstants.NODE_AREA_SIZE / 2;
         return new BlockPos(nodeX, com.piranport.dungeon.DungeonConstants.SPAWN_Y, nodeZ);
     }
 

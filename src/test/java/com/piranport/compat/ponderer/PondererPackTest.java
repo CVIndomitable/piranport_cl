@@ -58,6 +58,25 @@ class PondererPackTest {
     }
 
     @Test
+    void releaseJarAndDevelopmentClasspathContainTheSameTutorialZip() throws IOException {
+        Path modJar = Path.of(System.getProperty("piranport.modJar"));
+        try (ZipFile archive = new ZipFile(modJar.toFile())) {
+            ZipEntry entry = archive.getEntry(PondererPackInstaller.BUNDLED_RESOURCE.substring(1));
+            assertNotNull(entry, "The release JAR must include the tutorial ZIP");
+            try (var embedded = archive.getInputStream(entry);
+                 var development = PondererPackInstaller.class.getResourceAsStream(
+                         PondererPackInstaller.BUNDLED_RESOURCE)) {
+                assertNotNull(development, "Development runs must exercise the same installation path");
+                byte[] expected = Files.readAllBytes(PACK);
+                assertArrayEquals(expected, embedded.readAllBytes());
+                assertArrayEquals(expected, development.readAllBytes());
+            }
+            assertFalse(archive.stream().anyMatch(bundled -> bundled.getName().startsWith("com/nododiiiii/")),
+                    "Ponderer itself must remain an external optional dependency");
+        }
+    }
+
+    @Test
     void archiveContainsCurrentSourcesAndMinecraft1211Metadata() throws IOException {
         try (ZipFile archive = new ZipFile(PACK.toFile())) {
             Set<String> expectedFiles = Set.of("pack.json", "pack.mcmeta", SCRIPT);

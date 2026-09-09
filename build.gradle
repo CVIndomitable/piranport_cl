@@ -126,26 +126,21 @@ var pondererPack = tasks.register('pondererPack', Zip) {
     reproducibleFileOrder = true
 }
 
-var installPondererPack = tasks.register('installPondererPack', Copy) {
-    from pondererPack
-    into layout.projectDirectory.dir('run/resourcepacks')
-    rename { '[Ponderer] Piran Port.zip' }
-}
-
-tasks.named('runClient').configure {
-    dependsOn installPondererPack
-}
-
-tasks.named('assemble').configure {
-    dependsOn pondererPack
+tasks.named('processResources', ProcessResources).configure {
+    from(pondererPack) {
+        into 'META-INF/resourcepacks'
+        rename { 'piranport-ponderer.zip' }
+    }
 }
 
 tasks.named('test', Test).configure {
     useJUnitPlatform()
-    dependsOn pondererPack
+    dependsOn tasks.named('jar')
     inputs.files(pondererPack).withPropertyName('pondererTutorialPack')
+    inputs.files(tasks.named('jar')).withPropertyName('piranportModJar')
     systemProperty 'piranport.pondererPack', pondererPack.get().archiveFile.get().asFile.absolutePath
     systemProperty 'piranport.pondererSource', layout.projectDirectory.dir('ponderer').asFile.absolutePath
+    systemProperty 'piranport.modJar', tasks.named('jar', Jar).get().archiveFile.get().asFile.absolutePath
 }
 
 var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {

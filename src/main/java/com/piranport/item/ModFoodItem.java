@@ -43,7 +43,10 @@ public class ModFoodItem extends Item {
                         BlockEntity be = level.getBlockEntity(target);
                         if (be instanceof PlaceableFoodBlockEntity foodBE) {
                             ResourceLocation id = BuiltInRegistries.ITEM.getKey(held.getItem());
-                            foodBE.initialize(id, info.servings());
+                            // 依据：策划决策/食物/09-食物方块饱食度加成.md
+                            // 物品 PlaceableInfo.bonusMultiplier 可覆盖默认 1.5x
+                            foodBE.initialize(id, info.servings(), info.bonusMultiplier());
+                            foodBE.applyPlaceableInfo(info);
                             foodBE.setChanged();
                             level.sendBlockUpdated(target, block.defaultBlockState(), block.defaultBlockState(), 3);
                         }

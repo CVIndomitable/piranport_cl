@@ -1,7 +1,9 @@
 package com.piranport.block.entity;
 
+import com.piranport.component.PlaceableInfo;
 import com.piranport.registry.ModBlockEntityTypes;
 import com.piranport.registry.ModBlocks;
+import com.piranport.registry.ModDataComponents;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -23,10 +25,11 @@ import org.jetbrains.annotations.Nullable;
 
 public class PlaceableFoodBlockEntity extends BlockEntity {
     /**
-     * 策划 §7.6：食物方块每口饱食度较手持更高，向上取整[总饱食度×加成/可使用次数]。
-     * 倍率 1.5x 与"锅内熟食 vs 生食"的常见设计一致。
+     * 依据：策划决策/食物/09-食物方块饱食度加成.md
+     * <p>方块版本每口饱食度 = ceil(总饱食度 × bonusMultiplier / 可使用次数)</p>
+     * <p>默认 bonusMultiplier = 1.5x；可通过物品数据组件 PLACEABLE_INFO.bonusMultiplier 覆盖</p>
      */
-    private static final float PLACEABLE_FOOD_BONUS = 1.5f;
+    private float bonusMultiplier = PlaceableInfo.DEFAULT_BONUS;
 
     private ResourceLocation foodItemId = ResourceLocation.withDefaultNamespace("air");
     private int remainingServings = 0;
@@ -36,15 +39,34 @@ public class PlaceableFoodBlockEntity extends BlockEntity {
         super(ModBlockEntityTypes.PLACEABLE_FOOD.get(), pos, state);
     }
 
+    /**
+     * 初始化（兼容旧调用）— bonusMultiplier 取默认 1.5x。
+     */
     public void initialize(ResourceLocation id, int servings) {
+        initialize(id, servings, PlaceableInfo.DEFAULT_BONUS);
+    }
+
+    /**
+     * 初始化（带 bonusMultiplier）。策划可在物品 JSON/数据中指定。
+     */
+    public void initialize(ResourceLocation id, int servings, float bonus) {
         this.foodItemId = id;
         this.remainingServings = servings;
         this.totalServings = servings;
+        this.bonusMultiplier = bonus;
+    }
+
+    /** 运行时探测物品的 PlaceableInfo 并回填 bonusMultiplier。 */
+    public void applyPlaceableInfo(@Nullable PlaceableInfo info) {
+        if (info != null && info.bonusMultiplier() > 0f) {
+            this.bonusMultiplier = info.bonusMultiplier();
+        }
     }
 
     public ResourceLocation getFoodItemId() { return foodItemId; }
     public int getRemainingServings() { return remainingServings; }
     public boolean isEmpty() { return remainingServings <= 0; }
+    public float getBonusMultiplier() { return bonusMultiplier; }
 
     public void eat(Player player) {
         if (remainingServings <= 0 || level == null) return;
@@ -55,22 +77,40 @@ public class PlaceableFoodBlockEntity extends BlockEntity {
         FoodProperties food = new ItemStack(foodItem).getFoodProperties(player);
         if (food == null) return;
 
-        // Cumulative allocation — guarantees Σ(bites) == original food value (×PLACEABLE_FOOD_BONUS).
+        // Cumulative allocation — guarantees Σ(bites) == original food value (×bonusMultiplier).
         int bitesDone = totalServings - remainingServings;
-        int nutritionPerBite = (int) ((long) food.nutrition() * PLACEABLE_FOOD_BONUS * (bitesDone + 1) / totalServings)
-                - (int) ((long) food.nutrition() * PLACEABLE_FOOD_BONUS * bitesDone / totalServings);
-        float satModPerBite = food.saturation() * PLACEABLE_FOOD_BONUS * (bitesDone + 1) / totalServings
-                - food.saturation() * PLACEABLE_FOOD_BONUS * bitesDone / totalServings;
+        float totalBonusNutrition = food.nutrition() * bonusMultiplier;
+        float totalBonusSaturation = food.saturation() * bonusMultiplier;
+        int nutritionPerBite = (int) ((long) totalBonusNutrition * (bitesDone + 1) / totalServings)
+                - (int) ((long) totalBonusNutrition * bitesDone / totalServings);
+        float satModPerBite = totalBonusSaturation * (bitesDone + 1) / totalServings
+                - totalBonusSaturation * bitesDone / totalServings;
         player.getFoodData().eat(nutritionPerBite, satModPerBite);
 
-        // Effects: roll once on the last bite with full duration — matches vanilla single-use semantics.
+        // 依据：策划决策/食物/09-食物方块饱食度加成.md
+        // "概率性效果每口独立判定（如鲱鱼罐头的凋零）保持概率不变"
         boolean isLastBite = (remainingServings == 1);
         if (isLastBite) {
+            // 最后一口仍按原版语义触发完整 Buff（含非概率的固定 Buff）
             for (FoodProperties.PossibleEffect pe : food.effects()) {
                 MobEffectInstance orig = pe.effect();
                 if (player.getRandom().nextFloat() < pe.probability()) {
+                    int perBiteDuration = Math.max(1,
+                            (orig.getDuration() + totalServings - 1) / totalServings);
                     player.addEffect(new MobEffectInstance(orig.getEffect(),
-                            orig.getDuration(), orig.getAmplifier()));
+                            perBiteDuration, orig.getAmplifier()));
+                }
+            }
+        } else {
+            // 非最后一口：仅触发概率型效果，时长均分
+            for (FoodProperties.PossibleEffect pe : food.effects()) {
+                MobEffectInstance orig = pe.effect();
+                if (pe.probability() < 1.0f
+                        && player.getRandom().nextFloat() < pe.probability()) {
+                    int perBiteDuration = Math.max(1,
+                            (orig.getDuration() + totalServings - 1) / totalServings);
+                    player.addEffect(new MobEffectInstance(orig.getEffect(),
+                            perBiteDuration, orig.getAmplifier()));
                 }
             }
         }
@@ -107,6 +147,7 @@ public class PlaceableFoodBlockEntity extends BlockEntity {
         tag.putString("foodItemId", foodItemId.toString());
         tag.putInt("remainingServings", remainingServings);
         tag.putInt("totalServings", totalServings);
+        tag.putFloat("BonusMultiplier", bonusMultiplier);
     }
 
     @Override
@@ -117,5 +158,8 @@ public class PlaceableFoodBlockEntity extends BlockEntity {
         }
         remainingServings = tag.getInt("remainingServings");
         totalServings = tag.getInt("totalServings");
+        if (tag.contains("BonusMultiplier")) {
+            bonusMultiplier = tag.getFloat("BonusMultiplier");
+        }
     }
 }

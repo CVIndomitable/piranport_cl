@@ -81,6 +81,11 @@ public class ArtilleryItem extends Item {
     public float getCustomGravity() { return data.gravity(); }
     public float getExplosionPower() { return data.explosionPower(); }
 
+    /** 装填模式：策划决策/武器/07-火炮装填双模式.md（true=AUTO 开火后自动装填；false=MANUAL 需按 R 键） */
+    public boolean isAutoLoading() { return data.isAutoLoading(); }
+
+    public String getLoadingMode() { return data.loadingMode(); }
+
     /** 获取散布角（度）。优先使用 JSON 配置，未配置时按口径计算。 */
     public float getDispersionAngle() {
         return data.dispersion();
@@ -211,6 +216,11 @@ public class ArtilleryItem extends Item {
         String calCat = caliber <= 4 ? "小口径" : (caliber <= 8 ? "中口径" : "大口径");
         tooltipComponents.add(Component.literal(String.format("口径: %dmm (%s)", caliber, calCat))
                 .withStyle(net.minecraft.ChatFormatting.AQUA));
+
+        // 装填模式（策划决策/武器/07-火炮装填双模式.md）
+        tooltipComponents.add(Component.translatable(
+                "tooltip.piranport.cannon.loading_mode." + (data.isAutoLoading() ? "auto" : "manual"))
+                .withStyle(data.isAutoLoading() ? net.minecraft.ChatFormatting.GREEN : net.minecraft.ChatFormatting.GOLD));
 
         // 耐久状态
         if (stack.isDamageableItem() && stack.getDamageValue() >= stack.getMaxDamage() - 1) {

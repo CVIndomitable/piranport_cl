@@ -179,7 +179,10 @@ public class ConfigOverrideManager {
                 horizontalSpread,
                 maxElevation,
                 minElevation,
-                turretSpeed
+                turretSpeed,
+                overrides.getCannonOverride(name, "loadingMode")
+                        .map(v -> v == null ? null : v.toString())
+                        .orElse(original.loadingMode())
         );
     }
 
@@ -301,7 +304,9 @@ public class ConfigOverrideManager {
                 horizontalSpread,
                 maxElevation,
                 minElevation,
-                turretSpeed
+                turretSpeed,
+                ClientConfigCache.getCannonOverride(name, "loadingMode")
+                        .orElse(original.loadingMode())
         );
     }
 

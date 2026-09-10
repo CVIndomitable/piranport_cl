@@ -24,13 +24,23 @@ public record ArtilleryCannonData(
         float horizontalSpread,
         float maxElevation,
         float minElevation,
-        float turretSpeed
+        float turretSpeed,
+        /**
+         * 装填模式：策划决策/武器/07-火炮装填双模式.md
+         * <ul>
+         *   <li>"AUTO" — 开火后冷却（FPS 风格，发射即进入装填）</li>
+         *   <li>"MANUAL" — 装填时冷却（玩家按 R 键启动读条）</li>
+         * </ul>
+         * 默认按口径：<=4 = AUTO（与"小口径自动"设计参考一致）；>4 = MANUAL。
+         */
+        String loadingMode
 ) {
     public static final ArtilleryCannonData DEFAULT = new ArtilleryCannonData(
             14, 1, 6f, 30, 500, 4.0f, List.of(new MuzzlePos(0, 0, 0)),
             3.0f, 0.01f, 9.8f, 1.0f, 0.5f,
             20, 1, 5.0f,
-            200.0f, 0.5f, 0.5f, 45.0f, -5.0f, 3.0f
+            200.0f, 0.5f, 0.5f, 45.0f, -5.0f, 3.0f,
+            "MANUAL"
     );
 
     /** 旧构造器兼容（缺少物理参数时使用默认值） */
@@ -51,6 +61,17 @@ public record ArtilleryCannonData(
         if (maxElevation <= 0) maxElevation = getDefaultMaxElevation(caliber);
         if (minElevation >= maxElevation) minElevation = -5.0f;
         if (turretSpeed <= 0) turretSpeed = 3.0f;
+        // 装填模式：缺省按口径（<=4 = AUTO, >4 = MANUAL）
+        if (loadingMode == null || loadingMode.isBlank()) {
+            loadingMode = (caliber <= 4) ? "AUTO" : "MANUAL";
+        } else {
+            String up = loadingMode.toUpperCase(java.util.Locale.ROOT);
+            if (!"AUTO".equals(up) && !"MANUAL".equals(up)) {
+                loadingMode = (caliber <= 4) ? "AUTO" : "MANUAL";
+            } else {
+                loadingMode = up;
+            }
+        }
     }
 
     /** 兼容旧代码/旧数据结构的 16 字段构造器。 */
@@ -73,7 +94,8 @@ public record ArtilleryCannonData(
                 initialSpeed, dragCoeff, gravity, explosionPower, dispersion,
                 fireCooldown, salvoCount, salvoInterval,
                 getDefaultProjectileWeight(caliber), dispersion, dispersion,
-                getDefaultMaxElevation(caliber), getDefaultMinElevation(caliber), 3.0f);
+                getDefaultMaxElevation(caliber), getDefaultMinElevation(caliber), 3.0f,
+                (caliber <= 4) ? "AUTO" : "MANUAL");
     }
 
     /** 根据口径计算默认散布角（度），保持向后兼容 */
@@ -105,5 +127,10 @@ public record ArtilleryCannonData(
         return new ArtilleryCannonData(caliber, barrels, damage, reloadTime, durability,
                 scopeZoom, muzzles, 3.0f, 0.01f, 9.8f, 1.0f, 0.0f,
                 20, 1, 5.0f);
+    }
+
+    /** 是否为自动装填模式（开火后自动进入装填） */
+    public boolean isAutoLoading() {
+        return "AUTO".equals(loadingMode);
     }
 }

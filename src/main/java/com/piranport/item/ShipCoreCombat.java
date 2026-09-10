@@ -218,7 +218,12 @@ public class ShipCoreCombat {
             return true;
         }
 
-        startCannonReloadIfPossible(player, coreStack, inv, weaponSlot, coreSlot, weapon, cooldowns);
+        // 策划决策/武器/07-火炮装填双模式.md
+        // 自动模式 = 开火后自动进入下一轮装填读条；手动模式 = 玩家按 R 键才启动读条
+        boolean isAutoLoading = weapon.getItem() instanceof com.piranport.artillery.ArtilleryItem ai && ai.isAutoLoading();
+        if (isAutoLoading) {
+            startCannonReloadIfPossible(player, coreStack, inv, weaponSlot, coreSlot, weapon, cooldowns);
+        }
 
         com.piranport.debug.PiranPortDebug.event(
                 "Fire cannon | weapon={} ammo={} barrels={}",
@@ -261,7 +266,10 @@ public class ShipCoreCombat {
 
     private static boolean tickCannonAutoReloadSlot(Player player, ItemStack coreStack, Inventory inv,
             int weaponSlot, int coreSlot, ItemStack weapon, SlotCooldowns cooldowns) {
-        if (!(weapon.getItem() instanceof com.piranport.artillery.ArtilleryItem)) return false;
+        if (!(weapon.getItem() instanceof com.piranport.artillery.ArtilleryItem ai)) return false;
+        // 策划决策/武器/07-火炮装填双模式.md：手动模式不在服务端 tick 自动装填
+        // （仅 R 键启动读条）
+        if (!ai.isAutoLoading()) return false;
         if (coreSlot == -1) return false;
 
         long now = player.level().getGameTime();
@@ -307,6 +315,42 @@ public class ShipCoreCombat {
         weapon.set(ModDataComponents.WEAPON_COOLDOWN.get(), WeaponCooldown.of(now, reloadTicks));
         playCannonReloadStartSound(player, weapon);
         return true;
+    }
+
+    /**
+     * 手动模式火炮 R 键启动装填读条（策划决策/武器/07-火炮装填双模式.md）
+     * <p>仅在武器 MANUAL 装填模式时空炮且未在读条才启动；自动模式应走自动 tick 装填。</p>
+     */
+    public static void tryManualCannonReload(Player player, ItemStack coreStack, ItemStack weapon) {
+        if (player.level().isClientSide()) return;
+        if (coreStack.isEmpty() || weapon.isEmpty()) return;
+        if (!(weapon.getItem() instanceof com.piranport.artillery.ArtilleryItem)) return;
+
+        // 已装弹或已在读条 → 提示
+        LoadedAmmo loaded = weapon.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
+        if (loaded.ammoItemId() != null && !loaded.ammoItemId().isEmpty()) {
+            player.displayClientMessage(Component.translatable("message.piranport.weapon_already_loaded"), true);
+            return;
+        }
+        WeaponCooldown cd = weapon.get(ModDataComponents.WEAPON_COOLDOWN.get());
+        long now = player.level().getGameTime();
+        if (cd != null && cd.endTick() > now) {
+            player.displayClientMessage(Component.translatable("message.piranport.weapon_reloading"), true);
+            return;
+        }
+
+        Inventory inv = player.getInventory();
+        int weaponSlot = -1;
+        for (int i = 0; i < inv.items.size(); i++) {
+            if (inv.items.get(i) == weapon) { weaponSlot = i; break; }
+        }
+        if (weaponSlot < 0) weaponSlot = inv.selected;
+        int coreSlot = -1;
+        for (int i = 0; i < inv.items.size(); i++) {
+            if (inv.items.get(i) == coreStack) { coreSlot = i; break; }
+        }
+        SlotCooldowns cooldowns = coreStack.getOrDefault(ModDataComponents.SLOT_COOLDOWNS.get(), SlotCooldowns.EMPTY);
+        startCannonReloadIfPossible(player, coreStack, inv, weaponSlot, coreSlot, weapon, cooldowns);
     }
 
     private static boolean completeCannonReload(Player player, ItemStack coreStack, Inventory inv,

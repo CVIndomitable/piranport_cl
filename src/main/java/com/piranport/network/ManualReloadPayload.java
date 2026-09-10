@@ -81,9 +81,18 @@ public record ManualReloadPayload() implements CustomPacketPayload {
                 return;
             }
 
-            // 火炮在 Phase 4 自动补给，R 键无效
-            if (mainHand.getItem() instanceof com.piranport.artillery.ArtilleryItem
-                    || offHand.getItem() instanceof com.piranport.artillery.ArtilleryItem) {
+            // 火炮：依据策划决策/武器/07-火炮装填双模式.md
+            // 自动模式 = 开火后冷却（FPS 风格），不需要 R 键；手动模式 = 必须按 R 键启动读条
+            if (mainHand.getItem() instanceof com.piranport.artillery.ArtilleryItem ai) {
+                if (!ai.isAutoLoading()) {
+                    // 手动模式：仅在空炮且无读条时启动读条；已装弹或已在读条时提示
+                    com.piranport.item.ShipCoreCombat.tryManualCannonReload(player, coreStack, mainHand);
+                }
+                return;
+            } else if (offHand.getItem() instanceof com.piranport.artillery.ArtilleryItem ai) {
+                if (!ai.isAutoLoading()) {
+                    com.piranport.item.ShipCoreCombat.tryManualCannonReload(player, coreStack, offHand);
+                }
                 return;
             }
         });

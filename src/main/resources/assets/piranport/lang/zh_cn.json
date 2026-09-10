@@ -59,6 +59,7 @@
   "message.piranport.need_torpedo_reload": "需要安装鱼雷再装填部件！",
   "message.piranport.weapon_reloading": "武器装填中…",
   "message.piranport.weapon_already_loaded": "已装弹",
+  "message.piranport.weapon_auto_reload": "自动装填中，无需手动装填",
   "message.piranport.weapon_selected": "已选择: %s",
   "piranport.ship_core.data_corrupted": "舰装核心数据损坏，已自动修复",
   "tooltip.piranport.armor_bonus": "护甲: +%s",

@@ -6,6 +6,7 @@ import com.piranport.item.AutoCIWSItem;
 import com.piranport.PiranPort;
 import com.piranport.aviation.FireControlManager;
 import com.piranport.aviation.ReconManager;
+import com.piranport.combat.AASilenceManager;
 import com.piranport.combat.TransformationManager;
 import com.piranport.component.FuelData;
 import com.piranport.config.ModCommonConfig;
@@ -189,6 +190,8 @@ public class PlayerTickHandler {
             tickSonarGlow(player, transformedCore);
             tickCleanupResidualSlowdown(player);
             tickAutoCombatIfNeeded(player);
+            // 决策/数值/05 §定稿修订 #3：防空静默窗口每 tick 衰减
+            AASilenceManager.tickDown(player);
             // 策划决策/舰装/舰装-自动近防炮系统.md：H 键总开关在 server 侧生效时 tick 近防炮
             AutoCIWSItem.tickAutoCIWS(player, isAutoFireEnabled(transformedCore));
         }

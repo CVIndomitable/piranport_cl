@@ -32,6 +32,7 @@ import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.brewing.RegisterBrewingRecipesEvent;
+import net.neoforged.neoforge.event.tick.LevelTickEvent;
 import org.slf4j.Logger;
 
 /**
@@ -96,6 +97,8 @@ public class PiranPort {
         ModAttachmentTypes.ATTACHMENT_TYPES.register(modEventBus);
         ModSounds.SOUND_EVENTS.register(modEventBus);
         NeoForge.EVENT_BUS.addListener(this::registerBrewingRecipes);
+        // 决策/副本/07：Boss 节点防卡 tick 调度（每 server level tick 调用）
+        NeoForge.EVENT_BUS.addListener(this::onLevelTick);
         modContainer.registerConfig(ModConfig.Type.CLIENT, ModClientConfig.SPEC);
         modContainer.registerConfig(ModConfig.Type.COMMON, ModCommonConfig.SPEC);
         modContainer.registerConfig(ModConfig.Type.COMMON, ModWeaponsConfig.SPEC, "piranport-weapons.toml");
@@ -117,5 +120,16 @@ public class PiranPort {
 
     private void registerBrewingRecipes(final RegisterBrewingRecipesEvent event) {
         ModBrewingRecipes.register(event.getBuilder());
+    }
+
+    /**
+     * 决策/副本/07-Boss战环境防卡地形设计.md：
+     * 服务端 level tick 触发 BossAntiStuckScheduler.tickInstances，
+     * 由调度器内部按 TICK_INTERVAL=100 tick 调用 BossAntiStuckArea.maybeTick。
+     */
+    private void onLevelTick(final LevelTickEvent.Post event) {
+        if (event.getLevel().isClientSide()) return;
+        if (!(event.getLevel() instanceof net.minecraft.server.level.ServerLevel serverLevel)) return;
+        com.piranport.dungeon.BossAntiStuckScheduler.tickInstances(serverLevel);
     }
 }

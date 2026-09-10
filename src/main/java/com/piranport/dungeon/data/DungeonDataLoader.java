@@ -196,11 +196,71 @@ public class DungeonDataLoader extends SimpleJsonResourceReloadListener {
             }
         }
 
+        // 决策/副本/12：关卡级默认值（若未指定则取所有节点的并集）
+        SceneData stageScene = aggregateStageScene(nodes);
+        Set<CombatRestriction> stageRestrictions = aggregateStageRestrictions(nodes);
+
+        // 决策/副本/12：业务判定字段（顶层可选）
+        StageData.VictoryObjectives objectives = parseVictoryObjectives(json);
+
         return new StageData(stageId, chapter, displayName,
                 Map.copyOf(nodes), List.copyOf(edges), startNode,
                 List.copyOf(bossNodes), List.copyOf(firstClearRewards),
                 List.copyOf(checkpoints),
-                Set.copyOf(victoryConditions));
+                Set.copyOf(victoryConditions),
+                stageScene, Set.copyOf(stageRestrictions), objectives);
+    }
+
+    /**
+     * 关卡级场景默认值：若 JSON 顶层未指定 sceneData，按节点列表首个有效场景作为默认值。
+     */
+    private SceneData aggregateStageScene(Map<String, NodeData> nodes) {
+        for (NodeData n : nodes.values()) {
+            if (n.scene() != null) return n.scene();
+        }
+        return SceneData.DAY;
+    }
+
+    /**
+     * 关卡级战斗限制默认值：聚合所有节点的限制并集。
+     */
+    private Set<CombatRestriction> aggregateStageRestrictions(Map<String, NodeData> nodes) {
+        Set<CombatRestriction> all = new HashSet<>();
+        for (NodeData n : nodes.values()) {
+            all.addAll(n.restrictions());
+        }
+        return all;
+    }
+
+    /**
+     * 解析关卡业务判定字段（决策 §副本/12）：
+     * 运输目标点偏移、护航目标、夺旗半径/计时等。
+     */
+    private StageData.VictoryObjectives parseVictoryObjectives(JsonObject json) {
+        if (!json.has("victory_objectives")) {
+            return StageData.VictoryObjectives.EMPTY;
+        }
+        JsonObject obj = json.getAsJsonObject("victory_objectives");
+        boolean requireAll = obj.has("require_all_nodes_cleared")
+                && obj.get("require_all_nodes_cleared").getAsBoolean();
+        int surviveSec = obj.has("survive_seconds") ? obj.get("survive_seconds").getAsInt() : 0;
+        String escortKey = obj.has("escort_entity") && !obj.get("escort_entity").isJsonNull()
+                ? obj.get("escort_entity").getAsString() : null;
+        int[] reachOffset = null;
+        if (obj.has("reach_point_offset") && obj.get("reach_point_offset").isJsonArray()) {
+            JsonArray arr = obj.getAsJsonArray("reach_point_offset");
+            if (arr.size() == 3) {
+                reachOffset = new int[]{
+                        arr.get(0).getAsInt(),
+                        arr.get(1).getAsInt(),
+                        arr.get(2).getAsInt()
+                };
+            }
+        }
+        int capRadius = obj.has("capture_radius") ? obj.get("capture_radius").getAsInt() : 0;
+        int capHold = obj.has("capture_hold_seconds") ? obj.get("capture_hold_seconds").getAsInt() : 0;
+        return new StageData.VictoryObjectives(requireAll, surviveSec,
+                escortKey, reachOffset, capRadius, capHold);
     }
 
     private NodeData parseNode(String nodeId, JsonObject json) {

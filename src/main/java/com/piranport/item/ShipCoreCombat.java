@@ -218,6 +218,9 @@ public class ShipCoreCombat {
             return true;
         }
 
+        // 决策/数值/05 §定稿修订 #3：大口径主炮开火触发 5 秒防空静默窗口
+        com.piranport.combat.AASilenceManager.onCannonFire(player, shellForRender);
+
         // 策划决策/武器/07-火炮装填双模式.md
         // 自动模式 = 开火后自动进入下一轮装填读条；手动模式 = 玩家按 R 键才启动读条
         boolean isAutoLoading = weapon.getItem() instanceof com.piranport.artillery.ArtilleryItem ai && ai.isAutoLoading();
@@ -324,7 +327,14 @@ public class ShipCoreCombat {
     public static void tryManualCannonReload(Player player, ItemStack coreStack, ItemStack weapon) {
         if (player.level().isClientSide()) return;
         if (coreStack.isEmpty() || weapon.isEmpty()) return;
-        if (!(weapon.getItem() instanceof com.piranport.artillery.ArtilleryItem)) return;
+        if (!(weapon.getItem() instanceof com.piranport.artillery.ArtilleryItem ai)) return;
+
+        // 策划决策/武器/09：仅 MANUAL 模式武器允许 R 键手动装填；
+        // 自动模式武器按 R 不应启动读条（避免与自动 tick 装填冲突）。
+        if (ai.isAutoLoading()) {
+            player.displayClientMessage(Component.translatable("message.piranport.weapon_auto_reload"), true);
+            return;
+        }
 
         // 已装弹或已在读条 → 提示
         LoadedAmmo loaded = weapon.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);

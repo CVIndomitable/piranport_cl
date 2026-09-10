@@ -170,7 +170,10 @@ public record DungeonRegistrySyncPayload(String jsonData,
                         List.copyOf(bossNodes),
                         List.of(),
                         List.copyOf(checkpoints),
-                        Set.of()));
+                        Set.of(),
+                        com.piranport.dungeon.data.SceneData.DAY,
+                        Set.of(),
+                        com.piranport.dungeon.data.StageData.VictoryObjectives.EMPTY));
             }
         } catch (Exception e) {
             PiranPort.LOGGER.warn("Failed to parse dungeon registry sync: {}", e.getMessage());

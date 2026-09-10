@@ -45,12 +45,15 @@ public class AutoCIWSItem extends Item {
 
     /**
      * 服务端 tick — 由 PlayerTickHandler 调用。
-     * <p>简化版：仅在玩家变身状态下、且 H 键自动模式已启用时扫描范围内敌对飞机/抛射物。</p>
+     * <p>仅在玩家变身状态下、且 H 键自动模式已启用、且不在主炮防空静默窗口
+     * （《数值/05》定稿 #3：主炮开火后 5 秒定时）时扫描范围内敌对飞机/抛射物。</p>
      */
     public static void tickAutoCIWS(Player player, boolean autoFireEnabled) {
         if (player == null) return;
         if (!autoFireEnabled) return;
         if (player.level().isClientSide()) return;
+        // 决策/数值/05 §定稿修订 #3：主炮开火后 5 秒防空静默期间禁用
+        if (com.piranport.combat.AASilenceManager.isSilenced(player)) return;
         if (player.tickCount % FIRE_INTERVAL != 0) return;
 
         // AbstractArrow 继承 Projectile 而非 LivingEntity；故此处用 Entity 基类查询

@@ -59,6 +59,7 @@
   "message.piranport.need_torpedo_reload": "Torpedo Reload enhancement required!",
   "message.piranport.weapon_reloading": "Reloading…",
   "message.piranport.weapon_already_loaded": "Already loaded",
+  "message.piranport.weapon_auto_reload": "Auto-reloading, no manual reload needed",
   "message.piranport.weapon_selected": "Selected: %s",
   "piranport.ship_core.data_corrupted": "Ship core data corrupted, auto-repaired",
   "tooltip.piranport.armor_bonus": "Armor: +%s",

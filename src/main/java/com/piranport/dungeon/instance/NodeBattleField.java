@@ -134,6 +134,11 @@ public final class NodeBattleField {
             spawnCompletionPortal(dungeonLevel, instance, node.nodeId());
         }
 
+        // 决策/副本/07：BOSS 节点注册防卡 tick 调度器
+        if (node.type() == NodeData.NodeType.BOSS && flagshipSpawned) {
+            com.piranport.dungeon.BossAntiStuckScheduler.register(instance, node, spawned);
+        }
+
         return spawned;
     }
 

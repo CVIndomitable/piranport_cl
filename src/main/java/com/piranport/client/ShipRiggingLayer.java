@@ -154,7 +154,7 @@ public class ShipRiggingLayer extends RenderLayer<AbstractClientPlayer, PlayerMo
             case SUBMARINE -> renderSubmarineHull(consumer, pose, accent, packedLight);
             case DEFAULT -> renderDefaultHull(consumer, pose, accent, hasAircraft, packedLight);
         }
-        renderSkinMotif(consumer, pose, resolveMotif(skinId), accent, launchPose, packedLight);
+        renderSkinMotif(consumer, pose, resolveMotif(skinId, resolveNationality(player)), accent, launchPose, packedLight);
         renderLaunchPulse(consumer, pose, accent, launchPose, packedLight);
 
         poseStack.popPose();
@@ -181,6 +181,31 @@ public class ShipRiggingLayer extends RenderLayer<AbstractClientPlayer, PlayerMo
     }
 
     private static RiggingMotif resolveMotif(int skinId) {
+        return resolveMotif(skinId, null);
+    }
+
+    /**
+     * 国籍派发优先于 skinId 派发（决策 §航空/22-放飞动作按国籍特化）：
+     * <ul>
+     *   <li>J = J_BOW（日系和弓射箭）</li>
+     *   <li>E = E_LONGBOW（英系长弓）</li>
+     *   <li>U = U_FUSILIER（美系火枪 F4U）— 默认</li>
+     *   <li>未读到 nationality（null）则按 skinId 历史派发作 fallback</li>
+     * </ul>
+     */
+    private static RiggingMotif resolveMotif(int skinId, String nationality) {
+        if (nationality != null) {
+            return switch (nationality) {
+                case "J" -> RiggingMotif.J_BOW;
+                case "E" -> RiggingMotif.E_LONGBOW;
+                case "U" -> RiggingMotif.U_FUSILIER;
+                default -> resolveMotifBySkinId(skinId);
+            };
+        }
+        return resolveMotifBySkinId(skinId);
+    }
+
+    private static RiggingMotif resolveMotifBySkinId(int skinId) {
         return switch (skinId) {
             case 4, 8, 9, 11, 13 -> RiggingMotif.J_BOW;
             case 5, 6, 7, 14, 15 -> RiggingMotif.C_TALISMAN;
@@ -191,6 +216,26 @@ public class ShipRiggingLayer extends RenderLayer<AbstractClientPlayer, PlayerMo
             case 20, 21 -> RiggingMotif.U_FUSILIER;
             default -> RiggingMotif.NONE;
         };
+    }
+
+    /**
+     * 从客户端玩家变身核心读取国籍字段（决策 §航空/22）。
+     * 客户端不持有 ShipType 实例的字段（仅在 ShipCoreItem 上），直接通过
+     * {@code TransformationManager.findTransformedCore} → {@code ShipCoreItem.getShipType().nationality}。
+     * 失败 / 非变身状态 / null 核心 → 返回 null（由调用方走 skinId fallback）。
+     */
+    private static String resolveNationality(AbstractClientPlayer player) {
+        if (player == null) return null;
+        try {
+            var core = com.piranport.combat.TransformationManager.findTransformedCore(player);
+            if (core == null || core.isEmpty()) return null;
+            if (core.getItem() instanceof com.piranport.item.ShipCoreItem sci) {
+                return sci.getShipType().nationality;
+            }
+        } catch (Exception ignored) {
+            // 客户端可能在异次元（非变身态）调用，安全降级
+        }
+        return null;
     }
 
     private static void renderSkinMotif(VertexConsumer consumer, Matrix4f pose, RiggingMotif motif,

@@ -27,10 +27,7 @@ public class ModMobEffects {
     public static final DeferredHolder<MobEffect, com.piranport.effect.ExperienceBoostEffect> EXPERIENCE_BOOST =
             MOB_EFFECTS.register("experience_boost", com.piranport.effect.ExperienceBoostEffect::new);
 
-    // Phase 27: 策划 §7.7 着火/被发现 Buff
+    // Phase 27: 策划 §7.7 着火 Buff（"被发现" 2026-09-09 已取消，见战斗/02 决策）
     public static final DeferredHolder<MobEffect, com.piranport.effect.BurningEffect> BURNING =
             MOB_EFFECTS.register("burning", com.piranport.effect.BurningEffect::new);
-
-    public static final DeferredHolder<MobEffect, com.piranport.effect.SpottedEffect> SPOTTED =
-            MOB_EFFECTS.register("spotted", com.piranport.effect.SpottedEffect::new);
 }

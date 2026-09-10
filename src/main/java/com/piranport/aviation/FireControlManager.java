@@ -88,34 +88,9 @@ public class FireControlManager {
         return !FIGHTER_GROUND_ENABLED.contains(playerUUID);
     }
 
-    // ===== Phase 27：策划 §7.7 "被发现!" Buff 候选池 =====
-    // 火控锁定选目标时优先从本集合中选；具体填充由 ServerLevel 扫描 SpottedEffect 的事件处理完成。
-    private static final Set<UUID> SPOTTED_ENTITIES = ConcurrentHashMap.newKeySet();
-
-    /** 注册一个"被发现"实体 UUID（带 effect 自动触发）。幂等。 */
-    public static void markSpotted(UUID entityUuid) {
-        SPOTTED_ENTITIES.add(entityUuid);
-    }
-
-    /** 移除"被发现"标记。幂等。 */
-    public static void clearSpotted(UUID entityUuid) {
-        SPOTTED_ENTITIES.remove(entityUuid);
-    }
-
-    /** 当前服务器所有"被发现"实体快照。 */
-    public static List<UUID> getSpottedEntities() {
-        return List.copyOf(SPOTTED_ENTITIES);
-    }
-
-    /** 实体是否被标记"被发现"。 */
-    public static boolean isSpotted(UUID entityUuid) {
-        return SPOTTED_ENTITIES.contains(entityUuid);
-    }
-
     /** Remove all state (call on server stop / world unload). */
     public static void clearAll() {
         LOCKED_TARGETS.clear();
         FIGHTER_GROUND_ENABLED.clear();
-        SPOTTED_ENTITIES.clear();
     }
 }

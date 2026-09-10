@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    { "item": "piranport:f4u_corsair_ice" },
+    { "item": "minecraft:snowball" },
+    { "item": "minecraft:sugar" },
+    { "item": "minecraft:milk_bucket" }
+  ],
+  "result": {
+    "id": "minecraft:snowball",
+    "count": 16
+  }
+}

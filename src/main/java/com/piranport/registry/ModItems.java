@@ -147,6 +147,14 @@ public class ModItems {
             ITEMS.register("large_he_shell",
                     () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.he_shell"));
 
+    // ===== MK23 Nuclear Shell — 副本/08-Boss通关奖励阿尔法兵装.md =====
+    // 2026-09-09 定稿：原"阿尔法兵装"占位废止，实体化为 MK23 核炮弹。
+    // 限制：仅 LARGE_SHELLS 标签火炮可装填；威力按炮 HE 表值 ×10（写死查表）；
+    // 装填/伤害模型与 HE 完全相同；水中到期规则同 HE。
+    public static final DeferredItem<Item> MK23_NUCLEAR_SHELL =
+            ITEMS.register("mk23_nuclear_shell",
+                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.mk23_nuclear"));
+
     // ===== AP Shells =====
     public static final DeferredItem<Item> SMALL_AP_SHELL =
             ITEMS.register("small_ap_shell",
@@ -452,6 +460,20 @@ public class ModItems {
             ITEMS.register("torpedo_610mm_type95_mk2",
                     () -> new TorpedoItem(new Item.Properties().stacksTo(16),
                             610, 55.5f, 45, 0.929f, false, false, false, false));
+
+    // 数值配置/05 鱼雷补缺（2026-09-07 项目所有者定稿）
+    public static final DeferredItem<TorpedoItem> TORPEDO_610MM_TYPE92 =
+            ITEMS.register("torpedo_610mm_type92",
+                    () -> new TorpedoItem(new Item.Properties().stacksTo(16),
+                            610, 42f, 30, 0.80f, false, false, false, true));
+    public static final DeferredItem<TorpedoItem> TORPEDO_533MM_MK13 =
+            ITEMS.register("torpedo_533mm_mk13",
+                    () -> new TorpedoItem(new Item.Properties().stacksTo(16),
+                            533, 22f, 25, 0.60f, false, false, false, false));
+    public static final DeferredItem<TorpedoItem> TORPEDO_533MM_53_38 =
+            ITEMS.register("torpedo_533mm_53_38",
+                    () -> new TorpedoItem(new Item.Properties().stacksTo(16),
+                            533, 24f, 20, 0.75f, false, false, false, false));
 
     // ===== Armor Plates =====
     public static final DeferredItem<ArmorPlateItem> SMALL_ARMOR_PLATE =

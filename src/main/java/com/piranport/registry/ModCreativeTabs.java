@@ -404,6 +404,8 @@ public class ModCreativeTabs {
                         output.accept(ModItems.SMALL_HE_SHELL.get());
                         output.accept(ModItems.MEDIUM_HE_SHELL.get());
                         output.accept(ModItems.LARGE_HE_SHELL.get());
+                        // MK23 核炮弹 — 副本/08 决策（仅大口径主炮可用）
+                        output.accept(ModItems.MK23_NUCLEAR_SHELL.get());
                         // AP Shells
                         output.accept(ModItems.SMALL_AP_SHELL.get());
                         output.accept(ModItems.MEDIUM_AP_SHELL.get());
@@ -436,10 +438,13 @@ public class ModCreativeTabs {
                         output.accept(ModItems.ACOUSTIC_TORPEDO_533MM_MK27.get());
                         output.accept(ModItems.TORPEDO_530MM_TYPE95.get());
                         output.accept(ModItems.TORPEDO_610MM_TYPE91.get());
+                        output.accept(ModItems.TORPEDO_610MM_TYPE92.get());
                         output.accept(ModItems.TORPEDO_610MM_TYPE93_MK1.get());
                         output.accept(ModItems.TORPEDO_610MM_TYPE93_MK3.get());
                         output.accept(ModItems.TORPEDO_610MM_TYPE95_MK2.get());
                         output.accept(ModItems.TORPEDO_720MM_TYPE0.get());
+                        output.accept(ModItems.TORPEDO_533MM_MK13.get());
+                        output.accept(ModItems.TORPEDO_533MM_53_38.get());
                         // Aviation Ammo
                         output.accept(ModItems.AVIATION_FUEL.get());
                         output.accept(ModItems.AERIAL_BOMB.get());

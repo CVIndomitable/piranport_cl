@@ -1551,7 +1551,19 @@ public class ShipCoreCombat {
     static boolean isHEShell(String ammoItemId) {
         return ammoItemId.equals(BuiltInRegistries.ITEM.getKey(ModItems.SMALL_HE_SHELL.get()).toString())
                 || ammoItemId.equals(BuiltInRegistries.ITEM.getKey(ModItems.MEDIUM_HE_SHELL.get()).toString())
-                || ammoItemId.equals(BuiltInRegistries.ITEM.getKey(ModItems.LARGE_HE_SHELL.get()).toString());
+                || ammoItemId.equals(BuiltInRegistries.ITEM.getKey(ModItems.LARGE_HE_SHELL.get()).toString())
+                // MK23 视作 HE 走原版爆炸管线（副本/08 决策 §威力写死查表）
+                || isMK23Shell(ammoItemId);
+    }
+
+    /** MK23 核炮弹识别 — 仅大型火炮可装填（参见 large_shells.json）。 */
+    static boolean isMK23Shell(ItemStack stack) {
+        return stack.is(ModItems.MK23_NUCLEAR_SHELL.get());
+    }
+
+    static boolean isMK23Shell(String ammoItemId) {
+        return ammoItemId.equals(
+                BuiltInRegistries.ITEM.getKey(ModItems.MK23_NUCLEAR_SHELL.get()).toString());
     }
 
     static boolean isVTShell(ItemStack stack) {
@@ -1974,6 +1986,11 @@ public class ShipCoreCombat {
             } else {
                 float damage = getGunDamage(weapon, level);
                 float explosionPower = getExplosionPower(weapon, level);
+                // 副本/08 决策：MK23 核炮弹威力 = HE 表值 ×10（写死查表，不走运行时系数）。
+                // 仅作用于 LARGE_SHELLS 火炮；isMK23Shell 已在 large_shells 标签上保证。
+                if (isMK23Shell(shellForRender)) {
+                    explosionPower = explosionPower * 10f;
+                }
                 float velocity = getProjectileVelocity(weapon, level);
                 float drag = getProjectileDrag(weapon, level);
                 float gravity = getProjectileGravity(weapon, level);

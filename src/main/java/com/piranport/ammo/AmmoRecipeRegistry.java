@@ -214,6 +214,17 @@ public class AmmoRecipeRegistry {
                 () -> ModItems.TORPEDO_610MM_TYPE95_MK2.get(), 2, 80,
                 mat(iron, 8), mat(gp, 4), mat(fuel, 3));
 
+        // 数值配置/05 鱼雷补缺（2026-09-07 项目所有者定稿）
+        add("torp_std_t92", AmmoCategory.TORPEDO, "氧气", "610mm 九二式",
+                () -> ModItems.TORPEDO_610MM_TYPE92.get(), 2, 80,
+                mat(iron, 7), mat(gp, 3), mat(fuel, 2));
+        add("torp_std_mk13", AmmoCategory.TORPEDO, "航空", "533mm MK13",
+                () -> ModItems.TORPEDO_533MM_MK13.get(), 4, 60,
+                mat(iron, 4), mat(gp, 2), mat(fuel, 1));
+        add("torp_std_53_38", AmmoCategory.TORPEDO, "标准", "533mm 53-38",
+                () -> ModItems.TORPEDO_533MM_53_38.get(), 4, 60,
+                mat(iron, 5), mat(gp, 2), mat(fuel, 1));
+
         // Named 720mm
         add("torp_std_t0", AmmoCategory.TORPEDO, "标准", "720mm 零式",
                 () -> ModItems.TORPEDO_720MM_TYPE0.get(), 1, 100,

@@ -32,17 +32,22 @@ import net.neoforged.neoforge.network.PacketDistributor;
 @EventBusSubscriber(modid = PiranPort.MOD_ID)
 public class PlayerConnectionHandler {
 
-    /** 精英损管：背包内有损管时抵消致命伤害 */
+    /**
+     * 精英损管：原版不死图腾之后判定——原版图腾仅手持（主手/副手）时在 die() 之前由
+     * 原版先行结算；未触发时致死事件照常发出，本方法按背包槽位序号（0→40，含副手）
+     * 扫描并消耗一个精英损管，抵消本次致命伤害。损管判定不识别原版不死图腾
+     * （背包内未手持的图腾不参与本结算，仍只在手持时按原版规则生效）。
+     * <p>
+     * 副本维度同样生效：此处取消死亡后，DungeonEventHandler 的副本死亡流程（回讲台等）
+     * 因事件已取消而不再接管，玩家原地以 1 血存活。
+     */
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void onEliteDamageControl(LivingDeathEvent event) {
         if (event.isCanceled()) return;
         if (event.getEntity().level().isClientSide()) return;
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
 
-        // 整合版 §3.3：副本维度死亡由 DungeonEventHandler.onPlayerDeath 接管（totem 原版结算 +
-        // 取消事件 + 回 lectern），精英损管不在副本维度生效。
-        if (com.piranport.dungeon.event.DungeonEventHandler.isInDungeon(player)) return;
-
+        // 按背包槽位序号扫描，消耗最先命中的精英损管
         Inventory inv = player.getInventory();
         int foundSlot = -1;
         for (int i = 0; i < inv.getContainerSize(); i++) {

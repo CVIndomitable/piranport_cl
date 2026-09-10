@@ -28,3 +28,6 @@ tools/unicorn-render/input.png
 tools/unicorn-render/input.webp
 tools/unicorn-render/out/
 tools/unicorn-render/output/
+
+# 敏感：SSH 密钥目录（含私钥，禁止入库）
+.ssh-keys/

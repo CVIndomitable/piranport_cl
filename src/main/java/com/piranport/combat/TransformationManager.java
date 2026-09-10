@@ -321,16 +321,16 @@ public class TransformationManager {
     }
 
     /**
-     * Apply overweight debuffs based on how much totalLoad exceeds maxLoad.
-     * cost = maxLoad - totalLoad. Negative cost means overweight.
-     *   cost < 0:    (speed penalty only, no extra debuff)
-     *   cost <= -20:  Mining Fatigue I + Weakness I
-     *   cost <= -50:  Mining Fatigue III + Weakness II
-     *   cost <= -100: Mining Fatigue III + Poison II
+     * Apply overweight debuffs based on load ratio relative to maxLoad.
+     * 依据：策划决策/数值/03-超载惩罚分级.md（115%/130%/150% 三档阈值）
+     *   ratio > 115%: Mining Fatigue I
+     *   ratio > 130%: Mining Fatigue II + Weakness II
+     *   ratio > 150%: Mining Fatigue III + Poison II
      * Effects last 60 ticks (3s), refreshed each recalculation.
      */
     public static void applyOverweightPenalty(Player player, int totalLoad, int maxLoad) {
         if (player.level().isClientSide()) return;
+        if (maxLoad <= 0) return;
         int cost = maxLoad - totalLoad;
 
         // P1-7: 超载时记录 error 埋点（含玩家、当前/最大值、触发上下文）
@@ -339,38 +339,30 @@ public class TransformationManager {
         }
 
         int duration = 60; // 3秒，每次重算刷新
-        if (cost <= -100) {
-            // 挖掘疲劳 III + 中毒 II
-            player.addEffect(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, duration, 2, false, false, true));
-            player.addEffect(new MobEffectInstance(MobEffects.POISON, duration, 1, false, false, true));
-        } else if (cost <= -50) {
-            // 挖掘疲劳 III + 虚弱 II
-            player.addEffect(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, duration, 2, false, false, true));
-            player.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, duration, 1, false, false, true));
-        } else if (cost <= -20) {
-            // 挖掘疲劳 I + 虚弱 I
-            player.addEffect(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, duration, 0, false, false, true));
-            player.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, duration, 0, false, false, true));
-        } else if (cost > -20) {
+        // 仅在超载时计算阈值；不超载 = cost >= 0，跳过
+        if (cost < 0) {
+            // 决策 §3.5：百分比阈值（115% / 130% / 150%）映射三档惩罚
+            // 当 totalLoad > 115% maxLoad 时即视为"超载 115%"
+            int totalLoadTimes100 = (int) ((double) totalLoad * 100 / maxLoad);
+            if (totalLoadTimes100 > 150) {
+                // > 150%：挖掘疲劳 III + 中毒 II
+                player.addEffect(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, duration, 2, false, false, true));
+                player.addEffect(new MobEffectInstance(MobEffects.POISON, duration, 1, false, false, true));
+            } else if (totalLoadTimes100 > 130) {
+                // > 130%：挖掘疲劳 II + 虚弱 II
+                player.addEffect(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, duration, 1, false, false, true));
+                player.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, duration, 1, false, false, true));
+            } else if (totalLoadTimes100 > 115) {
+                // > 115%：挖掘疲劳 I
+                player.addEffect(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, duration, 0, false, false, true));
+            } else {
+                // 100% < totalLoad ≤ 115%：航速已在 Weight 曲线处理，不再施加额外 debuff
+                removeOverweightPenalty(player);
+                return;
+            }
+        } else {
             // 不再超重时移除所有超重惩罚（仅移除本系统施加的效果）
-            if (player.hasEffect(MobEffects.DIG_SLOWDOWN)) {
-                MobEffectInstance effect = player.getEffect(MobEffects.DIG_SLOWDOWN);
-                if (effect != null && effect.getAmplifier() <= 2 && effect.getDuration() <= duration) {
-                    player.removeEffect(MobEffects.DIG_SLOWDOWN);
-                }
-            }
-            if (player.hasEffect(MobEffects.WEAKNESS)) {
-                MobEffectInstance effect = player.getEffect(MobEffects.WEAKNESS);
-                if (effect != null && effect.getAmplifier() <= 1 && effect.getDuration() <= duration) {
-                    player.removeEffect(MobEffects.WEAKNESS);
-                }
-            }
-            if (player.hasEffect(MobEffects.POISON)) {
-                MobEffectInstance effect = player.getEffect(MobEffects.POISON);
-                if (effect != null && effect.getAmplifier() <= 1 && effect.getDuration() <= duration) {
-                    player.removeEffect(MobEffects.POISON);
-                }
-            }
+            removeOverweightPenalty(player);
         }
     }
 

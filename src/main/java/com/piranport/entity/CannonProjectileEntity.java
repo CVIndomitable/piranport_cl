@@ -3,6 +3,8 @@ package com.piranport.entity;
 import com.piranport.PiranPort;
 import com.piranport.artillery.config.override.ConfigOverrideManager;
 import com.piranport.combat.CannonImpactEffectBroadcaster;
+import com.piranport.combat.FireApplyHelper;
+import com.piranport.combat.ShipTypeMitigationHelper;
 import com.piranport.config.ModArtilleryConfig;
 import com.piranport.config.ModCommonConfig;
 import com.piranport.config.ModProjectilesConfig;
@@ -75,6 +77,9 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
     /** 进程内单调递增 ID，保证同 tick 齐射时临时属性名不重复。 */
     private static final AtomicLong AP_MODIFIER_SEQUENCE = new AtomicLong();
 
+    /** 发射此炮弹的火炮口径（inch/2 近似单位，>8 为大口径）。策划 §5 决策：AP 大口径对小型船过穿。 */
+    private int sourceCaliber = 0;
+
     // 客户端位置插值（防止服务端位置同步跳跃导致的抖动）
     private int clientLerpSteps;
     private double clientLerpX, clientLerpY, clientLerpZ;
@@ -145,6 +150,15 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
 
     public void setCustomGravity(float g) {
         this.customGravity = g;
+    }
+
+    /** 标记发射火炮口径；策划 §5 决策：AP 大口径对小船过穿伤害 5%。 */
+    public void setSourceCaliber(int caliber) {
+        this.sourceCaliber = caliber;
+    }
+
+    public int getSourceCaliber() {
+        return sourceCaliber;
     }
 
     /**
@@ -433,6 +447,10 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
                 Level.ExplosionInteraction interaction = ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get()
                         ? Level.ExplosionInteraction.TNT : Level.ExplosionInteraction.NONE;
                 level().explode(this, getX(), getY(), getZ(), explosionPower, interaction);
+                // 依据：策划决策/战斗/04-起火Debuff替代原版着火.md（HE 命中按口径概率施火）
+                if (target instanceof LivingEntity living) {
+                    FireApplyHelper.tryApplyFire(living, getItem().getItem(), false);
+                }
                 sendImpactEffect(CannonImpactEffectPayload.Kind.HE, explosionPower);
                 level().playSound(null, getX(), getY(), getZ(),
                         ModSounds.CANNON_EXPLOSION.get(), SoundSource.PLAYERS, 2.0f, 0.9f + random.nextFloat() * 0.2f);
@@ -443,6 +461,10 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
                 float apMultiplier = (float) getProjectileDouble("AP_DAMAGE_MULTIPLIER",
                         ModProjectilesConfig.AP_DAMAGE_MULTIPLIER.get());
                 float apDamage = damage * apMultiplier * speedRatio;
+                // 依据：策划决策/数值/05-船型职能分化修订.md（大口径 AP 对小型船过穿 5%）
+                if (target instanceof LivingEntity) {
+                    apDamage = ShipTypeMitigationHelper.applyLargeApOverpen(apDamage, sourceCaliber);
+                }
                 float apArmorIgnore = (float) getProjectileDouble("AP_ARMOR_IGNORE",
                         ModProjectilesConfig.AP_ARMOR_IGNORE.get());
                 // 依据：策划决策/武器/弹药-AP弹穿甲设计.md（91 式 20% / 一式 50% 护甲忽略）
@@ -471,6 +493,10 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
                         applied = true;
                     }
                     try {
+                        // 依据：策划决策/数值/05-船型职能分化修订.md（小型船 AP/HE 单次封顶 = maxHealth/4）
+                        if (ShipTypeMitigationHelper.isSmallTransformedPlayer(living)) {
+                            apDamage = ShipTypeMitigationHelper.capSmallShipDamage(apDamage, living.getMaxHealth());
+                        }
                         living.hurt(damageSources().thrown(this, getOwner()), apDamage);
                     } finally {
                         if (applied && armorAttr != null) {
@@ -562,6 +588,7 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         tag.putInt("UnderwaterTicks", underwaterTicks);
         tag.putBoolean("Exploded", exploded);
         tag.putFloat("CustomGravity", customGravity);
+        tag.putInt("SourceCaliber", sourceCaliber);
     }
 
     @Override
@@ -586,6 +613,9 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         }
         if (tag.contains("CustomGravity")) {
             customGravity = tag.getFloat("CustomGravity");
+        }
+        if (tag.contains("SourceCaliber")) {
+            sourceCaliber = tag.getInt("SourceCaliber");
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.piranport.entity;
 
+import com.piranport.combat.FireApplyHelper;
 import com.piranport.config.ModCommonConfig;
 import com.piranport.registry.ModEntityTypes;
 import com.piranport.registry.ModItems;
@@ -88,6 +89,11 @@ public class AerialBombEntity extends ThrowableItemProjectile {
             Level.ExplosionInteraction interaction = ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get()
                     ? Level.ExplosionInteraction.TNT : Level.ExplosionInteraction.NONE;
             level().explode(this, getX(), getY(), getZ(), explosionPower, interaction);
+
+            // 依据：策划决策/战斗/04-起火Debuff替代原版着火.md（航弹单次判定 r<0.4→+2 / r<0.8→+1 / 否则失败）
+            if (target instanceof net.minecraft.world.entity.LivingEntity living) {
+                FireApplyHelper.tryApplyFire(living, null, true);
+            }
 
             // 显式设置最后受伤来源，使敌对生物进入仇恨状态
             if (target instanceof net.minecraft.world.entity.LivingEntity living) {

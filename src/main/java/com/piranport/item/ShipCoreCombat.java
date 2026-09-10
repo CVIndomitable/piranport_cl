@@ -1983,6 +1983,10 @@ public class ShipCoreCombat {
                 if (isVT) projectile.setVT(true);
                 projectile.setDragCoeff(drag);
                 projectile.setCustomGravity(gravity);
+                // 依据：策划决策/数值/05-船型职能分化修订.md（AP 大口径对小型船过穿）
+                if (weapon.getItem() instanceof com.piranport.artillery.ArtilleryItem artilleryItem) {
+                    projectile.setSourceCaliber(artilleryItem.getEffectiveData(level).caliber());
+                }
 
                 Vec3 direction;
                 if (aim instanceof Aimed(Vec3 aimTarget)) {

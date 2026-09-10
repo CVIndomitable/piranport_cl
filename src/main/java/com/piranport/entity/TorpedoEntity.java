@@ -553,7 +553,8 @@ public class TorpedoEntity extends ThrowableItemProjectile {
             } else {
                 target.hurt(damageSources().thrown(directSource, getOwner()), damage);
                 if (target instanceof LivingEntity living) {
-                    living.addEffect(new MobEffectInstance(ModMobEffects.FLOODING, 60, 0));
+                    // 依据：策划决策/战斗/02-Buff系统核心设计.md（进水时长 8 秒 = 160 tick）
+                    living.addEffect(new MobEffectInstance(ModMobEffects.FLOODING, 160, 0));
                 }
                 discard();
             }

@@ -1577,13 +1577,20 @@ public class ShipCoreCombat {
     static boolean isAPShell(ItemStack stack) {
         return stack.is(ModItems.SMALL_AP_SHELL.get())
                 || stack.is(ModItems.MEDIUM_AP_SHELL.get())
-                || stack.is(ModItems.LARGE_AP_SHELL.get());
+                || stack.is(ModItems.LARGE_AP_SHELL.get())
+                // 依据：弹药-AP弹穿甲设计.md —— 91 式 / 一式 / 超重弹均为 AP 子类
+                || stack.is(ModItems.TYPE_91_AP_SHELL.get())
+                || stack.is(ModItems.TYPE_1_AP_SHELL.get())
+                || stack.is(ModItems.SUPER_HEAVY_AP_SHELL.get());
     }
 
     static boolean isAPShell(String ammoItemId) {
         return ammoItemId.equals(BuiltInRegistries.ITEM.getKey(ModItems.SMALL_AP_SHELL.get()).toString())
                 || ammoItemId.equals(BuiltInRegistries.ITEM.getKey(ModItems.MEDIUM_AP_SHELL.get()).toString())
-                || ammoItemId.equals(BuiltInRegistries.ITEM.getKey(ModItems.LARGE_AP_SHELL.get()).toString());
+                || ammoItemId.equals(BuiltInRegistries.ITEM.getKey(ModItems.LARGE_AP_SHELL.get()).toString())
+                || ammoItemId.equals(BuiltInRegistries.ITEM.getKey(ModItems.TYPE_91_AP_SHELL.get()).toString())
+                || ammoItemId.equals(BuiltInRegistries.ITEM.getKey(ModItems.TYPE_1_AP_SHELL.get()).toString())
+                || ammoItemId.equals(BuiltInRegistries.ITEM.getKey(ModItems.SUPER_HEAVY_AP_SHELL.get()).toString());
     }
 
     static boolean isMagneticTorpedo(ItemStack stack) {

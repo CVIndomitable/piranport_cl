@@ -119,6 +119,20 @@ public class AmmoRecipeRegistry {
                 () -> ModItems.LARGE_AP_SHELL.get(), 4, 80,
                 mat(copper, 5), mat(gp, 3), mat(gold, 5));
 
+        // 特种 AP（依据：弹药-AP弹穿甲设计.md）
+        // 91 式：大口径 14-21in；忽略 20% 护甲
+        add("shell_ap_91", AmmoCategory.SHELL, "AP弹", "九一式",
+                () -> ModItems.TYPE_91_AP_SHELL.get(), 2, 100,
+                mat(copper, 7), mat(gp, 4), mat(gold, 8));
+        // 一式：大口径 16-21in；忽略 50% 护甲
+        add("shell_ap_t1", AmmoCategory.SHELL, "AP弹", "一式",
+                () -> ModItems.TYPE_1_AP_SHELL.get(), 2, 100,
+                mat(copper, 8), mat(gp, 4), mat(gold, 10));
+        // 超重弹：中口径 7-16in；常规 AP 护甲忽略
+        add("shell_ap_super", AmmoCategory.SHELL, "AP弹", "超重弹",
+                () -> ModItems.SUPER_HEAVY_AP_SHELL.get(), 4, 80,
+                mat(copper, 6), mat(gp, 3), mat(gold, 12));
+
         // VT (small only)
         add("shell_vt_s", AmmoCategory.SHELL, "VT弹", "小口径",
                 () -> ModItems.SMALL_VT_SHELL.get(), 4, 60,

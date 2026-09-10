@@ -408,6 +408,10 @@ public class ModCreativeTabs {
                         output.accept(ModItems.SMALL_AP_SHELL.get());
                         output.accept(ModItems.MEDIUM_AP_SHELL.get());
                         output.accept(ModItems.LARGE_AP_SHELL.get());
+                        // 特种 AP（91 式 / 一式 / 超重弹）—— 依据弹药-AP弹穿甲设计
+                        output.accept(ModItems.TYPE_91_AP_SHELL.get());
+                        output.accept(ModItems.TYPE_1_AP_SHELL.get());
+                        output.accept(ModItems.SUPER_HEAVY_AP_SHELL.get());
                         // VT Shell
                         output.accept(ModItems.SMALL_VT_SHELL.get());
                         // Type 3 Shells

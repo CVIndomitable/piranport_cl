@@ -445,6 +445,13 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
                 float apDamage = damage * apMultiplier * speedRatio;
                 float apArmorIgnore = (float) getProjectileDouble("AP_ARMOR_IGNORE",
                         ModProjectilesConfig.AP_ARMOR_IGNORE.get());
+                // 依据：策划决策/武器/弹药-AP弹穿甲设计.md（91 式 20% / 一式 50% 护甲忽略）
+                Item ammoItem = getItem().getItem();
+                if (ammoItem == ModItems.TYPE_91_AP_SHELL.get()) {
+                    apArmorIgnore = 0.20f;
+                } else if (ammoItem == ModItems.TYPE_1_AP_SHELL.get()) {
+                    apArmorIgnore = 0.50f;
+                }
                 if (apArmorIgnore < 0) apArmorIgnore = 0;
                 if (apArmorIgnore > 1) apArmorIgnore = 1;
                 level().playSound(null, getX(), getY(), getZ(),

@@ -4,6 +4,8 @@ import com.piranport.advancement.ModAdvancements;
 import com.piranport.npc.ai.FleetGroup;
 import com.piranport.npc.ai.FleetGroupManager;
 import com.piranport.registry.ModItems;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -59,6 +61,17 @@ public abstract class AbstractDeepOceanEntity extends Monster {
                 .add(Attributes.ATTACK_DAMAGE, 5.0)
                 .add(Attributes.KNOCKBACK_RESISTANCE, 0.6)
                 .add(Attributes.ARMOR, 8.0);
+    }
+
+    /**
+     * 依据：策划决策/架构/03-数据驱动vs硬编码.md
+     * <p>查询本实体的 JSON 数据（若存在）。找不到时回退到子类硬编码默认值。</p>
+     */
+    protected DeepOceanEntityData getJsonData() {
+        if (getType() == null) return null;
+        ResourceLocation id = BuiltInRegistries.ENTITY_TYPE.getKey(getType());
+        if (id == null) return null;
+        return DeepOceanDataLoader.get(id);
     }
 
     // --- Synched Data ---
@@ -365,72 +378,83 @@ public abstract class AbstractDeepOceanEntity extends Monster {
 
     /**
      * Get the orbit distance for this ship type. Override in subclasses.
+     * 依据：策划决策/架构/03-数据驱动vs硬编码.md — JSON 配置优先，否则子类硬编码值。
      */
     public double getOrbitDistance() {
-        return 16.0;
+        DeepOceanEntityData d = getJsonData();
+        return d != null ? d.orbitDistance() : 16.0;
     }
 
     /**
      * Get the fire interval in ticks. Override in subclasses.
      */
     public int getFireInterval() {
-        return 80;
+        DeepOceanEntityData d = getJsonData();
+        return d != null ? d.fireInterval() : 80;
     }
 
     /**
      * Get shell damage. Override in subclasses.
      */
     public float getShellDamage() {
-        return 5.0f;
+        DeepOceanEntityData d = getJsonData();
+        return d != null ? d.shellDamage() : 5.0f;
     }
 
     /**
      * Get explosion power. Override in subclasses.
      */
     public float getExplosionPower() {
-        return 1.5f;
+        DeepOceanEntityData d = getJsonData();
+        return d != null ? d.explosionPower() : 1.5f;
     }
 
     /**
      * How many shots between tracking rounds (min). Override in subclasses.
      */
     public int getTrackingIntervalMin() {
-        return 3;
+        DeepOceanEntityData d = getJsonData();
+        return d != null ? d.trackingIntervalMin() : 3;
     }
 
     /**
      * How many shots between tracking rounds (max). Override in subclasses.
      */
     public int getTrackingIntervalMax() {
-        return 6;
+        DeepOceanEntityData d = getJsonData();
+        return d != null ? d.trackingIntervalMax() : 6;
     }
 
     /**
      * Whether this entity can use torpedoes. Override in subclasses.
      */
     public boolean canUseTorpedoes() {
-        return false;
+        DeepOceanEntityData d = getJsonData();
+        return d != null && d.canUseTorpedoes();
     }
 
     /**
      * Whether this entity can launch aircraft. Override in subclasses.
      */
     public boolean canLaunchAircraft() {
-        return false;
+        DeepOceanEntityData d = getJsonData();
+        return d != null && d.canLaunchAircraft();
     }
 
     /**
      * Torpedo damage. Override in subclasses.
      */
     public float getTorpedoDamage() {
-        return 8.0f;
+        DeepOceanEntityData d = getJsonData();
+        return d != null ? d.torpedoDamage() : 8.0f;
     }
 
     /**
      * Max aircraft capacity for carriers. Override in subclasses.
      */
     public int getMaxAircraft() {
-        return 0;
+        DeepOceanEntityData d = getJsonData();
+        return d != null ? d.maxAircraft() : 0;
     }
 
     // --- Glowing & Persistence ---

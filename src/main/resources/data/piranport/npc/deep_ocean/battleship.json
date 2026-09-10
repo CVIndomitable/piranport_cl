@@ -1,0 +1,19 @@
+{
+  "entity_type": "piranport:deep_ocean_battleship",
+  "max_health": 150.0,
+  "movement_speed": 0.20,
+  "follow_range": 48.0,
+  "attack_damage": 12.0,
+  "knockback_resistance": 0.7,
+  "armor": 16.0,
+  "shell_damage": 12.0,
+  "explosion_power": 3.0,
+  "fire_interval": 120,
+  "orbit_distance": 28.0,
+  "can_use_torpedoes": false,
+  "torpedo_damage": 0.0,
+  "tracking_interval_min": 2,
+  "tracking_interval_max": 4,
+  "can_launch_aircraft": false,
+  "max_aircraft": 0
+}

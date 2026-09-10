@@ -1,0 +1,19 @@
+{
+  "entity_type": "piranport:deep_ocean_destroyer",
+  "max_health": 30.0,
+  "movement_speed": 0.35,
+  "follow_range": 24.0,
+  "attack_damage": 3.0,
+  "knockback_resistance": 0.3,
+  "armor": 4.0,
+  "shell_damage": 4.0,
+  "explosion_power": 1.2,
+  "fire_interval": 100,
+  "orbit_distance": 12.0,
+  "can_use_torpedoes": true,
+  "torpedo_damage": 8.0,
+  "tracking_interval_min": 3,
+  "tracking_interval_max": 6,
+  "can_launch_aircraft": false,
+  "max_aircraft": 0
+}

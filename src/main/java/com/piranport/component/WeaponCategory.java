@@ -14,7 +14,9 @@ public enum WeaponCategory implements StringRepresentable {
     ARMOR("armor"),
     MISSILE("missile"),
     ENGINE("engine"),
-    DEPTH_CHARGE("depth_charge");
+    DEPTH_CHARGE("depth_charge"),
+    /** 强化部件（如自动近防炮、声纳等）。策划决策/舰装-自动近防炮系统.md */
+    ENHANCEMENT("enhancement");
 
     private final String serializedName;
 

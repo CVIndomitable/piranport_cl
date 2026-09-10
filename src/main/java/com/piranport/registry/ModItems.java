@@ -13,6 +13,7 @@ import com.piranport.item.AircraftItem;
 import com.piranport.item.AmmoItem;
 import com.piranport.item.AbyssalReportItem;
 import com.piranport.item.ArmorPlateItem;
+import com.piranport.item.AutoCIWSItem;
 import com.piranport.artillery.ArtilleryItem;
 import com.piranport.artillery.config.ArtilleryCannonData;
 import com.piranport.artillery.config.ArtilleryConfig;
@@ -488,6 +489,23 @@ public class ModItems {
             ITEMS.register("large_armor_plate",
                     () -> new ArmorPlateItem(new Item.Properties().stacksTo(1)
                             .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ARMOR), 6, 30, 9));
+
+    // ===== Auto CIWS（强化部件槽 — 策划决策/舰装/舰装-自动近防炮系统.md）=====
+    public static final DeferredItem<AutoCIWSItem> AUTO_CIWS_20MM =
+            ITEMS.register("auto_ciws_20mm",
+                    () -> new AutoCIWSItem(new Item.Properties().stacksTo(1)
+                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ENHANCEMENT),
+                            1.0f));
+    public static final DeferredItem<AutoCIWSItem> AUTO_CIWS_40MM =
+            ITEMS.register("auto_ciws_40mm",
+                    () -> new AutoCIWSItem(new Item.Properties().stacksTo(1)
+                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ENHANCEMENT),
+                            1.5f));
+    public static final DeferredItem<AutoCIWSItem> AUTO_CIWS_76MM =
+            ITEMS.register("auto_ciws_76mm",
+                    () -> new AutoCIWSItem(new Item.Properties().stacksTo(1)
+                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ENHANCEMENT),
+                            2.0f));
 
     // ===== Food Ingredients (Phase 11a) =====
     public static final DeferredItem<Item> FLOUR           = ITEMS.registerSimpleItem("flour");

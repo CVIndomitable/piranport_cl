@@ -122,6 +122,10 @@ public class ModCreativeTabs {
                         output.accept(ModItems.SMALL_ARMOR_PLATE.get());
                         output.accept(ModItems.MEDIUM_ARMOR_PLATE.get());
                         output.accept(ModItems.LARGE_ARMOR_PLATE.get());
+                        // Auto CIWS — 策划决策/舰装/舰装-自动近防炮系统.md
+                        output.accept(ModItems.AUTO_CIWS_20MM.get());
+                        output.accept(ModItems.AUTO_CIWS_40MM.get());
+                        output.accept(ModItems.AUTO_CIWS_76MM.get());
                         // Sonar
                         output.accept(ModItems.STANDARD_SONAR.get());
                         // Engines

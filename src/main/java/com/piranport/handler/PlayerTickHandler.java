@@ -1,6 +1,7 @@
 package com.piranport.handler;
 
 import com.piranport.item.ShipType;
+import com.piranport.item.AutoCIWSItem;
 
 import com.piranport.PiranPort;
 import com.piranport.aviation.FireControlManager;
@@ -188,6 +189,8 @@ public class PlayerTickHandler {
             tickSonarGlow(player, transformedCore);
             tickCleanupResidualSlowdown(player);
             tickAutoCombatIfNeeded(player);
+            // 策划决策/舰装/舰装-自动近防炮系统.md：H 键总开关在 server 侧生效时 tick 近防炮
+            AutoCIWSItem.tickAutoCIWS(player, isAutoFireEnabled(transformedCore));
         }
     }
 
@@ -229,6 +232,16 @@ public class PlayerTickHandler {
                 player.resetFallDistance();
             }
         }
+    }
+
+    /**
+     * 判定 H 键自动模式是否启用。复用既有 SHIP_AUTO_LAUNCH 组件（H 键 toggle）。
+     * 依据：策划决策/数值/05-船型职能分化修订.md（H 键"自动模式"总开关）
+     */
+    private static boolean isAutoFireEnabled(ItemStack transformedCore) {
+        if (transformedCore.isEmpty()) return false;
+        Boolean flag = transformedCore.get(com.piranport.registry.ModDataComponents.SHIP_AUTO_LAUNCH.get());
+        return Boolean.TRUE.equals(flag);
     }
 
     /** 水面行走条件判断后委托给 handleWaterWalking */

@@ -88,7 +88,8 @@ public class AmmoRecipeRegistry {
     // ===== Shells =====
 
     private static void registerShells() {
-        Supplier<Item> iron = () -> Items.IRON_INGOT;
+        // 依据：策划决策/武器/弹药-材料值合成方案.md（2026-09-07 定稿：炮弹弹壳原料铁→铜）
+        Supplier<Item> copper = () -> Items.COPPER_INGOT;
         Supplier<Item> gp   = () -> Items.GUNPOWDER;
         Supplier<Item> gold = () -> Items.GOLD_NUGGET;
         Supplier<Item> rs   = () -> Items.REDSTONE;
@@ -99,40 +100,40 @@ public class AmmoRecipeRegistry {
         // HE
         add("shell_he_s", AmmoCategory.SHELL, "HE弹", "小口径",
                 () -> ModItems.SMALL_HE_SHELL.get(), 8, 40,
-                mat(iron, 2), mat(gp, 1));
+                mat(copper, 2), mat(gp, 1));
         add("shell_he_m", AmmoCategory.SHELL, "HE弹", "中口径",
                 () -> ModItems.MEDIUM_HE_SHELL.get(), 8, 60,
-                mat(iron, 3), mat(gp, 2));
+                mat(copper, 3), mat(gp, 2));
         add("shell_he_l", AmmoCategory.SHELL, "HE弹", "大口径",
                 () -> ModItems.LARGE_HE_SHELL.get(), 4, 80,
-                mat(iron, 5), mat(gp, 3));
+                mat(copper, 5), mat(gp, 3));
 
         // AP
         add("shell_ap_s", AmmoCategory.SHELL, "AP弹", "小口径",
                 () -> ModItems.SMALL_AP_SHELL.get(), 8, 40,
-                mat(iron, 2), mat(gp, 1), mat(gold, 2));
+                mat(copper, 2), mat(gp, 1), mat(gold, 2));
         add("shell_ap_m", AmmoCategory.SHELL, "AP弹", "中口径",
                 () -> ModItems.MEDIUM_AP_SHELL.get(), 8, 60,
-                mat(iron, 3), mat(gp, 2), mat(gold, 3));
+                mat(copper, 3), mat(gp, 2), mat(gold, 3));
         add("shell_ap_l", AmmoCategory.SHELL, "AP弹", "大口径",
                 () -> ModItems.LARGE_AP_SHELL.get(), 4, 80,
-                mat(iron, 5), mat(gp, 3), mat(gold, 5));
+                mat(copper, 5), mat(gp, 3), mat(gold, 5));
 
         // VT (small only)
         add("shell_vt_s", AmmoCategory.SHELL, "VT弹", "小口径",
                 () -> ModItems.SMALL_VT_SHELL.get(), 4, 60,
-                mat(iron, 2), mat(gp, 1), mat(rs, 2), mat(comp, 1));
+                mat(copper, 2), mat(gp, 1), mat(rs, 2), mat(comp, 1));
 
         // Type 3
         add("shell_t3_s", AmmoCategory.SHELL, "三式弹", "小口径",
                 () -> ModItems.SMALL_TYPE3_SHELL.get(), 8, 40,
-                mat(iron, 2), mat(gp, 2), mat(rs, 1));
+                mat(copper, 2), mat(gp, 2), mat(rs, 1));
         add("shell_t3_m", AmmoCategory.SHELL, "三式弹", "中口径",
                 () -> ModItems.MEDIUM_TYPE3_SHELL.get(), 8, 60,
-                mat(iron, 3), mat(gp, 3), mat(rs, 1));
+                mat(copper, 3), mat(gp, 3), mat(rs, 1));
         add("shell_t3_l", AmmoCategory.SHELL, "三式弹", "大口径",
                 () -> ModItems.LARGE_TYPE3_SHELL.get(), 4, 80,
-                mat(iron, 5), mat(gp, 4), mat(rs, 2));
+                mat(copper, 5), mat(gp, 4), mat(rs, 2));
     }
 
     // ===== Torpedoes =====

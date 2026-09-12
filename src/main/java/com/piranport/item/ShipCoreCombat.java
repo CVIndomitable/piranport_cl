@@ -1,9 +1,10 @@
 package com.piranport.item;
 
+import com.piranport.aviation.AircraftFireStrategy;
 import com.piranport.aviation.FireControlManager;
 import com.piranport.combat.TransformationManager;
-import com.piranport.component.AircraftAttackMode;
-import com.piranport.component.AircraftInfo;
+import com.piranport.combat.data.AmmoInventory;
+import com.piranport.combat.data.WeaponState;
 import com.piranport.component.FuelData;
 import com.piranport.component.LoadedAmmo;
 import com.piranport.component.SelectedAmmoType;
@@ -11,18 +12,14 @@ import com.piranport.component.SlotCooldowns;
 import com.piranport.component.WeaponCooldown;
 import com.piranport.config.ModArtilleryConfig;
 import com.piranport.config.ModCommonConfig;
-import com.piranport.entity.AircraftEntity;
 import com.piranport.entity.CannonProjectileEntity;
 import com.piranport.entity.SanshikiPelletEntity;
 import com.piranport.entity.DepthChargeEntity;
-import com.piranport.entity.MissileEntity;
 import com.piranport.entity.TorpedoEntity;
-import com.piranport.network.AircraftLaunchPosePayload;
 import com.piranport.network.ShakeEffectPayload;
 import com.piranport.registry.ModDataComponents;
 import com.piranport.registry.ModItems;
 import com.piranport.registry.ModSounds;
-import com.piranport.skin.SkinManager;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -32,12 +29,10 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.Item;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.SimpleMenuProvider;
@@ -52,9 +47,11 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import java.util.UUID;
 import com.piranport.combat.BallisticSolver;
+import com.piranport.combat.depthcharge.DepthChargeFireStrategy;
+import com.piranport.combat.missile.MissileFireStrategy;
+import com.piranport.combat.torpedo.TorpedoFireStrategy;
 import com.piranport.platform.ClientHooks;
 import com.piranport.PiranPort;
-import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.tags.TagKey;
@@ -147,28 +144,28 @@ public class ShipCoreCombat {
         // Torpedo launcher — requires 鱼雷再装填 enhancement for auto-reload
         if (weapon.getItem() instanceof TorpedoLauncherItem torpedoLauncher) {
             if (TransformationManager.hasTorpedoReloadEquipped(player, coreStack)) {
-                fireTorpedosInventoryMode(level, player, coreStack, inv, weaponSlot, coreInventorySlot, torpedoLauncher, cooldowns);
+                TorpedoFireStrategy.fireTorpedosInventoryMode(level, player, coreStack, inv, weaponSlot, coreInventorySlot, torpedoLauncher, cooldowns);
             } else {
-                fireTorpedosManualMode(level, player, coreStack, inv, weaponSlot, torpedoLauncher, cooldowns);
+                TorpedoFireStrategy.fireTorpedosManualMode(level, player, coreStack, inv, weaponSlot, torpedoLauncher, cooldowns);
             }
             return true;
         }
 
         // Depth charge launcher
         if (weapon.getItem() instanceof DepthChargeLauncherItem dcLauncher) {
-            fireDepthCharges(level, player, coreStack, inv, weaponSlot, coreInventorySlot, dcLauncher, cooldowns);
+            DepthChargeFireStrategy.fireDepthCharges(level, player, coreStack, inv, weaponSlot, coreInventorySlot, dcLauncher, cooldowns);
             return true;
         }
 
         // Missile launcher
         if (weapon.getItem() instanceof MissileLauncherItem missileLauncher) {
-            fireMissiles(level, player, coreStack, inv, weaponSlot, coreInventorySlot, missileLauncher, cooldowns);
+            MissileFireStrategy.fireMissiles(level, player, coreStack, inv, weaponSlot, coreInventorySlot, missileLauncher, cooldowns);
             return true;
         }
 
         // Aircraft
         if (weapon.getItem() instanceof AircraftItem) {
-            launchAircraftInventoryMode(level, player, coreStack, inv, weaponSlot, coreInventorySlot, cooldowns);
+            AircraftFireStrategy.launchAircraftInventoryMode(level, player, coreStack, inv, weaponSlot, coreInventorySlot, cooldowns);
             return true;
         }
 
@@ -190,9 +187,10 @@ public class ShipCoreCombat {
             return true;
         }
 
-        LoadedAmmo loaded = weapon.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
+        WeaponState ws = new WeaponState(weapon);
+        LoadedAmmo loaded = ws.getLoadedAmmo();
         if (!isLoadedCannonAmmoValid(loaded, weapon, barrelCount, level)) {
-            weapon.remove(ModDataComponents.LOADED_AMMO.get());
+            ws.clearLoadedAmmo();
             startCannonReloadIfPossible(player, coreStack, inv, weaponSlot, coreSlot, weapon, cooldowns);
             player.displayClientMessage(Component.translatable("message.piranport.weapon_not_loaded"), true);
             return true;
@@ -200,7 +198,7 @@ public class ShipCoreCombat {
 
         ItemStack shellForRender = createAmmoStack(loaded.ammoItemId());
         if (shellForRender.isEmpty()) {
-            weapon.remove(ModDataComponents.LOADED_AMMO.get());
+            ws.clearLoadedAmmo();
             player.displayClientMessage(Component.translatable("message.piranport.weapon_not_loaded"), true);
             return true;
         }
@@ -208,13 +206,13 @@ public class ShipCoreCombat {
         boolean isType3 = isType3Shell(loaded.ammoItemId());
         boolean isVT = isVTShell(loaded.ammoItemId());
         boolean isHE = isHEShell(loaded.ammoItemId()) || isVT;
-        weapon.remove(ModDataComponents.LOADED_AMMO.get());
-        recordCurrentAmmoType(weapon, shellForRender.getItem());
+        ws.clearLoadedAmmo();
+        new AmmoInventory(inv, coreSlot, weaponSlot).recordAmmoType(weapon, shellForRender.getItem());
 
         boolean fired = fireCannonSalvo(level, player, weapon, shellForRender, barrelCount,
                 isType3, isVT, isHE, aim);
         if (!fired) {
-            weapon.set(ModDataComponents.LOADED_AMMO.get(), loaded);
+            ws.setLoadedAmmo(loaded.count(), loaded.ammoItemId());
             return true;
         }
 
@@ -277,20 +275,20 @@ public class ShipCoreCombat {
 
         long now = player.level().getGameTime();
         int barrelCount = getBarrelCount(weapon, player.level());
-        LoadedAmmo loaded = weapon.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
+        WeaponState ws = new WeaponState(weapon);
+        LoadedAmmo loaded = ws.getLoadedAmmo();
         if (isLoadedCannonAmmoValid(loaded, weapon, barrelCount, player.level())) {
             return false;
         }
-        if (loaded.hasAmmo()) {
-            weapon.remove(ModDataComponents.LOADED_AMMO.get());
+        if (ws.hasLoadedAmmo()) {
+            ws.clearLoadedAmmo();
         }
 
         if (cooldowns.isOnCooldown(weaponSlot, now)) {
             return false;
         }
 
-        WeaponCooldown itemCooldown = weapon.get(ModDataComponents.WEAPON_COOLDOWN.get());
-        if (itemCooldown != null && itemCooldown.endTick() > 0 && itemCooldown.endTick() <= now) {
+        if (ws.getCooldown() != null && ws.getCooldown().endTick() > 0 && ws.getCooldown().endTick() <= now) {
             return completeCannonReload(player, coreStack, inv, weaponSlot, coreSlot, weapon, cooldowns);
         }
 
@@ -301,21 +299,21 @@ public class ShipCoreCombat {
             int weaponSlot, int coreSlot, ItemStack weapon, SlotCooldowns cooldowns) {
         if (coreSlot == -1) return false;
         int barrelCount = getBarrelCount(weapon, player.level());
-        Item ammoType = chooseCannonReloadAmmo(inv, weapon, barrelCount, coreSlot, weaponSlot,
-                player.level(), player.getAbilities().instabuild);
+        AmmoInventory ammoInv = new AmmoInventory(inv, coreSlot, weaponSlot);
+        Item ammoType = ammoInv.chooseReloadAmmo(weapon, barrelCount, player.getAbilities().instabuild, player.level());
         if (ammoType == null && !player.getAbilities().instabuild) {
             return clearCannonReloadState(coreStack, weapon, weaponSlot, cooldowns);
         }
 
         if (ammoType != null) {
-            recordCurrentAmmoType(weapon, ammoType);
+            ammoInv.recordAmmoType(weapon, ammoType);
         }
 
         int reloadTicks = TransformationManager.boostedCooldown(player, getGunCooldown(weapon, player.level()));
         long now = player.level().getGameTime();
         coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
                 cooldowns.withSlotCooldown(weaponSlot, reloadTicks, now));
-        weapon.set(ModDataComponents.WEAPON_COOLDOWN.get(), WeaponCooldown.of(now, reloadTicks));
+        new WeaponState(weapon).setCooldown(now, reloadTicks);
         playCannonReloadStartSound(player, weapon);
         return true;
     }
@@ -337,14 +335,13 @@ public class ShipCoreCombat {
         }
 
         // 已装弹或已在读条 → 提示
-        LoadedAmmo loaded = weapon.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
-        if (loaded.ammoItemId() != null && !loaded.ammoItemId().isEmpty()) {
+        WeaponState ws = new WeaponState(weapon);
+        if (ws.hasLoadedAmmo()) {
             player.displayClientMessage(Component.translatable("message.piranport.weapon_already_loaded"), true);
             return;
         }
-        WeaponCooldown cd = weapon.get(ModDataComponents.WEAPON_COOLDOWN.get());
         long now = player.level().getGameTime();
-        if (cd != null && cd.endTick() > now) {
+        if (ws.isOnCooldown(now)) {
             player.displayClientMessage(Component.translatable("message.piranport.weapon_reloading"), true);
             return;
         }
@@ -366,22 +363,23 @@ public class ShipCoreCombat {
     private static boolean completeCannonReload(Player player, ItemStack coreStack, Inventory inv,
             int weaponSlot, int coreSlot, ItemStack weapon, SlotCooldowns cooldowns) {
         int barrelCount = getBarrelCount(weapon, player.level());
-        Item ammoType = chooseCannonReloadAmmo(inv, weapon, barrelCount, coreSlot, weaponSlot,
-                player.level(), player.getAbilities().instabuild);
+        AmmoInventory ammoInv = new AmmoInventory(inv, coreSlot, weaponSlot);
+        Item ammoType = ammoInv.chooseReloadAmmo(weapon, barrelCount, player.getAbilities().instabuild, player.level());
         if (ammoType == null) {
             return clearCannonReloadState(coreStack, weapon, weaponSlot, cooldowns);
         }
 
         if (!player.getAbilities().instabuild
-                && !consumeCannonAmmo(inv, ammoType, barrelCount, coreSlot, weaponSlot)) {
+                && !ammoInv.consumeAmmo(ammoType, barrelCount)) {
             return clearCannonReloadState(coreStack, weapon, weaponSlot, cooldowns);
         }
 
         String ammoId = BuiltInRegistries.ITEM.getKey(ammoType).toString();
-        weapon.set(ModDataComponents.LOADED_AMMO.get(), new LoadedAmmo(barrelCount, ammoId));
-        weapon.remove(ModDataComponents.WEAPON_COOLDOWN.get());
+        WeaponState ws = new WeaponState(weapon);
+        ws.setLoadedAmmo(barrelCount, ammoId);
+        ws.clearCooldown();
         coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(), cooldowns.withoutSlotCooldown(weaponSlot));
-        recordCurrentAmmoType(weapon, ammoType);
+        ammoInv.recordAmmoType(weapon, ammoType);
         playCannonReloadCompleteSound(player, weapon);
 
         com.piranport.debug.PiranPortDebug.event(
@@ -396,8 +394,9 @@ public class ShipCoreCombat {
     private static boolean clearCannonReloadState(ItemStack coreStack, ItemStack weapon,
             int weaponSlot, SlotCooldowns cooldowns) {
         boolean changed = false;
-        if (weapon.get(ModDataComponents.WEAPON_COOLDOWN.get()) != null) {
-            weapon.remove(ModDataComponents.WEAPON_COOLDOWN.get());
+        WeaponState ws = new WeaponState(weapon);
+        if (ws.getCooldown() != null) {
+            ws.clearCooldown();
             changed = true;
         }
         if (cooldowns.endTick().containsKey(weaponSlot) || cooldowns.totalTick().containsKey(weaponSlot)) {
@@ -417,7 +416,8 @@ public class ShipCoreCombat {
     private static boolean isCannonReadyToFire(ItemStack weapon, @Nullable Level level) {
         if (!(weapon.getItem() instanceof com.piranport.artillery.ArtilleryItem)) return false;
         int barrelCount = getBarrelCount(weapon, level);
-        LoadedAmmo loaded = weapon.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
+        WeaponState ws = new WeaponState(weapon);
+        LoadedAmmo loaded = ws.getLoadedAmmo();
         return isLoadedCannonAmmoValid(loaded, weapon, barrelCount, level);
     }
 
@@ -429,1023 +429,16 @@ public class ShipCoreCombat {
         return new ItemStack(item);
     }
 
-    /** Manual-mode torpedo: consume LOADED_AMMO component on the launcher item. */
-    private static void fireTorpedosManualMode(Level level, Player player, ItemStack coreStack,
-            Inventory inv, int weaponSlot, TorpedoLauncherItem launcher, SlotCooldowns cooldowns) {
-        ItemStack launcherStack = weaponSlot == 40 ? inv.offhand.get(0) : inv.items.get(weaponSlot);
-        int tubeCount = launcher.getTubeCount();
-        int caliber = launcher.getCaliber();
-
-        // Creative mode: auto-find torpedo from inventory
-        if (player.getAbilities().instabuild) {
-            TorpedoItem torpedoType = null;
-            int coreSlot = -1;
-            for (int i = 0; i < inv.items.size(); i++) {
-                if (i == weaponSlot) continue;
-                ItemStack s = inv.items.get(i);
-                if (s.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(s)) {
-                    coreSlot = i;
-                }
-                if (torpedoType == null && s.getItem() instanceof TorpedoItem ti && ti.getCaliber() == caliber) {
-                    torpedoType = ti;
-                }
-            }
-            if (torpedoType == null && weaponSlot != 40 && coreSlot != 40) {
-                ItemStack oh = inv.offhand.get(0);
-                if (oh.getItem() instanceof TorpedoItem ti && ti.getCaliber() == caliber) {
-                    torpedoType = ti;
-                }
-            }
-
-            if (torpedoType == null) {
-                player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
-                return;
-            }
-
-            String ammoId = BuiltInRegistries.ITEM.getKey(torpedoType).toString();
-            boolean magnetic = isMagneticTorpedo(ammoId);
-            boolean wireGuided = isWireGuidedTorpedo(ammoId);
-            boolean acousticHoming = isAcousticTorpedo(ammoId);
-            float torpedoSpeed = torpedoType.getSpeed();
-            float[] angles = getSpreadAngles(tubeCount);
-            Vec3 look = player.getLookAngle();
-
-            TorpedoEntity primaryGuided = null;
-            for (float angle : angles) {
-                Vec3 dir = rotateHorizontal(look, Math.toRadians(angle));
-                TorpedoEntity torpedo = new TorpedoEntity(level, player, caliber);
-                torpedo.setDamage(ExperienceShellItem.applyDamageBonus(launcherStack, torpedoType.getDamage()));
-                torpedo.setSpeed(torpedoType.getSpeed());
-                torpedo.setLifetime(torpedoType.getLifetimeTicks());
-                if (magnetic) torpedo.setMagnetic(true);
-                if (wireGuided) torpedo.setWireGuided(true);
-                if (acousticHoming) torpedo.setAcoustic(true);
-                torpedo.setPos(player.getX() + dir.x * 0.5, player.getEyeY() - 0.3, player.getZ() + dir.z * 0.5);
-                torpedo.setDeltaMovement(dir.x * torpedoSpeed, 0, dir.z * torpedoSpeed);
-                level.addFreshEntity(torpedo);
-                if (wireGuided && primaryGuided == null) primaryGuided = torpedo;
-            }
-            if (primaryGuided != null && player instanceof net.minecraft.server.level.ServerPlayer sp) {
-                com.piranport.combat.TorpedoGuidanceManager.startGuidance(sp, primaryGuided);
-            }
-
-            int cooldown = ExperienceShellItem.applyCooldownReduction(launcherStack, launcher.getCooldownTicks());
-            int boostedCooldown = TransformationManager.boostedCooldown(player, cooldown);
-            coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
-                    cooldowns.withSlotCooldown(weaponSlot, boostedCooldown, level.getGameTime()));
-            launcherStack.set(ModDataComponents.WEAPON_COOLDOWN.get(),
-                    WeaponCooldown.of(level.getGameTime(), boostedCooldown));
-
-            level.playSound(null, player.getX(), player.getY(), player.getZ(),
-                    SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 0.4f, 0.4f);
-            return;
-        }
-
-        // Survival mode: use LOADED_AMMO component
-        LoadedAmmo loaded = launcherStack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
-        if (!loaded.hasAmmo() || loaded.count() < tubeCount) {
-            player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
-            return;
-        }
-
-        // Use caliber from method start
-        int cooldown = ExperienceShellItem.applyCooldownReduction(launcherStack, launcher.getCooldownTicks());
-        boolean magnetic = isMagneticTorpedo(loaded.ammoItemId());
-        boolean wireGuided = isWireGuidedTorpedo(loaded.ammoItemId());
-        boolean acousticHoming = isAcousticTorpedo(loaded.ammoItemId());
-        // Resolve torpedo item to read per-item stats
-        Item loadedItem = BuiltInRegistries.ITEM.get(ResourceLocation.parse(loaded.ammoItemId()));
-        TorpedoItem loadedTorpedo = loadedItem instanceof TorpedoItem ti ? ti : null;
-        float torpedoSpeed = loadedTorpedo != null ? loadedTorpedo.getSpeed() : (caliber == 610 ? 1.0f : 1.2f);
-        float[] angles = getSpreadAngles(tubeCount);
-        Vec3 look = player.getLookAngle();
-
-        TorpedoEntity primaryGuided = null;
-        for (float angle : angles) {
-            Vec3 dir = rotateHorizontal(look, Math.toRadians(angle));
-            TorpedoEntity torpedo = new TorpedoEntity(level, player, caliber);
-            if (loadedTorpedo != null) {
-                torpedo.setDamage(ExperienceShellItem.applyDamageBonus(launcherStack, loadedTorpedo.getDamage()));
-                torpedo.setSpeed(loadedTorpedo.getSpeed());
-                torpedo.setLifetime(loadedTorpedo.getLifetimeTicks());
-            }
-            if (magnetic) torpedo.setMagnetic(true);
-            if (wireGuided) torpedo.setWireGuided(true);
-            if (acousticHoming) torpedo.setAcoustic(true);
-            torpedo.setPos(player.getX() + dir.x * 0.5, player.getEyeY() - 0.3, player.getZ() + dir.z * 0.5);
-            torpedo.setDeltaMovement(dir.x * torpedoSpeed, 0, dir.z * torpedoSpeed);
-            level.addFreshEntity(torpedo);
-            if (wireGuided && primaryGuided == null) primaryGuided = torpedo;
-        }
-        if (primaryGuided != null && player instanceof net.minecraft.server.level.ServerPlayer sp) {
-            com.piranport.combat.TorpedoGuidanceManager.startGuidance(sp, primaryGuided);
-        }
-
-        // Consume all loaded torpedoes
-        launcherStack.remove(ModDataComponents.LOADED_AMMO.get());
-
-        // Damage launcher
-        boolean launcherBroken = false;
-        if (!launcherStack.isEmpty()) {
-            int newDamage = launcherStack.getDamageValue() + 1;
-            if (newDamage >= launcherStack.getMaxDamage()) {
-                if (weaponSlot == 40) inv.offhand.set(0, ItemStack.EMPTY);
-                else inv.items.set(weaponSlot, ItemStack.EMPTY);
-                launcherBroken = true;
-                level.playSound(null, player.getX(), player.getY(), player.getZ(),
-                        SoundEvents.ITEM_BREAK, SoundSource.PLAYERS, 0.8f, 0.8f + level.random.nextFloat() * 0.4f);
-            } else {
-                launcherStack.setDamageValue(newDamage);
-            }
-        }
-
-        if (!launcherBroken) {
-            int boostedCooldown = TransformationManager.boostedCooldown(player, cooldown);
-            coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
-                    cooldowns.withSlotCooldown(weaponSlot, boostedCooldown, level.getGameTime()));
-            launcherStack.set(ModDataComponents.WEAPON_COOLDOWN.get(),
-                    WeaponCooldown.of(level.getGameTime(), boostedCooldown));
-        }
-
-        level.playSound(null, player.getX(), player.getY(), player.getZ(),
-                SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 0.4f, 0.4f);
-    }
-
     private static void fireTorpedosInventoryMode(Level level, Player player, ItemStack coreStack,
                                             Inventory inv, int weaponSlot, int coreSlot,
                                             TorpedoLauncherItem launcher, SlotCooldowns cooldowns) {
-        ItemStack launcherStack = weaponSlot == 40 ? inv.offhand.get(0) : inv.items.get(weaponSlot);
-        LoadedAmmo loaded = launcherStack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
-
-        // 优先使用已装填弹药（装填设施装的），用完后才自动从背包装填
-        if (loaded.hasAmmo() && loaded.count() >= launcher.getTubeCount()) {
-            fireTorpedosManualMode(level, player, coreStack, inv, weaponSlot, launcher, cooldowns);
-            return;
-        }
-
-        int caliber = launcher.getCaliber();
-        int tubeCount = launcher.getTubeCount();
-        int cooldown = ExperienceShellItem.applyCooldownReduction(launcherStack, launcher.getCooldownTicks());
-
-        // Find first matching torpedo to determine type (strict: only consume same item type)
-        TorpedoItem torpedoType = null;
-        for (int i = 0; i < inv.items.size(); i++) {
-            if (i == coreSlot || i == weaponSlot) continue;
-            ItemStack s = inv.items.get(i);
-            if (!s.isEmpty() && s.getItem() instanceof TorpedoItem ti && ti.getCaliber() == caliber) {
-                torpedoType = ti;
-                break;
-            }
-        }
-        if (torpedoType == null && weaponSlot != 40 && coreSlot != 40) {
-            ItemStack oh = inv.offhand.get(0);
-            if (!oh.isEmpty() && oh.getItem() instanceof TorpedoItem ti && ti.getCaliber() == caliber) {
-                torpedoType = ti;
-            }
-        }
-
-        // 创造模式：如果没有鱼雷，使用默认鱼雷类型
-        if (torpedoType == null) {
-            if (!player.getAbilities().instabuild) {
-                player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
-                return;
-            }
-            // 创造模式：使用默认鱼雷
-            torpedoType = getDefaultTorpedoForCaliber(caliber);
-            if (torpedoType == null) {
-                player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
-                return;
-            }
-        }
-
-        // Creative mode: skip ammo consumption
-        if (!player.getAbilities().instabuild) {
-            // Count available ammo of the same type
-            int available = 0;
-            for (int i = 0; i < inv.items.size(); i++) {
-                if (i == coreSlot || i == weaponSlot) continue;
-                ItemStack s = inv.items.get(i);
-                if (!s.isEmpty() && s.getItem() == torpedoType) {
-                    available += s.getCount();
-                }
-            }
-            if (weaponSlot != 40 && coreSlot != 40) {
-                ItemStack oh = inv.offhand.get(0);
-                if (!oh.isEmpty() && oh.getItem() == torpedoType) {
-                    available += oh.getCount();
-                }
-            }
-
-            if (available < tubeCount) {
-                player.displayClientMessage(Component.translatable("message.piranport.insufficient_same_ammo"), true);
-                return;
-            }
-
-            // Consume ammo before spawning entities (prevent TOCTOU)
-            int toConsume = tubeCount;
-            for (int i = 0; i < inv.items.size() && toConsume > 0; i++) {
-                if (i == coreSlot || i == weaponSlot) continue;
-                ItemStack s = inv.items.get(i);
-                if (!s.isEmpty() && s.getItem() == torpedoType) {
-                    int take = Math.min(toConsume, s.getCount());
-                    com.piranport.debug.PiranPortDebug.consumeAmmo(s, take);
-                    toConsume -= take;
-                }
-            }
-            if (toConsume > 0 && weaponSlot != 40 && coreSlot != 40) {
-                ItemStack oh = inv.offhand.get(0);
-                if (!oh.isEmpty() && oh.getItem() == torpedoType) {
-                    int take = Math.min(toConsume, oh.getCount());
-                    com.piranport.debug.PiranPortDebug.consumeAmmo(oh, take);
-                    toConsume -= take;
-                }
-            }
-        }
-
-        boolean magnetic = torpedoType.isMagnetic();
-        boolean acousticHoming = torpedoType.isAcoustic();
-        boolean wireGuided = torpedoType.isWireGuided();
-        boolean oxygen = torpedoType.isOxygen();
-        float torpedoSpeed = torpedoType.getSpeed();
-        float[] angles = getSpreadAngles(tubeCount);
-        Vec3 look = player.getLookAngle();
-
-        TorpedoEntity primaryGuided = null;
-        for (float angle : angles) {
-            Vec3 dir = rotateHorizontal(look, Math.toRadians(angle));
-            TorpedoEntity torpedo = new TorpedoEntity(level, player, caliber);
-            torpedo.setDamage(ExperienceShellItem.applyDamageBonus(launcherStack, torpedoType.getDamage()));
-            torpedo.setSpeed(torpedoType.getSpeed());
-            torpedo.setLifetime(torpedoType.getLifetimeTicks());
-            if (magnetic) torpedo.setMagnetic(true);
-            if (acousticHoming) torpedo.setAcoustic(true);
-            if (oxygen) torpedo.setOxygen(true);
-            if (wireGuided) torpedo.setWireGuided(true);
-            torpedo.setPos(player.getX() + dir.x * 0.5, player.getEyeY() - 0.3, player.getZ() + dir.z * 0.5);
-            torpedo.setDeltaMovement(dir.x * torpedoSpeed, 0, dir.z * torpedoSpeed);
-            level.addFreshEntity(torpedo);
-            if (wireGuided && primaryGuided == null) primaryGuided = torpedo;
-        }
-        if (primaryGuided != null && player instanceof net.minecraft.server.level.ServerPlayer sp) {
-            com.piranport.combat.TorpedoGuidanceManager.startGuidance(sp, primaryGuided);
-        }
-
-        // Damage launcher in-inventory
-        boolean launcherBroken = false;
-        if (!launcherStack.isEmpty()) {
-            int newDamage = launcherStack.getDamageValue() + 1;
-            if (newDamage >= launcherStack.getMaxDamage()) {
-                if (weaponSlot == 40) inv.offhand.set(0, ItemStack.EMPTY);
-                else inv.items.set(weaponSlot, ItemStack.EMPTY);
-                launcherBroken = true;
-                level.playSound(null, player.getX(), player.getY(), player.getZ(),
-                        SoundEvents.ITEM_BREAK, SoundSource.PLAYERS, 0.8f, 0.8f + level.random.nextFloat() * 0.4f);
-            } else {
-                launcherStack.setDamageValue(newDamage);
-            }
-        }
-
-        // Check if enough torpedoes remain for next salvo
-        int nextAvailable = 0;
-        for (int i = 0; i < inv.items.size(); i++) {
-            if (i == coreSlot || i == weaponSlot) continue;
-            ItemStack s = inv.items.get(i);
-            if (!s.isEmpty() && s.getItem() instanceof TorpedoItem ti && ti.getCaliber() == caliber) {
-                nextAvailable += s.getCount();
-            }
-        }
-        if (weaponSlot != 40 && coreSlot != 40) {
-            ItemStack oh = inv.offhand.get(0);
-            if (!oh.isEmpty() && oh.getItem() instanceof TorpedoItem ti && ti.getCaliber() == caliber) {
-                nextAvailable += oh.getCount();
-            }
-        }
-
-        if (!launcherBroken) {
-            if (nextAvailable >= tubeCount) {
-                int boostedCooldown = TransformationManager.boostedCooldown(player, cooldown);
-                coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
-                        cooldowns.withSlotCooldown(weaponSlot, boostedCooldown, level.getGameTime()));
-                launcherStack.set(ModDataComponents.WEAPON_COOLDOWN.get(),
-                        WeaponCooldown.of(level.getGameTime(), boostedCooldown));
-            } else {
-                // 背包弹药不足，设置短冷却提示玩家需要补充弹药
-                int penaltyTicks = 10;
-                coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
-                        cooldowns.withSlotCooldown(weaponSlot, penaltyTicks, level.getGameTime()));
-                launcherStack.set(ModDataComponents.WEAPON_COOLDOWN.get(),
-                        WeaponCooldown.of(level.getGameTime(), penaltyTicks));
-            }
-        }
-
-
-        level.playSound(null, player.getX(), player.getY(), player.getZ(),
-                SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 0.4f, 0.4f);
+        TorpedoFireStrategy.fireTorpedosInventoryMode(level, player, coreStack, inv, weaponSlot, coreSlot, launcher, cooldowns);
     }
 
     private static void fireDepthCharges(Level level, Player player, ItemStack coreStack,
                                           Inventory inv, int weaponSlot, int coreSlot,
                                           DepthChargeLauncherItem launcher, SlotCooldowns cooldowns) {
-        ItemStack launcherStack = weaponSlot == 40 ? inv.offhand.get(0) : inv.items.get(weaponSlot);
-        int chargeCount = launcher.getChargeCount();
-        int cooldown = ExperienceShellItem.applyCooldownReduction(launcherStack, launcher.getCooldownTicks());
-        float damage = ExperienceShellItem.applyDamageBonus(launcherStack, 14f);
-        float explosionPower = ExperienceShellItem.applyExplosionBonus(launcherStack, 3.0f);
-
-        // Creative mode: skip ammo check and consumption
-        if (!player.getAbilities().instabuild) {
-            // Count available depth charge ammo in inventory
-            int available = 0;
-            for (int i = 0; i < inv.items.size(); i++) {
-                if (i == coreSlot || i == weaponSlot) continue;
-                ItemStack s = inv.items.get(i);
-                if (!s.isEmpty() && s.is(ModItems.DEPTH_CHARGE.get())) {
-                    available += s.getCount();
-                }
-            }
-            if (weaponSlot != 40 && coreSlot != 40) {
-                ItemStack oh = inv.offhand.get(0);
-                if (!oh.isEmpty() && oh.is(ModItems.DEPTH_CHARGE.get())) {
-                    available += oh.getCount();
-                }
-            }
-
-            if (available < chargeCount) {
-                player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
-                return;
-            }
-
-            // Consume ammo
-            int toConsume = chargeCount;
-            for (int i = 0; i < inv.items.size() && toConsume > 0; i++) {
-                if (i == coreSlot || i == weaponSlot) continue;
-                ItemStack s = inv.items.get(i);
-                if (!s.isEmpty() && s.is(ModItems.DEPTH_CHARGE.get())) {
-                    int take = Math.min(toConsume, s.getCount());
-                    com.piranport.debug.PiranPortDebug.consumeAmmo(s, take);
-                    toConsume -= take;
-                }
-            }
-            if (toConsume > 0 && weaponSlot != 40 && coreSlot != 40) {
-                ItemStack oh = inv.offhand.get(0);
-                if (!oh.isEmpty() && oh.is(ModItems.DEPTH_CHARGE.get())) {
-                    int take = Math.min(toConsume, oh.getCount());
-                    com.piranport.debug.PiranPortDebug.consumeAmmo(oh, take);
-                    toConsume -= take;
-                }
-            }
-        } else {
-            // 创造模式：即使没有深弹也允许发射（使用默认深弹）
-            // 无需额外检查，直接发射
-        }
-
-        // Spawn depth charges based on spread pattern
-        Vec3 look = player.getLookAngle();
-        Vec3 horizLook = new Vec3(look.x, 0, look.z).normalize();
-        switch (launcher.getSpreadPattern()) {
-            case SINGLE -> {
-                spawnDepthCharge(level, player, horizLook, 0.0, 0.6, damage, explosionPower);
-            }
-            case FRONT_BACK -> {
-                spawnDepthCharge(level, player, horizLook, 0.0, 0.7, damage, explosionPower);   // far
-                spawnDepthCharge(level, player, horizLook, 0.0, 0.4, damage, explosionPower);   // near
-            }
-            case TRIANGLE -> {
-                spawnDepthCharge(level, player, horizLook, 0.0, 0.7, damage, explosionPower);   // center far
-                Vec3 left = rotateHorizontal(horizLook, Math.toRadians(-20));
-                spawnDepthCharge(level, player, left, 0.0, 0.5, damage, explosionPower);
-                Vec3 right = rotateHorizontal(horizLook, Math.toRadians(20));
-                spawnDepthCharge(level, player, right, 0.0, 0.5, damage, explosionPower);
-            }
-        }
-
-        // Damage launcher
-        boolean launcherBroken = false;
-        if (!launcherStack.isEmpty()) {
-            int newDamage = launcherStack.getDamageValue() + 1;
-            if (newDamage >= launcherStack.getMaxDamage()) {
-                if (weaponSlot == 40) inv.offhand.set(0, ItemStack.EMPTY);
-                else inv.items.set(weaponSlot, ItemStack.EMPTY);
-                launcherBroken = true;
-                level.playSound(null, player.getX(), player.getY(), player.getZ(),
-                        SoundEvents.ITEM_BREAK, SoundSource.PLAYERS, 0.8f, 0.8f + level.random.nextFloat() * 0.4f);
-            } else {
-                launcherStack.setDamageValue(newDamage);
-            }
-        }
-
-        if (!launcherBroken) {
-            int boostedCooldown = TransformationManager.boostedCooldown(player, cooldown);
-            coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
-                    cooldowns.withSlotCooldown(weaponSlot, boostedCooldown, level.getGameTime()));
-            launcherStack.set(ModDataComponents.WEAPON_COOLDOWN.get(),
-                    WeaponCooldown.of(level.getGameTime(), boostedCooldown));
-        }
-
-
-        level.playSound(null, player.getX(), player.getY(), player.getZ(),
-                SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 0.5f, 0.6f);
-    }
-
-    private static void spawnDepthCharge(Level level, Player player, Vec3 dir, double angleOffset,
-                                         double speed, float damage, float explosionPower) {
-        DepthChargeEntity dc = new DepthChargeEntity(level, player, damage, explosionPower);
-        dc.setPos(player.getX() + dir.x * 0.5, player.getEyeY() - 0.3, player.getZ() + dir.z * 0.5);
-        dc.setDeltaMovement(dir.x * speed, 0.3, dir.z * speed);
-        level.addFreshEntity(dc);
-    }
-
-    // ===== Missile firing =====
-
-    private static void fireMissiles(Level level, Player player, ItemStack coreStack,
-                                      Inventory inv, int weaponSlot, int coreSlot,
-                                      MissileLauncherItem launcher, SlotCooldowns cooldowns) {
-        if (launcher.isManualReload()) {
-            // 反舰导弹/火箭弹：仅手动装填（装填设施），不受鱼雷再装填强化影响
-            fireMissileManual(level, player, coreStack, inv, weaponSlot, launcher, cooldowns);
-        } else {
-            // 防空导弹：自动从背包装填
-            fireMissileAutoReload(level, player, coreStack, inv, weaponSlot, coreSlot, launcher, cooldowns);
-        }
-    }
-
-    /** 反舰导弹/火箭弹：消耗 LOADED_AMMO，无冷却，仅装填设施装弹。 */
-    private static void fireMissileManual(Level level, Player player, ItemStack coreStack,
-                                           Inventory inv, int weaponSlot,
-                                           MissileLauncherItem launcher, SlotCooldowns cooldowns) {
-        ItemStack launcherStack = weaponSlot == 40 ? inv.offhand.get(0) : inv.items.get(weaponSlot);
-
-        // Creative mode: auto-find missile from inventory
-        if (player.getAbilities().instabuild) {
-            Item ammoItem = launcher.getAmmoItem();
-            int coreSlot = -1;
-            int ammoSlot = -1;
-
-            for (int i = 0; i < inv.items.size(); i++) {
-                if (i == weaponSlot) continue;
-                ItemStack s = inv.items.get(i);
-                if (s.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(s)) {
-                    coreSlot = i;
-                }
-                if (ammoSlot == -1 && !s.isEmpty() && s.is(ammoItem)) {
-                    ammoSlot = i;
-                }
-            }
-            if (ammoSlot == -1 && weaponSlot != 40 && coreSlot != 40) {
-                ItemStack oh = inv.offhand.get(0);
-                if (!oh.isEmpty() && oh.is(ammoItem)) {
-                    ammoSlot = 40;
-                }
-            }
-
-            String ammoId;
-            if (ammoSlot == -1) {
-                // 创造模式：使用默认弹药
-                ammoId = BuiltInRegistries.ITEM.getKey(ammoItem).toString();
-            } else {
-                ammoId = BuiltInRegistries.ITEM.getKey(ammoItem).toString();
-            }
-
-            spawnMissile(level, player, launcherStack, launcher, ammoId);
-    
-            level.playSound(null, player.getX(), player.getY(), player.getZ(),
-                    SoundEvents.FIREWORK_ROCKET_LAUNCH, SoundSource.PLAYERS, 1.0f, 0.8f);
-            return;
-        }
-
-        // Survival mode: use LOADED_AMMO component
-        LoadedAmmo loaded = launcherStack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
-        if (!loaded.hasAmmo()) {
-            player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
-            return;
-        }
-
-        // 发射1枚导弹
-        String ammoId = loaded.ammoItemId();
-        spawnMissile(level, player, launcherStack, launcher, ammoId);
-
-        // 消耗1枚
-        int remaining = loaded.count() - 1;
-        if (remaining <= 0) {
-            launcherStack.remove(ModDataComponents.LOADED_AMMO.get());
-        } else {
-            launcherStack.set(ModDataComponents.LOADED_AMMO.get(), new LoadedAmmo(remaining, ammoId));
-        }
-
-        // 无冷却 — 反舰/火箭可连续发射
-
-
-        level.playSound(null, player.getX(), player.getY(), player.getZ(),
-                SoundEvents.FIREWORK_ROCKET_LAUNCH, SoundSource.PLAYERS, 1.0f, 0.8f);
-    }
-
-    /** 导弹自动装填：从背包消耗弹药，发射后进入冷却。防空导弹专用。 */
-    private static void fireMissileAutoReload(Level level, Player player, ItemStack coreStack,
-                                               Inventory inv, int weaponSlot, int coreSlot,
-                                               MissileLauncherItem launcher, SlotCooldowns cooldowns) {
-        Item ammoItem = launcher.getAmmoItem();
-
-        // 查找弹药
-        int ammoSlot = -1;
-        for (int i = 0; i < inv.items.size(); i++) {
-            if (i == coreSlot || i == weaponSlot) continue;
-            ItemStack s = inv.items.get(i);
-            if (!s.isEmpty() && s.is(ammoItem)) {
-                ammoSlot = i;
-                break;
-            }
-        }
-        if (ammoSlot == -1 && weaponSlot != 40 && coreSlot != 40) {
-            ItemStack oh = inv.offhand.get(0);
-            if (!oh.isEmpty() && oh.is(ammoItem)) {
-                ammoSlot = 40;
-            }
-        }
-
-        // 创造模式：如果没有弹药，使用默认弹药ID
-        String ammoId;
-        if (ammoSlot == -1) {
-            if (!player.getAbilities().instabuild) {
-                player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
-                return;
-            }
-            // 创造模式：使用默认弹药
-            ammoId = BuiltInRegistries.ITEM.getKey(ammoItem).toString();
-        } else {
-            // 有弹药：使用物品栏中的弹药类型
-            ammoId = BuiltInRegistries.ITEM.getKey(ammoItem).toString();
-            // 创造模式：不消耗弹药
-            if (!player.getAbilities().instabuild) {
-                com.piranport.debug.PiranPortDebug.consumeAmmo(
-                        ammoSlot == 40 ? inv.offhand.get(0) : inv.items.get(ammoSlot), 1);
-            }
-        }
-
-        // 发射
-        ItemStack launcherStack = weaponSlot == 40 ? inv.offhand.get(0) : inv.items.get(weaponSlot);
-        spawnMissile(level, player, launcherStack, launcher, ammoId);
-
-        // 检查剩余弹药（避免冷却后才发现无弹药）
-        int nextAvailable = 0;
-        for (int i = 0; i < inv.items.size(); i++) {
-            if (i == coreSlot || i == weaponSlot) continue;
-            ItemStack s = inv.items.get(i);
-            if (!s.isEmpty() && s.is(ammoItem)) {
-                nextAvailable += s.getCount();
-            }
-        }
-        if (weaponSlot != 40 && coreSlot != 40) {
-            ItemStack oh = inv.offhand.get(0);
-            if (!oh.isEmpty() && oh.is(ammoItem)) {
-                nextAvailable += oh.getCount();
-            }
-        }
-
-        // Creative mode: always has next round
-        if (player.getAbilities().instabuild) {
-            nextAvailable = 1;
-        }
-
-        // 应用冷却
-        if (nextAvailable > 0) {
-            int cd = TransformationManager.boostedCooldown(player,
-                    ExperienceShellItem.applyCooldownReduction(launcherStack, launcher.getCooldownTicks()));
-            coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
-                    cooldowns.withSlotCooldown(weaponSlot, cd, level.getGameTime()));
-            launcherStack.set(ModDataComponents.WEAPON_COOLDOWN.get(),
-                    WeaponCooldown.of(level.getGameTime(), cd));
-        } else {
-            int penaltyTicks = 10;
-            coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
-                    cooldowns.withSlotCooldown(weaponSlot, penaltyTicks, level.getGameTime()));
-            launcherStack.set(ModDataComponents.WEAPON_COOLDOWN.get(),
-                    WeaponCooldown.of(level.getGameTime(), penaltyTicks));
-            player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
-        }
-
-
-        level.playSound(null, player.getX(), player.getY(), player.getZ(),
-                SoundEvents.FIREWORK_ROCKET_LAUNCH, SoundSource.PLAYERS, 1.0f, 0.8f);
-    }
-
-    /** 生成导弹实体：玩家前方0.5格处，沿视线方向发射。 */
-    private static void spawnMissile(Level level, Player player, ItemStack launcherStack,
-                                      MissileLauncherItem launcher, String displayItemId) {
-        spawnMissileWithDir(level, player, launcherStack, launcher, displayItemId, player.getLookAngle());
-    }
-
-    /**
-     * 通用导弹生成：在玩家眼睛 + dir*0.5 处生成导弹，以 dir 方向按 initialSpeed 射出。
-     * dir 预期为单位向量；非单位向量将被规整化。
-     */
-    private static void spawnMissileWithDir(Level level, Player player, ItemStack launcherStack,
-                                             MissileLauncherItem launcher, String displayItemId,
-                                             Vec3 dir) {
-        Vec3 d = dir.lengthSqr() > 1e-6 ? dir.normalize() : player.getLookAngle();
-        MissileEntity missile = new MissileEntity(level, launcher.getMissileType(),
-                ExperienceShellItem.applyDamageBonus(launcherStack, launcher.getDamage()),
-                launcher.getArmorPen(),
-                ExperienceShellItem.applyExplosionBonus(launcherStack, launcher.getExplosionPower()),
-                displayItemId);
-        missile.setOwner(player);
-        // Y 跟随 dir.y 偏移，避免抬头/俯冲时导弹从胸前喷出
-        missile.setPos(
-                player.getX() + d.x * 0.5,
-                player.getEyeY() - 0.1 + d.y * 0.5,
-                player.getZ() + d.z * 0.5);
-        float initSpeed = launcher.getMissileType().initialSpeed;
-        missile.setDeltaMovement(d.x * initSpeed, d.y * initSpeed, d.z * initSpeed);
-        level.addFreshEntity(missile);
-    }
-
-    private static void launchAircraftInventoryMode(Level level, Player player, ItemStack coreStack,
-                                              Inventory inv, int weaponSlot, int coreInventorySlot,
-                                              SlotCooldowns cooldowns) {
-        ItemStack aircraftStack = weaponSlot == 40 ? inv.offhand.get(0) : inv.items.get(weaponSlot);
-
-        // Fuel check — refuse launch if currentFuel == 0
-        AircraftInfo launchInfo = aircraftStack.get(ModDataComponents.AIRCRAFT_INFO.get());
-        if (launchInfo == null || launchInfo.currentFuel() <= 0) {
-            player.displayClientMessage(Component.translatable("message.piranport.no_fuel"), true);
-            return;
-        }
-
-        AircraftAttackMode attackMode = AircraftAttackMode.FOCUS;
-        boolean hasBullets = launchInfo.aircraftType() == AircraftInfo.AircraftType.FIGHTER
-                || launchInfo.aircraftType() == AircraftInfo.AircraftType.ROCKET_FIGHTER;
-        String payloadType = "";
-
-        switch (launchInfo.aircraftType()) {
-            case TORPEDO_BOMBER -> { payloadType = "piranport:aerial_torpedo"; hasBullets = false; }
-            case DIVE_BOMBER, LEVEL_BOMBER -> { payloadType = "piranport:aerial_bomb"; hasBullets = false; }
-            case ASW -> { payloadType = "piranport:depth_charge"; hasBullets = false; }
-            default -> { }
-        }
-
-        // Consume payload from inventory if needed
-        if (!payloadType.isEmpty() && !hasBullets) {
-            net.minecraft.world.item.Item payloadItem = net.minecraft.core.registries.BuiltInRegistries.ITEM.get(
-                    net.minecraft.resources.ResourceLocation.parse(payloadType));
-
-            // 创造模式：即使没有挂载物也允许发射（使用默认挂载物）
-            // 生存模式：消耗挂载物
-            if (!player.getAbilities().instabuild) {
-                // Survival mode: consume payload
-                boolean consumed = false;
-                for (int i = 0; i < inv.items.size(); i++) {
-                    if (i == coreInventorySlot || i == weaponSlot) continue;
-                    ItemStack s = inv.items.get(i);
-                    if (!s.isEmpty() && s.getItem() == payloadItem) {
-                        com.piranport.debug.PiranPortDebug.consumeAmmo(s, 1);
-                        consumed = true;
-                        break;
-                    }
-                }
-                if (!consumed && weaponSlot != 40 && coreInventorySlot != 40) {
-                    ItemStack oh = inv.offhand.get(0);
-                    if (!oh.isEmpty() && oh.getItem() == payloadItem) {
-                        com.piranport.debug.PiranPortDebug.consumeAmmo(oh, 1);
-                        consumed = true;
-                    }
-                }
-                if (!consumed) {
-                    player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
-                    // P0-3: 起飞失败埋点（弹药不足）
-                    com.piranport.debug.PiranPortDebug.aircraftLaunchFailed(
-                            player, weaponSlot, aircraftStack, "NO_AMMO");
-                    return;
-                }
-            }
-        }
-
-        AircraftEntity aircraft = AircraftEntity.create(level, player, weaponSlot, aircraftStack,
-                attackMode, coreInventorySlot, hasBullets, payloadType);
-        level.addFreshEntity(aircraft);
-        spawnAircraftLaunchEffect(level, player, launchInfo.aircraftType());
-        // P0-3: 起飞成功埋点（带玩家短UUID、槽位、物品hash、payload、mode、entityId）
-        com.piranport.debug.PiranPortDebug.aircraftLaunched(
-                player, weaponSlot, aircraftStack, payloadType, attackMode.name(), aircraft.getId());
-        // 旧版事件保留，便于历史脚本兼容
-        com.piranport.debug.PiranPortDebug.event(
-                "Aircraft LAUNCH | type={} entityId={} payload={} mode={}",
-                aircraft.getAircraftType().name(), aircraft.getId(), payloadType, attackMode.name());
-
-        // Clear the aircraft from inventory
-        if (weaponSlot == 40) {
-            inv.offhand.set(0, ItemStack.EMPTY);
-        } else {
-            inv.items.set(weaponSlot, ItemStack.EMPTY);
-        }
-
-        int launchCooldown = TransformationManager.boostedCooldown(player, 20);
-        coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
-                cooldowns.withSlotCooldown(weaponSlot, launchCooldown, level.getGameTime()));
-
-
-        level.playSound(null, player.getX(), player.getY(), player.getZ(),
-                SoundEvents.FIRECHARGE_USE, SoundSource.PLAYERS, 0.6f, 1.3f);
-        player.displayClientMessage(
-                Component.translatable("message.piranport.aircraft_launched", aircraftStack.getHoverName()), true);
-    }
-
-    private enum LaunchStyle {
-        J_DECK_BOW,
-        J_SNOW_BOW,
-        J_CRUISER_BOW,
-        J_RIBBON_BOW,
-        C_SIGNAL,
-        C_MISSILE_RAIL,
-        G_MECHANICAL,
-        G_SUBMARINE,
-        I_CATAPULT,
-        I_AERIAL_FRAME,
-        E_LONGBOW,
-        E_DECK_LONGBOW,
-        U_MUSKET,
-        U_CARRIER_CATAPULT,
-        F_RAPIER,
-        DEFAULT
-    }
-
-    private record LaunchProfile(LaunchStyle style, ParticleOptions accentParticle, SoundEvent sound,
-                                 float volume, float pitch, double width, double lift, int accentBonus) {}
-
-    private static void spawnAircraftLaunchEffect(Level level, Player player, AircraftInfo.AircraftType aircraftType) {
-        if (!(level instanceof ServerLevel serverLevel)) return;
-
-        Vec3 look = player.getLookAngle();
-        Vec3 horizontal = new Vec3(look.x, 0, look.z);
-        if (horizontal.lengthSqr() < 1.0e-5) {
-            horizontal = new Vec3(0, 0, 1);
-        } else {
-            horizontal = horizontal.normalize();
-        }
-        Vec3 right = new Vec3(-horizontal.z, 0, horizontal.x);
-        Vec3 origin = player.position().add(0, 1.1, 0).add(horizontal.scale(0.35));
-        int skinId = SkinManager.getActiveSkin(player);
-        LaunchProfile profile = resolveLaunchProfile(skinId);
-        double poseRadius = serverLevel.getServer().getPlayerList().getSimulationDistance() * 16.0;
-        PacketDistributor.sendToPlayersNear(
-                serverLevel,
-                null,
-                player.getX(), player.getY(), player.getZ(),
-                Math.max(48.0, poseRadius),
-                new AircraftLaunchPosePayload(player.getId(), skinId, 18));
-
-        for (int i = 0; i < 9; i++) {
-            double t = (i - 4) / 4.0;
-            Vec3 p = origin.add(right.scale(t * profile.width()))
-                    .add(horizontal.scale(Math.abs(t) * 0.15))
-                    .add(0, profile.lift(), 0);
-            serverLevel.sendParticles(ParticleTypes.CLOUD, p.x, p.y, p.z,
-                    2, 0.04, 0.03, 0.04, 0.01);
-        }
-
-        spawnSkinLaunchGesture(serverLevel, origin, horizontal, right, profile, aircraftType);
-
-        int accentCount = aircraftType == AircraftInfo.AircraftType.FIGHTER
-                || aircraftType == AircraftInfo.AircraftType.ROCKET_FIGHTER ? 14 : 10;
-        serverLevel.sendParticles(profile.accentParticle(),
-                origin.x + horizontal.x * 0.6,
-                origin.y + 0.1 + profile.lift(),
-                origin.z + horizontal.z * 0.6,
-                accentCount + profile.accentBonus(),
-                0.35, 0.18, 0.35, 0.04);
-
-        level.playSound(null, player.getX(), player.getY(), player.getZ(),
-                profile.sound(), SoundSource.PLAYERS, profile.volume(), profile.pitch());
-    }
-
-    private static LaunchProfile resolveLaunchProfile(int skinId) {
-        return switch (skinId) {
-            case 4 -> new LaunchProfile(LaunchStyle.J_DECK_BOW, ParticleTypes.CRIT,
-                    SoundEvents.ARROW_SHOOT, 0.58f, 1.12f, 0.72, 0.04, 4);
-            case 5 -> new LaunchProfile(LaunchStyle.C_MISSILE_RAIL, ParticleTypes.ENCHANT,
-                    SoundEvents.CROSSBOW_SHOOT, 0.56f, 1.35f, 0.52, 0.02, 3);
-            case 6 -> new LaunchProfile(LaunchStyle.C_SIGNAL, ParticleTypes.ENCHANT,
-                    SoundEvents.AMETHYST_BLOCK_CHIME, 0.54f, 1.08f, 0.46, 0.02, 1);
-            case 7 -> new LaunchProfile(LaunchStyle.C_SIGNAL, ParticleTypes.ENCHANT,
-                    SoundEvents.AMETHYST_BLOCK_CHIME, 0.54f, 1.28f, 0.58, 0.05, 2);
-            case 8 -> new LaunchProfile(LaunchStyle.J_SNOW_BOW, ParticleTypes.SNOWFLAKE,
-                    SoundEvents.ARROW_SHOOT, 0.56f, 1.18f, 0.56, 0.03, 2);
-            case 9 -> new LaunchProfile(LaunchStyle.J_SNOW_BOW, ParticleTypes.SNOWFLAKE,
-                    SoundEvents.ARROW_SHOOT, 0.58f, 1.38f, 0.66, 0.06, 4);
-            case 10 -> new LaunchProfile(LaunchStyle.I_CATAPULT, ParticleTypes.CRIT,
-                    SoundEvents.FIREWORK_ROCKET_LAUNCH, 0.58f, 1.04f, 0.62, 0.02, 3);
-            case 11 -> new LaunchProfile(LaunchStyle.J_CRUISER_BOW, ParticleTypes.CRIT,
-                    SoundEvents.ARROW_SHOOT, 0.56f, 1.30f, 0.50, 0.04, 2);
-            case 12 -> new LaunchProfile(LaunchStyle.G_MECHANICAL, ParticleTypes.WITCH,
-                    SoundEvents.CROSSBOW_SHOOT, 0.56f, 0.95f, 0.54, 0.02, 2);
-            case 13 -> new LaunchProfile(LaunchStyle.J_RIBBON_BOW, ParticleTypes.HEART,
-                    SoundEvents.ARROW_SHOOT, 0.58f, 1.42f, 0.62, 0.07, 5);
-            case 14 -> new LaunchProfile(LaunchStyle.C_SIGNAL, ParticleTypes.ENCHANT,
-                    SoundEvents.AMETHYST_BLOCK_CHIME, 0.56f, 0.92f, 0.64, 0.04, 4);
-            case 15 -> new LaunchProfile(LaunchStyle.C_MISSILE_RAIL, ParticleTypes.ENCHANT,
-                    SoundEvents.CROSSBOW_SHOOT, 0.58f, 1.48f, 0.60, 0.04, 5);
-            case 16 -> new LaunchProfile(LaunchStyle.I_AERIAL_FRAME, ParticleTypes.CRIT,
-                    SoundEvents.FIREWORK_ROCKET_LAUNCH, 0.56f, 1.22f, 0.50, 0.03, 2);
-            case 17 -> new LaunchProfile(LaunchStyle.G_SUBMARINE, ParticleTypes.BUBBLE,
-                    SoundEvents.CROSSBOW_SHOOT, 0.48f, 0.78f, 0.42, -0.03, 1);
-            case 18 -> new LaunchProfile(LaunchStyle.E_DECK_LONGBOW, ParticleTypes.END_ROD,
-                    SoundEvents.ARROW_SHOOT, 0.56f, 1.06f, 0.68, 0.07, 4);
-            case 19 -> new LaunchProfile(LaunchStyle.F_RAPIER, ParticleTypes.CRIT,
-                    SoundEvents.CROSSBOW_SHOOT, 0.54f, 1.26f, 0.48, 0.04, 3);
-            case 20 -> new LaunchProfile(LaunchStyle.U_CARRIER_CATAPULT, ParticleTypes.END_ROD,
-                    SoundEvents.FIREWORK_ROCKET_LAUNCH, 0.62f, 0.98f, 0.76, 0.02, 5);
-            case 21 -> new LaunchProfile(LaunchStyle.U_MUSKET, ParticleTypes.POOF,
-                    SoundEvents.FIREWORK_ROCKET_BLAST, 0.58f, 1.16f, 0.50, 0.02, 3);
-            case 22 -> new LaunchProfile(LaunchStyle.E_LONGBOW, ParticleTypes.END_ROD,
-                    SoundEvents.ARROW_SHOOT, 0.56f, 1.34f, 0.56, 0.08, 3);
-            case 23 -> new LaunchProfile(LaunchStyle.E_LONGBOW, ParticleTypes.END_ROD,
-                    SoundEvents.ARROW_SHOOT, 0.58f, 1.30f, 0.58, 0.08, 3);
-            default -> new LaunchProfile(LaunchStyle.DEFAULT, ParticleTypes.FIREWORK,
-                    SoundEvents.CROSSBOW_SHOOT, 0.55f, 1.25f, 0.55, 0.0, 0);
-        };
-    }
-
-    private static void spawnSkinLaunchGesture(ServerLevel level, Vec3 origin, Vec3 forward, Vec3 right,
-                                               LaunchProfile profile, AircraftInfo.AircraftType aircraftType) {
-        boolean fighter = aircraftType == AircraftInfo.AircraftType.FIGHTER
-                || aircraftType == AircraftInfo.AircraftType.ROCKET_FIGHTER;
-        switch (profile.style()) {
-            case J_DECK_BOW -> {
-                spawnRunwayStreak(level, origin, forward, right, ParticleTypes.CRIT, 7, 0.34, 0.02);
-                spawnBowArc(level, origin.add(0, 0.08, 0), forward, right, ParticleTypes.CRIT, 0.58, 0.24);
-                Vec3 arrow = origin.add(forward.scale(fighter ? 1.05 : 0.82)).add(0, 0.24, 0);
-                level.sendParticles(ParticleTypes.END_ROD, arrow.x, arrow.y, arrow.z,
-                        fighter ? 12 : 8, 0.08, 0.05, 0.08, 0.02);
-            }
-            case J_SNOW_BOW -> {
-                spawnBowArc(level, origin, forward, right, ParticleTypes.SNOWFLAKE, 0.52, 0.22);
-                for (int i = 0; i < 8; i++) {
-                    Vec3 p = origin.add(forward.scale(0.16 * i)).add(0, 0.08 + i * 0.018, 0);
-                    level.sendParticles(ParticleTypes.SNOWFLAKE, p.x, p.y, p.z,
-                            2, 0.04, 0.04, 0.04, 0.0);
-                }
-            }
-            case J_CRUISER_BOW -> {
-                spawnBowArc(level, origin.add(0, 0.05, 0), forward, right, ParticleTypes.CRIT, 0.44, 0.20);
-                for (int i = -1; i <= 1; i++) {
-                    Vec3 p = origin.add(right.scale(i * 0.18)).add(forward.scale(0.22)).add(0, 0.12, 0);
-                    level.sendParticles(ParticleTypes.CRIT, p.x, p.y, p.z,
-                            fighter ? 4 : 3, 0.02, 0.02, 0.02, 0.01);
-                }
-            }
-            case J_RIBBON_BOW -> {
-                spawnBowArc(level, origin.add(0, 0.06, 0), forward, right, ParticleTypes.CRIT, 0.56, 0.20);
-                for (int i = 0; i < 6; i++) {
-                    double angle = i * Math.PI * 2.0 / 6.0;
-                    Vec3 p = origin.add(right.scale(Math.cos(angle) * 0.32))
-                            .add(forward.scale(Math.sin(angle) * 0.12))
-                            .add(0, 0.18, 0);
-                    level.sendParticles(ParticleTypes.HEART, p.x, p.y, p.z,
-                            1, 0.0, 0.0, 0.0, 0.0);
-                }
-            }
-            case C_SIGNAL -> {
-                for (int i = 0; i < 8; i++) {
-                    double angle = i * Math.PI * 2.0 / 8.0;
-                    Vec3 p = origin.add(right.scale(Math.cos(angle) * profile.width() * 0.75))
-                            .add(forward.scale(Math.sin(angle) * 0.20))
-                            .add(0, 0.12 + profile.lift(), 0);
-                    level.sendParticles(ParticleTypes.ENCHANT, p.x, p.y, p.z,
-                            2, 0.02, 0.02, 0.02, 0.0);
-                }
-                if (profile.accentBonus() >= 4) {
-                    spawnSignalBars(level, origin, right, ParticleTypes.ENCHANT);
-                }
-            }
-            case C_MISSILE_RAIL -> {
-                spawnRunwayStreak(level, origin, forward, right, ParticleTypes.ENCHANT, 9, 0.22, profile.lift());
-                for (int side = -1; side <= 1; side += 2) {
-                    Vec3 rail = origin.add(right.scale(side * profile.width() * 0.55)).add(forward.scale(0.18));
-                    level.sendParticles(ParticleTypes.ENCHANT, rail.x, rail.y + 0.1, rail.z,
-                            fighter ? 7 : 5, 0.03, 0.04, 0.03, 0.02);
-                }
-            }
-            case G_MECHANICAL -> {
-                for (int i = 0; i < 6; i++) {
-                    double angle = i * Math.PI * 2.0 / 6.0;
-                    Vec3 p = origin.add(right.scale(Math.cos(angle) * 0.34))
-                            .add(forward.scale(Math.sin(angle) * 0.16))
-                            .add(0, 0.10, 0);
-                    level.sendParticles(ParticleTypes.WITCH, p.x, p.y, p.z,
-                            2, 0.02, 0.02, 0.02, 0.01);
-                }
-                spawnRunwayStreak(level, origin, forward, right, ParticleTypes.CRIT, 5, 0.18, 0.03);
-            }
-            case G_SUBMARINE -> {
-                for (int i = 0; i < 9; i++) {
-                    Vec3 p = origin.add(forward.scale(i * 0.10)).add(0, -0.08 + i * 0.012, 0)
-                            .add(right.scale(Math.sin(i * 0.8) * 0.10));
-                    level.sendParticles(ParticleTypes.BUBBLE, p.x, p.y, p.z,
-                            3, 0.03, 0.02, 0.03, 0.01);
-                }
-                level.sendParticles(ParticleTypes.WITCH,
-                        origin.x, origin.y + 0.05, origin.z,
-                        fighter ? 8 : 5, 0.16, 0.05, 0.16, 0.01);
-            }
-            case I_CATAPULT -> {
-                spawnRunwayStreak(level, origin, forward, right, ParticleTypes.CRIT, 9, 0.30, 0.02);
-                Vec3 exhaust = origin.add(forward.scale(-0.10)).add(0, 0.05, 0);
-                level.sendParticles(ParticleTypes.POOF, exhaust.x, exhaust.y, exhaust.z,
-                        fighter ? 10 : 7, 0.16, 0.05, 0.16, 0.02);
-            }
-            case I_AERIAL_FRAME -> {
-                for (int side = -1; side <= 1; side += 2) {
-                    for (int i = 0; i < 4; i++) {
-                        Vec3 p = origin.add(right.scale(side * (0.18 + i * 0.06)))
-                                .add(forward.scale(0.10 + i * 0.05))
-                                .add(0, 0.08 + i * 0.018, 0);
-                        level.sendParticles(ParticleTypes.CRIT, p.x, p.y, p.z,
-                                2, 0.02, 0.02, 0.02, 0.01);
-                    }
-                }
-            }
-            case E_LONGBOW, E_DECK_LONGBOW -> {
-                double height = profile.style() == LaunchStyle.E_DECK_LONGBOW ? 0.52 : 0.44;
-                for (int i = 0; i < 13; i++) {
-                    double t = (i - 6) / 6.0;
-                    Vec3 p = origin.add(right.scale(t * 0.30))
-                            .add(forward.scale(Math.abs(t) * 0.10))
-                            .add(0, height - Math.abs(t) * 0.34, 0);
-                    level.sendParticles(ParticleTypes.END_ROD, p.x, p.y, p.z,
-                            1, 0.01, 0.01, 0.01, 0.0);
-                }
-                if (profile.style() == LaunchStyle.E_DECK_LONGBOW) {
-                    spawnRunwayStreak(level, origin, forward, right, ParticleTypes.END_ROD, 7, 0.30, 0.04);
-                }
-                Vec3 arrow = origin.add(forward.scale(fighter ? 1.05 : 0.82)).add(0, height * 0.75, 0);
-                level.sendParticles(ParticleTypes.END_ROD, arrow.x, arrow.y, arrow.z,
-                        fighter ? 12 : 8, 0.08, 0.05, 0.08, 0.02);
-            }
-            case U_MUSKET -> {
-                Vec3 muzzle = origin.add(forward.scale(0.64)).add(0, 0.12, 0);
-                level.sendParticles(ParticleTypes.POOF, muzzle.x, muzzle.y, muzzle.z,
-                        fighter ? 12 : 8, 0.12, 0.04, 0.12, 0.02);
-                level.sendParticles(ParticleTypes.CRIT, muzzle.x + forward.x * 0.15, muzzle.y, muzzle.z + forward.z * 0.15,
-                        fighter ? 9 : 6, 0.04, 0.02, 0.04, 0.04);
-                spawnRunwayStreak(level, origin, forward, right, ParticleTypes.POOF, 5, 0.16, 0.00);
-            }
-            case U_CARRIER_CATAPULT -> {
-                spawnRunwayStreak(level, origin, forward, right, ParticleTypes.END_ROD, 11, 0.36, 0.02);
-                Vec3 exhaust = origin.add(forward.scale(-0.12));
-                level.sendParticles(ParticleTypes.POOF, exhaust.x, exhaust.y, exhaust.z,
-                        fighter ? 12 : 8, 0.20, 0.06, 0.20, 0.025);
-            }
-            case F_RAPIER -> {
-                for (int i = 0; i < 8; i++) {
-                    Vec3 p = origin.add(forward.scale(i * 0.13))
-                            .add(right.scale((i - 3.5) * 0.035))
-                            .add(0, 0.12 + i * 0.012, 0);
-                    level.sendParticles(ParticleTypes.CRIT, p.x, p.y, p.z,
-                            2, 0.02, 0.02, 0.02, 0.02);
-                }
-                Vec3 flourish = origin.add(forward.scale(0.34)).add(right.scale(0.22)).add(0, 0.22, 0);
-                level.sendParticles(ParticleTypes.ENCHANT, flourish.x, flourish.y, flourish.z,
-                        7, 0.06, 0.05, 0.06, 0.01);
-            }
-            case DEFAULT -> {
-                Vec3 p = origin.add(forward.scale(0.45)).add(0, 0.12, 0);
-                level.sendParticles(ParticleTypes.FIREWORK, p.x, p.y, p.z,
-                        fighter ? 8 : 5, 0.18, 0.08, 0.18, 0.03);
-            }
-        }
-    }
-
-    private static void spawnBowArc(ServerLevel level, Vec3 origin, Vec3 forward, Vec3 right,
-                                    ParticleOptions particle, double width, double height) {
-        for (int i = 0; i < 13; i++) {
-            double t = (i - 6) / 6.0;
-            Vec3 p = origin.add(right.scale(t * width))
-                    .add(forward.scale(Math.abs(t) * 0.08))
-                    .add(0, height - Math.abs(t) * height * 0.72, 0);
-            level.sendParticles(particle, p.x, p.y, p.z,
-                    1, 0.01, 0.01, 0.01, 0.0);
-        }
-    }
-
-    private static void spawnRunwayStreak(ServerLevel level, Vec3 origin, Vec3 forward, Vec3 right,
-                                          ParticleOptions particle, int points, double halfWidth, double lift) {
-        for (int i = 0; i < points; i++) {
-            double t = points <= 1 ? 0.0 : i / (double) (points - 1);
-            double side = i % 2 == 0 ? -halfWidth : halfWidth;
-            Vec3 p = origin.add(forward.scale(t * 0.95))
-                    .add(right.scale(side * (0.28 + 0.72 * t)))
-                    .add(0, 0.04 + lift + t * 0.10, 0);
-            level.sendParticles(particle, p.x, p.y, p.z,
-                    2, 0.02, 0.02, 0.02, 0.01);
-        }
-    }
-
-    private static void spawnSignalBars(ServerLevel level, Vec3 origin, Vec3 right, ParticleOptions particle) {
-        for (int bar = 0; bar < 3; bar++) {
-            for (int i = -2; i <= 2; i++) {
-                Vec3 p = origin.add(right.scale(i * 0.08)).add(0, 0.10 + bar * 0.08, 0);
-                level.sendParticles(particle, p.x, p.y, p.z,
-                        1, 0.01, 0.01, 0.01, 0.0);
-            }
-        }
+        DepthChargeFireStrategy.fireDepthCharges(level, player, coreStack, inv, weaponSlot, coreSlot, launcher, cooldowns);
     }
 
     // ===== Weapon cooldown tooltip (shared by all weapon item types) =====
@@ -1462,29 +455,8 @@ public class ShipCoreCombat {
     // ===== Caliber matching =====
     // Phase 12: 已迁移至 piranport:small_shells / medium_shells / large_shells 物品标签
 
-    /** 偏好弹种不足时，按背包槽位顺序查找第一种同口径且足量的弹药类型。 */
-    private static Item findFirstSufficientAmmoTypeByInventoryOrder(Inventory inv, ItemStack weapon,
-                                                                    int required, int coreSlot, int weaponSlot,
-                                                                    @Nullable Level level) {
-        for (int i = 0; i < inv.items.size(); i++) {
-            if (i == coreSlot || i == weaponSlot) continue;
-            ItemStack ammo = inv.items.get(i);
-            if (!ammo.isEmpty()
-                    && matchesCaliber(ammo, weapon, level)
-                    && countAmmo(inv, ammo.getItem(), coreSlot, weaponSlot) >= required) {
-                return ammo.getItem();
-            }
-        }
-        if (weaponSlot != 40 && coreSlot != 40) {
-            ItemStack offhand = inv.offhand.get(0);
-            if (!offhand.isEmpty()
-                    && matchesCaliber(offhand, weapon, level)
-                    && countAmmo(inv, offhand.getItem(), coreSlot, weaponSlot) >= required) {
-                return offhand.getItem();
-            }
-        }
-        return null;
-    }
+    /** 偏好弹种不足时,按背包槽位顺序查找第一种同口径且足量的弹药类型。 */
+    // This entire method is now replaced by AmmoInventory.findFirstSufficientAmmoByInventoryOrder()
 
     /** Phase 12: 用物品标签匹配口径，替代硬编码物品列表。数据包可向标签添加物品来扩展。 */
     public static boolean matchesCaliber(ItemStack ammo, ItemStack weapon) {
@@ -1502,99 +474,15 @@ public class ShipCoreCombat {
         return false;
     }
 
-    /** 根据策划的装填优先级选择弹药：上次/指定弹种优先，否则背包从左到右。 */
-    private static Item chooseCannonReloadAmmo(Inventory inv, ItemStack weapon,
-                                               int required, int coreSlot, int weaponSlot,
-                                               @Nullable Level level, boolean creative) {
-        SelectedAmmoType preferred = weapon.getOrDefault(
-                ModDataComponents.SELECTED_AMMO_TYPE.get(), SelectedAmmoType.EMPTY);
-        if (preferred.hasSelection()) {
-            ResourceLocation rl = ResourceLocation.tryParse(preferred.ammoItemId());
-            if (rl != null) {
-                Item preferredItem = BuiltInRegistries.ITEM.get(rl);
-                if (preferredItem != null && preferredItem != net.minecraft.world.item.Items.AIR) {
-                    ItemStack ammoStack = new ItemStack(preferredItem);
-                    if (matchesCaliber(ammoStack, weapon, level)
-                            && (creative || countAmmo(inv, preferredItem, coreSlot, weaponSlot) >= required)) {
-                        return preferredItem;
-                    }
-                }
-            }
-        }
-        Item fallback = findFirstSufficientAmmoTypeByInventoryOrder(inv, weapon, required,
-                coreSlot, weaponSlot, level);
-        if (fallback == null && creative) {
-            return getDefaultAmmoForWeapon(weapon, level);
-        }
-        return fallback;
-    }
+    // This entire method is now replaced by AmmoInventory.chooseReloadAmmo()
 
-    /** 将当前消耗的弹种写入武器的 SelectedAmmoType DataComponent。 */
-    private static void recordCurrentAmmoType(ItemStack weapon, Item ammoItem) {
-        String id = BuiltInRegistries.ITEM.getKey(ammoItem).toString();
-        weapon.set(ModDataComponents.SELECTED_AMMO_TYPE.get(), new SelectedAmmoType(id));
-    }
+    // This entire method is now replaced by AmmoInventory.recordAmmoType()
 
-    /** 在背包中查找选定类型的第一个弹药堆叠。 */
-    private static ItemStack findFirstAmmoStack(Inventory inv, Item ammoType,
-                                                  int coreSlot, int weaponSlot) {
-        for (int i = 0; i < inv.items.size(); i++) {
-            if (i == coreSlot || i == weaponSlot) continue;
-            ItemStack ammo = inv.items.get(i);
-            if (!ammo.isEmpty() && ammo.getItem() == ammoType) {
-                return ammo;
-            }
-        }
-        if (weaponSlot != 40 && coreSlot != 40) {
-            ItemStack oh = inv.offhand.get(0);
-            if (!oh.isEmpty() && oh.getItem() == ammoType) {
-                return oh;
-            }
-        }
-        return ItemStack.EMPTY;
-    }
+    // This entire method is now replaced by AmmoInventory.findFirstAmmoStack()
 
-    private static int countAmmo(Inventory inv, Item ammoType, int coreSlot, int weaponSlot) {
-        int count = 0;
-        for (int i = 0; i < inv.items.size(); i++) {
-            if (i == coreSlot || i == weaponSlot) continue;
-            ItemStack stack = inv.items.get(i);
-            if (!stack.isEmpty() && stack.getItem() == ammoType) {
-                count += stack.getCount();
-            }
-        }
-        if (weaponSlot != 40 && coreSlot != 40) {
-            ItemStack offhand = inv.offhand.get(0);
-            if (!offhand.isEmpty() && offhand.getItem() == ammoType) {
-                count += offhand.getCount();
-            }
-        }
-        return count;
-    }
+    // This entire method is now replaced by AmmoInventory.countAmmo()
 
-    private static boolean consumeCannonAmmo(Inventory inv, Item ammoType, int required,
-                                             int coreSlot, int weaponSlot) {
-        if (countAmmo(inv, ammoType, coreSlot, weaponSlot) < required) return false;
-        int toConsume = required;
-        for (int i = 0; i < inv.items.size() && toConsume > 0; i++) {
-            if (i == coreSlot || i == weaponSlot) continue;
-            ItemStack stack = inv.items.get(i);
-            if (!stack.isEmpty() && stack.getItem() == ammoType) {
-                int take = Math.min(toConsume, stack.getCount());
-                com.piranport.debug.PiranPortDebug.consumeAmmo(stack, take);
-                toConsume -= take;
-            }
-        }
-        if (toConsume > 0 && weaponSlot != 40 && coreSlot != 40) {
-            ItemStack offhand = inv.offhand.get(0);
-            if (!offhand.isEmpty() && offhand.getItem() == ammoType) {
-                int take = Math.min(toConsume, offhand.getCount());
-                com.piranport.debug.PiranPortDebug.consumeAmmo(offhand, take);
-                toConsume -= take;
-            }
-        }
-        return toConsume <= 0;
-    }
+    // This entire method is now replaced by AmmoInventory.consumeAmmo()
 
     static boolean isHEShell(ItemStack stack) {
         return stack.is(ModItems.SMALL_HE_SHELL.get())
@@ -1657,39 +545,6 @@ public class ShipCoreCombat {
                 || ammoItemId.equals(BuiltInRegistries.ITEM.getKey(ModItems.TYPE_91_AP_SHELL.get()).toString())
                 || ammoItemId.equals(BuiltInRegistries.ITEM.getKey(ModItems.TYPE_1_AP_SHELL.get()).toString())
                 || ammoItemId.equals(BuiltInRegistries.ITEM.getKey(ModItems.SUPER_HEAVY_AP_SHELL.get()).toString());
-    }
-
-    static boolean isMagneticTorpedo(ItemStack stack) {
-        return stack.getItem() instanceof TorpedoItem ti && ti.isMagnetic();
-    }
-
-    static boolean isMagneticTorpedo(String ammoItemId) {
-        var rl = net.minecraft.resources.ResourceLocation.tryParse(ammoItemId);
-        if (rl == null) return false;
-        Item item = BuiltInRegistries.ITEM.get(rl);
-        return item instanceof TorpedoItem ti && ti.isMagnetic();
-    }
-
-    static boolean isWireGuidedTorpedo(ItemStack stack) {
-        return stack.getItem() instanceof TorpedoItem ti && ti.isWireGuided();
-    }
-
-    static boolean isWireGuidedTorpedo(String ammoItemId) {
-        var rl = net.minecraft.resources.ResourceLocation.tryParse(ammoItemId);
-        if (rl == null) return false;
-        Item item = BuiltInRegistries.ITEM.get(rl);
-        return item instanceof TorpedoItem ti && ti.isWireGuided();
-    }
-
-    static boolean isAcousticTorpedo(ItemStack stack) {
-        return stack.getItem() instanceof TorpedoItem ti && ti.isAcoustic();
-    }
-
-    static boolean isAcousticTorpedo(String ammoItemId) {
-        var rl = net.minecraft.resources.ResourceLocation.tryParse(ammoItemId);
-        if (rl == null) return false;
-        Item item = BuiltInRegistries.ITEM.get(rl);
-        return item instanceof TorpedoItem ti && ti.isAcoustic();
     }
 
     /** Look up TorpedoItem from a loaded ammo item ID string. */
@@ -2246,15 +1101,6 @@ public class ShipCoreCombat {
         return true;
     }
 
-    private static float[] getSpreadAngles(int count) {
-        return switch (count) {
-            case 2 -> new float[]{-3f, 3f};
-            case 3 -> new float[]{-4f, 0f, 4f};
-            case 4 -> new float[]{-6f, -2f, 2f, 6f};
-            default -> new float[]{0f};
-        };
-    }
-
     // ====================================================================
     // 飞机系统 — 起飞/召回/燃料/自动战斗
     // ====================================================================
@@ -2265,22 +1111,7 @@ public class ShipCoreCombat {
      * Recall all airborne aircraft owned by this player. Returns the count recalled.
      */
     public static int recallAllAircraft(ServerLevel level, Player player) {
-        java.util.UUID ownerUUID = player.getUUID();
-        // Reduced recall range from 300 to 128 blocks for better performance
-        java.util.List<AircraftEntity> aircraft = level.getEntitiesOfClass(
-                AircraftEntity.class,
-                new AABB(player.getX() - 128, player.getY() - 64, player.getZ() - 128,
-                         player.getX() + 128, player.getY() + 64, player.getZ() + 128),
-                a -> ownerUUID.equals(a.getOwnerUUID()) && a.isAlive());
-        for (AircraftEntity a : aircraft) {
-            a.startReturning("core_recall");
-        }
-        // End recon mode if active
-        if (!aircraft.isEmpty()) {
-            com.piranport.aviation.ReconManager.endRecon(ownerUUID);
-            com.piranport.aviation.FireControlManager.clearTargets(ownerUUID);
-        }
-        return aircraft.size();
+        return AircraftFireStrategy.recallAllAircraft(level, player);
     }
 
     /**
@@ -2288,10 +1119,7 @@ public class ShipCoreCombat {
      * One aviation_fuel item fills one aircraft to full fuelCapacity.
      */
     public static void refillAircraftFuel(Player player, ItemStack coreStack) {
-        if (!com.piranport.config.ModCommonConfig.AUTO_RESUPPLY_ENABLED.get()) return; // manual mode: no auto fuel
-        if (!(coreStack.getItem() instanceof ShipCoreItem)) return;
-
-        refillAircraftFuelInventoryMode(player);
+        AircraftFireStrategy.refillAircraftFuel(player, coreStack);
     }
 
     /**
@@ -2299,24 +1127,7 @@ public class ShipCoreCombat {
      * consuming one fuel per aircraft that needs it.
      */
     private static void refillAircraftFuelInventoryMode(Player player) {
-        Inventory inv = player.getInventory();
-
-        for (ItemStack weapon : inv.items) {
-            if (!(weapon.getItem() instanceof AircraftItem)) continue;
-            AircraftInfo info = weapon.get(ModDataComponents.AIRCRAFT_INFO.get());
-            if (info == null || info.currentFuel() >= info.fuelCapacity()) {
-                continue;
-            }
-            // Find aviation_fuel in inventory
-            for (ItemStack ammo : inv.items) {
-                if (ammo.is(ModItems.AVIATION_FUEL.get()) && ammo.getCount() > 0) {
-                    com.piranport.debug.PiranPortDebug.consumeAmmo(ammo, 1);
-                    weapon.set(ModDataComponents.AIRCRAFT_INFO.get(),
-                            info.withCurrentFuel(info.fuelCapacity()));
-                    break;
-                }
-            }
-        }
+        AircraftFireStrategy.refillAircraftFuelInventoryMode(player);
     }
 
     // ===== Auto-launch (Phase 36) =====
@@ -2327,37 +1138,7 @@ public class ShipCoreCombat {
      * Returns true if a fighter was launched.
      */
     public static boolean tryAutoLaunchFighter(Level level, Player player, ItemStack coreStack, int coreSlot) {
-        if (!(coreStack.getItem() instanceof ShipCoreItem)) return false;
-        if (level.isClientSide()) return false;
-
-        // Refuel aircraft before checking.
-        refillAircraftFuel(player, coreStack);
-
-        Inventory inv = player.getInventory();
-        SlotCooldowns cooldowns = coreStack.getOrDefault(
-                ModDataComponents.SLOT_COOLDOWNS.get(), SlotCooldowns.EMPTY);
-        long gameTime = level.getGameTime();
-
-        for (int wi = 0; wi < 9; wi++) {
-            if (wi == coreSlot) continue;
-            if (cooldowns.isOnCooldown(wi, gameTime)) continue;
-
-            ItemStack weapon = inv.items.get(wi);
-            if (weapon.isEmpty() || !(weapon.getItem() instanceof AircraftItem)) continue;
-            AircraftInfo info = weapon.get(ModDataComponents.AIRCRAFT_INFO.get());
-            if (info == null || info.currentFuel() <= 0) continue;
-
-            boolean isFighter = info.aircraftType() == AircraftInfo.AircraftType.FIGHTER
-                    || info.aircraftType() == AircraftInfo.AircraftType.ROCKET_FIGHTER;
-            if (!isFighter) continue;
-
-            launchAircraftInventoryMode(level, player, coreStack, inv, wi, coreSlot, cooldowns);
-            com.piranport.debug.PiranPortDebug.event(
-                    "Auto fighter launch | slot={} aircraft={}",
-                    wi, BuiltInRegistries.ITEM.getKey(weapon.getItem()).getPath());
-            return true;
-        }
-        return false;
+        return AircraftFireStrategy.tryAutoLaunchFighter(level, player, coreStack, coreSlot);
     }
 
     /**
@@ -2366,133 +1147,13 @@ public class ShipCoreCombat {
      * The missile is aimed toward the fire control target (or upward if no lock).
      */
     public static boolean tryAutoFireAntiAirMissile(Level level, Player player, ItemStack coreStack, int coreSlot) {
-        if (!(coreStack.getItem() instanceof ShipCoreItem)) return false;
-        if (level.isClientSide()) return false;
-
-        Inventory inv = player.getInventory();
-        SlotCooldowns cooldowns = coreStack.getOrDefault(
-                ModDataComponents.SLOT_COOLDOWNS.get(), SlotCooldowns.EMPTY);
-        long gameTime = level.getGameTime();
-
-        // Scan hotbar (slots 0-8) for anti-air missile launchers
-        for (int slot = 0; slot < 9; slot++) {
-            if (slot == coreSlot) continue;
-            ItemStack stack = inv.items.get(slot);
-            if (stack.isEmpty() || !(stack.getItem() instanceof MissileLauncherItem launcher)) continue;
-            if (launcher.getMissileType() != MissileEntity.MissileType.ANTI_AIR) continue;
-
-            // Check cooldown
-            if (cooldowns.isOnCooldown(slot, gameTime)) continue;
-
-            // Find ammo in inventory
-            Item ammoItem = launcher.getAmmoItem();
-            int ammoSlot = -1;
-            for (int i = 0; i < inv.items.size(); i++) {
-                if (i == coreSlot || i == slot) continue;
-                ItemStack s = inv.items.get(i);
-                if (!s.isEmpty() && s.is(ammoItem)) {
-                    ammoSlot = i;
-                    break;
-                }
-            }
-            if (ammoSlot == -1 && slot != 40 && coreSlot != 40) {
-                ItemStack oh = inv.offhand.get(0);
-                if (!oh.isEmpty() && oh.is(ammoItem)) {
-                    ammoSlot = 40;
-                }
-            }
-            if (ammoSlot == -1) continue; // No ammo for this launcher, try next
-
-            // Consume 1 ammo
-            String ammoId = BuiltInRegistries.ITEM.getKey(ammoItem).toString();
-            com.piranport.debug.PiranPortDebug.consumeAmmo(
-                    ammoSlot == 40 ? inv.offhand.get(0) : inv.items.get(ammoSlot), 1);
-
-            // Spawn missile aimed at fire control target
-            spawnMissileAutoAim(level, player, stack, launcher, ammoId);
-
-            // Apply cooldown
-            int cd = TransformationManager.boostedCooldown(player,
-                    ExperienceShellItem.applyCooldownReduction(stack, launcher.getCooldownTicks()));
-            coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
-                    cooldowns.withSlotCooldown(slot, cd, gameTime));
-            stack.set(ModDataComponents.WEAPON_COOLDOWN.get(),
-                    WeaponCooldown.of(gameTime, cd));
-
-            level.playSound(null, player.getX(), player.getY(), player.getZ(),
-                    SoundEvents.FIREWORK_ROCKET_LAUNCH, SoundSource.PLAYERS, 1.0f, 0.8f);
-            return true;
-        }
-        return false;
+        return MissileFireStrategy.tryAutoFireAntiAirMissile(level, player, coreStack, coreSlot);
     }
 
     /** Spawn a missile aimed toward the fire control target, nearest hostile, or upward. */
     private static void spawnMissileAutoAim(Level level, Player player, ItemStack launcherStack,
                                              MissileLauncherItem launcher, String displayItemId) {
-        Vec3 aimDir = null;
-        if (level instanceof ServerLevel sl) {
-            // 1. Fire control target
-            List<UUID> fcTargets = FireControlManager.getTargets(player.getUUID());
-            for (UUID targetUUID : fcTargets) {
-                net.minecraft.world.entity.Entity target = sl.getEntity(targetUUID);
-                if (target != null && target.isAlive() && !target.isUnderWater()
-                        && !(target instanceof net.minecraft.world.Container)) {
-                    Vec3 toTarget = target.position().add(0, target.getBbHeight() * 0.5, 0)
-                            .subtract(player.getEyePosition());
-                    if (toTarget.lengthSqr() > 0.01) {
-                        aimDir = toTarget.normalize();
-                    }
-                    break;
-                }
-            }
-            // 2. No fire control lock — find nearest hostile mob (Enemy interface covers Phantom/Vex/Monster)
-            //    防空导弹自动瞄准仅限飞行目标（离地至少2格的空中目标）
-            final boolean antiAirOnly = launcher.getMissileType() == MissileEntity.MissileType.ANTI_AIR;
-            if (aimDir == null) {
-                LivingEntity nearest = null;
-                double bestDist = 32.0;
-                for (LivingEntity mob : level.getEntitiesOfClass(LivingEntity.class,
-                        player.getBoundingBox().inflate(32.0),
-                        e -> e.isAlive() && e.isPickable() && e instanceof Enemy && !e.isUnderWater())) {
-                    if (antiAirOnly) {
-                        // Anti-air missiles only target airborne enemies (at least 2 blocks above ground)
-                        net.minecraft.core.BlockPos below = mob.blockPosition().below(2);
-                        if (mob.onGround() || level.getBlockState(below).isSolid()) {
-                            continue;
-                        }
-                    }
-                    double d = player.distanceTo(mob);
-                    if (d < bestDist) {
-                        bestDist = d;
-                        nearest = mob;
-                    }
-                }
-                if (nearest != null) {
-                    Vec3 toTarget = nearest.position().add(0, nearest.getBbHeight() * 0.5, 0)
-                            .subtract(player.getEyePosition());
-                    if (toTarget.lengthSqr() > 0.01) {
-                        aimDir = toTarget.normalize();
-                    }
-                }
-            }
-        }
-        // 3. Fallback: upward launch (avoid hitting ground)
-        if (aimDir == null) {
-            Vec3 look = player.getLookAngle();
-            aimDir = new Vec3(look.x, Math.max(look.y, 0.5), look.z).normalize();
-        }
-
-        spawnMissileWithDir(level, player, launcherStack, launcher, displayItemId, aimDir);
-    }
-
-    /** Rotate a look vector around the Y axis by angleRad, project to horizontal plane, normalize. */
-    private static Vec3 rotateHorizontal(Vec3 look, double angleRad) {
-        double cos = Math.cos(angleRad);
-        double sin = Math.sin(angleRad);
-        double nx = look.x * cos - look.z * sin;
-        double nz = look.x * sin + look.z * cos;
-        Vec3 result = new Vec3(nx, 0, nz);
-        return result.lengthSqr() > 0 ? result.normalize() : new Vec3(1, 0, 0);
+        MissileFireStrategy.spawnMissileAutoAim(level, player, launcherStack, launcher, displayItemId);
     }
 
     /**
@@ -2510,17 +1171,6 @@ public class ShipCoreCombat {
             return ModItems.LARGE_AP_SHELL.get();
         }
         return null;
-    }
-
-    /**
-     * 获取指定口径的默认鱼雷类型（创造模式使用）
-     */
-    private static TorpedoItem getDefaultTorpedoForCaliber(int caliber) {
-        return switch (caliber) {
-            case 533 -> (TorpedoItem) ModItems.TORPEDO_533MM.get();
-            case 610 -> (TorpedoItem) ModItems.TORPEDO_610MM.get();
-            default -> null;
-        };
     }
 
     // ===== 齐射系统 =====
@@ -2630,19 +1280,21 @@ public class ShipCoreCombat {
         if (!(held.getItem() instanceof com.piranport.artillery.ArtilleryItem)) return;
 
         Item heldType = held.getItem();
-        SelectedAmmoType selected = held.getOrDefault(
-                ModDataComponents.SELECTED_AMMO_TYPE.get(), SelectedAmmoType.EMPTY);
+        WeaponState heldWs = new WeaponState(held);
+        SelectedAmmoType selected = heldWs.getSelectedAmmoType();
 
         Inventory inv = player.getInventory();
         for (int i = 0; i < inv.items.size(); i++) {
             ItemStack stack = inv.items.get(i);
             if (stack != held && stack.getItem() == heldType) {
-                stack.set(ModDataComponents.SELECTED_AMMO_TYPE.get(), selected);
+                String ammoId = selected.hasSelection() ? selected.ammoItemId() : null;
+                if (ammoId != null) new WeaponState(stack).setSelectedAmmoType(ammoId);
             }
         }
         ItemStack offhand = inv.offhand.get(0);
         if (offhand.getItem() == heldType) {
-            offhand.set(ModDataComponents.SELECTED_AMMO_TYPE.get(), selected);
+            String ammoId = selected.hasSelection() ? selected.ammoItemId() : null;
+            if (ammoId != null) new WeaponState(offhand).setSelectedAmmoType(ammoId);
         }
     }
 

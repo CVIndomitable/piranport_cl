@@ -192,9 +192,14 @@ public class ShipCoreCombat {
 
         WeaponState ws = new WeaponState(weapon);
         LoadedAmmo loaded = ws.getLoadedAmmo();
+        boolean isAutoLoading = weapon.getItem() instanceof com.piranport.artillery.ArtilleryItem ai && ai.isAutoLoading();
         if (!isLoadedCannonAmmoValid(loaded, weapon, barrelCount, level)) {
             ws.clearLoadedAmmo();
-            startCannonReloadIfPossible(player, coreStack, inv, weaponSlot, coreSlot, weapon, cooldowns);
+            // 策划决策/武器/07-火炮装填双模式.md：自动模式空炮时自动启动装填读条；
+            // 手动模式按 R 才启动，未装填时射击什么都不做（只提示）
+            if (isAutoLoading) {
+                startCannonReloadIfPossible(player, coreStack, inv, weaponSlot, coreSlot, weapon, cooldowns);
+            }
             player.displayClientMessage(Component.translatable("message.piranport.weapon_not_loaded"), true);
             return true;
         }
@@ -223,8 +228,7 @@ public class ShipCoreCombat {
         com.piranport.combat.AASilenceManager.onCannonFire(player, shellForRender);
 
         // 策划决策/武器/07-火炮装填双模式.md
-        // 自动模式 = 开火后自动进入下一轮装填读条；手动模式 = 玩家按 R 键才启动读条
-        boolean isAutoLoading = weapon.getItem() instanceof com.piranport.artillery.ArtilleryItem ai && ai.isAutoLoading();
+        // 开火后自动模式立即启动下一轮装填读条；手动模式按 R 才启动
         if (isAutoLoading) {
             startCannonReloadIfPossible(player, coreStack, inv, weaponSlot, coreSlot, weapon, cooldowns);
         }

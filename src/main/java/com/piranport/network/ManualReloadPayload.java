@@ -14,8 +14,12 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public record ManualReloadPayload() implements CustomPacketPayload {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ManualReloadPayload.class);
+
     public static final Type<ManualReloadPayload> TYPE =
             new Type<>(ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "manual_reload"));
 
@@ -30,8 +34,12 @@ public record ManualReloadPayload() implements CustomPacketPayload {
     public static void handle(ManualReloadPayload payload, IPayloadContext context) {
         context.enqueueWork(() -> {
             Player player = context.player();
+            LOGGER.info("[SERVER] ManualReloadPayload received - player: {}", player == null ? "null" : player.getName().getString());
             if (player == null) return;
-            if (!TransformationManager.isPlayerTransformed(player)) return;
+            if (!TransformationManager.isPlayerTransformed(player)) {
+                LOGGER.info("[SERVER] Player not transformed, ignoring");
+                return;
+            }
 
             Inventory inv = player.getInventory();
 
@@ -54,6 +62,9 @@ public record ManualReloadPayload() implements CustomPacketPayload {
 
             ItemStack mainHand = player.getMainHandItem();
             ItemStack offHand = inv.offhand.get(0);
+            LOGGER.info("[SERVER] MainHand: {}, OffHand: {}", mainHand.getItem(), offHand.getItem());
+            LOGGER.info("[SERVER] MainHand item class: {}", mainHand.getItem().getClass().getName());
+            LOGGER.info("[SERVER] Is mainHand ArtilleryItem? {}", mainHand.getItem() instanceof com.piranport.artillery.ArtilleryItem);
 
             // 鱼雷发射器：需要装备"鱼雷再装填"增强
             if (mainHand.getItem() instanceof TorpedoLauncherItem) {
@@ -84,17 +95,20 @@ public record ManualReloadPayload() implements CustomPacketPayload {
             // 火炮：依据策划决策/武器/07-火炮装填双模式.md
             // 自动模式 = 开火后冷却（FPS 风格），不需要 R 键；手动模式 = 必须按 R 键启动读条
             if (mainHand.getItem() instanceof com.piranport.artillery.ArtilleryItem ai) {
+                LOGGER.info("[SERVER] MainHand is ArtilleryItem - isAutoLoading: {}", ai.isAutoLoading());
                 if (!ai.isAutoLoading()) {
                     // 手动模式：仅在空炮且无读条时启动读条；已装弹或已在读条时提示
                     com.piranport.item.ShipCoreCombat.tryManualCannonReload(player, coreStack, mainHand);
                 }
                 return;
             } else if (offHand.getItem() instanceof com.piranport.artillery.ArtilleryItem ai) {
+                LOGGER.info("[SERVER] OffHand is ArtilleryItem - isAutoLoading: {}", ai.isAutoLoading());
                 if (!ai.isAutoLoading()) {
                     com.piranport.item.ShipCoreCombat.tryManualCannonReload(player, coreStack, offHand);
                 }
                 return;
             }
+            LOGGER.info("[SERVER] No valid weapon found for manual reload");
         });
     }
 }

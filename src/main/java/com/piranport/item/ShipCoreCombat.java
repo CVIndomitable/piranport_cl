@@ -18,6 +18,8 @@ import com.piranport.entity.DepthChargeEntity;
 import com.piranport.entity.TorpedoEntity;
 import com.piranport.network.ShakeEffectPayload;
 import com.piranport.registry.ModDataComponents;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.piranport.registry.ModItems;
 import com.piranport.registry.ModSounds;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -68,6 +70,7 @@ import org.jetbrains.annotations.Nullable;
  * <p><b>设计</b>: 纯静态方法集合，无实例状态。
  */
 public class ShipCoreCombat {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ShipCoreCombat.class);
 
     private ShipCoreCombat() {}
 
@@ -297,8 +300,11 @@ public class ShipCoreCombat {
 
     private static boolean startCannonReloadIfPossible(Player player, ItemStack coreStack, Inventory inv,
             int weaponSlot, int coreSlot, ItemStack weapon, SlotCooldowns cooldowns) {
+        LOGGER.info("[ShipCoreCombat] startCannonReloadIfPossible - weapon: {}, weaponSlot: {}, coreSlot: {}",
+            weapon.getItem(), weaponSlot, coreSlot);
         if (coreSlot == -1) return false;
         int barrelCount = getBarrelCount(weapon, player.level());
+        LOGGER.info("[ShipCoreCombat] barrelCount: {}, creative: {}", barrelCount, player.getAbilities().instabuild);
         AmmoInventory ammoInv = new AmmoInventory(inv, coreSlot, weaponSlot);
         Item ammoType = ammoInv.chooseReloadAmmo(weapon, barrelCount, player.getAbilities().instabuild, player.level());
         if (ammoType == null && !player.getAbilities().instabuild) {
@@ -323,10 +329,12 @@ public class ShipCoreCombat {
      * <p>仅在武器 MANUAL 装填模式时空炮且未在读条才启动；自动模式应走自动 tick 装填。</p>
      */
     public static void tryManualCannonReload(Player player, ItemStack coreStack, ItemStack weapon) {
+        LOGGER.info("[tryManualCannonReload] Called - weapon: {}, core: {}", weapon.getItem(), coreStack.getItem());
         if (player.level().isClientSide()) return;
         if (coreStack.isEmpty() || weapon.isEmpty()) return;
         if (!(weapon.getItem() instanceof com.piranport.artillery.ArtilleryItem ai)) return;
 
+        LOGGER.info("[tryManualCannonReload] ArtilleryItem check passed, isAutoLoading: {}", ai.isAutoLoading());
         // 策划决策/武器/09：仅 MANUAL 模式武器允许 R 键手动装填；
         // 自动模式武器按 R 不应启动读条（避免与自动 tick 装填冲突）。
         if (ai.isAutoLoading()) {
@@ -336,16 +344,19 @@ public class ShipCoreCombat {
 
         // 已装弹或已在读条 → 提示
         WeaponState ws = new WeaponState(weapon);
+        LOGGER.info("[tryManualCannonReload] WeaponState check - hasLoadedAmmo: {}", ws.hasLoadedAmmo());
         if (ws.hasLoadedAmmo()) {
             player.displayClientMessage(Component.translatable("message.piranport.weapon_already_loaded"), true);
             return;
         }
         long now = player.level().getGameTime();
+        LOGGER.info("[tryManualCannonReload] Cooldown check - isOnCooldown: {}", ws.isOnCooldown(now));
         if (ws.isOnCooldown(now)) {
             player.displayClientMessage(Component.translatable("message.piranport.weapon_reloading"), true);
             return;
         }
 
+        LOGGER.info("[tryManualCannonReload] All checks passed, starting reload");
         Inventory inv = player.getInventory();
         int weaponSlot = -1;
         for (int i = 0; i < inv.items.size(); i++) {

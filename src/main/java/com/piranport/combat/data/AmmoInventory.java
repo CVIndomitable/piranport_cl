@@ -10,12 +10,16 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 弹药背包扫描器 — 封装背包中弹药的查找、统计和消耗逻辑。
  * <p>自动跳过核心槽和武器槽，支持偏好弹种优先级和创造模式兜底。</p>
  */
 public class AmmoInventory {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AmmoInventory.class);
 
     private final Inventory inventory;
     private final int coreSlotIndex;
@@ -132,6 +136,15 @@ public class AmmoInventory {
         WeaponState weaponState = new WeaponState(weapon);
         var preferred = weaponState.getSelectedAmmoType();
 
+        LOGGER.info("[AmmoInventory] chooseReloadAmmo START: weapon={} required={} creative={} hasPreferred={}",
+                BuiltInRegistries.ITEM.getKey(weapon.getItem()),
+                required, creative, preferred.hasSelection());
+
+        com.piranport.debug.PiranPortDebug.event(
+                "AmmoInventory.chooseReloadAmmo | weapon={} required={} creative={} hasPreferred={}",
+                net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(weapon.getItem()).getPath(),
+                required, creative, preferred.hasSelection());
+
         if (preferred.hasSelection()) {
             ResourceLocation rl = ResourceLocation.tryParse(preferred.ammoItemId());
             if (rl != null) {
@@ -140,6 +153,7 @@ public class AmmoInventory {
                     ItemStack ammoStack = new ItemStack(preferredItem);
                     if (matchesCaliber(ammoStack, weapon, level)) {
                         if (creative || countAmmo(preferredItem) >= required) {
+                            com.piranport.debug.PiranPortDebug.event("  → Preferred ammo selected: {}", preferred.ammoItemId());
                             return preferredItem;
                         }
                     }
@@ -150,9 +164,14 @@ public class AmmoInventory {
         Item fallback = findFirstSufficientAmmoByInventoryOrder(weapon, required, level);
 
         if (fallback == null && creative) {
-            return getDefaultAmmoForWeapon(weapon, level);
+            Item defaultAmmo = getDefaultAmmoForWeapon(weapon, level);
+            com.piranport.debug.PiranPortDebug.event("  → Creative fallback: {}",
+                defaultAmmo != null ? net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(defaultAmmo).toString() : "null");
+            return defaultAmmo;
         }
 
+        com.piranport.debug.PiranPortDebug.event("  → Fallback result: {}",
+            fallback != null ? net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(fallback).toString() : "null");
         return fallback;
     }
 
@@ -165,13 +184,18 @@ public class AmmoInventory {
      */
     @Nullable
     public Item findFirstSufficientAmmoByInventoryOrder(ItemStack weapon, int required, @Nullable Level level) {
+        com.piranport.debug.PiranPortDebug.event("  findFirstSufficientAmmo | slots={} required={}", inventory.items.size(), required);
         for (int i = 0; i < inventory.items.size(); i++) {
             if (shouldSkipSlot(i)) continue;
             ItemStack stack = inventory.items.get(i);
-            if (!stack.isEmpty()
-                    && matchesCaliber(stack, weapon, level)
-                    && countAmmo(stack.getItem()) >= required) {
-                return stack.getItem();
+            if (!stack.isEmpty() && matchesCaliber(stack, weapon, level)) {
+                int count = countAmmo(stack.getItem());
+                com.piranport.debug.PiranPortDebug.event("    slot[{}] {} count={} matches={}",
+                    i, net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(stack.getItem()).getPath(),
+                    count, count >= required);
+                if (count >= required) {
+                    return stack.getItem();
+                }
             }
         }
 
@@ -205,9 +229,19 @@ public class AmmoInventory {
     private static boolean matchesCaliber(ItemStack ammo, ItemStack weapon, @Nullable Level level) {
         if (weapon.getItem() instanceof com.piranport.artillery.ArtilleryItem ai) {
             int caliber = level != null ? ai.getEffectiveData(level).caliber() : ai.getCaliber();
-            if (caliber <= 4) return ammo.is(ShipCoreItem.SMALL_SHELLS);
-            if (caliber <= 8) return ammo.is(ShipCoreItem.MEDIUM_SHELLS);
-            return ammo.is(ShipCoreItem.LARGE_SHELLS);
+            boolean isSmall = ammo.is(ShipCoreItem.SMALL_SHELLS);
+            boolean isMedium = ammo.is(ShipCoreItem.MEDIUM_SHELLS);
+            boolean isLarge = ammo.is(ShipCoreItem.LARGE_SHELLS);
+
+            LOGGER.info("[AmmoInventory] matchesCaliber: weapon={} caliber={} ammo={} small={} medium={} large={}",
+                BuiltInRegistries.ITEM.getKey(weapon.getItem()),
+                caliber,
+                BuiltInRegistries.ITEM.getKey(ammo.getItem()),
+                isSmall, isMedium, isLarge);
+
+            if (caliber <= 4) return isSmall;
+            if (caliber <= 8) return isMedium;
+            return isLarge;
         }
         return false;
     }
@@ -216,9 +250,21 @@ public class AmmoInventory {
     private static Item getDefaultAmmoForWeapon(ItemStack weapon, @Nullable Level level) {
         if (weapon.getItem() instanceof com.piranport.artillery.ArtilleryItem ai) {
             int caliber = level != null ? ai.getEffectiveData(level).caliber() : ai.getCaliber();
-            if (caliber <= 4) return ModItems.SMALL_AP_SHELL.get();
-            if (caliber <= 8) return ModItems.MEDIUM_AP_SHELL.get();
-            return ModItems.LARGE_AP_SHELL.get();
+            Item defaultAmmo;
+            if (caliber <= 4) {
+                defaultAmmo = ModItems.SMALL_AP_SHELL.get();
+            } else if (caliber <= 8) {
+                defaultAmmo = ModItems.MEDIUM_AP_SHELL.get();
+            } else {
+                defaultAmmo = ModItems.LARGE_AP_SHELL.get();
+            }
+
+            LOGGER.info("[AmmoInventory] getDefaultAmmoForWeapon: weapon={} caliber={} defaultAmmo={}",
+                BuiltInRegistries.ITEM.getKey(weapon.getItem()),
+                caliber,
+                BuiltInRegistries.ITEM.getKey(defaultAmmo));
+
+            return defaultAmmo;
         }
         return null;
     }

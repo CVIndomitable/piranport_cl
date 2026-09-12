@@ -19,14 +19,17 @@ import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * 火控按键处理（P/O/I键）和战斗机对地/升空/装填功能键（U/H/R键）。
+ * 火控按键处理(P/O/I键)和战斗机对地/升空/装填功能键(U/H/R键)。
  *
  * <p><b>线程模型</b>: 客户端渲染线程（单线程），无需同步。
  */
 public class FireControlInputHandler {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(FireControlInputHandler.class);
     private static final double FIRE_CONTROL_RANGE = 80.0;
 
     private FireControlInputHandler() {}
@@ -84,7 +87,12 @@ public class FireControlInputHandler {
     public static void handleManualReloadKey(Minecraft mc, boolean transformed, boolean inReconMode) {
         if (mc.player == null) return;
         while (ModKeyMappings.MANUAL_RELOAD.consumeClick()) {
-            if (!transformed || inReconMode) continue;
+            LOGGER.info("[CLIENT] R key pressed - transformed: {}, inReconMode: {}", transformed, inReconMode);
+            if (!transformed || inReconMode) {
+                LOGGER.info("[CLIENT] R key ignored - not in combat mode");
+                continue;
+            }
+            LOGGER.info("[CLIENT] Sending ManualReloadPayload to server");
             PacketDistributor.sendToServer(new ManualReloadPayload());
         }
     }

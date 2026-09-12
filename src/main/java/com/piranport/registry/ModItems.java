@@ -13,6 +13,8 @@ import com.piranport.item.AircraftItem;
 import com.piranport.item.AmmoItem;
 import com.piranport.item.AbyssalReportItem;
 import com.piranport.item.ArmorPlateItem;
+import com.piranport.item.FloatingTargetItem;
+import com.piranport.item.GuidebookItem;
 import com.piranport.item.AutoCIWSItem;
 import com.piranport.artillery.ArtilleryItem;
 import com.piranport.artillery.config.ArtilleryCannonData;
@@ -56,6 +58,7 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemNameBlockItem;
 import net.minecraft.world.item.SpawnEggItem;
 import net.neoforged.neoforge.common.DeferredSpawnEggItem;
 import net.neoforged.neoforge.registries.DeferredItem;
@@ -65,447 +68,118 @@ public class ModItems {
     public static final DeferredRegister.Items ITEMS =
             DeferredRegister.createItems(PiranPort.MOD_ID);
 
-    // ===== Block Items =====
-    public static final DeferredItem<BlockItem> BAUXITE_ORE =
-            ITEMS.registerSimpleBlockItem(ModBlocks.BAUXITE_ORE);
-    public static final DeferredItem<BlockItem> ALUMINUM_BLOCK =
-            ITEMS.registerSimpleBlockItem(ModBlocks.ALUMINUM_BLOCK);
-    public static final DeferredItem<BlockItem> SALT_BLOCK =
-            ITEMS.registerSimpleBlockItem(ModBlocks.SALT_BLOCK);
-    public static final DeferredItem<BlockItem> SALT_CHIP =
-            ITEMS.registerSimpleBlockItem(ModBlocks.SALT_CHIP);
+    // ===== Block Items（已迁移到 MaterialItems；保留薄包装以兼容旧引用） =====
+    public static final DeferredItem<BlockItem> BAUXITE_ORE = MaterialItems.BAUXITE_ORE;
+    public static final DeferredItem<BlockItem> ALUMINUM_BLOCK = MaterialItems.ALUMINUM_BLOCK;
+    public static final DeferredItem<BlockItem> SALT_BLOCK = MaterialItems.SALT_BLOCK;
+    public static final DeferredItem<BlockItem> SALT_CHIP = MaterialItems.SALT_CHIP;
 
-    // ===== Abyssal Blocks (v0.0.11) =====
-    public static final DeferredItem<BlockItem> ABYSSAL_PORTAL_FRAME =
-            ITEMS.registerSimpleBlockItem(ModBlocks.ABYSSAL_PORTAL_FRAME);
-    public static final DeferredItem<BlockItem> ABYSSAL_SPAWNER =
-            ITEMS.registerSimpleBlockItem(ModBlocks.ABYSSAL_SPAWNER);
-    public static final DeferredItem<BlockItem> ABYSSAL_SEEP =
-            ITEMS.registerSimpleBlockItem(ModBlocks.ABYSSAL_SEEP);
+    // ===== Abyssal Blocks (v0.0.11)（已迁移到 MaterialItems） =====
+    public static final DeferredItem<BlockItem> ABYSSAL_PORTAL_FRAME = MaterialItems.ABYSSAL_PORTAL_FRAME;
+    public static final DeferredItem<BlockItem> ABYSSAL_SPAWNER = MaterialItems.ABYSSAL_SPAWNER;
+    public static final DeferredItem<BlockItem> ABYSSAL_SEEP = MaterialItems.ABYSSAL_SEEP;
 
-    // ===== Decorative Blocks (from sheropshire) =====
-    public static final DeferredItem<BlockItem> CONFIDENTIAL_CARGO =
-            ITEMS.registerSimpleBlockItem(ModBlocks.CONFIDENTIAL_CARGO);
-    public static final DeferredItem<BlockItem> ABYSS_RED_SPIDER_LILY =
-            ITEMS.registerSimpleBlockItem(ModBlocks.ABYSS_RED_SPIDER_LILY);
-    public static final DeferredItem<BlockItem> ITALIAN_DISH_KIT =
-            ITEMS.registerSimpleBlockItem(ModBlocks.ITALIAN_DISH_KIT);
+    // ===== Decorative Blocks（已迁移到 MaterialItems） =====
+    public static final DeferredItem<BlockItem> CONFIDENTIAL_CARGO = MaterialItems.CONFIDENTIAL_CARGO;
+    public static final DeferredItem<BlockItem> ABYSS_RED_SPIDER_LILY = MaterialItems.ABYSS_RED_SPIDER_LILY;
+    public static final DeferredItem<BlockItem> ITALIAN_DISH_KIT = MaterialItems.ITALIAN_DISH_KIT;
 
-    public static final DeferredItem<BlockItem> PIRATE_CHAIR =
-            ITEMS.registerSimpleBlockItem(ModBlocks.PIRATE_CHAIR);
+    public static final DeferredItem<BlockItem> PIRATE_CHAIR = MaterialItems.PIRATE_CHAIR;
 
-    public static final DeferredItem<BlockItem> PIRATE_TABLE =
-            ITEMS.registerSimpleBlockItem(ModBlocks.PIRATE_TABLE);
-    public static final DeferredItem<BlockItem> B25_MODEL =
-            ITEMS.registerSimpleBlockItem(ModBlocks.B25_MODEL);
+    public static final DeferredItem<BlockItem> PIRATE_TABLE = MaterialItems.PIRATE_TABLE;
+    public static final DeferredItem<BlockItem> B25_MODEL = MaterialItems.B25_MODEL;
 
-    // ===== Tab Icon (no components, no bar) =====
-    public static final DeferredItem<Item> TAB_ICON =
-            ITEMS.registerSimpleItem("tab_icon");
+    // ===== Tab Icon（已迁移到 MaterialItems） =====
+    public static final DeferredItem<Item> TAB_ICON = MaterialItems.TAB_ICON;
 
-    // ===== Materials =====
-    public static final DeferredItem<Item> RAW_ALUMINUM =
-            ITEMS.registerSimpleItem("raw_aluminum");
-    public static final DeferredItem<Item> ALUMINUM_INGOT =
-            ITEMS.registerSimpleItem("aluminum_ingot");
-    public static final DeferredItem<Item> SALT =
-            ITEMS.registerSimpleItem("salt");
+    // ===== Materials（已迁移到 MaterialItems） =====
+    public static final DeferredItem<Item> RAW_ALUMINUM = MaterialItems.RAW_ALUMINUM;
+    public static final DeferredItem<Item> ALUMINUM_INGOT = MaterialItems.ALUMINUM_INGOT;
+    public static final DeferredItem<Item> SALT = MaterialItems.SALT;
 
-    // ===== Ship Cores =====
-    public static final DeferredItem<ShipCoreItem> SMALL_SHIP_CORE =
-            ITEMS.register("small_ship_core",
-                    () -> new ShipCoreItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.SHIP_CORE_FUEL.get(),
-                                    new FuelData(0, ShipType.SMALL.fuelCapacity)),
-                            ShipType.SMALL));
-    public static final DeferredItem<ShipCoreItem> MEDIUM_SHIP_CORE =
-            ITEMS.register("medium_ship_core",
-                    () -> new ShipCoreItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.SHIP_CORE_FUEL.get(),
-                                    new FuelData(0, ShipType.MEDIUM.fuelCapacity)),
-                            ShipType.MEDIUM));
-    public static final DeferredItem<ShipCoreItem> LARGE_SHIP_CORE =
-            ITEMS.register("large_ship_core",
-                    () -> new ShipCoreItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.SHIP_CORE_FUEL.get(),
-                                    new FuelData(0, ShipType.LARGE.fuelCapacity)),
-                            ShipType.LARGE));
-    public static final DeferredItem<ShipCoreItem> SUBMARINE_CORE =
-            ITEMS.register("submarine_core",
-                    () -> new ShipCoreItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.SHIP_CORE_FUEL.get(),
-                                    new FuelData(0, ShipType.SUBMARINE.fuelCapacity)),
-                            ShipType.SUBMARINE));
+    // ===== Ship Cores (extracted to WeaponItems) =====
+    public static final DeferredItem<ShipCoreItem> SMALL_SHIP_CORE = WeaponItems.SMALL_SHIP_CORE;
+    public static final DeferredItem<ShipCoreItem> MEDIUM_SHIP_CORE = WeaponItems.MEDIUM_SHIP_CORE;
+    public static final DeferredItem<ShipCoreItem> LARGE_SHIP_CORE = WeaponItems.LARGE_SHIP_CORE;
+    public static final DeferredItem<ShipCoreItem> SUBMARINE_CORE = WeaponItems.SUBMARINE_CORE;
 
-    // ===== HE Shells =====
-    public static final DeferredItem<Item> SMALL_HE_SHELL =
-            ITEMS.register("small_he_shell",
-                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.he_shell"));
-    public static final DeferredItem<Item> MEDIUM_HE_SHELL =
-            ITEMS.register("medium_he_shell",
-                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.he_shell"));
-    public static final DeferredItem<Item> LARGE_HE_SHELL =
-            ITEMS.register("large_he_shell",
-                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.he_shell"));
+    // ===== HE Shells (extracted to AmmoItems) =====
+    public static final DeferredItem<Item> SMALL_HE_SHELL = AmmoItems.SMALL_HE_SHELL;
+    public static final DeferredItem<Item> MEDIUM_HE_SHELL = AmmoItems.MEDIUM_HE_SHELL;
+    public static final DeferredItem<Item> LARGE_HE_SHELL = AmmoItems.LARGE_HE_SHELL;
 
-    // ===== MK23 Nuclear Shell — 副本/08-Boss通关奖励阿尔法兵装.md =====
-    // 2026-09-09 定稿：原"阿尔法兵装"占位废止，实体化为 MK23 核炮弹。
-    // 限制：仅 LARGE_SHELLS 标签火炮可装填；威力按炮 HE 表值 ×10（写死查表）；
-    // 装填/伤害模型与 HE 完全相同；水中到期规则同 HE。
-    public static final DeferredItem<Item> MK23_NUCLEAR_SHELL =
-            ITEMS.register("mk23_nuclear_shell",
-                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.mk23_nuclear"));
+    // ===== MK23 Nuclear Shell (extracted to AmmoItems) =====
+    public static final DeferredItem<Item> MK23_NUCLEAR_SHELL = AmmoItems.MK23_NUCLEAR_SHELL;
 
-    // ===== AP Shells =====
-    public static final DeferredItem<Item> SMALL_AP_SHELL =
-            ITEMS.register("small_ap_shell",
-                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.ap_shell"));
-    public static final DeferredItem<Item> MEDIUM_AP_SHELL =
-            ITEMS.register("medium_ap_shell",
-                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.ap_shell"));
-    public static final DeferredItem<Item> LARGE_AP_SHELL =
-            ITEMS.register("large_ap_shell",
-                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.ap_shell"));
+    // ===== AP Shells (extracted to AmmoItems) =====
+    public static final DeferredItem<Item> SMALL_AP_SHELL = AmmoItems.SMALL_AP_SHELL;
+    public static final DeferredItem<Item> MEDIUM_AP_SHELL = AmmoItems.MEDIUM_AP_SHELL;
+    public static final DeferredItem<Item> LARGE_AP_SHELL = AmmoItems.LARGE_AP_SHELL;
 
-    // Phase 27：策划 §3.1 表 3.1 命名 AP 炮弹 (91 式 14-21in, 一式 16-21in, 超重弹 7-16in)
-    public static final DeferredItem<Item> TYPE_91_AP_SHELL =
-            ITEMS.register("type_91_ap_shell",
-                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.ap_shell"));
-    public static final DeferredItem<Item> TYPE_1_AP_SHELL =
-            ITEMS.register("type_1_ap_shell",
-                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.ap_shell"));
-    public static final DeferredItem<Item> SUPER_HEAVY_AP_SHELL =
-            ITEMS.register("super_heavy_ap_shell",
-                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.ap_shell"));
+    // Phase 27: named AP shells (extracted to AmmoItems)
+    public static final DeferredItem<Item> TYPE_91_AP_SHELL = AmmoItems.TYPE_91_AP_SHELL;
+    public static final DeferredItem<Item> TYPE_1_AP_SHELL = AmmoItems.TYPE_1_AP_SHELL;
+    public static final DeferredItem<Item> SUPER_HEAVY_AP_SHELL = AmmoItems.SUPER_HEAVY_AP_SHELL;
 
-    // ===== VT Shells (proximity fuze, small caliber only) =====
-    public static final DeferredItem<Item> SMALL_VT_SHELL =
-            ITEMS.register("small_vt_shell",
-                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.vt_shell"));
+    // ===== VT Shells (proximity fuze, small caliber only) (extracted to AmmoItems) =====
+    public static final DeferredItem<Item> SMALL_VT_SHELL = AmmoItems.SMALL_VT_SHELL;
 
-    // ===== Type 3 (Sanshiki) Shells =====
-    public static final DeferredItem<Item> SMALL_TYPE3_SHELL =
-            ITEMS.register("small_type3_shell",
-                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.type3_shell"));
-    public static final DeferredItem<Item> MEDIUM_TYPE3_SHELL =
-            ITEMS.register("medium_type3_shell",
-                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.type3_shell"));
-    public static final DeferredItem<Item> LARGE_TYPE3_SHELL =
-            ITEMS.register("large_type3_shell",
-                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.type3_shell"));
+    // ===== Type 3 (Sanshiki) Shells (extracted to AmmoItems) =====
+    public static final DeferredItem<Item> SMALL_TYPE3_SHELL = AmmoItems.SMALL_TYPE3_SHELL;
+    public static final DeferredItem<Item> MEDIUM_TYPE3_SHELL = AmmoItems.MEDIUM_TYPE3_SHELL;
+    public static final DeferredItem<Item> LARGE_TYPE3_SHELL = AmmoItems.LARGE_TYPE3_SHELL;
 
-    // ===== Guns =====
-    public static final DeferredItem<Item> SINGLE_SMALL_GUN =
-            ITEMS.register("single_small_gun", () -> new ArtilleryItem(new Item.Properties().stacksTo(1)
-                    .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.CANNON)
-                    .durability(500),
-                    new ArtilleryCannonData(4, 1, 6.0f, 30, 500, 2.0f,
-                            List.of(new MuzzlePos(0.2, 0.15, 0)),
-                            2.5f, 0.015f, 9.8f, 1.0f, 0.0f,
-                            10, 1, 0.0f), "single_small_gun"));
-    public static final DeferredItem<Item> SMALL_GUN =
-            ITEMS.register("small_gun", () -> new ArtilleryItem(new Item.Properties().stacksTo(1)
-                    .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.CANNON)
-                    .durability(500),
-                    new ArtilleryCannonData(4, 2, 6.0f, 30, 500, 2.0f,
-                            List.of(new MuzzlePos(0.3, 0.2, 0),
-                                    new MuzzlePos(-0.3, 0.2, 0)),
-                            2.5f, 0.015f, 9.8f, 1.0f, 0.0f,
-                            10, 1, 5.0f), "small_gun"));
-    public static final DeferredItem<Item> MEDIUM_GUN =
-            ITEMS.register("medium_gun", () -> new ArtilleryItem(new Item.Properties().stacksTo(1)
-                    .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.CANNON)
-                    .durability(1000),
-                    new ArtilleryCannonData(8, 1, 12.0f, 50, 1000, 3.0f,
-                            List.of(new MuzzlePos(0.3, 0.2, 0)),
-                            3.0f, 0.01f, 9.8f, 1.5f, 0.0f,
-                            15, 1, 0.0f), "medium_gun"));
-    public static final DeferredItem<Item> LARGE_GUN =
-            ITEMS.register("large_gun", () -> new ArtilleryItem(new Item.Properties().stacksTo(1)
-                    .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.CANNON)
-                    .durability(2000),
-                    new ArtilleryCannonData(16, 3, 20.0f, 80, 2000, 4.0f,
-                            List.of(new MuzzlePos(0.5, 0.25, 0),
-                                    new MuzzlePos(0, 0.25, 0),
-                                    new MuzzlePos(-0.5, 0.25, 0)),
-                            3.5f, 0.008f, 9.8f, 2.0f, 0.0f,
-                            20, 3, 5.0f), "large_gun"));
-    public static final DeferredItem<Item> FRENCH_QUAD_380MM_GUN =
-            ITEMS.register("french_quad_380mm_gun", () -> new ArtilleryItem(new Item.Properties().stacksTo(1)
-                    .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.CANNON)
-                    .durability(2500),
-                    new ArtilleryCannonData(16, 4, 20.0f, 60, 2500, 4.0f,
-                            List.of(new MuzzlePos(0.6, 0.3, 0),
-                                    new MuzzlePos(0.2, 0.3, 0),
-                                    new MuzzlePos(-0.2, 0.3, 0),
-                                    new MuzzlePos(-0.6, 0.3, 0)),
-                            3.5f, 0.008f, 9.8f, 2.0f, 0.0f,
-                            20, 4, 3.0f), "french_quad_380mm_gun"));
+    // ===== Guns (extracted to WeaponItems) =====
+    public static final DeferredItem<Item> SINGLE_SMALL_GUN = WeaponItems.SINGLE_SMALL_GUN;
+    public static final DeferredItem<Item> SMALL_GUN = WeaponItems.SMALL_GUN;
+    public static final DeferredItem<Item> MEDIUM_GUN = WeaponItems.MEDIUM_GUN;
+    public static final DeferredItem<Item> LARGE_GUN = WeaponItems.LARGE_GUN;
+    public static final DeferredItem<Item> FRENCH_QUAD_380MM_GUN = WeaponItems.FRENCH_QUAD_380MM_GUN;
+    public static final DeferredItem<Item> SEVEN_BARREL_GUN = WeaponItems.SEVEN_BARREL_GUN;
+    public static final DeferredItem<Item> SALVO_TEST_GUN = WeaponItems.SALVO_TEST_GUN;
+    public static final DeferredItem<Item> FOURTEEN_BARREL_GUN = WeaponItems.FOURTEEN_BARREL_GUN;
 
-    /**
-     * 七联装主炮群 — 测试用极限齐射火炮。
-     * 用途：测试齐射数值、散布系统、负重平衡。
-     *
-     * 参数说明：
-     * - 齐射数：7发（barrels=7）
-     * - 散布角：1.5度（可调整测试不同精度）
-     * - 装填时间：100tick（5秒，可调整测试DPS）
-     * - 武器重量：35（比large_gun的30更重）
-     */
-    public static final DeferredItem<Item> SEVEN_BARREL_GUN =
-            ITEMS.register("seven_barrel_gun", () -> new ArtilleryItem(new Item.Properties().stacksTo(1)
-                    .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.CANNON)
-                    .durability(3000),
-                    new ArtilleryCannonData(
-                            16,      // caliber: 大口径
-                            7,       // barrels: 7联装
-                            20.0f,   // damage: 与large_gun相同
-                            100,     // reloadTime: 5秒装填
-                            3000,    // durability: 高耐久
-                            4.0f,    // scopeZoom: 与large_gun相同
-                            List.of( // muzzles: 7个炮口横向排列
-                                    new MuzzlePos(0.9, 0.3, 0),
-                                    new MuzzlePos(0.6, 0.3, 0),
-                                    new MuzzlePos(0.3, 0.3, 0),
-                                    new MuzzlePos(0.0, 0.3, 0),
-                                    new MuzzlePos(-0.3, 0.3, 0),
-                                    new MuzzlePos(-0.6, 0.3, 0),
-                                    new MuzzlePos(-0.9, 0.3, 0)
-                            ),
-                            3.5f,    // initialSpeed: 与large_gun相同
-                            0.008f,  // dragCoeff: 与large_gun相同
-                            9.8f,    // gravity: 标准重力
-                            2.0f,    // explosionPower: 与large_gun相同
-                            1.5f,    // dispersion: 1.5度散布
-                            15,      // fireCooldown
-                            7,       // salvoCount
-                            3.0f     // salvoInterval
-                    ), "seven_barrel_gun"));
+    // ===== Torpedo Ammo (legacy generic) (extracted to AmmoItems) =====
+    public static final DeferredItem<TorpedoItem> TORPEDO_533MM = AmmoItems.TORPEDO_533MM;
+    public static final DeferredItem<TorpedoItem> TORPEDO_610MM = AmmoItems.TORPEDO_610MM;
+    public static final DeferredItem<TorpedoItem> MAGNETIC_TORPEDO_533MM = AmmoItems.MAGNETIC_TORPEDO_533MM;
+    public static final DeferredItem<TorpedoItem> WIRE_GUIDED_TORPEDO_533MM = AmmoItems.WIRE_GUIDED_TORPEDO_533MM;
+    public static final DeferredItem<TorpedoItem> ACOUSTIC_TORPEDO_533MM = AmmoItems.ACOUSTIC_TORPEDO_533MM;
 
-    /**
-     * 齐射测试 — 三倍大型火炮数值，12联装。
-     * 用途：测试极限齐射性能和散布系统。
-     *
-     * 参数说明：
-     * - 齐射数：12发（barrels=12）
-     * - 伤害：60.0（大型火炮的3倍）
-     * - 装填时间：80tick（与大型火炮相同）
-     * - 初速：10.5（大型火炮的3倍）
-     * - 爆炸威力：6.0（大型火炮的3倍）
-     */
-    public static final DeferredItem<Item> SALVO_TEST_GUN =
-            ITEMS.register("salvo_test_gun", () -> new ArtilleryItem(new Item.Properties().stacksTo(1)
-                    .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.CANNON)
-                    .durability(2000),
-                    new ArtilleryCannonData(
-                            16,      // caliber: 大口径
-                            12,      // barrels: 12联装
-                            60.0f,   // damage: 大型火炮的3倍
-                            80,      // reloadTime: 与大型火炮相同
-                            2000,    // durability: 与大型火炮相同
-                            4.0f,    // scopeZoom: 与大型火炮相同
-                            List.of( // muzzles: 12个炮口横向排列
-                                    new MuzzlePos(1.65, 0.3, 0),
-                                    new MuzzlePos(1.35, 0.3, 0),
-                                    new MuzzlePos(1.05, 0.3, 0),
-                                    new MuzzlePos(0.75, 0.3, 0),
-                                    new MuzzlePos(0.45, 0.3, 0),
-                                    new MuzzlePos(0.15, 0.3, 0),
-                                    new MuzzlePos(-0.15, 0.3, 0),
-                                    new MuzzlePos(-0.45, 0.3, 0),
-                                    new MuzzlePos(-0.75, 0.3, 0),
-                                    new MuzzlePos(-1.05, 0.3, 0),
-                                    new MuzzlePos(-1.35, 0.3, 0),
-                                    new MuzzlePos(-1.65, 0.3, 0)
-                            ),
-                            10.5f,   // initialSpeed: 大型火炮的3倍
-                            0.008f,  // dragCoeff: 与大型火炮相同
-                            9.8f,    // gravity: 标准重力
-                            6.0f,    // explosionPower: 大型火炮的3倍
-                            0.5f,    // dispersion: 默认散布
-                            10,      // fireCooldown
-                            12,      // salvoCount
-                            2.0f     // salvoInterval
-                    ), "salvo_test_gun"));
+    // Phase 27: oxygen torpedo (extracted to AmmoItems)
+    public static final DeferredItem<TorpedoItem> OXYGEN_TORPEDO_610MM = AmmoItems.OXYGEN_TORPEDO_610MM;
 
-    /**
-     * 一星期主炮群 — 14联装极限齐射火炮。
-     * 用途：测试更大规模齐射性能和散布系统。
-     *
-     * 参数说明（按 salvo_test_gun 的 3 倍缩放线性外推，14联装 ≈ 3.5倍大型火炮）：
-     * - 齐射数：14发（barrels=14）
-     * - 伤害：70.0（大型火炮的3.5倍）
-     * - 装填时间：80tick（与大型火炮相同）
-     * - 初速：12.25（大型火炮的3.5倍）
-     * - 爆炸威力：7.0（大型火炮的3.5倍）
-     * - 散布角：1.8度（比12联装稍大，补偿更多炮管）
-     */
-    public static final DeferredItem<Item> FOURTEEN_BARREL_GUN =
-            ITEMS.register("fourteen_barrel_gun", () -> new ArtilleryItem(new Item.Properties().stacksTo(1)
-                    .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.CANNON)
-                    .durability(3500),
-                    new ArtilleryCannonData(
-                            16,      // caliber: 大口径
-                            14,      // barrels: 14联装
-                            70.0f,   // damage: 大型火炮的3.5倍
-                            80,      // reloadTime: 与大型火炮相同
-                            3500,    // durability: 高耐久
-                            4.0f,    // scopeZoom: 与大型火炮相同
-                            List.of( // muzzles: 14个炮口横向排列，y=0.3，间距0.3
-                                    new MuzzlePos(1.95, 0.3, 0),
-                                    new MuzzlePos(1.65, 0.3, 0),
-                                    new MuzzlePos(1.35, 0.3, 0),
-                                    new MuzzlePos(1.05, 0.3, 0),
-                                    new MuzzlePos(0.75, 0.3, 0),
-                                    new MuzzlePos(0.45, 0.3, 0),
-                                    new MuzzlePos(0.15, 0.3, 0),
-                                    new MuzzlePos(-0.15, 0.3, 0),
-                                    new MuzzlePos(-0.45, 0.3, 0),
-                                    new MuzzlePos(-0.75, 0.3, 0),
-                                    new MuzzlePos(-1.05, 0.3, 0),
-                                    new MuzzlePos(-1.35, 0.3, 0),
-                                    new MuzzlePos(-1.65, 0.3, 0),
-                                    new MuzzlePos(-1.95, 0.3, 0)
-                            ),
-                            12.25f,  // initialSpeed: 大型火炮的3.5倍
-                            0.008f,  // dragCoeff: 与大型火炮相同
-                            9.8f,    // gravity: 标准重力
-                            7.0f,    // explosionPower: 大型火炮的3.5倍
-                            1.8f,    // dispersion: 比12联装稍大
-                            10,      // fireCooldown
-                            14,      // salvoCount
-                            2.0f     // salvoInterval
-                    ), "fourteen_barrel_gun"));
+    // ===== Torpedo Ammo (named variants) (extracted to AmmoItems) =====
+    public static final DeferredItem<TorpedoItem> TORPEDO_533MM_G7A = AmmoItems.TORPEDO_533MM_G7A;
+    public static final DeferredItem<TorpedoItem> MAGNETIC_TORPEDO_533MM_G7A = AmmoItems.MAGNETIC_TORPEDO_533MM_G7A;
+    public static final DeferredItem<TorpedoItem> TORPEDO_533MM_MK17 = AmmoItems.TORPEDO_533MM_MK17;
+    public static final DeferredItem<TorpedoItem> TORPEDO_610MM_TYPE91 = AmmoItems.TORPEDO_610MM_TYPE91;
+    public static final DeferredItem<TorpedoItem> TORPEDO_610MM_TYPE93_MK1 = AmmoItems.TORPEDO_610MM_TYPE93_MK1;
+    public static final DeferredItem<TorpedoItem> TORPEDO_610MM_TYPE93_MK3 = AmmoItems.TORPEDO_610MM_TYPE93_MK3;
+    public static final DeferredItem<TorpedoItem> TORPEDO_720MM_TYPE0 = AmmoItems.TORPEDO_720MM_TYPE0;
+    public static final DeferredItem<TorpedoItem> TORPEDO_533MM_MK14 = AmmoItems.TORPEDO_533MM_MK14;
+    public static final DeferredItem<TorpedoItem> TORPEDO_533MM_MK16 = AmmoItems.TORPEDO_533MM_MK16;
+    public static final DeferredItem<TorpedoItem> MAGNETIC_TORPEDO_533MM_G7E = AmmoItems.MAGNETIC_TORPEDO_533MM_G7E;
+    public static final DeferredItem<TorpedoItem> ACOUSTIC_TORPEDO_533MM_G7E = AmmoItems.ACOUSTIC_TORPEDO_533MM_G7E;
+    public static final DeferredItem<TorpedoItem> WIRE_GUIDED_TORPEDO_533MM_G7E = AmmoItems.WIRE_GUIDED_TORPEDO_533MM_G7E;
+    public static final DeferredItem<TorpedoItem> ACOUSTIC_TORPEDO_533MM_MK27 = AmmoItems.ACOUSTIC_TORPEDO_533MM_MK27;
+    public static final DeferredItem<TorpedoItem> TORPEDO_530MM_TYPE95 = AmmoItems.TORPEDO_530MM_TYPE95;
+    public static final DeferredItem<TorpedoItem> TORPEDO_610MM_TYPE95_MK2 = AmmoItems.TORPEDO_610MM_TYPE95_MK2;
 
-    // ===== Torpedo Ammo (legacy generic) =====
-    public static final DeferredItem<TorpedoItem> TORPEDO_533MM =
-            ITEMS.register("torpedo_533mm",
-                    () -> new TorpedoItem(new Item.Properties().stacksTo(16), 533));
-    public static final DeferredItem<TorpedoItem> TORPEDO_610MM =
-            ITEMS.register("torpedo_610mm",
-                    () -> new TorpedoItem(new Item.Properties().stacksTo(16), 610));
-    public static final DeferredItem<TorpedoItem> MAGNETIC_TORPEDO_533MM =
-            ITEMS.register("magnetic_torpedo_533mm",
-                    () -> new TorpedoItem(new Item.Properties().stacksTo(16), 533, true));
-    public static final DeferredItem<TorpedoItem> WIRE_GUIDED_TORPEDO_533MM =
-            ITEMS.register("wire_guided_torpedo_533mm",
-                    () -> new TorpedoItem(new Item.Properties().stacksTo(16), 533, false, true));
-    public static final DeferredItem<TorpedoItem> ACOUSTIC_TORPEDO_533MM =
-            ITEMS.register("acoustic_torpedo_533mm",
-                    () -> new TorpedoItem(new Item.Properties().stacksTo(16), 533, false, false, true));
+    // 数值配置/05 鱼雷补缺（2026-09-07 项目所有者定稿）(extracted to AmmoItems)
+    public static final DeferredItem<TorpedoItem> TORPEDO_610MM_TYPE92 = AmmoItems.TORPEDO_610MM_TYPE92;
+    public static final DeferredItem<TorpedoItem> TORPEDO_533MM_MK13 = AmmoItems.TORPEDO_533MM_MK13;
+    public static final DeferredItem<TorpedoItem> TORPEDO_533MM_53_38 = AmmoItems.TORPEDO_533MM_53_38;
 
-    // Phase 27：策划 §3.3 氧气鱼雷（95 式氧气鱼雷原型）
-    public static final DeferredItem<TorpedoItem> OXYGEN_TORPEDO_610MM =
-            ITEMS.register("oxygen_torpedo_610mm",
-                    () -> new TorpedoItem(new Item.Properties().stacksTo(16),
-                            610, 32f, 30, 1.0f, false, false, false, true));
+    // ===== Armor Plates（已迁移到 MaterialItems） =====
+    public static final DeferredItem<ArmorPlateItem> SMALL_ARMOR_PLATE = MaterialItems.SMALL_ARMOR_PLATE;
+    public static final DeferredItem<ArmorPlateItem> MEDIUM_ARMOR_PLATE = MaterialItems.MEDIUM_ARMOR_PLATE;
+    public static final DeferredItem<ArmorPlateItem> LARGE_ARMOR_PLATE = MaterialItems.LARGE_ARMOR_PLATE;
 
-    // ===== Torpedo Ammo (named variants) =====
-    public static final DeferredItem<TorpedoItem> TORPEDO_533MM_G7A =
-            ITEMS.register("torpedo_533mm_g7a",
-                    () -> new TorpedoItem(new Item.Properties().stacksTo(16),
-                            533, 27f, 18, 0.817f, false, false, false, false));
-    public static final DeferredItem<TorpedoItem> MAGNETIC_TORPEDO_533MM_G7A =
-            ITEMS.register("magnetic_torpedo_533mm_g7a",
-                    () -> new TorpedoItem(new Item.Properties().stacksTo(16),
-                            533, 27f, 18, 0.817f, true, false, false, false));
-    public static final DeferredItem<TorpedoItem> TORPEDO_533MM_MK17 =
-            ITEMS.register("torpedo_533mm_mk17",
-                    () -> new TorpedoItem(new Item.Properties().stacksTo(16),
-                            533, 55.5f, 49, 0.854f, false, false, false, false));
-    public static final DeferredItem<TorpedoItem> TORPEDO_610MM_TYPE91 =
-            ITEMS.register("torpedo_610mm_type91",
-                    () -> new TorpedoItem(new Item.Properties().stacksTo(16),
-                            610, 49.5f, 30, 0.743f, false, false, false, false));
-    public static final DeferredItem<TorpedoItem> TORPEDO_610MM_TYPE93_MK1 =
-            ITEMS.register("torpedo_610mm_type93_mk1",
-                    () -> new TorpedoItem(new Item.Properties().stacksTo(16),
-                            610, 49.5f, 60, 0.929f, false, false, false, false));
-    public static final DeferredItem<TorpedoItem> TORPEDO_610MM_TYPE93_MK3 =
-            ITEMS.register("torpedo_610mm_type93_mk3",
-                    () -> new TorpedoItem(new Item.Properties().stacksTo(16),
-                            610, 78f, 90, 0.706f, false, false, false, false));
-    public static final DeferredItem<TorpedoItem> TORPEDO_720MM_TYPE0 =
-            ITEMS.register("torpedo_720mm_type0",
-                    () -> new TorpedoItem(new Item.Properties().stacksTo(16),
-                            720, 55.5f, 70, 0.743f, false, false, false, false));
-    public static final DeferredItem<TorpedoItem> TORPEDO_533MM_MK14 =
-            ITEMS.register("torpedo_533mm_mk14",
-                    () -> new TorpedoItem(new Item.Properties().stacksTo(16),
-                            533, 24f, 25, 0.576f, false, false, false, false));
-    public static final DeferredItem<TorpedoItem> TORPEDO_533MM_MK16 =
-            ITEMS.register("torpedo_533mm_mk16",
-                    () -> new TorpedoItem(new Item.Properties().stacksTo(16),
-                            533, 55.5f, 47, 0.854f, false, false, false, false));
-    public static final DeferredItem<TorpedoItem> MAGNETIC_TORPEDO_533MM_G7E =
-            ITEMS.register("magnetic_torpedo_533mm_g7e",
-                    () -> new TorpedoItem(new Item.Properties().stacksTo(16),
-                            533, 21f, 25, 0.669f, true, false, false, false));
-    public static final DeferredItem<TorpedoItem> ACOUSTIC_TORPEDO_533MM_G7E =
-            ITEMS.register("acoustic_torpedo_533mm_g7e",
-                    () -> new TorpedoItem(new Item.Properties().stacksTo(16),
-                            533, 21f, 17, 0.446f, false, false, true, false));
-    public static final DeferredItem<TorpedoItem> WIRE_GUIDED_TORPEDO_533MM_G7E =
-            ITEMS.register("wire_guided_torpedo_533mm_g7e",
-                    () -> new TorpedoItem(new Item.Properties().stacksTo(16),
-                            533, 21f, 15, 0.557f, false, true, false, false));
-    public static final DeferredItem<TorpedoItem> ACOUSTIC_TORPEDO_533MM_MK27 =
-            ITEMS.register("acoustic_torpedo_533mm_mk27",
-                    () -> new TorpedoItem(new Item.Properties().stacksTo(16),
-                            533, 24f, 25, 0.669f, false, false, true, false));
-    public static final DeferredItem<TorpedoItem> TORPEDO_530MM_TYPE95 =
-            ITEMS.register("torpedo_530mm_type95",
-                    () -> new TorpedoItem(new Item.Properties().stacksTo(16),
-                            530, 39f, 23, 0.854f, false, false, false, false));
-    public static final DeferredItem<TorpedoItem> TORPEDO_610MM_TYPE95_MK2 =
-            ITEMS.register("torpedo_610mm_type95_mk2",
-                    () -> new TorpedoItem(new Item.Properties().stacksTo(16),
-                            610, 55.5f, 45, 0.929f, false, false, false, false));
-
-    // 数值配置/05 鱼雷补缺（2026-09-07 项目所有者定稿）
-    public static final DeferredItem<TorpedoItem> TORPEDO_610MM_TYPE92 =
-            ITEMS.register("torpedo_610mm_type92",
-                    () -> new TorpedoItem(new Item.Properties().stacksTo(16),
-                            610, 42f, 30, 0.80f, false, false, false, true));
-    public static final DeferredItem<TorpedoItem> TORPEDO_533MM_MK13 =
-            ITEMS.register("torpedo_533mm_mk13",
-                    () -> new TorpedoItem(new Item.Properties().stacksTo(16),
-                            533, 22f, 25, 0.60f, false, false, false, false));
-    public static final DeferredItem<TorpedoItem> TORPEDO_533MM_53_38 =
-            ITEMS.register("torpedo_533mm_53_38",
-                    () -> new TorpedoItem(new Item.Properties().stacksTo(16),
-                            533, 24f, 20, 0.75f, false, false, false, false));
-
-    // ===== Armor Plates =====
-    public static final DeferredItem<ArmorPlateItem> SMALL_ARMOR_PLATE =
-            ITEMS.register("small_armor_plate",
-                    () -> new ArmorPlateItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ARMOR), 2, 10, 3));
-    public static final DeferredItem<ArmorPlateItem> MEDIUM_ARMOR_PLATE =
-            ITEMS.register("medium_armor_plate",
-                    () -> new ArmorPlateItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ARMOR), 4, 20, 6));
-    public static final DeferredItem<ArmorPlateItem> LARGE_ARMOR_PLATE =
-            ITEMS.register("large_armor_plate",
-                    () -> new ArmorPlateItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ARMOR), 6, 30, 9));
-
-    // ===== Auto CIWS（强化部件槽 — 策划决策/舰装/舰装-自动近防炮系统.md）=====
-    public static final DeferredItem<AutoCIWSItem> AUTO_CIWS_20MM =
-            ITEMS.register("auto_ciws_20mm",
-                    () -> new AutoCIWSItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ENHANCEMENT),
-                            1.0f));
-    public static final DeferredItem<AutoCIWSItem> AUTO_CIWS_40MM =
-            ITEMS.register("auto_ciws_40mm",
-                    () -> new AutoCIWSItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ENHANCEMENT),
-                            1.5f));
-    public static final DeferredItem<AutoCIWSItem> AUTO_CIWS_76MM =
-            ITEMS.register("auto_ciws_76mm",
-                    () -> new AutoCIWSItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ENHANCEMENT),
-                            2.0f));
+    // ===== Auto CIWS（强化部件槽 — 策划决策/舰装/舰装-自动近防炮系统.md）(extracted to WeaponItems) =====
+    public static final DeferredItem<AutoCIWSItem> AUTO_CIWS_20MM = WeaponItems.AUTO_CIWS_20MM;
+    public static final DeferredItem<AutoCIWSItem> AUTO_CIWS_40MM = WeaponItems.AUTO_CIWS_40MM;
+    public static final DeferredItem<AutoCIWSItem> AUTO_CIWS_76MM = WeaponItems.AUTO_CIWS_76MM;
 
     // ===== Food Ingredients (Phase 11a) =====
     public static final DeferredItem<Item> FLOUR           = ITEMS.registerSimpleItem("flour");
@@ -565,45 +239,31 @@ public class ModItems {
     public static final DeferredItem<BlockItem> WILD_GARDEN =
             ITEMS.registerSimpleBlockItem(ModBlocks.WILD_GARDEN);
 
-    // ===== Functional Block Items (Phase 12-14) =====
-    public static final DeferredItem<BlockItem> STONE_MILL =
-            ITEMS.registerSimpleBlockItem(ModBlocks.STONE_MILL);
-    public static final DeferredItem<BlockItem> CUTTING_BOARD =
-            ITEMS.registerSimpleBlockItem(ModBlocks.CUTTING_BOARD);
-    public static final DeferredItem<BlockItem> COOKING_POT =
-            ITEMS.registerSimpleBlockItem(ModBlocks.COOKING_POT);
-    public static final DeferredItem<BlockItem> STOVE =
-            ITEMS.registerSimpleBlockItem(ModBlocks.STOVE);
-    public static final DeferredItem<BlockItem> RELOAD_FACILITY =
-            ITEMS.registerSimpleBlockItem(ModBlocks.RELOAD_FACILITY);
-    public static final DeferredItem<BlockItem> SHIP_CORE_MODIFIER =
-            ITEMS.registerSimpleBlockItem(ModBlocks.SHIP_CORE_MODIFIER);
-    public static final DeferredItem<BlockItem> YUBARI_WATER_BUCKET =
-            ITEMS.registerSimpleBlockItem(ModBlocks.YUBARI_WATER_BUCKET);
+    // ===== Functional Block Items (Phase 12-14)（已迁移到 MaterialItems） =====
+    public static final DeferredItem<BlockItem> STONE_MILL = MaterialItems.STONE_MILL;
+    public static final DeferredItem<BlockItem> CUTTING_BOARD = MaterialItems.CUTTING_BOARD;
+    public static final DeferredItem<BlockItem> COOKING_POT = MaterialItems.COOKING_POT;
+    public static final DeferredItem<BlockItem> STOVE = MaterialItems.STOVE;
+    public static final DeferredItem<BlockItem> RELOAD_FACILITY = MaterialItems.RELOAD_FACILITY;
+    public static final DeferredItem<BlockItem> SHIP_CORE_MODIFIER = MaterialItems.SHIP_CORE_MODIFIER;
+    public static final DeferredItem<BlockItem> YUBARI_WATER_BUCKET = MaterialItems.YUBARI_WATER_BUCKET;
 
-    public static final DeferredItem<BlockItem> AMMO_WORKBENCH =
-            ITEMS.registerSimpleBlockItem(ModBlocks.AMMO_WORKBENCH);
-    public static final DeferredItem<BlockItem> WEAPON_WORKBENCH =
-            ITEMS.registerSimpleBlockItem(ModBlocks.WEAPON_WORKBENCH);
-    public static final DeferredItem<BlockItem> BLUEPRINT_CHEST =
-            ITEMS.registerSimpleBlockItem(ModBlocks.BLUEPRINT_CHEST);
+    public static final DeferredItem<BlockItem> AMMO_WORKBENCH = MaterialItems.AMMO_WORKBENCH;
+    public static final DeferredItem<BlockItem> WEAPON_WORKBENCH = MaterialItems.WEAPON_WORKBENCH;
+    public static final DeferredItem<BlockItem> BLUEPRINT_CHEST = MaterialItems.BLUEPRINT_CHEST;
 
-    // ===== Blueprints =====
-    public static final DeferredItem<Item> MEDIUM_GUN_BLUEPRINT =
-            ITEMS.registerSimpleItem("medium_gun_blueprint", new Item.Properties().stacksTo(1));
-    public static final DeferredItem<Item> LARGE_GUN_BLUEPRINT =
-            ITEMS.registerSimpleItem("large_gun_blueprint", new Item.Properties().stacksTo(1));
-    public static final DeferredItem<Item> CREATIVE_BLUEPRINT =
-            ITEMS.registerSimpleItem("creative_blueprint",
-                    new Item.Properties().stacksTo(1).rarity(net.minecraft.world.item.Rarity.EPIC));
+    // ===== Blueprints（已迁移到 MaterialItems） =====
+    public static final DeferredItem<Item> MEDIUM_GUN_BLUEPRINT = MaterialItems.MEDIUM_GUN_BLUEPRINT;
+    public static final DeferredItem<Item> LARGE_GUN_BLUEPRINT = MaterialItems.LARGE_GUN_BLUEPRINT;
+    public static final DeferredItem<Item> CREATIVE_BLUEPRINT = MaterialItems.CREATIVE_BLUEPRINT;
 
-    // ===== Intermediate Products (Phase 13/16) =====
-    public static final DeferredItem<Item> SAUSAGE            = ITEMS.registerSimpleItem("sausage");
-    public static final DeferredItem<Item> SLICED_SAUSAGE     = ITEMS.registerSimpleItem("sliced_sausage");
-    public static final DeferredItem<Item> BACON              = ITEMS.registerSimpleItem("bacon");
-    public static final DeferredItem<Item> TOAST_BREAD_SLICES = ITEMS.registerSimpleItem("toast_bread_slices");
-    public static final DeferredItem<Item> BEER               = ITEMS.registerSimpleItem("beer");
-    public static final DeferredItem<Item> ROUND_BUN          = ITEMS.registerSimpleItem("round_bun");
+    // ===== Intermediate Products (Phase 13/16)（已迁移到 MaterialItems） =====
+    public static final DeferredItem<Item> SAUSAGE = MaterialItems.SAUSAGE;
+    public static final DeferredItem<Item> SLICED_SAUSAGE = MaterialItems.SLICED_SAUSAGE;
+    public static final DeferredItem<Item> BACON = MaterialItems.BACON;
+    public static final DeferredItem<Item> TOAST_BREAD_SLICES = MaterialItems.TOAST_BREAD_SLICES;
+    public static final DeferredItem<Item> BEER = MaterialItems.BEER;
+    public static final DeferredItem<Item> ROUND_BUN = MaterialItems.ROUND_BUN;
 
     // ===== Food Items (Phase 16) =====
     private static FoodProperties.Builder fp(int nutrition, float saturation) {
@@ -877,322 +537,70 @@ public class ModItems {
                     .food(fp(5, 6f).build())
                     .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 2))));
 
-    // ===== Aircraft Squadrons (Phase 18) =====
-    public static final DeferredItem<AircraftItem> FIGHTER_SQUADRON =
-            ITEMS.register("fighter_squadron",
-                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
-                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
-                                    new AircraftInfo(AircraftInfo.AircraftType.FIGHTER,
-                                            1200, 64, 0, 18f, 1.8f, 12, AircraftInfo.BombingMode.DIVE))));
+    // ===== Aircraft Squadrons (Phase 18) — 实际定义见 AircraftItems =====
+    public static final DeferredItem<AircraftItem> FIGHTER_SQUADRON = AircraftItems.FIGHTER_SQUADRON;
+    public static final DeferredItem<AircraftItem> DIVE_BOMBER_SQUADRON = AircraftItems.DIVE_BOMBER_SQUADRON;
+    public static final DeferredItem<AircraftItem> XTB2D = AircraftItems.XTB2D;
+    public static final DeferredItem<AircraftItem> RECON_SQUADRON = AircraftItems.RECON_SQUADRON;
 
-    public static final DeferredItem<AircraftItem> DIVE_BOMBER_SQUADRON =
-            ITEMS.register("dive_bomber_squadron",
-                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
-                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
-                                    new AircraftInfo(AircraftInfo.AircraftType.DIVE_BOMBER,
-                                            1200, 1, 0, 24f, 1.4f, 16, AircraftInfo.BombingMode.DIVE))));
-
-    public static final DeferredItem<AircraftItem> XTB2D =
-            ITEMS.register("xtb2d",
-                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
-                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
-                                    new AircraftInfo(AircraftInfo.AircraftType.TORPEDO_BOMBER,
-                                            1200, 4, 0, 30f, 1.2f, 22, AircraftInfo.BombingMode.DIVE))));
-
-
-    public static final DeferredItem<AircraftItem> RECON_SQUADRON =
-            ITEMS.register("recon_squadron",
-                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
-                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
-                                    new AircraftInfo(AircraftInfo.AircraftType.RECON,
-                                            1500, 0, 0, 0f, 1.5f, 8, AircraftInfo.BombingMode.DIVE))));
-
-    // ===== Named Aircraft =====
-
+    // ===== Named Aircraft — 实际定义见 AircraftItems =====
     // --- 鱼雷机 ---
-    public static final DeferredItem<AircraftItem> SWORDFISH_TORPEDO =
-            ITEMS.register("swordfish_torpedo",
-                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
-                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
-                                    new AircraftInfo(AircraftInfo.AircraftType.TORPEDO_BOMBER,
-                                            1200, 1, 0, 18f, 0.8f, 18, AircraftInfo.BombingMode.DIVE))));
-
-    /** 剑鱼（反潜）— 6×深弹8, HP4, 52节 */
-    public static final DeferredItem<AircraftItem> SWORDFISH_ASW =
-            ITEMS.register("swordfish_asw",
-                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
-                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
-                                    new AircraftInfo(AircraftInfo.AircraftType.ASW,
-                                            1200, 6, 0, 8f, 0.8f, 16, AircraftInfo.BombingMode.LEVEL))));
-
-    /** TBF（鱼雷）— 1×533鱼雷21, HP5, 56节 */
-    public static final DeferredItem<AircraftItem> TBF_TORPEDO =
-            ITEMS.register("tbf_torpedo",
-                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
-                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
-                                    new AircraftInfo(AircraftInfo.AircraftType.TORPEDO_BOMBER,
-                                            1200, 1, 0, 21f, 0.9f, 20, AircraftInfo.BombingMode.DIVE))));
-
-    /** TBF（反潜）— 4×深弹8, HP5, 56节 */
-    public static final DeferredItem<AircraftItem> TBF_ASW =
-            ITEMS.register("tbf_asw",
-                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
-                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
-                                    new AircraftInfo(AircraftInfo.AircraftType.ASW,
-                                            1200, 4, 0, 8f, 0.9f, 18, AircraftInfo.BombingMode.LEVEL))));
-
-    /** 天山（鱼雷）— 610鱼雷24, HP4, 64节 */
-    public static final DeferredItem<AircraftItem> TENZAN_TORPEDO =
-            ITEMS.register("tenzan_torpedo",
-                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
-                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
-                                    new AircraftInfo(AircraftInfo.AircraftType.TORPEDO_BOMBER,
-                                            1200, 1, 0, 24f, 1.1f, 20, AircraftInfo.BombingMode.DIVE))));
-
-    /** 九七舰攻（鱼雷）— 610鱼雷21, HP4, 64节 */
-    public static final DeferredItem<AircraftItem> TYPE97_TORPEDO =
-            ITEMS.register("type97_torpedo",
-                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
-                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
-                                    new AircraftInfo(AircraftInfo.AircraftType.TORPEDO_BOMBER,
-                                            1200, 1, 0, 21f, 1.1f, 18, AircraftInfo.BombingMode.DIVE))));
-
-    /** 空中海盗（鱼雷）— 4×533鱼雷12, HP9, 64节 */
-    public static final DeferredItem<AircraftItem> SKY_PIRATE_TORPEDO =
-            ITEMS.register("sky_pirate_torpedo",
-                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
-                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
-                                    new AircraftInfo(AircraftInfo.AircraftType.TORPEDO_BOMBER,
-                                            1200, 4, 0, 12f, 1.1f, 22, AircraftInfo.BombingMode.DIVE))));
-
+    public static final DeferredItem<AircraftItem> SWORDFISH_TORPEDO = AircraftItems.SWORDFISH_TORPEDO;
+    public static final DeferredItem<AircraftItem> SWORDFISH_ASW = AircraftItems.SWORDFISH_ASW;
+    public static final DeferredItem<AircraftItem> TBF_TORPEDO = AircraftItems.TBF_TORPEDO;
+    public static final DeferredItem<AircraftItem> TBF_ASW = AircraftItems.TBF_ASW;
+    public static final DeferredItem<AircraftItem> TENZAN_TORPEDO = AircraftItems.TENZAN_TORPEDO;
+    public static final DeferredItem<AircraftItem> TYPE97_TORPEDO = AircraftItems.TYPE97_TORPEDO;
+    public static final DeferredItem<AircraftItem> SKY_PIRATE_TORPEDO = AircraftItems.SKY_PIRATE_TORPEDO;
     // --- 俯冲轰炸机 ---
-    /** 海燕（轰炸）— 1/咬+俯冲轰炸10, HP4, 56节 */
-    public static final DeferredItem<AircraftItem> PETREL_BOMBER =
-            ITEMS.register("petrel_bomber",
-                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
-                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
-                                    new AircraftInfo(AircraftInfo.AircraftType.DIVE_BOMBER,
-                                            1200, 1, 0, 10f, 0.9f, 14, AircraftInfo.BombingMode.DIVE))));
-
-    /** 九九舰爆（轰炸）— 俯冲轰炸12, HP4, 64节 */
-    public static final DeferredItem<AircraftItem> TYPE99_DIVE_BOMBER =
-            ITEMS.register("type99_dive_bomber",
-                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
-                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
-                                    new AircraftInfo(AircraftInfo.AircraftType.DIVE_BOMBER,
-                                            1200, 1, 0, 12f, 1.1f, 16, AircraftInfo.BombingMode.DIVE))));
-
-    /** SBD（轰炸）— 1/咬+俯冲轰炸12, HP5, 64节 */
-    public static final DeferredItem<AircraftItem> SBD_DAUNTLESS =
-            ITEMS.register("sbd_dauntless",
-                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
-                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
-                                    new AircraftInfo(AircraftInfo.AircraftType.DIVE_BOMBER,
-                                            1200, 1, 0, 12f, 1.1f, 16, AircraftInfo.BombingMode.DIVE))));
-
-    /** 萤火虫AS.MK5（轰炸）— 2/咬+俯冲轰炸14, HP5, 64节 */
-    public static final DeferredItem<AircraftItem> FIREFLY_AS_MK5 =
-            ITEMS.register("firefly_as_mk5",
-                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
-                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
-                                    new AircraftInfo(AircraftInfo.AircraftType.DIVE_BOMBER,
-                                            1200, 1, 0, 14f, 1.1f, 18, AircraftInfo.BombingMode.DIVE))));
-
-    /** 彗星（轰炸）— 俯冲轰炸18, HP4, 72节 */
-    public static final DeferredItem<AircraftItem> SUISEI_BOMBER =
-            ITEMS.register("suisei_bomber",
-                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
-                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
-                                    new AircraftInfo(AircraftInfo.AircraftType.DIVE_BOMBER,
-                                            1200, 1, 0, 18f, 1.3f, 16, AircraftInfo.BombingMode.DIVE))));
-
+    public static final DeferredItem<AircraftItem> PETREL_BOMBER = AircraftItems.PETREL_BOMBER;
+    public static final DeferredItem<AircraftItem> TYPE99_DIVE_BOMBER = AircraftItems.TYPE99_DIVE_BOMBER;
+    public static final DeferredItem<AircraftItem> SBD_DAUNTLESS = AircraftItems.SBD_DAUNTLESS;
+    public static final DeferredItem<AircraftItem> FIREFLY_AS_MK5 = AircraftItems.FIREFLY_AS_MK5;
+    public static final DeferredItem<AircraftItem> SUISEI_BOMBER = AircraftItems.SUISEI_BOMBER;
     // --- 水平轰炸机 ---
-    /** 景云（轰炸）— 水平轰炸26, HP6, 68节 */
-    public static final DeferredItem<AircraftItem> SEIUN_BOMBER =
-            ITEMS.register("seiun_bomber",
-                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
-                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
-                                    new AircraftInfo(AircraftInfo.AircraftType.LEVEL_BOMBER,
-                                            1200, 32, 0, 26f, 1.2f, 16, AircraftInfo.BombingMode.LEVEL))));
-
-    /** B25（轰炸）— 水平轰炸30, HP15, 64节 */
-    public static final DeferredItem<AircraftItem> B25_BOMBER =
-            ITEMS.register("b25_bomber",
-                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
-                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
-                                    new AircraftInfo(AircraftInfo.AircraftType.LEVEL_BOMBER,
-                                            1200, 32, 0, 30f, 1.1f, 24, AircraftInfo.BombingMode.LEVEL))));
-
-    /** XA2J（轰炸）— 水平轰炸46, HP15, 72节 */
-    public static final DeferredItem<AircraftItem> XA2J_BOMBER =
-            ITEMS.register("xa2j_bomber",
-                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
-                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
-                                    new AircraftInfo(AircraftInfo.AircraftType.LEVEL_BOMBER,
-                                            1200, 32, 0, 46f, 1.3f, 20, AircraftInfo.BombingMode.LEVEL))));
-
+    public static final DeferredItem<AircraftItem> SEIUN_BOMBER = AircraftItems.SEIUN_BOMBER;
+    public static final DeferredItem<AircraftItem> B25_BOMBER = AircraftItems.B25_BOMBER;
+    public static final DeferredItem<AircraftItem> XA2J_BOMBER = AircraftItems.XA2J_BOMBER;
     // --- 战斗机 ---
-    /** F6F地狱猫（火箭弹）— 火箭机：对空子弹(2/咬)+对地/海6枚火箭弹(6爆炸伤害), HP6, 72节 */
-    public static final DeferredItem<AircraftItem> F6F_HELLCAT_ROCKET =
-            ITEMS.register("f6f_hellcat_rocket",
-                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
-                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
-                                    new AircraftInfo(AircraftInfo.AircraftType.ROCKET_FIGHTER,
-                                            1200, 6, 0, 6f, 1.3f, 14, AircraftInfo.BombingMode.DIVE))));
-
-    /** 海喷火 — 3/咬, HP5, 80节 */
-    public static final DeferredItem<AircraftItem> SEAFIRE =
-            ITEMS.register("seafire",
-                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
-                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
-                                    new AircraftInfo(AircraftInfo.AircraftType.FIGHTER,
-                                            1200, 64, 0, 3f, 1.5f, 12, AircraftInfo.BombingMode.DIVE))));
-
-    /** 零战五二型 — 2/咬, HP5, 80节 */
-    public static final DeferredItem<AircraftItem> ZERO_MODEL52 =
-            ITEMS.register("zero_model52",
-                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
-                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
-                                    new AircraftInfo(AircraftInfo.AircraftType.FIGHTER,
-                                            1200, 64, 0, 2f, 1.5f, 10, AircraftInfo.BombingMode.DIVE))));
-
-    /** F4F野猫 — 2/咬, HP5, 72节 */
-    public static final DeferredItem<AircraftItem> F4F_WILDCAT =
-            ITEMS.register("f4f_wildcat",
-                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
-                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
-                                    new AircraftInfo(AircraftInfo.AircraftType.FIGHTER,
-                                            1200, 64, 0, 2f, 1.3f, 12, AircraftInfo.BombingMode.DIVE))));
-
-    /** F4U冰激凌 — 无伤害, HP5, 航速暂无 */
-    public static final DeferredItem<AircraftItem> F4U_CORSAIR_ICE =
-            ITEMS.register("f4u_corsair_ice",
-                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
-                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
-                                    new AircraftInfo(AircraftInfo.AircraftType.FIGHTER,
-                                            1200, 0, 0, 0f, 1.0f, 14, AircraftInfo.BombingMode.DIVE))));
-
-    /** F4U海盗 — 3/咬+6×火箭弹6, HP5, 80节 */
-    public static final DeferredItem<AircraftItem> F4U_CORSAIR =
-            ITEMS.register("f4u_corsair",
-                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
-                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
-                                    new AircraftInfo(AircraftInfo.AircraftType.FIGHTER,
-                                            1200, 64, 0, 3f, 1.5f, 14, AircraftInfo.BombingMode.DIVE))));
-
-    /** F2H女妖 — 5/咬, HP8, 100节 */
-    public static final DeferredItem<AircraftItem> F2H_BANSHEE =
-            ITEMS.register("f2h_banshee",
-                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
-                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
-                                    new AircraftInfo(AircraftInfo.AircraftType.FIGHTER,
-                                            1200, 64, 0, 5f, 2.0f, 14, AircraftInfo.BombingMode.DIVE))));
-
+    public static final DeferredItem<AircraftItem> F6F_HELLCAT_ROCKET = AircraftItems.F6F_HELLCAT_ROCKET;
+    public static final DeferredItem<AircraftItem> SEAFIRE = AircraftItems.SEAFIRE;
+    public static final DeferredItem<AircraftItem> ZERO_MODEL52 = AircraftItems.ZERO_MODEL52;
+    public static final DeferredItem<AircraftItem> F4F_WILDCAT = AircraftItems.F4F_WILDCAT;
+    public static final DeferredItem<AircraftItem> F4U_CORSAIR_ICE = AircraftItems.F4U_CORSAIR_ICE;
+    public static final DeferredItem<AircraftItem> F4U_CORSAIR = AircraftItems.F4U_CORSAIR;
+    public static final DeferredItem<AircraftItem> F2H_BANSHEE = AircraftItems.F2H_BANSHEE;
     // --- 侦察机 ---
-    /** 零式水侦 — HP4, 航程10240, 160节 */
-    public static final DeferredItem<AircraftItem> TYPE0_RECON =
-            ITEMS.register("type0_recon",
-                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
-                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
-                                    new AircraftInfo(AircraftInfo.AircraftType.RECON,
-                                            10240, 0, 0, 0f, 3.5f, 8, AircraftInfo.BombingMode.DIVE))));
+    public static final DeferredItem<AircraftItem> TYPE0_RECON = AircraftItems.TYPE0_RECON;
+    public static final DeferredItem<AircraftItem> C1_RECON = AircraftItems.C1_RECON;
+    public static final DeferredItem<AircraftItem> SAIUN_RECON = AircraftItems.SAIUN_RECON;
 
-    /** C-1侦察机 — HP5, 航程12800, 120节 */
-    public static final DeferredItem<AircraftItem> C1_RECON =
-            ITEMS.register("c1_recon",
-                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
-                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
-                                    new AircraftInfo(AircraftInfo.AircraftType.RECON,
-                                            12800, 0, 0, 0f, 2.5f, 8, AircraftInfo.BombingMode.DIVE))));
-
-    /** 彩云舰侦 — HP5, 航程25600, 200节 */
-    public static final DeferredItem<AircraftItem> SAIUN_RECON =
-            ITEMS.register("saiun_recon",
-                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
-                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
-                                    new AircraftInfo(AircraftInfo.AircraftType.RECON,
-                                            25600, 0, 0, 0f, 4.5f, 8, AircraftInfo.BombingMode.DIVE))));
-
-    // ===== Aviation Ammo (Phase 18) =====
-    public static final DeferredItem<Item> AVIATION_FUEL =
-            ITEMS.register("aviation_fuel",
-                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.aviation_fuel"));
+    // ===== Aviation Ammo (Phase 18) (extracted to AmmoItems) =====
+    public static final DeferredItem<Item> AVIATION_FUEL = AmmoItems.AVIATION_FUEL;
     // Legacy items kept for world compatibility — unified into AERIAL_BOMB below
-    @Deprecated public static final DeferredItem<Item> AERIAL_BOMB_SMALL =
-            ITEMS.register("aerial_bomb_small",
-                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.aerial_bomb"));
-    @Deprecated public static final DeferredItem<Item> AERIAL_BOMB_MEDIUM =
-            ITEMS.register("aerial_bomb_medium",
-                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.aerial_bomb"));
-    public static final DeferredItem<Item> AERIAL_TORPEDO =
-            ITEMS.register("aerial_torpedo",
-                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.aerial_torpedo"));
+    @Deprecated public static final DeferredItem<Item> AERIAL_BOMB_SMALL = AmmoItems.AERIAL_BOMB_SMALL;
+    @Deprecated public static final DeferredItem<Item> AERIAL_BOMB_MEDIUM = AmmoItems.AERIAL_BOMB_MEDIUM;
+    public static final DeferredItem<Item> AERIAL_TORPEDO = AmmoItems.AERIAL_TORPEDO;
     // Unified aerial bomb (replaces small/medium distinction)
-    public static final DeferredItem<Item> AERIAL_BOMB =
-            ITEMS.register("aerial_bomb",
-                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.aerial_bomb"));
+    public static final DeferredItem<Item> AERIAL_BOMB = AmmoItems.AERIAL_BOMB;
     // 深水炸弹
-    public static final DeferredItem<Item> DEPTH_CHARGE =
-            ITEMS.register("depth_charge",
-                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.depth_charge"));
+    public static final DeferredItem<Item> DEPTH_CHARGE = AmmoItems.DEPTH_CHARGE;
     // Fighter ammo (子弹)
-    public static final DeferredItem<Item> FIGHTER_AMMO =
-            ITEMS.register("fighter_ammo",
-                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.fighter_ammo"));
+    public static final DeferredItem<Item> FIGHTER_AMMO = AmmoItems.FIGHTER_AMMO;
 
     // 弹丸渲染用隐藏物品（不加入创造模式标签页）
-    public static final DeferredItem<Item> PROJECTILE_BULLET =
-            ITEMS.register("projectile_bullet", () -> new Item(new Item.Properties()));
+    public static final DeferredItem<Item> PROJECTILE_BULLET = AmmoItems.PROJECTILE_BULLET;
 
-    // ===== Phase 19: Floating Target =====
-    public static final DeferredItem<com.piranport.item.FloatingTargetItem> FLOATING_TARGET =
-            ITEMS.register("floating_target",
-                    () -> new com.piranport.item.FloatingTargetItem(new Item.Properties().stacksTo(16)));
+    // ===== Phase 19: Floating Target（已迁移到 MaterialItems） =====
+    public static final DeferredItem<FloatingTargetItem> FLOATING_TARGET = MaterialItems.FLOATING_TARGET;
 
-    // ===== Phase 23: Guidebook =====
-    public static final DeferredItem<com.piranport.item.GuidebookItem> GUIDEBOOK =
-            ITEMS.register("guidebook",
-                    () -> new com.piranport.item.GuidebookItem(new Item.Properties().stacksTo(1)));
+    // ===== Phase 23: Guidebook（已迁移到 MaterialItems） =====
+    public static final DeferredItem<GuidebookItem> GUIDEBOOK = MaterialItems.GUIDEBOOK;
 
-    // ===== Phase 27: Pineapple chain =====
-    public static final DeferredItem<net.minecraft.world.item.ItemNameBlockItem> PINEAPPLE_SEED =
-            ITEMS.register("pineapple_seed", () -> new net.minecraft.world.item.ItemNameBlockItem(
-                    ModBlocks.PINEAPPLE_CROP.get(), new Item.Properties()));
-    public static final DeferredItem<Item> PINEAPPLE =
-            ITEMS.register("pineapple",
-                    () -> new Item(new Item.Properties().food(fp(3, 3.8f).build())));
-    public static final DeferredItem<Item> PINEAPPLE_JUICE =
-            ITEMS.register("pineapple_juice",
-                    () -> new Item(new Item.Properties().food(fp(2, 2.5f).build())));
+    // ===== Phase 27: Pineapple chain（已迁移到 MaterialItems） =====
+    public static final DeferredItem<ItemNameBlockItem> PINEAPPLE_SEED = MaterialItems.PINEAPPLE_SEED;
+    public static final DeferredItem<Item> PINEAPPLE = MaterialItems.PINEAPPLE;
+    public static final DeferredItem<Item> PINEAPPLE_JUICE = MaterialItems.PINEAPPLE_JUICE;
 
     // ===== Phase 27: Buff foods =====
 
@@ -1230,256 +638,73 @@ public class ModItems {
                             .effect(() -> new MobEffectInstance(ModMobEffects.EVASION, 2400, 1), 1.0f)
                             .build())));
 
-    // ===== Sonar =====
-    public static final DeferredItem<SonarItem> STANDARD_SONAR =
-            ITEMS.register("standard_sonar",
-                    () -> new SonarItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ARMOR),
-                            10, 24));
+    // ===== Sonar (extracted to AircraftItems) =====
+    public static final DeferredItem<SonarItem> STANDARD_SONAR = AircraftItems.STANDARD_SONAR;
+    public static final DeferredItem<SonarItem> IMPROVED_SONAR = AircraftItems.IMPROVED_SONAR;
+    public static final DeferredItem<SonarItem> ADVANCED_SONAR = AircraftItems.ADVANCED_SONAR;
 
-    // Phase 27：策划 §3.6 表 3.2 改进型/先进型声呐
-    public static final DeferredItem<SonarItem> IMPROVED_SONAR =
-            ITEMS.register("improved_sonar",
-                    () -> new SonarItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ARMOR),
-                            3, 32));
+    // ===== Engines (extracted to AircraftItems) =====
+    public static final DeferredItem<EngineItem> STANDARD_ENGINE = AircraftItems.STANDARD_ENGINE;
+    public static final DeferredItem<EngineItem> IMPROVED_ENGINE = AircraftItems.IMPROVED_ENGINE;
+    public static final DeferredItem<EngineItem> ADVANCED_ENGINE = AircraftItems.ADVANCED_ENGINE;
+    public static final DeferredItem<EngineItem> HIGH_PRESSURE_BOILER = AircraftItems.HIGH_PRESSURE_BOILER;
+    public static final DeferredItem<EngineItem> DIESEL_ENGINE = AircraftItems.DIESEL_ENGINE;
 
-    public static final DeferredItem<SonarItem> ADVANCED_SONAR =
-            ITEMS.register("advanced_sonar",
-                    () -> new SonarItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ARMOR),
-                            5, 40));
+    // ===== Torpedo Reload Enhancement (extracted to SpecialtyItems) =====
+    public static final DeferredItem<TorpedoReloadItem> TORPEDO_RELOAD = SpecialtyItems.TORPEDO_RELOAD;
 
-    // ===== Engines =====
-    public static final DeferredItem<EngineItem> STANDARD_ENGINE =
-            ITEMS.register("standard_engine",
-                    () -> new EngineItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ENGINE), 0.05, 5));
-    public static final DeferredItem<EngineItem> IMPROVED_ENGINE =
-            ITEMS.register("improved_engine",
-                    () -> new EngineItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ENGINE), 0.10, 10));
-    public static final DeferredItem<EngineItem> ADVANCED_ENGINE =
-            ITEMS.register("advanced_engine",
-                    () -> new EngineItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ENGINE), 0.15, 15));
-    public static final DeferredItem<EngineItem> HIGH_PRESSURE_BOILER =
-            ITEMS.register("high_pressure_boiler",
-                    () -> new EngineItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ENGINE), 0.12, 20));
-    public static final DeferredItem<EngineItem> DIESEL_ENGINE =
-            ITEMS.register("diesel_engine",
-                    () -> new EngineItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ENGINE), 0.08, 2));
+    // ===== Torpedo Launchers (extracted to WeaponItems) =====
+    public static final DeferredItem<TorpedoLauncherItem> TWIN_TORPEDO_LAUNCHER = WeaponItems.TWIN_TORPEDO_LAUNCHER;
+    public static final DeferredItem<TorpedoLauncherItem> TRIPLE_TORPEDO_LAUNCHER = WeaponItems.TRIPLE_TORPEDO_LAUNCHER;
+    public static final DeferredItem<TorpedoLauncherItem> QUAD_TORPEDO_LAUNCHER = WeaponItems.QUAD_TORPEDO_LAUNCHER;
+    public static final DeferredItem<TorpedoLauncherItem> QUINTUPLE_TORPEDO_LAUNCHER = WeaponItems.QUINTUPLE_TORPEDO_LAUNCHER;
 
-    // ===== Torpedo Reload Enhancement =====
-    public static final DeferredItem<TorpedoReloadItem> TORPEDO_RELOAD =
-            ITEMS.register("torpedo_reload",
-                    () -> new TorpedoReloadItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ARMOR), 8));
+    // ===== Depth Charge Launchers (extracted to WeaponItems) =====
+    public static final DeferredItem<DepthChargeLauncherItem> DEPTH_CHARGE_LAUNCHER = WeaponItems.DEPTH_CHARGE_LAUNCHER;
+    public static final DeferredItem<DepthChargeLauncherItem> DEPTH_CHARGE_LAUNCHER_IMPROVED = WeaponItems.DEPTH_CHARGE_LAUNCHER_IMPROVED;
+    public static final DeferredItem<DepthChargeLauncherItem> DEPTH_CHARGE_LAUNCHER_ADVANCED = WeaponItems.DEPTH_CHARGE_LAUNCHER_ADVANCED;
 
-    // ===== Torpedo Launchers =====
-    public static final DeferredItem<TorpedoLauncherItem> TWIN_TORPEDO_LAUNCHER =
-            ITEMS.register("twin_torpedo_launcher",
-                    () -> new TorpedoLauncherItem(
-                            new Item.Properties().stacksTo(1).durability(64)
-                                    .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.TORPEDO),
-                            533, 2, ModProjectilesConfig.TWIN_TORPEDO_LAUNCHER_COOLDOWN::get));
-    public static final DeferredItem<TorpedoLauncherItem> TRIPLE_TORPEDO_LAUNCHER =
-            ITEMS.register("triple_torpedo_launcher",
-                    () -> new TorpedoLauncherItem(
-                            new Item.Properties().stacksTo(1).durability(48)
-                                    .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.TORPEDO),
-                            533, 3, ModProjectilesConfig.TRIPLE_TORPEDO_LAUNCHER_COOLDOWN::get));
-    public static final DeferredItem<TorpedoLauncherItem> QUAD_TORPEDO_LAUNCHER =
-            ITEMS.register("quad_torpedo_launcher",
-                    () -> new TorpedoLauncherItem(
-                            new Item.Properties().stacksTo(1).durability(32)
-                                    .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.TORPEDO),
-                            610, 4, ModProjectilesConfig.QUAD_TORPEDO_LAUNCHER_COOLDOWN::get));
+    // ===== Missile / Rocket Ammo (extracted to AmmoItems) =====
+    public static final DeferredItem<MissileItem> SY1_MISSILE = AmmoItems.SY1_MISSILE;
+    public static final DeferredItem<MissileItem> HARPOON_MISSILE = AmmoItems.HARPOON_MISSILE;
+    public static final DeferredItem<MissileItem> TERRIER_MISSILE = AmmoItems.TERRIER_MISSILE;
+    public static final DeferredItem<MissileItem> ANTI_AIR_MISSILE = AmmoItems.ANTI_AIR_MISSILE;
+    public static final DeferredItem<MissileItem> ROCKET_AMMO = AmmoItems.ROCKET_AMMO;
 
-    // Phase 27：策划 §3.3 五联装鱼雷发射器
-    public static final DeferredItem<TorpedoLauncherItem> QUINTUPLE_TORPEDO_LAUNCHER =
-            ITEMS.register("quintuple_torpedo_launcher",
-                    () -> new TorpedoLauncherItem(
-                            new Item.Properties().stacksTo(1).durability(24)
-                                    .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.TORPEDO),
-                            610, 5, ModProjectilesConfig.QUINTUPLE_TORPEDO_LAUNCHER_COOLDOWN::get));
+    // ===== Missile Launchers (extracted to WeaponItems) =====
+    public static final DeferredItem<MissileLauncherItem> SY1_LAUNCHER = WeaponItems.SY1_LAUNCHER;
+    public static final DeferredItem<MissileLauncherItem> MK14_HARPOON_LAUNCHER = WeaponItems.MK14_HARPOON_LAUNCHER;
+    public static final DeferredItem<MissileLauncherItem> TERRIER_LAUNCHER = WeaponItems.TERRIER_LAUNCHER;
+    public static final DeferredItem<MissileLauncherItem> SHIP_ROCKET_LAUNCHER = WeaponItems.SHIP_ROCKET_LAUNCHER;
+    public static final DeferredItem<MissileLauncherItem> SEA_DART_LAUNCHER = WeaponItems.SEA_DART_LAUNCHER;
+    public static final DeferredItem<MissileLauncherItem> SEACAT_LAUNCHER = WeaponItems.SEACAT_LAUNCHER;
 
-    // ===== Depth Charge Launchers =====
-    public static final DeferredItem<DepthChargeLauncherItem> DEPTH_CHARGE_LAUNCHER =
-            ITEMS.register("depth_charge_launcher",
-                    () -> new DepthChargeLauncherItem(
-                            new Item.Properties().stacksTo(1).durability(64)
-                                    .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.DEPTH_CHARGE),
-                            1, 60, DepthChargeLauncherItem.SpreadPattern.SINGLE));
-    public static final DeferredItem<DepthChargeLauncherItem> DEPTH_CHARGE_LAUNCHER_IMPROVED =
-            ITEMS.register("depth_charge_launcher_improved",
-                    () -> new DepthChargeLauncherItem(
-                            new Item.Properties().stacksTo(1).durability(48)
-                                    .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.DEPTH_CHARGE),
-                            2, 80, DepthChargeLauncherItem.SpreadPattern.FRONT_BACK));
-    public static final DeferredItem<DepthChargeLauncherItem> DEPTH_CHARGE_LAUNCHER_ADVANCED =
-            ITEMS.register("depth_charge_launcher_advanced",
-                    () -> new DepthChargeLauncherItem(
-                            new Item.Properties().stacksTo(1).durability(32)
-                                    .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.DEPTH_CHARGE),
-                            3, 100, DepthChargeLauncherItem.SpreadPattern.TRIANGLE));
+    // ===== Dungeon System (v0.0.8) (extracted to SpecialtyItems) =====
+    public static final DeferredItem<com.piranport.dungeon.key.DungeonKeyItem> DUNGEON_KEY = SpecialtyItems.DUNGEON_KEY;
+    public static final DeferredItem<com.piranport.dungeon.item.TownScrollItem> TOWN_SCROLL = SpecialtyItems.TOWN_SCROLL;
+    public static final DeferredItem<BlockItem> DUNGEON_LECTERN = SpecialtyItems.DUNGEON_LECTERN;
 
-    // ===== Missile / Rocket Ammo =====
-    public static final DeferredItem<MissileItem> SY1_MISSILE =
-            ITEMS.register("sy1_missile",
-                    () -> new MissileItem(new Item.Properties().stacksTo(16),
-                            com.piranport.entity.MissileEntity.MissileType.ANTI_SHIP, 30f, 6f));
-    public static final DeferredItem<MissileItem> HARPOON_MISSILE =
-            ITEMS.register("harpoon_missile",
-                    () -> new MissileItem(new Item.Properties().stacksTo(16),
-                            com.piranport.entity.MissileEntity.MissileType.ANTI_SHIP, 24f));
-    public static final DeferredItem<MissileItem> TERRIER_MISSILE =
-            ITEMS.register("terrier_missile",
-                    () -> new MissileItem(new Item.Properties().stacksTo(16),
-                            com.piranport.entity.MissileEntity.MissileType.ANTI_AIR, 9f));
-    public static final DeferredItem<MissileItem> ANTI_AIR_MISSILE =
-            ITEMS.register("anti_air_missile",
-                    () -> new MissileItem(new Item.Properties().stacksTo(16),
-                            com.piranport.entity.MissileEntity.MissileType.ANTI_AIR, 6f));
-    public static final DeferredItem<MissileItem> ROCKET_AMMO =
-            ITEMS.register("rocket_ammo",
-                    () -> new MissileItem(new Item.Properties().stacksTo(16),
-                            com.piranport.entity.MissileEntity.MissileType.ROCKET, 6f));
-
-    // ===== Missile Launchers =====
-    // 上游一号（反舰导弹）: 伤害30+6穿甲, 连装2, 负重25
-    public static final DeferredItem<MissileLauncherItem> SY1_LAUNCHER =
-            ITEMS.register("sy1_launcher",
-                    () -> new MissileLauncherItem(
-                            new Item.Properties().stacksTo(1)
-                                    .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.MISSILE),
-                            com.piranport.entity.MissileEntity.MissileType.ANTI_SHIP,
-                            30f, 6f, 0f, 2, 0,
-                            () -> ModItems.SY1_MISSILE.get()));
-    // MK14鱼叉（反舰导弹）: 伤害24, 连装4, 负重22
-    public static final DeferredItem<MissileLauncherItem> MK14_HARPOON_LAUNCHER =
-            ITEMS.register("mk14_harpoon_launcher",
-                    () -> new MissileLauncherItem(
-                            new Item.Properties().stacksTo(1)
-                                    .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.MISSILE),
-                            com.piranport.entity.MissileEntity.MissileType.ANTI_SHIP,
-                            24f, 0f, 0f, 4, 0,
-                            () -> ModItems.HARPOON_MISSILE.get()));
-    // 小猎犬（防空导弹）: 伤害9, 冷却60s, 负重14
-    public static final DeferredItem<MissileLauncherItem> TERRIER_LAUNCHER =
-            ITEMS.register("terrier_launcher",
-                    () -> new MissileLauncherItem(
-                            new Item.Properties().stacksTo(1)
-                                    .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.MISSILE),
-                            com.piranport.entity.MissileEntity.MissileType.ANTI_AIR,
-                            9f, 0f, 2.0f, 1, 1200,
-                            () -> ModItems.TERRIER_MISSILE.get()));
-    // 舰载火箭弹: 伤害6, 连装6, 负重32
-    public static final DeferredItem<MissileLauncherItem> SHIP_ROCKET_LAUNCHER =
-            ITEMS.register("ship_rocket_launcher",
-                    () -> new MissileLauncherItem(
-                            new Item.Properties().stacksTo(1)
-                                    .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.MISSILE),
-                            com.piranport.entity.MissileEntity.MissileType.ROCKET,
-                            6f, 0f, 2.0f, 6, 0,
-                            () -> ModItems.ROCKET_AMMO.get()));
-    // 箭型防空导弹（Sea Dart）: 伤害6, 冷却60s, 负重7
-    public static final DeferredItem<MissileLauncherItem> SEA_DART_LAUNCHER =
-            ITEMS.register("sea_dart_launcher",
-                    () -> new MissileLauncherItem(
-                            new Item.Properties().stacksTo(1)
-                                    .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.MISSILE),
-                            com.piranport.entity.MissileEntity.MissileType.ANTI_AIR,
-                            6f, 0f, 1.5f, 1, 1200,
-                            () -> ModItems.ANTI_AIR_MISSILE.get()));
-    // 海猫防空导弹（Seacat）: 伤害6, 冷却60s, 负重6
-    public static final DeferredItem<MissileLauncherItem> SEACAT_LAUNCHER =
-            ITEMS.register("seacat_launcher",
-                    () -> new MissileLauncherItem(
-                            new Item.Properties().stacksTo(1)
-                                    .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.MISSILE),
-                            com.piranport.entity.MissileEntity.MissileType.ANTI_AIR,
-                            6f, 0f, 1.5f, 1, 1200,
-                            () -> ModItems.ANTI_AIR_MISSILE.get()));
-
-    // ===== Dungeon System (v0.0.8) =====
-    public static final DeferredItem<com.piranport.dungeon.key.DungeonKeyItem> DUNGEON_KEY =
-            ITEMS.register("dungeon_key",
-                    () -> new com.piranport.dungeon.key.DungeonKeyItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.DUNGEON_STAGE_ID.get(), "")
-                            .component(ModDataComponents.DUNGEON_PROGRESS.get(),
-                                    com.piranport.dungeon.key.DungeonProgress.EMPTY)));
-
-    public static final DeferredItem<com.piranport.dungeon.item.TownScrollItem> TOWN_SCROLL =
-            ITEMS.register("town_scroll",
-                    () -> new com.piranport.dungeon.item.TownScrollItem(new Item.Properties().stacksTo(1)));
-
-    public static final DeferredItem<BlockItem> DUNGEON_LECTERN =
-            ITEMS.registerSimpleBlockItem(ModBlocks.DUNGEON_LECTERN);
-
-    // ===== Skin Cores =====
-    public static final DeferredItem<SkinCoreItem> SKIN_CORE_4 =
-            ITEMS.register("skin_core_4",
-                    () -> new SkinCoreItem(new Item.Properties().stacksTo(1), 4));
-    public static final DeferredItem<SkinCoreItem> SKIN_CORE_5 =
-            ITEMS.register("skin_core_5",
-                    () -> new SkinCoreItem(new Item.Properties().stacksTo(1), 5));
-    public static final DeferredItem<SkinCoreItem> SKIN_CORE_6 =
-            ITEMS.register("skin_core_6",
-                    () -> new SkinCoreItem(new Item.Properties().stacksTo(1), 6));
-    public static final DeferredItem<SkinCoreItem> SKIN_CORE_7 =
-            ITEMS.register("skin_core_7",
-                    () -> new SkinCoreItem(new Item.Properties().stacksTo(1), 7));
-    public static final DeferredItem<SkinCoreItem> SKIN_CORE_8 =
-            ITEMS.register("skin_core_8",
-                    () -> new SkinCoreItem(new Item.Properties().stacksTo(1), 8));
-    public static final DeferredItem<SkinCoreItem> SKIN_CORE_9 =
-            ITEMS.register("skin_core_9",
-                    () -> new SkinCoreItem(new Item.Properties().stacksTo(1), 9));
-    public static final DeferredItem<SkinCoreItem> SKIN_CORE_10 =
-            ITEMS.register("skin_core_10",
-                    () -> new SkinCoreItem(new Item.Properties().stacksTo(1), 10));
-    public static final DeferredItem<SkinCoreItem> SKIN_CORE_11 =
-            ITEMS.register("skin_core_11",
-                    () -> new SkinCoreItem(new Item.Properties().stacksTo(1), 11));
-    public static final DeferredItem<SkinCoreItem> SKIN_CORE_12 =
-            ITEMS.register("skin_core_12",
-                    () -> new SkinCoreItem(new Item.Properties().stacksTo(1), 12));
-    public static final DeferredItem<SkinCoreItem> SKIN_CORE_13 =
-            ITEMS.register("skin_core_13",
-                    () -> new SkinCoreItem(new Item.Properties().stacksTo(1), 13));
-    public static final DeferredItem<SkinCoreItem> SKIN_CORE_14 =
-            ITEMS.register("skin_core_14",
-                    () -> new SkinCoreItem(new Item.Properties().stacksTo(1), 14));
-    public static final DeferredItem<SkinCoreItem> SKIN_CORE_15 =
-            ITEMS.register("skin_core_15",
-                    () -> new SkinCoreItem(new Item.Properties().stacksTo(1), 15));
-    public static final DeferredItem<SkinCoreItem> SKIN_CORE_16 =
-            ITEMS.register("skin_core_16",
-                    () -> new SkinCoreItem(new Item.Properties().stacksTo(1), 16));
-    public static final DeferredItem<SkinCoreItem> SKIN_CORE_17 =
-            ITEMS.register("skin_core_17",
-                    () -> new SkinCoreItem(new Item.Properties().stacksTo(1), 17));
-    public static final DeferredItem<SkinCoreItem> SKIN_CORE_18 =
-            ITEMS.register("skin_core_18",
-                    () -> new SkinCoreItem(new Item.Properties().stacksTo(1), 18));
-    public static final DeferredItem<SkinCoreItem> SKIN_CORE_19 =
-            ITEMS.register("skin_core_19",
-                    () -> new SkinCoreItem(new Item.Properties().stacksTo(1), 19));
-    public static final DeferredItem<SkinCoreItem> SKIN_CORE_20 =
-            ITEMS.register("skin_core_20",
-                    () -> new SkinCoreItem(new Item.Properties().stacksTo(1), 20));
-    public static final DeferredItem<SkinCoreItem> SKIN_CORE_21 =
-            ITEMS.register("skin_core_21",
-                    () -> new SkinCoreItem(new Item.Properties().stacksTo(1), 21));
-    public static final DeferredItem<SkinCoreItem> SKIN_CORE_22 =
-            ITEMS.register("skin_core_22",
-                    () -> new SkinCoreItem(new Item.Properties().stacksTo(1), 22));
-    public static final DeferredItem<SkinCoreItem> SKIN_CORE_23 =
-            ITEMS.register("skin_core_23",
-                    () -> new SkinCoreItem(new Item.Properties().stacksTo(1), 23));
+    // ===== Skin Cores (extracted to SpecialtyItems) =====
+    public static final DeferredItem<SkinCoreItem> SKIN_CORE_4 = SpecialtyItems.SKIN_CORE_4;
+    public static final DeferredItem<SkinCoreItem> SKIN_CORE_5 = SpecialtyItems.SKIN_CORE_5;
+    public static final DeferredItem<SkinCoreItem> SKIN_CORE_6 = SpecialtyItems.SKIN_CORE_6;
+    public static final DeferredItem<SkinCoreItem> SKIN_CORE_7 = SpecialtyItems.SKIN_CORE_7;
+    public static final DeferredItem<SkinCoreItem> SKIN_CORE_8 = SpecialtyItems.SKIN_CORE_8;
+    public static final DeferredItem<SkinCoreItem> SKIN_CORE_9 = SpecialtyItems.SKIN_CORE_9;
+    public static final DeferredItem<SkinCoreItem> SKIN_CORE_10 = SpecialtyItems.SKIN_CORE_10;
+    public static final DeferredItem<SkinCoreItem> SKIN_CORE_11 = SpecialtyItems.SKIN_CORE_11;
+    public static final DeferredItem<SkinCoreItem> SKIN_CORE_12 = SpecialtyItems.SKIN_CORE_12;
+    public static final DeferredItem<SkinCoreItem> SKIN_CORE_13 = SpecialtyItems.SKIN_CORE_13;
+    public static final DeferredItem<SkinCoreItem> SKIN_CORE_14 = SpecialtyItems.SKIN_CORE_14;
+    public static final DeferredItem<SkinCoreItem> SKIN_CORE_15 = SpecialtyItems.SKIN_CORE_15;
+    public static final DeferredItem<SkinCoreItem> SKIN_CORE_16 = SpecialtyItems.SKIN_CORE_16;
+    public static final DeferredItem<SkinCoreItem> SKIN_CORE_17 = SpecialtyItems.SKIN_CORE_17;
+    public static final DeferredItem<SkinCoreItem> SKIN_CORE_18 = SpecialtyItems.SKIN_CORE_18;
+    public static final DeferredItem<SkinCoreItem> SKIN_CORE_19 = SpecialtyItems.SKIN_CORE_19;
+    public static final DeferredItem<SkinCoreItem> SKIN_CORE_20 = SpecialtyItems.SKIN_CORE_20;
+    public static final DeferredItem<SkinCoreItem> SKIN_CORE_21 = SpecialtyItems.SKIN_CORE_21;
+    public static final DeferredItem<SkinCoreItem> SKIN_CORE_22 = SpecialtyItems.SKIN_CORE_22;
+    public static final DeferredItem<SkinCoreItem> SKIN_CORE_23 = SpecialtyItems.SKIN_CORE_23;
 
     // ===== Entity Cores =====
     public static final DeferredItem<EntityCoreItem> ENTITY_CORE_DEEP_OCEAN_SUPPLY =

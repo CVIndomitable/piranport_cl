@@ -271,9 +271,6 @@ public class ShipCoreCombat {
     private static boolean tickCannonAutoReloadSlot(Player player, ItemStack coreStack, Inventory inv,
             int weaponSlot, int coreSlot, ItemStack weapon, SlotCooldowns cooldowns) {
         if (!(weapon.getItem() instanceof com.piranport.artillery.ArtilleryItem ai)) return false;
-        // 策划决策/武器/07-火炮装填双模式.md：手动模式不在服务端 tick 自动装填
-        // （仅 R 键启动读条）
-        if (!ai.isAutoLoading()) return false;
         if (coreSlot == -1) return false;
 
         long now = player.level().getGameTime();
@@ -291,23 +288,34 @@ public class ShipCoreCombat {
             return false;
         }
 
+        // 策划决策/武器/07-火炮装填双模式.md
+        // 读条结束 → 调用 completeCannonReload（手动+自动都执行，否则手动模式的 R 键读条永不完成）
         if (ws.getCooldown() != null && ws.getCooldown().endTick() > 0 && ws.getCooldown().endTick() <= now) {
             return completeCannonReload(player, coreStack, inv, weaponSlot, coreSlot, weapon, cooldowns);
         }
 
-        return startCannonReloadIfPossible(player, coreStack, inv, weaponSlot, coreSlot, weapon, cooldowns);
+        // 启动新读条：仅自动模式（R 键路径已单独处理手动模式）
+        if (ai.isAutoLoading()) {
+            return startCannonReloadIfPossible(player, coreStack, inv, weaponSlot, coreSlot, weapon, cooldowns);
+        }
+        return false;
     }
 
     private static boolean startCannonReloadIfPossible(Player player, ItemStack coreStack, Inventory inv,
             int weaponSlot, int coreSlot, ItemStack weapon, SlotCooldowns cooldowns) {
         LOGGER.info("[ShipCoreCombat] startCannonReloadIfPossible - weapon: {}, weaponSlot: {}, coreSlot: {}",
             weapon.getItem(), weaponSlot, coreSlot);
-        if (coreSlot == -1) return false;
+        if (coreSlot == -1) {
+            LOGGER.info("[ShipCoreCombat] coreSlot == -1, returning false");
+            return false;
+        }
         int barrelCount = getBarrelCount(weapon, player.level());
         LOGGER.info("[ShipCoreCombat] barrelCount: {}, creative: {}", barrelCount, player.getAbilities().instabuild);
         AmmoInventory ammoInv = new AmmoInventory(inv, coreSlot, weaponSlot);
         Item ammoType = ammoInv.chooseReloadAmmo(weapon, barrelCount, player.getAbilities().instabuild, player.level());
+        LOGGER.info("[ShipCoreCombat] chooseReloadAmmo returned: {}", ammoType);
         if (ammoType == null && !player.getAbilities().instabuild) {
+            LOGGER.info("[ShipCoreCombat] No ammo found and not creative, clearing reload state");
             return clearCannonReloadState(coreStack, weapon, weaponSlot, cooldowns);
         }
 
@@ -316,11 +324,13 @@ public class ShipCoreCombat {
         }
 
         int reloadTicks = TransformationManager.boostedCooldown(player, getGunCooldown(weapon, player.level()));
+        LOGGER.info("[ShipCoreCombat] Setting cooldown - reloadTicks: {}, weaponSlot: {}", reloadTicks, weaponSlot);
         long now = player.level().getGameTime();
         coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
                 cooldowns.withSlotCooldown(weaponSlot, reloadTicks, now));
         new WeaponState(weapon).setCooldown(now, reloadTicks);
         playCannonReloadStartSound(player, weapon);
+        LOGGER.info("[ShipCoreCombat] Reload started successfully");
         return true;
     }
 
@@ -328,8 +338,8 @@ public class ShipCoreCombat {
      * 手动模式火炮 R 键启动装填读条（策划决策/武器/07-火炮装填双模式.md）
      * <p>仅在武器 MANUAL 装填模式时空炮且未在读条才启动；自动模式应走自动 tick 装填。</p>
      */
-    public static void tryManualCannonReload(Player player, ItemStack coreStack, ItemStack weapon) {
-        LOGGER.info("[tryManualCannonReload] Called - weapon: {}, core: {}", weapon.getItem(), coreStack.getItem());
+    public static void tryManualCannonReload(Player player, ItemStack coreStack, int coreSlot, ItemStack weapon) {
+        LOGGER.info("[tryManualCannonReload] Called - weapon: {}, core: {}, coreSlot: {}", weapon.getItem(), coreStack.getItem(), coreSlot);
         if (player.level().isClientSide()) return;
         if (coreStack.isEmpty() || weapon.isEmpty()) return;
         if (!(weapon.getItem() instanceof com.piranport.artillery.ArtilleryItem ai)) return;
@@ -363,10 +373,7 @@ public class ShipCoreCombat {
             if (inv.items.get(i) == weapon) { weaponSlot = i; break; }
         }
         if (weaponSlot < 0) weaponSlot = inv.selected;
-        int coreSlot = -1;
-        for (int i = 0; i < inv.items.size(); i++) {
-            if (inv.items.get(i) == coreStack) { coreSlot = i; break; }
-        }
+        LOGGER.info("[tryManualCannonReload] weaponSlot: {}, coreSlot: {}", weaponSlot, coreSlot);
         SlotCooldowns cooldowns = coreStack.getOrDefault(ModDataComponents.SLOT_COOLDOWNS.get(), SlotCooldowns.EMPTY);
         startCannonReloadIfPossible(player, coreStack, inv, weaponSlot, coreSlot, weapon, cooldowns);
     }

@@ -98,13 +98,13 @@ public record ManualReloadPayload() implements CustomPacketPayload {
                 LOGGER.info("[SERVER] MainHand is ArtilleryItem - isAutoLoading: {}", ai.isAutoLoading());
                 if (!ai.isAutoLoading()) {
                     // 手动模式：仅在空炮且无读条时启动读条；已装弹或已在读条时提示
-                    com.piranport.item.ShipCoreCombat.tryManualCannonReload(player, coreStack, mainHand);
+                    com.piranport.item.ShipCoreCombat.tryManualCannonReload(player, coreStack, coreSlot, mainHand);
                 }
                 return;
             } else if (offHand.getItem() instanceof com.piranport.artillery.ArtilleryItem ai) {
                 LOGGER.info("[SERVER] OffHand is ArtilleryItem - isAutoLoading: {}", ai.isAutoLoading());
                 if (!ai.isAutoLoading()) {
-                    com.piranport.item.ShipCoreCombat.tryManualCannonReload(player, coreStack, offHand);
+                    com.piranport.item.ShipCoreCombat.tryManualCannonReload(player, coreStack, coreSlot, offHand);
                 }
                 return;
             }

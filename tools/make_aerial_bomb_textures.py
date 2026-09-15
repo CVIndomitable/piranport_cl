@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
-"""生成航空炸弹系列物品贴图（航空炸弹 / 小型航弹 / 中型航弹）。
+"""生成航空炸弹物品贴图（item/aerial_bomb.png）。
+
+航弹只有一种（小型/中型已在 AmmoItems 中统一，仅留 legacy 空壳兼容老存档），
+所以只出一张贴图；aerial_bomb_small / aerial_bomb_medium 的模型直接复用它。
 
 画风对齐现有弹药贴图（item/torpedo_533_mm.png、item/small_he_shell.png）：
   - 32x32 画布，背景全透明，无抗锯齿（alpha 只有 0 和 255）
   - 轮廓为 1px 纯黑 #000000
-  - 弹体为顶部受光的圆柱渐变（5~9 级灰阶）
-  - 弹头后一道黄铜色识别环，取色与炮弹的铜环 / 引信一致
-
-三张图按尺寸区分：小型 < 标准 < 中型（弹径 7 / 9 / 11 像素）。
+  - 弹体为顶部受光的圆柱渐变（9 级灰阶）
+  - 弹头后一道黄铜识别环，取色与炮弹的铜弹带 / 引信一致
 
     python3 tools/make_aerial_bomb_textures.py
 """
@@ -27,39 +28,22 @@ def hx(s):
 
 
 # 弹体渐变，自上而下（水平圆柱，光从上方来）
-RAMPS = {
-    3: ['8b8b8b', 'a7a7a7', '5e5e5e'],
-    5: ['7c7c7c', 'c9c9c9', 'a7a7a7', '5e5e5e', '3f3f3f'],
-    7: ['5e5e5e', '8b8b8b', 'c9c9c9', 'a7a7a7', '8b8b8b', '5e5e5e', '3f3f3f'],
-    9: ['5e5e5e', '7c7c7c', 'a7a7a7', 'c9c9c9', 'a7a7a7', '8b8b8b', '5e5e5e', '454545', '2f2f2f'],
-}
-# 黄铜环，取色自 small_he_shell 的引信 / 铜弹带
-BRASS = {
-    3: ['d8a210', 'ffdd64', 'a27828'],
-    5: ['d8a210', 'ffdd64', 'e0aa29', 'a27828', '7a5a1c'],
-    7: ['a27828', 'd8a210', 'ffdd64', 'e0aa29', 'd8a210', 'a27828', '7a5a1c'],
-    9: ['a27828', 'c99a20', 'e0aa29', 'ffdd64', 'e0aa29', 'c99a20', 'a27828', '7a5a1c', '5e4416'],
-}
+BODY_RAMP = ['5e5e5e', '7c7c7c', 'a7a7a7', 'c9c9c9', 'a7a7a7',
+             '8b8b8b', '5e5e5e', '454545', '2f2f2f']
+# 黄铜识别环，取色自 small_he_shell 的引信 / 铜弹带
+BRASS_RAMP = ['a27828', 'c99a20', 'e0aa29', 'ffdd64', 'e0aa29',
+              'c99a20', 'a27828', '7a5a1c', '5e4416']
 # 尾鳍：平板，上缘亮下缘暗；整体比弹体暗部亮一档，避免尾部糊成一团黑
-FIN = {
-    7:  ['b0b0b0', 'a7a7a7', '8b8b8b', '8b8b8b', '7c7c7c', '6a6a6a', '5e5e5e'],
-    9:  ['b0b0b0', 'a7a7a7', 'a7a7a7', '8b8b8b', '8b8b8b', '7c7c7c', '6a6a6a', '5e5e5e', '5e5e5e'],
-    11: ['b0b0b0', 'b0b0b0', 'a7a7a7', 'a7a7a7', '8b8b8b', '8b8b8b', '7c7c7c', '7c7c7c', '6a6a6a', '5e5e5e', '5e5e5e'],
-    13: ['c0c0c0', 'b0b0b0', 'b0b0b0', 'a7a7a7', 'a7a7a7', '8b8b8b', '8b8b8b', '8b8b8b', '7c7c7c', '7c7c7c', '6a6a6a', '5e5e5e', '5e5e5e'],
-    15: ['c0c0c0', 'b0b0b0', 'b0b0b0', 'a7a7a7', 'a7a7a7', '8b8b8b', '8b8b8b', '8b8b8b', '8b8b8b', '7c7c7c', '7c7c7c', '6a6a6a', '6a6a6a', '5e5e5e', '5e5e5e'],
-    17: ['c0c0c0', 'b0b0b0', 'b0b0b0', 'a7a7a7', 'a7a7a7', 'a7a7a7', '8b8b8b', '8b8b8b', '8b8b8b', '8b8b8b', '7c7c7c', '7c7c7c', '6a6a6a', '6a6a6a', '5e5e5e', '5e5e5e', '5e5e5e'],
-    19: ['c0c0c0', 'c0c0c0', 'b0b0b0', 'b0b0b0', 'a7a7a7', 'a7a7a7', 'a7a7a7', '8b8b8b', '8b8b8b', '8b8b8b', '8b8b8b', '7c7c7c', '7c7c7c', '6a6a6a', '6a6a6a', '6a6a6a', '5e5e5e', '5e5e5e', '5e5e5e'],
-    21: ['c0c0c0', 'c0c0c0', 'b0b0b0', 'b0b0b0', 'a7a7a7', 'a7a7a7', 'a7a7a7', 'a7a7a7', '8b8b8b', '8b8b8b', '8b8b8b', '8b8b8b', '7c7c7c', '7c7c7c', '6a6a6a', '6a6a6a', '6a6a6a', '5e5e5e', '5e5e5e', '5e5e5e', '5e5e5e'],
-}
+FIN_RAMP = ['c0c0c0', 'c0c0c0', 'b0b0b0', 'b0b0b0', 'a7a7a7', 'a7a7a7', 'a7a7a7',
+            '8b8b8b', '8b8b8b', '8b8b8b', '8b8b8b', '7c7c7c', '7c7c7c',
+            '6a6a6a', '6a6a6a', '6a6a6a', '5e5e5e', '5e5e5e', '5e5e5e']
 
 
-def ramp_for(table, n):
-    """取 n 级渐变；表里没有正好 n 级时按比例从最近的档位重采样。"""
-    if n in table:
-        return [hx(c) for c in table[n]]
-    best = min(sorted(table), key=lambda k: abs(k - n))
-    src = table[best]
-    return [hx(src[round(i * (len(src) - 1) / max(1, n - 1))]) for i in range(n)]
+def ramp(table, n):
+    """取 n 级渐变；表里没有正好 n 级时按比例重采样。"""
+    if n == len(table):
+        return [hx(c) for c in table]
+    return [hx(table[round(i * (len(table) - 1) / max(1, n - 1))]) for i in range(n)]
 
 
 def build(profile, fins, band_x0, band_w):
@@ -74,16 +58,16 @@ def build(profile, fins, band_x0, band_w):
     # 1. 尾鳍先画，弹体压在上面
     fin_x0 = len(profile) - len(fins) - TAIL_NUB
     for i, fh in enumerate(fins):
-        column(fin_x0 + i, fh, ramp_for(FIN, 2 * fh + 1))
+        column(fin_x0 + i, fh, ramp(FIN_RAMP, 2 * fh + 1))
 
     # 2. 弹体
     for cx, half in enumerate(profile):
-        column(cx, half, ramp_for(RAMPS, 2 * half + 1))
+        column(cx, half, ramp(BODY_RAMP, 2 * half + 1))
 
     # 3. 黄铜识别环
     for cx in range(band_x0, band_x0 + band_w):
         if 0 <= cx < len(profile):
-            column(cx, profile[cx], ramp_for(BRASS, 2 * profile[cx] + 1))
+            column(cx, profile[cx], ramp(BRASS_RAMP, 2 * profile[cx] + 1))
 
     # 4. 描边：只在最外圈上色（每列上下端 + 每行左右端）
     filled = set(px)
@@ -111,38 +95,28 @@ def build(profile, fins, band_x0, band_w):
     return img
 
 
-VARIANTS = {
-    # 小型航弹 —— 细而短
-    'aerial_bomb_small': dict(
-        profile=[1, 2, 3] + [3] * 10 + [3, 2, 1, 1, 1],
-        fins=[3, 5, 6, 7, 7, 7, 7], band_x0=5, band_w=2),
-    # 航空炸弹 —— 标准型
-    'aerial_bomb': dict(
-        profile=[1, 2, 3, 4] + [4] * 12 + [4, 3, 2, 1, 1, 1, 1],
-        fins=[4, 6, 8, 9, 9, 9, 9, 9], band_x0=6, band_w=2),
-    # 中型航弹 —— 长而粗
-    'aerial_bomb_medium': dict(
-        profile=[1, 2, 3, 4, 5] + [5] * 13 + [5, 4, 3, 2, 1, 1, 1, 1],
-        fins=[5, 7, 9, 10, 10, 10, 10, 10], band_x0=7, band_w=3),
-}
+# 弹径 9 像素的标准航弹：锥形弹头 -> 圆柱弹体 -> 收敛尾锥 -> 尾鳍 + 尾杆
+BOMB = dict(
+    profile=[1, 2, 3, 4] + [4] * 12 + [4, 3, 2, 1, 1, 1, 1],
+    fins=[4, 6, 8, 9, 9, 9, 9, 9],
+    band_x0=6, band_w=2)
 
 
 def main():
-    imgs = {}
-    for name, kw in VARIANTS.items():
-        build(**kw).save(f"{OUT}/{name}.png")
-        print(f"wrote {OUT}/{name}.png")
-        imgs[name] = Image.open(f"{OUT}/{name}.png").convert("RGBA")
+    name = "aerial_bomb"
+    build(**BOMB).save(f"{OUT}/{name}.png")
+    print(f"wrote {OUT}/{name}.png")
 
     # 放大预览 + 背包 16x16 实际观感
+    img = Image.open(f"{OUT}/{name}.png").convert("RGBA")
     scale = 10
-    names = list(VARIANTS)
-    canvas = Image.new("RGB", (len(names) * W * scale + 32, H * scale + 16), (30, 30, 32))
-    for i, name in enumerate(names):
-        big = imgs[name].resize((W * scale, H * scale), Image.NEAREST)
-        canvas.paste(big, (8 + i * (W * scale + 8), 8), big)
+    canvas = Image.new("RGB", (W * scale * 2 + 24, H * scale + 16), (30, 30, 32))
+    big = img.resize((W * scale, H * scale), Image.NEAREST)
+    canvas.paste(big, (8, 8), big)
+    inv = img.resize((16, 16), Image.LANCZOS).resize((W * scale, H * scale), Image.NEAREST)
+    canvas.paste(inv, (W * scale + 16, 8), inv)
     canvas.save("/tmp/aerial_bomb_preview.png")
-    print("wrote /tmp/aerial_bomb_preview.png")
+    print("wrote /tmp/aerial_bomb_preview.png（左：原图放大，右：背包 16x16 观感）")
 
 
 if __name__ == "__main__":

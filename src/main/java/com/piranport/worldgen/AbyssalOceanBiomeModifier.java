@@ -58,21 +58,11 @@ public record AbyssalOceanBiomeModifier(
                 new MobSpawnSettings.SpawnerData(ModEntityTypes.DEEP_OCEAN_SUBMARINE.get(), 3, 1, 1));
         spawns.addSpawn(MobCategory.MONSTER,
                 new MobSpawnSettings.SpawnerData(ModEntityTypes.DEEP_OCEAN_SUPPLY.get(), 2, 1, 1));
-        spawns.addSpawn(MobCategory.MONSTER,
-                new MobSpawnSettings.SpawnerData(ModEntityTypes.DEEP_OCEAN_ARCHIVIST.get(), deepSeaForces ? 3 : 1, 1, 1));
-        spawns.addSpawn(MobCategory.MONSTER,
-                new MobSpawnSettings.SpawnerData(ModEntityTypes.DEEP_OCEAN_ENGINEER.get(), deepSeaForces ? 3 : 1, 1, 1));
-        spawns.addSpawn(MobCategory.MONSTER,
-                new MobSpawnSettings.SpawnerData(ModEntityTypes.DEEP_OCEAN_NAVIGATOR.get(), deepSeaForces ? 3 : 1, 1, 1));
-        spawns.addSpawn(MobCategory.MONSTER,
-                new MobSpawnSettings.SpawnerData(ModEntityTypes.DEEP_OCEAN_QUARTERMASTER.get(), deepSeaForces ? 3 : 1, 1, 1));
         if (deepSeaForces) {
             spawns.addSpawn(MobCategory.MONSTER,
                     new MobSpawnSettings.SpawnerData(ModEntityTypes.DEEP_OCEAN_BATTLESHIP.get(), 3, 1, 1));
             spawns.addSpawn(MobCategory.MONSTER,
                     new MobSpawnSettings.SpawnerData(ModEntityTypes.DEEP_OCEAN_CARRIER.get(), 2, 1, 1));
-            spawns.addSpawn(MobCategory.MONSTER,
-                    new MobSpawnSettings.SpawnerData(ModEntityTypes.DEEP_OCEAN_FLAGSHIP.get(), 1, 1, 1));
         }
     }
 

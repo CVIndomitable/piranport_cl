@@ -3,7 +3,6 @@ package com.piranport.client;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.piranport.npc.deepocean.AbstractDeepOceanEntity;
-import com.piranport.npc.deepocean.DeepOceanFlagshipEntity;
 import com.piranport.npc.deepocean.DeepOceanLightCruiserEntity;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.renderer.LightTexture;
@@ -49,7 +48,6 @@ public class DeepOceanRiggingLayer extends RenderLayer<AbstractDeepOceanEntity, 
             case BATTLESHIP -> renderBattleship(consumer, pose, profile, packedLight);
             case CARRIER -> renderCarrier(consumer, pose, profile, launchPose, packedLight);
             case SUBMARINE -> renderSubmarine(consumer, pose, profile, packedLight);
-            case FLAGSHIP -> renderFlagship(consumer, pose, profile, flagshipPhase(entity), ageInTicks, packedLight);
         }
 
         poseStack.popPose();
@@ -205,68 +203,6 @@ public class DeepOceanRiggingLayer extends RenderLayer<AbstractDeepOceanEntity, 
                 profile.r(), profile.g(), profile.b(), profile.alpha(), light);
         renderCuboid(consumer, pose, -0.08f, 0.10f, -0.03f, 0.08f, 0.25f, 0.09f,
                 0.28f, 0.42f, 0.74f, 0.72f, light);
-    }
-
-    private static int flagshipPhase(AbstractDeepOceanEntity entity) {
-        return entity instanceof DeepOceanFlagshipEntity flagship ? flagship.getPhase() : 1;
-    }
-
-    private static void renderFlagship(VertexConsumer consumer, Matrix4f pose,
-                                       DeepOceanRenderer.VisualProfile profile, int phase,
-                                       float ageInTicks, int light) {
-        renderBattleship(consumer, pose, profile, light);
-        renderCuboid(consumer, pose, -0.72f, 0.16f, 0.08f, -0.58f, 0.42f, 0.24f,
-                profile.r() * 0.72f, profile.g() * 0.72f, profile.b(), profile.alpha(), light);
-        renderCuboid(consumer, pose, 0.58f, 0.16f, 0.08f, 0.72f, 0.42f, 0.24f,
-                profile.r() * 0.72f, profile.g() * 0.72f, profile.b(), profile.alpha(), light);
-        renderCuboid(consumer, pose, -0.56f, 0.24f, -0.18f, -0.46f, 0.32f, 0.12f,
-                0.78f, 0.76f, 0.88f, 0.78f, light);
-        renderCuboid(consumer, pose, 0.46f, 0.24f, -0.18f, 0.56f, 0.32f, 0.12f,
-                0.78f, 0.76f, 0.88f, 0.78f, light);
-        renderCuboid(consumer, pose, -0.08f, 0.34f, -0.04f, 0.08f, 0.52f, 0.18f,
-                0.74f, 0.52f, 0.96f, 0.84f, light);
-        renderCuboid(consumer, pose, -0.26f, 0.49f, 0.02f, 0.26f, 0.54f, 0.08f,
-                0.88f, 0.72f, 1.00f, 0.74f, light);
-        if (phase >= 2) {
-            renderFlagshipPhaseTwo(consumer, pose, ageInTicks, light);
-        }
-        if (phase >= 3) {
-            renderFlagshipPhaseThree(consumer, pose, ageInTicks, light);
-        }
-    }
-
-    private static void renderFlagshipPhaseTwo(VertexConsumer consumer, Matrix4f pose,
-                                               float ageInTicks, int light) {
-        float pulse = 0.55f + 0.25f * (float) Math.sin(ageInTicks * 0.12f);
-        renderCuboid(consumer, pose, -0.38f, 0.30f, 0.20f, -0.28f, 0.68f, 0.28f,
-                0.70f, 0.36f, 0.96f, 0.72f, light);
-        renderCuboid(consumer, pose, 0.28f, 0.30f, 0.20f, 0.38f, 0.68f, 0.28f,
-                0.70f, 0.36f, 0.96f, 0.72f, light);
-        renderCuboid(consumer, pose, -0.18f, 0.55f, 0.16f, 0.18f, 0.62f, 0.34f,
-                0.94f, 0.76f, 1.00f, pulse, light);
-        renderCuboid(consumer, pose, -0.82f, 0.22f, 0.24f, -0.66f, 0.28f, 0.42f,
-                0.42f, 0.72f, 1.00f, 0.42f, light);
-        renderCuboid(consumer, pose, 0.66f, 0.22f, 0.24f, 0.82f, 0.28f, 0.42f,
-                0.42f, 0.72f, 1.00f, 0.42f, light);
-    }
-
-    private static void renderFlagshipPhaseThree(VertexConsumer consumer, Matrix4f pose,
-                                                 float ageInTicks, int light) {
-        float pulse = 0.58f + 0.28f * (float) Math.sin(ageInTicks * 0.18f);
-        renderCuboid(consumer, pose, -0.08f, 0.62f, 0.20f, 0.08f, 0.86f, 0.36f,
-                0.95f, 0.48f, 1.00f, 0.82f, light);
-        renderCuboid(consumer, pose, -0.62f, 0.42f, 0.20f, -0.48f, 0.62f, 0.35f,
-                0.90f, 0.38f, 0.96f, 0.72f, light);
-        renderCuboid(consumer, pose, 0.48f, 0.42f, 0.20f, 0.62f, 0.62f, 0.35f,
-                0.90f, 0.38f, 0.96f, 0.72f, light);
-        renderCuboid(consumer, pose, -0.92f, 0.08f, 0.18f, -0.78f, 0.44f, 0.30f,
-                0.70f, 0.18f, 0.92f, 0.76f, light);
-        renderCuboid(consumer, pose, 0.78f, 0.08f, 0.18f, 0.92f, 0.44f, 0.30f,
-                0.70f, 0.18f, 0.92f, 0.76f, light);
-        renderCuboid(consumer, pose, -0.72f, 0.02f, 0.34f, 0.72f, 0.055f, 0.46f,
-                0.98f, 0.42f, 1.00f, pulse, light);
-        renderCuboid(consumer, pose, -0.30f, 0.70f, 0.24f, 0.30f, 0.735f, 0.48f,
-                0.98f, 0.42f, 1.00f, pulse * 0.82f, light);
     }
 
     private static void renderHull(VertexConsumer consumer, Matrix4f pose,

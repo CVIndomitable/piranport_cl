@@ -1,6 +1,5 @@
 package com.piranport.npc.deepocean;
 
-import com.piranport.advancement.ModAdvancements;
 import com.piranport.npc.ai.FleetGroup;
 import com.piranport.npc.ai.FleetGroupManager;
 import com.piranport.registry.ModItems;
@@ -21,7 +20,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.common.NeoForgeMod;
 
@@ -272,21 +270,7 @@ public abstract class AbstractDeepOceanEntity extends Monster {
     @Override
     protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean recentlyHit) {
         super.dropCustomDeathLoot(level, source, recentlyHit);
-        if (this instanceof DeepOceanFlagshipEntity) {
-            if (source.getEntity() instanceof ServerPlayer player) {
-                ModAdvancements.award(player, "story/defeat_abyssal_flagship");
-            }
-            spawnAtLocation(new ItemStack(ModItems.RAW_ALUMINUM.get(), 8 + random.nextInt(9)));
-            spawnAtLocation(new ItemStack(Items.DIAMOND, 2 + random.nextInt(3)));
-            spawnAtLocation(new ItemStack(ModItems.ABYSSAL_REPORT.get(), 1));
-            spawnAtLocation(new ItemStack(ModItems.EXP_SHELL.get(), 2 + random.nextInt(2)));
-            spawnAtLocation(new ItemStack(ModItems.PORTAL_ACTIVATION_CORE.get(), 1));
-            spawnAtLocation(new ItemStack(ModItems.CHAOS_SHARD_IOTA.get(), 1));
-            // 策划 §3.5 表 3.5：深海翔鹤/旗舰低概率掉落翔鹤的镰刀
-            if (random.nextFloat() < 0.05f) {
-                spawnAtLocation(new ItemStack(ModItems.SHOUKAKU_SCYTHE.get(), 1));
-            }
-        } else if (this instanceof DeepOceanCarrierEntity) {
+        if (this instanceof DeepOceanCarrierEntity) {
             // 深海翔鹤 Boss 替代为深海航母：1/20 概率必掉镰刀（旗舰主掉落之外的稳定来源）
             if (random.nextFloat() < 0.05f) {
                 spawnAtLocation(new ItemStack(ModItems.SHOUKAKU_SCYTHE.get(), 1));
@@ -294,31 +278,6 @@ public abstract class AbstractDeepOceanEntity extends Monster {
         } else if (this instanceof DeepOceanSupplyEntity) {
             spawnAtLocation(new ItemStack(ModItems.FUEL.get(), 2 + random.nextInt(3)));
             spawnAtLocation(new ItemStack(Items.IRON_INGOT, 1 + random.nextInt(2)));
-        } else if (this instanceof DeepOceanArchivistEntity) {
-            spawnAtLocation(new ItemStack(ModItems.ABYSSAL_REPORT.get(), 1));
-            spawnAtLocation(new ItemStack(Items.PAPER, 3 + random.nextInt(4)));
-            if (random.nextFloat() < 0.35f) {
-                spawnAtLocation(new ItemStack(ModItems.EXP_SHELL.get(), 1));
-            }
-        } else if (this instanceof DeepOceanEngineerEntity) {
-            spawnAtLocation(new ItemStack(ModItems.RAW_ALUMINUM.get(), 3 + random.nextInt(4)));
-            spawnAtLocation(new ItemStack(Items.REDSTONE, 1 + random.nextInt(3)));
-            if (random.nextFloat() < 0.35f) {
-                spawnAtLocation(new ItemStack(ModItems.REPAIR_KIT.get(), 1));
-            }
-        } else if (this instanceof DeepOceanNavigatorEntity) {
-            spawnAtLocation(new ItemStack(Items.MAP, 1));
-            spawnAtLocation(new ItemStack(Items.COMPASS, 1));
-            if (random.nextFloat() < 0.45f) {
-                spawnAtLocation(new ItemStack(ModItems.ABYSSAL_REPORT.get(), 1));
-            }
-        } else if (this instanceof DeepOceanQuartermasterEntity) {
-            spawnAtLocation(new ItemStack(ModItems.FUEL.get(), 1 + random.nextInt(2)));
-            spawnAtLocation(new ItemStack(ModItems.MEDIUM_HE_SHELL.get(), 4 + random.nextInt(5)));
-            spawnAtLocation(new ItemStack(ModItems.AVIATION_FUEL.get(), 1 + random.nextInt(2)));
-            if (random.nextFloat() < 0.35f) {
-                spawnAtLocation(new ItemStack(ModItems.EXP_SHELL.get(), 1));
-            }
         } else if (this instanceof DeepOceanDestroyerEntity) {
             spawnAtLocation(new ItemStack(Items.IRON_INGOT, 1 + random.nextInt(2)));
             if (random.nextFloat() < 0.25f) {

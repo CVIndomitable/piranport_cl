@@ -222,7 +222,6 @@ public class ModItems {
     public static final DeferredItem<net.minecraft.world.item.ItemNameBlockItem> RICE_SEEDS = FoodItems.RICE_SEEDS;
     public static final DeferredItem<net.minecraft.world.item.ItemNameBlockItem> LETTUCE_SEEDS = FoodItems.LETTUCE_SEEDS;
     public static final DeferredItem<net.minecraft.world.item.ItemNameBlockItem> GARLIC_SEEDS = FoodItems.GARLIC_SEEDS;
-    public static final DeferredItem<BlockItem> WILD_GARDEN = FoodItems.WILD_GARDEN;
 
     // ===== Functional Block Items (Phase 12-14)（已迁移到 MaterialItems） =====
     public static final DeferredItem<BlockItem> STONE_MILL = MaterialItems.STONE_MILL;
@@ -442,10 +441,6 @@ public class ModItems {
 
     // ===== Entity Cores (extracted to SpecialtyItems) =====
     public static final DeferredItem<EntityCoreItem> ENTITY_CORE_DEEP_OCEAN_SUPPLY = SpecialtyItems.ENTITY_CORE_DEEP_OCEAN_SUPPLY;
-    public static final DeferredItem<EntityCoreItem> ENTITY_CORE_DEEP_OCEAN_ARCHIVIST = SpecialtyItems.ENTITY_CORE_DEEP_OCEAN_ARCHIVIST;
-    public static final DeferredItem<EntityCoreItem> ENTITY_CORE_DEEP_OCEAN_ENGINEER = SpecialtyItems.ENTITY_CORE_DEEP_OCEAN_ENGINEER;
-    public static final DeferredItem<EntityCoreItem> ENTITY_CORE_DEEP_OCEAN_NAVIGATOR = SpecialtyItems.ENTITY_CORE_DEEP_OCEAN_NAVIGATOR;
-    public static final DeferredItem<EntityCoreItem> ENTITY_CORE_DEEP_OCEAN_QUARTERMASTER = SpecialtyItems.ENTITY_CORE_DEEP_OCEAN_QUARTERMASTER;
     public static final DeferredItem<EntityCoreItem> ENTITY_CORE_DEEP_OCEAN_DESTROYER = SpecialtyItems.ENTITY_CORE_DEEP_OCEAN_DESTROYER;
     public static final DeferredItem<EntityCoreItem> ENTITY_CORE_DEEP_OCEAN_LIGHT_CRUISER = SpecialtyItems.ENTITY_CORE_DEEP_OCEAN_LIGHT_CRUISER;
     public static final DeferredItem<EntityCoreItem> ENTITY_CORE_DEEP_OCEAN_HEAVY_CRUISER = SpecialtyItems.ENTITY_CORE_DEEP_OCEAN_HEAVY_CRUISER;
@@ -454,7 +449,6 @@ public class ModItems {
     public static final DeferredItem<EntityCoreItem> ENTITY_CORE_DEEP_OCEAN_LIGHT_CARRIER = SpecialtyItems.ENTITY_CORE_DEEP_OCEAN_LIGHT_CARRIER;
     public static final DeferredItem<EntityCoreItem> ENTITY_CORE_DEEP_OCEAN_CARRIER = SpecialtyItems.ENTITY_CORE_DEEP_OCEAN_CARRIER;
     public static final DeferredItem<EntityCoreItem> ENTITY_CORE_DEEP_OCEAN_SUBMARINE = SpecialtyItems.ENTITY_CORE_DEEP_OCEAN_SUBMARINE;
-    public static final DeferredItem<EntityCoreItem> ENTITY_CORE_DEEP_OCEAN_FLAGSHIP = SpecialtyItems.ENTITY_CORE_DEEP_OCEAN_FLAGSHIP;
     public static final DeferredItem<EntityCoreItem> ENTITY_CORE_SHIP_GIRL = SpecialtyItems.ENTITY_CORE_SHIP_GIRL;
 
     // ===== Fuel (extracted to SpecialtyItems) =====
@@ -544,10 +538,6 @@ public class ModItems {
 
     // ===== Deep Ocean Spawn Eggs (深海生成蛋) (extracted to SpecialtyItems) =====
     public static final DeferredItem<SpawnEggItem> DEEP_OCEAN_SUPPLY_SPAWN_EGG = SpecialtyItems.DEEP_OCEAN_SUPPLY_SPAWN_EGG;
-    public static final DeferredItem<SpawnEggItem> DEEP_OCEAN_ARCHIVIST_SPAWN_EGG = SpecialtyItems.DEEP_OCEAN_ARCHIVIST_SPAWN_EGG;
-    public static final DeferredItem<SpawnEggItem> DEEP_OCEAN_ENGINEER_SPAWN_EGG = SpecialtyItems.DEEP_OCEAN_ENGINEER_SPAWN_EGG;
-    public static final DeferredItem<SpawnEggItem> DEEP_OCEAN_NAVIGATOR_SPAWN_EGG = SpecialtyItems.DEEP_OCEAN_NAVIGATOR_SPAWN_EGG;
-    public static final DeferredItem<SpawnEggItem> DEEP_OCEAN_QUARTERMASTER_SPAWN_EGG = SpecialtyItems.DEEP_OCEAN_QUARTERMASTER_SPAWN_EGG;
     public static final DeferredItem<SpawnEggItem> DEEP_OCEAN_DESTROYER_SPAWN_EGG = SpecialtyItems.DEEP_OCEAN_DESTROYER_SPAWN_EGG;
     public static final DeferredItem<SpawnEggItem> DEEP_OCEAN_LIGHT_CRUISER_SPAWN_EGG = SpecialtyItems.DEEP_OCEAN_LIGHT_CRUISER_SPAWN_EGG;
     public static final DeferredItem<SpawnEggItem> DEEP_OCEAN_HEAVY_CRUISER_SPAWN_EGG = SpecialtyItems.DEEP_OCEAN_HEAVY_CRUISER_SPAWN_EGG;
@@ -556,7 +546,6 @@ public class ModItems {
     public static final DeferredItem<SpawnEggItem> DEEP_OCEAN_LIGHT_CARRIER_SPAWN_EGG = SpecialtyItems.DEEP_OCEAN_LIGHT_CARRIER_SPAWN_EGG;
     public static final DeferredItem<SpawnEggItem> DEEP_OCEAN_CARRIER_SPAWN_EGG = SpecialtyItems.DEEP_OCEAN_CARRIER_SPAWN_EGG;
     public static final DeferredItem<SpawnEggItem> DEEP_OCEAN_SUBMARINE_SPAWN_EGG = SpecialtyItems.DEEP_OCEAN_SUBMARINE_SPAWN_EGG;
-    public static final DeferredItem<SpawnEggItem> DEEP_OCEAN_FLAGSHIP_SPAWN_EGG = SpecialtyItems.DEEP_OCEAN_FLAGSHIP_SPAWN_EGG;
     public static final DeferredItem<SpawnEggItem> SHIP_GIRL_SPAWN_EGG = SpecialtyItems.SHIP_GIRL_SPAWN_EGG;
 
     // ===== Phase 28: Shipgirl Food Expansion — Crops (produce) (extracted to FoodItems) =====

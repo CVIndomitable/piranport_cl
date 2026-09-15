@@ -44,14 +44,6 @@ public class EntityCoreState {
         return switch (coreId) {
             case EntityCoreDefinitions.DEEP_OCEAN_SUPPLY ->
                     new ItemStack(ModItems.ENTITY_CORE_DEEP_OCEAN_SUPPLY.get());
-            case EntityCoreDefinitions.DEEP_OCEAN_ARCHIVIST ->
-                    new ItemStack(ModItems.ENTITY_CORE_DEEP_OCEAN_ARCHIVIST.get());
-            case EntityCoreDefinitions.DEEP_OCEAN_ENGINEER ->
-                    new ItemStack(ModItems.ENTITY_CORE_DEEP_OCEAN_ENGINEER.get());
-            case EntityCoreDefinitions.DEEP_OCEAN_NAVIGATOR ->
-                    new ItemStack(ModItems.ENTITY_CORE_DEEP_OCEAN_NAVIGATOR.get());
-            case EntityCoreDefinitions.DEEP_OCEAN_QUARTERMASTER ->
-                    new ItemStack(ModItems.ENTITY_CORE_DEEP_OCEAN_QUARTERMASTER.get());
             case EntityCoreDefinitions.DEEP_OCEAN_DESTROYER ->
                     new ItemStack(ModItems.ENTITY_CORE_DEEP_OCEAN_DESTROYER.get());
             case EntityCoreDefinitions.DEEP_OCEAN_LIGHT_CRUISER ->
@@ -68,8 +60,6 @@ public class EntityCoreState {
                     new ItemStack(ModItems.ENTITY_CORE_DEEP_OCEAN_CARRIER.get());
             case EntityCoreDefinitions.DEEP_OCEAN_SUBMARINE ->
                     new ItemStack(ModItems.ENTITY_CORE_DEEP_OCEAN_SUBMARINE.get());
-            case EntityCoreDefinitions.DEEP_OCEAN_FLAGSHIP ->
-                    new ItemStack(ModItems.ENTITY_CORE_DEEP_OCEAN_FLAGSHIP.get());
             case EntityCoreDefinitions.SHIP_GIRL ->
                     new ItemStack(ModItems.ENTITY_CORE_SHIP_GIRL.get());
             default -> ItemStack.EMPTY;

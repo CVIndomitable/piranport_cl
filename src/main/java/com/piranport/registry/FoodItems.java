@@ -96,8 +96,6 @@ public final class FoodItems {
     public static final DeferredItem<ItemNameBlockItem> GARLIC_SEEDS =
             ITEMS.register("garlic_seeds", () -> new ItemNameBlockItem(
                     ModBlocks.GARLIC_CROP.get(), new Item.Properties()));
-    public static final DeferredItem<BlockItem> WILD_GARDEN =
-            ITEMS.registerSimpleBlockItem(ModBlocks.WILD_GARDEN);
 
     // ===== Food Items (Phase 16) =====
     public static final DeferredItem<ModFoodItem> TOAST_BREAD = ITEMS.register("toast_bread",

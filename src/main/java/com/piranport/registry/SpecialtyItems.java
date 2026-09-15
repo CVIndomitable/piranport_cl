@@ -135,22 +135,6 @@ public final class SpecialtyItems {
             ITEMS.register("entity_core_deep_ocean_supply",
                     () -> new EntityCoreItem(new Item.Properties().stacksTo(1),
                             EntityCoreDefinitions.DEEP_OCEAN_SUPPLY));
-    public static final DeferredItem<EntityCoreItem> ENTITY_CORE_DEEP_OCEAN_ARCHIVIST =
-            ITEMS.register("entity_core_deep_ocean_archivist",
-                    () -> new EntityCoreItem(new Item.Properties().stacksTo(1),
-                            EntityCoreDefinitions.DEEP_OCEAN_ARCHIVIST));
-    public static final DeferredItem<EntityCoreItem> ENTITY_CORE_DEEP_OCEAN_ENGINEER =
-            ITEMS.register("entity_core_deep_ocean_engineer",
-                    () -> new EntityCoreItem(new Item.Properties().stacksTo(1),
-                            EntityCoreDefinitions.DEEP_OCEAN_ENGINEER));
-    public static final DeferredItem<EntityCoreItem> ENTITY_CORE_DEEP_OCEAN_NAVIGATOR =
-            ITEMS.register("entity_core_deep_ocean_navigator",
-                    () -> new EntityCoreItem(new Item.Properties().stacksTo(1),
-                            EntityCoreDefinitions.DEEP_OCEAN_NAVIGATOR));
-    public static final DeferredItem<EntityCoreItem> ENTITY_CORE_DEEP_OCEAN_QUARTERMASTER =
-            ITEMS.register("entity_core_deep_ocean_quartermaster",
-                    () -> new EntityCoreItem(new Item.Properties().stacksTo(1),
-                            EntityCoreDefinitions.DEEP_OCEAN_QUARTERMASTER));
     public static final DeferredItem<EntityCoreItem> ENTITY_CORE_DEEP_OCEAN_DESTROYER =
             ITEMS.register("entity_core_deep_ocean_destroyer",
                     () -> new EntityCoreItem(new Item.Properties().stacksTo(1),
@@ -183,10 +167,6 @@ public final class SpecialtyItems {
             ITEMS.register("entity_core_deep_ocean_submarine",
                     () -> new EntityCoreItem(new Item.Properties().stacksTo(1),
                             EntityCoreDefinitions.DEEP_OCEAN_SUBMARINE));
-    public static final DeferredItem<EntityCoreItem> ENTITY_CORE_DEEP_OCEAN_FLAGSHIP =
-            ITEMS.register("entity_core_deep_ocean_flagship",
-                    () -> new EntityCoreItem(new Item.Properties().stacksTo(1),
-                            EntityCoreDefinitions.DEEP_OCEAN_FLAGSHIP));
     public static final DeferredItem<EntityCoreItem> ENTITY_CORE_SHIP_GIRL =
             ITEMS.register("entity_core_ship_girl",
                     () -> new EntityCoreItem(new Item.Properties().stacksTo(1),
@@ -416,22 +396,6 @@ public final class SpecialtyItems {
             ITEMS.register("deep_ocean_supply_spawn_egg",
                     () -> new DeferredSpawnEggItem(ModEntityTypes.DEEP_OCEAN_SUPPLY,
                             0x2D2D3D, 0x8888AA, new Item.Properties()));
-    public static final DeferredItem<SpawnEggItem> DEEP_OCEAN_ARCHIVIST_SPAWN_EGG =
-            ITEMS.register("deep_ocean_archivist_spawn_egg",
-                    () -> new DeferredSpawnEggItem(ModEntityTypes.DEEP_OCEAN_ARCHIVIST,
-                            0x1C2638, 0xB8A6FF, new Item.Properties()));
-    public static final DeferredItem<SpawnEggItem> DEEP_OCEAN_ENGINEER_SPAWN_EGG =
-            ITEMS.register("deep_ocean_engineer_spawn_egg",
-                    () -> new DeferredSpawnEggItem(ModEntityTypes.DEEP_OCEAN_ENGINEER,
-                            0x202A2D, 0x66D6C8, new Item.Properties()));
-    public static final DeferredItem<SpawnEggItem> DEEP_OCEAN_NAVIGATOR_SPAWN_EGG =
-            ITEMS.register("deep_ocean_navigator_spawn_egg",
-                    () -> new DeferredSpawnEggItem(ModEntityTypes.DEEP_OCEAN_NAVIGATOR,
-                            0x17223D, 0x77B7FF, new Item.Properties()));
-    public static final DeferredItem<SpawnEggItem> DEEP_OCEAN_QUARTERMASTER_SPAWN_EGG =
-            ITEMS.register("deep_ocean_quartermaster_spawn_egg",
-                    () -> new DeferredSpawnEggItem(ModEntityTypes.DEEP_OCEAN_QUARTERMASTER,
-                            0x242735, 0xE3B85A, new Item.Properties()));
     public static final DeferredItem<SpawnEggItem> DEEP_OCEAN_DESTROYER_SPAWN_EGG =
             ITEMS.register("deep_ocean_destroyer_spawn_egg",
                     () -> new DeferredSpawnEggItem(ModEntityTypes.DEEP_OCEAN_DESTROYER,
@@ -464,10 +428,6 @@ public final class SpecialtyItems {
             ITEMS.register("deep_ocean_submarine_spawn_egg",
                     () -> new DeferredSpawnEggItem(ModEntityTypes.DEEP_OCEAN_SUBMARINE,
                             0x2D2D3D, 0x334466, new Item.Properties()));
-    public static final DeferredItem<SpawnEggItem> DEEP_OCEAN_FLAGSHIP_SPAWN_EGG =
-            ITEMS.register("deep_ocean_flagship_spawn_egg",
-                    () -> new DeferredSpawnEggItem(ModEntityTypes.DEEP_OCEAN_FLAGSHIP,
-                            0x161624, 0xD9D1FF, new Item.Properties()));
     public static final DeferredItem<SpawnEggItem> SHIP_GIRL_SPAWN_EGG =
             ITEMS.register("ship_girl_spawn_egg",
                     () -> new DeferredSpawnEggItem(ModEntityTypes.SHIP_GIRL,

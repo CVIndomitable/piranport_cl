@@ -16,7 +16,6 @@ import com.piranport.block.SmokeScreenBlock;
 import com.piranport.block.StoneMillBlock;
 import com.piranport.block.StoveBlock;
 import com.piranport.block.ThreeStageCropBlock;
-import com.piranport.block.WildGardenBlock;
 import com.piranport.block.YubariWaterBucketBlock;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
@@ -92,13 +91,6 @@ public class ModBlocks {
     // Phase 27: Pineapple crop
     public static final DeferredBlock<FourStageCropBlock> PINEAPPLE_CROP =
             BLOCKS.register("pineapple_crop", () -> new FourStageCropBlock(cropProps(), () -> ModItems.PINEAPPLE_SEED.get()));
-
-    public static final DeferredBlock<WildGardenBlock> WILD_GARDEN =
-            BLOCKS.register("wild_garden", () -> new WildGardenBlock(
-                    BlockBehaviour.Properties.ofFullCopy(Blocks.SHORT_GRASS)
-                            .noCollission()
-                            .instabreak()
-                            .sound(SoundType.GRASS)));
 
     // ===== Phase 28: Shipgirl Food Expansion Crops =====
     public static final DeferredBlock<FourStageCropBlock> LABLAB_BEAN_CROP =

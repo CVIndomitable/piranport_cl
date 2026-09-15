@@ -210,14 +210,6 @@ public class ClientModEvents {
         // 深海 NPC 实体（基础舰种贴图 + 程序化舰装轮廓）
         event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_SUPPLY.get(),
                 com.piranport.client.DeepOceanSupplyRenderer::new);
-        event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_ARCHIVIST.get(),
-                com.piranport.client.DeepOceanRenderer::new);
-        event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_ENGINEER.get(),
-                com.piranport.client.DeepOceanRenderer::new);
-        event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_NAVIGATOR.get(),
-                com.piranport.client.DeepOceanRenderer::new);
-        event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_QUARTERMASTER.get(),
-                com.piranport.client.DeepOceanRenderer::new);
         event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_DESTROYER.get(),
                 com.piranport.client.DeepOceanDestroyerRenderer::new);
         event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_LIGHT_CRUISER.get(),
@@ -234,8 +226,6 @@ public class ClientModEvents {
                 com.piranport.client.DeepOceanRenderer::new);
         event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_SUBMARINE.get(),
                 com.piranport.client.DeepOceanSubmarineRenderer::new);
-        event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_FLAGSHIP.get(),
-                com.piranport.client.DeepOceanRenderer::new);
         // 舰娘 NPC
         event.registerEntityRenderer(ModEntityTypes.SHIP_GIRL.get(),
                 com.piranport.client.ShipGirlRenderer::new);

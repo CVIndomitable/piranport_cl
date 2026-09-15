@@ -159,10 +159,6 @@ public class ModCreativeTabs {
                         output.accept(ModItems.SKIN_CORE_23.get());
                         // Entity Cores
                         output.accept(ModItems.ENTITY_CORE_DEEP_OCEAN_SUPPLY.get());
-                        output.accept(ModItems.ENTITY_CORE_DEEP_OCEAN_ARCHIVIST.get());
-                        output.accept(ModItems.ENTITY_CORE_DEEP_OCEAN_ENGINEER.get());
-                        output.accept(ModItems.ENTITY_CORE_DEEP_OCEAN_NAVIGATOR.get());
-                        output.accept(ModItems.ENTITY_CORE_DEEP_OCEAN_QUARTERMASTER.get());
                         output.accept(ModItems.ENTITY_CORE_DEEP_OCEAN_DESTROYER.get());
                         output.accept(ModItems.ENTITY_CORE_DEEP_OCEAN_LIGHT_CRUISER.get());
                         output.accept(ModItems.ENTITY_CORE_DEEP_OCEAN_HEAVY_CRUISER.get());
@@ -171,7 +167,6 @@ public class ModCreativeTabs {
                         output.accept(ModItems.ENTITY_CORE_DEEP_OCEAN_LIGHT_CARRIER.get());
                         output.accept(ModItems.ENTITY_CORE_DEEP_OCEAN_CARRIER.get());
                         output.accept(ModItems.ENTITY_CORE_DEEP_OCEAN_SUBMARINE.get());
-                        output.accept(ModItems.ENTITY_CORE_DEEP_OCEAN_FLAGSHIP.get());
                         output.accept(ModItems.ENTITY_CORE_SHIP_GIRL.get());
                     }).build());
 
@@ -193,7 +188,6 @@ public class ModCreativeTabs {
                         output.accept(ModItems.SALT.get());
                         output.accept(ModItems.GYPSUM_CHIP.get());
                         output.accept(ModItems.QUICKLIME.get());
-                        output.accept(ModItems.WILD_GARDEN.get());
                     }).build());
 
     // ===== 食物 — 种子/作物/食材/调料/中间品/菜品/加工站（合并原"舰娘食物"和"厨房"）=====
@@ -575,10 +569,6 @@ public class ModCreativeTabs {
                     .displayItems((parameters, output) -> {
                         // Deep Ocean Spawn Eggs
                         output.accept(ModItems.DEEP_OCEAN_SUPPLY_SPAWN_EGG.get());
-                        output.accept(ModItems.DEEP_OCEAN_ARCHIVIST_SPAWN_EGG.get());
-                        output.accept(ModItems.DEEP_OCEAN_ENGINEER_SPAWN_EGG.get());
-                        output.accept(ModItems.DEEP_OCEAN_NAVIGATOR_SPAWN_EGG.get());
-                        output.accept(ModItems.DEEP_OCEAN_QUARTERMASTER_SPAWN_EGG.get());
                         output.accept(ModItems.DEEP_OCEAN_DESTROYER_SPAWN_EGG.get());
                         output.accept(ModItems.DEEP_OCEAN_LIGHT_CRUISER_SPAWN_EGG.get());
                         output.accept(ModItems.DEEP_OCEAN_HEAVY_CRUISER_SPAWN_EGG.get());
@@ -587,7 +577,6 @@ public class ModCreativeTabs {
                         output.accept(ModItems.DEEP_OCEAN_LIGHT_CARRIER_SPAWN_EGG.get());
                         output.accept(ModItems.DEEP_OCEAN_CARRIER_SPAWN_EGG.get());
                         output.accept(ModItems.DEEP_OCEAN_SUBMARINE_SPAWN_EGG.get());
-                        output.accept(ModItems.DEEP_OCEAN_FLAGSHIP_SPAWN_EGG.get());
                         output.accept(ModItems.SHIP_GIRL_SPAWN_EGG.get());
                     }).build());
 

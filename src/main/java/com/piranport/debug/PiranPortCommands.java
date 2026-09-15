@@ -76,10 +76,6 @@ public final class PiranPortCommands {
                         .then(Commands.argument("entity_type", StringArgumentType.word())
                                 .suggests((ctx, builder) -> {
                                     builder.suggest("deep_ocean_supply");
-                                    builder.suggest("deep_ocean_archivist");
-                                    builder.suggest("deep_ocean_engineer");
-                                    builder.suggest("deep_ocean_navigator");
-                                    builder.suggest("deep_ocean_quartermaster");
                                     builder.suggest("deep_ocean_destroyer");
                                     builder.suggest("deep_ocean_light_cruiser");
                                     builder.suggest("deep_ocean_heavy_cruiser");
@@ -88,7 +84,6 @@ public final class PiranPortCommands {
                                     builder.suggest("deep_ocean_light_carrier");
                                     builder.suggest("deep_ocean_carrier");
                                     builder.suggest("deep_ocean_submarine");
-                                    builder.suggest("deep_ocean_flagship");
                                     return builder.buildFuture();
                                 })
                                 .executes(ctx -> spawnAbyssal(ctx.getSource(),
@@ -622,15 +617,10 @@ public final class PiranPortCommands {
         stacks += giveChaosShards(player, 2);
         stacks += giveFlags(player);
         stacks += give(player, ModItems.DEEP_OCEAN_SUPPLY_SPAWN_EGG.get(), 2);
-        stacks += give(player, ModItems.DEEP_OCEAN_ARCHIVIST_SPAWN_EGG.get(), 2);
-        stacks += give(player, ModItems.DEEP_OCEAN_ENGINEER_SPAWN_EGG.get(), 2);
-        stacks += give(player, ModItems.DEEP_OCEAN_NAVIGATOR_SPAWN_EGG.get(), 2);
-        stacks += give(player, ModItems.DEEP_OCEAN_QUARTERMASTER_SPAWN_EGG.get(), 2);
         stacks += give(player, ModItems.DEEP_OCEAN_DESTROYER_SPAWN_EGG.get(), 2);
         stacks += give(player, ModItems.DEEP_OCEAN_BATTLESHIP_SPAWN_EGG.get(), 1);
         stacks += give(player, ModItems.DEEP_OCEAN_CARRIER_SPAWN_EGG.get(), 1);
         stacks += give(player, ModItems.DEEP_OCEAN_SUBMARINE_SPAWN_EGG.get(), 1);
-        stacks += give(player, ModItems.DEEP_OCEAN_FLAGSHIP_SPAWN_EGG.get(), 1);
         return stacks;
     }
 
@@ -652,7 +642,6 @@ public final class PiranPortCommands {
 
     private static int giveTreesKit(ServerPlayer player) {
         int stacks = 0;
-        stacks += give(player, ModItems.WILD_GARDEN.get(), 16);
         stacks += give(player, Items.BONE_MEAL, 64);
         stacks += giveCropSeeds(player);
         stacks += giveTreeSet(player, ModItems.PEACH_LOG.get(), ModItems.PEACH_LEAVES.get(), ModItems.PEACH_SAPLING.get());

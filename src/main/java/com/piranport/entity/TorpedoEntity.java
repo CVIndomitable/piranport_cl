@@ -584,6 +584,15 @@ public class TorpedoEntity extends ThrowableItemProjectile {
         com.piranport.combat.HitNotifier.send(player, Component.translatable(key, weaponName, target.getDisplayName()));
     }
 
+    /**
+     * 3D 模型比碰撞箱长得多（雷体 1.25 格，碰撞箱只有 0.5x0.25），
+     * 放宽视锥剔除盒，免得雷头雷尾还画面上时整根雷被剔掉。
+     */
+    @Override
+    public AABB getBoundingBoxForCulling() {
+        return super.getBoundingBoxForCulling().inflate(0.75);
+    }
+
     @Override
     protected void onHitBlock(BlockHitResult result) {
         BlockState hitState = level().getBlockState(result.getBlockPos());

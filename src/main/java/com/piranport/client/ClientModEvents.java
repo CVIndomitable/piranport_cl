@@ -138,6 +138,8 @@ public class ClientModEvents {
                 com.piranport.client.model.B25Model::createBodyLayer);
         event.registerLayerDefinition(com.piranport.client.model.F4FModel.LAYER_LOCATION,
                 com.piranport.client.model.F4FModel::createBodyLayer);
+        event.registerLayerDefinition(com.piranport.client.model.TorpedoModel.LAYER_LOCATION,
+                com.piranport.client.model.TorpedoModel::createBodyLayer);
         event.registerLayerDefinition(com.piranport.client.model.UnicornModel.LAYER_LOCATION,
                 com.piranport.client.model.UnicornModel::createBodyLayer);
         event.registerLayerDefinition(com.piranport.client.model.KitchenGoddessModel.LAYER_LOCATION,
@@ -163,7 +165,7 @@ public class ClientModEvents {
         event.registerEntityRenderer(ModEntityTypes.CANNON_PROJECTILE.get(),
                 CannonProjectileRenderer::new);
         event.registerEntityRenderer(ModEntityTypes.TORPEDO_ENTITY.get(),
-                ThrownItemRenderer::new);
+                TorpedoRenderer::new);
         event.registerEntityRenderer(ModEntityTypes.AIRCRAFT_ENTITY.get(),
                 AircraftRenderer::new);
         event.registerEntityRenderer(ModEntityTypes.FLOATING_TARGET.get(),

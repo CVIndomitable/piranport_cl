@@ -1,6 +1,8 @@
 {
-  "parent": "minecraft:block/cube_all",
+  "parent": "minecraft:block/cube_bottom_top",
   "textures": {
-    "all": "piranport:block/stone_mill"
+    "top": "piranport:block/stone_mill_top",
+    "side": "piranport:block/stone_mill_side",
+    "bottom": "piranport:block/stone_mill_bottom"
   }
 }

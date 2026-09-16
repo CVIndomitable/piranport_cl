@@ -39,21 +39,19 @@ public record CheckpointReachedPayload(String stageName, String checkpointName)
         context.enqueueWork(() -> {
             // 客户端反射调用 ClientItemHooks.onCheckpointReached(name)
             // 当前阶段先在客户端展示标题（轻量级反馈）
-            net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
-            if (mc.player != null) {
-                mc.player.displayClientMessage(
-                        net.minecraft.network.chat.Component.literal(
-                                "§6✦ 记录点 §f" + payload.checkpointName()
-                                        + " §7(" + payload.stageName() + ")"),
-                        true);
-                // 标题显示（整合版 §3.2：屏幕标题显示"记录点名称"）
-                mc.gui.setTitle(net.minecraft.network.chat.Component.literal(
-                        net.minecraft.ChatFormatting.GOLD + payload.checkpointName()));
-                // 轻快音效：使用原版 note block pling 音
-                mc.player.playSound(
-                        net.minecraft.sounds.SoundEvents.NOTE_BLOCK_PLING.value(),
-                        1.0f, 1.5f);
-            }
+            com.piranport.platform.ClientHooks.displayClientMessage(
+                    net.minecraft.network.chat.Component.literal(
+                            "§6✦ 记录点 §f" + payload.checkpointName()
+                                    + " §7(" + payload.stageName() + ")"),
+                    true);
+            // 标题显示（整合版 §3.2：屏幕标题显示"记录点名称"）
+            com.piranport.platform.ClientHooks.setTitle(
+                    net.minecraft.network.chat.Component.literal(
+                            net.minecraft.ChatFormatting.GOLD + payload.checkpointName()));
+            // 轻快音效：使用原版 note block pling 音
+            com.piranport.platform.ClientHooks.playSound(
+                    net.minecraft.sounds.SoundEvents.NOTE_BLOCK_PLING.value(),
+                    1.0f, 1.5f);
         });
     }
 }

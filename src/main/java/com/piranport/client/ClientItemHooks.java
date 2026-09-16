@@ -4,7 +4,9 @@ import com.piranport.combat.TransformationManager;
 import com.piranport.component.LoadedAmmo;
 import com.piranport.component.SlotCooldowns;
 import com.piranport.client.input.ClientInputCoordinator;
+import com.piranport.client.input.DebugInputHandler;
 import com.piranport.client.input.EntityHighlightHandler;
+import com.piranport.dungeon.client.DungeonContinueScreen;
 import com.piranport.dungeon.client.DungeonHudLayer;
 import com.piranport.dungeon.client.DungeonResultScreen;
 import com.piranport.dungeon.client.DungeonReviveScreen;
@@ -114,10 +116,31 @@ public final class ClientItemHooks {
     }
 
     public static void displayClientMessage(Component message) {
-        Minecraft mc = Minecraft.getInstance();
-        if (mc.player != null) {
-            mc.player.displayClientMessage(message, true);
-        }
+        Minecraft.getInstance().player.displayClientMessage(message, true);
+    }
+
+    public static void displayClientMessage(Component message, boolean overlay) {
+        Minecraft.getInstance().player.displayClientMessage(message, overlay);
+    }
+
+    public static void setTitle(Component title) {
+        Minecraft.getInstance().gui.setTitle(title);
+    }
+
+    public static void playSound(net.minecraft.sounds.SoundEvent sound, float volume, float pitch) {
+        Minecraft.getInstance().player.playSound(sound, volume, pitch);
+    }
+
+    public static void setDebugEnabledClient(boolean enabled) {
+        DebugInputHandler.setDebugEnabledClient(enabled);
+    }
+
+    public static void setTestModeClient(boolean enabled) {
+        DebugInputHandler.setTestModeClient(enabled);
+    }
+
+    public static void openDungeonContinueScreen(net.minecraft.core.BlockPos lecternPos, String stageName, int clearedNodeCount) {
+        Minecraft.getInstance().setScreen(new DungeonContinueScreen(lecternPos, stageName, clearedNodeCount));
     }
 
     public static void setServerSolverStats(int ternaryIters, int newtonIters) {

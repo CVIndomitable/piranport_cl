@@ -37,7 +37,7 @@ public record TestModeWatermarkPayload(boolean enabled, long sessionId) implemen
                     : String.format("[PP] 测试模式已关闭 session=#%d", payload.sessionId());
             com.piranport.platform.ClientHooks.displayClientMessage(Component.literal(msg));
             // 同步到客户端本地状态，便于 HUD 渲染判断
-            com.piranport.client.input.DebugInputHandler.setTestModeClient(payload.enabled());
+            com.piranport.platform.ClientHooks.setTestModeClient(payload.enabled());
         });
     }
 }

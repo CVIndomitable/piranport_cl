@@ -107,6 +107,32 @@ public final class ClientHooks {
         invoke("displayClientMessage", new Class<?>[] { Component.class }, message);
     }
 
+    public static void displayClientMessage(Component message, boolean overlay) {
+        invoke("displayClientMessage", new Class<?>[] { Component.class, boolean.class }, message, overlay);
+    }
+
+    public static void setTitle(Component title) {
+        invoke("setTitle", new Class<?>[] { Component.class }, title);
+    }
+
+    public static void playSound(Object sound, float volume, float pitch) {
+        invoke("playSound", new Class<?>[] { Object.class, float.class, float.class }, sound, volume, pitch);
+    }
+
+    public static void openDungeonContinueScreen(Object lecternPos, String stageName, int clearedNodeCount) {
+        invoke("openDungeonContinueScreen",
+                new Class<?>[] { Object.class, String.class, int.class },
+                lecternPos, stageName, clearedNodeCount);
+    }
+
+    public static void setDebugEnabledClient(boolean enabled) {
+        invoke("setDebugEnabledClient", new Class<?>[] { boolean.class }, enabled);
+    }
+
+    public static void setTestModeClient(boolean enabled) {
+        invoke("setTestModeClient", new Class<?>[] { boolean.class }, enabled);
+    }
+
     public static void setServerSolverStats(int ternaryIters, int newtonIters) {
         invoke("setServerSolverStats",
                 new Class<?>[] { int.class, int.class }, ternaryIters, newtonIters);

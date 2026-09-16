@@ -39,11 +39,10 @@ public record OpenContinueScreenPayload(BlockPos lecternPos, String stageName, i
     public static void handle(OpenContinueScreenPayload payload, IPayloadContext context) {
         context.enqueueWork(() -> {
             // 客户端打开 DungeonContinueScreen（独立 Screen，无 Menu）
-            net.minecraft.client.Minecraft.getInstance().setScreen(
-                    new com.piranport.dungeon.client.DungeonContinueScreen(
-                            payload.lecternPos(),
-                            payload.stageName(),
-                            payload.clearedNodeCount()));
+            com.piranport.platform.ClientHooks.openDungeonContinueScreen(
+                    payload.lecternPos(),
+                    payload.stageName(),
+                    payload.clearedNodeCount());
         });
     }
 }

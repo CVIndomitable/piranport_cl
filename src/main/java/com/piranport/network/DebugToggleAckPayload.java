@@ -45,7 +45,7 @@ public record DebugToggleAckPayload(boolean enabled, long sessionId, String stat
     public static void handle(DebugToggleAckPayload payload, IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
             // 校正客户端本地状态，避免与服务端偏离
-            com.piranport.client.input.DebugInputHandler.setDebugEnabledClient(payload.enabled());
+            com.piranport.platform.ClientHooks.setDebugEnabledClient(payload.enabled());
             String msg;
             switch (payload.status()) {
                 case "OPENED" ->

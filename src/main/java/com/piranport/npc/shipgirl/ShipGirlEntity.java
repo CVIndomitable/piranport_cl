@@ -257,6 +257,7 @@ public class ShipGirlEntity extends PathfinderMob implements Merchant {
         this.goalSelector.addGoal(1, new MeleeAttackGoal(this, 1.0, true));
         this.goalSelector.addGoal(2, new FollowOrderGoal(this, 1.05, 4.0f, 12.0f));
         this.goalSelector.addGoal(3, new HoldPositionGoal(this, 0.9));
+        this.goalSelector.addGoal(4, new ShipGirlCombatGoal(this));
         this.goalSelector.addGoal(5, new PatrolStrollGoal(this, 0.8));
         this.goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 8.0f));
         this.goalSelector.addGoal(7, new RandomLookAroundGoal(this));
@@ -283,6 +284,29 @@ public class ShipGirlEntity extends PathfinderMob implements Merchant {
         if (!level().isClientSide() && getSkinVariant() <= 0) {
             setSkinVariant(pickDefaultSkinVariant());
         }
+    }
+
+    /**
+     * 按关卡难度缩放属性，场内属性归一化。
+     * 需配合 DungeonDifficultyProvider 使用（接口已定义，后续接入）。
+     *
+     * @param difficultyScale 难度缩放系数（例如 1.0 = 基准，1.5 = 难度 +50%）
+     * @return 归一化后的属性快照
+     */
+    public ShipGirlData.NormalizedAttributes normalizeAttributes(float difficultyScale) {
+        // 职能补位：随从 DPS 上限刻意低于同配置玩家
+        float followerDpsCap = 0.7f;
+
+        double baseMaxHp = getMaxHealth();
+        double baseAttack = getAttributeValue(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE);
+        double baseDefense = getAttributeValue(net.minecraft.world.entity.ai.attributes.Attributes.ARMOR);
+
+        int normalizedMaxHp = (int) Math.round(baseMaxHp * difficultyScale);
+        float normalizedAttack = (float) (baseAttack * difficultyScale * followerDpsCap);
+        float normalizedDefense = (float) (baseDefense * difficultyScale);
+
+        return new ShipGirlData.NormalizedAttributes(
+                normalizedMaxHp, normalizedAttack, normalizedDefense, 1, 0);
     }
 
     public int getSkinVariant() {

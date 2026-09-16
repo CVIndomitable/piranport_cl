@@ -414,6 +414,24 @@ public class ModItems {
 
     // ===== Dungeon System (v0.0.8) (extracted to SpecialtyItems) =====
     public static final DeferredItem<com.piranport.dungeon.key.DungeonKeyItem> DUNGEON_KEY = SpecialtyItems.DUNGEON_KEY;
+
+    // ===== Chapter Gating: Deploy Medal (通关纪念章) =====
+    public static final DeferredItem<com.piranport.item.DeployMedalItem> DEPLOY_MEDAL_CH1 = SpecialtyItems.DEPLOY_MEDAL_CH1;
+    public static final DeferredItem<com.piranport.item.DeployMedalItem> DEPLOY_MEDAL_CH2 = SpecialtyItems.DEPLOY_MEDAL_CH2;
+    public static final DeferredItem<com.piranport.item.DeployMedalItem> DEPLOY_MEDAL_CH3 = SpecialtyItems.DEPLOY_MEDAL_CH3;
+    public static final DeferredItem<com.piranport.item.DeployMedalItem> DEPLOY_MEDAL_CH4 = SpecialtyItems.DEPLOY_MEDAL_CH4;
+    public static final DeferredItem<com.piranport.item.DeployMedalItem> DEPLOY_MEDAL_CH5 = SpecialtyItems.DEPLOY_MEDAL_CH5;
+    public static final DeferredItem<com.piranport.item.DeployMedalItem> DEPLOY_MEDAL_CH6 = SpecialtyItems.DEPLOY_MEDAL_CH6;
+    public static final DeferredItem<com.piranport.item.DeployMedalItem> DEPLOY_MEDAL_CH7 = SpecialtyItems.DEPLOY_MEDAL_CH7;
+
+    // ===== Chapter Gating: Key Fragments (钥匙碎片) =====
+    public static final DeferredItem<com.piranport.item.KeyFragmentItem> KEY_FRAGMENT_CH1 = SpecialtyItems.KEY_FRAGMENT_CH1;
+    public static final DeferredItem<com.piranport.item.KeyFragmentItem> KEY_FRAGMENT_CH2 = SpecialtyItems.KEY_FRAGMENT_CH2;
+    public static final DeferredItem<com.piranport.item.KeyFragmentItem> KEY_FRAGMENT_CH3 = SpecialtyItems.KEY_FRAGMENT_CH3;
+    public static final DeferredItem<com.piranport.item.KeyFragmentItem> KEY_FRAGMENT_CH4 = SpecialtyItems.KEY_FRAGMENT_CH4;
+    public static final DeferredItem<com.piranport.item.KeyFragmentItem> KEY_FRAGMENT_CH5 = SpecialtyItems.KEY_FRAGMENT_CH5;
+    public static final DeferredItem<com.piranport.item.KeyFragmentItem> KEY_FRAGMENT_CH6 = SpecialtyItems.KEY_FRAGMENT_CH6;
+    public static final DeferredItem<com.piranport.item.KeyFragmentItem> KEY_FRAGMENT_CH7 = SpecialtyItems.KEY_FRAGMENT_CH7;
     public static final DeferredItem<com.piranport.dungeon.item.TownScrollItem> TOWN_SCROLL = SpecialtyItems.TOWN_SCROLL;
     public static final DeferredItem<BlockItem> DUNGEON_LECTERN = SpecialtyItems.DUNGEON_LECTERN;
 

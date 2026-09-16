@@ -66,6 +66,7 @@ public final class PiranPortCommands {
                                     builder.suggest("supply_depot");
                                     builder.suggest("outpost");
                                     builder.suggest("abyssal_base");
+                                    builder.suggest("abandoned_portal");
                                     return builder.buildFuture();
                                 })
                                 .executes(ctx -> spawnRuin(ctx.getSource(),
@@ -153,6 +154,7 @@ public final class PiranPortCommands {
                                     builder.suggest("supply_depot");
                                     builder.suggest("outpost");
                                     builder.suggest("abyssal_base");
+                                    builder.suggest("abandoned_portal");
                                     return builder.buildFuture();
                                 })
                                 .executes(ctx -> locateRuin(ctx.getSource(),
@@ -259,10 +261,10 @@ public final class PiranPortCommands {
 
         ServerLevel level = player.serverLevel();
         int variantCount = switch (type) {
-            case "portal_ruin", "supply_depot", "outpost", "abyssal_base" -> 2;
+            case "portal_ruin", "supply_depot", "outpost", "abyssal_base", "abandoned_portal" -> 2;
             default -> {
                 source.sendFailure(Component.literal("Unknown ruin type: " + type
-                        + ". Use: portal_ruin, supply_depot, outpost, abyssal_base"));
+                        + ". Use: portal_ruin, supply_depot, outpost, abyssal_base, abandoned_portal"));
                 yield 0;
             }
         };
@@ -306,6 +308,7 @@ public final class PiranPortCommands {
             case "supply_depot" -> 0.80f;
             case "outpost" -> 0.75f;
             case "abyssal_base" -> 0.70f;
+            case "abandoned_portal" -> 1.0f;
             default -> 1.0f;
         };
     }

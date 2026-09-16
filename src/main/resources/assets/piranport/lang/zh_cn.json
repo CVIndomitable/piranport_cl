@@ -935,6 +935,7 @@
   "structure.piranport.supply_depot": "补给站",
   "structure.piranport.outpost": "前哨站",
   "structure.piranport.abyssal_base": "深海基地",
+  "structure.piranport.abandoned_portal": "废弃传送门",
   "piranport.book.cat.ruins": "主世界遗迹",
   "piranport.book.cat.ruins.desc": "散布在海洋中的四类遗迹建筑：传送门遗迹、补给站、前哨站与深海基地。",
   "itemGroup.piranport.facility": "皮兰港设施",

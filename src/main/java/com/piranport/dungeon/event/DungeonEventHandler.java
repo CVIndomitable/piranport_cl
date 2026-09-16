@@ -18,6 +18,8 @@ import com.piranport.dungeon.network.PlayerDiedInDungeonPayload;
 import com.piranport.dungeon.saved.DungeonLeaderboard;
 import com.piranport.dungeon.saved.DungeonSavedData;
 import com.piranport.dungeon.script.DungeonScriptManager;
+import com.piranport.item.DeployMedalItem;
+import com.piranport.item.KeyFragmentItem;
 import com.piranport.registry.ModDataComponents;
 import com.piranport.registry.ModItems;
 import net.minecraft.core.BlockPos;
@@ -268,11 +270,17 @@ public class DungeonEventHandler {
                 for (NodeData.RewardEntry reward : stage.firstClearRewards()) {
                     RewardDispatcher.give(player, reward, rewardNames);
                 }
+
+                // 章节通关纪念章：解析 stageId 中的章节号（如 "chapter_1" → 1）
+                int chapterNum = parseChapterFromStageId(stage.stageId());
+                if (chapterNum > 0) {
+                    giveDeployMedal(player, chapterNum);
+                }
             }
 
-            // Submit to leaderboard
-            leaderboard.submit(stage.stageId(), playerUuid,
-                    player.getGameProfile().getName(), elapsed);
+            // 副本/16：排行榜废弃，禁用提交（代码保留，功能关闭）
+            // leaderboard.submit(stage.stageId(), playerUuid,
+            //         player.getGameProfile().getName(), elapsed);
 
             // Teleport back
             teleportToLectern(player, instance);
@@ -436,5 +444,38 @@ public class DungeonEventHandler {
                         stage.displayName(), matched.id()));
         PiranPort.LOGGER.info("Player {} reached checkpoint '{}' in stage {}",
                 player.getName().getString(), matched.id(), instance.getStageId());
+    }
+
+    // ===== 钥匙三源：章节通关纪念章发放 =====
+    private static void giveDeployMedal(ServerPlayer player, int chapterNum) {
+        if (chapterNum < 1 || chapterNum > 7) return;
+        ItemStack medal = switch (chapterNum) {
+            case 1 -> new ItemStack(ModItems.DEPLOY_MEDAL_CH1.get());
+            case 2 -> new ItemStack(ModItems.DEPLOY_MEDAL_CH2.get());
+            case 3 -> new ItemStack(ModItems.DEPLOY_MEDAL_CH3.get());
+            case 4 -> new ItemStack(ModItems.DEPLOY_MEDAL_CH4.get());
+            case 5 -> new ItemStack(ModItems.DEPLOY_MEDAL_CH5.get());
+            case 6 -> new ItemStack(ModItems.DEPLOY_MEDAL_CH6.get());
+            case 7 -> new ItemStack(ModItems.DEPLOY_MEDAL_CH7.get());
+            default -> ItemStack.EMPTY;
+        };
+        if (!medal.isEmpty()) {
+            if (!player.getInventory().add(medal)) {
+                player.drop(medal, false);
+            }
+            PiranPort.LOGGER.info("Gave deploy medal Ch{} to {}", chapterNum, player.getName().getString());
+        }
+    }
+
+    private static int parseChapterFromStageId(String stageId) {
+        if (stageId == null || stageId.isEmpty()) return -1;
+        if (stageId.startsWith("chapter_")) {
+            try {
+                return Integer.parseInt(stageId.substring("chapter_".length()));
+            } catch (NumberFormatException e) {
+                return -1;
+            }
+        }
+        return -1;
     }
 }

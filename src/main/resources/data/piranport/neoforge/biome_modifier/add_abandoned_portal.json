@@ -1,0 +1,6 @@
+{
+  "type": "neoforge:add_features",
+  "biomes": "#minecraft:is_ocean",
+  "features": "piranport:abandoned_portal",
+  "step": "surface_structures"
+}

@@ -93,6 +93,24 @@ public class DungeonLecternBlockEntity extends BlockEntity {
         return true;
     }
 
+    /**
+     * 程序化地设置讲台上的钥匙（用于世界生成 / 结构放置）。
+     * 教学触点专用：讲台在生成时已预设教学关卡钥匙，无需玩家背包插入。
+     *
+     * @param keyStack 钥匙 ItemStack，必须为 DungeonKeyItem
+     */
+    public void setKeyStack(ItemStack keyStack) {
+        if (!(keyStack.getItem() instanceof DungeonKeyItem)) {
+            return;
+        }
+        this.keyStack = keyStack.copy();
+        UUID keyInstanceId = DungeonKeyItem.getInstanceId(keyStack);
+        if (keyInstanceId != null) {
+            this.dungeonInstanceUuid = keyInstanceId;
+        }
+        setChanged();
+    }
+
     // ===== NBT Serialization =====
 
     @Override

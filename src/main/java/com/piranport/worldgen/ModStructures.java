@@ -18,5 +18,11 @@ public final class ModStructures {
     public static final String OUTPOST = "piranport:outpost";
     public static final String ABYSSAL_BASE = "piranport:abyssal_base";
 
+    /**
+     * 废弃传送门（决策/副本/09 + 17）：讲台 + 深渊传送门多方块结构，
+     * 作为世界中的副本教学触点，讲台内预设教学关卡钥匙（{@code t-1}）。
+     */
+    public static final String ABANDONED_PORTAL = "piranport:abandoned_portal";
+
     private ModStructures() {}
 }

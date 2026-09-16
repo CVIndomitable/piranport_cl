@@ -51,11 +51,17 @@ public enum AutoModeState {
         };
     }
 
-    /** 读取 ItemStack 上存储的自动模式，无组件或无效值时返回 OFF */
+    /** 读取 ItemStack 上存储的自动模式，无组件或无效值时回退到旧版 SHIP_AUTO_LAUNCH 布尔组件。 */
     public static AutoModeState fromStack(net.minecraft.world.item.ItemStack stack) {
         if (stack.isEmpty()) return OFF;
         Integer value = stack.get(com.piranport.registry.ModDataComponents.SHIP_AUTO_MODE.get());
-        return fromId(value != null ? value : OFF.getId());
+        if (value != null) {
+            AutoModeState state = fromId(value);
+            if (state != OFF) return state;
+        }
+        // 兼容旧存档：SHIP_AUTO_LAUNCH=true → FULL_AUTO，否则 OFF
+        Boolean legacy = stack.get(com.piranport.registry.ModDataComponents.SHIP_AUTO_LAUNCH.get());
+        return Boolean.TRUE.equals(legacy) ? FULL_AUTO : OFF;
     }
 
     /** 将当前模式写入 ItemStack（不触发网络同步，写入后若需同步须调用 set） */

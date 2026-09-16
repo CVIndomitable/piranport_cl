@@ -2,6 +2,8 @@ package com.piranport.npc.deepocean;
 
 import com.piranport.npc.ai.FleetGroup;
 import com.piranport.npc.ai.FleetGroupManager;
+import com.piranport.dungeon.saved.DungeonSavedData;
+import com.piranport.item.KeyFragmentItem;
 import com.piranport.registry.ModItems;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -20,11 +22,14 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.common.NeoForgeMod;
+import net.neoforged.neoforge.registries.DeferredItem;
 
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -292,6 +297,9 @@ public abstract class AbstractDeepOceanEntity extends Monster {
     @Override
     protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean recentlyHit) {
         super.dropCustomDeathLoot(level, source, recentlyHit);
+        // 钥匙碎片掉落（仅对玩家当前进度章节之前的碎片）：5% 概率
+        dropKeyFragment(level);
+
         if (this instanceof DeepOceanCarrierEntity) {
             // 深海翔鹤 Boss 替代为深海航母：1/20 概率必掉镰刀（旗舰主掉落之外的稳定来源）
             if (random.nextFloat() < 0.05f) {
@@ -481,5 +489,51 @@ public abstract class AbstractDeepOceanEntity extends Monster {
         }
         isSinking = tag.getBoolean("Sinking");
         sinkingTicks = tag.getInt("SinkingTicks");
+    }
+
+    // ===== 钥匙三源：钥匙碎片掉落 =====
+    private void dropKeyFragment(ServerLevel level) {
+        if (random.nextFloat() > 0.05f) return; // 5% 概率
+
+        // 获取击杀者的最高通关章节（仅掉落 ≤ 玩家进度的章节碎片）
+        LivingEntity killer = getKillCredit();
+        if (killer instanceof ServerPlayer player) {
+            DungeonSavedData savedData = DungeonSavedData.get(level);
+            Set<String> cleared = savedData.getFirstClearedStages(player.getUUID());
+            int maxChapter = 0;
+            for (String stageId : cleared) {
+                int ch = parseChapterFromStageId(stageId);
+                if (ch > maxChapter) maxChapter = ch;
+            }
+            // 玩家未通关任何章节时，掉落 Ch1 碎片
+            int dropChapter = Math.max(1, maxChapter);
+            // 选择具体章节（随机但 ≤ maxChapter）
+            int targetCh = 1 + random.nextInt(Math.max(1, dropChapter));
+            DeferredItem<KeyFragmentItem> fragmentItem = switch (targetCh) {
+                case 1 -> ModItems.KEY_FRAGMENT_CH1;
+                case 2 -> ModItems.KEY_FRAGMENT_CH2;
+                case 3 -> ModItems.KEY_FRAGMENT_CH3;
+                case 4 -> ModItems.KEY_FRAGMENT_CH4;
+                case 5 -> ModItems.KEY_FRAGMENT_CH5;
+                case 6 -> ModItems.KEY_FRAGMENT_CH6;
+                case 7 -> ModItems.KEY_FRAGMENT_CH7;
+                default -> null;
+            };
+            if (fragmentItem != null) {
+                spawnAtLocation(new ItemStack(fragmentItem.get(), 1));
+            }
+        }
+    }
+
+    private static int parseChapterFromStageId(String stageId) {
+        if (stageId == null || stageId.isEmpty()) return 0;
+        if (stageId.startsWith("chapter_")) {
+            try {
+                return Integer.parseInt(stageId.substring("chapter_".length()));
+            } catch (NumberFormatException e) {
+                return 0;
+            }
+        }
+        return 0;
     }
 }

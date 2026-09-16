@@ -1,0 +1,9 @@
+{
+  "feature": "piranport:abandoned_portal",
+  "placement": [
+    {
+      "type": "minecraft:rarity_filter",
+      "chance": 80
+    }
+  ]
+}

@@ -56,6 +56,12 @@ public class ModPackets {
                 AutoLaunchTogglePayload.STREAM_CODEC,
                 AutoLaunchTogglePayload::handle
         );
+        // H 键自动模式三态（OFF/AA_ONLY/FULL_AUTO）
+        registrar.playToServer(
+                ToggleAutoModePayload.TYPE,
+                ToggleAutoModePayload.STREAM_CODEC,
+                ToggleAutoModePayload::handle
+        );
         // Debug system
         registrar.playToServer(
                 DebugTogglePayload.TYPE,

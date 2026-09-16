@@ -1,0 +1,66 @@
+{
+  "stage_id": "5-2",
+  "chapter": "chapter_5",
+  "display_name": "5-2 声呐猎手",
+  "nodes": {
+    "A": {
+      "type": "battle",
+      "enemies": "enemy_set_5_2a",
+      "display_x": 50,
+      "display_y": 200
+    },
+    "B": {
+      "type": "resource",
+      "rewards": [
+        {
+          "item": "minecraft:iron_ingot",
+          "count": 16
+        },
+        {
+          "item": "minecraft:gunpowder",
+          "count": 8
+        }
+      ],
+      "display_x": 200,
+      "display_y": 100
+    },
+    "C": {
+      "type": "boss",
+      "enemies": "boss_5_2",
+      "display_x": 350,
+      "display_y": 200
+    }
+  },
+  "edges": [
+    {
+      "from": "A",
+      "to": "B"
+    },
+    {
+      "from": "B",
+      "to": "C"
+    }
+  ],
+  "start_node": "A",
+  "boss_nodes": [
+    "C"
+  ],
+  "first_clear_rewards": [
+    {
+      "item": "minecraft:diamond",
+      "count": 4
+    },
+    {
+      "item": "piranport:depth_charge_blueprint",
+      "count": 1
+    }
+  ],
+  "victory_conditions": [
+    "KILL_ALL"
+  ],
+  "victory_objectives": {
+    "require_all_nodes_cleared": true
+  },
+  "terrain_type": "T2",
+  "chapter_mechanism": "anti_submarine"
+}

@@ -383,6 +383,8 @@ public class DungeonDataLoader extends SimpleJsonResourceReloadListener {
                 PiranPort.LOGGER.warn("Skipping flagship entry missing required field in enemy_set {}", id);
             }
         }
-        return new EnemySetData(id, List.copyOf(spawnList), flagship);
+        String formation = json.has("formation") && !json.get("formation").isJsonNull()
+                ? json.get("formation").getAsString() : null;
+        return new EnemySetData(id, List.copyOf(spawnList), flagship, formation);
     }
 }

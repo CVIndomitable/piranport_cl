@@ -3,7 +3,7 @@ package com.piranport.npc.deepocean;
 import com.piranport.npc.ai.goal.AircraftLaunchGoal;
 import com.piranport.npc.ai.goal.FleetAlertGoal;
 import com.piranport.npc.ai.goal.IdleWanderGoal;
-import com.piranport.npc.ai.goal.OrbitTargetGoal;
+import com.piranport.npc.ai.goal.FollowLeaderGoal;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -35,7 +35,7 @@ public class DeepOceanCarrierEntity extends AbstractDeepOceanEntity {
 
     @Override
     protected void registerGoals() {
-        this.goalSelector.addGoal(1, new OrbitTargetGoal(this, 0.09));
+        this.goalSelector.addGoal(1, new FollowLeaderGoal(this, 0.09));
         this.goalSelector.addGoal(2, new AircraftLaunchGoal(this));
         this.goalSelector.addGoal(5, new IdleWanderGoal(this, 0.6, 32));
         this.goalSelector.addGoal(6, new FleetAlertGoal(this));

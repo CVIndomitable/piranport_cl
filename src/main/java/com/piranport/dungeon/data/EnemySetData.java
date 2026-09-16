@@ -8,7 +8,12 @@ import java.util.List;
 public record EnemySetData(
         String enemySetId,
         List<SpawnEntry> spawnList,
-        SpawnEntry flagship
+        SpawnEntry flagship,
+        String formation
 ) {
     public record SpawnEntry(String entity, int count) {}
+
+    public boolean hasFormation() {
+        return formation != null && !formation.isEmpty();
+    }
 }

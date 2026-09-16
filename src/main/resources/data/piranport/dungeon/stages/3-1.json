@@ -1,0 +1,95 @@
+{
+  "stage_id": "3-1",
+  "chapter": "chapter_3",
+  "display_name": "3-1 复合护航",
+  "nodes": {
+    "A": {
+      "type": "battle",
+      "enemies": "enemy_set_3_1a",
+      "display_x": 50,
+      "display_y": 200
+    },
+    "B": {
+      "type": "resource",
+      "rewards": [
+        {
+          "item": "minecraft:iron_ingot",
+          "count": 16
+        },
+        {
+          "item": "minecraft:coal",
+          "count": 8
+        }
+      ],
+      "display_x": 150,
+      "display_y": 100
+    },
+    "C": {
+      "type": "battle",
+      "enemies": "enemy_set_3_1b",
+      "display_x": 250,
+      "display_y": 100
+    },
+    "D": {
+      "type": "boss",
+      "enemies": "boss_3_1",
+      "display_x": 350,
+      "display_y": 200
+    }
+  },
+  "edges": [
+    {
+      "from": "A",
+      "to": "B"
+    },
+    {
+      "from": "B",
+      "to": "C"
+    },
+    {
+      "from": "C",
+      "to": "D"
+    }
+  ],
+  "start_node": "A",
+  "boss_nodes": [
+    "D"
+  ],
+  "first_clear_rewards": [
+    {
+      "item": "minecraft:emerald",
+      "count": 8
+    },
+    {
+      "item": "piranport:type_1_ap_shell",
+      "count": 4
+    }
+  ],
+  "victory_conditions": [
+    "ESCORT_ALIVE",
+    "KILL_BOSS"
+  ],
+  "victory_objectives": {
+    "require_all_nodes_cleared": true
+  },
+  "checkpoints": [
+    {
+      "id": "cp_3_1a",
+      "node_id": "B",
+      "pos_x": 0,
+      "pos_y": 64,
+      "pos_z": 0,
+      "facing": "south"
+    },
+    {
+      "id": "cp_3_1b",
+      "node_id": "C",
+      "pos_x": 0,
+      "pos_y": 64,
+      "pos_z": 0,
+      "facing": "south"
+    }
+  ],
+  "terrain_type": "T3",
+  "chapter_mechanism": "multi_mechanic"
+}

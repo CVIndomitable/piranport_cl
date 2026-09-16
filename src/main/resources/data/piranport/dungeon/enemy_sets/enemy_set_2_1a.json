@@ -1,0 +1,17 @@
+{
+  "enemy_set_id": "enemy_set_2_1a",
+  "spawn_list": [
+    {
+      "entity": "piranport:deep_ocean_light_carrier",
+      "count": 1
+    },
+    {
+      "entity": "piranport:deep_ocean_destroyer",
+      "count": 3
+    }
+  ],
+  "flagship": {
+    "entity": "piranport:deep_ocean_light_carrier",
+    "count": 1
+  }
+}

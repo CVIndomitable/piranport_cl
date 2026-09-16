@@ -1,0 +1,67 @@
+{
+  "stage_id": "4-3",
+  "chapter": "chapter_4",
+  "display_name": "4-3 多维绞杀",
+  "nodes": {
+    "A": {
+      "type": "battle",
+      "enemies": "enemy_set_4_3a",
+      "display_x": 50,
+      "display_y": 200
+    },
+    "B": {
+      "type": "battle",
+      "enemies": "enemy_set_4_3b",
+      "display_x": 200,
+      "display_y": 100
+    },
+    "C": {
+      "type": "boss",
+      "enemies": "boss_4_3",
+      "display_x": 350,
+      "display_y": 200
+    }
+  },
+  "edges": [
+    {
+      "from": "A",
+      "to": "B"
+    },
+    {
+      "from": "B",
+      "to": "C"
+    }
+  ],
+  "start_node": "A",
+  "boss_nodes": [
+    "C"
+  ],
+  "first_clear_rewards": [
+    {
+      "item": "minecraft:emerald",
+      "count": 16
+    },
+    {
+      "item": "piranport:l3_upgrade_part",
+      "count": 1
+    }
+  ],
+  "victory_conditions": [
+    "KILL_FLAGSHIP"
+  ],
+  "victory_objectives": {
+    "require_all_nodes_cleared": true
+  },
+  "checkpoints": [
+    {
+      "id": "cp_4_3",
+      "node_id": "B",
+      "pos_x": 0,
+      "pos_y": 64,
+      "pos_z": 0,
+      "facing": "south"
+    }
+  ],
+  "terrain_type": "T2",
+  "chapter_mechanism": "multi_mechanic"
+}

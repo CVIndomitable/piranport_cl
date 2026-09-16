@@ -1,0 +1,77 @@
+{
+  "stage_id": "4-2",
+  "chapter": "chapter_4",
+  "display_name": "4-2 钢铁运输线",
+  "nodes": {
+    "A": {
+      "type": "battle",
+      "enemies": "enemy_set_4_2a",
+      "display_x": 50,
+      "display_y": 200
+    },
+    "B": {
+      "type": "resource",
+      "rewards": [
+        {
+          "item": "minecraft:iron_ingot",
+          "count": 16
+        },
+        {
+          "item": "minecraft:copper_ingot",
+          "count": 8
+        }
+      ],
+      "display_x": 150,
+      "display_y": 100
+    },
+    "C": {
+      "type": "battle",
+      "enemies": "enemy_set_4_2b",
+      "display_x": 250,
+      "display_y": 100
+    },
+    "D": {
+      "type": "boss",
+      "enemies": "boss_4_2",
+      "display_x": 350,
+      "display_y": 200
+    }
+  },
+  "edges": [
+    {
+      "from": "A",
+      "to": "B"
+    },
+    {
+      "from": "B",
+      "to": "C"
+    },
+    {
+      "from": "C",
+      "to": "D"
+    }
+  ],
+  "start_node": "A",
+  "boss_nodes": [
+    "D"
+  ],
+  "first_clear_rewards": [
+    {
+      "item": "minecraft:diamond",
+      "count": 8
+    },
+    {
+      "item": "piranport:reinforced_part_blueprint",
+      "count": 1
+    }
+  ],
+  "victory_conditions": [
+    "TRANSPORT",
+    "ESCORT_ALIVE"
+  ],
+  "victory_objectives": {
+    "require_all_nodes_cleared": true
+  },
+  "terrain_type": "T3",
+  "chapter_mechanism": "multi_mission"
+}

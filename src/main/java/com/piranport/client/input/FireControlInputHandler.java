@@ -3,7 +3,7 @@ package com.piranport.client.input;
 import com.piranport.aviation.ClientFireControlData;
 import com.piranport.combat.TransformationManager;
 import com.piranport.item.ShipCoreItem;
-import com.piranport.network.AutoLaunchTogglePayload;
+import com.piranport.network.ToggleAutoModePayload;
 import com.piranport.network.FireControlPayload;
 import com.piranport.network.ManualReloadPayload;
 import com.piranport.network.ToggleFighterGroundAttackPayload;
@@ -71,15 +71,12 @@ public class FireControlInputHandler {
         }
     }
 
-    /** 处理 H 键 — 切换战斗机自动升空。 */
+    /** 处理 H 键 — 循环切换自动模式三态（OFF → AA_ONLY → FULL_AUTO）。 */
     public static void handleAutoLaunchKey(Minecraft mc, boolean transformed, boolean inReconMode) {
         if (mc.player == null) return;
         while (ModKeyMappings.TOGGLE_AUTO_LAUNCH.consumeClick()) {
             if (!transformed || inReconMode) continue;
-            int autoSlot = findCoreSlot(mc.player);
-            if (autoSlot >= 0) {
-                PacketDistributor.sendToServer(new AutoLaunchTogglePayload(autoSlot));
-            }
+            PacketDistributor.sendToServer(new ToggleAutoModePayload());
         }
     }
 

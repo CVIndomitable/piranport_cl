@@ -1,0 +1,17 @@
+{
+  "enemy_set_id": "enemy_set_7_1b",
+  "spawn_list": [
+    {
+      "entity": "piranport:deep_ocean_light_cruiser",
+      "count": 1
+    },
+    {
+      "entity": "piranport:deep_ocean_destroyer",
+      "count": 2
+    }
+  ],
+  "flagship": {
+    "entity": "piranport:deep_ocean_light_cruiser",
+    "count": 1
+  }
+}

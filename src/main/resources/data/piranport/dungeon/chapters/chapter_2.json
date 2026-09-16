@@ -1,0 +1,11 @@
+{
+  "chapter_id": "chapter_2",
+  "display_name": "第二章 防空战线",
+  "sort_order": 2,
+  "stages": [
+    "2-1",
+    "2-2",
+    "2-3",
+    "2-4"
+  ]
+}

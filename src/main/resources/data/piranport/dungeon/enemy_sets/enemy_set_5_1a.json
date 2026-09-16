@@ -1,0 +1,13 @@
+{
+  "enemy_set_id": "enemy_set_5_1a",
+  "spawn_list": [
+    {
+      "entity": "piranport:deep_ocean_submarine",
+      "count": 2
+    }
+  ],
+  "flagship": {
+    "entity": "piranport:deep_ocean_submarine",
+    "count": 1
+  }
+}

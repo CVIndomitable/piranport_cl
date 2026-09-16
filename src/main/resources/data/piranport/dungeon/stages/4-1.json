@@ -1,0 +1,92 @@
+{
+  "stage_id": "4-1",
+  "chapter": "chapter_4",
+  "display_name": "4-1 交叉火力",
+  "nodes": {
+    "A": {
+      "type": "battle",
+      "enemies": "enemy_set_4_1a",
+      "display_x": 50,
+      "display_y": 200
+    },
+    "B": {
+      "type": "cost",
+      "cost": [
+        {
+          "item": "minecraft:iron_ingot",
+          "count": 4
+        }
+      ],
+      "cost_message": "占领据点，消耗4铁锭",
+      "display_x": 150,
+      "display_y": 100
+    },
+    "C": {
+      "type": "battle",
+      "enemies": "enemy_set_4_1b",
+      "display_x": 250,
+      "display_y": 100
+    },
+    "D": {
+      "type": "boss",
+      "enemies": "boss_4_1",
+      "display_x": 350,
+      "display_y": 200
+    }
+  },
+  "edges": [
+    {
+      "from": "A",
+      "to": "B"
+    },
+    {
+      "from": "B",
+      "to": "C"
+    },
+    {
+      "from": "C",
+      "to": "D"
+    }
+  ],
+  "start_node": "A",
+  "boss_nodes": [
+    "D"
+  ],
+  "first_clear_rewards": [
+    {
+      "item": "minecraft:emerald",
+      "count": 12
+    },
+    {
+      "item": "piranport:356mm_main_gun_blueprint",
+      "count": 1
+    }
+  ],
+  "victory_conditions": [
+    "CAPTURE_POINT",
+    "KILL_BOSS"
+  ],
+  "victory_objectives": {
+    "require_all_nodes_cleared": true
+  },
+  "checkpoints": [
+    {
+      "id": "cp_4_1a",
+      "node_id": "B",
+      "pos_x": 0,
+      "pos_y": 64,
+      "pos_z": 0,
+      "facing": "south"
+    },
+    {
+      "id": "cp_4_1b",
+      "node_id": "C",
+      "pos_x": 0,
+      "pos_y": 64,
+      "pos_z": 0,
+      "facing": "south"
+    }
+  ],
+  "terrain_type": "T4",
+  "chapter_mechanism": "multi_mission"
+}

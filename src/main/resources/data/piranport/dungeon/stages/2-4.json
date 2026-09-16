@@ -1,0 +1,83 @@
+{
+  "stage_id": "2-4",
+  "chapter": "chapter_2",
+  "display_name": "2-4 斩首行动",
+  "nodes": {
+    "A": {
+      "type": "battle",
+      "enemies": "enemy_set_2_4a",
+      "display_x": 50,
+      "display_y": 200
+    },
+    "B": {
+      "type": "battle",
+      "enemies": "enemy_set_2_4b",
+      "display_x": 200,
+      "display_y": 100
+    },
+    "C": {
+      "type": "cost",
+      "cost": [
+        {
+          "item": "minecraft:iron_ingot",
+          "count": 4
+        }
+      ],
+      "cost_message": "海域湍流，消耗4铁锭",
+      "display_x": 200,
+      "display_y": 300
+    },
+    "D": {
+      "type": "boss",
+      "enemies": "boss_2_4",
+      "display_x": 350,
+      "display_y": 200
+    }
+  },
+  "edges": [
+    {
+      "from": "A",
+      "to": "B"
+    },
+    {
+      "from": "B",
+      "to": "C"
+    },
+    {
+      "from": "C",
+      "to": "D"
+    }
+  ],
+  "start_node": "A",
+  "boss_nodes": [
+    "D"
+  ],
+  "first_clear_rewards": [
+    {
+      "item": "minecraft:diamond",
+      "count": 6
+    },
+    {
+      "item": "piranport:ciws_blueprint",
+      "count": 1
+    }
+  ],
+  "victory_conditions": [
+    "KILL_FLAGSHIP"
+  ],
+  "victory_objectives": {
+    "require_all_nodes_cleared": true
+  },
+  "checkpoints": [
+    {
+      "id": "cp_2_4",
+      "node_id": "B",
+      "pos_x": 0,
+      "pos_y": 64,
+      "pos_z": 0,
+      "facing": "south"
+    }
+  ],
+  "terrain_type": "T2",
+  "chapter_mechanism": "air_defense"
+}

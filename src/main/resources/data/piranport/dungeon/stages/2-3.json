@@ -1,0 +1,67 @@
+{
+  "stage_id": "2-3",
+  "chapter": "chapter_2",
+  "display_name": "2-3 高压空域",
+  "nodes": {
+    "A": {
+      "type": "battle",
+      "enemies": "enemy_set_2_3a",
+      "display_x": 50,
+      "display_y": 200
+    },
+    "B": {
+      "type": "battle",
+      "enemies": "enemy_set_2_3b",
+      "display_x": 200,
+      "display_y": 100
+    },
+    "C": {
+      "type": "boss",
+      "enemies": "boss_2_3",
+      "display_x": 350,
+      "display_y": 200
+    }
+  },
+  "edges": [
+    {
+      "from": "A",
+      "to": "B"
+    },
+    {
+      "from": "B",
+      "to": "C"
+    }
+  ],
+  "start_node": "A",
+  "boss_nodes": [
+    "C"
+  ],
+  "first_clear_rewards": [
+    {
+      "item": "minecraft:iron_ingot",
+      "count": 24
+    },
+    {
+      "item": "minecraft:gold_ingot",
+      "count": 12
+    }
+  ],
+  "victory_conditions": [
+    "KILL_BOSS"
+  ],
+  "victory_objectives": {
+    "require_all_nodes_cleared": true
+  },
+  "checkpoints": [
+    {
+      "id": "cp_2_3",
+      "node_id": "B",
+      "pos_x": 0,
+      "pos_y": 64,
+      "pos_z": 0,
+      "facing": "south"
+    }
+  ],
+  "terrain_type": "T1",
+  "chapter_mechanism": "air_defense"
+}

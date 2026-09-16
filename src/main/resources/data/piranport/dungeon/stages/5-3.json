@@ -1,0 +1,67 @@
+{
+  "stage_id": "5-3",
+  "chapter": "chapter_5",
+  "display_name": "5-3 深水清算",
+  "nodes": {
+    "A": {
+      "type": "battle",
+      "enemies": "enemy_set_5_3a",
+      "display_x": 50,
+      "display_y": 200
+    },
+    "B": {
+      "type": "battle",
+      "enemies": "enemy_set_5_3b",
+      "display_x": 200,
+      "display_y": 100
+    },
+    "C": {
+      "type": "boss",
+      "enemies": "boss_5_3",
+      "display_x": 350,
+      "display_y": 200
+    }
+  },
+  "edges": [
+    {
+      "from": "A",
+      "to": "B"
+    },
+    {
+      "from": "B",
+      "to": "C"
+    }
+  ],
+  "start_node": "A",
+  "boss_nodes": [
+    "C"
+  ],
+  "first_clear_rewards": [
+    {
+      "item": "minecraft:emerald",
+      "count": 8
+    },
+    {
+      "item": "piranport:magnetic_torpedo_blueprint",
+      "count": 1
+    }
+  ],
+  "victory_conditions": [
+    "KILL_ALL"
+  ],
+  "victory_objectives": {
+    "require_all_nodes_cleared": true
+  },
+  "checkpoints": [
+    {
+      "id": "cp_5_3",
+      "node_id": "B",
+      "pos_x": 0,
+      "pos_y": 64,
+      "pos_z": 0,
+      "facing": "south"
+    }
+  ],
+  "terrain_type": "T1",
+  "chapter_mechanism": "anti_submarine"
+}

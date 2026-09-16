@@ -1,0 +1,58 @@
+{
+  "stage_id": "7-1",
+  "chapter": "chapter_7",
+  "display_name": "7-1 导弹时代",
+  "nodes": {
+    "A": {
+      "type": "battle",
+      "enemies": "enemy_set_7_1a",
+      "display_x": 50,
+      "display_y": 200
+    },
+    "B": {
+      "type": "boss",
+      "enemies": "boss_7_1",
+      "display_x": 350,
+      "display_y": 200
+    }
+  },
+  "edges": [
+    {
+      "from": "A",
+      "to": "B"
+    }
+  ],
+  "start_node": "A",
+  "boss_nodes": [
+    "B"
+  ],
+  "first_clear_rewards": [
+    {
+      "item": "minecraft:iron_ingot",
+      "count": 20
+    },
+    {
+      "item": "minecraft:redstone",
+      "count": 12
+    }
+  ],
+  "victory_conditions": [
+    "INTERCEPT_ALL",
+    "KILL_BOSS"
+  ],
+  "victory_objectives": {
+    "require_all_nodes_cleared": true
+  },
+  "checkpoints": [
+    {
+      "id": "cp_7_1",
+      "node_id": "A",
+      "pos_x": 0,
+      "pos_y": 64,
+      "pos_z": 0,
+      "facing": "south"
+    }
+  ],
+  "terrain_type": "T1",
+  "chapter_mechanism": "anti_missile"
+}

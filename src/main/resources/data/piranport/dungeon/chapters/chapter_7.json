@@ -1,0 +1,10 @@
+{
+  "chapter_id": "chapter_7",
+  "display_name": "第七章 反导拦截",
+  "sort_order": 7,
+  "stages": [
+    "7-1",
+    "7-2",
+    "7-3"
+  ]
+}

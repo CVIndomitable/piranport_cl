@@ -1,0 +1,84 @@
+{
+  "stage_id": "6-2",
+  "chapter": "chapter_6",
+  "display_name": "6-2 多任务反潜",
+  "nodes": {
+    "A": {
+      "type": "battle",
+      "enemies": "enemy_set_6_2a",
+      "display_x": 50,
+      "display_y": 200
+    },
+    "B": {
+      "type": "cost",
+      "cost": [
+        {
+          "item": "minecraft:iron_ingot",
+          "count": 4
+        }
+      ],
+      "cost_message": "护航警戒，消耗4铁锭",
+      "display_x": 150,
+      "display_y": 100
+    },
+    "C": {
+      "type": "battle",
+      "enemies": "enemy_set_6_2b",
+      "display_x": 250,
+      "display_y": 100
+    },
+    "D": {
+      "type": "boss",
+      "enemies": "boss_6_2",
+      "display_x": 350,
+      "display_y": 200
+    }
+  },
+  "edges": [
+    {
+      "from": "A",
+      "to": "B"
+    },
+    {
+      "from": "B",
+      "to": "C"
+    },
+    {
+      "from": "C",
+      "to": "D"
+    }
+  ],
+  "start_node": "A",
+  "boss_nodes": [
+    "D"
+  ],
+  "first_clear_rewards": [
+    {
+      "item": "minecraft:emerald",
+      "count": 12
+    },
+    {
+      "item": "piranport:vt_improved_blueprint",
+      "count": 1
+    }
+  ],
+  "victory_conditions": [
+    "ESCORT_ALIVE",
+    "KILL_ALL"
+  ],
+  "victory_objectives": {
+    "require_all_nodes_cleared": true
+  },
+  "checkpoints": [
+    {
+      "id": "cp_6_2",
+      "node_id": "C",
+      "pos_x": 0,
+      "pos_y": 64,
+      "pos_z": 0,
+      "facing": "south"
+    }
+  ],
+  "terrain_type": "T3",
+  "chapter_mechanism": "anti_submarine"
+}

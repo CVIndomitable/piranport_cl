@@ -1,0 +1,67 @@
+{
+  "stage_id": "6-1",
+  "chapter": "chapter_6",
+  "display_name": "6-1 深海猎场",
+  "nodes": {
+    "A": {
+      "type": "battle",
+      "enemies": "enemy_set_6_1a",
+      "display_x": 50,
+      "display_y": 200
+    },
+    "B": {
+      "type": "battle",
+      "enemies": "enemy_set_6_1b",
+      "display_x": 200,
+      "display_y": 100
+    },
+    "C": {
+      "type": "boss",
+      "enemies": "boss_6_1",
+      "display_x": 350,
+      "display_y": 200
+    }
+  },
+  "edges": [
+    {
+      "from": "A",
+      "to": "B"
+    },
+    {
+      "from": "B",
+      "to": "C"
+    }
+  ],
+  "start_node": "A",
+  "boss_nodes": [
+    "C"
+  ],
+  "first_clear_rewards": [
+    {
+      "item": "minecraft:diamond",
+      "count": 6
+    },
+    {
+      "item": "piranport:asw_upgrade_part",
+      "count": 1
+    }
+  ],
+  "victory_conditions": [
+    "KILL_ALL"
+  ],
+  "victory_objectives": {
+    "require_all_nodes_cleared": true
+  },
+  "checkpoints": [
+    {
+      "id": "cp_6_1",
+      "node_id": "B",
+      "pos_x": 0,
+      "pos_y": 64,
+      "pos_z": 0,
+      "facing": "south"
+    }
+  ],
+  "terrain_type": "T2",
+  "chapter_mechanism": "anti_submarine"
+}

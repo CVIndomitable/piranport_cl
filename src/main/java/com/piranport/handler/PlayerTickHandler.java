@@ -7,6 +7,7 @@ import com.piranport.PiranPort;
 import com.piranport.aviation.FireControlManager;
 import com.piranport.aviation.ReconManager;
 import com.piranport.combat.AASilenceManager;
+import com.piranport.combat.AutoModeState;
 import com.piranport.combat.TransformationManager;
 import com.piranport.component.FuelData;
 import com.piranport.config.ModCommonConfig;
@@ -238,11 +239,15 @@ public class PlayerTickHandler {
     }
 
     /**
-     * 判定 H 键自动模式是否启用。复用既有 SHIP_AUTO_LAUNCH 组件（H 键 toggle）。
-     * 依据：策划决策/数值/05-船型职能分化修订.md（H 键"自动模式"总开关）
+     * 判定自动模式是否启用（CIWS/AA导弹）。状态为 AA_ONLY 或 FULL_AUTO 时启用。
+     * 兼容旧版 SHIP_AUTO_LAUNCH 布尔组件（存在且为 true 时视为 FULL_AUTO）。
+     * 依据：策划决策/副本/14 §H 键三态总开关 + 数值/05 定稿。
      */
     private static boolean isAutoFireEnabled(ItemStack transformedCore) {
         if (transformedCore.isEmpty()) return false;
+        AutoModeState state = AutoModeState.fromStack(transformedCore);
+        if (state != AutoModeState.OFF) return true;
+        // 兼容旧存档：SHIP_AUTO_LAUNCH=true 视为 FULL_AUTO
         Boolean flag = transformedCore.get(com.piranport.registry.ModDataComponents.SHIP_AUTO_LAUNCH.get());
         return Boolean.TRUE.equals(flag);
     }
@@ -369,7 +374,9 @@ public class PlayerTickHandler {
     private static void tickAutoCombat(Player player) {
         ItemStack autoLaunchCore = TransformationManager.findTransformedCore(player);
         if (autoLaunchCore.isEmpty()) return;
-        if (!autoLaunchCore.getOrDefault(ModDataComponents.SHIP_AUTO_LAUNCH.get(), false)) return;
+
+        AutoModeState mode = AutoModeState.fromStack(autoLaunchCore);
+        if (mode == AutoModeState.OFF) return;
 
         int autoLaunchSlot = -1;
         Inventory inv = player.getInventory();
@@ -386,7 +393,10 @@ public class PlayerTickHandler {
             }
         }
         if (autoLaunchSlot >= 0) {
-            tickAutoLaunchFighters(player, autoLaunchCore, autoLaunchSlot);
+            // 仅 FULL_AUTO 时自动升空战斗机；AA_ONLY 和 FULL_AUTO 均触发防空导弹
+            if (mode == AutoModeState.FULL_AUTO) {
+                tickAutoLaunchFighters(player, autoLaunchCore, autoLaunchSlot);
+            }
             tickAntiAirMissiles(player, autoLaunchCore, autoLaunchSlot);
         }
     }

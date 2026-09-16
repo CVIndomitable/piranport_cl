@@ -1,0 +1,57 @@
+{
+  "stage_id": "2-1",
+  "chapter": "chapter_2",
+  "display_name": "2-1 空袭来临时",
+  "nodes": {
+    "A": {
+      "type": "battle",
+      "enemies": "enemy_set_2_1a",
+      "display_x": 50,
+      "display_y": 200
+    },
+    "B": {
+      "type": "boss",
+      "enemies": "boss_2_1",
+      "display_x": 350,
+      "display_y": 200
+    }
+  },
+  "edges": [
+    {
+      "from": "A",
+      "to": "B"
+    }
+  ],
+  "start_node": "A",
+  "boss_nodes": [
+    "B"
+  ],
+  "first_clear_rewards": [
+    {
+      "item": "minecraft:iron_ingot",
+      "count": 16
+    },
+    {
+      "item": "minecraft:gold_ingot",
+      "count": 8
+    }
+  ],
+  "victory_conditions": [
+    "SURVIVE_WAVES"
+  ],
+  "victory_objectives": {
+    "wave_count": 3
+  },
+  "checkpoints": [
+    {
+      "id": "cp_2_1",
+      "node_id": "A",
+      "pos_x": 0,
+      "pos_y": 64,
+      "pos_z": 0,
+      "facing": "south"
+    }
+  ],
+  "terrain_type": "T1",
+  "chapter_mechanism": "air_defense"
+}

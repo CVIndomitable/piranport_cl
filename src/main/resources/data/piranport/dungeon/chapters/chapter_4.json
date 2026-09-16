@@ -1,0 +1,10 @@
+{
+  "chapter_id": "chapter_4",
+  "display_name": "第四章 多任务交叉",
+  "sort_order": 4,
+  "stages": [
+    "4-1",
+    "4-2",
+    "4-3"
+  ]
+}

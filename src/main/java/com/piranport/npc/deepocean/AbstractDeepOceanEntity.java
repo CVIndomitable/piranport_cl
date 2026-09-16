@@ -24,6 +24,7 @@ import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.common.NeoForgeMod;
 
 import javax.annotation.Nullable;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -112,6 +113,27 @@ public abstract class AbstractDeepOceanEntity extends Monster {
         if (fleetGroupId == null || level().isClientSide()) return null;
         FleetGroupManager mgr = FleetGroupManager.get((ServerLevel) level());
         return mgr.getGroup(fleetGroupId);
+    }
+
+    /**
+     * 判断本实体是否为当前编队领舰。
+     */
+    public boolean isFleetLeader() {
+        FleetGroup group = getFleetGroup();
+        return group != null && getUUID().equals(group.getLeaderUuid());
+    }
+
+    /**
+     * 获取本实体在编队队列中的索引（0 = 领舰）。非编队成员返回 -1。
+     */
+    public int getFleetMemberIndex() {
+        FleetGroup group = getFleetGroup();
+        if (group == null) return -1;
+        List<UUID> members = group.getMembers();
+        for (int i = 0; i < members.size(); i++) {
+            if (members.get(i).equals(getUUID())) return i;
+        }
+        return -1;
     }
 
     // --- Water Walking ---

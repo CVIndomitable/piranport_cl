@@ -22,7 +22,7 @@ public class ModKeyMappings {
             new KeyMapping("key.piranport.highlight_entities", GLFW.GLFW_KEY_Y, CATEGORY);
 
     public static final KeyMapping TOGGLE_AUTO_LAUNCH =
-            new KeyMapping("key.piranport.toggle_auto_launch", GLFW.GLFW_KEY_H, CATEGORY);
+            new KeyMapping("key.piranport.toggle_auto_mode", GLFW.GLFW_KEY_H, CATEGORY);
 
     public static final KeyMapping DEBUG_TOGGLE =
             new KeyMapping("key.piranport.debug_toggle", GLFW.GLFW_KEY_F8, CATEGORY);

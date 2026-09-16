@@ -1,6 +1,8 @@
 package com.piranport.block.entity;
 
+import com.piranport.npc.ai.FleetGroup;
 import com.piranport.npc.ai.FleetGroupManager;
+import com.piranport.npc.ai.FleetGroup.FormationType;
 import com.piranport.npc.deepocean.AbstractDeepOceanEntity;
 import com.piranport.registry.ModBlockEntityTypes;
 import net.minecraft.core.BlockPos;
@@ -31,6 +33,7 @@ import java.util.UUID;
  *   <li>{@code count} — number to spawn (1-4)</li>
  *   <li>{@code clusterUUID} — shared fleet group id (string, auto-generated if absent)</li>
  *   <li>{@code patrolRadius} — patrol wander radius</li>
+ *   <li>{@code formation} — formation type string (e.g. "single_line", "double_line", "wheel", "single_horizontal")</li>
  * </ul>
  * <p>
  * On first server tick, spawns enemies then self-destructs.
@@ -41,6 +44,7 @@ public class AbyssalSpawnerBlockEntity extends BlockEntity {
     private int count = 1;
     private UUID clusterUUID = null;
     private float patrolRadius = 16.0f;
+    private String formation = null;
     private boolean hasSpawned = false;
 
     public AbyssalSpawnerBlockEntity(BlockPos pos, BlockState state) {
@@ -55,6 +59,7 @@ public class AbyssalSpawnerBlockEntity extends BlockEntity {
         if (!(level instanceof ServerLevel serverLevel)) return;
 
         UUID cluster = be.clusterUUID != null ? be.clusterUUID : UUID.randomUUID();
+        FormationType formationType = parseFormation(be.formation);
 
         if (!be.entityTypeId.contains(":")) {
             level.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
@@ -69,6 +74,15 @@ public class AbyssalSpawnerBlockEntity extends BlockEntity {
 
         EntityType<?> type = optType.get();
 
+        // Create fleet group if multiple entities
+        boolean needsGroup = be.count > 1;
+        FleetGroup group = null;
+        if (needsGroup) {
+            FleetGroupManager mgr = FleetGroupManager.get(serverLevel);
+            group = mgr.createGroup(cluster);
+            group.setFormation(formationType);
+        }
+
         for (int i = 0; i < be.count; i++) {
             Entity entity = type.create(serverLevel);
             if (entity == null) {
@@ -82,11 +96,13 @@ public class AbyssalSpawnerBlockEntity extends BlockEntity {
 
             if (entity instanceof AbstractDeepOceanEntity abyssal) {
                 abyssal.setFleetGroupId(cluster);
-                FleetGroupManager mgr = FleetGroupManager.get(serverLevel);
-                if (mgr.getGroup(cluster) == null) {
-                    mgr.createGroup(cluster);
+                if (group != null) {
+                    FleetGroupManager mgr = FleetGroupManager.get(serverLevel);
+                    mgr.addMember(cluster, abyssal.getUUID());
+                    if (i == 0) {
+                        group.setLeaderUuid(abyssal.getUUID());
+                    }
                 }
-                mgr.addMember(cluster, abyssal.getUUID());
             }
 
             if (entity instanceof Mob mob) {
@@ -102,6 +118,16 @@ public class AbyssalSpawnerBlockEntity extends BlockEntity {
         level.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
     }
 
+    private static FormationType parseFormation(String formationStr) {
+        if (formationStr == null || formationStr.isEmpty()) return FormationType.SINGLE_LINE;
+        return switch (formationStr.toLowerCase()) {
+            case "double_line", "复纵阵", "double" -> FormationType.DOUBLE_LINE;
+            case "wheel", "轮型阵" -> FormationType.WHEEL;
+            case "single_horizontal", "单横阵", "horizontal" -> FormationType.SINGLE_HORIZONTAL;
+            default -> FormationType.SINGLE_LINE;
+        };
+    }
+
     @Override
     protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
@@ -111,6 +137,9 @@ public class AbyssalSpawnerBlockEntity extends BlockEntity {
             tag.putUUID("clusterUUID", clusterUUID);
         }
         tag.putFloat("patrolRadius", patrolRadius);
+        if (formation != null && !formation.isEmpty()) {
+            tag.putString("formation", formation);
+        }
         tag.putBoolean("hasSpawned", hasSpawned);
     }
 
@@ -128,6 +157,7 @@ public class AbyssalSpawnerBlockEntity extends BlockEntity {
         }
         patrolRadius = tag.getFloat("patrolRadius");
         if (patrolRadius <= 0) patrolRadius = 16.0f;
+        formation = tag.contains("formation") ? tag.getString("formation") : null;
         hasSpawned = tag.getBoolean("hasSpawned");
     }
 }

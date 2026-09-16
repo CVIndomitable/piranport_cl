@@ -1,0 +1,112 @@
+{
+  "stage_id": "7-3",
+  "chapter": "chapter_7",
+  "display_name": "7-3 终焉试炼",
+  "nodes": {
+    "A": {
+      "type": "battle",
+      "enemies": "enemy_set_7_3a",
+      "display_x": 50,
+      "display_y": 200
+    },
+    "B": {
+      "type": "battle",
+      "enemies": "enemy_set_7_3b",
+      "display_x": 150,
+      "display_y": 100
+    },
+    "C": {
+      "type": "battle",
+      "enemies": "enemy_set_7_3c",
+      "display_x": 250,
+      "display_y": 100
+    },
+    "D": {
+      "type": "cost",
+      "cost": [
+        {
+          "item": "minecraft:iron_ingot",
+          "count": 8
+        }
+      ],
+      "cost_message": "最终防线，消耗8铁锭",
+      "display_x": 250,
+      "display_y": 300
+    },
+    "E": {
+      "type": "boss",
+      "enemies": "boss_7_3a",
+      "display_x": 350,
+      "display_y": 150
+    },
+    "F": {
+      "type": "boss",
+      "enemies": "boss_7_3b",
+      "display_x": 450,
+      "display_y": 250
+    }
+  },
+  "edges": [
+    {
+      "from": "A",
+      "to": "B"
+    },
+    {
+      "from": "B",
+      "to": "C"
+    },
+    {
+      "from": "C",
+      "to": "D"
+    },
+    {
+      "from": "D",
+      "to": "E"
+    },
+    {
+      "from": "E",
+      "to": "F"
+    }
+  ],
+  "start_node": "A",
+  "boss_nodes": [
+    "E",
+    "F"
+  ],
+  "first_clear_rewards": [
+    {
+      "item": "minecraft:nether_star",
+      "count": 2
+    },
+    {
+      "item": "piranport:mk23_nuke",
+      "count": 1
+    }
+  ],
+  "victory_conditions": [
+    "KILL_ALL_FLAGSHIPS"
+  ],
+  "victory_objectives": {
+    "require_all_nodes_cleared": true
+  },
+  "checkpoints": [
+    {
+      "id": "cp_7_3a",
+      "node_id": "B",
+      "pos_x": 0,
+      "pos_y": 64,
+      "pos_z": 0,
+      "facing": "south"
+    },
+    {
+      "id": "cp_7_3b",
+      "node_id": "D",
+      "pos_x": 0,
+      "pos_y": 64,
+      "pos_z": 0,
+      "facing": "south"
+    }
+  ],
+  "terrain_type": "T5",
+  "chapter_mechanism": "anti_missile"
+}

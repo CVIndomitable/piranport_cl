@@ -54,6 +54,15 @@ public class ModDataComponents {
                     .networkSynchronized(ByteBufCodecs.BOOL)
                     .build());
 
+    // ===== 自动模式三态（0=OFF, 1=AA_ONLY, 2=FULL_AUTO）=====
+
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<Integer>>
+            SHIP_AUTO_MODE = DATA_COMPONENTS.register("ship_auto_mode",
+            () -> DataComponentType.<Integer>builder()
+                    .persistent(Codec.INT)
+                    .networkSynchronized(ByteBufCodecs.VAR_INT)
+                    .build());
+
     // ===== 武器种类标签 =====
 
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<WeaponCategory>>

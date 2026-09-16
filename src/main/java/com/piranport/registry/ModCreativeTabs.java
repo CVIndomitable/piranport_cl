@@ -4,6 +4,8 @@ import com.piranport.PiranPort;
 import com.piranport.component.LoadedAmmo;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
@@ -34,7 +36,7 @@ public class ModCreativeTabs {
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> WEAPONS_TAB =
             CREATIVE_TABS.register("weapons_tab", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.piranport.weapons"))
-                    .withTabsBefore(CreativeModeTabs.COMBAT)
+                    .withTabsBefore(ResourceKey.create(Registries.CREATIVE_MODE_TAB, PiranPort.modId("core_tab")))  // 链式排序：紧接 core_tab
                     .icon(() -> ModItems.MEDIUM_GUN.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
                         // Guns
@@ -70,7 +72,7 @@ public class ModCreativeTabs {
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> AVIATION_TAB =
             CREATIVE_TABS.register("aviation_tab", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.piranport.aviation"))
-                    .withTabsBefore(CreativeModeTabs.COMBAT)
+                    .withTabsBefore(ResourceKey.create(Registries.CREATIVE_MODE_TAB, PiranPort.modId("weapons_tab")))  // 链式排序：紧接 weapons_tab
                     .icon(() -> ModItems.FIGHTER_SQUADRON.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
                         // Generic squadrons
@@ -115,7 +117,7 @@ public class ModCreativeTabs {
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> ENHANCEMENT_TAB =
             CREATIVE_TABS.register("enhancement_tab", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.piranport.enhancement"))
-                    .withTabsBefore(CreativeModeTabs.COMBAT)
+                    .withTabsBefore(ResourceKey.create(Registries.CREATIVE_MODE_TAB, PiranPort.modId("aviation_tab")))  // 链式排序：紧接 aviation_tab
                     .icon(() -> ModItems.MEDIUM_ARMOR_PLATE.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
                         // Armor Plates
@@ -174,7 +176,7 @@ public class ModCreativeTabs {
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> AGRICULTURE_TAB =
             CREATIVE_TABS.register("agriculture_tab", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.piranport.agriculture"))
-                    .withTabsBefore(CreativeModeTabs.COMBAT)
+                    .withTabsBefore(ResourceKey.create(Registries.CREATIVE_MODE_TAB, PiranPort.modId("enhancement_tab")))  // 链式排序：紧接 enhancement_tab
                     .icon(() -> ModItems.RAW_ALUMINUM.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
                         // Blocks
@@ -194,7 +196,7 @@ public class ModCreativeTabs {
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> FOOD_TAB =
             CREATIVE_TABS.register("food_tab", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.piranport.food"))
-                    .withTabsBefore(CreativeModeTabs.COMBAT)
+                    .withTabsBefore(ResourceKey.create(Registries.CREATIVE_MODE_TAB, PiranPort.modId("agriculture_tab")))  // 链式排序：紧接 agriculture_tab
                     .icon(() -> ModItems.TOAST_BREAD.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
                         // --- 加工站 ---
@@ -395,7 +397,7 @@ public class ModCreativeTabs {
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> AMMO_TAB =
             CREATIVE_TABS.register("ammo_tab", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.piranport.ammo"))
-                    .withTabsBefore(CreativeModeTabs.COMBAT)
+                    .withTabsBefore(ResourceKey.create(Registries.CREATIVE_MODE_TAB, PiranPort.modId("food_tab")))  // 链式排序：紧接 food_tab
                     .icon(() -> ModItems.MEDIUM_HE_SHELL.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
                         // HE Shells
@@ -461,7 +463,7 @@ public class ModCreativeTabs {
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> PROPS_TAB =
             CREATIVE_TABS.register("props_tab", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.piranport.props"))
-                    .withTabsBefore(CreativeModeTabs.COMBAT)
+                    .withTabsBefore(ResourceKey.create(Registries.CREATIVE_MODE_TAB, PiranPort.modId("ammo_tab")))  // 链式排序：紧接 ammo_tab
                     .icon(() -> ModItems.HENTAI_TROPHY.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
                         output.accept(ModItems.UNICORN_HARP.get());
@@ -495,7 +497,7 @@ public class ModCreativeTabs {
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> FACILITY_TAB =
             CREATIVE_TABS.register("facility_tab", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.piranport.facility"))
-                    .withTabsBefore(CreativeModeTabs.COMBAT)
+                    .withTabsBefore(ResourceKey.create(Registries.CREATIVE_MODE_TAB, PiranPort.modId("props_tab")))  // 链式排序：紧接 props_tab
                     .icon(() -> ModItems.WEAPON_WORKBENCH.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
                         output.accept(ModItems.RELOAD_FACILITY.get());
@@ -516,7 +518,7 @@ public class ModCreativeTabs {
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> DECORATION_TAB =
             CREATIVE_TABS.register("decoration_tab", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.piranport.decoration"))
-                    .withTabsBefore(CreativeModeTabs.COMBAT)
+                    .withTabsBefore(ResourceKey.create(Registries.CREATIVE_MODE_TAB, PiranPort.modId("facility_tab")))  // 链式排序：紧接 facility_tab
                     .icon(() -> ModItems.CONFIDENTIAL_CARGO.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
                         output.accept(ModItems.CONFIDENTIAL_CARGO.get());
@@ -529,7 +531,7 @@ public class ModCreativeTabs {
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> RUINS_TAB =
             CREATIVE_TABS.register("ruins_tab", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.piranport.ruins"))
-                    .withTabsBefore(CreativeModeTabs.COMBAT)
+                    .withTabsBefore(ResourceKey.create(Registries.CREATIVE_MODE_TAB, PiranPort.modId("decoration_tab")))  // 链式排序：紧接 decoration_tab
                     .icon(() -> ModItems.ABYSSAL_PORTAL_FRAME.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
                         // Blocks
@@ -564,7 +566,7 @@ public class ModCreativeTabs {
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> SPAWN_EGGS_TAB =
             CREATIVE_TABS.register("spawn_eggs_tab", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.piranport.spawn_eggs"))
-                    .withTabsBefore(CreativeModeTabs.COMBAT)
+                    .withTabsBefore(ResourceKey.create(Registries.CREATIVE_MODE_TAB, PiranPort.modId("ruins_tab")))  // 链式排序：紧接 ruins_tab
                     .icon(() -> ModItems.SHIP_GIRL_SPAWN_EGG.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
                         // Deep Ocean Spawn Eggs
@@ -584,7 +586,7 @@ public class ModCreativeTabs {
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> TEST_WEAPONS_TAB =
             CREATIVE_TABS.register("test_weapons_tab", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.piranport.test_weapons"))
-                    .withTabsBefore(CreativeModeTabs.COMBAT)
+                    .withTabsBefore(ResourceKey.create(Registries.CREATIVE_MODE_TAB, PiranPort.modId("spawn_eggs_tab")))  // 链式排序：紧接 spawn_eggs_tab
                     .icon(() -> createPreloadedWeapon(ModItems.LARGE_GUN.get(), "piranport:large_he_shell", 3))
                     .displayItems((parameters, output) -> {
                         // Preloaded cannons listed in the design doc.

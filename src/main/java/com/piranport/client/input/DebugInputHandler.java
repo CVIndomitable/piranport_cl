@@ -68,10 +68,18 @@ public class DebugInputHandler {
         while (ModKeyMappings.DEBUG_TOGGLE.consumeClick()) {
             if (Screen.hasShiftDown()) {
                 PacketDistributor.sendToServer(new SnapshotRequestPayload(true));
-                // 反馈由服务端 SnapshotRequestPayload 处理后通过 ClientHooks 返回
+                mc.player.displayClientMessage(
+                        net.minecraft.network.chat.Component.translatable("message.piranport.snapshot_requested"),
+                        true);
             } else {
                 debugEnabledClientState = !debugEnabledClientState;
-                PacketDistributor.sendToServer(new DebugTogglePayload(debugEnabledClientState));
+                boolean nowEnabled = debugEnabledClientState;
+                PacketDistributor.sendToServer(new DebugTogglePayload(nowEnabled));
+                // 立即显示本地状态，服务端 ACK 到达后由 DebugToggleAckPayload 覆盖修正
+                mc.player.displayClientMessage(
+                        net.minecraft.network.chat.Component.translatable(
+                                nowEnabled ? "message.piranport.debug_on" : "message.piranport.debug_off"),
+                        true);
             }
         }
 

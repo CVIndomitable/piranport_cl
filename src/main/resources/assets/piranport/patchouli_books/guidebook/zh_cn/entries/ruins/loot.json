@@ -6,11 +6,11 @@
   "pages": [
     {
       "type": "patchouli:text",
-      "text": "piranport.book.ruins.loot.p1"
+      "text": "piranport.book.advanced.ruins_loot.p1"
     },
     {
       "type": "patchouli:text",
-      "text": "piranport.book.ruins.loot.p2"
+      "text": "piranport.book.advanced.ruins_loot.p2"
     }
   ]
 }

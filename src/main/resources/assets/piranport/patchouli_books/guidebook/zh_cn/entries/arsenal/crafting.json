@@ -6,11 +6,12 @@
   "pages": [
     {
       "type": "patchouli:text",
-      "text": "piranport.book.arsenal.crafting.p1"
+      "text": "piranport.book.advanced.workbenches.p1"
     },
     {
-      "type": "patchouli:text",
-      "text": "piranport.book.arsenal.crafting.p2"
+      "type": "patchouli:crafting",
+      "recipe": "piranport:ammo_workbench",
+      "text": "piranport.book.advanced.workbenches.p2"
     }
   ]
 }

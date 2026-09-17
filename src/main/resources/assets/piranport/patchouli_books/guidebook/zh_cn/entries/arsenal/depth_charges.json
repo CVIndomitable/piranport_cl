@@ -6,27 +6,19 @@
   "pages": [
     {
       "type": "patchouli:text",
-      "text": "piranport.book.arsenal.depth_charges.p1"
+      "text": "piranport.book.advanced.depth_charges.p1"
     },
     {
-      "type": "patchouli:crafting",
-      "recipe": "piranport:depth_charge",
-      "text": "piranport.book.arsenal.depth_charges.charge_craft"
+      "type": "patchouli:text",
+      "text": "piranport.book.advanced.depth_charges.p2"
     },
     {
-      "type": "patchouli:crafting",
-      "recipe": "piranport:depth_charge_launcher",
-      "text": "piranport.book.arsenal.depth_charges.launcher_craft"
+      "type": "patchouli:text",
+      "text": "piranport.book.advanced.depth_charges.p3"
     },
     {
-      "type": "patchouli:crafting",
-      "recipe": "piranport:depth_charge_launcher_improved",
-      "text": "piranport.book.arsenal.depth_charges.improved_craft"
-    },
-    {
-      "type": "patchouli:crafting",
-      "recipe": "piranport:depth_charge_launcher_advanced",
-      "text": "piranport.book.arsenal.depth_charges.advanced_craft"
+      "type": "patchouli:text",
+      "text": "piranport.book.advanced.depth_charges.p4"
     }
   ]
 }

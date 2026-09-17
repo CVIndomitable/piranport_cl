@@ -6,16 +6,19 @@
   "pages": [
     {
       "type": "patchouli:text",
-      "text": "piranport.book.arsenal.special.p1"
+      "text": "piranport.book.advanced.special_weapons.p1"
     },
     {
       "type": "patchouli:text",
-      "text": "piranport.book.arsenal.special.p2"
+      "text": "piranport.book.advanced.special_weapons.p2"
     },
     {
-      "type": "patchouli:crafting",
-      "recipe": "piranport:gungnir",
-      "text": "piranport.book.arsenal.special.gungnir"
+      "type": "patchouli:text",
+      "text": "piranport.book.advanced.special_weapons.p3"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "piranport.book.advanced.special_weapons.p4"
     }
   ]
 }

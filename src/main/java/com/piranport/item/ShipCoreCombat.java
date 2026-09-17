@@ -18,6 +18,7 @@ import com.piranport.entity.DepthChargeEntity;
 import com.piranport.entity.TorpedoEntity;
 import com.piranport.network.ShakeEffectPayload;
 import com.piranport.registry.ModDataComponents;
+import com.piranport.server.ScopingManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.piranport.registry.ModItems;
@@ -903,6 +904,11 @@ public class ShipCoreCombat {
 
         float verticalSpreadDeg = getVerticalSpread(weapon, level);
         float horizontalSpreadDeg = getHorizontalSpread(weapon, level);
+        // 策划决策/武器/13：闭镜时同样使用弹道解算落点，散布增加10%
+        if (!ScopingManager.isScoping(player)) {
+            horizontalSpreadDeg *= 1.1f;
+            verticalSpreadDeg *= 1.1f;
+        }
         for (int b = 0; b < barrelCount; b++) {
             // 计算当前炮管的炮口位置
             com.piranport.artillery.config.MuzzlePos muzzle = muzzles.get(b % muzzles.size());

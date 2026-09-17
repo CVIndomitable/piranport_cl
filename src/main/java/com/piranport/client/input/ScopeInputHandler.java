@@ -103,8 +103,9 @@ public class ScopeInputHandler {
                     }
                 } else {
                     Vec3 target = ClientScopeHandler.getAimedPosition();
-                    if (target != null) {
-                        PacketDistributor.sendToServer(SalvoFirePayload.directFire(target.x, target.y, target.z));
+                    // 策划决策/武器/13：闭镜时同样使用弹道解算落点，仅散布增加10%（服务端处理）
+                    if (isArtillery && target != null) {
+                        PacketDistributor.sendToServer(SalvoFirePayload.aimedFire(target.x, target.y, target.z));
                     } else {
                         PacketDistributor.sendToServer(SalvoFirePayload.quickFire());
                     }
@@ -124,8 +125,9 @@ public class ScopeInputHandler {
                     }
                 } else {
                     Vec3 target = ClientScopeHandler.getAimedPosition();
+                    // 策划决策/武器/13：闭镜时同样使用弹道解算落点，仅散布增加10%（服务端处理）
                     if (isArtillery && target != null) {
-                        PacketDistributor.sendToServer(ScopeFirePayload.directFire(target.x, target.y, target.z));
+                        PacketDistributor.sendToServer(ScopeFirePayload.aimedFire(target.x, target.y, target.z));
                     } else {
                         PacketDistributor.sendToServer(ScopeFirePayload.quickFire());
                     }

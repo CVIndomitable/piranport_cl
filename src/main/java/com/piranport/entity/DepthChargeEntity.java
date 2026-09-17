@@ -12,6 +12,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.ThrowableItemProjectile;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.Level;
+import net.minecraft.core.BlockPos;
+import net.minecraft.tags.FluidTags;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
@@ -78,6 +80,10 @@ public class DepthChargeEntity extends ThrowableItemProjectile {
 
     private static final int PROXIMITY_CHECK_INTERVAL = 5; // 近炸检测每5tick执行一次，减少多枚深弹同时存在时的查询开销
 
+    private boolean inWater = false;
+    private boolean waterEntryEffectPlayed = false;
+    private static final int WATER_SINK_DURATION = 20; // 入水后无目标时下沉1秒后开始近炸检测
+
     @Override
     public void tick() {
         super.tick();
@@ -89,8 +95,31 @@ public class DepthChargeEntity extends ThrowableItemProjectile {
                 discard();
                 return;
             }
+
+            // 水中检测：遇到水面时不下沉则销毁（防止漂浮）
+            boolean nowInWater = isInWater();
+            if (nowInWater != inWater) {
+                inWater = nowInWater;
+                if (inWater) {
+                    waterEntryEffectPlayed = false;
+                    // 入水时播放水花音效
+                    level().playSound(null, getX(), getY(), getZ(),
+                            net.minecraft.sounds.SoundEvents.GENERIC_SPLASH, net.minecraft.sounds.SoundSource.NEUTRAL,
+                            0.5f, 0.8f + level().getRandom().nextFloat() * 0.4f);
+                }
+            }
+
+            // 在水中：阻力增大，加重力加速下沉
+            if (inWater) {
+                var movement = getDeltaMovement();
+                double drag = 0.85;
+                setDeltaMovement(movement.x * drag, movement.y - 0.04, movement.z * drag);
+            }
+
             // P2优化: 错峰执行近炸检测，避免齐投时同一tick内多次检测
-            if (tickCount > ARM_TICKS && (tickCount + getId()) % PROXIMITY_CHECK_INTERVAL == 0) {
+            // 入水后短暂延迟再开始检测，模拟真实深弹入水后下潜启动引信
+            if (tickCount > ARM_TICKS + (inWater ? WATER_SINK_DURATION : 0)
+                    && (tickCount + getId()) % PROXIMITY_CHECK_INTERVAL == 0) {
                 checkProximity();
             }
         }
@@ -170,7 +199,16 @@ public class DepthChargeEntity extends ThrowableItemProjectile {
     @Override
     protected void onHitBlock(BlockHitResult result) {
         if (!level().isClientSide() && !detonated) {
-            detonate();
+            // 遇到水面时不引爆，让深水炸弹继续下沉
+            if (level().getBlockState(result.getBlockPos()).getFluidState().is(FluidTags.WATER)
+                    || level().getBlockState(result.getBlockPos().above()).getFluidState().is(FluidTags.WATER)) {
+                return;
+            }
+            BlockPos pos = result.getBlockPos();
+            // 砰在固体表面（如舰体）上时引爆
+            if (!level().getBlockState(pos).getCollisionShape(level(), pos).isEmpty()) {
+                detonate();
+            }
         }
     }
 

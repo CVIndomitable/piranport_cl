@@ -9,6 +9,7 @@
     "piranport:mapple_log",
     "piranport:chorus_tree_log",
     "piranport:slime_tree_log",
-    "piranport:lava_slime_tree_log"
+    "piranport:lava_slime_tree_log",
+    "piranport:apple_log"
   ]
 }

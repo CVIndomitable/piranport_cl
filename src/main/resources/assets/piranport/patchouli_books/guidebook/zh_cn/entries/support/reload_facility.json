@@ -1,21 +1,21 @@
 {
-  "name": "piranport.book.support.reload",
+  "name": "piranport.book.advanced.reload_facility",
   "category": "piranport:11_support",
   "icon": "piranport:reload_facility",
   "sortnum": 3,
   "pages": [
     {
       "type": "patchouli:text",
-      "text": "$(bold)Reload Facility$()$(br2)An automated station that reloads ammunition into your weapons.$(br2)$(bold)Features:$()$(br)• Automatically reloads weapons in range$(br)• Supports all ammo types$(br)• Faster than manual reloading$(br)• Requires power/fuel to operate"
+      "text": "$(bold)装填设施$()$(br2)$(item)装填设施$()用于把鱼雷或手动装填导弹装入发射器。它不会给靠近的玩家自动补给，也不是弹药仓库。$(br2)界面有三个槽位：发射器输入、弹药输入、已装填输出。"
     },
     {
       "type": "patchouli:crafting",
       "recipe": "piranport:reload_facility",
-      "text": "Reload Facility crafting recipe"
+      "text": ""
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)Usage$()$(br2)1. Place the reload facility$(br)2. Right-click to open the interface$(br)3. Insert ammunition into the input slots$(br)4. Stand nearby with weapons$(br)5. Weapons reload automatically$(br2)$(bold)Tip:$() Build reload facilities near your base for quick rearming!"
+      "text": "$(bold)规则与速度$()$(br2)装填设施只产出满弹发射器；已满或部分装填的发射器会被拒绝。输出槽必须为空才能继续工作。$(br2)陆地装填约5秒，水中装填约20秒。上方漏斗输入发射器，侧面输入弹药，底部取出成品。"
     }
   ]
 }

@@ -1,20 +1,20 @@
 {
-  "name": "piranport.book.config.debug",
+  "name": "piranport.book.advanced.debug_tools",
   "category": "piranport:12_config",
   "icon": "minecraft:command_block",
   "sortnum": 2,
   "pages": [
     {
       "type": "patchouli:text",
-      "text": "$(bold)Debug Tools$()$(br2)$(o)Creative mode and operator only.$()$(br2)$(bold)Commands:$()$(br)• $(o)/ppd spawn_ruin <type>$(): Spawn a ruin structure$(br)• $(o)/ppd debug_toggle$(): Toggle debug mode$(br)• $(o)/ppd cooldown_override$(): Bypass weapon cooldowns"
+      "text": "$(bold)F8调试模式$()$(br2)按$(bold)F8键$()可以切换皮兰港调试模式。按$(bold)Shift+F8$()会向日志写入调试快照。$(br2)$(bold)用途：$()$(br)开发测试、问题排查、性能分析。"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)Config Inspector$()$(br2)A special item that displays entity and block data.$(br2)$(bold)Usage:$()$(br)• Hold the config inspector$(br)• Right-click any entity or block$(br)• View detailed debug information$(br)• Useful for modpack developers"
+      "text": "$(bold)J键命中提示$()$(br2)按$(bold)J键$()可以切换命中提示显示。$(br2)$(bold)开启：$()$(br)武器命中目标时显示伤害数字和提示。$(br2)$(bold)关闭：$()$(br)不显示命中提示，保持界面简洁。"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)Model Debug Block$()$(br2)A special block for testing model rendering.$(br2)$(bold)Features:$()$(br)• Displays model information$(br)• Shows animation states$(br)• Helps troubleshoot rendering issues$(br2)$(bold)Note:$() These tools are for development and testing only."
+      "text": "$(bold)N键冷却覆盖$()$(br2)调试环境下按$(bold)N键$()可以切换服务器侧冷却覆盖，把武器冷却压到便于测试的时间。$(br2)该功能用于开发验证，不建议在正常生存玩法中使用。"
     }
   ]
 }

@@ -1,16 +1,16 @@
 {
-  "name": "piranport.book.cooking.placeable_food",
+  "name": "piranport.book.advanced.placeable_food",
   "category": "piranport:4_cooking",
   "icon": "piranport:placeable_food",
   "sortnum": 4,
   "pages": [
     {
       "type": "patchouli:text",
-      "text": "$(bold)Placeable Food$()$(br2)Some dishes can be placed in the world as decorations or for sharing.$(br2)$(bold)Types:$()$(br)• $(item)Plated Dishes$(): Place on blocks$(br)• $(item)Bowled Soups$(): Placeable soup containers$(br)• $(item)Cakes$(): Multi-layer edible cakes$(br2)Right-click to place, right-click again to eat."
+      "text": "$(bold)可放置的食物$()$(br2)某些食物可以放置在世界中作为装饰或分享：$(br2)• $(item)盘子食物$()：放置在方块上$(br)• $(item)碗装食物$()：可放置的汤类$(br)• $(item)蛋糕$()：多层可食用蛋糕$(br2)右键放置，再次右键食用。"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)Multiplayer Sharing$()$(br2)Placed food can be consumed by other players, perfect for:$(br2)• Multiplayer dining parties$(br)• Base decoration$(br)• Food displays$(br2)$(bold)Tip:$() Different foods have different serving counts and restoration effects!"
+      "text": "$(bold)多人分享$()$(br2)放置的食物可以被其他玩家食用，适合：$(br2)• 多人游戏中的聚餐$(br)• 基地装饰$(br)• 食物展示$(br2)$(bold)提示：$()不同食物有不同的食用次数和恢复效果。"
     }
   ]
 }

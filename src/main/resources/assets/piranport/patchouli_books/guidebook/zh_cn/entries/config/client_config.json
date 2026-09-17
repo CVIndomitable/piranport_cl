@@ -1,16 +1,16 @@
 {
-  "name": "piranport.book.config.client",
+  "name": "piranport.book.advanced.client_config",
   "category": "piranport:12_config",
   "icon": "minecraft:writable_book",
   "sortnum": 1,
   "pages": [
     {
       "type": "patchouli:text",
-      "text": "$(bold)Client Configuration$()$(br2)Located in $(o).minecraft/config/piranport-client.toml$()$(br2)$(bold)Options:$()$(br)• HUD position and visibility$(br)• Camera shake intensity$(br)• Reload bar display$(br)• Entity highlight colors"
+      "text": "$(bold)客户端配置选项$()$(br2)皮兰港提供多个客户端配置选项，可以在配置文件中修改：$(br2)• 装填条样式：调整装填条显示位置$(br)• 装填条淡出动画：调整装填完成后的淡出动画$(br)• 火控面板位置与屏幕震动强度等显示选项"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)HUD Settings$()$(br2)Adjust the heads-up display:$(br2)• Fire control panel position$(br)• Weapon reload indicators$(br)• Ship core status display$(br)• Scope overlay opacity$(br2)$(bold)Tip:$() Use the HUD layout detector to find optimal positions!"
+      "text": "$(bold)装填条显示$()$(br2)装填条样式控制装填进度条位置：$(br)• 快捷栏上方：显示在快捷栏上方$(br)• 屏幕中央：显示在屏幕中央$(br)• 隐藏：不显示装填条$(br2)也可以调整装填完成后的淡出动画。"
     }
   ]
 }

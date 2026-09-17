@@ -31,7 +31,8 @@ import org.jetbrains.annotations.Nullable;
 
 public class YubariWaterBucketBlock extends BaseEntityBlock {
     public static final MapCodec<YubariWaterBucketBlock> CODEC = simpleCodec(YubariWaterBucketBlock::new);
-    private static final VoxelShape SHAPE = Block.box(2, 0, 2, 14, 14, 14);
+    // 与桶模型一致：桶身 2..14，桶口加强圈外扩到 1..15、顶面到 y=15
+    private static final VoxelShape SHAPE = Block.box(1, 0, 1, 15, 15, 15);
 
     @Override
     public MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }

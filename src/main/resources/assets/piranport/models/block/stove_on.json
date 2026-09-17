@@ -22,7 +22,7 @@
       ],
       "faces": {
         "north": {
-          "texture": "#front"
+          "texture": "#front_on"
         },
         "south": {
           "texture": "#side"
@@ -34,7 +34,7 @@
           "texture": "#side"
         },
         "up": {
-          "texture": "#top"
+          "texture": "#top_on"
         },
         "down": {
           "texture": "#side"
@@ -54,7 +54,7 @@
       ],
       "faces": {
         "north": {
-          "texture": "#front"
+          "texture": "#front_on"
         },
         "east": {
           "texture": "#side"
@@ -80,7 +80,7 @@
       ],
       "faces": {
         "north": {
-          "texture": "#front"
+          "texture": "#front_on"
         },
         "east": {
           "texture": "#side"
@@ -109,7 +109,7 @@
       ],
       "faces": {
         "north": {
-          "texture": "#front"
+          "texture": "#front_on"
         },
         "east": {
           "texture": "#side"
@@ -132,7 +132,7 @@
       ],
       "faces": {
         "north": {
-          "texture": "#front"
+          "texture": "#front_on"
         },
         "east": {
           "texture": "#side"
@@ -167,7 +167,7 @@
           "texture": "#side"
         },
         "up": {
-          "texture": "#top"
+          "texture": "#top_on"
         }
       }
     },
@@ -196,7 +196,7 @@
           "texture": "#side"
         },
         "up": {
-          "texture": "#top"
+          "texture": "#top_on"
         }
       }
     },
@@ -225,7 +225,7 @@
           "texture": "#side"
         },
         "up": {
-          "texture": "#top"
+          "texture": "#top_on"
         }
       }
     },
@@ -254,7 +254,7 @@
           "texture": "#side"
         },
         "up": {
-          "texture": "#top"
+          "texture": "#top_on"
         }
       }
     },
@@ -283,7 +283,7 @@
           "texture": "#side"
         },
         "up": {
-          "texture": "#top"
+          "texture": "#top_on"
         }
       }
     },
@@ -312,7 +312,7 @@
           "texture": "#side"
         },
         "up": {
-          "texture": "#top"
+          "texture": "#top_on"
         }
       }
     },
@@ -341,7 +341,7 @@
           "texture": "#side"
         },
         "up": {
-          "texture": "#top"
+          "texture": "#top_on"
         }
       }
     },
@@ -370,7 +370,7 @@
           "texture": "#side"
         },
         "up": {
-          "texture": "#top"
+          "texture": "#top_on"
         }
       }
     }

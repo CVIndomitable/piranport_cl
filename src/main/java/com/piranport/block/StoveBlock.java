@@ -26,6 +26,7 @@ import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
@@ -35,19 +36,25 @@ import org.jetbrains.annotations.Nullable;
 public class StoveBlock extends BaseEntityBlock {
     public static final MapCodec<StoveBlock> CODEC = simpleCodec(StoveBlock::new);
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
-    private static final VoxelShape SHAPE = Block.box(1, 0, 1, 15, 14, 15);
+    /** 灶膛里有没有东西在烤。由 {@link StoveBlockEntity#serverTick} 维护，
+     *  客户端只负责按它切模型（有火 / 无火两套贴图）。 */
+    public static final BooleanProperty LIT = BlockStateProperties.LIT;
+    // 模型占满整格高度（y 0..16），好让放在灶上的厨锅底面对齐方块边界、不悬空。
+    private static final VoxelShape SHAPE = Block.box(1, 0, 1, 15, 16, 15);
 
     @Override
     public MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }
 
     public StoveBlock(BlockBehaviour.Properties props) {
         super(props);
-        registerDefaultState(stateDefinition.any().setValue(FACING, Direction.NORTH));
+        registerDefaultState(stateDefinition.any()
+                .setValue(FACING, Direction.NORTH)
+                .setValue(LIT, false));
     }
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-        builder.add(FACING);
+        builder.add(FACING, LIT);
     }
 
     @Override

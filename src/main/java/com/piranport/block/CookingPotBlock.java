@@ -34,7 +34,11 @@ import com.piranport.registry.ModBlockEntityTypes;
 public class CookingPotBlock extends BaseEntityBlock {
     public static final MapCodec<CookingPotBlock> CODEC = simpleCodec(CookingPotBlock::new);
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
-    public static final VoxelShape SHAPE = Block.box(2, 0, 2, 14, 12, 14);
+    // 锅是半高的（只占 y 0..7，锅底贴 y=0），这样放在地上贴地、放在灶上
+    // （灶模型占满整格高度）也能正好贴合。锅身最大半宽 6（x/z 2..14），
+    // 双耳再向外探 1 格；FACING 旋转会让双耳在东西/南北之间切换，
+    // 所以这里取覆盖两个朝向的对称包围盒。
+    public static final VoxelShape SHAPE = Block.box(1, 0, 1, 15, 7, 15);
 
     @Override
     public MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }

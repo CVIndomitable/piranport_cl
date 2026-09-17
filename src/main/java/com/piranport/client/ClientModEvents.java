@@ -102,6 +102,7 @@ public class ClientModEvents {
         WeaponReloadDecorator weaponDecorator = new WeaponReloadDecorator();
         event.register(ModItems.SINGLE_SMALL_GUN.get(), weaponDecorator);
         event.register(ModItems.SMALL_GUN.get(), weaponDecorator);
+        event.register(ModItems.JAPANESE_127MM_TWIN_GUN.get(), weaponDecorator);
         event.register(ModItems.MEDIUM_GUN.get(), weaponDecorator);
         event.register(ModItems.LARGE_GUN.get(), weaponDecorator);
         event.register(ModItems.TWIN_TORPEDO_LAUNCHER.get(), weaponDecorator);

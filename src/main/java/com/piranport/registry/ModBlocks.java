@@ -238,7 +238,8 @@ public class ModBlocks {
                             .mapColor(MapColor.STONE)
                             .strength(3.5f, 10.0f)
                             .requiresCorrectToolForDrops()
-                            .sound(SoundType.STONE)));
+                            .sound(SoundType.STONE)
+                            .noOcclusion()));
 
     // ===== Functional Blocks (Phase 13) =====
     public static final DeferredBlock<CuttingBoardBlock> CUTTING_BOARD =

@@ -42,6 +42,7 @@ public class ModCreativeTabs {
                         // Guns
                         output.accept(ModItems.SINGLE_SMALL_GUN.get());
                         output.accept(ModItems.SMALL_GUN.get());
+                        output.accept(ModItems.JAPANESE_127MM_TWIN_GUN.get());
                         output.accept(ModItems.MEDIUM_GUN.get());
                         output.accept(ModItems.LARGE_GUN.get());
                         output.accept(ModItems.FRENCH_QUAD_380MM_GUN.get());

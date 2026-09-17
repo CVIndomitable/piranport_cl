@@ -1,5 +1,6 @@
 package com.piranport.block.entity;
 
+import com.piranport.block.StoveBlock;
 import com.piranport.registry.ModBlockEntityTypes;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
@@ -94,6 +95,7 @@ public class StoveBlockEntity extends BlockEntity {
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, StoveBlockEntity stove) {
         boolean changed = false;
+        boolean cooking = false;
         for (int i = 0; i < SLOT_COUNT; i++) {
             ItemStack input = stove.items.getStackInSlot(i);
             if (input.isEmpty()) {
@@ -114,6 +116,7 @@ public class StoveBlockEntity extends BlockEntity {
             }
             stove.cookingProgress[i]++;
             changed = true;
+            cooking = true;
 
             if (stove.cookingProgress[i] >= stove.cookingTotalTime[i]) {
                 ItemStack result = recipe.get().value()
@@ -126,6 +129,12 @@ public class StoveBlockEntity extends BlockEntity {
         }
         if (changed) {
             stove.setChanged();
+        }
+
+        // 只要有一格在烤就算"有火"，切到带余烬的模型。只在真的变了才写方块状态，
+        // 否则每 tick 一次 setBlock 会白白刷邻居更新。
+        if (state.getValue(StoveBlock.LIT) != cooking) {
+            level.setBlock(pos, state.setValue(StoveBlock.LIT, cooking), 3);
         }
     }
 

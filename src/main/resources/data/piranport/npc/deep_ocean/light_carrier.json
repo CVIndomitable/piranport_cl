@@ -1,0 +1,19 @@
+{
+  "entity_type": "piranport:deep_ocean_light_carrier",
+  "max_health": 55.0,
+  "movement_speed": 0.20,
+  "follow_range": 48.0,
+  "attack_damage": 2.0,
+  "knockback_resistance": 0.3,
+  "armor": 5.0,
+  "shell_damage": 4.0,
+  "explosion_power": 1.0,
+  "fire_interval": 120,
+  "orbit_distance": 32.0,
+  "can_use_torpedoes": false,
+  "torpedo_damage": 0.0,
+  "tracking_interval_min": 4,
+  "tracking_interval_max": 8,
+  "can_launch_aircraft": true,
+  "max_aircraft": 3
+}

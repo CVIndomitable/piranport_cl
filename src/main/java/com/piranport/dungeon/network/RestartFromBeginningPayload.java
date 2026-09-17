@@ -14,6 +14,7 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
@@ -56,9 +57,31 @@ public record RestartFromBeginningPayload(BlockPos lecternPos)
             ServerLevel serverLevel = (ServerLevel) player.level();
             DungeonInstanceManager mgr = DungeonInstanceManager.get(serverLevel);
             UUID instanceId = lecternBE.getDungeonInstanceUuid();
-            if (instanceId == null) return;
-            DungeonInstance instance = mgr.getInstance(instanceId);
-            if (instance == null) return;
+            ItemStack keyStack = lecternBE.getKeyStack();
+
+            DungeonInstance instance = null;
+            if (instanceId != null) {
+                instance = mgr.getInstance(instanceId);
+            }
+            if (instance == null) {
+                // 新副本：尚未创建实例——使用钥匙上的 stageId 创建并直接进入起点
+                if (keyStack.isEmpty()) return;
+                String stageId = DungeonKeyItem.getStageId(keyStack);
+                com.piranport.dungeon.data.StageData stage =
+                        com.piranport.dungeon.data.DungeonRegistry.INSTANCE.getStage(stageId);
+                if (stage == null) return;
+                String startNode = stage.startNode();
+                if (startNode == null) return;
+                instance = mgr.createInstance(stageId, player,
+                        lecternPos,
+                        player.level().dimension().location().toString());
+                if (instance == null) return;
+                com.piranport.dungeon.event.DungeonEventHandler.enterNode(
+                        serverLevel, instance,
+                        stage.nodes().get(startNode),
+                        stage, player, keyStack);
+                return;
+            }
 
             StageData stage = DungeonRegistry.INSTANCE.getStage(instance.getStageId());
             if (stage == null) return;

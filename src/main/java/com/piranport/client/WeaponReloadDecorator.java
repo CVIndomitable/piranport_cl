@@ -54,7 +54,8 @@ public class WeaponReloadDecorator implements IItemDecorator {
 
                 boolean hasDurability = stack.isDamageableItem();
                 int barX = x + 2;
-                int barY = hasDurability ? (y + 11) : (y + 13);
+                // 耐久条在 y+13，避免遮挡：耐久物品装填条下移到 y+14
+                int barY = hasDurability ? (y + 14) : (y + 13);
 
                 gui.fill(barX, barY, barX + BAR_WIDTH, barY + 2, BG_COLOR);
                 if (fillW > 0) {
@@ -70,7 +71,7 @@ public class WeaponReloadDecorator implements IItemDecorator {
             if (!loaded.hasAmmo() && !hasMatchingAmmoInInventory(stack)) {
                 boolean hasDurability = stack.isDamageableItem();
                 int barX = x + 2;
-                int barY = hasDurability ? (y + 11) : (y + 13);
+                int barY = hasDurability ? (y + 14) : (y + 13);
                 gui.fill(barX, barY, barX + BAR_WIDTH, barY + 2, BG_COLOR);
             }
             return false;
@@ -87,7 +88,7 @@ public class WeaponReloadDecorator implements IItemDecorator {
             if (!ammo.hasAmmo()) {
                 boolean hasDurability = stack.isDamageableItem();
                 int barX = x + 2;
-                int barY = hasDurability ? (y + 11) : (y + 13);
+                int barY = hasDurability ? (y + 14) : (y + 13);
                 gui.fill(barX, barY, barX + BAR_WIDTH, barY + 2, BG_COLOR);
                 return false;
             }

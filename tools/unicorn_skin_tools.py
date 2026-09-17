@@ -42,42 +42,48 @@ SIZE = BASE_SIZE * SCALE
 
 P = {
     "none": (0, 0, 0, 0),
-    # 淡蓝白发
-    "hair": (232, 241, 252, 255),
-    "hair_light": (251, 253, 255, 255),
-    "hair_mid": (210, 226, 245, 255),
-    "hair_shadow": (180, 203, 232, 255),
-    "hair_deep": (146, 176, 212, 255),
-    # 皮肤
-    "skin": (253, 229, 212, 255),
-    "skin_shadow": (233, 198, 180, 255),
-    "skin_deep": (211, 171, 156, 255),
-    "blush": (248, 172, 182, 255),
+    # 淡蓝白发 —— 5 个色阶（发梢深 → 头顶亮）
+    "hair_deep": (124, 158, 206, 255),
+    "hair_shadow": (162, 192, 228, 255),
+    "hair": (202, 224, 246, 255),
+    "hair_mid": (228, 240, 253, 255),
+    "hair_light": (250, 253, 255, 255),
+    # 皮肤 —— 4 个色阶
+    "skin_light": (255, 241, 232, 255),
+    "skin": (253, 224, 208, 255),
+    "skin_shadow": (240, 198, 183, 255),
+    "skin_deep": (220, 170, 156, 255),
+    "blush": (250, 156, 172, 255),
     # 五官
-    "lash": (76, 92, 122, 255),
-    "eye_deep": (54, 116, 182, 255),
-    "eye_blue": (108, 182, 234, 255),
-    "eye_light": (198, 238, 255, 255),
-    "mouth": (206, 112, 124, 255),
-    # 白裙
-    "white": (253, 254, 255, 255),
-    "white_sh": (226, 235, 245, 255),
-    "white_deep": (198, 214, 232, 255),
-    "blue_acc": (188, 219, 247, 255),
-    "blue_deep": (146, 190, 236, 255),
+    "lash": (88, 60, 74, 255),
+    "eye_deep": (42, 98, 168, 255),
+    "eye_blue": (86, 168, 228, 255),
+    "eye_light": (154, 222, 252, 255),
+    "eye_hi": (242, 253, 255, 255),
+    "mouth": (214, 116, 130, 255),
+    # 白色连衣裙
+    "white": (253, 253, 255, 255),
+    "white_sh": (214, 228, 244, 255),
+    "white_deep": (182, 203, 228, 255),
+    "mint": (206, 240, 244, 255),
+    "blue_acc": (166, 208, 246, 255),
+    "blue_deep": (114, 166, 226, 255),
+    # 深色收边（发梢 / 鞋底 / 颈部）
+    "navy": (62, 76, 112, 255),
+    "navy_deep": (44, 54, 84, 255),
     # 绿色缎带 / 叶
-    "green": (150, 205, 152, 255),
-    "green_deep": (100, 164, 110, 255),
+    "green": (128, 198, 138, 255),
+    "green_deep": (82, 146, 98, 255),
     # 花朵
-    "pink": (247, 160, 192, 255),
-    "yellow": (251, 217, 124, 255),
-    "red": (233, 104, 122, 255),
-    "orange": (248, 172, 98, 255),
-    "lilac": (204, 174, 232, 255),
+    "pink": (250, 138, 180, 255),
+    "yellow": (252, 214, 98, 255),
+    "red": (232, 82, 108, 255),
+    "orange": (250, 158, 74, 255),
+    "lilac": (196, 158, 232, 255),
     # 鞋
-    "shoe": (252, 252, 254, 255),
-    "shoe_sh": (214, 224, 236, 255),
-    "shoe_deep": (178, 190, 210, 255),
+    "shoe": (250, 250, 253, 255),
+    "shoe_sh": (208, 220, 236, 255),
+    "shoe_deep": (164, 178, 206, 255),
 }
 
 FLOWERS = ["pink", "white", "yellow", "red", "orange", "lilac"]
@@ -515,71 +521,85 @@ def side_rect(s: Sheet, face: str, front_is_right: bool, d: int, y: int, w: int,
 
 
 def hd_face(s: Sheet) -> None:
-    """16×16 面部：刘海 6 行 + 动漫大眼 5 行 + 腮红与嘴。"""
+    """16×16 面部。参照大凤画风：鬓发压住脸型、刘海下缘投影、分色阶大眼。"""
     f = "head_front"
-    # 底色
-    s.rect(f, 0, 0, 16, 16, P["skin"])
-    # 两侧鬓发：太阳穴以上为发，颊部以下转为脸颊侧影
-    s.rect(f, 0, 0, 2, 9, P["hair_mid"])
-    s.rect(f, 14, 0, 2, 9, P["hair_mid"])
-    s.rect(f, 0, 9, 2, 7, P["skin_shadow"])
-    s.rect(f, 14, 9, 2, 7, P["skin_shadow"])
-    # 刘海：5 行 + 发丝尖
-    s.rect(f, 0, 0, 16, 6, P["hair"])
-    s.rect(f, 0, 0, 16, 1, P["hair_shadow"])
-    s.rect(f, 6, 1, 4, 3, P["hair_light"])
-    s.rect(f, 1, 3, 4, 3, P["hair_light"])
-    s.rect(f, 11, 3, 4, 3, P["hair_light"])
-    s.rect(f, 3, 5, 3, 2, P["hair"])
-    s.rect(f, 10, 5, 3, 2, P["hair"])
-    s.rect(f, 0, 5, 2, 2, P["hair_mid"])
-    s.rect(f, 14, 5, 2, 2, P["hair_mid"])
-    s.px(f, 7, 6, P["hair"])
-    s.px(f, 8, 6, P["hair"])
+    # 脸颊两侧全部用头发压边（越靠下越深），把脸型框出来
+    s.rect(f, 0, 0, 2, 16, P["hair"])
+    s.rect(f, 14, 0, 2, 16, P["hair"])
+    s.rect(f, 0, 0, 2, 2, P["hair_light"])
+    s.rect(f, 14, 0, 2, 2, P["hair_light"])
+    s.rect(f, 0, 2, 2, 9, P["hair_shadow"])
+    s.rect(f, 14, 2, 2, 9, P["hair_shadow"])
+    s.rect(f, 0, 11, 2, 5, P["hair_deep"])
+    s.rect(f, 14, 11, 2, 5, P["hair_deep"])
 
-    # 眼睛：左眼 x2..6，右眼 x9..13，鼻梁留白 x7..8，共 4 行
+    # 面部：刘海下方是被遮住的暗调，往下渐亮
+    s.rect(f, 2, 6, 12, 10, P["skin_shadow"])
+    s.rect(f, 2, 8, 12, 5, P["skin"])
+    s.rect(f, 2, 11, 12, 3, P["skin_light"])
+
+    # 刘海：分股 + 下缘阴影（关键：让脸跳出来）
+    s.rect(f, 0, 0, 16, 6, P["hair"])
+    s.rect(f, 0, 0, 16, 1, P["hair_mid"])
+    s.rect(f, 0, 5, 16, 1, P["hair_shadow"])
+    s.rect(f, 2, 1, 3, 4, P["hair_light"])
+    s.rect(f, 11, 1, 3, 4, P["hair_light"])
+    s.rect(f, 6, 1, 4, 3, P["hair_mid"])
+    s.rect(f, 0, 1, 2, 5, P["hair_shadow"])
+    s.rect(f, 14, 1, 2, 5, P["hair_shadow"])
+    for x, c in ((3, P["hair"]), (12, P["hair"]), (7, P["hair_shadow"]), (8, P["hair_shadow"])):
+        s.px(f, x, 6, c)
+
+    # 眼睛：左眼 x2..6，右眼 x9..13，鼻梁留白 x7..8，4 行分色阶
     for x0 in (2, 9):
         outer = x0 if x0 == 2 else x0 + 4
-        s.rect(f, x0, 8, 5, 1, P["lash"])              # 上眼线
         s.px(f, outer, 7, P["lash"])                   # 外眼角上挑
+        s.rect(f, x0, 8, 5, 1, P["lash"])              # 上眼线
         s.rect(f, x0, 9, 5, 1, P["eye_deep"])
         s.rect(f, x0, 10, 5, 1, P["eye_blue"])
-        s.rect(f, x0 + 1, 10, 2, 1, P["eye_light"])    # 高光
+        s.px(f, x0 + 1, 10, P["eye_hi"])               # 高光
+        s.px(f, x0 + 2, 10, P["eye_light"])
         s.rect(f, x0, 11, 5, 1, P["eye_deep"])
         s.rect(f, x0 + 1, 11, 3, 1, P["eye_blue"])
-        s.px(f, x0, 12, P["skin_shadow"])
-        s.px(f, x0 + 4, 12, P["skin_shadow"])
+        s.px(f, x0 + 2, 11, P["eye_light"])
+        s.rect(f, x0, 12, 5, 1, P["skin_shadow"])      # 下眼睑投影
 
-    # 腮红、嘴、下颌
-    s.sym(f, 1, 12, 2, 2, (*P["blush"][:3], 165))
-    s.sym(f, 2, 14, 1, 1, (*P["blush"][:3], 110))
-    s.rect(f, 7, 13, 2, 1, (222, 142, 150, 255))
-    s.rect(f, 3, 15, 10, 1, P["skin_shadow"])
+    # 腮红、嘴、下巴
+    s.sym(f, 2, 13, 2, 1, P["blush"])
+    s.rect(f, 7, 14, 2, 1, P["mouth"])
+    s.rect(f, 2, 15, 12, 1, P["skin_deep"])
 
-    # 侧面：后脑厚发 + 前颊露肤，前缘与正面 x0/x1 列严格对齐
+    # 侧面：整片头发，前缘与正面 x0/x1 列严格对齐
     for face, front_is_right in (("head_left", True), ("head_right", False)):
         s.rect(face, 0, 0, 16, 16, P["hair"])
-        side_rect(s, face, front_is_right, 0, 0, 2, 9, P["hair_mid"])       # 与正面鬓发一致
-        side_rect(s, face, front_is_right, 0, 9, 2, 7, P["skin_shadow"])
-        side_rect(s, face, front_is_right, 2, 6, 4, 10, P["skin"])          # 脸颊与下颌
-        side_rect(s, face, front_is_right, 2, 5, 4, 1, P["hair"])
-        side_rect(s, face, front_is_right, 2, 14, 4, 2, P["skin_shadow"])
-        side_rect(s, face, front_is_right, 6, 0, 10, 2, P["hair_light"])    # 侧发高光
-        side_rect(s, face, front_is_right, 6, 13, 10, 3, P["hair_shadow"])
-        side_rect(s, face, front_is_right, 10, 4, 3, 12, P["hair_mid"])
+        side_rect(s, face, front_is_right, 0, 0, 2, 1, P["hair_light"])
+        side_rect(s, face, front_is_right, 0, 1, 2, 5, P["hair_shadow"])
+        side_rect(s, face, front_is_right, 0, 6, 2, 5, P["hair_shadow"])
+        side_rect(s, face, front_is_right, 0, 11, 2, 5, P["hair_deep"])
+        # 后侧：顶部亮 → 发梢深
+        side_rect(s, face, front_is_right, 6, 0, 10, 3, P["hair_mid"])
+        side_rect(s, face, front_is_right, 6, 3, 10, 6, P["hair"])
+        side_rect(s, face, front_is_right, 4, 9, 12, 4, P["hair_shadow"])
+        side_rect(s, face, front_is_right, 6, 13, 10, 3, P["hair_deep"])
+        # 发丝分股
+        side_rect(s, face, front_is_right, 4, 1, 2, 12, P["hair_light"])
+        side_rect(s, face, front_is_right, 9, 2, 1, 11, P["hair_shadow"])
+        side_rect(s, face, front_is_right, 12, 1, 2, 13, P["hair_light"])
 
-    # 后脑：垂直发丝分层（发缝 + 高光发股）
+    # 后脑：垂直渐深 + 发股
     s.rect("head_back", 0, 0, 16, 16, P["hair"])
+    s.rect("head_back", 0, 0, 16, 2, P["hair_mid"])
+    s.rect("head_back", 0, 9, 16, 4, P["hair_shadow"])
+    s.rect("head_back", 0, 13, 16, 3, P["hair_deep"])
     for x in (0, 4, 8, 12):
-        s.rect("head_back", x, 0, 1, 16, P["hair_shadow"])
-        s.rect("head_back", x + 1, 0, 2, 16, P["hair_light"])
-    s.rect("head_back", 0, 0, 16, 1, P["hair_shadow"])
-    s.rect("head_back", 0, 14, 16, 2, P["hair_shadow"])
+        s.rect("head_back", x, 2, 1, 14, P["hair_shadow"])
+        s.rect("head_back", x + 1, 2, 2, 11, P["hair_light"])
 
     # 头顶：发旋
-    s.rect("head_top", 6, 6, 4, 6, P["hair_light"])
-    s.sym("head_top", 5, 9, 1, 2, P["hair_shadow"])
-    s.rect("head_top", 0, 0, 16, 1, P["hair_shadow"])
+    s.rect("head_top", 0, 0, 16, 16, P["hair"])
+    s.rect("head_top", 0, 0, 16, 3, P["hair_shadow"])
+    s.rect("head_top", 3, 3, 10, 11, P["hair_mid"])
+    s.rect("head_top", 6, 5, 4, 7, P["hair_light"])
 
 
 def hd_crown(s: Sheet) -> None:
@@ -600,26 +620,29 @@ def hd_crown(s: Sheet) -> None:
     flower(f, 2, 3, P["pink"])
     flower(f, 12, 3, P["yellow"])
 
-    # 侧面：花环 + 垂到肩上的长发
+    # 侧面：花环 + 垂到肩上的长发（顶部亮 → 发梢深，与前缘对齐）
     for face, front_is_right in (("head_left_ov", True), ("head_right_ov", False)):
         s.rect(face, 0, 0, 16, 16, P["none"])
         for i in range(8):
             flower(face, i * 2, 0, petals[(i + 2) % len(petals)])
-        side_rect(s, face, front_is_right, 6, 2, 6, 14, P["hair"])
-        side_rect(s, face, front_is_right, 6, 2, 2, 14, P["hair_light"])
-        side_rect(s, face, front_is_right, 8, 6, 8, 10, P["hair_shadow"])
-        side_rect(s, face, front_is_right, 0, 2, 6, 14, P["hair_mid"])
-        side_rect(s, face, front_is_right, 0, 13, 6, 3, P["hair_shadow"])
+        side_rect(s, face, front_is_right, 0, 2, 16, 3, P["hair_mid"])
+        side_rect(s, face, front_is_right, 0, 5, 16, 5, P["hair"])
+        side_rect(s, face, front_is_right, 0, 10, 16, 4, P["hair_shadow"])
+        side_rect(s, face, front_is_right, 0, 14, 16, 2, P["hair_deep"])
+        side_rect(s, face, front_is_right, 6, 2, 2, 12, P["hair_light"])
+        side_rect(s, face, front_is_right, 10, 3, 1, 11, P["hair_shadow"])
 
     # 后脑：花环 + 长发
     s.rect("head_back_ov", 0, 0, 16, 16, P["none"])
     for i in range(8):
         flower("head_back_ov", i * 2, 0, petals[(i + 4) % len(petals)])
-    s.rect("head_back_ov", 0, 2, 16, 14, P["hair"])
-    s.rect("head_back_ov", 0, 2, 2, 14, P["hair_shadow"])
-    s.sym("head_back_ov", 3, 2, 3, 14, P["hair_light"])
-    s.rect("head_back_ov", 7, 2, 2, 14, P["hair_light"])
-    s.rect("head_back_ov", 0, 14, 16, 2, P["hair_shadow"])
+    s.rect("head_back_ov", 0, 2, 16, 3, P["hair_mid"])
+    s.rect("head_back_ov", 0, 5, 16, 6, P["hair"])
+    s.rect("head_back_ov", 0, 11, 16, 3, P["hair_shadow"])
+    s.rect("head_back_ov", 0, 14, 16, 2, P["hair_deep"])
+    s.sym("head_back_ov", 3, 2, 2, 12, P["hair_light"])
+    s.rect("head_back_ov", 8, 2, 2, 12, P["hair_light"])
+    s.sym("head_back_ov", 6, 2, 1, 14, P["hair_shadow"])
 
     # 头顶俯视：花环只沿周长画 1 像素，避免俯视时变成彩色盒盖
     t = "head_top_ov"
@@ -637,33 +660,45 @@ def hd_dress(s: Sheet) -> None:
     f = "body_front"
     # 颈肩 + 细肩带
     s.rect(f, 0, 0, 16, 2, P["skin"])
+    s.rect(f, 0, 0, 16, 1, P["skin_light"])
     s.sym(f, 5, 0, 2, 3, P["white"])
     s.sym(f, 6, 0, 1, 3, P["white_sh"])
     # 胸衣上缘与淡蓝装饰带
     s.rect(f, 0, 2, 16, 2, P["white"])
     s.rect(f, 0, 3, 16, 1, P["white_sh"])
     s.rect(f, 0, 4, 16, 3, P["blue_acc"])
-    s.rect(f, 2, 4, 12, 1, P["blue_deep"])
+    s.rect(f, 0, 4, 16, 1, P["blue_deep"])
+    s.rect(f, 2, 5, 12, 1, P["white"])
     s.rect(f, 0, 7, 16, 1, P["blue_deep"])
     # 胸口小花点缀
     for x, c in ((2, P["pink"]), (12, P["pink"]), (5, P["yellow"]), (9, P["yellow"])):
         s.rect(f, x, 4, 2, 2, c)
-    # 白色胸衣 + 胸前小蝴蝶结
+    # 白色胸衣：两侧收暗 + 中央蕾丝门襟 + 胸前蝴蝶结
     s.rect(f, 0, 8, 16, 6, P["white"])
-    s.sym(f, 0, 8, 1, 6, P["white_sh"])
-    s.rect(f, 4, 9, 3, 2, P["blue_acc"])
-    s.rect(f, 9, 9, 3, 2, P["blue_acc"])
-    s.rect(f, 4, 9, 1, 2, P["blue_deep"])
-    s.rect(f, 11, 9, 1, 2, P["blue_deep"])
-    s.rect(f, 7, 9, 2, 2, P["blue_deep"])
-    s.rect(f, 7, 11, 2, 2, P["blue_acc"])
+    s.sym(f, 0, 8, 2, 6, P["white_sh"])
+    s.sym(f, 0, 8, 1, 6, P["white_deep"])
+    s.rect(f, 7, 12, 2, 2, P["white_sh"])
+    s.rect(f, 0, 13, 16, 1, P["white_deep"])
+    s.rect(f, 4, 9, 3, 3, P["blue_acc"])
+    s.rect(f, 9, 9, 3, 3, P["blue_acc"])
+    s.px(f, 4, 9, P["white"])
+    s.px(f, 11, 9, P["white"])
+    s.rect(f, 7, 9, 2, 3, P["blue_deep"])
+    # 裙身小花刺绣
+    s.sym(f, 3, 11, 2, 2, P["pink"])
+    s.sym(f, 2, 12, 1, 1, P["yellow"])
     # 腰封
     s.rect(f, 0, 14, 16, 1, P["white"])
     s.rect(f, 0, 15, 16, 2, P["blue_acc"])
+    s.rect(f, 0, 15, 16, 1, P["mint"])
     s.rect(f, 0, 17, 16, 1, P["blue_deep"])
-    # 裙摆
+    # 裙摆：褶皱线 + 两侧深色收起
     s.rect(f, 0, 18, 16, 6, P["white"])
-    s.sym(f, 2, 18, 2, 6, P["white_sh"])
+    s.sym(f, 0, 18, 1, 6, P["white_deep"])
+    for x in (2, 6, 10, 14):
+        s.rect(f, x, 18, 1, 5, P["white_sh"])
+    for x in (4, 12):
+        s.rect(f, x, 18, 1, 5, P["white_deep"])
     s.rect(f, 0, 23, 16, 1, P["white_deep"])
     # 斜跨花环（自左下摆斜向右上，只落在裙摆内）
     for i in range(5):
@@ -674,12 +709,15 @@ def hd_dress(s: Sheet) -> None:
     b = "body_back"
     s.rect(b, 0, 0, 16, 2, P["skin"])
     s.rect(b, 0, 2, 16, 13, P["white"])
+    s.sym(b, 0, 2, 1, 16, P["white_sh"])
+    s.rect(b, 0, 13, 16, 1, P["white_deep"])
     s.rect(b, 0, 15, 16, 3, P["blue_acc"])
     s.rect(b, 0, 18, 16, 6, P["white_sh"])
     s.rect(b, 0, 23, 16, 1, P["white_deep"])
 
     for face in ("body_left", "body_right"):
         s.rect(face, 0, 2, 8, 13, P["white"])
+        s.rect(face, 0, 13, 8, 1, P["white_deep"])
         s.rect(face, 0, 15, 8, 3, P["blue_acc"])
         s.rect(face, 0, 18, 8, 6, P["white_sh"])
         s.rect(face, 0, 23, 8, 1, P["white_deep"])
@@ -698,12 +736,13 @@ def hd_dress(s: Sheet) -> None:
     # 背外衣层：长发披到臀部（发缝 + 高光发股）
     bo = "body_back_ov"
     s.rect(bo, 0, 0, 16, 24, P["none"])
-    s.rect(bo, 0, 0, 16, 18, P["hair"])
+    s.rect(bo, 0, 0, 16, 4, P["hair_mid"])
+    s.rect(bo, 0, 4, 16, 7, P["hair"])
+    s.rect(bo, 0, 11, 16, 5, P["hair_shadow"])
+    s.rect(bo, 0, 16, 16, 2, P["hair_deep"])
     for x in (0, 4, 8, 12):
         s.rect(bo, x, 0, 1, 18, P["hair_shadow"])
-        s.rect(bo, x + 1, 0, 2, 18, P["hair_light"])
-    s.rect(bo, 0, 0, 16, 2, P["hair_shadow"])
-    s.rect(bo, 0, 16, 16, 2, P["hair_shadow"])
+        s.rect(bo, x + 1, 0, 2, 14, P["hair_light"])
     s.rect(bo, 0, 20, 16, 1, P["white"])
     for i in range(8):
         s.rect(bo, i * 2, 21, 2, 2, P[FLOWERS[(i + 3) % len(FLOWERS)]])
@@ -711,9 +750,11 @@ def hd_dress(s: Sheet) -> None:
 
     for face, front_is_right in (("body_left_ov", True), ("body_right_ov", False)):
         s.rect(face, 0, 0, 8, 24, P["none"])
-        s.rect(face, 0, 0, 8, 12, P["hair"])
+        s.rect(face, 0, 0, 8, 4, P["hair_mid"])
+        s.rect(face, 0, 4, 8, 6, P["hair"])
+        s.rect(face, 0, 10, 8, 4, P["hair_shadow"])
+        s.rect(face, 0, 14, 8, 2, P["hair_deep"])
         side_rect(s, face, front_is_right, 0, 0, 2, 12, P["hair_light"])
-        s.rect(face, 0, 10, 8, 2, P["hair_shadow"])
         s.rect(face, 0, 17, 8, 1, P["white"])
         s.rect(face, 0, 20, 8, 4, P["white_sh"])
 
@@ -724,20 +765,24 @@ def hd_dress(s: Sheet) -> None:
 
 
 def hd_arms(s: Sheet) -> None:
-    for faces in (
-        ("rarm_front", "rarm_back", "rarm_left", "rarm_right"),
-        ("larm_front", "larm_back", "larm_left", "larm_right"),
+    for faces, front_is_right in (
+        (("rarm_front", "rarm_back", "rarm_left", "rarm_right"), True),
+        (("larm_front", "larm_back", "larm_left", "larm_right"), False),
     ):
         front, back, side_in, side_out = faces
+        # 内侧深、外侧亮，做出圆柱感
+        s.rect(side_in, 0, 0, 8, 24, P["skin_shadow"])
+        s.rect(side_out, 0, 0, 8, 24, P["skin_light"])
+        s.rect(back, 0, 0, 6, 24, P["skin_shadow"])
+        s.rect(front, 0, 0, 6, 24, P["skin"])
+        s.rect(front, 0, 6, 1, 12, P["skin_shadow"])
+        s.rect(front, 5, 6, 1, 12, P["skin_light"])
+        # 腕部蕾丝袖口
         for f in faces:
             fw = FACES[f][2] * 2
-            s.rect(f, 0, 0, fw, 24, P["skin"] if f is not back and f is not side_in else P["skin_shadow"])
             s.rect(f, 0, 18, fw, 2, P["white"])
-            s.rect(f, 0, 19, fw, 1, P["white_sh"])
-            s.rect(f, 0, 20, fw, 4, P["skin"])
-        s.rect(front, 0, 0, 6, 2, P["skin"])
-        s.rect(front, 0, 20, 6, 4, P["skin_shadow"])
-        s.rect(side_out, 0, 6, 8, 12, P["skin_shadow"])
+            s.rect(f, 0, 18, fw, 1, P["white_sh"])
+            s.rect(f, 0, 20, fw, 4, P["skin"] if f is side_out else P["skin_shadow"])
 
     for faces in (
         ("rarm_front_ov", "rarm_back_ov", "rarm_left_ov", "rarm_right_ov"),
@@ -747,18 +792,21 @@ def hd_arms(s: Sheet) -> None:
         for f in faces:
             fw = FACES[f][2] * 2
             s.rect(f, 0, 0, fw, 24, P["none"])
-            s.rect(f, 0, 0, fw, 3, P["white"])
-            s.rect(f, 0, 3, fw, 1, P["white_sh"])
-            s.px(f, 0, 3, P["none"])
-            s.px(f, fw - 1, 3, P["none"])
+            # 肩部荷叶边（立绘为细吊带，只保留很窄的一圈）
+            s.rect(f, 0, 0, fw, 2, P["white"])
+            s.rect(f, 0, 2, fw, 1, P["white_sh"])
+            s.px(f, 0, 2, P["none"])
+            s.px(f, fw - 1, 2, P["none"])
+            # 腕部蕾丝
             s.rect(f, 0, 16, fw, 2, P["white"])
-            s.rect(f, 0, 18, fw, 1, P["white_sh"])
-        # 外侧与后侧垂下的长发
-        s.rect(side_out, 0, 5, 8, 9, P["hair"])
-        s.rect(side_out, 0, 5, 8, 1, P["hair_light"])
+            s.rect(f, 0, 18, fw, 1, P["white_deep"])
+        # 外侧与后侧垂下的长发（顶部亮 → 发梢深）
+        s.rect(side_out, 0, 4, 8, 2, P["hair_mid"])
+        s.rect(side_out, 0, 6, 8, 6, P["hair"])
         s.rect(side_out, 0, 12, 8, 2, P["hair_shadow"])
-        s.rect(back, 0, 4, 6, 10, P["hair"])
-        s.rect(back, 0, 12, 6, 2, P["hair_shadow"])
+        s.rect(side_out, 0, 14, 8, 1, P["hair_deep"])
+        s.rect(back, 0, 4, 6, 8, P["hair"])
+        s.rect(back, 0, 12, 6, 3, P["hair_shadow"])
         for f in ("rarm_top_ov", "rarm_bottom_ov", "larm_top_ov", "larm_bottom_ov"):
             s.rect(f, 0, 0, FACES[f][2] * 2, 8, P["none"])
 
@@ -772,26 +820,25 @@ def hd_legs(s: Sheet) -> None:
             fw = FACES[f][2] * 2
             tone = P["skin_shadow"] if f in (back, side_in) else P["skin"]
             s.rect(f, 0, 0, fw, 24, tone)
+            if f is side_out or f is front:
+                s.rect(f, fw - 2, 0, 2, 24, P["skin_light"])   # 外侧受光
             # 白色长筒袜（袜口 r11 → r19）
             s.rect(f, 0, 11, fw, 9, P["white"])
             s.rect(f, 0, 11, fw, 1, P["green"])
             s.rect(f, 0, 12, fw, 1, P["green_deep"])
-            # 袜身两侧淡蓝阴影
-            s.px(f, 0, 15, P["white_sh"])
-            s.px(f, 0, 17, P["white_sh"])
-            s.px(f, fw - 1, 15, P["white_sh"])
-            s.px(f, fw - 1, 17, P["white_sh"])
+            # 袜身内侧收暗
+            s.rect(f, 0, 13, 1, 7, P["white_sh"])
+            s.rect(f, fw - 1, 13, 1, 7, P["white_sh"])
             # 白鞋
             s.rect(f, 0, 20, fw, 3, P["shoe"])
-            s.rect(f, 0, 23, fw, 1, P["shoe_deep"])
             s.rect(f, 0, 20, fw, 1, P["shoe_sh"])
-        # 正面/外侧的绿色交叉缎带：一道贯穿袜身的大 X（1 像素线）
+            s.rect(f, 0, 23, fw, 1, P["shoe_deep"])
+        # 正面/外侧的绿色交叉缎带：贯穿袜身的菱形网格
         for f in (front, side_out, side_in):
             fw = FACES[f][2] * 2
-            xs = [0, 1, 3, 4, 6, 7] if fw == 8 else [0, 1, 2, 3]
-            for i, xa in enumerate(xs):
-                s.px(f, xa, 13 + i, P["green"])
-                s.px(f, fw - 1 - xa, 13 + i, P["green"])
+            for i in range(fw):
+                s.px(f, i, 12 + i, P["green"])
+                s.px(f, fw - 1 - i, 12 + i, P["green"])
         # 鞋面缎带
         s.rect(front, 2, 21, 4, 1, P["green"])
         s.rect(back, 2, 21, 4, 1, P["shoe_sh"])

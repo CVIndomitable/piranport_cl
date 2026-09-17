@@ -35,7 +35,7 @@ import java.util.UUID;
 public class TorpedoEntity extends ThrowableItemProjectile {
     private int caliber = 533;
     private float damage = 18f;
-    private float torpedoSpeed = 1.2f;
+    private float torpedoSpeed = 1.0f;
     private int lifetime = 1200;
     private float explosionRadius = 2.0f;
     private boolean magnetic = false;
@@ -86,12 +86,12 @@ public class TorpedoEntity extends ThrowableItemProjectile {
         this.caliber = caliber;
         if (caliber == 610) {
             this.damage = 28f;
-            this.torpedoSpeed = 1.0f;
+            this.torpedoSpeed = 0.9f;
             this.lifetime = 1200;
             this.explosionRadius = 2.5f;
         } else {
             this.damage = 18f;
-            this.torpedoSpeed = 1.0f;
+            this.torpedoSpeed = 0.9f;
             this.lifetime = 1200;
             this.explosionRadius = 2.0f;
         }
@@ -134,7 +134,7 @@ public class TorpedoEntity extends ThrowableItemProjectile {
     public void setOxygen(boolean oxygen) {
         this.oxygen = oxygen;
         if (oxygen) {
-            // 氧气推进：航速 +30% (1.0 → 1.3 blocks/tick)
+            // 氧气推进：航速 +30% (0.9 → 1.17 blocks/tick)
             this.torpedoSpeed = this.torpedoSpeed * 1.3f;
         }
     }
@@ -687,7 +687,7 @@ public class TorpedoEntity extends ThrowableItemProjectile {
         caliber = tag.getInt("Caliber");
         damage = tag.getFloat("Damage");
         torpedoSpeed = tag.getFloat("TorpedoSpeed");
-        if (torpedoSpeed <= 0) torpedoSpeed = 1.2f;
+        if (torpedoSpeed <= 0) torpedoSpeed = 1.0f;
         lifetime = tag.getInt("Lifetime");
         if (lifetime <= 0) lifetime = 1200;
         explosionRadius = tag.getFloat("ExplosionRadius");

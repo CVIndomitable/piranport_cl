@@ -10,7 +10,6 @@
   },
   "elements": [
     {
-      "__note": "桌腿：四根 2x2 的角柱，高 10 格，桌面就架在它们上面",
       "from": [
         1,
         0,
@@ -21,65 +20,11 @@
         10,
         3
       ],
-      "faces": {
-        "down": {
-          "uv": [
-            0,
-            0,
-            2,
-            2
-          ],
-          "texture": "#wood"
-        },
-        "up": {
-          "uv": [
-            0,
-            0,
-            2,
-            2
-          ],
-          "texture": "#wood"
-        },
-        "north": {
-          "uv": [
-            0,
-            6,
-            2,
-            16
-          ],
-          "texture": "#wood"
-        },
-        "south": {
-          "uv": [
-            0,
-            6,
-            2,
-            16
-          ],
-          "texture": "#wood"
-        },
-        "west": {
-          "uv": [
-            0,
-            6,
-            2,
-            16
-          ],
-          "texture": "#wood"
-        },
-        "east": {
-          "uv": [
-            0,
-            6,
-            2,
-            16
-          ],
-          "texture": "#wood"
-        }
+      "faces":    { "down": {   "uv": [     0,     0,     2,     2   ],   "texture": "#wood" }, "up": {   "uv": [     0,     0,     2,     2   ],   "texture": "#wood" }, "north": {   "uv": [     0,     6,     2,     16   ],   "texture": "#wood" }, "south": {   "uv": [     0,     6,     2,     16   ],   "texture": "#wood" }, "west": {   "uv": [     0,     6,     2,     16   ],   "texture": "#wood" }, "east": {   "uv": [     0,     6,     2,     16   ],   "texture": "#wood" }
       }
+
     },
     {
-      "__note": "桌腿：东北角",
       "from": [
         13,
         0,
@@ -90,65 +35,11 @@
         10,
         3
       ],
-      "faces": {
-        "down": {
-          "uv": [
-            0,
-            0,
-            2,
-            2
-          ],
-          "texture": "#wood"
-        },
-        "up": {
-          "uv": [
-            0,
-            0,
-            2,
-            2
-          ],
-          "texture": "#wood"
-        },
-        "north": {
-          "uv": [
-            0,
-            6,
-            2,
-            16
-          ],
-          "texture": "#wood"
-        },
-        "south": {
-          "uv": [
-            0,
-            6,
-            2,
-            16
-          ],
-          "texture": "#wood"
-        },
-        "west": {
-          "uv": [
-            0,
-            6,
-            2,
-            16
-          ],
-          "texture": "#wood"
-        },
-        "east": {
-          "uv": [
-            0,
-            6,
-            2,
-            16
-          ],
-          "texture": "#wood"
-        }
+      "faces":    { "down": {   "uv": [     0,     0,     2,     2   ],   "texture": "#wood" }, "up": {   "uv": [     0,     0,     2,     2   ],   "texture": "#wood" }, "north": {   "uv": [     0,     6,     2,     16   ],   "texture": "#wood" }, "south": {   "uv": [     0,     6,     2,     16   ],   "texture": "#wood" }, "west": {   "uv": [     0,     6,     2,     16   ],   "texture": "#wood" }, "east": {   "uv": [     0,     6,     2,     16   ],   "texture": "#wood" }
       }
+
     },
     {
-      "__note": "桌腿：西南角",
       "from": [
         1,
         0,
@@ -159,65 +50,11 @@
         10,
         15
       ],
-      "faces": {
-        "down": {
-          "uv": [
-            0,
-            0,
-            2,
-            2
-          ],
-          "texture": "#wood"
-        },
-        "up": {
-          "uv": [
-            0,
-            0,
-            2,
-            2
-          ],
-          "texture": "#wood"
-        },
-        "north": {
-          "uv": [
-            0,
-            6,
-            2,
-            16
-          ],
-          "texture": "#wood"
-        },
-        "south": {
-          "uv": [
-            0,
-            6,
-            2,
-            16
-          ],
-          "texture": "#wood"
-        },
-        "west": {
-          "uv": [
-            0,
-            6,
-            2,
-            16
-          ],
-          "texture": "#wood"
-        },
-        "east": {
-          "uv": [
-            0,
-            6,
-            2,
-            16
-          ],
-          "texture": "#wood"
-        }
+      "faces":    { "down": {   "uv": [     0,     0,     2,     2   ],   "texture": "#wood" }, "up": {   "uv": [     0,     0,     2,     2   ],   "texture": "#wood" }, "north": {   "uv": [     0,     6,     2,     16   ],   "texture": "#wood" }, "south": {   "uv": [     0,     6,     2,     16   ],   "texture": "#wood" }, "west": {   "uv": [     0,     6,     2,     16   ],   "texture": "#wood" }, "east": {   "uv": [     0,     6,     2,     16   ],   "texture": "#wood" }
       }
+
     },
     {
-      "__note": "桌腿：东南角",
       "from": [
         13,
         0,
@@ -228,65 +65,11 @@
         10,
         15
       ],
-      "faces": {
-        "down": {
-          "uv": [
-            0,
-            0,
-            2,
-            2
-          ],
-          "texture": "#wood"
-        },
-        "up": {
-          "uv": [
-            0,
-            0,
-            2,
-            2
-          ],
-          "texture": "#wood"
-        },
-        "north": {
-          "uv": [
-            0,
-            6,
-            2,
-            16
-          ],
-          "texture": "#wood"
-        },
-        "south": {
-          "uv": [
-            0,
-            6,
-            2,
-            16
-          ],
-          "texture": "#wood"
-        },
-        "west": {
-          "uv": [
-            0,
-            6,
-            2,
-            16
-          ],
-          "texture": "#wood"
-        },
-        "east": {
-          "uv": [
-            0,
-            6,
-            2,
-            16
-          ],
-          "texture": "#wood"
-        }
+      "faces":    { "down": {   "uv": [     0,     0,     2,     2   ],   "texture": "#wood" }, "up": {   "uv": [     0,     0,     2,     2   ],   "texture": "#wood" }, "north": {   "uv": [     0,     6,     2,     16   ],   "texture": "#wood" }, "south": {   "uv": [     0,     6,     2,     16   ],   "texture": "#wood" }, "west": {   "uv": [     0,     6,     2,     16   ],   "texture": "#wood" }, "east": {   "uv": [     0,     6,     2,     16   ],   "texture": "#wood" }
       }
+
     },
     {
-      "__note": "箱体：4..12 高度，架在四条腿之间，z 向收窄 2 格给前后留出踢脚空间。西/东面贴 steel，正面(north)露出码放的弹药",
       "from": [
         0,
         4,
@@ -297,65 +80,11 @@
         12,
         14
       ],
-      "faces": {
-        "down": {
-          "uv": [
-            0,
-            0,
-            16,
-            12
-          ],
-          "texture": "#steel"
-        },
-        "up": {
-          "uv": [
-            0,
-            0,
-            16,
-            12
-          ],
-          "texture": "#steel"
-        },
-        "north": {
-          "uv": [
-            0,
-            1,
-            16,
-            15
-          ],
-          "texture": "#projectile"
-        },
-        "south": {
-          "uv": [
-            0,
-            0,
-            16,
-            16
-          ],
-          "texture": "#steel"
-        },
-        "west": {
-          "uv": [
-            0,
-            0,
-            12,
-            16
-          ],
-          "texture": "#steel"
-        },
-        "east": {
-          "uv": [
-            0,
-            0,
-            12,
-            16
-          ],
-          "texture": "#steel"
-        }
+      "faces":    { "down": {   "uv": [     0,     0,     16,     12   ],   "texture": "#steel" }, "up": {   "uv": [     0,     0,     16,     12   ],   "texture": "#steel" }, "north": {   "uv": [     0,     1,     16,     15   ],   "texture": "#projectile" }, "south": {   "uv": [     0,     0,     16,     16   ],   "texture": "#steel" }, "west": {   "uv": [     0,     0,     12,     16   ],   "texture": "#steel" }, "east": {   "uv": [     0,     0,     12,     16   ],   "texture": "#steel" }
       }
+
     },
     {
-      "__note": "桌面：12..14 高度、一整块 16x16，向四周轻微出檐",
       "from": [
         0,
         12,
@@ -366,338 +95,69 @@
         14,
         16
       ],
-      "faces": {
-        "down": {
-          "uv": [
-            0,
-            0,
-            16,
-            16
-          ],
-          "texture": "#wood"
-        },
-        "up": {
-          "uv": [
-            0,
-            0,
-            16,
-            16
-          ],
-          "texture": "#wood"
-        },
-        "north": {
-          "uv": [
-            0,
-            14,
-            16,
-            16
-          ],
-          "texture": "#wood"
-        },
-        "south": {
-          "uv": [
-            0,
-            14,
-            16,
-            16
-          ],
-          "texture": "#wood"
-        },
-        "west": {
-          "uv": [
-            0,
-            14,
-            16,
-            16
-          ],
-          "texture": "#wood"
-        },
-        "east": {
-          "uv": [
-            0,
-            14,
-            16,
-            16
-          ],
-          "texture": "#wood"
-        }
+      "faces":    { "down": {   "uv": [     0,     0,     16,     16   ],   "texture": "#wood" }, "up": {   "uv": [     0,     0,     16,     16   ],   "texture": "#wood" }, "north": {   "uv": [     0,     14,     16,     16   ],   "texture": "#wood" }, "south": {   "uv": [     0,     14,     16,     16   ],   "texture": "#wood" }, "west": {   "uv": [     0,     14,     16,     16   ],   "texture": "#wood" }, "east": {   "uv": [     0,     14,     16,     16   ],   "texture": "#wood" }
       }
+
     },
     {
-      "__note": "桌上的蓝图：一张略微小于桌面的纸，用 z 偏移抬 0.1 避免和桌面共面闪烁",
       "from": [
-        3.5,
+        2,
         14.1,
-        3.5
+        2
       ],
       "to": [
+        14,
+        14.16,
+        14
+      ],
+      "faces":    { "down": {   "uv": [     0,     0,     12,     12   ],   "texture": "#blueprint" }, "up": {   "uv": [     0,     0,     12,     12   ],   "texture": "#blueprint" }, "north": {   "uv": [     0,     0,     12,     1   ],   "texture": "#blueprint" }, "south": {   "uv": [     0,     0,     12,     1   ],   "texture": "#blueprint" }, "west": {   "uv": [     0,     0,     12,     1   ],   "texture": "#blueprint" }, "east": {   "uv": [     0,     0,     12,     1   ],   "texture": "#blueprint" }
+      }
+
+    },
+    {
+      "from": [
+        1.5,
+        14.16,
+        1.5
+      ],
+      "to": [
+        4.5,
+        15.2,
+        3.5
+      ],
+      "faces":    { "down": {   "uv": [     0,     0,     2,     2   ],   "texture": "#steel" }, "up": {   "uv": [     0,     0,     2,     2   ],   "texture": "#steel" }, "north": {   "uv": [     0,     14,     2,     16   ],   "texture": "#steel" }, "south": {   "uv": [     0,     14,     2,     16   ],   "texture": "#steel" }, "west": {   "uv": [     0,     14,     2,     16   ],   "texture": "#steel" }, "east": {   "uv": [     0,     14,     2,     16   ],   "texture": "#steel" }
+      }
+
+    },
+    {
+      "from": [
         12.5,
         14.16,
         12.5
       ],
-      "faces": {
-        "down": {
-          "uv": [
-            0,
-            0,
-            9,
-            9
-          ],
-          "texture": "#blueprint"
-        },
-        "up": {
-          "uv": [
-            0,
-            0,
-            9,
-            9
-          ],
-          "texture": "#blueprint"
-        },
-        "north": {
-          "uv": [
-            0,
-            0,
-            9,
-            1
-          ],
-          "texture": "#blueprint"
-        },
-        "south": {
-          "uv": [
-            0,
-            0,
-            9,
-            1
-          ],
-          "texture": "#blueprint"
-        },
-        "west": {
-          "uv": [
-            0,
-            0,
-            9,
-            1
-          ],
-          "texture": "#blueprint"
-        },
-        "east": {
-          "uv": [
-            0,
-            0,
-            9,
-            1
-          ],
-          "texture": "#blueprint"
-        }
-      }
-    },
-    {
-      "__note": "图纸压角：西北角的镇纸，防止蓝图被当成空气",
-      "from": [
-        2.5,
-        14.16,
-        2.5
-      ],
       "to": [
-        4.5,
-        15.1,
-        4.5
+        15.5,
+        15.2,
+        14.5
       ],
-      "faces": {
-        "down": {
-          "uv": [
-            0,
-            0,
-            2,
-            2
-          ],
-          "texture": "#steel"
-        },
-        "up": {
-          "uv": [
-            0,
-            0,
-            2,
-            2
-          ],
-          "texture": "#steel"
-        },
-        "north": {
-          "uv": [
-            0,
-            14,
-            2,
-            16
-          ],
-          "texture": "#steel"
-        },
-        "south": {
-          "uv": [
-            0,
-            14,
-            2,
-            16
-          ],
-          "texture": "#steel"
-        },
-        "west": {
-          "uv": [
-            0,
-            14,
-            2,
-            16
-          ],
-          "texture": "#steel"
-        },
-        "east": {
-          "uv": [
-            0,
-            14,
-            2,
-            16
-          ],
-          "texture": "#steel"
-        }
+      "faces":    { "down": {   "uv": [     0,     0,     2,     2   ],   "texture": "#steel" }, "up": {   "uv": [     0,     0,     2,     2   ],   "texture": "#steel" }, "north": {   "uv": [     0,     14,     2,     16   ],   "texture": "#steel" }, "south": {   "uv": [     0,     14,     2,     16   ],   "texture": "#steel" }, "west": {   "uv": [     0,     14,     2,     16   ],   "texture": "#steel" }, "east": {   "uv": [     0,     14,     2,     16   ],   "texture": "#steel" }
       }
+
     },
     {
-      "__note": "图纸压角：东南角的镇纸",
       "from": [
-        11.5,
-        14.16,
-        11.5
-      ],
-      "to": [
-        13.5,
-        15.1,
-        13.5
-      ],
-      "faces": {
-        "down": {
-          "uv": [
-            0,
-            0,
-            2,
-            2
-          ],
-          "texture": "#steel"
-        },
-        "up": {
-          "uv": [
-            0,
-            0,
-            2,
-            2
-          ],
-          "texture": "#steel"
-        },
-        "north": {
-          "uv": [
-            0,
-            14,
-            2,
-            16
-          ],
-          "texture": "#steel"
-        },
-        "south": {
-          "uv": [
-            0,
-            14,
-            2,
-            16
-          ],
-          "texture": "#steel"
-        },
-        "west": {
-          "uv": [
-            0,
-            14,
-            2,
-            16
-          ],
-          "texture": "#steel"
-        },
-        "east": {
-          "uv": [
-            0,
-            14,
-            2,
-            16
-          ],
-          "texture": "#steel"
-        }
-      }
-    },
-    {
-      "__note": "桌面上立着的一发炮弹，斜靠在蓝图上做参照物",
-      "from": [
-        7,
+        6.5,
         14,
-        6
+        6.5
       ],
       "to": [
         9,
         16,
-        8
+        9
       ],
-      "faces": {
-        "down": {
-          "uv": [
-            0,
-            0,
-            2,
-            2
-          ],
-          "texture": "#projectile"
-        },
-        "up": {
-          "uv": [
-            0,
-            0,
-            2,
-            2
-          ],
-          "texture": "#projectile"
-        },
-        "north": {
-          "uv": [
-            6,
-            4,
-            8,
-            16
-          ],
-          "texture": "#projectile"
-        },
-        "south": {
-          "uv": [
-            6,
-            4,
-            8,
-            16
-          ],
-          "texture": "#projectile"
-        },
-        "west": {
-          "uv": [
-            6,
-            4,
-            8,
-            16
-          ],
-          "texture": "#projectile"
-        },
-        "east": {
-          "uv": [
-            6,
-            4,
-            8,
-            16
-          ],
-          "texture": "#projectile"
-        }
+      "faces":    { "down": {   "uv": [     0,     0,     2,     2   ],   "texture": "#projectile" }, "up": {   "uv": [     0,     0,     2,     2   ],   "texture": "#projectile" }, "north": {   "uv": [     6,     4,     8,     16   ],   "texture": "#projectile" }, "south": {   "uv": [     6,     4,     8,     16   ],   "texture": "#projectile" }, "west": {   "uv": [     6,     4,     8,     16   ],   "texture": "#projectile" }, "east": {   "uv": [     6,     4,     8,     16   ],   "texture": "#projectile" }
       }
+
     }
   ]
 }

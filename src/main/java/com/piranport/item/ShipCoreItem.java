@@ -274,7 +274,7 @@ public class ShipCoreItem extends Item implements Equipable {
 
         if (!other.isEmpty()) {
             // Insert: cursor has ArmorPlateItem/SonarItem/EngineItem/TorpedoReloadItem → store in first empty slot
-            if (!(other.getItem() instanceof ArmorPlateItem) && !(other.getItem() instanceof SonarItem) && !(other.getItem() instanceof EngineItem) && !(other.getItem() instanceof TorpedoReloadItem)) return false;
+            if (!(other.getItem() instanceof ArmorPlateItem) && !(other.getItem() instanceof SonarItem) && !(other.getItem() instanceof EngineItem) && !(other.getItem() instanceof TorpedoReloadItem) && !(other.getItem() instanceof AutoCIWSItem)) return false;
             for (int i = 0; i < capacity; i++) {
                 if (stored.get(i).isEmpty()) {
                     stored.set(i, other.copyWithCount(1));

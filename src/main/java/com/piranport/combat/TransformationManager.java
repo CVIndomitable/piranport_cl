@@ -231,7 +231,7 @@ public class TransformationManager {
     }
 
     /** 读取核心内的有效强化件列表。 */
-    private static NonNullList<ItemStack> getCoreStoredContents(ItemStack coreStack) {
+    public static NonNullList<ItemStack> getCoreStoredContents(ItemStack coreStack) {
         if (!(coreStack.getItem() instanceof ShipCoreItem sci)) return NonNullList.create();
         int enhancementSlots = getCoreEnhancementSlots(coreStack, sci);
         NonNullList<ItemStack> stored = NonNullList.withSize(enhancementSlots, ItemStack.EMPTY);
@@ -289,6 +289,7 @@ public class TransformationManager {
             else if (s.getItem() instanceof SonarItem sonar) total += sonar.getWeight();
             else if (s.getItem() instanceof EngineItem engine) total += engine.getWeight();
             else if (s.getItem() instanceof TorpedoReloadItem tr) total += tr.getWeight();
+            else if (s.getItem() instanceof com.piranport.item.AutoCIWSItem ciws) total += ciws.getWeight();
         }
         return total;
     }
@@ -410,10 +411,7 @@ public class TransformationManager {
         AttributeInstance toughnessAttr = player.getAttribute(Attributes.ARMOR_TOUGHNESS);
         AttributeInstance speedAttr = player.getAttribute(Attributes.MOVEMENT_SPEED);
 
-        if (healthAttr != null && type.healthBonus != 0) {
-            healthAttr.addTransientModifier(new AttributeModifier(
-                    HEALTH_MODIFIER_ID, type.healthBonus, AttributeModifier.Operation.ADD_VALUE));
-        }
+        ShipHealthOverride.apply(healthAttr, type.maxHealth());
         int totalArmor = type.baseArmor + plateArmorBonus;
         if (armorAttr != null && totalArmor > 0) {
             armorAttr.addTransientModifier(new AttributeModifier(
@@ -449,8 +447,7 @@ public class TransformationManager {
     public static double reloadBoostMultiplier(Player player) {
         var effect = player.getEffect(ModMobEffects.RELOAD_BOOST);
         if (effect == null) return 1.0D;
-        int level = Math.min(2, Math.max(0, effect.getAmplifier()));
-        return 0.9D - level * 0.1D;
+        return com.piranport.effect.CombatEffectRules.reloadMultiplier(effect.getAmplifier());
     }
 
     /** Converts actual draw/use ticks into boosted effective progress ticks. */

@@ -22,7 +22,13 @@ class ConfigOverrideManagerTest {
                         "AP_DAMAGE_MULTIPLIER", Double.NaN));
         assertThrows(IllegalArgumentException.class,
                 () -> ConfigOverrideManager.validateProjectileValue(
-                        "HE_ARMOR_PENETRATION", Double.NEGATIVE_INFINITY));
+                        "AP_ARMOR_IGNORE", Double.NEGATIVE_INFINITY));
+    }
+
+    @Test
+    void removedHePenetrationCannotBeReintroducedByAnOverride() {
+        assertThrows(IllegalArgumentException.class,
+                () -> ConfigOverrideManager.validateProjectileValue("HE_ARMOR_PENETRATION", 0.3));
     }
 
     @Test

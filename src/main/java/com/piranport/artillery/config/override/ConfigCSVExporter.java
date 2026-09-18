@@ -39,7 +39,6 @@ public class ConfigCSVExporter {
 
     // 弹药配置键列表（按字母顺序）
     private static final String[] PROJECTILE_KEYS = {
-            "HE_ARMOR_PENETRATION",
             "HE_DAMAGE_FALLOFF",
             "AP_DAMAGE_MULTIPLIER",
             "AP_ARMOR_IGNORE",
@@ -209,7 +208,6 @@ public class ConfigCSVExporter {
      */
     private static Object getDefaultProjectileValue(String key) {
         return switch (key) {
-            case "HE_ARMOR_PENETRATION" -> 0.3;
             case "HE_DAMAGE_FALLOFF" -> true;
             case "AP_DAMAGE_MULTIPLIER" -> 1.3;
             case "AP_ARMOR_IGNORE" -> 0.5;
@@ -239,7 +237,6 @@ public class ConfigCSVExporter {
      */
     private static String getProjectileDescription(String key) {
         return switch (key) {
-            case "HE_ARMOR_PENETRATION" -> "HE弹护甲穿透比例";
             case "HE_DAMAGE_FALLOFF" -> "HE弹距离衰减开关";
             case "AP_DAMAGE_MULTIPLIER" -> "AP弹伤害倍率";
             case "AP_ARMOR_IGNORE" -> "AP弹护甲忽略比例";

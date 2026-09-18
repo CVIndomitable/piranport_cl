@@ -1,5 +1,6 @@
 {
   "enemy_set_id": "enemy_set_1a",
+  "formation": "double_line",
   "spawn_list": [
     { "entity": "minecraft:zombie", "count": 3 },
     { "entity": "minecraft:skeleton", "count": 2 }

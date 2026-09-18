@@ -1,78 +1,71 @@
 package com.piranport.item;
 
+import com.piranport.combat.AASilenceManager;
+import com.piranport.combat.TransformationManager;
+import com.piranport.config.ModEquipmentConfig;
+import com.piranport.entity.AircraftEntity;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.FlyingMob;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.monster.Enemy;
+import net.minecraft.world.entity.monster.Phantom;
+import net.minecraft.world.entity.monster.Vex;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.Level;
 
-import java.util.List;
+import java.util.Comparator;
 
-/**
- * 自动近防炮部件（强化部件槽）。
- * 策划决策/舰装/舰装-自动近防炮系统.md
- *
- * <p>装入舰装核心的强化槽后，每 20 tick 自动检测半径
- * {@link #DETECT_RADIUS} 内的敌对空中实体（飞机/抛射物），命中时造成
- * {@link #DAMAGE} 伤害（不消耗炮弹）。</p>
- *
- * <p>受 H 键总开关控制（《数值/05》定稿），静默窗口（《数值/05》主炮开火后
- * 5 秒定时）期间自动近防炮禁用。</p>
- *
- * <p>不阻塞手持武器的发射 — 与火炮/鱼雷独立开火。</p>
- */
+/** 强化槽中的自动近防炮；只有已装入核心的部件才提供独立自动火力。 */
 public class AutoCIWSItem extends Item {
-
-    /** 检测半径（针对飞机/抛射物） */
     public static final double DETECT_RADIUS = 16.0;
-    /** 每次触发伤害 */
     public static final float DAMAGE = 1.5f;
-    /** 触发间隔（每 20 tick = 1 秒） */
     public static final int FIRE_INTERVAL = 20;
 
-    /** 不同口径伤害系数（策划 §自动近防炮 — 数值待填） */
     private final float caliberDamage;
+    private final ModEquipmentConfig.CIWSConfig config;
 
-    public AutoCIWSItem(Properties properties, float caliberDamage) {
+    public AutoCIWSItem(Properties properties, float caliberDamage,
+                        ModEquipmentConfig.CIWSConfig config) {
         super(properties);
         this.caliberDamage = caliberDamage;
+        this.config = config;
     }
 
-    public float getCaliberDamage() {
-        return caliberDamage;
+    public float getCaliberDamage() { return caliberDamage; }
+    public int getWeight() { return config.weight().get(); }
+
+    /** 敌机包括敌对生物、深海自主飞机和非友军玩家飞机；不拦截普通箭矢。 */
+    public static boolean isHostileAircraft(Player player, Entity target) {
+        if (!target.isAlive() || target == player || target.isAlliedTo(player)) return false;
+        if (target instanceof AircraftEntity aircraft) {
+            if (aircraft.getOwnerUUID() != null && aircraft.getOwnerUUID().equals(player.getUUID())) return false;
+            Player owner = aircraft.getOwner();
+            if (owner != null) return player.canHarmPlayer(owner) && !player.isAlliedTo(owner);
+            return aircraft.isAutonomous();
+        }
+        return target instanceof LivingEntity living && target instanceof Enemy && (living instanceof FlyingMob
+                || living instanceof Phantom || living instanceof Vex);
     }
 
-    /**
-     * 服务端 tick — 由 PlayerTickHandler 调用。
-     * <p>仅在玩家变身状态下、且 H 键自动模式已启用、且不在主炮防空静默窗口
-     * （《数值/05》定稿 #3：主炮开火后 5 秒定时）时扫描范围内敌对飞机/抛射物。</p>
-     */
     public static void tickAutoCIWS(Player player, boolean autoFireEnabled) {
-        if (player == null) return;
-        if (!autoFireEnabled) return;
-        if (player.level().isClientSide()) return;
-        // 决策/数值/05 §定稿修订 #3：主炮开火后 5 秒防空静默期间禁用
-        if (com.piranport.combat.AASilenceManager.isSilenced(player)) return;
-        if (player.tickCount % FIRE_INTERVAL != 0) return;
-
-        // AbstractArrow 继承 Projectile 而非 LivingEntity；故此处用 Entity 基类查询
-        List<Entity> targets = player.level().getEntitiesOfClass(Entity.class,
-                player.getBoundingBox().inflate(DETECT_RADIUS),
-                e -> e != player && e.isAlive() && !e.isAlliedTo(player));
-        for (Entity t : targets) {
-            boolean isArrow = t instanceof net.minecraft.world.entity.projectile.AbstractArrow;
-            boolean isAircraft = t instanceof com.piranport.entity.AircraftEntity;
-            if (!isArrow && !isAircraft) {
-                continue;
-            }
-            // 仅对飞机（AircraftEntity = LivingEntity 子类）造成伤害
-            if (t instanceof LivingEntity living) {
-                living.hurt(player.damageSources().mobAttack(player), DAMAGE);
-            } else {
-                // 抛射物用 discard 代替击杀
-                t.discard();
-            }
+        if (player == null || !autoFireEnabled || player.level().isClientSide()
+                || AASilenceManager.isSilenced(player)) return;
+        ItemStack core = TransformationManager.findTransformedCore(player);
+        for (ItemStack enhancement : TransformationManager.getCoreStoredContents(core)) {
+            if (!(enhancement.getItem() instanceof AutoCIWSItem ciws)) continue;
+            if (player.tickCount % ciws.config.interval().get() != 0) continue;
+            double range = ciws.config.range().get();
+            Entity target = player.level().getEntitiesOfClass(Entity.class,
+                    player.getBoundingBox().inflate(range),
+                    candidate -> isHostileAircraft(player, candidate)
+                            && player.distanceToSqr(candidate) <= range * range
+                            && player.hasLineOfSight(candidate)).stream()
+                    .min(Comparator.comparingDouble(player::distanceToSqr)).orElse(null);
+            if (target == null) continue;
+            if (!(target instanceof LivingEntity living)) continue;
+            living.hurt(player.damageSources().mobAttack(player),
+                    DAMAGE * ciws.caliberDamage * ciws.config.barrels().get());
         }
     }
 }

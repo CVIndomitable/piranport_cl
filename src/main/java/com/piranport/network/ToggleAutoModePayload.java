@@ -6,7 +6,6 @@ import com.piranport.combat.TransformationManager;
 import com.piranport.registry.ModDataComponents;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
@@ -15,7 +14,7 @@ import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 /**
- * C2S：切换自动模式三态（OFF → AA_ONLY → FULL_AUTO → OFF）。
+ * C2S：切换自动模式总开关，近防炮、导弹、战斗机同时启用或停用。
  *
  * <p>服务端在舰装核心上写入 {@link ModDataComponents#SHIP_AUTO_MODE}；
  * 客户端通过 DataComponent 网络同步自动感知变更。</p>
@@ -44,12 +43,12 @@ public record ToggleAutoModePayload() implements CustomPacketPayload {
             AutoModeState current = AutoModeState.fromStack(coreStack);
             AutoModeState next = current.next();
             next.writeToStack(coreStack);
+            TransformationManager.writeCoreToConfiguredSlot(player, coreStack);
 
             player.displayClientMessage(Component.translatable(
                     switch (next) {
                         case OFF -> "message.piranport.auto_mode_off";
-                        case AA_ONLY -> "message.piranport.auto_mode_aa_only";
-                        case FULL_AUTO -> "message.piranport.auto_mode_full";
+                        case ON -> "message.piranport.auto_mode_on";
                     }
             ), true);
         });

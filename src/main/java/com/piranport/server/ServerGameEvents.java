@@ -12,7 +12,6 @@ import com.piranport.debug.PiranPortCommands;
 import com.piranport.debug.PiranPortDebug;
 import com.piranport.testtools.PiranPortTestTools;
 import com.piranport.dungeon.DungeonConstants;
-import com.piranport.dungeon.entity.DungeonPortalEntity;
 import com.piranport.dungeon.event.DungeonEventHandler;
 import com.piranport.dungeon.instance.DungeonInstance;
 import com.piranport.dungeon.instance.DungeonInstanceManager;
@@ -136,6 +135,7 @@ public class ServerGameEvents {
                             tag.substring("dungeon_instance_".length()));
                     DungeonScriptManager.get(sl.getServer())
                             .onEntityDeath(instanceId, entity);
+                    com.piranport.dungeon.event.DungeonSettlementService.recordKill(instanceId);
                 } catch (IllegalArgumentException ignored) {}
                 break;
             }
@@ -163,6 +163,8 @@ public class ServerGameEvents {
         }
         if (instanceId == null || nodeId == null) return;
 
+        com.piranport.dungeon.event.DungeonSettlementService.recordKill(instanceId);
+
         if (DungeonScriptManager.get(sl.getServer()).getScript(instanceId) != null) return;
 
         String matchTag = "dungeon_instance_" + instanceId;
@@ -180,14 +182,8 @@ public class ServerGameEvents {
             if (instance == null) return;
 
             BlockPos portalPos = entity.blockPosition();
-            DungeonPortalEntity portal = DungeonPortalEntity.create(
-                    sl, instanceId, nodeId,
-                    portalPos.getX() + 0.5,
-                    DungeonConstants.SPAWN_Y,
-                    portalPos.getZ() + 0.5);
-            if (portal != null) {
-                sl.addFreshEntity(portal);
-            }
+            com.piranport.dungeon.block.PortalStructureHelper.buildPortalStructure(
+                    sl, portalPos.below(), instanceId, nodeId);
 
             for (UUID playerUuid : instance.getPlayerUuids()) {
                 ServerPlayer player = sl.getServer().getPlayerList().getPlayer(playerUuid);
@@ -213,8 +209,8 @@ public class ServerGameEvents {
     public static void onXpDrop(LivingExperienceDropEvent event) {
         Player attacker = event.getAttackingPlayer();
         if (attacker != null && attacker.hasEffect(ModMobEffects.EXPERIENCE_BOOST)) {
-            int amp = Math.min(2, attacker.getEffect(ModMobEffects.EXPERIENCE_BOOST).getAmplifier());
-            double multiplier = 1.2 + amp * 0.2;
+            int amp = attacker.getEffect(ModMobEffects.EXPERIENCE_BOOST).getAmplifier();
+            double multiplier = com.piranport.effect.CombatEffectRules.experienceMultiplier(amp);
             int original = event.getDroppedExperience();
             event.setDroppedExperience((int) (original * multiplier));
         }

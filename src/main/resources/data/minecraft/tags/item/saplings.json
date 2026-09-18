@@ -6,9 +6,6 @@
     "piranport:sago_palm_sapling",
     "piranport:gardenia_sapling",
     "piranport:chinese_plum_sapling",
-    "piranport:mapple_sapling",
-    "piranport:chorus_tree_sapling",
-    "piranport:slime_tree_sapling",
-    "piranport:lava_slime_tree_sapling"
+    "piranport:mapple_sapling"
   ]
 }

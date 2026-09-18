@@ -1,0 +1,18 @@
+{
+  "parent": "piranport:root",
+  "display": {
+    "icon": { "id": "minecraft:diamond" },
+    "title": { "translate": "advancements.piranport.dungeon_first_clear.title" },
+    "description": { "translate": "advancements.piranport.dungeon_first_clear.description" },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "requirements": [["done"]],
+  "sends_telemetry_event": false
+}

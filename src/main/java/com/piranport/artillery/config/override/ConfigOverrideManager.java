@@ -396,7 +396,7 @@ public class ConfigOverrideManager {
     /**
      * 获取应用覆盖后的double类型弹药配置
      *
-     * @param key 配置键（如 "HE_ARMOR_PENETRATION"）
+     * @param key 配置键（如 "AP_ARMOR_IGNORE"）
      * @param defaultValue 原始默认值
      * @param level 世界实例
      * @return 应用覆盖后的值
@@ -607,7 +607,7 @@ public class ConfigOverrideManager {
                 throw new IllegalArgumentException("Expected finite number for projectile config: " + key);
             }
             return switch (key) {
-                case "HE_ARMOR_PENETRATION", "AP_ARMOR_IGNORE" ->
+                case "AP_ARMOR_IGNORE" ->
                         clampFinite(number.doubleValue(), 0.0, 1.0, key);
                 case "AP_DAMAGE_MULTIPLIER" ->
                         clampFinite(number.doubleValue(), 0.1, 10.0, key);
@@ -666,7 +666,6 @@ public class ConfigOverrideManager {
     }
 
     private static final Set<String> DOUBLE_PROJECTILE_KEYS = Set.of(
-            "HE_ARMOR_PENETRATION",
             "AP_DAMAGE_MULTIPLIER",
             "AP_ARMOR_IGNORE",
             "UNDERWATER_EXPLOSION_MULTIPLIER"

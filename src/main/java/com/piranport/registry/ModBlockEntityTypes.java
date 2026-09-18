@@ -14,6 +14,7 @@ import com.piranport.block.entity.StoneMillBlockEntity;
 import com.piranport.block.entity.StoveBlockEntity;
 import com.piranport.block.entity.WeaponWorkbenchBlockEntity;
 import com.piranport.block.entity.YubariWaterBucketBlockEntity;
+import com.piranport.dungeon.block.entity.DungeonPortalBlockEntity;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.neoforged.neoforge.registries.DeferredHolder;
@@ -110,5 +111,13 @@ public class ModBlockEntityTypes {
                     BlockEntityType.Builder.of(
                             com.piranport.dungeon.block.DungeonLecternBlockEntity::new,
                             ModBlocks.DUNGEON_LECTERN.get()
+                    ).build(null));
+
+    // 副本传送门（多方块结构）
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<DungeonPortalBlockEntity>> DUNGEON_PORTAL =
+            BLOCK_ENTITY_TYPES.register("dungeon_portal", () ->
+                    BlockEntityType.Builder.of(
+                            DungeonPortalBlockEntity::new,
+                            ModBlocks.DUNGEON_PORTAL.get()
                     ).build(null));
 }

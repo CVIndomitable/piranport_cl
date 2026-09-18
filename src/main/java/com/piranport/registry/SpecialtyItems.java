@@ -484,6 +484,10 @@ public final class SpecialtyItems {
             ITEMS.register("deep_ocean_submarine_spawn_egg",
                     () -> new DeferredSpawnEggItem(ModEntityTypes.DEEP_OCEAN_SUBMARINE,
                             0x2D2D3D, 0x334466, new Item.Properties()));
+    public static final DeferredItem<SpawnEggItem> DEEP_OCEAN_BOSS_SPAWN_EGG =
+            ITEMS.register("deep_ocean_boss_spawn_egg",
+                    () -> new DeferredSpawnEggItem(ModEntityTypes.DEEP_OCEAN_BOSS,
+                            0x1A1A2E, 0x8B0000, new Item.Properties()));
     public static final DeferredItem<SpawnEggItem> SHIP_GIRL_SPAWN_EGG =
             ITEMS.register("ship_girl_spawn_egg",
                     () -> new DeferredSpawnEggItem(ModEntityTypes.SHIP_GIRL,

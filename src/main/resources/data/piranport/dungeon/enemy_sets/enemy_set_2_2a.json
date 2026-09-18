@@ -1,5 +1,6 @@
 {
   "enemy_set_id": "enemy_set_2_2a",
+  "formation": "single_line",
   "spawn_list": [
     {
       "entity": "piranport:deep_ocean_light_cruiser",

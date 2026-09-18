@@ -71,7 +71,7 @@ public class FireControlInputHandler {
         }
     }
 
-    /** 处理 H 键 — 循环切换自动模式三态（OFF → AA_ONLY → FULL_AUTO）。 */
+    /** 处理 H 键 — 切换自动模式总开关（OFF ↔ ON）。 */
     public static void handleAutoLaunchKey(Minecraft mc, boolean transformed, boolean inReconMode) {
         if (mc.player == null) return;
         while (ModKeyMappings.TOGGLE_AUTO_LAUNCH.consumeClick()) {

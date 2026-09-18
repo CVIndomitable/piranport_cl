@@ -1,222 +1,179 @@
 package com.piranport.platform;
 
 import com.piranport.entity.AircraftEntity;
+import com.piranport.network.CannonImpactEffectPayload;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.fml.loading.FMLEnvironment;
 
-import java.lang.reflect.Method;
 import java.util.List;
 import java.util.UUID;
+import java.util.Objects;
 
 /**
- * Common-side bridge for client-only helpers.
- *
- * <p>Do not reference Minecraft client classes from this class. It may be loaded
- * on dedicated servers through shared item/entity classes.
+ * 公共逻辑访问客户端能力的入口。
+ * 客户端入口在注册物品前安装实现；运行时使用普通接口调用，异常保留原始调用栈。
  */
 public final class ClientHooks {
-    private static final Class<?> CLIENT_HOOKS = loadClientHooks();
+    private static volatile ClientBridge bridge = new NoopClientBridge();
 
     private ClientHooks() {}
 
+    public static void install(ClientBridge clientBridge) {
+        bridge = Objects.requireNonNull(clientBridge);
+    }
+
     public static boolean isClient() {
-        return CLIENT_HOOKS != null;
+        return bridge.isClient();
     }
 
     public static boolean hasShiftDown() {
-        Object result = invoke("hasShiftDown");
-        return result instanceof Boolean value && value;
+        return bridge.hasShiftDown();
     }
 
     public static Player getClientPlayer() {
-        Object result = invoke("getClientPlayer");
-        return result instanceof Player player ? player : null;
+        return bridge.getClientPlayer();
     }
 
-    /** Returns the local player's scoreboard name, or {@code null} when unavailable. */
     public static String getClientPlayerName() {
-        Object result = invoke("getClientPlayerName");
-        return result instanceof String value ? value : null;
+        return bridge.getClientPlayerName();
     }
 
     public static long getClientGameTime() {
-        Object result = invoke("getClientGameTime");
-        return result instanceof Long value ? value : -1L;
+        return bridge.getClientGameTime();
     }
 
     public static void resetClientState() {
-        invoke("resetClientState");
+        bridge.resetClientState();
     }
 
     public static boolean isHighlightEnabled() {
-        Object result = invoke("isHighlightEnabled");
-        return result instanceof Boolean value && value;
+        return bridge.isHighlightEnabled();
     }
 
     public static void initializeSkinCoreItemClient(Object consumer) {
-        invoke("initializeSkinCoreItemClient", new Class<?>[] { Object.class }, consumer);
+        bridge.initializeSkinCoreItemClient(consumer);
     }
 
     public static boolean toggleArtilleryScope(Player player, ItemStack stack) {
-        Object result = invoke("toggleArtilleryScope",
-                new Class<?>[] { Player.class, ItemStack.class }, player, stack);
-        return result instanceof Boolean value && value;
+        return bridge.toggleArtilleryScope(player, stack);
     }
 
     public static void appendWeaponCooldownTooltip(ItemStack stack, List<Component> tooltip) {
-        invoke("appendWeaponCooldownTooltip",
-                new Class<?>[] { ItemStack.class, List.class }, stack, tooltip);
+        bridge.appendWeaponCooldownTooltip(stack, tooltip);
     }
 
     public static void handleTorpedoGuidanceState(boolean active, int entityId) {
-        invoke("handleTorpedoGuidanceState",
-                new Class<?>[] { boolean.class, int.class }, active, entityId);
+        bridge.handleTorpedoGuidanceState(active, entityId);
     }
 
     public static void handleReconState(boolean active, int entityId) {
-        invoke("handleReconState",
-                new Class<?>[] { boolean.class, int.class }, active, entityId);
+        bridge.handleReconState(active, entityId);
     }
 
     public static void triggerCameraShake(float intensity, int durationTicks) {
-        invoke("triggerCameraShake",
-                new Class<?>[] { float.class, int.class }, intensity, durationTicks);
+        bridge.triggerCameraShake(intensity, durationTicks);
     }
 
     public static void triggerAircraftLaunchPose(int entityId, int skinId, int durationTicks) {
-        invoke("triggerAircraftLaunchPose",
-                new Class<?>[] { int.class, int.class, int.class }, entityId, skinId, durationTicks);
+        bridge.triggerAircraftLaunchPose(entityId, skinId, durationTicks);
     }
 
-    public static void spawnCannonImpactEffect(Object payload) {
-        invoke("spawnCannonImpactEffect", new Class<?>[] { Object.class }, payload);
+    public static void spawnCannonImpactEffect(CannonImpactEffectPayload payload) {
+        bridge.spawnCannonImpactEffect(payload);
     }
 
     public static void updateAswSonar(int aircraftEntityId, List<Integer> detectedEntityIds) {
-        invoke("updateAswSonar",
-                new Class<?>[] { int.class, List.class }, aircraftEntityId, detectedEntityIds);
+        bridge.updateAswSonar(aircraftEntityId, detectedEntityIds);
     }
 
     public static void setFireControlTargets(List<UUID> targetUUIDs) {
-        invoke("setFireControlTargets", new Class<?>[] { List.class }, targetUUIDs);
+        bridge.setFireControlTargets(targetUUIDs);
     }
 
     public static void displayClientMessage(Component message) {
-        invoke("displayClientMessage", new Class<?>[] { Component.class }, message);
+        bridge.displayClientMessage(message);
     }
 
     public static void displayClientMessage(Component message, boolean overlay) {
-        invoke("displayClientMessage", new Class<?>[] { Component.class, boolean.class }, message, overlay);
+        bridge.displayClientMessage(message, overlay);
     }
 
     public static void setTitle(Component title) {
-        invoke("setTitle", new Class<?>[] { Component.class }, title);
+        bridge.setTitle(title);
     }
 
-    public static void playSound(Object sound, float volume, float pitch) {
-        invoke("playSound", new Class<?>[] { Object.class, float.class, float.class }, sound, volume, pitch);
+    public static void playSound(SoundEvent sound, float volume, float pitch) {
+        bridge.playSound(sound, volume, pitch);
     }
 
-    public static void openDungeonContinueScreen(Object lecternPos, String stageName, int clearedNodeCount) {
-        invoke("openDungeonContinueScreen",
-                new Class<?>[] { Object.class, String.class, int.class },
-                lecternPos, stageName, clearedNodeCount);
+    public static void openDungeonContinueScreen(BlockPos lecternPos, String stageName, int clearedNodeCount) {
+        bridge.openDungeonContinueScreen(lecternPos, stageName, clearedNodeCount);
     }
 
     public static void setDebugEnabledClient(boolean enabled) {
-        invoke("setDebugEnabledClient", new Class<?>[] { boolean.class }, enabled);
+        bridge.setDebugEnabledClient(enabled);
     }
 
     public static void setTestModeClient(boolean enabled) {
-        invoke("setTestModeClient", new Class<?>[] { boolean.class }, enabled);
+        bridge.setTestModeClient(enabled);
     }
 
     public static void setServerSolverStats(int ternaryIters, int newtonIters) {
-        invoke("setServerSolverStats",
-                new Class<?>[] { int.class, int.class }, ternaryIters, newtonIters);
+        bridge.setServerSolverStats(ternaryIters, newtonIters);
     }
 
-    public static void setServerSolverStats(int ternaryIters, int newtonIters, long totalUs,
-                                            double verticalError, double horizontalError, double angleDeg) {
-        invoke("setServerSolverStats",
-                new Class<?>[] { int.class, int.class, long.class, double.class, double.class, double.class },
-                ternaryIters, newtonIters, totalUs, verticalError, horizontalError, angleDeg);
+    public static void setServerSolverStats(int ternaryIters, int newtonIters, long totalUs, double verticalError, double horizontalError, double angleDeg) {
+        bridge.setServerSolverStats(ternaryIters, newtonIters, totalUs, verticalError, horizontalError, angleDeg);
     }
 
     public static boolean isReconEntity(int entityId) {
-        Object result = invoke("isReconEntity",
-                new Class<?>[] { int.class }, entityId);
-        return result instanceof Boolean value && value;
+        return bridge.isReconEntity(entityId);
     }
 
     public static boolean isInReconMode() {
-        Object result = invoke("isInReconMode");
-        return result instanceof Boolean value && value;
+        return bridge.isInReconMode();
     }
 
     public static void openTownScrollScreen() {
-        invoke("openTownScrollScreen");
+        bridge.openTownScrollScreen();
     }
 
-    public static void openDungeonResultScreen(String stageName, long timeMillis,
-                                                boolean isFirstClear, List<String> rewardNames) {
-        invoke("openDungeonResultScreen",
-                new Class<?>[] { String.class, long.class, boolean.class, List.class },
-                stageName, timeMillis, isFirstClear, rewardNames);
+    public static void openDungeonResultScreen(String stageName, long timeMillis, boolean isFirstClear, List<String> rewardNames) {
+        bridge.openDungeonResultScreen(stageName, timeMillis, isFirstClear, rewardNames);
+    }
+
+    public static void openDungeonResultScreen(String stageName, long timeMillis, boolean isFirstClear,
+                                               List<String> rewardNames, int kills) {
+        bridge.openDungeonResultScreen(stageName, timeMillis, isFirstClear, rewardNames, kills);
     }
 
     public static void openDungeonReviveScreen() {
-        invoke("openDungeonReviveScreen");
+        bridge.openDungeonReviveScreen();
     }
 
     public static void updateDungeonNode(String nodeId) {
-        invoke("updateDungeonNode", new Class<?>[] { String.class }, nodeId);
+        bridge.updateDungeonNode(nodeId);
     }
 
     public static void setDungeonState(String stageName, String nodeId, long timerStartMillis) {
-        invoke("setDungeonState",
-                new Class<?>[] { String.class, String.class, long.class },
-                stageName, nodeId, timerStartMillis);
+        bridge.setDungeonState(stageName, nodeId, timerStartMillis);
+    }
+
+    public static void updateDungeonBossOverlay(String bossName, String shipType, String chapter,
+                                                int segment, float health, float maxHealth,
+                                                boolean visible, boolean quietBattlefield) {
+        bridge.updateDungeonBossOverlay(bossName, shipType, chapter, segment,
+                health, maxHealth, visible, quietBattlefield);
     }
 
     public static boolean shouldAircraftGlow(AircraftEntity aircraft) {
-        Object result = invoke("shouldAircraftGlow",
-                new Class<?>[] { AircraftEntity.class }, aircraft);
-        return result instanceof Boolean value && value;
+        return bridge.shouldAircraftGlow(aircraft);
     }
 
     public static int getAircraftGlowColor(AircraftEntity aircraft, int fallbackColor) {
-        Object result = invoke("getAircraftGlowColor",
-                new Class<?>[] { AircraftEntity.class, int.class }, aircraft, fallbackColor);
-        return result instanceof Integer value ? value : fallbackColor;
-    }
-
-    private static Class<?> loadClientHooks() {
-        if (!FMLEnvironment.dist.isClient()) {
-            return null;
-        }
-        try {
-            return Class.forName("com.piranport.client.ClientItemHooks");
-        } catch (ClassNotFoundException e) {
-            return null;
-        }
-    }
-
-    private static Object invoke(String methodName) {
-        return invoke(methodName, new Class<?>[0]);
-    }
-
-    private static Object invoke(String methodName, Class<?>[] parameterTypes, Object... args) {
-        if (CLIENT_HOOKS == null) {
-            return null;
-        }
-        try {
-            Method method = CLIENT_HOOKS.getMethod(methodName, parameterTypes);
-            return method.invoke(null, args);
-        } catch (ReflectiveOperationException e) {
-            return null;
-        }
+        return bridge.getAircraftGlowColor(aircraft, fallbackColor);
     }
 }

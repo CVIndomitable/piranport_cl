@@ -2,7 +2,7 @@ package com.piranport.block;
 
 import com.piranport.advancement.ModAdvancements;
 import com.piranport.registry.ModBlocks;
-import com.piranport.worldgen.AbyssalDimensions;
+import com.piranport.dungeon.event.DungeonEventHandler;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -13,7 +13,7 @@ import net.minecraft.world.level.levelgen.Heightmap;
 
 public final class AbyssalPortalTeleporter {
     private static final int PORTAL_COOLDOWN_TICKS = 100;
-    private static final int ABYSSAL_ENTRY_Y = 72;
+    private static final int DUNGEON_ENTRY_Y = 64;
 
     private AbyssalPortalTeleporter() {
     }
@@ -24,17 +24,18 @@ public final class AbyssalPortalTeleporter {
         }
 
         ServerLevel currentLevel = player.serverLevel();
-        boolean returning = currentLevel.dimension().equals(AbyssalDimensions.ABYSSAL_WORLD);
+        // 深海副本的权威维度是 piranport:dungeon；旧 abyssal_world 方案已废弃。
+        boolean returning = currentLevel.dimension().equals(DungeonEventHandler.DUNGEON_DIMENSION);
         ServerLevel targetLevel = returning
                 ? player.server.overworld()
-                : player.server.getLevel(AbyssalDimensions.ABYSSAL_WORLD);
+                : DungeonEventHandler.getDungeonLevel(player.server);
         if (targetLevel == null) {
             return false;
         }
 
         BlockPos destination = returning
                 ? overworldDestination(targetLevel, player)
-                : abyssalDestination(player);
+                : dungeonDestination(player);
         prepareLanding(targetLevel, destination);
 
         player.setPortalCooldown(PORTAL_COOLDOWN_TICKS);
@@ -46,14 +47,12 @@ public final class AbyssalPortalTeleporter {
                 player.getXRot());
         player.setDeltaMovement(0.0, 0.0, 0.0);
         player.fallDistance = 0.0f;
-        if (!returning) {
-            ModAdvancements.award(player, "story/enter_abyssal_world");
-        }
+        if (!returning) ModAdvancements.award(player, "story/enter_abyssal_world");
         return true;
     }
 
-    private static BlockPos abyssalDestination(Entity entity) {
-        return new BlockPos(entity.getBlockX(), ABYSSAL_ENTRY_Y, entity.getBlockZ());
+    private static BlockPos dungeonDestination(Entity entity) {
+        return new BlockPos(entity.getBlockX(), DUNGEON_ENTRY_Y, entity.getBlockZ());
     }
 
     private static BlockPos overworldDestination(ServerLevel overworld, Entity entity) {

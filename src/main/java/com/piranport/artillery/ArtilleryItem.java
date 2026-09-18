@@ -2,11 +2,8 @@ package com.piranport.artillery;
 
 import com.piranport.artillery.config.ArtilleryCannonData;
 import com.piranport.combat.TransformationManager;
-import com.piranport.combat.data.AmmoInventory;
-import com.piranport.combat.data.WeaponState;
 import com.piranport.component.LoadedAmmo;
 import com.piranport.component.SelectedAmmoType;
-import com.piranport.component.SlotCooldowns;
 import com.piranport.component.WeaponCooldown;
 import com.piranport.debug.PiranPortDebug;
 import com.piranport.item.ExperienceShellItem;
@@ -14,7 +11,6 @@ import com.piranport.item.ShipCoreItem;
 import com.piranport.item.ShipCoreCombat;
 import com.piranport.platform.ClientHooks;
 import com.piranport.registry.ModDataComponents;
-import com.piranport.registry.ModSounds;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -24,7 +20,6 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.ClickAction;
 import net.minecraft.world.inventory.Slot;
@@ -43,7 +38,7 @@ import java.util.List;
  * 火炮物品基类。
  * Phase 1: 基础射击逻辑（右键发射直线炮弹）
  * Phase 2: 抛物线弹道 + 散布系统 + 调试模式
- * Phase 4: 统一自动装填，删除手动装填路径
+ * 装填事务委托 CannonReloading，按武器属性区分自动与手动模式。
  */
 public class ArtilleryItem extends Item {
 
@@ -217,51 +212,9 @@ public class ArtilleryItem extends Item {
         return stack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY).hasAmmo();
     }
 
-    /**
-     * 弩式读条完成：直接消耗弹药并设置已装填状态（绕过 SlotCooldowns 定时读条）。
-     * 与 ShipCoreCombat.completeCannonReload 逻辑等价，但无需等待冷却到期。
-     */
+    /** 持续使用读条完成后，交由统一装填事务扣弹并写入膛内状态。 */
     private void completeCrossbowReload(Player player, ItemStack weapon) {
-        ItemStack coreStack = com.piranport.combat.TransformationManager.findTransformedCore(player);
-        if (coreStack.isEmpty()) return;
-
-        Inventory inv = player.getInventory();
-        int coreSlot = -1;
-        for (int i = 0; i < inv.items.size(); i++) {
-            if (inv.items.get(i) == coreStack) { coreSlot = i; break; }
-        }
-        if (coreSlot < 0) coreSlot = -2;
-
-        int weaponSlot = -1;
-        for (int i = 0; i < inv.items.size(); i++) {
-            if (inv.items.get(i) == weapon) { weaponSlot = i; break; }
-        }
-        if (weaponSlot < 0) weaponSlot = inv.selected;
-
-        int barrelCount = getBarrelCount();
-        AmmoInventory ammoInv = new AmmoInventory(inv, coreSlot, weaponSlot);
-        Item ammoType = ammoInv.chooseReloadAmmo(weapon, barrelCount, player.getAbilities().instabuild, player.level());
-        if (ammoType == null) return;
-
-        if (!player.getAbilities().instabuild && !ammoInv.consumeAmmo(ammoType, barrelCount)) return;
-
-        String ammoId = BuiltInRegistries.ITEM.getKey(ammoType).toString();
-        WeaponState ws = new WeaponState(weapon);
-        ws.setLoadedAmmo(barrelCount, ammoId);
-        ws.clearCooldown();
-
-        SlotCooldowns cooldowns = coreStack.getOrDefault(ModDataComponents.SLOT_COOLDOWNS.get(), SlotCooldowns.EMPTY);
-        coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(), cooldowns.withoutSlotCooldown(weaponSlot));
-
-        ammoInv.recordAmmoType(weapon, ammoType);
-
-        // 装填完成音效
-        player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
-                ModSounds.CANNON_RELOAD.get(), SoundSource.PLAYERS, 0.65f, 1.0f);
-        player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
-                ModSounds.CANNON_RELOAD_BREECH.get(), SoundSource.PLAYERS, 0.42f, 0.78f);
-        player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
-                SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.35f, 1.25f);
+        com.piranport.combat.cannon.CannonReloading.completeManualUse(player, weapon);
     }
 
     /**

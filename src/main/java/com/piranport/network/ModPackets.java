@@ -56,7 +56,12 @@ public class ModPackets {
                 AutoLaunchTogglePayload.STREAM_CODEC,
                 AutoLaunchTogglePayload::handle
         );
-        // H 键自动模式三态（OFF/AA_ONLY/FULL_AUTO）
+        registrar.playToClient(
+                AASilenceSyncPayload.TYPE,
+                AASilenceSyncPayload.STREAM_CODEC,
+                AASilenceSyncPayload::handle
+        );
+        // H 键自动模式总开关
         registrar.playToServer(
                 ToggleAutoModePayload.TYPE,
                 ToggleAutoModePayload.STREAM_CODEC,
@@ -230,6 +235,11 @@ public class ModPackets {
                 com.piranport.dungeon.network.DungeonResultPayload.TYPE,
                 com.piranport.dungeon.network.DungeonResultPayload.STREAM_CODEC,
                 com.piranport.dungeon.network.DungeonResultPayload::handle
+        );
+        registrar.playToClient(
+                com.piranport.dungeon.network.DungeonBossOverlayPayload.TYPE,
+                com.piranport.dungeon.network.DungeonBossOverlayPayload.STREAM_CODEC,
+                com.piranport.dungeon.network.DungeonBossOverlayPayload::handle
         );
         registrar.playToClient(
                 com.piranport.dungeon.network.PlayerDiedInDungeonPayload.TYPE,

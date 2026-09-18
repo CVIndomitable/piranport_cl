@@ -654,9 +654,6 @@ public final class PiranPortCommands {
         stacks += giveTreeSet(player, ModItems.GARDENIA_LOG.get(), ModItems.GARDENIA_LEAVES.get(), ModItems.GARDENIA_SAPLING.get());
         stacks += giveTreeSet(player, ModItems.CHINESE_PLUM_LOG.get(), ModItems.CHINESE_PLUM_LEAVES.get(), ModItems.CHINESE_PLUM_SAPLING.get());
         stacks += giveTreeSet(player, ModItems.MAPPLE_LOG.get(), ModItems.MAPPLE_LEAVES.get(), ModItems.MAPPLE_SAPLING.get());
-        stacks += giveTreeSet(player, ModItems.CHORUS_TREE_LOG.get(), ModItems.CHORUS_TREE_LEAVES.get(), ModItems.CHORUS_TREE_SAPLING.get());
-        stacks += giveTreeSet(player, ModItems.SLIME_TREE_LOG.get(), ModItems.SLIME_TREE_LEAVES.get(), ModItems.SLIME_TREE_SAPLING.get());
-        stacks += giveTreeSet(player, ModItems.LAVA_SLIME_TREE_LOG.get(), ModItems.LAVA_SLIME_TREE_LEAVES.get(), ModItems.LAVA_SLIME_TREE_SAPLING.get());
         return stacks;
     }
 

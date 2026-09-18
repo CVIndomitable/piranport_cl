@@ -45,7 +45,6 @@ public class ArtilleryConfigToolScreen extends AbstractContainerScreen<Artillery
     // 数据缓存
     private List<String> cannonNames = new ArrayList<>();
     private List<String> projectileKeys = Arrays.asList(
-            "HE_ARMOR_PENETRATION",
             "HE_DAMAGE_FALLOFF",
             "AP_DAMAGE_MULTIPLIER",
             "AP_ARMOR_IGNORE",
@@ -56,7 +55,7 @@ public class ArtilleryConfigToolScreen extends AbstractContainerScreen<Artillery
     // 可编辑字段
     @SuppressWarnings("unused")
     private static final String[] PROJECTILE_FIELDS = {
-            "HE_ARMOR_PENETRATION", "HE_DAMAGE_FALLOFF", "AP_DAMAGE_MULTIPLIER",
+            "HE_DAMAGE_FALLOFF", "AP_DAMAGE_MULTIPLIER",
             "AP_ARMOR_IGNORE", "UNDERWATER_EXPLOSION_MULTIPLIER", "UNDERWATER_EXPLODE"
     };
 
@@ -192,7 +191,6 @@ public class ArtilleryConfigToolScreen extends AbstractContainerScreen<Artillery
 
         // 否则使用默认值
         return switch (key) {
-            case "HE_ARMOR_PENETRATION" -> "0.3";
             case "HE_DAMAGE_FALLOFF" -> "true";
             case "AP_DAMAGE_MULTIPLIER" -> "1.3";
             case "AP_ARMOR_IGNORE" -> "0.5";

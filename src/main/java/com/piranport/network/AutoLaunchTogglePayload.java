@@ -2,7 +2,7 @@ package com.piranport.network;
 
 import com.piranport.PiranPort;
 import com.piranport.item.ShipCoreItem;
-import com.piranport.registry.ModDataComponents;
+import com.piranport.combat.AutoModeState;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
@@ -34,12 +34,12 @@ public record AutoLaunchTogglePayload(int coreSlot) implements CustomPacketPaylo
             if (slot < 0 || slot >= 41) return;
             ItemStack coreStack = player.getInventory().getItem(slot);
             if (coreStack.getItem() instanceof ShipCoreItem) {
-                boolean current = coreStack.getOrDefault(ModDataComponents.SHIP_AUTO_LAUNCH.get(), false);
-                boolean newState = !current;
-                coreStack.set(ModDataComponents.SHIP_AUTO_LAUNCH.get(), newState);
+                AutoModeState next = AutoModeState.fromStack(coreStack).next();
+                next.writeToStack(coreStack);
+                player.getInventory().setItem(slot, coreStack);
                 player.displayClientMessage(Component.translatable(
-                        newState ? "message.piranport.auto_launch_on"
-                                 : "message.piranport.auto_launch_off"), true);
+                        next == AutoModeState.ON ? "message.piranport.auto_mode_on"
+                                                 : "message.piranport.auto_mode_off"), true);
             }
         });
     }

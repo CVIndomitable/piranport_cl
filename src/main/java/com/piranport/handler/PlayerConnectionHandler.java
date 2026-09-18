@@ -9,7 +9,6 @@ import com.piranport.aviation.ReconManager;
 import com.piranport.combat.HitNotifier;
 import com.piranport.combat.TorpedoGuidanceManager;
 import com.piranport.config.ModCommonConfig;
-import com.piranport.dungeon.instance.DungeonInstanceManager;
 import com.piranport.dungeon.network.DungeonRegistrySyncPayload;
 import com.piranport.entitycore.EntityCoreState;
 import com.piranport.network.RecallAllAircraftPayload;
@@ -125,6 +124,7 @@ public class PlayerConnectionHandler {
         FireControlManager.clearTargets(uuid);
         ReconManager.endRecon(uuid);
         TorpedoGuidanceManager.endGuidance(uuid);
+        com.piranport.combat.AASilenceManager.clear(player);
 
         // 清理玩家 Tick 缓存
         PlayerTickHandler.onPlayerLogout(uuid);
@@ -132,11 +132,9 @@ public class PlayerConnectionHandler {
         // 清理飞机索引
         AircraftIndex.removePlayerAircraft(uuid);
 
-        // 清理瞄准状态和副本状态（合并重复的 instanceof 检查）
+        // 副本暂停/恢复由 DungeonEventHandler 统一处理，避免单个成员退出暂停整个实例。
         if (player instanceof ServerPlayer sp) {
             com.piranport.server.ScopingManager.handleDisconnect(sp);
-            DungeonInstanceManager mgr = DungeonInstanceManager.get(sp.serverLevel());
-            mgr.handlePlayerDisconnect(uuid);
         }
 
         // 登出通知

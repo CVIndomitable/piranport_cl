@@ -225,9 +225,6 @@ public class ModCreativeTabs {
                         output.accept(ModItems.GARDENIA_SAPLING.get());
                         output.accept(ModItems.CHINESE_PLUM_SAPLING.get());
                         output.accept(ModItems.MAPPLE_SAPLING.get());
-                        output.accept(ModItems.CHORUS_TREE_SAPLING.get());
-                        output.accept(ModItems.SLIME_TREE_SAPLING.get());
-                        output.accept(ModItems.LAVA_SLIME_TREE_SAPLING.get());
                         // --- 树木材料 ---
                         output.accept(ModItems.PEACH_LOG.get());
                         output.accept(ModItems.PEACH_LEAVES.get());
@@ -241,12 +238,6 @@ public class ModCreativeTabs {
                         output.accept(ModItems.CHINESE_PLUM_LEAVES.get());
                         output.accept(ModItems.MAPPLE_LOG.get());
                         output.accept(ModItems.MAPPLE_LEAVES.get());
-                        output.accept(ModItems.CHORUS_TREE_LOG.get());
-                        output.accept(ModItems.CHORUS_TREE_LEAVES.get());
-                        output.accept(ModItems.SLIME_TREE_LOG.get());
-                        output.accept(ModItems.SLIME_TREE_LEAVES.get());
-                        output.accept(ModItems.LAVA_SLIME_TREE_LOG.get());
-                        output.accept(ModItems.LAVA_SLIME_TREE_LEAVES.get());
                         // --- 作物产出 ---
                         output.accept(ModItems.TOMATO.get());
                         output.accept(ModItems.SOYBEAN.get());

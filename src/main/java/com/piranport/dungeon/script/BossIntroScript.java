@@ -21,6 +21,11 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket;
 import net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket;
 import net.minecraft.network.protocol.game.ClientboundSetTitlesAnimationPacket;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.neoforged.neoforge.network.PacketDistributor;
+import com.piranport.dungeon.network.DungeonBossOverlayPayload;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
@@ -54,6 +59,7 @@ public class BossIntroScript implements DungeonScript {
     private final UUID instanceId;
     private final String nodeId;
     private final String stageDisplayName;
+    private final String stageId;
     private final List<UUID> playerUuids;
     private final BlockPos spawnPos;
     private final String enemySetId;
@@ -65,6 +71,7 @@ public class BossIntroScript implements DungeonScript {
     // Phase 1 (INTRO) state
     private UUID bossUuid;
     private boolean titleSent = false;
+    private boolean victorySent = false;
     private boolean bossSpawned = false;
 
     // Phase 2 (BATTLE) state
@@ -87,6 +94,7 @@ public class BossIntroScript implements DungeonScript {
         this.instanceId = instance.getInstanceId();
         this.nodeId = nodeId;
         this.stageDisplayName = stageDisplayName;
+        this.stageId = instance.getStageId();
         this.playerUuids = List.copyOf(playerUuids);
         this.spawnPos = instance.getNodeSpawnPos(nodeId);
         this.enemySetId = enemySetId;
@@ -97,6 +105,7 @@ public class BossIntroScript implements DungeonScript {
         this.instanceId = NbtUtils.loadUUID(tag.get("InstanceId"));
         this.nodeId = tag.getString("NodeId");
         this.stageDisplayName = tag.getString("StageDisplayName");
+        this.stageId = tag.getString("StageId");
         this.enemySetId = tag.getString("EnemySetId");
 
         List<UUID> players = new ArrayList<>();
@@ -118,6 +127,7 @@ public class BossIntroScript implements DungeonScript {
             this.bossUuid = tag.getUUID("BossUuid");
         }
         this.titleSent = tag.getBoolean("TitleSent");
+        this.victorySent = tag.getBoolean("VictorySent");
         this.bossSpawned = tag.getBoolean("BossSpawned");
         this.totalEscorts = tag.getInt("TotalEscorts");
         this.escortsKilled = tag.getInt("EscortsKilled");
@@ -145,6 +155,7 @@ public class BossIntroScript implements DungeonScript {
         tag.put("InstanceId", NbtUtils.createUUID(instanceId));
         tag.putString("NodeId", nodeId);
         tag.putString("StageDisplayName", stageDisplayName);
+        tag.putString("StageId", stageId);
         tag.putString("EnemySetId", enemySetId);
 
         ListTag plist = new ListTag();
@@ -158,6 +169,7 @@ public class BossIntroScript implements DungeonScript {
         tag.putInt("TickCounter", tickCounter);
         if (bossUuid != null) tag.putUUID("BossUuid", bossUuid);
         tag.putBoolean("TitleSent", titleSent);
+        tag.putBoolean("VictorySent", victorySent);
         tag.putBoolean("BossSpawned", bossSpawned);
         tag.putInt("TotalEscorts", totalEscorts);
         tag.putInt("EscortsKilled", escortsKilled);
@@ -199,6 +211,7 @@ public class BossIntroScript implements DungeonScript {
             spawnBoss(level);
             changed = true;
         }
+        if (bossSpawned && tickCounter % 5 == 0) sendBossOverlay(level, true, false);
 
         // 验证 Boss 实体存活（服务端重启后重解析 UUID）
         Entity boss = resolveBoss(level);
@@ -278,6 +291,7 @@ public class BossIntroScript implements DungeonScript {
             spawnEscorts(level);
             changed = true;
         }
+        if (tickCounter % 5 == 0) sendBossOverlay(level, true, false);
 
         // 安全超时：10 分钟强制进入结算
         if (tickCounter > 12000 + 60 && !finished) {
@@ -316,10 +330,10 @@ public class BossIntroScript implements DungeonScript {
                     entity.setPos(plan.position().x, DungeonConstants.SPAWN_Y, plan.position().z);
                     entity.addTag("dungeon_instance_" + instanceId);
                     entity.addTag("dungeon_node_" + nodeId);
-                    dungeonLevel.addFreshEntity(entity);
+                    level.addFreshEntity(entity);
                     totalEscorts++;
                     if (entity instanceof com.piranport.npc.deepocean.AbstractDeepOceanEntity deep) {
-                        com.piranport.npc.ai.FleetGroupManager.get(dungeonLevel)
+                        com.piranport.npc.ai.FleetGroupManager.get(level)
                                 .addMember(group.getGroupId(), deep.getUUID());
                     }
                 }
@@ -384,6 +398,7 @@ public class BossIntroScript implements DungeonScript {
         if (portalSpawned && !finished) {
             finished = true;
             phase = Phase.COMPLETED;
+            sendBossOverlay(level, false, false);
             sendActionBar(level, Component.translatable("dungeon.piranport.boss_intro.cleared"));
             PiranPort.LOGGER.info("[BossIntro] Outro complete, instance={}", instanceId);
             changed = true;
@@ -393,8 +408,8 @@ public class BossIntroScript implements DungeonScript {
     }
 
     private void sendVictoryTitle(ServerLevel level) {
-        if (titleSent) return;
-        titleSent = true;
+        if (victorySent) return;
+        victorySent = true;
 
         for (ServerPlayer player : getOnlinePlayers(level)) {
             player.connection.send(new ClientboundSetTitlesAnimationPacket(10, 40, 10));
@@ -458,6 +473,13 @@ public class BossIntroScript implements DungeonScript {
                     bossDeathPos, instanceId);
             if (entity.level() instanceof ServerLevel sl) {
                 sendActionBar(sl, Component.translatable("dungeon.piranport.boss_intro.boss_defeated"));
+                sl.sendParticles(ParticleTypes.FLAME, entity.getX(), entity.getY() + 1.0, entity.getZ(),
+                        18, 1.2, 0.5, 1.2, 0.04);
+                sl.sendParticles(ParticleTypes.SMOKE, entity.getX(), entity.getY() + 1.0, entity.getZ(),
+                        12, 0.9, 0.4, 0.9, 0.02);
+                sl.playSound(null, entity.blockPosition(), SoundEvents.GENERIC_EXPLODE.value(),
+                        SoundSource.HOSTILE, 0.65f, 0.85f);
+                sendBossOverlay(sl, true, true);
             }
             return true;
         }
@@ -478,6 +500,32 @@ public class BossIntroScript implements DungeonScript {
         }
 
         return false;
+    }
+
+    /** Boss 铭牌和血条由服务端权威状态同步，所有在节点内的玩家看到同一份信息。 */
+    private void sendBossOverlay(ServerLevel level, boolean visible, boolean quietBattlefield) {
+        Entity boss = resolveBoss(level);
+        float health = boss instanceof net.minecraft.world.entity.LivingEntity living
+                ? Math.max(0.0f, living.getHealth()) : 0.0f;
+        float maxHealth = boss instanceof net.minecraft.world.entity.LivingEntity living
+                ? Math.max(1.0f, living.getMaxHealth()) : 1.0f;
+        int segment = visible ? Math.max(0, Math.min(4, (int) Math.ceil(health / maxHealth * 4.0f))) : 0;
+        String shipType = resolveShipType();
+        String chapter = "";
+        var stage = DungeonRegistry.INSTANCE.getStage(stageId);
+        if (stage != null) chapter = stage.chapter();
+        DungeonBossOverlayPayload payload = new DungeonBossOverlayPayload(
+                resolveBossDisplayName(), shipType, chapter, segment, health, maxHealth,
+                visible, quietBattlefield);
+        for (ServerPlayer player : getOnlinePlayers(level)) PacketDistributor.sendToPlayer(player, payload);
+    }
+
+    private String resolveShipType() {
+        var enemySet = DungeonRegistry.INSTANCE.getEnemySet(enemySetId);
+        if (enemySet == null || enemySet.flagship() == null) return "";
+        String id = enemySet.flagship().entity();
+        int colon = id.lastIndexOf(':');
+        return (colon >= 0 ? id.substring(colon + 1) : id).replace('_', ' ');
     }
 
     // ========== Utilities ==========

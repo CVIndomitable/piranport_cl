@@ -1156,6 +1156,10 @@ public class AircraftEntity extends Entity {
                         : "message.piranport.aircraft_returned";
                 owner.displayClientMessage(Component.translatable(msgKey, aircraftName), true);
                 returned = returnItemToOwner(owner);
+                // 实际返还飞机时触发航空回收静默，失联强制销毁不触发。
+                if (!isForcedReturn && level() == owner.level()) {
+                    com.piranport.combat.AASilenceManager.startSilence(owner);
+                }
             } else {
                 // Owner offline — still clean up recon state and chunks
                 ReconManager.endRecon(ownerUUID);

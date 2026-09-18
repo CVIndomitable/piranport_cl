@@ -29,55 +29,67 @@ import net.minecraft.world.item.ItemStack;
 import java.util.List;
 import java.util.UUID;
 
-public final class ClientItemHooks {
+public final class ClientItemHooks implements com.piranport.platform.ClientBridge {
     private static final int FRIENDLY_BLUE = 0x3399FF;
     private static final int HOSTILE_RED = 0xFF3333;
     private static final int FC_TARGET_RED = 0xFF0000;
     private static final int ALLY_GREEN = 0x33FF33;
 
-    private ClientItemHooks() {}
+    public ClientItemHooks() {}
 
-    public static boolean hasShiftDown() {
+    @Override
+    public boolean isClient() { return true; }
+
+    @Override
+    public boolean hasShiftDown() {
         return Screen.hasShiftDown();
     }
 
-    public static Player getClientPlayer() {
+    @Override
+    public Player getClientPlayer() {
         return Minecraft.getInstance().player;
     }
 
-    public static String getClientPlayerName() {
+    @Override
+    public String getClientPlayerName() {
         var player = Minecraft.getInstance().player;
         return player != null ? player.getScoreboardName() : null;
     }
 
-    public static long getClientGameTime() {
+    @Override
+    public long getClientGameTime() {
         Minecraft mc = Minecraft.getInstance();
         return mc.level != null ? mc.level.getGameTime() : -1L;
     }
 
-    public static void resetClientState() {
+    @Override
+    public void resetClientState() {
         ClientInputCoordinator.resetClientState();
     }
 
-    public static boolean isHighlightEnabled() {
+    @Override
+    public boolean isHighlightEnabled() {
         return EntityHighlightHandler.isHighlightEnabled();
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    public static void initializeSkinCoreItemClient(Object consumer) {
+    @Override
+    public void initializeSkinCoreItemClient(Object consumer) {
         if (consumer instanceof java.util.function.Consumer rawConsumer) {
             rawConsumer.accept(SkinCoreItemRenderer.CLIENT_EXTENSIONS);
         }
     }
 
-    public static boolean toggleArtilleryScope(Player player, ItemStack stack) {
+    @Override
+    public boolean toggleArtilleryScope(Player player, ItemStack stack) {
         if (!ClientScopeHandler.isScoping()) {
             ClientScopeHandler.enterScope(player, stack);
         }
         return true;
     }
 
-    public static void handleTorpedoGuidanceState(boolean active, int entityId) {
+    @Override
+    public void handleTorpedoGuidanceState(boolean active, int entityId) {
         if (active) {
             ClientTorpedoGuidance.handleStart(entityId);
         } else {
@@ -85,7 +97,8 @@ public final class ClientItemHooks {
         }
     }
 
-    public static void handleReconState(boolean active, int entityId) {
+    @Override
+    public void handleReconState(boolean active, int entityId) {
         if (active) {
             com.piranport.aviation.ClientReconData.handleReconStart(entityId);
         } else {
@@ -93,99 +106,135 @@ public final class ClientItemHooks {
         }
     }
 
-    public static void triggerCameraShake(float intensity, int durationTicks) {
+    @Override
+    public void triggerCameraShake(float intensity, int durationTicks) {
         CameraShakeHandler.trigger(intensity, durationTicks);
     }
 
-    public static void triggerAircraftLaunchPose(int entityId, int skinId, int durationTicks) {
+    @Override
+    public void triggerAircraftLaunchPose(int entityId, int skinId, int durationTicks) {
         AircraftLaunchPoseClientState.trigger(entityId, skinId, durationTicks);
     }
 
-    public static void spawnCannonImpactEffect(Object payload) {
-        if (payload instanceof CannonImpactEffectPayload impact) {
-            CannonImpactEffects.spawn(impact);
-        }
+    @Override
+    public void spawnCannonImpactEffect(CannonImpactEffectPayload payload) {
+        CannonImpactEffects.spawn(payload);
     }
 
-    public static void updateAswSonar(int aircraftEntityId, List<Integer> detectedEntityIds) {
+    @Override
+    public void updateAswSonar(int aircraftEntityId, List<Integer> detectedEntityIds) {
         com.piranport.aviation.ClientAswSonarData.update(aircraftEntityId, detectedEntityIds);
     }
 
-    public static void setFireControlTargets(List<UUID> targetUUIDs) {
+    @Override
+    public void setFireControlTargets(List<UUID> targetUUIDs) {
         com.piranport.aviation.ClientFireControlData.setTargets(targetUUIDs);
     }
 
-    public static void displayClientMessage(Component message) {
-        Minecraft.getInstance().player.displayClientMessage(message, true);
+    @Override
+    public void displayClientMessage(Component message) {
+        displayClientMessage(message, true);
     }
 
-    public static void displayClientMessage(Component message, boolean overlay) {
-        Minecraft.getInstance().player.displayClientMessage(message, overlay);
+    @Override
+    public void displayClientMessage(Component message, boolean overlay) {
+        Player player = Minecraft.getInstance().player;
+        if (player != null) player.displayClientMessage(message, overlay);
     }
 
-    public static void setTitle(Component title) {
+    @Override
+    public void setTitle(Component title) {
         Minecraft.getInstance().gui.setTitle(title);
     }
 
-    public static void playSound(net.minecraft.sounds.SoundEvent sound, float volume, float pitch) {
-        Minecraft.getInstance().player.playSound(sound, volume, pitch);
+    @Override
+    public void playSound(net.minecraft.sounds.SoundEvent sound, float volume, float pitch) {
+        Player player = Minecraft.getInstance().player;
+        if (player != null) player.playSound(sound, volume, pitch);
     }
 
-    public static void setDebugEnabledClient(boolean enabled) {
+    @Override
+    public void setDebugEnabledClient(boolean enabled) {
         DebugInputHandler.setDebugEnabledClient(enabled);
     }
 
-    public static void setTestModeClient(boolean enabled) {
+    @Override
+    public void setTestModeClient(boolean enabled) {
         DebugInputHandler.setTestModeClient(enabled);
     }
 
-    public static void openDungeonContinueScreen(net.minecraft.core.BlockPos lecternPos, String stageName, int clearedNodeCount) {
+    @Override
+    public void openDungeonContinueScreen(net.minecraft.core.BlockPos lecternPos, String stageName, int clearedNodeCount) {
         Minecraft.getInstance().setScreen(new DungeonContinueScreen(lecternPos, stageName, clearedNodeCount));
     }
 
-    public static void setServerSolverStats(int ternaryIters, int newtonIters) {
+    @Override
+    public void setServerSolverStats(int ternaryIters, int newtonIters) {
         ClientScopeHandler.setServerSolverStats(ternaryIters, newtonIters);
     }
 
-    public static void setServerSolverStats(int ternaryIters, int newtonIters, long totalUs,
+    @Override
+    public void setServerSolverStats(int ternaryIters, int newtonIters, long totalUs,
                                             double verticalError, double horizontalError, double angleDeg) {
         ClientScopeHandler.setServerSolverStats(
                 ternaryIters, newtonIters, totalUs, verticalError, horizontalError, angleDeg);
     }
 
-    public static boolean isReconEntity(int entityId) {
+    @Override
+    public boolean isReconEntity(int entityId) {
         return com.piranport.aviation.ClientReconData.isInReconMode()
                 && com.piranport.aviation.ClientReconData.getReconEntityId() == entityId;
     }
 
-    public static boolean isInReconMode() {
+    @Override
+    public boolean isInReconMode() {
         return com.piranport.aviation.ClientReconData.isInReconMode();
     }
 
-    public static void openTownScrollScreen() {
+    @Override
+    public void openTownScrollScreen() {
         Minecraft.getInstance().setScreen(new TownScrollScreen());
     }
 
-    public static void openDungeonResultScreen(String stageName, long timeMillis,
+    @Override
+    public void openDungeonResultScreen(String stageName, long timeMillis,
                                                 boolean isFirstClear, List<String> rewardNames) {
-        DungeonHudLayer.clearDungeonState();
-        Minecraft.getInstance().setScreen(new DungeonResultScreen(
-                stageName, timeMillis, isFirstClear, rewardNames));
+        openDungeonResultScreen(stageName, timeMillis, isFirstClear, rewardNames, 0);
     }
 
-    public static void openDungeonReviveScreen() {
+    @Override
+    public void openDungeonResultScreen(String stageName, long timeMillis,
+                                        boolean isFirstClear, List<String> rewardNames, int kills) {
+        DungeonHudLayer.clearDungeonState();
+        Minecraft.getInstance().setScreen(new DungeonResultScreen(
+                stageName, timeMillis, isFirstClear, rewardNames, kills));
+    }
+
+    @Override
+    public void openDungeonReviveScreen() {
         Minecraft.getInstance().setScreen(new DungeonReviveScreen());
     }
 
-    public static void updateDungeonNode(String nodeId) {
+    @Override
+    public void updateDungeonNode(String nodeId) {
         DungeonHudLayer.updateNode(nodeId);
     }
 
-    public static void setDungeonState(String stageName, String nodeId, long timerStartMillis) {
+    @Override
+    public void setDungeonState(String stageName, String nodeId, long timerStartMillis) {
         DungeonHudLayer.setDungeonState(stageName, nodeId, timerStartMillis);
     }
 
-    public static boolean shouldAircraftGlow(AircraftEntity aircraft) {
+    @Override
+    public void updateDungeonBossOverlay(String bossName, String shipType, String chapter,
+                                         int segment, float health, float maxHealth,
+                                         boolean visible, boolean quietBattlefield) {
+        DungeonHudLayer.updateBossOverlay(bossName, shipType, chapter, segment,
+                health, maxHealth, visible, quietBattlefield);
+    }
+
+    @Override
+    public boolean shouldAircraftGlow(AircraftEntity aircraft) {
         if (isFireControlTarget(aircraft)) {
             return true;
         }
@@ -199,7 +248,8 @@ public final class ClientItemHooks {
         return aircraft.getOwnerUUID() != null;
     }
 
-    public static int getAircraftGlowColor(AircraftEntity aircraft, int fallbackColor) {
+    @Override
+    public int getAircraftGlowColor(AircraftEntity aircraft, int fallbackColor) {
         if (isFireControlTarget(aircraft)) {
             return FC_TARGET_RED;
         }
@@ -229,7 +279,8 @@ public final class ClientItemHooks {
      * Appends current reload readiness for weapons that are directly in the
      * local player's inventory.
      */
-    public static void appendWeaponCooldownTooltip(ItemStack stack, List<Component> tooltip) {
+    @Override
+    public void appendWeaponCooldownTooltip(ItemStack stack, List<Component> tooltip) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || mc.level == null) return;
 
@@ -251,10 +302,13 @@ public final class ClientItemHooks {
                 ModDataComponents.SLOT_COOLDOWNS.get(), SlotCooldowns.EMPTY);
         long gameTime = mc.level.getGameTime();
 
-        boolean onCooldown = cooldowns.isOnCooldown(weaponSlot, gameTime);
+        boolean isCannon = stack.getItem() instanceof com.piranport.artillery.ArtilleryItem;
+        // 火炮计时跟随物品，换槽后不读取上一把武器留下的槽位镜像。
+        boolean onCooldown = isCannon
+                ? new com.piranport.combat.data.WeaponState(stack).isOnCooldown(gameTime)
+                : cooldowns.isOnCooldown(weaponSlot, gameTime);
         boolean isManualMode = !com.piranport.config.ModCommonConfig.AUTO_RESUPPLY_ENABLED.get();
         boolean isAutoReloadMissile = stack.getItem() instanceof MissileLauncherItem ml0 && !ml0.isManualReload();
-        boolean isCannon = stack.getItem() instanceof com.piranport.artillery.ArtilleryItem;
         boolean needsLoadedAmmo = !isAutoReloadMissile
                 && (isCannon
                 || (isManualMode && !(stack.getItem() instanceof AircraftItem))

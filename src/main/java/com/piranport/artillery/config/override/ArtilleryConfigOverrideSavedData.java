@@ -102,7 +102,7 @@ public class ArtilleryConfigOverrideSavedData extends SavedData {
 
     /**
      * 设置弹药配置覆盖
-     * @param configKey 配置键（如 "HE_ARMOR_PENETRATION"）
+     * @param configKey 配置键（如 "AP_ARMOR_IGNORE"）
      * @param value 覆盖值
      */
     public void setProjectileOverride(String configKey, Object value) {

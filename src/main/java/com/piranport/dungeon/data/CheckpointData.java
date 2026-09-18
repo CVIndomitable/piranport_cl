@@ -7,7 +7,7 @@ package com.piranport.dungeon.data;
  *
  * @param id              记录点唯一 ID
  * @param nodeId          关联的节点 ID（玩家在该节点通关时记录点可解锁）
- * @param posX/posY/posZ 记录点坐标（讲台坐标系）
+ * @param posX/posY/posZ 记录点坐标（X/Z 相对节点平台，Y 为副本绝对高度）
  * @param facing          玩家朝向（"north"/"south"/"east"/"west"）
  * @param unlockCondition 解锁条件字符串（"any" 默认；"boss_defeated" 表示关联节点为 BOSS 且已击败）
  */

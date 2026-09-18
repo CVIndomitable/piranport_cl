@@ -5,7 +5,6 @@ import com.piranport.item.ShipType;
 import com.piranport.PiranPort;
 import com.piranport.combat.TransformationManager;
 import com.piranport.dungeon.DungeonConstants;
-import com.piranport.dungeon.entity.DungeonPortalEntity;
 import com.piranport.dungeon.entity.LootShipEntity;
 import com.piranport.dungeon.event.DungeonEventHandler;
 import com.piranport.dungeon.instance.DungeonInstance;
@@ -506,11 +505,9 @@ public class ArtilleryIntroScript implements DungeonScript {
                 ? lastDestroyerDeathPos
                 : crateDropPos;
 
-        DungeonPortalEntity portal = DungeonPortalEntity.create(level, instanceId, nodeId,
-                portalPos.getX() + 0.5, DungeonConstants.SPAWN_Y, portalPos.getZ() + 0.5);
-        if (portal != null) {
-            level.addFreshEntity(portal);
-        }
+        // 多方块传送门系统：构建 4x5 框架结构而非实体传送门
+        com.piranport.dungeon.block.PortalStructureHelper.buildPortalStructure(
+                level, portalPos.below(), instanceId, nodeId);
 
         // Phase 27：策划 §10.7 - Boss 击杀后生成战利品箱船（红色烟雾信标）
         spawnBossLootShip(level, portalPos);
@@ -519,8 +516,7 @@ public class ArtilleryIntroScript implements DungeonScript {
         phase = Phase.COMPLETED;
         finished = true;
 
-        PiranPort.LOGGER.info("[ArtilleryIntro] All destroyers killed, portal spawned at {}",
-                portalPos);
+        PiranPort.LOGGER.info("[ArtilleryIntro] Multi-block portal structure built at {}", portalPos);
     }
 
     /**

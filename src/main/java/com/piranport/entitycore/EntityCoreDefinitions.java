@@ -15,6 +15,7 @@ public final class EntityCoreDefinitions {
     public static final int DEEP_OCEAN_LIGHT_CARRIER = 11;
     public static final int DEEP_OCEAN_CARRIER = 12;
     public static final int DEEP_OCEAN_SUBMARINE = 13;
+    public static final int DEEP_OCEAN_BOSS = 14;
     public static final int SHIP_GIRL = 15;
 
     private static final List<EntityCoreDefinition> ALL = List.of(
@@ -27,6 +28,7 @@ public final class EntityCoreDefinitions {
             new EntityCoreDefinition(DEEP_OCEAN_LIGHT_CARRIER, "deep_ocean_light_carrier", ModEntityTypes.DEEP_OCEAN_LIGHT_CARRIER),
             new EntityCoreDefinition(DEEP_OCEAN_CARRIER, "deep_ocean_carrier", ModEntityTypes.DEEP_OCEAN_CARRIER),
             new EntityCoreDefinition(DEEP_OCEAN_SUBMARINE, "deep_ocean_submarine", ModEntityTypes.DEEP_OCEAN_SUBMARINE),
+            new EntityCoreDefinition(DEEP_OCEAN_BOSS, "deep_ocean_boss", ModEntityTypes.DEEP_OCEAN_BOSS),
             new EntityCoreDefinition(SHIP_GIRL, "ship_girl", ModEntityTypes.SHIP_GIRL)
     );
 

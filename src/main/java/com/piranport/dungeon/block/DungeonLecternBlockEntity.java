@@ -50,6 +50,14 @@ public class DungeonLecternBlockEntity extends BlockEntity {
 
     // ===== Mutators =====
 
+    /** 创建成功后立即同步钥匙与讲台，防止下一次进入重复分配副本。 */
+    public void bindInstance(UUID instanceId) {
+        if (!hasKey()) return;
+        DungeonKeyItem.setInstanceId(keyStack, instanceId);
+        dungeonInstanceUuid = instanceId;
+        setChanged();
+    }
+
     /**
      * 尝试将玩家背包中任意一把钥匙插入讲台。已持有钥匙的讲台拒绝插入。
      *
@@ -105,9 +113,7 @@ public class DungeonLecternBlockEntity extends BlockEntity {
         }
         this.keyStack = keyStack.copy();
         UUID keyInstanceId = DungeonKeyItem.getInstanceId(keyStack);
-        if (keyInstanceId != null) {
-            this.dungeonInstanceUuid = keyInstanceId;
-        }
+        this.dungeonInstanceUuid = keyInstanceId;
         setChanged();
     }
 

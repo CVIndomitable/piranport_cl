@@ -2,7 +2,6 @@ package com.piranport.dungeon.script;
 
 import com.piranport.PiranPort;
 import com.piranport.dungeon.DungeonConstants;
-import com.piranport.dungeon.entity.DungeonPortalEntity;
 import com.piranport.dungeon.entity.LootShipEntity;
 import com.piranport.dungeon.instance.DungeonInstance;
 import com.piranport.registry.ModEntityTypes;
@@ -154,17 +153,15 @@ public class GoldencatcatScript implements DungeonScript {
 
         BlockPos center = spawnPos;
 
-        var portal = DungeonPortalEntity.create(dungeonLevel, instanceId, nodeId,
-                center.getX() + 0.5, center.getY(), center.getZ() + 0.5);
-        if (portal != null) {
-            dungeonLevel.addFreshEntity(portal);
-        }
+        // 多方块传送门系统：构建 4x5 框架结构而非实体传送门
+        com.piranport.dungeon.block.PortalStructureHelper.buildPortalStructure(
+                dungeonLevel, center.below(), instanceId, nodeId);
 
         // Spawn boss loot ship at portal position
         spawnLootShip(dungeonLevel, center);
 
         finished = true;
-        PiranPort.LOGGER.info("[Goldencatcat] All cats cleared, portal spawned at {}", center);
+        PiranPort.LOGGER.info("[Goldencatcat] Multi-block portal structure built at {}", center);
     }
 
     private void spawnLootShip(ServerLevel level, BlockPos center) {

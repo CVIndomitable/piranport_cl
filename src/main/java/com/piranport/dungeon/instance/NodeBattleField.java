@@ -33,38 +33,23 @@ public final class NodeBattleField {
      */
     public static void generateTerrain(ServerLevel dungeonLevel, DungeonInstance instance,
                                         NodeData node) {
-        BlockPos spawn = instance.getNodeSpawnPos(node.nodeId());
-        int halfSize = DungeonConstants.NODE_AREA_SIZE / 2;
-        int seaLevel = DungeonConstants.SEA_LEVEL;
-        int startX = spawn.getX() - halfSize;
-        int startZ = spawn.getZ() - halfSize;
+        // 生成由持久化管线分帧处理；调用方应轮询 isTerrainReady 后再传送/刷怪。
+        TerrainGenerationPipeline.tick(dungeonLevel, instance, node);
+    }
 
-        // Flag 2 = send to clients, 16 = skip neighbor updates, 64 = suppress drops (performance)
-        int flags = 2 | 16 | 64;
+    /** 每 tick 推进一个节点的地形写入，供副本入口或服务器 tick 调度。 */
+    public static boolean tickTerrain(ServerLevel dungeonLevel, DungeonInstance instance, NodeData node) {
+        return TerrainGenerationPipeline.tick(dungeonLevel, instance, node);
+    }
 
-        // 基底：平坦海面 + 海床
-        for (int x = 0; x < DungeonConstants.NODE_AREA_SIZE; x++) {
-            for (int z = 0; z < DungeonConstants.NODE_AREA_SIZE; z++) {
-                BlockPos waterPos = new BlockPos(startX + x, seaLevel, startZ + z);
-                dungeonLevel.setBlock(waterPos, Blocks.WATER.defaultBlockState(), flags);
-                BlockPos floorPos = new BlockPos(startX + x, seaLevel - 1, startZ + z);
-                dungeonLevel.setBlock(floorPos, Blocks.STONE.defaultBlockState(), flags);
-            }
-        }
+    /** 地形已完成基底、特征、POI 和硬边界时才允许刷怪或传送。 */
+    public static boolean isTerrainReady(ServerLevel dungeonLevel, DungeonInstance instance, NodeData node) {
+        return TerrainGenerationPipeline.isReady(dungeonLevel, instance, node);
+    }
 
-        // 根据地形类型生成特征（技术指南 05）
-        TerrainType terrain = node.terrainType() != null ? node.terrainType() : TerrainType.T1_OCEAN;
-        switch (terrain) {
-            case T2_ISLAND_REEFS -> generateIslandReefs(dungeonLevel, startX, startZ, flags);
-            case T3_WRECKAGE -> generateWreckageBand(dungeonLevel, startX, startZ, flags);
-            case T4_ISLAND_CHAIN -> generateIslandChain(dungeonLevel, startX, startZ, flags);
-            case T5_FORTRESS_REEF -> generateFortressReef(dungeonLevel, spawn, startX, startZ, flags);
-            case T6_PORT_RUINS -> generatePortRuins(dungeonLevel, spawn, startX, startZ, flags);
-            default -> { /* T1_OCEAN: 仅平坦海面，无需额外生成 */ }
-        }
-
-        // 出生点平台（所有地形通用）
-        placeSpawnPlatform(dungeonLevel, spawn, flags);
+    /** 供入口 UI/调度器显示剩余地形队列工作量。 */
+    public static long queuedTerrainBlocks(ServerLevel dungeonLevel, DungeonInstance instance, NodeData node) {
+        return TerrainGenerationPipeline.queuedBlocks(dungeonLevel, instance, node);
     }
 
     // ===== 技术指南 05：六种地形特征生成器 =====
@@ -357,12 +342,8 @@ public final class NodeBattleField {
     private static void spawnCompletionPortal(ServerLevel dungeonLevel, DungeonInstance instance,
                                                 String nodeId) {
         BlockPos spawn = instance.getNodeSpawnPos(nodeId);
-        var portal = com.piranport.dungeon.entity.DungeonPortalEntity.create(dungeonLevel,
-                instance.getInstanceId(), nodeId,
-                spawn.getX() + 0.5, DungeonConstants.SPAWN_Y, spawn.getZ() + 0.5);
-        if (portal != null) {
-            dungeonLevel.addFreshEntity(portal);
-        }
+        com.piranport.dungeon.block.PortalStructureHelper.buildPortalStructure(
+                dungeonLevel, spawn.below(), instance.getInstanceId(), nodeId);
     }
 
     /**

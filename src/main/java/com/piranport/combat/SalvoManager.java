@@ -1,7 +1,10 @@
 package com.piranport.combat;
 
 import com.piranport.PiranPort;
-import com.piranport.item.ShipCoreCombat;
+import com.piranport.combat.cannon.CannonSalvos;
+import com.piranport.combat.cannon.CannonInventory;
+import com.piranport.combat.cannon.SalvoContext;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.Item;
@@ -22,12 +25,14 @@ public class SalvoManager {
     private static final Map<UUID, ArrayDeque<SalvoTask>> PENDING = new HashMap<>();
 
     /**
-     * 单次延迟射击任务。expectedWeaponType 用于执行时校验槽位未被换物品。
+     * 单次延迟射击任务。捕获玩家、世界和武器实例，执行时重新验证生命周期。
      */
     private record SalvoTask(
             int weaponSlot,
             int coreSlot,
             Item expectedWeaponType,
+            ItemStack expectedWeapon,
+            SalvoContext context,
             int aimMode,
             double aimTargetX,
             double aimTargetY,
@@ -36,19 +41,20 @@ public class SalvoManager {
     ) {}
 
     /**
-     * 调度一批槽位的延迟射击。间隔来自火炮配置的 salvoInterval。
+     * 按策划决策/武器/10，以 1-4 tick 随机间隔调度同型炮；火炮自身的连发参数不控制跨武器队列。
      */
     public static void schedule(ServerPlayer player, Item expectedType, List<int[]> slotPairs,
-                                 int aimMode, double ax, double ay, double az, int intervalTicks) {
+                                 int aimMode, double ax, double ay, double az) {
         long now = player.serverLevel().getGameTime();
-        int interval = Math.max(1, intervalTicks);
-        long nextTick = now + interval;
+        long nextTick = now;
+        SalvoContext context = new SalvoContext(player, player.serverLevel(), player.getMainHandItem());
         ArrayDeque<SalvoTask> queue = new ArrayDeque<>();
 
         for (int[] pair : slotPairs) {
-            queue.add(new SalvoTask(pair[0], pair[1], expectedType,
+            nextTick += 1 + player.getRandom().nextInt(4);
+            ItemStack weapon = CannonInventory.weaponAt(player.getInventory(), pair[0]);
+            queue.add(new SalvoTask(pair[0], pair[1], expectedType, weapon, context,
                     aimMode, ax, ay, az, nextTick));
-            nextTick += interval;
         }
 
         PENDING.put(player.getUUID(), queue);
@@ -61,7 +67,9 @@ public class SalvoManager {
             Map.Entry<UUID, ArrayDeque<SalvoTask>> entry = it.next();
             ServerPlayer player = event.getServer().getPlayerList().getPlayer(entry.getKey());
 
-            if (player == null) {
+            SalvoTask next = entry.getValue().peek();
+            if (player == null || next == null || !next.context().isValid(player,
+                    player.serverLevel(), player.getMainHandItem(), player.isAlive(), player.isSpectator())) {
                 it.remove();
                 continue;
             }
@@ -72,7 +80,9 @@ public class SalvoManager {
 
             while (!queue.isEmpty() && queue.peek().fireTick() <= now) {
                 SalvoTask task = queue.poll();
-                ShipCoreCombat.executeSalvoFire(level, player,
+                // 同型炮被另一把替换也应取消，不能只比较注册类型。
+                if (CannonInventory.weaponAt(player.getInventory(), task.weaponSlot()) != task.expectedWeapon()) continue;
+                CannonSalvos.executeSalvoFire(level, player,
                         task.weaponSlot(), task.coreSlot(), task.expectedWeaponType(),
                         task.aimMode(),
                         task.aimTargetX(), task.aimTargetY(), task.aimTargetZ());

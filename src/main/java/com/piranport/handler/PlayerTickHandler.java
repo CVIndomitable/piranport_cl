@@ -11,7 +11,6 @@ import com.piranport.combat.AutoModeState;
 import com.piranport.combat.TransformationManager;
 import com.piranport.component.FuelData;
 import com.piranport.config.ModCommonConfig;
-import net.minecraft.nbt.CompoundTag;
 
 import com.piranport.item.KirinHeadbandItem;
 import com.piranport.item.FootballArmorItem;
@@ -35,8 +34,6 @@ import net.minecraft.world.entity.monster.Vex;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -51,14 +48,15 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * 玩家 Tick 处理器 — 服务端每 tick 驱动燃料消耗、水上行走、声呐、自动战斗等。
+ * 玩家 Tick 处理器 — 驱动水上行走及服务端燃料、声呐、自动战斗等。
  *
- * <p><b>线程模型</b>: 服务端主线程，使用 ConcurrentHashMap 防御服务器关闭时的竞态条件。
+ * <p><b>线程模型</b>: 水上行走由各逻辑端的玩家实例独立驱动，其余逻辑仅在服务端主线程运行。
+ * 服务端缓存使用 ConcurrentHashMap 防御服务器关闭时的竞态条件。
  * <p><b>缓存生命周期</b>:
  *   {@link #lastWeaponLoad} / {@link #lastPlayerPos} / {@link #accumulatedDistance} —
  *   在 {@link #onPlayerLogout(UUID)} 中清理以单向释放内存，
  *   全局清理通过 {@link #clearCaches()} 在 {@link com.piranport.server.ServerGameEvents#onServerStopped} 中调用。
- * <p><b>访问限制</b>: 仅在服务端运行，客户端不会触发。
+ * <p><b>访问限制</b>: 静态缓存仅供服务端使用，水上行走状态由 {@link WaterWalkingHandler} 隔离到玩家实例。
  */
 @EventBusSubscriber(modid = PiranPort.MOD_ID)
 public class PlayerTickHandler {
@@ -82,23 +80,11 @@ public class PlayerTickHandler {
     private static final Map<UUID, Vec3> lastPlayerPos = new ConcurrentHashMap<>();
     /** 玩家 UUID → 累计移动距离。用于按距离驱动的燃料消耗。 */
     private static final Map<UUID, Double> accumulatedDistance = new ConcurrentHashMap<>();
-    /** 玩家 UUID → 上次计算的 yaw 角度。用于缓存水面行走的三角函数计算。 */
-    private static final Map<UUID, Float> lastYaw = new ConcurrentHashMap<>();
-    /** 玩家 UUID → 缓存的方向向量。用于水面行走加速。 */
-    private static final Map<UUID, Vec3> cachedDirection = new ConcurrentHashMap<>();
-    /** 玩家 UUID → 水面 Y 坐标。用于水面行走位置锁定，防止下沉。 */
-    private static final Map<UUID, Double> waterSurfaceY = new ConcurrentHashMap<>();
-    /** 玩家 UUID → 上次离开水面的tick。用于延迟清理水面Y缓存。 */
-    private static final Map<UUID, Integer> lastWaterExitTick = new ConcurrentHashMap<>();
     /** 清理所有缓存（服务器关闭时调用）*/
     public static void clearCaches() {
         lastWeaponLoad.clear();
         lastPlayerPos.clear();
         accumulatedDistance.clear();
-        lastYaw.clear();
-        cachedDirection.clear();
-        waterSurfaceY.clear();
-        lastWaterExitTick.clear();
     }
 
     /** 玩家登出时清理该玩家的缓存条目，防止长时间运行内存泄漏 */
@@ -106,10 +92,6 @@ public class PlayerTickHandler {
         lastWeaponLoad.remove(uuid);
         lastPlayerPos.remove(uuid);
         accumulatedDistance.remove(uuid);
-        lastYaw.remove(uuid);
-        cachedDirection.remove(uuid);
-        waterSurfaceY.remove(uuid);
-        lastWaterExitTick.remove(uuid);
     }
 
     /** 定期清理离线玩家的缓存条目，防止服务器崩溃导致的内存泄漏 */
@@ -121,10 +103,6 @@ public class PlayerTickHandler {
         lastWeaponLoad.keySet().removeIf(uuid -> !onlineUuids.contains(uuid));
         lastPlayerPos.keySet().removeIf(uuid -> !onlineUuids.contains(uuid));
         accumulatedDistance.keySet().removeIf(uuid -> !onlineUuids.contains(uuid));
-        lastYaw.keySet().removeIf(uuid -> !onlineUuids.contains(uuid));
-        cachedDirection.keySet().removeIf(uuid -> !onlineUuids.contains(uuid));
-        waterSurfaceY.keySet().removeIf(uuid -> !onlineUuids.contains(uuid));
-        lastWaterExitTick.keySet().removeIf(uuid -> !onlineUuids.contains(uuid));
     }
 
     @SubscribeEvent
@@ -146,7 +124,9 @@ public class PlayerTickHandler {
                 player.getName().getString(), isTransformed);
 
         if (!isTransformed) {
+            WaterWalkingHandler.clear(player);
             if (!isClientSide) {
+                AASilenceManager.clear(player);
                 lastPlayerPos.remove(player.getUUID());
                 accumulatedDistance.remove(player.getUUID());
 
@@ -171,7 +151,10 @@ public class PlayerTickHandler {
         // 服务端专属逻辑
         if (!isClientSide) {
             tickFuelConsumption(player);
-            if (!TransformationManager.isPlayerTransformed(player)) return;
+            if (!TransformationManager.isPlayerTransformed(player)) {
+                WaterWalkingHandler.clear(player);
+                return;
+            }
         }
 
         ItemStack transformedCore = TransformationManager.findTransformedCore(player);
@@ -182,10 +165,16 @@ public class PlayerTickHandler {
                 player.getName().getString(), isSubmarine);
 
         // 水上行走：客户端和服务端都需要执行
-        handleWaterWalkingIfNeeded(player, isSubmarine);
+        WaterWalkingHandler.tick(player, isSubmarine);
 
         // 以下逻辑只在服务端执行
         if (!isClientSide) {
+            if (transformedCore.getItem() instanceof ShipCoreItem activeCore) {
+                com.piranport.combat.ShipHealthOverride.apply(
+                        player.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH),
+                        activeCore.getShipType().maxHealth());
+                if (player.getHealth() > player.getMaxHealth()) player.setHealth(player.getMaxHealth());
+            }
             tickSubmarineEffects(player, isSubmarine);
             ShipCoreCombat.tickCannonAutoReload(player, transformedCore);
             tickSonarGlow(player, transformedCore);
@@ -238,74 +227,9 @@ public class PlayerTickHandler {
         }
     }
 
-    /**
-     * 判定自动模式是否启用（CIWS/AA导弹）。状态为 AA_ONLY 或 FULL_AUTO 时启用。
-     * 兼容旧版 SHIP_AUTO_LAUNCH 布尔组件（存在且为 true 时视为 FULL_AUTO）。
-     * 依据：策划决策/副本/14 §H 键三态总开关 + 数值/05 定稿。
-     */
+    /** 近防炮、导弹和战斗机读取同一个自动模式总开关。 */
     private static boolean isAutoFireEnabled(ItemStack transformedCore) {
-        if (transformedCore.isEmpty()) return false;
-        AutoModeState state = AutoModeState.fromStack(transformedCore);
-        if (state != AutoModeState.OFF) return true;
-        // 兼容旧存档：SHIP_AUTO_LAUNCH=true 视为 FULL_AUTO
-        Boolean flag = transformedCore.get(com.piranport.registry.ModDataComponents.SHIP_AUTO_LAUNCH.get());
-        return Boolean.TRUE.equals(flag);
-    }
-
-    /** 水面行走条件判断后委托给 handleWaterWalking */
-    private static void handleWaterWalkingIfNeeded(Player player, boolean isSubmarine) {
-        if (isSubmarine) {
-            return;
-        }
-
-        boolean inWater = player.isInWater();
-        boolean eyeInWater = player.isEyeInFluidType(NeoForgeMod.WATER_TYPE.value());
-
-        if (inWater && eyeInWater) {
-            applyUnderwaterBuoyancy(player);
-            waterSurfaceY.remove(player.getUUID());
-            return;
-        }
-
-        if (inWater) {
-            Vec3 vel = player.getDeltaMovement();
-
-            if (vel.y < 0) {
-                player.setDeltaMovement(vel.x, 0.0, vel.z);
-            }
-
-            // 方法2：如果还在下沉，强制拉回位置（更强力）
-            // 记录水面Y坐标
-            UUID uuid = player.getUUID();
-            Double surfaceY = waterSurfaceY.get(uuid);
-            double currentY = player.getY();
-
-            if (surfaceY == null) {
-                // 第一次进入水面，记录当前位置
-                waterSurfaceY.put(uuid, currentY);
-            } else if (currentY < surfaceY - 0.1) {
-                // 如果下沉超过0.1格，强制拉回
-                player.setPos(player.getX(), surfaceY, player.getZ());
-                player.setDeltaMovement(vel.x, 0.0, vel.z);
-            }
-
-            player.resetFallDistance();
-
-            // 水平移动加速
-            handleWaterWalking(player);
-        } else {
-            // 离开水面，清除记录
-            waterSurfaceY.remove(player.getUUID());
-        }
-    }
-
-    private static void applyUnderwaterBuoyancy(Player player) {
-        Vec3 vel = player.getDeltaMovement();
-        double buoyancy = ModCommonConfig.WATER_SURFACE_BUOYANCY.get();
-        double maxRiseSpeed = Math.max(0.05, Math.min(0.6, buoyancy));
-        double rise = Math.min(maxRiseSpeed, Math.max(vel.y, 0.0) + buoyancy * 0.08);
-        player.setDeltaMovement(vel.x, rise, vel.z);
-        player.resetFallDistance();
+        return AutoModeState.fromStack(transformedCore) == AutoModeState.ON;
     }
 
     /** 潜艇效果：无限水下呼吸 + 水下隐身 + 深海夜视（仅在效果快过期时刷新，避免每tick发包） */
@@ -393,10 +317,8 @@ public class PlayerTickHandler {
             }
         }
         if (autoLaunchSlot >= 0) {
-            // 仅 FULL_AUTO 时自动升空战斗机；AA_ONLY 和 FULL_AUTO 均触发防空导弹
-            if (mode == AutoModeState.FULL_AUTO) {
-                tickAutoLaunchFighters(player, autoLaunchCore, autoLaunchSlot);
-            }
+            // 起飞可刷新防空静默窗口，但静默本身不阻塞起飞动作。
+            tickAutoLaunchFighters(player, autoLaunchCore, autoLaunchSlot);
             tickAntiAirMissiles(player, autoLaunchCore, autoLaunchSlot);
         }
     }
@@ -489,63 +411,6 @@ public class PlayerTickHandler {
         }
     }
 
-    /** 水面行走：取消下沉、水平加速补偿 */
-    private static void handleWaterWalking(Player player) {
-        Vec3 vel = player.getDeltaMovement();
-        if (vel.y < 0) {
-            player.setDeltaMovement(vel.x, 0.0, vel.z);
-        }
-        player.resetFallDistance();
-
-        double accel = ModCommonConfig.WATER_WALKING_ACCELERATION.get();
-        if (accel <= 0.0001) return;
-
-        Vec3 currentVel = player.getDeltaMovement();
-        float inputX = player.xxa;
-        float inputZ = player.zza;
-        boolean hasInput = Math.abs(inputX) > 0.01f || Math.abs(inputZ) > 0.01f;
-
-        if (hasInput) {
-            float yaw = player.getYRot();
-            UUID uuid = player.getUUID();
-
-            // 缓存三角函数计算：仅在yaw变化超过5度时重算
-            Float cachedYaw = lastYaw.get(uuid);
-            Vec3 direction = cachedDirection.get(uuid);
-            if (cachedYaw == null || Math.abs(yaw - cachedYaw) > 5.0f || direction == null) {
-                float yawRad = yaw * ((float) Math.PI / 180f);
-                double sinYaw = Math.sin(yawRad);
-                double cosYaw = Math.cos(yawRad);
-                direction = new Vec3(-sinYaw, 0, cosYaw);
-                lastYaw.put(uuid, yaw);
-                cachedDirection.put(uuid, direction);
-            }
-
-            double dirX = direction.x * inputZ + direction.z * inputX;
-            double dirZ = direction.z * inputZ - direction.x * inputX;
-            double dirLen = Math.sqrt(dirX * dirX + dirZ * dirZ);
-            if (dirLen > 0.001) {
-                dirX /= dirLen;
-                dirZ /= dirLen;
-                player.setDeltaMovement(
-                    currentVel.x + dirX * accel,
-                    currentVel.y,
-                    currentVel.z + dirZ * accel
-                );
-            }
-        } else {
-            double horizontalSpeed = Math.sqrt(currentVel.x * currentVel.x + currentVel.z * currentVel.z);
-            if (horizontalSpeed > 0.001) {
-                double deceleration = ModCommonConfig.WATER_WALKING_DECELERATION.get();
-                player.setDeltaMovement(
-                    currentVel.x * deceleration,
-                    currentVel.y,
-                    currentVel.z * deceleration
-                );
-            }
-        }
-    }
-
     /** 燃料消耗：基于移动距离，耗尽时自动解除变身（每5tick计算一次） */
     private static void tickFuelConsumption(Player player) {
         // 性能优化：每5tick计算一次燃料消耗
@@ -610,9 +475,6 @@ public class PlayerTickHandler {
         lastWeaponLoad.remove(uuid);
         accumulatedDistance.remove(uuid);
         lastPlayerPos.remove(uuid);
-        lastYaw.remove(uuid);
-        cachedDirection.remove(uuid);
-        waterSurfaceY.remove(uuid);
     }
 
     /** 自动发射战斗机锁定附近飞行敌对生物 */
@@ -655,6 +517,7 @@ public class PlayerTickHandler {
 
     /** 防空导弹：检测32格内空中敌对目标 */
     private static void tickAntiAirMissiles(Player player, ItemStack coreStack, int coreSlot) {
+        if (AASilenceManager.isSilenced(player)) return;
         boolean hasAirborneHostile = !player.level().getEntitiesOfClass(
                 LivingEntity.class,
                 player.getBoundingBox().inflate(32.0),

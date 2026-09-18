@@ -54,7 +54,7 @@ public class ModDataComponents {
                     .networkSynchronized(ByteBufCodecs.BOOL)
                     .build());
 
-    // ===== 自动模式三态（0=OFF, 1=AA_ONLY, 2=FULL_AUTO）=====
+    // ===== 自动模式总开关（0=关闭，1=开启；读取时兼容旧版 2）=====
 
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<Integer>>
             SHIP_AUTO_MODE = DATA_COMPONENTS.register("ship_auto_mode",

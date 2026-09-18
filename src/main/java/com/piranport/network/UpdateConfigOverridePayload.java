@@ -111,7 +111,7 @@ public record UpdateConfigOverridePayload(
         if (key.equals("HE_DAMAGE_FALLOFF") || key.equals("UNDERWATER_EXPLODE")) {
             return Boolean.parseBoolean(valueStr);
         } else {
-            // 默认为double类型（HE_ARMOR_PENETRATION, AP_DAMAGE_MULTIPLIER等）
+            // 默认为double类型（AP_ARMOR_IGNORE, AP_DAMAGE_MULTIPLIER等）
             return parseFiniteDouble(valueStr);
         }
     }

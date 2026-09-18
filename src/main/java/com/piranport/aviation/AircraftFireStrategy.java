@@ -119,6 +119,7 @@ public class AircraftFireStrategy {
         AircraftEntity aircraft = AircraftEntity.create(level, player, weaponSlot, aircraftStack,
                 attackMode, coreInventorySlot, hasBullets, payloadType);
         level.addFreshEntity(aircraft);
+        com.piranport.combat.AASilenceManager.startSilence(player);
         spawnAircraftLaunchEffect(level, player, launchInfo.aircraftType());
         // P0-3: 起飞成功埋点（带玩家短UUID、槽位、物品hash、payload、mode、entityId）
         com.piranport.debug.PiranPortDebug.aircraftLaunched(

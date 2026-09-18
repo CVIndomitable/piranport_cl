@@ -248,6 +248,13 @@ public class ModEntityTypes {
                     .sized(0.6f, 1.8f).clientTrackingRange(16).updateInterval(3)
                     .build("piranport:deep_ocean_submarine"));
 
+    public static final DeferredHolder<EntityType<?>, EntityType<com.piranport.npc.deepocean.DeepOceanBossEntity>>
+            DEEP_OCEAN_BOSS = ENTITY_TYPES.register("deep_ocean_boss",
+            () -> EntityType.Builder.<com.piranport.npc.deepocean.DeepOceanBossEntity>of(
+                            com.piranport.npc.deepocean.DeepOceanBossEntity::new, MobCategory.MONSTER)
+                    .sized(0.9f, 2.2f).clientTrackingRange(16).updateInterval(3)
+                    .build("piranport:deep_ocean_boss"));
+
     // --- Goldencatcat (Goldencatcat 活动关卡训练靶) ---
     public static final DeferredHolder<EntityType<?>, EntityType<com.piranport.entity.GoldencatcatEntity>>
             GOLDENCATCAT = ENTITY_TYPES.register("goldencatcat",

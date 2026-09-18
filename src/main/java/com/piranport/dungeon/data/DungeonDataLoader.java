@@ -6,11 +6,15 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.piranport.PiranPort;
+import net.minecraft.resources.FileToIdConverter;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.SimpleJsonResourceReloadListener;
 import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraft.util.GsonHelper;
 
+import java.io.IOException;
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -30,8 +34,33 @@ public class DungeonDataLoader extends SimpleJsonResourceReloadListener {
     }
 
     @Override
+    protected Map<ResourceLocation, JsonElement> prepare(ResourceManager resourceManager,
+                                                          ProfilerFiller profiler) {
+        // 原版扫描器会记录语法错误后跳过文件；这里必须拒绝整批重载，防止旧定义悄悄消失。
+        FileToIdConverter converter = FileToIdConverter.json("dungeon");
+        Map<ResourceLocation, JsonElement> prepared = new HashMap<>();
+        for (var entry : converter.listMatchingResources(resourceManager).entrySet()) {
+            ResourceLocation id = converter.fileToId(entry.getKey());
+            String path = id.getPath();
+            if (!path.startsWith("chapters/") && !path.startsWith("stages/")
+                    && !path.startsWith("enemy_sets/")) continue;
+            try (Reader reader = entry.getValue().openAsReader()) {
+                JsonElement json = GsonHelper.fromJson(GSON, reader, JsonElement.class);
+                if (json == null || !json.isJsonObject()) {
+                    throw new IllegalArgumentException("配置根节点必须是对象");
+                }
+                prepared.put(id, json);
+            } catch (IOException | RuntimeException e) {
+                throw new IllegalArgumentException("无法读取副本配置 " + entry.getKey(), e);
+            }
+        }
+        return prepared;
+    }
+
+    @Override
     protected void apply(Map<ResourceLocation, JsonElement> resources,
                          ResourceManager resourceManager, ProfilerFiller profiler) {
+        List<String> errors = new ArrayList<>();
         Map<String, ChapterData> chapters = new HashMap<>();
         Map<String, StageData> stages = new HashMap<>();
         Map<String, EnemySetData> enemySets = new HashMap<>();
@@ -44,55 +73,35 @@ public class DungeonDataLoader extends SimpleJsonResourceReloadListener {
             try {
                 if (path.startsWith("chapters/")) {
                     ChapterData chapter = parseChapter(json.getAsJsonObject());
-                    chapters.put(chapter.chapterId(), chapter);
+                    putUnique(chapters, chapter.chapterId(), chapter);
                 } else if (path.startsWith("stages/")) {
                     StageData stage = parseStage(json.getAsJsonObject());
-                    stages.put(stage.stageId(), stage);
+                    putUnique(stages, stage.stageId(), stage);
                 } else if (path.startsWith("enemy_sets/")) {
                     EnemySetData enemySet = parseEnemySet(json.getAsJsonObject());
-                    enemySets.put(enemySet.enemySetId(), enemySet);
+                    putUnique(enemySets, enemySet.enemySetId(), enemySet);
                 }
             } catch (Exception e) {
-                PiranPort.LOGGER.warn("Failed to parse dungeon config {}: {}", id, e.getMessage());
+                errors.add(id + ": " + e.getMessage());
             }
         }
 
-        // Validate references
-        for (var stage : stages.values()) {
-            // Validate edges reference existing nodes
-            for (var edge : stage.edges()) {
-                if (!stage.nodes().containsKey(edge.from()) || !stage.nodes().containsKey(edge.to())) {
-                    PiranPort.LOGGER.warn("Stage {} has edge referencing missing node: {} -> {}",
-                            stage.stageId(), edge.from(), edge.to());
-                }
-            }
-            // Validate enemy set references
-            for (var node : stage.nodes().values()) {
-                if ((node.type() == NodeData.NodeType.BATTLE || node.type() == NodeData.NodeType.BOSS)
-                        && node.enemies() != null && !enemySets.containsKey(node.enemies())) {
-                    PiranPort.LOGGER.warn("Stage {} node {} references missing enemy_set: {}",
-                            stage.stageId(), node.nodeId(), node.enemies());
-                }
-            }
-            // Validate start node exists
-            if (!stage.nodes().containsKey(stage.startNode())) {
-                PiranPort.LOGGER.warn("Stage {} start_node '{}' does not exist in nodes",
-                        stage.stageId(), stage.startNode());
-            }
-            // Validate checkpoint nodeId references existing node
-            for (var cp : stage.checkpoints()) {
-                if (!stage.nodes().containsKey(cp.nodeId())) {
-                    PiranPort.LOGGER.warn("Stage {} checkpoint '{}' references missing node '{}'",
-                            stage.stageId(), cp.id(), cp.nodeId());
-                }
-            }
+        errors.addAll(DungeonDataValidator.validate(chapters, stages, enemySets));
+        if (!errors.isEmpty()) {
+            // 在提交注册表之前拒绝整批数据，重载失败时上一份有效配置仍可继续使用。
+            throw new IllegalArgumentException("副本配置校验失败：\n" + String.join("\n", errors));
         }
 
         DungeonRegistry.INSTANCE.load(chapters, stages, enemySets);
-        // Stage adjacency / node-index caches must be rebuilt against the new stage data.
-        StageData.invalidateCaches();
         PiranPort.LOGGER.info("Loaded dungeon data: {} chapters, {} stages, {} enemy sets",
                 chapters.size(), stages.size(), enemySets.size());
+    }
+
+    private static <T> void putUnique(Map<String, T> entries, String id, T value) {
+        if (id.isBlank()) throw new IllegalArgumentException("配置 ID 不能为空");
+        if (entries.putIfAbsent(id, value) != null) {
+            throw new IllegalArgumentException("重复配置 ID: " + id);
+        }
     }
 
     private void requireField(JsonObject json, String field, String context) {
@@ -165,8 +174,7 @@ public class DungeonDataLoader extends SimpleJsonResourceReloadListener {
                 JsonObject cpObj = ce.getAsJsonObject();
                 if (!cpObj.has("id") || cpObj.get("id").isJsonNull()
                         || !cpObj.has("node_id") || cpObj.get("node_id").isJsonNull()) {
-                    PiranPort.LOGGER.warn("Skipping checkpoint missing required field 'id' or 'node_id' in stage {}", stageId);
-                    continue;
+                    throw new IllegalArgumentException("记录点缺少 id/node_id，关卡 " + stageId);
                 }
                 int posX = cpObj.has("pos_x") ? cpObj.get("pos_x").getAsInt() : 0;
                 int posY = cpObj.has("pos_y") ? cpObj.get("pos_y").getAsInt() : 64;
@@ -189,6 +197,7 @@ public class DungeonDataLoader extends SimpleJsonResourceReloadListener {
                 String v = vce.getAsString();
                 VictoryCondition cond = VictoryCondition.fromString(v);
                 if (cond == null) {
+                    // 现有关卡包含尚未映射到枚举的扩展任务名，沿用警告以保持当前关卡兼容。
                     PiranPort.LOGGER.warn("Unknown victory_condition '{}' in stage {}", v, stageId);
                 } else {
                     victoryConditions.add(cond);
@@ -287,7 +296,7 @@ public class DungeonDataLoader extends SimpleJsonResourceReloadListener {
                 String r = re.getAsString();
                 CombatRestriction cr = CombatRestriction.fromString(r);
                 if (cr == null) {
-                    PiranPort.LOGGER.warn("Unknown combat_restriction '{}' in node {}", r, nodeId);
+                    throw new IllegalArgumentException("未知战斗限制 " + r + "，节点 " + nodeId);
                 } else {
                     restrictions.add(cr);
                 }
@@ -301,7 +310,7 @@ public class DungeonDataLoader extends SimpleJsonResourceReloadListener {
             if (parsed != null) {
                 scene = parsed;
             } else {
-                PiranPort.LOGGER.warn("Unknown scene '{}' in node {}", json.get("scene").getAsString(), nodeId);
+                throw new IllegalArgumentException("未知场景，节点 " + nodeId);
             }
         }
 
@@ -315,15 +324,13 @@ public class DungeonDataLoader extends SimpleJsonResourceReloadListener {
         for (int i = 0; i < arr.size(); i++) {
             JsonElement e = arr.get(i);
             if (!e.isJsonObject()) {
-                PiranPort.LOGGER.warn("Skipping non-object reward entry at index {}", i);
-                continue;
+                throw new IllegalArgumentException("嵌套条目缺少必要字段，序号 " + i);
             }
             JsonObject obj = e.getAsJsonObject();
-            // H2: 缺字段时跳过该 entry 并 log WARN，避免一条坏数据让整份 stage 加载失败
+            // 奖励缺字段必须拒绝重载，避免通关后才发现奖励丢失。
             if (!obj.has("item") || obj.get("item").isJsonNull()
                     || !obj.has("count") || obj.get("count").isJsonNull()) {
-                PiranPort.LOGGER.warn("Skipping reward entry missing required field 'item' or 'count' at index {}", i);
-                continue;
+                throw new IllegalArgumentException("嵌套条目缺少必要字段，序号 " + i);
             }
             String item = obj.get("item").getAsString();
             int count = obj.get("count").getAsInt();
@@ -338,14 +345,12 @@ public class DungeonDataLoader extends SimpleJsonResourceReloadListener {
         for (int i = 0; i < arr.size(); i++) {
             JsonElement e = arr.get(i);
             if (!e.isJsonObject()) {
-                PiranPort.LOGGER.warn("Skipping non-object cost entry at index {}", i);
-                continue;
+                throw new IllegalArgumentException("嵌套条目缺少必要字段，序号 " + i);
             }
             JsonObject obj = e.getAsJsonObject();
             if (!obj.has("item") || obj.get("item").isJsonNull()
                     || !obj.has("count") || obj.get("count").isJsonNull()) {
-                PiranPort.LOGGER.warn("Skipping cost entry missing required field 'item' or 'count' at index {}", i);
-                continue;
+                throw new IllegalArgumentException("嵌套条目缺少必要字段，序号 " + i);
             }
             list.add(new NodeData.CostEntry(
                     obj.get("item").getAsString(),
@@ -362,14 +367,12 @@ public class DungeonDataLoader extends SimpleJsonResourceReloadListener {
         for (int i = 0; i < json.getAsJsonArray("spawn_list").size(); i++) {
             JsonElement e = json.getAsJsonArray("spawn_list").get(i);
             if (!e.isJsonObject()) {
-                PiranPort.LOGGER.warn("Skipping non-object spawn_list entry at index {} in enemy_set {}", i, id);
-                continue;
+                throw new IllegalArgumentException("嵌套条目缺少必要字段，序号 " + i);
             }
             JsonObject obj = e.getAsJsonObject();
             if (!obj.has("entity") || obj.get("entity").isJsonNull()
                     || !obj.has("count") || obj.get("count").isJsonNull()) {
-                PiranPort.LOGGER.warn("Skipping spawn_list entry missing required field 'entity' or 'count' at index {} in enemy_set {}", i, id);
-                continue;
+                throw new IllegalArgumentException("嵌套条目缺少必要字段，序号 " + i);
             }
             spawnList.add(new EnemySetData.SpawnEntry(
                     obj.get("entity").getAsString(),
@@ -384,7 +387,7 @@ public class DungeonDataLoader extends SimpleJsonResourceReloadListener {
                         fObj.get("entity").getAsString(),
                         fObj.get("count").getAsInt());
             } else {
-                PiranPort.LOGGER.warn("Skipping flagship entry missing required field in enemy_set {}", id);
+                throw new IllegalArgumentException("旗舰缺少 entity/count，敌人组 " + id);
             }
         }
         String formation = json.has("formation") && !json.get("formation").isJsonNull()

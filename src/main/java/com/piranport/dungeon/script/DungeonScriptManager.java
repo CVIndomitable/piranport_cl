@@ -1,6 +1,8 @@
 package com.piranport.dungeon.script;
 
 import com.piranport.PiranPort;
+import com.piranport.dungeon.instance.DungeonInstance;
+import com.piranport.dungeon.instance.DungeonInstanceManager;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -9,12 +11,17 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.saveddata.SavedData;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 /**
  * Persists active dungeon scripts as world SavedData attached to the dungeon dimension.
@@ -27,6 +34,8 @@ public final class DungeonScriptManager extends SavedData {
     private static final int MAX_SCRIPTS = 256;
 
     private final Map<UUID, DungeonScript> activeScripts = new HashMap<>();
+    /** 异常脚本停止调度但保留存档；重启或显式替换脚本后才重试，避免每 tick 刷屏。 */
+    private final Set<UUID> failedScripts = new HashSet<>();
 
     public DungeonScriptManager() {}
 
@@ -43,6 +52,7 @@ public final class DungeonScriptManager extends SavedData {
     /** Register a new script for a dungeon instance. */
     public void start(UUID instanceId, DungeonScript script) {
         activeScripts.put(instanceId, script);
+        failedScripts.remove(instanceId);
         setDirty();
         PiranPort.LOGGER.info("Dungeon script started for instance {}: {}",
                 instanceId, script.getClass().getSimpleName());
@@ -51,6 +61,7 @@ public final class DungeonScriptManager extends SavedData {
     /** Remove the script for the given instance. */
     public void remove(UUID instanceId) {
         DungeonScript removed = activeScripts.remove(instanceId);
+        failedScripts.remove(instanceId);
         if (removed != null) {
             setDirty();
             PiranPort.LOGGER.info("Dungeon script removed for instance {}", instanceId);
@@ -62,25 +73,51 @@ public final class DungeonScriptManager extends SavedData {
         return activeScripts.get(instanceId);
     }
 
-    /** Tick all active scripts. Called from ServerTickEvent. */
+    /** 唯一的脚本调度入口：先按实际玩家位置校准实例，再推进运行中的剧情。 */
     public void tickAll(ServerLevel dungeonLevel) {
+        DungeonInstanceManager instances = DungeonInstanceManager.get(dungeonLevel);
+        instances.refreshPlayerPresence(dungeonLevel.getServer());
+        tickAll(dungeonLevel, instances::getInstance, instance -> {
+            // 重连时实体 NBT 可能尚未加载，等待节点入口区块实体就绪，不将缺失实体当作死亡。
+            String node = instance.getCurrentNode();
+            return node != null && dungeonLevel.areEntitiesLoaded(
+                    new ChunkPos(instance.getNodeSpawnPos(node)).toLong());
+        });
+    }
+
+    /** 保留真实调度逻辑，通过实例解析和区块就绪查询隔离服务端依赖。 */
+    void tickAll(ServerLevel dungeonLevel, Function<UUID, DungeonInstance> findInstance,
+                 Predicate<DungeonInstance> isReady) {
         boolean changed = false;
         Iterator<Map.Entry<UUID, DungeonScript>> iter = activeScripts.entrySet().iterator();
         while (iter.hasNext()) {
             Map.Entry<UUID, DungeonScript> entry = iter.next();
+            UUID instanceId = entry.getKey();
+            DungeonInstance instance = findInstance.apply(instanceId);
+            if (instance == null || instance.getState() == DungeonInstance.State.COMPLETED
+                    || instance.getState() == DungeonInstance.State.CLEANUP) {
+                iter.remove();
+                failedScripts.remove(instanceId);
+                changed = true;
+                continue;
+            }
+            // SUSPENDED 保留原脚本及计时器，恢复后从同一阶段继续；CREATING 也不能提前运行。
+            if (instance.getState() != DungeonInstance.State.ACTIVE
+                    || failedScripts.contains(instanceId) || !isReady.test(instance)) continue;
+
             DungeonScript script = entry.getValue();
             try {
-                if (script.tick(dungeonLevel)) changed = true;
+                // 现有脚本的计时器每 tick 都会变化，即使 tick() 未报告阶段转换也需要保存。
+                changed = true;
+                if (!script.isFinished()) script.tick(dungeonLevel);
                 if (script.isFinished()) {
                     iter.remove();
-                    changed = true;
-                    PiranPort.LOGGER.info("Dungeon script finished for instance {}", entry.getKey());
+                    PiranPort.LOGGER.info("Dungeon script finished for instance {}", instanceId);
                 }
             } catch (Exception e) {
-                PiranPort.LOGGER.error("Error ticking dungeon script for instance {}",
-                        entry.getKey(), e);
-                iter.remove();
-                changed = true;
+                failedScripts.add(instanceId);
+                PiranPort.LOGGER.error("Dungeon script paused after an error; saved state retained for instance {}",
+                        instanceId, e);
             }
         }
         if (changed) setDirty();

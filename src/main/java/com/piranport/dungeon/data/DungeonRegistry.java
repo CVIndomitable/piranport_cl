@@ -1,9 +1,7 @@
 package com.piranport.dungeon.data;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -14,46 +12,47 @@ import java.util.Map;
 public final class DungeonRegistry {
     public static final DungeonRegistry INSTANCE = new DungeonRegistry();
 
-    private Map<String, ChapterData> chapters = Map.of();
-    private Map<String, StageData> stages = Map.of();
-    private Map<String, EnemySetData> enemySets = Map.of();
-    private List<ChapterData> sortedChapters = List.of();
+    private record Snapshot(Map<String, ChapterData> chapters,
+                            Map<String, StageData> stages,
+                            Map<String, EnemySetData> enemySets,
+                            List<ChapterData> sortedChapters) {}
+
+    // 一次发布完整快照，读者不会看到新章节搭配旧关卡的中间状态。
+    private volatile Snapshot snapshot = new Snapshot(Map.of(), Map.of(), Map.of(), List.of());
 
     private DungeonRegistry() {}
 
     public void load(Map<String, ChapterData> chapters,
                      Map<String, StageData> stages,
                      Map<String, EnemySetData> enemySets) {
-        this.chapters = Map.copyOf(chapters);
-        this.stages = Map.copyOf(stages);
-        this.enemySets = Map.copyOf(enemySets);
-
         List<ChapterData> sorted = new ArrayList<>(chapters.values());
         sorted.sort(Comparator.comparingInt(ChapterData::sortOrder));
-        this.sortedChapters = List.copyOf(sorted);
+        Snapshot next = new Snapshot(Map.copyOf(chapters), Map.copyOf(stages),
+                Map.copyOf(enemySets), List.copyOf(sorted));
+        snapshot = next;
     }
 
     public ChapterData getChapter(String chapterId) {
-        return chapters.get(chapterId);
+        return snapshot.chapters().get(chapterId);
     }
 
     public StageData getStage(String stageId) {
-        return stages.get(stageId);
+        return snapshot.stages().get(stageId);
     }
 
     public EnemySetData getEnemySet(String enemySetId) {
-        return enemySets.get(enemySetId);
+        return snapshot.enemySets().get(enemySetId);
     }
 
     public List<ChapterData> getSortedChapters() {
-        return sortedChapters;
+        return snapshot.sortedChapters();
     }
 
     public Map<String, StageData> getAllStages() {
-        return stages;
+        return snapshot.stages();
     }
 
     public boolean hasStage(String stageId) {
-        return stages.containsKey(stageId);
+        return snapshot.stages().containsKey(stageId);
     }
 }

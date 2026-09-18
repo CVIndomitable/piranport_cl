@@ -29,6 +29,8 @@ public class DungeonInstance {
     private State state;
     private String currentNode;
     private final Set<String> clearedNodes = new HashSet<>();
+    /** 已生成节点独立于已通关节点，重返战斗不会重新生成敌人或提前解锁路线。 */
+    private final Set<String> enteredNodes = new HashSet<>();
     private final Set<UUID> playerUuids = new HashSet<>(); // all players who participated
     /** 整合版 §3.2：按玩家个人计算的"最新记录点 id"。每个玩家仅保留最新 checkpoint id。 */
     private final Map<UUID, String> playerCheckpoints = new HashMap<>();
@@ -52,6 +54,17 @@ public class DungeonInstance {
     public State getState() { return state; }
     public String getCurrentNode() { return currentNode; }
     public Set<String> getClearedNodes() { return java.util.Collections.unmodifiableSet(clearedNodes); }
+    public boolean hasEnteredNode(String node) { return enteredNodes.contains(node); }
+
+    public boolean beginNode(String node) {
+        if (state == State.COMPLETED || state == State.CLEANUP || !enteredNodes.add(node)) return false;
+        currentNode = node;
+        return true;
+    }
+
+    public boolean clearNode(String node) {
+        return enteredNodes.contains(node) && clearedNodes.add(node);
+    }
     public Set<UUID> getPlayerUuids() { return java.util.Collections.unmodifiableSet(playerUuids); }
     /** 整合版 §3.2：返回玩家个人最新记录点 id（null 表示尚未踩过任何 checkpoint）。 */
     public String getLatestCheckpointFor(UUID playerUuid) { return playerCheckpoints.get(playerUuid); }
@@ -191,6 +204,14 @@ public class DungeonInstance {
         }
         tag.put("ClearedNodes", clearedList);
 
+        ListTag enteredList = new ListTag();
+        for (String node : enteredNodes) {
+            CompoundTag entry = new CompoundTag();
+            entry.putString("Node", node);
+            enteredList.add(entry);
+        }
+        tag.put("EnteredNodes", enteredList);
+
         ListTag playerList = new ListTag();
         for (UUID u : playerUuids) {
             playerList.add(NbtUtils.createUUID(u));
@@ -240,6 +261,13 @@ public class DungeonInstance {
         ListTag clearedList = tag.getList("ClearedNodes", Tag.TAG_COMPOUND);
         for (int i = 0; i < clearedList.size(); i++) {
             inst.clearedNodes.add(clearedList.getCompound(i).getString("Node"));
+        }
+        // 旧存档没有单独记录生成状态；保留已有进度，避免重新刷怪或覆盖宝箱。
+        inst.enteredNodes.addAll(inst.clearedNodes);
+        if (inst.currentNode != null) inst.enteredNodes.add(inst.currentNode);
+        ListTag enteredList = tag.getList("EnteredNodes", Tag.TAG_COMPOUND);
+        for (int i = 0; i < enteredList.size(); i++) {
+            inst.enteredNodes.add(enteredList.getCompound(i).getString("Node"));
         }
 
         ListTag playerList = tag.getList("Players", Tag.TAG_INT_ARRAY);

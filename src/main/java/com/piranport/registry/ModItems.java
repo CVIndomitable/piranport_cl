@@ -608,17 +608,8 @@ public class ModItems {
     public static final DeferredItem<BlockItem> MAPPLE_LEAVES = FoodItems.MAPPLE_LEAVES;
     public static final DeferredItem<BlockItem> MAPPLE_SAPLING = FoodItems.MAPPLE_SAPLING;
 
-    public static final DeferredItem<BlockItem> CHORUS_TREE_LOG = FoodItems.CHORUS_TREE_LOG;
-    public static final DeferredItem<BlockItem> CHORUS_TREE_LEAVES = FoodItems.CHORUS_TREE_LEAVES;
-    public static final DeferredItem<BlockItem> CHORUS_TREE_SAPLING = FoodItems.CHORUS_TREE_SAPLING;
 
-    public static final DeferredItem<BlockItem> SLIME_TREE_LOG = FoodItems.SLIME_TREE_LOG;
-    public static final DeferredItem<BlockItem> SLIME_TREE_LEAVES = FoodItems.SLIME_TREE_LEAVES;
-    public static final DeferredItem<BlockItem> SLIME_TREE_SAPLING = FoodItems.SLIME_TREE_SAPLING;
 
-    public static final DeferredItem<BlockItem> LAVA_SLIME_TREE_LOG = FoodItems.LAVA_SLIME_TREE_LOG;
-    public static final DeferredItem<BlockItem> LAVA_SLIME_TREE_LEAVES = FoodItems.LAVA_SLIME_TREE_LEAVES;
-    public static final DeferredItem<BlockItem> LAVA_SLIME_TREE_SAPLING = FoodItems.LAVA_SLIME_TREE_SAPLING;
 
     // ===== Phase 28: New Ingredients/Condiments (extracted to FoodItems) =====
     public static final DeferredItem<Item> MILK_ICE_CREAM = FoodItems.MILK_ICE_CREAM;

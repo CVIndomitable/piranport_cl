@@ -2,6 +2,7 @@ package com.piranport.architecture;
 
 import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.domain.JavaClasses;
+import com.tngtech.archunit.core.domain.JavaModifier;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.lang.ArchCondition;
@@ -22,6 +23,7 @@ import java.util.Set;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.*;
 import static com.tngtech.archunit.core.domain.properties.CanBeAnnotated.Predicates.*;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ArchitectureTest {
@@ -71,7 +73,7 @@ class ArchitectureTest {
      * 高频共享包不得直接依赖 Minecraft 客户端类。
      *
      * <p>若共享物品/实体需要读取本地客户端状态，应通过 {@code platform.ClientHooks}
-     * 反射桥接到 client 包，避免 dedicated server 类加载崩溃。
+     * 类型化桥接到 client 包，避免 dedicated server 类加载崩溃。
      */
     @Test
     void sharedGameplayPackagesShouldNotDependOnMinecraftClient() {
@@ -146,6 +148,15 @@ class ArchitectureTest {
      */
     @Test
     void managersShouldPreferConcurrentCollections() {
+        classes()
+                .that().haveSimpleNameEndingWith("Manager")
+                .should(noNonConcurrentStaticCollections())
+                .because("静态集合必须有明确线程所有权，不能直接声明为非并发具体容器")
+                .check(CLASSES);
+    }
+
+    private static ArchCondition<JavaClass> noNonConcurrentStaticCollections() {
+        // 此规则约束直接声明的具体类型；接口字段与复合操作仍需行为测试验证。
         // 定义非并发集合类型集合
         Set<String> nonConcurrent = Set.of(
                 HashMap.class.getName(),
@@ -156,12 +167,11 @@ class ArchitectureTest {
                 "java.util.TreeMap",
                 "java.util.TreeSet");
 
-        ArchCondition<JavaClass> noNonConcurrentStaticCollections =
-                new ArchCondition<>("not have static non-concurrent collection fields") {
+        return new ArchCondition<>("not have static non-concurrent collection fields") {
                     @Override
                     public void check(JavaClass clazz, ConditionEvents events) {
                         clazz.getFields().stream()
-                                .filter(f -> f.getModifiers().contains(java.lang.reflect.Modifier.STATIC))
+                                .filter(f -> f.getModifiers().contains(JavaModifier.STATIC))
                                 .forEach(f -> {
                                     String typeName = f.getRawType().getName();
                                     if (nonConcurrent.contains(typeName)) {
@@ -173,11 +183,25 @@ class ArchitectureTest {
                     }
                 };
 
-        classes()
-                .that().haveSimpleNameEndingWith("Manager")
-                .should(noNonConcurrentStaticCollections)
-                .because("Manager classes are accessed from multiple threads; "
-                        + "static collections must be thread-safe")
+    }
+
+    /** 防止规则本身再度变成永远通过的空检查。 */
+    @Test
+    void staticCollectionRuleDetectsUnsafeFixture() {
+        JavaClasses fixture = new ClassFileImporter().importClasses(UnsafeFixtureManager.class);
+        assertThrows(AssertionError.class,
+                () -> classes().should(noNonConcurrentStaticCollections()).check(fixture));
+    }
+
+    private static final class UnsafeFixtureManager {
+        private static final HashMap<String, String> STATE = new HashMap<>();
+    }
+
+    /** 客户端能力只能通过类型化契约调用，禁止恢复字符串反射分派。 */
+    @Test
+    void clientBridgeShouldNotUseReflection() {
+        noClasses().that().resideInAPackage("..platform..")
+                .should().dependOnClassesThat().resideInAPackage("java.lang.reflect..")
                 .check(CLASSES);
     }
 

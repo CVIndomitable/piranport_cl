@@ -194,32 +194,8 @@ public class ModBlocks {
     public static final DeferredBlock<SaplingBlock> MAPPLE_SAPLING =
             registerTreeSapling("mapple_sapling", "mapple", MAPPLE_TREE_FEATURE_KEY);
 
-    public static final ResourceKey<ConfiguredFeature<?, ?>> CHORUS_TREE_FEATURE_KEY =
-            treeFeatureKey("chorus_tree");
-    public static final DeferredBlock<RotatedPillarBlock> CHORUS_TREE_LOG =
-            registerTreeLog("chorus_tree_log");
-    public static final DeferredBlock<SeasonalLeavesBlock> CHORUS_TREE_LEAVES =
-            registerSeasonalLeaves("chorus_tree_leaves");
-    public static final DeferredBlock<SaplingBlock> CHORUS_TREE_SAPLING =
-            registerTreeSapling("chorus_tree_sapling", "chorus_tree", CHORUS_TREE_FEATURE_KEY);
 
-    public static final ResourceKey<ConfiguredFeature<?, ?>> SLIME_TREE_FEATURE_KEY =
-            treeFeatureKey("slime_tree");
-    public static final DeferredBlock<RotatedPillarBlock> SLIME_TREE_LOG =
-            registerTreeLog("slime_tree_log");
-    public static final DeferredBlock<SeasonalLeavesBlock> SLIME_TREE_LEAVES =
-            registerSeasonalLeaves("slime_tree_leaves");
-    public static final DeferredBlock<SaplingBlock> SLIME_TREE_SAPLING =
-            registerTreeSapling("slime_tree_sapling", "slime_tree", SLIME_TREE_FEATURE_KEY);
 
-    public static final ResourceKey<ConfiguredFeature<?, ?>> LAVA_SLIME_TREE_FEATURE_KEY =
-            treeFeatureKey("lava_slime_tree");
-    public static final DeferredBlock<RotatedPillarBlock> LAVA_SLIME_TREE_LOG =
-            registerTreeLog("lava_slime_tree_log");
-    public static final DeferredBlock<SeasonalLeavesBlock> LAVA_SLIME_TREE_LEAVES =
-            registerSeasonalLeaves("lava_slime_tree_leaves");
-    public static final DeferredBlock<SaplingBlock> LAVA_SLIME_TREE_SAPLING =
-            registerTreeSapling("lava_slime_tree_sapling", "lava_slime_tree", LAVA_SLIME_TREE_FEATURE_KEY);
 
     // Phase 30: Apple tree (策划要求注册苹果树)
     public static final ResourceKey<ConfiguredFeature<?, ?>> APPLE_TREE_FEATURE_KEY =
@@ -447,4 +423,20 @@ public class ModBlocks {
                                     .strength(5.0f, 1200.0f)
                                     .sound(SoundType.DEEPSLATE)
                                     .noOcclusion()));
+
+    // ===== Dungeon Portal System =====
+    public static final DeferredBlock<com.piranport.dungeon.block.DungeonPortalBlock> DUNGEON_PORTAL =
+            BLOCKS.register("dungeon_portal",
+                    () -> new com.piranport.dungeon.block.DungeonPortalBlock(
+                            BlockBehaviour.Properties.of()
+                                    .mapColor(MapColor.DEEPSLATE)
+                                    .strength(5.0f, 1200.0f)
+                                    .sound(SoundType.DEEPSLATE)
+                                    .noOcclusion()));
+
+    /** 副本记录点隐形触发方块；仅由副本生成器放置，不提供生存物品。 */
+    public static final DeferredBlock<com.piranport.dungeon.block.DungeonCheckpointBlock> DUNGEON_CHECKPOINT =
+            BLOCKS.register("dungeon_checkpoint",
+                    () -> new com.piranport.dungeon.block.DungeonCheckpointBlock(
+                            BlockBehaviour.Properties.of().noOcclusion().noCollission().strength(-1.0f, 3600000.0f)));
 }

@@ -44,7 +44,31 @@ public class ModEquipmentConfig {
     /** 进入瞄准所需最小长按 tick 数 */
     public static final ModConfigSpec.IntValue SCOPE_ACTIVATION_TICKS;
 
+    /** 近防炮参数保留现有射程/射速；负重默认 0，等待策划各型号定值后可直接配置。 */
+    public record CIWSConfig(ModConfigSpec.DoubleValue range, ModConfigSpec.IntValue interval,
+                             ModConfigSpec.IntValue barrels, ModConfigSpec.IntValue weight) {}
+
+    public static final CIWSConfig CIWS_20MM;
+    public static final CIWSConfig CIWS_40MM;
+    public static final CIWSConfig CIWS_76MM;
+
+    private static CIWSConfig defineCIWS(String caliber) {
+        BUILDER.push(caliber);
+        var range = BUILDER.comment("近防炮射程（格）").defineInRange("range", 16.0, 1.0, 128.0);
+        var interval = BUILDER.comment("近防炮射击间隔（tick）").defineInRange("interval", 20, 1, 1200);
+        var barrels = BUILDER.comment("近防炮联装数").defineInRange("barrels", 1, 1, 16);
+        var weight = BUILDER.comment("近防炮负重：具体数值尚待策划定稿，默认保留现状 0")
+                .defineInRange("weight", 0, 0, 112);
+        BUILDER.pop();
+        return new CIWSConfig(range, interval, barrels, weight);
+    }
+
     static {
+        BUILDER.push("ciws");
+        CIWS_20MM = defineCIWS("20mm");
+        CIWS_40MM = defineCIWS("40mm");
+        CIWS_76MM = defineCIWS("76mm");
+        BUILDER.pop();
         // ==================== 再装填设施 ====================
         BUILDER.push("equipment");
         BUILDER.push("reload_facility");

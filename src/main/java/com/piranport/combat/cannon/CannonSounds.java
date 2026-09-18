@@ -1,0 +1,78 @@
+package com.piranport.combat.cannon;
+
+import com.piranport.registry.ModItems;
+import com.piranport.registry.ModSounds;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import static com.piranport.combat.cannon.CannonStats.isSmallCaliber;
+
+/** 火炮开火和装填的音效表现。 */
+final class CannonSounds {
+    private CannonSounds() {}
+
+    static float getSoundPitch(ItemStack weapon) {
+        if (isSmallCaliber(weapon)) return 1.5f;
+        if (weapon.is(ModItems.MEDIUM_GUN.get())) return 1.2f;
+        if (weapon.is(ModItems.LARGE_GUN.get())) return 0.8f;
+        return 1.0f;
+    }
+
+    static SoundEvent getFireSound(ItemStack weapon) {
+        if (isSmallCaliber(weapon)) return ModSounds.CANNON_FIRE_SMALL.get();
+        if (weapon.is(ModItems.MEDIUM_GUN.get())) return ModSounds.CANNON_FIRE_MEDIUM.get();
+        return ModSounds.CANNON_FIRE_LARGE.get();
+    }
+
+    static SoundEvent getFireTailSound(ItemStack weapon) {
+        if (isSmallCaliber(weapon)) return ModSounds.CANNON_FIRE_SMALL_TAIL.get();
+        if (weapon.is(ModItems.MEDIUM_GUN.get())) return ModSounds.CANNON_FIRE_MEDIUM_TAIL.get();
+        return ModSounds.CANNON_FIRE_LARGE_TAIL.get();
+    }
+
+    static SoundEvent getDistantFireSound(ItemStack weapon) {
+        if (weapon.is(ModItems.MEDIUM_GUN.get())) return ModSounds.CANNON_FIRE_MEDIUM_DISTANT.get();
+        if (weapon.is(ModItems.LARGE_GUN.get())) return ModSounds.CANNON_FIRE_LARGE_DISTANT.get();
+        return null;
+    }
+
+    static void playCannonFireSound(Level level, Player player, ItemStack weapon) {
+        float pitch = getSoundPitch(weapon);
+        SoundEvent fireSound = getFireSound(weapon);
+        level.playSound(null, player.getX(), player.getY(), player.getZ(),
+                fireSound, SoundSource.PLAYERS, 2.0f, pitch);
+        level.playSound(null, player.getX(), player.getY(), player.getZ(),
+                getFireTailSound(weapon), SoundSource.PLAYERS, 1.15f, Math.max(0.55f, pitch * 0.82f));
+        SoundEvent distantFireSound = getDistantFireSound(weapon);
+        if (distantFireSound != null) {
+            float distantVolume = weapon.is(ModItems.LARGE_GUN.get()) ? 1.65f : 1.25f;
+            level.playSound(null, player.getX(), player.getY(), player.getZ(),
+                    distantFireSound, SoundSource.PLAYERS, distantVolume, Math.max(0.5f, pitch * 0.62f));
+        }
+        level.playSound(null, player.getX(), player.getY(), player.getZ(),
+                SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 0.95f, pitch * 0.75f);
+        level.playSound(null, player.getX(), player.getY(), player.getZ(),
+                SoundEvents.FIREWORK_ROCKET_BLAST, SoundSource.PLAYERS, 0.65f, pitch * 0.55f);
+    }
+
+    static void playCannonReloadStartSound(Player player, ItemStack weapon) {
+        float pitch = Math.max(0.55f, getSoundPitch(weapon) * 0.75f);
+        player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+                ModSounds.CANNON_RELOAD.get(), SoundSource.PLAYERS, 0.45f, pitch);
+        player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+                ModSounds.CANNON_RELOAD_BREECH.get(), SoundSource.PLAYERS, 0.32f, Math.max(0.5f, pitch * 0.88f));
+    }
+
+    static void playCannonReloadCompleteSound(Player player, ItemStack weapon) {
+        float pitch = Math.max(0.65f, getSoundPitch(weapon));
+        player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+                ModSounds.CANNON_RELOAD.get(), SoundSource.PLAYERS, 0.65f, pitch);
+        player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+                ModSounds.CANNON_RELOAD_BREECH.get(), SoundSource.PLAYERS, 0.42f, Math.max(0.55f, pitch * 0.78f));
+        player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+                SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.35f, pitch + 0.25f);
+    }
+}

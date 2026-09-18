@@ -467,26 +467,8 @@ public final class FoodItems {
     public static final DeferredItem<BlockItem> MAPPLE_SAPLING =
             ITEMS.registerSimpleBlockItem(ModBlocks.MAPPLE_SAPLING);
 
-    public static final DeferredItem<BlockItem> CHORUS_TREE_LOG =
-            ITEMS.registerSimpleBlockItem(ModBlocks.CHORUS_TREE_LOG);
-    public static final DeferredItem<BlockItem> CHORUS_TREE_LEAVES =
-            ITEMS.registerSimpleBlockItem(ModBlocks.CHORUS_TREE_LEAVES);
-    public static final DeferredItem<BlockItem> CHORUS_TREE_SAPLING =
-            ITEMS.registerSimpleBlockItem(ModBlocks.CHORUS_TREE_SAPLING);
 
-    public static final DeferredItem<BlockItem> SLIME_TREE_LOG =
-            ITEMS.registerSimpleBlockItem(ModBlocks.SLIME_TREE_LOG);
-    public static final DeferredItem<BlockItem> SLIME_TREE_LEAVES =
-            ITEMS.registerSimpleBlockItem(ModBlocks.SLIME_TREE_LEAVES);
-    public static final DeferredItem<BlockItem> SLIME_TREE_SAPLING =
-            ITEMS.registerSimpleBlockItem(ModBlocks.SLIME_TREE_SAPLING);
 
-    public static final DeferredItem<BlockItem> LAVA_SLIME_TREE_LOG =
-            ITEMS.registerSimpleBlockItem(ModBlocks.LAVA_SLIME_TREE_LOG);
-    public static final DeferredItem<BlockItem> LAVA_SLIME_TREE_LEAVES =
-            ITEMS.registerSimpleBlockItem(ModBlocks.LAVA_SLIME_TREE_LEAVES);
-    public static final DeferredItem<BlockItem> LAVA_SLIME_TREE_SAPLING =
-            ITEMS.registerSimpleBlockItem(ModBlocks.LAVA_SLIME_TREE_SAPLING);
 
     // ===== Phase 28: New Ingredients/Condiments =====
     public static final DeferredItem<Item> MILK_ICE_CREAM      = ITEMS.registerSimpleItem("milk_ice_cream");

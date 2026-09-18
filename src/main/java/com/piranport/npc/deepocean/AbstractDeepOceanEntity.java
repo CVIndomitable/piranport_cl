@@ -362,6 +362,17 @@ public abstract class AbstractDeepOceanEntity extends Monster {
             spawnAtLocation(new ItemStack(Items.IRON_INGOT, 2 + random.nextInt(2)));
             spawnAtLocation(new ItemStack(ModItems.FUEL.get(), 1 + random.nextInt(2)));
             spawnAtLocation(new ItemStack(ModItems.CHAOS_SHARD_EPSILON.get(), 1));
+        } else if (this instanceof DeepOceanBossEntity) {
+            spawnAtLocation(new ItemStack(Items.IRON_INGOT, 5 + random.nextInt(4)));
+            spawnAtLocation(new ItemStack(Items.GUNPOWDER, 4 + random.nextInt(3)));
+            spawnAtLocation(new ItemStack(ModItems.FUEL.get(), 3 + random.nextInt(3)));
+            spawnAtLocation(new ItemStack(ModItems.RAW_ALUMINUM.get(), 4 + random.nextInt(5)));
+            if (random.nextFloat() < 0.6f) {
+                spawnAtLocation(new ItemStack(ModItems.CHAOS_SHARD_DELTA.get(), 1));
+            }
+            if (random.nextFloat() < 0.15f) {
+                spawnAtLocation(new ItemStack(ModItems.ELITE_DAMAGE_CONTROL.get(), 1));
+            }
         }
     }
 

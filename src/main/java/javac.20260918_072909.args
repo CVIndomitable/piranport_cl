@@ -1,0 +1,9 @@
+-d
+/tmp/test_compile
+-source
+21
+-target
+21
+-cp
+:
+com/piranport/artillery/ArtilleryItem.java

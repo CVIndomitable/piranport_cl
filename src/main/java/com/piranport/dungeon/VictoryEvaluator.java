@@ -58,7 +58,7 @@ public final class VictoryEvaluator {
         StageData.VictoryObjectives obj = (stage != null) ? stage.victoryObjectives() : StageData.VictoryObjectives.EMPTY;
 
         return switch (cond) {
-            case KILL_ALL -> checkKillAll(instance, stage, obj);
+            case KILL_ALL -> checkKillAll(level, instance, stage, obj);
             case KILL_BOSS -> instance.getClearedNodes().containsAll(stage != null ? stage.bossNodes() : java.util.List.of());
             case SURVIVE -> checkSurvive(instance, obj);
             case ESCORT -> checkEscort(level, instance, obj);
@@ -77,9 +77,19 @@ public final class VictoryEvaluator {
      * 检查 instance 的 clearedNodes 覆盖所有 battle/boss 节点。
      * 若未配置，默认 false（关卡脚本侧自行判定）。
      */
-    private static boolean checkKillAll(DungeonInstance instance, StageData stage,
+    private static boolean checkKillAll(ServerLevel level, DungeonInstance instance, StageData stage,
                                         StageData.VictoryObjectives obj) {
-        if (!obj.requireAllNodesCleared() || stage == null) return false;
+        if (stage == null) return false;
+        // 优先检查当前实例中仍存活的副本实体；节点已清空时允许使用持久化进度兜底。
+        if (level != null) {
+            String instanceTag = "dungeon_instance_" + instance.getInstanceId();
+            boolean active = level.getEntitiesOfClass(LivingEntity.class,
+                    new AABB(instance.getUsableMinX(), level.getMinBuildHeight(), instance.getUsableMinZ(),
+                            instance.getUsableMaxX() + 1, level.getMaxBuildHeight(), instance.getUsableMaxZ() + 1),
+                    e -> e.isAlive() && e.getTags().contains(instanceTag)).stream().findAny().isPresent();
+            if (active) return false;
+        }
+        if (!obj.requireAllNodesCleared()) return false;
         for (NodeData n : stage.nodes().values()) {
             if ((n.type() == NodeData.NodeType.BATTLE || n.type() == NodeData.NodeType.BOSS)
                     && !instance.getClearedNodes().contains(n.nodeId())) {
@@ -103,13 +113,21 @@ public final class VictoryEvaluator {
      */
     private static boolean checkEscort(ServerLevel level, DungeonInstance instance,
                                        StageData.VictoryObjectives obj) {
-        if (level == null || obj.escortEntityKey() == null || obj.escortEntityKey().isEmpty()) return false;
-        // 关卡内找护送实体 — 至少存在一个即认为"护航目标存在"
+        if (level == null || obj.escortEntityKey() == null || obj.escortEntityKey().isEmpty()
+                || obj.reachPointOffset() == null || stageFor(instance) == null) return false;
+        StageData stage = stageFor(instance);
+        BlockPos target = instance.getNodeSpawnPos(stage.startNode()).offset(
+                obj.reachPointOffset()[0], obj.reachPointOffset()[1], obj.reachPointOffset()[2]);
         AABB box = new AABB(
                 instance.getUsableMinX(), level.getMinBuildHeight(), instance.getUsableMinZ(),
                 instance.getUsableMaxX(), level.getMaxBuildHeight(), instance.getUsableMaxZ());
         return !level.getEntitiesOfClass(LivingEntity.class, box,
-                e -> e.getType().toString().contains(obj.escortEntityKey())).isEmpty();
+                e -> e.getType().toString().contains(obj.escortEntityKey())
+                        && e.distanceToSqr(target.getX() + .5, target.getY() + .5, target.getZ() + .5) <= 16.0).isEmpty();
+    }
+
+    private static StageData stageFor(DungeonInstance instance) {
+        return com.piranport.dungeon.data.DungeonRegistry.INSTANCE.getStage(instance.getStageId());
     }
 
     /**
@@ -135,7 +153,7 @@ public final class VictoryEvaluator {
     private static boolean checkCaptureFlag(ServerLevel level, DungeonInstance instance,
                                             StageData stage, StageData.VictoryObjectives obj) {
         // OR 路径 1：触发 KILL_ALL
-        if (checkKillAll(instance, stage, obj)) return true;
+        if (checkKillAll(level, instance, stage, obj)) return true;
         // OR 路径 2：玩家在夺旗半径内持续 capture_hold_seconds
         if (level == null || obj.captureRadius() <= 0 || obj.captureHoldSeconds() <= 0) return false;
         if (stage == null || obj.reachPointOffset() == null) return false;

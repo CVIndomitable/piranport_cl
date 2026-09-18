@@ -1,15 +1,12 @@
 package com.piranport.dungeon.data;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Parsed stage (level) configuration from JSON.
+ * 从 JSON 解析的关卡配置。
  *
  * <p>关卡公式 = 胜利方式 × 战斗限制 × 场景（决策 §副本/12）。
  * 顶层 {@link #sceneData} 与 {@link #combatRestriction} 字段用于关卡级默认值；
@@ -31,6 +28,17 @@ public record StageData(
         Set<CombatRestriction> combatRestriction,
         VictoryObjectives victoryObjectives
 ) {
+    public StageData {
+        // 配置发布后保持拓扑稳定，旧快照也不能被调用方持有的可变容器修改。
+        nodes = Map.copyOf(nodes);
+        edges = List.copyOf(edges);
+        bossNodes = List.copyOf(bossNodes);
+        firstClearRewards = List.copyOf(firstClearRewards);
+        checkpoints = List.copyOf(checkpoints);
+        victoryConditions = Set.copyOf(victoryConditions);
+        combatRestriction = Set.copyOf(combatRestriction);
+    }
+
     public record EdgeData(String from, String to) {}
 
     /**
@@ -54,47 +62,34 @@ public record StageData(
                 new VictoryObjectives(false, 0, null, null, 0, 0);
     }
 
-    // ===== Lazily-built indexes (kept off the record so equality / Json stay clean) =====
-
-    private static final ConcurrentHashMap<String, Map<String, Set<String>>> ADJ_CACHE =
-            new ConcurrentHashMap<>();
-    private static final ConcurrentHashMap<String, Map<String, Integer>> INDEX_CACHE =
-            new ConcurrentHashMap<>();
-
     /**
-     * Returns the set of node IDs reachable from the given node. O(1) after first call.
+     * 返回当前配置中可从指定节点直接抵达的节点。
+     * 关卡节点规模较小，直接计算可避免按关卡 ID 缓存串用不同配置快照的拓扑。
      */
     public Set<String> getReachableFrom(String nodeId) {
-        Map<String, Set<String>> adj = ADJ_CACHE.computeIfAbsent(stageId, k -> {
-            Map<String, Set<String>> built = new HashMap<>();
-            for (EdgeData e : edges) {
-                built.computeIfAbsent(e.from(), kk -> new HashSet<>()).add(e.to());
+        Set<String> reachable = new HashSet<>();
+        for (EdgeData edge : edges) {
+            if (edge.from().equals(nodeId)) {
+                reachable.add(edge.to());
             }
-            return Map.copyOf(built);
-        });
-        return adj.getOrDefault(nodeId, Set.of());
+        }
+        return Set.copyOf(reachable);
     }
 
     /**
-     * Returns a stable lexicographic index for a node ID. Used for laying out node
-     * battlefields along the X axis without colliding when nodeIds are non-letter.
+     * 按节点 ID 字典序计算稳定序号，避免非字母节点 ID 的战场坐标重叠。
+     * 未知节点沿用序号 0，具体的节点合法性由入口校验。
      */
     public int nodeIndexOf(String nodeId) {
-        Map<String, Integer> idx = INDEX_CACHE.computeIfAbsent(stageId, k -> {
-            TreeMap<String, NodeData> sorted = new TreeMap<>(nodes);
-            Map<String, Integer> built = new HashMap<>();
-            int i = 0;
-            for (String key : sorted.keySet()) {
-                built.put(key, i++);
+        if (!nodes.containsKey(nodeId)) {
+            return 0;
+        }
+        int index = 0;
+        for (String key : nodes.keySet()) {
+            if (key.compareTo(nodeId) < 0) {
+                index++;
             }
-            return Map.copyOf(built);
-        });
-        return idx.getOrDefault(nodeId, 0);
-    }
-
-    /** Drop cached indexes for this stage — call when datapack reloads change topology. */
-    public static void invalidateCaches() {
-        ADJ_CACHE.clear();
-        INDEX_CACHE.clear();
+        }
+        return index;
     }
 }

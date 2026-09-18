@@ -1,29 +1,20 @@
 package com.piranport.dungeon.event;
 
 import com.piranport.PiranPort;
-import com.piranport.dungeon.DungeonConstants;
 import com.piranport.dungeon.data.DungeonRegistry;
 import com.piranport.dungeon.data.NodeData;
 import com.piranport.dungeon.data.StageData;
-import com.piranport.dungeon.entity.DungeonPortalEntity;
-import com.piranport.dungeon.entity.LootShipEntity;
 import com.piranport.dungeon.instance.DungeonInstance;
 import com.piranport.dungeon.instance.DungeonInstanceManager;
-import com.piranport.dungeon.instance.NodeBattleField;
 import com.piranport.dungeon.key.DungeonKeyItem;
-import com.piranport.dungeon.key.DungeonProgress;
 import com.piranport.dungeon.network.DungeonResultPayload;
-import com.piranport.dungeon.network.DungeonStatePayload;
 import com.piranport.dungeon.network.PlayerDiedInDungeonPayload;
 import com.piranport.dungeon.saved.DungeonSavedData;
 import com.piranport.dungeon.script.DungeonScriptManager;
-import com.piranport.item.DeployMedalItem;
-import com.piranport.item.KeyFragmentItem;
-import com.piranport.registry.ModDataComponents;
 import com.piranport.registry.ModItems;
+import com.piranport.advancement.ModAdvancements;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
@@ -81,18 +72,6 @@ public class DungeonEventHandler {
     // ===== Key Authority Helpers (整合版 §2.2：钥匙插在讲台上) =====
 
     /**
-     * 按玩家 UUID 反查其当前参与的第一个 ACTIVE 实例。
-     * 整合版 §2.2：玩家不再持有钥匙，身份归属以"玩家加入实例"为权威。
-     */
-    private static DungeonInstance findActiveInstanceForPlayer(DungeonInstanceManager mgr, UUID playerUuid) {
-        for (DungeonInstance inst : mgr.getAllInstances()) {
-            if (inst.getState() != DungeonInstance.State.ACTIVE) continue;
-            if (inst.getPlayerUuids().contains(playerUuid)) return inst;
-        }
-        return null;
-    }
-
-    /**
      * 从副本实例对应的讲台 BE 读取钥匙 ItemStack。
      * 整合版 §2.2：钥匙权威源是讲台 BE（讲台在 instance.lecternDimension 维度的 instance.lecternPos 位置），
      * 不再扫玩家背包。读到的钥匙其 DUNGEON_INSTANCE_ID 应等于 instance.getInstanceId()。
@@ -117,6 +96,15 @@ public class DungeonEventHandler {
         ItemStack key = lectern.getKeyStack();
         if (key.getItem() instanceof DungeonKeyItem) return key;
         return ItemStack.EMPTY;
+    }
+
+    private static void markLecternChanged(DungeonInstance instance, MinecraftServer server) {
+        if (instance.getLecternPos() == null || instance.getLecternDimension() == null) return;
+        ResourceLocation id = ResourceLocation.tryParse(instance.getLecternDimension());
+        if (id == null) return;
+        ServerLevel level = server.getLevel(ResourceKey.create(Registries.DIMENSION, id));
+        if (level != null && level.getBlockEntity(instance.getLecternPos()) instanceof
+                com.piranport.dungeon.block.DungeonLecternBlockEntity lectern) lectern.setChanged();
     }
 
     // ===== Event Listeners =====
@@ -159,7 +147,7 @@ public class DungeonEventHandler {
         // 整合版 §3.3：死亡回门口（讲台）—— 钥匙权威源在讲台 BE（整合版 §2.2），
         // 通过 player → ACTIVE instance 反查讲台位置，再从 BE 读钥匙。
         DungeonInstanceManager mgr = DungeonInstanceManager.get((ServerLevel) player.level());
-        DungeonInstance instance = findActiveInstanceForPlayer(mgr, player.getUUID());
+        DungeonInstance instance = mgr.getInstanceForPlayer(player);
         if (instance != null) {
             ItemStack key = readKeyFromLectern(instance, player.server);
             if (key.getItem() instanceof DungeonKeyItem) {
@@ -192,14 +180,22 @@ public class DungeonEventHandler {
     public static void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
 
-        // 整合版 §3.1：联机大厅与队长机制已作废（副本/10），不再清理 lobby / 转让钥匙。
-        // 仅保留"实例为空则 SUSPENDED"检查（让原版区块卸载机制能正常卸载）。
         DungeonInstanceManager mgr = DungeonInstanceManager.get(player.server.overworld());
-        UUID leavingId = player.getUUID();
-        for (DungeonInstance inst : mgr.getAllInstances()) {
-            if (!inst.getPlayerUuids().contains(leavingId)) continue;
-            checkAndSuspendIfEmpty(player.server, inst);
-        }
+        mgr.handlePlayerDisconnect(player.server, player.getUUID());
+    }
+
+    /** 重连后按当前区域恢复，保留已保存的脚本阶段。 */
+    @SubscribeEvent
+    public static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
+        if (!(event.getEntity() instanceof ServerPlayer player)) return;
+        DungeonInstanceManager.get(player.serverLevel()).refreshPlayerPresence(player.server);
+    }
+
+    /** 包含其他模组或指令发起的跨维度退出，统一交由实例管理器判断是否全员离开。 */
+    @SubscribeEvent
+    public static void onPlayerChangedDimension(PlayerEvent.PlayerChangedDimensionEvent event) {
+        if (!(event.getEntity() instanceof ServerPlayer player)) return;
+        DungeonInstanceManager.get(player.serverLevel()).refreshPlayerPresence(player.server);
     }
 
     // ===== Node Entry Logic — delegated to DungeonNodeRouter =====
@@ -226,6 +222,14 @@ public class DungeonEventHandler {
         NodeData node = stage.nodes().get(nodeId);
         if (node == null) return;
 
+        DungeonInstanceManager manager = DungeonInstanceManager.get(dungeonLevel);
+        ItemStack key = readKeyFromLectern(instance, dungeonLevel.getServer());
+        if (!manager.markNodeCleared(instance.getInstanceId(), nodeId, key)) return;
+        markLecternChanged(instance, dungeonLevel.getServer());
+
+        // 任意节点完成都即时发放该节点奖励，并向每位在线参与者展示结算。
+        DungeonSettlementService.settleNode(dungeonLevel.getServer(), instance, stage, node);
+
         // Spawn loot ships for killed enemies (simplified: spawn one at portal location)
         // In a full implementation, this would track each killed enemy
 
@@ -251,20 +255,22 @@ public class DungeonEventHandler {
         DungeonInstanceManager mgr = DungeonInstanceManager.get(dungeonLevel);
         DungeonSavedData savedData = DungeonSavedData.get(dungeonLevel);
 
-        long endTime = System.currentTimeMillis();
-        long elapsed = endTime - instance.getStartTimeMillis();
-        mgr.completeInstance(instance.getInstanceId());
+        // 完成状态是一次性的结算边界，重复传送门回调不能再次发放奖励。
+        if (!mgr.completeInstance(instance.getInstanceId())) return;
+        long elapsed = instance.getEndTimeMillis() - instance.getStartTimeMillis();
 
         // Process each player
         for (UUID playerUuid : instance.getPlayerUuids()) {
             ServerPlayer player = server.getPlayerList().getPlayer(playerUuid);
-            if (player == null) continue;
+            if (player == null || mgr.getInstanceForPlayer(player) != instance) continue;
 
             boolean isFirstClear = !savedData.hasFirstCleared(stage.stageId(), playerUuid);
 
             List<String> rewardNames = new ArrayList<>();
             if (isFirstClear) {
                 savedData.markFirstCleared(stage.stageId(), playerUuid);
+                // 首通记录使用原版进度系统，结算页仅展示奖励，不再额外显示印章。
+                ModAdvancements.award(player, "dungeon/first_clear");
                 for (NodeData.RewardEntry reward : stage.firstClearRewards()) {
                     RewardDispatcher.give(player, reward, rewardNames);
                 }
@@ -288,9 +294,8 @@ public class DungeonEventHandler {
                             isFirstClear, rewardNames));
         }
 
-        // Cleanup instance
-        NodeBattleField.cleanupRegion(dungeonLevel, instance);
-        mgr.cleanupInstance(instance.getInstanceId());
+        // 副本/00、17：使用过的钥匙进度永不擦除，完成后保留区域与实例供回访。
+        // 仅移除已结束的剧情调度，不清空怪物、宝箱状态，也不复用此实例的区域索引。
         DungeonScriptManager.get(server).remove(instance.getInstanceId());
     }
 
@@ -334,7 +339,7 @@ public class DungeonEventHandler {
                                                      DungeonInstance instance) {
         for (UUID playerUuid : instance.getPlayerUuids()) {
             ServerPlayer player = server.getPlayerList().getPlayer(playerUuid);
-            if (player != null && isInDungeon(player)) {
+            if (player != null && DungeonInstanceManager.get(server.overworld()).getInstanceForPlayer(player) == instance) {
                 teleportToLectern(player, instance);
             }
         }
@@ -342,22 +347,7 @@ public class DungeonEventHandler {
 
     public static void checkAndSuspendIfEmpty(MinecraftServer server,
                                                 DungeonInstance instance) {
-        ServerLevel dungeonLevel = getDungeonLevel(server);
-        if (dungeonLevel == null) return;
-
-        boolean anyOnline = false;
-        for (UUID playerUuid : instance.getPlayerUuids()) {
-            ServerPlayer player = server.getPlayerList().getPlayer(playerUuid);
-            if (player != null && isInDungeon(player)) {
-                anyOnline = true;
-                break;
-            }
-        }
-
-        if (!anyOnline) {
-            DungeonInstanceManager mgr = DungeonInstanceManager.get(dungeonLevel);
-            mgr.suspendInstance(instance.getInstanceId());
-        }
+        DungeonInstanceManager.get(server.overworld()).refreshPlayerPresence(server);
     }
 
     // ===== Boundary Protection (整合版 §2.1 / 副本/01) =====
@@ -373,7 +363,7 @@ public class DungeonEventHandler {
         if (!isInDungeon(player)) return;
 
         DungeonInstanceManager mgr = DungeonInstanceManager.get((ServerLevel) player.level());
-        DungeonInstance instance = findActiveInstanceForPlayer(mgr, player.getUUID());
+        DungeonInstance instance = mgr.getInstanceForPlayer(player);
         if (instance == null) return;
 
         BlockPos pos = player.blockPosition();
@@ -401,13 +391,7 @@ public class DungeonEventHandler {
                                               BlockPos pos) {
         DungeonInstanceManager mgr = DungeonInstanceManager.get((ServerLevel) player.level());
         UUID playerUuid = player.getUUID();
-        DungeonInstance instance = null;
-        for (DungeonInstance inst : mgr.getAllInstances()) {
-            if (inst.getPlayerUuids().contains(playerUuid)) {
-                instance = inst;
-                break;
-            }
-        }
+        DungeonInstance instance = mgr.getInstanceForPlayer(player);
         if (instance == null) return;
         if (!isInDungeon(player)) return;
 
@@ -417,7 +401,7 @@ public class DungeonEventHandler {
 
         com.piranport.dungeon.data.CheckpointData matched = null;
         for (com.piranport.dungeon.data.CheckpointData cp : stage.checkpoints()) {
-            if (cp.posX() == pos.getX() && cp.posY() == pos.getY() && cp.posZ() == pos.getZ()) {
+            if (DungeonEntryRules.checkpointPosition(instance, cp).equals(pos)) {
                 matched = cp;
                 break;
             }

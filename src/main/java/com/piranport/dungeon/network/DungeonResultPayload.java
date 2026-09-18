@@ -16,8 +16,14 @@ import java.util.List;
  * S2C: Sends dungeon completion result to the client.
  */
 public record DungeonResultPayload(String stageName, long timeMillis,
-                                     boolean isFirstClear, List<String> rewardNames)
+                                     boolean isFirstClear, List<String> rewardNames,
+                                     int kills)
         implements CustomPacketPayload {
+
+    public DungeonResultPayload(String stageName, long timeMillis,
+                                boolean isFirstClear, List<String> rewardNames) {
+        this(stageName, timeMillis, isFirstClear, rewardNames, 0);
+    }
 
     public static final Type<DungeonResultPayload> TYPE =
             new Type<>(ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "dungeon_result"));
@@ -31,6 +37,7 @@ public record DungeonResultPayload(String stageName, long timeMillis,
                 for (String s : p.rewardNames()) {
                     ByteBufCodecs.STRING_UTF8.encode(buf, s);
                 }
+                ByteBufCodecs.VAR_INT.encode(buf, Math.max(0, p.kills()));
             },
             buf -> {
                 String name = ByteBufCodecs.STRING_UTF8.decode(buf);
@@ -42,7 +49,8 @@ public record DungeonResultPayload(String stageName, long timeMillis,
                 for (int i = 0; i < count; i++) {
                     rewards.add(ByteBufCodecs.STRING_UTF8.decode(buf));
                 }
-                return new DungeonResultPayload(name, time, first, List.copyOf(rewards));
+                int kills = buf.isReadable() ? Math.max(0, ByteBufCodecs.VAR_INT.decode(buf)) : 0;
+                return new DungeonResultPayload(name, time, first, List.copyOf(rewards), kills);
             }
     );
 
@@ -53,7 +61,7 @@ public record DungeonResultPayload(String stageName, long timeMillis,
         context.enqueueWork(() -> {
             ClientHooks.openDungeonResultScreen(
                     payload.stageName(), payload.timeMillis(),
-                    payload.isFirstClear(), payload.rewardNames());
+                    payload.isFirstClear(), payload.rewardNames(), payload.kills());
         });
     }
 }

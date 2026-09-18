@@ -33,7 +33,13 @@ public enum VictoryCondition {
             case "escort" -> ESCORT;
             case "puzzle" -> PUZZLE;
             case "reach_point" -> REACH_POINT;
+            // 关卡表使用的任务别名统一归一到已经实现的业务判定，避免被静默丢弃。
+            case "transport" -> REACH_POINT;
             case "capture_flag" -> CAPTURE_FLAG;
+            case "capture_point" -> CAPTURE_FLAG;
+            case "kill_flagship", "kill_all_flagships", "intercept_all" -> KILL_ALL;
+            case "survive_waves" -> SURVIVE;
+            case "escort_alive" -> ESCORT;
             default -> null;
         };
     }

@@ -257,17 +257,17 @@ public final class WeaponItems {
             ITEMS.register("auto_ciws_20mm",
                     () -> new AutoCIWSItem(new Item.Properties().stacksTo(1)
                             .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ENHANCEMENT),
-                            1.0f));
+                            1.0f, com.piranport.config.ModEquipmentConfig.CIWS_20MM));
     public static final DeferredItem<AutoCIWSItem> AUTO_CIWS_40MM =
             ITEMS.register("auto_ciws_40mm",
                     () -> new AutoCIWSItem(new Item.Properties().stacksTo(1)
                             .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ENHANCEMENT),
-                            1.5f));
+                            1.5f, com.piranport.config.ModEquipmentConfig.CIWS_40MM));
     public static final DeferredItem<AutoCIWSItem> AUTO_CIWS_76MM =
             ITEMS.register("auto_ciws_76mm",
                     () -> new AutoCIWSItem(new Item.Properties().stacksTo(1)
                             .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ENHANCEMENT),
-                            2.0f));
+                            2.0f, com.piranport.config.ModEquipmentConfig.CIWS_76MM));
 
     // ===== Torpedo Launchers =====
     public static final DeferredItem<TorpedoLauncherItem> TWIN_TORPEDO_LAUNCHER =

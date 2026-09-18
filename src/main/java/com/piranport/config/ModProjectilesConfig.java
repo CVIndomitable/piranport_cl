@@ -42,7 +42,6 @@ public class ModProjectilesConfig {
     @Deprecated
     public static final ModConfigSpec.IntValue UNDERWATER_DESTROY_TICKS;
     public static final ModConfigSpec.DoubleValue UNDERWATER_EXPLOSION_MULTIPLIER;
-    public static final ModConfigSpec.DoubleValue HE_ARMOR_PENETRATION;
     public static final ModConfigSpec.BooleanValue HE_DAMAGE_FALLOFF;
     public static final ModConfigSpec.BooleanValue UNDERWATER_EXPLODE;
 
@@ -172,14 +171,6 @@ public class ModProjectilesConfig {
                 "Default: 0.5 (half radius). Water dampens the blast.",
                 "默认0.5，水中爆炸半径减半")
             .defineInRange("underwater_explosion_multiplier", 0.5, 0.0, 2.0);
-
-        HE_ARMOR_PENETRATION = BUILDER
-            .comment(
-                "HE shell armor penetration ratio 0-1 (HE弹护甲穿透比例).",
-                "Default: 0.3. PER tick reduces target armor by this fraction before dealing",
-                "explosion damage. 0 = no penetration, 1 = full armor ignore.",
-                "默认0.3，爆炸伤害临时忽略目标30%护甲")
-            .defineInRange("he_armor_penetration", 0.3, 0.0, 1.0);
 
         HE_DAMAGE_FALLOFF = BUILDER
             .comment(

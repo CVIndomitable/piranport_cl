@@ -23,15 +23,9 @@ __pycache__/
 *.pyc
 *.pyo
 
-# 工具脚本的临时渲染输入/输出（不要入库；src/ 里的 Java 渲染器源码要保留）
-tools/unicorn-render/input.png
-tools/unicorn-render/input.webp
-tools/unicorn-render/out/
-tools/unicorn-render/output/
-tools/deepocean-render/out/
-
-# 工具脚本改前的 .bak 备份
-tools/*.bak
+# tools/ 是独立 git 仓库（有自己的 .git），不纳入主仓库 ——
+# 里面的工具脚本、临时渲染输入/输出、.bak 备份都由那个库自己管。
+tools/
 
 # 敏感：SSH 密钥目录（含私钥，禁止入库）
 .ssh-keys/

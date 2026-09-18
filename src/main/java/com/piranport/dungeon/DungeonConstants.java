@@ -62,4 +62,12 @@ public final class DungeonConstants {
 
     /** Defeat delay before outro starts in ticks (3 seconds). */
     public static final int BOSS_INTRO_DEFEAT_DELAY = 3 * 20;
+
+    // ===== Artillery Intro Script =====
+
+    /** Looting phase timeout in ticks (5 minutes). */
+    public static final int ARTILLERY_INTRO_LOOTING_TIMEOUT = 5 * 60 * 20;
+
+    /** Distance threshold for leaving the crate during looting phase (blocks). */
+    public static final double ARTILLERY_INTRO_LEAVE_DISTANCE = 20.0;
 }

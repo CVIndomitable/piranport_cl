@@ -5,6 +5,7 @@ import com.piranport.dungeon.DungeonConstants;
 import com.piranport.dungeon.data.DungeonRegistry;
 import com.piranport.dungeon.data.EnemySetData;
 import com.piranport.dungeon.data.NodeData;
+import com.piranport.dungeon.data.TerrainType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -24,41 +25,200 @@ public final class NodeBattleField {
     private NodeBattleField() {}
 
     /**
-     * Generates the battlefield terrain (flat water surface) at the node's position
-     * within the instance region.
+     * Generates the battlefield terrain at the node's position
+     * within the instance region, based on the node's terrain type.
+     *
+     * <p>技术指南 05：从平坦海洋基底升级为六种地形变体。</p>
      */
-    public static void generateTerrain(ServerLevel dungeonLevel, DungeonInstance instance, String nodeId) {
-        BlockPos spawn = instance.getNodeSpawnPos(nodeId);
+    public static void generateTerrain(ServerLevel dungeonLevel, DungeonInstance instance,
+                                        NodeData node) {
+        BlockPos spawn = instance.getNodeSpawnPos(node.nodeId());
         int halfSize = DungeonConstants.NODE_AREA_SIZE / 2;
         int seaLevel = DungeonConstants.SEA_LEVEL;
-
-        // Place a flat water surface
         int startX = spawn.getX() - halfSize;
         int startZ = spawn.getZ() - halfSize;
 
         // Flag 2 = send to clients, 16 = skip neighbor updates, 64 = suppress drops (performance)
         int flags = 2 | 16 | 64;
+
+        // 基底：平坦海面 + 海床
         for (int x = 0; x < DungeonConstants.NODE_AREA_SIZE; x++) {
             for (int z = 0; z < DungeonConstants.NODE_AREA_SIZE; z++) {
                 BlockPos waterPos = new BlockPos(startX + x, seaLevel, startZ + z);
                 dungeonLevel.setBlock(waterPos, Blocks.WATER.defaultBlockState(), flags);
-                // Solid floor below water
                 BlockPos floorPos = new BlockPos(startX + x, seaLevel - 1, startZ + z);
                 dungeonLevel.setBlock(floorPos, Blocks.STONE.defaultBlockState(), flags);
             }
         }
 
-        // Place a small platform at spawn for players to stand on
-        for (int dx = -2; dx <= 2; dx++) {
-            for (int dz = -2; dz <= 2; dz++) {
-                BlockPos platPos = spawn.offset(dx, -1, dz);
-                dungeonLevel.setBlock(platPos, Blocks.OAK_PLANKS.defaultBlockState(), flags);
-                // Remove water above platform
-                BlockPos abovePos = spawn.offset(dx, 0, dz);
-                dungeonLevel.setBlock(abovePos, Blocks.AIR.defaultBlockState(), flags);
+        // 根据地形类型生成特征（技术指南 05）
+        TerrainType terrain = node.terrainType() != null ? node.terrainType() : TerrainType.T1_OCEAN;
+        switch (terrain) {
+            case T2_ISLAND_REEFS -> generateIslandReefs(dungeonLevel, startX, startZ, flags);
+            case T3_WRECKAGE -> generateWreckageBand(dungeonLevel, startX, startZ, flags);
+            case T4_ISLAND_CHAIN -> generateIslandChain(dungeonLevel, startX, startZ, flags);
+            case T5_FORTRESS_REEF -> generateFortressReef(dungeonLevel, spawn, startX, startZ, flags);
+            case T6_PORT_RUINS -> generatePortRuins(dungeonLevel, spawn, startX, startZ, flags);
+            default -> { /* T1_OCEAN: 仅平坦海面，无需额外生成 */ }
+        }
+
+        // 出生点平台（所有地形通用）
+        placeSpawnPlatform(dungeonLevel, spawn, flags);
+    }
+
+    // ===== 技术指南 05：六种地形特征生成器 =====
+
+    /** T2 岛礁群：散布小岛礁（直径 5-15 格），密度参数化。 */
+    private static void generateIslandReefs(ServerLevel level, int startX, int startZ, int flags) {
+        var rng = level.getRandom();
+        int count = 3 + rng.nextInt(3); // 每 100×100 区域 3-5 座
+        int areaSize = DungeonConstants.NODE_AREA_SIZE;
+        for (int i = 0; i < count; i++) {
+            int cx = startX + rng.nextInt(areaSize);
+            int cz = startZ + rng.nextInt(areaSize);
+            int radius = 3 + rng.nextInt(4); // 3-6 格半径
+            placeCircleIsland(level, cx, cz, radius, 1 + rng.nextInt(3), flags);
+        }
+    }
+
+    /** T3 残骸带：沉船结构横贯战场。 */
+    private static void generateWreckageBand(ServerLevel level, int startX, int startZ, int flags) {
+        var rng = level.getRandom();
+        int areaSize = DungeonConstants.NODE_AREA_SIZE;
+        // 1-2 条残骸带
+        int bands = 1 + rng.nextInt(2);
+        for (int b = 0; b < bands; b++) {
+            int bandZ = startZ + areaSize / 4 + b * areaSize / 3;
+            int bandX = startX + areaSize / 4 + rng.nextInt(areaSize / 2);
+            int length = 15 + rng.nextInt(20); // 带宽 15-35
+            for (int i = 0; i < length; i++) {
+                int wx = bandX + i - length / 2;
+                int wz = bandZ + rng.nextInt(5) - 2;
+                // 沉船结构：木板上铺木板+箱子
+                level.setBlock(new BlockPos(wx, DungeonConstants.SEA_LEVEL - 1, wz),
+                        Blocks.DARK_OAK_PLANKS.defaultBlockState(), flags);
+                level.setBlock(new BlockPos(wx, DungeonConstants.SEA_LEVEL, wz),
+                        Blocks.OAK_PLANKS.defaultBlockState(), flags);
+                if (rng.nextFloat() < 0.2f) {
+                    level.setBlock(new BlockPos(wx, DungeonConstants.SEA_LEVEL, wz),
+                            Blocks.CHEST.defaultBlockState(), flags);
+                }
             }
         }
     }
+
+    /** T4 岛链湾：岛屿链围出弯曲航道。 */
+    private static void generateIslandChain(ServerLevel level, int startX, int startZ, int flags) {
+        var rng = level.getRandom();
+        int areaSize = DungeonConstants.NODE_AREA_SIZE;
+        // 两条岛链围出中间航道
+        for (int chain = 0; chain < 2; chain++) {
+            int chainX = startX + areaSize / 4 + chain * areaSize / 2;
+            int chainZ = startZ + areaSize / 4;
+            int chainLen = areaSize / 2;
+            for (int i = 0; i < chainLen; i++) {
+                int iz = chainZ + i;
+                int ix = chainX + (int) (Math.sin(i * 0.3) * 5);
+                int radius = 3 + rng.nextInt(3);
+                placeCircleIsland(level, ix, iz, radius, 1 + rng.nextInt(2), flags);
+            }
+        }
+    }
+
+    /** T5 要塞环礁：中心环形礁盘 + 要塞结构。 */
+    private static void generateFortressReef(ServerLevel level, BlockPos center,
+                                              int startX, int startZ, int flags) {
+        var rng = level.getRandom();
+        int areaSize = DungeonConstants.NODE_AREA_SIZE;
+        int midX = startX + areaSize / 2;
+        int midZ = startZ + areaSize / 2;
+        // 环形礁盘
+        for (int angle = 0; angle < 360; angle += 10) {
+            double rad = Math.toRadians(angle);
+            int rx = midX + (int) (Math.cos(rad) * 20);
+            int rz = midZ + (int) (Math.sin(rad) * 20);
+            placeCircleIsland(level, rx, rz, 2 + rng.nextInt(2), 1, flags);
+        }
+        // 中心要塞平台
+        int fortSize = 8;
+        for (int dx = -fortSize; dx <= fortSize; dx++) {
+            for (int dz = -fortSize; dz <= fortSize; dz++) {
+                if (dx * dx + dz * dz <= fortSize * fortSize) {
+                    BlockPos pos = new BlockPos(midX + dx, DungeonConstants.SEA_LEVEL - 1, midZ + dz);
+                    level.setBlock(pos, Blocks.STONE_BRICKS.defaultBlockState(), flags);
+                }
+            }
+        }
+        // 要塞中央方块
+        level.setBlock(new BlockPos(midX, DungeonConstants.SEA_LEVEL, midZ),
+                Blocks.OBSIDIAN.defaultBlockState(), flags);
+    }
+
+    /** T6 港口遗迹：岸式结构（复用原版方块模拟码头）。 */
+    private static void generatePortRuins(ServerLevel level, BlockPos center,
+                                            int startX, int startZ, int flags) {
+        var rng = level.getRandom();
+        int areaSize = DungeonConstants.NODE_AREA_SIZE;
+        // 码头平台（一侧延伸）
+        int pierX = startX + areaSize / 2;
+        int pierZ = startZ + 2;
+        for (int i = 0; i < 15; i++) {
+            for (int dx = -2; dx <= 2; dx++) {
+                BlockPos pos = new BlockPos(pierX + dx, DungeonConstants.SEA_LEVEL - 1, pierZ + i);
+                level.setBlock(pos, Blocks.OAK_PLANKS.defaultBlockState(), flags);
+            }
+            // 两侧柱子
+            if (i % 4 == 0) {
+                for (int dx : new int[]{-3, 3}) {
+                    BlockPos pillar = new BlockPos(pierX + dx, DungeonConstants.SEA_LEVEL - 1, pierZ + i);
+                    level.setBlock(pillar, Blocks.OAK_LOG.defaultBlockState(), flags);
+                }
+            }
+        }
+        // 仓库结构
+        for (int dx = -3; dx <= 3; dx++) {
+            for (int dz = -3; dz <= 3; dz++) {
+                BlockPos pos = new BlockPos(pierX + dx, DungeonConstants.SEA_LEVEL, pierZ + 16 + dz);
+                if (Math.abs(dx) == 3 || Math.abs(dz) == 3) {
+                    level.setBlock(pos, Blocks.STONE_BRICKS.defaultBlockState(), flags);
+                } else {
+                    level.setBlock(pos, Blocks.AIR.defaultBlockState(), flags);
+                }
+            }
+        }
+    }
+
+    /** 辅助：放置圆形岛礁（水面以上 1 格沙土 + 周围石头）。 */
+    private static void placeCircleIsland(ServerLevel level, int cx, int cz, int radius,
+                                          int heightAbove, int flags) {
+        for (int dx = -radius; dx <= radius; dx++) {
+            for (int dz = -radius; dz <= radius; dz++) {
+                if (dx * dx + dz * dz <= radius * radius) {
+                    BlockPos base = new BlockPos(cx + dx, DungeonConstants.SEA_LEVEL - 1, cz + dz);
+                    level.setBlock(base, Blocks.STONE.defaultBlockState(), flags);
+                    // 水面以上沙土
+                    for (int h = 0; h < heightAbove; h++) {
+                        BlockPos above = base.above(h);
+                        level.setBlock(above, Blocks.SAND.defaultBlockState(), flags);
+                    }
+                }
+            }
+        }
+    }
+
+    /** 辅助：出生点平台。 */
+    private static void placeSpawnPlatform(ServerLevel level, BlockPos spawn, int flags) {
+        for (int dx = -2; dx <= 2; dx++) {
+            for (int dz = -2; dz <= 2; dz++) {
+                BlockPos platPos = spawn.offset(dx, -1, dz);
+                level.setBlock(platPos, Blocks.OAK_PLANKS.defaultBlockState(), flags);
+                BlockPos abovePos = spawn.offset(dx, 0, dz);
+                level.setBlock(abovePos, Blocks.AIR.defaultBlockState(), flags);
+            }
+        }
+    }
+
+    // ===== 敌人生成 =====
 
     /**
      * Spawns enemies for a battle/boss node. Returns the list of spawned entities.

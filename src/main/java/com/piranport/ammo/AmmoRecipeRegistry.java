@@ -74,15 +74,48 @@ public class AmmoRecipeRegistry {
 
     // ===== Helpers =====
 
+    /**
+     * 材料值系统（策划决策/武器/弹药-材料值合成方案.md）：
+     * 每种材料有固定的材料值点数，配方的总材料值 = Σ(数量 × 材料值)。
+     */
+    private static final java.util.Map<Item, Integer> MATERIAL_VALUES = new java.util.HashMap<>();
+
+    static {
+        // 通用材料值表
+        registerMaterialValue(Items.COPPER_INGOT, 1);
+        registerMaterialValue(Items.GUNPOWDER, 1);
+        registerMaterialValue(Items.GOLD_NUGGET, 2);
+        registerMaterialValue(Items.REDSTONE, 1);
+        registerMaterialValue(Items.COMPARATOR, 5);
+        registerMaterialValue(Items.GLOWSTONE_DUST, 3);
+        registerMaterialValue(Items.CHARCOAL, 1);
+        registerMaterialValue(Items.IRON_INGOT, 1);
+        // Mod 物品
+        registerMaterialValue(ModItems.AVIATION_FUEL.get(), 3);
+        registerMaterialValue(Items.REDSTONE_TORCH, 2);
+        registerMaterialValue(Items.TRIPWIRE_HOOK, 4);
+        registerMaterialValue(Items.STRING, 1);
+    }
+
+    private static void registerMaterialValue(Item item, int value) {
+        MATERIAL_VALUES.put(item, value);
+    }
+
+    private static int getMaterialValue(Item item) {
+        return MATERIAL_VALUES.getOrDefault(item, 1);
+    }
+
     private static AmmoRecipe.MaterialRequirement mat(Supplier<Item> item, int count) {
-        return new AmmoRecipe.MaterialRequirement(item, count);
+        int value = getMaterialValue(item.get());
+        return new AmmoRecipe.MaterialRequirement(item, count, value);
     }
 
     private static void add(String id, AmmoCategory cat, String type, String caliber,
                             Supplier<Item> result, int output, int timeTicks,
                             AmmoRecipe.MaterialRequirement... mats) {
+        int totalValue = AmmoRecipe.calcTotalValue(List.of(mats));
         ALL_RECIPES.add(new AmmoRecipe(id, cat, type, caliber, result, output,
-                List.of(mats), timeTicks));
+                List.of(mats), timeTicks, totalValue));
     }
 
     // ===== Shells =====

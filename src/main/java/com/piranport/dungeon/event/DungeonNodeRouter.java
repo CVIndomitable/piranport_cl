@@ -128,7 +128,7 @@ public final class DungeonNodeRouter {
         DungeonInstanceManager mgr = DungeonInstanceManager.get(level);
         mgr.advanceNode(instance.getInstanceId(), node.nodeId(), keyStack);
 
-        NodeBattleField.generateTerrain(dungeonLevel, instance, node.nodeId());
+        NodeBattleField.generateTerrain(dungeonLevel, instance, node);
 
         BlockPos spawn = instance.getNodeSpawnPos(node.nodeId());
         List<ServerPlayer> toTeleport = new ArrayList<>();
@@ -183,14 +183,21 @@ public final class DungeonNodeRouter {
         String displayName = stageData != null ? stageData.displayName() : instance.getStageId();
 
         if ("artillery_intro".equals(node.script())) {
-            var script = new com.piranport.dungeon.script.ArtilleryIntroScript(
-                    instance, node.nodeId(), displayName, setup.playerUuids());
-            com.piranport.dungeon.script.DungeonScriptManager.get(level.getServer())
-                    .start(instance.getInstanceId(), script);
-        } else {
-            PiranPort.LOGGER.warn("Unknown script: {}", node.script());
-            NodeBattleField.spawnEnemies(setup.dungeonLevel(), instance, node);
-        }
+                var script = new com.piranport.dungeon.script.ArtilleryIntroScript(
+                        instance, node.nodeId(), displayName, setup.playerUuids());
+                com.piranport.dungeon.script.DungeonScriptManager.get(level.getServer())
+                        .start(instance.getInstanceId(), script);
+            } else if ("goldencatcat_activity".equals(node.script())) {
+                var script = new com.piranport.dungeon.script.GoldencatcatScript(
+                        instance, node.nodeId(), setup.playerUuids());
+                script.onStart();
+                script.spawnEntities(setup.dungeonLevel());
+                com.piranport.dungeon.script.DungeonScriptManager.get(level.getServer())
+                        .start(instance.getInstanceId(), script);
+            } else {
+                PiranPort.LOGGER.warn("Unknown script: {}", node.script());
+                NodeBattleField.spawnEnemies(setup.dungeonLevel(), instance, node);
+            }
     }
 
     private static int countItem(ServerPlayer player, Item item) {

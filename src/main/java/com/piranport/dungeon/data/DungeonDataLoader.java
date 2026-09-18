@@ -275,6 +275,10 @@ public class DungeonDataLoader extends SimpleJsonResourceReloadListener {
         int displayX = json.has("display_x") ? json.get("display_x").getAsInt() : 0;
         int displayY = json.has("display_y") ? json.get("display_y").getAsInt() : 0;
         String script = json.has("script") ? json.get("script").getAsString() : null;
+        TerrainType terrainType = TerrainType.T1_OCEAN;
+        if (json.has("terrain_type")) {
+            terrainType = TerrainType.fromString(json.get("terrain_type").getAsString());
+        }
 
         // 整合版 §2.4 战斗限制（5 种）
         Set<CombatRestriction> restrictions = new HashSet<>();
@@ -303,7 +307,7 @@ public class DungeonDataLoader extends SimpleJsonResourceReloadListener {
 
         return new NodeData(nodeId, type, enemies, List.copyOf(rewards),
                 List.copyOf(cost), costMessage, displayX, displayY, script,
-                Set.copyOf(restrictions), scene);
+                terrainType, Set.copyOf(restrictions), scene);
     }
 
     private List<NodeData.RewardEntry> parseRewards(JsonArray arr) {

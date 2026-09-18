@@ -20,6 +20,7 @@ public record NodeData(
         int displayX,
         int displayY,
         String script,            // optional script ID (e.g. "artillery_intro") for scripted battle nodes
+        TerrainType terrainType,  // 技术指南 05：副本地形类型
         Set<CombatRestriction> restrictions, // 整合版 §2.4 关卡公式 5 战斗限制
         SceneData scene           // 整合版 §2.4 关卡公式 5 场景
 ) {

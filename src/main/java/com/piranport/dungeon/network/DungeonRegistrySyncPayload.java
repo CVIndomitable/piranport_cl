@@ -9,6 +9,7 @@ import com.piranport.PiranPort;
 import com.piranport.dungeon.data.CheckpointData;
 import com.piranport.dungeon.data.ChapterData;
 import com.piranport.dungeon.data.DungeonRegistry;
+import com.piranport.dungeon.data.TerrainType;
 import com.piranport.dungeon.data.SceneData;
 import com.piranport.dungeon.data.NodeData;
 import com.piranport.dungeon.data.StageData;
@@ -129,6 +130,7 @@ public record DungeonRegistrySyncPayload(String jsonData,
                             nObj.get("displayX").getAsInt(),
                             nObj.get("displayY").getAsInt(),
                             nObj.has("script") ? nObj.get("script").getAsString() : null,
+                            nObj.has("terrainType") ? TerrainType.fromString(nObj.get("terrainType").getAsString()) : TerrainType.T1_OCEAN,
                             Set.of(),
                             SceneData.DAY));
                 }

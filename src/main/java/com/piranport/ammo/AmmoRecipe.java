@@ -15,17 +15,35 @@ public record AmmoRecipe(
         Supplier<Item> resultItem,
         int outputCount,
         List<MaterialRequirement> materials,
-        int craftTimeTicks
+        int craftTimeTicks,
+        int totalMaterialValue
 ) {
     public ItemStack getResultStack(int quantity) {
         return new ItemStack(resultItem.get(), outputCount * quantity);
+    }
+
+    public int totalMaterialValue() {
+        return totalMaterialValue;
     }
 
     public Component getResultName() {
         return resultItem.get().getDefaultInstance().getHoverName();
     }
 
-    public record MaterialRequirement(Supplier<Item> item, int count) {
+    /**
+     * Calculates the total material value from all requirements.
+     */
+    public static int calcTotalValue(List<MaterialRequirement> materials) {
+        return materials.stream()
+                .mapToInt(MaterialRequirement::materialValue)
+                .sum();
+    }
+
+    public record MaterialRequirement(Supplier<Item> item, int count, int materialValue) {
+        public MaterialRequirement(Supplier<Item> item, int count) {
+            this(item, count, 0);
+        }
+
         public Component getDisplayName() {
             return item.get().getDefaultInstance().getHoverName();
         }

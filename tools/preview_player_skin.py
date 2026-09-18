@@ -108,8 +108,11 @@ FACE_NORMAL = {"up": (0, 1, 0), "down": (0, -1, 0), "north": (0, 0, -1),
                "south": (0, 0, 1), "east": (1, 0, 0), "west": (-1, 0, 0)}
 
 
-def make_parts():
-    """构建经典（Steve）玩家模型的全部部件，坐标 y 向上、-z 为正面朝向。
+def make_parts(slim=False):
+    """构建玩家模型的全部部件，坐标 y 向上、-z 为正面朝向。
+
+    slim=True 时使用 Alex 体型（手臂宽 3 texel，其余尺寸不变）。默认
+    classic（Steve，手臂 4 texel）。
 
     overlay 层（hat/jacket/sleeve/pant）原版是 0.25 膨胀的独立模型，
     在原版里靠 `zOffset` 做轻微外推以避免 z-fighting；这里统一用 0.4 膨胀，
@@ -117,22 +120,26 @@ def make_parts():
     """
     P = []
     INF = 0.4
+    # slim 体型手臂宽 3，classic 宽 4；手臂贴躯干外侧，x 范围 0..arm_w。
+    arm_w = 3 if slim else 4
+    # 坐标约定：模型朝 -z，x=0 是身体中轴。左右腿各占 0..4 一侧，
+    # 手臂贴在腿的外侧；「角色右手」在 -x 侧、「角色左手」在 +x 侧。
     # 头：8×8×8，中心在 x,z 原点，y 从 24 到 32
     P.append(Box("head", -4, 24, -4, 8, 8, 8, (0, 0)))
     P.append(Box("hat", -4, 24, -4, 8, 8, 8, (32, 0), inflate=INF))
     # 躯干：8×12×4，y 从 12 到 24
     P.append(Box("body", -4, 12, -2, 8, 12, 4, (16, 16)))
     P.append(Box("jacket", -4, 12, -2, 8, 12, 4, (16, 32), inflate=INF))
-    # 右臂（角色右手 = 世界 -x 侧）：4×12×4，y 12..24
-    P.append(Box("right_arm", -8, 12, -2, 4, 12, 4, (40, 16)))
-    P.append(Box("right_sleeve", -8, 12, -2, 4, 12, 4, (40, 32), inflate=INF))
-    # 左臂（+x 侧）
-    P.append(Box("left_arm", 4, 12, -2, 4, 12, 4, (32, 48)))
-    P.append(Box("left_sleeve", 4, 12, -2, 4, 12, 4, (48, 48), inflate=INF))
+    # 右臂（角色右手 = -x 侧）：y 12..24，UV 起点 (40,16)
+    P.append(Box("right_arm", -arm_w, 12, -2, arm_w, 12, 4, (40, 16)))
+    P.append(Box("right_sleeve", -arm_w, 12, -2, arm_w, 12, 4, (40, 32), inflate=INF))
+    # 左臂（角色左手 = +x 侧）：y 12..24，UV 起点 (32,48)
+    P.append(Box("left_arm", 0, 12, -2, arm_w, 12, 4, (32, 48)))
+    P.append(Box("left_sleeve", 0, 12, -2, arm_w, 12, 4, (48, 48), inflate=INF))
     # 右腿（-x 侧）：4×12×4，y 0..12
     P.append(Box("right_leg", -4, 0, -2, 4, 12, 4, (0, 16)))
     P.append(Box("right_pant", -4, 0, -2, 4, 12, 4, (0, 32), inflate=INF))
-    # 左腿（+x 侧）
+    # 左腿（+x 侧）：4×12×4，y 0..12
     P.append(Box("left_leg", 0, 0, -2, 4, 12, 4, (16, 48)))
     P.append(Box("left_pant", 0, 0, -2, 4, 12, 4, (0, 48), inflate=INF))
     return P
@@ -156,7 +163,7 @@ def project(p, scale, cx, cy):
 
 # ---------------------------------------------------------------- 渲染
 
-def render(skin, yaw, pitch, out_size, scale=1.0):
+def render(skin, yaw, pitch, out_size, scale=1.0, slim=False):
     """渲染一个视角。返回 RGBA 图。"""
     W = H = out_size
     img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
@@ -167,7 +174,7 @@ def render(skin, yaw, pitch, out_size, scale=1.0):
     sx = W / 40.0 * scale
     cx, cy = W / 2.0, H / 2.0 + 16.0 * sx    # y=16 是模型竖直中心
 
-    parts = make_parts()
+    parts = make_parts(slim=slim)
     for box in parts:
         x0, y0, z0, x1, y1, z1 = box.corners()
         # UV 展开用「未膨胀」的原始尺寸（与原版 ModelPart 一致）
@@ -276,9 +283,11 @@ def rasterize_face(buf, zbuf, W, H, skin, fuv, corners3d, yaw, pitch,
 # ---------------------------------------------------------------- 主流程
 
 def main():
-    src = Path(sys.argv[1]) if len(sys.argv) > 1 else \
+    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    slim = "--slim" in sys.argv
+    src = Path(args[0]) if len(args) > 0 else \
         ROOT / "src/main/resources/assets/piranport/textures/skin/skin_20.png"
-    out = Path(sys.argv[2]) if len(sys.argv) > 2 else \
+    out = Path(args[1]) if len(args) > 1 else \
         ROOT / "build/offline-renders/skin_3d.png"
     skin = Image.open(src).convert("RGBA")
     if skin.size != (64, 64):
@@ -291,9 +300,11 @@ def main():
     from PIL import ImageDraw
     d = ImageDraw.Draw(sheet)
     for i, (name, yaw, pitch) in enumerate(views):
-        v = render(skin, yaw, pitch, S)
+        v = render(skin, yaw, pitch, S, slim=slim)
         sheet.alpha_composite(v, (i * S, 0))
-        d.text((i * S + 6, S + 3), f"{name} (yaw={yaw})", fill=(220, 220, 230, 255))
+        d.text((i * S + 6, S + 3),
+               f"{name} (yaw={yaw}){' slim' if slim else ''}",
+               fill=(220, 220, 230, 255))
     out.parent.mkdir(parents=True, exist_ok=True)
     sheet.save(out)
     print(f"已生成 {out}")

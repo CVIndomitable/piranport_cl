@@ -1,0 +1,12 @@
+{
+  "enemy_set_id": "enemy_set_goldencatcat_main",
+  "spawn_list": [
+    { "entity": "minecraft:zombie", "count": 4 },
+    { "entity": "minecraft:skeleton", "count": 3 },
+    { "entity": "minecraft:spider", "count": 2 }
+  ],
+  "flagship": {
+    "entity": "minecraft:wither_skeleton",
+    "count": 1
+  }
+}

@@ -1,8 +1,12 @@
 package com.piranport.artillery;
 
 import com.piranport.artillery.config.ArtilleryCannonData;
+import com.piranport.combat.TransformationManager;
+import com.piranport.combat.data.AmmoInventory;
+import com.piranport.combat.data.WeaponState;
 import com.piranport.component.LoadedAmmo;
 import com.piranport.component.SelectedAmmoType;
+import com.piranport.component.SlotCooldowns;
 import com.piranport.component.WeaponCooldown;
 import com.piranport.debug.PiranPortDebug;
 import com.piranport.item.ExperienceShellItem;
@@ -19,6 +23,8 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.ClickAction;
 import net.minecraft.world.inventory.Slot;
@@ -121,9 +127,17 @@ public class ArtilleryItem extends Item {
                 ClientHooks.toggleArtilleryScope(player, stack);
                 return InteractionResultHolder.fail(stack);
             }
+            // 弩式读条：手动模式且未装弹时，客户端开始使用动画
+            if (!isAutoLoading() && !hasLoadedAmmo(stack)) {
+                return InteractionResultHolder.consume(stack);
+            }
             return InteractionResultHolder.pass(stack);
         }
 
+        // 服务端：手动模式且未装弹时，接受使用动作以启动读条
+        if (!isAutoLoading() && !hasLoadedAmmo(stack)) {
+            return InteractionResultHolder.consume(stack);
+        }
         return InteractionResultHolder.pass(stack);
     }
 
@@ -151,6 +165,103 @@ public class ArtilleryItem extends Item {
                     SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.5f, 1.4f);
         }
         return true;
+    }
+
+    // ===== 弩式读条装填（Crossbow-style Charged Reload） =====
+
+    /** 使用引用语义的 Map 跟踪每把武器的读条进度（避免 ItemStack.equals 按内容匹配）。 */
+    private static final java.util.Map<ItemStack, Integer> chargeTicks = new java.util.IdentityHashMap<>();
+
+    /** 读条持续时间 = 武器装填时间（ticks）。 */
+    @Override
+    public int getUseDuration(ItemStack stack, LivingEntity entity) {
+        return getCooldownTicks();
+    }
+
+    /** 每 tick 累计读条进度（仅服务端、手动模式、未装弹时）。 */
+    @Override
+    public void onUseTick(Level level, LivingEntity livingEntity, ItemStack stack, int chargeTicks) {
+        if (level.isClientSide()) return;
+        if (!(livingEntity instanceof Player player)) return;
+        if (isAutoLoading()) return;
+        if (hasLoadedAmmo(stack)) return;
+
+        // 将每 tick 的进度写入引用 Map
+        ArtilleryItem.chargeTicks.put(stack, chargeTicks);
+    }
+
+    /** 读条完成（右键按住直到满）：执行装填。 */
+    @Override
+    public ItemStack finishUsingItem(ItemStack stack, Level level, LivingEntity entity) {
+        if (!level.isClientSide() && entity instanceof Player player) {
+            if (!isAutoLoading() && !hasLoadedAmmo(stack)) {
+                int charge = chargeTicks.getOrDefault(stack, 0);
+                if (charge >= getUseDuration(stack, entity)) {
+                    completeCrossbowReload(player, stack);
+                }
+                chargeTicks.remove(stack);
+            }
+        }
+        return stack;
+    }
+
+    /** 提前松手（右键未满就释放）：取消读条。 */
+    @Override
+    public void releaseUsing(ItemStack stack, Level level, LivingEntity entity, int chargeTicks) {
+        if (level.isClientSide()) return;
+        ArtilleryItem.chargeTicks.remove(stack);
+    }
+
+    /** 判断武器是否已装弹。 */
+    private boolean hasLoadedAmmo(ItemStack stack) {
+        return stack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY).hasAmmo();
+    }
+
+    /**
+     * 弩式读条完成：直接消耗弹药并设置已装填状态（绕过 SlotCooldowns 定时读条）。
+     * 与 ShipCoreCombat.completeCannonReload 逻辑等价，但无需等待冷却到期。
+     */
+    private void completeCrossbowReload(Player player, ItemStack weapon) {
+        ItemStack coreStack = com.piranport.combat.TransformationManager.findTransformedCore(player);
+        if (coreStack.isEmpty()) return;
+
+        Inventory inv = player.getInventory();
+        int coreSlot = -1;
+        for (int i = 0; i < inv.items.size(); i++) {
+            if (inv.items.get(i) == coreStack) { coreSlot = i; break; }
+        }
+        if (coreSlot < 0) coreSlot = -2;
+
+        int weaponSlot = -1;
+        for (int i = 0; i < inv.items.size(); i++) {
+            if (inv.items.get(i) == weapon) { weaponSlot = i; break; }
+        }
+        if (weaponSlot < 0) weaponSlot = inv.selected;
+
+        int barrelCount = getBarrelCount();
+        AmmoInventory ammoInv = new AmmoInventory(inv, coreSlot, weaponSlot);
+        Item ammoType = ammoInv.chooseReloadAmmo(weapon, barrelCount, player.getAbilities().instabuild, player.level());
+        if (ammoType == null) return;
+
+        if (!player.getAbilities().instabuild && !ammoInv.consumeAmmo(ammoType, barrelCount)) return;
+
+        String ammoId = BuiltInRegistries.ITEM.getKey(ammoType).toString();
+        WeaponState ws = new WeaponState(weapon);
+        ws.setLoadedAmmo(barrelCount, ammoId);
+        ws.clearCooldown();
+
+        SlotCooldowns cooldowns = coreStack.getOrDefault(ModDataComponents.SLOT_COOLDOWNS.get(), SlotCooldowns.EMPTY);
+        coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(), cooldowns.withoutSlotCooldown(weaponSlot));
+
+        ammoInv.recordAmmoType(weapon, ammoType);
+
+        // 装填完成音效
+        player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+                ModSounds.CANNON_RELOAD.get(), SoundSource.PLAYERS, 0.65f, 1.0f);
+        player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+                ModSounds.CANNON_RELOAD_BREECH.get(), SoundSource.PLAYERS, 0.42f, 0.78f);
+        player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+                SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.35f, 1.25f);
     }
 
     /**

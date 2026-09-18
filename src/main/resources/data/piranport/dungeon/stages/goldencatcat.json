@@ -1,0 +1,26 @@
+{
+  "stage_id": "goldencatcat",
+  "chapter": "chapter_event_goldencatcat",
+  "display_name": "活动 金猫猫打靶练习",
+  "nodes": {
+    "A": {
+      "type": "battle",
+      "enemies": "boss_goldencatcat",
+      "display_x": 200,
+      "display_y": 200
+    }
+  },
+  "edges": [],
+  "start_node": "A",
+  "boss_nodes": [],
+  "first_clear_rewards": [
+    { "item": "piranport:exp_shell", "count": 16 },
+    { "item": "piranport:toast_bread", "count": 16 }
+  ],
+  "victory_conditions": ["KILL_ALL"],
+  "victory_objectives": {
+    "require_all_nodes_cleared": true
+  },
+  "terrain_type": "T1",
+  "script": "goldencatcat_activity"
+}

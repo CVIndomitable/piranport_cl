@@ -13,6 +13,7 @@ import com.piranport.item.EugenShieldItem;
 import com.piranport.item.ExperienceShellItem;
 import com.piranport.item.FlareLauncherItem;
 import com.piranport.item.FootballArmorItem;
+import com.piranport.item.FireExtinguisherItem;
 import com.piranport.item.GungnirItem;
 import com.piranport.item.HatsuyukiMainGunItem;
 import com.piranport.item.KirinHeadbandItem;
@@ -239,6 +240,11 @@ public final class SpecialtyItems {
     public static final DeferredItem<DamageControlItem> DAMAGE_CONTROL =
             ITEMS.register("damage_control",
                     () -> new DamageControlItem(new Item.Properties().stacksTo(1)));
+
+    // ===== 灭火器 =====
+    public static final DeferredItem<FireExtinguisherItem> FIRE_EXTINGUISHER =
+            ITEMS.register("fire_extinguisher",
+                    () -> new FireExtinguisherItem(new Item.Properties().stacksTo(1)));
 
     // ===== Quick Repair =====
     public static final DeferredItem<com.piranport.item.QuickRepairItem> QUICK_REPAIR =

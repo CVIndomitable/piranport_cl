@@ -1,0 +1,19 @@
+{
+  "entity_type": "piranport:goldencatcat",
+  "max_health": 180.0,
+  "movement_speed": 0.20,
+  "follow_range": 48.0,
+  "attack_damage": 5.0,
+  "knockback_resistance": 0.9,
+  "armor": 24.0,
+  "shell_damage": 2.0,
+  "explosion_power": 1.0,
+  "fire_interval": 200,
+  "orbit_distance": 30.0,
+  "can_use_torpedoes": false,
+  "torpedo_damage": 0.0,
+  "tracking_interval_min": 5,
+  "tracking_interval_max": 10,
+  "can_launch_aircraft": false,
+  "max_aircraft": 0
+}

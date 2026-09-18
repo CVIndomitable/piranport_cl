@@ -241,13 +241,20 @@ public class ModEntityTypes {
                             com.piranport.npc.deepocean.DeepOceanCarrierEntity::new, MobCategory.MONSTER)
                     .sized(0.8f, 2.0f).clientTrackingRange(16).updateInterval(3)
                     .build("piranport:deep_ocean_carrier"));
-
     public static final DeferredHolder<EntityType<?>, EntityType<com.piranport.npc.deepocean.DeepOceanSubmarineEntity>>
             DEEP_OCEAN_SUBMARINE = ENTITY_TYPES.register("deep_ocean_submarine",
             () -> EntityType.Builder.<com.piranport.npc.deepocean.DeepOceanSubmarineEntity>of(
                             com.piranport.npc.deepocean.DeepOceanSubmarineEntity::new, MobCategory.MONSTER)
                     .sized(0.6f, 1.8f).clientTrackingRange(16).updateInterval(3)
                     .build("piranport:deep_ocean_submarine"));
+
+    // --- Goldencatcat (Goldencatcat 活动关卡训练靶) ---
+    public static final DeferredHolder<EntityType<?>, EntityType<com.piranport.entity.GoldencatcatEntity>>
+            GOLDENCATCAT = ENTITY_TYPES.register("goldencatcat",
+            () -> EntityType.Builder.<com.piranport.entity.GoldencatcatEntity>of(
+                            com.piranport.entity.GoldencatcatEntity::new, MobCategory.MONSTER)
+                    .sized(0.8f, 2.0f).clientTrackingRange(16).updateInterval(3)
+                    .build("piranport:goldencatcat"));
 
     // --- Ship Girl NPC ---
     public static final DeferredHolder<EntityType<?>, EntityType<com.piranport.npc.shipgirl.ShipGirlEntity>>

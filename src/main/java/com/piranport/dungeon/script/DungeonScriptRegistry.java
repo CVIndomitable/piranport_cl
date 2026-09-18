@@ -2,6 +2,7 @@ package com.piranport.dungeon.script;
 
 import net.minecraft.nbt.CompoundTag;
 
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
@@ -26,5 +27,6 @@ public final class DungeonScriptRegistry {
 
     static {
         register(ArtilleryIntroScript.TYPE_ID, ArtilleryIntroScript::loadFromNbt);
+        register(GoldencatcatScript.TYPE_ID, GoldencatcatScript::loadFromNbt);
     }
 }

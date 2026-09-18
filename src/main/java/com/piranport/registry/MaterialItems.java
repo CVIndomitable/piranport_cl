@@ -68,6 +68,9 @@ public final class MaterialItems {
             ITEMS.registerSimpleItem("aluminum_ingot");
     public static final DeferredItem<Item> SALT =
             ITEMS.registerSimpleItem("salt");
+    // ===== Dungeon Copy Essence (副本复制精华) =====
+    public static final DeferredItem<Item> DIAMOND =
+            ITEMS.registerSimpleItem("diamond");
 
     // ===== Armor Plates =====
     public static final DeferredItem<ArmorPlateItem> SMALL_ARMOR_PLATE =

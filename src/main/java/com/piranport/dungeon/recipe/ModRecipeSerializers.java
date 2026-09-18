@@ -16,8 +16,8 @@ public class ModRecipeSerializers {
     public static final DeferredRegister<RecipeSerializer<?>> RECIPE_SERIALIZERS =
             DeferredRegister.create(Registries.RECIPE_SERIALIZER, PiranPort.MOD_ID);
 
-    public static final DeferredHolder<RecipeSerializer<?>, RecipeSerializer<KeyResetRecipe>> KEY_RESET =
-            RECIPE_SERIALIZERS.register("key_reset", () -> new KeyResetRecipe.Serializer());
+    public static final DeferredHolder<RecipeSerializer<?>, RecipeSerializer<KeyResetRecipe>> KEY_COPY =
+            RECIPE_SERIALIZERS.register("key_copy", () -> new KeyResetRecipe.Serializer());
 
     // ===== Chapter Key Recipe (章节钥匙合成) =====
     public static final DeferredHolder<RecipeSerializer<?>, RecipeSerializer<ChapterKeyRecipe>> CHAPTER_KEY =

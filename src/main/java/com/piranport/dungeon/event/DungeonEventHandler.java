@@ -15,7 +15,6 @@ import com.piranport.dungeon.key.DungeonProgress;
 import com.piranport.dungeon.network.DungeonResultPayload;
 import com.piranport.dungeon.network.DungeonStatePayload;
 import com.piranport.dungeon.network.PlayerDiedInDungeonPayload;
-import com.piranport.dungeon.saved.DungeonLeaderboard;
 import com.piranport.dungeon.saved.DungeonSavedData;
 import com.piranport.dungeon.script.DungeonScriptManager;
 import com.piranport.item.DeployMedalItem;
@@ -251,7 +250,6 @@ public class DungeonEventHandler {
         MinecraftServer server = dungeonLevel.getServer();
         DungeonInstanceManager mgr = DungeonInstanceManager.get(dungeonLevel);
         DungeonSavedData savedData = DungeonSavedData.get(dungeonLevel);
-        DungeonLeaderboard leaderboard = DungeonLeaderboard.get(dungeonLevel);
 
         long endTime = System.currentTimeMillis();
         long elapsed = endTime - instance.getStartTimeMillis();
@@ -278,9 +276,8 @@ public class DungeonEventHandler {
                 }
             }
 
-            // 副本/16：排行榜废弃，禁用提交（代码保留，功能关闭）
-            // leaderboard.submit(stage.stageId(), playerUuid,
-            //         player.getGameProfile().getName(), elapsed);
+            // 副本/16：排行榜废弃——DungeonLeaderboard.submit 调用已移除（2026-09-17），
+            // DungeonLeaderboard 类保留（代码保留、功能关闭），不再写入任何条目。
 
             // Teleport back
             teleportToLectern(player, instance);

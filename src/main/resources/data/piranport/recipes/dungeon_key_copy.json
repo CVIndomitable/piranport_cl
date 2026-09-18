@@ -1,0 +1,20 @@
+{
+  "type": "piranport:key_copy",
+  "category": "misc",
+  "pattern": [
+    "KA",
+    "  "
+  ],
+  "key": {
+    "K": {
+      "item": "piranport:dungeon_key"
+    },
+    "A": {
+      "item": "minecraft:diamond"
+    }
+  },
+  "result": {
+    "id": "piranport:dungeon_key",
+    "count": 1
+  }
+}

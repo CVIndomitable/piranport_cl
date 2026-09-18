@@ -1,0 +1,11 @@
+{
+  "enemy_set_id": "boss_goldencatcat",
+  "spawn_list": [
+    { "entity": "piranport:goldencatcat", "count": 2 }
+  ],
+  "flagship": {
+    "entity": "piranport:goldencatcat",
+    "count": 1
+  },
+  "formation": "LINE_AHEAD"
+}

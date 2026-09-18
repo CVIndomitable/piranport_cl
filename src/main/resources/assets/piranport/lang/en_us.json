@@ -15,6 +15,7 @@
   "item.piranport.raw_aluminum": "Raw Aluminum",
   "item.piranport.aluminum_ingot": "Aluminum Ingot",
   "item.piranport.salt": "Salt",
+  "item.piranport.diamond": "Dungeon Copy Essence",
   "item.piranport.small_ship_core": "Small Ship Core",
   "item.piranport.medium_ship_core": "Medium Ship Core",
   "item.piranport.large_ship_core": "Large Ship Core",
@@ -1169,5 +1170,6 @@
   "block.piranport.apple_sapling": "Apple Sapling",
   "block.piranport.lava_slime_tree_sapling": "Lava Slime Tree Sapling",
   "block.piranport.lava_slime_tree_log": "Lava Slime Tree Log",
-  "block.piranport.lava_slime_tree_leaves": "Lava Slime Tree Leaves"
+  "block.piranport.lava_slime_tree_leaves": "Lava Slime Tree Leaves",
+  "item.piranport.fire_extinguisher": "Fire Extinguisher"
 }

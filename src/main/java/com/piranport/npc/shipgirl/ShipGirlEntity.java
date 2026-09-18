@@ -9,6 +9,7 @@ import java.util.UUID;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -228,6 +229,7 @@ public class ShipGirlEntity extends PathfinderMob implements Merchant {
     private FollowUpStage followUpStage = FollowUpStage.FLAGSHIP_DEBRIEF;
     private int rapport = 0;
     private int branchMask = 0;
+    private int[] equipmentSlots = new int[3];
 
     public ShipGirlEntity(EntityType<? extends ShipGirlEntity> type, Level level) {
         super(type, level);
@@ -315,6 +317,23 @@ public class ShipGirlEntity extends PathfinderMob implements Merchant {
 
     public int getRapport() {
         return entityData.get(DATA_RAPPORT);
+    }
+
+    public int[] getEquipmentSlots() {
+        return equipmentSlots.clone();
+    }
+
+    public int getEquipmentSlot(int index) {
+        if (index >= 0 && index < equipmentSlots.length) {
+            return equipmentSlots[index];
+        }
+        return -1;
+    }
+
+    public void setEquipmentSlot(int index, int itemId) {
+        if (index >= 0 && index < equipmentSlots.length) {
+            equipmentSlots[index] = itemId;
+        }
     }
 
     public void setSkinVariant(int skinVariant) {
@@ -1080,6 +1099,14 @@ public class ShipGirlEntity extends PathfinderMob implements Merchant {
         tag.putInt("TradeXp", tradeXp);
         tag.putInt("Rapport", rapport);
         tag.putInt("BranchMask", branchMask);
+        int[] slots = getEquipmentSlots();
+        if (slots.length > 0) {
+            net.minecraft.nbt.ListTag slotList = new net.minecraft.nbt.ListTag();
+            for (int slot : slots) {
+                slotList.add(net.minecraft.nbt.IntTag.valueOf(slot));
+            }
+            tag.put("EquipmentSlots", slotList);
+        }
         if (orderPlayerUuid != null) {
             tag.putUUID("OrderPlayer", orderPlayerUuid);
         }
@@ -1124,6 +1151,13 @@ public class ShipGirlEntity extends PathfinderMob implements Merchant {
         rapport = Math.max(0, Math.min(MAX_RAPPORT, tag.getInt("Rapport")));
         entityData.set(DATA_RAPPORT, rapport);
         branchMask = tag.getInt("BranchMask");
+        if (tag.contains("EquipmentSlots", Tag.TAG_LIST)) {
+            net.minecraft.nbt.ListTag slotList = tag.getList("EquipmentSlots", Tag.TAG_INT);
+            int len = Math.min(slotList.size(), equipmentSlots.length);
+            for (int i = 0; i < len; i++) {
+                equipmentSlots[i] = slotList.getInt(i);
+            }
+        }
         orderPlayerUuid = tag.hasUUID("OrderPlayer") ? tag.getUUID("OrderPlayer") : null;
         if (tag.contains("OrderHomeX") && tag.contains("OrderHomeY") && tag.contains("OrderHomeZ")) {
             orderHomePos = new BlockPos(

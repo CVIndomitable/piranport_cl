@@ -1,0 +1,6 @@
+{
+  "chapter_id": "chapter_event_goldencatcat",
+  "display_name": "活动关卡 金猫猫",
+  "sort_order": 100,
+  "stages": ["goldencatcat"]
+}

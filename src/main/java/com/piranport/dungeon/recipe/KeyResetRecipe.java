@@ -16,14 +16,13 @@ import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.level.Level;
 
 /**
- * 整合版 §2.2 末段：钥匙重置 = 讲台取出 + 合成栏合成 → 丢失原有信息，重新随机为
- * 相同类型、相同难度的副本。
+ * 整合版 §2.2 末段 + 副本/09 修订：钥匙复制 = 讲台取出 + 合成栏合成 → 保留原有进度，
+ * 仅清除 instanceId，生成一把同类型同进度的新钥匙。
  *
  * <p>本合成配方在合成栏中：1 把 DungeonKeyItem + 任意 1 个材料 → 1 把新 DungeonKeyItem
- * （同 stageId + 同 difficulty，progress 清空，instanceId 移除）。</p>
+ * （同 stageId + 同 progress，instanceId 移除）。</p>
  *
- * <p>注意：当前仅清空 progress 与 instanceId，stageId 保持不变（"同类型"）。
- * difficulty 当前未在 DataComponent 中建模——若未来增加 DUNGEON_DIFFICULTY 组件，本配方需同步保留。</p>
+ * <p>注意：当前保留 stageId 和 progress，仅清除 instanceId（"复制"语义）。</p>
  */
 public class KeyResetRecipe extends CustomRecipe {
 
@@ -66,18 +65,20 @@ public class KeyResetRecipe extends CustomRecipe {
         }
         if (sourceKey.isEmpty()) return ItemStack.EMPTY;
 
-        // 输出：新钥匙（同 stageId、progress 清空、instanceId 移除）
+        // 输出：新钥匙（同 stageId + 同 progress，仅 instanceId 移除 = 复制语义）
         ItemStack result = new ItemStack(sourceKey.getItem());
         String stageId = DungeonKeyItem.getStageId(sourceKey);
         if (!stageId.isEmpty()) {
             result.set(ModDataComponents.DUNGEON_STAGE_ID.get(), stageId);
         }
-        // 整合版 §2.2：progress 清空
-        result.set(ModDataComponents.DUNGEON_PROGRESS.get(), DungeonProgress.EMPTY);
-        // 整合版 §2.2：instanceId 移除（新副本）
-        // （DUNGEON_INSTANCE_ID 不设置则为空，符合"新副本"语义）
+        // 保留原有进度（副本/09：复制合成替代重置）
+        DungeonProgress originalProgress = DungeonKeyItem.getProgress(sourceKey);
+        if (originalProgress != null && !originalProgress.equals(DungeonProgress.EMPTY)) {
+            result.set(ModDataComponents.DUNGEON_PROGRESS.get(), originalProgress);
+        }
+        // instanceId 不设置（新副本）
 
-        PiranPort.LOGGER.info("KeyReset: stageId={} (progress cleared, instanceId removed)",
+        PiranPort.LOGGER.info("KeyCopy: stageId={} (progress preserved, instanceId cleared)",
                 stageId);
         return result;
     }
@@ -97,7 +98,7 @@ public class KeyResetRecipe extends CustomRecipe {
 
     @Override
     public RecipeSerializer<?> getSerializer() {
-        return ModRecipeSerializers.KEY_RESET.get();
+        return ModRecipeSerializers.KEY_COPY.get();
     }
 
     // ===== Serializer =====

@@ -41,6 +41,7 @@ import com.piranport.item.ConfigInspectorItem;
 import com.piranport.item.ArtilleryConfigToolItem;
 import com.piranport.item.DamageControlItem;
 import com.piranport.item.KirinHeadbandItem;
+import com.piranport.item.FireExtinguisherItem;
 import com.piranport.item.RepairKitItem;
 import com.piranport.item.FootballArmorItem;
 import com.piranport.item.GungnirItem;
@@ -96,6 +97,7 @@ public class ModItems {
     public static final DeferredItem<Item> RAW_ALUMINUM = MaterialItems.RAW_ALUMINUM;
     public static final DeferredItem<Item> ALUMINUM_INGOT = MaterialItems.ALUMINUM_INGOT;
     public static final DeferredItem<Item> SALT = MaterialItems.SALT;
+    public static final DeferredItem<Item> DIAMOND = MaterialItems.DIAMOND;
 
     // ===== Ship Cores (extracted to WeaponItems) =====
     public static final DeferredItem<ShipCoreItem> SMALL_SHIP_CORE = WeaponItems.SMALL_SHIP_CORE;
@@ -479,6 +481,7 @@ public class ModItems {
     // ===== 道具 (extracted to SpecialtyItems) =====
     public static final DeferredItem<Item> ELITE_DAMAGE_CONTROL = SpecialtyItems.ELITE_DAMAGE_CONTROL;
     public static final DeferredItem<DamageControlItem> DAMAGE_CONTROL = SpecialtyItems.DAMAGE_CONTROL;
+    public static final DeferredItem<FireExtinguisherItem> FIRE_EXTINGUISHER = SpecialtyItems.FIRE_EXTINGUISHER;
 
     // ===== Quick Repair (extracted to SpecialtyItems) =====
     public static final DeferredItem<com.piranport.item.QuickRepairItem> QUICK_REPAIR = SpecialtyItems.QUICK_REPAIR;

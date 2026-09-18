@@ -28,6 +28,10 @@ tools/unicorn-render/input.png
 tools/unicorn-render/input.webp
 tools/unicorn-render/out/
 tools/unicorn-render/output/
+tools/deepocean-render/out/
+
+# 工具脚本改前的 .bak 备份
+tools/*.bak
 
 # 敏感：SSH 密钥目录（含私钥，禁止入库）
 .ssh-keys/

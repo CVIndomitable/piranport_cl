@@ -27,13 +27,26 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
 public class ReloadFacilityBlock extends BaseEntityBlock {
     public static final MapCodec<ReloadFacilityBlock> CODEC = simpleCodec(ReloadFacilityBlock::new);
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
-    public static final VoxelShape SHAPE = Block.box(0, 0, 0, 16, 16, 16);
+
+    /**
+     * 碰撞/选取形状 = 四条立柱（模型里 4x4 的角柱）。
+     * 模型是"四角立柱 + 顶部横梁的开放龙门吊"，中间是给舰娘站进去的作业区，
+     * 所以碰撞体不能是整个立方体——否则玩家会被挡在门外，站不进中间，
+     * 而模型看起来明明是通的。横梁在 2 格高处，玩家身高 1.8 格会自然从下面穿过。
+     */
+    private static final VoxelShape SHAPE = Shapes.or(
+            Block.box(0, 0, 0, 4, 16, 4),      // 前左柱
+            Block.box(12, 0, 0, 16, 16, 4),    // 前右柱
+            Block.box(0, 0, 12, 4, 16, 16),    // 后左柱
+            Block.box(12, 0, 12, 16, 16, 16)   // 后右柱
+    );
 
     @Override
     public MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }

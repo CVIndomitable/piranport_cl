@@ -194,6 +194,11 @@ public final class DungeonNodeRouter {
                 script.spawnEntities(setup.dungeonLevel());
                 com.piranport.dungeon.script.DungeonScriptManager.get(level.getServer())
                         .start(instance.getInstanceId(), script);
+            } else if ("boss_intro".equals(node.script())) {
+                var script = new com.piranport.dungeon.script.BossIntroScript(
+                        instance, node.nodeId(), displayName, setup.playerUuids(), node.enemies());
+                com.piranport.dungeon.script.DungeonScriptManager.get(level.getServer())
+                        .start(instance.getInstanceId(), script);
             } else {
                 PiranPort.LOGGER.warn("Unknown script: {}", node.script());
                 NodeBattleField.spawnEnemies(setup.dungeonLevel(), instance, node);

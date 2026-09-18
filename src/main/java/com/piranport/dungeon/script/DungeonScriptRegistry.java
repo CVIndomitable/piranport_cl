@@ -28,5 +28,6 @@ public final class DungeonScriptRegistry {
     static {
         register(ArtilleryIntroScript.TYPE_ID, ArtilleryIntroScript::loadFromNbt);
         register(GoldencatcatScript.TYPE_ID, GoldencatcatScript::loadFromNbt);
+        register(BossIntroScript.TYPE_ID, BossIntroScript::loadFromNbt);
     }
 }

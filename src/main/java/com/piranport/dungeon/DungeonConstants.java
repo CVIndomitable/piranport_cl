@@ -52,14 +52,14 @@ public final class DungeonConstants {
     /** Maximum leaderboard entries per stage. */
     public static final int MAX_LEADERBOARD_ENTRIES = 100;
 
-    // ===== Artillery Intro Script =====
+    // ===== Boss Intro Script =====
 
-    /** Looting phase timeout in ticks (60 seconds). */
-    public static final int ARTILLERY_INTRO_LOOTING_TIMEOUT = 60 * 20;
+    /** Boss intro phase timeout in ticks (3 seconds). */
+    public static final int BOSS_INTRO_PHASE_TIMEOUT = 3 * 20;
 
-    /** Distance (blocks) at which looting phase ends. */
-    public static final double ARTILLERY_INTRO_LEAVE_DISTANCE = 20.0;
+    /** Boss battle timeout in ticks (10 minutes). */
+    public static final int BOSS_INTRO_BATTLE_TIMEOUT = 10 * 60 * 20;
 
-    /** Transport plane altitude above sea level. */
-    public static final int TRANSPORT_PLANE_ALTITUDE = 15;
+    /** Defeat delay before outro starts in ticks (3 seconds). */
+    public static final int BOSS_INTRO_DEFEAT_DELAY = 3 * 20;
 }

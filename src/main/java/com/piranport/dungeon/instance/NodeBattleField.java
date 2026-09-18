@@ -6,6 +6,7 @@ import com.piranport.dungeon.data.DungeonRegistry;
 import com.piranport.dungeon.data.EnemySetData;
 import com.piranport.dungeon.data.NodeData;
 import com.piranport.dungeon.data.TerrainType;
+import com.piranport.npc.deepocean.AbstractDeepOceanEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -243,6 +244,57 @@ public final class NodeBattleField {
         BlockPos center = instance.getNodeSpawnPos(node.nodeId());
         int radius = 30; // spawn enemies ~30 blocks from player spawn
 
+        // ===== 副本/15：编队生成器接入 =====
+        FormationGenerator.FormationResult formationResult =
+                FormationGenerator.generateWithFleetGroup(enemySet, center, dungeonLevel);
+        if (formationResult != null) {
+            // 有 formation 配置：按队形生成 + 注册 FleetGroup
+            com.piranport.npc.ai.FleetGroup group = formationResult.group();
+            List<FormationGenerator.SpawnPlan> plans = formationResult.plans();
+            boolean flagshipSpawned = false;
+            for (FormationGenerator.SpawnPlan plan : plans) {
+                Entity entity = plan.entityType().create(dungeonLevel);
+                if (entity != null) {
+                    entity.setPos(plan.position().x, DungeonConstants.SPAWN_Y, plan.position().z);
+                    entity.addTag("dungeon_instance_" + instance.getInstanceId());
+                    entity.addTag("dungeon_node_" + node.nodeId());
+                    if (plan.isLeader()) {
+                        entity.addTag("dungeon_flagship");
+                        flagshipSpawned = true;
+                    }
+                    dungeonLevel.addFreshEntity(entity);
+                    spawned.add(entity);
+                    // 注册到编队
+                    if (entity instanceof AbstractDeepOceanEntity deep) {
+                        com.piranport.npc.ai.FleetGroupManager.get(dungeonLevel)
+                                .addMember(group.getGroupId(), deep.getUUID());
+                    }
+                }
+            }
+            // 设置旗舰为领舰
+            if (!group.getMembers().isEmpty() && group.getLeaderUuid() == null) {
+                for (Entity e : spawned) {
+                    if (e instanceof AbstractDeepOceanEntity deep && e.getTags().contains("dungeon_flagship")) {
+                        group.setLeaderUuid(deep.getUUID());
+                        break;
+                    }
+                }
+            }
+
+            if (enemySet.flagship() != null && !flagshipSpawned) {
+                PiranPort.LOGGER.warn("Formation flagship configured but not spawned — recovery portal");
+                spawnCompletionPortal(dungeonLevel, instance, node.nodeId());
+            } else if (spawned.isEmpty()) {
+                spawnCompletionPortal(dungeonLevel, instance, node.nodeId());
+            }
+
+            if (node.type() == NodeData.NodeType.BOSS && flagshipSpawned) {
+                com.piranport.dungeon.BossAntiStuckScheduler.register(instance, node, spawned);
+            }
+            return spawned;
+        }
+
+        // ===== 原有随机散布逻辑（无 formation 时执行） =====
         // Spawn regular enemies
         var rng = dungeonLevel.getRandom();
         for (EnemySetData.SpawnEntry entry : enemySet.spawnList()) {
@@ -318,7 +370,7 @@ public final class NodeBattleField {
      * as "skip" rather than substituting an untagged fallback entity, since that
      * would never trigger node completion handlers.
      */
-    private static Entity createEntity(ServerLevel level, String entityId) {
+    public static Entity createEntity(ServerLevel level, String entityId) {
         ResourceLocation rl = ResourceLocation.tryParse(entityId);
         if (rl == null) {
             PiranPort.LOGGER.warn("Invalid entity ID: {}", entityId);

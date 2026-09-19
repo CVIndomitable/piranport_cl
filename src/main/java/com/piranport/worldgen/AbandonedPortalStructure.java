@@ -20,28 +20,36 @@ import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConf
 import java.util.UUID;
 
 /**
- * 废弃传送门结构：在世界海洋中自然生成，作为副本教学触点。
+ * 废弃传送门结构：在水面上方自然生成小岛，作为副本教学触点。
  *
- * <p>结构组成（5×4×5）：
+ * <p>结构组成：
  * <ul>
+ *   <li>底部：石砖平台（5×5，贴地）</li>
+ *   <li>岛基：草方块+泥土+圆石堆砌的小岛，高出水面 1~2 格</li>
  *   <li>中心：{@code dungeon_lectern}（讲台），预设教学关卡钥匙（{@code t-1}）</li>
  *   <li>前方：2×3 深渊传送门（{@code abyssal_portal_frame} 框架 + {@code abyssal_portal} 方块）</li>
- *   <li>底部：石砖平台，带苔石/裂纹石砖装饰</li>
  * </ul>
  *
  * <p>策划依据：《副本/09》讲台+钥匙合并模式、《副本/17》野外讲台作为教学触点。
  */
 public class AbandonedPortalStructure extends Feature<NoneFeatureConfiguration> {
 
-    /** 结构尺寸：宽×高×深 */
+    /** 结构宽度（不含岛基） */
     private static final int WIDTH = 5;
+    /** 结构高度（不含岛基） */
     private static final int HEIGHT = 4;
+    /** 结构深度（不含岛基） */
     private static final int DEPTH = 5;
 
-    /** 讲台相对结构原点的偏移 */
+    /** 岛基半径 */
+    private static final int ISLAND_RADIUS = 4;
+    /** 岛基高度（高出水面） */
+    private static final int ISLAND_HEIGHT = 2;
+
+    /** 讲台相对平台原点的偏移 */
     private static final BlockPos LECTERN_OFFSET = new BlockPos(2, 1, 2);
 
-    /** 传送门框架相对讲台的偏移（讲台前方 1 格） */
+    /** 传送门框架相对平台原点的偏移（讲台前方 1 格） */
     private static final BlockPos PORTAL_OFFSET = new BlockPos(2, 1, 3);
 
     public AbandonedPortalStructure() {
@@ -54,33 +62,58 @@ public class AbandonedPortalStructure extends Feature<NoneFeatureConfiguration> 
         BlockPos origin = context.origin();
         RandomSource random = context.random();
 
-        // 找到海床高度
-        int seaFloor = findSeaFloor(level, origin);
-        if (seaFloor < level.getMinBuildHeight() + 1) {
+        // 找到水面高度（从海床向上扫描）
+        int waterLevel = findWaterLevel(level, origin);
+        if (waterLevel <= level.getMinBuildHeight()) {
             return false;
         }
 
-        BlockPos base = new BlockPos(origin.getX(), seaFloor, origin.getZ());
+        // 平台基准高度：水面 + ISLAND_HEIGHT（岛高出水面）
+        int platformBaseY = waterLevel + ISLAND_HEIGHT;
 
-        // 检测是否适合放置（海床不能是空气，上方需要 4 格空间）
-        if (!level.ensureCanWrite(base) || !hasSpace(level, base)) {
+        // 检测上方空间是否足够（结构需要 HEIGHT 格空间）
+        BlockPos platformBase = new BlockPos(origin.getX(), platformBaseY, origin.getZ());
+        if (!level.ensureCanWrite(platformBase) || !hasSpace(level, platformBase)) {
             return false;
         }
+
+        // 生成岛基（草方块+泥土+圆石）
+        placeIsland(level, platformBase, random);
 
         // 放置底部石砖平台
-        placePlatform(level, base, random);
+        placePlatform(level, platformBase, random);
 
         // 放置讲台（带预设钥匙）
-        placeLectern(level, base.offset(LECTERN_OFFSET));
+        placeLectern(level, platformBase.offset(LECTERN_OFFSET));
 
         // 放置传送门（框架 + 传送门方块）
-        placePortal(level, base.offset(PORTAL_OFFSET));
+        placePortal(level, platformBase.offset(PORTAL_OFFSET));
 
         return true;
     }
 
     /**
-     * 在海床位置向上寻找足够空间。
+     * 向上扫描找到第一个非空气且上方是空气的方块（水面高度）。
+     */
+    private static int findWaterLevel(WorldGenLevel level, BlockPos origin) {
+        int x = origin.getX();
+        int z = origin.getZ();
+        int top = level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.OCEAN_FLOOR_WG, x, z);
+        int minY = level.getMinBuildHeight();
+        BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
+        for (int y = Math.min(top, level.getMaxBuildHeight() - 2); y >= minY; y--) {
+            cursor.set(x, y, z);
+            BlockState state = level.getBlockState(cursor);
+            // 水面：当前是水，上方是空气
+            if (state.is(Blocks.WATER) && level.getBlockState(cursor.above()).isAir()) {
+                return y;
+            }
+        }
+        return minY;
+    }
+
+    /**
+     * 检测结构上方是否有足够空间（空气或水）。
      */
     private static boolean hasSpace(WorldGenLevel level, BlockPos base) {
         for (int y = 0; y < HEIGHT; y++) {
@@ -98,24 +131,36 @@ public class AbandonedPortalStructure extends Feature<NoneFeatureConfiguration> 
     }
 
     /**
-     * 找到海床 Y 坐标。
+     * 生成岛基：以平台中心为圆心，ISLAND_RADIUS 为半径，
+     * 用草方块、泥土、圆石堆砌高出水面 ISLAND_HEIGHT 格的小岛。
      */
-    private static int findSeaFloor(WorldGenLevel level, BlockPos origin) {
-        int x = origin.getX();
-        int z = origin.getZ();
-        int top = level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.OCEAN_FLOOR_WG, x, z);
-        int minY = level.getMinBuildHeight() + 1;
-        BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
-        for (int y = Math.min(top, level.getMaxBuildHeight() - 2); y >= minY; y--) {
-            cursor.set(x, y, z);
-            BlockState state = level.getBlockState(cursor);
-            if (!state.isAir()
-                    && !state.getFluidState().is(net.minecraft.tags.FluidTags.WATER)
-                    && level.getFluidState(cursor.above()).is(net.minecraft.tags.FluidTags.WATER)) {
-                return y;
+    private static void placeIsland(WorldGenLevel level, BlockPos platformBase, RandomSource random) {
+        int cx = platformBase.getX() + WIDTH / 2;
+        int cz = platformBase.getZ() + DEPTH / 2;
+        int islandTopY = platformBase.getY() - 1; // 岛基顶部略低于平台
+        int islandBottomY = islandTopY - ISLAND_HEIGHT + 1;
+
+        for (int y = islandBottomY; y <= islandTopY; y++) {
+            // 半径随高度递减，形成锥形
+            int radius = ISLAND_RADIUS - (islandTopY - y);
+            if (radius < 1) radius = 1;
+            for (int dx = -radius; dx <= radius; dx++) {
+                for (int dz = -radius; dz <= radius; dz++) {
+                    if (dx * dx + dz * dz > radius * radius) continue;
+                    BlockPos pos = new BlockPos(cx + dx, y, cz + dz);
+                    if (y == islandTopY) {
+                        // 顶层：草方块（随机少量泥土）
+                        level.setBlock(pos, random.nextFloat() < 0.3f ? Blocks.DIRT.defaultBlockState() : Blocks.GRASS_BLOCK.defaultBlockState(), 2);
+                    } else if (y == islandBottomY) {
+                        // 底层：圆石
+                        level.setBlock(pos, Blocks.COBBLESTONE.defaultBlockState(), 2);
+                    } else {
+                        // 中间层：泥土
+                        level.setBlock(pos, Blocks.DIRT.defaultBlockState(), 2);
+                    }
+                }
             }
         }
-        return minY - 1;
     }
 
     /**

@@ -122,6 +122,22 @@ public class DungeonLecternBlock extends BaseEntityBlock {
                     stageDisplay = stage.displayName();
                 }
             }
+        } else {
+            // instId 为 null：钥匙尚未绑定实例（首次插入），从钥匙的 stageId 回退获取名称
+            com.piranport.dungeon.key.DungeonKeyItem keyItem = null;
+            if (lecternBE.getKeyStack().getItem() instanceof com.piranport.dungeon.key.DungeonKeyItem) {
+                keyItem = (com.piranport.dungeon.key.DungeonKeyItem) lecternBE.getKeyStack().getItem();
+            }
+            if (keyItem != null) {
+                String keyStageId = com.piranport.dungeon.key.DungeonKeyItem.getStageId(lecternBE.getKeyStack());
+                if (!keyStageId.isEmpty()) {
+                    com.piranport.dungeon.data.StageData fallbackStage =
+                            com.piranport.dungeon.data.DungeonRegistry.INSTANCE.getStage(keyStageId);
+                    if (fallbackStage != null) {
+                        stageDisplay = fallbackStage.displayName();
+                    }
+                }
+            }
         }
         net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(serverPlayer,
                 new com.piranport.dungeon.network.OpenContinueScreenPayload(pos, stageDisplay, clearedCount));

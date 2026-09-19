@@ -2,7 +2,7 @@ package com.piranport.npc.deepocean;
 
 import com.piranport.npc.ai.goal.CannonAttackGoal;
 import com.piranport.npc.ai.goal.FleetAlertGoal;
-import com.piranport.npc.ai.goal.FollowLeaderGoal;
+import com.piranport.npc.ai.goal.OrbitTargetGoal;
 import com.piranport.npc.ai.goal.IdleWanderGoal;
 import com.piranport.npc.ai.goal.TorpedoAttackGoal;
 import net.minecraft.world.entity.EntityType;
@@ -36,11 +36,11 @@ public class DeepOceanDestroyerEntity extends AbstractDeepOceanEntity {
 
     @Override
     protected void registerGoals() {
-        this.goalSelector.addGoal(1, new FollowLeaderGoal(this, 0.14));
+        this.goalSelector.addGoal(1, new OrbitTargetGoal(this, 0.14));
         this.goalSelector.addGoal(2, new CannonAttackGoal(this));
         this.goalSelector.addGoal(2, new TorpedoAttackGoal(this));
         this.goalSelector.addGoal(5, new IdleWanderGoal(this, 0.8, 32));
-        this.goalSelector.addGoal(6, new FleetAlertGoal(this));
+        this.goalSelector.addGoal(4, new FleetAlertGoal(this));
         this.targetSelector.addGoal(1, new NearestAttackableTargetGoal<>(this, Player.class, true));
         this.targetSelector.addGoal(2, new HurtByTargetGoal(this, AbstractDeepOceanEntity.class));
     }

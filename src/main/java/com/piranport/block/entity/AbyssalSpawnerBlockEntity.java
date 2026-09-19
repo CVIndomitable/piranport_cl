@@ -92,7 +92,9 @@ public class AbyssalSpawnerBlockEntity extends BlockEntity {
 
             double offsetX = (level.random.nextDouble() - 0.5) * 4.0;
             double offsetZ = (level.random.nextDouble() - 0.5) * 4.0;
-            entity.setPos(pos.getX() + 0.5 + offsetX, pos.getY() + 0.5, pos.getZ() + 0.5 + offsetZ);
+            // 敌舰直接在附近水面高度生成，避免从海底缓慢上浮
+            double spawnY = serverLevel.getSeaLevel() - 1.0 + level.random.nextDouble() * 2.0;
+            entity.setPos(pos.getX() + 0.5 + offsetX, spawnY, pos.getZ() + 0.5 + offsetZ);
 
             if (entity instanceof AbstractDeepOceanEntity abyssal) {
                 abyssal.setFleetGroupId(cluster);

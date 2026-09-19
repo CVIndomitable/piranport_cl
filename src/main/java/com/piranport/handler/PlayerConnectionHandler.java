@@ -55,15 +55,54 @@ public class PlayerConnectionHandler {
                 break;
             }
         }
-        if (foundSlot < 0) return;
 
-        inv.getItem(foundSlot).shrink(1);
+        com.piranport.debug.PiranPortDebug.event(
+            "EliteDamageControl | entity={} isPlayer={} foundSlot={} eventCanceledBefore={}",
+            event.getEntity().getUUID(),
+            event.getEntity() instanceof ServerPlayer,
+            foundSlot,
+            event.isCanceled()
+        );
+
+        if (foundSlot < 0) {
+            com.piranport.debug.PiranPortDebug.event("EliteDamageControl | 未找到精英损管，死亡继续");
+            return;
+        }
+
+        // 消耗损管
+        ItemStack stack = inv.getItem(foundSlot);
+        stack.shrink(1);
+        com.piranport.debug.PiranPortDebug.event(
+            "EliteDamageControl | 消耗损管 slot={} 剩余={}",
+            foundSlot,
+            inv.getItem(foundSlot).getCount()
+        );
+
+        // 取消死亡事件
         event.setCanceled(true);
+        com.piranport.debug.PiranPortDebug.event(
+            "EliteDamageControl | 事件已取消，health={} maxHealth={}",
+            player.getHealth(),
+            player.getMaxHealth()
+        );
+
+        // 恢复至1血
         player.setHealth(1.0f);
+        com.piranport.debug.PiranPortDebug.event("EliteDamageControl | 已设置health=1");
+
+        // 添加效果包
         player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 600, 1));
         player.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 600, 0));
         player.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 120, 1));
+        com.piranport.debug.PiranPortDebug.event("EliteDamageControl | 已添加效果包");
+
+        // 播放图腾动画
         player.level().broadcastEntityEvent(player, (byte) 35);
+        com.piranport.debug.PiranPortDebug.event(
+            "EliteDamageControl | 图腾动画已广播，最终health={} isDead={}",
+            player.getHealth(),
+            player.isDeadOrDying()
+        );
     }
 
     /** 玩家死亡时召回所有战机 */

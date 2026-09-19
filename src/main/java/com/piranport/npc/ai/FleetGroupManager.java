@@ -2,17 +2,21 @@ package com.piranport.npc.ai;
 
 import com.piranport.PiranPort;
 import com.piranport.npc.deepocean.AbstractDeepOceanEntity;
-import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtUtils;
 import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.world.phys.Vec3;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -23,6 +27,7 @@ import java.util.UUID;
  * - Members notify the manager when they discover a target.
  * - Members are removed on death/unload.
  * - Empty groups are cleaned up lazily.
+ * - Leader succession: when the leader dies, the next member in the ordered list becomes the new leader.
  */
 public class FleetGroupManager extends SavedData {
     private static final String DATA_NAME = "piranport_fleet_groups";
@@ -73,12 +78,26 @@ public class FleetGroupManager extends SavedData {
     }
 
     /**
-     * Remove an entity from a group. Destroys the group if empty.
+     * Remove an entity from a group. Handles leader succession.
+     * If the removed entity was the leader, the next member in the ordered list becomes the new leader.
+     * Destroys the group if empty.
      */
     public void removeMember(UUID groupId, UUID entityUuid) {
         FleetGroup group = groups.get(groupId);
         if (group != null) {
+            UUID leaderBefore = group.getLeaderUuid();
             group.removeMember(entityUuid);
+            // 领舰递补：若移除的是领舰且编队仍有成员，下一顺位递补
+            if (entityUuid.equals(leaderBefore) && !group.isEmpty()) {
+                UUID newLeader = group.getMembers().stream()
+                        .filter(uuid -> !uuid.equals(entityUuid))
+                        .findFirst()
+                        .orElse(null);
+                if (newLeader != null) {
+                    group.setLeaderUuid(newLeader);
+                    PiranPort.LOGGER.info("FleetGroup {}: leader succession — new leader is {}", groupId, newLeader);
+                }
+            }
             if (group.isEmpty()) {
                 groups.remove(groupId);
             }
@@ -170,7 +189,7 @@ public class FleetGroupManager extends SavedData {
     // --- SavedData ---
 
     @Override
-    public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
+    public CompoundTag save(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries) {
         ListTag groupList = new ListTag();
         for (FleetGroup group : groups.values()) {
             groupList.add(group.save());
@@ -179,7 +198,7 @@ public class FleetGroupManager extends SavedData {
         return tag;
     }
 
-    public static FleetGroupManager load(CompoundTag tag, HolderLookup.Provider registries) {
+    public static FleetGroupManager load(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries) {
         FleetGroupManager mgr = new FleetGroupManager();
         ListTag groupList = tag.getList("Groups", Tag.TAG_COMPOUND);
         for (int i = 0; i < groupList.size(); i++) {

@@ -6,6 +6,7 @@ import com.piranport.dungeon.data.NodeData;
 import com.piranport.dungeon.data.StageData;
 import com.piranport.dungeon.instance.DungeonInstance;
 import com.piranport.dungeon.instance.DungeonInstanceManager;
+import com.piranport.dungeon.instance.NodeBattleField;
 import com.piranport.dungeon.key.DungeonKeyItem;
 import com.piranport.dungeon.network.DungeonResultPayload;
 import com.piranport.dungeon.network.PlayerDiedInDungeonPayload;
@@ -250,9 +251,48 @@ public class DungeonEventHandler {
                                          StageData stage) {
         MinecraftServer server = dungeonLevel.getServer();
         DungeonInstanceManager mgr = DungeonInstanceManager.get(dungeonLevel);
+        DungeonSavedData savedData = DungeonSavedData.get(dungeonLevel);
+        // 副本排行榜废弃（2026-09-16）：提交排行榜逻辑已禁用
+        // DungeonLeaderboard leaderboard = DungeonLeaderboard.get(dungeonLevel);
+
+        long endTime = System.currentTimeMillis();
+        long elapsed = endTime - instance.getStartTimeMillis();
         if (!mgr.completeInstance(instance.getInstanceId())) return;
         // 结算保留现场供玩家自行离开；脚本调度器看到 COMPLETED 后自行移除，
         // 避免脚本正在遍历时回调删除当前 Map 条目。
+
+        // Process each player
+        for (UUID playerUuid : instance.getPlayerUuids()) {
+            ServerPlayer player = server.getPlayerList().getPlayer(playerUuid);
+            if (player == null) continue;
+
+            boolean isFirstClear = !savedData.hasFirstCleared(stage.stageId(), playerUuid);
+
+            List<String> rewardNames = new ArrayList<>();
+            if (isFirstClear) {
+                savedData.markFirstCleared(stage.stageId(), playerUuid);
+                for (NodeData.RewardEntry reward : stage.firstClearRewards()) {
+                    RewardDispatcher.give(player, reward, rewardNames);
+                }
+            }
+
+            // Submit to leaderboard — 已禁用
+            // leaderboard.submit(stage.stageId(), playerUuid,
+            //         player.getGameProfile().getName(), elapsed);
+
+            // Teleport back
+            teleportToLectern(player, instance);
+
+            // Send result screen
+            PacketDistributor.sendToPlayer(player,
+                    new DungeonResultPayload(stage.displayName(), elapsed,
+                            isFirstClear, rewardNames));
+        }
+
+        // Cleanup instance
+        NodeBattleField.cleanupRegion(dungeonLevel, instance);
+        mgr.cleanupInstance(instance.getInstanceId());
+        DungeonScriptManager.get(server).remove(instance.getInstanceId());
     }
 
     // ===== Utility Methods =====

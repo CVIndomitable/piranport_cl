@@ -306,7 +306,8 @@ public class ModBlocks {
                             .mapColor(MapColor.METAL)
                             .strength(3.5f, 6.0f)
                             .requiresCorrectToolForDrops()
-                            .sound(SoundType.METAL)));
+                            .sound(SoundType.METAL)
+                            .noOcclusion()));
 
     public static final DeferredBlock<BlueprintChestBlock> BLUEPRINT_CHEST =
             BLOCKS.register("blueprint_chest", () -> new BlueprintChestBlock(

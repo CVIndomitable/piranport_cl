@@ -12,225 +12,1185 @@
   "elements": [
     {
       "__note": "桌腿：西北角",
-      "from": [1, 0, 1],
-      "to": [3, 10, 3],
+      "from": [
+        1,
+        0,
+        1
+      ],
+      "to": [
+        3,
+        10,
+        3
+      ],
       "faces": {
-        "down":  { "uv": [0, 0, 2, 2], "texture": "#wood" },
-        "up":    { "uv": [0, 0, 2, 2], "texture": "#wood" },
-        "north": { "uv": [0, 6, 2, 16], "texture": "#wood" },
-        "south": { "uv": [0, 6, 2, 16], "texture": "#wood" },
-        "west":  { "uv": [0, 6, 2, 16], "texture": "#wood" },
-        "east":  { "uv": [0, 6, 2, 16], "texture": "#wood" }
+        "down": {
+          "uv": [
+            0,
+            0,
+            2,
+            2
+          ],
+          "texture": "#wood"
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            2,
+            2
+          ],
+          "texture": "#wood"
+        },
+        "north": {
+          "uv": [
+            0,
+            6,
+            2,
+            16
+          ],
+          "texture": "#wood"
+        },
+        "south": {
+          "uv": [
+            0,
+            6,
+            2,
+            16
+          ],
+          "texture": "#wood"
+        },
+        "west": {
+          "uv": [
+            0,
+            6,
+            2,
+            16
+          ],
+          "texture": "#wood"
+        },
+        "east": {
+          "uv": [
+            0,
+            6,
+            2,
+            16
+          ],
+          "texture": "#wood"
+        }
       }
     },
     {
       "__note": "桌腿：东北角",
-      "from": [13, 0, 1],
-      "to": [15, 10, 3],
+      "from": [
+        13,
+        0,
+        1
+      ],
+      "to": [
+        15,
+        10,
+        3
+      ],
       "faces": {
-        "down":  { "uv": [0, 0, 2, 2], "texture": "#wood" },
-        "up":    { "uv": [0, 0, 2, 2], "texture": "#wood" },
-        "north": { "uv": [0, 6, 2, 16], "texture": "#wood" },
-        "south": { "uv": [0, 6, 2, 16], "texture": "#wood" },
-        "west":  { "uv": [0, 6, 2, 16], "texture": "#wood" },
-        "east":  { "uv": [0, 6, 2, 16], "texture": "#wood" }
+        "down": {
+          "uv": [
+            0,
+            0,
+            2,
+            2
+          ],
+          "texture": "#wood"
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            2,
+            2
+          ],
+          "texture": "#wood"
+        },
+        "north": {
+          "uv": [
+            0,
+            6,
+            2,
+            16
+          ],
+          "texture": "#wood"
+        },
+        "south": {
+          "uv": [
+            0,
+            6,
+            2,
+            16
+          ],
+          "texture": "#wood"
+        },
+        "west": {
+          "uv": [
+            0,
+            6,
+            2,
+            16
+          ],
+          "texture": "#wood"
+        },
+        "east": {
+          "uv": [
+            0,
+            6,
+            2,
+            16
+          ],
+          "texture": "#wood"
+        }
       }
     },
     {
       "__note": "桌腿：西南角。比北侧两根矮 0.2，因为炮管从这里伸出去，视觉上要压住炮口",
-      "from": [1, 0, 13],
-      "to": [3, 9.8, 15],
+      "from": [
+        1,
+        0,
+        13
+      ],
+      "to": [
+        3,
+        9.8,
+        15
+      ],
       "faces": {
-        "down":  { "uv": [0, 0, 2, 2], "texture": "#wood" },
-        "up":    { "uv": [0, 0, 2, 2], "texture": "#wood" },
-        "north": { "uv": [0, 6, 2, 16], "texture": "#wood" },
-        "south": { "uv": [0, 6, 2, 16], "texture": "#wood" },
-        "west":  { "uv": [0, 6, 2, 16], "texture": "#wood" },
-        "east":  { "uv": [0, 6, 2, 16], "texture": "#wood" }
+        "down": {
+          "uv": [
+            0,
+            0,
+            2,
+            2
+          ],
+          "texture": "#wood"
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            2,
+            2
+          ],
+          "texture": "#wood"
+        },
+        "north": {
+          "uv": [
+            0,
+            6,
+            2,
+            16
+          ],
+          "texture": "#wood"
+        },
+        "south": {
+          "uv": [
+            0,
+            6,
+            2,
+            16
+          ],
+          "texture": "#wood"
+        },
+        "west": {
+          "uv": [
+            0,
+            6,
+            2,
+            16
+          ],
+          "texture": "#wood"
+        },
+        "east": {
+          "uv": [
+            0,
+            6,
+            2,
+            16
+          ],
+          "texture": "#wood"
+        }
       }
     },
     {
       "__note": "桌腿：东南角",
-      "from": [13, 0, 13],
-      "to": [15, 9.8, 15],
+      "from": [
+        13,
+        0,
+        13
+      ],
+      "to": [
+        15,
+        9.8,
+        15
+      ],
       "faces": {
-        "down":  { "uv": [0, 0, 2, 2], "texture": "#wood" },
-        "up":    { "uv": [0, 0, 2, 2], "texture": "#wood" },
-        "north": { "uv": [0, 6, 2, 16], "texture": "#wood" },
-        "south": { "uv": [0, 6, 2, 16], "texture": "#wood" },
-        "west":  { "uv": [0, 6, 2, 16], "texture": "#wood" },
-        "east":  { "uv": [0, 6, 2, 16], "texture": "#wood" }
+        "down": {
+          "uv": [
+            0,
+            0,
+            2,
+            2
+          ],
+          "texture": "#wood"
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            2,
+            2
+          ],
+          "texture": "#wood"
+        },
+        "north": {
+          "uv": [
+            0,
+            6,
+            2,
+            16
+          ],
+          "texture": "#wood"
+        },
+        "south": {
+          "uv": [
+            0,
+            6,
+            2,
+            16
+          ],
+          "texture": "#wood"
+        },
+        "west": {
+          "uv": [
+            0,
+            6,
+            2,
+            16
+          ],
+          "texture": "#wood"
+        },
+        "east": {
+          "uv": [
+            0,
+            6,
+            2,
+            16
+          ],
+          "texture": "#wood"
+        }
       }
     },
     {
       "__note": "炮座底盘：座圈落在桌下地面上，比炮塔宽一圈，压住整座炮",
-      "from": [2, 0, 3],
-      "to": [14, 1, 15],
+      "from": [
+        2,
+        0,
+        3
+      ],
+      "to": [
+        14,
+        1,
+        15
+      ],
       "faces": {
-        "down":  { "uv": [0, 0, 12, 12], "texture": "#steel" },
-        "up":    { "uv": [2, 2, 14, 14], "texture": "#steel" },
-        "north": { "uv": [2, 0, 14, 1], "texture": "#steel" },
-        "south": { "uv": [2, 0, 14, 1], "texture": "#steel" },
-        "west":  { "uv": [3, 0, 15, 1], "texture": "#steel" },
-        "east":  { "uv": [3, 0, 15, 1], "texture": "#steel" }
+        "down": {
+          "uv": [
+            0,
+            0,
+            12,
+            12
+          ],
+          "texture": "#steel"
+        },
+        "up": {
+          "uv": [
+            2,
+            2,
+            14,
+            14
+          ],
+          "texture": "#steel"
+        },
+        "north": {
+          "uv": [
+            2,
+            0,
+            14,
+            1
+          ],
+          "texture": "#steel"
+        },
+        "south": {
+          "uv": [
+            2,
+            0,
+            14,
+            1
+          ],
+          "texture": "#steel"
+        },
+        "west": {
+          "uv": [
+            3,
+            0,
+            15,
+            1
+          ],
+          "texture": "#steel"
+        },
+        "east": {
+          "uv": [
+            3,
+            0,
+            15,
+            1
+          ],
+          "texture": "#steel"
+        }
       }
     },
     {
       "__note": "炮塔座圈：1..3 高度的圆柱感底座，比炮塔窄一点，让炮塔像架在上面",
-      "from": [3, 1, 4],
-      "to": [13, 3, 14],
+      "from": [
+        3,
+        1,
+        4
+      ],
+      "to": [
+        13,
+        3,
+        14
+      ],
       "faces": {
-        "down":  { "uv": [0, 0, 10, 10], "texture": "#steel" },
-        "up":    { "uv": [3, 3, 13, 13], "texture": "#steel" },
-        "north": { "uv": [3, 0, 13, 2], "texture": "#steel" },
-        "south": { "uv": [3, 0, 13, 2], "texture": "#steel" },
-        "west":  { "uv": [4, 0, 14, 2], "texture": "#steel" },
-        "east":  { "uv": [4, 0, 14, 2], "texture": "#steel" }
+        "down": {
+          "uv": [
+            0,
+            0,
+            10,
+            10
+          ],
+          "texture": "#steel"
+        },
+        "up": {
+          "uv": [
+            3,
+            3,
+            13,
+            13
+          ],
+          "texture": "#steel"
+        },
+        "north": {
+          "uv": [
+            3,
+            0,
+            13,
+            2
+          ],
+          "texture": "#steel"
+        },
+        "south": {
+          "uv": [
+            3,
+            0,
+            13,
+            2
+          ],
+          "texture": "#steel"
+        },
+        "west": {
+          "uv": [
+            4,
+            0,
+            14,
+            2
+          ],
+          "texture": "#steel"
+        },
+        "east": {
+          "uv": [
+            4,
+            0,
+            14,
+            2
+          ],
+          "texture": "#steel"
+        }
       }
     },
     {
       "__note": "主炮炮塔本体：正面(north)朝观察者，贴 gun 纹理。宽 3..13 居中，避开两侧桌腿的遮挡",
-      "from": [3, 3, 6],
-      "to": [13, 8, 12],
+      "from": [
+        3,
+        3,
+        6
+      ],
+      "to": [
+        13,
+        8,
+        12
+      ],
       "shade": true,
       "faces": {
-        "down":  { "uv": [3, 4, 13, 10], "texture": "#steel" },
-        "up":    { "uv": [3, 6, 13, 12], "texture": "#steel" },
-        "north": { "uv": [3, 5, 13, 10], "texture": "#gun" },
-        "south": { "uv": [3, 5, 13, 10], "texture": "#steel" },
-        "west":  { "uv": [6, 5, 12, 10], "texture": "#gun" },
-        "east":  { "uv": [6, 5, 12, 10], "texture": "#gun" }
+        "down": {
+          "uv": [
+            3,
+            4,
+            13,
+            10
+          ],
+          "texture": "#steel"
+        },
+        "up": {
+          "uv": [
+            3,
+            6,
+            13,
+            12
+          ],
+          "texture": "#steel"
+        },
+        "north": {
+          "uv": [
+            3,
+            5,
+            13,
+            10
+          ],
+          "texture": "#gun"
+        },
+        "south": {
+          "uv": [
+            3,
+            5,
+            13,
+            10
+          ],
+          "texture": "#steel"
+        },
+        "west": {
+          "uv": [
+            6,
+            5,
+            12,
+            10
+          ],
+          "texture": "#gun"
+        },
+        "east": {
+          "uv": [
+            6,
+            5,
+            12,
+            10
+          ],
+          "texture": "#gun"
+        }
       }
     },
     {
       "__note": "炮塔顶盖：5..6 高度压薄一层，比炮塔外扩 0.5，做出顶板的台阶",
-      "from": [2.5, 8, 4.5],
-      "to": [13.5, 9, 12.5],
+      "from": [
+        2.5,
+        8,
+        4.5
+      ],
+      "to": [
+        13.5,
+        9,
+        12.5
+      ],
       "faces": {
-        "down":  { "uv": [2, 4, 13, 12], "texture": "#steel" },
-        "up":    { "uv": [2, 4, 13, 12], "texture": "#steel" },
-        "north": { "uv": [2, 4, 13, 5], "texture": "#gun" },
-        "south": { "uv": [2, 4, 13, 5], "texture": "#steel" },
-        "west":  { "uv": [4, 4, 12, 5], "texture": "#steel" },
-        "east":  { "uv": [4, 4, 12, 5], "texture": "#steel" }
+        "down": {
+          "uv": [
+            2,
+            4,
+            13,
+            12
+          ],
+          "texture": "#steel"
+        },
+        "up": {
+          "uv": [
+            2,
+            4,
+            13,
+            12
+          ],
+          "texture": "#steel"
+        },
+        "north": {
+          "uv": [
+            2,
+            4,
+            13,
+            5
+          ],
+          "texture": "#gun"
+        },
+        "south": {
+          "uv": [
+            2,
+            4,
+            13,
+            5
+          ],
+          "texture": "#steel"
+        },
+        "west": {
+          "uv": [
+            4,
+            4,
+            12,
+            5
+          ],
+          "texture": "#steel"
+        },
+        "east": {
+          "uv": [
+            4,
+            4,
+            12,
+            5
+          ],
+          "texture": "#steel"
+        }
       }
     },
     {
       "__note": "主炮炮管：从炮塔正面斜插出去，穿出桌子南侧。rotation 绕 z 轴 -8° 做出仰角",
-      "from": [6.5, 6, 7],
-      "to": [9.5, 8, 15.5],
-      "rotation": { "origin": [8, 7, 7], "axis": "z", "angle": 0 },
+      "from": [
+        6.5,
+        6,
+        7
+      ],
+      "to": [
+        9.5,
+        8,
+        15.5
+      ],
+      "rotation": {
+        "origin": [
+          8,
+          7,
+          7
+        ],
+        "axis": "z",
+        "angle": 0
+      },
       "faces": {
-        "down":  { "uv": [0, 0, 3, 8], "texture": "#steel" },
-        "up":    { "uv": [0, 0, 3, 8], "texture": "#steel" },
-        "north": { "uv": [0, 0, 3, 2], "texture": "#steel" },
-        "south": { "uv": [0, 6, 3, 8], "texture": "#gun" },
-        "west":  { "uv": [0, 0, 8, 2], "texture": "#steel" },
-        "east":  { "uv": [0, 0, 8, 2], "texture": "#steel" }
+        "down": {
+          "uv": [
+            0,
+            0,
+            3,
+            8
+          ],
+          "texture": "#steel"
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            3,
+            8
+          ],
+          "texture": "#steel"
+        },
+        "north": {
+          "uv": [
+            0,
+            0,
+            3,
+            2
+          ],
+          "texture": "#steel"
+        },
+        "south": {
+          "uv": [
+            0,
+            6,
+            3,
+            8
+          ],
+          "texture": "#gun"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            8,
+            2
+          ],
+          "texture": "#steel"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            8,
+            2
+          ],
+          "texture": "#steel"
+        }
       }
     },
     {
-      "__note": "炮口制退器：炮管最前端加粗一圈，让炮口读得出来",
-      "from": [6, 5.6, 15.5],
-      "to": [10, 8.4, 16.6],
+      "__note": "炮口制退器：炮管最前端加粗一圈，让炮口读得出来。收回方块边界内 (z<=16)，避免侵入相邻方块导致渲染透视",
+      "from": [
+        6,
+        5.6,
+        15.5
+      ],
+      "to": [
+        10,
+        8.4,
+        16
+      ],
       "faces": {
-        "down":  { "uv": [0, 0, 4, 1], "texture": "#steel" },
-        "up":    { "uv": [0, 0, 4, 1], "texture": "#steel" },
-        "north": { "uv": [0, 0, 4, 1], "texture": "#steel" },
-        "south": { "uv": [0, 0, 4, 1], "texture": "#gun" },
-        "west":  { "uv": [0, 0, 1, 3], "texture": "#steel" },
-        "east":  { "uv": [0, 0, 1, 3], "texture": "#steel" }
+        "down": {
+          "uv": [
+            0,
+            0,
+            4,
+            1
+          ],
+          "texture": "#steel"
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            4,
+            1
+          ],
+          "texture": "#steel"
+        },
+        "north": {
+          "uv": [
+            0,
+            0,
+            4,
+            1
+          ],
+          "texture": "#steel"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            4,
+            1
+          ],
+          "texture": "#gun"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            1,
+            3
+          ],
+          "texture": "#steel"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            1,
+            3
+          ],
+          "texture": "#steel"
+        }
       }
     },
     {
-      "__note": "桌面：10..12 高度，一整块 16x16 并四周出檐 0.5，盖住下面的炮塔",
-      "from": [-0.5, 10, -0.5],
-      "to": [16.5, 12, 16.5],
+      "__note": "桌面：10..12 高度，紧贴方块边界 [0,16] 不留出檐。原出檐 0.5 会侵入相邻方块碰撞体，导致透视，已收回",
+      "from": [
+        0,
+        10,
+        0
+      ],
+      "to": [
+        16,
+        12,
+        16
+      ],
       "faces": {
-        "down":  { "uv": [0, 0, 16, 16], "texture": "#wood" },
-        "up":    { "uv": [0, 0, 16, 16], "texture": "#wood" },
-        "north": { "uv": [0, 14, 16, 16], "texture": "#wood" },
-        "south": { "uv": [0, 14, 16, 16], "texture": "#wood" },
-        "west":  { "uv": [0, 14, 16, 16], "texture": "#wood" },
-        "east":  { "uv": [0, 14, 16, 16], "texture": "#wood" }
+        "down": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#wood"
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#wood"
+        },
+        "north": {
+          "uv": [
+            0,
+            14,
+            16,
+            16
+          ],
+          "texture": "#wood"
+        },
+        "south": {
+          "uv": [
+            0,
+            14,
+            16,
+            16
+          ],
+          "texture": "#wood"
+        },
+        "west": {
+          "uv": [
+            0,
+            14,
+            16,
+            16
+          ],
+          "texture": "#wood"
+        },
+        "east": {
+          "uv": [
+            0,
+            14,
+            16,
+            16
+          ],
+          "texture": "#wood"
+        }
       }
     },
     {
-      "__note": "桌面下的加强梁：贴桌板底面往后 1 格，四条腿之间连成框，避免桌子看着悬浮",
-      "from": [1, 9, 1],
-      "to": [15, 10, 3],
+      "__note": "桌面：10..12 高度，紧贴方块边界 [0,16] 不留出檐。原出檐 0.5 会侵入相邻方块碰撞体，导致透视，已收回",
+      "from": [
+        1,
+        9,
+        1
+      ],
+      "to": [
+        15,
+        10,
+        3
+      ],
       "faces": {
-        "down":  { "uv": [0, 0, 14, 2], "texture": "#wood" },
-        "up":    { "uv": [0, 0, 14, 2], "texture": "#wood" },
-        "north": { "uv": [0, 8, 14, 9], "texture": "#wood" },
-        "south": { "uv": [0, 8, 14, 9], "texture": "#wood" },
-        "west":  { "uv": [0, 8, 2, 9], "texture": "#wood" },
-        "east":  { "uv": [0, 8, 2, 9], "texture": "#wood" }
+        "down": {
+          "uv": [
+            0,
+            0,
+            14,
+            2
+          ],
+          "texture": "#wood"
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            14,
+            2
+          ],
+          "texture": "#wood"
+        },
+        "north": {
+          "uv": [
+            0,
+            8,
+            14,
+            9
+          ],
+          "texture": "#wood"
+        },
+        "south": {
+          "uv": [
+            0,
+            8,
+            14,
+            9
+          ],
+          "texture": "#wood"
+        },
+        "west": {
+          "uv": [
+            0,
+            8,
+            2,
+            9
+          ],
+          "texture": "#wood"
+        },
+        "east": {
+          "uv": [
+            0,
+            8,
+            2,
+            9
+          ],
+          "texture": "#wood"
+        }
       }
     },
     {
-      "__note": "桌面下的加强梁：南侧一根，位置比北侧低 1 格，避开炮管穿出的高度",
-      "from": [1, 8.6, 13],
-      "to": [15, 9.6, 15],
+      "__note": "桌面：10..12 高度，紧贴方块边界 [0,16] 不留出檐。原出檐 0.5 会侵入相邻方块碰撞体，导致透视，已收回",
+      "from": [
+        1,
+        8.6,
+        13
+      ],
+      "to": [
+        15,
+        9.6,
+        15
+      ],
       "faces": {
-        "down":  { "uv": [0, 0, 14, 2], "texture": "#wood" },
-        "up":    { "uv": [0, 0, 14, 2], "texture": "#wood" },
-        "north": { "uv": [0, 8, 14, 9], "texture": "#wood" },
-        "south": { "uv": [0, 8, 14, 9], "texture": "#wood" },
-        "west":  { "uv": [0, 8, 2, 9], "texture": "#wood" },
-        "east":  { "uv": [0, 8, 2, 9], "texture": "#wood" }
+        "down": {
+          "uv": [
+            0,
+            0,
+            14,
+            2
+          ],
+          "texture": "#wood"
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            14,
+            2
+          ],
+          "texture": "#wood"
+        },
+        "north": {
+          "uv": [
+            0,
+            8,
+            14,
+            9
+          ],
+          "texture": "#wood"
+        },
+        "south": {
+          "uv": [
+            0,
+            8,
+            14,
+            9
+          ],
+          "texture": "#wood"
+        },
+        "west": {
+          "uv": [
+            0,
+            8,
+            2,
+            9
+          ],
+          "texture": "#wood"
+        },
+        "east": {
+          "uv": [
+            0,
+            8,
+            2,
+            9
+          ],
+          "texture": "#wood"
+        }
       }
     },
     {
-      "__note": "蓝图：摊在桌面上的图纸，z 偏移抬 0.06 避免和桌面共面闪烁。偏北部一点，给南边的炮口留视觉空间",
-      "from": [2.5, 12.06, 2],
-      "to": [13.5, 12.12, 11],
+      "__note": "桌面：10..12 高度，紧贴方块边界 [0,16] 不留出檐。原出檐 0.5 会侵入相邻方块碰撞体，导致透视，已收回",
+      "from": [
+        2.5,
+        12.06,
+        2
+      ],
+      "to": [
+        13.5,
+        12.12,
+        11
+      ],
       "faces": {
-        "down":  { "uv": [0, 0, 11, 9], "texture": "#blueprint" },
-        "up":    { "uv": [0, 0, 11, 9], "texture": "#blueprint" },
-        "north": { "uv": [0, 8, 11, 9], "texture": "#blueprint" },
-        "south": { "uv": [0, 0, 11, 1], "texture": "#blueprint" },
-        "west":  { "uv": [0, 0, 9, 1], "texture": "#blueprint" },
-        "east":  { "uv": [0, 0, 9, 1], "texture": "#blueprint" }
+        "down": {
+          "uv": [
+            0,
+            0,
+            11,
+            9
+          ],
+          "texture": "#blueprint"
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            11,
+            9
+          ],
+          "texture": "#blueprint"
+        },
+        "north": {
+          "uv": [
+            0,
+            8,
+            11,
+            9
+          ],
+          "texture": "#blueprint"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            11,
+            1
+          ],
+          "texture": "#blueprint"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            9,
+            1
+          ],
+          "texture": "#blueprint"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            9,
+            1
+          ],
+          "texture": "#blueprint"
+        }
       }
     },
     {
       "__note": "图纸镇纸：西北角压住蓝图的一块配重铁",
-      "from": [2.2, 12.12, 1.7],
-      "to": [4.4, 13, 3.9],
+      "from": [
+        2.2,
+        12.12,
+        1.7
+      ],
+      "to": [
+        4.4,
+        13,
+        3.9
+      ],
       "faces": {
-        "down":  { "uv": [0, 0, 2, 2], "texture": "#steel" },
-        "up":    { "uv": [0, 0, 2, 2], "texture": "#steel" },
-        "north": { "uv": [0, 0, 2, 2], "texture": "#steel" },
-        "south": { "uv": [0, 0, 2, 2], "texture": "#steel" },
-        "west":  { "uv": [0, 0, 2, 2], "texture": "#steel" },
-        "east":  { "uv": [0, 0, 2, 2], "texture": "#steel" }
+        "down": {
+          "uv": [
+            0,
+            0,
+            2,
+            2
+          ],
+          "texture": "#steel"
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            2,
+            2
+          ],
+          "texture": "#steel"
+        },
+        "north": {
+          "uv": [
+            0,
+            0,
+            2,
+            2
+          ],
+          "texture": "#steel"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            2,
+            2
+          ],
+          "texture": "#steel"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            2,
+            2
+          ],
+          "texture": "#steel"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            2,
+            2
+          ],
+          "texture": "#steel"
+        }
       }
     },
     {
       "__note": "图纸镇纸：东南角一块，和西北角对角压住",
-      "from": [11.6, 12.12, 9.1],
-      "to": [13.8, 13, 11.3],
+      "from": [
+        11.6,
+        12.12,
+        9.1
+      ],
+      "to": [
+        13.8,
+        13,
+        11.3
+      ],
       "faces": {
-        "down":  { "uv": [0, 0, 2, 2], "texture": "#steel" },
-        "up":    { "uv": [0, 0, 2, 2], "texture": "#steel" },
-        "north": { "uv": [0, 0, 2, 2], "texture": "#steel" },
-        "south": { "uv": [0, 0, 2, 2], "texture": "#steel" },
-        "west":  { "uv": [0, 0, 2, 2], "texture": "#steel" },
-        "east":  { "uv": [0, 0, 2, 2], "texture": "#steel" }
+        "down": {
+          "uv": [
+            0,
+            0,
+            2,
+            2
+          ],
+          "texture": "#steel"
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            2,
+            2
+          ],
+          "texture": "#steel"
+        },
+        "north": {
+          "uv": [
+            0,
+            0,
+            2,
+            2
+          ],
+          "texture": "#steel"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            2,
+            2
+          ],
+          "texture": "#steel"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            2,
+            2
+          ],
+          "texture": "#steel"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            2,
+            2
+          ],
+          "texture": "#steel"
+        }
       }
     },
     {
       "__note": "桌上的炮座零件：一枚立起来的炮塔座圈备件，横截面上能看到炮口盖纹理",
-      "from": [10.5, 12, 4.2],
-      "to": [13, 14.2, 6.7],
+      "from": [
+        10.5,
+        12,
+        4.2
+      ],
+      "to": [
+        13,
+        14.2,
+        6.7
+      ],
       "faces": {
-        "down":  { "uv": [0, 0, 3, 3], "texture": "#steel" },
-        "up":    { "uv": [0, 0, 3, 3], "texture": "#gun" },
-        "north": { "uv": [0, 0, 3, 3], "texture": "#steel" },
-        "south": { "uv": [0, 0, 3, 3], "texture": "#steel" },
-        "west":  { "uv": [0, 0, 3, 3], "texture": "#steel" },
-        "east":  { "uv": [0, 0, 3, 3], "texture": "#steel" }
+        "down": {
+          "uv": [
+            0,
+            0,
+            3,
+            3
+          ],
+          "texture": "#steel"
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            3,
+            3
+          ],
+          "texture": "#gun"
+        },
+        "north": {
+          "uv": [
+            0,
+            0,
+            3,
+            3
+          ],
+          "texture": "#steel"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            3,
+            3
+          ],
+          "texture": "#steel"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            3,
+            3
+          ],
+          "texture": "#steel"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            3,
+            3
+          ],
+          "texture": "#steel"
+        }
       }
     }
   ]

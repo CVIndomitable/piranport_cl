@@ -55,10 +55,11 @@ public final class TerrainGenerationState extends SavedData {
     public void nextPhase() {
         cursor = 0;
         phase = switch (phase) {
-            case BASE -> Phase.BOUNDARY;
+            case BASE -> Phase.FEATURES;
             case FEATURES -> Phase.POI;
-            case POI -> Phase.READY;
-            case BOUNDARY, READY -> Phase.READY;
+            case POI -> Phase.BOUNDARY;
+            case BOUNDARY -> Phase.READY;
+            case READY -> Phase.READY;
         };
         setDirty();
     }

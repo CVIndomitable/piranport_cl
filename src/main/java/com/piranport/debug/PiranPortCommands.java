@@ -433,7 +433,7 @@ public final class PiranPortCommands {
                     target.getY() + target.getBbHeight() + 1.0,
                     target.getZ());
 
-            AircraftEntity aircraft = AircraftEntity.createAutonomous(level, spawnPos, b25Stack, null);
+            AircraftEntity aircraft = AircraftEntity.createAutonomous(level, spawnPos, b25Stack, null, null);
             level.addFreshEntity(aircraft);
             launched++;
         }

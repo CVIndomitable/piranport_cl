@@ -175,6 +175,8 @@ public class AircraftEntity extends Entity {
     Vec3 homePosition = Vec3.ZERO;
     @Nullable private Vec3 lastHorizontalDir = null; // previous tick's horizontal direction for turn radius
     @Nullable LivingEntity autonomousTarget = null;
+    // NPC 航母发射的飞机：持有者对（甲板容量回收用）
+    @Nullable private AbstractDeepOceanEntity aircraftOwner;
 
     private static final int MAX_AIRTIME_TICKS = 12000;
     private static final double MIN_DIST_FROM_OWNER = 48.0;
@@ -291,11 +293,14 @@ public class AircraftEntity extends Entity {
      * Factory for autonomous aircraft (no player owner).
      * Used by debug commands to spawn aircraft from non-player entities (e.g. floating targets).
      */
-    public static AircraftEntity createAutonomous(Level level, Vec3 spawnPos, ItemStack aircraftStack, @Nullable LivingEntity target) {
+    public static AircraftEntity createAutonomous(Level level, Vec3 spawnPos, ItemStack aircraftStack,
+                                                  @Nullable LivingEntity target,
+                                                  @Nullable AbstractDeepOceanEntity aircraftOwner) {
         AircraftEntity entity = new AircraftEntity(ModEntityTypes.AIRCRAFT_ENTITY.get(), level);
         entity.autonomous = true;
         entity.homePosition = spawnPos;
         entity.autonomousTarget = target;
+        entity.aircraftOwner = aircraftOwner;
 
         AircraftInfo info;
         try {
@@ -1558,9 +1563,15 @@ public class AircraftEntity extends Entity {
     @Override
     public void onRemovedFromLevel() {
         super.onRemovedFromLevel();
-        if (!level().isClientSide() && ownerUUID != null) {
-            com.piranport.aviation.AircraftIndex.remove(ownerUUID, this);
-            indexRegistered = false;
+        if (!level().isClientSide()) {
+            if (ownerUUID != null) {
+                com.piranport.aviation.AircraftIndex.remove(ownerUUID, this);
+                indexRegistered = false;
+            }
+            // Notify NPC carrier that this aircraft has been returned or destroyed
+            if (aircraftOwner != null && !aircraftOwner.isRemoved()) {
+                aircraftOwner.onAircraftReturned();
+            }
         }
     }
 

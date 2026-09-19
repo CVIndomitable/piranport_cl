@@ -1,30 +1,27 @@
 package com.piranport.npc.ai.goal;
 
-import com.piranport.entity.DeepOceanProjectileEntity;
-import com.piranport.network.AircraftLaunchPosePayload;
 import com.piranport.npc.deepocean.AbstractDeepOceanEntity;
+import com.piranport.network.AircraftLaunchPosePayload;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.goal.Goal;
-import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.EnumSet;
 
 /**
- * Carrier-specific goal: simulates air strikes against the target using parabolic projectiles.
- * Respects deck capacity and readying interval.
+ * Carrier-specific goal: launches real {@link com.piranport.entity.AircraftEntity} instances
+ * that autonomously seek and attack targets, then return to the carrier when fuel runs out.
+ *
+ * <p>Deck capacity is enforced via {@link AbstractDeepOceanEntity#spawnAircraft()}.</p>
  */
 public class AircraftLaunchGoal extends Goal {
 
     private final AbstractDeepOceanEntity mob;
     private int readyCooldown = 0;
 
-    private static final int READY_INTERVAL = 300; // 15 seconds
-    private static final int INITIAL_DELAY = 100;
-    private static final float STRIKE_DAMAGE = 12.0f;
-    private static final float STRIKE_EXPLOSION = 2.0f;
-    private static final int SALVO_SIZE = 3;
+    private static final int READY_INTERVAL = 300; // 15 seconds between launches
+    private static final int INITIAL_DELAY = 100;  // 5 seconds before first launch
 
     public AircraftLaunchGoal(AbstractDeepOceanEntity mob) {
         this.mob = mob;
@@ -52,44 +49,26 @@ public class AircraftLaunchGoal extends Goal {
         }
 
         LivingEntity target = mob.getTarget();
-        if (target == null) return;
+        if (target == null || !target.isAlive()) return;
 
-        launchAirStrike(target);
+        launchAircraft(target);
         readyCooldown = READY_INTERVAL;
     }
 
-    private void launchAirStrike(LivingEntity target) {
+    private void launchAircraft(LivingEntity target) {
         if (mob.level().isClientSide()) return;
+        if (!(mob.level() instanceof ServerLevel serverLevel)) return;
 
-        Vec3 launchPos = mob.position().add(0, 2.0, 0);
-        Vec3 toTarget = target.position().subtract(launchPos);
-        double dist = toTarget.horizontalDistance();
-        if (mob.level() instanceof ServerLevel serverLevel) {
-            double radius = serverLevel.getServer().getPlayerList().getSimulationDistance() * 16.0;
-            PacketDistributor.sendToPlayersNear(
-                    serverLevel,
-                    null,
-                    mob.getX(), mob.getY(), mob.getZ(),
-                    Math.max(48.0, radius),
-                    new AircraftLaunchPosePayload(mob.getId(), 0, 22));
-        }
+        // Send launch pose animation to nearby clients
+        double radius = serverLevel.getServer().getPlayerList().getSimulationDistance() * 16.0;
+        PacketDistributor.sendToPlayersNear(
+                serverLevel,
+                null,
+                mob.getX(), mob.getY(), mob.getZ(),
+                Math.max(48.0, radius),
+                new AircraftLaunchPosePayload(mob.getId(), 0, 22));
 
-        for (int i = 0; i < SALVO_SIZE; i++) {
-            DeepOceanProjectileEntity proj = new DeepOceanProjectileEntity(
-                    mob.level(), mob, STRIKE_DAMAGE, STRIKE_EXPLOSION,
-                    DeepOceanProjectileEntity.BallisticType.PARABOLIC);
-            proj.setPos(launchPos.x, launchPos.y, launchPos.z);
-
-            double speed = 1.2;
-            double arcHeight = Math.min(dist * 0.15, 8.0);
-            Vec3 dir = toTarget.normalize();
-            double spread = (i - 1) * 0.1;
-            proj.setDeltaMovement(
-                    dir.x * speed + spread,
-                    arcHeight * 0.3 + 0.5,
-                    dir.z * speed + spread);
-
-            mob.level().addFreshEntity(proj);
-        }
+        // Spawn the actual aircraft entity (deck capacity is enforced inside spawnAircraft)
+        mob.spawnAircraft();
     }
 }

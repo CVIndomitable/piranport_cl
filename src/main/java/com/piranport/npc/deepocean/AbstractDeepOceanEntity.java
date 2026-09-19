@@ -1,9 +1,12 @@
 package com.piranport.npc.deepocean;
 
+import com.piranport.component.AircraftInfo;
+import com.piranport.entity.AircraftEntity;
 import com.piranport.npc.ai.FleetGroup;
 import com.piranport.npc.ai.FleetGroupManager;
 import com.piranport.dungeon.saved.DungeonSavedData;
 import com.piranport.item.KeyFragmentItem;
+import com.piranport.registry.ModDataComponents;
 import com.piranport.registry.ModItems;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -50,6 +53,11 @@ public abstract class AbstractDeepOceanEntity extends Monster {
     private int sinkingTicks = 0;
     private static final int SINKING_DURATION = 40; // 2 seconds
     private boolean isSinking = false;
+
+    // --- Aircraft launch tracking ---
+    @Nullable
+    private AbstractDeepOceanEntity aircraftOwner;
+    private int currentAircraft = 0;
 
     protected AbstractDeepOceanEntity(EntityType<? extends AbstractDeepOceanEntity> type, Level level) {
         super(type, level);
@@ -455,6 +463,82 @@ public abstract class AbstractDeepOceanEntity extends Monster {
     public int getMaxAircraft() {
         DeepOceanEntityData d = getJsonData();
         return d != null ? d.maxAircraft() : 0;
+    }
+
+    // --- Aircraft spawn ---
+
+    /**
+     * 放飞一架舰载机（仅限航母/轻母调用）。
+     * 若甲板已满（currentAircraft >= getMaxAircraft()）则静默跳过。
+     * 飞机以自主模式生成，自动寻找攻击目标。
+     */
+    public void spawnAircraft() {
+        if (level().isClientSide()) return;
+        if (!canLaunchAircraft()) return;
+        if (currentAircraft >= getMaxAircraft()) return;
+        if (!(level() instanceof ServerLevel sl)) return;
+        if (sl.getServer() == null) return;
+
+        // 选择飞机类型：轻母全战斗机，航母前半战斗机后半俯冲轰炸机
+        AircraftInfo.AircraftType type;
+        if (this instanceof DeepOceanLightCarrierEntity) {
+            type = AircraftInfo.AircraftType.FIGHTER;
+        } else {
+            type = currentAircraft < getMaxAircraft() / 2
+                    ? AircraftInfo.AircraftType.FIGHTER
+                    : AircraftInfo.AircraftType.DIVE_BOMBER;
+        }
+
+        DeferredItem<?> itemReg;
+        switch (type) {
+            case FIGHTER:          itemReg = ModItems.FIGHTER_SQUADRON;         break;
+            case DIVE_BOMBER:      itemReg = ModItems.DIVE_BOMBER_SQUADRON;     break;
+            case TORPEDO_BOMBER:   itemReg = ModItems.SWORDFISH_TORPEDO;        break;
+            case LEVEL_BOMBER:     itemReg = ModItems.B25_BOMBER;               break;
+            case ASW:              itemReg = ModItems.SWORDFISH_ASW;            break;
+            case RECON:            itemReg = ModItems.RECON_SQUADRON;           break;
+            case ROCKET_FIGHTER:   itemReg = ModItems.F6F_HELLCAT_ROCKET;       break;
+            default:               itemReg = ModItems.FIGHTER_SQUADRON;         break;
+        }
+        ItemStack stack = new ItemStack(itemReg.get());
+
+        // 填满燃料（玩家航母放飞机需要先加燃料，这里直接给满）
+        AircraftInfo info = stack.get(ModDataComponents.AIRCRAFT_INFO.get());
+        if (info != null) {
+            stack.set(ModDataComponents.AIRCRAFT_INFO.get(), info.withCurrentFuel(info.fuelCapacity()));
+        }
+
+        // 在舰娘前方生成，朝向目标
+        Vec3 spawnPos;
+        LivingEntity target = getTarget();
+        if (target != null && target.isAlive()) {
+            double dx = target.getX() - getX();
+            double dz = target.getZ() - getZ();
+            double dist = Math.sqrt(dx * dx + dz * dz);
+            if (dist > 0.01) {
+                double nx = dx / dist;
+                double nz = dz / dist;
+                spawnPos = new Vec3(getX() + nx * 1.5, getY() + 3.0, getZ() + nz * 1.5);
+            } else {
+                spawnPos = new Vec3(getX(), getY() + 3.0, getZ() + 1.5);
+            }
+        } else {
+            spawnPos = new Vec3(getX(), getY() + 3.0, getZ() + 1.5);
+        }
+
+        AircraftEntity aircraft = AircraftEntity.createAutonomous(level(), spawnPos, stack, target, this);
+        sl.addFreshEntity(aircraft);
+        aircraftOwner = this;
+        currentAircraft++;
+    }
+
+    /**
+     * 一架飞机已落地/被击落，回收甲板槽位。
+     * 由 AircraftEntity.onRemovedFromLevel 在飞机移除时调用。
+     */
+    public void onAircraftReturned() {
+        if (currentAircraft > 0) currentAircraft--;
+        aircraftOwner = null;
     }
 
     // --- Glowing & Persistence ---

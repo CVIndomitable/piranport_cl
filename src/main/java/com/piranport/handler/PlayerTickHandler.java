@@ -505,7 +505,8 @@ public class PlayerTickHandler {
                         .min(Comparator.comparingDouble(player::distanceTo))
                         .orElse(null);
                 if (nearest != null) {
-                    FireControlManager.lock(player.getUUID(), nearest.getUUID());
+                    // 自动火控只追加，不替换玩家用 O 积累的目标列表
+                    FireControlManager.addTarget(player.getUUID(), nearest.getUUID());
                 }
             }
         }

@@ -2,6 +2,7 @@ package com.piranport.entity;
 
 import com.piranport.PiranPort;
 import com.piranport.aviation.FireControlManager;
+import com.piranport.npc.deepocean.AbstractDeepOceanEntity;
 import net.minecraft.core.registries.BuiltInRegistries;
 import com.piranport.aviation.ReconManager;
 import com.piranport.component.AircraftAttackMode;

@@ -331,7 +331,7 @@ public class TorpedoEntity extends ThrowableItemProjectile {
         return true;
     }
 
-    /** 水面贴合 AI */
+    /** 水下航行 AI：鱼雷保持入水深度航行，不再上浮到水面 */
     private void tickSurfaceAI() {
         Vec3 motion = getDeltaMovement();
         BlockPos pos = blockPosition();
@@ -353,9 +353,9 @@ public class TorpedoEntity extends ThrowableItemProjectile {
             if (currentH > 0.001) {
                 double dirX = motion.x / currentH;
                 double dirZ = motion.z / currentH;
-                setDeltaMovement(dirX * torpedoSpeed, motion.y + 0.04, dirZ * torpedoSpeed);
+                setDeltaMovement(dirX * torpedoSpeed, motion.y, dirZ * torpedoSpeed);
             } else {
-                setDeltaMovement(motion.x, motion.y + 0.04, motion.z);
+                setDeltaMovement(motion.x, motion.y, motion.z);
             }
         } else {
             setDeltaMovement(motion.x * 0.70, motion.y - 0.25, motion.z * 0.70);

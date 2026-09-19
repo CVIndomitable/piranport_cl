@@ -38,7 +38,7 @@ public class ModEntityTypes {
     public static final DeferredHolder<EntityType<?>, EntityType<TorpedoEntity>>
             TORPEDO_ENTITY = ENTITY_TYPES.register("torpedo_entity",
             () -> EntityType.Builder.<TorpedoEntity>of(TorpedoEntity::new, MobCategory.MISC)
-                    .sized(0.5f, 0.25f)
+                    .sized(0.5f, 0.75f)
                     .clientTrackingRange(8)
                     .updateInterval(3)
                     .build("piranport:torpedo_entity"));

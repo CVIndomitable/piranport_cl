@@ -18,7 +18,8 @@ import net.minecraft.resources.ResourceLocation;
  * 鱼雷实体模型（发射后航行中的外观），替代原先的物品图标渲染。
  *
  * 轴向约定：雷头朝 -Z，雷尾螺旋桨朝 +Z，原点在雷体正中，
- * 长度 20px（1.25 格）、直径 4px（0.25 格），与实体碰撞箱 0.5x0.25 相称。
+ * 长度 20px（1.25 格）、直径 4px（0.25 格），碰撞箱 0.5x0.75（宽度 x 高度），
+ * 高度向水上延伸以在水下触及目标。与实体碰撞箱相称。
  * 朝向换算见 {@link com.piranport.client.TorpedoRenderer}。
  *
  * 贴图 UV 布局由 tools/make_torpedo_texture.py 的 BOXES 表定义，

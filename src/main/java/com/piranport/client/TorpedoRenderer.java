@@ -63,6 +63,8 @@ public class TorpedoRenderer extends EntityRenderer<TorpedoEntity> {
         }
 
         poseStack.pushPose();
+        // 模型视觉缩放 0.75，使鱼雷看起来更短更紧凑
+        poseStack.scale(0.75f, 0.75f, 0.75f);
         poseStack.mulPose(Axis.YP.rotationDegrees(180.0f - yaw));
         // 原版实体模型靠 scale(-1,-1,1) 把 Y 轴翻过去，所以 xRot 直接当转角用；
         // 本模型没做翻转（自然 Y 轴朝上），转角要取反，与 AircraftRenderer 的 -pitch 同理

@@ -276,6 +276,8 @@ public final class NodeBattleField {
             if (node.type() == NodeData.NodeType.BOSS && flagshipSpawned) {
                 com.piranport.dungeon.BossAntiStuckScheduler.register(instance, node, spawned);
             }
+            com.piranport.dungeon.saved.DungeonObjectiveData.get(dungeonLevel)
+                    .register(instance.getInstanceId(), node.nodeId(), spawned);
             return spawned;
         }
 
@@ -336,6 +338,8 @@ public final class NodeBattleField {
             com.piranport.dungeon.BossAntiStuckScheduler.register(instance, node, spawned);
         }
 
+        com.piranport.dungeon.saved.DungeonObjectiveData.get(dungeonLevel)
+                .register(instance.getInstanceId(), node.nodeId(), spawned);
         return spawned;
     }
 

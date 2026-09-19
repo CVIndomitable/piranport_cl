@@ -211,11 +211,9 @@ public class DungeonEventHandler {
 
     // ===== Portal Completion =====
 
-    /**
-     * Called when all players have entered the portal after clearing a node.
-     */
-    public static void onPortalComplete(ServerLevel dungeonLevel, DungeonInstance instance,
-                                         String nodeId) {
+    /** 真实胜利判定的唯一节点完成入口；奖励和结算界面在此立即处理。 */
+    public static void onNodeCompleted(ServerLevel dungeonLevel, DungeonInstance instance,
+                                       String nodeId) {
         StageData stage = DungeonRegistry.INSTANCE.getStage(instance.getStageId());
         if (stage == null) return;
 
@@ -223,80 +221,38 @@ public class DungeonEventHandler {
         if (node == null) return;
 
         DungeonInstanceManager manager = DungeonInstanceManager.get(dungeonLevel);
-        ItemStack key = readKeyFromLectern(instance, dungeonLevel.getServer());
-        if (!manager.markNodeCleared(instance.getInstanceId(), nodeId, key)) return;
+        if (!manager.markNodeCleared(instance.getInstanceId(), nodeId,
+                readKeyFromLectern(instance, dungeonLevel.getServer()))) return;
         markLecternChanged(instance, dungeonLevel.getServer());
+        boolean completes = node.type() == NodeData.NodeType.BOSS
+                && stage.bossNodes().stream().allMatch(instance.getClearedNodes()::contains);
+        DungeonSettlementService.settleNode(dungeonLevel, instance, stage, node, completes);
+        if (completes) completeDungeon(dungeonLevel, instance, stage);
+    }
 
-        // 任意节点完成都即时发放该节点奖励，并向每位在线参与者展示结算。
-        DungeonSettlementService.settleNode(dungeonLevel.getServer(), instance, stage, node);
-
-        // Spawn loot ships for killed enemies (simplified: spawn one at portal location)
-        // In a full implementation, this would track each killed enemy
-
-        // Check if this was a boss node and all boss nodes are cleared
-        if (node.type() == NodeData.NodeType.BOSS) {
-            boolean allBossesCleared = stage.bossNodes().stream()
-                    .allMatch(bossNode -> instance.getClearedNodes().contains(bossNode));
-
-            if (allBossesCleared) {
-                // Dungeon complete!
-                completeDungeon(dungeonLevel, instance, stage);
-                return;
-            }
+    /** 传送门只负责离开/推进；它不能把节点标记完成或再次结算。 */
+    public static void onPortalComplete(ServerLevel dungeonLevel, DungeonInstance instance,
+                                         String nodeId) {
+        if (instance.getClearedNodes().contains(nodeId)) {
+            teleportAllPlayersToLectern(dungeonLevel.getServer(), instance);
         }
+    }
 
-        // Return players to the lectern to select next node via book
-        teleportAllPlayersToLectern(dungeonLevel.getServer(), instance);
+    /** 已完成节点的出口按玩家独立使用，不把其他成员从战场强制传走。 */
+    public static void onPortalEntered(ServerPlayer player, DungeonInstance instance, String nodeId) {
+        if (instance.getClearedNodes().contains(nodeId)
+                && DungeonInstanceManager.get(player.serverLevel()).getInstanceForPlayer(player) == instance) {
+            teleportToLectern(player, instance);
+        }
     }
 
     private static void completeDungeon(ServerLevel dungeonLevel, DungeonInstance instance,
                                          StageData stage) {
         MinecraftServer server = dungeonLevel.getServer();
         DungeonInstanceManager mgr = DungeonInstanceManager.get(dungeonLevel);
-        DungeonSavedData savedData = DungeonSavedData.get(dungeonLevel);
-
-        // 完成状态是一次性的结算边界，重复传送门回调不能再次发放奖励。
         if (!mgr.completeInstance(instance.getInstanceId())) return;
-        long elapsed = instance.getEndTimeMillis() - instance.getStartTimeMillis();
-
-        // Process each player
-        for (UUID playerUuid : instance.getPlayerUuids()) {
-            ServerPlayer player = server.getPlayerList().getPlayer(playerUuid);
-            if (player == null || mgr.getInstanceForPlayer(player) != instance) continue;
-
-            boolean isFirstClear = !savedData.hasFirstCleared(stage.stageId(), playerUuid);
-
-            List<String> rewardNames = new ArrayList<>();
-            if (isFirstClear) {
-                savedData.markFirstCleared(stage.stageId(), playerUuid);
-                // 首通记录使用原版进度系统，结算页仅展示奖励，不再额外显示印章。
-                ModAdvancements.award(player, "dungeon/first_clear");
-                for (NodeData.RewardEntry reward : stage.firstClearRewards()) {
-                    RewardDispatcher.give(player, reward, rewardNames);
-                }
-
-                // 章节通关纪念章：解析 stageId 中的章节号（如 "chapter_1" → 1）
-                int chapterNum = parseChapterFromStageId(stage.stageId());
-                if (chapterNum > 0) {
-                    giveDeployMedal(player, chapterNum);
-                }
-            }
-
-            // 副本/16：排行榜废弃——DungeonLeaderboard.submit 调用已移除（2026-09-17），
-            // DungeonLeaderboard 类保留（代码保留、功能关闭），不再写入任何条目。
-
-            // Teleport back
-            teleportToLectern(player, instance);
-
-            // Send result screen
-            PacketDistributor.sendToPlayer(player,
-                    new DungeonResultPayload(stage.displayName(), elapsed,
-                            isFirstClear, rewardNames));
-        }
-
-        // 副本/00、17：使用过的钥匙进度永不擦除，完成后保留区域与实例供回访。
-        // 仅移除已结束的剧情调度，不清空怪物、宝箱状态，也不复用此实例的区域索引。
-        DungeonScriptManager.get(server).remove(instance.getInstanceId());
+        // 结算保留现场供玩家自行离开；脚本调度器看到 COMPLETED 后自行移除，
+        // 避免脚本正在遍历时回调删除当前 Map 条目。
     }
 
     // ===== Utility Methods =====

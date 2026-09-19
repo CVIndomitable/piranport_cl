@@ -4,8 +4,12 @@ import com.piranport.dungeon.block.DungeonLecternBlockEntity;
 import com.piranport.dungeon.data.CheckpointData;
 import com.piranport.dungeon.data.DungeonRegistry;
 import com.piranport.dungeon.data.StageData;
+import com.piranport.dungeon.data.NodeData;
+import net.minecraft.server.level.ServerLevel;
 import com.piranport.dungeon.instance.DungeonInstance;
 import com.piranport.dungeon.instance.DungeonInstanceManager;
+import com.piranport.dungeon.instance.TerrainEntryQueue;
+import com.piranport.dungeon.instance.TerrainGenerationPipeline;
 import com.piranport.dungeon.key.DungeonKeyItem;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
@@ -50,6 +54,16 @@ public final class DungeonEntryService {
         instance.addPlayer(player.getUUID());
         manager.syncKey(instance, key);
         manager.setDirty();
+
+        ServerLevel dungeonLevel = DungeonEventHandler.getDungeonLevel(player.server);
+        NodeData requested = stage.nodes().get(nodeId);
+        // 地形是入口的前置条件：只登记实例钥匙，不登记节点和传送玩家。
+        if (dungeonLevel == null || requested == null) return;
+        if (!instance.hasEnteredNode(nodeId)
+                && !TerrainGenerationPipeline.isReady(dungeonLevel, instance, requested)) {
+            TerrainEntryQueue.get(player.server).enqueue(player, lecternPos, nodeId, fromCheckpoint);
+            return;
+        }
 
         if (checkpoint != null) {
             float yaw = switch (checkpoint.facing()) {

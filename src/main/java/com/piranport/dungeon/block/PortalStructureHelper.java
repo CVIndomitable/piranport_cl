@@ -169,6 +169,14 @@ public class PortalStructureHelper {
             return null;
         }
 
+        // 此入口由已满足胜利条件的战斗/脚本调用；发奖不依赖玩家是否碰到出口。
+        var instance = com.piranport.dungeon.instance.DungeonInstanceManager.get(level).getInstance(instanceId);
+        if (instance == null) return null;
+        com.piranport.dungeon.event.DungeonEventHandler.onNodeCompleted(level, instance, nodeId);
+        var portal = com.piranport.dungeon.entity.DungeonPortalEntity.create(level, instanceId, nodeId,
+                cornerPos.getX() + .5, cornerPos.getY() + 1, cornerPos.getZ() + .5);
+        if (portal != null) level.addFreshEntity(portal);
+
         // We need to determine the facing direction. Since we don't have a facing parameter,
         // we'll try all horizontal directions and pick the one that works.
         for (Direction facing : Direction.Plane.HORIZONTAL) {

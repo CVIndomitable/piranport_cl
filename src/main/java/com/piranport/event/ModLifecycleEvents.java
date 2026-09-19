@@ -8,6 +8,8 @@ import com.piranport.block.entity.StoneMillBlockEntity;
 import com.piranport.block.entity.YubariWaterBucketBlockEntity;
 import com.piranport.entity.FloatingTargetEntity;
 import com.piranport.entity.LowTierDestroyerEntity;
+import com.piranport.entity.GoldencatcatEntity;
+import com.piranport.npc.deepocean.DeepOceanBossEntity;
 import com.piranport.npc.deepocean.DeepOceanBattleCruiserEntity;
 import com.piranport.npc.deepocean.DeepOceanBattleshipEntity;
 import com.piranport.npc.deepocean.DeepOceanCarrierEntity;
@@ -99,5 +101,10 @@ public class ModLifecycleEvents {
         // 舰娘 NPC
         event.put(ModEntityTypes.SHIP_GIRL.get(),
                 ShipGirlEntity.createAttributes().build());
+        // 副本 Boss 与活动训练靶也必须注册属性，否则实体可生成但客户端会报无属性。
+        event.put(ModEntityTypes.DEEP_OCEAN_BOSS.get(),
+                DeepOceanBossEntity.createAttributes().build());
+        event.put(ModEntityTypes.GOLDENCATCAT.get(),
+                GoldencatcatEntity.createAttributes().build());
     }
 }

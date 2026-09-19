@@ -8,13 +8,14 @@ import com.piranport.dungeon.data.NodeData;
 import com.piranport.dungeon.data.TerrainType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.saveddata.SavedData;
+import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 
 
 /**
@@ -33,50 +34,71 @@ public final class TerrainGenerationPipeline {
     private TerrainGenerationPipeline() {}
 
     public static TerrainGenerationState state(ServerLevel level, DungeonInstance instance, NodeData node) {
-        // 地形属于整个 512×512 实例地图，而非 128×128 节点；同一实例的后续节点调用复用这份状态。
         String key = "piranport_terrain_" + instance.getInstanceId().toString().replace('-', '_');
+        if (node != null) {
+            key += "_node_" + UUID.nameUUIDFromBytes(node.nodeId().getBytes(StandardCharsets.UTF_8))
+                    .toString().replace('-', '_');
+        }
         return level.getDataStorage().computeIfAbsent(
                 new SavedData.Factory<>(TerrainGenerationState::new, TerrainGenerationState::load, null), key);
     }
 
     /** 开始或继续生成；返回 true 仅表示本节点全部方块已准备好。 */
     public static boolean tick(ServerLevel level, DungeonInstance instance, NodeData node) {
-        TerrainGenerationState state = state(level, instance, node);
-        if (!state.initialized()) {
-            BlockPos spawn = instance.getNodeSpawnPos(node.nodeId());
-            TerrainType terrain = node.terrainType() == null ? TerrainType.T1_OCEAN : node.terrainType();
-            long seed = instance.getInstanceId().getMostSignificantBits() ^ instance.getInstanceId().getLeastSignificantBits()
-                    ^ node.nodeId().hashCode() * 31L;
-            state.initialize(instance.getUsableMinX(), instance.getUsableMinZ(), seed, terrain.ordinal());
-        }
-        int budget = BLOCKS_PER_TICK;
-        while (budget > 0 && state.phase() != TerrainGenerationState.Phase.READY) {
-            int used = switch (state.phase()) {
-                case BASE -> processBase(level, state, budget);
-                case FEATURES -> processFeatures(level, state, budget);
-                case POI -> processPoi(level, instance, node, state, budget);
-                case BOUNDARY -> processBoundary(level, state, budget);
+        TerrainWorkBudget budget = TerrainWorkBudget.get(level);
+        int granted = budget.reserve(level.getServer().getTickCount(), BLOCKS_PER_TICK);
+        int used = advance(level, instance, node, granted);
+        budget.release(granted - used);
+        return isReady(level, instance, node);
+    }
+
+    /** 调度器提供额度；共享基底和该节点特征都完成后才放行。每个写入占一个额度。 */
+    public static int advance(ServerLevel level, DungeonInstance instance, NodeData node, int budget) {
+        if (budget <= 0) return 0;
+        long seed = instance.getInstanceId().getMostSignificantBits() ^ instance.getInstanceId().getLeastSignificantBits();
+        TerrainGenerationState base = state(level, instance, null);
+        base.initialize(instance.getUsableMinX(), instance.getUsableMinZ(), seed, 0);
+        TerrainGenerationState local = state(level, instance, node);
+        BlockPos spawn = instance.getNodeSpawnPos(node.nodeId());
+        TerrainType terrain = node.terrainType() == null ? TerrainType.T1_OCEAN : node.terrainType();
+        local.initializeNode(spawn.getX(), spawn.getZ(), seed ^ node.nodeId().hashCode() * 31L, terrain.ordinal());
+        int remaining = budget;
+        while (remaining > 0) {
+            TerrainGenerationState active = base.phase() == TerrainGenerationState.Phase.READY ? local : base;
+            if (active.phase() == TerrainGenerationState.Phase.READY) break;
+            int used = switch (active.phase()) {
+                case BASE -> processBase(level, active, remaining);
+                case FEATURES -> processFeatures(level, active, remaining);
+                case POI -> processPoi(level, instance, node, active, remaining);
+                case BOUNDARY -> processBoundary(level, active, remaining);
                 case READY -> 0;
             };
-            if (used <= 0) break;
-            budget -= used;
+            remaining -= used;
         }
-        return state.phase() == TerrainGenerationState.Phase.READY;
+        return budget - remaining;
     }
 
     public static boolean isReady(ServerLevel level, DungeonInstance instance, NodeData node) {
-        return state(level, instance, node).phase() == TerrainGenerationState.Phase.READY;
+        return state(level, instance, null).phase() == TerrainGenerationState.Phase.READY
+                && state(level, instance, node).phase() == TerrainGenerationState.Phase.READY;
     }
 
     /** 当前持久化队列尚需写入的近似方块数，入口可用于调试或进度提示。 */
     public static long queuedBlocks(ServerLevel level, DungeonInstance instance, NodeData node) {
-        TerrainGenerationState state = state(level, instance, node);
-        return switch (state.phase()) {
-            case BASE -> (long) MAP_SIZE * MAP_SIZE * (MAX_DEPTH + 1) - state.cursor();
-            case FEATURES -> Math.max(0, featureCount(TerrainType.values()[state.terrainOrdinal()]) - state.cursor());
-            case POI -> Math.max(0, 26 + checkpointCount(instance, node) - state.cursor());
-            case BOUNDARY -> Math.max(0, (long) MAP_SIZE * 4 * (MAX_DEPTH + 7) - state.cursor());
-            case READY -> 0;
+        TerrainGenerationState base = state(level, instance, null);
+        TerrainGenerationState local = state(level, instance, node);
+        long boundary = (long) MAP_SIZE * 4 * (MAX_DEPTH + 7);
+        long shared = switch (base.phase()) {
+            case BASE -> Math.max(0, (long) MAP_SIZE * MAP_SIZE * (MAX_DEPTH + 1) - base.cursor()) + boundary;
+            case BOUNDARY -> Math.max(0, boundary - base.cursor());
+            default -> 0;
+        };
+        long features = featureCount(node.terrainType() == null ? TerrainType.T1_OCEAN : node.terrainType());
+        long poi = 75 + 28 * checkpointCount(instance, node);
+        return shared + switch (local.phase()) {
+            case BASE, FEATURES -> Math.max(0, features - local.cursor()) + poi;
+            case POI -> Math.max(0, poi - local.cursor());
+            default -> 0;
         };
     }
 
@@ -104,7 +126,7 @@ public final class TerrainGenerationPipeline {
         long total = featureCount(terrain);
         if (total == 0) {
             state.nextPhase();
-            return 1;
+            return 0;
         }
         int used = (int) Math.min(total - state.cursor(), budget);
         for (int i = 0; i < used; i++) placeFeature(level, state, terrain, state.cursor() + i);
@@ -115,26 +137,34 @@ public final class TerrainGenerationPipeline {
 
     private static int processPoi(ServerLevel level, DungeonInstance instance, NodeData node,
                                   TerrainGenerationState state, int budget) {
-        long total = 26L + checkpointCount(instance, node);
+        long total = 75L + 28 * checkpointCount(instance, node);
         int used = (int) Math.min(total - state.cursor(), budget);
         for (int i = 0; i < used; i++) {
             long index = state.cursor() + i;
             BlockPos spawn = instance.getNodeSpawnPos(node.nodeId());
-            if (index < 25) {
-                int dx = (int) (index % 5) - 2;
-                int dz = (int) (index / 5) - 2;
-                level.setBlock(spawn.offset(dx, -1, dz), Blocks.OAK_PLANKS.defaultBlockState(), FLAGS);
-                level.setBlock(spawn.offset(dx, 0, dz), Blocks.AIR.defaultBlockState(), FLAGS);
+            if (index < 75) {
+                int cell = (int) (index / 3), layer = (int) (index % 3);
+                int dx = cell % 5 - 2;
+                int dz = cell / 5 - 2;
+                level.setBlock(spawn.offset(dx, layer - 1, dz),
+                        (layer == 0 ? Blocks.OAK_PLANKS : Blocks.AIR).defaultBlockState(), FLAGS);
             } else {
-                CheckpointData checkpoint = checkpoint(instance, node, (int) index - 26);
+                int checkpointIndex = (int) ((index - 75) / 28);
+                int localIndex = (int) ((index - 75) % 28);
+                CheckpointData checkpoint = checkpoint(instance, node, checkpointIndex);
                 if (checkpoint != null) {
                     Block block = BuiltInRegistries.BLOCK.getOptional(
                             ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "dungeon_checkpoint"))
                             .orElse(Blocks.LODESTONE);
-                    BlockPos pos = new BlockPos(spawn.getX() + checkpoint.posX(),
-                            checkpoint.posY() > 0 ? checkpoint.posY() : SEA,
+                    BlockPos pos = new BlockPos(spawn.getX() + checkpoint.posX(), checkpoint.posY(),
                             spawn.getZ() + checkpoint.posZ());
-                    level.setBlock(pos, block.defaultBlockState(), FLAGS);
+                    if (localIndex == 27) {
+                        level.setBlock(pos, block.defaultBlockState(), FLAGS);
+                    } else {
+                        int cell = localIndex / 3, layer = localIndex % 3;
+                        level.setBlock(pos.offset(cell % 3 - 1, layer - 1, cell / 3 - 1),
+                                (layer == 0 ? Blocks.SMOOTH_STONE : Blocks.AIR).defaultBlockState(), FLAGS);
+                    }
                 }
             }
         }
@@ -162,7 +192,17 @@ public final class TerrainGenerationPipeline {
         return used;
     }
 
-    private static int depthAt(long seed, int x, int z) {
+    static int depthAt(long seed, int x, int z) {
+        int cellX = Math.floorDiv(x, 32), cellZ = Math.floorDiv(z, 32);
+        double tx = Math.floorMod(x, 32) / 32.0, tz = Math.floorMod(z, 32) / 32.0;
+        tx = tx * tx * (3 - 2 * tx);
+        tz = tz * tz * (3 - 2 * tz);
+        double north = noiseDepth(seed, cellX, cellZ) * (1 - tx) + noiseDepth(seed, cellX + 1, cellZ) * tx;
+        double south = noiseDepth(seed, cellX, cellZ + 1) * (1 - tx) + noiseDepth(seed, cellX + 1, cellZ + 1) * tx;
+        return (int) Math.round(north * (1 - tz) + south * tz);
+    }
+
+    private static int noiseDepth(long seed, int x, int z) {
         long n = seed ^ (x * 0x9E3779B97F4A7C15L) ^ (z * 0xC2B2AE3D27D4EB4FL);
         n ^= n >>> 33;
         n *= 0xff51afd7ed558ccdL;
@@ -182,16 +222,16 @@ public final class TerrainGenerationPipeline {
     }
 
     private static void placeFeature(ServerLevel level, TerrainGenerationState state, TerrainType terrain, long index) {
-        int cx = state.startX() + MAP_SIZE / 2;
-        int cz = state.startZ() + MAP_SIZE / 2;
+        int cx = state.startX();
+        int cz = state.startZ();
         Block block = Blocks.STONE;
         int x = cx, z = cz, y = SEA - 1;
         switch (terrain) {
             case T2_ISLAND_REEFS -> {
                 int island = (int) (index / 169), local = (int) (index % 169);
                 int radius = 3 + (int) Math.floorMod(state.seed() + island, 4);
-                int ox = (int) Math.floorMod(state.seed() / 7 + island * 37L, MAP_SIZE - 24) - MAP_SIZE / 2 + 12;
-                int oz = (int) Math.floorMod(state.seed() / 11 + island * 53L, MAP_SIZE - 24) - MAP_SIZE / 2 + 12;
+                int ox = (int) Math.floorMod(state.seed() / 7 + island * 37L, DungeonConstants.NODE_AREA_SIZE - 24) - DungeonConstants.NODE_AREA_SIZE / 2 + 12;
+                int oz = (int) Math.floorMod(state.seed() / 11 + island * 53L, DungeonConstants.NODE_AREA_SIZE - 24) - DungeonConstants.NODE_AREA_SIZE / 2 + 12;
                 int dx = local % 13 - 6, dz0 = local / 13 - 6;
                 if (dx * dx + dz0 * dz0 > radius * radius) return;
                 x += ox + dx; z += oz + dz0; y = SEA;

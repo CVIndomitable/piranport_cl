@@ -5,7 +5,7 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.world.level.saveddata.SavedData;
 
 /**
- * 一个实例节点的地形生成游标。所有字段都可恢复，服务器重启或区块卸载不会重新刷已经写完的方块。
+ * 共享海面或单个节点的生成游标；节点特征不会复用其他节点的完成标记。
  */
 public final class TerrainGenerationState extends SavedData {
     public enum Phase { BASE, FEATURES, POI, BOUNDARY, READY }
@@ -17,6 +17,7 @@ public final class TerrainGenerationState extends SavedData {
     private long seed;
     private int terrainOrdinal;
     private boolean initialized;
+    private boolean nodeSpecific;
 
     public TerrainGenerationState() {}
 
@@ -27,6 +28,7 @@ public final class TerrainGenerationState extends SavedData {
     public long seed() { return seed; }
     public int terrainOrdinal() { return terrainOrdinal; }
     public boolean initialized() { return initialized; }
+    public boolean nodeSpecific() { return nodeSpecific; }
 
     public void initialize(int startX, int startZ, long seed, int terrainOrdinal) {
         if (initialized) return;
@@ -38,6 +40,13 @@ public final class TerrainGenerationState extends SavedData {
         setDirty();
     }
 
+    public void initializeNode(int centerX, int centerZ, long seed, int terrainOrdinal) {
+        if (initialized) return;
+        initialize(centerX, centerZ, seed, terrainOrdinal);
+        nodeSpecific = true;
+        phase = Phase.FEATURES;
+    }
+
     public void advance(long amount) {
         cursor += amount;
         setDirty();
@@ -46,9 +55,9 @@ public final class TerrainGenerationState extends SavedData {
     public void nextPhase() {
         cursor = 0;
         phase = switch (phase) {
-            case BASE -> Phase.FEATURES;
+            case BASE -> Phase.BOUNDARY;
             case FEATURES -> Phase.POI;
-            case POI -> Phase.BOUNDARY;
+            case POI -> Phase.READY;
             case BOUNDARY, READY -> Phase.READY;
         };
         setDirty();
@@ -69,6 +78,8 @@ public final class TerrainGenerationState extends SavedData {
         tag.putLong("Seed", seed);
         tag.putInt("Terrain", terrainOrdinal);
         tag.putBoolean("Initialized", initialized);
+        tag.putInt("Version", 2);
+        tag.putBoolean("NodeSpecific", nodeSpecific);
         return tag;
     }
 
@@ -85,6 +96,13 @@ public final class TerrainGenerationState extends SavedData {
         state.seed = tag.getLong("Seed");
         state.terrainOrdinal = Math.max(0, Math.min(5, tag.getInt("Terrain")));
         state.initialized = tag.getBoolean("Initialized");
+        state.nodeSpecific = tag.getBoolean("NodeSpecific");
+        // 旧版本把首节点特征写入共享游标。保留海面进度，独立节点游标负责补齐各节点。
+        if (tag.getInt("Version") < 2 && (state.phase == Phase.FEATURES || state.phase == Phase.POI)) {
+            state.phase = Phase.BOUNDARY;
+            state.cursor = 0;
+            state.setDirty();
+        }
         return state;
     }
 }

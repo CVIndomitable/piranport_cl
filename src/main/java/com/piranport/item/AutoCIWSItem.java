@@ -63,8 +63,8 @@ public class AutoCIWSItem extends Item {
                             && player.hasLineOfSight(candidate)).stream()
                     .min(Comparator.comparingDouble(player::distanceToSqr)).orElse(null);
             if (target == null) continue;
-            if (!(target instanceof LivingEntity living)) continue;
-            living.hurt(player.damageSources().mobAttack(player),
+            // 舰载机继承 Entity 并自行处理耐久；不能在已选中飞机后再用 LivingEntity 过滤掉。
+            target.hurt(player.damageSources().mobAttack(player),
                     DAMAGE * ciws.caliberDamage * ciws.config.barrels().get());
         }
     }

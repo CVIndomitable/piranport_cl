@@ -59,8 +59,9 @@ public final class VictoryEvaluator {
 
         return switch (cond) {
             case KILL_ALL -> checkKillAll(level, instance, stage, obj);
-            case KILL_BOSS -> instance.getClearedNodes().containsAll(stage != null ? stage.bossNodes() : java.util.List.of());
-            case SURVIVE -> checkSurvive(instance, obj);
+            case KILL_BOSS -> stage != null && !stage.bossNodes().isEmpty()
+                    && instance.getClearedNodes().containsAll(stage.bossNodes());
+            case SURVIVE -> checkSurvive(level, instance, obj);
             case ESCORT -> checkEscort(level, instance, obj);
             case REACH_POINT -> checkReachPoint(level, instance, stage, obj);
             case CAPTURE_FLAG -> checkCaptureFlag(level, instance, stage, obj);
@@ -100,10 +101,10 @@ public final class VictoryEvaluator {
     }
 
     /** SURVIVE：坚持 N 秒（决策 §副本/06）。 */
-    private static boolean checkSurvive(DungeonInstance instance, StageData.VictoryObjectives obj) {
-        if (obj.surviveSeconds() <= 0 || instance.getStartTimeMillis() <= 0) return false;
-        long elapsed = (System.currentTimeMillis() - instance.getStartTimeMillis()) / 1000L;
-        return elapsed >= obj.surviveSeconds();
+    private static boolean checkSurvive(ServerLevel level, DungeonInstance instance, StageData.VictoryObjectives obj) {
+        if (level == null || obj.surviveSeconds() <= 0 || instance.getCurrentNode() == null) return false;
+        return com.piranport.dungeon.saved.DungeonSettlementData.get(level)
+                .elapsedMillis(instance.getInstanceId(), instance.getCurrentNode()) >= obj.surviveSeconds() * 1000L;
     }
 
     /**
@@ -122,12 +123,56 @@ public final class VictoryEvaluator {
                 instance.getUsableMinX(), level.getMinBuildHeight(), instance.getUsableMinZ(),
                 instance.getUsableMaxX(), level.getMaxBuildHeight(), instance.getUsableMaxZ());
         return !level.getEntitiesOfClass(LivingEntity.class, box,
-                e -> e.getType().toString().contains(obj.escortEntityKey())
+                e -> e.isAlive() && e.getTags().contains("dungeon_instance_" + instance.getInstanceId())
+                        && escortMatches(e, obj.escortEntityKey())
                         && e.distanceToSqr(target.getX() + .5, target.getY() + .5, target.getZ() + .5) <= 16.0).isEmpty();
     }
 
     private static StageData stageFor(DungeonInstance instance) {
         return com.piranport.dungeon.data.DungeonRegistry.INSTANCE.getStage(instance.getStageId());
+    }
+
+    private static boolean escortMatches(LivingEntity entity, String key) {
+        boolean tag = key.startsWith("#");
+        var id = net.minecraft.resources.ResourceLocation.tryParse(tag ? key.substring(1) : key);
+        if (id == null) return false;
+        return tag ? entity.getType().is(net.minecraft.tags.TagKey.create(
+                net.minecraft.core.registries.Registries.ENTITY_TYPE, id))
+                : net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType()).equals(id);
+    }
+
+    private static boolean isParticipant(Player player, DungeonInstance instance) {
+        return player.isAlive() && !player.isSpectator()
+                && instance.getPlayerUuids().contains(player.getUUID())
+                && instance.isInsideUsableArea(player.blockPosition());
+    }
+
+    /** 只对显式配置目标的任务计时；无玩家时暂停，离开占领区立即重置连续计时。 */
+    public static void tick(ServerLevel level, DungeonInstance instance) {
+        if (instance.getState() != DungeonInstance.State.ACTIVE || instance.getCurrentNode() == null
+                || instance.getClearedNodes().contains(instance.getCurrentNode())) return;
+        StageData stage = stageFor(instance);
+        if (stage == null) return;
+        var obj = stage.victoryObjectives();
+        boolean occupied = false;
+        if (obj.reachPointOffset() != null && obj.captureRadius() > 0) {
+            int[] offset = obj.reachPointOffset();
+            BlockPos flag = instance.getNodeSpawnPos(stage.startNode()).offset(offset[0], offset[1], offset[2]);
+            occupied = !level.getEntitiesOfClass(Player.class, new AABB(flag).inflate(obj.captureRadius()),
+                    p -> isParticipant(p, instance)).isEmpty();
+        }
+        com.piranport.dungeon.saved.DungeonObjectiveData.get(level)
+                .tickCapture(instance.getInstanceId(), instance.getCurrentNode(), occupied);
+        for (VictoryCondition condition : stage.victoryConditions()) {
+            if ((condition == VictoryCondition.REACH_POINT || condition == VictoryCondition.ESCORT
+                    || condition == VictoryCondition.CAPTURE_FLAG || condition == VictoryCondition.SURVIVE)
+                    && checkSingle(level, instance, condition)) {
+                com.piranport.dungeon.block.PortalStructureHelper.buildPortalStructure(level,
+                        instance.getNodeSpawnPos(instance.getCurrentNode()).offset(4, 0, 0),
+                        instance.getInstanceId(), instance.getCurrentNode());
+                break;
+            }
+        }
     }
 
     /**
@@ -143,7 +188,7 @@ public final class VictoryEvaluator {
                 obj.reachPointOffset()[1],
                 obj.reachPointOffset()[2]);
         AABB box = new AABB(target).inflate(4.0);
-        return !level.getEntitiesOfClass(Player.class, box).isEmpty();
+        return !level.getEntitiesOfClass(Player.class, box, p -> isParticipant(p, instance)).isEmpty();
     }
 
     /**
@@ -161,10 +206,8 @@ public final class VictoryEvaluator {
         BlockPos flagPos = center.offset(
                 obj.reachPointOffset()[0], obj.reachPointOffset()[1], obj.reachPointOffset()[2]);
         AABB box = new AABB(flagPos).inflate(obj.captureRadius());
-        if (level.getEntitiesOfClass(Player.class, box).isEmpty()) return false;
-        // 简化：仅检查玩家在场 + 起始时间 ≥ 计时（生产代码应在旗点留挂定时器）
-        if (instance.getStartTimeMillis() <= 0) return false;
-        long elapsed = (System.currentTimeMillis() - instance.getStartTimeMillis()) / 1000L;
-        return elapsed >= obj.captureHoldSeconds();
+        if (level.getEntitiesOfClass(Player.class, box, p -> isParticipant(p, instance)).isEmpty()) return false;
+        return instance.getCurrentNode() != null && com.piranport.dungeon.saved.DungeonObjectiveData.get(level)
+                .captureTicks(instance.getInstanceId(), instance.getCurrentNode()) >= obj.captureHoldSeconds() * 20L;
     }
 }

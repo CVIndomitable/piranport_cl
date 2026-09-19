@@ -202,20 +202,10 @@ public class DungeonPortalBlockEntity extends BlockEntity {
             return;
         }
 
-        // Check if this player has already used this portal recently
-        UUID playerId = player.getUUID();
-        if (enteredPlayers.contains(playerId)) {
-            // Prevent rapid re-entry
-            return;
+        DungeonInstance instance = DungeonInstanceManager.get(serverLevel).getInstance(instanceId);
+        if (instance != null && player instanceof ServerPlayer serverPlayer) {
+            DungeonEventHandler.onPortalEntered(serverPlayer, instance, nodeId);
         }
-
-        enteredPlayers.add(playerId);
-
-        // Teleport the player to the dungeon
-        teleportPlayerToDungeon(serverLevel, player);
-
-        // Check if all players have entered - if so, advance the dungeon
-        checkForCompletion(serverLevel);
     }
 
     /**

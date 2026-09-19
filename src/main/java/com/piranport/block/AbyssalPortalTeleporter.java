@@ -1,84 +1,38 @@
 package com.piranport.block;
 
-import com.piranport.advancement.ModAdvancements;
-import com.piranport.registry.ModBlocks;
+import com.piranport.dungeon.block.DungeonLecternBlockEntity;
+import com.piranport.dungeon.event.DungeonEntryService;
 import com.piranport.dungeon.event.DungeonEventHandler;
+import com.piranport.dungeon.instance.DungeonInstanceManager;
 import net.minecraft.core.BlockPos;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.levelgen.Heightmap;
 
+/** 旧深海门也走讲台钥匙入口，不能绕过实例分配直接写入副本坐标。 */
 public final class AbyssalPortalTeleporter {
-    private static final int PORTAL_COOLDOWN_TICKS = 100;
-    private static final int DUNGEON_ENTRY_Y = 64;
-
-    private AbyssalPortalTeleporter() {
-    }
+    private AbyssalPortalTeleporter() {}
 
     public static boolean teleport(ServerPlayer player) {
-        if (player.isOnPortalCooldown()) {
-            return false;
+        if (player.isOnPortalCooldown()) return false;
+        player.setPortalCooldown(100);
+        if (DungeonEventHandler.isInDungeon(player)) {
+            var instance = DungeonInstanceManager.get(player.serverLevel()).getInstanceForPlayer(player);
+            if (instance == null) return false;
+            DungeonEventHandler.teleportToLectern(player, instance);
+            return true;
         }
-
-        ServerLevel currentLevel = player.serverLevel();
-        // 深海副本的权威维度是 piranport:dungeon；旧 abyssal_world 方案已废弃。
-        boolean returning = currentLevel.dimension().equals(DungeonEventHandler.DUNGEON_DIMENSION);
-        ServerLevel targetLevel = returning
-                ? player.server.overworld()
-                : DungeonEventHandler.getDungeonLevel(player.server);
-        if (targetLevel == null) {
-            return false;
-        }
-
-        BlockPos destination = returning
-                ? overworldDestination(targetLevel, player)
-                : dungeonDestination(player);
-        prepareLanding(targetLevel, destination);
-
-        player.setPortalCooldown(PORTAL_COOLDOWN_TICKS);
-        player.teleportTo(targetLevel,
-                destination.getX() + 0.5,
-                destination.getY(),
-                destination.getZ() + 0.5,
-                player.getYRot(),
-                player.getXRot());
-        player.setDeltaMovement(0.0, 0.0, 0.0);
-        player.fallDistance = 0.0f;
-        if (!returning) ModAdvancements.award(player, "story/enter_abyssal_world");
-        return true;
-    }
-
-    private static BlockPos dungeonDestination(Entity entity) {
-        return new BlockPos(entity.getBlockX(), DUNGEON_ENTRY_Y, entity.getBlockZ());
-    }
-
-    private static BlockPos overworldDestination(ServerLevel overworld, Entity entity) {
-        int x = entity.getBlockX();
-        int z = entity.getBlockZ();
-        int y = overworld.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z) + 1;
-        return new BlockPos(x, y, z);
-    }
-
-    private static void prepareLanding(ServerLevel level, BlockPos center) {
-        BlockPos floor = center.below();
-        for (int dx = -2; dx <= 2; dx++) {
-            for (int dz = -2; dz <= 2; dz++) {
-                BlockPos floorPos = floor.offset(dx, 0, dz);
-                level.setBlock(floorPos, Blocks.POLISHED_DEEPSLATE.defaultBlockState(), 3);
-                for (int dy = 0; dy <= 3; dy++) {
-                    BlockPos airPos = center.offset(dx, dy, dz);
-                    if (!airPos.equals(center.north(2)) && !airPos.equals(center.north(2).above())) {
-                        level.setBlock(airPos, Blocks.AIR.defaultBlockState(), 3);
-                    }
-                }
+        BlockPos center = player.blockPosition();
+        BlockPos closest = null;
+        double distance = 64.0;
+        for (BlockPos pos : BlockPos.betweenClosed(center.offset(-8, -8, -8), center.offset(8, 8, 8))) {
+            double candidate = player.distanceToSqr(pos.getX() + .5, pos.getY() + .5, pos.getZ() + .5);
+            if (candidate > distance || !player.serverLevel().hasChunkAt(pos)) continue;
+            if (player.level().getBlockEntity(pos) instanceof DungeonLecternBlockEntity lectern && lectern.hasKey()) {
+                closest = pos.immutable();
+                distance = candidate;
             }
         }
-
-        BlockPos portalBase = center.north(2);
-        level.setBlock(portalBase, ModBlocks.ABYSSAL_PORTAL.get().defaultBlockState(), 3);
-        level.setBlock(portalBase.above(), ModBlocks.ABYSSAL_PORTAL.get().defaultBlockState(), 3);
+        if (closest == null) return false;
+        DungeonEntryService.enter(player, closest, true, null);
+        return true;
     }
 }

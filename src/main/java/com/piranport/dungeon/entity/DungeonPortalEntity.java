@@ -110,6 +110,8 @@ public class DungeonPortalEntity extends Entity {
         for (ServerPlayer player : nearbyPlayers) {
             UUID playerId = player.getUUID();
             if (!members.contains(playerId)) continue;
+            com.piranport.dungeon.event.DungeonEventHandler.onPortalEntered(
+                    player, mgr.getInstance(instanceId), nodeId);
             if (enteredPlayers.size() >= MAX_ENTERED_PLAYERS && !enteredPlayers.contains(playerId)) {
                 continue;
             }
@@ -133,31 +135,12 @@ public class DungeonPortalEntity extends Entity {
             orphanTicks = 0;
         }
 
-        // Check if all dungeon players have entered
+        // 传送门只处理当前触碰者的离开/推进，不等待实例中的其他历史成员。
         if (!enteredPlayers.isEmpty()) {
             DungeonInstance instance = mgr.getInstance(instanceId);
             if (instance != null) {
-                Set<UUID> allPlayers = instance.getPlayerUuids();
-                // Check: every member who is currently online in this dimension has entered.
-                boolean allEntered = true;
-                for (UUID playerUuid : allPlayers) {
-                    ServerPlayer onlinePlayer = ((ServerLevel) level()).getServer()
-                            .getPlayerList().getPlayer(playerUuid);
-                    if (onlinePlayer != null
-                            && onlinePlayer.level().dimension().equals(level().dimension())
-                            && !enteredPlayers.contains(playerUuid)) {
-                        allEntered = false;
-                        break;
-                    }
-                }
-
-                if (allEntered) {
-                    // Advance to next phase — handled by DungeonEventHandler
-                    com.piranport.dungeon.event.DungeonEventHandler.onPortalComplete(
-                            (ServerLevel) level(), instance, nodeId);
-                    discard();
-                    return;
-                }
+                // 出口保留给仍在战场中的玩家及之后的回访者，历史触碰记录无需保存。
+                enteredPlayers.clear();
             }
         }
     }

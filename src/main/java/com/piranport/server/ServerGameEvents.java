@@ -101,7 +101,12 @@ public class ServerGameEvents {
         ServerLevel dungeonLevel = event.getServer().getLevel(
                 DungeonEventHandler.DUNGEON_DIMENSION);
         if (dungeonLevel != null) {
+            com.piranport.dungeon.instance.TerrainEntryQueue.get(event.getServer()).tick(event.getServer());
             DungeonScriptManager.get(event.getServer()).tickAll(dungeonLevel);
+            for (DungeonInstance instance : DungeonInstanceManager.get(dungeonLevel).getAllInstances()) {
+                com.piranport.dungeon.event.DungeonSettlementService.tickActiveNode(dungeonLevel, instance);
+                com.piranport.dungeon.VictoryEvaluator.tick(dungeonLevel, instance);
+            }
         }
 
         // 舰队编队清理（每10分钟）
@@ -124,18 +129,26 @@ public class ServerGameEvents {
     /** 地牢脚本标记的生物死亡时通知脚本管理器 */
     @SubscribeEvent
     public static void onDungeonMobDeath(LivingDeathEvent event) {
+        if (event.isCanceled()) return;
         if (!(event.getEntity().level() instanceof ServerLevel sl)) return;
         LivingEntity entity = event.getEntity();
-        if (!entity.getTags().contains("dungeon_script")) return;
 
         for (String tag : entity.getTags()) {
             if (tag.startsWith("dungeon_instance_")) {
                 try {
                     UUID instanceId = UUID.fromString(
                             tag.substring("dungeon_instance_".length()));
-                    DungeonScriptManager.get(sl.getServer())
-                            .onEntityDeath(instanceId, entity);
-                    com.piranport.dungeon.event.DungeonSettlementService.recordKill(instanceId);
+                    DungeonInstance instance = DungeonInstanceManager.get(sl).getInstance(instanceId);
+                    if (instance == null || instance.getState() != DungeonInstance.State.ACTIVE) return;
+                    for (String nodeTag : entity.getTags()) {
+                        if (nodeTag.startsWith("dungeon_node_")) {
+                            com.piranport.dungeon.event.DungeonSettlementService.recordKill(sl, instance,
+                                    nodeTag.substring("dungeon_node_".length()), entity.getUUID());
+                        }
+                    }
+                    if (entity.getTags().contains("dungeon_script")) {
+                        DungeonScriptManager.get(sl.getServer()).onEntityDeath(instanceId, entity);
+                    }
                 } catch (IllegalArgumentException ignored) {}
                 break;
             }
@@ -145,10 +158,10 @@ public class ServerGameEvents {
     /** 地牢旗舰死亡时检查同节点所有旗舰，全灭则生成传送门 */
     @SubscribeEvent
     public static void onDungeonFlagshipDeath(LivingDeathEvent event) {
+        if (event.isCanceled()) return;
         if (event.getEntity().level().isClientSide()) return;
         if (!(event.getEntity().level() instanceof ServerLevel sl)) return;
         LivingEntity entity = event.getEntity();
-        if (!entity.getTags().contains("dungeon_flagship")) return;
 
         UUID instanceId = null;
         String nodeId = null;
@@ -163,31 +176,34 @@ public class ServerGameEvents {
         }
         if (instanceId == null || nodeId == null) return;
 
-        com.piranport.dungeon.event.DungeonSettlementService.recordKill(instanceId);
+        DungeonInstanceManager mgr = DungeonInstanceManager.get(sl);
+        DungeonInstance instance = mgr.getInstance(instanceId);
+        if (instance == null || instance.getState() != DungeonInstance.State.ACTIVE
+                || instance.getClearedNodes().contains(nodeId)) return;
+        com.piranport.dungeon.event.DungeonSettlementService.recordKill(sl, instance, nodeId, entity.getUUID());
+        var objectives = com.piranport.dungeon.saved.DungeonObjectiveData.get(sl);
+        objectives.died(instanceId, nodeId, entity.getUUID());
 
         if (DungeonScriptManager.get(sl.getServer()).getScript(instanceId) != null) return;
 
-        String matchTag = "dungeon_instance_" + instanceId;
-        String nodeTag = "dungeon_node_" + nodeId;
-        AABB scanBox = entity.getBoundingBox().inflate(200);
-        boolean anyFlagshipAlive = sl.getEntitiesOfClass(LivingEntity.class, scanBox,
-                e -> e != entity && e.isAlive()
-                        && e.getTags().contains("dungeon_flagship")
-                        && e.getTags().contains(matchTag)
-                        && e.getTags().contains(nodeTag)).stream().findAny().isPresent();
+        var stage = com.piranport.dungeon.data.DungeonRegistry.INSTANCE.getStage(instance.getStageId());
+        if (stage == null) return;
+        boolean allEnemies = stage.victoryConditions().contains(com.piranport.dungeon.data.VictoryCondition.KILL_ALL)
+                || stage.victoryConditions().contains(com.piranport.dungeon.data.VictoryCondition.CAPTURE_FLAG);
+        var node = stage.nodes().get(nodeId);
+        var enemies = node == null || node.enemies() == null ? null
+                : com.piranport.dungeon.data.DungeonRegistry.INSTANCE.getEnemySet(node.enemies());
+        allEnemies |= enemies != null && enemies.flagship() == null;
+        boolean anyFlagshipAlive = !objectives.defeated(instanceId, nodeId, allEnemies);
 
         if (!anyFlagshipAlive) {
-            DungeonInstanceManager mgr = DungeonInstanceManager.get(sl);
-            DungeonInstance instance = mgr.getInstance(instanceId);
-            if (instance == null) return;
-
             BlockPos portalPos = entity.blockPosition();
             com.piranport.dungeon.block.PortalStructureHelper.buildPortalStructure(
                     sl, portalPos.below(), instanceId, nodeId);
 
             for (UUID playerUuid : instance.getPlayerUuids()) {
                 ServerPlayer player = sl.getServer().getPlayerList().getPlayer(playerUuid);
-                if (player != null) {
+                if (player != null && mgr.getInstanceForPlayer(player) == instance) {
                     player.displayClientMessage(
                             net.minecraft.network.chat.Component.translatable(
                                     "dungeon.piranport.node_cleared"), true);

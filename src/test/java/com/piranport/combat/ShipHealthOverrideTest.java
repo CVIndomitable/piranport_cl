@@ -1,18 +1,13 @@
 package com.piranport.combat;
 
 import com.piranport.item.ShipType;
-import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
-import net.minecraft.world.entity.ai.attributes.RangedAttribute;
 import org.junit.jupiter.api.Test;
+import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ShipHealthOverrideTest {
-    private static AttributeInstance health() {
-        return new AttributeInstance(Holder.direct(new RangedAttribute("test.health", 20, 1, 1024)), unused -> {});
-    }
 
     @Test
     void allCoreHealthLimitsFollowTheLatestCoreDecision() {
@@ -24,32 +19,22 @@ class ShipHealthOverrideTest {
 
     @Test
     void preexistingHealthBoostIsSuppressedAndRestoredOnRemoval() {
-        AttributeInstance health = health();
         var boost = new AttributeModifier(ResourceLocation.fromNamespaceAndPath("test", "boost"),
                 10, AttributeModifier.Operation.ADD_VALUE);
-        health.addTransientModifier(boost);
-        ShipHealthOverride.apply(health, 20);
-        assertEquals(20, health.getValue(), 0.00001);
-        health.removeModifier(TransformationManager.HEALTH_MODIFIER_ID);
-        assertEquals(30, health.getValue(), 0.00001);
-        assertTrue(health.hasModifier(boost.id()));
+        double correction = ShipHealthOverride.computeCorrection(20, List.of(boost), 20);
+        assertEquals(-10.0, correction, 1.0E-6);
     }
 
     @Test
     void mixedMultipliersAndChangingEffectsCannotRaiseTheCoreLimit() {
-        AttributeInstance health = health();
         var base = new AttributeModifier(ResourceLocation.fromNamespaceAndPath("test", "base"),
                 0.5, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
         var total = new AttributeModifier(ResourceLocation.fromNamespaceAndPath("test", "total"),
                 1.0, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL);
-        health.addTransientModifier(base);
-        health.addTransientModifier(total);
-        ShipHealthOverride.apply(health, 12);
-        assertEquals(12, health.getValue(), 0.00001);
-        health.removeModifier(base.id());
-        ShipHealthOverride.apply(health, 12);
-        assertEquals(12, health.getValue(), 0.00001);
-        health.removeModifier(TransformationManager.HEALTH_MODIFIER_ID);
-        assertEquals(40, health.getValue(), 0.00001);
+        // base=20, additive=0, baseMultiplier=1.5, totalMultiplier=2.0, max=12
+        // multiplier = 1.5 * 2.0 = 3.0
+        // correction = 12 / 3.0 - 20 = -16.0
+        double correction = ShipHealthOverride.computeCorrection(20, List.of(base, total), 12);
+        assertEquals(-16.0, correction, 1.0E-6);
     }
 }

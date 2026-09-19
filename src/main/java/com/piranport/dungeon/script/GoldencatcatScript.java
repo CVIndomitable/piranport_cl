@@ -119,8 +119,7 @@ public class GoldencatcatScript implements DungeonScript {
     /** Called once per node entry — spawns cats and starts tracking. */
     public void onStart() {
         if (portalSpawned) return;
-        catsSpawned = computeCatCount();
-        PiranPort.LOGGER.info("[Goldencatcat] Spawning {} cats for instance {}", catsSpawned, instanceId);
+        PiranPort.LOGGER.info("[Goldencatcat] Preparing cats for instance {}", instanceId);
     }
 
     /**
@@ -142,6 +141,7 @@ public class GoldencatcatScript implements DungeonScript {
             cat.setPos(ex, DungeonConstants.SPAWN_Y, ez);
             cat.addTag("dungeon_instance_" + instanceId);
             cat.addTag("dungeon_node_" + nodeId);
+            cat.addTag("dungeon_script");
             dungeonLevel.addFreshEntity(cat);
         }
         PiranPort.LOGGER.info("[Goldencatcat] Spawned {} cats at instance {}", catsSpawned, instanceId);

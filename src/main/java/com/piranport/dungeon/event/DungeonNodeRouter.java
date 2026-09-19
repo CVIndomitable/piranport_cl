@@ -40,6 +40,9 @@ public final class DungeonNodeRouter {
     public static void enterNode(ServerLevel level, DungeonInstance instance,
                                   NodeData node, StageData stage,
                                   ServerPlayer player, ItemStack keyStack) {
+        ServerLevel dungeonLevel = DungeonEventHandler.getDungeonLevel(player.server);
+        if (dungeonLevel == null || (!instance.hasEnteredNode(node.nodeId())
+                && !NodeBattleField.isTerrainReady(dungeonLevel, instance, node))) return;
         if (instance.hasEnteredNode(node.nodeId())) {
             teleportToNode(player, instance, node.nodeId(), instance.getNodeSpawnPos(node.nodeId()), player.getYRot());
             return;
@@ -60,12 +63,13 @@ public final class DungeonNodeRouter {
     private static void handleResourceNode(DungeonInstance instance, NodeData node,
                                             ServerPlayer player, ItemStack keyStack) {
         DungeonInstanceManager mgr = DungeonInstanceManager.get((ServerLevel) player.level());
-        if (!mgr.advanceNode(instance.getInstanceId(), node.nodeId(), keyStack)) {
+        if (!mgr.beginBattleNode(instance.getInstanceId(), node.nodeId(), keyStack)) {
             return;
         }
-        // 奖励统一在传送门完成节点时发放，避免玩家刚进入资源节点退出后重复领取。
+        // 先进入节点，再统一结算，使领取者是实际在场玩家。
         player.sendSystemMessage(Component.translatable("dungeon.piranport.resource_collected"));
         prepareNonBattleTerrain(instance, node, player);
+        finishNonBattleNode(instance, node, player);
     }
 
     private static void handleCostNode(DungeonInstance instance, NodeData node,
@@ -81,7 +85,7 @@ public final class DungeonNodeRouter {
             }
         }
         DungeonInstanceManager mgr = DungeonInstanceManager.get((ServerLevel) player.level());
-        if (!mgr.advanceNode(instance.getInstanceId(), node.nodeId(), keyStack)) {
+        if (!mgr.beginBattleNode(instance.getInstanceId(), node.nodeId(), keyStack)) {
             return;
         }
         for (NodeData.CostEntry cost : node.cost()) {
@@ -90,12 +94,19 @@ public final class DungeonNodeRouter {
             removeItems(player, item, cost.count());
         }
         prepareNonBattleTerrain(instance, node, player);
+        finishNonBattleNode(instance, node, player);
         if (!node.costMessage().isEmpty()) {
             player.sendSystemMessage(Component.literal(node.costMessage()));
         }
     }
 
     /** 首次进入时生成战场；重返只传送当前玩家，不重复登记或生成。 */
+    private static void finishNonBattleNode(DungeonInstance instance, NodeData node, ServerPlayer player) {
+        DungeonEventHandler.onNodeCompleted(player.serverLevel(), instance, node.nodeId());
+        com.piranport.dungeon.block.PortalStructureHelper.buildPortalStructure(player.serverLevel(),
+                instance.getNodeSpawnPos(node.nodeId()).offset(4, 0, 0), instance.getInstanceId(), node.nodeId());
+    }
+
     public static BattleSetup prepareBattleNode(ServerLevel level, DungeonInstance instance,
                                                   NodeData node, ServerPlayer player,
                                                   ItemStack keyStack) {
@@ -111,9 +122,10 @@ public final class DungeonNodeRouter {
             return null;
         }
         DungeonInstanceManager mgr = DungeonInstanceManager.get(level);
+        if (!NodeBattleField.isTerrainReady(dungeonLevel, instance, node)) {
+            return null;
+        }
         if (!mgr.beginBattleNode(instance.getInstanceId(), node.nodeId(), keyStack)) return null;
-
-        NodeBattleField.generateTerrain(dungeonLevel, instance, node);
 
         // 玩家自行进入，不将历史参与者从主世界或其他副本强制传送过来。
         List<ServerPlayer> toTeleport = List.of(player);
@@ -126,7 +138,7 @@ public final class DungeonNodeRouter {
     private static void prepareNonBattleTerrain(DungeonInstance instance, NodeData node, ServerPlayer player) {
         ServerLevel dungeonLevel = DungeonEventHandler.getDungeonLevel(player.server);
         if (dungeonLevel == null) return;
-        NodeBattleField.generateTerrain(dungeonLevel, instance, node);
+        if (!NodeBattleField.isTerrainReady(dungeonLevel, instance, node)) return;
         teleportToNode(player, instance, node.nodeId(), instance.getNodeSpawnPos(node.nodeId()), player.getYRot());
     }
 

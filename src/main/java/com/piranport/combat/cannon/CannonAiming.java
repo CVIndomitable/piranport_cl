@@ -77,7 +77,10 @@ final class CannonAiming {
         float drag = getProjectileDrag(weapon, player.level());
         float gravity = getProjectileGravity(weapon, player.level());
         double mcGravity = gravity > 0f ? gravity / 196.0 : BallisticSolver.DEFAULT_GRAVITY;
-        BallisticSolver.Result result = BallisticSolver.solve(velocity, drag, mcGravity,
+        // 经 BallisticDispatcher 分发：实验炮走网络，其余炮走 BallisticSolver。
+        // 依据：docs/策划决策/武器/火炮-神经网络弹道解算实验方案.md 4.2
+        BallisticSolver.Result result = com.piranport.combat.neural.BallisticDispatcher.solve(
+                weapon, velocity, drag, mcGravity,
                 horizontalDist, verticalDist, 0.0,
                 getMinElevationRadians(weapon, player.level()),
                 getMaxElevationRadians(weapon, player.level()));

@@ -2,9 +2,9 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "pattern": [
-    "II ",
-    "IAI",
-    "IRI"
+    "II",
+    "AA",
+    "RC"
   ],
   "key": {
     "I": {
@@ -15,9 +15,12 @@
     },
     "R": {
       "item": "minecraft:redstone"
+    },
+    "C": {
+      "item": "minecraft:comparator"
     }
   },
   "result": {
-    "id": "piranport:twin_torpedo_launcher"
+    "id": "piranport:neural_ballistic_test_gun"
   }
 }

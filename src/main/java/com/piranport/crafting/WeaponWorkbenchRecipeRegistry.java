@@ -82,11 +82,6 @@ public final class WeaponWorkbenchRecipeRegistry {
         ), ModItems.LARGE_GUN_BLUEPRINT.get(), 400);
 
         // ===== Tab 1: 鱼雷发射器 =====
-        add(r, 1, ModItems.TWIN_TORPEDO_LAUNCHER.get(), List.of(
-                new ItemStack(Items.IRON_INGOT, 4),
-                new ItemStack(ModItems.ALUMINUM_INGOT.get(), 2)
-        ), null, 150);
-
         add(r, 1, ModItems.TRIPLE_TORPEDO_LAUNCHER.get(), List.of(
                 new ItemStack(Items.IRON_INGOT, 6),
                 new ItemStack(ModItems.ALUMINUM_INGOT.get(), 3)
@@ -153,18 +148,6 @@ public final class WeaponWorkbenchRecipeRegistry {
         ), null, 200);
 
         // ===== Tab 4: 飞机 =====
-        add(r, 4, ModItems.FIGHTER_SQUADRON.get(), List.of(
-                new ItemStack(ModItems.ALUMINUM_INGOT.get(), 3),
-                new ItemStack(Items.REDSTONE, 1),
-                new ItemStack(Items.GUNPOWDER, 1)
-        ), null, 200);
-
-        add(r, 4, ModItems.DIVE_BOMBER_SQUADRON.get(), List.of(
-                new ItemStack(ModItems.ALUMINUM_INGOT.get(), 3),
-                new ItemStack(Items.REDSTONE, 1),
-                new ItemStack(Items.TNT, 1)
-        ), null, 200);
-
         add(r, 4, ModItems.B25_BOMBER.get(), List.of(
                 new ItemStack(ModItems.ALUMINUM_INGOT.get(), 4),
                 new ItemStack(Items.REDSTONE, 2),

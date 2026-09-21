@@ -69,18 +69,36 @@ public final class BallisticNet {
     }
 
     /**
-     * 前向传播。
+     * 输入标准化 + 逐层前向 + 输出反标准化。
      *
-     * <p>输入按 {@code [hDist, vDist, initialSpeed, dragCoeff, gravity]} 顺序给出
-     * （gravity 需已 /196 归一化），与 Python 侧训练脚本一致。
+     * <p><b>注意：网络学的是残差，不是飞行时间本身。</b>训练脚本
+     * （{@code tools/neural_ballistic/train.py}）把目标定义为
+     * {@code t − hDist / initialSpeed}——因为残差幅值只有 t 本身的约 10%，
+     * 让 MLP 逼近它才可能达到精度要求（train.py:157 的 {@code residual_baseline}）。
+     * 因此反标准化后必须把基线加回来，否则得到的是一段没有物理意义的数。
      *
-     * <p>刻意使用复用的临时缓冲区而非每层新建数组：动态分配会把单次推理拖到
-     * 10~30 μs 并产生 GC 压力（文档 2.2 节）。
+     * <p>踩坑：曾漏掉这一步，症状是解算结果整体偏小、落点误差最大 47 格
+     * （54 格距离处预测 4.87 tick，真值 22.87 tick）。这个 bug 不会报错、
+     * 不会抛异常，只会让精度全线崩掉，靠单元测试才发现。
      *
      * @param input 5 维输入，长度必须为 5
      * @return 飞行时间（tick），未做闭式反解
      */
     public double forwardTicks(double[] input) {
+        double residual = forwardResidual(input);
+        // 加回残差基线 h/v0。v0 非法时训练侧取 0（见 residual_baseline 的 np.where），此处对齐。
+        double v0 = input[2];
+        double baseline = v0 > 1e-9 ? input[0] / v0 : 0.0;
+        return residual + baseline;
+    }
+
+    /**
+     * 只跑网络本体，返回反标准化后的**残差**（未加基线）。
+     *
+     * <p>拆出来是为了让 {@code forwardTicks} 的基线步骤显式可见，
+     * 避免再次被当成「多余的一行」删掉。
+     */
+    private double forwardResidual(double[] input) {
         if (input.length != xMean.length) {
             throw new IllegalArgumentException("输入维度应为 " + xMean.length + "，实际 " + input.length);
         }

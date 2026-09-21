@@ -16,22 +16,6 @@ public final class AircraftItems {
     private static final DeferredRegister.Items ITEMS = ModItems.ITEMS;
 
     // ===== Aircraft Squadrons (Phase 18) =====
-    public static final DeferredItem<AircraftItem> FIGHTER_SQUADRON =
-            ITEMS.register("fighter_squadron",
-                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
-                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
-                                    new AircraftInfo(AircraftInfo.AircraftType.FIGHTER,
-                                            1200, 64, 0, 18f, 2.2f, 12, AircraftInfo.BombingMode.DIVE))));
-
-    public static final DeferredItem<AircraftItem> DIVE_BOMBER_SQUADRON =
-            ITEMS.register("dive_bomber_squadron",
-                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
-                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
-                                    new AircraftInfo(AircraftInfo.AircraftType.DIVE_BOMBER,
-                                            1200, 1, 0, 24f, 1.7f, 16, AircraftInfo.BombingMode.DIVE))));
-
     public static final DeferredItem<AircraftItem> XTB2D =
             ITEMS.register("xtb2d",
                     () -> new AircraftItem(new Item.Properties().stacksTo(1)

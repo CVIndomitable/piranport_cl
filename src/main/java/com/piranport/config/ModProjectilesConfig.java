@@ -50,7 +50,6 @@ public class ModProjectilesConfig {
     public static final ModConfigSpec.DoubleValue AP_ARMOR_IGNORE;
 
     // ==================== 鱼雷发射管 ====================
-    public static final ModConfigSpec.IntValue TWIN_TORPEDO_LAUNCHER_COOLDOWN;
     public static final ModConfigSpec.IntValue TRIPLE_TORPEDO_LAUNCHER_COOLDOWN;
     public static final ModConfigSpec.IntValue QUAD_TORPEDO_LAUNCHER_COOLDOWN;
     public static final ModConfigSpec.IntValue QUINTUPLE_TORPEDO_LAUNCHER_COOLDOWN;
@@ -206,10 +205,6 @@ public class ModProjectilesConfig {
 
         // ==================== 鱼雷发射管 ====================
         BUILDER.push("torpedo_launcher");
-
-        TWIN_TORPEDO_LAUNCHER_COOLDOWN = BUILDER
-            .comment("Twin torpedo launcher cooldown in ticks (双联鱼雷发射器冷却)")
-            .defineInRange("twin_cooldown_ticks", 100, 1, 6000);
 
         TRIPLE_TORPEDO_LAUNCHER_COOLDOWN = BUILDER
             .comment("Triple torpedo launcher cooldown in ticks (三联鱼雷发射器冷却)")

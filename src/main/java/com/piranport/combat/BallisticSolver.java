@@ -29,6 +29,16 @@ public final class BallisticSolver {
     private static final double PRECISE_ANGLE_EPSILON = 1.0e-9;
     /** 策划精度上限；数值相近的有效解优先使用低弹道。 */
     private static final double MAX_ACCEPTABLE_ERROR = 0.5;
+
+    /**
+     * 策划精度上限（格）的公开只读视图。
+     *
+     * <p>供外部解算实现（如 {@code combat.neural.BallisticDispatcher}）复用同一判据，
+     * 避免两处各写一个常量后漂移。
+     */
+    public static double maxAcceptableError() {
+        return MAX_ACCEPTABLE_ERROR;
+    }
     private static final double LOW_ARC_EQUIVALENCE_ERROR = 0.01;
 
     private static final Map<SolutionKey, Result> cache = createLRUCache();

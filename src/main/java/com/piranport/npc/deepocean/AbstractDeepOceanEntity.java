@@ -491,14 +491,14 @@ public abstract class AbstractDeepOceanEntity extends Monster {
 
         DeferredItem<?> itemReg;
         switch (type) {
-            case FIGHTER:          itemReg = ModItems.FIGHTER_SQUADRON;         break;
-            case DIVE_BOMBER:      itemReg = ModItems.DIVE_BOMBER_SQUADRON;     break;
+            case FIGHTER:          itemReg = ModItems.SEAFIRE;                  break;
+            case DIVE_BOMBER:      itemReg = ModItems.PETREL_BOMBER;            break;
             case TORPEDO_BOMBER:   itemReg = ModItems.SWORDFISH_TORPEDO;        break;
             case LEVEL_BOMBER:     itemReg = ModItems.B25_BOMBER;               break;
             case ASW:              itemReg = ModItems.SWORDFISH_ASW;            break;
             case RECON:            itemReg = ModItems.RECON_SQUADRON;           break;
             case ROCKET_FIGHTER:   itemReg = ModItems.F6F_HELLCAT_ROCKET;       break;
-            default:               itemReg = ModItems.FIGHTER_SQUADRON;         break;
+            default:               itemReg = ModItems.SEAFIRE;                  break;
         }
         ItemStack stack = new ItemStack(itemReg.get());
 

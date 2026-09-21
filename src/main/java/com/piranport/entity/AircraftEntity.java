@@ -1229,8 +1229,8 @@ public class AircraftEntity extends Entity {
             stack = originalStack.copy();
         } else {
             stack = switch (aircraftType) {
-                case FIGHTER        -> new ItemStack(ModItems.FIGHTER_SQUADRON.get());
-                case DIVE_BOMBER    -> new ItemStack(ModItems.DIVE_BOMBER_SQUADRON.get());
+                case FIGHTER        -> new ItemStack(ModItems.SEAFIRE.get());
+                case DIVE_BOMBER    -> new ItemStack(ModItems.PETREL_BOMBER.get());
                 case TORPEDO_BOMBER -> new ItemStack(ModItems.SWORDFISH_TORPEDO.get());
                 case LEVEL_BOMBER   -> new ItemStack(ModItems.B25_BOMBER.get());
                 case ASW            -> new ItemStack(ModItems.SWORDFISH_ASW.get());

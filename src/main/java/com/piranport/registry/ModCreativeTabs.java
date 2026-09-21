@@ -49,9 +49,10 @@ public class ModCreativeTabs {
                         output.accept(ModItems.SEVEN_BARREL_GUN.get());
                         output.accept(ModItems.SALVO_TEST_GUN.get());
                         output.accept(ModItems.FOURTEEN_BARREL_GUN.get());
+                        // 神经网络弹道解算实验炮（实验性质，见 docs/策划决策/武器/火炮-神经网络弹道解算实验方案.md）
+                        output.accept(ModItems.NEURAL_BALLISTIC_TEST_GUN.get());
 
                         // Torpedo Launchers
-                        output.accept(ModItems.TWIN_TORPEDO_LAUNCHER.get());
                         output.accept(ModItems.TRIPLE_TORPEDO_LAUNCHER.get());
                         output.accept(ModItems.QUAD_TORPEDO_LAUNCHER.get());
 
@@ -74,12 +75,9 @@ public class ModCreativeTabs {
             CREATIVE_TABS.register("aviation_tab", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.piranport.aviation"))
                     .withTabsBefore(ResourceKey.create(Registries.CREATIVE_MODE_TAB, PiranPort.modId("weapons_tab")))  // 链式排序：紧接 weapons_tab
-                    .icon(() -> ModItems.FIGHTER_SQUADRON.get().getDefaultInstance())
+                    .icon(() -> ModItems.SEAFIRE.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
                         // Generic squadrons
-                        output.accept(ModItems.FIGHTER_SQUADRON.get());
-                        output.accept(ModItems.DIVE_BOMBER_SQUADRON.get());
-
                         output.accept(ModItems.XTB2D.get());
                         output.accept(ModItems.RECON_SQUADRON.get());
                         // Torpedo bombers
@@ -588,8 +586,6 @@ public class ModCreativeTabs {
                         addPreloadedWeapon(output, ModItems.LARGE_GUN.get(), "piranport:large_he_shell", 3);
 
                         // Other preloaded test weapons already supported by the current test build.
-                        addPreloadedWeapon(output, ModItems.TWIN_TORPEDO_LAUNCHER.get(), "piranport:torpedo_533mm_g7a", 2);
-                        addPreloadedWeapon(output, ModItems.TWIN_TORPEDO_LAUNCHER.get(), "piranport:magnetic_torpedo_533mm_g7a", 2);
                         addPreloadedWeapon(output, ModItems.TRIPLE_TORPEDO_LAUNCHER.get(), "piranport:torpedo_533mm_g7a", 3);
                         addPreloadedWeapon(output, ModItems.TRIPLE_TORPEDO_LAUNCHER.get(), "piranport:acoustic_torpedo_533mm_g7e", 3);
                         addPreloadedWeapon(output, ModItems.QUAD_TORPEDO_LAUNCHER.get(), "piranport:torpedo_610mm_type93_mk3", 4);

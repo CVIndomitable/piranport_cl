@@ -136,6 +136,7 @@ public class ModItems {
     public static final DeferredItem<Item> SMALL_GUN = WeaponItems.SMALL_GUN;
     public static final DeferredItem<Item> JAPANESE_127MM_TWIN_GUN = WeaponItems.JAPANESE_127MM_TWIN_GUN;
     public static final DeferredItem<Item> MEDIUM_GUN = WeaponItems.MEDIUM_GUN;
+    public static final DeferredItem<Item> NEURAL_BALLISTIC_TEST_GUN = WeaponItems.NEURAL_BALLISTIC_TEST_GUN;
     public static final DeferredItem<Item> LARGE_GUN = WeaponItems.LARGE_GUN;
     public static final DeferredItem<Item> FRENCH_QUAD_380MM_GUN = WeaponItems.FRENCH_QUAD_380MM_GUN;
     public static final DeferredItem<Item> SEVEN_BARREL_GUN = WeaponItems.SEVEN_BARREL_GUN;
@@ -304,8 +305,6 @@ public class ModItems {
     public static final DeferredItem<ModFoodItem> YORKSHIRE_PUDDING = FoodItems.YORKSHIRE_PUDDING;
 
     // ===== Aircraft Squadrons (Phase 18) — 实际定义见 AircraftItems =====
-    public static final DeferredItem<AircraftItem> FIGHTER_SQUADRON = AircraftItems.FIGHTER_SQUADRON;
-    public static final DeferredItem<AircraftItem> DIVE_BOMBER_SQUADRON = AircraftItems.DIVE_BOMBER_SQUADRON;
     public static final DeferredItem<AircraftItem> XTB2D = AircraftItems.XTB2D;
     public static final DeferredItem<AircraftItem> RECON_SQUADRON = AircraftItems.RECON_SQUADRON;
 
@@ -390,7 +389,6 @@ public class ModItems {
     public static final DeferredItem<TorpedoReloadItem> TORPEDO_RELOAD = SpecialtyItems.TORPEDO_RELOAD;
 
     // ===== Torpedo Launchers (extracted to WeaponItems) =====
-    public static final DeferredItem<TorpedoLauncherItem> TWIN_TORPEDO_LAUNCHER = WeaponItems.TWIN_TORPEDO_LAUNCHER;
     public static final DeferredItem<TorpedoLauncherItem> TRIPLE_TORPEDO_LAUNCHER = WeaponItems.TRIPLE_TORPEDO_LAUNCHER;
     public static final DeferredItem<TorpedoLauncherItem> QUAD_TORPEDO_LAUNCHER = WeaponItems.QUAD_TORPEDO_LAUNCHER;
     public static final DeferredItem<TorpedoLauncherItem> QUINTUPLE_TORPEDO_LAUNCHER = WeaponItems.QUINTUPLE_TORPEDO_LAUNCHER;

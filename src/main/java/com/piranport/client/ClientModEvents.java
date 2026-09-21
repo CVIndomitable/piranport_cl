@@ -138,7 +138,6 @@ public class ClientModEvents {
         event.register(ModItems.JAPANESE_127MM_TWIN_GUN.get(), weaponDecorator);
         event.register(ModItems.MEDIUM_GUN.get(), weaponDecorator);
         event.register(ModItems.LARGE_GUN.get(), weaponDecorator);
-        event.register(ModItems.TWIN_TORPEDO_LAUNCHER.get(), weaponDecorator);
         event.register(ModItems.TRIPLE_TORPEDO_LAUNCHER.get(), weaponDecorator);
         event.register(ModItems.QUAD_TORPEDO_LAUNCHER.get(), weaponDecorator);
         event.register(ModItems.DEPTH_CHARGE_LAUNCHER.get(), weaponDecorator);

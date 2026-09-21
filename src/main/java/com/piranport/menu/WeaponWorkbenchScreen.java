@@ -52,10 +52,10 @@ public class WeaponWorkbenchScreen extends AbstractContainerScreen<WeaponWorkben
         super.init();
         tabIcons = new ItemStack[]{
                 new ItemStack(ModItems.SMALL_GUN.get()),
-                new ItemStack(ModItems.TWIN_TORPEDO_LAUNCHER.get()),
+                new ItemStack(ModItems.TRIPLE_TORPEDO_LAUNCHER.get()),
                 new ItemStack(ModItems.TERRIER_LAUNCHER.get()),
                 new ItemStack(ModItems.DEPTH_CHARGE_LAUNCHER.get()),
-                new ItemStack(ModItems.FIGHTER_SQUADRON.get())
+                new ItemStack(ModItems.SEAFIRE.get())
         };
     }
 

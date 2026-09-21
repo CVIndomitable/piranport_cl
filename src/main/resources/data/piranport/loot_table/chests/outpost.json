@@ -13,7 +13,6 @@
         { "type": "minecraft:item", "name": "piranport:medium_gun", "weight": 4 },
         { "type": "minecraft:item", "name": "piranport:medium_armor_plate", "weight": 4 },
         { "type": "minecraft:item", "name": "piranport:small_armor_plate", "weight": 6 },
-        { "type": "minecraft:item", "name": "piranport:twin_torpedo_launcher", "weight": 3 },
         { "type": "minecraft:item", "name": "piranport:standard_engine", "weight": 4 },
         { "type": "minecraft:item", "name": "piranport:fuel", "weight": 8,
           "functions": [{ "function": "minecraft:set_count", "count": { "min": 2, "max": 6, "type": "minecraft:uniform" } }] },

@@ -95,6 +95,25 @@ public final class WeaponItems {
                             List.of(new MuzzlePos(0.3, 0.2, 0)),
                             3.0f, 0.01f, 9.8f, 1.5f, 0.0f,
                             15, 1, 0.0f), "medium_gun"));
+    /**
+     * 神经网络弹道解算实验炮。
+     *
+     * <p>数值完全复制 {@link #MEDIUM_GUN}（口径 8 / 单装 / v₀=3.0 / drag=0.01 / g=9.8 /
+     * 散布 0.8° / 仰角 −5°~50°），但解算路径走 {@code combat.neural.BallisticNet}
+     * 而非 {@code BallisticSolver}。路由按注册 ID 判定（见 {@code CannonAiming}），
+     * 不依赖物理参数——因为 {@code ConfigOverrideManager} 会运行时改动参数，
+     * 用参数路由会在玩家改覆盖值时误判。
+     *
+     * <p>依据：{@code docs/策划决策/武器/火炮-神经网络弹道解算实验方案.md} 4.1 / 4.2。
+     */
+    public static final DeferredItem<Item> NEURAL_BALLISTIC_TEST_GUN =
+            ITEMS.register("neural_ballistic_test_gun", () -> new ArtilleryItem(new Item.Properties().stacksTo(1)
+                    .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.CANNON)
+                    .durability(1000),
+                    new ArtilleryCannonData(8, 1, 12.0f, 50, 1000, 3.0f,
+                            List.of(new MuzzlePos(0.3, 0.2, 0)),
+                            3.0f, 0.01f, 9.8f, 1.5f, 0.0f,
+                            15, 1, 0.0f), "neural_ballistic_test_gun"));
     public static final DeferredItem<Item> LARGE_GUN =
             ITEMS.register("large_gun", () -> new ArtilleryItem(new Item.Properties().stacksTo(1)
                     .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.CANNON)
@@ -270,12 +289,6 @@ public final class WeaponItems {
                             2.0f, com.piranport.config.ModEquipmentConfig.CIWS_76MM));
 
     // ===== Torpedo Launchers =====
-    public static final DeferredItem<TorpedoLauncherItem> TWIN_TORPEDO_LAUNCHER =
-            ITEMS.register("twin_torpedo_launcher",
-                    () -> new TorpedoLauncherItem(
-                            new Item.Properties().stacksTo(1).durability(64)
-                                    .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.TORPEDO),
-                            533, 2, ModProjectilesConfig.TWIN_TORPEDO_LAUNCHER_COOLDOWN::get));
     public static final DeferredItem<TorpedoLauncherItem> TRIPLE_TORPEDO_LAUNCHER =
             ITEMS.register("triple_torpedo_launcher",
                     () -> new TorpedoLauncherItem(

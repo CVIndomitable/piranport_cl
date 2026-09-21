@@ -109,18 +109,18 @@ def new_canvas():
 # 排布：(x, y, w, h, tail, light)
 LAYOUTS = {
     # 3 枚：大 + 中 + 小，错落分布 —— 最贴近辣椒种子
-    'cluster3': [(9, 4, 8, 11, 'down-right', 'left'),
-                 (3, 11, 7, 10, 'left',       'right'),
-                 (14, 16, 7, 9, 'down-right', 'left')],
-    # 4 枚：更密
-    'cluster4': [(9, 3, 8, 10, 'down-right', 'left'),
-                 (3, 10, 7, 9, 'left',       'right'),
-                 (14, 15, 7, 9, 'down-right', 'left'),
-                 (8, 20, 6, 7, 'down-left',  'right')],
+    'cluster3': [(10, 4, 10, 13, 'down-right', 'left'),
+                 (2, 11, 9, 12, 'left',       'right'),
+                 (15, 15, 9, 12, 'down-right', 'left')],
+    # 4 枚：更密（番茄籽偏小偏多）
+    'cluster4': [(11, 3, 9, 12, 'down-right', 'left'),
+                 (2, 10, 8, 11, 'left',       'right'),
+                 (15, 14, 8, 11, 'down-right', 'left'),
+                 (6, 21, 7, 9,  'down-right', 'right')],
     # 3 枚细长型（麦类/生菜）
-    'tall3':    [(9, 3, 7, 12, 'down-right', 'left'),
-                 (3, 9, 6, 12, 'left',       'right'),
-                 (15, 13, 7, 11, 'down-right', 'left')],
+    'tall3':    [(11, 2, 8, 14, 'down-right', 'left'),
+                 (2, 9, 7, 14,  'left',       'right'),
+                 (16, 12, 8, 13, 'down-right', 'left')],
 }
 
 

@@ -27,6 +27,9 @@ public final class BallisticSolver {
     private static final int PRECISE_REFINE_ITERS = 80;
     private static final double PRECISE_VERTICAL_EPSILON = 1.0e-4;
     private static final double PRECISE_ANGLE_EPSILON = 1.0e-9;
+    /** 策划精度上限；数值相近的有效解优先使用低弹道。 */
+    private static final double MAX_ACCEPTABLE_ERROR = 0.5;
+    private static final double LOW_ARC_EQUIVALENCE_ERROR = 0.01;
 
     private static final Map<SolutionKey, Result> cache = createLRUCache();
     private static boolean cacheEnabled = true;
@@ -48,7 +51,7 @@ public final class BallisticSolver {
     };
     private static java.util.function.DoubleSupplier noSolutionThresholdSupplier = () -> {
         try { return ModArtilleryConfig.BALLISTIC_NO_SOLUTION_THRESHOLD.get(); }
-        catch (Throwable t) { return 50.0; }
+        catch (Throwable t) { return 5.0; }
     };
     private static java.util.function.IntSupplier cacheSizeSupplier = () -> {
         try { return ModEquipmentConfig.BALLISTIC_CACHE_SIZE.get(); }
@@ -134,7 +137,7 @@ public final class BallisticSolver {
     private record Velocity(double vx, double vy, double vz) {}
 
     /** 原版 ThrowableProjectile 在空气中的每 tick 速度保留比例。 */
-    private static final double VANILLA_AIR_DRAG = 0.99;
+    private static final double VANILLA_AIR_DRAG = (double) 0.99F;
 
     /**
      * 弹道解算入口。从 ModEquipmentConfig / ModArtilleryConfig 读取参数。
@@ -212,7 +215,7 @@ public final class BallisticSolver {
         ErrorMetrics bestError;
         BallisticSolverStats.Algorithm chosen;
 
-        if (newtonError.total() < ternaryError.total()) {
+        if (isBetter(newtonError, newtonAngle, ternaryError, ternaryAngle)) {
             bestAngle = newtonAngle;
             bestError = newtonError;
             chosen = BallisticSolverStats.Algorithm.NEWTON;
@@ -238,9 +241,11 @@ public final class BallisticSolver {
         long totalElapsed = System.nanoTime() - solveStart;
         stats.recordCombined(bestError.vertical(), bestError.horizontal(), chosen, totalElapsed);
 
-        // 无解（打不到目标）时返回最大射程角 + 超出射程标记
-        boolean outOfRange = bestError.total() > noSolutionThreshold;
-        if (outOfRange) {
+        // 有效命中遵守策划的 0.5 格精度，不能因为回退阈值较宽就把近似解当作命中。
+        // no_solution_threshold 仍控制何时放弃最佳近似角、改用最大射程角。
+        boolean outOfRange = !Double.isFinite(bestError.total())
+                || bestError.total() > MAX_ACCEPTABLE_ERROR;
+        if (!Double.isFinite(bestError.total()) || bestError.total() > noSolutionThreshold) {
             bestAngle = calculateMaxRangeAngle(initialSpeed, dragCoeff, gravity, minAngle, maxAngle);
         }
 
@@ -417,6 +422,15 @@ public final class BallisticSolver {
         if (current == null) return true;
         double candidateTotal = candidate.total();
         double currentTotal = current.total();
+        double accuracy = accuracySupplier.getAsDouble();
+        if (!Double.isFinite(accuracy) || accuracy <= 0.0) accuracy = 0.01;
+        double equivalentAccuracy = Math.min(LOW_ARC_EQUIVALENCE_ERROR,
+                Math.max(PRECISE_VERTICAL_EPSILON, accuracy));
+        // 两个根都达到命中精度后，继续比较微小浮点误差会随机切换高低弹道。
+        // 优先较低仰角，避免平射目标突然变成持续数秒的高抛射击。
+        if (candidateTotal <= equivalentAccuracy && currentTotal <= equivalentAccuracy) {
+            return candidateAngle < currentAngle;
+        }
         if (candidateTotal < currentTotal - 1.0e-6) return true;
         if (Math.abs(candidateTotal - currentTotal) <= 1.0e-6) {
             return Math.abs(candidateAngle) < Math.abs(currentAngle);

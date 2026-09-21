@@ -83,7 +83,8 @@ public class ModArtilleryConfig {
             .comment(
                 "Error threshold for 'no solution' fallback (无解判定阈值，格).",
                 "When the best solution error exceeds this, the solver falls back to max-range angle.",
-                "Range: 0.5-50.0, Default: 5.0 (误差超过5格认为打不到)")
+                "A shot is already marked out of range above 0.5 blocks; this only controls the angle fallback.",
+                "Range: 0.5-50.0, Default: 5.0 (误差超过0.5格提示无法命中，超过此阈值改用最大射程角)")
             .defineInRange("no_solution_threshold", 5.0, 0.5, 50.0);
 
         BUILDER.pop();

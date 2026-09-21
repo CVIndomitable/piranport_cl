@@ -1,6 +1,14 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "piranport:item/quintuple_torpedo_launcher"
-  }
+    "layer0": "piranport:item/quintuple_torpedo_launcher_empty"
+  },
+  "overrides": [
+    {
+      "predicate": {
+        "piranport:loaded": 1
+      },
+      "model": "piranport:item/quintuple_torpedo_launcher"
+    }
+  ]
 }

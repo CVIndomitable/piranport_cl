@@ -1,6 +1,28 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "piranport:item/triple_torpedo_launcher"
-  }
+    "layer0": "piranport:item/triple_torpedo_launcher_empty"
+  },
+  "overrides": [
+    {
+      "predicate": {
+        "piranport:loaded": 1
+      },
+      "model": "piranport:item/triple_torpedo_launcher"
+    },
+    {
+      "predicate": {
+        "piranport:loaded": 1,
+        "piranport:ammo_type": 0.5
+      },
+      "model": "piranport:item/triple_torpedo_launcher_h2o2"
+    },
+    {
+      "predicate": {
+        "piranport:loaded": 1,
+        "piranport:ammo_type": 0.25
+      },
+      "model": "piranport:item/triple_torpedo_launcher_magnetic"
+    }
+  ]
 }

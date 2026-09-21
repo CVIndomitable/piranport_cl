@@ -1,6 +1,14 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "piranport:item/mk14_harpoon_launcher"
-  }
+    "layer0": "piranport:item/mk14_harpoon_launcher_empty"
+  },
+  "overrides": [
+    {
+      "predicate": {
+        "piranport:loaded": 1
+      },
+      "model": "piranport:item/mk14_harpoon_launcher"
+    }
+  ]
 }

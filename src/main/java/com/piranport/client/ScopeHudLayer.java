@@ -211,6 +211,17 @@ public class ScopeHudLayer {
                 formatBlocks(ClientScopeHandler.getServerHorizontalError()),
                 sTern, sNewt);
         graphics.drawString(mc.font, serverInfo, cx - mc.font.width(serverInfo) / 2, startY, accuracyColor, true);
+        startY += lineHeight;
+
+        // 缓存命中率：决定「神经网络替换解算器」方案的收益。
+        // 该方案只在 cache-miss 路径有加速，稳态瞄准时缓存全命中、上网络反而更慢。
+        // 依据：docs/策划决策/武器/火炮-神经网络弹道解算实验方案.md
+        long hits = stats.getCacheHits();
+        long misses = stats.getCacheMisses();
+        String cacheInfo = String.format("§7缓存: 命中§f%d§7 未命中§f%d§7 命中率§f%.1f%%  §7miss均值§f%d§7µs 峰值§f%d§7µs",
+                hits, misses, (1.0 - stats.getCacheMissRate()) * 100.0,
+                stats.getCacheMissAvgUs(), stats.getCacheMissMaxUs());
+        graphics.drawString(mc.font, cacheInfo, cx - mc.font.width(cacheInfo) / 2, startY, textColor, true);
     }
 
     private static String formatBlocks(double value) {

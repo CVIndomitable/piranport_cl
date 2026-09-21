@@ -173,7 +173,12 @@ public final class BallisticSolver {
         if (isCacheEnabled()) {
             SolutionKey key = new SolutionKey(initialSpeed, dragCoeff, gravity, qHDist, qVDist, minAngle, maxAngle);
             Result cached = cacheGet(key);
-            if (cached != null) return cached;
+            if (cached != null) {
+                // 缓存命中率统计：用于评估「神经网络替换解算器」方案的收益
+                // （该方案的加速只体现在 miss 路径，稳态瞄准时上网络是负优化）
+                BallisticSolverStats.getInstance().recordCacheHit();
+                return cached;
+            }
         }
 
         long solveStart = System.nanoTime();
@@ -240,6 +245,8 @@ public final class BallisticSolver {
 
         long totalElapsed = System.nanoTime() - solveStart;
         stats.recordCombined(bestError.vertical(), bestError.horizontal(), chosen, totalElapsed);
+        // 缓存未命中统计（完整解算路径的实际成本与发生率）
+        stats.recordCacheMiss(totalElapsed);
 
         // 有效命中遵守策划的 0.5 格精度，不能因为回退阈值较宽就把近似解当作命中。
         // no_solution_threshold 仍控制何时放弃最佳近似角、改用最大射程角。

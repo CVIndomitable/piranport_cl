@@ -46,11 +46,55 @@ public final class BallisticSolverStats {
     private int lastTernaryIters = 0;
     private int lastNewtonIters = 0;
 
+    // ===== 缓存命中率统计 =====
+    // 用途：判断「神经网络替换解算器」方案的收益。该方案的加速只体现在
+    // cache-miss 路径上，而稳态瞄准时缓存全命中、上网络反而是负优化
+    // （实测 cache-hit P50=0.25us，网络推理约 1.4us）。因此 cache-miss
+    // 的实际发生率直接决定该方案是否值得推进。
+    // 依据：docs/策划决策/武器/火炮-神经网络弹道解算实验方案.md
+    private long cacheHits = 0;
+    private long cacheMisses = 0;
+    /** cache-miss 的累计耗时（纳秒），用于算真实平均成本 */
+    private long cacheMissTotalNs = 0;
+    /** cache-miss 耗时上限（最坏一次），用于观察长尾 */
+    private long cacheMissMaxNs = 0;
+    /** 最近一次 cache-miss 的累计耗时，用于观察连续变速时的成本 */
+    private long lastCacheMissNs = 0;
+
     private static final BallisticSolverStats INSTANCE = new BallisticSolverStats();
 
     private BallisticSolverStats() {}
 
     public static BallisticSolverStats getInstance() { return INSTANCE; }
+
+    // ===== 缓存命中率 =====
+
+    /** 记录一次缓存命中（零成本路径）。 */
+    public void recordCacheHit() { cacheHits++; }
+
+    /**
+     * 记录一次缓存未命中（完整解算）。
+     * @param elapsedNs 本次解算耗时
+     */
+    public void recordCacheMiss(long elapsedNs) {
+        cacheMisses++;
+        cacheMissTotalNs += elapsedNs;
+        if (elapsedNs > cacheMissMaxNs) cacheMissMaxNs = elapsedNs;
+        lastCacheMissNs = elapsedNs;
+    }
+
+    public long getCacheHits() { return cacheHits; }
+    public long getCacheMisses() { return cacheMisses; }
+    public long getCacheTotalRequests() { return cacheHits + cacheMisses; }
+    public long getLastCacheMissUs() { return lastCacheMissNs / 1000; }
+    public long getCacheMissMaxUs() { return cacheMissMaxNs / 1000; }
+    public long getCacheMissAvgUs() { return cacheMisses == 0 ? 0 : (cacheMissTotalNs / cacheMisses) / 1000; }
+
+    /** 缓存未命中率 [0,1]。样本不足时返回 0。 */
+    public double getCacheMissRate() {
+        long total = getCacheTotalRequests();
+        return total == 0 ? 0.0 : (double) cacheMisses / total;
+    }
 
     /** 记录三分法计算 */
     public void recordTernary(long elapsedNs, double verticalError, double horizontalError) {
@@ -137,5 +181,10 @@ public final class BallisticSolverStats {
         lastChosen = Algorithm.TERNARY;
         lastTernaryIters = 0;
         lastNewtonIters = 0;
+        cacheHits = 0;
+        cacheMisses = 0;
+        cacheMissTotalNs = 0;
+        cacheMissMaxNs = 0;
+        lastCacheMissNs = 0;
     }
 }

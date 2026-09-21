@@ -2,5 +2,13 @@
   "parent": "minecraft:item/generated",
   "textures": {
     "layer0": "piranport:item/medium_armor_plate"
-  }
+  },
+  "overrides": [
+    {
+      "predicate": {
+        "piranport:loaded": 1
+      },
+      "model": "piranport:item/medium_armor_plate"
+    }
+  ]
 }

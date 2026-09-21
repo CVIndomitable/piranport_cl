@@ -45,6 +45,16 @@ public class ClientModEvents {
         // 注册 "fueled" 物品属性：有燃料时为 1.0，否则为 0.0。
         // 模型使用此谓词在装载和空载纹理之间切换。
         ResourceLocation fueled = ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "fueled");
+        // 注册 "loaded" 物品属性：已装填弹药时为 1.0，否则为 0.0。
+        // 火炮/鱼雷发射器/导弹发射器用它切换"空膛/已装填"纹理。
+        // WHY：火炮走"类似弩"的装填模型（见 docs/策划决策/武器/09-装填类似弩模型.md），
+        // 空膛时无法发射，玩家需要一眼看出武器是否能开火，因此必须有独立的空膛贴图。
+        ResourceLocation loaded = ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "loaded");
+        // 注册 "ammo_type" 物品属性：区分已装填鱼雷的弹种，用于给发射器切换弹种贴图。
+        // 0.0 = 普通鱼雷 / 1.0 = 过氧化氢 / 0.25 = 磁性。
+        // WHY：不同弹种的发射器外观不同（美术提供了 _h2o2 / _magnetic 两套变体贴图），
+        // 玩家需要一眼看出管里装的是哪种鱼雷。
+        ResourceLocation ammoType = ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "ammo_type");
         event.enqueueWork(() -> {
             // 为所有 AircraftItem 实例注册 "fueled" 属性（包括命名变体）
             for (var entry : ModItems.ITEMS.getEntries()) {
@@ -52,6 +62,29 @@ public class ClientModEvents {
                     ItemProperties.register(entry.get(), fueled, (stack, level, entity, seed) -> {
                         AircraftInfo info = stack.get(ModDataComponents.AIRCRAFT_INFO.get());
                         return (info != null && info.currentFuel() > 0) ? 1.0f : 0.0f;
+                    });
+                }
+                // 为所有火炮和发射器（鱼雷/导弹/火箭）注册 "loaded" 属性。
+                // 判定依据是 LOADED_AMMO 数据组件，而非某种物品子类特有的状态，
+                // 这样鱼雷再装填增强件（走同一组件）生效时也会自动切换贴图。
+                // 注意：导弹发射器是 MissileLauncherItem，与 TorpedoLauncherItem
+                // 没有继承关系，两者都要覆盖，否则导弹发射器贴图不会切换。
+                if (entry.get() instanceof com.piranport.artillery.ArtilleryItem
+                        || entry.get() instanceof com.piranport.item.TorpedoLauncherItem
+                        || entry.get() instanceof com.piranport.item.MissileLauncherItem) {
+                    ItemProperties.register(entry.get(), loaded, (stack, level, entity, seed) -> {
+                        var ammo = stack.get(ModDataComponents.LOADED_AMMO.get());
+                        return (ammo != null && ammo.hasAmmo()) ? 1.0f : 0.0f;
+                    });
+                    // 弹种判定：ammoItemId 里带 h2o2/过氧化氢字样 → 1.0，磁性 → 0.25，其余 → 0.0。
+                    // 用 ID 关键字而非硬编码物品表，新增同弹种鱼雷时无需改这里。
+                    ItemProperties.register(entry.get(), ammoType, (stack, level, entity, seed) -> {
+                        var ammo = stack.get(ModDataComponents.LOADED_AMMO.get());
+                        if (ammo == null || !ammo.hasAmmo()) return 0.0f;
+                        String id = ammo.ammoItemId();
+                        if (id.contains("mk16") || id.contains("mk17")) return 1.0f;   // 过氧化氢鱼雷
+                        if (id.contains("magnetic")) return 0.25f;                    // 磁性鱼雷
+                        return 0.0f;
                     });
                 }
             }

@@ -68,12 +68,12 @@
   ],
   "first_clear_rewards": [
     {
-      "item": "minecraft:emerald",
-      "count": 16
+      "item": "minecraft:iron_ingot",
+      "count": 40
     },
     {
-      "item": "piranport:type_1_ap_shell",
-      "count": 8
+      "item": "piranport:super_heavy_ap_shell",
+      "count": 4
     }
   ],
   "victory_conditions": [

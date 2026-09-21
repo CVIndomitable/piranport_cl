@@ -38,12 +38,16 @@
   ],
   "first_clear_rewards": [
     {
-      "item": "minecraft:emerald",
-      "count": 8
+      "item": "minecraft:iron_ingot",
+      "count": 52
     },
     {
-      "item": "piranport:magnetic_torpedo_blueprint",
-      "count": 1
+      "item": "minecraft:gunpowder",
+      "count": 16
+    },
+    {
+      "item": "piranport:magnetic_torpedo_533mm",
+      "count": 8
     }
   ],
   "victory_conditions": [

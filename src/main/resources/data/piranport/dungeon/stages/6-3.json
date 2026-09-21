@@ -68,11 +68,15 @@
   ],
   "first_clear_rewards": [
     {
-      "item": "minecraft:emerald",
-      "count": 16
+      "item": "minecraft:iron_ingot",
+      "count": 60
     },
     {
-      "item": "piranport:magnetic_torpedo_blueprint",
+      "item": "minecraft:copper_ingot",
+      "count": 20
+    },
+    {
+      "item": "piranport:depth_charge_launcher_improved",
       "count": 1
     }
   ],

@@ -12,8 +12,14 @@
     "B": {
       "type": "resource",
       "rewards": [
-        { "item": "minecraft:iron_ingot", "count": 16 },
-        { "item": "minecraft:diamond", "count": 4 }
+        {
+          "item": "minecraft:iron_ingot",
+          "count": 16
+        },
+        {
+          "item": "minecraft:diamond",
+          "count": 4
+        }
       ],
       "display_x": 200,
       "display_y": 100
@@ -26,20 +32,43 @@
     }
   },
   "edges": [
-    { "from": "A", "to": "B" },
-    { "from": "B", "to": "C" }
+    {
+      "from": "A",
+      "to": "B"
+    },
+    {
+      "from": "B",
+      "to": "C"
+    }
   ],
   "start_node": "A",
-  "boss_nodes": ["C"],
-  "checkpoints": [
-    { "id": "cp_1_4_pre_boss", "node_id": "B", "pos_x": 0, "pos_y": 64, "pos_z": 0, "facing": "south" }
+  "boss_nodes": [
+    "C"
   ],
-  "victory_conditions": ["KILL_BOSS"],
+  "checkpoints": [
+    {
+      "id": "cp_1_4_pre_boss",
+      "node_id": "B",
+      "pos_x": 0,
+      "pos_y": 64,
+      "pos_z": 0,
+      "facing": "south"
+    }
+  ],
+  "victory_conditions": [
+    "KILL_BOSS"
+  ],
   "victory_objectives": {
     "require_all_nodes_cleared": true
   },
   "first_clear_rewards": [
-    { "item": "piranport:type_91_ap_shell", "count": 4 },
-    { "item": "minecraft:diamond", "count": 6 }
+    {
+      "item": "minecraft:iron_ingot",
+      "count": 20
+    },
+    {
+      "item": "piranport:medium_gun_blueprint",
+      "count": 1
+    }
   ]
 }

@@ -12,8 +12,15 @@
     "B": {
       "type": "resource",
       "rewards": [
-        { "item": "minecraft:iron_ingot", "count": 8 },
-        { "item": "minecraft:totem_of_undying", "count": 1, "chance": 0.15 }
+        {
+          "item": "minecraft:iron_ingot",
+          "count": 8
+        },
+        {
+          "item": "minecraft:totem_of_undying",
+          "count": 1,
+          "chance": 0.15
+        }
       ],
       "display_x": 150,
       "display_y": 100
@@ -21,7 +28,10 @@
     "C": {
       "type": "cost",
       "cost": [
-        { "item": "minecraft:iron_ingot", "count": 4 }
+        {
+          "item": "minecraft:iron_ingot",
+          "count": 4
+        }
       ],
       "cost_message": "海域湍流，消耗4铁锭",
       "display_x": 150,
@@ -41,15 +51,39 @@
     }
   },
   "edges": [
-    { "from": "A", "to": "B" },
-    { "from": "A", "to": "C" },
-    { "from": "B", "to": "D" },
-    { "from": "C", "to": "D" },
-    { "from": "D", "to": "E" }
+    {
+      "from": "A",
+      "to": "B"
+    },
+    {
+      "from": "A",
+      "to": "C"
+    },
+    {
+      "from": "B",
+      "to": "D"
+    },
+    {
+      "from": "C",
+      "to": "D"
+    },
+    {
+      "from": "D",
+      "to": "E"
+    }
   ],
   "start_node": "A",
-  "boss_nodes": ["E"],
+  "boss_nodes": [
+    "E"
+  ],
   "first_clear_rewards": [
-    { "item": "minecraft:diamond", "count": 3 }
+    {
+      "item": "minecraft:iron_ingot",
+      "count": 16
+    },
+    {
+      "item": "minecraft:coal",
+      "count": 12
+    }
   ]
 }

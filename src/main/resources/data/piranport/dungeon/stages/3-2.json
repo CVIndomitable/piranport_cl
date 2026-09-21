@@ -54,11 +54,11 @@
   ],
   "first_clear_rewards": [
     {
-      "item": "minecraft:diamond",
-      "count": 4
+      "item": "minecraft:iron_ingot",
+      "count": 32
     },
     {
-      "item": "piranport:twin_127mm_blueprint",
+      "item": "piranport:large_gun_blueprint",
       "count": 1
     }
   ],

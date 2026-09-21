@@ -68,12 +68,16 @@
   ],
   "first_clear_rewards": [
     {
-      "item": "minecraft:diamond",
-      "count": 16
+      "item": "minecraft:iron_ingot",
+      "count": 64
     },
     {
-      "item": "minecraft:nether_star",
-      "count": 2
+      "item": "minecraft:gunpowder",
+      "count": 32
+    },
+    {
+      "item": "piranport:mk23_nuclear_shell",
+      "count": 1
     }
   ],
   "victory_conditions": [

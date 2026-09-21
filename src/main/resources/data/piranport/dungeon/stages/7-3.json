@@ -75,11 +75,15 @@
   ],
   "first_clear_rewards": [
     {
-      "item": "minecraft:nether_star",
-      "count": 2
+      "item": "minecraft:iron_ingot",
+      "count": 64
     },
     {
-      "item": "piranport:mk23_nuke",
+      "item": "minecraft:copper_ingot",
+      "count": 32
+    },
+    {
+      "item": "piranport:depth_charge_launcher_advanced",
       "count": 1
     }
   ],

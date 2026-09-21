@@ -29,11 +29,11 @@
   "first_clear_rewards": [
     {
       "item": "minecraft:iron_ingot",
-      "count": 16
+      "count": 24
     },
     {
-      "item": "minecraft:gold_ingot",
-      "count": 8
+      "item": "minecraft:gunpowder",
+      "count": 16
     }
   ],
   "victory_conditions": [

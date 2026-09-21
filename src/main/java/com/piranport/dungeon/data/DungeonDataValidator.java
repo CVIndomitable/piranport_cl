@@ -1,5 +1,6 @@
 package com.piranport.dungeon.data;
 
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.ArrayList;
@@ -51,8 +52,12 @@ final class DungeonDataValidator {
                 }
                 checkRewards(node.rewards(), nodeContext, errors);
                 for (NodeData.CostEntry cost : node.cost()) {
-                    if (ResourceLocation.tryParse(cost.item()) == null || cost.count() <= 0) {
+                    ResourceLocation costId = ResourceLocation.tryParse(cost.item());
+                    if (costId == null || cost.count() <= 0) {
                         errors.add(nodeContext + " 过路费物品 ID 或数量无效");
+                    } else if (!BuiltInRegistries.ITEM.containsKey(costId)) {
+                        // 同 checkRewards：过路费是玩家前进的必经扣费，未注册物品会导致节点永远无法通过。
+                        errors.add(nodeContext + " 过路费物品未注册: " + cost.item());
                     }
                 }
             }
@@ -61,8 +66,12 @@ final class DungeonDataValidator {
             List<EnemySetData.SpawnEntry> spawns = new ArrayList<>(set.spawnList());
             if (set.flagship() != null) spawns.add(set.flagship());
             for (EnemySetData.SpawnEntry spawn : spawns) {
-                if (ResourceLocation.tryParse(spawn.entity()) == null || spawn.count() <= 0) {
+                ResourceLocation entityId = ResourceLocation.tryParse(spawn.entity());
+                if (entityId == null || spawn.count() <= 0) {
                     errors.add("敌人组 " + set.enemySetId() + " 实体 ID 或数量无效");
+                } else if (!BuiltInRegistries.ENTITY_TYPE.containsKey(entityId)) {
+                    // 同 checkRewards：未注册实体在生成时静默跳过，关卡会变成"空关"却无任何报错。
+                    errors.add("敌人组 " + set.enemySetId() + " 实体未注册: " + spawn.entity());
                 }
             }
         }
@@ -75,9 +84,14 @@ final class DungeonDataValidator {
 
     private static void checkRewards(List<NodeData.RewardEntry> rewards, String context, List<String> errors) {
         for (NodeData.RewardEntry reward : rewards) {
-            if (ResourceLocation.tryParse(reward.item()) == null || reward.count() <= 0
+            ResourceLocation id = ResourceLocation.tryParse(reward.item());
+            if (id == null || reward.count() <= 0
                     || !Float.isFinite(reward.chance()) || reward.chance() < 0 || reward.chance() > 1) {
                 errors.add(context + " 奖励物品 ID、数量或概率无效");
+            } else if (!BuiltInRegistries.ITEM.containsKey(id)) {
+                // 决策/副本/21 §4.4：只校验 ID 语法会让"语法合法但从未注册"的奖励静默丢失，
+                // RewardDispatcher 在解析失败时直接 return 且无日志，玩家通关后拿不到东西也无提示。
+                errors.add(context + " 奖励物品未注册: " + reward.item());
             }
         }
     }

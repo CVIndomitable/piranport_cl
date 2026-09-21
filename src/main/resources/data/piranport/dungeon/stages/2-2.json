@@ -17,7 +17,7 @@
           "count": 16
         },
         {
-          "item": "minecraft:aluminum",
+          "item": "piranport:aluminum_ingot",
           "count": 8
         }
       ],
@@ -47,12 +47,12 @@
   ],
   "first_clear_rewards": [
     {
-      "item": "minecraft:diamond",
-      "count": 4
+      "item": "minecraft:iron_ingot",
+      "count": 24
     },
     {
-      "item": "piranport:vt_fuse",
-      "count": 2
+      "item": "piranport:small_vt_shell",
+      "count": 8
     }
   ],
   "victory_conditions": [

@@ -38,11 +38,15 @@
   ],
   "first_clear_rewards": [
     {
-      "item": "minecraft:diamond",
-      "count": 6
+      "item": "minecraft:iron_ingot",
+      "count": 56
     },
     {
-      "item": "piranport:asw_upgrade_part",
+      "item": "minecraft:aluminum_ingot",
+      "count": 24
+    },
+    {
+      "item": "piranport:improved_sonar",
       "count": 1
     }
   ],

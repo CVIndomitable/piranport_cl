@@ -29,11 +29,15 @@
   "first_clear_rewards": [
     {
       "item": "minecraft:iron_ingot",
-      "count": 20
+      "count": 64
     },
     {
-      "item": "minecraft:redstone",
-      "count": 12
+      "item": "minecraft:coal",
+      "count": 32
+    },
+    {
+      "item": "piranport:advanced_sonar",
+      "count": 1
     }
   ],
   "victory_conditions": [

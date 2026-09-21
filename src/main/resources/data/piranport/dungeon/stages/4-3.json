@@ -38,11 +38,15 @@
   ],
   "first_clear_rewards": [
     {
-      "item": "minecraft:emerald",
-      "count": 16
+      "item": "minecraft:iron_ingot",
+      "count": 44
     },
     {
-      "item": "piranport:l3_upgrade_part",
+      "item": "minecraft:aluminum_ingot",
+      "count": 24
+    },
+    {
+      "item": "piranport:improved_engine",
       "count": 1
     }
   ],

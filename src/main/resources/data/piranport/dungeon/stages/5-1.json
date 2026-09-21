@@ -29,10 +29,14 @@
   "first_clear_rewards": [
     {
       "item": "minecraft:iron_ingot",
-      "count": 16
+      "count": 48
     },
     {
-      "item": "piranport:sonar_blueprint",
+      "item": "minecraft:coal",
+      "count": 24
+    },
+    {
+      "item": "piranport:standard_sonar",
       "count": 1
     }
   ],

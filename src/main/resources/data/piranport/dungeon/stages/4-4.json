@@ -71,11 +71,11 @@
   ],
   "first_clear_rewards": [
     {
-      "item": "minecraft:emerald",
-      "count": 16
+      "item": "minecraft:iron_ingot",
+      "count": 48
     },
     {
-      "item": "piranport:l3_upgrade_part",
+      "item": "piranport:high_pressure_boiler",
       "count": 1
     }
   ],

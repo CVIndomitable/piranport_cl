@@ -71,12 +71,12 @@
   ],
   "first_clear_rewards": [
     {
-      "item": "minecraft:emerald",
-      "count": 16
+      "item": "minecraft:iron_ingot",
+      "count": 64
     },
     {
-      "item": "piranport:vt_improved_blueprint",
-      "count": 1
+      "item": "piranport:chaos_shard_alpha",
+      "count": 4
     }
   ],
   "victory_conditions": [

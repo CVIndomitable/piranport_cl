@@ -1,5 +1,6 @@
 package com.piranport.dungeon.event;
 
+import com.piranport.PiranPort;
 import com.piranport.dungeon.data.NodeData;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.Item;
@@ -23,7 +24,12 @@ public final class RewardDispatcher {
         if (reward.chance() < 1.0f && player.getRandom().nextFloat() > reward.chance()) return;
 
         Item item = reward.resolvedItem();
-        if (item == null) return;
+        if (item == null) {
+            // 决策/副本/21 §4.4：加载期校验已拦截未注册物品，这里是兜底——
+            // 万一有遗漏，至少留下可追溯的日志，而不是静默什么都不发。
+            PiranPort.LOGGER.warn("副本奖励物品未注册，已跳过发放: {}", reward.item());
+            return;
+        }
 
         ItemStack stack = new ItemStack(item, reward.count());
         if (namesOut != null) {

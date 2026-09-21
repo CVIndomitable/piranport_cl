@@ -54,11 +54,11 @@
   ],
   "first_clear_rewards": [
     {
-      "item": "minecraft:diamond",
-      "count": 6
+      "item": "minecraft:iron_ingot",
+      "count": 28
     },
     {
-      "item": "piranport:ciws_blueprint",
+      "item": "piranport:auto_ciws_76mm",
       "count": 1
     }
   ],

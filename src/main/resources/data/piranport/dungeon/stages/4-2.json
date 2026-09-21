@@ -57,11 +57,11 @@
   ],
   "first_clear_rewards": [
     {
-      "item": "minecraft:diamond",
-      "count": 8
+      "item": "minecraft:iron_ingot",
+      "count": 44
     },
     {
-      "item": "piranport:reinforced_part_blueprint",
+      "item": "piranport:large_ship_core",
       "count": 1
     }
   ],

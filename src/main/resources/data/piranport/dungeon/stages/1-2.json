@@ -23,12 +23,27 @@
     }
   },
   "edges": [
-    { "from": "A", "to": "B" },
-    { "from": "B", "to": "C" }
+    {
+      "from": "A",
+      "to": "B"
+    },
+    {
+      "from": "B",
+      "to": "C"
+    }
   ],
   "start_node": "A",
-  "boss_nodes": ["C"],
+  "boss_nodes": [
+    "C"
+  ],
   "first_clear_rewards": [
-    { "item": "minecraft:emerald", "count": 5 }
+    {
+      "item": "minecraft:iron_ingot",
+      "count": 16
+    },
+    {
+      "item": "piranport:aluminum_ingot",
+      "count": 8
+    }
   ]
 }

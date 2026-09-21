@@ -71,12 +71,12 @@
   ],
   "first_clear_rewards": [
     {
-      "item": "minecraft:emerald",
-      "count": 12
+      "item": "minecraft:iron_ingot",
+      "count": 56
     },
     {
-      "item": "piranport:depth_charge",
-      "count": 16
+      "item": "piranport:depth_charge_launcher",
+      "count": 1
     }
   ],
   "victory_conditions": [

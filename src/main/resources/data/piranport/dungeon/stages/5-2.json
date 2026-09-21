@@ -47,12 +47,12 @@
   ],
   "first_clear_rewards": [
     {
-      "item": "minecraft:diamond",
-      "count": 4
+      "item": "minecraft:iron_ingot",
+      "count": 52
     },
     {
-      "item": "piranport:depth_charge_blueprint",
-      "count": 1
+      "item": "piranport:depth_charge",
+      "count": 16
     }
   ],
   "victory_conditions": [

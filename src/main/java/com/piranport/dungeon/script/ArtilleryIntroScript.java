@@ -335,7 +335,7 @@ public class ArtilleryIntroScript implements DungeonScript {
                     apAmmo = new ItemStack(ModItems.MEDIUM_AP_SHELL.get(), 64);
                 }
                 default -> { // SMALL, SUBMARINE
-                    cannon = new ItemStack(ModItems.SMALL_GUN.get());
+                    cannon = new ItemStack(ModItems.JAPANESE_127MM_TWIN_GUN.get());
                     heAmmo = new ItemStack(ModItems.SMALL_HE_SHELL.get(), 128);
                     apAmmo = new ItemStack(ModItems.SMALL_AP_SHELL.get(), 128);
                 }

@@ -56,7 +56,7 @@ final class CannonStats {
     }
 
     static boolean isSmallCaliber(ItemStack weapon) {
-        return weapon.is(ModItems.SMALL_GUN.get()) || weapon.is(ModItems.SINGLE_SMALL_GUN.get());
+        return weapon.is(ModItems.JAPANESE_127MM_TWIN_GUN.get()) || weapon.is(ModItems.SINGLE_SMALL_GUN.get());
     }
 
     static float getExplosionPower(ItemStack weapon, net.minecraft.world.level.Level level) {

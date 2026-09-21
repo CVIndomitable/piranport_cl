@@ -63,20 +63,11 @@ public final class WeaponItems {
                             List.of(new MuzzlePos(0.2, 0.15, 0)),
                             2.5f, 0.015f, 9.8f, 1.0f, 0.0f,
                             10, 1, 0.0f), "single_small_gun"));
-    public static final DeferredItem<Item> SMALL_GUN =
-            ITEMS.register("small_gun", () -> new ArtilleryItem(new Item.Properties().stacksTo(1)
-                    .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.CANNON)
-                    .durability(500),
-                    new ArtilleryCannonData(4, 2, 6.0f, 30, 500, 2.0f,
-                            List.of(new MuzzlePos(0.3, 0.2, 0),
-                                    new MuzzlePos(-0.3, 0.2, 0)),
-                            2.5f, 0.015f, 9.8f, 1.0f, 0.0f,
-                            10, 1, 5.0f), "small_gun"));
     /**
      * 日本12.7厘米连装炮 — 八九式十二糎七高角砲。
      *
-     * 数值与 {@link #SMALL_GUN} 完全一致（策划要求：贴图和数值和小型火炮一样），
-     * 区别只在于它有独立的 3D 方块模型（小型火炮只有一张平面贴图）。
+     * <p>数值、贴图、合成配方均与已删除的 {@code small_gun} 一致（策划要求）。原先两者
+     * 并存时 12.7 厘米炮只是小型火炮换皮，现由本炮直接取代小型火炮的位置。
      */
     public static final DeferredItem<Item> JAPANESE_127MM_TWIN_GUN =
             ITEMS.register("japanese_127mm_twin_gun", () -> new ArtilleryItem(new Item.Properties().stacksTo(1)

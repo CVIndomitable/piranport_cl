@@ -185,7 +185,6 @@ public class ConfigCSVExporter {
         // 返回简化的中文名称映射
         return switch (translationKey) {
             case "item.piranport.single_small_gun" -> "单装小型火炮";
-            case "item.piranport.small_gun" -> "小型火炮";
             case "item.piranport.japanese_127mm_twin_gun" -> "日本12.7厘米连装炮";
             case "item.piranport.medium_gun" -> "中型火炮";
             case "item.piranport.large_gun" -> "大型火炮";

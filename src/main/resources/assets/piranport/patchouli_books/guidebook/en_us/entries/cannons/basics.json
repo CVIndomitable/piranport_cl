@@ -1,7 +1,7 @@
 {
   "name": "piranport.book.cannons.basics",
   "category": "piranport:2_cannons",
-  "icon": "piranport:small_gun",
+  "icon": "piranport:japanese_127mm_twin_gun",
   "sortnum": 0,
   "pages": [
     {
@@ -10,7 +10,7 @@
     },
     {
       "type": "patchouli:crafting",
-      "recipe": "piranport:small_gun",
+      "recipe": "piranport:japanese_127mm_twin_gun",
       "text": "piranport.book.cannons.basics.craft"
     },
     {

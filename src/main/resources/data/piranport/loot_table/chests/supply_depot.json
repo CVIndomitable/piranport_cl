@@ -12,7 +12,7 @@
           "functions": [{ "function": "minecraft:set_count", "count": { "min": 4, "max": 12, "type": "minecraft:uniform" } }] },
         { "type": "minecraft:item", "name": "piranport:small_he_shell", "weight": 8,
           "functions": [{ "function": "minecraft:set_count", "count": { "min": 4, "max": 16, "type": "minecraft:uniform" } }] },
-        { "type": "minecraft:item", "name": "piranport:small_gun", "weight": 3 },
+        { "type": "minecraft:item", "name": "piranport:japanese_127mm_twin_gun", "weight": 3 },
         { "type": "minecraft:item", "name": "piranport:small_armor_plate", "weight": 4 },
         { "type": "minecraft:item", "name": "piranport:fuel", "weight": 6,
           "functions": [{ "function": "minecraft:set_count", "count": { "min": 1, "max": 3, "type": "minecraft:uniform" } }] },

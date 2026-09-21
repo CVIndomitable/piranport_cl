@@ -1,14 +1,14 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "piranport:item/small_gun_empty"
+    "layer0": "piranport:item/japanese_127mm_twin_gun_empty"
   },
   "overrides": [
     {
       "predicate": {
         "piranport:loaded": 1
       },
-      "model": "piranport:item/small_gun"
+      "model": "piranport:item/japanese_127mm_twin_gun"
     }
   ]
 }

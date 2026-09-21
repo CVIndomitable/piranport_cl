@@ -1,7 +1,7 @@
 {
   "name": "piranport.book.aviation.aircraft",
   "category": "piranport:5_aviation",
-  "icon": "piranport:fighter_squadron",
+  "icon": "piranport:seafire",
   "sortnum": 0,
   "pages": [
     {
@@ -11,16 +11,6 @@
     {
       "type": "patchouli:text",
       "text": "piranport.book.aviation.aircraft.p2"
-    },
-    {
-      "type": "patchouli:crafting",
-      "recipe": "piranport:fighter_squadron",
-      "text": "piranport.book.aviation.aircraft.fighter_craft"
-    },
-    {
-      "type": "patchouli:crafting",
-      "recipe": "piranport:dive_bomber_squadron",
-      "text": "piranport.book.aviation.aircraft.dive_bomber_craft"
     },
     {
       "type": "patchouli:crafting",

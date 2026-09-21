@@ -587,7 +587,7 @@ public final class PiranPortCommands {
         stacks += give(player, ModItems.LARGE_SHIP_CORE.get(), 1);
         stacks += give(player, ModItems.FUEL.get(), 16);
         stacks += give(player, ModItems.ARTILLERY_CONFIG_TOOL.get(), 1);
-        stacks += give(player, ModItems.SMALL_GUN.get(), 1);
+        stacks += give(player, ModItems.SINGLE_SMALL_GUN.get(), 1);
         stacks += give(player, ModItems.JAPANESE_127MM_TWIN_GUN.get(), 1);
         stacks += give(player, ModItems.MEDIUM_GUN.get(), 1);
         stacks += give(player, ModItems.LARGE_GUN.get(), 1);

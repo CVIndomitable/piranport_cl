@@ -51,7 +51,7 @@ public class WeaponWorkbenchScreen extends AbstractContainerScreen<WeaponWorkben
     protected void init() {
         super.init();
         tabIcons = new ItemStack[]{
-                new ItemStack(ModItems.SMALL_GUN.get()),
+                new ItemStack(ModItems.JAPANESE_127MM_TWIN_GUN.get()),
                 new ItemStack(ModItems.TRIPLE_TORPEDO_LAUNCHER.get()),
                 new ItemStack(ModItems.TERRIER_LAUNCHER.get()),
                 new ItemStack(ModItems.DEPTH_CHARGE_LAUNCHER.get()),

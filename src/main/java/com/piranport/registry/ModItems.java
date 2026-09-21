@@ -133,7 +133,6 @@ public class ModItems {
 
     // ===== Guns (extracted to WeaponItems) =====
     public static final DeferredItem<Item> SINGLE_SMALL_GUN = WeaponItems.SINGLE_SMALL_GUN;
-    public static final DeferredItem<Item> SMALL_GUN = WeaponItems.SMALL_GUN;
     public static final DeferredItem<Item> JAPANESE_127MM_TWIN_GUN = WeaponItems.JAPANESE_127MM_TWIN_GUN;
     public static final DeferredItem<Item> MEDIUM_GUN = WeaponItems.MEDIUM_GUN;
     public static final DeferredItem<Item> NEURAL_BALLISTIC_TEST_GUN = WeaponItems.NEURAL_BALLISTIC_TEST_GUN;

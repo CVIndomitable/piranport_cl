@@ -41,7 +41,7 @@ public class ModCreativeTabs {
                     .displayItems((parameters, output) -> {
                         // Guns
                         output.accept(ModItems.SINGLE_SMALL_GUN.get());
-                        output.accept(ModItems.SMALL_GUN.get());
+                        output.accept(ModItems.SINGLE_SMALL_GUN.get());
                         output.accept(ModItems.JAPANESE_127MM_TWIN_GUN.get());
                         output.accept(ModItems.MEDIUM_GUN.get());
                         output.accept(ModItems.LARGE_GUN.get());
@@ -581,7 +581,7 @@ public class ModCreativeTabs {
                     .displayItems((parameters, output) -> {
                         // Preloaded cannons listed in the design doc.
                         addPreloadedWeapon(output, ModItems.SINGLE_SMALL_GUN.get(), "piranport:small_he_shell", 1);
-                        addPreloadedWeapon(output, ModItems.SMALL_GUN.get(), "piranport:small_he_shell", 2);
+                        addPreloadedWeapon(output, ModItems.SINGLE_SMALL_GUN.get(), "piranport:small_he_shell", 2);
                         addPreloadedWeapon(output, ModItems.MEDIUM_GUN.get(), "piranport:medium_he_shell", 1);
                         addPreloadedWeapon(output, ModItems.LARGE_GUN.get(), "piranport:large_he_shell", 3);
 

@@ -135,12 +135,13 @@ def build(name, base, layout, outline=None):
 
 if __name__ == '__main__':
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
-    # 各种子主色：取自各作物本体配色，整体向辣椒种子的金褐色调靠拢
-    build('celery_seeds',      (198, 174, 108), 'cluster3')  # 芹菜籽：浅黄褐
-    build('lablab_bean_seeds', (196, 174, 148), 'cluster3')  # 扁豆：灰米色
-    build('lettuce_seeds',     (174, 160, 108), 'tall3')     # 生菜籽：土黄
+    # 各种子主色：取自各作物本体配色，整体向辣椒种子的金褐色调靠拢。
+    # 注意同系种子要拉开色相，避免背包里分不清（见下方注释的撞车组）。
+    build('celery_seeds',      (170, 186, 108), 'cluster3')  # 芹菜籽：偏黄绿（避开菠萝籽）
+    build('lablab_bean_seeds', (140, 130, 146), 'cluster3')  # 扁豆：灰紫（避开番茄籽）
+    build('lettuce_seeds',     (132, 148,  84), 'tall3')     # 生菜籽：橄榄绿（避开黑麦籽）
     build('onion_seeds',       (172, 142,  86), 'cluster3')  # 洋葱籽：深褐
     build('ormosia_seeds',     (170,  98,  80), 'cluster3')  # 红豆：暗红
-    build('pineapple_seed',    (190, 166, 104), 'cluster3')  # 菠萝籽：黄褐
-    build('rye_seeds',         (168, 144, 110), 'tall3')     # 黑麦籽：灰褐
-    build('tomato_seeds',      (208, 192, 146), 'cluster4')  # 番茄籽：浅米黄
+    build('pineapple_seed',    (214, 152,  62), 'cluster3')  # 菠萝籽：橙黄（避开水稻/辣椒的黄）
+    build('rye_seeds',         (146, 138, 132), 'tall3')     # 黑麦籽：冷灰褐（避开生菜籽）
+    build('tomato_seeds',      (216, 178, 128), 'cluster4')  # 番茄籽：浅橙米（避开扁豆）

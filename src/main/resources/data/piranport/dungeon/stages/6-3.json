@@ -1,0 +1,108 @@
+{
+  "stage_id": "6-3",
+  "chapter": "chapter_6",
+  "display_name": "6-3 铁底湾",
+  "nodes": {
+    "A": {
+      "type": "battle",
+      "enemies": "enemy_set_6_3a",
+      "display_x": 50,
+      "display_y": 200
+    },
+    "B": {
+      "type": "battle",
+      "enemies": "enemy_set_6_3b",
+      "display_x": 150,
+      "display_y": 100
+    },
+    "C": {
+      "type": "cost",
+      "cost": [
+        {
+          "item": "minecraft:iron_ingot",
+          "count": 16
+        }
+      ],
+      "cost_message": "深水航道，消耗16铁锭",
+      "display_x": 150,
+      "display_y": 300
+    },
+    "D": {
+      "type": "battle",
+      "enemies": "enemy_set_6_3c",
+      "display_x": 250,
+      "display_y": 100
+    },
+    "E": {
+      "type": "boss",
+      "enemies": "boss_6_3",
+      "display_x": 350,
+      "display_y": 200
+    }
+  },
+  "edges": [
+    {
+      "from": "A",
+      "to": "B"
+    },
+    {
+      "from": "A",
+      "to": "C"
+    },
+    {
+      "from": "B",
+      "to": "D"
+    },
+    {
+      "from": "C",
+      "to": "D"
+    },
+    {
+      "from": "D",
+      "to": "E"
+    }
+  ],
+  "start_node": "A",
+  "boss_nodes": [
+    "E"
+  ],
+  "first_clear_rewards": [
+    {
+      "item": "minecraft:emerald",
+      "count": 16
+    },
+    {
+      "item": "piranport:magnetic_torpedo_blueprint",
+      "count": 1
+    }
+  ],
+  "victory_conditions": [
+    "ESCORT_ALIVE",
+    "KILL_ALL"
+  ],
+  "victory_objectives": {
+    "require_all_nodes_cleared": true
+  },
+  "checkpoints": [
+    {
+      "id": "cp_6_3a",
+      "node_id": "B",
+      "pos_x": 0,
+      "pos_y": 64,
+      "pos_z": 0,
+      "facing": "south"
+    },
+    {
+      "id": "cp_6_3b",
+      "node_id": "D",
+      "pos_x": 0,
+      "pos_y": 64,
+      "pos_z": 0,
+      "facing": "south"
+    }
+  ],
+  "terrain_type": "T4",
+  "chapter_mechanism": "anti_submarine",
+  "difficulty_scale": 2.7,
+  "par_time_seconds": 1200
+}

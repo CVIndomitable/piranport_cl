@@ -1,0 +1,108 @@
+{
+  "stage_id": "3-4",
+  "chapter": "chapter_3",
+  "display_name": "3-4 全线增援",
+  "nodes": {
+    "A": {
+      "type": "battle",
+      "enemies": "enemy_set_3_4a",
+      "display_x": 50,
+      "display_y": 200
+    },
+    "B": {
+      "type": "battle",
+      "enemies": "enemy_set_3_4b",
+      "display_x": 150,
+      "display_y": 100
+    },
+    "C": {
+      "type": "cost",
+      "cost": [
+        {
+          "item": "minecraft:coal",
+          "count": 12
+        }
+      ],
+      "cost_message": "补给消耗12煤炭",
+      "display_x": 150,
+      "display_y": 300
+    },
+    "D": {
+      "type": "battle",
+      "enemies": "enemy_set_3_4c",
+      "display_x": 250,
+      "display_y": 100
+    },
+    "E": {
+      "type": "boss",
+      "enemies": "boss_3_4",
+      "display_x": 350,
+      "display_y": 200
+    }
+  },
+  "edges": [
+    {
+      "from": "A",
+      "to": "B"
+    },
+    {
+      "from": "A",
+      "to": "C"
+    },
+    {
+      "from": "B",
+      "to": "D"
+    },
+    {
+      "from": "C",
+      "to": "D"
+    },
+    {
+      "from": "D",
+      "to": "E"
+    }
+  ],
+  "start_node": "A",
+  "boss_nodes": [
+    "E"
+  ],
+  "first_clear_rewards": [
+    {
+      "item": "minecraft:emerald",
+      "count": 16
+    },
+    {
+      "item": "piranport:type_1_ap_shell",
+      "count": 8
+    }
+  ],
+  "victory_conditions": [
+    "ESCORT_ALIVE",
+    "KILL_BOSS"
+  ],
+  "victory_objectives": {
+    "require_all_nodes_cleared": true
+  },
+  "checkpoints": [
+    {
+      "id": "cp_3_4a",
+      "node_id": "B",
+      "pos_x": 0,
+      "pos_y": 64,
+      "pos_z": 0,
+      "facing": "south"
+    },
+    {
+      "id": "cp_3_4b",
+      "node_id": "D",
+      "pos_x": 0,
+      "pos_y": 64,
+      "pos_z": 0,
+      "facing": "south"
+    }
+  ],
+  "terrain_type": "T3",
+  "chapter_mechanism": "multi_mechanic",
+  "difficulty_scale": 1.85,
+  "par_time_seconds": 1200
+}

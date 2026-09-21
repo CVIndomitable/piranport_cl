@@ -1,0 +1,102 @@
+{
+  "stage_id": "4-4",
+  "chapter": "chapter_4",
+  "display_name": "4-4 多维绞杀",
+  "nodes": {
+    "A": {
+      "type": "battle",
+      "enemies": "enemy_set_4_4a",
+      "display_x": 50,
+      "display_y": 200
+    },
+    "B": {
+      "type": "battle",
+      "enemies": "enemy_set_4_4b",
+      "display_x": 150,
+      "display_y": 100
+    },
+    "C": {
+      "type": "resource",
+      "rewards": [
+        {
+          "item": "minecraft:iron_ingot",
+          "count": 24
+        },
+        {
+          "item": "minecraft:emerald",
+          "count": 4
+        }
+      ],
+      "display_x": 150,
+      "display_y": 300
+    },
+    "D": {
+      "type": "battle",
+      "enemies": "enemy_set_4_4c",
+      "display_x": 250,
+      "display_y": 100
+    },
+    "E": {
+      "type": "boss",
+      "enemies": "boss_4_4",
+      "display_x": 350,
+      "display_y": 200
+    }
+  },
+  "edges": [
+    {
+      "from": "A",
+      "to": "B"
+    },
+    {
+      "from": "A",
+      "to": "C"
+    },
+    {
+      "from": "B",
+      "to": "D"
+    },
+    {
+      "from": "C",
+      "to": "D"
+    },
+    {
+      "from": "D",
+      "to": "E"
+    }
+  ],
+  "start_node": "A",
+  "boss_nodes": [
+    "E"
+  ],
+  "first_clear_rewards": [
+    {
+      "item": "minecraft:emerald",
+      "count": 16
+    },
+    {
+      "item": "piranport:l3_upgrade_part",
+      "count": 1
+    }
+  ],
+  "victory_conditions": [
+    "KILL_FLAGSHIP"
+  ],
+  "victory_objectives": {
+    "require_all_nodes_cleared": true
+  },
+  "checkpoints": [
+    {
+      "id": "cp_4_4",
+      "node_id": "D",
+      "pos_x": 0,
+      "pos_y": 64,
+      "pos_z": 0,
+      "facing": "south"
+    }
+  ],
+  "terrain_type": "T4",
+  "chapter_mechanism": "multi_mission",
+  "difficulty_scale": 2.1,
+  "par_time_seconds": 1200
+}

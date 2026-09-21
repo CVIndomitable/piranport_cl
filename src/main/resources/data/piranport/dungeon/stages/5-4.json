@@ -1,0 +1,110 @@
+{
+  "stage_id": "5-4",
+  "chapter": "chapter_5",
+  "display_name": "5-4 深海围猎",
+  "nodes": {
+    "A": {
+      "type": "battle",
+      "enemies": "enemy_set_5_4a",
+      "display_x": 50,
+      "display_y": 200
+    },
+    "B": {
+      "type": "resource",
+      "rewards": [
+        {
+          "item": "minecraft:iron_ingot",
+          "count": 20
+        },
+        {
+          "item": "minecraft:coal",
+          "count": 16
+        }
+      ],
+      "display_x": 150,
+      "display_y": 100
+    },
+    "C": {
+      "type": "battle",
+      "enemies": "enemy_set_5_4b",
+      "display_x": 150,
+      "display_y": 300
+    },
+    "D": {
+      "type": "battle",
+      "enemies": "enemy_set_5_4c",
+      "display_x": 250,
+      "display_y": 100
+    },
+    "E": {
+      "type": "boss",
+      "enemies": "boss_5_4",
+      "display_x": 350,
+      "display_y": 200
+    }
+  },
+  "edges": [
+    {
+      "from": "A",
+      "to": "B"
+    },
+    {
+      "from": "A",
+      "to": "C"
+    },
+    {
+      "from": "B",
+      "to": "D"
+    },
+    {
+      "from": "C",
+      "to": "D"
+    },
+    {
+      "from": "D",
+      "to": "E"
+    }
+  ],
+  "start_node": "A",
+  "boss_nodes": [
+    "E"
+  ],
+  "first_clear_rewards": [
+    {
+      "item": "minecraft:emerald",
+      "count": 12
+    },
+    {
+      "item": "piranport:depth_charge",
+      "count": 16
+    }
+  ],
+  "victory_conditions": [
+    "KILL_ALL"
+  ],
+  "victory_objectives": {
+    "require_all_nodes_cleared": true
+  },
+  "checkpoints": [
+    {
+      "id": "cp_5_4a",
+      "node_id": "B",
+      "pos_x": 0,
+      "pos_y": 64,
+      "pos_z": 0,
+      "facing": "south"
+    },
+    {
+      "id": "cp_5_4b",
+      "node_id": "D",
+      "pos_x": 0,
+      "pos_y": 64,
+      "pos_z": 0,
+      "facing": "south"
+    }
+  ],
+  "terrain_type": "T2",
+  "chapter_mechanism": "anti_submarine",
+  "difficulty_scale": 2.35,
+  "par_time_seconds": 1200
+}

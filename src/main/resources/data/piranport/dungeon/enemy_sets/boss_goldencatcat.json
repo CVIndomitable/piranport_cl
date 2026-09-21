@@ -7,5 +7,5 @@
     "entity": "piranport:goldencatcat",
     "count": 1
   },
-  "formation": "LINE_AHEAD"
+  "formation": "single_line"
 }

@@ -46,6 +46,59 @@ public final class BallisticNet {
         this.xStd = xStd;
         this.yMean = yMean;
         this.yStd = yStd;
+        this.frozenInputs = detectDegenerateColumns(xMean, xStd);
+    }
+
+    /**
+     * 退化（零方差）特征列的训练期归一化值。
+     *
+     * <p><b>为什么需要这个</b>：训练数据里 {@code gravity} 这一维是常量
+     * （归一化后恒为 0.05），是零信息特征。但训练脚本
+     * （{@code tools/neural_ballistic/experiments.py}）用裸的 {@code X.std(0)} 求标准差，
+     * 常量列得到的是**浮点残差** 1.4224732503009818e-15 而不是 0，
+     * 于是归一化值 = {@code (0.05 − x_mean) / x_std}。这个比式的分子分母在 float64 下
+     * **逐位相等**（训练时 {@code x_mean = 0.05 − x_std}），商精确为 {@code 1.0}。
+     *
+     * <p><b>为什么会崩</b>：权重文件把 {@code xMean} 存成 float32，
+     * 读回来变成 {@code 0.05000000074505806}。{@code 0.05} 与训练均值的差只有
+     * 1.42e-15，远小于 float32 在 0.05 附近的分辨率（约 3.7e-9），
+     * 四舍五入直接摧毁了那个「恰好抵消」。同一个比式于是变成
+     * {@code −7.45e-10 / 1.42e-15 = −523776.5}。第 5 维权重是正常量级，
+     * 这个值会直接污染输出（实测 t 变成 1178 万）。
+     *
+     * <p><b>修复方式</b>：对判定为退化的列，不再做浮点除法，直接冻结为
+     * {@link #DEGENERATE_COLUMN_NORMALIZED}。该常量取自训练时的实际喂入值，
+     * 已用全量 1888 条样本验证（喂 1.0 时 t_MAE 0.0122，喂 0.0 时 7.43，喂 0.5 时 3.09，
+     * 1.0 是尖锐最小值）。见文档 4.8。
+     */
+    private final double[] frozenInputs;
+
+    /** 退化列冻结后的归一化值。见 {@link #frozenInputs} 的说明与验证数据。 */
+    private static final double DEGENERATE_COLUMN_NORMALIZED = 1.0;
+
+    /**
+     * 退化列的相对判据：标准差相对「均值量级」小于此值即视为零方差。
+     *
+     * <p>取 1e-9 是因为 float32 在 0.05 附近的分辨率约 3.7e-9——凡是落在这个尺度以下的
+     * 标准差，其归一化结果都完全由舍入噪声决定，不可信。实测该列 xStd = 1.42e-15，
+     * 相对均值 0.05 的比值是 2.8e-14，被正确捕获。
+     */
+    private static final double DEGENERATE_STD_RATIO = 1e-9;
+
+    /**
+     * 找出零方差列。返回的数组与输入同长，非退化列为 {@code NaN}（表示「照常归一化」）。
+     */
+    private static double[] detectDegenerateColumns(double[] xMean, double[] xStd) {
+        double[] frozen = new double[xMean.length];
+        for (int j = 0; j < xMean.length; j++) {
+            double scale = Math.abs(xMean[j]);
+            // 均值为 0 时退化判据不适用（无法用相对量级判断），退回绝对判据。
+            boolean degenerate = scale > 0.0
+                    ? xStd[j] < scale * DEGENERATE_STD_RATIO
+                    : xStd[j] < Double.MIN_NORMAL;
+            frozen[j] = degenerate ? DEGENERATE_COLUMN_NORMALIZED : Double.NaN;
+        }
+        return frozen;
     }
 
     /**
@@ -106,9 +159,11 @@ public final class BallisticNet {
         double[] buf = scratchA;
         double[] next = scratchB;
 
-        // 输入标准化
+        // 输入标准化。退化列（零方差）不走浮点除法，直接用训练期冻结值，
+        // 否则 float32 舍入会把「恰好抵消」放大成 −5e5 量级。见 frozenInputs 的说明。
         for (int j = 0; j < input.length; j++) {
-            buf[j] = (input[j] - xMean[j]) / xStd[j];
+            double frozen = frozenInputs[j];
+            buf[j] = Double.isNaN(frozen) ? (input[j] - xMean[j]) / xStd[j] : frozen;
         }
 
         for (int li = 0; li < layers.length; li++) {

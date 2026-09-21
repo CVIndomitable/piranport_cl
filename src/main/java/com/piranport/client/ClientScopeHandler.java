@@ -4,16 +4,11 @@ import com.piranport.artillery.ArtilleryItem;
 import com.piranport.artillery.config.ArtilleryCannonData;
 import com.piranport.artillery.config.MuzzlePos;
 import com.piranport.combat.BallisticSolver;
-import com.piranport.combat.BallisticSolverStats;
 import com.piranport.config.ModEquipmentConfig;
 import net.minecraft.client.Minecraft;
-import net.minecraft.core.BlockPos;
-import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.projectile.ProjectileUtil;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
@@ -33,25 +28,21 @@ public final class ClientScopeHandler {
     private static boolean scoping = false;
     private static int holdTicks = 0;
     private static float zoomLevel = 2.0f;
-    /** 当前瞄准的目标位置（方块/实体命中点） */
+    /** 当前瞄准的目标位置（实体、方块或水面交点） */
     @Nullable
     private static Vec3 aimedPosition = null;
     /** 与目标的水平距离（格） */
     private static double targetDistance = 0;
     /** 与目标的高度差（格） */
     private static double targetVertical = 0;
-    /** 当前 tick 射线是否命中有效目标（方块或实体），false 表示射线远端回退 */
+    /** 当前 tick 射线是否命中有效目标，false 表示射线远端回退。 */
     private static boolean hasValidTarget = false;
 
     /** 进入瞄准模式之前是否持有火炮 */
     private static boolean heldCannonBeforeScope = false;
 
-    /** 手持火炮的“炮塔”朝向。turretSpeed 按每 tick 可转过的角度使用。 */
-    private static boolean hasTurretAim = false;
-    private static float turretAimYaw = 0.0f;
-    private static float turretAimPitch = 0.0f;
-    @Nullable
-    private static Item turretAimWeapon = null;
+    /** 当前有效交点是否属于实体，用于核对准星实际取点。 */
+    private static boolean aimedAtEntity = false;
 
     // ===== 客户端弹道解算相关 =====
     /** 上一次解算的结果（发射仰角，弧度） */
@@ -92,7 +83,6 @@ public final class ClientScopeHandler {
         serverHorizontalError = 0.0;
         serverAngleDeg = 0.0;
         lastSolveTick = 0;
-        resetTurretAim();
     }
 
     /** 退出瞄准模式 */
@@ -110,7 +100,6 @@ public final class ClientScopeHandler {
         serverVerticalError = 0.0;
         serverHorizontalError = 0.0;
         serverAngleDeg = 0.0;
-        resetTurretAim();
     }
 
     /** 每客户端 tick 调用，更新长按计数和射线检测 */
@@ -122,13 +111,14 @@ public final class ClientScopeHandler {
         updateAimedPosition(player, weapon);
 
         // 定期进行客户端弹道解算（用于性能统计）
-        if (hasValidTarget && targetDistance > 0 && (holdTicks - lastSolveTick >= SOLVE_INTERVAL)) {
+        if (hasValidTarget && targetDistance > 0
+                && (!hasSolved || holdTicks - lastSolveTick >= SOLVE_INTERVAL)) {
             solveBallisticsClient(weapon);
             lastSolveTick = holdTicks;
         }
     }
 
-    /** 非瞄准镜状态下维护炮塔滞后射线，用于快速点击开火。 */
+    /** 非瞄准镜状态下维护准星射线，用于快速点击开火。 */
     public static void tickQuickAim(Player player, ItemStack weapon) {
         if (scoping) return;
         updateAimedPosition(player, weapon);
@@ -141,7 +131,6 @@ public final class ClientScopeHandler {
         targetDistance = 0;
         targetVertical = 0;
         hasValidTarget = false;
-        resetTurretAim();
     }
 
     /**
@@ -179,110 +168,34 @@ public final class ClientScopeHandler {
         Entity camera = mc.getCameraEntity();
         Vec3 eyePos = camera.getEyePosition();
         Vec3 ballisticOrigin = getReferenceMuzzlePosition(player, weapon, mc.level);
-        Vec3 lookDir = getTurretLimitedLookDirection(player, weapon, mc.level);
+        // 手持火炮没有炮塔实体，按策划决策/武器/12 直接使用准星方向。
+        Vec3 lookDir = camera.getLookAngle();
         double range = SCOPE_RAYCAST_RANGE;
 
         Vec3 end = eyePos.add(lookDir.scale(range));
 
-        // 1. 方块碰撞检测
+        // 水面必须作为落点参与检测，否则瞄水面时会取到海床或射线远端。
         ClipContext clipCtx = new ClipContext(eyePos, end,
-                ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, camera);
-        BlockHitResult blockHit = mc.level.clip(clipCtx);
-
-        // 2. 实体碰撞检测（活体实体 + 飞机）
-        AABB searchBox = camera.getBoundingBox()
-                .expandTowards(lookDir.scale(range))
-                .inflate(2.0);
-        EntityHitResult entityHit = ProjectileUtil.getEntityHitResult(
-                mc.level, player, eyePos, end, searchBox,
+                ClipContext.Block.COLLIDER, ClipContext.Fluid.ANY, camera);
+        BlockHitResult surfaceHit = mc.level.clip(clipCtx);
+        AABB searchBox = new AABB(eyePos, end).inflate(2.0);
+        List<AABB> entityBounds = mc.level.getEntities(player, searchBox,
                 e -> (e instanceof LivingEntity || e instanceof com.piranport.entity.AircraftEntity)
-                        && e.isAlive() && e != player && e != camera,
-                0.0f);
-
-        // 3. 取距离最近的命中点
-        Vec3 hitPos;
-        if (entityHit != null) {
-            double entityDist = entityHit.getLocation().distanceToSqr(eyePos);
-            double blockDist = blockHit.getType() == HitResult.Type.BLOCK
-                    ? blockHit.getLocation().distanceToSqr(eyePos) : Double.MAX_VALUE;
-
-            if (blockHit.getType() == HitResult.Type.BLOCK && blockDist < entityDist) {
-                hitPos = blockHit.getLocation();
-            } else {
-                hitPos = entityHit.getLocation();
-            }
-            hasValidTarget = true;
-        } else if (blockHit.getType() == HitResult.Type.BLOCK) {
-            hitPos = blockHit.getLocation();
-            hasValidTarget = true;
-        } else {
-            // 什么都没打到：取射线远端
-            hitPos = end;
-            hasValidTarget = false;
+                        && e.isAlive() && !e.isSpectator() && e != player && e != camera)
+                .stream().map(Entity::getBoundingBox).toList();
+        ScopeTargeting.Target target = ScopeTargeting.pick(eyePos, end, surfaceHit, entityBounds);
+        Vec3 hitPos = target.position();
+        hasValidTarget = target.valid();
+        aimedAtEntity = target.entity();
+        if (!hasValidTarget) {
+            hasSolved = false;
+            lastOutOfRange = false;
         }
-
         aimedPosition = hitPos;
         targetDistance = Math.sqrt(
                 (hitPos.x - ballisticOrigin.x) * (hitPos.x - ballisticOrigin.x) +
                 (hitPos.z - ballisticOrigin.z) * (hitPos.z - ballisticOrigin.z));
         targetVertical = hitPos.y - ballisticOrigin.y;
-    }
-
-    private static Vec3 getTurretLimitedLookDirection(Player player, ItemStack weapon, Level level) {
-        if (!(weapon.getItem() instanceof ArtilleryItem ai)) {
-            resetTurretAim();
-            return player.getLookAngle();
-        }
-
-        Item weaponItem = weapon.getItem();
-        if (!hasTurretAim || turretAimWeapon != weaponItem) {
-            hasTurretAim = true;
-            turretAimWeapon = weaponItem;
-            turretAimYaw = player.getYRot();
-            turretAimPitch = player.getXRot();
-            return player.getLookAngle();
-        }
-
-        ArtilleryCannonData effectiveData = ai.getEffectiveData(level);
-        float maxStepDeg = effectiveData.turretSpeed();
-        if (maxStepDeg <= 0.0f || maxStepDeg >= 180.0f) {
-            turretAimYaw = player.getYRot();
-            turretAimPitch = player.getXRot();
-            return player.getLookAngle();
-        }
-
-        turretAimYaw = approachDegrees(turretAimYaw, player.getYRot(), maxStepDeg);
-        turretAimPitch = approachDegrees(turretAimPitch, player.getXRot(), maxStepDeg);
-        turretAimPitch = Mth.clamp(turretAimPitch, -90.0f, 90.0f);
-        return directionFromYawPitch(turretAimYaw, turretAimPitch);
-    }
-
-    private static float approachDegrees(float current, float target, float maxStepDeg) {
-        float delta = Mth.wrapDegrees(target - current);
-        if (delta > maxStepDeg) {
-            delta = maxStepDeg;
-        } else if (delta < -maxStepDeg) {
-            delta = -maxStepDeg;
-        }
-        return current + delta;
-    }
-
-    private static Vec3 directionFromYawPitch(float yaw, float pitch) {
-        double yawRad = Math.toRadians(yaw);
-        double pitchRad = Math.toRadians(pitch);
-        double cosPitch = Math.cos(pitchRad);
-        return new Vec3(
-                -Math.sin(yawRad) * cosPitch,
-                -Math.sin(pitchRad),
-                Math.cos(yawRad) * cosPitch
-        ).normalize();
-    }
-
-    private static void resetTurretAim() {
-        hasTurretAim = false;
-        turretAimYaw = 0.0f;
-        turretAimPitch = 0.0f;
-        turretAimWeapon = null;
     }
 
     private static Vec3 getReferenceMuzzlePosition(Player player, ItemStack weapon, Level level) {
@@ -338,8 +251,13 @@ public final class ClientScopeHandler {
 
     public static double getTargetVertical() { return targetVertical; }
 
-    /** 当前 tick 的射线是否命中有效目标（方块或实体） */
+    /** 当前 tick 的射线是否命中有效目标（实体、方块或水面） */
     public static boolean hasValidTarget() { return hasValidTarget; }
+
+    public static String getTargetKindTranslationKey() {
+        return !hasValidTarget ? "hud.piranport.scope.target.miss"
+                : aimedAtEntity ? "hud.piranport.scope.target.entity" : "hud.piranport.scope.target.surface";
+    }
 
     /** 上一次客户端解算的发射仰角（弧度） */
     public static double getLastSolvedAngle() { return lastSolvedAngle; }
@@ -404,6 +322,5 @@ public final class ClientScopeHandler {
         heldCannonBeforeScope = false;
         hasSolved = false;
         lastOutOfRange = false;
-        resetTurretAim();
     }
 }

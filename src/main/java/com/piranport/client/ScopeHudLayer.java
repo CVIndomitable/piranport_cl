@@ -6,6 +6,7 @@ import com.piranport.combat.BallisticSolver;
 import com.piranport.combat.BallisticSolverStats;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -121,11 +122,14 @@ public class ScopeHudLayer {
             graphics.drawString(mc.font, distText, cx - mc.font.width(distText) / 2, cy + 25, 0xFFFFFF, true);
         }
 
-        // ---- 超出射程提示 ----
+        // 显示本次实际取点类型，避免未命中回退最大射程时看起来仍像锁定了敌舰。
+        String targetText = Component.translatable(ClientScopeHandler.getTargetKindTranslationKey()).getString();
         if (ClientScopeHandler.hasSolved() && ClientScopeHandler.isLastOutOfRange()) {
-            String warnText = "§c⚠ 超出射程";
-            graphics.drawString(mc.font, warnText, cx - mc.font.width(warnText) / 2, cy + 37, 0xFF5555, true);
+            targetText += "  " + Component.translatable("message.piranport.out_of_range").getString();
         }
+        int targetColor = !ClientScopeHandler.hasValidTarget() || ClientScopeHandler.isLastOutOfRange()
+                ? 0xFF5555 : 0xFFFFFF;
+        graphics.drawString(mc.font, targetText, cx - mc.font.width(targetText) / 2, cy + 37, targetColor, true);
 
         // ---- 算法性能统计 ----
         drawAlgorithmStats(graphics, mc, cx, cy);
@@ -136,7 +140,13 @@ public class ScopeHudLayer {
                     ClientScopeHandler.getHoldTicks(),
                     ClientScopeHandler.getScopeThreshold(),
                     ClientScopeHandler.getZoomLevel());
-            graphics.drawString(mc.font, debugText, cx - mc.font.width(debugText) / 2, cy + 40, 0xFFFFFF, true);
+            graphics.drawString(mc.font, debugText, cx - mc.font.width(debugText) / 2, cy + 114, 0xFFFFFF, true);
+            var target = ClientScopeHandler.getAimedPosition();
+            if (target != null) {
+                String positionText = Component.translatable("hud.piranport.scope.target.position",
+                        String.format(java.util.Locale.ROOT, "%.2f / %.2f / %.2f", target.x, target.y, target.z)).getString();
+                graphics.drawString(mc.font, positionText, cx - mc.font.width(positionText) / 2, cy + 126, 0xFFFFFF, true);
+            }
         }
     }
 

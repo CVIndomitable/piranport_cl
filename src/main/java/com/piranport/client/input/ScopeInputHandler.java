@@ -52,9 +52,7 @@ public class ScopeInputHandler {
             attackWasDown = false;
             return;
         }
-        if (holdingCannon && !isScoping) {
-            ClientScopeHandler.tickQuickAim(mc.player, mc.player.getMainHandItem());
-        } else if (!holdingCannon) {
+        if (!holdingCannon) {
             ClientScopeHandler.clearQuickAim();
         }
 
@@ -79,6 +77,16 @@ public class ScopeInputHandler {
             }
         }
         useWasDown = useDown;
+
+        // 本 tick 的开闭镜状态和射线必须先更新，开火不能使用上一 tick 或入镜前的落点。
+        isScoping = ClientScopeHandler.isScoping();
+        if (holdingCannon) {
+            if (isScoping) {
+                ClientScopeHandler.tick(mc.player, mc.player.getMainHandItem());
+            } else {
+                ClientScopeHandler.tickQuickAim(mc.player, mc.player.getMainHandItem());
+            }
+        }
 
         // 左键：开火（单击 / 双击）。弹药轮盘打开时禁止开炮，避免切弹药误触发射。
         boolean attackDown = mc.options.keyAttack.isDown();
@@ -147,10 +155,6 @@ public class ScopeInputHandler {
             }
         }
         attackWasDown = attackDown;
-
-        if (isScoping) {
-            ClientScopeHandler.tick(mc.player, mc.player.getMainHandItem());
-        }
     }
 
     private static void suppressCannonHandAnimation(Minecraft mc) {

@@ -1165,5 +1165,9 @@
   "block.piranport.apple_log": "Apple Log",
   "block.piranport.apple_leaves": "Apple Leaves",
   "block.piranport.apple_sapling": "Apple Sapling",
-  "item.piranport.fire_extinguisher": "Fire Extinguisher"
+  "item.piranport.fire_extinguisher": "Fire Extinguisher",
+  "hud.piranport.scope.target.entity": "Target: entity hit point",
+  "hud.piranport.scope.target.surface": "Target: terrain / water surface",
+  "hud.piranport.scope.target.miss": "No target: maximum-range fire",
+  "hud.piranport.scope.target.position": "Aim coordinates XYZ: %s"
 }

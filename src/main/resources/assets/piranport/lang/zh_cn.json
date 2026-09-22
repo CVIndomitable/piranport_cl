@@ -712,7 +712,7 @@
   "key.piranport.fire_control_lock": "锁定目标 [P]",
   "key.piranport.highlight_entities": "高亮战场单位 [Y]",
   "key.piranport.hit_display_toggle": "命中显示开关 [J]",
-  "key.piranport.manual_reload": "手动装填 [R]",
+  "key.piranport.manual_reload": "装填 [R]",
   "key.piranport.recon_exit": "退出侦察 [V]",
   "key.piranport.switch_ammo": "切换弹种 [Tab]",
   "key.piranport.toggle_auto_launch": "自动模式开关 [H]",
@@ -1422,5 +1422,12 @@
   "tooltip.piranport.weapon_not_loaded": "未装填",
   "tooltip.piranport.weapon_ready": "已装填",
   "tooltip.piranport.weapon_reloading": "装填中",
-  "tooltip.piranport.weight": "负重: %s"
+  "tooltip.piranport.weight": "负重: %s",
+  "message.piranport.aircraft_not_loaded": "对海挂载未装填，按 R 键装填",
+  "message.piranport.aircraft_loaded": "已装填 %s 的对海挂载",
+  "message.piranport.aircraft_already_loaded": "对海挂载已装填",
+  "message.piranport.aircraft_no_payload": "该机无对海挂载",
+  "message.piranport.aircraft_creative_free_load": "创造模式：无需装填对海挂载",
+  "tooltip.piranport.aircraft_payload_loaded": "对海挂载: 已装填 [R]",
+  "tooltip.piranport.aircraft_payload_empty": "对海挂载: 空 [R 装填]"
 }

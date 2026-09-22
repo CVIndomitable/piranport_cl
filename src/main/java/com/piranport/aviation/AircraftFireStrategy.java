@@ -80,40 +80,14 @@ public class AircraftFireStrategy {
             default -> { }
         }
 
-        // Consume payload from inventory if needed
-        if (!payloadType.isEmpty() && !hasBullets) {
-            net.minecraft.world.item.Item payloadItem = net.minecraft.core.registries.BuiltInRegistries.ITEM.get(
-                    net.minecraft.resources.ResourceLocation.parse(payloadType));
-
-            // 创造模式：即使没有挂载物也允许发射（使用默认挂载物）
-            // 生存模式：消耗挂载物
-            if (!player.getAbilities().instabuild) {
-                // Survival mode: consume payload
-                boolean consumed = false;
-                for (int i = 0; i < inv.items.size(); i++) {
-                    if (i == coreInventorySlot || i == weaponSlot) continue;
-                    ItemStack s = inv.items.get(i);
-                    if (!s.isEmpty() && s.getItem() == payloadItem) {
-                        com.piranport.debug.PiranPortDebug.consumeAmmo(s, 1);
-                        consumed = true;
-                        break;
-                    }
-                }
-                if (!consumed && weaponSlot != 40 && coreInventorySlot != 40) {
-                    ItemStack oh = inv.offhand.get(0);
-                    if (!oh.isEmpty() && oh.getItem() == payloadItem) {
-                        com.piranport.debug.PiranPortDebug.consumeAmmo(oh, 1);
-                        consumed = true;
-                    }
-                }
-                if (!consumed) {
-                    player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
-                    // P0-3: 起飞失败埋点（弹药不足）
-                    com.piranport.debug.PiranPortDebug.aircraftLaunchFailed(
-                            player, weaponSlot, aircraftStack, "NO_AMMO");
-                    return;
-                }
-            }
+        // 对海挂载未装填则拒绝放飞（创造模式无此限制）。
+        // 装填由 R 键完成，见 loadAircraftPayload —— 放飞不再扫描背包消耗挂载物，
+        // 挂载物只作装填消耗品，避免"装填后放飞又被扣一次"的双重消耗。
+        if (!payloadType.isEmpty() && !player.getAbilities().instabuild && !launchInfo.payloadLoaded()) {
+            player.displayClientMessage(Component.translatable("message.piranport.aircraft_not_loaded"), true);
+            com.piranport.debug.PiranPortDebug.aircraftLaunchFailed(
+                    player, weaponSlot, aircraftStack, "NO_PAYLOAD");
+            return;
         }
 
         AircraftEntity aircraft = AircraftEntity.create(level, player, weaponSlot, aircraftStack,
@@ -505,6 +479,90 @@ public class AircraftFireStrategy {
                 }
             }
         }
+    }
+
+    // ===== R 键装填（对海挂载）=====
+
+    /** 机型 → 对海挂载物注册名（与 {@link #launchAircraftInventoryMode} 的 payloadType 保持一致）。 */
+    public static String payloadRegistryName(AircraftInfo.AircraftType type) {
+        return switch (type) {
+            case TORPEDO_BOMBER -> "piranport:aerial_torpedo";
+            case DIVE_BOMBER, LEVEL_BOMBER -> "piranport:aerial_bomb";
+            case ASW -> "piranport:depth_charge";
+            default -> "";
+        };
+    }
+
+    /** 返回该槽位飞机是否还需要 R 键装填（对海机型；战斗机/侦察机无挂载概念，返回 false）。 */
+    public static boolean needsPayloadLoad(ItemStack aircraftStack) {
+        AircraftInfo info = aircraftStack.get(ModDataComponents.AIRCRAFT_INFO.get());
+        if (info == null) return false;
+        return !payloadRegistryName(info.aircraftType()).isEmpty() && !info.payloadLoaded();
+    }
+
+    /**
+     * R 键装填舰载机对海挂载。
+     *
+     * <p>装填即从背包消耗 1 个挂载物并写入 {@link AircraftInfo#payloadLoaded()}；放飞时不再扣弹药，
+     * 弹药消耗时点与火炮/鱼雷的"R 键装填"模型一致（见《武器/07-火炮装填双模式》）。
+     *
+     * @param weaponSlot 飞机所在槽位（0-8 主手，40 副手）
+     */
+    public static void loadAircraftPayload(Player player, Inventory inv, ItemStack aircraftStack,
+                                           int weaponSlot, int coreSlot) {
+        if (player.level().isClientSide()) return;
+
+        AircraftInfo info = aircraftStack.get(ModDataComponents.AIRCRAFT_INFO.get());
+        if (info == null) return;
+
+        String payloadType = payloadRegistryName(info.aircraftType());
+        if (payloadType.isEmpty()) {
+            player.displayClientMessage(Component.translatable("message.piranport.aircraft_no_payload"), true);
+            return;
+        }
+        if (info.payloadLoaded()) {
+            player.displayClientMessage(Component.translatable("message.piranport.aircraft_already_loaded"), true);
+            return;
+        }
+
+        // 创造模式不需要装填（放飞时也不消耗），直接跳过，避免创造模式被挂载物卡住
+        if (player.getAbilities().instabuild) {
+            player.displayClientMessage(Component.translatable("message.piranport.aircraft_creative_free_load"), true);
+            return;
+        }
+
+        net.minecraft.world.item.Item payloadItem = BuiltInRegistries.ITEM.get(
+                ResourceLocation.parse(payloadType));
+
+        // 查找并消耗 1 个挂载物（排除飞机自身槽位与核心槽位）
+        int consumedFrom = -1;
+        for (int i = 0; i < inv.items.size(); i++) {
+            if (i == coreSlot || i == weaponSlot) continue;
+            ItemStack s = inv.items.get(i);
+            if (!s.isEmpty() && s.getItem() == payloadItem) {
+                com.piranport.debug.PiranPortDebug.consumeAmmo(s, 1);
+                consumedFrom = i;
+                break;
+            }
+        }
+        if (consumedFrom < 0 && weaponSlot != 40 && coreSlot != 40) {
+            ItemStack oh = inv.offhand.get(0);
+            if (!oh.isEmpty() && oh.getItem() == payloadItem) {
+                com.piranport.debug.PiranPortDebug.consumeAmmo(oh, 1);
+                consumedFrom = 40;
+            }
+        }
+        if (consumedFrom < 0) {
+            player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
+            return;
+        }
+
+        aircraftStack.set(ModDataComponents.AIRCRAFT_INFO.get(), info.withPayloadLoaded(true));
+
+        player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+                SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.5f, 1.4f);
+        player.displayClientMessage(Component.translatable("message.piranport.aircraft_loaded",
+                aircraftStack.getHoverName()), true);
     }
 
     // ===== Auto-launch (Phase 36) =====

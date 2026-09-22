@@ -7,6 +7,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import com.piranport.aviation.ReconManager;
 import com.piranport.component.AircraftAttackMode;
 import com.piranport.component.AircraftInfo;
+import com.piranport.config.ModCommonConfig;
 import com.piranport.item.ExperienceShellItem;
 import com.piranport.network.AswSonarSyncPayload;
 import com.piranport.network.ReconStatePayload;
@@ -1302,6 +1303,8 @@ public class AircraftEntity extends Entity {
 
     boolean tryAutoResupplyAmmo(Player owner) {
         if (payloadType.isEmpty()) return false;
+        // 自动补给是"空中重新装填挂载"，仅在 AUTO_RESUPPLY 开启时可用；手动模式下挂载只走 R 键背包装填
+        if (!ModCommonConfig.AUTO_RESUPPLY_ENABLED.get()) return false;
         net.minecraft.world.item.Item payloadItem = resolvePayloadItem();
         if (payloadItem == null) return false;
 

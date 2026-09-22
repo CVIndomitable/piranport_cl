@@ -15,7 +15,8 @@ public record AircraftInfo(
         float panelDamage,
         float panelSpeed,
         int weight,
-        BombingMode bombingMode
+        BombingMode bombingMode,
+        boolean payloadLoaded
 ) {
     private static final int MAX_CAPACITY = 32768;
     private static final float MIN_PANEL_DAMAGE = 0.0F;
@@ -98,7 +99,9 @@ public record AircraftInfo(
             Codec.FLOAT.fieldOf("panel_damage").forGetter(AircraftInfo::panelDamage),
             Codec.FLOAT.fieldOf("panel_speed").forGetter(AircraftInfo::panelSpeed),
             Codec.INT.fieldOf("weight").forGetter(AircraftInfo::weight),
-            BombingMode.CODEC.optionalFieldOf("bombing_mode", BombingMode.DIVE).forGetter(AircraftInfo::bombingMode)
+            BombingMode.CODEC.optionalFieldOf("bombing_mode", BombingMode.DIVE).forGetter(AircraftInfo::bombingMode),
+            // 对海挂载是否已装填（R 键手动装填模型）。旧存档缺省为 true，保持既有放飞体验
+            Codec.BOOL.optionalFieldOf("payload_loaded", true).forGetter(AircraftInfo::payloadLoaded)
     ).apply(i, AircraftInfo::new));
 
     public static final StreamCodec<ByteBuf, AircraftInfo> STREAM_CODEC = StreamCodec.of(
@@ -111,6 +114,7 @@ public record AircraftInfo(
                 ByteBufCodecs.FLOAT.encode(buf, info.panelSpeed());
                 ByteBufCodecs.VAR_INT.encode(buf, info.weight());
                 BombingMode.STREAM_CODEC.encode(buf, info.bombingMode());
+                buf.writeBoolean(info.payloadLoaded());
             },
             buf -> new AircraftInfo(
                     AircraftType.STREAM_CODEC.decode(buf),
@@ -120,12 +124,18 @@ public record AircraftInfo(
                     ByteBufCodecs.FLOAT.decode(buf),
                     ByteBufCodecs.FLOAT.decode(buf),
                     ByteBufCodecs.VAR_INT.decode(buf),
-                    BombingMode.STREAM_CODEC.decode(buf)
+                    BombingMode.STREAM_CODEC.decode(buf),
+                    buf.readBoolean()
             )
     );
 
     public AircraftInfo withCurrentFuel(int fuel) {
         return new AircraftInfo(aircraftType, fuelCapacity, ammoCapacity, fuel,
-                panelDamage, panelSpeed, weight, bombingMode);
+                panelDamage, panelSpeed, weight, bombingMode, payloadLoaded);
+    }
+
+    public AircraftInfo withPayloadLoaded(boolean loaded) {
+        return new AircraftInfo(aircraftType, fuelCapacity, ammoCapacity, currentFuel,
+                panelDamage, panelSpeed, weight, bombingMode, loaded);
     }
 }

@@ -712,7 +712,7 @@
   "key.piranport.fire_control_lock": "Lock Target [P]",
   "key.piranport.highlight_entities": "Highlight Battlefield [Y]",
   "key.piranport.hit_display_toggle": "Hit Display Toggle [J]",
-  "key.piranport.manual_reload": "Manual Reload [R]",
+  "key.piranport.manual_reload": "Reload [R]",
   "key.piranport.recon_exit": "Exit Recon [V]",
   "key.piranport.switch_ammo": "Switch Ammo [Tab]",
   "key.piranport.toggle_auto_launch": "Toggle Auto Mode [H]",
@@ -1220,5 +1220,12 @@
   "tooltip.piranport.weapon_not_loaded": "Not Loaded",
   "tooltip.piranport.weapon_ready": "Ready",
   "tooltip.piranport.weapon_reloading": "Reloading",
-  "tooltip.piranport.weight": "Weight: %s"
+  "tooltip.piranport.weight": "Weight: %s",
+  "message.piranport.aircraft_not_loaded": "Payload not loaded - press R to load",
+  "message.piranport.aircraft_loaded": "Loaded payload for %s",
+  "message.piranport.aircraft_already_loaded": "Payload already loaded",
+  "message.piranport.aircraft_no_payload": "This aircraft has no anti-ship payload",
+  "message.piranport.aircraft_creative_free_load": "Creative mode: no payload loading needed",
+  "tooltip.piranport.aircraft_payload_loaded": "Payload: Loaded [R]",
+  "tooltip.piranport.aircraft_payload_empty": "Payload: Empty [R to load]"
 }

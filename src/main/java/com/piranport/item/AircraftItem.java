@@ -84,6 +84,19 @@ public class AircraftItem extends Item {
                         String.format("%.1f", info.panelSpeed())).withStyle(net.minecraft.ChatFormatting.GREEN));
                 tooltipComponents.add(Component.translatable("tooltip.piranport.aircraft_ammo_capacity", info.ammoCapacity())
                         .withStyle(net.minecraft.ChatFormatting.AQUA));
+                // 对海挂载装填状态：直接显示，不折叠进 Shift 详情——玩家需要随时知道能不能放飞
+                String payloadKey = com.piranport.aviation.AircraftFireStrategy
+                        .payloadRegistryName(info.aircraftType());
+                if (!payloadKey.isEmpty()) {
+                    // 创造模式不消耗挂载物，工具提示只反映物品自身的装填状态
+                    if (info.payloadLoaded()) {
+                        tooltipComponents.add(Component.translatable("tooltip.piranport.aircraft_payload_loaded")
+                                .withStyle(net.minecraft.ChatFormatting.GREEN));
+                    } else {
+                        tooltipComponents.add(Component.translatable("tooltip.piranport.aircraft_payload_empty")
+                                .withStyle(net.minecraft.ChatFormatting.RED));
+                    }
+                }
                 if (info.currentFuel() > 0) {
                     tooltipComponents.add(Component.translatable("tooltip.piranport.aircraft_fueled")
                             .withStyle(net.minecraft.ChatFormatting.GREEN));

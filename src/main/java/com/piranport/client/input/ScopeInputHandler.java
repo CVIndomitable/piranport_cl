@@ -17,6 +17,9 @@ import net.neoforged.neoforge.network.PacketDistributor;
  *
  * <p><b>开镜延迟</b>: 开镜阈值恒为 1 tick，右键按下当 tick 即完全开镜，闭镜退镜同样即时。
  *
+ * <p><b>落点算法</b>: 只要手持火炮就每 tick 维护准星射线，闭镜与开镜使用同一套弹道解算落点，
+ * 差别只在服务端散布 ×1.1（策划决策/武器/13 方案 B）。
+ *
  * <p><b>线程模型</b>: 客户端渲染线程（单线程），无需同步。
  */
 public class ScopeInputHandler {
@@ -63,7 +66,7 @@ public class ScopeInputHandler {
             attackWasDown = false;
             return;
         }
-        // 打开 GUI / 每 tick 的兜底：非瞄准镜状态下不维护准星射线，闭镜开火走最大射程仰角。
+        // 不再持有火炮：清理闭镜准星射线，避免残留落点被下次开火使用。
         if (!holdingCannon) {
             ClientScopeHandler.clearQuickAim();
         }
@@ -90,12 +93,13 @@ public class ScopeInputHandler {
         }
         useWasDown = useDown;
 
-        // 本 tick 的开闭镜状态和射线必须先更新，开火不能使用上一 tick 或入镜前的落点。
-        isScoping = ClientScopeHandler.isScoping();
-        if (holdingCannon && isScoping) {
-            ClientScopeHandler.tick(mc.player, mc.player.getMainHandItem());
-        } else if (!holdingCannon) {
-            ClientScopeHandler.clearQuickAim();
+        // 只要手持火炮就维护准星射线：闭镜与开镜走同一套落点解算（策划决策/武器/13 方案 B）。
+        if (holdingCannon) {
+            if (isScoping) {
+                ClientScopeHandler.tick(mc.player, mc.player.getMainHandItem());
+            } else {
+                ClientScopeHandler.tickQuickAim(mc.player, mc.player.getMainHandItem());
+            }
         }
 
         // 左键：开火（单击 / 双击）。弹药轮盘打开时禁止开炮，避免切弹药误触发射。
@@ -112,16 +116,13 @@ public class ScopeInputHandler {
                     && mc.getConnection() != null) {
                 // 双击：齐射所有同型炮
                 fired = true;
-                if (isScoping) {
-                    if (ClientScopeHandler.hasValidTarget() && ClientScopeHandler.getAimedPosition() != null) {
-                        Vec3 target = ClientScopeHandler.getAimedPosition();
-                        PacketDistributor.sendToServer(SalvoFirePayload.aimedFire(target.x, target.y, target.z));
-                    } else {
-                        PacketDistributor.sendToServer(SalvoFirePayload.maxRangeFire());
-                    }
+                // 开镜/闭镜同一套算法：都用手持火炮维护的准星射线落点。
+                // 差别只在服务端散布 ×1.1（闭镜无火控 GUI 辅助的代价）。依据：策划决策/武器/13
+                if (ClientScopeHandler.hasValidTarget() && ClientScopeHandler.getAimedPosition() != null) {
+                    Vec3 target = ClientScopeHandler.getAimedPosition();
+                    PacketDistributor.sendToServer(SalvoFirePayload.aimedFire(target.x, target.y, target.z));
                 } else {
-                    // 闭镜：不维护准星射线，固定最大射程快速射击（散布 ×1.1 由服务端施加）。
-                    PacketDistributor.sendToServer(SalvoFirePayload.quickFire());
+                    PacketDistributor.sendToServer(SalvoFirePayload.maxRangeFire());
                 }
                 // 重置，防三击被当作新一轮双击
                 lastAttackClickTick = -1;
@@ -129,16 +130,13 @@ public class ScopeInputHandler {
             } else if (mc.getConnection() != null) {
                 // 单击
                 fired = true;
-                if (isScoping) {
-                    if (ClientScopeHandler.hasValidTarget() && ClientScopeHandler.getAimedPosition() != null) {
-                        Vec3 target = ClientScopeHandler.getAimedPosition();
-                        PacketDistributor.sendToServer(ScopeFirePayload.aimedFire(target.x, target.y, target.z));
-                    } else {
-                        PacketDistributor.sendToServer(ScopeFirePayload.maxRangeFire());
-                    }
+                // 开镜/闭镜同一套算法：都用手持火炮维护的准星射线落点。
+                // 差别只在服务端散布 ×1.1（闭镜无火控 GUI 辅助的代价）。依据：策划决策/武器/13
+                if (ClientScopeHandler.hasValidTarget() && ClientScopeHandler.getAimedPosition() != null) {
+                    Vec3 target = ClientScopeHandler.getAimedPosition();
+                    PacketDistributor.sendToServer(ScopeFirePayload.aimedFire(target.x, target.y, target.z));
                 } else {
-                    // 闭镜：不维护准星射线，固定最大射程快速射击（散布 ×1.1 由服务端施加）。
-                    PacketDistributor.sendToServer(ScopeFirePayload.quickFire());
+                    PacketDistributor.sendToServer(ScopeFirePayload.maxRangeFire());
                 }
                 // 记录供双击检测
                 if (isArtillery) {

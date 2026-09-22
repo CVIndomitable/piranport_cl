@@ -118,14 +118,18 @@ public final class ClientScopeHandler {
     }
 
     /**
-     * 非瞄准镜状态下维护准星射线，用于快速点击开火。
+     * 非瞄准镜状态下维护准星射线，用于闭镜开火。
      *
-     * <p><b>玩法定位</b>：闭镜前准星保持"未命中"状态，射线不在每 tick 更新。
-     * 这样闭镜开火固定走最大射程仰角（快速射击），而不是用上一次开镜留下的
-     * 陈旧落点去解算 —— 否则玩家可以反复按右键刷新落点，等于免费获得火控精度。
-     * 闭镜射击由散布 ×1.1 惩罚和"无 GUI 辅助"共同体现代价。
-     * 依据：docs/策划决策/武器/13-火炮闭镜落点算法与散布惩罚.md
+     * <p><b>玩法定位</b>：只要手持火炮（无论开镜与否）就每 tick 更新准星射线，
+     * 闭镜开火与开镜使用同一套弹道解算落点，差别只在服务端散布 ×1.1。
+     * 依据：docs/策划决策/武器/13-火炮闭镜落点算法与散布惩罚.md（方案 B）
      */
+    public static void tickQuickAim(Player player, ItemStack weapon) {
+        if (scoping) return;
+        updateAimedPosition(player, weapon);
+    }
+
+    /** 玩家不再持有火炮时清理非瞄准镜快速瞄准状态。 */
     public static void clearQuickAim() {
         if (scoping) return;
         aimedPosition = null;

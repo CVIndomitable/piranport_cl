@@ -501,10 +501,13 @@ public class AircraftFireStrategy {
     }
 
     /**
-     * R 键装填舰载机对海挂载。
+     * R 键装填舰载机 — 一次完成"加油 + 挂载"，即完整的出击准备。
      *
-     * <p>装填即从背包消耗 1 个挂载物并写入 {@link AircraftInfo#payloadLoaded()}；放飞时不再扣弹药，
-     * 弹药消耗时点与火炮/鱼雷的"R 键装填"模型一致（见《武器/07-火炮装填双模式》）。
+     * <p>消耗 1 个航空燃料（加满油）与 1 个对海挂载物；两项都必须在背包里备齐，
+     * 缺任一项则整体不执行并提示缺什么，避免出现"加了油却没弹"的半准备状态。
+     * 与火炮/鱼雷的 R 键装填模型一致（见《武器/07-火炮装填双模式》）。
+     *
+     * <p>战斗机/侦察机没有对海挂载，按 R 只补油。
      *
      * @param weaponSlot 飞机所在槽位（0-8 主手，40 副手）
      */
@@ -515,54 +518,76 @@ public class AircraftFireStrategy {
         AircraftInfo info = aircraftStack.get(ModDataComponents.AIRCRAFT_INFO.get());
         if (info == null) return;
 
-        String payloadType = payloadRegistryName(info.aircraftType());
-        if (payloadType.isEmpty()) {
-            player.displayClientMessage(Component.translatable("message.piranport.aircraft_no_payload"), true);
-            return;
-        }
-        if (info.payloadLoaded()) {
-            player.displayClientMessage(Component.translatable("message.piranport.aircraft_already_loaded"), true);
-            return;
-        }
-
-        // 创造模式不需要装填（放飞时也不消耗），直接跳过，避免创造模式被挂载物卡住
+        // 创造模式不消耗任何补给，直接跳过（放飞时同样不消耗）
         if (player.getAbilities().instabuild) {
             player.displayClientMessage(Component.translatable("message.piranport.aircraft_creative_free_load"), true);
             return;
         }
 
-        net.minecraft.world.item.Item payloadItem = BuiltInRegistries.ITEM.get(
-                ResourceLocation.parse(payloadType));
+        // 出厂飞机未挂弹，所以对海机型一律要求挂载物；战斗机/侦察机 payloadType 为空，跳过
+        String payloadType = payloadRegistryName(info.aircraftType());
+        net.minecraft.world.item.Item payloadItem = payloadType.isEmpty() ? null
+                : BuiltInRegistries.ITEM.get(ResourceLocation.parse(payloadType));
 
-        // 查找并消耗 1 个挂载物（排除飞机自身槽位与核心槽位）
-        int consumedFrom = -1;
-        for (int i = 0; i < inv.items.size(); i++) {
-            if (i == coreSlot || i == weaponSlot) continue;
-            ItemStack s = inv.items.get(i);
-            if (!s.isEmpty() && s.getItem() == payloadItem) {
-                com.piranport.debug.PiranPortDebug.consumeAmmo(s, 1);
-                consumedFrom = i;
-                break;
-            }
-        }
-        if (consumedFrom < 0 && weaponSlot != 40 && coreSlot != 40) {
-            ItemStack oh = inv.offhand.get(0);
-            if (!oh.isEmpty() && oh.getItem() == payloadItem) {
-                com.piranport.debug.PiranPortDebug.consumeAmmo(oh, 1);
-                consumedFrom = 40;
-            }
-        }
-        if (consumedFrom < 0) {
-            player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
+        boolean needsFuel = info.currentFuel() < info.fuelCapacity();
+        boolean needsPayload = payloadItem != null && !info.payloadLoaded();
+
+        if (!needsFuel && !needsPayload) {
+            player.displayClientMessage(Component.translatable("message.piranport.aircraft_already_loaded"), true);
             return;
         }
 
-        aircraftStack.set(ModDataComponents.AIRCRAFT_INFO.get(), info.withPayloadLoaded(true));
+        // 先全量校验再消耗：避免"扣了油才发现没弹"导致状态半残
+        int payloadSlot = payloadItem == null ? -1 : findPayloadSlot(inv, payloadItem, weaponSlot, coreSlot);
+        int fuelSlot = needsFuel ? findPayloadSlot(inv, ModItems.AVIATION_FUEL.get(), weaponSlot, coreSlot) : -1;
+
+        if (needsPayload && payloadSlot < 0) {
+            player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
+            return;
+        }
+        if (needsFuel && fuelSlot < 0) {
+            player.displayClientMessage(Component.translatable("message.piranport.aircraft_no_fuel_item"), true);
+            return;
+        }
+
+        if (fuelSlot >= 0) {
+            com.piranport.debug.PiranPortDebug.consumeAmmo(stackAt(inv, fuelSlot), 1);
+            info = info.withCurrentFuel(info.fuelCapacity());
+        }
+        if (payloadSlot >= 0) {
+            com.piranport.debug.PiranPortDebug.consumeAmmo(stackAt(inv, payloadSlot), 1);
+            info = info.withPayloadLoaded(true);
+        }
+
+        aircraftStack.set(ModDataComponents.AIRCRAFT_INFO.get(), info);
 
         player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
                 SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.5f, 1.4f);
         player.displayClientMessage(Component.translatable("message.piranport.aircraft_loaded",
                 aircraftStack.getHoverName()), true);
+    }
+
+    /** 取槽位对应的实际 ItemStack（40 = 副手）。消耗必须落在这个栈上，才能正确写回背包。 */
+    private static ItemStack stackAt(Inventory inv, int slot) {
+        return slot == 40 ? inv.offhand.get(0) : inv.items.get(slot);
+    }
+
+    /**
+     * 查找背包内指定物品所在槽位（排除飞机自身槽位与核心槽位），未找到返回 -1。
+     * 返回 40 代表副手。
+     */
+    private static int findPayloadSlot(Inventory inv, net.minecraft.world.item.Item item,
+                                       int weaponSlot, int coreSlot) {
+        for (int i = 0; i < inv.items.size(); i++) {
+            if (i == coreSlot || i == weaponSlot) continue;
+            ItemStack s = inv.items.get(i);
+            if (!s.isEmpty() && s.getItem() == item) return i;
+        }
+        if (weaponSlot != 40 && coreSlot != 40) {
+            ItemStack oh = inv.offhand.get(0);
+            if (!oh.isEmpty() && oh.getItem() == item) return 40;
+        }
+        return -1;
     }
 
     // ===== Auto-launch (Phase 36) =====

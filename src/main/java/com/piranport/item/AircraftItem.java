@@ -82,31 +82,29 @@ public class AircraftItem extends Item {
                 }
                 tooltipComponents.add(Component.translatable("tooltip.piranport.aircraft_speed",
                         String.format("%.1f", info.panelSpeed())).withStyle(net.minecraft.ChatFormatting.GREEN));
-                tooltipComponents.add(Component.translatable("tooltip.piranport.aircraft_ammo_capacity", info.ammoCapacity())
-                        .withStyle(net.minecraft.ChatFormatting.AQUA));
-                // 对海挂载装填状态：直接显示，不折叠进 Shift 详情——玩家需要随时知道能不能放飞
-                String payloadKey = com.piranport.aviation.AircraftFireStrategy
-                        .payloadRegistryName(info.aircraftType());
-                if (!payloadKey.isEmpty()) {
-                    // 创造模式不消耗挂载物，工具提示只反映物品自身的装填状态
-                    if (info.payloadLoaded()) {
-                        tooltipComponents.add(Component.translatable("tooltip.piranport.aircraft_payload_loaded")
-                                .withStyle(net.minecraft.ChatFormatting.GREEN));
-                    } else {
-                        tooltipComponents.add(Component.translatable("tooltip.piranport.aircraft_payload_empty")
-                                .withStyle(net.minecraft.ChatFormatting.RED));
-                    }
-                }
-                if (info.currentFuel() > 0) {
-                    tooltipComponents.add(Component.translatable("tooltip.piranport.aircraft_fueled")
-                            .withStyle(net.minecraft.ChatFormatting.GREEN));
-                } else {
-                    tooltipComponents.add(Component.translatable("tooltip.piranport.aircraft_not_fueled")
-                            .withStyle(net.minecraft.ChatFormatting.RED));
-                }
             } else if (ClientHooks.isClient()) {
                 tooltipComponents.add(Component.translatable("tooltip.piranport.shift_for_details")
                         .withStyle(net.minecraft.ChatFormatting.DARK_GRAY));
+            }
+            // 出击准备状态（燃料 + 对海挂载）：必须常驻可见，不折叠进 Shift 详情，
+            // 否则玩家无法判断这架飞机现在能不能放飞
+            if (info.currentFuel() > 0) {
+                tooltipComponents.add(Component.translatable("tooltip.piranport.aircraft_fueled")
+                        .withStyle(net.minecraft.ChatFormatting.GREEN));
+            } else {
+                tooltipComponents.add(Component.translatable("tooltip.piranport.aircraft_fuel_short")
+                        .withStyle(net.minecraft.ChatFormatting.RED));
+            }
+            String payloadKey = com.piranport.aviation.AircraftFireStrategy
+                    .payloadRegistryName(info.aircraftType());
+            if (!payloadKey.isEmpty()) {
+                if (info.payloadLoaded()) {
+                    tooltipComponents.add(Component.translatable("tooltip.piranport.aircraft_payload_loaded")
+                            .withStyle(net.minecraft.ChatFormatting.GREEN));
+                } else {
+                    tooltipComponents.add(Component.translatable("tooltip.piranport.aircraft_payload_empty")
+                            .withStyle(net.minecraft.ChatFormatting.RED));
+                }
             }
         }
         ShipCoreCombat.appendWeaponCooldownTooltip(stack, tooltipComponents);

@@ -14,8 +14,10 @@ import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
@@ -34,16 +36,24 @@ import java.util.UUID;
  * </ul>
  *
  * <p>阶段 2（P1-A）范围：BE 持有钥匙的持久化与插入/取出。阶段 3（P1-B）会替换为"打开 ContinueScreen"。
+ *
+ * <p>外观：{@link #HAS_KEY} 驱动 blockstate 切模型——空台面 vs 台面上插着钥匙。
+ * 该属性由 {@link DungeonLecternBlockEntity} 在增删钥匙时同步，因此模型状态与 BE 里的钥匙保持一致。
  */
 public class DungeonLecternBlock extends BaseEntityBlock {
     public static final MapCodec<DungeonLecternBlock> CODEC = simpleCodec(DungeonLecternBlock::new);
     public static final DirectionProperty FACING = HorizontalDirectionalBlock.FACING;
 
+    /** 台面上是否插着钥匙。仅用于外观分层，不参与任何逻辑判定（逻辑一律问 BE）。 */
+    public static final BooleanProperty HAS_KEY = BooleanProperty.create("has_key");
+
     private static final VoxelShape SHAPE = Block.box(0, 0, 0, 16, 16, 16);
 
     public DungeonLecternBlock(Properties props) {
         super(props);
-        this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH));
+        this.registerDefaultState(this.stateDefinition.any()
+                .setValue(FACING, Direction.NORTH)
+                .setValue(HAS_KEY, false));
     }
 
     @Override
@@ -53,7 +63,20 @@ public class DungeonLecternBlock extends BaseEntityBlock {
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-        builder.add(FACING);
+        builder.add(FACING, HAS_KEY);
+    }
+
+    /**
+     * 抽取钥匙前先脱掉 HAS_KEY，避免区块被卸载时带着"已插钥匙"的状态存盘，
+     * 下次加载模型显示插着钥匙但 BE 里其实已经空了。
+     */
+    @Override
+    public BlockState playerWillDestroy(net.minecraft.world.level.Level level, BlockPos pos,
+                                        BlockState state, Player player) {
+        if (!level.isClientSide() && state.getValue(HAS_KEY)) {
+            level.setBlock(pos, state.setValue(HAS_KEY, false), Block.UPDATE_ALL);
+        }
+        return super.playerWillDestroy(level, pos, state, player);
     }
 
     @Override
@@ -69,6 +92,21 @@ public class DungeonLecternBlock extends BaseEntityBlock {
     @Override
     public @Nullable BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
         return new DungeonLecternBlockEntity(pos, state);
+    }
+
+    /**
+     * 服务端 ticker：只用于承接 {@code onLoad} 里调度的那次复检（见 BE#onLoad）。
+     * 常规插入/取出走 BE 直接同步，不依赖 tick。
+     */
+    @Override
+    public <T extends BlockEntity> @Nullable BlockEntityTicker<T> getTicker(
+            Level level, BlockState state, net.minecraft.world.level.block.entity.BlockEntityType<T> type) {
+        if (level.isClientSide()) return null;
+        return (lvl, pos, st, be) -> {
+            if (be instanceof DungeonLecternBlockEntity lecternBE) {
+                lecternBE.tickFromScheduledUpdate();
+            }
+        };
     }
 
     @Override

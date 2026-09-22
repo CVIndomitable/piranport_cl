@@ -8,6 +8,7 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -24,14 +25,43 @@ import java.util.UUID;
  *
  * <p>不实现公开的 IItemHandler capability（防漏斗/AE2 等自动设备误操作），钥匙的插入/取出
  * 只能通过 {@link #tryInsertKey(Player)} / {@link #extractKeyForShiftRightClick(Player)} 显式调用。
+ *
+ * <p>外观同步：钥匙的有无会被回写到方块状态 {@link DungeonLecternBlock#HAS_KEY}，从而切换
+ * "空台面 / 台面插着钥匙"两套模型。之所以放在 BE 侧而不是方块交互里改，是因为钥匙也会被
+ * {@link #setKeyStack(ItemStack)}（世界生成/教学触点）和 {@link #loadAdditional} 改动，
+ * 这些路径本来就绕不开 BE；单点同步能保证所有路径外观一致。
  */
 public class DungeonLecternBlockEntity extends BlockEntity {
 
     private ItemStack keyStack = ItemStack.EMPTY;
     private UUID dungeonInstanceUuid = null;
+    /** 关掉状态重入：{@link #syncHasKeyState} 引起的 setBlock 会再次触发 onLoad。 */
+    private boolean syncingState = false;
 
     public DungeonLecternBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntityTypes.DUNGEON_LECTERN.get(), pos, state);
+    }
+
+    // ===== 外观同步 =====
+
+    /**
+     * 把"是否插着钥匙"回写到方块状态，驱动 blockstate 换模型。
+     *
+     * <p>只在真正变化时才 setBlock，避免每次插入/取出都触发一次区块更新。
+     * 必须先读当前状态再比对：BE 构造期间 level 为 null，此时直接跳过。
+     */
+    private void syncHasKeyState() {
+        if (level == null || level.isClientSide() || syncingState) return;
+        BlockState state = getBlockState();
+        if (!state.hasProperty(DungeonLecternBlock.HAS_KEY)) return;
+        boolean want = hasKey();
+        if (state.getValue(DungeonLecternBlock.HAS_KEY) == want) return;
+        syncingState = true;
+        try {
+            level.setBlock(worldPosition, state.setValue(DungeonLecternBlock.HAS_KEY, want), Block.UPDATE_ALL);
+        } finally {
+            syncingState = false;
+        }
     }
 
     // ===== Getters =====
@@ -75,6 +105,7 @@ public class DungeonLecternBlockEntity extends BlockEntity {
         this.dungeonInstanceUuid = keyInstanceId;
         player.getInventory().setItem(slot, ItemStack.EMPTY);
         setChanged();
+        syncHasKeyState();
         PiranPort.LOGGER.info("DungeonLectern @ {}: inserted key (instanceId={})",
                 worldPosition, keyInstanceId);
         return true;
@@ -96,6 +127,7 @@ public class DungeonLecternBlockEntity extends BlockEntity {
         this.keyStack = ItemStack.EMPTY;
         // dungeonInstanceUuid 保留，副本可被其他玩家继续
         setChanged();
+        syncHasKeyState();
         PiranPort.LOGGER.info("DungeonLectern @ {}: extracted key (instanceId={})",
                 worldPosition, dungeonInstanceUuid);
         return true;
@@ -115,6 +147,7 @@ public class DungeonLecternBlockEntity extends BlockEntity {
         UUID keyInstanceId = DungeonKeyItem.getInstanceId(keyStack);
         this.dungeonInstanceUuid = keyInstanceId;
         setChanged();
+        syncHasKeyState();
     }
 
     // ===== NBT Serialization =====
@@ -141,6 +174,50 @@ public class DungeonLecternBlockEntity extends BlockEntity {
         }
         if (tag.hasUUID("DungeonInstanceUuid")) {
             this.dungeonInstanceUuid = tag.getUUID("DungeonInstanceUuid");
+        }
+    }
+
+    /**
+     * 区块加载后把外观状态追平。
+     *
+     * <p>存档里的方块状态可能是旧的（讲台世界生成时先放空台面、再由结构逻辑灌入钥匙），
+     * 所以不能只依赖插入时的同步——加载时以 BE 的实际钥匙为准重算一次。
+     * 放在下一 tick 执行：{@code onLoad} 期间改方块状态会被区块自身的加载流程覆盖掉。
+     */
+    @Override
+    public void onLoad() {
+        super.onLoad();
+        if (level == null || level.isClientSide()) return;
+        BlockState state = getBlockState();
+        if (!state.hasProperty(DungeonLecternBlock.HAS_KEY)) return;
+        if (state.getValue(DungeonLecternBlock.HAS_KEY) == hasKey()) return;
+        level.scheduleTick(worldPosition, state.getBlock(), 1);
+    }
+
+    /** 承接 {@link #onLoad} 调度的那次 tick，复检外观。（ticker 由方块注册，见 DungeonLecternBlock。） */
+    void tickFromScheduledUpdate() {
+        syncHasKeyState();
+    }
+
+    /** 服务端→客户端的状态同步标签，带上 HAS_KEY 以免刚进视距的客户端看到空台面。 */
+    @Override
+    public CompoundTag getUpdateTag(HolderLookup.Provider registries) {
+        CompoundTag tag = super.getUpdateTag(registries);
+        if (hasKey()) {
+            tag.put("KeyStack", keyStack.save(registries));
+        }
+        return tag;
+    }
+
+    @Override
+    public void handleUpdateTag(CompoundTag tag, HolderLookup.Provider registries) {
+        super.handleUpdateTag(tag, registries);
+        // 客户端只需要知道"有没有钥匙"，钥匙内容本身不参与客户端渲染。
+        if (tag.contains("KeyStack")) {
+            ItemStack loaded = ItemStack.parse(registries, tag.getCompound("KeyStack")).orElse(ItemStack.EMPTY);
+            if (loaded.getItem() instanceof DungeonKeyItem) {
+                this.keyStack = loaded;
+            }
         }
     }
 }

@@ -1,0 +1,108 @@
+{
+  "parent": "minecraft:block/block",
+  "ambientocclusion": false,
+  "textures": {
+    "particle": "piranport:block/dungeon_lectern_stone",
+    "stone": "piranport:block/dungeon_lectern_stone",
+    "metal": "piranport:block/dungeon_lectern_metal",
+    "chart": "piranport:block/dungeon_lectern_chart"
+  },
+  "elements": [
+    {
+      "from": [0, 0, 0],
+      "to": [16, 4, 16],
+      "faces": {
+        "down":  { "uv": [0, 0, 16, 16], "texture": "#stone" },
+        "up":    { "uv": [0, 0, 16, 16], "texture": "#stone" },
+        "north": { "uv": [0, 12, 16, 16], "texture": "#stone" },
+        "south": { "uv": [0, 12, 16, 16], "texture": "#stone" },
+        "west":  { "uv": [0, 12, 16, 16], "texture": "#stone" },
+        "east":  { "uv": [0, 12, 16, 16], "texture": "#stone" }
+      }
+    },
+    {
+      "from": [1, 4, 1],
+      "to": [15, 12, 15],
+      "faces": {
+        "down":  { "uv": [1, 1, 15, 15], "texture": "#stone" },
+        "up":    { "uv": [0, 0, 16, 16], "texture": "#metal" },
+        "north": { "uv": [1, 4, 15, 12], "texture": "#stone" },
+        "south": { "uv": [1, 4, 15, 12], "texture": "#stone" },
+        "west":  { "uv": [1, 4, 15, 12], "texture": "#stone" },
+        "east":  { "uv": [1, 4, 15, 12], "texture": "#stone" }
+      }
+    },
+    {
+      "from": [1.5, 12, 1.5],
+      "to": [14.5, 13.5, 14.5],
+      "faces": {
+        "down":  { "uv": [1.5, 1.5, 14.5, 14.5], "texture": "#metal" },
+        "up":    { "uv": [0, 0, 16, 16], "texture": "#chart" },
+        "north": { "uv": [1.5, 2.5, 14.5, 4], "texture": "#metal" },
+        "south": { "uv": [1.5, 2.5, 14.5, 4], "texture": "#metal" },
+        "west":  { "uv": [1.5, 2.5, 14.5, 4], "texture": "#metal" },
+        "east":  { "uv": [1.5, 2.5, 14.5, 4], "texture": "#metal" }
+      }
+    },
+    {
+      "from": [2, 13.5, 3],
+      "to": [4, 13.6, 5],
+      "faces": {
+        "down":  { "uv": [2, 3, 4, 5], "texture": "#metal" },
+        "up":    { "uv": [2, 3, 4, 5], "texture": "#metal" },
+        "north": { "uv": [2, 0, 4, 1], "texture": "#metal" },
+        "south": { "uv": [2, 0, 4, 1], "texture": "#metal" },
+        "west":  { "uv": [3, 0, 5, 1], "texture": "#metal" },
+        "east":  { "uv": [3, 0, 5, 1], "texture": "#metal" }
+      }
+    },
+    {
+      "from": [12, 13.5, 11],
+      "to": [14, 13.6, 13],
+      "faces": {
+        "down":  { "uv": [2, 3, 4, 5], "texture": "#metal" },
+        "up":    { "uv": [2, 3, 4, 5], "texture": "#metal" },
+        "north": { "uv": [2, 0, 4, 1], "texture": "#metal" },
+        "south": { "uv": [2, 0, 4, 1], "texture": "#metal" },
+        "west":  { "uv": [3, 0, 5, 1], "texture": "#metal" },
+        "east":  { "uv": [3, 0, 5, 1], "texture": "#metal" }
+      }
+    },
+    {
+      "from": [0.5, 4, 5],
+      "to": [3.5, 13, 7],
+      "faces": {
+        "down":  { "uv": [0.5, 5, 3.5, 7], "texture": "#metal" },
+        "up":    { "uv": [0.5, 5, 3.5, 7], "texture": "#metal" },
+        "north": { "uv": [1, 1, 4, 10], "texture": "#metal" },
+        "south": { "uv": [1, 1, 4, 10], "texture": "#metal" },
+        "west":  { "uv": [7, 1, 9, 10], "texture": "#metal" },
+        "east":  { "uv": [7, 1, 9, 10], "texture": "#metal" }
+      }
+    },
+    {
+      "from": [12.5, 4, 9],
+      "to": [15.5, 13, 11],
+      "faces": {
+        "down":  { "uv": [0.5, 5, 3.5, 7], "texture": "#metal" },
+        "up":    { "uv": [0.5, 5, 3.5, 7], "texture": "#metal" },
+        "north": { "uv": [1, 1, 4, 10], "texture": "#metal" },
+        "south": { "uv": [1, 1, 4, 10], "texture": "#metal" },
+        "west":  { "uv": [7, 1, 9, 10], "texture": "#metal" },
+        "east":  { "uv": [7, 1, 9, 10], "texture": "#metal" }
+      }
+    },
+    {
+      "from": [7.5, 4, 1],
+      "to": [8.5, 6, 1.6],
+      "faces": {
+        "north": { "uv": [2, 2, 3, 4], "texture": "#metal" },
+        "south": { "uv": [2, 2, 3, 4], "texture": "#metal" },
+        "west":  { "uv": [2, 2, 3, 4], "texture": "#metal" },
+        "east":  { "uv": [2, 2, 3, 4], "texture": "#metal" },
+        "up":    { "uv": [2, 2, 3, 4], "texture": "#metal" },
+        "down":  { "uv": [2, 2, 3, 4], "texture": "#metal" }
+      }
+    }
+  ]
+}

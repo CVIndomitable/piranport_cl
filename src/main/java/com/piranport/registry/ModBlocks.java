@@ -270,7 +270,8 @@ public class ModBlocks {
                             .mapColor(MapColor.METAL)
                             .strength(3.5f, 6.0f)
                             .requiresCorrectToolForDrops()
-                            .sound(SoundType.METAL)));
+                            .sound(SoundType.METAL)
+                            .noOcclusion()));
 
     // ===== Ship Core Modifier =====
     public static final DeferredBlock<com.piranport.block.ShipCoreModifierBlock> SHIP_CORE_MODIFIER =
@@ -297,7 +298,8 @@ public class ModBlocks {
                             .mapColor(MapColor.METAL)
                             .strength(3.5f, 6.0f)
                             .requiresCorrectToolForDrops()
-                            .sound(SoundType.METAL)));
+                            .sound(SoundType.METAL)
+                            .noOcclusion()));
 
     // ===== Weapon Workbench =====
     public static final DeferredBlock<com.piranport.block.WeaponWorkbenchBlock> WEAPON_WORKBENCH =

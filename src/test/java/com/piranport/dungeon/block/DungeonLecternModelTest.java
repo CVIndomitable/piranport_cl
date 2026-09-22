@@ -126,6 +126,17 @@ class DungeonLecternModelTest {
     }
 
     @Test
+    void keyedModelUsesCutoutRenderType() throws IOException {
+        // 钥匙贴图只有 83/256 像素不透明（alpha 轮廓），而父模型 minecraft:block/block
+        // 不带 render_type，默认按 solid 渲染 —— 带 alpha 的几何走 solid 会渲染错乱。
+        // 显式声明 cutout 让原版做 alpha 裁剪。写法必须与 mod 内其他 54 个模型一致：
+        // 带 minecraft: 命名空间（裸 "cutout" 不在验证范围内）。
+        JsonObject keyed = readJson(ASSETS + "/models/block/dungeon_lectern_key.json");
+        assertEquals("minecraft:cutout", keyed.get("render_type").getAsString(),
+                "带钥匙模型必须声明 render_type=minecraft:cutout，否则 alpha 钥匙贴图渲染错乱");
+    }
+
+    @Test
     void elementRotationsAreLegalForVanillaDeserializer() throws IOException {
         // 原版 BlockElement.Deserializer 只接受 22.5 的整数倍，其余值会抛 JsonParseException
         // 并让【整个模型】加载失败 —— 表现就是方块又变回透明。这个坑踩过一次，锁死它。

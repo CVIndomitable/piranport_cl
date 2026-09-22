@@ -199,6 +199,17 @@ public final class AmmoItems {
     public static final DeferredItem<Item> PROJECTILE_BULLET =
             ITEMS.register("projectile_bullet", () -> new Item(new Item.Properties()));
 
+    // ===== 炮弹 3D 渲染载体（隐藏物品，不加入创造模式标签页） =====
+    // CannonProjectileRenderer 会按装填的炮弹口径选择其中一档，渲染其 3D 锥形模型。
+    // 真实的炮弹物品（small_he_shell 等）图标保持原有 2D 贴图不变，
+    // 只有飞行中的炮弹用这三档 3D 模型，故用隐藏载体物品承载模型。
+    public static final DeferredItem<Item> SHELL_PROJECTILE_SMALL =
+            ITEMS.register("shell_projectile_small", () -> new Item(new Item.Properties()));
+    public static final DeferredItem<Item> SHELL_PROJECTILE_MEDIUM =
+            ITEMS.register("shell_projectile_medium", () -> new Item(new Item.Properties()));
+    public static final DeferredItem<Item> SHELL_PROJECTILE_LARGE =
+            ITEMS.register("shell_projectile_large", () -> new Item(new Item.Properties()));
+
     // ===== Missile / Rocket Ammo =====
     public static final DeferredItem<MissileItem> SY1_MISSILE =
             ITEMS.register("sy1_missile",

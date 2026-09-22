@@ -1,0 +1,7 @@
+{
+  "parent": "piranport:custom/shell_large",
+  "textures": {
+    "0": "piranport:item/shell_projectile",
+    "particle": "piranport:item/shell_projectile"
+  }
+}

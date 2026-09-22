@@ -355,6 +355,11 @@ public class ModItems {
     // 弹丸渲染用隐藏物品（不加入创造模式标签页）
     public static final DeferredItem<Item> PROJECTILE_BULLET = AmmoItems.PROJECTILE_BULLET;
 
+    // 炮弹 3D 渲染载体（隐藏物品）
+    public static final DeferredItem<Item> SHELL_PROJECTILE_SMALL = AmmoItems.SHELL_PROJECTILE_SMALL;
+    public static final DeferredItem<Item> SHELL_PROJECTILE_MEDIUM = AmmoItems.SHELL_PROJECTILE_MEDIUM;
+    public static final DeferredItem<Item> SHELL_PROJECTILE_LARGE = AmmoItems.SHELL_PROJECTILE_LARGE;
+
     // ===== Phase 19: Floating Target（已迁移到 MaterialItems） =====
     public static final DeferredItem<FloatingTargetItem> FLOATING_TARGET = MaterialItems.FLOATING_TARGET;
 

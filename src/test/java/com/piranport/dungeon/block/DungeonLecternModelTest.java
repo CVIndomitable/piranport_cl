@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -193,6 +194,19 @@ class DungeonLecternModelTest {
                 }
             }
         }
+    }
+
+    @Test
+    void lecternMustRenderAsModelNotInvisible() throws Exception {
+        // BaseEntityBlock 默认 getRenderShape() == INVISIBLE（为"BE 自带渲染器"准备）。
+        // 本 BE 没有渲染器，不覆写的话区块渲染阶段直接跳过方块模型 ——
+        // 表现就是"只有碰撞箱、方块透明"，正是这个方块最初的 bug。
+        // 反射拿注解表判定"是否覆写"，不初始化方块实例，避免触发 MC bootstrap。
+        Method getRenderShape = DungeonLecternBlock.class.getDeclaredMethod(
+                "getRenderShape", net.minecraft.world.level.block.state.BlockState.class);
+        assertTrue(getRenderShape.getDeclaringClass() == DungeonLecternBlock.class,
+                "DungeonLecternBlock 必须自己覆写 getRenderShape 并返回 RenderShape.MODEL，"
+                        + "否则方块会渲染成透明（只有碰撞箱）");
     }
 
     private JsonObject readJson(String resourcePath) throws IOException {

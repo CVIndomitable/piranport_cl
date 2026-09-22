@@ -10,7 +10,6 @@ import com.piranport.item.AircraftItem;
 import com.piranport.item.ShipCoreItem;
 import com.piranport.network.AircraftLaunchPosePayload;
 import com.piranport.registry.ModDataComponents;
-import com.piranport.registry.ModCreativeTabs;
 import com.piranport.registry.ModItems;
 import com.piranport.skin.SkinManager;
 import net.minecraft.core.particles.ParticleOptions;
@@ -24,7 +23,6 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
@@ -64,12 +62,10 @@ public class AircraftFireStrategy {
         ItemStack aircraftStack = weaponSlot == 40 ? inv.offhand.get(0) : inv.items.get(weaponSlot);
 
         // 燃料校验：油量归零则拒绝放飞。
-        // 创造模式跳过——但仅限"能从创造物品栏拿到的机型"（isCreativeSupplied）。
-        // 本项目的飞机是"武器即实体"，部分机型靠创造物品栏拿不到（只能靠玩法产出），
-        // 对这些机型放行会让创造玩家白嫖出击，所以照常按油量拦。
+        // 创造模式整体豁免：创造模式拿到所有飞机都不算"游戏内产出"，
+        // 不存在白嫖问题，因此不对机型做区分——只看 instabuild 一个开关。
         AircraftInfo launchInfo = aircraftStack.get(ModDataComponents.AIRCRAFT_INFO.get());
-        boolean creativeFree = player.getAbilities().instabuild
-                && isCreativeSupplied(BuiltInRegistries.ITEM.getKey(aircraftStack.getItem()));
+        boolean creativeFree = player.getAbilities().instabuild;
         if (launchInfo == null || (!creativeFree && launchInfo.currentFuel() <= 0)) {
             player.displayClientMessage(Component.translatable("message.piranport.no_fuel"), true);
             return;
@@ -489,24 +485,6 @@ public class AircraftFireStrategy {
     }
 
     // ===== R 键装填（对海挂载）=====
-
-    /**
-     * 该物品是否躺在创造物品栏的航空页里 —— 用来判断创造模式能否"白嫖"这架飞机。
-     *
-     * <p>只有创造物品栏里拿得到的机型才享受创造免补给；将来若有只能靠玩法产出
-     * （掉落/合成/限定）的飞机，它天然不在创造页里，创造模式也得老老实实加油挂弹。
-     * 直接问创造页而不是维护一张机型白名单，是为了让"新增机型"这件事不需要改这里。
-     */
-    public static boolean isCreativeSupplied(ResourceLocation itemId) {
-        if (itemId == null) return false;
-        CreativeModeTab tab = BuiltInRegistries.CREATIVE_MODE_TAB.get(ModCreativeTabs.AVIATION_TAB.getKey());
-        if (tab == null) return false;
-        // 只在"全部物品"搜索参数下枚举：创造模式玩家的物品栏就是全解锁状态
-        for (ItemStack shown : tab.getDisplayItems()) {
-            if (BuiltInRegistries.ITEM.getKey(shown.getItem()).equals(itemId)) return true;
-        }
-        return false;
-    }
 
     /** 机型 → 对海挂载物注册名（与 {@link #launchAircraftInventoryMode} 的 payloadType 保持一致）。 */
     public static String payloadRegistryName(AircraftInfo.AircraftType type) {

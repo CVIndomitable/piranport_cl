@@ -363,6 +363,7 @@ public class ModItems {
     // 导弹 3D 渲染载体（隐藏物品）
     public static final DeferredItem<Item> MISSILE_PROJECTILE_ANTI_AIR = AmmoItems.MISSILE_PROJECTILE_ANTI_AIR;
     public static final DeferredItem<Item> MISSILE_PROJECTILE_ANTI_SHIP = AmmoItems.MISSILE_PROJECTILE_ANTI_SHIP;
+    public static final DeferredItem<Item> MISSILE_PROJECTILE_ROCKET = AmmoItems.MISSILE_PROJECTILE_ROCKET;
 
     // ===== Phase 19: Floating Target（已迁移到 MaterialItems） =====
     public static final DeferredItem<FloatingTargetItem> FLOATING_TARGET = MaterialItems.FLOATING_TARGET;

@@ -30,7 +30,6 @@ import net.minecraft.world.phys.Vec3;
  *
  * <p>真实导弹物品（anti_air_missile / harpoon_missile 等）的图标保持原有 2D 贴图不变，
  * 3D 模型由隐藏载体物品 {@code missile_projectile_*} 承载，渲染时临时构造其 ItemStack。
- * 火箭弹（rocket_ammo）不在其中——它继续走 {@code ThrownItemRenderer} 的 2D 精灵外观。
  */
 public class MissileProjectileRenderer extends EntityRenderer<MissileEntity> {
     private static final ResourceLocation TEXTURE =
@@ -40,6 +39,8 @@ public class MissileProjectileRenderer extends EntityRenderer<MissileEntity> {
     // 长度天然是炮弹的两倍（模型 26 格 = 1.625 方块）。
     private static final float ANTI_AIR_SCALE = 0.75f;
     private static final float ANTI_SHIP_SCALE = 0.85f;
+    // 火箭弹按策划口径"小型弹拉长"，细度照搬小口径，缩放同防空。
+    private static final float ROCKET_SCALE = 0.75f;
 
     private final ItemRenderer itemRenderer;
 
@@ -49,34 +50,27 @@ public class MissileProjectileRenderer extends EntityRenderer<MissileEntity> {
         this.shadowRadius = 0.05f;
     }
 
-    /**
-     * 判断该弹药物品是否用 3D 反舰弹体渲染。
-     * 未列出的一律按反舰处理——实体默认物品回退到 SY1_MISSILE（反舰），保持与 resolveDisplayItem 一致。
-     */
-    private static boolean isAntiShip(ItemStack ammo) {
-        return !ammo.is(ModItems.TERRIER_MISSILE) && !ammo.is(ModItems.ANTI_AIR_MISSILE);
-    }
+    /** 载体物品 + 缩放：防空/火箭用小型弹几何，反舰用中型弹几何。 */
+    private record Model(ItemStack stack, float scale) {}
 
-    /** 火箭弹保留原版 2D 精灵外观，不走 3D 弹体。 */
-    private static boolean isRocket(ItemStack ammo) {
-        return ammo.is(ModItems.ROCKET_AMMO);
+    /**
+     * 按弹药物品选 3D 弹体。未列出的一律按反舰处理——实体默认物品回退到 SY1_MISSILE（反舰），
+     * 保持与 MissileEntity#resolveDisplayItem 的默认值一致。
+     */
+    private static Model selectModel(ItemStack ammo) {
+        if (ammo.is(ModItems.TERRIER_MISSILE) || ammo.is(ModItems.ANTI_AIR_MISSILE)) {
+            return new Model(new ItemStack(ModItems.MISSILE_PROJECTILE_ANTI_AIR.get()), ANTI_AIR_SCALE);
+        }
+        if (ammo.is(ModItems.ROCKET_AMMO)) {
+            return new Model(new ItemStack(ModItems.MISSILE_PROJECTILE_ROCKET.get()), ROCKET_SCALE);
+        }
+        return new Model(new ItemStack(ModItems.MISSILE_PROJECTILE_ANTI_SHIP.get()), ANTI_SHIP_SCALE);
     }
 
     @Override
     public void render(MissileEntity entity, float entityYaw, float partialTick,
                        PoseStack poseStack, MultiBufferSource buffer, int packedLight) {
-        ItemStack ammo = entity.getItem();
-        if (isRocket(ammo)) {
-            // 火箭弹：交回原版精灵渲染，位置与朝向由原版逻辑处理
-            super.render(entity, entityYaw, partialTick, poseStack, buffer, packedLight);
-            return;
-        }
-
-        boolean antiShip = isAntiShip(ammo);
-        ItemStack renderStack = new ItemStack(antiShip
-                ? ModItems.MISSILE_PROJECTILE_ANTI_SHIP.get()
-                : ModItems.MISSILE_PROJECTILE_ANTI_AIR.get());
-        float scale = antiShip ? ANTI_SHIP_SCALE : ANTI_AIR_SCALE;
+        Model model = selectModel(entity.getItem());
 
         poseStack.pushPose();
         Vec3 velocity = entity.getDeltaMovement();
@@ -87,9 +81,9 @@ public class MissileProjectileRenderer extends EntityRenderer<MissileEntity> {
             poseStack.mulPose(Axis.YP.rotationDegrees(yaw));
             poseStack.mulPose(Axis.XP.rotationDegrees(-pitch));
         }
-        poseStack.scale(scale, scale, scale);
+        poseStack.scale(model.scale(), model.scale(), model.scale());
         // 用 NONE 而非 GROUND：显示变换会右乘在速度定向之后，GROUND 自带的旋转/缩放会污染朝向。
-        itemRenderer.renderStatic(renderStack, ItemDisplayContext.NONE, packedLight,
+        itemRenderer.renderStatic(model.stack(), ItemDisplayContext.NONE, packedLight,
                 OverlayTexture.NO_OVERLAY, poseStack, buffer, entity.level(), entity.getId());
         poseStack.popPose();
 

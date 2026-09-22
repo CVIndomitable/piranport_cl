@@ -70,7 +70,8 @@ final class DungeonDataValidator {
                 if (entityId == null || spawn.count() <= 0) {
                     errors.add("敌人组 " + set.enemySetId() + " 实体 ID 或数量无效");
                 } else if (!BuiltInRegistries.ENTITY_TYPE.containsKey(entityId)) {
-                    // 同 checkRewards：未注册实体在生成时静默跳过，关卡会变成"空关"却无任何报错。
+                    // 同 checkRewards：未注册实体虽不会静默失败（NodeBattleField 会打 WARN 并生成恢复传送门），
+                    // 但节点实际没有战斗内容，等于关卡被跳过——玩家不会报错，只会觉得这关莫名其妙就过了。
                     errors.add("敌人组 " + set.enemySetId() + " 实体未注册: " + spawn.entity());
                 }
             }
@@ -89,8 +90,8 @@ final class DungeonDataValidator {
                     || !Float.isFinite(reward.chance()) || reward.chance() < 0 || reward.chance() > 1) {
                 errors.add(context + " 奖励物品 ID、数量或概率无效");
             } else if (!BuiltInRegistries.ITEM.containsKey(id)) {
-                // 决策/副本/21 §4.4：只校验 ID 语法会让"语法合法但从未注册"的奖励静默丢失，
-                // RewardDispatcher 在解析失败时直接 return 且无日志，玩家通关后拿不到东西也无提示。
+                // 决策/副本/21 §4.4：只校验 ID 语法会让"语法合法但从未注册"的奖励静默丢失——
+                // 加载期拦下，比等玩家通关后拿不到东西、且只有一条容易被忽略的 WARN 要好。
                 errors.add(context + " 奖励物品未注册: " + reward.item());
             }
         }

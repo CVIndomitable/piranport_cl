@@ -132,7 +132,6 @@ public class ClientModEvents {
         // 武器装填条（武器物品上的耐久条样式）
         WeaponReloadDecorator weaponDecorator = new WeaponReloadDecorator();
         event.register(ModItems.SINGLE_SMALL_GUN.get(), weaponDecorator);
-        event.register(ModItems.SINGLE_SMALL_GUN.get(), weaponDecorator);
         event.register(ModItems.JAPANESE_127MM_TWIN_GUN.get(), weaponDecorator);
         event.register(ModItems.MEDIUM_GUN.get(), weaponDecorator);
         event.register(ModItems.LARGE_GUN.get(), weaponDecorator);

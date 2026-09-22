@@ -3,6 +3,7 @@ package com.piranport.client;
 import com.piranport.combat.TransformationManager;
 import com.piranport.component.LoadedAmmo;
 import com.piranport.component.WeaponCooldown;
+import com.piranport.item.MissileLauncherItem;
 import com.piranport.item.ShipCoreItem;
 import com.piranport.item.ShipCoreCombat;
 import com.piranport.item.TorpedoLauncherItem;
@@ -37,6 +38,11 @@ public class WeaponReloadDecorator implements IItemDecorator {
                 torpedoCannotReload = true;
             }
         }
+
+        // 防空导弹发射器始终满装填：弹药直接从背包消耗，不存在 LOADED_AMMO 状态，
+        // 也没有"空膛"可言——画空膛条等于谎报状态（见 docs/策划决策/武器/鱼雷-再装填机制.md）。
+        // 冷却条仍要走第 1 段，否则玩家看不到 60s 装填进度。
+        boolean isAutoReloadMissile = isAutoReloadMissile(stack);
 
         // 1. Cooldown bar takes priority (except for torpedo launchers that can't reload)
         WeaponCooldown cd = stack.get(ModDataComponents.WEAPON_COOLDOWN.get());
@@ -78,10 +84,12 @@ public class WeaponReloadDecorator implements IItemDecorator {
         }
 
         // 3. Manual-reload launchers (torpedo, missile) — show empty bar when not loaded
-        boolean showEmptyBar = stack.getItem() instanceof TorpedoLauncherItem
+        //    防空导弹不在此列：它走自动装填，不该有"空膛"态。
+        boolean showEmptyBar = !isAutoReloadMissile
+                && (stack.getItem() instanceof TorpedoLauncherItem
                 || stack.is(ModItems.SY1_LAUNCHER.get())
                 || stack.is(ModItems.MK14_HARPOON_LAUNCHER.get())
-                || stack.is(ModItems.SHIP_ROCKET_LAUNCHER.get());
+                || stack.is(ModItems.SHIP_ROCKET_LAUNCHER.get()));
 
         if (showEmptyBar) {
             LoadedAmmo ammo = stack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
@@ -95,6 +103,11 @@ public class WeaponReloadDecorator implements IItemDecorator {
         }
 
         return false;
+    }
+
+    /** 是否为自动装填导弹（防空导弹）：弹药直接从背包消耗，无 LOADED_AMMO 状态。 */
+    private static boolean isAutoReloadMissile(ItemStack stack) {
+        return stack.getItem() instanceof MissileLauncherItem ml && !ml.isManualReload();
     }
 
     private static boolean hasMatchingAmmoInInventory(ItemStack weapon) {

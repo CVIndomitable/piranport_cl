@@ -2,13 +2,5 @@
   "parent": "minecraft:item/generated",
   "textures": {
     "layer0": "piranport:item/terrier_launcher"
-  },
-  "overrides": [
-    {
-      "predicate": {
-        "piranport:loaded": 1
-      },
-      "model": "piranport:item/terrier_launcher"
-    }
-  ]
+  }
 }

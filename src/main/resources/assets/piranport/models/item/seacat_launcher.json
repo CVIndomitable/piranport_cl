@@ -1,14 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "piranport:item/seacat_launcher_empty"
-  },
-  "overrides": [
-    {
-      "predicate": {
-        "piranport:loaded": 1
-      },
-      "model": "piranport:item/seacat_launcher"
-    }
-  ]
+    "layer0": "piranport:item/seacat_launcher"
+  }
 }

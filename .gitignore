@@ -29,3 +29,7 @@ tools/
 
 # 敏感：SSH 密钥目录（含私钥，禁止入库）
 .ssh-keys/
+
+# pondererPack 构建产物：由 build.gradle 的 pondererPack 任务在源码树里生成，
+# 追踪它会让每次构建都产生一个假的"已修改"文件。源文件在 ponderer/data/ 下。
+ponderer/PiranPort-Ponderer-1.0.zip

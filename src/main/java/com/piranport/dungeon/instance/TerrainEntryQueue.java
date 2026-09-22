@@ -28,7 +28,7 @@ public final class TerrainEntryQueue extends SavedData {
     private final List<Request> requests = new ArrayList<>();
 
     private record Request(UUID player, BlockPos lectern, String dimension, UUID instance,
-                           String node, boolean checkpoint) {}
+                           String node, boolean checkpoint, DungeonEntryService.Mode mode) {}
 
     public static TerrainEntryQueue get(MinecraftServer server) {
         return server.overworld().getDataStorage().computeIfAbsent(new SavedData.Factory<>(
@@ -36,12 +36,18 @@ public final class TerrainEntryQueue extends SavedData {
     }
 
     public void enqueue(ServerPlayer player, BlockPos lectern, String node, boolean checkpoint) {
+        enqueue(player, lectern, node, checkpoint, DungeonEntryService.Mode.ADVANCE);
+    }
+
+    /** mode 随请求一起持久化：地形就绪后必须能复现玩家的原始意图（推进还是仅传送回起点）。 */
+    public void enqueue(ServerPlayer player, BlockPos lectern, String node, boolean checkpoint,
+                        DungeonEntryService.Mode mode) {
         requests.removeIf(r -> r.player().equals(player.getUUID()));
         if (!(player.level().getBlockEntity(lectern) instanceof DungeonLecternBlockEntity block)) return;
         UUID instance = DungeonKeyItem.getInstanceId(block.getKeyStack());
         if (instance == null) return;
         requests.add(new Request(player.getUUID(), lectern.immutable(),
-                player.level().dimension().location().toString(), instance, node, checkpoint));
+                player.level().dimension().location().toString(), instance, node, checkpoint, mode));
         setDirty();
     }
 
@@ -84,7 +90,8 @@ public final class TerrainEntryQueue extends SavedData {
         if (changed) setDirty();
         for (Request request : ready) {
             ServerPlayer player = server.getPlayerList().getPlayer(request.player());
-            if (player != null) DungeonEntryService.enter(player, request.lectern(), request.checkpoint(), request.node());
+            if (player != null) DungeonEntryService.enter(player, request.lectern(),
+                    request.checkpoint(), request.node(), request.mode());
         }
     }
 
@@ -99,6 +106,8 @@ public final class TerrainEntryQueue extends SavedData {
             item.putString("Dimension", request.dimension());
             item.putUUID("Instance", request.instance());
             item.putBoolean("Checkpoint", request.checkpoint());
+            // 旧存档没有 Mode 字段：读取时按 tryParse 回退到 ADVANCE，保持向后兼容。
+            item.putString("Mode", request.mode().name());
             list.add(item);
         }
         tag.put("Requests", list);
@@ -113,9 +122,18 @@ public final class TerrainEntryQueue extends SavedData {
             if (item.hasUUID("Player") && item.hasUUID("Instance")) {
                 queue.requests.add(new Request(item.getUUID("Player"), BlockPos.of(item.getLong("Lectern")),
                         item.getString("Dimension"), item.getUUID("Instance"),
-                        item.getString("Node"), item.getBoolean("Checkpoint")));
+                        item.getString("Node"), item.getBoolean("Checkpoint"), parseMode(item.getString("Mode"))));
             }
         }
         return queue;
+    }
+
+    /** 旧存档/脏数据容错：无法解析的 Mode 一律回退到 ADVANCE（推进），绝不误判成"仅传送"。 */
+    private static DungeonEntryService.Mode parseMode(String raw) {
+        try {
+            return DungeonEntryService.Mode.valueOf(raw);
+        } catch (IllegalArgumentException e) {
+            return DungeonEntryService.Mode.ADVANCE;
+        }
     }
 }

@@ -157,6 +157,7 @@
   "dungeon.piranport.artillery_intro.kills": "Destroyers sunk: %s/%s (%s remaining)",
   "dungeon.piranport.artillery_intro.looting": "Prepare for combat — %s seconds remaining",
   "dungeon.piranport.artillery_intro.subtitle": "Artillery Introduction",
+  "dungeon.piranport.entry_rejected": "Cannot enter the dungeon: your current progress does not allow this.",
   "dungeon.piranport.flagship_promoted": "You are now the flagship; the dungeon key has been transferred to your copy.",
   "dungeon.piranport.insufficient_cost": "Insufficient: need %s x %s",
   "dungeon.piranport.resource_collected": "Supplies collected!",

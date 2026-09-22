@@ -32,8 +32,11 @@ public record RestartFromBeginningPayload(BlockPos lecternPos)
     public static void handle(RestartFromBeginningPayload payload, IPayloadContext context) {
         context.enqueueWork(() -> {
             if (context.player() instanceof ServerPlayer player) {
+                // Mode.RESTART：走"仅传送"分支，绕过 canEnter 的节点推进规则。
+                // 否则玩家在战斗未清时点"从头开始"会被 canEnter 静默拒绝（本按钮的原 bug）。
                 com.piranport.dungeon.event.DungeonEntryService.enter(
-                        player, payload.lecternPos(), false, null);
+                        player, payload.lecternPos(), false, null,
+                        com.piranport.dungeon.event.DungeonEntryService.Mode.RESTART);
             }
         });
     }

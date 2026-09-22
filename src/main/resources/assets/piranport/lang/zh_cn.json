@@ -157,6 +157,7 @@
   "dungeon.piranport.artillery_intro.kills": "击沉驱逐舰：%s/%s（剩余 %s）",
   "dungeon.piranport.artillery_intro.looting": "准备战斗——剩余 %s 秒",
   "dungeon.piranport.artillery_intro.subtitle": "炮击引入",
+  "dungeon.piranport.entry_rejected": "无法进入副本：当前进度不允许该操作。",
   "dungeon.piranport.flagship_promoted": "你已被指定为新的旗手，钥匙已转移到你的副本上。",
   "dungeon.piranport.insufficient_cost": "资源不足，需要 %s 个 %s",
   "dungeon.piranport.resource_collected": "补给已收集！",

@@ -24,6 +24,25 @@ public final class DungeonEntryRules {
         return instance.getClearedNodes().stream().anyMatch(id -> stage.getReachableFrom(id).contains(nodeId));
     }
 
+    /**
+     * "从头开始"（仅传送回起点）的放行判定。
+     *
+     * <p>与 {@link #canEnter} 不同，本方法<b>刻意不复用推进规则</b>：canEnter 在
+     * <pre>currentNode != null && !clearedNodes.contains(currentNode)</pre> 时会拒绝一切请求
+     * （防止玩家在战斗中途直接跳到下一个节点）。但玩家阵亡/掉线时 currentNode 恰好未清，
+     * 该分支会把"回起点"也一并拒掉，按钮于是静默失效。</p>
+     *
+     * <p>语义（整合版 §3.1）：回起点只传送、不刷新怪物与宝箱、不清空 clearedNodes/enteredNodes，
+     * 因此它天然不会产生推进收益，可以安全绕开推进规则。仍需排除的只有两类状态：
+     * 实例正在创建（数据未就绪）与正在清理（即将销毁）。</p>
+     */
+    public static boolean canRestartFromBeginning(DungeonInstance instance, StageData stage) {
+        if (stage == null || instance == null) return false;
+        if (!stage.nodes().containsKey(stage.startNode())) return false;
+        return instance.getState() != DungeonInstance.State.CREATING
+                && instance.getState() != DungeonInstance.State.CLEANUP;
+    }
+
     public static CheckpointData latestCheckpoint(DungeonInstance instance, StageData stage, UUID player) {
         if (instance == null) return null;
         String id = instance.getLatestCheckpointFor(player);

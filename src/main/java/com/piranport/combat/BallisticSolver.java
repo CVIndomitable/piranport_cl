@@ -41,6 +41,17 @@ public final class BallisticSolver {
     }
     private static final double LOW_ARC_EQUIVALENCE_ERROR = 0.01;
 
+    /**
+     * 闭式解快速路径开关。默认开启；关闭后 solve() 完全走原有的三分+牛顿精确路径。
+     * 依据：docs/技术实现指南/06-弹道闭式解法优化.md（已按实测修正搜索策略）。
+     */
+    private static boolean closedFormEnabled = true;
+
+    /** 闭式解收敛容差（步数 N 的相对变化）。 */
+    private static final double CLOSED_FORM_N_TOLERANCE = 1.0e-12;
+    /** 闭式解 N 的不动点迭代上限（实测 5-8 次即收敛）。 */
+    private static final int CLOSED_FORM_MAX_ITER = 60;
+
     private static final Map<SolutionKey, Result> cache = createLRUCache();
     private static boolean cacheEnabled = true;
 
@@ -286,23 +297,50 @@ public final class BallisticSolver {
                                             double vz0, double minAngle, double maxAngle) {
         int totalIters = 0;
         int scanSteps = Math.max(32, PRECISE_SCAN_STEPS);
-        double step = (maxAngle - minAngle) / scanSteps;
-        if (step <= 0.0) return new SolveResult(minAngle, 0);
+        if (maxAngle - minAngle <= 0.0) return new SolveResult(minAngle, 0);
 
         double bestSampleAngle = minAngle;
         double bestSampleAbs = Double.MAX_VALUE;
         SolveResult bestRoot = null;
         ErrorMetrics bestRootError = null;
 
-        double prevAngle = minAngle;
+        // 闭式种子：解析解先给出低弹道所在的扫描区间，避免在整个 [minAngle, maxAngle]
+        // 上盲扫 512 步，也避免落在错误的一侧。种子不可达（null）时退回全区间盲扫。
+        double scanLow = minAngle;
+        double scanHigh = maxAngle;
+        if (closedFormEnabled) {
+            Double seed = closedFormSeed(initialSpeed, dragCoeff, gravity, horizontalDist, verticalDist);
+            if (seed != null) {
+                double seedAngle = clampAngle(seed, minAngle, maxAngle);
+                // 种子本身即近似解，先记为候选
+                ErrorMetrics seedError = evaluateError(initialSpeed, seedAngle, dragCoeff, gravity,
+                        horizontalDist, verticalDist, vz0);
+                totalIters++;
+                bestSampleAngle = seedAngle;
+                bestSampleAbs = Math.abs(seedError.vertical());
+                // 在种子附近收窄扫描窗口（±15°，覆盖插值偏差与 float 参数误差）
+                double halfWindow = Math.toRadians(15.0);
+                scanLow = Math.max(minAngle, seedAngle - halfWindow);
+                scanHigh = Math.min(maxAngle, seedAngle + halfWindow);
+                if (scanHigh - scanLow < (maxAngle - minAngle) * 0.05) {
+                    scanLow = minAngle;
+                    scanHigh = maxAngle;
+                }
+            }
+        }
+
+        double prevAngle = scanLow;
         double prevF = verticalErrorSigned(initialSpeed, prevAngle, dragCoeff, gravity, horizontalDist, verticalDist, vz0);
         totalIters++;
         if (Double.isFinite(prevF)) {
             bestSampleAbs = Math.abs(prevF);
         }
 
+        double scanSpan = scanHigh - scanLow;
+        double step = scanSpan / scanSteps;
+
         for (int i = 1; i <= scanSteps; i++) {
-            double angle = minAngle + step * i;
+            double angle = scanLow + step * i;
             double f = verticalErrorSigned(initialSpeed, angle, dragCoeff, gravity, horizontalDist, verticalDist, vz0);
             totalIters++;
 
@@ -563,6 +601,106 @@ public final class BallisticSolver {
 
         // 牛顿法未收敛，返回当前最佳估计
         return new SolveResult(angle, iters);
+    }
+
+    /**
+     * 闭式解：直接解析计算发射仰角，作为精确路径的种子。
+     *
+     * <p><b>推导</b>（与 {@link #simulate} 的每 tick 顺序严格一致）：
+     * <pre>
+     *   step n: vx *= s;  vy *= s;       // s = 1/(1+drag)
+     *           x += vx;  y += vy;
+     *           vx *= 0.99;  vy = vy*0.99 - g;
+     * </pre>
+     * 令 d = 0.99 × s，则第 n 步速度 vx_n = vx₀·s·d^n，于是
+     * <pre>
+     *   X_N = vx₀ · A(N),   A(N) = s(1 - d^N)/(1 - d)
+     *   Y_N = vy₀ · A(N) - g·s·B(N),
+     *   B(N) = (N-1)/(1-d) - d(1 - d^(N-1))/(1 - d)²   (N ≥ 2, B(1)=0)
+     * </pre>
+     *
+     * <p><b>关键修正</b>：不能用「枚举 N，取 |V_needed(N) - V| 最小」。
+     * 实测 V_needed(N) 是山谷形而非单调，最小值可低于 V（此时无根），
+     * 且最小误差点落在<b>高弹道</b>（如 V=2.5/D=50 给出 50.66°，而所需低弹道是 19.28°）。
+     *
+     * <p>正确做法：对每个 N 由 sin²+cos²=1 消去 θ 得
+     * <pre>
+     *   A(N)² = (D² + (H + g·s·B(N))²) / V²
+     * </pre>
+     * 因 A(N) 关于 N <b>严格单调递增</b>，可解析反解（B(N) 含 N，做不动点迭代）：
+     * <pre>
+     *   d^N = 1 - A_target·(1-d)/s   →   N = ln(1 - A_target(1-d)/s) / ln d
+     * </pre>
+     * N ≤ 1 或 1-A_target(1-d)/s ≤ 0 表示目标不可达（超出最大射程）。
+     * 最后由 θ = atan2(H + g·s·B(N), D) 得到<b>低弹道</b>解。
+     *
+     * <p><b>精度与用法</b>：A(N)/B(N) 是整数 tick 处的精确位置，而命中判定用的是
+     * x 跨越目标点时的<b>线性插值</b>高度。实测插值落点误差 0.0008-0.0062 格
+     * （远优于 0.02 格判据），但为稳妥起见本方法只作为种子，仍需
+     * {@link #solvePrecise} 在 θ 域做精修（尤其小初速/大高差场景）。
+     *
+     * @return 种子角度（弧度）；目标不可达时返回 null
+     */
+    static Double closedFormSeed(double initialSpeed, double dragCoeff, double gravity,
+                                 double horizontalDist, double verticalDist) {
+        if (!(initialSpeed > 0.0) || !(horizontalDist > 0.0)
+                || !Double.isFinite(initialSpeed) || !Double.isFinite(dragCoeff)
+                || !Double.isFinite(gravity) || !Double.isFinite(horizontalDist)
+                || !Double.isFinite(verticalDist)) {
+            return null;
+        }
+
+        double drag = Math.max(0.0, dragCoeff);
+        double s = 1.0 / (1.0 + drag);
+        double d = VANILLA_AIR_DRAG * s;
+        double oneMinusD = 1.0 - d;
+
+        // d 退化到 1（零阻力极限）：A(N) = N，本闭式不再适用，交回精确路径。
+        if (oneMinusD < 1.0e-9 || d <= 0.0) {
+            return null;
+        }
+
+        // 不动点迭代求自洽的 N。
+        double n = 1.0;
+        double aTarget = Math.hypot(horizontalDist, verticalDist) / initialSpeed; // B=0 的初值
+        for (int iter = 0; iter < CLOSED_FORM_MAX_ITER; iter++) {
+            double bN = gravityAccumulation(n, s, oneMinusD, d);
+            aTarget = Math.sqrt(horizontalDist * horizontalDist
+                    + (verticalDist + gravity * s * bN) * (verticalDist + gravity * s * bN))
+                    / initialSpeed;
+            // A(N) = s(1-d^N)/(1-d) = aTarget  →  d^N = 1 - aTarget(1-d)/s
+            double dPowN = 1.0 - aTarget * oneMinusD / s;
+            if (dPowN <= 0.0) {
+                return null; // 所需 A 超过 A(∞) = s/(1-d)，超出最大射程
+            }
+            double nextN = Math.log(dPowN) / Math.log(d);
+            if (nextN < 1.0) {
+                return null; // 目标比 1 tick 可达的最近点还近
+            }
+            if (Math.abs(nextN - n) <= CLOSED_FORM_N_TOLERANCE * Math.max(1.0, n)) {
+                n = nextN;
+                break;
+            }
+            n = nextN;
+        }
+
+        double bN = gravityAccumulation(n, s, oneMinusD, d);
+        double vyNumerator = verticalDist + gravity * s * bN;
+        double angle = Math.atan2(vyNumerator, horizontalDist);
+
+        if (!Double.isFinite(angle)) return null;
+        return angle;
+    }
+
+    /** B(N) 的重力累积项；N 为实数（闭式反解得到的是实值步数）。 */
+    private static double gravityAccumulation(double n, double s, double oneMinusD, double d) {
+        if (n <= 1.0) return 0.0;
+        return (n - 1.0) / oneMinusD - d * (1.0 - Math.pow(d, n - 1.0)) / (oneMinusD * oneMinusD);
+    }
+
+    /** 闭式解快速路径开关（调试/性能测试用）。 */
+    public static void setClosedFormEnabled(boolean enabled) {
+        closedFormEnabled = enabled;
     }
 
     /**

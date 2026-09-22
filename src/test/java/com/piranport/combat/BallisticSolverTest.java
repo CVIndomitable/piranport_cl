@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -294,6 +295,126 @@ class BallisticSolverTest {
         BallisticSolver.setCacheEnabled(false);
         BallisticSolver.clearCache();
         assertDoesNotThrow(() -> BallisticSolver.solve(1.5, 0.01, 0.05, 30.0, 0.0, 0.0));
+    }
+
+    // ===== 闭式解（docs/技术实现指南/06-弹道闭式解法优化.md）=====
+
+    /**
+     * 闭式种子必须给出<b>低弹道</b>，而不是高弹道。
+     *
+     * <p>回归背景：该文档原始方案是「枚举 N 取 |V_needed(N) - V| 最小」，实测
+     * V_needed(N) 是山谷形而非单调，最小值点落在高弹道（本用例为 50.66°），
+     * 而正确的低弹道是 19.28°。修正后必须反解 A(N) 的单调关系。
+     */
+    @Test
+    void closedFormSeedReturnsLowArcNotHighArc() {
+        double drag = (double) 0.015F;
+        double gravity = 9.8F / 196.0;
+
+        Double seed = BallisticSolver.closedFormSeed(2.5, drag, gravity, 50.0, 0.0);
+        assertNotNull(seed, "闭式解应能求出 50 格平射的种子角");
+
+        double lowArc = Math.toDegrees(seed);
+        assertTrue(lowArc < 35.0,
+                "闭式种子必须是低弹道（<35°），不得落到高弹道 50.66°，实际=" + lowArc);
+        assertEquals(19.2763, lowArc, 0.05, "闭式种子应收敛到真实低弹道角");
+
+        // 种子经过 solve() 的精修后必须真正命中目标
+        BallisticSolver.clearCache();
+        BallisticSolver.Result r = BallisticSolver.solve(2.5, drag, gravity,
+                50.0, 0.0, 0.0, Math.toRadians(-10.0), Math.toRadians(60.0));
+        assertFalse(r.outOfRange());
+        assertProjectileHits(2.5, drag, gravity, 50.0, 0.0, r);
+    }
+
+    /**
+     * 闭式种子的插值落点误差必须远优于 0.02 格判据。
+     *
+     * <p>A(N)/B(N) 描述的是整数 tick 处的精确位置，而命中判定用线性插值；
+     * 实测该偏差为 0.0008-0.0062 格。这里覆盖多个初速/阻力/高低差组合。
+     */
+    @Test
+    void closedFormSeedLandsWithinToleranceAcrossGuns() {
+        double[][] cases = {
+                // V,     drag,          gravity,       D,     H
+                {2.0, 0.01, 0.05, 30.0, 0.0},
+                {2.5, (double) 0.015F, 9.8F / 196.0, 50.0, 0.0},
+                {2.5, (double) 0.015F, 9.8F / 196.0, 50.0, 5.0},
+                {2.5, (double) 0.015F, 9.8F / 196.0, 50.0, -2.0},
+                {3.0, 0.01, 9.8F / 196.0, 50.0, 0.0},
+                {6.0, (double) 0.002F, 6.0F / 196.0, 100.0, 0.0},
+                {6.0, (double) 0.002F, 6.0F / 196.0, 250.0, 0.0},
+                {6.0, (double) 0.002F, 6.0F / 196.0, 100.0, 20.0},
+                {6.0, (double) 0.002F, 6.0F / 196.0, 100.0, -20.0},
+        };
+        for (double[] c : cases) {
+            Double seed = BallisticSolver.closedFormSeed(c[0], c[1], c[2], c[3], c[4]);
+            assertNotNull(seed, "闭式解应给出种子，V=" + c[0] + " D=" + c[3] + " H=" + c[4]);
+            double height = projectileHeightAt(c[0], seed, c[1], c[2], c[3]);
+            assertTrue(Math.abs(height - c[4]) < 0.02,
+                    "闭式种子插值落点误差超限：V=" + c[0] + " D=" + c[3] + " H=" + c[4]
+                            + "，实际高=" + height);
+        }
+    }
+
+    /**
+     * 闭式解对超出最大射程的目标必须返回 null（不可达），不得给出伪解。
+     *
+     * <p>V=3.0/drag=0.01/g=0.05 的最大射程实测 84.874 格，因此 D=100 无解。
+     * 回归背景：原文档 §8.1 声称该参数下 D=100 在 25.4° 命中，属伪造数据。
+     */
+    @Test
+    void closedFormSeedReportsUnreachableTargets() {
+        assertNull(BallisticSolver.closedFormSeed(3.0, 0.01, 0.05, 100.0, 0.0),
+                "V=3.0 时 D=100 超出最大射程 84.87 格，闭式解应判为不可达");
+        assertNull(BallisticSolver.closedFormSeed(2.5, (double) 0.015F, 9.8F / 196.0, 70.0, -2.0),
+                "该参数下 70 格处可达高度约 -23 格，H=-2 不可达");
+        // 最大射程内则应可达
+        assertNotNull(BallisticSolver.closedFormSeed(3.0, 0.01, 0.05, 80.0, 0.0),
+                "D=80 在 84.87 格最大射程内，应有解");
+    }
+
+    /** 闭式解退化输入不得抛异常，且应通过 null 交回精确路径。 */
+    @Test
+    void closedFormSeedHandlesDegenerateInput() {
+        assertDoesNotThrow(() -> BallisticSolver.closedFormSeed(0.0, 0.01, 0.05, 50.0, 0.0));
+        assertNull(BallisticSolver.closedFormSeed(0.0, 0.01, 0.05, 50.0, 0.0));
+        assertNull(BallisticSolver.closedFormSeed(1.5, 0.01, 0.05, 0.0, 0.0));
+        assertNull(BallisticSolver.closedFormSeed(1.5, 0.01, 0.05, -10.0, 0.0));
+        assertNull(BallisticSolver.closedFormSeed(Double.NaN, 0.01, 0.05, 50.0, 0.0));
+        assertNull(BallisticSolver.closedFormSeed(1.5, Double.NaN, 0.05, 50.0, 0.0));
+        assertNull(BallisticSolver.closedFormSeed(1.5, 0.01, Double.NaN, 50.0, 0.0));
+        assertNull(BallisticSolver.closedFormSeed(1.5, 0.01, 0.05, Double.NaN, 0.0));
+        assertNull(BallisticSolver.closedFormSeed(1.5, 0.01, 0.05, 50.0, Double.NaN));
+        // dragCoeff = 0 是零阻力极限，d -> 0.99 仍可解
+        assertDoesNotThrow(() -> BallisticSolver.closedFormSeed(3.0, 0.0, 0.05, 50.0, 0.0));
+    }
+
+    /** 关闭闭式解后，解算结果仍须命中同一目标（种子只是加速，不改变可达性）。 */
+    @Test
+    void disablingClosedFormDoesNotChangeResults() {
+        double drag = (double) 0.015F;
+        double gravity = 9.8F / 196.0;
+
+        BallisticSolver.clearCache();
+        BallisticSolver.setClosedFormEnabled(true);
+        BallisticSolver.Result withSeed = BallisticSolver.solve(2.5, drag, gravity,
+                50.0, 3.0, 0.0, Math.toRadians(-10.0), Math.toRadians(60.0));
+
+        BallisticSolver.clearCache();
+        BallisticSolver.setClosedFormEnabled(false);
+        BallisticSolver.Result withoutSeed = BallisticSolver.solve(2.5, drag, gravity,
+                50.0, 3.0, 0.0, Math.toRadians(-10.0), Math.toRadians(60.0));
+        BallisticSolver.setClosedFormEnabled(true);
+
+        // 种子收窄了精修扫描窗口，落在同一平台根的略不同点属正常；
+        // 判定标准是二者都命中目标且仰角差在 1e-3 度以内，而非逐位相同。
+        assertEquals(withoutSeed.outOfRange(), withSeed.outOfRange());
+        assertEquals(Math.toDegrees(withoutSeed.angle()), Math.toDegrees(withSeed.angle()), 1.0e-3,
+                "闭式种子只应加速收敛，不应改变最终仰角");
+        assertFalse(withSeed.outOfRange());
+        assertProjectileHits(2.5, drag, gravity, 50.0, 3.0, withSeed);
+        assertProjectileHits(2.5, drag, gravity, 50.0, 3.0, withoutSeed);
     }
 
     private static void assertProjectileHits(double speed, double drag, double gravity,

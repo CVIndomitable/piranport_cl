@@ -83,6 +83,53 @@ class DungeonDataLoaderTest {
         assertTrue(DungeonRegistry.INSTANCE.getStage("test").getReachableFrom("A").isEmpty());
     }
 
+    /**
+     * 副本/20 §4.6 回归：terrain_type 写在关卡顶层，必须下发到该关每个节点。
+     * 曾经的 bug 是加载器只读节点级字段，25 个关卡的顶层声明被静默丢弃，
+     * 所有节点回退 T1_OCEAN——玩家打完七章只看得到同一种地形。
+     */
+    @Test
+    void stageLevelTerrainTypePropagatesToEveryNode() {
+        loader.apply(terrainResources("T5", ""), null, null);
+        StageData stage = DungeonRegistry.INSTANCE.getStage("test");
+        for (NodeData node : stage.nodes().values()) {
+            assertEquals(TerrainType.T5_FORTRESS_REEF, node.terrainType(),
+                    "节点 " + node.nodeId() + " 应继承关卡级地形");
+        }
+    }
+
+    @Test
+    void nodeLevelTerrainTypeOverridesStageLevel() {
+        loader.apply(terrainResources("T3", ",\"terrain_type\":\"T2\""), null, null);
+        StageData stage = DungeonRegistry.INSTANCE.getStage("test");
+        assertEquals(TerrainType.T2_ISLAND_REEFS, stage.nodes().get("A").terrainType(),
+                "节点级 terrain_type 应覆盖关卡级");
+        assertEquals(TerrainType.T3_WRECKAGE, stage.nodes().get("B").terrainType(),
+                "未写节点级 terrain_type 的节点仍继承关卡级");
+    }
+
+    /** 地形写错一个字不该静默变成大海：无法识别必须拒绝整批加载。 */
+    @Test
+    void unrecognizedStageTerrainTypeRejectsReload() {
+        assertThrows(IllegalArgumentException.class,
+                () -> loader.apply(terrainResources("T7", ""), null, null));
+        assertFalse(DungeonRegistry.INSTANCE.hasStage("test"));
+    }
+
+    private static Map<ResourceLocation, JsonElement> terrainResources(String stageTerrain, String nodeExtra) {
+        Map<ResourceLocation, JsonElement> resources = new HashMap<>();
+        resources.put(id("chapters/test"), JsonParser.parseString("""
+                {"chapter_id":"test","display_name":"test","stages":["test"]}
+                """));
+        resources.put(id("stages/test"), JsonParser.parseString("""
+                {"stage_id":"test","chapter":"test","display_name":"test","start_node":"A",
+                 "terrain_type":"%s",
+                 "nodes":{"A":{"type":"resource"%s},"B":{"type":"resource"}},
+                 "edges":[{"from":"A","to":"B"}],"boss_nodes":[]}
+                """.formatted(stageTerrain, nodeExtra)));
+        return resources;
+    }
+
     private static Map<ResourceLocation, JsonElement> validResources() {
         Map<ResourceLocation, JsonElement> resources = new HashMap<>();
         resources.put(id("chapters/test"), JsonParser.parseString("""

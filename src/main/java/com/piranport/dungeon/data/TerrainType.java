@@ -54,4 +54,23 @@ public enum TerrainType {
             default -> T1_OCEAN;
         };
     }
+
+    /**
+     * 严格解析：无法识别时返回 null，由调用方拒绝加载。
+     * 关卡 JSON 里的地形写错一个字（如 "T7"、"岛嶕群"）不该静默变成大海——
+     * 那是玩家要打完一整关才会察觉的偏差，加载期就该拦下。
+     */
+    public static TerrainType parseStrict(String s) {
+        TerrainType parsed = fromString(s);
+        if (parsed == T1_OCEAN && !isExplicitOceanAlias(s)) return null;
+        return parsed;
+    }
+
+    private static boolean isExplicitOceanAlias(String s) {
+        if (s == null) return true;
+        return switch (s.toUpperCase()) {
+            case "T1", "OCEAN", "大海" -> true;
+            default -> false;
+        };
+    }
 }

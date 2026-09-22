@@ -137,13 +137,26 @@ public class DungeonDataLoader extends SimpleJsonResourceReloadListener {
         String displayName = json.get("display_name").getAsString();
         String startNode = json.get("start_node").getAsString();
 
+        // 副本/20 §4.6：terrain_type 是**关卡级**属性，写在同一关所有节点的公共字段位置上。
+        // 节点级 terrain_type 保留为可选覆盖（个别节点换地形时用），未写则继承关卡值。
+        // 历史 bug：这里曾只读节点级，导致 25 个关卡写在顶层的 terrain_type 全部被忽略，
+        // 所有节点回退 T1_OCEAN——玩家打完七章看到的是同一种地形。
+        TerrainType stageTerrain = TerrainType.T1_OCEAN;
+        if (json.has("terrain_type") && !json.get("terrain_type").isJsonNull()) {
+            stageTerrain = TerrainType.parseStrict(json.get("terrain_type").getAsString());
+            if (stageTerrain == null) {
+                throw new IllegalArgumentException("未知地形类型 '"
+                        + json.get("terrain_type").getAsString() + "'，关卡 " + stageId);
+            }
+        }
+
         // Parse nodes
         Map<String, NodeData> nodes = new HashMap<>();
         JsonObject nodesObj = json.getAsJsonObject("nodes");
         for (var nodeEntry : nodesObj.entrySet()) {
             String nodeId = nodeEntry.getKey();
             JsonObject nodeJson = nodeEntry.getValue().getAsJsonObject();
-            nodes.put(nodeId, parseNode(nodeId, nodeJson));
+            nodes.put(nodeId, parseNode(nodeId, nodeJson, stageTerrain));
         }
 
         // Parse edges
@@ -272,7 +285,7 @@ public class DungeonDataLoader extends SimpleJsonResourceReloadListener {
                 escortKey, reachOffset, capRadius, capHold);
     }
 
-    private NodeData parseNode(String nodeId, JsonObject json) {
+    private NodeData parseNode(String nodeId, JsonObject json, TerrainType stageTerrain) {
         requireField(json, "type", "node " + nodeId);
         NodeData.NodeType type = NodeData.NodeType.fromString(json.get("type").getAsString());
         String enemies = json.has("enemies") ? json.get("enemies").getAsString() : null;
@@ -284,9 +297,14 @@ public class DungeonDataLoader extends SimpleJsonResourceReloadListener {
         int displayX = json.has("display_x") ? json.get("display_x").getAsInt() : 0;
         int displayY = json.has("display_y") ? json.get("display_y").getAsInt() : 0;
         String script = json.has("script") ? json.get("script").getAsString() : null;
-        TerrainType terrainType = TerrainType.T1_OCEAN;
-        if (json.has("terrain_type")) {
-            terrainType = TerrainType.fromString(json.get("terrain_type").getAsString());
+        // 节点级 terrain_type 是可选覆盖；未写时继承关卡级（见 parseStage）。
+        TerrainType terrainType = stageTerrain;
+        if (json.has("terrain_type") && !json.get("terrain_type").isJsonNull()) {
+            terrainType = TerrainType.parseStrict(json.get("terrain_type").getAsString());
+            if (terrainType == null) {
+                throw new IllegalArgumentException("未知地形类型 '"
+                        + json.get("terrain_type").getAsString() + "'，节点 " + nodeId);
+            }
         }
 
         // 整合版 §2.4 战斗限制（5 种）

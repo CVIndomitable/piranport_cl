@@ -10,6 +10,7 @@ import com.piranport.item.AircraftItem;
 import com.piranport.item.ShipCoreItem;
 import com.piranport.network.AircraftLaunchPosePayload;
 import com.piranport.registry.ModDataComponents;
+import com.piranport.registry.ModCreativeTabs;
 import com.piranport.registry.ModItems;
 import com.piranport.skin.SkinManager;
 import net.minecraft.core.particles.ParticleOptions;
@@ -23,6 +24,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
@@ -61,9 +63,14 @@ public class AircraftFireStrategy {
                                               SlotCooldowns cooldowns) {
         ItemStack aircraftStack = weaponSlot == 40 ? inv.offhand.get(0) : inv.items.get(weaponSlot);
 
-        // Fuel check — refuse launch if currentFuel == 0
+        // 燃料校验：油量归零则拒绝放飞。
+        // 创造模式跳过——但仅限"能从创造物品栏拿到的机型"（isCreativeSupplied）。
+        // 本项目的飞机是"武器即实体"，部分机型靠创造物品栏拿不到（只能靠玩法产出），
+        // 对这些机型放行会让创造玩家白嫖出击，所以照常按油量拦。
         AircraftInfo launchInfo = aircraftStack.get(ModDataComponents.AIRCRAFT_INFO.get());
-        if (launchInfo == null || launchInfo.currentFuel() <= 0) {
+        boolean creativeFree = player.getAbilities().instabuild
+                && isCreativeSupplied(BuiltInRegistries.ITEM.getKey(aircraftStack.getItem()));
+        if (launchInfo == null || (!creativeFree && launchInfo.currentFuel() <= 0)) {
             player.displayClientMessage(Component.translatable("message.piranport.no_fuel"), true);
             return;
         }
@@ -80,10 +87,10 @@ public class AircraftFireStrategy {
             default -> { }
         }
 
-        // 对海挂载未装填则拒绝放飞（创造模式无此限制）。
+        // 对海挂载未装填则拒绝放飞（创造模式的常规机型无此限制）。
         // 装填由 R 键完成，见 loadAircraftPayload —— 放飞不再扫描背包消耗挂载物，
         // 挂载物只作装填消耗品，避免"装填后放飞又被扣一次"的双重消耗。
-        if (!payloadType.isEmpty() && !player.getAbilities().instabuild && !launchInfo.payloadLoaded()) {
+        if (!payloadType.isEmpty() && !creativeFree && !launchInfo.payloadLoaded()) {
             player.displayClientMessage(Component.translatable("message.piranport.aircraft_not_loaded"), true);
             com.piranport.debug.PiranPortDebug.aircraftLaunchFailed(
                     player, weaponSlot, aircraftStack, "NO_PAYLOAD");
@@ -472,7 +479,7 @@ public class AircraftFireStrategy {
             // Find aviation_fuel in inventory
             for (ItemStack ammo : inv.items) {
                 if (ammo.is(ModItems.AVIATION_FUEL.get()) && ammo.getCount() > 0) {
-                    com.piranport.debug.PiranPortDebug.consumeAmmo(ammo, 1);
+                    com.piranport.testtools.PiranPortTestTools.consumeAmmo(ammo, 1);
                     weapon.set(ModDataComponents.AIRCRAFT_INFO.get(),
                             info.withCurrentFuel(info.fuelCapacity()));
                     break;
@@ -482,6 +489,24 @@ public class AircraftFireStrategy {
     }
 
     // ===== R 键装填（对海挂载）=====
+
+    /**
+     * 该物品是否躺在创造物品栏的航空页里 —— 用来判断创造模式能否"白嫖"这架飞机。
+     *
+     * <p>只有创造物品栏里拿得到的机型才享受创造免补给；将来若有只能靠玩法产出
+     * （掉落/合成/限定）的飞机，它天然不在创造页里，创造模式也得老老实实加油挂弹。
+     * 直接问创造页而不是维护一张机型白名单，是为了让"新增机型"这件事不需要改这里。
+     */
+    public static boolean isCreativeSupplied(ResourceLocation itemId) {
+        if (itemId == null) return false;
+        CreativeModeTab tab = BuiltInRegistries.CREATIVE_MODE_TAB.get(ModCreativeTabs.AVIATION_TAB.getKey());
+        if (tab == null) return false;
+        // 只在"全部物品"搜索参数下枚举：创造模式玩家的物品栏就是全解锁状态
+        for (ItemStack shown : tab.getDisplayItems()) {
+            if (BuiltInRegistries.ITEM.getKey(shown.getItem()).equals(itemId)) return true;
+        }
+        return false;
+    }
 
     /** 机型 → 对海挂载物注册名（与 {@link #launchAircraftInventoryMode} 的 payloadType 保持一致）。 */
     public static String payloadRegistryName(AircraftInfo.AircraftType type) {
@@ -518,8 +543,12 @@ public class AircraftFireStrategy {
         AircraftInfo info = aircraftStack.get(ModDataComponents.AIRCRAFT_INFO.get());
         if (info == null) return;
 
-        // 创造模式不消耗任何补给，直接跳过（放飞时同样不消耗）
+        // 创造模式不消耗补给，但必须真的把飞机写成"已准备"状态。
+        // 早先这里只弹提示就 return，导致创造玩家看到"无需补给"却因为油量仍是 0
+        // 被放飞校验拦下，提示与实际行为自相矛盾。
         if (player.getAbilities().instabuild) {
+            aircraftStack.set(ModDataComponents.AIRCRAFT_INFO.get(),
+                    info.withCurrentFuel(info.fuelCapacity()).withPayloadLoaded(true));
             player.displayClientMessage(Component.translatable("message.piranport.aircraft_creative_free_load"), true);
             return;
         }
@@ -551,11 +580,11 @@ public class AircraftFireStrategy {
         }
 
         if (fuelSlot >= 0) {
-            com.piranport.debug.PiranPortDebug.consumeAmmo(stackAt(inv, fuelSlot), 1);
+            com.piranport.testtools.PiranPortTestTools.consumeAmmo(stackAt(inv, fuelSlot), 1);
             info = info.withCurrentFuel(info.fuelCapacity());
         }
         if (payloadSlot >= 0) {
-            com.piranport.debug.PiranPortDebug.consumeAmmo(stackAt(inv, payloadSlot), 1);
+            com.piranport.testtools.PiranPortTestTools.consumeAmmo(stackAt(inv, payloadSlot), 1);
             info = info.withPayloadLoaded(true);
         }
 

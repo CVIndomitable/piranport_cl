@@ -727,6 +727,16 @@ public final class BallisticSolver {
         return bestAngle;
     }
 
+    /**
+     * 计算给定初速、阻力、重力条件下的最大水平射程（格）。
+     * 内部使用最大射程仰角进行模拟，步长与 CannonProjectileEntity 一致。
+     */
+    public static double calculateMaxHorizontalRange(double initialSpeed, double dragCoeff, double gravity) {
+        if (initialSpeed <= 0) return 0.0;
+        double maxAngle = calculateMaxRangeAngle(initialSpeed, dragCoeff, gravity);
+        return simulateHorizontalRange(initialSpeed, maxAngle, dragCoeff, gravity, 0.0);
+    }
+
     private static double simulateHorizontalRange(double v0, double angle, double dragCoeff,
                                                   double gravity, double vz0) {
         double vx = v0 * Math.cos(angle);

@@ -53,8 +53,8 @@ public final class ClientScopeHandler {
     private static boolean hasSolved = false;
     /** 解算间隔（ticks）：避免每 tick 都解算，降低性能开销 */
     private static final int SOLVE_INTERVAL = 5;
-    /** 瞄准镜射线最大距离（格）。 */
-    private static final double SCOPE_RAYCAST_RANGE = 500.0;
+    /** 射线检测绝对上限（格），防止极端情况（如测试武器）造成性能问题。 */
+    private static final double SCOPE_RAYCAST_MAX = 1000.0;
     /** 上一次解算的 tick */
     private static int lastSolveTick = 0;
 
@@ -172,7 +172,13 @@ public final class ClientScopeHandler {
         Vec3 ballisticOrigin = getReferenceMuzzlePosition(player, weapon, mc.level);
         // 手持火炮没有炮塔实体，按策划决策/武器/12 直接使用准星方向。
         Vec3 lookDir = camera.getLookAngle();
-        double range = SCOPE_RAYCAST_RANGE;
+
+        // 根据火炮实际射程动态计算射线检测范围，避免无意义地检测超射程区域
+        double range = estimateRaycastRange(player, weapon);
+        if (range <= 0) {
+            // 无法获取射程信息时回退到绝对上限
+            range = SCOPE_RAYCAST_MAX;
+        }
 
         Vec3 end = eyePos.add(lookDir.scale(range));
 
@@ -198,6 +204,22 @@ public final class ClientScopeHandler {
                 (hitPos.x - ballisticOrigin.x) * (hitPos.x - ballisticOrigin.x) +
                 (hitPos.z - ballisticOrigin.z) * (hitPos.z - ballisticOrigin.z));
         targetVertical = hitPos.y - ballisticOrigin.y;
+    }
+
+    /**
+     * 估算当前火炮的有效射线检测范围。
+     * 返回实际射程与绝对上限的最小值，避免无意义地检测超射程区域。
+     */
+    private static double estimateRaycastRange(Player player, ItemStack weapon) {
+        if (!(weapon.getItem() instanceof ArtilleryItem ai)) return -1.0;
+        ArtilleryCannonData data = ai.getEffectiveData(player.level());
+        if (data.initialSpeed() <= 0) return -1.0;
+        // 使用服务端物理参数计算理论最大射程
+        double mcGravity = data.gravity() > 0f ? data.gravity() / 196.0 : BallisticSolver.DEFAULT_GRAVITY;
+        double maxRange = BallisticSolver.calculateMaxHorizontalRange(
+                data.initialSpeed(), data.dragCoeff(), mcGravity);
+        // 加 10% 余量用于命中点判定
+        return Math.min(maxRange * 1.1, SCOPE_RAYCAST_MAX);
     }
 
     private static Vec3 getReferenceMuzzlePosition(Player player, ItemStack weapon, Level level) {

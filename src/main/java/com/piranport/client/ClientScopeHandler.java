@@ -4,7 +4,6 @@ import com.piranport.artillery.ArtilleryItem;
 import com.piranport.artillery.config.ArtilleryCannonData;
 import com.piranport.artillery.config.MuzzlePos;
 import com.piranport.combat.BallisticSolver;
-import com.piranport.config.ModEquipmentConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -328,7 +327,9 @@ public final class ClientScopeHandler {
     }
 
     private static int getScopeActivationTicks() {
-        return ModEquipmentConfig.SCOPE_ACTIVATION_TICKS.get();
+        // 开镜无延迟：右键按下当 tick holdTicks 即为 1，立刻满足阈值。
+        // 早期该阈值是可配置项（activation_ticks，默认 5），现已移除，长按手感不再可调。
+        return 1;
     }
 
     /** 判断玩家是否手持火炮 */

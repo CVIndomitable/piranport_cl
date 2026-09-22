@@ -50,7 +50,8 @@ public class ClientInputCoordinator {
 
     /**
      * 打开任何普通 GUI/Screen 前退出瞄准镜，并同步服务端状态。
-     * 同时重置按键边沿，避免关闭界面后残留的右键状态立刻重新进入。
+     * 只重置右键边沿，不重置左键边沿 —— 开屏前若左键正处于按下状态，重置会让
+     * 关闭界面后残留的 "按下" 被误判成一次新点击而立即走火。
      */
     @SubscribeEvent
     public static void onScreenOpening(ScreenEvent.Opening event) {
@@ -62,7 +63,7 @@ public class ClientInputCoordinator {
         if (mc.getConnection() != null) {
             PacketDistributor.sendToServer(new ScopeEnterPayload(false));
         }
-        ScopeInputHandler.reset();
+        ScopeInputHandler.resetUseEdge();
     }
 
     /** 重置所有客户端静态状态（断开连接时调用）。 */
@@ -113,7 +114,7 @@ public class ClientInputCoordinator {
             }
         }
 
-        // 4) 火控按键 (P/O/I)
+        // 4) 火控按键 (鼠标中键)
         FireControlInputHandler.handleFireControlKeys(mc, transformed, inReconMode);
 
         // 5) 功能键 (U/H/R)

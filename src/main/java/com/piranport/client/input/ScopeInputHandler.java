@@ -15,6 +15,8 @@ import net.neoforged.neoforge.network.PacketDistributor;
  * 瞄准镜输入处理：按住右键进入瞄准镜，左键发射，松开右键退出。
  * 状态管理委托给 {@link ClientScopeHandler}。
  *
+ * <p><b>开镜延迟</b>: 开镜阈值恒为 1 tick，右键按下当 tick 即完全开镜，闭镜退镜同样即时。
+ *
  * <p><b>线程模型</b>: 客户端渲染线程（单线程），无需同步。
  */
 public class ScopeInputHandler {
@@ -36,6 +38,15 @@ public class ScopeInputHandler {
         lastAttackClickItemType = null;
     }
 
+    /**
+     * 只清右键边沿，保留左键边沿与双击检测状态。
+     * 打开 GUI 时用：右键边沿必须清（否则关界面后残留按住状态会立刻重新开镜），
+     * 但左键边沿不能清（否则关界面时仍按着的左键会被当成一次新点击而走火）。
+     */
+    public static void resetUseEdge() {
+        useWasDown = false;
+    }
+
     /** 每 tick 处理瞄准镜的右键/左键输入。 */
     public static void tick(Minecraft mc) {
         if (mc.player == null || mc.level == null) return;
@@ -52,6 +63,7 @@ public class ScopeInputHandler {
             attackWasDown = false;
             return;
         }
+        // 打开 GUI / 每 tick 的兜底：非瞄准镜状态下不维护准星射线，闭镜开火走最大射程仰角。
         if (!holdingCannon) {
             ClientScopeHandler.clearQuickAim();
         }
@@ -80,12 +92,10 @@ public class ScopeInputHandler {
 
         // 本 tick 的开闭镜状态和射线必须先更新，开火不能使用上一 tick 或入镜前的落点。
         isScoping = ClientScopeHandler.isScoping();
-        if (holdingCannon) {
-            if (isScoping) {
-                ClientScopeHandler.tick(mc.player, mc.player.getMainHandItem());
-            } else {
-                ClientScopeHandler.tickQuickAim(mc.player, mc.player.getMainHandItem());
-            }
+        if (holdingCannon && isScoping) {
+            ClientScopeHandler.tick(mc.player, mc.player.getMainHandItem());
+        } else if (!holdingCannon) {
+            ClientScopeHandler.clearQuickAim();
         }
 
         // 左键：开火（单击 / 双击）。弹药轮盘打开时禁止开炮，避免切弹药误触发射。
@@ -110,13 +120,8 @@ public class ScopeInputHandler {
                         PacketDistributor.sendToServer(SalvoFirePayload.maxRangeFire());
                     }
                 } else {
-                    Vec3 target = ClientScopeHandler.getAimedPosition();
-                    // 策划决策/武器/13：闭镜时同样使用弹道解算落点，仅散布增加10%（服务端处理）
-                    if (isArtillery && target != null) {
-                        PacketDistributor.sendToServer(SalvoFirePayload.aimedFire(target.x, target.y, target.z));
-                    } else {
-                        PacketDistributor.sendToServer(SalvoFirePayload.quickFire());
-                    }
+                    // 闭镜：不维护准星射线，固定最大射程快速射击（散布 ×1.1 由服务端施加）。
+                    PacketDistributor.sendToServer(SalvoFirePayload.quickFire());
                 }
                 // 重置，防三击被当作新一轮双击
                 lastAttackClickTick = -1;
@@ -132,13 +137,8 @@ public class ScopeInputHandler {
                         PacketDistributor.sendToServer(ScopeFirePayload.maxRangeFire());
                     }
                 } else {
-                    Vec3 target = ClientScopeHandler.getAimedPosition();
-                    // 策划决策/武器/13：闭镜时同样使用弹道解算落点，仅散布增加10%（服务端处理）
-                    if (isArtillery && target != null) {
-                        PacketDistributor.sendToServer(ScopeFirePayload.aimedFire(target.x, target.y, target.z));
-                    } else {
-                        PacketDistributor.sendToServer(ScopeFirePayload.quickFire());
-                    }
+                    // 闭镜：不维护准星射线，固定最大射程快速射击（散布 ×1.1 由服务端施加）。
+                    PacketDistributor.sendToServer(ScopeFirePayload.quickFire());
                 }
                 // 记录供双击检测
                 if (isArtillery) {

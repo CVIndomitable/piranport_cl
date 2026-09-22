@@ -210,6 +210,16 @@ public final class AmmoItems {
     public static final DeferredItem<Item> SHELL_PROJECTILE_LARGE =
             ITEMS.register("shell_projectile_large", () -> new Item(new Item.Properties()));
 
+    // ===== 导弹 3D 渲染载体（隐藏物品，不加入创造模式标签页） =====
+    // MissileProjectileRenderer 按飞行中导弹携带的弹药物品选择其一，渲染对应的细长弹体模型。
+    // 真实的导弹物品（anti_air_missile / harpoon_missile 等）图标保持原有 2D 贴图不变，
+    // 只有飞行中的导弹用这两个 3D 模型，故用隐藏载体物品承载模型。
+    // 火箭弹（rocket_ammo）不在此列——它保留原有 2D 精灵告示牌外观。
+    public static final DeferredItem<Item> MISSILE_PROJECTILE_ANTI_AIR =
+            ITEMS.register("missile_projectile_anti_air", () -> new Item(new Item.Properties()));
+    public static final DeferredItem<Item> MISSILE_PROJECTILE_ANTI_SHIP =
+            ITEMS.register("missile_projectile_anti_ship", () -> new Item(new Item.Properties()));
+
     // ===== Missile / Rocket Ammo =====
     public static final DeferredItem<MissileItem> SY1_MISSILE =
             ITEMS.register("sy1_missile",

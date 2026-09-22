@@ -115,9 +115,7 @@ public class ClientModEvents {
 
     @SubscribeEvent
     public static void registerKeyMappings(RegisterKeyMappingsEvent event) {
-        event.register(ModKeyMappings.FIRE_CONTROL_LOCK);
-        event.register(ModKeyMappings.FIRE_CONTROL_ADD);
-        event.register(ModKeyMappings.FIRE_CONTROL_CANCEL);
+        event.register(ModKeyMappings.FIRE_CONTROL_SELECT);
         event.register(ModKeyMappings.TOGGLE_FIGHTER_GROUND_ATTACK);
         event.register(ModKeyMappings.HIGHLIGHT_ENTITIES);
         event.register(ModKeyMappings.TOGGLE_AUTO_LAUNCH);
@@ -212,7 +210,7 @@ public class ClientModEvents {
         event.registerEntityRenderer(ModEntityTypes.DEPTH_CHARGE.get(),
                 ThrownItemRenderer::new);
         event.registerEntityRenderer(ModEntityTypes.MISSILE_ENTITY.get(),
-                ThrownItemRenderer::new);
+                MissileProjectileRenderer::new);
         event.registerEntityRenderer(ModEntityTypes.FLARE_PROJECTILE.get(),
                 ThrownItemRenderer::new);
         event.registerEntityRenderer(ModEntityTypes.RAILGUN_PROJECTILE.get(),

@@ -252,12 +252,15 @@ public final class ClientScopeHandler {
 
     public static boolean isScoping() { return scoping; }
 
-    /** 是否已长按达到瞄准阈值（完全进入瞄准模式） */
+    /**
+     * 是否已长按达到瞄准阈值（完全进入瞄准模式）。
+     * 阈值默认 1 tick，即按下右键当 tick 就返回 true，开镜无延迟。
+     */
     public static boolean isFullyScoped() {
         return scoping && holdTicks >= getScopeActivationTicks();
     }
 
-    /** 是否为快速点击（短按未达到瞄准阈值） */
+    /** 是否为快速点击（短按未达到瞄准阈值）。阈值默认 1 时不成立。 */
     public static boolean isQuickRelease() {
         return scoping && holdTicks < getScopeActivationTicks();
     }

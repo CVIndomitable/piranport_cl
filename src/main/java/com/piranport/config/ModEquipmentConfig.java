@@ -41,7 +41,10 @@ public class ModEquipmentConfig {
     public static final ModConfigSpec.DoubleValue BALLISTIC_ACCURACY;
     /** 最大缓存解数量 */
     public static final ModConfigSpec.IntValue BALLISTIC_CACHE_SIZE;
-    /** 进入瞄准所需最小长按 tick 数 */
+    /**
+     * 瞄准完全生效所需的长按 tick 数。默认 1 表示按下右键当 tick 立即开镜，无延迟。
+     * 调大可重现早期"需长按 N tick 才完全开镜"的手感。
+     */
     public static final ModConfigSpec.IntValue SCOPE_ACTIVATION_TICKS;
 
     /** 近防炮参数保留现有射程/射速；负重默认 0，等待策划各型号定值后可直接配置。 */
@@ -154,8 +157,9 @@ public class ModEquipmentConfig {
             .defineInRange("cache_size", 32, 1, 256);
 
         SCOPE_ACTIVATION_TICKS = BUILDER
-            .comment("Minimum right-click hold ticks to activate scope (瞄准激活所需长按 tick 数)")
-            .defineInRange("activation_ticks", 5, 1, 40);
+            .comment("Ticks of right-click hold before the scope fully activates. 1 = instant, no delay.",
+                     "瞄准完全生效所需的长按 tick 数；1 = 按下即开镜，无延迟")
+            .defineInRange("activation_ticks", 1, 1, 40);
 
         BUILDER.pop();
 

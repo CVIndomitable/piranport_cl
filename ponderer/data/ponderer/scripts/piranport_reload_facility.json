@@ -170,7 +170,7 @@
           "pos": [3.5, 2.5, 2.5],
           "motion": [-0.02, 0.0, 0.0],
           "count": 1,
-          "item": "piranport:torpedo_610",
+          "item": "piranport:torpedo_610mm",
           "attachKeyFrame": true
         },
         {
@@ -178,7 +178,7 @@
           "pos": [3.5, 2.5, 1.5],
           "motion": [-0.02, 0.0, 0.0],
           "count": 1,
-          "item": "piranport:torpedo_533",
+          "item": "piranport:torpedo_533mm",
           "attachKeyFrame": false
         },
         {

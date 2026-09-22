@@ -1,13 +1,17 @@
 {
   "id": "piranport:fire_control",
   "items": [
-    "piranport:artillery_scope"
+    "piranport:single_small_gun"
   ],
   "title": {
     "zh_cn": "皮兰港：火控与落点提示",
     "en_us": "Piran Port: Fire Control & Landing Indicator"
   },
-  "tags": ["piranport", "fire_control", "artillery"],
+  "tags": [
+    "piranport",
+    "fire_control",
+    "artillery"
+  ],
   "editable": false,
   "scenes": [
     {
@@ -26,10 +30,13 @@
           "duration": 20
         },
         {
-          "type": "set_block",
-          "block": "piranport:artillery_scope",
-          "blockPos": [2, 1, 2],
-          "attachKeyFrame": true
+          "type": "create_item_entity",
+          "item": "piranport:single_small_gun",
+          "pos": [
+            2,
+            1,
+            2
+          ]
         },
         {
           "type": "text",
@@ -38,7 +45,11 @@
             "zh_cn": "手持火炮时按住鼠标右键进入瞄准镜模式。准星内会显示距离、仰角等信息。",
             "en_us": "Hold right-click with a cannon in hand to enter scope mode. The crosshair shows distance and elevation info."
           },
-          "point": [2.5, 2.2, 2.5],
+          "point": [
+            2.5,
+            2.2,
+            2.5
+          ],
           "placeNearTarget": true,
           "attachKeyFrame": true
         },
@@ -53,7 +64,11 @@
             "zh_cn": "松开右键开火后，弹丸落点处会出现红色圆圈。红圈从约1格半径开始，随弹丸飞行逐渐缩小至接触时变成一个点。",
             "en_us": "After firing, a red circle appears at the landing point. The circle starts at ~1 block radius and shrinks as the shell flies, becoming a dot on impact."
           },
-          "point": [2.5, 3.0, 2.5],
+          "point": [
+            2.5,
+            3.0,
+            2.5
+          ],
           "color": "red",
           "placeNearTarget": true,
           "attachKeyFrame": true
@@ -64,10 +79,18 @@
         },
         {
           "type": "create_item_entity",
-          "pos": [2.5, 3.5, 2.5],
-          "motion": [0.0, -0.03, 0.0],
+          "pos": [
+            2.5,
+            3.5,
+            2.5
+          ],
+          "motion": [
+            0.0,
+            -0.03,
+            0.0
+          ],
           "count": 1,
-          "item": "piranport:small_shell",
+          "item": "piranport:small_he_shell",
           "attachKeyFrame": true
         },
         {
@@ -77,7 +100,11 @@
             "zh_cn": "落点提示对玩家火炮和深海舰船炮击均有效。快捷键 G 可随时显示或隐藏红圈。",
             "en_us": "Landing indicators work for both player cannons and deep-sea ship guns. Press G to toggle the circle on or off."
           },
-          "point": [2.5, 1.5, 2.5],
+          "point": [
+            2.5,
+            1.5,
+            2.5
+          ],
           "placeNearTarget": true,
           "attachKeyFrame": true
         },
@@ -103,10 +130,13 @@
           "duration": 20
         },
         {
-          "type": "set_block",
-          "block": "piranport:artillery_scope",
-          "blockPos": [2, 1, 2],
-          "attachKeyFrame": true
+          "type": "create_item_entity",
+          "item": "piranport:single_small_gun",
+          "pos": [
+            2,
+            1,
+            2
+          ]
         },
         {
           "type": "text",
@@ -115,7 +145,11 @@
             "zh_cn": "按键 G 切换落点红圈的显示与隐藏。默认开启，在设置中也可调整红圈颜色和初始半径。",
             "en_us": "Press G to toggle the landing circle on or off. It is enabled by default; you can adjust the color and initial radius in settings."
           },
-          "point": [2.5, 2.2, 2.5],
+          "point": [
+            2.5,
+            2.2,
+            2.5
+          ],
           "placeNearTarget": true,
           "attachKeyFrame": true
         },
@@ -130,7 +164,11 @@
             "zh_cn": "H 键切换自动模式（战斗机自动升空与防空导弹自动发射），P/O/I 键管理火控锁定目标。",
             "en_us": "H toggles auto-mode (auto-launch fighters and auto-fire missiles). P/O/I manage fire-control target locks."
           },
-          "point": [2.5, 3.0, 2.5],
+          "point": [
+            2.5,
+            3.0,
+            2.5
+          ],
           "color": "green",
           "placeNearTarget": true,
           "attachKeyFrame": true

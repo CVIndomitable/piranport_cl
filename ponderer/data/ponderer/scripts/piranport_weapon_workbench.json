@@ -83,7 +83,7 @@
           "pos": [2.5, 3.5, 2.5],
           "motion": [0.0, -0.03, 0.0],
           "count": 1,
-          "item": "piranport:small_gun",
+          "item": "piranport:single_small_gun",
           "attachKeyFrame": true
         },
         {

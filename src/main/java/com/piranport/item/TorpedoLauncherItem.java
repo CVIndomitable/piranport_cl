@@ -49,6 +49,8 @@ public class TorpedoLauncherItem extends Item {
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
+        // 返回值只表示"船上有没有核心/武器"，发射策略全是 void，因此这里恒为 true，
+        // consume 与否不改变实际开火结果——真正的拒绝信息由策略自己 actionbar 播报。
         if (ShipCoreCombat.tryFireFromInventory(level, player, hand)) {
             return InteractionResultHolder.consume(stack);
         }

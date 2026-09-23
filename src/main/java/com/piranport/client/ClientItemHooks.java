@@ -290,6 +290,30 @@ public final class ClientItemHooks implements com.piranport.platform.ClientBridg
     }
 
     /**
+     * 数背包（含副手）里同口径鱼雷的总数。
+     *
+     * <p>刻意与 {@code TorpedoFireStrategy.fireTorpedosInventoryMode} 的扫描口径保持一致：
+     * 只认口径、不限弹种，副手仅在武器不在副手时才计入。这里是客户端预测，
+     * 只用来决定 tooltip 报"已装填"还是"未装填"，真正能不能打仍由服务端裁决。
+     */
+    private static int countInventoryTorpedoes(TorpedoLauncherItem launcher, Inventory inv) {
+        int caliber = launcher.getCaliber();
+        int available = 0;
+        for (ItemStack s : inv.items) {
+            if (!s.isEmpty() && s.getItem() instanceof com.piranport.item.TorpedoItem ti
+                    && ti.getCaliber() == caliber) {
+                available += s.getCount();
+            }
+        }
+        ItemStack oh = inv.offhand.get(0);
+        if (!oh.isEmpty() && oh.getItem() instanceof com.piranport.item.TorpedoItem ti
+                && ti.getCaliber() == caliber) {
+            available += oh.getCount();
+        }
+        return available;
+    }
+
+    /**
      * Appends current reload readiness for weapons that are directly in the
      * local player's inventory.
      */
@@ -323,10 +347,17 @@ public final class ClientItemHooks implements com.piranport.platform.ClientBridg
                 : cooldowns.isOnCooldown(weaponSlot, gameTime);
         boolean isManualMode = !com.piranport.config.ModCommonConfig.AUTO_RESUPPLY_ENABLED.get();
         boolean isAutoReloadMissile = stack.getItem() instanceof MissileLauncherItem ml0 && !ml0.isManualReload();
-        boolean needsLoadedAmmo = !isAutoReloadMissile
+        // 鱼雷发射器在任何模式下都可能"已装填 / 空膛 / 从背包现取"三态，必须单独判，
+        // 不能像火炮那样一刀切（装填模式开时火炮走自动补给，鱼雷不走）。
+        // WHY：否则装填模式开启（autoResupplyEnabled=true）时 needsLoadedAmmo 对鱼雷是 false，
+        // 直接落到最后那个无条件 else 分支，无论膛里有没有鱼雷都报"已装填"——
+        // 玩家看到的就是"显示装填了却打不出来"。
+        boolean isTorpedoLauncher = stack.getItem() instanceof TorpedoLauncherItem;
+        boolean needsLoadedAmmo = isTorpedoLauncher
+                || (!isAutoReloadMissile
                 && (isCannon
                 || (isManualMode && !(stack.getItem() instanceof AircraftItem))
-                || (stack.getItem() instanceof MissileLauncherItem ml && ml.isManualReload()));
+                || (stack.getItem() instanceof MissileLauncherItem ml && ml.isManualReload())));
 
         if (onCooldown) {
             if (isCannon) {
@@ -346,7 +377,11 @@ public final class ClientItemHooks implements com.piranport.platform.ClientBridg
             LoadedAmmo loaded = stack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
             boolean hasAmmo;
             if (stack.getItem() instanceof TorpedoLauncherItem tl) {
-                hasAmmo = loaded.count() >= tl.getTubeCount();
+                // 两种弹药来源都算"能开火"：膛内（装填设施/右键装的）或背包里足量同口径鱼雷（再装填件自动取弹）。
+                // WHY 保留 hasAmmo()：不可信来源（旧存档/组件编辑）可能留下 count>0 但 ammoItemId 为空的脏值，
+                // 只看 count 会把这种管报成"已装填"。判定口径对齐 TorpedoFireStrategy 的手动模式分支。
+                hasAmmo = (loaded.hasAmmo() && loaded.count() >= tl.getTubeCount())
+                        || countInventoryTorpedoes(tl, inv) >= tl.getTubeCount();
             } else if (stack.getItem() instanceof com.piranport.artillery.ArtilleryItem ai) {
                 hasAmmo = loaded.count() >= ai.getEffectiveData(mc.level).barrels();
             } else {

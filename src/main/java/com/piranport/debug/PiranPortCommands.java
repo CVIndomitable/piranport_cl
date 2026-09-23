@@ -893,9 +893,13 @@ public final class PiranPortCommands {
         String structureId = "piranport:" + type;
         // 结构是否真的注册过要另外查一次：白名单只挡拼写错误，挡不住
         // "名单里有但 worldgen 未注册" 的档位（改名/未启用时就会这样）。
+        //
+        // 注意必须判 isEmpty()：HolderLookup 的 getOptional 返回 Optional，
+        // 未命中时是 Optional.empty() 而**不是 null**，拿 != null 判是死的。
         if (source.getServer().registryAccess()
                 .registryOrThrow(net.minecraft.core.registries.Registries.STRUCTURE)
-                .getOptional(ResourceLocation.fromNamespaceAndPath("piranport", type)) == null) {
+                .getOptional(ResourceLocation.fromNamespaceAndPath("piranport", type))
+                .isEmpty()) {
             source.sendFailure(Component.literal("§c该结构未注册: " + structureId));
             return 0;
         }

@@ -46,8 +46,12 @@ public final class PiranPortTestTools {
     public static final int COOLDOWN_OVERRIDE_TICKS = 100;
 
     /**
-     * 测试模式水印文本（红色），客户端会在 HUD 渲染。
-     * 渲染逻辑由 ClientHooks/ClientItemHooks 实现。
+     * 测试模式水印文本（红色）。
+     *
+     * <p>注意：HUD 水印渲染层**尚未实装**（没有读取方）。当前的可见提示是
+     * {@link com.piranport.network.TestModeWatermarkPayload} 发的聊天栏消息，
+     * 客户端状态由 {@code DebugInputHandler.setTestModeClient} 保存供 N 键取反。
+     * 实装 HUD 时从这里取文案即可。
      */
     public static final String WATERMARK_TEXT = "§c[PP TEST MODE] §r测试模式 — 日志可能被污染";
 

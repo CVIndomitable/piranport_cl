@@ -114,7 +114,9 @@ public class TerminalOverridesSavedData extends SavedData {
             return;
         }
         double clamped = clampCoreDelta(delta);
-        if (coreDeltas.put(coreKey, clamped) == null || coreDeltas.get(coreKey) != clamped) {
+        Double existing = coreDeltas.put(coreKey, clamped);
+        // 只有值真的变化才标脏：Double 装箱比较用 equals，避免 == 对 -0.0/NaN 的陷阱。
+        if (existing == null || !existing.equals(clamped)) {
             setDirty();
         }
         publishToRuntime();

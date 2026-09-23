@@ -101,7 +101,9 @@ public record UpdateTerminalOverridePayload(
                         reject(serverPlayer, "未知舰型: " + payload.key());
                         return;
                     }
-                    data.setCoreSpeedDelta(coreKey, TerminalOverridesSavedData.clampCoreDelta(payload.delta()));
+                    // 不要把 delta 在调用点先钳一遍：core 的钳制下限是 0.1，先钳会把「填 0 清除覆盖」
+                    // 变成 +0.1。让 setCoreSpeedDelta 自己判 0 走移除、其余才钳。
+                    data.setCoreSpeedDelta(coreKey, payload.delta());
                     // R1：核心航速走的是玩家属性修饰符，写覆盖不会自动重算，
                     // 必须显式重放，否则只有下次变形/换装才生效。
                     com.piranport.combat.TransformationManager.onTerminalCoreOverrideChanged(serverPlayer);

@@ -1,6 +1,7 @@
 {
   "parent": "minecraft:block/block",
   "ambientocclusion": false,
+  "render_type": "minecraft:cutout",
   "textures": {
     "particle": "piranport:block/dungeon_lectern_stone",
     "stone": "piranport:block/dungeon_lectern_stone",

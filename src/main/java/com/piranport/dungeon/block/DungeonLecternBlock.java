@@ -221,24 +221,15 @@ public class DungeonLecternBlock extends BaseEntityBlock {
                 }
             }
         } else {
-            // instId 为 null：钥匙尚未绑定实例（首次插入），从钥匙的 stageId 回退获取名称
-            // 注意：钥匙的 stageId 可能是 chapter ID（如 "chapter_1"），需先解析为实际关卡 ID
+            // instId 为 null：钥匙尚未绑定实例（首次插入），从钥匙的 stageId 回退获取名称。
+            // 解析走 DungeonKeyItem.resolveStageId —— 与 DungeonEntryService.enter 的入口判定
+            // 共用同一个方法，避免"对话框显示了章节名、点进去却说副本不存在"。
             if (lecternBE.getKeyStack().getItem() instanceof com.piranport.dungeon.key.DungeonKeyItem) {
-                String keyStageId = com.piranport.dungeon.key.DungeonKeyItem.getStageId(lecternBE.getKeyStack());
-                if (!keyStageId.isEmpty()) {
-                    // chapter_1 → 取该章节第一个 stage（如 "1-1"）
-                    if (keyStageId.startsWith("chapter_")) {
-                        com.piranport.dungeon.data.ChapterData chapter =
-                                com.piranport.dungeon.data.DungeonRegistry.INSTANCE.getChapter(keyStageId);
-                        if (chapter != null && !chapter.stages().isEmpty()) {
-                            keyStageId = chapter.stages().get(0);
-                        }
-                    }
-                    com.piranport.dungeon.data.StageData fallbackStage =
-                            com.piranport.dungeon.data.DungeonRegistry.INSTANCE.getStage(keyStageId);
-                    if (fallbackStage != null) {
-                        stageDisplay = fallbackStage.displayName();
-                    }
+                com.piranport.dungeon.data.StageData fallbackStage =
+                        com.piranport.dungeon.data.DungeonRegistry.INSTANCE.getStage(
+                                com.piranport.dungeon.key.DungeonKeyItem.resolveStageId(lecternBE.getKeyStack()));
+                if (fallbackStage != null) {
+                    stageDisplay = fallbackStage.displayName();
                 }
             }
         }

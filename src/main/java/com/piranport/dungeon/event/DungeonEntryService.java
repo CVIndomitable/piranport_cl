@@ -91,7 +91,9 @@ public final class DungeonEntryService {
             return;
         }
         ItemStack key = lectern.getKeyStack();
-        StageData stage = DungeonRegistry.INSTANCE.getStage(DungeonKeyItem.getStageId(key));
+        // 必须解析 chapter_* → 真实关卡 ID：章节钥匙（ChapterKeyRecipe 产物）存的是章节 ID，
+        // 直接查 stages 表恒为 null，玩家看到的会是"钥匙上的副本不存在"。
+        StageData stage = DungeonRegistry.INSTANCE.getStage(DungeonKeyItem.resolveStageId(key));
         if (stage == null) {
             Reject.NO_SUCH_STAGE.report(player);
             return;

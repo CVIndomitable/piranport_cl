@@ -127,13 +127,59 @@ class DungeonLecternModelTest {
 
     @Test
     void keyedModelUsesCutoutRenderType() throws IOException {
-        // 钥匙贴图只有 83/256 像素不透明（alpha 轮廓），而父模型 minecraft:block/block
-        // 不带 render_type，默认按 solid 渲染 —— 带 alpha 的几何走 solid 会渲染错乱。
-        // 显式声明 cutout 让原版做 alpha 裁剪。写法必须与 mod 内其他 54 个模型一致：
-        // 带 minecraft: 命名空间（裸 "cutout" 不在验证范围内）。
+        // 钥匙贴图只有 83/256 像素不透明（alpha 轮廓），带 alpha 的几何必须走 cutout 做 alpha 裁剪。
+        // 写法必须与 mod 内其他 54 个模型一致：带 minecraft: 命名空间（裸 "cutout" 不在验证范围内）。
         JsonObject keyed = readJson(ASSETS + "/models/block/dungeon_lectern_key.json");
         assertEquals("minecraft:cutout", keyed.get("render_type").getAsString(),
                 "带钥匙模型必须声明 render_type=minecraft:cutout，否则 alpha 钥匙贴图渲染错乱");
+    }
+
+    @Test
+    void cutoutRenderTypeSitsOnTheModelOwningTheAlphaTexture() throws IOException {
+        // 这是"插上钥匙后方块透明"的真正的坑，之前的三层叠加把根因藏住了：
+        //   1) 子模型 dungeon_lectern_key 声明 render_type=cutout —— 但【只作用于它自己定义的
+        //      element】。它 parent 指向 dungeon_lectern，而父模型 parent 是 minecraft:block/block，
+        //      block/block 不带 render_type，默认 solid（FaceBakery 的默认渲染类型）。
+        //   2) 于是 inherited 的台面几何仍是 solid，而 cutout 的钥匙 element 与它是
+        //      【同一个 block model part 的同一批 quads】—— 一个 part 只取一次渲染类型。
+        //   3) 钥匙贴图 83/256 像素 alpha=0，solid 层不做 alpha 裁剪，整批 quad 渲染错乱 → 方块"消失"。
+        // 所以 render_type 必须落在【声明了带 alpha 贴图的 element、且离根最近】的模型上。
+        // dungeon_lectern（父）显式声明后，两层都成了 cutout，与渲染类型无关的台面贴图是全不透明的，
+        // 视觉零变化。
+        JsonObject empty = readJson(ASSETS + "/models/block/dungeon_lectern.json");
+        assertEquals("minecraft:block/block", empty.get("parent").getAsString(),
+                "前提校验：空模型的父是 minecraft:block/block（它不带 render_type）");
+        assertTrue(empty.has("render_type"),
+                "dungeon_lectern 必须自己声明 render_type —— 它的父 minecraft:block/block 不带，"
+                        + "不声明就默认 solid，子模型的 cutout 声明救不了 inherited 的台面几何");
+        String emptyType = empty.get("render_type").getAsString();
+        assertEquals("minecraft:cutout", emptyType,
+                "空模型必须声明 minecraft:cutout（与带钥匙模型一致，避免同一方块的两个状态用不同渲染类型）");
+
+        // 两层渲染类型必须相同，否则 has_key 翻转时渲染类型跳变
+        JsonObject keyed = readJson(ASSETS + "/models/block/dungeon_lectern_key.json");
+        assertEquals(emptyType, keyed.get("render_type").getAsString(),
+                "空模型与带钥匙模型的 render_type 必须一致，否则插入/取出钥匙时渲染类型跳变");
+    }
+
+    @Test
+    void everyAlphaTextureIsUsedOnlyByCutoutModels() throws IOException {
+        // 反向锁：只要某个模型引用了带 alpha 的贴图，它的渲染类型就必须是 cutout。
+        // 用反射枚举 assets 下的模型资源，避免手写清单在新增模型时静默失效。
+        // 已知带 alpha 的贴图（按本 mod 的资源实测）：dungeon_lectern_key。
+        // 若日后新增带 alpha 的方块贴图，请把它加进这个集合——本测试的意义正是"逼人显式登记"。
+        List<String> alphaTextures = List.of("piranport:block/dungeon_lectern_key");
+        for (String model : List.of("dungeon_lectern", "dungeon_lectern_key")) {
+            JsonObject json = readJson(ASSETS + "/models/block/" + model + ".json");
+            JsonObject textures = json.getAsJsonObject("textures");
+            boolean usesAlpha = textures != null && textures.entrySet().stream()
+                    .anyMatch(e -> alphaTextures.contains(e.getValue().getAsString()));
+            if (!usesAlpha) {
+                continue;
+            }
+            assertEquals("minecraft:cutout", json.get("render_type").getAsString(),
+                    model + " 引用了带 alpha 的贴图，render_type 必须是 minecraft:cutout");
+        }
     }
 
     @Test

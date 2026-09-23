@@ -1,5 +1,6 @@
 package com.piranport.dungeon.key;
 
+import com.piranport.dungeon.data.ChapterData;
 import com.piranport.dungeon.data.DungeonRegistry;
 import com.piranport.dungeon.data.StageData;
 import com.piranport.registry.ModDataComponents;
@@ -46,6 +47,33 @@ public class DungeonKeyItem extends Item {
     /**
      * Gets the stage ID from a dungeon key stack.
      */
+    /**
+     * 把钥匙上的"入口 ID"解析成真实的关卡 ID。
+     *
+     * <p><b>为什么需要这一步：</b>钥匙的 {@code DUNGEON_STAGE_ID} 并不总是关卡 ID。
+     * {@link com.piranport.dungeon.recipe.ChapterKeyRecipe} 合成出来的章节钥匙写的是
+     * {@code chapter_*}（如 {@code chapter_1}），而 {@code DungeonRegistry} 里
+     * {@code stages} 表只认 {@code 1-1} 这类关卡 ID、{@code chapter_1} 在 {@code chapters} 表里。
+     * 直接拿 chapter ID 去 {@code getStage} 必然返回 null → 入口报
+     * "钥匙上的副本不存在"——这正是"点继续/从头开始都进不去"的根因。</p>
+     *
+     * <p>解析规则与讲台打开 ContinueScreen 时的显示名回退（{@code DungeonLecternBlock.useWithoutItem}）
+     * 完全一致，两处必须同进退，否则会出现"对话框显示了章节名、点进去却说副本不存在"。
+     * 因此这里做成唯一的解析入口，两边共用。</p>
+     *
+     * @return 真实关卡 ID；无法解析时返回原值（调用方据此报错，不要静默替换成默认关卡）
+     */
+    public static String resolveStageId(ItemStack stack) {
+        String id = getStageId(stack);
+        if (id.startsWith("chapter_")) {
+            ChapterData chapter = DungeonRegistry.INSTANCE.getChapter(id);
+            if (chapter != null && !chapter.stages().isEmpty()) {
+                return chapter.stages().get(0);
+            }
+        }
+        return id;
+    }
+
     public static String getStageId(ItemStack stack) {
         return stack.getOrDefault(ModDataComponents.DUNGEON_STAGE_ID.get(), "");
     }

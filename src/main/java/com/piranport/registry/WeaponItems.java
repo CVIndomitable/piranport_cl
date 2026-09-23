@@ -115,17 +115,15 @@ public final class WeaponItems {
                                     new MuzzlePos(-0.5, 0.25, 0)),
                             3.5f, 0.008f, 9.8f, 2.0f, 0.0f,
                             20, 3, 5.0f), "large_gun"));
-    public static final DeferredItem<Item> FRENCH_QUAD_380MM_GUN =
-            ITEMS.register("french_quad_380mm_gun", () -> new ArtilleryItem(new Item.Properties().stacksTo(1)
+    public static final DeferredItem<Item> GERMAN_TWIN_380MM_GUN =
+            ITEMS.register("german_twin_380mm_gun", () -> new ArtilleryItem(new Item.Properties().stacksTo(1)
                     .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.CANNON)
                     .durability(2500),
-                    new ArtilleryCannonData(16, 4, 20.0f, 60, 2500, 4.0f,
-                            List.of(new MuzzlePos(0.6, 0.3, 0),
-                                    new MuzzlePos(0.2, 0.3, 0),
-                                    new MuzzlePos(-0.2, 0.3, 0),
-                                    new MuzzlePos(-0.6, 0.3, 0)),
+                    new ArtilleryCannonData(16, 2, 20.0f, 60, 2500, 4.0f,
+                            List.of(new MuzzlePos(0.2, 0.3, 0),
+                                    new MuzzlePos(-0.2, 0.3, 0)),
                             3.5f, 0.008f, 9.8f, 2.0f, 0.0f,
-                            20, 4, 3.0f), "french_quad_380mm_gun"));
+                            20, 2, 3.0f), "german_twin_380mm_gun"));
 
     /**
      * 七联装主炮群 — 测试用极限齐射火炮。

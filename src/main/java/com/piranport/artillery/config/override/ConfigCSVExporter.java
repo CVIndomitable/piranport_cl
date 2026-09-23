@@ -188,7 +188,7 @@ public class ConfigCSVExporter {
             case "item.piranport.japanese_127mm_twin_gun" -> "日本12.7厘米连装炮";
             case "item.piranport.medium_gun" -> "中型火炮";
             case "item.piranport.large_gun" -> "大型火炮";
-            case "item.piranport.french_quad_380mm_gun" -> "法国四联380毫米炮";
+            case "item.piranport.german_twin_380mm_gun" -> "德国双联380毫米炮";
             case "item.piranport.seven_barrel_gun" -> "七联装主炮群";
             case "item.piranport.salvo_test_gun" -> "齐射测试";
             case "item.piranport.fourteen_barrel_gun" -> "一星期主炮群";

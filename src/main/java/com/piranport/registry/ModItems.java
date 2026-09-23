@@ -137,7 +137,7 @@ public class ModItems {
     public static final DeferredItem<Item> MEDIUM_GUN = WeaponItems.MEDIUM_GUN;
     public static final DeferredItem<Item> NEURAL_BALLISTIC_TEST_GUN = WeaponItems.NEURAL_BALLISTIC_TEST_GUN;
     public static final DeferredItem<Item> LARGE_GUN = WeaponItems.LARGE_GUN;
-    public static final DeferredItem<Item> FRENCH_QUAD_380MM_GUN = WeaponItems.FRENCH_QUAD_380MM_GUN;
+    public static final DeferredItem<Item> GERMAN_TWIN_380MM_GUN = WeaponItems.GERMAN_TWIN_380MM_GUN;
     public static final DeferredItem<Item> SEVEN_BARREL_GUN = WeaponItems.SEVEN_BARREL_GUN;
     public static final DeferredItem<Item> SALVO_TEST_GUN = WeaponItems.SALVO_TEST_GUN;
     public static final DeferredItem<Item> FOURTEEN_BARREL_GUN = WeaponItems.FOURTEEN_BARREL_GUN;

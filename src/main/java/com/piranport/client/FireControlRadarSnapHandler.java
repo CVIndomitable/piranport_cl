@@ -4,7 +4,6 @@ import com.piranport.artillery.ArtilleryItem;
 import com.piranport.combat.CombatTargeting;
 import com.piranport.combat.TransformationManager;
 import com.piranport.entity.AircraftEntity;
-import com.piranport.platform.ClientHooks;
 import com.piranport.registry.ModDataComponents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
@@ -50,8 +49,12 @@ import java.util.List;
  *       它只判断「包围盒被射线穿过」，完全看不见方块 —— 于是射线擦过墙、山、船体后仍会
  *       把墙后的怪选成吸附目标，表现为「按 0 过一会儿吸到奇怪的地方」。现在选新目标前
  *       用 {@link ClipContext} 做一次真正的方块遮挡检测。</li>
- *   <li><b>拿根部坐标当瞄准点</b>：射线求交返回的是实体<b>根部</b>的命中坐标，而实际瞄准点用
- *       插值后的 {@code getPosition(1.0f)}，两者在目标移动时会明显错开。现在统一用插值位置。</li>
+ *   <li><b>瞄准点与渲染位置不一致</b>：首版沿用射线求交返回的<b>根部</b>命中坐标，与屏幕上
+ *       看到的实体位置对不上，目标一动就明显错开。修的过程中还踩了第二个坑：
+ *       {@code getPosition(1.0f)} 插值的是 {@code xo→getX()}，而 {@link AircraftEntity}
+ *       的网络落点存在自己的 {@code clientLerpX/Y/Z}（见其 {@code lerpTo} 注释，
+ *       官方就是为防「xo==x 导致镜头抖动」才拆的），于是对飞机读出来永远是滞后一拍的整点位置。
+ *       现在统一取 {@code position()} —— 与渲染同源，不带任何自家插值假设。</li>
  *   <li><b>忽略俯仰翻转</b>：{@link Entity#turn} 内部对 xRot 做了 ±90° 钳制，
  *       脸朝下的目标多转 0.1° 就会从 -90 翻到 +90；而 {@code xRotO} 那个方向<b>不</b>钳制，
  *       两个值分道扬镳后渲染插值会甩出一个巨大的假旋转 —— 这就是「吸到奇奇怪怪的地方」的
@@ -73,11 +76,19 @@ import java.util.List;
  *       （至于 {@code xRotO}：{@code Entity#baseTick} 开头本来就会把它对齐到当前值，
  *       所以直接 set 并不会「上一帧角度滞后」—— 这里选 {@code turn} 图的是它
  *       让 O 与当前值同进同出、旋转无插值瞬切，以及上面那句载具传播。）</li>
- *   <li>{@code turn} 的第一个参数是<b>俯仰</b>原始量、第二个是<b>偏航</b>原始量，
- *       且内部固定乘 0.15 后才变成角度。所以「想转 N 度」的原始量是 {@code N / 0.15}。</li>
- *   <li>原版鼠标还要再乘 {@code effSens³ = (sensitivity*0.6+0.2)³}（见 {@code MouseHandler#turnPlayer}，
- *       已核对反编译源码：非开镜路径还额外乘 8）。若直接发原始量，玩家把灵敏度调低后吸附会变得极慢、
- *       调高则瞬移。这里主动除掉该项，让「每 tick 转多少度」与玩家灵敏度设置<b>无关</b>，手感恒定。</li>
+ *   <li>{@code turn} 的第一个参数是<b>偏航</b>原始量、第二个是<b>俯仰</b>原始量，
+ *       且内部固定乘 0.15 后才变成角度。所以「想转 N 度」的原始量是 {@code N / 0.15}。
+ *       <br>已核对反编译源码：{@code Entity#turn(double p1, double p2)} 里
+ *       {@code f = p2*0.15 → setXRot}（俯仰）、{@code f1 = p1*0.15 → setYRot}（偏航）；
+ *       {@code MouseHandler#turnPlayer} 也写作 {@code player.turn(鼠标X增量, 鼠标Y增量)} ——
+ *       鼠标左右移动改的是 yaw。传反不是「转得别扭」而是<b>横竖各转错一根轴</b>，
+ *       准星会横着甩、竖直乱跳，正是本类要修的那个症状。</li>
+ *   <li>除数<b>只有</b> 0.15，不能额外乘 {@code effSens³}。原版那个系数是乘在
+ *       <b>鼠标像素增量</b>上的分子（{@code MouseHandler#turnPlayer}: {@code d3 = effSens³}，
+ *       开镜用 d3、非开镜再 ×8），不是 turn 的内部分母。把它放分母会让「每 tick 实转」
+ *       变成 {@code stepDeg / effSens³}：灵敏度 0.5（默认）时 10° 限速放大成 80°，
+ *       灵敏度调到 0 直接饱和到 ±90° —— 限速在整个滑块范围内失效。本类要的是
+ *       「每 tick 转多少度」与玩家灵敏度<b>无关</b>，所以除 0.15 就够。</li>
  * </ul>
  *
  * <p><b>线程模型</b>：客户端渲染线程（{@code ClientTickEvent}），单线程无并发。
@@ -187,7 +198,13 @@ public final class FireControlRadarSnapHandler {
             // 必须按「它脚下有没有已加载的区块」把它们挡在候选之外。
             if (!mc.level.isLoaded(e.blockPosition())) continue;
 
-            Vec3 aimPoint = e.getPosition(1.0f).add(0.0, e.getBbHeight() * AIM_HEIGHT_FRACTION, 0.0);
+            // 用「当前落点」而不是 getPosition(1.0f)：后者插值的是 xo→getX()，
+            // 而 AircraftEntity 把网络包的落点存进自己的 clientLerpX/Y/Z，在 tick() 里平滑推进，
+            // 官方实现在 lerpTo 里正是为了「别让 xo==x 导致镜头抖动」才这么拆的
+            // （见 AircraftEntity#lerpTo 注释）。于是 getPosition(1.0f) 对飞机永远是
+            // 上一个 tick 的整点位置，读出来的是滞后一拍的旧坐标。
+            // 吸附的瞄准点必须跟渲染看得见的位置一致，所以这里取 position()。
+            Vec3 aimPoint = e.position().add(0.0, e.getBbHeight() * AIM_HEIGHT_FRACTION, 0.0);
             Vec3 delta = aimPoint.subtract(eyePos);
             double distance = delta.length();
             if (distance < 1.0e-3) continue;
@@ -285,8 +302,8 @@ public final class FireControlRadarSnapHandler {
     private static void aimAt(Minecraft mc, Player player, SnapDecision.Candidate target) {
         Vec3 eyePos = player.getEyePosition();
         // 方向向量是长度的倍数，乘回距离即得眼睛→瞄准点的位移。
-        // 不重新取实体位置：候选是拿本 tick 的插值位置算的，重取会让「算角度用的点」
-        // 与「转向用的点」错开（同一 tick 内实体位置理论上不变，但没必要赌）。
+        // 不重新查实体、直接复用候选里的方向/距离：候选是同一个 tick 里算出来的，
+        // 中途重取位置会让「算角度用的点」和「转向用的点」错开。
         Vec3 toTarget = new Vec3(target.directionX(), target.directionY(), target.directionZ())
                 .scale(target.distance());
 
@@ -306,13 +323,20 @@ public final class FireControlRadarSnapHandler {
         float stepYaw = Mth.clamp(deltaYaw, -MAX_TURN_DEGREES_PER_TICK, MAX_TURN_DEGREES_PER_TICK);
         float stepPitch = Mth.clamp(deltaPitch, -MAX_TURN_DEGREES_PER_TICK, MAX_TURN_DEGREES_PER_TICK);
 
-        // 除数 = 0.15（turn 内部的固定换算）× effSens³（原版鼠标的灵敏度系数，见 MouseHandler#turnPlayer）
-        double effSens = ClientHooks.turnPlayerSensitivity(mc.options.sensitivity().get()) * 0.6F + 0.2F;
-        double divisor = 0.15 * effSens * effSens * effSens;
-        if (divisor < 1.0e-9) return;
+        // 除数只保留 0.15 —— 这是 turn 内部唯一的固定换算（见 Entity#turn：入参 ×0.15）。
+        // 千万别把原版鼠标的 effSens³ 也乘进来：那个系数在原版里是乘在「鼠标像素增量」上的
+        // （MouseHandler#turnPlayer: d3 = effSens³，开镜用 d3、非开镜再 ×8），
+        // 属于送进 turn 的分子。放到分母上会变成「每 tick 实转 stepDeg / effSens³」，
+        // 灵敏度 0.5（默认）时 10° 限速被放大成 80°，灵敏度 0 时直接饱和到 ±90° ——
+        // 既复现了首版「吸到奇奇怪怪的地方」，又和本类「手感与玩家灵敏度无关」的设计相反。
+        final double divisor = 0.15;
 
-        // turn(俯仰原始量, 偏航原始量) —— 顺序不能反
-        player.turn(stepPitch / divisor, stepYaw / divisor);
+        // turn(偏航原始量, 俯仰原始量) —— 顺序不能反。
+        // Entity#turn(double p1, double p2) 内部是 setXRot(± p2*0.15)、setYRot(± p1*0.15)，
+        // 即第一形参喂偏航、第二形参喂俯仰；MouseHandler#turnPlayer 也是
+        // player.turn(鼠标X增量, 鼠标Y增量) —— 鼠标左右动改的是 yaw，交叉印证。
+        // 传反的后果不是「转慢点」而是「横竖各转错一根轴」，准星会横着甩、竖直乱跳。
+        player.turn(stepYaw / divisor, stepPitch / divisor);
 
         // 视角旋转原本由 ServerboundMovePlayerPacket 在客户端玩家 tick 里同步给服务端
         // （见 LocalPlayer#tick 内的 sendPosition / sendIsSprintingIfNeeded 调用链），

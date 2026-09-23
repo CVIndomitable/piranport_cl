@@ -1,0 +1,6 @@
+{
+  "variants": {
+    "waterlogged=false": { "model": "piranport:block/dungeon_portal" },
+    "waterlogged=true":  { "model": "piranport:block/dungeon_portal" }
+  }
+}

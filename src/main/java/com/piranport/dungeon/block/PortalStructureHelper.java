@@ -6,6 +6,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 
@@ -250,6 +251,73 @@ public class PortalStructureHelper {
         return new AABB(
                 min.getX(), min.getY(), min.getZ(),
                 max.getX(), max.getY(), max.getZ());
+    }
+
+    /**
+     * 只摆出 {@code dungeon_portal} 框架几何（4×5×4，前景单层 2×3 开口留空气），不碰副本实例数据。
+     *
+     * <p><b>为什么需要这个入口：</b>{@link #buildPortalStructure} 承担两件事——建实例相关的门
+     * （发奖钩子、传送门实体、BE 的 instanceId/nodeId），以及摆方块几何。野外/结构生成想要的是
+     * 后者，但那个入口会先查 {@code getInstance(instanceId)}，实例不存在就整段返回 null，
+     * 结果一个字方块都放不下——这正是"野外永远看不到废弃传送门"的直接原因之一。</p>
+     *
+     * <p>{@code facing} 必须由调用方给定：世界生成阶段没有玩家上下文，此前 buildPortalStructure
+     * 靠遍历四个水平朝向碰运气，既依赖周围是否可替换，落到哪个朝向也不确定。</p>
+     *
+     * @param level     目标世界。参数类型刻意用 {@link net.minecraft.world.level.LevelAccessor} 而不是
+     *                  {@code Level}：世界生成阶段拿到的是 {@code WorldGenLevel}，它<b>只实现了
+     *                  LevelAccessor</b>，不继承 {@code Level}，用 {@code Level} 会编译不过。
+     *                  本方法只用到 getBlockState/setBlock/getBlockEntity，这三者都在 LevelAccessor 上。
+     * @param cornerPos 框架角点（局部 lx=0, ly=0, lz=0 那一格）
+     * @param facing    框架正面朝向（决定开口在哪一面）
+     * @return 开口中心坐标；若任一框架格被不可替换的方块占据则返回 null 且不放任何方块
+     */
+    public static BlockPos placeFrameGeometry(net.minecraft.world.level.LevelAccessor level,
+                                              BlockPos cornerPos, Direction facing) {
+        if (level == null || cornerPos == null || facing == null || !facing.getAxis().isHorizontal()) {
+            return null;
+        }
+        Direction right = facing.getClockWise();
+        BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
+
+        // 先整体检查后整体放置：避免占位检查失败时留下半截框架。
+        for (int x = 0; x < FRAME_WIDTH; x++) {
+            for (int y = 0; y < FRAME_HEIGHT; y++) {
+                for (int z = 0; z < FRAME_DEPTH; z++) {
+                    if (isInOpening(x, y, z)) continue;
+                    cursor.set(cornerPos.getX() + facing.getStepX() * x + right.getStepX() * z,
+                            cornerPos.getY() + y,
+                            cornerPos.getZ() + facing.getStepZ() * x + right.getStepZ() * z);
+                    BlockState existing = level.getBlockState(cursor);
+                    if (!existing.isAir() && !existing.canBeReplaced()) {
+                        return null;
+                    }
+                }
+            }
+        }
+
+        BlockState frame = com.piranport.registry.ModBlocks.DUNGEON_PORTAL.get().defaultBlockState();
+        BlockState air = net.minecraft.world.level.block.Blocks.AIR.defaultBlockState();
+        for (int x = 0; x < FRAME_WIDTH; x++) {
+            for (int y = 0; y < FRAME_HEIGHT; y++) {
+                for (int z = 0; z < FRAME_DEPTH; z++) {
+                    cursor.set(cornerPos.getX() + facing.getStepX() * x + right.getStepX() * z,
+                            cornerPos.getY() + y,
+                            cornerPos.getZ() + facing.getStepZ() * x + right.getStepZ() * z);
+                    level.setBlock(cursor, isInOpening(x, y, z) ? air : frame, Block.UPDATE_ALL);
+                }
+            }
+        }
+
+        // 让框架自带的 BE 立即复核结构，这样刚生成出来的门也处于"可判定"状态。
+        BlockPos bePos = cornerPos.relative(facing, openingMinX()).relative(right, (FRAME_DEPTH - 1) / 2);
+        if (level.getBlockEntity(bePos) instanceof DungeonPortalBlockEntity portalBE) {
+            portalBE.checkStructure();
+        }
+
+        return cornerPos.relative(facing, openingMinX() + PORTAL_WIDTH / 2)
+                .above(openingMinY() + PORTAL_HEIGHT / 2)
+                .relative(right, (FRAME_DEPTH - 1) / 2);
     }
 
     /**

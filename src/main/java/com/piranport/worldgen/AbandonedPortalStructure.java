@@ -1,38 +1,35 @@
 package com.piranport.worldgen;
 
-import com.piranport.PiranPort;
-import com.piranport.dungeon.block.DungeonLecternBlockEntity;
 import com.piranport.dungeon.block.PortalStructureHelper;
-import com.piranport.dungeon.key.DungeonKeyItem;
-import com.piranport.dungeon.key.DungeonProgress;
 import com.piranport.registry.ModBlocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.feature.Feature;
 import net.minecraft.world.level.levelgen.feature.FeaturePlaceContext;
 import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
-
-import java.util.UUID;
 
 /**
  * 废弃传送门结构：在水面上方自然生成小岛，作为副本教学触点。
  *
  * <p>结构组成：
  * <ul>
- *   <li>底部：石砖平台（5×5，贴地）</li>
  *   <li>岛基：草方块+泥土+圆石堆砌的小岛，高出水面 1~2 格</li>
- *   <li>中心：{@code dungeon_lectern}（讲台），预设教学关卡钥匙（{@code t-1}）</li>
- *   <li>前方：2×3 深渊传送门（{@code abyssal_portal_frame} 框架 + {@code abyssal_portal} 方块）</li>
+ *   <li>平台：5×5 石砖台面（边缘苔石砖、次边缘裂纹石砖、中心普通石砖）</li>
+ *   <li>传送门：{@code dungeon_portal} 构成的 4×5×4 框架，正面单层 2×3 开口</li>
+ *   <li>讲台：{@code dungeon_lectern}（<b>空台面</b>），贴在框架底边外侧</li>
+ *   <li>告示牌：写明"讲台插钥匙后走进门框"</li>
  * </ul>
  *
- * <p>策划依据：《副本/09》讲台+钥匙合并模式、《副本/17》野外讲台作为教学触点。
+ * <p>策划依据：《副本/09》讲台+钥匙合并模式、《副本/17》§三"野外自然生成废弃传送门（包含讲台）
+ * 作教学触点——首次右键空讲台 → 提示需要钥匙 → 引导到钥匙获取路径"。
+ *
+ * <p>旧版类注释写的是 {@code abyssal_portal_frame} / {@code abyssal_portal}，那是已废弃口径；
+ * 本结构一律使用 {@code dungeon_*} 系列方块。
  */
 public class AbandonedPortalStructure extends Feature<NoneFeatureConfiguration> {
 
@@ -91,7 +88,9 @@ public class AbandonedPortalStructure extends Feature<NoneFeatureConfiguration> 
         // 平台基准高度：水面 + ISLAND_HEIGHT（岛高出水面）
         int platformBaseY = waterLevel + ISLAND_HEIGHT;
 
-        // 检测上方空间是否足够（结构需要 HEIGHT 格空间）
+        // 检测上方空间是否足够：按"结构包围盒 + 传送门框架外扩"取范围，
+        // 因为传送门从 PORTAL_OFFSET(1,1,2) 起向 +X/+Y/+Z 各展开 4/5/4 格，
+        // 最高处 y=5、最远处 z=5，都超出了 WIDTH/HEIGHT/DEPTH 起的包围盒。
         BlockPos platformBase = new BlockPos(origin.getX(), platformBaseY, origin.getZ());
         if (!level.ensureCanWrite(platformBase) || !hasSpace(level, platformBase)) {
             return false;
@@ -103,7 +102,7 @@ public class AbandonedPortalStructure extends Feature<NoneFeatureConfiguration> 
         // 放置底部石砖平台
         placePlatform(level, platformBase, random);
 
-        // 放置讲台（带预设钥匙）
+        // 放置讲台（空台面，不预插钥匙，见 placeLectern 的 Javadoc）
         placeLectern(level, platformBase.offset(LECTERN_OFFSET));
 
         // 放置传送门（框架 + 传送门方块）
@@ -136,12 +135,20 @@ public class AbandonedPortalStructure extends Feature<NoneFeatureConfiguration> 
     }
 
     /**
-     * 检测结构上方是否有足够空间（空气或水）。
+     * 检测结构占位范围内是否全部为可替换空间（空气或水）。
+     *
+     * <p>扫描范围必须覆盖<b>所有真正会被写入的格子</b>，而不只是 {@code WIDTH×HEIGHT×DEPTH}
+     * 这个名义包围盒：传送门框架从 {@code PORTAL_OFFSET(1,1,2)} 起算，向 +X 展 4 宽、
+     * 向 +Y 展 5 高、向 +Z 展 4 深，于是它的占位是 {@code x∈[1,4]}、{@code y∈[1,5]}、
+     * {@code z∈[2,5]}——y 与 z 各比名义包围盒多出 1 格（旧写法只查 y∈[0,3]、z∈[0,4]）。
+     * 只要这两格恰好压在水下礁石或地形上，{@link PortalStructureHelper#placeFrameGeometry}
+     * 的整体预检就会失败并<b>一格不放</b>，表现为"讲台和牌子都在、门凭空消失"。
+     * 所以这里把范围扩到 y∈[0,5]、z∈[0,5]，宁可让整个 feature 放弃生成，也不要生成半截结构。</p>
      */
     private static boolean hasSpace(WorldGenLevel level, BlockPos base) {
-        for (int y = 0; y < HEIGHT; y++) {
+        for (int y = 0; y <= HEIGHT + 1; y++) {
             for (int x = 0; x < WIDTH; x++) {
-                for (int z = 0; z < DEPTH; z++) {
+                for (int z = 0; z <= DEPTH; z++) {
                     BlockPos pos = base.offset(x, y, z);
                     BlockState state = level.getBlockState(pos);
                     if (!state.isAir() && !state.is(Blocks.WATER)) {
@@ -212,48 +219,40 @@ public class AbandonedPortalStructure extends Feature<NoneFeatureConfiguration> 
     }
 
     /**
-     * 放置讲台，并预插入教学关卡钥匙（stage_id = "t-1"）。
+     * 放置讲台。<b>刻意不预插钥匙</b>。
+     *
+     * <p>《副本/17》§三定稿的教学触点是"<b>首次右键空讲台 → 提示需要钥匙 → 引导到钥匙获取路径</b>"。
+     * 旧实现在这里 {@code setKeyStack()} 预插了一把 {@code t-1} 钥匙，等于把教学流程的第一步
+     * 直接跳过去了：玩家右键看到的不是"需要钥匙"的提示，而是"进入副本"的对话框，
+     * 同时那把钥匙还带着一个随机的、不对应任何实例的 UUID。空讲台 + 告示牌才是定稿口径。</p>
      */
     private static void placeLectern(WorldGenLevel level, BlockPos pos) {
-        // 放置讲台方块
         BlockState lecternState = ModBlocks.DUNGEON_LECTERN.get().defaultBlockState()
                 .setValue(net.minecraft.world.level.block.HorizontalDirectionalBlock.FACING,
                         Direction.SOUTH);
         level.setBlock(pos, lecternState, 2);
-
-        // 获取 BlockEntity 并插入教学钥匙
-        BlockEntity be = level.getBlockEntity(pos);
-        if (be instanceof DungeonLecternBlockEntity lecternBE) {
-            // 创建教学关卡钥匙
-            ItemStack key = new ItemStack(com.piranport.registry.ModItems.DUNGEON_KEY.get());
-            key.set(com.piranport.registry.ModDataComponents.DUNGEON_STAGE_ID.get(), "t-1");
-            key.set(com.piranport.registry.ModDataComponents.DUNGEON_INSTANCE_ID.get(), UUID.randomUUID());
-            key.set(com.piranport.registry.ModDataComponents.DUNGEON_PROGRESS.get(), DungeonProgress.EMPTY);
-
-            // 使用公开方法设置钥匙（无需反射）
-            lecternBE.setKeyStack(key);
-        }
+        // 不再 setKeyStack：教学门必须从"空台面 + 提示需要钥匙"开始（《副本/17》§三）。
+        // 钥匙由玩家走正常获取路径拿到后自己插上，此时 BlockEntity 的 HAS_KEY 会驱动模型切换。
     }
 
     /**
-     * 放置传送门：统一走 {@link PortalStructureHelper} 构建，不再自己写裸 setBlock 循环。
+     * 放置传送门：只摆框架几何，不碰副本实例数据。
      *
-     * <p>旧实现有个致命 bug：先在 [0,1,0][0,2,0][1,1,0][1,2,0] 放框架方块，
-     * 紧接着又用传送门方块覆盖同样四格，等于把门柱自己拆了；而且用的是已废弃的
-     * {@code abyssal_portal_frame}/{@code abyssal_portal} 旧口径。
-     * 现在改用 {@code dungeon_portal} 框架 + 前景单层 2×3 空气开口（甲），
-     * 由 helper 保证几何与运行时判定完全一致。</p>
+     * <p><b>旧实现为什么一个字都放不下：</b>它调 {@link PortalStructureHelper#buildPortalStructure}，
+     * 而那个入口的第一件事是 {@code DungeonInstanceManager.getInstance(instanceId)}，野外教学门
+     * 传入的是 {@code new UUID(0L, 0L)} 占位符——实例必然不存在，于是 <b>函数直接 return null，
+     * 方块一个都没摆</b>。野外因此永远看不到门，只剩孤零零的讲台和牌子。</p>
+     *
+     * <p>现在改走 {@link PortalStructureHelper#placeFrameGeometry}：纯几何，不查实例。
+     * 实例数据由玩家首次经讲台权威入口 {@code DungeonEntryService.enter} 写入，
+     * 这与《副本/17》"门常开、玩家不携带钥匙进副本"的口径一致。</p>
+     *
+     * <p>朝向刻意固定为 {@link Direction#NORTH}：世界生成阶段没有玩家上下文，随机的面朝方向
+     * 会让门正面朝海或朝岛内，玩家找不到开口。讲台在框架的西侧（LECTERN_OFFSET），
+     * 与门面同处一侧，保证"贴底边"的挂载判定成立。</p>
      */
-    private static void placePortal(WorldGenLevel level, BlockPos center) {
-        if (!(level instanceof net.minecraft.server.level.ServerLevel serverLevel)) {
-            // 世界生成阶段拿不到 ServerLevel 时退化为直接摆框架块（几何仍与 helper 一致）。
-            placePortalBlocksDirect(level, center);
-            return;
-        }
-        // helper 需要 instanceId/nodeId；教学门的实例尚未创建，先构建纯结构，
-        // 数据由玩家首次进入时经讲台权威入口写入。
-        PortalStructureHelper.buildPortalStructure(serverLevel, center,
-                new UUID(0L, 0L), "t-1");
+    private static void placePortal(WorldGenLevel level, BlockPos cornerPos) {
+        PortalStructureHelper.placeFrameGeometry(level, cornerPos, Direction.NORTH);
     }
 
     /**
@@ -275,23 +274,6 @@ public class AbandonedPortalStructure extends Feature<NoneFeatureConfiguration> 
                     .setMessage(2, Component.literal("走进门框即进入"))
                     .setMessage(3, Component.literal("右键门只会提示"));
             sign.updateText(ignored -> text, true);
-        }
-    }
-
-    /** 无 ServerLevel 时的退化路径：按 helper 的几何摆放，开口留空气。 */    private static void placePortalBlocksDirect(WorldGenLevel level, BlockPos origin) {
-        BlockState frame = ModBlocks.DUNGEON_PORTAL.get().defaultBlockState();
-        // 单朝向（南北向）足够，形状对齐 helper 的 FRAME_WIDTH/HEIGHT/DEPTH。
-        for (int lx = 0; lx < PortalStructureHelper.FRAME_WIDTH; lx++) {
-            for (int ly = 0; ly < PortalStructureHelper.FRAME_HEIGHT; ly++) {
-                for (int lz = 0; lz < PortalStructureHelper.FRAME_DEPTH; lz++) {
-                    BlockPos pos = origin.offset(lx, ly, lz);
-                    if (PortalStructureHelper.isInOpening(lx, ly, lz)) {
-                        level.setBlock(pos, Blocks.AIR.defaultBlockState(), 2);
-                    } else {
-                        level.setBlock(pos, frame, 2);
-                    }
-                }
-            }
         }
     }
 }

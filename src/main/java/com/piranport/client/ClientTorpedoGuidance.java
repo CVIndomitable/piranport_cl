@@ -19,11 +19,16 @@ public class ClientTorpedoGuidance {
         Minecraft mc = Minecraft.getInstance();
         if (mc.level == null) return;
         Entity entity = mc.level.getEntity(entityId);
-        if (entity != null) {
-            mc.setCameraEntity(entity);
-            active = true;
-            torpedoEntityId = entityId;
+        if (entity == null) {
+            // 实体尚未下发到本客户端（生成包与制导包乱序）或已超出视距卸载：
+            // 不能提示"进入制导"，否则玩家以为已进入视角、实际摄像机还挂在自身上，
+            // 且本端 active=false 不会发送任何制导输入，鱼雷将直线跑偏。
+            // 服务端会在导线切断/鱼雷消失时下发 active=false 收尾，这里静默即可。
+            return;
         }
+        mc.setCameraEntity(entity);
+        active = true;
+        torpedoEntityId = entityId;
         if (mc.player != null) {
             mc.player.displayClientMessage(
                     Component.translatable("message.piranport.torpedo_guidance_enter"), true);

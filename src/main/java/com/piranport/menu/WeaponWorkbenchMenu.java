@@ -107,6 +107,9 @@ public class WeaponWorkbenchMenu extends AbstractContainerMenu {
         return blockEntity.getLevel();
     }
 
+    /** 供 BE 判定「占用者开着的到底是不是本工作台」。 */
+    public WeaponWorkbenchBlockEntity getBlockEntity() { return blockEntity; }
+
     public int getSelectedTab()      { return blockEntity.dataAccess.get(0); }
     public int getSelectedRecipe()   { return blockEntity.dataAccess.get(1); }
     public int getCraftingProgress() { return blockEntity.dataAccess.get(2); }
@@ -169,19 +172,26 @@ public class WeaponWorkbenchMenu extends AbstractContainerMenu {
     @Override
     public void removed(Player player) {
         super.removed(player);
-        if (!player.level().isClientSide) {
-            blockEntity.cancelCrafting();
-            var handler = blockEntity.getItemHandler();
-            for (int i = 0; i < WeaponWorkbenchBlockEntity.TOTAL_SLOTS; i++) {
-                ItemStack stack = handler.extractItem(i, Integer.MAX_VALUE, false);
-                if (!stack.isEmpty()) {
-                    if (!player.addItem(stack)) {
-                        player.drop(stack, false);
-                    }
+        if (player.level().isClientSide) return;
+
+        // 只有占用者才允许倒包。原实现无条件把 8 个槽全倒给关菜单的人，
+        // 于是第二人只要 tryOpen 放行（原主异常离场 / 跨维度传送导致占用失效）
+        // 就能把原主进行中的合成材料连同蓝图整箱取走。
+        if (!player.getUUID().equals(blockEntity.getCurrentUser())) return;
+
+        // 注意顺序：先取消合成再取料（isCrafting 会卡住 extractItem），
+        // 且取消后不再复原 isCrafting，避免菜单关闭期间 handler 处于「锁着但没人负责」的状态。
+        blockEntity.cancelCrafting();
+        var handler = blockEntity.getItemHandler();
+        for (int i = 0; i < WeaponWorkbenchBlockEntity.TOTAL_SLOTS; i++) {
+            ItemStack stack = handler.extractItem(i, Integer.MAX_VALUE, false);
+            if (!stack.isEmpty()) {
+                if (!player.addItem(stack)) {
+                    player.drop(stack, false);
                 }
             }
-            blockEntity.setCurrentUser(null);
         }
+        blockEntity.releaseOccupancy();
     }
 
     @Override

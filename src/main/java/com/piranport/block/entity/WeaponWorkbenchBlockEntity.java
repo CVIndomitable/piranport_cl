@@ -9,6 +9,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.Containers;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -52,6 +53,7 @@ public class WeaponWorkbenchBlockEntity extends BlockEntity implements MenuProvi
         @Override
         public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
             if (slot == OUTPUT_SLOT) return stack;
+            // 合成中禁止再塞料，否则合成进度算的是旧配方快照、消耗的却是新料，可越权刷出产物
             if (isCrafting) return stack;
             return super.insertItem(slot, stack, simulate);
         }
@@ -69,11 +71,17 @@ public class WeaponWorkbenchBlockEntity extends BlockEntity implements MenuProvi
     private int craftingTotalTime = 0;
     private boolean isCrafting = false;
 
-    // transient, not persisted — used for multi-player mutex only
+    // 占用者。持久化到 NBT：多人互斥不能只依赖 removed() 回收 —— 异常离场（未送达 removed）
+    // 或原版跨维度传送强制切换 containerMenu 时，旧实现重载后 currentUser==null，
+    // 第二人 tryOpen 直接放行，原主进行中的合成料被整箱取走。
     @Nullable
     private UUID currentUser;
-    // H4: 记录当前用户最后一次成功 tryOpen 的服务端 tick；用于 idle 超时强制释放
+    // 占用者最后一次「确认持有本工作台菜单」的服务端 tick；用于 idle 超时强制释放。
+    // 落盘保存，否则区块卸载重载后时间基准丢失。
     private long currentUserSinceTick = 0;
+    // 时间基准来自哪个 level。本工作台无跨维度传送逻辑，跨 level 即视为过期，
+    // 避免用另一维度的 gameTime 相减得出无意义的 stale 判断。
+    private boolean tickBaselineValid = false;
 
     public int getSelectedTab() { return selectedTab; }
 
@@ -131,33 +139,126 @@ public class WeaponWorkbenchBlockEntity extends BlockEntity implements MenuProvi
 
     // ===== 多人互斥 =====
 
+    /** @return 当前占用者的 UUID；无人占用时为 null */
+    @Nullable
+    public UUID getCurrentUser() { return currentUser; }
+
+    /**
+     * 占用者是否仍是「活跃占用」。
+     * 任一条件不满足即视为可释放（返回 false）：
+     *   1) 占用者已不在本工作台所在维度（离线 / 换维度）；
+     *   2) 占用者已死亡 —— 死亡会原版关菜单，此时不该继续替他锁着台子；
+     *   3) 占用者的容器菜单已经不是本工作台 —— 传送/被顶替等强制切菜单的情况；
+     *   4) idle 超时 —— 断线 / crash / menu close 事件未送达时的兜底，保证永不永久锁死。
+     * 判定只依赖占用者自身状态 + 时间，不需要「本台子上有第二人在看」这类额外前提。
+     */
+    private boolean isOccupancyLive(long gameTime) {
+        if (currentUser == null) return false;
+        if (level == null) return false;
+        Player existing = level.getPlayerByUUID(currentUser);
+        if (existing == null || !existing.isAlive()) return false;
+        if (!(existing.containerMenu instanceof WeaponWorkbenchMenu menu)) return false;
+        // 菜单指向的必须正是本工作台：否则是「同一玩家开着别的台子」，
+        // 不加这条会把另一台工作台误判为被占用。
+        if (menu.getBlockEntity() != this) return false;
+        return tickBaselineValid && (gameTime - currentUserSinceTick) <= IDLE_RELEASE_TICKS;
+    }
+
+    /** 释放占用（不回收物品，物品回收见 refundAllSlotsTo）。 */
+    public void releaseOccupancy() {
+        if (currentUser == null) return;
+        currentUser = null;
+        currentUserSinceTick = 0;
+        tickBaselineValid = false;
+        setChanged();
+    }
+
+    /**
+     * 把占用者标记为本玩家。
+     * 若台上已有进行中的合成却被别人占用，先把台上的料回收给原占用者，
+     * 再开始新的占用 —— 既不会让新玩家拿走原主材料，也不会让工作台永久锁死。
+     */
     public boolean tryOpen(Player player) {
         if (currentUser != null) {
-            if (level != null) {
-                Player existing = level.getPlayerByUUID(currentUser);
-                // H4: 三道闸门 — 1) 玩家已不存在；2) 玩家已死亡；3) 玩家容器菜单不再是工作台；
-                // 4) idle 超时（断线/crash/menu close 事件未送达时的兜底）
-                long gameTime = level.getGameTime();
-                boolean stale = (gameTime - currentUserSinceTick) > IDLE_RELEASE_TICKS;
-                if (existing != null && existing.isAlive()
-                        && existing.containerMenu instanceof WeaponWorkbenchMenu
-                        && !stale) {
-                    return false;
-                }
+            long gameTime = level != null ? level.getGameTime() : 0L;
+            if (isOccupancyLive(gameTime) && !currentUser.equals(player.getUUID())) {
+                return false;
             }
+            if (currentUser.equals(player.getUUID())) {
+                // 本人重复开台：只刷新时间戳，绝不回收自己台面上的料
+                if (level != null) {
+                    currentUserSinceTick = level.getGameTime();
+                    tickBaselineValid = true;
+                }
+                return true;
+            }
+            // 占用已失效或已换人：若还留着未完成的合成，先还给原主
+            if (isCrafting) reclaimOrphanedCraft();
+            cancelCrafting();
             currentUser = null;
         }
         currentUser = player.getUUID();
-        if (level != null) {
-            currentUserSinceTick = level.getGameTime();
-        }
+        currentUserSinceTick = level != null ? level.getGameTime() : 0L;
+        tickBaselineValid = level != null;
+        setChanged();
         return true;
     }
 
     public void setCurrentUser(@Nullable UUID uuid) {
-        this.currentUser = uuid;
-        // H4: 显式释放时（如 Menu.removed）立即清零计时，避免下次 tryOpen 因超时立即释放
-        this.currentUserSinceTick = uuid == null ? 0L : (level != null ? level.getGameTime() : 0L);
+        if (uuid == null) {
+            // 显式释放：清零计时，避免下次 tryOpen 因超时立即放行（H4）
+            this.currentUser = null;
+            this.currentUserSinceTick = 0L;
+            this.tickBaselineValid = false;
+        } else {
+            this.currentUser = uuid;
+            this.currentUserSinceTick = level != null ? level.getGameTime() : 0L;
+            this.tickBaselineValid = level != null;
+        }
+        setChanged();
+    }
+
+    /**
+     * 把某个槽位整体退还给原占用者。
+     * 占用者离线 / 已死 / 背包塞不下时掉落在此方块位置，保证物品永不蒸发
+     * （对齐 AmmoWorkbenchBlockEntity.refundPendingMaterials 的做法）。
+     */
+    private boolean refundSlotToOwner(int slot, @Nullable UUID owner, Player onlineOwner) {
+        ItemStack stack = itemHandler.extractItem(slot, Integer.MAX_VALUE, false);
+        if (stack.isEmpty()) return false;
+        if (onlineOwner != null && onlineOwner.isAlive()) {
+            if (!onlineOwner.addItem(stack)) onlineOwner.drop(stack, false);
+        } else if (level != null) {
+            Containers.dropItemStack(level, worldPosition.getX(), worldPosition.getY(),
+                    worldPosition.getZ(), stack);
+        }
+        return true;
+    }
+
+    /** 占用者离线/已死时，把台上所有物品交给占用人（离线则掉落原地）。 */
+    private void refundAllSlotsTo(@Nullable UUID owner) {
+        Player onlineOwner = (level != null && owner != null) ? level.getPlayerByUUID(owner) : null;
+        for (int i = 0; i < TOTAL_SLOTS; i++) {
+            refundSlotToOwner(i, owner, onlineOwner);
+        }
+    }
+
+    /**
+     * 占用已失效但台上还留着未完成的合成：把料还给原占用者并取消合成。
+     * 这是「原主异常离场」时材料的可靠回收路径 —— 不依赖 Menu.removed 有没有被送达。
+     */
+    private void reclaimOrphanedCraft() {
+        UUID owner = currentUser;
+        cancelCrafting();
+        refundAllSlotsTo(owner);
+        if (owner != null) {
+            // 顺手通知在线的原主，让他知道合成被中断了
+            Player onlineOwner = level != null ? level.getPlayerByUUID(owner) : null;
+            if (onlineOwner != null && onlineOwner.isAlive()) {
+                onlineOwner.displayClientMessage(
+                        Component.translatable("message.piranport.workbench_craft_interrupted"), false);
+            }
+        }
     }
 
     // ===== 合成逻辑 =====
@@ -225,6 +326,15 @@ public class WeaponWorkbenchBlockEntity extends BlockEntity implements MenuProvi
 
     public static void serverTick(Level level, BlockPos pos, BlockState state,
                                   WeaponWorkbenchBlockEntity be) {
+        // L1: idle 超时是「玩家异常离场」时唯一的保底释放途径，因此必须在无合成时也运行，
+        // 不能只挂在 isCrafting 分支上 —— 否则原主在未开工状态下掉线，台子会被锁到区块卸载为止。
+        long gameTime = level.getGameTime();
+        if (be.currentUser != null && !be.isOccupancyLive(gameTime)) {
+            // 台上还有未完成的合成时，先连料带产物一起还给原占用者，再释放
+            if (be.isCrafting) be.reclaimOrphanedCraft();
+            be.releaseOccupancy();
+        }
+
         if (!be.isCrafting) return;
 
         if (be.craftingProgress < be.craftingTotalTime) {
@@ -273,6 +383,12 @@ public class WeaponWorkbenchBlockEntity extends BlockEntity implements MenuProvi
         tag.putInt("craftingProgress", craftingProgress);
         tag.putInt("craftingTotalTime", craftingTotalTime);
         tag.putBoolean("isCrafting", isCrafting);
+        // 占用者连同时间基准一起落盘：区块卸载/存档重载后仍能判断占用是否还有效，
+        // 不再无条件把 currentUser 丢掉（那是「第二人可趁原主异常离场开箱取料」的根因）。
+        if (currentUser != null) {
+            tag.putUUID("currentUser", currentUser);
+            tag.putLong("currentUserSinceTick", currentUserSinceTick);
+        }
     }
 
     @Override
@@ -284,8 +400,12 @@ public class WeaponWorkbenchBlockEntity extends BlockEntity implements MenuProvi
         craftingProgress = Math.max(0, tag.getInt("craftingProgress"));
         craftingTotalTime = Math.max(0, tag.getInt("craftingTotalTime"));
         isCrafting = tag.getBoolean("isCrafting");
-        // currentUser is transient — ensure null after load
-        currentUser = null;
+        // 恢复占用者。tickBaselineValid 置 false：NBT 里的 tick 可能来自上一个存档会话，
+        // 与当前 level.getGameTime() 不同基准，直接相减不可靠；首次 serverTick 复核时
+        // 若占用者确实还开着本台子，时间戳会被立即刷新为当前 tick。
+        currentUser = tag.hasUUID("currentUser") ? tag.getUUID("currentUser") : null;
+        currentUserSinceTick = tag.getLong("currentUserSinceTick");
+        tickBaselineValid = false;
     }
 
     // ===== MenuProvider =====

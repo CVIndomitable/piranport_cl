@@ -62,6 +62,21 @@ public final class AmmoConsumer {
     }
 
     /**
+     * 统计背包中所有候选弹药的数量之和。
+     * 用于「是否装得满一个弹夹」的前置判定：逐个候选单一判断会漏掉
+     * 「两种弹各半夹、合计刚好够齐射」的情形。
+     */
+    public static int countAnyOf(Player player, List<Item> items) {
+        if (player == null) return 0;
+        if (isFreebie(player)) return Integer.MAX_VALUE;
+        int total = 0;
+        for (Item item : items) {
+            total += count(player, s -> !s.isEmpty() && s.is(item));
+        }
+        return total;
+    }
+
+    /**
      * Get player's preferred ammo type from a list of candidates.
      * Priority: offhand item > first available item in list.
      * Returns null if player has none of the candidate ammo types.

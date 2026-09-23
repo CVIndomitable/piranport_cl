@@ -49,6 +49,16 @@ public class MissileHandler implements WeaponHandler {
             }
         }
 
+        // 弹道判定先于扣弹药：射击方向由 getBoundingBox().getCenter() 得出，几何上极少退化，
+        // 但 Math.asin 在 |y| > 1 时返回 NaN，会把导弹射向一个无意义的俯仰角。
+        // 同一场景下若已先扣弹药，就变成「扣了弹却打空炮」——判定必须前置。
+        Vec3 origin = maid.getEyePosition();
+        Vec3 aim = target.getBoundingBox().getCenter().subtract(origin);
+        if (aim.lengthSqr() < 1.0E-6) return;
+        aim = aim.normalize();
+        float yaw = (float) Math.toDegrees(Math.atan2(-aim.x, aim.z));
+        float pitch = (float) Math.toDegrees(-Math.asin(clampUnit(aim.y)));
+
         Player owner = AmmoConsumer.ownerPlayer(maid);
         int burst = Math.max(1, launcher.getBurstCount());
         Item ammo = launcher.getAmmoItem();
@@ -61,13 +71,6 @@ public class MissileHandler implements WeaponHandler {
         float explosion = launcher.getExplosionPower();
         String ammoId = ammo != null ? BuiltInRegistries.ITEM.getKey(ammo).toString() : "";
 
-        Vec3 origin = maid.getEyePosition();
-        Vec3 aim = target.getBoundingBox().getCenter().subtract(origin);
-        if (aim.lengthSqr() < 1.0E-6) return;
-        aim = aim.normalize();
-        float yaw = (float) Math.toDegrees(Math.atan2(-aim.x, aim.z));
-        float pitch = (float) Math.toDegrees(-Math.asin(aim.y));
-
         for (int i = 0; i < loaded; i++) {
             MissileEntity missile = new MissileEntity(level, launcher.getMissileType(), damage, armorPen, explosion, ammoId);
             missile.setOwner(maid);
@@ -76,5 +79,10 @@ public class MissileHandler implements WeaponHandler {
             missile.shootFromRotation(maid, pitch, yaw, 0f, 0.5f, 1.5f);
             level.addFreshEntity(missile);
         }
+    }
+
+    /** 把方向向量的 y 分量夹到 asin 定义域内，防浮点误差产生 NaN 俯仰角。 */
+    private static double clampUnit(double v) {
+        return v < -1.0 ? -1.0 : Math.min(v, 1.0);
     }
 }

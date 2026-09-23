@@ -2,6 +2,7 @@ package com.piranport.compat.maid.combat.handlers;
 
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import com.piranport.artillery.ArtilleryItem;
+import com.piranport.combat.cannon.CannonAmmoRules;
 import com.piranport.compat.maid.combat.AmmoConsumer;
 import com.piranport.compat.maid.combat.WeaponHandler;
 import com.piranport.entity.CannonProjectileEntity;
@@ -13,6 +14,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class CannonHandler implements WeaponHandler {
@@ -32,76 +34,79 @@ public class CannonHandler implements WeaponHandler {
         if (!(stack.getItem() instanceof ArtilleryItem ai)) return false;
         Player owner = AmmoConsumer.ownerPlayer(maid);
         if (AmmoConsumer.isFreebie(owner)) return true;
-        List<Item> candidates = shellsFor(ai.getDamage());
-        return AmmoConsumer.getPreferredAmmo(owner, candidates) != null;
+        // 必须凑满一个完整弹夹才放行：fire() 里 loaded 按 Math.min 逐管装填，
+        // 弹药不足整夹会照样扣弹但弹数少于 barrels，混装/残缺状态下会一直打残缺齐射。
+        // 这里按候选表合计数量判定，兼容「两种弹各半夹、合计刚好够」的合法情形。
+        var effectiveData = ai.getEffectiveData(maid.level());
+        int barrels = Math.max(1, effectiveData.barrels());
+        return AmmoConsumer.countAnyOf(owner, shellsFor(effectiveData.damage())) >= barrels;
     }
 
     @Override
     public void fire(EntityMaid maid, LivingEntity target, ItemStack stack) {
-        int barrels;
-        float damage;
-        float explosion;
-        float velocity;
-        float inaccuracy;
+        if (!(stack.getItem() instanceof ArtilleryItem ai)) return;
 
-        if (stack.getItem() instanceof ArtilleryItem ai) {
-            // 使用有效数据（考虑配置覆盖）
-            var effectiveData = ai.getEffectiveData(maid.level());
-            barrels = Math.max(1, effectiveData.barrels());
-            damage = effectiveData.damage();
-            explosion = effectiveData.explosionPower();
-            velocity = effectiveData.initialSpeed();
-            // 根据散布角计算不精确度（简化映射）
-            inaccuracy = effectiveData.dispersion();
-        } else {
-            return;
-        }
-
-        Player owner = AmmoConsumer.ownerPlayer(maid);
-        List<Item> candidates = shellsFor(damage);
-        Item preferred = AmmoConsumer.getPreferredAmmo(owner, candidates);
-        int loaded = 0;
-
-        if (preferred != null) {
-            loaded = AmmoConsumer.consumeItem(owner, preferred, barrels);
-        }
-
-        if (loaded < barrels) {
-            loaded += consumeShells(owner, damage, barrels - loaded);
-        }
-
-        if (loaded <= 0) return;
-        float shotDamage = damage;
-        float shotExplosion = explosion;
-
-        Level level = maid.level();
+        // 使用有效数据（考虑配置覆盖）
+        var effectiveData = ai.getEffectiveData(maid.level());
+        int barrels = Math.max(1, effectiveData.barrels());
+        float damage = effectiveData.damage();
+        float explosion = effectiveData.explosionPower();
+        float velocity = effectiveData.initialSpeed();
+        // 根据散布角计算不精确度（简化映射）
+        float inaccuracy = effectiveData.dispersion();
 
         Vec3 origin = maid.getEyePosition();
         Vec3 aim = target.getBoundingBox().getCenter().subtract(origin);
         if (aim.lengthSqr() < 1.0E-6) return;
         aim = aim.normalize();
+        // 射线方向除以长度后 y 必落在 [-1,1]；此处显式夹紧只为防浮点误差让 asin 返回 NaN
         float yaw = (float) Math.toDegrees(Math.atan2(-aim.x, aim.z));
-        float pitch = (float) Math.toDegrees(-Math.asin(aim.y));
+        float pitch = (float) Math.toDegrees(-Math.asin(clampUnit(aim.y)));
 
-        for (int i = 0; i < loaded; i++) {
+        Player owner = AmmoConsumer.ownerPlayer(maid);
+        List<Item> candidates = shellsFor(damage);
+
+        // 先按「副手优先、否则候选表顺序」取偏好弹种，再逐类取弹。
+        // 每发都必须记住自己消耗的是哪个弹种：弹种决定 isHE / 近炸引信 / 三式霰弹 / 过穿口径，
+        // 此前统一按 preferred 构造导致「只要拿到弹药就恒按 HE 结算」。
+        List<Item> shotShells = new ArrayList<>(barrels);
+        Item preferred = AmmoConsumer.getPreferredAmmo(owner, candidates);
+        if (preferred != null) {
+            int n = AmmoConsumer.consumeItem(owner, preferred, barrels);
+            for (int i = 0; i < n; i++) shotShells.add(preferred);
+        }
+        for (Item shell : candidates) {
+            if (shotShells.size() >= barrels) break;
+            int n = AmmoConsumer.consumeItem(owner, shell, barrels - shotShells.size());
+            for (int i = 0; i < n; i++) shotShells.add(shell);
+        }
+
+        if (shotShells.isEmpty()) return;
+
+        Level level = maid.level();
+        int sourceCaliber = effectiveData.caliber();
+
+        for (Item shell : shotShells) {
+            ItemStack shellStack = new ItemStack(shell);
+            // 弹种语义与玩家路径对齐：参照 CannonFiring.java:57-59 的推导
+            boolean isVT = CannonAmmoRules.isVTShell(shellStack);
+            boolean isHE = CannonAmmoRules.isHEShell(shellStack) || isVT;
+
             CannonProjectileEntity proj = new CannonProjectileEntity(level, maid,
-                    preferred != null ? new ItemStack(preferred) : ItemStack.EMPTY,
-                    shotDamage, true, shotExplosion);
+                    shellStack, damage, isHE, explosion);
+            if (isVT) proj.setVT(true);
+            // 依据：策划决策/数值/05-船型职能分化修订.md（大口径 AP 对小型船过穿），
+            // 玩家路径在 CannonProjectiles.java:97-99 同样设置；不设则过穿与穿甲口径判定失效
+            proj.setSourceCaliber(sourceCaliber);
             proj.setPos(origin.x, origin.y, origin.z);
             proj.shootFromRotation(maid, pitch, yaw, 0f, velocity, inaccuracy);
             level.addFreshEntity(proj);
         }
     }
 
-    private static int consumeShells(Player owner, float damage, int amount) {
-        if (owner == null) return 0;
-        if (AmmoConsumer.isFreebie(owner)) return amount;
-        int remaining = amount;
-        for (Item shell : shellsFor(damage)) {
-            if (remaining <= 0) break;
-            remaining -= AmmoConsumer.consumeItem(owner, shell, remaining);
-        }
-        return amount - remaining;
+    /** 把方向向量的 y 分量夹到 asin 定义域内。 */
+    private static double clampUnit(double v) {
+        return v < -1.0 ? -1.0 : Math.min(v, 1.0);
     }
 
     private static List<Item> shellsFor(float damage) {
@@ -125,23 +130,5 @@ public class CannonHandler implements WeaponHandler {
                 ModItems.SMALL_VT_SHELL.get(),
                 ModItems.SMALL_TYPE3_SHELL.get()
         );
-    }
-
-    private static float guessExplosion(float damage) {
-        if (damage >= 20f) return 2.0f;
-        if (damage >= 12f) return 1.5f;
-        return 1.0f;
-    }
-
-    private static float guessVelocity(float damage) {
-        if (damage >= 20f) return 3.0f;
-        if (damage >= 12f) return 2.5f;
-        return 2.0f;
-    }
-
-    private static float guessInaccuracy(float damage) {
-        if (damage >= 20f) return 0.5f;
-        if (damage >= 12f) return 1.0f;
-        return 1.5f;
     }
 }

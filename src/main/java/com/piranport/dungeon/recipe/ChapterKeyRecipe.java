@@ -9,6 +9,7 @@ import com.piranport.item.KeyFragmentItem;
 import com.piranport.registry.ModDataComponents;
 import com.piranport.registry.ModItems;
 import com.piranport.dungeon.key.DungeonKeyItem;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -18,6 +19,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.CraftingBookCategory;
 import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.item.crafting.CustomRecipe;
+import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.level.Level;
@@ -32,6 +34,24 @@ import net.minecraft.world.level.Level;
  *
  * <p><b>章节编号取自投入的碎片，而非 JSON 字段</b>（详见 {@link #matches}）：一份
  * {@code piranport:chapter_key} 配方 JSON 即可覆盖全部七章。</p>
+ *
+ * <h2>为什么这里的 {@link #isSpecial()} 被覆写成 {@code false}（有意偏离基类默认）</h2>
+ * <p>{@link CustomRecipe} 的默认实现是 {@code isSpecial() == true}，这个默认值有服务端语义
+ * （原版配方书不会自动摆放它），但它在 <b>JEI 侧是一道硬闸门</b>：JEI 的
+ * {@code CategoryRecipeValidator.isValid(RecipeHolder)} 字节码第一步就是
+ * {@code Recipe.isSpecial()}，为 true 立刻 {@code return false}，
+ * <b>后面补什么 {@code getIngredients()}、什么 JEI 扩展都救不回来</b>
+ * （JEI 该版本也没有任何可注册到「原版合成台」类别的入口——
+ * {@code IExtendableCraftingRecipeCategory} 的唯一实现即 JEI 自建的 {@code CraftingRecipeCategory}，
+ * 其扩展表在构造时就已被锁死，模组拿不到句柄）。</p>
+ * <p>而 {@code chapter_key} 的本源语义就是<b>一张普通的 3x3 合成表</b>：
+ * 四个角放同章节碎片，Ch2 起中间再放一枚上一章纪念章。
+ * {@code isSpecial=true} 只是因为类继承了 {@code CustomRecipe} 而白捡的默认值，
+ * 并不是本配方有意设计成「特殊配方」。</p>
+ * <p>因此这里覆写为 {@code false} 是<b>有意的偏离</b>，目的有二：
+ * ① JEI 能显示这条配方；② 原版配方书也能正常识别与自动摆放。
+ * 配套必须一并提供 {@link #getIngredients()} 与 {@link #getResultItem(HolderLookup.Provider)}
+ * ——JEI 在过了 {@code isSpecial} 闸门后，还会用「结果物品非空」和「输入物品数 &gt; 0」两道检查把关。</p>
  */
 public class ChapterKeyRecipe extends CustomRecipe {
 
@@ -90,6 +110,84 @@ public class ChapterKeyRecipe extends CustomRecipe {
     private record Parsed(int fragmentChapter, int fragmentCount, int medalChapter, boolean foreign) {
         static final Parsed INVALID = new Parsed(0, 0, 0, true);
         boolean valid() { return fragmentChapter > 0; }
+    }
+
+    /**
+     * 覆写 {@link CustomRecipe} 的 {@code isSpecial() == true} 默认值，改为 {@code false}。
+     *
+     * <p><b>这是有意偏离基类默认的行为</b>，原因见类 javadoc「为什么这里的 isSpecial() 被覆写成 false」：
+     * JEI 的 {@code CategoryRecipeValidator.isValid} 第一步就检查 {@code isSpecial()}，
+     * 为 true 直接拒绝显示，且该版本 JEI 不提供任何可绕开这道闸门的扩展入口；
+     * 而本配方本身就是一张普通 3x3 合成表，并非特殊配方。改为 false 同时让原版配方书
+     * 也能识别并自动摆放本配方。</p>
+     *
+     * <p>注意：{@code isSpecial()} 只影响「配方书/JEI 是否展示与自动摆放」，
+     * <b>匹配逻辑完全由 {@link #matches} 决定</b>，两者互不干扰，
+     * 所以改这个返回值不会让不该成立的组合变成可合成。</p>
+     */
+    @Override
+    public boolean isSpecial() {
+        return false;
+    }
+
+    /**
+     * 提供给 JEI / 配方书显示的<b>存在性</b>输入列表。
+     *
+     * <p><b>本方法不参与 {@link #matches} 判定，{@link #matches} 才是权威。</b>
+     * 因为真正的匹配规则是「四个同章节碎片，且章节必须一致；Ch2 起还要一枚<b>上一章</b>纪念章」，
+     * 这种「跨格一致性约束」无法用 {@link Ingredient} 的有序列表表达
+     * （Ingredient 只能表达「这一格可以是这些物品之一」）。
+     * 所以这里退而求其次，返回一个能表达「4 碎片 + 1 纪念章」形状的列表，让 JEI 有东西可画。</p>
+     *
+     * <p>具体做法：把七个章节的碎片物品合并成<b>同一个通配 {@link Ingredient}</b>，再重复 4 次
+     * ——这样 JEI 格子下方显示的候选物品是全部七种碎片（而不是「只有第一章碎片」这种误导）。
+     * 第 5 格是同样处理过的纪念章通配 Ingredient。JEI 只取前 9 个 Ingredient 按顺序铺进 3x3 格，
+     * 所以这 5 格会排成「第一行 3 碎片 + 第二行 1 碎片 + 1 纪念章」。</p>
+     */
+    @Override
+    public NonNullList<Ingredient> getIngredients() {
+        Ingredient anyFragment = fragmentIngredient();
+        Ingredient anyMedal = medalIngredient();
+        return NonNullList.of(Ingredient.EMPTY,
+                anyFragment, anyFragment, anyFragment, anyFragment, anyMedal);
+    }
+
+    /**
+     * 供 JEI / 配方书显示的结果物品：一把普通的副本钥匙。
+     *
+     * <p><b>刻意不带 {@code DUNGEON_STAGE_ID} 组件。</b>真实产物（见 {@link #assemble}）会写入
+     * {@code chapter_N}，但那个 N 取决于玩家投入的是哪一章碎片，「一份 JSON 覆盖七章」意味着
+     * 这里根本没有唯一正确的章节可写。写死 {@code chapter_1} 会让 Ch2~Ch7 的玩家看到错误提示。
+     * 不带组件时 JEI 会按 {@code DUNGEON_KEY} 物品自身的默认组件集渲染出钥匙图标，信息量恰好足够。</p>
+     */
+    @Override
+    public ItemStack getResultItem(HolderLookup.Provider registries) {
+        return new ItemStack(ModItems.DUNGEON_KEY.get());
+    }
+
+    /**
+     * 把某一章的全部碎片物品合成一个通配 {@link Ingredient}。
+     *
+     * <p>逐个 {@code ModItems.KEY_FRAGMENT_CHn} 显式列举，而不是在此时扫
+     * {@code BuiltInRegistries.ITEM} 做类型过滤：注册表的迭代顺序不保证稳定，
+     * Ingredient 的 {@code items} 顺序会直接决定 JEI 悬停提示里候选物品的排列顺序，
+     * 显式列举既稳定又可读。</p>
+     */
+    private static Ingredient fragmentIngredient() {
+        return Ingredient.of(
+                ModItems.KEY_FRAGMENT_CH1.get(), ModItems.KEY_FRAGMENT_CH2.get(),
+                ModItems.KEY_FRAGMENT_CH3.get(), ModItems.KEY_FRAGMENT_CH4.get(),
+                ModItems.KEY_FRAGMENT_CH5.get(), ModItems.KEY_FRAGMENT_CH6.get(),
+                ModItems.KEY_FRAGMENT_CH7.get());
+    }
+
+    /** 把某一章的全部出击纪念章合成一个通配 {@link Ingredient}，理由同 {@link #fragmentIngredient()}。 */
+    private static Ingredient medalIngredient() {
+        return Ingredient.of(
+                ModItems.DEPLOY_MEDAL_CH1.get(), ModItems.DEPLOY_MEDAL_CH2.get(),
+                ModItems.DEPLOY_MEDAL_CH3.get(), ModItems.DEPLOY_MEDAL_CH4.get(),
+                ModItems.DEPLOY_MEDAL_CH5.get(), ModItems.DEPLOY_MEDAL_CH6.get(),
+                ModItems.DEPLOY_MEDAL_CH7.get());
     }
 
     /**

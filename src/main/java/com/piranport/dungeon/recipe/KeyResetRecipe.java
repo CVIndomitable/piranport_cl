@@ -5,6 +5,8 @@ import com.piranport.PiranPort;
 import com.piranport.dungeon.key.DungeonKeyItem;
 import com.piranport.dungeon.key.DungeonProgress;
 import com.piranport.registry.ModDataComponents;
+import com.piranport.registry.ModItems;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
@@ -13,6 +15,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.CraftingBookCategory;
 import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.item.crafting.CustomRecipe;
+import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.level.Level;
 
@@ -45,11 +48,55 @@ import net.minecraft.world.level.Level;
  * （{@code ModDataComponents} 中并无该组件）。策划案《副本/17》§一.3「复制出的空白钥匙」
  * 是靠清空 instanceId 实现的：新钥匙复用原钥匙的 stageId + progress，
  * 由讲台据此重新随机一个全新副本实例。语义上不需要记录来源钥匙。</p>
+ *
+ * <h2>为什么这里的 {@link #isSpecial()} 被覆写成 {@code false}（有意偏离基类默认）</h2>
+ * <p>与 {@link ChapterKeyRecipe} 同因：{@link CustomRecipe} 默认 {@code isSpecial() == true}，
+ * 而 JEI 的 {@code CategoryRecipeValidator.isValid} 第一步就卡这个返回值，为 true 直接不显示，
+ * 该版本 JEI 也没有可注册到原版合成台类别、绕开这道闸门的扩展入口。
+ * 本配方本源语义同样是「普通合成」（钥匙 + 铜锭），并非特殊配方，故覆写为 {@code false}，
+ * 让 JEI 可见、原版配方书也能识别。</p>
+ * <p>注意：这只影响展示与自动摆放，<b>匹配逻辑仍完全以 {@link #matches} 为准</b>。</p>
  */
 public class KeyResetRecipe extends CustomRecipe {
 
     public KeyResetRecipe(CraftingBookCategory category) {
         super(category);
+    }
+
+    /**
+     * 覆写 {@link CustomRecipe} 的 {@code isSpecial() == true} 默认值，改为 {@code false}（理由见类 javadoc）。
+     * 这是<b>有意偏离基类默认</b>的行为：目的是让 JEI 显示本配方、并让原版配方书能识别与自动摆放。
+     */
+    @Override
+    public boolean isSpecial() {
+        return false;
+    }
+
+    /**
+     * 提供给 JEI / 配方书显示的<b>存在性</b>输入列表（2 格：钥匙 + 铜锭）。
+     *
+     * <p><b>本方法不参与 {@link #matches} 判定，{@link #matches} 才是权威。</b>
+     * 真实规则里还有一个 Ingredient 表达不了的额外约束——钥匙必须是「使用过的」
+     * （{@code progress} 非空，见 {@link #matches}），Ingredient 只能表达「这一格可以是哪些物品」，
+     * 无法表达「这一格的物品必须带某个组件」。所以这里只声明物品种类，组件层面的门控留给 {@code matches}。</p>
+     */
+    @Override
+    public NonNullList<Ingredient> getIngredients() {
+        return NonNullList.of(Ingredient.EMPTY,
+                Ingredient.of(ModItems.DUNGEON_KEY.get()),
+                Ingredient.of(Items.COPPER_INGOT));
+    }
+
+    /**
+     * 供 JEI / 配方书显示的结果物品：一把副本钥匙。
+     *
+     * <p>刻意不带任何组件：真实产物会继承来源钥匙的 {@code stageId} + {@code progress}
+     * （见 {@link #assemble}），那取决于玩家投入的是哪把钥匙，这里没有唯一正确答案。
+     * 不带组件时 JEI 按物品自身默认组件渲染出钥匙图标，信息量恰好足够。</p>
+     */
+    @Override
+    public ItemStack getResultItem(HolderLookup.Provider registries) {
+        return new ItemStack(ModItems.DUNGEON_KEY.get());
     }
 
     @Override

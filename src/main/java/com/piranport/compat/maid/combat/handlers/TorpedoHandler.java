@@ -41,6 +41,18 @@ public class TorpedoHandler implements WeaponHandler {
         Player owner = AmmoConsumer.ownerPlayer(maid);
         int tubes = Math.max(1, launcher.getTubeCount());
         int caliber = launcher.getCaliber();
+
+        // 弹道判定必须先于扣弹药：本 handler 把瞄准向量抹掉 Y 分量（鱼雷只走水平面），
+        // 当目标与女仆处于同一 x/z 柱时 aim 退化为零向量，此处会 return。
+        // 若放到消耗之后再判，这一次发射的鱼雷已被扣掉却一发未出（无退款分支），
+        // 且 fire 提前返回仍会走满整段冷却 —— 玩家持续站桩就持续白扣。
+        Vec3 origin = maid.position().add(0, 0.2, 0);
+        Vec3 aim = target.position().subtract(origin);
+        aim = new Vec3(aim.x, 0, aim.z);
+        if (aim.lengthSqr() < 1.0E-6) return;
+        aim = aim.normalize();
+        float baseYaw = (float) Math.toDegrees(Math.atan2(-aim.x, aim.z));
+
         int loaded = AmmoConsumer.consume(owner, caliberMatcher(caliber), tubes);
         if (loaded <= 0) return;
 
@@ -49,13 +61,6 @@ public class TorpedoHandler implements WeaponHandler {
         float damage = reference != null ? reference.getDamage() : 27f;
         float speed = reference != null ? reference.getSpeed() : DEFAULT_SPEED;
         int lifetime = reference != null ? reference.getLifetimeTicks() : 360;
-
-        Vec3 origin = maid.position().add(0, 0.2, 0);
-        Vec3 aim = target.position().subtract(origin);
-        aim = new Vec3(aim.x, 0, aim.z);
-        if (aim.lengthSqr() < 1.0E-6) return;
-        aim = aim.normalize();
-        float baseYaw = (float) Math.toDegrees(Math.atan2(-aim.x, aim.z));
 
         float[] offsets = spreadOffsets(loaded);
         for (int i = 0; i < loaded; i++) {

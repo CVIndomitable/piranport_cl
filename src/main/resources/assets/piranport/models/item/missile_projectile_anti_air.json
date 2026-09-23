@@ -1,7 +1,7 @@
 {
   "parent": "piranport:custom/missile_anti_air",
   "textures": {
-    "0": "piranport:item/shell_projectile",
-    "particle": "piranport:item/shell_projectile"
+    "0": "piranport:item/missile_body_whitegrey",
+    "particle": "piranport:item/missile_body_whitegrey"
   }
 }

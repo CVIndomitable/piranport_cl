@@ -125,11 +125,21 @@ public class AmmoWorkbenchMenu extends AbstractContainerMenu {
     @Override
     public void removed(Player player) {
         super.removed(player);
-        if (!player.level().isClientSide) {
-            // Cancel any in-progress crafting and refund materials
-            if (blockEntity.isCrafting()) {
-                blockEntity.cancelCrafting();
-            }
+        if (player.level().isClientSide) return;
+
+        // 只有占用者本人关闭菜单才中断合成并退还材料。
+        // 旁观者（旧版本留下、或在占用者异常离线后被放入的菜单）关闭时不得动合成状态，
+        // 否则关一次菜单就能打断别人的合成。
+        //
+        // 占用者异常离场（断线 / 换维度 / 死亡）时 removed() 可能根本不会被调用，
+        // 这条路径由 AmmoWorkbenchBlockEntity.serverTick 的 idle 兜底回收：
+        // 占用者不再开着菜单，craftingOwner 会在 IDLE_RELEASE_TICKS 后由 tryOpen 释放。
+        // 若占用者是在菜单打开期间死亡，removed() 仍会正常触发，走下面的分支取消。
+        if (!blockEntity.isOwnedBy(player)) return;
+
+        if (blockEntity.isCrafting()) {
+            blockEntity.cancelCrafting();
         }
+        blockEntity.releaseOccupant(false);
     }
 }

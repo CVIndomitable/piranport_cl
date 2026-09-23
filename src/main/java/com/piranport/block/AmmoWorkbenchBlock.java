@@ -5,6 +5,7 @@ import com.piranport.block.entity.AmmoWorkbenchBlockEntity;
 import com.piranport.registry.ModBlockEntityTypes;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -84,6 +85,13 @@ public class AmmoWorkbenchBlock extends BaseEntityBlock {
         if (!level.isClientSide) {
             BlockEntity be = level.getBlockEntity(pos);
             if (be instanceof AmmoWorkbenchBlockEntity wb) {
+                // 占用判定：别人正在用（合成中或产物未取走）时拒绝打开，
+                // 否则第二人关闭菜单的 removed() 会打断原主的合成
+                if (!wb.tryOpen(player)) {
+                    player.displayClientMessage(
+                            Component.translatable("message.piranport.workbench_in_use"), true);
+                    return InteractionResult.FAIL;
+                }
                 ((ServerPlayer) player).openMenu(wb, buf -> buf.writeBlockPos(pos));
             }
         }

@@ -33,6 +33,9 @@ public class AmmoWorkbenchBlockEntity extends BlockEntity implements MenuProvide
     private static final int DATA_SIZE = 2;
     private static final int SAVE_INTERVAL_TICKS = 20;
     private static final int MAX_CRAFT_QUANTITY = 1_000_000;
+    /** 未被任何玩家打开的 idle 累计 tick 上限：超过即释放 craftingOwner。
+     *  用于断线 / crash / menu 关闭事件未送达时强制释放占用锁，避免工作台永久锁死。 */
+    private static final int IDLE_RELEASE_TICKS = 100;
     private static final java.util.function.Predicate<ItemStack> NON_EMPTY_STACK =
             stack -> !stack.isEmpty();
 
@@ -63,8 +66,16 @@ public class AmmoWorkbenchBlockEntity extends BlockEntity implements MenuProvide
     private NonNullList<ItemStack> pendingMaterials = NonNullList.create();
     // Result held when crafting completed but OUTPUT slot is blocked.
     private ItemStack pendingOutput = ItemStack.EMPTY;
+    /**
+     * 合成归属者 UUID，同时充当工作台的「占用者」（二人互斥锁）：
+     * - 打开菜单时由 tryOpen 写入；菜单关闭 / idle 超时 / 合成取消时清空。
+     * - 它的生命周期比单次合成更长：合成完成但产物还没被取走时依然保留，
+     *   用来阻止旁人抢走产物（见 OutputSlot.mayPickup）并让关闭菜单只由归属者触发取消。
+     */
     @Nullable
     private UUID craftingOwner;
+    /** 记录占用者最近一次仍在与服务端交互的 tick。只在本地内存维护，不落盘。 */
+    private long ownerActiveTick = 0;
 
     public final ContainerData dataAccess = new ContainerData() {
         @Override
@@ -106,6 +117,66 @@ public class AmmoWorkbenchBlockEntity extends BlockEntity implements MenuProvide
     @Nullable
     public UUID getCraftingOwner() { return craftingOwner; }
 
+    // ===== 多人互斥（占用判定）=====
+    // 弹药工作台不像武器工作台那样另设 currentUser：craftingOwner 本身就代表
+    // 「谁在用这台工作台」——它既覆盖合成期间，也覆盖合成完成、产物尚未取走的窗口，
+    // 所以直接复用，不再新增一个语义重叠的字段。
+
+    /**
+     * 尝试占用工作台。仅在原占用者已不可用时才允许抢占。
+     * 抢占时必须先回收未取走的产物：原占用者已经拿不到了（离线 / 换维度 / 死亡），
+     * 产物留在槽里只会永久卡住（OutputSlot.mayPickup 对所有人都不放行）。
+     */
+    public boolean tryOpen(Player player) {
+        if (craftingOwner != null && level != null && !craftingOwner.equals(player.getUUID())) {
+            Player existing = level.getPlayerByUUID(craftingOwner);
+            if (existing != null && existing.isAlive()
+                    && existing.containerMenu instanceof AmmoWorkbenchMenu) {
+                // 原占用者活着且正开着菜单 → 真占用中，拒绝第二人
+                ownerActiveTick = level.getGameTime();
+                return false;
+            }
+            // H4 同款兜底：断线 / crash / menu 关闭事件未送达时靠 idle 超时释放。
+            // 注意 lastSeen 为 0 表示占用者从未被 tick 观察到（例如刚被打开就换人），
+            // 此时不能拿 gameTime 去减，否则在游戏早期就会误判超时。
+            long now = level.getGameTime();
+            boolean stale = ownerActiveTick > 0 && (now - ownerActiveTick) > IDLE_RELEASE_TICKS;
+            if (!stale) {
+                ownerActiveTick = now;
+                return false;
+            }
+            releaseOccupant(true);
+        }
+        assignOwner(player.getUUID());
+        return true;
+    }
+
+    /** 当前占用者是否为该玩家。 */
+    public boolean isOwnedBy(Player player) {
+        return craftingOwner != null && craftingOwner.equals(player.getUUID());
+    }
+
+    /** 显式释放占用（菜单关闭时调用）。owner 匹配才释放，旁观者关闭自己的菜单不影响占用者。 */
+    public void releaseOccupantIfOwner(Player player) {
+        if (craftingOwner != null && craftingOwner.equals(player.getUUID())) {
+            releaseOccupant(true);
+        }
+    }
+
+    /** 让出占用（不退还材料，材料由调用方决定去留）。 */
+    public void releaseOccupant(boolean refund) {
+        if (refund) refundPendingMaterials();
+        craftingOwner = null;
+        ownerActiveTick = 0;
+        setChanged();
+    }
+
+    private void assignOwner(UUID uuid) {
+        craftingOwner = uuid;
+        ownerActiveTick = level != null ? level.getGameTime() : 0;
+        setChanged();
+    }
+
     /**
      * Begin a crafting job using materials already shrunk from the player's inventory.
      * The materials are moved into the BE's internal buffer and will be consumed at completion,
@@ -121,6 +192,8 @@ public class AmmoWorkbenchBlockEntity extends BlockEntity implements MenuProvide
         long totalTime = (long) recipe.craftTimeTicks() * quantity;
         this.craftingTotalTime = (int) Math.min(totalTime, Integer.MAX_VALUE / 2);
         this.craftingOwner = owner.getUUID();
+        // 占用者在操作（开始合成），刷新活跃时间戳，避免被误判 idle
+        this.ownerActiveTick = level != null ? level.getGameTime() : 0;
         this.pendingMaterials = takenMaterials;
         setChanged();
     }
@@ -158,6 +231,7 @@ public class AmmoWorkbenchBlockEntity extends BlockEntity implements MenuProvide
         craftingRecipeId = "";
         craftingQuantity = 0;
         craftingOwner = null;
+        ownerActiveTick = 0;
         setChanged();
     }
 
@@ -169,6 +243,7 @@ public class AmmoWorkbenchBlockEntity extends BlockEntity implements MenuProvide
         craftingRecipeId = "";
         craftingQuantity = 0;
         craftingOwner = null;
+        ownerActiveTick = 0;
         setChanged();
     }
 
@@ -222,7 +297,18 @@ public class AmmoWorkbenchBlockEntity extends BlockEntity implements MenuProvide
                 && be.itemHandler.getStackInSlot(OUTPUT_SLOT).isEmpty()
                 && be.craftingOwner != null) {
             be.craftingOwner = null;
+            be.ownerActiveTick = 0;
             be.setChanged();
+        }
+
+        // 占用者在线且仍开着本菜单（或正在合成）就持续刷新活跃时间戳；
+        // 否则让时间戳自然变旧，由 tryOpen 的 idle 兜底回收。
+        if (be.craftingOwner != null) {
+            Player owner = level.getPlayerByUUID(be.craftingOwner);
+            if (owner != null && owner.isAlive()
+                    && (owner.containerMenu instanceof AmmoWorkbenchMenu || be.isCrafting())) {
+                be.ownerActiveTick = level.getGameTime();
+            }
         }
 
         if (be.craftingTotalTime <= 0) return;

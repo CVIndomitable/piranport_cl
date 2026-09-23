@@ -78,14 +78,22 @@ public final class WeaponItems {
                                     new MuzzlePos(-0.3, 0.2, 0)),
                             2.5f, 0.015f, 9.8f, 1.0f, 0.0f,
                             10, 1, 5.0f), "japanese_127mm_twin_gun"));
+    /**
+     * 中国双联140毫米炮。
+     *
+     * <p>原为单装「中型火炮」（注册 ID {@code medium_gun}），现改为双联并启用中文命名。
+     * 炮口位置相应改为左右各一（±0.3），与 {@link #JAPANESE_127MM_TWIN_GUN} 的双联
+     * 约定一致；双联两管轮流击发，故 {@code salvoInterval} 由 0 改为 5.0。
+     */
     public static final DeferredItem<Item> MEDIUM_GUN =
-            ITEMS.register("medium_gun", () -> new ArtilleryItem(new Item.Properties().stacksTo(1)
+            ITEMS.register("chinese_twin_140mm_gun", () -> new ArtilleryItem(new Item.Properties().stacksTo(1)
                     .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.CANNON)
                     .durability(1000),
-                    new ArtilleryCannonData(8, 1, 12.0f, 50, 1000, 3.0f,
-                            List.of(new MuzzlePos(0.3, 0.2, 0)),
+                    new ArtilleryCannonData(8, 2, 12.0f, 50, 1000, 3.0f,
+                            List.of(new MuzzlePos(0.3, 0.2, 0),
+                                    new MuzzlePos(-0.3, 0.2, 0)),
                             3.0f, 0.01f, 9.8f, 1.5f, 0.0f,
-                            15, 1, 0.0f), "medium_gun"));
+                            15, 1, 5.0f), "chinese_twin_140mm_gun"));
     /**
      * 神经网络弹道解算实验炮。
      *
@@ -94,6 +102,9 @@ public final class WeaponItems {
      * 而非 {@code BallisticSolver}。路由按注册 ID 判定（见 {@code CannonAiming}），
      * 不依赖物理参数——因为 {@code ConfigOverrideManager} 会运行时改动参数，
      * 用参数路由会在玩家改覆盖值时误判。
+     *
+     * <p>注意：中国双联140毫米炮已改为双联，本炮仍是单装，两者数值不再逐项相同，
+     * 仅口径 / 初速 / 落点物理一致，便于对照弹道解算结果。
      *
      * <p>依据：{@code docs/策划决策/武器/火炮-神经网络弹道解算实验方案.md} 4.1 / 4.2。
      */

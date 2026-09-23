@@ -186,7 +186,7 @@ public class ConfigCSVExporter {
         return switch (translationKey) {
             case "item.piranport.single_small_gun" -> "日本12厘米单装炮";
             case "item.piranport.japanese_127mm_twin_gun" -> "日本12.7厘米连装炮";
-            case "item.piranport.medium_gun" -> "中型火炮";
+            case "item.piranport.chinese_twin_140mm_gun" -> "中国双联140毫米炮";
             case "item.piranport.large_gun" -> "大型火炮";
             case "item.piranport.german_twin_380mm_gun" -> "德国双联380毫米炮";
             case "item.piranport.seven_barrel_gun" -> "七联装主炮群";

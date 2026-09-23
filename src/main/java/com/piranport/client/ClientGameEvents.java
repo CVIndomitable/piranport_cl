@@ -14,7 +14,9 @@ import com.piranport.network.SkinRevertPayload;
 import com.piranport.skin.ClientSkinData;
 import net.minecraft.ChatFormatting;
 import com.piranport.artillery.ArtilleryItem;
+import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+import net.neoforged.neoforge.client.settings.KeyModifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.util.RandomSource;
@@ -24,6 +26,7 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
+import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.RenderHandEvent;
 import net.neoforged.neoforge.client.event.RenderLivingEvent;
 import net.neoforged.neoforge.client.event.InputEvent;
@@ -112,6 +115,48 @@ public class ClientGameEvents {
         if (viewer != null && viewer.hasEffect(MobEffects.INVISIBILITY) && event.getEntity() != viewer) {
             event.setCanceled(true);
         }
+    }
+
+    /**
+     * 变身/侦察状态下接管原版「选取方块」的点击队列。
+     *
+     * <p>WHY: 原版 keyPickItem 默认绑定鼠标中键，与火控选择键头碰头。实测时序
+     * （neoforge-21.1.220-sources）：{@code Minecraft.tick()} 内先发 Pre
+     * （ClientHooks.fireClientTickPre），再调 {@code handleKeybinds()}（消费
+     * keyPickItem 并执行 pickBlock），最后发 Post。所以在 Post 阶段才清队列已经晚了
+     * 一步，必须挂在 tick 头部的 Pre；否则创造模式下每按一次火控中键都会替换快捷栏物品。
+     *
+     * <p><b>仅当两个键确实撞车时才吞</b>：若玩家把「选取方块」改绑到别的键，或把
+     * 火控选择改绑到别的键，两者已不再冲突，此时必须放行原版行为——否则玩家会在
+     * 变身态下凭空失去「选取方块」功能。
+     */
+    @SubscribeEvent
+    public static void onClientTickPre(ClientTickEvent.Pre event) {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player == null) return;
+        if (!keysCollide(mc.options.keyPickItem, ModKeyMappings.FIRE_CONTROL_SELECT)) return;
+        boolean transformed = TransformationManager.isPlayerTransformed(mc.player);
+        boolean inRecon = ClientReconData.isInReconMode();
+        if (transformed || inRecon) {
+            while (mc.options.keyPickItem.consumeClick()) {
+                // 吞噬原版 pick block，避免与火控中键冲突
+            }
+        }
+    }
+
+    /**
+     * 两个按键绑定是否会真的抢同一次按键（物理键码相同，且修饰键语义重叠）。
+     *
+     * <p>WHY: 光比对键码不够。NeoForge 允许给绑定挂 {@link KeyModifier}（Ctrl / Shift），
+     * 玩家把「选取方块」绑到中键、火控绑到 Ctrl+中键时两者本可共存，只比键码会误判成
+     * 撞车、把原版 pick block 白白吞掉。这里复用原版 {@link KeyMapping#same} 的语义：
+     * 只有修饰键完全相同、或其中一方为 {@link KeyModifier#NONE} 时才算冲突。
+     */
+    public static boolean keysCollide(KeyMapping a, KeyMapping b) {
+        if (!a.getKey().equals(b.getKey())) return false;
+        KeyModifier modA = a.getKeyModifier();
+        KeyModifier modB = b.getKeyModifier();
+        return modA == modB || modA == KeyModifier.NONE || modB == KeyModifier.NONE;
     }
 
     /**

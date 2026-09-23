@@ -26,7 +26,7 @@ public class FireControlManager {
     }
 
     /**
-     * P 键触发：替换整个目标列表为准心所指单目标。
+     * 蹲下+鼠标中键触发：替换整个目标列表为准心所指单目标。
      * 自动火控不应调用此方法，而应使用 {@link #addTarget} 保留玩家手动积累的目标列表。
      */
     public static void lock(UUID playerUUID, UUID targetUUID) {

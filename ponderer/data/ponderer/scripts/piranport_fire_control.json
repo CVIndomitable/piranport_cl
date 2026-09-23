@@ -161,8 +161,8 @@
           "type": "text",
           "duration": 80,
           "text": {
-            "zh_cn": "H 键切换自动模式（战斗机自动升空与防空导弹自动发射），P/O/I 键管理火控锁定目标。",
-            "en_us": "H toggles auto-mode (auto-launch fighters and auto-fire missiles). P/O/I manage fire-control target locks."
+            "zh_cn": "H 键切换自动模式（战斗机自动升空与防空导弹自动发射），鼠标中键（蹲下=单选/清空）管理火控锁定目标。",
+            "en_us": "H toggles auto-mode (auto-launch fighters and auto-fire missiles). Mouse middle-click (sneak=single/clear) manages fire-control target locks."
           },
           "point": [
             2.5,

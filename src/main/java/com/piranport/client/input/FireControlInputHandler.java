@@ -7,6 +7,7 @@ import com.piranport.network.ToggleAutoModePayload;
 import com.piranport.network.FireControlPayload;
 import com.piranport.network.ManualReloadPayload;
 import com.piranport.network.ToggleFighterGroundAttackPayload;
+import com.piranport.client.ClientGameEvents;
 import com.piranport.client.ModKeyMappings;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.Entity;
@@ -23,7 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 火控按键处理(P/O/I键)和战斗机对地/升空/装填功能键(U/H/R键)。
+ * 火控按键处理(鼠标中键)和战斗机对地/升空/装填功能键(U/H/R键)。
  *
  * <p><b>线程模型</b>: 客户端渲染线程（单线程），无需同步。
  */
@@ -34,31 +35,55 @@ public class FireControlInputHandler {
 
     private FireControlInputHandler() {}
 
-    /** 处理火控按键：锁定(P)/追加(O)/取消(I)。 */
+    /**
+     * 处理火控选择键（鼠标中键）：
+     * 不蹲下=加选，蹲下=单选，蹲下且准心无实体=清空列表。
+     *
+     * <p>注意：中键同时是原版 keyPickItem（选取方块），本方法会在变身/侦察状态下
+     * 顺带清空 keyPickItem 的点击队列，避免创造模式误替换快捷栏物品；两个键被改绑
+     * 到不同物理键时不吞，见 {@code ClientGameEvents#onClientTickPre}。
+     */
     public static void handleFireControlKeys(Minecraft mc, boolean transformed, boolean inReconMode) {
         if (mc.player == null) return;
 
-        while (ModKeyMappings.FIRE_CONTROL_LOCK.consumeClick()) {
-            if (!transformed && !inReconMode) continue;
-            Entity target = getTargetInCrosshair(mc, FIRE_CONTROL_RANGE);
-            if (target != null) {
-                PacketDistributor.sendToServer(new FireControlPayload(
-                        FireControlPayload.FireAction.LOCK, target.getUUID()));
-            }
+        // 先累计本 tick 的中键点击次数：卡顿时可能一次 tick 内累积多次点击，
+        // 保留旧 while(consumeClick()) 的「一次点击=一次操作」语义。
+        int clicks = 0;
+        while (ModKeyMappings.FIRE_CONTROL_SELECT.consumeClick()) {
+            clicks++;
+        }
+        if (clicks == 0) return;
+
+        // 解锁前置条件保持不变：仅变身态或侦察模式生效。
+        // 放行前先吞掉原版「选取方块」队列，避免占用中键时误触发 pick block。
+        // 仅在两键确实指向同一物理键时才吞：玩家把任一绑定改走时，原版行为必须保留。
+        if (!transformed && !inReconMode) return;
+        if (ClientGameEvents.keysCollide(mc.options.keyPickItem, ModKeyMappings.FIRE_CONTROL_SELECT)) {
+            while (mc.options.keyPickItem.consumeClick()) { /* discard vanilla pick block */ }
         }
 
-        while (ModKeyMappings.FIRE_CONTROL_ADD.consumeClick()) {
-            if (!transformed && !inReconMode) continue;
+        // 蹲下判定只读一次；不同点击之间玩家可能转视角，故每次点击重新取准心实体
+        boolean crouching = mc.player.isShiftKeyDown();
+
+        for (int i = 0; i < clicks; i++) {
             Entity target = getTargetInCrosshair(mc, FIRE_CONTROL_RANGE);
-            if (target != null) {
+
+            if (crouching) {
+                if (target != null) {
+                    // 蹲下 + 有目标 → 单选（替换整个列表）
+                    PacketDistributor.sendToServer(new FireControlPayload(
+                            FireControlPayload.FireAction.LOCK, target.getUUID()));
+                } else {
+                    // 蹲下 + 准心无实体 → 清空列表（与旧 I 键行为一致）
+                    PacketDistributor.sendToServer(FireControlPayload.cancel());
+                    ClientFireControlData.clear();
+                }
+            } else if (target != null) {
+                // 不蹲下 + 有目标 → 加选（追加，服务端上限 4）
                 PacketDistributor.sendToServer(new FireControlPayload(
                         FireControlPayload.FireAction.ADD, target.getUUID()));
             }
-        }
-
-        while (ModKeyMappings.FIRE_CONTROL_CANCEL.consumeClick()) {
-            PacketDistributor.sendToServer(FireControlPayload.cancel());
-            ClientFireControlData.clear();
+            // 不蹲下 + 准心无实体 → 静默，不做任何事（避免误清空）
         }
     }
 

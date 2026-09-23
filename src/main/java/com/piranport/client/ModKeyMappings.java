@@ -1,19 +1,25 @@
 package com.piranport.client;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
 import org.lwjgl.glfw.GLFW;
 
 public class ModKeyMappings {
     private static final String CATEGORY = "key.categories.piranport";
 
-    public static final KeyMapping FIRE_CONTROL_LOCK =
-            new KeyMapping("key.piranport.fire_control_lock", GLFW.GLFW_KEY_P, CATEGORY);
-
-    public static final KeyMapping FIRE_CONTROL_ADD =
-            new KeyMapping("key.piranport.fire_control_add", GLFW.GLFW_KEY_O, CATEGORY);
-
-    public static final KeyMapping FIRE_CONTROL_CANCEL =
-            new KeyMapping("key.piranport.fire_control_cancel", GLFW.GLFW_KEY_I, CATEGORY);
+    /**
+     * 火控选择目标（鼠标中键）。
+     *
+     * <p>三种语义由「是否蹲下 × 准心是否有实体」派生：
+     * 不蹲下=加选（追加到火控列表，上限 4）；蹲下=单选（替换整个列表）；
+     * 蹲下且准心无实体=清空列表。
+     *
+     * <p>必须用带 {@link InputConstants.Type} 的构造重载：用 (String,int,String)
+     * 重载会把鼠标键码当成键盘 keysym，永远匹配不上鼠标。
+     */
+    public static final KeyMapping FIRE_CONTROL_SELECT =
+            new KeyMapping("key.piranport.fire_control_select",
+                    InputConstants.Type.MOUSE, GLFW.GLFW_MOUSE_BUTTON_MIDDLE, CATEGORY);
 
     public static final KeyMapping TOGGLE_FIGHTER_GROUND_ATTACK =
             new KeyMapping("key.piranport.toggle_fighter_ground_attack", GLFW.GLFW_KEY_U, CATEGORY);

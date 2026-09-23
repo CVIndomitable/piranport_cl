@@ -274,6 +274,16 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
         // 而不是文本。文本比较会放过 0.58→0.580 这种纯写法的差异。
         Double previousTarget = parseOrNull(previous);
         if (previousTarget != null && Math.abs(previousTarget - target) < 1e-4) {
+            // 不发包，但把框里的写法归一化成规范显示，否则 lastSubmitted 与框内文本
+            // 会一直不同，下次失焦又走一遍到这里。
+            EditBox same = editBoxes.get(mapKey);
+            if (same != null && !same.isFocused()) {
+                String canonical = formatAbsoluteValue(category, target);
+                if (!canonical.equals(same.getValue())) {
+                    same.setValue(canonical);
+                }
+                lastSubmitted.put(mapKey, canonical);
+            }
             return;
         }
 

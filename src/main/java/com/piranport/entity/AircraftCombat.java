@@ -330,6 +330,10 @@ public class AircraftCombat {
                 double offsetX = -dir.z * (i - (toFire - 1) / 2.0) * 1.2;
                 double offsetZ = dir.x * (i - (toFire - 1) / 2.0) * 1.2;
                 torpedo.moveTo(craft.getX() + offsetX, craft.getY() - 1.0, craft.getZ() + offsetZ, 0, 0);
+                // 注意：空投鱼雷不绑定具体 TorpedoItem 型号，初速固定 0.8，
+                // 因此不受调试终端的型号航速覆盖影响（玩家发射路径读 TorpedoItem.getSpeed()，
+                // 这里没有型号可查）。这是设计如此，不是漏改 —— 若要让它也受覆盖，
+                // 需要先给飞机挂弹定义「所投型号」再按型号取 getSpeed()。
                 Vec3 vel = dir.scale(0.8).add(0, -0.1, 0);
                 torpedo.setDeltaMovement(vel);
                 torpedo.setOwner(owner);

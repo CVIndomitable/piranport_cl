@@ -109,6 +109,20 @@ public class PlayerConnectionHandler {
         PacketDistributor.sendToPlayer(joiner, com.piranport.network.SyncTerminalOverridesPayload.from(
                 com.piranport.terminal.TerminalOverridesSavedData.get(joiner.serverLevel())));
 
+        // 测试模式水印的客户端状态是进程级布尔量，登录时默认 false。
+        // 属主「开着测试模式」掉线重连后服务端状态还在（cooldownOverrideEnabled 是静态字段），
+        // 但客户端没收到任何包 → 水印不显示，玩家以为测试模式已经关了。
+        // 这里无条件推一份当前真实状态（关着时也推，用于校正上一次会话的残留）。
+        if (com.piranport.testtools.PiranPortTestTools.isActiveOwner(joiner.getUUID())) {
+            PacketDistributor.sendToPlayer(joiner,
+                    new com.piranport.network.TestModeWatermarkPayload(
+                            true, com.piranport.testtools.PiranPortTestTools.currentTestSessionId()));
+        } else {
+            // 非属主：显式推 false，清掉可能残留的水印显示
+            PacketDistributor.sendToPlayer(joiner,
+                    new com.piranport.network.TestModeWatermarkPayload(false, -1L));
+        }
+
         var slowness = joiner.getEffect(MobEffects.MOVEMENT_SLOWDOWN);
         if (slowness != null && slowness.getAmplifier() >= 9) {
             joiner.removeEffect(MobEffects.MOVEMENT_SLOWDOWN);

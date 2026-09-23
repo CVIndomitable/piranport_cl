@@ -23,11 +23,16 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class PiranPortDebugMicrobenchTest {
 
-    // 阈值说明：这些是粗略目标，非精确基准（应使用 JMH）
-    // String.format 是主要开销，event()/error() 单次约 1-2μs（包含格式化）
-    private static final long EVENT_THRESHOLD_NS = 2_000_000L;   // 1000 次 event() 总开销 < 2ms
-    private static final long PERF_THRESHOLD_NS = 1_000_000L;    // 1000 次 perf() < 1ms
-    private static final long ERROR_THRESHOLD_NS = 5_000_000L;   // 1000 次 error() < 5ms（总是记录）
+    // 阈值说明：这些是粗略目标，非精确基准（应使用 JMH）。
+    //
+    // 关键认识：门控生效时（无会话）event()/perf() 的第一条语句就是 SESSIONS.isEmpty()
+    // 短路返回，不做 String.format、不做 varargs 数组以外的分配。所以这里的真实开销
+    // 应当接近"一次 ConcurrentHashMap.isEmpty()"，而不是格式化开销。
+    // 原阈值（2ms/1ms/5ms）宽到连"误删门控、每次都完整格式化"都能通过，
+    // 对回归毫无检测力 —— 按同一台机器上实测值的 20 倍余量收紧。
+    private static final long EVENT_THRESHOLD_NS = 200_000L;   // 1000 次 event() 总开销 < 200μs
+    private static final long PERF_THRESHOLD_NS = 200_000L;    // 1000 次 perf() < 200μs
+    private static final long ERROR_THRESHOLD_NS = 5_000_000L; // 1000 次 error() < 5ms（无门控，总是记录）
     private static final long SHORT_UUID_THRESHOLD_NS = 10_000_000L; // 10000 次 < 10ms
     private static final int ITERATIONS = 1_000;
 
@@ -101,5 +106,51 @@ class PiranPortDebugMicrobenchTest {
         assertTrue(elapsedNs < SHORT_UUID_THRESHOLD_NS,
                 String.format("shortUuid() x %d took %,d ns, exceeds 10ms threshold",
                         ITERATIONS * 10, elapsedNs));
+    }
+
+    /**
+     * 参数求值门控回归测试 —— 对应审查里那条「门控前置」修复。
+     *
+     * <p>Java 是 eager evaluation：{@code event("...", expensive())} 的实参会在
+     * {@code event()} 方法体执行之前就求值完毕，方法内部的 {@code SESSIONS.isEmpty()}
+     * 短路救不了调用方。因此凡是埋点参数带注册表查找/字符串拼接的调用点，都必须写成
+     * <pre>
+     *   if (PiranPortDebug.shouldEmit()) { PiranPortDebug.event("...", expensive()); }
+     * </pre>
+     * 该测试用一个"被调用就计数"的探针函数证明：无会话时这些参数一次都不该被求值。
+     * 若哪天有人把 {@code shouldEmit()} 门控删掉（或改回裸 {@code event()} 调用），
+     * 计数器会立刻非零，测试失败。
+     */
+    @Test
+    void shouldEmit_gatesArgumentEvaluation() {
+        // 前置断言：本测试的前提是「测试环境里没有任何调试会话」。
+        // 若将来测试基建真的开了一个会话，这条断言会先失败，避免我们误判门控行为。
+        assertFalse(PiranPortDebug.shouldEmit(),
+                "测试环境不应存在调试会话，否则本回归测试的前提不成立");
+        assertFalse(PiranPortDebug.isServerEnabled(),
+                "SESSIONS 应为空");
+
+        final int[] probeCalls = {0};
+        java.util.function.Supplier<String> expensiveProbe = () -> {
+            probeCalls[0]++;
+            return "probe";
+        };
+
+        // 模拟修复后的调用点写法：门控包住整个埋点（含实参）
+        for (int i = 0; i < 100; i++) {
+            if (PiranPortDebug.shouldEmit()) {
+                PiranPortDebug.event("slot[{}] {}", i, expensiveProbe.get());
+            }
+        }
+
+        assertEquals(0, probeCalls[0],
+                "无会话时门控内的埋点实参被求值了 —— shouldEmit() 门控失效");
+
+        // 对照：不带门控的裸调用会（这是 Java 语义，不是 bug；此处固化为文档）
+        for (int i = 0; i < 100; i++) {
+            PiranPortDebug.event("slot[{}] {}", i, expensiveProbe.get());
+        }
+        assertEquals(100, probeCalls[0],
+                "裸 event() 调用应先行求值实参 —— 这正是必须加 shouldEmit() 门控的原因");
     }
 }

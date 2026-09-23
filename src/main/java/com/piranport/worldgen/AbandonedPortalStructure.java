@@ -8,6 +8,7 @@ import com.piranport.dungeon.key.DungeonProgress;
 import com.piranport.registry.ModBlocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.WorldGenLevel;
@@ -62,6 +63,15 @@ public class AbandonedPortalStructure extends Feature<NoneFeatureConfiguration> 
     /** 传送门框架原点相对平台原点的偏移（框架沿 X 轴展开 4 宽、Z 轴 4 深）。 */
     private static final BlockPos PORTAL_OFFSET = new BlockPos(1, 1, 2);
 
+    /**
+     * 告示牌相对平台原点的偏移。
+     *
+     * <p>立在讲台的另一侧（讲台在 (3,1,1)，牌在 (2,1,1)），不挡门面也不挡讲台交互面。
+     * 教学门此前最大的问题是玩家不知道"要往门里走"而不是"右键门"——告示牌把这条
+     * 写死在场景里，不依赖玩家读过策划文档。</p>
+     */
+    private static final BlockPos SIGN_OFFSET = new BlockPos(2, 1, 1);
+
     public AbandonedPortalStructure() {
         super(NoneFeatureConfiguration.CODEC);
     }
@@ -98,6 +108,9 @@ public class AbandonedPortalStructure extends Feature<NoneFeatureConfiguration> 
 
         // 放置传送门（框架 + 传送门方块）
         placePortal(level, platformBase.offset(PORTAL_OFFSET));
+
+        // 放置告示牌（写着怎么用），立在讲台旁边
+        placeSign(level, platformBase.offset(SIGN_OFFSET));
 
         return true;
     }
@@ -243,8 +256,29 @@ public class AbandonedPortalStructure extends Feature<NoneFeatureConfiguration> 
                 new UUID(0L, 0L), "t-1");
     }
 
-    /** 无 ServerLevel 时的退化路径：按 helper 的几何摆放，开口留空气。 */
-    private static void placePortalBlocksDirect(WorldGenLevel level, BlockPos origin) {
+    /**
+     * 立一块告示牌写明用法。
+     *
+     * <p>1.21.1 的告示牌文字不是逐行 setter：正/反面各是一个不可变的 {@code SignText}，
+     * 要整份换掉（{@code SignText.setMessage} 返回新实例，最后交给
+     * {@code updateText(text, frontSide)} 落到 BE）。用竖直的 {@code oak_sign} 而非墙上的
+     * {@code oak_wall_sign}，免得再算一次依附面朝向。</p>
+     */
+    private static void placeSign(WorldGenLevel level, BlockPos pos) {
+        BlockState signState = Blocks.OAK_SIGN.defaultBlockState()
+                .setValue(net.minecraft.world.level.block.StandingSignBlock.ROTATION, 8);
+        level.setBlock(pos, signState, 2);
+        if (level.getBlockEntity(pos) instanceof net.minecraft.world.level.block.entity.SignBlockEntity sign) {
+            var text = sign.getFrontText()
+                    .setMessage(0, Component.literal("深渊传送门"))
+                    .setMessage(1, Component.literal("讲台插钥匙后"))
+                    .setMessage(2, Component.literal("走进门框即进入"))
+                    .setMessage(3, Component.literal("右键门只会提示"));
+            sign.updateText(ignored -> text, true);
+        }
+    }
+
+    /** 无 ServerLevel 时的退化路径：按 helper 的几何摆放，开口留空气。 */    private static void placePortalBlocksDirect(WorldGenLevel level, BlockPos origin) {
         BlockState frame = ModBlocks.DUNGEON_PORTAL.get().defaultBlockState();
         // 单朝向（南北向）足够，形状对齐 helper 的 FRAME_WIDTH/HEIGHT/DEPTH。
         for (int lx = 0; lx < PortalStructureHelper.FRAME_WIDTH; lx++) {

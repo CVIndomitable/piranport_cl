@@ -342,6 +342,11 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
             return Math.max(TerminalOverrides.TORPEDO_DELTA_MIN,
                     Math.min(TerminalOverrides.TORPEDO_DELTA_MAX, delta));
         }
+        // delta 恰为 0 时放行：那是「清除本行覆盖」的信号，不能钳成 CORE_SPEED_MIN(0.1)。
+        // 服务端 setCoreSpeedDelta 也在钳制前判 0 走移除分支，两边口径一致。
+        if (delta == 0d) {
+            return 0d;
+        }
         return Math.max(TerminalOverrides.CORE_SPEED_MIN,
                 Math.min(TerminalOverrides.CORE_SPEED_MAX, delta));
     }

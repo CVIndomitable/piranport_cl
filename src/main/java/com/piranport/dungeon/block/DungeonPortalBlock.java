@@ -52,50 +52,32 @@ public class DungeonPortalBlock extends BaseEntityBlock {
         return simpleCodec(DungeonPortalBlock::new);
     }
 
+    /**
+     * 右键只作诊断提示，不再承担激活职责。
+     *
+     * <p>按《副本/17》定稿，进入方式是<b>走进传送门</b>：门框成立且底边挂着持钥匙的讲台时，
+     * 门常开，无需手动 ignition。此前的 Shift+右键 activatePortal 是旧口径残留，
+     * 会形成第二条与权威入口并行的路径，已删除。</p>
+     */
     @Override
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos,
                                                Player player, BlockHitResult hitResult) {
         if (level.isClientSide()) {
             return InteractionResult.SUCCESS;
         }
-
-        // Only handle sneaking right-click for activation
-        if (!player.isShiftKeyDown()) {
-            return InteractionResult.PASS;
-        }
-
         if (!(player instanceof ServerPlayer serverPlayer)) {
             return InteractionResult.PASS;
         }
-
         BlockEntity be = level.getBlockEntity(pos);
         if (!(be instanceof DungeonPortalBlockEntity portalBE)) {
             return InteractionResult.PASS;
         }
-
-        // Check if the portal structure is complete
-        if (portalBE.isStructureComplete()) {
-            // Try to activate the portal if we have the right item
-            ItemStack stack = serverPlayer.getMainHandItem();
-            if (stack.isEmpty()) {
-                stack = serverPlayer.getOffhandItem();
-            }
-
-            // Look for dungeon key or activation core
-            // For now, we'll just check if structure is ready and show message
-            if (portalBE.isReadyForActivation()) {
-                portalBE.activatePortal(serverPlayer);
-                return InteractionResult.CONSUME;
-            } else {
-                serverPlayer.displayClientMessage(
-                        Component.translatable("block.piranport.dungeon_portal.waiting_for_activation"), true);
-                return InteractionResult.CONSUME;
-            }
-        } else {
-            serverPlayer.displayClientMessage(
-                    Component.translatable("block.piranport.dungeon_portal.incomplete_structure"), true);
-            return InteractionResult.CONSUME;
-        }
+        // 给玩家可见反馈，避免"点了没反应"再次成为困惑来源。
+        serverPlayer.displayClientMessage(
+                Component.translatable(portalBE.findKeyedLectern() == null
+                        ? "block.piranport.dungeon_portal.waiting_for_activation"
+                        : "block.piranport.dungeon_portal.walk_in_hint"), true);
+        return InteractionResult.CONSUME;
     }
 
     @Override

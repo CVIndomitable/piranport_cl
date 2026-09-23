@@ -34,6 +34,7 @@ class PondererPackTest {
     private static final String[] SCRIPTS = {
             "data/ponderer/scripts/piranport_ammo_workbench.json",
             "data/ponderer/scripts/piranport_fire_control.json",
+            "data/ponderer/scripts/piranport_portal_lectern.json",
             "data/ponderer/scripts/piranport_processing.json",
             "data/ponderer/scripts/piranport_reload_facility.json",
             "data/ponderer/scripts/piranport_ship_core_modifier.json",

@@ -27,7 +27,7 @@ import net.minecraft.world.phys.AABB;
  *   <li>护航（ESCORT）：护航对象到达指定位置后可以过关</li>
  *   <li>夺旗（CAPTURE_FLAG）：玩家在指定范围内保持存活指定时间 <b>或</b> 全灭副本敌人后可以过关（双路径 OR）</li>
  *   <li>存活（SURVIVE）：坚持 N 秒（秒数在 victory_objectives.survive_seconds）</li>
- *   <li>击破首领（KILL_BOSS）：由 DungeonEventHandler.onPortalComplete 事件流处理</li>
+ *   <li>击破首领（KILL_BOSS）：由 DungeonEventHandler 的节点完成事件流处理</li>
  * </ul>
  *
  * <p>关卡脚本集成提示：</p>

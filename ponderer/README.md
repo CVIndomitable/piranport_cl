@@ -22,7 +22,7 @@ Ponderer 直接扫描 `resourcepacks/` 中的教程 ZIP，不要求先在原版�
 - Ponderer 可从 Modrinth Maven 获取。本项目的回归测试使用 `maven.modrinth:the-ponderer:YzFWxoks`，对应 1.10.6.1 的 NeoForge 构建；这是仅测试依赖，不会打入模组。
 - `./gradlew test --tests 'com.piranport.compat.ponderer.*'` 检查正式 JAR 内嵌资源、首次安装、重复启动、升级、手改保护，并调用 Ponderer 实际的 `PonderPackInfo.fromZip`，检查脚本解析、双语文本和字幕等待间隔。
 
-当前共 7 个脚本，覆盖 9 个物品：3 个工作台系列（弹药工作台、武器工作台）、加工三件套（石磨/厨锅/砧板）、再装填设施、舰核改装台、烟雾弹、火控与落点提示。任一绑定物品都能进入其脚本对应的章节。
+当前共 8 个脚本，覆盖 10 个物品：3 个工作台系列（弹药工作台、武器工作台）、加工三件套（石磨/厨锅/砧板）、再装填设施、舰核改装台、烟雾弹、火控与落点提示、副本传送门与讲台。任一绑定物品都能进入其脚本对应的章节。
 
 | 脚本 ID | 绑定物品 | 章节数 |
 |---|---|---|
@@ -33,6 +33,7 @@ Ponderer 直接扫描 `resourcepacks/` 中的教程 ZIP，不要求先在原版�
 | `piranport:smoke_candle` | `smoke_candle` | 2（3×3×2 烟雾区、隐身与衰减） |
 | `piranport:processing` | `stone_mill`, `cooking_pot`, `cutting_board` | 3 |
 | `piranport:fire_control` | `artillery_scope` | 2（瞄准镜与落点提示、快捷键与配置） |
+| `piranport:portal_lectern` | `dungeon_lectern` | 3（门框与开口、讲台贴底边、走进传送门） |
 
 ## 安装时序与更新
 

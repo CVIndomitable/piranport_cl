@@ -2,6 +2,7 @@ package com.piranport.worldgen;
 
 import com.piranport.PiranPort;
 import com.piranport.dungeon.block.DungeonLecternBlockEntity;
+import com.piranport.dungeon.block.PortalStructureHelper;
 import com.piranport.dungeon.key.DungeonKeyItem;
 import com.piranport.dungeon.key.DungeonProgress;
 import com.piranport.registry.ModBlocks;
@@ -46,11 +47,20 @@ public class AbandonedPortalStructure extends Feature<NoneFeatureConfiguration> 
     /** 岛基高度（高出水面） */
     private static final int ISLAND_HEIGHT = 2;
 
-    /** 讲台相对平台原点的偏移 */
-    private static final BlockPos LECTERN_OFFSET = new BlockPos(2, 1, 2);
+    /**
+     * 讲台相对平台原点的偏移。
+     *
+     * <p>讲台必须<b>贴在框架底边外侧</b>（《副本/17》定稿 + 项目所有者 2026-09-23 决策“讲台贴着的
+     * 传送门框架生效”），否则门不工作。旧值 (2,1,2) 把讲台放在门前一格、与框架不相邻，正是
+     * 教学门点了没反应的根因。</p>
+     *
+     * <p>框架原点为 PORTAL_OFFSET，底边层是 ly==0 的 4×4；讲台放在底边正前方
+     * （门面一侧）一格，与门槛中央 (lx=1,lz=0)/(lx=2,lz=0) 正交相邻。</p>
+     */
+    private static final BlockPos LECTERN_OFFSET = new BlockPos(3, 1, 1);
 
-    /** 传送门框架相对平台原点的偏移（讲台前方 1 格） */
-    private static final BlockPos PORTAL_OFFSET = new BlockPos(2, 1, 3);
+    /** 传送门框架原点相对平台原点的偏移（框架沿 X 轴展开 4 宽、Z 轴 4 深）。 */
+    private static final BlockPos PORTAL_OFFSET = new BlockPos(1, 1, 2);
 
     public AbandonedPortalStructure() {
         super(NoneFeatureConfiguration.CODEC);
@@ -213,30 +223,41 @@ public class AbandonedPortalStructure extends Feature<NoneFeatureConfiguration> 
     }
 
     /**
-     * 放置传送门（2×3 框架 + 内部传送门方块）。
+     * 放置传送门：统一走 {@link PortalStructureHelper} 构建，不再自己写裸 setBlock 循环。
+     *
+     * <p>旧实现有个致命 bug：先在 [0,1,0][0,2,0][1,1,0][1,2,0] 放框架方块，
+     * 紧接着又用传送门方块覆盖同样四格，等于把门柱自己拆了；而且用的是已废弃的
+     * {@code abyssal_portal_frame}/{@code abyssal_portal} 旧口径。
+     * 现在改用 {@code dungeon_portal} 框架 + 前景单层 2×3 空气开口（甲），
+     * 由 helper 保证几何与运行时判定完全一致。</p>
      */
     private static void placePortal(WorldGenLevel level, BlockPos center) {
-        BlockState frame = ModBlocks.ABYSSAL_PORTAL_FRAME.get().defaultBlockState();
-        BlockState portal = ModBlocks.ABYSSAL_PORTAL.get().defaultBlockState();
+        if (!(level instanceof net.minecraft.server.level.ServerLevel serverLevel)) {
+            // 世界生成阶段拿不到 ServerLevel 时退化为直接摆框架块（几何仍与 helper 一致）。
+            placePortalBlocksDirect(level, center);
+            return;
+        }
+        // helper 需要 instanceId/nodeId；教学门的实例尚未创建，先构建纯结构，
+        // 数据由玩家首次进入时经讲台权威入口写入。
+        PortalStructureHelper.buildPortalStructure(serverLevel, center,
+                new UUID(0L, 0L), "t-1");
+    }
 
-        // 左柱（x=0）
-        level.setBlock(center.offset(0, 0, 0), frame, 2);
-        level.setBlock(center.offset(0, 1, 0), frame, 2);
-        level.setBlock(center.offset(0, 2, 0), frame, 2);
-
-        // 右柱（x=1）
-        level.setBlock(center.offset(1, 0, 0), frame, 2);
-        level.setBlock(center.offset(1, 1, 0), frame, 2);
-        level.setBlock(center.offset(1, 2, 0), frame, 2);
-
-        // 顶部横梁（y=3）
-        level.setBlock(center.offset(0, 3, 0), frame, 2);
-        level.setBlock(center.offset(1, 3, 0), frame, 2);
-
-        // 内部传送门方块（y=1, y=2）
-        level.setBlock(center.offset(0, 1, 0), portal, 2);
-        level.setBlock(center.offset(1, 1, 0), portal, 2);
-        level.setBlock(center.offset(0, 2, 0), portal, 2);
-        level.setBlock(center.offset(1, 2, 0), portal, 2);
+    /** 无 ServerLevel 时的退化路径：按 helper 的几何摆放，开口留空气。 */
+    private static void placePortalBlocksDirect(WorldGenLevel level, BlockPos origin) {
+        BlockState frame = ModBlocks.DUNGEON_PORTAL.get().defaultBlockState();
+        // 单朝向（南北向）足够，形状对齐 helper 的 FRAME_WIDTH/HEIGHT/DEPTH。
+        for (int lx = 0; lx < PortalStructureHelper.FRAME_WIDTH; lx++) {
+            for (int ly = 0; ly < PortalStructureHelper.FRAME_HEIGHT; ly++) {
+                for (int lz = 0; lz < PortalStructureHelper.FRAME_DEPTH; lz++) {
+                    BlockPos pos = origin.offset(lx, ly, lz);
+                    if (PortalStructureHelper.isInOpening(lx, ly, lz)) {
+                        level.setBlock(pos, Blocks.AIR.defaultBlockState(), 2);
+                    } else {
+                        level.setBlock(pos, frame, 2);
+                    }
+                }
+            }
+        }
     }
 }

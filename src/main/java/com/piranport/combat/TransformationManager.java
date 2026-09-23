@@ -9,6 +9,7 @@ import com.piranport.item.SonarItem;
 import com.piranport.item.RadarItem;
 import com.piranport.item.TorpedoReloadItem;
 import com.piranport.item.EngineItem;
+import com.piranport.item.FireControlRadarItem;
 import com.piranport.registry.ModDataComponents;
 import com.piranport.registry.ModItems;
 import com.piranport.registry.ModMobEffects;

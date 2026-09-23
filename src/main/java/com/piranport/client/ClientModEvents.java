@@ -111,6 +111,9 @@ public class ClientModEvents {
         // 火炮配置工具
         event.register(ModMenuTypes.ARTILLERY_CONFIG_TOOL_MENU.get(),
                 ArtilleryConfigToolScreen::new);
+        // 调试终端
+        event.register(ModMenuTypes.DEBUG_TERMINAL_MENU.get(),
+                com.piranport.client.gui.DebugTerminalScreen::new);
     }
 
     @SubscribeEvent

@@ -179,6 +179,29 @@ public class TransformationManager {
     private static final int HOTBAR_SIZE = 9;
 
     /**
+     * 调试终端改了舰型航速覆盖后，立刻把新倍率重放给该玩家。
+     *
+     * <p>WHY 必须显式重放：属性修饰符只在 {@link #applyTransformationAttributes} 里写入，
+     * 而那个方法由 tick 循环按「载重缓存键」门控调用（见 {@code PlayerTickHandler} 的
+     * {@code cacheKey}）——覆盖值不在缓存键里，所以单改覆盖不会触发任何重算，
+     * 玩家得等下一次换装/变形才看得到效果。
+     *
+     * <p>顺带使载重缓存失效，让下一 tick 的循环再算一次，兜住「缓存键恰好没变但
+     * 玩家期待立刻生效」的情况；重放是幂等的（内部先 remove 再 apply）。
+     */
+    public static void onTerminalCoreOverrideChanged(Player player) {
+        if (player == null || player.level().isClientSide()) {
+            return;
+        }
+        ItemStack coreStack = findTransformedCore(player);
+        if (coreStack.isEmpty()) {
+            return;  // 未变身：没有属性可重放，覆盖会在下次变身时自然生效
+        }
+        com.piranport.handler.PlayerTickHandler.invalidateLoadCache(player);
+        applyTransformationAttributes(player, coreStack);
+    }
+
+    /**
      * Inventory mode (GUI disabled): scan the player's inventory for load and attributes.
      * Only hotbar slots (0–8) are considered for weight calculation.
      * The transformed core passed by the caller provides the weight capacity and base attributes.
@@ -202,6 +225,11 @@ public class TransformationManager {
         double loadRatio = activeType.maxLoad > 0 ? (double) totalLoad / activeType.maxLoad : 0;
         double speedMult = activeType.emptySpeed - (activeType.emptySpeed - activeType.fullLoadSpeed) * Math.min(loadRatio, 1.0);
         speedMult += engineSpeedBonus;
+        // 调试终端的舰型级倍率偏移，加在最后一步（在载重插值与强化件加成之上）。
+        // WHY 加在末尾而不是混进 emptySpeed/fullLoadSpeed：那两者是策划表里的基准值，
+        // 覆盖必须能整体叠加在最终结果上，否则载重插值会把手填的倍率再次放大/缩小，
+        // 玩家输入的数值与实际效果对不上。key 用 ShipType.name()（枚举常量名，如 LARGE）。
+        speedMult += com.piranport.terminal.TerminalOverrides.coreSpeedDelta(activeType.name());
 
         applyTypeAttributes(player, activeType, armorBonus, speedMult);
         applyOverweightPenalty(player, totalLoad, activeType.maxLoad);

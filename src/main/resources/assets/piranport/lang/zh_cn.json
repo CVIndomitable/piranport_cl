@@ -1461,5 +1461,23 @@
   "tooltip.piranport.aircraft_payload_loaded": "对海挂载: 已装填 [R]",
   "tooltip.piranport.aircraft_payload_empty": "对海挂载: 空 [R 装填]",
   "message.piranport.aircraft_no_fuel_item": "缺少航空燃料",
-  "tooltip.piranport.aircraft_fuel_short": "航空燃料: 空 [R 补给]"
+  "tooltip.piranport.aircraft_fuel_short": "航空燃料: 空 [R 补给]",
+
+  "gui.piranport.debug_terminal": "调试终端",
+  "tooltip.piranport.debug_terminal.desc": "调试终端：调整鱼雷航速与舰娘核心航速",
+  "tooltip.piranport.debug_terminal.admin_only": "仅管理员（权限等级 2 或单机房主）可使用",
+  "message.piranport.debug_terminal.admin_required": "你没有权限使用调试终端",
+
+  "gui.piranport.debug_terminal.tab.torpedo": "鱼雷航速",
+  "gui.piranport.debug_terminal.tab.core": "核心航速",
+  "gui.piranport.debug_terminal.header.model": "型号",
+  "gui.piranport.debug_terminal.header.base": "基准值",
+  "gui.piranport.debug_terminal.header.value": "设定值",
+  "gui.piranport.debug_terminal.reset_tab": "重置本页",
+  "gui.piranport.debug_terminal.reset_all": "重置全部",
+
+  "gui.piranport.debug_terminal.ship_type.SMALL": "小型舰 SMALL",
+  "gui.piranport.debug_terminal.ship_type.MEDIUM": "中型舰 MEDIUM",
+  "gui.piranport.debug_terminal.ship_type.LARGE": "大型舰 LARGE",
+  "gui.piranport.debug_terminal.ship_type.SUBMARINE": "潜艇 SUBMARINE"
 }

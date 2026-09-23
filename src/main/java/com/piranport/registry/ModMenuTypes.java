@@ -52,4 +52,9 @@ public class ModMenuTypes {
     public static final DeferredHolder<MenuType<?>, MenuType<ArtilleryConfigToolMenu>>
             ARTILLERY_CONFIG_TOOL_MENU = MENU_TYPES.register("artillery_config_tool",
                     () -> IMenuTypeExtension.create(ArtilleryConfigToolMenu::new));
+
+    // Debug Terminal
+    public static final DeferredHolder<MenuType<?>, MenuType<com.piranport.menu.DebugTerminalMenu>>
+            DEBUG_TERMINAL_MENU = MENU_TYPES.register("debug_terminal",
+                    () -> IMenuTypeExtension.create(com.piranport.menu.DebugTerminalMenu::new));
 }

@@ -507,6 +507,9 @@ public class ModItems {
     // ===== Artillery Config Tool (extracted to SpecialtyItems) =====
     public static final DeferredItem<ArtilleryConfigToolItem> ARTILLERY_CONFIG_TOOL = SpecialtyItems.ARTILLERY_CONFIG_TOOL;
 
+    // ===== Debug Terminal (extracted to SpecialtyItems) =====
+    public static final DeferredItem<com.piranport.item.DebugTerminalItem> DEBUG_TERMINAL = SpecialtyItems.DEBUG_TERMINAL;
+
     // ===== Smoke Candle (extracted to SpecialtyItems) =====
     public static final DeferredItem<SmokeCandleItem> SMOKE_CANDLE = SpecialtyItems.SMOKE_CANDLE;
 

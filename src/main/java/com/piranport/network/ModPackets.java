@@ -338,5 +338,23 @@ public class ModPackets {
                 SyncConfigOverridesPayload.STREAM_CODEC,
                 SyncConfigOverridesPayload::handle
         );
+
+        // ===== Debug Terminal =====
+        // 与火炮域并列的运行时覆盖通道：那个改静态配置表数值，这个改航速换算偏移。
+        registrar.playToServer(
+                UpdateTerminalOverridePayload.TYPE,
+                UpdateTerminalOverridePayload.STREAM_CODEC,
+                UpdateTerminalOverridePayload::handle
+        );
+        registrar.playToServer(
+                ResetTerminalOverridesPayload.TYPE,
+                ResetTerminalOverridesPayload.STREAM_CODEC,
+                ResetTerminalOverridesPayload::handle
+        );
+        registrar.playToClient(
+                SyncTerminalOverridesPayload.TYPE,
+                SyncTerminalOverridesPayload.STREAM_CODEC,
+                SyncTerminalOverridesPayload::handle
+        );
     }
 }

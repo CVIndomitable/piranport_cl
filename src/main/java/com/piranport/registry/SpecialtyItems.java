@@ -261,6 +261,13 @@ public final class SpecialtyItems {
             ITEMS.register("artillery_config_tool",
                     () -> new ArtilleryConfigToolItem(new Item.Properties().stacksTo(1)));
 
+    // ===== Debug Terminal =====
+    // 与火炮配置工具并列的调试入口：那个编辑配置表数值，这个编辑运行时换算偏移
+    // （舰娘核心航速倍率、单型号鱼雷航速）。管理员专用，使用同一套权限判定。
+    public static final DeferredItem<com.piranport.item.DebugTerminalItem> DEBUG_TERMINAL =
+            ITEMS.register("debug_terminal",
+                    () -> new com.piranport.item.DebugTerminalItem(new Item.Properties().stacksTo(1)));
+
     // ===== Smoke Candle =====
     public static final DeferredItem<SmokeCandleItem> SMOKE_CANDLE =
             ITEMS.register("smoke_candle",

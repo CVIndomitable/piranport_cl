@@ -504,6 +504,7 @@ public class ModCreativeTabs {
                         output.accept(ModItems.LARGE_GUN_BLUEPRINT.get());
                         output.accept(ModItems.CREATIVE_BLUEPRINT.get());
                         output.accept(ModItems.ARTILLERY_CONFIG_TOOL.get());
+                        output.accept(ModItems.DEBUG_TERMINAL.get());
                         output.accept(ModItems.CONFIG_INSPECTOR.get());
                         output.accept(ModItems.SHIP_CORE_MODIFIER.get());
                     }).build());

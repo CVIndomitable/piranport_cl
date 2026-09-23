@@ -119,6 +119,17 @@ public class PlayerConnectionHandler {
                 }
             }
         }
+
+        // 舰娘形态的护甲/速度是 transient 属性修饰符，进程重启或重新登录后会丢，
+        // 而变身的 DataComponent 标志位仍留在核心物品上。这里补一次重放，
+        // 否则玩家会保持「显示为舰娘但没有任何舰装加成」的裸状态，直到下次手动变形。
+        // 同时使载重缓存失效，让下一 tick 的 tick 循环重新计算一次（登录瞬间
+        // 背包可能还没同步完，靠 tick 循环再兜一次）。
+        ItemStack loginCore = com.piranport.combat.TransformationManager.findTransformedCore(joiner);
+        if (!loginCore.isEmpty()) {
+            PlayerTickHandler.invalidateLoadCache(joiner);
+            com.piranport.combat.TransformationManager.applyTransformationAttributes(joiner, loginCore);
+        }
     }
 
     /** 登出时召回战机、清理战斗状态、缓存和讲台大厅 */

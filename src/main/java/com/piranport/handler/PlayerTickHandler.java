@@ -95,9 +95,22 @@ public class PlayerTickHandler {
         accumulatedDistance.remove(uuid);
     }
 
+    /**
+     * 强制使某玩家的载重缓存失效，让下一次 tick 无条件重算属性。
+     *
+     * <p>WHY 需要外部触发：tick 循环只在
+     * {@code Objects.hash(weaponLoad, armorLoad, maxLoad, engineBonus)} 变化时才重算。
+     * 调试终端改的是速度覆盖值，它不是这四个输入之一，写入后缓存仍然"命中"，
+     * 结果就是「数值改了但角色速度不变」。删掉缓存条目即可让下一 tick 重算。
+     */
+    public static void invalidateLoadCache(Player player) {
+        if (player != null) {
+            lastWeaponLoad.remove(player.getUUID());
+        }
+    }
+
     /** 定期清理离线玩家的缓存条目，防止服务器崩溃导致的内存泄漏 */
-    public static void cleanupOfflinePlayers(net.minecraft.server.MinecraftServer server) {
-        java.util.Set<UUID> onlineUuids = server.getPlayerList().getPlayers().stream()
+    public static void cleanupOfflinePlayers(net.minecraft.server.MinecraftServer server) {        java.util.Set<UUID> onlineUuids = server.getPlayerList().getPlayers().stream()
                 .map(net.minecraft.world.entity.Entity::getUUID)
                 .collect(java.util.stream.Collectors.toSet());
 

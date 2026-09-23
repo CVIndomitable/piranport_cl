@@ -1259,5 +1259,23 @@
   "tooltip.piranport.aircraft_payload_loaded": "Payload: Loaded [R]",
   "tooltip.piranport.aircraft_payload_empty": "Payload: Empty [R to load]",
   "message.piranport.aircraft_no_fuel_item": "No aviation fuel",
-  "tooltip.piranport.aircraft_fuel_short": "Aviation Fuel: Empty [R to load]"
+  "tooltip.piranport.aircraft_fuel_short": "Aviation Fuel: Empty [R to load]",
+
+  "gui.piranport.debug_terminal": "Debug Terminal",
+  "tooltip.piranport.debug_terminal.desc": "Debug Terminal: tune torpedo speed and ship-girl core speed",
+  "tooltip.piranport.debug_terminal.admin_only": "Operators only (permission level 2 or singleplayer host)",
+  "message.piranport.debug_terminal.admin_required": "You are not allowed to use the Debug Terminal",
+
+  "gui.piranport.debug_terminal.tab.torpedo": "Torpedo Speed",
+  "gui.piranport.debug_terminal.tab.core": "Core Speed",
+  "gui.piranport.debug_terminal.header.model": "Model",
+  "gui.piranport.debug_terminal.header.base": "Base",
+  "gui.piranport.debug_terminal.header.value": "Set",
+  "gui.piranport.debug_terminal.reset_tab": "Reset Tab",
+  "gui.piranport.debug_terminal.reset_all": "Reset All",
+
+  "gui.piranport.debug_terminal.ship_type.SMALL": "Small SMALL",
+  "gui.piranport.debug_terminal.ship_type.MEDIUM": "Medium MEDIUM",
+  "gui.piranport.debug_terminal.ship_type.LARGE": "Large LARGE",
+  "gui.piranport.debug_terminal.ship_type.SUBMARINE": "Submarine SUBMARINE"
 }

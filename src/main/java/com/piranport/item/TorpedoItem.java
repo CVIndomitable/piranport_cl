@@ -181,11 +181,11 @@ public class TorpedoItem extends Item {
         if (ClientHooks.isClient()) {
             if (ClientHooks.hasShiftDown()) {
                 tooltipComponents.add(Component.translatable("tooltip.piranport.torpedo.damage",
-                        String.format("%.1f", damage)).withStyle(ChatFormatting.RED));
+                        String.format(java.util.Locale.ROOT, "%.1f", damage)).withStyle(ChatFormatting.RED));
                 tooltipComponents.add(Component.translatable("tooltip.piranport.torpedo.range",
                         range).withStyle(ChatFormatting.AQUA));
                 tooltipComponents.add(Component.translatable("tooltip.piranport.torpedo.speed",
-                        String.format("%.2f", getSpeed())).withStyle(ChatFormatting.GREEN));
+                        String.format(java.util.Locale.ROOT, "%.2f", getSpeed())).withStyle(ChatFormatting.GREEN));
                 if (magnetic) {
                     tooltipComponents.add(Component.translatable("tooltip.piranport.torpedo.magnetic")
                             .withStyle(ChatFormatting.LIGHT_PURPLE));

@@ -43,6 +43,20 @@ public class ModelDebugBlock extends Block implements EntityBlock {
         return Shapes.empty();
     }
 
+    /**
+     * 强制走实体渲染路径。
+     *
+     * <p>WHY 必须显式覆写：方块模型（{@code blockstates/model_debug.json}）是一个空模型，
+     * 而默认的 {@code RenderShape.MODEL} 会在空模型上再叠一次方块烘焙层的"无几何"渲染。
+     * 更关键的是调试方块本身没有可见几何，所有可见内容都来自 BER；返回 {@code INVISIBLE}
+     * 把方块模型这一层彻底摘掉，只留 BER，避免空模型偶尔漏出的残影/粒子面
+     * （{@code "parent": "block/air"} 在部分光影/资源包下不是真的什么都不画）。
+     */
+    @Override
+    public net.minecraft.world.level.block.RenderShape getRenderShape(BlockState state) {
+        return net.minecraft.world.level.block.RenderShape.INVISIBLE;
+    }
+
     @Nullable
     @Override
     public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {

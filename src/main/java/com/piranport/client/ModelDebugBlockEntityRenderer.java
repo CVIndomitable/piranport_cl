@@ -63,6 +63,20 @@ public class ModelDebugBlockEntityRenderer implements BlockEntityRenderer<ModelD
     private static final float MISSILE_ANTI_SHIP_SCALE = 0.85f;
     private static final float MISSILE_ROCKET_SCALE = 0.75f;
 
+    /**
+     * BER 的渲染裁剪盒。
+     *
+     * <p>WHY 必须挂在渲染器上而不是 BlockEntity 上：NeoForge 查询的是
+     * {@code IBlockEntityRendererExtension.getRenderBoundingBox}，即只有渲染器这一侧
+     * 会被调用。模型几何在 yaw=180 / scale=-1.5 的变换下大约占据 1.5 格半径，
+     * 加上上方的 B25 与六块方向告示牌，留 3 格余量。不开的话默认裁剪盒只有 1 格，
+     * 玩家稍微偏头模型就会被剔掉（表现为"模型一闪一闪"）。
+     */
+    @Override
+    public net.minecraft.world.phys.AABB getRenderBoundingBox(ModelDebugBlockEntity be) {
+        return new net.minecraft.world.phys.AABB(be.getBlockPos()).inflate(3.0);
+    }
+
     private final B25Model<Entity> b25;
     private final F4FModel<Entity> f4f;
     private final DeepOceanHeavyCruiserModel heavyCruiser;

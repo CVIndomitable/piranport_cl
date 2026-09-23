@@ -9,7 +9,6 @@ import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.phys.AABB;
 
 /**
  * Marker BlockEntity that stores which entity model to render (b25 / f4f / ...).
@@ -75,7 +74,8 @@ public class ModelDebugBlockEntity extends BlockEntity {
         return tag;
     }
 
-    public AABB getRenderBoundingBox() {
-        return new AABB(worldPosition).inflate(3.0);
-    }
+    // 注意：这里刻意没有 getRenderBoundingBox()。
+    // 该方法只在 BlockEntityRenderer 上被查询（IBlockEntityRendererExtension），
+    // 定义在 BlockEntity 上永远不会被调用 —— 真正生效的那份在
+    // ModelDebugBlockEntityRenderer。留着这份死代码会让人误以为裁剪盒已经配好了。
 }

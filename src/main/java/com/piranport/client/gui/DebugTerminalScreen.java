@@ -79,6 +79,15 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
 
     private int scrollOffset = 0;
 
+    /**
+     * 上次刷新编辑框内容时 {@link TerminalOverrides} 的版本号。
+     *
+     * <p>WHY 需要它：编辑框文本是 {@link #createRowWidgets()} 里按当时镜像算出来的一次性字符串，
+     * 之后服务端把覆盖清了（重置按钮 / 别人改了同一存档）屏上还是旧数字。
+     * 在 {@link #render} 里比对版本号，变了就把所有未聚焦的框刷成权威值。
+     */
+    private long lastSeenRevision = -1L;
+
     public DebugTerminalScreen(DebugTerminalMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
         this.imageWidth = 256;
@@ -190,14 +199,16 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
             EditBox box = new EditBox(this.font, x + EDIT_X, rowY, EDIT_WIDTH, EDIT_HEIGHT, Component.empty());
             box.setMaxLength(12);
             box.setValue(formatCurrentValue(key));
+            editBoxes.put(mapKey, box);
+            // 基准线必须在装 responder 之前落好：setValue 会立刻触发 responder，
+            // 而此时 lastSubmitted 里还没有这一行，会被 commitField 当成"值变了"误发包。
+            lastSubmitted.put(mapKey, box.getValue());
             // 失焦即提交：这是「输入的数字马上生效」的关键，removed() 只是关界面时的兜底。
             box.setResponder(value -> {
                 if (!box.isFocused()) {
                     commitField(mapKey, value);
                 }
             });
-            editBoxes.put(mapKey, box);
-            lastSubmitted.put(mapKey, box.getValue());
             this.addRenderableWidget(box);
         }
     }
@@ -207,11 +218,11 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
         if (currentTab == TAB_TORPEDO) {
             float base = torpedoModels.getOrDefault(key, 0f);
             float actual = base + TerminalOverrides.torpedoSpeedDelta(key);
-            return String.format("%.2f", actual);
+            return String.format(java.util.Locale.ROOT, "%.2f", actual);
         }
         double base = shipTypes.getOrDefault(key, 0d);
         double actual = base + TerminalOverrides.coreSpeedDelta(key);
-        return String.format("%.3f", actual);
+        return String.format(java.util.Locale.ROOT, "%.3f", actual);
     }
 
     /**
@@ -247,10 +258,58 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
             return;
         }
 
-        double delta = target - baseValue(category, key);
-        PacketDistributor.sendToServer(new UpdateTerminalOverridePayload(
-                category, key, clampClientSide(category, delta)));
-        lastSubmitted.put(mapKey, raw);
+        double base = baseValue(category, key);
+        double delta = target - base;
+
+        // 零化阈值：显示精度（%.2f/%.3f）低于基准值的真实精度，把显示串原样提交回来会算出
+        // 1e-8 量级的残差（例：(double)0.7f = 0.699999988，0.70 - 它 ≈ 1.19e-8）。
+        // 不零化就会落一条玩家从未有意设置的覆盖，星标常亮。delta=0 在数据层等价于删除覆盖。
+        if (Math.abs(delta) < 1e-4) {
+            delta = 0d;
+        }
+
+        double applied = clampClientSide(category, delta);
+
+        // 数值等价的写法（0.58 vs 0.580）不该算改动：比较的是解析后的目标值，
+        // 而不是文本。文本比较会放过 0.58→0.580 这种纯写法的差异。
+        Double previousTarget = parseOrNull(previous);
+        if (previousTarget != null && Math.abs(previousTarget - target) < 1e-4) {
+            return;
+        }
+
+        PacketDistributor.sendToServer(new UpdateTerminalOverridePayload(category, key, applied));
+
+        // 把编辑框刷成「实际生效的绝对值」：越界输入（填 999 被钳到 2.0）后框里必须显示钳后值，
+        // 否则玩家看到的永远是那个从没生效过的数字，且再点一次还会被文本比较判为「没变」。
+        EditBox box = editBoxes.get(mapKey);
+        if (box != null && !box.isFocused()) {
+            String shown = formatAbsoluteValue(category, base + applied);
+            if (!shown.equals(box.getValue())) {
+                box.setValue(shown);  // 未聚焦，不会重入 responder
+            }
+            lastSubmitted.put(mapKey, shown);
+        } else {
+            lastSubmitted.put(mapKey, raw);
+        }
+    }
+
+    /** 与 {@link #formatCurrentValue} 同一套格式，但输入是绝对值而非型号键。 */
+    private String formatAbsoluteValue(String category, double value) {
+        return UpdateTerminalOverridePayload.CATEGORY_TORPEDO.equals(category)
+                ? String.format(java.util.Locale.ROOT, "%.2f", value)
+                : String.format(java.util.Locale.ROOT, "%.3f", value);
+    }
+
+    private static Double parseOrNull(String text) {
+        if (text == null) {
+            return null;
+        }
+        try {
+            double v = Double.parseDouble(text.trim());
+            return Double.isFinite(v) ? v : null;
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     /** 基准值（不含覆盖）：鱼雷 = 注册时写死的航速，舰型 = 空载倍率。 */
@@ -329,6 +388,7 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
 
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        refreshFromMirrorIfChanged();
         super.render(graphics, mouseX, mouseY, partialTick);
 
         int x = (this.width - this.imageWidth) / 2;
@@ -385,9 +445,9 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
 
     private String baseDisplay(String key) {
         if (currentTab == TAB_TORPEDO) {
-            return String.format("%.2f", torpedoModels.getOrDefault(key, 0f));
+            return String.format(java.util.Locale.ROOT, "%.2f", torpedoModels.getOrDefault(key, 0f));
         }
-        return String.format("%.3f", shipTypes.getOrDefault(key, 0d));
+        return String.format(java.util.Locale.ROOT, "%.3f", shipTypes.getOrDefault(key, 0d));
     }
 
     private boolean hasOverride(String key) {
@@ -414,15 +474,67 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        // 编辑框聚焦时先让它吃按键（数字、退格、方向键、以及 ESC）。
-        // WHY 连 ESC 也给它：玩家在输入框里按 ESC 的意图是「取消这次输入」，
-        // 不应顺手把整个界面关掉 —— 那是火炮配置工具的老毛病。
+        // 编辑框聚焦时按 ESC：取消这次输入，不关界面。
+        // WHY 单独处理而不是交给 EditBox.keyPressed：MC 的 EditBox.keyPressed 里
+        // 根本没有 ESC(256) 分支，default 一律 return false，按键会穿透到
+        // super.keyPressed → shouldCloseOnEsc → 关界面 —— 与「取消输入」的意图相悖。
+        if (keyCode == org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE) {
+            for (Map.Entry<String, EditBox> entry : editBoxes.entrySet()) {
+                EditBox box = entry.getValue();
+                if (box.isFocused()) {
+                    int sep = entry.getKey().indexOf(':');
+                    String key = sep < 0 ? "" : entry.getKey().substring(sep + 1);
+                    box.setFocused(false);
+                    // 还原成当前镜像值，丢掉输了一半的文本。
+                    String restored = formatCurrentValue(key);
+                    box.setValue(restored);
+                    lastSubmitted.put(entry.getKey(), restored);
+                    return true;
+                }
+            }
+            return super.keyPressed(keyCode, scanCode, modifiers);
+        }
+
+        // 编辑框聚焦时先让它吃按键（数字、退格、方向键）。
         for (EditBox box : editBoxes.values()) {
             if (box.isFocused() && box.keyPressed(keyCode, scanCode, modifiers)) {
                 return true;
             }
         }
         return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    /**
+     * 镜像版本号变了就把编辑框刷成权威值。
+     *
+     * <p>跳过聚焦中的框：玩家正输一半时被服务端同步打断会很难用。那个框自己失焦时
+     * 会走 {@code commitField}，届时以玩家输入为准（服务端可能再钳一次并回推）。
+     *
+     * <p>刷新后必须同步 {@link #lastSubmitted}，否则下一帧的 {@code commitField}
+     * 会把这批「界面刷新」误判成玩家输入，把刚同步来的值再原样发回服务端。
+     */
+    private void refreshFromMirrorIfChanged() {
+        long rev = TerminalOverrides.revision();
+        if (rev == lastSeenRevision) {
+            return;
+        }
+        lastSeenRevision = rev;
+
+        for (Map.Entry<String, EditBox> entry : editBoxes.entrySet()) {
+            EditBox box = entry.getValue();
+            if (box.isFocused()) {
+                continue;
+            }
+            int sep = entry.getKey().indexOf(':');
+            if (sep < 0) {
+                continue;
+            }
+            String refreshed = formatCurrentValue(entry.getKey().substring(sep + 1));
+            if (!refreshed.equals(box.getValue())) {
+                box.setValue(refreshed);
+            }
+            lastSubmitted.put(entry.getKey(), refreshed);
+        }
     }
 
     @Override

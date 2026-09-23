@@ -207,6 +207,9 @@ public class ClientGameEvents {
         com.piranport.dungeon.network.ClientDungeonData.clear();
         // P0修复: 清理配置缓存，防止跨服务器配置污染
         com.piranport.artillery.config.override.ClientConfigCache.clearCache();
+        // 终端覆盖镜像同为进程级静态态：不清的话退出存档 A 后进存档 B，
+        // B 里未设过覆盖的鱼雷会带着 A 的偏移显示/飞行（终端没打开前无人纠正）。
+        com.piranport.terminal.TerminalOverrides.clear();
     }
 
     /**

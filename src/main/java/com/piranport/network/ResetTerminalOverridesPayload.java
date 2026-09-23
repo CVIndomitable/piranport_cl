@@ -69,7 +69,9 @@ public record ResetTerminalOverridesPayload(
                             data.removeTorpedoSpeedDelta(modelKey);
                         }
                     } else {
-                        data.removeTorpedoSpeedDelta(key);
+                        // 与写入路径统一键空间：Update 存的是 normalizeTorpedoKey 出来的裸注册 ID，
+                        // 这里若直接用原始串，带 piranport: 前缀的单键重置会静默匹配不上。
+                        data.removeTorpedoSpeedDelta(UpdateTerminalOverridePayload.normalizeTorpedoKey(key));
                     }
                 }
                 case UpdateTerminalOverridePayload.CATEGORY_CORE -> {
@@ -79,7 +81,10 @@ public record ResetTerminalOverridesPayload(
                             data.removeCoreSpeedDelta(coreKey);
                         }
                     } else {
-                        data.removeCoreSpeedDelta(key);
+                        String coreKey = TerminalOverridesSavedData.normalizeCoreKey(key);
+                        if (coreKey != null) {
+                            data.removeCoreSpeedDelta(coreKey);
+                        }
                     }
                 }
                 default -> {

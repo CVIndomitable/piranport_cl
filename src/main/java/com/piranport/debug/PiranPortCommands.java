@@ -198,7 +198,11 @@ public final class PiranPortCommands {
         long recentTicks;
         long recentNanos;
         synchronized (TPS_SAMPLE_LOCK) {
-            if (tpsSampleTick == -1 || nanoTime - tpsSampleNanos > TPS_SAMPLE_INTERVAL_NS) {
+            // tickCount 会随退出存档/新建存档归零，而这两个静态字段跨存档保留，
+            // 归档后会得到"当前 tick 数 < 上次采样 tick 数"的负差，tps 直接变成负数/垃圾值。
+            // 必须把"采样 tick 比当前 tick 还新"当作失效基线重新采样。
+            if (tpsSampleTick == -1 || tickCount < tpsSampleTick
+                    || nanoTime - tpsSampleNanos > TPS_SAMPLE_INTERVAL_NS) {
                 tpsSampleTick = tickCount;
                 tpsSampleNanos = nanoTime;
             }
@@ -211,7 +215,7 @@ public final class PiranPortCommands {
         int sessionCount = com.piranport.debug.PiranPortDebug.isServerEnabled() ? 1 : 0;
         boolean testMode = com.piranport.testtools.PiranPortTestTools.isTestModeActive();
 
-        String msg = String.format(
+        String msg = String.format(java.util.Locale.ROOT,
                 "§7[PP TPS] tick=%d tps=%.2f avgTick=%.2fms debugSession=%s testMode=%s",
                 tickCount, tps, avgTickMs,
                 sessionCount > 0 ? "ACTIVE" : "off",
@@ -226,6 +230,34 @@ public final class PiranPortCommands {
             "b25", "f4f", "heavy_cruiser", "light_carrier", "torpedo", "shell", "missile");
     private static final java.util.List<String> MODEL_DEBUG_VARIANTS = java.util.List.of(
             "small", "medium", "large", "anti_air", "anti_ship", "rocket");
+
+    /** 弹体域：只有 shell / missile 吃 variant，其余模型忽略该字段。 */
+    private static final java.util.List<String> SHELL_VARIANTS = java.util.List.of("small", "medium", "large");
+    private static final java.util.List<String> MISSILE_VARIANTS = java.util.List.of("anti_air", "anti_ship", "rocket");
+
+    /**
+     * 型号是否支持某个变体。
+     *
+     * <p>两张独立白名单交叉出四种组合，只有两种合法；不查交叉会让
+     * {@code /ppd model_debug shell rocket} 通过校验然后落进渲染器 default 分支。
+     */
+    private static boolean isValidModelVariant(String modelType, String variant) {
+        return switch (modelType) {
+            case "shell" -> SHELL_VARIANTS.contains(variant);
+            case "missile" -> MISSILE_VARIANTS.contains(variant);
+            // 非弹体模型：variant 会被忽略，任何空串以外的值都算"填了没用的参数"，
+            // 直接按不支持处理，免得玩家以为换了贴图。
+            default -> false;
+        };
+    }
+
+    private static java.util.List<String> variantsForModel(String modelType) {
+        return switch (modelType) {
+            case "shell" -> SHELL_VARIANTS;
+            case "missile" -> MISSILE_VARIANTS;
+            default -> java.util.List.of();
+        };
+    }
 
     private static final Object TPS_SAMPLE_LOCK = new Object();
     private static long tpsSampleTick = -1L;
@@ -351,6 +383,16 @@ public final class PiranPortCommands {
             source.sendFailure(Component.literal("Unknown entity type: piranport:" + entityId));
             return 0;
         }
+        // 仅查注册表是不够的：piranport: 命名空间下还有一堆非深海的实体
+        // （飞机、导弹、鱼雷、浮动靶子）。放行它们的话，create() 出来的实体不属于
+        // AbstractDeepOceanEntity，下面 setFleetGroupId 分支整段落空 —— 结果是
+        // 凭空造出无编组的战斗实体，且凭空造飞机/导弹本身就是玩法破坏行为。
+        EntityType<?> type = optType.get();
+        if (!AbstractDeepOceanEntity.class.isAssignableFrom(type.getBaseClass())) {
+            source.sendFailure(Component.literal(
+                    "§c该实体不是深海敌舰，禁止用此指令生成: piranport:" + entityId));
+            return 0;
+        }
 
         ServerLevel level = player.serverLevel();
         java.util.UUID cluster = java.util.UUID.randomUUID();
@@ -359,7 +401,7 @@ public final class PiranPortCommands {
 
         int spawned = 0;
         for (int i = 0; i < count; i++) {
-            Entity entity = optType.get().create(level);
+            Entity entity = type.create(level);
             if (entity == null) continue;
 
             double offsetX = (level.random.nextDouble() - 0.5) * 6.0;
@@ -378,6 +420,14 @@ public final class PiranPortCommands {
 
             level.addFreshEntity(entity);
             spawned++;
+        }
+
+        // 一个都没造出来时必须回收刚建的空编组：create() 返回 null 或实体被拒时
+        // 留下的是永久空组（FleetGroupManager 只提供惰性 cleanup，不保证这一帧会跑到）。
+        if (spawned == 0) {
+            mgr.cleanup(player.getServer());
+            source.sendFailure(Component.literal("§c未能生成任何实体（实体创建被拒绝）"));
+            return 0;
         }
 
         int finalSpawned = spawned;
@@ -415,16 +465,28 @@ public final class PiranPortCommands {
             missile.setPos(startX, startY, startZ);
             missile.setOwner(target);
 
-            Vec3 toPlayer = player.position()
+            // Vec3.normalize() 对零长度向量返回 (NaN, NaN, NaN)，而靶子与玩家同点
+            // （玩家站进靶子碰撞箱、或刚被指令传送到靶子上）完全可达。
+            // 一旦 NaN 进了 setDeltaMovement，实体坐标会在第一 tick 变成 NaN，
+            // 之后连带区块/存档一起坏掉——必须在这里挡住。
+            Vec3 raw = player.position()
                     .add(0, player.getBbHeight() / 2, 0)
-                    .subtract(startX, startY, startZ)
-                    .normalize();
+                    .subtract(startX, startY, startZ);
+            if (raw.lengthSqr() < 1.0e-6) {
+                continue;  // 距离过近，方向无意义，跳过这一个靶子
+            }
+            Vec3 toPlayer = raw.normalize();
             float speed = MissileEntity.MissileType.ANTI_SHIP.initialSpeed;
             missile.setDeltaMovement(toPlayer.scale(speed));
             missile.setTrackedTarget(player);
 
             level.addFreshEntity(missile);
             fired++;
+        }
+
+        if (fired == 0) {
+            source.sendFailure(Component.literal("浮动靶子与你的距离过近，无法确定发射方向（请退开几格）"));
+            return 0;
         }
 
         int finalFired = fired;
@@ -440,7 +502,21 @@ public final class PiranPortCommands {
             return 0;
         }
 
+        // target_b25 会放飞一架真实的 B25 并对玩家区域实施轰炸，属于"会伤害玩家的
+        // 破坏性测试指令"，必须与 target_fire 及 model_debug 一样受调试会话门禁约束，
+        // 否则任何 OP 都能在普通游戏里凭空召唤轰炸机。而且调试模式必须由"执行者本人"开启。
+        if (!PiranPortDebug.isSessionActive(player.getUUID())) {
+            source.sendFailure(Component.literal(
+                    "§c此指令需要先为你自己开启调试模式（按 F8 开启）"));
+            return 0;
+        }
+
         ServerLevel level = player.serverLevel();
+        if (level.getDifficulty() == net.minecraft.world.Difficulty.PEACEFUL) {
+            source.sendFailure(Component.literal("§c和平难度下轰炸机会被立即清除，请在非和平难度使用"));
+            return 0;
+        }
+
         double range = 32.0;
         AABB searchBox = player.getBoundingBox().inflate(range);
         List<FloatingTargetEntity> targets = level.getEntitiesOfClass(
@@ -451,8 +527,13 @@ public final class PiranPortCommands {
             return 0;
         }
 
+        // 不设上限的话，"在靶场中央连敲几次指令"会把整个附近的靶子全部放飞 B25，
+        // 每次 32 格内的靶子都算一遍，服务端瞬间多出几十架飞机 + 后续几十组投弹。
+        int maxLaunch = Math.min(targets.size(), TARGET_B25_MAX_LAUNCH);
+
         int launched = 0;
-        for (FloatingTargetEntity target : targets) {
+        for (int i = 0; i < maxLaunch; i++) {
+            FloatingTargetEntity target = targets.get(i);
             ItemStack b25Stack = new ItemStack(ModItems.B25_BOMBER.get());
             Vec3 spawnPos = new Vec3(target.getX(),
                     target.getY() + target.getBbHeight() + 1.0,
@@ -465,9 +546,13 @@ public final class PiranPortCommands {
 
         int finalLaunched = launched;
         source.sendSuccess(() -> Component.literal(
-                finalLaunched + " 个浮动靶子放飞了B25轰炸机！"), true);
+                finalLaunched + " 个浮动靶子放飞了B25轰炸机！"
+                + (targets.size() > finalLaunched ? "（已按上限截断，共 " + targets.size() + " 个靶子）" : "")), true);
         return launched;
     }
+
+    /** {@code /ppd target_b25} 单次最多放飞的轰炸机数：够做编队测试，又不至于一把打垮服务端。 */
+    private static final int TARGET_B25_MAX_LAUNCH = 8;
 
     private static int modelDebug(CommandSourceStack source, String modelType, String variant) {
         ServerPlayer player = source.getPlayer();
@@ -475,9 +560,9 @@ public final class PiranPortCommands {
             source.sendFailure(Component.literal("Must be run by a player"));
             return 0;
         }
-        if (!PiranPortDebug.isServerEnabled()) {
+        if (!PiranPortDebug.isSessionActive(player.getUUID())) {
             source.sendFailure(Component.literal(
-                    "§c此指令需要先开启调试模式（按 F8 开启）"));
+                    "§c此指令需要先为你自己开启调试模式（按 F8 开启）"));
             return 0;
         }
         // 支持表与 ModelDebugBlockEntityRenderer 的 switch 一一对应。
@@ -490,6 +575,15 @@ public final class PiranPortCommands {
         if (!variant.isEmpty() && !MODEL_DEBUG_VARIANTS.contains(variant)) {
             source.sendFailure(Component.literal("Unknown variant: " + variant
                     + " (supported: " + String.join(", ", MODEL_DEBUG_VARIANTS) + ")"));
+            return 0;
+        }
+        // 两份名单各自合法不代表组合合法：shell 只认口径（small/medium/large），
+        // missile 只认弹种（anti_air/anti_ship/rocket）。原实现只查两个独立列表，
+        // 于是 `/ppd model_debug shell rocket` 会一路通过校验，最后在渲染器的
+        // switch 里落进 default —— 玩家得到一块什么都不显示的方块，没有报错。
+        if (!variant.isEmpty() && !isValidModelVariant(modelType, variant)) {
+            source.sendFailure(Component.literal("§c型号 " + modelType + " 不支持变体 " + variant
+                    + "（可用: " + String.join(", ", variantsForModel(modelType)) + "）"));
             return 0;
         }
 
@@ -788,9 +882,28 @@ public final class PiranPortCommands {
     }
 
     private static int locateRuin(CommandSourceStack source, String type) {
-        // Delegate to vanilla /locate command format
+        // 白名单必须与 spawn_ruin 的建议列表一致。原实现直接把参数拼进 ID 发给玩家，
+        // 玩家敲 /ppd locate_ruin xxx 会拿到一条 /locate structure piranport:xxx 的
+        // "用法提示"——这个提示指向一个不存在的结构，且永远返回成功，看起来像指令坏了。
+        if (!LOCATE_RUIN_TYPES.contains(type)) {
+            source.sendFailure(Component.literal("Unknown ruin type: " + type
+                    + " (supported: " + String.join(", ", LOCATE_RUIN_TYPES) + ")"));
+            return 0;
+        }
         String structureId = "piranport:" + type;
+        // 结构是否真的注册过要另外查一次：白名单只挡拼写错误，挡不住
+        // "名单里有但 worldgen 未注册" 的档位（改名/未启用时就会这样）。
+        if (source.getServer().registryAccess()
+                .registryOrThrow(net.minecraft.core.registries.Registries.STRUCTURE)
+                .getOptional(ResourceLocation.fromNamespaceAndPath("piranport", type)) == null) {
+            source.sendFailure(Component.literal("§c该结构未注册: " + structureId));
+            return 0;
+        }
         source.sendSuccess(() -> Component.literal("Use: /locate structure " + structureId), false);
         return 1;
     }
+
+    /** {@code /ppd locate_ruin} 与 {@code /ppd spawn_ruin} 共用的遗迹名单。 */
+    private static final java.util.List<String> LOCATE_RUIN_TYPES = java.util.List.of(
+            "portal_ruin", "supply_depot", "outpost", "abyssal_base", "abandoned_portal");
 }

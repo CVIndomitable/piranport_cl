@@ -410,10 +410,14 @@ public class ShipCoreItem extends Item implements Equipable {
                 if (hasCurrentLoad) {
                     double loadRatio = shipType.maxLoad > 0
                             ? (double) currentTotalLoad / shipType.maxLoad : 0;
+                    // 与 TransformationManager.applyAttributesInventoryMode 的口径一致：
+                    // 覆盖值加在「载重插值 + 强化件加成」之后。不减这一项的话
+                    // tooltip 显示的速度会比玩家实际移动速度少一个覆盖偏移。
                     double currentSpeed = shipType.emptySpeed
                             - (shipType.emptySpeed - shipType.fullLoadSpeed)
                                     * Math.min(loadRatio, 1.0)
-                            + currentEngineSpeedBonus;
+                            + currentEngineSpeedBonus
+                            + com.piranport.terminal.TerminalOverrides.coreSpeedDelta(shipType.name());
                     tooltipComponents.add(Component.translatable("tooltip.piranport.core.current_speed",
                                     String.format("%.2f", currentSpeed))
                             .withStyle(net.minecraft.ChatFormatting.AQUA));

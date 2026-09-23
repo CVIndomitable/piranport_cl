@@ -253,6 +253,9 @@ public class ServerGameEvents {
         SalvoManager.clearAll();
         AircraftIndex.clearAll();
         PlayerTickHandler.clearCaches();
+        // 终端覆盖的运行时镜像也是进程级静态态，停机时必须清，否则同一进程开的
+        // 下一个存档（尤其单机主菜单切存档）会沿用上一个存档的覆盖值。
+        com.piranport.terminal.TerminalOverrides.clear();
     }
 
     /** 玩家登出时关闭其调试会话，避免日志文件泄漏 */

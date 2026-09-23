@@ -2,6 +2,7 @@ package com.piranport.terminal;
 
 import org.jetbrains.annotations.Nullable;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -32,6 +33,17 @@ public final class TerminalOverrides {
     /** 当前快照。整体替换，不做原地修改 —— 这是本类无锁安全的前提。 */
     private static volatile Snapshot snapshot = EMPTY;
 
+    /**
+     * 快照版本号，每次 {@link #apply} 自增。
+     *
+     * <p>WHY 需要它：终端界面的编辑框内容是在 {@code rebuildWidgets()} 时按当时镜像
+     * 算出来的一次性文本，之后即便服务端把覆盖值改了/清了，屏上还是旧数字。
+     * 界面靠比较自己记住的版本号来判断「镜像变过」，在下一帧把编辑框刷成权威值。
+     * 不能直接比较 Map 内容 —— 那样每帧都要遍历两个 Map，而且分不清
+     * 「服务端钳制后恰好等于旧值」与「压根没同步过」。
+     */
+    private static volatile long revision = 0L;
+
     private TerminalOverrides() {
     }
 
@@ -53,18 +65,56 @@ public final class TerminalOverrides {
      * 整体替换运行时快照。
      *
      * <p>调用方（SavedData 写入后 / 网络包收到后）负责传入已校验的值；
-     * 本方法仍会再过滤一遍 NaN/Infinity —— 校验是为了「让调用方的错误无处藏身」，
-     * 而不是因为不信任调用方。
+     * 本方法仍会再过滤一遍 NaN/Infinity —— 这是唯一收口点，一旦 NaN 进快照，
+     * {@code TorpedoItem.getSpeed()} 会返回 NaN → 实体坐标 NaN。
+     * 过滤是为了「让调用方的错误无处藏身」，而不是因为不信任调用方。
      */
     public static void apply(Map<String, Float> torpedoDeltas, Map<String, Double> coreDeltas) {
         snapshot = new Snapshot(
-                torpedoDeltas == null ? Map.of() : Map.copyOf(torpedoDeltas),
-                coreDeltas == null ? Map.of() : Map.copyOf(coreDeltas));
+                finiteFloats(torpedoDeltas),
+                finiteDoubles(coreDeltas));
+        revision++;
+    }
+
+    /** 丢弃 null / 非有限（NaN、±Infinity）的鱼雷偏移条目。 */
+    private static Map<String, Float> finiteFloats(Map<String, Float> raw) {
+        if (raw == null || raw.isEmpty()) {
+            return Map.of();
+        }
+        Map<String, Float> filtered = new HashMap<>(raw.size());
+        for (Map.Entry<String, Float> entry : raw.entrySet()) {
+            Float value = entry.getValue();
+            if (entry.getKey() != null && value != null && Float.isFinite(value)) {
+                filtered.put(entry.getKey(), value);
+            }
+        }
+        return Map.copyOf(filtered);
+    }
+
+    /** 丢弃 null / 非有限（NaN、±Infinity）的核心偏移条目。 */
+    private static Map<String, Double> finiteDoubles(Map<String, Double> raw) {
+        if (raw == null || raw.isEmpty()) {
+            return Map.of();
+        }
+        Map<String, Double> filtered = new HashMap<>(raw.size());
+        for (Map.Entry<String, Double> entry : raw.entrySet()) {
+            Double value = entry.getValue();
+            if (entry.getKey() != null && value != null && Double.isFinite(value)) {
+                filtered.put(entry.getKey(), value);
+            }
+        }
+        return Map.copyOf(filtered);
+    }
+
+    /** 当前快照版本号；只在 {@link #apply} / {@link #clear} 后变化。见 {@link #revision}。 */
+    public static long revision() {
+        return revision;
     }
 
     /** 清空所有覆盖（重置功能）。 */
     public static void clear() {
         snapshot = EMPTY;
+        revision++;
     }
 
     /**

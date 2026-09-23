@@ -103,6 +103,12 @@ public class PlayerConnectionHandler {
         EntityCoreState.syncAllEntityCoresToPlayer(joiner);
         PacketDistributor.sendToPlayer(joiner, DungeonRegistrySyncPayload.fromRegistry());
 
+        // 终端覆盖的客户端镜像是进程级静态态，只在「打开终端」与「重置」时刷新。
+        // 不在这里推一次的话，联机下非 OP 玩家永远不会收到 sync：他背包里鱼雷的 tooltip
+        // 显示的是基准航速，而实际飞行速度按覆盖值走，两边对不上。
+        PacketDistributor.sendToPlayer(joiner, com.piranport.network.SyncTerminalOverridesPayload.from(
+                com.piranport.terminal.TerminalOverridesSavedData.get(joiner.serverLevel())));
+
         var slowness = joiner.getEffect(MobEffects.MOVEMENT_SLOWDOWN);
         if (slowness != null && slowness.getAmplifier() >= 9) {
             joiner.removeEffect(MobEffects.MOVEMENT_SLOWDOWN);

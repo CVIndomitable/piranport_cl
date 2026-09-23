@@ -145,9 +145,12 @@ public record UpdateTerminalOverridePayload(
      * <p>WHY 必须校验：modelKey 是纯字符串，写进去的垃圾键会永久留在存档里，
      * 每次读覆盖都要白查一次 Map。这里在入口挡掉，存档里就只会出现真实存在的型号。
      *
+     * <p>可见性为包级：重置路径 {@link ResetTerminalOverridesPayload} 也要用它
+     * 把单键重置的键归一化到与写入一致的键空间。
+     *
      * @return 归一化后的裸注册 ID；不是已注册鱼雷时返回 null
      */
-    private static String normalizeTorpedoKey(String rawKey) {
+    static String normalizeTorpedoKey(String rawKey) {
         if (rawKey == null || rawKey.isEmpty()) {
             return null;
         }

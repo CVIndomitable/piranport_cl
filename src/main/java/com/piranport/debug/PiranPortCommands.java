@@ -117,7 +117,9 @@ public final class PiranPortCommands {
                 .then(Commands.literal("target_b25")
                         .executes(ctx -> targetB25(ctx.getSource())))
 
-                // /ppd model_debug <model>
+                // /ppd model_debug <model> [variant]
+                // variant 只对弹体有意义：shell 取 small/medium/large（口径），
+                // missile 取 anti_air/anti_ship/rocket（弹种）。省略时取各族默认档。
                 .then(Commands.literal("model_debug")
                         .then(Commands.argument("model", StringArgumentType.word())
                                 .suggests((ctx, builder) -> {
@@ -125,10 +127,26 @@ public final class PiranPortCommands {
                                     builder.suggest("f4f");
                                     builder.suggest("heavy_cruiser");
                                     builder.suggest("light_carrier");
+                                    builder.suggest("torpedo");
+                                    builder.suggest("shell");
+                                    builder.suggest("missile");
                                     return builder.buildFuture();
                                 })
                                 .executes(ctx -> modelDebug(ctx.getSource(),
-                                        StringArgumentType.getString(ctx, "model")))))
+                                        StringArgumentType.getString(ctx, "model"), ""))
+                                .then(Commands.argument("variant", StringArgumentType.word())
+                                        .suggests((ctx, builder) -> {
+                                            builder.suggest("small");
+                                            builder.suggest("medium");
+                                            builder.suggest("large");
+                                            builder.suggest("anti_air");
+                                            builder.suggest("anti_ship");
+                                            builder.suggest("rocket");
+                                            return builder.buildFuture();
+                                        })
+                                        .executes(ctx -> modelDebug(ctx.getSource(),
+                                                StringArgumentType.getString(ctx, "model"),
+                                                StringArgumentType.getString(ctx, "variant"))))))
 
                 // /ppd acceptance_kit <type>
                 .then(Commands.literal("acceptance_kit")
@@ -201,6 +219,13 @@ public final class PiranPortCommands {
         source.sendSuccess(() -> Component.literal(msg), false);
         return 1;
     }
+
+    // /ppd model_debug 的合法取值。必须与 ModelDebugBlockEntityRenderer 的两个 switch 保持一致，
+    // 校验与渲染读同一份名单，避免再次出现"补了渲染忘了补校验"的漏档。
+    private static final java.util.List<String> MODEL_DEBUG_TYPES = java.util.List.of(
+            "b25", "f4f", "heavy_cruiser", "light_carrier", "torpedo", "shell", "missile");
+    private static final java.util.List<String> MODEL_DEBUG_VARIANTS = java.util.List.of(
+            "small", "medium", "large", "anti_air", "anti_ship", "rocket");
 
     private static final Object TPS_SAMPLE_LOCK = new Object();
     private static long tpsSampleTick = -1L;
@@ -444,7 +469,7 @@ public final class PiranPortCommands {
         return launched;
     }
 
-    private static int modelDebug(CommandSourceStack source, String modelType) {
+    private static int modelDebug(CommandSourceStack source, String modelType, String variant) {
         ServerPlayer player = source.getPlayer();
         if (player == null) {
             source.sendFailure(Component.literal("Must be run by a player"));
@@ -455,8 +480,16 @@ public final class PiranPortCommands {
                     "§c此指令需要先开启调试模式（按 F8 开启）"));
             return 0;
         }
-        if (!"b25".equals(modelType) && !"f4f".equals(modelType)) {
-            source.sendFailure(Component.literal("Unknown model: " + modelType + " (supported: b25, f4f)"));
+        // 支持表与 ModelDebugBlockEntityRenderer 的 switch 一一对应。
+        // 之前这里只放行 b25/f4f，把 heavy_cruiser/light_carrier 也一起挡掉了（补齐时漏改校验）。
+        if (!MODEL_DEBUG_TYPES.contains(modelType)) {
+            source.sendFailure(Component.literal("Unknown model: " + modelType
+                    + " (supported: " + String.join(", ", MODEL_DEBUG_TYPES) + ")"));
+            return 0;
+        }
+        if (!variant.isEmpty() && !MODEL_DEBUG_VARIANTS.contains(variant)) {
+            source.sendFailure(Component.literal("Unknown variant: " + variant
+                    + " (supported: " + String.join(", ", MODEL_DEBUG_VARIANTS) + ")"));
             return 0;
         }
 
@@ -477,7 +510,7 @@ public final class PiranPortCommands {
         level.setBlock(center, ModBlocks.MODEL_DEBUG.get().defaultBlockState(), 3);
         BlockEntity centerBe = level.getBlockEntity(center);
         if (centerBe instanceof com.piranport.block.entity.ModelDebugBlockEntity mdbe) {
-            mdbe.setModelType(modelType);
+            mdbe.setModelType(modelType, variant);
         }
 
         // Support blocks so standing signs can survive
@@ -498,9 +531,13 @@ public final class PiranPortCommands {
         placeDirectionSign(level, center.offset(0, -3, 0),  0, "DOWN",  "-Y");
 
         String finalType = modelType;
+        String finalVariant = variant;
+        String label = (finalVariant.isEmpty() ? finalType : finalType + "/" + finalVariant).toUpperCase();
         source.sendSuccess(() -> Component.literal(
-                "§a已在 " + center.toShortString() + " 放置 " + finalType.toUpperCase()
-                + " 方向核对结构。看模型机头指向的那块告示牌即可确认 yaw=0 的世界方向。"), true);
+                "§a已在 " + center.toShortString() + " 放置 " + label
+                + " 方向核对结构。看模型机头指向的那块告示牌即可确认 yaw=0 的世界方向。"
+                + (finalType.equals("shell") || finalType.equals("missile")
+                        ? "（弹体按固定 +Z 摆放，应指向 SOUTH/+Z）" : "")), true);
         return 1;
     }
 

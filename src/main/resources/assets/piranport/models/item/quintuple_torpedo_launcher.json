@@ -8,7 +8,7 @@
       "predicate": {
         "piranport:loaded": 1
       },
-      "model": "piranport:item/quintuple_torpedo_launcher"
+      "model": "piranport:item/quintuple_torpedo_launcher_loaded"
     }
   ]
 }

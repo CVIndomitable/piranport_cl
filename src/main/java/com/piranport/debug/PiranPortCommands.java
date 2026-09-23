@@ -117,9 +117,10 @@ public final class PiranPortCommands {
                 .then(Commands.literal("target_b25")
                         .executes(ctx -> targetB25(ctx.getSource())))
 
-                // /ppd model_debug <model> [variant]
+                // /ppd model_debug <model> [variant] [force]
                 // variant 只对弹体有意义：shell 取 small/medium/large（口径），
                 // missile 取 anti_air/anti_ship/rocket（弹种）。省略时取各族默认档。
+                // force 用于确认在非本指令放置的区域内施工（见 modelDebug 的破坏性防护）。
                 .then(Commands.literal("model_debug")
                         .then(Commands.argument("model", StringArgumentType.word())
                                 .suggests((ctx, builder) -> {
@@ -133,7 +134,7 @@ public final class PiranPortCommands {
                                     return builder.buildFuture();
                                 })
                                 .executes(ctx -> modelDebug(ctx.getSource(),
-                                        StringArgumentType.getString(ctx, "model"), ""))
+                                        StringArgumentType.getString(ctx, "model"), "", false))
                                 .then(Commands.argument("variant", StringArgumentType.word())
                                         .suggests((ctx, builder) -> {
                                             builder.suggest("small");
@@ -142,11 +143,21 @@ public final class PiranPortCommands {
                                             builder.suggest("anti_air");
                                             builder.suggest("anti_ship");
                                             builder.suggest("rocket");
+                                            builder.suggest("force");
                                             return builder.buildFuture();
                                         })
                                         .executes(ctx -> modelDebug(ctx.getSource(),
                                                 StringArgumentType.getString(ctx, "model"),
-                                                StringArgumentType.getString(ctx, "variant"))))))
+                                                StringArgumentType.getString(ctx, "variant"), false))
+                                        .then(Commands.argument("force", StringArgumentType.word())
+                                                .suggests((ctx, builder) -> {
+                                                    builder.suggest("force");
+                                                    return builder.buildFuture();
+                                                })
+                                                .executes(ctx -> modelDebug(ctx.getSource(),
+                                                        StringArgumentType.getString(ctx, "model"),
+                                                        StringArgumentType.getString(ctx, "variant"),
+                                                        true))))))
 
                 // /ppd acceptance_kit <type>
                 .then(Commands.literal("acceptance_kit")
@@ -383,18 +394,8 @@ public final class PiranPortCommands {
             source.sendFailure(Component.literal("Unknown entity type: piranport:" + entityId));
             return 0;
         }
-        // 仅查注册表是不够的：piranport: 命名空间下还有一堆非深海的实体
-        // （飞机、导弹、鱼雷、浮动靶子）。放行它们的话，create() 出来的实体不属于
-        // AbstractDeepOceanEntity，下面 setFleetGroupId 分支整段落空 —— 结果是
-        // 凭空造出无编组的战斗实体，且凭空造飞机/导弹本身就是玩法破坏行为。
-        EntityType<?> type = optType.get();
-        if (!AbstractDeepOceanEntity.class.isAssignableFrom(type.getBaseClass())) {
-            source.sendFailure(Component.literal(
-                    "§c该实体不是深海敌舰，禁止用此指令生成: piranport:" + entityId));
-            return 0;
-        }
-
         ServerLevel level = player.serverLevel();
+        EntityType<?> type = optType.get();
         java.util.UUID cluster = java.util.UUID.randomUUID();
         com.piranport.npc.ai.FleetGroupManager mgr = com.piranport.npc.ai.FleetGroupManager.get(level);
         mgr.createGroup(cluster);
@@ -404,19 +405,26 @@ public final class PiranPortCommands {
             Entity entity = type.create(level);
             if (entity == null) continue;
 
+            // 类型白名单必须在 create() 之后判：EntityType.getBaseClass() 在 1.21.1 恒返回
+            // Entity.class（见 EntityType 源码，就是个裸 return），拿它做 isAssignableFrom
+            // 既挡不住飞机/导弹，反过来写错方向还会把 9 种合法深海舰全拒掉。
+            // 唯一可靠的办法是看造出来的实体本身。
+            if (!(entity instanceof AbstractDeepOceanEntity abyssal)) {
+                source.sendFailure(Component.literal(
+                        "§c该实体不是深海敌舰，禁止用此指令生成: piranport:" + entityId));
+                // 已建的空编组留给 FleetGroupManager 惰性清理
+                return 0;
+            }
+
             double offsetX = (level.random.nextDouble() - 0.5) * 6.0;
             double offsetZ = (level.random.nextDouble() - 0.5) * 6.0;
             entity.setPos(player.getX() + offsetX, player.getY(), player.getZ() + offsetZ);
 
-            if (entity instanceof Mob mob) {
-                EventHooks.finalizeMobSpawn(mob, level, level.getCurrentDifficultyAt(player.blockPosition()),
-                        MobSpawnType.COMMAND, null);
-            }
+            EventHooks.finalizeMobSpawn(abyssal, level, level.getCurrentDifficultyAt(player.blockPosition()),
+                    MobSpawnType.COMMAND, null);
 
-            if (entity instanceof AbstractDeepOceanEntity abyssal) {
-                abyssal.setFleetGroupId(cluster);
-                mgr.addMember(cluster, abyssal.getUUID());
-            }
+            abyssal.setFleetGroupId(cluster);
+            mgr.addMember(cluster, abyssal.getUUID());
 
             level.addFreshEntity(entity);
             spawned++;
@@ -554,7 +562,7 @@ public final class PiranPortCommands {
     /** {@code /ppd target_b25} 单次最多放飞的轰炸机数：够做编队测试，又不至于一把打垮服务端。 */
     private static final int TARGET_B25_MAX_LAUNCH = 8;
 
-    private static int modelDebug(CommandSourceStack source, String modelType, String variant) {
+    private static int modelDebug(CommandSourceStack source, String modelType, String variant, boolean force) {
         ServerPlayer player = source.getPlayer();
         if (player == null) {
             source.sendFailure(Component.literal("Must be run by a player"));
@@ -564,6 +572,12 @@ public final class PiranPortCommands {
             source.sendFailure(Component.literal(
                     "§c此指令需要先为你自己开启调试模式（按 F8 开启）"));
             return 0;
+        }
+        // `/ppd model_debug b25 force`（省略 variant）时 force 落在 variant 位上，
+        // 把它归一化成"默认档 + 强制"。
+        if ("force".equals(variant)) {
+            variant = "";
+            force = true;
         }
         // 支持表与 ModelDebugBlockEntityRenderer 的 switch 一一对应。
         // 之前这里只放行 b25/f4f，把 heavy_cruiser/light_carrier 也一起挡掉了（补齐时漏改校验）。
@@ -590,7 +604,23 @@ public final class PiranPortCommands {
         ServerLevel level = player.serverLevel();
         BlockPos center = player.blockPosition();
 
-        // Clear 7x11x7 working volume
+        // Clear 7x11x7 working volume.
+        //
+        // 破坏性防护：这个循环会无条件抹掉 539 格（含箱子及其内容物、告示牌、机器），
+        // 而玩家脚下的坐标是完全自由的 —— 站在队友的建筑里敲一下即不可逆摧毁。
+        // 任何"按过 F8"的门禁都拦不住这个（门禁校验的是"你是不是在调试"，
+        // 与"这块地是不是你的"正交）。因此只允许覆盖上一次由本指令自己放下的结构：
+        // 先探测中心格是不是 MODEL_DEBUG 方块，不是就拒绝并要求显式确认。
+        boolean selfPlaced = level.getBlockState(center).is(ModBlocks.MODEL_DEBUG.get());
+        if (!force && !selfPlaced && !hasModelDebugNeighbourhood(level, center)) {
+            source.sendFailure(Component.literal(
+                    "§c拒绝清空 " + center.toShortString() + " 附近的 7×11×7 区域："
+                    + "该处没有本指令上次放置的调试结构。"));
+            source.sendFailure(Component.literal(
+                    "§7若确认要在此施工，请加尾参数 force：/ppd model_debug <model> [variant] force"));
+            return 0;
+        }
+
         BlockState air = Blocks.AIR.defaultBlockState();
         for (int x = -3; x <= 3; x++) {
             for (int y = -5; y <= 5; y++) {
@@ -633,6 +663,26 @@ public final class PiranPortCommands {
                 + (finalType.equals("shell") || finalType.equals("missile")
                         ? "（弹体按固定 +Z 摆放，应指向 SOUTH/+Z）" : "")), true);
         return 1;
+    }
+
+    /**
+     * 工作区是否残留本指令上次放置的结构（用于把"覆盖上一次的调试台"与"在别人的建筑上施工"区分开）。
+     *
+     * <p>扫 7×11×7 的全部格而不是只查中心：玩家离场再回来、或上次只放了一半就被打断时，
+     * 中心格可能已经不是 MODEL_DEBUG 了，但周围还有告示牌/荧石残留 —— 那仍然是本指令的地盘。
+     */
+    private static boolean hasModelDebugNeighbourhood(ServerLevel level, BlockPos center) {
+        BlockState modelDebug = ModBlocks.MODEL_DEBUG.get().defaultBlockState();
+        for (int x = -3; x <= 3; x++) {
+            for (int y = -5; y <= 5; y++) {
+                for (int z = -3; z <= 3; z++) {
+                    if (level.getBlockState(center.offset(x, y, z)).is(ModBlocks.MODEL_DEBUG.get())) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     private static void placeDirectionSign(ServerLevel level, BlockPos pos, int rotation,

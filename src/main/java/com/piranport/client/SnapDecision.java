@@ -59,15 +59,16 @@ final class SnapDecision {
     /**
      * 清空吸附状态。
      *
-     * <p>调用时机有两类：断开连接（{@code ClientInputCoordinator#resetClientState}）、
-     * 退出开镜（{@code FireControlRadarSnapHandler#tick} 的开镜门）。
+     * <p>调用时机有三类：断开连接/跨维度重生（{@code ClientInputCoordinator#resetClientState}）、
+     * 退出开镜（{@code FireControlRadarSnapHandler#tick} 的开镜门）、以及本 tick 没选中
+     * 任何目标（{@link #decide} 的末尾赋值）。
      *
-     * <p><b>0 键关火控这条路径不清状态</b>：{@code FireControlRadarSnapHandler#tick} 在读到
-     * {@code SHIP_FC_RADAR_ON != true} 时只做 {@code return}，并不调本方法，所以关掉雷达后
-     * 「上一轮锁定的实体 id」会留在静态字段里。重新按 0 开启雷达时，只要仍开着镜，
-     * {@code decide()} 就会因该 id 还在而走「保持原锁定」分支 —— 而该分支刻意不看遮挡、
-     * 阈值放宽到退出半径（8°），于是准星会从最远 8° 外被猛拉回旧目标，绕过 4° 的进入阈值。
-     * 要修就在 {@code tick()} 读到开关不为 true 的那个分支里补一次 {@code SnapDecision.reset()}。
+     * <p><b>0 键关火控这条路径也调本方法</b>：{@code FireControlRadarSnapHandler#tick} 读到
+     * {@code SHIP_FC_RADAR_ON != true} 时会先 {@code reset()} 再 {@code return}。
+     * WHY 必须显式清：那条分支的 {@code return} 跳过了 {@link #decide}，而 {@code decide} 是唯一
+     * 会重新赋值 {@code snapLocked/lockedTarget} 的地方。不清的话，玩家关掉雷达再打开（全程不松右键）
+     * 时，上一轮的锁定 id 还在，{@code decide()} 会走「保持原锁定」分支 —— 该分支刻意不看遮挡、
+     * 阈值放宽到退出半径 8°，准星会从 8° 外被猛拉回旧目标，绕过 4° 的进入阈值。
      */
     static void reset() {
         snapLocked = false;
@@ -150,11 +151,14 @@ final class SnapDecision {
     /**
      * 「眼睛 → 目标」的位移解算成绝对俯仰角（度），与 {@code Entity#xRot} 同号。
      *
-     * <p>返回的是 {@code Entity} 口径的 xRot 值，不是「自然语言里的抬头角度」。
-     * 按 {@code aimAt} 的取数口径（{@code toTargetY} 已含上下方向、{@code horizontalDistance} 恒为非负），
-     * 实测符号是：目标在<b>上方</b>（{@code toTargetY} 为负）→ <b>正</b>角；目标在<b>下方</b> → <b>负</b>角。
-     * 这条符号约定由 {@code SnapDecisionTest} 用具体数值钉死 —— 写反的表现不是「转得别扭」，
-     * 而是准星朝目标的反方向（上/下）转，并稳定停在关于水平面对称的位置上。
+     * <p>按 {@code aimAt} 的取数口径（{@code toTargetY = 瞄准点.y - 眼睛.y}、
+     * {@code horizontalDistance} 恒为非负），<b>实测</b>符号是：
+     * 目标在<b>上方</b>（{@code toTargetY} 为负）→ <b>正</b>角；目标在<b>下方</b> → <b>负</b>角。
+     * 例：{@code pitchTo(-1, 1) == +45}、{@code pitchTo(-1, 1e-3) ≈ +89.94}。
+     *
+     * <p>注意这与「抬头为负」的直觉相反 —— 别按直觉改这里的符号。{@code aimAt} 把返回值直接
+     * 送给 {@code Entity#turn}，符号写反的表现不是「转得别扭」，而是准星朝目标的反方向（上/下）
+     * 转，并稳定停在关于水平面对称的位置上。约定由 {@code SnapDecisionTest} 用这些具体数值钉死。
      *
      * <p>结果钳制在 ±90°：{@code Entity#turn} 内部只对 {@code xRot} 钳制、对 {@code xRotO}
      * 不钳制，喂进越界值会让两者分道扬镳，渲染插值甩出一个巨大假旋转。

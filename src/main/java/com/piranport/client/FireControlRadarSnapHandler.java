@@ -163,10 +163,18 @@ public final class FireControlRadarSnapHandler {
         ItemStack coreStack = TransformationManager.findTransformedCore(player);
         if (coreStack.isEmpty()) return;
 
-        if (!Boolean.TRUE.equals(coreStack.get(ModDataComponents.SHIP_FC_RADAR_ON.get()))) return;
+        // 服务端翻转开关后会把这个组件回同步过来，这里是「关掉火控」这条路径唯一的松锁点。
+        //
+        // WHY 必须显式 reset 而不能只 return：下面的 return 会跳过 decide()，而 decide() 是唯一
+        // 会重新赋值 snapLocked/lockedTarget 的地方。只 return 的话，玩家「锁定中 → 按 0 关掉 →
+        // 再按 0 打开」（全程不松右键）时，上一轮的锁定 id 仍在静态字段里，重新开启后 decide()
+        // 会直接走「保持原锁定」分支 —— 该分支刻意不看遮挡、阈值放宽到 8°，准星会从 8° 外被猛拉回
+        // 旧目标，绕过 4° 的进入阈值。这正是开镜门那条 reset 要消除的同类现象。
+        if (!Boolean.TRUE.equals(coreStack.get(ModDataComponents.SHIP_FC_RADAR_ON.get()))) {
+            SnapDecision.reset();
+            return;
+        }
 
-        // 服务端会把组件回同步过来，所以「关掉火控」这条路径的松锁在这里兜住：
-        // 开关状态一旦不为 true，本 tick 就走到这里，不再持有任何锁定。
         if (!TransformationManager.hasFireControlRadarEquipped(player, coreStack)) return;
 
         // 火炮才谈得上「瞄准辅助」：手持非火炮时吸附没有落点意义，且会跟其他交互抢镜头。

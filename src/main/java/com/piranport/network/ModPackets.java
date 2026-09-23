@@ -80,6 +80,14 @@ public class ModPackets {
                 FcRangeSyncPayload.STREAM_CODEC,
                 FcRangeSyncPayload::handle
         );
+        // C2S: 客户端在清掉半径缓存（死亡重生/跨维度）后主动索要一次补发。
+        // 见 FcRangeRequestPayload 的类注释：没有它，处于「雷达一直开着」状态的玩家
+        // 在重生/跨维度后会静默失去吸附。
+        registrar.playToServer(
+                FcRangeRequestPayload.TYPE,
+                FcRangeRequestPayload.STREAM_CODEC,
+                FcRangeRequestPayload::handle
+        );
         // Debug system
         registrar.playToServer(
                 DebugTogglePayload.TYPE,

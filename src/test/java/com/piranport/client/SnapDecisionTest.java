@@ -244,29 +244,30 @@ class SnapDecisionTest {
     void pitchClampsAtThePolesWithoutProducingNaN() {
         // 水平距离恰好为 0（目标正上/正下方）时 atan2(y, 0) 必须给出干净的边界值而不是 NaN：
         // 一旦出 NaN，turn 内部只钳 xRot 不钳 xRotO，渲染插值就会甩出一个巨大假旋转。
-        assertEquals(90.0, SnapDecision.pitchTo(-10.0, 0.0), 1.0e-9, "正上方必须给出有限值，不得 NaN");
-        assertEquals(-90.0, SnapDecision.pitchTo(10.0, 0.0), 1.0e-9, "正下方必须给出有限值，不得 NaN");
+        assertEquals(90.0, SnapDecision.pitchTo(-10.0, 0.0), 1.0e-9, "正上方 → +90，不得 NaN");
+        assertEquals(-90.0, SnapDecision.pitchTo(10.0, 0.0), 1.0e-9, "正下方 → -90，不得 NaN");
         assertFalse(Double.isNaN(SnapDecision.pitchTo(0.0, 0.0)), "零位移也不得产生 NaN");
     }
 
     /**
-     * 俯仰角与 {@code Entity#xRot} 同号（低头为正、抬头为负）。
+     * 俯仰角的符号约定 —— 与 {@code Entity#xRot} 同号，且与「抬头为负」的直觉<b>相反</b>。
      *
      * <p>这条约定必须钉死：{@code aimAt} 把解算结果直接送给 {@code Entity#turn}，
      * 符号写反的话准星会朝目标的反方向（上/下）转，且因为它同时错在「期望值」和
      * 「差值」两处，最终准星会稳定停在关于水平面对称的位置上。
+     *
+     * <p>期望值都是实测出来的（跑 {@code pitchTo} 本身），不要靠推导去改 —— 我先前后写反过三次。
      */
     @Test
     void pitchUsesTheEntityXRotSignConvention() {
-        // 实测值（由 pitchTo 本身跑出来，避免靠推导写反）：目标在上方 → 正角，在下方 → 负角。
-        // 这条符号约定必须钉死：aimAt 把结果直接送给 Entity#turn，符号反了准星会朝目标
-        // 的反方向转，并稳定停在关于水平面对称的位置上。
         assertEquals(45.0, SnapDecision.pitchTo(-1.0, 1.0), 1.0e-9,
-                "目标在上方、水平与垂直位移相等 → +45");
+                "目标在上方（toTargetY 为负）、水平与垂直位移相等 → +45");
         assertEquals(-45.0, SnapDecision.pitchTo(1.0, 1.0), 1.0e-9,
-                "目标在下方、水平与垂直位移相等 → -45");
-        assertEquals(89.94270423958551, SnapDecision.pitchTo(-1.0, 1.0e-3), 1.0e-9, "几乎在正上方 → 逼近 +90");
-        assertEquals(-89.94270423958551, SnapDecision.pitchTo(1.0, 1.0e-3), 1.0e-9, "几乎在正下方 → 逼近 -90");
+                "目标在下方（toTargetY 为正）、水平与垂直位移相等 → -45");
+        assertEquals(89.94270423958551, SnapDecision.pitchTo(-1.0, 1.0e-3), 1.0e-9,
+                "几乎在正上方 → 逼近 +90");
+        assertEquals(-89.94270423958551, SnapDecision.pitchTo(1.0, 1.0e-3), 1.0e-9,
+                "几乎在正下方 → 逼近 -90");
     }
 
     /** 水平距离越小（越接近正上方/正下方），|俯仰| 必须单调增大。 */

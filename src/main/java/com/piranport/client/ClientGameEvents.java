@@ -9,6 +9,7 @@ import com.piranport.client.input.ClientInputCoordinator;
 import com.piranport.PiranPort;
 import com.piranport.entitycore.ClientEntityCoreData;
 import com.piranport.network.EntityCoreRevertPayload;
+import com.piranport.network.FcRangeRequestPayload;
 import com.piranport.network.RecallAllAircraftPayload;
 import com.piranport.network.SkinRevertPayload;
 import com.piranport.skin.ClientSkinData;
@@ -213,21 +214,30 @@ public class ClientGameEvents {
     }
 
     /**
-     * 跨越维度（下界/末地/换图）时清理客户端静态状态。
+     * 跨越维度（下界/末地/换图）或死亡重生时清理客户端静态状态。
      *
      * <p>WHY 单靠 LoggingOut 不够：火控吸附的锁定目标以 {@link net.minecraft.world.entity.Entity#getId()}
      * 为键，而实体 id 是<b>每个 {@code ServerLevel} 各自</b>的计数器 —— 换个维度后同一个 id
-     * 完全可能指向另一只怪（甚至一只兔子）。跨维度时玩家并没有断线，{@code LoggingOut} 不会触发，
+     * 完全可能指向另一只怪（甚至一只兔子）。跨维度/重生时玩家并没有断线，{@code LoggingOut} 不会触发，
      * 残留的锁定 id 就跟着走了：新维度里只要有一只怪恰好落进 8° 锥体内，准星就会把它当成
      * 「原锁定目标」继续抓，绕过了 4° 的进入阈值。
      *
-     * <p>用 {@code Clone}（旧版 PlayerEvent.PlayerLoggedInEvent 的重命名版）而不是
-     * {@code LoggedIn}：官方在换维度/重生时走的是「旧玩家实体 → 新玩家实体」的克隆流程，
-     * 客户端收到的就是这条事件；而 {@code LoggedIn} 只在真正登录那一次触发。两者连用时
-     * {@code resetClientState} 会被调两次，但它是幂等的（各字段都只是清空/复位）。
+     * <p>用 {@code Clone}（服务端 {@code PlayerList#respawn} 与 {@code ServerPlayer#changeDimension}
+     * 都会走到 {@code ClientPacketListener#handleRespawn}，NeoForge 在那里 post 本事件）：
+     * 它覆盖「死亡重生」与「换维度」两种换实体的场景，而 {@code LoggedIn} 只在真正登录那一次触发。
+     * {@code resetClientState} 是幂等的，重复调用安全。
+     *
+     * <p>清完之后必须<b>补要一次</b>吸附半径：{@code FireControlRadarSnapHandler#reset} 会把
+     * {@code serverSimulationLimitBlocks} 归零，而这个值原先只在玩家按 0 键开关雷达时下发。
+     * 若玩家是在「雷达一直开着」的状态下重生/换维度，就再也不会收到下发，吸附会静默失效
+     * （组件仍显示开启，玩家完全没有线索）。所以这里主动发一个索要包，把缓存重新建立起来。
+     * 服务端会自行复核装备与开关状态，客户端拿不到也不该自己编一个半径。
      */
     @SubscribeEvent
     public static void onClientPlayerClone(ClientPlayerNetworkEvent.Clone event) {
         ClientInputCoordinator.resetClientState();
+        if (Minecraft.getInstance().getConnection() != null) {
+            PacketDistributor.sendToServer(new FcRangeRequestPayload());
+        }
     }
 }

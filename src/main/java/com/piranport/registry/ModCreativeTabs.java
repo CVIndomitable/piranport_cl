@@ -54,6 +54,7 @@ public class ModCreativeTabs {
                         // Torpedo Launchers
                         output.accept(ModItems.TRIPLE_TORPEDO_LAUNCHER.get());
                         output.accept(ModItems.QUAD_TORPEDO_LAUNCHER.get());
+                        output.accept(ModItems.QUINTUPLE_TORPEDO_LAUNCHER.get());
 
                         // Depth Charge Launchers
                         output.accept(ModItems.DEPTH_CHARGE_LAUNCHER.get());

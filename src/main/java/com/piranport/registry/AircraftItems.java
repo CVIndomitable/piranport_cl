@@ -4,6 +4,7 @@ import com.piranport.component.AircraftInfo;
 import com.piranport.component.WeaponCategory;
 import com.piranport.item.AircraftItem;
 import com.piranport.item.EngineItem;
+import com.piranport.item.RadarItem;
 import com.piranport.item.SonarItem;
 import net.minecraft.world.item.Item;
 import net.neoforged.neoforge.registries.DeferredItem;
@@ -283,6 +284,27 @@ public final class AircraftItems {
                     () -> new SonarItem(new Item.Properties().stacksTo(1)
                             .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ARMOR),
                             5, 40));
+
+    // ===== Radar =====
+    // 三种雷达各注册一台，索敌范围统一 32 区块、负重 1；
+    // 差异化只体现在「索敌目标」上（对海/对空/声纳），三者互斥，不可互相替代。
+    public static final DeferredItem<RadarItem> STANDARD_SURFACE_RADAR =
+            ITEMS.register("standard_surface_radar",
+                    () -> new RadarItem(new Item.Properties().stacksTo(1)
+                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ARMOR),
+                            1, 32, RadarItem.RadarTarget.SURFACE));
+
+    public static final DeferredItem<RadarItem> STANDARD_AIR_RADAR =
+            ITEMS.register("standard_air_radar",
+                    () -> new RadarItem(new Item.Properties().stacksTo(1)
+                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ARMOR),
+                            1, 32, RadarItem.RadarTarget.AIR));
+
+    public static final DeferredItem<RadarItem> STANDARD_SONAR_RADAR =
+            ITEMS.register("standard_sonar_radar",
+                    () -> new RadarItem(new Item.Properties().stacksTo(1)
+                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ARMOR),
+                            1, 32, RadarItem.RadarTarget.SUBMARINE));
 
     // ===== Engines =====
     public static final DeferredItem<EngineItem> STANDARD_ENGINE =

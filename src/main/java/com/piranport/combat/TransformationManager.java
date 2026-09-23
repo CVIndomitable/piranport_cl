@@ -6,6 +6,7 @@ import com.piranport.item.ArmorPlateItem;
 import com.piranport.item.ShipCoreItem;
 import com.piranport.item.ShipType;
 import com.piranport.item.SonarItem;
+import com.piranport.item.RadarItem;
 import com.piranport.item.TorpedoReloadItem;
 import com.piranport.item.EngineItem;
 import com.piranport.registry.ModDataComponents;
@@ -23,6 +24,9 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemContainerContents;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 变身管理器 — 管理玩家从"人类形态"到"舰娘形态"的切换及相关属性计算。
@@ -151,6 +155,7 @@ public class TransformationManager {
         if (stack.getItem() instanceof ShipCoreItem) return false;
         if (stack.getItem() instanceof ArmorPlateItem) return false;
         if (stack.getItem() instanceof SonarItem) return false;
+        if (stack.getItem() instanceof RadarItem) return false;
         if (stack.getItem() instanceof EngineItem) return false;
         if (stack.getItem() instanceof TorpedoReloadItem) return false;
         // 鱼雷弹药、炮弹、航空消耗品的 getItemLoad 均为 0，自然排除
@@ -287,6 +292,7 @@ public class TransformationManager {
         for (ItemStack s : getCoreStoredContents(coreStack)) {
             if (s.getItem() instanceof ArmorPlateItem plate) total += plate.getWeight();
             else if (s.getItem() instanceof SonarItem sonar) total += sonar.getWeight();
+            else if (s.getItem() instanceof RadarItem radar) total += radar.getWeight();
             else if (s.getItem() instanceof EngineItem engine) total += engine.getWeight();
             else if (s.getItem() instanceof TorpedoReloadItem tr) total += tr.getWeight();
             else if (s.getItem() instanceof com.piranport.item.AutoCIWSItem ciws) total += ciws.getWeight();
@@ -317,6 +323,7 @@ public class TransformationManager {
         if (stack.getItem() instanceof ArmorPlateItem) return false;
         if (stack.getItem() instanceof EngineItem) return false;
         if (stack.getItem() instanceof SonarItem) return false;
+        if (stack.getItem() instanceof RadarItem) return false;
         if (stack.getItem() instanceof TorpedoReloadItem) return false;
         return getItemLoad(stack) > 0;
     }
@@ -494,6 +501,7 @@ public class TransformationManager {
         if (load != null) return load;
         if (stack.getItem() instanceof ArmorPlateItem plate) return plate.getWeight();
         if (stack.getItem() instanceof SonarItem sonar) return sonar.getWeight();
+        if (stack.getItem() instanceof RadarItem radar) return radar.getWeight();
         if (stack.getItem() instanceof EngineItem engine) return engine.getWeight();
         if (stack.getItem() instanceof TorpedoReloadItem tr) return tr.getWeight();
         if (stack.getItem() instanceof com.piranport.item.AircraftItem) {
@@ -521,6 +529,18 @@ public class TransformationManager {
             if (s.getItem() instanceof SonarItem sonar) return sonar.getRadius();
         }
         return 24.0;
+    }
+
+    /**
+     * 取核心内已装备的全部雷达。
+     * 雷达不叠加——装上多台就各扫各的目标分层，所以返回列表而不是单台。
+     */
+    public static List<RadarItem> getEquippedRadars(ItemStack coreStack) {
+        List<RadarItem> radars = new ArrayList<>();
+        for (ItemStack s : getCoreStoredContents(coreStack)) {
+            if (s.getItem() instanceof RadarItem radar) radars.add(radar);
+        }
+        return radars;
     }
 
     /** Check if a TorpedoReloadItem is stored in SHIP_CORE_ARMOR. */

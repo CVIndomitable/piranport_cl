@@ -14,6 +14,7 @@ import com.piranport.config.ModCommonConfig;
 
 import com.piranport.item.KirinHeadbandItem;
 import com.piranport.item.FootballArmorItem;
+import com.piranport.item.RadarItem;
 import com.piranport.item.ShipCoreItem;
 import com.piranport.item.ShipCoreCombat;
 import com.piranport.registry.ModDataComponents;
@@ -255,25 +256,104 @@ public class PlayerTickHandler {
         }
     }
 
-    /** 声纳效果：24格内水生/敌对生物发光（每40tick，错峰执行） */
+    /**
+     * 索敌高亮：核心被动声呐 + 已装备雷达，统一在本次扫描里处理（每40tick，错峰执行）。
+     *
+     * <p><b>为什么合并成一次扫描</b>：声呐和雷达都是「加 GLOWING 效果」，而 addEffect 会覆盖
+     * 同名效果的持续时间。若两者各扫一次，后执行的一方会把先执行的一方的效果时长重置，
+     * 造成高频重扫。这里一次取完实体再按各自条件打标，只发一次效果包。
+     *
+     * <p><b>为什么范围内实体只扫一次</b>：多台雷达同时装备时，扫描范围取其中最大值，
+     * 逐台各扫一遍会重复遍历同一批实体。取并集后逐实体判断，性能按最大范围算一次。
+     */
     private static void tickSonarGlow(Player player, ItemStack transformedCore) {
         // 错峰执行：使用UUID哈希避免玩家ID连续分配导致的碰撞
         if ((player.tickCount + player.getUUID().hashCode()) % SONAR_SCAN_INTERVAL != 0) return;
-        if (!TransformationManager.hasSonarEquipped(player, transformedCore)) return;
+
+        boolean hasSonar = TransformationManager.hasSonarEquipped(player, transformedCore);
+        List<RadarItem> radars = TransformationManager.getEquippedRadars(transformedCore);
+        if (!hasSonar && radars.isEmpty()) return;
 
         // 动态限制扫描范围，避免超出服务器模拟距离
         int simDist = ((ServerLevel) player.level()).getServer().getPlayerList().getSimulationDistance();
-        // Phase 27：策划 §3.6 - 声呐半径按 SonarItem.radius 决定 (标准 24/改进 32/先进 40)
-        double baseRadius = TransformationManager.getEquippedSonarRadius(player, transformedCore);
-        double maxRange = Math.min(baseRadius, simDist * 16.0 - 8.0);
+        double simLimit = simDist * 16.0 - 8.0;
+
+        // 实际扫描半径取「所有已装备索敌设备里的最大值」，再统一受模拟距离钳制。
+        // 逐台各扫一遍会重复遍历同一批实体，取并集后逐实体判断只需扫一次。
+        double scanRange = 0.0;
+        if (hasSonar) {
+            // Phase 27：策划 §3.6 - 声呐半径按 SonarItem.radius 决定 (标准 24/改进 32/先进 40)
+            scanRange = Math.max(scanRange,
+                    TransformationManager.getEquippedSonarRadius(player, transformedCore));
+        }
+        for (RadarItem radar : radars) {
+            scanRange = Math.max(scanRange, radar.getRange());
+        }
+        double maxRange = Math.min(scanRange, simLimit);
 
         AABB scanBox = player.getBoundingBox().inflate(maxRange, 8.0, maxRange);
         List<LivingEntity> nearby = player.level().getEntitiesOfClass(
                 LivingEntity.class, scanBox,
                 e -> e.isAlive() && e != player && !(e instanceof Player));
         for (LivingEntity entity : nearby) {
-            entity.addEffect(new MobEffectInstance(MobEffects.GLOWING, SONAR_SCAN_INTERVAL, 0, false, false, false));
+            if (isDetectedBySonarOrRadar(player, entity, hasSonar, radars)) {
+                entity.addEffect(new MobEffectInstance(
+                        MobEffects.GLOWING, SONAR_SCAN_INTERVAL, 0, false, false, false));
+            }
         }
+    }
+
+    /**
+     * 判定单个实体是否被核心被动声呐或任一已装备雷达探测到。
+     * 被动声呐沿用策划决策/火控/02 的口径：范围内一切非玩家生物（含友方水生生物）都标记；
+     * 雷达则严格按各自「索敌目标」分层，三种分层互斥。
+     */
+    private static boolean isDetectedBySonarOrRadar(Player player, LivingEntity entity,
+                                                    boolean hasSonar, List<RadarItem> radars) {
+        // 被动声呐：全目标
+        if (hasSonar) return true;
+        if (radars.isEmpty()) return false;
+
+        // 先算出目标的分层归属，避免每台雷达重复调用 isUnderWater / onGround 等
+        boolean underwater = isUnderwaterTarget(entity);
+        boolean airborne = isAirborneTarget(entity);
+        for (RadarItem radar : radars) {
+            // 各雷达索敌范围独立：装了大范围雷达也要能让小范围雷达的高亮不越界
+            if (radar.getRange() < player.distanceTo(entity)) continue;
+            switch (radar.getTarget()) {
+                case SUBMARINE -> {
+                    if (underwater) return true;
+                }
+                case AIR -> {
+                    if (airborne) return true;
+                }
+                // 对海：既不在水下、也不在空中（水面舰船、岸上单位）
+                case SURFACE -> {
+                    if (!underwater && !airborne) return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 水下目标判定 —— 沿用反潜机 ASW 的口径（见 AircraftAswRecon.isAswTarget），
+     * 但去掉敌对过滤：索敌是「发现」而非「攻击」，友方水下生物同样该被雷达看到。
+     */
+    private static boolean isUnderwaterTarget(LivingEntity entity) {
+        if (entity instanceof com.piranport.npc.deepocean.DeepOceanSubmarineEntity) return true;
+        if (entity.getType().is(net.minecraft.tags.EntityTypeTags.AQUATIC)) return true;
+        if (entity instanceof net.minecraft.world.entity.monster.Guardian) return true;
+        return entity.isUnderWater();
+    }
+
+    /**
+     * 飞行目标判定 —— 与防空导弹的判定（MissileEntity.isValidTarget）保持一致：
+     * 离地且不在水中即视为空中，或正在上升（避免把下落中的地面实体误判为空中目标）。
+     */
+    private static boolean isAirborneTarget(LivingEntity entity) {
+        if (entity instanceof com.piranport.entity.AircraftEntity) return true;
+        return (!entity.onGround() && !entity.isInWater()) || entity.getDeltaMovement().y > 0.1;
     }
 
     /** 清除侦察模式残留的减速效果（每20tick） */

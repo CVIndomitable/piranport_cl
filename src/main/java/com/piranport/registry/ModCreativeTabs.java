@@ -128,6 +128,10 @@ public class ModCreativeTabs {
                         output.accept(ModItems.AUTO_CIWS_76MM.get());
                         // Sonar
                         output.accept(ModItems.STANDARD_SONAR.get());
+                        // Radar — 对海 / 对空 / 声纳三种索敌目标各一台
+                        output.accept(ModItems.STANDARD_SURFACE_RADAR.get());
+                        output.accept(ModItems.STANDARD_AIR_RADAR.get());
+                        output.accept(ModItems.STANDARD_SONAR_RADAR.get());
                         // Engines
                         output.accept(ModItems.STANDARD_ENGINE.get());
                         output.accept(ModItems.IMPROVED_ENGINE.get());

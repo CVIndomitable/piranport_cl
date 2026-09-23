@@ -1,13 +1,18 @@
 {
   "id": "piranport:portal_lectern",
   "items": [
-    "piranport:dungeon_lectern"
+    "piranport:dungeon_lectern",
+    "piranport:dungeon_portal"
   ],
   "title": {
     "zh_cn": "皮兰港：副本传送门",
     "en_us": "Piran Port: Dungeon Portal"
   },
-  "tags": ["piranport", "dungeon", "portal"],
+  "tags": [
+    "piranport",
+    "dungeon",
+    "portal"
+  ],
   "editable": false,
   "scenes": [
     {
@@ -28,7 +33,11 @@
         {
           "type": "set_block",
           "block": "piranport:dungeon_portal",
-          "blockPos": [1, 1, 2],
+          "blockPos": [
+            1,
+            1,
+            2
+          ],
           "attachKeyFrame": true
         },
         {
@@ -38,7 +47,11 @@
             "zh_cn": "传送门是多方块结构：用$(item)传送门框架$()围出一个门洞。框架外廓 4 宽 × 5 高，正面留出 2 宽 × 3 高的空洞。",
             "en_us": "The portal is a multiblock: build a doorway out of $(item)Portal Frame$() blocks. The frame is 4 wide × 5 tall, with a 2 wide × 3 tall opening at the front."
           },
-          "point": [1.5, 2.2, 2.5],
+          "point": [
+            1.5,
+            2.2,
+            2.5
+          ],
           "placeNearTarget": true,
           "attachKeyFrame": true
         },
@@ -49,43 +62,71 @@
         {
           "type": "set_block",
           "block": "piranport:dungeon_portal",
-          "blockPos": [2, 1, 2],
+          "blockPos": [
+            2,
+            1,
+            2
+          ],
           "attachKeyFrame": true
         },
         {
           "type": "set_block",
           "block": "piranport:dungeon_portal",
-          "blockPos": [1, 2, 2],
+          "blockPos": [
+            1,
+            2,
+            2
+          ],
           "attachKeyFrame": false
         },
         {
           "type": "set_block",
           "block": "piranport:dungeon_portal",
-          "blockPos": [2, 2, 2],
+          "blockPos": [
+            2,
+            2,
+            2
+          ],
           "attachKeyFrame": false
         },
         {
           "type": "set_block",
           "block": "piranport:dungeon_portal",
-          "blockPos": [1, 3, 2],
+          "blockPos": [
+            1,
+            3,
+            2
+          ],
           "attachKeyFrame": false
         },
         {
           "type": "set_block",
           "block": "piranport:dungeon_portal",
-          "blockPos": [2, 3, 2],
+          "blockPos": [
+            2,
+            3,
+            2
+          ],
           "attachKeyFrame": false
         },
         {
           "type": "set_block",
           "block": "piranport:dungeon_portal",
-          "blockPos": [1, 4, 2],
+          "blockPos": [
+            1,
+            4,
+            2
+          ],
           "attachKeyFrame": false
         },
         {
           "type": "set_block",
           "block": "piranport:dungeon_portal",
-          "blockPos": [2, 4, 2],
+          "blockPos": [
+            2,
+            4,
+            2
+          ],
           "attachKeyFrame": false
         },
         {
@@ -95,7 +136,11 @@
             "zh_cn": "只有正面这一层是空的——门后有整整一层框架当背板。开口里必须保持空气，塞任何方块都会让门失效。",
             "en_us": "Only the front layer is hollow — there is a full layer of frame behind it. Keep the opening filled with air; any block inside disables the portal."
           },
-          "point": [2.5, 2.6, 2.5],
+          "point": [
+            2.5,
+            2.6,
+            2.5
+          ],
           "color": "input",
           "placeNearTarget": true,
           "attachKeyFrame": true
@@ -124,29 +169,49 @@
         {
           "type": "set_block",
           "block": "piranport:dungeon_portal",
-          "blockPos": [1, 1, 2],
+          "blockPos": [
+            1,
+            1,
+            2
+          ],
           "attachKeyFrame": true
         },
         {
           "type": "set_block",
           "block": "piranport:dungeon_portal",
-          "blockPos": [2, 1, 2],
+          "blockPos": [
+            2,
+            1,
+            2
+          ],
           "attachKeyFrame": false
         },
         {
           "type": "set_block",
           "block": "piranport:dungeon_lectern",
-          "blockPos": [1, 0, 1],
-          "attachKeyFrame": true
+          "blockPos": [
+            1,
+            1,
+            1
+          ],
+          "attachKeyFrame": true,
+          "blockProperties": {
+            "facing": "south",
+            "has_key": "true"
+          }
         },
         {
           "type": "text",
           "duration": 80,
           "text": {
             "zh_cn": "$(item)海域出击书台$()必须紧贴门框底边外侧一格——门前、门后、左右或正下方都算。",
-            "en_us": "The $(item)Dungeon Lectern$() must sit one block outside the frame's bottom edge — front, back, left, right, or directly below all count."
+            "en_us": "$(item)Dungeon Lectern$() must sit one block outside the frame's bottom edge — front, back, left, right, or directly below all count."
           },
-          "point": [1.5, 0.6, 1.5],
+          "point": [
+            1.5,
+            0.6,
+            1.5
+          ],
           "placeNearTarget": true,
           "attachKeyFrame": true
         },
@@ -156,7 +221,11 @@
         },
         {
           "type": "indicate_success",
-          "blockPos": [1, 0, 1],
+          "blockPos": [
+            1,
+            1,
+            1
+          ],
           "attachKeyFrame": true
         },
         {
@@ -166,7 +235,11 @@
             "zh_cn": "书台里必须插着$(item)副本钥匙$()。空书台不激活传送门——插钥匙时门框会立刻响应。",
             "en_us": "The lectern must hold a $(item)Dungeon Key$(). An empty lectern will not activate the portal — inserting the key lights it up immediately."
           },
-          "point": [1.5, 1.6, 1.5],
+          "point": [
+            1.5,
+            1.6,
+            1.5
+          ],
           "color": "green",
           "placeNearTarget": true,
           "attachKeyFrame": true
@@ -182,7 +255,11 @@
             "zh_cn": "记不住位置的话，右键门框任意一块会提示你还缺什么。",
             "en_us": "If unsure, right-click any frame block — it will tell you what is still missing."
           },
-          "point": [2.5, 2.2, 3.5],
+          "point": [
+            2.5,
+            2.2,
+            3.5
+          ],
           "placeNearTarget": true,
           "attachKeyFrame": true
         },
@@ -210,14 +287,26 @@
         {
           "type": "set_block",
           "block": "piranport:dungeon_portal",
-          "blockPos": [1, 1, 2],
+          "blockPos": [
+            1,
+            1,
+            2
+          ],
           "attachKeyFrame": true
         },
         {
           "type": "set_block",
           "block": "piranport:dungeon_lectern",
-          "blockPos": [1, 0, 1],
-          "attachKeyFrame": false
+          "blockPos": [
+            1,
+            1,
+            1
+          ],
+          "attachKeyFrame": false,
+          "blockProperties": {
+            "facing": "south",
+            "has_key": "true"
+          }
         },
         {
           "type": "text",
@@ -226,7 +315,11 @@
             "zh_cn": "框架完整、底边挂着插钥匙的书台，传送门就常开——直接走进开口即可进入副本，不需要任何右键操作。",
             "en_us": "With a complete frame and a keyed lectern on the bottom edge, the portal stays open — simply walk into the opening to enter. No right-click needed."
           },
-          "point": [1.5, 2.2, 1.5],
+          "point": [
+            1.5,
+            2.2,
+            1.5
+          ],
           "placeNearTarget": true,
           "attachKeyFrame": true
         },
@@ -236,7 +329,11 @@
         },
         {
           "type": "indicate_success",
-          "blockPos": [1, 1, 2],
+          "blockPos": [
+            1,
+            1,
+            2
+          ],
           "attachKeyFrame": true
         },
         {
@@ -246,7 +343,11 @@
             "zh_cn": "首次进入会从关卡起点开局；已经有进度则接着上次的节点继续。多人各自开门、各自进本，互不强制组队。",
             "en_us": "First entry starts at the stage's beginning; an existing run resumes at its current node. Players enter independently — no forced party."
           },
-          "point": [1.5, 2.6, 2.5],
+          "point": [
+            1.5,
+            2.6,
+            2.5
+          ],
           "color": "green",
           "placeNearTarget": true,
           "attachKeyFrame": true
@@ -262,7 +363,11 @@
             "zh_cn": "想直接回起点或续用最新记录点，就右键书台打开出击界面选择。",
             "en_us": "To jump to the stage start or resume from your latest checkpoint, right-click the lectern to open the sortie screen."
           },
-          "point": [1.5, 0.6, 1.5],
+          "point": [
+            1.5,
+            0.6,
+            1.5
+          ],
           "placeNearTarget": true,
           "attachKeyFrame": true
         },

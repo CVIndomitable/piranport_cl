@@ -374,6 +374,25 @@
         {
           "type": "idle",
           "duration": 90
+        },
+        {
+          "type": "text",
+          "duration": 80,
+          "text": {
+            "zh_cn": "想把钥匙收回包里，就$(bold)潜行 + 右键$()书台。手里拿着东西也没关系。",
+            "en_us": "To take the key back, $(bold)sneak + right-click$() the lectern — works even with items in hand."
+          },
+          "point": [
+            1.5,
+            0.6,
+            1.5
+          ],
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 90
         }
       ]
     }

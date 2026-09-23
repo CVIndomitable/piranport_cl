@@ -174,34 +174,44 @@ public final class TerrainGenerationPipeline {
     }
 
     /**
-     * 写入节点边界的屏障环。
+     * 写入边界的屏障环。
      *
-     * <p><b>坐标基准必须和 BASE 阶段区分开：</b>{@code state.startX()/startZ()} 对共享基底是
-     * 实例可用区的<b>最小角</b>（{@link DungeonInstance#getUsableMinX()}），而对节点局部状态则是
-     * <b>该节点的出生中心</b>（{@link TerrainGenerationState#initializeNode} 传入 spawn 坐标）。
-     * 旧实现在这里一律按"角"处理，于是每个节点都会以自己的中心为角、向外扫出一个
-     * {@code MAP_SIZE}（512）见方的屏障环——而节点中心间距只有 {@code NODE_AREA_SIZE}（128）。
-     * 512 的跨度是 128 的 4 倍，导致 <b>任一新节点的屏障环都会横穿并封锁相邻节点的出生点</b>，
-     * 玩家被关在隐形墙之间（"进了副本却走不出去/像被卡住"）。</p>
+     * <h2>两处独立缺陷（260924 审查 P0-5，对抗验证后确认）</h2>
+     * <p><b>其一：坐标基准混淆。</b>{@code state.startX()/startZ()} 对共享基底是实例可用区的
+     * <b>最小角</b>（{@link DungeonInstance#getUsableMinX()}），对节点局部状态却是<b>该节点的出生
+     * 中心</b>（{@link TerrainGenerationState#initializeNode} 传入 spawn）。旧实现一律按"角"用，
+     * 等于以节点中心为角向外扫环。</p>
      *
-     * <p>修法：按节点面积的一半把中心换算成该节点自己的角。节点专属状态（{@code nodeSpecific}）
-     * 才做这层换算；共享基底本来就是角，保持不变。</p>
+     * <p><b>其二：跨度对不上对象。</b>环边长写死 {@code MAP_SIZE}（512），但节点只占
+     * {@code NODE_AREA_SIZE}（128）、中心间距也只有 128。512 是 128 的 4 倍——这个跨度从来
+     * 没有对应的设计对象：节点是 4×4 网格排布的，512 的环一个格子根本放不下。</p>
+     *
+     * <p>只修第一条不够：环仍会横穿同列/同行邻居的出生点（只是从"跨 4 列"缩成"跨邻居"），
+     * 玩家依旧被隐形墙围住。<b>两条必须一起修</b>——按状态类型选取跨度：节点用
+     * {@code NODE_AREA_SIZE}，共享基底才用 {@code MAP_SIZE}。</p>
+     *
+     * <p>另注：玩家越界防护是<b>整实例级</b>的
+     * （{@code DungeonEventHandler} 把玩家钳回 {@code getUsableMinX/MaxX} 的可用区），
+     * 与节点级屏障环职责不同，二者不冲突。</p>
      */
     private static int processBoundary(ServerLevel level, TerrainGenerationState state, int budget) {
+        // 节点局部状态：跨度 = 节点边长，坐标基准 = 出生中心回退半格。
+        // 共享基底状态：跨度 = 整张地图，坐标基准本来就是角。
+        boolean nodeLocal = state.nodeSpecific();
+        int span = nodeLocal ? DungeonConstants.NODE_AREA_SIZE : MAP_SIZE;
+        int originX = nodeLocal ? state.startX() - span / 2 : state.startX();
+        int originZ = nodeLocal ? state.startZ() - span / 2 : state.startZ();
         int height = MAX_DEPTH + 7;
-        long total = (long) MAP_SIZE * 4 * height;
+        long total = (long) span * 4 * height;
         int used = (int) Math.min(total - state.cursor(), budget);
-        // 节点局部状态的 startX/startZ 是出生中心，需回退半个节点边长才是该节点区域的角。
-        int originX = state.nodeSpecific() ? state.startX() - DungeonConstants.NODE_AREA_SIZE / 2 : state.startX();
-        int originZ = state.nodeSpecific() ? state.startZ() - DungeonConstants.NODE_AREA_SIZE / 2 : state.startZ();
         for (int i = 0; i < used; i++) {
             long index = state.cursor() + i;
-            int side = (int) (index / (MAP_SIZE * height));
-            int rem = (int) (index % (MAP_SIZE * height));
+            int side = (int) (index / (span * height));
+            int rem = (int) (index % (span * height));
             int offset = rem / height;
             int y = SEA - MAX_DEPTH + rem % height;
-            int x = originX + (side < 2 ? offset : side == 2 ? 0 : MAP_SIZE - 1);
-            int z = originZ + (side < 2 ? side == 0 ? 0 : MAP_SIZE - 1 : offset);
+            int x = originX + (side < 2 ? offset : side == 2 ? 0 : span - 1);
+            int z = originZ + (side < 2 ? side == 0 ? 0 : span - 1 : offset);
             level.setBlock(new BlockPos(x, y, z), Blocks.BARRIER.defaultBlockState(), FLAGS);
         }
         state.advance(used);

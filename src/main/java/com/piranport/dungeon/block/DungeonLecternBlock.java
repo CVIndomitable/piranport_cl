@@ -72,14 +72,37 @@ public class DungeonLecternBlock extends BaseEntityBlock {
     }
 
     /**
-     * 抽取钥匙前先脱掉 HAS_KEY，避免区块被卸载时带着"已插钥匙"的状态存盘，
-     * 下次加载模型显示插着钥匙但 BE 里其实已经空了。
+     * 破坏前把插着的钥匙交还玩家。
+     *
+     * <h2>为什么必须在这里掉落（260924 审查 P0-6）</h2>
+     * <p>讲台的钥匙只活在 BlockEntity 的 {@code keyStack} 字段里，BE 没有 {@code onRemove}
+     * 之类钩子，且 {@code data/piranport/loot_table/} 下<b>没有</b> {@code dungeon_lectern}
+     * 掉落表——破坏后方块与钥匙双双蒸发。</p>
+     *
+     * <p>后果比"丢一件道具"严重得多：{@code DungeonEntryService.enter} 的唯一入口要求
+     * 「讲台方块存在且 {@code hasKey()}」，而实例存档里的 {@code lecternPos} 只被读取做距离
+     * 判定、<b>没有任何一处用它重建讲台</b>。所以拆掉讲台后，该实例的
+     * {@code ClearedNodes} 等进度就成了谁也读不到的孤儿数据——钥匙、方块、可达性三者全灭。
+     * 玩家只是顺手挖了个自己放下去的讲台，就永久失去一整个副本的进度。</p>
+     *
+     * <p>交还语义与 {@code extractKeyForShiftRightClick} 完全一致（背包满则落地），
+     * 因此走同一个方法即可，不重复实现。</p>
      */
     @Override
     public BlockState playerWillDestroy(net.minecraft.world.level.Level level, BlockPos pos,
                                         BlockState state, Player player) {
-        if (!level.isClientSide() && state.getValue(HAS_KEY)) {
-            level.setBlock(pos, state.setValue(HAS_KEY, false), Block.UPDATE_ALL);
+        if (!level.isClientSide()) {
+            // 先归还钥匙：extractKeyForShiftRightClick 内部会清 keyStack + setChanged，
+            // 并保留 dungeonInstanceUuid（副本可被其他玩家继续，与主动取钥匙同一约定）。
+            if (level.getBlockEntity(pos) instanceof DungeonLecternBlockEntity lectern
+                    && lectern.hasKey()) {
+                lectern.extractKeyForShiftRightClick(player);
+            }
+            // 再脱掉 HAS_KEY，避免区块被卸载时带着"已插钥匙"的状态存盘，
+            // 下次加载模型显示插着钥匙但 BE 里其实已经空了。
+            if (state.getValue(HAS_KEY)) {
+                level.setBlock(pos, state.setValue(HAS_KEY, false), Block.UPDATE_ALL);
+            }
         }
         return super.playerWillDestroy(level, pos, state, player);
     }

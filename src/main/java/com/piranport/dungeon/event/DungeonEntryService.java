@@ -46,6 +46,15 @@ public final class DungeonEntryService {
         TOO_FAR("too_far"),
         NO_LECTERN_OR_KEY("no_lectern_or_key"),
         NO_DUNGEON_LEVEL("no_dungeon_level"),
+        /**
+         * 钥匙没写 stageId（空白钥匙）——与"关卡被删了"是完全不同的两回事。
+         *
+         * <p>补给站遗迹掉落的通用 {@code dungeon_key} 注册时 DUNGEON_STAGE_ID 默认为空串，
+         * 从未绑定关卡。此前它和"关卡已删除"共用 {@link #NO_SUCH_STAGE}，玩家看到的是
+         * 「钥匙上的关卡不存在（可能已被删除）」——把人引向"钥匙坏了/存档丢了"，
+         * 而真实原因是"这把钥匙是空白的，需要先合成为某个章节的钥匙"。</p>
+         */
+        BLANK_KEY("blank_key"),
         NO_SUCH_STAGE("no_such_stage"),
         REJECTED("rejected"),
         NO_NODE("no_node");
@@ -93,7 +102,14 @@ public final class DungeonEntryService {
         ItemStack key = lectern.getKeyStack();
         // 必须解析 chapter_* → 真实关卡 ID：章节钥匙（ChapterKeyRecipe 产物）存的是章节 ID，
         // 直接查 stages 表恒为 null，玩家看到的会是"钥匙上的副本不存在"。
-        StageData stage = DungeonRegistry.INSTANCE.getStage(DungeonKeyItem.resolveStageId(key));
+        String resolvedStageId = DungeonKeyItem.resolveStageId(key);
+        // 空白钥匙（无 stageId）单独报错：它从未绑定关卡，不是"关卡被删了"。
+        // 玩家需要的是"先去合成一把章节钥匙"这个指引，而不是去怀疑存档损坏。
+        if (resolvedStageId == null || resolvedStageId.isEmpty()) {
+            Reject.BLANK_KEY.report(player);
+            return;
+        }
+        StageData stage = DungeonRegistry.INSTANCE.getStage(resolvedStageId);
         if (stage == null) {
             Reject.NO_SUCH_STAGE.report(player);
             return;

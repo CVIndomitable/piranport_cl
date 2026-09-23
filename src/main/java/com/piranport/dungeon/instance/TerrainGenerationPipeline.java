@@ -173,18 +173,35 @@ public final class TerrainGenerationPipeline {
         return used;
     }
 
+    /**
+     * 写入节点边界的屏障环。
+     *
+     * <p><b>坐标基准必须和 BASE 阶段区分开：</b>{@code state.startX()/startZ()} 对共享基底是
+     * 实例可用区的<b>最小角</b>（{@link DungeonInstance#getUsableMinX()}），而对节点局部状态则是
+     * <b>该节点的出生中心</b>（{@link TerrainGenerationState#initializeNode} 传入 spawn 坐标）。
+     * 旧实现在这里一律按"角"处理，于是每个节点都会以自己的中心为角、向外扫出一个
+     * {@code MAP_SIZE}（512）见方的屏障环——而节点中心间距只有 {@code NODE_AREA_SIZE}（128）。
+     * 512 的跨度是 128 的 4 倍，导致 <b>任一新节点的屏障环都会横穿并封锁相邻节点的出生点</b>，
+     * 玩家被关在隐形墙之间（"进了副本却走不出去/像被卡住"）。</p>
+     *
+     * <p>修法：按节点面积的一半把中心换算成该节点自己的角。节点专属状态（{@code nodeSpecific}）
+     * 才做这层换算；共享基底本来就是角，保持不变。</p>
+     */
     private static int processBoundary(ServerLevel level, TerrainGenerationState state, int budget) {
         int height = MAX_DEPTH + 7;
         long total = (long) MAP_SIZE * 4 * height;
         int used = (int) Math.min(total - state.cursor(), budget);
+        // 节点局部状态的 startX/startZ 是出生中心，需回退半个节点边长才是该节点区域的角。
+        int originX = state.nodeSpecific() ? state.startX() - DungeonConstants.NODE_AREA_SIZE / 2 : state.startX();
+        int originZ = state.nodeSpecific() ? state.startZ() - DungeonConstants.NODE_AREA_SIZE / 2 : state.startZ();
         for (int i = 0; i < used; i++) {
             long index = state.cursor() + i;
             int side = (int) (index / (MAP_SIZE * height));
             int rem = (int) (index % (MAP_SIZE * height));
             int offset = rem / height;
             int y = SEA - MAX_DEPTH + rem % height;
-            int x = state.startX() + (side < 2 ? offset : side == 2 ? 0 : MAP_SIZE - 1);
-            int z = state.startZ() + (side < 2 ? side == 0 ? 0 : MAP_SIZE - 1 : offset);
+            int x = originX + (side < 2 ? offset : side == 2 ? 0 : MAP_SIZE - 1);
+            int z = originZ + (side < 2 ? side == 0 ? 0 : MAP_SIZE - 1 : offset);
             level.setBlock(new BlockPos(x, y, z), Blocks.BARRIER.defaultBlockState(), FLAGS);
         }
         state.advance(used);

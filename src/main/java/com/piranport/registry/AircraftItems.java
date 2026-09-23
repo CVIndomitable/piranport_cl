@@ -137,9 +137,9 @@ public final class AircraftItems {
                                             1200, 1, 0, 18f, 1.6f, 16, AircraftInfo.BombingMode.DIVE, false))));
 
     // --- 水平轰炸机 ---
-    /** 景云（轰炸）— 水平轰炸26, HP6, 68节 */
-    public static final DeferredItem<AircraftItem> SEIUN_BOMBER =
-            ITEMS.register("seiun_bomber",
+    /** 景云改（轰炸）— 水平轰炸26, HP6, 68节 */
+    public static final DeferredItem<AircraftItem> SEIUN_KAI_BOMBER =
+            ITEMS.register("seiun_kai_bomber",
                     () -> new AircraftItem(new Item.Properties().stacksTo(1)
                             .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
                             .component(ModDataComponents.AIRCRAFT_INFO.get(),

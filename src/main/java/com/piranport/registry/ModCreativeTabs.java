@@ -93,7 +93,7 @@ public class ModCreativeTabs {
                         output.accept(ModItems.FIREFLY_AS_MK5.get());
                         output.accept(ModItems.SUISEI_BOMBER.get());
                         // Level bombers
-                        output.accept(ModItems.SEIUN_BOMBER.get());
+                        output.accept(ModItems.SEIUN_KAI_BOMBER.get());
                         output.accept(ModItems.B25_BOMBER.get());
                         output.accept(ModItems.XA2J_BOMBER.get());
                         // Fighters

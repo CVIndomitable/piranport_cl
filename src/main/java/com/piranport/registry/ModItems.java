@@ -323,7 +323,7 @@ public class ModItems {
     public static final DeferredItem<AircraftItem> FIREFLY_AS_MK5 = AircraftItems.FIREFLY_AS_MK5;
     public static final DeferredItem<AircraftItem> SUISEI_BOMBER = AircraftItems.SUISEI_BOMBER;
     // --- 水平轰炸机 ---
-    public static final DeferredItem<AircraftItem> SEIUN_BOMBER = AircraftItems.SEIUN_BOMBER;
+    public static final DeferredItem<AircraftItem> SEIUN_KAI_BOMBER = AircraftItems.SEIUN_KAI_BOMBER;
     public static final DeferredItem<AircraftItem> B25_BOMBER = AircraftItems.B25_BOMBER;
     public static final DeferredItem<AircraftItem> XA2J_BOMBER = AircraftItems.XA2J_BOMBER;
     // --- 战斗机 ---

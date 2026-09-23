@@ -1,12 +1,12 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "piranport:item/seiun_bomber_empty"
+    "layer0": "piranport:item/seiun_kai_bomber_empty"
   },
   "overrides": [
     {
       "predicate": { "piranport:fueled": 1 },
-      "model": "piranport:item/seiun_bomber_fueled"
+      "model": "piranport:item/seiun_kai_bomber_fueled"
     }
   ]
 }

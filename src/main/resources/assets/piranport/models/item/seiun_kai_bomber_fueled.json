@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "piranport:item/seiun_bomber"
+    "layer0": "piranport:item/seiun_kai_bomber"
   }
 }

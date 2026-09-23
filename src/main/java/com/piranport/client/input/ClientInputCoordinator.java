@@ -80,6 +80,10 @@ public class ClientInputCoordinator {
         CannonImpactEffects.clear();
         DebugInputHandler.reset();
         ScopeInputHandler.reset();
+        // 火控雷达吸附是跨 tick 的状态机（锁定目标 + 进入/退出回滞）。
+        // 不清的话，退出存档前锁着的实体 id 会残留到下一个存档：新世界里 id 空间
+        // 从 0 重新分配但含义完全不同（可能是只兔子），吸附会在没按 0 的情况下突然咬上去。
+        FireControlRadarSnapHandler.reset();
     }
 
     @SubscribeEvent

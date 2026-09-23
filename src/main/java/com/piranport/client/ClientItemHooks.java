@@ -137,6 +137,15 @@ public final class ClientItemHooks implements com.piranport.platform.ClientBridg
     }
 
     @Override
+    public double turnPlayerSensitivity(double rawSensitivity) {
+        // 走原版鼠标同一条取值路径（NeoForge 的 getTurnPlayerValues 钩子），
+        // 这样第三方改灵敏度的 mod 对吸附和鼠标一视同仁。
+        return net.neoforged.neoforge.client.ClientHooks.getTurnPlayerValues(
+                rawSensitivity, net.minecraft.client.Minecraft.getInstance().options.smoothCamera)
+                .getMouseSensitivity();
+    }
+
+    @Override
     public void displayClientMessage(Component message) {
         displayClientMessage(message, true);
     }

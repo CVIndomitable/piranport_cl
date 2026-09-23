@@ -98,6 +98,20 @@ public final class ClientHooks {
         bridge.setFcRadarSnapLimit(limitBlocks);
     }
 
+    /**
+     * 把原始鼠标灵敏度换成真正参与转向换算的那个值。
+     *
+     * <p>WHY 要有这层转发：原版 {@code MouseHandler#turnPlayer} 在乘系数之前会先把灵敏度
+     * 过一个 NeoForge 钩子（{@code ClientHooks.getTurnPlayerValues}），有 mod 改写它时
+     * 实际生效的灵敏度就不是选项里的那个数。本方法让吸附走和原版鼠标完全相同的取值路径，
+     * 否则装了改灵敏度的 mod 时，吸附速度会与鼠标手感对不上。
+     *
+     * <p>服务端侧返回入参本身（那边根本没有客户端选项）。
+     */
+    public static double turnPlayerSensitivity(double rawSensitivity) {
+        return bridge.turnPlayerSensitivity(rawSensitivity);
+    }
+
     public static void displayClientMessage(Component message) {
         bridge.displayClientMessage(message);
     }

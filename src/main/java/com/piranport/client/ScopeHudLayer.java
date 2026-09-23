@@ -111,11 +111,15 @@ public class ScopeHudLayer {
             }
         }
 
+        // 弹道解算的结果读数（仰角、算法性能）只在 F8 调试模式下显示，
+        // 避免普通开镜时 HUD 被解算细节淹没。
+        boolean debug = com.piranport.debug.PiranPortDebug.isClientEnabled();
+
         // ---- 距离信息 ----
         double dist = ClientScopeHandler.getTargetDistance();
         double vert = ClientScopeHandler.getTargetVertical();
         if (dist > 0) {
-            String angleText = ClientScopeHandler.hasSolved()
+            String angleText = debug && ClientScopeHandler.hasSolved()
                     ? String.format("  §7仰角: §b%.1f°", Math.toDegrees(ClientScopeHandler.getLastSolvedAngle()))
                     : "";
             String distText = String.format("§f距离: §e%.1f§fm  §7(相对高度: §b%+.1f§7)%s", dist, vert, angleText);
@@ -131,11 +135,11 @@ public class ScopeHudLayer {
                 ? 0xFF5555 : 0xFFFFFF;
         graphics.drawString(mc.font, targetText, cx - mc.font.width(targetText) / 2, cy + 37, targetColor, true);
 
-        // ---- 算法性能统计 ----
-        drawAlgorithmStats(graphics, mc, cx, cy);
+        // ---- 算法性能统计（仅 F8 调试模式） ----
+        if (debug) drawAlgorithmStats(graphics, mc, cx, cy);
 
         // ---- 调试信息 ----
-        if (com.piranport.debug.PiranPortDebug.isClientEnabled()) {
+        if (debug) {
             String debugText = String.format("§7[火控] 长按: %dt/%dt  zoom: %.1f",
                     ClientScopeHandler.getHoldTicks(),
                     ClientScopeHandler.getScopeThreshold(),

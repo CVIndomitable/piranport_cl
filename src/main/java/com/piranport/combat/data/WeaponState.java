@@ -38,7 +38,12 @@ public class WeaponState {
      * @param ticks 冷却时长（自动应用测试工具覆盖）
      */
     public void setCooldown(long currentTick, int ticks) {
-        weapon.set(ModDataComponents.WEAPON_COOLDOWN.get(), WeaponCooldown.of(currentTick, ticks));
+        setCooldown(null, currentTick, ticks);
+    }
+
+    /** 带所有者版本：只有测试模式属主才享受冷却覆盖。 */
+    public void setCooldown(java.util.UUID owner, long currentTick, int ticks) {
+        weapon.set(ModDataComponents.WEAPON_COOLDOWN.get(), WeaponCooldown.of(owner, currentTick, ticks));
     }
 
     /**

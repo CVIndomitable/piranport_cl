@@ -103,9 +103,9 @@ public class TorpedoFireStrategy {
             int cooldown = ExperienceShellItem.applyCooldownReduction(launcherStack, launcher.getCooldownTicks());
             int boostedCooldown = TransformationManager.boostedCooldown(player, cooldown);
             coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
-                    cooldowns.withSlotCooldown(weaponSlot, boostedCooldown, level.getGameTime()));
+                    cooldowns.withSlotCooldown(player.getUUID(), weaponSlot, boostedCooldown, level.getGameTime()));
             launcherStack.set(ModDataComponents.WEAPON_COOLDOWN.get(),
-                    WeaponCooldown.of(level.getGameTime(), boostedCooldown));
+                    WeaponCooldown.of(player.getUUID(), level.getGameTime(), boostedCooldown));
 
             level.playSound(null, player.getX(), player.getY(), player.getZ(),
                     SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 0.4f, 0.4f);
@@ -173,9 +173,9 @@ public class TorpedoFireStrategy {
         if (!launcherBroken) {
             int boostedCooldown = TransformationManager.boostedCooldown(player, cooldown);
             coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
-                    cooldowns.withSlotCooldown(weaponSlot, boostedCooldown, level.getGameTime()));
+                    cooldowns.withSlotCooldown(player.getUUID(), weaponSlot, boostedCooldown, level.getGameTime()));
             launcherStack.set(ModDataComponents.WEAPON_COOLDOWN.get(),
-                    WeaponCooldown.of(level.getGameTime(), boostedCooldown));
+                    WeaponCooldown.of(player.getUUID(), level.getGameTime(), boostedCooldown));
         }
 
         level.playSound(null, player.getX(), player.getY(), player.getZ(),
@@ -259,7 +259,7 @@ public class TorpedoFireStrategy {
                 ItemStack s = inv.items.get(i);
                 if (!s.isEmpty() && s.getItem() == torpedoType) {
                     int take = Math.min(toConsume, s.getCount());
-                    PiranPortDebug.consumeAmmo(s, take);
+                    PiranPortDebug.consumeAmmo(player.getUUID(), s, take);
                     toConsume -= take;
                 }
             }
@@ -267,7 +267,7 @@ public class TorpedoFireStrategy {
                 ItemStack oh = inv.offhand.get(0);
                 if (!oh.isEmpty() && oh.getItem() == torpedoType) {
                     int take = Math.min(toConsume, oh.getCount());
-                    PiranPortDebug.consumeAmmo(oh, take);
+                    PiranPortDebug.consumeAmmo(player.getUUID(), oh, take);
                     toConsume -= take;
                 }
             }
@@ -336,16 +336,16 @@ public class TorpedoFireStrategy {
             if (nextAvailable >= tubeCount) {
                 int boostedCooldown = TransformationManager.boostedCooldown(player, cooldown);
                 coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
-                        cooldowns.withSlotCooldown(weaponSlot, boostedCooldown, level.getGameTime()));
+                        cooldowns.withSlotCooldown(player.getUUID(), weaponSlot, boostedCooldown, level.getGameTime()));
                 launcherStack.set(ModDataComponents.WEAPON_COOLDOWN.get(),
-                        WeaponCooldown.of(level.getGameTime(), boostedCooldown));
+                        WeaponCooldown.of(player.getUUID(), level.getGameTime(), boostedCooldown));
             } else {
                 // 背包弹药不足，设置短冷却提示玩家需要补充弹药
                 int penaltyTicks = 10;
                 coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
-                        cooldowns.withSlotCooldown(weaponSlot, penaltyTicks, level.getGameTime()));
+                        cooldowns.withSlotCooldown(player.getUUID(), weaponSlot, penaltyTicks, level.getGameTime()));
                 launcherStack.set(ModDataComponents.WEAPON_COOLDOWN.get(),
-                        WeaponCooldown.of(level.getGameTime(), penaltyTicks));
+                        WeaponCooldown.of(player.getUUID(), level.getGameTime(), penaltyTicks));
             }
         }
 

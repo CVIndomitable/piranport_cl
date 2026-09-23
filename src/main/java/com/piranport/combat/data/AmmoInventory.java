@@ -91,6 +91,17 @@ public class AmmoInventory {
      * @return true 表示成功消耗足够弹药，false 表示背包中弹药不足
      */
     public boolean consumeAmmo(Item ammoType, int required) {
+        return consumeAmmo(null, ammoType, required);
+    }
+
+    /**
+     * 消耗指定数量的弹药（带所有者校验，只有测试模式属主免耗）。
+     * @param owner 弹药所属玩家 UUID；{@code null} 表示无玩家上下文，正常消耗
+     * @param ammoType 弹药物品类型
+     * @param required 需要消耗的数量
+     * @return true 表示成功消耗足够弹药，false 表示背包中弹药不足
+     */
+    public boolean consumeAmmo(java.util.UUID owner, Item ammoType, int required) {
         if (countAmmo(ammoType) < required) {
             return false;
         }
@@ -102,7 +113,7 @@ public class AmmoInventory {
             ItemStack stack = inventory.items.get(i);
             if (!stack.isEmpty() && stack.getItem() == ammoType) {
                 int take = Math.min(toConsume, stack.getCount());
-                com.piranport.debug.PiranPortDebug.consumeAmmo(stack, take);
+                com.piranport.debug.PiranPortDebug.consumeAmmo(owner, stack, take);
                 toConsume -= take;
             }
         }
@@ -111,7 +122,7 @@ public class AmmoInventory {
             ItemStack offhand = inventory.offhand.get(0);
             if (!offhand.isEmpty() && offhand.getItem() == ammoType) {
                 int take = Math.min(toConsume, offhand.getCount());
-                com.piranport.debug.PiranPortDebug.consumeAmmo(offhand, take);
+                com.piranport.debug.PiranPortDebug.consumeAmmo(owner, offhand, take);
                 toConsume -= take;
             }
         }
@@ -133,10 +144,15 @@ public class AmmoInventory {
         var preferred = weaponState.getSelectedAmmoType();
 
 
-        com.piranport.debug.PiranPortDebug.event(
-                "AmmoInventory.chooseReloadAmmo | weapon={} required={} creative={} hasPreferred={}",
-                net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(weapon.getItem()).getPath(),
-                required, creative, preferred.hasSelection());
+        // 门控前置：BuiltInRegistries.ITEM.getKey(...).getPath() 是注册表查找 + ResourceLocation
+        // 创建 + 字符串分配，Java eager evaluation 会让它在 event() 的 SESSIONS.isEmpty() 短路之前
+        // 就执行完毕，因此必须把整个调用包在 shouldEmit() 里。
+        if (com.piranport.debug.PiranPortDebug.shouldEmit()) {
+            com.piranport.debug.PiranPortDebug.event(
+                    "AmmoInventory.chooseReloadAmmo | weapon={} required={} creative={} hasPreferred={}",
+                    net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(weapon.getItem()).getPath(),
+                    required, creative, preferred.hasSelection());
+        }
 
         if (preferred.hasSelection()) {
             ResourceLocation rl = ResourceLocation.tryParse(preferred.ammoItemId());
@@ -177,15 +193,21 @@ public class AmmoInventory {
      */
     @Nullable
     public Item findFirstSufficientAmmoByInventoryOrder(ItemStack weapon, int required, @Nullable Level level) {
-        com.piranport.debug.PiranPortDebug.event("  findFirstSufficientAmmo | slots={} required={}", inventory.items.size(), required);
+        if (com.piranport.debug.PiranPortDebug.shouldEmit()) {
+            com.piranport.debug.PiranPortDebug.event("  findFirstSufficientAmmo | slots={} required={}",
+                    inventory.items.size(), required);
+        }
         for (int i = 0; i < inventory.items.size(); i++) {
             if (shouldSkipSlot(i)) continue;
             ItemStack stack = inventory.items.get(i);
             if (!stack.isEmpty() && matchesCaliber(stack, weapon, level)) {
                 int count = countAmmo(stack.getItem());
-                com.piranport.debug.PiranPortDebug.event("    slot[{}] {} count={} matches={}",
-                    i, net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(stack.getItem()).getPath(),
-                    count, count >= required);
+                // 循环体内埋点：每槽位一次注册表查找，必须整体门控
+                if (com.piranport.debug.PiranPortDebug.shouldEmit()) {
+                    com.piranport.debug.PiranPortDebug.event("    slot[{}] {} count={} matches={}",
+                        i, net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(stack.getItem()).getPath(),
+                        count, count >= required);
+                }
                 if (count >= required) {
                     return stack.getItem();
                 }

@@ -49,8 +49,6 @@ public interface ClientBridge {
 
     void setFcRadarSnapLimit(double limitBlocks);
 
-    double turnPlayerSensitivity(double rawSensitivity);
-
     void displayClientMessage(Component message);
 
     void displayClientMessage(Component message, boolean overlay);

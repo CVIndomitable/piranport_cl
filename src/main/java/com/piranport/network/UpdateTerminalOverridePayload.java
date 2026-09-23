@@ -13,6 +13,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.Item;
+import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 /**
@@ -51,7 +52,9 @@ public record UpdateTerminalOverridePayload(
     }
 
     public static void handle(UpdateTerminalOverridePayload payload, IPayloadContext context) {
-        context.enqueueWork(() -> {
+        // runPayload：与其余调试通道一致地兜住异常并附带玩家上下文，
+        // 裸 enqueueWork 一旦抛异常会静默吞掉，客户端停在乐观更新后的假状态。
+        com.piranport.debug.PiranPortDebug.runPayload("UpdateTerminalOverride", context.player(), () -> {
             if (!(context.player() instanceof ServerPlayer serverPlayer)) {
                 return;
             }
@@ -61,12 +64,15 @@ public record UpdateTerminalOverridePayload(
             if (!ConfigToolPermissions.canUse(serverPlayer)) {
                 PiranPort.LOGGER.warn("Player {} tried to change terminal override without admin permission",
                         serverPlayer.getName().getString());
+                // 必须回执：客户端的输入框已经乐观改成了新值，不回执就永久显示一个没生效的覆盖。
+                reject(serverPlayer, "无管理员权限");
                 return;
             }
 
             if (!Double.isFinite(payload.delta())) {
                 PiranPort.LOGGER.warn("Rejected non-finite terminal override: {} / {}",
                         payload.category(), payload.key());
+                reject(serverPlayer, "偏移量非法");
                 return;
             }
 
@@ -80,14 +86,19 @@ public record UpdateTerminalOverridePayload(
                     String modelKey = normalizeTorpedoKey(payload.key());
                     if (modelKey == null) {
                         PiranPort.LOGGER.warn("Rejected unknown torpedo model key: {}", payload.key());
+                        reject(serverPlayer, "未知鱼雷型号: " + payload.key());
                         return;
                     }
                     data.setTorpedoSpeedDelta(modelKey, TerminalOverridesSavedData.clampTorpedoDelta((float) payload.delta()));
                     // 鱼雷是实体化的，后续发射会读取新速度；已飞行的鱼雷不受影响（设计如此，见终端 UI 说明）。
                 }
                 case CATEGORY_CORE -> {
-                    String coreKey = payload.key();
-                    if (coreKey == null || coreKey.isEmpty()) {
+                    // 与鱼雷分支对齐：键必须是合法 ShipType 枚举名（SMALL/MEDIUM/LARGE/SUBMARINE）。
+                    // 不走白名单的话，非法键会永久写进存档且永远匹配不到读取方 activeType.name()。
+                    String coreKey = TerminalOverridesSavedData.normalizeCoreKey(payload.key());
+                    if (coreKey == null) {
+                        PiranPort.LOGGER.warn("Rejected unknown ship type key: {}", payload.key());
+                        reject(serverPlayer, "未知舰型: " + payload.key());
                         return;
                     }
                     data.setCoreSpeedDelta(coreKey, TerminalOverridesSavedData.clampCoreDelta(payload.delta()));
@@ -95,8 +106,17 @@ public record UpdateTerminalOverridePayload(
                     // 必须显式重放，否则只有下次变形/换装才生效。
                     com.piranport.combat.TransformationManager.onTerminalCoreOverrideChanged(serverPlayer);
                 }
-                default -> PiranPort.LOGGER.warn("Unknown terminal override category: {}", payload.category());
+                default -> {
+                    PiranPort.LOGGER.warn("Unknown terminal override category: {}", payload.category());
+                    reject(serverPlayer, "未知分类: " + payload.category());
+                    return;
+                }
             }
+
+            // 回推最新快照：客户端镜像只在收到 sync 包时更新，而写覆盖的客户端
+            // 不刷新镜像的话，切页/滚动/缩放触发 rebuildWidgets 会把输入框回退成旧值
+            // （单机因客户端与服务端同 JVM 共享静态镜像而看不出来，联机才暴露）。
+            PacketDistributor.sendToPlayer(serverPlayer, SyncTerminalOverridesPayload.from(data));
 
             if (payload.category().equals(CATEGORY_CORE)) {
                 PiranPort.LOGGER.info("Player {} set core speed delta {} = {}",
@@ -106,6 +126,17 @@ public record UpdateTerminalOverridePayload(
                         serverPlayer.getName().getString(), payload.key(), payload.delta());
             }
         });
+    }
+
+    /**
+     * 拒绝回执：告诉客户端本次修改没有生效。
+     *
+     * <p>WHY 不只是 LOGGER.warn：终端界面在发包时就把输入框改成了新值，静默拒绝会让界面
+     * 一直显示一个存档里不存在的覆盖值，直到玩家重启客户端——比直接报错更难查。
+     */
+    private static void reject(ServerPlayer player, String reason) {
+        player.displayClientMessage(net.minecraft.network.chat.Component.literal(
+                "§c[PP] 速度覆盖未生效：" + reason), false);
     }
 
     /**

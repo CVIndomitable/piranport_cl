@@ -14,7 +14,10 @@ import java.util.Map;
 /**
  * 存档级别的调试终端覆盖数据。
  *
- * <p>存储位置: world/data/piranport_terminal_overrides.dat
+ * <p>存储位置: &lt;主世界&gt;/data/piranport_terminal_overrides.dat —— 锚点固定为主世界，
+ * 与 {@code DungeonSavedData} 一致。WHY 不用调用方所在维度：本域是存档级数据，
+ * 而 MC 每个维度各持一份独立的 data 目录，按维度存会把一份覆盖拆成互不可见的几份，
+ * 且 {@code publishToRuntime} 是全局单例，两个维度会互相覆盖镜像。
  * <p>用途: 调试终端「速度」标签页写入的数值覆盖。
  * <p>线程模型: 服务端主线程。
  *
@@ -94,6 +97,11 @@ public class TerminalOverridesSavedData extends SavedData {
     /**
      * 设置某舰型的核心航速倍率偏移。
      *
+     * <p>偏移量为 0 时等价于移除覆盖 —— 与 {@link #setTorpedoSpeedDelta} 语义对齐。
+     * WHY 要在钳制<b>之前</b>判 0：{@link #clampCoreDelta} 的下限是 0.1，
+     * 先钳再判会让「填 0 清除」永远走不到移除分支（钳完最小也是 0.1），
+     * 只有 NaN/Infinity 才可达，而调用方已把 non-finite 挡在门外 —— 即死代码。
+     *
      * @param coreKey 舰型名（如 {@code LARGE}）
      * @param delta   偏移量，将被钳制到合法区间
      */
@@ -101,13 +109,12 @@ public class TerminalOverridesSavedData extends SavedData {
         if (coreKey == null || coreKey.isEmpty()) {
             return;
         }
+        if (delta == 0d) {
+            removeCoreSpeedDelta(coreKey);
+            return;
+        }
         double clamped = clampCoreDelta(delta);
-        if (clamped == 0d) {
-            if (coreDeltas.remove(coreKey) != null) {
-                setDirty();
-            }
-        } else {
-            coreDeltas.put(coreKey, clamped);
+        if (coreDeltas.put(coreKey, clamped) == null || coreDeltas.get(coreKey) != clamped) {
             setDirty();
         }
         publishToRuntime();
@@ -177,6 +184,29 @@ public class TerminalOverridesSavedData extends SavedData {
     }
 
     /**
+     * 校验核心覆盖键是否合法：必须是 {@code ShipType} 枚举常量名
+     * （{@code SMALL} / {@code MEDIUM} / {@code LARGE} / {@code SUBMARINE}）。
+     *
+     * <p>WHY 需要白名单：读取方 {@code TransformationManager} 只用
+     * {@code activeType.name()} 查表，任何非法键都永远匹配不到，却会永久写进存档
+     * （每次读覆盖白查一次 Map）。鱼雷侧已在 {@code normalizeTorpedoKey} 入口挡掉，
+     * 核心侧此前只判空串，构成设计不对称。
+     *
+     * @return 归一化后的枚举名；不是合法舰型时返回 null
+     */
+    public static String normalizeCoreKey(String rawKey) {
+        if (rawKey == null || rawKey.isEmpty()) {
+            return null;
+        }
+        for (com.piranport.item.ShipType type : com.piranport.item.ShipType.values()) {
+            if (type.name().equals(rawKey)) {
+                return type.name();
+            }
+        }
+        return null;
+    }
+
+    /**
      * 把当前覆盖发布到 {@link TerminalOverrides} 运行时镜像。
      *
      * <p>WHY 在这里统一发布而不是让调用方各发一次：写入的三个入口
@@ -228,16 +258,23 @@ public class TerminalOverridesSavedData extends SavedData {
 
         if (tag.contains(KEY_CORES, Tag.TAG_COMPOUND)) {
             CompoundTag coresTag = tag.getCompound(KEY_CORES);
-            for (String coreKey : coresTag.getAllKeys()) {
-                byte type = coresTag.getTagType(coreKey);
+            for (String rawKey : coresTag.getAllKeys()) {
+                byte type = coresTag.getTagType(rawKey);
                 // 兼容 putFloat 写出来的旧数据：double 是主格式，float 也接受
                 double raw;
                 if (type == Tag.TAG_DOUBLE) {
-                    raw = coresTag.getDouble(coreKey);
+                    raw = coresTag.getDouble(rawKey);
                 } else if (type == Tag.TAG_FLOAT) {
-                    raw = coresTag.getFloat(coreKey);
+                    raw = coresTag.getFloat(rawKey);
                 } else {
-                    PiranPort.LOGGER.warn("Skipping non-numeric core override: {}", coreKey);
+                    PiranPort.LOGGER.warn("Skipping non-numeric core override: {}", rawKey);
+                    continue;
+                }
+                // 手改的 .dat 可能塞进任意键名，与网络入口同样过一道 ShipType 白名单，
+                // 否则垃圾键会永远留在内存里且每次读覆盖白查一次。
+                String coreKey = normalizeCoreKey(rawKey);
+                if (coreKey == null) {
+                    PiranPort.LOGGER.warn("Skipping unknown ship type override: {}", rawKey);
                     continue;
                 }
                 double clamped = clampCoreDelta(raw);
@@ -260,10 +297,19 @@ public class TerminalOverridesSavedData extends SavedData {
     /**
      * 获取或创建 SavedData 实例。
      *
-     * @param level 服务端世界（通常使用主世界 —— 存档级数据的锚点）
+     * <p>WHY 形参是 {@link ServerLevel} 却锚到主世界：本域是存档级数据，
+     * 但 {@code level.getDataStorage()} 返回的是该维度<b>私有</b>的 data 目录
+     * （MC 的 {@code ServerChunkCache} 按 {@code level.dimension()} 分目录），
+     * 直接用它会让主世界/下界/末地/副本各持一份互不可见的覆盖。
+     * 调用方手上通常只有玩家所在维度，故此处统一改道
+     * {@code level.getServer().overworld()}，调用方无需关心。
+     *
+     * @param level 服务端世界（任意维度都可，内部一律折算到主世界）
      */
     public static TerminalOverridesSavedData get(ServerLevel level) {
-        return level.getDataStorage().computeIfAbsent(
+        // 用 getServer() 而非 getServerLevel(OVERWORLD)：单机集成服务端下同样成立，
+        // 且不依赖 ClientLevel 侧的 ClientLevelData 实现。
+        return level.getServer().overworld().getDataStorage().computeIfAbsent(
                 new SavedData.Factory<>(
                         TerminalOverridesSavedData::new,
                         TerminalOverridesSavedData::load,

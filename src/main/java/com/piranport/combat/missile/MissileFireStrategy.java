@@ -159,7 +159,7 @@ public class MissileFireStrategy {
             ammoId = BuiltInRegistries.ITEM.getKey(ammoItem).toString();
             // 创造模式：不消耗弹药
             if (!player.getAbilities().instabuild) {
-                PiranPortDebug.consumeAmmo(
+                PiranPortDebug.consumeAmmo(player.getUUID(), 
                         ammoSlot == 40 ? inv.offhand.get(0) : inv.items.get(ammoSlot), 1);
             }
         }
@@ -194,15 +194,15 @@ public class MissileFireStrategy {
             int cd = TransformationManager.boostedCooldown(player,
                     ExperienceShellItem.applyCooldownReduction(launcherStack, launcher.getCooldownTicks()));
             coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
-                    cooldowns.withSlotCooldown(weaponSlot, cd, level.getGameTime()));
+                    cooldowns.withSlotCooldown(player.getUUID(), weaponSlot, cd, level.getGameTime()));
             launcherStack.set(ModDataComponents.WEAPON_COOLDOWN.get(),
-                    WeaponCooldown.of(level.getGameTime(), cd));
+                    WeaponCooldown.of(player.getUUID(), level.getGameTime(), cd));
         } else {
             int penaltyTicks = 10;
             coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
-                    cooldowns.withSlotCooldown(weaponSlot, penaltyTicks, level.getGameTime()));
+                    cooldowns.withSlotCooldown(player.getUUID(), weaponSlot, penaltyTicks, level.getGameTime()));
             launcherStack.set(ModDataComponents.WEAPON_COOLDOWN.get(),
-                    WeaponCooldown.of(level.getGameTime(), penaltyTicks));
+                    WeaponCooldown.of(player.getUUID(), level.getGameTime(), penaltyTicks));
             player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
         }
 
@@ -286,7 +286,7 @@ public class MissileFireStrategy {
 
             // Consume 1 ammo
             String ammoId = BuiltInRegistries.ITEM.getKey(ammoItem).toString();
-            PiranPortDebug.consumeAmmo(
+            PiranPortDebug.consumeAmmo(player.getUUID(), 
                     ammoSlot == 40 ? inv.offhand.get(0) : inv.items.get(ammoSlot), 1);
 
             // Spawn missile aimed at fire control target
@@ -296,9 +296,9 @@ public class MissileFireStrategy {
             int cd = TransformationManager.boostedCooldown(player,
                     ExperienceShellItem.applyCooldownReduction(stack, launcher.getCooldownTicks()));
             coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
-                    cooldowns.withSlotCooldown(slot, cd, gameTime));
+                    cooldowns.withSlotCooldown(player.getUUID(), slot, cd, gameTime));
             stack.set(ModDataComponents.WEAPON_COOLDOWN.get(),
-                    WeaponCooldown.of(gameTime, cd));
+                    WeaponCooldown.of(player.getUUID(), gameTime, cd));
 
             level.playSound(null, player.getX(), player.getY(), player.getZ(),
                     SoundEvents.FIREWORK_ROCKET_LAUNCH, SoundSource.PLAYERS, 1.0f, 0.8f);

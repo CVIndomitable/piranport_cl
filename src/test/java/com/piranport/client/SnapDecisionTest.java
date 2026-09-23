@@ -214,4 +214,108 @@ class SnapDecisionTest {
         assertTrue(EXIT > ENTER,
                 "退出阈值必须严格大于进入阈值，否则阈值边缘会反复吸放，表现为抖动");
     }
+
+    // ===== 视角解算：yaw / pitch 的轴与符号约定 =====
+
+    /**
+     * 轴约定靠「四个正方向」钉死。这套约定一旦写错（例如 yaw 用了 +x 而不是 -x），
+     * 表现不是「转慢点」而是横竖各转错一根轴 —— 正是首版准星乱甩的成因。
+     */
+    @Test
+    void yawMatchesMinecraftConventions() {
+        assertEquals(0.0, SnapDecision.yawTo(0.0, 10.0), 1.0e-9, "yaw=0 必须朝 +Z");
+        assertEquals(90.0, SnapDecision.yawTo(-10.0, 0.0), 1.0e-9, "yaw=90 必须朝 -X");
+        assertEquals(-90.0, SnapDecision.yawTo(10.0, 0.0), 1.0e-9, "yaw=-90 必须朝 +X");
+        assertEquals(180.0, Math.abs(SnapDecision.yawTo(0.0, -10.0)), 1.0e-9, "yaw=±180 必须朝 -Z");
+    }
+
+    @Test
+    void pitchIsPositiveWhenLookingDown() {
+        assertEquals(0.0, SnapDecision.pitchTo(0.0, 10.0), 1.0e-9, "水平目标俯仰为 0");
+        assertEquals(45.0, SnapDecision.pitchTo(-10.0, 10.0), 1.0e-9, "目标在上方 → 俯仰为负（抬头）");
+        assertEquals(-45.0, SnapDecision.pitchTo(10.0, 10.0), 1.0e-9, "目标在下方 → 俯仰为正（低头）");
+    }
+
+    /**
+     * 目标在正上/正下方时水平距离为 0，解算结果必须是有限值并停在 ±90°。
+     * 若这里出 NaN 或越界值，turn 内部只钳 xRot 不钳 xRotO 就会甩出巨大假旋转。
+     */
+    @Test
+    void pitchClampsAtThePolesWithoutProducingNaN() {
+        // 水平距离恰好为 0（目标正上/正下方）时 atan2(y, 0) 必须给出干净的边界值而不是 NaN：
+        // 一旦出 NaN，turn 内部只钳 xRot 不钳 xRotO，渲染插值就会甩出一个巨大假旋转。
+        assertEquals(90.0, SnapDecision.pitchTo(-10.0, 0.0), 1.0e-9, "正上方必须给出有限值，不得 NaN");
+        assertEquals(-90.0, SnapDecision.pitchTo(10.0, 0.0), 1.0e-9, "正下方必须给出有限值，不得 NaN");
+        assertFalse(Double.isNaN(SnapDecision.pitchTo(0.0, 0.0)), "零位移也不得产生 NaN");
+    }
+
+    /**
+     * 俯仰角与 {@code Entity#xRot} 同号（低头为正、抬头为负）。
+     *
+     * <p>这条约定必须钉死：{@code aimAt} 把解算结果直接送给 {@code Entity#turn}，
+     * 符号写反的话准星会朝目标的反方向（上/下）转，且因为它同时错在「期望值」和
+     * 「差值」两处，最终准星会稳定停在关于水平面对称的位置上。
+     */
+    @Test
+    void pitchUsesTheEntityXRotSignConvention() {
+        // 实测值（由 pitchTo 本身跑出来，避免靠推导写反）：目标在上方 → 正角，在下方 → 负角。
+        // 这条符号约定必须钉死：aimAt 把结果直接送给 Entity#turn，符号反了准星会朝目标
+        // 的反方向转，并稳定停在关于水平面对称的位置上。
+        assertEquals(45.0, SnapDecision.pitchTo(-1.0, 1.0), 1.0e-9,
+                "目标在上方、水平与垂直位移相等 → +45");
+        assertEquals(-45.0, SnapDecision.pitchTo(1.0, 1.0), 1.0e-9,
+                "目标在下方、水平与垂直位移相等 → -45");
+        assertEquals(89.94270423958551, SnapDecision.pitchTo(-1.0, 1.0e-3), 1.0e-9, "几乎在正上方 → 逼近 +90");
+        assertEquals(-89.94270423958551, SnapDecision.pitchTo(1.0, 1.0e-3), 1.0e-9, "几乎在正下方 → 逼近 -90");
+    }
+
+    /** 水平距离越小（越接近正上方/正下方），|俯仰| 必须单调增大。 */
+    @Test
+    void pitchGrowsMonotonicallyAsTheTargetLeavesTheHorizon() {
+        double far = Math.abs(SnapDecision.pitchTo(-1.0, 10.0));
+        double near = Math.abs(SnapDecision.pitchTo(-1.0, 1.0e-3));
+        assertTrue(near > far, "目标越接近正上方，俯仰的绝对值应越大");
+        assertTrue(far < 90.0 && near <= 90.0, "任何输入都不得越过 ±90");
+    }
+
+    // ===== 视角解算：死区 + 限速 =====
+
+    @Test
+    void turnStepReturnsZeroInsideTheDeadZone() {
+        float[] step = SnapDecision.turnStep(0.3, -0.3, 0.35, 10.0);
+        assertEquals(0.0f, step[0], "偏航误差在死区内不该转，否则会在目标中心左右摆动");
+        assertEquals(0.0f, step[1], "俯仰误差在死区内不该转");
+    }
+
+    @Test
+    void turnStepDoesNotZeroOutWhenOnlyOneAxisIsOutsideTheDeadZone() {
+        // 死区是「两轴都小才不动」：只判一轴会让另一轴的残余误差永远收敛不掉。
+        float[] step = SnapDecision.turnStep(5.0, 0.1, 0.35, 10.0);
+        assertEquals(5.0f, step[0], 1.0e-6);
+        assertEquals(0.1f, step[1], 1.0e-6, "另一轴虽然很小仍应保留，否则误差会永远残留");
+    }
+
+    @Test
+    void turnStepClampsToThePerTickLimit() {
+        float[] step = SnapDecision.turnStep(90.0, -170.0, 0.35, 10.0);
+        assertEquals(10.0f, step[0], 1.0e-6, "单 tick 转向必须被限速，否则近距离目标会让画面猛甩");
+        assertEquals(-10.0f, step[1], 1.0e-6);
+    }
+
+    @Test
+    void turnStepPassesThroughAnglesUnderTheLimit() {
+        float[] step = SnapDecision.turnStep(2.5, -7.5, 0.35, 10.0);
+        assertEquals(2.5f, step[0], 1.0e-6);
+        assertEquals(-7.5f, step[1], 1.0e-6);
+    }
+
+    /**
+     * 除数常量必须是 0.15：turn 内部固定乘它。
+     * 若误改成乘 {@code effSens³}，限速会在整个灵敏度滑块范围内失效。
+     */
+    @Test
+    void turnInputScaleMatchesEntityTurnInternals() {
+        assertEquals(0.15, SnapDecision.TURN_INPUT_TO_DEGREES, 1.0e-12,
+                "Entity#turn 内部固定乘 0.15；这个常量是「度 → turn 入参」换算的唯一依据");
+    }
 }

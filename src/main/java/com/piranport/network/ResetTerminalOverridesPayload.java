@@ -39,7 +39,7 @@ public record ResetTerminalOverridesPayload(
     }
 
     public static void handle(ResetTerminalOverridesPayload payload, IPayloadContext context) {
-        context.enqueueWork(() -> {
+        com.piranport.debug.PiranPortDebug.runPayload("ResetTerminalOverrides", context.player(), () -> {
             if (!(context.player() instanceof ServerPlayer serverPlayer)) {
                 return;
             }
@@ -47,6 +47,8 @@ public record ResetTerminalOverridesPayload(
             if (!ConfigToolPermissions.canUse(serverPlayer)) {
                 PiranPort.LOGGER.warn("Player {} tried to reset terminal overrides without admin permission",
                         serverPlayer.getName().getString());
+                // 与 Update 通道对齐：拒绝必须有回执，否则界面显示"已重置"而存档没动。
+                reject(serverPlayer, "无管理员权限");
                 return;
             }
 
@@ -82,6 +84,7 @@ public record ResetTerminalOverridesPayload(
                 }
                 default -> {
                     PiranPort.LOGGER.warn("Unknown reset category: {}", payload.category());
+                    reject(serverPlayer, "未知分类: " + payload.category());
                     return;
                 }
             }
@@ -98,5 +101,11 @@ public record ResetTerminalOverridesPayload(
             PiranPort.LOGGER.info("Player {} reset terminal overrides [{}/{}]",
                     serverPlayer.getName().getString(), payload.category(), key);
         });
+    }
+
+    /** 拒绝回执：界面已乐观清空了输入框，必须告诉玩家这次没生效。 */
+    private static void reject(ServerPlayer player, String reason) {
+        player.displayClientMessage(net.minecraft.network.chat.Component.literal(
+                "§c[PP] 重置未生效：" + reason), false);
     }
 }

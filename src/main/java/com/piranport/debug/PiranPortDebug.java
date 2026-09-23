@@ -37,6 +37,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -84,8 +85,18 @@ public final class PiranPortDebug {
     // Configuration constants
     // -------------------------------------------------------------------------
 
-    /** 单会话日志上限：超过则停止写入并通知玩家 */
-    public static final long MAX_SESSION_BYTES = 50L * 1024L * 1024L; // 50 MB
+    /** 单个分卷日志的滚动触发阈值：当前文件达到此大小即 rollover 到下一分卷 */
+    public static final long SESSION_ROLL_BYTES = 50L * 1024L * 1024L; // 50 MB
+
+    /** 单会话保留的分卷数（含当前文件）：总量 = SESSION_ROLL_BYTES × SESSION_ROLL_KEEP */
+    public static final int SESSION_ROLL_KEEP = 8;
+
+    /**
+     * 单会话日志总量硬上限（含全部分卷）。
+     * 由 {@link #SESSION_ROLL_BYTES} × {@link #SESSION_ROLL_KEEP} 决定，
+     * 会话写入超过此量后旧分卷会被滚动覆盖，请以此为准判断磁盘占用上界。
+     */
+    public static final long MAX_SESSION_BYTES = SESSION_ROLL_BYTES * SESSION_ROLL_KEEP;
 
     /** 异步队列容量；满时丢弃（不阻塞业务线程） */
     public static final int ASYNC_QUEUE_CAPACITY = 1024;
@@ -102,6 +113,17 @@ public final class PiranPortDebug {
     /** 快照默认扫描半径（格） */
     public static final int SNAPSHOT_RADIUS = 300;
 
+    /** 快照限频：所有玩家共用的最小全局间隔，防止多 OP 并发叠加成主线程尖峰 */
+    public static final long SNAPSHOT_GLOBAL_INTERVAL_MS = 1_000L;
+
+    /** 生命周期日志专线：仅在存在活跃会话时记录，避免无会话时仍在主线程做 String.format */
+    private static final java.util.concurrent.ExecutorService CLOSE_EXECUTOR =
+            java.util.concurrent.Executors.newSingleThreadExecutor(r -> {
+                Thread t = new Thread(r, "PiranPortDebug-IO");
+                t.setDaemon(true);
+                return t;
+            });
+
     // -------------------------------------------------------------------------
     // Per-player session state
     // -------------------------------------------------------------------------
@@ -117,6 +139,9 @@ public final class PiranPortDebug {
 
     /** 玩家最后一次快照时间戳（毫秒），用于限频 */
     private static final Map<UUID, Long> LAST_SNAPSHOT_MS = new ConcurrentHashMap<>();
+
+    /** 全局快照限频时间戳：跨玩家共享，避免多人同时刷快照叠加成主线程尖峰 */
+    private static final AtomicLong LAST_GLOBAL_SNAPSHOT_MS = new AtomicLong(0L);
 
     /** 冷却覆盖时长（5 秒 = 100 tick）— 由 {@link com.piranport.testtools.PiranPortTestTools} 实际使用 */
     public static final int COOLDOWN_OVERRIDE_TICKS = 100; // 5 seconds
@@ -155,7 +180,12 @@ public final class PiranPortDebug {
         DebugSession existing = SESSIONS.get(playerUuid);
         if (wantEnabled) {
             if (existing != null) {
-                return ToggleResult.ALREADY_OPEN;
+                return ToggleResult.ALREADY_OPEN.apply(existing.sessionId);
+            }
+            // 反向互斥：测试模式开启时拒绝开启调试会话，避免调试日志被冷却覆盖/免耗弹药污染。
+            // 测试模式侧（PiranPortTestTools.toggleFor）已做正向互斥，此处补齐另一个方向。
+            if (com.piranport.testtools.PiranPortTestTools.isTestModeActive()) {
+                return ToggleResult.TEST_ACTIVE;
             }
             DebugSession session = openSession(playerUuid, playerName);
             return ToggleResult.OPENED.apply(session.sessionId);
@@ -163,8 +193,9 @@ public final class PiranPortDebug {
             if (existing == null) {
                 return ToggleResult.ALREADY_CLOSED;
             }
+            long sid = existing.sessionId;
             closeSession(playerUuid, CloseReason.USER);
-            return ToggleResult.CLOSED;
+            return ToggleResult.CLOSED.apply(sid);
         }
     }
 
@@ -178,6 +209,9 @@ public final class PiranPortDebug {
         for (UUID uuid : List.copyOf(SESSIONS.keySet())) {
             closeSession(uuid, reason);
         }
+        // 服务端停止时清空限频残留，避免集成服务器反复开新世界时跨世界累积
+        LAST_SNAPSHOT_MS.clear();
+        LAST_GLOBAL_SNAPSHOT_MS.set(0L);
     }
 
     /** 强制清理过期的会话（用于周期任务）。 */
@@ -229,6 +263,15 @@ public final class PiranPortDebug {
     }
 
     /**
+     * @deprecated 改用 {@code PiranPortTestTools.applyCooldownOverride(UUID, int)}：
+     * 只有测试模式属主才应享受覆盖，无 owner 版本会误伤全服玩家。
+     */
+    @Deprecated
+    public static int applyCooldownOverride(UUID owner, int ticks) {
+        return com.piranport.testtools.PiranPortTestTools.applyCooldownOverride(owner, ticks);
+    }
+
+    /**
      * @deprecated 同上，已迁移到 {@link com.piranport.testtools.PiranPortTestTools#isCooldownOverrideEnabled()}
      */
     @Deprecated
@@ -257,6 +300,15 @@ public final class PiranPortDebug {
     @Deprecated
     public static void consumeAmmo(ItemStack stack, int count) {
         com.piranport.testtools.PiranPortTestTools.consumeAmmo(stack, count);
+    }
+
+    /**
+     * @deprecated 改用 {@code PiranPortTestTools.consumeAmmo(UUID, stack, count)}：
+     * 只有测试模式属主才应免耗弹药，无 owner 版本会让全服玩家一起无限弹药。
+     */
+    @Deprecated
+    public static void consumeAmmo(UUID owner, ItemStack stack, int count) {
+        com.piranport.testtools.PiranPortTestTools.consumeAmmo(owner, stack, count);
     }
 
     // -------------------------------------------------------------------------
@@ -290,14 +342,38 @@ public final class PiranPortDebug {
     }
 
     /**
+     * 事件埋点的惰性变体：仅在有会话时才求值 {@code detail}。
+     *
+     * <p>用于高频路径（每 tick / 每循环槽位）的调用点——Java 是 eager evaluation，
+     * 直接写 {@code event("...", expensive())} 会让实参在门控之外先行求值，
+     * 即使用 {@code event()} 内部的 {@code SESSIONS.isEmpty()} 短路也挡不住。
+     */
+    public static void eventLazy(Object detail) {
+        if (SESSIONS.isEmpty()) return;
+        event(String.valueOf(detail));
+    }
+
+    /**
+     * 是否应执行昂贵的埋点实参求值。调用方用法：
+     * <pre>
+     *   if (PiranPortDebug.shouldEmit()) {
+     *       PiranPortDebug.event("... | weapon={}", expensiveLookup(), count);
+     *   }
+     * </pre>
+     */
+    public static boolean shouldEmit() {
+        return !SESSIONS.isEmpty();
+    }
+
+    /**
      * 关联到具体玩家的 event 记录。自动注入该玩家的 sessionId，便于定位。
      */
     public static void eventFor(UUID playerUuid, String format, Object... args) {
         DebugSession s = SESSIONS.get(playerUuid);
         if (s == null) {
-            // 玩家未开调试，但可能是生命周期埋点（总会记录以保留证据）
-            String body = format(format, args);
-            LOG.info("[EVENT] {}", body);
+            // 无会话时直接短路，与 event() 行为对齐。
+            // 原实现会 format 后 LOG.info 主日志，使得该入口在无会话时仍付出完整
+            // String.format 代价，且 aircraft* 系列埋点全部经过这里。
             return;
         }
         String body = format(format, args);
@@ -452,7 +528,13 @@ public final class PiranPortDebug {
         if (last != null && now - last < SNAPSHOT_COOLDOWN_MS) {
             return SNAPSHOT_COOLDOWN_MS - (now - last);
         }
+        // 全局限频：per-UUID 冷却不防并发，N 名 OP 同时刷会在主线程叠加成周期性尖峰
+        long globalLast = LAST_GLOBAL_SNAPSHOT_MS.get();
+        if (now - globalLast < SNAPSHOT_GLOBAL_INTERVAL_MS) {
+            return SNAPSHOT_GLOBAL_INTERVAL_MS - (now - globalLast);
+        }
         LAST_SNAPSHOT_MS.put(uuid, now);
+        LAST_GLOBAL_SNAPSHOT_MS.set(now);
         LOG.info(buildSnapshot(player));
         return 0;
     }
@@ -482,17 +564,8 @@ public final class PiranPortDebug {
         LOG.info("[SESSION] session=#{} player={} ({}) status=OPENED absTime={}",
                 sid, playerName, shortUuid(playerUuid),
                 ABS_TIME_FMT.format(Instant.now()));
-        // 3) 客户端确认包
-        try {
-            var server = net.neoforged.neoforge.server.ServerLifecycleHooks.getCurrentServer();
-            if (server != null) {
-                var sp = server.getPlayerList().getPlayer(playerUuid);
-                if (sp != null) {
-                    PacketDistributor.sendToPlayer(sp,
-                            new DebugToggleAckPayload(true, sid, "OPENED"));
-                }
-            }
-        } catch (Exception ignored) {}
+        // 3) 客户端确认包由网络层（DebugTogglePayload）统一发送：
+        //    这里再发一次会让每次开关都收到两条重复提示，且两份 sessionId 语义不一致。
         return s;
     }
 
@@ -513,44 +586,43 @@ public final class PiranPortDebug {
         LOG.info("[SESSION] session=#{} reason={} status=CLOSED",
                 s.sessionId, reason.name());
 
-        // 1) 停止并解绑 appender
+        // 1) 停止并解绑 appender（AsyncAppender 与其下游 RollingFileAppender 都要处理）
         if (s.appender != null) {
             LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
             Configuration config = ctx.getConfiguration();
             LoggerConfig lc = config.getLoggerConfig("PiranPortDebug");
+            // 先解绑 logger 上的 async，再停 async（停止投递），最后停 inner rolling
             lc.removeAppender(s.appender.getName());
-            s.appender.stop();
             config.getAppenders().remove(s.appender.getName());
+            Appender rolling = findRolling(s.appender);
+            s.appender.stop();
+            if (rolling != null) {
+                // AsyncAppender.stop() 只停自身 dispatcher，不会停下游 appender。
+                // 不显式 stop/remove 会永久残留 RollingFileAppender 与文件句柄。
+                lc.removeAppender(rolling.getName());
+                config.getAppenders().remove(rolling.getName());
+                rolling.stop();
+            }
             ctx.updateLoggers();
         }
-        // 2) 重命名文件为 .completed
-        Path baseDir = logsDir();
-        Path src = baseDir.resolve("piranport-debug-" + s.sessionId + ".log");
-        Path dst = baseDir.resolve("piranport-debug-" + s.sessionId + ".log.completed");
-        try {
-            if (Files.exists(src)) {
-                Files.move(src, dst, StandardCopyOption.REPLACE_EXISTING);
-            }
-        } catch (Exception e) {
-            PiranPort.LOGGER.warn("[PiranPortDebug] Failed to rename session log {}: {}",
-                    src, e.getMessage());
-        }
-        // 3) 通知客户端
-        try {
-            var server = net.neoforged.neoforge.server.ServerLifecycleHooks.getCurrentServer();
-            if (server != null) {
-                var sp = server.getPlayerList().getPlayer(playerUuid);
-                if (sp != null) {
-                    PacketDistributor.sendToPlayer(sp,
-                            new DebugToggleAckPayload(false, s.sessionId, "CLOSED:" + reason.name()));
+        // 2) 归档本会话文件（重命名 + 清理全部分卷）改为后台执行，避免主 tick 线程做磁盘 I/O
+        final long sid = s.sessionId;
+        final Path baseDir = logsDir();
+        CLOSE_EXECUTOR.execute(() -> {
+            try {
+                Path src = baseDir.resolve(sessionLogBase(sid) + ".log");
+                Path dst = baseDir.resolve(sessionLogBase(sid) + ".log.completed");
+                if (Files.exists(src)) {
+                    Files.move(src, dst, StandardCopyOption.REPLACE_EXISTING);
                 }
+                pruneArchives();
+            } catch (Exception e) {
+                PiranPort.LOGGER.warn("[PiranPortDebug] Failed to archive session log #{}: {}", sid, e.getMessage());
             }
-        } catch (Exception ignored) {}
-
-        // 4) 清理旧归档
-        try {
-            pruneArchives();
-        } catch (Exception ignored) {}
+        });
+        // 3) 关闭确认包同样由网络层统一发送（防止重复提示 + 双份 sessionId 语义）
+        // 4) 清理该玩家的快照限频记录，避免 UUID 条目无界累积与重连误限频
+        LAST_SNAPSHOT_MS.remove(playerUuid);
     }
 
     // -------------------------------------------------------------------------
@@ -558,6 +630,7 @@ public final class PiranPortDebug {
     // -------------------------------------------------------------------------
 
     private static Appender createSessionAppender(long sessionId) {
+        RollingFileAppender rolling = null;
         try {
             LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
             Configuration config = ctx.getConfiguration();
@@ -572,16 +645,34 @@ public final class PiranPortDebug {
             String rollingName = "PPDebugRolling-" + sessionId;
             String asyncName = "PPDebugAsync-" + sessionId;
 
-            RollingFileAppender rolling = RollingFileAppender.newBuilder()
+            // 显式滚动策略：固定窗口，最多 SESSION_ROLL_KEEP 个分卷（含当前文件），
+            // 使单会话磁盘占用有明确上界 SESSION_ROLL_BYTES × SESSION_ROLL_KEEP。
+            org.apache.logging.log4j.core.appender.rolling.DefaultRolloverStrategy rollover =
+                    org.apache.logging.log4j.core.appender.rolling.DefaultRolloverStrategy.newBuilder()
+                            .withConfig(config)
+                            .withMax(String.valueOf(SESSION_ROLL_KEEP))
+                            .withMin(String.valueOf(1))
+                            .withFileIndex("min")
+                            .build();
+            SizeBasedTriggeringPolicy policy =
+                    SizeBasedTriggeringPolicy.createPolicy(Long.toString(SESSION_ROLL_BYTES));
+
+            rolling = RollingFileAppender.newBuilder()
                     .withConfiguration(config)
                     .withName(rollingName)
                     .withFileName(fileName)
                     .withFilePattern(pattern)
-                    .withPolicy(SizeBasedTriggeringPolicy.createPolicy(Long.toString(MAX_SESSION_BYTES)))
+                    .withPolicy(policy)
+                    .withStrategy(rollover)
                     .withLayout(layout)
                     .withIgnoreExceptions(true)
                     .build();
             rolling.start();
+
+            // 关键顺序：AsyncAppender.start() 会通过 config.getAppenders() 解析下游引用，
+            // 引用必须先在 Configuration 里注册，否则抛 ConfigurationException 并被下面的
+            // catch 吞掉，导致整个 per-session 文件日志静默失效。
+            config.addAppender(rolling);
 
             // AsyncAppender 通过 AppenderRef 引用已注册的 RollingFileAppender
             AsyncAppender async = AsyncAppender.newBuilder()
@@ -597,23 +688,71 @@ public final class PiranPortDebug {
             return async;
         } catch (Throwable t) {
             PiranPort.LOGGER.warn("[PiranPortDebug] Failed to create session appender: {}", t.getMessage());
+            // 失败回滚：rolling 可能已经 start() 并打开了文件句柄，必须显式释放
+            if (rolling != null) {
+                try {
+                    LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
+                    Configuration config = ctx.getConfiguration();
+                    config.getAppenders().remove(rolling.getName());
+                    rolling.stop();
+                } catch (Throwable ignored) {}
+            }
             return null;
         }
     }
 
-    private static void pruneArchives() throws java.io.IOException {
-        File dir = logsDir().toFile();
-        File[] completed = dir.listFiles((d, n) ->
-                n.startsWith("piranport-debug-") && n.endsWith(".log.completed"));
-        if (completed == null || completed.length <= ARCHIVE_KEEP) return;
-        // 按最后修改时间排序，保留最新 ARCHIVE_KEEP 个
-        java.util.Arrays.sort(completed, (x, y) ->
-                Long.compare(y.lastModified(), x.lastModified()));
-        for (int i = ARCHIVE_KEEP; i < completed.length; i++) {
-            if (!completed[i].delete()) {
-                PiranPort.LOGGER.warn("[PiranPortDebug] Failed to delete old archive {}", completed[i].getName());
+    /**
+     * 删除指定会话的所有日志文件：主文件、已完成归档、以及滚动产生的 .log.<i> 分卷。
+     * 用于 pruneArchives 统一按「同一会话」为整体清理。
+     */
+    private static boolean deleteSessionLogs(File dir, String baseName) {
+        boolean all = true;
+        for (File f : java.util.Objects.requireNonNull(dir.listFiles())) {
+            String n = f.getName();
+            if (n.equals(baseName + ".log") || n.equals(baseName + ".log.completed")
+                    || n.matches(java.util.regex.Pattern.quote(baseName) + "\\.log\\.\\d+")) {
+                if (!f.delete()) all = false;
             }
         }
+        return all;
+    }
+
+    /** 会话日志的基准文件名（不含扩展名） */
+    private static String sessionLogBase(long sessionId) {
+        return "piranport-debug-" + sessionId;
+    }
+
+    private static void pruneArchives() throws java.io.IOException {
+        File dir = logsDir().toFile();
+        // 归档单位是「会话」而不是「文件」：一个会话可能留下 .log / .log.completed / .log.<i> 多个文件，
+        // 必须按会话整体保留/整体删除，否则滚动分卷会成为永不清理的孤儿。
+        File[] all = dir.listFiles((d, n) -> n.startsWith("piranport-debug-"));
+        if (all == null) return;
+
+        Map<String, Long> latestBySession = new java.util.HashMap<>();
+        for (File f : all) {
+            String session = sessionBaseOf(f.getName());
+            if (session == null) continue;
+            latestBySession.merge(session, f.lastModified(), Math::max);
+        }
+        if (latestBySession.size() <= ARCHIVE_KEEP) return;
+
+        List<String> sessions = new java.util.ArrayList<>(latestBySession.keySet());
+        sessions.sort((a, b) -> Long.compare(latestBySession.get(b), latestBySession.get(a)));
+        for (int i = ARCHIVE_KEEP; i < sessions.size(); i++) {
+            String session = sessions.get(i);
+            if (!deleteSessionLogs(dir, session)) {
+                PiranPort.LOGGER.warn("[PiranPortDebug] Failed to delete old archive session {}", session);
+            }
+        }
+    }
+
+    /** 从日志文件名解析出会话基准名（{@code piranport-debug-<sid>}）；不匹配返回 null */
+    private static String sessionBaseOf(String fileName) {
+        java.util.regex.Matcher m = java.util.regex.Pattern
+                .compile("^(piranport-debug-\\d+)\\.log(\\.[\\d]+|\\.completed)?$")
+                .matcher(fileName);
+        return m.matches() ? m.group(1) : null;
     }
 
     private static Path logsDir() {
@@ -690,22 +829,30 @@ public final class PiranPortDebug {
             }
         }
 
-        // 当前维度附近（按原半径）
+        // 当前维度附近：走已维护的 AircraftIndex 按属主查询，替代原先的 300 格全实体枚举。
+        // 原因：getEntitiesOfClass 会对 600³ 方块体积做分区块实体枚举并逐个跑谓词，
+        // 命中为 0 也要全扫，跑在服务端主线程上且被 5 秒冷却 × 多 OP 放大成 TPS 尖峰。
         sb.append("Active Aircraft (nearby, within ").append(SNAPSHOT_RADIUS).append("):\n");
+        Set<AircraftEntity> owned = AircraftIndex.snapshot(player.getUUID());
+        int globalCount = owned.size();
         int nearbyCount = 0;
         if (player.level() instanceof ServerLevel sl) {
-            List<AircraftEntity> aircraft = sl.getEntitiesOfClass(
-                    AircraftEntity.class,
-                    player.getBoundingBox().inflate(SNAPSHOT_RADIUS),
-                    a -> player.getUUID().equals(a.getOwnerUUID()));
-            if (aircraft.isEmpty()) {
+            List<AircraftEntity> nearby = new java.util.ArrayList<>();
+            for (AircraftEntity a : owned) {
+                if (a.level() == sl
+                        && a.blockPosition().distSqr(player.blockPosition())
+                            <= (long) SNAPSHOT_RADIUS * SNAPSHOT_RADIUS) {
+                    nearby.add(a);
+                }
+            }
+            if (nearby.isEmpty()) {
                 sb.append("  (none)\n");
             } else {
                 int maxAircraft = 50; // P1-5: 大量飞机场景下截断并标注
                 int shown = 0;
-                for (AircraftEntity a : aircraft) {
+                for (AircraftEntity a : nearby) {
                     if (shown >= maxAircraft) {
-                        sb.append("  ... (truncated, total=").append(aircraft.size()).append(")\n");
+                        sb.append("  ... (truncated, total=").append(nearby.size()).append(")\n");
                         break;
                     }
                     sb.append(String.format(Locale.ROOT, "  %s entityId=%d state=%s\n",
@@ -713,11 +860,10 @@ public final class PiranPortDebug {
                     shown++;
                 }
             }
-            nearbyCount = aircraft.size();
+            nearbyCount = nearby.size();
         }
 
         // P1-5: 全服飞机统计（任何维度）
-        int globalCount = AircraftIndex.snapshot(player.getUUID()).size();
         sb.append("All owned aircraft (any dimension): ").append(globalCount).append('\n');
         sb.append("Nearby total: ").append(nearbyCount).append('\n');
 
@@ -762,6 +908,8 @@ public final class PiranPortDebug {
         public static final ToggleResult CLOSED = new ToggleResult(false, -1L, "CLOSED");
         public static final ToggleResult ALREADY_OPEN = new ToggleResult(true, -1L, "ALREADY_OPEN");
         public static final ToggleResult ALREADY_CLOSED = new ToggleResult(false, -1L, "ALREADY_CLOSED");
+        /** 反向互斥：测试模式正在运行，拒绝开启调试会话 */
+        public static final ToggleResult TEST_ACTIVE = new ToggleResult(false, -1L, "TEST_ACTIVE");
 
         public ToggleResult apply(long sid) {
             return new ToggleResult(enabled, sid, status);

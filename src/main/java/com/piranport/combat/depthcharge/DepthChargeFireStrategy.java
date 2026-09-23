@@ -70,7 +70,7 @@ public final class DepthChargeFireStrategy {
                 ItemStack s = inv.items.get(i);
                 if (!s.isEmpty() && s.is(ModItems.DEPTH_CHARGE.get())) {
                     int take = Math.min(toConsume, s.getCount());
-                    PiranPortDebug.consumeAmmo(s, take);
+                    PiranPortDebug.consumeAmmo(player.getUUID(), s, take);
                     toConsume -= take;
                 }
             }
@@ -78,7 +78,7 @@ public final class DepthChargeFireStrategy {
                 ItemStack oh = inv.offhand.get(0);
                 if (!oh.isEmpty() && oh.is(ModItems.DEPTH_CHARGE.get())) {
                     int take = Math.min(toConsume, oh.getCount());
-                    PiranPortDebug.consumeAmmo(oh, take);
+                    PiranPortDebug.consumeAmmo(player.getUUID(), oh, take);
                     toConsume -= take;
                 }
             }
@@ -125,9 +125,9 @@ public final class DepthChargeFireStrategy {
         if (!launcherBroken) {
             int boostedCooldown = TransformationManager.boostedCooldown(player, cooldown);
             coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
-                    cooldowns.withSlotCooldown(weaponSlot, boostedCooldown, level.getGameTime()));
+                    cooldowns.withSlotCooldown(player.getUUID(), weaponSlot, boostedCooldown, level.getGameTime()));
             launcherStack.set(ModDataComponents.WEAPON_COOLDOWN.get(),
-                    WeaponCooldown.of(level.getGameTime(), boostedCooldown));
+                    WeaponCooldown.of(player.getUUID(), level.getGameTime(), boostedCooldown));
         }
 
 

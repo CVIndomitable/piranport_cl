@@ -15,19 +15,15 @@ import java.util.List;
  * 火控雷达 — 舰装强化槽内的瞄准辅助设备。
  *
  * <p>装入舰装核心后，玩家可用 0 键开启/关闭火控；开启时准星会向敌对目标吸附（火炮瞄准辅助）。
- * 吸附范围按「区块」配置，运行时还会被服务端模拟距离二次钳制。
+ * 吸附的<b>实际</b>生效半径只由「准星吸附处理器里的搜索半径常量」与「服务端下发的模拟距离」
+ * 两者中较小的那个决定（见 {@code FireControlRadarSnapHandler}）。本物品构造参数里的
+ * {@code snapRangeChunks} <b>不参与</b>吸附判定，只用于 tooltip 展示 —— 改它不会改变吸附手感。
  *
  * <p>它与中键火控锁定列表（{@code FireControlManager} / {@code ClientFireControlData}）无关：
  * 后者是航空投放的锁定目标，本装备只做准星辅助。
  *
- * <p><b>注意：本物品尚未注册到 {@code AircraftItems}，也没有模型/贴图/配方。</b>
- * 它目前只是一份类型骨架，用于让已有的负重、槽位、瞄准吸附逻辑能编译并提前定型。
- * 注册时需要同步处理三处，否则会出现「注册了但装不上核心」或「有物品但客户端崩模型」：
- * <ol>
- *   <li>{@code AircraftItems} 中注册，并在 {@code ModItems} 转发；</li>
- *   <li>{@code ShipCoreItem} 强化槽白名单加上 {@code FireControlRadarItem}；</li>
- *   <li>{@code models/item/} + {@code textures/item/} + 双语 lang key + 配方。</li>
- * </ol>
+ * <p>注册在 {@code AircraftItems#STANDARD_FIRE_CONTROL_RADAR}，模型/贴图/配方/双语 lang
+ * 均已齐全。新增同类装备时记得同步 {@code ShipCoreItem} 的强化槽白名单，否则会「注册了但装不上」。
  */
 public class FireControlRadarItem extends Item {
 
@@ -42,18 +38,6 @@ public class FireControlRadarItem extends Item {
 
     public int getWeight() {
         return weight;
-    }
-
-    public int getSnapRangeChunks() {
-        return snapRangeChunks;
-    }
-
-    /**
-     * 吸附半径（格）。策划口径：32 区块 = 512 格；服务端模拟距离会二次钳制，
-     * 所以实际生效半径取本值与模拟距离的较小者。
-     */
-    public double getSnapRangeBlocks() {
-        return snapRangeChunks * 16.0;
     }
 
     @Override

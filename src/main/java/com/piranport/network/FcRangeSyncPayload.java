@@ -22,8 +22,13 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
  * ArchitectureTest 的「client 不得依赖 server」规则。所以换算搬到服务端，
  * 客户端只收结果。
  *
- * <p>取值范围只有效于本次会话：模拟距离是存档/服务器配置，重连后会重新下发，
- * 客户端不需要持久化。
+ * <p><b>这个值只在本次会话内有效，但它不会「自动重新下发」</b>：唯一的发送点是
+ * {@code ToggleFcRadarPayload#handle}，也就是玩家按下 0 键那一刻。重连、换维度、死亡重生
+ * 都不会补发，而 {@code SHIP_FC_RADAR_ON} 是持久化组件、会跟着核心物品跨存档同步 ——
+ * 于是「上个存档里雷达是开着的、这次进新世界没再按 0」的玩家，客户端缓存会停在上一局的
+ * 残留值上。为此客户端在断开连接时会把缓存复位为 0（见
+ * {@code FireControlRadarSnapHandler#reset}），并且必须等到玩家重新按 0 才会再次有值。
+ * 不要在客户端把这个值持久化，也不要把「有没有值」当成「雷达开没开」的判据。
  */
 public record FcRangeSyncPayload(double limitBlocks) implements CustomPacketPayload {
 

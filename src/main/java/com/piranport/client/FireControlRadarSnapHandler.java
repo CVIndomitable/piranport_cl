@@ -9,7 +9,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 import net.minecraft.util.Mth;
-import net.minecraft.world.Container;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -125,10 +124,16 @@ public final class FireControlRadarSnapHandler {
     private static final double AIM_HEIGHT_FRACTION = 0.4;
 
     /**
-     * 清空吸附状态机。断开连接时由 {@code ClientInputCoordinator#resetClientState} 调用。
+     * 清空吸附状态机与半径缓存。断开连接时由 {@code ClientInputCoordinator#resetClientState} 调用。
+     *
+     * <p>半径缓存也必须一起清：它是「服务端模拟距离」的镜像，而模拟距离是<b>单次会话/单个存档</b>
+     * 的属性。返回主菜单再进另一个存档时 JVM 不重启，static 字段会把上一个存档的值带过去。
+     * 复位成初值 0 后，在服务端重新下发之前吸附一律不生效 —— 这与字段自身的初值语义一致
+     * （见 {@link #serverSimulationLimitBlocks}：「宁可先不吸」）。
      */
     public static void reset() {
         SnapDecision.reset();
+        serverSimulationLimitBlocks = 0.0;
     }
 
     /**
@@ -139,7 +144,16 @@ public final class FireControlRadarSnapHandler {
         if (player == null || mc.level == null) return;
 
         // 「仅开镜状态」：闭镜时的准星是自由瞄准，任何自动吸附都会让玩家觉得鼠标被抢。
-        if (!ClientScopeHandler.isScoping()) return;
+        //
+        // 这里的提前返回同时承担「关镜即松锁」的语义：不返回就等于把吸附状态机整个冻结在
+        // 关镜那一刻 —— 玩家关镜、把视线甩到别处几秒、再开镜扫回原目标附近时，上一轮的锁定
+        // id 还在，{@code decide()} 会走「保持原锁定」分支，而该分支刻意不看遮挡、阈值放宽到
+        // 8°：准星会从 8° 外被猛拉到一个此刻并不在视野里的目标上，看起来像是吸附绕过了 4°
+        // 的进入阈值。清掉它，重新开镜就是干干净净的「未吸附」态。
+        if (!ClientScopeHandler.isScoping()) {
+            SnapDecision.reset();
+            return;
+        }
 
         // 侦察/鱼雷制导等模式把摄像机挂在别的实体上（见 ReconInputHandler 的 setCameraEntity）。
         // 此时 isScoping() 可能仍为残留的 true，而准星瞄的是侦察机自身的机头方向 ——
@@ -151,6 +165,8 @@ public final class FireControlRadarSnapHandler {
 
         if (!Boolean.TRUE.equals(coreStack.get(ModDataComponents.SHIP_FC_RADAR_ON.get()))) return;
 
+        // 服务端会把组件回同步过来，所以「关掉火控」这条路径的松锁在这里兜住：
+        // 开关状态一旦不为 true，本 tick 就走到这里，不再持有任何锁定。
         if (!TransformationManager.hasFireControlRadarEquipped(player, coreStack)) return;
 
         // 火炮才谈得上「瞄准辅助」：手持非火炮时吸附没有落点意义，且会跟其他交互抢镜头。
@@ -162,7 +178,13 @@ public final class FireControlRadarSnapHandler {
                 candidates, ENTER_RADIUS_DEGREES, EXIT_RADIUS_DEGREES,
                 SnapDecision.isSnapping() ? SnapDecision.lockedTarget().id() : -1);
 
-        if (chosen == null) return;
+        if (chosen == null) {
+            // 决策判定「本 tick 不该吸」时状态机已经被 decide() 清空了（见 SnapDecision#decide
+            // 的末尾赋值）。这里再显式复位一次，是为了保证「未选中 == 未锁定」这条不变量在
+            // 所有提前返回路径上都成立，而不是依赖 decide() 内部实现的细节。
+            SnapDecision.reset();
+            return;
+        }
 
         aimAt(mc, player, chosen);
     }
@@ -238,7 +260,6 @@ public final class FireControlRadarSnapHandler {
     private static boolean isSnapCandidate(Player player, Entity e) {
         if (e == player || !e.isAlive() || e.isSpectator()) return false;
         if (!(e instanceof LivingEntity || e instanceof AircraftEntity)) return false;
-        if (e instanceof Container) return false;
         return CombatTargeting.isHostileTarget(player, e);
     }
 
@@ -310,18 +331,17 @@ public final class FireControlRadarSnapHandler {
         double horizontal = Math.sqrt(toTarget.x * toTarget.x + toTarget.z * toTarget.z);
 
         // 目标绝对角度（与 Entity 的约定一致：yaw 由 atan2(-x, z) 得出，pitch 向下为正）
-        float desiredYaw = (float) (Mth.atan2(-toTarget.x, toTarget.z) * (180.0 / Math.PI));
-        float desiredPitch = Mth.clamp(
-                (float) (-Mth.atan2(toTarget.y, horizontal) * (180.0 / Math.PI)), -90.0f, 90.0f);
+        float desiredYaw = (float) SnapDecision.yawTo(toTarget.x, toTarget.z);
+        float desiredPitch = (float) SnapDecision.pitchTo(toTarget.y, horizontal);
 
         float deltaYaw = Mth.wrapDegrees(desiredYaw - player.getYRot());
         float deltaPitch = Mth.clamp(desiredPitch - player.getXRot(), -90.0f, 90.0f);
 
-        // 死区：已经对准就别再转，否则会在目标中心左右各摆一下，看起来像抖动
-        if (Math.abs(deltaYaw) < TURN_EPSILON_DEGREES && Math.abs(deltaPitch) < TURN_EPSILON_DEGREES) return;
-
-        float stepYaw = Mth.clamp(deltaYaw, -MAX_TURN_DEGREES_PER_TICK, MAX_TURN_DEGREES_PER_TICK);
-        float stepPitch = Mth.clamp(deltaPitch, -MAX_TURN_DEGREES_PER_TICK, MAX_TURN_DEGREES_PER_TICK);
+        // 死区与限速都在纯函数里（见 SnapDecision#turnStep）：两者必须成对，
+        // 只限速会过冲抖动、只死区会瞬移拉满。零步长即「已经对准」。
+        float[] step = SnapDecision.turnStep(
+                deltaYaw, deltaPitch, TURN_EPSILON_DEGREES, MAX_TURN_DEGREES_PER_TICK);
+        if (step[0] == 0.0f && step[1] == 0.0f) return;
 
         // 除数只保留 0.15 —— 这是 turn 内部唯一的固定换算（见 Entity#turn：入参 ×0.15）。
         // 千万别把原版鼠标的 effSens³ 也乘进来：那个系数在原版里是乘在「鼠标像素增量」上的
@@ -329,14 +349,14 @@ public final class FireControlRadarSnapHandler {
         // 属于送进 turn 的分子。放到分母上会变成「每 tick 实转 stepDeg / effSens³」，
         // 灵敏度 0.5（默认）时 10° 限速被放大成 80°，灵敏度 0 时直接饱和到 ±90° ——
         // 既复现了首版「吸到奇奇怪怪的地方」，又和本类「手感与玩家灵敏度无关」的设计相反。
-        final double divisor = 0.15;
+        final double divisor = SnapDecision.TURN_INPUT_TO_DEGREES;
 
         // turn(偏航原始量, 俯仰原始量) —— 顺序不能反。
         // Entity#turn(double p1, double p2) 内部是 setXRot(± p2*0.15)、setYRot(± p1*0.15)，
         // 即第一形参喂偏航、第二形参喂俯仰；MouseHandler#turnPlayer 也是
         // player.turn(鼠标X增量, 鼠标Y增量) —— 鼠标左右动改的是 yaw，交叉印证。
         // 传反的后果不是「转慢点」而是「横竖各转错一根轴」，准星会横着甩、竖直乱跳。
-        player.turn(stepYaw / divisor, stepPitch / divisor);
+        player.turn(step[0] / divisor, step[1] / divisor);
 
         // 视角旋转原本由 ServerboundMovePlayerPacket 在客户端玩家 tick 里同步给服务端
         // （见 LocalPlayer#tick 内的 sendPosition / sendIsSprintingIfNeeded 调用链），
@@ -346,9 +366,14 @@ public final class FireControlRadarSnapHandler {
         // 炮弹却按上一 tick 的偏角飞出去。只有真玩家才有这个上行动作；假玩家
         // （FakePlayer / 集成服内其它玩家）不发包。
         if (player instanceof LocalPlayer) {
-            mc.getConnection().send(new ServerboundMovePlayerPacket.PosRot(
-                    player.getX(), player.getY(), player.getZ(),
-                    player.getYRot(), player.getXRot(), player.onGround()));
+            // 判空不是多余的：本方法在 ClientTickEvent.Post 里跑，而连接对象在「被踢/主动断线
+            // 但本 tick 已经排上队」的收尾阶段可能已经为 null。原版对所有 mc.getConnection()
+            // 调用点都做了同样的判空，不判就是给退出瞬间留一个必崩的 NPE。
+            if (mc.getConnection() != null) {
+                mc.getConnection().send(new ServerboundMovePlayerPacket.PosRot(
+                        player.getX(), player.getY(), player.getZ(),
+                        player.getYRot(), player.getXRot(), player.onGround()));
+            }
         }
     }
 }

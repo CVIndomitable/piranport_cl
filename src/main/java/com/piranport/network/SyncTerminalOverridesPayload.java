@@ -49,8 +49,15 @@ public record SyncTerminalOverridesPayload(
                 }
             },
             buffer -> {
+                // 解码侧必须自己校验条目数：编码侧写了 MAX_ENTRIES 常量，但 decode 只读
+                // VAR_INT 计数就照单循环，畸形包给个 0x7FFFFFFF 会先耗尽堆再耗尽网络线程。
+                // 超限直接抛出——让连接层按协议错误断开，好过静默截断出一个语义错误的快照。
                 Map<String, Float> torpedoes = new HashMap<>();
                 int torpedoCount = ByteBufCodecs.VAR_INT.decode(buffer);
+                if (torpedoCount < 0 || torpedoCount > MAX_ENTRIES) {
+                    throw new io.netty.handler.codec.DecoderException(
+                            "SyncTerminalOverrides: torpedo entry count out of range: " + torpedoCount);
+                }
                 for (int i = 0; i < torpedoCount; i++) {
                     String key = ByteBufCodecs.stringUtf8(MAX_KEY_LENGTH).decode(buffer);
                     torpedoes.put(key, ByteBufCodecs.FLOAT.decode(buffer));
@@ -58,6 +65,10 @@ public record SyncTerminalOverridesPayload(
 
                 Map<String, Double> cores = new HashMap<>();
                 int coreCount = ByteBufCodecs.VAR_INT.decode(buffer);
+                if (coreCount < 0 || coreCount > MAX_ENTRIES) {
+                    throw new io.netty.handler.codec.DecoderException(
+                            "SyncTerminalOverrides: core entry count out of range: " + coreCount);
+                }
                 for (int i = 0; i < coreCount; i++) {
                     String key = ByteBufCodecs.stringUtf8(MAX_KEY_LENGTH).decode(buffer);
                     cores.put(key, ByteBufCodecs.DOUBLE.decode(buffer));

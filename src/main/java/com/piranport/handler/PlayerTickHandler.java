@@ -134,8 +134,10 @@ public class PlayerTickHandler {
 
         boolean isTransformed = TransformationManager.isPlayerTransformed(player);
 
-        com.piranport.debug.PiranPortDebug.event("PlayerTick | player={} transformed={}",
-                player.getName().getString(), isTransformed);
+        if (com.piranport.debug.PiranPortDebug.isServerEnabled()) {
+            com.piranport.debug.PiranPortDebug.event("PlayerTick | player={} transformed={}",
+                    player.getName().getString(), isTransformed);
+        }
 
         if (!isTransformed) {
             WaterWalkingHandler.clear(player);
@@ -175,8 +177,12 @@ public class PlayerTickHandler {
         boolean isSubmarine = transformedCore.getItem() instanceof ShipCoreItem sci
                 && sci.getShipType() == ShipType.SUBMARINE;
 
-        com.piranport.debug.PiranPortDebug.event("WaterWalkCheck | player={} submarine={}",
-                player.getName().getString(), isSubmarine);
+        // 门控前置：player.getName().getString() 每 tick 都会构造新 String，
+        // 必须放到 isServerEnabled() 之后再求值，否则关调试也照样分配。
+        if (com.piranport.debug.PiranPortDebug.isServerEnabled()) {
+            com.piranport.debug.PiranPortDebug.event("WaterWalkCheck | player={} submarine={}",
+                    player.getName().getString(), isSubmarine);
+        }
 
         // 水上行走：客户端和服务端都需要执行
         WaterWalkingHandler.tick(player, isSubmarine);

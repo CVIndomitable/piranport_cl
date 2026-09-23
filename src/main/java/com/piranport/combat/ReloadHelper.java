@@ -118,15 +118,15 @@ public class ReloadHelper {
         String ammoId = BuiltInRegistries.ITEM.getKey(torpedoType).toString();
         launcherStack.set(ModDataComponents.LOADED_AMMO.get(), new LoadedAmmo(tubeCount, ammoId));
 
-        // 设置冷却时间
+        // 设置冷却时间。
+        // WHY 只写武器栈的 WEAPON_COOLDOWN、不写船核心栈的 SLOT_COOLDOWNS：
+        // ShipCoreCombat 的开火前检查只读 SLOT_COOLDOWNS，写了它会让"刚装填完"的武器被静默拦截
+        // 5-7 秒（无任何提示），即玩家报告的"显示装填了但无法发射"。
+        // 保留 WEAPON_COOLDOWN 是为了让 WeaponReloadDecorator 继续画装填进度条、
+        // 并让上面的 already_reloading 分支仍能区分"装填中"与"已装填"。
         int cooldownTicks = TransformationManager.boostedCooldown(player, launcher.getCooldownTicks());
-        long gameTime = player.level().getGameTime();
         launcherStack.set(ModDataComponents.WEAPON_COOLDOWN.get(),
-                WeaponCooldown.of(gameTime, cooldownTicks));
-        SlotCooldowns cooldowns = coreStack.getOrDefault(
-                ModDataComponents.SLOT_COOLDOWNS.get(), SlotCooldowns.EMPTY);
-        coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
-                cooldowns.withSlotCooldown(weaponSlot, cooldownTicks, gameTime));
+                WeaponCooldown.of(player.getUUID(), player.level().getGameTime(), cooldownTicks));
 
         player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
                 SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.5f, 1.4f);

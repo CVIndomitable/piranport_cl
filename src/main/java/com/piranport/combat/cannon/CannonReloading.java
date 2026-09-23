@@ -133,7 +133,7 @@ public final class CannonReloading {
         int barrels = getBarrelCount(weapon, player.level());
         AmmoInventory ammo = new AmmoInventory(inventory, coreSlot, weaponSlot);
         Item type = ammo.chooseReloadAmmo(weapon, barrels, player.getAbilities().instabuild, player.level());
-        if (type == null || (!player.getAbilities().instabuild && !ammo.consumeAmmo(type, barrels))) {
+        if (type == null || (!player.getAbilities().instabuild && !ammo.consumeAmmo(player.getUUID(), type, barrels))) {
             return clearCannonReloadState(core, weapon, weaponSlot);
         }
         new WeaponState(weapon).setLoadedAmmo(barrels, BuiltInRegistries.ITEM.getKey(type).toString());
@@ -177,7 +177,7 @@ public final class CannonReloading {
     private static void startTimer(Player player, ItemStack core, int slot, ItemStack weapon) {
         int ticks = TransformationManager.boostedCooldown(player, getGunCooldown(weapon, player.level()));
         WeaponState state = new WeaponState(weapon);
-        state.setCooldown(player.level().getGameTime(), ticks);
+        state.setCooldown(player.getUUID(), player.level().getGameTime(), ticks);
         removeLegacyCooldown(core, slot);
     }
 

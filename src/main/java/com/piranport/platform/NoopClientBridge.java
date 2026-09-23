@@ -68,12 +68,6 @@ class NoopClientBridge implements ClientBridge {
     public void setFcRadarSnapLimit(double limitBlocks) {  }
 
     @Override
-    public double turnPlayerSensitivity(double rawSensitivity) {
-        // 服务端没有客户端选项体系，也没有会改写灵敏度的客户端 mod，原样返回。
-        return rawSensitivity;
-    }
-
-    @Override
     public void displayClientMessage(Component message) {  }
 
     @Override

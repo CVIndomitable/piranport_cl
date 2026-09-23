@@ -475,7 +475,7 @@ public class AircraftFireStrategy {
             // Find aviation_fuel in inventory
             for (ItemStack ammo : inv.items) {
                 if (ammo.is(ModItems.AVIATION_FUEL.get()) && ammo.getCount() > 0) {
-                    com.piranport.testtools.PiranPortTestTools.consumeAmmo(ammo, 1);
+                    com.piranport.testtools.PiranPortTestTools.consumeAmmo(player.getUUID(), ammo, 1);
                     weapon.set(ModDataComponents.AIRCRAFT_INFO.get(),
                             info.withCurrentFuel(info.fuelCapacity()));
                     break;
@@ -558,11 +558,11 @@ public class AircraftFireStrategy {
         }
 
         if (fuelSlot >= 0) {
-            com.piranport.testtools.PiranPortTestTools.consumeAmmo(stackAt(inv, fuelSlot), 1);
+            com.piranport.testtools.PiranPortTestTools.consumeAmmo(player.getUUID(), stackAt(inv, fuelSlot), 1);
             info = info.withCurrentFuel(info.fuelCapacity());
         }
         if (payloadSlot >= 0) {
-            com.piranport.testtools.PiranPortTestTools.consumeAmmo(stackAt(inv, payloadSlot), 1);
+            com.piranport.testtools.PiranPortTestTools.consumeAmmo(player.getUUID(), stackAt(inv, payloadSlot), 1);
             info = info.withPayloadLoaded(true);
         }
 

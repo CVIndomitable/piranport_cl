@@ -1133,13 +1133,17 @@ public class AircraftEntity extends Entity {
         FlightState cur = getFlightState();
         if (cur == FlightState.RETURNING || cur == FlightState.REMOVED) return;
         // P0-3: 返航触发埋点（带原因/状态/位置/玩家）
-        String posStr = String.format("[%d,%d,%d]",
-                blockPosition().getX(), blockPosition().getY(), blockPosition().getZ());
-        com.piranport.debug.PiranPortDebug.aircraftReturnTriggered(
-                getId(), reason, getFlightState(), posStr);
-        com.piranport.debug.PiranPortDebug.event(
-                "Aircraft RETURNING | type={} entityId={} reason={}",
-                aircraftType.name(), getId(), reason);
+        // 门控前置：posStr 的 String.format 只服务这两个埋点，必须在确认有会话后才执行，
+        // 否则每架返航飞机都会在主线程无谓分配一次。
+        if (com.piranport.debug.PiranPortDebug.shouldEmit()) {
+            String posStr = String.format("[%d,%d,%d]",
+                    blockPosition().getX(), blockPosition().getY(), blockPosition().getZ());
+            com.piranport.debug.PiranPortDebug.aircraftReturnTriggered(
+                    getId(), reason, getFlightState(), posStr);
+            com.piranport.debug.PiranPortDebug.event(
+                    "Aircraft RETURNING | type={} entityId={} reason={}",
+                    aircraftType.name(), getId(), reason);
+        }
         setState(FlightState.RETURNING);
     }
 

@@ -50,11 +50,12 @@ public class ClientModEvents {
         // WHY：火炮走"类似弩"的装填模型（见 docs/策划决策/武器/09-装填类似弩模型.md），
         // 空膛时无法发射，玩家需要一眼看出武器是否能开火，因此必须有独立的空膛贴图。
         ResourceLocation loaded = ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "loaded");
-        // 注册 "ammo_type" 物品属性：区分已装填鱼雷的弹种，用于给发射器切换弹种贴图。
-        // 0.0 = 普通鱼雷 / 1.0 = 过氧化氢 / 0.25 = 磁性。
-        // WHY：不同弹种的发射器外观不同（美术提供了 _h2o2 / _magnetic 两套变体贴图），
-        // 玩家需要一眼看出管里装的是哪种鱼雷。
-        ResourceLocation ammoType = ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "ammo_type");
+        // 注意：这里**没有** "ammo_type" 属性，而且不要加回来。
+        // WHY：原版 1.21.1 的 overrides[].predicate 只有 (ResourceLocation, float) 一种类型，
+        // 没有字符串/枚举谓词，判定又是 "value >= threshold" 且 ItemOverrides 倒序遍历数组，
+        // 所以多谓词覆盖**无法表达弹种的互斥取值**（弹药种类 N 也会同时满足种类 M 的阈值）。
+        // 弹种差异一律走客户端渲染（见 TorpedoItem.getIconBadgeColor 与 WeaponReloadDecorator），
+        // 不要在模型层用浮点魔法数字区分。
         event.enqueueWork(() -> {
             // 为所有 AircraftItem 实例注册 "fueled" 属性（包括命名变体）
             for (var entry : ModItems.ITEMS.getEntries()) {
@@ -75,16 +76,6 @@ public class ClientModEvents {
                     ItemProperties.register(entry.get(), loaded, (stack, level, entity, seed) -> {
                         var ammo = stack.get(ModDataComponents.LOADED_AMMO.get());
                         return (ammo != null && ammo.hasAmmo()) ? 1.0f : 0.0f;
-                    });
-                    // 弹种判定：ammoItemId 里带 h2o2/过氧化氢字样 → 1.0，磁性 → 0.25，其余 → 0.0。
-                    // 用 ID 关键字而非硬编码物品表，新增同弹种鱼雷时无需改这里。
-                    ItemProperties.register(entry.get(), ammoType, (stack, level, entity, seed) -> {
-                        var ammo = stack.get(ModDataComponents.LOADED_AMMO.get());
-                        if (ammo == null || !ammo.hasAmmo()) return 0.0f;
-                        String id = ammo.ammoItemId();
-                        if (id.contains("mk16") || id.contains("mk17")) return 1.0f;   // 过氧化氢鱼雷
-                        if (id.contains("magnetic")) return 0.25f;                    // 磁性鱼雷
-                        return 0.0f;
                     });
                 }
             }

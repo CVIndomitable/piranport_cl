@@ -208,4 +208,23 @@ public class ClientGameEvents {
         // P0修复: 清理配置缓存，防止跨服务器配置污染
         com.piranport.artillery.config.override.ClientConfigCache.clearCache();
     }
+
+    /**
+     * 跨越维度（下界/末地/换图）时清理客户端静态状态。
+     *
+     * <p>WHY 单靠 LoggingOut 不够：火控吸附的锁定目标以 {@link net.minecraft.world.entity.Entity#getId()}
+     * 为键，而实体 id 是<b>每个 {@code ServerLevel} 各自</b>的计数器 —— 换个维度后同一个 id
+     * 完全可能指向另一只怪（甚至一只兔子）。跨维度时玩家并没有断线，{@code LoggingOut} 不会触发，
+     * 残留的锁定 id 就跟着走了：新维度里只要有一只怪恰好落进 8° 锥体内，准星就会把它当成
+     * 「原锁定目标」继续抓，绕过了 4° 的进入阈值。
+     *
+     * <p>用 {@code Clone}（旧版 PlayerEvent.PlayerLoggedInEvent 的重命名版）而不是
+     * {@code LoggedIn}：官方在换维度/重生时走的是「旧玩家实体 → 新玩家实体」的克隆流程，
+     * 客户端收到的就是这条事件；而 {@code LoggedIn} 只在真正登录那一次触发。两者连用时
+     * {@code resetClientState} 会被调两次，但它是幂等的（各字段都只是清空/复位）。
+     */
+    @SubscribeEvent
+    public static void onClientPlayerClone(ClientPlayerNetworkEvent.Clone event) {
+        ClientInputCoordinator.resetClientState();
+    }
 }

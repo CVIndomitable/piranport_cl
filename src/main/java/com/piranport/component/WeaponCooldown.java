@@ -24,7 +24,16 @@ public record WeaponCooldown(long endTick, int totalTick) {
      * Applies the debug cooldown override so a single chokepoint covers all call sites.
      */
     public static WeaponCooldown of(long currentTick, int ticks) {
-        int adjusted = com.piranport.testtools.PiranPortTestTools.applyCooldownOverride(ticks);
+        return of(null, currentTick, ticks);
+    }
+
+    /**
+     * 带所有者版本：只有测试模式属主才享受冷却覆盖，避免测试模式改写全服玩家的冷却。
+     *
+     * @param owner 触发本次冷却的玩家 UUID；{@code null} 表示无玩家上下文（如女仆实体）
+     */
+    public static WeaponCooldown of(java.util.UUID owner, long currentTick, int ticks) {
+        int adjusted = com.piranport.testtools.PiranPortTestTools.applyCooldownOverride(owner, ticks);
         return new WeaponCooldown(currentTick + adjusted, adjusted);
     }
 

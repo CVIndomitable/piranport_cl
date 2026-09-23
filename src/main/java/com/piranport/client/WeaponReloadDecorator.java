@@ -6,6 +6,7 @@ import com.piranport.component.WeaponCooldown;
 import com.piranport.item.MissileLauncherItem;
 import com.piranport.item.ShipCoreItem;
 import com.piranport.item.ShipCoreCombat;
+import com.piranport.item.TorpedoItem;
 import com.piranport.item.TorpedoLauncherItem;
 import com.piranport.registry.ModDataComponents;
 import com.piranport.registry.ModItems;
@@ -13,6 +14,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
@@ -26,8 +29,22 @@ public class WeaponReloadDecorator implements IItemDecorator {
 
     private static final int BAR_WIDTH = 13;
     private static final int BG_COLOR  = 0xFF000000;
-    /** 已装填指示条：满绿，与原版"附魔光效 / 已充能"观感一致。 */
+    /** 已装填指示条（普通鱼雷）：满绿，与原版"附魔光效 / 已充能"观感一致。 */
     private static final int READY_COLOR = 0xFF3FD23F;
+
+    // ===== 弹种颜色 =====
+    // WHY 用渲染器而不是贴图区分弹种：1.21.1 的 overrides 谓词只有浮点数、判定是
+    // "value >= threshold" 且 ItemOverrides 倒序遍历，无法表达弹种的互斥取值
+    // （详见 ClientModEvents 里关于删掉 ammo_type 属性的注释）。
+    // 色相直接沿用 TorpedoItem.tooltip 里已有的 ChatFormatting，玩家不用学两套语言。
+    /** 氧气鱼雷（isOxygen）：青，对应 ChatFormatting.AQUA。 */
+    private static final int AMMO_OXYGEN   = 0xFF40D8E8;
+    /** 声自导鱼雷（isAcoustic）：金，对应 ChatFormatting.GOLD。 */
+    private static final int AMMO_ACOUSTIC = 0xFFFFC24A;
+    /** 线导鱼雷（isWireGuided）：黄，对应 ChatFormatting.YELLOW。 */
+    private static final int AMMO_WIRE     = 0xFFF0D040;
+    /** 磁性鱼雷（isMagnetic）：品红，对应 ChatFormatting.LIGHT_PURPLE。 */
+    private static final int AMMO_MAGNETIC = 0xFFB06CFF;
 
     @Override
     public boolean render(GuiGraphics gui, Font font, ItemStack stack, int x, int y) {
@@ -105,12 +122,40 @@ public class WeaponReloadDecorator implements IItemDecorator {
             // 因此永远走不到第 1 段的冷却条分支；上面第 3 段在不装填时又是直接 return。
             // 结果就是"已装填"比"空膛"画得还少（什么都不画），玩家看图标只会以为没装上，
             // 而 tooltip（ClientItemHooks.weapon_ready）却报"已装填"——两者对不上。
-            // 这里补一条满绿条，让"已装填"在图标上也有正向信号。
-            drawBar(gui, stack, x, y, BAR_WIDTH, READY_COLOR);
+            // 这里补一条满条，条色同时表达弹种（见 readyBarColor）。
+            drawBar(gui, stack, x, y, BAR_WIDTH, readyBarColor(ammo));
             return false;
         }
 
         return false;
+    }
+
+    /**
+     * 已装填指示条的颜色 = 膛内鱼雷的真实制导类型。
+     *
+     * <p>判定用 {@link TorpedoItem} 的实例属性而不是 {@code ammoItemId} 字符串关键字：
+     * 关键字匹配会把注册名里恰好含 "magnetic" 之类子串的新弹种误分类，而且一旦改名就静默失效。
+     *
+     * <p>优先级按"对玩家的信息量"排：氧气 &gt; 声自导 &gt; 线导 &gt; 磁性 &gt; 普通。
+     *
+     * @return 膛内没有鱼雷、口径不匹配、或 {@code ammoItemId} 解析不出物品时返回 {@link #READY_COLOR}
+     */
+    private static int readyBarColor(LoadedAmmo ammo) {
+        TorpedoItem torpedo = torpedoOf(ammo);
+        if (torpedo == null) return READY_COLOR;
+        if (torpedo.isOxygen()) return AMMO_OXYGEN;
+        if (torpedo.isAcoustic()) return AMMO_ACOUSTIC;
+        if (torpedo.isWireGuided()) return AMMO_WIRE;
+        if (torpedo.isMagnetic()) return AMMO_MAGNETIC;
+        return READY_COLOR;
+    }
+
+    /** 把 {@link LoadedAmmo#ammoItemId()} 解析回 {@link TorpedoItem}；解析不出或不是鱼雷时返回 null。 */
+    private static TorpedoItem torpedoOf(LoadedAmmo ammo) {
+        if (ammo == null || !ammo.hasAmmo()) return null;
+        ResourceLocation id = ResourceLocation.tryParse(ammo.ammoItemId());
+        if (id == null) return null;
+        return BuiltInRegistries.ITEM.get(id) instanceof TorpedoItem ti ? ti : null;
     }
 
     /**

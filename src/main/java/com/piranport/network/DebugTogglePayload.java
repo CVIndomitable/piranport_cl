@@ -35,10 +35,10 @@ public record DebugTogglePayload(boolean enabled) implements CustomPacketPayload
                         return;
                     }
                     var result = PiranPortDebug.togglePlayer(sp.getUUID(), sp.getScoreboardName(), payload.enabled());
-                    String status = result.status();
-                    long sid = result.sessionId();
+                    // sessionId 必须原样回传：客户端要靠它拼日志文件名。
+                    // 回传 payload.enabled() 会让 TEST_ACTIVE 等反向拒绝场景在客户端显示成"已开启"。
                     PacketDistributor.sendToPlayer(sp,
-                            new DebugToggleAckPayload(payload.enabled(), sid, status));
+                            new DebugToggleAckPayload(result.enabled(), result.sessionId(), result.status()));
                 }));
     }
 }

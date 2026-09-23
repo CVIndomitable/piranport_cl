@@ -112,7 +112,12 @@ public record SlotCooldowns(Map<Integer, Long> endTick, Map<Integer, Integer> to
 
     /** Returns a new SlotCooldowns with the given slot's cooldown set. */
     public SlotCooldowns withSlotCooldown(int slot, int ticks, long currentTick) {
-        int adjusted = com.piranport.testtools.PiranPortTestTools.applyCooldownOverride(ticks);
+        return withSlotCooldown(null, slot, ticks, currentTick);
+    }
+
+    /** 带所有者版本：只有测试模式属主才享受冷却覆盖。 */
+    public SlotCooldowns withSlotCooldown(java.util.UUID owner, int slot, int ticks, long currentTick) {
+        int adjusted = com.piranport.testtools.PiranPortTestTools.applyCooldownOverride(owner, ticks);
         Map<Integer, Long> newEnd = new HashMap<>(endTick);
         Map<Integer, Integer> newTotal = new HashMap<>(totalTick);
         newEnd.put(slot, currentTick + adjusted);

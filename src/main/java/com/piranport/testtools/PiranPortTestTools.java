@@ -62,8 +62,10 @@ public final class PiranPortTestTools {
      */
     public static ToggleResult toggleFor(java.util.UUID playerUuid, boolean wantEnabled) {
         if (wantEnabled) {
-            // 互斥检查：禁止在调试会话激活时开启测试模式
-            if (PiranPortDebug.isServerEnabled()) {
+            // 互斥检查：禁止在「调用者本人」有调试会话时开启测试模式。
+            // 原实现用全局 isServerEnabled()（!SESSIONS.isEmpty()），会因别人开了会话
+            // 而错误拒绝本人，也会让「测试模式与调试互斥」被顺序颠倒绕过。
+            if (PiranPortDebug.isSessionActive(playerUuid)) {
                 return ToggleResult.DEBUG_ACTIVE;
             }
             if (cooldownOverrideEnabled) {
@@ -90,28 +92,40 @@ public final class PiranPortTestTools {
             if (!cooldownOverrideEnabled) {
                 return ToggleResult.ALREADY_OFF;
             }
+            // 所有权校验：只有开启者本人（或服务端停机/登出路径）能关闭，
+            // 否则任意 OP 都能关掉别人的测试模式，导致对方客户端水印永久残留。
+            if (activePlayerUuid != null && playerUuid != null
+                    && !activePlayerUuid.equals(playerUuid)) {
+                return ToggleResult.NOT_OWNER;
+            }
+            java.util.UUID owner = activePlayerUuid;
             long sid = currentTestSessionId;
             cooldownOverrideEnabled = false;
             activePlayerUuid = null;
             currentTestSessionId = -1L;
             try {
                 var server = net.neoforged.neoforge.server.ServerLifecycleHooks.getCurrentServer();
-                if (server != null && playerUuid != null) {
-                    var sp = server.getPlayerList().getPlayer(playerUuid);
+                // 水印撤销必须发给真正的属主，否则被劫持方的客户端状态永远停在 ON
+                java.util.UUID target = owner != null ? owner : playerUuid;
+                if (server != null && target != null) {
+                    var sp = server.getPlayerList().getPlayer(target);
                     if (sp != null) {
                         PacketDistributor.sendToPlayer(sp,
                                 new com.piranport.network.TestModeWatermarkPayload(false, sid));
                     }
                 }
             } catch (Exception ignored) {}
-            PiranPortDebug.event("[TEST] session=#{} reason=USER status=CLOSED", sid);
+            PiranPortDebug.event("[TEST] session=#{} reason=USER status=CLOSED by={}",
+                    sid, PiranPortDebug.shortUuid(playerUuid));
             return ToggleResult.CLOSED;
         }
     }
 
     /** 服务端停止时强制关闭 */
     public static void closeAll() {
-        if (!cooldownOverrideEnabled) return;
+        // 早退条件必须同时看两个字段：只看布尔时，若有「布尔已 false 但 activePlayerUuid 非空」
+        // 的中间态，属主信息与水印撤销会被跳过。
+        if (!cooldownOverrideEnabled && activePlayerUuid == null) return;
         long sid = currentTestSessionId;
         cooldownOverrideEnabled = false;
         java.util.UUID prev = activePlayerUuid;
@@ -162,9 +176,22 @@ public final class PiranPortTestTools {
     /**
      * 应用冷却覆盖：当 ticks &gt; COOLDOWN_OVERRIDE_TICKS 时返回 COOLDOWN_OVERRIDE_TICKS。
      * 这是测试工具的核心功能，等价于"所有武器冷却都缩短到 5 秒"。
+     *
+     * <p>无 owner 重载：仅供拿不到施法玩家的调用点使用，等价于「不享受覆盖」。
+     * 新代码应一律使用 {@link #applyCooldownOverride(java.util.UUID, int)}。
      */
     public static int applyCooldownOverride(int ticks) {
-        if (cooldownOverrideEnabled && ticks > COOLDOWN_OVERRIDE_TICKS) {
+        return applyCooldownOverride(null, ticks);
+    }
+
+    /**
+     * 应用冷却覆盖（带所有者校验）。
+     * 只有当前测试模式的属主才享受覆盖，避免 OP 开测试后全服玩家一起被改写冷却。
+     *
+     * @param owner 触发本次冷却的玩家 UUID；{@code null} 表示无玩家上下文（如女仆实体），不享受覆盖
+     */
+    public static int applyCooldownOverride(java.util.UUID owner, int ticks) {
+        if (isActiveOwner(owner) && ticks > COOLDOWN_OVERRIDE_TICKS) {
             return COOLDOWN_OVERRIDE_TICKS;
         }
         return ticks;
@@ -173,9 +200,25 @@ public final class PiranPortTestTools {
     /**
      * 测试模式下消耗物品时跳过（与 {@link PiranPortDebug#consumeAmmo} 等价但隔离）
      * 这是为了避免测试人员因为弹药耗尽而无法复现问题。
+     *
+     * <p>无 owner 重载：{@code null} 视为非属主，正常消耗。
      */
     public static void consumeAmmo(net.minecraft.world.item.ItemStack stack, int count) {
-        if (!cooldownOverrideEnabled) stack.shrink(count);
+        consumeAmmo(null, stack, count);
+    }
+
+    /** 见 {@link #consumeAmmo(net.minecraft.world.item.ItemStack, int)}，带所有者校验 */
+    public static void consumeAmmo(java.util.UUID owner,
+                                   net.minecraft.world.item.ItemStack stack, int count) {
+        if (!isActiveOwner(owner)) stack.shrink(count);
+    }
+
+    /**
+     * 是否为当前测试模式的属主。测试模式是 JVM 全局态，但只有开启者本人应受其影响——
+     * 否则任一 OP 按 N 会让全服玩家的武器冷却与弹药消耗一起被改写。
+     */
+    public static boolean isActiveOwner(java.util.UUID owner) {
+        return cooldownOverrideEnabled && owner != null && owner.equals(activePlayerUuid);
     }
 
     public enum ToggleResult {
@@ -183,7 +226,9 @@ public final class PiranPortTestTools {
         CLOSED(false, "CLOSED"),
         ALREADY_ON(true, "ALREADY_ON"),
         ALREADY_OFF(false, "ALREADY_OFF"),
-        DEBUG_ACTIVE(false, "DEBUG_ACTIVE");
+        DEBUG_ACTIVE(false, "DEBUG_ACTIVE"),
+        /** 调用者不是当前测试模式的属主，拒绝关闭 */
+        NOT_OWNER(false, "NOT_OWNER");
 
         public final boolean enabled;
         public final String status;

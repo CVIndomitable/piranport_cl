@@ -38,13 +38,24 @@ public record DebugCooldownOverridePayload(boolean enabled) implements CustomPac
                     if (!(context.player() instanceof net.minecraft.server.level.ServerPlayer sp)) {
                         return;
                     }
-                    if (!sp.hasPermissions(2)) return;
+                    if (!sp.hasPermissions(2)) {
+                        // 权限不足必须有回执，否则客户端乐观翻转的本地状态永久说谎
+                        sp.displayClientMessage(net.minecraft.network.chat.Component.literal(
+                                "§c[PP] 测试模式需要 OP 权限"), false);
+                        return;
+                    }
                     var result = PiranPortTestTools.toggleFor(sp.getUUID(), payload.enabled());
-                    if ("DEBUG_ACTIVE".equals(result.status)) {
-                        // 调试模式正在运行，拒绝开启测试模式
-                        com.piranport.platform.ClientHooks.displayClientMessage(
+                    // 服务端直接发给该玩家：ClientHooks 在专用服务器上是 Noop 桥接，提示送不到人。
+                    switch (result.status) {
+                        case "DEBUG_ACTIVE" -> sp.displayClientMessage(
                                 net.minecraft.network.chat.Component.literal(
-                                        "§c[PP] 测试模式与调试互斥：请先关闭调试 (F8) 再开启测试模式"));
+                                        "§c[PP] 测试模式与调试互斥：请先关闭调试 (F8) 再开启测试模式"), false);
+                        case "NOT_OWNER" -> sp.displayClientMessage(
+                                net.minecraft.network.chat.Component.literal(
+                                        "§c[PP] 测试模式由其他玩家开启，无法代为关闭"), false);
+                        case "ALREADY_ON" -> {}
+                        case "ALREADY_OFF" -> {}
+                        default -> {}
                     }
                 }));
     }

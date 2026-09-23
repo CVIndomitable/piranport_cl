@@ -15,19 +15,19 @@ import net.neoforged.neoforge.network.PacketDistributor;
  * <p><b>线程模型</b>: 客户端渲染线程（单线程），无需同步。
  * <p><b>状态管理</b>:
  *   - debugEnabledClientState: F8 调试开关本地显示，初始由服务端 ack 校正。
- *   - cooldownOverrideClientState: 调试冷却覆盖，在 onClientDisconnect 中重置。
  *   - hitDisplayEnabled: 命中显示开关，持久化于客户端会话。
  *
- * <p>反馈统一由服务端 {@link com.piranport.network.DebugToggleAckPayload} 负责，
- * 客户端不再立即提示成功/失败，避免假成功。
+ * <p><b>权威归服务端</b>：本类里的布尔量只是"最后一次服务端 ack 说到的状态"，
+ * 按键时不预先翻转——服务端可能因权限 / 互斥 / 属主校验而拒绝（见
+ * {@link com.piranport.network.DebugToggleAckPayload} 与
+ * {@link com.piranport.network.DebugCooldownOverridePayload}），
+ * 乐观翻转会让本地状态与被拒绝的请求一起说谎。按键只发包 + 一条"已发送"提示，
+ * 真实状态由 ack 覆盖。
  */
 public class DebugInputHandler {
 
     private static boolean debugEnabledClientState = false;
-    private static boolean cooldownOverrideClientState = false;
     private static boolean hitDisplayEnabled = true;
-    // P2-9: 测试模式水印同步（由 TestModeWatermarkPayload 校正）
-    private static boolean testModeClientState = false;
 
     private DebugInputHandler() {}
 
@@ -35,28 +35,25 @@ public class DebugInputHandler {
 
     public static boolean isDebugEnabledClient() { return debugEnabledClientState; }
 
-    public static boolean isCooldownOverrideClientState() {
-        return cooldownOverrideClientState;
-    }
-
     /** 由 DebugToggleAckPayload 校正本地状态，避免与服务端偏离 */
     public static void setDebugEnabledClient(boolean enabled) {
         debugEnabledClientState = enabled;
     }
 
-    /** P2-9: 由 TestModeWatermarkPayload 校正 */
+    /**
+     * 测试模式水印状态同步入口。
+     *
+     * <p>为什么保留空实现：测试模式的 HUD 水印渲染尚未落地（原计划由 ClientHooks
+     * 读 {@code PiranPortTestTools.WATERMARK_TEXT} 画，实际没有调用方）。
+     * 这里刻意不缓存布尔量——存了也没人读，只会像之前那样留下一个误导性的
+     * "P2-9 已实现"注释；水印真正实装时应该在这个方法里接 HUD 渲染层。
+     */
     public static void setTestModeClient(boolean enabled) {
-        testModeClientState = enabled;
-    }
-
-    public static boolean isTestModeClient() {
-        return testModeClientState;
+        // no-op：等待水印渲染实装
     }
 
     public static void reset() {
         debugEnabledClientState = false;
-        cooldownOverrideClientState = false;
-        testModeClientState = false;
         hitDisplayEnabled = true;
     }
 
@@ -72,27 +69,23 @@ public class DebugInputHandler {
                         net.minecraft.network.chat.Component.translatable("message.piranport.snapshot_requested"),
                         true);
             } else {
-                debugEnabledClientState = !debugEnabledClientState;
-                boolean nowEnabled = debugEnabledClientState;
-                PacketDistributor.sendToServer(new DebugTogglePayload(nowEnabled));
-                // 立即显示本地状态，服务端 ACK 到达后由 DebugToggleAckPayload 覆盖修正
+                // 请求翻转：目标状态由本地镜像取反，但本地镜像不先改——
+                // 服务端 TEST_ACTIVE / NO_PERMISSION 拒绝时镜像必须保持原值。
+                boolean wantEnabled = !debugEnabledClientState;
+                PacketDistributor.sendToServer(new DebugTogglePayload(wantEnabled));
                 mc.player.displayClientMessage(
                         net.minecraft.network.chat.Component.translatable(
-                                nowEnabled ? "message.piranport.debug_on" : "message.piranport.debug_off"),
+                                wantEnabled ? "message.piranport.debug_on" : "message.piranport.debug_off"),
                         true);
             }
         }
 
         // N 键：调试冷却覆盖（独立测试工具）
         while (ModKeyMappings.DEBUG_COOLDOWN_OVERRIDE.consumeClick()) {
-            cooldownOverrideClientState = !cooldownOverrideClientState;
-            boolean nowEnabled = cooldownOverrideClientState;
-            PacketDistributor.sendToServer(new DebugCooldownOverridePayload(nowEnabled));
-            mc.player.displayClientMessage(
-                    net.minecraft.network.chat.Component.translatable(
-                            nowEnabled ? "message.piranport.debug_cooldown_override_on"
-                                       : "message.piranport.debug_cooldown_override_off"),
-                    true);
+            // cooldownOverrideClientState 已移除：服务端是唯一权威，
+            // 本地想翻转的目标值由"我认为的当前值取反"退化为"请求开启"，
+            // 因为 ack 不带回该标志；由服务端幂等（ALREADY_ON / ALREADY_OFF）兜住。
+            PacketDistributor.sendToServer(new DebugCooldownOverridePayload(true));
         }
 
         // J 键：切换命中显示

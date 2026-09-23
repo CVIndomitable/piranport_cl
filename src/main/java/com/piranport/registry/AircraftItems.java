@@ -4,6 +4,7 @@ import com.piranport.component.AircraftInfo;
 import com.piranport.component.WeaponCategory;
 import com.piranport.item.AircraftItem;
 import com.piranport.item.EngineItem;
+import com.piranport.item.FireControlRadarItem;
 import com.piranport.item.RadarItem;
 import com.piranport.item.SonarItem;
 import net.minecraft.world.item.Item;
@@ -296,6 +297,16 @@ public final class AircraftItems {
                     () -> new RadarItem(new Item.Properties().stacksTo(1)
                             .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ARMOR),
                             1, 32, RadarItem.RadarTarget.SUBMARINE));
+
+    // ===== Fire Control Radar =====
+    // 与上面三台索敌雷达是不同东西：那三台是「自动扫描并高亮目标」，这台是「手动开关的
+    // 准星吸附（火炮瞄准辅助）」。所以它是 FireControlRadarItem 而不是 RadarItem 的第四个枚举值
+    // —— 两者的驱动方式（自动 tick 扫描 vs 玩家按 0 键切换）与作用对象（高亮 vs 准星）都不同。
+    public static final DeferredItem<FireControlRadarItem> STANDARD_FIRE_CONTROL_RADAR =
+            ITEMS.register("standard_fire_control_radar",
+                    () -> new FireControlRadarItem(new Item.Properties().stacksTo(1)
+                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ARMOR),
+                            1, 32));
 
     // ===== Engines =====
     public static final DeferredItem<EngineItem> STANDARD_ENGINE =

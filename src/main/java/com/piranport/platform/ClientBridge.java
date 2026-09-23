@@ -47,6 +47,8 @@ public interface ClientBridge {
 
     void setFireControlTargets(List<UUID> targetUUIDs);
 
+    void setFcRadarSnapLimit(double limitBlocks);
+
     void displayClientMessage(Component message);
 
     void displayClientMessage(Component message, boolean overlay);

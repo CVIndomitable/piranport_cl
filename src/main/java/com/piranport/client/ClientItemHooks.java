@@ -132,6 +132,11 @@ public final class ClientItemHooks implements com.piranport.platform.ClientBridg
     }
 
     @Override
+    public void setFcRadarSnapLimit(double limitBlocks) {
+        com.piranport.client.FireControlRadarSnapHandler.setServerSimulationLimitBlocks(limitBlocks);
+    }
+
+    @Override
     public void displayClientMessage(Component message) {
         displayClientMessage(message, true);
     }

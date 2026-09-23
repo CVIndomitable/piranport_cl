@@ -50,4 +50,13 @@ public class ModKeyMappings {
     /** 退出侦察模式（V） */
     public static final KeyMapping RECON_EXIT =
             new KeyMapping("key.piranport.recon_exit", GLFW.GLFW_KEY_V, CATEGORY);
+
+    /**
+     * 火控雷达开关（0）。
+     *
+     * <p>WHY 用主键盘数字 0 而不是小键盘：策划口径就是「按 0 键」，主键盘 0 与
+     * 快捷栏 1–9 相邻，玩家按完 9 顺手按 0 不会跳到小键盘。原版并未占用主键盘 0。
+     */
+    public static final KeyMapping TOGGLE_FC_RADAR =
+            new KeyMapping("key.piranport.toggle_fire_control_radar", GLFW.GLFW_KEY_0, CATEGORY);
 }

@@ -7,6 +7,7 @@ import com.piranport.network.ToggleAutoModePayload;
 import com.piranport.network.FireControlPayload;
 import com.piranport.network.ManualReloadPayload;
 import com.piranport.network.ToggleFighterGroundAttackPayload;
+import com.piranport.network.ToggleFcRadarPayload;
 import com.piranport.client.ClientGameEvents;
 import com.piranport.client.ModKeyMappings;
 import net.minecraft.client.Minecraft;
@@ -102,6 +103,24 @@ public class FireControlInputHandler {
         while (ModKeyMappings.TOGGLE_AUTO_LAUNCH.consumeClick()) {
             if (!transformed || inReconMode) continue;
             PacketDistributor.sendToServer(new ToggleAutoModePayload());
+        }
+    }
+
+    /**
+     * 处理 0 键 — 开关火控雷达（准星吸附）。
+     *
+     * <p>与中键火控是两套系统：中键维护「火控锁定列表」（供航空/导弹使用），
+     * 0 键开关的是「准星吸附」（火炮瞄准辅助）。本方法只发一个「翻转」意图，
+     * 真正的状态由服务端写在核心组件上，客户端按 DataComponent 同步读取，
+     * 因此这里不需要也不应该维护本地镜像。
+     *
+     * <p>不加 transformed 前置判断：未变身时发过去，服务端 findTransformedCore 会
+     * 拿到空栈直接返回，多一次无效包但省掉一处客户端/服务端状态不一致的风险。
+     */
+    public static void handleFcRadarToggleKey(Minecraft mc) {
+        if (mc.player == null) return;
+        while (ModKeyMappings.TOGGLE_FC_RADAR.consumeClick()) {
+            PacketDistributor.sendToServer(new ToggleFcRadarPayload());
         }
     }
 

@@ -27,6 +27,7 @@ import com.piranport.item.ShipCoreItem;
 import com.piranport.item.ShipGirlContractItem;
 import com.piranport.item.SkinCoreItem;
 import com.piranport.item.SonarItem;
+import com.piranport.item.FireControlRadarItem;
 import com.piranport.item.RadarItem;
 import com.piranport.item.TooltipItem;
 import com.piranport.item.EngineItem;
@@ -391,6 +392,8 @@ public class ModItems {
     public static final DeferredItem<RadarItem> STANDARD_SURFACE_RADAR = AircraftItems.STANDARD_SURFACE_RADAR;
     public static final DeferredItem<RadarItem> STANDARD_AIR_RADAR = AircraftItems.STANDARD_AIR_RADAR;
     public static final DeferredItem<RadarItem> STANDARD_SONAR_RADAR = AircraftItems.STANDARD_SONAR_RADAR;
+    public static final DeferredItem<FireControlRadarItem> STANDARD_FIRE_CONTROL_RADAR =
+            AircraftItems.STANDARD_FIRE_CONTROL_RADAR;
 
     // ===== Engines (extracted to AircraftItems) =====
     public static final DeferredItem<EngineItem> STANDARD_ENGINE = AircraftItems.STANDARD_ENGINE;

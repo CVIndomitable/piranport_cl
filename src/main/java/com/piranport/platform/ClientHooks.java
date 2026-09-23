@@ -93,6 +93,11 @@ public final class ClientHooks {
         bridge.setFireControlTargets(targetUUIDs);
     }
 
+    /** 服务端下发火控雷达准星吸附的半径上限（格）。服务端侧是 no-op。 */
+    public static void setFcRadarSnapLimit(double limitBlocks) {
+        bridge.setFcRadarSnapLimit(limitBlocks);
+    }
+
     public static void displayClientMessage(Component message) {
         bridge.displayClientMessage(message);
     }

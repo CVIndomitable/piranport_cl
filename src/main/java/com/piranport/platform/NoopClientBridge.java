@@ -65,6 +65,9 @@ class NoopClientBridge implements ClientBridge {
     public void setFireControlTargets(List<UUID> targetUUIDs) {  }
 
     @Override
+    public void setFcRadarSnapLimit(double limitBlocks) {  }
+
+    @Override
     public void displayClientMessage(Component message) {  }
 
     @Override

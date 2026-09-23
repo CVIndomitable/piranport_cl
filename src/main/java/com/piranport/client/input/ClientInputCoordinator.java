@@ -8,6 +8,7 @@ import com.piranport.client.CannonImpactEffects;
 import com.piranport.client.ClientScopeHandler;
 import com.piranport.client.ClientTorpedoGuidance;
 import com.piranport.client.EntityUuidCache;
+import com.piranport.client.FireControlRadarSnapHandler;
 import com.piranport.client.ModKeyMappings;
 import com.piranport.combat.TransformationManager;
 import com.piranport.item.ShipCoreItem;
@@ -121,6 +122,13 @@ public class ClientInputCoordinator {
         FireControlInputHandler.handleFighterGroundAttackKey(mc, transformed, inReconMode);
         FireControlInputHandler.handleAutoLaunchKey(mc, transformed, inReconMode);
         FireControlInputHandler.handleManualReloadKey(mc, transformed, inReconMode);
+
+        // 5b) 0 键 — 火控雷达开关（准星吸附），与中键火控锁定列表无关
+        FireControlInputHandler.handleFcRadarToggleKey(mc);
+
+        // 5c) 火控雷达准星吸附：放在所有输入处理之后、渲染之前，
+        //     这样本 tick 的按键操作（含刚按下的 0 键）都已生效，不会有一帧延迟。
+        FireControlRadarSnapHandler.tick(mc);
 
         // 6) 弹药选择轮盘 (Tab)
         AmmoSelectionHandler.handleAmmoWheel(mc, mc.player, transformed, inReconMode);

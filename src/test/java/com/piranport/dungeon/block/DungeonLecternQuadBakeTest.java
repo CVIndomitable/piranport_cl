@@ -43,11 +43,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * 原版的区块渲染对超出 0..16 的体积容忍度很低（背面剔除 + 光照计算都会跟着错）。
  *
  * <p>所以这里往下走一层：用 {@link FaceBakery#bakeQuad} 对每个 element 的每个面真烘一遍，
- * 断言顶点全部落在 [-0.1, 16.1] 的方盒里（留 0.1 给原版烘焙的浮点误差）。
- * 同时断言钥匙 element 不能和台面 element 完全共面，否则 z-fighting。
+ * 断言顶点全部落在归一化的 0..1 方盒里（容差 0.01，约 0.16 像素——够吸收原版烘焙的浮点
+ * 误差，又能抓住"角点翻出方块体积"这类真实越界）。
  *
- * <p>不碰注册表/资源管理器：{@link TextureAtlasSprite} 是接口，用一个空实现即可，
- * 本测试只关心几何，不关心贴图采样。
+ * <p>注意 {@link FaceBakery#bakeQuad} 吐出来的是**归一化坐标**（0..1），不是模型 JSON 里
+ * 的 0..16 像素空间。按 0..16 写阈值的话这个断言永远不可能失败——本项目踩过这个坑。
+ *
+ * <p>不碰注册表/资源管理器：{@link TextureAtlasSprite} 的构造函数是 protected，用一个
+ * 最小子类包住一张真的 16×16 空白图即可。本测试只关心几何，不关心像素内容。
  */
 class DungeonLecternQuadBakeTest {
 

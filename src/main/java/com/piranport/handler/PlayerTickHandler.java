@@ -291,7 +291,14 @@ public class PlayerTickHandler {
         }
         double maxRange = Math.min(scanRange, simLimit);
 
-        AABB scanBox = player.getBoundingBox().inflate(maxRange, 8.0, maxRange);
+        // 扫描盒三轴都用 maxRange，而不是把垂直方向压成 ±8。
+        //
+        // 为什么必须各向同性：雷达是球面索敌，逐实体判定用的是 player.distanceTo(entity)（三维距离），
+        // 而扫描盒只负责「把候选实体捞出来」。若垂直方向只给 ±8，正上方 20 格的飞机、正下方 20 格的
+        // 潜艇会因为压根不在盒子里而永远进不了候选列表 —— 三维距离判定根本没机会执行，
+        // 于是「索敌范围: 32 格」在垂直方向上被静默缩水成 8 格，恰恰是雷达最该看到的两个方向。
+        // 三轴同为 maxRange 才能保证「盒内 ⊇ 球内」，球面判定才是唯一的判定口径。
+        AABB scanBox = player.getBoundingBox().inflate(maxRange);
         List<LivingEntity> nearby = player.level().getEntitiesOfClass(
                 LivingEntity.class, scanBox,
                 e -> e.isAlive() && e != player && !(e instanceof Player));
@@ -337,13 +344,18 @@ public class PlayerTickHandler {
     }
 
     /**
-     * 水下目标判定 —— 沿用反潜机 ASW 的口径（见 AircraftAswRecon.isAswTarget），
-     * 但去掉敌对过滤：索敌是「发现」而非「攻击」，友方水下生物同样该被雷达看到。
+     * 水下目标判定 —— 雷达的「声纳」只在目标真正处于水下时才高亮（策划：声纳只能高亮水下目标）。
+     *
+     * <p>为什么不能只看 {@code EntityTypeTags.AQUATIC}：该标签包含海龟、美西螈等两栖生物，
+     * 它们爬上岸、{@code isUnderWater()} 为 false 时仍会被误判为水下目标，于是声纳雷达高亮一只
+     * 沙滩上的海龟、而对海雷达又因为它「属于水下」而跳过它 —— 分层互相挤占，与策划的互斥设计冲突。
+     * 因此这里以实际水下状态为准，标签只作为「水深不足一格的浅水生物」的兜底。
+     *
+     * <p>{@code DeepOceanSubmarineEntity} 单独判：深海潜艇是自定义实体，不保证 {@code isUnderWater()}
+     * 在贴底航行时为真，而它正是声纳的首要目标，必须先于状态判定返回。
      */
     private static boolean isUnderwaterTarget(LivingEntity entity) {
         if (entity instanceof com.piranport.npc.deepocean.DeepOceanSubmarineEntity) return true;
-        if (entity.getType().is(net.minecraft.tags.EntityTypeTags.AQUATIC)) return true;
-        if (entity instanceof net.minecraft.world.entity.monster.Guardian) return true;
         return entity.isUnderWater();
     }
 

@@ -156,6 +156,7 @@ public class TransformationManager {
         if (stack.getItem() instanceof ArmorPlateItem) return false;
         if (stack.getItem() instanceof SonarItem) return false;
         if (stack.getItem() instanceof RadarItem) return false;
+        if (stack.getItem() instanceof FireControlRadarItem) return false;
         if (stack.getItem() instanceof EngineItem) return false;
         if (stack.getItem() instanceof TorpedoReloadItem) return false;
         // 鱼雷弹药、炮弹、航空消耗品的 getItemLoad 均为 0，自然排除
@@ -293,6 +294,7 @@ public class TransformationManager {
             if (s.getItem() instanceof ArmorPlateItem plate) total += plate.getWeight();
             else if (s.getItem() instanceof SonarItem sonar) total += sonar.getWeight();
             else if (s.getItem() instanceof RadarItem radar) total += radar.getWeight();
+            else if (s.getItem() instanceof FireControlRadarItem fc) total += fc.getWeight();
             else if (s.getItem() instanceof EngineItem engine) total += engine.getWeight();
             else if (s.getItem() instanceof TorpedoReloadItem tr) total += tr.getWeight();
             else if (s.getItem() instanceof com.piranport.item.AutoCIWSItem ciws) total += ciws.getWeight();
@@ -324,6 +326,7 @@ public class TransformationManager {
         if (stack.getItem() instanceof EngineItem) return false;
         if (stack.getItem() instanceof SonarItem) return false;
         if (stack.getItem() instanceof RadarItem) return false;
+        if (stack.getItem() instanceof FireControlRadarItem) return false;
         if (stack.getItem() instanceof TorpedoReloadItem) return false;
         return getItemLoad(stack) > 0;
     }
@@ -502,6 +505,7 @@ public class TransformationManager {
         if (stack.getItem() instanceof ArmorPlateItem plate) return plate.getWeight();
         if (stack.getItem() instanceof SonarItem sonar) return sonar.getWeight();
         if (stack.getItem() instanceof RadarItem radar) return radar.getWeight();
+        if (stack.getItem() instanceof FireControlRadarItem fc) return fc.getWeight();
         if (stack.getItem() instanceof EngineItem engine) return engine.getWeight();
         if (stack.getItem() instanceof TorpedoReloadItem tr) return tr.getWeight();
         if (stack.getItem() instanceof com.piranport.item.AircraftItem) {
@@ -541,6 +545,27 @@ public class TransformationManager {
             if (s.getItem() instanceof RadarItem radar) radars.add(radar);
         }
         return radars;
+    }
+
+    /** 核心强化槽里是否装了火控雷达（决定 0 键开关是否可用、准星吸附是否启用）。 */
+    public static boolean hasFireControlRadarEquipped(Player player, ItemStack coreStack) {
+        for (ItemStack s : getCoreStoredContents(coreStack)) {
+            if (s.getItem() instanceof FireControlRadarItem) return true;
+        }
+        return false;
+    }
+
+    /**
+     * 取核心内已装备的火控雷达。
+     *
+     * <p>火控雷达不叠加——多台只取第一台，功能语义是「有没有」而非「有几台」，
+     * 所以返回单台（无装备返回 null），不用 List。
+     */
+    public static FireControlRadarItem findEquippedFireControlRadar(ItemStack coreStack) {
+        for (ItemStack s : getCoreStoredContents(coreStack)) {
+            if (s.getItem() instanceof FireControlRadarItem fc) return fc;
+        }
+        return null;
     }
 
     /** Check if a TorpedoReloadItem is stored in SHIP_CORE_ARMOR. */

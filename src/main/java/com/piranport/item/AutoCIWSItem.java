@@ -1,15 +1,10 @@
 package com.piranport.item;
 
 import com.piranport.combat.AASilenceManager;
+import com.piranport.combat.CombatTargeting;
 import com.piranport.combat.TransformationManager;
 import com.piranport.config.ModEquipmentConfig;
-import com.piranport.entity.AircraftEntity;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.FlyingMob;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.monster.Enemy;
-import net.minecraft.world.entity.monster.Phantom;
-import net.minecraft.world.entity.monster.Vex;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -35,17 +30,14 @@ public class AutoCIWSItem extends Item {
     public float getCaliberDamage() { return caliberDamage; }
     public int getWeight() { return config.weight().get(); }
 
-    /** 敌机包括敌对生物、深海自主飞机和非友军玩家飞机；不拦截普通箭矢。 */
+    /**
+     * 敌机包括敌对生物、深海自主飞机和非友军玩家飞机；不拦截普通箭矢。
+     *
+     * <p>判据已下沉到 {@link CombatTargeting#isHostileTarget(Player, Entity)}，
+     * 同时修掉了原判据只认空中敌人（FlyingMob/Phantom/Vex）而对地/对海漏判的问题。
+     */
     public static boolean isHostileAircraft(Player player, Entity target) {
-        if (!target.isAlive() || target == player || target.isAlliedTo(player)) return false;
-        if (target instanceof AircraftEntity aircraft) {
-            if (aircraft.getOwnerUUID() != null && aircraft.getOwnerUUID().equals(player.getUUID())) return false;
-            Player owner = aircraft.getOwner();
-            if (owner != null) return player.canHarmPlayer(owner) && !player.isAlliedTo(owner);
-            return aircraft.isAutonomous();
-        }
-        return target instanceof LivingEntity living && target instanceof Enemy && (living instanceof FlyingMob
-                || living instanceof Phantom || living instanceof Vex);
+        return CombatTargeting.isHostileTarget(player, target);
     }
 
     public static void tickAutoCIWS(Player player, boolean autoFireEnabled) {

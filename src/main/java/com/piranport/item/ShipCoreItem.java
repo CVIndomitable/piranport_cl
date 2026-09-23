@@ -273,8 +273,10 @@ public class ShipCoreItem extends Item implements Equipable {
         existing.copyInto(stored);
 
         if (!other.isEmpty()) {
-            // Insert: cursor has ArmorPlateItem/SonarItem/EngineItem/TorpedoReloadItem → store in first empty slot
-            if (!(other.getItem() instanceof ArmorPlateItem) && !(other.getItem() instanceof SonarItem) && !(other.getItem() instanceof EngineItem) && !(other.getItem() instanceof TorpedoReloadItem) && !(other.getItem() instanceof AutoCIWSItem)) return false;
+            // Insert: cursor has ArmorPlateItem/SonarItem/RadarItem/EngineItem/TorpedoReloadItem → store in first empty slot
+            // 这是一张白名单：不在名单里的物品一律拒绝装入强化槽。新增装备类型时必须同步加进来，
+            // 否则该装备永远装不上核心（负重、索敌等一切功能都不会生效）。
+            if (!(other.getItem() instanceof ArmorPlateItem) && !(other.getItem() instanceof SonarItem) && !(other.getItem() instanceof RadarItem) && !(other.getItem() instanceof EngineItem) && !(other.getItem() instanceof TorpedoReloadItem) && !(other.getItem() instanceof AutoCIWSItem)) return false;
             for (int i = 0; i < capacity; i++) {
                 if (stored.get(i).isEmpty()) {
                     stored.set(i, other.copyWithCount(1));

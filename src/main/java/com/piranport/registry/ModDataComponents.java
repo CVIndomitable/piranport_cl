@@ -63,6 +63,20 @@ public class ModDataComponents {
                     .networkSynchronized(ByteBufCodecs.VAR_INT)
                     .build());
 
+    /**
+     * 火控雷达开关（0 键）。
+     *
+     * <p>与 SHIP_AUTO_MODE 同属「写在核心物品上的功能二态开关」：持久化 + 网络同步。
+     * 持久化使开关跟随核心物品跨维度保留；网络同步使客户端能据此判断是否启用准星吸附。
+     * 服务端权威——客户端只读同步下来的布尔值，开关动作走 C2S 包由服务端校验。
+     */
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<Boolean>>
+            SHIP_FC_RADAR_ON = DATA_COMPONENTS.register("ship_fc_radar_on",
+            () -> DataComponentType.<Boolean>builder()
+                    .persistent(Codec.BOOL)
+                    .networkSynchronized(ByteBufCodecs.BOOL)
+                    .build());
+
     // ===== 武器种类标签 =====
 
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<WeaponCategory>>

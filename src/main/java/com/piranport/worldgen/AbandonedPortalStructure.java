@@ -92,16 +92,21 @@ public class AbandonedPortalStructure extends Feature<NoneFeatureConfiguration> 
     /**
      * 告示牌相对平台原点的偏移。
      *
-     * <p>立在讲台的另一侧（讲台在 (0,1,1)，牌在 (2,1,1)），不挡门面也不挡讲台交互面。
-     * 教学门此前最大的问题是玩家不知道"要往门里走"而不是"右键门"——告示牌把这条
-     * 写死在场景里，不依赖玩家读过策划文档。</p>
+     * <p>立在讲台同列（x=base+0）、台面最外沿（z=base+4），即世界 {@code (base.x, base.y+1, base.z+4)}。
+     * 玩家面对讲台时一眼可见，且不挡门面、不挡讲台交互面。</p>
      *
-     * <p><b>为什么 z 是 1 而不是旧的 2：</b>{@code PORTAL_OFFSET} 的 z 从 2 改成 3 之后，
-     * 框架前方多出一条 z=1 的空走廊（框架前表面在 z=2）。牌子放在 z=2 会正好落进框架体积里，
-     * 被 {@link PortalStructureHelper#placeFrameGeometry} 的"整体预检"判为非空气而<b>放弃整座门</b>
-     * （该预检是全有全无的）。放在 z=1 既在走廊里、又贴着讲台，且不与框架 80 格任何一格重合。</p>
+     * <p><b>为什么不能再放在 (2,1,1)：</b>那个位置的世界坐标是 {@code (base.x+2, base.y+1, base.z+1)}，
+     * 换算成框架局部坐标是 {@code (lx=2, lz=1)}——<b>正好落在框架体积内部</b>。而 {@code place()}
+     * 里告示牌是先于框架放的，{@link PortalStructureHelper#placeFrameGeometry} 的预检又是
+     * "任一格非空气且不可替换就 {@code return null} 且一格不放"，于是那格 {@code oak_sign}
+     * 让它放弃整座门——实测结果是<b>台面、讲台、告示牌都在，框架 60 格全是空气</b>，
+     * 玩家看到一座"没有门只有牌子"的岛。</p>
+     *
+     * <p>框架 footprint 由 {@code facing=NORTH} + {@link #PORTAL_OFFSET} 决定，实测为
+     * {@code x∈[base.x+1, base.x+4]}、{@code z∈[base.z, base.z+3]}、{@code y∈[base.y+1, base.y+5]}。
+     * 改动任一偏移量后必须重新核对这条边界，否则会重现"牌子吃掉门"。</p>
      */
-    private static final BlockPos SIGN_OFFSET = new BlockPos(2, 1, 1);
+    private static final BlockPos SIGN_OFFSET = new BlockPos(0, 1, 4);
 
     public AbandonedPortalStructure() {
         super(NoneFeatureConfiguration.CODEC);
@@ -137,7 +142,8 @@ public class AbandonedPortalStructure extends Feature<NoneFeatureConfiguration> 
 
         // 讲台与告示牌必须在建完台面之后、<b>摆框架之前</b>放：框架的预检是"整体有全无"的，
         // 任何一格非空气都会让它放弃整座门；反过来，先把框架摆好再放讲台/牌子又会把框架块盖掉。
-        // 讲台 (0,1,1) 与牌子 (2,1,1) 都在框架体积外，先放不会挡住预检。
+        // 讲台 (0,1,1) 与牌子 (0,1,4) 都已核对在框架体积外（见两个常量的 Javadoc），
+        // 先放不会挡住预检。
         placeLectern(level, platformBase.offset(LECTERN_OFFSET));
         placeSign(level, platformBase.offset(SIGN_OFFSET));
 
@@ -201,9 +207,9 @@ public class AbandonedPortalStructure extends Feature<NoneFeatureConfiguration> 
      * 现在这一版按真实体积判定：{@code hasSpace} 通过 ⟺ {@code placeFrameGeometry} 的预检也会通过。</p>
      *
      * <p>讲台/告示牌的位置必须一起查：它们的摆放时机在框架<b>之前</b>，若它们与框架体积重合，
-     * 框架的预检会因为那一格非空气而放弃整座门。当前 {@code LECTERN_OFFSET(0,1,1)} 与
-     * {@code SIGN_OFFSET(2,1,1)} 都在 z=1、而框架体积是 z∈[2,5]，不重合；这里把这条约束
-     * 写成断言式的检查，日后谁挪了偏移量都会在这里立刻暴露。</p>
+     * 框架的预检会因为那一格非空气而放弃整座门——实测过，表现为"台面/讲台/牌子都在、框架 60 格
+     * 全空气"（告示牌曾被放在框架局部 {@code (lx=2,lz=1)} 上，整座门因此消失）。
+     * 这里把这条约束写成断言式的检查，日后谁挪了偏移量都会在这里立刻暴露。</p>
      */
     private static boolean hasSpace(WorldGenLevel level, BlockPos base) {
         BlockPos corner = base.offset(PORTAL_OFFSET);

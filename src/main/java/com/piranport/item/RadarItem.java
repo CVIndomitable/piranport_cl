@@ -1,6 +1,7 @@
 package com.piranport.item;
 
 import com.piranport.component.WeaponCategory;
+import com.piranport.platform.ClientHooks;
 import com.piranport.registry.ModDataComponents;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;

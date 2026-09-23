@@ -496,7 +496,7 @@ public abstract class AbstractDeepOceanEntity extends Monster {
             case TORPEDO_BOMBER:   itemReg = ModItems.SWORDFISH_TORPEDO;        break;
             case LEVEL_BOMBER:     itemReg = ModItems.B25_BOMBER;               break;
             case ASW:              itemReg = ModItems.SWORDFISH_ASW;            break;
-            case RECON:            itemReg = ModItems.RECON_SQUADRON;           break;
+            case RECON:            itemReg = ModItems.SAIUN_RECON;              break;
             case ROCKET_FIGHTER:   itemReg = ModItems.F6F_HELLCAT_ROCKET;       break;
             default:               itemReg = ModItems.SEAFIRE;                  break;
         }

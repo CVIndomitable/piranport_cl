@@ -25,15 +25,6 @@ public final class AircraftItems {
                                     new AircraftInfo(AircraftInfo.AircraftType.TORPEDO_BOMBER,
                                             1200, 4, 0, 30f, 1.5f, 22, AircraftInfo.BombingMode.DIVE, false))));
 
-
-    public static final DeferredItem<AircraftItem> RECON_SQUADRON =
-            ITEMS.register("recon_squadron",
-                    () -> new AircraftItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.AIRCRAFT)
-                            .component(ModDataComponents.AIRCRAFT_INFO.get(),
-                                    new AircraftInfo(AircraftInfo.AircraftType.RECON,
-                                            1500, 0, 0, 0f, 1.5f, 8, AircraftInfo.BombingMode.DIVE, false))));
-
     // ===== Named Aircraft =====
 
     // --- 鱼雷机 ---

@@ -13,8 +13,7 @@
       "text": "piranport.book.aviation.aircraft.p2"
     },
     {
-      "type": "patchouli:crafting",
-      "recipe": "piranport:recon_squadron",
+      "type": "patchouli:text",
       "text": "piranport.book.aviation.aircraft.recon_craft"
     }
   ]

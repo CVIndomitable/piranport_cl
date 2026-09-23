@@ -350,9 +350,12 @@ public class PlayerTickHandler {
     /**
      * 飞行目标判定 —— 与防空导弹的判定（MissileEntity.isValidTarget）保持一致：
      * 离地且不在水中即视为空中，或正在上升（避免把下落中的地面实体误判为空中目标）。
+     *
+     * <p>为什么不在这里判断 {@code AircraftEntity}：AircraftEntity 继承自 Entity 而非
+     * LivingEntity，根本进不了本次扫描的实体列表（扫描按 LivingEntity 过滤，见 tickSonarGlow）。
+     * 而且飞机升空后 onGround() 恒为 false，上面的条件已经覆盖，额外分支是死代码。
      */
     private static boolean isAirborneTarget(LivingEntity entity) {
-        if (entity instanceof com.piranport.entity.AircraftEntity) return true;
         return (!entity.onGround() && !entity.isInWater()) || entity.getDeltaMovement().y > 0.1;
     }
 

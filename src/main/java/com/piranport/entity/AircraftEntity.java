@@ -1235,7 +1235,7 @@ public class AircraftEntity extends Entity {
                 case TORPEDO_BOMBER -> new ItemStack(ModItems.SWORDFISH_TORPEDO.get());
                 case LEVEL_BOMBER   -> new ItemStack(ModItems.B25_BOMBER.get());
                 case ASW            -> new ItemStack(ModItems.SWORDFISH_ASW.get());
-                case RECON          -> new ItemStack(ModItems.RECON_SQUADRON.get());
+                case RECON          -> new ItemStack(ModItems.SAIUN_RECON.get());
                 case ROCKET_FIGHTER -> new ItemStack(ModItems.F6F_HELLCAT_ROCKET.get());
             };
         }

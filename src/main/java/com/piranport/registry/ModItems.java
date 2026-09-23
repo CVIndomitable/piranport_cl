@@ -306,7 +306,6 @@ public class ModItems {
 
     // ===== Aircraft Squadrons (Phase 18) — 实际定义见 AircraftItems =====
     public static final DeferredItem<AircraftItem> XTB2D = AircraftItems.XTB2D;
-    public static final DeferredItem<AircraftItem> RECON_SQUADRON = AircraftItems.RECON_SQUADRON;
 
     // ===== Named Aircraft — 实际定义见 AircraftItems =====
     // --- 鱼雷机 ---

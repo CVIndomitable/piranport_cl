@@ -78,7 +78,6 @@ public class ModCreativeTabs {
                     .displayItems((parameters, output) -> {
                         // Generic squadrons
                         output.accept(ModItems.XTB2D.get());
-                        output.accept(ModItems.RECON_SQUADRON.get());
                         // Torpedo bombers
                         output.accept(ModItems.SWORDFISH_TORPEDO.get());
                         output.accept(ModItems.SWORDFISH_ASW.get());

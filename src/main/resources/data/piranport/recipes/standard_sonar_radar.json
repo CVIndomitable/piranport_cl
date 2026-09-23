@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "III",
+    "RCR",
+    "IPI"
+  ],
+  "key": {
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "R": {
+      "item": "minecraft:redstone"
+    },
+    "C": {
+      "item": "minecraft:compass"
+    },
+    "P": {
+      "item": "minecraft:prismarine_shard"
+    }
+  },
+  "result": {
+    "id": "piranport:standard_sonar_radar",
+    "count": 1
+  }
+}

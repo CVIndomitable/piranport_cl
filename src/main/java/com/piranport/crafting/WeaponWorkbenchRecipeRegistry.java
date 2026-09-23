@@ -154,7 +154,7 @@ public final class WeaponWorkbenchRecipeRegistry {
                 new ItemStack(Items.TNT, 1)
         ), null, 250);
 
-        add(r, 4, ModItems.RECON_SQUADRON.get(), List.of(
+        add(r, 4, ModItems.SAIUN_RECON.get(), List.of(
                 new ItemStack(ModItems.ALUMINUM_INGOT.get(), 2),
                 new ItemStack(Items.REDSTONE, 1),
                 new ItemStack(Items.GOLD_INGOT, 1)

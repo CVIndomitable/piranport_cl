@@ -1,12 +1,17 @@
 package com.piranport.compat.maid.combat.handlers;
 
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
+import com.piranport.PiranPort;
 import com.piranport.artillery.ArtilleryItem;
 import com.piranport.combat.cannon.CannonAmmoRules;
 import com.piranport.compat.maid.combat.AmmoConsumer;
 import com.piranport.compat.maid.combat.WeaponHandler;
 import com.piranport.entity.CannonProjectileEntity;
+import com.piranport.item.ShipCoreItem;
 import com.piranport.registry.ModItems;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
@@ -39,7 +44,7 @@ public class CannonHandler implements WeaponHandler {
         // 这里按候选表合计数量判定，兼容「两种弹各半夹、合计刚好够」的合法情形。
         var effectiveData = ai.getEffectiveData(maid.level());
         int barrels = Math.max(1, effectiveData.barrels());
-        return AmmoConsumer.countAnyOf(owner, shellsFor(effectiveData.damage())) >= barrels;
+        return AmmoConsumer.countAnyOf(owner, shellsFor(maid.level(), effectiveData.damage())) >= barrels;
     }
 
     @Override
@@ -64,7 +69,7 @@ public class CannonHandler implements WeaponHandler {
         float pitch = (float) Math.toDegrees(-Math.asin(clampUnit(aim.y)));
 
         Player owner = AmmoConsumer.ownerPlayer(maid);
-        List<Item> candidates = shellsFor(damage);
+        List<Item> candidates = shellsFor(maid.level(), damage);
 
         // 先按「副手优先、否则候选表顺序」取偏好弹种，再逐类取弹。
         // 每发都必须记住自己消耗的是哪个弹种：弹种决定 isHE / 近炸引信 / 三式霰弹 / 过穿口径，
@@ -109,26 +114,71 @@ public class CannonHandler implements WeaponHandler {
         return v < -1.0 ? -1.0 : Math.min(v, 1.0);
     }
 
-    private static List<Item> shellsFor(float damage) {
-        if (damage >= 20f) {
-            return List.of(
+    /** 单口径候选弹种表：全量物品项 —— 弹种集合的**唯一事实来源**。 */
+    private record ShellFamily(float minDamage, TagKey<Item> tag, List<Item> allItems) {}
+
+    /**
+     * 三个口径族的候选物品全集。
+     * <p><b>必须与 item 标签逐项同步</b>（见下方 {@code logTagDrift}）：本表决定弹种的<b>顺序</b>与
+     * 是否需要实例化物品对象，标签决定<b>准入</b>（某个物品是否真的是可用弹种）。
+     * 之所以不直接遍历标签内容，是因为 {@code HolderSet.Named} 的迭代顺序未必是 JSON 里的书写顺序，
+     * 而玩家路径「弹药库顺序即偏好」（策划决策/武器/弹药-弹种切换机制.md 方案 A）要求顺序稳定可预期。
+     */
+    private static final List<ShellFamily> SHELL_FAMILIES = List.of(
+            new ShellFamily(20f, ShipCoreItem.LARGE_SHELLS, List.of(
                     ModItems.LARGE_HE_SHELL.get(),
                     ModItems.LARGE_AP_SHELL.get(),
-                    ModItems.LARGE_TYPE3_SHELL.get()
-            );
-        }
-        if (damage >= 12f) {
-            return List.of(
+                    ModItems.LARGE_TYPE3_SHELL.get(),
+                    ModItems.TYPE_91_AP_SHELL.get(),
+                    ModItems.TYPE_1_AP_SHELL.get(),
+                    ModItems.MK23_NUCLEAR_SHELL.get())),
+            new ShellFamily(12f, ShipCoreItem.MEDIUM_SHELLS, List.of(
                     ModItems.MEDIUM_HE_SHELL.get(),
                     ModItems.MEDIUM_AP_SHELL.get(),
-                    ModItems.MEDIUM_TYPE3_SHELL.get()
-            );
+                    ModItems.MEDIUM_TYPE3_SHELL.get(),
+                    ModItems.SUPER_HEAVY_AP_SHELL.get())),
+            new ShellFamily(0f, ShipCoreItem.SMALL_SHELLS, List.of(
+                    ModItems.SMALL_HE_SHELL.get(),
+                    ModItems.SMALL_AP_SHELL.get(),
+                    ModItems.SMALL_VT_SHELL.get(),
+                    ModItems.SMALL_TYPE3_SHELL.get())));
+
+    /** 一次同步日志的静默期，避免每次开火都刷屏。 */
+    private static final long TAG_DRIFT_LOG_INTERVAL_TICKS = 600L;
+    private static long lastTagDriftLogTick = Long.MIN_VALUE;
+
+    /**
+     * 女仆可用弹种 = 玩家路径同源口径标签 ∩ 本表全集，按本表顺序排列。
+     * <p>玩家装填走 {@link CannonAmmoRules#matchesCaliber}（口径→标签匹配），此处同样以标签为准，
+     * 于是「玩家能装的弹，女仆就能用」，新增弹种只改标签 JSON 即可自动生效，
+     * 不会再出现女仆硬编码清单落后于标签的漂移。
+     * <p>用候选全集而非遍历标签内容，是因为需在服务端线程外也能安全调用（标签在数据包重载时才绑定），
+     * 且遍历标签拿到的是 {@code Holder}，还原成 {@code Item} 需要额外非空判断。
+     */
+    private static List<Item> shellsFor(Level level, float damage) {
+        for (ShellFamily family : SHELL_FAMILIES) {
+            if (damage < family.minDamage()) continue;
+            List<Item> allowed = new ArrayList<>(family.allItems().size());
+            for (Item item : family.allItems()) {
+                ItemStack probe = new ItemStack(item);
+                boolean inTag = probe.is(family.tag());
+                // 二者不一致即漂移：标签缺项会让女仆漏弹，标签多项则是本表落后
+                if (inTag) allowed.add(item);
+                else logTagDrift(level, family.tag(), item, probe);
+            }
+            return allowed;
         }
-        return List.of(
-                ModItems.SMALL_HE_SHELL.get(),
-                ModItems.SMALL_AP_SHELL.get(),
-                ModItems.SMALL_VT_SHELL.get(),
-                ModItems.SMALL_TYPE3_SHELL.get()
-        );
+        return List.of();
+    }
+
+    /** 发现「候选全集」与标签不一致时打一次告警（带上物品 id，便于直接照着补标签 JSON）。 */
+    private static void logTagDrift(Level level, TagKey<Item> tag, Item item, ItemStack probe) {
+        if (!(level instanceof ServerLevel serverLevel)) return;
+        long now = serverLevel.getGameTime();
+        if (now - lastTagDriftLogTick < TAG_DRIFT_LOG_INTERVAL_TICKS) return;
+        lastTagDriftLogTick = now;
+        PiranPort.LOGGER.warn("[女仆火炮] 弹种候选表与标签 {} 不一致：物品注册 id {}（当前表现为女仆无法使用该弹）。"
+                + "请同步 data/piranport/tags/item/ 下的标签 JSON 与 CannonHandler.SHELL_FAMILIES。",
+                tag.location(), BuiltInRegistries.ITEM.getKey(probe.getItem()));
     }
 }

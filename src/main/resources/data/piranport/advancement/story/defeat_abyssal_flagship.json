@@ -1,5 +1,5 @@
 {
-  "parent": "piranport:story/enter_abyssal_world",
+  "parent": "piranport:story/activate_abyssal_portal",
   "display": {
     "icon": {
       "count": 1,

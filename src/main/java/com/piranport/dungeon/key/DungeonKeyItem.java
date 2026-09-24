@@ -1,16 +1,20 @@
 package com.piranport.dungeon.key;
 
+import com.piranport.dungeon.block.DungeonLecternBlock;
 import com.piranport.dungeon.data.ChapterData;
 import com.piranport.dungeon.data.DungeonRegistry;
 import com.piranport.dungeon.data.StageData;
 import com.piranport.registry.ModDataComponents;
 import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.level.LevelReader;
 
 import java.util.List;
 import java.util.UUID;
@@ -19,6 +23,42 @@ public class DungeonKeyItem extends Item {
 
     public DungeonKeyItem(Properties props) {
         super(props);
+    }
+
+    /**
+     * 让潜行右键在<b>指向讲台时</b>绕过"潜行不触发方块交互"的引擎闸门。
+     *
+     * <h2>为什么必须是这个 pos-aware 的重载</h2>
+     * <p>1.21.1 + NeoForge 里，"潜行 + 手上拿着钥匙"取不出讲台上的钥匙，卡在两道独立的闸门上：</p>
+     * <ol>
+     *   <li><b>NeoForge flag1</b>（{@code ServerPlayerGameMode.useItemOn} 补丁）：玩家潜行且主/副手
+     *       任一手非空时算出 {@code flag1 = true}，把 {@code blockstate.useItemOn} 整块跳过。
+     *       {@code flag1} 里带的豁免条件是
+     *       {@code !(主手.doesSneakBypassUse(...) && 副手.doesSneakBypassUse(...))}——
+     *       注意是 <b>&&</b>：两只手都得返回 true 才豁免。空手那侧走 {@link ItemStack#EMPTY} 的
+     *       默认实现（返回 false），全项目没有任何 Uncraftable 之外的空手豁免，所以
+     *       "一手钥匙 + 一手舰装核心"这种最常见的组合，只要副手拿的不是同样返回 true 的物品，
+     *       flag1 就恒为 true，讲台的 {@code useItemOn} 永远进不去。</li>
+     *   <li><b>原版 PASS_TO_DEFAULT_BLOCK_INTERACTION</b>：非潜行路径靠它把交互续接到
+     *       {@code useWithoutItem}，而它只在触发手是 {@code MAIN_HAND} 时才续接（原版硬编码）。
+     *       这条路对"主手空手"有效，对"主手拿钥匙"无效。</li>
+     * </ol>
+     *
+     * <p>本方法只解决第 1 道：{@code flag1} 的两侧判定各自问"这个物品允不允许潜行穿透这个方块"，
+     * 所以让钥匙在指向讲台时返回 true，就能在"主手钥匙 + 副手任意非豁免物品"时
+     * 把 {@code flag1} 压成 false，让讲台的 {@code useItemOn} 拿到控制权。
+     * 钥匙指向别的方块时返回 false，保持原版"潜行右键不误触方块"的手感。</p>
+     *
+     * <p><b>为什么不能用无 pos 的 {@code Item#doesSneakBypassUse}：</b>旧版签名没有坐标参数，
+     * 一旦返回 true 就是"拿着钥匙潜行点任何方块都穿透"，会全局破坏潜行交互语义。
+     * 带 pos 的重载是 NeoForge 1.21.1 唯一能把豁免范围收窄到单个方块的入口。</p>
+     *
+     * <p><b>已知残留：</b>副手若也拿着钥匙，两手都返回 true，豁免成立；若副手拿的是其它物品且该物品
+     * 未实现本方法，则豁免不成立，flag1 仍拦截。副手这一侧无法从钥匙本类影响。</p>
+     */
+    @Override
+    public boolean doesSneakBypassUse(ItemStack stack, LevelReader level, BlockPos pos, Player player) {
+        return level.getBlockState(pos).getBlock() instanceof DungeonLecternBlock;
     }
 
     @Override

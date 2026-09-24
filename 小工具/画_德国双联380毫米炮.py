@@ -1,123 +1,140 @@
 #!/usr/bin/env python3
-"""重画「德国双联380毫米炮」贴图。
+"""重画「德国双联380毫米炮」（german_twin_380mm_gun）物品贴图 —— 从原画直接降采样。
 
-构图依据 zjsnrwiki 原画：德式双联装炮塔 —— 两门炮管并排、方形/斜角装甲炮室、
-下方座圈（barbette）。区别于旧「法国四联380毫米炮」的四管并排构图。
+原画: https://www.zjsnrwiki.com/wiki/德国双联380毫米炮
+      Equip_L_28.png（512×512，缓存于 ~/IndomitableCache/zjsnrwiki原画/）
+      内容 bbox x67-414 y133-421 = 348×289 —— 灰色德式炮塔，双管朝左下。
 
-画风对齐 medium_gun / large_gun：纯黑最外侧描边 + 灰蓝装甲色阶。
-输出 32x32 RGBA，同时产出（装填）与（空膛）两版。
+管线与 gen_chinese_twin_140mm_gun_texture.py 一致:
+  裁内容 bbox → 预乘 alpha 面积平均降采样（长边 32 → 32×27）→
+  量化 48 色 → 画布摆放 (0,2) → 最外圈 8 邻域补纯黑描边。
+  y0 留空一行（范例贴图全部 T:0），满宽 32 时左右描边贴边裁掉
+  （同 chinese_twin，画布边缘自然裁切）。
+
+两态: 本体逐像素一致；装填态无底部图标，空膛态在 (12,24) 盖项目标准
+  BURST 空膛叹号（9×8，与 jp12cm / chinese_twin 标准件逐像素一致），
+  盖在描边之后（jp12cm 约定：先 finish 居中再盖，叹号叠在本体底部上）。
 """
 from PIL import Image
+import numpy as np
+import os
+import urllib.request
 
-W = H = 32
+SRC = '/Users/lianran/IndomitableCache/zjsnrwiki原画/Equip_L_28.png'
+SRC_URL = 'https://0v0.zjsnrwiki.com/images/6/6c/Equip_L_28.png'  # 仅缓存缺失时用一次
+OUT_MOD = '/Users/lianran/apps/皮兰港实验/测试版/src/main/resources/assets/piranport/textures/item/'
+OUT_ART = '/Users/lianran/apps/皮兰港实验/美术素材/Item（图标）/火炮/'
 
-# ---- 调色板（取自现有火炮贴图，保持系列一致）----
-OUTLINE = (0, 0, 0, 255)
-HI      = (214, 218, 220, 255)   # D6DADC 高光
-TOP     = (181, 190, 196, 255)   # 炮塔顶面
-LIGHT   = (133, 152, 164, 255)   # 8598A4 受光面
-MID     = (106, 128, 145, 255)   # 6A8091 侧面
-DARK    = (67, 81, 91, 255)      # 43515B 背光面
-DEEP    = (39, 49, 56, 255)      # 273138 炮口/腔体
-BRASS   = (189, 159, 90, 255)    # BD9F5A 装填弹体黄铜
-BRASS_D = (115, 93, 44, 255)     # 735D2C 黄铜暗部
+CANVAS = 32
+ART_W = 32        # 348×289 近方形构图，按满宽等比降采样 → 32×27
+ART_BOTTOM = 28   # 本体底边行号：y0 留一行呼吸，叹号盖在 y24 起压住底缘
+BURST_X, BURST_Y = 12, 24   # 空膛爆发标记位置（全项目统一）
+N_COLORS = 48     # 量化档位：范例贴图普遍 30~110 色
 
-
-def new_canvas():
-    return Image.new("RGBA", (W, H), (0, 0, 0, 0))
-
-
-def px(im, x, y, c):
-    if 0 <= x < W and 0 <= y < H:
-        im.putpixel((x, y), c)
-
-
-def rect(im, x0, y0, x1, y1, c):
-    """含端点的实心矩形。"""
-    for y in range(y0, y1 + 1):
-        for x in range(x0, x1 + 1):
-            px(im, x, y, c)
+# 空膛爆发标记 9×8：黄色爆发形（下宽上尖），提取自 f2h_banshee_empty.png（x=12-20, y=24-31）
+# 与 gen_chinese_twin_140mm_gun_texture.py / jp12cm_single_gun_texture.py 的标准件逐像素一致。
+T = (0, 0, 0, 0)
+K = (0, 0, 0, 255)
+YY = (255, 248, 0, 255)
+BURST = [
+    [T, T, T, T, K, T, T, T, T],
+    [T, T, T, K, YY, K, T, T, T],
+    [T, T, T, K, YY, K, T, T, T],
+    [T, T, K, YY, K, YY, K, T, T],
+    [T, K, YY, YY, K, YY, YY, K, T],
+    [T, K, YY, YY, YY, YY, YY, K, T],
+    [K, YY, YY, YY, K, YY, YY, YY, K],
+    [K, K, K, K, K, K, K, K, K],
+]
 
 
-def outline_silhouette(im):
-    """给已有像素的最外圈补纯黑描边（八邻域），不改动已有像素本身。"""
-    solid = {(x, y) for y in range(H) for x in range(W) if im.getpixel((x, y))[3] > 0}
-    edge = []
-    for (x, y) in solid:
+def load_original():
+    """本地缓存优先；缓存缺失才下载一次并写回缓存。"""
+    if not os.path.exists(SRC):
+        os.makedirs(os.path.dirname(SRC), exist_ok=True)
+        urllib.request.urlretrieve(SRC_URL, SRC)
+        print(f'已下载原画缓存: {SRC}')
+    return Image.open(SRC).convert('RGBA')
+
+
+def downsample_art(img):
+    """裁内容 bbox 后按满宽等比面积平均降采样（预乘 alpha 避免边缘黑边）。"""
+    a = np.asarray(img, dtype=np.float64) / 255.0
+    op = a[:, :, 3] > 8 / 255.0
+    ys, xs = np.where(op)
+    a = a[ys.min():ys.max() + 1, xs.min():xs.max() + 1]
+
+    h_src, w_src = a.shape[:2]
+    h_out = max(1, round(ART_W * h_src / w_src))
+
+    # 预乘后再采样：半透明边缘像素的 RGB 才不会把透明区的脏色平均进来
+    premult = a.copy()
+    premult[:, :, :3] *= premult[:, :, 3:4]
+
+    def box_resize(ch2d):
+        return np.asarray(
+            Image.fromarray(ch2d.astype(np.float32), mode='F').resize((ART_W, h_out), Image.BOX)
+        )
+
+    out = np.zeros((h_out, ART_W, 4), dtype=np.float64)
+    for c in range(4):
+        out[:, :, c] = box_resize(premult[:, :, c])
+    alpha = out[:, :, 3:4]
+    rgb = np.where(alpha > 1e-6, out[:, :, :3] / np.maximum(alpha, 1e-6), 0.0)
+    out[:, :, :3] = np.clip(rgb, 0.0, 1.0)
+    return out * 255.0
+
+
+def quantize(arr):
+    """量化颜色到 N_COLORS 档，贴齐范例 30~110 色的颗粒质感；alpha 保留软边。"""
+    h, w = arr.shape[:2]
+    flat = arr.reshape(-1, 4)
+    op = flat[:, 3] > 8
+    rgb_u8 = np.clip(flat[op, :3], 0, 255).astype(np.uint8)
+    q = Image.fromarray(rgb_u8.reshape(-1, 1, 3), 'RGB').quantize(
+        colors=N_COLORS, method=Image.MEDIANCUT
+    )
+    pal = np.asarray(q.convert('RGB'), dtype=np.float64).reshape(-1, 3)
+    flat[op, :3] = pal
+    return flat.reshape(h, w, 4)
+
+
+def add_outline(arr):
+    """不透明像素最外圈外侧补一圈纯黑描边（画布边缘会自然裁掉，与范例一致）。"""
+    solid = arr[:, :, 3] > 8
+    grow = np.zeros_like(solid)
+    for dy in (-1, 0, 1):
         for dx in (-1, 0, 1):
-            for dy in (-1, 0, 1):
-                nx, ny = x + dx, y + dy
-                if not (0 <= nx < W and 0 <= ny < H):
-                    continue
-                if (nx, ny) not in solid:
-                    edge.append((nx, ny))
-    for (x, y) in edge:
-        px(im, x, y, OUTLINE)
-    return im
+            grow |= np.roll(np.roll(solid, dy, 0), dx, 1)
+    edge = grow & ~solid
+    arr[edge] = (0, 0, 0, 255)
+    return arr
 
 
-def draw_turret(loaded: bool):
-    """画一座德式双联装炮塔。
-
-    loaded=False 时空膛（炮口为深腔、无弹），loaded=True 时炮口露出黄铜弹体。
-    结构自下而上：座圈 -> 炮室（顶面斜切）-> 两根并列粗炮管。
-    单像素坐标；整体略偏右下以贴近原画构图。
-    """
-    im = new_canvas()
-
-    # ---- 1) 座圈 barbette：炮塔下方的梯形基座 ----
-    rect(im, 11, 25, 19, 26, MID)
-    rect(im, 10, 26, 20, 27, LIGHT)
-    rect(im, 9, 27, 21, 28, MID)
-    rect(im, 8, 28, 22, 29, DARK)
-
-    # ---- 2) 炮塔顶面（斜切装甲顶，俯视可见的一条亮带）----
-    rect(im, 11, 13, 20, 15, TOP)
-    # 前面板与背面板的分界
-    rect(im, 15, 13, 16, 15, LIGHT)
-
-    # ---- 3) 炮室 gun house：正面装甲板 ----
-    rect(im, 10, 16, 21, 25, MID)
-    # 左缘受光
-    rect(im, 10, 16, 10, 25, LIGHT)
-    # 右缘背光
-    rect(im, 21, 16, 21, 25, DARK)
-    # 中缝（左右两片装甲的分界）
-    rect(im, 15, 16, 16, 25, DARK)
-    # 底缘压暗，避免与座圈糊在一起
-    rect(im, 10, 24, 21, 25, DARK)
-    # 装甲板上的观察窗/铆钉高光点
-    px(im, 12, 18, HI)
-    px(im, 19, 18, HI)
-
-    # ---- 4) 两根并列粗炮管（德式双联：左右各一门）----
-    # 炮管比炮室窄，靠炮室顶面留出左右各 1px 的肩部，读出「双联」而非实心块。
-    for cx in (13, 18):                  # 左炮管中心 13，右炮管中心 18
-        rect(im, cx - 1, 5, cx + 1, 14, MID)       # 管身
-        rect(im, cx - 1, 5, cx - 1, 14, LIGHT)     # 左管壁受光
-        rect(im, cx + 1, 5, cx + 1, 14, DARK)      # 右管壁背光
-        # 炮口：装填时露黄铜弹体（与管壁同宽），空膛时为深色腔体
-        if loaded:
-            rect(im, cx - 1, 3, cx + 1, 4, BRASS)
-            px(im, cx, 3, HI)                       # 弹顶高光，区分「有弹」
-            rect(im, cx - 1, 5, cx + 1, 5, BRASS_D)  # 弹体与管口的接缝
-        else:
-            rect(im, cx - 1, 3, cx + 1, 4, DEEP)
-            px(im, cx, 4, OUTLINE)                   # 空膛更深的腔底
-
-    # ---- 5) 炮管根部炮盾（炮室与炮管衔接的凸台）----
-    rect(im, 12, 13, 14, 14, LIGHT)
-    rect(im, 17, 13, 19, 14, LIGHT)
-
-    return outline_silhouette(im)
+def stamp(canvas, patch, x0, y0):
+    """把标准叹号盖到画布上，只覆盖其非透明像素（本体其余部分不动）。"""
+    for j, row in enumerate(patch):
+        for i, (r, g, b, al) in enumerate(row):
+            if al:
+                canvas[y0 + j, x0 + i] = (r, g, b, al)
+    return canvas
 
 
-def main():
-    base = "src/main/resources/assets/piranport/textures/item"
-    draw_turret(loaded=False).save(f"{base}/german_twin_380mm_gun_empty.png")
-    draw_turret(loaded=True).save(f"{base}/german_twin_380mm_gun.png")
-    print("wrote german_twin_380mm_gun.png / _empty.png")
+def build(with_burst):
+    art = quantize(downsample_art(load_original()))
+    canvas = np.zeros((CANVAS, CANVAS, 4), dtype=np.float64)
+    y0 = ART_BOTTOM - art.shape[0] + 1
+    canvas[y0:y0 + art.shape[0], :art.shape[1]] = art
+    canvas = add_outline(canvas)
+    if with_burst:
+        canvas = stamp(canvas, BURST, BURST_X, BURST_Y)
+    return Image.fromarray(np.clip(canvas, 0, 255).astype(np.uint8), 'RGBA')
 
 
-if __name__ == "__main__":
-    main()
+if __name__ == '__main__':
+    for name, with_burst in [('german_twin_380mm_gun.png', False),
+                             ('german_twin_380mm_gun_empty.png', True)]:
+        im = build(with_burst)
+        im.save(OUT_MOD + name)
+        im.save(OUT_ART + name)   # 美术素材库是画风源头，成品同步入库存档
+        print('saved', name)

@@ -189,8 +189,6 @@ public class ConfigCSVExporter {
             case "item.piranport.chinese_twin_140mm_gun" -> "中国双联140毫米炮";
             case "item.piranport.large_gun" -> "大型火炮";
             case "item.piranport.german_twin_380mm_gun" -> "德国双联380毫米炮";
-            case "item.piranport.seven_barrel_gun" -> "七联装主炮群";
-            case "item.piranport.salvo_test_gun" -> "齐射测试";
             case "item.piranport.fourteen_barrel_gun" -> "一星期主炮群";
             case "config.piranport.he_armor_penetration" -> "HE弹护甲穿透";
             case "config.piranport.he_damage_falloff" -> "HE弹距离衰减";

@@ -773,7 +773,6 @@ public final class PiranPortCommands {
         stacks += give(player, ModItems.MEDIUM_GUN.get(), 1);
         stacks += give(player, ModItems.LARGE_GUN.get(), 1);
         stacks += give(player, ModItems.GERMAN_TWIN_380MM_GUN.get(), 1);
-        stacks += give(player, ModItems.SALVO_TEST_GUN.get(), 1);
         stacks += give(player, ModItems.FLOATING_TARGET.get(), 8);
         stacks += giveArtilleryShells(player, ModItems.SMALL_HE_SHELL.get(), ModItems.SMALL_AP_SHELL.get());
         stacks += giveArtilleryShells(player, ModItems.MEDIUM_HE_SHELL.get(), ModItems.MEDIUM_AP_SHELL.get());

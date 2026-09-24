@@ -510,8 +510,6 @@ public class TransformationManager {
             temp.put(ModItems.MEDIUM_GUN.get(), 16);
             temp.put(ModItems.LARGE_GUN.get(), 30);
             temp.put(ModItems.GERMAN_TWIN_380MM_GUN.get(), 35);
-            temp.put(ModItems.SEVEN_BARREL_GUN.get(), 35);
-            temp.put(ModItems.SALVO_TEST_GUN.get(), 50);
             temp.put(ModItems.TRIPLE_TORPEDO_LAUNCHER.get(), 12);
             temp.put(ModItems.QUAD_TORPEDO_LAUNCHER.get(), 20);
             temp.put(ModItems.SY1_LAUNCHER.get(), 14);

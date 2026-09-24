@@ -49,8 +49,6 @@ public class ModCreativeTabs {
                         output.accept(ModItems.LARGE_GUN.get());
                         output.accept(ModItems.GERMAN_TWIN_380MM_GUN.get());
                         output.accept(ModItems.FRENCH_QUAD_380MM_GUN.get());
-                        output.accept(ModItems.SEVEN_BARREL_GUN.get());
-                        output.accept(ModItems.SALVO_TEST_GUN.get());
                         output.accept(ModItems.FOURTEEN_BARREL_GUN.get());
                         // 神经网络弹道解算实验炮（实验性质，见 docs/策划决策/武器/火炮-神经网络弹道解算实验方案.md）
                         output.accept(ModItems.NEURAL_BALLISTIC_TEST_GUN.get());

@@ -40,7 +40,10 @@ public class SkinOverlayLayer extends RenderLayer<AbstractClientPlayer, PlayerMo
         ResourceLocation skinTexture = ResourceLocation.fromNamespaceAndPath(
                 PiranPort.MOD_ID, "textures/skin/skin_" + skinId + ".png");
 
-        VertexConsumer vc = bufferSource.getBuffer(RenderType.entityCutout(skinTexture));
+        // 必须用 entityTranslucent 而非 entityCutout：皮肤是叠在玩家自身模型上的双面渲染，
+        // cutout 着色器不做 alpha 混合，背面与正面深度冲突（z-fighting）会让整个皮肤变黑、
+        // 只在穿模缝隙里透出彩色。
+        VertexConsumer vc = bufferSource.getBuffer(RenderType.entityTranslucent(skinTexture));
         this.getParentModel().renderToBuffer(poseStack, vc, packedLight,
                 OverlayTexture.NO_OVERLAY, -1);
     }

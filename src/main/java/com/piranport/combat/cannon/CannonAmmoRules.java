@@ -16,16 +16,42 @@ import static com.piranport.combat.cannon.CannonStats.getBarrelCount;
 public final class CannonAmmoRules {
     private CannonAmmoRules() {}
 
+    /** 口径族：唯一事实来源。玩家路径的标签匹配与女仆路径的候选表选择都必须用它，否则两条路径会漂移。 */
+    public enum CaliberFamily {
+        SMALL, MEDIUM, LARGE
+    }
+
+    /**
+     * 由**口径**判定口径族。
+     * <p>判据必须是 caliber 而非 damage：caliber 与 damage 都是可被 CSV 运行时覆盖的独立字段，
+     * 而 {@code ArtilleryCannonData} 不校验两者是否同族，故「damage 大的炮口径也大」只是当前数值表的巧合、
+     * 不是不变量。以 damage 为判据会在有人改配置或新增炮时静默选错族的弹。
+     */
+    public static CaliberFamily familyForCaliber(int caliber) {
+        if (caliber <= 4) return CaliberFamily.SMALL;
+        if (caliber <= 8) return CaliberFamily.MEDIUM;
+        return CaliberFamily.LARGE;
+    }
+
+    /** 取武器当前生效的口径（含配置覆盖），供 {@link #familyForCaliber} 使用。 */
+    public static CaliberFamily familyForWeapon(ItemStack weapon, @Nullable Level level) {
+        int caliber = weapon.getItem() instanceof com.piranport.artillery.ArtilleryItem ai
+                ? (level != null ? ai.getEffectiveData(level).caliber() : ai.getCaliber())
+                : 0;
+        return familyForCaliber(caliber);
+    }
+
     public static boolean matchesCaliber(ItemStack ammo, ItemStack weapon) {
         return matchesCaliber(ammo, weapon, null);
     }
 
     public static boolean matchesCaliber(ItemStack ammo, ItemStack weapon, @Nullable Level level) {
-        if (weapon.getItem() instanceof com.piranport.artillery.ArtilleryItem ai) {
-            int caliber = level != null ? ai.getEffectiveData(level).caliber() : ai.getCaliber();
-            if (caliber <= 4) return ammo.is(ShipCoreItem.SMALL_SHELLS);
-            if (caliber <= 8) return ammo.is(ShipCoreItem.MEDIUM_SHELLS);
-            return ammo.is(ShipCoreItem.LARGE_SHELLS);
+        if (weapon.getItem() instanceof com.piranport.artillery.ArtilleryItem) {
+            return switch (familyForWeapon(weapon, level)) {
+                case SMALL -> ammo.is(ShipCoreItem.SMALL_SHELLS);
+                case MEDIUM -> ammo.is(ShipCoreItem.MEDIUM_SHELLS);
+                case LARGE -> ammo.is(ShipCoreItem.LARGE_SHELLS);
+            };
         }
         return false;
     }
@@ -90,11 +116,12 @@ public final class CannonAmmoRules {
     }
 
     public static Item getDefaultAmmoForWeapon(ItemStack weapon, @Nullable Level level) {
-        if (weapon.getItem() instanceof com.piranport.artillery.ArtilleryItem ai) {
-            int caliber = level != null ? ai.getEffectiveData(level).caliber() : ai.getCaliber();
-            if (caliber <= 4) return ModItems.SMALL_AP_SHELL.get();
-            if (caliber <= 8) return ModItems.MEDIUM_AP_SHELL.get();
-            return ModItems.LARGE_AP_SHELL.get();
+        if (weapon.getItem() instanceof com.piranport.artillery.ArtilleryItem) {
+            return switch (familyForWeapon(weapon, level)) {
+                case SMALL -> ModItems.SMALL_AP_SHELL.get();
+                case MEDIUM -> ModItems.MEDIUM_AP_SHELL.get();
+                case LARGE -> ModItems.LARGE_AP_SHELL.get();
+            };
         }
         return null;
     }

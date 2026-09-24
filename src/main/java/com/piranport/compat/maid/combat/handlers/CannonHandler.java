@@ -44,7 +44,7 @@ public class CannonHandler implements WeaponHandler {
         // 这里按候选表合计数量判定，兼容「两种弹各半夹、合计刚好够」的合法情形。
         var effectiveData = ai.getEffectiveData(maid.level());
         int barrels = Math.max(1, effectiveData.barrels());
-        return AmmoConsumer.countAnyOf(owner, shellsFor(maid.level(), effectiveData.damage())) >= barrels;
+        return AmmoConsumer.countAnyOf(owner, shellsFor(maid.level(), stack)) >= barrels;
     }
 
     @Override
@@ -69,7 +69,7 @@ public class CannonHandler implements WeaponHandler {
         float pitch = (float) Math.toDegrees(-Math.asin(clampUnit(aim.y)));
 
         Player owner = AmmoConsumer.ownerPlayer(maid);
-        List<Item> candidates = shellsFor(maid.level(), damage);
+        List<Item> candidates = shellsFor(maid.level(), stack);
 
         // 先按「副手优先、否则候选表顺序」取偏好弹种，再逐类取弹。
         // 每发都必须记住自己消耗的是哪个弹种：弹种决定 isHE / 近炸引信 / 三式霰弹 / 过穿口径，
@@ -121,7 +121,7 @@ public class CannonHandler implements WeaponHandler {
     }
 
     /** 单口径候选弹种表：全量物品项 —— 弹种集合的**唯一事实来源**。 */
-    private record ShellFamily(float minDamage, TagKey<Item> tag, List<Item> allItems) {}
+    private record ShellFamily(CannonAmmoRules.CaliberFamily family, TagKey<Item> tag, List<Item> allItems) {}
 
     /**
      * 三个口径族的候选物品全集。
@@ -131,19 +131,19 @@ public class CannonHandler implements WeaponHandler {
      * 而玩家路径「弹药库顺序即偏好」（策划决策/武器/弹药-弹种切换机制.md 方案 A）要求顺序稳定可预期。
      */
     private static final List<ShellFamily> SHELL_FAMILIES = List.of(
-            new ShellFamily(20f, ShipCoreItem.LARGE_SHELLS, List.of(
+            new ShellFamily(CannonAmmoRules.CaliberFamily.LARGE, ShipCoreItem.LARGE_SHELLS, List.of(
                     ModItems.LARGE_HE_SHELL.get(),
                     ModItems.LARGE_AP_SHELL.get(),
                     ModItems.LARGE_TYPE3_SHELL.get(),
                     ModItems.TYPE_91_AP_SHELL.get(),
                     ModItems.TYPE_1_AP_SHELL.get(),
                     ModItems.MK23_NUCLEAR_SHELL.get())),
-            new ShellFamily(12f, ShipCoreItem.MEDIUM_SHELLS, List.of(
+            new ShellFamily(CannonAmmoRules.CaliberFamily.MEDIUM, ShipCoreItem.MEDIUM_SHELLS, List.of(
                     ModItems.MEDIUM_HE_SHELL.get(),
                     ModItems.MEDIUM_AP_SHELL.get(),
                     ModItems.MEDIUM_TYPE3_SHELL.get(),
                     ModItems.SUPER_HEAVY_AP_SHELL.get())),
-            new ShellFamily(0f, ShipCoreItem.SMALL_SHELLS, List.of(
+            new ShellFamily(CannonAmmoRules.CaliberFamily.SMALL, ShipCoreItem.SMALL_SHELLS, List.of(
                     ModItems.SMALL_HE_SHELL.get(),
                     ModItems.SMALL_AP_SHELL.get(),
                     ModItems.SMALL_VT_SHELL.get(),
@@ -161,9 +161,10 @@ public class CannonHandler implements WeaponHandler {
      * <p>用候选全集而非遍历标签内容，是因为需在服务端线程外也能安全调用（标签在数据包重载时才绑定），
      * 且遍历标签拿到的是 {@code Holder}，还原成 {@code Item} 需要额外非空判断。
      */
-    private static List<Item> shellsFor(Level level, float damage) {
+    private static List<Item> shellsFor(Level level, ItemStack weapon) {
+        CannonAmmoRules.CaliberFamily want = CannonAmmoRules.familyForWeapon(weapon, level);
         for (ShellFamily family : SHELL_FAMILIES) {
-            if (damage < family.minDamage()) continue;
+            if (family.family() != want) continue;
             List<Item> allowed = new ArrayList<>(family.allItems().size());
             for (Item item : family.allItems()) {
                 ItemStack probe = new ItemStack(item);

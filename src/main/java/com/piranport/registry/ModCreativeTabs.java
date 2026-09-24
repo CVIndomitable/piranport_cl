@@ -538,6 +538,14 @@ public class ModCreativeTabs {
                         output.accept(ModItems.ABYSSAL_REPORT.get());
                         output.accept(ModItems.PORTAL_ACTIVATION_CORE.get());
                         output.accept(ModItems.EXP_SHELL.get());
+                        // Key Fragments（钥匙碎片，ch1~ch7）
+                        output.accept(ModItems.KEY_FRAGMENT_CH1.get());
+                        output.accept(ModItems.KEY_FRAGMENT_CH2.get());
+                        output.accept(ModItems.KEY_FRAGMENT_CH3.get());
+                        output.accept(ModItems.KEY_FRAGMENT_CH4.get());
+                        output.accept(ModItems.KEY_FRAGMENT_CH5.get());
+                        output.accept(ModItems.KEY_FRAGMENT_CH6.get());
+                        output.accept(ModItems.KEY_FRAGMENT_CH7.get());
                         // Chaos Shards
                         output.accept(ModItems.CHAOS_SHARD_ALPHA.get());
                         output.accept(ModItems.CHAOS_SHARD_BETA.get());

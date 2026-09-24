@@ -21,7 +21,10 @@ public class ModCreativeTabs {
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> CORE_TAB =
             CREATIVE_TABS.register("core_tab", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.piranport.core"))
-                    .withTabsBefore(CreativeModeTabs.COMBAT)
+                    // 链式排序：皮兰港 13 个标签页从 core_tab 起首尾相接，整串挂在原版最后一个
+                    // 标签（INVENTORY=物品栏）之后，避免被原版标签夹在中间。
+                    // 其余 12 个各自 withTabsBefore 到本模组的上一个标签，见下。
+                    .withTabsBefore(CreativeModeTabs.INVENTORY)
                     .icon(() -> ModItems.MEDIUM_SHIP_CORE.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
                         output.accept(ModItems.SMALL_SHIP_CORE.get());

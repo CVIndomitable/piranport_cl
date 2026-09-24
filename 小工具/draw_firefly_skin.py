@@ -105,26 +105,26 @@ class Face:
 
 def outline_face(f, c=OUT):
     """在 face 内所有「不透明像素的邻居是空洞」的一侧补上纯黑描边。
-    项目既定像素化约定：构图对齐原画，只在最外层加黑描边。"""
-    src = [row[:] for row in f.px]
+    项目既定像素化约定：构图对齐原画，只在最外层加黑描边。
+    注意：不透明判断必须用**初始快照**——若边扫边改，新描的黑边会变成
+    下一轮的"源"一路泛滥，把整面刷黑（躯干叠层曾因此整层变黑）。"""
+    orig = [[f.px[y][x][3] > 0 for x in range(f.w)] for y in range(f.h)]
 
     def opaque(x, y):
-        if 0 <= x < f.w and 0 <= y < f.h:
-            return src[y][x][3] > 0
-        return False
+        return 0 <= x < f.w and 0 <= y < f.h and orig[y][x]
 
+    mark = set()
     for y in range(f.h):
         for x in range(f.w):
-            if not opaque(x, y):
+            if not orig[y][x]:
                 continue
             for dx, dy in ((-1, 0), (1, 0), (0, -1), (0, 1)):
                 nx, ny = x + dx, y + dy
-                if 0 <= nx < f.w and 0 <= ny < f.h and not opaque(nx, ny):
-                    src[ny][nx] = c
-    for y in range(f.h):
-        for x in range(f.w):
-            if src[y][x][3] > 0:
-                f.set(x, y, src[y][x])
+                if 0 <= nx < f.w and 0 <= ny < f.h and not orig[ny][nx]:
+                    mark.add((nx, ny))
+
+    for x, y in mark:
+        f.set(x, y, c)
 
 
 def bake(faces):

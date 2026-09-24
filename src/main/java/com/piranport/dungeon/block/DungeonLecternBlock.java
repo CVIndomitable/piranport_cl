@@ -36,8 +36,10 @@ import java.util.UUID;
  * <p>交互流程：
  * <ul>
  *   <li>右键：BE 无钥匙 → 玩家背包有钥匙则插入；BE 有钥匙 → 进入副本（打开 ContinueScreen）</li>
- *   <li>Shift+右键：取出钥匙到玩家背包。<b>由 {@link #useItemOn} 处理</b>，
- *       不能写在 {@link #useWithoutItem} 里——引擎在"潜行 + 手持物品"时会跳过 useWithoutItem</li>
+ *   <li>Shift+右键：取出钥匙到玩家背包。<b>两条方法各覆盖一半场景</b>：
+ *       {@link #useItemOn} 管"潜行 + 手上拿着东西"，{@link #useWithoutItem} 管"潜行 + 主手空手"。
+ *       缺一不可——主手空手时引擎不会调用 useItemOn（见 {@link #useWithoutItem} 的潜行分支说明），
+ *       而潜行且手上有东西时引擎会整块跳过 useWithoutItem（见 {@link #useItemOn} 的 flag1 说明）</li>
  * </ul>
  *
  * <p>阶段 2（P1-A）范围：BE 持有钥匙的持久化与插入/取出。阶段 3（P1-B）会替换为"打开 ContinueScreen"。
@@ -150,14 +152,18 @@ public class DungeonLecternBlock extends BaseEntityBlock {
     }
 
     /**
-     * 手持物品时的交互入口：只负责"蹲下取钥匙"这一种手势。
+     * 手持物品时的交互入口：潜行取钥匙，非潜行交回 {@link #useWithoutItem}。
      *
-     * <p><b>为什么取钥匙必须写在这里，而不是 {@link #useWithoutItem}：</b>
-     * 当玩家潜行且两手中至少有一手非空时，{@code ServerPlayerGameMode.useItemOn} 会算出
-     * {@code flag1 = true}，随即将 {@code useItemOn} 与紧随其后的 {@code useWithoutItem}
-     * <b>整块跳过</b>（1.21.1 引擎行为，见该方法的 flag/flag1 判定）。而潜行取钥匙恰恰是
-     * "蹲下 + 通常手持武器/工具"的场景，所以写在 useWithoutItem 里的 shift 分支根本不会被调用——
-     * 这就是"蹲下右键取不下钥匙"的根因。
+     * <p><b>什么时候会走到这里：</b>只有"主手/副手拿着物品、且物品对空手交互没有抢先消费"时，
+     * 引擎才会调用本方法。主手空手右键时 {@code handleUseItemOn} 会直接跳过整个
+     * {@code gameMode.useItemOn}（客户端 {@code Minecraft#startUseItem} 也只在
+     * {@code itemstack} 非空时才调 {@code gameMode.useItemOn}），那条路径由
+     * {@link #useWithoutItem} 的潜行分支兜底——两处必须同时存在，覆盖"潜行取钥匙"的全部手势。
+     *
+     * <p><b>为什么潜行分支不能只写在这里：</b>当玩家潜行且两手中至少有一手非空时，
+     * {@code ServerPlayerGameMode.useItemOn} 会算出 {@code flag1 = true}，随即将 {@code useItemOn}
+     * 与紧随其后的 {@code useWithoutItem} <b>整块跳过</b>（1.21.1 引擎行为，见该方法的
+     * flag/flag1 判定）。反过来，主手空手时又走不到本方法。所以两边都要有，不能二选一。
      *
      * <p>{@code flag1} 只拦 {@code getUseBlock().isDefault()} 这一支；一旦本方法返回
      * {@code consumesAction() == true}，引擎在越过 flag1 前就已处理完毕，故不必也不该关心潜行状态以外的事。
@@ -200,8 +206,14 @@ public class DungeonLecternBlock extends BaseEntityBlock {
     @Override
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos,
                                                 Player player, BlockHitResult hitResult) {
+        // 客户端预测：判定只看"潜行 + 是不是主手"这类本地已知信息，与服务端完全同构，
+        // 因此不会出现"客户端预测成功、服务端拒绝"的预测-回滚闪烁。
+        // 引擎在本方法返回 consumesAction() 后即为这一步发送 ServerboundUseItemPacket，
+        // 所以非潜行分支照旧返回 SUCCESS（原行为，不改）。
         if (level.isClientSide()) {
-            return InteractionResult.SUCCESS;
+            return player.isSecondaryUseActive()
+                    ? InteractionResult.sidedSuccess(true)
+                    : InteractionResult.SUCCESS;
         }
         if (!(player instanceof ServerPlayer serverPlayer)) {
             return InteractionResult.PASS;
@@ -212,10 +224,22 @@ public class DungeonLecternBlock extends BaseEntityBlock {
             return InteractionResult.PASS;
         }
 
-        // 潜行分支不在这里：见 useItemOn 的说明。能走到这里就说明玩家没在潜行
-        // （或者手上为空、引擎放行了 useWithoutItem），此时潜行语义不适用。
+        // ===== 潜行分支：取钥匙 =====
+        // 主手空手 + 潜行时，引擎压根不会调用 useItemOn（handleUseItemOn 的 itemstack 为空时
+        // 直接不发包；客户端 startUseItem 也只在 itemstack 非空时才调 gameMode.useItemOn），
+        // 只能落到这里——这就是"蹲下右键取不下钥匙"在主手空手时的根因。
+        // useItemOn 只覆盖"潜行 + 手上拿着东西"那一条路径，两条路共用同一个取钥匙方法。
+        if (player.isSecondaryUseActive()) {
+            if (lecternBE.extractKeyForShiftRightClick(serverPlayer)) {
+                return InteractionResult.sidedSuccess(false);
+            }
+            // 讲台上没钥匙：可见反馈，然后不消费，保持"潜行右键不触发方块常规交互"的原版语义
+            serverPlayer.sendSystemMessage(
+                    Component.translatable("block.piranport.dungeon_lectern.no_key_to_take"));
+            return InteractionResult.PASS;
+        }
 
-        // 右键：BE 无钥匙 → 插入；BE 有钥匙 → 进入副本（阶段 3 改为打开 ContinueScreen）
+        // 非潜行 → 右键：BE 无钥匙 → 插入；BE 有钥匙 → 进入副本（阶段 3 改为打开 ContinueScreen）
         if (!lecternBE.hasKey()) {
             if (!lecternBE.tryInsertKey(serverPlayer)) {
                 serverPlayer.sendSystemMessage(

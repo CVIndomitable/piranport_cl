@@ -35,6 +35,12 @@ import net.minecraft.world.level.Level;
  * <p><b>章节编号取自投入的碎片，而非 JSON 字段</b>（详见 {@link #matches}）：一份
  * {@code piranport:chapter_key} 配方 JSON 即可覆盖全部七章。</p>
  *
+ * <p><b>【当前未接线】</b>目前 {@code data/piranport/recipe/} 下<b>不存在</b>
+ * {@code type: piranport:chapter_key} 的 JSON，本类不会被配方管理器实例化。
+ * 当前实际生效的碎片 → 钥匙配方是原版有序合成
+ * {@code recipe/chapter_key_1.json}～{@code chapter_key_7.json}（规则与上文一致）。
+ * 本类是备用的动态合成实现（章节由投入碎片决定），供未来把七张 JSON 合并成一份时启用。</p>
+ *
  * <h2>为什么这里的 {@link #isSpecial()} 被覆写成 {@code false}（有意偏离基类默认）</h2>
  * <p>{@link CustomRecipe} 的默认实现是 {@code isSpecial() == true}，这个默认值有服务端语义
  * （原版配方书不会自动摆放它），但它在 <b>JEI 侧是一道硬闸门</b>：JEI 的

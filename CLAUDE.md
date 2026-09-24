@@ -49,6 +49,7 @@
 - Client-only 放 `@Mod.EventBusSubscriber(value = Dist.CLIENT)`
 - 同时维护 `zh_cn.json` 和 `en_us.json`
 - **MC 1.21.1 配方格式**: 所有配方 `key`/`ingredients`/`ingredient` 必须用 `{item:...}` 对象，不接受裸字符串（1.21.2+ 才支持）
+- **MC 1.21.1 数据目录名单数**: 1.21 起数据包目录为单数——配方必须放 `data/<ns>/recipe/`（不是 `recipes/`），同理 `loot_table/`、`advancement/`、`structure/`。目录名错误时整目录静默不加载（无报错，仅 Patchouli 之类引用方会报 Recipe not found）
 - **物品模型**: 注册物品时必须主动创建 `models/item/*.json` 模型文件，不能只放贴图
 - **注释语言**: 全部使用中文注释，保持中文团队维护一致性。复杂逻辑必须注释 WHY 而不只是 WHAT
 

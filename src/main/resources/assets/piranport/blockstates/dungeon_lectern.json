@@ -1,13 +1,12 @@
 {
-  "_comment": "临时诊断改动：4 个 has_key=true 变体当前指向 piranport:block/dungeon_lectern_key_debug（占满整格的不透明诊断立方体）。还原方法：把这 4 行里的 dungeon_lectern_key_debug 全部改回 dungeon_lectern_key，并删除 models/block/dungeon_lectern_key_debug.json。has_key=false 的 4 行未改动。y 旋转值刻意保留，用于一并验证 blockstate 旋转是否生效。",
   "variants": {
     "facing=south,has_key=false": { "model": "piranport:block/dungeon_lectern" },
     "facing=west,has_key=false":  { "model": "piranport:block/dungeon_lectern", "y": 90 },
     "facing=north,has_key=false": { "model": "piranport:block/dungeon_lectern", "y": 180 },
     "facing=east,has_key=false":  { "model": "piranport:block/dungeon_lectern", "y": 270 },
-    "facing=south,has_key=true":  { "model": "piranport:block/dungeon_lectern_key_debug" },
-    "facing=west,has_key=true":   { "model": "piranport:block/dungeon_lectern_key_debug", "y": 90 },
-    "facing=north,has_key=true":  { "model": "piranport:block/dungeon_lectern_key_debug", "y": 180 },
-    "facing=east,has_key=true":   { "model": "piranport:block/dungeon_lectern_key_debug", "y": 270 }
+    "facing=south,has_key=true":  { "model": "piranport:block/dungeon_lectern_key" },
+    "facing=west,has_key=true":   { "model": "piranport:block/dungeon_lectern_key", "y": 90 },
+    "facing=north,has_key=true":  { "model": "piranport:block/dungeon_lectern_key", "y": 180 },
+    "facing=east,has_key=true":   { "model": "piranport:block/dungeon_lectern_key", "y": 270 }
   }
 }

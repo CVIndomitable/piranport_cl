@@ -1,0 +1,14 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "piranport:item/french_quad_380mm_gun_empty"
+  },
+  "overrides": [
+    {
+      "predicate": {
+        "piranport:loaded": 1
+      },
+      "model": "piranport:item/french_quad_380mm_gun"
+    }
+  ]
+}

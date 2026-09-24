@@ -137,6 +137,25 @@ public final class WeaponItems {
                             20, 2, 3.0f), "german_twin_380mm_gun"));
 
     /**
+     * 法国四联380毫米炮 — 大型火炮，四联装。
+     *
+     * <p><b>数值均为占位值</b>，待策划定案后调整。取法：口径/初速/弹道参数照
+     * {@link #GERMAN_TWIN_380MM_GUN}（同为 380 口径，保证弹道解算一致），
+     * 联装数改 4、装填介于双联(60)与七联(100)之间、耐久略高于双联。</p>
+     */
+    public static final DeferredItem<Item> FRENCH_QUAD_380MM_GUN =
+            ITEMS.register("french_quad_380mm_gun", () -> new ArtilleryItem(new Item.Properties().stacksTo(1)
+                    .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.CANNON)
+                    .durability(2600),
+                    new ArtilleryCannonData(16, 4, 20.0f, 70, 2600, 4.0f,
+                            List.of(new MuzzlePos(0.3, 0.3, 0),
+                                    new MuzzlePos(0.1, 0.3, 0),
+                                    new MuzzlePos(-0.1, 0.3, 0),
+                                    new MuzzlePos(-0.3, 0.3, 0)),
+                            3.5f, 0.008f, 9.8f, 2.0f, 0.0f,
+                            20, 4, 3.0f), "french_quad_380mm_gun"));
+
+    /**
      * 七联装主炮群 — 测试用极限齐射火炮。
      * 用途：测试齐射数值、散布系统、负重平衡。
      *

@@ -84,7 +84,12 @@ public class GungnirEntity extends ThrowableItemProjectile {
             Entity owner = getOwner();
             if (owner == null || !owner.isAlive()) {
                 if (!level().isClientSide()) {
-                    spawnAtLocation(getReturnStack());
+                    // WHY: 与 returnToOwner 同理 —— 只有玩家路径的物品真的随实体飞出去了，
+                    // 才有「owner 没了就把枪掉回地上」的必要。女仆路径的枪一直在主手，
+                    // 这里再 spawnAtLocation 就是凭空造一把（复制源），故只回收实体。
+                    if (owner instanceof Player) {
+                        spawnAtLocation(getReturnStack());
+                    }
                     discard();
                 }
                 return;
@@ -167,17 +172,20 @@ public class GungnirEntity extends ThrowableItemProjectile {
     }
 
     private void returnToOwner(Entity owner) {
-        ItemStack stack = getReturnStack();
-        // Damage the item
+        // WHY: 只有玩家路径需要「实体返还物品」—— 玩家投掷时 GungnirItem.use 已把枪从手里清空
+        // （setItemInHand(hand, EMPTY)），枪随实体飞行，所以返还时按耐久扣 1 再放回背包/脚边。
         if (owner instanceof Player player) {
+            ItemStack stack = getReturnStack();
             // Use main hand as default since we can't reliably track the original hand
             stack.hurtAndBreak(1, player, LivingEntity.getSlotForHand(net.minecraft.world.InteractionHand.MAIN_HAND));
             if (!player.getInventory().add(stack)) {
                 player.drop(stack, false);
             }
-        } else {
-            spawnAtLocation(stack);
         }
+        // WHY: 非玩家 owner（女仆等）不在这里掉落物品。女仆路径的枪始终留在主手，
+        // 耐久已在 GungnirHandler.fire() 中扣过，实体自始至终只是投射物、不持有物品所有权。
+        // 旧实现无条件 spawnAtLocation(stack) 会让女仆每次投掷都白掉一把新枪（无限刷取）。
+        // 此处直接返回，由调用方 discard() 回收实体。
     }
 
     private ItemStack getReturnStack() {

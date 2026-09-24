@@ -93,17 +93,15 @@ public class DungeonLecternBlockEntity extends BlockEntity {
      *
      * @return true 表示成功插入；false 表示讲台已有钥匙或玩家背包无钥匙
      */
-    public boolean tryInsertKey(Player player) {
+    public boolean tryInsertKey(Player player, net.minecraft.world.InteractionHand hand) {
         if (hasKey()) return false;
-        int slot = DungeonKeyItem.findAnyKeySlot((net.minecraft.server.level.ServerPlayer) player);
-        if (slot < 0) return false;
-        ItemStack key = player.getInventory().getItem(slot);
-        if (key.isEmpty()) return false;
+        ItemStack key = player.getItemInHand(hand);
+        if (!(key.getItem() instanceof DungeonKeyItem)) return false;
         this.keyStack = key.copy();
         // 同步实例 UUID：钥匙上的 instanceId 即为该讲台对应的副本实例
         UUID keyInstanceId = DungeonKeyItem.getInstanceId(key);
         this.dungeonInstanceUuid = keyInstanceId;
-        player.getInventory().setItem(slot, ItemStack.EMPTY);
+        key.shrink(1);
         setChanged();
         syncHasKeyState();
         PiranPort.LOGGER.info("DungeonLectern @ {}: inserted key (instanceId={})",

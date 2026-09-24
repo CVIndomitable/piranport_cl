@@ -20,9 +20,28 @@ import java.util.List;
 import java.util.UUID;
 
 public class DungeonKeyItem extends Item {
+    /**
+     * 章节钥匙的章节号。0 表示旧版通用钥匙；旧钥匙仍通过
+     * {@link com.piranport.registry.ModDataComponents#DUNGEON_STAGE_ID} 兼容读取。
+     */
+    private final int chapterNumber;
 
     public DungeonKeyItem(Properties props) {
+        this(0, props);
+    }
+
+    /** 创建一个绑定固定章节的钥匙。章节号属于物品类型，不再写在钥匙组件里做差分。 */
+    public DungeonKeyItem(int chapterNumber, Properties props) {
         super(props);
+        this.chapterNumber = chapterNumber;
+    }
+
+    public int getChapterNumber() {
+        return chapterNumber;
+    }
+
+    public boolean isChapterKey() {
+        return chapterNumber >= 1;
     }
 
     /**
@@ -63,7 +82,7 @@ public class DungeonKeyItem extends Item {
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        String stageId = stack.getOrDefault(ModDataComponents.DUNGEON_STAGE_ID.get(), "");
+        String stageId = getStageId(stack);
         if (!stageId.isEmpty()) {
             StageData stage = DungeonRegistry.INSTANCE.getStage(stageId);
             if (stage != null) {
@@ -115,7 +134,28 @@ public class DungeonKeyItem extends Item {
     }
 
     public static String getStageId(ItemStack stack) {
-        return stack.getOrDefault(ModDataComponents.DUNGEON_STAGE_ID.get(), "");
+        String stored = stack.getOrDefault(ModDataComponents.DUNGEON_STAGE_ID.get(), "");
+        if (!stored.isEmpty()) return stored;
+        if (stack.getItem() instanceof DungeonKeyItem key && key.isChapterKey()) {
+            return "chapter_" + key.getChapterNumber();
+        }
+        return "";
+    }
+
+    /** 返回钥匙所属章节；旧版通用钥匙从旧组件回退解析。 */
+    public static int getChapterNumber(ItemStack stack) {
+        if (stack.getItem() instanceof DungeonKeyItem key && key.isChapterKey()) {
+            return key.getChapterNumber();
+        }
+        String stageId = stack.getOrDefault(ModDataComponents.DUNGEON_STAGE_ID.get(), "");
+        if (stageId.startsWith("chapter_")) {
+            try {
+                return Integer.parseInt(stageId.substring("chapter_".length()));
+            } catch (NumberFormatException ignored) {
+                // fall through to the legacy unknown value
+            }
+        }
+        return 0;
     }
 
     /**

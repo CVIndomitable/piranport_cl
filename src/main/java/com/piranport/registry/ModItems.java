@@ -431,7 +431,30 @@ public class ModItems {
     public static final DeferredItem<MissileLauncherItem> SEACAT_LAUNCHER = WeaponItems.SEACAT_LAUNCHER;
 
     // ===== Dungeon System (v0.0.8) (extracted to SpecialtyItems) =====
+    /** @deprecated 旧版通用钥匙，仅用于兼容旧存档。新内容使用章节钥匙。 */
+    @Deprecated
     public static final DeferredItem<com.piranport.dungeon.key.DungeonKeyItem> DUNGEON_KEY = SpecialtyItems.DUNGEON_KEY;
+    public static final DeferredItem<com.piranport.dungeon.key.DungeonKeyItem> DUNGEON_KEY_CH1 = SpecialtyItems.DUNGEON_KEY_CH1;
+    public static final DeferredItem<com.piranport.dungeon.key.DungeonKeyItem> DUNGEON_KEY_CH2 = SpecialtyItems.DUNGEON_KEY_CH2;
+    public static final DeferredItem<com.piranport.dungeon.key.DungeonKeyItem> DUNGEON_KEY_CH3 = SpecialtyItems.DUNGEON_KEY_CH3;
+    public static final DeferredItem<com.piranport.dungeon.key.DungeonKeyItem> DUNGEON_KEY_CH4 = SpecialtyItems.DUNGEON_KEY_CH4;
+    public static final DeferredItem<com.piranport.dungeon.key.DungeonKeyItem> DUNGEON_KEY_CH5 = SpecialtyItems.DUNGEON_KEY_CH5;
+    public static final DeferredItem<com.piranport.dungeon.key.DungeonKeyItem> DUNGEON_KEY_CH6 = SpecialtyItems.DUNGEON_KEY_CH6;
+    public static final DeferredItem<com.piranport.dungeon.key.DungeonKeyItem> DUNGEON_KEY_CH7 = SpecialtyItems.DUNGEON_KEY_CH7;
+
+    /** 返回指定章节的固定类型钥匙；无效章节返回旧版兼容钥匙。 */
+    public static net.minecraft.world.item.Item chapterDungeonKey(int chapter) {
+        return switch (chapter) {
+            case 1 -> DUNGEON_KEY_CH1.get();
+            case 2 -> DUNGEON_KEY_CH2.get();
+            case 3 -> DUNGEON_KEY_CH3.get();
+            case 4 -> DUNGEON_KEY_CH4.get();
+            case 5 -> DUNGEON_KEY_CH5.get();
+            case 6 -> DUNGEON_KEY_CH6.get();
+            case 7 -> DUNGEON_KEY_CH7.get();
+            default -> DUNGEON_KEY.get();
+        };
+    }
 
     // ===== Chapter Gating: Deploy Medal (通关纪念章) =====
     public static final DeferredItem<com.piranport.item.DeployMedalItem> DEPLOY_MEDAL_CH1 = SpecialtyItems.DEPLOY_MEDAL_CH1;

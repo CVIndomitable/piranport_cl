@@ -23,8 +23,8 @@ import net.minecraft.world.level.Level;
  * 整合版 §2.2 末段 + 副本/09 修订：钥匙复制 = 讲台取出 + 合成栏合成 → 保留原有进度，
  * 仅清除 instanceId，生成一把同类型同进度的新钥匙。
  *
- * <p>本合成配方在合成栏中：1 把 DungeonKeyItem + 任意 1 个材料 → 1 把新 DungeonKeyItem
- * （同 stageId + 同 progress，instanceId 移除）。</p>
+     * <p>本合成配方在合成栏中：1 把章节钥匙 + 1 个铜锭 → 1 把同章节的新钥匙
+     * （保留进度，清除 instanceId）。</p>
  *
  * <p>注意：当前保留 stageId 和 progress，仅清除 instanceId（"复制"语义）。</p>
  *
@@ -83,7 +83,10 @@ public class KeyResetRecipe extends CustomRecipe {
     @Override
     public NonNullList<Ingredient> getIngredients() {
         return NonNullList.of(Ingredient.EMPTY,
-                Ingredient.of(ModItems.DUNGEON_KEY.get()),
+                Ingredient.of(ModItems.DUNGEON_KEY_CH1.get(), ModItems.DUNGEON_KEY_CH2.get(),
+                        ModItems.DUNGEON_KEY_CH3.get(), ModItems.DUNGEON_KEY_CH4.get(),
+                        ModItems.DUNGEON_KEY_CH5.get(), ModItems.DUNGEON_KEY_CH6.get(),
+                        ModItems.DUNGEON_KEY_CH7.get(), ModItems.DUNGEON_KEY.get()),
                 Ingredient.of(Items.COPPER_INGOT));
     }
 
@@ -96,7 +99,7 @@ public class KeyResetRecipe extends CustomRecipe {
      */
     @Override
     public ItemStack getResultItem(HolderLookup.Provider registries) {
-        return new ItemStack(ModItems.DUNGEON_KEY.get());
+        return new ItemStack(ModItems.DUNGEON_KEY_CH1.get());
     }
 
     @Override
@@ -156,7 +159,9 @@ public class KeyResetRecipe extends CustomRecipe {
         // 输出：新钥匙（同 stageId + 同 progress，仅 instanceId 移除 = 复制语义）
         ItemStack result = new ItemStack(sourceKey.getItem());
         String stageId = DungeonKeyItem.getStageId(sourceKey);
-        if (!stageId.isEmpty()) {
+        // 新章节钥匙的章节号已经由物品类型表达，不再回写旧版差分组件；
+        // 只有旧通用钥匙需要保留存档中的 stageId。
+        if (!((DungeonKeyItem) sourceKey.getItem()).isChapterKey() && !stageId.isEmpty()) {
             result.set(ModDataComponents.DUNGEON_STAGE_ID.get(), stageId);
         }
         // 保留原有进度（副本/09：复制合成替代重置）

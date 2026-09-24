@@ -178,6 +178,13 @@ public class DungeonLecternBlock extends BaseEntityBlock {
                                               Player player, InteractionHand hand, BlockHitResult hitResult) {
         // 非潜行 → 交回 useWithoutItem 走"插入/进入副本"，本方法不消费
         if (!player.isSecondaryUseActive()) {
+            if (!level.isClientSide() && stack.getItem() instanceof com.piranport.dungeon.key.DungeonKeyItem) {
+                BlockEntity be = level.getBlockEntity(pos);
+                if (be instanceof DungeonLecternBlockEntity lecternBE && !lecternBE.hasKey()
+                        && lecternBE.tryInsertKey(player, hand)) {
+                    return ItemInteractionResult.SUCCESS;
+                }
+            }
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
         if (level.isClientSide()) {
@@ -241,10 +248,8 @@ public class DungeonLecternBlock extends BaseEntityBlock {
 
         // 非潜行 → 右键：BE 无钥匙 → 插入；BE 有钥匙 → 进入副本（阶段 3 改为打开 ContinueScreen）
         if (!lecternBE.hasKey()) {
-            if (!lecternBE.tryInsertKey(serverPlayer)) {
-                serverPlayer.sendSystemMessage(
-                        Component.translatable("block.piranport.dungeon_lectern.no_key"));
-            }
+            serverPlayer.sendSystemMessage(
+                    Component.translatable("block.piranport.dungeon_lectern.no_key"));
             return InteractionResult.CONSUME;
         }
 

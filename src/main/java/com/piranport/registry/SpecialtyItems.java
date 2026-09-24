@@ -57,12 +57,40 @@ public final class SpecialtyItems {
                             .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ARMOR), 8));
 
     // ===== Dungeon System (v0.0.8) =====
+    /**
+     * 旧版通用钥匙，仅用于读取旧存档和兼容旧世界掉落。新内容全部使用下面的章节钥匙，
+     * 章节号由物品类型决定，不再依赖 DUNGEON_STAGE_ID 组件差分。
+     */
+    @Deprecated
     public static final DeferredItem<com.piranport.dungeon.key.DungeonKeyItem> DUNGEON_KEY =
             ITEMS.register("dungeon_key",
                     () -> new com.piranport.dungeon.key.DungeonKeyItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.DUNGEON_STAGE_ID.get(), "")
                             .component(ModDataComponents.DUNGEON_PROGRESS.get(),
                                     com.piranport.dungeon.key.DungeonProgress.EMPTY)));
+
+    public static final DeferredItem<com.piranport.dungeon.key.DungeonKeyItem> DUNGEON_KEY_CH1 =
+            registerChapterKey("dungeon_key_ch1", 1);
+    public static final DeferredItem<com.piranport.dungeon.key.DungeonKeyItem> DUNGEON_KEY_CH2 =
+            registerChapterKey("dungeon_key_ch2", 2);
+    public static final DeferredItem<com.piranport.dungeon.key.DungeonKeyItem> DUNGEON_KEY_CH3 =
+            registerChapterKey("dungeon_key_ch3", 3);
+    public static final DeferredItem<com.piranport.dungeon.key.DungeonKeyItem> DUNGEON_KEY_CH4 =
+            registerChapterKey("dungeon_key_ch4", 4);
+    public static final DeferredItem<com.piranport.dungeon.key.DungeonKeyItem> DUNGEON_KEY_CH5 =
+            registerChapterKey("dungeon_key_ch5", 5);
+    public static final DeferredItem<com.piranport.dungeon.key.DungeonKeyItem> DUNGEON_KEY_CH6 =
+            registerChapterKey("dungeon_key_ch6", 6);
+    public static final DeferredItem<com.piranport.dungeon.key.DungeonKeyItem> DUNGEON_KEY_CH7 =
+            registerChapterKey("dungeon_key_ch7", 7);
+
+    private static DeferredItem<com.piranport.dungeon.key.DungeonKeyItem> registerChapterKey(
+            String id, int chapter) {
+        return ITEMS.register(id,
+                () -> new com.piranport.dungeon.key.DungeonKeyItem(chapter,
+                        new Item.Properties().stacksTo(1)
+                                .component(ModDataComponents.DUNGEON_PROGRESS.get(),
+                                        com.piranport.dungeon.key.DungeonProgress.EMPTY)));
+    }
 
     // ===== Chapter Gating: Deploy Medal (通关纪念章) =====
     // 章节通关奖励，合成下一章钥匙的材料

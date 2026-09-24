@@ -297,7 +297,7 @@ public class DungeonEventHandler {
 
     // ===== Utility Methods =====
 
-    public static void teleportToLectern(ServerPlayer player, DungeonInstance instance) {
+    public static boolean teleportToLectern(ServerPlayer player, DungeonInstance instance) {
         BlockPos lecternPos = instance.getLecternPos();
         if (lecternPos == null) {
             // 整合版 §3.3：决策要求"重生到进入副本时的门口"——若实例未记录讲台位置
@@ -305,7 +305,7 @@ public class DungeonEventHandler {
             // 导致玩家错误地认为副本丢失。改用 keepPosition+log，让玩家报告。
             PiranPort.LOGGER.error("Instance {} has no lecternPos; refusing teleport-to-lectern for {}",
                     instance.getInstanceId(), player.getName().getString());
-            return;
+            return false;
         }
 
         String dimKey = instance.getLecternDimension();
@@ -326,9 +326,13 @@ public class DungeonEventHandler {
             targetLevel = player.server.overworld();
         }
 
+        // 回到主世界后立即清掉客户端副本 HUD。单纯跨维度不会可靠触发客户端
+        // 状态清理（尤其是刚进入副本就使用回城卷轴的路径），所以由服务端显式发送空状态。
+        PacketDistributor.sendToPlayer(player, new com.piranport.dungeon.network.DungeonStatePayload("", "", 0L));
         player.teleportTo(targetLevel,
                 lecternPos.getX() + 0.5, lecternPos.getY() + 1, lecternPos.getZ() + 0.5,
                 player.getYRot(), player.getXRot());
+        return true;
     }
 
     public static void teleportAllPlayersToLectern(MinecraftServer server,

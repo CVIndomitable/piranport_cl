@@ -75,7 +75,6 @@ public class TownScrollItem extends Item {
         PENDING.put(player.getUUID(), new Intent(slot,
                 System.currentTimeMillis() + DungeonConstants.TOWN_SCROLL_INTENT_WINDOW_MS));
 
-        player.getCooldowns().addCooldown(this, DungeonConstants.TOWN_SCROLL_COOLDOWN_TICKS);
         return InteractionResultHolder.consume(stack);
     }
 

@@ -7,8 +7,7 @@
     "M": { "item": "piranport:deploy_medal_ch2" }
   },
   "result": {
-    "id": "piranport:dungeon_key",
-    "count": 1,
-    "components": { "piranport:dungeon_stage_id": "chapter_3" }
+    "id": "piranport:dungeon_key_ch3",
+    "count": 1
   }
 }

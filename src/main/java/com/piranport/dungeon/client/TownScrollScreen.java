@@ -42,13 +42,18 @@ public class TownScrollScreen extends Screen {
         int cx = width / 2;
         int cy = height / 2;
 
-        gfx.fill(cx - 80, cy - 30, cx + 80, cy + 40, 0xCC1A1A1A);
-        gfx.renderOutline(cx - 80, cy - 30, 160, 70, 0xFFFFD700);
-
-        gfx.drawCenteredString(font,
-                Component.translatable("gui.piranport.town_scroll.question"),
-                cx, cy - 20, 0xFFFFFFFF);
+        // Draw a fully opaque dialog after the dim/blurred background so its text
+        // stays readable on clients that apply a strong background blur.
+        gfx.fill(cx - 100, cy - 45, cx + 100, cy + 50, 0xFF1A1A1A);
+        gfx.renderOutline(cx - 100, cy - 45, 200, 95, 0xFFFFD700);
 
         super.render(gfx, mouseX, mouseY, partialTick);
+
+        // Draw text in the same final GUI pass as the buttons. Some clients apply
+        // their blur/post-processing pass between the panel and widget layers.
+        gfx.drawCenteredString(font, title, cx, cy - 36, 0xFFFFD700);
+        gfx.drawCenteredString(font,
+                Component.translatable("gui.piranport.town_scroll.question"),
+                cx, cy - 18, 0xFFFFFFFF);
     }
 }

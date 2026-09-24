@@ -236,6 +236,9 @@ public class ClientGameEvents {
     @SubscribeEvent
     public static void onClientPlayerClone(ClientPlayerNetworkEvent.Clone event) {
         ClientInputCoordinator.resetClientState();
+        // 换维度/重生都可能复用客户端 HUD 静态状态；离开副本时不能把关卡和节点
+        // 文案带到主世界。服务端仍会发送显式空状态，这里作为客户端换实体兜底。
+        com.piranport.dungeon.client.DungeonHudLayer.clearDungeonState();
         if (Minecraft.getInstance().getConnection() != null) {
             PacketDistributor.sendToServer(new FcRangeRequestPayload());
         }

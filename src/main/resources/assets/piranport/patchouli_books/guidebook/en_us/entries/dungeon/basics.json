@@ -1,7 +1,7 @@
 {
   "name": "piranport.book.dungeon.basics",
   "category": "piranport:7_dungeon",
-  "icon": "piranport:dungeon_key",
+  "icon": "piranport:dungeon_key_ch1",
   "sortnum": 0,
   "pages": [
     {

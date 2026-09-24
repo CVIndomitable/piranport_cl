@@ -1,6 +1,7 @@
 package com.piranport.dungeon.event;
 
 import com.piranport.PiranPort;
+import com.piranport.dungeon.DungeonConstants;
 import com.piranport.dungeon.data.DungeonRegistry;
 import com.piranport.dungeon.data.NodeData;
 import com.piranport.dungeon.data.StageData;
@@ -16,6 +17,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.List;
@@ -147,6 +149,9 @@ public final class DungeonNodeRouter {
                                      String nodeId, BlockPos spawn, float yaw) {
         ServerLevel dungeonLevel = DungeonEventHandler.getDungeonLevel(player.server);
         if (dungeonLevel == null) return;
+        // 入口传送必须落在海面平台上。旧存档或生成队列恢复时可能已经把 POI
+        // 游标保存到传送前，显式补平台可避免玩家在海水里生成后直接下沉。
+        ensureSpawnPlatform(dungeonLevel, spawn);
         boolean entering = DungeonInstanceManager.get(player.serverLevel()).getInstanceForPlayer(player) != instance;
         if (entering) {
             ItemStack scroll = new ItemStack(ModItems.TOWN_SCROLL.get());
@@ -158,6 +163,21 @@ public final class DungeonNodeRouter {
         PacketDistributor.sendToPlayer(player, new DungeonStatePayload(
                 stage == null ? instance.getStageId() : stage.displayName(), nodeId, instance.getStartTimeMillis()));
         DungeonInstanceManager.get(dungeonLevel).refreshPlayerPresence(player.server);
+    }
+
+    /** 在固定海面高度补一个小型出生平台，并清理玩家头顶空间。 */
+    private static void ensureSpawnPlatform(ServerLevel level, BlockPos spawn) {
+        int floorY = DungeonConstants.SEA_LEVEL;
+        for (int dx = -2; dx <= 2; dx++) {
+            for (int dz = -2; dz <= 2; dz++) {
+                BlockPos floor = new BlockPos(spawn.getX() + dx, floorY, spawn.getZ() + dz);
+                level.setBlock(floor, Blocks.OAK_PLANKS.defaultBlockState(), 2 | 16 | 64);
+                level.setBlock(floor.above(), Blocks.AIR.defaultBlockState(), 2 | 16 | 64);
+            }
+        }
+        // 玩家碰撞箱约 2 格高，清理中心上方额外一格，避免生成在水/特征方块里。
+        level.setBlock(new BlockPos(spawn.getX(), floorY + 2, spawn.getZ()),
+                Blocks.AIR.defaultBlockState(), 2 | 16 | 64);
     }
 
     private static void handleBattleNode(ServerLevel level, DungeonInstance instance,

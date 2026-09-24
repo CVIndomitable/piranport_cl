@@ -403,7 +403,7 @@ public class ShipGirlEntity extends PathfinderMob implements Merchant {
                 handleAbyssalReport(player, held);
             } else if (held.is(ModItems.REPAIR_KIT.get())) {
                 handleRepairKit(player, held);
-            } else if (held.is(ModItems.DUNGEON_KEY.get())) {
+            } else if (held.getItem() instanceof com.piranport.dungeon.key.DungeonKeyItem) {
                 handleDungeonKey(player, held);
             } else if (held.is(ModItems.EXP_SHELL.get())) {
                 handleDrillBranch(player, held);
@@ -1040,7 +1040,7 @@ public class ShipGirlEntity extends PathfinderMob implements Merchant {
                 new ItemStack(ModItems.FLAG_J.get(), 1),
                 4, 6, 0.05f));
         result.add(new MerchantOffer(
-                new ItemCost(ModItems.DUNGEON_KEY.get(), 1),
+                new ItemCost(ModItems.DUNGEON_KEY_CH1.get(), 1),
                 Optional.of(new ItemCost(ModItems.ABYSSAL_REPORT.get(), 1)),
                 new ItemStack(ModItems.SHIP_GIRL_CONTRACT.get(), 1),
                 2, 12, 0.05f));

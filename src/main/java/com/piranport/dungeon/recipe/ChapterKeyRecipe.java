@@ -154,17 +154,10 @@ public class ChapterKeyRecipe extends CustomRecipe {
                 anyFragment, anyFragment, anyFragment, anyFragment, anyMedal);
     }
 
-    /**
-     * 供 JEI / 配方书显示的结果物品：一把普通的副本钥匙。
-     *
-     * <p><b>刻意不带 {@code DUNGEON_STAGE_ID} 组件。</b>真实产物（见 {@link #assemble}）会写入
-     * {@code chapter_N}，但那个 N 取决于玩家投入的是哪一章碎片，「一份 JSON 覆盖七章」意味着
-     * 这里根本没有唯一正确的章节可写。写死 {@code chapter_1} 会让 Ch2~Ch7 的玩家看到错误提示。
-     * 不带组件时 JEI 会按 {@code DUNGEON_KEY} 物品自身的默认组件集渲染出钥匙图标，信息量恰好足够。</p>
-     */
+    /** 供 JEI / 配方书显示的本配方默认章节钥匙。 */
     @Override
     public ItemStack getResultItem(HolderLookup.Provider registries) {
-        return new ItemStack(ModItems.DUNGEON_KEY.get());
+        return new ItemStack(ModItems.chapterDungeonKey(chapterNumber));
     }
 
     /**
@@ -219,9 +212,7 @@ public class ChapterKeyRecipe extends CustomRecipe {
         // matches() 通过才轮到 assemble()，但配方装配在创造模式/某些工具路径下可能被单独调用，
         // 所以这里仍要防御：解析不出章节就退回构造函数给的兜底编号，绝不产出 chapter_0 这种空关卡。
         int chapter = p.valid() ? p.fragmentChapter() : chapterNumber;
-        ItemStack key = new ItemStack(ModItems.DUNGEON_KEY.get());
-        key.set(ModDataComponents.DUNGEON_STAGE_ID.get(), "chapter_" + chapter);
-        return key;
+        return new ItemStack(ModItems.chapterDungeonKey(chapter));
     }
 
     @Override

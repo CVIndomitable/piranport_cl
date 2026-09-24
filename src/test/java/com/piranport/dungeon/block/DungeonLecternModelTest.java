@@ -39,33 +39,27 @@ class DungeonLecternModelTest {
     @Test
     void blockstateCoversEveryFacingAndKeyCombination() throws IOException {
         JsonObject blockstate = readJson(ASSETS + "/blockstates/dungeon_lectern.json");
-        JsonObject variants = blockstate.getAsJsonObject("variants");
-        assertNotNull(variants, "blockstate 必须有 variants");
+        JsonArray multipart = blockstate.getAsJsonArray("multipart");
+        assertNotNull(multipart, "blockstate 必须使用 multipart 叠加模型");
 
-        List<String> missing = new ArrayList<>();
         for (String facing : List.of("north", "south", "east", "west")) {
-            for (String hasKey : List.of("true", "false")) {
-                String key = "facing=" + facing + ",has_key=" + hasKey;
-                if (!variants.has(key)) {
-                    missing.add(key);
+            boolean hasBase = false;
+            boolean hasKey = false;
+            for (JsonElement part : multipart) {
+                JsonObject entry = part.getAsJsonObject();
+                JsonObject when = entry.getAsJsonObject("when");
+                if (!facing.equals(when.get("facing").getAsString())) continue;
+                String model = entry.getAsJsonObject("apply").get("model").getAsString();
+                if (model.equals("piranport:block/dungeon_lectern")) hasBase = true;
+                if (model.equals("piranport:block/dungeon_lectern_key")
+                        && "true".equals(when.get("has_key").getAsString())) {
+                    hasKey = true;
                 }
             }
+            assertTrue(hasBase, "朝向 " + facing + " 缺少底座模型");
+            assertTrue(hasKey, "朝向 " + facing + " 缺少 has_key=true 的钥匙叠加模型");
         }
-        assertTrue(missing.isEmpty(),
-                "blockstate 缺少变体（会导致该朝向下方块不可见）：" + missing);
-        assertEquals(8, variants.size(), "讲台应只有 facing × has_key 共 8 个变体");
-
-        // 空状态直接使用底座；有钥匙状态必须同时使用底座和钥匙叠加层。
-        String emptyModel = variants.getAsJsonObject("facing=north,has_key=false")
-                .get("model").getAsString();
-        JsonArray keyedModels = variants.getAsJsonArray("facing=north,has_key=true");
-        assertEquals(2, keyedModels.size(),
-                "has_key=true 必须由底座模型和钥匙模型两层叠加");
-        assertEquals(emptyModel, keyedModels.get(0).getAsJsonObject().get("model").getAsString(),
-                "有钥匙状态必须保留讲台底座");
-        assertEquals("piranport:block/dungeon_lectern_key",
-                keyedModels.get(1).getAsJsonObject().get("model").getAsString(),
-                "有钥匙状态必须追加独立钥匙模型");
+        assertEquals(8, multipart.size(), "讲台应有四个底座方向和四个钥匙方向叠加层");
     }
 
     @Test

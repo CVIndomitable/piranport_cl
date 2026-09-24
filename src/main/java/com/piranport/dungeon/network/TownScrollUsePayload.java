@@ -1,10 +1,10 @@
 package com.piranport.dungeon.network;
 
 import com.piranport.PiranPort;
+import com.piranport.dungeon.DungeonConstants;
 import com.piranport.dungeon.event.DungeonEventHandler;
 import com.piranport.dungeon.instance.DungeonInstance;
 import com.piranport.dungeon.instance.DungeonInstanceManager;
-import com.piranport.dungeon.key.DungeonKeyItem;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.codec.StreamCodec;
@@ -48,52 +48,11 @@ public record TownScrollUsePayload() implements CustomPacketPayload {
 
             Inventory inv = player.getInventory();
 
-            // Pre-check: player must hold an active dungeon instance via key, otherwise
-            // refund the intent (no consume) so the totem-equivalent isn't burned.
+            // The key is stored in the lectern while the player is inside the dungeon.
+            // Resolve the instance from the player's current dungeon region.
             DungeonInstanceManager mgr = DungeonInstanceManager.get((ServerLevel) player.level());
-            DungeonInstance targetInstance = null;
-            for (int i = 0; i < inv.getContainerSize(); i++) {
-                ItemStack stack = inv.getItem(i);
-                if (stack.getItem() instanceof DungeonKeyItem) {
-                    java.util.UUID instanceId = DungeonKeyItem.getInstanceId(stack);
-                    if (instanceId == null) continue;
-                    DungeonInstance inst = mgr.getInstance(instanceId);
-                    if (inst != null) {
-                        targetInstance = inst;
-                        break;
-                    }
-                }
-            }
+            DungeonInstance targetInstance = mgr.getInstanceForPlayer(player);
             if (targetInstance == null) return;
-
-            // 整合版 §2.2：讲台 BE 持有钥匙；这里只验证讲台 BE 还存在并匹配同一 instanceId
-            // 注意：玩家可能用 town scroll 时不在 lectern 附近，所以这里只做软校验
-            BlockPos lecternPos = targetInstance.getLecternPos();
-            if (lecternPos != null) {
-                String dimKey = targetInstance.getLecternDimension();
-                if (dimKey != null) {
-                    net.minecraft.resources.ResourceLocation parsed =
-                            net.minecraft.resources.ResourceLocation.tryParse(dimKey);
-                    if (parsed != null) {
-                        net.minecraft.resources.ResourceKey<net.minecraft.world.level.Level> targetDim =
-                                net.minecraft.resources.ResourceKey.create(
-                                        net.minecraft.core.registries.Registries.DIMENSION, parsed);
-                        ServerLevel lecternLevel = player.server.getLevel(targetDim);
-                        if (lecternLevel != null) {
-                            net.minecraft.world.level.block.entity.BlockEntity be =
-                                    lecternLevel.getBlockEntity(lecternPos);
-                            if (be instanceof com.piranport.dungeon.block.DungeonLecternBlockEntity lecternBE) {
-                                // 校验讲台 BE 仍持有该 instance 的钥匙（玩家可能取出）
-                                if (!lecternBE.hasKey()
-                                        || !lecternBE.getDungeonInstanceUuid().equals(
-                                                targetInstance.getInstanceId())) {
-                                    return; // 钥匙已被取出或被重置，回城失败
-                                }
-                            }
-                        }
-                    }
-                }
-            }
 
             // Try to consume the exact slot the player right-clicked. Fall back to
             // any TownScrollItem in inventory if the slot moved (e.g. drag).
@@ -113,9 +72,10 @@ public record TownScrollUsePayload() implements CustomPacketPayload {
                 chosen = inv.getItem(fallback);
             }
 
+            if (!DungeonEventHandler.teleportToLectern(player, targetInstance)) return;
             chosen.shrink(1);
-
-            DungeonEventHandler.teleportToLectern(player, targetInstance);
+            player.getCooldowns().addCooldown(chosen.getItem(),
+                    DungeonConstants.TOWN_SCROLL_COOLDOWN_TICKS);
             DungeonEventHandler.checkAndSuspendIfEmpty(player.server, targetInstance);
         });
     }

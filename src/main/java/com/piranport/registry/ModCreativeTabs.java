@@ -467,12 +467,21 @@ public class ModCreativeTabs {
                     .displayItems((parameters, output) -> {
                         output.accept(ModItems.UNICORN_HARP.get());
                         output.accept(ModItems.GUIDEBOOK.get());
-                        output.accept(ModItems.DUNGEON_KEY.get());
-                        for (int chapter = 1; chapter <= 7; chapter++) {
-                            ItemStack chapterKey = new ItemStack(ModItems.DUNGEON_KEY.get());
-                            chapterKey.set(ModDataComponents.DUNGEON_STAGE_ID.get(), "chapter_" + chapter);
-                            output.accept(chapterKey);
-                        }
+                        // 每章使用独立物品；章节号不再通过同一把钥匙的组件差分。
+                        output.accept(ModItems.DUNGEON_KEY_CH1.get());
+                        output.accept(ModItems.DUNGEON_KEY_CH2.get());
+                        output.accept(ModItems.DUNGEON_KEY_CH3.get());
+                        output.accept(ModItems.DUNGEON_KEY_CH4.get());
+                        output.accept(ModItems.DUNGEON_KEY_CH5.get());
+                        output.accept(ModItems.DUNGEON_KEY_CH6.get());
+                        output.accept(ModItems.DUNGEON_KEY_CH7.get());
+                        output.accept(ModItems.DEPLOY_MEDAL_CH1.get());
+                        output.accept(ModItems.DEPLOY_MEDAL_CH2.get());
+                        output.accept(ModItems.DEPLOY_MEDAL_CH3.get());
+                        output.accept(ModItems.DEPLOY_MEDAL_CH4.get());
+                        output.accept(ModItems.DEPLOY_MEDAL_CH5.get());
+                        output.accept(ModItems.DEPLOY_MEDAL_CH6.get());
+                        output.accept(ModItems.DEPLOY_MEDAL_CH7.get());
                         output.accept(ModItems.TOWN_SCROLL.get());
                         output.accept(ModItems.ELITE_DAMAGE_CONTROL.get());
                         output.accept(ModItems.DAMAGE_CONTROL.get());

@@ -61,24 +61,28 @@ public class DungeonReviveScreen extends Screen {
         int cx = width / 2;
         int cy = height / 2;
 
-        gfx.fill(cx - 80, cy - 40, cx + 80, cy + 50, 0xCC1A1A1A);
-        gfx.renderOutline(cx - 80, cy - 40, 160, 90, 0xFFFF4444);
+        // renderBackground() may apply a strong blur. Draw a fully opaque panel
+        // afterwards so the confirmation text remains readable on every client.
+        gfx.fill(cx - 100, cy - 50, cx + 100, cy + 55, 0xFF1A1A1A);
+        gfx.renderOutline(cx - 100, cy - 50, 200, 105, 0xFFFF4444);
 
+        super.render(gfx, mouseX, mouseY, partialTick);
+
+        // Draw all copy in the final GUI pass so the blur/post-processing layer
+        // cannot soften it before the screen is presented.
+        gfx.drawCenteredString(font, title, cx, cy - 43, 0xFFFFD700);
         gfx.drawCenteredString(font,
                 Component.translatable("gui.piranport.dungeon_revive.died"),
-                cx, cy - 30, 0xFFFF4444);
-
+                cx, cy - 29, 0xFFFF4444);
         if (hasTotem) {
             gfx.drawCenteredString(font,
                     Component.translatable("gui.piranport.dungeon_revive.cost"),
-                    cx, cy - 5, 0xFFFFFFFF);
+                    cx, cy - 9, 0xFFFFFFFF);
         } else {
             gfx.drawCenteredString(font,
                     Component.translatable("gui.piranport.dungeon_revive.no_totem"),
-                    cx, cy - 5, 0xFFFF6666);
+                    cx, cy - 9, 0xFFFF6666);
         }
-
-        super.render(gfx, mouseX, mouseY, partialTick);
     }
 
     @Override

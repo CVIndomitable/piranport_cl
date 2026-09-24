@@ -41,6 +41,11 @@ public class DungeonHudLayer implements LayeredDraw.Layer {
     private static long quietUntilMillis;
 
     public static void setDungeonState(String stageName, String nodeId, long startMillis) {
+        if ((stageName == null || stageName.isEmpty())
+                && (nodeId == null || nodeId.isEmpty()) && startMillis <= 0L) {
+            clearDungeonState();
+            return;
+        }
         currentStageName = stageName;
         currentNodeId = nodeId;
         timerStartMillis = startMillis;

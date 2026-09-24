@@ -35,10 +35,9 @@ public class PiranPortJEIPlugin implements IModPlugin {
 
     @Override
     public void registerItemSubtypes(mezz.jei.api.registration.ISubtypeRegistration registration) {
-        // 章节写在 dungeon_stage_id DataComponent 中；没有子类型解释器时，JEI
-        // 会把七把章节钥匙和普通钥匙都按同一个 dungeon_key 去重。
-        registration.registerSubtypeInterpreter(
-                com.piranport.registry.ModItems.DUNGEON_KEY.get(),
+        // 章节钥匙现在是七个独立物品。旧版通用钥匙仍注册解释器，避免旧存档里的
+        // stage/progress 组件在 JEI 中被错误去重。
+        registration.registerSubtypeInterpreter(com.piranport.registry.ModItems.DUNGEON_KEY.get(),
                 (stack, context) -> {
                     String stageId = DungeonKeyItem.getStageId(stack);
                     return stageId.isEmpty() ? "unassigned" : stageId;

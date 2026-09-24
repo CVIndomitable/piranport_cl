@@ -2,41 +2,77 @@
 """
 重画皮肤核心 22（萤火虫）的 64x64 玩家皮肤贴图。
 参考原画: 战舰少女R L_NORMAL_82.png（zjsnrwiki）
-构图对齐原画: 金色/橙色头发 + 银白羽翼发饰、苍白皮肤、绿色眼睛、
-深蓝灰海军制服 + 橙色滚边 + 金色纽扣。
+
+头部（脸）：**直接复制大凤 skin_4 的 12 个头面，只做配色替换**
+（画风基准同 keeling_skin_tools.py 的做法）——粉发→金发、粉瞳→蓝瞳、
+肤色/睫毛原样保留；叠层透明处补萤火虫的红黑条纹发带。
+身体/手臂/腿为本脚本自绘：深蓝水手服 + 白泡泡袖 + 红滚边百褶裙 +
+红黑条纹围巾 + 黑长靴红边 + 腰间萤火光。
 
 贴图按 Minecraft 64x64 玩家皮肤标准分区写入（每个面一张位图，含外层叠层区）。
 """
+from pathlib import Path
+
 from PIL import Image
+
+# 画风基准：大凤（skin_4）的头部被本脚本直接照搬，只换配色
+TAIHOU_SKIN = Path(__file__).resolve().parents[1] / \
+    "src/main/resources/assets/piranport/textures/skin/skin_4.png"
+
+# 大凤头部全部 14 色 → 萤火虫配色（结构一模一样，只换色）。
+# 键来自 skin_4 头部区域的实际取色，精确匹配。
+TAIHOU_TO_FIREFLY = {
+    # 粉发 → 金发（5 个色阶一一对应，保留大凤头发的明暗分布）
+    (230, 116, 142): (200, 156, 66),
+    (235, 118, 149): (214, 172, 84),
+    (238, 136, 163): (232, 196, 110),
+    (242, 144, 167): (243, 216, 140),   # = HAIR
+    (248, 164, 174): (252, 234, 168),
+    # 皮肤：沿用大凤原肤色（萤火虫同为白皙暖调），恒等映射
+    (254, 243, 229): (254, 243, 229),
+    (252, 231, 216): (252, 231, 216),
+    (249, 205, 191): (249, 205, 191),
+    (252, 196, 182): (252, 196, 182),
+    # 睫毛 / 眼睑：原样保留
+    (97, 51, 51): (97, 51, 51),
+    (184, 157, 167): (184, 157, 167),
+    # 粉瞳 → 蓝瞳（萤火虫是明亮蓝瞳）
+    (82, 173, 203): (92, 130, 210),
+    (152, 238, 244): (170, 220, 255),
+    # 眼高光
+    (247, 247, 247): (247, 247, 247),
+}
 
 W = H = 64
 T = (0, 0, 0, 0)          # 透明
 
-# ---------- 调色板 ----------
-OUT   = (10, 10, 14, 255)        # 纯黑描边
-HAIR  = (232, 176, 66, 255)      # 金色头发
-HAIR_D= (186, 132, 40, 255)      # 头发暗部
-HAIR_L= (252, 226, 150, 255)     # 头发亮部
-SIL   = (222, 226, 238, 255)     # 银白发饰
-SIL_D = (152, 160, 178, 255)
-SKIN  = (252, 226, 211, 255)     # 苍白皮肤
-SKIN_D= (226, 176, 156, 255)
-EYE   = (58, 150, 84, 255)       # 绿色眼睛
-EYE_D = (22, 58, 36, 255)
-COAT  = (28, 34, 62, 255)        # 深蓝灰军装
-COAT_D= (16, 20, 40, 255)        # 暗部/衣褶
-COAT_L= (66, 82, 138, 255)       # 亮部
-ORNG  = (216, 118, 34, 255)      # 橙色滚边
-GOLD  = (238, 194, 92, 255)      # 金色纽扣
-WHITE = (244, 248, 255, 255)     # 衬衫
-PANTS = (26, 34, 68, 255)        # 长裤
-PANTS_D=(14, 18, 38, 255)
-BOOT  = (44, 32, 28, 255)        # 深色长靴
-BOOT_D= (26, 18, 16, 255)
+# ---------- 调色板（取自原画配色） ----------
+OUT    = (10, 10, 12, 255)       # 纯黑描边
+HAIR   = (243, 216, 140, 255)    # 金 Blonde 发（浅金）
+HAIR_D = (214, 176, 100, 255)    # 头发暗部
+HAIR_L = (255, 240, 190, 255)    # 头发亮部
+SKIN   = (255, 230, 214, 255)    # 苍白皮肤
+SKIN_D = (238, 196, 176, 255)    # 皮肤阴影
+BLUSH  = (250, 186, 172, 255)    # 腮红
+EYE    = (92, 130, 210, 255)     # 蓝色眼睛
+EYE_D  = (52, 74, 150, 255)      # 眼睛暗部
+WHITE  = (248, 248, 250, 255)    # 白衬衫
+WHITE_D= (220, 222, 232, 255)    # 白衬衫阴影
+NAVY   = (56, 66, 116, 255)      # 深蓝水手服
+NAVY_D = (40, 48, 92, 255)       # 深蓝暗部/裙褶暗
+NAVY_L = (78, 90, 148, 255)      # 深蓝亮部
+RED    = (201, 54, 58, 255)      # 红滚边/领巾
+RED_D  = (150, 36, 44, 255)      # 红暗部
+STRIPE = (32, 30, 34, 255)       # 条纹中的黑（发带/围巾）
+BOOT   = (46, 38, 40, 255)       # 黑长靴
+BOOT_D = (30, 25, 27, 255)       # 长靴暗部
+GREEN  = (120, 235, 120, 255)    # 萤火光
+GREEN_L= (210, 255, 190, 255)    # 萤火光核心
+MOUTH  = (198, 116, 110, 255)    # 张口笑的嘴
 
 
 class Face:
-    """一个 64x64 面位图；坐标相对该面左上角。"""
+    """一个面位图；坐标相对该面左上角。"""
 
     def __init__(self, w, h):
         self.w, self.h = w, h
@@ -59,33 +95,6 @@ class Face:
             for xx in range(x, x + w):
                 self.set(xx, yy, c)
 
-    def frame(self, x, y, w, h, c):
-        """只描最外圈的边（矩形轮廓）。"""
-        for xx in range(x, x + w):
-            self.set(xx, y, c)
-            self.set(xx, y + h - 1, c)
-        for yy in range(y, y + h):
-            self.set(x, yy, c)
-            self.set(x + w - 1, yy, c)
-
-    def outline(self, c=OUT):
-        """把整张面最外缘描一圈纯黑（原画像素化约定：只加最外侧黑描边）。"""
-        for xx in range(self.w):
-            for yy in range(self.h):
-                if not self.is_opaque(xx, yy):
-                    continue
-                for dx, dy in ((-1, 0), (1, 0), (0, -1), (0, 1)):
-                    nx, ny = xx + dx, yy + dy
-                    if 0 <= nx < self.w and 0 <= ny < self.h:
-                        if not self.is_opaque(nx, ny):
-                            pass  # 洞口位置留给贴图外天然透明，不描里面
-        # 只描最外圈边框
-        for xx in range(self.w):
-            for yy in range(self.h):
-                if self.is_opaque(xx, yy):
-                    if xx == 0 or yy == 0 or xx == self.w - 1 or yy == self.h - 1:
-                        self.set(xx, yy, c)
-
     def paste(self, canvas, ox, oy):
         for y in range(self.h):
             for x in range(self.w):
@@ -94,24 +103,9 @@ class Face:
                     canvas[oy + y][ox + x] = c
 
 
-def edge_outline(f, c=OUT):
-    """给 face 中每个不透明像素若四邻有不透明像素则保持不变；
-    真正的黑描边在绘制阶段手工指定，这里只在轮廓与透明交界处补黑边。"""
-    src = [row[:] for row in f.px]
-    for y in range(f.h):
-        for x in range(f.w):
-            if src[y][x][3] == 0:
-                continue
-            # 若右/下侧为透明，则在该像素的右/下画黑边（把轮廓推向透明一侧）
-            for dx, dy in ((1, 0), (0, 1)):
-                nx, ny = x + dx, y + dy
-                if 0 <= nx < f.w and 0 <= ny < f.h and src[ny][nx][3] == 0:
-                    pass
-
-
 def outline_face(f, c=OUT):
     """在 face 内所有「不透明像素的邻居是空洞」的一侧补上纯黑描边。
-    这是项目既定的像素化约定：构图对齐原画，只在最外层加黑描边。"""
+    项目既定像素化约定：构图对齐原画，只在最外层加黑描边。"""
     src = [row[:] for row in f.px]
 
     def opaque(x, y):
@@ -125,7 +119,6 @@ def outline_face(f, c=OUT):
                 continue
             for dx, dy in ((-1, 0), (1, 0), (0, -1), (0, 1)):
                 nx, ny = x + dx, y + dy
-                # 只处理面内邻格；面外的边缘由贴图本身的边界体现
                 if 0 <= nx < f.w and 0 <= ny < f.h and not opaque(nx, ny):
                     src[ny][nx] = c
     for y in range(f.h):
@@ -135,113 +128,89 @@ def outline_face(f, c=OUT):
 
 
 def bake(faces):
-    """把各面位图贴到 64x64 皮肤画布上，超出叠层区的像素直接丢弃。"""
+    """把各面位图贴到 64x64 皮肤画布上。"""
     canvas = [[T] * W for _ in range(H)]
     for f, ox, oy in faces:
         f.paste(canvas, ox, oy)
     return canvas
 
 
-def to_topleft_origin(x, z_offset=0.0, u_origin=0.0):
-    return x
-
-
 # =====================================================================
 # 头部 —— 8x8x8，展开于 (0,0)
 #   top(8,0) bottom(16,0) right(0,8) front(8,8) left(16,8) back(24,8)
 #   叠层: top(40,0) bottom(48,0) right(32,8) front(40,8) left(48,8) back(56,8)
+#   面朝向：right 面 x7 为前缘，left 面 x0 为前缘（盒状展开相邻边）
 # =====================================================================
 
 
+def _copy_head_face(src, box):
+    """从大凤皮肤裁一个 8x8 头面并做配色替换；未映射颜色保留原值并告警。"""
+    f = Face(8, 8)
+    unmapped = set()
+    for y in range(8):
+        for x in range(8):
+            c = src.getpixel((box[0] + x, box[1] + y))
+            if c[3] == 0:
+                continue
+            rgb = c[:3]
+            if rgb in TAIHOU_TO_FIREFLY:
+                t = TAIHOU_TO_FIREFLY[rgb]
+                f.set(x, y, (t[0], t[1], t[2], 255))
+            else:
+                unmapped.add(rgb)
+                f.set(x, y, c)
+    if unmapped:
+        # 出现映射表外的颜色说明 skin_4 被改过，打印出来提醒补映射
+        print("警告: skin_4 头部出现未映射颜色", unmapped)
+    f.do_outline = False   # 照搬大凤的脸，不加黑描边，保持原样
+    return f
+
+
 def build_head():
-    top = Face(8, 8)
-    # 头顶：金黄头发，中央一道分缝亮线
-    top.rect(0, 0, 8, 8, HAIR)
-    top.rect(1, 0, 6, 1, HAIR_L)
-    top.rect(3, 3, 2, 1, HAIR_D)
+    """头部 = 大凤 skin_4 的 12 个面原样复制 + 换色；叠层透明处补条纹发带。"""
+    src = Image.open(TAIHOU_SKIN).convert('RGBA')
 
-    bot = Face(8, 8)
-    bot.rect(0, 0, 8, 8, HAIR_D)          # 下巴底面/脖颈窝：暗色
-    bot.rect(2, 2, 4, 4, SKIN_D)
+    # 基底 6 面
+    top = _copy_head_face(src, (8, 0))
+    bot = _copy_head_face(src, (16, 0))
+    right = _copy_head_face(src, (0, 8))
+    front = _copy_head_face(src, (8, 8))
+    left = _copy_head_face(src, (16, 8))
+    back = _copy_head_face(src, (24, 8))
+    # 叠层 6 面（大凤的刘海/发饰造型，换色后即萤火虫金发叠层）
+    l_top = _copy_head_face(src, (40, 0))
+    l_bot = _copy_head_face(src, (48, 0))
+    l_right = _copy_head_face(src, (32, 8))
+    l_front = _copy_head_face(src, (40, 8))
+    l_left = _copy_head_face(src, (48, 8))
+    l_back = _copy_head_face(src, (56, 8))
 
-    front = Face(8, 8)
-    # 底色：脸
-    front.rect(0, 0, 8, 8, SKIN)
-    # 额头碎发（刘海）：金黄，中间略长
-    front.rect(0, 0, 8, 1, HAIR)
-    front.rect(0, 1, 1, 3, HAIR)
-    front.rect(7, 1, 1, 3, HAIR)
-    front.set(2, 1, HAIR)
-    front.set(5, 1, HAIR)
-    # 绿色眼睛 2x1，中间留一格做鼻梁
-    front.rect(1, 2, 2, 1, EYE)
-    front.rect(5, 2, 2, 1, EYE)
-    front.set(1, 3, EYE_D)
-    front.set(6, 3, EYE_D)
-    # 腮红/阴影 → 下颊
-    front.rect(2, 5, 4, 1, SKIN_D)
+    # ---- 萤火虫标志：红黑条纹发带（只画在叠层透明处，不覆盖大凤造型）----
+    def stripe_if_free(f, x, y, by='y'):
+        if not f.is_opaque(x, y):
+            idx = y if by == 'y' else x
+            f.set(x, y, RED if idx % 2 == 0 else STRIPE)
 
-    back = Face(8, 8)
-    back.rect(0, 0, 8, 8, HAIR)
-    back.rect(0, 1, 8, 2, HAIR_D)         # 后脑发暗部
-    back.rect(2, 4, 4, 4, HAIR)
-
-    right = Face(8, 8)
-    right.rect(0, 0, 8, 8, HAIR)
-    right.rect(3, 1, 5, 6, SKIN)          # 侧面脸（后侧留发）
-    right.rect(2, 1, 1, 6, HAIR)
-    right.set(4, 2, EYE)                  # 侧视眼睛（贴前缘，不跨面重复）
-    right.rect(3, 6, 4, 1, SKIN_D)
-
-    left = Face(8, 8)
-    left.rect(0, 0, 8, 8, HAIR)
-    left.rect(0, 1, 5, 6, SKIN)
-    left.rect(5, 1, 1, 6, HAIR)
-    left.set(3, 2, EYE)
-    left.rect(1, 6, 4, 1, SKIN_D)
-
-    # ---- 叠层（帽子/配饰区）：银白羽翼发饰 ----
-    l_top = Face(8, 8)                    # 头顶叠层
-    l_top.set(0, 0, T)
-    l_top.rect(0, 0, 2, 1, HAIR_L)
-    l_top.rect(2, 0, 4, 1, SIL)           # 银色头饰正面
-    l_top.set(2, 0, T)
-    l_top.set(5, 0, T)
-
-    l_front = Face(8, 8)
-    # 额前银白发饰 + 两侧羽翼
-    l_front.rect(1, 0, 6, 1, SIL)
-    l_front.set(1, 0, T)
-    l_front.set(6, 0, T)
-    l_front.rect(0, 1, 1, 1, SIL_D)
-    l_front.rect(7, 1, 1, 1, SIL_D)
-    l_front.rect(2, 1, 4, 1, GOLD)
-    l_front.set(3, 1, SIL)
-    l_front.set(4, 1, SIL)
-
-    l_right = Face(8, 8)
-    l_right.rect(0, 0, 1, 1, SIL)
-    l_right.rect(3, 0, 4, 1, SIL)         # 侧翼
-    l_right.set(3, 0, T)
-    l_right.set(6, 0, SIL_D)
-
-    l_left = Face(8, 8)
-    l_left.rect(7, 0, 1, 1, SIL)
-    l_left.rect(1, 0, 4, 1, SIL)
-    l_left.set(4, 0, T)
-    l_left.set(1, 0, SIL_D)
-
-    l_back = Face(8, 8)
-    l_back.rect(2, 0, 4, 1, SIL)
-    l_back.set(2, 0, T)
-    l_back.set(5, 0, T)
-    l_back.set(3, 0, SIL_D)
-    l_back.set(4, 0, SIL_D)
+    # 头顶两条竖起的条纹飘带（x1、x6 列）
+    for y in range(8):
+        stripe_if_free(l_top, 1, y)
+        stripe_if_free(l_top, 6, y)
+    # 额前发带（叠层前脸 y0 横过）
+    for x in range(8):
+        stripe_if_free(l_front, x, 0, by='x')
+    # 后脑发带结（叠层后脸 y0 中段）
+    for x in range(2, 6):
+        stripe_if_free(l_back, x, 0, by='x')
+    # 马尾根部发圈（叠层两侧后缘 y1）
+    for x in (0, 1):
+        stripe_if_free(l_right, x, 1, by='x')
+    for x in (6, 7):
+        stripe_if_free(l_left, x, 1, by='x')
 
     return [
         (top, 8, 0), (bot, 16, 0),
         (right, 0, 8), (front, 8, 8), (left, 16, 8), (back, 24, 8),
-        (l_top, 40, 0), (Face(8, 8), 48, 0),          # 叠层底=空
+        (l_top, 40, 0), (l_bot, 48, 0),
         (l_right, 32, 8), (l_front, 40, 8), (l_left, 48, 8), (l_back, 56, 8),
     ]
 
@@ -255,162 +224,196 @@ def build_head():
 
 def build_body():
     top = Face(8, 4)
-    # 肩/脖颈处：颈部露肤，两侧肩章
-    top.rect(0, 0, 8, 4, COAT)
-    top.rect(2, 0, 4, 2, SKIN_D)
-    top.rect(3, 0, 2, 1, SKIN)
-    top.rect(0, 3, 2, 1, GOLD)
-    top.rect(6, 3, 2, 1, GOLD)
+    top.rect(0, 0, 8, 4, NAVY)
+    top.rect(1, 0, 6, 1, WHITE)          # 前缘白领/衬衫
 
     bot = Face(8, 4)
-    bot.rect(0, 0, 8, 4, COAT_D)
-    bot.rect(2, 1, 4, 2, PANTS_D)
+    bot.rect(0, 0, 8, 4, NAVY_D)         # 裙底
 
     front = Face(8, 12)
-    # 上衣主体
-    front.rect(0, 0, 8, 12, COAT)
-    # 双排扣：中央橙色滚边 + 左右金色纽扣
-    front.rect(3, 1, 2, 10, COAT_L)
-    front.rect(3, 1, 2, 1, ORNG)
-    for yy in (3, 5, 7, 9):
-        front.set(2, yy, GOLD)
-        front.set(5, yy, GOLD)
-    # 白色内衬领口
-    front.rect(2, 0, 4, 1, WHITE)
-    front.set(3, 1, WHITE)
-    front.set(4, 1, WHITE)
-    # 腰带
-    front.rect(0, 10, 8, 1, COAT_D)
-    front.set(3, 10, GOLD)
-    front.set(4, 10, GOLD)
-    # 下摆橙色滚边
-    front.rect(0, 11, 8, 1, ORNG)
+    front.rect(0, 0, 8, 12, NAVY)
+    # 白衬衫领口 + 红领巾尖（y2，y0-1 被围巾叠层盖住）
+    front.rect(2, 2, 4, 1, WHITE)
+    front.rect(3, 2, 2, 1, RED)
+    # 髋部：白滚边 + 红滚边
+    front.rect(0, 8, 8, 1, WHITE)
+    front.rect(0, 9, 8, 1, RED)
+    # 百褶裙摆 y10-11
+    front.rect(0, 10, 8, 2, NAVY_D)
+    for x in (0, 2, 4, 6):
+        front.rect(x, 10, 1, 2, NAVY)
 
     back = Face(8, 12)
-    back.rect(0, 0, 8, 12, COAT)
-    back.rect(0, 0, 8, 1, COAT_D)         # 后领
-    back.rect(3, 4, 2, 7, COAT_D)         # 背部中缝
-    back.rect(1, 2, 6, 1, COAT_L)         # 肩胛高光
-    back.rect(0, 11, 8, 1, ORNG)          # 下摆滚边
+    back.rect(0, 0, 8, 12, NAVY)
+    # 水手方领
+    back.rect(1, 2, 6, 1, WHITE)
+    back.rect(1, 3, 6, 1, WHITE)
+    back.rect(2, 3, 4, 1, RED)
+    back.rect(0, 8, 8, 1, WHITE)
+    back.rect(0, 9, 8, 1, RED)
+    back.rect(0, 10, 8, 2, NAVY_D)
+    for x in (0, 2, 4, 6):
+        back.rect(x, 10, 1, 2, NAVY)
 
     right = Face(4, 12)
-    right.rect(0, 0, 4, 12, COAT)
-    right.rect(0, 0, 1, 12, COAT_L)
-    right.rect(0, 10, 4, 1, ORNG)
+    right.rect(0, 0, 4, 12, NAVY)
+    right.rect(0, 8, 4, 1, WHITE)
+    right.rect(0, 9, 4, 1, RED)
+    right.rect(0, 10, 4, 2, NAVY_D)
+    right.set(0, 10, NAVY)
+    right.set(2, 10, NAVY)
+    right.set(0, 11, NAVY)
+    right.set(2, 11, NAVY)
 
     left = Face(4, 12)
-    left.rect(0, 0, 4, 12, COAT)
-    left.rect(3, 0, 1, 12, COAT_L)
-    left.rect(0, 10, 4, 1, ORNG)
+    left.rect(0, 0, 4, 12, NAVY)
+    left.rect(0, 8, 4, 1, WHITE)
+    left.rect(0, 9, 4, 1, RED)
+    left.rect(0, 10, 4, 2, NAVY_D)
+    left.set(1, 10, NAVY)
+    left.set(3, 10, NAVY)
+    left.set(1, 11, NAVY)
+    left.set(3, 11, NAVY)
+
+    # ---- 叠层：红黑条纹围巾（y0-1 环绕）+ 腰间萤火光 ----
+    ov_front = Face(8, 12)
+    for y in (0, 1):
+        for x in range(8):
+            # 斜纹：红黑相间条纹围巾
+            c = RED if (x + y) % 2 == 0 else STRIPE
+            ov_front.set(x, y, c)
+    # 萤火光点（前右髋部，对应原画腰间绿色光 pouch）
+    ov_front.set(5, 6, GREEN)
+    ov_front.rect(6, 6, 2, 2, GREEN)
+    ov_front.set(6, 6, GREEN_L)
+    ov_front.set(4, 7, GREEN)
+
+    ov_back = Face(8, 12)
+    for y in (0, 1):
+        for x in range(8):
+            ov_back.set(x, y, RED if (x + y) % 2 == 0 else STRIPE)
+
+    ov_right = Face(4, 12)
+    for y in (0, 1):
+        for x in range(4):
+            ov_right.set(x, y, RED if (x + y) % 2 == 0 else STRIPE)
+
+    ov_left = Face(4, 12)
+    for y in (0, 1):
+        for x in range(4):
+            ov_left.set(x, y, RED if (x + y) % 2 == 0 else STRIPE)
 
     return [
         (top, 20, 16), (bot, 28, 16),
         (right, 16, 20), (front, 20, 20), (left, 28, 20), (back, 32, 20),
         (Face(8, 4), 20, 32), (Face(8, 4), 28, 32),
-        (Face(4, 12), 16, 36), (Face(8, 12), 20, 36),
-        (Face(4, 12), 28, 36), (Face(8, 12), 32, 36),
+        (ov_right, 16, 36), (ov_front, 20, 36),
+        (ov_left, 28, 36), (ov_back, 32, 36),
     ]
 
 
 # =====================================================================
 # 手臂 —— 4x12x4（右臂用 (40,16) 区，左臂用 (32,48) 区）
+# 白色泡泡袖至 y4，其下裸露手臂
 # =====================================================================
 
 
-def build_arm(mirror, x0, y0, sleeve_len=4):
-    """mirror=True 表示左臂（左右镜像）。"""
-    def mx(x, w=4):
-        return (w - 1 - x) if mirror else x
+def build_arm(mirror, x0, y0):
+    """mirror=True 表示左臂。
+    展开顺序（盒状）：[侧(+0)][前(+4)][侧(+8)][后(+12)]；
+    +0 侧恒为角色右手侧：右臂 = 外侧，左臂 = 内侧。"""
 
     top = Face(4, 4)
-    top.rect(0, 0, 4, 4, COAT)
-    top.set(1, 1, COAT_L)
-    top.set(2, 2, COAT_L)
+    top.rect(0, 0, 4, 4, WHITE)
 
     bot = Face(4, 4)
     bot.rect(0, 0, 4, 4, SKIN_D)
-    bot.set(1, 1, SKIN)
-    bot.set(2, 2, SKIN)
 
     front = Face(4, 12)
-    # 袖口以上为军装
-    front.rect(0, 0, 4, sleeve_len, COAT)
-    front.rect(0, sleeve_len - 1, 4, 1, ORNG)   # 袖口橙色滚边
-    # 裸露小臂
-    front.rect(0, sleeve_len, 4, 12 - sleeve_len, SKIN)
-    front.rect(0, 8, 4, 1, SKIN_D)              # 臂弯阴影
-    front.set(mx(0), 1, GOLD)                   # 肩纽扣
-    front.rect(0, 0, 4, 1, COAT_L)
+    front.rect(0, 0, 4, 1, NAVY)             # 肩部背带线
+    front.rect(0, 1, 4, 3, WHITE)            # 泡泡袖主体 y1-4
+    front.rect(0, 4, 4, 1, WHITE_D)          # 袖口收边
+    front.rect(0, 5, 4, 7, SKIN)             # 裸露手臂
+    front.rect(0, 8, 4, 1, SKIN_D)           # 肘弯阴影
+    front.set(3, 11, SKIN_D)                 # 指缝阴影
 
     back = Face(4, 12)
-    back.rect(0, 0, 4, sleeve_len, COAT)
-    back.rect(0, sleeve_len - 1, 4, 1, ORNG)
-    back.rect(0, sleeve_len, 4, 12 - sleeve_len, SKIN)
+    back.rect(0, 0, 4, 1, NAVY)
+    back.rect(0, 1, 4, 3, WHITE)
+    back.rect(0, 4, 4, 1, WHITE_D)
+    back.rect(0, 5, 4, 7, SKIN)
     back.rect(0, 8, 4, 1, SKIN_D)
 
-    right = Face(4, 12)   # 外侧
-    right.rect(0, 0, 4, sleeve_len, COAT)
-    right.rect(0, sleeve_len - 1, 4, 1, ORNG)
-    right.rect(0, sleeve_len, 4, 12 - sleeve_len, SKIN)
-    right.rect(0, 3, 1, 2, GOLD)
+    outer = Face(4, 12)   # 外侧（正常光照）
+    outer.rect(0, 0, 4, 1, NAVY)
+    outer.rect(0, 1, 4, 3, WHITE)
+    outer.rect(0, 4, 4, 1, WHITE_D)
+    outer.rect(0, 5, 4, 7, SKIN)
 
-    left = Face(4, 12)    # 内侧
-    left.rect(0, 0, 4, sleeve_len, COAT_D)
-    left.rect(0, sleeve_len - 1, 4, 1, ORNG)
-    left.rect(0, sleeve_len, 4, 12 - sleeve_len, SKIN_D)
+    inner = Face(4, 12)    # 内侧（贴身体，整体压暗）
+    inner.rect(0, 0, 4, 1, NAVY)
+    inner.rect(0, 1, 4, 3, WHITE_D)
+    inner.rect(0, 4, 4, 1, WHITE_D)
+    inner.rect(0, 5, 4, 7, SKIN_D)
+
+    side_a = outer if not mirror else inner    # +0 侧
+    side_b = inner if not mirror else outer    # +8 侧
 
     return [
         (top, x0 + 4, y0), (bot, x0 + 8, y0),
-        (right, x0, y0 + 4), (front, x0 + 4, y0 + 4),
-        (left, x0 + 12, y0 + 4), (back, x0 + 8, y0 + 4),
+        (side_a, x0, y0 + 4), (front, x0 + 4, y0 + 4),
+        (side_b, x0 + 8, y0 + 4), (back, x0 + 12, y0 + 4),
     ]
 
 
 # =====================================================================
 # 腿 —— 4x12x4（右腿 (0,16) 区，左腿 (16,48) 区）
+# 裸腿 + 黑色高筒靴（y6 起），靴口红边、前缘红细线
 # =====================================================================
 
 
-def build_leg(x0, y0, boot=True):
+def build_leg(x0, y0, boot_red_col):
+    """boot_red_col: 靴前缘红细线所在列（右腿 0 / 左腿 3，均在外侧）。"""
     top = Face(4, 4)
-    top.rect(0, 0, 4, 4, PANTS)
+    top.rect(0, 0, 4, 4, SKIN)
 
     bot = Face(4, 4)
-    bot.rect(0, 0, 4, 4, BOOT)
-    bot.rect(1, 1, 2, 2, BOOT_D)
+    bot.rect(0, 0, 4, 4, BOOT_D)
+    bot.rect(1, 1, 2, 2, BOOT)
 
     front = Face(4, 12)
-    front.rect(0, 0, 4, 3, PANTS)          # 大腿
-    front.rect(0, 3, 4, 1, COAT_D)         # 衣摆/裙边
-    front.rect(0, 4, 4, 4, PANTS)          # 小腿
-    front.rect(0, 8, 4, 4, BOOT)           # 长靴
-    front.rect(0, 8, 4, 1, BOOT_D)         # 靴口
-    front.set(2, 10, BOOT_D)               # 靴面光泽
+    front.rect(0, 0, 4, 6, SKIN)             # 裸腿（裙下大腿至膝）
+    front.rect(0, 5, 4, 1, SKIN_D)           # 膝下阴影
+    front.rect(0, 6, 4, 1, RED)              # 靴口红边
+    front.rect(0, 7, 4, 5, BOOT)             # 高筒靴
+    front.set(boot_red_col, 7, RED)          # 靴前缘红细线（外侧）
+    for yy in range(8, 12):
+        front.set(boot_red_col, yy, RED)
+    front.rect(0, 11, 4, 1, BOOT_D)          # 鞋底
 
     back = Face(4, 12)
-    back.rect(0, 0, 4, 3, PANTS)
-    back.rect(0, 3, 4, 1, COAT_D)
-    back.rect(0, 4, 4, 4, PANTS)
-    back.rect(0, 8, 4, 4, BOOT)
-    back.rect(0, 8, 4, 1, BOOT_D)
-    back.set(1, 10, BOOT_D)
+    back.rect(0, 0, 4, 6, SKIN)
+    back.rect(0, 5, 4, 1, SKIN_D)
+    back.rect(0, 6, 4, 1, RED)
+    back.rect(0, 7, 4, 5, BOOT)
+    back.rect(0, 11, 4, 1, BOOT_D)
 
     right = Face(4, 12)
-    right.rect(0, 0, 4, 8, PANTS)
-    right.rect(0, 0, 1, 8, PANTS_D)
-    right.rect(0, 8, 4, 4, BOOT)
-    right.rect(0, 8, 4, 1, BOOT_D)
+    right.rect(0, 0, 4, 6, SKIN)
+    right.rect(0, 6, 4, 1, RED)
+    right.rect(0, 7, 4, 5, BOOT)
+    right.rect(0, 11, 4, 1, BOOT_D)
 
     left = Face(4, 12)
-    left.rect(0, 0, 4, 8, PANTS)
-    left.rect(3, 0, 1, 8, PANTS_D)
-    left.rect(0, 8, 4, 4, BOOT)
-    left.rect(0, 8, 4, 1, BOOT_D)
+    left.rect(0, 0, 4, 6, SKIN)
+    left.rect(0, 6, 4, 1, RED)
+    left.rect(0, 7, 4, 5, BOOT)
+    left.rect(0, 11, 4, 1, BOOT_D)
 
     return [
         (top, x0 + 4, y0), (bot, x0 + 8, y0),
         (right, x0, y0 + 4), (front, x0 + 4, y0 + 4),
-        (left, x0 + 12, y0 + 4), (back, x0 + 8, y0 + 4),
+        (left, x0 + 8, y0 + 4), (back, x0 + 12, y0 + 4),
     ]
 
 
@@ -423,11 +426,12 @@ def main():
     faces += build_body()
     faces += build_arm(False, 40, 16)    # 右臂
     faces += build_arm(True, 32, 48)     # 左臂
-    faces += build_leg(0, 16)            # 右腿
-    faces += build_leg(16, 48)           # 左腿
+    faces += build_leg(0, 16, boot_red_col=0)    # 右腿：红细线在前脸外侧列
+    faces += build_leg(16, 48, boot_red_col=3)   # 左腿：红细线在前脸外侧列
 
     for f, _, _ in faces:
-        outline_face(f)
+        if getattr(f, 'do_outline', True):
+            outline_face(f)
 
     canvas = bake(faces)
     out = Image.new('RGBA', (W, H), T)
@@ -435,7 +439,6 @@ def main():
         for x in range(W):
             out.putpixel((x, y), canvas[y][x])
 
-    # 验收：所有绘制像素必须在合法皮肤区域内
     path = 'src/main/resources/assets/piranport/textures/skin/skin_22.png'
     out.save(path)
     print('saved', path)
@@ -447,41 +450,45 @@ def main():
 
 
 def compose_view(im):
-    """把 64x64 皮肤按玩家模型拼出正/背/侧三视图，便于肉眼验收。"""
-    vw, vh = 4 * 8, 12 * 4
-    view = Image.new('RGBA', (vw * 3 + 4, vh), (40, 40, 48, 255))
+    """把 64x64 皮肤按玩家模型拼出正/背/右侧三视图，便于肉眼验收。
+    模型 16x32 像素（classic 4px 臂），4 倍放大。
+    侧视图：角色面朝右，+0 侧面 = 角色右手侧（前缘 x3）。"""
+    S = 4
+    fw = 16 * S                       # 正/背面宽 16px
+    sw = 8 * S                        # 侧面宽 8px（头宽）
+    canvas = Image.new('RGBA', (fw + 4 + fw + 4 + sw, 32 * S), (40, 40, 48, 255))
 
-    def blit(face_box, dest, w, h, scale=4):
-        fw, fh = face_box[2] - face_box[0], face_box[3] - face_box[1]
-        crop = im.crop(face_box).resize((fw * scale, fh * scale), Image.NEAREST)
-        view.alpha_composite(crop, dest)
+    def blit(box, dx, dy):
+        crop = im.crop(box)
+        crop = crop.resize((crop.width * S, crop.height * S), Image.NEAREST)
+        canvas.alpha_composite(crop, (dx, dy))
 
-    # 正面
+    # ---- 正面（角色右手在观察者左） ----
     ox = 0
-    blit((8, 8, 16, 16), (ox + 4 * 4, 0), 8, 8)             # 头
-    blit((20, 20, 28, 32), (ox + 4 * 4, 8 * 4), 8, 12)      # 躯干
-    blit((44, 20, 48, 32), (ox, 8 * 4), 4, 12)              # 右臂
-    blit((36, 52, 40, 64), (ox + 12 * 4, 8 * 4), 4, 12)     # 左臂
-    blit((4, 20, 8, 32), (ox + 4 * 4, 20 * 4), 4, 12)       # 右腿
-    blit((20, 52, 24, 64), (ox + 8 * 4, 20 * 4), 4, 12)     # 左腿
+    blit((8, 8, 16, 16), ox + 4 * S, 0)            # 头前
+    blit((44, 20, 48, 32), ox + 0, 8 * S)          # 右臂前
+    blit((20, 20, 28, 32), ox + 4 * S, 8 * S)      # 躯干前
+    blit((36, 52, 40, 64), ox + 12 * S, 8 * S)     # 左臂前
+    blit((4, 20, 8, 32), ox + 4 * S, 20 * S)       # 右腿前
+    blit((20, 52, 24, 64), ox + 8 * S, 20 * S)     # 左腿前
 
-    # 背面
-    ox = vw + 2
-    blit((24, 8, 32, 16), (ox + 4 * 4, 0), 8, 8)
-    blit((32, 20, 40, 32), (ox + 4 * 4, 8 * 4), 8, 12)
-    blit((40, 20, 44, 32), (ox, 8 * 4), 4, 12)
-    blit((32, 52, 36, 64), (ox + 12 * 4, 8 * 4), 4, 12)
-    blit((8, 20, 12, 32), (ox + 4 * 4, 20 * 4), 4, 12)
-    blit((16, 52, 20, 64), (ox + 8 * 4, 20 * 4), 4, 12)
+    # ---- 背面 ----
+    ox = fw + 4
+    blit((24, 8, 32, 16), ox + 4 * S, 0)           # 头后
+    blit((52, 20, 56, 32), ox + 0, 8 * S)          # 右臂后 (+12)
+    blit((32, 20, 40, 32), ox + 4 * S, 8 * S)      # 躯干后
+    blit((44, 52, 48, 64), ox + 12 * S, 8 * S)     # 左臂后 (+12)
+    blit((12, 20, 16, 32), ox + 4 * S, 20 * S)     # 右腿后
+    blit((28, 52, 32, 64), ox + 8 * S, 20 * S)     # 左腿后
 
-    # 侧面（右）
-    ox = (vw + 2) * 2
-    blit((0, 8, 8, 16), (ox + 4 * 4, 0), 8, 8)
-    blit((16, 20, 20, 32), (ox + 4 * 4, 8 * 4), 4, 12)
-    blit((0, 20, 4, 32), (ox, 8 * 4), 4, 12)
-    blit((0, 52, 4, 64), (ox + 4 * 4, 20 * 4), 4, 12)
+    # ---- 右侧面（角色面朝右：头/躯干/右臂外侧/右腿） ----
+    ox = fw + 4 + fw + 4
+    blit((0, 8, 8, 16), ox + 0, 0)                 # 头右面（前缘 x7 靠右）
+    blit((16, 20, 20, 32), ox + 0, 8 * S)          # 躯干右面
+    blit((48, 20, 52, 32), ox + 4 * S, 8 * S)      # 右臂外侧 (+8)
+    blit((8, 20, 12, 32), ox + 0, 20 * S)          # 右腿外侧 (+8)
 
-    return view
+    return canvas
 
 
 if __name__ == '__main__':

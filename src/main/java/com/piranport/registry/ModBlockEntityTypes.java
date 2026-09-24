@@ -95,7 +95,8 @@ public class ModBlockEntityTypes {
                     BlockEntityType.Builder.of(PlaceableFoodBlockEntity::new,
                             ModBlocks.PLATE_FOOD.get(),
                             ModBlocks.BOWL_FOOD.get(),
-                            ModBlocks.CAKE_FOOD.get())
+                            ModBlocks.CAKE_FOOD.get(),
+                            ModBlocks.TOAST_BREAD.get())
                             .build(null));
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<SmokeScreenBlockEntity>> SMOKE_SCREEN =

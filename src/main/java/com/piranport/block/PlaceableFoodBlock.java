@@ -77,4 +77,14 @@ public class PlaceableFoodBlock extends BaseEntityBlock {
         @Override public MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }
         public Cake(BlockBehaviour.Properties props) { super(Block.box(1, 0, 1, 15, 8, 15), props); }
     }
+
+    /**
+     * 专属模型食物方块（吐司面包）：模型自带盘+食物本体，碰撞箱贴合模型外框。
+     * 与三容器的区别：不依赖浮空物品图标展示内容物，渲染器跳过叠影（见 PlaceableFoodRenderer）。
+     */
+    public static class Toast extends PlaceableFoodBlock {
+        public static final MapCodec<Toast> CODEC = simpleCodec(Toast::new);
+        @Override public MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }
+        public Toast(BlockBehaviour.Properties props) { super(Block.box(1, 0, 1, 15, 6, 15), props); }
+    }
 }

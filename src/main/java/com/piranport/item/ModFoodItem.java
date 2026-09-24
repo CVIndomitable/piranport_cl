@@ -34,15 +34,19 @@ public class ModFoodItem extends Item {
                 BlockPos target = ctx.getClickedPos().above();
                 if (level.getBlockState(target).canBeReplaced()) {
                     if (!level.isClientSide) {
-                        Block block = switch (info.containerType()) {
-                            case "bowl" -> ModBlocks.BOWL_FOOD.get();
-                            case "cake" -> ModBlocks.CAKE_FOOD.get();
-                            default -> ModBlocks.PLATE_FOOD.get();
-                        };
+                        ResourceLocation id = BuiltInRegistries.ITEM.getKey(held.getItem());
+                        // 同名专属方块优先（吐司面包等自带模型的展示方块），
+                        // 否则按容器类型落到通用盘/碗/蛋糕台 — 依据：策划决策/食物/08-可放置食物方块.md
+                        Block block = BuiltInRegistries.BLOCK.getOptional(id)
+                                .filter(b -> b instanceof PlaceableFoodBlock)
+                                .orElseGet(() -> switch (info.containerType()) {
+                                    case "bowl" -> ModBlocks.BOWL_FOOD.get();
+                                    case "cake" -> ModBlocks.CAKE_FOOD.get();
+                                    default -> ModBlocks.PLATE_FOOD.get();
+                                });
                         level.setBlockAndUpdate(target, block.defaultBlockState());
                         BlockEntity be = level.getBlockEntity(target);
                         if (be instanceof PlaceableFoodBlockEntity foodBE) {
-                            ResourceLocation id = BuiltInRegistries.ITEM.getKey(held.getItem());
                             // 依据：策划决策/食物/09-食物方块饱食度加成.md
                             // 物品 PlaceableInfo.bonusMultiplier 可覆盖默认 1.5x
                             foodBE.initialize(id, info.servings(), info.bonusMultiplier());

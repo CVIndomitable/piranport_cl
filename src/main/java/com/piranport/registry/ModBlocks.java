@@ -262,6 +262,10 @@ public class ModBlocks {
             BLOCKS.register("bowl_food", () -> new PlaceableFoodBlock.Bowl(foodBlockProps()));
     public static final DeferredBlock<PlaceableFoodBlock.Cake> CAKE_FOOD =
             BLOCKS.register("cake_food", () -> new PlaceableFoodBlock.Cake(foodBlockProps()));
+    // 吐司面包专属食物方块（自带模型）。与物品同 id 不冲突——方块/物品分属独立注册表；
+    // 放置时同名方块优先于通用容器，落位逻辑见 ModFoodItem.useOn
+    public static final DeferredBlock<PlaceableFoodBlock.Toast> TOAST_BREAD =
+            BLOCKS.register("toast_bread", () -> new PlaceableFoodBlock.Toast(foodBlockProps()));
 
     // ===== Reload Facility =====
     public static final DeferredBlock<ReloadFacilityBlock> RELOAD_FACILITY =

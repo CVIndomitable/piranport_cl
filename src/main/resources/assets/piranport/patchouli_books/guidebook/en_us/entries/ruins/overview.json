@@ -1,7 +1,7 @@
 {
   "name": "piranport.book.ruins.overview",
   "category": "piranport:8_ruins",
-  "icon": "piranport:abyssal_portal_frame",
+  "icon": "piranport:abyssal_report",
   "sortnum": 0,
   "pages": [
     {

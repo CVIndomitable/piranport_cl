@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * <ul>
  *   <li>blockstate 必须覆盖 facing × has_key 全 8 种组合（钥匙插没插外观要有区别）</li>
  *   <li>两个模型引用的贴图必须真实存在于 assets 目录</li>
- *   <li>带钥匙模型必须是空模型的子模型（只追加钥匙 element，不重复台面几何）</li>
+ *   <li>带钥匙状态必须叠加空台面模型和独立的钥匙模型，避免子模型覆盖台面几何</li>
  * </ul>
  *
  * <p>只读资源文件、不碰方块注册表，因此不会触发 MC 的 bootstrap（见
@@ -55,13 +55,17 @@ class DungeonLecternModelTest {
                 "blockstate 缺少变体（会导致该朝向下方块不可见）：" + missing);
         assertEquals(8, variants.size(), "讲台应只有 facing × has_key 共 8 个变体");
 
-        // 空 / 有钥匙必须指向不同模型，否则"是否放入钥匙要有区别"就没实现
+        // 空状态直接使用底座；有钥匙状态必须同时使用底座和钥匙叠加层。
         String emptyModel = variants.getAsJsonObject("facing=north,has_key=false")
                 .get("model").getAsString();
-        String keyedModel = variants.getAsJsonObject("facing=north,has_key=true")
-                .get("model").getAsString();
-        assertTrue(!emptyModel.equals(keyedModel),
-                "has_key=true 必须用与 has_key=false 不同的模型");
+        JsonArray keyedModels = variants.getAsJsonArray("facing=north,has_key=true");
+        assertEquals(2, keyedModels.size(),
+                "has_key=true 必须由底座模型和钥匙模型两层叠加");
+        assertEquals(emptyModel, keyedModels.get(0).getAsJsonObject().get("model").getAsString(),
+                "有钥匙状态必须保留讲台底座");
+        assertEquals("piranport:block/dungeon_lectern_key",
+                keyedModels.get(1).getAsJsonObject().get("model").getAsString(),
+                "有钥匙状态必须追加独立钥匙模型");
     }
 
     @Test
@@ -89,17 +93,16 @@ class DungeonLecternModelTest {
     }
 
     @Test
-    void keyedModelInheritsDeskGeometryAndOnlyAddsTheKey() throws IOException {
+    void keyedModelOwnsOnlyTheKeyGeometry() throws IOException {
         JsonObject keyed = readJson(ASSETS + "/models/block/dungeon_lectern_key.json");
-        assertEquals("piranport:block/dungeon_lectern", keyed.get("parent").getAsString(),
-                "带钥匙模型应是空讲台的子模型，避免台面几何重复维护");
+        assertEquals("minecraft:block/block", keyed.get("parent").getAsString(),
+                "钥匙叠加层必须使用基础 block 父模型，避免覆盖底座模型");
 
         JsonObject empty = readJson(ASSETS + "/models/block/dungeon_lectern.json");
         int deskElements = empty.getAsJsonArray("elements").size();
         int keyElements = keyed.getAsJsonArray("elements").size();
         assertEquals(1, keyElements, "子模型只应追加 1 个钥匙 element");
 
-        // 子模型不应重复台面 element，否则插钥匙时会与父模型 z-fighting
         assertTrue(deskElements > 1, "空模型应有多个台面 element");
 
         // 钥匙必须有独立贴图，否则会和台面糊在一起看不出区别

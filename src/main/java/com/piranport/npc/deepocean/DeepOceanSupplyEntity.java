@@ -1,5 +1,6 @@
 package com.piranport.npc.deepocean;
 
+import com.piranport.item.KeyFragmentItem;
 import com.piranport.npc.ai.goal.FleetAlertGoal;
 import com.piranport.npc.ai.goal.IdleWanderGoal;
 import com.piranport.registry.ModItems;
@@ -121,7 +122,7 @@ public class DeepOceanSupplyEntity extends AbstractDeepOceanEntity {
             return InteractionResult.SUCCESS;
         }
 
-        if (isChaosShard(held)) {
+        if (isKeyFragment(held)) {
             if (!player.getAbilities().instabuild) {
                 held.shrink(1);
             }
@@ -170,16 +171,16 @@ public class DeepOceanSupplyEntity extends AbstractDeepOceanEntity {
         }
     }
 
-    private boolean isChaosShard(ItemStack stack) {
-        return stack.is(ModItems.CHAOS_SHARD_ALPHA.get())
-                || stack.is(ModItems.CHAOS_SHARD_BETA.get())
-                || stack.is(ModItems.CHAOS_SHARD_GAMMA.get())
-                || stack.is(ModItems.CHAOS_SHARD_DELTA.get())
-                || stack.is(ModItems.CHAOS_SHARD_EPSILON.get())
-                || stack.is(ModItems.CHAOS_SHARD_ZETA.get())
-                || stack.is(ModItems.CHAOS_SHARD_ETA.get())
-                || stack.is(ModItems.CHAOS_SHARD_THETA.get())
-                || stack.is(ModItems.CHAOS_SHARD_IOTA.get());
+    /**
+     * 判断手持物是否为钥匙碎片。
+     *
+     * <p>原先这里枚举的是 9 种无序意志碎片（α~ι）。碎片体系收敛为单一通用货币
+     * 「钥匙碎片」后，改为按类型判定 {@link KeyFragmentItem}，章节由物品自身携带
+     * （{@link KeyFragmentItem#getChapterNumber()}），
+     * 与 {@code ChapterKeyRecipe} 的判定方式保持一致。</p>
+     */
+    private boolean isKeyFragment(ItemStack stack) {
+        return stack.getItem() instanceof KeyFragmentItem;
     }
 
     private boolean isNationalFlag(ItemStack stack) {

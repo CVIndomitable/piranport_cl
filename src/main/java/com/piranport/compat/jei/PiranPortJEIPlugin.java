@@ -3,6 +3,7 @@ package com.piranport.compat.jei;
 import com.piranport.PiranPort;
 import com.piranport.ammo.AmmoCategory;
 import com.piranport.ammo.AmmoRecipeRegistry;
+import com.piranport.dungeon.key.DungeonKeyItem;
 import com.piranport.menu.CookingPotMenu;
 import com.piranport.menu.StoneMillMenu;
 import com.piranport.recipe.CookingPotRecipe;
@@ -31,6 +32,18 @@ public class PiranPortJEIPlugin implements IModPlugin {
 
     @Override
     public ResourceLocation getPluginUid() { return UID; }
+
+    @Override
+    public void registerItemSubtypes(mezz.jei.api.registration.ISubtypeRegistration registration) {
+        // 章节写在 dungeon_stage_id DataComponent 中；没有子类型解释器时，JEI
+        // 会把七把章节钥匙和普通钥匙都按同一个 dungeon_key 去重。
+        registration.registerSubtypeInterpreter(
+                com.piranport.registry.ModItems.DUNGEON_KEY.get(),
+                (stack, context) -> {
+                    String stageId = DungeonKeyItem.getStageId(stack);
+                    return stageId.isEmpty() ? "unassigned" : stageId;
+                });
+    }
 
     @Override
     public void registerCategories(IRecipeCategoryRegistration registration) {

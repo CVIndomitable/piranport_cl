@@ -340,7 +340,7 @@ public abstract class AbstractDeepOceanEntity extends Monster {
             spawnAtLocation(new ItemStack(ModItems.FUEL.get(), 2));
             spawnAtLocation(new ItemStack(ModItems.RAW_ALUMINUM.get(), 2 + random.nextInt(3)));
             if (random.nextFloat() < 0.3f) {
-                spawnAtLocation(new ItemStack(ModItems.CHAOS_SHARD_ALPHA.get(), 1));
+                spawnKeyFragment(level);
             }
         } else if (this instanceof DeepOceanBattleshipEntity) {
             spawnAtLocation(new ItemStack(Items.IRON_INGOT, 4 + random.nextInt(3)));
@@ -348,7 +348,7 @@ public abstract class AbstractDeepOceanEntity extends Monster {
             spawnAtLocation(new ItemStack(ModItems.FUEL.get(), 2 + random.nextInt(2)));
             spawnAtLocation(new ItemStack(ModItems.RAW_ALUMINUM.get(), 3 + random.nextInt(4)));
             if (random.nextFloat() < 0.4f) {
-                spawnAtLocation(new ItemStack(ModItems.CHAOS_SHARD_BETA.get(), 1));
+                spawnKeyFragment(level);
             }
         } else if (this instanceof DeepOceanLightCarrierEntity) {
             spawnAtLocation(new ItemStack(Items.IRON_INGOT, 3 + random.nextInt(2)));
@@ -356,7 +356,7 @@ public abstract class AbstractDeepOceanEntity extends Monster {
             spawnAtLocation(new ItemStack(ModItems.AVIATION_FUEL.get(), 2 + random.nextInt(2)));
             spawnAtLocation(new ItemStack(ModItems.RAW_ALUMINUM.get(), 2 + random.nextInt(3)));
             if (random.nextFloat() < 0.3f) {
-                spawnAtLocation(new ItemStack(ModItems.CHAOS_SHARD_GAMMA.get(), 1));
+                spawnKeyFragment(level);
             }
         } else if (this instanceof DeepOceanCarrierEntity) {
             spawnAtLocation(new ItemStack(Items.IRON_INGOT, 5 + random.nextInt(3)));
@@ -364,19 +364,19 @@ public abstract class AbstractDeepOceanEntity extends Monster {
             spawnAtLocation(new ItemStack(ModItems.AVIATION_FUEL.get(), 3 + random.nextInt(3)));
             spawnAtLocation(new ItemStack(ModItems.RAW_ALUMINUM.get(), 4 + random.nextInt(5)));
             if (random.nextFloat() < 0.5f) {
-                spawnAtLocation(new ItemStack(ModItems.CHAOS_SHARD_DELTA.get(), 1));
+                spawnKeyFragment(level);
             }
         } else if (this instanceof DeepOceanSubmarineEntity) {
             spawnAtLocation(new ItemStack(Items.IRON_INGOT, 2 + random.nextInt(2)));
             spawnAtLocation(new ItemStack(ModItems.FUEL.get(), 1 + random.nextInt(2)));
-            spawnAtLocation(new ItemStack(ModItems.CHAOS_SHARD_EPSILON.get(), 1));
+            spawnKeyFragment(level);
         } else if (this instanceof DeepOceanBossEntity) {
             spawnAtLocation(new ItemStack(Items.IRON_INGOT, 5 + random.nextInt(4)));
             spawnAtLocation(new ItemStack(Items.GUNPOWDER, 4 + random.nextInt(3)));
             spawnAtLocation(new ItemStack(ModItems.FUEL.get(), 3 + random.nextInt(3)));
             spawnAtLocation(new ItemStack(ModItems.RAW_ALUMINUM.get(), 4 + random.nextInt(5)));
             if (random.nextFloat() < 0.6f) {
-                spawnAtLocation(new ItemStack(ModItems.CHAOS_SHARD_DELTA.get(), 1));
+                spawnKeyFragment(level);
             }
             if (random.nextFloat() < 0.15f) {
                 spawnAtLocation(new ItemStack(ModItems.ELITE_DAMAGE_CONTROL.get(), 1));
@@ -589,34 +589,43 @@ public abstract class AbstractDeepOceanEntity extends Monster {
     // ===== 钥匙三源：钥匙碎片掉落 =====
     private void dropKeyFragment(ServerLevel level) {
         if (random.nextFloat() > 0.05f) return; // 5% 概率
+        spawnKeyFragment(level);
+    }
 
+    /**
+     * 按击杀者进度掉落 1 个钥匙碎片（章节 ≤ 击杀者已通关的最高章节）。
+     *
+     * <p>原先各型号深海舰掉落的是 9 种无序意志碎片（α~ι）中的某一种，
+     * 现已统一收敛为钥匙碎片这一种通用货币；具体章节仍按玩家进度推导，
+     * 与 {@link #dropKeyFragment} 复用同一套逻辑，不另造分支。</p>
+     */
+    protected void spawnKeyFragment(ServerLevel level) {
         // 获取击杀者的最高通关章节（仅掉落 ≤ 玩家进度的章节碎片）
         LivingEntity killer = getKillCredit();
-        if (killer instanceof ServerPlayer player) {
-            DungeonSavedData savedData = DungeonSavedData.get(level);
-            Set<String> cleared = savedData.getFirstClearedStages(player.getUUID());
-            int maxChapter = 0;
-            for (String stageId : cleared) {
-                int ch = parseChapterFromStageId(stageId);
-                if (ch > maxChapter) maxChapter = ch;
-            }
-            // 玩家未通关任何章节时，掉落 Ch1 碎片
-            int dropChapter = Math.max(1, maxChapter);
-            // 选择具体章节（随机但 ≤ maxChapter）
-            int targetCh = 1 + random.nextInt(Math.max(1, dropChapter));
-            DeferredItem<KeyFragmentItem> fragmentItem = switch (targetCh) {
-                case 1 -> ModItems.KEY_FRAGMENT_CH1;
-                case 2 -> ModItems.KEY_FRAGMENT_CH2;
-                case 3 -> ModItems.KEY_FRAGMENT_CH3;
-                case 4 -> ModItems.KEY_FRAGMENT_CH4;
-                case 5 -> ModItems.KEY_FRAGMENT_CH5;
-                case 6 -> ModItems.KEY_FRAGMENT_CH6;
-                case 7 -> ModItems.KEY_FRAGMENT_CH7;
-                default -> null;
-            };
-            if (fragmentItem != null) {
-                spawnAtLocation(new ItemStack(fragmentItem.get(), 1));
-            }
+        if (!(killer instanceof ServerPlayer player)) return;
+        DungeonSavedData savedData = DungeonSavedData.get(level);
+        Set<String> cleared = savedData.getFirstClearedStages(player.getUUID());
+        int maxChapter = 0;
+        for (String stageId : cleared) {
+            int ch = parseChapterFromStageId(stageId);
+            if (ch > maxChapter) maxChapter = ch;
+        }
+        // 玩家未通关任何章节时，掉落 Ch1 碎片
+        int dropChapter = Math.max(1, maxChapter);
+        // 选择具体章节（随机但 ≤ maxChapter）
+        int targetCh = 1 + random.nextInt(Math.max(1, dropChapter));
+        DeferredItem<KeyFragmentItem> fragmentItem = switch (targetCh) {
+            case 1 -> ModItems.KEY_FRAGMENT_CH1;
+            case 2 -> ModItems.KEY_FRAGMENT_CH2;
+            case 3 -> ModItems.KEY_FRAGMENT_CH3;
+            case 4 -> ModItems.KEY_FRAGMENT_CH4;
+            case 5 -> ModItems.KEY_FRAGMENT_CH5;
+            case 6 -> ModItems.KEY_FRAGMENT_CH6;
+            case 7 -> ModItems.KEY_FRAGMENT_CH7;
+            default -> null;
+        };
+        if (fragmentItem != null) {
+            spawnAtLocation(new ItemStack(fragmentItem.get(), 1));
         }
     }
 

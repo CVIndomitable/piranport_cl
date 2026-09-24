@@ -1,6 +1,7 @@
 package com.piranport.npc.shipgirl;
 
 import com.piranport.advancement.ModAdvancements;
+import com.piranport.item.KeyFragmentItem;
 import com.piranport.npc.deepocean.AbstractDeepOceanEntity;
 import com.piranport.registry.ModItems;
 import java.util.EnumSet;
@@ -402,14 +403,14 @@ public class ShipGirlEntity extends PathfinderMob implements Merchant {
                 handleAbyssalReport(player, held);
             } else if (held.is(ModItems.REPAIR_KIT.get())) {
                 handleRepairKit(player, held);
-            } else if (held.is(ModItems.PORTAL_ACTIVATION_CORE.get())) {
-                handlePortalCore(player, held);
+            } else if (held.is(ModItems.DUNGEON_KEY.get())) {
+                handleDungeonKey(player, held);
             } else if (held.is(ModItems.EXP_SHELL.get())) {
                 handleDrillBranch(player, held);
             } else if (held.is(ModItems.AVIATION_FUEL.get())) {
                 handleAirCoverBranch(player, held);
-            } else if (isChaosShard(held)) {
-                handleChaosShard(player, held);
+            } else if (isKeyFragment(held)) {
+                handleKeyFragment(player, held);
             } else if (isNationalFlag(held)) {
                 handleNationalFlag(player, held);
             } else if (held.is(ModItems.FUEL.get())) {
@@ -599,7 +600,11 @@ public class ShipGirlEntity extends PathfinderMob implements Merchant {
         playQuestFeedback(player, ParticleTypes.HAPPY_VILLAGER, 18, 1.25f);
     }
 
-    private void handlePortalCore(Player player, ItemStack held) {
+    /**
+     * 交付副本钥匙完成校准：QuestStage 状态机里唯一把 {@code questStage} 推到 COMPLETE 的入口，
+     * 也是所有 FollowUpStage 分支的闸门（见 isReadyForFollowUp）。消耗品口径为副本钥匙。
+     */
+    private void handleDungeonKey(Player player, ItemStack held) {
         if (questStage != QuestStage.CALIBRATION) {
             player.sendSystemMessage(Component.translatable(
                     "message.piranport.ship_girl_quest_not_ready",
@@ -643,9 +648,9 @@ public class ShipGirlEntity extends PathfinderMob implements Merchant {
         playQuestFeedback(player, ParticleTypes.SOUL_FIRE_FLAME, 30, 1.2f);
     }
 
-    private void handleChaosShard(Player player, ItemStack held) {
+    private void handleKeyFragment(Player player, ItemStack held) {
         if (isBranchReady()) {
-            handleShardResearchBranch(player, held);
+            handleFragmentResearchBranch(player, held);
             return;
         }
         if (!isReadyForFollowUp(player, FollowUpStage.SHARD_STABILIZATION)) {
@@ -783,7 +788,7 @@ public class ShipGirlEntity extends PathfinderMob implements Merchant {
         playQuestFeedback(player, ParticleTypes.CLOUD, first ? 30 : 12, 1.55f);
     }
 
-    private void handleShardResearchBranch(Player player, ItemStack held) {
+    private void handleFragmentResearchBranch(Player player, ItemStack held) {
         boolean first = markBranchCompleted(BRANCH_SHARD_RESEARCH);
         consumeOne(player, held);
         giveOrDrop(player, new ItemStack(ModItems.RAW_ALUMINUM.get(), first ? 16 : 6));
@@ -875,16 +880,16 @@ public class ShipGirlEntity extends PathfinderMob implements Merchant {
         return Component.translatable(key);
     }
 
-    private boolean isChaosShard(ItemStack stack) {
-        return stack.is(ModItems.CHAOS_SHARD_ALPHA.get())
-                || stack.is(ModItems.CHAOS_SHARD_BETA.get())
-                || stack.is(ModItems.CHAOS_SHARD_GAMMA.get())
-                || stack.is(ModItems.CHAOS_SHARD_DELTA.get())
-                || stack.is(ModItems.CHAOS_SHARD_EPSILON.get())
-                || stack.is(ModItems.CHAOS_SHARD_ZETA.get())
-                || stack.is(ModItems.CHAOS_SHARD_ETA.get())
-                || stack.is(ModItems.CHAOS_SHARD_THETA.get())
-                || stack.is(ModItems.CHAOS_SHARD_IOTA.get());
+    /**
+     * 判断手持物是否为钥匙碎片。
+     *
+     * <p>原先这里枚举的是 9 种无序意志碎片（α~ι）。碎片体系收敛为单一通用货币
+     * 「钥匙碎片」后，改为按类型判定 {@link KeyFragmentItem}，章节由物品自身携带
+     * （{@link KeyFragmentItem#getChapterNumber()}），
+     * 与 {@code ChapterKeyRecipe} 的判定方式保持一致。</p>
+     */
+    private boolean isKeyFragment(ItemStack stack) {
+        return stack.getItem() instanceof KeyFragmentItem;
     }
 
     private boolean isNationalFlag(ItemStack stack) {
@@ -1035,7 +1040,7 @@ public class ShipGirlEntity extends PathfinderMob implements Merchant {
                 new ItemStack(ModItems.FLAG_J.get(), 1),
                 4, 6, 0.05f));
         result.add(new MerchantOffer(
-                new ItemCost(ModItems.PORTAL_ACTIVATION_CORE.get(), 1),
+                new ItemCost(ModItems.DUNGEON_KEY.get(), 1),
                 Optional.of(new ItemCost(ModItems.ABYSSAL_REPORT.get(), 1)),
                 new ItemStack(ModItems.SHIP_GIRL_CONTRACT.get(), 1),
                 2, 12, 0.05f));

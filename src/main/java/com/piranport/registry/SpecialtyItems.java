@@ -374,50 +374,6 @@ public final class SpecialtyItems {
                     () -> new AbyssalReportItem(new Item.Properties().stacksTo(16),
                             "tooltip.piranport.abyssal_report"));
 
-    // Chaos Shards (无序意志碎片 α~ι)
-    public static final DeferredItem<TooltipItem> CHAOS_SHARD_ALPHA =
-            ITEMS.register("chaos_shard_alpha",
-                    () -> new TooltipItem(new Item.Properties(),
-                            "tooltip.piranport.chaos_shard"));
-    public static final DeferredItem<TooltipItem> CHAOS_SHARD_BETA =
-            ITEMS.register("chaos_shard_beta",
-                    () -> new TooltipItem(new Item.Properties(),
-                            "tooltip.piranport.chaos_shard"));
-    public static final DeferredItem<TooltipItem> CHAOS_SHARD_GAMMA =
-            ITEMS.register("chaos_shard_gamma",
-                    () -> new TooltipItem(new Item.Properties(),
-                            "tooltip.piranport.chaos_shard"));
-    public static final DeferredItem<TooltipItem> CHAOS_SHARD_DELTA =
-            ITEMS.register("chaos_shard_delta",
-                    () -> new TooltipItem(new Item.Properties(),
-                            "tooltip.piranport.chaos_shard"));
-    public static final DeferredItem<TooltipItem> CHAOS_SHARD_EPSILON =
-            ITEMS.register("chaos_shard_epsilon",
-                    () -> new TooltipItem(new Item.Properties(),
-                            "tooltip.piranport.chaos_shard"));
-    public static final DeferredItem<TooltipItem> CHAOS_SHARD_ZETA =
-            ITEMS.register("chaos_shard_zeta",
-                    () -> new TooltipItem(new Item.Properties(),
-                            "tooltip.piranport.chaos_shard"));
-    public static final DeferredItem<TooltipItem> CHAOS_SHARD_ETA =
-            ITEMS.register("chaos_shard_eta",
-                    () -> new TooltipItem(new Item.Properties(),
-                            "tooltip.piranport.chaos_shard"));
-    public static final DeferredItem<TooltipItem> CHAOS_SHARD_THETA =
-            ITEMS.register("chaos_shard_theta",
-                    () -> new TooltipItem(new Item.Properties(),
-                            "tooltip.piranport.chaos_shard"));
-    public static final DeferredItem<TooltipItem> CHAOS_SHARD_IOTA =
-            ITEMS.register("chaos_shard_iota",
-                    () -> new TooltipItem(new Item.Properties(),
-                            "tooltip.piranport.chaos_shard"));
-
-    // Portal Activation Core (传送门激活核心)
-    public static final DeferredItem<TooltipItem> PORTAL_ACTIVATION_CORE =
-            ITEMS.register("portal_activation_core",
-                    () -> new TooltipItem(new Item.Properties(),
-                            "tooltip.piranport.portal_activation_core"));
-
     // National Flags (各国国旗)
     public static final DeferredItem<TooltipItem> FLAG_J =
             ITEMS.register("flag_j",

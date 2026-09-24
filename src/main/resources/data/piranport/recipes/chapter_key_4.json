@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": ["F F", " M ", "F F"],
+  "key": {
+    "F": { "item": "piranport:key_fragment_ch4" },
+    "M": { "item": "piranport:deploy_medal_ch3" }
+  },
+  "result": {
+    "id": "piranport:dungeon_key",
+    "count": 1,
+    "components": { "piranport:dungeon_stage_id": "chapter_4" }
+  }
+}

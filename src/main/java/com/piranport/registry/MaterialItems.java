@@ -34,8 +34,6 @@ public final class MaterialItems {
             ITEMS.registerSimpleBlockItem(ModBlocks.SALT_CHIP);
 
     // ===== Abyssal Blocks (v0.0.11) =====
-    public static final DeferredItem<BlockItem> ABYSSAL_PORTAL_FRAME =
-            ITEMS.registerSimpleBlockItem(ModBlocks.ABYSSAL_PORTAL_FRAME);
     public static final DeferredItem<BlockItem> ABYSSAL_SPAWNER =
             ITEMS.registerSimpleBlockItem(ModBlocks.ABYSSAL_SPAWNER);
     public static final DeferredItem<BlockItem> ABYSSAL_SEEP =

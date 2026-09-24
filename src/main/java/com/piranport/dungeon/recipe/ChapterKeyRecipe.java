@@ -69,7 +69,9 @@ public class ChapterKeyRecipe extends CustomRecipe {
 
     @Override
     public boolean canCraftInDimensions(int width, int height) {
-        return width * height >= 5;
+        // 第一章只需要四个碎片，必须允许在 2x2 合成栏中制作；后续章节
+        // 额外的通关纪念章会自然要求 3x3 合成栏。
+        return width >= 2 && height >= 2;
     }
 
     /**

@@ -22,9 +22,9 @@ public class ModCreativeTabs {
             CREATIVE_TABS.register("core_tab", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.piranport.core"))
                     // 链式排序：皮兰港 13 个标签页从 core_tab 起首尾相接，整串挂在原版最后一个
-                    // 标签（INVENTORY=物品栏）之后，避免被原版标签夹在中间。
-                    // 其余 12 个各自 withTabsBefore 到本模组的上一个标签，见下。
-                    .withTabsBefore(CreativeModeTabs.INVENTORY)
+                    // 原版普通标签的最后一个是 SPAWN_EGGS；从这里接入，避免被原版标签夹在中间。
+                    // 其余 12 个各自 withTabsBefore 接到本模组的上一个标签，见下。
+                    .withTabsBefore(CreativeModeTabs.SPAWN_EGGS)
                     .icon(() -> ModItems.MEDIUM_SHIP_CORE.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
                         output.accept(ModItems.SMALL_SHIP_CORE.get());
@@ -468,6 +468,11 @@ public class ModCreativeTabs {
                         output.accept(ModItems.UNICORN_HARP.get());
                         output.accept(ModItems.GUIDEBOOK.get());
                         output.accept(ModItems.DUNGEON_KEY.get());
+                        for (int chapter = 1; chapter <= 7; chapter++) {
+                            ItemStack chapterKey = new ItemStack(ModItems.DUNGEON_KEY.get());
+                            chapterKey.set(ModDataComponents.DUNGEON_STAGE_ID.get(), "chapter_" + chapter);
+                            output.accept(chapterKey);
+                        }
                         output.accept(ModItems.TOWN_SCROLL.get());
                         output.accept(ModItems.ELITE_DAMAGE_CONTROL.get());
                         output.accept(ModItems.DAMAGE_CONTROL.get());
@@ -527,20 +532,18 @@ public class ModCreativeTabs {
                         output.accept(ModItems.B25_MODEL.get());
                     }).build());
 
-    // ===== 遗迹 — 传送门/碎片/国旗/档案 =====
+    // ===== 遗迹 — 深渊方块/碎片/国旗/档案 =====
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> RUINS_TAB =
             CREATIVE_TABS.register("ruins_tab", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.piranport.ruins"))
                     .withTabsBefore(ResourceKey.create(Registries.CREATIVE_MODE_TAB, PiranPort.modId("decoration_tab")))  // 链式排序：紧接 decoration_tab
-                    .icon(() -> ModItems.ABYSSAL_PORTAL_FRAME.get().getDefaultInstance())
+                    .icon(() -> ModItems.ABYSSAL_REPORT.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
                         // Blocks
-                        output.accept(ModItems.ABYSSAL_PORTAL_FRAME.get());
                         output.accept(ModItems.ABYSSAL_SPAWNER.get());
                         output.accept(ModItems.ABYSSAL_SEEP.get());
                         // Story and progression reward items
                         output.accept(ModItems.ABYSSAL_REPORT.get());
-                        output.accept(ModItems.PORTAL_ACTIVATION_CORE.get());
                         output.accept(ModItems.EXP_SHELL.get());
                         // Key Fragments（钥匙碎片，ch1~ch7）
                         output.accept(ModItems.KEY_FRAGMENT_CH1.get());
@@ -550,16 +553,6 @@ public class ModCreativeTabs {
                         output.accept(ModItems.KEY_FRAGMENT_CH5.get());
                         output.accept(ModItems.KEY_FRAGMENT_CH6.get());
                         output.accept(ModItems.KEY_FRAGMENT_CH7.get());
-                        // Chaos Shards
-                        output.accept(ModItems.CHAOS_SHARD_ALPHA.get());
-                        output.accept(ModItems.CHAOS_SHARD_BETA.get());
-                        output.accept(ModItems.CHAOS_SHARD_GAMMA.get());
-                        output.accept(ModItems.CHAOS_SHARD_DELTA.get());
-                        output.accept(ModItems.CHAOS_SHARD_EPSILON.get());
-                        output.accept(ModItems.CHAOS_SHARD_ZETA.get());
-                        output.accept(ModItems.CHAOS_SHARD_ETA.get());
-                        output.accept(ModItems.CHAOS_SHARD_THETA.get());
-                        output.accept(ModItems.CHAOS_SHARD_IOTA.get());
                         // National Flags
                         output.accept(ModItems.FLAG_J.get());
                         output.accept(ModItems.FLAG_E.get());

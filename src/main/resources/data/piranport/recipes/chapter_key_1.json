@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": ["FF", "FF"],
+  "key": {
+    "F": { "item": "piranport:key_fragment_ch1" }
+  },
+  "result": {
+    "id": "piranport:dungeon_key",
+    "count": 1,
+    "components": { "piranport:dungeon_stage_id": "chapter_1" }
+  }
+}

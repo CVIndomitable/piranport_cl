@@ -59,7 +59,6 @@
     {
       "rolls": 1,
       "entries": [
-        { "type": "minecraft:item", "name": "piranport:portal_activation_core", "weight": 3 },
         { "type": "minecraft:empty", "weight": 17 }
       ]
     }

@@ -74,7 +74,7 @@ public class PortalStructureHelper {
                             origin.getZ() + facing.getStepZ() * x + right.getStepZ() * z);
                     BlockState state = level.getBlockState(mutable);
                     if (isInOpening(x, y, z)) {
-                        // 甲：开口必须是空气（不接受旧的 ABYSSAL_PORTAL 填充口径）
+                        // 甲：开口必须是空气，不允许任何填充方块
                         if (!state.isAir()) return false;
                     } else if (!state.is(com.piranport.registry.ModBlocks.DUNGEON_PORTAL.get())) {
                         return false;

@@ -36,8 +36,7 @@ import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConf
  * <p>策划依据：《副本/09》讲台+钥匙合并模式、《副本/17》§三"野外自然生成废弃传送门（包含讲台）
  * 作教学触点——首次右键空讲台 → 提示需要钥匙 → 引导到钥匙获取路径"。
  *
- * <p>旧版类注释写的是 {@code abyssal_portal_frame} / {@code abyssal_portal}，那是已废弃口径；
- * 本结构一律使用 {@code dungeon_*} 系列方块。
+ * <p>本结构一律使用 {@code dungeon_*} 系列方块。
  */
 public class AbandonedPortalStructure extends Feature<NoneFeatureConfiguration> {
 

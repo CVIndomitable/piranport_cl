@@ -790,8 +790,6 @@ public final class PiranPortCommands {
 
     private static int giveDeepOceanKit(ServerPlayer player) {
         int stacks = 0;
-        stacks += give(player, ModItems.ABYSSAL_PORTAL_FRAME.get(), 8);
-        stacks += give(player, ModItems.PORTAL_ACTIVATION_CORE.get(), 2);
         stacks += give(player, ModItems.ABYSSAL_SEEP.get(), 8);
         stacks += give(player, ModItems.ABYSSAL_REPORT.get(), 16);
         stacks += give(player, ModItems.RAW_ALUMINUM.get(), 32);
@@ -799,7 +797,7 @@ public final class PiranPortCommands {
         stacks += give(player, ModItems.AVIATION_FUEL.get(), 16);
         stacks += give(player, ModItems.REPAIR_KIT.get(), 3);
         stacks += give(player, ModItems.EXP_SHELL.get(), 8);
-        stacks += giveChaosShards(player, 2);
+        stacks += giveKeyFragments(player, 2);
         stacks += giveFlags(player);
         stacks += give(player, ModItems.DEEP_OCEAN_SUPPLY_SPAWN_EGG.get(), 2);
         stacks += give(player, ModItems.DEEP_OCEAN_DESTROYER_SPAWN_EGG.get(), 2);
@@ -816,10 +814,9 @@ public final class PiranPortCommands {
         stacks += give(player, ModItems.RICHELIEU_COMMAND_SWORD.get(), 1);
         stacks += give(player, ModItems.ABYSSAL_REPORT.get(), 16);
         stacks += give(player, ModItems.REPAIR_KIT.get(), 3);
-        stacks += give(player, ModItems.PORTAL_ACTIVATION_CORE.get(), 2);
         stacks += give(player, ModItems.EXP_SHELL.get(), 16);
         stacks += give(player, ModItems.AVIATION_FUEL.get(), 16);
-        stacks += giveChaosShards(player, 2);
+        stacks += giveKeyFragments(player, 2);
         stacks += giveFlags(player);
         stacks += giveSkinCores(player);
         return stacks;
@@ -863,17 +860,22 @@ public final class PiranPortCommands {
         return stacks;
     }
 
-    private static int giveChaosShards(ServerPlayer player, int count) {
+    /**
+     * 发钥匙碎片（ch1~ch7 各 count 个）。
+     *
+     * <p>原先发的是 9 种无序意志碎片（α~ι）。碎片体系收敛为单一通用货币
+     * 「钥匙碎片」后，这里改为把 7 个章节的钥匙碎片各发一份——调试时仍需覆盖
+     * 全章节，否则测不了「某章的钥匙合不出来」这类问题。</p>
+     */
+    private static int giveKeyFragments(ServerPlayer player, int count) {
         int stacks = 0;
-        stacks += give(player, ModItems.CHAOS_SHARD_ALPHA.get(), count);
-        stacks += give(player, ModItems.CHAOS_SHARD_BETA.get(), count);
-        stacks += give(player, ModItems.CHAOS_SHARD_GAMMA.get(), count);
-        stacks += give(player, ModItems.CHAOS_SHARD_DELTA.get(), count);
-        stacks += give(player, ModItems.CHAOS_SHARD_EPSILON.get(), count);
-        stacks += give(player, ModItems.CHAOS_SHARD_ZETA.get(), count);
-        stacks += give(player, ModItems.CHAOS_SHARD_ETA.get(), count);
-        stacks += give(player, ModItems.CHAOS_SHARD_THETA.get(), count);
-        stacks += give(player, ModItems.CHAOS_SHARD_IOTA.get(), count);
+        stacks += give(player, ModItems.KEY_FRAGMENT_CH1.get(), count);
+        stacks += give(player, ModItems.KEY_FRAGMENT_CH2.get(), count);
+        stacks += give(player, ModItems.KEY_FRAGMENT_CH3.get(), count);
+        stacks += give(player, ModItems.KEY_FRAGMENT_CH4.get(), count);
+        stacks += give(player, ModItems.KEY_FRAGMENT_CH5.get(), count);
+        stacks += give(player, ModItems.KEY_FRAGMENT_CH6.get(), count);
+        stacks += give(player, ModItems.KEY_FRAGMENT_CH7.get(), count);
         return stacks;
     }
 

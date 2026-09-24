@@ -78,7 +78,6 @@ public class ModItems {
     public static final DeferredItem<BlockItem> SALT_CHIP = MaterialItems.SALT_CHIP;
 
     // ===== Abyssal Blocks (v0.0.11)（已迁移到 MaterialItems） =====
-    public static final DeferredItem<BlockItem> ABYSSAL_PORTAL_FRAME = MaterialItems.ABYSSAL_PORTAL_FRAME;
     public static final DeferredItem<BlockItem> ABYSSAL_SPAWNER = MaterialItems.ABYSSAL_SPAWNER;
     public static final DeferredItem<BlockItem> ABYSSAL_SEEP = MaterialItems.ABYSSAL_SEEP;
 
@@ -558,16 +557,6 @@ public class ModItems {
 
     // ===== v0.0.11 Ruins — Reward Items (extracted to SpecialtyItems) =====
     public static final DeferredItem<AbyssalReportItem> ABYSSAL_REPORT = SpecialtyItems.ABYSSAL_REPORT;
-    public static final DeferredItem<TooltipItem> CHAOS_SHARD_ALPHA = SpecialtyItems.CHAOS_SHARD_ALPHA;
-    public static final DeferredItem<TooltipItem> CHAOS_SHARD_BETA = SpecialtyItems.CHAOS_SHARD_BETA;
-    public static final DeferredItem<TooltipItem> CHAOS_SHARD_GAMMA = SpecialtyItems.CHAOS_SHARD_GAMMA;
-    public static final DeferredItem<TooltipItem> CHAOS_SHARD_DELTA = SpecialtyItems.CHAOS_SHARD_DELTA;
-    public static final DeferredItem<TooltipItem> CHAOS_SHARD_EPSILON = SpecialtyItems.CHAOS_SHARD_EPSILON;
-    public static final DeferredItem<TooltipItem> CHAOS_SHARD_ZETA = SpecialtyItems.CHAOS_SHARD_ZETA;
-    public static final DeferredItem<TooltipItem> CHAOS_SHARD_ETA = SpecialtyItems.CHAOS_SHARD_ETA;
-    public static final DeferredItem<TooltipItem> CHAOS_SHARD_THETA = SpecialtyItems.CHAOS_SHARD_THETA;
-    public static final DeferredItem<TooltipItem> CHAOS_SHARD_IOTA = SpecialtyItems.CHAOS_SHARD_IOTA;
-    public static final DeferredItem<TooltipItem> PORTAL_ACTIVATION_CORE = SpecialtyItems.PORTAL_ACTIVATION_CORE;
     public static final DeferredItem<TooltipItem> FLAG_J = SpecialtyItems.FLAG_J;
     public static final DeferredItem<TooltipItem> FLAG_E = SpecialtyItems.FLAG_E;
     public static final DeferredItem<TooltipItem> FLAG_U = SpecialtyItems.FLAG_U;

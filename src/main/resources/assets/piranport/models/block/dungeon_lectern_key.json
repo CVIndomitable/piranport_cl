@@ -1,5 +1,5 @@
 {
-  "parent": "piranport:block/dungeon_lectern",
+  "parent": "minecraft:block/block",
   "render_type": "minecraft:cutout",
   "textures": {
     "particle": "piranport:block/dungeon_lectern_metal",

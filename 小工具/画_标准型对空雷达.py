@@ -16,8 +16,8 @@
 
 两态: 雷达是被动装备不是武器，无装填/空膛两态，只出单张贴图。
 
-预览: 写 小工具/_preview/标准型对空雷达_<说明>_<输入哈希>.png
-      （任务名做前缀，防并发线程互相覆盖；不用 /tmp）。
+预览: 写 小工具/_preview/preview_画_标准型对空雷达_<说明>.png
+      （统一 preview_<任务名> 命名，防并发线程互相覆盖；不用 /tmp）。
 """
 from PIL import Image
 import numpy as np
@@ -108,12 +108,11 @@ def build():
 
 
 def save_preview(im, note):
-    """预览落盘：任务名做前缀防并发覆盖，输入哈希进文件名方便核验。"""
+    """预览落盘：统一命名 preview_<任务名>.png（并发线程间天然不冲突的命名空间）。"""
     os.makedirs(PREVIEW_DIR, exist_ok=True)
-    src_hash = hashlib.md5(open(SRC, 'rb').read()).hexdigest()[:8]
-    path = f'{PREVIEW_DIR}标准型对空雷达_{note}_{src_hash}.png'
+    path = f'{PREVIEW_DIR}preview_画_标准型对空雷达_{note}.png'
     im.save(path)
-    print('preview', path)
+    print('preview', path, 'src_md5', hashlib.md5(open(SRC, 'rb').read()).hexdigest()[:8])
     return path
 
 

@@ -913,6 +913,7 @@ public final class PiranPortCommands {
         stacks += give(player, ModItems.SKIN_CORE_21.get(), 1);
         stacks += give(player, ModItems.SKIN_CORE_22.get(), 1);
         stacks += give(player, ModItems.SKIN_CORE_23.get(), 1);
+        stacks += give(player, ModItems.SKIN_CORE_24.get(), 1);
         return stacks;
     }
 

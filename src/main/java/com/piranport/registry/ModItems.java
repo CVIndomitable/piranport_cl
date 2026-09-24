@@ -497,6 +497,7 @@ public class ModItems {
     public static final DeferredItem<SkinCoreItem> SKIN_CORE_21 = SpecialtyItems.SKIN_CORE_21;
     public static final DeferredItem<SkinCoreItem> SKIN_CORE_22 = SpecialtyItems.SKIN_CORE_22;
     public static final DeferredItem<SkinCoreItem> SKIN_CORE_23 = SpecialtyItems.SKIN_CORE_23;
+    public static final DeferredItem<SkinCoreItem> SKIN_CORE_24 = SpecialtyItems.SKIN_CORE_24;
 
     // ===== Entity Cores (extracted to SpecialtyItems) =====
     public static final DeferredItem<EntityCoreItem> ENTITY_CORE_DEEP_OCEAN_SUPPLY = SpecialtyItems.ENTITY_CORE_DEEP_OCEAN_SUPPLY;

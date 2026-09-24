@@ -208,6 +208,9 @@ public final class SpecialtyItems {
     public static final DeferredItem<SkinCoreItem> SKIN_CORE_23 =
             ITEMS.register("skin_core_23",
                     () -> new SkinCoreItem(new Item.Properties().stacksTo(1), 23));
+    public static final DeferredItem<SkinCoreItem> SKIN_CORE_24 =
+            ITEMS.register("skin_core_24",
+                    () -> new SkinCoreItem(new Item.Properties().stacksTo(1), 24));
 
     // ===== Entity Cores =====
     public static final DeferredItem<EntityCoreItem> ENTITY_CORE_DEEP_OCEAN_SUPPLY =

@@ -167,6 +167,7 @@ public class ModCreativeTabs {
                         output.accept(ModItems.SKIN_CORE_21.get());
                         output.accept(ModItems.SKIN_CORE_22.get());
                         output.accept(ModItems.SKIN_CORE_23.get());
+                        output.accept(ModItems.SKIN_CORE_24.get());
                         // Entity Cores
                         output.accept(ModItems.ENTITY_CORE_DEEP_OCEAN_SUPPLY.get());
                         output.accept(ModItems.ENTITY_CORE_DEEP_OCEAN_DESTROYER.get());

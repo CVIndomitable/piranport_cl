@@ -97,8 +97,14 @@ public class CannonHandler implements WeaponHandler {
             boolean isVT = CannonAmmoRules.isVTShell(shellStack);
             boolean isHE = CannonAmmoRules.isHEShell(shellStack) || isVT;
 
+            // 副本/08 决策：MK23 核炮弹威力 = HE 表值 ×10（写死查表，不走运行时系数）。
+            // 玩家路径在 CannonProjectiles.java:84 同样放大；此处按弹逐发计算，
+            // 不放在循环外，是因为同一轮齐射可能混装（MK23 只占其中一部分）。
+            float shellExplosion = CannonAmmoRules.isMK23Shell(shellStack)
+                    ? explosion * 10f : explosion;
+
             CannonProjectileEntity proj = new CannonProjectileEntity(level, maid,
-                    shellStack, damage, isHE, explosion);
+                    shellStack, damage, isHE, shellExplosion);
             if (isVT) proj.setVT(true);
             // 依据：策划决策/数值/05-船型职能分化修订.md（大口径 AP 对小型船过穿），
             // 玩家路径在 CannonProjectiles.java:97-99 同样设置；不设则过穿与穿甲口径判定失效

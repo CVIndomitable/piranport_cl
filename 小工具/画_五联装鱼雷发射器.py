@@ -32,7 +32,7 @@ OUT_ART = '/Users/lianran/apps/皮兰港实验/美术素材/Item（图标）/鱼
 
 CANVAS = 32
 ART_W = 32        # 356×199 扁构图，按满宽等比降采样 → 32×18
-ART_BOTTOM = 31   # 贴底摆放（同 french_quad 扁炮），叹号盖在本体下部
+ART_BOTTOM = 23   # 本体摆在画布中上（行 6-23，描边 5-24），下方留给标准叹号位
 BURST_X, BURST_Y = 12, 24   # 空膛爆发标记位置（全项目统一）
 N_COLORS = 48     # 量化档位：范例贴图普遍 30~110 色
 

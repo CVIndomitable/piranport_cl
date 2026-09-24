@@ -1,18 +1,21 @@
 {
-  "_comment": "临时诊断模型（非正式资源）：用于区分 dungeon_lectern 在 has_key=true 时钥匙渲染不出来，是渲染管线的问题还是钥匙模型/UV 的问题。本模型是一个占满整格 (0,0,0)-(16,16,16) 的不透明立方体，六个面全部使用明文写死的完整贴图 ID（刻意不用 #变量，排除变量解析失败的因素），无 parent，render_type 为 minecraft:solid。若插钥匙后此方块可见，说明渲染管线正常，问题出在原钥匙模型（UV/贴图/element 尺寸）；若仍不可见，说明管线或 blockstate 变体没生效。验证完毕后删除本文件，并把 blockstates/dungeon_lectern.json 中 4 个 has_key=true 变体改回 piranport:block/dungeon_lectern_key。",
+  "_comment": "临时诊断模型（非正式资源）：用于区分 dungeon_lectern 在 has_key=true 时钥匙渲染不出来，是渲染管线的问题还是钥匙模型/UV 的问题。本模型是一个占满整格 (0,0,0)-(16,16,16) 的不透明立方体，六个面共用同一张贴图（走 #变量 引用，与项目里其他可用模型同构——注意 MC 模型的 texture 字段只接受 #变量 形式，明文贴图 ID 会解析失败导致六面全部退化成 missing texture）。无 parent，render_type 为 minecraft:solid。若插钥匙后此方块可见，说明渲染管线正常，问题出在原钥匙模型（UV/贴图/element 尺寸）；若仍不可见，说明管线或 blockstate 变体没生效。验证完毕后删除本文件，并把 blockstates/dungeon_lectern.json 中 4 个 has_key=true 变体改回 piranport:block/dungeon_lectern_key。",
   "render_type": "minecraft:solid",
+  "textures": {
+    "all": "piranport:block/dungeon_lectern_metal"
+  },
   "elements": [
     {
-      "comment": "占满整格的诊断立方体，六面明文贴图",
+      "comment": "占满整格的诊断立方体，六面共用同一张贴图（任一紫黑即说明该面没走到本贴图）",
       "from": [0, 0, 0],
       "to": [16, 16, 16],
       "faces": {
-        "north": { "uv": [0, 0, 16, 16], "texture": "piranport:block/dungeon_lectern_metal" },
-        "south": { "uv": [0, 0, 16, 16], "texture": "piranport:block/dungeon_lectern_metal" },
-        "west":  { "uv": [0, 0, 16, 16], "texture": "piranport:block/dungeon_lectern_metal" },
-        "east":  { "uv": [0, 0, 16, 16], "texture": "piranport:block/dungeon_lectern_metal" },
-        "up":    { "uv": [0, 0, 16, 16], "texture": "minecraft:block/oak_planks" },
-        "down":  { "uv": [0, 0, 16, 16], "texture": "minecraft:block/oak_planks" }
+        "north": { "uv": [0, 0, 16, 16], "texture": "#all" },
+        "south": { "uv": [0, 0, 16, 16], "texture": "#all" },
+        "west":  { "uv": [0, 0, 16, 16], "texture": "#all" },
+        "east":  { "uv": [0, 0, 16, 16], "texture": "#all" },
+        "up":    { "uv": [0, 0, 16, 16], "texture": "#all" },
+        "down":  { "uv": [0, 0, 16, 16], "texture": "#all" }
       }
     }
   ]

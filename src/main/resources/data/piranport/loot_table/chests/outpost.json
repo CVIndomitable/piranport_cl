@@ -33,9 +33,13 @@
     {
       "rolls": 1,
       "entries": [
-        { "type": "minecraft:item", "name": "piranport:chaos_shard_alpha", "weight": 1 },
-        { "type": "minecraft:item", "name": "piranport:chaos_shard_beta", "weight": 1 },
-        { "type": "minecraft:item", "name": "piranport:chaos_shard_gamma", "weight": 1 },
+        { "type": "minecraft:item", "name": "piranport:key_fragment_ch1", "weight": 1 },
+        { "type": "minecraft:item", "name": "piranport:key_fragment_ch2", "weight": 1 },
+        { "type": "minecraft:item", "name": "piranport:key_fragment_ch3", "weight": 1 },
+        { "type": "minecraft:item", "name": "piranport:key_fragment_ch4", "weight": 1 },
+        { "type": "minecraft:item", "name": "piranport:key_fragment_ch5", "weight": 1 },
+        { "type": "minecraft:item", "name": "piranport:key_fragment_ch6", "weight": 1 },
+        { "type": "minecraft:item", "name": "piranport:key_fragment_ch7", "weight": 1 },
         { "type": "minecraft:item", "name": "piranport:portal_activation_core", "weight": 2 },
         { "type": "minecraft:empty", "weight": 15 }
       ]

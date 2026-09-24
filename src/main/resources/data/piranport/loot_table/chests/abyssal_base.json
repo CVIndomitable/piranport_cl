@@ -46,15 +46,13 @@
     {
       "rolls": { "min": 1, "max": 2, "type": "minecraft:uniform" },
       "entries": [
-        { "type": "minecraft:item", "name": "piranport:chaos_shard_alpha", "weight": 2 },
-        { "type": "minecraft:item", "name": "piranport:chaos_shard_beta", "weight": 2 },
-        { "type": "minecraft:item", "name": "piranport:chaos_shard_gamma", "weight": 2 },
-        { "type": "minecraft:item", "name": "piranport:chaos_shard_delta", "weight": 2 },
-        { "type": "minecraft:item", "name": "piranport:chaos_shard_epsilon", "weight": 2 },
-        { "type": "minecraft:item", "name": "piranport:chaos_shard_zeta", "weight": 1 },
-        { "type": "minecraft:item", "name": "piranport:chaos_shard_eta", "weight": 1 },
-        { "type": "minecraft:item", "name": "piranport:chaos_shard_theta", "weight": 1 },
-        { "type": "minecraft:item", "name": "piranport:chaos_shard_iota", "weight": 1 },
+        { "type": "minecraft:item", "name": "piranport:key_fragment_ch1", "weight": 2 },
+        { "type": "minecraft:item", "name": "piranport:key_fragment_ch2", "weight": 2 },
+        { "type": "minecraft:item", "name": "piranport:key_fragment_ch3", "weight": 2 },
+        { "type": "minecraft:item", "name": "piranport:key_fragment_ch4", "weight": 2 },
+        { "type": "minecraft:item", "name": "piranport:key_fragment_ch5", "weight": 2 },
+        { "type": "minecraft:item", "name": "piranport:key_fragment_ch6", "weight": 2 },
+        { "type": "minecraft:item", "name": "piranport:key_fragment_ch7", "weight": 2 },
         { "type": "minecraft:empty", "weight": 6 }
       ]
     },

@@ -11,6 +11,7 @@ import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
 import com.piranport.item.ShipCoreItem;
 import com.piranport.artillery.config.ArtilleryCannonData;
+import com.piranport.combat.cannon.ammo.AmmoDefinitionService;
 import static com.piranport.combat.cannon.CannonStats.getBarrelCount;
 
 /** 火炮弹药规则：标签口径匹配、弹种识别、默认弹药与已装弹校验。 */
@@ -64,6 +65,8 @@ public final class CannonAmmoRules {
     }
 
     public static boolean isHEShell(ItemStack stack) {
+        var definition = AmmoDefinitionService.find(BuiltInRegistries.ITEM.getKey(stack.getItem()));
+        if (definition.isPresent()) return definition.get().isHighExplosive();
         return stack.is(ModItems.SMALL_HE_SHELL.get())
                 || stack.is(ModItems.MEDIUM_HE_SHELL.get())
                 || stack.is(ModItems.LARGE_HE_SHELL.get())
@@ -75,16 +78,24 @@ public final class CannonAmmoRules {
     }
 
     public static boolean isVTShell(ItemStack stack) {
+        var definition = AmmoDefinitionService.find(BuiltInRegistries.ITEM.getKey(stack.getItem()));
+        if (definition.isPresent()) return definition.get().behavior()
+                == com.piranport.combat.cannon.ammo.AmmoBehavior.VT;
         return stack.is(ModItems.SMALL_VT_SHELL.get());
     }
 
     public static boolean isType3Shell(ItemStack stack) {
+        var definition = AmmoDefinitionService.find(BuiltInRegistries.ITEM.getKey(stack.getItem()));
+        if (definition.isPresent()) return definition.get().behavior()
+                == com.piranport.combat.cannon.ammo.AmmoBehavior.TYPE3;
         return stack.is(ModItems.SMALL_TYPE3_SHELL.get())
                 || stack.is(ModItems.MEDIUM_TYPE3_SHELL.get())
                 || stack.is(ModItems.LARGE_TYPE3_SHELL.get());
     }
 
     public static boolean isAPShell(ItemStack stack) {
+        var definition = AmmoDefinitionService.find(BuiltInRegistries.ITEM.getKey(stack.getItem()));
+        if (definition.isPresent()) return definition.get().isArmorPiercing();
         return stack.is(ModItems.SMALL_AP_SHELL.get())
                 || stack.is(ModItems.MEDIUM_AP_SHELL.get())
                 || stack.is(ModItems.LARGE_AP_SHELL.get())

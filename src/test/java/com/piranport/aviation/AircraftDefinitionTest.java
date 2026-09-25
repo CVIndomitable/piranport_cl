@@ -7,6 +7,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
+import com.google.gson.Gson;
 
 class AircraftDefinitionTest {
     @AfterEach
@@ -68,5 +69,21 @@ class AircraftDefinitionTest {
         assertNotSame(firstDefinition, secondDefinition);
         assertEquals(2.0F, firstDefinition.panelDamage());
         assertEquals(5.0F, secondDefinition.panelDamage());
+    }
+
+    @Test
+    void jsonShapeBuildsDefinitionWithStableResourceId() {
+        String json = "{\"aircraft_class\":\"torpedo_bomber\",\"attack_profile\":\"torpedo\","
+                + "\"payload_type\":\"aerial_torpedo\",\"visual_id\":\"swordfish\","
+                + "\"fuel_capacity\":1200,\"ammo_capacity\":1,\"panel_damage\":18.0,"
+                + "\"panel_speed\":1.0,\"weight\":18,\"bombing_mode\":\"dive\"}";
+        AircraftDefinition definition = new Gson().fromJson(json,
+                AircraftDefinitionReloadListener.JsonAircraftDefinition.class)
+                .toDefinition("piranport:aircraft/test");
+        assertEquals(AircraftInfo.AircraftType.TORPEDO_BOMBER, definition.aircraftClass());
+        assertEquals(AircraftDefinition.AttackProfile.TORPEDO, definition.attackProfile());
+        assertEquals(AircraftDefinition.PayloadType.AERIAL_TORPEDO, definition.payloadType());
+        assertEquals("swordfish", definition.visualId());
+        assertEquals(18.0F, definition.panelDamage());
     }
 }

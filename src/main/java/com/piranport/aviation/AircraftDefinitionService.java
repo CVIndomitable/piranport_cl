@@ -4,34 +4,57 @@ import com.piranport.component.AircraftInfo;
 import com.piranport.registry.ModDataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.resources.ResourceLocation;
 
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.HashMap;
 
 /**
  * 迁移期飞机定义服务。定义在创建飞机时解析一次并缓存；飞行中的实体持有自己的定义 ID，不读取可变注册表。
  */
 public final class AircraftDefinitionService {
     public static final String ID_PREFIX = "piranport:aircraft/";
-    private static final Map<String, AircraftDefinition> DEFINITIONS = new ConcurrentHashMap<>();
+    private static volatile Map<String, AircraftDefinition> definitions = Map.of();
+
 
     private AircraftDefinitionService() {}
 
     /** 注册或替换数据加载阶段构造的不可变定义。 */
     public static void register(AircraftDefinition definition) {
         Objects.requireNonNull(definition, "definition");
-        DEFINITIONS.put(definition.id(), definition);
+        Map<String, AircraftDefinition> copy = new HashMap<>(definitions);
+        copy.put(definition.id(), definition);
+        definitions = Map.copyOf(copy);
     }
 
     /** 清空数据重载缓存；已生成实体不会调用此方法。 */
     public static void clear() {
-        DEFINITIONS.clear();
+        definitions = Map.of();
+    }
+
+    /** Replaces all resource-backed definitions as one reload operation. */
+    public static void replaceAll(Map<String, AircraftDefinition> definitions) {
+        Objects.requireNonNull(definitions, "definitions");
+        Map<String, AircraftDefinition> copy = new HashMap<>();
+        definitions.forEach((id, definition) -> {
+            if (definition == null || !id.equals(definition.id())) {
+                throw new IllegalArgumentException("definition map key does not match definition id: " + id);
+            }
+            copy.put(id, definition);
+        });
+        definitions = Map.copyOf(copy);
+    }
+
+    /** Resource ID used by aircraft JSON files. */
+    public static String resourceId(ResourceLocation id) {
+        Objects.requireNonNull(id, "id");
+        return id.toString();
     }
 
     public static AircraftDefinition find(String id) {
         if (id == null || id.isBlank()) return null;
-        return DEFINITIONS.get(id);
+        return definitions.get(id);
     }
 
     /** 按稳定定义 ID解析，找不到时用旧类型生成兼容定义并缓存。 */
@@ -49,7 +72,7 @@ public final class AircraftDefinitionService {
         // keeps two aircraft of one class from sharing the first resolved stats.
         net.minecraft.resources.ResourceLocation key = BuiltInRegistries.ITEM.getKey(stack.getItem());
         String stableId = key != null && !"minecraft".equals(key.getNamespace())
-                ? key.toString() : info.definitionId();
+                ? resourceId(key) : info.definitionId();
         return resolve(info, stableId);
     }
 
@@ -73,10 +96,23 @@ public final class AircraftDefinitionService {
         Objects.requireNonNull(info, "info");
         String id = stableId == null || stableId.isBlank() ? info.definitionId() : stableId;
         AircraftDefinition known = find(id);
+        if (known == null) {
+            String canonical = canonicalResourceId(id);
+            if (!canonical.equals(id)) known = find(canonical);
+        }
         if (known != null) return known;
         AircraftDefinition migrated = AircraftDefinition.fromLegacy(id, info);
         register(migrated);
         return migrated;
+    }
+
+    /** Canonical resource IDs live under data/<namespace>/aircraft/. */
+    public static String canonicalResourceId(String id) {
+        Objects.requireNonNull(id, "id");
+        ResourceLocation parsed = ResourceLocation.tryParse(id);
+        if (parsed == null || !"piranport".equals(parsed.getNamespace())
+                || parsed.getPath().startsWith("aircraft/")) return id;
+        return ID_PREFIX + parsed.getPath();
     }
 
     /** 给旧构造器使用的稳定 ID。旧物品没有独立 ID 时按机种生成确定性兼容 ID。 */
@@ -86,6 +122,6 @@ public final class AircraftDefinitionService {
     }
 
     public static Map<String, AircraftDefinition> snapshot() {
-        return Map.copyOf(DEFINITIONS);
+        return Map.copyOf(definitions);
     }
 }

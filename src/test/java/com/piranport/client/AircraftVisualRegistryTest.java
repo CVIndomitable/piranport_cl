@@ -27,6 +27,19 @@ class AircraftVisualRegistryTest {
     }
 
     @Test
+    void everyDataDefinedVisualUsesAnExplicitPlaceholderOrModel() {
+        String[] definedVisuals = {
+                "fighter", "rocket_fighter", "dive_bomber", "level_bomber",
+                "torpedo_bomber", "asw", "recon"
+        };
+
+        for (String visualId : definedVisuals) {
+            assertEquals(true, AircraftVisualRegistry.isRegistered(visualId), visualId);
+            assertEquals(false, AircraftVisualRegistry.resolve(visualId).id().isBlank(), visualId);
+        }
+    }
+
+    @Test
     void unknownVisualIdsUseTheExplicitF4FFallback() {
         AircraftVisualRegistry.AircraftVisual fallback = AircraftVisualRegistry.resolve("swordfish");
 

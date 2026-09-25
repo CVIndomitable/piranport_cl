@@ -23,6 +23,14 @@ import java.util.Objects;
 public final class AircraftVisualRegistry {
     public static final String B25_VISUAL_ID = "b25";
     public static final String F4F_VISUAL_ID = "f4f";
+    /** Visual IDs currently backed by the two available aircraft model layers. */
+    public static final String FIGHTER_VISUAL_ID = "fighter";
+    public static final String ROCKET_FIGHTER_VISUAL_ID = "rocket_fighter";
+    public static final String DIVE_BOMBER_VISUAL_ID = "dive_bomber";
+    public static final String LEVEL_BOMBER_VISUAL_ID = "level_bomber";
+    public static final String TORPEDO_BOMBER_VISUAL_ID = "torpedo_bomber";
+    public static final String ASW_VISUAL_ID = "asw";
+    public static final String RECON_VISUAL_ID = "recon";
 
     private static final ResourceLocation B25_TEXTURE =
             ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "textures/entity/b25.png");
@@ -36,13 +44,20 @@ public final class AircraftVisualRegistry {
 
     /**
      * Aliases preserve the visual output of entities saved before visual IDs
-     * were introduced. Any unregistered id intentionally resolves to F4F.
+     * were introduced. The data-defined IDs are listed explicitly even while
+     * they share the existing B25/F4F placeholder layers; this prevents a new
+     * aircraft definition from silently becoming an unknown visual.
      */
-    private static final Map<String, AircraftVisual> VISUALS = Map.of(
-            B25_VISUAL_ID, B25,
-            "level_bomber", B25,
-            F4F_VISUAL_ID, F4F,
-            "fighter", F4F);
+    private static final Map<String, AircraftVisual> VISUALS = Map.ofEntries(
+            Map.entry(B25_VISUAL_ID, B25),
+            Map.entry(LEVEL_BOMBER_VISUAL_ID, B25),
+            Map.entry(DIVE_BOMBER_VISUAL_ID, B25),
+            Map.entry(TORPEDO_BOMBER_VISUAL_ID, B25),
+            Map.entry(ASW_VISUAL_ID, B25),
+            Map.entry(F4F_VISUAL_ID, F4F),
+            Map.entry(FIGHTER_VISUAL_ID, F4F),
+            Map.entry(ROCKET_FIGHTER_VISUAL_ID, F4F),
+            Map.entry(RECON_VISUAL_ID, F4F));
 
     private AircraftVisualRegistry() {}
 
@@ -52,6 +67,11 @@ public final class AircraftVisualRegistry {
      */
     public static AircraftVisual resolve(String visualId) {
         return VISUALS.getOrDefault(normalize(visualId), F4F);
+    }
+
+    /** Whether a visual ID is explicitly registered rather than using legacy fallback. */
+    public static boolean isRegistered(String visualId) {
+        return VISUALS.containsKey(normalize(visualId));
     }
 
     /** Resolves the visual declared by an immutable aircraft definition. */

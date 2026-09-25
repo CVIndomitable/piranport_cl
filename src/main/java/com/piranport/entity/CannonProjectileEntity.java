@@ -8,6 +8,8 @@ import com.piranport.combat.ShipTypeMitigationHelper;
 import com.piranport.config.ModArtilleryConfig;
 import com.piranport.config.ModCommonConfig;
 import com.piranport.config.ModProjectilesConfig;
+import com.piranport.combat.cannon.ammo.AmmoBehavior;
+import com.piranport.combat.cannon.ammo.AmmoBehaviorResolver;
 import com.piranport.network.CannonImpactEffectPayload;
 import com.piranport.registry.ModBlocks;
 import com.piranport.registry.ModEntityTypes;
@@ -50,6 +52,7 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
     private float damage = 6f;
     private boolean isHE = true;
     private boolean isVT = false;
+    private AmmoBehavior ammoBehavior = AmmoBehavior.HE;
     private float explosionPower = 1.5f;
     private float initialSpeed = 2.0f;
     /** Phase 2: 自定义阻力系数（每 tick 按比例衰减速度）。 */
@@ -132,11 +135,18 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         this.damage = damage;
         this.isHE = isHE;
         this.explosionPower = explosionPower;
+        this.ammoBehavior = AmmoBehaviorResolver.resolve(shellItem, isHE, false);
+        this.isVT = AmmoBehaviorResolver.isProximityFuse(this.ammoBehavior);
+        this.isHE = AmmoBehaviorResolver.isHighExplosive(this.ammoBehavior);
         this.cachedObsidianResistance = initObsidianResistance(level);
     }
 
     public void setVT(boolean vt) {
         this.isVT = vt;
+        if (vt) {
+            this.ammoBehavior = AmmoBehavior.VT;
+            this.isHE = true;
+        }
     }
 
     /** 启用对特定实体的追踪（通过运行时实体 ID）。 */
@@ -232,11 +242,11 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
 
         if (!level().isClientSide) {
             // 水中弹药销毁：所有弹种通用（VT 弹在 tickVT 中另有近炸逻辑）
-            if (!isVT && isInWater()) {
+            if (!isProximityFuse() && isInWater()) {
                 sendWaterEntryEffectIfNeeded();
-                handleUnderwaterDestruction(isHE);
+                handleUnderwaterDestruction(isHighExplosive());
             }
-            if (isVT && tickCount > vtArmTicks) {
+            if (isProximityFuse() && tickCount > vtArmTicks) {
                 tickVT();
             }
             tickWhistleSound();
@@ -441,7 +451,7 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
             Entity target = result.getEntity();
             // 联装炮齐射：同 tick 多发命中同目标时，重置无敌帧让每发都造成伤害
             target.invulnerableTime = 0;
-            if (isHE) {
+            if (isHighExplosive()) {
                 // HE：直击伤害 + 范围爆炸溅射
                 target.hurt(damageSources().explosion(this, getOwner()), damage);
                 Level.ExplosionInteraction interaction = ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get()
@@ -532,7 +542,7 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
     protected void onHitBlock(BlockHitResult result) {
         super.onHitBlock(result);
         if (!level().isClientSide && !exploded) {
-            if (isHE) {
+            if (isHighExplosive()) {
                 if (isInWater()) {
                     sendWaterEntryEffectIfNeeded();
                 }
@@ -582,6 +592,7 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         tag.putFloat("Damage", damage);
         tag.putBoolean("IsHE", isHE);
         tag.putBoolean("IsVT", isVT);
+        tag.putString("AmmoBehavior", ammoBehavior.name());
         tag.putFloat("ExplosionPower", explosionPower);
         tag.putFloat("InitialSpeed", initialSpeed);
         tag.putFloat("DragCoeff", dragCoeff);
@@ -598,6 +609,9 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         if (damage <= 0) damage = 4.0f; // 兜底：避免世界重载后出现零伤害的投射物
         isHE = tag.getBoolean("IsHE");
         isVT = tag.getBoolean("IsVT");
+        ammoBehavior = AmmoBehaviorResolver.fromSerialized(tag.getString("AmmoBehavior"), isHE, isVT);
+        isVT = AmmoBehaviorResolver.isProximityFuse(ammoBehavior);
+        isHE = AmmoBehaviorResolver.isHighExplosive(ammoBehavior);
         explosionPower = tag.getFloat("ExplosionPower");
         if (tag.contains("InitialSpeed")) {
             initialSpeed = tag.getFloat("InitialSpeed");
@@ -617,5 +631,13 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         if (tag.contains("SourceCaliber")) {
             sourceCaliber = tag.getInt("SourceCaliber");
         }
+    }
+
+    private boolean isHighExplosive() {
+        return AmmoBehaviorResolver.isHighExplosive(ammoBehavior);
+    }
+
+    private boolean isProximityFuse() {
+        return AmmoBehaviorResolver.isProximityFuse(ammoBehavior);
     }
 }

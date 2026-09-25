@@ -23,6 +23,18 @@ class AmmoDefinitionTest {
         assertEquals(AmmoBehavior.VT, vt.behavior());
         assertEquals(AmmoBehavior.TYPE3, type3.behavior());
         assertNotEquals(he.itemId(), ap.itemId());
+        assertEquals(0.5f, ap.armorIgnore(), 0.0001f);
+    }
+
+    @Test
+    void specialAmmoParametersComeFromDefinitions() {
+        var type91 = AmmoDefinitionService.require(id("type_91_ap_shell"));
+        var type1 = AmmoDefinitionService.require(id("type_1_ap_shell"));
+        var mk23 = AmmoDefinitionService.require(id("mk23_nuclear_shell"));
+        assertEquals(0.20f, type91.armorIgnore(), 0.0001f);
+        assertEquals(0.50f, type1.armorIgnore(), 0.0001f);
+        assertEquals(10f, mk23.explosionMultiplier(), 0.0001f);
+        assertTrue(mk23.underwaterExplosion());
     }
 
     @Test

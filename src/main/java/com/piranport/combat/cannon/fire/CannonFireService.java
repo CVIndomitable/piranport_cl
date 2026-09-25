@@ -2,6 +2,8 @@ package com.piranport.combat.cannon.fire;
 
 import com.piranport.combat.cannon.CannonAim;
 import com.piranport.combat.cannon.CannonAmmoRules;
+import com.piranport.combat.cannon.ammo.AmmoDefinitionService;
+import net.minecraft.core.registries.BuiltInRegistries;
 import com.piranport.entity.CannonProjectileEntity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
@@ -44,10 +46,18 @@ public final class CannonFireService {
     public static CannonProjectileEntity createProjectile(CannonFireRequest request) {
         String error = validationError(request);
         if (!error.isEmpty()) throw new IllegalArgumentException(error);
+        var definition = AmmoDefinitionService.find(BuiltInRegistries.ITEM.getKey(request.shell().getItem()));
+        float damage = request.damage() * definition.map(d -> d.damageMultiplier()).orElse(1f);
+        float explosionPower = request.explosionPower() * definition.map(d -> d.explosionMultiplier()).orElse(1f);
         CannonProjectileEntity projectile = new CannonProjectileEntity(
-                request.level(), request.shooter(), request.shell(), request.damage(),
-                request.highExplosive(), request.explosionPower());
+                request.level(), request.shooter(), request.shell(), damage,
+                request.highExplosive(), explosionPower);
+        projectile.setDamage(damage);
         projectile.setVT(request.proximityFuse());
+        definition.ifPresent(d -> {
+            projectile.setArmorIgnore(d.armorIgnore());
+            projectile.setUnderwaterExplosion(d.underwaterExplosion());
+        });
         projectile.setDragCoeff(request.drag());
         projectile.setCustomGravity(request.gravity());
         projectile.setSourceCaliber(request.sourceCaliber());

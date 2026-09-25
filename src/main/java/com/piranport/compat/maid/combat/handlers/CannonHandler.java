@@ -11,6 +11,7 @@ import com.piranport.combat.cannon.CannonAim;
 import com.piranport.combat.cannon.fire.CannonFireRequest;
 import com.piranport.combat.cannon.fire.CannonFireService;
 import com.piranport.combat.cannon.fire.CannonProjectileFactory;
+import com.piranport.combat.cannon.ammo.AmmoDefinitionService;
 import com.piranport.item.ShipCoreItem;
 import com.piranport.registry.ModItems;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -105,6 +106,7 @@ public class CannonHandler implements WeaponHandler {
             // 玩家路径在 CannonProjectiles.java:84 同样放大；此处按弹逐发计算，
             // 不放在循环外，是因为同一轮齐射可能混装（MK23 只占其中一部分）。
             float shellExplosion = CannonAmmoRules.isMK23Shell(shellStack)
+                    && AmmoDefinitionService.find(BuiltInRegistries.ITEM.getKey(shellStack.getItem())).isEmpty()
                     ? explosion * 10f : explosion;
 
             Vec3 spawnPos = origin;

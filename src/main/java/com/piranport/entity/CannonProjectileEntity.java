@@ -58,6 +58,8 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
     private boolean isVT = false;
     private AmmoBehavior ammoBehavior = AmmoBehavior.HE;
     private float explosionPower = 1.5f;
+    private float armorIgnore = -1f;
+    private boolean underwaterExplosion = false;
     private float initialSpeed = 2.0f;
     /** Phase 2: 自定义阻力系数（每 tick 按比例衰减速度）。 */
     private float dragCoeff = 0.01f;
@@ -160,6 +162,18 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
 
     public void setDragCoeff(float dragCoeff) {
         this.dragCoeff = dragCoeff;
+    }
+
+    public void setDamage(float damage) {
+        if (Float.isFinite(damage) && damage >= 0f) this.damage = damage;
+    }
+
+    public void setArmorIgnore(float armorIgnore) {
+        if (Float.isFinite(armorIgnore)) this.armorIgnore = Math.max(0f, Math.min(1f, armorIgnore));
+    }
+
+    public void setUnderwaterExplosion(boolean underwaterExplosion) {
+        this.underwaterExplosion = underwaterExplosion;
     }
 
     public void setCustomGravity(float g) {
@@ -317,7 +331,7 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         int maxTicks = (int) (ModArtilleryConfig.ARTILLERY_UNDERWATER_DESTROY_TIME.get() * 20);
         if (underwaterTicks >= maxTicks) {
             exploded = true;
-            if (shouldExplode && getProjectileBoolean("UNDERWATER_EXPLODE", ModProjectilesConfig.UNDERWATER_EXPLODE.get())) {
+            if (shouldExplode && (underwaterExplosion || getProjectileBoolean("UNDERWATER_EXPLODE", ModProjectilesConfig.UNDERWATER_EXPLODE.get()))) {
                 Level.ExplosionInteraction interaction = ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get()
                         ? Level.ExplosionInteraction.TNT : Level.ExplosionInteraction.NONE;
                 double multiplier = getProjectileDouble("UNDERWATER_EXPLOSION_MULTIPLIER",
@@ -472,13 +486,13 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
                 // AP：130% 基础直击伤害，与原版箭矢一样随速度衰减，忽略 50% 目标护甲
                 float apMultiplier = (float) getProjectileDouble("AP_DAMAGE_MULTIPLIER",
                         ModProjectilesConfig.AP_DAMAGE_MULTIPLIER.get());
-                float apArmorIgnore = (float) getProjectileDouble("AP_ARMOR_IGNORE",
+                float apArmorIgnore = armorIgnore >= 0f ? armorIgnore : (float) getProjectileDouble("AP_ARMOR_IGNORE",
                         ModProjectilesConfig.AP_ARMOR_IGNORE.get());
                 // 依据：策划决策/武器/弹药-AP弹穿甲设计.md（91 式 20% / 一式 50% 护甲忽略）
                 Item ammoItem = getItem().getItem();
-                if (ammoItem == ModItems.TYPE_91_AP_SHELL.get()) {
+                if (armorIgnore < 0f && ammoItem == ModItems.TYPE_91_AP_SHELL.get()) {
                     apArmorIgnore = 0.20f;
-                } else if (ammoItem == ModItems.TYPE_1_AP_SHELL.get()) {
+                } else if (armorIgnore < 0f && ammoItem == ModItems.TYPE_1_AP_SHELL.get()) {
                     apArmorIgnore = 0.50f;
                 }
                 boolean smallShip = target instanceof LivingEntity living
@@ -594,6 +608,8 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         tag.putBoolean("IsVT", isVT);
         tag.putString("AmmoBehavior", ammoBehavior.name());
         tag.putFloat("ExplosionPower", explosionPower);
+        tag.putFloat("ArmorIgnore", armorIgnore);
+        tag.putBoolean("UnderwaterExplosion", underwaterExplosion);
         tag.putFloat("InitialSpeed", initialSpeed);
         tag.putFloat("DragCoeff", dragCoeff);
         tag.putInt("UnderwaterTicks", underwaterTicks);
@@ -613,6 +629,8 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         isVT = AmmoBehaviorResolver.isProximityFuse(ammoBehavior);
         isHE = AmmoBehaviorResolver.isHighExplosive(ammoBehavior);
         explosionPower = tag.getFloat("ExplosionPower");
+        if (tag.contains("ArmorIgnore")) armorIgnore = tag.getFloat("ArmorIgnore");
+        if (tag.contains("UnderwaterExplosion")) underwaterExplosion = tag.getBoolean("UnderwaterExplosion");
         if (tag.contains("InitialSpeed")) {
             initialSpeed = tag.getFloat("InitialSpeed");
         }

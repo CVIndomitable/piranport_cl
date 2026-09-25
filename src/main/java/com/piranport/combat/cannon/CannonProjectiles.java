@@ -33,6 +33,8 @@ import static com.piranport.combat.cannon.CannonAiming.rotateMuzzleByPlayerView;
 import com.piranport.combat.cannon.fire.CannonFireRequest;
 import com.piranport.combat.cannon.fire.CannonFireService;
 import com.piranport.combat.cannon.fire.CannonProjectileFactory;
+import com.piranport.combat.cannon.ammo.AmmoDefinitionService;
+import net.minecraft.core.registries.BuiltInRegistries;
 
 /** 火炮发射表现：生成炮弹与霰弹，处理粒子、音效和数量上限。 */
 final class CannonProjectiles {
@@ -84,7 +86,8 @@ final class CannonProjectiles {
                 float explosionPower = getExplosionPower(weapon, level);
                 // 副本/08 决策：MK23 核炮弹威力 = HE 表值 ×10（写死查表，不走运行时系数）。
                 // 仅作用于 LARGE_SHELLS 火炮；isMK23Shell 已在 large_shells 标签上保证。
-                if (isMK23Shell(shellForRender)) {
+                if (isMK23Shell(shellForRender)
+                        && AmmoDefinitionService.find(BuiltInRegistries.ITEM.getKey(shellForRender.getItem())).isEmpty()) {
                     explosionPower = explosionPower * 10f;
                 }
                 float velocity = getProjectileVelocity(weapon, level);

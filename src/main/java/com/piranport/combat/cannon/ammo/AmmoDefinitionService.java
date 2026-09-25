@@ -58,14 +58,14 @@ public final class AmmoDefinitionService {
         register(map, "small_ap_shell", AmmoBehavior.AP, CannonAmmoRules.CaliberFamily.SMALL);
         register(map, "medium_ap_shell", AmmoBehavior.AP, CannonAmmoRules.CaliberFamily.MEDIUM);
         register(map, "large_ap_shell", AmmoBehavior.AP, CannonAmmoRules.CaliberFamily.LARGE);
-        register(map, "type_91_ap_shell", AmmoBehavior.AP, CannonAmmoRules.CaliberFamily.LARGE);
-        register(map, "type_1_ap_shell", AmmoBehavior.AP, CannonAmmoRules.CaliberFamily.LARGE);
-        register(map, "super_heavy_ap_shell", AmmoBehavior.AP, CannonAmmoRules.CaliberFamily.MEDIUM);
+        register(map, "type_91_ap_shell", AmmoBehavior.AP, CannonAmmoRules.CaliberFamily.LARGE, 1f, 1f, 0.20f, false, null);
+        register(map, "type_1_ap_shell", AmmoBehavior.AP, CannonAmmoRules.CaliberFamily.LARGE, 1f, 1f, 0.50f, false, null);
+        register(map, "super_heavy_ap_shell", AmmoBehavior.AP, CannonAmmoRules.CaliberFamily.MEDIUM, 1f, 1f, 0.35f, false, null);
         register(map, "small_vt_shell", AmmoBehavior.VT, CannonAmmoRules.CaliberFamily.SMALL);
         register(map, "small_type3_shell", AmmoBehavior.TYPE3, CannonAmmoRules.CaliberFamily.SMALL);
         register(map, "medium_type3_shell", AmmoBehavior.TYPE3, CannonAmmoRules.CaliberFamily.MEDIUM);
         register(map, "large_type3_shell", AmmoBehavior.TYPE3, CannonAmmoRules.CaliberFamily.LARGE);
-        register(map, "mk23_nuclear_shell", AmmoBehavior.MK23, CannonAmmoRules.CaliberFamily.LARGE);
+        register(map, "mk23_nuclear_shell", AmmoBehavior.MK23, CannonAmmoRules.CaliberFamily.LARGE, 1f, 10f, 0f, true, AmmoBehaviorStrategy.ImpactKind.HE);
         return Collections.synchronizedMap(map);
     }
 
@@ -73,5 +73,14 @@ public final class AmmoDefinitionService {
                                  AmmoBehavior behavior, CannonAmmoRules.CaliberFamily family) {
         ResourceLocation id = ResourceLocation.fromNamespaceAndPath("piranport", path);
         map.put(id, new AmmoDefinition(id, behavior, family));
+    }
+
+    private static void register(Map<ResourceLocation, AmmoDefinition> map, String path,
+                                 AmmoBehavior behavior, CannonAmmoRules.CaliberFamily family,
+                                 float damageMultiplier, float explosionMultiplier, float armorIgnore,
+                                 boolean underwaterExplosion, AmmoBehaviorStrategy.ImpactKind impactKind) {
+        ResourceLocation id = ResourceLocation.fromNamespaceAndPath("piranport", path);
+        map.put(id, new AmmoDefinition(id, behavior, java.util.Optional.of(family), damageMultiplier,
+                explosionMultiplier, armorIgnore, underwaterExplosion, java.util.Optional.ofNullable(impactKind)));
     }
 }

@@ -25,7 +25,7 @@ public final class AmmoDefinitionService {
     }
 
     public static Map<ResourceLocation, AmmoDefinition> all() {
-        return DEFINITIONS;
+        return Map.copyOf(DEFINITIONS);
     }
 
     /** 只供数据驱动加载器使用；调用方应在初始化阶段一次性替换，避免半更新状态。 */

@@ -74,6 +74,9 @@ public final class CannonAmmoRules {
     }
 
     public static boolean isMK23Shell(ItemStack stack) {
+        var definition = AmmoDefinitionService.find(BuiltInRegistries.ITEM.getKey(stack.getItem()));
+        if (definition.isPresent()) return definition.get().behavior()
+                == com.piranport.combat.cannon.ammo.AmmoBehavior.MK23;
         return stack.is(ModItems.MK23_NUCLEAR_SHELL.get());
     }
 

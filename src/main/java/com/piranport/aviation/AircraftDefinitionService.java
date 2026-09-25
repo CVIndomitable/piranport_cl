@@ -21,7 +21,7 @@ public final class AircraftDefinitionService {
     private AircraftDefinitionService() {}
 
     /** 注册或替换数据加载阶段构造的不可变定义。 */
-    public static void register(AircraftDefinition definition) {
+    public static synchronized void register(AircraftDefinition definition) {
         Objects.requireNonNull(definition, "definition");
         Map<String, AircraftDefinition> copy = new HashMap<>(definitions);
         copy.put(definition.id(), definition);
@@ -29,12 +29,12 @@ public final class AircraftDefinitionService {
     }
 
     /** 清空数据重载缓存；已生成实体不会调用此方法。 */
-    public static void clear() {
+    public static synchronized void clear() {
         definitions = Map.of();
     }
 
     /** Replaces all resource-backed definitions as one reload operation. */
-    public static void replaceAll(Map<String, AircraftDefinition> definitions) {
+    public static synchronized void replaceAll(Map<String, AircraftDefinition> definitions) {
         Objects.requireNonNull(definitions, "definitions");
         Map<String, AircraftDefinition> copy = new HashMap<>();
         definitions.forEach((id, definition) -> {

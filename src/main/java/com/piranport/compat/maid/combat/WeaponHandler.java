@@ -12,6 +12,11 @@ public interface WeaponHandler {
 
     int cooldownTicks(ItemStack stack);
 
+    /** Resolves cooldown with the firing world available for runtime overrides. */
+    default int cooldownTicks(EntityMaid maid, ItemStack stack) {
+        return cooldownTicks(stack);
+    }
+
     default boolean isOffensive() {
         return true;
     }

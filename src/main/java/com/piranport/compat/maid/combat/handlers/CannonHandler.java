@@ -39,6 +39,14 @@ public class CannonHandler implements WeaponHandler {
     }
 
     @Override
+    public int cooldownTicks(EntityMaid maid, ItemStack stack) {
+        if (stack.getItem() instanceof ArtilleryItem ai) {
+            return ai.getEffectiveData(maid.level()).reloadTime();
+        }
+        return cooldownTicks(stack);
+    }
+
+    @Override
     public boolean hasAmmo(EntityMaid maid, ItemStack stack) {
         if (!(stack.getItem() instanceof ArtilleryItem ai)) return false;
         Player owner = AmmoConsumer.ownerPlayer(maid);

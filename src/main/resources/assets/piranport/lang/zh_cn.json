@@ -1464,6 +1464,12 @@
   "gui.piranport.debug_terminal.header.value": "设定值",
   "gui.piranport.debug_terminal.reset_tab": "重置本页",
   "gui.piranport.debug_terminal.reset_all": "重置全部",
+  "gui.piranport.debug_terminal.control.debug": "调试",
+  "gui.piranport.debug_terminal.control.cooldown": "冷却",
+  "gui.piranport.debug_terminal.control.hit": "命中显示",
+  "gui.piranport.debug_terminal.control.snapshot": "日志快照",
+  "message.piranport.snapshot.done": "[调试] 调试快照已写入会话日志",
+  "message.piranport.snapshot.cooldown": "[调试] 快照冷却中",
 
   "gui.piranport.debug_terminal.ship_type.SMALL": "小型舰 SMALL",
   "gui.piranport.debug_terminal.ship_type.MEDIUM": "中型舰 MEDIUM",

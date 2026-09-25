@@ -2,6 +2,7 @@ package com.piranport.item;
 
 import com.piranport.config.ConfigToolPermissions;
 import com.piranport.menu.DebugTerminalMenu;
+import com.piranport.debug.PiranPortDebug;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -44,6 +45,15 @@ public class DebugTerminalItem extends Item {
                         Component.translatable("message.piranport.debug_terminal.admin_required")
                                 .withStyle(ChatFormatting.RED));
                 return InteractionResultHolder.fail(stack);
+            }
+
+            if (serverPlayer.isShiftKeyDown()) {
+                long cooldownMs = PiranPortDebug.snapshot(serverPlayer);
+                serverPlayer.sendSystemMessage(Component.translatable(
+                        cooldownMs > 0
+                                ? "message.piranport.snapshot.cooldown"
+                                : "message.piranport.snapshot.done"));
+                return InteractionResultHolder.sidedSuccess(stack, false);
             }
 
             serverPlayer.openMenu(new SimpleMenuProvider(

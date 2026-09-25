@@ -1262,6 +1262,12 @@
   "gui.piranport.debug_terminal.header.value": "Set",
   "gui.piranport.debug_terminal.reset_tab": "Reset Tab",
   "gui.piranport.debug_terminal.reset_all": "Reset All",
+  "gui.piranport.debug_terminal.control.debug": "Debug",
+  "gui.piranport.debug_terminal.control.cooldown": "Cooldown",
+  "gui.piranport.debug_terminal.control.hit": "Hit Display",
+  "gui.piranport.debug_terminal.control.snapshot": "Log Snapshot",
+  "message.piranport.snapshot.done": "[DEBUG] Snapshot written to session log",
+  "message.piranport.snapshot.cooldown": "[DEBUG] Snapshot is on cooldown",
 
   "gui.piranport.debug_terminal.ship_type.SMALL": "Small SMALL",
   "gui.piranport.debug_terminal.ship_type.MEDIUM": "Medium MEDIUM",

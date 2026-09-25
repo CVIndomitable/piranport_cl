@@ -43,6 +43,9 @@ public class DebugInputHandler {
 
     public static boolean isHitDisplayEnabled() { return hitDisplayEnabled; }
 
+    /** 供调试终端按钮更新客户端镜像；服务端仍由 HitDisplayTogglePayload 权威处理。 */
+    public static void setHitDisplayEnabled(boolean enabled) { hitDisplayEnabled = enabled; }
+
     public static boolean isDebugEnabledClient() { return debugEnabledClientState; }
 
     /** 由 DebugToggleAckPayload 校正本地状态，避免与服务端偏离 */

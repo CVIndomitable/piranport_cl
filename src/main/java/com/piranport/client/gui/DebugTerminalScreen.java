@@ -5,6 +5,11 @@ import com.piranport.item.TorpedoItem;
 import com.piranport.menu.DebugTerminalMenu;
 import com.piranport.network.ResetTerminalOverridesPayload;
 import com.piranport.network.UpdateTerminalOverridePayload;
+import com.piranport.network.DebugTogglePayload;
+import com.piranport.network.DebugCooldownOverridePayload;
+import com.piranport.network.HitDisplayTogglePayload;
+import com.piranport.network.SnapshotRequestPayload;
+import com.piranport.client.input.DebugInputHandler;
 import com.piranport.terminal.TerminalOverrides;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -59,6 +64,7 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
     private static final int EDIT_X = 200;        // 编辑框相对 x 的偏移
     private static final int EDIT_WIDTH = 50;
     private static final int EDIT_HEIGHT = 16;
+    private static final int CONTROL_TOP = 238;
 
     /** 每行编辑框，key = 「域:键」（如 {@code torpedo:torpedo_533mm_mk14} / {@code core:LARGE}）。 */
     private final Map<String, EditBox> editBoxes = new LinkedHashMap<>();
@@ -165,7 +171,42 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
                 button -> resetAll()
         ).bounds(x + 85, y + 215, 70, 20).build());
 
+        this.addRenderableWidget(Button.builder(
+                Component.translatable("gui.piranport.debug_terminal.control.debug"),
+                button -> toggleDebug()
+        ).bounds(x + 160, y + 215, 45, 20).build());
+        this.addRenderableWidget(Button.builder(
+                Component.translatable("gui.piranport.debug_terminal.control.cooldown"),
+                button -> toggleCooldown()
+        ).bounds(x + 207, y + 215, 45, 20).build());
+        this.addRenderableWidget(Button.builder(
+                Component.translatable("gui.piranport.debug_terminal.control.hit"),
+                button -> toggleHitDisplay()
+        ).bounds(x + 10, y + CONTROL_TOP, 70, 20).build());
+        this.addRenderableWidget(Button.builder(
+                Component.translatable("gui.piranport.debug_terminal.control.snapshot"),
+                button -> requestSnapshot()
+        ).bounds(x + 85, y + CONTROL_TOP, 70, 20).build());
+
         createRowWidgets();
+    }
+
+    private void toggleDebug() {
+        PacketDistributor.sendToServer(new DebugTogglePayload(!DebugInputHandler.isDebugEnabledClient()));
+    }
+
+    private void toggleCooldown() {
+        PacketDistributor.sendToServer(new DebugCooldownOverridePayload(!DebugInputHandler.isTestModeClient()));
+    }
+
+    private void toggleHitDisplay() {
+        boolean next = !DebugInputHandler.isHitDisplayEnabled();
+        DebugInputHandler.setHitDisplayEnabled(next);
+        PacketDistributor.sendToServer(new HitDisplayTogglePayload(next));
+    }
+
+    private void requestSnapshot() {
+        PacketDistributor.sendToServer(new SnapshotRequestPayload(true));
     }
 
     /** 当前标签页的行键（有序）。 */
@@ -477,7 +518,7 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
         int x = (this.width - this.imageWidth) / 2;
         int y = (this.height - this.imageHeight) / 2;
 
-        graphics.fill(x, y, x + this.imageWidth, y + 210, 0xFF8B8B8B);
+        graphics.fill(x, y, x + this.imageWidth, y + 265, 0xFF8B8B8B);
         graphics.fill(x, y, x + this.imageWidth, y + 20, 0xFF5A5A5A);
         graphics.fill(x + 5, y + 48, x + 232, y + 210, 0xFF6B6B6B);
     }

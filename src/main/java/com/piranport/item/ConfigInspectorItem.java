@@ -45,11 +45,11 @@ public class ConfigInspectorItem extends Item {
 
         // 核心开关
         tooltip.add(Component.literal("[核心开关]").withStyle(ChatFormatting.GOLD));
-        tooltip.add(Component.literal("  友军伤害: " + formatBoolean(ModCommonConfig.FRIENDLY_FIRE_ENABLED.get()))
+        tooltip.add(Component.literal("  友军伤害: 开启")
                 .withStyle(ChatFormatting.GRAY));
         tooltip.add(Component.literal("  爆炸破坏: " + formatBoolean(ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get()))
                 .withStyle(ChatFormatting.GRAY));
-        tooltip.add(Component.literal("  自动装填: " + formatBoolean(ModCommonConfig.AUTO_RESUPPLY_ENABLED.get()))
+        tooltip.add(Component.literal("  自动装填: 关闭")
                 .withStyle(ChatFormatting.GRAY));
 
         tooltip.add(Component.literal("")); // 空行
@@ -68,11 +68,11 @@ public class ConfigInspectorItem extends Item {
         // 1. 游戏模式与核心开关
         addSection(player, "游戏模式与核心开关");
         addConfigLine(player, "首次赠书", formatBoolean(ModCommonConfig.GIVE_GUIDEBOOK_ON_FIRST_JOIN.get()));
-        addConfigLine(player, "舰装槽位", ModCommonConfig.SHIP_CORE_SLOT_MODE.get());
-        addConfigLine(player, "友军伤害", formatBoolean(ModCommonConfig.FRIENDLY_FIRE_ENABLED.get()));
+        addConfigLine(player, "舰装槽位", "offhand");
+        addConfigLine(player, "友军伤害", "开启");
         addConfigLine(player, "爆炸破坏", formatBoolean(ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get()));
-        addConfigLine(player, "自动装填", formatBoolean(ModCommonConfig.AUTO_RESUPPLY_ENABLED.get()));
-        addConfigLine(player, "战斗机弹药", formatBoolean(ModCommonConfig.FIGHTER_AMMO_ENABLED.get()));
+        addConfigLine(player, "自动装填", "关闭");
+        addConfigLine(player, "战斗机弹药", "无限");
 
         // 2. 舰装属性
         addSection(player, "舰装属性");

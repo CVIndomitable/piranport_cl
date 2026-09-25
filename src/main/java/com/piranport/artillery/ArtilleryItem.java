@@ -149,7 +149,6 @@ public class ArtilleryItem extends Item {
     public boolean overrideOtherStackedOnMe(ItemStack stack, ItemStack other, Slot slot,
             ClickAction action, Player player, net.minecraft.world.entity.SlotAccess access) {
         if (action != ClickAction.SECONDARY) return false;
-        if (com.piranport.config.ModCommonConfig.AUTO_RESUPPLY_ENABLED.get()) return false;
         if (other.isEmpty() || !ShipCoreCombat.matchesCaliber(other, stack, player.level())) return false;
 
         LoadedAmmo current = stack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);

@@ -1234,32 +1234,7 @@ public class AircraftEntity extends Entity {
     boolean tryAutoResupplyAmmo(Player owner) {
         if (payloadType.isEmpty()) return false;
         // 自动补给是"空中重新装填挂载"，仅在 AUTO_RESUPPLY 开启时可用；手动模式下挂载只走 R 键背包装填
-        if (!ModCommonConfig.AUTO_RESUPPLY_ENABLED.get()) return false;
-        net.minecraft.world.item.Item payloadItem = resolvePayloadItem();
-        if (payloadItem == null) return false;
-
-        int needed = ammoCapacity - remainingAmmo;
-        int loaded = 0;
-        for (ItemStack ammo : owner.getInventory().items) {
-            if (needed <= 0) break;
-            if (!ammo.isEmpty() && ammo.getItem() == payloadItem) {
-                int take = Math.min(needed, ammo.getCount());
-                ammo.shrink(take);
-                needed -= take;
-                loaded += take;
-            }
-        }
-        ItemStack offhand = owner.getInventory().offhand.get(0);
-        if (needed > 0 && !offhand.isEmpty() && offhand.getItem() == payloadItem) {
-            int take = Math.min(needed, offhand.getCount());
-            offhand.shrink(take);
-            loaded += take;
-        }
-        if (loaded > 0) {
-            remainingAmmo += loaded;
-            hasFired = false;
-            return true;
-        }
+        // 自动装填固定关闭；保留方法作为旧实体调用方的兼容边界。
         return false;
     }
 

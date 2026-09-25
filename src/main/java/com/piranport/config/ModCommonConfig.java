@@ -8,8 +8,6 @@ public class ModCommonConfig {
 
     // ===== Equipment & Resupply (装备与补给) =====
 
-    public static final ModConfigSpec.BooleanValue FIGHTER_AMMO_ENABLED;
-    public static final ModConfigSpec.BooleanValue AUTO_RESUPPLY_ENABLED;
 
     // ===== Inventory (背包) =====
 
@@ -24,7 +22,6 @@ public class ModCommonConfig {
 
     // ===== Combat (战斗) =====
 
-    public static final ModConfigSpec.BooleanValue FRIENDLY_FIRE_ENABLED;
     public static final ModConfigSpec.BooleanValue EXPLOSION_BLOCK_DAMAGE;
 
     // ===== World Generation (世界生成) =====
@@ -37,20 +34,6 @@ public class ModCommonConfig {
 
     static {
         BUILDER.push("equipment");
-        FIGHTER_AMMO_ENABLED = BUILDER
-                .comment(
-                        "Enable ammo consumption for fighter aircraft (战斗机).",
-                        "Default: false (fighters have unlimited bullets, only fuel is consumed).",
-                        "Set to true to enable finite bullet count per sortie. (战斗机子弹消耗，默认关闭)")
-                .define("fighterAmmoEnabled", false);
-
-        AUTO_RESUPPLY_ENABLED = BUILDER
-                .comment(
-                        "Enable automatic ammo resupply (自动装填模式).",
-                        "Default: false (manual reload for torpedoes/aircraft).",
-                        "Set to true to auto-consume ammo from inventory on each shot.",
-                        "Note: cannons always auto-resupply since Phase 4.")
-                .define("autoResupplyEnabled", false);
         BUILDER.pop();
 
         BUILDER.push("inventory");
@@ -101,13 +84,6 @@ public class ModCommonConfig {
         BUILDER.pop();
 
         BUILDER.push("combat");
-        FRIENDLY_FIRE_ENABLED = BUILDER
-                .comment(
-                        "Enable friendly fire between players (友军伤害开关).",
-                        "Default: true (player projectiles can hit other players, 默认开启友伤).",
-                        "Set to false to prevent player-fired projectiles from hitting other players. (关闭后玩家抛射物不会命中其他玩家)")
-                .define("friendlyFireEnabled", true);
-
         EXPLOSION_BLOCK_DAMAGE = BUILDER
                 .comment(
                         "Allow cannon/torpedo explosions to destroy blocks (炮弹/鱼雷爆炸破坏方块).",

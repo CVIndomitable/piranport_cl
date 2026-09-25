@@ -144,8 +144,8 @@ public class AircraftCombat {
 
     /** @see AircraftEntity#tickFighterAttack(Player, Entity) */
     public static void tickFighterAttack(AircraftEntity craft, @Nullable Player owner, Entity target) {
-        boolean ammoEnabled = ModCommonConfig.FIGHTER_AMMO_ENABLED.get()
-                && attackProfile(craft) != AircraftDefinition.AttackProfile.ROCKET;
+        // 战斗机机枪弹药固定无限，不再由配置改变行为。
+        boolean ammoEnabled = false;
         if (ammoEnabled && craft.remainingAmmo <= 0) { craft.startReturning("fighter_ammo_depleted"); return; }
 
         Vec3 toTarget = target.getEyePosition().subtract(craft.position());
@@ -175,7 +175,7 @@ public class AircraftCombat {
             if (ammoEnabled) {
                 craft.remainingAmmo--;
                 if (craft.remainingAmmo <= 0) {
-                    if (owner != null && ModCommonConfig.AUTO_RESUPPLY_ENABLED.get() && craft.tryAutoResupplyAmmo(owner)) {
+                    if (owner != null && craft.tryAutoResupplyAmmo(owner)) {
                     } else {
                         craft.startReturning("fighter_ammo_depleted");
                     }
@@ -243,7 +243,7 @@ public class AircraftCombat {
     /** @see AircraftEntity#tickDiveBomberAttack(Player, LivingEntity) */
     public static void tickDiveBomberAttack(AircraftEntity craft, @Nullable Player owner, LivingEntity target) {
         if (craft.hasFired) {
-            if (owner != null && ModCommonConfig.AUTO_RESUPPLY_ENABLED.get() && craft.tryAutoResupplyAmmo(owner)) {
+            if (owner != null && craft.tryAutoResupplyAmmo(owner)) {
                 craft.setState(AircraftEntity.FlightState.CRUISING);
             } else {
                 craft.startReturning("dive_bomber_done");
@@ -300,7 +300,7 @@ public class AircraftCombat {
     /** @see AircraftEntity#tickTorpedoBomberAttack(Player, LivingEntity) */
     public static void tickTorpedoBomberAttack(AircraftEntity craft, @Nullable Player owner, LivingEntity target) {
         if (craft.remainingAmmo <= 0) {
-            if (owner != null && ModCommonConfig.AUTO_RESUPPLY_ENABLED.get() && craft.tryAutoResupplyAmmo(owner)) {
+            if (owner != null && craft.tryAutoResupplyAmmo(owner)) {
             } else {
                 craft.startReturning("torpedo_bomber_done");
                 return;
@@ -356,7 +356,7 @@ public class AircraftCombat {
     /** @see AircraftEntity#tickLevelBomberAttack(Player, LivingEntity) */
     public static void tickLevelBomberAttack(AircraftEntity craft, @Nullable Player owner, LivingEntity target) {
         if (craft.remainingAmmo <= 0) {
-            if (owner != null && ModCommonConfig.AUTO_RESUPPLY_ENABLED.get() && craft.tryAutoResupplyAmmo(owner)) {
+            if (owner != null && craft.tryAutoResupplyAmmo(owner)) {
                 craft.setState(AircraftEntity.FlightState.CRUISING);
             } else {
                 craft.startReturning("level_bomber_ammo_depleted");

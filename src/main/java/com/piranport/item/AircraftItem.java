@@ -47,7 +47,6 @@ public class AircraftItem extends Item {
     public boolean overrideOtherStackedOnMe(ItemStack stack, ItemStack other, Slot slot,
             ClickAction action, Player player, net.minecraft.world.entity.SlotAccess access) {
         if (action != ClickAction.SECONDARY) return false;
-        if (com.piranport.config.ModCommonConfig.AUTO_RESUPPLY_ENABLED.get()) return false;
         if (!other.is(ModItems.AVIATION_FUEL.get())) return false;
 
         AircraftInfo info = stack.get(ModDataComponents.AIRCRAFT_INFO.get());

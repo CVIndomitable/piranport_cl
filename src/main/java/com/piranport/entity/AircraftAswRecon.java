@@ -41,7 +41,7 @@ public class AircraftAswRecon {
     /** @see AircraftEntity#tickASWAttack(Player, LivingEntity) */
     public static void tickASWAttack(AircraftEntity craft, @Nullable Player owner, LivingEntity target) {
         if (craft.remainingAmmo <= 0) {
-            if (owner != null && ModCommonConfig.AUTO_RESUPPLY_ENABLED.get() && craft.tryAutoResupplyAmmo(owner)) {
+            if (owner != null && craft.tryAutoResupplyAmmo(owner)) {
                 // Ammo restored — continue attacking
             } else {
                 craft.startReturning("asw_ammo_depleted");

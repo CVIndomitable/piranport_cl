@@ -151,7 +151,7 @@ public class TorpedoLauncherItem extends Item {
             tooltipComponents.add(Component.translatable("tooltip.piranport.launcher.loaded_ammo",
                     loadedAmmo.count(), ammoName)
                     .withStyle(net.minecraft.ChatFormatting.GREEN));
-        } else if (!com.piranport.config.ModCommonConfig.AUTO_RESUPPLY_ENABLED.get()) {
+        } else {
             tooltipComponents.add(Component.translatable("tooltip.piranport.launcher.no_ammo_loaded")
                     .withStyle(net.minecraft.ChatFormatting.GRAY));
         }

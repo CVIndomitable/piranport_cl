@@ -444,10 +444,7 @@ public class AircraftFireStrategy {
      * One aviation_fuel item fills one aircraft to full fuelCapacity.
      */
     public static void refillAircraftFuel(Player player, ItemStack coreStack) {
-        if (!ModCommonConfig.AUTO_RESUPPLY_ENABLED.get()) return; // manual mode: no auto fuel
-        if (!(coreStack.getItem() instanceof ShipCoreItem)) return;
-
-        refillAircraftFuelInventoryMode(player);
+        // 自动装填固定关闭；燃油由手动补给流程处理。
     }
 
     /**

@@ -336,7 +336,7 @@ public final class ClientItemHooks implements com.piranport.platform.ClientBridg
         boolean onCooldown = isCannon
                 ? new com.piranport.combat.data.WeaponState(stack).isOnCooldown(gameTime)
                 : cooldowns.isOnCooldown(weaponSlot, gameTime);
-        boolean isManualMode = !com.piranport.config.ModCommonConfig.AUTO_RESUPPLY_ENABLED.get();
+        boolean isManualMode = true;
         boolean isAutoReloadMissile = stack.getItem() instanceof MissileLauncherItem ml0 && !ml0.isManualReload();
         // 鱼雷发射器在任何模式下都可能"已装填 / 空膛 / 从背包现取"三态，必须单独判，
         // 不能像火炮那样一刀切（装填模式开时火炮走自动补给，鱼雷不走）。

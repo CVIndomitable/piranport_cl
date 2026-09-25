@@ -1,5 +1,7 @@
 package com.piranport.entity;
 
+import com.piranport.aviation.AircraftDefinition;
+import com.piranport.aviation.AircraftDefinitionService;
 import com.piranport.component.AircraftInfo;
 import com.piranport.component.AircraftAttackMode;
 import com.piranport.config.ModCommonConfig;
@@ -35,42 +37,33 @@ public class AircraftCombat {
             return;
         }
 
-        if (craft.aircraftType == AircraftInfo.AircraftType.RECON) {
-            craft.startReturning("recon_no_attack");
-            return;
-        }
-
         boolean canFallback = craft.stateTicks >= 20;
-
-        if (craft.aircraftType == AircraftInfo.AircraftType.ROCKET_FIGHTER) {
-            if (!craft.hasFired && craft.remainingAmmo > 0) {
-                LivingEntity groundTarget = resolveTarget(craft, owner);
-                if (groundTarget != null) {
-                    tickRocketFighterMissileRun(craft, owner, groundTarget);
+        switch (attackProfile(craft)) {
+            case RECON -> craft.startReturning("recon_no_attack");
+            case ROCKET -> {
+                if (!craft.hasFired && craft.remainingAmmo > 0) {
+                    LivingEntity groundTarget = resolveTarget(craft, owner);
+                    if (groundTarget != null) {
+                        tickRocketFighterMissileRun(craft, owner, groundTarget);
+                        return;
+                    }
+                }
+                Entity airTarget = resolveFighterTarget(craft, owner);
+                if (airTarget == null) {
+                    if (canFallback) craft.setState(AircraftEntity.FlightState.CRUISING);
                     return;
                 }
+                tickFighterAttack(craft, owner, airTarget);
             }
-            Entity airTarget = resolveFighterTarget(craft, owner);
-            if (airTarget == null) {
-                if (canFallback) craft.setState(AircraftEntity.FlightState.CRUISING);
-                return;
+            case GUN -> {
+                Entity target = resolveFighterTarget(craft, owner);
+                if (target == null) {
+                    if (canFallback) craft.setState(AircraftEntity.FlightState.CRUISING);
+                    return;
+                }
+                tickFighterAttack(craft, owner, target);
             }
-            tickFighterAttack(craft, owner, airTarget);
-            return;
-        }
-
-        if (craft.hasBullets) {
-            Entity target = resolveFighterTarget(craft, owner);
-            if (target == null) {
-                if (canFallback) craft.setState(AircraftEntity.FlightState.CRUISING);
-                return;
-            }
-            tickFighterAttack(craft, owner, target);
-            return;
-        }
-
-        switch (craft.payloadType) {
-            case "piranport:aerial_torpedo" -> {
+            case TORPEDO -> {
                 LivingEntity target = resolveTarget(craft, owner);
                 if (target == null) {
                     if (canFallback) craft.setState(AircraftEntity.FlightState.CRUISING);
@@ -78,19 +71,23 @@ public class AircraftCombat {
                 }
                 tickTorpedoBomberAttack(craft, owner, target);
             }
-            case "piranport:aerial_bomb" -> {
+            case DIVE_BOMB -> {
                 LivingEntity target = resolveTarget(craft, owner);
                 if (target == null) {
                     if (canFallback) craft.setState(AircraftEntity.FlightState.CRUISING);
                     return;
                 }
-                if (craft.bombingMode == AircraftInfo.BombingMode.LEVEL) {
-                    tickLevelBomberAttack(craft, owner, target);
-                } else {
-                    tickDiveBomberAttack(craft, owner, target);
-                }
+                tickDiveBomberAttack(craft, owner, target);
             }
-            case "piranport:depth_charge" -> {
+            case LEVEL_BOMB -> {
+                LivingEntity target = resolveTarget(craft, owner);
+                if (target == null) {
+                    if (canFallback) craft.setState(AircraftEntity.FlightState.CRUISING);
+                    return;
+                }
+                tickLevelBomberAttack(craft, owner, target);
+            }
+            case DEPTH_CHARGE -> {
                 LivingEntity target = AircraftAswRecon.resolveASWTarget(craft, owner);
                 if (target == null) {
                     if (canFallback) craft.setState(AircraftEntity.FlightState.CRUISING);
@@ -98,7 +95,7 @@ public class AircraftCombat {
                 }
                 AircraftAswRecon.tickASWAttack(craft, owner, target);
             }
-            default -> craft.startReturning("no_payload");
+            case NONE -> craft.startReturning("no_payload");
         }
     }
 
@@ -109,32 +106,36 @@ public class AircraftCombat {
             return;
         }
 
-        if (craft.aircraftType == AircraftInfo.AircraftType.ROCKET_FIGHTER) {
-            if (!craft.hasFired && craft.remainingAmmo > 0) {
-                tickRocketFighterMissileRun(craft, null, craft.autonomousTarget);
-                return;
-            }
-            tickFighterAttack(craft, null, craft.autonomousTarget);
-            return;
-        }
-
-        if (craft.hasBullets) {
-            tickFighterAttack(craft, null, craft.autonomousTarget);
-            return;
-        }
-
-        switch (craft.payloadType) {
-            case "piranport:aerial_torpedo" -> tickTorpedoBomberAttack(craft, null, craft.autonomousTarget);
-            case "piranport:aerial_bomb" -> {
-                if (craft.bombingMode == AircraftInfo.BombingMode.LEVEL) {
-                    tickLevelBomberAttack(craft, null, craft.autonomousTarget);
+        switch (attackProfile(craft)) {
+            case ROCKET -> {
+                if (!craft.hasFired && craft.remainingAmmo > 0) {
+                    tickRocketFighterMissileRun(craft, null, craft.autonomousTarget);
                 } else {
-                    tickDiveBomberAttack(craft, null, craft.autonomousTarget);
+                    tickFighterAttack(craft, null, craft.autonomousTarget);
                 }
             }
-            case "piranport:depth_charge" -> AircraftAswRecon.tickASWAttack(craft, null, craft.autonomousTarget);
-            default -> craft.startReturning("no_payload");
+            case GUN -> tickFighterAttack(craft, null, craft.autonomousTarget);
+            case TORPEDO -> tickTorpedoBomberAttack(craft, null, craft.autonomousTarget);
+            case DIVE_BOMB -> tickDiveBomberAttack(craft, null, craft.autonomousTarget);
+            case LEVEL_BOMB -> tickLevelBomberAttack(craft, null, craft.autonomousTarget);
+            case DEPTH_CHARGE -> AircraftAswRecon.tickASWAttack(craft, null, craft.autonomousTarget);
+            case NONE, RECON -> craft.startReturning("no_payload");
         }
+    }
+
+    /** Resolve the immutable definition profile; legacy entities fall back to their old enum type. */
+    private static AircraftDefinition.AttackProfile attackProfile(AircraftEntity craft) {
+        AircraftDefinition definition = AircraftDefinitionService.find(craft.getAircraftDefinitionId());
+        if (definition != null) return definition.attackProfile();
+        return switch (craft.aircraftType) {
+            case FIGHTER -> AircraftDefinition.AttackProfile.GUN;
+            case ROCKET_FIGHTER -> AircraftDefinition.AttackProfile.ROCKET;
+            case DIVE_BOMBER -> AircraftDefinition.AttackProfile.DIVE_BOMB;
+            case LEVEL_BOMBER -> AircraftDefinition.AttackProfile.LEVEL_BOMB;
+            case TORPEDO_BOMBER -> AircraftDefinition.AttackProfile.TORPEDO;
+            case ASW -> AircraftDefinition.AttackProfile.DEPTH_CHARGE;
+            case RECON -> AircraftDefinition.AttackProfile.RECON;
+        };
     }
 
     // ====================================================================
@@ -144,7 +145,7 @@ public class AircraftCombat {
     /** @see AircraftEntity#tickFighterAttack(Player, Entity) */
     public static void tickFighterAttack(AircraftEntity craft, @Nullable Player owner, Entity target) {
         boolean ammoEnabled = ModCommonConfig.FIGHTER_AMMO_ENABLED.get()
-                && craft.aircraftType != AircraftInfo.AircraftType.ROCKET_FIGHTER;
+                && attackProfile(craft) != AircraftDefinition.AttackProfile.ROCKET;
         if (ammoEnabled && craft.remainingAmmo <= 0) { craft.startReturning("fighter_ammo_depleted"); return; }
 
         Vec3 toTarget = target.getEyePosition().subtract(craft.position());

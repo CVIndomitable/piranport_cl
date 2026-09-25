@@ -196,7 +196,7 @@ final class CannonProjectiles {
             float yawOffset = r * (float) Math.cos(theta);
             float pitchOffset = r * (float) Math.sin(theta);
 
-            SanshikiPelletEntity pellet = new SanshikiPelletEntity(
+            SanshikiPelletEntity pellet = CannonProjectileFactory.createSanshikiPellet(
                     level, player, pelletDamage, shellForRender);
             pellet.setPos(spawnPos);
             pellet.shootFromRotation(player,

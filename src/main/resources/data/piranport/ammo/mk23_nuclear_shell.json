@@ -1,0 +1,7 @@
+{
+  "behavior": "mk23",
+  "caliber_family": "large",
+  "explosion_multiplier": 10.0,
+  "underwater_explosion": true,
+  "impact_kind": "he"
+}

@@ -12,6 +12,7 @@ import org.jetbrains.annotations.Nullable;
 import com.piranport.item.ShipCoreItem;
 import com.piranport.artillery.config.ArtilleryCannonData;
 import com.piranport.combat.cannon.ammo.AmmoDefinitionService;
+import com.piranport.combat.cannon.ammo.AmmoBehavior;
 import static com.piranport.combat.cannon.CannonStats.getBarrelCount;
 
 /** 火炮弹药规则：标签口径匹配、弹种识别、默认弹药与已装弹校验。 */
@@ -55,7 +56,13 @@ public final class CannonAmmoRules {
 
     public static boolean matchesCaliber(ItemStack ammo, ItemStack weapon, @Nullable Level level) {
         if (weapon.getItem() instanceof com.piranport.artillery.ArtilleryItem) {
-            return switch (familyForWeapon(weapon, level)) {
+            CaliberFamily cannonFamily = familyForWeapon(weapon, level);
+            ResourceLocation ammoId = BuiltInRegistries.ITEM.getKey(ammo.getItem());
+            var definition = AmmoDefinitionService.find(ammoId);
+            if (definition.isPresent()) {
+                return definition.get().isCompatibleWith(cannonFamily);
+            }
+            return switch (cannonFamily) {
                 case SMALL -> ammo.is(ShipCoreItem.SMALL_SHELLS);
                 case MEDIUM -> ammo.is(ShipCoreItem.MEDIUM_SHELLS);
                 case LARGE -> ammo.is(ShipCoreItem.LARGE_SHELLS);
@@ -138,7 +145,13 @@ public final class CannonAmmoRules {
 
     public static Item getDefaultAmmoForWeapon(ItemStack weapon, @Nullable Level level) {
         if (weapon.getItem() instanceof com.piranport.artillery.ArtilleryItem) {
-            return switch (familyForWeapon(weapon, level)) {
+            CaliberFamily family = familyForWeapon(weapon, level);
+            for (var definition : AmmoDefinitionService.allInOrder()) {
+                if (definition.behavior() != AmmoBehavior.AP || !definition.isCompatibleWith(family)) continue;
+                Item item = BuiltInRegistries.ITEM.get(definition.itemId());
+                if (item != null && item != net.minecraft.world.item.Items.AIR) return item;
+            }
+            return switch (family) {
                 case SMALL -> ModItems.SMALL_AP_SHELL.get();
                 case MEDIUM -> ModItems.MEDIUM_AP_SHELL.get();
                 case LARGE -> ModItems.LARGE_AP_SHELL.get();

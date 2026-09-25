@@ -4,6 +4,7 @@ import com.piranport.component.AircraftInfo;
 import com.piranport.entity.AircraftEntity;
 import com.piranport.item.AircraftItem;
 import com.piranport.npc.deepocean.AbstractDeepOceanEntity;
+import com.piranport.npc.deepocean.DeepOceanLightCarrierEntity;
 import com.piranport.registry.ModDataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -26,6 +27,29 @@ import java.util.Objects;
  */
 public final class AircraftLaunchService {
     private AircraftLaunchService() {}
+
+    /**
+     * Select and launch one autonomous aircraft for a deep-ocean carrier.
+     * Carrier loadout policy and spawn geometry live here so entity subclasses
+     * only manage deck capacity and the returned aircraft reference.
+     */
+    @Nullable
+    public static AircraftEntity launchCarrier(AbstractDeepOceanEntity carrier, int aircraftIndex) {
+        Objects.requireNonNull(carrier, "carrier");
+        Level level = carrier.level();
+        if (level.isClientSide() || carrier.getMaxAircraft() <= 0
+                || aircraftIndex < 0 || aircraftIndex >= carrier.getMaxAircraft()) {
+            return null;
+        }
+
+        boolean lightCarrier = carrier instanceof DeepOceanLightCarrierEntity;
+        String itemId = carrierAircraftItemId(lightCarrier, aircraftIndex, carrier.getMaxAircraft());
+        LivingEntity target = carrier.getTarget();
+        Vec3 spawnPosition = carrierSpawnPosition(carrier, target);
+        AircraftEntity aircraft = createAutonomous(level, spawnPosition, itemId, target, carrier);
+        level.addFreshEntity(aircraft);
+        return aircraft;
+    }
 
     /**
      * Creates an autonomous aircraft from a stable registered item ID.
@@ -96,6 +120,25 @@ public final class AircraftLaunchService {
         // Keep createAutonomous on AircraftEntity as the low-level field mapper;
         // this service owns the stable ID, definition and context preparation.
         return AircraftEntity.createAutonomous(level, spawnPosition, launchStack, target, aircraftOwner);
+    }
+
+    private static String carrierAircraftItemId(boolean lightCarrier, int aircraftIndex, int maxAircraft) {
+        if (lightCarrier || aircraftIndex < maxAircraft / 2) return "piranport:seafire";
+        return "piranport:petrel_bomber";
+    }
+
+    private static Vec3 carrierSpawnPosition(AbstractDeepOceanEntity carrier, @Nullable LivingEntity target) {
+        if (target != null && target.isAlive()) {
+            double dx = target.getX() - carrier.getX();
+            double dz = target.getZ() - carrier.getZ();
+            double distance = Math.sqrt(dx * dx + dz * dz);
+            if (distance > 0.01) {
+                return new Vec3(carrier.getX() + dx / distance * 1.5,
+                        carrier.getY() + 3.0,
+                        carrier.getZ() + dz / distance * 1.5);
+            }
+        }
+        return new Vec3(carrier.getX(), carrier.getY() + 3.0, carrier.getZ() + 1.5);
     }
 
     /** Resolves and validates a registered aircraft item from its stable ID. */

@@ -1,6 +1,5 @@
 package com.piranport.npc.deepocean;
 
-import com.piranport.component.AircraftInfo;
 import com.piranport.aviation.AircraftLaunchService;
 import com.piranport.entity.AircraftEntity;
 import com.piranport.npc.ai.FleetGroup;
@@ -479,48 +478,8 @@ public abstract class AbstractDeepOceanEntity extends Monster {
         if (!(level() instanceof ServerLevel sl)) return;
         if (sl.getServer() == null) return;
 
-        // 选择飞机类型：轻母全战斗机，航母前半战斗机后半俯冲轰炸机
-        AircraftInfo.AircraftType type;
-        if (this instanceof DeepOceanLightCarrierEntity) {
-            type = AircraftInfo.AircraftType.FIGHTER;
-        } else {
-            type = currentAircraft < getMaxAircraft() / 2
-                    ? AircraftInfo.AircraftType.FIGHTER
-                    : AircraftInfo.AircraftType.DIVE_BOMBER;
-        }
-
-        String aircraftItemId = switch (type) {
-            case FIGHTER -> "piranport:seafire";
-            case DIVE_BOMBER -> "piranport:petrel_bomber";
-            case TORPEDO_BOMBER -> "piranport:swordfish_torpedo";
-            case LEVEL_BOMBER -> "piranport:b25_bomber";
-            case ASW -> "piranport:swordfish_asw";
-            case RECON -> "piranport:saiun_recon";
-            case ROCKET_FIGHTER -> "piranport:f6f_hellcat_rocket";
-            default -> "piranport:seafire";
-        };
-
-        // 在舰娘前方生成，朝向目标
-        Vec3 spawnPos;
-        LivingEntity target = getTarget();
-        if (target != null && target.isAlive()) {
-            double dx = target.getX() - getX();
-            double dz = target.getZ() - getZ();
-            double dist = Math.sqrt(dx * dx + dz * dz);
-            if (dist > 0.01) {
-                double nx = dx / dist;
-                double nz = dz / dist;
-                spawnPos = new Vec3(getX() + nx * 1.5, getY() + 3.0, getZ() + nz * 1.5);
-            } else {
-                spawnPos = new Vec3(getX(), getY() + 3.0, getZ() + 1.5);
-            }
-        } else {
-            spawnPos = new Vec3(getX(), getY() + 3.0, getZ() + 1.5);
-        }
-
-        AircraftEntity aircraft = AircraftLaunchService.createAutonomous(
-                level(), spawnPos, aircraftItemId, target, this);
-        sl.addFreshEntity(aircraft);
+        AircraftEntity aircraft = AircraftLaunchService.launchCarrier(this, currentAircraft);
+        if (aircraft == null) return;
         aircraftOwner = this;
         currentAircraft++;
     }

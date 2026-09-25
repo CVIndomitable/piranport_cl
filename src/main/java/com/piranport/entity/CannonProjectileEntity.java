@@ -12,6 +12,8 @@ import com.piranport.combat.cannon.ammo.AmmoBehavior;
 import com.piranport.combat.cannon.ammo.AmmoBehaviorResolver;
 import com.piranport.combat.cannon.ammo.AmmoBehaviorStrategy;
 import com.piranport.combat.cannon.ammo.AmmoBehaviorRegistry;
+import com.piranport.combat.cannon.impact.ProjectileImpactResolver;
+import com.piranport.combat.cannon.impact.ProjectileImpactResult;
 import com.piranport.network.CannonImpactEffectPayload;
 import com.piranport.registry.ModBlocks;
 import com.piranport.registry.ModEntityTypes;
@@ -468,15 +470,8 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
                         ModSounds.CANNON_EXPLOSION.get(), SoundSource.PLAYERS, 2.0f, 0.9f + random.nextFloat() * 0.2f);
             } else {
                 // AP：130% 基础直击伤害，与原版箭矢一样随速度衰减，忽略 50% 目标护甲
-                float currentSpeed = (float) getDeltaMovement().length();
-                float speedRatio = initialSpeed > 0 ? currentSpeed / initialSpeed : 1.0f;
                 float apMultiplier = (float) getProjectileDouble("AP_DAMAGE_MULTIPLIER",
                         ModProjectilesConfig.AP_DAMAGE_MULTIPLIER.get());
-                float apDamage = damage * apMultiplier * speedRatio;
-                // 依据：策划决策/数值/05-船型职能分化修订.md（大口径 AP 对小型船过穿 5%）
-                if (target instanceof LivingEntity) {
-                    apDamage = ShipTypeMitigationHelper.applyLargeApOverpen(apDamage, sourceCaliber);
-                }
                 float apArmorIgnore = (float) getProjectileDouble("AP_ARMOR_IGNORE",
                         ModProjectilesConfig.AP_ARMOR_IGNORE.get());
                 // 依据：策划决策/武器/弹药-AP弹穿甲设计.md（91 式 20% / 一式 50% 护甲忽略）
@@ -486,8 +481,14 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
                 } else if (ammoItem == ModItems.TYPE_1_AP_SHELL.get()) {
                     apArmorIgnore = 0.50f;
                 }
-                if (apArmorIgnore < 0) apArmorIgnore = 0;
-                if (apArmorIgnore > 1) apArmorIgnore = 1;
+                boolean smallShip = target instanceof LivingEntity living
+                        && ShipTypeMitigationHelper.isSmallTransformedPlayer(living);
+                float maxHealth = target instanceof LivingEntity living ? living.getMaxHealth() : 0f;
+                ProjectileImpactResult impact = ProjectileImpactResolver.resolve(
+                        AmmoBehavior.AP, damage, initialSpeed, (float) getDeltaMovement().length(),
+                        apMultiplier, sourceCaliber, smallShip, maxHealth, apArmorIgnore);
+                float apDamage = impact.damage();
+                apArmorIgnore = impact.armorIgnore();
                 level().playSound(null, getX(), getY(), getZ(),
                         SoundEvents.ANVIL_LAND, SoundSource.PLAYERS, 0.5f, 1.2f);
                 if (target instanceof LivingEntity living) {
@@ -506,9 +507,6 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
                     }
                     try {
                         // 依据：策划决策/数值/05-船型职能分化修订.md（小型船 AP/HE 单次封顶 = maxHealth/4）
-                        if (ShipTypeMitigationHelper.isSmallTransformedPlayer(living)) {
-                            apDamage = ShipTypeMitigationHelper.capSmallShipDamage(apDamage, living.getMaxHealth());
-                        }
                         living.hurt(damageSources().thrown(this, getOwner()), apDamage);
                     } finally {
                         if (applied && armorAttr != null) {

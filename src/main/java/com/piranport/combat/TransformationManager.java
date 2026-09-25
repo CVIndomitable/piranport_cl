@@ -74,22 +74,7 @@ public class TransformationManager {
      * @return 核心物品栈，如果未装备则返回 ItemStack.EMPTY
      */
     public static ItemStack getCoreFromConfiguredSlot(Player player) {
-        String slotMode = ModCommonConfig.SHIP_CORE_SLOT_MODE.get();
-
-        // 向后兼容：将旧的 "chest" 配置自动映射到 "helmet"
-        if ("chest".equalsIgnoreCase(slotMode)) {
-            if (!chestModeWarningLogged) {
-                PiranPort.LOGGER.warn("Config value 'chest' for shipCoreSlotMode is deprecated. " +
-                        "Please update to 'helmet'. Auto-migrating to helmet slot.");
-                chestModeWarningLogged = true;
-            }
-            return player.getItemBySlot(EquipmentSlot.HEAD);
-        } else if ("helmet".equalsIgnoreCase(slotMode)) {
-            return player.getItemBySlot(EquipmentSlot.HEAD);
-        } else {
-            // 默认：副手模式
-            return player.getOffhandItem();
-        }
+        return player.getOffhandItem();
     }
 
     /** 查找当前激活的变身核心。根据配置检测副手或胸甲槽位。 */
@@ -117,19 +102,7 @@ public class TransformationManager {
      * @param coreStack 核心物品栈
      */
     public static void writeCoreToConfiguredSlot(Player player, ItemStack coreStack) {
-        String slotMode = ModCommonConfig.SHIP_CORE_SLOT_MODE.get();
-
-        // 向后兼容：将旧的 "chest" 配置自动映射到 "helmet"
-        if ("chest".equalsIgnoreCase(slotMode)) {
-            slotMode = "helmet";
-        }
-
-        if ("helmet".equalsIgnoreCase(slotMode)) {
-            player.setItemSlot(EquipmentSlot.HEAD, coreStack);
-        } else {
-            // 默认：副手模式
-            player.getInventory().offhand.set(0, coreStack);
-        }
+        player.getInventory().offhand.set(0, coreStack);
     }
 
     /**

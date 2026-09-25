@@ -50,49 +50,7 @@ public class ServerGameEvents {
      */
     @SubscribeEvent
     public static void onWeaponPickup(ItemEntityPickupEvent.Pre event) {
-        if (!ModCommonConfig.WEAPON_PICKUP_TO_INVENTORY.get()) return;
-        Player player = event.getPlayer();
-        ItemEntity itemEntity = event.getItemEntity();
-        ItemStack stack = itemEntity.getItem();
-        if (TransformationManager.getItemLoad(stack) <= 0) return;
-
-        Inventory inv = player.getInventory();
-        int total = stack.getCount();
-        int taken = 0;
-
-        // 第一轮：合并到主背包已有叠堆
-        for (int i = 9; i < 36 && taken < total; i++) {
-            ItemStack existing = inv.getItem(i);
-            if (ItemStack.isSameItemSameComponents(existing, stack)
-                    && existing.getCount() < existing.getMaxStackSize()) {
-                int space = existing.getMaxStackSize() - existing.getCount();
-                int add = Math.min(space, total - taken);
-                existing.grow(add);
-                taken += add;
-            }
-        }
-
-        // 第二轮：放入主背包空格
-        for (int i = 9; i < 36 && taken < total; i++) {
-            if (inv.getItem(i).isEmpty()) {
-                int add = Math.min(stack.getMaxStackSize(), total - taken);
-                inv.setItem(i, stack.copyWithCount(add));
-                taken += add;
-            }
-        }
-
-        if (taken == 0) return;
-
-        if (player instanceof ServerPlayer sp) {
-            sp.awardStat(Stats.ITEM_PICKED_UP.get(stack.getItem()), taken);
-        }
-
-        stack.shrink(taken);
-        if (stack.isEmpty()) {
-            itemEntity.discard();
-        }
-
-        event.setCanPickup(TriState.FALSE);
+        // 保持原版拾取规则：武器不再被重定向到主背包。
     }
 
     /** 每 tick 驱动地牢脚本 */

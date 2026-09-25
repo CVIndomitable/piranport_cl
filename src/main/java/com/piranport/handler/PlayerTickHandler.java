@@ -155,7 +155,7 @@ public class PlayerTickHandler {
                             PiranPort.LOGGER.warn("Player {} has ship core in slot but not transformed. Core: {}, Slot: {}, DataComponent: {}",
                                 player.getName().getString(),
                                 coreStack.getItem(),
-                                ModCommonConfig.SHIP_CORE_SLOT_MODE.get(),
+                                "offhand",
                                 coreStack.get(ModDataComponents.SHIP_CORE_TRANSFORMED.get()));
                         }
                     }

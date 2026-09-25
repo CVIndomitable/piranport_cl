@@ -1,6 +1,5 @@
 package com.piranport.block;
 
-import com.piranport.config.ModCommonConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
@@ -26,10 +25,6 @@ public class SeasonalLeavesBlock extends LeavesBlock {
     @Override
     protected void randomTick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
         super.randomTick(state, level, pos, random);
-        if (!ModCommonConfig.SEASONAL_LEAF_COLOR_ENABLED.get()) {
-            return;
-        }
-
         BlockState current = level.getBlockState(pos);
         if (!current.is(this)) {
             return;

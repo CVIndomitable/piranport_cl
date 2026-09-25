@@ -11,8 +11,6 @@ public class ModCommonConfig {
 
     // ===== Inventory (背包) =====
 
-    public static final ModConfigSpec.ConfigValue<String> SHIP_CORE_SLOT_MODE;
-    public static final ModConfigSpec.BooleanValue WEAPON_PICKUP_TO_INVENTORY;
 
     // ===== Movement (移动) =====
 
@@ -26,7 +24,6 @@ public class ModCommonConfig {
 
     // ===== World Generation (世界生成) =====
 
-    public static final ModConfigSpec.BooleanValue SEASONAL_LEAF_COLOR_ENABLED;
 
     // ===== Game Mode (游戏模式) =====
 
@@ -37,23 +34,6 @@ public class ModCommonConfig {
         BUILDER.pop();
 
         BUILDER.push("inventory");
-        SHIP_CORE_SLOT_MODE = BUILDER
-                .comment(
-                        "Ship Core equipment slot mode (舰装核心装备槽位模式).",
-                        "Options: 'offhand' or 'helmet'.",
-                        "  - offhand: Ship core must be held in offhand (default, current behavior).",
-                        "  - helmet: Ship core must be equipped in helmet armor slot.",
-                        "Default: 'offhand' (副手模式，当前行为).",
-                        "Set to 'helmet' to enable helmet mode (设为'helmet'启用头盔模式).",
-                        "Note: 'chest' is deprecated and will be auto-migrated to 'helmet' (注意：'chest'已弃用，将自动迁移到'helmet').")
-                .define("shipCoreSlotMode", "offhand");
-
-        WEAPON_PICKUP_TO_INVENTORY = BUILDER
-                .comment(
-                        "Send picked-up weapon items to main inventory instead of hotbar (武器拾取入背包).",
-                        "Default: false (vanilla behavior — hotbar first).",
-                        "Set to true to redirect guns/torpedoes/aircraft/armor plates to slots 9-35 on pickup. (武器拾取自动进入背包而非快捷栏，默认关闭)")
-                .define("weaponPickupToInventory", false);
         BUILDER.pop();
 
         BUILDER.push("movement");
@@ -93,12 +73,6 @@ public class ModCommonConfig {
         BUILDER.pop();
 
         BUILDER.push("worldgen");
-        SEASONAL_LEAF_COLOR_ENABLED = BUILDER
-                .comment(
-                        "Enable seasonal color changes for Piran Port tree leaves (树叶季节变色).",
-                        "Default: false. When enabled, leaf blocks update by random tick and switch season every 90 Minecraft days.",
-                        "默认关闭。开启后树叶通过随机刻按每 90 个 Minecraft 日切换春夏秋冬状态。")
-                .define("seasonalLeafColorEnabled", false);
         BUILDER.pop();
 
         BUILDER.push("gameMode");

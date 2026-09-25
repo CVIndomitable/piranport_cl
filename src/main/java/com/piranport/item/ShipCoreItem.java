@@ -107,10 +107,6 @@ public class ShipCoreItem extends Item implements Equipable {
 
     @Override
     public EquipmentSlot getEquipmentSlot() {
-        String slotMode = ModCommonConfig.SHIP_CORE_SLOT_MODE.get();
-        if ("helmet".equalsIgnoreCase(slotMode) || "chest".equalsIgnoreCase(slotMode)) {
-            return EquipmentSlot.HEAD;
-        }
         return EquipmentSlot.OFFHAND;
     }
 
@@ -428,10 +424,7 @@ public class ShipCoreItem extends Item implements Equipable {
             }
 
             // 显示槽位提示
-            String slotMode = ModCommonConfig.SHIP_CORE_SLOT_MODE.get();
-            String hintKey = "tooltip.piranport.ship_core.slot_hint." +
-                ("chest".equalsIgnoreCase(slotMode) ? "chest" :
-                 "helmet".equalsIgnoreCase(slotMode) ? "helmet" : "offhand");
+            String hintKey = "tooltip.piranport.ship_core.slot_hint.offhand";
             tooltipComponents.add(Component.translatable(hintKey)
                     .withStyle(net.minecraft.ChatFormatting.GRAY));
         }

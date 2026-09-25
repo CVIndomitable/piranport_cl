@@ -169,7 +169,7 @@ public class AircraftCombat {
             bullet.setSourceAircraftName(craft.getDisplayName());
             bullet.setSourceAircraft(craft);
             craft.level().addFreshEntity(bullet);
-            craft.attackCooldown = 5;
+            craft.attackCooldown = craft.attackCooldownDuration();
 
             if (ammoEnabled) {
                 craft.remainingAmmo--;
@@ -227,7 +227,7 @@ public class AircraftCombat {
             if (craft.remainingAmmo <= 0) {
                 craft.hasFired = true;
             } else {
-                craft.attackCooldown = 40;
+                craft.attackCooldown = craft.attackCooldownDuration();
             }
             return;
         }
@@ -340,7 +340,7 @@ public class AircraftCombat {
                 craft.level().addFreshEntity(torpedo);
             }
             craft.remainingAmmo -= toFire;
-            craft.attackCooldown = 40;
+            craft.attackCooldown = craft.attackCooldownDuration();
             if (craft.remainingAmmo <= 0) {
                 craft.startReturning("torpedo_launched");
             }

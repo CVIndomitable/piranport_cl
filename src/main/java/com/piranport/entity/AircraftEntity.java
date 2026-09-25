@@ -264,7 +264,10 @@ public class AircraftEntity extends Entity {
             if (definition != null) entity.payloadType = definition.payloadRegistryName();
             entity.hasBullets = entity.aircraftType == AircraftInfo.AircraftType.FIGHTER;
         }
-        entity.aircraftHealth = getMaxHealth(entity.aircraftType);
+        AircraftDefinition healthDefinition = AircraftDefinitionService.find(entity.aircraftDefinitionId);
+        entity.aircraftHealth = healthDefinition != null
+                ? AircraftStatsService.resolve(healthDefinition).health()
+                : getMaxHealth(entity.aircraftType);
         entity.originalStack = aircraftStack.copy();
         entity.entityData.set(AIRCRAFT_TYPE_DATA, entity.aircraftType.ordinal());
         entity.entityData.set(AIRCRAFT_DEFINITION_DATA, entity.aircraftDefinitionId);
@@ -317,7 +320,10 @@ public class AircraftEntity extends Entity {
             entity.payloadType = definition.payloadRegistryName();
             entity.hasBullets = definition.attackProfile() == AircraftDefinition.AttackProfile.GUN;
         }
-        entity.aircraftHealth = getMaxHealth(entity.aircraftType);
+        AircraftDefinition healthDefinition = AircraftDefinitionService.find(entity.aircraftDefinitionId);
+        entity.aircraftHealth = healthDefinition != null
+                ? AircraftStatsService.resolve(healthDefinition).health()
+                : getMaxHealth(entity.aircraftType);
         entity.originalStack = aircraftStack.copy();
         entity.entityData.set(AIRCRAFT_TYPE_DATA, entity.aircraftType.ordinal());
         entity.entityData.set(AIRCRAFT_DEFINITION_DATA, entity.aircraftDefinitionId);
@@ -1488,6 +1494,17 @@ public class AircraftEntity extends Entity {
         int ordinal = entityData.get(AIRCRAFT_TYPE_DATA);
         if (ordinal < 0 || ordinal >= AIRCRAFT_TYPE_VALUES.length) return AircraftInfo.AircraftType.FIGHTER;
         return AIRCRAFT_TYPE_VALUES[ordinal];
+    }
+
+    /** Cooldown defined by the immutable aircraft definition, with legacy fallback. */
+    int attackCooldownDuration() {
+        AircraftDefinition definition = AircraftDefinitionService.find(aircraftDefinitionId);
+        return definition != null ? AircraftStatsService.resolve(definition).cooldown() : switch (aircraftType) {
+            case FIGHTER -> 5;
+            case ROCKET_FIGHTER, TORPEDO_BOMBER -> 40;
+            case DIVE_BOMBER, LEVEL_BOMBER, RECON -> 1;
+            case ASW -> 30;
+        };
     }
 
     /** 返回实体创建时解析的稳定飞机定义 ID。 */

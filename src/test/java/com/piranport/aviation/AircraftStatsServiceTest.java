@@ -14,7 +14,7 @@ class AircraftStatsServiceTest {
     }
 
     @Test
-    void resolvesDefinitionValuesAndLegacyConfigValues() {
+    void resolvesDefinitionValuesAndLegacyValues() {
         AircraftDefinition definition = new AircraftDefinition(
                 "piranport:aircraft/test_stats", AircraftInfo.AircraftType.FIGHTER,
                 AircraftDefinition.AttackProfile.GUN, AircraftDefinition.PayloadType.NONE,
@@ -28,7 +28,7 @@ class AircraftStatsServiceTest {
         assertEquals(7, stats.ammoCapacity());
         assertEquals(19, stats.weight());
         assertEquals(20, stats.health());
-        assertEquals(40, stats.cooldown());
+        assertEquals(5, stats.cooldown());
     }
 
     @Test

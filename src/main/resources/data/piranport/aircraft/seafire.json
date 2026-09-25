@@ -8,5 +8,7 @@
   "panel_damage": 3.0,
   "panel_speed": 1.8,
   "weight": 12,
-  "bombing_mode": "dive"
+  "bombing_mode": "dive",
+  "health": 20,
+  "attack_cooldown": 5
 }

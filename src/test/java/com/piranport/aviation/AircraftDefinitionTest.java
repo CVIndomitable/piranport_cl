@@ -85,5 +85,21 @@ class AircraftDefinitionTest {
         assertEquals(AircraftDefinition.PayloadType.AERIAL_TORPEDO, definition.payloadType());
         assertEquals("swordfish", definition.visualId());
         assertEquals(18.0F, definition.panelDamage());
+        assertEquals(15, definition.health());
+        assertEquals(40, definition.attackCooldown());
+    }
+
+    @Test
+    void jsonExplicitHealthAndCooldownOverrideLegacyDefaults() {
+        String json = "{\"aircraft_class\":\"fighter\",\"attack_profile\":\"gun\","
+                + "\"payload_type\":\"none\",\"visual_id\":\"custom\","
+                + "\"fuel_capacity\":100,\"ammo_capacity\":1,\"panel_damage\":1.0,"
+                + "\"panel_speed\":1.0,\"weight\":1,\"bombing_mode\":\"dive\","
+                + "\"health\":37,\"attack_cooldown\":9}";
+        AircraftDefinition definition = new Gson().fromJson(json,
+                AircraftDefinitionReloadListener.JsonAircraftDefinition.class)
+                .toDefinition("piranport:aircraft/custom");
+        assertEquals(37, definition.health());
+        assertEquals(9, definition.attackCooldown());
     }
 }

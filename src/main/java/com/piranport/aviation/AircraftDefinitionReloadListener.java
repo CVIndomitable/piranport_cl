@@ -68,12 +68,17 @@ public final class AircraftDefinitionReloadListener
             float panel_damage,
             float panel_speed,
             int weight,
-            String bombing_mode
+            String bombing_mode,
+            Integer health,
+            Integer attack_cooldown
     ) {
         AircraftDefinition toDefinition(String id) {
+            AircraftInfo.AircraftType aircraftType = enumValue(aircraft_class, AircraftInfo.AircraftType.class, "aircraft_class", id);
+            int resolvedHealth = health != null ? health : legacyHealth(aircraftType);
+            int resolvedCooldown = attack_cooldown != null ? attack_cooldown : legacyCooldown(aircraftType);
             return new AircraftDefinition(
                     id,
-                    enumValue(aircraft_class, AircraftInfo.AircraftType.class, "aircraft_class", id),
+                    aircraftType,
                     enumValue(attack_profile, AircraftDefinition.AttackProfile.class, "attack_profile", id),
                     enumValue(payload_type, AircraftDefinition.PayloadType.class, "payload_type", id),
                     visual_id,
@@ -82,7 +87,28 @@ public final class AircraftDefinitionReloadListener
                     panel_damage,
                     panel_speed,
                     weight,
-                    enumValue(bombing_mode, AircraftInfo.BombingMode.class, "bombing_mode", id));
+                    enumValue(bombing_mode, AircraftInfo.BombingMode.class, "bombing_mode", id),
+                    resolvedHealth, resolvedCooldown);
+        }
+
+        private static int legacyHealth(AircraftInfo.AircraftType type) {
+            return switch (type) {
+                case FIGHTER, ROCKET_FIGHTER -> 20;
+                case DIVE_BOMBER -> 15;
+                case LEVEL_BOMBER -> 12;
+                case TORPEDO_BOMBER -> 15;
+                case ASW -> 12;
+                case RECON -> 10;
+            };
+        }
+
+        private static int legacyCooldown(AircraftInfo.AircraftType type) {
+            return switch (type) {
+                case FIGHTER -> 5;
+                case ROCKET_FIGHTER, TORPEDO_BOMBER -> 40;
+                case DIVE_BOMBER, LEVEL_BOMBER, RECON -> 1;
+                case ASW -> 30;
+            };
         }
 
         private static <E> E enumValue(String value, Class<E> type, String field, String id) {

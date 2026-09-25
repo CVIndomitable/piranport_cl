@@ -86,7 +86,7 @@ public class AircraftAswRecon {
                     craft.level().addFreshEntity(dc);
                 }
                 craft.remainingAmmo -= toFire;
-                craft.attackCooldown = 30;
+                craft.attackCooldown = craft.attackCooldownDuration();
             }
 
             Vec3 horizontal = new Vec3(dx, 0, dz).normalize().scale(Math.min(craft.panelSpeed * 0.4, horizDist));

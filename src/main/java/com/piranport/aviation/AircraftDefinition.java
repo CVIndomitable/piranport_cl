@@ -18,8 +18,21 @@ public record AircraftDefinition(
         float panelDamage,
         float panelSpeed,
         int weight,
-        AircraftInfo.BombingMode bombingMode
+        AircraftInfo.BombingMode bombingMode,
+        int health,
+        int attackCooldown
 ) {
+    /** Compatibility constructor for existing callers and legacy definitions. */
+    public AircraftDefinition(String id, AircraftInfo.AircraftType aircraftClass,
+                              AttackProfile attackProfile, PayloadType payloadType,
+                              String visualId, int fuelCapacity, int ammoCapacity,
+                              float panelDamage, float panelSpeed, int weight,
+                              AircraftInfo.BombingMode bombingMode) {
+        this(id, aircraftClass, attackProfile, payloadType, visualId, fuelCapacity, ammoCapacity,
+                panelDamage, panelSpeed, weight, bombingMode, legacyHealth(aircraftClass),
+                legacyCooldown(aircraftClass));
+    }
+
     public AircraftDefinition {
         id = requireId(id);
         Objects.requireNonNull(aircraftClass, "aircraftClass");
@@ -27,7 +40,7 @@ public record AircraftDefinition(
         Objects.requireNonNull(payloadType, "payloadType");
         visualId = requireId(visualId);
         Objects.requireNonNull(bombingMode, "bombingMode");
-        if (fuelCapacity < 1 || ammoCapacity < 0 || weight < 0) {
+        if (fuelCapacity < 1 || ammoCapacity < 0 || weight < 0 || health < 1 || attackCooldown < 1) {
             throw new IllegalArgumentException("aircraft capacities and weight must be non-negative");
         }
         if (!Float.isFinite(panelDamage) || panelDamage < 0.0F) {
@@ -47,7 +60,30 @@ public record AircraftDefinition(
         PayloadType payload = PayloadType.from(type);
         return new AircraftDefinition(id, type, profile, payload, type.getSerializedName(),
                 info.fuelCapacity(), info.ammoCapacity(), info.panelDamage(), info.panelSpeed(),
-                info.weight(), info.bombingMode());
+                info.weight(), info.bombingMode(), legacyHealth(type), legacyCooldown(type));
+    }
+
+    private static int legacyHealth(AircraftInfo.AircraftType type) {
+        return switch (type) {
+            case FIGHTER -> 20;
+            case ROCKET_FIGHTER -> 20;
+            case DIVE_BOMBER -> 15;
+            case LEVEL_BOMBER -> 12;
+            case TORPEDO_BOMBER -> 15;
+            case ASW -> 12;
+            case RECON -> 10;
+        };
+    }
+
+    private static int legacyCooldown(AircraftInfo.AircraftType type) {
+        return switch (type) {
+            case FIGHTER -> 5;
+            case ROCKET_FIGHTER -> 40;
+            case DIVE_BOMBER, LEVEL_BOMBER -> 1;
+            case TORPEDO_BOMBER -> 40;
+            case ASW -> 30;
+            case RECON -> 1;
+        };
     }
 
     public String payloadRegistryName() {

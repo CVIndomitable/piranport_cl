@@ -1,5 +1,9 @@
 package com.piranport.entity;
 
+import com.piranport.combat.cannon.CannonAim;
+import com.piranport.combat.cannon.fire.CannonFireRequest;
+import com.piranport.combat.cannon.fire.CannonFireService;
+import com.piranport.combat.cannon.fire.CannonProjectileFactory;
 import com.piranport.registry.ModEntityTypes;
 import com.piranport.registry.ModItems;
 import net.minecraft.core.particles.ParticleTypes;
@@ -145,16 +149,19 @@ public class LowTierDestroyerEntity extends Monster {
             nextTrackingShotAt = shotsFired + 2 + random.nextInt(4);
         }
 
-        // Create HE shell aimed at target
-        CannonProjectileEntity shell = new CannonProjectileEntity(
-                level(), this,
-                new ItemStack(ModItems.SMALL_HE_SHELL.get()),
-                SHELL_DAMAGE, true, EXPLOSION_POWER);
-
         // Aim: direction to target with arc compensation for gravity
         Vec3 aim = target.getEyePosition().subtract(getEyePosition());
         double hDist = aim.horizontalDistance();
         double arcY = hDist * 0.05; // rough upward compensation for parabolic drop
+        ItemStack weapon = new ItemStack(ModItems.SINGLE_SMALL_GUN.get());
+        ItemStack shellStack = new ItemStack(ModItems.SMALL_HE_SHELL.get());
+        CannonFireRequest request = CannonFireService.request(
+                level(), this, weapon, shellStack, SHELL_DAMAGE, EXPLOSION_POWER,
+                SHELL_SPEED, 0.015f, 9.8f, SHELL_INACCURACY, SHELL_INACCURACY,
+                4, true, false,
+                new CannonAim.DirectAim(target.getBoundingBox().getCenter()), getEyePosition());
+        if (!CannonFireService.isValid(request)) return;
+        var shell = CannonProjectileFactory.create(request);
         shell.shoot(aim.x, aim.y + arcY, aim.z, SHELL_SPEED, SHELL_INACCURACY);
 
         if (tracking) {

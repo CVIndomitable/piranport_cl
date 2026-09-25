@@ -1,7 +1,6 @@
 package com.piranport.combat.cannon;
 
 import com.piranport.config.ModArtilleryConfig;
-import com.piranport.entity.CannonProjectileEntity;
 import com.piranport.entity.SanshikiPelletEntity;
 import com.piranport.network.ShakeEffectPayload;
 import com.piranport.server.ScopingManager;
@@ -34,6 +33,7 @@ import com.piranport.combat.cannon.fire.CannonFireRequest;
 import com.piranport.combat.cannon.fire.CannonFireService;
 import com.piranport.combat.cannon.fire.CannonProjectileFactory;
 import com.piranport.combat.cannon.ammo.AmmoDefinitionService;
+import com.piranport.entity.CannonProjectileEntity;
 import net.minecraft.core.registries.BuiltInRegistries;
 
 /** 火炮发射表现：生成炮弹与霰弹，处理粒子、音效和数量上限。 */
@@ -101,7 +101,7 @@ final class CannonProjectiles {
                                 ? ai.getEffectiveData(level).caliber() : 0,
                         isHE, isVT, aim, spawnPos);
                 if (!CannonFireService.isValid(request)) return false;
-                CannonProjectileEntity projectile = CannonProjectileFactory.create(request);
+                var projectile = CannonProjectileFactory.create(request);
                 // 依据：策划决策/数值/05-船型职能分化修订.md（AP 大口径对小型船过穿）
                 if (weapon.getItem() instanceof com.piranport.artillery.ArtilleryItem artilleryItem) {
                     projectile.setSourceCaliber(artilleryItem.getEffectiveData(level).caliber());

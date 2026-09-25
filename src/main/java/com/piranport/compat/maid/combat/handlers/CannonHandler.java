@@ -6,7 +6,6 @@ import com.piranport.artillery.ArtilleryItem;
 import com.piranport.combat.cannon.CannonAmmoRules;
 import com.piranport.compat.maid.combat.AmmoConsumer;
 import com.piranport.compat.maid.combat.WeaponHandler;
-import com.piranport.entity.CannonProjectileEntity;
 import com.piranport.combat.cannon.CannonAim;
 import com.piranport.combat.cannon.fire.CannonFireRequest;
 import com.piranport.combat.cannon.fire.CannonFireService;
@@ -123,7 +122,7 @@ public class CannonHandler implements WeaponHandler {
                     sourceCaliber, isHE, isVT,
                     new CannonAim.DirectAim(target.getBoundingBox().getCenter()), spawnPos);
             if (!CannonFireService.isValid(request)) continue;
-            CannonProjectileEntity proj = CannonProjectileFactory.create(request);
+            var proj = CannonProjectileFactory.create(request);
             proj.setPos(origin.x, origin.y, origin.z);
             proj.shootFromRotation(maid, pitch, yaw, 0f, velocity, inaccuracy);
             level.addFreshEntity(proj);

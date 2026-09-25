@@ -1,12 +1,12 @@
 package com.piranport.npc.deepocean;
 
 import com.piranport.component.AircraftInfo;
+import com.piranport.aviation.AircraftLaunchService;
 import com.piranport.entity.AircraftEntity;
 import com.piranport.npc.ai.FleetGroup;
 import com.piranport.npc.ai.FleetGroupManager;
 import com.piranport.dungeon.saved.DungeonSavedData;
 import com.piranport.item.KeyFragmentItem;
-import com.piranport.registry.ModDataComponents;
 import com.piranport.registry.ModItems;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -489,24 +489,16 @@ public abstract class AbstractDeepOceanEntity extends Monster {
                     : AircraftInfo.AircraftType.DIVE_BOMBER;
         }
 
-        DeferredItem<?> itemReg;
-        switch (type) {
-            case FIGHTER:          itemReg = ModItems.SEAFIRE;                  break;
-            case DIVE_BOMBER:      itemReg = ModItems.PETREL_BOMBER;            break;
-            case TORPEDO_BOMBER:   itemReg = ModItems.SWORDFISH_TORPEDO;        break;
-            case LEVEL_BOMBER:     itemReg = ModItems.B25_BOMBER;               break;
-            case ASW:              itemReg = ModItems.SWORDFISH_ASW;            break;
-            case RECON:            itemReg = ModItems.SAIUN_RECON;              break;
-            case ROCKET_FIGHTER:   itemReg = ModItems.F6F_HELLCAT_ROCKET;       break;
-            default:               itemReg = ModItems.SEAFIRE;                  break;
-        }
-        ItemStack stack = new ItemStack(itemReg.get());
-
-        // 填满燃料（玩家航母放飞机需要先加燃料，这里直接给满）
-        AircraftInfo info = stack.get(ModDataComponents.AIRCRAFT_INFO.get());
-        if (info != null) {
-            stack.set(ModDataComponents.AIRCRAFT_INFO.get(), info.withCurrentFuel(info.fuelCapacity()));
-        }
+        String aircraftItemId = switch (type) {
+            case FIGHTER -> "piranport:seafire";
+            case DIVE_BOMBER -> "piranport:petrel_bomber";
+            case TORPEDO_BOMBER -> "piranport:swordfish_torpedo";
+            case LEVEL_BOMBER -> "piranport:b25_bomber";
+            case ASW -> "piranport:swordfish_asw";
+            case RECON -> "piranport:saiun_recon";
+            case ROCKET_FIGHTER -> "piranport:f6f_hellcat_rocket";
+            default -> "piranport:seafire";
+        };
 
         // 在舰娘前方生成，朝向目标
         Vec3 spawnPos;
@@ -526,7 +518,8 @@ public abstract class AbstractDeepOceanEntity extends Monster {
             spawnPos = new Vec3(getX(), getY() + 3.0, getZ() + 1.5);
         }
 
-        AircraftEntity aircraft = AircraftEntity.createAutonomous(level(), spawnPos, stack, target, this);
+        AircraftEntity aircraft = AircraftLaunchService.createAutonomous(
+                level(), spawnPos, aircraftItemId, target, this);
         sl.addFreshEntity(aircraft);
         aircraftOwner = this;
         currentAircraft++;

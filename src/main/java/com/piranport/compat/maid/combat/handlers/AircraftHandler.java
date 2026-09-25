@@ -2,9 +2,9 @@ package com.piranport.compat.maid.combat.handlers;
 
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import com.piranport.PiranPort;
+import com.piranport.aviation.AircraftLaunchService;
 import com.piranport.compat.maid.combat.AmmoConsumer;
 import com.piranport.compat.maid.combat.WeaponHandler;
-import com.piranport.entity.AircraftEntity;
 import com.piranport.item.AircraftItem;
 import com.piranport.registry.ModItems;
 import net.minecraft.world.entity.LivingEntity;
@@ -43,7 +43,7 @@ public class AircraftHandler implements WeaponHandler {
         Level level = maid.level();
         Vec3 spawn = maid.position().add(0, 2.0, 0);
         try {
-            AircraftEntity plane = AircraftEntity.createAutonomous(level, spawn, stack.copy(), target, null);
+            var plane = AircraftLaunchService.createAutonomous(level, spawn, stack, target, null);
             if (plane != null) {
                 level.addFreshEntity(plane);
             }

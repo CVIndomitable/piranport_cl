@@ -3,7 +3,7 @@ package com.piranport.debug;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
-import com.piranport.entity.AircraftEntity;
+import com.piranport.aviation.AircraftLaunchService;
 import com.piranport.entity.FloatingTargetEntity;
 import com.piranport.entity.MissileEntity;
 import com.piranport.npc.deepocean.AbstractDeepOceanEntity;
@@ -542,12 +542,12 @@ public final class PiranPortCommands {
         int launched = 0;
         for (int i = 0; i < maxLaunch; i++) {
             FloatingTargetEntity target = targets.get(i);
-            ItemStack b25Stack = new ItemStack(ModItems.B25_BOMBER.get());
             Vec3 spawnPos = new Vec3(target.getX(),
                     target.getY() + target.getBbHeight() + 1.0,
                     target.getZ());
 
-            AircraftEntity aircraft = AircraftEntity.createAutonomous(level, spawnPos, b25Stack, null, null);
+            var aircraft = AircraftLaunchService.createAutonomous(
+                    level, spawnPos, "piranport:b25_bomber", null, null);
             level.addFreshEntity(aircraft);
             launched++;
         }

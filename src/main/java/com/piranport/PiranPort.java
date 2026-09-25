@@ -4,7 +4,6 @@ import com.mojang.logging.LogUtils;
 import com.piranport.compat.ModCompats;
 import com.piranport.config.ModClientConfig;
 import com.piranport.config.ModCommonConfig;
-import com.piranport.config.ModWeaponsConfig;
 import com.piranport.config.ModAircraftConfig;
 import com.piranport.config.ModShipsConfig;
 import com.piranport.config.ModProjectilesConfig;
@@ -58,7 +57,7 @@ import org.slf4j.Logger;
  *
  * 配置文件（COMMON 类型，运行时热重载安全）：
  *   piranport-common.toml       — 通用开关（友伤/爆炸破坏/水面行走等）
- *   piranport-weapons.toml      — 火炮数值（伤害/冷却/散布）
+ *   piranport-artillery.toml    — 火炮数值与弹道覆盖（旧武器配置已废弃）
  *   piranport-aircraft.toml     — 飞机数值（伤害/冷却/航速/血量）
  *   piranport-ships.toml        — 舰装数值（护甲/速度/击退抗性）
  *   piranport-projectiles.toml  — 弹药数值（鱼雷/深弹/炸弹/火箭）
@@ -106,7 +105,6 @@ public class PiranPort {
         NeoForge.EVENT_BUS.addListener(this::onLevelTick);
         modContainer.registerConfig(ModConfig.Type.CLIENT, ModClientConfig.SPEC);
         modContainer.registerConfig(ModConfig.Type.COMMON, ModCommonConfig.SPEC);
-        modContainer.registerConfig(ModConfig.Type.COMMON, ModWeaponsConfig.SPEC, "piranport-weapons.toml");
         modContainer.registerConfig(ModConfig.Type.COMMON, ModAircraftConfig.SPEC, "piranport-aircraft.toml");
         modContainer.registerConfig(ModConfig.Type.COMMON, ModShipsConfig.SPEC, "piranport-ships.toml");
         modContainer.registerConfig(ModConfig.Type.COMMON, ModProjectilesConfig.SPEC, "piranport-projectiles.toml");

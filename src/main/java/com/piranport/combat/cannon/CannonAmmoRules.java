@@ -60,13 +60,10 @@ public final class CannonAmmoRules {
             ResourceLocation ammoId = BuiltInRegistries.ITEM.getKey(ammo.getItem());
             var definition = AmmoDefinitionService.find(ammoId);
             if (definition.isPresent()) {
-                return definition.get().isCompatibleWith(cannonFamily);
+                return definition.get().isCompatibleWith(cannonFamily)
+                        && isInCaliberTag(ammo, cannonFamily);
             }
-            return switch (cannonFamily) {
-                case SMALL -> ammo.is(ShipCoreItem.SMALL_SHELLS);
-                case MEDIUM -> ammo.is(ShipCoreItem.MEDIUM_SHELLS);
-                case LARGE -> ammo.is(ShipCoreItem.LARGE_SHELLS);
-            };
+            return isInCaliberTag(ammo, cannonFamily);
         }
         return false;
     }
@@ -149,7 +146,8 @@ public final class CannonAmmoRules {
             for (var definition : AmmoDefinitionService.allInOrder()) {
                 if (definition.behavior() != AmmoBehavior.AP || !definition.isCompatibleWith(family)) continue;
                 Item item = BuiltInRegistries.ITEM.get(definition.itemId());
-                if (item != null && item != net.minecraft.world.item.Items.AIR) return item;
+                if (item != null && item != net.minecraft.world.item.Items.AIR
+                        && isInCaliberTag(new ItemStack(item), family)) return item;
             }
             return switch (family) {
                 case SMALL -> ModItems.SMALL_AP_SHELL.get();
@@ -158,5 +156,13 @@ public final class CannonAmmoRules {
             };
         }
         return null;
+    }
+
+    private static boolean isInCaliberTag(ItemStack ammo, CaliberFamily family) {
+        return switch (family) {
+            case SMALL -> ammo.is(ShipCoreItem.SMALL_SHELLS);
+            case MEDIUM -> ammo.is(ShipCoreItem.MEDIUM_SHELLS);
+            case LARGE -> ammo.is(ShipCoreItem.LARGE_SHELLS);
+        };
     }
 }

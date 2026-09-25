@@ -4,6 +4,8 @@ import com.piranport.PiranPort;
 import com.piranport.aviation.FireControlManager;
 import com.piranport.aviation.AircraftDefinition;
 import com.piranport.aviation.AircraftDefinitionService;
+import com.piranport.aviation.AircraftStatsService;
+import com.piranport.aviation.ResolvedAircraftStats;
 import com.piranport.npc.deepocean.AbstractDeepOceanEntity;
 import net.minecraft.core.registries.BuiltInRegistries;
 import com.piranport.aviation.ReconManager;
@@ -240,13 +242,14 @@ public class AircraftEntity extends Entity {
         }
         if (info != null) {
             AircraftDefinition definition = AircraftDefinitionService.resolve(info, definitionIdFor(aircraftStack, info));
+            ResolvedAircraftStats stats = AircraftStatsService.resolve(definition);
             entity.aircraftDefinitionId = definition.id();
             entity.aircraftType = info.aircraftType();
-            entity.panelDamage = ExperienceShellItem.applyAircraftPanelDamageBonus(aircraftStack, info.panelDamage());
-            entity.panelSpeed = ExperienceShellItem.applyAircraftPanelSpeedBonus(aircraftStack, info.panelSpeed());
-            entity.ammoCapacity = info.ammoCapacity();
-            entity.remainingAmmo = info.ammoCapacity();
-            entity.fuelCapacity = info.fuelCapacity();
+            entity.panelDamage = ExperienceShellItem.applyAircraftPanelDamageBonus(aircraftStack, stats.damage());
+            entity.panelSpeed = ExperienceShellItem.applyAircraftPanelSpeedBonus(aircraftStack, stats.speed());
+            entity.ammoCapacity = stats.ammoCapacity();
+            entity.remainingAmmo = stats.ammoCapacity();
+            entity.fuelCapacity = stats.fuelCapacity();
             entity.currentFuel = info.currentFuel();
             entity.bombingMode = info.bombingMode();
         } else {
@@ -299,13 +302,14 @@ public class AircraftEntity extends Entity {
         }
         if (info != null) {
             AircraftDefinition definition = AircraftDefinitionService.resolve(info, definitionIdFor(aircraftStack, info));
+            ResolvedAircraftStats stats = AircraftStatsService.resolve(definition);
             entity.aircraftDefinitionId = definition.id();
             entity.aircraftType = info.aircraftType();
-            entity.panelDamage = ExperienceShellItem.applyAircraftPanelDamageBonus(aircraftStack, info.panelDamage());
-            entity.panelSpeed = ExperienceShellItem.applyAircraftPanelSpeedBonus(aircraftStack, info.panelSpeed());
-            entity.ammoCapacity = info.ammoCapacity();
-            entity.remainingAmmo = info.ammoCapacity();
-            entity.fuelCapacity = info.fuelCapacity();
+            entity.panelDamage = ExperienceShellItem.applyAircraftPanelDamageBonus(aircraftStack, stats.damage());
+            entity.panelSpeed = ExperienceShellItem.applyAircraftPanelSpeedBonus(aircraftStack, stats.speed());
+            entity.ammoCapacity = stats.ammoCapacity();
+            entity.remainingAmmo = stats.ammoCapacity();
+            entity.fuelCapacity = stats.fuelCapacity();
             entity.currentFuel = info.fuelCapacity();
             entity.bombingMode = info.bombingMode();
             // 玩家和 NPC 由同一定义解析路径决定挂载，避免自主飞机固定为航弹。

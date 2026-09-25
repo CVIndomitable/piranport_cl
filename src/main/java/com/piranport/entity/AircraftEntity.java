@@ -5,6 +5,7 @@ import com.piranport.aviation.FireControlManager;
 import com.piranport.aviation.AircraftDefinition;
 import com.piranport.aviation.AircraftDefinitionService;
 import com.piranport.aviation.AircraftStatsService;
+import com.piranport.aviation.combat.AircraftCombatService;
 import com.piranport.aviation.ResolvedAircraftStats;
 import com.piranport.npc.deepocean.AbstractDeepOceanEntity;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -723,11 +724,11 @@ public class AircraftEntity extends Entity {
     // ===== ATTACKING dispatch =====
 
     private void tickAttacking(Player owner) {
-        AircraftCombat.tickAttacking(this, owner);
+        AircraftCombatService.tickAttacking(this, owner);
     }
 
     private void tickAutonomousAttacking() {
-        AircraftCombat.tickAutonomousAttacking(this);
+        AircraftCombatService.tickAutonomousAttacking(this);
     }
 
     /**

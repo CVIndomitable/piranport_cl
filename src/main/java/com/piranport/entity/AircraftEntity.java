@@ -1664,9 +1664,16 @@ public class AircraftEntity extends Entity {
 
         airtimeTicks = tag.getInt("AirtimeTicks");
         hasFired = tag.getBoolean("HasFired");
-        aircraftHealth = tag.contains("AircraftHealth")
-                ? tag.getInt("AircraftHealth")
-                : getMaxHealth(aircraftType);
+        if (tag.contains("AircraftHealth")) {
+            aircraftHealth = tag.getInt("AircraftHealth");
+        } else {
+            AircraftDefinition definition = AircraftDefinitionService.find(aircraftDefinitionId);
+            if (definition != null) {
+                aircraftHealth = AircraftStatsService.resolve(definition).health();
+            } else {
+                aircraftHealth = getMaxHealth(aircraftType);
+            }
+        }
         if (tag.contains("OriginalStack")) {
             originalStack = ItemStack.parse(level().registryAccess(), tag.getCompound("OriginalStack"))
                     .orElse(ItemStack.EMPTY);

@@ -28,6 +28,11 @@ public final class AmmoDefinitionService {
         return Map.copyOf(DEFINITIONS);
     }
 
+    /** Returns definitions in stable registration order for candidate selection. */
+    public static java.util.List<AmmoDefinition> allInOrder() {
+        return java.util.List.copyOf(DEFINITIONS.values());
+    }
+
     /** 只供数据驱动加载器使用；调用方应在初始化阶段一次性替换，避免半更新状态。 */
     public static synchronized void replaceAll(Map<ResourceLocation, AmmoDefinition> definitions) {
         Objects.requireNonNull(definitions, "definitions");

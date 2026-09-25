@@ -13,7 +13,6 @@ import com.piranport.combat.cannon.fire.CannonFireService;
 import com.piranport.combat.cannon.fire.CannonProjectileFactory;
 import com.piranport.combat.cannon.ammo.AmmoDefinitionService;
 import com.piranport.item.ShipCoreItem;
-import com.piranport.registry.ModItems;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.TagKey;
@@ -128,34 +127,7 @@ public class CannonHandler implements WeaponHandler {
         return v < -1.0 ? -1.0 : Math.min(v, 1.0);
     }
 
-    /** 单口径候选弹种表：全量物品项 —— 弹种集合的**唯一事实来源**。 */
-    private record ShellFamily(CannonAmmoRules.CaliberFamily family, TagKey<Item> tag, List<Item> allItems) {}
-
-    /**
-     * 三个口径族的候选物品全集。
-     * <p><b>必须与 item 标签逐项同步</b>（见下方 {@code logTagDrift}）：本表决定弹种的<b>顺序</b>与
-     * 是否需要实例化物品对象，标签决定<b>准入</b>（某个物品是否真的是可用弹种）。
-     * 之所以不直接遍历标签内容，是因为 {@code HolderSet.Named} 的迭代顺序未必是 JSON 里的书写顺序，
-     * 而玩家路径「弹药库顺序即偏好」（策划决策/武器/弹药-弹种切换机制.md 方案 A）要求顺序稳定可预期。
-     */
-    private static final List<ShellFamily> SHELL_FAMILIES = List.of(
-            new ShellFamily(CannonAmmoRules.CaliberFamily.LARGE, ShipCoreItem.LARGE_SHELLS, List.of(
-                    ModItems.LARGE_HE_SHELL.get(),
-                    ModItems.LARGE_AP_SHELL.get(),
-                    ModItems.LARGE_TYPE3_SHELL.get(),
-                    ModItems.TYPE_91_AP_SHELL.get(),
-                    ModItems.TYPE_1_AP_SHELL.get(),
-                    ModItems.MK23_NUCLEAR_SHELL.get())),
-            new ShellFamily(CannonAmmoRules.CaliberFamily.MEDIUM, ShipCoreItem.MEDIUM_SHELLS, List.of(
-                    ModItems.MEDIUM_HE_SHELL.get(),
-                    ModItems.MEDIUM_AP_SHELL.get(),
-                    ModItems.MEDIUM_TYPE3_SHELL.get(),
-                    ModItems.SUPER_HEAVY_AP_SHELL.get())),
-            new ShellFamily(CannonAmmoRules.CaliberFamily.SMALL, ShipCoreItem.SMALL_SHELLS, List.of(
-                    ModItems.SMALL_HE_SHELL.get(),
-                    ModItems.SMALL_AP_SHELL.get(),
-                    ModItems.SMALL_VT_SHELL.get(),
-                    ModItems.SMALL_TYPE3_SHELL.get())));
+    /** 女仆候选弹药来自统一定义注册表，标签仍是最终准入条件。 */
 
     /** 一次同步日志的静默期，避免每次开火都刷屏。 */
     private static final long TAG_DRIFT_LOG_INTERVAL_TICKS = 600L;
@@ -171,19 +143,21 @@ public class CannonHandler implements WeaponHandler {
      */
     private static List<Item> shellsFor(Level level, ItemStack weapon) {
         CannonAmmoRules.CaliberFamily want = CannonAmmoRules.familyForWeapon(weapon, level);
-        for (ShellFamily family : SHELL_FAMILIES) {
-            if (family.family() != want) continue;
-            List<Item> allowed = new ArrayList<>(family.allItems().size());
-            for (Item item : family.allItems()) {
-                ItemStack probe = new ItemStack(item);
-                boolean inTag = probe.is(family.tag());
-                // 二者不一致即漂移：标签缺项会让女仆漏弹，标签多项则是本表落后
-                if (inTag) allowed.add(item);
-                else logTagDrift(level, family.tag(), item, probe);
-            }
-            return allowed;
+        TagKey<Item> tag = switch (want) {
+            case SMALL -> ShipCoreItem.SMALL_SHELLS;
+            case MEDIUM -> ShipCoreItem.MEDIUM_SHELLS;
+            case LARGE -> ShipCoreItem.LARGE_SHELLS;
+        };
+        List<Item> allowed = new ArrayList<>();
+        for (var definition : AmmoDefinitionService.allInOrder()) {
+            if (definition.caliberFamily().isEmpty() || definition.caliberFamily().get() != want) continue;
+            Item item = BuiltInRegistries.ITEM.get(definition.itemId());
+            if (item == null || item == net.minecraft.world.item.Items.AIR) continue;
+            ItemStack probe = new ItemStack(item);
+            if (probe.is(tag)) allowed.add(item);
+            else logTagDrift(level, tag, item, probe);
         }
-        return List.of();
+        return allowed;
     }
 
     /** 发现「候选全集」与标签不一致时打一次告警（带上物品 id，便于直接照着补标签 JSON）。 */
@@ -192,8 +166,8 @@ public class CannonHandler implements WeaponHandler {
         long now = serverLevel.getGameTime();
         if (now - lastTagDriftLogTick < TAG_DRIFT_LOG_INTERVAL_TICKS) return;
         lastTagDriftLogTick = now;
-        PiranPort.LOGGER.warn("[女仆火炮] 弹种候选表与标签 {} 不一致：物品注册 id {}（当前表现为女仆无法使用该弹）。"
-                + "请同步 data/piranport/tags/item/ 下的标签 JSON 与 CannonHandler.SHELL_FAMILIES。",
+        PiranPort.LOGGER.warn("[女仆火炮] 弹药定义与标签 {} 不一致：物品注册 id {}（当前表现为女仆无法使用该弹）。"
+                + "请同步 data/piranport/tags/item/ 下的标签 JSON 与 AmmoDefinitionService。",
                 tag.location(), BuiltInRegistries.ITEM.getKey(probe.getItem()));
     }
 }

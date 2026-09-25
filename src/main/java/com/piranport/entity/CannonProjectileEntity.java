@@ -60,6 +60,7 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
     private float explosionPower = 1.5f;
     private float armorIgnore = -1f;
     private boolean underwaterExplosion = false;
+    private boolean underwaterExplosionConfigured = false;
     private float initialSpeed = 2.0f;
     /** Phase 2: 自定义阻力系数（每 tick 按比例衰减速度）。 */
     private float dragCoeff = 0.01f;
@@ -174,6 +175,7 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
 
     public void setUnderwaterExplosion(boolean underwaterExplosion) {
         this.underwaterExplosion = underwaterExplosion;
+        this.underwaterExplosionConfigured = true;
     }
 
     public void setCustomGravity(float g) {
@@ -331,7 +333,10 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         int maxTicks = (int) (ModArtilleryConfig.ARTILLERY_UNDERWATER_DESTROY_TIME.get() * 20);
         if (underwaterTicks >= maxTicks) {
             exploded = true;
-            if (shouldExplode && (underwaterExplosion || getProjectileBoolean("UNDERWATER_EXPLODE", ModProjectilesConfig.UNDERWATER_EXPLODE.get()))) {
+            boolean shouldExplodeUnderwater = underwaterExplosionConfigured
+                    ? underwaterExplosion
+                    : getProjectileBoolean("UNDERWATER_EXPLODE", ModProjectilesConfig.UNDERWATER_EXPLODE.get());
+            if (shouldExplode && shouldExplodeUnderwater) {
                 Level.ExplosionInteraction interaction = ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get()
                         ? Level.ExplosionInteraction.TNT : Level.ExplosionInteraction.NONE;
                 double multiplier = getProjectileDouble("UNDERWATER_EXPLOSION_MULTIPLIER",
@@ -610,6 +615,7 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         tag.putFloat("ExplosionPower", explosionPower);
         tag.putFloat("ArmorIgnore", armorIgnore);
         tag.putBoolean("UnderwaterExplosion", underwaterExplosion);
+        tag.putBoolean("UnderwaterExplosionConfigured", underwaterExplosionConfigured);
         tag.putFloat("InitialSpeed", initialSpeed);
         tag.putFloat("DragCoeff", dragCoeff);
         tag.putInt("UnderwaterTicks", underwaterTicks);
@@ -631,6 +637,12 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         explosionPower = tag.getFloat("ExplosionPower");
         if (tag.contains("ArmorIgnore")) armorIgnore = tag.getFloat("ArmorIgnore");
         if (tag.contains("UnderwaterExplosion")) underwaterExplosion = tag.getBoolean("UnderwaterExplosion");
+        if (tag.contains("UnderwaterExplosionConfigured")) {
+            underwaterExplosionConfigured = tag.getBoolean("UnderwaterExplosionConfigured");
+        } else if (tag.contains("UnderwaterExplosion")) {
+            // Newer saves written before the explicit marker still contain a deliberate snapshot value.
+            underwaterExplosionConfigured = true;
+        }
         if (tag.contains("InitialSpeed")) {
             initialSpeed = tag.getFloat("InitialSpeed");
         }

@@ -30,6 +30,9 @@ import static com.piranport.combat.cannon.CannonStats.getMuzzlePositions;
 import static com.piranport.combat.cannon.CannonSounds.playCannonFireSound;
 import static com.piranport.combat.cannon.CannonAmmoRules.isMK23Shell;
 import static com.piranport.combat.cannon.CannonAiming.rotateMuzzleByPlayerView;
+import com.piranport.combat.cannon.fire.CannonFireRequest;
+import com.piranport.combat.cannon.fire.CannonFireService;
+import com.piranport.combat.cannon.fire.CannonProjectileFactory;
 
 /** 火炮发射表现：生成炮弹与霰弹，处理粒子、音效和数量上限。 */
 final class CannonProjectiles {
@@ -88,11 +91,14 @@ final class CannonProjectiles {
                 float drag = getProjectileDrag(weapon, level);
                 float gravity = getProjectileGravity(weapon, level);
 
-                CannonProjectileEntity projectile = new CannonProjectileEntity(
-                        level, player, shellForRender, damage, isHE, explosionPower);
-                if (isVT) projectile.setVT(true);
-                projectile.setDragCoeff(drag);
-                projectile.setCustomGravity(gravity);
+                CannonFireRequest request = CannonFireService.request(
+                        level, player, weapon, shellForRender, damage, explosionPower,
+                        velocity, drag, gravity, horizontalSpreadDeg, verticalSpreadDeg,
+                        weapon.getItem() instanceof com.piranport.artillery.ArtilleryItem ai
+                                ? ai.getEffectiveData(level).caliber() : 0,
+                        isHE, isVT, aim, spawnPos);
+                if (!CannonFireService.isValid(request)) return false;
+                CannonProjectileEntity projectile = CannonProjectileFactory.create(request);
                 // 依据：策划决策/数值/05-船型职能分化修订.md（AP 大口径对小型船过穿）
                 if (weapon.getItem() instanceof com.piranport.artillery.ArtilleryItem artilleryItem) {
                     projectile.setSourceCaliber(artilleryItem.getEffectiveData(level).caliber());

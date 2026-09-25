@@ -64,6 +64,8 @@ public class SalvoManager {
         // before returning from the same server work item instead of waiting for the
         // next ServerTickEvent (which would turn it into a one-tick delay).
         if (interval == 0.0f) {
+            // A same-tick plan supersedes any older delayed plan for this player.
+            PENDING.remove(player.getUUID());
             for (int[] pair : slotPairs) {
                 ItemStack weapon = CannonInventory.weaponAt(player.getInventory(), pair[0]);
                 if (weapon.isEmpty() || weapon.getItem() != expectedType) continue;

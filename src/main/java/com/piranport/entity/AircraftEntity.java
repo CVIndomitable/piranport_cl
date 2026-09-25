@@ -260,7 +260,7 @@ public class AircraftEntity extends Entity {
             if (definition != null) entity.payloadType = definition.payloadRegistryName();
             entity.hasBullets = entity.aircraftType == AircraftInfo.AircraftType.FIGHTER;
         }
-        entity.aircraftHealth = getMaxHealth(entity.aircraftDefinitionId, entity.aircraftType);
+        entity.aircraftHealth = getMaxHealth(entity.aircraftType);
         entity.originalStack = aircraftStack.copy();
         entity.entityData.set(AIRCRAFT_TYPE_DATA, entity.aircraftType.ordinal());
         entity.entityData.set(AIRCRAFT_DEFINITION_DATA, entity.aircraftDefinitionId);
@@ -312,7 +312,7 @@ public class AircraftEntity extends Entity {
             entity.payloadType = definition.payloadRegistryName();
             entity.hasBullets = definition.attackProfile() == AircraftDefinition.AttackProfile.GUN;
         }
-        entity.aircraftHealth = getMaxHealth(entity.aircraftDefinitionId, entity.aircraftType);
+        entity.aircraftHealth = getMaxHealth(entity.aircraftType);
         entity.originalStack = aircraftStack.copy();
         entity.entityData.set(AIRCRAFT_TYPE_DATA, entity.aircraftType.ordinal());
         entity.entityData.set(AIRCRAFT_DEFINITION_DATA, entity.aircraftDefinitionId);
@@ -1363,24 +1363,7 @@ public class AircraftEntity extends Entity {
 
     // ===== Phase 33: air combat =====
 
-    private static int getMaxHealth(String definitionId, AircraftInfo.AircraftType type) {
-        AircraftDefinition definition = AircraftDefinitionService.find(definitionId);
-        return definition != null ? configuredMaxHealth(type) : legacyMaxHealth(type);
-    }
-
-    private static int configuredMaxHealth(AircraftInfo.AircraftType type) {
-        return switch (type) {
-            case FIGHTER -> com.piranport.config.ModAircraftConfig.FIGHTER_HEALTH.get();
-            case ROCKET_FIGHTER -> com.piranport.config.ModAircraftConfig.ROCKET_FIGHTER_HEALTH.get();
-            case DIVE_BOMBER -> com.piranport.config.ModAircraftConfig.DIVE_BOMBER_HEALTH.get();
-            case LEVEL_BOMBER -> com.piranport.config.ModAircraftConfig.LEVEL_BOMBER_HEALTH.get();
-            case TORPEDO_BOMBER -> com.piranport.config.ModAircraftConfig.TORPEDO_BOMBER_HEALTH.get();
-            case ASW -> com.piranport.config.ModAircraftConfig.ASW_AIRCRAFT_HEALTH.get();
-            case RECON -> com.piranport.config.ModAircraftConfig.RECON_AIRCRAFT_HEALTH.get();
-        };
-    }
-
-    private static int legacyMaxHealth(AircraftInfo.AircraftType type) {
+    private static int getMaxHealth(AircraftInfo.AircraftType type) {
         return switch (type) {
             case FIGHTER        -> 20;
             case DIVE_BOMBER    -> 15;
@@ -1678,7 +1661,7 @@ public class AircraftEntity extends Entity {
         hasFired = tag.getBoolean("HasFired");
         aircraftHealth = tag.contains("AircraftHealth")
                 ? tag.getInt("AircraftHealth")
-                : getMaxHealth(aircraftDefinitionId, aircraftType);
+                : getMaxHealth(aircraftType);
         if (tag.contains("OriginalStack")) {
             originalStack = ItemStack.parse(level().registryAccess(), tag.getCompound("OriginalStack"))
                     .orElse(ItemStack.EMPTY);

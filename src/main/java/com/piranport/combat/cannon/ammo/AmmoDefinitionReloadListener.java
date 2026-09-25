@@ -28,7 +28,7 @@ public final class AmmoDefinitionReloadListener
     protected Map<ResourceLocation, AmmoDefinition> prepare(ResourceManager manager,
                                                               ProfilerFiller profiler) {
         Map<ResourceLocation, AmmoDefinition> result = new LinkedHashMap<>();
-        AmmoDefinitionService.allInOrder().forEach(definition ->
+        AmmoDefinitionService.builtInInOrder().forEach(definition ->
                 result.put(definition.itemId(), definition));
         for (Map.Entry<ResourceLocation, Resource> entry : manager.listResources("ammo",
                 location -> location.getPath().endsWith(".json")).entrySet()) {

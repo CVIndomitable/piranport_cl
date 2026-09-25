@@ -29,8 +29,13 @@ public final class AmmoDefinitionService {
     }
 
     /** Returns definitions in stable registration order for candidate selection. */
-    public static java.util.List<AmmoDefinition> allInOrder() {
+    public static synchronized java.util.List<AmmoDefinition> allInOrder() {
         return java.util.List.copyOf(DEFINITIONS.values());
+    }
+
+    /** Returns a fresh immutable snapshot of code-provided defaults for reload baselines. */
+    public static java.util.List<AmmoDefinition> builtInInOrder() {
+        return java.util.List.copyOf(createDefaults().values());
     }
 
     /** 只供数据驱动加载器使用；调用方应在初始化阶段一次性替换，避免半更新状态。 */

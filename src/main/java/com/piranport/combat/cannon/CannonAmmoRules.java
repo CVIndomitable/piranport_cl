@@ -10,6 +10,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
 import com.piranport.item.ShipCoreItem;
+import com.piranport.artillery.config.ArtilleryCannonData;
 import static com.piranport.combat.cannon.CannonStats.getBarrelCount;
 
 /** 火炮弹药规则：标签口径匹配、弹种识别、默认弹药与已装弹校验。 */
@@ -31,6 +32,12 @@ public final class CannonAmmoRules {
         if (caliber <= 4) return CaliberFamily.SMALL;
         if (caliber <= 8) return CaliberFamily.MEDIUM;
         return CaliberFamily.LARGE;
+    }
+
+    /** 从规范数据派生口径族；分类只依赖真实口径，不读取具体物品 ID。 */
+    public static CaliberFamily familyForData(ArtilleryCannonData data) {
+        if (data == null) throw new IllegalArgumentException("cannon data must not be null");
+        return familyForCaliber(data.caliber());
     }
 
     /** 取武器当前生效的口径（含配置覆盖），供 {@link #familyForCaliber} 使用。 */

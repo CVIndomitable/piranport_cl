@@ -130,7 +130,7 @@ final class CannonProjectiles {
                 playCannonFireSound(level, player, weapon);
 
                 // 发射屏幕震动（S2C）
-                float shakeIntensity = isSmallCaliber(weapon) ? 0.3f : 0.6f;
+                float shakeIntensity = isSmallCaliber(weapon, level) ? 0.3f : 0.6f;
                 if (player instanceof ServerPlayer serverPlayer) {
                     PacketDistributor.sendToPlayer(serverPlayer,
                             new ShakeEffectPayload(shakeIntensity, 6));

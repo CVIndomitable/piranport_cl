@@ -2,6 +2,8 @@ package com.piranport.entity;
 
 import com.piranport.PiranPort;
 import com.piranport.aviation.FireControlManager;
+import com.piranport.aviation.AircraftDefinition;
+import com.piranport.aviation.AircraftDefinitionService;
 import com.piranport.npc.deepocean.AbstractDeepOceanEntity;
 import net.minecraft.core.registries.BuiltInRegistries;
 import com.piranport.aviation.ReconManager;
@@ -85,6 +87,9 @@ public class AircraftEntity extends Entity {
             SynchedEntityData.defineId(AircraftEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Integer> AIRCRAFT_TYPE_DATA =
             SynchedEntityData.defineId(AircraftEntity.class, EntityDataSerializers.INT);
+    /** 稳定定义 ID；AIRCRAFT_TYPE_DATA 仅保留为旧实体同步兼容字段。 */
+    private static final EntityDataAccessor<String> AIRCRAFT_DEFINITION_DATA =
+            SynchedEntityData.defineId(AircraftEntity.class, EntityDataSerializers.STRING);
     private static final EntityDataAccessor<Optional<UUID>> OWNER_ID =
             SynchedEntityData.defineId(AircraftEntity.class, EntityDataSerializers.OPTIONAL_UUID);
     private static final EntityDataAccessor<Integer> WEAPON_SLOT_INDEX =
@@ -95,6 +100,7 @@ public class AircraftEntity extends Entity {
     private int weaponSlotIndex = -1;  // -1表示未设置，避免误用默认值0
     private int coreInventorySlot = 0;
     AircraftInfo.AircraftType aircraftType = AircraftInfo.AircraftType.FIGHTER;
+    String aircraftDefinitionId = AircraftDefinitionService.legacyId(AircraftInfo.AircraftType.FIGHTER);
     AircraftAttackMode attackMode = AircraftAttackMode.FOCUS;
     float panelDamage;
     float panelSpeed;
@@ -233,6 +239,8 @@ public class AircraftEntity extends Entity {
             info = null;
         }
         if (info != null) {
+            AircraftDefinition definition = AircraftDefinitionService.resolve(info, definitionIdFor(aircraftStack, info));
+            entity.aircraftDefinitionId = definition.id();
             entity.aircraftType = info.aircraftType();
             entity.panelDamage = ExperienceShellItem.applyAircraftPanelDamageBonus(aircraftStack, info.panelDamage());
             entity.panelSpeed = ExperienceShellItem.applyAircraftPanelSpeedBonus(aircraftStack, info.panelSpeed());
@@ -248,36 +256,14 @@ public class AircraftEntity extends Entity {
         }
         // Default payload based on aircraft type when not explicitly configured
         if (entity.payloadType.isEmpty()) {
-            switch (entity.aircraftType) {
-                case TORPEDO_BOMBER -> {
-                    entity.payloadType = "piranport:aerial_torpedo";
-                    entity.hasBullets = false;
-                }
-                case DIVE_BOMBER, LEVEL_BOMBER -> {
-                    entity.payloadType = "piranport:aerial_bomb";
-                    entity.hasBullets = false;
-                }
-                case ASW -> {
-                    entity.payloadType = "piranport:depth_charge";
-                    entity.hasBullets = false;
-                }
-                case FIGHTER -> {
-                    // Fighters use bullets, no payload
-                    entity.hasBullets = true;
-                }
-                case ROCKET_FIGHTER -> {
-                    entity.payloadType = "piranport:rocket_ammo";
-                    entity.hasBullets = true;
-                }
-                default -> {
-                    // RECON keeps empty payload and no bullets
-                    entity.hasBullets = false;
-                }
-            }
+            AircraftDefinition definition = AircraftDefinitionService.find(entity.aircraftDefinitionId);
+            if (definition != null) entity.payloadType = definition.payloadRegistryName();
+            entity.hasBullets = entity.aircraftType == AircraftInfo.AircraftType.FIGHTER;
         }
-        entity.aircraftHealth = getMaxHealth(entity.aircraftType);
+        entity.aircraftHealth = getMaxHealth(entity.aircraftDefinitionId, entity.aircraftType);
         entity.originalStack = aircraftStack.copy();
         entity.entityData.set(AIRCRAFT_TYPE_DATA, entity.aircraftType.ordinal());
+        entity.entityData.set(AIRCRAFT_DEFINITION_DATA, entity.aircraftDefinitionId);
         entity.entityData.set(OWNER_ID, Optional.of(owner.getUUID()));
         entity.entityData.set(WEAPON_SLOT_INDEX, weaponSlotIndex);
 
@@ -312,6 +298,8 @@ public class AircraftEntity extends Entity {
             info = null;
         }
         if (info != null) {
+            AircraftDefinition definition = AircraftDefinitionService.resolve(info, definitionIdFor(aircraftStack, info));
+            entity.aircraftDefinitionId = definition.id();
             entity.aircraftType = info.aircraftType();
             entity.panelDamage = ExperienceShellItem.applyAircraftPanelDamageBonus(aircraftStack, info.panelDamage());
             entity.panelSpeed = ExperienceShellItem.applyAircraftPanelSpeedBonus(aircraftStack, info.panelSpeed());
@@ -320,11 +308,14 @@ public class AircraftEntity extends Entity {
             entity.fuelCapacity = info.fuelCapacity();
             entity.currentFuel = info.fuelCapacity();
             entity.bombingMode = info.bombingMode();
+            // 玩家和 NPC 由同一定义解析路径决定挂载，避免自主飞机固定为航弹。
+            entity.payloadType = definition.payloadRegistryName();
+            entity.hasBullets = definition.attackProfile() == AircraftDefinition.AttackProfile.GUN;
         }
-        entity.payloadType = "piranport:aerial_bomb";
-        entity.aircraftHealth = getMaxHealth(entity.aircraftType);
+        entity.aircraftHealth = getMaxHealth(entity.aircraftDefinitionId, entity.aircraftType);
         entity.originalStack = aircraftStack.copy();
         entity.entityData.set(AIRCRAFT_TYPE_DATA, entity.aircraftType.ordinal());
+        entity.entityData.set(AIRCRAFT_DEFINITION_DATA, entity.aircraftDefinitionId);
 
         entity.setPos(spawnPos.x, spawnPos.y, spawnPos.z);
         entity.orbitAngle = level.random.nextDouble() * Math.PI * 2;
@@ -332,10 +323,20 @@ public class AircraftEntity extends Entity {
         return entity;
     }
 
+    /** 优先使用物品注册名作为稳定定义 ID；旧或未注册物品回退到 AircraftInfo 的兼容 ID。 */
+    private static String definitionIdFor(ItemStack aircraftStack, AircraftInfo info) {
+        if (aircraftStack != null && !aircraftStack.isEmpty()) {
+            net.minecraft.resources.ResourceLocation key = BuiltInRegistries.ITEM.getKey(aircraftStack.getItem());
+            if (key != null && !"minecraft".equals(key.getNamespace())) return key.toString();
+        }
+        return info.definitionId();
+    }
+
     @Override
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
         builder.define(STATE, FlightState.LAUNCHING.ordinal());
         builder.define(AIRCRAFT_TYPE_DATA, 0);
+        builder.define(AIRCRAFT_DEFINITION_DATA, AircraftDefinitionService.legacyId(AircraftInfo.AircraftType.FIGHTER));
         builder.define(OWNER_ID, Optional.empty());
         builder.define(WEAPON_SLOT_INDEX, -1);
     }
@@ -909,7 +910,7 @@ public class AircraftEntity extends Entity {
             }
             case CRUISING -> {
                 // Auto-seek players
-                if (level() instanceof ServerLevel sl && !payloadType.isEmpty()) {
+                if (level() instanceof ServerLevel sl && (hasBullets || !payloadType.isEmpty())) {
                     AABB box = getBoundingBox().inflate(48.0);
                     boolean hasTarget = !sl.getEntitiesOfClass(Player.class, box,
                             e -> e.isAlive() && !e.isSpectator()).isEmpty();
@@ -940,7 +941,9 @@ public class AircraftEntity extends Entity {
                         .stream().map(e -> (LivingEntity) e)
                         .min(Comparator.comparingDouble(this::distanceTo)).orElse(null);
                 if (target == null) { setState(FlightState.CRUISING); return; }
-                tickAutonomousLevelBomb(target);
+                // NPC 与玩家共享 AircraftCombat 的攻击分派；定义决定鱼雷、炸弹、机枪或反潜策略。
+                autonomousTarget = target;
+                tickAutonomousAttacking();
             }
             case RETURNING -> discard();
             default -> {}
@@ -1360,7 +1363,24 @@ public class AircraftEntity extends Entity {
 
     // ===== Phase 33: air combat =====
 
-    private static int getMaxHealth(AircraftInfo.AircraftType type) {
+    private static int getMaxHealth(String definitionId, AircraftInfo.AircraftType type) {
+        AircraftDefinition definition = AircraftDefinitionService.find(definitionId);
+        return definition != null ? configuredMaxHealth(type) : legacyMaxHealth(type);
+    }
+
+    private static int configuredMaxHealth(AircraftInfo.AircraftType type) {
+        return switch (type) {
+            case FIGHTER -> com.piranport.config.ModAircraftConfig.FIGHTER_HEALTH.get();
+            case ROCKET_FIGHTER -> com.piranport.config.ModAircraftConfig.ROCKET_FIGHTER_HEALTH.get();
+            case DIVE_BOMBER -> com.piranport.config.ModAircraftConfig.DIVE_BOMBER_HEALTH.get();
+            case LEVEL_BOMBER -> com.piranport.config.ModAircraftConfig.LEVEL_BOMBER_HEALTH.get();
+            case TORPEDO_BOMBER -> com.piranport.config.ModAircraftConfig.TORPEDO_BOMBER_HEALTH.get();
+            case ASW -> com.piranport.config.ModAircraftConfig.ASW_AIRCRAFT_HEALTH.get();
+            case RECON -> com.piranport.config.ModAircraftConfig.RECON_AIRCRAFT_HEALTH.get();
+        };
+    }
+
+    private static int legacyMaxHealth(AircraftInfo.AircraftType type) {
         return switch (type) {
             case FIGHTER        -> 20;
             case DIVE_BOMBER    -> 15;
@@ -1482,6 +1502,12 @@ public class AircraftEntity extends Entity {
         return AIRCRAFT_TYPE_VALUES[ordinal];
     }
 
+    /** 返回实体创建时解析的稳定飞机定义 ID。 */
+    public String getAircraftDefinitionId() {
+        String synced = entityData.get(AIRCRAFT_DEFINITION_DATA);
+        return synced == null || synced.isBlank() ? aircraftDefinitionId : synced;
+    }
+
     /** Returns true if this aircraft is owned by the given player. Works client-side (synced). */
     public boolean isOwnedByPlayer(Player player) {
         Optional<UUID> id = entityData.get(OWNER_ID);
@@ -1592,6 +1618,9 @@ public class AircraftEntity extends Entity {
         coreInventorySlot = tag.getInt("CoreSlot");
         try { aircraftType = AircraftInfo.AircraftType.valueOf(tag.getString("AircraftType")); }
         catch (IllegalArgumentException e) { aircraftType = AircraftInfo.AircraftType.FIGHTER; }
+        aircraftDefinitionId = tag.contains("AircraftDefinitionId")
+                ? tag.getString("AircraftDefinitionId")
+                : AircraftDefinitionService.legacyId(aircraftType);
         try { attackMode = AircraftAttackMode.valueOf(tag.getString("AttackMode")); }
         catch (IllegalArgumentException e) { attackMode = AircraftAttackMode.FOCUS; }
         panelDamage = tag.getFloat("PanelDamage");
@@ -1630,6 +1659,7 @@ public class AircraftEntity extends Entity {
         }
         entityData.set(STATE, savedState.ordinal());
         entityData.set(AIRCRAFT_TYPE_DATA, aircraftType.ordinal());
+        entityData.set(AIRCRAFT_DEFINITION_DATA, aircraftDefinitionId);
         if (ownerUUID != null) entityData.set(OWNER_ID, Optional.of(ownerUUID));
 
         // P1修复: 如果重新加载后状态是RECON_ACTIVE但玩家不在线，强制切换到RETURNING
@@ -1648,7 +1678,7 @@ public class AircraftEntity extends Entity {
         hasFired = tag.getBoolean("HasFired");
         aircraftHealth = tag.contains("AircraftHealth")
                 ? tag.getInt("AircraftHealth")
-                : getMaxHealth(aircraftType);
+                : getMaxHealth(aircraftDefinitionId, aircraftType);
         if (tag.contains("OriginalStack")) {
             originalStack = ItemStack.parse(level().registryAccess(), tag.getCompound("OriginalStack"))
                     .orElse(ItemStack.EMPTY);
@@ -1687,6 +1717,7 @@ public class AircraftEntity extends Entity {
         tag.putInt("WeaponSlot", weaponSlotIndex);
         tag.putInt("CoreSlot", coreInventorySlot);
         tag.putString("AircraftType", aircraftType.name());
+        tag.putString("AircraftDefinitionId", aircraftDefinitionId);
         tag.putString("AttackMode", attackMode.name());
         tag.putFloat("PanelDamage", panelDamage);
         tag.putInt("AmmoCapacity", ammoCapacity);

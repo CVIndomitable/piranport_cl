@@ -1,6 +1,8 @@
 package com.piranport.item;
 
 import com.piranport.combat.TransformationManager;
+import com.piranport.aviation.AircraftDefinition;
+import com.piranport.aviation.AircraftDefinitionService;
 import com.piranport.component.AircraftInfo;
 import com.piranport.component.WeaponCategory;
 import com.piranport.platform.ClientHooks;
@@ -49,9 +51,10 @@ public class AircraftItem extends Item {
         if (!other.is(ModItems.AVIATION_FUEL.get())) return false;
 
         AircraftInfo info = stack.get(ModDataComponents.AIRCRAFT_INFO.get());
-        if (info == null || info.currentFuel() >= info.fuelCapacity()) return false;
+        AircraftDefinition definition = AircraftDefinitionService.resolve(stack);
+        if (info == null || definition == null || info.currentFuel() >= definition.fuelCapacity()) return false;
 
-        stack.set(ModDataComponents.AIRCRAFT_INFO.get(), info.withCurrentFuel(info.fuelCapacity()));
+        stack.set(ModDataComponents.AIRCRAFT_INFO.get(), info.withCurrentFuel(definition.fuelCapacity()));
         other.shrink(1);
 
         if (!player.level().isClientSide) {
@@ -95,9 +98,8 @@ public class AircraftItem extends Item {
                 tooltipComponents.add(Component.translatable("tooltip.piranport.aircraft_fuel_short")
                         .withStyle(net.minecraft.ChatFormatting.RED));
             }
-            String payloadKey = com.piranport.aviation.AircraftFireStrategy
-                    .payloadRegistryName(info.aircraftType());
-            if (!payloadKey.isEmpty()) {
+            AircraftDefinition definition = AircraftDefinitionService.resolve(stack);
+            if (definition != null && definition.requiresPayload()) {
                 if (info.payloadLoaded()) {
                     tooltipComponents.add(Component.translatable("tooltip.piranport.aircraft_payload_loaded")
                             .withStyle(net.minecraft.ChatFormatting.GREEN));

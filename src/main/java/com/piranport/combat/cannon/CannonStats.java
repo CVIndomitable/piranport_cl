@@ -1,6 +1,5 @@
 package com.piranport.combat.cannon;
 
-import com.piranport.registry.ModItems;
 import net.minecraft.world.item.Item;
 import java.util.List;
 import net.minecraft.world.item.ItemStack;
@@ -36,7 +35,9 @@ final class CannonStats {
         if (item instanceof com.piranport.artillery.ArtilleryItem ai) {
             com.piranport.artillery.config.ArtilleryCannonData data =
                     level != null ? ai.getEffectiveData(level) : ai.getData();
-            return Math.max(data.barrels(), data.salvoCount());
+            // 炮管数是装填与实体生成的唯一数量；salvoCount 迁移期仅保留字段，
+            // 不能用 max 隐式扩大齐射，否则配置会生成没有对应炮口的炮弹。
+            return data.barrels();
         }
         return 1;
     }
@@ -56,7 +57,12 @@ final class CannonStats {
     }
 
     static boolean isSmallCaliber(ItemStack weapon) {
-        return weapon.is(ModItems.JAPANESE_127MM_TWIN_GUN.get()) || weapon.is(ModItems.SINGLE_SMALL_GUN.get());
+        return CannonAmmoRules.familyForWeapon(weapon, null) == CannonAmmoRules.CaliberFamily.SMALL;
+    }
+
+    /** 按当前世界中的运行时覆盖分类，供开火表现读取服务端有效定义。 */
+    static boolean isSmallCaliber(ItemStack weapon, net.minecraft.world.level.Level level) {
+        return CannonAmmoRules.familyForWeapon(weapon, level) == CannonAmmoRules.CaliberFamily.SMALL;
     }
 
     static float getExplosionPower(ItemStack weapon, net.minecraft.world.level.Level level) {
@@ -81,10 +87,11 @@ final class CannonStats {
         if (item instanceof com.piranport.artillery.ArtilleryItem ai) {
             return level != null ? ai.getEffectiveData(level).dispersion() : ai.getDispersionAngle();
         }
-        if (isSmallCaliber(weapon)) return 1.5f;
-        if (weapon.is(ModItems.MEDIUM_GUN.get())) return 1.0f;
-        if (weapon.is(ModItems.LARGE_GUN.get())) return 0.5f;
-        return 1.0f;
+        return switch (CannonAmmoRules.familyForWeapon(weapon, level)) {
+            case SMALL -> 1.5f;
+            case MEDIUM -> 1.0f;
+            case LARGE -> 0.5f;
+        };
     }
 
     static float getVerticalSpread(ItemStack weapon, net.minecraft.world.level.Level level) {
@@ -132,10 +139,11 @@ final class CannonStats {
         if (item instanceof com.piranport.artillery.ArtilleryItem ai) {
             return level != null ? ai.getEffectiveData(level).dragCoeff() : ai.getDragCoeff();
         }
-        if (isSmallCaliber(weapon)) return 0.015f;
-        if (weapon.is(ModItems.MEDIUM_GUN.get())) return 0.01f;
-        if (weapon.is(ModItems.LARGE_GUN.get())) return 0.008f;
-        return 0.01f;
+        return switch (CannonAmmoRules.familyForWeapon(weapon, level)) {
+            case SMALL -> 0.015f;
+            case MEDIUM -> 0.01f;
+            case LARGE -> 0.008f;
+        };
     }
 
     static java.util.List<com.piranport.artillery.config.MuzzlePos> getMuzzlePositions(ItemStack weapon, net.minecraft.world.level.Level level) {

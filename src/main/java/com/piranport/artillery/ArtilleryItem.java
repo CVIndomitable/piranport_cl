@@ -1,6 +1,7 @@
 package com.piranport.artillery;
 
 import com.piranport.artillery.config.ArtilleryCannonData;
+import com.piranport.artillery.config.ArtilleryConfig;
 import com.piranport.combat.TransformationManager;
 import com.piranport.component.LoadedAmmo;
 import com.piranport.component.SelectedAmmoType;
@@ -62,34 +63,41 @@ public class ArtilleryItem extends Item {
     }
 
     // ===== ShipCoreItem 兼容接口 =====
-    public float getDamage() { return data.damage(); }
-    public int getCooldownTicks() { return data.reloadTime(); }
-    public int getBarrelCount() { return data.barrels(); }
-    public int getCaliber() { return data.caliber(); }
-    public ArtilleryCannonData getData() { return data; }
+    /**
+     * 返回规范定义数据；资源重载完成后优先使用 JSON，物品注册值只作为迁移期回退。
+     * 这样没有 Level 的提示、工具和兼容调用也不会绕过规范数据源。
+     */
+    public ArtilleryCannonData getData() {
+        return cannonName == null ? data : ArtilleryConfig.find(cannonName).orElse(data);
+    }
+
+    public float getDamage() { return getData().damage(); }
+    public int getCooldownTicks() { return getData().reloadTime(); }
+    public int getBarrelCount() { return getData().barrels(); }
+    public int getCaliber() { return getData().caliber(); }
     
     /** 获取应用配置覆盖后的有效数据 */
     public ArtilleryCannonData getEffectiveData(net.minecraft.world.level.Level level) {
         if (cannonName != null && level != null) {
             return com.piranport.artillery.config.override.ConfigOverrideManager.getCannonData(cannonName, level);
         }
-        return data;
+        return getData();
     }
     
     public String getCannonName() { return cannonName; }
-    public float getInitialSpeed() { return data.initialSpeed(); }
-    public float getDragCoeff() { return data.dragCoeff(); }
-    public float getCustomGravity() { return data.gravity(); }
-    public float getExplosionPower() { return data.explosionPower(); }
+    public float getInitialSpeed() { return getData().initialSpeed(); }
+    public float getDragCoeff() { return getData().dragCoeff(); }
+    public float getCustomGravity() { return getData().gravity(); }
+    public float getExplosionPower() { return getData().explosionPower(); }
 
     /** 装填模式：策划决策/武器/07-火炮装填双模式.md（true=AUTO 开火后自动装填；false=MANUAL 需按 R 键） */
-    public boolean isAutoLoading() { return data.isAutoLoading(); }
+    public boolean isAutoLoading() { return getData().isAutoLoading(); }
 
-    public String getLoadingMode() { return data.loadingMode(); }
+    public String getLoadingMode() { return getData().loadingMode(); }
 
     /** 获取散布角（度）。优先使用 JSON 配置，未配置时按口径计算。 */
     public float getDispersionAngle() {
-        return data.dispersion();
+        return getData().dispersion();
     }
 
     @Override

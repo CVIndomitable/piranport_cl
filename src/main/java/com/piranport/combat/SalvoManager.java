@@ -4,6 +4,7 @@ import com.piranport.PiranPort;
 import com.piranport.combat.cannon.CannonSalvos;
 import com.piranport.combat.cannon.CannonInventory;
 import com.piranport.combat.cannon.SalvoContext;
+import com.piranport.artillery.ArtilleryItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -16,7 +17,7 @@ import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import java.util.*;
 
 /**
- * 齐射延迟射击调度器。将同一类型火炮的发射分散到多个 tick 中，形成 0.05-0.2s 的随机间隔。
+ * 齐射延迟射击调度器。按当前火炮定义的齐射间隔安排剩余炮管。
  * 所有 PENDING 操作在主线程，HashMap + ArrayDeque 安全。
  */
 @EventBusSubscriber(modid = PiranPort.MOD_ID)
@@ -41,22 +42,45 @@ public class SalvoManager {
     ) {}
 
     /**
-     * 按策划决策/武器/10，以 1-4 tick 随机间隔调度同型炮；火炮自身的连发参数不控制跨武器队列。
+     * 按当前有效火炮配置的 salvoInterval 调度同型炮；重复计划会替换旧计划。
      */
     public static void schedule(ServerPlayer player, Item expectedType, List<int[]> slotPairs,
                                  int aimMode, double ax, double ay, double az) {
         long now = player.serverLevel().getGameTime();
-        long nextTick = now;
         SalvoContext context = new SalvoContext(player, player.serverLevel(), player.getMainHandItem());
         ArrayDeque<SalvoTask> queue = new ArrayDeque<>();
 
-        for (int[] pair : slotPairs) {
-            nextTick += 1 + player.getRandom().nextInt(4);
-            ItemStack weapon = CannonInventory.weaponAt(player.getInventory(), pair[0]);
-            queue.add(new SalvoTask(pair[0], pair[1], expectedType, weapon, context,
-                    aimMode, ax, ay, az, nextTick));
+        // The interval belongs to the actual cannon definition, including runtime overrides.
+        // A non-artillery caller keeps the historical immediate cadence.
+        float interval = 0.0f;
+        ItemStack reference = slotPairs.isEmpty() ? ItemStack.EMPTY
+                : CannonInventory.weaponAt(player.getInventory(), slotPairs.get(0)[0]);
+        if (reference.getItem() instanceof ArtilleryItem cannon) {
+            interval = cannon.getEffectiveData(player.serverLevel()).salvoInterval();
+        }
+        SalvoPlan plan = SalvoPlan.remaining(slotPairs.size(), interval);
+
+        // A zero interval is a real simultaneous salvo. Execute the remaining guns
+        // before returning from the same server work item instead of waiting for the
+        // next ServerTickEvent (which would turn it into a one-tick delay).
+        if (interval == 0.0f) {
+            for (int[] pair : slotPairs) {
+                ItemStack weapon = CannonInventory.weaponAt(player.getInventory(), pair[0]);
+                if (weapon.isEmpty() || weapon.getItem() != expectedType) continue;
+                CannonSalvos.executeSalvoFire(player.serverLevel(), player,
+                        pair[0], pair[1], expectedType, aimMode, ax, ay, az);
+            }
+            return;
         }
 
+        for (int index = 0; index < slotPairs.size(); index++) {
+            int[] pair = slotPairs.get(index);
+            ItemStack weapon = CannonInventory.weaponAt(player.getInventory(), pair[0]);
+            queue.add(new SalvoTask(pair[0], pair[1], expectedType, weapon, context,
+                    aimMode, ax, ay, az, now + plan.delays().get(index)));
+        }
+
+        // Replacing a plan is an explicit cancellation policy for duplicate salvo input.
         PENDING.put(player.getUUID(), queue);
     }
 
@@ -73,22 +97,30 @@ public class SalvoManager {
                 it.remove();
                 continue;
             }
+            if (player.getMainHandItem().getItem() != next.expectedWeaponType()) {
+                it.remove();
+                continue;
+            }
 
             ServerLevel level = player.serverLevel();
             long now = level.getGameTime();
             ArrayDeque<SalvoTask> queue = entry.getValue();
 
+            boolean cancelled = false;
             while (!queue.isEmpty() && queue.peek().fireTick() <= now) {
                 SalvoTask task = queue.poll();
                 // 同型炮被另一把替换也应取消，不能只比较注册类型。
-                if (CannonInventory.weaponAt(player.getInventory(), task.weaponSlot()) != task.expectedWeapon()) continue;
+                if (CannonInventory.weaponAt(player.getInventory(), task.weaponSlot()) != task.expectedWeapon()) {
+                    cancelled = true;
+                    break;
+                }
                 CannonSalvos.executeSalvoFire(level, player,
                         task.weaponSlot(), task.coreSlot(), task.expectedWeaponType(),
                         task.aimMode(),
                         task.aimTargetX(), task.aimTargetY(), task.aimTargetZ());
             }
 
-            if (queue.isEmpty()) {
+            if (cancelled || queue.isEmpty()) {
                 it.remove();
             }
         }

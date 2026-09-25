@@ -8,7 +8,7 @@
       "predicate": {
         "piranport:loaded": 1
       },
-      "model": "piranport:item/japanese_127mm_twin_gun"
+      "model": "piranport:item/japanese_127mm_twin_gun_loaded"
     }
   ]
 }

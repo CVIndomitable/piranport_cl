@@ -8,7 +8,7 @@
       "predicate": {
         "piranport:loaded": 1
       },
-      "model": "piranport:item/fourteen_barrel_gun"
+      "model": "piranport:item/fourteen_barrel_gun_loaded"
     }
   ]
 }

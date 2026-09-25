@@ -8,7 +8,7 @@
       "predicate": {
         "piranport:loaded": 1
       },
-      "model": "piranport:item/neural_ballistic_test_gun"
+      "model": "piranport:item/neural_ballistic_test_gun_loaded"
     }
   ]
 }

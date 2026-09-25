@@ -40,12 +40,10 @@ public final class AmmoBehaviorResolver {
     }
 
     public static boolean isHighExplosive(AmmoBehavior behavior) {
-        return behavior == AmmoBehavior.HE
-                || behavior == AmmoBehavior.MK23
-                || behavior == AmmoBehavior.VT;
+        return AmmoBehaviorRegistry.forBehavior(behavior).highExplosive();
     }
 
     public static boolean isProximityFuse(AmmoBehavior behavior) {
-        return behavior == AmmoBehavior.VT;
+        return AmmoBehaviorRegistry.forBehavior(behavior).proximityFuse();
     }
 }

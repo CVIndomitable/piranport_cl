@@ -10,6 +10,8 @@ import com.piranport.config.ModCommonConfig;
 import com.piranport.config.ModProjectilesConfig;
 import com.piranport.combat.cannon.ammo.AmmoBehavior;
 import com.piranport.combat.cannon.ammo.AmmoBehaviorResolver;
+import com.piranport.combat.cannon.ammo.AmmoBehaviorStrategy;
+import com.piranport.combat.cannon.ammo.AmmoBehaviorRegistry;
 import com.piranport.network.CannonImpactEffectPayload;
 import com.piranport.registry.ModBlocks;
 import com.piranport.registry.ModEntityTypes;
@@ -634,10 +636,14 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
     }
 
     private boolean isHighExplosive() {
-        return AmmoBehaviorResolver.isHighExplosive(ammoBehavior);
+        return behaviorStrategy().highExplosive();
     }
 
     private boolean isProximityFuse() {
-        return AmmoBehaviorResolver.isProximityFuse(ammoBehavior);
+        return behaviorStrategy().proximityFuse();
+    }
+
+    private AmmoBehaviorStrategy behaviorStrategy() {
+        return AmmoBehaviorRegistry.forBehavior(ammoBehavior);
     }
 }

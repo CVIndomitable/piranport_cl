@@ -3,10 +3,8 @@ package com.piranport.client;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
-import com.piranport.PiranPort;
 import com.piranport.client.model.B25Model;
 import com.piranport.client.model.F4FModel;
-import com.piranport.component.AircraftInfo;
 import com.piranport.entity.AircraftEntity;
 import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -16,15 +14,10 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
 
 /**
- * Aircraft renderer using 3D entity models.
- * B25 (LEVEL_BOMBER) uses B25Model, all others use F4FModel.
+ * Aircraft renderer using 3D entity models. The model and texture are chosen
+ * from the entity's immutable aircraft definition visual id.
  */
 public class AircraftRenderer extends EntityRenderer<AircraftEntity> {
-
-    private static final ResourceLocation B25_TEXTURE =
-            ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "textures/entity/b25.png");
-    private static final ResourceLocation F4F_TEXTURE =
-            ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "textures/entity/f4f.png");
 
     private final B25Model<AircraftEntity> b25Model;
     private final F4FModel<AircraftEntity> f4fModel;
@@ -55,13 +48,12 @@ public class AircraftRenderer extends EntityRenderer<AircraftEntity> {
         poseStack.translate(0.0, -1.501, 0.0);
 
         EntityModel<AircraftEntity> model;
-        ResourceLocation texture;
-        if (entity.getAircraftType() == AircraftInfo.AircraftType.LEVEL_BOMBER) {
+        AircraftVisualRegistry.AircraftVisual visual = AircraftVisualRegistry.resolve(entity);
+        ResourceLocation texture = visual.texture();
+        if (visual.modelKind() == AircraftVisualRegistry.ModelKind.B25) {
             model = b25Model;
-            texture = B25_TEXTURE;
         } else {
             model = f4fModel;
-            texture = F4F_TEXTURE;
         }
 
         VertexConsumer vertexConsumer = bufferSource.getBuffer(model.renderType(texture));
@@ -73,9 +65,6 @@ public class AircraftRenderer extends EntityRenderer<AircraftEntity> {
 
     @Override
     public ResourceLocation getTextureLocation(AircraftEntity entity) {
-        if (entity.getAircraftType() == AircraftInfo.AircraftType.LEVEL_BOMBER) {
-            return B25_TEXTURE;
-        }
-        return F4F_TEXTURE;
+        return AircraftVisualRegistry.resolve(entity).texture();
     }
 }

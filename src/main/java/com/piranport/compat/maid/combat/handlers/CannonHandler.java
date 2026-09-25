@@ -7,6 +7,10 @@ import com.piranport.combat.cannon.CannonAmmoRules;
 import com.piranport.compat.maid.combat.AmmoConsumer;
 import com.piranport.compat.maid.combat.WeaponHandler;
 import com.piranport.entity.CannonProjectileEntity;
+import com.piranport.combat.cannon.CannonAim;
+import com.piranport.combat.cannon.fire.CannonFireRequest;
+import com.piranport.combat.cannon.fire.CannonFireService;
+import com.piranport.combat.cannon.fire.CannonProjectileFactory;
 import com.piranport.item.ShipCoreItem;
 import com.piranport.registry.ModItems;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -103,12 +107,14 @@ public class CannonHandler implements WeaponHandler {
             float shellExplosion = CannonAmmoRules.isMK23Shell(shellStack)
                     ? explosion * 10f : explosion;
 
-            CannonProjectileEntity proj = new CannonProjectileEntity(level, maid,
-                    shellStack, damage, isHE, shellExplosion);
-            if (isVT) proj.setVT(true);
-            // 依据：策划决策/数值/05-船型职能分化修订.md（大口径 AP 对小型船过穿），
-            // 玩家路径在 CannonProjectiles.java:97-99 同样设置；不设则过穿与穿甲口径判定失效
-            proj.setSourceCaliber(sourceCaliber);
+            Vec3 spawnPos = origin;
+            CannonFireRequest request = CannonFireService.request(
+                    level, maid, stack, shellStack, damage, shellExplosion, velocity,
+                    effectiveData.dragCoeff(), effectiveData.gravity(), inaccuracy, inaccuracy,
+                    sourceCaliber, isHE, isVT,
+                    new CannonAim.DirectAim(target.getBoundingBox().getCenter()), spawnPos);
+            if (!CannonFireService.isValid(request)) continue;
+            CannonProjectileEntity proj = CannonProjectileFactory.create(request);
             proj.setPos(origin.x, origin.y, origin.z);
             proj.shootFromRotation(maid, pitch, yaw, 0f, velocity, inaccuracy);
             level.addFreshEntity(proj);

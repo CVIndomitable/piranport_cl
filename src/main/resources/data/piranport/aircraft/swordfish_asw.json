@@ -1,0 +1,14 @@
+{
+  "aircraft_class": "asw",
+  "attack_profile": "depth_charge",
+  "payload_type": "depth_charge",
+  "visual_id": "asw",
+  "fuel_capacity": 1200,
+  "ammo_capacity": 6,
+  "panel_damage": 8.0,
+  "panel_speed": 1.0,
+  "weight": 16,
+  "bombing_mode": "level",
+  "health": 12,
+  "attack_cooldown": 30
+}

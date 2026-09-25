@@ -1,0 +1,14 @@
+{
+  "aircraft_class": "torpedo_bomber",
+  "attack_profile": "torpedo",
+  "payload_type": "aerial_torpedo",
+  "visual_id": "torpedo_bomber",
+  "fuel_capacity": 1200,
+  "ammo_capacity": 1,
+  "panel_damage": 21.0,
+  "panel_speed": 1.1,
+  "weight": 20,
+  "bombing_mode": "dive",
+  "health": 15,
+  "attack_cooldown": 40
+}

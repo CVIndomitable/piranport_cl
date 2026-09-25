@@ -1,0 +1,14 @@
+{
+  "aircraft_class": "level_bomber",
+  "attack_profile": "level_bomb",
+  "payload_type": "aerial_bomb",
+  "visual_id": "level_bomber",
+  "fuel_capacity": 1200,
+  "ammo_capacity": 32,
+  "panel_damage": 46.0,
+  "panel_speed": 1.6,
+  "weight": 20,
+  "bombing_mode": "level",
+  "health": 12,
+  "attack_cooldown": 1
+}

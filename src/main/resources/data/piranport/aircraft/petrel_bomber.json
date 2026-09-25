@@ -1,0 +1,14 @@
+{
+  "aircraft_class": "dive_bomber",
+  "attack_profile": "dive_bomb",
+  "payload_type": "aerial_bomb",
+  "visual_id": "dive_bomber",
+  "fuel_capacity": 1200,
+  "ammo_capacity": 1,
+  "panel_damage": 10.0,
+  "panel_speed": 1.1,
+  "weight": 14,
+  "bombing_mode": "dive",
+  "health": 15,
+  "attack_cooldown": 1
+}

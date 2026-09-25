@@ -1,0 +1,14 @@
+{
+  "aircraft_class": "fighter",
+  "attack_profile": "gun",
+  "payload_type": "none",
+  "visual_id": "fighter",
+  "fuel_capacity": 1200,
+  "ammo_capacity": 64,
+  "panel_damage": 5.0,
+  "panel_speed": 2.4,
+  "weight": 14,
+  "bombing_mode": "dive",
+  "health": 20,
+  "attack_cooldown": 5
+}

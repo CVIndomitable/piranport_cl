@@ -1,0 +1,14 @@
+{
+  "aircraft_class": "rocket_fighter",
+  "attack_profile": "rocket",
+  "payload_type": "rocket_ammo",
+  "visual_id": "rocket_fighter",
+  "fuel_capacity": 1200,
+  "ammo_capacity": 6,
+  "panel_damage": 6.0,
+  "panel_speed": 1.6,
+  "weight": 14,
+  "bombing_mode": "dive",
+  "health": 20,
+  "attack_cooldown": 40
+}

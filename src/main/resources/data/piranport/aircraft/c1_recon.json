@@ -1,0 +1,14 @@
+{
+  "aircraft_class": "recon",
+  "attack_profile": "recon",
+  "payload_type": "none",
+  "visual_id": "recon",
+  "fuel_capacity": 12800,
+  "ammo_capacity": 0,
+  "panel_damage": 0.0,
+  "panel_speed": 2.5,
+  "weight": 8,
+  "bombing_mode": "dive",
+  "health": 10,
+  "attack_cooldown": 1
+}

@@ -5,6 +5,10 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import com.google.gson.Gson;
@@ -101,5 +105,33 @@ class AircraftDefinitionTest {
                 .toDefinition("piranport:aircraft/custom");
         assertEquals(37, definition.health());
         assertEquals(9, definition.attackCooldown());
+    }
+
+    @Test
+    void allRegisteredAircraftResourcesResolveToValidDefinitions() {
+        List<String> ids = List.of(
+                "xtb2d", "swordfish_torpedo", "swordfish_asw", "tbf_torpedo",
+                "tbf_asw", "tenzan_torpedo", "type97_torpedo", "sky_pirate_torpedo",
+                "petrel_bomber", "type99_dive_bomber", "sbd_dauntless", "firefly_as_mk5",
+                "suisei_bomber", "seiun_kai_bomber", "b25_bomber", "xa2j_bomber",
+                "f6f_hellcat_rocket", "seafire", "zero_model52", "f4f_wildcat",
+                "f4u_corsair_ice", "f4u_corsair", "f2h_banshee",
+                "type0_recon", "c1_recon", "saiun_recon");
+        Gson gson = new Gson();
+        for (String id : ids) {
+            String resource = "data/piranport/aircraft/" + id + ".json";
+            try (InputStream stream = getClass().getClassLoader().getResourceAsStream(resource)) {
+                assertNotNull(stream, "missing aircraft definition resource: " + resource);
+                AircraftDefinition definition = gson.fromJson(
+                        new InputStreamReader(stream, StandardCharsets.UTF_8),
+                        AircraftDefinitionReloadListener.JsonAircraftDefinition.class)
+                        .toDefinition("piranport:aircraft/" + id);
+                assertEquals("piranport:aircraft/" + id, definition.id());
+                assertTrue(definition.health() > 0);
+                assertTrue(definition.attackCooldown() > 0);
+            } catch (Exception exception) {
+                fail("invalid aircraft definition resource: " + resource, exception);
+            }
+        }
     }
 }

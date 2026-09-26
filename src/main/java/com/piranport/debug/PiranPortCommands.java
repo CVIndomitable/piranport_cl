@@ -515,7 +515,7 @@ public final class PiranPortCommands {
         // 否则任何 OP 都能在普通游戏里凭空召唤轰炸机。而且调试模式必须由"执行者本人"开启。
         if (!PiranPortDebug.isSessionActive(player.getUUID())) {
             source.sendFailure(Component.literal(
-                    "§c此指令需要先为你自己开启调试模式（按 F8 开启）"));
+                    "§c此指令需要先在调试终端的控制页开启调试模式"));
             return 0;
         }
 
@@ -570,7 +570,7 @@ public final class PiranPortCommands {
         }
         if (!PiranPortDebug.isSessionActive(player.getUUID())) {
             source.sendFailure(Component.literal(
-                    "§c此指令需要先为你自己开启调试模式（按 F8 开启）"));
+                    "§c此指令需要先在调试终端的控制页开启调试模式"));
             return 0;
         }
         // `/ppd model_debug b25 force`（省略 variant）时 force 落在 variant 位上，

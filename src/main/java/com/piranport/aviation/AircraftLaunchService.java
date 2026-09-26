@@ -115,7 +115,7 @@ public final class AircraftLaunchService {
             throw new IllegalArgumentException("aircraft item has no definition: " + itemId);
         }
         launchStack.set(ModDataComponents.AIRCRAFT_INFO.get(),
-                withFullFuel(info, definition.fuelCapacity()));
+                withFullFuel(info, AircraftStatsService.resolve(definition)));
 
         // Keep createAutonomous on AircraftEntity as the low-level field mapper;
         // this service owns the stable ID, definition and context preparation.
@@ -191,9 +191,9 @@ public final class AircraftLaunchService {
         }
     }
 
-    private static AircraftInfo withFullFuel(AircraftInfo info, int fuelCapacity) {
-        return new AircraftInfo(info.aircraftType(), fuelCapacity, info.ammoCapacity(), fuelCapacity,
-                info.panelDamage(), info.panelSpeed(), info.weight(), info.bombingMode(),
+    private static AircraftInfo withFullFuel(AircraftInfo info, ResolvedAircraftStats stats) {
+        return new AircraftInfo(info.aircraftType(), stats.fuelCapacity(), stats.ammoCapacity(), stats.fuelCapacity(),
+                info.panelDamage(), info.panelSpeed(), stats.weight(), info.bombingMode(),
                 info.payloadLoaded(), info.definitionId());
     }
 }

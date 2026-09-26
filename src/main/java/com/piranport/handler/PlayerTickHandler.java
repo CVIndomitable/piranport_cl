@@ -459,7 +459,7 @@ public class PlayerTickHandler {
         if (hasCoreEquipped) {
             if (!TransformationManager.isTransformed(coreStack)) {
                 FuelData fuel = coreStack.getOrDefault(ModDataComponents.SHIP_CORE_FUEL.get(),
-                        new FuelData(0, ((ShipCoreItem) coreStack.getItem()).getShipType().fuelCapacity));
+                        new FuelData(0, ((ShipCoreItem) coreStack.getItem()).getShipType().effectiveFuelCapacity()));
                 if (fuel.isEmpty()) {
                     // 燃料不足提示（聊天框 + 动作栏）
                     Integer cached = lastWeaponLoad.get(player.getUUID());
@@ -498,7 +498,7 @@ public class PlayerTickHandler {
             int weaponLoad = TransformationManager.getInventoryWeaponLoad(inv);
             int armorLoad  = TransformationManager.getCoreArmorLoad(coreStack);
             double engineBonus = TransformationManager.getCoreEngineSpeedBonus(coreStack);
-            int maxLoad    = ((ShipCoreItem) coreStack.getItem()).getShipType().maxLoad;
+            int maxLoad    = ((ShipCoreItem) coreStack.getItem()).getShipType().effectiveMaxLoad();
             int cacheKey   = java.util.Objects.hash(weaponLoad, armorLoad, maxLoad, engineBonus);
             Integer cached = lastWeaponLoad.get(player.getUUID());
             if (cached == null || cached != cacheKey) {
@@ -558,10 +558,10 @@ public class PlayerTickHandler {
         ItemStack core = TransformationManager.findTransformedCore(player);
         if (!(core.getItem() instanceof ShipCoreItem sci)) return;
 
-        double threshold = sci.getShipType().distancePerFuel;
+        double threshold = sci.getShipType().effectiveDistancePerFuel();
         double acc = accumulatedDistance.getOrDefault(uuid, 0.0) + dist;
         FuelData fuel = core.getOrDefault(ModDataComponents.SHIP_CORE_FUEL.get(),
-                new FuelData(0, sci.getShipType().fuelCapacity));
+                new FuelData(0, sci.getShipType().effectiveFuelCapacity()));
 
         while (acc >= threshold && fuel.currentFuel() > 0) {
             acc -= threshold;

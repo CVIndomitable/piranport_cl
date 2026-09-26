@@ -122,6 +122,8 @@ public class AircraftEntity extends Entity {
     private double orbitAngle = 0;
     int stateTicks = 0;
     int attackCooldown = 0;
+    private int flightAttackCooldown = 0;
+    private int flightMaxHealth = 0;
     boolean hasFired = false;
     boolean diveCommitted = false;
     @Nullable Vec3 diveTarget = null;
@@ -268,6 +270,8 @@ public class AircraftEntity extends Entity {
         entity.aircraftHealth = healthDefinition != null
                 ? AircraftStatsService.resolve(healthDefinition).health()
                 : getMaxHealth(entity.aircraftType);
+        entity.flightMaxHealth = entity.aircraftHealth;
+        entity.flightAttackCooldown = entity.resolveAttackCooldown();
         entity.originalStack = aircraftStack.copy();
         entity.entityData.set(AIRCRAFT_TYPE_DATA, entity.aircraftType.ordinal());
         entity.entityData.set(AIRCRAFT_DEFINITION_DATA, entity.aircraftDefinitionId);
@@ -324,6 +328,8 @@ public class AircraftEntity extends Entity {
         entity.aircraftHealth = healthDefinition != null
                 ? AircraftStatsService.resolve(healthDefinition).health()
                 : getMaxHealth(entity.aircraftType);
+        entity.flightMaxHealth = entity.aircraftHealth;
+        entity.flightAttackCooldown = entity.resolveAttackCooldown();
         entity.originalStack = aircraftStack.copy();
         entity.entityData.set(AIRCRAFT_TYPE_DATA, entity.aircraftType.ordinal());
         entity.entityData.set(AIRCRAFT_DEFINITION_DATA, entity.aircraftDefinitionId);
@@ -1385,6 +1391,10 @@ public class AircraftEntity extends Entity {
 
     /** Cooldown defined by the immutable aircraft definition, with legacy fallback. */
     int attackCooldownDuration() {
+        return flightAttackCooldown > 0 ? flightAttackCooldown : resolveAttackCooldown();
+    }
+
+    private int resolveAttackCooldown() {
         AircraftDefinition definition = AircraftDefinitionService.find(aircraftDefinitionId);
         return definition != null ? AircraftStatsService.resolve(definition).cooldown() : switch (aircraftType) {
             case FIGHTER -> 5;
@@ -1578,6 +1588,9 @@ public class AircraftEntity extends Entity {
                 aircraftHealth = getMaxHealth(aircraftType);
             }
         }
+        flightMaxHealth = tag.contains("FlightMaxHealth") ? tag.getInt("FlightMaxHealth") : Math.max(1, aircraftHealth);
+        flightAttackCooldown = tag.contains("FlightAttackCooldown")
+                ? Math.max(1, tag.getInt("FlightAttackCooldown")) : resolveAttackCooldown();
         if (tag.contains("OriginalStack")) {
             originalStack = ItemStack.parse(level().registryAccess(), tag.getCompound("OriginalStack"))
                     .orElse(ItemStack.EMPTY);
@@ -1640,6 +1653,8 @@ public class AircraftEntity extends Entity {
         tag.putInt("AirtimeTicks", airtimeTicks);
         tag.putBoolean("HasFired", hasFired);
         tag.putInt("AircraftHealth", aircraftHealth);
+        tag.putInt("FlightMaxHealth", flightMaxHealth > 0 ? flightMaxHealth : Math.max(1, aircraftHealth));
+        tag.putInt("FlightAttackCooldown", attackCooldownDuration());
         if (originalStack != null && !originalStack.isEmpty()) {
             tag.put("OriginalStack", originalStack.save(level().registryAccess()));
         }

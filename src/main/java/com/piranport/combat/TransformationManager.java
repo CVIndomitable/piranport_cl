@@ -195,23 +195,25 @@ public class TransformationManager {
         int armorLoad  = getCoreArmorLoad(coreStack);
         int totalLoad  = getInventoryWeaponLoad(inv) + armorLoad;
 
-        double loadRatio = activeType.maxLoad > 0 ? (double) totalLoad / activeType.maxLoad : 0;
-        double speedMult = activeType.emptySpeed - (activeType.emptySpeed - activeType.fullLoadSpeed) * Math.min(loadRatio, 1.0);
+        double loadRatio = activeType.effectiveMaxLoad() > 0 ? (double) totalLoad / activeType.effectiveMaxLoad() : 0;
+        double speedMult = activeType.effectiveEmptySpeed() - (activeType.effectiveEmptySpeed() - activeType.effectiveFullLoadSpeed()) * Math.min(loadRatio, 1.0);
         speedMult += engineSpeedBonus;
         // 调试终端的舰型级倍率偏移，加在最后一步（在载重插值与强化件加成之上）。
         // WHY 加在末尾而不是混进 emptySpeed/fullLoadSpeed：那两者是策划表里的基准值，
         // 覆盖必须能整体叠加在最终结果上，否则载重插值会把手填的倍率再次放大/缩小，
         // 玩家输入的数值与实际效果对不上。key 用 ShipType.name()（枚举常量名，如 LARGE）。
-        speedMult += com.piranport.terminal.TerminalOverrides.coreSpeedDelta(activeType.name());
+        speedMult += com.piranport.terminal.TerminalParameters.getDouble(
+                "core." + activeType.name() + ".speed_bonus",
+                0.0);
 
         applyTypeAttributes(player, activeType, armorBonus, speedMult);
-        applyOverweightPenalty(player, totalLoad, activeType.maxLoad);
+        applyOverweightPenalty(player, totalLoad, activeType.effectiveMaxLoad());
 
         if (perfEnabled) {
             long ns = System.nanoTime() - t0;
             com.piranport.debug.PiranPortDebug.perf("WeightScan", ns,
                     "player=" + (player == null ? "?" : player.getName().getString())
-                    + " load=" + totalLoad + "/" + activeType.maxLoad);
+                    + " load=" + totalLoad + "/" + activeType.effectiveMaxLoad());
         }
     }
 
@@ -424,14 +426,14 @@ public class TransformationManager {
         AttributeInstance speedAttr = player.getAttribute(Attributes.MOVEMENT_SPEED);
 
         ShipHealthOverride.apply(healthAttr, type.maxHealth());
-        int totalArmor = type.baseArmor + plateArmorBonus;
+        int totalArmor = type.effectiveBaseArmor() + plateArmorBonus;
         if (armorAttr != null && totalArmor > 0) {
             armorAttr.addTransientModifier(new AttributeModifier(
                     ARMOR_MODIFIER_ID, totalArmor, AttributeModifier.Operation.ADD_VALUE));
         }
-        if (toughnessAttr != null && type.armorToughness > 0) {
+        if (toughnessAttr != null && type.effectiveArmorToughness() > 0) {
             toughnessAttr.addTransientModifier(new AttributeModifier(
-                    TOUGHNESS_MODIFIER_ID, type.armorToughness, AttributeModifier.Operation.ADD_VALUE));
+                    TOUGHNESS_MODIFIER_ID, type.effectiveArmorToughness(), AttributeModifier.Operation.ADD_VALUE));
         }
         if (speedAttr != null && speedMult != 1.0) {
             speedAttr.addTransientModifier(new AttributeModifier(

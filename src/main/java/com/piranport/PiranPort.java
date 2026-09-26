@@ -3,8 +3,6 @@ package com.piranport;
 import com.mojang.logging.LogUtils;
 import com.piranport.compat.ModCompats;
 import com.piranport.config.ModCommonConfig;
-import com.piranport.config.ModAircraftConfig;
-import com.piranport.config.ModShipsConfig;
 import com.piranport.config.ModProjectilesConfig;
 import com.piranport.config.ModEquipmentConfig;
 import com.piranport.config.ModArtilleryConfig;
@@ -102,11 +100,6 @@ public class PiranPort {
         // 决策/副本/07：Boss 节点防卡 tick 调度（每 server level tick 调用）
         NeoForge.EVENT_BUS.addListener(this::onLevelTick);
         modContainer.registerConfig(ModConfig.Type.COMMON, ModCommonConfig.SPEC);
-        modContainer.registerConfig(ModConfig.Type.COMMON, ModAircraftConfig.SPEC, "piranport-aircraft.toml");
-        modContainer.registerConfig(ModConfig.Type.COMMON, ModShipsConfig.SPEC, "piranport-ships.toml");
-        modContainer.registerConfig(ModConfig.Type.COMMON, ModProjectilesConfig.SPEC, "piranport-projectiles.toml");
-        modContainer.registerConfig(ModConfig.Type.COMMON, ModEquipmentConfig.SPEC, "piranport-equipment.toml");
-        modContainer.registerConfig(ModConfig.Type.COMMON, ModArtilleryConfig.SPEC, "piranport-artillery.toml");
 
         ModCompats.initialize(modEventBus);
 

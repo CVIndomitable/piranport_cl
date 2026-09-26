@@ -137,9 +137,6 @@ public class ClientInputCoordinator {
         // 6) 弹药选择轮盘 (Tab)
         AmmoSelectionHandler.handleAmmoWheel(mc, mc.player, transformed, inReconMode);
 
-        // 7) 调试快捷键 (F8/N/J)
-        DebugInputHandler.handleDebugKeys(mc);
-
         // 8) 实体高亮 (Y键 + 火控 + 声呐)
         if (mc.level != null) {
             Player localPlayer = mc.player;

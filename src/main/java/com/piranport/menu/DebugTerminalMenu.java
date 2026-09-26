@@ -2,6 +2,7 @@ package com.piranport.menu;
 
 import com.piranport.config.ConfigToolPermissions;
 import com.piranport.registry.ModMenuTypes;
+import com.piranport.terminal.TerminalParametersSavedData;
 import com.piranport.terminal.TerminalOverridesSavedData;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
@@ -13,12 +14,7 @@ import org.jetbrains.annotations.NotNull;
 /**
  * 调试终端菜单（服务端逻辑）
  *
- * <p>与 {@link ArtilleryConfigToolMenu} 同构：纯配置界面、无物品槽位，
- * 真正的读写都通过自定义网络包在服务端完成，这里只负责权限校验和打开时推一次快照。
- *
- * <p>WHY 打开时就要推快照：客户端 {@code TerminalOverrides} 是服务端覆盖值的只读镜像，
- * 只在 sync 包到达时更新。不在这里推一次，玩家第一次开终端会看到一份过期数据
- * （上次同步后可能已经被重置/被其他终端改过）。
+ * 纯配置界面、无物品槽位；打开时推送当前存档的权威参数快照。
  */
 public class DebugTerminalMenu extends AbstractContainerMenu {
 
@@ -35,6 +31,9 @@ public class DebugTerminalMenu extends AbstractContainerMenu {
             TerminalOverridesSavedData data = TerminalOverridesSavedData.get(sp.serverLevel());
             net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(sp,
                     com.piranport.network.SyncTerminalOverridesPayload.from(data));
+            net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(sp,
+                    com.piranport.network.SyncTerminalParametersPayload.from(
+                            TerminalParametersSavedData.get(sp.serverLevel()), ""));
         }
     }
 

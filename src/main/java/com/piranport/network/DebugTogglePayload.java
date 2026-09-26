@@ -28,7 +28,7 @@ public record DebugTogglePayload(boolean enabled) implements CustomPacketPayload
                     if (!(context.player() instanceof net.minecraft.server.level.ServerPlayer sp)) {
                         return;
                     }
-                    if (!sp.hasPermissions(2)) {
+                    if (!com.piranport.config.ConfigToolPermissions.canUse(sp)) {
                         // P0-1: 权限不足时显式反馈，避免假成功
                         PacketDistributor.sendToPlayer(sp,
                                 new DebugToggleAckPayload(false, -1L, "NO_PERMISSION"));

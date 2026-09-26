@@ -36,7 +36,7 @@ public record SnapshotRequestPayload(boolean acknowledged) implements CustomPack
                         return;
                     }
                     // 服务端直接发给该玩家：ClientHooks 在专用服务器上是 Noop 桥接，消息送不到人。
-                    if (!sp.hasPermissions(2)) {
+                    if (!com.piranport.config.ConfigToolPermissions.canUse(sp)) {
                         sp.displayClientMessage(Component.literal("[PP] 调试需要 OP 权限"), false);
                         return;
                     }

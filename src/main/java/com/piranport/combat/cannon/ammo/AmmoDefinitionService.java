@@ -8,15 +8,27 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import com.piranport.terminal.TerminalParameters;
 
 /** 稳定的炮弹定义注册表；后续数据包加载可替换快照而无需改变查询方。 */
 public final class AmmoDefinitionService {
-    private static final Map<ResourceLocation, AmmoDefinition> DEFINITIONS = createDefaults();
+    private record Snapshot(Map<ResourceLocation, AmmoDefinition> byId, java.util.List<AmmoDefinition> ordered) {}
+    private static volatile Snapshot snapshot = snapshotOf(createDefaults());
 
     private AmmoDefinitionService() {}
 
     public static Optional<AmmoDefinition> find(ResourceLocation itemId) {
-        return Optional.ofNullable(DEFINITIONS.get(itemId));
+        AmmoDefinition base = snapshot.byId().get(itemId);
+        if (base == null) return Optional.empty();
+        String key = "ammo." + itemId + ".";
+        AmmoDefinition effective = new AmmoDefinition(base.itemId(), base.behavior(), base.caliberFamily(),
+                (float) TerminalParameters.getDouble(key + "damage_multiplier", base.damageMultiplier()),
+                (float) TerminalParameters.getDouble(key + "explosion_multiplier", base.explosionMultiplier()),
+                (float) TerminalParameters.getDouble(key + "armor_ignore", base.armorIgnore()),
+                TerminalParameters.getBoolean(key + "underwater_explosion", base.underwaterExplosion()),
+                base.impactKindOverride());
+        // 无有效变化时保留快照对象身份，避免查询方看到伪造的新定义。
+        return Optional.of(effective.equals(base) ? base : effective);
     }
 
     public static AmmoDefinition require(ResourceLocation itemId) {
@@ -25,12 +37,12 @@ public final class AmmoDefinitionService {
     }
 
     public static Map<ResourceLocation, AmmoDefinition> all() {
-        return Map.copyOf(DEFINITIONS);
+        return snapshot.byId();
     }
 
     /** Returns definitions in stable registration order for candidate selection. */
     public static synchronized java.util.List<AmmoDefinition> allInOrder() {
-        return java.util.List.copyOf(DEFINITIONS.values());
+        return snapshot.ordered();
     }
 
     /** Returns a fresh immutable snapshot of code-provided defaults for reload baselines. */
@@ -50,14 +62,20 @@ public final class AmmoDefinitionService {
                 throw new IllegalArgumentException("Duplicate ammo definition: " + id);
             }
         });
-        DEFINITIONS.clear();
-        DEFINITIONS.putAll(copy);
+        publish(copy);
     }
 
     /** 恢复内置定义；数据包重载失败或测试清理时使用。 */
     public static synchronized void resetDefaults() {
-        DEFINITIONS.clear();
-        DEFINITIONS.putAll(createDefaults());
+        publish(createDefaults());
+    }
+
+    private static void publish(Map<ResourceLocation, AmmoDefinition> next) {
+        snapshot = snapshotOf(next);
+    }
+
+    private static Snapshot snapshotOf(Map<ResourceLocation, AmmoDefinition> next) {
+        return new Snapshot(Map.copyOf(next), java.util.List.copyOf(next.values()));
     }
 
     private static Map<ResourceLocation, AmmoDefinition> createDefaults() {

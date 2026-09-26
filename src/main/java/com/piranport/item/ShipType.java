@@ -51,8 +51,18 @@ public enum ShipType {
         this.nationality = nationality;
     }
 
+    private String terminalKey(String property) { return "core." + name() + "." + property; }
+    public int effectiveHealthBonus() { return com.piranport.terminal.TerminalParameters.getInt(terminalKey("health_bonus"), healthBonus); }
+    public int effectiveMaxLoad() { return com.piranport.terminal.TerminalParameters.getInt(terminalKey("max_load"), maxLoad); }
+    public int effectiveFuelCapacity() { return com.piranport.terminal.TerminalParameters.getInt(terminalKey("fuel_capacity"), fuelCapacity); }
+    public double effectiveDistancePerFuel() { return com.piranport.terminal.TerminalParameters.getDouble(terminalKey("distance_per_fuel"), distancePerFuel); }
+    public double effectiveFullLoadSpeed() { return com.piranport.terminal.TerminalParameters.getDouble(terminalKey("full_load_speed"), fullLoadSpeed); }
+    public double effectiveEmptySpeed() { return com.piranport.terminal.TerminalParameters.getDouble(terminalKey("empty_speed"), emptySpeed); }
+    public int effectiveBaseArmor() { return com.piranport.terminal.TerminalParameters.getInt(terminalKey("base_armor"), baseArmor); }
+    public int effectiveArmorToughness() { return com.piranport.terminal.TerminalParameters.getInt(terminalKey("armor_toughness"), armorToughness); }
+
     /** 舰装覆盖玩家本体血量上限。 */
-    public int maxHealth() { return 20 + healthBonus; }
+    public int maxHealth() { return 20 + effectiveHealthBonus(); }
 
     public int totalSlots() {
         return weaponSlots + ammoSlots + enhancementSlots;

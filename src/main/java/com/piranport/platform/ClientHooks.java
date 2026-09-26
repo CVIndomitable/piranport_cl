@@ -122,6 +122,10 @@ public final class ClientHooks {
         bridge.setDebugEnabledClient(enabled);
     }
 
+    public static void setHitDisplayEnabledClient(boolean enabled) {
+        bridge.setHitDisplayEnabledClient(enabled);
+    }
+
     public static void setTestModeClient(boolean enabled) {
         bridge.setTestModeClient(enabled);
     }

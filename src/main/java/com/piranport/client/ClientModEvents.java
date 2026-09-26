@@ -113,11 +113,8 @@ public class ClientModEvents {
         event.register(ModKeyMappings.TOGGLE_FIGHTER_GROUND_ATTACK);
         event.register(ModKeyMappings.HIGHLIGHT_ENTITIES);
         event.register(ModKeyMappings.TOGGLE_AUTO_LAUNCH);
-        event.register(ModKeyMappings.DEBUG_TOGGLE);
         event.register(ModKeyMappings.MANUAL_RELOAD);
         event.register(ModKeyMappings.SWITCH_AMMO);
-        event.register(ModKeyMappings.DEBUG_COOLDOWN_OVERRIDE);
-        event.register(ModKeyMappings.HIT_DISPLAY_TOGGLE);
         event.register(ModKeyMappings.RECON_EXIT);
         event.register(ModKeyMappings.TOGGLE_FC_RADAR);
     }

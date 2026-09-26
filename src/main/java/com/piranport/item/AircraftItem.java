@@ -51,9 +51,10 @@ public class AircraftItem extends Item {
 
         AircraftInfo info = stack.get(ModDataComponents.AIRCRAFT_INFO.get());
         AircraftDefinition definition = AircraftDefinitionService.resolve(stack);
-        if (info == null || definition == null || info.currentFuel() >= definition.fuelCapacity()) return false;
+        if (info == null || definition == null || info.currentFuel() >= com.piranport.aviation.AircraftStatsService.resolve(definition).fuelCapacity()) return false;
 
-        stack.set(ModDataComponents.AIRCRAFT_INFO.get(), info.withCurrentFuel(definition.fuelCapacity()));
+        stack.set(ModDataComponents.AIRCRAFT_INFO.get(), info.withCurrentFuel(
+                com.piranport.aviation.AircraftStatsService.resolve(definition).fuelCapacity()));
         other.shrink(1);
 
         if (!player.level().isClientSide) {

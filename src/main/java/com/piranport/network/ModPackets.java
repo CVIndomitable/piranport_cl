@@ -121,6 +121,11 @@ public class ModPackets {
                 HitDisplayTogglePayload.STREAM_CODEC,
                 HitDisplayTogglePayload::handle
         );
+        registrar.playToClient(
+                HitDisplayAckPayload.TYPE,
+                HitDisplayAckPayload.STREAM_CODEC,
+                HitDisplayAckPayload::handle
+        );
 
         // Empty-hand recall all aircraft
         registrar.playToServer(
@@ -319,27 +324,27 @@ public class ModPackets {
         registrar.playToServer(
                 UpdateConfigOverridePayload.TYPE,
                 UpdateConfigOverridePayload.STREAM_CODEC,
-                UpdateConfigOverridePayload::handle
+                (payload, context) -> legacyConfigToolDisabled(context)
         );
         registrar.playToServer(
                 ExportConfigPayload.TYPE,
                 ExportConfigPayload.STREAM_CODEC,
-                ExportConfigPayload::handle
+                (payload, context) -> legacyConfigToolDisabled(context)
         );
         registrar.playToServer(
                 ImportConfigPayload.TYPE,
                 ImportConfigPayload.STREAM_CODEC,
-                ImportConfigPayload::handle
+                (payload, context) -> legacyConfigToolDisabled(context)
         );
         registrar.playToServer(
                 ResetConfigPayload.TYPE,
                 ResetConfigPayload.STREAM_CODEC,
-                ResetConfigPayload::handle
+                (payload, context) -> legacyConfigToolDisabled(context)
         );
         registrar.playToServer(
                 ResetSingleConfigPayload.TYPE,
                 ResetSingleConfigPayload.STREAM_CODEC,
-                ResetSingleConfigPayload::handle
+                (payload, context) -> legacyConfigToolDisabled(context)
         );
         registrar.playToClient(
                 SyncConfigOverridesPayload.TYPE,
@@ -364,5 +369,34 @@ public class ModPackets {
                 SyncTerminalOverridesPayload.STREAM_CODEC,
                 SyncTerminalOverridesPayload::handle
         );
+        registrar.playToServer(
+                UpdateTerminalParameterPayload.TYPE,
+                UpdateTerminalParameterPayload.STREAM_CODEC,
+                UpdateTerminalParameterPayload::handle
+        );
+        registrar.playToServer(
+                SaveTerminalParametersPayload.TYPE,
+                SaveTerminalParametersPayload.STREAM_CODEC,
+                SaveTerminalParametersPayload::handle
+        );
+        registrar.playToServer(
+                TerminalParameterActionPayload.TYPE,
+                TerminalParameterActionPayload.STREAM_CODEC,
+                TerminalParameterActionPayload::handle
+        );
+        registrar.playToClient(
+                SyncTerminalParametersPayload.TYPE,
+                SyncTerminalParametersPayload.STREAM_CODEC,
+                SyncTerminalParametersPayload::handle
+        );
+    }
+
+    private static void legacyConfigToolDisabled(net.neoforged.neoforge.network.handling.IPayloadContext context) {
+        context.enqueueWork(() -> {
+            if (context.player() instanceof net.minecraft.server.level.ServerPlayer player) {
+                player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                        "旧火炮配置工具已停用，请使用调试终端"));
+            }
+        });
     }
 }

@@ -78,13 +78,19 @@ public class ArtilleryItem extends Item {
     
     /** 获取应用配置覆盖后的有效数据 */
     public ArtilleryCannonData getEffectiveData(net.minecraft.world.level.Level level) {
-        if (cannonName != null && level != null) {
+        if (cannonName != null) {
             return com.piranport.artillery.config.override.ConfigOverrideManager.getCannonData(cannonName, level);
         }
         return getData();
     }
     
     public String getCannonName() { return cannonName; }
+
+    @Override
+    public int getMaxDamage(ItemStack stack) {
+        // NeoForge 的物品钩子贯穿耐久条、损坏判定和修复；旧物品保留损伤点数而非重算百分比。
+        return Math.max(1, getEffectiveData(null).durability());
+    }
     public float getInitialSpeed() { return getData().initialSpeed(); }
     public float getDragCoeff() { return getData().dragCoeff(); }
     public float getCustomGravity() { return getData().gravity(); }
@@ -177,7 +183,7 @@ public class ArtilleryItem extends Item {
     /** 读条持续时间 = 武器装填时间（ticks）。 */
     @Override
     public int getUseDuration(ItemStack stack, LivingEntity entity) {
-        return getCooldownTicks();
+        return getEffectiveData(entity == null ? null : entity.level()).reloadTime();
     }
 
     /** 每 tick 累计读条进度（仅服务端、手动模式、未装弹时）。 */

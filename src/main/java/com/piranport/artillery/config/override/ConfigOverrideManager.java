@@ -15,7 +15,7 @@ import java.util.Set;
 /**
  * 配置覆盖管理器 - 运行时拦截层
  *
- * <p>在数据读取点应用存档级别的覆盖值，不修改原始配置系统。
+ * <p>在数据读取点应用终端有效值，不修改原始配置系统。
  * <p>线程模型: 服务端主线程（服务端），客户端主线程（客户端缓存）
  * <p>使用方式: 替换所有 {@code ArtilleryConfig.get()} 调用为 {@code ConfigOverrideManager.getCannonData()}
  */
@@ -31,28 +31,41 @@ public class ConfigOverrideManager {
      * 获取应用覆盖后的火炮数据
      *
      * @param name 火炮注册ID（如 "medium_gun"）
-     * @param level 世界实例（null时返回原始值）
+     * @param level 世界实例（无世界的客户端提示同样读取终端镜像）
      * @return 应用覆盖后的火炮数据
      */
     public static ArtilleryCannonData getCannonData(String name, @Nullable Level level) {
         // 获取原始数据
         ArtilleryCannonData original = ArtilleryConfig.get(name);
 
-        // null时直接返回原始值
-        if (level == null) {
-            return original;
-        }
+        return applyTerminalParameters(original, name);
+    }
 
-        // 客户端：从缓存读取（仅用于GUI显示，实际战斗逻辑在服务端）
-        if (level.isClientSide()) {
-            return applyCannonOverridesFromCache(original, name);
-        }
-
-        // 服务端：应用覆盖
-        ServerLevel serverLevel = (ServerLevel) level;
-        ArtilleryConfigOverrideSavedData overrides = ArtilleryConfigOverrideSavedData.get(serverLevel);
-
-        return applyCannonOverrides(original, name, overrides);
+    /** 终端是唯一运行时覆盖层；目录基准仍直接读取 ArtilleryConfig。 */
+    private static ArtilleryCannonData applyTerminalParameters(ArtilleryCannonData c, String name) {
+        String key = "cannon." + name + ".";
+        return new ArtilleryCannonData(
+                c.caliber(), c.barrels(),
+                (float) com.piranport.terminal.TerminalParameters.getDouble(key + "damage", c.damage()),
+                com.piranport.terminal.TerminalParameters.getInt(key + "reload_time", c.reloadTime()),
+                com.piranport.terminal.TerminalParameters.getInt(key + "durability", c.durability()),
+                (float) com.piranport.terminal.TerminalParameters.getDouble(key + "scope_zoom", c.scopeZoom()),
+                c.muzzles(),
+                (float) com.piranport.terminal.TerminalParameters.getDouble(key + "initial_speed", c.initialSpeed()),
+                (float) com.piranport.terminal.TerminalParameters.getDouble(key + "drag_coeff", c.dragCoeff()),
+                (float) com.piranport.terminal.TerminalParameters.getDouble(key + "gravity", c.gravity()),
+                (float) com.piranport.terminal.TerminalParameters.getDouble(key + "explosion_power", c.explosionPower()),
+                (float) com.piranport.terminal.TerminalParameters.getDouble(key + "dispersion", c.dispersion()),
+                com.piranport.terminal.TerminalParameters.getInt(key + "fire_cooldown", c.fireCooldown()),
+                com.piranport.terminal.TerminalParameters.getInt(key + "salvo_count", c.salvoCount()),
+                (float) com.piranport.terminal.TerminalParameters.getDouble(key + "salvo_interval", c.salvoInterval()),
+                (float) com.piranport.terminal.TerminalParameters.getDouble(key + "projectile_weight", c.projectileWeight()),
+                (float) com.piranport.terminal.TerminalParameters.getDouble(key + "vertical_spread", c.verticalSpread()),
+                (float) com.piranport.terminal.TerminalParameters.getDouble(key + "horizontal_spread", c.horizontalSpread()),
+                (float) com.piranport.terminal.TerminalParameters.getDouble(key + "max_elevation", c.maxElevation()),
+                (float) com.piranport.terminal.TerminalParameters.getDouble(key + "min_elevation", c.minElevation()),
+                (float) com.piranport.terminal.TerminalParameters.getDouble(key + "turret_speed", c.turretSpeed()),
+                c.loadingMode());
     }
 
     /**
@@ -402,48 +415,24 @@ public class ConfigOverrideManager {
      * @return 应用覆盖后的值
      */
     public static double getProjectileConfigDouble(String key, double defaultValue, @Nullable Level level) {
-        if (level == null || level.isClientSide()) {
-            return defaultValue;
-        }
-
-        ServerLevel serverLevel = (ServerLevel) level;
-        ArtilleryConfigOverrideSavedData overrides = ArtilleryConfigOverrideSavedData.get(serverLevel);
-
-        return overrides.getProjectileOverride(key)
-                .flatMap(v -> finiteDoubleOverride(v))
-                .orElse(defaultValue);
+        return com.piranport.terminal.TerminalParameters.getDouble(
+                "global.projectiles." + key.toLowerCase(java.util.Locale.ROOT), defaultValue);
     }
 
     /**
      * 获取应用覆盖后的boolean类型弹药配置
      */
     public static boolean getProjectileConfigBoolean(String key, boolean defaultValue, @Nullable Level level) {
-        if (level == null || level.isClientSide()) {
-            return defaultValue;
-        }
-
-        ServerLevel serverLevel = (ServerLevel) level;
-        ArtilleryConfigOverrideSavedData overrides = ArtilleryConfigOverrideSavedData.get(serverLevel);
-
-        return overrides.getProjectileOverride(key)
-                .flatMap(v -> booleanOverride(v))
-                .orElse(defaultValue);
+        return com.piranport.terminal.TerminalParameters.getBoolean(
+                "global.projectiles." + key.toLowerCase(java.util.Locale.ROOT), defaultValue);
     }
 
     /**
      * 获取应用覆盖后的int类型弹药配置
      */
     public static int getProjectileConfigInt(String key, int defaultValue, @Nullable Level level) {
-        if (level == null || level.isClientSide()) {
-            return defaultValue;
-        }
-
-        ServerLevel serverLevel = (ServerLevel) level;
-        ArtilleryConfigOverrideSavedData overrides = ArtilleryConfigOverrideSavedData.get(serverLevel);
-
-        return overrides.getProjectileOverride(key)
-                .flatMap(v -> intOverride(v))
-                .orElse(defaultValue);
+        return com.piranport.terminal.TerminalParameters.getInt(
+                "global.projectiles." + key.toLowerCase(java.util.Locale.ROOT), defaultValue);
     }
 
     // ==================== 弹药覆盖安全读取 ====================

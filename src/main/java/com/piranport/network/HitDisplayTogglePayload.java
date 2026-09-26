@@ -9,6 +9,7 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 /** C2S: toggle hit/kill/miss chat notifications for this player. */
 public record HitDisplayTogglePayload(boolean enabled) implements CustomPacketPayload {
@@ -26,6 +27,7 @@ public record HitDisplayTogglePayload(boolean enabled) implements CustomPacketPa
         context.enqueueWork(() -> {
             if (context.player() instanceof ServerPlayer sp) {
                 HitNotifier.setEnabled(sp.getUUID(), payload.enabled());
+                PacketDistributor.sendToPlayer(sp, new HitDisplayAckPayload(HitNotifier.isEnabled(sp.getUUID())));
             }
         });
     }

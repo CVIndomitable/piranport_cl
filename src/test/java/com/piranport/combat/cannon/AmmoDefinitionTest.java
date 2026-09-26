@@ -3,10 +3,12 @@ package com.piranport.combat.cannon;
 import com.piranport.combat.cannon.ammo.AmmoBehavior;
 import com.piranport.combat.cannon.ammo.AmmoDefinition;
 import com.piranport.combat.cannon.ammo.AmmoDefinitionService;
+import com.piranport.terminal.TerminalParameters;
 import net.minecraft.resources.ResourceLocation;
 import org.junit.jupiter.api.Test;
 
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -67,6 +69,20 @@ class AmmoDefinitionTest {
         var replacement = new LinkedHashMap<ResourceLocation, AmmoDefinition>();
         replacement.put(key, value);
         assertThrows(IllegalArgumentException.class, () -> AmmoDefinitionService.replaceAll(replacement));
+    }
+
+    @Test
+    void terminalOverrideDoesNotMutateDefinitionSnapshot() {
+        var itemId = id("small_he_shell");
+        var baseline = AmmoDefinitionService.require(itemId);
+        try {
+            TerminalParameters.apply(Map.of("ammo." + itemId + ".damage_multiplier", "2.5"), 1);
+            assertEquals(2.5f, AmmoDefinitionService.require(itemId).damageMultiplier());
+            assertSame(baseline, AmmoDefinitionService.all().get(itemId));
+        } finally {
+            TerminalParameters.clearServer();
+        }
+        assertSame(baseline, AmmoDefinitionService.require(itemId));
     }
 
     private static ResourceLocation id(String path) {

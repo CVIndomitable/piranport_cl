@@ -164,7 +164,7 @@ public class ShipCoreItem extends Item implements Equipable {
     private void validateAndFixFuelData(ItemStack stack) {
         FuelData fuel = readFuelData(stack);
         if (fuel == null || fuel.maxFuel() <= 0 || fuel.currentFuel() < 0) {
-            fuel = new FuelData(0, shipType.fuelCapacity);
+            fuel = new FuelData(0, shipType.effectiveFuelCapacity());
         } else if (fuel.currentFuel() > fuel.maxFuel()) {
             fuel = fuel.withCurrentFuel(fuel.maxFuel());
         }
@@ -344,7 +344,7 @@ public class ShipCoreItem extends Item implements Equipable {
             int weaponLoad = com.piranport.combat.TransformationManager.getInventoryWeaponLoad(inv);
             int armorLoad = com.piranport.combat.TransformationManager.getCoreArmorLoad(stack);
             tooltipComponents.add(Component.translatable(
-                    "container.piranport.load", weaponLoad + armorLoad, shipType.maxLoad));
+                    "container.piranport.load", weaponLoad + armorLoad, shipType.effectiveMaxLoad()));
             // Show stored armor plates
             int capacity = shipType.enhancementSlots;
             ItemContainerContents armorContents = stack.getOrDefault(
@@ -352,7 +352,7 @@ public class ShipCoreItem extends Item implements Equipable {
             NonNullList<ItemStack> storedArmor = NonNullList.withSize(capacity, ItemStack.EMPTY);
             armorContents.copyInto(storedArmor);
             int armorBonus = com.piranport.combat.TransformationManager.getCoreArmorBonus(stack);
-            int totalArmor = shipType.baseArmor + armorBonus;
+            int totalArmor = shipType.effectiveBaseArmor() + armorBonus;
             if (armorBonus > 0) {
                 tooltipComponents.add(Component.translatable(
                         "tooltip.piranport.core_armor_with_bonus", totalArmor, armorBonus, capacity));
@@ -368,21 +368,21 @@ public class ShipCoreItem extends Item implements Equipable {
         }
         // Fuel tank info (both modes)
         FuelData fuel = stack.getOrDefault(ModDataComponents.SHIP_CORE_FUEL.get(),
-                new FuelData(0, shipType.fuelCapacity));
+                new FuelData(0, shipType.effectiveFuelCapacity()));
         tooltipComponents.add(Component.translatable(
                 "tooltip.piranport.fuel_tank", fuel.currentFuel(), fuel.maxFuel()));
         // Shift: core stats
         if (ClientHooks.isClient()) {
             if (ClientHooks.hasShiftDown()) {
-                if (shipType.healthBonus != 0) {
+                if (shipType.effectiveHealthBonus() != 0) {
                     tooltipComponents.add(Component.translatable("tooltip.piranport.core.health_bonus",
-                            (shipType.healthBonus > 0 ? "+" : "") + shipType.healthBonus)
+                            (shipType.effectiveHealthBonus() > 0 ? "+" : "") + shipType.effectiveHealthBonus())
                             .withStyle(net.minecraft.ChatFormatting.RED));
                 }
-                tooltipComponents.add(Component.translatable("tooltip.piranport.core.max_load", shipType.maxLoad)
+                tooltipComponents.add(Component.translatable("tooltip.piranport.core.max_load", shipType.effectiveMaxLoad())
                         .withStyle(net.minecraft.ChatFormatting.GOLD));
                 int armorBonus = com.piranport.combat.TransformationManager.getCoreArmorBonus(stack);
-                int totalArmor = shipType.baseArmor + armorBonus;
+                int totalArmor = shipType.effectiveBaseArmor() + armorBonus;
                 if (armorBonus > 0) {
                     tooltipComponents.add(Component.translatable("tooltip.piranport.core.armor_with_bonus",
                             totalArmor, armorBonus)
@@ -391,29 +391,31 @@ public class ShipCoreItem extends Item implements Equipable {
                     tooltipComponents.add(Component.translatable("tooltip.piranport.core.armor", totalArmor)
                             .withStyle(net.minecraft.ChatFormatting.BLUE));
                 }
-                if (shipType.armorToughness > 0) {
-                    tooltipComponents.add(Component.translatable("tooltip.piranport.core.toughness", shipType.armorToughness)
+                if (shipType.effectiveArmorToughness() > 0) {
+                    tooltipComponents.add(Component.translatable("tooltip.piranport.core.toughness", shipType.effectiveArmorToughness())
                             .withStyle(net.minecraft.ChatFormatting.AQUA));
                 }
                 tooltipComponents.add(Component.translatable("tooltip.piranport.core.empty_speed",
-                        String.format("%.2f", shipType.emptySpeed)).withStyle(net.minecraft.ChatFormatting.GREEN));
+                        String.format("%.2f", shipType.effectiveEmptySpeed())).withStyle(net.minecraft.ChatFormatting.GREEN));
                 tooltipComponents.add(Component.translatable("tooltip.piranport.core.full_speed",
-                        String.format("%.2f", shipType.fullLoadSpeed)).withStyle(net.minecraft.ChatFormatting.YELLOW));
+                        String.format("%.2f", shipType.effectiveFullLoadSpeed())).withStyle(net.minecraft.ChatFormatting.YELLOW));
                 if (currentEngineSpeedBonus > 0) {
                     tooltipComponents.add(Component.translatable("tooltip.piranport.engine.speed_bonus",
                             String.format("%.0f", currentEngineSpeedBonus * 100)).withStyle(net.minecraft.ChatFormatting.GREEN));
                 }
                 if (hasCurrentLoad) {
-                    double loadRatio = shipType.maxLoad > 0
-                            ? (double) currentTotalLoad / shipType.maxLoad : 0;
+                    double loadRatio = shipType.effectiveMaxLoad() > 0
+                            ? (double) currentTotalLoad / shipType.effectiveMaxLoad() : 0;
                     // 与 TransformationManager.applyAttributesInventoryMode 的口径一致：
                     // 覆盖值加在「载重插值 + 强化件加成」之后。不减这一项的话
                     // tooltip 显示的速度会比玩家实际移动速度少一个覆盖偏移。
-                    double currentSpeed = shipType.emptySpeed
-                            - (shipType.emptySpeed - shipType.fullLoadSpeed)
+                    double currentSpeed = shipType.effectiveEmptySpeed()
+                            - (shipType.effectiveEmptySpeed() - shipType.effectiveFullLoadSpeed())
                                     * Math.min(loadRatio, 1.0)
                             + currentEngineSpeedBonus
-                            + com.piranport.terminal.TerminalOverrides.coreSpeedDelta(shipType.name());
+                            + com.piranport.terminal.TerminalParameters.getDouble(
+                                    "core." + shipType.name() + ".speed_bonus",
+                                    0.0);
                     tooltipComponents.add(Component.translatable("tooltip.piranport.core.current_speed",
                                     String.format("%.2f", currentSpeed))
                             .withStyle(net.minecraft.ChatFormatting.AQUA));

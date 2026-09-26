@@ -123,16 +123,22 @@ public class TorpedoItem extends Item {
     }
 
     public float getDamage() {
-        return damage;
+        return modelKey == null ? damage : (float) com.piranport.terminal.TerminalParameters.getDouble(
+                "torpedo." + modelKey + ".damage", damage);
     }
 
+    public float getBaseDamage() { return damage; }
+
     public int getRange() {
-        return range;
+        return modelKey == null ? range : com.piranport.terminal.TerminalParameters.getInt(
+                "torpedo." + modelKey + ".range", range);
     }
+
+    public int getBaseRange() { return range; }
 
     /** 航程转换为 lifetime ticks。 */
     public int getLifetimeTicks() {
-        return range * 20;
+        return getRange() * 20;
     }
 
     /** 基准航速，不含调试终端覆盖。 */
@@ -149,7 +155,8 @@ public class TorpedoItem extends Item {
      * 由服务端在改动时同步给客户端，这里按需查表。
      */
     public float getSpeed() {
-        return speed + com.piranport.terminal.TerminalOverrides.torpedoSpeedDelta(modelKey);
+        return modelKey == null ? speed : (float) com.piranport.terminal.TerminalParameters.getDouble(
+                "torpedo." + modelKey + ".speed", speed);
     }
 
     /** 鱼雷型号 ID（= 注册名，如 {@code torpedo_533mm_mk14}），供调试终端做型号级覆盖。 */
@@ -181,9 +188,9 @@ public class TorpedoItem extends Item {
         if (ClientHooks.isClient()) {
             if (ClientHooks.hasShiftDown()) {
                 tooltipComponents.add(Component.translatable("tooltip.piranport.torpedo.damage",
-                        String.format(java.util.Locale.ROOT, "%.1f", damage)).withStyle(ChatFormatting.RED));
+                        String.format(java.util.Locale.ROOT, "%.1f", getDamage())).withStyle(ChatFormatting.RED));
                 tooltipComponents.add(Component.translatable("tooltip.piranport.torpedo.range",
-                        range).withStyle(ChatFormatting.AQUA));
+                        getRange()).withStyle(ChatFormatting.AQUA));
                 tooltipComponents.add(Component.translatable("tooltip.piranport.torpedo.speed",
                         String.format(java.util.Locale.ROOT, "%.2f", getSpeed())).withStyle(ChatFormatting.GREEN));
                 if (magnetic) {

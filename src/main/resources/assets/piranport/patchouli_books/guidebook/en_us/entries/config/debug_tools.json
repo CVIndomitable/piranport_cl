@@ -6,7 +6,7 @@
   "pages": [
     {
       "type": "patchouli:text",
-      "text": "$(bold)Debug Tools$()$(br2)$(o)Creative mode and operator only.$()$(br2)$(bold)Commands:$()$(br)• $(o)/ppd spawn_ruin <type>$(): Spawn a ruin structure$(br)• $(o)/ppd debug_toggle$(): Toggle debug mode$(br)• $(o)/ppd cooldown_override$(): Bypass weapon cooldowns"
+      "text": "$(bold)Debug Terminal$()$(br2)Operators can right-click the terminal to edit parameters or use the control page for debug mode, cooldown override, hit notifications and log snapshots. Shift-right-click requests a snapshot directly. CSV files are read and written on the server."
     },
     {
       "type": "patchouli:text",

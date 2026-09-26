@@ -38,7 +38,7 @@ public record DebugCooldownOverridePayload(boolean enabled) implements CustomPac
                     if (!(context.player() instanceof net.minecraft.server.level.ServerPlayer sp)) {
                         return;
                     }
-                    if (!sp.hasPermissions(2)) {
+                    if (!com.piranport.config.ConfigToolPermissions.canUse(sp)) {
                         // 权限不足必须有回执，否则客户端乐观翻转的本地状态永久说谎
                         sp.displayClientMessage(net.minecraft.network.chat.Component.literal(
                                 "§c[PP] 测试模式需要 OP 权限"), false);

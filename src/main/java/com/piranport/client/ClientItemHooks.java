@@ -164,6 +164,11 @@ public final class ClientItemHooks implements com.piranport.platform.ClientBridg
     }
 
     @Override
+    public void setHitDisplayEnabledClient(boolean enabled) {
+        DebugInputHandler.setHitDisplayEnabled(enabled);
+    }
+
+    @Override
     public void setTestModeClient(boolean enabled) {
         DebugInputHandler.setTestModeClient(enabled);
     }

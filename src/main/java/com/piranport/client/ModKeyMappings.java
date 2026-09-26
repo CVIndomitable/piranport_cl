@@ -30,22 +30,12 @@ public class ModKeyMappings {
     public static final KeyMapping TOGGLE_AUTO_LAUNCH =
             new KeyMapping("key.piranport.toggle_auto_mode", GLFW.GLFW_KEY_H, CATEGORY);
 
-    public static final KeyMapping DEBUG_TOGGLE =
-            new KeyMapping("key.piranport.debug_toggle", GLFW.GLFW_KEY_F8, CATEGORY);
-
     public static final KeyMapping MANUAL_RELOAD =
             new KeyMapping("key.piranport.manual_reload", GLFW.GLFW_KEY_R, CATEGORY);
 
     /** Phase 4: 切换弹种（Tab） */
     public static final KeyMapping SWITCH_AMMO =
             new KeyMapping("key.piranport.switch_ammo", GLFW.GLFW_KEY_TAB, CATEGORY);
-
-    /** Debug-only: toggle a server-side override that clamps every cooldown to 5s. */
-    public static final KeyMapping DEBUG_COOLDOWN_OVERRIDE =
-            new KeyMapping("key.piranport.debug_cooldown_override", GLFW.GLFW_KEY_N, CATEGORY);
-
-    public static final KeyMapping HIT_DISPLAY_TOGGLE =
-            new KeyMapping("key.piranport.hit_display_toggle", GLFW.GLFW_KEY_J, CATEGORY);
 
     /** 退出侦察模式（V） */
     public static final KeyMapping RECON_EXIT =

@@ -458,7 +458,7 @@ public class AircraftFireStrategy {
             if (!(weapon.getItem() instanceof AircraftItem)) continue;
             AircraftInfo info = weapon.get(ModDataComponents.AIRCRAFT_INFO.get());
             AircraftDefinition definition = AircraftDefinitionService.resolve(weapon);
-            if (info == null || definition == null || info.currentFuel() >= definition.fuelCapacity()) {
+            if (info == null || definition == null || info.currentFuel() >= AircraftStatsService.resolve(definition).fuelCapacity()) {
                 continue;
             }
             // Find aviation_fuel in inventory
@@ -466,7 +466,7 @@ public class AircraftFireStrategy {
                 if (ammo.is(ModItems.AVIATION_FUEL.get()) && ammo.getCount() > 0) {
                     com.piranport.testtools.PiranPortTestTools.consumeAmmo(player.getUUID(), ammo, 1);
                     weapon.set(ModDataComponents.AIRCRAFT_INFO.get(),
-                            info.withCurrentFuel(definition.fuelCapacity()));
+                            info.withCurrentFuel(AircraftStatsService.resolve(definition).fuelCapacity()));
                     break;
                 }
             }
@@ -525,7 +525,7 @@ public class AircraftFireStrategy {
         // 被放飞校验拦下，提示与实际行为自相矛盾。
         if (player.getAbilities().instabuild) {
             aircraftStack.set(ModDataComponents.AIRCRAFT_INFO.get(),
-                    info.withCurrentFuel(definition.fuelCapacity()).withPayloadLoaded(true));
+                    info.withCurrentFuel(AircraftStatsService.resolve(definition).fuelCapacity()).withPayloadLoaded(true));
             player.displayClientMessage(Component.translatable("message.piranport.aircraft_creative_free_load"), true);
             return;
         }
@@ -535,7 +535,7 @@ public class AircraftFireStrategy {
         net.minecraft.world.item.Item payloadItem = payloadType.isEmpty() ? null
                 : BuiltInRegistries.ITEM.get(ResourceLocation.parse(payloadType));
 
-        boolean needsFuel = info.currentFuel() < definition.fuelCapacity();
+        boolean needsFuel = info.currentFuel() < AircraftStatsService.resolve(definition).fuelCapacity();
         boolean needsPayload = definition.requiresPayload() && !info.payloadLoaded();
 
         if (!needsFuel && !needsPayload) {
@@ -558,7 +558,7 @@ public class AircraftFireStrategy {
 
         if (fuelSlot >= 0) {
             com.piranport.testtools.PiranPortTestTools.consumeAmmo(player.getUUID(), stackAt(inv, fuelSlot), 1);
-            info = info.withCurrentFuel(definition.fuelCapacity());
+            info = info.withCurrentFuel(AircraftStatsService.resolve(definition).fuelCapacity());
         }
         if (payloadSlot >= 0) {
             com.piranport.testtools.PiranPortTestTools.consumeAmmo(player.getUUID(), stackAt(inv, payloadSlot), 1);

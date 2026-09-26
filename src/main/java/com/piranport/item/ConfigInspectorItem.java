@@ -76,60 +76,20 @@ public class ConfigInspectorItem extends Item {
 
         // 2. 舰装属性
         addSection(player, "舰装属性");
-        addShipStats(player, "驱逐舰",
-                ModShipsConfig.DESTROYER_ARMOR.get(),
-                ModShipsConfig.DESTROYER_SPEED_BONUS.get(),
-                ModShipsConfig.DESTROYER_KNOCKBACK_RESISTANCE.get());
-        addShipStats(player, "轻巡舰",
-                ModShipsConfig.LIGHT_CRUISER_ARMOR.get(),
-                ModShipsConfig.LIGHT_CRUISER_SPEED_BONUS.get(),
-                ModShipsConfig.LIGHT_CRUISER_KNOCKBACK_RESISTANCE.get());
-        addShipStats(player, "重巡舰",
-                ModShipsConfig.HEAVY_CRUISER_ARMOR.get(),
-                ModShipsConfig.HEAVY_CRUISER_SPEED_BONUS.get(),
-                ModShipsConfig.HEAVY_CRUISER_KNOCKBACK_RESISTANCE.get());
-        addShipStats(player, "战列舰",
-                ModShipsConfig.BATTLESHIP_ARMOR.get(),
-                ModShipsConfig.BATTLESHIP_SPEED_BONUS.get(),
-                ModShipsConfig.BATTLESHIP_KNOCKBACK_RESISTANCE.get());
-        addShipStats(player, "航母",
-                ModShipsConfig.CARRIER_ARMOR.get(),
-                ModShipsConfig.CARRIER_SPEED_BONUS.get(),
-                ModShipsConfig.CARRIER_KNOCKBACK_RESISTANCE.get());
-        addShipStats(player, "潜艇",
-                ModShipsConfig.SUBMARINE_ARMOR.get(),
-                ModShipsConfig.SUBMARINE_SPEED_BONUS.get(),
-                ModShipsConfig.SUBMARINE_KNOCKBACK_RESISTANCE.get());
+        for (ShipType core : ShipType.values()) {
+            addConfigLine(player, core.name(), String.format("护甲%d 载重%d 空载速度%.2f 满载速度%.2f",
+                    core.effectiveBaseArmor(), core.effectiveMaxLoad(),
+                    core.effectiveEmptySpeed(), core.effectiveFullLoadSpeed()));
+        }
 
         // 3. 飞机系统
         addSection(player, "飞机系统");
-        addAircraftStats(player, "战斗机",
-                ModAircraftConfig.FIGHTER_DAMAGE.get(),
-                ModAircraftConfig.FIGHTER_SPEED.get(),
-                ModAircraftConfig.FIGHTER_HEALTH.get());
-        addAircraftStats(player, "火箭机",
-                ModAircraftConfig.ROCKET_FIGHTER_DAMAGE.get(),
-                ModAircraftConfig.ROCKET_FIGHTER_SPEED.get(),
-                ModAircraftConfig.ROCKET_FIGHTER_HEALTH.get());
-        addAircraftStats(player, "俯冲轰炸机",
-                ModAircraftConfig.DIVE_BOMBER_DAMAGE.get(),
-                ModAircraftConfig.DIVE_BOMBER_SPEED.get(),
-                ModAircraftConfig.DIVE_BOMBER_HEALTH.get());
-        addAircraftStats(player, "水平轰炸机",
-                ModAircraftConfig.LEVEL_BOMBER_DAMAGE.get(),
-                ModAircraftConfig.LEVEL_BOMBER_SPEED.get(),
-                ModAircraftConfig.LEVEL_BOMBER_HEALTH.get());
-        addAircraftStats(player, "鱼雷机",
-                ModAircraftConfig.TORPEDO_BOMBER_DAMAGE.get(),
-                ModAircraftConfig.TORPEDO_BOMBER_SPEED.get(),
-                ModAircraftConfig.TORPEDO_BOMBER_HEALTH.get());
-        addAircraftStats(player, "反潜机",
-                ModAircraftConfig.ASW_AIRCRAFT_DAMAGE.get(),
-                ModAircraftConfig.ASW_AIRCRAFT_SPEED.get(),
-                ModAircraftConfig.ASW_AIRCRAFT_HEALTH.get());
-        addConfigLine(player, "侦察机", String.format("速度%.1f 生命%.0f",
-                ModAircraftConfig.RECON_AIRCRAFT_SPEED.get(),
-                ModAircraftConfig.RECON_AIRCRAFT_HEALTH.get()));
+        com.piranport.aviation.AircraftDefinitionService.snapshot().values().stream()
+                .sorted(java.util.Comparator.comparing(com.piranport.aviation.AircraftDefinition::id))
+                .forEach(definition -> {
+                    var stats = com.piranport.aviation.AircraftStatsService.resolve(definition);
+                    addAircraftStats(player, definition.id(), stats.damage(), stats.speed(), stats.health());
+                });
 
         // 4. 火炮与弹药系统
         addSection(player, "火炮与弹药系统");
@@ -174,17 +134,6 @@ public class ConfigInspectorItem extends Item {
     }
 
     /**
-     * 添加舰装属性行
-     */
-    private void addShipStats(Player player, String name, double armor, double speedBonus, double knockbackResist) {
-        String stats = String.format("护甲%.1f 速度%s 击退抗性%d%%",
-                armor,
-                formatPercent(speedBonus),
-                (int)(knockbackResist * 100));
-        addConfigLine(player, name, stats);
-    }
-
-    /**
      * 添加飞机属性行
      */
     private void addAircraftStats(Player player, String name, double damage, double speed, double health) {
@@ -199,12 +148,4 @@ public class ConfigInspectorItem extends Item {
         return value ? "✓ 开启" : "✗ 关闭";
     }
 
-    /**
-     * 格式化百分比
-     */
-    private String formatPercent(double value) {
-        if (value > 0.001) return "+" + (int)(value * 100) + "%";
-        if (value < -0.001) return (int)(value * 100) + "%";
-        return "±0%";
-    }
 }

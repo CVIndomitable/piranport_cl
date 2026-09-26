@@ -123,11 +123,6 @@
   "config.piranport.ap_damage_multiplier": "AP弹伤害倍率",
   "config.piranport.he_armor_penetration": "HE弹护甲穿透",
   "config.piranport.he_damage_falloff": "HE弹距离衰减",
-  "config.piranport.reloadHudFadeAnimation": "装填进度条淡入淡出动画",
-  "config.piranport.reloadHudStyle": "装填进度条样式",
-  "config.piranport.reloadHudStyle.center": "屏幕中央",
-  "config.piranport.reloadHudStyle.hidden": "隐藏",
-  "config.piranport.reloadHudStyle.hotbar": "物品栏上方",
   "config.piranport.shipCoreSlotMode": "舰装核心槽位模式",
   "config.piranport.shipCoreSlotMode.tooltip": "offhand=副手模式，helmet=头盔模式",
   "config.piranport.underwater_explode": "水中到期爆炸",
@@ -1453,7 +1448,7 @@
   "tooltip.piranport.aircraft_fuel_short": "航空燃料: 空 [R 补给]",
 
   "gui.piranport.debug_terminal": "调试终端",
-  "tooltip.piranport.debug_terminal.desc": "调试终端：调整鱼雷航速与舰娘核心航速",
+  "tooltip.piranport.debug_terminal.desc": "右键打开控制界面；Shift+右键请求日志快照",
   "tooltip.piranport.debug_terminal.admin_only": "仅管理员（权限等级 2 或单机房主）可使用",
   "message.piranport.debug_terminal.admin_required": "你没有权限使用调试终端",
 
@@ -1468,6 +1463,8 @@
   "gui.piranport.debug_terminal.control.cooldown": "冷却",
   "gui.piranport.debug_terminal.control.hit": "命中显示",
   "gui.piranport.debug_terminal.control.snapshot": "日志快照",
+  "gui.piranport.debug_terminal.state.on": "开",
+  "gui.piranport.debug_terminal.state.off": "关",
   "message.piranport.snapshot.done": "[调试] 调试快照已写入会话日志",
   "message.piranport.snapshot.cooldown": "[调试] 快照冷却中",
 

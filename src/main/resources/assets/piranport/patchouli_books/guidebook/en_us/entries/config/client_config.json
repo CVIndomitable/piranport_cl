@@ -6,11 +6,11 @@
   "pages": [
     {
       "type": "patchouli:text",
-      "text": "$(bold)Client Configuration$()$(br2)Located in $(o).minecraft/config/piranport-client.toml$()$(br2)$(bold)Options:$()$(br)• HUD position and visibility$(br)• Camera shake intensity$(br)• Reload bar display$(br)• Entity highlight colors"
+      "text": "$(bold)Fixed Client Defaults$()$(br2)This version has no client configuration file; these behaviors are fixed in code.$(br2)• Reload bar: HOTBAR, fading after completion$(br)• Fire-control panel: AUTO, with horizontal and vertical offsets of 0$(br)• Camera shake: default strength"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)HUD Settings$()$(br2)Adjust the heads-up display:$(br2)• Fire control panel position$(br)• Weapon reload indicators$(br)• Ship core status display$(br)• Scope overlay opacity$(br2)$(bold)Tip:$() Use the HUD layout detector to find optimal positions!"
+      "text": "$(bold)Note$()$(br2)These defaults cannot currently be changed through a client configuration file. The Debug Terminal offers its existing debug controls and torpedo/core speed overrides, not general client parameters or CSV configuration."
     }
   ]
 }

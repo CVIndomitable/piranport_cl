@@ -58,13 +58,15 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
     private int currentTab = TAB_TORPEDO;
 
     // ===== 布局 =====
-    private static final int VISIBLE_ROWS = 9;
     private static final int ROW_HEIGHT = 18;
-    private static final int LIST_TOP = 50;       // 列表区相对 y 的偏移
-    private static final int EDIT_X = 200;        // 编辑框相对 x 的偏移
-    private static final int EDIT_WIDTH = 50;
+    private static final int LIST_TOP = 60;
+    private static final int EDIT_X = 185;
+    private static final int EDIT_WIDTH = 45;
     private static final int EDIT_HEIGHT = 16;
-    private static final int CONTROL_TOP = 238;
+    private int visibleRows;
+    private Button debugButton;
+    private Button cooldownButton;
+    private Button hitButton;
 
     /** 每行编辑框，key = 「域:键」（如 {@code torpedo:torpedo_533mm_mk14} / {@code core:LARGE}）。 */
     private final Map<String, EditBox> editBoxes = new LinkedHashMap<>();
@@ -135,6 +137,10 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
 
     @Override
     protected void init() {
+        this.imageHeight = Math.min(300, Math.max(180, this.height - 8));
+        int controlTop = this.imageHeight - 48;
+        visibleRows = Math.max(1, (controlTop - 8 - LIST_TOP) / ROW_HEIGHT);
+        scrollOffset = Math.min(scrollOffset, Math.max(0, currentKeys().size() - visibleRows));
         super.init();
         editBoxes.clear();
 
@@ -144,49 +150,49 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
         this.addRenderableWidget(Button.builder(
                 Component.translatable("gui.piranport.debug_terminal.tab.torpedo"),
                 button -> switchTab(TAB_TORPEDO)
-        ).bounds(x + 10, y + 25, 70, 20).build());
+        ).bounds(x + 10, y + 22, 70, 20).build());
 
         this.addRenderableWidget(Button.builder(
                 Component.translatable("gui.piranport.debug_terminal.tab.core"),
                 button -> switchTab(TAB_CORE)
-        ).bounds(x + 85, y + 25, 70, 20).build());
+        ).bounds(x + 85, y + 22, 70, 20).build());
 
         this.addRenderableWidget(Button.builder(
                 Component.literal("▲"),
                 button -> scroll(-1)
-        ).bounds(x + 235, y + 48, 15, 15).build());
+        ).bounds(x + 235, y + LIST_TOP, 15, 15).build());
 
         this.addRenderableWidget(Button.builder(
                 Component.literal("▼"),
                 button -> scroll(1)
-        ).bounds(x + 235, y + 195, 15, 15).build());
+        ).bounds(x + 235, y + LIST_TOP + (visibleRows - 1) * ROW_HEIGHT, 15, 15).build());
 
         this.addRenderableWidget(Button.builder(
                 Component.translatable("gui.piranport.debug_terminal.reset_tab"),
                 button -> resetCurrentTab()
-        ).bounds(x + 10, y + 215, 70, 20).build());
+        ).bounds(x + 10, y + controlTop, 70, 20).build());
 
         this.addRenderableWidget(Button.builder(
                 Component.translatable("gui.piranport.debug_terminal.reset_all"),
                 button -> resetAll()
-        ).bounds(x + 85, y + 215, 70, 20).build());
+        ).bounds(x + 85, y + controlTop, 70, 20).build());
 
-        this.addRenderableWidget(Button.builder(
-                Component.translatable("gui.piranport.debug_terminal.control.debug"),
+        debugButton = this.addRenderableWidget(Button.builder(
+                toggleLabel("debug", DebugInputHandler.isDebugEnabledClient()),
                 button -> toggleDebug()
-        ).bounds(x + 160, y + 215, 45, 20).build());
-        this.addRenderableWidget(Button.builder(
-                Component.translatable("gui.piranport.debug_terminal.control.cooldown"),
+        ).bounds(x + 160, y + controlTop, 45, 20).build());
+        cooldownButton = this.addRenderableWidget(Button.builder(
+                toggleLabel("cooldown", DebugInputHandler.isTestModeClient()),
                 button -> toggleCooldown()
-        ).bounds(x + 207, y + 215, 45, 20).build());
-        this.addRenderableWidget(Button.builder(
-                Component.translatable("gui.piranport.debug_terminal.control.hit"),
+        ).bounds(x + 207, y + controlTop, 45, 20).build());
+        hitButton = this.addRenderableWidget(Button.builder(
+                toggleLabel("hit", DebugInputHandler.isHitDisplayEnabled()),
                 button -> toggleHitDisplay()
-        ).bounds(x + 10, y + CONTROL_TOP, 70, 20).build());
+        ).bounds(x + 10, y + controlTop + 23, 70, 20).build());
         this.addRenderableWidget(Button.builder(
                 Component.translatable("gui.piranport.debug_terminal.control.snapshot"),
                 button -> requestSnapshot()
-        ).bounds(x + 85, y + CONTROL_TOP, 70, 20).build());
+        ).bounds(x + 85, y + controlTop + 23, 70, 20).build());
 
         createRowWidgets();
     }
@@ -203,6 +209,12 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
         boolean next = !DebugInputHandler.isHitDisplayEnabled();
         DebugInputHandler.setHitDisplayEnabled(next);
         PacketDistributor.sendToServer(new HitDisplayTogglePayload(next));
+    }
+
+    private Component toggleLabel(String control, boolean enabled) {
+        return Component.translatable("gui.piranport.debug_terminal.control." + control)
+                .append(" ").append(Component.translatable(
+                        "gui.piranport.debug_terminal.state." + (enabled ? "on" : "off")));
     }
 
     private void requestSnapshot() {
@@ -228,7 +240,7 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
         int y = (this.height - this.imageHeight) / 2;
 
         List<String> keys = currentKeys();
-        for (int i = 0; i < Math.min(VISIBLE_ROWS, keys.size() - scrollOffset); i++) {
+        for (int i = 0; i < Math.min(visibleRows, keys.size() - scrollOffset); i++) {
             int index = scrollOffset + i;
             if (index >= keys.size()) {
                 break;
@@ -423,7 +435,7 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
     private void scroll(int direction) {
         int maxItems = currentKeys().size();
         int next = scrollOffset + direction;
-        if (next < 0 || next > Math.max(0, maxItems - VISIBLE_ROWS)) {
+        if (next < 0 || next > Math.max(0, maxItems - visibleRows)) {
             return;
         }
         commitVisibleEdits();
@@ -445,6 +457,9 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         refreshFromMirrorIfChanged();
+        debugButton.setMessage(toggleLabel("debug", DebugInputHandler.isDebugEnabledClient()));
+        cooldownButton.setMessage(toggleLabel("cooldown", DebugInputHandler.isTestModeClient()));
+        hitButton.setMessage(toggleLabel("hit", DebugInputHandler.isHitDisplayEnabled()));
         super.render(graphics, mouseX, mouseY, partialTick);
 
         int x = (this.width - this.imageWidth) / 2;
@@ -455,16 +470,16 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
         // 表头
         graphics.drawString(this.font,
                 Component.translatable("gui.piranport.debug_terminal.header.model").getString(),
-                x + 10, y + 38, 0xFFD0D0D0, false);
+                x + 10, y + 47, 0xFFD0D0D0, false);
         graphics.drawString(this.font,
                 Component.translatable("gui.piranport.debug_terminal.header.base").getString(),
-                x + 148, y + 38, 0xFFD0D0D0, false);
+                x + 145, y + 47, 0xFFD0D0D0, false);
         graphics.drawString(this.font,
                 Component.translatable("gui.piranport.debug_terminal.header.value").getString(),
-                x + EDIT_X, y + 38, 0xFFD0D0D0, false);
+                x + EDIT_X, y + 47, 0xFFD0D0D0, false);
 
         List<String> keys = currentKeys();
-        for (int i = 0; i < Math.min(VISIBLE_ROWS, keys.size() - scrollOffset); i++) {
+        for (int i = 0; i < Math.min(visibleRows, keys.size() - scrollOffset); i++) {
             int index = scrollOffset + i;
             if (index >= keys.size()) {
                 break;
@@ -475,7 +490,7 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
             graphics.drawString(this.font, displayName(key), x + 10, rowY, 0xFFFFFF, false);
 
             // 基准值只读展示，玩家改的是右侧编辑框里的绝对值。
-            graphics.drawString(this.font, baseDisplay(key), x + 148, rowY, 0xFFB0B0B0, false);
+            graphics.drawString(this.font, baseDisplay(key), x + 145, rowY, 0xFFB0B0B0, false);
 
             // 有覆盖的行加一个角标，一眼看出哪些型号被改过。
             if (hasOverride(key)) {
@@ -484,10 +499,10 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
         }
 
         // 滚动位置提示（行数超过一屏时才显示）
-        if (keys.size() > VISIBLE_ROWS) {
+        if (keys.size() > visibleRows) {
             String pos = (scrollOffset + 1) + "-"
-                    + Math.min(scrollOffset + VISIBLE_ROWS, keys.size()) + "/" + keys.size();
-            graphics.drawString(this.font, pos, x + 228, y + 220, 0xFFD0D0D0, false);
+                    + Math.min(scrollOffset + visibleRows, keys.size()) + "/" + keys.size();
+            graphics.drawString(this.font, pos, x + 175, y + this.imageHeight - 20, 0xFFD0D0D0, false);
         }
     }
 
@@ -518,9 +533,10 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
         int x = (this.width - this.imageWidth) / 2;
         int y = (this.height - this.imageHeight) / 2;
 
-        graphics.fill(x, y, x + this.imageWidth, y + 265, 0xFF8B8B8B);
+        graphics.fill(x, y, x + this.imageWidth, y + this.imageHeight, 0xFF8B8B8B);
         graphics.fill(x, y, x + this.imageWidth, y + 20, 0xFF5A5A5A);
-        graphics.fill(x + 5, y + 48, x + 232, y + 210, 0xFF6B6B6B);
+        graphics.fill(x + 5, y + LIST_TOP - 2, x + 232,
+                y + LIST_TOP + visibleRows * ROW_HEIGHT, 0xFF6B6B6B);
     }
 
     @Override

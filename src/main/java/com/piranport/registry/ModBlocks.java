@@ -11,7 +11,6 @@ import com.piranport.block.FourStageCropBlock;
 import com.piranport.block.PlaceableFoodBlock;
 import com.piranport.block.RiceCropBlock;
 import com.piranport.block.SaltChipBlock;
-import com.piranport.block.SeasonalLeavesBlock;
 import com.piranport.block.SmokeScreenBlock;
 import com.piranport.block.StoneMillBlock;
 import com.piranport.block.StoveBlock;
@@ -113,8 +112,8 @@ public class ModBlocks {
                 BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_LOG)));
     }
 
-    private static DeferredBlock<SeasonalLeavesBlock> registerSeasonalLeaves(String name) {
-        return BLOCKS.register(name, () -> new SeasonalLeavesBlock(
+    private static DeferredBlock<LeavesBlock> registerTreeLeaves(String name) {
+        return BLOCKS.register(name, () -> new LeavesBlock(
                 BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_LEAVES)));
     }
 
@@ -138,8 +137,8 @@ public class ModBlocks {
             BLOCKS.register("peach_log", () -> new RotatedPillarBlock(
                     BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_LOG)));
 
-    public static final DeferredBlock<SeasonalLeavesBlock> PEACH_LEAVES =
-            registerSeasonalLeaves("peach_leaves");
+    public static final DeferredBlock<LeavesBlock> PEACH_LEAVES =
+            registerTreeLeaves("peach_leaves");
 
     public static final DeferredBlock<SaplingBlock> PEACH_SAPLING =
             BLOCKS.register("peach_sapling", () -> new SaplingBlock(
@@ -153,8 +152,8 @@ public class ModBlocks {
             treeFeatureKey("maidenhair_tree");
     public static final DeferredBlock<RotatedPillarBlock> MAIDENHAIR_LOG =
             registerTreeLog("maidenhair_log");
-    public static final DeferredBlock<SeasonalLeavesBlock> MAIDENHAIR_LEAVES =
-            registerSeasonalLeaves("maidenhair_leaves");
+    public static final DeferredBlock<LeavesBlock> MAIDENHAIR_LEAVES =
+            registerTreeLeaves("maidenhair_leaves");
     public static final DeferredBlock<SaplingBlock> MAIDENHAIR_SAPLING =
             registerTreeSapling("maidenhair_sapling", "maidenhair", MAIDENHAIR_TREE_FEATURE_KEY);
 
@@ -162,8 +161,8 @@ public class ModBlocks {
             treeFeatureKey("sago_palm_tree");
     public static final DeferredBlock<RotatedPillarBlock> SAGO_PALM_LOG =
             registerTreeLog("sago_palm_log");
-    public static final DeferredBlock<SeasonalLeavesBlock> SAGO_PALM_LEAVES =
-            registerSeasonalLeaves("sago_palm_leaves");
+    public static final DeferredBlock<LeavesBlock> SAGO_PALM_LEAVES =
+            registerTreeLeaves("sago_palm_leaves");
     public static final DeferredBlock<SaplingBlock> SAGO_PALM_SAPLING =
             registerTreeSapling("sago_palm_sapling", "sago_palm", SAGO_PALM_TREE_FEATURE_KEY);
 
@@ -171,8 +170,8 @@ public class ModBlocks {
             treeFeatureKey("gardenia_tree");
     public static final DeferredBlock<RotatedPillarBlock> GARDENIA_LOG =
             registerTreeLog("gardenia_log");
-    public static final DeferredBlock<SeasonalLeavesBlock> GARDENIA_LEAVES =
-            registerSeasonalLeaves("gardenia_leaves");
+    public static final DeferredBlock<LeavesBlock> GARDENIA_LEAVES =
+            registerTreeLeaves("gardenia_leaves");
     public static final DeferredBlock<SaplingBlock> GARDENIA_SAPLING =
             registerTreeSapling("gardenia_sapling", "gardenia", GARDENIA_TREE_FEATURE_KEY);
 
@@ -180,8 +179,8 @@ public class ModBlocks {
             treeFeatureKey("chinese_plum_tree");
     public static final DeferredBlock<RotatedPillarBlock> CHINESE_PLUM_LOG =
             registerTreeLog("chinese_plum_log");
-    public static final DeferredBlock<SeasonalLeavesBlock> CHINESE_PLUM_LEAVES =
-            registerSeasonalLeaves("chinese_plum_leaves");
+    public static final DeferredBlock<LeavesBlock> CHINESE_PLUM_LEAVES =
+            registerTreeLeaves("chinese_plum_leaves");
     public static final DeferredBlock<SaplingBlock> CHINESE_PLUM_SAPLING =
             registerTreeSapling("chinese_plum_sapling", "chinese_plum", CHINESE_PLUM_TREE_FEATURE_KEY);
 
@@ -189,8 +188,8 @@ public class ModBlocks {
             treeFeatureKey("mapple_tree");
     public static final DeferredBlock<RotatedPillarBlock> MAPPLE_LOG =
             registerTreeLog("mapple_log");
-    public static final DeferredBlock<SeasonalLeavesBlock> MAPPLE_LEAVES =
-            registerSeasonalLeaves("mapple_leaves");
+    public static final DeferredBlock<LeavesBlock> MAPPLE_LEAVES =
+            registerTreeLeaves("mapple_leaves");
     public static final DeferredBlock<SaplingBlock> MAPPLE_SAPLING =
             registerTreeSapling("mapple_sapling", "mapple", MAPPLE_TREE_FEATURE_KEY);
 
@@ -202,8 +201,8 @@ public class ModBlocks {
             treeFeatureKey("apple_tree");
     public static final DeferredBlock<RotatedPillarBlock> APPLE_LOG =
             registerTreeLog("apple_log");
-    public static final DeferredBlock<SeasonalLeavesBlock> APPLE_LEAVES =
-            registerSeasonalLeaves("apple_leaves");
+    public static final DeferredBlock<LeavesBlock> APPLE_LEAVES =
+            registerTreeLeaves("apple_leaves");
     public static final DeferredBlock<SaplingBlock> APPLE_SAPLING =
             registerTreeSapling("apple_sapling", "apple", APPLE_TREE_FEATURE_KEY);
 

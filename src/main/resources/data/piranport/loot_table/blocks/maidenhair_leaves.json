@@ -36,15 +36,6 @@
                     }
                   ]
                 }
-              ],
-              "functions": [
-                {
-                  "function": "minecraft:copy_state",
-                  "block": "piranport:maidenhair_leaves",
-                  "properties": [
-                    "season"
-                  ]
-                }
               ]
             },
             {

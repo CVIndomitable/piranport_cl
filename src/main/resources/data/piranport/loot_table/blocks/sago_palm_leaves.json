@@ -36,15 +36,6 @@
                     }
                   ]
                 }
-              ],
-              "functions": [
-                {
-                  "function": "minecraft:copy_state",
-                  "block": "piranport:sago_palm_leaves",
-                  "properties": [
-                    "season"
-                  ]
-                }
               ]
             },
             {

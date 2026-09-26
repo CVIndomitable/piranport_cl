@@ -4,7 +4,6 @@ import com.piranport.aviation.ClientFireControlData;
 import com.piranport.aviation.ClientReconData;
 import com.piranport.client.CameraShakeHandler;
 import com.piranport.combat.TransformationManager;
-import com.piranport.config.ModClientConfig;
 import com.piranport.client.input.ClientInputCoordinator;
 import com.piranport.PiranPort;
 import com.piranport.entitycore.ClientEntityCoreData;
@@ -56,8 +55,7 @@ public class ClientGameEvents {
     @SubscribeEvent
     public static void onComputeCameraAngles(net.neoforged.neoforge.client.event.ViewportEvent.ComputeCameraAngles event) {
         if (CameraShakeHandler.isShaking()) {
-            float intensity = CameraShakeHandler.getShakeIntensity()
-                    * ModClientConfig.SCREEN_SHAKE_MULTIPLIER.get().floatValue();
+            float intensity = CameraShakeHandler.getShakeIntensity();
             if (intensity > 0) {
                 event.setYaw(event.getYaw() + (SHAKE_RANDOM.nextFloat() - 0.5f) * intensity * 2);
                 event.setPitch(event.getPitch() + (SHAKE_RANDOM.nextFloat() - 0.5f) * intensity * 2);

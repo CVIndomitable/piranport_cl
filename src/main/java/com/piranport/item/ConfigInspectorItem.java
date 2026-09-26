@@ -147,9 +147,9 @@ public class ConfigInspectorItem extends Item {
 
         // 6. 客户端显示
         addSection(player, "客户端显示");
-        addConfigLine(player, "装填HUD样式", ModClientConfig.RELOAD_HUD_STYLE.get().toString());
-        addConfigLine(player, "火控位置", ModClientConfig.FIRE_CONTROL_POSITION.get().toString());
-        addConfigLine(player, "屏幕震动", ModClientConfig.SCREEN_SHAKE_MULTIPLIER.get() + "x");
+        addConfigLine(player, "装填HUD样式", "HOTBAR");
+        addConfigLine(player, "火控位置", "AUTO");
+        addConfigLine(player, "屏幕震动", "1.0x");
 
         // 结束分隔线
         player.sendSystemMessage(Component.literal("━━━━━━━━━━━━━━━━━━━━")

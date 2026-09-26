@@ -2,7 +2,6 @@ package com.piranport;
 
 import com.mojang.logging.LogUtils;
 import com.piranport.compat.ModCompats;
-import com.piranport.config.ModClientConfig;
 import com.piranport.config.ModCommonConfig;
 import com.piranport.config.ModAircraftConfig;
 import com.piranport.config.ModShipsConfig;
@@ -62,7 +61,6 @@ import org.slf4j.Logger;
  *   piranport-ships.toml        — 舰装数值（护甲/速度/击退抗性）
  *   piranport-projectiles.toml  — 弹药数值（鱼雷/深弹/炸弹/火箭）
  *   piranport-equipment.toml    — 装备数值（声纳/雷达/火控/装甲板）
- *   piranport-client.toml       — 客户端配置（HUD/火控面板位置）
  *
  * 事件处理（通过 @EventBusSubscriber 自动注册）：
  *   CommonEvents    — 实体属性/击杀/方块交互等通用事件
@@ -103,7 +101,6 @@ public class PiranPort {
         NeoForge.EVENT_BUS.addListener(this::registerBrewingRecipes);
         // 决策/副本/07：Boss 节点防卡 tick 调度（每 server level tick 调用）
         NeoForge.EVENT_BUS.addListener(this::onLevelTick);
-        modContainer.registerConfig(ModConfig.Type.CLIENT, ModClientConfig.SPEC);
         modContainer.registerConfig(ModConfig.Type.COMMON, ModCommonConfig.SPEC);
         modContainer.registerConfig(ModConfig.Type.COMMON, ModAircraftConfig.SPEC, "piranport-aircraft.toml");
         modContainer.registerConfig(ModConfig.Type.COMMON, ModShipsConfig.SPEC, "piranport-ships.toml");

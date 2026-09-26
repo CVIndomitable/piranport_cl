@@ -4,12 +4,14 @@ import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import com.piranport.PiranPort;
 import com.piranport.artillery.ArtilleryItem;
 import com.piranport.combat.cannon.CannonAmmoRules;
+import com.piranport.combat.cannon.CannonSounds;
 import com.piranport.compat.maid.combat.AmmoConsumer;
 import com.piranport.compat.maid.combat.WeaponHandler;
 import com.piranport.combat.cannon.CannonAim;
 import com.piranport.combat.cannon.fire.CannonFireRequest;
 import com.piranport.combat.cannon.fire.CannonFireService;
 import com.piranport.combat.cannon.fire.CannonProjectileFactory;
+import com.piranport.combat.data.WeaponState;
 import com.piranport.combat.cannon.ammo.AmmoDefinitionService;
 import com.piranport.item.ShipCoreItem;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -40,7 +42,8 @@ public class CannonHandler implements WeaponHandler {
     @Override
     public int cooldownTicks(EntityMaid maid, ItemStack stack) {
         if (stack.getItem() instanceof ArtilleryItem ai) {
-            return ai.getEffectiveData(maid.level()).reloadTime();
+            var data = ai.getEffectiveData(maid.level());
+            return Math.max(data.reloadTime(), data.fireCooldown());
         }
         return cooldownTicks(stack);
     }
@@ -49,6 +52,7 @@ public class CannonHandler implements WeaponHandler {
     public boolean hasAmmo(EntityMaid maid, ItemStack stack) {
         if (!(stack.getItem() instanceof ArtilleryItem ai)) return false;
         Player owner = AmmoConsumer.ownerPlayer(maid);
+        if (owner == null) return false;
         if (AmmoConsumer.isFreebie(owner)) return true;
         // 必须凑满一个完整弹夹才放行：fire() 里 loaded 按 Math.min 逐管装填，
         // 弹药不足整夹会照样扣弹但弹数少于 barrels，混装/残缺状态下会一直打残缺齐射。
@@ -61,25 +65,29 @@ public class CannonHandler implements WeaponHandler {
     @Override
     public void fire(EntityMaid maid, LivingEntity target, ItemStack stack) {
         if (!(stack.getItem() instanceof ArtilleryItem ai)) return;
+        Level level = maid.level();
+        if (level.isClientSide() || !maid.isAlive() || target == null || !target.isAlive()
+                || target.level() != level || new WeaponState(stack).isOnCooldown(level.getGameTime())
+                || stack.isDamageableItem() && stack.getDamageValue() >= ai.getEffectiveData(level).durability() - 1) return;
 
         // 使用有效数据（考虑配置覆盖）
         var effectiveData = ai.getEffectiveData(maid.level());
         int barrels = Math.max(1, effectiveData.barrels());
-        float damage = effectiveData.damage();
-        float explosion = effectiveData.explosionPower();
+        float damage = com.piranport.item.ExperienceShellItem.applyDamageBonus(stack, effectiveData.damage());
+        float explosion = com.piranport.item.ExperienceShellItem.applyExplosionBonus(stack, effectiveData.explosionPower());
         float velocity = effectiveData.initialSpeed();
         // 根据散布角计算不精确度（简化映射）
-        float inaccuracy = effectiveData.dispersion();
+        float horizontal = effectiveData.horizontalSpread();
+        float vertical = effectiveData.verticalSpread();
 
         Vec3 origin = maid.getEyePosition();
         Vec3 aim = target.getBoundingBox().getCenter().subtract(origin);
         if (aim.lengthSqr() < 1.0E-6) return;
         aim = aim.normalize();
         // 射线方向除以长度后 y 必落在 [-1,1]；此处显式夹紧只为防浮点误差让 asin 返回 NaN
-        float yaw = (float) Math.toDegrees(Math.atan2(-aim.x, aim.z));
-        float pitch = (float) Math.toDegrees(-Math.asin(clampUnit(aim.y)));
 
         Player owner = AmmoConsumer.ownerPlayer(maid);
+        if (owner == null) return;
         List<Item> candidates = shellsFor(maid.level(), stack);
 
         // 先按「副手优先、否则候选表顺序」取偏好弹种，再逐类取弹。
@@ -88,20 +96,20 @@ public class CannonHandler implements WeaponHandler {
         List<Item> shotShells = new ArrayList<>(barrels);
         Item preferred = AmmoConsumer.getPreferredAmmo(owner, candidates);
         if (preferred != null) {
-            int n = AmmoConsumer.consumeItem(owner, preferred, barrels);
+            Item preferredShell = preferred;
+            int n = Math.min(barrels, AmmoConsumer.isFreebie(owner) ? barrels : AmmoConsumer.count(owner, s -> s.is(preferredShell)));
             for (int i = 0; i < n; i++) shotShells.add(preferred);
         }
         for (Item shell : candidates) {
             if (shotShells.size() >= barrels) break;
-            int n = AmmoConsumer.consumeItem(owner, shell, barrels - shotShells.size());
+            int already = (int) shotShells.stream().filter(item -> item == shell).count();
+            int n = Math.min(barrels - shotShells.size(),
+                    (AmmoConsumer.isFreebie(owner) ? barrels : AmmoConsumer.count(owner, s -> s.is(shell))) - already);
             for (int i = 0; i < n; i++) shotShells.add(shell);
         }
-
-        if (shotShells.isEmpty()) return;
-
-        Level level = maid.level();
+        if (shotShells.size() != barrels) return;
         int sourceCaliber = effectiveData.caliber();
-
+        List<CannonFireService.Shot> shots = new ArrayList<>(barrels);
         for (Item shell : shotShells) {
             ItemStack shellStack = new ItemStack(shell);
             // 弹种语义与玩家路径对齐：参照 CannonFiring.java:57-59 的推导
@@ -116,17 +124,25 @@ public class CannonHandler implements WeaponHandler {
                     ? explosion * 10f : explosion;
 
             Vec3 spawnPos = origin;
-            CannonFireRequest request = CannonFireService.request(
-                    level, maid, stack, shellStack, damage, shellExplosion, velocity,
-                    effectiveData.dragCoeff(), effectiveData.gravity(), inaccuracy, inaccuracy,
-                    sourceCaliber, isHE, isVT,
-                    new CannonAim.DirectAim(target.getBoundingBox().getCenter()), spawnPos);
-            if (!CannonFireService.isValid(request)) continue;
-            var proj = CannonProjectileFactory.create(request);
-            proj.setPos(origin.x, origin.y, origin.z);
-            proj.shootFromRotation(maid, pitch, yaw, 0f, velocity, inaccuracy);
-            level.addFreshEntity(proj);
+            try {
+                CannonFireRequest request = CannonFireService.request(
+                        level, maid, stack, shellStack, damage, shellExplosion, velocity,
+                        effectiveData.dragCoeff(), effectiveData.gravity(), horizontal, vertical,
+                        sourceCaliber, isHE, isVT,
+                        new CannonAim.DirectAim(target.getBoundingBox().getCenter()), spawnPos);
+                shots.add(new CannonFireService.Shot(request, aim, CannonAmmoRules.isType3Shell(shellStack)));
+            } catch (IllegalArgumentException invalid) {
+                return;
+            }
         }
+        if (!CannonFireService.validatePlan(shots).isEmpty()) return;
+        var result = CannonFireService.emit(shots);
+        for (int index = 0; index < result.shots(); index++) {
+            Item shell = shotShells.get(index);
+            AmmoConsumer.consumeItem(owner, shell, 1);
+        }
+        if (result.shots() > 0 && stack.isDamageableItem()) stack.setDamageValue(stack.getDamageValue() + 1);
+        if (result.shots() > 0) CannonSounds.playCannonFireSound(level, maid, stack);
     }
 
     /** 把方向向量的 y 分量夹到 asin 定义域内。 */

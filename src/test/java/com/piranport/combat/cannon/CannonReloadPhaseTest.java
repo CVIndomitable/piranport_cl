@@ -8,6 +8,14 @@ import static org.junit.jupiter.api.Assertions.*;
 /** 保护自动/手动交互、到期扣弹和切弹边界。 */
 class CannonReloadPhaseTest {
     @Test
+    void acceptsLoadedResidueWithoutAllowingOverfilledMagazine() {
+        assertTrue(CannonAmmoRules.validLoadedCount(1, 3));
+        assertTrue(CannonAmmoRules.validLoadedCount(3, 3));
+        assertFalse(CannonAmmoRules.validLoadedCount(0, 3));
+        assertFalse(CannonAmmoRules.validLoadedCount(4, 3));
+    }
+
+    @Test
     void emptyAutomaticGunStartsButEmptyManualGunWaitsForInput() {
         assertEquals(START, resolve(false, true, null, 100));
         assertEquals(IDLE, resolve(false, false, null, 100));

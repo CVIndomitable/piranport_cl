@@ -5,6 +5,7 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
@@ -12,7 +13,7 @@ import static com.piranport.combat.cannon.CannonAmmoRules.CaliberFamily;
 import static com.piranport.combat.cannon.CannonAmmoRules.familyForWeapon;
 
 /** 火炮开火和装填的音效表现。 */
-final class CannonSounds {
+public final class CannonSounds {
     private CannonSounds() {}
 
     static float getSoundPitch(ItemStack weapon) {
@@ -64,21 +65,25 @@ final class CannonSounds {
     }
 
     static void playCannonFireSound(Level level, Player player, ItemStack weapon) {
+        playCannonFireSound(level, (LivingEntity) player, weapon);
+    }
+
+    public static void playCannonFireSound(Level level, LivingEntity shooter, ItemStack weapon) {
         float pitch = getSoundPitch(weapon, level);
         SoundEvent fireSound = getFireSound(weapon, level);
-        level.playSound(null, player.getX(), player.getY(), player.getZ(),
+        level.playSound(null, shooter.getX(), shooter.getY(), shooter.getZ(),
                 fireSound, SoundSource.PLAYERS, 2.0f, pitch);
-        level.playSound(null, player.getX(), player.getY(), player.getZ(),
+        level.playSound(null, shooter.getX(), shooter.getY(), shooter.getZ(),
                 getFireTailSound(weapon, level), SoundSource.PLAYERS, 1.15f, Math.max(0.55f, pitch * 0.82f));
         SoundEvent distantFireSound = getDistantFireSound(weapon, level);
         if (distantFireSound != null) {
             float distantVolume = familyForWeapon(weapon, level) == CaliberFamily.LARGE ? 1.65f : 1.25f;
-            level.playSound(null, player.getX(), player.getY(), player.getZ(),
+            level.playSound(null, shooter.getX(), shooter.getY(), shooter.getZ(),
                     distantFireSound, SoundSource.PLAYERS, distantVolume, Math.max(0.5f, pitch * 0.62f));
         }
-        level.playSound(null, player.getX(), player.getY(), player.getZ(),
+        level.playSound(null, shooter.getX(), shooter.getY(), shooter.getZ(),
                 SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 0.95f, pitch * 0.75f);
-        level.playSound(null, player.getX(), player.getY(), player.getZ(),
+        level.playSound(null, shooter.getX(), shooter.getY(), shooter.getZ(),
                 SoundEvents.FIREWORK_ROCKET_BLAST, SoundSource.PLAYERS, 0.65f, pitch * 0.55f);
     }
 

@@ -57,21 +57,21 @@ public final class CannonFiring {
         boolean isType3 = isType3Shell(shellForRender);
         boolean isVT = isVTShell(shellForRender);
         boolean isHE = isHEShell(shellForRender) || isVT;
-        ws.clearLoadedAmmo();
-
-        boolean fired = fireCannonSalvo(level, player, weapon, shellForRender, barrelCount,
+        var result = fireCannonSalvo(level, player, weapon, shellForRender, loaded.count(),
                 isType3, isVT, isHE, aim);
-        if (!fired) {
-            ws.setLoadedAmmo(loaded.count(), loaded.ammoItemId());
+        if (result.shots() == 0) {
             return true;
         }
+        int remaining = loaded.count() - result.shots();
+        if (remaining > 0) ws.setLoadedAmmo(remaining, loaded.ammoItemId());
+        else ws.clearLoadedAmmo();
 
         // 决策/数值/05 §定稿修订 #3：大口径主炮开火触发 5 秒防空静默窗口
         com.piranport.combat.AASilenceManager.onCannonFire(player, shellForRender);
 
         // 策划决策/武器/07-火炮装填双模式.md
         // 开火后自动模式立即启动下一轮装填读条；手动模式按 R 才启动
-        if (isAutoLoading) {
+        if (isAutoLoading && remaining == 0) {
             startCannonReloadIfPossible(player, coreStack, inv, weaponSlot, coreSlot, weapon);
         }
 

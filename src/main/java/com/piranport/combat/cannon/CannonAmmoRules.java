@@ -114,9 +114,13 @@ public final class CannonAmmoRules {
 
     public static boolean isLoadedCannonAmmoValid(LoadedAmmo loaded, ItemStack weapon,
             int barrelCount, @Nullable Level level) {
-        if (!loaded.hasAmmo() || loaded.count() < barrelCount) return false;
+        if (!loaded.hasAmmo() || !validLoadedCount(loaded.count(), barrelCount)) return false;
         ItemStack ammo = createAmmoStack(loaded.ammoItemId());
         return !ammo.isEmpty() && matchesCaliber(ammo, weapon, level);
+    }
+
+    static boolean validLoadedCount(int count, int barrelCount) {
+        return count > 0 && barrelCount > 0 && count <= barrelCount;
     }
 
     public static boolean isCannonReadyToFire(ItemStack weapon, @Nullable Level level) {

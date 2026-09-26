@@ -55,5 +55,10 @@ class CannonArchitectureTest {
                         Level.class, LivingEntity.class, float.class, ItemStack.class)
                 .because("三式霰弹也必须经由统一发射工厂，避免新增发射者绕过边界")
                 .check(classes);
+
+        noClasses().that().haveNameMatching(".*(CannonProjectiles|CannonHandler)")
+                .should().callMethod(Level.class, "addFreshEntity", net.minecraft.world.entity.Entity.class)
+                .because("玩家和女仆不得跳过统一预检及提交边界直接插入炮弹")
+                .check(classes);
     }
 }

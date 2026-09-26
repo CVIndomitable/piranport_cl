@@ -3,7 +3,6 @@ package com.piranport.aviation.combat;
 import com.piranport.aviation.AircraftDefinition;
 import com.piranport.aviation.AircraftDefinitionService;
 import com.piranport.component.AircraftInfo;
-import com.piranport.entity.AircraftCombat;
 import com.piranport.entity.AircraftEntity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -41,15 +40,23 @@ public final class AircraftCombatService {
     public static void tickAttacking(AircraftEntity aircraft, Player owner) {
         Objects.requireNonNull(aircraft, "aircraft");
         Objects.requireNonNull(owner, "owner");
-        strategyFor(definitionFor(aircraft));
-        AircraftCombat.tickAttacking(aircraft, owner);
+        executeAttacking(definitionFor(aircraft), aircraft, owner);
     }
 
     /** Runtime entry point for autonomous aircraft. */
     public static void tickAutonomousAttacking(AircraftEntity aircraft) {
         Objects.requireNonNull(aircraft, "aircraft");
-        strategyFor(definitionFor(aircraft));
-        AircraftCombat.tickAutonomousAttacking(aircraft);
+        executeAutonomous(definitionFor(aircraft), aircraft);
+    }
+
+    /** 包级执行 seam，供运行时入口和纯策略测试共用。 */
+    static void executeAttacking(AircraftDefinition definition, AircraftEntity aircraft, Player owner) {
+        strategyFor(definition).execute(aircraft, owner);
+    }
+
+    /** 包级执行 seam，供自主飞机入口和纯策略测试共用。 */
+    static void executeAutonomous(AircraftDefinition definition, AircraftEntity aircraft) {
+        strategyFor(definition).executeAutonomous(aircraft);
     }
 
     private static AircraftDefinition definitionFor(AircraftEntity aircraft) {

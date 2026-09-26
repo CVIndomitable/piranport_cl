@@ -90,6 +90,12 @@ public class AircraftEntity extends Entity {
             SynchedEntityData.defineId(AircraftEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Integer> AIRCRAFT_TYPE_DATA =
             SynchedEntityData.defineId(AircraftEntity.class, EntityDataSerializers.INT);
+    /** 稳定机种 ID；AIRCRAFT_TYPE_DATA 保留给旧网络同步包。 */
+    private static final EntityDataAccessor<String> AIRCRAFT_TYPE_ID_DATA =
+            SynchedEntityData.defineId(AircraftEntity.class, EntityDataSerializers.STRING);
+    /** 稳定状态 ID；STATE 保留给旧网络同步包。 */
+    private static final EntityDataAccessor<String> STATE_ID_DATA =
+            SynchedEntityData.defineId(AircraftEntity.class, EntityDataSerializers.STRING);
     /** 稳定定义 ID；AIRCRAFT_TYPE_DATA 仅保留为旧实体同步兼容字段。 */
     private static final EntityDataAccessor<String> AIRCRAFT_DEFINITION_DATA =
             SynchedEntityData.defineId(AircraftEntity.class, EntityDataSerializers.STRING);
@@ -122,7 +128,8 @@ public class AircraftEntity extends Entity {
     private double orbitAngle = 0;
     int stateTicks = 0;
     int attackCooldown = 0;
-    private int flightAttackCooldown = 0;
+    // 创建时写入的快照；保持正值后攻击 tick 不再查定义表。
+    private int flightAttackCooldown = 1;
     private int flightMaxHealth = 0;
     boolean hasFired = false;
     boolean diveCommitted = false;
@@ -274,6 +281,7 @@ public class AircraftEntity extends Entity {
         entity.flightAttackCooldown = entity.resolveAttackCooldown();
         entity.originalStack = aircraftStack.copy();
         entity.entityData.set(AIRCRAFT_TYPE_DATA, entity.aircraftType.ordinal());
+        entity.entityData.set(AIRCRAFT_TYPE_ID_DATA, entity.aircraftType.getSerializedName());
         entity.entityData.set(AIRCRAFT_DEFINITION_DATA, entity.aircraftDefinitionId);
         entity.entityData.set(OWNER_ID, Optional.of(owner.getUUID()));
         entity.entityData.set(WEAPON_SLOT_INDEX, weaponSlotIndex);
@@ -332,6 +340,7 @@ public class AircraftEntity extends Entity {
         entity.flightAttackCooldown = entity.resolveAttackCooldown();
         entity.originalStack = aircraftStack.copy();
         entity.entityData.set(AIRCRAFT_TYPE_DATA, entity.aircraftType.ordinal());
+        entity.entityData.set(AIRCRAFT_TYPE_ID_DATA, entity.aircraftType.getSerializedName());
         entity.entityData.set(AIRCRAFT_DEFINITION_DATA, entity.aircraftDefinitionId);
 
         entity.setPos(spawnPos.x, spawnPos.y, spawnPos.z);
@@ -352,7 +361,9 @@ public class AircraftEntity extends Entity {
     @Override
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
         builder.define(STATE, FlightState.LAUNCHING.ordinal());
+        builder.define(STATE_ID_DATA, "");
         builder.define(AIRCRAFT_TYPE_DATA, 0);
+        builder.define(AIRCRAFT_TYPE_ID_DATA, "");
         builder.define(AIRCRAFT_DEFINITION_DATA, AircraftDefinitionService.legacyId(AircraftInfo.AircraftType.FIGHTER));
         builder.define(OWNER_ID, Optional.empty());
         builder.define(WEAPON_SLOT_INDEX, -1);
@@ -1301,7 +1312,9 @@ public class AircraftEntity extends Entity {
             return false;
         }
 
-        aircraftHealth -= (int) Math.ceil(amount);
+        // 伤害只作用于本次飞行创建时的快照，不受终端修改或定义热重载影响。
+        aircraftHealth = Math.max(0, Math.min(getAircraftMaxHealth(), aircraftHealth)
+                - (int) Math.ceil(Math.max(0.0F, amount)));
 
         // Hit sound
         level().playSound(null, getX(), getY(), getZ(),
@@ -1367,6 +1380,7 @@ public class AircraftEntity extends Entity {
             diveTarget = null;
         }
         entityData.set(STATE, newState.ordinal());
+        entityData.set(STATE_ID_DATA, stateId(newState));
         stateTicks = 0;
     }
 
@@ -1379,19 +1393,48 @@ public class AircraftEntity extends Entity {
                 ? FLIGHT_STATE_VALUES[ordinal] : FlightState.REMOVED;
     }
 
+    /** 新存档和新网络同步使用稳定的小写 ID；旧序号只在兼容路径读取。 */
+    static String stateId(FlightState state) {
+        return state.name().toLowerCase(java.util.Locale.ROOT);
+    }
+
+    static FlightState stateById(String id) {
+        if (id == null || id.isBlank()) return null;
+        String normalized = id.trim().toLowerCase(java.util.Locale.ROOT);
+        for (FlightState candidate : FLIGHT_STATE_VALUES) {
+            if (stateId(candidate).equals(normalized)) return candidate;
+        }
+        return null;
+    }
+
+    static AircraftInfo.AircraftType aircraftTypeById(String id) {
+        if (id == null || id.isBlank()) return null;
+        String normalized = id.trim().toLowerCase(java.util.Locale.ROOT);
+        for (AircraftInfo.AircraftType candidate : AIRCRAFT_TYPE_VALUES) {
+            if (candidate.getSerializedName().equals(normalized)
+                    || candidate.name().toLowerCase(java.util.Locale.ROOT).equals(normalized)) {
+                return candidate;
+            }
+        }
+        return null;
+    }
+
     public FlightState getFlightState() {
-        return stateByOrdinal(entityData.get(STATE));
+        FlightState stable = stateById(entityData.get(STATE_ID_DATA));
+        return stable != null ? stable : stateByOrdinal(entityData.get(STATE));
     }
 
     public AircraftInfo.AircraftType getAircraftType() {
+        AircraftInfo.AircraftType stable = aircraftTypeById(entityData.get(AIRCRAFT_TYPE_ID_DATA));
+        if (stable != null) return stable;
         int ordinal = entityData.get(AIRCRAFT_TYPE_DATA);
         if (ordinal < 0 || ordinal >= AIRCRAFT_TYPE_VALUES.length) return AircraftInfo.AircraftType.FIGHTER;
         return AIRCRAFT_TYPE_VALUES[ordinal];
     }
 
-    /** Cooldown defined by the immutable aircraft definition, with legacy fallback. */
+    /** 返回创建时快照的冷却；攻击 tick 不重新解析定义或终端参数。 */
     int attackCooldownDuration() {
-        return flightAttackCooldown > 0 ? flightAttackCooldown : resolveAttackCooldown();
+        return Math.max(1, flightAttackCooldown);
     }
 
     private int resolveAttackCooldown() {
@@ -1408,6 +1451,16 @@ public class AircraftEntity extends Entity {
     public String getAircraftDefinitionId() {
         String synced = entityData.get(AIRCRAFT_DEFINITION_DATA);
         return synced == null || synced.isBlank() ? aircraftDefinitionId : synced;
+    }
+
+    /** 当前飞行快照中的生命值。 */
+    public int getAircraftHealth() {
+        return Math.max(0, aircraftHealth);
+    }
+
+    /** 当前飞行快照中的最大生命值，不随定义热重载变化。 */
+    public int getAircraftMaxHealth() {
+        return Math.max(1, flightMaxHealth > 0 ? flightMaxHealth : aircraftHealth);
     }
 
     /** Returns true if this aircraft is owned by the given player. Works client-side (synced). */
@@ -1518,8 +1571,9 @@ public class AircraftEntity extends Entity {
             entityData.set(WEAPON_SLOT_INDEX, weaponSlotIndex);
         }
         coreInventorySlot = tag.getInt("CoreSlot");
-        try { aircraftType = AircraftInfo.AircraftType.valueOf(tag.getString("AircraftType")); }
-        catch (IllegalArgumentException e) { aircraftType = AircraftInfo.AircraftType.FIGHTER; }
+        AircraftInfo.AircraftType savedType = aircraftTypeById(
+                tag.contains("AircraftTypeId") ? tag.getString("AircraftTypeId") : tag.getString("AircraftType"));
+        aircraftType = savedType != null ? savedType : AircraftInfo.AircraftType.FIGHTER;
         aircraftDefinitionId = tag.contains("AircraftDefinitionId")
                 ? tag.getString("AircraftDefinitionId")
                 : AircraftDefinitionService.legacyId(aircraftType);
@@ -1554,13 +1608,19 @@ public class AircraftEntity extends Entity {
         }
         reconForcedChunks.clear();
         int savedOrdinal = tag.contains("FlightState") ? tag.getInt("FlightState") : 0;
-        FlightState savedState = stateByOrdinal(savedOrdinal);
-        if (savedState == FlightState.REMOVED && savedOrdinal != FlightState.REMOVED.ordinal()) {
-            PiranPort.LOGGER.warn("Invalid FlightState ordinal {} for aircraft {}; falling back to {}",
-                    savedOrdinal, getId(), savedState.name());
+        FlightState savedState = stateById(tag.getString("FlightStateId"));
+        if (savedState == null) {
+            // 旧存档只写序号；仅在稳定 ID 缺失时走兼容读取。
+            savedState = stateByOrdinal(savedOrdinal);
+            if (savedState == FlightState.REMOVED && savedOrdinal != FlightState.REMOVED.ordinal()) {
+                PiranPort.LOGGER.warn("Invalid FlightState ordinal {} for aircraft {}; falling back to {}",
+                        savedOrdinal, getId(), savedState.name());
+            }
         }
         entityData.set(STATE, savedState.ordinal());
+        entityData.set(STATE_ID_DATA, stateId(savedState));
         entityData.set(AIRCRAFT_TYPE_DATA, aircraftType.ordinal());
+        entityData.set(AIRCRAFT_TYPE_ID_DATA, aircraftType.getSerializedName());
         entityData.set(AIRCRAFT_DEFINITION_DATA, aircraftDefinitionId);
         if (ownerUUID != null) entityData.set(OWNER_ID, Optional.of(ownerUUID));
 
@@ -1588,7 +1648,9 @@ public class AircraftEntity extends Entity {
                 aircraftHealth = getMaxHealth(aircraftType);
             }
         }
-        flightMaxHealth = tag.contains("FlightMaxHealth") ? tag.getInt("FlightMaxHealth") : Math.max(1, aircraftHealth);
+        flightMaxHealth = tag.contains("FlightMaxHealth")
+                ? Math.max(1, tag.getInt("FlightMaxHealth")) : Math.max(1, aircraftHealth);
+        aircraftHealth = Math.min(Math.max(0, aircraftHealth), flightMaxHealth);
         flightAttackCooldown = tag.contains("FlightAttackCooldown")
                 ? Math.max(1, tag.getInt("FlightAttackCooldown")) : resolveAttackCooldown();
         if (tag.contains("OriginalStack")) {
@@ -1628,6 +1690,8 @@ public class AircraftEntity extends Entity {
         if (ownerUUID != null) tag.putUUID("OwnerUUID", ownerUUID);
         tag.putInt("WeaponSlot", weaponSlotIndex);
         tag.putInt("CoreSlot", coreInventorySlot);
+        tag.putString("AircraftTypeId", aircraftType.getSerializedName());
+        // 保留旧键一段时间，便于旧工具读取；加载优先使用稳定 ID。
         tag.putString("AircraftType", aircraftType.name());
         tag.putString("AircraftDefinitionId", aircraftDefinitionId);
         tag.putString("AttackMode", attackMode.name());
@@ -1649,12 +1713,14 @@ public class AircraftEntity extends Entity {
             for (long key : reconForcedChunks) chunks[idx++] = key;
             tag.putLongArray("ReconForcedChunks", chunks);
         }
+        tag.putString("FlightStateId", stateId(getFlightState()));
+        // 保留旧序号供旧客户端/工具读取，服务端新加载以 FlightStateId 为准。
         tag.putInt("FlightState", entityData.get(STATE));
         tag.putInt("AirtimeTicks", airtimeTicks);
         tag.putBoolean("HasFired", hasFired);
         tag.putInt("AircraftHealth", aircraftHealth);
         tag.putInt("FlightMaxHealth", flightMaxHealth > 0 ? flightMaxHealth : Math.max(1, aircraftHealth));
-        tag.putInt("FlightAttackCooldown", attackCooldownDuration());
+        tag.putInt("FlightAttackCooldown", Math.max(1, flightAttackCooldown));
         if (originalStack != null && !originalStack.isEmpty()) {
             tag.put("OriginalStack", originalStack.save(level().registryAccess()));
         }

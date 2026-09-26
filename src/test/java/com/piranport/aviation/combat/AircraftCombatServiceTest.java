@@ -5,6 +5,8 @@ import com.piranport.component.AircraftInfo;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class AircraftCombatServiceTest {
@@ -29,6 +31,24 @@ class AircraftCombatServiceTest {
         AttackStrategyRegistry.register(custom);
         assertSame(custom, AttackStrategyRegistry.byId(" GUN " ).orElseThrow());
         assertSame(custom, AircraftCombatService.strategyFor(definition(AircraftDefinition.AttackProfile.GUN)));
+    }
+
+    @Test
+    void registeredStrategyControlsExecutionThroughService() {
+        AtomicBoolean executed = new AtomicBoolean();
+        AttackStrategy custom = new AttackStrategy() {
+            @Override public String id() { return "gun"; }
+            @Override public AircraftDefinition.AttackProfile profile() { return AircraftDefinition.AttackProfile.GUN; }
+            @Override public void execute(com.piranport.entity.AircraftEntity aircraft,
+                                          net.minecraft.world.entity.player.Player owner) {
+                executed.set(true);
+            }
+        };
+        AttackStrategyRegistry.register(custom);
+
+        // 使用包级执行 seam，避免为纯分发测试启动 Minecraft 世界。
+        AircraftCombatService.executeAttacking(definition(AircraftDefinition.AttackProfile.GUN), null, null);
+        assertTrue(executed.get());
     }
 
     @Test

@@ -23,43 +23,13 @@ import static com.piranport.combat.cannon.CannonStats.getGunCooldown;
 
 /**
  * 火炮装填生命周期：武器保存唯一读条，HUD 和提示直接读取武器。
- * 自动与手动模式只影响读条启动；两者都在到期后才扣弹并写入 LOADED_AMMO。
+ * 火炮固定使用手动装填；读条到期后才扣弹并写入 LOADED_AMMO。
  */
 public final class CannonReloading {
     private CannonReloading() {}
 
     public static void tickCannonAutoReload(Player player, ItemStack coreStack) {
-        if (player.level().isClientSide() || !player.isAlive() || player.isSpectator() || coreStack.isEmpty()) return;
-        Inventory inventory = player.getInventory();
-        boolean changed = false;
-        for (int slot = 0; slot < inventory.items.size(); slot++) {
-            changed |= tickSlot(player, coreStack, slot, inventory.items.get(slot));
-        }
-        changed |= tickSlot(player, coreStack, 40, inventory.offhand.get(0));
-        if (changed) TransformationManager.writeCoreToConfiguredSlot(player, coreStack);
-    }
-
-    private static boolean tickSlot(Player player, ItemStack core, int slot, ItemStack weapon) {
-        if (!(weapon.getItem() instanceof ArtilleryItem artillery)) return false;
-        int coreSlot = findCoreSlotIndex(player.getInventory(), player, slot);
-        if (coreSlot == -1) return false;
-        WeaponState state = new WeaponState(weapon);
-        boolean loaded = isCannonReadyToFire(weapon, player.level());
-        if (!loaded && state.hasLoadedAmmo()) state.clearLoadedAmmo();
-        WeaponCooldown cooldown = state.getCooldown();
-        CannonReloadPhase phase = CannonReloadPhase.resolve(loaded,
-                artillery.getEffectiveData(player.level()).isAutoLoading(),
-                cooldown == null ? null : cooldown.endTick(), player.level().getGameTime());
-        boolean legacyRemoved = removeLegacyCooldown(core, slot);
-        boolean changed = switch (phase) {
-            case LOADED -> clearCannonReloadState(core, weapon, slot);
-            case IDLE, WAIT -> false;
-            case START -> startCannonReloadIfPossible(player, core, player.getInventory(),
-                    slot, coreSlot, weapon);
-            case COMPLETE -> completeCannonReload(player, core, player.getInventory(),
-                    slot, coreSlot, weapon);
-        };
-        return legacyRemoved || changed;
+        // 保留旧 tick 入口，避免存档/调用方兼容问题；火炮不再有自动装填计时器路径。
     }
 
     static boolean startCannonReloadIfPossible(Player player, ItemStack core, Inventory inventory,
@@ -85,10 +55,6 @@ public final class CannonReloading {
         if (core.isEmpty() || !(weapon.getItem() instanceof ArtilleryItem artillery)) return;
         int slot = CannonInventory.findWeaponSlot(player.getInventory(), weapon);
         if (slot < 0 || coreSlot == -1) return;
-        if (artillery.getEffectiveData(player.level()).isAutoLoading()) {
-            player.displayClientMessage(Component.translatable("message.piranport.weapon_auto_reload"), true);
-            return;
-        }
         if (isCannonReadyToFire(weapon, player.level())) {
             player.displayClientMessage(Component.translatable("message.piranport.weapon_already_loaded"), true);
             return;
@@ -114,8 +80,7 @@ public final class CannonReloading {
     /** 已经完成持续使用读条的手动装填入口，共享到期装填的弹药事务。 */
     public static void completeManualUse(Player player, ItemStack weapon) {
         if (player.level().isClientSide() || !player.isAlive() || player.isSpectator()) return;
-        if (!(weapon.getItem() instanceof ArtilleryItem artillery)
-                || artillery.getEffectiveData(player.level()).isAutoLoading()
+        if (!(weapon.getItem() instanceof ArtilleryItem)
                 || isCannonReadyToFire(weapon, player.level())) return;
         Inventory inventory = player.getInventory();
         int slot = CannonInventory.findWeaponSlot(inventory, weapon);

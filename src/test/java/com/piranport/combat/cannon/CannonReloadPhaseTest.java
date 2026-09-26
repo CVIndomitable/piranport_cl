@@ -16,8 +16,8 @@ class CannonReloadPhaseTest {
     }
 
     @Test
-    void emptyAutomaticGunStartsButEmptyManualGunWaitsForInput() {
-        assertEquals(START, resolve(false, true, null, 100));
+    void emptyCannonAlwaysWaitsForManualInput() {
+        assertEquals(IDLE, resolve(false, true, null, 100));
         assertEquals(IDLE, resolve(false, false, null, 100));
     }
 
@@ -38,7 +38,7 @@ class CannonReloadPhaseTest {
 
     @Test
     void emptyCooldownMarkerNeverCompletesAFreeReload() {
-        assertEquals(START, resolve(false, true, 0L, 100));
+        assertEquals(IDLE, resolve(false, true, 0L, 100));
         assertEquals(IDLE, resolve(false, false, 0L, 100));
     }
 

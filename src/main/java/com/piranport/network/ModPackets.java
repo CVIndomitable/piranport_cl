@@ -320,55 +320,7 @@ public class ModPackets {
                 CannonImpactEffectPayload::handle
         );
 
-        // ===== Artillery Config Tool =====
-        registrar.playToServer(
-                UpdateConfigOverridePayload.TYPE,
-                UpdateConfigOverridePayload.STREAM_CODEC,
-                (payload, context) -> legacyConfigToolDisabled(context)
-        );
-        registrar.playToServer(
-                ExportConfigPayload.TYPE,
-                ExportConfigPayload.STREAM_CODEC,
-                (payload, context) -> legacyConfigToolDisabled(context)
-        );
-        registrar.playToServer(
-                ImportConfigPayload.TYPE,
-                ImportConfigPayload.STREAM_CODEC,
-                (payload, context) -> legacyConfigToolDisabled(context)
-        );
-        registrar.playToServer(
-                ResetConfigPayload.TYPE,
-                ResetConfigPayload.STREAM_CODEC,
-                (payload, context) -> legacyConfigToolDisabled(context)
-        );
-        registrar.playToServer(
-                ResetSingleConfigPayload.TYPE,
-                ResetSingleConfigPayload.STREAM_CODEC,
-                (payload, context) -> legacyConfigToolDisabled(context)
-        );
-        registrar.playToClient(
-                SyncConfigOverridesPayload.TYPE,
-                SyncConfigOverridesPayload.STREAM_CODEC,
-                SyncConfigOverridesPayload::handle
-        );
-
         // ===== Debug Terminal =====
-        // 与火炮域并列的运行时覆盖通道：那个改静态配置表数值，这个改航速换算偏移。
-        registrar.playToServer(
-                UpdateTerminalOverridePayload.TYPE,
-                UpdateTerminalOverridePayload.STREAM_CODEC,
-                UpdateTerminalOverridePayload::handle
-        );
-        registrar.playToServer(
-                ResetTerminalOverridesPayload.TYPE,
-                ResetTerminalOverridesPayload.STREAM_CODEC,
-                ResetTerminalOverridesPayload::handle
-        );
-        registrar.playToClient(
-                SyncTerminalOverridesPayload.TYPE,
-                SyncTerminalOverridesPayload.STREAM_CODEC,
-                SyncTerminalOverridesPayload::handle
-        );
         registrar.playToServer(
                 UpdateTerminalParameterPayload.TYPE,
                 UpdateTerminalParameterPayload.STREAM_CODEC,
@@ -389,14 +341,5 @@ public class ModPackets {
                 SyncTerminalParametersPayload.STREAM_CODEC,
                 SyncTerminalParametersPayload::handle
         );
-    }
-
-    private static void legacyConfigToolDisabled(net.neoforged.neoforge.network.handling.IPayloadContext context) {
-        context.enqueueWork(() -> {
-            if (context.player() instanceof net.minecraft.server.level.ServerPlayer player) {
-                player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
-                        "旧火炮配置工具已停用，请使用调试终端"));
-            }
-        });
     }
 }

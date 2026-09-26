@@ -217,9 +217,9 @@ class ArchitectureTest {
                 .check(CLASSES);
     }
 
-    /** 配置覆盖入口必须走统一管理员权限，不得用创造模式替代管理权限。 */
+    /** 调试终端参数入口必须走统一管理员权限，不得用创造模式替代管理权限。 */
     @Test
-    void configMutationPayloadsShouldUseAdminPermissionGate() throws IOException {
+    void terminalMutationPayloadsShouldUseAdminPermissionGate() throws IOException {
         String permissionSource = Files.readString(
                 Path.of("src/main/java/com/piranport/config/ConfigToolPermissions.java"));
         assertTrue(permissionSource.contains("CONFIG_ADMIN_PERMISSION_LEVEL = 2"),
@@ -230,12 +230,11 @@ class ArchitectureTest {
                 "ConfigToolPermissions must keep no-cheats singleplayer owner testing available");
 
         String[] files = {
-                "src/main/java/com/piranport/network/UpdateConfigOverridePayload.java",
-                "src/main/java/com/piranport/network/ImportConfigPayload.java",
-                "src/main/java/com/piranport/network/ExportConfigPayload.java",
-                "src/main/java/com/piranport/network/ResetConfigPayload.java",
-                "src/main/java/com/piranport/item/ArtilleryConfigToolItem.java",
-                "src/main/java/com/piranport/menu/ArtilleryConfigToolMenu.java"
+                "src/main/java/com/piranport/network/UpdateTerminalParameterPayload.java",
+                "src/main/java/com/piranport/network/SaveTerminalParametersPayload.java",
+                "src/main/java/com/piranport/network/TerminalParameterActionPayload.java",
+                "src/main/java/com/piranport/item/DebugTerminalItem.java",
+                "src/main/java/com/piranport/menu/DebugTerminalMenu.java"
         };
 
         for (String file : files) {

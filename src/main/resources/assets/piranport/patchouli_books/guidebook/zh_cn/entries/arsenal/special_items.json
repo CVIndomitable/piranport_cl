@@ -19,6 +19,11 @@
     {
       "type": "patchouli:text",
       "text": "piranport.book.advanced.special_weapons.p4"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "piranport:gungnir",
+      "text": "piranport.book.arsenal.special.gungnir"
     }
   ]
 }

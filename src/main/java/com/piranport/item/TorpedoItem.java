@@ -27,8 +27,7 @@ public class TorpedoItem extends Item {
      * {@code BuiltInRegistries}，反查拿到的是 null，且反查会拖慢每个鱼雷物品的构造。
      * 注册点本来就知道自己的注册名，写死一个字符串零成本、零歧义。
      *
-     * <p>旧构造器（只传口径的那几个）不传它，此时为 null——{@code torpedoSpeedDelta}
-     * 对 null 返回 0，即「不可覆盖」，不会误命中别的型号。
+     * <p>旧构造器（只传口径的那几个）不传它，此时为 null，不会生成型号级终端参数键。
      */
     private final String modelKey;
 
@@ -147,12 +146,12 @@ public class TorpedoItem extends Item {
     }
 
     /**
-     * 实机航速 = 基准值 + 调试终端覆盖。
+     * 实机航速 = 基准值，经调试终端参数覆盖。
      *
      * <p>WHY 覆盖加在这里而不是去改 {@code speed} 字段：{@code TorpedoItem} 是注册表里的
      * 单例，字段是全局的。直接改字段会污染同型号的所有鱼雷、且存档间互相串味。
-     * 覆盖值存在 {@link com.piranport.terminal.TerminalOverrides} 的静态快照里，
-     * 由服务端在改动时同步给客户端，这里按需查表。
+     * 覆盖值存在 {@link com.piranport.terminal.TerminalParameters} 的参数快照里，
+     * 由服务端同步给客户端，这里按需查表。
      */
     public float getSpeed() {
         return modelKey == null ? speed : (float) com.piranport.terminal.TerminalParameters.getDouble(

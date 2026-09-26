@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:blasting",
+  "category": "misc",
+  "group": "aluminum_ingot",
+  "ingredient": {
+    "item": "piranport:bauxite_ore"
+  },
+  "result": {
+    "id": "piranport:raw_aluminum"
+  },
+  "experience": 0.7,
+  "cookingtime": 100
+}

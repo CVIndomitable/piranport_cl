@@ -157,13 +157,6 @@ class PayloadCodecRoundtripTest {
         assertEquals(p, roundtrip(EntityCoreSyncPayload.STREAM_CODEC, p));
     }
 
-    // ===== ExportConfigPayload (unit) =====
-    @Test
-    void exportConfigUnitRoundtrip() {
-        ExportConfigPayload p = new ExportConfigPayload();
-        assertEquals(p, roundtrip(ExportConfigPayload.STREAM_CODEC, p));
-    }
-
     // ===== FireControlPayload（含 FireAction ordinal 守卫）=====
     @Test
     void fireControlCancelRoundtrip() {
@@ -221,13 +214,6 @@ class PayloadCodecRoundtripTest {
     void hitDisplayToggleRoundtrip() {
         HitDisplayTogglePayload p = new HitDisplayTogglePayload(true);
         assertEquals(p, roundtrip(HitDisplayTogglePayload.STREAM_CODEC, p));
-    }
-
-    // ===== ImportConfigPayload =====
-    @Test
-    void importConfigRoundtrip() {
-        ImportConfigPayload p = new ImportConfigPayload("cannon.json", "projectile.json");
-        assertEquals(p, roundtrip(ImportConfigPayload.STREAM_CODEC, p));
     }
 
     // ===== ManualReloadPayload (unit) =====

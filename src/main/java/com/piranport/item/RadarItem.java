@@ -8,6 +8,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.core.registries.BuiltInRegistries;
+import com.piranport.terminal.TerminalParameters;
 
 import java.util.List;
 
@@ -59,15 +61,25 @@ public class RadarItem extends Item {
     }
 
     public int getWeight() {
-        return weight;
+        return TerminalParameters.getInt(parameterKey("weight"), weight);
     }
+    public int getBaseWeight() { return weight; }
 
     public int getRange() {
-        return range;
+        return TerminalParameters.getInt(parameterKey("range"), range);
     }
+    public int getBaseRange() { return range; }
 
     public RadarTarget getTarget() {
-        return target;
+        int ordinal = TerminalParameters.getInt(parameterKey("target"), target.ordinal());
+        RadarTarget[] values = RadarTarget.values();
+        return ordinal >= 0 && ordinal < values.length ? values[ordinal] : target;
+    }
+    public RadarTarget getBaseTarget() { return target; }
+
+    private String parameterKey(String property) {
+        var id = BuiltInRegistries.ITEM.getKey(this);
+        return "equipment." + (id == null ? "radar" : id) + "." + property;
     }
 
     @Override
@@ -80,12 +92,12 @@ public class RadarItem extends Item {
         }
         if (ClientHooks.isClient()) {
             if (ClientHooks.hasShiftDown()) {
-                tooltip.add(Component.translatable("tooltip.piranport.radar.range", range)
+                tooltip.add(Component.translatable("tooltip.piranport.radar.range", getRange())
                         .withStyle(ChatFormatting.AQUA));
                 tooltip.add(Component.translatable("tooltip.piranport.radar.target."
-                                + target.getSerializedName())
+                                + getTarget().getSerializedName())
                         .withStyle(ChatFormatting.GOLD));
-                tooltip.add(Component.translatable("tooltip.piranport.radar.weight", weight)
+                tooltip.add(Component.translatable("tooltip.piranport.radar.weight", getWeight())
                         .withStyle(ChatFormatting.GRAY));
             } else {
                 tooltip.add(Component.translatable("tooltip.piranport.shift_for_details")

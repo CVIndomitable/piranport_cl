@@ -11,8 +11,8 @@ import net.minecraft.world.item.ItemStack;
  * 只有实验炮 {@code neural_ballistic_test_gun} 走网络，其余全部保持原路径。
  *
  * <h2>为什么必须按注册 ID 路由，不能按物理参数</h2>
- * {@code ConfigOverrideManager} / {@code UpdateConfigOverridePayload} 允许运行时改动
- * 任意火炮的 {@code dragCoeff} / {@code initialSpeed} / {@code gravity}。若按参数
+ * {@code ConfigOverrideManager} 读取调试终端的运行时覆盖，允许改动任意火炮的
+ * {@code dragCoeff} / {@code initialSpeed} / {@code gravity}。若按参数
  * 判断（例如「v0=3.0 且 drag=0.01 就是实验炮」），玩家一改覆盖值路由就会误判，
  * 把普通炮导到网络上，或反之。注册 ID 不受覆盖配置影响。
  *

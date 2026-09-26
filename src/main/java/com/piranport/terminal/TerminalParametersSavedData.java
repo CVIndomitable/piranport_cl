@@ -1,7 +1,6 @@
 package com.piranport.terminal;
 
 import com.piranport.PiranPort;
-import com.piranport.artillery.config.override.ArtilleryConfigOverrideSavedData;
 import com.piranport.aviation.AircraftStatsService;
 import com.piranport.combat.BallisticSolver;
 import net.minecraft.core.HolderLookup;
@@ -19,7 +18,6 @@ public final class TerminalParametersSavedData extends SavedData {
     private static final String DATA_NAME = "piranport_parameters";
     private final Map<String, String> overrides = new HashMap<>();
     private long revision;
-    private boolean migratedLegacy;
 
     public Map<String, String> overrides() { return Map.copyOf(overrides); }
     public long revision() { return revision; }
@@ -42,6 +40,18 @@ public final class TerminalParametersSavedData extends SavedData {
         overrides.clear();
         changed();
         return true;
+    }
+
+    /** Removes only the overrides belonging to one terminal object. */
+    public boolean clearTarget(String group, String target) {
+        Map<String, String> proposed = new HashMap<>(overrides);
+        Map<String, TerminalParameterSpec> specs = new HashMap<>();
+        TerminalParameterCatalog.all().forEach(spec -> specs.put(spec.key(), spec));
+        proposed.keySet().removeIf(key -> {
+            TerminalParameterSpec spec = specs.get(key);
+            return spec != null && spec.group().equals(group) && spec.target().equals(target);
+        });
+        return replace(proposed);
     }
 
     public boolean replace(Map<String, String> proposed) {
@@ -104,7 +114,6 @@ public final class TerminalParametersSavedData extends SavedData {
         overrides.forEach(values::putString);
         tag.put("values", values);
         tag.putLong("revision", revision);
-        tag.putBoolean("migratedLegacy", migratedLegacy);
         return tag;
     }
 
@@ -133,7 +142,6 @@ public final class TerminalParametersSavedData extends SavedData {
             PiranPort.LOGGER.warn("Ignoring invalid coupled terminal overrides: {}", e.getMessage());
         }
         data.revision = Math.max(0L, tag.getLong("revision"));
-        data.migratedLegacy = tag.getBoolean("migratedLegacy");
         return data;
     }
 
@@ -141,86 +149,8 @@ public final class TerminalParametersSavedData extends SavedData {
         TerminalParametersSavedData data = level.getServer().overworld().getDataStorage().computeIfAbsent(
                 new SavedData.Factory<>(TerminalParametersSavedData::new, TerminalParametersSavedData::load, null),
                 DATA_NAME);
-        if (!data.migratedLegacy && !TerminalParameterCatalog.all().isEmpty()) {
-            data.migrateLegacy(level);
-        }
         TerminalParameters.apply(data.overrides, data.revision);
         return data;
-    }
-
-    private void migrateLegacy(ServerLevel level) {
-        Map<String, String> previous = new HashMap<>(overrides);
-        // 旧火炮工具按维度保存；合并各维度的数据，以主世界同键优先。
-        migrateArtillery(level.getServer().overworld());
-        for (ServerLevel sourceLevel : level.getServer().getAllLevels()) {
-            if (sourceLevel != level.getServer().overworld()) migrateArtillery(sourceLevel);
-        }
-        TerminalOverridesSavedData oldSpeeds = TerminalOverridesSavedData.get(level);
-        oldSpeeds.getAllTorpedoDeltas().forEach((key, delta) ->
-                migrateDelta("torpedo." + key + ".speed", delta));
-        oldSpeeds.getAllCoreDeltas().forEach((key, delta) -> {
-            for (String property : new String[] { "speed_bonus", "speed_multiplier", "speed" }) {
-                if (TerminalParameterCatalog.find("core." + key + "." + property) != null) {
-                    migrateDelta("core." + key + "." + property, delta);
-                    break;
-                }
-            }
-        });
-        try {
-            TerminalParameterValidation.checked(overrides, TerminalParameterCatalog.all());
-        } catch (RuntimeException e) {
-            overrides.clear();
-            overrides.putAll(previous);
-            PiranPort.LOGGER.warn("Ignoring invalid coupled legacy terminal overrides: {}", e.getMessage());
-        }
-        migratedLegacy = true;
-        revision++;
-        setDirty();
-        PiranPort.LOGGER.info("Migrated {} legacy terminal parameter overrides", overrides.size());
-    }
-
-    private void migrateArtillery(ServerLevel sourceLevel) {
-        ArtilleryConfigOverrideSavedData old = ArtilleryConfigOverrideSavedData.get(sourceLevel);
-        old.getAllCannonOverrides().forEach((name, fields) -> fields.forEach((field, value) ->
-                migrate("cannon." + name + "." + snakeCase(field), value)));
-        old.getAllProjectileOverrides().forEach((key, value) ->
-                migrate("global.projectiles." + key.toLowerCase(java.util.Locale.ROOT), value));
-    }
-
-    private void migrateDelta(String key, double delta) {
-        TerminalParameterSpec spec = TerminalParameterCatalog.find(key);
-        if (spec == null) return;
-        try {
-            migrate(key, Double.parseDouble(spec.baseValue()) + delta);
-        } catch (NumberFormatException ignored) {
-            // 非数值项没有速度偏移语义。
-        }
-    }
-
-    private void migrate(String key, Object value) {
-        if (overrides.containsKey(key) || value == null) return;
-        TerminalParameterSpec spec = TerminalParameterCatalog.find(key);
-        if (spec == null) return;
-        try {
-            String raw = value.toString();
-            // 旧配置以浮点数存储整型参数，只有精确整数才可迁移。
-            if (spec.type() == TerminalParameterSpec.ValueType.INTEGER && value instanceof Number number) {
-                double numeric = number.doubleValue();
-                if (Double.isFinite(numeric) && numeric == Math.rint(numeric)
-                        && numeric >= Integer.MIN_VALUE && numeric <= Integer.MAX_VALUE) {
-                    raw = Integer.toString((int) numeric);
-                }
-            }
-            String canonical = spec.canonical(raw);
-            if (!canonical.equals(spec.canonical(spec.baseValue()))) overrides.put(key, canonical);
-        } catch (RuntimeException e) {
-            PiranPort.LOGGER.warn("Skipping legacy override {}: {}", key, e.getMessage());
-        }
-    }
-
-    private static String snakeCase(String field) {
-        return field.replaceAll("([a-z0-9])([A-Z])", "$1_$2")
-                .toLowerCase(java.util.Locale.ROOT);
     }
 
 }

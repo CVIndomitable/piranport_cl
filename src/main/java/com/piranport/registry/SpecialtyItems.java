@@ -3,7 +3,6 @@ package com.piranport.registry;
 import com.piranport.component.WeaponCategory;
 import com.piranport.entitycore.EntityCoreDefinitions;
 import com.piranport.item.AbyssalReportItem;
-import com.piranport.item.ArtilleryConfigToolItem;
 import com.piranport.item.CommandSwordItem;
 import com.piranport.item.ConfigInspectorItem;
 import com.piranport.item.DamageControlItem;
@@ -37,7 +36,7 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 
 /**
  * 特殊物品注册表（鱼雷装填强化 / 副本系统 / 皮肤核心 / 实体核心 / 燃料 / 工具 / 道具 /
- * 快速维修 / 配置检查器 / 炮术配置工具 / 烟幕蜡烛 / 信号弹发射器 / 修理包 / 麒麟头带 /
+ * 快速维修 / 配置检查器 / 烟幕蜡烛 / 信号弹发射器 / 修理包 / 麒麟头带 /
  * 神秘武器 / 黎塞留指挥剑 / 舰娘契约 / 大凤伞 / 欧根盾 / 翔鹤镰刀 / 道具栏图标 /
  * 足球巨星套装 / 初雪主炮 / 冈格尼尔 / 深海遗迹奖励 / 深海生成蛋）。
  *
@@ -287,14 +286,8 @@ public final class SpecialtyItems {
             ITEMS.register("config_inspector",
                     () -> new ConfigInspectorItem(new Item.Properties().stacksTo(1)));
 
-    // ===== Artillery Config Tool =====
-    public static final DeferredItem<ArtilleryConfigToolItem> ARTILLERY_CONFIG_TOOL =
-            ITEMS.register("artillery_config_tool",
-                    () -> new ArtilleryConfigToolItem(new Item.Properties().stacksTo(1)));
-
     // ===== Debug Terminal =====
-    // 与火炮配置工具并列的调试入口：那个编辑配置表数值，这个编辑运行时换算偏移
-    // （舰娘核心航速倍率、单型号鱼雷航速）。管理员专用，使用同一套权限判定。
+    // 统一的运行时参数与调试入口，管理员专用，使用同一套权限判定。
     public static final DeferredItem<com.piranport.item.DebugTerminalItem> DEBUG_TERMINAL =
             ITEMS.register("debug_terminal",
                     () -> new com.piranport.item.DebugTerminalItem(new Item.Properties().stacksTo(1)));

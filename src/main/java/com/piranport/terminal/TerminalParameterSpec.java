@@ -27,6 +27,48 @@ public record TerminalParameterSpec(String key, String group, String target, Str
         return parse(type, raw, min, max, key);
     }
 
+    /**
+     * The simulation stores movement speeds per game tick, while the terminal
+     * deliberately exposes every linear speed in blocks per second.
+     */
+    public boolean isLinearSpeed() {
+        return switch (property) {
+            case "speed", "panel_speed", "initial_speed", "full_load_speed", "empty_speed",
+                    "movement_speed" -> true;
+            default -> false;
+        };
+    }
+
+    public double displayScale() {
+        return isLinearSpeed() ? 20.0 : 1.0;
+    }
+
+    /** Convert a stored (per tick) value to the value shown in the terminal. */
+    public String displayValue(String raw) {
+        if (type != ValueType.DOUBLE) return raw;
+        try {
+            double value = Double.parseDouble(raw) * displayScale();
+            return "drag_coeff".equals(property)
+                    ? String.format(Locale.ROOT, "%.6e", value)
+                    : isLinearSpeed() ? String.format(Locale.ROOT, "%.6f", value) : raw;
+        } catch (NumberFormatException ignored) {
+            return raw;
+        }
+    }
+
+    /** Convert a terminal value back to the canonical stored value. */
+    public String canonicalDisplay(String raw) {
+        if (!isLinearSpeed() || type != ValueType.DOUBLE) return canonical(raw);
+        try {
+            return canonical(Double.toString(Double.parseDouble(raw.trim()) / displayScale()));
+        } catch (NumberFormatException exception) {
+            throw new IllegalArgumentException("Expected number for " + key, exception);
+        }
+    }
+
+    public double displayMin() { return min * displayScale(); }
+    public double displayMax() { return max * displayScale(); }
+
     private static String parse(ValueType type, String raw, double min, double max, String key) {
         String value = raw.trim();
         return switch (type) {

@@ -25,4 +25,15 @@ class TerminalParameterSpecTest {
                 TerminalParameterSpec.ValueType.BOOLEAN, "false", 0, 1);
         assertThrows(IllegalArgumentException.class, () -> toggle.canonical("1"));
     }
+
+    @Test
+    void linearSpeedsAreEditedInBlocksPerSecondButStoredPerTick() {
+        TerminalParameterSpec speed = new TerminalParameterSpec("aircraft.test.panel_speed",
+                "aircraft", "test", "panel_speed", TerminalParameterSpec.ValueType.DOUBLE,
+                "0.5", 0.01, 10);
+        assertEquals("10.000000", speed.displayValue("0.5"));
+        assertEquals("0.75", speed.canonicalDisplay("15"));
+        assertEquals(0.2, speed.displayMin(), 1.0e-9);
+        assertEquals(200.0, speed.displayMax(), 1.0e-9);
+    }
 }

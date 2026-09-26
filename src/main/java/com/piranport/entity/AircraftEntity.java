@@ -603,12 +603,13 @@ public class AircraftEntity extends Entity {
     // ===== Tick methods =====
 
     private void tickLaunching(Player owner) {
+        double phase = phaseSpeedCoefficient();
         double targetY = owner.getY() + CRUISE_ALTITUDE;
         double dy = targetY - getY();
-        double rise = Math.min(panelSpeed * 0.3, Math.abs(dy));
+        double rise = Math.min(panelSpeed * 0.3 * phase, Math.abs(dy));
         // Horizontal velocity along launch direction (orbitAngle = player's facing at launch)
         // so the aircraft climbs out diagonally instead of rocketing straight up.
-        double fwdSpeed = panelSpeed * 0.3;
+        double fwdSpeed = panelSpeed * 0.3 * phase;
         double fwdX = Math.cos(orbitAngle) * fwdSpeed;
         double fwdZ = Math.sin(orbitAngle) * fwdSpeed;
         setDeltaMovement(fwdX, dy > 0 ? rise : -rise, fwdZ);
@@ -620,6 +621,7 @@ public class AircraftEntity extends Entity {
     }
 
     private void tickCruising(Player owner) {
+        double phase = phaseSpeedCoefficient();
         boolean isAsw = aircraftType == AircraftInfo.AircraftType.ASW;
         // Transition to ATTACKING if owner has locked targets with at least one alive entity
         if (aircraftType != AircraftInfo.AircraftType.RECON
@@ -704,14 +706,14 @@ public class AircraftEntity extends Entity {
             }
             AircraftEntity reconAircraft = cachedReconAircraft;
             if (reconAircraft != null) {
-                orbitAngle += panelSpeed * 0.015;
+                orbitAngle += panelSpeed * 0.015 * phase;
                 double tx = reconAircraft.getX() + Math.cos(orbitAngle) * ORBIT_RADIUS;
                 double ty = reconAircraft.getY();  // match recon altitude
                 double tz = reconAircraft.getZ() + Math.sin(orbitAngle) * ORBIT_RADIUS;
                 Vec3 toTarget = new Vec3(tx - getX(), ty - getY(), tz - getZ());
                 double dist = toTarget.length();
                 if (dist > 0.1) {
-                    setDeltaMovement(toTarget.normalize().scale(Math.min(panelSpeed * 0.35, dist)));
+                    setDeltaMovement(toTarget.normalize().scale(Math.min(panelSpeed * 0.35 * phase, dist)));
                 } else {
                     setDeltaMovement(Vec3.ZERO);
                 }
@@ -720,14 +722,14 @@ public class AircraftEntity extends Entity {
             // No active recon — fall through to normal orbit around player
         }
 
-        orbitAngle += panelSpeed * 0.015;
+        orbitAngle += panelSpeed * 0.015 * phase;
         double tx = owner.getX() + Math.cos(orbitAngle) * ORBIT_RADIUS;
         double ty = owner.getY() + CRUISE_ALTITUDE;
         double tz = owner.getZ() + Math.sin(orbitAngle) * ORBIT_RADIUS;
         Vec3 toTarget = new Vec3(tx - getX(), ty - getY(), tz - getZ());
         double dist = toTarget.length();
         if (dist > 0.1) {
-            setDeltaMovement(toTarget.normalize().scale(Math.min(panelSpeed * 0.3, dist)));
+            setDeltaMovement(toTarget.normalize().scale(Math.min(panelSpeed * 0.3 * phase, dist)));
         } else {
             setDeltaMovement(Vec3.ZERO);
         }
@@ -899,16 +901,38 @@ public class AircraftEntity extends Entity {
     /** An entity is considered airborne if it is not on the ground and not in water. */
 
     private void tickReturning(Player owner) {
+        double phase = phaseSpeedCoefficient();
         Vec3 toOwner = owner.getEyePosition().subtract(position());
         double dist = toOwner.length();
         if (dist < RETURN_ARRIVAL_DIST) { recallAndRemove(); return; }
         // 返航增速 30%：0.4 × 1.3 = 0.52
-        setDeltaMovement(toOwner.normalize().scale(Math.min(panelSpeed * 0.52, dist)));
+        setDeltaMovement(toOwner.normalize().scale(Math.min(panelSpeed * 0.52 * phase, dist)));
+    }
+
+    /** Combined legacy master coefficient and current action-stage coefficient. */
+    double phaseSpeedCoefficient() {
+        double master = boundedCoefficient(ModCommonConfig.AIRCRAFT_CONTROL_PHASE_COEFFICIENT.get());
+        double stage = switch (getFlightState()) {
+            case LAUNCHING -> ModCommonConfig.AIRCRAFT_LAUNCH_SPEED_COEFFICIENT.get();
+            case CRUISING -> attackMode == AircraftAttackMode.FOLLOW
+                    ? ModCommonConfig.AIRCRAFT_FOLLOW_SPEED_COEFFICIENT.get()
+                    : ModCommonConfig.AIRCRAFT_CRUISE_SPEED_COEFFICIENT.get();
+            case ATTACKING -> ModCommonConfig.AIRCRAFT_ATTACK_SPEED_COEFFICIENT.get();
+            case RETURNING -> ModCommonConfig.AIRCRAFT_RETURN_SPEED_COEFFICIENT.get();
+            case RECON_ACTIVE -> ModCommonConfig.AIRCRAFT_RECON_SPEED_COEFFICIENT.get();
+            case REMOVED -> 1.0;
+        };
+        return master * boundedCoefficient(stage);
+    }
+
+    private static double boundedCoefficient(double value) {
+        return Double.isFinite(value) ? Math.max(0.05, Math.min(5.0, value)) : 1.0;
     }
 
     // ===== Autonomous (no player owner) tick =====
 
     private void tickAutonomousServer() {
+        double phase = phaseSpeedCoefficient();
         FlightState state = getFlightState();
         if (state == FlightState.REMOVED) { discard(); return; }
 
@@ -930,7 +954,7 @@ public class AircraftEntity extends Entity {
             case LAUNCHING -> {
                 double targetY = homePosition.y + CRUISE_ALTITUDE;
                 double dy = targetY - getY();
-                double rise = Math.min(panelSpeed * 0.3, Math.abs(dy));
+                double rise = Math.min(panelSpeed * 0.3 * phase, Math.abs(dy));
                 setDeltaMovement(getDeltaMovement().x * 0.5, dy > 0 ? rise : -rise, getDeltaMovement().z * 0.5);
                 if (stateTicks >= LAUNCH_DURATION || Math.abs(dy) < 1.5) {
                     setState(FlightState.CRUISING);
@@ -948,14 +972,14 @@ public class AircraftEntity extends Entity {
                     }
                 }
                 // Orbit home position
-                orbitAngle += panelSpeed * 0.015;
+                orbitAngle += panelSpeed * 0.015 * phase;
                 double tx = homePosition.x + Math.cos(orbitAngle) * ORBIT_RADIUS;
                 double ty = homePosition.y + CRUISE_ALTITUDE;
                 double tz = homePosition.z + Math.sin(orbitAngle) * ORBIT_RADIUS;
                 Vec3 toTarget = new Vec3(tx - getX(), ty - getY(), tz - getZ());
                 double dist = toTarget.length();
                 if (dist > 0.1) {
-                    setDeltaMovement(toTarget.normalize().scale(Math.min(panelSpeed * 0.3, dist)));
+                    setDeltaMovement(toTarget.normalize().scale(Math.min(panelSpeed * 0.3 * phase, dist)));
                 } else {
                     setDeltaMovement(Vec3.ZERO);
                 }
@@ -1005,7 +1029,7 @@ public class AircraftEntity extends Entity {
         // Enforce minimum horizontal speed (no hovering) — skip during LAUNCHING (vertical ascent)
         if (state != FlightState.LAUNCHING && lastHorizontalDir != null) {
             double rawHorizSpeed = rawVel.horizontalDistance();
-            double minSpeed = panelSpeed * 0.05;
+            double minSpeed = panelSpeed * 0.05 * phaseSpeedCoefficient();
             if (rawHorizSpeed < minSpeed) {
                 rawVel = new Vec3(lastHorizontalDir.x * minSpeed, rawVel.y, lastHorizontalDir.z * minSpeed);
                 setDeltaMovement(rawVel);

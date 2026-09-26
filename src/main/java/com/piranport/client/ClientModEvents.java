@@ -5,7 +5,6 @@ import com.piranport.client.AircraftRenderer;
 import com.piranport.client.CuttingBoardRenderer;
 import com.piranport.client.PlaceableFoodRenderer;
 import com.piranport.client.WeaponReloadDecorator;
-import com.piranport.client.gui.ArtilleryConfigToolScreen;
 import com.piranport.component.AircraftInfo;
 import com.piranport.menu.AmmoWorkbenchScreen;
 import com.piranport.menu.CookingPotScreen;
@@ -99,9 +98,6 @@ public class ClientModEvents {
         // 副本
         event.register(ModMenuTypes.DUNGEON_BOOK_MENU.get(),
                 com.piranport.dungeon.client.DungeonBookScreen::new);
-        // 火炮配置工具
-        event.register(ModMenuTypes.ARTILLERY_CONFIG_TOOL_MENU.get(),
-                ArtilleryConfigToolScreen::new);
         // 调试终端
         event.register(ModMenuTypes.DEBUG_TERMINAL_MENU.get(),
                 com.piranport.client.gui.DebugTerminalScreen::new);

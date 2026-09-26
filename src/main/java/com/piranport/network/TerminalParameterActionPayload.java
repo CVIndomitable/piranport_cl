@@ -22,7 +22,9 @@ public record TerminalParameterActionPayload(String action, String filename) imp
             ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "terminal_parameter_action"));
     public static final StreamCodec<ByteBuf, TerminalParameterActionPayload> STREAM_CODEC = StreamCodec.composite(
             ByteBufCodecs.stringUtf8(32), TerminalParameterActionPayload::action,
-            ByteBufCodecs.stringUtf8(128), TerminalParameterActionPayload::filename,
+            // The argument is normally a filename, but reset_target carries
+            // group + NUL + target and therefore needs more room than a name.
+            ByteBufCodecs.stringUtf8(256), TerminalParameterActionPayload::filename,
             TerminalParameterActionPayload::new);
 
     @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
@@ -48,6 +50,20 @@ public record TerminalParameterActionPayload(String action, String filename) imp
                         if (payload.filename().startsWith("core.")) reapplyCore(player);
                         yield "已重置参数";
                     }
+                    case "reset_target" -> {
+                        int separator = payload.filename().indexOf('\u0000');
+                        if (separator <= 0 || separator >= payload.filename().length() - 1) {
+                            throw new IllegalArgumentException("对象标识无效");
+                        }
+                        String group = payload.filename().substring(0, separator);
+                        String target = payload.filename().substring(separator + 1);
+                        boolean exists = TerminalParameterCatalog.all().stream()
+                                .anyMatch(spec -> spec.group().equals(group) && spec.target().equals(target));
+                        if (!exists) throw new IllegalArgumentException("未知对象");
+                        data.clearTarget(group, target);
+                        if ("core".equals(group)) reapplyCore(player);
+                        yield "已重置本对象";
+                    }
                     case "reset_all" -> {
                         data.clearAll();
                         reapplyCore(player);
@@ -67,6 +83,7 @@ public record TerminalParameterActionPayload(String action, String filename) imp
                         payload.action(), player.getName().getString(), e.getMessage());
             }
             if (("reset_all".equals(payload.action()) || "reset".equals(payload.action())
+                    || "reset_target".equals(payload.action())
                     || "import".equals(payload.action())) && !result.startsWith("操作失败")) {
                 SyncTerminalParametersPayload.broadcast(player, data, result);
             } else {

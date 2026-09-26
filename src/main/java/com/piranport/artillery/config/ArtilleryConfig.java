@@ -73,7 +73,7 @@ public class ArtilleryConfig extends SimplePreparableReloadListener<Map<String, 
         ArtilleryCannonData data = CANNON_DATA.get(name);
         if (data != null) return data;
         if (MISSING_WARNINGS.add(name)) {
-            PiranPort.LOGGER.error("Missing artillery cannon definition '{}'; using migration fallback", name);
+            PiranPort.LOGGER.error("Missing artillery cannon definition '{}'; using default fallback", name);
         }
         return ArtilleryCannonData.DEFAULT;
     }
@@ -88,9 +88,7 @@ public class ArtilleryConfig extends SimplePreparableReloadListener<Map<String, 
         return Optional.ofNullable(CANNON_DATA.get(name));
     }
 
-    /**
-     * 获取所有已加载的火炮名称（用于CSV导出等）
-     */
+    /** 获取所有已加载的火炮名称，供终端参数目录建立索引。 */
     public static Set<String> getAllCannonNames() {
         return Collections.unmodifiableSet(CANNON_DATA.keySet());
     }

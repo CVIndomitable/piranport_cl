@@ -154,9 +154,11 @@ public class AircraftCombat {
         double preferredDist = 11.0;
 
         if (dist > preferredDist + 3) {
-            craft.setDeltaMovement(toTarget.normalize().scale(Math.min(craft.panelSpeed * 0.5, dist)));
+            craft.setDeltaMovement(toTarget.normalize().scale(Math.min(craft.panelSpeed * 0.5
+                    * craft.phaseSpeedCoefficient(), dist)));
         } else if (dist < preferredDist - 3) {
-            craft.setDeltaMovement(toTarget.normalize().scale(-craft.panelSpeed * 0.2));
+            craft.setDeltaMovement(toTarget.normalize().scale(-craft.panelSpeed * 0.2
+                    * craft.phaseSpeedCoefficient()));
         } else {
             craft.setDeltaMovement(craft.getDeltaMovement().scale(0.8));
         }
@@ -236,7 +238,8 @@ public class AircraftCombat {
         Vec3 toTarget = new Vec3(dx, desiredY - craft.getY(), dz);
         double dist = toTarget.length();
         if (dist > 0.1) {
-            craft.setDeltaMovement(toTarget.normalize().scale(Math.min(craft.panelSpeed * 0.5, dist)));
+            craft.setDeltaMovement(toTarget.normalize().scale(Math.min(craft.panelSpeed * 0.5
+                    * craft.phaseSpeedCoefficient(), dist)));
         }
     }
 
@@ -253,11 +256,14 @@ public class AircraftCombat {
 
         double climbY = target.getY() + 18.0;
         double heightDiff = Math.max(0, climbY - craft.getY());
-        int climbTimeout = Math.max(80, (int)Math.ceil(heightDiff / Math.max(craft.panelSpeed * 0.4, 0.1)));
+        double phaseSpeed = craft.phaseSpeedCoefficient();
+        int climbTimeout = Math.max(80, (int)Math.ceil(heightDiff
+                / Math.max(craft.panelSpeed * 0.4 * phaseSpeed, 0.1)));
         if (!craft.diveCommitted && craft.getY() < climbY - 1.0 && craft.stateTicks < climbTimeout) {
             Vec3 toClimb = new Vec3(target.getX() - craft.getX(), climbY - craft.getY(), target.getZ() - craft.getZ());
             double dist = toClimb.length();
-            craft.setDeltaMovement(toClimb.normalize().scale(Math.min(craft.panelSpeed * 0.4, dist)));
+            craft.setDeltaMovement(toClimb.normalize().scale(Math.min(craft.panelSpeed * 0.4
+                    * phaseSpeed, dist)));
             return;
         }
 
@@ -265,7 +271,7 @@ public class AircraftCombat {
             craft.diveCommitted = true;
             Vec3 targetPos = target.getEyePosition();
             double estimatedDist = craft.position().distanceTo(targetPos);
-            double diveSpeed = Math.max(craft.panelSpeed * 0.6, 0.1);
+            double diveSpeed = Math.max(craft.panelSpeed * 0.6 * phaseSpeed, 0.1);
             double estimatedTicks = estimatedDist / diveSpeed;
             Vec3 targetVel = target.getDeltaMovement();
             craft.diveTarget = targetPos.add(targetVel.scale(estimatedTicks));
@@ -291,7 +297,7 @@ public class AircraftCombat {
                 craft.remainingAmmo = 0;
                 craft.hasFired = true;
             } else {
-                double speed = Math.min(craft.panelSpeed * 0.7, diveDist);
+                double speed = Math.min(craft.panelSpeed * 0.7 * phaseSpeed, diveDist);
                 craft.setDeltaMovement(toDive.normalize().scale(speed));
             }
         }
@@ -316,7 +322,8 @@ public class AircraftCombat {
         // Descend to attack altitude
         if (altitudeDiff > 2.0) {
             Vec3 descend = new Vec3(dx, target.getY() + approachAlt - craft.getY(), dz).normalize();
-            craft.setDeltaMovement(descend.scale(Math.min(craft.panelSpeed * 0.4, 1.0)));
+            craft.setDeltaMovement(descend.scale(Math.min(craft.panelSpeed * 0.4
+                    * craft.phaseSpeedCoefficient(), 1.0)));
             return;
         }
 
@@ -348,7 +355,8 @@ public class AircraftCombat {
             return;
         }
 
-        Vec3 toTarget = new Vec3(dx, 0, dz).normalize().scale(Math.min(craft.panelSpeed * 0.5, horizDist));
+        Vec3 toTarget = new Vec3(dx, 0, dz).normalize().scale(Math.min(craft.panelSpeed * 0.5
+                * craft.phaseSpeedCoefficient(), horizDist));
         double yAdjust = (target.getY() + approachAlt - craft.getY()) * 0.1;
         craft.setDeltaMovement(toTarget.x, yAdjust, toTarget.z);
     }
@@ -372,7 +380,8 @@ public class AircraftCombat {
         // Phase 1: Approach bombing altitude
         if (craft.getY() < bombAlt - 2.0) {
             Vec3 toAlt = new Vec3(dx, bombAlt - craft.getY(), dz);
-            craft.setDeltaMovement(toAlt.normalize().scale(Math.min(craft.panelSpeed * 0.4, toAlt.length())));
+            craft.setDeltaMovement(toAlt.normalize().scale(Math.min(craft.panelSpeed * 0.4
+                    * craft.phaseSpeedCoefficient(), toAlt.length())));
             return;
         }
 
@@ -382,7 +391,7 @@ public class AircraftCombat {
             craft.levelRunTicks = 0;
         }
 
-        double runSpeed = craft.panelSpeed * 0.6;
+        double runSpeed = craft.panelSpeed * 0.6 * craft.phaseSpeedCoefficient();
         Vec3 runDir = craft.levelRunDirection;
         Vec3 runVel = new Vec3(runDir.x * runSpeed, 0, runDir.z * runSpeed);
         craft.setDeltaMovement(runVel);

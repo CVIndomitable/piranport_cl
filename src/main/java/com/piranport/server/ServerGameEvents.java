@@ -33,6 +33,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.common.util.TriState;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
+import net.neoforged.neoforge.event.tick.EntityTickEvent;
 import net.neoforged.neoforge.event.entity.living.LivingExperienceDropEvent;
 import net.neoforged.neoforge.event.entity.player.ItemEntityPickupEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
@@ -43,6 +44,13 @@ import java.util.UUID;
 
 @EventBusSubscriber(modid = PiranPort.MOD_ID)
 public class ServerGameEvents {
+
+    @SubscribeEvent
+    public static void onLivingTick(EntityTickEvent.Post event) {
+        if (event.getEntity() instanceof LivingEntity living && !living.level().isClientSide()) {
+            com.piranport.terminal.TerminalEntityAttributeOverrides.apply(living);
+        }
+    }
 
     /**
      * 将武器类物品拾取定向到主背包（9-35格）而非快捷栏。
@@ -211,9 +219,6 @@ public class ServerGameEvents {
         SalvoManager.clearAll();
         AircraftIndex.clearAll();
         PlayerTickHandler.clearCaches();
-        // 终端覆盖的运行时镜像也是进程级静态态，停机时必须清，否则同一进程开的
-        // 下一个存档（尤其单机主菜单切存档）会沿用上一个存档的覆盖值。
-        com.piranport.terminal.TerminalOverrides.clear();
     }
 
     /** 玩家登出时关闭其调试会话，避免日志文件泄漏 */

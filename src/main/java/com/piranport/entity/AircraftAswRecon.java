@@ -57,7 +57,8 @@ public class AircraftAswRecon {
         if (craft.getY() < bombAltitude - 1.5) {
             Vec3 toPoint = new Vec3(target.getX() - craft.getX(), bombAltitude - craft.getY(), target.getZ() - craft.getZ());
             double dist = toPoint.length();
-            craft.setDeltaMovement(toPoint.normalize().scale(Math.min(craft.panelSpeed * 0.4, dist)));
+            craft.setDeltaMovement(toPoint.normalize().scale(Math.min(craft.panelSpeed * 0.4
+                    * craft.phaseSpeedCoefficient(), dist)));
         } else {
             double dx = target.getX() - craft.getX();
             double dz = target.getZ() - craft.getZ();
@@ -89,7 +90,8 @@ public class AircraftAswRecon {
                 craft.attackCooldown = craft.attackCooldownDuration();
             }
 
-            Vec3 horizontal = new Vec3(dx, 0, dz).normalize().scale(Math.min(craft.panelSpeed * 0.4, horizDist));
+            Vec3 horizontal = new Vec3(dx, 0, dz).normalize().scale(Math.min(craft.panelSpeed * 0.4
+                    * craft.phaseSpeedCoefficient(), horizDist));
             double yCorrect = (bombAltitude - craft.getY()) * 0.15;
             craft.setDeltaMovement(horizontal.x, yCorrect, horizontal.z);
         }
@@ -188,7 +190,7 @@ public class AircraftAswRecon {
 
         float[] input = ReconManager.consumeInput(owner.getUUID());
         boolean hasInput = input != null && (input[0] != 0 || input[1] != 0 || input[2] != 0);
-        double speed = craft.panelSpeed * 0.5;
+        double speed = craft.panelSpeed * 0.5 * craft.phaseSpeedCoefficient();
         Vec3 target;
         if (hasInput) {
             target = new Vec3(input[0] * speed, input[1] * speed, input[2] * speed);

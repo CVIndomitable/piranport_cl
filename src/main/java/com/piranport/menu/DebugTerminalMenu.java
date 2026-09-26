@@ -3,7 +3,6 @@ package com.piranport.menu;
 import com.piranport.config.ConfigToolPermissions;
 import com.piranport.registry.ModMenuTypes;
 import com.piranport.terminal.TerminalParametersSavedData;
-import com.piranport.terminal.TerminalOverridesSavedData;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -28,9 +27,6 @@ public class DebugTerminalMenu extends AbstractContainerMenu {
         super(ModMenuTypes.DEBUG_TERMINAL_MENU.get(), containerId);
 
         if (playerInventory.player instanceof net.minecraft.server.level.ServerPlayer sp) {
-            TerminalOverridesSavedData data = TerminalOverridesSavedData.get(sp.serverLevel());
-            net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(sp,
-                    com.piranport.network.SyncTerminalOverridesPayload.from(data));
             net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(sp,
                     com.piranport.network.SyncTerminalParametersPayload.from(
                             TerminalParametersSavedData.get(sp.serverLevel()), ""));
@@ -47,7 +43,7 @@ public class DebugTerminalMenu extends AbstractContainerMenu {
         if (player.level().isClientSide()) {
             return true;
         }
-        // 与火炮配置工具一致：联机掉权限后菜单自动关闭，避免开着的终端继续改数。
+        // 联机掉权限后菜单自动关闭，避免开着的终端继续改数。
         return ConfigToolPermissions.canUse(player);
     }
 }

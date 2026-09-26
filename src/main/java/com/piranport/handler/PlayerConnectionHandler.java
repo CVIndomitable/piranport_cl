@@ -103,24 +103,13 @@ public class PlayerConnectionHandler {
         EntityCoreState.syncAllEntityCoresToPlayer(joiner);
         PacketDistributor.sendToPlayer(joiner, DungeonRegistrySyncPayload.fromRegistry());
 
-        // 终端覆盖的客户端镜像是进程级静态态，只在「打开终端」与「重置」时刷新。
-        // 不在这里推一次的话，联机下非 OP 玩家永远不会收到 sync：他背包里鱼雷的 tooltip
-        // 显示的是基准航速，而实际飞行速度按覆盖值走，两边对不上。
-        PacketDistributor.sendToPlayer(joiner, com.piranport.network.SyncTerminalOverridesPayload.from(
-                com.piranport.terminal.TerminalOverridesSavedData.get(joiner.serverLevel())));
-
-        // 测试模式水印的客户端状态是进程级布尔量，登录时默认 false。
-        // 属主「开着测试模式」掉线重连后服务端状态还在（cooldownOverrideEnabled 是静态字段），
-        // 但客户端没收到任何包 → 水印不显示，玩家以为测试模式已经关了。
-        // 这里无条件推一份当前真实状态（关着时也推，用于校正上一次会话的残留）。
+        // 测试模式水印的客户端状态是进程级布尔量。属主「开着测试模式」掉线重连后，
+        // 服务端状态还在（cooldownOverrideEnabled 是静态字段），因此只给属主恢复开启水印。
+        // 非属主不发送关闭包，避免每次进入存档都在聊天栏显示「测试模式已关闭」。
         if (com.piranport.testtools.PiranPortTestTools.isActiveOwner(joiner.getUUID())) {
             PacketDistributor.sendToPlayer(joiner,
                     new com.piranport.network.TestModeWatermarkPayload(
                             true, com.piranport.testtools.PiranPortTestTools.currentTestSessionId()));
-        } else {
-            // 非属主：显式推 false，清掉可能残留的水印显示
-            PacketDistributor.sendToPlayer(joiner,
-                    new com.piranport.network.TestModeWatermarkPayload(false, -1L));
         }
 
         var slowness = joiner.getEffect(MobEffects.MOVEMENT_SLOWDOWN);

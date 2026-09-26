@@ -34,22 +34,39 @@ import java.util.LinkedHashMap;
 /** 服务端参数快照的编辑界面。草稿只在明确确认时提交。 */
 @OnlyIn(Dist.CLIENT)
 public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMenu> {
+    private static final int PAGE_PARAMETERS = 0;
+    private static final int PAGE_CONTROLS = 1;
     private static final int ROW_HEIGHT = 18;
-    private static final int LIST_TOP = 61;
+    private static final int LIST_TOP = 68;
+    private static final int TARGET_ROW_HEIGHT = 21;
+    private static final List<String> CATEGORY_ORDER = List.of(
+            "aircraft", "cannon", "enhancement", "deep_ocean", "vanilla_mob", "ship_girl",
+            "ammo", "torpedo", "core", "projectile", "system");
+    private static final List<String> CONTROL_TOOLTIP_KEYS = List.of(
+            "debug.tooltip", "cooldown.tooltip", "hit.tooltip", "snapshot.tooltip");
     private final Map<String, String> drafts = new HashMap<>();
     private final Map<String, EditBox> editors = new HashMap<>();
     private List<TerminalParameterSpec> visible = List.of();
+    private List<TargetChoice> targets = List.of();
     private String query = "";
     private String filename = "terminal-parameters.csv";
     private String selectedKey;
     private String localStatus = "";
-    private int page;
-    private boolean byProperty;
+    private int page = PAGE_PARAMETERS;
+    private boolean detailView;
+    private String selectedCategory = "aircraft";
+    private String selectedGroup;
+    private String selectedTarget;
     private int scrollOffset;
+    private int targetScrollOffset;
+    private int categoryScrollOffset;
     private int visibleRows;
+    private int targetVisibleRows;
+    private int categoryVisibleRows;
     private long lastRevision = Long.MIN_VALUE;
     private long lastSequence = Long.MIN_VALUE;
     private boolean resetConfirmation;
+    private boolean resetTargetConfirmation;
     private boolean searchDirty;
     private List<TerminalParameterSpec> lastSpecs = List.of();
     private EditBox searchBox;
@@ -57,6 +74,8 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
     private Button debugButton;
     private Button cooldownButton;
     private Button hitButton;
+
+    private record TargetChoice(String category, String group, String target, int parameterCount) {}
 
     public DebugTerminalScreen(DebugTerminalMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
@@ -76,8 +95,15 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
         imageWidth = Math.min(440, width - 12);
         imageHeight = Math.min(330, height - 8);
         visibleRows = Math.max(1, (imageHeight - 68 - (LIST_TOP + 13) - 2) / ROW_HEIGHT);
+        targetVisibleRows = Math.max(1, (imageHeight - 68 - 64) / TARGET_ROW_HEIGHT);
+        categoryVisibleRows = targetVisibleRows;
         super.init();
         editors.clear();
+        searchBox = null;
+        filenameBox = null;
+        debugButton = null;
+        cooldownButton = null;
+        hitButton = null;
         rebuildList();
         int x = left();
         int y = top();
@@ -86,7 +112,7 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
                 .bounds(x + 8, y + 20, half, 18).build());
         addRenderableWidget(Button.builder(label("tab.controls"), b -> switchPage(1))
                 .bounds(x + 16 + half, y + 20, half, 18).build());
-        if (page == 0) {
+        if (page == PAGE_PARAMETERS) {
             initParameters(x, y);
         } else {
             initControls(x, y);
@@ -94,25 +120,87 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
     }
 
     private void initParameters(int x, int y) {
-        searchBox = addRenderableWidget(new EditBox(font, x + 8, y + 40,
-                imageWidth - 116, 17, label("search")));
-        searchBox.setMaxLength(80);
-        searchBox.setHint(label("search"));
-        searchBox.setValue(query);
-        searchBox.setResponder(value -> {
-            if (!query.equals(value)) {
-                query = value;
-                scrollOffset = 0;
-                rebuildList();
-                searchDirty = true;
-            }
-        });
-        addRenderableWidget(Button.builder(label(byProperty ? "mode.property" : "mode.target"),
-                b -> {
-                    byProperty = !byProperty;
+        if (!detailView) {
+            searchBox = addRenderableWidget(new EditBox(font, x + 8, y + 40,
+                    imageWidth - 16, 17, label("search_target")));
+            searchBox.setMaxLength(80);
+            searchBox.setHint(label("search_target"));
+            searchBox.setValue(query);
+            searchBox.setResponder(value -> {
+                if (!query.equals(value)) {
+                    query = value;
                     scrollOffset = 0;
-                    rebuildWidgets();
-                }).bounds(x + imageWidth - 104, y + 40, 96, 17).build());
+                    targetScrollOffset = 0;
+                    rebuildList();
+                    searchDirty = true;
+                }
+            });
+        } else {
+            searchBox = null;
+        }
+
+        if (detailView) {
+            initParameterDetail(x, y);
+        } else {
+            initTargetSelection(x, y);
+        }
+    }
+
+    private void initTargetSelection(int x, int y) {
+        int contentTop = y + 63;
+        int categoryWidth = Math.min(142, Math.max(112, imageWidth / 3));
+        int targetX = x + categoryWidth + 12;
+        int targetWidth = imageWidth - categoryWidth - 20;
+        int maxCategoryOffset = Math.max(0, CATEGORY_ORDER.size() - categoryVisibleRows);
+        categoryScrollOffset = Math.min(categoryScrollOffset, maxCategoryOffset);
+        for (int index = 0; index < Math.min(categoryVisibleRows,
+                CATEGORY_ORDER.size() - categoryScrollOffset); index++) {
+            String category = CATEGORY_ORDER.get(categoryScrollOffset + index);
+            int rowY = contentTop + index * TARGET_ROW_HEIGHT;
+            int count = targetCount(category);
+            addRenderableWidget(Button.builder(
+                    categoryLabel(category).copy().append(" (" + count + ")"),
+                    b -> selectCategory(category))
+                    .bounds(x + 8, rowY, categoryWidth - 24, 18).build());
+        }
+        if (maxCategoryOffset > 0) {
+            if (categoryScrollOffset > 0) {
+                addRenderableWidget(Button.builder(Component.literal("▲"), b -> scrollCategories(-1))
+                        .bounds(x + categoryWidth - 13, contentTop, 14, 16).build());
+            }
+            if (categoryScrollOffset < maxCategoryOffset) {
+                addRenderableWidget(Button.builder(Component.literal("▼"), b -> scrollCategories(1))
+                        .bounds(x + categoryWidth - 13, y + imageHeight - 68, 14, 16).build());
+            }
+        }
+
+        List<TargetChoice> choices = targetsForSelectedCategory();
+        int maxOffset = Math.max(0, choices.size() - targetVisibleRows);
+        targetScrollOffset = Math.min(targetScrollOffset, maxOffset);
+        for (int index = 0; index < Math.min(targetVisibleRows, choices.size() - targetScrollOffset); index++) {
+            TargetChoice choice = choices.get(targetScrollOffset + index);
+            int rowY = contentTop + index * TARGET_ROW_HEIGHT;
+            addRenderableWidget(Button.builder(Component.literal(targetLabel(choice)), b -> openTarget(choice))
+                    .bounds(targetX, rowY, targetWidth, 18).build());
+        }
+        if (choices.size() > targetVisibleRows) {
+            addRenderableWidget(Button.builder(Component.literal("▲"), b -> scrollTargets(-1))
+                    .bounds(x + imageWidth - 19, contentTop, 14, 16).build());
+            addRenderableWidget(Button.builder(Component.literal("▼"), b -> scrollTargets(1))
+                    .bounds(x + imageWidth - 19, y + imageHeight - 68, 14, 16).build());
+        }
+
+        int actionY = y + imageHeight - 65;
+        addRenderableWidget(Button.builder(label("refresh"), b -> refresh())
+                .bounds(x + 8, actionY, 90, 18).build());
+        addRenderableWidget(Button.builder(label("reset_all"), b -> resetAll())
+                .bounds(x + 102, actionY, 90, 18).build());
+        addCsvActions(x, y);
+    }
+
+    private void initParameterDetail(int x, int y) {
+        addRenderableWidget(Button.builder(label("back_to_targets"), b -> closeDetail())
+                .bounds(x + 8, y + 40, 94, 18).build());
 
         int draftWidth = Math.max(64, imageWidth / 5);
         int draftX = x + imageWidth - draftWidth - 25;
@@ -124,16 +212,21 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
                 .bounds(x + imageWidth - 19, listBottom - 16, 14, 16).build());
         int actionY = y + imageHeight - 65;
         int gap = 4;
-        int actionWidth = (imageWidth - 16 - gap * 3) / 4;
+        int actionWidth = (imageWidth - 16 - gap * 4) / 5;
         addRenderableWidget(Button.builder(label("confirm"), b -> confirmSelected())
                 .bounds(x + 8, actionY, actionWidth, 18).build());
         addRenderableWidget(Button.builder(label("save"), b -> saveAll())
                 .bounds(x + 8 + (actionWidth + gap), actionY, actionWidth, 18).build());
         addRenderableWidget(Button.builder(label("refresh"), b -> refresh())
                 .bounds(x + 8 + 2 * (actionWidth + gap), actionY, actionWidth, 18).build());
-        addRenderableWidget(Button.builder(label("reset_all"), b -> resetAll())
+        addRenderableWidget(Button.builder(label("reset_target"), b -> resetTarget())
                 .bounds(x + 8 + 3 * (actionWidth + gap), actionY, actionWidth, 18).build());
+        addRenderableWidget(Button.builder(label("reset_all"), b -> resetAll())
+                .bounds(x + 8 + 4 * (actionWidth + gap), actionY, actionWidth, 18).build());
+        addCsvActions(x, y);
+    }
 
+    private void addCsvActions(int x, int y) {
         int csvY = y + imageHeight - 43;
         filenameBox = addRenderableWidget(new EditBox(font, x + 8, csvY,
                 imageWidth - 150, 17, label("filename")));
@@ -163,7 +256,7 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
                 }).bounds(draftX, rowY, draftWidth, 16).build());
             } else {
                 EditBox box = addRenderableWidget(new EditBox(font, draftX, rowY,
-                        draftWidth, 16, Component.literal(key)));
+                        draftWidth, 16, Component.literal(parameterName(spec))));
                 box.setMaxLength(64);
                 box.setValue(draftValue(spec));
                 box.setResponder(value -> {
@@ -209,36 +302,177 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
     }
 
     private void rebuildList() {
+        if (!detailView) {
+            rebuildTargets();
+            visible = List.of();
+            return;
+        }
         String needle = query.trim().toLowerCase(Locale.ROOT);
         List<TerminalParameterSpec> rows = new ArrayList<>();
         for (TerminalParameterSpec spec : TerminalParameters.clientSpecs()) {
-            String terms = spec.key() + " " + spec.group() + " " + spec.target() + " " + spec.property()
-                    + " " + displayName(spec);
+            if (!sameTarget(spec, selectedGroup, selectedTarget)) continue;
+            String terms = spec.key() + " " + spec.property() + " " + parameterName(spec);
             if (terms.toLowerCase(Locale.ROOT).contains(needle)) rows.add(spec);
         }
-        Comparator<TerminalParameterSpec> comparator = byProperty
-                ? Comparator.comparing(TerminalParameterSpec::property)
-                    .thenComparing(TerminalParameterSpec::group)
-                    .thenComparing(TerminalParameterSpec::target)
-                : Comparator.comparing(TerminalParameterSpec::group)
-                    .thenComparing(TerminalParameterSpec::target)
-                    .thenComparing(TerminalParameterSpec::property);
-        rows.sort(comparator);
+        rows.sort(Comparator.comparing(TerminalParameterSpec::property)
+                .thenComparing(TerminalParameterSpec::key));
         visible = rows;
         scrollOffset = Math.min(scrollOffset, Math.max(0, rows.size() - visibleRows));
     }
 
-    private String displayName(TerminalParameterSpec spec) {
+    private void rebuildTargets() {
+        String needle = query.trim().toLowerCase(Locale.ROOT);
+        Map<String, TargetChoice> unique = new LinkedHashMap<>();
+        for (TerminalParameterSpec spec : TerminalParameters.clientSpecs()) {
+            String category = categoryFor(spec.group());
+            String key = category + "\u0000" + spec.group() + "\u0000"
+                    + targetIdentity(spec.group(), spec.target());
+            unique.computeIfAbsent(key, ignored -> new TargetChoice(category, spec.group(), spec.target(), 0));
+        }
+        Map<String, Integer> counts = new HashMap<>();
+        for (TerminalParameterSpec spec : TerminalParameters.clientSpecs()) {
+            String key = categoryFor(spec.group()) + "\u0000" + spec.group() + "\u0000"
+                    + targetIdentity(spec.group(), spec.target());
+            counts.merge(key, 1, Integer::sum);
+        }
+        List<TargetChoice> rows = new ArrayList<>();
+        for (TargetChoice choice : unique.values()) {
+            TargetChoice counted = new TargetChoice(choice.category(), choice.group(), choice.target(),
+                    counts.getOrDefault(choiceKey(choice), 0));
+            String terms = categoryLabel(choice.category()).getString() + " " + targetLabel(counted)
+                    + " " + choice.group() + " " + choice.target();
+            if (terms.toLowerCase(Locale.ROOT).contains(needle)) rows.add(counted);
+        }
+        rows.sort(Comparator.comparingInt((TargetChoice choice) -> CATEGORY_ORDER.indexOf(choice.category()))
+                .thenComparing(choice -> targetDisplayName(choice.group(), choice.target()))
+                .thenComparing(TargetChoice::target));
+        targets = rows;
+        targetScrollOffset = Math.min(targetScrollOffset,
+                Math.max(0, targetsForSelectedCategory().size() - targetVisibleRows));
+    }
+
+    private String choiceKey(TargetChoice choice) {
+        return choice.category() + "\u0000" + choice.group() + "\u0000"
+                + targetIdentity(choice.group(), choice.target());
+    }
+
+    private String targetIdentity(String group, String target) {
+        if ("ammo".equals(group) && target != null && !target.contains(":")) {
+            return "piranport:" + target;
+        }
+        return target;
+    }
+
+    private boolean sameTarget(TerminalParameterSpec spec, String group, String target) {
+        return group != null && target != null && spec.group().equals(group) && spec.target().equals(target);
+    }
+
+    private String categoryFor(String group) {
+        return switch (group) {
+            case "aircraft" -> "aircraft";
+            case "cannon", "artillery" -> "cannon";
+            case "equipment" -> "enhancement";
+            case "ship", "deep_ocean" -> "deep_ocean";
+            case "vanilla_mob" -> "vanilla_mob";
+            case "ship_girl" -> "ship_girl";
+            case "ammo" -> "ammo";
+            case "torpedo" -> "torpedo";
+            case "core" -> "core";
+            case "projectile", "projectiles" -> "projectile";
+            default -> "system";
+        };
+    }
+
+    private List<TargetChoice> targetsForSelectedCategory() {
+        return targets.stream().filter(choice -> choice.category().equals(selectedCategory)).toList();
+    }
+
+    private int targetCount(String category) {
+        return (int) targets.stream().filter(choice -> choice.category().equals(category))
+                .map(choice -> choice.group() + "\u0000" + choice.target()).distinct().count();
+    }
+
+    private Component categoryLabel(String category) {
+        return label("category." + category);
+    }
+
+    private String targetLabel(TargetChoice choice) {
+        return targetDisplayName(choice.group(), choice.target()) + "  ·  "
+                + choice.parameterCount() + " " + label("parameter_count").getString();
+    }
+
+    private String parameterName(TerminalParameterSpec spec) {
         String key = "gui.piranport.debug_terminal.parameter." + spec.key();
         String translated = Component.translatable(key).getString();
         if (!translated.equals(key)) return translated;
-        String targetKey = "item.piranport." + spec.target();
-        String target = Component.translatable(targetKey).getString();
-        if (target.equals(targetKey)) target = readable(spec.target());
-        String group = translated("group." + spec.group(), readable(spec.group()));
-        String property = translated("property." + spec.property(), readable(spec.property()));
-        return byProperty ? property + " · " + group + "/" + target
-                : group + "/" + target + " · " + property;
+        return translated("property." + spec.property(), readable(spec.property()));
+    }
+
+    private String unitSuffix(TerminalParameterSpec spec) {
+        if (spec.isLinearSpeed()) return "格/秒";
+        if ("drag_coeff".equals(spec.property())) return "";
+        return "";
+    }
+
+    private Component parameterDescription(TerminalParameterSpec spec) {
+        String descriptionKey = "gui.piranport.debug_terminal.description." + spec.key();
+        Component translated = Component.translatable(descriptionKey);
+        if (!translated.getString().equals(descriptionKey)) return translated;
+        String propertyDescriptionKey = "gui.piranport.debug_terminal.description.property."
+                + spec.property();
+        Component propertyDescription = Component.translatable(propertyDescriptionKey);
+        if (!propertyDescription.getString().equals(propertyDescriptionKey)) return propertyDescription;
+        String range = spec.type() == TerminalParameterSpec.ValueType.BOOLEAN
+                ? "布尔开关"
+                : String.format(Locale.ROOT, "范围 %.4g–%.4g", spec.displayMin(), spec.displayMax());
+        String unit = unitSuffix(spec);
+        String value = unit.isEmpty() ? range : range + " " + unit;
+        return Component.translatable("gui.piranport.debug_terminal.description.fallback",
+                parameterName(spec), value);
+    }
+
+    private String displayName(TerminalParameterSpec spec) {
+        return parameterName(spec);
+    }
+
+    private String targetDisplayName(String group, String rawTarget) {
+        if (rawTarget == null || rawTarget.isBlank()) return categoryLabel(categoryFor(group)).getString();
+        String path = rawTarget;
+        String namespace = "piranport";
+        int colon = rawTarget.indexOf(':');
+        if (colon > 0 && colon < rawTarget.length() - 1) {
+            namespace = rawTarget.substring(0, colon);
+            path = rawTarget.substring(colon + 1);
+        }
+        List<String> candidates = new ArrayList<>();
+        // Resource IDs often carry a data-only prefix (aircraft/, entity/). The
+        // actual item/entity translation is registered under the final path.
+        String leaf = path;
+        int slash = leaf.lastIndexOf('/');
+        if (slash >= 0 && slash + 1 < leaf.length()) leaf = leaf.substring(slash + 1);
+        if ("core".equals(group)) {
+            candidates.add("ship_type." + path);
+        }
+        candidates.add("target." + group + "." + path);
+        candidates.add("target." + group + "." + leaf);
+        candidates.add("item." + namespace + "." + path);
+        candidates.add("item." + namespace + "." + leaf);
+        if ("equipment".equals(group) && path.startsWith("ciws_")) {
+            candidates.add("item." + namespace + ".auto_" + path);
+        }
+        candidates.add("entity." + namespace + "." + path);
+        candidates.add("entity." + namespace + "." + leaf);
+        candidates.add("block." + namespace + "." + path);
+        candidates.add("group." + group);
+        for (String suffix : candidates) {
+            String key = suffix.startsWith("item.") || suffix.startsWith("entity.")
+                    || suffix.startsWith("block.") ? suffix : "gui.piranport.debug_terminal." + suffix;
+            String value = Component.translatable(key).getString();
+            if (!value.equals(key)) return value;
+        }
+        // Never expose a raw registry ID in the terminal. A missing translation
+        // is still identifiable by its translated category.
+        return translated("group." + group, categoryLabel(categoryFor(group)).getString());
     }
 
     private String translated(String suffix, String fallback) {
@@ -248,20 +482,97 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
     }
 
     private String readable(String value) {
-        return value.replace('_', ' ');
+        String result = value.replace('_', ' ');
+        return result.isEmpty() ? value : Character.toUpperCase(result.charAt(0)) + result.substring(1);
+    }
+
+    private String rawCurrentValue(TerminalParameterSpec spec) {
+        return TerminalParameters.clientValues().getOrDefault(spec.key(), spec.baseValue());
     }
 
     private String currentValue(TerminalParameterSpec spec) {
-        return TerminalParameters.clientValues().getOrDefault(spec.key(), spec.baseValue());
+        return formatValue(spec, rawCurrentValue(spec));
+    }
+
+    private String defaultValue(TerminalParameterSpec spec) {
+        return formatValue(spec, spec.baseValue());
     }
 
     private String draftValue(TerminalParameterSpec spec) {
         return drafts.getOrDefault(spec.key(), currentValue(spec));
     }
 
+    private String formatValue(TerminalParameterSpec spec, String raw) {
+        String value = spec.displayValue(raw);
+        if ("drag_coeff".equals(spec.property())) {
+            try {
+                return String.format(Locale.ROOT, "%.6e", Double.parseDouble(value));
+            } catch (NumberFormatException ignored) {
+                // Keep a malformed server value visible; validation will reject edits.
+            }
+        }
+        return value;
+    }
+
+    private void selectCategory(String category) {
+        if (targetCount(category) == 0) {
+            localStatus = label("status.no_parameters").getString();
+            return;
+        }
+        selectedCategory = category;
+        targetScrollOffset = 0;
+        localStatus = "";
+        rebuildWidgets();
+    }
+
+    private void openTarget(TargetChoice choice) {
+        selectedCategory = choice.category();
+        selectedGroup = choice.group();
+        selectedTarget = choice.target();
+        detailView = true;
+        query = "";
+        scrollOffset = 0;
+        selectedKey = null;
+        resetTargetConfirmation = false;
+        searchDirty = false;
+        localStatus = "";
+        rebuildWidgets();
+    }
+
+    private void closeDetail() {
+        detailView = false;
+        selectedGroup = null;
+        selectedTarget = null;
+        selectedKey = null;
+        resetTargetConfirmation = false;
+        query = "";
+        scrollOffset = 0;
+        searchDirty = false;
+        rebuildWidgets();
+    }
+
+    private void scrollTargets(int direction) {
+        int max = Math.max(0, targetsForSelectedCategory().size() - targetVisibleRows);
+        int next = Math.max(0, Math.min(targetScrollOffset + direction, max));
+        if (next != targetScrollOffset) {
+            targetScrollOffset = next;
+            rebuildWidgets();
+        }
+    }
+
+    private void scrollCategories(int direction) {
+        int max = Math.max(0, CATEGORY_ORDER.size() - categoryVisibleRows);
+        int next = Math.max(0, Math.min(categoryScrollOffset + direction, max));
+        if (next != categoryScrollOffset) {
+            categoryScrollOffset = next;
+            rebuildWidgets();
+        }
+    }
+
     private void switchPage(int next) {
         if (page == next) return;
         resetConfirmation = false;
+        searchDirty = false;
         page = next;
         rebuildWidgets();
     }
@@ -276,8 +587,17 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-        if (page == 0 && scrollY != 0) {
-            scroll(scrollY > 0 ? -1 : 1);
+        if (page == PAGE_PARAMETERS && scrollY != 0) {
+            if (detailView) {
+                scroll(scrollY > 0 ? -1 : 1);
+            } else {
+                int categoryWidth = Math.min(142, Math.max(112, imageWidth / 3));
+                if (mouseX < left() + categoryWidth) {
+                    scrollCategories(scrollY > 0 ? -1 : 1);
+                } else {
+                    scrollTargets(scrollY > 0 ? -1 : 1);
+                }
+            }
             return true;
         }
         return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
@@ -297,10 +617,10 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
 
     private boolean valid(TerminalParameterSpec spec, String value) {
         try {
-            spec.canonical(value);
+            spec.canonicalDisplay(value);
             return true;
         } catch (RuntimeException exception) {
-            localStatus = label("status.invalid").getString() + ": " + spec.key();
+            localStatus = label("status.invalid").getString() + ": " + parameterName(spec);
             return false;
         }
     }
@@ -315,20 +635,23 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
         if (spec == null) return;
         String draft = draftValue(spec);
         if (!valid(spec, draft)) return;
-        PacketDistributor.sendToServer(new UpdateTerminalParameterPayload(spec.key(), draft));
+        PacketDistributor.sendToServer(new UpdateTerminalParameterPayload(spec.key(),
+                spec.canonicalDisplay(draft)));
         localStatus = label("status.pending").getString();
     }
 
     private void saveAll() {
         List<TerminalParameterSpec> changed = TerminalParameters.clientSpecs().stream()
                 .filter(spec -> drafts.containsKey(spec.key())
-                        && !drafts.get(spec.key()).equals(currentValue(spec))).toList();
+                && !drafts.get(spec.key()).equals(currentValue(spec))).toList();
         for (TerminalParameterSpec spec : changed) {
             if (!valid(spec, drafts.get(spec.key()))) return;
         }
         if (!changed.isEmpty()) {
             Map<String, String> batch = new LinkedHashMap<>();
-            for (TerminalParameterSpec spec : changed) batch.put(spec.key(), drafts.get(spec.key()));
+            for (TerminalParameterSpec spec : changed) {
+                batch.put(spec.key(), spec.canonicalDisplay(drafts.get(spec.key())));
+            }
             PacketDistributor.sendToServer(new SaveTerminalParametersPayload(batch));
         }
         localStatus = changed.isEmpty() ? label("status.no_changes").getString()
@@ -337,6 +660,7 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
 
     private void refresh() {
         resetConfirmation = false;
+        resetTargetConfirmation = false;
         drafts.clear();
         selectedKey = null;
         PacketDistributor.sendToServer(new TerminalParameterActionPayload("refresh", ""));
@@ -345,6 +669,7 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
     }
 
     private void resetAll() {
+        resetTargetConfirmation = false;
         if (!resetConfirmation) {
             resetConfirmation = true;
             localStatus = label("status.confirm_reset").getString();
@@ -358,6 +683,24 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
         rebuildWidgets();
     }
 
+    private void resetTarget() {
+        if (selectedGroup == null || selectedTarget == null) return;
+        if (!resetTargetConfirmation) {
+            resetTargetConfirmation = true;
+            localStatus = label("status.confirm_reset_target").getString();
+            return;
+        }
+        resetTargetConfirmation = false;
+        drafts.entrySet().removeIf(entry -> TerminalParameters.clientSpecs().stream()
+                .filter(spec -> spec.key().equals(entry.getKey()))
+                .anyMatch(spec -> sameTarget(spec, selectedGroup, selectedTarget)));
+        selectedKey = null;
+        PacketDistributor.sendToServer(new TerminalParameterActionPayload(
+                "reset_target", selectedGroup + "\u0000" + selectedTarget));
+        localStatus = label("status.pending").getString();
+        rebuildWidgets();
+    }
+
     private void sendCsv(String action) {
         PacketDistributor.sendToServer(new TerminalParameterActionPayload(action, filename.trim()));
         localStatus = label("status.pending").getString() + " · " + label("csv.folder").getString();
@@ -365,13 +708,15 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
 
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        if (searchDirty) {
+        if (searchDirty && searchBox != null) {
             searchDirty = false;
             int cursor = searchBox.getCursorPosition();
             rebuildWidgets();
             searchBox.setCursorPosition(cursor);
             setFocused(searchBox);
             searchBox.setFocused(true);
+        } else if (searchDirty) {
+            searchDirty = false;
         }
         if (lastSequence != TerminalParameters.syncSequence()
                 || lastSpecs != TerminalParameters.clientSpecs()) {
@@ -385,9 +730,16 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
             localStatus = TerminalParameters.clientMessage().isBlank()
                     ? (drafts.isEmpty() ? "" : label("status.unsaved").getString())
                     : TerminalParameters.clientMessage();
-            if (page == 0) rebuildWidgets();
+            if (page == PAGE_PARAMETERS) {
+                if (detailView && TerminalParameters.clientSpecs().stream()
+                        .noneMatch(spec -> sameTarget(spec, selectedGroup, selectedTarget))) {
+                    closeDetail();
+                } else {
+                    rebuildWidgets();
+                }
+            }
         }
-        if (page == 1) {
+        if (page == PAGE_CONTROLS) {
             debugButton.setMessage(toggleLabel("debug", DebugInputHandler.isDebugEnabledClient()));
             cooldownButton.setMessage(toggleLabel("cooldown", DebugInputHandler.isTestModeClient()));
             hitButton.setMessage(toggleLabel("hit", DebugInputHandler.isHitDisplayEnabled()));
@@ -396,12 +748,35 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
         int x = left();
         int y = top();
         graphics.drawString(font, title, x + 8, y + 6, 0xFFFFFF, false);
-        if (page == 0) {
+        if (page == PAGE_PARAMETERS && !detailView) {
+            int categoryWidth = Math.min(142, Math.max(112, imageWidth / 3));
+            int targetX = x + categoryWidth + 12;
+            int contentTop = y + 63;
+            graphics.drawString(font, label("category_header"), x + 12, contentTop - 12,
+                    0xFFD6D6D6, false);
+            graphics.drawString(font, label("target_header"), targetX, contentTop - 12,
+                    0xFFD6D6D6, false);
+            List<TargetChoice> choices = targetsForSelectedCategory();
+            if (choices.isEmpty()) {
+                graphics.drawString(font, label("status.no_parameters"), targetX, contentTop + 8,
+                        0xFFEAD890, false);
+            }
+            String count = choices.isEmpty() ? "0/0" : (targetScrollOffset + 1) + "-"
+                    + Math.min(targetScrollOffset + targetVisibleRows, choices.size()) + "/" + choices.size();
+            graphics.drawString(font, count, x + imageWidth - 43, y + imageHeight - 19,
+                    0xFFD0D0D0, false);
+        } else if (page == PAGE_PARAMETERS) {
             int draftWidth = Math.max(64, imageWidth / 5);
             int draftX = x + imageWidth - draftWidth - 25;
             int currentX = draftX - 80;
+            int defaultX = currentX - 80;
+            String targetName = targetDisplayName(selectedGroup, selectedTarget);
+            graphics.drawString(font, label("detail_prefix"), x + 110, y + 46, 0xFFD6D6D6, false);
+            graphics.drawString(font, font.plainSubstrByWidth(targetName, imageWidth - 178),
+                    x + 170, y + 46, 0xFFFFFFFF, false);
             graphics.drawString(font, label("header.parameter"), x + 10, y + LIST_TOP, 0xFFD6D6D6, false);
             graphics.drawString(font, label("header.current"), currentX, y + LIST_TOP, 0xFFD6D6D6, false);
+            graphics.drawString(font, label("header.default"), defaultX, y + LIST_TOP, 0xFFD6D6D6, false);
             graphics.drawString(font, label("header.draft"), draftX, y + LIST_TOP, 0xFFD6D6D6, false);
             for (int i = 0; i < Math.min(visibleRows, visible.size() - scrollOffset); i++) {
                 TerminalParameterSpec spec = visible.get(scrollOffset + i);
@@ -412,13 +787,26 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
                 String name = displayName(spec);
                 graphics.drawString(font, font.plainSubstrByWidth(name, currentX - x - 18),
                         x + 10, rowY, color, false);
-                graphics.drawString(font, font.plainSubstrByWidth(currentValue(spec), 74),
+                String current = currentValue(spec);
+                String defaultValue = defaultValue(spec);
+                String suffix = unitSuffix(spec);
+                graphics.drawString(font, font.plainSubstrByWidth(current + suffix, 74),
                         currentX, rowY, 0xFFC7ECCF, false);
+                graphics.drawString(font, font.plainSubstrByWidth(defaultValue + suffix, 74),
+                        defaultX, rowY, 0xFFD5D5B8, false);
                 if (mouseX >= x + 10 && mouseX < x + imageWidth - 20
                         && mouseY >= rowY - 3 && mouseY < rowY + 15) {
-                    graphics.renderTooltip(font, Component.literal(name + " (" + spec.key() + ") · "
+                    List<Component> tooltip = new ArrayList<>();
+                    tooltip.add(Component.literal(name + (suffix.isEmpty() ? "" : " (" + suffix + ")") + " · "
                             + label("header.current").getString() + ": " + currentValue(spec) + " · "
-                            + label("header.draft").getString() + ": " + draftValue(spec)), mouseX, mouseY);
+                            + label("header.default").getString() + ": " + defaultValue(spec) + " · "
+                            + label("header.draft").getString() + ": " + draftValue(spec)));
+                    if (!spec.target().isBlank() && !"system".equals(spec.group())) {
+                        tooltip.add(Component.literal(label("object_id").getString() + ": " + spec.target()));
+                    }
+                    tooltip.add(parameterDescription(spec));
+                    graphics.renderTooltip(font, tooltip.stream().map(Component::getVisualOrderText).toList(),
+                            mouseX, mouseY);
                 }
             }
             String count = visible.isEmpty() ? "0/0" :
@@ -429,17 +817,34 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
         }
         String message = localStatus;
         if (!message.isBlank()) {
-            if (page == 0 && mouseY >= y + imageHeight - 21 && mouseX < x + imageWidth - 90) {
+            if (page == PAGE_PARAMETERS && mouseY >= y + imageHeight - 21 && mouseX < x + imageWidth - 90) {
                 graphics.renderTooltip(font, Component.literal(message), mouseX, mouseY);
             }
             graphics.drawString(font, font.plainSubstrByWidth(message, imageWidth - 105),
                     x + 8, y + imageHeight - 19, 0xFFEAD890, false);
         }
+        if (page == PAGE_CONTROLS) {
+            renderControlTooltip(graphics, mouseX, mouseY, x, y);
+        }
+    }
+
+    private void renderControlTooltip(GuiGraphics graphics, int mouseX, int mouseY, int x, int y) {
+        int controlWidth = Math.min(210, imageWidth - 20);
+        int controlX = x + (imageWidth - controlWidth) / 2;
+        for (int index = 0; index < CONTROL_TOOLTIP_KEYS.size(); index++) {
+            int buttonY = y + 49 + index * 24;
+            if (mouseX >= controlX && mouseX < controlX + controlWidth
+                    && mouseY >= buttonY && mouseY < buttonY + 20) {
+                graphics.renderTooltip(font, label("control." + CONTROL_TOOLTIP_KEYS.get(index)),
+                        mouseX, mouseY);
+                return;
+            }
+        }
     }
 
     private boolean canonicalMatches(TerminalParameterSpec spec, String value) {
         try {
-            return spec.canonical(value).equals(currentValue(spec));
+            return spec.canonicalDisplay(value).equals(rawCurrentValue(spec));
         } catch (RuntimeException exception) {
             return false;
         }
@@ -451,8 +856,8 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
         int y = top();
         graphics.fill(x, y, x + imageWidth, y + imageHeight, 0xFF34393C);
         graphics.fill(x, y, x + imageWidth, y + 18, 0xFF20282B);
-        if (page == 0) {
-            graphics.fill(x + 6, y + LIST_TOP + 11, x + imageWidth - 4,
+        if (page == PAGE_PARAMETERS) {
+            graphics.fill(x + 6, y + 59, x + imageWidth - 4,
                     y + imageHeight - 68, 0xFF292F31);
         }
     }

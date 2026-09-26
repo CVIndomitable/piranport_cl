@@ -10,7 +10,7 @@
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)Note$()$(br2)These defaults cannot currently be changed through a client configuration file. The Debug Terminal offers its existing debug controls and torpedo/core speed overrides, not general client parameters or CSV configuration."
+      "text": "$(bold)Note$()$(br2)These defaults cannot currently be changed through a client configuration file. Use the Debug Terminal parameter page for gameplay or weapon values; parameter CSV files are read and written on the server."
     }
   ]
 }

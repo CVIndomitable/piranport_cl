@@ -17,6 +17,11 @@
       "type": "patchouli:crafting",
       "recipe": "piranport:quad_torpedo_launcher",
       "text": "piranport.book.torpedoes.basics.quad_craft"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "piranport:quintuple_torpedo_launcher",
+      "text": "piranport.book.torpedoes.basics.quint_craft"
     }
   ]
 }

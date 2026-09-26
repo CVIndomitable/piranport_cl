@@ -13,6 +13,14 @@
       "text": "piranport.book.arsenal.special.p2"
     },
     {
+      "type": "patchouli:text",
+      "text": "piranport.book.arsenal.special.p3"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "piranport.book.arsenal.special.p4"
+    },
+    {
       "type": "patchouli:crafting",
       "recipe": "piranport:gungnir",
       "text": "piranport.book.arsenal.special.gungnir"

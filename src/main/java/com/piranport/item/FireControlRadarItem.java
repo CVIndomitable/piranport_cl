@@ -8,6 +8,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.core.registries.BuiltInRegistries;
+import com.piranport.terminal.TerminalParameters;
 
 import java.util.List;
 
@@ -37,7 +39,18 @@ public class FireControlRadarItem extends Item {
     }
 
     public int getWeight() {
-        return weight;
+        return TerminalParameters.getInt(parameterKey("weight"), weight);
+    }
+    public int getBaseWeight() { return weight; }
+
+    public int getSnapRangeChunks() {
+        return TerminalParameters.getInt(parameterKey("range"), snapRangeChunks);
+    }
+    public int getBaseSnapRangeChunks() { return snapRangeChunks; }
+
+    private String parameterKey(String property) {
+        var id = BuiltInRegistries.ITEM.getKey(this);
+        return "equipment." + (id == null ? "fire_control_radar" : id) + "." + property;
     }
 
     @Override
@@ -50,9 +63,9 @@ public class FireControlRadarItem extends Item {
         }
         if (ClientHooks.isClient()) {
             if (ClientHooks.hasShiftDown()) {
-                tooltip.add(Component.translatable("tooltip.piranport.fire_control_radar.range", snapRangeChunks)
+                tooltip.add(Component.translatable("tooltip.piranport.fire_control_radar.range", getSnapRangeChunks())
                         .withStyle(ChatFormatting.AQUA));
-                tooltip.add(Component.translatable("tooltip.piranport.fire_control_radar.weight", weight)
+                tooltip.add(Component.translatable("tooltip.piranport.fire_control_radar.weight", getWeight())
                         .withStyle(ChatFormatting.GRAY));
             } else {
                 tooltip.add(Component.translatable("tooltip.piranport.shift_for_details")

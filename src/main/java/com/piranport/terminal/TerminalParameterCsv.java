@@ -45,8 +45,8 @@ public final class TerminalParameterCsv {
             Map<String, String> overrides = data.overrides();
             TerminalParameterCatalog.all().stream().sorted((a, b) -> a.key().compareTo(b.key()))
                     .forEach(spec -> lines.add(String.join(",", quote(spec.key()), quote(spec.group()), quote(spec.target()),
-                            quote(spec.property()), quote(spec.type().name()), quote(spec.baseValue()),
-                            quote(overrides.getOrDefault(spec.key(), spec.baseValue())),
+                            quote(spec.property()), quote(spec.type().name()), quote(spec.displayValue(spec.baseValue())),
+                            quote(spec.displayValue(overrides.getOrDefault(spec.key(), spec.baseValue()))),
                             Boolean.toString(overrides.containsKey(spec.key())))));
             if (lines.size() > MAX_ROWS + 1) throw new IOException("参数数量超出 CSV 上限");
             Files.write(temporary, lines, StandardCharsets.UTF_8);
@@ -111,7 +111,7 @@ public final class TerminalParameterCsv {
                 if (spec == null) throw new IOException("未知参数: " + key);
                 String value;
                 try {
-                    value = spec.canonical(cells.get(valueColumn));
+                    value = spec.canonicalDisplay(cells.get(valueColumn));
                 } catch (RuntimeException e) {
                     throw new IOException("第 " + (count + 1) + " 行参数非法: " + key, e);
                 }

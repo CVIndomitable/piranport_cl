@@ -13,6 +13,15 @@ import com.piranport.config.ModCommonConfig;
 import com.piranport.config.TerminalConfigValue;
 import com.piranport.item.ShipType;
 import com.piranport.item.TorpedoItem;
+import com.piranport.item.RadarItem;
+import com.piranport.item.SonarItem;
+import com.piranport.item.FireControlRadarItem;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.ai.attributes.DefaultAttributes;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.item.Item;
 
@@ -20,6 +29,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.HashSet;
+import java.util.Set;
 
 /** 从当前数据包定义和代码默认值生成终端目录；重载后下次查询立即反映新基准。 */
 public final class TerminalParameterCatalog {
@@ -33,7 +44,7 @@ public final class TerminalParameterCatalog {
         ignored = ModArtilleryConfig.ARTILLERY_MAX_PROJECTILES;
         ignored = ModProjectilesConfig.AP_DAMAGE_MULTIPLIER;
         for (TerminalParameterSpec spec : TerminalConfigValue.specs()) {
-            if (!spec.key().startsWith("global.aircraft.") && !spec.key().startsWith("global.ships.")) {
+            if (!spec.key().startsWith("global.ships.")) {
                 specs.put(spec.key(), spec);
             }
         }
@@ -70,8 +81,10 @@ public final class TerminalParameterCatalog {
             add(specs, "aircraft", target, "health", a.health(), 1, 100000);
             add(specs, "aircraft", target, "attack_cooldown", a.attackCooldown(), 1, 12000);
         }
+        Set<String> ammoTargets = new HashSet<>();
         for (AmmoDefinition a : AmmoDefinitionService.all().values()) {
             String target = a.itemId().toString();
+            if (!ammoTargets.add(target)) continue;
             add(specs, "ammo", target, "damage_multiplier", a.damageMultiplier(), 0, 100);
             add(specs, "ammo", target, "explosion_multiplier", a.explosionMultiplier(), 0, 100);
             add(specs, "ammo", target, "armor_ignore", a.armorIgnore(), 0, 1);
@@ -83,6 +96,22 @@ public final class TerminalParameterCatalog {
             add(specs, "torpedo", target, "damage", torpedo.getBaseDamage(), 0, 10000);
             add(specs, "torpedo", target, "range", torpedo.getBaseRange(), 1, 100000);
             add(specs, "torpedo", target, "speed", torpedo.getBaseSpeed(), 0.01, 10);
+
+            // covered above; equipment is added in the type-specific pass below
+        }
+        for (Item item : BuiltInRegistries.ITEM) {
+            String target = BuiltInRegistries.ITEM.getKey(item).toString();
+            if (item instanceof RadarItem radar) {
+                add(specs, "equipment", target, "weight", radar.getBaseWeight(), 0, 112);
+                add(specs, "equipment", target, "range", radar.getBaseRange(), 1, 1024);
+                add(specs, "equipment", target, "target", radar.getBaseTarget().ordinal(), 0, 2);
+            } else if (item instanceof SonarItem sonar) {
+                add(specs, "equipment", target, "weight", sonar.getBaseWeight(), 0, 112);
+                add(specs, "equipment", target, "range", sonar.getBaseRadius(), 1, 1024);
+            } else if (item instanceof FireControlRadarItem radar) {
+                add(specs, "equipment", target, "weight", radar.getBaseWeight(), 0, 112);
+                add(specs, "equipment", target, "range", radar.getBaseSnapRangeChunks(), 1, 1024);
+            }
         }
         for (ShipType core : ShipType.values()) {
             add(specs, "core", core.name(), "health_bonus", core.healthBonus, -19, 1000);
@@ -95,7 +124,51 @@ public final class TerminalParameterCatalog {
             add(specs, "core", core.name(), "armor_toughness", core.armorToughness, 0, 1000);
             add(specs, "core", core.name(), "speed_bonus", 0.0, -5, 5);
         }
+        addLivingEntitySpecs(specs);
         return new ArrayList<>(specs.values());
+    }
+
+    private static void addLivingEntitySpecs(Map<String, TerminalParameterSpec> specs) {
+        for (EntityType<?> type : BuiltInRegistries.ENTITY_TYPE) {
+            if (type.getCategory() == MobCategory.MISC) continue;
+            var id = BuiltInRegistries.ENTITY_TYPE.getKey(type);
+            if (id == null) continue;
+            String path = id.getPath();
+            String group = id.getNamespace().equals("minecraft") ? "vanilla_mob"
+                    : path.equals("ship_girl") ? "ship_girl"
+                    : path.startsWith("deep_ocean_") || path.equals("low_tier_destroyer")
+                    || path.equals("goldencatcat") ? "deep_ocean" : "vanilla_mob";
+            AttributeSupplier defaults = null;
+            try {
+                @SuppressWarnings("unchecked")
+                EntityType<? extends LivingEntity> livingType = (EntityType<? extends LivingEntity>) type;
+                defaults = DefaultAttributes.getSupplier(livingType);
+            } catch (Throwable ignored) {
+                // A third-party entity may not expose a default supplier. The
+                // generic fallback keeps its terminal entry editable.
+            }
+            add(specs, group, id.toString(), "max_health", attribute(defaults, Attributes.MAX_HEALTH, 20), 1, 100000);
+            add(specs, group, id.toString(), "movement_speed", attribute(defaults, Attributes.MOVEMENT_SPEED, 0.1), 0.001, 100);
+            add(specs, group, id.toString(), "movement_speed_idle_coefficient", 1.0, 0.05, 5.0);
+            add(specs, group, id.toString(), "movement_speed_move_coefficient", 1.0, 0.05, 5.0);
+            add(specs, group, id.toString(), "movement_speed_chase_coefficient", 1.0, 0.05, 5.0);
+            add(specs, group, id.toString(), "movement_speed_attack_coefficient", 1.0, 0.05, 5.0);
+            add(specs, group, id.toString(), "movement_speed_swim_coefficient", 1.0, 0.05, 5.0);
+            add(specs, group, id.toString(), "attack_damage", attribute(defaults, Attributes.ATTACK_DAMAGE, 2), 0, 100000);
+            add(specs, group, id.toString(), "follow_range", attribute(defaults, Attributes.FOLLOW_RANGE, 16), 1, 2048);
+            add(specs, group, id.toString(), "armor", attribute(defaults, Attributes.ARMOR, 0), 0, 10000);
+        }
+    }
+
+    private static double attribute(AttributeSupplier defaults,
+                                    net.minecraft.core.Holder<net.minecraft.world.entity.ai.attributes.Attribute> key,
+                                    double fallback) {
+        if (defaults == null) return fallback;
+        try {
+            return defaults.getBaseValue(key);
+        } catch (RuntimeException ignored) {
+            return fallback;
+        }
     }
 
     public static TerminalParameterSpec find(String key) {

@@ -12,6 +12,15 @@
       "type": "patchouli:crafting",
       "recipe": "piranport:ammo_workbench",
       "text": "piranport.book.advanced.workbenches.p2"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "piranport.book.advanced.workbenches.p3"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "piranport:weapon_workbench",
+      "text": "piranport.book.advanced.workbenches.p4"
     }
   ]
 }

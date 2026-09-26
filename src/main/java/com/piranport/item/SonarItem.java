@@ -8,6 +8,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.core.registries.BuiltInRegistries;
+import com.piranport.terminal.TerminalParameters;
 
 import java.util.List;
 
@@ -26,8 +28,15 @@ public class SonarItem extends Item {
         this.radius = radius;
     }
 
-    public int getWeight() { return weight; }
-    public int getRadius() { return radius; }
+    public int getWeight() { return TerminalParameters.getInt(parameterKey("weight"), weight); }
+    public int getBaseWeight() { return weight; }
+    public int getRadius() { return TerminalParameters.getInt(parameterKey("range"), radius); }
+    public int getBaseRadius() { return radius; }
+
+    private String parameterKey(String property) {
+        var id = BuiltInRegistries.ITEM.getKey(this);
+        return "equipment." + (id == null ? "sonar" : id) + "." + property;
+    }
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context,
@@ -39,9 +48,9 @@ public class SonarItem extends Item {
         }
         if (ClientHooks.isClient()) {
             if (ClientHooks.hasShiftDown()) {
-                tooltip.add(Component.translatable("tooltip.piranport.sonar.radius", radius)
+                tooltip.add(Component.translatable("tooltip.piranport.sonar.radius", getRadius())
                         .withStyle(ChatFormatting.AQUA));
-                tooltip.add(Component.translatable("tooltip.piranport.sonar.weight", weight)
+                tooltip.add(Component.translatable("tooltip.piranport.sonar.weight", getWeight())
                         .withStyle(ChatFormatting.GRAY));
             } else {
                 tooltip.add(Component.translatable("tooltip.piranport.shift_for_details")

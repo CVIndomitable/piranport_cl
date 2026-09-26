@@ -40,7 +40,6 @@ import com.piranport.item.MissileItem;
 import com.piranport.item.MissileLauncherItem;
 import com.piranport.item.FlareLauncherItem;
 import com.piranport.item.ConfigInspectorItem;
-import com.piranport.item.ArtilleryConfigToolItem;
 import com.piranport.item.DamageControlItem;
 import com.piranport.item.KirinHeadbandItem;
 import com.piranport.item.FireExtinguisherItem;
@@ -389,7 +388,6 @@ public class ModItems {
     // ===== Radar (extracted to AircraftItems) =====
     public static final DeferredItem<RadarItem> STANDARD_SURFACE_RADAR = AircraftItems.STANDARD_SURFACE_RADAR;
     public static final DeferredItem<RadarItem> STANDARD_AIR_RADAR = AircraftItems.STANDARD_AIR_RADAR;
-    public static final DeferredItem<RadarItem> STANDARD_SONAR_RADAR = AircraftItems.STANDARD_SONAR_RADAR;
     public static final DeferredItem<FireControlRadarItem> STANDARD_FIRE_CONTROL_RADAR =
             AircraftItems.STANDARD_FIRE_CONTROL_RADAR;
 
@@ -525,9 +523,6 @@ public class ModItems {
 
     // ===== Config Inspector (extracted to SpecialtyItems) =====
     public static final DeferredItem<ConfigInspectorItem> CONFIG_INSPECTOR = SpecialtyItems.CONFIG_INSPECTOR;
-
-    // ===== Artillery Config Tool (extracted to SpecialtyItems) =====
-    public static final DeferredItem<ArtilleryConfigToolItem> ARTILLERY_CONFIG_TOOL = SpecialtyItems.ARTILLERY_CONFIG_TOOL;
 
     // ===== Debug Terminal (extracted to SpecialtyItems) =====
     public static final DeferredItem<com.piranport.item.DebugTerminalItem> DEBUG_TERMINAL = SpecialtyItems.DEBUG_TERMINAL;

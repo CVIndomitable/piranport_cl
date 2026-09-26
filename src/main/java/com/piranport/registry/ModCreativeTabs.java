@@ -133,8 +133,7 @@ public class ModCreativeTabs {
                         // Radar — 对海 / 对空 / 声纳三种索敌目标各一台
                         output.accept(ModItems.STANDARD_SURFACE_RADAR.get());
                         output.accept(ModItems.STANDARD_AIR_RADAR.get());
-                        output.accept(ModItems.STANDARD_SONAR_RADAR.get());
-                        // 火控雷达 — 手动开关的准星吸附（火炮瞄准辅助），与上面三台索敌雷达不同类
+                        // 火控雷达 — 手动开关的准星吸附（火炮瞄准辅助），与上面两台索敌雷达不同类
                         output.accept(ModItems.STANDARD_FIRE_CONTROL_RADAR.get());
                         // Engines
                         output.accept(ModItems.STANDARD_ENGINE.get());
@@ -179,7 +178,7 @@ public class ModCreativeTabs {
                         output.accept(ModItems.ENTITY_CORE_SHIP_GIRL.get());
                     }).build());
 
-    // ===== 农业 — 矿石 / 材料（作物类归入"舰娘食物"标签页）=====
+    // ===== 农业 — 矿石 / 农业资源 / 食材与加工 =====
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> AGRICULTURE_TAB =
             CREATIVE_TABS.register("agriculture_tab", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.piranport.agriculture"))
@@ -197,22 +196,15 @@ public class ModCreativeTabs {
                         output.accept(ModItems.SALT.get());
                         output.accept(ModItems.GYPSUM_CHIP.get());
                         output.accept(ModItems.QUICKLIME.get());
-                    }).build());
 
-    // ===== 食物 — 种子/作物/食材/调料/中间品/菜品/加工站（合并原"舰娘食物"和"厨房"）=====
-    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> FOOD_TAB =
-            CREATIVE_TABS.register("food_tab", () -> CreativeModeTab.builder()
-                    .title(Component.translatable("itemGroup.piranport.food"))
-                    .withTabsBefore(ResourceKey.create(Registries.CREATIVE_MODE_TAB, PiranPort.modId("agriculture_tab")))  // 链式排序：紧接 agriculture_tab
-                    .icon(() -> ModItems.TOAST_BREAD.get().getDefaultInstance())
-                    .displayItems((parameters, output) -> {
-                        // --- 加工站 ---
+                        // 加工设备
                         output.accept(ModItems.STONE_MILL.get());
                         output.accept(ModItems.CUTTING_BOARD.get());
                         output.accept(ModItems.COOKING_POT.get());
                         output.accept(ModItems.STOVE.get());
                         output.accept(ModItems.YUBARI_WATER_BUCKET.get());
-                        // --- 种子 ---
+
+                        // 种子
                         output.accept(ModItems.TOMATO_SEEDS.get());
                         output.accept(ModItems.SOYBEAN_SEEDS.get());
                         output.accept(ModItems.CHILI_SEEDS.get());
@@ -225,26 +217,8 @@ public class ModCreativeTabs {
                         output.accept(ModItems.ORMOSIA_SEEDS.get());
                         output.accept(ModItems.CELERY_SEEDS.get());
                         output.accept(ModItems.RYE_SEEDS.get());
-                        output.accept(ModItems.PEACH_SAPLING.get());
-                        output.accept(ModItems.MAIDENHAIR_SAPLING.get());
-                        output.accept(ModItems.SAGO_PALM_SAPLING.get());
-                        output.accept(ModItems.GARDENIA_SAPLING.get());
-                        output.accept(ModItems.CHINESE_PLUM_SAPLING.get());
-                        output.accept(ModItems.MAPPLE_SAPLING.get());
-                        // --- 树木材料 ---
-                        output.accept(ModItems.PEACH_LOG.get());
-                        output.accept(ModItems.PEACH_LEAVES.get());
-                        output.accept(ModItems.MAIDENHAIR_LOG.get());
-                        output.accept(ModItems.MAIDENHAIR_LEAVES.get());
-                        output.accept(ModItems.SAGO_PALM_LOG.get());
-                        output.accept(ModItems.SAGO_PALM_LEAVES.get());
-                        output.accept(ModItems.GARDENIA_LOG.get());
-                        output.accept(ModItems.GARDENIA_LEAVES.get());
-                        output.accept(ModItems.CHINESE_PLUM_LOG.get());
-                        output.accept(ModItems.CHINESE_PLUM_LEAVES.get());
-                        output.accept(ModItems.MAPPLE_LOG.get());
-                        output.accept(ModItems.MAPPLE_LEAVES.get());
-                        // --- 作物产出 ---
+
+                        // 作物产出
                         output.accept(ModItems.TOMATO.get());
                         output.accept(ModItems.SOYBEAN.get());
                         output.accept(ModItems.CHILI.get());
@@ -258,7 +232,28 @@ public class ModCreativeTabs {
                         output.accept(ModItems.CELERY.get());
                         output.accept(ModItems.RYE.get());
                         output.accept(ModItems.PEACH.get());
-                        // --- 食材/调料 ---
+
+                        // 树木：原木、树叶、树苗
+                        output.accept(ModItems.PEACH_LOG.get());
+                        output.accept(ModItems.PEACH_LEAVES.get());
+                        output.accept(ModItems.PEACH_SAPLING.get());
+                        output.accept(ModItems.MAIDENHAIR_LOG.get());
+                        output.accept(ModItems.MAIDENHAIR_LEAVES.get());
+                        output.accept(ModItems.MAIDENHAIR_SAPLING.get());
+                        output.accept(ModItems.SAGO_PALM_LOG.get());
+                        output.accept(ModItems.SAGO_PALM_LEAVES.get());
+                        output.accept(ModItems.SAGO_PALM_SAPLING.get());
+                        output.accept(ModItems.GARDENIA_LOG.get());
+                        output.accept(ModItems.GARDENIA_LEAVES.get());
+                        output.accept(ModItems.GARDENIA_SAPLING.get());
+                        output.accept(ModItems.CHINESE_PLUM_LOG.get());
+                        output.accept(ModItems.CHINESE_PLUM_LEAVES.get());
+                        output.accept(ModItems.CHINESE_PLUM_SAPLING.get());
+                        output.accept(ModItems.MAPPLE_LOG.get());
+                        output.accept(ModItems.MAPPLE_LEAVES.get());
+                        output.accept(ModItems.MAPPLE_SAPLING.get());
+
+                        // 食材与调料
                         output.accept(ModItems.FLOUR.get());
                         output.accept(ModItems.RICE_FLOUR.get());
                         output.accept(ModItems.WALNUT.get());
@@ -294,7 +289,8 @@ public class ModCreativeTabs {
                         output.accept(ModItems.EMBRYO_OF_SALAMI_PIZZA.get());
                         output.accept(ModItems.WOODEN_BOWL.get());
                         output.accept(ModItems.WOODEN_BARREL.get());
-                        // --- 中间品 ---
+
+                        // 中间品
                         output.accept(ModItems.SAUSAGE.get());
                         output.accept(ModItems.SLICED_SAUSAGE.get());
                         output.accept(ModItems.SALAMI.get());
@@ -308,6 +304,15 @@ public class ModCreativeTabs {
                         output.accept(ModItems.CATCHUP.get());
                         output.accept(ModItems.BOLOGNESE.get());
                         output.accept(ModItems.LABLAB_SOUP.get());
+                    }).build());
+
+    // ===== 菜品 — 只放最终成品（合并原"舰娘食物"和"厨房"）=====
+    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> FOOD_TAB =
+            CREATIVE_TABS.register("food_tab", () -> CreativeModeTab.builder()
+                    .title(Component.translatable("itemGroup.piranport.food"))
+                    .withTabsBefore(ResourceKey.create(Registries.CREATIVE_MODE_TAB, PiranPort.modId("agriculture_tab")))  // 链式排序：紧接 agriculture_tab
+                    .icon(() -> ModItems.TOAST_BREAD.get().getDefaultInstance())
+                    .displayItems((parameters, output) -> {
                         // --- 果汁/果酱 ---
                         output.accept(ModItems.APPLE_JUICE.get());
                         output.accept(ModItems.APPLE_JAM.get());
@@ -521,7 +526,6 @@ public class ModCreativeTabs {
                         output.accept(ModItems.MEDIUM_GUN_BLUEPRINT.get());
                         output.accept(ModItems.LARGE_GUN_BLUEPRINT.get());
                         output.accept(ModItems.CREATIVE_BLUEPRINT.get());
-                        output.accept(ModItems.ARTILLERY_CONFIG_TOOL.get());
                         output.accept(ModItems.DEBUG_TERMINAL.get());
                         output.accept(ModItems.CONFIG_INSPECTOR.get());
                         output.accept(ModItems.SHIP_CORE_MODIFIER.get());

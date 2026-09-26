@@ -278,8 +278,8 @@ public final class AircraftItems {
                             5, 40));
 
     // ===== Radar =====
-    // 三种雷达各注册一台，索敌范围统一 32 区块、负重 1；
-    // 差异化只体现在「索敌目标」上（对海/对空/声纳），三者互斥，不可互相替代。
+    // 两台雷达各注册一台，索敌范围统一 32 区块、负重 1；
+    // 差异化只体现在「索敌目标」上（对海/对空），二者互斥。
     public static final DeferredItem<RadarItem> STANDARD_SURFACE_RADAR =
             ITEMS.register("standard_surface_radar",
                     () -> new RadarItem(new Item.Properties().stacksTo(1)
@@ -291,12 +291,6 @@ public final class AircraftItems {
                     () -> new RadarItem(new Item.Properties().stacksTo(1)
                             .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ARMOR),
                             1, 32, RadarItem.RadarTarget.AIR));
-
-    public static final DeferredItem<RadarItem> STANDARD_SONAR_RADAR =
-            ITEMS.register("standard_sonar_radar",
-                    () -> new RadarItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ARMOR),
-                            1, 32, RadarItem.RadarTarget.SUBMARINE));
 
     // ===== Fire Control Radar =====
     // 与上面三台索敌雷达是不同东西：那三台是「自动扫描并高亮目标」，这台是「手动开关的

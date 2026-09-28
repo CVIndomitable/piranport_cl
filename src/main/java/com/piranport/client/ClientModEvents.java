@@ -62,7 +62,8 @@ public class ClientModEvents {
                 if (entry.get() instanceof com.piranport.item.TaihouUmbrellaItem
                         || entry.get() instanceof com.piranport.item.EugenShieldItem) {
                     ItemProperties.register(entry.get(), blocking, (stack, level, entity, seed) ->
-                            entity != null && entity.isUsingItem() && entity.getUseItem() == stack
+                            entity != null && entity.isUsingItem()
+                                    && entity.getUseItem().getItem() == stack.getItem()
                                     ? 1.0f : 0.0f);
                 }
                 if (entry.get() instanceof com.piranport.item.AircraftItem) {
@@ -194,6 +195,12 @@ public class ClientModEvents {
                 TorpedoRenderer::new);
         event.registerEntityRenderer(ModEntityTypes.AIRCRAFT_ENTITY.get(),
                 AircraftRenderer::new);
+        // 飞机被击落后掉落的物品实体（AircraftDropEntity extends ItemEntity）。
+        // WHY：EntityRenderDispatcher.getRenderer 只按 entity.getType() 查表，原版 ItemEntity
+        // 的渲染器挂在 minecraft:item 这个 EntityType 上，不会被子类类型继承；漏注册时
+        // shouldRender 直接 NPE 崩客户端（"entityrenderer is null"）。
+        event.registerEntityRenderer(ModEntityTypes.AIRCRAFT_DROP.get(),
+                net.minecraft.client.renderer.entity.ItemEntityRenderer::new);
         event.registerEntityRenderer(ModEntityTypes.FLOATING_TARGET.get(),
                 net.minecraft.client.renderer.entity.ArmorStandRenderer::new);
         event.registerEntityRenderer(ModEntityTypes.AERIAL_BOMB.get(),
@@ -254,6 +261,14 @@ public class ClientModEvents {
                 com.piranport.client.DeepOceanRenderer::new);
         event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_SUBMARINE.get(),
                 com.piranport.client.DeepOceanSubmarineRenderer::new);
+        // 深海 BOSS 与金猫猫同属 AbstractDeepOceanEntity，走通用渲染器（人形骨架 + 程序化舰装轮廓）。
+        // WHY：漏注册时 EntityRenderDispatcher.shouldRender 直接 NPE 崩客户端，先兜住注册。
+        // TODO 外观：《策划决策/深海/01》第八章的 Boss"特殊建模清单"仍为待补充；《策划决策/副本/18》
+        // 已定金猫猫为"高级战列外观"，落地后换专用/战列档渲染器并补 profileFor 分支。
+        event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_BOSS.get(),
+                com.piranport.client.DeepOceanRenderer::new);
+        event.registerEntityRenderer(ModEntityTypes.GOLDENCATCAT.get(),
+                com.piranport.client.DeepOceanRenderer::new);
         // 舰娘 NPC
         event.registerEntityRenderer(ModEntityTypes.SHIP_GIRL.get(),
                 com.piranport.client.ShipGirlRenderer::new);

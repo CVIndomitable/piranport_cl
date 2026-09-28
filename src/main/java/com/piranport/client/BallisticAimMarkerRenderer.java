@@ -85,7 +85,9 @@ public final class BallisticAimMarkerRenderer {
         markerPosition = null;
         markerRadius = 0.0;
         if (mc.player == null || mc.level == null
-                || !TransformationManager.isPlayerTransformed(mc.player)) return;
+                || (!TransformationManager.isPlayerTransformed(mc.player)
+                && !(mc.player.getAbilities().instabuild
+                && mc.player.getMainHandItem().getItem() instanceof ArtilleryItem))) return;
 
         List<UUID> targets = ClientFireControlData.getTargets();
         if (targets.isEmpty()) return;
@@ -122,6 +124,17 @@ public final class BallisticAimMarkerRenderer {
         }
 
         Vec3 marker = predicted.add(0.0, -target.getBbHeight() * 0.45 + 0.08, 0.0);
+        // Keep the ring visible above water when the target's aim point is submerged.
+        if (target.isInWaterOrBubble()) {
+            var surfacePos = target.blockPosition();
+            int scan = 0;
+            while (scan < 16 && !mc.level.getFluidState(surfacePos.above()).isEmpty()) {
+                surfacePos = surfacePos.above();
+                scan++;
+            }
+            double surface = surfacePos.getY() + 1.0;
+            marker = new Vec3(marker.x, Math.max(marker.y, surface + 0.04), marker.z);
+        }
         if (!isFinite(marker) || marker.distanceToSqr(origin) > MAX_MARKER_DISTANCE * MAX_MARKER_DISTANCE) return;
         markerPosition = marker;
         markerRadius = Math.max(0.75, Math.min(2.5, target.getBbWidth() * 0.8));

@@ -25,7 +25,7 @@ public class RailgunHandler implements WeaponHandler {
     public void fire(EntityMaid maid, LivingEntity target, ItemStack stack) {
         Level level = maid.level();
         Vec3 origin = maid.getEyePosition();
-        Vec3 aim = target.getBoundingBox().getCenter().subtract(origin);
+        Vec3 aim = com.piranport.compat.maid.combat.MaidAimPrediction.predict(target, origin, 2.0).subtract(origin);
         if (aim.lengthSqr() < 1.0E-6) return;
         aim = aim.normalize();
         float yaw = (float) Math.toDegrees(Math.atan2(-aim.x, aim.z));

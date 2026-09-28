@@ -605,10 +605,10 @@ public class AircraftEntity extends Entity {
         double phase = phaseSpeedCoefficient();
         double targetY = owner.getY() + CRUISE_ALTITUDE;
         double dy = targetY - getY();
-        double rise = Math.min(panelSpeed * 0.3 * phase, Math.abs(dy));
+        double rise = Math.min(panelSpeed * phase, Math.abs(dy));
         // Horizontal velocity along launch direction (orbitAngle = player's facing at launch)
         // so the aircraft climbs out diagonally instead of rocketing straight up.
-        double fwdSpeed = panelSpeed * 0.3 * phase;
+        double fwdSpeed = panelSpeed * phase;
         double fwdX = Math.cos(orbitAngle) * fwdSpeed;
         double fwdZ = Math.sin(orbitAngle) * fwdSpeed;
         setDeltaMovement(fwdX, dy > 0 ? rise : -rise, fwdZ);
@@ -712,7 +712,7 @@ public class AircraftEntity extends Entity {
                 Vec3 toTarget = new Vec3(tx - getX(), ty - getY(), tz - getZ());
                 double dist = toTarget.length();
                 if (dist > 0.1) {
-                    setDeltaMovement(toTarget.normalize().scale(Math.min(panelSpeed * 0.35 * phase, dist)));
+                    setDeltaMovement(toTarget.normalize().scale(Math.min(panelSpeed * phase, dist)));
                 } else {
                     setDeltaMovement(Vec3.ZERO);
                 }
@@ -728,7 +728,7 @@ public class AircraftEntity extends Entity {
         Vec3 toTarget = new Vec3(tx - getX(), ty - getY(), tz - getZ());
         double dist = toTarget.length();
         if (dist > 0.1) {
-            setDeltaMovement(toTarget.normalize().scale(Math.min(panelSpeed * 0.3 * phase, dist)));
+            setDeltaMovement(toTarget.normalize().scale(Math.min(panelSpeed * phase, dist)));
         } else {
             setDeltaMovement(Vec3.ZERO);
         }
@@ -905,7 +905,7 @@ public class AircraftEntity extends Entity {
         double dist = toOwner.length();
         if (dist < RETURN_ARRIVAL_DIST) { recallAndRemove(); return; }
         // 返航增速 30%：0.4 × 1.3 = 0.52
-        setDeltaMovement(toOwner.normalize().scale(Math.min(panelSpeed * 0.52 * phase, dist)));
+        setDeltaMovement(toOwner.normalize().scale(Math.min(panelSpeed * phase, dist)));
     }
 
     /** 当前控制阶段相对于机型基础航速的速度乘数。 */
@@ -954,7 +954,7 @@ public class AircraftEntity extends Entity {
             case LAUNCHING -> {
                 double targetY = homePosition.y + CRUISE_ALTITUDE;
                 double dy = targetY - getY();
-                double rise = Math.min(panelSpeed * 0.3 * phase, Math.abs(dy));
+                double rise = Math.min(panelSpeed * phase, Math.abs(dy));
                 setDeltaMovement(getDeltaMovement().x * 0.5, dy > 0 ? rise : -rise, getDeltaMovement().z * 0.5);
                 if (stateTicks >= LAUNCH_DURATION || Math.abs(dy) < 1.5) {
                     setState(FlightState.CRUISING);
@@ -979,7 +979,7 @@ public class AircraftEntity extends Entity {
                 Vec3 toTarget = new Vec3(tx - getX(), ty - getY(), tz - getZ());
                 double dist = toTarget.length();
                 if (dist > 0.1) {
-                    setDeltaMovement(toTarget.normalize().scale(Math.min(panelSpeed * 0.3 * phase, dist)));
+                    setDeltaMovement(toTarget.normalize().scale(Math.min(panelSpeed * phase, dist)));
                 } else {
                     setDeltaMovement(Vec3.ZERO);
                 }

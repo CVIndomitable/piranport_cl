@@ -136,7 +136,9 @@ public class ClientGameEvents {
         if (!keysCollide(mc.options.keyPickItem, ModKeyMappings.FIRE_CONTROL_SELECT)) return;
         boolean transformed = TransformationManager.isPlayerTransformed(mc.player);
         boolean inRecon = ClientReconData.isInReconMode();
-        if (transformed || inRecon) {
+        boolean creativeAim = mc.player.getAbilities().instabuild
+                && mc.player.getMainHandItem().getItem() instanceof ArtilleryItem;
+        if (transformed || inRecon || creativeAim) {
             while (mc.options.keyPickItem.consumeClick()) {
                 // 吞噬原版 pick block，避免与火控中键冲突
             }

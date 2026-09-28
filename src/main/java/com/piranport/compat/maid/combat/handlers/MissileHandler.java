@@ -53,7 +53,8 @@ public class MissileHandler implements WeaponHandler {
         // 但 Math.asin 在 |y| > 1 时返回 NaN，会把导弹射向一个无意义的俯仰角。
         // 同一场景下若已先扣弹药，就变成「扣了弹却打空炮」——判定必须前置。
         Vec3 origin = maid.getEyePosition();
-        Vec3 aim = target.getBoundingBox().getCenter().subtract(origin);
+        Vec3 predictedPoint = com.piranport.compat.maid.combat.MaidAimPrediction.predict(target, origin, 0.5);
+        Vec3 aim = predictedPoint.subtract(origin);
         if (aim.lengthSqr() < 1.0E-6) return;
         aim = aim.normalize();
         float yaw = (float) Math.toDegrees(Math.atan2(-aim.x, aim.z));

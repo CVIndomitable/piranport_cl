@@ -49,6 +49,7 @@ public class ClientModEvents {
         // WHY：火炮走"类似弩"的装填模型（见 docs/策划决策/武器/09-装填类似弩模型.md），
         // 空膛时无法发射，玩家需要一眼看出武器是否能开火，因此必须有独立的空膛贴图。
         ResourceLocation loaded = ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "loaded");
+        ResourceLocation blocking = ResourceLocation.withDefaultNamespace("blocking");
         // 注意：这里**没有** "ammo_type" 属性，而且不要加回来。
         // WHY：原版 1.21.1 的 overrides[].predicate 只有 (ResourceLocation, float) 一种类型，
         // 没有字符串/枚举谓词，判定又是 "value >= threshold" 且 ItemOverrides 倒序遍历数组，
@@ -58,6 +59,12 @@ public class ClientModEvents {
         event.enqueueWork(() -> {
             // 为所有 AircraftItem 实例注册 "fueled" 属性（包括命名变体）
             for (var entry : ModItems.ITEMS.getEntries()) {
+                if (entry.get() instanceof com.piranport.item.TaihouUmbrellaItem
+                        || entry.get() instanceof com.piranport.item.EugenShieldItem) {
+                    ItemProperties.register(entry.get(), blocking, (stack, level, entity, seed) ->
+                            entity != null && entity.isUsingItem() && entity.getUseItem() == stack
+                                    ? 1.0f : 0.0f);
+                }
                 if (entry.get() instanceof com.piranport.item.AircraftItem) {
                     ItemProperties.register(entry.get(), fueled, (stack, level, entity, seed) -> {
                         AircraftInfo info = stack.get(ModDataComponents.AIRCRAFT_INFO.get());

@@ -56,6 +56,12 @@ public class DepthChargeLauncherItem extends Item {
     }
 
     @Override
+    public void inventoryTick(ItemStack stack, Level level, net.minecraft.world.entity.Entity entity,
+                              int slot, boolean selected) {
+        com.piranport.combat.data.WeaponReloadLifecycle.tick(stack, level, entity, slot);
+    }
+
+    @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
         if (ShipCoreCombat.tryFireFromInventory(level, player, hand)) {

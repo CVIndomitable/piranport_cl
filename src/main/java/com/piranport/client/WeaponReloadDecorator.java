@@ -104,11 +104,15 @@ public class WeaponReloadDecorator implements IItemDecorator {
 
         // 3. Manual-reload launchers (torpedo, missile) — 空膛画黑条、满膛画绿条
         //    防空导弹不在此列：它走自动装填，不该有"空膛"态。
-        boolean showEmptyBar = !isAutoReloadMissile
+        boolean showEmptyBar = (stack.getItem() instanceof MissileLauncherItem
+                && ((MissileLauncherItem) stack.getItem()).getMissileType()
+                == com.piranport.entity.MissileEntity.MissileType.ANTI_AIR)
+                || (!isAutoReloadMissile
                 && (stack.getItem() instanceof TorpedoLauncherItem
                 || stack.is(ModItems.SY1_LAUNCHER.get())
                 || stack.is(ModItems.MK14_HARPOON_LAUNCHER.get())
-                || stack.is(ModItems.SHIP_ROCKET_LAUNCHER.get()));
+                || stack.is(ModItems.SHIP_ROCKET_LAUNCHER.get())
+                || stack.getItem() instanceof com.piranport.item.DepthChargeLauncherItem));
 
         if (showEmptyBar) {
             LoadedAmmo ammo = stack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
@@ -170,7 +174,7 @@ public class WeaponReloadDecorator implements IItemDecorator {
         gui.fill(barX, barY, barX + width, barY + 2, color);
     }
 
-    /** 是否为自动装填导弹（防空导弹）：弹药直接从背包消耗，无 LOADED_AMMO 状态。 */
+    /** 是否为自动装填导弹类型；防空弹药现在仍需先经 R 键装入膛内。 */
     private static boolean isAutoReloadMissile(ItemStack stack) {
         return stack.getItem() instanceof MissileLauncherItem ml && !ml.isManualReload();
     }

@@ -34,6 +34,15 @@ public class AircraftItem extends Item {
     }
 
     @Override
+    public void inventoryTick(ItemStack stack, Level level, net.minecraft.world.entity.Entity entity,
+                              int slot, boolean selected) {
+        if (!level.isClientSide() && slot >= 9 && entity instanceof Player player
+                && player.isUsingItem() && player.getUseItem() == stack) {
+            player.stopUsingItem();
+        }
+    }
+
+    @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
         if (ShipCoreCombat.tryFireFromInventory(level, player, hand)) {

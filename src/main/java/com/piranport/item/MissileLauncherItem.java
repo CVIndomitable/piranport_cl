@@ -52,6 +52,12 @@ public class MissileLauncherItem extends Item {
     public int getCooldownTicks() { return cooldownTicks; }
     public Item getAmmoItem() { return ammoItem.get(); }
 
+    @Override
+    public void inventoryTick(ItemStack stack, Level level, net.minecraft.world.entity.Entity entity,
+                              int slot, boolean selected) {
+        com.piranport.combat.data.WeaponReloadLifecycle.tick(stack, level, entity, slot);
+    }
+
     /** 是否为手动装填模式（反舰/火箭：需要在装填设施装弹）。 */
     public boolean isManualReload() {
         return missileType == MissileEntity.MissileType.ANTI_SHIP

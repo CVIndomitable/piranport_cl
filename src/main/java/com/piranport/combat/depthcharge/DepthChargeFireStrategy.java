@@ -4,6 +4,7 @@ import com.piranport.combat.TransformationManager;
 import com.piranport.combat.util.CombatFireUtils;
 import com.piranport.component.SlotCooldowns;
 import com.piranport.component.WeaponCooldown;
+import com.piranport.component.LoadedAmmo;
 import com.piranport.debug.PiranPortDebug;
 import com.piranport.entity.DepthChargeEntity;
 import com.piranport.item.DepthChargeLauncherItem;
@@ -40,52 +41,12 @@ public final class DepthChargeFireStrategy {
         float damage = ExperienceShellItem.applyDamageBonus(player, 14f);
         float explosionPower = ExperienceShellItem.applyExplosionBonus(player, 3.0f);
 
-        // Creative mode: skip ammo check and consumption
-        if (!player.getAbilities().instabuild) {
-            // Count available depth charge ammo in inventory
-            int available = 0;
-            for (int i = 0; i < inv.items.size(); i++) {
-                if (i == coreSlot || i == weaponSlot) continue;
-                ItemStack s = inv.items.get(i);
-                if (!s.isEmpty() && s.is(ModItems.DEPTH_CHARGE.get())) {
-                    available += s.getCount();
-                }
-            }
-            if (weaponSlot != 40 && coreSlot != 40) {
-                ItemStack oh = inv.offhand.get(0);
-                if (!oh.isEmpty() && oh.is(ModItems.DEPTH_CHARGE.get())) {
-                    available += oh.getCount();
-                }
-            }
-
-            if (available < chargeCount) {
-                player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
-                return;
-            }
-
-            // Consume ammo
-            int toConsume = chargeCount;
-            for (int i = 0; i < inv.items.size() && toConsume > 0; i++) {
-                if (i == coreSlot || i == weaponSlot) continue;
-                ItemStack s = inv.items.get(i);
-                if (!s.isEmpty() && s.is(ModItems.DEPTH_CHARGE.get())) {
-                    int take = Math.min(toConsume, s.getCount());
-                    PiranPortDebug.consumeAmmo(player.getUUID(), s, take);
-                    toConsume -= take;
-                }
-            }
-            if (toConsume > 0 && weaponSlot != 40 && coreSlot != 40) {
-                ItemStack oh = inv.offhand.get(0);
-                if (!oh.isEmpty() && oh.is(ModItems.DEPTH_CHARGE.get())) {
-                    int take = Math.min(toConsume, oh.getCount());
-                    PiranPortDebug.consumeAmmo(player.getUUID(), oh, take);
-                    toConsume -= take;
-                }
-            }
-        } else {
-            // 创造模式：即使没有深弹也允许发射（使用默认深弹）
-            // 无需额外检查，直接发射
+        LoadedAmmo loaded = launcherStack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
+        if (!player.getAbilities().instabuild && (!loaded.hasAmmo() || loaded.count() < chargeCount)) {
+            player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
+            return;
         }
+        if (loaded.hasAmmo()) launcherStack.remove(ModDataComponents.LOADED_AMMO.get());
 
         // Spawn depth charges based on spread pattern
         Vec3 look = player.getLookAngle();

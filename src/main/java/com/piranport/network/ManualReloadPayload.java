@@ -86,6 +86,21 @@ public record ManualReloadPayload() implements CustomPacketPayload {
             }
 
             // 导弹发射器：必须使用装填设施
+            if (mainHand.getItem() instanceof MissileLauncherItem launcher
+                    && launcher.getMissileType() == com.piranport.entity.MissileEntity.MissileType.ANTI_AIR) {
+                ReloadHelper.reloadAntiAirMissile(player, inv, mainHand, inv.selected, coreStack, coreSlot, launcher);
+                return;
+            } else if (offHand.getItem() instanceof MissileLauncherItem launcher
+                    && launcher.getMissileType() == com.piranport.entity.MissileEntity.MissileType.ANTI_AIR) {
+                ReloadHelper.reloadAntiAirMissile(player, inv, offHand, 40, coreStack, coreSlot, launcher);
+                return;
+            } else if (mainHand.getItem() instanceof com.piranport.item.DepthChargeLauncherItem launcher) {
+                ReloadHelper.reloadDepthChargeLauncher(player, inv, mainHand, inv.selected, coreSlot, launcher);
+                return;
+            } else if (offHand.getItem() instanceof com.piranport.item.DepthChargeLauncherItem launcher) {
+                ReloadHelper.reloadDepthChargeLauncher(player, inv, offHand, 40, coreSlot, launcher);
+                return;
+            }
             if (mainHand.getItem() instanceof MissileLauncherItem || offHand.getItem() instanceof MissileLauncherItem) {
                 player.displayClientMessage(
                         Component.translatable("message.piranport.use_reload_facility"), true);

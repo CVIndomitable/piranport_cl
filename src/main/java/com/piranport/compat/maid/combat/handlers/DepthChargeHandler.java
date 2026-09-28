@@ -41,7 +41,8 @@ public class DepthChargeHandler implements WeaponHandler {
         // 且 Math.asin 在 |y| > 1 时返回 NaN。判定若放在消耗之后，
         // 就会出现「深弹已扣掉却一枚未投」的净损失。
         Vec3 origin = maid.getEyePosition();
-        Vec3 aim = target.position().subtract(origin);
+        Vec3 predictedPoint = com.piranport.compat.maid.combat.MaidAimPrediction.predict(target, origin, 1.6);
+        Vec3 aim = predictedPoint.subtract(origin);
         if (aim.lengthSqr() < 1.0E-6) return;
         aim = aim.normalize();
         float yaw = (float) Math.toDegrees(Math.atan2(-aim.x, aim.z));

@@ -1,6 +1,6 @@
 {
-  "parent": "minecraft:item/shield_blocking",
+  "parent": "item/generated",
   "textures": {
-    "particle": "piranport:item/eugen_shield"
+    "layer0": "piranport:item/eugen_shield"
   }
 }

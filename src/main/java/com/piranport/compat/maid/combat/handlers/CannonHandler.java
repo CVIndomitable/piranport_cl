@@ -81,7 +81,9 @@ public class CannonHandler implements WeaponHandler {
         float vertical = effectiveData.verticalSpread();
 
         Vec3 origin = maid.getEyePosition();
-        Vec3 aim = target.getBoundingBox().getCenter().subtract(origin);
+        Vec3 aimPoint = com.piranport.compat.maid.combat.MaidAimPrediction.predict(
+                target, origin, Math.max(0.02, velocity));
+        Vec3 aim = aimPoint.subtract(origin);
         if (aim.lengthSqr() < 1.0E-6) return;
         aim = aim.normalize();
         // 射线方向除以长度后 y 必落在 [-1,1]；此处显式夹紧只为防浮点误差让 asin 返回 NaN
@@ -129,7 +131,7 @@ public class CannonHandler implements WeaponHandler {
                         level, maid, stack, shellStack, damage, shellExplosion, velocity,
                         effectiveData.dragCoeff(), effectiveData.gravity(), horizontal, vertical,
                         sourceCaliber, isHE, isVT,
-                        new CannonAim.DirectAim(target.getBoundingBox().getCenter()), spawnPos);
+                        new CannonAim.DirectAim(aimPoint), spawnPos);
                 shots.add(new CannonFireService.Shot(request, aim, CannonAmmoRules.isType3Shell(shellStack)));
             } catch (IllegalArgumentException invalid) {
                 return;

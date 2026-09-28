@@ -60,10 +60,12 @@ public class FireControlInputHandler {
         }
         if (clicks == 0) return;
 
-        // 解锁前置条件保持不变：仅变身态或侦察模式生效。
+        // 火控锁定仅限变身态、侦察态和创造模式。
         // 放行前先吞掉原版「选取方块」队列，避免占用中键时误触发 pick block。
         // 仅在两键确实指向同一物理键时才吞：玩家把任一绑定改走时，原版行为必须保留。
-        if (!transformed && !inReconMode) return;
+        boolean creativeAim = mc.player.getAbilities().instabuild
+                && mc.player.getMainHandItem().getItem() instanceof com.piranport.artillery.ArtilleryItem;
+        if (!transformed && !inReconMode && !creativeAim) return;
         if (ClientGameEvents.keysCollide(mc.options.keyPickItem, ModKeyMappings.FIRE_CONTROL_SELECT)) {
             while (mc.options.keyPickItem.consumeClick()) { /* discard vanilla pick block */ }
         }

@@ -350,6 +350,8 @@ public final class ClientItemHooks implements com.piranport.platform.ClientBridg
         // 玩家看到的就是"显示装填了却打不出来"。
         boolean isTorpedoLauncher = stack.getItem() instanceof TorpedoLauncherItem;
         boolean needsLoadedAmmo = isTorpedoLauncher
+                || (stack.getItem() instanceof MissileLauncherItem
+                || stack.getItem() instanceof com.piranport.item.DepthChargeLauncherItem)
                 || (!isAutoReloadMissile
                 && (isCannon
                 || (isManualMode && !(stack.getItem() instanceof AircraftItem))

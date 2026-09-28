@@ -180,6 +180,17 @@ public class ArtilleryItem extends Item {
     /** 使用引用语义的 Map 跟踪每把武器的读条进度（避免 ItemStack.equals 按内容匹配）。 */
     private static final java.util.Map<ItemStack, Integer> chargeTicks = new java.util.IdentityHashMap<>();
 
+    @Override
+    public void inventoryTick(ItemStack stack, Level level, net.minecraft.world.entity.Entity entity,
+                              int slot, boolean selected) {
+        com.piranport.combat.data.WeaponReloadLifecycle.tick(stack, level, entity, slot);
+        if (!level.isClientSide() && entity instanceof Player player && slot >= 9
+                && player.isUsingItem() && player.getUseItem() == stack) {
+            player.stopUsingItem();
+            chargeTicks.remove(stack);
+        }
+    }
+
     /** 读条持续时间 = 武器装填时间（ticks）。 */
     @Override
     public int getUseDuration(ItemStack stack, LivingEntity entity) {

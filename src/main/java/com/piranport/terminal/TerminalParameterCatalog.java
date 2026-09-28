@@ -82,12 +82,12 @@ public final class TerminalParameterCatalog {
             add(specs, "aircraft", target, "health", a.health(), 1, 100000);
             add(specs, "aircraft", target, "attack_cooldown", a.attackCooldown(), 1, 12000);
             add(specs, "aircraft", target, "reload_time", ResolvedAircraftStats.DEFAULT_RELOAD_TIME, 1, 12000);
-            add(specs, "aircraft", target, "launch_speed_coefficient", 1.0, 0.05, 5.0);
-            add(specs, "aircraft", target, "cruise_speed_coefficient", 1.0, 0.05, 5.0);
-            add(specs, "aircraft", target, "attack_speed_coefficient", 1.0, 0.05, 5.0);
-            add(specs, "aircraft", target, "return_speed_coefficient", 1.0, 0.05, 5.0);
-            add(specs, "aircraft", target, "follow_speed_coefficient", 1.0, 0.05, 5.0);
-            add(specs, "aircraft", target, "recon_speed_coefficient", 1.0, 0.05, 5.0);
+            add(specs, "aircraft", target, "launch_speed_coefficient", 0.3, 0.05, 5.0);
+            add(specs, "aircraft", target, "cruise_speed_coefficient", 0.3, 0.05, 5.0);
+            add(specs, "aircraft", target, "attack_speed_coefficient", 0.5, 0.05, 5.0);
+            add(specs, "aircraft", target, "return_speed_coefficient", 0.52, 0.05, 5.0);
+            add(specs, "aircraft", target, "follow_speed_coefficient", 0.35, 0.05, 5.0);
+            add(specs, "aircraft", target, "recon_speed_coefficient", 0.4, 0.05, 5.0);
         }
         Set<String> ammoTargets = new HashSet<>();
         for (AmmoDefinition a : AmmoDefinitionService.all().values()) {
@@ -157,11 +157,6 @@ public final class TerminalParameterCatalog {
             }
             add(specs, group, id.toString(), "max_health", attribute(defaults, Attributes.MAX_HEALTH, 20), 1, 100000);
             add(specs, group, id.toString(), "movement_speed", attribute(defaults, Attributes.MOVEMENT_SPEED, 0.1), 0.001, 100);
-            add(specs, group, id.toString(), "movement_speed_idle_coefficient", 1.0, 0.05, 5.0);
-            add(specs, group, id.toString(), "movement_speed_move_coefficient", 1.0, 0.05, 5.0);
-            add(specs, group, id.toString(), "movement_speed_chase_coefficient", 1.0, 0.05, 5.0);
-            add(specs, group, id.toString(), "movement_speed_attack_coefficient", 1.0, 0.05, 5.0);
-            add(specs, group, id.toString(), "movement_speed_swim_coefficient", 1.0, 0.05, 5.0);
             add(specs, group, id.toString(), "attack_damage", attribute(defaults, Attributes.ATTACK_DAMAGE, 2), 0, 100000);
             add(specs, group, id.toString(), "follow_range", attribute(defaults, Attributes.FOLLOW_RANGE, 16), 1, 2048);
             add(specs, group, id.toString(), "armor", attribute(defaults, Attributes.ARMOR, 0), 0, 10000);

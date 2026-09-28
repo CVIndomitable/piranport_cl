@@ -47,6 +47,12 @@ public class TorpedoLauncherItem extends Item {
     }
 
     @Override
+    public void inventoryTick(ItemStack stack, Level level, net.minecraft.world.entity.Entity entity,
+                              int slot, boolean selected) {
+        com.piranport.combat.data.WeaponReloadLifecycle.tick(stack, level, entity, slot);
+    }
+
+    @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
         // 返回值只表示"船上有没有核心/武器"，发射策略全是 void，因此这里恒为 true，

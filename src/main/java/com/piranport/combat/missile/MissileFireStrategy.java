@@ -127,46 +127,15 @@ public class MissileFireStrategy {
                                                Inventory inv, int weaponSlot, int coreSlot,
                                                MissileLauncherItem launcher, SlotCooldowns cooldowns) {
         Item ammoItem = launcher.getAmmoItem();
-
-        // 查找弹药
-        int ammoSlot = -1;
-        for (int i = 0; i < inv.items.size(); i++) {
-            if (i == coreSlot || i == weaponSlot) continue;
-            ItemStack s = inv.items.get(i);
-            if (!s.isEmpty() && s.is(ammoItem)) {
-                ammoSlot = i;
-                break;
-            }
-        }
-        if (ammoSlot == -1 && weaponSlot != 40 && coreSlot != 40) {
-            ItemStack oh = inv.offhand.get(0);
-            if (!oh.isEmpty() && oh.is(ammoItem)) {
-                ammoSlot = 40;
-            }
-        }
-
-        // 创造模式：如果没有弹药，使用默认弹药ID
-        String ammoId;
-        if (ammoSlot == -1) {
-            if (!player.getAbilities().instabuild) {
-                player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
-                return;
-            }
-            // 创造模式：使用默认弹药
-            ammoId = BuiltInRegistries.ITEM.getKey(ammoItem).toString();
-        } else {
-            // 有弹药：使用物品栏中的弹药类型
-            ammoId = BuiltInRegistries.ITEM.getKey(ammoItem).toString();
-            // 创造模式：不消耗弹药
-            if (!player.getAbilities().instabuild) {
-                PiranPortDebug.consumeAmmo(player.getUUID(), 
-                        ammoSlot == 40 ? inv.offhand.get(0) : inv.items.get(ammoSlot), 1);
-            }
-        }
-
-        // 发射
         ItemStack launcherStack = weaponSlot == 40 ? inv.offhand.get(0) : inv.items.get(weaponSlot);
+        LoadedAmmo loaded = launcherStack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
+        if (!loaded.hasAmmo()) {
+            player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
+            return;
+        }
+        String ammoId = loaded.ammoItemId();
         spawnMissile(level, player, launcherStack, launcher, ammoId);
+        launcherStack.remove(ModDataComponents.LOADED_AMMO.get());
 
         // 检查剩余弹药（避免冷却后才发现无弹药）
         int nextAvailable = 0;

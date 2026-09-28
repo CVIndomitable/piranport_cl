@@ -32,13 +32,7 @@ public final class TerminalEntityAttributeOverrides {
                 base(health, 20), base(speed, 0.1), base(attack, 2), base(follow, 16), base(armor, 0)
         });
         set(health, TerminalParameters.getDouble(prefix + "max_health", base[0]));
-        double baseSpeed = TerminalParameters.getDouble(prefix + "movement_speed", base[1]);
-        String phase = movementPhase(entity);
-        double phaseCoefficient = TerminalParameters.getDouble(
-                prefix + "movement_speed_" + phase + "_coefficient", 1.0);
-        if (!Double.isFinite(phaseCoefficient)) phaseCoefficient = 1.0;
-        phaseCoefficient = Math.max(0.05, Math.min(5.0, phaseCoefficient));
-        set(speed, baseSpeed * phaseCoefficient);
+        set(speed, TerminalParameters.getDouble(prefix + "movement_speed", base[1]));
         set(attack, TerminalParameters.getDouble(prefix + "attack_damage", base[2]));
         set(follow, TerminalParameters.getDouble(prefix + "follow_range", base[3]));
         set(armor, TerminalParameters.getDouble(prefix + "armor", base[4]));
@@ -65,19 +59,4 @@ public final class TerminalEntityAttributeOverrides {
         return "vanilla_mob";
     }
 
-    /**
-     * Classifies the active vanilla/custom mob AI phase without replacing its
-     * navigation goals.  The terminal then scales the already selected base
-     * movement attribute for that phase.
-     */
-    private static String movementPhase(LivingEntity entity) {
-        if (entity.isInWaterOrBubble()) return "swim";
-        if (!(entity instanceof Mob mob)) return "idle";
-        LivingEntity target = mob.getTarget();
-        if (target == null) {
-            return mob.getNavigation().isInProgress() ? "move" : "idle";
-        }
-        double reach = mob.getBbWidth() * 2.0 + target.getBbWidth();
-        return mob.distanceToSqr(target) <= reach * reach ? "attack" : "chase";
-    }
 }

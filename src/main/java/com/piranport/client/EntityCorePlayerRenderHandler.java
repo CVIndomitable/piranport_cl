@@ -19,12 +19,21 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RenderPlayerEvent;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 @EventBusSubscriber(modid = PiranPort.MOD_ID, value = Dist.CLIENT)
 public class EntityCorePlayerRenderHandler {
     private static final Map<UUID, CachedEntity> CACHE = new HashMap<>();
+
+    /**
+     * 创建替身失败的核心 id —— 本处理器挂在玩家渲染前钩子上（每帧每玩家一次），
+     * 失败后不清缓存就会每帧重试 + 每帧刷 WARN。这些核心的工厂方法失败是确定性的
+     * （定义坏了），记下来直接跳过，等重连（clearCaches）再给一次机会。
+     */
+    private static final Set<Integer> FAILED_CORES = new HashSet<>();
 
     @SubscribeEvent
     public static void onRenderPlayerPre(RenderPlayerEvent.Pre event) {
@@ -53,9 +62,12 @@ public class EntityCorePlayerRenderHandler {
 
     public static void clearCache() {
         CACHE.clear();
+        FAILED_CORES.clear();
     }
 
     private static Entity getOrCreateStandIn(AbstractClientPlayer player, EntityCoreDefinition definition) {
+        if (FAILED_CORES.contains(definition.id())) return null;
+
         CachedEntity cached = CACHE.get(player.getUUID());
         if (cached != null
                 && cached.coreId() == definition.id()
@@ -66,7 +78,11 @@ public class EntityCorePlayerRenderHandler {
 
         Entity created = definition.create(player.level());
         if (created == null) {
-            PiranPort.LOGGER.warn("Failed to create entity core stand-in for core {}", definition.id());
+            // 只有首次失败才记日志：add 返回 true 表示这个核心此前没失败过。
+            if (FAILED_CORES.add(definition.id())) {
+                PiranPort.LOGGER.warn("Failed to create entity core stand-in for core {}, 已停用该核心的替身渲染",
+                        definition.id());
+            }
             CACHE.remove(player.getUUID());
             return null;
         }

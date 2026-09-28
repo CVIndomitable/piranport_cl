@@ -36,20 +36,41 @@ class PiranPortDebugMicrobenchTest {
     private static final long SHORT_UUID_THRESHOLD_NS = 10_000_000L; // 10000 次 < 10ms
     private static final int ITERATIONS = 1_000;
 
+    /**
+     * 测量轮数 —— 每轮跑完整段循环，取最小耗时作为判据。
+     *
+     * <p>WHY：单轮结果会被 JIT 编译、GC、同机其他进程（打包时 gradle 自己在跑）干扰。
+     * 实测同一台机器上 1000 次 event() 在 186µs ～ 200µs+ 之间跳，而阈值就是 200µs，
+     * 于是 {@code ./gradlew build} 会随机变红。最小耗时代表"没被干扰的那一轮"，
+     * 是简化基准里最稳的判据，且不削弱检测力 —— 真的性能回归会让每一轮都变慢。
+     */
+    private static final int ROUNDS = 5;
+
+    /** 跑 {@link #ROUNDS} 轮 {@code measured}，返回最小耗时（纳秒）。 */
+    private static long bestOfRounds(Runnable measured) {
+        long best = Long.MAX_VALUE;
+        for (int round = 0; round < ROUNDS; round++) {
+            long t0 = System.nanoTime();
+            measured.run();
+            best = Math.min(best, System.nanoTime() - t0);
+        }
+        return best;
+    }
+
     @Test
     void eventCallOverhead_isBounded() {
         // 预热：让 JIT 编译热代码
         for (int i = 0; i < 5_000; i++) {
             PiranPortDebug.event("warmup {}", i);
         }
-        // 测量
-        long t0 = System.nanoTime();
-        for (int i = 0; i < ITERATIONS; i++) {
-            PiranPortDebug.event("Transform ON | player={} load={}/{}", "test", i, 100);
-        }
-        long elapsedNs = System.nanoTime() - t0;
-        System.out.printf("[Microbench] event() x %d: %,d ns (avg %.0f ns/call)%n",
-                ITERATIONS, elapsedNs, (double) elapsedNs / ITERATIONS);
+        // 测量（取 5 轮最优）
+        long elapsedNs = bestOfRounds(() -> {
+            for (int i = 0; i < ITERATIONS; i++) {
+                PiranPortDebug.event("Transform ON | player={} load={}/{}", "test", i, 100);
+            }
+        });
+        System.out.printf("[Microbench] event() x %d: %,d ns (avg %.0f ns/call, best of %d rounds)%n",
+                ITERATIONS, elapsedNs, (double) elapsedNs / ITERATIONS, ROUNDS);
 
         // 关闭状态下：无 appender，event() 只做字符串格式化 + 早期 return（无 session）
         // 因为测试环境无 MCP debug session，SESSIONS 为空 → event() 第一次 isEmpty 检查即返回
@@ -63,13 +84,13 @@ class PiranPortDebugMicrobenchTest {
         for (int i = 0; i < 5_000; i++) {
             PiranPortDebug.perf("warmup", i, "ctx");
         }
-        long t0 = System.nanoTime();
-        for (int i = 0; i < ITERATIONS; i++) {
-            PiranPortDebug.perf("WeightScan", 12345L, "player=test load=46/72");
-        }
-        long elapsedNs = System.nanoTime() - t0;
-        System.out.printf("[Microbench] perf() x %d: %,d ns (avg %.0f ns/call)%n",
-                ITERATIONS, elapsedNs, (double) elapsedNs / ITERATIONS);
+        long elapsedNs = bestOfRounds(() -> {
+            for (int i = 0; i < ITERATIONS; i++) {
+                PiranPortDebug.perf("WeightScan", 12345L, "player=test load=46/72");
+            }
+        });
+        System.out.printf("[Microbench] perf() x %d: %,d ns (avg %.0f ns/call, best of %d rounds)%n",
+                ITERATIONS, elapsedNs, (double) elapsedNs / ITERATIONS, ROUNDS);
         assertTrue(elapsedNs < PERF_THRESHOLD_NS,
                 String.format("perf() x %d took %,d ns, exceeds threshold %,d ns",
                         ITERATIONS, elapsedNs, PERF_THRESHOLD_NS));
@@ -80,13 +101,13 @@ class PiranPortDebugMicrobenchTest {
         for (int i = 0; i < 5_000; i++) {
             PiranPortDebug.error("warmup {}", i);
         }
-        long t0 = System.nanoTime();
-        for (int i = 0; i < ITERATIONS; i++) {
-            PiranPortDebug.error("Component READ FAIL | item=piranport:test ex=RuntimeException: msg={}", i);
-        }
-        long elapsedNs = System.nanoTime() - t0;
-        System.out.printf("[Microbench] error() x %d: %,d ns (avg %.0f ns/call)%n",
-                ITERATIONS, elapsedNs, (double) elapsedNs / ITERATIONS);
+        long elapsedNs = bestOfRounds(() -> {
+            for (int i = 0; i < ITERATIONS; i++) {
+                PiranPortDebug.error("Component READ FAIL | item=piranport:test ex=RuntimeException: msg={}", i);
+            }
+        });
+        System.out.printf("[Microbench] error() x %d: %,d ns (avg %.0f ns/call, best of %d rounds)%n",
+                ITERATIONS, elapsedNs, (double) elapsedNs / ITERATIONS, ROUNDS);
         assertTrue(elapsedNs < ERROR_THRESHOLD_NS,
                 String.format("error() x %d took %,d ns, exceeds threshold %,d ns",
                         ITERATIONS, elapsedNs, ERROR_THRESHOLD_NS));
@@ -95,13 +116,13 @@ class PiranPortDebugMicrobenchTest {
     @Test
     void shortUuidAndShortHash_areFast() {
         UUID id = UUID.randomUUID();
-        long t0 = System.nanoTime();
-        for (int i = 0; i < ITERATIONS * 10; i++) {
-            PiranPortDebug.shortUuid(id);
-        }
-        long elapsedNs = System.nanoTime() - t0;
-        System.out.printf("[Microbench] shortUuid() x %d: %,d ns%n",
-                ITERATIONS * 10, elapsedNs);
+        long elapsedNs = bestOfRounds(() -> {
+            for (int i = 0; i < ITERATIONS * 10; i++) {
+                PiranPortDebug.shortUuid(id);
+            }
+        });
+        System.out.printf("[Microbench] shortUuid() x %d: %,d ns (best of %d rounds)%n",
+                ITERATIONS * 10, elapsedNs, ROUNDS);
         // 10k 次调用应远小于 10ms
         assertTrue(elapsedNs < SHORT_UUID_THRESHOLD_NS,
                 String.format("shortUuid() x %d took %,d ns, exceeds 10ms threshold",

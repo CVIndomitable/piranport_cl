@@ -3,9 +3,11 @@ package com.piranport.client;
 import com.piranport.PiranPort;
 import com.piranport.artillery.ArtilleryItem;
 import com.piranport.component.WeaponCooldown;
+import com.piranport.item.AircraftItem;
 import com.piranport.registry.ModDataComponents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -36,6 +38,16 @@ public class ReloadProgressHudLayer {
 
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || mc.level == null) return;
+
+        ItemStack aircraft = mc.player.isUsingItem() ? mc.player.getUseItem() : ItemStack.EMPTY;
+        if (aircraft.getItem() instanceof AircraftItem) {
+            int total = ((AircraftItem) aircraft.getItem()).getUseDuration(aircraft, mc.player);
+            int remaining = mc.player.getUseItemRemainingTicks();
+            float progress = total <= 0 ? 0.0F
+                    : Mth.clamp(1.0F - remaining / (float) total, 0.0F, 1.0F);
+            renderProgressBar(event.getGuiGraphics(), mc, progress, mc.level.getGameTime());
+            return;
+        }
 
         ItemStack mainHand = mc.player.getMainHandItem();
         if (!(mainHand.getItem() instanceof ArtilleryItem)) return;

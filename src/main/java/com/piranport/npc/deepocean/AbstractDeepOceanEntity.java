@@ -62,6 +62,12 @@ public abstract class AbstractDeepOceanEntity extends Monster {
         super(type, level);
     }
 
+    /** Match crosshair picking to the visible ship rigging, not the tiny humanoid fallback box. */
+    @Override
+    public float getPickRadius() {
+        return 0.85F;
+    }
+
     // --- Attributes ---
 
     public static AttributeSupplier.Builder createDeepOceanAttributes() {

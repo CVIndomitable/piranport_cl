@@ -8,7 +8,6 @@ import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.LayeredDraw;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -52,8 +51,5 @@ public class AutoModeHudOverlay implements LayeredDraw.Layer {
                 gfx.fill(x + 2 + i, y + 2 + i, x + 4 + i, y + 4 + i, 0xFFFF5555);
             }
         }
-        Component label = Component.translatable(enabled
-                ? "hud.piranport.auto_mode_on" : "hud.piranport.auto_mode_off");
-        gfx.drawString(mc.font, label, x - mc.font.width(label) - 5, y + 8, color, true);
     }
 }

@@ -577,9 +577,14 @@ public class AircraftFireStrategy {
     /** Completes an R-key loading bar after the vanilla use duration has elapsed. */
     public static void finishAircraftReload(Player player, ItemStack aircraftStack) {
         Inventory inv = player.getInventory();
-        if (player.getMainHandItem() != aircraftStack && inv.offhand.get(0) != aircraftStack) return;
-        int weaponSlot = inv.selected;
-        if (inv.offhand.get(0) == aircraftStack && player.getMainHandItem() != aircraftStack) weaponSlot = 40;
+        // Resolve the live stack from the hand that completed the use action.
+        // The callback may receive a defensive ItemStack copy, so comparing it
+        // by object identity can silently skip the fuel and payload update.
+        net.minecraft.world.InteractionHand hand = player.getUsedItemHand();
+        ItemStack held = player.getItemInHand(hand);
+        if (!(held.getItem() instanceof AircraftItem)) return;
+        aircraftStack = held;
+        int weaponSlot = hand == net.minecraft.world.InteractionHand.OFF_HAND ? 40 : inv.selected;
         ItemStack coreStack = com.piranport.combat.TransformationManager.findTransformedCore(player);
         if (coreStack.isEmpty()) return;
         int coreSlot = -2;

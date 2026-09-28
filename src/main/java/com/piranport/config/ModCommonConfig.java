@@ -21,22 +21,6 @@ public class ModCommonConfig {
     public static final TerminalConfigValue<Double> WATER_SURFACE_BUOYANCY =
             TerminalConfigValue.number("movement", "movement", "water_surface_buoyancy", 0.5, 0.3, 1.0);
 
-    /** 飞机起飞、巡航、返航等控制阶段的速度系数。 */
-    public static final TerminalConfigValue<Double> AIRCRAFT_CONTROL_PHASE_COEFFICIENT =
-            TerminalConfigValue.number("system", "aircraft", "control_phase_coefficient", 1.0, 0.05, 5.0);
-    public static final TerminalConfigValue<Double> AIRCRAFT_LAUNCH_SPEED_COEFFICIENT =
-            TerminalConfigValue.number("system", "aircraft", "launch_speed_coefficient", 1.0, 0.05, 5.0);
-    public static final TerminalConfigValue<Double> AIRCRAFT_CRUISE_SPEED_COEFFICIENT =
-            TerminalConfigValue.number("system", "aircraft", "cruise_speed_coefficient", 1.0, 0.05, 5.0);
-    public static final TerminalConfigValue<Double> AIRCRAFT_ATTACK_SPEED_COEFFICIENT =
-            TerminalConfigValue.number("system", "aircraft", "attack_speed_coefficient", 1.0, 0.05, 5.0);
-    public static final TerminalConfigValue<Double> AIRCRAFT_RETURN_SPEED_COEFFICIENT =
-            TerminalConfigValue.number("system", "aircraft", "return_speed_coefficient", 1.0, 0.05, 5.0);
-    public static final TerminalConfigValue<Double> AIRCRAFT_FOLLOW_SPEED_COEFFICIENT =
-            TerminalConfigValue.number("system", "aircraft", "follow_speed_coefficient", 1.0, 0.05, 5.0);
-    public static final TerminalConfigValue<Double> AIRCRAFT_RECON_SPEED_COEFFICIENT =
-            TerminalConfigValue.number("system", "aircraft", "recon_speed_coefficient", 1.0, 0.05, 5.0);
-
     // ===== Combat (战斗) =====
 
     public static final ModConfigSpec.BooleanValue EXPLOSION_BLOCK_DAMAGE;

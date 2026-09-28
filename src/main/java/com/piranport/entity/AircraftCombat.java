@@ -154,17 +154,17 @@ public class AircraftCombat {
         double preferredDist = 11.0;
 
         if (dist > preferredDist + 3) {
-            craft.setDeltaMovement(toTarget.normalize().scale(Math.min(craft.panelSpeed * 0.5
+            craft.setDeltaMovement(toTarget.normalize().scale(Math.min(craft.getPanelSpeed() * 0.5
                     * craft.phaseSpeedCoefficient(), dist)));
         } else if (dist < preferredDist - 3) {
-            craft.setDeltaMovement(toTarget.normalize().scale(-craft.panelSpeed * 0.2
+            craft.setDeltaMovement(toTarget.normalize().scale(-craft.getPanelSpeed() * 0.2
                     * craft.phaseSpeedCoefficient()));
         } else {
             craft.setDeltaMovement(craft.getDeltaMovement().scale(0.8));
         }
 
         if (craft.attackCooldown <= 0 && dist < 24.0) {
-            BulletEntity bullet = new BulletEntity(craft.level(), craft.panelDamage / 8f);
+            BulletEntity bullet = new BulletEntity(craft.level(), craft.getPanelDamage() / 8f);
             Vec3 dir = toTarget.normalize();
             bullet.moveTo(craft.getX(), craft.getY() + 0.3, craft.getZ(), bullet.getYRot(), bullet.getXRot());
             bullet.setDeltaMovement(dir.scale(2.5));
@@ -202,7 +202,7 @@ public class AircraftCombat {
 
         if (horizDist >= 12 && horizDist <= 22 && altDelta >= -2.0 && altDelta <= 8.0 && craft.attackCooldown <= 0) {
             Vec3 dir = new Vec3(dx, target.getEyeY() + 0.5 - craft.getY(), dz).normalize();
-            float rocketDamage = craft.panelDamage * 1.2f;
+            float rocketDamage = craft.getPanelDamage() * 1.2f;
             int toFire = craft.computeSalvoSize(target, rocketDamage);
             com.piranport.debug.PiranPortDebug.event(
                     "Aircraft ROCKET_SALVO | entityId={} capacity={} remaining={} firing={} targetHP={}",
@@ -238,7 +238,7 @@ public class AircraftCombat {
         Vec3 toTarget = new Vec3(dx, desiredY - craft.getY(), dz);
         double dist = toTarget.length();
         if (dist > 0.1) {
-            craft.setDeltaMovement(toTarget.normalize().scale(Math.min(craft.panelSpeed * 0.5
+            craft.setDeltaMovement(toTarget.normalize().scale(Math.min(craft.getPanelSpeed() * 0.5
                     * craft.phaseSpeedCoefficient(), dist)));
         }
     }
@@ -258,11 +258,11 @@ public class AircraftCombat {
         double heightDiff = Math.max(0, climbY - craft.getY());
         double phaseSpeed = craft.phaseSpeedCoefficient();
         int climbTimeout = Math.max(80, (int)Math.ceil(heightDiff
-                / Math.max(craft.panelSpeed * 0.4 * phaseSpeed, 0.1)));
+                / Math.max(craft.getPanelSpeed() * 0.4 * phaseSpeed, 0.1)));
         if (!craft.diveCommitted && craft.getY() < climbY - 1.0 && craft.stateTicks < climbTimeout) {
             Vec3 toClimb = new Vec3(target.getX() - craft.getX(), climbY - craft.getY(), target.getZ() - craft.getZ());
             double dist = toClimb.length();
-            craft.setDeltaMovement(toClimb.normalize().scale(Math.min(craft.panelSpeed * 0.4
+            craft.setDeltaMovement(toClimb.normalize().scale(Math.min(craft.getPanelSpeed() * 0.4
                     * phaseSpeed, dist)));
             return;
         }
@@ -271,7 +271,7 @@ public class AircraftCombat {
             craft.diveCommitted = true;
             Vec3 targetPos = target.getEyePosition();
             double estimatedDist = craft.position().distanceTo(targetPos);
-            double diveSpeed = Math.max(craft.panelSpeed * 0.6 * phaseSpeed, 0.1);
+            double diveSpeed = Math.max(craft.getPanelSpeed() * 0.6 * phaseSpeed, 0.1);
             double estimatedTicks = estimatedDist / diveSpeed;
             Vec3 targetVel = target.getDeltaMovement();
             craft.diveTarget = targetPos.add(targetVel.scale(estimatedTicks));
@@ -283,7 +283,7 @@ public class AircraftCombat {
             if (diveDist < 2.0) {
                 // Drop the bomb
                 net.minecraft.world.level.Level level = craft.level();
-                float bombPower = craft.panelDamage;
+                float bombPower = craft.getPanelDamage();
                 int bombCount = Math.max(1, craft.remainingAmmo);
                 for (int i = 0; i < bombCount; i++) {
                     AerialBombEntity bomb = new AerialBombEntity(level, bombPower / bombCount, 4.0f);
@@ -297,7 +297,7 @@ public class AircraftCombat {
                 craft.remainingAmmo = 0;
                 craft.hasFired = true;
             } else {
-                double speed = Math.min(craft.panelSpeed * 0.7 * phaseSpeed, diveDist);
+                double speed = Math.min(craft.getPanelSpeed() * 0.7 * phaseSpeed, diveDist);
                 craft.setDeltaMovement(toDive.normalize().scale(speed));
             }
         }
@@ -322,14 +322,14 @@ public class AircraftCombat {
         // Descend to attack altitude
         if (altitudeDiff > 2.0) {
             Vec3 descend = new Vec3(dx, target.getY() + approachAlt - craft.getY(), dz).normalize();
-            craft.setDeltaMovement(descend.scale(Math.min(craft.panelSpeed * 0.4
+            craft.setDeltaMovement(descend.scale(Math.min(craft.getPanelSpeed() * 0.4
                     * craft.phaseSpeedCoefficient(), 1.0)));
             return;
         }
 
         if (horizDist < 6.0 && craft.attackCooldown <= 0) {
             Vec3 dir = new Vec3(dx, 0, dz).normalize();
-            int toFire = craft.computeSalvoSize(target, craft.panelDamage);
+            int toFire = craft.computeSalvoSize(target, craft.getPanelDamage());
             com.piranport.debug.PiranPortDebug.event(
                     "Aircraft TORPEDO_SALVO | entityId={} capacity={} remaining={} firing={} targetHP={}",
                     craft.getId(), craft.ammoCapacity, craft.remainingAmmo, toFire, target.getHealth());
@@ -355,7 +355,7 @@ public class AircraftCombat {
             return;
         }
 
-        Vec3 toTarget = new Vec3(dx, 0, dz).normalize().scale(Math.min(craft.panelSpeed * 0.5
+        Vec3 toTarget = new Vec3(dx, 0, dz).normalize().scale(Math.min(craft.getPanelSpeed() * 0.5
                 * craft.phaseSpeedCoefficient(), horizDist));
         double yAdjust = (target.getY() + approachAlt - craft.getY()) * 0.1;
         craft.setDeltaMovement(toTarget.x, yAdjust, toTarget.z);
@@ -380,7 +380,7 @@ public class AircraftCombat {
         // Phase 1: Approach bombing altitude
         if (craft.getY() < bombAlt - 2.0) {
             Vec3 toAlt = new Vec3(dx, bombAlt - craft.getY(), dz);
-            craft.setDeltaMovement(toAlt.normalize().scale(Math.min(craft.panelSpeed * 0.4
+            craft.setDeltaMovement(toAlt.normalize().scale(Math.min(craft.getPanelSpeed() * 0.4
                     * craft.phaseSpeedCoefficient(), toAlt.length())));
             return;
         }
@@ -391,7 +391,7 @@ public class AircraftCombat {
             craft.levelRunTicks = 0;
         }
 
-        double runSpeed = craft.panelSpeed * 0.6 * craft.phaseSpeedCoefficient();
+        double runSpeed = craft.getPanelSpeed() * 0.6 * craft.phaseSpeedCoefficient();
         Vec3 runDir = craft.levelRunDirection;
         Vec3 runVel = new Vec3(runDir.x * runSpeed, 0, runDir.z * runSpeed);
         craft.setDeltaMovement(runVel);
@@ -400,7 +400,7 @@ public class AircraftCombat {
 
         // Drop bomb when within range, or timeout after 200 ticks
         if ((horizDist < 4.0 || craft.levelRunTicks > 200) && !craft.levelBombDropped) {
-            float bombPower = craft.panelDamage;
+            float bombPower = craft.getPanelDamage();
             int bombCount = Math.max(1, craft.remainingAmmo);
             for (int i = 0; i < bombCount; i++) {
                 AerialBombEntity bomb = new AerialBombEntity(craft.level(), bombPower / bombCount, 4.0f);
@@ -485,16 +485,9 @@ public class AircraftCombat {
             if (closest != null) return closest;
         }
 
-        // Auto-seek: hostile mobs and enemy aircraft only (not all living entities)
+        // Auto-seek: only enemy aircraft (机枪只能对空)
         net.minecraft.world.phys.AABB box = craft.getBoundingBox().inflate(48.0);
-        // Search for hostile mobs
-        LivingEntity hostileTarget = sl.getEntitiesOfClass(LivingEntity.class, box,
-                        e -> e.isAlive() && e != owner
-                                && e instanceof net.minecraft.world.entity.monster.Monster)
-                .stream()
-                .min(java.util.Comparator.comparingDouble(craft::distanceToSqr))
-                .orElse(null);
-        // Search for enemy aircraft
+        // 搜索敌方飞机
         AircraftEntity airTarget = sl.getEntitiesOfClass(AircraftEntity.class, box,
                         e -> e.isAlive() && e != craft
                                 && e.getOwnerUUID() != null
@@ -502,11 +495,6 @@ public class AircraftCombat {
                 .stream()
                 .min(java.util.Comparator.comparingDouble(craft::distanceToSqr))
                 .orElse(null);
-        // Return whichever is closer
-        if (hostileTarget != null && airTarget != null) {
-            return craft.distanceToSqr(hostileTarget) <= craft.distanceToSqr(airTarget)
-                    ? hostileTarget : airTarget;
-        }
-        return hostileTarget != null ? hostileTarget : airTarget;
+        return airTarget;
     }
 }

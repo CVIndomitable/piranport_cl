@@ -39,12 +39,26 @@ public record TerminalParameterSpec(String key, String group, String target, Str
         };
     }
 
+    /** Tick based durations are shown and edited in seconds in the debug terminal. */
+    public boolean isTickDuration() {
+        return "reload_time".equals(property) || "fire_cooldown".equals(property)
+                || "salvo_interval".equals(property) || property.endsWith("_cooldown");
+    }
+
     public double displayScale() {
-        return isLinearSpeed() ? 20.0 : 1.0;
+        if (isLinearSpeed()) return 20.0;
+        return isTickDuration() ? 0.05 : 1.0;
     }
 
     /** Convert a stored (per tick) value to the value shown in the terminal. */
     public String displayValue(String raw) {
+        if (isTickDuration() && type == ValueType.INTEGER) {
+            try {
+                return String.format(Locale.ROOT, "%.2f", Integer.parseInt(raw.trim()) * displayScale());
+            } catch (NumberFormatException ignored) {
+                return raw;
+            }
+        }
         if (type != ValueType.DOUBLE) return raw;
         try {
             double value = Double.parseDouble(raw) * displayScale();
@@ -58,6 +72,15 @@ public record TerminalParameterSpec(String key, String group, String target, Str
 
     /** Convert a terminal value back to the canonical stored value. */
     public String canonicalDisplay(String raw) {
+        if (isTickDuration() && type == ValueType.INTEGER) {
+            try {
+                double seconds = Double.parseDouble(raw.trim());
+                if (!Double.isFinite(seconds)) throw new NumberFormatException();
+                return canonical(Integer.toString((int) Math.round(seconds / displayScale())));
+            } catch (NumberFormatException exception) {
+                throw new IllegalArgumentException("Expected seconds for " + key, exception);
+            }
+        }
         if (!isLinearSpeed() || type != ValueType.DOUBLE) return canonical(raw);
         try {
             return canonical(Double.toString(Double.parseDouble(raw.trim()) / displayScale()));

@@ -134,11 +134,16 @@ public class ModPackets {
                 RecallAllAircraftPayload::handle
         );
 
-        // Manual reload (R key) — 仅鱼雷/导弹
+        // Manual reload (R key) — 鱼雷/导弹瞬时操作，飞机使用独立读条包
         registrar.playToServer(
                 ManualReloadPayload.TYPE,
                 ManualReloadPayload.STREAM_CODEC,
                 ManualReloadPayload::handle
+        );
+        registrar.playToServer(
+                AircraftReloadPayload.TYPE,
+                AircraftReloadPayload.STREAM_CODEC,
+                AircraftReloadPayload::handle
         );
 
         // Phase 4: ammo type switching (Tab key)

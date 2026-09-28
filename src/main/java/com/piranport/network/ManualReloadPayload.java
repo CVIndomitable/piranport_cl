@@ -95,11 +95,11 @@ public record ManualReloadPayload() implements CustomPacketPayload {
             // 舰载机：对海挂载按 R 键装填（见《航空/12-飞机武器化方案》：飞机即武器，与火炮同一套装填交互）
             if (mainHand.getItem() instanceof com.piranport.item.AircraftItem) {
                 com.piranport.aviation.AircraftFireStrategy.loadAircraftPayload(
-                        player, inv, mainHand, inv.selected, coreSlot);
+                        player, inv, mainHand, inv.selected, coreStack, coreSlot);
                 return;
             } else if (offHand.getItem() instanceof com.piranport.item.AircraftItem) {
                 com.piranport.aviation.AircraftFireStrategy.loadAircraftPayload(
-                        player, inv, offHand, 40, coreSlot);
+                        player, inv, offHand, 40, coreStack, coreSlot);
                 return;
             }
 
@@ -123,4 +123,3 @@ public record ManualReloadPayload() implements CustomPacketPayload {
         });
     }
 }
-

@@ -140,7 +140,7 @@ public final class CannonReloading {
     }
 
     private static void startTimer(Player player, ItemStack core, int slot, ItemStack weapon) {
-        int ticks = TransformationManager.boostedCooldown(player, getGunCooldown(weapon, player.level()));
+        int ticks = TransformationManager.boostedCooldown(player, getGunCooldown(player, weapon, player.level()));
         WeaponState state = new WeaponState(weapon);
         state.setCooldown(player.getUUID(), player.level().getGameTime(), ticks);
         removeLegacyCooldown(core, slot);

@@ -37,7 +37,8 @@ public final class AircraftStatsService {
                 TerminalParameters.getInt(key + "attack_cooldown", definition.attackCooldown()),
                 TerminalParameters.getInt(key + "fuel_capacity", definition.fuelCapacity()),
                 TerminalParameters.getInt(key + "ammo_capacity", definition.ammoCapacity()),
-                TerminalParameters.getInt(key + "weight", definition.weight()));
+                TerminalParameters.getInt(key + "weight", definition.weight()),
+                TerminalParameters.getInt(key + "reload_time", ResolvedAircraftStats.DEFAULT_RELOAD_TIME));
     }
 
 }

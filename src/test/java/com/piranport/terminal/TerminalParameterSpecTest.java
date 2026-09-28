@@ -36,4 +36,15 @@ class TerminalParameterSpecTest {
         assertEquals(0.2, speed.displayMin(), 1.0e-9);
         assertEquals(200.0, speed.displayMax(), 1.0e-9);
     }
+
+    @Test
+    void tickDurationsAreEditedInSecondsButStoredInTicks() {
+        TerminalParameterSpec reload = new TerminalParameterSpec("aircraft.test.reload_time",
+                "aircraft", "test", "reload_time", TerminalParameterSpec.ValueType.INTEGER,
+                "60", 1, 12000);
+        assertEquals("3.00", reload.displayValue("60"));
+        assertEquals("60", reload.canonicalDisplay("3"));
+        assertEquals(0.05, reload.displayMin(), 1.0e-9);
+        assertEquals(600.0, reload.displayMax(), 1.0e-9);
+    }
 }

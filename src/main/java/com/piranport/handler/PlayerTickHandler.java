@@ -14,6 +14,7 @@ import com.piranport.config.ModCommonConfig;
 
 import com.piranport.item.KirinHeadbandItem;
 import com.piranport.item.FootballArmorItem;
+import com.piranport.item.ExperienceShellItem;
 import com.piranport.item.RadarItem;
 import com.piranport.item.ShipCoreItem;
 import com.piranport.item.ShipCoreCombat;
@@ -207,7 +208,7 @@ public class PlayerTickHandler {
         }
     }
 
-    /** 麒麟头巾隐身 + 足球套装经验加成 */
+    /** 麒麟头巾隐身 + 足球套装/经验炮弹经验加成 */
     private static void tickEquipmentPassives(Player player) {
         if (player.getItemBySlot(EquipmentSlot.HEAD).getItem() instanceof KirinHeadbandItem) {
             player.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 25, 0, false, false, true));
@@ -219,8 +220,11 @@ public class PlayerTickHandler {
                 break;
             }
         }
-        if (hasFootball) {
+        boolean hasExperienceShell = ExperienceShellItem.hasInInventory(player);
+        if (hasFootball || hasExperienceShell) {
             player.addEffect(new MobEffectInstance(ModMobEffects.EXPERIENCE_BOOST, 25, 0, false, false, true));
+        } else {
+            player.removeEffect(ModMobEffects.EXPERIENCE_BOOST);
         }
     }
 

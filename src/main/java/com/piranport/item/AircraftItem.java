@@ -15,6 +15,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.inventory.ClickAction;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.Item;
@@ -25,6 +26,8 @@ import net.minecraft.world.level.Level;
 import java.util.List;
 
 public class AircraftItem extends Item {
+
+    private static final int DEFAULT_RELOAD_TIME = 60;
 
     public AircraftItem(Properties properties) {
         super(properties);
@@ -37,6 +40,27 @@ public class AircraftItem extends Item {
             return InteractionResultHolder.consume(stack);
         }
         return InteractionResultHolder.pass(stack);
+    }
+
+    /** R-key loading uses the same vanilla use bar as artillery. */
+    @Override
+    public int getUseDuration(ItemStack stack, LivingEntity entity) {
+        AircraftDefinition definition = AircraftDefinitionService.resolve(stack);
+        return definition == null ? DEFAULT_RELOAD_TIME
+                : com.piranport.aviation.AircraftStatsService.resolve(definition).reloadTime();
+    }
+
+    @Override
+    public ItemStack finishUsingItem(ItemStack stack, Level level, LivingEntity entity) {
+        if (!level.isClientSide() && entity instanceof Player player) {
+            com.piranport.aviation.AircraftFireStrategy.finishAircraftReload(player, stack);
+        }
+        return stack;
+    }
+
+    @Override
+    public void releaseUsing(ItemStack stack, Level level, LivingEntity entity, int timeCharged) {
+        // Releasing R early cancels the loading bar and does not consume supplies.
     }
 
     /**

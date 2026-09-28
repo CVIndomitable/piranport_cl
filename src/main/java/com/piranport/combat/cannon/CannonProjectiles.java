@@ -34,7 +34,7 @@ final class CannonProjectiles {
             horizontal *= 1.1f;
             vertical *= 1.1f;
         }
-        float explosion = getExplosionPower(weapon, level);
+        float explosion = getExplosionPower(player, weapon, level);
         if (CannonAmmoRules.isMK23Shell(shell)
                 && AmmoDefinitionService.find(BuiltInRegistries.ITEM.getKey(shell.getItem())).isEmpty()) explosion *= 10f;
         int caliber = ((com.piranport.artillery.ArtilleryItem) weapon.getItem()).getEffectiveData(level).caliber();
@@ -44,7 +44,7 @@ final class CannonProjectiles {
             Vec3 direction = CannonAiming.resolveDirection(player, weapon, velocity, aim, aimOrigin, spawn);
             try {
                 CannonFireRequest request = CannonFireService.request(level, player, weapon, shell,
-                        getGunDamage(weapon, level), explosion, velocity, getProjectileDrag(weapon, level),
+                        getGunDamage(player, weapon, level), explosion, velocity, getProjectileDrag(weapon, level),
                         getProjectileGravity(weapon, level), horizontal, vertical, caliber, he, vt, aim, spawn);
                 shots.add(new CannonFireService.Shot(request, direction, type3));
             } catch (IllegalArgumentException invalid) {

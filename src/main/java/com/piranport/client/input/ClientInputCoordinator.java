@@ -9,6 +9,7 @@ import com.piranport.client.ClientScopeHandler;
 import com.piranport.client.ClientTorpedoGuidance;
 import com.piranport.client.EntityUuidCache;
 import com.piranport.client.FireControlRadarSnapHandler;
+import com.piranport.client.BallisticAimMarkerRenderer;
 import com.piranport.client.ModKeyMappings;
 import com.piranport.combat.TransformationManager;
 import com.piranport.item.ShipCoreItem;
@@ -84,6 +85,7 @@ public class ClientInputCoordinator {
         // 不清的话，退出存档前锁着的实体 id 会残留到下一个存档：新世界里 id 空间
         // 从 0 重新分配但含义完全不同（可能是只兔子），吸附会在没按 0 的情况下突然咬上去。
         FireControlRadarSnapHandler.reset();
+        BallisticAimMarkerRenderer.reset();
     }
 
     @SubscribeEvent
@@ -133,6 +135,9 @@ public class ClientInputCoordinator {
         // 5c) 火控雷达准星吸附：放在所有输入处理之后、渲染之前，
         //     这样本 tick 的按键操作（含刚按下的 0 键）都已生效，不会有一帧延迟。
         FireControlRadarSnapHandler.tick(mc);
+
+        // 火控第一目标的炮弹落点预瞄圈：使用本 tick 的锁定列表和实体速度。
+        com.piranport.client.BallisticAimMarkerRenderer.tick(mc);
 
         // 6) 弹药选择轮盘 (Tab)
         AmmoSelectionHandler.handleAmmoWheel(mc, mc.player, transformed, inReconMode);

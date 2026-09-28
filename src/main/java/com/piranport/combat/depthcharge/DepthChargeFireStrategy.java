@@ -36,9 +36,9 @@ public final class DepthChargeFireStrategy {
                                         DepthChargeLauncherItem launcher, SlotCooldowns cooldowns) {
         ItemStack launcherStack = weaponSlot == 40 ? inv.offhand.get(0) : inv.items.get(weaponSlot);
         int chargeCount = launcher.getChargeCount();
-        int cooldown = ExperienceShellItem.applyCooldownReduction(launcherStack, launcher.getCooldownTicks());
-        float damage = ExperienceShellItem.applyDamageBonus(launcherStack, 14f);
-        float explosionPower = ExperienceShellItem.applyExplosionBonus(launcherStack, 3.0f);
+        int cooldown = ExperienceShellItem.applyCooldownReduction(player, launcher.getCooldownTicks());
+        float damage = ExperienceShellItem.applyDamageBonus(player, 14f);
+        float explosionPower = ExperienceShellItem.applyExplosionBonus(player, 3.0f);
 
         // Creative mode: skip ammo check and consumption
         if (!player.getAbilities().instabuild) {

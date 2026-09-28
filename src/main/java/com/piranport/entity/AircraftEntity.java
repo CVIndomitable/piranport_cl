@@ -12,7 +12,6 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import com.piranport.aviation.ReconManager;
 import com.piranport.component.AircraftAttackMode;
 import com.piranport.component.AircraftInfo;
-import com.piranport.config.ModCommonConfig;
 import com.piranport.item.ExperienceShellItem;
 import com.piranport.network.AswSonarSyncPayload;
 import com.piranport.network.ReconStatePayload;
@@ -255,8 +254,8 @@ public class AircraftEntity extends Entity {
             ResolvedAircraftStats stats = AircraftStatsService.resolve(definition);
             entity.aircraftDefinitionId = definition.id();
             entity.aircraftType = info.aircraftType();
-            entity.panelDamage = ExperienceShellItem.applyAircraftPanelDamageBonus(aircraftStack, stats.damage());
-            entity.panelSpeed = ExperienceShellItem.applyAircraftPanelSpeedBonus(aircraftStack, stats.speed());
+            entity.panelDamage = ExperienceShellItem.applyAircraftPanelDamageBonus(owner, stats.damage());
+            entity.panelSpeed = ExperienceShellItem.applyAircraftPanelSpeedBonus(owner, stats.speed());
             entity.ammoCapacity = stats.ammoCapacity();
             entity.remainingAmmo = stats.ammoCapacity();
             entity.fuelCapacity = stats.fuelCapacity();
@@ -321,8 +320,8 @@ public class AircraftEntity extends Entity {
             ResolvedAircraftStats stats = AircraftStatsService.resolve(definition);
             entity.aircraftDefinitionId = definition.id();
             entity.aircraftType = info.aircraftType();
-            entity.panelDamage = ExperienceShellItem.applyAircraftPanelDamageBonus(aircraftStack, stats.damage());
-            entity.panelSpeed = ExperienceShellItem.applyAircraftPanelSpeedBonus(aircraftStack, stats.speed());
+            entity.panelDamage = ExperienceShellItem.applyAircraftPanelDamageBonus(null, stats.damage());
+            entity.panelSpeed = ExperienceShellItem.applyAircraftPanelSpeedBonus(null, stats.speed());
             entity.ammoCapacity = stats.ammoCapacity();
             entity.remainingAmmo = stats.ammoCapacity();
             entity.fuelCapacity = stats.fuelCapacity();
@@ -909,20 +908,21 @@ public class AircraftEntity extends Entity {
         setDeltaMovement(toOwner.normalize().scale(Math.min(panelSpeed * 0.52 * phase, dist)));
     }
 
-    /** Combined legacy master coefficient and current action-stage coefficient. */
+    /** 当前控制阶段相对于机型基础航速的速度乘数。 */
     double phaseSpeedCoefficient() {
-        double master = boundedCoefficient(ModCommonConfig.AIRCRAFT_CONTROL_PHASE_COEFFICIENT.get());
-        double stage = switch (getFlightState()) {
-            case LAUNCHING -> ModCommonConfig.AIRCRAFT_LAUNCH_SPEED_COEFFICIENT.get();
+        String property = switch (getFlightState()) {
+            case LAUNCHING -> "launch_speed_coefficient";
             case CRUISING -> attackMode == AircraftAttackMode.FOLLOW
-                    ? ModCommonConfig.AIRCRAFT_FOLLOW_SPEED_COEFFICIENT.get()
-                    : ModCommonConfig.AIRCRAFT_CRUISE_SPEED_COEFFICIENT.get();
-            case ATTACKING -> ModCommonConfig.AIRCRAFT_ATTACK_SPEED_COEFFICIENT.get();
-            case RETURNING -> ModCommonConfig.AIRCRAFT_RETURN_SPEED_COEFFICIENT.get();
-            case RECON_ACTIVE -> ModCommonConfig.AIRCRAFT_RECON_SPEED_COEFFICIENT.get();
-            case REMOVED -> 1.0;
+                    ? "follow_speed_coefficient" : "cruise_speed_coefficient";
+            case ATTACKING -> "attack_speed_coefficient";
+            case RETURNING -> "return_speed_coefficient";
+            case RECON_ACTIVE -> "recon_speed_coefficient";
+            case REMOVED -> null;
         };
-        return master * boundedCoefficient(stage);
+        if (property == null) return 1.0;
+        double multiplier = com.piranport.terminal.TerminalParameters.getDouble(
+                "aircraft." + aircraftDefinitionId + "." + property, 1.0);
+        return boundedCoefficient(multiplier);
     }
 
     private static double boundedCoefficient(double value) {
@@ -1485,6 +1485,21 @@ public class AircraftEntity extends Entity {
     /** 当前飞行快照中的最大生命值，不随定义热重载变化。 */
     public int getAircraftMaxHealth() {
         return Math.max(1, flightMaxHealth > 0 ? flightMaxHealth : aircraftHealth);
+    }
+
+    /** 当前飞行快照中的面板伤害。 */
+    public float getPanelDamage() {
+        // 动态应用经验炮弹buff（玩家持有时生效）
+        Player owner = getOwner();
+        if (owner != null) {
+            return ExperienceShellItem.applyAircraftPanelDamageBonus(owner, panelDamage);
+        }
+        return panelDamage;
+    }
+
+    /** 当前飞行快照中的面板速度。保留基础值，速度buff由 phaseSpeedCoefficient 补充。 */
+    public float getPanelSpeed() {
+        return panelSpeed;
     }
 
     /** Returns true if this aircraft is owned by the given player. Works client-side (synced). */

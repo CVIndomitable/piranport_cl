@@ -57,7 +57,7 @@ public class AircraftAswRecon {
         if (craft.getY() < bombAltitude - 1.5) {
             Vec3 toPoint = new Vec3(target.getX() - craft.getX(), bombAltitude - craft.getY(), target.getZ() - craft.getZ());
             double dist = toPoint.length();
-            craft.setDeltaMovement(toPoint.normalize().scale(Math.min(craft.panelSpeed * 0.4
+            craft.setDeltaMovement(toPoint.normalize().scale(Math.min(craft.getPanelSpeed() * 0.4
                     * craft.phaseSpeedCoefficient(), dist)));
         } else {
             double dx = target.getX() - craft.getX();
@@ -68,7 +68,7 @@ public class AircraftAswRecon {
             double leadDistance = targetDepth * 0.15;
 
             if (horizDist < (4.0 + leadDistance) && craft.attackCooldown <= 0) {
-                float dcDamage = craft.panelDamage * 1.5f;
+                float dcDamage = craft.getPanelDamage() * 1.5f;
                 int toFire = craft.computeSalvoSize(target, dcDamage);
                 com.piranport.debug.PiranPortDebug.event(
                         "Aircraft ASW_SALVO | entityId={} capacity={} remaining={} firing={} targetHP={}",

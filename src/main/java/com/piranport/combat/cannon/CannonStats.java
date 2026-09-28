@@ -4,28 +4,28 @@ import net.minecraft.world.item.Item;
 import java.util.List;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.entity.player.Player;
 import com.piranport.item.ExperienceShellItem;
 
 /** 火炮数值入口：统一读取世界配置覆盖与经验弹加成。 */
 final class CannonStats {
     private CannonStats() {}
 
-    static float getGunDamage(ItemStack weapon, net.minecraft.world.level.Level level) {
+    static float getGunDamage(Player player, ItemStack weapon, net.minecraft.world.level.Level level) {
         Item item = weapon.getItem();
         if (item instanceof com.piranport.artillery.ArtilleryItem ai) {
             float baseDamage = level != null ? ai.getEffectiveData(level).damage() : ai.getDamage();
-            return ExperienceShellItem.applyDamageBonus(weapon, baseDamage);
+            return ExperienceShellItem.applyDamageBonus(player, baseDamage);
         }
         return 6f;
     }
 
-    static int getGunCooldown(ItemStack weapon, net.minecraft.world.level.Level level) {
+    static int getGunCooldown(Player player, ItemStack weapon, net.minecraft.world.level.Level level) {
         Item item = weapon.getItem();
         if (item instanceof com.piranport.artillery.ArtilleryItem ai) {
             com.piranport.artillery.config.ArtilleryCannonData data =
                     level != null ? ai.getEffectiveData(level) : ai.getData();
-            return ExperienceShellItem.applyCooldownReduction(
-                    weapon, Math.max(data.reloadTime(), data.fireCooldown()));
+            return ExperienceShellItem.applyCooldownReduction(player, Math.max(data.reloadTime(), data.fireCooldown()));
         }
         return 30;
     }
@@ -65,11 +65,11 @@ final class CannonStats {
         return CannonAmmoRules.familyForWeapon(weapon, level) == CannonAmmoRules.CaliberFamily.SMALL;
     }
 
-    static float getExplosionPower(ItemStack weapon, net.minecraft.world.level.Level level) {
+    static float getExplosionPower(Player player, ItemStack weapon, net.minecraft.world.level.Level level) {
         Item item = weapon.getItem();
         if (item instanceof com.piranport.artillery.ArtilleryItem ai) {
             float baseExplosion = level != null ? ai.getEffectiveData(level).explosionPower() : ai.getExplosionPower();
-            return ExperienceShellItem.applyExplosionBonus(weapon, baseExplosion);
+            return ExperienceShellItem.applyExplosionBonus(player, baseExplosion);
         }
         return 1.0f;
     }

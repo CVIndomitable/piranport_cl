@@ -514,6 +514,43 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
         return value;
     }
 
+    private String computedSpeed(TerminalParameterSpec multiplierSpec, boolean defaults) {
+        if (!multiplierSpec.property().endsWith("_coefficient")) return "";
+        boolean aircraft = "aircraft".equals(multiplierSpec.group())
+                && multiplierSpec.property().endsWith("_speed_coefficient");
+        boolean entityMovement = multiplierSpec.property().startsWith("movement_speed_")
+                && multiplierSpec.property().endsWith("_coefficient");
+        if (!aircraft && !entityMovement) return "";
+        String speedProperty = aircraft ? "panel_speed" : "movement_speed";
+        TerminalParameterSpec speedSpec = TerminalParameters.clientSpecs().stream()
+                .filter(candidate -> candidate.group().equals(multiplierSpec.group())
+                        && multiplierSpec.target().equals(candidate.target())
+                        && speedProperty.equals(candidate.property()))
+                .findFirst().orElse(null);
+        if (speedSpec == null) return "";
+        try {
+            double panelSpeed = Double.parseDouble(defaults
+                    ? speedSpec.baseValue() : rawCurrentValue(speedSpec));
+            double multiplier = Double.parseDouble(defaults
+                    ? multiplierSpec.baseValue() : rawCurrentValue(multiplierSpec));
+            double phaseFactor = aircraft ? switch (multiplierSpec.property()) {
+                    case "launch_speed_coefficient", "cruise_speed_coefficient" -> 0.3;
+                    case "follow_speed_coefficient" -> 0.35;
+                    case "attack_speed_coefficient" -> 0.5;
+                    case "return_speed_coefficient" -> 0.52;
+                    case "recon_speed_coefficient" -> 0.4;
+                    default -> 1.0;
+                } : 1.0;
+            double result = panelSpeed * 20.0 * phaseFactor * multiplier;
+            return Double.isFinite(result)
+                    ? Component.translatable("gui.piranport.debug_terminal.speed_value",
+                            String.format(Locale.ROOT, "%.2f", result)).getString()
+                    : "";
+        } catch (NumberFormatException ignored) {
+            return "";
+        }
+    }
+
     private void selectCategory(String category) {
         if (targetCount(category) == 0) {
             localStatus = label("status.no_parameters").getString();
@@ -766,10 +803,12 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
             graphics.drawString(font, count, x + imageWidth - 43, y + imageHeight - 19,
                     0xFFD0D0D0, false);
         } else if (page == PAGE_PARAMETERS) {
-            int draftWidth = Math.max(64, imageWidth / 5);
-            int draftX = x + imageWidth - draftWidth - 25;
-            int currentX = draftX - 80;
-            int defaultX = currentX - 80;
+            int draftWidth = Math.max(56, imageWidth / 7);
+            int draftX = x + imageWidth - draftWidth - 12;
+            int defaultSpeedX = draftX - 58;
+            int currentSpeedX = defaultSpeedX - 58;
+            int defaultX = currentSpeedX - 62;
+            int currentX = defaultX - 62;
             String targetName = targetDisplayName(selectedGroup, selectedTarget);
             graphics.drawString(font, label("detail_prefix"), x + 110, y + 46, 0xFFD6D6D6, false);
             graphics.drawString(font, font.plainSubstrByWidth(targetName, imageWidth - 178),
@@ -777,6 +816,10 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
             graphics.drawString(font, label("header.parameter"), x + 10, y + LIST_TOP, 0xFFD6D6D6, false);
             graphics.drawString(font, label("header.current"), currentX, y + LIST_TOP, 0xFFD6D6D6, false);
             graphics.drawString(font, label("header.default"), defaultX, y + LIST_TOP, 0xFFD6D6D6, false);
+            graphics.drawString(font, font.plainSubstrByWidth(label("header.current_speed").getString(), 54),
+                    currentSpeedX, y + LIST_TOP, 0xFFD6D6D6, false);
+            graphics.drawString(font, font.plainSubstrByWidth(label("header.default_speed").getString(), 54),
+                    defaultSpeedX, y + LIST_TOP, 0xFFD6D6D6, false);
             graphics.drawString(font, label("header.draft"), draftX, y + LIST_TOP, 0xFFD6D6D6, false);
             for (int i = 0; i < Math.min(visibleRows, visible.size() - scrollOffset); i++) {
                 TerminalParameterSpec spec = visible.get(scrollOffset + i);
@@ -794,6 +837,8 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
                         currentX, rowY, 0xFFC7ECCF, false);
                 graphics.drawString(font, font.plainSubstrByWidth(defaultValue + suffix, 74),
                         defaultX, rowY, 0xFFD5D5B8, false);
+                graphics.drawString(font, computedSpeed(spec, false), currentSpeedX, rowY, 0xFFC7ECCF, false);
+                graphics.drawString(font, computedSpeed(spec, true), defaultSpeedX, rowY, 0xFFD5D5B8, false);
                 if (mouseX >= x + 10 && mouseX < x + imageWidth - 20
                         && mouseY >= rowY - 3 && mouseY < rowY + 15) {
                     List<Component> tooltip = new ArrayList<>();

@@ -85,7 +85,7 @@ public class TorpedoFireStrategy {
             for (float angle : angles) {
                 Vec3 dir = CombatFireUtils.rotateHorizontal(look, Math.toRadians(angle));
                 TorpedoEntity torpedo = new TorpedoEntity(level, player, caliber);
-                torpedo.setDamage(ExperienceShellItem.applyDamageBonus(launcherStack, torpedoType.getDamage()));
+                torpedo.setDamage(ExperienceShellItem.applyDamageBonus(player, torpedoType.getDamage()));
                 torpedo.setSpeed(torpedoType.getSpeed());
                 torpedo.setLifetime(torpedoType.getLifetimeTicks());
                 if (magnetic) torpedo.setMagnetic(true);
@@ -100,7 +100,7 @@ public class TorpedoFireStrategy {
                 TorpedoGuidanceManager.startGuidance(sp, primaryGuided);
             }
 
-            int cooldown = ExperienceShellItem.applyCooldownReduction(launcherStack, launcher.getCooldownTicks());
+            int cooldown = ExperienceShellItem.applyCooldownReduction(player, launcher.getCooldownTicks());
             int boostedCooldown = TransformationManager.boostedCooldown(player, cooldown);
             coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
                     cooldowns.withSlotCooldown(player.getUUID(), weaponSlot, boostedCooldown, level.getGameTime()));
@@ -120,7 +120,7 @@ public class TorpedoFireStrategy {
         }
 
         // Use caliber from method start
-        int cooldown = ExperienceShellItem.applyCooldownReduction(launcherStack, launcher.getCooldownTicks());
+        int cooldown = ExperienceShellItem.applyCooldownReduction(player, launcher.getCooldownTicks());
         boolean magnetic = CombatFireUtils.isMagneticTorpedo(loaded.ammoItemId());
         boolean wireGuided = CombatFireUtils.isWireGuidedTorpedo(loaded.ammoItemId());
         boolean acousticHoming = CombatFireUtils.isAcousticTorpedo(loaded.ammoItemId());
@@ -136,7 +136,7 @@ public class TorpedoFireStrategy {
             Vec3 dir = CombatFireUtils.rotateHorizontal(look, Math.toRadians(angle));
             TorpedoEntity torpedo = new TorpedoEntity(level, player, caliber);
             if (loadedTorpedo != null) {
-                torpedo.setDamage(ExperienceShellItem.applyDamageBonus(launcherStack, loadedTorpedo.getDamage()));
+                torpedo.setDamage(ExperienceShellItem.applyDamageBonus(player, loadedTorpedo.getDamage()));
                 torpedo.setSpeed(loadedTorpedo.getSpeed());
                 torpedo.setLifetime(loadedTorpedo.getLifetimeTicks());
             }
@@ -196,7 +196,7 @@ public class TorpedoFireStrategy {
 
         int caliber = launcher.getCaliber();
         int tubeCount = launcher.getTubeCount();
-        int cooldown = ExperienceShellItem.applyCooldownReduction(launcherStack, launcher.getCooldownTicks());
+        int cooldown = ExperienceShellItem.applyCooldownReduction(player, launcher.getCooldownTicks());
 
         // Find first matching torpedo to determine type (strict: only consume same item type)
         TorpedoItem torpedoType = null;
@@ -285,7 +285,7 @@ public class TorpedoFireStrategy {
         for (float angle : angles) {
             Vec3 dir = CombatFireUtils.rotateHorizontal(look, Math.toRadians(angle));
             TorpedoEntity torpedo = new TorpedoEntity(level, player, caliber);
-            torpedo.setDamage(ExperienceShellItem.applyDamageBonus(launcherStack, torpedoType.getDamage()));
+            torpedo.setDamage(ExperienceShellItem.applyDamageBonus(player, torpedoType.getDamage()));
             torpedo.setSpeed(torpedoType.getSpeed());
             torpedo.setLifetime(torpedoType.getLifetimeTicks());
             if (magnetic) torpedo.setMagnetic(true);

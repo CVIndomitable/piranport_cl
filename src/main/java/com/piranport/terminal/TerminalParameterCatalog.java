@@ -4,6 +4,7 @@ import com.piranport.artillery.config.ArtilleryCannonData;
 import com.piranport.artillery.config.ArtilleryConfig;
 import com.piranport.aviation.AircraftDefinition;
 import com.piranport.aviation.AircraftDefinitionService;
+import com.piranport.aviation.ResolvedAircraftStats;
 import com.piranport.combat.cannon.ammo.AmmoDefinition;
 import com.piranport.combat.cannon.ammo.AmmoDefinitionService;
 import com.piranport.config.ModArtilleryConfig;
@@ -80,6 +81,13 @@ public final class TerminalParameterCatalog {
             add(specs, "aircraft", target, "weight", a.weight(), 0, 100000);
             add(specs, "aircraft", target, "health", a.health(), 1, 100000);
             add(specs, "aircraft", target, "attack_cooldown", a.attackCooldown(), 1, 12000);
+            add(specs, "aircraft", target, "reload_time", ResolvedAircraftStats.DEFAULT_RELOAD_TIME, 1, 12000);
+            add(specs, "aircraft", target, "launch_speed_coefficient", 1.0, 0.05, 5.0);
+            add(specs, "aircraft", target, "cruise_speed_coefficient", 1.0, 0.05, 5.0);
+            add(specs, "aircraft", target, "attack_speed_coefficient", 1.0, 0.05, 5.0);
+            add(specs, "aircraft", target, "return_speed_coefficient", 1.0, 0.05, 5.0);
+            add(specs, "aircraft", target, "follow_speed_coefficient", 1.0, 0.05, 5.0);
+            add(specs, "aircraft", target, "recon_speed_coefficient", 1.0, 0.05, 5.0);
         }
         Set<String> ammoTargets = new HashSet<>();
         for (AmmoDefinition a : AmmoDefinitionService.all().values()) {

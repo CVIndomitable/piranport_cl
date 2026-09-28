@@ -6,6 +6,9 @@ import com.piranport.item.ShipCoreItem;
 import com.piranport.network.ToggleAutoModePayload;
 import com.piranport.network.FireControlPayload;
 import com.piranport.network.ManualReloadPayload;
+import com.piranport.network.AircraftReloadPayload;
+import com.piranport.item.AircraftItem;
+import net.minecraft.world.InteractionHand;
 import com.piranport.network.ToggleFighterGroundAttackPayload;
 import com.piranport.network.ToggleFcRadarPayload;
 import com.piranport.client.ClientGameEvents;
@@ -33,6 +36,8 @@ public class FireControlInputHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FireControlInputHandler.class);
     private static final double FIRE_CONTROL_RANGE = 80.0;
+    private static boolean aircraftReloadActive;
+    private static int aircraftReloadHand;
 
     private FireControlInputHandler() {}
 
@@ -127,14 +132,32 @@ public class FireControlInputHandler {
     /** 处理 R 键 — 手动装填（鱼雷/导弹）。 */
     public static void handleManualReloadKey(Minecraft mc, boolean transformed, boolean inReconMode) {
         if (mc.player == null) return;
+        if (aircraftReloadActive && (!ModKeyMappings.MANUAL_RELOAD.isDown()
+                || !(mc.player.getItemInHand(aircraftReloadHand == 1 ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND)
+                .getItem() instanceof AircraftItem))) {
+            mc.player.stopUsingItem();
+            PacketDistributor.sendToServer(new AircraftReloadPayload(false, aircraftReloadHand));
+            aircraftReloadActive = false;
+        }
         while (ModKeyMappings.MANUAL_RELOAD.consumeClick()) {
             LOGGER.info("[CLIENT] R key pressed - transformed: {}, inReconMode: {}", transformed, inReconMode);
             if (!transformed || inReconMode) {
                 LOGGER.info("[CLIENT] R key ignored - not in combat mode");
                 continue;
             }
-            LOGGER.info("[CLIENT] Sending ManualReloadPayload to server");
-            PacketDistributor.sendToServer(new ManualReloadPayload());
+            InteractionHand hand = mc.player.getMainHandItem().getItem() instanceof AircraftItem
+                    ? InteractionHand.MAIN_HAND
+                    : mc.player.getOffhandItem().getItem() instanceof AircraftItem
+                    ? InteractionHand.OFF_HAND : null;
+            if (hand != null) {
+                aircraftReloadHand = hand == InteractionHand.OFF_HAND ? 1 : 0;
+                aircraftReloadActive = true;
+                mc.player.startUsingItem(hand);
+                PacketDistributor.sendToServer(new AircraftReloadPayload(true, aircraftReloadHand));
+            } else {
+                LOGGER.info("[CLIENT] Sending ManualReloadPayload to server");
+                PacketDistributor.sendToServer(new ManualReloadPayload());
+            }
         }
     }
 

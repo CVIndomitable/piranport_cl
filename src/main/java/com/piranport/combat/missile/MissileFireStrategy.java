@@ -192,7 +192,7 @@ public class MissileFireStrategy {
         // 应用冷却
         if (nextAvailable > 0) {
             int cd = TransformationManager.boostedCooldown(player,
-                    ExperienceShellItem.applyCooldownReduction(launcherStack, launcher.getCooldownTicks()));
+                    ExperienceShellItem.applyCooldownReduction(player, launcher.getCooldownTicks()));
             coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
                     cooldowns.withSlotCooldown(player.getUUID(), weaponSlot, cd, level.getGameTime()));
             launcherStack.set(ModDataComponents.WEAPON_COOLDOWN.get(),
@@ -220,15 +220,16 @@ public class MissileFireStrategy {
     /**
      * 通用导弹生成：在玩家眼睛 + dir*0.5 处生成导弹，以 dir 方向按 initialSpeed 射出。
      * dir 预期为单位向量；非单位向量将被规整化。
+     * 根据玩家是否持有经验炮弹应用强化buff。
      */
     public static void spawnMissileWithDir(Level level, Player player, ItemStack launcherStack,
                                              MissileLauncherItem launcher, String displayItemId,
                                              Vec3 dir) {
         Vec3 d = dir.lengthSqr() > 1e-6 ? dir.normalize() : player.getLookAngle();
         MissileEntity missile = new MissileEntity(level, launcher.getMissileType(),
-                ExperienceShellItem.applyDamageBonus(launcherStack, launcher.getDamage()),
+                ExperienceShellItem.applyDamageBonus(player, launcher.getDamage()),
                 launcher.getArmorPen(),
-                ExperienceShellItem.applyExplosionBonus(launcherStack, launcher.getExplosionPower()),
+                ExperienceShellItem.applyExplosionBonus(player, launcher.getExplosionPower()),
                 displayItemId);
         missile.setOwner(player);
         // Y 跟随 dir.y 偏移，避免抬头/俯冲时导弹从胸前喷出
@@ -294,7 +295,7 @@ public class MissileFireStrategy {
 
             // Apply cooldown
             int cd = TransformationManager.boostedCooldown(player,
-                    ExperienceShellItem.applyCooldownReduction(stack, launcher.getCooldownTicks()));
+                    ExperienceShellItem.applyCooldownReduction(player, launcher.getCooldownTicks()));
             coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
                     cooldowns.withSlotCooldown(player.getUUID(), slot, cd, gameTime));
             stack.set(ModDataComponents.WEAPON_COOLDOWN.get(),

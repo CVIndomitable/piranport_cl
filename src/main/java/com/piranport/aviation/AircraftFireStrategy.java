@@ -512,20 +512,21 @@ public class AircraftFireStrategy {
      * @param weaponSlot 飞机所在槽位（0-8 主手，40 副手）
      */
     public static void loadAircraftPayload(Player player, Inventory inv, ItemStack aircraftStack,
-                                           int weaponSlot, int coreSlot) {
+                                           int weaponSlot, ItemStack coreStack, int coreSlot) {
         if (player.level().isClientSide()) return;
 
         AircraftInfo info = aircraftStack.get(ModDataComponents.AIRCRAFT_INFO.get());
         if (info == null) return;
         AircraftDefinition definition = AircraftDefinitionService.resolve(aircraftStack);
         if (definition == null) return;
+        ResolvedAircraftStats stats = AircraftStatsService.resolve(definition);
 
         // 创造模式不消耗补给，但必须真的把飞机写成"已准备"状态。
         // 早先这里只弹提示就 return，导致创造玩家看到"无需补给"却因为油量仍是 0
         // 被放飞校验拦下，提示与实际行为自相矛盾。
         if (player.getAbilities().instabuild) {
             aircraftStack.set(ModDataComponents.AIRCRAFT_INFO.get(),
-                    info.withCurrentFuel(AircraftStatsService.resolve(definition).fuelCapacity()).withPayloadLoaded(true));
+                    info.withCurrentFuel(stats.fuelCapacity()).withPayloadLoaded(true));
             player.displayClientMessage(Component.translatable("message.piranport.aircraft_creative_free_load"), true);
             return;
         }
@@ -535,7 +536,7 @@ public class AircraftFireStrategy {
         net.minecraft.world.item.Item payloadItem = payloadType.isEmpty() ? null
                 : BuiltInRegistries.ITEM.get(ResourceLocation.parse(payloadType));
 
-        boolean needsFuel = info.currentFuel() < AircraftStatsService.resolve(definition).fuelCapacity();
+        boolean needsFuel = info.currentFuel() < stats.fuelCapacity();
         boolean needsPayload = definition.requiresPayload() && !info.payloadLoaded();
 
         if (!needsFuel && !needsPayload) {
@@ -558,7 +559,7 @@ public class AircraftFireStrategy {
 
         if (fuelSlot >= 0) {
             com.piranport.testtools.PiranPortTestTools.consumeAmmo(player.getUUID(), stackAt(inv, fuelSlot), 1);
-            info = info.withCurrentFuel(AircraftStatsService.resolve(definition).fuelCapacity());
+            info = info.withCurrentFuel(stats.fuelCapacity());
         }
         if (payloadSlot >= 0) {
             com.piranport.testtools.PiranPortTestTools.consumeAmmo(player.getUUID(), stackAt(inv, payloadSlot), 1);
@@ -571,6 +572,22 @@ public class AircraftFireStrategy {
                 SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.5f, 1.4f);
         player.displayClientMessage(Component.translatable("message.piranport.aircraft_loaded",
                 aircraftStack.getHoverName()), true);
+    }
+
+    /** Completes an R-key loading bar after the vanilla use duration has elapsed. */
+    public static void finishAircraftReload(Player player, ItemStack aircraftStack) {
+        Inventory inv = player.getInventory();
+        if (player.getMainHandItem() != aircraftStack && inv.offhand.get(0) != aircraftStack) return;
+        int weaponSlot = inv.selected;
+        if (inv.offhand.get(0) == aircraftStack && player.getMainHandItem() != aircraftStack) weaponSlot = 40;
+        ItemStack coreStack = com.piranport.combat.TransformationManager.findTransformedCore(player);
+        if (coreStack.isEmpty()) return;
+        int coreSlot = -2;
+        for (int i = 0; i < inv.items.size(); i++) {
+            if (inv.items.get(i) == coreStack) { coreSlot = i; break; }
+        }
+        if (inv.offhand.get(0) == coreStack) coreSlot = 40;
+        loadAircraftPayload(player, inv, aircraftStack, weaponSlot, coreStack, coreSlot);
     }
 
     /** 取槽位对应的实际 ItemStack（40 = 副手）。消耗必须落在这个栈上，才能正确写回背包。 */

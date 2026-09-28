@@ -20,7 +20,6 @@ import net.minecraft.resources.ResourceLocation;
  * These should be standard 64x64 player skin format PNG files.
  */
 public class SkinOverlayLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> {
-    private static final int MAX_SKIN_ID = 24;
 
     public SkinOverlayLayer(RenderLayerParent<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> renderer) {
         super(renderer);
@@ -31,8 +30,9 @@ public class SkinOverlayLayer extends RenderLayer<AbstractClientPlayer, PlayerMo
                        AbstractClientPlayer player, float limbSwing, float limbSwingAmount,
                        float partialTick, float ageInTicks, float netHeadYaw, float headPitch) {
         int skinId = ClientSkinData.getActiveSkin(player.getUUID());
-        if (skinId <= 0 || skinId > MAX_SKIN_ID) {
-            PiranPort.LOGGER.warn("Invalid skin ID: {}, expected 1-{}", skinId, MAX_SKIN_ID);
+        if (skinId <= 0 || skinId > ClientSkinData.MAX_SKIN_ID) {
+            // WHY：本方法每个玩家模型每帧都会被调用，而"没装备皮肤核心"是默认状态。
+            // 这里必须静默早退，警告只在 ClientSkinData.setActiveSkin（每次同步一次）里打。
             return;
         }
         if (player.isInvisible()) return;

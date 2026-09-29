@@ -122,7 +122,14 @@ public class ScopeHudLayer {
             String angleText = debug && ClientScopeHandler.hasSolved()
                     ? String.format("  §7仰角: §b%.1f°", Math.toDegrees(ClientScopeHandler.getLastSolvedAngle()))
                     : "";
-            String distText = String.format("§f距离: §e%.1f§fm  §7(相对高度: §b%+.1f§7)%s", dist, vert, angleText);
+            // 落弹时间：给移动目标提前量用，故不加 F8 门槛，普通开镜常驻。
+            // 超射程 / 未解算时 getLastFlightSeconds() 为 NaN，此时整段不显示，避免给出假读数。
+            double flightSeconds = ClientScopeHandler.getLastFlightSeconds();
+            String flightText = ClientScopeHandler.hasSolved() && Double.isFinite(flightSeconds)
+                    ? String.format("  §f落弹: §b%.1f§fs", flightSeconds)
+                    : "";
+            String distText = String.format("§f距离: §e%.1f§fm  §7(相对高度: §b%+.1f§7)%s%s",
+                    dist, vert, flightText, angleText);
             graphics.drawString(mc.font, distText, cx - mc.font.width(distText) / 2, cy + 25, 0xFFFFFF, true);
         }
 

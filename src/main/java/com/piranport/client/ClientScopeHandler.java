@@ -46,6 +46,11 @@ public final class ClientScopeHandler {
     // ===== 客户端弹道解算相关 =====
     /** 上一次解算的结果（发射仰角，弧度） */
     private static double lastSolvedAngle = 0;
+    /**
+     * 上一次解算对应的落弹时间（秒）。NaN = 无有效读数（未解算 / 超射程）。
+     * 与 {@link #lastSolvedAngle} 同源同周期更新，保证 HUD 的「仰角 / 落弹时间」始终配套。
+     */
+    private static double lastFlightSeconds = Double.NaN;
     /** 上一次解算是否判定为目标超出射程 */
     private static boolean lastOutOfRange = false;
     /** 是否已完成至少一次解算 */
@@ -76,6 +81,7 @@ public final class ClientScopeHandler {
         holdTicks = 0;
         heldCannonBeforeScope = true;
         hasSolved = false;
+        lastFlightSeconds = Double.NaN;
         lastOutOfRange = false;
         serverTotalUs = 0;
         serverVerticalError = 0.0;
@@ -94,6 +100,7 @@ public final class ClientScopeHandler {
         hasValidTarget = false;
         heldCannonBeforeScope = false;
         hasSolved = false;
+        lastFlightSeconds = Double.NaN;
         lastOutOfRange = false;
         serverTotalUs = 0;
         serverVerticalError = 0.0;
@@ -160,10 +167,17 @@ public final class ClientScopeHandler {
         // 依据：docs/策划决策/武器/火炮-神经网络弹道解算实验方案.md 4.2
         BallisticSolver.Result result = com.piranport.combat.neural.BallisticDispatcher.solve(
                 weapon, velocity, drag, mcGravity, targetDistance, targetVertical, 0.0,
-                Math.toRadians(effectiveData.minElevation()),
+                BallisticSolver.UNRESTRICTED_MIN_ANGLE,
                 Math.toRadians(effectiveData.maxElevation()));
         lastSolvedAngle = result.angle();
         lastOutOfRange = result.outOfRange();
+        // 落弹时间由仰角回代积分得到（与解算器同一物理模型）。
+        // 超射程时不给出读数：回退角是最大射程角，弹丸到不了目标水平距离。
+        double flightTicks = lastOutOfRange
+                ? Double.NaN
+                : BallisticSolver.flightTimeTicks(velocity, lastSolvedAngle, drag, mcGravity,
+                        targetDistance, 0.0);
+        lastFlightSeconds = Double.isFinite(flightTicks) ? flightTicks / 20.0 : Double.NaN;
         hasSolved = true;
     }
 
@@ -202,6 +216,7 @@ public final class ClientScopeHandler {
         aimedAtEntity = target.entity();
         if (!hasValidTarget) {
             hasSolved = false;
+            lastFlightSeconds = Double.NaN;
             lastOutOfRange = false;
         }
         aimedPosition = hitPos;
@@ -294,6 +309,12 @@ public final class ClientScopeHandler {
     /** 上一次客户端解算的发射仰角（弧度） */
     public static double getLastSolvedAngle() { return lastSolvedAngle; }
 
+    /**
+     * 上一次客户端解算对应的落弹时间（秒）。
+     * 返回 NaN 表示当前没有有效读数（未解算 / 超射程），调用方需自行判断。
+     */
+    public static double getLastFlightSeconds() { return lastFlightSeconds; }
+
     /** 上一次解算是否判定为目标超出射程 */
     public static boolean isLastOutOfRange() { return lastOutOfRange; }
 
@@ -355,6 +376,7 @@ public final class ClientScopeHandler {
         hasValidTarget = false;
         heldCannonBeforeScope = false;
         hasSolved = false;
+        lastFlightSeconds = Double.NaN;
         lastOutOfRange = false;
     }
 }

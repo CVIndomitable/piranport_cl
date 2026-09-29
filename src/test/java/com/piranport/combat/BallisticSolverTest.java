@@ -417,6 +417,94 @@ class BallisticSolverTest {
         assertProjectileHits(2.5, drag, gravity, 50.0, 3.0, withoutSeed);
     }
 
+    // ===== 落弹时间（HUD 读数）=====
+
+    /** 落弹时间必须与独立逐 tick 积分求出的跨点时刻一致。 */
+    @Test
+    void flightTimeMatchesIndependentTickCrossing() {
+        double speed = 2.0;
+        double drag = 0.01;
+        double gravity = 0.05;
+        double hDist = 30.0;
+        BallisticSolver.Result result = BallisticSolver.solve(speed, drag, gravity, hDist, 0.0, 0.0);
+        assertFalse(result.outOfRange());
+
+        double ticks = BallisticSolver.flightTimeTicks(speed, result.angle(), drag, gravity, hDist, 0.0);
+        assertTrue(Double.isFinite(ticks), "射程内必须有落弹时间");
+        assertEquals(independentCrossingTick(speed, result.angle(), drag, gravity, hDist), ticks, 1.0e-9,
+                "落弹时间应与独立物理的跨点时刻逐位一致");
+        // 量级自检：v0=2、30 格、约 13° 低弹道，约 18 tick ≈ 0.9 秒
+        assertEquals(0.91, ticks / 20.0, 0.1, "落弹秒数量级不对");
+    }
+
+    /** 落弹时间随距离单调递增：HUD 读数不能出现「更远反而更快」。 */
+    @Test
+    void flightTimeGrowsWithDistance() {
+        double speed = 2.5;
+        double drag = 0.015;
+        double gravity = 9.8 / 196.0;
+        // 按该炮实际最大射程取档位，避免写死距离写超程（写 60 格时这门炮已经够不着）。
+        double maxRange = BallisticSolver.calculateMaxHorizontalRange(speed, drag, gravity);
+        double previous = -1.0;
+        for (double fraction : new double[]{0.2, 0.4, 0.6, 0.75}) {
+            double hDist = maxRange * fraction;
+            BallisticSolver.Result result = BallisticSolver.solve(speed, drag, gravity, hDist, 0.0, 0.0);
+            assertFalse(result.outOfRange(), "hDist=" + hDist + " 应仍在射程内");
+            double ticks = BallisticSolver.flightTimeTicks(speed, result.angle(), drag, gravity, hDist, 0.0);
+            assertTrue(ticks > previous, "hDist=" + hDist + " 的落弹时间应大于上一档：" + ticks + " <= " + previous);
+            previous = ticks;
+        }
+    }
+
+    /** 超射程回退角打不到目标水平距离 → 必须返回 NaN，HUD 才能不显示假读数。 */
+    @Test
+    void flightTimeIsNaNWhenTargetOutOfReach() {
+        double speed = 1.0;
+        double drag = 0.05;
+        double gravity = 0.05;
+        double hDist = 400.0;
+        BallisticSolver.Result result = BallisticSolver.solve(speed, drag, gravity, hDist, 0.0, 0.0);
+        assertTrue(result.outOfRange(), "该配置应判定超射程");
+        assertTrue(Double.isNaN(BallisticSolver.flightTimeTicks(speed, result.angle(), drag, gravity, hDist, 0.0)),
+                "超射程时落弹时间必须是 NaN");
+    }
+
+    /** 非法输入不抛异常，返回 NaN。 */
+    @Test
+    void flightTimeHandlesDegenerateInputs() {
+        assertTrue(Double.isNaN(BallisticSolver.flightTimeTicks(0.0, 0.3, 0.01, 0.05, 30.0, 0.0)));
+        assertTrue(Double.isNaN(BallisticSolver.flightTimeTicks(2.0, 0.3, 0.01, 0.05, 0.0, 0.0)));
+        assertTrue(Double.isNaN(BallisticSolver.flightTimeTicks(Double.NaN, 0.3, 0.01, 0.05, 30.0, 0.0)));
+        assertTrue(Double.isNaN(BallisticSolver.flightTimeTicks(2.0, Double.NaN, 0.01, 0.05, 30.0, 0.0)));
+    }
+
+    /**
+     * 独立核对的跨点时刻（tick）。同样复刻实体执行顺序：自定义阻力 → 移动 → 原版 0.99 → 重力。
+     * 第 tick 次循环结束时位置对应 tick tick，故跨点时刻 = tick + 本 tick 内的插值比例。
+     */
+    private static double independentCrossingTick(double speed, double angle, double drag,
+                                                  double gravity, double targetX) {
+        double x = 0.0;
+        double y = 0.0;
+        double velocityX = speed * Math.cos(angle);
+        double velocityY = speed * Math.sin(angle);
+        for (int tick = 0; tick < 4000; tick++) {
+            velocityX /= 1.0 + drag;
+            velocityY /= 1.0 + drag;
+            double nextX = x + velocityX;
+            double nextY = y + velocityY;
+            if (nextX >= targetX) {
+                return tick + (targetX - x) / (nextX - x);
+            }
+            x = nextX;
+            y = nextY;
+            velocityX *= (double) 0.99F;
+            velocityY = velocityY * (double) 0.99F - gravity;
+            if (y < -300.0) break;
+        }
+        return Double.NaN;
+    }
+
     private static void assertProjectileHits(double speed, double drag, double gravity,
                                              double targetX, double targetY, BallisticSolver.Result result) {
         assertEquals(targetY, projectileHeightAt(speed, result.angle(), drag, gravity, targetX), 0.02,

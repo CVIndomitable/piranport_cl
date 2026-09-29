@@ -756,6 +756,62 @@ public final class BallisticSolver {
         return y;
     }
 
+    /**
+     * 计算弹丸从出膛到抵达目标水平距离所需的飞行时间（tick）。
+     *
+     * <p>与 {@link #simulate} 使用同一套逐 tick 积分模型（阻力 → 移动 → 原版空气阻力 + 重力），
+     * 区别只是把积分步数当作返回值。跨过目标点的那一 tick 内做线性插值，否则远距离下
+     * 整 tick 量化会让读数比实际偏大最多 1 tick（0.05 秒）。
+     *
+     * <p><b>为什么单独算而不塞进 {@link Result}</b>：飞行时间只服务于 HUD 读数，
+     * 解算器内部（误差评估、缓存键、超射程判定）都不需要它；放进 Result 会污染缓存语义。
+     * 调用方拿到仰角后再回代一次即可，代价是一次与误差评估同量级的积分。
+     *
+     * <p><b>超射程时返回 NaN</b>：回退角是最大射程角，弹丸根本到不了目标水平距离，
+     * 此时任何「落弹时间」都是假的，必须由调用方判断。
+     *
+     * @return 飞行时间（tick，含跨点插值）；参数非法或步数上限内未抵达目标水平距离时返回 NaN
+     */
+    public static double flightTimeTicks(double v0, double angle, double dragCoeff, double gravity,
+                                         double targetX, double vz0) {
+        if (!Double.isFinite(v0) || v0 <= 0.0
+                || !Double.isFinite(angle) || !Double.isFinite(targetX) || targetX <= 0.0) {
+            return Double.NaN;
+        }
+        double vx = v0 * Math.cos(angle);
+        double vy = v0 * Math.sin(angle);
+        double vz = vz0;
+        double x = 0.0;
+        double y = 0.0;
+        int maxSteps = simulationStepLimit(v0, targetX);
+
+        for (int step = 0; step < maxSteps; step++) {
+            Velocity dragged = applyLinearDrag(vx, vy, vz, dragCoeff);
+            vx = dragged.vx();
+            vy = dragged.vy();
+            vz = dragged.vz();
+
+            double prevX = x;
+            x += vx;
+            y += vy;
+
+            if (x >= targetX) {
+                double dx = x - prevX;
+                // step 是 0 基索引：prevX 是第 step tick 结束时的位置，
+                // 因此跨点时刻 = step + 本 tick 内的插值比例
+                return dx < 1.0e-9 ? step + 1.0 : step + (targetX - prevX) / dx;
+            }
+
+            vx *= VANILLA_AIR_DRAG;
+            vy *= VANILLA_AIR_DRAG;
+            vz *= VANILLA_AIR_DRAG;
+            vy -= gravity;
+
+            if (y < -300) break;
+        }
+        return Double.NaN;
+    }
+
     private static double computeHorizontalError(double v0, double angle, double dragCoeff, double gravity,
                                                  double targetX, double targetY, double vz0) {
         double vx = v0 * Math.cos(angle);

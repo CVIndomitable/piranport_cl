@@ -110,14 +110,6 @@ final class CannonStats {
         return getProjectileInaccuracy(weapon, level);
     }
 
-    static double getMinElevationRadians(ItemStack weapon, net.minecraft.world.level.Level level) {
-        if (weapon.getItem() instanceof com.piranport.artillery.ArtilleryItem ai) {
-            float value = level != null ? ai.getEffectiveData(level).minElevation() : ai.getData().minElevation();
-            return Math.toRadians(value);
-        }
-        return Math.toRadians(-89.0);
-    }
-
     static double getMaxElevationRadians(ItemStack weapon, net.minecraft.world.level.Level level) {
         if (weapon.getItem() instanceof com.piranport.artillery.ArtilleryItem ai) {
             float value = level != null ? ai.getEffectiveData(level).maxElevation() : ai.getData().maxElevation();

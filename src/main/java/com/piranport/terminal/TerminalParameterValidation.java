@@ -20,14 +20,6 @@ public final class TerminalParameterValidation {
             String value = spec.canonical(entry.getValue());
             if (!value.equals(spec.canonical(spec.baseValue()))) checked.put(spec.key(), value);
         }
-        for (TerminalParameterSpec spec : metadata) {
-            if (!"cannon".equals(spec.group()) || !"min_elevation".equals(spec.property())) continue;
-            TerminalParameterSpec maximum = specs.get("cannon." + spec.target() + ".max_elevation");
-            if (maximum == null) continue;
-            double min = Double.parseDouble(checked.getOrDefault(spec.key(), spec.baseValue()));
-            double max = Double.parseDouble(checked.getOrDefault(maximum.key(), maximum.baseValue()));
-            if (min >= max) throw new IllegalArgumentException("火炮最小仰角必须小于最大仰角");
-        }
         return checked;
     }
 }

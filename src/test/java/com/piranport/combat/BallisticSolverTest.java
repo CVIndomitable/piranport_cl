@@ -146,6 +146,71 @@ class BallisticSolverTest {
         assertTrue(depressionLimit.outOfRange(), "近距离目标需要超过炮管限制的俯角");
     }
 
+    // 俯角废除（策划决策/武器/16-火炮无俯角限制.md）后，瞄准路径的下界从 -5°/-10° 放宽到 -89°。
+    // 下面两条测试钉住放宽的影响面：不低于炮口的目标解算基本不变、低于炮口的近距目标才能命中。
+    @Test
+    void unrestrictedLowerBoundKeepsSolutionsForTargetsAtOrAboveMuzzle() {
+        double[][] guns = {
+                {2.5, 0.015, 9.8 / 196.0, 60.0},
+                {3.0, 0.01, 9.8 / 196.0, 50.0},
+                {3.5, 0.008, 9.8 / 196.0, 40.0},
+        };
+        for (double[] gun : guns) {
+            double maxAngle = Math.toRadians(gun[3]);
+            for (double hDist : new double[]{5.0, 10.0, 25.0, 50.0, 90.0}) {
+                for (double vDist : new double[]{0.0, 1.0, 4.0, 10.0}) {
+                    BallisticSolver.Result limited = BallisticSolver.solve(
+                            gun[0], gun[1], gun[2], hDist, vDist, 0.0, Math.toRadians(-5.0), maxAngle);
+                    BallisticSolver.Result free = BallisticSolver.solve(
+                            gun[0], gun[1], gun[2], hDist, vDist, 0.0,
+                            BallisticSolver.UNRESTRICTED_MIN_ANGLE, maxAngle);
+                    String where = "v0=" + gun[0] + "，h=" + hDist + "，高差=" + vDist;
+                    assertEquals(limited.outOfRange(), free.outOfRange(), "可达性不应因放宽下界而改变：" + where);
+                    if (free.outOfRange()) continue;   // 仰角上限打不到的高角目标（如 5 格外 10 格高）
+                    // 搜索区间从 50° 宽变成 130° 宽后，三分解的网格步长随之变大，解算角会出现
+                    // 0.0x° 量级的数值抖动（实测全矩阵最大 0.18°，只在贴脸近距出现）。抖动是否可接受
+                    // 不看角度看落点：独立物理复刻的落点差必须远小于 0.5 格判定容差（实测全矩阵最大 0.008 格）。
+                    assertProjectileHits(gun[0], gun[1], gun[2], hDist, vDist, free);
+                    assertEquals(
+                            projectileHeightAt(gun[0], limited.angle(), gun[1], gun[2], hDist),
+                            projectileHeightAt(gun[0], free.angle(), gun[1], gun[2], hDist), 0.05,
+                            "落点不应因放宽下界而改变：" + where);
+                }
+            }
+        }
+    }
+
+    @Test
+    void unrestrictedLowerBoundReachesTargetsBelowMuzzle() {
+        // 甲板上打水线目标，炮口比瞄点高 2.8 格（140mm 双联的 v₀/drag，旧俯角 -5°）。
+        double v0 = 3.0;
+        double drag = (double) 0.01F;
+        double gravity = 9.8 / 196.0;
+        double maxAngle = Math.toRadians(50.0);
+
+        // 15 格：旧行为误差异常大，兜底成最大射程角抛射（远界兜底逻辑），同样打不中。
+        BallisticSolver.Result lobbed = BallisticSolver.solve(
+                v0, drag, gravity, 10.0, -2.8, 0.0, Math.toRadians(-5.0), maxAngle);
+        assertTrue(lobbed.outOfRange(), "旧俯角限制下这是近界内的目标");
+        assertEquals(BallisticSolver.calculateMaxRangeAngle(v0, drag, gravity,
+                        Math.toRadians(-5.0), maxAngle), lobbed.angle(), 1.0e-9,
+                "近界内误差超兜底阈值时，旧行为是把炮打到最大射程角上");
+
+        // 18 格：旧行为钳在俯角上，仍判超程。
+        BallisticSolver.Result clamped = BallisticSolver.solve(
+                v0, drag, gravity, 18.0, -2.8, 0.0, Math.toRadians(-5.0), maxAngle);
+        assertTrue(clamped.outOfRange());
+        assertEquals(-5.0, Math.toDegrees(clamped.angle()), 0.01, "旧行为是把角度钳在俯角上");
+
+        for (double hDist : new double[]{10.0, 18.0}) {
+            BallisticSolver.Result free = BallisticSolver.solve(
+                    v0, drag, gravity, hDist, -2.8, 0.0, BallisticSolver.UNRESTRICTED_MIN_ANGLE, maxAngle);
+            assertFalse(free.outOfRange(), "废除俯角后近距低目标必须可解，h=" + hDist);
+            assertTrue(Math.toDegrees(free.angle()) < 0.0, "低于炮口的目标应解出负角，h=" + hDist);
+            assertProjectileHits(v0, drag, gravity, hDist, -2.8, free);
+        }
+    }
+
     @Test
     void configuredThresholdStillControlsMaxRangeAngleFallback() {
         BallisticSolver.setConfigSuppliers(100, 4000, 0.01, 50.0, 32, true);

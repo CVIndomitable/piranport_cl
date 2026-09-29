@@ -21,7 +21,15 @@ public final class BallisticSolver {
 
     /** 默认重力值（blocks/tick²），匹配 CannonProjectileEntity.getDefaultGravity() */
     public static final double DEFAULT_GRAVITY = 0.05;
-    private static final double UNRESTRICTED_MIN_ANGLE = Math.toRadians(-89.0);
+    /**
+     * 无限制下界角。
+     *
+     * <p>火炮不再限制俯角（玩法上不做「最近射程」，见
+     * {@code docs/策划决策/武器/16-火炮无俯角限制.md}），因此所有火炮瞄准路径的
+     * 角度区间下界都取此常量，只保留 {@code maxElevation} 作为上界。
+     * 非火炮物品历来走这个下界，两类调用方现在同值。
+     */
+    public static final double UNRESTRICTED_MIN_ANGLE = Math.toRadians(-89.0);
     private static final double UNRESTRICTED_MAX_ANGLE = Math.toRadians(89.0);
     private static final int PRECISE_SCAN_STEPS = 512;
     private static final int PRECISE_REFINE_ITERS = 80;

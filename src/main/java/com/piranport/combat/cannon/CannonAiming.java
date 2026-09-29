@@ -7,7 +7,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 import com.piranport.combat.BallisticSolver;
 import net.neoforged.neoforge.network.PacketDistributor;
-import static com.piranport.combat.cannon.CannonStats.getMinElevationRadians;
 import static com.piranport.combat.cannon.CannonStats.getMaxElevationRadians;
 import static com.piranport.combat.cannon.CannonStats.getProjectileGravity;
 import static com.piranport.combat.cannon.CannonStats.getProjectileDrag;
@@ -30,7 +29,7 @@ final class CannonAiming {
             double mcGravity = gravity > 0f ? gravity / 196.0 : BallisticSolver.DEFAULT_GRAVITY;
             double pitch = BallisticSolver.calculateMaxRangeAngle(velocity,
                     getProjectileDrag(weapon, player.level()), mcGravity,
-                    getMinElevationRadians(weapon, player.level()), getMaxElevationRadians(weapon, player.level()));
+                    BallisticSolver.UNRESTRICTED_MIN_ANGLE, getMaxElevationRadians(weapon, player.level()));
             double yaw = Math.toRadians(player.getYRot());
             double cosPitch = Math.cos(pitch);
             return new Vec3(-Math.sin(yaw) * cosPitch, Math.sin(pitch), Math.cos(yaw) * cosPitch).normalize();
@@ -82,7 +81,7 @@ final class CannonAiming {
         BallisticSolver.Result result = com.piranport.combat.neural.BallisticDispatcher.solve(
                 weapon, velocity, drag, mcGravity,
                 horizontalDist, verticalDist, 0.0,
-                getMinElevationRadians(weapon, player.level()),
+                BallisticSolver.UNRESTRICTED_MIN_ANGLE,
                 getMaxElevationRadians(weapon, player.level()));
         double optimalPitch = result.angle();
 

@@ -56,7 +56,6 @@ public class ConfigOverrideManager {
                 (float) com.piranport.terminal.TerminalParameters.getDouble(key + "vertical_spread", c.verticalSpread()),
                 (float) com.piranport.terminal.TerminalParameters.getDouble(key + "horizontal_spread", c.horizontalSpread()),
                 (float) com.piranport.terminal.TerminalParameters.getDouble(key + "max_elevation", c.maxElevation()),
-                (float) com.piranport.terminal.TerminalParameters.getDouble(key + "min_elevation", c.minElevation()),
                 (float) com.piranport.terminal.TerminalParameters.getDouble(key + "turret_speed", c.turretSpeed()),
                 c.loadingMode());
     }

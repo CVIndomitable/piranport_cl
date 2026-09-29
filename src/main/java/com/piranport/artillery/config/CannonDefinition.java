@@ -42,8 +42,9 @@ public record CannonDefinition(ResourceLocation id, ArtilleryCannonData data) {
         if (!Float.isFinite(data.dispersion()) || data.dispersion() < 0) errors.add("dispersion must be finite and non-negative");
         if (!Float.isFinite(data.verticalSpread()) || data.verticalSpread() < 0) errors.add("verticalSpread must be finite and non-negative");
         if (!Float.isFinite(data.horizontalSpread()) || data.horizontalSpread() < 0) errors.add("horizontalSpread must be finite and non-negative");
-        if (!Float.isFinite(data.minElevation()) || !Float.isFinite(data.maxElevation()) || data.minElevation() >= data.maxElevation()) {
-            errors.add("minElevation must be lower than maxElevation");
+        // 俯角已废除（策划决策/武器/16-火炮无俯角限制.md），只校验仰角上界。
+        if (!Float.isFinite(data.maxElevation())) {
+            errors.add("maxElevation must be finite");
         }
         if (data.loadingMode() == null ||
                 !("AUTO".equalsIgnoreCase(data.loadingMode()) || "MANUAL".equalsIgnoreCase(data.loadingMode()))) {

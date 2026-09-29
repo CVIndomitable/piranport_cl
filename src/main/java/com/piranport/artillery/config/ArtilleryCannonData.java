@@ -23,7 +23,6 @@ public record ArtilleryCannonData(
         float verticalSpread,
         float horizontalSpread,
         float maxElevation,
-        float minElevation,
         float turretSpeed,
         /**
          * 装填模式：策划决策/武器/07-火炮装填双模式.md
@@ -39,7 +38,7 @@ public record ArtilleryCannonData(
             14, 1, 6f, 30, 500, 4.0f, List.of(new MuzzlePos(0, 0, 0)),
             3.0f, 0.01f, 9.8f, 1.0f, 0.5f,
             20, 1, 5.0f,
-            200.0f, 0.5f, 0.5f, 45.0f, -5.0f, 3.0f,
+            200.0f, 0.5f, 0.5f, 45.0f, 3.0f,
             "MANUAL"
     );
 
@@ -59,7 +58,6 @@ public record ArtilleryCannonData(
         if (verticalSpread <= 0) verticalSpread = dispersion;
         if (horizontalSpread <= 0) horizontalSpread = dispersion;
         if (maxElevation <= 0) maxElevation = getDefaultMaxElevation(caliber);
-        if (minElevation >= maxElevation) minElevation = -5.0f;
         if (turretSpeed <= 0) turretSpeed = 3.0f;
         // 装填模式：缺省按口径（<=4 = AUTO, >4 = MANUAL）
         if (loadingMode == null || loadingMode.isBlank()) {
@@ -94,7 +92,7 @@ public record ArtilleryCannonData(
                 initialSpeed, dragCoeff, gravity, explosionPower, dispersion,
                 fireCooldown, salvoCount, salvoInterval,
                 getDefaultProjectileWeight(caliber), dispersion, dispersion,
-                getDefaultMaxElevation(caliber), getDefaultMinElevation(caliber), 3.0f,
+                getDefaultMaxElevation(caliber), 3.0f,
                 (caliber <= 4) ? "AUTO" : "MANUAL");
     }
 
@@ -115,10 +113,6 @@ public record ArtilleryCannonData(
         if (caliber <= 4) return 60.0f;
         if (caliber <= 8) return 50.0f;
         return 45.0f;
-    }
-
-    private static float getDefaultMinElevation(int caliber) {
-        return caliber <= 4 ? -10.0f : -5.0f;
     }
 
     // compact constructor 无法提供默认值，用静态工厂

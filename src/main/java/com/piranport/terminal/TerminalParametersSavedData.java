@@ -79,18 +79,6 @@ public final class TerminalParametersSavedData extends SavedData {
                 PiranPort.LOGGER.warn("Skipping invalid reloaded terminal override {}: {}", entry.getKey(), e.getMessage());
             }
         }
-        // 新基准可能使旧仰角对倒置，只舍弃相关旧覆盖，不连带删除其他有效设置。
-        for (TerminalParameterSpec spec : metadata) {
-            if (!"cannon".equals(spec.group()) || !"min_elevation".equals(spec.property())) continue;
-            TerminalParameterSpec max = specs.get("cannon." + spec.target() + ".max_elevation");
-            if (max == null) continue;
-            double minimum = Double.parseDouble(valid.getOrDefault(spec.key(), spec.baseValue()));
-            double maximum = Double.parseDouble(valid.getOrDefault(max.key(), max.baseValue()));
-            if (minimum >= maximum) {
-                valid.remove(spec.key());
-                valid.remove(max.key());
-            }
-        }
         if (!overrides.equals(valid)) {
             overrides.clear();
             overrides.putAll(valid);

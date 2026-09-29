@@ -12,7 +12,7 @@ class CannonDefinitionTest {
     private static ArtilleryCannonData data(int barrels, List<MuzzlePos> muzzles) {
         return new ArtilleryCannonData(8, barrels, 12f, 50, 1000, 3f, muzzles,
                 3f, 0.01f, 9.8f, 1.5f, 1f, 15, barrels, 0f,
-                200f, 0.8f, 0.8f, 50f, -5f, 3f, "MANUAL");
+                200f, 0.8f, 0.8f, 50f, 3f, "MANUAL");
     }
 
     @Test

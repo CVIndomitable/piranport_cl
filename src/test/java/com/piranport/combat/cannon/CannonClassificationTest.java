@@ -26,7 +26,7 @@ class CannonClassificationTest {
                         new MuzzlePos(0, 0, 0), new MuzzlePos(0, 0, 0), new MuzzlePos(0, 0, 0),
                         new MuzzlePos(0, 0, 0), new MuzzlePos(0, 0, 0)),
                 12f, 0.008f, 9.8f, 7f, 1.8f, 10, 14, 2f,
-                800f, 1.8f, 1.8f, 45f, -5f, 3f, "MANUAL");
+                800f, 1.8f, 1.8f, 45f, 3f, "MANUAL");
         assertEquals(CannonAmmoRules.CaliberFamily.LARGE, CannonAmmoRules.familyForData(experimental));
     }
 }

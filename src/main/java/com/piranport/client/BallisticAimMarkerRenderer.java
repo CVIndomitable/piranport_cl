@@ -104,7 +104,7 @@ public final class BallisticAimMarkerRenderer {
         double gravity = data.gravity() > 0.0f
                 ? data.gravity() / GRAVITY_SCALE
                 : BallisticSolver.DEFAULT_GRAVITY;
-        double minAngle = Math.toRadians(data.minElevation());
+        double minAngle = BallisticSolver.UNRESTRICTED_MIN_ANGLE;
         double maxAngle = Math.toRadians(data.maxElevation());
 
         Vec3 origin = mc.player.getEyePosition();

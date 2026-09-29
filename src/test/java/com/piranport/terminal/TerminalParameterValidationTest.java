@@ -10,8 +10,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class TerminalParameterValidationTest {
     private static final List<TerminalParameterSpec> SPECS = List.of(
-            new TerminalParameterSpec("cannon.test.min_elevation", "cannon", "test", "min_elevation",
-                    TerminalParameterSpec.ValueType.DOUBLE, "-5", -90, 90),
             new TerminalParameterSpec("cannon.test.max_elevation", "cannon", "test", "max_elevation",
                     TerminalParameterSpec.ValueType.DOUBLE, "45", -90, 90),
             new TerminalParameterSpec("global.test.count", "global", "test", "count",
@@ -21,15 +19,11 @@ class TerminalParameterValidationTest {
 
     @Test
     void validatesWholeEffectiveBatchIndependentOfEditOrder() {
-        Map<String, String> valid = Map.of("cannon.test.min_elevation", "60",
-                "cannon.test.max_elevation", "70");
-        assertEquals(Map.of("cannon.test.min_elevation", "60.0",
-                "cannon.test.max_elevation", "70.0"), TerminalParameterValidation.checked(valid, SPECS));
-        assertThrows(IllegalArgumentException.class, () -> TerminalParameterValidation.checked(
-                Map.of("cannon.test.min_elevation", "60"), SPECS));
-        assertThrows(IllegalArgumentException.class, () -> TerminalParameterValidation.checked(
-                Map.of("cannon.test.min_elevation", "70", "cannon.test.max_elevation", "60"), SPECS));
+        Map<String, String> valid = Map.of("cannon.test.max_elevation", "70");
+        assertEquals(Map.of("cannon.test.max_elevation", "70.0"),
+                TerminalParameterValidation.checked(valid, SPECS));
         for (Map<String, String> invalid : List.of(Map.of("missing", "1"),
+                Map.of("cannon.test.max_elevation", "91"),
                 Map.of("global.test.count", "1.5"), Map.of("global.test.count", "11"),
                 Map.of("global.test.enabled", "1"))) {
             assertThrows(RuntimeException.class, () -> TerminalParameterValidation.checked(invalid, SPECS));

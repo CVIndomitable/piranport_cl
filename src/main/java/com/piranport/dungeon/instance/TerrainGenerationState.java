@@ -79,7 +79,7 @@ public final class TerrainGenerationState extends SavedData {
         tag.putLong("Seed", seed);
         tag.putInt("Terrain", terrainOrdinal);
         tag.putBoolean("Initialized", initialized);
-        tag.putInt("Version", 2);
+        tag.putInt("Version", 3);
         tag.putBoolean("NodeSpecific", nodeSpecific);
         return tag;
     }
@@ -100,6 +100,14 @@ public final class TerrainGenerationState extends SavedData {
         state.nodeSpecific = tag.getBoolean("NodeSpecific");
         // 旧版本把首节点特征写入共享游标。保留海面进度，独立节点游标负责补齐各节点。
         if (tag.getInt("Version") < 2 && (state.phase == Phase.FEATURES || state.phase == Phase.POI)) {
+            state.phase = Phase.BOUNDARY;
+            state.cursor = 0;
+            state.setDirty();
+        }
+        // 屏障环改为写到建筑高度上限并加盖（260929）。V2 存档写下的是矮环且没有顶盖，
+        // 若沿用 READY/BOUNDARY 游标就永远不会补写，玩家照样能从上方越出——退回重扫一遍。
+        // 屏障写入幂等，重扫只是多花队列额度。
+        if (tag.getInt("Version") < 3 && (state.phase == Phase.BOUNDARY || state.phase == Phase.READY)) {
             state.phase = Phase.BOUNDARY;
             state.cursor = 0;
             state.setDirty();

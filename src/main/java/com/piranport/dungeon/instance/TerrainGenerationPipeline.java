@@ -87,17 +87,20 @@ public final class TerrainGenerationPipeline {
     public static long queuedBlocks(ServerLevel level, DungeonInstance instance, NodeData node) {
         TerrainGenerationState base = state(level, instance, null);
         TerrainGenerationState local = state(level, instance, node);
-        long boundary = (long) MAP_SIZE * 4 * (MAX_DEPTH + 7);
+        // 屏障环是整块地图规模和节点规模两套，各自按自己的跨度与高度计费，不能共用一份估算。
+        long baseBoundary = boundaryBlockCount(level, MAP_SIZE);
+        long localBoundary = boundaryBlockCount(level, DungeonConstants.NODE_AREA_SIZE);
         long shared = switch (base.phase()) {
-            case BASE -> Math.max(0, (long) MAP_SIZE * MAP_SIZE * (MAX_DEPTH + 1) - base.cursor()) + boundary;
-            case BOUNDARY -> Math.max(0, boundary - base.cursor());
+            case BASE -> Math.max(0, (long) MAP_SIZE * MAP_SIZE * (MAX_DEPTH + 1) - base.cursor()) + baseBoundary;
+            case BOUNDARY -> Math.max(0, baseBoundary - base.cursor());
             default -> 0;
         };
         long features = featureCount(node.terrainType() == null ? TerrainType.T1_OCEAN : node.terrainType());
         long poi = 75 + 28 * checkpointCount(instance, node);
         return shared + switch (local.phase()) {
-            case BASE, FEATURES -> Math.max(0, features - local.cursor()) + poi;
-            case POI -> Math.max(0, poi - local.cursor());
+            case BASE, FEATURES -> Math.max(0, features - local.cursor()) + poi + localBoundary;
+            case POI -> Math.max(0, poi - local.cursor()) + localBoundary;
+            case BOUNDARY -> Math.max(0, localBoundary - local.cursor());
             default -> 0;
         };
     }
@@ -193,6 +196,16 @@ public final class TerrainGenerationPipeline {
      * <p>另注：玩家越界防护是<b>整实例级</b>的
      * （{@code DungeonEventHandler} 把玩家钳回 {@code getUsableMinX/MaxX} 的可用区），
      * 与节点级屏障环职责不同，二者不冲突。</p>
+     *
+     * <h2>高度：写满到建筑高度上限并加盖（260929）</h2>
+     * <p>旧实现只写 {@code MAX_DEPTH + 7}（y=47..69）层——比海面高 6 格。玩家只要自己搭方块、
+     * 用火箭鞘翅或任何升空手段越过 70 层，就等于走出了空气墙：屏障环变成一道可以绕过去的矮栅栏。
+     * 现在竖直方向一路写到 {@code level.getMaxBuildHeight()} 的最后一层
+     * （主世界即 y=319），并在顶端铺满一整层屏障"加盖"，与围墙顶部咬合，形成封闭笼子。</p>
+     *
+     * <p>代价是方块数：环体 = 周长 × 高度。共享基底 512×4×273 ≈ 56 万，节点 128×4×273 ≈ 14 万，
+     * 另加顶盖（基底 512² ≈ 26 万、节点 128² ≈ 1.6 万）。仍按 8192/帧分帧写入，
+     * {@link #queuedBlocks} 的估算同步改为按各自跨度计费，否则入口进度会低估到接近 0。</p>
      */
     private static int processBoundary(ServerLevel level, TerrainGenerationState state, int budget) {
         // 节点局部状态：跨度 = 节点边长，坐标基准 = 出生中心回退半格。
@@ -201,22 +214,54 @@ public final class TerrainGenerationPipeline {
         int span = nodeLocal ? DungeonConstants.NODE_AREA_SIZE : MAP_SIZE;
         int originX = nodeLocal ? state.startX() - span / 2 : state.startX();
         int originZ = nodeLocal ? state.startZ() - span / 2 : state.startZ();
-        int height = MAX_DEPTH + 7;
-        long total = (long) span * 4 * height;
+        int bottomY = barrierBottomY();
+        int height = boundaryHeight(level);
+        int topY = barrierTopY(level);
+        long ring = (long) span * 4 * height;
+        long total = ring + (long) span * span;
         int used = (int) Math.min(total - state.cursor(), budget);
+        BlockState barrier = Blocks.BARRIER.defaultBlockState();
         for (int i = 0; i < used; i++) {
             long index = state.cursor() + i;
-            int side = (int) (index / (span * height));
-            int rem = (int) (index % (span * height));
-            int offset = rem / height;
-            int y = SEA - MAX_DEPTH + rem % height;
-            int x = originX + (side < 2 ? offset : side == 2 ? 0 : span - 1);
-            int z = originZ + (side < 2 ? side == 0 ? 0 : span - 1 : offset);
-            level.setBlock(new BlockPos(x, y, z), Blocks.BARRIER.defaultBlockState(), FLAGS);
+            if (index < ring) {
+                int side = (int) (index / ((long) span * height));
+                int rem = (int) (index % ((long) span * height));
+                int offset = rem / height;
+                int y = bottomY + rem % height;
+                int x = originX + (side < 2 ? offset : side == 2 ? 0 : span - 1);
+                int z = originZ + (side < 2 ? side == 0 ? 0 : span - 1 : offset);
+                level.setBlock(new BlockPos(x, y, z), barrier, FLAGS);
+            } else {
+                // 加盖：顶端整层封死（含与围墙重叠的一圈，写屏障是幂等的），
+                // 防止玩家从围墙正上方越顶。
+                long cap = index - ring;
+                int x = originX + (int) (cap % span);
+                int z = originZ + (int) (cap / span);
+                level.setBlock(new BlockPos(x, topY, z), barrier, FLAGS);
+            }
         }
         state.advance(used);
         if (state.cursor() >= total) state.markReady();
         return used;
+    }
+
+    /** 屏障环顶端 = 建筑高度上限的最后一层（主世界 y=319，其上放不了方块也飞不上去）。 */
+    private static int barrierTopY(ServerLevel level) {
+        return level.getMaxBuildHeight() - 1;
+    }
+
+    /** 屏障环底端 = 共享基底写入的最低层，与水底齐平，不留水下缝隙。 */
+    private static int barrierBottomY() {
+        return SEA - MAX_DEPTH;
+    }
+
+    private static int boundaryHeight(ServerLevel level) {
+        return barrierTopY(level) - barrierBottomY() + 1;
+    }
+
+    /** 环体（周长 × 高度）+ 顶盖（整层），供分帧游标与队列估算共用同一口径。 */
+    private static long boundaryBlockCount(ServerLevel level, int span) {
+        return (long) span * 4 * boundaryHeight(level) + (long) span * span;
     }
 
     static int depthAt(long seed, int x, int z) {

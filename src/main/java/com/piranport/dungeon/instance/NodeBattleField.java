@@ -331,6 +331,9 @@ public final class NodeBattleField {
             entity.setPos(ex, DungeonConstants.SPAWN_Y, ez);
 
             if (entity instanceof AbstractDeepOceanEntity abyssal) {
+                // Dungeon ships must not be cleaned up by the vanilla mob
+                // distance/peaceful despawn rules while the node is active.
+                abyssal.addTag("piranport_dungeon");
                 abyssal.setFleetGroupId(groupId);
                 mgr.addMember(groupId, abyssal.getUUID());
                 if (i == 0) {

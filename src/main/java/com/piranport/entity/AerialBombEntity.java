@@ -64,6 +64,11 @@ public class AerialBombEntity extends ThrowableItemProjectile {
         return 0.06;
     }
 
+    /** Gravity exposed to the client landing marker prediction. */
+    public double getMarkerGravity() {
+        return getDefaultGravity();
+    }
+
     @Override
     protected boolean canHitEntity(Entity target) {
         if (com.piranport.combat.FriendlyFireHelper.shouldBlockHit(target, getOwner())) return false;

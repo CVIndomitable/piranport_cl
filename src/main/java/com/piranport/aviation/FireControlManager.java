@@ -54,18 +54,20 @@ public class FireControlManager {
     }
 
     /** Remove specific dead target UUIDs. Only fully clears if no targets remain. */
-    public static void removeDeadTargets(UUID playerUUID, java.util.function.Predicate<UUID> isDead) {
+    public static boolean removeDeadTargets(UUID playerUUID, java.util.function.Predicate<UUID> isDead) {
         List<UUID> list = LOCKED_TARGETS.get(playerUUID);
-        if (list == null) return;
+        if (list == null) return false;
         // 批量收集再移除，避免 CopyOnWriteArrayList.removeIf 在每次删除时复制整个数组
         List<UUID> toRemove = new java.util.ArrayList<>();
         for (UUID uuid : list) {
             if (isDead.test(uuid)) toRemove.add(uuid);
         }
+        if (toRemove.isEmpty()) return false;
         list.removeAll(toRemove);
         if (list.isEmpty()) {
             LOCKED_TARGETS.remove(playerUUID);
         }
+        return true;
     }
 
     /** Returns an unmodifiable snapshot of the player's locked targets. */

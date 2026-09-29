@@ -475,8 +475,7 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
             // 联装炮齐射：同 tick 多发命中同目标时，重置无敌帧让每发都造成伤害
             target.invulnerableTime = 0;
             if (isHighExplosive()) {
-                // HE：直击伤害 + 范围爆炸溅射
-                target.hurt(damageSources().explosion(this, getOwner()), damage);
+                // HE：仅由范围爆炸造成伤害；命中目标不再额外承受一次直击伤害。
                 Level.ExplosionInteraction interaction = ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get()
                         ? Level.ExplosionInteraction.TNT : Level.ExplosionInteraction.NONE;
                 level().explode(this, getX(), getY(), getZ(), explosionPower, interaction);
@@ -603,6 +602,16 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
     protected double getDefaultGravity() {
         // customGravity 是真实比例（如 9.8），除以 196 换算为 MC 内部比例
         return customGravity > 0f ? customGravity / 196.0 : 9.8 / 196.0;
+    }
+
+    /** Gravity exposed to the client landing marker prediction. */
+    public double getMarkerGravity() {
+        return getDefaultGravity();
+    }
+
+    /** Drag coefficient exposed to the client landing marker prediction. */
+    public double getMarkerDragCoeff() {
+        return Float.isFinite(dragCoeff) ? Math.max(0.0, dragCoeff) : 0.0;
     }
 
     @Override

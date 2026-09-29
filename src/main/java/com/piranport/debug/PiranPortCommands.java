@@ -416,6 +416,10 @@ public final class PiranPortCommands {
                 return 0;
             }
 
+            // Keep explicitly spawned debug ships stable while testing; natural
+            // biome spawns use the normal despawn rules.
+            abyssal.addTag("piranport_command_spawn");
+
             double offsetX = (level.random.nextDouble() - 0.5) * 6.0;
             double offsetZ = (level.random.nextDouble() - 0.5) * 6.0;
             entity.setPos(player.getX() + offsetX, player.getY(), player.getZ() + offsetZ);

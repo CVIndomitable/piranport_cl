@@ -290,7 +290,13 @@ public class AircraftCombat {
                     double spreadX = (level.random.nextDouble() - 0.5) * 0.5;
                     double spreadZ = (level.random.nextDouble() - 0.5) * 0.5;
                     bomb.moveTo(craft.getX() + spreadX, craft.getY(), craft.getZ() + spreadZ, 0, 0);
-                    bomb.setDeltaMovement(0, -0.5, 0);
+                    // Preserve the aircraft's horizontal momentum.  Dropping with
+                    // a zero horizontal velocity made every dive bomb fall behind
+                    // the moving attack run and systematically miss ships at sea.
+                    Vec3 aircraftVelocity = craft.getDeltaMovement();
+                    bomb.setDeltaMovement(aircraftVelocity.x * 0.85,
+                            Math.min(-0.20, aircraftVelocity.y),
+                            aircraftVelocity.z * 0.85);
                     bomb.setOwner(owner);
                     level.addFreshEntity(bomb);
                 }

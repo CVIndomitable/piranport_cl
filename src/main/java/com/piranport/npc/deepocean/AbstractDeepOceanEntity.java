@@ -514,12 +514,29 @@ public abstract class AbstractDeepOceanEntity extends Monster {
 
     @Override
     public boolean removeWhenFarAway(double distSq) {
-        return false; // Don't despawn
+        // Natural ocean spawns must obey the normal mob distance cleanup.  Scenario
+        // entities are tagged at their spawn site and intentionally survive an
+        // unloaded area (and peaceful difficulty) until the scenario removes them.
+        return !isScenarioPersistent();
     }
 
     @Override
     protected boolean shouldDespawnInPeaceful() {
-        return false;
+        return !isScenarioPersistent();
+    }
+
+    /**
+     * Whether this ship belongs to authored content (dungeon/structure/command)
+     * rather than the biome's natural monster population.
+     *
+     * <p>Tags are used instead of an in-memory flag so the rule survives save and
+     * reload, including entities created by older dungeon instances.</p>
+     */
+    protected boolean isScenarioPersistent() {
+        return getTags().contains("piranport_dungeon")
+                || getTags().contains("piranport_structure_persistent")
+                || getTags().contains("piranport_command_spawn")
+                || getTags().stream().anyMatch(tag -> tag.startsWith("dungeon_instance_"));
     }
 
     // --- Persistence ---

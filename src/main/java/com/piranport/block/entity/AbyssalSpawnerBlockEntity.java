@@ -97,6 +97,9 @@ public class AbyssalSpawnerBlockEntity extends BlockEntity {
             entity.setPos(pos.getX() + 0.5 + offsetX, spawnY, pos.getZ() + 0.5 + offsetZ);
 
             if (entity instanceof AbstractDeepOceanEntity abyssal) {
+                // Structure guards are authored encounters, not the natural
+                // biome population; keep them across distance and peaceful mode.
+                abyssal.addTag("piranport_structure_persistent");
                 abyssal.setFleetGroupId(cluster);
                 if (group != null) {
                     FleetGroupManager mgr = FleetGroupManager.get(serverLevel);

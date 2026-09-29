@@ -4,6 +4,7 @@ import com.piranport.PiranPort;
 import com.piranport.aviation.AircraftIndex;
 import com.piranport.aviation.FireControlManager;
 import com.piranport.aviation.ReconManager;
+import com.piranport.network.FireControlSyncPayload;
 import com.piranport.combat.SalvoManager;
 import com.piranport.combat.TorpedoGuidanceManager;
 import com.piranport.combat.TransformationManager;
@@ -39,6 +40,7 @@ import net.neoforged.neoforge.event.entity.player.ItemEntityPickupEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.server.ServerStoppedEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.UUID;
 
@@ -64,6 +66,17 @@ public class ServerGameEvents {
     /** 每 tick 驱动地牢脚本 */
     @SubscribeEvent
     public static void onServerTick(ServerTickEvent.Post event) {
+        // Dead or unloaded entities must disappear from both server locks and the client HUD.
+        for (ServerPlayer player : event.getServer().getPlayerList().getPlayers()) {
+            if (FireControlManager.removeDeadTargets(player.getUUID(), targetUuid -> {
+                net.minecraft.world.entity.Entity target = player.serverLevel().getEntity(targetUuid);
+                return target == null || target.isRemoved() || !target.isAlive();
+            })) {
+                PacketDistributor.sendToPlayer(player, new FireControlSyncPayload(
+                        FireControlManager.getTargets(player.getUUID())));
+            }
+        }
+
         ServerLevel dungeonLevel = event.getServer().getLevel(
                 DungeonEventHandler.DUNGEON_DIMENSION);
         if (dungeonLevel != null) {

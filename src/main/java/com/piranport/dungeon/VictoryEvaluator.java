@@ -193,7 +193,8 @@ public final class VictoryEvaluator {
 
     /**
      * CAPTURE_FLAG：双路径 OR — 玩家在夺旗点存活 N 秒 <b>或</b> 触发 KILL_ALL。
-     * 夺旗点位置与 KILL_ALL 走相同定位（reach_point_offset），存活计时由 instance.startTimeMillis 起算。
+     * 夺旗点位置与 KILL_ALL 走相同定位（reach_point_offset），存活计时用 DungeonObjectiveData
+     * 的 tick 计数（只在实例 ACTIVE 且玩家在圈内时累加），不用墙钟。
      */
     private static boolean checkCaptureFlag(ServerLevel level, DungeonInstance instance,
                                             StageData stage, StageData.VictoryObjectives obj) {

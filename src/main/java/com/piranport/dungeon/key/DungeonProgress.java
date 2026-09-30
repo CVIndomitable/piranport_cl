@@ -17,7 +17,7 @@ import java.util.Set;
 public record DungeonProgress(
         String currentNode,
         Set<String> clearedNodes,
-        long startTimeMillis,
+        long elapsedMillis,
         boolean timerStarted
 ) {
 
@@ -32,8 +32,8 @@ public record DungeonProgress(
             Codec.STRING.listOf().xmap(l -> (Set<String>) new HashSet<>(l), l -> List.copyOf(l))
                     .optionalFieldOf("cleared_nodes", Set.of())
                     .forGetter(DungeonProgress::clearedNodes),
-            Codec.LONG.optionalFieldOf("start_time_millis", 0L)
-                    .forGetter(DungeonProgress::startTimeMillis),
+            Codec.LONG.optionalFieldOf("elapsed_millis", 0L)
+                    .forGetter(DungeonProgress::elapsedMillis),
             Codec.BOOL.optionalFieldOf("timer_started", false)
                     .forGetter(DungeonProgress::timerStarted)
     ).apply(i, DungeonProgress::new));
@@ -45,7 +45,7 @@ public record DungeonProgress(
                 for (String s : p.clearedNodes()) {
                     ByteBufCodecs.STRING_UTF8.encode(buf, s);
                 }
-                buf.writeLong(p.startTimeMillis());
+                buf.writeLong(p.elapsedMillis());
                 ByteBufCodecs.BOOL.encode(buf, p.timerStarted());
             },
             buf -> {
@@ -59,23 +59,23 @@ public record DungeonProgress(
                     String node = ByteBufCodecs.stringUtf8(MAX_NODE_ID_LENGTH).decode(buf);
                     cleared.add(node);
                 }
-                long startTime = buf.readLong();
+                long elapsed = buf.readLong();
                 boolean timerStarted = ByteBufCodecs.BOOL.decode(buf);
-                return new DungeonProgress(currentNode, Set.copyOf(cleared), startTime, timerStarted);
+                return new DungeonProgress(currentNode, Set.copyOf(cleared), elapsed, timerStarted);
             }
     );
 
     public DungeonProgress withCurrentNode(String node) {
-        return new DungeonProgress(node, clearedNodes, startTimeMillis, timerStarted);
+        return new DungeonProgress(node, clearedNodes, elapsedMillis, timerStarted);
     }
 
     public DungeonProgress withNodeCleared(String node) {
         Set<String> newCleared = new HashSet<>(clearedNodes);
         newCleared.add(node);
-        return new DungeonProgress(currentNode, Set.copyOf(newCleared), startTimeMillis, timerStarted);
+        return new DungeonProgress(currentNode, Set.copyOf(newCleared), elapsedMillis, timerStarted);
     }
 
-    public DungeonProgress withTimerStarted(long startTime) {
-        return new DungeonProgress(currentNode, clearedNodes, startTime, true);
+    public DungeonProgress withTimerStarted(long elapsedMillis) {
+        return new DungeonProgress(currentNode, clearedNodes, elapsedMillis, true);
     }
 }

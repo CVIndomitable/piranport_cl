@@ -84,7 +84,7 @@ public interface ClientBridge {
 
     void updateDungeonNode(String nodeId);
 
-    void setDungeonState(String stageName, String nodeId, long timerStartMillis);
+    void setDungeonState(String stageName, String nodeId, long elapsedMillis);
 
     void updateDungeonBossOverlay(String bossName, String shipType, String chapter,
                                   int segment, float health, float maxHealth,

@@ -231,8 +231,8 @@ public final class ClientItemHooks implements com.piranport.platform.ClientBridg
     }
 
     @Override
-    public void setDungeonState(String stageName, String nodeId, long timerStartMillis) {
-        DungeonHudLayer.setDungeonState(stageName, nodeId, timerStartMillis);
+    public void setDungeonState(String stageName, String nodeId, long elapsedMillis) {
+        DungeonHudLayer.setDungeonState(stageName, nodeId, elapsedMillis);
     }
 
     @Override

@@ -11,8 +11,11 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 /**
  * S2C: Syncs current dungeon state (stage name, node, timer) to client HUD.
+ *
+ * <p>elapsedMillis 是服务端按 tick 累计的关卡总用时，客户端直接显示、不自行推算，
+ * 因此暂停游戏时表会跟着停（详见 {@code DungeonInstance#getElapsedMillis}）。</p>
  */
-public record DungeonStatePayload(String stageName, String nodeId, long timerStartMillis)
+public record DungeonStatePayload(String stageName, String nodeId, long elapsedMillis)
         implements CustomPacketPayload {
 
     public static final Type<DungeonStatePayload> TYPE =
@@ -22,7 +25,7 @@ public record DungeonStatePayload(String stageName, String nodeId, long timerSta
             (buf, p) -> {
                 ByteBufCodecs.STRING_UTF8.encode(buf, p.stageName());
                 ByteBufCodecs.STRING_UTF8.encode(buf, p.nodeId());
-                buf.writeLong(p.timerStartMillis());
+                buf.writeLong(p.elapsedMillis());
             },
             buf -> new DungeonStatePayload(
                     ByteBufCodecs.STRING_UTF8.decode(buf),
@@ -36,7 +39,7 @@ public record DungeonStatePayload(String stageName, String nodeId, long timerSta
     public static void handle(DungeonStatePayload payload, IPayloadContext context) {
         context.enqueueWork(() -> {
             ClientHooks.setDungeonState(payload.stageName(), payload.nodeId(),
-                    payload.timerStartMillis());
+                    payload.elapsedMillis());
         });
     }
 }

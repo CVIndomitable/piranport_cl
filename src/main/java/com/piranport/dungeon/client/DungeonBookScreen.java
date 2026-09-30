@@ -295,10 +295,11 @@ public class DungeonBookScreen extends AbstractContainerScreen<DungeonBookMenu> 
             gfx.drawString(font, selectedStage.displayName(),
                     leftPos + 5, topPos + 5, 0xFFFFD700, false);
 
-            // Timer display
+            // Timer display：钥匙里存的是服务端累计的关卡总用时（节点转换时同步），
+            // 不用墙钟推算——墙上时钟在暂停或挂机时照走，显示会越飘越多。
             DungeonProgress progress = getKeyProgress();
             if (progress.timerStarted()) {
-                long elapsed = System.currentTimeMillis() - progress.startTimeMillis();
+                long elapsed = progress.elapsedMillis();
                 String timeStr = formatTime(elapsed);
                 gfx.drawString(font, timeStr,
                         leftPos + imageWidth - font.width(timeStr) - 5, topPos + 5,

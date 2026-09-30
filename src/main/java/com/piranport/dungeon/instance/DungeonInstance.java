@@ -38,6 +38,16 @@ public class DungeonInstance {
     private String lecternDimension; // dimension key of the lectern
     private long startTimeMillis;
     private long endTimeMillis;
+    /**
+     * 关卡总用时（服务器 tick 累计，tick × 50ms）。
+     *
+     * <p>刻意不用墙钟：只有实例处于 {@link State#ACTIVE}（有参与者实际待在副本区域内）
+     * 时每 tick 加一，所以游戏暂停、玩家回讲台整理背包、退出副本都不计时。
+     * 这与 {@link com.piranport.dungeon.saved.DungeonSettlementData} 的节点计时、
+     * 以及 {@link com.piranport.dungeon.script.DungeonScriptManager} 的脚本计时器同一口径。
+     * startTimeMillis 只作为"这一关什么时候开的"元信息保留，不再参与任何用时计算。</p>
+     */
+    private long elapsedTicks;
 
     public DungeonInstance(UUID instanceId, String stageId, int instanceIndex) {
         this.instanceId = instanceId;
@@ -77,6 +87,9 @@ public class DungeonInstance {
     public String getLecternDimension() { return lecternDimension; }
     public long getStartTimeMillis() { return startTimeMillis; }
     public long getEndTimeMillis() { return endTimeMillis; }
+    public long getElapsedTicks() { return elapsedTicks; }
+    /** 关卡总用时（毫秒），HUD / 结算页 / 钥匙进度统一取这个值。 */
+    public long getElapsedMillis() { return elapsedTicks * 50L; }
 
     /**
      * Returns the X offset of this instance's region in the dungeon dimension.
@@ -185,6 +198,9 @@ public class DungeonInstance {
     public void setLecternDimension(String dim) { this.lecternDimension = dim; }
     public void setStartTimeMillis(long t) { this.startTimeMillis = t; }
     public void setEndTimeMillis(long t) { this.endTimeMillis = t; }
+    /** 推进一次关卡总用时；调用方负责只在 ACTIVE 时调用。 */
+    public void tickElapsed() { elapsedTicks++; }
+    public void setElapsedTicks(long t) { this.elapsedTicks = Math.max(0L, t); }
 
     // ===== NBT Serialization =====
 
@@ -239,6 +255,7 @@ public class DungeonInstance {
         }
         tag.putLong("StartTime", startTimeMillis);
         tag.putLong("EndTime", endTimeMillis);
+        tag.putLong("ElapsedTicks", elapsedTicks);
         return tag;
     }
 
@@ -295,6 +312,9 @@ public class DungeonInstance {
         }
         inst.startTimeMillis = tag.getLong("StartTime");
         inst.endTimeMillis = tag.getLong("EndTime");
+        // 旧存档没有 ElapsedTicks（当年用墙钟算用时），按 0 起算由后续 tick 重新累计，
+        // 不做 startTimeMillis 反推：反推会把暂停/挂机时间算进去，正是本次要修的问题。
+        inst.setElapsedTicks(tag.getLong("ElapsedTicks"));
         return inst;
     }
 }

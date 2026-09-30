@@ -29,7 +29,8 @@ public class DungeonHudLayer implements LayeredDraw.Layer {
     // Client-side state updated by S2C payloads
     private static String currentStageName = "";
     private static String currentNodeId = "";
-    private static long timerStartMillis = 0;
+    /** 服务端同步下来的关卡总用时。客户端不自己算（原来用墙钟算，暂停后仍在跑）。 */
+    private static long timerElapsedMillis = 0;
     private static boolean inDungeon = false;
     private static String bossName = "";
     private static String bossShipType = "";
@@ -40,15 +41,15 @@ public class DungeonHudLayer implements LayeredDraw.Layer {
     private static boolean bossVisible;
     private static long quietUntilMillis;
 
-    public static void setDungeonState(String stageName, String nodeId, long startMillis) {
+    public static void setDungeonState(String stageName, String nodeId, long elapsedMillis) {
         if ((stageName == null || stageName.isEmpty())
-                && (nodeId == null || nodeId.isEmpty()) && startMillis <= 0L) {
+                && (nodeId == null || nodeId.isEmpty()) && elapsedMillis <= 0L) {
             clearDungeonState();
             return;
         }
         currentStageName = stageName;
         currentNodeId = nodeId;
-        timerStartMillis = startMillis;
+        timerElapsedMillis = Math.max(0L, elapsedMillis);
         inDungeon = true;
     }
 
@@ -60,7 +61,7 @@ public class DungeonHudLayer implements LayeredDraw.Layer {
         inDungeon = false;
         currentStageName = "";
         currentNodeId = "";
-        timerStartMillis = 0;
+        timerElapsedMillis = 0;
         clearBossOverlay();
     }
 
@@ -140,15 +141,12 @@ public class DungeonHudLayer implements LayeredDraw.Layer {
                     screenWidth / 2, 17, 0xFFAAFFAA);
         }
 
-        // Timer (top right)
-        if (timerStartMillis > 0) {
-            long elapsed = System.currentTimeMillis() - timerStartMillis;
-            long totalSec = elapsed / 1000;
-            String timeStr = String.format("%02d:%02d.%03d",
-                    totalSec / 60, totalSec % 60, elapsed % 1000);
-            int tw = font.width(timeStr);
-            gfx.drawString(font, timeStr, screenWidth - tw - 5, 5, 0xFFAAFFAA, false);
-        }
+        // Timer (top right)：直接画服务端同步值，暂停时没有新包自然停表。
+        // 只显示到秒——服务端 5 tick 同步一次，毫秒位是没有意义的噪声。
+        long totalSec = timerElapsedMillis / 1000;
+        String timeStr = String.format("%02d:%02d", totalSec / 60, totalSec % 60);
+        int tw = font.width(timeStr);
+        gfx.drawString(font, timeStr, screenWidth - tw - 5, 5, 0xFFAAFFAA, false);
 
         if (bossVisible && !bossName.isEmpty()) {
             int center = screenWidth / 2;

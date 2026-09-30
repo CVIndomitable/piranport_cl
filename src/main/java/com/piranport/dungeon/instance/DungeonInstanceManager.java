@@ -189,7 +189,7 @@ public class DungeonInstanceManager extends SavedData {
         if (keyStack.isEmpty() || !instance.getInstanceId().equals(DungeonKeyItem.getInstanceId(keyStack))) return;
         DungeonKeyItem.setProgress(keyStack, new DungeonProgress(
                 instance.getCurrentNode() == null ? "" : instance.getCurrentNode(),
-                java.util.Set.copyOf(instance.getClearedNodes()), instance.getStartTimeMillis(),
+                java.util.Set.copyOf(instance.getClearedNodes()), instance.getElapsedMillis(),
                 instance.getStartTimeMillis() > 0));
     }
 

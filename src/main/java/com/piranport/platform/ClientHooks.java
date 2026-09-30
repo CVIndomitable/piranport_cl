@@ -167,8 +167,8 @@ public final class ClientHooks {
         bridge.updateDungeonNode(nodeId);
     }
 
-    public static void setDungeonState(String stageName, String nodeId, long timerStartMillis) {
-        bridge.setDungeonState(stageName, nodeId, timerStartMillis);
+    public static void setDungeonState(String stageName, String nodeId, long elapsedMillis) {
+        bridge.setDungeonState(stageName, nodeId, elapsedMillis);
     }
 
     public static void updateDungeonBossOverlay(String bossName, String shipType, String chapter,

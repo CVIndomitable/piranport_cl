@@ -83,8 +83,15 @@ public class ServerGameEvents {
             com.piranport.dungeon.instance.TerrainEntryQueue.get(event.getServer()).tick(event.getServer());
             DungeonScriptManager.get(event.getServer()).tickAll(dungeonLevel);
             for (DungeonInstance instance : DungeonInstanceManager.get(dungeonLevel).getAllInstances()) {
+                // 关卡总用时与服务端 tick 同源：暂停（无 tick）或玩家离开副本（SUSPENDED）都不推进，
+                // 与节点计时/脚本计时器同一口径。客户端不再自行读墙钟，只显示服务端同步下来的值。
+                if (instance.getState() == DungeonInstance.State.ACTIVE) instance.tickElapsed();
                 com.piranport.dungeon.event.DungeonSettlementService.tickActiveNode(dungeonLevel, instance);
                 com.piranport.dungeon.VictoryEvaluator.tick(dungeonLevel, instance);
+            }
+            // HUD 计时每 5 tick（0.25s）同步一次，足够 mm:ss 显示且暂停时自然停表
+            if (event.getServer().getTickCount() % 5 == 0) {
+                syncDungeonHudTimers(event.getServer(), dungeonLevel);
             }
         }
 
@@ -102,6 +109,32 @@ public class ServerGameEvents {
         // 离线玩家缓存清理（每小时）
         if (event.getServer().getTickCount() % 72000 == 0) {
             PlayerTickHandler.cleanupOfflinePlayers(event.getServer());
+        }
+    }
+
+    /**
+     * 把实例的累计用时推给真正在副本区域里的玩家。
+     *
+     * <p>HUD 层原本每帧用 {@code System.currentTimeMillis()} 减开始时间自己算，
+     * 于是暂停游戏后墙钟照走、计时器照跑。改为服务端权威值下发后，客户端只负责显示，
+     * 暂停时没有 tick 也就没有新包，表自然停住。</p>
+     *
+     * <p>只发给活着且非旁观、且当前确实在该实例区域内的玩家：死亡界面/复活界面期间
+     * 不能把已清空的 HUD 重新点亮。</p>
+     */
+    private static void syncDungeonHudTimers(net.minecraft.server.MinecraftServer server,
+                                             ServerLevel dungeonLevel) {
+        DungeonInstanceManager mgr = DungeonInstanceManager.get(dungeonLevel);
+        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+            if (!player.isAlive() || player.isSpectator()) continue;
+            DungeonInstance instance = mgr.getInstanceForPlayer(player);
+            if (instance == null) continue;
+            com.piranport.dungeon.data.StageData stage =
+                    com.piranport.dungeon.data.DungeonRegistry.INSTANCE.getStage(instance.getStageId());
+            PacketDistributor.sendToPlayer(player, new com.piranport.dungeon.network.DungeonStatePayload(
+                    stage == null ? instance.getStageId() : stage.displayName(),
+                    instance.getCurrentNode() == null ? "" : instance.getCurrentNode(),
+                    instance.getElapsedMillis()));
         }
     }
 

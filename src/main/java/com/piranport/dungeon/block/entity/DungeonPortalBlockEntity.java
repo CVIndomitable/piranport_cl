@@ -4,7 +4,6 @@ import com.piranport.PiranPort;
 import com.piranport.dungeon.block.DungeonLecternBlock;
 import com.piranport.dungeon.block.DungeonLecternBlockEntity;
 import com.piranport.dungeon.block.PortalStructureHelper;
-import com.piranport.dungeon.event.DungeonEntryService;
 import com.piranport.registry.ModBlockEntityTypes;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -135,9 +134,7 @@ public class DungeonPortalBlockEntity extends BlockEntity {
      * <ul>
      *   <li>必须是玩家，且只认服务端。开口是空气，本方法由 ticker 的 AABB 扫描驱动
      *       （空气没有方块承载 entityInside），方块侧的 entityInside 只是冗余触发。</li>
-     *   <li>进门走 {@link DungeonEntryService#enter}——那是全项目唯一的权威入口，
-     *       负责首次进入（instance == null → createInstance）与节点推进。绝不能另起一套
-     *       近似逻辑，否则首次进入永远建不出实例。</li>
+     *   <li>入口传送门已作废（副本/17 §三）：进本只走书台，这里只提示玩家去右键书台。</li>
      * </ul>
      *
      * <p>刻意不走 {@link DungeonEventHandler#onPortalEntered}：那是副本内“已清节点出口”
@@ -170,8 +167,10 @@ public class DungeonPortalBlockEntity extends BlockEntity {
                     Component.translatable("block.piranport.dungeon_portal.waiting_for_activation"), true);
             return;
         }
-        // 权威入口：首次进入 / 续关 / 节点推进都在这里分流。
-        DungeonEntryService.enter(player, lecternPos, false, null, DungeonEntryService.Mode.ADVANCE);
+        // 副本/17 §三：入口传送门已作废，书台本身就是入口。门不再调用 DungeonEntryService.enter，
+        // 只把玩家引到书台（方块注册保留，旧存档里的门不会变成未知方块）。
+        player.displayClientMessage(
+                Component.translatable("block.piranport.dungeon_lectern.use_lectern"), true);
     }
 
     /** 玩家离开开口后清掉去重标记，使其可以再次进门。 */

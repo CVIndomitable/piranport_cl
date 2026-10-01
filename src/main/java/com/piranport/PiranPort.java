@@ -95,6 +95,7 @@ public class PiranPort {
         ModStructureProcessors.STRUCTURE_PROCESSORS.register(modEventBus);
         ModArmorMaterials.ARMOR_MATERIALS.register(modEventBus);
         ModAttachmentTypes.ATTACHMENT_TYPES.register(modEventBus);
+        com.piranport.dungeon.key.EnteredDungeonCondition.LOOT_CONDITIONS.register(modEventBus);
         ModSounds.SOUND_EVENTS.register(modEventBus);
         NeoForge.EVENT_BUS.addListener(this::registerBrewingRecipes);
         // 决策/副本/07：Boss 节点防卡 tick 调度（每 server level tick 调用）

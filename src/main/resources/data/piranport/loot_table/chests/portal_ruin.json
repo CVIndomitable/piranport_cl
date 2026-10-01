@@ -1,0 +1,41 @@
+{
+  "type": "minecraft:chest",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "piranport:dungeon_key_ch1",
+          "functions": [
+            {
+              "function": "minecraft:set_components",
+              "components": { "piranport:dungeon_stage_id": "1-1" }
+            }
+          ]
+        }
+      ],
+      "conditions": [
+        { "condition": "piranport:entered_dungeon", "entered": false }
+      ]
+    },
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "piranport:dungeon_key",
+          "functions": [
+            {
+              "function": "minecraft:set_components",
+              "components": { "piranport:dungeon_stage_id": "goldencatcat" }
+            }
+          ]
+        }
+      ],
+      "conditions": [
+        { "condition": "piranport:entered_dungeon", "entered": true }
+      ]
+    }
+  ]
+}

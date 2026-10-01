@@ -81,6 +81,8 @@ public class ServerGameEvents {
                 DungeonEventHandler.DUNGEON_DIMENSION);
         if (dungeonLevel != null) {
             com.piranport.dungeon.instance.TerrainEntryQueue.get(event.getServer()).tick(event.getServer());
+            // 副本/17 §3.1：插钥匙即开始建造起点，建造挂在实例上推进。
+            com.piranport.dungeon.block.LecternBuildScheduler.tick(event.getServer());
             DungeonScriptManager.get(event.getServer()).tickAll(dungeonLevel);
             for (DungeonInstance instance : DungeonInstanceManager.get(dungeonLevel).getAllInstances()) {
                 // 关卡总用时与服务端 tick 同源：暂停（无 tick）或玩家离开副本（SUSPENDED）都不推进，

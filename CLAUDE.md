@@ -53,6 +53,16 @@
 - **物品模型**: 注册物品时必须主动创建 `models/item/*.json` 模型文件，不能只放贴图
 - **注释语言**: 全部使用中文注释，保持中文团队维护一致性。复杂逻辑必须注释 WHY 而不只是 WHAT
 
+### 副本进入链路（副本/00 §2.2/§3.1、副本/17 §三）
+- **书台即入口**：入口传送门已作废，`DungeonPortalBlockEntity` 不再调 `DungeonEntryService.enter`，只提示去书台；传送门方块注册保留（兼容旧存档）。
+- **插钥匙即建实例**：`DungeonLecternBlockEntity.tryInsertKey` → 钥匙已有 instanceId 则沿用（换书台不新建），否则 `DungeonInstanceManager.createInstanceForLectern`（无参与者、初始 SUSPENDED）并写回钥匙。
+- **建造挂在实例上**：`LecternBuildScheduler.tick` 由 `ServerGameEvents` 每 tick 推进起点节点地形，书台被拆也不中断。
+- **纹路三态**（`LecternPattern`）：白=无钥匙，红=建造中/满员(4人)/实例失效，绿=可进。只有绿才打开进本界面。纹路面 `tintindex 0` + `ClientModEvents.registerBlockColors` 染色，不另画贴图。
+- **交互**：空手潜行右键撤钥匙（建造中锁定）；普通右键（空手/持物）开书台；持物潜行右键 = 使用手中物品。破坏/爆炸 `onRemove` 掉钥匙，不清绑定。
+- **悬浮字幕**：`DungeonLecternRenderer`，关卡名 / 已通关或未通关+节点数 / 人数 x/4，空书台不显示。
+- **已进入过副本标记**：`ModAttachmentTypes.ENTERED_DUNGEON`（copyOnDeath），`DungeonEntryService` 成功传入副本维度时写入。
+- **书台遗迹**：`portal_ruin_1/2.nbt` 已去掉传送门框架、放空白书台；`AbandonedPortalStructure` 不再摆框架。开箱战利品 `chests/portal_ruin.json` 用条件 `piranport:entered_dungeon`：没进过 → 1-1 钥匙，进过 → 金猫猫钥匙（规则见 `RuinKeyRule`）。补给站/前哨站/深海基地不掉主线钥匙。
+
 ---
 
 ## Build & Run

@@ -21,6 +21,14 @@ public class ModAttachmentTypes {
             ATTACHMENT_TYPES.register("active_entity_core",
                     () -> AttachmentType.builder(() -> 0).serialize(Codec.INT).build());
 
+    /**
+     * 「已进入过副本」持久标记（策划决策/副本/17 §二）。第一次成功进入任意副本时写入，
+     * 死亡、换钥匙、换书台都不清除（copyOnDeath）。书台遗迹开箱据此发 1-1 或金猫猫钥匙。
+     */
+    public static final Supplier<AttachmentType<Boolean>> ENTERED_DUNGEON =
+            ATTACHMENT_TYPES.register("entered_dungeon",
+                    () -> AttachmentType.builder(() -> false).serialize(Codec.BOOL).copyOnDeath().build());
+
     // 移动预测缓存属于各端的玩家实例，不持久化、不同步，也不复制到重生玩家。
     public static final Supplier<AttachmentType<WaterWalkingState>> WATER_WALKING =
             ATTACHMENT_TYPES.register("water_walking",

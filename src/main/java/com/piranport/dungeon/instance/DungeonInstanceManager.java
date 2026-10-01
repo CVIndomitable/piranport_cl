@@ -78,6 +78,30 @@ public class DungeonInstanceManager extends SavedData {
     }
 
     /**
+     * 副本/17 §3.1：钥匙插入书台瞬间创建实例。与 {@link #createInstance} 不同，这里没有进本玩家，
+     * 不把任何人登记为参与者——参与者只在真正传送进本时由 DungeonEntryService 写入。
+     */
+    public DungeonInstance createInstanceForLectern(String stageId, BlockPos lecternPos, String lecternDimension) {
+        StageData stage = DungeonRegistry.INSTANCE.getStage(stageId);
+        if (stage == null) {
+            PiranPort.LOGGER.warn("Cannot create instance: unknown stage {}", stageId);
+            return null;
+        }
+        UUID instanceId = UUID.randomUUID();
+        int index = freedIndices.isEmpty() ? nextIndex++ : freedIndices.poll();
+        DungeonInstance instance = new DungeonInstance(instanceId, stageId, index);
+        // 无人在场 → 挂起，关卡计时不在建造/等待期间推进；首个玩家进本时 refreshPlayerPresence 恢复。
+        instance.setState(DungeonInstance.State.SUSPENDED);
+        instance.setLecternPos(lecternPos);
+        instance.setLecternDimension(lecternDimension);
+        instances.put(instanceId, instance);
+        setDirty();
+        PiranPort.LOGGER.info("Created dungeon instance {} for stage {} (index {}) on lectern insert",
+                instanceId, stageId, index);
+        return instance;
+    }
+
+    /**
      * Loads an existing instance by UUID (for key reconnection).
      */
     public DungeonInstance getInstance(UUID instanceId) {

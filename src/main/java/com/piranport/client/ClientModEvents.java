@@ -89,6 +89,15 @@ public class ClientModEvents {
         });
     }
 
+    /** 副本书台纹路面（tintindex 0）按 PATTERN 染白/红/绿，不另画贴图（副本/17 §3.2）。 */
+    @SubscribeEvent
+    public static void registerBlockColors(net.neoforged.neoforge.client.event.RegisterColorHandlersEvent.Block event) {
+        event.register((state, level, pos, tintIndex) -> {
+            if (tintIndex != 0 || !state.hasProperty(com.piranport.dungeon.block.DungeonLecternBlock.PATTERN)) return -1;
+            return state.getValue(com.piranport.dungeon.block.DungeonLecternBlock.PATTERN).tint();
+        }, com.piranport.registry.ModBlocks.DUNGEON_LECTERN.get());
+    }
+
     @SubscribeEvent
     public static void registerScreens(RegisterMenuScreensEvent event) {
         event.register(ModMenuTypes.STONE_MILL_MENU.get(), StoneMillScreen::new);
@@ -225,6 +234,9 @@ public class ClientModEvents {
                 com.piranport.client.ModelDebugBlockEntityRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntityTypes.SMOKE_SCREEN.get(),
                 com.piranport.client.SmokeScreenRenderer::new);
+        // 副本书台：上方悬浮字幕（关卡名 / 通关情况 / 人数）
+        event.registerBlockEntityRenderer(ModBlockEntityTypes.DUNGEON_LECTERN.get(),
+                com.piranport.dungeon.client.DungeonLecternRenderer::new);
         // 副本敌人
         event.registerEntityRenderer(ModEntityTypes.LOW_TIER_DESTROYER.get(),
                 com.piranport.client.LowTierDestroyerRenderer::new);

@@ -49,7 +49,9 @@ public class RuinDegradationProcessor extends StructureProcessor {
         if (relativeBlockInfo.state().is(Blocks.CHEST)
                 || relativeBlockInfo.state().isAir()
                 || relativeBlockInfo.state().is(Blocks.SPAWNER)
-                || relativeBlockInfo.state().is(ModBlocks.ABYSSAL_SPAWNER.get())) {
+                || relativeBlockInfo.state().is(ModBlocks.ABYSSAL_SPAWNER.get())
+                // 书台遗迹的空白书台是遗迹的核心交互点，不能被风化成圆石或抹掉（副本/17 §3.6）
+                || relativeBlockInfo.state().is(ModBlocks.DUNGEON_LECTERN.get())) {
             return relativeBlockInfo;
         }
 

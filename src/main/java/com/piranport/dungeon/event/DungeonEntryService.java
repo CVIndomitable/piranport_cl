@@ -186,6 +186,7 @@ public final class DungeonEntryService {
             manager.refreshPlayerPresence(player.server);
             DungeonNodeRouter.teleportToNode(player, instance, nodeId,
                     instance.getNodeSpawnPos(nodeId), player.getYRot());
+            markEntered(player);
             return;
         }
         if (!instance.hasEnteredNode(nodeId)
@@ -207,7 +208,18 @@ public final class DungeonEntryService {
             DungeonNodeRouter.enterNode(player.serverLevel(), instance, stage.nodes().get(nodeId),
                     stage, player, key);
         }
+        markEntered(player);
         lectern.setChanged();
         manager.refreshPlayerPresence(player.server);
+    }
+
+    /**
+     * 首次成功进本时写入玩家持久标记"已进入过副本"（随死亡复制）。
+     * 书台遗迹开箱按它决定放 1-1 钥匙还是金猫猫活动钥匙（副本/17 §二）。
+     */
+    private static void markEntered(ServerPlayer player) {
+        if (player.level() == DungeonEventHandler.getDungeonLevel(player.server)) {
+            com.piranport.dungeon.key.EnteredDungeonCondition.markEntered(player);
+        }
     }
 }

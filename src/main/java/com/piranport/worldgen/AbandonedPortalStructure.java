@@ -146,8 +146,8 @@ public class AbandonedPortalStructure extends Feature<NoneFeatureConfiguration> 
         placeLectern(level, platformBase.offset(LECTERN_OFFSET));
         placeSign(level, platformBase.offset(SIGN_OFFSET));
 
-        // 最后放置传送门（框架 + 传送门方块）
-        placePortal(level, platformBase.offset(PORTAL_OFFSET));
+        // 副本/17 §3.6：原传送门遗迹改书台遗迹——只生成空白书台，不再摆传送门框架/激活核心。
+        // hasSpace 仍按原框架体积检查，保持遗迹选址与旧版一致。
 
         return true;
     }
@@ -320,26 +320,6 @@ public class AbandonedPortalStructure extends Feature<NoneFeatureConfiguration> 
     }
 
     /**
-     * 放置传送门：只摆框架几何，不碰副本实例数据。
-     *
-     * <p><b>旧实现为什么一个字都放不下：</b>它调 {@link PortalStructureHelper#buildPortalStructure}，
-     * 而那个入口的第一件事是 {@code DungeonInstanceManager.getInstance(instanceId)}，野外教学门
-     * 传入的是 {@code new UUID(0L, 0L)} 占位符——实例必然不存在，于是 <b>函数直接 return null，
-     * 方块一个都没摆</b>。野外因此永远看不到门，只剩孤零零的讲台和牌子。</p>
-     *
-     * <p>现在改走 {@link PortalStructureHelper#placeFrameGeometry}：纯几何，不查实例。
-     * 实例数据由玩家首次经讲台权威入口 {@code DungeonEntryService.enter} 写入，
-     * 这与《副本/17》"门常开、玩家不携带钥匙进副本"的口径一致。</p>
-     *
-     * <p>朝向刻意固定为 {@link Direction#NORTH}：世界生成阶段没有玩家上下文，随机的面朝方向
-     * 会让门正面朝海或朝岛内，玩家找不到开口。facing=NORTH 下开口面朝 -Z，讲台落在框架西侧
-     * （见 {@link #LECTERN_OFFSET}），仍是"贴底边外侧"的合法挂载。</p>
-     */
-    private static void placePortal(WorldGenLevel level, BlockPos cornerPos) {
-        BlockPos r = PortalStructureHelper.placeFrameGeometry(level, cornerPos, Direction.NORTH);
-    }
-
-    /**
      * 立一块告示牌写明用法。
      *
      * <p>用竖直的 {@code oak_sign} 而非墙上的 {@code oak_wall_sign}，免得再算一次依附面朝向。</p>
@@ -370,10 +350,10 @@ public class AbandonedPortalStructure extends Feature<NoneFeatureConfiguration> 
 
         // 先按"空台面"的现有 SignText 取样式基底，再逐行换上文案（setMessage 返回新实例，不改原对象）
         var text = sign.getFrontText()
-                .setMessage(0, Component.literal("深渊传送门"))
-                .setMessage(1, Component.literal("讲台插钥匙后"))
-                .setMessage(2, Component.literal("走进门框即进入"))
-                .setMessage(3, Component.literal("右键门只会提示"));
+                .setMessage(0, Component.literal("海域出击书台"))
+                .setMessage(1, Component.literal("插入钥匙后"))
+                .setMessage(2, Component.literal("纹路变绿"))
+                .setMessage(3, Component.literal("右键书台进入"));
 
         // 用 codec 编出 front_text 的 NBT，再 load 进 BE —— 全程不触碰会调 markUpdated 的 setter
         var ops = net.minecraft.nbt.NbtOps.INSTANCE;

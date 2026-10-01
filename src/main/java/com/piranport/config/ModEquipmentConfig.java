@@ -36,6 +36,15 @@ public final class ModEquipmentConfig {
     public static final TerminalConfigValue<Double> FC_RADAR_L3_TURN =
             TerminalConfigValue.number("equipment", "fire_control_radar", "level3_turn_coefficient", 0.06, 0.0, 1.0);
 
+    // 5/6/7 联鱼雷最大偏角（度），暂定 5°，由策划在调试终端试验（2026-09-30 项目所有者）。
+    // 2/3/4 管沿用《武器/鱼雷-联装设计》固定表，不走此处。
+    public static final TerminalConfigValue<Double> TORPEDO_SPREAD_TUBES5 =
+            TerminalConfigValue.number("equipment", "torpedo_spread", "tubes5_max_angle", 5.0, 0.0, 45.0);
+    public static final TerminalConfigValue<Double> TORPEDO_SPREAD_TUBES6 =
+            TerminalConfigValue.number("equipment", "torpedo_spread", "tubes6_max_angle", 5.0, 0.0, 45.0);
+    public static final TerminalConfigValue<Double> TORPEDO_SPREAD_TUBES7 =
+            TerminalConfigValue.number("equipment", "torpedo_spread", "tubes7_max_angle", 5.0, 0.0, 45.0);
+
     public static final TerminalConfigValue<Double> ARMOR_PLATE_PROTECTION =
             TerminalConfigValue.number("equipment", "equipment", "armor_plate_protection", 3.0, 0.0, 100.0);
 

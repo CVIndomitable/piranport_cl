@@ -134,6 +134,7 @@ public class ClientModEvents {
         event.register(ModItems.TRIPLE_TORPEDO_LAUNCHER.get(), weaponDecorator);
         event.register(ModItems.QUAD_TORPEDO_LAUNCHER.get(), weaponDecorator);
         event.register(ModItems.QUINTUPLE_TORPEDO_LAUNCHER.get(), weaponDecorator);
+        ModItems.CATALOG_TORPEDO_LAUNCHERS.forEach(l -> event.register(l.get(), weaponDecorator));
         event.register(ModItems.DEPTH_CHARGE_LAUNCHER.get(), weaponDecorator);
         event.register(ModItems.DEPTH_CHARGE_LAUNCHER_IMPROVED.get(), weaponDecorator);
         event.register(ModItems.DEPTH_CHARGE_LAUNCHER_ADVANCED.get(), weaponDecorator);

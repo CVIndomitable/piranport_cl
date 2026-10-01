@@ -405,6 +405,30 @@ public class ModItems {
     public static final DeferredItem<TorpedoLauncherItem> TRIPLE_TORPEDO_LAUNCHER = WeaponItems.TRIPLE_TORPEDO_LAUNCHER;
     public static final DeferredItem<TorpedoLauncherItem> QUAD_TORPEDO_LAUNCHER = WeaponItems.QUAD_TORPEDO_LAUNCHER;
     public static final DeferredItem<TorpedoLauncherItem> QUINTUPLE_TORPEDO_LAUNCHER = WeaponItems.QUINTUPLE_TORPEDO_LAUNCHER;
+    // 数值/08 图鉴鱼雷发射器
+    public static final DeferredItem<TorpedoLauncherItem> TRIPLE_533MM_TORPEDO = WeaponItems.TRIPLE_533MM_TORPEDO;
+    public static final DeferredItem<TorpedoLauncherItem> QUAD_533MM_TORPEDO = WeaponItems.QUAD_533MM_TORPEDO;
+    public static final DeferredItem<TorpedoLauncherItem> QUAD_533MM_TORPEDO_UR_HIGH_SPEED = WeaponItems.QUAD_533MM_TORPEDO_UR_HIGH_SPEED;
+    public static final DeferredItem<TorpedoLauncherItem> QUINTUPLE_533MM_TORPEDO = WeaponItems.QUINTUPLE_533MM_TORPEDO;
+    public static final DeferredItem<TorpedoLauncherItem> QUINTUPLE_533MM_TORPEDO_MK17 = WeaponItems.QUINTUPLE_533MM_TORPEDO_MK17;
+    public static final DeferredItem<TorpedoLauncherItem> QUINTUPLE_21IN_TORPEDO_MK35 = WeaponItems.QUINTUPLE_21IN_TORPEDO_MK35;
+    public static final DeferredItem<TorpedoLauncherItem> QUINTUPLE_TORPEDO_LAUNCHER_53_56 = WeaponItems.QUINTUPLE_TORPEDO_LAUNCHER_53_56;
+    public static final DeferredItem<TorpedoLauncherItem> QUINTUPLE_TORPEDO_LAUNCHER_53_65 = WeaponItems.QUINTUPLE_TORPEDO_LAUNCHER_53_65;
+    public static final DeferredItem<TorpedoLauncherItem> TRIPLE_61CM_TORPEDO = WeaponItems.TRIPLE_61CM_TORPEDO;
+    public static final DeferredItem<TorpedoLauncherItem> TRIPLE_61CM_OXYGEN_TORPEDO = WeaponItems.TRIPLE_61CM_OXYGEN_TORPEDO;
+    public static final DeferredItem<TorpedoLauncherItem> QUAD_61CM_TORPEDO = WeaponItems.QUAD_61CM_TORPEDO;
+    public static final DeferredItem<TorpedoLauncherItem> QUAD_61CM_OXYGEN_TORPEDO = WeaponItems.QUAD_61CM_OXYGEN_TORPEDO;
+    public static final DeferredItem<TorpedoLauncherItem> TORPEDO_LAUNCHER_61CM_TYPE9 = WeaponItems.TORPEDO_LAUNCHER_61CM_TYPE9;
+    public static final DeferredItem<TorpedoLauncherItem> QUINTUPLE_61CM_TORPEDO = WeaponItems.QUINTUPLE_61CM_TORPEDO;
+    public static final DeferredItem<TorpedoLauncherItem> QUINTUPLE_61CM_OXYGEN_TORPEDO = WeaponItems.QUINTUPLE_61CM_OXYGEN_TORPEDO;
+    public static final DeferredItem<TorpedoLauncherItem> JAPANESE_SEXTUPLE_61CM_TORPEDO = WeaponItems.JAPANESE_SEXTUPLE_61CM_TORPEDO;
+    public static final DeferredItem<TorpedoLauncherItem> SEXTUPLE_61CM_TORPEDO_LAUNCHER_93M3 = WeaponItems.SEXTUPLE_61CM_TORPEDO_LAUNCHER_93M3;
+    public static final DeferredItem<TorpedoLauncherItem> SEPTUPLE_TORPEDO_LAUNCHER = WeaponItems.SEPTUPLE_TORPEDO_LAUNCHER;
+    public static final DeferredItem<TorpedoLauncherItem> SEPTUPLE_TORPEDO_LAUNCHER_93M3 = WeaponItems.SEPTUPLE_TORPEDO_LAUNCHER_93M3;
+    public static final DeferredItem<TorpedoLauncherItem> JAPANESE_TRIPLE_72CM_TORPEDO = WeaponItems.JAPANESE_TRIPLE_72CM_TORPEDO;
+    public static final DeferredItem<TorpedoLauncherItem> QUAD_TYPE0_72CM_TORPEDO = WeaponItems.QUAD_TYPE0_72CM_TORPEDO;
+    public static final DeferredItem<TorpedoLauncherItem> CLT_QUAD_TORPEDO_LAUNCHER_TYPE0 = WeaponItems.CLT_QUAD_TORPEDO_LAUNCHER_TYPE0;
+    public static final java.util.List<DeferredItem<TorpedoLauncherItem>> CATALOG_TORPEDO_LAUNCHERS = WeaponItems.CATALOG_TORPEDO_LAUNCHERS;
 
     // ===== Depth Charge Launchers (extracted to WeaponItems) =====
     public static final DeferredItem<DepthChargeLauncherItem> DEPTH_CHARGE_LAUNCHER = WeaponItems.DEPTH_CHARGE_LAUNCHER;

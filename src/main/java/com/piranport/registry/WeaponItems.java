@@ -13,6 +13,7 @@ import com.piranport.item.DepthChargeLauncherItem;
 import com.piranport.item.MissileLauncherItem;
 import com.piranport.item.ShipCoreItem;
 import com.piranport.item.TorpedoLauncherItem;
+import com.piranport.component.EquipmentTier;
 import java.util.List;
 import net.minecraft.world.item.Item;
 import net.neoforged.neoforge.registries.DeferredItem;
@@ -227,13 +228,13 @@ public final class WeaponItems {
                     () -> new TorpedoLauncherItem(
                             new Item.Properties().stacksTo(1).durability(48)
                                     .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.TORPEDO),
-                            533, 3, ModProjectilesConfig.TRIPLE_TORPEDO_LAUNCHER_COOLDOWN::get));
+                            533, 3, ModProjectilesConfig.TRIPLE_TORPEDO_LAUNCHER_COOLDOWN::get, EquipmentTier.INITIAL));
     public static final DeferredItem<TorpedoLauncherItem> QUAD_TORPEDO_LAUNCHER =
             ITEMS.register("quad_torpedo_launcher",
                     () -> new TorpedoLauncherItem(
                             new Item.Properties().stacksTo(1).durability(32)
                                     .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.TORPEDO),
-                            610, 4, ModProjectilesConfig.QUAD_TORPEDO_LAUNCHER_COOLDOWN::get));
+                            610, 4, ModProjectilesConfig.QUAD_TORPEDO_LAUNCHER_COOLDOWN::get, EquipmentTier.IMPROVED));
 
     // Phase 27：策划 §3.3 五联装鱼雷发射器
     public static final DeferredItem<TorpedoLauncherItem> QUINTUPLE_TORPEDO_LAUNCHER =
@@ -241,7 +242,86 @@ public final class WeaponItems {
                     () -> new TorpedoLauncherItem(
                             new Item.Properties().stacksTo(1).durability(24)
                                     .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.TORPEDO),
-                            610, 5, ModProjectilesConfig.QUINTUPLE_TORPEDO_LAUNCHER_COOLDOWN::get));
+                            610, 5, ModProjectilesConfig.QUINTUPLE_TORPEDO_LAUNCHER_COOLDOWN::get, EquipmentTier.IMPROVED));
+
+    // ===== 图鉴鱼雷发射器（策划决策/数值/08，负重按公式，见 TorpedoLauncherItem#computeWeight）=====
+    public static final DeferredItem<TorpedoLauncherItem> TRIPLE_533MM_TORPEDO = catalogLauncher("triple_533mm_torpedo", 533, 3, EquipmentTier.INITIAL,
+            48, ModProjectilesConfig.TRIPLE_TORPEDO_LAUNCHER_COOLDOWN::get);
+    public static final DeferredItem<TorpedoLauncherItem> QUAD_533MM_TORPEDO = catalogLauncher("quad_533mm_torpedo", 533, 4, EquipmentTier.STANDARD,
+            32, ModProjectilesConfig.QUAD_TORPEDO_LAUNCHER_COOLDOWN::get);
+    public static final DeferredItem<TorpedoLauncherItem> QUAD_533MM_TORPEDO_UR_HIGH_SPEED = catalogLauncher("quad_533mm_torpedo_ur_high_speed", 533, 4, EquipmentTier.STANDARD,
+            32, ModProjectilesConfig.QUAD_TORPEDO_LAUNCHER_COOLDOWN::get);
+    public static final DeferredItem<TorpedoLauncherItem> QUINTUPLE_533MM_TORPEDO = catalogLauncher("quintuple_533mm_torpedo", 533, 5, EquipmentTier.IMPROVED,
+            24, ModProjectilesConfig.QUINTUPLE_TORPEDO_LAUNCHER_COOLDOWN::get);
+    public static final DeferredItem<TorpedoLauncherItem> QUINTUPLE_533MM_TORPEDO_MK17 = catalogLauncher("quintuple_533mm_torpedo_mk17", 533, 5, EquipmentTier.IMPROVED,
+            24, ModProjectilesConfig.QUINTUPLE_TORPEDO_LAUNCHER_COOLDOWN::get);
+    public static final DeferredItem<TorpedoLauncherItem> QUINTUPLE_21IN_TORPEDO_MK35 = catalogLauncher("quintuple_21in_torpedo_mk35", 533, 5, EquipmentTier.IMPROVED,
+            24, ModProjectilesConfig.QUINTUPLE_TORPEDO_LAUNCHER_COOLDOWN::get);
+    public static final DeferredItem<TorpedoLauncherItem> QUINTUPLE_TORPEDO_LAUNCHER_53_56 = catalogLauncher("quintuple_torpedo_launcher_53_56", 533, 5, EquipmentTier.IMPROVED,
+            24, ModProjectilesConfig.QUINTUPLE_TORPEDO_LAUNCHER_COOLDOWN::get);
+    public static final DeferredItem<TorpedoLauncherItem> QUINTUPLE_TORPEDO_LAUNCHER_53_65 = catalogLauncher("quintuple_torpedo_launcher_53_65", 533, 5, EquipmentTier.IMPROVED,
+            24, ModProjectilesConfig.QUINTUPLE_TORPEDO_LAUNCHER_COOLDOWN::get);
+    public static final DeferredItem<TorpedoLauncherItem> TRIPLE_61CM_TORPEDO = catalogLauncher("triple_61cm_torpedo", 610, 3, EquipmentTier.STANDARD,
+            48, ModProjectilesConfig.TRIPLE_TORPEDO_LAUNCHER_COOLDOWN::get);
+    public static final DeferredItem<TorpedoLauncherItem> TRIPLE_61CM_OXYGEN_TORPEDO = catalogLauncher("triple_61cm_oxygen_torpedo", 610, 3, EquipmentTier.STANDARD,
+            48, ModProjectilesConfig.TRIPLE_TORPEDO_LAUNCHER_COOLDOWN::get);
+    public static final DeferredItem<TorpedoLauncherItem> QUAD_61CM_TORPEDO = catalogLauncher("quad_61cm_torpedo", 610, 4, EquipmentTier.IMPROVED,
+            32, ModProjectilesConfig.QUAD_TORPEDO_LAUNCHER_COOLDOWN::get);
+    public static final DeferredItem<TorpedoLauncherItem> QUAD_61CM_OXYGEN_TORPEDO = catalogLauncher("quad_61cm_oxygen_torpedo", 610, 4, EquipmentTier.IMPROVED,
+            32, ModProjectilesConfig.QUAD_TORPEDO_LAUNCHER_COOLDOWN::get);
+    public static final DeferredItem<TorpedoLauncherItem> TORPEDO_LAUNCHER_61CM_TYPE9 = catalogLauncher("torpedo_launcher_61cm_type9", 610, 4, EquipmentTier.IMPROVED,
+            32, ModProjectilesConfig.QUAD_TORPEDO_LAUNCHER_COOLDOWN::get);
+    public static final DeferredItem<TorpedoLauncherItem> QUINTUPLE_61CM_TORPEDO = catalogLauncher("quintuple_61cm_torpedo", 610, 5, EquipmentTier.IMPROVED,
+            24, ModProjectilesConfig.QUINTUPLE_TORPEDO_LAUNCHER_COOLDOWN::get);
+    public static final DeferredItem<TorpedoLauncherItem> QUINTUPLE_61CM_OXYGEN_TORPEDO = catalogLauncher("quintuple_61cm_oxygen_torpedo", 610, 5, EquipmentTier.IMPROVED,
+            24, ModProjectilesConfig.QUINTUPLE_TORPEDO_LAUNCHER_COOLDOWN::get);
+    public static final DeferredItem<TorpedoLauncherItem> JAPANESE_SEXTUPLE_61CM_TORPEDO = catalogLauncher("japanese_sextuple_61cm_torpedo", 610, 6, EquipmentTier.ADVANCED,
+            24, ModProjectilesConfig.QUINTUPLE_TORPEDO_LAUNCHER_COOLDOWN::get);
+    public static final DeferredItem<TorpedoLauncherItem> SEXTUPLE_61CM_TORPEDO_LAUNCHER_93M3 = catalogLauncher("sextuple_61cm_torpedo_launcher_93m3", 610, 6, EquipmentTier.ADVANCED,
+            24, ModProjectilesConfig.QUINTUPLE_TORPEDO_LAUNCHER_COOLDOWN::get);
+    public static final DeferredItem<TorpedoLauncherItem> SEPTUPLE_TORPEDO_LAUNCHER = catalogLauncher("septuple_torpedo_launcher", 610, 7, EquipmentTier.ADVANCED,
+            24, ModProjectilesConfig.QUINTUPLE_TORPEDO_LAUNCHER_COOLDOWN::get);
+    public static final DeferredItem<TorpedoLauncherItem> SEPTUPLE_TORPEDO_LAUNCHER_93M3 = catalogLauncher("septuple_torpedo_launcher_93m3", 610, 7, EquipmentTier.ADVANCED,
+            24, ModProjectilesConfig.QUINTUPLE_TORPEDO_LAUNCHER_COOLDOWN::get);
+    public static final DeferredItem<TorpedoLauncherItem> JAPANESE_TRIPLE_72CM_TORPEDO = catalogLauncher("japanese_triple_72cm_torpedo", 720, 3, EquipmentTier.ADVANCED,
+            48, ModProjectilesConfig.TRIPLE_TORPEDO_LAUNCHER_COOLDOWN::get);
+    public static final DeferredItem<TorpedoLauncherItem> QUAD_TYPE0_72CM_TORPEDO = catalogLauncher("quad_type0_72cm_torpedo", 720, 4, EquipmentTier.ADVANCED,
+            32, ModProjectilesConfig.QUAD_TORPEDO_LAUNCHER_COOLDOWN::get);
+    public static final DeferredItem<TorpedoLauncherItem> CLT_QUAD_TORPEDO_LAUNCHER_TYPE0 = catalogLauncher("clt_quad_torpedo_launcher_type0", 720, 4, EquipmentTier.ADVANCED,
+            32, ModProjectilesConfig.QUAD_TORPEDO_LAUNCHER_COOLDOWN::get);
+
+    /** 数值/08 图鉴发射器全表，供创造栏、装填条装饰器遍历。 */
+    public static final java.util.List<DeferredItem<TorpedoLauncherItem>> CATALOG_TORPEDO_LAUNCHERS = java.util.List.of(
+            TRIPLE_533MM_TORPEDO,
+            QUAD_533MM_TORPEDO,
+            QUAD_533MM_TORPEDO_UR_HIGH_SPEED,
+            QUINTUPLE_533MM_TORPEDO,
+            QUINTUPLE_533MM_TORPEDO_MK17,
+            QUINTUPLE_21IN_TORPEDO_MK35,
+            QUINTUPLE_TORPEDO_LAUNCHER_53_56,
+            QUINTUPLE_TORPEDO_LAUNCHER_53_65,
+            TRIPLE_61CM_TORPEDO,
+            TRIPLE_61CM_OXYGEN_TORPEDO,
+            QUAD_61CM_TORPEDO,
+            QUAD_61CM_OXYGEN_TORPEDO,
+            TORPEDO_LAUNCHER_61CM_TYPE9,
+            QUINTUPLE_61CM_TORPEDO,
+            QUINTUPLE_61CM_OXYGEN_TORPEDO,
+            JAPANESE_SEXTUPLE_61CM_TORPEDO,
+            SEXTUPLE_61CM_TORPEDO_LAUNCHER_93M3,
+            SEPTUPLE_TORPEDO_LAUNCHER,
+            SEPTUPLE_TORPEDO_LAUNCHER_93M3,
+            JAPANESE_TRIPLE_72CM_TORPEDO,
+            QUAD_TYPE0_72CM_TORPEDO,
+            CLT_QUAD_TORPEDO_LAUNCHER_TYPE0);
+
+    private static DeferredItem<TorpedoLauncherItem> catalogLauncher(String id, int caliber, int tubes,
+            EquipmentTier tier, int durability, java.util.function.IntSupplier cooldown) {
+        return ITEMS.register(id, () -> new TorpedoLauncherItem(
+                new Item.Properties().stacksTo(1).durability(durability)
+                        .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.TORPEDO),
+                caliber, tubes, cooldown, tier));
+    }
 
     // ===== Depth Charge Launchers =====
     public static final DeferredItem<DepthChargeLauncherItem> DEPTH_CHARGE_LAUNCHER =

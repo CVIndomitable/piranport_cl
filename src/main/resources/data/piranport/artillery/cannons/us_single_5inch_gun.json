@@ -1,0 +1,29 @@
+{
+  "caliberInches": 5.0,
+  "barrels": 1,
+  "tier": "standard",
+  "velocityClass": "standard",
+  "durability": 500,
+  "scopeZoom": 2.0,
+  "initialSpeed": 2.5,
+  "dragCoeff": 0.015,
+  "gravity": 9.8,
+  "explosionPower": 1.0,
+  "dispersion": 1.5,
+  "projectileWeight": 50.0,
+  "fireCooldown": 0,
+  "salvoCount": 1,
+  "salvoInterval": 0.0,
+  "verticalSpread": 1.0,
+  "horizontalSpread": 1.5,
+  "maxElevation": 60.0,
+  "turretSpeed": 3.5,
+  "loadingMode": "MANUAL",
+  "muzzles": [
+    {
+      "x": 0.0,
+      "y": 0.2,
+      "z": 0
+    }
+  ]
+}

@@ -67,18 +67,11 @@ public final class WeaponItems {
     /**
      * 日本12.7厘米连装炮 — 八九式十二糎七高角砲。
      *
-     * <p>数值、贴图、合成配方均与已删除的 {@code small_gun} 一致（策划要求）。原先两者
-     * 并存时 12.7 厘米炮只是小型火炮换皮，现由本炮直接取代小型火炮的位置。
+     * <p>贴图、合成配方沿用已删除的 {@code small_gun}。数值自 2026-09-30 起按
+     * 策划决策/数值/07（5英寸双联·初期：面板 5、装填 39 tick、负重 12），见 {@link com.piranport.artillery.CannonCatalog}。
      */
     public static final DeferredItem<Item> JAPANESE_127MM_TWIN_GUN =
-            ITEMS.register("japanese_127mm_twin_gun", () -> new ArtilleryItem(new Item.Properties().stacksTo(1)
-                    .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.CANNON)
-                    .durability(500),
-                    new ArtilleryCannonData(4, 2, 6.0f, 30, 500, 2.0f,
-                            List.of(new MuzzlePos(0.3, 0.2, 0),
-                                    new MuzzlePos(-0.3, 0.2, 0)),
-                            2.5f, 0.015f, 9.8f, 1.0f, 0.0f,
-                            10, 1, 5.0f), "japanese_127mm_twin_gun"));
+            ITEMS.register("japanese_127mm_twin_gun", () -> catalogGun("japanese_127mm_twin_gun"));
     /**
      * 中国双联140毫米炮。
      *
@@ -117,25 +110,44 @@ public final class WeaponItems {
                             List.of(new MuzzlePos(0.3, 0.2, 0)),
                             3.0f, 0.01f, 9.8f, 1.5f, 0.0f,
                             15, 1, 0.0f), "neural_ballistic_test_gun"));
-    public static final DeferredItem<Item> LARGE_GUN =
-            ITEMS.register("large_gun", () -> new ArtilleryItem(new Item.Properties().stacksTo(1)
-                    .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.CANNON)
-                    .durability(2000),
-                    new ArtilleryCannonData(16, 3, 20.0f, 80, 2000, 4.0f,
-                            List.of(new MuzzlePos(0.5, 0.25, 0),
-                                    new MuzzlePos(0, 0.25, 0),
-                                    new MuzzlePos(-0.5, 0.25, 0)),
-                            3.5f, 0.008f, 9.8f, 2.0f, 0.0f,
-                            20, 3, 5.0f), "large_gun"));
+    // large_gun（大型火炮，旧试验炮）2026-09-30 删除；原用处改指 07 表「英国三联16英寸炮」。
+    /** 德国双联380毫米炮：策划决策/数值/07（15英寸双联·标准：面板 31、装填 135.2 tick、负重 54）。 */
     public static final DeferredItem<Item> GERMAN_TWIN_380MM_GUN =
-            ITEMS.register("german_twin_380mm_gun", () -> new ArtilleryItem(new Item.Properties().stacksTo(1)
-                    .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.CANNON)
-                    .durability(2500),
-                    new ArtilleryCannonData(16, 2, 20.0f, 60, 2500, 4.0f,
-                            List.of(new MuzzlePos(0.2, 0.3, 0),
-                                    new MuzzlePos(-0.2, 0.3, 0)),
-                            3.5f, 0.008f, 9.8f, 2.0f, 0.0f,
-                            20, 2, 3.0f), "german_twin_380mm_gun"));
+            ITEMS.register("german_twin_380mm_gun", () -> catalogGun("german_twin_380mm_gun"));
+
+    /**
+     * 策划决策/数值/07 注册表其余火炮（id → 物品），顺序同 07 表。
+     * 日本12.7厘米连装炮、德国双联380毫米炮已有独立字段，不在此重复注册。
+     */
+    public static final java.util.Map<String, DeferredItem<Item>> CATALOG_GUNS = registerCatalogGuns();
+
+    private static java.util.Map<String, DeferredItem<Item>> registerCatalogGuns() {
+        java.util.Map<String, DeferredItem<Item>> map = new java.util.LinkedHashMap<>();
+        for (com.piranport.artillery.CannonCatalog.Entry e : com.piranport.artillery.CannonCatalog.ENTRIES) {
+            String id = e.id();
+            if (id.equals("japanese_127mm_twin_gun") || id.equals("german_twin_380mm_gun")) continue;
+            map.put(id, ITEMS.register(id, () -> catalogGun(id)));
+        }
+        return java.util.Collections.unmodifiableMap(map);
+    }
+
+    private static ArtilleryItem catalogGun(String id) {
+        ArtilleryCannonData data = com.piranport.artillery.CannonCatalog.fallbackData(id);
+        return new ArtilleryItem(new Item.Properties().stacksTo(1)
+                .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.CANNON)
+                .durability(data.durability()), data, id);
+    }
+
+    /** 07 表全部 60 门（含两门独立字段），按表顺序。 */
+    public static java.util.List<Item> allCatalogGuns() {
+        java.util.List<Item> list = new java.util.ArrayList<>();
+        for (com.piranport.artillery.CannonCatalog.Entry e : com.piranport.artillery.CannonCatalog.ENTRIES) {
+            if (e.id().equals("japanese_127mm_twin_gun")) list.add(JAPANESE_127MM_TWIN_GUN.get());
+            else if (e.id().equals("german_twin_380mm_gun")) list.add(GERMAN_TWIN_380MM_GUN.get());
+            else list.add(CATALOG_GUNS.get(e.id()).get());
+        }
+        return list;
+    }
 
     /**
      * 法国四联380毫米炮 — 大型火炮，四联装。

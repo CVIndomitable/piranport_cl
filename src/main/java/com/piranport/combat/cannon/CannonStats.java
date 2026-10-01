@@ -25,7 +25,12 @@ final class CannonStats {
         if (item instanceof com.piranport.artillery.ArtilleryItem ai) {
             com.piranport.artillery.config.ArtilleryCannonData data =
                     level != null ? ai.getEffectiveData(level) : ai.getData();
-            return ExperienceShellItem.applyCooldownReduction(player, Math.max(data.reloadTime(), data.fireCooldown()));
+            // 装填允许小数（策划决策/数值/07）：按小数部分概率进位，长期平均等于表值。
+            // fireCooldown 只作下限；新注册表火炮 fireCooldown=0，不会顶掉 6.5 tick 这类短装填。
+            double ticks = Math.max(data.reloadTime(), data.fireCooldown());
+            double roll = player != null ? player.getRandom().nextDouble() : 0.5;
+            return ExperienceShellItem.applyCooldownReduction(player,
+                    com.piranport.artillery.CannonStatFormula.resolveTicks(ticks, roll));
         }
         return 30;
     }

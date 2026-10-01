@@ -43,7 +43,8 @@ public class CannonHandler implements WeaponHandler {
     public int cooldownTicks(EntityMaid maid, ItemStack stack) {
         if (stack.getItem() instanceof ArtilleryItem ai) {
             var data = ai.getEffectiveData(maid.level());
-            return Math.max(data.reloadTime(), data.fireCooldown());
+            return com.piranport.artillery.CannonStatFormula.resolveTicks(
+                    Math.max(data.reloadTime(), data.fireCooldown()), maid.getRandom().nextDouble());
         }
         return cooldownTicks(stack);
     }

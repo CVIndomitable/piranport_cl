@@ -1,8 +1,8 @@
 {
-  "caliber": 4,
+  "caliberInches": 5.0,
   "barrels": 2,
-  "damage": 6.0,
-  "reloadTime": 30,
+  "tier": "initial",
+  "velocityClass": "standard",
   "durability": 500,
   "scopeZoom": 2.0,
   "initialSpeed": 2.5,
@@ -11,15 +11,24 @@
   "explosionPower": 1.0,
   "dispersion": 1.5,
   "projectileWeight": 50.0,
-  "fireCooldown": 10,
-  "salvoCount": 1,
-  "salvoInterval": 5.0,
-  "verticalSpread": 1.00,
-  "horizontalSpread": 1.50,
+  "fireCooldown": 0,
+  "salvoCount": 2,
+  "salvoInterval": 3.0,
+  "verticalSpread": 1.0,
+  "horizontalSpread": 1.5,
   "maxElevation": 60.0,
   "turretSpeed": 3.5,
+  "loadingMode": "MANUAL",
   "muzzles": [
-    {"x": 0.3, "y": 0.2, "z": 0},
-    {"x": -0.3, "y": 0.2, "z": 0}
+    {
+      "x": 0.15,
+      "y": 0.2,
+      "z": 0
+    },
+    {
+      "x": -0.15,
+      "y": 0.2,
+      "z": 0
+    }
   ]
 }

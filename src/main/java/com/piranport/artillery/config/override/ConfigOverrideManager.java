@@ -40,7 +40,7 @@ public class ConfigOverrideManager {
         return new ArtilleryCannonData(
                 c.caliber(), c.barrels(),
                 (float) com.piranport.terminal.TerminalParameters.getDouble(key + "damage", c.damage()),
-                com.piranport.terminal.TerminalParameters.getInt(key + "reload_time", c.reloadTime()),
+                (float) com.piranport.terminal.TerminalParameters.getDouble(key + "reload_time", c.reloadTime()),
                 com.piranport.terminal.TerminalParameters.getInt(key + "durability", c.durability()),
                 (float) com.piranport.terminal.TerminalParameters.getDouble(key + "scope_zoom", c.scopeZoom()),
                 c.muzzles(),
@@ -57,7 +57,7 @@ public class ConfigOverrideManager {
                 (float) com.piranport.terminal.TerminalParameters.getDouble(key + "horizontal_spread", c.horizontalSpread()),
                 (float) com.piranport.terminal.TerminalParameters.getDouble(key + "max_elevation", c.maxElevation()),
                 (float) com.piranport.terminal.TerminalParameters.getDouble(key + "turret_speed", c.turretSpeed()),
-                c.loadingMode());
+                c.loadingMode(), c.caliberInches(), c.tier(), c.velocityClass());
     }
 
     // ==================== 弹药配置覆盖 ====================

@@ -28,7 +28,19 @@ public record CannonDefinition(ResourceLocation id, ArtilleryCannonData data) {
         if (data.caliber() <= 0) errors.add("caliber must be positive");
         if (data.barrels() <= 0) errors.add("barrels must be positive");
         if (data.damage() < 0 || !Float.isFinite(data.damage())) errors.add("damage must be finite and non-negative");
-        if (data.reloadTime() < 0) errors.add("reloadTime must be non-negative");
+        if (!Float.isFinite(data.reloadTime()) || data.reloadTime() < 0) errors.add("reloadTime must be finite and non-negative");
+        if (!Float.isFinite(data.caliberInches()) || data.caliberInches() < 0) errors.add("caliberInches must be finite and non-negative");
+        if (data.usesInchCaliber()) {
+            try {
+                com.piranport.component.EquipmentTier.byId(data.tier());
+            } catch (IllegalArgumentException e) {
+                errors.add("tier must be initial/standard/improved/advanced");
+            }
+            String v = data.velocityClass();
+            if (!("standard".equalsIgnoreCase(v) || "high".equalsIgnoreCase(v) || "low".equalsIgnoreCase(v))) {
+                errors.add("velocityClass must be high/standard/low");
+            }
+        }
         if (data.durability() <= 0) errors.add("durability must be positive");
         if (data.fireCooldown() < 0) errors.add("fireCooldown must be non-negative");
         if (!Float.isFinite(data.salvoInterval()) || data.salvoInterval() < 0) {

@@ -433,7 +433,7 @@ public class BossIntroScript implements DungeonScript {
         // 为每个玩家填充 Boss 奖励
         List<ItemStack> loot = new ArrayList<>();
         for (int i = 0; i < playerUuids.size(); i++) {
-            loot.add(new ItemStack(ModItems.LARGE_GUN.get()));
+            loot.add(new ItemStack(ModItems.BRITISH_TRIPLE_16INCH_GUN.get()));
             loot.add(new ItemStack(ModItems.LARGE_HE_SHELL.get(), 64));
             loot.add(new ItemStack(ModItems.LARGE_AP_SHELL.get(), 64));
             loot.add(new ItemStack(ModItems.EXP_SHELL.get(), 8));

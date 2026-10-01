@@ -136,7 +136,9 @@ public class ModItems {
     public static final DeferredItem<Item> JAPANESE_127MM_TWIN_GUN = WeaponItems.JAPANESE_127MM_TWIN_GUN;
     public static final DeferredItem<Item> MEDIUM_GUN = WeaponItems.MEDIUM_GUN;
     public static final DeferredItem<Item> NEURAL_BALLISTIC_TEST_GUN = WeaponItems.NEURAL_BALLISTIC_TEST_GUN;
-    public static final DeferredItem<Item> LARGE_GUN = WeaponItems.LARGE_GUN;
+    /** 英国三联16英寸炮（策划决策/数值/07，16英寸三联·标准）；接替已删除的 large_gun 的引用位置。 */
+    public static final DeferredItem<Item> BRITISH_TRIPLE_16INCH_GUN =
+            WeaponItems.CATALOG_GUNS.get("british_triple_16inch_gun");
     public static final DeferredItem<Item> GERMAN_TWIN_380MM_GUN = WeaponItems.GERMAN_TWIN_380MM_GUN;
     public static final DeferredItem<Item> FRENCH_QUAD_380MM_GUN = WeaponItems.FRENCH_QUAD_380MM_GUN;
     public static final DeferredItem<Item> FOURTEEN_BARREL_GUN = WeaponItems.FOURTEEN_BARREL_GUN;

@@ -128,9 +128,11 @@ public class ClientModEvents {
         // 武器装填条（武器物品上的耐久条样式）
         WeaponReloadDecorator weaponDecorator = new WeaponReloadDecorator();
         event.register(ModItems.SINGLE_SMALL_GUN.get(), weaponDecorator);
-        event.register(ModItems.JAPANESE_127MM_TWIN_GUN.get(), weaponDecorator);
         event.register(ModItems.MEDIUM_GUN.get(), weaponDecorator);
-        event.register(ModItems.LARGE_GUN.get(), weaponDecorator);
+        // 07 火炮注册表 60 门（含日本12.7厘米连装炮、德国双联380毫米炮）
+        for (net.minecraft.world.item.Item gun : com.piranport.registry.WeaponItems.allCatalogGuns()) {
+            event.register(gun, weaponDecorator);
+        }
         event.register(ModItems.TRIPLE_TORPEDO_LAUNCHER.get(), weaponDecorator);
         event.register(ModItems.QUAD_TORPEDO_LAUNCHER.get(), weaponDecorator);
         event.register(ModItems.QUINTUPLE_TORPEDO_LAUNCHER.get(), weaponDecorator);

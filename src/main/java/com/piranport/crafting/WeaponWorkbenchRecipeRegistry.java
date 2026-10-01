@@ -75,7 +75,7 @@ public final class WeaponWorkbenchRecipeRegistry {
                 new ItemStack(Items.REDSTONE, 2)
         ), ModItems.MEDIUM_GUN_BLUEPRINT.get(), 200);
 
-        add(r, 0, ModItems.LARGE_GUN.get(), List.of(
+        add(r, 0, ModItems.BRITISH_TRIPLE_16INCH_GUN.get(), List.of(
                 new ItemStack(Items.IRON_INGOT, 8),
                 new ItemStack(Items.GOLD_INGOT, 4),
                 new ItemStack(Items.DIAMOND, 2)

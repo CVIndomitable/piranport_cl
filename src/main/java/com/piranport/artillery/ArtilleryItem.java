@@ -72,7 +72,10 @@ public class ArtilleryItem extends Item {
     }
 
     public float getDamage() { return getData().damage(); }
-    public int getCooldownTicks() { return getData().reloadTime(); }
+    /** 装填 tick 四舍五入（展示/女仆兜底用）；开火读条走 CannonStats 的小数概率进位。 */
+    public int getCooldownTicks() { return Math.round(getData().reloadTime()); }
+    /** 装填 tick 原值，允许小数（策划决策/数值/07）。 */
+    public float getReloadTicksExact() { return getData().reloadTime(); }
     public int getBarrelCount() { return getData().barrels(); }
     public int getCaliber() { return getData().caliber(); }
     
@@ -194,7 +197,18 @@ public class ArtilleryItem extends Item {
     /** 读条持续时间 = 武器装填时间（ticks）。 */
     @Override
     public int getUseDuration(ItemStack stack, LivingEntity entity) {
-        return getEffectiveData(entity == null ? null : entity.level()).reloadTime();
+        // 持续使用时长须客户端/服务端一致，不能随机进位，取四舍五入。
+        return Math.max(1, Math.round(getEffectiveData(entity == null ? null : entity.level()).reloadTime()));
+    }
+
+    /**
+     * 公式负重（策划决策/数值/06）：英寸口径炮按 ceil(0.04(c+15)c(n+1)) 再乘初速系数；
+     * 旧炮返回 -1，由 TransformationManager 的旧负重表兜底。
+     */
+    public int getFormulaWeight() {
+        ArtilleryCannonData d = getEffectiveData(null);
+        if (!d.usesInchCaliber()) return -1;
+        return CannonStatFormula.weight(d.caliberInches(), d.barrels(), d.velocityClassOrDefault());
     }
 
     /** 每 tick 累计读条进度（仅服务端、手动模式、未装弹时）。 */
@@ -288,6 +302,13 @@ public class ArtilleryItem extends Item {
         return Math.max(-limit, Math.min(limit, value));
     }
 
+    /** 3.937 → "3.94"，16.5 → "16.5"，8 → "8"。 */
+    static String formatInches(double inches) {
+        String s = String.format(java.util.Locale.ROOT, "%.2f", inches);
+        s = s.replaceAll("0+$", "");
+        return s.endsWith(".") ? s.substring(0, s.length() - 1) : s;
+    }
+
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context,
                                 List<Component> tooltipComponents, TooltipFlag tooltipFlag) {
@@ -299,11 +320,22 @@ public class ArtilleryItem extends Item {
                     .withStyle(net.minecraft.ChatFormatting.DARK_GREEN));
         }
 
-        // 口径分类
-        int caliber = getCaliber();
-        String calCat = caliber <= 4 ? "小口径" : (caliber <= 8 ? "中口径" : "大口径");
-        tooltipComponents.add(Component.literal(String.format("口径: %dmm (%s)", caliber, calCat))
-                .withStyle(net.minecraft.ChatFormatting.AQUA));
+        // 口径分类：英寸炮显示真实英寸口径、联装与稀有度（策划决策/数值/07）；旧炮保持原显示。
+        ArtilleryCannonData shown = getData();
+        if (shown.usesInchCaliber()) {
+            var family = com.piranport.combat.cannon.CannonAmmoRules.familyForInches(shown.caliberInches());
+            tooltipComponents.add(Component.translatable("tooltip.piranport.cannon.caliber_inches",
+                    formatInches(shown.caliberInches()), shown.barrels(),
+                    Component.translatable("tooltip.piranport.cannon.family."
+                            + family.name().toLowerCase(java.util.Locale.ROOT)))
+                    .withStyle(net.minecraft.ChatFormatting.AQUA));
+            tooltipComponents.add(shown.tierOrDefault().tooltip());
+        } else {
+            int caliber = getCaliber();
+            String calCat = caliber <= 4 ? "小口径" : (caliber <= 8 ? "中口径" : "大口径");
+            tooltipComponents.add(Component.literal(String.format("口径: %dmm (%s)", caliber, calCat))
+                    .withStyle(net.minecraft.ChatFormatting.AQUA));
+        }
 
         // 装填模式（策划决策/武器/07-火炮装填双模式.md）
         tooltipComponents.add(Component.translatable(
@@ -338,7 +370,12 @@ public class ArtilleryItem extends Item {
                 tooltipComponents.add(Component.translatable("tooltip.piranport.cannon.damage",
                         String.format("%.1f", getDamage())).withStyle(net.minecraft.ChatFormatting.RED));
                 tooltipComponents.add(Component.translatable("tooltip.piranport.cooldown",
-                        String.format("%.1f", getCooldownTicks() / 20.0)).withStyle(net.minecraft.ChatFormatting.YELLOW));
+                        String.format("%.2f", getReloadTicksExact() / 20.0)).withStyle(net.minecraft.ChatFormatting.YELLOW));
+                int formulaWeight = getFormulaWeight();
+                if (formulaWeight >= 0) {
+                    tooltipComponents.add(Component.translatable("tooltip.piranport.cannon.weight", formulaWeight)
+                            .withStyle(net.minecraft.ChatFormatting.GRAY));
+                }
 
                 // 装填进度
                 WeaponCooldown cd = stack.get(ModDataComponents.WEAPON_COOLDOWN.get());

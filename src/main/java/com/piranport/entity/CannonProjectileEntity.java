@@ -78,6 +78,11 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
     /** 混合因子：0.05 = 每 tick 约 5% 修正（平缓曲线）。 */
     private static final double TRACKING_STEER = 0.05;
 
+    /** 火控雷达追踪目标（火控锁定目标 UUID）；null 表示无雷达追踪。策划决策/火控/05。 */
+    private java.util.UUID radarTrackingTarget = null;
+    private double radarTrackingRange = 0;
+    private double radarTrackingTurn = 0;
+
     /** 自定义重力（真实比例，使用时除以 196 换算为 MC 比例）。0 表示使用默认值。 */
     private float customGravity = 0f;
 
@@ -159,6 +164,13 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
     /** 启用对特定实体的追踪（通过运行时实体 ID）。 */
     public void setTracking(int entityId) {
         this.trackingTargetId = entityId;
+    }
+
+    /** 火控雷达追踪：炮弹进入目标 range 格内后每 tick 按 turn 系数偏转。 */
+    public void setRadarTracking(java.util.UUID target, double range, double turn) {
+        this.radarTrackingTarget = target;
+        this.radarTrackingRange = range;
+        this.radarTrackingTurn = turn;
     }
 
     public void setDragCoeff(float dragCoeff) {
@@ -273,7 +285,25 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
             if (trackingTargetId >= 0) {
                 tickTracking();
             }
+            if (radarTrackingTarget != null) {
+                tickRadarTracking();
+            }
         }
+    }
+
+    /** 火控雷达追踪：只在距目标 range 格内生效，范围外弹道不变。 */
+    private void tickRadarTracking() {
+        if (!(level() instanceof net.minecraft.server.level.ServerLevel serverLevel)) return;
+        Entity target = serverLevel.getEntity(radarTrackingTarget);
+        if (target == null || !target.isAlive()) {
+            radarTrackingTarget = null;
+            return;
+        }
+        Vec3 aim = target.position().add(0, target.getBbHeight() * 0.5, 0);
+        setDeltaMovement(com.piranport.combat.cannon.FireControlRadarTracking.steer(
+                position(), getDeltaMovement(), aim,
+                new com.piranport.combat.cannon.FireControlRadarTracking.Params(
+                        radarTrackingRange, radarTrackingTurn)));
     }
 
     private void tickWhistleSound() {
@@ -631,6 +661,11 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         tag.putBoolean("Exploded", exploded);
         tag.putFloat("CustomGravity", customGravity);
         tag.putInt("SourceCaliber", sourceCaliber);
+        if (radarTrackingTarget != null) {
+            tag.putUUID("RadarTrackingTarget", radarTrackingTarget);
+            tag.putDouble("RadarTrackingRange", radarTrackingRange);
+            tag.putDouble("RadarTrackingTurn", radarTrackingTurn);
+        }
     }
 
     @Override
@@ -669,6 +704,11 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         }
         if (tag.contains("SourceCaliber")) {
             sourceCaliber = tag.getInt("SourceCaliber");
+        }
+        if (tag.hasUUID("RadarTrackingTarget")) {
+            radarTrackingTarget = tag.getUUID("RadarTrackingTarget");
+            radarTrackingRange = tag.getDouble("RadarTrackingRange");
+            radarTrackingTurn = tag.getDouble("RadarTrackingTurn");
         }
     }
 

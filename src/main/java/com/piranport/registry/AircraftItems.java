@@ -300,7 +300,7 @@ public final class AircraftItems {
             ITEMS.register("standard_fire_control_radar",
                     () -> new FireControlRadarItem(new Item.Properties().stacksTo(1)
                             .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ARMOR),
-                            1, 32));
+                            8, 32, 1)); // 火控/05：等级1 负重 8
 
     // ===== Engines =====
     public static final DeferredItem<EngineItem> STANDARD_ENGINE =

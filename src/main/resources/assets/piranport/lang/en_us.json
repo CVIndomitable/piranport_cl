@@ -1151,6 +1151,7 @@
   "tooltip.piranport.fire_control_radar.range": "Snap range: %d chunks",
   "tooltip.piranport.fire_control_radar.weight": "Weight: %d",
   "tooltip.piranport.fire_control_radar.hint": "Press [0] to toggle crosshair snap",
+  "tooltip.piranport.fire_control_radar.tracking": "Shell tracking Lv.%s: within %s blocks of the FC-locked target, turn %s",
   "key.piranport.toggle_fire_control_radar": "Toggle Fire Control Radar",
   "message.piranport.fire_control_radar_on": "Fire control radar: ON",
   "message.piranport.fire_control_radar_off": "Fire control radar: OFF",

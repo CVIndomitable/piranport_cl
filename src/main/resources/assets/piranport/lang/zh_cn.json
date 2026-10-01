@@ -1349,6 +1349,7 @@
   "tooltip.piranport.fire_control_radar.range": "吸附范围: %d 区块",
   "tooltip.piranport.fire_control_radar.weight": "负重: %d",
   "tooltip.piranport.fire_control_radar.hint": "装备后按 0 键开关准星吸附",
+  "tooltip.piranport.fire_control_radar.tracking": "炮弹追踪 %s 级：距火控锁定目标 %s 格内，转向系数 %s",
   "key.piranport.toggle_fire_control_radar": "火控雷达开关",
   "message.piranport.fire_control_radar_on": "火控雷达已开启",
   "message.piranport.fire_control_radar_off": "火控雷达已关闭",

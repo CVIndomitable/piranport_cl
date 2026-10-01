@@ -21,6 +21,21 @@ public final class ModEquipmentConfig {
 
 
 
+    // 火控雷达炮弹追踪（策划决策/火控/05 §4，占位值需实测）。原文写 equipment.toml，
+    // 项目已改为终端参数，键名保持 fire_control_radar.levelN_*。
+    public static final TerminalConfigValue<Double> FC_RADAR_L1_RANGE =
+            TerminalConfigValue.number("equipment", "fire_control_radar", "level1_range", 8.0, 0.0, 128.0);
+    public static final TerminalConfigValue<Double> FC_RADAR_L1_TURN =
+            TerminalConfigValue.number("equipment", "fire_control_radar", "level1_turn_coefficient", 0.02, 0.0, 1.0);
+    public static final TerminalConfigValue<Double> FC_RADAR_L2_RANGE =
+            TerminalConfigValue.number("equipment", "fire_control_radar", "level2_range", 12.0, 0.0, 128.0);
+    public static final TerminalConfigValue<Double> FC_RADAR_L2_TURN =
+            TerminalConfigValue.number("equipment", "fire_control_radar", "level2_turn_coefficient", 0.04, 0.0, 1.0);
+    public static final TerminalConfigValue<Double> FC_RADAR_L3_RANGE =
+            TerminalConfigValue.number("equipment", "fire_control_radar", "level3_range", 16.0, 0.0, 128.0);
+    public static final TerminalConfigValue<Double> FC_RADAR_L3_TURN =
+            TerminalConfigValue.number("equipment", "fire_control_radar", "level3_turn_coefficient", 0.06, 0.0, 1.0);
+
     public static final TerminalConfigValue<Double> ARMOR_PLATE_PROTECTION =
             TerminalConfigValue.number("equipment", "equipment", "armor_plate_protection", 3.0, 0.0, 100.0);
 

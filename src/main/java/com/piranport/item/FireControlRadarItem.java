@@ -21,8 +21,9 @@ import java.util.List;
  * 两者中较小的那个决定（见 {@code FireControlRadarSnapHandler}）。本物品构造参数里的
  * {@code snapRangeChunks} <b>不参与</b>吸附判定，只用于 tooltip 展示 —— 改它不会改变吸附手感。
  *
- * <p>它与中键火控锁定列表（{@code FireControlManager} / {@code ClientFireControlData}）无关：
- * 后者是航空投放的锁定目标，本装备只做准星辅助。
+ * <p>炮弹追踪（策划决策/火控/05）：装备后若 {@code FireControlManager} 存在火控锁定目标，
+ * 发射的炮弹在距该目标 {@code levelN_range} 格内每 tick 按转向系数偏转，见
+ * {@code FireControlRadarTracking}。追踪与 0 键吸附开关无关，只看装备与锁定。
  *
  * <p>注册在 {@code AircraftItems#STANDARD_FIRE_CONTROL_RADAR}，模型/贴图/配方/双语 lang
  * 均已齐全。新增同类装备时记得同步 {@code ShipCoreItem} 的强化槽白名单，否则会「注册了但装不上」。
@@ -31,12 +32,21 @@ public class FireControlRadarItem extends Item {
 
     private final int weight;
     private final int snapRangeChunks;
+    /** 追踪等级 1～3（策划决策/火控/05 §1），决定炮弹追踪范围与转向系数。 */
+    private final int level;
 
     public FireControlRadarItem(Properties properties, int weight, int snapRangeChunks) {
+        this(properties, weight, snapRangeChunks, 1);
+    }
+
+    public FireControlRadarItem(Properties properties, int weight, int snapRangeChunks, int level) {
         super(properties);
         this.weight = weight;
         this.snapRangeChunks = snapRangeChunks;
+        this.level = Math.max(1, Math.min(3, level));
     }
+
+    public int getLevel() { return level; }
 
     public int getWeight() {
         return TerminalParameters.getInt(parameterKey("weight"), weight);
@@ -64,6 +74,11 @@ public class FireControlRadarItem extends Item {
         if (ClientHooks.isClient()) {
             if (ClientHooks.hasShiftDown()) {
                 tooltip.add(Component.translatable("tooltip.piranport.fire_control_radar.range", getSnapRangeChunks())
+                        .withStyle(ChatFormatting.AQUA));
+                var tracking = com.piranport.combat.cannon.FireControlRadarTracking.forLevel(level);
+                tooltip.add(Component.translatable("tooltip.piranport.fire_control_radar.tracking",
+                                level, String.format("%.0f", tracking.range()),
+                                String.format("%.2f", tracking.turnCoefficient()))
                         .withStyle(ChatFormatting.AQUA));
                 tooltip.add(Component.translatable("tooltip.piranport.fire_control_radar.weight", getWeight())
                         .withStyle(ChatFormatting.GRAY));

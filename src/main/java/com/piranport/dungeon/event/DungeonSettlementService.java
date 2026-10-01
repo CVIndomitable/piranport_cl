@@ -22,6 +22,16 @@ import java.util.UUID;
 /** 副本/19：每节点即时发奖，末节点把首通奖励合并进同一张展示页。 */
 public final class DungeonSettlementService {
     private DungeonSettlementService() {}
+
+    /** 副本/20：用时相对 par_time_seconds 评价，S ≤0.6×、A ≤0.85×、B ≤1.15×、C 其余。 */
+    public static String ratingFor(long elapsedMillis, int parTimeSeconds) {
+        double par = (parTimeSeconds > 0 ? parTimeSeconds : 1200) * 1000.0;
+        double ratio = Math.max(0L, elapsedMillis) / par;
+        if (ratio <= 0.6) return "S";
+        if (ratio <= 0.85) return "A";
+        if (ratio <= 1.15) return "B";
+        return "C";
+    }
     public static boolean isCounting(DungeonInstance i,String n){return i!=null&&n!=null&&i.getState()==DungeonInstance.State.ACTIVE&&i.hasEnteredNode(n)&&!i.getClearedNodes().contains(n);}
     public static void tickActiveNode(ServerLevel l,DungeonInstance i){if(isCounting(i,i.getCurrentNode()))DungeonSettlementData.get(l).tick(i.getInstanceId(),i.getCurrentNode());}
     public static void recordKill(ServerLevel l,DungeonInstance i,String n,UUID e){if(e!=null&&isCounting(i,n))DungeonSettlementData.get(l).recordKill(i.getInstanceId(),n,e);}

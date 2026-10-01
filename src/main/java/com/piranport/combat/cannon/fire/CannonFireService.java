@@ -184,7 +184,30 @@ public final class CannonFireService {
         projectile.setCustomGravity(request.gravity());
         projectile.setSourceCaliber(request.sourceCaliber());
         projectile.setPos(request.spawnPosition());
+        applyFireControlRadarTracking(projectile, request);
         return projectile;
+    }
+
+    /**
+     * 策划决策/火控/05 §2：舰娘状态 + 核心装火控雷达 + 存在火控锁定目标 → 炮弹挂追踪。
+     * 只追火控锁定目标（取第一个同维度存活目标），不对其他实体追踪。
+     */
+    private static void applyFireControlRadarTracking(CannonProjectileEntity projectile, CannonFireRequest request) {
+        if (!(request.shooter() instanceof net.minecraft.world.entity.player.Player player)) return;
+        if (!(request.level() instanceof net.minecraft.server.level.ServerLevel serverLevel)) return;
+        ItemStack core = com.piranport.combat.TransformationManager.findTransformedCore(player);
+        if (core.isEmpty()) return;
+        var radar = com.piranport.combat.TransformationManager.findEquippedFireControlRadar(core);
+        if (radar == null) return;
+        var params = com.piranport.combat.cannon.FireControlRadarTracking.forLevel(radar.getLevel());
+        if (!params.active()) return;
+        for (java.util.UUID id : com.piranport.aviation.FireControlManager.getTargets(player.getUUID())) {
+            Entity target = serverLevel.getEntity(id);
+            if (target != null && target.isAlive()) {
+                projectile.setRadarTracking(id, params.range(), params.turnCoefficient());
+                return;
+            }
+        }
     }
 
     /** 便于未来玩家、女仆调用方从同一组数值创建请求。 */

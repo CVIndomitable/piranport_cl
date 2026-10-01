@@ -53,6 +53,12 @@
 - **物品模型**: 注册物品时必须主动创建 `models/item/*.json` 模型文件，不能只放贴图
 - **注释语言**: 全部使用中文注释，保持中文团队维护一致性。复杂逻辑必须注释 WHY 而不只是 WHAT
 
+### 火控可视化预测（策划决策/火控/06）
+- 渲染统一在 `client/FireControlVisualRenderer`（原 `BallisticAimMarkerRenderer` 已并入删除），由 `ClientInputCoordinator` 每 tick 调用。纯客户端，不发包。
+- 纯数学在 `combat/FireControlPrediction`（5 tick 采样速度、鱼雷水平拦截闭式解、准星入球判定、扇形角）；火炮预测落点走 `BallisticSolver.predictImpactPoint`（客户端专用）。
+- 扇形圆心角 = 2×max|`CombatFireUtils.getSpreadAngles(管数)`|，散布表改了扇形自动跟随。
+- 颜色为终端参数 `global.fire_control_visual.prediction_line_color` / `prediction_line_active_color`（RGB 整数）。
+
 ---
 
 ## Build & Run

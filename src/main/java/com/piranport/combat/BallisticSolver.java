@@ -1022,6 +1022,51 @@ public final class BallisticSolver {
         cache.clear();
     }
 
+    // ===== 客户端预测落点接口（策划决策/火控/06 §6）=====
+
+    private static final int PREDICT_MAX_FLIGHT_TICKS = 400;
+
+    /**
+     * 估算炮弹到达目标水平距离所需 tick，沿用炮弹实体「先自定义阻力、后原版 0.99」的顺序。
+     * 仅供客户端预测显示，不参与服务端弹道判定。
+     */
+    public static double estimateFlightTicks(net.minecraft.world.phys.Vec3 origin, net.minecraft.world.phys.Vec3 target,
+                                             double speed, double drag, double gravity,
+                                             double minAngle, double maxAngle) {
+        net.minecraft.world.phys.Vec3 delta = target.subtract(origin);
+        double horizontalDistance = Math.sqrt(delta.x * delta.x + delta.z * delta.z);
+        if (horizontalDistance < 0.05) return 1.0;
+        double angle = solve(speed, drag, gravity, horizontalDistance, delta.y,
+                0.0, minAngle, maxAngle).angle();
+        double horizontalVelocity = Math.max(0.01, speed * Math.cos(angle));
+        double travelled = 0.0;
+        double customDrag = 1.0 / (1.0 + Math.max(0.0, drag));
+        for (int tick = 1; tick <= PREDICT_MAX_FLIGHT_TICKS; tick++) {
+            horizontalVelocity *= customDrag;
+            travelled += horizontalVelocity;
+            if (travelled >= horizontalDistance) return tick;
+            horizontalVelocity *= 0.99;
+        }
+        return PREDICT_MAX_FLIGHT_TICKS;
+    }
+
+    /**
+     * 预测落点：目标按 {@code targetVelocity}（格/tick）匀速运动，迭代修正飞行时间后返回
+     * 炮弹与目标相遇的瞄准点。客户端专用。
+     */
+    public static net.minecraft.world.phys.Vec3 predictImpactPoint(
+            net.minecraft.world.phys.Vec3 origin, net.minecraft.world.phys.Vec3 targetAimPoint,
+            net.minecraft.world.phys.Vec3 targetVelocity, double speed, double drag, double gravity,
+            double minAngle, double maxAngle, int iterations) {
+        double flightTicks = estimateFlightTicks(origin, targetAimPoint, speed, drag, gravity, minAngle, maxAngle);
+        net.minecraft.world.phys.Vec3 predicted = targetAimPoint;
+        for (int i = 0; i < Math.max(1, iterations); i++) {
+            predicted = targetAimPoint.add(targetVelocity.scale(flightTicks));
+            flightTicks = estimateFlightTicks(origin, predicted, speed, drag, gravity, minAngle, maxAngle);
+        }
+        return predicted;
+    }
+
     /** 缓存键：包含所有影响弹道的参数，距离已量化 */
     private record SolutionKey(double speed, double drag, double gravity, double hDist, double vDist,
                                double minAngle, double maxAngle) {}

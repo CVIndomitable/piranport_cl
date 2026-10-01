@@ -36,6 +36,12 @@ public final class ModEquipmentConfig {
     public static final TerminalConfigValue<Double> FC_RADAR_L3_TURN =
             TerminalConfigValue.number("equipment", "fire_control_radar", "level3_turn_coefficient", 0.06, 0.0, 1.0);
 
+    // 火控可视化预测颜色（策划决策/火控/06 §4），RGB 整数：白 0xFFFFFF，激活绿 0x40FF60。
+    public static final TerminalConfigValue<Integer> PREDICTION_LINE_COLOR =
+            TerminalConfigValue.integer("equipment", "fire_control_visual", "prediction_line_color", 0xFFFFFF, 0, 0xFFFFFF);
+    public static final TerminalConfigValue<Integer> PREDICTION_LINE_ACTIVE_COLOR =
+            TerminalConfigValue.integer("equipment", "fire_control_visual", "prediction_line_active_color", 0x40FF60, 0, 0xFFFFFF);
+
     public static final TerminalConfigValue<Double> ARMOR_PLATE_PROTECTION =
             TerminalConfigValue.number("equipment", "equipment", "armor_plate_protection", 3.0, 0.0, 100.0);
 

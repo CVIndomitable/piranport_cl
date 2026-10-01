@@ -1,0 +1,14 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "piranport:item/single_small_gun_empty"
+  },
+  "overrides": [
+    {
+      "predicate": {
+        "piranport:loaded": 1
+      },
+      "model": "piranport:item/german_single_127mm_gun_loaded"
+    }
+  ]
+}

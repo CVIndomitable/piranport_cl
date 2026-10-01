@@ -10,7 +10,7 @@
           "functions": [{ "function": "minecraft:set_count", "count": { "min": 2, "max": 8, "type": "minecraft:uniform" } }] },
         { "type": "minecraft:item", "name": "piranport:torpedo_610mm", "weight": 4,
           "functions": [{ "function": "minecraft:set_count", "count": { "min": 1, "max": 3, "type": "minecraft:uniform" } }] },
-        { "type": "minecraft:item", "name": "piranport:large_gun", "weight": 3 },
+        { "type": "minecraft:item", "name": "piranport:british_triple_16inch_gun", "weight": 3 },
         { "type": "minecraft:item", "name": "piranport:large_armor_plate", "weight": 3 },
         { "type": "minecraft:item", "name": "piranport:quad_torpedo_launcher", "weight": 2 },
         { "type": "minecraft:item", "name": "piranport:improved_engine", "weight": 3 },

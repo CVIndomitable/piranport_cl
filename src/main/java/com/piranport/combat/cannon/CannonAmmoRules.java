@@ -36,18 +36,29 @@ public final class CannonAmmoRules {
         return CaliberFamily.LARGE;
     }
 
-    /** 从规范数据派生口径族；分类只依赖真实口径，不读取具体物品 ID。 */
+    /**
+     * 由英寸口径判定口径族（用户 2026-09-30 拍板，配合策划决策/数值/06、07）：
+     * &lt;7 英寸小口径，7～&lt;13 英寸中口径，≥13 英寸大口径。
+     */
+    public static CaliberFamily familyForInches(double inches) {
+        if (inches < 7.0) return CaliberFamily.SMALL;
+        if (inches < 13.0) return CaliberFamily.MEDIUM;
+        return CaliberFamily.LARGE;
+    }
+
+    /** 从规范数据派生口径族；英寸炮按英寸判定，旧炮按 int 档位判定。 */
     public static CaliberFamily familyForData(ArtilleryCannonData data) {
         if (data == null) throw new IllegalArgumentException("cannon data must not be null");
+        if (data.usesInchCaliber()) return familyForInches(data.caliberInches());
         return familyForCaliber(data.caliber());
     }
 
     /** 取武器当前生效的口径（含配置覆盖），供 {@link #familyForCaliber} 使用。 */
     public static CaliberFamily familyForWeapon(ItemStack weapon, @Nullable Level level) {
-        int caliber = weapon.getItem() instanceof com.piranport.artillery.ArtilleryItem ai
-                ? (level != null ? ai.getEffectiveData(level).caliber() : ai.getCaliber())
-                : 0;
-        return familyForCaliber(caliber);
+        if (weapon.getItem() instanceof com.piranport.artillery.ArtilleryItem ai) {
+            return familyForData(level != null ? ai.getEffectiveData(level) : ai.getData());
+        }
+        return familyForCaliber(0);
     }
 
     public static boolean matchesCaliber(ItemStack ammo, ItemStack weapon) {

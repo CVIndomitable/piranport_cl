@@ -44,10 +44,9 @@ public class ModCreativeTabs {
                     .displayItems((parameters, output) -> {
                         // Guns
                         output.accept(ModItems.SINGLE_SMALL_GUN.get());
-                        output.accept(ModItems.JAPANESE_127MM_TWIN_GUN.get());
                         output.accept(ModItems.MEDIUM_GUN.get());
-                        output.accept(ModItems.LARGE_GUN.get());
-                        output.accept(ModItems.GERMAN_TWIN_380MM_GUN.get());
+                        // 策划决策/数值/07 火炮注册表 60 门（含日本12.7厘米连装炮、德国双联380毫米炮），按表顺序
+                        for (net.minecraft.world.item.Item gun : WeaponItems.allCatalogGuns()) output.accept(gun);
                         output.accept(ModItems.FRENCH_QUAD_380MM_GUN.get());
                         output.accept(ModItems.FOURTEEN_BARREL_GUN.get());
                         // 神经网络弹道解算实验炮（实验性质，见 docs/策划决策/武器/火炮-神经网络弹道解算实验方案.md）
@@ -600,13 +599,13 @@ public class ModCreativeTabs {
             CREATIVE_TABS.register("test_weapons_tab", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.piranport.test_weapons"))
                     .withTabsBefore(ResourceKey.create(Registries.CREATIVE_MODE_TAB, PiranPort.modId("spawn_eggs_tab")))  // 链式排序：紧接 spawn_eggs_tab
-                    .icon(() -> createPreloadedWeapon(ModItems.LARGE_GUN.get(), "piranport:large_he_shell", 3))
+                    .icon(() -> createPreloadedWeapon(ModItems.BRITISH_TRIPLE_16INCH_GUN.get(), "piranport:large_he_shell", 3))
                     .displayItems((parameters, output) -> {
                         // Preloaded cannons listed in the design doc.
                         addPreloadedWeapon(output, ModItems.SINGLE_SMALL_GUN.get(), "piranport:small_he_shell", 1);
                         addPreloadedWeapon(output, ModItems.JAPANESE_127MM_TWIN_GUN.get(), "piranport:small_he_shell", 2);
                         addPreloadedWeapon(output, ModItems.MEDIUM_GUN.get(), "piranport:medium_he_shell", 1);
-                        addPreloadedWeapon(output, ModItems.LARGE_GUN.get(), "piranport:large_he_shell", 3);
+                        addPreloadedWeapon(output, ModItems.BRITISH_TRIPLE_16INCH_GUN.get(), "piranport:large_he_shell", 3);
 
                         // Other preloaded test weapons already supported by the current test build.
                         addPreloadedWeapon(output, ModItems.TRIPLE_TORPEDO_LAUNCHER.get(), "piranport:torpedo_533mm_g7a", 3);

@@ -1,0 +1,14 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "piranport:item/large_gun_empty"
+  },
+  "overrides": [
+    {
+      "predicate": {
+        "piranport:loaded": 1
+      },
+      "model": "piranport:item/german_skc40_triple_420mm_gun_loaded"
+    }
+  ]
+}

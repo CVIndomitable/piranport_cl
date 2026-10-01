@@ -53,6 +53,16 @@
 - **物品模型**: 注册物品时必须主动创建 `models/item/*.json` 模型文件，不能只放贴图
 - **注释语言**: 全部使用中文注释，保持中文团队维护一致性。复杂逻辑必须注释 WHY 而不只是 WHAT
 
+### 火炮数值（策划决策/数值/06、07）
+- 公式集中在 `artillery/CannonStatFormula`：面板、齐射、装填（tick，可带小数）、负重、DPS；稀有度乘数取 `EquipmentTier`
+- 07 表的 60 门炮清单在 `artillery/CannonCatalog`，并在 `WeaponItems.CATALOG_GUNS` 循环注册（日本12.7厘米连装炮、德国双联380毫米炮仍是独立字段）；`allCatalogGuns()` 按表顺序返回全部 60 门
+- 炮的 JSON（`data/piranport/artillery/cannons/<id>.json`）写 `caliberInches`、`barrels`、`tier`、可选 `velocityClass`（standard、high、low）。不写 damage 和 reloadTime 时由公式推导
+- 旧 int `caliber` 由英寸派生：7 英寸以下记 4（小口径），7 到 13 英寸之间记 8（中口径），13 英寸及以上记 16（大口径）。旧判定照常可用，例如 AP 过穿要求 `>8`
+- `reloadTime` 是 float。计时器用 `CannonStatFormula.resolveTicks` 按小数部分随机进位，长期平均等于表值
+- 07 表炮的负重由 `ArtilleryItem.getFormulaWeight()` 计算，`TransformationManager.getWeaponLoadMap` 只保留旧炮和鱼雷
+- `large_gun`（大型火炮）已删除，原引用改指 `british_triple_16inch_gun`（英国三联16英寸炮）。`large_gun_blueprint`（大型火炮蓝图）和 large_gun 贴图都保留，蓝图与贴图仍在复用
+- 对表测试：`CannonStatFormulaTest`
+
 ---
 
 ## Build & Run

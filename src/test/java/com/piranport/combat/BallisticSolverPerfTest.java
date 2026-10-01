@@ -23,7 +23,7 @@ class BallisticSolverPerfTest {
     private static final double[][] GUNS = {
             {2.5, 0.015,  9.8 / 196.0, -10.0, 60.0},  // small_gun
             {3.0, 0.010,  9.8 / 196.0,  -5.0, 50.0},  // medium_gun
-            {3.5, 0.008,  9.8 / 196.0,  -5.0, 45.0},  // large_gun 系
+            {3.5, 0.008,  9.8 / 196.0,  -5.0, 45.0},  // 大口径系（原 large_gun，已删除）
     };
 
     private static final int N = 20000;

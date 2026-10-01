@@ -20,7 +20,7 @@
     },
     {
       "type": "patchouli:crafting",
-      "recipe": "piranport:large_gun",
+      "recipe": "piranport:british_triple_16inch_gun",
       "text": "piranport.book.cannons.basics.large"
     },
     {

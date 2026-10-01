@@ -479,12 +479,10 @@ public class TransformationManager {
     private static java.util.Map<net.minecraft.world.item.Item, Integer> getWeaponLoadMap() {
         if (weaponLoadMap == null) {
             java.util.Map<net.minecraft.world.item.Item, Integer> temp = new java.util.IdentityHashMap<>();
+            // 火炮：策划决策/数值/07 注册表火炮的负重走 ArtilleryItem#getFormulaWeight（数值/06 公式），
+            // 不再在此硬编码；这里只保留未进注册表的旧炮。
             temp.put(ModItems.SINGLE_SMALL_GUN.get(), 4);
-            temp.put(ModItems.JAPANESE_127MM_TWIN_GUN.get(), 6);
-            temp.put(ModItems.JAPANESE_127MM_TWIN_GUN.get(), 6);
             temp.put(ModItems.MEDIUM_GUN.get(), 16);
-            temp.put(ModItems.LARGE_GUN.get(), 30);
-            temp.put(ModItems.GERMAN_TWIN_380MM_GUN.get(), 35);
             temp.put(ModItems.TRIPLE_TORPEDO_LAUNCHER.get(), 12);
             temp.put(ModItems.QUAD_TORPEDO_LAUNCHER.get(), 20);
             temp.put(ModItems.SY1_LAUNCHER.get(), 14);
@@ -502,6 +500,10 @@ public class TransformationManager {
     }
 
     public static int getItemLoad(ItemStack stack) {
+        if (stack.getItem() instanceof com.piranport.artillery.ArtilleryItem artillery) {
+            int formula = artillery.getFormulaWeight();
+            if (formula >= 0) return formula;
+        }
         Integer load = getWeaponLoadMap().get(stack.getItem());
         if (load != null) return load;
         if (stack.getItem() instanceof ArmorPlateItem plate) return plate.getWeight();

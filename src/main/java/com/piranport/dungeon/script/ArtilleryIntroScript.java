@@ -325,7 +325,7 @@ public class ArtilleryIntroScript implements DungeonScript {
             ItemStack apAmmo;
             switch (shipType) {
                 case LARGE -> {
-                    cannon = new ItemStack(ModItems.LARGE_GUN.get());
+                    cannon = new ItemStack(ModItems.BRITISH_TRIPLE_16INCH_GUN.get());
                     heAmmo = new ItemStack(ModItems.LARGE_HE_SHELL.get(), 32);
                     apAmmo = new ItemStack(ModItems.LARGE_AP_SHELL.get(), 32);
                 }
@@ -532,7 +532,7 @@ public class ArtilleryIntroScript implements DungeonScript {
         // 用现有 fillInventory 填一份高级战利品（每个玩家一份大口径混合弹药 + 经验壳）
         List<ItemStack> loot = new ArrayList<>();
         for (int i = 0; i < playerUuids.size(); i++) {
-            loot.add(new ItemStack(ModItems.LARGE_GUN.get()));
+            loot.add(new ItemStack(ModItems.BRITISH_TRIPLE_16INCH_GUN.get()));
             loot.add(new ItemStack(ModItems.LARGE_HE_SHELL.get(), 64));
             loot.add(new ItemStack(ModItems.LARGE_AP_SHELL.get(), 64));
             loot.add(new ItemStack(ModItems.EXP_SHELL.get(), 4));

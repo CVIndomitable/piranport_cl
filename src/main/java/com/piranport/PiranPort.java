@@ -10,6 +10,7 @@ import com.piranport.recipe.ModBrewingRecipes;
 import com.piranport.registry.ModBiomeModifiers;
 import com.piranport.registry.ModBlockEntityTypes;
 import com.piranport.registry.ModBlocks;
+import com.piranport.registry.ModVillagerProfessions;
 import com.piranport.registry.ModCreativeTabs;
 import com.piranport.registry.ModDataComponents;
 import com.piranport.registry.ModEntityTypes;
@@ -96,6 +97,8 @@ public class PiranPort {
         ModArmorMaterials.ARMOR_MATERIALS.register(modEventBus);
         ModAttachmentTypes.ATTACHMENT_TYPES.register(modEventBus);
         ModSounds.SOUND_EVENTS.register(modEventBus);
+        ModVillagerProfessions.POI_TYPES.register(modEventBus);
+        ModVillagerProfessions.PROFESSIONS.register(modEventBus);
         NeoForge.EVENT_BUS.addListener(this::registerBrewingRecipes);
         // 决策/副本/07：Boss 节点防卡 tick 调度（每 server level tick 调用）
         NeoForge.EVENT_BUS.addListener(this::onLevelTick);

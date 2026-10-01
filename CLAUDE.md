@@ -52,6 +52,7 @@
 - **MC 1.21.1 数据目录名单数**: 1.21 起数据包目录为单数——配方必须放 `data/<ns>/recipe/`（不是 `recipes/`），同理 `loot_table/`、`advancement/`、`structure/`。目录名错误时整目录静默不加载（无报错，仅 Patchouli 之类引用方会报 Recipe not found）
 - **物品模型**: 注册物品时必须主动创建 `models/item/*.json` 模型文件，不能只放贴图
 - **注释语言**: 全部使用中文注释，保持中文团队维护一致性。复杂逻辑必须注释 WHY 而不只是 WHAT
+- **村民职业**（经济/02）: 三职业在 `registry/ModVillagerProfessions`，交易表在 `handler/VillagerTradeHandler`，不往原版职业塞模组商品。新 POI 必须同时登记 `data/minecraft/tags/point_of_interest_type/acquirable_job_site.json`，否则无业村民不认领。战利品 `hentai_trophy` 只在支付侧，交易补货用 `TROPHY_USES`（低于绿宝石）
 
 ---
 

@@ -46,6 +46,7 @@ public final class DungeonEntryService {
         TOO_FAR("too_far"),
         NO_LECTERN_OR_KEY("no_lectern_or_key"),
         NO_DUNGEON_LEVEL("no_dungeon_level"),
+        INSTANCE_FULL("instance_full"),
         /**
          * 钥匙没写 stageId（空白钥匙）——与"关卡被删了"是完全不同的两回事。
          *
@@ -144,6 +145,14 @@ public final class DungeonEntryService {
         if (!allowed) {
             // 拒绝时给玩家可见反馈：此前的静默 return 让"从头开始"看起来像按钮坏了。
             Reject.REJECTED.report(player);
+            return;
+        }
+
+        // 副本/22 §四：同一实例同时在线最多 4 位玩家。历史参与者不占位，
+        // 只有实际位于副本区域内的玩家才计入，离开后位置立即释放。
+        if (instance != null && !instance.getPlayerUuids().contains(player.getUUID())
+                && manager.countPresentPlayers(instance, player.server) >= 4) {
+            Reject.INSTANCE_FULL.report(player);
             return;
         }
 

@@ -84,6 +84,16 @@ public class DungeonInstanceManager extends SavedData {
         return instances.get(instanceId);
     }
 
+    /** Number of participating players currently inside the instance region. */
+    public int countPresentPlayers(DungeonInstance instance, MinecraftServer server) {
+        if (instance == null || server == null) return 0;
+        int count = 0;
+        for (UUID uuid : instance.getPlayerUuids()) {
+            if (isPlayerPresent(server, instance, uuid)) count++;
+        }
+        return count;
+    }
+
     /**
      * 返回当前管理器中所有实例（拷贝）。
      * 整合版 §3.2：用于 onCheckpointReached 按玩家反查所在 instance。

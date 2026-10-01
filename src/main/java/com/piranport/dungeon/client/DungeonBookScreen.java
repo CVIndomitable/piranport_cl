@@ -294,6 +294,10 @@ public class DungeonBookScreen extends AbstractContainerScreen<DungeonBookMenu> 
             // Title
             gfx.drawString(font, selectedStage.displayName(),
                     leftPos + 5, topPos + 5, 0xFFFFD700, false);
+            gfx.drawString(font, "引导: " + selectedStage.guidance(),
+                    leftPos + 5, topPos + 24, 0xFFB8C7D9, false);
+            gfx.drawString(font, "目标: " + selectedStage.objective(),
+                    leftPos + 5, topPos + 36, 0xFFFFD080, false);
 
             // Timer display：钥匙里存的是服务端累计的关卡总用时（节点转换时同步），
             // 不用墙钟推算——墙上时钟在暂停或挂机时照走，显示会越飘越多。

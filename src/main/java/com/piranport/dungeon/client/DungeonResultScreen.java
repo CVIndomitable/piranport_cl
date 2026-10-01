@@ -16,6 +16,7 @@ public class DungeonResultScreen extends Screen {
     private final boolean isFirstClear;
     private final List<String> rewardNames;
     private final int kills;
+    private final String ending;
 
     public DungeonResultScreen(String stageName, long timeMillis,
                                 boolean isFirstClear, List<String> rewardNames) {
@@ -30,6 +31,20 @@ public class DungeonResultScreen extends Screen {
         this.isFirstClear = isFirstClear;
         this.rewardNames = rewardNames;
         this.kills = Math.max(0, kills);
+        this.ending = "战区肃清，航路恢复，舰队返回港口。";
+    }
+
+    public DungeonResultScreen(String stageName, long timeMillis,
+                               boolean isFirstClear, List<String> rewardNames,
+                               int kills, String ending) {
+        super(Component.translatable("gui.piranport.dungeon_result.title"));
+        this.stageName = stageName;
+        this.timeMillis = timeMillis;
+        this.isFirstClear = isFirstClear;
+        this.rewardNames = rewardNames;
+        this.kills = Math.max(0, kills);
+        this.ending = ending == null || ending.isBlank()
+                ? "战区肃清，航路恢复，舰队返回港口。" : ending;
     }
 
     @Override
@@ -69,9 +84,10 @@ public class DungeonResultScreen extends Screen {
         gfx.drawCenteredString(font,
                 Component.translatable("gui.piranport.dungeon_result.kills", kills),
                 cx, cy - 10, 0xFFFFAA88);
+        gfx.drawCenteredString(font, Component.literal(ending), cx, cy + 3, 0xFFD0D0FF);
 
         // Rewards
-        int ry = cy + 17;
+        int ry = cy + 29;
         for (String reward : rewardNames) {
             gfx.drawCenteredString(font, Component.literal(reward), cx, ry, 0xFFCCCCCC);
             ry += 12;

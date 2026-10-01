@@ -175,7 +175,12 @@ public record DungeonRegistrySyncPayload(String jsonData,
                         Set.of(),
                         com.piranport.dungeon.data.SceneData.DAY,
                         Set.of(),
-                        com.piranport.dungeon.data.StageData.VictoryObjectives.EMPTY));
+                        com.piranport.dungeon.data.StageData.VictoryObjectives.EMPTY,
+                        sObj.has("guidance") ? sObj.get("guidance").getAsString() : "沿节点图前进，完成当前节点后继续向前。",
+                        sObj.has("objective") ? sObj.get("objective").getAsString() : "完成关卡目标并击破首领。",
+                        sObj.has("ending") ? sObj.get("ending").getAsString() : "战区肃清，航路恢复，舰队返回港口。",
+                        sObj.has("difficultyScale") ? sObj.get("difficultyScale").getAsFloat() : 1.0f,
+                        sObj.has("parTimeSeconds") ? sObj.get("parTimeSeconds").getAsInt() : 1200));
             }
         } catch (Exception e) {
             PiranPort.LOGGER.warn("Failed to parse dungeon registry sync: {}", e.getMessage());
@@ -217,6 +222,11 @@ public record DungeonRegistrySyncPayload(String jsonData,
             sObj.addProperty("chapter", stage.chapter());
             sObj.addProperty("displayName", stage.displayName());
             sObj.addProperty("startNode", stage.startNode());
+            sObj.addProperty("guidance", stage.guidance());
+            sObj.addProperty("objective", stage.objective());
+            sObj.addProperty("ending", stage.ending());
+            sObj.addProperty("difficultyScale", stage.difficultyScale());
+            sObj.addProperty("parTimeSeconds", stage.parTimeSeconds());
 
             // Nodes
             JsonObject nodesObj = new JsonObject();

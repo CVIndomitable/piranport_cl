@@ -16,6 +16,8 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.level.block.Blocks;
 
 import java.util.ArrayList;
@@ -323,6 +325,8 @@ public final class NodeBattleField {
             Entity entity = createEntity(dungeonLevel, spec.entityId);
             if (entity == null) continue;
 
+            applyDungeonDifficulty(entity, instance, node);
+
             // 初始位置：在编队队形中均匀分布（后续由 FollowLeaderGoal 微调）
             double angle = baseAngle + angleStep * i;
             double dist = baseDist;
@@ -358,6 +362,24 @@ public final class NodeBattleField {
         }
 
         return fleet;
+    }
+
+    /** Apply the stage and node activation multipliers before the entity enters the world. */
+    private static void applyDungeonDifficulty(Entity entity, DungeonInstance instance, NodeData node) {
+        if (!(entity instanceof net.minecraft.world.entity.LivingEntity living)) return;
+        var stage = DungeonRegistry.INSTANCE.getStage(instance.getStageId());
+        double stageScale = stage == null ? 1.0 : Math.max(0.1, stage.difficultyScale());
+        int players = instance.getNodePlayerCount(node.nodeId());
+        double playerScale = 1.0 + 0.5 * (players - 1);
+
+        AttributeInstance health = living.getAttribute(Attributes.MAX_HEALTH);
+        if (health != null) {
+            health.setBaseValue(Math.max(1.0, health.getBaseValue() * stageScale * playerScale));
+            living.setHealth(living.getMaxHealth());
+        }
+        // difficulty_scale affects damage; player-count scaling intentionally does not.
+        AttributeInstance attack = living.getAttribute(Attributes.ATTACK_DAMAGE);
+        if (attack != null) attack.setBaseValue(Math.max(0.0, attack.getBaseValue() * stageScale));
     }
 
     private static BlockPos blockPos(double x, double z) {

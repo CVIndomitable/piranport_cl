@@ -225,12 +225,40 @@ public class DungeonDataLoader extends SimpleJsonResourceReloadListener {
         // 决策/副本/12：业务判定字段（顶层可选）
         StageData.VictoryObjectives objectives = parseVictoryObjectives(json);
 
+        // Every playable stage has a short brief. Older datapacks receive a safe,
+        // actionable default so the UI never leaves the player without a goal.
+        String guidance = textOrDefault(json, "guidance",
+                "沿节点图前进，完成当前节点后继续向前。");
+        String objective = textOrDefault(json, "objective",
+                objectivesLabel(victoryConditions, bossNodes));
+        String ending = textOrDefault(json, "ending",
+                "战区肃清，航路恢复，舰队返回港口。");
+        float difficultyScale = json.has("difficulty_scale")
+                ? Math.max(0.1f, json.get("difficulty_scale").getAsFloat()) : 1.0f;
+        int parTimeSeconds = json.has("par_time_seconds")
+                ? Math.max(1, json.get("par_time_seconds").getAsInt()) : 1200;
+
         return new StageData(stageId, chapter, displayName,
                 Map.copyOf(nodes), List.copyOf(edges), startNode,
                 List.copyOf(bossNodes), List.copyOf(firstClearRewards),
                 List.copyOf(checkpoints),
                 Set.copyOf(victoryConditions),
-                stageScene, Set.copyOf(stageRestrictions), objectives);
+                stageScene, Set.copyOf(stageRestrictions), objectives,
+                guidance, objective, ending, difficultyScale, parTimeSeconds);
+    }
+
+    private static String textOrDefault(JsonObject json, String key, String fallback) {
+        return json.has(key) && !json.get(key).isJsonNull()
+                && !json.get(key).getAsString().isBlank() ? json.get(key).getAsString() : fallback;
+    }
+
+    private static String objectivesLabel(Set<VictoryCondition> conditions, List<String> bossNodes) {
+        if (conditions.contains(VictoryCondition.SURVIVE)) return "坚持到任务计时结束。";
+        if (conditions.contains(VictoryCondition.ESCORT)) return "保护护航目标并完成护送。";
+        if (conditions.contains(VictoryCondition.CAPTURE_FLAG)) return "占领目标区域并守住阵地。";
+        if (conditions.contains(VictoryCondition.REACH_POINT)) return "抵达指定目标点。";
+        if (!bossNodes.isEmpty()) return "清理航路并击破首领。";
+        return "清除战区内的全部敌人。";
     }
 
     /**

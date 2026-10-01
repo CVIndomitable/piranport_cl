@@ -31,6 +31,8 @@ public class DungeonInstance {
     private final Set<String> clearedNodes = new HashSet<>();
     /** 已生成节点独立于已通关节点，重返战斗不会重新生成敌人或提前解锁路线。 */
     private final Set<String> enteredNodes = new HashSet<>();
+    /** Player-count snapshot captured when each node is first activated. */
+    private final Map<String, Integer> nodePlayerCounts = new HashMap<>();
     private final Set<UUID> playerUuids = new HashSet<>(); // all players who participated
     /** 整合版 §3.2：按玩家个人计算的"最新记录点 id"。每个玩家仅保留最新 checkpoint id。 */
     private final Map<UUID, String> playerCheckpoints = new HashMap<>();
@@ -65,6 +67,10 @@ public class DungeonInstance {
     public String getCurrentNode() { return currentNode; }
     public Set<String> getClearedNodes() { return java.util.Collections.unmodifiableSet(clearedNodes); }
     public boolean hasEnteredNode(String node) { return enteredNodes.contains(node); }
+    public int getNodePlayerCount(String node) { return Math.max(1, nodePlayerCounts.getOrDefault(node, 1)); }
+    public void setNodePlayerCount(String node, int count) {
+        if (node != null && !node.isBlank()) nodePlayerCounts.putIfAbsent(node, Math.max(1, Math.min(4, count)));
+    }
 
     public boolean beginNode(String node) {
         if (state == State.COMPLETED || state == State.CLEANUP || !enteredNodes.add(node)) return false;
@@ -228,6 +234,15 @@ public class DungeonInstance {
         }
         tag.put("EnteredNodes", enteredList);
 
+        ListTag nodeCounts = new ListTag();
+        for (Map.Entry<String, Integer> entry : nodePlayerCounts.entrySet()) {
+            CompoundTag item = new CompoundTag();
+            item.putString("Node", entry.getKey());
+            item.putInt("Players", entry.getValue());
+            nodeCounts.add(item);
+        }
+        tag.put("NodePlayerCounts", nodeCounts);
+
         ListTag playerList = new ListTag();
         for (UUID u : playerUuids) {
             playerList.add(NbtUtils.createUUID(u));
@@ -285,6 +300,11 @@ public class DungeonInstance {
         ListTag enteredList = tag.getList("EnteredNodes", Tag.TAG_COMPOUND);
         for (int i = 0; i < enteredList.size(); i++) {
             inst.enteredNodes.add(enteredList.getCompound(i).getString("Node"));
+        }
+        ListTag nodeCounts = tag.getList("NodePlayerCounts", Tag.TAG_COMPOUND);
+        for (int i = 0; i < nodeCounts.size(); i++) {
+            CompoundTag item = nodeCounts.getCompound(i);
+            inst.setNodePlayerCount(item.getString("Node"), item.getInt("Players"));
         }
 
         ListTag playerList = tag.getList("Players", Tag.TAG_INT_ARRAY);

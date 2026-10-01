@@ -9,6 +9,7 @@ import com.piranport.client.input.EntityHighlightHandler;
 import com.piranport.dungeon.client.DungeonContinueScreen;
 import com.piranport.dungeon.client.DungeonHudLayer;
 import com.piranport.dungeon.client.DungeonResultScreen;
+import com.piranport.dungeon.network.ClientDungeonData;
 import com.piranport.dungeon.client.DungeonReviveScreen;
 import com.piranport.dungeon.client.TownScrollScreen;
 import com.piranport.entity.AircraftEntity;
@@ -216,8 +217,16 @@ public final class ClientItemHooks implements com.piranport.platform.ClientBridg
     public void openDungeonResultScreen(String stageName, long timeMillis,
                                         boolean isFirstClear, List<String> rewardNames, int kills) {
         DungeonHudLayer.clearDungeonState();
+        String ending = ClientDungeonData.getSortedChapters().stream()
+                .flatMap(ch -> ch.stages().stream())
+                .map(ClientDungeonData::getStage)
+                .filter(java.util.Objects::nonNull)
+                .filter(stage -> stageName.startsWith(stage.displayName()))
+                .map(com.piranport.dungeon.data.StageData::ending)
+                .findFirst()
+                .orElse("战区肃清，航路恢复，舰队返回港口。");
         Minecraft.getInstance().setScreen(new DungeonResultScreen(
-                stageName, timeMillis, isFirstClear, rewardNames, kills));
+                stageName, timeMillis, isFirstClear, rewardNames, kills, ending));
     }
 
     @Override

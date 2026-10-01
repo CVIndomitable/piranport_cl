@@ -129,6 +129,11 @@ public final class DungeonNodeRouter {
         }
         if (!mgr.beginBattleNode(instance.getInstanceId(), node.nodeId(), keyStack)) return null;
 
+        // 副本/22 §五：节点首次激活时锁定在线人数；后续进出不回溯本节点难度。
+        instance.setNodePlayerCount(node.nodeId(),
+                Math.max(1, Math.min(4, mgr.countPresentPlayers(instance, player.server))));
+        mgr.setDirty();
+
         // 玩家自行进入，不将历史参与者从主世界或其他副本强制传送过来。
         List<ServerPlayer> toTeleport = List.of(player);
         List<UUID> playerUuids = List.of(player.getUUID());

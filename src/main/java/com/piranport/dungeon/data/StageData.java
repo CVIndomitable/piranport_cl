@@ -26,8 +26,25 @@ public record StageData(
         Set<VictoryCondition> victoryConditions,
         SceneData sceneData,
         Set<CombatRestriction> combatRestriction,
-        VictoryObjectives victoryObjectives
+        VictoryObjectives victoryObjectives,
+        String guidance,
+        String objective,
+        String ending,
+        float difficultyScale,
+        int parTimeSeconds
 ) {
+    /** Compatibility constructor for callers that predate the stage brief fields. */
+    public StageData(String stageId, String chapter, String displayName,
+                     Map<String, NodeData> nodes, List<EdgeData> edges, String startNode,
+                     List<String> bossNodes, List<NodeData.RewardEntry> firstClearRewards,
+                     List<CheckpointData> checkpoints, Set<VictoryCondition> victoryConditions,
+                     SceneData sceneData, Set<CombatRestriction> combatRestriction,
+                     VictoryObjectives victoryObjectives) {
+        this(stageId, chapter, displayName, nodes, edges, startNode, bossNodes,
+                firstClearRewards, checkpoints, victoryConditions, sceneData,
+                combatRestriction, victoryObjectives, "沿节点图前进，完成当前节点后继续向前。",
+                "完成关卡目标并击破首领。", "战区肃清，航路恢复，舰队返回港口。", 1.0f, 1200);
+    }
     public StageData {
         // 配置发布后保持拓扑稳定，旧快照也不能被调用方持有的可变容器修改。
         nodes = Map.copyOf(nodes);

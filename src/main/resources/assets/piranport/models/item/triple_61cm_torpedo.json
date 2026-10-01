@@ -1,0 +1,14 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "piranport:item/triple_torpedo_launcher_empty"
+  },
+  "overrides": [
+    {
+      "predicate": {
+        "piranport:loaded": 1
+      },
+      "model": "piranport:item/triple_61cm_torpedo_loaded"
+    }
+  ]
+}

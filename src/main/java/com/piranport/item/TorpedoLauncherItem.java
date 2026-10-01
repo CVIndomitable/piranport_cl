@@ -26,12 +26,46 @@ public class TorpedoLauncherItem extends Item {
     private final int caliber;
     private final int tubeCount;
     private final IntSupplier cooldownSupplier;
+    /** 稀有度档（策划决策/数值/08）；只做分类展示，不改负重。 */
+    private final com.piranport.component.EquipmentTier tier;
 
     public TorpedoLauncherItem(Properties properties, int caliber, int tubeCount, IntSupplier cooldownSupplier) {
+        this(properties, caliber, tubeCount, cooldownSupplier, com.piranport.component.EquipmentTier.INITIAL);
+    }
+
+    public TorpedoLauncherItem(Properties properties, int caliber, int tubeCount, IntSupplier cooldownSupplier,
+                               com.piranport.component.EquipmentTier tier) {
         super(properties);
         this.caliber = caliber;
         this.tubeCount = tubeCount;
         this.cooldownSupplier = cooldownSupplier;
+        this.tier = tier;
+    }
+
+    public com.piranport.component.EquipmentTier getTier() {
+        return tier;
+    }
+
+    /** 发射器负重：ceil((1 + 联装) × 口径英寸² × 0.0055)。只算管子不算弹种（数值/08）。 */
+    public int getWeight() {
+        return computeWeight(caliber, tubeCount);
+    }
+
+    /** 毫米 → 公式英寸：533→21、610→24、720→28；其他口径按 /25.4 四舍五入到整英寸。 */
+    public static int caliberInches(int caliberMm) {
+        return switch (caliberMm) {
+            case 533 -> 21;
+            case 610 -> 24;
+            case 720 -> 28;
+            default -> (int) Math.round(caliberMm / 25.4);
+        };
+    }
+
+    public static int computeWeight(int caliberMm, int tubes) {
+        int inches = caliberInches(caliberMm);
+        // 用整数运算避开 0.0055 的浮点误差：ceil((1+n)·c²·55 / 10000)
+        long numerator = (long) (1 + tubes) * inches * inches * 55L;
+        return (int) ((numerator + 9999L) / 10000L);
     }
 
     public int getCaliber() {
@@ -161,6 +195,11 @@ public class TorpedoLauncherItem extends Item {
             tooltipComponents.add(Component.translatable("tooltip.piranport.launcher.no_ammo_loaded")
                     .withStyle(net.minecraft.ChatFormatting.GRAY));
         }
+
+        tooltipComponents.add(tier.tooltip());
+        // 数值/08：说明必须写明口径和联装（不藏在 Shift 后）
+        tooltipComponents.add(Component.translatable("tooltip.piranport.launcher.spec", caliber, tubeCount)
+                .withStyle(net.minecraft.ChatFormatting.GRAY));
 
         if (ClientHooks.isClient()) {
             if (ClientHooks.hasShiftDown()) {

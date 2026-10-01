@@ -485,8 +485,6 @@ public class TransformationManager {
             temp.put(ModItems.MEDIUM_GUN.get(), 16);
             temp.put(ModItems.LARGE_GUN.get(), 30);
             temp.put(ModItems.GERMAN_TWIN_380MM_GUN.get(), 35);
-            temp.put(ModItems.TRIPLE_TORPEDO_LAUNCHER.get(), 12);
-            temp.put(ModItems.QUAD_TORPEDO_LAUNCHER.get(), 20);
             temp.put(ModItems.SY1_LAUNCHER.get(), 14);
             temp.put(ModItems.MK14_HARPOON_LAUNCHER.get(), 16);
             temp.put(ModItems.TERRIER_LAUNCHER.get(), 10);
@@ -504,6 +502,8 @@ public class TransformationManager {
     public static int getItemLoad(ItemStack stack) {
         Integer load = getWeaponLoadMap().get(stack.getItem());
         if (load != null) return load;
+        // 鱼雷发射器负重按公式（数值/08），不再逐个硬编码
+        if (stack.getItem() instanceof com.piranport.item.TorpedoLauncherItem launcher) return launcher.getWeight();
         if (stack.getItem() instanceof ArmorPlateItem plate) return plate.getWeight();
         if (stack.getItem() instanceof SonarItem sonar) return sonar.getWeight();
         if (stack.getItem() instanceof RadarItem radar) return radar.getWeight();

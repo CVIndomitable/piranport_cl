@@ -361,6 +361,7 @@ public class TorpedoFireStrategy {
         return switch (caliber) {
             case 533 -> (TorpedoItem) ModItems.TORPEDO_533MM.get();
             case 610 -> (TorpedoItem) ModItems.TORPEDO_610MM.get();
+            case 720 -> (TorpedoItem) ModItems.TORPEDO_720MM_TYPE0.get();
             default -> null;
         };
     }

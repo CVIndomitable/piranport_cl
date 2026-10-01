@@ -53,6 +53,8 @@
 - **物品模型**: 注册物品时必须主动创建 `models/item/*.json` 模型文件，不能只放贴图
 - **注释语言**: 全部使用中文注释，保持中文团队维护一致性。复杂逻辑必须注释 WHY 而不只是 WHAT
 - **村民职业**（经济/02）: 三职业在 `registry/ModVillagerProfessions`，交易表在 `handler/VillagerTradeHandler`，不往原版职业塞模组商品。新 POI 必须同时登记 `data/minecraft/tags/point_of_interest_type/acquirable_job_site.json`，否则无业村民不认领。战利品 `hentai_trophy` 只在支付侧，交易补货用 `TROPHY_USES`（低于绿宝石）
+- **鱼雷发射器负重**（数值/08）: 一律走 `TorpedoLauncherItem#computeWeight` = `ceil((1+联装)×口径英寸²×0.0055)`（533→21/610→24/720→28 英寸），不要再往 `TransformationManager.getWeaponLoadMap` 加鱼雷条目。稀有度用 `component.EquipmentTier`。图鉴发射器集中在 `WeaponItems.CATALOG_TORPEDO_LAUNCHERS`，创造栏和装填条装饰器遍历它注册
+- **鱼雷散布角**: `CombatFireUtils.getSpreadAngles(n)` 返回长度必须 = 管数。2/3/4 管固定表；5/6/7 管在 ±最大偏角内均分，最大偏角走调试终端 `equipment.torpedo_spread.tubes{5,6,7}_max_angle`（默认 5°，待策划实测）
 
 ### 火控可视化预测（策划决策/火控/06）
 - 渲染统一在 `client/FireControlVisualRenderer`（原 `BallisticAimMarkerRenderer` 已并入删除），由 `ClientInputCoordinator` 每 tick 调用。纯客户端，不发包。

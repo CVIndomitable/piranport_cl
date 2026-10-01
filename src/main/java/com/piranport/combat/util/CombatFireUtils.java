@@ -70,8 +70,25 @@ public final class CombatFireUtils {
             case 2 -> new float[]{-3f, 3f};
             case 3 -> new float[]{-4f, 0f, 4f};
             case 4 -> new float[]{-6f, -2f, 2f, 6f};
-            default -> new float[]{0f};
+            default -> count <= 1 ? new float[]{0f} : evenSpread(count, maxAngleFor(count));
         };
+    }
+
+    /** 5/6/7 联最大偏角走调试终端；8 联及以上沿用 7 联值。 */
+    private static double maxAngleFor(int count) {
+        if (count == 5) return com.piranport.config.ModEquipmentConfig.TORPEDO_SPREAD_TUBES5.get();
+        if (count == 6) return com.piranport.config.ModEquipmentConfig.TORPEDO_SPREAD_TUBES6.get();
+        return com.piranport.config.ModEquipmentConfig.TORPEDO_SPREAD_TUBES7.get();
+    }
+
+    /** n 条鱼雷在 ±max 度内均分；返回长度恒等于管数（避免"发 1 条扣 n 发"）。 */
+    static float[] evenSpread(int count, double maxAngle) {
+        float[] out = new float[count];
+        double max = Double.isFinite(maxAngle) ? Math.max(0.0, maxAngle) : 0.0;
+        for (int i = 0; i < count; i++) {
+            out[i] = (float) (-max + 2.0 * max * i / (count - 1));
+        }
+        return out;
     }
 
     // ===== 几何 =====

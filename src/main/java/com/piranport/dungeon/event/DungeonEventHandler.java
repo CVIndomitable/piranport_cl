@@ -79,7 +79,7 @@ public class DungeonEventHandler {
      *
      * @return BE 中的钥匙；若讲台缺失或 BE 中无钥匙，返回 ItemStack.EMPTY
      */
-    private static ItemStack readKeyFromLectern(DungeonInstance instance, MinecraftServer server) {
+    static ItemStack readKeyFromLectern(DungeonInstance instance, MinecraftServer server) {
         if (instance.getLecternPos() == null || instance.getLecternDimension() == null) {
             return ItemStack.EMPTY;
         }
@@ -99,7 +99,7 @@ public class DungeonEventHandler {
         return ItemStack.EMPTY;
     }
 
-    private static void markLecternChanged(DungeonInstance instance, MinecraftServer server) {
+    static void markLecternChanged(DungeonInstance instance, MinecraftServer server) {
         if (instance.getLecternPos() == null || instance.getLecternDimension() == null) return;
         ResourceLocation id = ResourceLocation.tryParse(instance.getLecternDimension());
         if (id == null) return;
@@ -222,6 +222,12 @@ public class DungeonEventHandler {
         if (node == null) return;
 
         DungeonInstanceManager manager = DungeonInstanceManager.get(dungeonLevel);
+        if (node.type() == NodeData.NodeType.BOSS && !instance.getClearedNodes().contains(nodeId)
+                && !bossSnapshotTakenFor(instance, nodeId)) {
+            // 脚本 Boss / 胜利目标判定等不经 onDungeonFlagshipDeath 的路径在此兜底快照
+            snapshotBossParticipants(dungeonLevel.getServer(), instance, nodeId);
+        }
+        BOSS_SNAPSHOT_NODE.remove(instance.getInstanceId());
         if (!manager.markNodeCleared(instance.getInstanceId(), nodeId,
                 readKeyFromLectern(instance, dungeonLevel.getServer()))) return;
         markLecternChanged(instance, dungeonLevel.getServer());
@@ -243,8 +249,41 @@ public class DungeonEventHandler {
     public static void onPortalEntered(ServerPlayer player, DungeonInstance instance, String nodeId) {
         if (instance.getClearedNodes().contains(nodeId)
                 && DungeonInstanceManager.get(player.serverLevel()).getInstanceForPlayer(player) == instance) {
+            // 《副本/22》分歧带路：在分歧点出口当场判定并个人传送；关卡已通关则照常回讲台
+            StageData stage = DungeonRegistry.INSTANCE.getStage(instance.getStageId());
+            NodeData node = stage == null ? null : stage.nodes().get(nodeId);
+            if (node != null && node.hasBranches() && instance.getState() == DungeonInstance.State.ACTIVE
+                    && DungeonBranchRouter.routeFromPortal(player, instance, stage, node)) {
+                return;
+            }
             teleportToLectern(player, instance);
         }
+    }
+
+    /** 本 tick 已在击杀瞬间快照过的 Boss 节点（instanceId → nodeId），避免 onNodeCompleted 重拍。 */
+    private static final java.util.Map<UUID, String> BOSS_SNAPSHOT_NODE = new java.util.HashMap<>();
+
+    private static boolean bossSnapshotTakenFor(DungeonInstance instance, String nodeId) {
+        return nodeId.equals(BOSS_SNAPSHOT_NODE.get(instance.getInstanceId()));
+    }
+
+    /**
+     * 《副本/00》首通参与判定：Boss 击杀瞬间位于 Boss 节点 128×128 战场范围内（副本维度、存活、非旁观）的参与者。
+     */
+    public static void snapshotBossParticipants(MinecraftServer server, DungeonInstance instance, String nodeId) {
+        BlockPos center = instance.getNodeSpawnPos(nodeId);
+        List<UUID> inside = new ArrayList<>();
+        for (UUID uuid : instance.getPlayerUuids()) {
+            ServerPlayer p = server.getPlayerList().getPlayer(uuid);
+            if (p == null || !p.isAlive() || p.isSpectator() || !isInDungeon(p)) continue;
+            if (com.piranport.dungeon.instance.DungeonScaling.isInsideNodeTile(p.getX(), p.getZ(),
+                    center.getX() + 0.5, center.getZ() + 0.5, com.piranport.dungeon.DungeonConstants.NODE_AREA_SIZE)) {
+                inside.add(uuid);
+            }
+        }
+        instance.snapshotBossParticipants(inside);
+        BOSS_SNAPSHOT_NODE.put(instance.getInstanceId(), nodeId);
+        DungeonInstanceManager.get(server.overworld()).setDirty();
     }
 
     private static void completeDungeon(ServerLevel dungeonLevel, DungeonInstance instance,
@@ -267,7 +306,9 @@ public class DungeonEventHandler {
             ServerPlayer player = server.getPlayerList().getPlayer(playerUuid);
             if (player == null) continue;
 
-            boolean isFirstClear = !savedData.hasFirstCleared(stage.stageId(), playerUuid);
+            // 首通奖励只发给 Boss 击杀瞬间在 Boss 节点范围内的玩家；其他人照常结算/回城但不记首通
+            boolean isFirstClear = FirstClearRules.eligible(instance, playerUuid)
+                    && !savedData.hasFirstCleared(stage.stageId(), playerUuid);
 
             List<String> rewardNames = new ArrayList<>();
             if (isFirstClear) {
@@ -287,7 +328,7 @@ public class DungeonEventHandler {
             // Send result screen
             PacketDistributor.sendToPlayer(player,
                     new DungeonResultPayload(stage.displayName() + " · 评价 " + rating, elapsed,
-                            isFirstClear, rewardNames));
+                            isFirstClear, rewardNames, 0, stage.ending()));
         }
 
         // Cleanup instance
@@ -385,8 +426,8 @@ public class DungeonEventHandler {
      * 整合版 §3.2：玩家踩到记录点方块 → 标记玩家最新 checkpoint + S2C 反馈（标题 + 轻快音效）。
      * 解锁条件由 {@link com.piranport.dungeon.data.CheckpointData#isUnlocked} 判断。
      *
-     * <p>注：决策要求"信标光柱 + 屏幕标题 + 轻快音效"三件套；当前仅实现后两项（标题 + 音效）。
-     * 信标光柱属 MVP 后置（用户口径：MVP 聚焦维度/讲台钥匙/节点推进/怪物生成）。</p>
+     * <p>决策要求"信标光柱 + 屏幕标题 + 轻快音效"三件套：标题 + 音效由 CheckpointReachedPayload 客户端播放，
+     * 光柱由 {@link DungeonCheckpointBeacon} 每 10 tick 以 END_ROD 粒子柱下发。</p>
      */
     public static void onCheckpointReached(net.minecraft.server.level.ServerPlayer player,
                                               BlockPos pos) {

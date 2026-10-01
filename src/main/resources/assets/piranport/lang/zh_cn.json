@@ -1386,12 +1386,10 @@
   "tooltip.piranport.aircraft_payload_empty": "对海挂载: 空 [R 装填]",
   "message.piranport.aircraft_no_fuel_item": "缺少航空燃料",
   "tooltip.piranport.aircraft_fuel_short": "航空燃料: 空 [R 补给]",
-
   "gui.piranport.debug_terminal": "调试终端",
   "tooltip.piranport.debug_terminal.desc": "右键打开控制界面；Shift+右键请求日志快照",
   "tooltip.piranport.debug_terminal.admin_only": "仅管理员（权限等级 2 或单机房主）可使用",
   "message.piranport.debug_terminal.admin_required": "你没有权限使用调试终端",
-
   "gui.piranport.debug_terminal.tab.parameters": "参数",
   "gui.piranport.debug_terminal.tab.controls": "控制",
   "gui.piranport.debug_terminal.search_target": "搜索对象",
@@ -1636,9 +1634,22 @@
   "gui.piranport.debug_terminal.state.off": "关",
   "message.piranport.snapshot.done": "[调试] 调试快照已写入会话日志",
   "message.piranport.snapshot.cooldown": "[调试] 快照冷却中",
-
   "gui.piranport.debug_terminal.ship_type.SMALL": "小型舰",
   "gui.piranport.debug_terminal.ship_type.MEDIUM": "中型舰",
   "gui.piranport.debug_terminal.ship_type.LARGE": "大型舰",
-  "gui.piranport.debug_terminal.ship_type.SUBMARINE": "潜艇"
+  "gui.piranport.debug_terminal.ship_type.SUBMARINE": "潜艇",
+  "entity.piranport.lost_transport": "迷路的运输舰",
+  "dungeon.piranport.node_cleared": "节点已肃清，出口传送门已开启",
+  "dungeon.piranport.next_wave": "敌方增援！第 %s / %s 波",
+  "dungeon.piranport.boss_alert.title": "首领出现",
+  "dungeon.piranport.boss_alert.subtitle": "%s · 节点 %s",
+  "dungeon.piranport.boss_alert.chat": "[副本] %s：首领节点 %s 已被触发，Boss 已出现！",
+  "dungeon.piranport.branch.header": "[分歧带路] 节点 %s 的路线判定：",
+  "dungeon.piranport.branch.no_condition": "（无条件）",
+  "dungeon.piranport.branch.matched": "条件满足，带往节点 %s。",
+  "dungeon.piranport.branch.diverted": "条件均不满足，被“沟”到默认路线：节点 %s。",
+  "dungeon.piranport.branch.title": "分歧带路",
+  "dungeon.piranport.branch.diverted_title": "被沟了！",
+  "dungeon.piranport.branch.subtitle": "前往节点 %s",
+  "dungeon.piranport.branch.blocked": "分歧带路已为你选定其他路线，无法前往节点 %s。"
 }

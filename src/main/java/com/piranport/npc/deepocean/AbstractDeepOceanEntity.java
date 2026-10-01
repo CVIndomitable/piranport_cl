@@ -307,6 +307,22 @@ public abstract class AbstractDeepOceanEntity extends Monster {
     /**
      * Drop ship-type-specific resources on death.
      */
+    /**
+     * 《经济/01》迷路的运输舰：只掉 1 个战利品（hentai_trophy），跳过战利品表、
+     * 钥匙碎片与补给舰原掉落。经验照常。
+     */
+    @Override
+    protected void dropAllDeathLoot(ServerLevel level, DamageSource source) {
+        if (getTags().contains(com.piranport.dungeon.instance.NodeBattleField.LOST_TRANSPORT_TAG)) {
+            if (shouldDropLoot() && level.getGameRules().getBoolean(net.minecraft.world.level.GameRules.RULE_DOMOBLOOT)) {
+                spawnAtLocation(new ItemStack(ModItems.HENTAI_TROPHY.get(), 1));
+            }
+            dropExperience(source.getEntity());
+            return;
+        }
+        super.dropAllDeathLoot(level, source);
+    }
+
     @Override
     protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean recentlyHit) {
         super.dropCustomDeathLoot(level, source, recentlyHit);

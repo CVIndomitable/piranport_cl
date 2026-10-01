@@ -95,6 +95,24 @@ final class DungeonDataValidator {
                         errors.add(nodeContext + " 过路费物品未注册: " + cost.item());
                     }
                 }
+                // 《副本/22》分歧目标必须存在，且必须是本节点的出边（节点图仍是唯一路线来源）
+                List<String> branchTargets = new java.util.ArrayList<>();
+                for (BranchRule rule : node.branches()) branchTargets.add(rule.to());
+                if (node.branchDefault() != null) branchTargets.add(node.branchDefault());
+                for (String to : branchTargets) {
+                    checkNode(stage, to, nodeContext + " 分歧目标", errors);
+                    boolean isEdge = stage.edges().stream()
+                            .anyMatch(e -> e.from().equals(node.nodeId()) && e.to().equals(to));
+                    if (!isEdge) errors.add(nodeContext + " 分歧目标 " + to + " 不是本节点的出边");
+                }
+                for (BranchRule rule : node.branches()) {
+                    if (rule.carry() != null) {
+                        ResourceLocation carryId = ResourceLocation.tryParse(rule.carry());
+                        if (carryId == null || !isItemRegistered(carryId)) {
+                            errors.add(nodeContext + " 分歧携带物品未注册: " + rule.carry());
+                        }
+                    }
+                }
             }
         }
         for (EnemySetData set : enemySets.values()) {

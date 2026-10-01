@@ -22,8 +22,31 @@ public record NodeData(
         String script,            // optional script ID (e.g. "artillery_intro") for scripted battle nodes
         TerrainType terrainType,  // 技术指南 05：副本地形类型
         Set<CombatRestriction> restrictions, // 整合版 §2.4 关卡公式 5 战斗限制
-        SceneData scene           // 整合版 §2.4 关卡公式 5 场景
+        SceneData scene,          // 整合版 §2.4 关卡公式 5 场景
+        double difficultyScale,   // 《副本/00》节点级 difficulty_scale；<=0 表示继承关卡级
+        int waves,                // 基础波数（节点敌人列表 = 一波），多人按 DungeonScaling.waveCount 放大
+        List<BranchRule> branches, // 《副本/22》分歧带路规则（有序）
+        String branchDefault      // 都不满足时的兜底节点；null = 不分歧
 ) {
+    public NodeData {
+        branches = branches == null ? List.of() : List.copyOf(branches);
+        waves = Math.max(1, waves);
+    }
+
+    /** 兼容旧调用方（测试 / 客户端同步）：不带缩放与分歧字段。 */
+    public NodeData(String nodeId, NodeType type, String enemies, List<RewardEntry> rewards,
+                    List<CostEntry> cost, String costMessage, int displayX, int displayY,
+                    String script, TerrainType terrainType, Set<CombatRestriction> restrictions,
+                    SceneData scene) {
+        this(nodeId, type, enemies, rewards, cost, costMessage, displayX, displayY, script,
+                terrainType, restrictions, scene, 0.0, 1, List.of(), null);
+    }
+
+    /** 是否配置了分歧带路。 */
+    public boolean hasBranches() {
+        return !branches.isEmpty() || branchDefault != null;
+    }
+
     public enum NodeType {
         BATTLE, BOSS, RESOURCE, COST;
 

@@ -36,6 +36,11 @@ public class DungeonInstance {
     private final Set<UUID> playerUuids = new HashSet<>(); // all players who participated
     /** 整合版 §3.2：按玩家个人计算的"最新记录点 id"。每个玩家仅保留最新 checkpoint id。 */
     private final Map<UUID, String> playerCheckpoints = new HashMap<>();
+    private final Map<String, Integer> nodeWaveTotals = new HashMap<>();
+    private final Map<String, Integer> nodeWaves = new HashMap<>();
+    private final Map<UUID, Map<String, String>> branchChoices = new HashMap<>();
+    private final Set<UUID> bossParticipants = new HashSet<>();
+    private boolean bossParticipantSnapshot;
     private BlockPos lecternPos; // the lectern block that opened this instance
     private String lecternDimension; // dimension key of the lectern
     private long startTimeMillis;
@@ -70,6 +75,37 @@ public class DungeonInstance {
     public int getNodePlayerCount(String node) { return Math.max(1, nodePlayerCounts.getOrDefault(node, 1)); }
     public void setNodePlayerCount(String node, int count) {
         if (node != null && !node.isBlank()) nodePlayerCounts.putIfAbsent(node, Math.max(1, Math.min(4, count)));
+    }
+
+    // ===== 《副本/00》波次（节点激活瞬间快照总波数） =====
+    public int getNodeWaveTotal(String node) { return Math.max(1, nodeWaveTotals.getOrDefault(node, 1)); }
+    public void setNodeWaveTotal(String node, int total) {
+        if (node != null && !node.isBlank()) nodeWaveTotals.putIfAbsent(node, Math.max(1, total));
+    }
+    /** 当前正在打的波次（1 起）。 */
+    public int getNodeWave(String node) { return Math.max(1, nodeWaves.getOrDefault(node, 1)); }
+    public void setNodeWave(String node, int wave) {
+        if (node != null && !node.isBlank()) nodeWaves.put(node, Math.max(1, wave));
+    }
+
+    // ===== 《副本/22》分歧带路：每个玩家在每个分歧点的快照选择 =====
+    public String getBranchChoice(UUID player, String fromNode) {
+        Map<String, String> m = branchChoices.get(player);
+        return m == null ? null : m.get(fromNode);
+    }
+    public void setBranchChoice(UUID player, String fromNode, String toNode) {
+        if (player == null || fromNode == null || toNode == null) return;
+        branchChoices.computeIfAbsent(player, k -> new HashMap<>()).put(fromNode, toNode);
+    }
+
+    // ===== 首通参与者：Boss 击杀瞬间位于 Boss 节点范围内的玩家 =====
+    public Set<UUID> getBossParticipants() { return java.util.Collections.unmodifiableSet(bossParticipants); }
+    public boolean hasBossParticipantSnapshot() { return bossParticipantSnapshot; }
+    /** 以最后一次 Boss 击杀为准（多 Boss 关卡最后一个 Boss 倒下即通关）。 */
+    public void snapshotBossParticipants(java.util.Collection<UUID> uuids) {
+        bossParticipants.clear();
+        bossParticipants.addAll(uuids);
+        bossParticipantSnapshot = true;
     }
 
     public boolean beginNode(String node) {
@@ -261,6 +297,34 @@ public class DungeonInstance {
             tag.put("PlayerCheckpoints", checkpointsList);
         }
 
+        ListTag waveList = new ListTag();
+        for (Map.Entry<String, Integer> entry : nodeWaveTotals.entrySet()) {
+            CompoundTag item = new CompoundTag();
+            item.putString("Node", entry.getKey());
+            item.putInt("Total", entry.getValue());
+            item.putInt("Wave", getNodeWave(entry.getKey()));
+            waveList.add(item);
+        }
+        tag.put("NodeWaves", waveList);
+
+        ListTag branchList = new ListTag();
+        for (Map.Entry<UUID, Map<String, String>> e : branchChoices.entrySet()) {
+            for (Map.Entry<String, String> c : e.getValue().entrySet()) {
+                CompoundTag item = new CompoundTag();
+                item.putUUID("Player", e.getKey());
+                item.putString("From", c.getKey());
+                item.putString("To", c.getValue());
+                branchList.add(item);
+            }
+        }
+        tag.put("BranchChoices", branchList);
+
+        if (bossParticipantSnapshot) {
+            ListTag bossList = new ListTag();
+            for (UUID u : bossParticipants) bossList.add(NbtUtils.createUUID(u));
+            tag.put("BossParticipants", bossList);
+        }
+
         // 整合版 §3.1：FlagshipUuid 字段不再写出（已删除玩家旗舰权限概念）
         if (lecternPos != null) {
             tag.put("LecternPos", NbtUtils.writeBlockPos(lecternPos));
@@ -321,6 +385,25 @@ public class DungeonInstance {
                 String cpId = cpTag.getString("Checkpoint");
                 inst.playerCheckpoints.put(playerUuid, cpId);
             }
+        }
+
+        ListTag waveList = tag.getList("NodeWaves", Tag.TAG_COMPOUND);
+        for (int i = 0; i < waveList.size(); i++) {
+            CompoundTag item = waveList.getCompound(i);
+            inst.setNodeWaveTotal(item.getString("Node"), item.getInt("Total"));
+            inst.setNodeWave(item.getString("Node"), item.getInt("Wave"));
+        }
+        ListTag branchList = tag.getList("BranchChoices", Tag.TAG_COMPOUND);
+        for (int i = 0; i < branchList.size(); i++) {
+            CompoundTag item = branchList.getCompound(i);
+            inst.setBranchChoice(item.getUUID("Player"), item.getString("From"), item.getString("To"));
+        }
+        if (tag.contains("BossParticipants", Tag.TAG_LIST)) {
+            ListTag bossList = tag.getList("BossParticipants", Tag.TAG_INT_ARRAY);
+            for (int i = 0; i < bossList.size(); i++) {
+                inst.bossParticipants.add(NbtUtils.loadUUID(bossList.get(i)));
+            }
+            inst.bossParticipantSnapshot = true;
         }
 
         // 整合版 §3.1：旧存档的 FlagshipUuid 字段读时忽略（不再需要），保证向前兼容

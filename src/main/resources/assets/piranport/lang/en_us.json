@@ -1188,12 +1188,10 @@
   "tooltip.piranport.aircraft_payload_empty": "Payload: Empty [R to load]",
   "message.piranport.aircraft_no_fuel_item": "No aviation fuel",
   "tooltip.piranport.aircraft_fuel_short": "Aviation Fuel: Empty [R to load]",
-
   "gui.piranport.debug_terminal": "Debug Terminal",
   "tooltip.piranport.debug_terminal.desc": "Right-click to open controls; Shift-right-click to request a log snapshot",
   "tooltip.piranport.debug_terminal.admin_only": "Operators only (permission level 2 or singleplayer host)",
   "message.piranport.debug_terminal.admin_required": "You are not allowed to use the Debug Terminal",
-
   "gui.piranport.debug_terminal.tab.parameters": "Parameters",
   "gui.piranport.debug_terminal.tab.controls": "Controls",
   "gui.piranport.debug_terminal.search_target": "Search objects",
@@ -1438,9 +1436,22 @@
   "gui.piranport.debug_terminal.state.off": "Off",
   "message.piranport.snapshot.done": "[DEBUG] Snapshot written to session log",
   "message.piranport.snapshot.cooldown": "[DEBUG] Snapshot is on cooldown",
-
   "gui.piranport.debug_terminal.ship_type.SMALL": "Small vessel",
   "gui.piranport.debug_terminal.ship_type.MEDIUM": "Medium vessel",
   "gui.piranport.debug_terminal.ship_type.LARGE": "Large vessel",
-  "gui.piranport.debug_terminal.ship_type.SUBMARINE": "Submarine"
+  "gui.piranport.debug_terminal.ship_type.SUBMARINE": "Submarine",
+  "entity.piranport.lost_transport": "Lost Transport",
+  "dungeon.piranport.node_cleared": "Node cleared. The exit portal is open.",
+  "dungeon.piranport.next_wave": "Enemy reinforcements! Wave %s / %s",
+  "dungeon.piranport.boss_alert.title": "Boss Incoming",
+  "dungeon.piranport.boss_alert.subtitle": "%s · Node %s",
+  "dungeon.piranport.boss_alert.chat": "[Dungeon] %s: boss node %s has been triggered. The boss has appeared!",
+  "dungeon.piranport.branch.header": "[Routing] Branch check at node %s:",
+  "dungeon.piranport.branch.no_condition": "(no condition)",
+  "dungeon.piranport.branch.matched": "Conditions met. Routing to node %s.",
+  "dungeon.piranport.branch.diverted": "No conditions met. Diverted to the default route: node %s.",
+  "dungeon.piranport.branch.title": "Routing",
+  "dungeon.piranport.branch.diverted_title": "Diverted!",
+  "dungeon.piranport.branch.subtitle": "Heading to node %s",
+  "dungeon.piranport.branch.blocked": "Routing has assigned you a different path. Node %s is not available."
 }

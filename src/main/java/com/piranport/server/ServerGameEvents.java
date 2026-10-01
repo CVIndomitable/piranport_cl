@@ -92,6 +92,11 @@ public class ServerGameEvents {
             // HUD 计时每 5 tick（0.25s）同步一次，足够 mm:ss 显示且暂停时自然停表
             if (event.getServer().getTickCount() % 5 == 0) {
                 syncDungeonHudTimers(event.getServer(), dungeonLevel);
+                com.piranport.dungeon.event.DungeonBossBroadcast.tick(dungeonLevel);
+            }
+            // 记录点信标光柱（粒子柱，只发给踩过该记录点的玩家）
+            if (event.getServer().getTickCount() % 10 == 0) {
+                com.piranport.dungeon.event.DungeonCheckpointBeacon.tick(event.getServer(), dungeonLevel);
             }
         }
 
@@ -207,6 +212,24 @@ public class ServerGameEvents {
                 : com.piranport.dungeon.data.DungeonRegistry.INSTANCE.getEnemySet(node.enemies());
         allEnemies |= enemies != null && enemies.flagship() == null;
         boolean anyFlagshipAlive = !objectives.defeated(instanceId, nodeId, allEnemies);
+
+        if (!anyFlagshipAlive && node != null) {
+            // 《副本/00》多人波次：快照总波数未打完 → 刷下一波，不开门
+            int wave = instance.getNodeWave(nodeId);
+            int total = instance.getNodeWaveTotal(nodeId);
+            if (com.piranport.dungeon.instance.NodeBattleField.trySpawnNextWave(sl, instance, node)) {
+                for (ServerPlayer player : mgr.getPresentPlayers(instance, sl.getServer())) {
+                    player.displayClientMessage(net.minecraft.network.chat.Component.translatable(
+                            "dungeon.piranport.next_wave", wave + 1, total), true);
+                }
+                return;
+            }
+            // 首通参与判定：Boss 击杀瞬间位于 Boss 节点 128×128 范围内的玩家
+            if (node.type() == com.piranport.dungeon.data.NodeData.NodeType.BOSS) {
+                com.piranport.dungeon.event.DungeonEventHandler.snapshotBossParticipants(
+                        sl.getServer(), instance, nodeId);
+            }
+        }
 
         if (!anyFlagshipAlive) {
             BlockPos portalPos = entity.blockPosition();

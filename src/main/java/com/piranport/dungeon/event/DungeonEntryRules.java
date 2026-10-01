@@ -1,6 +1,7 @@
 package com.piranport.dungeon.event;
 
 import com.piranport.dungeon.data.CheckpointData;
+import com.piranport.dungeon.data.NodeData;
 import com.piranport.dungeon.data.StageData;
 import com.piranport.dungeon.instance.DungeonInstance;
 import net.minecraft.core.BlockPos;
@@ -22,6 +23,26 @@ public final class DungeonEntryRules {
         if (current != null && !instance.getClearedNodes().contains(current)) return false;
         if (instance.getClearedNodes().isEmpty()) return stage.startNode().equals(nodeId);
         return instance.getClearedNodes().stream().anyMatch(id -> stage.getReachableFrom(id).contains(nodeId));
+    }
+
+    /**
+     * 《副本/22》分歧感知的推进判定：经由分歧节点解锁的后继，只放行该玩家快照选中的那一条。
+     * 已被任何人进入过的节点照常放行（重返不受分歧限制）。非分歧节点的出边规则不变。
+     *
+     * @param choiceFor 给定分歧节点 id，返回该玩家的快照目标（尚未判定时由调用方当场判定并快照）
+     */
+    public static boolean canEnter(DungeonInstance instance, StageData stage, String nodeId,
+                                   java.util.function.Function<String, String> choiceFor) {
+        if (!canEnter(instance, stage, nodeId)) return false;
+        if (instance == null || instance.hasEnteredNode(nodeId) || instance.getClearedNodes().isEmpty()) return true;
+        for (String cleared : instance.getClearedNodes()) {
+            if (!stage.getReachableFrom(cleared).contains(nodeId)) continue;
+            NodeData from = stage.nodes().get(cleared);
+            if (from == null || !from.hasBranches()) return true;
+            String choice = choiceFor == null ? null : choiceFor.apply(cleared);
+            if (choice == null || choice.equals(nodeId)) return true;
+        }
+        return false;
     }
 
     /**

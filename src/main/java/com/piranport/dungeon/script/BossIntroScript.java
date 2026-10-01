@@ -555,12 +555,24 @@ public class BossIntroScript implements DungeonScript {
         return "Unknown Boss";
     }
 
+    /**
+     * 《副本/00》Boss 生成 / 铭牌对全员：除触发时快照的玩家外，还包括当前位于本实例区域内的所有参与者
+     * （其他节点的队友也能看到 Boss 铭牌）。
+     */
     private List<ServerPlayer> getOnlinePlayers(ServerLevel level) {
         List<ServerPlayer> result = new ArrayList<>();
+        java.util.Set<UUID> seen = new java.util.HashSet<>();
         for (UUID uuid : playerUuids) {
             ServerPlayer player = level.getServer().getPlayerList().getPlayer(uuid);
-            if (player != null && DungeonEventHandler.isInDungeon(player)) {
+            if (player != null && DungeonEventHandler.isInDungeon(player) && seen.add(uuid)) {
                 result.add(player);
+            }
+        }
+        var mgr = com.piranport.dungeon.instance.DungeonInstanceManager.get(level);
+        var instance = mgr.getInstance(instanceId);
+        if (instance != null) {
+            for (ServerPlayer player : mgr.getPresentPlayers(instance, level.getServer())) {
+                if (seen.add(player.getUUID())) result.add(player);
             }
         }
         return result;

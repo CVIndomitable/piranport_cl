@@ -216,8 +216,16 @@ public final class ClientItemHooks implements com.piranport.platform.ClientBridg
     @Override
     public void openDungeonResultScreen(String stageName, long timeMillis,
                                         boolean isFirstClear, List<String> rewardNames, int kills) {
+        openDungeonResultScreen(stageName, timeMillis, isFirstClear, rewardNames, kills, "");
+    }
+
+    @Override
+    public void openDungeonResultScreen(String stageName, long timeMillis,
+                                        boolean isFirstClear, List<String> rewardNames, int kills,
+                                        String serverEnding) {
         DungeonHudLayer.clearDungeonState();
-        String ending = ClientDungeonData.getSortedChapters().stream()
+        // 优先用服务端下发的结语；旧服务端没有该字段时按关卡名前缀回查本地注册表
+        String ending = serverEnding != null && !serverEnding.isBlank() ? serverEnding : ClientDungeonData.getSortedChapters().stream()
                 .flatMap(ch -> ch.stages().stream())
                 .map(ClientDungeonData::getStage)
                 .filter(java.util.Objects::nonNull)

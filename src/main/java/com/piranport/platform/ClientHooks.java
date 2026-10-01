@@ -159,6 +159,12 @@ public final class ClientHooks {
         bridge.openDungeonResultScreen(stageName, timeMillis, isFirstClear, rewardNames, kills);
     }
 
+    /** 《副本/00》结语由服务端下发（DungeonResultPayload.ending）。 */
+    public static void openDungeonResultScreen(String stageName, long timeMillis, boolean isFirstClear,
+                                               List<String> rewardNames, int kills, String ending) {
+        bridge.openDungeonResultScreen(stageName, timeMillis, isFirstClear, rewardNames, kills, ending);
+    }
+
     public static void openDungeonReviveScreen() {
         bridge.openDungeonReviveScreen();
     }

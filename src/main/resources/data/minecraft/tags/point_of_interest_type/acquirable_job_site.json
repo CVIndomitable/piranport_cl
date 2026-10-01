@@ -1,0 +1,8 @@
+{
+  "replace": false,
+  "values": [
+    "piranport:weapon_workbench",
+    "piranport:stone_mill",
+    "piranport:ammo_workbench"
+  ]
+}

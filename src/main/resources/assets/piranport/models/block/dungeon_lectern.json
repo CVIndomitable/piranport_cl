@@ -38,7 +38,7 @@
       "to": [14.5, 13.5, 14.5],
       "faces": {
         "down":  { "uv": [1.5, 1.5, 14.5, 14.5], "texture": "#metal" },
-        "up":    { "uv": [0, 0, 16, 16], "texture": "#chart" },
+        "up":    { "uv": [0, 0, 16, 16], "texture": "#chart", "tintindex": 0 },
         "north": { "uv": [1.5, 2.5, 14.5, 4], "texture": "#metal" },
         "south": { "uv": [1.5, 2.5, 14.5, 4], "texture": "#metal" },
         "west":  { "uv": [1.5, 2.5, 14.5, 4], "texture": "#metal" },

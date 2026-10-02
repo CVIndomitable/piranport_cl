@@ -96,6 +96,7 @@ public class PiranPort {
         ModStructureProcessors.STRUCTURE_PROCESSORS.register(modEventBus);
         ModArmorMaterials.ARMOR_MATERIALS.register(modEventBus);
         ModAttachmentTypes.ATTACHMENT_TYPES.register(modEventBus);
+        com.piranport.dungeon.key.EnteredDungeonCondition.LOOT_CONDITIONS.register(modEventBus);
         ModSounds.SOUND_EVENTS.register(modEventBus);
         ModVillagerProfessions.POI_TYPES.register(modEventBus);
         ModVillagerProfessions.PROFESSIONS.register(modEventBus);

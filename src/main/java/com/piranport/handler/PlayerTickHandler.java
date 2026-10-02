@@ -198,6 +198,8 @@ public class PlayerTickHandler {
             }
             tickSubmarineEffects(player, isSubmarine);
             ShipCoreCombat.tickCannonAutoReload(player, transformedCore);
+            // 舰载机与火炮共用 WEAPON_COOLDOWN 读条，到期结算同样放在服务端 tick
+            com.piranport.aviation.AircraftFireStrategy.tickAircraftReload(player);
             tickSonarGlow(player, transformedCore);
             tickCleanupResidualSlowdown(player);
             tickAutoCombatIfNeeded(player);

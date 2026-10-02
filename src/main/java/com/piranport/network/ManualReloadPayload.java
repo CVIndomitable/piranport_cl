@@ -107,13 +107,14 @@ public record ManualReloadPayload() implements CustomPacketPayload {
                 return;
             }
 
-            // 舰载机：对海挂载按 R 键装填（见《航空/12-飞机武器化方案》：飞机即武器，与火炮同一套装填交互）
+            // 舰载机：R 键启动装填读条（燃油 + 对海挂载一起补），读条到期由服务端结算。
+            // 见《航空/12-飞机武器化方案》：飞机即武器，与火炮同一套装填交互。
             if (mainHand.getItem() instanceof com.piranport.item.AircraftItem) {
-                com.piranport.aviation.AircraftFireStrategy.loadAircraftPayload(
+                com.piranport.aviation.AircraftFireStrategy.tryStartAircraftReload(
                         player, inv, mainHand, inv.selected, coreStack, coreSlot);
                 return;
             } else if (offHand.getItem() instanceof com.piranport.item.AircraftItem) {
-                com.piranport.aviation.AircraftFireStrategy.loadAircraftPayload(
+                com.piranport.aviation.AircraftFireStrategy.tryStartAircraftReload(
                         player, inv, offHand, 40, coreStack, coreSlot);
                 return;
             }

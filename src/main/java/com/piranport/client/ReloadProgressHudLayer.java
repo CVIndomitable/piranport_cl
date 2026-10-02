@@ -7,7 +7,6 @@ import com.piranport.item.AircraftItem;
 import com.piranport.registry.ModDataComponents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -39,18 +38,11 @@ public class ReloadProgressHudLayer {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || mc.level == null) return;
 
-        ItemStack aircraft = mc.player.isUsingItem() ? mc.player.getUseItem() : ItemStack.EMPTY;
-        if (aircraft.getItem() instanceof AircraftItem) {
-            int total = ((AircraftItem) aircraft.getItem()).getUseDuration(aircraft, mc.player);
-            int remaining = mc.player.getUseItemRemainingTicks();
-            float progress = total <= 0 ? 0.0F
-                    : Mth.clamp(1.0F - remaining / (float) total, 0.0F, 1.0F);
-            renderProgressBar(event.getGuiGraphics(), mc, progress, mc.level.getGameTime());
+        // 火炮与舰载机共用一套读条（WEAPON_COOLDOWN），因此这里只认计时组件不认物品种类。
+        ItemStack mainHand = mc.player.getMainHandItem();
+        if (!(mainHand.getItem() instanceof ArtilleryItem) && !(mainHand.getItem() instanceof AircraftItem)) {
             return;
         }
-
-        ItemStack mainHand = mc.player.getMainHandItem();
-        if (!(mainHand.getItem() instanceof ArtilleryItem)) return;
 
         // 检查是否有冷却
         WeaponCooldown cooldown = mainHand.get(ModDataComponents.WEAPON_COOLDOWN.get());

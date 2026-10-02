@@ -15,7 +15,6 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.inventory.ClickAction;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.Item;
@@ -27,8 +26,6 @@ import java.util.List;
 
 public class AircraftItem extends Item {
 
-    private static final int DEFAULT_RELOAD_TIME = 60;
-
     public AircraftItem(Properties properties) {
         super(properties);
     }
@@ -36,10 +33,9 @@ public class AircraftItem extends Item {
     @Override
     public void inventoryTick(ItemStack stack, Level level, net.minecraft.world.entity.Entity entity,
                               int slot, boolean selected) {
-        if (!level.isClientSide() && slot >= 9 && entity instanceof Player player
-                && player.isUsingItem() && player.getUseItem() == stack) {
-            player.stopUsingItem();
-        }
+        // 装填读条计时存在物品自己身上（与火炮同组件）。物品被移出快捷栏时
+        // WeaponReloadLifecycle 负责清掉未完成的读条，避免计时跟着物品跑到别处。
+        com.piranport.combat.data.WeaponReloadLifecycle.tick(stack, level, entity, slot);
     }
 
     @Override
@@ -51,26 +47,6 @@ public class AircraftItem extends Item {
         return InteractionResultHolder.pass(stack);
     }
 
-    /** R-key loading uses the same vanilla use bar as artillery. */
-    @Override
-    public int getUseDuration(ItemStack stack, LivingEntity entity) {
-        AircraftDefinition definition = AircraftDefinitionService.resolve(stack);
-        return definition == null ? DEFAULT_RELOAD_TIME
-                : com.piranport.aviation.AircraftStatsService.resolve(definition).reloadTime();
-    }
-
-    @Override
-    public ItemStack finishUsingItem(ItemStack stack, Level level, LivingEntity entity) {
-        if (!level.isClientSide() && entity instanceof Player player) {
-            com.piranport.aviation.AircraftFireStrategy.finishAircraftReload(player, stack);
-        }
-        return stack;
-    }
-
-    @Override
-    public void releaseUsing(ItemStack stack, Level level, LivingEntity entity, int timeCharged) {
-        // Releasing R early cancels the loading bar and does not consume supplies.
-    }
 
     /**
      * Right-click aviation_fuel onto aircraft in inventory to manually load fuel (manual reload mode only).

@@ -4,6 +4,7 @@ import com.piranport.combat.TransformationManager;
 import com.piranport.component.AircraftAttackMode;
 import com.piranport.component.AircraftInfo;
 import com.piranport.component.SlotCooldowns;
+import com.piranport.component.WeaponCooldown;
 import com.piranport.config.ModCommonConfig;
 import com.piranport.entity.AircraftEntity;
 import com.piranport.item.AircraftItem;
@@ -77,7 +78,7 @@ public class AircraftFireStrategy {
         String payloadType = definition.requiresPayload() ? definition.payloadRegistryName() : "";
 
         // 对海挂载未装填则拒绝放飞（创造模式的常规机型无此限制）。
-        // 装填由 R 键完成，见 loadAircraftPayload —— 放飞不再扫描背包消耗挂载物，
+        // 装填由 R 键读条完成，见 tryStartAircraftReload —— 放飞不再扫描背包消耗挂载物，
         // 挂载物只作装填消耗品，避免"装填后放飞又被扣一次"的双重消耗。
         if (!payloadType.isEmpty() && !creativeFree && !launchInfo.payloadLoaded()) {
             player.displayClientMessage(Component.translatable("message.piranport.aircraft_not_loaded"), true);
@@ -500,25 +501,125 @@ public class AircraftFireStrategy {
         return definition != null && definition.requiresPayload() && !info.payloadLoaded();
     }
 
+    // ===== R 键装填读条（与火炮共用 WEAPON_COOLDOWN 计时）=====
+
     /**
-     * R 键装填舰载机 — 一次完成"加油 + 挂载"，即完整的出击准备。
+     * R 键启动舰载机装填读条。
      *
-     * <p>消耗 1 个航空燃料（加满油）与 1 个对海挂载物；两项都必须在背包里备齐，
-     * 缺任一项则整体不执行并提示缺什么，避免出现"加了油却没弹"的半准备状态。
-     * 与火炮/鱼雷的 R 键装填模型一致（见《武器/07-火炮装填双模式》）。
+     * <p>《武器/09-装填类似弩模型》：按键只启动计时，读条到期由服务端扣补给并写入出击准备状态，
+     * 因此本方法不做任何消耗。计时组件与火炮共用 {@code WEAPON_COOLDOWN}，于是装填条
+     * （ReloadProgressHudLayer）、物品图标进度条（WeaponReloadDecorator）、离开快捷栏清理
+     * （WeaponReloadLifecycle）全部直接复用，不另立一套状态 —— 这就是"飞机与火炮同一套装填交互"。
      *
-     * <p>战斗机/侦察机没有对海挂载，按 R 只补油。
+     * <p>补给前置校验：缺油/缺挂载物时不启动读条，避免玩家等满读条才发现白等。
      *
      * @param weaponSlot 飞机所在槽位（0-8 主手，40 副手）
      */
-    public static void loadAircraftPayload(Player player, Inventory inv, ItemStack aircraftStack,
-                                           int weaponSlot, ItemStack coreStack, int coreSlot) {
+    public static void tryStartAircraftReload(Player player, Inventory inv, ItemStack aircraftStack,
+                                              int weaponSlot, ItemStack coreStack, int coreSlot) {
         if (player.level().isClientSide()) return;
-
         AircraftInfo info = aircraftStack.get(ModDataComponents.AIRCRAFT_INFO.get());
-        if (info == null) return;
         AircraftDefinition definition = AircraftDefinitionService.resolve(aircraftStack);
-        if (definition == null) return;
+        if (info == null || definition == null) return;
+        ResolvedAircraftStats stats = AircraftStatsService.resolve(definition);
+        long now = player.level().getGameTime();
+
+        WeaponCooldown cooldown = aircraftStack.get(ModDataComponents.WEAPON_COOLDOWN.get());
+        if (cooldown != null && cooldown.isOnCooldown(now)) {
+            player.displayClientMessage(Component.translatable("message.piranport.weapon_reloading"), true);
+            return;
+        }
+        if (isReadyForSortie(info, definition, stats)) {
+            player.displayClientMessage(Component.translatable("message.piranport.aircraft_already_loaded"), true);
+            return;
+        }
+        if (!suppliesAvailable(player, inv, aircraftStack, weaponSlot, coreSlot, definition, info, stats)) {
+            return; // 缺什么已由 suppliesAvailable 提示
+        }
+
+        int ticks = TransformationManager.boostedCooldown(player, stats.reloadTime());
+        aircraftStack.set(ModDataComponents.WEAPON_COOLDOWN.get(),
+                WeaponCooldown.of(player.getUUID(), now, ticks));
+        player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+                SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.4f, 1.6f);
+        player.displayClientMessage(Component.translatable("message.piranport.reload_start"), true);
+    }
+
+    /**
+     * 服务端每 tick：结算读条到期的舰载机。
+     *
+     * <p>WHY 由 tick 结算而不是等玩家再按一次 R：《武器/09》规定"读条完成时才从背包消耗足量弹药"，
+     * 一次按键即一次完整操作。火炮的到期结算（原 {@code CannonReloadPhase.COMPLETE} 分支）在
+     * 2026-09-26 随"关闭自动装填"被一并误删，已按同一语义恢复，见
+     * {@code CannonReloading#tickCannonAutoReload}。
+     */
+    public static void tickAircraftReload(Player player) {
+        if (player.level().isClientSide()) return;
+        ItemStack coreStack = TransformationManager.findTransformedCore(player);
+        if (coreStack.isEmpty()) return;
+        Inventory inv = player.getInventory();
+        long now = player.level().getGameTime();
+        for (int slot = 0; slot < inv.items.size(); slot++) {
+            tickReloadSlot(player, inv, slot, inv.items.get(slot), now);
+        }
+        tickReloadSlot(player, inv, 40, inv.offhand.get(0), now);
+    }
+
+    private static void tickReloadSlot(Player player, Inventory inv, int slot, ItemStack stack, long now) {
+        if (!(stack.getItem() instanceof AircraftItem)) return;
+        WeaponCooldown cooldown = stack.get(ModDataComponents.WEAPON_COOLDOWN.get());
+        if (cooldown == null || cooldown.endTick() <= 0 || cooldown.isOnCooldown(now)) return;
+        int coreSlot = com.piranport.combat.cannon.CannonInventory.findCoreSlotIndex(inv, player, slot);
+        if (coreSlot != -1) {
+            commitSortieSupplies(player, inv, stack, slot, coreSlot, true);
+        }
+        // 找不到核心槽（变身已解除等）时也要清掉读条，否则物品上会永远留着一条不会完成的计时
+        // 成功则状态已写入；失败（读条期间补给被拿走）则清掉读条退回未准备态，与火炮同规则
+        stack.remove(ModDataComponents.WEAPON_COOLDOWN.get());
+    }
+
+    /** 是否已完成出击准备（判定规则见 {@link AircraftSortieReadiness}）。 */
+    public static boolean isReadyForSortie(AircraftInfo info, AircraftDefinition definition,
+                                           ResolvedAircraftStats stats) {
+        return AircraftSortieReadiness.isReady(info, definition, stats);
+    }
+
+    /** 补给是否齐备；不齐时提示缺什么并返回 false（读条前置校验用）。 */
+    private static boolean suppliesAvailable(Player player, Inventory inv, ItemStack aircraftStack,
+                                             int weaponSlot, int coreSlot,
+                                             AircraftDefinition definition, AircraftInfo info,
+                                             ResolvedAircraftStats stats) {
+        if (player.getAbilities().instabuild) return true;
+        if (AircraftSortieReadiness.needsPayload(definition, info)
+                && findPayloadSlot(inv, payloadItem(definition), weaponSlot, coreSlot) < 0) {
+            player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
+            return false;
+        }
+        if (AircraftSortieReadiness.needsFuel(info, stats)
+                && findPayloadSlot(inv, ModItems.AVIATION_FUEL.get(), weaponSlot, coreSlot) < 0) {
+            player.displayClientMessage(Component.translatable("message.piranport.aircraft_no_fuel_item"), true);
+            return false;
+        }
+        return true;
+    }
+
+    /** 对海挂载物物品；无挂载概念的机型返回 null。 */
+    private static net.minecraft.world.item.Item payloadItem(AircraftDefinition definition) {
+        if (!definition.requiresPayload()) return null;
+        return BuiltInRegistries.ITEM.get(ResourceLocation.parse(definition.payloadRegistryName()));
+    }
+
+    /**
+     * 执行一次出击补给事务：消耗 1 航空燃料（加满油）+ 1 对海挂载物。
+     *
+     * <p>先全量校验再消耗，避免"扣了油才发现没弹"导致状态半残。任一补给在读条期间被拿走
+     * 就在这里中止，飞机保持未准备态（{@code warn} 控制是否提示）。
+     */
+    private static boolean commitSortieSupplies(Player player, Inventory inv, ItemStack aircraftStack,
+                                                int weaponSlot, int coreSlot, boolean warn) {
+        AircraftInfo info = aircraftStack.get(ModDataComponents.AIRCRAFT_INFO.get());
+        AircraftDefinition definition = AircraftDefinitionService.resolve(aircraftStack);
+        if (info == null || definition == null) return false;
         ResolvedAircraftStats stats = AircraftStatsService.resolve(definition);
 
         // 创造模式不消耗补给，但必须真的把飞机写成"已准备"状态。
@@ -527,34 +628,29 @@ public class AircraftFireStrategy {
         if (player.getAbilities().instabuild) {
             aircraftStack.set(ModDataComponents.AIRCRAFT_INFO.get(),
                     info.withCurrentFuel(stats.fuelCapacity()).withPayloadLoaded(true));
-            player.displayClientMessage(Component.translatable("message.piranport.aircraft_creative_free_load"), true);
-            return;
+            if (warn) {
+                player.displayClientMessage(
+                        Component.translatable("message.piranport.aircraft_creative_free_load"), true);
+            }
+            return true;
         }
 
-        // 出厂飞机未挂弹，所以对海机型一律要求挂载物；战斗机/侦察机 payloadType 为空，跳过
-        String payloadType = definition.requiresPayload() ? definition.payloadRegistryName() : "";
-        net.minecraft.world.item.Item payloadItem = payloadType.isEmpty() ? null
-                : BuiltInRegistries.ITEM.get(ResourceLocation.parse(payloadType));
+        boolean needsFuel = AircraftSortieReadiness.needsFuel(info, stats);
+        boolean needsPayload = AircraftSortieReadiness.needsPayload(definition, info);
+        if (!needsFuel && !needsPayload) return true;
 
-        boolean needsFuel = info.currentFuel() < stats.fuelCapacity();
-        boolean needsPayload = definition.requiresPayload() && !info.payloadLoaded();
-
-        if (!needsFuel && !needsPayload) {
-            player.displayClientMessage(Component.translatable("message.piranport.aircraft_already_loaded"), true);
-            return;
-        }
-
-        // 先全量校验再消耗：避免"扣了油才发现没弹"导致状态半残
+        net.minecraft.world.item.Item payloadItem = payloadItem(definition);
         int payloadSlot = payloadItem == null ? -1 : findPayloadSlot(inv, payloadItem, weaponSlot, coreSlot);
         int fuelSlot = needsFuel ? findPayloadSlot(inv, ModItems.AVIATION_FUEL.get(), weaponSlot, coreSlot) : -1;
 
         if (needsPayload && payloadSlot < 0) {
-            player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
-            return;
+            if (warn) player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
+            return false;
         }
         if (needsFuel && fuelSlot < 0) {
-            player.displayClientMessage(Component.translatable("message.piranport.aircraft_no_fuel_item"), true);
-            return;
+            if (warn) player.displayClientMessage(
+                    Component.translatable("message.piranport.aircraft_no_fuel_item"), true);
+            return false;
         }
 
         if (fuelSlot >= 0) {
@@ -565,34 +661,15 @@ public class AircraftFireStrategy {
             com.piranport.testtools.PiranPortTestTools.consumeAmmo(player.getUUID(), stackAt(inv, payloadSlot), 1);
             info = info.withPayloadLoaded(true);
         }
-
         aircraftStack.set(ModDataComponents.AIRCRAFT_INFO.get(), info);
 
         player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
                 SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.5f, 1.4f);
-        player.displayClientMessage(Component.translatable("message.piranport.aircraft_loaded",
-                aircraftStack.getHoverName()), true);
-    }
-
-    /** Completes an R-key loading bar after the vanilla use duration has elapsed. */
-    public static void finishAircraftReload(Player player, ItemStack aircraftStack) {
-        Inventory inv = player.getInventory();
-        // Resolve the live stack from the hand that completed the use action.
-        // The callback may receive a defensive ItemStack copy, so comparing it
-        // by object identity can silently skip the fuel and payload update.
-        net.minecraft.world.InteractionHand hand = player.getUsedItemHand();
-        ItemStack held = player.getItemInHand(hand);
-        if (!(held.getItem() instanceof AircraftItem)) return;
-        aircraftStack = held;
-        int weaponSlot = hand == net.minecraft.world.InteractionHand.OFF_HAND ? 40 : inv.selected;
-        ItemStack coreStack = com.piranport.combat.TransformationManager.findTransformedCore(player);
-        if (coreStack.isEmpty()) return;
-        int coreSlot = -2;
-        for (int i = 0; i < inv.items.size(); i++) {
-            if (inv.items.get(i) == coreStack) { coreSlot = i; break; }
+        if (warn) {
+            player.displayClientMessage(Component.translatable("message.piranport.aircraft_loaded",
+                    aircraftStack.getHoverName()), true);
         }
-        if (inv.offhand.get(0) == coreStack) coreSlot = 40;
-        loadAircraftPayload(player, inv, aircraftStack, weaponSlot, coreStack, coreSlot);
+        return true;
     }
 
     /** 取槽位对应的实际 ItemStack（40 = 副手）。消耗必须落在这个栈上，才能正确写回背包。 */

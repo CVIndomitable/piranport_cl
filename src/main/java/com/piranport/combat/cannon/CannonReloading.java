@@ -23,13 +23,46 @@ import static com.piranport.combat.cannon.CannonStats.getGunCooldown;
 
 /**
  * 火炮装填生命周期：武器保存唯一读条，HUD 和提示直接读取武器。
- * 火炮固定使用手动装填；读条到期后才扣弹并写入 LOADED_AMMO。
+ * 火炮固定使用手动装填：只能由 R 键启动读条，读条到期后扣弹并写入 LOADED_AMMO。
  */
 public final class CannonReloading {
     private CannonReloading() {}
 
+    /**
+     * 服务端每 tick：结算读条到期的火炮。
+     *
+     * <p>WHY 需要这段而不仅仅是 R 键入口：《武器/09-装填类似弩模型》规定"读条完成时才从背包
+     * 消耗足量弹药，并写入 LOADED_AMMO"——读条走完就该装好，不该要求玩家再按一次 R。
+     * 2026-09-26 的 a48acb7f「固定关闭火炮自动装填」把这里的 COMPLETE 结算连同"自动启动"
+     * 一起删掉了，导致读条满了仍是空膛（与 docs/1.0/测试计划.md B.2.2「已装弹 → 再按 R →
+     * 提示已装弹」也对不上）。本方法只恢复"到期结算"，启动依然只能由 R 键触发。
+     */
     public static void tickCannonAutoReload(Player player, ItemStack coreStack) {
-        // 保留旧 tick 入口，避免存档/调用方兼容问题；火炮不再有自动装填计时器路径。
+        if (player.level().isClientSide() || !player.isAlive() || player.isSpectator() || coreStack.isEmpty()) return;
+        Inventory inventory = player.getInventory();
+        for (int slot = 0; slot < inventory.items.size(); slot++) {
+            tickSlot(player, coreStack, slot, inventory.items.get(slot));
+        }
+        tickSlot(player, coreStack, 40, inventory.offhand.get(0));
+    }
+
+    private static void tickSlot(Player player, ItemStack core, int slot, ItemStack weapon) {
+        if (!(weapon.getItem() instanceof ArtilleryItem)) return;
+        int coreSlot = findCoreSlotIndex(player.getInventory(), player, slot);
+        if (coreSlot == -1) return;
+        WeaponState state = new WeaponState(weapon);
+        boolean loaded = isCannonReadyToFire(weapon, player.level());
+        WeaponCooldown cooldown = state.getCooldown();
+        // automatic 固定传 false：本方法只做"读条到期结算"，不启动装填（启动只能由 R 键触发），
+        // 所以 START 分支在这里不可达。
+        CannonReloadPhase phase = CannonReloadPhase.resolve(loaded, false,
+                cooldown == null ? null : cooldown.endTick(), player.level().getGameTime());
+        boolean changed = switch (phase) {
+            case LOADED -> clearCannonReloadState(core, weapon, slot);
+            case IDLE, START, WAIT -> false;
+            case COMPLETE -> completeCannonReload(player, core, player.getInventory(), slot, coreSlot, weapon);
+        };
+        if (changed) TransformationManager.writeCoreToConfiguredSlot(player, core);
     }
 
     static boolean startCannonReloadIfPossible(Player player, ItemStack core, Inventory inventory,

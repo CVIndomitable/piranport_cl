@@ -61,15 +61,30 @@
 - 纯数学在 `combat/FireControlPrediction`（5 tick 采样速度、鱼雷水平拦截闭式解、准星入球判定、扇形角）；火炮预测落点走 `BallisticSolver.predictImpactPoint`（客户端专用）。
 - 扇形圆心角 = 2×max|`CombatFireUtils.getSpreadAngles(管数)`|，散布表改了扇形自动跟随。
 - 颜色为终端参数 `global.fire_control_visual.prediction_line_color` / `prediction_line_active_color`（RGB 整数）。
+- **预瞄点画在 HUD，不在世界空间**：世界空间按透视缩小，远距离落点会糊掉。落点由 `FireControlPrediction.projectToScreen` 用本帧真实投影矩阵投影到 GUI 坐标，标记固定像素尺寸；相机背后的点返回 `null`（投影是镜像假点，只能整帧丢弃），视野外钳到屏幕边缘并画成实心块。开镜缩放改的是投影矩阵，因此自动跟随。鱼雷的线/扇形是 3D 跨度，保留在世界空间
+
+### 装填（策划决策/武器/07、09）
+- **一次按 R = 一次完整装填**：按下 R 只启动读条（写物品上的 `WEAPON_COOLDOWN`），到期由服务端结算——火炮在 `CannonReloading.tickCannonAutoReload`，舰载机在 `AircraftFireStrategy.tickAircraftReload`，都由 `PlayerTickHandler` 每 tick 调用。自动**启动**关闭（只能 R 键起读条），但自动**结算**必须保留
+- ⚠️ `a48acb7f`（2026-09-26「固定关闭火炮自动装填」）曾把火炮弹到期结算的 `CannonReloadPhase.COMPLETE` 分支连同自动启动一起删掉，导致读条满了仍是空膛、要在读条满后再按一次 R。2026-10-02 已恢复：`resolve` 固定传 `automatic=false`
+- **舰载机装填复用火炮那一套**：同一个 `WEAPON_COOLDOWN` 计时组件 → 装填条（`ReloadProgressHudLayer`）、物品图标进度条（`WeaponReloadDecorator`）、离开快捷栏清理（`WeaponReloadLifecycle`）全部免费复用；R 键统一走 `ManualReloadPayload`（曾经的 `AircraftReloadPayload` 长按读条已删除）
+- 舰载机一次装填同时补**航空燃料 + 对海挂载**（先全量校验再消耗，缺任一项整体不执行）；出击准备判定统一在 `aviation/AircraftSortieReadiness`，读条前置校验/到期结算/放飞校验共用同一份规则，避免"提示已准备却被放飞拦下"
+- 读条期间补给被拿走 → 到期结算失败、清读条退回未准备态（不消耗已拿到的部分）
+
+### 蓝图与武器制造台配方（项目所有者 2026-09-30 授权实现方编配方）
+- 三档武器蓝图：`standard_weapon_blueprint`（标准型武器蓝图，可合成）/ `improved_weapon_blueprint`（改良型）/ `advanced_weapon_blueprint`（先进型）。**按档位不按口径**——口径是玩法选择，不是进度；鱼雷发射器同一套
+- 档位→蓝图映射在 `WeaponWorkbenchRecipeRegistry.blueprintFor`；初期档 `null` = 无需蓝图。`blueprintSatisfied` 是唯一校验入口：**`requiredBlueprint == null` 表示无需蓝图（蓝图格可空）**，旧实现把它当"不可合成"，导致鱼雷/导弹/深弹/飞机配方在生存模式永远做不出来（副本/21 §1.2）
+- 火炮/鱼雷配方由 `CannonCatalog` / `CATALOG_TORPEDO_LAUNCHERS` 循环生成：材料按口径族（小/中/大）+ 联装数 + 档位稀有材料推算，**材料种类上限 5**（+蓝图正好 6 格，制造台需求区 3 列×2 行）；制造时间 小 100 / 中 200 / 大 400，乘档位系数
+- 蓝图不消耗，可在蓝图箱复制；蓝图物品同时登记在 `isWorkbenchBlueprint`（制造台蓝图格投递 + 蓝图箱存放共用一份名单）
+- 07 表炮不再有原版工作台配方（`british_triple_16inch_gun` / `japanese_127mm_twin_gun` 的 `recipe/*.json` 已删），否则绕过制造台的蓝图门槛。Patchouli 火炮基础页已改指武器制造台
 
 ### 火炮数值（策划决策/数值/06、07）
 - 公式集中在 `artillery/CannonStatFormula`：面板、齐射、装填（tick，可带小数）、负重、DPS；稀有度乘数取 `EquipmentTier`
 - 07 表的 60 门炮清单在 `artillery/CannonCatalog`，并在 `WeaponItems.CATALOG_GUNS` 循环注册（日本12.7厘米连装炮、德国双联380毫米炮仍是独立字段）；`allCatalogGuns()` 按表顺序返回全部 60 门
 - 炮的 JSON（`data/piranport/artillery/cannons/<id>.json`）写 `caliberInches`、`barrels`、`tier`、可选 `velocityClass`（standard、high、low）。不写 damage 和 reloadTime 时由公式推导
-- 旧 int `caliber` 由英寸派生：7 英寸以下记 4（小口径），7 到 13 英寸之间记 8（中口径），13 英寸及以上记 16（大口径）。旧判定照常可用，例如 AP 过穿要求 `>8`
+- 旧 int `caliber` 由英寸派生：5 英寸以下记 4（小口径），5 到 13 英寸之间记 8（中口径），13 英寸及以上记 16（大口径）。旧判定照常可用，例如 AP 过穿要求 `>8`
 - `reloadTime` 是 float。计时器用 `CannonStatFormula.resolveTicks` 按小数部分随机进位，长期平均等于表值
 - 07 表炮的负重由 `ArtilleryItem.getFormulaWeight()` 计算，`TransformationManager.getWeaponLoadMap` 只保留旧炮和鱼雷
-- `large_gun`（大型火炮）已删除，原引用改指 `british_triple_16inch_gun`（英国三联16英寸炮）。`large_gun_blueprint`（大型火炮蓝图）和 large_gun 贴图都保留，蓝图与贴图仍在复用
+- `large_gun`（大型火炮）已删除，原引用改指 `british_triple_16inch_gun`（英国三联16英寸炮）。`large_gun_blueprint`（大型火炮蓝图）保留但**不再卡任何配方**（档位蓝图已取代它），村民老手档位改卖改良型武器蓝图；贴图仍在复用
 - 对表测试：`CannonStatFormulaTest`
 
 ---

@@ -178,12 +178,17 @@ public class FireControlInputHandler {
                 .inflate(1.0);
 
         final Entity cam = cameraEntity;
+        // 必须用「按实体 getPickRadius() 膨胀」的原版拾取重载（与准心选取方块同一套口径），
+        // 不能传给带 float inflation 的那个重载：后者对所有实体用同一个固定膨胀值，
+        // 而 AbstractDeepOceanEntity 把 getPickRadius() 覆写成 0.85 就是为了让准心能选中
+        // "看得见的舰船索具"而不是人物碰撞箱。传 0.0f 等于把这个覆写静默作废 ——
+        // 深海舰船（浮在/潜在水里）就表现为「火控选不中」，而海面上的怪物一切正常。
         EntityHitResult hit = ProjectileUtil.getEntityHitResult(
-                mc.level, mc.player, eyePos, end, searchBox,
+                mc.player, eyePos, end, searchBox,
                 e -> (e instanceof LivingEntity || e instanceof com.piranport.entity.AircraftEntity)
                         && e.isAlive() && e != mc.player && e != cam
                         && !(e instanceof net.minecraft.world.Container),
-                0.0f);
+                range * range);
 
         return hit != null ? hit.getEntity() : null;
     }

@@ -112,6 +112,16 @@ public final class MaterialItems {
             ITEMS.registerSimpleItem("medium_gun_blueprint", new Item.Properties().stacksTo(1));
     public static final DeferredItem<Item> LARGE_GUN_BLUEPRINT =
             ITEMS.registerSimpleItem("large_gun_blueprint", new Item.Properties().stacksTo(1));
+    // 稀有度蓝图（数值/06、07、08）：武器制造台按档位验蓝图，不按口径拆分（口径是玩法选择，不是进度）。
+    // 初期档无需蓝图；蓝图不消耗，可在蓝图箱复制。
+    public static final DeferredItem<Item> STANDARD_WEAPON_BLUEPRINT =
+            ITEMS.registerSimpleItem("standard_weapon_blueprint", new Item.Properties().stacksTo(1));
+    public static final DeferredItem<Item> IMPROVED_WEAPON_BLUEPRINT =
+            ITEMS.registerSimpleItem("improved_weapon_blueprint",
+                    new Item.Properties().stacksTo(1).rarity(Rarity.UNCOMMON));
+    public static final DeferredItem<Item> ADVANCED_WEAPON_BLUEPRINT =
+            ITEMS.registerSimpleItem("advanced_weapon_blueprint",
+                    new Item.Properties().stacksTo(1).rarity(Rarity.RARE));
     public static final DeferredItem<Item> CREATIVE_BLUEPRINT =
             ITEMS.registerSimpleItem("creative_blueprint",
                     new Item.Properties().stacksTo(1).rarity(Rarity.EPIC));

@@ -2,22 +2,25 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "pattern": [
-    "I",
-    "A",
-    "R"
+    "RIR",
+    "APA",
+    "RIR"
   ],
   "key": {
+    "R": {
+      "item": "minecraft:redstone"
+    },
     "I": {
       "item": "minecraft:iron_ingot"
     },
     "A": {
       "item": "piranport:aluminum_ingot"
     },
-    "R": {
-      "item": "minecraft:redstone"
+    "P": {
+      "item": "minecraft:paper"
     }
   },
   "result": {
-    "id": "piranport:japanese_127mm_twin_gun"
+    "id": "piranport:standard_weapon_blueprint"
   }
 }

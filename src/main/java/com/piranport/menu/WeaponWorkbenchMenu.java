@@ -154,9 +154,7 @@ public class WeaponWorkbenchMenu extends AbstractContainerMenu {
                 if (!moveItemStackTo(stack, 8, 44, true)) return ItemStack.EMPTY;
             } else {
                 // inventory → workbench: route blueprints to slot 0, others to material slots 1-6
-                boolean isBlueprint = stack.is(ModItems.CREATIVE_BLUEPRINT.get())
-                        || stack.is(ModItems.MEDIUM_GUN_BLUEPRINT.get())
-                        || stack.is(ModItems.LARGE_GUN_BLUEPRINT.get());
+                boolean isBlueprint = com.piranport.crafting.WeaponWorkbenchRecipeRegistry.isWorkbenchBlueprint(stack);
                 if (isBlueprint) {
                     if (!moveItemStackTo(stack, 0, 1, false)) return ItemStack.EMPTY;
                 } else {

@@ -989,11 +989,11 @@
   "piranport.book.cannons.advanced.p1": "$(bold)VT Shell (Proximity Fuze):$() Small caliber only. Follows the same trajectory as HE shells but detonates automatically near the target. Effective against fast-moving targets.$(br)$(br)$(bold)Type 3 Shell (Sanshiki):$() Available in Small/Medium/Large caliber. Fires a spread of 64 pellets in a cone pattern. Each pellet deals 1/4 of the equivalent HE shell's damage. Effective against dense target groups or aircraft squadrons.",
   "piranport.book.cannons.ammo_selection": "Ammo Selection",
   "piranport.book.cannons.basics": "Guns & Shells",
-  "piranport.book.cannons.basics.craft": "Shells must match gun caliber. Unfilled medium/large guns show an empty durability bar as a reminder.",
-  "piranport.book.cannons.basics.large": "Large guns are triple-mounted, consuming 3 large-caliber shells per salvo with devastating firepower.",
-  "piranport.book.cannons.basics.medium": "Medium guns use medium-caliber shells, suitable for medium-sized ships.",
+  "piranport.book.cannons.basics.craft": "All guns and torpedo launchers are made at the $(item)Weapon Workbench$(). Initial-tier gear needs no blueprint; Standard/Improved/Advanced gear needs the matching tier blueprint in the blueprint slot (not consumed, copyable in the Blueprint Chest).",
+  "piranport.book.cannons.basics.large": "Materials scale with caliber family and barrel count: small guns use iron and copper, medium adds aluminum, large adds diamonds. Higher tiers add gold, diamonds and netherite scrap, and take longer to build.",
+  "piranport.book.cannons.basics.medium": "The $(item)Standard Weapon Blueprint$() is crafted from paper, iron, aluminum and redstone. $(item)Improved$() and $(item)Advanced$() blueprints come only from trophy trades with the weaponsmith villager or dungeon first-clear rewards.",
   "piranport.book.cannons.basics.ops": "$(bold)Switch Ammo [Tab]:$() Press Tab to open the ammo selection overlay. Move your mouse to pick between HE and AP shells (and special shells like VT/Sanshiki if available). Release Tab to confirm the selection.$(br)$(br)$(bold)Reload [R]:$() Press R to manually reload your current gun from ammo in your inventory.$(br)$(br)$(bold)Scope:$() Right-click while transformed to enter scope view — a zoomed first-person perspective with a crosshair for precision aiming.",
-  "piranport.book.cannons.basics.p1": "Four gun types: $(item)Japanese 12cm Single Gun$() (1 barrel), $(item)Small Gun$() (twin 2 barrels), $(item)Chinese Twin 140mm Gun$() (twin 2 barrels), $(item)Large Gun$() (triple 3 barrels). Barrel count determines ammo consumed per salvo.$(br)$(br)$(item)HE Shells$() cause area explosions. $(item)AP Shells$() deal higher armor-piercing damage.",
+  "piranport.book.cannons.basics.p1": "Guns come in three caliber families: small (<5 in), medium (5 to <13 in) and large (>=13 in). Shells must match the family. Barrel count determines ammo consumed per salvo.$(br)$(br)$(item)HE Shells$() cause area explosions. $(item)AP Shells$() deal higher armor-piercing damage.",
   "piranport.book.cannons.scoping": "Artillery Scope",
   "piranport.book.cat.arsenal": "Arsenal",
   "piranport.book.cat.arsenal.desc": "Missiles, depth charges, special equipment, and weapon crafting facilities.",
@@ -1279,12 +1279,10 @@
   "tooltip.piranport.aircraft_payload_empty": "Payload: Empty [R to load]",
   "message.piranport.aircraft_no_fuel_item": "No aviation fuel",
   "tooltip.piranport.aircraft_fuel_short": "Aviation Fuel: Empty [R to load]",
-
   "gui.piranport.debug_terminal": "Debug Terminal",
   "tooltip.piranport.debug_terminal.desc": "Right-click to open controls; Shift-right-click to request a log snapshot",
   "tooltip.piranport.debug_terminal.admin_only": "Operators only (permission level 2 or singleplayer host)",
   "message.piranport.debug_terminal.admin_required": "You are not allowed to use the Debug Terminal",
-
   "gui.piranport.debug_terminal.tab.parameters": "Parameters",
   "gui.piranport.debug_terminal.tab.controls": "Controls",
   "gui.piranport.debug_terminal.search_target": "Search objects",
@@ -1529,9 +1527,11 @@
   "gui.piranport.debug_terminal.state.off": "Off",
   "message.piranport.snapshot.done": "[DEBUG] Snapshot written to session log",
   "message.piranport.snapshot.cooldown": "[DEBUG] Snapshot is on cooldown",
-
   "gui.piranport.debug_terminal.ship_type.SMALL": "Small vessel",
   "gui.piranport.debug_terminal.ship_type.MEDIUM": "Medium vessel",
   "gui.piranport.debug_terminal.ship_type.LARGE": "Large vessel",
-  "gui.piranport.debug_terminal.ship_type.SUBMARINE": "Submarine"
+  "gui.piranport.debug_terminal.ship_type.SUBMARINE": "Submarine",
+  "item.piranport.standard_weapon_blueprint": "Standard Weapon Blueprint",
+  "item.piranport.improved_weapon_blueprint": "Improved Weapon Blueprint",
+  "item.piranport.advanced_weapon_blueprint": "Advanced Weapon Blueprint"
 }

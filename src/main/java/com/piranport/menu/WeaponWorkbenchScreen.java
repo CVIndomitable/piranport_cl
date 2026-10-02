@@ -85,12 +85,7 @@ public class WeaponWorkbenchScreen extends AbstractContainerScreen<WeaponWorkben
             if (!hasEnoughMaterial(required)) return false;
         }
         ItemStack bp = menu.getSlot(0).getItem();
-        if (bp.isEmpty()) return false;
-        boolean isCreativeBp = bp.is(ModItems.CREATIVE_BLUEPRINT.get());
-        if (!isCreativeBp) {
-            if (recipe.requiredBlueprint() == null) return false;
-            if (!bp.is(recipe.requiredBlueprint())) return false;
-        }
+        if (!com.piranport.crafting.WeaponWorkbenchRecipeRegistry.blueprintSatisfied(recipe, bp)) return false;
         ItemStack output = menu.getSlot(7).getItem();
         if (!output.isEmpty()) {
             ItemStack result = recipe.getResultStack();
@@ -221,7 +216,9 @@ public class WeaponWorkbenchScreen extends AbstractContainerScreen<WeaponWorkben
 
         // 每列最多 ROWS_PER_COL 行，超过换列，避免第三行侵入背包栏位
         final int ROWS_PER_COL = 2;
-        final int COL_W = 70;
+        // 条目 >4（材料+蓝图）时缩成 3 列，196px 宽面板放得下
+        int entries = recipe.materials().size() + (recipe.requiredBlueprint() != null ? 1 : 0);
+        final int COL_W = entries > 4 ? 60 : 70;
         final int ROW_H = 16;
         final int LIST_Y0 = headerY + 12;
         int rowIdx = 0;
@@ -243,20 +240,11 @@ public class WeaponWorkbenchScreen extends AbstractContainerScreen<WeaponWorkben
             rowIdx++;
         }
 
-        // 蓝图行：无论是否指定特定蓝图，都显示要求（未指定时只接受创造模式蓝图）
+        // 蓝图行：仅在配方指定蓝图时显示（null = 无需蓝图）
+        if (recipe.requiredBlueprint() == null) return;
         ItemStack bpSlot = menu.getSlot(0).getItem();
-        ItemStack bpStack;
-        boolean hasBp;
-        if (recipe.requiredBlueprint() != null) {
-            bpStack = new ItemStack(recipe.requiredBlueprint());
-            hasBp = !bpSlot.isEmpty()
-                    && (bpSlot.is(recipe.requiredBlueprint())
-                        || bpSlot.is(com.piranport.registry.ModItems.CREATIVE_BLUEPRINT.get()));
-        } else {
-            bpStack = new ItemStack(com.piranport.registry.ModItems.CREATIVE_BLUEPRINT.get());
-            hasBp = !bpSlot.isEmpty()
-                    && bpSlot.is(com.piranport.registry.ModItems.CREATIVE_BLUEPRINT.get());
-        }
+        ItemStack bpStack = new ItemStack(recipe.requiredBlueprint());
+        boolean hasBp = com.piranport.crafting.WeaponWorkbenchRecipeRegistry.blueprintSatisfied(recipe, bpSlot);
         int color = hasBp ? 0xFF00AA00 : 0xFFAA0000;
         int col = rowIdx / ROWS_PER_COL;
         int row = rowIdx % ROWS_PER_COL;

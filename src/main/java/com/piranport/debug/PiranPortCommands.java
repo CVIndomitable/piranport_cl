@@ -747,7 +747,9 @@ public final class PiranPortCommands {
         stacks += give(player, ModItems.BLUEPRINT_CHEST.get(), 1);
         stacks += give(player, ModItems.WEAPON_WORKBENCH.get(), 1);
         stacks += give(player, ModItems.MEDIUM_GUN_BLUEPRINT.get(), 2);
-        stacks += give(player, ModItems.LARGE_GUN_BLUEPRINT.get(), 2);
+        stacks += give(player, ModItems.STANDARD_WEAPON_BLUEPRINT.get(), 1);
+        stacks += give(player, ModItems.IMPROVED_WEAPON_BLUEPRINT.get(), 1);
+        stacks += give(player, ModItems.ADVANCED_WEAPON_BLUEPRINT.get(), 1);
         stacks += give(player, ModItems.CREATIVE_BLUEPRINT.get(), 2);
         stacks += give(player, Items.PAPER, 32);
         return stacks;

@@ -9,18 +9,17 @@
       "text": "piranport.book.cannons.basics.p1"
     },
     {
-      "type": "patchouli:crafting",
-      "recipe": "piranport:japanese_127mm_twin_gun",
+      "type": "patchouli:spotlight",
+      "item": "piranport:weapon_workbench",
       "text": "piranport.book.cannons.basics.craft"
     },
     {
       "type": "patchouli:crafting",
-      "recipe": "piranport:chinese_twin_140mm_gun",
+      "recipe": "piranport:standard_weapon_blueprint",
       "text": "piranport.book.cannons.basics.medium"
     },
     {
-      "type": "patchouli:crafting",
-      "recipe": "piranport:british_triple_16inch_gun",
+      "type": "patchouli:text",
       "text": "piranport.book.cannons.basics.large"
     },
     {

@@ -65,8 +65,10 @@ public class VillagerTradeHandler {
         t.get(2).add(sell(ModItems.FUEL, 8, () -> Items.EMERALD, 1, RECYCLE_USES, 2));
         // 老手：战利品换蓝图（导弹发射器蓝图需新增，暂缺）
         t.get(3).add(sell(ModItems.HENTAI_TROPHY, 4, ModItems.MEDIUM_GUN_BLUEPRINT, 1, TROPHY_USES, 3));
-        t.get(3).add(sell(ModItems.HENTAI_TROPHY, 8, ModItems.LARGE_GUN_BLUEPRINT, 1, TROPHY_USES, 3));
-        // 专家：不可合成特殊武器
+        // 旧「大型火炮蓝图」已不卡任何配方（大型火炮已删），同价位改给改良型武器蓝图
+        t.get(3).add(sell(ModItems.HENTAI_TROPHY, 8, ModItems.IMPROVED_WEAPON_BLUEPRINT, 1, TROPHY_USES, 3));
+        // 专家：不可合成特殊武器 + 先进型武器蓝图（档位蓝图只能战利品/副本获得，标准型可合成）
+        t.get(4).add(sell(ModItems.HENTAI_TROPHY, 12, ModItems.ADVANCED_WEAPON_BLUEPRINT, 1, TROPHY_USES, 4));
         t.get(4).add(sell(ModItems.HENTAI_TROPHY, 12, ModItems.HATSUYUKI_MAIN_GUN, 1, TROPHY_USES, 4));
         t.get(4).add(sell(ModItems.HENTAI_TROPHY, 12, ModItems.TAIHOU_UMBRELLA, 1, TROPHY_USES, 4));
         // 大师：不可合成火炮池 / 鱼雷管池待确认，暂缺

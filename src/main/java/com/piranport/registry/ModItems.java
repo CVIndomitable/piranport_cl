@@ -244,6 +244,9 @@ public class ModItems {
     public static final DeferredItem<Item> MEDIUM_GUN_BLUEPRINT = MaterialItems.MEDIUM_GUN_BLUEPRINT;
     public static final DeferredItem<Item> LARGE_GUN_BLUEPRINT = MaterialItems.LARGE_GUN_BLUEPRINT;
     public static final DeferredItem<Item> CREATIVE_BLUEPRINT = MaterialItems.CREATIVE_BLUEPRINT;
+    public static final DeferredItem<Item> STANDARD_WEAPON_BLUEPRINT = MaterialItems.STANDARD_WEAPON_BLUEPRINT;
+    public static final DeferredItem<Item> IMPROVED_WEAPON_BLUEPRINT = MaterialItems.IMPROVED_WEAPON_BLUEPRINT;
+    public static final DeferredItem<Item> ADVANCED_WEAPON_BLUEPRINT = MaterialItems.ADVANCED_WEAPON_BLUEPRINT;
 
     // ===== Intermediate Products (Phase 13/16)（已迁移到 MaterialItems） =====
     public static final DeferredItem<Item> SAUSAGE = MaterialItems.SAUSAGE;

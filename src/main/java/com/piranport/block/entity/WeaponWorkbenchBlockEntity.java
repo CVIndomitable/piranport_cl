@@ -283,13 +283,8 @@ public class WeaponWorkbenchBlockEntity extends BlockEntity implements MenuProvi
 
     public boolean canCraft(WeaponWorkbenchRecipe recipe) {
         ItemStack bp = itemHandler.getStackInSlot(BLUEPRINT_SLOT);
-        if (bp.isEmpty()) return false;
-        boolean isCreativeBp = bp.is(ModItems.CREATIVE_BLUEPRINT.get());
-        if (!isCreativeBp) {
-            // H3: requiredBlueprint 可能为 null（旧配方或被禁用的配方），bp.is(null) 会抛 NPE
-            if (recipe.requiredBlueprint() == null) return false;
-            if (!bp.is(recipe.requiredBlueprint())) return false;
-        }
+        // requiredBlueprint == null = 无需蓝图（副本/21 §1.2），蓝图格可空
+        if (!com.piranport.crafting.WeaponWorkbenchRecipeRegistry.blueprintSatisfied(recipe, bp)) return false;
         for (ItemStack required : recipe.materials()) {
             int needed = required.getCount();
             for (int i = MATERIAL_START; i <= MATERIAL_END; i++) {

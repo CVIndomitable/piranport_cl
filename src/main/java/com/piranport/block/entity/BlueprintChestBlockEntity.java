@@ -60,9 +60,7 @@ public class BlueprintChestBlockEntity extends BlockEntity implements MenuProvid
     public ItemStackHandler getItemHandler() { return itemHandler; }
 
     public static boolean isBlueprint(ItemStack stack) {
-        return stack.is(ModItems.MEDIUM_GUN_BLUEPRINT.get())
-                || stack.is(ModItems.LARGE_GUN_BLUEPRINT.get())
-                || stack.is(ModItems.CREATIVE_BLUEPRINT.get());
+        return com.piranport.crafting.WeaponWorkbenchRecipeRegistry.isWorkbenchBlueprint(stack);
     }
 
     public boolean hasBlueprint(ItemStack stack) {

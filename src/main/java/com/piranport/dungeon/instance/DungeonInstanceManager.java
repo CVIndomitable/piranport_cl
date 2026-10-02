@@ -94,6 +94,19 @@ public class DungeonInstanceManager extends SavedData {
         return count;
     }
 
+    /** 当前位于该实例区域内的在线参与者（全实例通报 / Boss 铭牌 / 首通判定用）。 */
+    public java.util.List<ServerPlayer> getPresentPlayers(DungeonInstance instance, MinecraftServer server) {
+        java.util.List<ServerPlayer> list = new java.util.ArrayList<>();
+        if (instance == null || server == null) return list;
+        for (UUID uuid : instance.getPlayerUuids()) {
+            ServerPlayer player = server.getPlayerList().getPlayer(uuid);
+            if (player != null && isInsideInstance(instance, player.level().dimension(), player.blockPosition())) {
+                list.add(player);
+            }
+        }
+        return list;
+    }
+
     /**
      * 返回当前管理器中所有实例（拷贝）。
      * 整合版 §3.2：用于 onCheckpointReached 按玩家反查所在 instance。

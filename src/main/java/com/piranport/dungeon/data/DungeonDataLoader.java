@@ -360,9 +360,53 @@ public class DungeonDataLoader extends SimpleJsonResourceReloadListener {
             }
         }
 
+        // 《副本/00》节点级 difficulty_scale（优先于关卡级）与基础波数
+        double nodeDifficulty = json.has("difficulty_scale")
+                ? json.get("difficulty_scale").getAsDouble() : 0.0;
+        int waves = json.has("waves") ? json.get("waves").getAsInt() : 1;
+        if (waves < 1) {
+            throw new IllegalArgumentException("waves 必须 >= 1，节点 " + nodeId);
+        }
+
+        // 《副本/22》分歧带路：branches[{when:{...},to}] + branch_default
+        List<BranchRule> branches = new ArrayList<>();
+        if (json.has("branches")) {
+            for (JsonElement be : json.getAsJsonArray("branches")) {
+                branches.add(parseBranchRule(be.getAsJsonObject(), nodeId));
+            }
+        }
+        String branchDefault = json.has("branch_default") && !json.get("branch_default").isJsonNull()
+                ? json.get("branch_default").getAsString() : null;
+        if (!branches.isEmpty() && branchDefault == null) {
+            throw new IllegalArgumentException("配置了 branches 必须同时写 branch_default，节点 " + nodeId);
+        }
+
         return new NodeData(nodeId, type, enemies, List.copyOf(rewards),
                 List.copyOf(cost), costMessage, displayX, displayY, script,
-                terrainType, Set.copyOf(restrictions), scene);
+                terrainType, Set.copyOf(restrictions), scene,
+                nodeDifficulty, waves, List.copyOf(branches), branchDefault);
+    }
+
+    private BranchRule parseBranchRule(JsonObject obj, String nodeId) {
+        requireField(obj, "to", "branch of node " + nodeId);
+        String to = obj.get("to").getAsString();
+        JsonObject when = obj.has("when") && obj.get("when").isJsonObject()
+                ? obj.getAsJsonObject("when") : new JsonObject();
+        String hull = when.has("hull") ? when.get("hull").getAsString() : null;
+        if (hull != null && !com.piranport.dungeon.event.BranchEvaluator.isValidHull(hull)) {
+            throw new IllegalArgumentException("未知舰体 '" + hull + "'，节点 " + nodeId);
+        }
+        String escorts = when.has("escorts") ? when.get("escorts").getAsString() : null;
+        if (escorts != null && !com.piranport.dungeon.event.BranchEvaluator.isValidComparison(escorts)) {
+            throw new IllegalArgumentException("escorts 格式错误 '" + escorts + "'，节点 " + nodeId);
+        }
+        String role = when.has("role") ? when.get("role").getAsString() : null;
+        String carry = when.has("carry") ? when.get("carry").getAsString() : null;
+        Double chance = when.has("chance") ? when.get("chance").getAsDouble() : null;
+        if (chance != null && (chance < 0 || chance > 1)) {
+            throw new IllegalArgumentException("chance 必须在 0~1，节点 " + nodeId);
+        }
+        return new BranchRule(hull, escorts, role, carry, chance, to);
     }
 
     private List<NodeData.RewardEntry> parseRewards(JsonArray arr) {

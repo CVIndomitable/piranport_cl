@@ -1731,5 +1731,18 @@
   "gui.piranport.debug_terminal.ship_type.SUBMARINE": "潜艇",
   "item.piranport.standard_weapon_blueprint": "标准型武器蓝图",
   "item.piranport.improved_weapon_blueprint": "改良型武器蓝图",
-  "item.piranport.advanced_weapon_blueprint": "先进型武器蓝图"
-}
+  "item.piranport.advanced_weapon_blueprint": "先进型武器蓝图",
+  "entity.piranport.lost_transport": "迷路的运输舰",
+  "dungeon.piranport.node_cleared": "节点已肃清，出口传送门已开启",
+  "dungeon.piranport.next_wave": "敌方增援！第 %s / %s 波",
+  "dungeon.piranport.boss_alert.title": "首领出现",
+  "dungeon.piranport.boss_alert.subtitle": "%s · 节点 %s",
+  "dungeon.piranport.boss_alert.chat": "[副本] %s：首领节点 %s 已被触发，Boss 已出现！",
+  "dungeon.piranport.branch.header": "[分歧带路] 节点 %s 的路线判定：",
+  "dungeon.piranport.branch.no_condition": "（无条件）",
+  "dungeon.piranport.branch.matched": "条件满足，带往节点 %s。",
+  "dungeon.piranport.branch.diverted": "条件均不满足，被“沟”到默认路线：节点 %s。",
+  "dungeon.piranport.branch.title": "分歧带路",
+  "dungeon.piranport.branch.diverted_title": "被沟了！",
+  "dungeon.piranport.branch.subtitle": "前往节点 %s",
+  "dungeon.piranport.branch.blocked": "分歧带路已为你选定其他路线，无法前往节点 %s。"}

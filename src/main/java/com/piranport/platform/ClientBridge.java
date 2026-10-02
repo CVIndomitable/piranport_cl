@@ -80,6 +80,9 @@ public interface ClientBridge {
     void openDungeonResultScreen(String stageName, long timeMillis, boolean isFirstClear,
                                  List<String> rewardNames, int kills);
 
+    void openDungeonResultScreen(String stageName, long timeMillis, boolean isFirstClear,
+                                 List<String> rewardNames, int kills, String ending);
+
     void openDungeonReviveScreen();
 
     void updateDungeonNode(String nodeId);

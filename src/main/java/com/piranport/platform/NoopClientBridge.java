@@ -111,6 +111,10 @@ class NoopClientBridge implements ClientBridge {
                                         List<String> rewardNames, int kills) {  }
 
     @Override
+    public void openDungeonResultScreen(String stageName, long timeMillis, boolean isFirstClear,
+                                        List<String> rewardNames, int kills, String ending) {  }
+
+    @Override
     public void openDungeonReviveScreen() {  }
 
     @Override

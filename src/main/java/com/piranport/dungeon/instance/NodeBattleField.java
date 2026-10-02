@@ -260,15 +260,24 @@ public final class NodeBattleField {
         // 解析队形
         FormationType formation = parseFormation(enemySet.formation());
 
+        // 《经济/01》迷路的运输舰：第二章起每波 10%，替换该波排序后的最后一位（非旗舰）。
+        // 优先替换水面编队末位；没有水面舰时替换潜艇编队末位。
+        var stage = DungeonRegistry.INSTANCE.getStage(instance.getStageId());
+        boolean lostTransport = stage != null
+                && DungeonScaling.lostTransportEligible(stage.chapter())
+                && dungeonLevel.getRandom().nextDouble() < DungeonScaling.LOST_TRANSPORT_CHANCE;
+
         // 生成水面舰编队
         if (!surfaceEntries.isEmpty()) {
-            List<Entity> surfaceFleet = spawnFleet(dungeonLevel, instance, node, center, spawnRadius, surfaceEntries, formation, true);
+            List<Entity> surfaceFleet = spawnFleet(dungeonLevel, instance, node, center, spawnRadius,
+                    surfaceEntries, formation, true, lostTransport);
             spawned.addAll(surfaceFleet);
         }
 
         // 生成潜艇编队（潜艇独立行动，不参与队形）
         if (!subEntries.isEmpty()) {
-            List<Entity> subFleet = spawnFleet(dungeonLevel, instance, node, center, spawnRadius, subEntries, FormationType.SINGLE_LINE, false);
+            List<Entity> subFleet = spawnFleet(dungeonLevel, instance, node, center, spawnRadius,
+                    subEntries, FormationType.SINGLE_LINE, false, lostTransport && surfaceEntries.isEmpty());
             spawned.addAll(subFleet);
         }
 
@@ -281,6 +290,8 @@ public final class NodeBattleField {
         // 决策/副本/07：BOSS 节点注册防卡 tick 调度器
         if (node.type() == NodeData.NodeType.BOSS && enemySet.flagship() != null) {
             com.piranport.dungeon.BossAntiStuckScheduler.register(instance, node, spawned);
+            com.piranport.dungeon.event.DungeonBossBroadcast.trackBoss(instance, node, spawned,
+                    enemySet.flagship().entity());
         }
 
         com.piranport.dungeon.saved.DungeonObjectiveData.get(dungeonLevel)
@@ -288,17 +299,34 @@ public final class NodeBattleField {
         return spawned;
     }
 
+    /**
+     * 《副本/00》多人波次：本波判定已全灭且快照总波数未打完时，刷出下一波（同一敌人列表）并返回 true；
+     * 已是最后一波返回 false，由调用方走正常清场。
+     */
+    public static boolean trySpawnNextWave(ServerLevel dungeonLevel, DungeonInstance instance, NodeData node) {
+        int wave = instance.getNodeWave(node.nodeId());
+        int total = instance.getNodeWaveTotal(node.nodeId());
+        if (wave >= total) return false;
+        instance.setNodeWave(node.nodeId(), wave + 1);
+        DungeonInstanceManager.get(dungeonLevel).setDirty();
+        List<Entity> spawned = spawnEnemies(dungeonLevel, instance, node);
+        // spawnEnemies 失败时已放了恢复传送门（节点即完成），这里仍算“已处理”
+        PiranPort.LOGGER.debug("Node {} wave {}/{} spawned {} entities", node.nodeId(), wave + 1, total, spawned.size());
+        return true;
+    }
+
     /** 按策划规则排序后生成编队 */
     private static List<Entity> spawnFleet(ServerLevel dungeonLevel, DungeonInstance instance, NodeData node,
                                             BlockPos center, int spawnRadius,
-                                            List<SpawnEntry> entries, FormationType formation, boolean sortBySize) {
+                                            List<SpawnEntry> entries, FormationType formation, boolean sortBySize,
+                                            boolean replaceLastWithLostTransport) {
         List<Entity> fleet = new ArrayList<>();
 
         // 展开为个体列表
         List<EntitySpec> specs = new ArrayList<>();
         for (SpawnEntry e : entries) {
             for (int i = 0; i < e.count(); i++) {
-                specs.add(new EntitySpec(e.entityId, e.isFlagship));
+                specs.add(new EntitySpec(e.entityId, e.isFlagship, false));
             }
         }
 
@@ -308,6 +336,11 @@ public final class NodeBattleField {
         }
 
         if (specs.isEmpty()) return fleet;
+
+        // 迷路的运输舰：替换最后一位；旗舰（Boss / 清场判定对象）不替换。
+        if (replaceLastWithLostTransport && !specs.get(specs.size() - 1).isFlagship()) {
+            specs.set(specs.size() - 1, new EntitySpec(LOST_TRANSPORT_ENTITY, false, true));
+        }
 
         // 创建 FleetGroup
         UUID groupId = UUID.randomUUID();
@@ -326,6 +359,11 @@ public final class NodeBattleField {
             if (entity == null) continue;
 
             applyDungeonDifficulty(entity, instance, node);
+            if (spec.lostTransport()) {
+                entity.addTag(LOST_TRANSPORT_TAG);
+                entity.setCustomName(net.minecraft.network.chat.Component.translatable("entity.piranport.lost_transport"));
+                entity.setCustomNameVisible(true);
+            }
 
             // 初始位置：在编队队形中均匀分布（后续由 FollowLeaderGoal 微调）
             double angle = baseAngle + angleStep * i;
@@ -364,22 +402,29 @@ public final class NodeBattleField {
         return fleet;
     }
 
-    /** Apply the stage and node activation multipliers before the entity enters the world. */
+    /** 《经济/01》迷路的运输舰：复用补给舰战斗数据，靠该标签识别并改掉落。 */
+    public static final String LOST_TRANSPORT_TAG = "piranport_lost_transport";
+    private static final String LOST_TRANSPORT_ENTITY = "piranport:deep_ocean_supply";
+
+    /**
+     * 《副本/00》缩放：difficulty_scale（节点级优先、关卡级兜底）同时作用于血量与伤害；
+     * 人数倍率只作用于血量。装甲（ARMOR 属性）不缩放。
+     * 伤害不改 ATTACK_DAMAGE：舰炮/鱼雷伤害走射弹参数，改由 {@link
+     * com.piranport.dungeon.event.DungeonDamageScaleHandler} 在受击时按来源乘倍率。
+     */
     private static void applyDungeonDifficulty(Entity entity, DungeonInstance instance, NodeData node) {
         if (!(entity instanceof net.minecraft.world.entity.LivingEntity living)) return;
         var stage = DungeonRegistry.INSTANCE.getStage(instance.getStageId());
-        double stageScale = stage == null ? 1.0 : Math.max(0.1, stage.difficultyScale());
-        int players = instance.getNodePlayerCount(node.nodeId());
-        double playerScale = 1.0 + 0.5 * (players - 1);
+        double scale = DungeonScaling.effectiveDifficulty(node.difficultyScale(),
+                stage == null ? 1.0 : stage.difficultyScale());
+        double playerScale = DungeonScaling.healthScale(instance.getNodePlayerCount(node.nodeId()));
 
         AttributeInstance health = living.getAttribute(Attributes.MAX_HEALTH);
         if (health != null) {
-            health.setBaseValue(Math.max(1.0, health.getBaseValue() * stageScale * playerScale));
+            health.setBaseValue(Math.max(1.0, health.getBaseValue() * scale * playerScale));
             living.setHealth(living.getMaxHealth());
         }
-        // difficulty_scale affects damage; player-count scaling intentionally does not.
-        AttributeInstance attack = living.getAttribute(Attributes.ATTACK_DAMAGE);
-        if (attack != null) attack.setBaseValue(Math.max(0.0, attack.getBaseValue() * stageScale));
+        com.piranport.dungeon.event.DungeonDamageScaleHandler.setDamageScale(entity, scale);
     }
 
     private static BlockPos blockPos(double x, double z) {
@@ -442,7 +487,7 @@ public final class NodeBattleField {
     }
 
     private record SpawnEntry(String entityId, int count, boolean isFlagship) {}
-    private record EntitySpec(String entityId, boolean isFlagship) {
+    private record EntitySpec(String entityId, boolean isFlagship, boolean lostTransport) {
         int weight() { return entityWeight(entityId); }
     }
 

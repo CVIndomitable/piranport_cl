@@ -1533,5 +1533,18 @@
   "gui.piranport.debug_terminal.ship_type.SUBMARINE": "Submarine",
   "item.piranport.standard_weapon_blueprint": "Standard Weapon Blueprint",
   "item.piranport.improved_weapon_blueprint": "Improved Weapon Blueprint",
-  "item.piranport.advanced_weapon_blueprint": "Advanced Weapon Blueprint"
-}
+  "item.piranport.advanced_weapon_blueprint": "Advanced Weapon Blueprint",
+  "entity.piranport.lost_transport": "Lost Transport",
+  "dungeon.piranport.node_cleared": "Node cleared. The exit portal is open.",
+  "dungeon.piranport.next_wave": "Enemy reinforcements! Wave %s / %s",
+  "dungeon.piranport.boss_alert.title": "Boss Incoming",
+  "dungeon.piranport.boss_alert.subtitle": "%s · Node %s",
+  "dungeon.piranport.boss_alert.chat": "[Dungeon] %s: boss node %s has been triggered. The boss has appeared!",
+  "dungeon.piranport.branch.header": "[Routing] Branch check at node %s:",
+  "dungeon.piranport.branch.no_condition": "(no condition)",
+  "dungeon.piranport.branch.matched": "Conditions met. Routing to node %s.",
+  "dungeon.piranport.branch.diverted": "No conditions met. Diverted to the default route: node %s.",
+  "dungeon.piranport.branch.title": "Routing",
+  "dungeon.piranport.branch.diverted_title": "Diverted!",
+  "dungeon.piranport.branch.subtitle": "Heading to node %s",
+  "dungeon.piranport.branch.blocked": "Routing has assigned you a different path. Node %s is not available."}

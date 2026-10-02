@@ -17,12 +17,21 @@ import java.util.List;
  */
 public record DungeonResultPayload(String stageName, long timeMillis,
                                      boolean isFirstClear, List<String> rewardNames,
-                                     int kills)
+                                     int kills, String ending)
         implements CustomPacketPayload {
+
+    public DungeonResultPayload {
+        if (ending == null) ending = "";
+    }
 
     public DungeonResultPayload(String stageName, long timeMillis,
                                 boolean isFirstClear, List<String> rewardNames) {
-        this(stageName, timeMillis, isFirstClear, rewardNames, 0);
+        this(stageName, timeMillis, isFirstClear, rewardNames, 0, "");
+    }
+
+    public DungeonResultPayload(String stageName, long timeMillis,
+                                boolean isFirstClear, List<String> rewardNames, int kills) {
+        this(stageName, timeMillis, isFirstClear, rewardNames, kills, "");
     }
 
     public static final Type<DungeonResultPayload> TYPE =
@@ -38,6 +47,8 @@ public record DungeonResultPayload(String stageName, long timeMillis,
                     ByteBufCodecs.STRING_UTF8.encode(buf, s);
                 }
                 ByteBufCodecs.VAR_INT.encode(buf, Math.max(0, p.kills()));
+                // 《副本/00》关卡结语由服务端权威下发
+                ByteBufCodecs.STRING_UTF8.encode(buf, p.ending());
             },
             buf -> {
                 String name = ByteBufCodecs.STRING_UTF8.decode(buf);
@@ -50,7 +61,8 @@ public record DungeonResultPayload(String stageName, long timeMillis,
                     rewards.add(ByteBufCodecs.STRING_UTF8.decode(buf));
                 }
                 int kills = buf.isReadable() ? Math.max(0, ByteBufCodecs.VAR_INT.decode(buf)) : 0;
-                return new DungeonResultPayload(name, time, first, List.copyOf(rewards), kills);
+                String ending = buf.isReadable() ? ByteBufCodecs.STRING_UTF8.decode(buf) : "";
+                return new DungeonResultPayload(name, time, first, List.copyOf(rewards), kills, ending);
             }
     );
 
@@ -61,7 +73,7 @@ public record DungeonResultPayload(String stageName, long timeMillis,
         context.enqueueWork(() -> {
             ClientHooks.openDungeonResultScreen(
                     payload.stageName(), payload.timeMillis(),
-                    payload.isFirstClear(), payload.rewardNames(), payload.kills());
+                    payload.isFirstClear(), payload.rewardNames(), payload.kills(), payload.ending());
         });
     }
 }

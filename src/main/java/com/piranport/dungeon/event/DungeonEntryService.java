@@ -73,6 +73,13 @@ public final class DungeonEntryService {
         }
     }
 
+    /** 分歧点尚未判定的玩家（未走出口、直接在讲台选节点）在此当场判定并快照。 */
+    private static boolean canEnterWithBranches(ServerPlayer player, DungeonInstance instance,
+                                                StageData stage, String nodeId) {
+        return DungeonEntryRules.canEnter(instance, stage, nodeId, from ->
+                DungeonBranchRouter.resolveChoice(player, instance, stage.nodes().get(from)));
+    }
+
     public static void enter(ServerPlayer player, BlockPos lecternPos,
                              boolean fromCheckpoint, String requestedNode) {
         enter(player, lecternPos, fromCheckpoint, requestedNode, Mode.ADVANCE);
@@ -141,8 +148,14 @@ public final class DungeonEntryService {
         // 只保留 canRestartFromBeginning 的状态守卫，避免战斗中途按钮静默失效。
         boolean allowed = mode == Mode.RESTART
                 ? DungeonEntryRules.canRestartFromBeginning(instance, stage)
-                : DungeonEntryRules.canEnter(instance, stage, nodeId);
+                : canEnterWithBranches(player, instance, stage, nodeId);
         if (!allowed) {
+            if (mode != Mode.RESTART && DungeonEntryRules.canEnter(instance, stage, nodeId)) {
+                // 节点图可达但被分歧带路挡住：告诉玩家自己的路线
+                player.displayClientMessage(Component.translatable(
+                        "dungeon.piranport.branch.blocked", nodeId), false);
+                return;
+            }
             // 拒绝时给玩家可见反馈：此前的静默 return 让"从头开始"看起来像按钮坏了。
             Reject.REJECTED.report(player);
             return;

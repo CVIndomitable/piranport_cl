@@ -130,9 +130,18 @@ public final class DungeonNodeRouter {
         if (!mgr.beginBattleNode(instance.getInstanceId(), node.nodeId(), keyStack)) return null;
 
         // 副本/22 §五：节点首次激活时锁定在线人数；后续进出不回溯本节点难度。
-        instance.setNodePlayerCount(node.nodeId(),
-                Math.max(1, Math.min(4, mgr.countPresentPlayers(instance, player.server))));
+        // 同一瞬间快照波数：ceil(基础波数 × (1 + 0.2(n−1)))。脚本节点自管流程，波数恒为 1。
+        int players = Math.max(1, Math.min(4, mgr.countPresentPlayers(instance, player.server)));
+        instance.setNodePlayerCount(node.nodeId(), players);
+        boolean scripted = node.script() != null && !node.script().isEmpty();
+        instance.setNodeWaveTotal(node.nodeId(), scripted ? 1
+                : com.piranport.dungeon.instance.DungeonScaling.waveCount(node.waves(), players));
+        instance.setNodeWave(node.nodeId(), 1);
         mgr.setDirty();
+
+        if (node.type() == NodeData.NodeType.BOSS) {
+            DungeonBossBroadcast.announceBossNode(player.server, instance, node);
+        }
 
         // 玩家自行进入，不将历史参与者从主世界或其他副本强制传送过来。
         List<ServerPlayer> toTeleport = List.of(player);

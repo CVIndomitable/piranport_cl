@@ -87,6 +87,17 @@
 - `large_gun`（大型火炮）已删除，原引用改指 `british_triple_16inch_gun`（英国三联16英寸炮）。`large_gun_blueprint`（大型火炮蓝图）保留但**不再卡任何配方**（档位蓝图已取代它），村民老手档位改卖改良型武器蓝图；贴图仍在复用
 - 对表测试：`CannonStatFormulaTest`
 
+### 副本战斗与路线（《副本/00》《副本/22》《经济/01》）
+- **缩放公式**集中在 `dungeon/instance/DungeonScaling`（纯逻辑，有单测）：血量 ×(1+0.5(n−1))；波数 ceil(基础波数×(1+0.2(n−1)))；n 在节点首次激活时快照（`DungeonNodeRouter.prepareBattleNode`）。
+- **波次**：原代码无多波系统，节点 `enemies` 敌人组 = 一波；节点 JSON 可选 `waves`（基础波数，默认 1）。全灭后 `ServerGameEvents.onDungeonFlagshipDeath` → `NodeBattleField.trySpawnNextWave` 刷下一波，最后一波才开门。脚本节点波数恒为 1。
+- **difficulty_scale**：节点级（>0）优先、关卡级兜底。血量直接乘；伤害写入实体 persistentData，由 `DungeonDamageScaleHandler`（LivingIncomingDamageEvent，HIGH）按来源/射弹 owner 放大——舰炮/鱼雷伤害走射弹参数，改 ATTACK_DAMAGE 无效。装甲不缩放。
+- **分歧带路**：节点 JSON `branches:[{when:{hull,escorts,role,carry,chance},to}]` + `branch_default`（有 branches 必须写 default；目标必须是本节点出边）。判定 `BranchEvaluator`（有序、AND、default 兜底），接线 `DungeonBranchRouter`：出口传送门当场判定→快照 `DungeonInstance.branchChoices`→聊天 ✔/✘ + 标题→个人传送。讲台选点走 `DungeonEntryRules.canEnter(…, choiceFor)`。随从未开发：escorts=0、role=无；捆绑传送随从未做。
+- **Boss**：激活时 `DungeonBossBroadcast` 全实例标题+音效+节点名；铭牌/血条每 5 tick 推给实例内全员。
+- **首通**：只发给 Boss 击杀瞬间在 Boss 节点 128×128 内的玩家（`FirstClearRules`，快照存实例 NBT；旧存档无快照=全员）。
+- **结语**：`DungeonResultPayload.ending` 由服务端下发。
+- **记录点光柱**：`DungeonCheckpointBeacon` 用 END_ROD 粒子柱，不新增贴图。
+- **迷路的运输舰**（`entity.piranport.lost_transport`）：第二章起每波 10% 把排序后末位（非旗舰）替换为补给舰 + `piranport_lost_transport` 标签；死亡只掉 1 个战利品（`hentai_trophy`），跳过全部原掉落。
+
 ---
 
 ## Build & Run

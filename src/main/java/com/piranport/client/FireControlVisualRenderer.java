@@ -18,6 +18,9 @@ import com.piranport.item.TorpedoItem;
 import com.piranport.item.TorpedoLauncherItem;
 import com.piranport.registry.ModDataComponents;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.neoforged.neoforge.client.event.RenderGuiLayerEvent;
+import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -40,11 +43,18 @@ import java.util.UUID;
  * 火控可视化预测（策划决策/火控/06）。纯客户端：不改火控列表，不向服务端发坐标。
  *
  * <ul>
- *   <li>手持火炮：第一个火控锁定目标前方渲染直径 1 格的半透明白球，准星射线进入球内变绿。</li>
- *   <li>手持鱼雷发射器：从玩家画白线到水平拦截点，末端小球；多联装画以该线为轴的扇形，
- *       圆心角 = 2 × max|散布角|。玩家水平朝向落在扇形（单管 ±1°）内时变绿。</li>
+ *   <li>手持火炮：第一个火控锁定目标前方的预测落点画成 <b>HUD 标记</b>（固定像素大小），
+ *       准星射线进入落点球范围（世界空间判定，半径 1 格）时标记变绿。</li>
+ *   <li>手持鱼雷发射器：世界里从玩家画白线到水平拦截点，多联装再画以该线为轴的扇形，
+ *       圆心角 = 2 × max|散布角|；拦截点本身同样画成 HUD 标记。
+ *       玩家水平朝向落在扇形（单管 ±1°）内时标记变绿。</li>
  * </ul>
  * 目标速度按 5 tick 位置采样窗口计算；每个客户端 tick 重算，渲染阶段只绘制最近结果并插值。
+ *
+ * <p><b>为什么预瞄点画在 HUD 而不是世界里</b>：世界空间的球按透视缩小，越远越小越快看不清
+ * （远距离狙击恰恰是最需要落点提示的场景）。改成把落点投影到屏幕、以固定像素尺寸绘制后，
+ * 屏幕距离仍能传达"偏左/偏右"，而"看得清"不再随距离劣化。鱼雷的线/扇形是 3D 跨度，
+ * 投影到屏幕等于退化成一条线，所以那部分保留在世界空间。
  */
 @EventBusSubscriber(modid = PiranPort.MOD_ID, value = Dist.CLIENT)
 public final class FireControlVisualRenderer {
@@ -55,9 +65,10 @@ public final class FireControlVisualRenderer {
     private static final double MIN_SPEED = 1.0e-3;
     /** 落点球直径 1.0 格（文档 §4）。 */
     static final double SPHERE_RADIUS = 0.5;
-    private static final double TORPEDO_END_RADIUS = 0.25;
     private static final double SINGLE_TUBE_ACTIVE_DEG = 1.0;
-    private static final int SPHERE_SEGMENTS = 16;
+    /** HUD 预瞄标记半径（GUI 缩放像素）与贴边留白。 */
+    private static final int HUD_RADIUS = 7;
+    private static final int HUD_MARGIN = 12;
     private static final int ALPHA = 150;
 
     private static final RenderType LINES = RenderType.create(
@@ -91,6 +102,13 @@ public final class FireControlVisualRenderer {
     private static double fanHalfDeg;
     private static Vec3 renderCamera = Vec3.ZERO;
 
+    // ===== HUD 投影结果（世界渲染阶段算好，GUI 阶段直接画）=====
+    /** 本帧是否有可画的预瞄标记（相机背后 / 超出渲染距离时为 false）。 */
+    private static boolean hudVisible;
+    /** 标记是否落在屏幕内；false 表示已贴边钳制（目标在视野外）。 */
+    private static boolean hudOnScreen;
+    private static float hudX, hudY;
+
     private FireControlVisualRenderer() {}
 
     /** 每个客户端 tick 在火控输入处理之后调用。 */
@@ -114,6 +132,8 @@ public final class FireControlVisualRenderer {
         mode = Mode.NONE;
         point = previousPoint = origin = previousOrigin = null;
         active = false;
+        hudVisible = false;
+        hudOnScreen = false;
         SAMPLER.clear();
         sampledTarget = null;
         ENTITY_CACHE.clear();
@@ -214,7 +234,10 @@ public final class FireControlVisualRenderer {
 
     @SubscribeEvent
     public static void onRenderLevelStage(RenderLevelStageEvent event) {
-        if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_PARTICLES || mode == Mode.NONE || point == null) return;
+        if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_PARTICLES) return;
+        // 先清本帧的 HUD 状态：下面任何一条提前返回都不能留下上一帧的标记
+        hudVisible = false;
+        if (mode == Mode.NONE || point == null) return;
         Minecraft mc = Minecraft.getInstance();
         float partial = event.getPartialTick().getGameTimeDeltaPartialTick(false);
         Vec3 camera = event.getCamera().getPosition();
@@ -225,42 +248,72 @@ public final class FireControlVisualRenderer {
                 : ModEquipmentConfig.PREDICTION_LINE_COLOR.get();
         int r = (rgb >> 16) & 0xFF, g = (rgb >> 8) & 0xFF, b = rgb & 0xFF;
 
-        PoseStack poseStack = event.getPoseStack();
-        poseStack.pushPose();
-        renderCamera = camera;
-        Matrix4f pose = poseStack.last().pose();
-        VertexConsumer c = mc.renderBuffers().bufferSource().getBuffer(LINES);
+        projectToHud(event, renderPoint, mc);
 
-        if (mode == Mode.CANNON) {
-            drawSphere(c, pose, renderPoint, SPHERE_RADIUS, r, g, b);
-        } else {
+        // 预瞄点本身画在 HUD（见类注释）；世界空间只保留鱼雷的线/扇形这类 3D 跨度提示。
+        if (mode == Mode.TORPEDO) {
             Vec3 start = previousOrigin == null || origin == null ? origin : previousOrigin.lerp(origin, partial);
-            if (start != null) {
+            if (start != null && fanHalfDeg > 0) {
+                PoseStack poseStack = event.getPoseStack();
+                poseStack.pushPose();
+                renderCamera = camera;
+                Matrix4f pose = poseStack.last().pose();
+                VertexConsumer c = mc.renderBuffers().bufferSource().getBuffer(LINES);
                 line(c, pose, start, renderPoint, r, g, b);
-                drawSphere(c, pose, renderPoint, TORPEDO_END_RADIUS, r, g, b);
-                if (fanHalfDeg > 0) drawFan(c, pose, start, renderPoint, fanHalfDeg, r, g, b);
+                drawFan(c, pose, start, renderPoint, fanHalfDeg, r, g, b);
+                mc.renderBuffers().bufferSource().endBatch(LINES);
+                poseStack.popPose();
             }
         }
-        mc.renderBuffers().bufferSource().endBatch(LINES);
-        poseStack.popPose();
     }
 
-    /** 线框球：3 个正交大圆 + 2 条纬线。 */
-    private static void drawSphere(VertexConsumer c, Matrix4f pose, Vec3 center, double radius, int r, int g, int b) {
-        for (int i = 0; i < SPHERE_SEGMENTS; i++) {
-            double a0 = i * Math.PI * 2.0 / SPHERE_SEGMENTS;
-            double a1 = (i + 1) * Math.PI * 2.0 / SPHERE_SEGMENTS;
-            double c0 = Math.cos(a0) * radius, s0 = Math.sin(a0) * radius;
-            double c1 = Math.cos(a1) * radius, s1 = Math.sin(a1) * radius;
-            line(c, pose, center.add(c0, 0, s0), center.add(c1, 0, s1), r, g, b);
-            line(c, pose, center.add(c0, s0, 0), center.add(c1, s1, 0), r, g, b);
-            line(c, pose, center.add(0, s0, c0), center.add(0, s1, c1), r, g, b);
-            double lat = radius * 0.5, ring = radius * Math.sqrt(0.75);
-            line(c, pose, center.add(Math.cos(a0) * ring, lat, Math.sin(a0) * ring),
-                    center.add(Math.cos(a1) * ring, lat, Math.sin(a1) * ring), r, g, b);
-            line(c, pose, center.add(Math.cos(a0) * ring, -lat, Math.sin(a0) * ring),
-                    center.add(Math.cos(a1) * ring, -lat, Math.sin(a1) * ring), r, g, b);
+    /**
+     * 把预测落点投影到屏幕（GUI 缩放坐标）。
+     *
+     * <p>用本阶段真实的投影矩阵与相机朝向，因此开镜缩放（改的是 FOV，即投影矩阵）自动跟随，
+     * 不需要另算一份 FOV。WHY 在这里算而不是在 GUI 阶段算：GUI 阶段 RenderSystem 的投影矩阵
+     * 已被换成正交矩阵，那时再投影必然错。
+     */
+    private static void projectToHud(RenderLevelStageEvent event, Vec3 worldPoint, Minecraft mc) {
+        hudVisible = false;
+        FireControlPrediction.ScreenPoint p = FireControlPrediction.projectToScreen(
+                worldPoint, event.getCamera().getPosition(), event.getCamera().rotation(),
+                event.getProjectionMatrix(),
+                mc.getWindow().getGuiScaledWidth(), mc.getWindow().getGuiScaledHeight(), HUD_MARGIN);
+        if (p == null) return;
+        hudX = p.x();
+        hudY = p.y();
+        hudOnScreen = p.onScreen();
+        hudVisible = true;
+    }
+
+    /** HUD 层：每帧把预测落点画成固定像素大小的准星标记。 */
+    @SubscribeEvent
+    public static void onRenderGuiLayer(RenderGuiLayerEvent.Post event) {
+        if (!event.getName().equals(VanillaGuiLayers.CROSSHAIR) || !hudVisible) return;
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player == null) return;
+        int rgb = active ? ModEquipmentConfig.PREDICTION_LINE_ACTIVE_COLOR.get()
+                : ModEquipmentConfig.PREDICTION_LINE_COLOR.get();
+        drawHudMarker(event.getGuiGraphics(), Math.round(hudX), Math.round(hudY), rgb, hudOnScreen);
+    }
+
+    /**
+     * 预瞄标记：屏幕内画四瓣准星环，视野外画实心小方块（说明"落点在那个方向、不在视野里"）。
+     * 固定像素尺寸 —— 这正是从世界空间搬到 HUD 的目的。
+     */
+    private static void drawHudMarker(GuiGraphics g, int x, int y, int rgb, boolean onScreen) {
+        int color = 0xFF000000 | rgb;
+        if (!onScreen) {
+            g.fill(x - 3, y - 3, x + 3, y + 3, 0xFF000000 | rgb);
+            return;
         }
+        int r = HUD_RADIUS;
+        // 四瓣：每瓣由两段线组成，中间留出中心空隙避免遮挡准星
+        g.fill(x - r, y - 1, x - 2, y + 1, color);
+        g.fill(x + 2, y - 1, x + r, y + 1, color);
+        g.fill(x - 1, y - r, x + 1, y - 2, color);
+        g.fill(x - 1, y + 2, x + 1, y + r, color);
     }
 
     /** 以 start→end 为对称轴的水平扇形：两条边线 + 圆弧。 */

@@ -1,6 +1,7 @@
 package com.piranport.combat;
 
 import net.minecraft.world.phys.Vec3;
+import org.joml.Matrix4f;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -104,5 +105,94 @@ class FireControlPredictionTest {
         Vec3 moving = BallisticSolver.predictImpactPoint(origin, aim, new Vec3(0, 0, 0.3), 3.0, 0.01, 0.05,
                 BallisticSolver.UNRESTRICTED_MIN_ANGLE, Math.toRadians(60), 2);
         assertTrue(moving.z > 0, "should lead target along its velocity");
+    }
+
+    // ===== 预瞄点 HUD 投影（火控/06：落点画在 HUD 而非世界空间）=====
+
+    /** 与 GameRenderer 同构的透视矩阵：垂直 FOV(度)、aspect、近远平面。 */
+    private static Matrix4f perspective(float fovDeg, float aspect) {
+        return new Matrix4f().setPerspective((float) Math.toRadians(fovDeg), aspect, 0.05f, 1000f);
+    }
+
+    /**
+     * JOML 右手系绕 +Y 旋转：rotateY(+45°) 把相机朝向从正北（-Z）转到西北，
+     * 等价于 MC 里向左转头 45°。
+     */
+    private static org.joml.Quaternionf yaw(float deg) {
+        return new org.joml.Quaternionf().rotateY((float) Math.toRadians(deg));
+    }
+
+    @Test
+    void pointStraightAheadLandsAtScreenCentre() {
+        // 相机在原点、朝向 -Z，正前方 10 格的点应落在屏幕正中
+        var p = FireControlPrediction.projectToScreen(new Vec3(0, 0, -10), Vec3.ZERO,
+                new org.joml.Quaternionf(), perspective(70f, 16f / 9f), 1920, 1080, 12);
+        assertNotNull(p);
+        assertTrue(p.onScreen());
+        assertEquals(960f, p.x(), 0.01f);
+        assertEquals(540f, p.y(), 0.01f);
+    }
+
+    @Test
+    void pointToTheRightLandsOnTheRightHalf() {
+        var p = FireControlPrediction.projectToScreen(new Vec3(4, 0, -10), Vec3.ZERO,
+                new org.joml.Quaternionf(), perspective(70f, 16f / 9f), 1920, 1080, 12);
+        assertNotNull(p);
+        assertTrue(p.x() > 960f, "偏右的目标必须画在屏幕右半边");
+        assertEquals(540f, p.y(), 0.01f);
+    }
+
+    @Test
+    void yawedCameraMovesMarkerInsteadOfWorld() {
+        // 相机向左转 45°后，正北的目标落到了视野右侧 —— 标记必须跟着相机转，而不是钉在屏幕上
+        var p = FireControlPrediction.projectToScreen(new Vec3(0, 0, -10), Vec3.ZERO,
+                yaw(45f), perspective(70f, 16f / 9f), 1920, 1080, 12);
+        assertNotNull(p);
+        assertTrue(p.onScreen());
+        assertTrue(p.x() > 960f, "相机左转后正北目标应在屏幕右半边，实际 x=" + p.x());
+    }
+
+    @Test
+    void cameraDoesNotNeedToSitAtOrigin() {
+        // 相机位移不应改变投影结果（只用相对位移）
+        var atOrigin = FireControlPrediction.projectToScreen(new Vec3(0, 0, -10), Vec3.ZERO,
+                new org.joml.Quaternionf(), perspective(70f, 16f / 9f), 1920, 1080, 12);
+        var farAway = FireControlPrediction.projectToScreen(new Vec3(1000, 64, 990), new Vec3(1000, 64, 1000),
+                new org.joml.Quaternionf(), perspective(70f, 16f / 9f), 1920, 1080, 12);
+        assertNotNull(atOrigin);
+        assertNotNull(farAway);
+        assertEquals(atOrigin.x(), farAway.x(), 0.01f);
+        assertEquals(atOrigin.y(), farAway.y(), 0.01f);
+    }
+
+    @Test
+    void behindCameraIsDroppedRatherThanClamped() {
+        // 相机背后的点投影是镜像假点：必须整帧丢弃，否则会把标记钳到相反方向
+        assertNull(FireControlPrediction.projectToScreen(new Vec3(0, 0, 10), Vec3.ZERO,
+                new org.joml.Quaternionf(), perspective(70f, 16f / 9f), 1920, 1080, 12));
+    }
+
+    @Test
+    void farOffAxisIsClampedToScreenEdgeAndFlaggedOffScreen() {
+        // 视野外但仍在相机前方的点：钳到边缘并标记 offScreen，供 HUD 画方向指示
+        var p = FireControlPrediction.projectToScreen(new Vec3(500, 0, -10), Vec3.ZERO,
+                new org.joml.Quaternionf(), perspective(70f, 16f / 9f), 1920, 1080, 12);
+        assertNotNull(p);
+        assertFalse(p.onScreen());
+        assertEquals(1920 - 12, p.x(), 0.01f);
+        assertEquals(540f, p.y(), 0.01f);
+    }
+
+    @Test
+    void markerPositionIsIndependentOfDistance() {
+        // 正前方的点无论多远都画在屏幕正中 —— 这正是从世界空间搬到 HUD 的目的
+        var near = FireControlPrediction.projectToScreen(new Vec3(0, 0, -8), Vec3.ZERO,
+                new org.joml.Quaternionf(), perspective(70f, 16f / 9f), 1920, 1080, 12);
+        var far = FireControlPrediction.projectToScreen(new Vec3(0, 0, -400), Vec3.ZERO,
+                new org.joml.Quaternionf(), perspective(70f, 16f / 9f), 1920, 1080, 12);
+        assertNotNull(near);
+        assertNotNull(far);
+        assertEquals(near.x(), far.x(), 0.01f);
+        assertEquals(near.y(), far.y(), 0.01f);
     }
 }

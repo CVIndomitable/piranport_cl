@@ -1,6 +1,10 @@
 package com.piranport.combat;
 
 import net.minecraft.world.phys.Vec3;
+import org.joml.Matrix4f;
+import org.joml.Quaternionf;
+import org.joml.Vector3f;
+import org.joml.Vector4f;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -104,5 +108,46 @@ public final class FireControlPrediction {
 
     private static boolean isFinite(Vec3 v) {
         return v != null && Double.isFinite(v.x) && Double.isFinite(v.y) && Double.isFinite(v.z);
+    }
+
+    /** 屏幕投影结果（GUI 缩放坐标）。{@code onScreen=false} 表示目标在视野外，坐标已贴边钳制。 */
+    public record ScreenPoint(float x, float y, boolean onScreen) {}
+
+    /**
+     * 把世界坐标投影到屏幕（GUI 缩放坐标）。
+     *
+     * <p>预瞄点画在 HUD 而不是世界里，是因为世界空间的图形按透视缩小，远距离落点会糊成一点，
+     * 而远距离恰恰最需要落点提示；HUD 标记固定像素尺寸，屏幕位置仍传达"偏左/偏右"。
+     *
+     * <p>用相机朝向四元数的共轭把世界位移转到视图空间（相机朝 -Z），再过真实投影矩阵。
+     * 传入真实投影矩阵而不是自算 FOV，是为了让开镜缩放自动生效。
+     *
+     * @return 相机背后或 w<=0（投影退化）时返回 {@code null}，调用方应整帧丢弃而不是钳制 ——
+     *         相机背后的点投影出来是镜像假点，钳到边缘会指向完全相反的方向。
+     */
+    public static ScreenPoint projectToScreen(Vec3 world, Vec3 cameraPos, Quaternionf cameraRotation,
+                                              Matrix4f projection, int guiWidth, int guiHeight,
+                                              int margin) {
+        if (!isFinite(world) || !isFinite(cameraPos)) return null;
+        Vector3f view = new Vector3f(
+                (float) (world.x - cameraPos.x),
+                (float) (world.y - cameraPos.y),
+                (float) (world.z - cameraPos.z));
+        new Quaternionf(cameraRotation).conjugate().transform(view);
+        if (view.z >= -1.0e-4f) return null;
+
+        Vector4f clip = new Vector4f(view.x, view.y, view.z, 1.0f);
+        projection.transform(clip);
+        if (clip.w <= 1.0e-6f) return null;
+
+        float ndcX = clip.x / clip.w;
+        float ndcY = clip.y / clip.w;
+        boolean onScreen = ndcX >= -1.0f && ndcX <= 1.0f && ndcY >= -1.0f && ndcY <= 1.0f;
+        float x = (ndcX * 0.5f + 0.5f) * guiWidth;
+        float y = (0.5f - ndcY * 0.5f) * guiHeight;
+        int m = Math.max(0, Math.min(margin, Math.min(guiWidth, guiHeight) / 2));
+        float clampedX = Math.min(Math.max(x, m), Math.max(m, guiWidth - m));
+        float clampedY = Math.min(Math.max(y, m), Math.max(m, guiHeight - m));
+        return new ScreenPoint(clampedX, clampedY, onScreen);
     }
 }

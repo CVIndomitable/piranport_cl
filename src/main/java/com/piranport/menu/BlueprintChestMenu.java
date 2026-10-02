@@ -101,13 +101,13 @@ public class BlueprintChestMenu extends AbstractContainerMenu {
 
         IItemHandler handler = be.getItemHandler();
         for (int col = 0; col < BlueprintChestBlockEntity.BLUEPRINT_SLOTS; col++) {
-            addSlot(new BlueprintSlot(handler, col, 8 + col * 18, 20));
+            addSlot(new BlueprintSlot(handler, col, 8 + col * 18, 34));
         }
 
-        addSlot(new PaperSlot(handler, BlueprintChestBlockEntity.PAPER_SLOT, 80, 54));
+        addSlot(new PaperSlot(handler, BlueprintChestBlockEntity.PAPER_SLOT, 80, 67));
 
         for (int col = 0; col < BlueprintChestBlockEntity.BLUEPRINT_SLOTS; col++) {
-            addSlot(new CopySlot(col, 8 + col * 18, 88));
+            addSlot(new CopySlot(col, 8 + col * 18, 34));
         }
 
         for (int row = 0; row < 3; row++) {

@@ -36,7 +36,7 @@ public record ArtilleryCannonData(
         String loadingMode,
         /**
          * 真实口径（英寸），策划决策/数值/06、07。&gt;0 时：
-         * 弹药族按英寸判定（&lt;7 小 / 7～&lt;13 中 / ≥13 大），
+         * 弹药族按英寸判定（&lt;5 小 / 5～&lt;13 中 / ≥13 大），
          * {@code caliber} 档位由英寸派生（4/8/16），damage/reloadTime 缺省时由公式派生，负重走公式。
          * 0 = 旧炮，沿用 int caliber 档位语义。
          */
@@ -111,12 +111,12 @@ public record ArtilleryCannonData(
     }
 
     /**
-     * 英寸 → 旧 int 档位（用户 2026-09-30 拍板：&lt;7 小口径、7～&lt;13 中口径、≥13 大口径）。
+     * 英寸 → 旧 int 档位（用户 2026-10-01 修订：&lt;5 小口径、5～&lt;13 中口径、≥13 大口径）。
      * 取 4/8/16 是为了让所有仍读 int 档位的旧判据（弹药族 ≤4/≤8、AP 过穿 &gt;8、默认散布/弹重/仰角、
      * 装填模式 ≤4）对英寸炮给出与新映射一致的结果。
      */
     public static int legacyCaliberForInches(double inches) {
-        if (inches < 7.0) return 4;
+        if (inches < 5.0) return 4;
         if (inches < 13.0) return 8;
         return 16;
     }

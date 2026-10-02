@@ -151,11 +151,12 @@ class CannonStatFormulaTest {
 
     @Test
     void caliberFamilyThresholds() {
-        assertEquals(CaliberFamily.SMALL, CannonAmmoRules.familyForInches(6.99));
-        assertEquals(CaliberFamily.MEDIUM, CannonAmmoRules.familyForInches(7));
+        assertEquals(CaliberFamily.SMALL, CannonAmmoRules.familyForInches(4.99));
+        assertEquals(CaliberFamily.MEDIUM, CannonAmmoRules.familyForInches(5));
         assertEquals(CaliberFamily.MEDIUM, CannonAmmoRules.familyForInches(12.99));
         assertEquals(CaliberFamily.LARGE, CannonAmmoRules.familyForInches(13));
-        assertEquals(4, ArtilleryCannonData.legacyCaliberForInches(5));
+        assertEquals(4, ArtilleryCannonData.legacyCaliberForInches(4.9));
+        assertEquals(8, ArtilleryCannonData.legacyCaliberForInches(5));
         assertEquals(8, ArtilleryCannonData.legacyCaliberForInches(8));
         assertEquals(16, ArtilleryCannonData.legacyCaliberForInches(13));
     }

@@ -38,10 +38,10 @@ public final class CannonAmmoRules {
 
     /**
      * 由英寸口径判定口径族（用户 2026-09-30 拍板，配合策划决策/数值/06、07）：
-     * &lt;7 英寸小口径，7～&lt;13 英寸中口径，≥13 英寸大口径。
+     * &lt;5 英寸小口径，5～&lt;13 英寸中口径，≥13 英寸大口径。
      */
     public static CaliberFamily familyForInches(double inches) {
-        if (inches < 7.0) return CaliberFamily.SMALL;
+        if (inches < 5.0) return CaliberFamily.SMALL;
         if (inches < 13.0) return CaliberFamily.MEDIUM;
         return CaliberFamily.LARGE;
     }

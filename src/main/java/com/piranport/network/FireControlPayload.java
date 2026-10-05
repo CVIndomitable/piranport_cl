@@ -3,6 +3,7 @@ package com.piranport.network;
 import com.piranport.PiranPort;
 import com.piranport.aviation.FireControlManager;
 import com.piranport.combat.CombatTargeting;
+import com.piranport.config.ModEquipmentConfig;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
@@ -73,14 +74,17 @@ public record FireControlPayload(FireAction action, UUID targetUUID) implements 
                 Entity entity = player.serverLevel().getEntity(payload.targetUUID());
                 // Cross-dimension protection
                 if (entity != null && entity.level() != player.level()) return;
-                // Limit lock range to simulation distance (in blocks)
-                int simDistBlocks = Math.max(10, player.serverLevel().getServer().getPlayerList().getSimulationDistance()) * 16;
+                // 锁定距离上限：与客户端共用同一调试终端参数（equipment.fire_control_range），
+                // 保证两侧口径一致；再叠加模拟距离硬上限（防 DoS，模拟距离下限 10 区块 = 160 格，
+                // 因此默认 96 格参数即为实际生效上限）。
+                double lockRange = Math.min(ModEquipmentConfig.FIRE_CONTROL_RANGE.get(),
+                        Math.max(10, player.serverLevel().getServer().getPlayerList().getSimulationDistance()) * 16.0);
                 // 允许锁 LivingEntity（怪/玩家/动物）和 AircraftEntity（敌方飞机）；
                 // AircraftEntity 不继承 LivingEntity，需单独放行，否则火控无法对空
                 boolean validTarget = entity != null && entity.isAlive() && entity != player
                         && !(entity instanceof net.minecraft.world.Container)
                         && (entity instanceof LivingEntity || entity instanceof AircraftEntity);
-                if (validTarget && player.distanceTo(entity) <= simDistBlocks) {
+                if (validTarget && player.distanceTo(entity) <= lockRange) {
                     // 视线检查：防止客户端伪造透视锁定
                     Vec3 eyePos = player.getEyePosition();
                     // 统一瞄点：取目标眼睛位置做视线检查，与实弹瞄准口径一致（见 CombatTargeting#aimPoint）。

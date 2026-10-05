@@ -13,10 +13,9 @@ import java.util.Comparator;
 
 /** 强化槽中的自动近防炮；只有已装入核心的部件才提供独立自动火力。 */
 public class AutoCIWSItem extends Item {
-    public static final double DETECT_RADIUS = 16.0;
-    public static final float DAMAGE = 1.5f;
-    public static final int FIRE_INTERVAL = 20;
-
+    // DETECT_RADIUS / FIRE_INTERVAL / DAMAGE 三个写死常量已删除：
+    // 前两者早已被 CIWSConfig 的 range/interval 取代（无任何引用），
+    // DAMAGE 下沉为终端参数 ciws_<caliber>.damage（见 ModEquipmentConfig）。
     private final float caliberDamage;
     private final ModEquipmentConfig.CIWSConfig config;
 
@@ -57,7 +56,7 @@ public class AutoCIWSItem extends Item {
             if (target == null) continue;
             // 舰载机继承 Entity 并自行处理耐久；不能在已选中飞机后再用 LivingEntity 过滤掉。
             target.hurt(player.damageSources().mobAttack(player),
-                    DAMAGE * ciws.caliberDamage * ciws.config.barrels().get());
+                    ciws.config.damage().get().floatValue() * ciws.caliberDamage * ciws.config.barrels().get());
         }
     }
 }

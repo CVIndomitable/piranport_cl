@@ -1,5 +1,6 @@
 package com.piranport.combat;
 
+import com.piranport.config.ModEquipmentConfig;
 import com.piranport.effect.BurningEffect;
 import com.piranport.item.ShipCoreItem;
 import com.piranport.registry.ModMobEffects;
@@ -19,14 +20,11 @@ import net.minecraft.world.item.ItemStack;
  *   <li>目标未着火时增量即初始等级；目标已着火时等级叠加对应增量，最高 4 级</li>
  *   <li>持续时间一律刷新至 15 秒</li>
  * </ul>
+ *
+ * <p>以上数值全部下沉为调试终端参数（{@code equipment/fire_debuff/*} →
+ * {@code global.fire_debuff.*}），见 {@link ModEquipmentConfig}。默认值与旧写死值一致。</p>
  */
 public final class FireApplyHelper {
-
-    /** 着火时长固定 15 秒 = 300 tick（策划 §4.3） */
-    public static final int FIRE_DURATION_TICKS = 300;
-
-    /** 起火最大等级（amplifier 0-3 → 等级 1-4） */
-    public static final int MAX_LEVEL = 4;
 
     private FireApplyHelper() {}
 
@@ -49,19 +47,19 @@ public final class FireApplyHelper {
         if (aerialBomb) {
             // 航空炸弹：单次随机数判定
             float r = rng.nextFloat();
-            if (r < 0.4f) return 2;
-            if (r < 0.8f) return 1;
+            if (r < ModEquipmentConfig.FIRE_BOMB_DOUBLE_ROLL.get().floatValue()) return 2;
+            if (r < ModEquipmentConfig.FIRE_BOMB_SINGLE_ROLL.get().floatValue()) return 1;
             return 0;
         }
         if (ammoItem == null) return 0;
         ItemStack probe = new ItemStack(ammoItem);
         float prob;
         if (probe.is(ShipCoreItem.SMALL_SHELLS)) {
-            prob = 0.05f;
+            prob = ModEquipmentConfig.FIRE_SMALL_PROB.get().floatValue();
         } else if (probe.is(ShipCoreItem.MEDIUM_SHELLS)) {
-            prob = 0.15f;
+            prob = ModEquipmentConfig.FIRE_MEDIUM_PROB.get().floatValue();
         } else if (probe.is(ShipCoreItem.LARGE_SHELLS)) {
-            prob = 0.40f;
+            prob = ModEquipmentConfig.FIRE_LARGE_PROB.get().floatValue();
         } else {
             return 0;
         }
@@ -69,20 +67,22 @@ public final class FireApplyHelper {
         return 0;
     }
 
-    /** 在目标上叠加/刷新燃烧效果（amplifier 0-3，等级 1-4）。 */
+    /** 在目标上叠加/刷新燃烧效果（amplifier 0 ~ max_level-1）。 */
     public static void applyBurning(LivingEntity target, int delta) {
         if (delta <= 0) return;
+        int durationTicks = ModEquipmentConfig.FIRE_DURATION_TICKS.get();
+        int maxLevel = ModEquipmentConfig.FIRE_MAX_LEVEL.get();
         MobEffectInstance existing = target.getEffect(ModMobEffects.BURNING);
         int oldAmplifier = existing != null ? existing.getAmplifier() : -1;
-        int newAmplifier = Math.min(MAX_LEVEL - 1, Math.max(0, oldAmplifier) + delta);
+        int newAmplifier = Math.min(maxLevel - 1, Math.max(0, oldAmplifier) + delta);
         target.addEffect(new MobEffectInstance(
-                ModMobEffects.BURNING, FIRE_DURATION_TICKS, newAmplifier, false, false, true));
-        // 防 effect 实例未触发刷新时强制刷新：移除后重新施加保证 15s
+                ModMobEffects.BURNING, durationTicks, newAmplifier, false, false, true));
+        // 防 effect 实例未触发刷新时强制刷新：移除后重新施加保证时长
         if (existing != null && existing.getAmplifier() == newAmplifier
-                && existing.getDuration() < FIRE_DURATION_TICKS) {
+                && existing.getDuration() < durationTicks) {
             target.removeEffect(ModMobEffects.BURNING);
             target.addEffect(new MobEffectInstance(
-                    ModMobEffects.BURNING, FIRE_DURATION_TICKS, newAmplifier, false, false, true));
+                    ModMobEffects.BURNING, durationTicks, newAmplifier, false, false, true));
         }
     }
 

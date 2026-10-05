@@ -93,8 +93,49 @@ public final class ModEquipmentConfig {
     public static final TerminalConfigValue<Integer> BALLISTIC_CACHE_SIZE =
             TerminalConfigValue.integer("equipment", "equipment", "ballistic_cache_size", 32, 1, 256);
 
+    // ===== 小型船职能分化（策划决策/数值/05）=====
+    // 这两个值原先在 ProjectileImpactResolver（实际开火路径）和 ShipTypeMitigationHelper
+    // 各写死一份，存在双份漂移风险；现只在此处定义，两处读取同一来源。
+    // 键：equipment/small_ship/* → global.small_ship.*
+
+    /** 大口径（caliber>8）AP 命中变身小船的过穿倍率：实际伤害 = 标伤 × 该值。默认 0.05 = 5%。 */
+    public static final TerminalConfigValue<Double> SMALL_SHIP_LARGE_AP_OVERPEN =
+            TerminalConfigValue.number("equipment", "small_ship", "large_ap_overpen", 0.05, 0.0, 1.0);
+
+    /** 小船单次受击伤害上限 = 目标最大血量 × 该值。默认 0.25 = 1/4。 */
+    public static final TerminalConfigValue<Double> SMALL_SHIP_DAMAGE_CAP_RATIO =
+            TerminalConfigValue.number("equipment", "small_ship", "damage_cap_ratio", 0.25, 0.0, 1.0);
+
+    // ===== 起火 Debuff 施加规则（策划决策/战斗/04）=====
+    // 键：equipment/fire_debuff/* → global.fire_debuff.*
+
+    /** 着火持续时长（tick）。默认 300 = 15 秒。 */
+    public static final TerminalConfigValue<Integer> FIRE_DURATION_TICKS =
+            TerminalConfigValue.integer("equipment", "fire_debuff", "duration_ticks", 300, 1, 6000);
+
+    /** 起火最大等级（amplifier 上限 = 该值 - 1）。默认 4。 */
+    public static final TerminalConfigValue<Integer> FIRE_MAX_LEVEL =
+            TerminalConfigValue.integer("equipment", "fire_debuff", "max_level", 4, 1, 10);
+
+    /** 小口径 HE 起火概率。默认 0.05 = 5%。 */
+    public static final TerminalConfigValue<Double> FIRE_SMALL_PROB =
+            TerminalConfigValue.number("equipment", "fire_debuff", "small_prob", 0.05, 0.0, 1.0);
+    /** 中口径 HE 起火概率。默认 0.15 = 15%。 */
+    public static final TerminalConfigValue<Double> FIRE_MEDIUM_PROB =
+            TerminalConfigValue.number("equipment", "fire_debuff", "medium_prob", 0.15, 0.0, 1.0);
+    /** 大口径 HE 起火概率。默认 0.40 = 40%。 */
+    public static final TerminalConfigValue<Double> FIRE_LARGE_PROB =
+            TerminalConfigValue.number("equipment", "fire_debuff", "large_prob", 0.40, 0.0, 1.0);
+
+    /** 航空炸弹单次随机判定阈值：r < bomb_double_roll → 等级 +2；r < bomb_single_roll → +1；否则失败。 */
+    public static final TerminalConfigValue<Double> FIRE_BOMB_DOUBLE_ROLL =
+            TerminalConfigValue.number("equipment", "fire_debuff", "bomb_double_roll", 0.4, 0.0, 1.0);
+    public static final TerminalConfigValue<Double> FIRE_BOMB_SINGLE_ROLL =
+            TerminalConfigValue.number("equipment", "fire_debuff", "bomb_single_roll", 0.8, 0.0, 1.0);
+
     public record CIWSConfig(TerminalConfigValue<Double> range, TerminalConfigValue<Integer> interval,
-                             TerminalConfigValue<Integer> barrels, TerminalConfigValue<Integer> weight) {}
+                             TerminalConfigValue<Integer> barrels, TerminalConfigValue<Integer> weight,
+                             TerminalConfigValue<Double> damage) {}
 
     private static CIWSConfig ciws(String caliber) {
         String target = "ciws_" + caliber;
@@ -102,7 +143,9 @@ public final class ModEquipmentConfig {
                 TerminalConfigValue.number("equipment", target, "range", 16.0, 1.0, 128.0),
                 TerminalConfigValue.integer("equipment", target, "interval", 20, 1, 1200),
                 TerminalConfigValue.integer("equipment", target, "barrels", 1, 1, 16),
-                TerminalConfigValue.integer("equipment", target, "weight", 0, 0, 112));
+                TerminalConfigValue.integer("equipment", target, "weight", 0, 0, 112),
+                // 单管单发基础伤害；最终 = damage × 口径伤害系数 × 管数。默认 1.5（下沉前写死值）。
+                TerminalConfigValue.number("equipment", target, "damage", 1.5, 0.0, 100.0));
     }
 
     public static final CIWSConfig CIWS_20MM = ciws("20mm");

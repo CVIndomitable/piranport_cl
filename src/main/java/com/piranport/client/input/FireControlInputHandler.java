@@ -2,6 +2,7 @@ package com.piranport.client.input;
 
 import com.piranport.aviation.ClientFireControlData;
 import com.piranport.combat.TransformationManager;
+import com.piranport.config.ModEquipmentConfig;
 import com.piranport.item.ShipCoreItem;
 import com.piranport.network.ToggleAutoModePayload;
 import com.piranport.network.FireControlPayload;
@@ -32,7 +33,6 @@ import org.slf4j.LoggerFactory;
 public class FireControlInputHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FireControlInputHandler.class);
-    private static final double FIRE_CONTROL_RANGE = 80.0;
 
     private FireControlInputHandler() {}
 
@@ -69,7 +69,9 @@ public class FireControlInputHandler {
         boolean crouching = mc.player.isShiftKeyDown();
 
         for (int i = 0; i < clicks; i++) {
-            Entity target = getTargetInCrosshair(mc, FIRE_CONTROL_RANGE);
+            // 火控范围取调试终端参数（客户端镜像由 SyncTerminalParametersPayload 同步；
+            // 未同步时回退默认值）。原先写死 80 与终端参数完全脱节，策划改终端无效。
+            Entity target = getTargetInCrosshair(mc, ModEquipmentConfig.FIRE_CONTROL_RANGE.get());
 
             if (crouching) {
                 if (target != null) {

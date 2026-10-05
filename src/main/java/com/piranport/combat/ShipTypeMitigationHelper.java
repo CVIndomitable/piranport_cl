@@ -1,5 +1,6 @@
 package com.piranport.combat;
 
+import com.piranport.config.ModEquipmentConfig;
 import com.piranport.item.ShipCoreItem;
 import com.piranport.item.ShipType;
 import net.minecraft.world.entity.LivingEntity;
@@ -34,21 +35,26 @@ public final class ShipTypeMitigationHelper {
     }
 
     /**
-     * 计算 AP 大口径对小型船的过穿伤害（标伤 5%）。
+     * 计算 AP 大口径对小型船的过穿伤害（默认标伤 5%）。
+     * 数值来源统一在 {@link ModEquipmentConfig#SMALL_SHIP_LARGE_AP_OVERPEN}，与
+     * {@code ProjectileImpactResolver}（实际开火路径）共用，避免双份写死各自漂移。
+     *
      * @param baseApDamage AP 直击伤害计算结果
      * @param caliber 口径分类（>8 为大口径；<=4 小；4-8 中）
      */
     public static float applyLargeApOverpen(float baseApDamage, int caliber) {
-        if (caliber > 8) return baseApDamage * 0.05f;
+        if (caliber > 8) {
+            return baseApDamage * ModEquipmentConfig.SMALL_SHIP_LARGE_AP_OVERPEN.get().floatValue();
+        }
         return baseApDamage;
     }
 
     /**
-     * 计算小型船受 AP/HE 单次伤害封顶：最大血量的 1/4。
+     * 计算小型船受 AP/HE 单次伤害封顶：最大血量 × {@link ModEquipmentConfig#SMALL_SHIP_DAMAGE_CAP_RATIO}（默认 1/4）。
      * 注：AP 已先走过穿判定（applyLargeApOverpen）后才进入此步。
      */
     public static float capSmallShipDamage(float incoming, float maxHealth) {
-        float cap = maxHealth * 0.25f;
+        float cap = maxHealth * ModEquipmentConfig.SMALL_SHIP_DAMAGE_CAP_RATIO.get().floatValue();
         return Math.min(incoming, cap);
     }
 }

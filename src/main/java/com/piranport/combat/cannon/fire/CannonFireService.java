@@ -38,7 +38,9 @@ public final class CannonFireService {
     public record Shot(CannonFireRequest request, Vec3 direction, boolean type3) {}
     public record Result(int shots, int entities, boolean complete) {}
 
-    public static int entityCount(boolean type3) { return type3 ? 64 : 1; }
+    public static int entityCount(boolean type3) {
+        return type3 ? ModArtilleryConfig.TYPE3_PELLET_COUNT.get() : 1;
+    }
 
     public static boolean withinLimit(int existing, int requested, int limit) {
         return requested == 0 || limit > 0 && existing >= 0 && requested <= limit - existing;
@@ -89,13 +91,18 @@ public final class CannonFireService {
             if (shot.type3()) {
                 float yaw = (float) Math.toDegrees(Math.atan2(-direction.x, direction.z));
                 float pitch = (float) Math.toDegrees(-Math.asin(Math.max(-1, Math.min(1, direction.normalize().y))));
-                return insertBatch(64, index -> {
-                    float radius = 7f * (float) Math.sqrt((index + .5f) / 64);
+                // 三式弹幕参数走调试终端（artillery/type3/*）；默认值与下沉前的写死值一致。
+                int type3PelletCount = ModArtilleryConfig.TYPE3_PELLET_COUNT.get();
+                float pelletRadius = ModArtilleryConfig.TYPE3_PELLET_RADIUS.get().floatValue();
+                float type3DamageMultiplier = ModArtilleryConfig.TYPE3_DAMAGE_MULTIPLIER.get().floatValue();
+                float pelletInaccuracy = ModArtilleryConfig.TYPE3_PELLET_INACCURACY.get().floatValue();
+                return insertBatch(type3PelletCount, index -> {
+                    float radius = pelletRadius * (float) Math.sqrt((index + .5f) / type3PelletCount);
                     float angle = index * 2.39996323f;
                     float multiplier = ammo.map(d -> d.damageMultiplier()).orElse(1f);
-                    SanshikiPelletEntity pellet = CannonProjectileFactory.createSanshikiPellet(request.level(), request.shooter(), request.damage() * multiplier * .25f, request.shell());
+                    SanshikiPelletEntity pellet = CannonProjectileFactory.createSanshikiPellet(request.level(), request.shooter(), request.damage() * multiplier * type3DamageMultiplier, request.shell());
                     pellet.setPos(request.spawnPosition());
-                    pellet.shootFromRotation(request.shooter(), pitch + radius * (float) Math.sin(angle), yaw + radius * (float) Math.cos(angle), 0, request.velocity(), .5f);
+                    pellet.shootFromRotation(request.shooter(), pitch + radius * (float) Math.sin(angle), yaw + radius * (float) Math.cos(angle), 0, request.velocity(), pelletInaccuracy);
                     return pellet;
                 }, request.level()::addFreshEntity, Entity::discard);
             } else {

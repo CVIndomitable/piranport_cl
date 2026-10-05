@@ -2,6 +2,7 @@ package com.piranport.combat.cannon.impact;
 
 import com.piranport.combat.cannon.ammo.AmmoBehavior;
 import com.piranport.combat.cannon.ammo.AmmoBehaviorStrategy;
+import com.piranport.config.ModEquipmentConfig;
 
 /** Stateless projectile impact rules. */
 public final class ProjectileImpactResolver {
@@ -24,9 +25,12 @@ public final class ProjectileImpactResolver {
         if (!Float.isFinite(speedRatio)) speedRatio = 0f;
         float multiplier = Float.isFinite(apMultiplier) ? Math.max(0f, apMultiplier) : 1f;
         float damage = sanitize(baseDamage) * multiplier * speedRatio;
-        if (smallShipTarget && sourceCaliber > 8) damage *= 0.05f;
+        if (smallShipTarget && sourceCaliber > 8) {
+            damage *= ModEquipmentConfig.SMALL_SHIP_LARGE_AP_OVERPEN.get().floatValue();
+        }
         if (smallShipTarget && Float.isFinite(maxHealth) && maxHealth > 0f) {
-            damage = Math.min(damage, maxHealth * 0.25f);
+            damage = Math.min(damage,
+                    maxHealth * ModEquipmentConfig.SMALL_SHIP_DAMAGE_CAP_RATIO.get().floatValue());
         }
         float clampedArmor = Float.isFinite(armorIgnore)
                 ? Math.max(0f, Math.min(1f, armorIgnore)) : 0f;

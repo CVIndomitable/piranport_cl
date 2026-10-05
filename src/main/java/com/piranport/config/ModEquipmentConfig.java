@@ -56,6 +56,27 @@ public final class ModEquipmentConfig {
     public static final TerminalConfigValue<Double> LEVEL_BOMBER_HORIZONTAL_VELOCITY_MULTIPLIER =
             TerminalConfigValue.number("equipment", "level_bomber", "horizontal_velocity_multiplier", 0.5, 0.0, 2.0);
 
+    // ===== 鱼雷水下贴水面巡航（用户口径 2026-10-05：鱼雷应潜航于水面之下一点，不是浮在水面）=====
+    // 数值全部走调试终端（equipment.torpedo.*），策划可实时调手感。
+
+    /** 雷体中心相对水面的目标深度（格）。0.5 时整根雷（高 0.75）几乎没入水面之下，
+     *  只剩顶面离水面约 0.125 格，视觉上就是"贴着水面潜航"。 */
+    public static final TerminalConfigValue<Double> TORPEDO_SURFACE_DEPTH =
+            TerminalConfigValue.number("equipment", "torpedo", "surface_depth", 0.5, 0.05, 3.0);
+
+    /** 每 tick 消除的垂直误差比例（0~1）。越大越"贴"目标深度、收敛越快；越小越柔。 */
+    public static final TerminalConfigValue<Double> TORPEDO_SURFACE_VERTICAL_ADJUST =
+            TerminalConfigValue.number("equipment", "torpedo", "surface_vertical_adjust", 0.3, 0.05, 1.0);
+
+    /** 贴深度时单 tick 最大垂直速度（格/tick），限制上浮/下潜的猛度。 */
+    public static final TerminalConfigValue<Double> TORPEDO_SURFACE_VERTICAL_MAX_SPEED =
+            TerminalConfigValue.number("equipment", "torpedo", "surface_vertical_max_speed", 0.3, 0.05, 1.0);
+
+    /** 水面捕获窗口（格）：雷体中心离目标深度不超过该值时才主动贴面；
+     *  超过且在水下时保持既有垂直运动（深水巡航），避免把潜艇/水中发射的深雷硬拽上水面。 */
+    public static final TerminalConfigValue<Double> TORPEDO_SURFACE_CAPTURE_RANGE =
+            TerminalConfigValue.number("equipment", "torpedo", "surface_capture_range", 1.0, 0.25, 6.0);
+
     public static final TerminalConfigValue<Double> ARMOR_PLATE_PROTECTION =
             TerminalConfigValue.number("equipment", "equipment", "armor_plate_protection", 3.0, 0.0, 100.0);
 

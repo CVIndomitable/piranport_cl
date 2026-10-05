@@ -2,14 +2,19 @@ package com.piranport.entity;
 
 import com.piranport.combat.TorpedoGuidanceManager;
 import com.piranport.config.ModCommonConfig;
+import com.piranport.config.ModEquipmentConfig;
 import com.piranport.registry.ModEntityTypes;
 import com.piranport.registry.ModItems;
 import com.piranport.registry.ModMobEffects;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -33,6 +38,41 @@ import net.minecraft.world.phys.Vec3;
 import java.util.UUID;
 
 public class TorpedoEntity extends ThrowableItemProjectile {
+
+    // ===== 同步字段（方案2）：客户端要跑同一套运动 AI，必须知道航速与模式标志 =====
+    // 这些标志原本是服务端私有字段，客户端实体走默认构造器（速度 1.0、标志全 false），
+    // 声导/氧气/空投等改航速时两边速度不一致，客户端每 tick 被服务端硬校正 → 抖动主因。
+    private static final EntityDataAccessor<Float> DATA_SPEED =
+            SynchedEntityData.defineId(TorpedoEntity.class, EntityDataSerializers.FLOAT);
+    private static final EntityDataAccessor<Boolean> DATA_MAGNETIC =
+            SynchedEntityData.defineId(TorpedoEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> DATA_WIRE_GUIDED =
+            SynchedEntityData.defineId(TorpedoEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> DATA_ACOUSTIC =
+            SynchedEntityData.defineId(TorpedoEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> DATA_OXYGEN =
+            SynchedEntityData.defineId(TorpedoEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> DATA_AIR_DROP =
+            SynchedEntityData.defineId(TorpedoEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Float> DATA_AIR_DROP_DIR_X =
+            SynchedEntityData.defineId(TorpedoEntity.class, EntityDataSerializers.FLOAT);
+    private static final EntityDataAccessor<Float> DATA_AIR_DROP_DIR_Z =
+            SynchedEntityData.defineId(TorpedoEntity.class, EntityDataSerializers.FLOAT);
+
+    // ===== 方案1：客户端位置插值（照抄 CannonProjectileEntity 的成熟写法）=====
+    // 原版 Entity.lerpTo 直接 setPos，导致 xo==x、partial-tick 插值失效 → 抖动。
+    private int clientLerpSteps;
+    private double clientLerpX, clientLerpY, clientLerpZ;
+
+    // ===== 水下贴水面（用户口径 2026-10-05）=====
+    /** 水面搜索的哨兵值：列内窗口没找到水。 */
+    private static final int NO_WATER = Integer.MIN_VALUE;
+    /** 原版静止水面顶面相对所在方块底边的高度（物理恒等量，非手感参数）。 */
+    private static final double STILL_WATER_SURFACE_HEIGHT = 0.875;
+    /** 空中下坠的水平衰减／垂直加速度，沿用原实现（未改动的手感参数）。 */
+    private static final double AIR_FALL_HORIZONTAL_DECAY = 0.70;
+    private static final double AIR_FALL_VERTICAL_ACCEL = 0.25;
+
     private int caliber = 533;
     private float damage = 18f;
     private float torpedoSpeed = 1.0f;
@@ -86,29 +126,49 @@ public class TorpedoEntity extends ThrowableItemProjectile {
         this.caliber = caliber;
         if (caliber == 610) {
             this.damage = 28f;
-            this.torpedoSpeed = 0.9f;
             this.lifetime = 1200;
             this.explosionRadius = 2.5f;
         } else {
             this.damage = 18f;
-            this.torpedoSpeed = 0.9f;
             this.lifetime = 1200;
             this.explosionRadius = 2.0f;
         }
+        // 走 setter 而非直接赋字段：同步字段要同时写进 entityData，随生成包下发给客户端。
+        setSpeed(0.9f);
+    }
+
+    @Override
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(DATA_SPEED, 1.0f);
+        builder.define(DATA_MAGNETIC, false);
+        builder.define(DATA_WIRE_GUIDED, false);
+        builder.define(DATA_ACOUSTIC, false);
+        builder.define(DATA_OXYGEN, false);
+        builder.define(DATA_AIR_DROP, false);
+        builder.define(DATA_AIR_DROP_DIR_X, 0.0f);
+        builder.define(DATA_AIR_DROP_DIR_Z, 0.0f);
     }
 
     public float getTorpedoSpeed() { return torpedoSpeed; }
 
     public void setDamage(float damage) { this.damage = damage; }
 
-    public void setSpeed(float speed) { this.torpedoSpeed = speed; }
+    public void setSpeed(float speed) {
+        this.torpedoSpeed = speed;
+        entityData.set(DATA_SPEED, speed);
+    }
 
     public void setLifetime(int lifetime) { this.lifetime = lifetime; }
 
-    public void setMagnetic(boolean magnetic) { this.magnetic = magnetic; }
+    public void setMagnetic(boolean magnetic) {
+        this.magnetic = magnetic;
+        entityData.set(DATA_MAGNETIC, magnetic);
+    }
 
     public void setWireGuided(boolean wireGuided) {
         this.wireGuided = wireGuided;
+        entityData.set(DATA_WIRE_GUIDED, wireGuided);
         if (wireGuided) wireMaxRange = -1; // 重置缓存，下次使用时重新读取模拟距离
     }
 
@@ -123,25 +183,31 @@ public class TorpedoEntity extends ThrowableItemProjectile {
         } else {
             this.airDropDirection = horizontal.normalize();
         }
+        // 方向也要同步：客户端会跑同一个空投分支，方向不同会让入水瞬间被服务端拽回。
+        entityData.set(DATA_AIR_DROP, airDrop);
+        entityData.set(DATA_AIR_DROP_DIR_X, (float) this.airDropDirection.x);
+        entityData.set(DATA_AIR_DROP_DIR_Z, (float) this.airDropDirection.z);
     }
 
     public void setAcoustic(boolean acoustic) {
         this.acoustic = acoustic;
-        if (acoustic) this.torpedoSpeed = 0.7f;
+        entityData.set(DATA_ACOUSTIC, acoustic);
+        if (acoustic) setSpeed(0.7f);
     }
 
     /** Phase 27：策划 §3.3 氧气鱼雷 — 高速且无可见航迹 */
     public void setOxygen(boolean oxygen) {
         this.oxygen = oxygen;
+        entityData.set(DATA_OXYGEN, oxygen);
         if (oxygen) {
             // 氧气推进：航速 +30% (0.9 → 1.17 blocks/tick)
-            this.torpedoSpeed = this.torpedoSpeed * 1.3f;
+            setSpeed(this.torpedoSpeed * 1.3f);
         }
     }
 
     public boolean isOxygen() { return oxygen; }
 
-    public void cutWire() { wireGuided = false; }
+    public void cutWire() { setWireGuided(false); }
 
     /** 线长等于服务器模拟距离，超出时断开（缓存值，避免每tick访问Server→PlayerList） */
     private double wireMaxRange = -1;
@@ -188,6 +254,44 @@ public class TorpedoEntity extends ThrowableItemProjectile {
         return m.scale(1.0 / len);
     }
 
+    // ==================== 客户端插值（方案1） ====================
+
+    /**
+     * 客户端位置插值：只存目标位置，在 tick() 里按步数指数衰减逼近。
+     * 原版 Entity.lerpTo 直接 setPos，导致 xo/yo/zo 与 x/y/z 相同、partial-tick 插值失效，
+     * 服务端每 tick 一同步就把客户端模拟位置拽回 → 抖动。旋转不插值：鱼雷朝向由速度矢量
+     * 决定（TorpedoRenderer），且线导时客户端用玩家视角直接写 yRot/xRot，插值会与之打架。
+     */
+    @Override
+    public void lerpTo(double x, double y, double z, float yRot, float xRot, int steps) {
+        if (level().isClientSide()) {
+            this.clientLerpSteps = steps + 2;
+            this.clientLerpX = x;
+            this.clientLerpY = y;
+            this.clientLerpZ = z;
+            return;
+        }
+        super.lerpTo(x, y, z, yRot, xRot, steps);
+    }
+
+    @Override public double lerpTargetX() { return clientLerpSteps > 0 ? clientLerpX : getX(); }
+    @Override public double lerpTargetY() { return clientLerpSteps > 0 ? clientLerpY : getY(); }
+    @Override public double lerpTargetZ() { return clientLerpSteps > 0 ? clientLerpZ : getZ(); }
+
+    /** 客户端每 tick 从同步数据刷新本地状态，保证与服务端跑同一套运动 AI。 */
+    private void syncClientState() {
+        this.torpedoSpeed = entityData.get(DATA_SPEED);
+        this.magnetic = entityData.get(DATA_MAGNETIC);
+        this.wireGuided = entityData.get(DATA_WIRE_GUIDED);
+        this.acoustic = entityData.get(DATA_ACOUSTIC);
+        this.oxygen = entityData.get(DATA_OXYGEN);
+        this.airDrop = entityData.get(DATA_AIR_DROP);
+        if (this.airDrop) {
+            this.airDropDirection = new Vec3(
+                    entityData.get(DATA_AIR_DROP_DIR_X), 0, entityData.get(DATA_AIR_DROP_DIR_Z));
+        }
+    }
+
     @Override
     protected Item getDefaultItem() {
         return switch (caliber) {
@@ -217,6 +321,19 @@ public class TorpedoEntity extends ThrowableItemProjectile {
     public void tick() {
         super.tick();
         if (isRemoved()) return;
+
+        if (level().isClientSide()) {
+            // 方案1：向服务端目标位置按步数平滑逼近，避免 setPos 硬拽。
+            if (clientLerpSteps > 0) {
+                double d = 1.0 / (double) clientLerpSteps;
+                setPos(getX() + (clientLerpX - getX()) * d,
+                       getY() + (clientLerpY - getY()) * d,
+                       getZ() + (clientLerpZ - getZ()) * d);
+                clientLerpSteps--;
+            }
+            // 方案2：先同步航速/模式标志，再跑与服务端相同的运动 AI。
+            syncClientState();
+        }
 
         resolveLockedTarget();
         if (tickLifetime()) return;
@@ -281,11 +398,11 @@ public class TorpedoEntity extends ThrowableItemProjectile {
             double maxRange = getWireMaxRange();
             Entity owner = getOwner();
             if (owner == null) {
-                wireGuided = false;
+                setWireGuided(false);
             } else {
                 double dist = position().distanceTo(owner.position());
                 if (dist > maxRange) {
-                    wireGuided = false;
+                    setWireGuided(false);
                     if (owner instanceof ServerPlayer sp) {
                         TorpedoGuidanceManager.endGuidance(sp);
                         sp.displayClientMessage(
@@ -316,6 +433,7 @@ public class TorpedoEntity extends ThrowableItemProjectile {
 
         if (inWater || (inAir && waterBelow)) {
             airDrop = false;
+            entityData.set(DATA_AIR_DROP, false);
             setDeltaMovement(airDropDirection.x * torpedoSpeed, 0, airDropDirection.z * torpedoSpeed);
         } else {
             setDeltaMovement(motion.x * 0.98, motion.y - 0.08, motion.z * 0.98);
@@ -323,35 +441,91 @@ public class TorpedoEntity extends ThrowableItemProjectile {
         return true;
     }
 
-    /** 水下航行 AI：鱼雷保持入水深度航行，不再上浮到水面 */
+    /**
+     * 水下航行 AI：鱼雷保持在水面之下一点航行（用户口径 2026-10-05）。
+     *
+     * <p>旧实现只在"脚部在空气、正下方是水"时把垂直速度清零，于是雷体正好卡在水面
+     * 之上的空气方块里 → 视觉上"浮在水面上"。现改为按列内水柱顶面定位：
+     * 目标脚部 Y = 水面顶面 − 中心目标深度 − 半高，使雷体中心稳定停在水面之下
+     * {@code TORPEDO_SURFACE_DEPTH} 格处。
+     *
+     * <p>水深超过 {@code TORPEDO_SURFACE_CAPTURE_RANGE} 时保持既有垂直运动（深水巡航），
+     * 不强行把潜艇/水中发射的深雷拽上水面。水面搜索只在实体所在区块读取方块状态，
+     * 客户端与服务端跑的是同一段代码。
+     */
     private void tickSurfaceAI() {
         Vec3 motion = getDeltaMovement();
-        BlockPos pos = blockPosition();
-        boolean inAir = level().getBlockState(pos).isAir();
-        boolean waterBelow = level().getBlockState(pos.below()).getFluidState().is(Fluids.WATER);
-        boolean inWater = level().getBlockState(pos).getFluidState().is(Fluids.WATER);
 
-        if (inAir && waterBelow) {
-            double currentH = Math.sqrt(motion.x * motion.x + motion.z * motion.z);
-            if (currentH > 0.001) {
-                double dirX = motion.x / currentH;
-                double dirZ = motion.z / currentH;
-                setDeltaMovement(dirX * torpedoSpeed, 0, dirZ * torpedoSpeed);
-            } else {
-                setDeltaMovement(motion.x, 0, motion.z);
-            }
-        } else if (inWater) {
-            double currentH = Math.sqrt(motion.x * motion.x + motion.z * motion.z);
-            if (currentH > 0.001) {
-                double dirX = motion.x / currentH;
-                double dirZ = motion.z / currentH;
-                setDeltaMovement(dirX * torpedoSpeed, motion.y, dirZ * torpedoSpeed);
-            } else {
-                setDeltaMovement(motion.x, motion.y, motion.z);
-            }
-        } else {
-            setDeltaMovement(motion.x * 0.70, motion.y - 0.25, motion.z * 0.70);
+        // 水平方向始终按航速巡航（方向沿用当前速度方向）
+        double h = Math.sqrt(motion.x * motion.x + motion.z * motion.z);
+        double dirX = h > 0.001 ? motion.x / h : 0.0;
+        double dirZ = h > 0.001 ? motion.z / h : 0.0;
+
+        int topWaterY = findTopWaterY();
+        if (topWaterY == NO_WATER) {
+            // 附近没有水（陆地上空等）：维持原有的减速坠落
+            setDeltaMovement(motion.x * AIR_FALL_HORIZONTAL_DECAY,
+                    motion.y - AIR_FALL_VERTICAL_ACCEL,
+                    motion.z * AIR_FALL_HORIZONTAL_DECAY);
+            return;
         }
+
+        double targetFeetY = topWaterY + STILL_WATER_SURFACE_HEIGHT
+                - surfaceDepth() - getBbHeight() * 0.5;
+        double err = targetFeetY - getY();
+        double capture = surfaceCaptureRange();
+
+        double vy;
+        if (Math.abs(err) <= capture) {
+            // 已在目标深度附近：按比例逼近，并限制垂直速度（避免上浮/下潜过猛）
+            double maxVy = surfaceVerticalMaxSpeed();
+            vy = Mth.clamp(err * surfaceVerticalAdjust(), -maxVy, maxVy);
+        } else if (err < 0) {
+            // 水面之上但还没进入捕获窗口：继续按原空中手感下坠
+            setDeltaMovement(motion.x * AIR_FALL_HORIZONTAL_DECAY,
+                    motion.y - AIR_FALL_VERTICAL_ACCEL,
+                    motion.z * AIR_FALL_HORIZONTAL_DECAY);
+            return;
+        } else {
+            // 水下且离目标深度超出捕获窗口：保持既有垂直运动（深水巡航）
+            vy = motion.y;
+        }
+
+        setDeltaMovement(dirX * torpedoSpeed, vy, dirZ * torpedoSpeed);
+    }
+
+    /**
+     * 在鱼雷所在列内向上/向下搜索水柱顶面（最高水方块的 Y）。
+     * 向上搜的格数取 {@code ceil(captureRange) + 1}：保证深水时"最近水面"落在搜索窗顶端、
+     * 其与目标的误差必然大于捕获窗口，从而进入"保持深水"分支，不会把深雷拽上来。
+     */
+    private int findTopWaterY() {
+        BlockPos base = blockPosition();
+        int up = Mth.ceil(surfaceCaptureRange()) + 1;
+        int down = up + 1;
+        for (int dy = up; dy >= -down; dy--) {
+            BlockPos p = base.offset(0, dy, 0);
+            if (level().getBlockState(p).getFluidState().is(Fluids.WATER)) {
+                return p.getY();
+            }
+        }
+        return NO_WATER;
+    }
+
+    private static double surfaceDepth() {
+        return ModEquipmentConfig.TORPEDO_SURFACE_DEPTH.get();
+    }
+
+    private static double surfaceVerticalAdjust() {
+        return ModEquipmentConfig.TORPEDO_SURFACE_VERTICAL_ADJUST.get();
+    }
+
+    private static double surfaceVerticalMaxSpeed() {
+        return ModEquipmentConfig.TORPEDO_SURFACE_VERTICAL_MAX_SPEED.get();
+    }
+
+    private static double surfaceCaptureRange() {
+        return ModEquipmentConfig.TORPEDO_SURFACE_CAPTURE_RANGE.get();
     }
 
     // ==================== 辅助方法 ====================
@@ -708,5 +882,16 @@ public class TorpedoEntity extends ThrowableItemProjectile {
             this.lockedTargetUuid = tag.getUUID("LockedTargetUUID");
         }
         this.lockDuration = tag.getInt("LockDuration");
+
+        // NBT 只在服务端反序列化；把同步字段推进 entityData，随生成包下发给客户端，
+        // 否则读档后的鱼雷在客户端仍是默认速度/标志，两边 AI 又会不一致。
+        entityData.set(DATA_SPEED, torpedoSpeed);
+        entityData.set(DATA_MAGNETIC, magnetic);
+        entityData.set(DATA_WIRE_GUIDED, wireGuided);
+        entityData.set(DATA_ACOUSTIC, acoustic);
+        entityData.set(DATA_OXYGEN, oxygen);
+        entityData.set(DATA_AIR_DROP, airDrop);
+        entityData.set(DATA_AIR_DROP_DIR_X, (float) airDropDirection.x);
+        entityData.set(DATA_AIR_DROP_DIR_Z, (float) airDropDirection.z);
     }
 }

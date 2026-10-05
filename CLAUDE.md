@@ -108,6 +108,39 @@
 - **已进入过副本标记**：`ModAttachmentTypes.ENTERED_DUNGEON`（copyOnDeath），`DungeonEntryService` 成功传入副本维度时写入。
 - **书台遗迹**：`portal_ruin_1/2.nbt` 已去掉传送门框架、放空白书台；`AbandonedPortalStructure` 不再摆框架。开箱战利品 `chests/portal_ruin.json` 用条件 `piranport:entered_dungeon`：没进过 → 1-1 钥匙，进过 → 金猫猫钥匙（规则见 `RuinKeyRule`）。补给站/前哨站/深海基地不掉主线钥匙。
 
+### 手感参数一律进调试终端（2026-10-05，强约定）
+- **凡需策划调手感的数值，一律走 `config/TerminalConfigValue.number/integer/bool(group, target, property, base, min, max)`**，注册在 `ModEquipmentConfig` / `ModProjectilesConfig` / `ModArtilleryConfig`。键自动生成为 `global.<target>.<property>`，经 `TerminalConfigValue.specs()` 被 `TerminalParameterCatalog` 收集进终端；读取用同一对象的 `.get()`。
+- **不要为手感参数手写 `TerminalParameterCatalog.add(specs, ...)`**：它生成的键是 `<group>.<target>.<property>`（如 `equipment.<target>.<property>`），而 `TerminalConfigValue.get()` 只读 `global.` 键 → 终端里「能改但不生效」的死参数。`add()` 仅用于读取侧也按同一非 global 键直读的目录项（雷达/声呐/导弹发射器的 `equipment.<注册名>.*`，读取在 `MissileLauncherItem#parameterKey`）。
+- **命名避开终端名字启发式**（`TerminalParameterSpec.isLinearSpeed` / `isTickDuration`）：property 恰为 `speed` / `panel_speed` / `initial_speed` / `full_load_speed` / `empty_speed` / `movement_speed` 会按「格/tick × 20」显示成 t/s；property 为 `reload_time` / `fire_cooldown` / `salvo_interval` 或以 `_cooldown` 结尾会按「× 0.05」显示成秒。单位对不上就换名，例如导弹速度曲线用 `speed_initial` / `speed_increment` / `speed_max`（避开 `initial_speed` / `max_speed`）。
+- 本次下沉的主要分组（均为 `global.<target>.*`）：`torpedo`、`torpedo_salvo`、`shell`、`tracking`、`depth_charge`、`missile` / `missile_anti_ship` / `missile_anti_air` / `missile_rocket`、`aerial_bomb`（重力）、`small_ship`、`fire_debuff`、`aircraft_flight`、`fighter_combat` / `dive_bomber_combat` / `torpedo_bomber_combat` / `rocket_fighter_combat`、`level_bomber`、`type3`（终端分组 artillery）、`ciws_20mm` / `ciws_40mm` / `ciws_76mm`（`.damage`）；另有导弹发射器 `equipment.<注册名>.*`。
+- 默认值 = 下沉前的写死值（纯重构）。NPC 炮弹/鱼雷手感统一经 `npc/ai/NpcCombatTuning` 读取，消除 `TorpedoAttackGoal` / `ShipGirlCombatGoal` 等处的逐字复制。
+
+### 火控瞄准点 = 目标眼睛高度（2026-10-05 起统一）
+- 统一真源：`combat/CombatTargeting.aimPoint(entity)` = `Entity#getEyeY()`（原版溺水/窒息判定用的那个位置），返回 `(getX, getEyeY, getZ)`。之所以取 `Entity` 而非 `LivingEntity` 的眼睛 API：`AircraftEntity` 不继承 `LivingEntity`。
+- 覆盖：HUD 预瞄圈（`FireControlVisualRenderer`）、火控包视线校验（`FireControlPayload`）、炮弹追踪/转向（`CannonProjectileEntity`）、导弹锁定与制导（`MissileEntity`、`MissileFireStrategy`）。此前各点各写 `getBbHeight() * 0.4~0.5`，导致「圈画在头高、炮弹打腰线」。
+- 例外（保持原样，勿顺手统一）：炮弹 VT 近炸引信取实体几何中心（`CannonProjectileEntity` 约 :453）；鱼雷水平拦截点的 y 取发射高度（`FireControlVisualRenderer` 把 `torpedoIntercept` 的 y 覆盖为 `start.y`）。
+
+### 已删除功能（勿照旧文档/旧提示加回）
+- **Y 键战场高亮已删除**（`ac9ec5bb`）：模组侧高亮只剩两档——原版发光恒最优先 > 火控红框 > 声呐黄框。`EntityHighlightHandler` 仅保留火控高亮与 ASW 声呐高亮两块；`ModKeyMappings` 已无对应键位。
+- **火控雷达 0 键准星吸附已删除**（`9003fc00`）：火控雷达只保留炮弹追踪——等级 1/2/3 对应追踪范围 8/12/16 格、转向系数 0.02/0.04/0.06（`ModEquipmentConfig.FC_RADAR_L*`，读取在 `combat/cannon/FireControlRadarTracking.forLevel`）。`SnapDecision`、`FireControlRadarSnapHandler`、`ToggleFcRadarPayload`、`FcRangeRequestPayload`、`FcRangeSyncPayload`、数据组件 `SHIP_FC_RADAR_ON` 均已删除。
+
+### 鱼雷：水下贴水面巡航 + 线导客户端权威（易被误当 bug，勿改回）
+- **目标行为是「水面之下贴水面」潜航，不是浮在水面之上**：目标深度 = 水面顶面 − `global.torpedo.surface_depth`（默认 0.5），雷体中心对齐；垂直收敛用 `surface_vertical_adjust` / `surface_vertical_max_speed`，捕获窗口 `surface_capture_range`（见 `TorpedoEntity.solveSurfaceVy`）。
+- **深水不强行拉回**：水面捕获窗口之外（潜艇深水、水中发射）保持既有垂直运动（`solveSurfaceVy` 返回当前 vy），避免把深雷硬拽上水面；上方无水时禁止上浮。
+- **线导期间客户端权威**（`178c9af1`）：`TorpedoEntity` 覆写 `isControlledByLocalInstance()` 与 `lerpMotion()`——仅对「本地玩家正在引导的线导鱼雷」返回 true / 忽略服务端速度包，使原版跳过服务端位置与传送校正。服务端仍按上传输入包（`combat/TorpedoGuidanceManager`）跑一份权威副本做命中/爆炸裁决。WHY：消除线导第一人称的镜头回拉。**这是消除网络延迟的正当设计，不要当成「客户端作弊通道」删掉。**
+- 客户端插值走自研 `lerpTo`（与 `CannonProjectileEntity` 同一套，修复原版 `lerpTo` 直接 `setPos` 导致的航行抽搐）；航速与五个模式标志（磁引信/线导/声导/氧气/空投）走 `SynchedEntityData` 同步，客户端每 tick `syncClientState` 刷新。
+
+### 水平轰炸机：保留前抛 + 提前量投弹
+- 航弹保留前抛——继承载机水平速度 × `global.level_bomber.horizontal_velocity_multiplier`（默认 0.5）。
+- 投弹判据不再是固定「< 3 格」：由 `combat/LevelBombLead.releaseDistance(...)` 按航弹真实物理（复刻 `ThrowableProjectile#tick` 的「先位移 → 阻尼 0.99 → 重力」逐行顺序）反推提前距离，水平距离 ≤ 提前距离才投（下限 `global.level_bomber.min_release_distance`）。落点标记与实体弹道同源。
+- 保留 ±0.5 格随机散布（`global.level_bomber.bomb_spread` 默认 1.0 → `(rand − 0.5) × 1.0`）。
+- 飞行手感不变：Phase 1 爬升 `climb_speed_multiplier` 0.4、Phase 2 航线 `run_speed_multiplier` 0.6、投弹高度 `altitude_offset` +32。
+
+### 自动索敌的敌我识别（2026-10-05）
+- 自动索敌与「自动进入攻击态」只打敌对目标，不得自动开打 `Animal` / `Villager` / 友军。对地自动索敌走 `CombatTargeting.isHostileTarget`（只认 `Enemy` 与敌对飞机）。
+- **声呐标记不受影响**：仍标记所有水生生物（含鲑鱼/海豚/玩家，策划既定玩法）。声呐判据 `AircraftAswRecon.isAswTarget` 本体保持不变；自动索敌/自动进入攻击态另用 `AircraftAswRecon.isHostileAswTarget`（= `isAswTarget` && `isHostileTarget`），别把过滤加回 `isAswTarget`。
+- 手动中键/火控锁定不限制（尊重玩家意图）。
+
 ---
 
 ## Build & Run

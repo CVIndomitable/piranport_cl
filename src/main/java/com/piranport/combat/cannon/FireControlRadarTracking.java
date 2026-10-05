@@ -35,7 +35,7 @@ public final class FireControlRadarTracking {
      *
      * @param pos       炮弹位置
      * @param velocity  炮弹当前速度
-     * @param aimPoint  目标瞄准点（目标中心）
+     * @param aimPoint  目标瞄准点（统一取目标眼睛高度，见 {@code CombatTargeting.aimPoint}）
      * @param params    追踪参数
      * @return 修正后的速度；未进入范围、目标已在身后或参数无效时原样返回
      */

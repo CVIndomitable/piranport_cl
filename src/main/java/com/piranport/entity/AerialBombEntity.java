@@ -50,15 +50,23 @@ public class AerialBombEntity extends ThrowableItemProjectile {
         if (!level().isClientSide() && tickCount > MAX_LIFETIME) discard();
     }
 
+    /**
+     * 航弹重力（每 tick 的垂直加速度，格/tick²），强于原版投掷物默认的 0.03，模拟自由落体炸弹。
+     *
+     * <p>公开为常量是为了让「实体物理、客户端落点标记、投弹提前量解算」三处共用同一来源：
+     * 任何一处单独写死 0.06 都会随调参漂移，导致标记指向与实际弹着点、提前量互相错位。
+     */
+    public static final double GRAVITY = 0.06;
+
     /** 重力强于默认值(0.03)，模拟自由落体炸弹 */
     @Override
     protected double getDefaultGravity() {
-        return 0.06;
+        return GRAVITY;
     }
 
     /** Gravity exposed to the client landing marker prediction. */
     public double getMarkerGravity() {
-        return getDefaultGravity();
+        return GRAVITY;
     }
 
     @Override

@@ -51,6 +51,11 @@ public final class ModEquipmentConfig {
     public static final TerminalConfigValue<Double> TORPEDO_SPREAD_TUBES7 =
             TerminalConfigValue.number("equipment", "torpedo_spread", "tubes7_max_angle", 5.0, 0.0, 45.0);
 
+    // 水平轰炸机投弹时，航弹继承载机水平速度的倍数（保留前抛，恢复改动前的 0.5，可调试终端实时调）。
+    // 投弹提前距离随此值自动重算（见 combat/LevelBombLead），所以改这里不会让弹着点重新偏前/偏后。
+    public static final TerminalConfigValue<Double> LEVEL_BOMBER_HORIZONTAL_VELOCITY_MULTIPLIER =
+            TerminalConfigValue.number("equipment", "level_bomber", "horizontal_velocity_multiplier", 0.5, 0.0, 2.0);
+
     public static final TerminalConfigValue<Double> ARMOR_PLATE_PROTECTION =
             TerminalConfigValue.number("equipment", "equipment", "armor_plate_protection", 3.0, 0.0, 100.0);
 

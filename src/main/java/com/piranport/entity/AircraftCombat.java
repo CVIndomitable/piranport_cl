@@ -2,9 +2,11 @@ package com.piranport.entity;
 
 import com.piranport.aviation.AircraftDefinition;
 import com.piranport.aviation.AircraftDefinitionService;
+import com.piranport.combat.LevelBombLead;
 import com.piranport.component.AircraftInfo;
 import com.piranport.component.AircraftAttackMode;
 import com.piranport.config.ModCommonConfig;
+import com.piranport.config.ModEquipmentConfig;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -368,17 +370,15 @@ public class AircraftCombat {
     }
 
     // ==== 水平轰炸机投弹参数 ====
-    // 出处：策划决策/航空/18-水平轰炸机轰炸航线模式.md
-    // 投弹高度相对目标的高度差（决策要求 +32）
+    // 投弹高度相对目标的高度差（+32，飞行手感维持不变，勿改）
     private static final double LEVEL_BOMB_ALTITUDE_OFFSET = 32.0;
-    // 投弹水平距离判据，进入该距离内即投弹（决策要求 <3 格）
-    private static final double LEVEL_BOMB_HORIZ_DROP_DISTANCE = 3.0;
-    // 投弹初速的水平速度乘数，乘载机当前水平速度（决策要求 ×0.1，近乎垂直坠落）；
-    // 此值与 LEVEL_BOMB_VERTICAL_VELOCITY 独立，不可合并
-    private static final double LEVEL_BOMB_HORIZONTAL_VELOCITY_MULTIPLIER = 0.1;
-    // 投弹初速的垂直分量（决策要求 -0.1，近乎垂直坠落）；
-    // 此值与 LEVEL_BOMB_HORIZONTAL_VELOCITY_MULTIPLIER 独立，不可合并
-    private static final double LEVEL_BOMB_VERTICAL_VELOCITY = -0.1;
+    // 投弹初速的垂直分量（恢复改动前的 -0.3）：航弹保留近垂直下坠的手感。
+    // 水平分量不在此写死——它 = 载机当前水平速度 × 终端参数倍数，见 LEVEL_BOMBER_HORIZONTAL_VELOCITY_MULTIPLIER。
+    private static final double LEVEL_BOMB_VERTICAL_VELOCITY = -0.3;
+    // 投弹提前判据的最小窗口（半格）：倍数为 0（无前抛）时提前距离也算得 0，
+    // 判据会退化成「必须恰好 0 格」而永远不成立，只能等 200 tick 超时把弹丢到目标身后。
+    // 半格窗口保证这种极端设置下也能在目标正上方附近投弹；正常倍数下提前距离远大于此，不影响。
+    private static final double LEVEL_BOMB_MIN_RELEASE_DISTANCE = 0.5;
 
     /** @see AircraftEntity#tickLevelBomberAttack(Player, LivingEntity) */
     public static void tickLevelBomberAttack(AircraftEntity craft, @Nullable Player owner, LivingEntity target) {
@@ -417,22 +417,39 @@ public class AircraftCombat {
 
         craft.levelRunTicks++;
 
-        // Drop bomb when within range, or timeout after 200 ticks
-        if ((horizDist < LEVEL_BOMB_HORIZ_DROP_DISTANCE || craft.levelRunTicks > 200) && !craft.levelBombDropped) {
-            float bombPower = craft.getPanelDamage();
-            int bombCount = Math.max(1, craft.remainingAmmo);
-            for (int i = 0; i < bombCount; i++) {
-                AerialBombEntity bomb = new AerialBombEntity(craft.level(), bombPower / bombCount, 4.0f);
-                double spreadX = (craft.level().random.nextDouble() - 0.5) * 1.0;
-                double spreadZ = (craft.level().random.nextDouble() - 0.5) * 1.0;
-                bomb.moveTo(craft.getX() + spreadX, craft.getY() - 0.5, craft.getZ() + spreadZ, 0, 0);
-                bomb.setDeltaMovement(craft.getDeltaMovement().x * LEVEL_BOMB_HORIZONTAL_VELOCITY_MULTIPLIER, LEVEL_BOMB_VERTICAL_VELOCITY, craft.getDeltaMovement().z * LEVEL_BOMB_HORIZONTAL_VELOCITY_MULTIPLIER);
-                bomb.setOwner(owner);
-                craft.level().addFreshEntity(bomb);
+        // 投弹判据：载机到目标的水平距离 ≤ 提前距离时投弹。
+        // 提前距离 = 航弹从投弹高度落到目标高度期间自身的水平前进量（保留前抛的直接后果），
+        // 由 LevelBombLead 按 ThrowableProjectile#tick 的逐行物理积分算出。删掉了旧的固定 <3 格判据。
+        if (!craft.levelBombDropped) {
+            double craftHorizontalSpeed = Math.sqrt(craft.getDeltaMovement().x * craft.getDeltaMovement().x
+                    + craft.getDeltaMovement().z * craft.getDeltaMovement().z);
+            double horizontalMultiplier = ModEquipmentConfig.LEVEL_BOMBER_HORIZONTAL_VELOCITY_MULTIPLIER.get();
+            // 起始高度与 bomb.moveTo 的 y 一致（craft.getY() - 0.5），目标高度取其脚底。
+            double dropHeight = (craft.getY() - 0.5) - target.getY();
+            // 重力读实体自身（AerialBombEntity.GRAVITY），不写死数字，避免与实体/落点标记漂移。
+            double leadDistance = LevelBombLead.releaseDistance(dropHeight, AerialBombEntity.GRAVITY,
+                    craftHorizontalSpeed * horizontalMultiplier, LEVEL_BOMB_VERTICAL_VELOCITY);
+
+            if (horizDist <= Math.max(leadDistance, LEVEL_BOMB_MIN_RELEASE_DISTANCE) || craft.levelRunTicks > 200) {
+                float bombPower = craft.getPanelDamage();
+                int bombCount = Math.max(1, craft.remainingAmmo);
+                for (int i = 0; i < bombCount; i++) {
+                    AerialBombEntity bomb = new AerialBombEntity(craft.level(), bombPower / bombCount, 4.0f);
+                    // 保留 ±0.5 格随机散布：提前量把弹着点拉回目标，但不必弹弹正中。
+                    double spreadX = (craft.level().random.nextDouble() - 0.5) * 1.0;
+                    double spreadZ = (craft.level().random.nextDouble() - 0.5) * 1.0;
+                    bomb.moveTo(craft.getX() + spreadX, craft.getY() - 0.5, craft.getZ() + spreadZ, 0, 0);
+                    // 保留前抛：航弹继承载机水平速度 × 倍数（终端可调，默认 0.5）。
+                    bomb.setDeltaMovement(craft.getDeltaMovement().x * horizontalMultiplier,
+                            LEVEL_BOMB_VERTICAL_VELOCITY,
+                            craft.getDeltaMovement().z * horizontalMultiplier);
+                    bomb.setOwner(owner);
+                    craft.level().addFreshEntity(bomb);
+                }
+                craft.remainingAmmo = 0;
+                craft.levelBombDropped = true;
+                craft.levelDropPoint = craft.position();
             }
-            craft.remainingAmmo = 0;
-            craft.levelBombDropped = true;
-            craft.levelDropPoint = craft.position();
         }
 
         // After dropping, fly for a few more ticks then return

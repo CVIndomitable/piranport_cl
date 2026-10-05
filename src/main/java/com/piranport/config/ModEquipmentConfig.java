@@ -624,4 +624,131 @@ public final class ModEquipmentConfig {
     /** 交易价格浮动倍率（传给 MerchantOffer）。默认 0.05。 */
     public static final TerminalConfigValue<Double> VILLAGER_PRICE_MULTIPLIER =
             TerminalConfigValue.number("economy", "villager_trade", "price_multiplier", 0.05, 0.0, 1.0);
+
+    // ===== 深海敌人 AI（2026-10-05 下沉）=====
+    // WHY：这些原先是 LowTierDestroyer / DeepOceanProjectile / DeepOceanSupply / AircraftLaunchGoal
+    // 里的写死手感常量，策划需要反复调（用户规则：手感数值一律终端可调）。默认值全部 = 下沉前
+    // 写死值，纯重构、行为等价。键：global.<target>.*，group=deep_ocean 使其归入终端「深海舰」分类。
+    // 命名注意：*_ticks 为整数 tick 时长（终端原样显示 tick）；orbit_angular_speed 单位为弧度/tick；
+    // surface_speed 单位为格/tick；speed/inaccuracy 复用既有的 global.shell.*（见 ModProjectilesConfig）。
+
+    // ---- 低阶驱逐舰（target=low_tier_destroyer）----
+    /** 侦测/开火距离（格）。默认 30.0。 */
+    public static final TerminalConfigValue<Double> LOW_TIER_DESTROYER_DETECTION_RANGE =
+            TerminalConfigValue.number("deep_ocean", "low_tier_destroyer_ai", "detection_range", 30.0, 1.0, 256.0);
+    /** 环绕目标的偏好距离（格）。默认 15.0。 */
+    public static final TerminalConfigValue<Double> LOW_TIER_DESTROYER_ORBIT_DISTANCE =
+            TerminalConfigValue.number("deep_ocean", "low_tier_destroyer_ai", "orbit_distance", 15.0, 0.0, 256.0);
+    /** 环绕角速度（弧度/tick）。默认 0.02。 */
+    public static final TerminalConfigValue<Double> LOW_TIER_DESTROYER_ORBIT_ANGULAR_SPEED =
+            TerminalConfigValue.number("deep_ocean", "low_tier_destroyer_ai", "orbit_angular_speed", 0.02, 0.0, 3.141592653589793);
+    /** 水面水平移动速度（格/tick）。默认 0.12。 */
+    public static final TerminalConfigValue<Double> LOW_TIER_DESTROYER_SURFACE_SPEED =
+            TerminalConfigValue.number("deep_ocean", "low_tier_destroyer_ai", "surface_speed", 0.12, 0.0, 10.0);
+    /** 开火间隔（tick）。默认 100（0.2 发/秒）。 */
+    public static final TerminalConfigValue<Integer> LOW_TIER_DESTROYER_FIRE_INTERVAL_TICKS =
+            TerminalConfigValue.integer("deep_ocean", "low_tier_destroyer_ai", "fire_interval_ticks", 100, 1, 12000);
+    /** 炮弹伤害（小口径 HE）。默认 4.0。 */
+    public static final TerminalConfigValue<Double> LOW_TIER_DESTROYER_SHELL_DAMAGE =
+            TerminalConfigValue.number("deep_ocean", "low_tier_destroyer_ai", "shell_damage", 4.0, 0.0, 10000.0);
+    /** 炮弹爆炸威力。默认 1.5。 */
+    public static final TerminalConfigValue<Double> LOW_TIER_DESTROYER_EXPLOSION_POWER =
+            TerminalConfigValue.number("deep_ocean", "low_tier_destroyer_ai", "explosion_power", 1.5, 0.0, 100.0);
+    /** 共享警戒半径（格）：把当前目标同步给此范围内尚未锁敌的同型驱逐舰。默认 40.0。 */
+    public static final TerminalConfigValue<Double> LOW_TIER_DESTROYER_ALERT_RANGE =
+            TerminalConfigValue.number("deep_ocean", "low_tier_destroyer_ai", "alert_range", 40.0, 0.0, 512.0);
+
+    // ---- 深海炮弹（target=deep_ocean_projectile，DeepOceanProjectileEntity）----
+    /** 兜底伤害（仅未由发射方指定时生效，如实体注册构造/NBT 缺省回填）。默认 5.0。 */
+    public static final TerminalConfigValue<Double> DEEP_OCEAN_PROJECTILE_DAMAGE =
+            TerminalConfigValue.number("deep_ocean", "deep_ocean_projectile", "damage", 5.0, 0.0, 10000.0);
+    /** 兜底爆炸威力。默认 1.5。 */
+    public static final TerminalConfigValue<Double> DEEP_OCEAN_PROJECTILE_EXPLOSION_POWER =
+            TerminalConfigValue.number("deep_ocean", "deep_ocean_projectile", "explosion_power", 1.5, 0.0, 100.0);
+    /** 近炸引信检测/起爆距离（格）。默认 3.0。 */
+    public static final TerminalConfigValue<Double> DEEP_OCEAN_PROJECTILE_PROXIMITY_RANGE =
+            TerminalConfigValue.number("deep_ocean", "deep_ocean_projectile", "proximity_range", 3.0, 0.0, 128.0);
+    /** 近炸引信起爆前安全延迟（tick）。默认 5。 */
+    public static final TerminalConfigValue<Integer> DEEP_OCEAN_PROJECTILE_ARM_TICKS =
+            TerminalConfigValue.integer("deep_ocean", "deep_ocean_projectile", "arm_ticks", 5, 0, 12000);
+    /** 抛物线弹重力（格/tick²）；DIRECT 弹不走重力。默认 0.05。 */
+    public static final TerminalConfigValue<Double> DEEP_OCEAN_PROJECTILE_GRAVITY =
+            TerminalConfigValue.number("deep_ocean", "deep_ocean_projectile", "gravity", 0.05, 0.0, 10.0);
+    /** 最大存活时长（tick），到期自毁防泄漏。默认 200（10 秒）。 */
+    public static final TerminalConfigValue<Integer> DEEP_OCEAN_PROJECTILE_LIFETIME_TICKS =
+            TerminalConfigValue.integer("deep_ocean", "deep_ocean_projectile", "lifetime_ticks", 200, 1, 120000);
+
+    // ---- 深海补给舰（target=deep_ocean_supply）----
+    /** 支援附近友军的间隔（tick）。默认 80。 */
+    public static final TerminalConfigValue<Integer> DEEP_OCEAN_SUPPLY_INTERVAL_TICKS =
+            TerminalConfigValue.integer("deep_ocean", "deep_ocean_supply_ai", "support_interval_ticks", 80, 1, 12000);
+    /** 支援作用半径（格）。默认 8.0。 */
+    public static final TerminalConfigValue<Double> DEEP_OCEAN_SUPPLY_RADIUS =
+            TerminalConfigValue.number("deep_ocean", "deep_ocean_supply_ai", "support_radius", 8.0, 0.0, 256.0);
+    /** 每次支援的单体治疗量。默认 3.0。 */
+    public static final TerminalConfigValue<Double> DEEP_OCEAN_SUPPLY_HEAL_AMOUNT =
+            TerminalConfigValue.number("deep_ocean", "deep_ocean_supply_ai", "support_heal_amount", 3.0, 0.0, 10000.0);
+    /** 每次支援最多治疗的友军数。默认 2。 */
+    public static final TerminalConfigValue<Integer> DEEP_OCEAN_SUPPLY_TARGET_LIMIT =
+            TerminalConfigValue.integer("deep_ocean", "deep_ocean_supply_ai", "support_target_limit", 2, 1, 64);
+
+    // ---- NPC 航母放飞（target=npc_carrier，AircraftLaunchGoal）----
+    /** 两次放飞之间的间隔（tick）。默认 300（15 秒）。 */
+    public static final TerminalConfigValue<Integer> NPC_CARRIER_READY_INTERVAL_TICKS =
+            TerminalConfigValue.integer("deep_ocean", "npc_carrier", "ready_interval_ticks", 300, 1, 120000);
+    /** 首次放飞前的初始延迟（tick）。默认 100（5 秒）。 */
+    public static final TerminalConfigValue<Integer> NPC_CARRIER_INITIAL_DELAY_TICKS =
+            TerminalConfigValue.integer("deep_ocean", "npc_carrier", "initial_delay_ticks", 100, 0, 120000);
+
+    // ===== 副本节奏（2026-10-05 下沉）=====
+    // WHY：副本难度缩放与脚本时序原先是 DungeonScaling / DungeonConstants / BossAntiStuckArea
+    // 里的写死平衡值，策划需要反复调（用户规则）。默认值全部 = 下沉前写死值，纯重构、行为等价。
+    // 键：global.<target>.*，group=dungeon（终端「系统参数」分类）。
+    // 注意：DungeonScaling 是纯逻辑类且有单测，读取终端参数后在无覆盖时会回落到基准值，
+    // 因此单测默认行为与改前逐字节一致。
+
+    // ---- 难度缩放（target=dungeon_scaling）----
+    /** 单实例同时在线人数上限（用于缩放取值的钳制）。默认 4。 */
+    public static final TerminalConfigValue<Integer> DUNGEON_MAX_PLAYERS =
+            TerminalConfigValue.integer("dungeon", "dungeon_scaling", "max_players", 4, 1, 64);
+    /** 血量倍率 = 1 + 该值 × (人数 − 1)。默认 0.5。 */
+    public static final TerminalConfigValue<Double> DUNGEON_HEALTH_SCALE_PER_PLAYER =
+            TerminalConfigValue.number("dungeon", "dungeon_scaling", "health_scale_per_player", 0.5, 0.0, 100.0);
+    /** 波数 = ceil(基础波数 × (1 + 该值 × (人数 − 1)))。默认 0.2。 */
+    public static final TerminalConfigValue<Double> DUNGEON_WAVE_SCALE_PER_PLAYER =
+            TerminalConfigValue.number("dungeon", "dungeon_scaling", "wave_scale_per_player", 0.2, 0.0, 100.0);
+    /** 迷路的运输舰替换概率（第二章起每波）。默认 0.10。 */
+    public static final TerminalConfigValue<Double> DUNGEON_LOST_TRANSPORT_CHANCE =
+            TerminalConfigValue.number("dungeon", "dungeon_scaling", "lost_transport_chance", 0.10, 0.0, 1.0);
+
+    // ---- 副本时序（target=dungeon_timing）----
+    /** 战利品箱船自动消失时长（tick）。默认 6000（300 秒）。 */
+    public static final TerminalConfigValue<Integer> DUNGEON_LOOT_SHIP_DESPAWN_TICKS =
+            TerminalConfigValue.integer("dungeon", "dungeon_timing", "loot_ship_despawn_ticks", 6000, 1, 1000000);
+    /** 回城卷轴使用冷却（tick，终端按秒显示）。默认 60（3 秒）。 */
+    public static final TerminalConfigValue<Integer> DUNGEON_TOWN_SCROLL_COOLDOWN =
+            TerminalConfigValue.integer("dungeon", "dungeon_timing", "town_scroll_cooldown", 60, 0, 12000);
+    /** Boss 演出开场阶段超时（tick）：Boss 就位后经过该延时进入战斗。默认 60（3 秒）。 */
+    public static final TerminalConfigValue<Integer> DUNGEON_BOSS_INTRO_PHASE_TIMEOUT_TICKS =
+            TerminalConfigValue.integer("dungeon", "dungeon_timing", "boss_intro_phase_timeout_ticks", 60, 0, 120000);
+    /** Boss 战安全超时（tick），自战斗开始计时。默认 12000（10 分钟）。 */
+    public static final TerminalConfigValue<Integer> DUNGEON_BOSS_INTRO_BATTLE_TIMEOUT_TICKS =
+            TerminalConfigValue.integer("dungeon", "dungeon_timing", "boss_intro_battle_timeout_ticks", 12000, 0, 10000000);
+    /** Boss 击败后到退场演出的延时（tick）。默认 60（3 秒）。 */
+    public static final TerminalConfigValue<Integer> DUNGEON_BOSS_INTRO_DEFEAT_DELAY_TICKS =
+            TerminalConfigValue.integer("dungeon", "dungeon_timing", "boss_intro_defeat_delay_ticks", 60, 0, 120000);
+    /** 火炮登场关卡「拾取阶段」超时（tick）。默认 6000（5 分钟）。 */
+    public static final TerminalConfigValue<Integer> DUNGEON_ARTILLERY_INTRO_LOOTING_TIMEOUT_TICKS =
+            TerminalConfigValue.integer("dungeon", "dungeon_timing", "artillery_intro_looting_timeout_ticks", 6000, 1, 10000000);
+    /** 火炮登场关卡：玩家离补给箱超过该距离（格）即提前进入战斗。默认 20.0。 */
+    public static final TerminalConfigValue<Double> DUNGEON_ARTILLERY_INTRO_LEAVE_DISTANCE =
+            TerminalConfigValue.number("dungeon", "dungeon_timing", "artillery_intro_leave_distance", 20.0, 0.0, 512.0);
+
+    // ---- Boss 防卡死区（target=boss_anti_stuck）----
+    /** 环境破坏执行间隔（tick）。默认 100（5 秒）。最小值 2，因为内部还会做 /2 取子周期。 */
+    public static final TerminalConfigValue<Integer> BOSS_ANTI_STUCK_TICK_INTERVAL =
+            TerminalConfigValue.integer("dungeon", "boss_anti_stuck", "tick_interval", 100, 2, 120000);
+    /** 环境破坏影响半径（格）。默认 24。 */
+    public static final TerminalConfigValue<Integer> BOSS_ANTI_STUCK_RADIUS =
+            TerminalConfigValue.integer("dungeon", "boss_anti_stuck", "radius", 24, 1, 256);
 }

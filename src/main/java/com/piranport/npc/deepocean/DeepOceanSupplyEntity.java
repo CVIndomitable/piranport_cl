@@ -1,5 +1,6 @@
 package com.piranport.npc.deepocean;
 
+import com.piranport.config.ModEquipmentConfig;
 import com.piranport.item.KeyFragmentItem;
 import com.piranport.npc.ai.goal.FleetAlertGoal;
 import com.piranport.npc.ai.goal.IdleWanderGoal;
@@ -26,10 +27,7 @@ import net.minecraft.world.level.Level;
  * HP:20 Armor:0 Speed:1.2 Detection:16
  */
 public class DeepOceanSupplyEntity extends AbstractDeepOceanEntity {
-    private static final int SUPPORT_INTERVAL_TICKS = 80;
-    private static final double SUPPORT_RADIUS = 8.0;
-    private static final float SUPPORT_HEAL_AMOUNT = 3.0f;
-    private static final int SUPPORT_TARGET_LIMIT = 2;
+    // 支援手感数值走调试终端（global.deep_ocean_supply.*，见 ModEquipmentConfig）。
 
     public DeepOceanSupplyEntity(EntityType<? extends DeepOceanSupplyEntity> type, Level level) {
         super(type, level);
@@ -55,7 +53,7 @@ public class DeepOceanSupplyEntity extends AbstractDeepOceanEntity {
     @Override
     public void aiStep() {
         super.aiStep();
-        if (!level().isClientSide() && tickCount % SUPPORT_INTERVAL_TICKS == 0) {
+        if (!level().isClientSide() && tickCount % ModEquipmentConfig.DEEP_OCEAN_SUPPLY_INTERVAL_TICKS.get() == 0) {
             supportNearbyFleet();
         }
     }
@@ -67,18 +65,20 @@ public class DeepOceanSupplyEntity extends AbstractDeepOceanEntity {
 
     private void supportNearbyFleet() {
         int healed = 0;
+        float healAmount = (float) (double) ModEquipmentConfig.DEEP_OCEAN_SUPPLY_HEAL_AMOUNT.get();
+        int targetLimit = ModEquipmentConfig.DEEP_OCEAN_SUPPLY_TARGET_LIMIT.get();
         for (AbstractDeepOceanEntity ally : level().getEntitiesOfClass(
                 AbstractDeepOceanEntity.class,
-                getBoundingBox().inflate(SUPPORT_RADIUS),
+                getBoundingBox().inflate(ModEquipmentConfig.DEEP_OCEAN_SUPPLY_RADIUS.get()),
                 ally -> ally != this && ally.isAlive() && ally.getHealth() < ally.getMaxHealth())) {
-            ally.heal(SUPPORT_HEAL_AMOUNT);
+            ally.heal(healAmount);
             healed++;
             if (level() instanceof ServerLevel serverLevel) {
                 serverLevel.sendParticles(ParticleTypes.BUBBLE_POP,
                         ally.getX(), ally.getY() + 0.7, ally.getZ(),
                         8, 0.25, 0.25, 0.25, 0.02);
             }
-            if (healed >= SUPPORT_TARGET_LIMIT) {
+            if (healed >= targetLimit) {
                 break;
             }
         }

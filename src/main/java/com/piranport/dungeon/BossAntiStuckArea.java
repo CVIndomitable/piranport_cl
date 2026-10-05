@@ -1,5 +1,6 @@
 package com.piranport.dungeon;
 
+import com.piranport.config.ModEquipmentConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
@@ -15,8 +16,8 @@ import java.util.Set;
  * Boss 战环境破坏器 — 策划决策/副本/07-Boss战环境防卡地形设计.md
  *
  * <p>实现方案 B：环境自带爆炸与变动，防止玩家用黑曜石/气泡柱/末影水晶等
- * "固定设备"困住 Boss。每隔 {@link #TICK_INTERVAL} tick 在 Boss 周围
- * 半径 {@link #RADIUS} 内执行：</p>
+ * "固定设备"困住 Boss。每隔 global.boss_anti_stuck.tick_interval tick 在 Boss 周围
+ * 半径 global.boss_anti_stuck.radius 内执行：</p>
  * <ul>
  *   <li>爆破黑曜石/哭泣的黑曜石/气泡柱方块（还原为空气）</li>
  *   <li>触发小型原版爆炸（仅伤害玩家方块破坏范围，不破坏地形防止连锁）</li>
@@ -27,10 +28,7 @@ import java.util.Set;
  */
 public final class BossAntiStuckArea {
 
-    /** 每 100 tick（5 秒）执行一次环境破坏。 */
-    public static final int TICK_INTERVAL = 100;
-    /** 影响半径（围绕 Boss 中心）。 */
-    public static final int RADIUS = 24;
+    // 执行间隔与影响半径走调试终端（global.boss_anti_stuck.*，见 ModEquipmentConfig）。
     /** 环境中爆破的方块列表。 */
     private static final Set<net.minecraft.world.level.block.Block> DISSOLVE_BLOCKS = new HashSet<>();
 
@@ -52,7 +50,9 @@ public final class BossAntiStuckArea {
      */
     public static int tick(ServerLevel level, LivingEntity boss) {
         if (level == null || boss == null || !boss.isAlive()) return 0;
-        AABB area = boss.getBoundingBox().inflate(RADIUS);
+        int interval = ModEquipmentConfig.BOSS_ANTI_STUCK_TICK_INTERVAL.get();
+        int radius = ModEquipmentConfig.BOSS_ANTI_STUCK_RADIUS.get();
+        AABB area = boss.getBoundingBox().inflate(radius);
         BlockPos center = boss.blockPosition();
 
         // 1) 销毁黑曜石/气泡柱方块（末影水晶作为实体由玩家主动拆除）
@@ -60,7 +60,7 @@ public final class BossAntiStuckArea {
         for (BlockPos p : BlockPos.betweenClosed(
                 (int) area.minX, (int) area.minY, (int) area.minZ,
                 (int) area.maxX, (int) area.maxY, (int) area.maxZ)) {
-            if (center.distSqr(p) > (double) RADIUS * RADIUS) continue;
+            if (center.distSqr(p) > (double) radius * radius) continue;
             var state = level.getBlockState(p);
             if (DISSOLVE_BLOCKS.contains(state.getBlock())) {
                 level.setBlock(p, Blocks.AIR.defaultBlockState(), 3);
@@ -70,7 +70,7 @@ public final class BossAntiStuckArea {
 
         // 2) 周期性小型环境爆炸（火山喷发/海流冲击的占位效果）
         // 仅在 Boss 附近随机 1-2 个点，爆炸不破坏方块（NONE 交互），仅作粒子和音效
-        if (level.getGameTime() % (TICK_INTERVAL * 2L) == 0L) {
+        if (level.getGameTime() % (interval * 2L) == 0L) {
             for (int i = 0; i < 2; i++) {
                 double angle = level.random.nextDouble() * Math.PI * 2;
                 double r = 8 + level.random.nextDouble() * 12;
@@ -84,7 +84,7 @@ public final class BossAntiStuckArea {
         }
 
         // 3) 海流冲击占位效果（粒子）— 周期在 Boss 周围洒水粒子
-        if (level.getGameTime() % (TICK_INTERVAL / 2L) == 0L) {
+        if (level.getGameTime() % (interval / 2L) == 0L) {
             for (int i = 0; i < 8; i++) {
                 double angle = level.random.nextDouble() * Math.PI * 2;
                 double r = 6 + level.random.nextDouble() * 16;
@@ -100,10 +100,10 @@ public final class BossAntiStuckArea {
         return destroyed;
     }
 
-    /** 关卡侧 boss 房间 tick 钩子：每 TICK_INTERVAL tick 调用一次 tick()。 */
+    /** 关卡侧 boss 房间 tick 钩子：每 tick_interval tick 调用一次 tick()。 */
     public static void maybeTick(ServerLevel level, LivingEntity boss) {
         if (level == null || boss == null) return;
-        if (level.getGameTime() % TICK_INTERVAL != 0L) return;
+        if (level.getGameTime() % ModEquipmentConfig.BOSS_ANTI_STUCK_TICK_INTERVAL.get() != 0L) return;
         tick(level, boss);
     }
 }

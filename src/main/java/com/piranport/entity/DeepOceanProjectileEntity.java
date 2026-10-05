@@ -4,6 +4,7 @@ import com.piranport.npc.ai.ballistic.ProximityFuse;
 import com.piranport.npc.ai.ballistic.TrackingCalculator;
 import com.piranport.npc.deepocean.AbstractDeepOceanEntity;
 import com.piranport.config.ModCommonConfig;
+import com.piranport.config.ModEquipmentConfig;
 import com.piranport.registry.ModEntityTypes;
 import com.piranport.registry.ModItems;
 import net.minecraft.nbt.CompoundTag;
@@ -34,8 +35,10 @@ public class DeepOceanProjectileEntity extends ThrowableItemProjectile {
         DIRECT               // Straight line (no gravity)
     }
 
-    private float damage = 5.0f;
-    private float explosionPower = 1.5f;
+    // 兜底伤害/爆炸威力走调试终端（global.deep_ocean_projectile.*）；实际开火由发射方传入覆盖值，
+    // 此处仅在实体注册构造与 NBT 缺省回填时生效。
+    private float damage = (float) (double) ModEquipmentConfig.DEEP_OCEAN_PROJECTILE_DAMAGE.get();
+    private float explosionPower = (float) (double) ModEquipmentConfig.DEEP_OCEAN_PROJECTILE_EXPLOSION_POWER.get();
     private BallisticType ballisticType = BallisticType.PARABOLIC;
     private UUID trackingTargetUuid;
     private boolean pastApex = false;
@@ -44,8 +47,7 @@ public class DeepOceanProjectileEntity extends ThrowableItemProjectile {
 
     /** Proximity fuze settings. */
     private boolean hasProximityFuse = false;
-    private double proximityRange = 3.0;
-    private static final int ARM_TICKS = 5;
+    private double proximityRange = ModEquipmentConfig.DEEP_OCEAN_PROJECTILE_PROXIMITY_RANGE.get();
 
     // Required constructor for entity type registration
     public DeepOceanProjectileEntity(EntityType<? extends DeepOceanProjectileEntity> type, Level level) {
@@ -97,13 +99,14 @@ public class DeepOceanProjectileEntity extends ThrowableItemProjectile {
 
             // Proximity fuze check
             if (hasProximityFuse && !exploded) {
-                if (ProximityFuse.shouldDetonate(this, proximityRange, ARM_TICKS)) {
+                if (ProximityFuse.shouldDetonate(this, proximityRange,
+                        ModEquipmentConfig.DEEP_OCEAN_PROJECTILE_ARM_TICKS.get())) {
                     detonate();
                 }
             }
 
-            // Discard after 200 ticks (10 seconds) to prevent leaks
-            if (tickCount > 200) {
+            // Discard after lifetime ticks (default 200 = 10 seconds) to prevent leaks
+            if (tickCount > ModEquipmentConfig.DEEP_OCEAN_PROJECTILE_LIFETIME_TICKS.get()) {
                 if (hasProximityFuse && !exploded) {
                     detonate();
                 } else {
@@ -115,7 +118,8 @@ public class DeepOceanProjectileEntity extends ThrowableItemProjectile {
 
     @Override
     protected double getDefaultGravity() {
-        return ballisticType == BallisticType.DIRECT ? 0.0 : 0.05;
+        return ballisticType == BallisticType.DIRECT ? 0.0
+                : ModEquipmentConfig.DEEP_OCEAN_PROJECTILE_GRAVITY.get();
     }
 
     @Override
@@ -189,7 +193,7 @@ public class DeepOceanProjectileEntity extends ThrowableItemProjectile {
     public void readAdditionalSaveData(CompoundTag tag) {
         super.readAdditionalSaveData(tag);
         damage = tag.getFloat("Damage");
-        if (damage <= 0) damage = 5.0f;
+        if (damage <= 0) damage = (float) (double) ModEquipmentConfig.DEEP_OCEAN_PROJECTILE_DAMAGE.get();
         explosionPower = tag.getFloat("ExplosionPower");
         if (explosionPower < 0.1f) explosionPower = 0.1f;
         int typeOrd = tag.getInt("BallisticType");

@@ -4,6 +4,7 @@ import com.piranport.item.ShipType;
 
 import com.piranport.PiranPort;
 import com.piranport.combat.TransformationManager;
+import com.piranport.config.ModEquipmentConfig;
 import com.piranport.dungeon.DungeonConstants;
 import com.piranport.dungeon.entity.LootShipEntity;
 import com.piranport.dungeon.event.DungeonEventHandler;
@@ -352,8 +353,10 @@ public class ArtilleryIntroScript implements DungeonScript {
     private boolean tickLooting(ServerLevel level) {
         lootingTicks++;
 
+        int lootingTimeout = ModEquipmentConfig.DUNGEON_ARTILLERY_INTRO_LOOTING_TIMEOUT_TICKS.get();
+
         // Condition 1: timeout
-        if (lootingTicks >= DungeonConstants.ARTILLERY_INTRO_LOOTING_TIMEOUT) {
+        if (lootingTicks >= lootingTimeout) {
             startBattle(level, "timeout");
             return true;
         }
@@ -374,7 +377,7 @@ public class ArtilleryIntroScript implements DungeonScript {
         // Condition 2: any player > 20 blocks from crate
         for (ServerPlayer player : online) {
             double dist = player.distanceToSqr(crate.getX(), crate.getY(), crate.getZ());
-            double threshold = DungeonConstants.ARTILLERY_INTRO_LEAVE_DISTANCE;
+            double threshold = ModEquipmentConfig.DUNGEON_ARTILLERY_INTRO_LEAVE_DISTANCE.get();
             if (dist > threshold * threshold) {
                 startBattle(level, "player_far");
                 return true;
@@ -399,7 +402,7 @@ public class ArtilleryIntroScript implements DungeonScript {
 
         // Periodic action bar reminder
         if (lootingTicks % 100 == 0) {
-            int remaining = (DungeonConstants.ARTILLERY_INTRO_LOOTING_TIMEOUT - lootingTicks) / 20;
+            int remaining = (lootingTimeout - lootingTicks) / 20;
             sendActionBar(level, Component.translatable(
                     "dungeon.piranport.artillery_intro.looting", remaining));
         }

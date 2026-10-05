@@ -122,7 +122,7 @@ public class PiranPort {
     /**
      * 决策/副本/07-Boss战环境防卡地形设计.md：
      * 服务端 level tick 触发 BossAntiStuckScheduler.tickInstances，
-     * 由调度器内部按 TICK_INTERVAL=100 tick 调用 BossAntiStuckArea.maybeTick。
+     * 由调度器内部按 global.boss_anti_stuck.tick_interval tick 调用 BossAntiStuckArea.maybeTick。
      */
     private void onLevelTick(final LevelTickEvent.Post event) {
         if (event.getLevel().isClientSide()) return;

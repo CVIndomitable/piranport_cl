@@ -1,6 +1,7 @@
 package com.piranport.dungeon.script;
 
 import com.piranport.PiranPort;
+import com.piranport.config.ModEquipmentConfig;
 import com.piranport.dungeon.DungeonConstants;
 import com.piranport.dungeon.data.DungeonRegistry;
 import com.piranport.dungeon.data.EnemySetData;
@@ -82,7 +83,7 @@ public class BossIntroScript implements DungeonScript {
     // Phase 3 (DEFEATED) state
     private BlockPos bossDeathPos;
     private int defeatDelayTicks = 0;
-    private static final int DEFEAT_DELAY_TICKS = 60; // 3 seconds
+    // 击败后到退场演出的延时走 global.dungeon_timing.boss_intro_defeat_delay_ticks。
 
     // Phase 4 (OUTRO) state
     private boolean portalSpawned = false;
@@ -216,8 +217,8 @@ public class BossIntroScript implements DungeonScript {
         // 验证 Boss 实体存活（服务端重启后重解析 UUID）
         Entity boss = resolveBoss(level);
         if (boss != null && boss.isAlive()) {
-            // Boss 已就位，短暂延时后进入战斗
-            if (tickCounter > 60) { // 3 秒延时让标题播放完
+            // Boss 已就位，短暂延时后进入战斗（延时走终端 boss_intro_phase_timeout_ticks）
+            if (tickCounter > ModEquipmentConfig.DUNGEON_BOSS_INTRO_PHASE_TIMEOUT_TICKS.get()) {
                 phase = Phase.BATTLE;
                 PiranPort.LOGGER.info("[BossIntro] Phase INTRO → BATTLE, instance={}", instanceId);
                 changed = true;
@@ -293,8 +294,9 @@ public class BossIntroScript implements DungeonScript {
         }
         if (tickCounter % 5 == 0) sendBossOverlay(level, true, false);
 
-        // 安全超时：10 分钟强制进入结算
-        if (tickCounter > 12000 + 60 && !finished) {
+        // 安全超时：默认 10 分钟（+ 开场延时偏移，tickCounter 自 INTRO 起单调递增）强制进入结算
+        if (tickCounter > ModEquipmentConfig.DUNGEON_BOSS_INTRO_BATTLE_TIMEOUT_TICKS.get()
+                + ModEquipmentConfig.DUNGEON_BOSS_INTRO_PHASE_TIMEOUT_TICKS.get() && !finished) {
             PiranPort.LOGGER.warn("[BossIntro] Battle timeout, forcing outro");
             bossDeathPos = spawnPos.offset(0, 0, 30);
             phase = Phase.DEFEATED;
@@ -367,7 +369,7 @@ public class BossIntroScript implements DungeonScript {
 
     private boolean tickDefeated(ServerLevel level) {
         defeatDelayTicks++;
-        if (defeatDelayTicks >= DEFEAT_DELAY_TICKS) {
+        if (defeatDelayTicks >= ModEquipmentConfig.DUNGEON_BOSS_INTRO_DEFEAT_DELAY_TICKS.get()) {
             phase = Phase.OUTRO;
             PiranPort.LOGGER.info("[BossIntro] Phase DEFEATED → OUTRO, instance={}", instanceId);
             return true;

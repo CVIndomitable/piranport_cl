@@ -4,6 +4,8 @@ import com.piranport.combat.cannon.CannonAim;
 import com.piranport.combat.cannon.fire.CannonFireRequest;
 import com.piranport.combat.cannon.fire.CannonFireService;
 import com.piranport.combat.cannon.fire.CannonProjectileFactory;
+import com.piranport.config.ModEquipmentConfig;
+import com.piranport.npc.ai.NpcCombatTuning;
 import com.piranport.registry.ModEntityTypes;
 import com.piranport.registry.ModItems;
 import net.minecraft.core.particles.ParticleTypes;
@@ -33,30 +35,9 @@ import java.util.List;
  */
 public class LowTierDestroyerEntity extends Monster {
 
-    // --- Constants ---
-
-    /** Detection / aggro range in blocks. */
-    private static final double DETECTION_RANGE = 30.0;
-    /** Preferred orbit distance from target. */
-    private static final double ORBIT_DISTANCE = 15.0;
-    /** Orbit angular speed (radians/tick). */
-    private static final double ORBIT_ANGULAR_SPEED = 0.02;
-    /** Horizontal movement speed on water surface (blocks/tick). */
-    private static final double SURFACE_SPEED = 0.12;
-
-    /** Fire interval in ticks. 0.2 shots/sec = 1 shot per 100 ticks. */
-    private static final int FIRE_INTERVAL = 100;
-    /** Shell damage (small-caliber HE). */
-    private static final float SHELL_DAMAGE = 4.0f;
-    /** Explosion power of HE shells. */
-    private static final float EXPLOSION_POWER = 1.5f;
-    /** Shell launch speed. */
-    private static final float SHELL_SPEED = 1.5f;
-    /** Shell inaccuracy (degrees of random spread). */
-    private static final float SHELL_INACCURACY = 2.0f;
-
-    /** Range within which alert is shared to other destroyers. */
-    private static final double ALERT_RANGE = 40.0;
+    // --- Tuning ---
+    // 手感数值改走调试终端（global.low_tier_destroyer.*，见 ModEquipmentConfig）。
+    // 弹速/散布复用既有的 global.shell.*（NpcCombatTuning），与其它 NPC 舰船同一份手感来源。
 
     // --- State ---
 
@@ -79,7 +60,7 @@ public class LowTierDestroyerEntity extends Monster {
         return Monster.createMonsterAttributes()
                 .add(Attributes.MAX_HEALTH, 30.0)          // 15 hearts — easy tutorial mob
                 .add(Attributes.MOVEMENT_SPEED, 0.25)      // ~player walk speed
-                .add(Attributes.FOLLOW_RANGE, DETECTION_RANGE)
+                .add(Attributes.FOLLOW_RANGE, ModEquipmentConfig.LOW_TIER_DESTROYER_DETECTION_RANGE.get())
                 .add(Attributes.ATTACK_DAMAGE, 3.0)
                 .add(Attributes.KNOCKBACK_RESISTANCE, 0.5)
                 .add(Attributes.ARMOR, 4.0);
@@ -130,7 +111,7 @@ public class LowTierDestroyerEntity extends Monster {
     private void alertNearbyDestroyers() {
         LivingEntity target = getTarget();
         if (target == null) return;
-        AABB alertBox = getBoundingBox().inflate(ALERT_RANGE);
+        AABB alertBox = getBoundingBox().inflate(ModEquipmentConfig.LOW_TIER_DESTROYER_ALERT_RANGE.get());
         List<LowTierDestroyerEntity> nearby = level().getEntitiesOfClass(
                 LowTierDestroyerEntity.class, alertBox, d -> d != this && d.getTarget() == null);
         for (LowTierDestroyerEntity d : nearby) {
@@ -153,16 +134,20 @@ public class LowTierDestroyerEntity extends Monster {
         Vec3 aim = target.getEyePosition().subtract(getEyePosition());
         double hDist = aim.horizontalDistance();
         double arcY = hDist * 0.05; // rough upward compensation for parabolic drop
+        float shellDamage = (float) (double) ModEquipmentConfig.LOW_TIER_DESTROYER_SHELL_DAMAGE.get();
+        float explosionPower = (float) (double) ModEquipmentConfig.LOW_TIER_DESTROYER_EXPLOSION_POWER.get();
+        float shellSpeed = NpcCombatTuning.shellSpeed();
+        float shellInaccuracy = NpcCombatTuning.shellInaccuracy();
         ItemStack weapon = new ItemStack(ModItems.SINGLE_SMALL_GUN.get());
         ItemStack shellStack = new ItemStack(ModItems.SMALL_HE_SHELL.get());
         CannonFireRequest request = CannonFireService.request(
-                level(), this, weapon, shellStack, SHELL_DAMAGE, EXPLOSION_POWER,
-                SHELL_SPEED, 0.015f, 9.8f, SHELL_INACCURACY, SHELL_INACCURACY,
+                level(), this, weapon, shellStack, shellDamage, explosionPower,
+                shellSpeed, 0.015f, 9.8f, shellInaccuracy, shellInaccuracy,
                 4, true, false,
                 new CannonAim.DirectAim(target.getBoundingBox().getCenter()), getEyePosition());
         if (!CannonFireService.isValid(request)) return;
         var shell = CannonProjectileFactory.create(request);
-        shell.shoot(aim.x, aim.y + arcY, aim.z, SHELL_SPEED, SHELL_INACCURACY);
+        shell.shoot(aim.x, aim.y + arcY, aim.z, shellSpeed, shellInaccuracy);
 
         if (tracking) {
             shell.setTracking(target.getId());
@@ -213,7 +198,7 @@ public class LowTierDestroyerEntity extends Monster {
     }
 
     // =====================================================================
-    //  AI Goal — Orbit target at ORBIT_DISTANCE and fire periodically
+    //  AI Goal — Orbit target at the terminal orbit_distance and fire periodically
     // =====================================================================
 
     private static class OrbitAndShootGoal extends Goal {
@@ -246,25 +231,28 @@ public class LowTierDestroyerEntity extends Monster {
             Vec3 toTarget = target.position().subtract(mob.position());
             double hDist = toTarget.horizontalDistance();
 
+            double orbitDistance = ModEquipmentConfig.LOW_TIER_DESTROYER_ORBIT_DISTANCE.get();
+            double surfaceSpeed = ModEquipmentConfig.LOW_TIER_DESTROYER_SURFACE_SPEED.get();
+
             Vec3 movement;
-            if (hDist > ORBIT_DISTANCE + 3) {
+            if (hDist > orbitDistance + 3) {
                 // Too far — approach
                 Vec3 dir = toTarget.normalize();
-                movement = new Vec3(dir.x * SURFACE_SPEED, 0, dir.z * SURFACE_SPEED);
-            } else if (hDist < ORBIT_DISTANCE - 3) {
+                movement = new Vec3(dir.x * surfaceSpeed, 0, dir.z * surfaceSpeed);
+            } else if (hDist < orbitDistance - 3) {
                 // Too close — retreat
                 Vec3 dir = toTarget.normalize();
-                movement = new Vec3(-dir.x * SURFACE_SPEED * 0.8, 0, -dir.z * SURFACE_SPEED * 0.8);
+                movement = new Vec3(-dir.x * surfaceSpeed * 0.8, 0, -dir.z * surfaceSpeed * 0.8);
             } else {
                 // Orbit
-                mob.orbitAngle += ORBIT_ANGULAR_SPEED;
-                double ox = target.getX() + Math.cos(mob.orbitAngle) * ORBIT_DISTANCE;
-                double oz = target.getZ() + Math.sin(mob.orbitAngle) * ORBIT_DISTANCE;
+                mob.orbitAngle += ModEquipmentConfig.LOW_TIER_DESTROYER_ORBIT_ANGULAR_SPEED.get();
+                double ox = target.getX() + Math.cos(mob.orbitAngle) * orbitDistance;
+                double oz = target.getZ() + Math.sin(mob.orbitAngle) * orbitDistance;
                 Vec3 toOrbit = new Vec3(ox - mob.getX(), 0, oz - mob.getZ());
                 double oDist = toOrbit.horizontalDistance();
                 if (oDist > 0.1) {
-                    movement = new Vec3(toOrbit.x / oDist * SURFACE_SPEED, 0,
-                            toOrbit.z / oDist * SURFACE_SPEED);
+                    movement = new Vec3(toOrbit.x / oDist * surfaceSpeed, 0,
+                            toOrbit.z / oDist * surfaceSpeed);
                 } else {
                     movement = Vec3.ZERO;
                 }
@@ -275,9 +263,9 @@ public class LowTierDestroyerEntity extends Monster {
             mob.setDeltaMovement(movement.x, current.y, movement.z);
 
             // Fire when in range and cooldown ready
-            if (dist <= DETECTION_RANGE && mob.fireCooldown <= 0) {
+            if (dist <= ModEquipmentConfig.LOW_TIER_DESTROYER_DETECTION_RANGE.get() && mob.fireCooldown <= 0) {
                 mob.fireAtTarget(target);
-                mob.fireCooldown = FIRE_INTERVAL;
+                mob.fireCooldown = ModEquipmentConfig.LOW_TIER_DESTROYER_FIRE_INTERVAL_TICKS.get();
             }
         }
     }

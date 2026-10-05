@@ -1,5 +1,6 @@
 package com.piranport.npc.ai.goal;
 
+import com.piranport.config.ModEquipmentConfig;
 import com.piranport.npc.deepocean.AbstractDeepOceanEntity;
 import com.piranport.network.AircraftLaunchPosePayload;
 import net.minecraft.server.level.ServerLevel;
@@ -20,12 +21,10 @@ public class AircraftLaunchGoal extends Goal {
     private final AbstractDeepOceanEntity mob;
     private int readyCooldown = 0;
 
-    private static final int READY_INTERVAL = 300; // 15 seconds between launches
-    private static final int INITIAL_DELAY = 100;  // 5 seconds before first launch
-
     public AircraftLaunchGoal(AbstractDeepOceanEntity mob) {
         this.mob = mob;
-        this.readyCooldown = INITIAL_DELAY;
+        // 放飞节奏走调试终端（global.npc_carrier.*，见 ModEquipmentConfig）。
+        this.readyCooldown = ModEquipmentConfig.NPC_CARRIER_INITIAL_DELAY_TICKS.get();
         setFlags(EnumSet.noneOf(Flag.class));
     }
 
@@ -52,7 +51,7 @@ public class AircraftLaunchGoal extends Goal {
         if (target == null || !target.isAlive()) return;
 
         launchAircraft(target);
-        readyCooldown = READY_INTERVAL;
+        readyCooldown = ModEquipmentConfig.NPC_CARRIER_READY_INTERVAL_TICKS.get();
     }
 
     private void launchAircraft(LivingEntity target) {

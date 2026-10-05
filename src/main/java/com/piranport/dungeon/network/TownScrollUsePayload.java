@@ -1,6 +1,7 @@
 package com.piranport.dungeon.network;
 
 import com.piranport.PiranPort;
+import com.piranport.config.ModEquipmentConfig;
 import com.piranport.dungeon.DungeonConstants;
 import com.piranport.dungeon.event.DungeonEventHandler;
 import com.piranport.dungeon.instance.DungeonInstance;
@@ -75,7 +76,7 @@ public record TownScrollUsePayload() implements CustomPacketPayload {
             if (!DungeonEventHandler.teleportToLectern(player, targetInstance)) return;
             chosen.shrink(1);
             player.getCooldowns().addCooldown(chosen.getItem(),
-                    DungeonConstants.TOWN_SCROLL_COOLDOWN_TICKS);
+                    ModEquipmentConfig.DUNGEON_TOWN_SCROLL_COOLDOWN.get());
             DungeonEventHandler.checkAndSuspendIfEmpty(player.server, targetInstance);
         });
     }

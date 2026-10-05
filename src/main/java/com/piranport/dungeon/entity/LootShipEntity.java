@@ -1,5 +1,6 @@
 package com.piranport.dungeon.entity;
 
+import com.piranport.config.ModEquipmentConfig;
 import com.piranport.dungeon.DungeonConstants;
 import com.piranport.registry.ModEntityTypes;
 import net.minecraft.nbt.CompoundTag;
@@ -108,7 +109,7 @@ public class LootShipEntity extends Entity {
 
         // Server: despawn timer
         despawnTimer++;
-        if (despawnTimer > DungeonConstants.LOOT_SHIP_DESPAWN_TICKS) {
+        if (despawnTimer > ModEquipmentConfig.DUNGEON_LOOT_SHIP_DESPAWN_TICKS.get()) {
             discard();
             return;
         }

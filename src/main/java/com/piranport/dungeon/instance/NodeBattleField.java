@@ -1,6 +1,7 @@
 package com.piranport.dungeon.instance;
 
 import com.piranport.PiranPort;
+import com.piranport.config.ModEquipmentConfig;
 import com.piranport.dungeon.DungeonConstants;
 import com.piranport.dungeon.data.DungeonRegistry;
 import com.piranport.dungeon.data.EnemySetData;
@@ -265,7 +266,7 @@ public final class NodeBattleField {
         var stage = DungeonRegistry.INSTANCE.getStage(instance.getStageId());
         boolean lostTransport = stage != null
                 && DungeonScaling.lostTransportEligible(stage.chapter())
-                && dungeonLevel.getRandom().nextDouble() < DungeonScaling.LOST_TRANSPORT_CHANCE;
+                && dungeonLevel.getRandom().nextDouble() < ModEquipmentConfig.DUNGEON_LOST_TRANSPORT_CHANCE.get();
 
         // 生成水面舰编队
         if (!surfaceEntries.isEmpty()) {

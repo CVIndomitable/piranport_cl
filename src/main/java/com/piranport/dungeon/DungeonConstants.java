@@ -37,11 +37,7 @@ public final class DungeonConstants {
     /** Spawn Y above water. */
     public static final int SPAWN_Y = SEA_LEVEL + 1;
 
-    /** Loot ship auto-despawn time in ticks (300 seconds). */
-    public static final int LOOT_SHIP_DESPAWN_TICKS = 300 * 20;
-
-    /** Town scroll cooldown in ticks (3 seconds). */
-    public static final int TOWN_SCROLL_COOLDOWN_TICKS = 3 * 20;
+    // 战利品箱消失时长、回城卷轴冷却改走调试终端 global.dungeon_timing.*（见 ModEquipmentConfig）。
 
     /** Window in milliseconds during which a TownScrollUsePayload is accepted after right-click. */
     public static final long TOWN_SCROLL_INTENT_WINDOW_MS = 10_000L;
@@ -52,22 +48,7 @@ public final class DungeonConstants {
     /** Maximum leaderboard entries per stage. */
     public static final int MAX_LEADERBOARD_ENTRIES = 100;
 
-    // ===== Boss Intro Script =====
-
-    /** Boss intro phase timeout in ticks (3 seconds). */
-    public static final int BOSS_INTRO_PHASE_TIMEOUT = 3 * 20;
-
-    /** Boss battle timeout in ticks (10 minutes). */
-    public static final int BOSS_INTRO_BATTLE_TIMEOUT = 10 * 60 * 20;
-
-    /** Defeat delay before outro starts in ticks (3 seconds). */
-    public static final int BOSS_INTRO_DEFEAT_DELAY = 3 * 20;
-
-    // ===== Artillery Intro Script =====
-
-    /** Looting phase timeout in ticks (5 minutes). */
-    public static final int ARTILLERY_INTRO_LOOTING_TIMEOUT = 5 * 60 * 20;
-
-    /** Distance threshold for leaving the crate during looting phase (blocks). */
-    public static final double ARTILLERY_INTRO_LEAVE_DISTANCE = 20.0;
+    // ===== Boss Intro / Artillery Intro Script =====
+    // Boss 演出超时（开场延时 / 战斗超时 / 击败延时）与火炮登场时序全部走调试终端
+    // global.dungeon_timing.*（见 ModEquipmentConfig），不再在此保留常量。
 }

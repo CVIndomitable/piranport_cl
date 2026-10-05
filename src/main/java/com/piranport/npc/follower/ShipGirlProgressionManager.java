@@ -1,5 +1,6 @@
 package com.piranport.npc.follower;
 
+import com.piranport.config.ModEquipmentConfig;
 import com.piranport.npc.shipgirl.ShipGirlEntity;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.IntTag;
@@ -17,14 +18,29 @@ import java.util.*;
  */
 public class ShipGirlProgressionManager {
 
-    /** 每名玩家携带位上限（与 DungeonFollowerManager 保持一致） */
-    public static final int MAX_FOLLOWERS = 2;
-    /** 等级上限 */
-    public static final int MAX_LEVEL = 50;
-    /** 每级所需经验基数 */
-    private static final int BASE_XP_PER_LEVEL = 100;
-    /** 经验缩放因子 */
-    private static final float XP_SCALE = 1.15f;
+    /** 每名玩家携带位上限（与 DungeonFollowerManager 共用同一终端参数，避免两处漂移）。 */
+    public static int maxFollowers() {
+        return ModEquipmentConfig.FOLLOW_PROGRESSION_MAX_FOLLOWERS.get();
+    }
+
+    /** 等级上限（终端可调，global.follower_progression.max_level）。 */
+    private static int maxLevel() {
+        return ModEquipmentConfig.FOLLOW_PROGRESSION_MAX_LEVEL.get();
+    }
+
+    /** 每级所需经验基数（终端可调，global.follower_progression.base_xp_per_level）。 */
+    private static int baseXpPerLevel() {
+        return ModEquipmentConfig.FOLLOW_PROGRESSION_BASE_XP.get();
+    }
+
+    /**
+     * 经验缩放因子（终端可调，global.follower_progression.xp_scale）。
+     * <p>WHY 先转 float 再参与 Math.pow：下沉前常量是 float 1.15f，直接读 double 会改变
+     * 低位的 pow 结果（如 100×1.15 截断成 115 还是 114），故按原精度转回 float。
+     */
+    private static float xpScale() {
+        return (float) (double) ModEquipmentConfig.FOLLOW_PROGRESSION_XP_SCALE.get();
+    }
 
     private ShipGirlProgressionManager() {}
 
@@ -55,20 +71,20 @@ public class ShipGirlProgressionManager {
 
         /** 当前等级升级所需经验 */
         public int xpToNextLevel() {
-            return (int) (BASE_XP_PER_LEVEL * Math.pow(XP_SCALE, level - 1));
+            return (int) (baseXpPerLevel() * Math.pow(xpScale(), level - 1));
         }
 
         /** 添加经验，返回是否升级 */
         public boolean addExperience(int xp) {
             this.experience += xp;
             boolean leveledUp = false;
-            while (this.experience >= xpToNextLevel() && this.level < MAX_LEVEL) {
+            while (this.experience >= xpToNextLevel() && this.level < maxLevel()) {
                 this.experience -= xpToNextLevel();
                 this.level++;
                 this.skillPoints++;
                 leveledUp = true;
             }
-            if (this.level >= MAX_LEVEL) {
+            if (this.level >= maxLevel()) {
                 this.experience = 0;
             }
             return leveledUp;

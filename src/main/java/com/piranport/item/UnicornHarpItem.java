@@ -1,5 +1,6 @@
 package com.piranport.item;
 
+import com.piranport.config.ModEquipmentConfig;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
@@ -17,10 +18,6 @@ import java.util.List;
 
 public class UnicornHarpItem extends Item {
 
-    private static final double RANGE = 16.0;
-    private static final int REGEN_DURATION = 200; // 10 seconds
-    private static final int REGEN_AMPLIFIER = 0;  // Level I
-
     public UnicornHarpItem(Properties properties) {
         super(properties);
     }
@@ -30,15 +27,17 @@ public class UnicornHarpItem extends Item {
         ItemStack stack = player.getItemInHand(hand);
 
         if (!level.isClientSide()) {
-            // Apply Regeneration I to friendly players within 16 blocks
-            AABB area = player.getBoundingBox().inflate(RANGE);
+            // Apply Regeneration to friendly players within range（范围/时长/等级均终端可调）
+            AABB area = player.getBoundingBox().inflate(ModEquipmentConfig.UNICORN_HARP_RANGE.get());
             List<Player> nearby = level.getEntitiesOfClass(Player.class, area);
             for (Player target : nearby) {
                 // Skip hostile players in PvP (check if they can hurt each other)
                 if (target != player && player.canHarmPlayer(target)) {
                     continue;
                 }
-                target.addEffect(new MobEffectInstance(MobEffects.REGENERATION, REGEN_DURATION, REGEN_AMPLIFIER));
+                target.addEffect(new MobEffectInstance(MobEffects.REGENERATION,
+                        ModEquipmentConfig.UNICORN_HARP_REGEN_DURATION.get(),
+                        ModEquipmentConfig.UNICORN_HARP_REGEN_AMPLIFIER.get()));
             }
         }
 
@@ -46,8 +45,8 @@ public class UnicornHarpItem extends Item {
         level.playSound(player, player.blockPosition(), SoundEvents.NOTE_BLOCK_HARP.value(),
                 SoundSource.PLAYERS, 1.0F, 1.0F);
 
-        // Cooldown to prevent spam (1 second)
-        player.getCooldowns().addCooldown(this, 20);
+        // Cooldown to prevent spam（终端可调，默认 20 tick = 1 秒）
+        player.getCooldowns().addCooldown(this, ModEquipmentConfig.UNICORN_HARP_USE_COOLDOWN.get());
 
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
     }

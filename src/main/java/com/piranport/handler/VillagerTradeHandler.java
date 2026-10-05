@@ -1,6 +1,8 @@
 package com.piranport.handler;
 
 import com.piranport.PiranPort;
+import com.piranport.config.ModEquipmentConfig;
+import com.piranport.config.TerminalConfigValue;
 import com.piranport.registry.ModItems;
 import com.piranport.registry.ModVillagerProfessions;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
@@ -34,13 +36,12 @@ public class VillagerTradeHandler {
 
     /** 等级经验（村民侧），按原版各级经验量级取。 */
     private static final int[] XP = {0, 2, 10, 20, 15, 30};
-    /** 绿宝石交易补货前最大次数。 */
-    static final int EMERALD_USES = 12;
-    /** 回收（卖给村民换绿宝石）交易补货前最大次数。 */
-    static final int RECYCLE_USES = 16;
-    /** 战利品交易补货前最大次数，必须低于绿宝石交易。 */
-    static final int TROPHY_USES = 3;
-    private static final float PRICE_MULTIPLIER = 0.05f;
+    /** 绿宝石交易补货前最大次数（终端可调，global.villager_trade.emerald_uses，默认 12）。 */
+    static final TerminalConfigValue<Integer> EMERALD_USES = ModEquipmentConfig.VILLAGER_EMERALD_USES;
+    /** 回收（卖给村民换绿宝石）交易补货前最大次数（终端可调，默认 16）。 */
+    static final TerminalConfigValue<Integer> RECYCLE_USES = ModEquipmentConfig.VILLAGER_RECYCLE_USES;
+    /** 战利品交易补货前最大次数，设计上应低于绿宝石交易（终端可调，默认 3）。 */
+    static final TerminalConfigValue<Integer> TROPHY_USES = ModEquipmentConfig.VILLAGER_TROPHY_USES;
 
     @SubscribeEvent
     public static void onVillagerTrades(VillagerTradesEvent event) {
@@ -107,11 +108,13 @@ public class VillagerTradeHandler {
     /** 单输入交易：支付 costCount 个 cost，获得 resultCount 个 result。 */
     static VillagerTrades.ItemListing sell(Supplier<? extends ItemLike> cost, int costCount,
                                            Supplier<? extends ItemLike> result, int resultCount,
-                                           int maxUses, int level) {
+                                           TerminalConfigValue<Integer> maxUses, int level) {
         int xp = XP[level];
+        int uses = maxUses.get();
+        float priceMultiplier = (float) (double) ModEquipmentConfig.VILLAGER_PRICE_MULTIPLIER.get();
         return (trader, rand) -> new MerchantOffer(
                 new ItemCost(cost.get(), costCount),
                 new ItemStack(result.get(), resultCount),
-                maxUses, xp, PRICE_MULTIPLIER);
+                uses, xp, priceMultiplier);
     }
 }

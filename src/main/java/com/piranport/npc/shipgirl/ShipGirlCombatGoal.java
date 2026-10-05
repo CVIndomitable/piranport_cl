@@ -1,5 +1,6 @@
 package com.piranport.npc.shipgirl;
 
+import com.piranport.config.ModEquipmentConfig;
 import com.piranport.entity.DeepOceanProjectileEntity;
 import com.piranport.entity.TorpedoEntity;
 import com.piranport.npc.ai.NpcCombatTuning;
@@ -56,7 +57,7 @@ public class ShipGirlCombatGoal extends Goal {
         if (target == null || !target.isAlive()) return;
 
         fireCannon(target);
-        fireCooldown = 80;
+        fireCooldown = ModEquipmentConfig.FOLLOW_COMBAT_FIRE_COOLDOWN.get();
 
         // 雷击冷却独立计算：每轮炮击有 1/N 概率放雷（N 走终端，默认 200）
         if (shipGirl.distanceTo(target) <= NpcCombatTuning.torpedoRange()
@@ -93,7 +94,7 @@ public class ShipGirlCombatGoal extends Goal {
 
         Vec3 aim = target.getEyePosition().subtract(shipGirl.getEyePosition());
         double hDist = aim.horizontalDistance();
-        double arcY = hDist * 0.05;
+        double arcY = hDist * ModEquipmentConfig.FOLLOW_COMBAT_SHELL_ARC_FACTOR.get();
         shell.shoot(aim.x, aim.y + arcY, aim.z,
                 NpcCombatTuning.shellSpeed(), NpcCombatTuning.shellInaccuracy());
 

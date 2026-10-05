@@ -1,5 +1,6 @@
 package com.piranport.item;
 
+import com.piranport.config.ModEquipmentConfig;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
@@ -20,10 +21,6 @@ import net.minecraft.world.phys.Vec3;
 import javax.annotation.Nullable;
 
 public class RepairKitItem extends Item {
-
-    private static final double RANGE = 5.0;
-    private static final int REGEN_DURATION = 60; // 3 seconds, refreshed each tick while held
-    private static final int REGEN_AMPLIFIER = 1;  // Level II
 
     public RepairKitItem(Properties properties) {
         super(properties);
@@ -61,7 +58,9 @@ public class RepairKitItem extends Item {
             return;
         }
 
-        target.addEffect(new MobEffectInstance(MobEffects.REGENERATION, REGEN_DURATION, REGEN_AMPLIFIER, false, true));
+        target.addEffect(new MobEffectInstance(MobEffects.REGENERATION,
+                ModEquipmentConfig.REPAIR_KIT_REGEN_DURATION.get(),
+                ModEquipmentConfig.REPAIR_KIT_REGEN_AMPLIFIER.get(), false, true));
 
         // 策划要求维修台无耐久，仅播放音效，不再消耗耐久
         int usedTicks = getUseDuration(stack, user) - remainingUseDuration;
@@ -73,15 +72,16 @@ public class RepairKitItem extends Item {
 
     @Nullable
     private LivingEntity getTargetEntity(Player player) {
+        double range = ModEquipmentConfig.REPAIR_KIT_RANGE.get();
         Vec3 eyePos = player.getEyePosition();
         Vec3 lookVec = player.getViewVector(1.0F);
-        Vec3 endPos = eyePos.add(lookVec.scale(RANGE));
-        AABB searchArea = player.getBoundingBox().expandTowards(lookVec.scale(RANGE)).inflate(1.0);
+        Vec3 endPos = eyePos.add(lookVec.scale(range));
+        AABB searchArea = player.getBoundingBox().expandTowards(lookVec.scale(range)).inflate(1.0);
         EntityHitResult result = ProjectileUtil.getEntityHitResult(
                 player, eyePos, endPos, searchArea,
                 e -> e instanceof LivingEntity && !e.isSpectator() && e.isAlive()
                         && !(e instanceof net.minecraft.world.entity.monster.Monster),
-                RANGE * RANGE
+                range * range
         );
         if (result != null && result.getEntity() instanceof LivingEntity living) {
             return living;

@@ -1,5 +1,6 @@
 package com.piranport.handler;
 
+import com.piranport.config.ModEquipmentConfig;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Files;
@@ -18,7 +19,10 @@ class VillagerTradeRulesTest {
 
     @Test
     void trophyTradesRestockLessThanEmeraldTrades() {
-        assertTrue(VillagerTradeHandler.TROPHY_USES < VillagerTradeHandler.EMERALD_USES);
+        // 补货次数已下沉为终端参数，这里校验默认值仍满足「战利品 < 绿宝石」的设计约束。
+        // 直接读 config 而非 VillagerTradeHandler：后者类初始化会拉起 ModItems/BuiltInRegistries，
+        // 单测环境未 bootstrap 会抛 ExceptionInInitializerError（见 mc_bootstrap_in_tests）。
+        assertTrue(ModEquipmentConfig.VILLAGER_TROPHY_USES.get() < ModEquipmentConfig.VILLAGER_EMERALD_USES.get());
     }
 
     @Test

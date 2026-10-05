@@ -1,5 +1,6 @@
 package com.piranport.npc.follower;
 
+import com.piranport.config.ModEquipmentConfig;
 import com.piranport.npc.shipgirl.ShipGirlEntity;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
@@ -12,12 +13,20 @@ import java.util.*;
  * <p>数据暂存内存，后续可持久化到 DungeonInstance NBT。</p>
  */
 public class DungeonFollowerManager {
-    /** 携带位上限（待实测后调为 2~3） */
-    public static final int MAX_FOLLOWERS_PER_PLAYER = 2;
-    /** 大破阈值：HP < 此比例时撤退 */
-    private static final float HEAVY_DAMAGE_THRESHOLD = 0.20f;
-    /** 大破撤退间隔（防止同一 tick 多次触发） */
-    private static final int RETREAT_COOLDOWN_TICKS = 100;
+    /** 携带位上限（终端可调，与 ShipGirlProgressionManager 共用 global.follower_progression.max_followers）。 */
+    private static int maxFollowersPerPlayer() {
+        return ModEquipmentConfig.FOLLOW_PROGRESSION_MAX_FOLLOWERS.get();
+    }
+
+    /** 大破阈值：HP < 此比例时撤退（终端可调）。默认 0.20。 */
+    private static float heavyDamageThreshold() {
+        return (float) (double) ModEquipmentConfig.FOLLOW_RETREAT_HEAVY_DAMAGE_THRESHOLD.get();
+    }
+
+    /** 大破撤退间隔（终端可调），防止同一 tick 多次触发。默认 100 tick。 */
+    private static int retreatCooldownTicks() {
+        return ModEquipmentConfig.FOLLOW_RETREAT_COOLDOWN.get();
+    }
 
     /** dungeonInstanceId -> (playerUuid -> followers) */
     private static final Map<UUID, Map<UUID, List<FollowerRecord>>> instanceFollowers = new HashMap<>();
@@ -41,7 +50,7 @@ public class DungeonFollowerManager {
 
         List<ShipGirlEntity> accepted = new ArrayList<>();
         for (ShipGirlEntity follower : followers) {
-            if (playerRecords.size() >= MAX_FOLLOWERS_PER_PLAYER) {
+            if (playerRecords.size() >= maxFollowersPerPlayer()) {
                 retreatFollower(level, instanceId, follower, playerUuid, "message.piranport.follower_slot_full");
             } else {
                 playerRecords.add(new FollowerRecord(follower, playerUuid));
@@ -115,9 +124,9 @@ public class DungeonFollowerManager {
      */
     public static int getRemainingSlots(UUID instanceId, UUID playerUuid) {
         Map<UUID, List<FollowerRecord>> instanceMap = instanceFollowers.get(instanceId);
-        if (instanceMap == null) return MAX_FOLLOWERS_PER_PLAYER;
+        if (instanceMap == null) return maxFollowersPerPlayer();
         List<FollowerRecord> records = instanceMap.get(playerUuid);
-        if (records == null) return MAX_FOLLOWERS_PER_PLAYER;
+        if (records == null) return maxFollowersPerPlayer();
 
         int active = 0;
         for (FollowerRecord record : records) {
@@ -125,7 +134,7 @@ public class DungeonFollowerManager {
                 active++;
             }
         }
-        return Math.max(0, MAX_FOLLOWERS_PER_PLAYER - active);
+        return Math.max(0, maxFollowersPerPlayer() - active);
     }
 
     // ===== 帧级逻辑 =====
@@ -147,7 +156,7 @@ public class DungeonFollowerManager {
                     it.remove();
                     continue;
                 }
-                if (record.lastRetreatTick > 0 && level.getGameTime() < record.lastRetreatTick + RETREAT_COOLDOWN_TICKS) {
+                if (record.lastRetreatTick > 0 && level.getGameTime() < record.lastRetreatTick + retreatCooldownTicks()) {
                     continue;
                 }
                 if (retreatedSet.contains(follower.getUUID())) {
@@ -166,7 +175,7 @@ public class DungeonFollowerManager {
 
     private static boolean isHeavilyDamaged(ShipGirlEntity follower) {
         return follower.getMaxHealth() > 0
-                && (follower.getHealth() / follower.getMaxHealth()) < HEAVY_DAMAGE_THRESHOLD;
+                && (follower.getHealth() / follower.getMaxHealth()) < heavyDamageThreshold();
     }
 
     private static void retreatFollower(ServerLevel level, UUID instanceId, ShipGirlEntity follower,

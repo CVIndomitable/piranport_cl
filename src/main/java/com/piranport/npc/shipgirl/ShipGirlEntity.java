@@ -1,6 +1,7 @@
 package com.piranport.npc.shipgirl;
 
 import com.piranport.advancement.ModAdvancements;
+import com.piranport.config.ModEquipmentConfig;
 import com.piranport.item.KeyFragmentItem;
 import com.piranport.npc.deepocean.AbstractDeepOceanEntity;
 import com.piranport.registry.ModItems;
@@ -297,8 +298,8 @@ public class ShipGirlEntity extends PathfinderMob implements Merchant {
      * @return 归一化后的属性快照
      */
     public ShipGirlData.NormalizedAttributes normalizeAttributes(float difficultyScale) {
-        // 职能补位：随从 DPS 上限刻意低于同配置玩家
-        float followerDpsCap = 0.7f;
+        // 职能补位：随从 DPS 上限刻意低于同配置玩家（终端可调，默认 0.7）
+        float followerDpsCap = (float) (double) ModEquipmentConfig.FOLLOW_COMBAT_DPS_CAP.get();
 
         double baseMaxHp = getMaxHealth();
         double baseAttack = getAttributeValue(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE);

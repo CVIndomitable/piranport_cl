@@ -1,5 +1,6 @@
 package com.piranport.item;
 
+import com.piranport.config.ModEquipmentConfig;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -20,13 +21,11 @@ import java.util.Set;
 
 /**
  * 独立灭火器物品（消耗品/02-灭火器设计）。
- * <p>右键使用：清除身上所有 HARMFUL 效果并灭火，冷却 120 秒（2400 tick）。
+ * <p>右键使用：清除身上所有 HARMFUL 效果并灭火；冷却与损管共用终端参数
+ * {@code global.damage_control.use_cooldown}（默认 2400 tick = 120 秒）。
  * 与损管区别：不消耗"强化槽"概念，背包槽位消耗，配方原料不同。</p>
  */
 public class FireExtinguisherItem extends Item {
-
-    /** 2 minutes = 2400 ticks cooldown */
-    private static final int COOLDOWN_TICKS = 2400;
 
     public FireExtinguisherItem(Properties properties) {
         super(properties);
@@ -57,7 +56,7 @@ public class FireExtinguisherItem extends Item {
                 SoundSource.PLAYERS, 1.0F, 1.0F);
 
         // 冷却
-        player.getCooldowns().addCooldown(this, COOLDOWN_TICKS);
+        player.getCooldowns().addCooldown(this, ModEquipmentConfig.DAMAGE_CONTROL_USE_COOLDOWN.get());
 
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
     }

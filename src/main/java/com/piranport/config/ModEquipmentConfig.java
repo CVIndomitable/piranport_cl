@@ -493,4 +493,135 @@ public final class ModEquipmentConfig {
     /** 共享发射冷却覆盖（tick，未设置时用各发射器注册值）。 */
     public static final TerminalConfigValue<Integer> MISSILE_LAUNCHER_FIRE_COOLDOWN =
             TerminalConfigValue.integer("missile_launcher", "missile_launcher", "fire_cooldown", 1200, 0, 12000);
+
+    // ===== 随从（舰娘）养成与战斗（2026-10-05 下沉）=====
+    // WHY：这些原先是 ShipGirlProgressionManager / DungeonFollowerManager / ShipGirlEntity /
+    // ShipGirlCombatGoal 里的写死平衡值，策划需要反复调手感（用户规则：手感数值一律终端可调）。
+    // 默认值全部 = 下沉前的写死值，纯重构、行为等价。键：global.<target>.*，group=ship_girl
+    // 使其归入终端「NPC舰娘」分类。
+
+    // ---- 养成曲线（target=follower_progression）----
+    /** 每名玩家携带位上限。默认 2。养成本与副本携带位共用此值，避免两处漂移。 */
+    public static final TerminalConfigValue<Integer> FOLLOW_PROGRESSION_MAX_FOLLOWERS =
+            TerminalConfigValue.integer("ship_girl", "follower_progression", "max_followers", 2, 0, 64);
+    /** 舰娘等级上限。默认 50。 */
+    public static final TerminalConfigValue<Integer> FOLLOW_PROGRESSION_MAX_LEVEL =
+            TerminalConfigValue.integer("ship_girl", "follower_progression", "max_level", 50, 1, 1000);
+    /** 每级所需经验基数。默认 100。 */
+    public static final TerminalConfigValue<Integer> FOLLOW_PROGRESSION_BASE_XP =
+            TerminalConfigValue.integer("ship_girl", "follower_progression", "base_xp_per_level", 100, 1, 1000000);
+    /** 经验缩放因子（每级所需经验 = 基数 × 该值^(level-1)）。默认 1.15。 */
+    public static final TerminalConfigValue<Double> FOLLOW_PROGRESSION_XP_SCALE =
+            TerminalConfigValue.number("ship_girl", "follower_progression", "xp_scale", 1.15, 0.5, 5.0);
+
+    // ---- 随从战斗（target=follower_combat）----
+    /** 随从 DPS 上限系数：归一化攻击 = 基础攻击 × 难度 × 该值。默认 0.7，随从的总强度闸。 */
+    public static final TerminalConfigValue<Double> FOLLOW_COMBAT_DPS_CAP =
+            TerminalConfigValue.number("ship_girl", "follower_combat", "dps_cap", 0.7, 0.0, 10.0);
+    /** 舰娘随从每次炮击后的开火冷却（tick，终端按秒显示）。默认 80（4 秒）。 */
+    public static final TerminalConfigValue<Integer> FOLLOW_COMBAT_FIRE_COOLDOWN =
+            TerminalConfigValue.integer("ship_girl", "follower_combat", "fire_cooldown", 80, 1, 6000);
+    /** 炮击抛弧抬升系数：垂直瞄准补偿 = 水平距离 × 该值。默认 0.05。 */
+    public static final TerminalConfigValue<Double> FOLLOW_COMBAT_SHELL_ARC_FACTOR =
+            TerminalConfigValue.number("ship_girl", "follower_combat", "shell_arc_factor", 0.05, 0.0, 10.0);
+
+    // ---- 随从重伤撤退（target=follower_retreat）----
+    /** 大破阈值：HP 低于最大值的该比例时随从撤退。默认 0.20。 */
+    public static final TerminalConfigValue<Double> FOLLOW_RETREAT_HEAVY_DAMAGE_THRESHOLD =
+            TerminalConfigValue.number("ship_girl", "follower_retreat", "heavy_damage_threshold", 0.20, 0.0, 1.0);
+    /** 大破撤退间隔（tick，终端按秒显示），防止同一随从被反复触发。默认 100（5 秒）。 */
+    public static final TerminalConfigValue<Integer> FOLLOW_RETREAT_COOLDOWN =
+            TerminalConfigValue.integer("ship_girl", "follower_retreat", "retreat_cooldown", 100, 0, 12000);
+
+    // ===== 战斗 Buff 数值（CombatEffectRules，2026-10-05 下沉）=====
+    // WHY：规避/经验/装填/燃烧原先在 CombatEffectRules 里写死，4 处消费者（EvasionHandler、
+    // TransformationManager、ServerGameEvents、BurningEffect）都读该类，改这里即全面生效。
+    // 规避按策划口径「每档位一组」拆成 3 个独立参数，不压成单个步长值。
+    // 经验/装填保留「基数 ± 步进 × 档位」的原算法，只把基数与步进参数化，保证逐位等价。
+    // 燃烧间隔按 4 档位各给一个整数参数（整数无精度问题）。
+    // 键：global.combat_effect.*。
+
+    /** 规避 I 档闪避概率。默认 0.10 = 10%。 */
+    public static final TerminalConfigValue<Double> COMBAT_EFFECT_EVASION_L1 =
+            TerminalConfigValue.number("equipment", "combat_effect", "evasion_level1_chance", 0.10, 0.0, 1.0);
+    /** 规避 II 档闪避概率。默认 0.20 = 20%。 */
+    public static final TerminalConfigValue<Double> COMBAT_EFFECT_EVASION_L2 =
+            TerminalConfigValue.number("equipment", "combat_effect", "evasion_level2_chance", 0.20, 0.0, 1.0);
+    /** 规避 III 档闪避概率（封顶）。默认 0.30 = 30%。 */
+    public static final TerminalConfigValue<Double> COMBAT_EFFECT_EVASION_L3 =
+            TerminalConfigValue.number("equipment", "combat_effect", "evasion_level3_chance", 0.30, 0.0, 1.0);
+
+    /** 经验加成基数：倍率 = 基数 + 档位 × 步进。默认 1.2。 */
+    public static final TerminalConfigValue<Double> COMBAT_EFFECT_EXPERIENCE_BASE =
+            TerminalConfigValue.number("equipment", "combat_effect", "experience_multiplier_base", 1.2, 0.0, 100.0);
+    /** 经验加成每档步进。默认 0.2。 */
+    public static final TerminalConfigValue<Double> COMBAT_EFFECT_EXPERIENCE_STEP =
+            TerminalConfigValue.number("equipment", "combat_effect", "experience_multiplier_step", 0.2, 0.0, 100.0);
+
+    /** 装填倍率基数：倍率 = 基数 − 档位 × 步进。默认 0.9。 */
+    public static final TerminalConfigValue<Double> COMBAT_EFFECT_RELOAD_BASE =
+            TerminalConfigValue.number("equipment", "combat_effect", "reload_multiplier_base", 0.9, 0.0, 1.0);
+    /** 装填倍率每档步进。默认 0.1。 */
+    public static final TerminalConfigValue<Double> COMBAT_EFFECT_RELOAD_STEP =
+            TerminalConfigValue.number("equipment", "combat_effect", "reload_multiplier_step", 0.1, 0.0, 1.0);
+
+    /** 燃烧 I 档伤害间隔（tick）。默认 60（3 秒）。 */
+    public static final TerminalConfigValue<Integer> COMBAT_EFFECT_BURNING_INTERVAL_L1 =
+            TerminalConfigValue.integer("equipment", "combat_effect", "burning_interval_level1", 60, 1, 1200);
+    /** 燃烧 II 档伤害间隔（tick）。默认 30。 */
+    public static final TerminalConfigValue<Integer> COMBAT_EFFECT_BURNING_INTERVAL_L2 =
+            TerminalConfigValue.integer("equipment", "combat_effect", "burning_interval_level2", 30, 1, 1200);
+    /** 燃烧 III 档伤害间隔（tick）。默认 20。 */
+    public static final TerminalConfigValue<Integer> COMBAT_EFFECT_BURNING_INTERVAL_L3 =
+            TerminalConfigValue.integer("equipment", "combat_effect", "burning_interval_level3", 20, 1, 1200);
+    /** 燃烧 IV 档伤害间隔（tick，封顶）。默认 15。 */
+    public static final TerminalConfigValue<Integer> COMBAT_EFFECT_BURNING_INTERVAL_L4 =
+            TerminalConfigValue.integer("equipment", "combat_effect", "burning_interval_level4", 15, 1, 1200);
+
+    // ===== 损管 / 治疗道具（2026-10-05 下沉）=====
+    // 键：global.<target>.*。
+
+    /** 损管与灭火器共用冷却（tick，终端按秒显示）。默认 2400（120 秒）。 */
+    public static final TerminalConfigValue<Integer> DAMAGE_CONTROL_USE_COOLDOWN =
+            TerminalConfigValue.integer("equipment", "damage_control", "use_cooldown", 2400, 0, 120000);
+
+    /** 维修套件作用距离（格）。默认 5.0。 */
+    public static final TerminalConfigValue<Double> REPAIR_KIT_RANGE =
+            TerminalConfigValue.number("equipment", "repair_kit", "range", 5.0, 0.0, 64.0);
+    /** 维修套件生命恢复持续（tick，持有时每 tick 刷新）。默认 60（3 秒）。 */
+    public static final TerminalConfigValue<Integer> REPAIR_KIT_REGEN_DURATION =
+            TerminalConfigValue.integer("equipment", "repair_kit", "regen_duration", 60, 1, 12000);
+    /** 维修套件生命恢复等级（amplifier，0 = I 级，1 = II 级）。默认 1 = II 级。 */
+    public static final TerminalConfigValue<Integer> REPAIR_KIT_REGEN_AMPLIFIER =
+            TerminalConfigValue.integer("equipment", "repair_kit", "regen_amplifier", 1, 0, 9);
+
+    /** 独角兽竖琴作用半径（格）。默认 16.0。 */
+    public static final TerminalConfigValue<Double> UNICORN_HARP_RANGE =
+            TerminalConfigValue.number("equipment", "unicorn_harp", "range", 16.0, 0.0, 64.0);
+    /** 独角兽竖琴生命恢复持续（tick）。默认 200（10 秒）。 */
+    public static final TerminalConfigValue<Integer> UNICORN_HARP_REGEN_DURATION =
+            TerminalConfigValue.integer("equipment", "unicorn_harp", "regen_duration", 200, 1, 12000);
+    /** 独角兽竖琴生命恢复等级（amplifier，0 = I 级）。默认 0。 */
+    public static final TerminalConfigValue<Integer> UNICORN_HARP_REGEN_AMPLIFIER =
+            TerminalConfigValue.integer("equipment", "unicorn_harp", "regen_amplifier", 0, 0, 9);
+    /** 独角兽竖琴冷却（tick，终端按秒显示），防连点。默认 20（1 秒）。 */
+    public static final TerminalConfigValue<Integer> UNICORN_HARP_USE_COOLDOWN =
+            TerminalConfigValue.integer("equipment", "unicorn_harp", "use_cooldown", 20, 0, 12000);
+
+    // ===== 村民交易经济（VillagerTradeHandler，2026-10-05 下沉）=====
+    // 键：global.villager_trade.*，group=economy（终端归入「系统参数」分类）。
+    // WHY：补货次数与价格倍率是策划调经济手感的核心旋钮，不应写死在交易表里。
+
+    /** 绿宝石交易补货前最大次数。默认 12。 */
+    public static final TerminalConfigValue<Integer> VILLAGER_EMERALD_USES =
+            TerminalConfigValue.integer("economy", "villager_trade", "emerald_uses", 12, 1, 999);
+    /** 回收（卖给村民换绿宝石）交易补货前最大次数。默认 16。 */
+    public static final TerminalConfigValue<Integer> VILLAGER_RECYCLE_USES =
+            TerminalConfigValue.integer("economy", "villager_trade", "recycle_uses", 16, 1, 999);
+    /** 战利品交易补货前最大次数，设计上应低于绿宝石交易。默认 3。 */
+    public static final TerminalConfigValue<Integer> VILLAGER_TROPHY_USES =
+            TerminalConfigValue.integer("economy", "villager_trade", "trophy_uses", 3, 1, 999);
+    /** 交易价格浮动倍率（传给 MerchantOffer）。默认 0.05。 */
+    public static final TerminalConfigValue<Double> VILLAGER_PRICE_MULTIPLIER =
+            TerminalConfigValue.number("economy", "villager_trade", "price_multiplier", 0.05, 0.0, 1.0);
 }

@@ -1,5 +1,6 @@
 package com.piranport.item;
 
+import com.piranport.config.ModEquipmentConfig;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -28,9 +29,6 @@ import java.util.Set;
  * 这些是舰装过载的安全警示）。</p>
  */
 public class DamageControlItem extends Item {
-
-    /** 2 minutes = 2400 ticks */
-    private static final int COOLDOWN_TICKS = 2400;
 
     /**
      * 超载相关 buff 白名单（决策 §关键约束：必须保留，不可清除）。
@@ -76,7 +74,7 @@ public class DamageControlItem extends Item {
         level.playSound(player, player.blockPosition(), SoundEvents.FIRE_EXTINGUISH,
                 SoundSource.PLAYERS, 1.0F, 1.0F);
 
-        player.getCooldowns().addCooldown(this, COOLDOWN_TICKS);
+        player.getCooldowns().addCooldown(this, ModEquipmentConfig.DAMAGE_CONTROL_USE_COOLDOWN.get());
 
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
     }

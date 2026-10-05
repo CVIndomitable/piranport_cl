@@ -80,10 +80,12 @@ public class TorpedoEntity extends ThrowableItemProjectile {
     private static final double WIRE_VERTICAL_DEADZONE = 0.05;
 
     private int caliber = 533;
-    private float damage = 18f;
+    // 兜底值全部走调试终端（global.torpedo.*）：默认 = 下沉前写死值。真实发射路径
+    // （TorpedoFireStrategy）会按型号覆盖伤害/航速/寿命，见类尾口径说明。
+    private float damage = (float) (double) ModEquipmentConfig.TORPEDO_DEFAULT_DAMAGE.get();
     private float torpedoSpeed = 1.0f;
-    private int lifetime = 1200;
-    private float explosionRadius = 2.0f;
+    private int lifetime = ModEquipmentConfig.TORPEDO_DEFAULT_LIFETIME.get();
+    private float explosionRadius = (float) (double) ModEquipmentConfig.TORPEDO_DEFAULT_EXPLOSION_RADIUS.get();
     private boolean magnetic = false;
     private boolean exploded = false;
     private Component sourceAircraftName;
@@ -94,34 +96,35 @@ public class TorpedoEntity extends ThrowableItemProjectile {
     private Vec3 launchPos = null;
     private static final double WIRE_FALLBACK_RANGE = 16.0;
 
-    // 声导鱼雷状态
+    // 声导鱼雷状态（手感数值全部读终端 global.torpedo.acoustic_*）
     private boolean acoustic = false;
-    private static final double ACOUSTIC_DETECT_RANGE = 25.0;
-    private static final double ACOUSTIC_SNEAK_RANGE = 10.0;
-    private static final float ACOUSTIC_MAX_TURN_DEG = 3.0f;
-    private static final int ACOUSTIC_ARM_TICKS = 10;
-    private static final double CLOSE_RANGE = 5.0;
+
+    private static double acousticDetectRange() { return ModEquipmentConfig.TORPEDO_ACOUSTIC_DETECT_RANGE.get(); }
+    private static double acousticSneakRange() { return ModEquipmentConfig.TORPEDO_ACOUSTIC_SNEAK_RANGE.get(); }
+    private static float acousticMaxTurnDeg() { return (float) (double) ModEquipmentConfig.TORPEDO_ACOUSTIC_MAX_TURN_DEG.get(); }
+    private static int acousticArmTicks() { return ModEquipmentConfig.TORPEDO_ACOUSTIC_ARM_TICKS.get(); }
+    private static double acousticCloseRange() { return ModEquipmentConfig.TORPEDO_ACOUSTIC_CLOSE_RANGE.get(); }
+    private static double acousticMidRange() { return ModEquipmentConfig.TORPEDO_ACOUSTIC_MID_RANGE.get(); }
+    private static float acousticCloseTurnMultiplier() { return (float) (double) ModEquipmentConfig.TORPEDO_ACOUSTIC_CLOSE_TURN_MULTIPLIER.get(); }
+    private static float acousticFarTurnMultiplier() { return (float) (double) ModEquipmentConfig.TORPEDO_ACOUSTIC_FAR_TURN_MULTIPLIER.get(); }
+    private static int acousticScanInterval() { return ModEquipmentConfig.TORPEDO_ACOUSTIC_SCAN_INTERVAL.get(); }
+    private static int lockMinDuration() { return ModEquipmentConfig.TORPEDO_LOCK_MIN_DURATION.get(); }
+    private static double lockBreakDistance() { return ModEquipmentConfig.TORPEDO_LOCK_BREAK_DISTANCE.get(); }
+    private static double targetSwitchThreshold() { return ModEquipmentConfig.TORPEDO_TARGET_SWITCH_THRESHOLD.get(); }
 
     // Phase 27：策划 §3.3 氧气鱼雷状态（无可见航迹 + 高速）
     private boolean oxygen = false;
-    private static final double MID_RANGE = 15.0;
-    private static final float CLOSE_TURN_MULTIPLIER = 1.5f;
-    private static final float FAR_TURN_MULTIPLIER = 0.6f;
     private Entity lockedTarget = null;
     private UUID lockedTargetUuid = null;
     private int lockDuration = 0;
-    private static final int MIN_LOCK_DURATION = 60;
-    private static final double LOCK_BREAK_DISTANCE = 30.0;
-    /** 声导鱼雷目标切换阈值：新目标距离需小于当前目标的此比例才切换 */
-    private static final double TARGET_SWITCH_THRESHOLD = 0.7;
 
     // 空投下落阶段
     private boolean airDrop = false;
     private Vec3 airDropDirection = Vec3.ZERO;
 
-    // 磁性近炸
-    private static final double MAGNETIC_DETONATE_DIST = 3.0;
-    private static final int MAGNETIC_ARM_TICKS = 5;
+    // 磁性近炸（读终端 global.torpedo.magnetic_*）
+    private static double magneticDetonateDist() { return ModEquipmentConfig.TORPEDO_MAGNETIC_DETONATE_DIST.get(); }
+    private static int magneticArmTicks() { return ModEquipmentConfig.TORPEDO_MAGNETIC_ARM_TICKS.get(); }
 
     public TorpedoEntity(EntityType<? extends TorpedoEntity> type, Level level) {
         super(type, level);
@@ -130,14 +133,15 @@ public class TorpedoEntity extends ThrowableItemProjectile {
     public TorpedoEntity(Level level, LivingEntity shooter, int caliber) {
         super(ModEntityTypes.TORPEDO_ENTITY.get(), shooter, level);
         this.caliber = caliber;
+        // 口径兜底值：610 走重雷档，其余走常规档；全部可从终端调（global.torpedo.*）。
         if (caliber == 610) {
-            this.damage = 28f;
-            this.lifetime = 1200;
-            this.explosionRadius = 2.5f;
+            this.damage = (float) (double) ModEquipmentConfig.TORPEDO_HEAVY_DAMAGE.get();
+            this.lifetime = ModEquipmentConfig.TORPEDO_DEFAULT_LIFETIME.get();
+            this.explosionRadius = (float) (double) ModEquipmentConfig.TORPEDO_HEAVY_EXPLOSION_RADIUS.get();
         } else {
-            this.damage = 18f;
-            this.lifetime = 1200;
-            this.explosionRadius = 2.0f;
+            this.damage = (float) (double) ModEquipmentConfig.TORPEDO_DEFAULT_DAMAGE.get();
+            this.lifetime = ModEquipmentConfig.TORPEDO_DEFAULT_LIFETIME.get();
+            this.explosionRadius = (float) (double) ModEquipmentConfig.TORPEDO_DEFAULT_EXPLOSION_RADIUS.get();
         }
         // 走 setter 而非直接赋字段：同步字段要同时写进 entityData，随生成包下发给客户端。
         setSpeed(0.9f);
@@ -206,8 +210,8 @@ public class TorpedoEntity extends ThrowableItemProjectile {
         this.oxygen = oxygen;
         entityData.set(DATA_OXYGEN, oxygen);
         if (oxygen) {
-            // 氧气推进：航速 +30% (0.9 → 1.17 blocks/tick)
-            setSpeed(this.torpedoSpeed * 1.3f);
+            // 氧气推进：航速倍率走终端（默认 1.3，即 +30%）
+            setSpeed(this.torpedoSpeed * (float) (double) ModEquipmentConfig.TORPEDO_OXYGEN_SPEED_MULTIPLIER.get());
         }
     }
 
@@ -495,7 +499,7 @@ public class TorpedoEntity extends ThrowableItemProjectile {
 
     /** 磁性近炸检测 */
     private boolean tickMagneticProximity() {
-        if (level().isClientSide() || !magnetic || tickCount <= MAGNETIC_ARM_TICKS) return false;
+        if (level().isClientSide() || !magnetic || tickCount <= magneticArmTicks()) return false;
         checkMagneticProximity();
         return exploded;
     }
@@ -544,7 +548,7 @@ public class TorpedoEntity extends ThrowableItemProjectile {
 
     /** 声导追踪 */
     private void tickAcousticHoming() {
-        if (!level().isClientSide() && acoustic && tickCount > ACOUSTIC_ARM_TICKS) {
+        if (!level().isClientSide() && acoustic && tickCount > acousticArmTicks()) {
             acousticHoming();
         }
     }
@@ -693,7 +697,8 @@ public class TorpedoEntity extends ThrowableItemProjectile {
     }
 
     private void checkMagneticProximity() {
-        AABB searchBox = getBoundingBox().inflate(MAGNETIC_DETONATE_DIST);
+        double detonateDist = magneticDetonateDist();
+        AABB searchBox = getBoundingBox().inflate(detonateDist);
         java.util.List<Entity> nearby = level().getEntities(this, searchBox, e -> {
             if (e == getOwner()) return false;
             if (com.piranport.combat.FriendlyFireHelper.shouldBlockHit(e, getOwner())) return false;
@@ -701,7 +706,7 @@ public class TorpedoEntity extends ThrowableItemProjectile {
         });
 
         for (Entity entity : nearby) {
-            if (entity.distanceTo(this) <= MAGNETIC_DETONATE_DIST) {
+            if (entity.distanceTo(this) <= detonateDist) {
                 magneticDetonate();
                 return;
             }
@@ -715,13 +720,13 @@ public class TorpedoEntity extends ThrowableItemProjectile {
     private void acousticHoming() {
         // 验证当前锁定目标是否仍然有效
         if (lockedTarget != null && (!lockedTarget.isAlive() || lockedTarget.isRemoved()
-                || distanceTo(lockedTarget) > LOCK_BREAK_DISTANCE)) {
+                || distanceTo(lockedTarget) > lockBreakDistance())) {
             lockedTarget = null;
             lockDuration = 0;
         }
 
         // 如果有锁定目标且在稳定期内，继续追踪
-        if (lockedTarget != null && lockDuration < MIN_LOCK_DURATION) {
+        if (lockedTarget != null && lockDuration < lockMinDuration()) {
             lockDuration++;
             turnTowardsTarget(lockedTarget, distanceTo(lockedTarget));
             return;
@@ -732,7 +737,7 @@ public class TorpedoEntity extends ThrowableItemProjectile {
             turnTowardsTarget(lockedTarget, distanceTo(lockedTarget));
             return;
         }
-        acousticScanCooldown = 5; // 每5tick扫描一次
+        acousticScanCooldown = acousticScanInterval(); // 默认每5tick扫描一次
 
         // 扫描新目标
         Entity bestTarget = scanForTarget();
@@ -743,7 +748,7 @@ public class TorpedoEntity extends ThrowableItemProjectile {
                 lockDuration = 0;
             } else {
                 double currentDist = distanceTo(lockedTarget);
-                if (newDist < currentDist * TARGET_SWITCH_THRESHOLD) {
+                if (newDist < currentDist * targetSwitchThreshold()) {
                     lockedTarget = bestTarget;
                     lockDuration = 0;
                 }
@@ -757,7 +762,10 @@ public class TorpedoEntity extends ThrowableItemProjectile {
     }
 
     private Entity scanForTarget() {
-        AABB searchBox = getBoundingBox().inflate(ACOUSTIC_DETECT_RANGE);
+        // 一次扫描内缓存参数，避免逐个实体重复查表
+        double detectRange = acousticDetectRange();
+        double sneakRange = acousticSneakRange();
+        AABB searchBox = getBoundingBox().inflate(detectRange);
         Entity bestTarget = null;
         double bestDist = Double.MAX_VALUE;
 
@@ -768,7 +776,7 @@ public class TorpedoEntity extends ThrowableItemProjectile {
         })) {
             double dist = distanceTo(e);
             double range = (e instanceof LivingEntity living && living.isShiftKeyDown())
-                    ? ACOUSTIC_SNEAK_RANGE : ACOUSTIC_DETECT_RANGE;
+                    ? sneakRange : detectRange;
             if (dist > range) continue;
             Vec3 vel = e.getDeltaMovement();
             double speed = vel.x * vel.x + vel.y * vel.y + vel.z * vel.z;
@@ -813,9 +821,10 @@ public class TorpedoEntity extends ThrowableItemProjectile {
     }
 
     private float getAdaptiveTurnRate(double distanceToTarget) {
-        if (distanceToTarget < CLOSE_RANGE) return ACOUSTIC_MAX_TURN_DEG * CLOSE_TURN_MULTIPLIER;
-        else if (distanceToTarget < MID_RANGE) return ACOUSTIC_MAX_TURN_DEG;
-        else return ACOUSTIC_MAX_TURN_DEG * FAR_TURN_MULTIPLIER;
+        float base = acousticMaxTurnDeg();
+        if (distanceToTarget < acousticCloseRange()) return base * acousticCloseTurnMultiplier();
+        else if (distanceToTarget < acousticMidRange()) return base;
+        else return base * acousticFarTurnMultiplier();
     }
 
     private boolean hasObstacleInDirection(double yaw, double distance) {
@@ -990,9 +999,9 @@ public class TorpedoEntity extends ThrowableItemProjectile {
         torpedoSpeed = tag.getFloat("TorpedoSpeed");
         if (torpedoSpeed <= 0) torpedoSpeed = 1.0f;
         lifetime = tag.getInt("Lifetime");
-        if (lifetime <= 0) lifetime = 1200;
+        if (lifetime <= 0) lifetime = ModEquipmentConfig.TORPEDO_DEFAULT_LIFETIME.get();
         explosionRadius = tag.getFloat("ExplosionRadius");
-        if (explosionRadius <= 0) explosionRadius = 2.0f;
+        if (explosionRadius <= 0) explosionRadius = (float) (double) ModEquipmentConfig.TORPEDO_DEFAULT_EXPLOSION_RADIUS.get();
         magnetic = tag.getBoolean("Magnetic");
         wireGuided = tag.getBoolean("WireGuided");
         acoustic = tag.getBoolean("Acoustic");

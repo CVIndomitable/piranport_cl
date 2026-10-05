@@ -5,6 +5,7 @@ import com.piranport.combat.CombatTargeting;
 import com.piranport.component.AircraftAttackMode;
 import com.piranport.aviation.ReconManager;
 import com.piranport.config.ModCommonConfig;
+import com.piranport.config.ModProjectilesConfig;
 import com.piranport.network.AswSonarSyncPayload;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -81,7 +82,9 @@ public class AircraftAswRecon {
                     double offset = (i - (toFire - 1) / 2.0) * 0.8;
                     double spawnX = craft.getX() + forward.x * offset;
                     double spawnZ = craft.getZ() + forward.z * offset;
-                    DepthChargeEntity dc = new DepthChargeEntity(craft.level(), dcDamage, 3.0f);
+                    // 爆炸威力与玩家/舰娘深弹同源（默认 3.0），避免空投反潜成为第三处写死值
+                    DepthChargeEntity dc = new DepthChargeEntity(craft.level(), dcDamage,
+                            (float) (double) ModProjectilesConfig.DEPTH_CHARGE_EXPLOSION_POWER.get());
                     dc.moveTo(spawnX, craft.getY(), spawnZ, dc.getYRot(), dc.getXRot());
                     dc.setDeltaMovement(craft.getDeltaMovement().x * 0.1, -0.1, craft.getDeltaMovement().z * 0.1);
                     dc.setOwner(owner);

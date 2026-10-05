@@ -77,6 +77,96 @@ public final class ModEquipmentConfig {
     public static final TerminalConfigValue<Double> TORPEDO_SURFACE_CAPTURE_RANGE =
             TerminalConfigValue.number("equipment", "torpedo", "surface_capture_range", 1.0, 0.25, 6.0);
 
+    // ===== 鱼雷制导/引信/口径兜底（2026-10-05 下沉）=====
+    // WHY：这些原先是 TorpedoEntity 里的写死常量，策划无法在调试终端调手感。
+    // 键统一为 global.torpedo.*（与上面的 surface_* 同 target，终端里归到同一目标下）。
+    // 默认值全部 = 下沉前的写死值，纯重构、行为逐字节等价。
+
+    /** 声导扫描半径（格）：非潜行目标。默认 25.0。 */
+    public static final TerminalConfigValue<Double> TORPEDO_ACOUSTIC_DETECT_RANGE =
+            TerminalConfigValue.number("equipment", "torpedo", "acoustic_detect_range", 25.0, 0.0, 256.0);
+
+    /** 声导扫描半径（格）：潜行（Shift）目标，比常规更近。默认 10.0。 */
+    public static final TerminalConfigValue<Double> TORPEDO_ACOUSTIC_SNEAK_RANGE =
+            TerminalConfigValue.number("equipment", "torpedo", "acoustic_sneak_range", 10.0, 0.0, 256.0);
+
+    /** 声导基础最大转角（度/tick）。近/远距离再乘倍率。默认 3.0。 */
+    public static final TerminalConfigValue<Double> TORPEDO_ACOUSTIC_MAX_TURN_DEG =
+            TerminalConfigValue.number("equipment", "torpedo", "acoustic_max_turn_deg", 3.0, 0.0, 180.0);
+
+    /** 声导引信起爆前的安全延迟（ticks）。默认 10。 */
+    public static final TerminalConfigValue<Integer> TORPEDO_ACOUSTIC_ARM_TICKS =
+            TerminalConfigValue.integer("equipment", "torpedo", "acoustic_arm_ticks", 10, 0, 12000);
+
+    /** 声导「近距离」判定（格），以内用近距转角倍率。默认 5.0。 */
+    public static final TerminalConfigValue<Double> TORPEDO_ACOUSTIC_CLOSE_RANGE =
+            TerminalConfigValue.number("equipment", "torpedo", "acoustic_close_range", 5.0, 0.0, 256.0);
+
+    /** 声导「中距离」判定（格），以内用基础转角、以外用远距倍率。默认 15.0。 */
+    public static final TerminalConfigValue<Double> TORPEDO_ACOUSTIC_MID_RANGE =
+            TerminalConfigValue.number("equipment", "torpedo", "acoustic_mid_range", 15.0, 0.0, 256.0);
+
+    /** 近距离声导转角倍率。默认 1.5。 */
+    public static final TerminalConfigValue<Double> TORPEDO_ACOUSTIC_CLOSE_TURN_MULTIPLIER =
+            TerminalConfigValue.number("equipment", "torpedo", "acoustic_close_turn_multiplier", 1.5, 0.0, 10.0);
+
+    /** 远距离声导转角倍率。默认 0.6。 */
+    public static final TerminalConfigValue<Double> TORPEDO_ACOUSTIC_FAR_TURN_MULTIPLIER =
+            TerminalConfigValue.number("equipment", "torpedo", "acoustic_far_turn_multiplier", 0.6, 0.0, 10.0);
+
+    /** 声导目标扫描节流（ticks），避免每 tick 扫描。默认 5。 */
+    public static final TerminalConfigValue<Integer> TORPEDO_ACOUSTIC_SCAN_INTERVAL =
+            TerminalConfigValue.integer("equipment", "torpedo", "acoustic_scan_interval", 5, 1, 1200);
+
+    /** 声导最短锁定周期（ticks）：锁定期内不切换目标。默认 60。 */
+    public static final TerminalConfigValue<Integer> TORPEDO_LOCK_MIN_DURATION =
+            TerminalConfigValue.integer("equipment", "torpedo", "lock_min_duration", 60, 0, 12000);
+
+    /** 声导断锁距离（格）：目标超出即丢失。默认 30.0。 */
+    public static final TerminalConfigValue<Double> TORPEDO_LOCK_BREAK_DISTANCE =
+            TerminalConfigValue.number("equipment", "torpedo", "lock_break_distance", 30.0, 0.0, 512.0);
+
+    /** 声导目标切换阈值：新目标距离需小于当前目标的此比例才切换。默认 0.7。 */
+    public static final TerminalConfigValue<Double> TORPEDO_TARGET_SWITCH_THRESHOLD =
+            TerminalConfigValue.number("equipment", "torpedo", "target_switch_threshold", 0.7, 0.0, 1.0);
+
+    /** 氧气鱼雷航速倍率（无航迹、高速）。默认 1.3。 */
+    public static final TerminalConfigValue<Double> TORPEDO_OXYGEN_SPEED_MULTIPLIER =
+            TerminalConfigValue.number("equipment", "torpedo", "oxygen_speed_multiplier", 1.3, 0.1, 10.0);
+
+    /** 磁性近炸检测/起爆距离（格）。默认 3.0。 */
+    public static final TerminalConfigValue<Double> TORPEDO_MAGNETIC_DETONATE_DIST =
+            TerminalConfigValue.number("equipment", "torpedo", "magnetic_detonate_dist", 3.0, 0.0, 64.0);
+
+    /** 磁性引信起爆前的安全延迟（ticks）。默认 5。 */
+    public static final TerminalConfigValue<Integer> TORPEDO_MAGNETIC_ARM_TICKS =
+            TerminalConfigValue.integer("equipment", "torpedo", "magnetic_arm_ticks", 5, 0, 12000);
+
+    // ---- 口径兜底值 ----
+    // WHY 两套口径分开：533/530/720 走常规档，610 走重雷档。注意玩家发射路径会由
+    // TorpedoFireStrategy 用 TorpedoItem 的型号值（终端键 torpedo.<型号>.*）覆盖伤害/寿命/航速；
+    // 这里的兜底值真正生效的是「不指定型号」的路径（NPC/空投雷）与未覆盖的爆炸半径。
+
+    /** 常规口径鱼雷兜底伤害。默认 18.0。 */
+    public static final TerminalConfigValue<Double> TORPEDO_DEFAULT_DAMAGE =
+            TerminalConfigValue.number("equipment", "torpedo", "default_damage", 18.0, 0.0, 10000.0);
+
+    /** 610mm 重雷兜底伤害。默认 28.0。 */
+    public static final TerminalConfigValue<Double> TORPEDO_HEAVY_DAMAGE =
+            TerminalConfigValue.number("equipment", "torpedo", "heavy_damage", 28.0, 0.0, 10000.0);
+
+    /** 常规口径鱼雷爆炸半径。默认 2.0。 */
+    public static final TerminalConfigValue<Double> TORPEDO_DEFAULT_EXPLOSION_RADIUS =
+            TerminalConfigValue.number("equipment", "torpedo", "default_explosion_radius", 2.0, 0.0, 100.0);
+
+    /** 610mm 重雷爆炸半径。默认 2.5。 */
+    public static final TerminalConfigValue<Double> TORPEDO_HEAVY_EXPLOSION_RADIUS =
+            TerminalConfigValue.number("equipment", "torpedo", "heavy_explosion_radius", 2.5, 0.0, 100.0);
+
+    /** 鱼雷兜底寿命（ticks），未按型号指定航程时使用。默认 1200（= 航程 60 × 20）。 */
+    public static final TerminalConfigValue<Integer> TORPEDO_DEFAULT_LIFETIME =
+            TerminalConfigValue.integer("equipment", "torpedo", "default_lifetime", 1200, 1, 100000);
+
     public static final TerminalConfigValue<Double> ARMOR_PLATE_PROTECTION =
             TerminalConfigValue.number("equipment", "equipment", "armor_plate_protection", 3.0, 0.0, 100.0);
 

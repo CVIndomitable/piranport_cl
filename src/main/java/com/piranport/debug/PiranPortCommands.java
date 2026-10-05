@@ -488,7 +488,7 @@ public final class PiranPortCommands {
                 continue;  // 距离过近，方向无意义，跳过这一个靶子
             }
             Vec3 toPlayer = raw.normalize();
-            float speed = MissileEntity.MissileType.ANTI_SHIP.initialSpeed;
+            float speed = MissileEntity.MissileType.ANTI_SHIP.initialSpeed();
             missile.setDeltaMovement(toPlayer.scale(speed));
             missile.setTrackedTarget(player);
 

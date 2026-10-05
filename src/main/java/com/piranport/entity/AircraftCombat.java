@@ -209,7 +209,7 @@ public class AircraftCombat {
             com.piranport.debug.PiranPortDebug.event(
                     "Aircraft ROCKET_SALVO | entityId={} capacity={} remaining={} firing={} targetHP={}",
                     craft.getId(), craft.ammoCapacity, craft.remainingAmmo, toFire, target.getHealth());
-            float initSpeed = MissileEntity.MissileType.ROCKET.initialSpeed;
+            float initSpeed = MissileEntity.MissileType.ROCKET.initialSpeed();
             for (int i = 0; i < toFire; i++) {
                 double spread = (i - (toFire - 1) / 2.0) * 0.07;
                 double cos = Math.cos(spread);

@@ -1,6 +1,7 @@
 package com.piranport.npc.ai.goal;
 
 import com.piranport.entity.DeepOceanProjectileEntity;
+import com.piranport.npc.ai.NpcCombatTuning;
 import com.piranport.npc.deepocean.AbstractDeepOceanEntity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.goal.Goal;
@@ -11,6 +12,8 @@ import java.util.EnumSet;
 /**
  * Fires cannon shells at the target with parabolic arc.
  * Every N shots fires a tracking round.
+ *
+ * <p>炮弹初速/散布统一走 {@link NpcCombatTuning}（终端可调）。
  */
 public class CannonAttackGoal extends Goal {
 
@@ -18,9 +21,6 @@ public class CannonAttackGoal extends Goal {
     private int fireCooldown = 0;
     private int shotsFired = 0;
     private int nextTrackingShotAt;
-
-    private static final float SHELL_SPEED = 1.5f;
-    private static final float SHELL_INACCURACY = 2.0f;
 
     public CannonAttackGoal(AbstractDeepOceanEntity mob) {
         this.mob = mob;
@@ -81,7 +81,8 @@ public class CannonAttackGoal extends Goal {
         Vec3 aim = target.getEyePosition().subtract(mob.getEyePosition());
         double hDist = aim.horizontalDistance();
         double arcY = hDist * 0.05;
-        shell.shoot(aim.x, aim.y + arcY, aim.z, SHELL_SPEED, SHELL_INACCURACY);
+        shell.shoot(aim.x, aim.y + arcY, aim.z,
+                NpcCombatTuning.shellSpeed(), NpcCombatTuning.shellInaccuracy());
 
         mob.level().addFreshEntity(shell);
     }

@@ -14,6 +14,7 @@ import com.piranport.config.ModCommonConfig;
 import com.piranport.config.TerminalConfigValue;
 import com.piranport.item.ShipType;
 import com.piranport.item.TorpedoItem;
+import com.piranport.item.MissileLauncherItem;
 import com.piranport.item.RadarItem;
 import com.piranport.item.SonarItem;
 import com.piranport.item.FireControlRadarItem;
@@ -117,6 +118,14 @@ public final class TerminalParameterCatalog {
                 add(specs, "equipment", target, "range", sonar.getBaseRadius(), 1, 1024);
             } else if (item instanceof FireControlRadarItem radar) {
                 add(specs, "equipment", target, "weight", radar.getBaseWeight(), 0, 112);
+            } else if (item instanceof MissileLauncherItem launcher) {
+                // 导弹发射器的注册数值补进终端目录（与雷达/声纳同一套：group=equipment、target=注册名）。
+                // 读取侧在 MissileLauncherItem#get*，按同一 key 覆盖生效。
+                add(specs, "equipment", target, "damage", launcher.getBaseDamage(), 0, 10000);
+                add(specs, "equipment", target, "armor_pen", launcher.getBaseArmorPen(), 0, 100);
+                add(specs, "equipment", target, "explosion_power", launcher.getBaseExplosionPower(), 0, 100);
+                add(specs, "equipment", target, "burst_count", launcher.getBaseBurstCount(), 0, 64);
+                add(specs, "equipment", target, "fire_cooldown", launcher.getBaseCooldownTicks(), 0, 12000);
             }
         }
         for (ShipType core : ShipType.values()) {

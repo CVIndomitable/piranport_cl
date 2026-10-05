@@ -207,7 +207,7 @@ public class MissileFireStrategy {
                 player.getX() + d.x * 0.5,
                 player.getEyeY() - 0.1 + d.y * 0.5,
                 player.getZ() + d.z * 0.5);
-        float initSpeed = launcher.getMissileType().initialSpeed;
+        float initSpeed = launcher.getMissileType().initialSpeed();
         missile.setDeltaMovement(d.x * initSpeed, d.y * initSpeed, d.z * initSpeed);
         level.addFreshEntity(missile);
     }

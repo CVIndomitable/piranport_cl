@@ -2,6 +2,7 @@ package com.piranport.combat.depthcharge;
 
 import com.piranport.combat.TransformationManager;
 import com.piranport.combat.util.CombatFireUtils;
+import com.piranport.config.ModProjectilesConfig;
 import com.piranport.component.SlotCooldowns;
 import com.piranport.component.WeaponCooldown;
 import com.piranport.component.LoadedAmmo;
@@ -38,8 +39,11 @@ public final class DepthChargeFireStrategy {
         ItemStack launcherStack = weaponSlot == 40 ? inv.offhand.get(0) : inv.items.get(weaponSlot);
         int chargeCount = launcher.getChargeCount();
         int cooldown = ExperienceShellItem.applyCooldownReduction(player, launcher.getCooldownTicks());
-        float damage = ExperienceShellItem.applyDamageBonus(player, 14f);
-        float explosionPower = ExperienceShellItem.applyExplosionBonus(player, 3.0f);
+        // 基础伤害/威力与 DepthChargeEntity 兜底值同源（global.depth_charge.*），再叠加玩家强化加成。
+        float damage = ExperienceShellItem.applyDamageBonus(player,
+                (float) (double) ModProjectilesConfig.DEPTH_CHARGE_DAMAGE.get());
+        float explosionPower = ExperienceShellItem.applyExplosionBonus(player,
+                (float) (double) ModProjectilesConfig.DEPTH_CHARGE_EXPLOSION_POWER.get());
 
         LoadedAmmo loaded = launcherStack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
         if (!player.getAbilities().instabuild && (!loaded.hasAmmo() || loaded.count() < chargeCount)) {
@@ -48,23 +52,28 @@ public final class DepthChargeFireStrategy {
         }
         if (loaded.hasAmmo()) launcherStack.remove(ModDataComponents.LOADED_AMMO.get());
 
-        // Spawn depth charges based on spread pattern
+        // Spawn depth charges based on spread pattern（各弹初速/偏角走终端 global.depth_charge.*）
         Vec3 look = player.getLookAngle();
         Vec3 horizLook = new Vec3(look.x, 0, look.z).normalize();
+        double speedSingle = ModProjectilesConfig.DEPTH_CHARGE_SPEED_SINGLE.get();
+        double speedFar = ModProjectilesConfig.DEPTH_CHARGE_SPEED_FAR.get();
+        double speedNear = ModProjectilesConfig.DEPTH_CHARGE_SPEED_NEAR.get();
+        double speedTriangle = ModProjectilesConfig.DEPTH_CHARGE_SPEED_TRIANGLE.get();
+        double spreadRad = Math.toRadians(ModProjectilesConfig.DEPTH_CHARGE_SPREAD_DEG.get());
         switch (launcher.getSpreadPattern()) {
             case SINGLE -> {
-                spawnDepthCharge(level, player, horizLook, 0.0, 0.6, damage, explosionPower);
+                spawnDepthCharge(level, player, horizLook, 0.0, speedSingle, damage, explosionPower);
             }
             case FRONT_BACK -> {
-                spawnDepthCharge(level, player, horizLook, 0.0, 0.7, damage, explosionPower);   // far
-                spawnDepthCharge(level, player, horizLook, 0.0, 0.4, damage, explosionPower);   // near
+                spawnDepthCharge(level, player, horizLook, 0.0, speedFar, damage, explosionPower);   // far
+                spawnDepthCharge(level, player, horizLook, 0.0, speedNear, damage, explosionPower);   // near
             }
             case TRIANGLE -> {
-                spawnDepthCharge(level, player, horizLook, 0.0, 0.7, damage, explosionPower);   // center far
-                Vec3 left = CombatFireUtils.rotateHorizontal(horizLook, Math.toRadians(-20));
-                spawnDepthCharge(level, player, left, 0.0, 0.5, damage, explosionPower);
-                Vec3 right = CombatFireUtils.rotateHorizontal(horizLook, Math.toRadians(20));
-                spawnDepthCharge(level, player, right, 0.0, 0.5, damage, explosionPower);
+                spawnDepthCharge(level, player, horizLook, 0.0, speedFar, damage, explosionPower);   // center far
+                Vec3 left = CombatFireUtils.rotateHorizontal(horizLook, -spreadRad);
+                spawnDepthCharge(level, player, left, 0.0, speedTriangle, damage, explosionPower);
+                Vec3 right = CombatFireUtils.rotateHorizontal(horizLook, spreadRad);
+                spawnDepthCharge(level, player, right, 0.0, speedTriangle, damage, explosionPower);
             }
         }
 

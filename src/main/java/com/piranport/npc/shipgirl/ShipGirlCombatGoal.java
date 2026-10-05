@@ -2,6 +2,7 @@ package com.piranport.npc.shipgirl;
 
 import com.piranport.entity.DeepOceanProjectileEntity;
 import com.piranport.entity.TorpedoEntity;
+import com.piranport.npc.ai.NpcCombatTuning;
 import com.piranport.registry.ModEntityTypes;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.goal.Goal;
@@ -12,6 +13,8 @@ import java.util.EnumSet;
 /**
  * 舰娘随从战斗 AI：炮击 + 雷击。
  * 参考 CannonAttackGoal（抛物线追踪弹）和 TorpedoAttackGoal（鱼雷齐射）。
+ *
+ * <p>炮弹/鱼雷手感数值统一走 {@link NpcCombatTuning}（终端可调），不再本地复制。
  */
 public class ShipGirlCombatGoal extends Goal {
     private final ShipGirlEntity shipGirl;
@@ -19,13 +22,6 @@ public class ShipGirlCombatGoal extends Goal {
     private int shotsFired = 0;
     private int nextTrackingShotAt;
 
-    private static final float SHELL_SPEED = 1.5f;
-    private static final float SHELL_INACCURACY = 2.0f;
-    private static final double TORPEDO_RANGE = 20.0;
-    private static final int SALVO_COOLDOWN = 200;
-    private static final int TORPEDOES_PER_SALVO = 3;
-    private static final double SPREAD_ANGLE = 8.0;
-    private static final float TORPEDO_SPEED = 0.8f;
     private static final int MIN_TRACKING_INTERVAL = 3;
     private static final int MAX_TRACKING_INTERVAL = 6;
 
@@ -62,8 +58,9 @@ public class ShipGirlCombatGoal extends Goal {
         fireCannon(target);
         fireCooldown = 80;
 
-        // 雷击冷却独立计算
-        if (shipGirl.distanceTo(target) <= TORPEDO_RANGE && shipGirl.getRandom().nextInt(200) == 0) {
+        // 雷击冷却独立计算：每轮炮击有 1/N 概率放雷（N 走终端，默认 200）
+        if (shipGirl.distanceTo(target) <= NpcCombatTuning.torpedoRange()
+                && shipGirl.getRandom().nextInt(NpcCombatTuning.torpedoTriggerRollBound()) == 0) {
             fireTorpedoSalvo(target);
         }
     }
@@ -97,7 +94,8 @@ public class ShipGirlCombatGoal extends Goal {
         Vec3 aim = target.getEyePosition().subtract(shipGirl.getEyePosition());
         double hDist = aim.horizontalDistance();
         double arcY = hDist * 0.05;
-        shell.shoot(aim.x, aim.y + arcY, aim.z, SHELL_SPEED, SHELL_INACCURACY);
+        shell.shoot(aim.x, aim.y + arcY, aim.z,
+                NpcCombatTuning.shellSpeed(), NpcCombatTuning.shellInaccuracy());
 
         shipGirl.level().addFreshEntity(shell);
     }
@@ -107,9 +105,11 @@ public class ShipGirlCombatGoal extends Goal {
 
         Vec3 aim = target.position().subtract(shipGirl.position()).normalize();
         double baseAngle = Math.atan2(aim.z, aim.x);
+        int count = NpcCombatTuning.torpedoesPerSalvo();
+        float speed = NpcCombatTuning.torpedoSalvoSpeed();
 
-        for (int i = 0; i < TORPEDOES_PER_SALVO; i++) {
-            double offset = (i - (TORPEDOES_PER_SALVO - 1) / 2.0) * Math.toRadians(SPREAD_ANGLE);
+        for (int i = 0; i < count; i++) {
+            double offset = (i - (count - 1) / 2.0) * Math.toRadians(NpcCombatTuning.spreadAngle());
             double angle = baseAngle + offset;
 
             TorpedoEntity torpedo = new TorpedoEntity(ModEntityTypes.TORPEDO_ENTITY.get(), shipGirl.level());
@@ -120,7 +120,7 @@ public class ShipGirlCombatGoal extends Goal {
 
             double dx = Math.cos(angle);
             double dz = Math.sin(angle);
-            torpedo.setDeltaMovement(dx * TORPEDO_SPEED, 0, dz * TORPEDO_SPEED);
+            torpedo.setDeltaMovement(dx * speed, 0, dz * speed);
 
             shipGirl.level().addFreshEntity(torpedo);
         }

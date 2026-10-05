@@ -3,6 +3,7 @@ package com.piranport.compat.maid.combat.handlers;
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import com.piranport.compat.maid.combat.AmmoConsumer;
 import com.piranport.compat.maid.combat.WeaponHandler;
+import com.piranport.config.ModProjectilesConfig;
 import com.piranport.entity.DepthChargeEntity;
 import com.piranport.item.DepthChargeLauncherItem;
 import com.piranport.registry.ModItems;
@@ -14,8 +15,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
 public class DepthChargeHandler implements WeaponHandler {
-    private static final float DAMAGE = 14f;
-    private static final float EXPLOSION = 3.0f;
 
     @Override
     public boolean handles(Item item) {
@@ -55,8 +54,11 @@ public class DepthChargeHandler implements WeaponHandler {
 
         Level level = maid.level();
 
+        // 基础伤害/威力与玩家发射路径同源（global.depth_charge.*）
+        float damage = (float) (double) ModProjectilesConfig.DEPTH_CHARGE_DAMAGE.get();
+        float explosion = (float) (double) ModProjectilesConfig.DEPTH_CHARGE_EXPLOSION_POWER.get();
         for (int i = 0; i < loaded; i++) {
-            DepthChargeEntity dc = new DepthChargeEntity(level, maid, DAMAGE, EXPLOSION);
+            DepthChargeEntity dc = new DepthChargeEntity(level, maid, damage, explosion);
             dc.setPos(origin.x, origin.y, origin.z);
             float offsetPitch = pitch + (i - (loaded - 1) / 2f) * 4f;
             dc.shootFromRotation(maid, offsetPitch, yaw, 0f, 1.6f, 1.0f);

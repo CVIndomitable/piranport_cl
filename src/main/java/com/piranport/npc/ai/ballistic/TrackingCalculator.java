@@ -1,5 +1,6 @@
 package com.piranport.npc.ai.ballistic;
 
+import com.piranport.config.ModProjectilesConfig;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
 
@@ -7,15 +8,22 @@ import net.minecraft.world.phys.Vec3;
  * Proportional Navigation guidance for tracking projectiles.
  * The projectile starts tracking after passing its apex (highest point).
  * Turn rate = N × LOS angular rate, with max-g clamp for natural-looking curves.
+ *
+ * <p>N 与最大转角走调试终端（{@code global.tracking.*}），直接决定 NPC 炮弹命中率。
  */
 public final class TrackingCalculator {
 
     private TrackingCalculator() {}
 
-    /** Navigation constant (dimensionless). Higher = more aggressive tracking. */
-    private static final double NAV_CONSTANT = 3.0;
-    /** Max turn rate per tick (radians). Prevents unnatural 90° turns. */
-    private static final double MAX_TURN_RATE = 0.08; // ~4.6 degrees/tick
+    /** Navigation constant (dimensionless). Higher = more aggressive tracking. 默认 3.0。 */
+    private static double navConstant() {
+        return ModProjectilesConfig.NPC_TRACKING_NAV_CONSTANT.get();
+    }
+
+    /** Max turn rate per tick (radians). Prevents unnatural 90° turns. 默认 0.08（约 4.6°/tick）。 */
+    private static double maxTurnRate() {
+        return ModProjectilesConfig.NPC_TRACKING_MAX_TURN_RATE.get();
+    }
 
     /**
      * Adjust velocity of a projectile to track a target using proportional navigation.
@@ -45,10 +53,10 @@ public final class TrackingCalculator {
 
         // Proportional navigation: desired turn = N * angle * (1/time_to_intercept)
         double timeToIntercept = losDist / speed;
-        double desiredTurn = NAV_CONSTANT * angle / Math.max(timeToIntercept, 1.0);
+        double desiredTurn = navConstant() * angle / Math.max(timeToIntercept, 1.0);
 
         // Clamp turn rate
-        double actualTurn = Math.min(desiredTurn, MAX_TURN_RATE);
+        double actualTurn = Math.min(desiredTurn, maxTurnRate());
 
         if (angle < 0.001) return currentVel; // Already on target
 

@@ -5,6 +5,7 @@ import com.piranport.aviation.FireControlManager;
 import com.piranport.combat.CombatTargeting;
 import com.piranport.combat.FriendlyFireHelper;
 import com.piranport.config.ModCommonConfig;
+import com.piranport.config.ModProjectilesConfig;
 import com.piranport.registry.ModEntityTypes;
 import com.piranport.registry.ModItems;
 import net.minecraft.nbt.CompoundTag;
@@ -45,28 +46,47 @@ public class MissileEntity extends ThrowableItemProjectile {
 
     public enum MissileType {
         /** 反舰导弹 — 中程制导武器，追踪水面目标，直伤+穿甲 */
-        ANTI_SHIP(0.04f, 0.04f, 2.4f,
-                "tooltip.piranport.missile.type.anti_ship", ChatFormatting.RED),
+        ANTI_SHIP("tooltip.piranport.missile.type.anti_ship", ChatFormatting.RED),
         /** 防空导弹 — 高速截击，只追踪空中目标(isValidTarget 限制)，爆炸伤害 */
-        ANTI_AIR(0.05f, 0.05f, 3.0f,
-                "tooltip.piranport.missile.type.anti_air", ChatFormatting.AQUA),
+        ANTI_AIR("tooltip.piranport.missile.type.anti_air", ChatFormatting.AQUA),
         /** 火箭弹 — 无制导直射，短距爆发，爆炸伤害 */
-        ROCKET(0.04f, 0.04f, 2.0f,
-                "tooltip.piranport.missile.type.rocket", ChatFormatting.GOLD);
+        ROCKET("tooltip.piranport.missile.type.rocket", ChatFormatting.GOLD);
 
-        public final float initialSpeed;
-        public final float speedIncrement;
-        public final float maxSpeed;
         public final String translationKey;
         public final ChatFormatting color;
 
-        MissileType(float initial, float increment, float max,
-                    String translationKey, ChatFormatting color) {
-            this.initialSpeed = initial;
-            this.speedIncrement = increment;
-            this.maxSpeed = max;
+        MissileType(String translationKey, ChatFormatting color) {
             this.translationKey = translationKey;
             this.color = color;
+        }
+
+        // 速度曲线原写死在枚举里，策划无法调；现改读终端 global.missile_<型号>.*。
+        // 默认值 = 下沉前各型号的写死值（见 ModProjectilesConfig）。
+        /** 初速（格/tick）。默认 反舰/火箭 0.04、防空 0.05。 */
+        public float initialSpeed() {
+            return (float) (double) switch (this) {
+                case ANTI_SHIP -> ModProjectilesConfig.MISSILE_ANTI_SHIP_SPEED_INITIAL.get();
+                case ANTI_AIR -> ModProjectilesConfig.MISSILE_ANTI_AIR_SPEED_INITIAL.get();
+                case ROCKET -> ModProjectilesConfig.MISSILE_ROCKET_SPEED_INITIAL.get();
+            };
+        }
+
+        /** 每 tick 加速度（格/tick²）。默认 反舰/火箭 0.04、防空 0.05。 */
+        public float speedIncrement() {
+            return (float) (double) switch (this) {
+                case ANTI_SHIP -> ModProjectilesConfig.MISSILE_ANTI_SHIP_SPEED_INCREMENT.get();
+                case ANTI_AIR -> ModProjectilesConfig.MISSILE_ANTI_AIR_SPEED_INCREMENT.get();
+                case ROCKET -> ModProjectilesConfig.MISSILE_ROCKET_SPEED_INCREMENT.get();
+            };
+        }
+
+        /** 极速（格/tick）。默认 反舰 2.4、防空 3.0、火箭 2.0。 */
+        public float maxSpeed() {
+            return (float) (double) switch (this) {
+                case ANTI_SHIP -> ModProjectilesConfig.MISSILE_ANTI_SHIP_SPEED_MAX.get();
+                case ANTI_AIR -> ModProjectilesConfig.MISSILE_ANTI_AIR_SPEED_MAX.get();
+                case ROCKET -> ModProjectilesConfig.MISSILE_ROCKET_SPEED_MAX.get();
+            };
         }
     }
 
@@ -79,10 +99,6 @@ public class MissileEntity extends ThrowableItemProjectile {
     private String displayItemId = "";
     /** 缓存的已解析显示物品（从 displayItemId 惰性解析） */
     private Item cachedDisplayItem = null;
-    private static final int MAX_LIFETIME = 600; // 30 seconds
-    private static final double SEARCH_RANGE = 32.0;
-    /** 每 tick 最大转向速率（度） */
-    private static final float MAX_TURN_DEG = 12.0f;
     /** 制导导弹的缓存追踪目标 */
     private Entity trackedTarget = null;
     /** UUID of the tracked target, used for NBT persistence. */
@@ -97,7 +113,7 @@ public class MissileEntity extends ThrowableItemProjectile {
     /** 实体类型注册所需 */
     public MissileEntity(EntityType<? extends MissileEntity> type, Level level) {
         super(type, level);
-        this.currentSpeed = MissileType.ANTI_SHIP.initialSpeed;
+        this.currentSpeed = MissileType.ANTI_SHIP.initialSpeed();
     }
 
     /** 由 ShipCoreItem 生成；位置、速度和所属者在外部设置 */
@@ -108,7 +124,7 @@ public class MissileEntity extends ThrowableItemProjectile {
         this.damage = damage;
         this.armorPen = armorPen;
         this.explosionPower = explosionPower;
-        this.currentSpeed = type.initialSpeed;
+        this.currentSpeed = type.initialSpeed();
         this.displayItemId = displayItemId;
     }
 
@@ -159,14 +175,14 @@ public class MissileEntity extends ThrowableItemProjectile {
         if (isRemoved()) return;
 
         // 超时消失
-        if (tickCount > MAX_LIFETIME) {
+        if (tickCount > ModProjectilesConfig.MISSILE_LIFETIME_TICKS.get()) {
             if (!level().isClientSide()) discard();
             return;
         }
 
         if (!level().isClientSide()) {
             // 加速
-            currentSpeed = Math.min(currentSpeed + missileType.speedIncrement, missileType.maxSpeed);
+            currentSpeed = Math.min(currentSpeed + missileType.speedIncrement(), missileType.maxSpeed());
 
             Vec3 motion = getDeltaMovement();
 
@@ -195,7 +211,7 @@ public class MissileEntity extends ThrowableItemProjectile {
                 // 手动制导导弹丢失目标后维持直线飞行，不自动重新搜索（与玩家锁定语义一致）
                 if (trackedTarget == null && !manualTarget && --targetSearchCooldown <= 0) {
                     trackedTarget = findTarget();
-                    targetSearchCooldown = 5;
+                    targetSearchCooldown = ModProjectilesConfig.MISSILE_SEARCH_INTERVAL.get();
                 }
                 if (trackedTarget != null) {
                     homeToward(trackedTarget);
@@ -259,7 +275,8 @@ public class MissileEntity extends ThrowableItemProjectile {
         }
 
         // 2. 半径32格内最近敌对生物
-        AABB searchBox = getBoundingBox().inflate(SEARCH_RANGE);
+        double searchRange = ModProjectilesConfig.MISSILE_SEARCH_RANGE.get();
+        AABB searchBox = getBoundingBox().inflate(searchRange);
         Entity bestTarget = null;
         double bestDist = Double.MAX_VALUE;
 
@@ -272,7 +289,7 @@ public class MissileEntity extends ThrowableItemProjectile {
             return isValidTarget(e);
         })) {
             double dist = distanceTo(e);
-            if (dist > SEARCH_RANGE) continue;
+            if (dist > searchRange) continue;
             if (dist < bestDist) {
                 bestTarget = e;
                 bestDist = dist;
@@ -297,7 +314,7 @@ public class MissileEntity extends ThrowableItemProjectile {
         double dot = currentDir.dot(targetDir);
         dot = Math.max(-1.0, Math.min(1.0, dot));
         double angleBetween = Math.acos(dot);
-        double maxTurnRad = Math.toRadians(MAX_TURN_DEG);
+        double maxTurnRad = Math.toRadians(ModProjectilesConfig.MISSILE_MAX_TURN_DEG.get());
 
         Vec3 newDir;
         if (angleBetween <= maxTurnRad) {
@@ -423,7 +440,7 @@ public class MissileEntity extends ThrowableItemProjectile {
         armorPen = tag.getFloat("ArmorPen");
         explosionPower = tag.getFloat("ExplosionPower");
         currentSpeed = tag.getFloat("CurrentSpeed");
-        if (currentSpeed <= 0) currentSpeed = missileType.initialSpeed;
+        if (currentSpeed <= 0) currentSpeed = missileType.initialSpeed();
         displayItemId = tag.getString("DisplayItemId");
         cachedDisplayItem = null;
         manualTarget = tag.getBoolean("ManualTarget");

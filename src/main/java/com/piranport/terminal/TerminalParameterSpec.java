@@ -1,5 +1,7 @@
 package com.piranport.terminal;
 
+import java.math.BigDecimal;
+import java.math.MathContext;
 import java.util.Locale;
 
 /** 调试终端单项参数的稳定描述与服务端校验边界。 */
@@ -61,13 +63,40 @@ public record TerminalParameterSpec(String key, String group, String target, Str
         }
         if (type != ValueType.DOUBLE) return raw;
         try {
-            double value = Double.parseDouble(raw) * displayScale();
-            return "drag_coeff".equals(property)
-                    ? String.format(Locale.ROOT, "%.6e", value)
-                    : isLinearSpeed() ? String.format(Locale.ROOT, "%.6f", value) : raw;
+            double parsed = Double.parseDouble(raw);
+            double value = parsed * displayScale();
+            // 三个特判保持原样：drag_coeff 科学计数法、线性速度 ×20 的 %.6f、其余走通用整洁化。
+            if ("drag_coeff".equals(property)) return String.format(Locale.ROOT, "%.6e", value);
+            if (isLinearSpeed()) return String.format(Locale.ROOT, "%.6f", value);
+            // 非速度非拖曳的 DOUBLE：历史上直接回显原始串（tick 时长型的 ×0.05 只在
+            // 上面的 INTEGER 分支生效），这里也只做美观化，不引入新的缩放语义。
+            return tidyDecimal(parsed);
         } catch (NumberFormatException ignored) {
             return raw;
         }
+    }
+
+    /**
+     * 把 double 显示串整理成人类可读形式，抹掉二进制尾数噪声。
+     * <p>
+     * WHY：不少参数底层是 {@code float}（如火炮垂直散布 0.05f），加宽成 double 后
+     * 会带出 {@code 0.05000000074505806} 这类尾巴。这里按 6 位有效数字取整并去尾零，
+     * 既得到 {@code 0.05}，又保证 {@code 12000} / {@code 100} / {@code 1.15} 这类
+     * 有效位数足够的真值原样保留；输出恒为 toPlainString（非科学计数法），可直接
+     * 被 {@link Double#parseDouble} 回填到编辑框。
+     */
+    private static String tidyDecimal(double value) {
+        BigDecimal exact = BigDecimal.valueOf(value);
+        BigDecimal rounded = exact.round(new MathContext(6)).stripTrailingZeros();
+        // 取整本来就无损：真值有效位数 ≤ 6，直接用（12000 → 12000）。
+        if (rounded.doubleValue() == value) return rounded.toPlainString();
+        // 原值恰是 float 加宽而来 = 纯二进制噪声，改用 float 的最短十进制表示，
+        // 避免 6 位取整把 float 本身的高 7 位真值（如 123456.78f）截坏。
+        if (value != 0.0 && (double) (float) value == value) {
+            return new BigDecimal(Float.toString((float) value)).stripTrailingZeros().toPlainString();
+        }
+        // 真·高精度 double：宁可保留原串，也不猜着截坏它。
+        return exact.toPlainString();
     }
 
     /** Convert a terminal value back to the canonical stored value. */

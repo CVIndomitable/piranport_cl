@@ -21,8 +21,9 @@ import java.util.Set;
 
 /**
  * 独立灭火器物品（消耗品/02-灭火器设计）。
- * <p>右键使用：清除身上所有 HARMFUL 效果并灭火；冷却与损管共用终端参数
- * {@code global.damage_control.use_cooldown}（默认 2400 tick = 120 秒）。
+ * <p>右键使用：清除身上所有 HARMFUL 效果并灭火；冷却走本物品独立终端参数
+ * {@code global.fire_extinguisher.use_cooldown}（默认 2400 tick = 120 秒），
+ * 与损管的 {@code global.damage_control.use_cooldown} 是两套参数，不共用。
  * 与损管区别：不消耗"强化槽"概念，背包槽位消耗，配方原料不同。</p>
  */
 public class FireExtinguisherItem extends Item {
@@ -56,7 +57,7 @@ public class FireExtinguisherItem extends Item {
                 SoundSource.PLAYERS, 1.0F, 1.0F);
 
         // 冷却
-        player.getCooldowns().addCooldown(this, ModEquipmentConfig.DAMAGE_CONTROL_USE_COOLDOWN.get());
+        player.getCooldowns().addCooldown(this, ModEquipmentConfig.FIRE_EXTINGUISHER_USE_COOLDOWN.get());
 
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
     }

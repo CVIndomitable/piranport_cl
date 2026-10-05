@@ -1,6 +1,7 @@
 package com.piranport.combat;
 
 import com.piranport.PiranPort;
+import com.piranport.config.ModEquipmentConfig;
 import com.piranport.item.EugenShieldItem;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -19,8 +20,14 @@ import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
 @EventBusSubscriber(modid = PiranPort.MOD_ID)
 public class EugenShieldBlockHandler {
 
-    /** cos(75°) — 150度扇形的半角 */
-    private static final double COS_HALF_ANGLE = Math.cos(Math.toRadians(75.0));
+    /**
+     * 格挡锥半角（度）的真源在 {@link ModEquipmentConfig#DEFENSE_CONE_HALF_ANGLE_DEG}
+     * （{@code global.defense_cone.half_angle_deg}，默认 75 → 150 度锥）。
+     * 与大凤的伞共用同一参数：两者语义相同 —— 都按「方向向量 · 锥轴 ≥ cos(半角)」判定是否落在对称锥内。
+     */
+    private static double cosHalfAngle() {
+        return Math.cos(Math.toRadians(ModEquipmentConfig.DEFENSE_CONE_HALF_ANGLE_DEG.get()));
+    }
 
     @SubscribeEvent
     public static void onLivingIncomingDamage(LivingIncomingDamageEvent event) {
@@ -55,7 +62,7 @@ public class EugenShieldBlockHandler {
 
         // 检查伤害源是否在 150 度正面锥形内
         double dot = lookHorizontal.dot(dirHorizontal);
-        if (dot >= COS_HALF_ANGLE) {
+        if (dot >= cosHalfAngle()) {
             // 格挡伤害
             event.setCanceled(true);
 

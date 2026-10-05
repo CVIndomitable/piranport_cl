@@ -1,6 +1,7 @@
 package com.piranport.combat;
 
 import com.piranport.PiranPort;
+import com.piranport.config.ModEquipmentConfig;
 import com.piranport.item.TaihouUmbrellaItem;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -19,8 +20,14 @@ import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
 @EventBusSubscriber(modid = PiranPort.MOD_ID)
 public class UmbrellaBlockHandler {
 
-    /** cos(75°) — 150度锥的半角 */
-    private static final double COS_HALF_ANGLE = Math.cos(Math.toRadians(75.0));
+    /**
+     * 格挡锥半角（度）的真源在 {@link ModEquipmentConfig#DEFENSE_CONE_HALF_ANGLE_DEG}
+     * （{@code global.defense_cone.half_angle_deg}，默认 75 → 150 度锥）。
+     * 与欧根舰盾共用同一参数：两者语义相同 —— 都按「方向向量 · 锥轴 ≥ cos(半角)」判定是否落在对称锥内。
+     */
+    private static double cosHalfAngle() {
+        return Math.cos(Math.toRadians(ModEquipmentConfig.DEFENSE_CONE_HALF_ANGLE_DEG.get()));
+    }
 
     @SubscribeEvent
     public static void onLivingIncomingDamage(LivingIncomingDamageEvent event) {
@@ -49,8 +56,8 @@ public class UmbrellaBlockHandler {
         // The umbrella protects against attacks coming from above (anti-air).
         // We check the angle between dirToSource and the UP vector (0, 1, 0).
         // dot(dirToSource, UP) = dirToSource.y = cos(angle)
-        // If angle <= 75° (half of 150°), then cos(angle) >= cos(75°)
-        if (dirToSource.y >= COS_HALF_ANGLE) {
+        // If angle <= half angle, then cos(angle) >= cos(half angle)
+        if (dirToSource.y >= cosHalfAngle()) {
             // 格挡伤害
             event.setCanceled(true);
 

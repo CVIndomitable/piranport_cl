@@ -489,6 +489,7 @@ public class ModCreativeTabs {
                         output.accept(ModItems.TOWN_SCROLL.get());
                         output.accept(ModItems.ELITE_DAMAGE_CONTROL.get());
                         output.accept(ModItems.DAMAGE_CONTROL.get());
+                        output.accept(ModItems.FIRE_EXTINGUISHER.get());
                         output.accept(ModItems.QUICK_REPAIR.get());
                         output.accept(ModItems.SMOKE_CANDLE.get());
                         output.accept(ModItems.FLARE_LAUNCHER.get());

@@ -581,9 +581,21 @@ public final class ModEquipmentConfig {
     // ===== 损管 / 治疗道具（2026-10-05 下沉）=====
     // 键：global.<target>.*。
 
-    /** 损管与灭火器共用冷却（tick，终端按秒显示）。默认 2400（120 秒）。 */
+    /** 损管冷却（tick，终端按秒显示）。默认 2400（120 秒）。
+     *  <p>灭火器是另一个独立消耗品（触发效果不同），不共用本参数，见 {@link #FIRE_EXTINGUISHER_USE_COOLDOWN}。</p> */
     public static final TerminalConfigValue<Integer> DAMAGE_CONTROL_USE_COOLDOWN =
             TerminalConfigValue.integer("equipment", "damage_control", "use_cooldown", 2400, 0, 120000);
+
+    /** 灭火器冷却（tick，终端按秒显示）。默认 2400（120 秒）。与损管拆开各自独立。 */
+    public static final TerminalConfigValue<Integer> FIRE_EXTINGUISHER_USE_COOLDOWN =
+            TerminalConfigValue.integer("equipment", "fire_extinguisher", "use_cooldown", 2400, 0, 120000);
+
+    // ===== 防御锥（2026-10-05 下沉）=====
+
+    /** 大凤的伞与欧根的舰盾共用的格挡半角（度）。默认 75，即 150 度对称锥。
+     *  <p>单位是「度」而非 tick/速度，故 property 名不带 {@code _cooldown} / {@code speed} 等终端启发式后缀。</p> */
+    public static final TerminalConfigValue<Double> DEFENSE_CONE_HALF_ANGLE_DEG =
+            TerminalConfigValue.number("equipment", "defense_cone", "half_angle_deg", 75.0, 0.0, 180.0);
 
     /** 维修套件作用距离（格）。默认 5.0。 */
     public static final TerminalConfigValue<Double> REPAIR_KIT_RANGE =

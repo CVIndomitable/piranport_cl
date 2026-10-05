@@ -21,12 +21,14 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * 灭火器 / 损管（精英/普通共用 use 逻辑，按 stacksTo 与触发位置区分）。
- * 策划决策：消耗品/01-损管设计.md、消耗品/02-灭火器设计.md
+ * 损害管制（普通/精英共用 use 逻辑，按 stacksTo 与触发位置区分）。
+ * 策划决策：消耗品/01-损管设计.md
  *
  * <p>右键使用：清除身上所有 {@link MobEffectCategory#HARMFUL} 效果并灭火。
  * <b>白名单保留"超载相关 buff"</b>（决策 §关键约束：挖掘疲劳/虚弱/中毒不得清除，
- * 这些是舰装过载的安全警示）。</p>
+ * 这些是舰装过载的安全警示）。
+ * 冷却走损管自己的终端参数 {@code global.damage_control.use_cooldown}
+ * （灭火器 {@link FireExtinguisherItem} 是独立消耗品，有自己的 {@code global.fire_extinguisher.use_cooldown}）。</p>
  */
 public class DamageControlItem extends Item {
 

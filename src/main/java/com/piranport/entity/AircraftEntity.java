@@ -1,6 +1,7 @@
 package com.piranport.entity;
 
 import com.piranport.PiranPort;
+import com.piranport.config.ModEquipmentConfig;
 import com.piranport.aviation.FireControlManager;
 import com.piranport.aviation.AircraftDefinition;
 import com.piranport.aviation.AircraftDefinitionService;
@@ -196,9 +197,9 @@ public class AircraftEntity extends Entity {
     // NPC 航母发射的飞机：持有者对（甲板容量回收用）
     @Nullable private AbstractDeepOceanEntity aircraftOwner;
 
-    private static final int MAX_AIRTIME_TICKS = 12000;
-    private static final double MIN_DIST_FROM_OWNER = 48.0;
-    private static final double MIN_RECON_DIST = 200.0;  // Phase 32
+    // 飞行手感常量（滞空上限、离所属者距离、脱困、巡航高度、盘旋半径、起飞/返航节奏、
+    // 转弯半径、轨道角速率、最低速比例等）已下沉到调试终端 global.aircraft_flight.*，
+    // 见 ModEquipmentConfig；运行期按需读取，策划可实时调手感。默认值 = 下沉前写死值。
 
     /**
      * 动态距离上限：取 max(最小值, (服务器模拟距离 - 1) × 16)。
@@ -211,15 +212,6 @@ public class AircraftEntity extends Entity {
         }
         return Math.max(minimum, (simDist - 1) * 16.0);
     }
-    private static final int STUCK_CHECK_INTERVAL = 60;
-    private static final double STUCK_THRESHOLD = 0.1;
-    private static final int LAUNCH_DURATION = 30;
-    private static final double CRUISE_ALTITUDE = 18.0;
-    private static final double ORBIT_RADIUS = 8.0;
-    private static final double RETURN_ARRIVAL_DIST = 3.0;
-    private static final int FUEL_BURN_INTERVAL = 4; // burn 1 fuel every 4 ticks
-    private static final double TURN_RADIUS = 2.0; // horizontal turn arc radius in blocks
-
     public AircraftEntity(EntityType<?> type, Level level) {
         super(type, level);
         this.noPhysics = true;
@@ -466,10 +458,10 @@ public class AircraftEntity extends Entity {
         airtimeTicks++;
         stateTicks++;
 
-        // Fuel consumption: burn 1 fuel per FUEL_BURN_INTERVAL ticks during active flight
+        // Fuel consumption: burn 1 fuel per fuel_burn_interval ticks during active flight
         if (state == FlightState.CRUISING || state == FlightState.ATTACKING || state == FlightState.RECON_ACTIVE) {
             // 防止燃料容量为0时除零（特殊配置的飞机如侦察机）
-            if (fuelCapacity > 0 && currentFuel > 0 && airtimeTicks % FUEL_BURN_INTERVAL == 0) {
+            if (fuelCapacity > 0 && currentFuel > 0 && airtimeTicks % ModEquipmentConfig.AIRCRAFT_FUEL_BURN_INTERVAL.get() == 0) {
                 currentFuel--;
             }
             if (currentFuel <= 0) {
@@ -484,7 +476,7 @@ public class AircraftEntity extends Entity {
         }
 
         // Defense: 10-min airtime limit
-        if (airtimeTicks >= MAX_AIRTIME_TICKS) {
+        if (airtimeTicks >= ModEquipmentConfig.AIRCRAFT_MAX_AIRTIME.get()) {
             if (state == FlightState.RETURNING) { recallAndRemove(); return; }
             isForcedReturn = true;
             startReturning("max_airtime");
@@ -492,11 +484,11 @@ public class AircraftEntity extends Entity {
         }
 
         // Defense: stuck detection (disabled in RECON_ACTIVE — player may hover stationary)
-        if (state != FlightState.RECON_ACTIVE && stateTicks % STUCK_CHECK_INTERVAL == 0) {
+        if (state != FlightState.RECON_ACTIVE && stateTicks % ModEquipmentConfig.AIRCRAFT_STUCK_CHECK_INTERVAL.get() == 0) {
             double moved = position().distanceTo(stuckCheckPos);
-            if (moved < STUCK_THRESHOLD) {
-                stuckTicks += STUCK_CHECK_INTERVAL;
-                if (stuckTicks >= STUCK_CHECK_INTERVAL * 2) { isForcedReturn = true; recallAndRemove(); return; }
+            if (moved < ModEquipmentConfig.AIRCRAFT_STUCK_THRESHOLD.get()) {
+                stuckTicks += ModEquipmentConfig.AIRCRAFT_STUCK_CHECK_INTERVAL.get();
+                if (stuckTicks >= ModEquipmentConfig.AIRCRAFT_STUCK_CHECK_INTERVAL.get() * 2) { isForcedReturn = true; recallAndRemove(); return; }
             } else {
                 stuckTicks = 0;
             }
@@ -507,7 +499,7 @@ public class AircraftEntity extends Entity {
         // FOLLOW mode uses extended range (recon plane may be 200 blocks away)
         double maxDist = (state == FlightState.RECON_ACTIVE
                 || attackMode == AircraftAttackMode.FOLLOW)
-                ? getDistanceLimit(MIN_RECON_DIST) : getDistanceLimit(MIN_DIST_FROM_OWNER);
+                ? getDistanceLimit(ModEquipmentConfig.AIRCRAFT_MIN_RECON_DISTANCE.get()) : getDistanceLimit(ModEquipmentConfig.AIRCRAFT_MIN_DISTANCE_FROM_OWNER.get());
         if (distanceTo(owner) > maxDist) {
             if (state == FlightState.RECON_ACTIVE) {
                 // Recon exceeded 200-block range — end recon and return
@@ -603,7 +595,7 @@ public class AircraftEntity extends Entity {
 
     private void tickLaunching(Player owner) {
         double phase = phaseSpeedCoefficient();
-        double targetY = owner.getY() + CRUISE_ALTITUDE;
+        double targetY = owner.getY() + ModEquipmentConfig.AIRCRAFT_CRUISE_ALTITUDE.get();
         double dy = targetY - getY();
         double rise = Math.min(panelSpeed * phase, Math.abs(dy));
         // Horizontal velocity along launch direction (orbitAngle = player's facing at launch)
@@ -612,7 +604,7 @@ public class AircraftEntity extends Entity {
         double fwdX = Math.cos(orbitAngle) * fwdSpeed;
         double fwdZ = Math.sin(orbitAngle) * fwdSpeed;
         setDeltaMovement(fwdX, dy > 0 ? rise : -rise, fwdZ);
-        if (stateTicks >= LAUNCH_DURATION || Math.abs(dy) < 1.5) {
+        if (stateTicks >= ModEquipmentConfig.AIRCRAFT_LAUNCH_TICKS.get() || Math.abs(dy) < 1.5) {
             // RECON goes directly to RECON_ACTIVE; others go to CRUISING
             setState(aircraftType == AircraftInfo.AircraftType.RECON
                     ? FlightState.RECON_ACTIVE : FlightState.CRUISING);
@@ -707,10 +699,10 @@ public class AircraftEntity extends Entity {
             }
             AircraftEntity reconAircraft = cachedReconAircraft;
             if (reconAircraft != null) {
-                orbitAngle += panelSpeed * 0.015 * phase;
-                double tx = reconAircraft.getX() + Math.cos(orbitAngle) * ORBIT_RADIUS;
+                orbitAngle += panelSpeed * ModEquipmentConfig.AIRCRAFT_ORBIT_ANGULAR_RATE.get() * phase;
+                double tx = reconAircraft.getX() + Math.cos(orbitAngle) * ModEquipmentConfig.AIRCRAFT_ORBIT_RADIUS.get();
                 double ty = reconAircraft.getY();  // match recon altitude
-                double tz = reconAircraft.getZ() + Math.sin(orbitAngle) * ORBIT_RADIUS;
+                double tz = reconAircraft.getZ() + Math.sin(orbitAngle) * ModEquipmentConfig.AIRCRAFT_ORBIT_RADIUS.get();
                 Vec3 toTarget = new Vec3(tx - getX(), ty - getY(), tz - getZ());
                 double dist = toTarget.length();
                 if (dist > 0.1) {
@@ -723,10 +715,10 @@ public class AircraftEntity extends Entity {
             // No active recon — fall through to normal orbit around player
         }
 
-        orbitAngle += panelSpeed * 0.015 * phase;
-        double tx = owner.getX() + Math.cos(orbitAngle) * ORBIT_RADIUS;
-        double ty = owner.getY() + CRUISE_ALTITUDE;
-        double tz = owner.getZ() + Math.sin(orbitAngle) * ORBIT_RADIUS;
+        orbitAngle += panelSpeed * ModEquipmentConfig.AIRCRAFT_ORBIT_ANGULAR_RATE.get() * phase;
+        double tx = owner.getX() + Math.cos(orbitAngle) * ModEquipmentConfig.AIRCRAFT_ORBIT_RADIUS.get();
+        double ty = owner.getY() + ModEquipmentConfig.AIRCRAFT_CRUISE_ALTITUDE.get();
+        double tz = owner.getZ() + Math.sin(orbitAngle) * ModEquipmentConfig.AIRCRAFT_ORBIT_RADIUS.get();
         Vec3 toTarget = new Vec3(tx - getX(), ty - getY(), tz - getZ());
         double dist = toTarget.length();
         if (dist > 0.1) {
@@ -905,7 +897,7 @@ public class AircraftEntity extends Entity {
         double phase = phaseSpeedCoefficient();
         Vec3 toOwner = owner.getEyePosition().subtract(position());
         double dist = toOwner.length();
-        if (dist < RETURN_ARRIVAL_DIST) { recallAndRemove(); return; }
+        if (dist < ModEquipmentConfig.AIRCRAFT_RETURN_ARRIVAL_DISTANCE.get()) { recallAndRemove(); return; }
         // 返航增速 30%：0.4 × 1.3 = 0.52
         setDeltaMovement(toOwner.normalize().scale(Math.min(panelSpeed * phase, dist)));
     }
@@ -944,21 +936,21 @@ public class AircraftEntity extends Entity {
         // Fuel consumption
         if (state == FlightState.CRUISING || state == FlightState.ATTACKING) {
             // 防止燃料容量为0时除零
-            if (fuelCapacity > 0 && currentFuel > 0 && airtimeTicks % FUEL_BURN_INTERVAL == 0) currentFuel--;
+            if (fuelCapacity > 0 && currentFuel > 0 && airtimeTicks % ModEquipmentConfig.AIRCRAFT_FUEL_BURN_INTERVAL.get() == 0) currentFuel--;
             if (currentFuel <= 0) { discard(); return; }
         }
-        if (airtimeTicks >= MAX_AIRTIME_TICKS) { discard(); return; }
-        if (position().distanceTo(homePosition) > getDistanceLimit(MIN_DIST_FROM_OWNER) * 2) { discard(); return; }
+        if (airtimeTicks >= ModEquipmentConfig.AIRCRAFT_MAX_AIRTIME.get()) { discard(); return; }
+        if (position().distanceTo(homePosition) > getDistanceLimit(ModEquipmentConfig.AIRCRAFT_MIN_DISTANCE_FROM_OWNER.get()) * 2) { discard(); return; }
 
         if (attackCooldown > 0) attackCooldown--;
 
         switch (state) {
             case LAUNCHING -> {
-                double targetY = homePosition.y + CRUISE_ALTITUDE;
+                double targetY = homePosition.y + ModEquipmentConfig.AIRCRAFT_CRUISE_ALTITUDE.get();
                 double dy = targetY - getY();
                 double rise = Math.min(panelSpeed * phase, Math.abs(dy));
                 setDeltaMovement(getDeltaMovement().x * 0.5, dy > 0 ? rise : -rise, getDeltaMovement().z * 0.5);
-                if (stateTicks >= LAUNCH_DURATION || Math.abs(dy) < 1.5) {
+                if (stateTicks >= ModEquipmentConfig.AIRCRAFT_LAUNCH_TICKS.get() || Math.abs(dy) < 1.5) {
                     setState(FlightState.CRUISING);
                 }
             }
@@ -974,10 +966,10 @@ public class AircraftEntity extends Entity {
                     }
                 }
                 // Orbit home position
-                orbitAngle += panelSpeed * 0.015 * phase;
-                double tx = homePosition.x + Math.cos(orbitAngle) * ORBIT_RADIUS;
-                double ty = homePosition.y + CRUISE_ALTITUDE;
-                double tz = homePosition.z + Math.sin(orbitAngle) * ORBIT_RADIUS;
+                orbitAngle += panelSpeed * ModEquipmentConfig.AIRCRAFT_ORBIT_ANGULAR_RATE.get() * phase;
+                double tx = homePosition.x + Math.cos(orbitAngle) * ModEquipmentConfig.AIRCRAFT_ORBIT_RADIUS.get();
+                double ty = homePosition.y + ModEquipmentConfig.AIRCRAFT_CRUISE_ALTITUDE.get();
+                double tz = homePosition.z + Math.sin(orbitAngle) * ModEquipmentConfig.AIRCRAFT_ORBIT_RADIUS.get();
                 Vec3 toTarget = new Vec3(tx - getX(), ty - getY(), tz - getZ());
                 double dist = toTarget.length();
                 if (dist > 0.1) {
@@ -1021,7 +1013,8 @@ public class AircraftEntity extends Entity {
     // ===== Turn radius constraint =====
 
     /**
-     * Enforces a circular arc turn with radius {@link #TURN_RADIUS} and prevents hovering.
+     * Enforces a circular arc turn with the terminal-configured turn radius
+     * （{@code global.aircraft_flight.turn_radius}）and prevents hovering.
      * Called after each state's tick method sets the desired delta movement, and before
      * rotation/position update.
      */
@@ -1031,7 +1024,8 @@ public class AircraftEntity extends Entity {
         // Enforce minimum horizontal speed (no hovering) — skip during LAUNCHING (vertical ascent)
         if (state != FlightState.LAUNCHING && lastHorizontalDir != null) {
             double rawHorizSpeed = rawVel.horizontalDistance();
-            double minSpeed = panelSpeed * 0.05 * phaseSpeedCoefficient();
+            double minSpeed = panelSpeed * ModEquipmentConfig.AIRCRAFT_MIN_SPEED_MULTIPLIER.get()
+                    * phaseSpeedCoefficient();
             if (rawHorizSpeed < minSpeed) {
                 rawVel = new Vec3(lastHorizontalDir.x * minSpeed, rawVel.y, lastHorizontalDir.z * minSpeed);
                 setDeltaMovement(rawVel);
@@ -1051,7 +1045,8 @@ public class AircraftEntity extends Entity {
 
     /**
      * Limits horizontal direction change to the maximum angular rate allowed by
-     * a circular arc of radius {@link #TURN_RADIUS}.
+     * a circular arc of the terminal-configured turn radius
+     * （{@code global.aircraft_flight.turn_radius}）.
      * Vertical (Y) component is passed through unchanged — altitude changes are not arc-limited.
      */
     private Vec3 constrainTurnRadius(Vec3 desiredVel) {
@@ -1063,7 +1058,7 @@ public class AircraftEntity extends Entity {
         }
 
         // Max yaw change per tick:  ω = v / r  (radians)
-        double maxAngle = desiredHorizSpeed / TURN_RADIUS;
+        double maxAngle = desiredHorizSpeed / ModEquipmentConfig.AIRCRAFT_TURN_RADIUS.get();
 
         // Desired horizontal direction
         double invSpeed = 1.0 / desiredHorizSpeed;

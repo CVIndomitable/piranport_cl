@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class LevelBombLeadTest {
 
-    private static final double GRAVITY = 0.06;   // 与 AerialBombEntity.GRAVITY 一致
+    private static final double GRAVITY = 0.06;   // 与终端参数 global.aerial_bomb.gravity 默认值一致
     private static final double VERTICAL = -0.3;  // 投弹垂直初速
 
     /** 典型高度（+32 投弹高度 - 0.5 出膛偏移）下与逐 tick 飞行模拟逐位对齐。 */

@@ -199,4 +199,16 @@ public final class ModProjectilesConfig {
     /** 三角散布：左右偏角（度）。默认 20.0。 */
     public static final TerminalConfigValue<Double> DEPTH_CHARGE_SPREAD_DEG =
             TerminalConfigValue.number("projectiles", "depth_charge", "spread_deg", 20.0, 0.0, 180.0);
+
+    // ===== 航空炸弹（AerialBombEntity）=====
+    // WHY：重力原先写死为 AerialBombEntity.GRAVITY = 0.06，被三处共用——实体物理
+    // （ThrowableProjectile#tick 的 getDefaultGravity）、客户端黄色落点标记
+    // （getMarkerGravity → ProjectileLandingMarkerRenderer）、水平轰炸投弹提前量解算
+    // （LevelBombLead.releaseDistance）。下沉为终端参数后三处仍读同一来源，
+    // 改重力不会让标记指向与实际弹着点、提前量互相漂移。
+    // 键：global.aerial_bomb.gravity。
+
+    /** 航弹重力（格/tick²），强于原版投掷物默认的 0.03，模拟自由落体炸弹。默认 0.06。 */
+    public static final TerminalConfigValue<Double> AERIAL_BOMB_GRAVITY =
+            TerminalConfigValue.number("projectiles", "aerial_bomb", "gravity", 0.06, 0.0, 10.0);
 }

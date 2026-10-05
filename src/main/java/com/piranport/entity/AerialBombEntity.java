@@ -53,20 +53,23 @@ public class AerialBombEntity extends ThrowableItemProjectile {
     /**
      * 航弹重力（每 tick 的垂直加速度，格/tick²），强于原版投掷物默认的 0.03，模拟自由落体炸弹。
      *
-     * <p>公开为常量是为了让「实体物理、客户端落点标记、投弹提前量解算」三处共用同一来源：
-     * 任何一处单独写死 0.06 都会随调参漂移，导致标记指向与实际弹着点、提前量互相错位。
+     * <p>数值来自调试终端参数 {@code global.aerial_bomb.gravity}（默认 0.06），
+     * 「实体物理、客户端落点标记、投弹提前量解算」三处共用这一个读取入口：
+     * 任何一处单独写死数字都会随调参漂移，导致标记指向与实际弹着点、提前量互相错位。
      */
-    public static final double GRAVITY = 0.06;
+    public static double gravity() {
+        return com.piranport.config.ModProjectilesConfig.AERIAL_BOMB_GRAVITY.get();
+    }
 
     /** 重力强于默认值(0.03)，模拟自由落体炸弹 */
     @Override
     protected double getDefaultGravity() {
-        return GRAVITY;
+        return gravity();
     }
 
     /** Gravity exposed to the client landing marker prediction. */
     public double getMarkerGravity() {
-        return GRAVITY;
+        return gravity();
     }
 
     @Override

@@ -153,23 +153,28 @@ public class AircraftCombat {
         Vec3 toTarget = target.getEyePosition().subtract(craft.position());
         double dist = toTarget.length();
         if (dist < 0.01) return; // 零距离保护：防止 normalize 产生 NaN
-        double preferredDist = 11.0;
+        double preferredDist = ModEquipmentConfig.FIGHTER_HOVER_DISTANCE.get();
+        double hoverBand = ModEquipmentConfig.FIGHTER_HOVER_BAND.get();
 
-        if (dist > preferredDist + 3) {
-            craft.setDeltaMovement(toTarget.normalize().scale(Math.min(craft.getPanelSpeed() * 0.5
+        if (dist > preferredDist + hoverBand) {
+            craft.setDeltaMovement(toTarget.normalize().scale(Math.min(craft.getPanelSpeed()
+                    * ModEquipmentConfig.FIGHTER_PURSUIT_MULTIPLIER.get()
                     * craft.phaseSpeedCoefficient(), dist)));
-        } else if (dist < preferredDist - 3) {
-            craft.setDeltaMovement(toTarget.normalize().scale(-craft.getPanelSpeed() * 0.2
+        } else if (dist < preferredDist - hoverBand) {
+            craft.setDeltaMovement(toTarget.normalize().scale(-craft.getPanelSpeed()
+                    * ModEquipmentConfig.FIGHTER_RETREAT_MULTIPLIER.get()
                     * craft.phaseSpeedCoefficient()));
         } else {
-            craft.setDeltaMovement(craft.getDeltaMovement().scale(0.8));
+            craft.setDeltaMovement(craft.getDeltaMovement().scale(ModEquipmentConfig.FIGHTER_HOVER_DAMPING.get()));
         }
 
-        if (craft.attackCooldown <= 0 && dist < 24.0) {
-            BulletEntity bullet = new BulletEntity(craft.level(), craft.getPanelDamage() / 8f);
+        if (craft.attackCooldown <= 0 && dist < ModEquipmentConfig.FIGHTER_BULLET_RANGE.get()) {
+            // 保留 float 除法（.floatValue()），保证默认 8.0 时与下沉前 8f 逐字节一致。
+            BulletEntity bullet = new BulletEntity(craft.level(),
+                    craft.getPanelDamage() / ModEquipmentConfig.FIGHTER_BULLET_DAMAGE_DIVISOR.get().floatValue());
             Vec3 dir = toTarget.normalize();
             bullet.moveTo(craft.getX(), craft.getY() + 0.3, craft.getZ(), bullet.getYRot(), bullet.getXRot());
-            bullet.setDeltaMovement(dir.scale(2.5));
+            bullet.setDeltaMovement(dir.scale(ModEquipmentConfig.FIGHTER_BULLET_SPEED.get()));
             bullet.setOwner(owner);
             bullet.setSourceAircraftName(craft.getDisplayName());
             bullet.setSourceAircraft(craft);
@@ -190,7 +195,7 @@ public class AircraftCombat {
 
     /** @see AircraftEntity#tickRocketFighterMissileRun(Player, LivingEntity) */
     public static void tickRocketFighterMissileRun(AircraftEntity craft, @Nullable Player owner, LivingEntity target) {
-        if (craft.stateTicks > 200) {
+        if (craft.stateTicks > ModEquipmentConfig.ROCKET_FIGHTER_RUN_TICKS.get()) {
             craft.hasFired = true;
             craft.remainingAmmo = 0;
             return;
@@ -199,19 +204,25 @@ public class AircraftCombat {
         double dx = target.getX() - craft.getX();
         double dz = target.getZ() - craft.getZ();
         double horizDist = Math.sqrt(dx * dx + dz * dz);
-        double desiredY = target.getY() + 8.0;
+        double desiredY = target.getY() + ModEquipmentConfig.ROCKET_FIGHTER_ATTACK_ALTITUDE_OFFSET.get();
         double altDelta = craft.getY() - desiredY;
 
-        if (horizDist >= 12 && horizDist <= 22 && altDelta >= -2.0 && altDelta <= 8.0 && craft.attackCooldown <= 0) {
+        if (horizDist >= ModEquipmentConfig.ROCKET_FIGHTER_WINDOW_HORIZONTAL_MIN.get()
+                && horizDist <= ModEquipmentConfig.ROCKET_FIGHTER_WINDOW_HORIZONTAL_MAX.get()
+                && altDelta >= ModEquipmentConfig.ROCKET_FIGHTER_WINDOW_ALTITUDE_MIN.get()
+                && altDelta <= ModEquipmentConfig.ROCKET_FIGHTER_WINDOW_ALTITUDE_MAX.get()
+                && craft.attackCooldown <= 0) {
             Vec3 dir = new Vec3(dx, target.getEyeY() + 0.5 - craft.getY(), dz).normalize();
-            float rocketDamage = craft.getPanelDamage() * 1.2f;
+            // 保留 float 乘法，保证默认 1.2 时与下沉前 1.2f 逐字节一致。
+            float rocketDamage = craft.getPanelDamage()
+                    * ModEquipmentConfig.ROCKET_FIGHTER_DAMAGE_MULTIPLIER.get().floatValue();
             int toFire = craft.computeSalvoSize(target, rocketDamage);
             com.piranport.debug.PiranPortDebug.event(
                     "Aircraft ROCKET_SALVO | entityId={} capacity={} remaining={} firing={} targetHP={}",
                     craft.getId(), craft.ammoCapacity, craft.remainingAmmo, toFire, target.getHealth());
             float initSpeed = MissileEntity.MissileType.ROCKET.initialSpeed();
             for (int i = 0; i < toFire; i++) {
-                double spread = (i - (toFire - 1) / 2.0) * 0.07;
+                double spread = (i - (toFire - 1) / 2.0) * ModEquipmentConfig.ROCKET_FIGHTER_SPREAD_STEP.get();
                 double cos = Math.cos(spread);
                 double sin = Math.sin(spread);
                 Vec3 fanDir = new Vec3(
@@ -221,7 +232,8 @@ public class AircraftCombat {
                 ).normalize();
                 MissileEntity rocket = new MissileEntity(craft.level(),
                         MissileEntity.MissileType.ROCKET,
-                        rocketDamage, 0f, 2.0f,
+                        rocketDamage, 0f,
+                        ModEquipmentConfig.ROCKET_FIGHTER_EXPLOSION_POWER.get().floatValue(),
                         "piranport:rocket_ammo");
                 rocket.moveTo(craft.getX(), craft.getY() + 0.2, craft.getZ(), rocket.getYRot(), rocket.getXRot());
                 rocket.setDeltaMovement(fanDir.x * initSpeed, fanDir.y * initSpeed, fanDir.z * initSpeed);
@@ -240,7 +252,8 @@ public class AircraftCombat {
         Vec3 toTarget = new Vec3(dx, desiredY - craft.getY(), dz);
         double dist = toTarget.length();
         if (dist > 0.1) {
-            craft.setDeltaMovement(toTarget.normalize().scale(Math.min(craft.getPanelSpeed() * 0.5
+            craft.setDeltaMovement(toTarget.normalize().scale(Math.min(craft.getPanelSpeed()
+                    * ModEquipmentConfig.ROCKET_FIGHTER_PURSUIT_MULTIPLIER.get()
                     * craft.phaseSpeedCoefficient(), dist)));
         }
     }
@@ -256,16 +269,19 @@ public class AircraftCombat {
             return;
         }
 
-        double climbY = target.getY() + 18.0;
+        double climbY = target.getY() + ModEquipmentConfig.DIVE_BOMBER_CLIMB_ALTITUDE_OFFSET.get();
         double heightDiff = Math.max(0, climbY - craft.getY());
         double phaseSpeed = craft.phaseSpeedCoefficient();
-        int climbTimeout = Math.max(80, (int)Math.ceil(heightDiff
-                / Math.max(craft.getPanelSpeed() * 0.4 * phaseSpeed, 0.1)));
-        if (!craft.diveCommitted && craft.getY() < climbY - 1.0 && craft.stateTicks < climbTimeout) {
+        int climbTimeout = Math.max(ModEquipmentConfig.DIVE_BOMBER_CLIMB_TIMEOUT_MIN_TICKS.get(),
+                (int)Math.ceil(heightDiff / Math.max(craft.getPanelSpeed()
+                        * ModEquipmentConfig.DIVE_BOMBER_CLIMB_SPEED_MULTIPLIER.get() * phaseSpeed, 0.1)));
+        if (!craft.diveCommitted
+                && craft.getY() < climbY - ModEquipmentConfig.DIVE_BOMBER_CLIMB_ARRIVAL_TOLERANCE.get()
+                && craft.stateTicks < climbTimeout) {
             Vec3 toClimb = new Vec3(target.getX() - craft.getX(), climbY - craft.getY(), target.getZ() - craft.getZ());
             double dist = toClimb.length();
-            craft.setDeltaMovement(toClimb.normalize().scale(Math.min(craft.getPanelSpeed() * 0.4
-                    * phaseSpeed, dist)));
+            craft.setDeltaMovement(toClimb.normalize().scale(Math.min(craft.getPanelSpeed()
+                    * ModEquipmentConfig.DIVE_BOMBER_CLIMB_SPEED_MULTIPLIER.get() * phaseSpeed, dist)));
             return;
         }
 
@@ -273,7 +289,8 @@ public class AircraftCombat {
             craft.diveCommitted = true;
             Vec3 targetPos = target.getEyePosition();
             double estimatedDist = craft.position().distanceTo(targetPos);
-            double diveSpeed = Math.max(craft.getPanelSpeed() * 0.6 * phaseSpeed, 0.1);
+            double diveSpeed = Math.max(craft.getPanelSpeed()
+                    * ModEquipmentConfig.DIVE_BOMBER_DIVE_SPEED_MULTIPLIER.get() * phaseSpeed, 0.1);
             double estimatedTicks = estimatedDist / diveSpeed;
             Vec3 targetVel = target.getDeltaMovement();
             craft.diveTarget = targetPos.add(targetVel.scale(estimatedTicks));
@@ -282,30 +299,34 @@ public class AircraftCombat {
         if (craft.diveTarget != null) {
             Vec3 toDive = craft.diveTarget.subtract(craft.position());
             double diveDist = toDive.length();
-            if (diveDist < 2.0) {
+            if (diveDist < ModEquipmentConfig.DIVE_BOMBER_RELEASE_DISTANCE.get()) {
                 // Drop the bomb
                 net.minecraft.world.level.Level level = craft.level();
                 float bombPower = craft.getPanelDamage();
                 int bombCount = Math.max(1, craft.remainingAmmo);
                 for (int i = 0; i < bombCount; i++) {
-                    AerialBombEntity bomb = new AerialBombEntity(level, bombPower / bombCount, 4.0f);
-                    double spreadX = (level.random.nextDouble() - 0.5) * 0.5;
-                    double spreadZ = (level.random.nextDouble() - 0.5) * 0.5;
+                    AerialBombEntity bomb = new AerialBombEntity(level, bombPower / bombCount,
+                            ModEquipmentConfig.DIVE_BOMBER_EXPLOSION_POWER.get().floatValue());
+                    double spreadX = (level.random.nextDouble() - 0.5) * ModEquipmentConfig.DIVE_BOMBER_BOMB_SPREAD.get();
+                    double spreadZ = (level.random.nextDouble() - 0.5) * ModEquipmentConfig.DIVE_BOMBER_BOMB_SPREAD.get();
                     bomb.moveTo(craft.getX() + spreadX, craft.getY(), craft.getZ() + spreadZ, 0, 0);
                     // Preserve the aircraft's horizontal momentum.  Dropping with
                     // a zero horizontal velocity made every dive bomb fall behind
                     // the moving attack run and systematically miss ships at sea.
+                    // 注意：俯冲投弹的水平动量倍数与水平轰炸的前抛倍数（level_bomber.horizontal_velocity_multiplier）
+                    // 是两种不同机制，各自可调，不合并。
                     Vec3 aircraftVelocity = craft.getDeltaMovement();
-                    bomb.setDeltaMovement(aircraftVelocity.x * 0.85,
-                            Math.min(-0.20, aircraftVelocity.y),
-                            aircraftVelocity.z * 0.85);
+                    bomb.setDeltaMovement(aircraftVelocity.x * ModEquipmentConfig.DIVE_BOMBER_HORIZONTAL_MOMENTUM.get(),
+                            Math.min(ModEquipmentConfig.DIVE_BOMBER_MIN_VERTICAL_VELOCITY.get(), aircraftVelocity.y),
+                            aircraftVelocity.z * ModEquipmentConfig.DIVE_BOMBER_HORIZONTAL_MOMENTUM.get());
                     bomb.setOwner(owner);
                     level.addFreshEntity(bomb);
                 }
                 craft.remainingAmmo = 0;
                 craft.hasFired = true;
             } else {
-                double speed = Math.min(craft.getPanelSpeed() * 0.7 * phaseSpeed, diveDist);
+                double speed = Math.min(craft.getPanelSpeed()
+                        * ModEquipmentConfig.DIVE_BOMBER_DIVE_APPROACH_MULTIPLIER.get() * phaseSpeed, diveDist);
                 craft.setDeltaMovement(toDive.normalize().scale(speed));
             }
         }
@@ -324,18 +345,19 @@ public class AircraftCombat {
         double dx = target.getX() - craft.getX();
         double dz = target.getZ() - craft.getZ();
         double horizDist = Math.sqrt(dx * dx + dz * dz);
-        double approachAlt = 12.0;
+        double approachAlt = ModEquipmentConfig.TORPEDO_BOMBER_APPROACH_ALTITUDE.get();
         double altitudeDiff = craft.getY() - (target.getY() + approachAlt);
 
         // Descend to attack altitude
-        if (altitudeDiff > 2.0) {
+        if (altitudeDiff > ModEquipmentConfig.TORPEDO_BOMBER_ALTITUDE_TOLERANCE.get()) {
             Vec3 descend = new Vec3(dx, target.getY() + approachAlt - craft.getY(), dz).normalize();
-            craft.setDeltaMovement(descend.scale(Math.min(craft.getPanelSpeed() * 0.4
-                    * craft.phaseSpeedCoefficient(), 1.0)));
+            craft.setDeltaMovement(descend.scale(Math.min(craft.getPanelSpeed()
+                    * ModEquipmentConfig.TORPEDO_BOMBER_DESCEND_SPEED_MULTIPLIER.get()
+                    * craft.phaseSpeedCoefficient(), ModEquipmentConfig.TORPEDO_BOMBER_DESCEND_MAX_SPEED.get())));
             return;
         }
 
-        if (horizDist < 6.0 && craft.attackCooldown <= 0) {
+        if (horizDist < ModEquipmentConfig.TORPEDO_BOMBER_RELEASE_DISTANCE.get() && craft.attackCooldown <= 0) {
             Vec3 dir = new Vec3(dx, 0, dz).normalize();
             int toFire = craft.computeSalvoSize(target, craft.getPanelDamage());
             com.piranport.debug.PiranPortDebug.event(
@@ -343,14 +365,18 @@ public class AircraftCombat {
                     craft.getId(), craft.ammoCapacity, craft.remainingAmmo, toFire, target.getHealth());
             for (int i = 0; i < toFire; i++) {
                 TorpedoEntity torpedo = new TorpedoEntity(com.piranport.registry.ModEntityTypes.TORPEDO_ENTITY.get(), craft.level());
-                double offsetX = -dir.z * (i - (toFire - 1) / 2.0) * 1.2;
-                double offsetZ = dir.x * (i - (toFire - 1) / 2.0) * 1.2;
-                torpedo.moveTo(craft.getX() + offsetX, craft.getY() - 1.0, craft.getZ() + offsetZ, 0, 0);
-                // 注意：空投鱼雷不绑定具体 TorpedoItem 型号，初速固定 0.8，
+                double offsetX = -dir.z * (i - (toFire - 1) / 2.0) * ModEquipmentConfig.TORPEDO_BOMBER_SPREAD_OFFSET.get();
+                double offsetZ = dir.x * (i - (toFire - 1) / 2.0) * ModEquipmentConfig.TORPEDO_BOMBER_SPREAD_OFFSET.get();
+                torpedo.moveTo(craft.getX() + offsetX,
+                        craft.getY() - ModEquipmentConfig.TORPEDO_BOMBER_DROP_HEIGHT_OFFSET.get(),
+                        craft.getZ() + offsetZ, 0, 0);
+                // 注意：空投鱼雷不绑定具体 TorpedoItem 型号，初速走终端参数
+                // global.torpedo_bomber_combat.torpedo_speed（默认 0.8），
                 // 因此不受调试终端的型号航速覆盖影响（玩家发射路径读 TorpedoItem.getSpeed()，
-                // 这里没有型号可查）。这是设计如此，不是漏改 —— 若要让它也受覆盖，
+                // 这里没有型号可查）。这是设计如此，不是漏改 —— 若要让它也受型号覆盖，
                 // 需要先给飞机挂弹定义「所投型号」再按型号取 getSpeed()。
-                Vec3 vel = dir.scale(0.8).add(0, -0.1, 0);
+                Vec3 vel = dir.scale(ModEquipmentConfig.TORPEDO_BOMBER_TORPEDO_SPEED.get())
+                        .add(0, ModEquipmentConfig.TORPEDO_BOMBER_TORPEDO_VERTICAL_SPEED.get(), 0);
                 torpedo.setDeltaMovement(vel);
                 torpedo.setOwner(owner);
                 craft.level().addFreshEntity(torpedo);
@@ -363,22 +389,18 @@ public class AircraftCombat {
             return;
         }
 
-        Vec3 toTarget = new Vec3(dx, 0, dz).normalize().scale(Math.min(craft.getPanelSpeed() * 0.5
+        Vec3 toTarget = new Vec3(dx, 0, dz).normalize().scale(Math.min(craft.getPanelSpeed()
+                * ModEquipmentConfig.TORPEDO_BOMBER_APPROACH_SPEED_MULTIPLIER.get()
                 * craft.phaseSpeedCoefficient(), horizDist));
-        double yAdjust = (target.getY() + approachAlt - craft.getY()) * 0.1;
+        double yAdjust = (target.getY() + approachAlt - craft.getY())
+                * ModEquipmentConfig.TORPEDO_BOMBER_ALTITUDE_ADJUST.get();
         craft.setDeltaMovement(toTarget.x, yAdjust, toTarget.z);
     }
 
     // ==== 水平轰炸机投弹参数 ====
-    // 投弹高度相对目标的高度差（+32，飞行手感维持不变，勿改）
-    private static final double LEVEL_BOMB_ALTITUDE_OFFSET = 32.0;
-    // 投弹初速的垂直分量（恢复改动前的 -0.3）：航弹保留近垂直下坠的手感。
-    // 水平分量不在此写死——它 = 载机当前水平速度 × 终端参数倍数，见 LEVEL_BOMBER_HORIZONTAL_VELOCITY_MULTIPLIER。
-    private static final double LEVEL_BOMB_VERTICAL_VELOCITY = -0.3;
-    // 投弹提前判据的最小窗口（半格）：倍数为 0（无前抛）时提前距离也算得 0，
-    // 判据会退化成「必须恰好 0 格」而永远不成立，只能等 200 tick 超时把弹丢到目标身后。
-    // 半格窗口保证这种极端设置下也能在目标正上方附近投弹；正常倍数下提前距离远大于此，不影响。
-    private static final double LEVEL_BOMB_MIN_RELEASE_DISTANCE = 0.5;
+    // 投弹高度、投弹初速垂直分量、提前判据最小窗口、航线速度、散布等原先写死为常量，
+    // 现已下沉到调试终端（global.level_bomber.*），默认值 = 下沉前写死值。
+    // 水平分量 = 载机当前水平速度 × terminal 倍数，见 LEVEL_BOMBER_HORIZONTAL_VELOCITY_MULTIPLIER。
 
     /** @see AircraftEntity#tickLevelBomberAttack(Player, LivingEntity) */
     public static void tickLevelBomberAttack(AircraftEntity craft, @Nullable Player owner, LivingEntity target) {
@@ -394,12 +416,13 @@ public class AircraftCombat {
         double dx = target.getX() - craft.getX();
         double dz = target.getZ() - craft.getZ();
         double horizDist = Math.sqrt(dx * dx + dz * dz);
-        double bombAlt = target.getY() + LEVEL_BOMB_ALTITUDE_OFFSET;
+        double bombAlt = target.getY() + ModEquipmentConfig.LEVEL_BOMBER_ALTITUDE_OFFSET.get();
 
         // Phase 1: Approach bombing altitude
-        if (craft.getY() < bombAlt - 2.0) {
+        if (craft.getY() < bombAlt - ModEquipmentConfig.LEVEL_BOMBER_ALTITUDE_TOLERANCE.get()) {
             Vec3 toAlt = new Vec3(dx, bombAlt - craft.getY(), dz);
-            craft.setDeltaMovement(toAlt.normalize().scale(Math.min(craft.getPanelSpeed() * 0.4
+            craft.setDeltaMovement(toAlt.normalize().scale(Math.min(craft.getPanelSpeed()
+                    * ModEquipmentConfig.LEVEL_BOMBER_CLIMB_SPEED_MULTIPLIER.get()
                     * craft.phaseSpeedCoefficient(), toAlt.length())));
             return;
         }
@@ -410,7 +433,8 @@ public class AircraftCombat {
             craft.levelRunTicks = 0;
         }
 
-        double runSpeed = craft.getPanelSpeed() * 0.6 * craft.phaseSpeedCoefficient();
+        double runSpeed = craft.getPanelSpeed() * ModEquipmentConfig.LEVEL_BOMBER_RUN_SPEED_MULTIPLIER.get()
+                * craft.phaseSpeedCoefficient();
         Vec3 runDir = craft.levelRunDirection;
         Vec3 runVel = new Vec3(runDir.x * runSpeed, 0, runDir.z * runSpeed);
         craft.setDeltaMovement(runVel);
@@ -424,24 +448,31 @@ public class AircraftCombat {
             double craftHorizontalSpeed = Math.sqrt(craft.getDeltaMovement().x * craft.getDeltaMovement().x
                     + craft.getDeltaMovement().z * craft.getDeltaMovement().z);
             double horizontalMultiplier = ModEquipmentConfig.LEVEL_BOMBER_HORIZONTAL_VELOCITY_MULTIPLIER.get();
-            // 起始高度与 bomb.moveTo 的 y 一致（craft.getY() - 0.5），目标高度取其脚底。
-            double dropHeight = (craft.getY() - 0.5) - target.getY();
-            // 重力读实体自身（AerialBombEntity.GRAVITY），不写死数字，避免与实体/落点标记漂移。
-            double leadDistance = LevelBombLead.releaseDistance(dropHeight, AerialBombEntity.GRAVITY,
-                    craftHorizontalSpeed * horizontalMultiplier, LEVEL_BOMB_VERTICAL_VELOCITY);
+            double dropYOffset = ModEquipmentConfig.LEVEL_BOMBER_DROP_Y_OFFSET.get();
+            double verticalVelocity = ModEquipmentConfig.LEVEL_BOMBER_VERTICAL_VELOCITY.get();
+            // 起始高度与 bomb.moveTo 的 y 一致（craft.getY() - dropYOffset），目标高度取其脚底。
+            double dropHeight = (craft.getY() - dropYOffset) - target.getY();
+            // 重力读实体（AerialBombEntity.gravity()，终端参数 global.aerial_bomb.gravity），
+            // 不写死数字，避免与实体物理/落点标记漂移。
+            double leadDistance = LevelBombLead.releaseDistance(dropHeight, AerialBombEntity.gravity(),
+                    craftHorizontalSpeed * horizontalMultiplier, verticalVelocity);
 
-            if (horizDist <= Math.max(leadDistance, LEVEL_BOMB_MIN_RELEASE_DISTANCE) || craft.levelRunTicks > 200) {
+            if (horizDist <= Math.max(leadDistance, ModEquipmentConfig.LEVEL_BOMBER_MIN_RELEASE_DISTANCE.get())
+                    || craft.levelRunTicks > ModEquipmentConfig.LEVEL_BOMBER_RUN_TIMEOUT_TICKS.get()) {
                 float bombPower = craft.getPanelDamage();
                 int bombCount = Math.max(1, craft.remainingAmmo);
                 for (int i = 0; i < bombCount; i++) {
-                    AerialBombEntity bomb = new AerialBombEntity(craft.level(), bombPower / bombCount, 4.0f);
-                    // 保留 ±0.5 格随机散布：提前量把弹着点拉回目标，但不必弹弹正中。
-                    double spreadX = (craft.level().random.nextDouble() - 0.5) * 1.0;
-                    double spreadZ = (craft.level().random.nextDouble() - 0.5) * 1.0;
-                    bomb.moveTo(craft.getX() + spreadX, craft.getY() - 0.5, craft.getZ() + spreadZ, 0, 0);
+                    AerialBombEntity bomb = new AerialBombEntity(craft.level(), bombPower / bombCount,
+                            ModEquipmentConfig.LEVEL_BOMBER_EXPLOSION_POWER.get().floatValue());
+                    // 保留随机散布：提前量把弹着点拉回目标，但不必弹弹正中。
+                    double spreadX = (craft.level().random.nextDouble() - 0.5)
+                            * ModEquipmentConfig.LEVEL_BOMBER_BOMB_SPREAD.get();
+                    double spreadZ = (craft.level().random.nextDouble() - 0.5)
+                            * ModEquipmentConfig.LEVEL_BOMBER_BOMB_SPREAD.get();
+                    bomb.moveTo(craft.getX() + spreadX, craft.getY() - dropYOffset, craft.getZ() + spreadZ, 0, 0);
                     // 保留前抛：航弹继承载机水平速度 × 倍数（终端可调，默认 0.5）。
                     bomb.setDeltaMovement(craft.getDeltaMovement().x * horizontalMultiplier,
-                            LEVEL_BOMB_VERTICAL_VELOCITY,
+                            verticalVelocity,
                             craft.getDeltaMovement().z * horizontalMultiplier);
                     bomb.setOwner(owner);
                     craft.level().addFreshEntity(bomb);
@@ -453,7 +484,8 @@ public class AircraftCombat {
         }
 
         // After dropping, fly for a few more ticks then return
-        if (craft.levelBombDropped && craft.levelRunTicks > 220) {
+        if (craft.levelBombDropped
+                && craft.levelRunTicks > ModEquipmentConfig.LEVEL_BOMBER_RETURN_TICKS.get()) {
             craft.startReturning("level_bomber_run_complete");
         }
     }

@@ -15,8 +15,6 @@ import com.piranport.item.ShipCoreItem;
 import com.piranport.item.ShipType;
 import com.piranport.network.ScopeEnterPayload;
 import net.minecraft.client.Minecraft;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -143,7 +141,6 @@ public class ClientInputCoordinator {
 
         // 8) 实体高亮 (火控 + 声呐)
         if (mc.level != null) {
-            Player localPlayer = mc.player;
             List<UUID> fcTargets = ClientFireControlData.getTargets();
             Set<UUID> lockedTargets = fcTargets.isEmpty()
                     ? java.util.Collections.emptySet()

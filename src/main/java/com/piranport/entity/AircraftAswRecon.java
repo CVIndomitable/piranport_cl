@@ -1,6 +1,7 @@
 package com.piranport.entity;
 
 import com.piranport.aviation.FireControlManager;
+import com.piranport.combat.CombatTargeting;
 import com.piranport.component.AircraftAttackMode;
 import com.piranport.aviation.ReconManager;
 import com.piranport.config.ModCommonConfig;
@@ -128,20 +129,40 @@ public class AircraftAswRecon {
         if (craft.autoSeekCooldown > 0) { craft.autoSeekCooldown--; return null; }
         craft.autoSeekDone = true;
         AABB box = craft.getBoundingBox().inflate(32.0);
+        // 自动索敌必须加敌对过滤：不能直接复用 isAswTarget（它认 AQUATIC 动物），
+        // 否则鲑鱼/海豚也会被自动开打。已有火控锁定分支保持原样，尊重玩家手动选择。
         return sl.getEntitiesOfClass(LivingEntity.class, box,
-                e -> e.isAlive() && e != owner && isAswTarget(e))
+                e -> e.isAlive() && e != owner && isHostileAswTarget(owner, e))
                 .stream()
                 .min(Comparator.comparingDouble(craft::distanceTo))
                 .orElse(null);
     }
 
-    /** Returns true if the entity qualifies as an ASW target. */
+    /**
+     * 声呐检测判据 —— 只判「是不是水下类目标」，不做敌我过滤。
+     *
+     * <p>声呐链路（{@link #tickAswSonar}）共用本方法，按策划「声呐标记所有水生生物
+     * （含鲑鱼）是预期玩法，非 bug」必须保持原样。自动索敌/自动进入攻击态请改用
+     * {@link #isHostileAswTarget(Player, Entity)}。
+     */
     public static boolean isAswTarget(Entity e) {
         if (e instanceof com.piranport.npc.deepocean.DeepOceanSubmarineEntity) return true;
         if (e.getType().is(net.minecraft.tags.EntityTypeTags.AQUATIC)) return true;
         if (e instanceof net.minecraft.world.entity.monster.Guardian) return true;
         if (e instanceof net.minecraft.world.entity.monster.Monster && e.isUnderWater()) return true;
         return false;
+    }
+
+    /**
+     * 自动索敌/自动进入攻击态专用判据 —— 实体确属反潜对象 AND 对 owner 敌对。
+     *
+     * <p>WHY 与 {@link #isAswTarget} 分开：后者被声呐链路共用，不能加敌我过滤；
+     * 而自动开打若复用它，会把 AQUATIC 动物（鲑鱼/鱼/鱿鱼/海豚）当成目标。
+     * 敌对口径统一复用 {@link CombatTargeting#isHostileTarget}（只认 {@code Enemy}
+     * 与敌对飞机，动物/村民恒为 false），不另写一套判据以免再次漂移。
+     */
+    public static boolean isHostileAswTarget(Player owner, Entity e) {
+        return isAswTarget(e) && CombatTargeting.isHostileTarget(owner, e);
     }
 
     // ====================================================================

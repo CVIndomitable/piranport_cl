@@ -457,9 +457,12 @@ public class AircraftCombat {
 
         // Auto-seek: scan for ground targets within 48 blocks
         if (craft.hasEverHadFireControl) return null;
+        // 自动索敌必须加敌对过滤：否则鱼、友军、玩家都会被无差别自动开打。
+        // 手动火控锁定分支在上方，保持原样不限制（尊重玩家意图）。
         net.minecraft.world.phys.AABB box = craft.getBoundingBox().inflate(48.0);
         return sl.getEntitiesOfClass(LivingEntity.class, box,
                         e -> e.isAlive() && e != owner
+                                && com.piranport.combat.CombatTargeting.isHostileTarget(owner, e)
                                 && !(e instanceof net.minecraft.world.entity.Mob mob && mob.isNoAi())
                                 && !isAirborneTarget(e))
                 .stream()

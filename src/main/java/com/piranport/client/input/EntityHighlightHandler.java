@@ -6,7 +6,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.scores.PlayerTeam;
 import net.minecraft.world.scores.Scoreboard;
 
@@ -61,7 +60,6 @@ public class EntityHighlightHandler {
      */
     public static void tick(Minecraft mc, Set<UUID> lockedTargets, boolean hasFcTargets) {
         if (mc.level == null || mc.player == null) return;
-        Player localPlayer = mc.player;
         Set<String> currentFcMembers = new HashSet<>();
 
         // Phase 1：火控目标 — 通过 UUID 缓存进行 O(k) 定向查找

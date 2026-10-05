@@ -672,8 +672,10 @@ public class AircraftEntity extends Entity {
                     AABB box = getBoundingBox().inflate(32.0);
                     boolean hasNearbyTarget;
                     if (isAsw) {
+                        // 自动进入攻击态必须加敌对过滤，否则旁边有鱼/海豚就会自动开打；
+                        // 声呐检测判据 isAswTarget 不加过滤，别在此复用。
                         hasNearbyTarget = !sl.getEntitiesOfClass(LivingEntity.class, box,
-                                e -> e.isAlive() && e != owner && isAswTarget(e)).isEmpty();
+                                e -> e.isAlive() && e != owner && AircraftAswRecon.isHostileAswTarget(owner, e)).isEmpty();
                     } else if (aircraftType == AircraftInfo.AircraftType.FIGHTER
                             || aircraftType == AircraftInfo.AircraftType.ROCKET_FIGHTER) {
                         // Fighters: hostile mobs OR enemy aircraft

@@ -47,6 +47,17 @@ public final class TerminalConfigValue<T> {
         throw new IllegalStateException("Unsupported parameter type: " + key);
     }
 
+    /**
+     * 该键是否被策划显式设置过（见 {@link TerminalParameters#isOverridden}）。
+     * <p>
+     * WHY 需要它：导弹发射器的「单型号键 &gt; 共享默认键 &gt; 物品注册基准」三层回退，必须先判断
+     * 某一层是否被设置过，才能安全地落到下一层；不能靠比较值大小来猜。普通单层参数用不到，
+     * 直接 {@link #get()} 即可。
+     */
+    public boolean isSet() {
+        return TerminalParameters.isOverridden(key);
+    }
+
     public static List<TerminalParameterSpec> specs() {
         return List.copyOf(SPECS);
     }

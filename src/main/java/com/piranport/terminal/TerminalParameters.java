@@ -77,6 +77,22 @@ public final class TerminalParameters {
                 ? serverSnapshot : clientValues;
     }
 
+    private static Map<String, String> activeOverrides() {
+        return dedicatedServer || serverWork.get() || Thread.currentThread() == serverThread
+                ? serverSnapshot : clientSnapshot;
+    }
+
+    /**
+     * 该键是否被策划「显式设置过」。服务端看服务端覆盖表、客户端看客户端覆盖表。
+     * <p>
+     * WHY 不能拿 {@link #getDouble} 的返回值判定：客户端同步的 {@code clientValues} 会把每个 spec 的
+     * 键都填成 baseValue（未设置的键也在），所以「读到值」≠「被设置过」。只有覆盖表（serverSnapshot /
+     * clientSnapshot）才只含策划改过的键。导弹发射器的「单型号 &gt; 共享默认 &gt; 物品基准」三层回退靠它判定。
+     */
+    public static boolean isOverridden(String key) {
+        return activeOverrides().containsKey(key);
+    }
+
     public static double getDouble(String key, double fallback) {
         String raw = active().get(key);
         if (raw == null) return fallback;

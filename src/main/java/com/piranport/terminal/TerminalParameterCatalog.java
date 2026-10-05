@@ -119,13 +119,17 @@ public final class TerminalParameterCatalog {
             } else if (item instanceof FireControlRadarItem radar) {
                 add(specs, "equipment", target, "weight", radar.getBaseWeight(), 0, 112);
             } else if (item instanceof MissileLauncherItem launcher) {
-                // 导弹发射器的注册数值补进终端目录（与雷达/声纳同一套：group=equipment、target=注册名）。
-                // 读取侧在 MissileLauncherItem#get*，按同一 key 覆盖生效。
-                add(specs, "equipment", target, "damage", launcher.getBaseDamage(), 0, 10000);
-                add(specs, "equipment", target, "armor_pen", launcher.getBaseArmorPen(), 0, 100);
-                add(specs, "equipment", target, "explosion_power", launcher.getBaseExplosionPower(), 0, 100);
-                add(specs, "equipment", target, "burst_count", launcher.getBaseBurstCount(), 0, 64);
-                add(specs, "equipment", target, "fire_cooldown", launcher.getBaseCooldownTicks(), 0, 12000);
+                // 导弹发射器单独一类：group=missile_launcher、target=注册路径（去命名空间），
+                // 键形如 missile_launcher.sy1_launcher.damage。读取侧 MissileLauncherItem#parameterKey
+                // 必须生成同一形态，否则会变成「能改但不生效」的死参数。
+                // 共享默认值（global.missile_launcher.*）由 ModEquipmentConfig 的 TerminalConfigValue
+                // 自动进目录，不在此处 add()，避免 key 形态对不上。
+                String launcherTarget = BuiltInRegistries.ITEM.getKey(item).getPath();
+                add(specs, "missile_launcher", launcherTarget, "damage", launcher.getBaseDamage(), 0, 10000);
+                add(specs, "missile_launcher", launcherTarget, "armor_pen", launcher.getBaseArmorPen(), 0, 100);
+                add(specs, "missile_launcher", launcherTarget, "explosion_power", launcher.getBaseExplosionPower(), 0, 100);
+                add(specs, "missile_launcher", launcherTarget, "burst_count", launcher.getBaseBurstCount(), 0, 64);
+                add(specs, "missile_launcher", launcherTarget, "fire_cooldown", launcher.getBaseCooldownTicks(), 0, 12000);
             }
         }
         for (ShipType core : ShipType.values()) {

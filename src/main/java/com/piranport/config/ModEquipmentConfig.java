@@ -470,4 +470,27 @@ public final class ModEquipmentConfig {
     public static final CIWSConfig CIWS_20MM = ciws("20mm");
     public static final CIWSConfig CIWS_40MM = ciws("40mm");
     public static final CIWSConfig CIWS_76MM = ciws("76mm");
+
+    // ===== 导弹发射器共享默认值（2026-10-05）=====
+    // WHY 单独一组 global.missile_launcher.*：每个型号的数值已按 missile_launcher.<注册路径>.*
+    // 单独进终端，这组「全型号共用」的值让策划一次调完整族，不必逐个型号改。
+    // 读取侧（MissileLauncherItem）三层回退：单型号键 > 本组共享键 > 物品注册基准；本组未设置时
+    // 回退到每个发射器各自的注册值，因此默认行为与下沉前逐字节一致。
+    // 注意 group=missile_launcher，经 DebugTerminalScreen.categoryFor 落到「导弹」独立分类。
+    // 注意 fire_cooldown 命中终端的 tick→秒 显示启发式（×0.05），与各型号同键一致，勿改名。
+    /** 共享伤害覆盖（未设置时用各发射器注册值）。 */
+    public static final TerminalConfigValue<Double> MISSILE_LAUNCHER_DAMAGE =
+            TerminalConfigValue.number("missile_launcher", "missile_launcher", "damage", 24.0, 0.0, 10000.0);
+    /** 共享穿甲覆盖（未设置时用各发射器注册值）。 */
+    public static final TerminalConfigValue<Double> MISSILE_LAUNCHER_ARMOR_PEN =
+            TerminalConfigValue.number("missile_launcher", "missile_launcher", "armor_pen", 0.0, 0.0, 100.0);
+    /** 共享爆炸威力覆盖（未设置时用各发射器注册值）。 */
+    public static final TerminalConfigValue<Double> MISSILE_LAUNCHER_EXPLOSION_POWER =
+            TerminalConfigValue.number("missile_launcher", "missile_launcher", "explosion_power", 2.0, 0.0, 100.0);
+    /** 共享连装数覆盖（未设置时用各发射器注册值）。 */
+    public static final TerminalConfigValue<Integer> MISSILE_LAUNCHER_BURST_COUNT =
+            TerminalConfigValue.integer("missile_launcher", "missile_launcher", "burst_count", 2, 0, 64);
+    /** 共享发射冷却覆盖（tick，未设置时用各发射器注册值）。 */
+    public static final TerminalConfigValue<Integer> MISSILE_LAUNCHER_FIRE_COOLDOWN =
+            TerminalConfigValue.integer("missile_launcher", "missile_launcher", "fire_cooldown", 1200, 0, 12000);
 }

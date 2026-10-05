@@ -42,7 +42,7 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
     private static final int TARGET_ROW_HEIGHT = 21;
     private static final List<String> CATEGORY_ORDER = List.of(
             "aircraft", "cannon", "enhancement", "deep_ocean", "vanilla_mob", "ship_girl",
-            "ammo", "torpedo", "core", "projectile", "system");
+            "ammo", "torpedo", "missile_launcher", "core", "projectile", "system");
     private static final List<String> CONTROL_TOOLTIP_KEYS = List.of(
             "debug.tooltip", "cooldown.tooltip", "hit.tooltip", "snapshot.tooltip");
     private final Map<String, String> drafts = new HashMap<>();
@@ -378,6 +378,8 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
             case "ship_girl" -> "ship_girl";
             case "ammo" -> "ammo";
             case "torpedo" -> "torpedo";
+            // 导弹发射器独立分类（型号数值 + 共享默认值），不再混进 enhancement（equipment）。
+            case "missile_launcher" -> "missile_launcher";
             case "core" -> "core";
             case "projectile", "projectiles" -> "projectile";
             default -> "system";

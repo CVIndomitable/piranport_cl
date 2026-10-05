@@ -1,5 +1,7 @@
 package com.piranport.item;
 
+import com.piranport.config.ModEquipmentConfig;
+import com.piranport.config.TerminalConfigValue;
 import com.piranport.entity.MissileEntity;
 import com.piranport.platform.ClientHooks;
 import com.piranport.terminal.TerminalParameters;
@@ -48,31 +50,58 @@ public class MissileLauncherItem extends Item {
 
     public MissileEntity.MissileType getMissileType() { return missileType; }
 
-    // 注册数值（伤害/穿甲/爆炸/连装/冷却）可在调试终端按 item 覆盖，键：
-    // equipment.<注册名>.<属性>（与雷达/声纳同一套约定）。目录侧用 getBase* 读基准值，
-    // 玩法侧与 tooltip 用下面的 get* 读覆盖值，避免「能改但不生效」。
-    public float getDamage() { return (float) TerminalParameters.getDouble(parameterKey("damage"), damage); }
+    // 注册数值（伤害/穿甲/爆炸/连装/冷却）可在调试终端覆盖。每个型号独立键：
+    // missile_launcher.<注册路径>.<属性>（独立分类「导弹」，不再与雷达/声纳挤在 equipment）。
+    // 三层优先级：单型号键（被策划设置过）> 共享默认键 global.missile_launcher.<属性> > 物品注册基准。
+    // 判定「设置过」必须走 TerminalParameters.isOverridden（覆盖表成员），不能靠 getXxx 的返回值：
+    // 客户端 clientValues 会把未设置的键填成 spec 基准值，用值判定会在客户端误命中共享层。
+    // 目录侧用 getBase* 读基准值，玩法侧与 tooltip 用下面的 get* 读生效值，避免「能改但不生效」。
+    public float getDamage() {
+        return (float) effectiveDouble("damage", ModEquipmentConfig.MISSILE_LAUNCHER_DAMAGE, damage);
+    }
     public float getBaseDamage() { return damage; }
 
-    public float getArmorPen() { return (float) TerminalParameters.getDouble(parameterKey("armor_pen"), armorPen); }
+    public float getArmorPen() {
+        return (float) effectiveDouble("armor_pen", ModEquipmentConfig.MISSILE_LAUNCHER_ARMOR_PEN, armorPen);
+    }
     public float getBaseArmorPen() { return armorPen; }
 
     public float getExplosionPower() {
-        return (float) TerminalParameters.getDouble(parameterKey("explosion_power"), explosionPower);
+        return (float) effectiveDouble("explosion_power",
+                ModEquipmentConfig.MISSILE_LAUNCHER_EXPLOSION_POWER, explosionPower);
     }
     public float getBaseExplosionPower() { return explosionPower; }
 
-    public int getBurstCount() { return TerminalParameters.getInt(parameterKey("burst_count"), burstCount); }
+    public int getBurstCount() {
+        return effectiveInt("burst_count", ModEquipmentConfig.MISSILE_LAUNCHER_BURST_COUNT, burstCount);
+    }
     public int getBaseBurstCount() { return burstCount; }
 
-    public int getCooldownTicks() { return TerminalParameters.getInt(parameterKey("fire_cooldown"), cooldownTicks); }
+    public int getCooldownTicks() {
+        return effectiveInt("fire_cooldown", ModEquipmentConfig.MISSILE_LAUNCHER_FIRE_COOLDOWN, cooldownTicks);
+    }
     public int getBaseCooldownTicks() { return cooldownTicks; }
 
     public Item getAmmoItem() { return ammoItem.get(); }
 
+    /** 单型号覆盖 &gt; 共享默认 &gt; 物品基准。 */
+    private double effectiveDouble(String property, TerminalConfigValue<Double> shared, double base) {
+        String key = parameterKey(property);
+        if (TerminalParameters.isOverridden(key)) return TerminalParameters.getDouble(key, base);
+        return shared.isSet() ? shared.get() : base;
+    }
+
+    /** 单型号覆盖 &gt; 共享默认 &gt; 物品基准。 */
+    private int effectiveInt(String property, TerminalConfigValue<Integer> shared, int base) {
+        String key = parameterKey(property);
+        if (TerminalParameters.isOverridden(key)) return TerminalParameters.getInt(key, base);
+        return shared.isSet() ? shared.get() : base;
+    }
+
     private String parameterKey(String property) {
         var id = BuiltInRegistries.ITEM.getKey(this);
-        return "equipment." + (id == null ? "missile_launcher" : id) + "." + property;
+        // 去命名空间：target 用注册路径（sy1_launcher），与目录侧 TerminalParameterCatalog 一致。
+        return "missile_launcher." + (id == null ? "missile_launcher" : id.getPath()) + "." + property;
     }
 
     @Override

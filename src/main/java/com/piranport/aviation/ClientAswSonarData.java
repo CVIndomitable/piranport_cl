@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Client-side store for ASW sonar detections.
  * Each ASW aircraft sends its own scan results; this aggregates them.
- * Yellow highlight for detected underwater entities — independent of Y-key battlefield highlight.
+ * Yellow highlight for detected underwater entities — independent of fire-control highlights.
  */
 @OnlyIn(Dist.CLIENT)
 public class ClientAswSonarData {

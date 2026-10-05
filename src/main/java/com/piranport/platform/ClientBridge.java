@@ -25,8 +25,6 @@ public interface ClientBridge {
 
     void resetClientState();
 
-    boolean isHighlightEnabled();
-
     void initializeSkinCoreItemClient(Object consumer);
 
     boolean toggleArtilleryScope(Player player, ItemStack stack);

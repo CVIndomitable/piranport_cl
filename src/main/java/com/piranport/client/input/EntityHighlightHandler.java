@@ -1,43 +1,35 @@
 package com.piranport.client.input;
 
-import com.piranport.aviation.ClientFireControlData;
 import com.piranport.client.EntityUuidCache;
 import com.piranport.entity.AircraftEntity;
-import com.piranport.entity.BulletEntity;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.animal.Animal;
-import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.scores.PlayerTeam;
 import net.minecraft.world.scores.Scoreboard;
 
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
 /**
- * 实体高亮逻辑（Y键+扫描）和火控/ASW计分板队伍同步。
+ * 实体高亮逻辑（火控 + 反潜声呐）和火控/ASW计分板队伍同步。
  *
- * <p>管理三个高亮层级：
+ * <p>管理两个高亮层级：
  * <ol>
  *   <li>火控目标（红色轮廓）— 通过 UUID 缓存 O(k) 定向查找</li>
- *   <li>Y 键战场高亮（白色轮廓）— 完整扫描按 ENTITY_SCAN_INTERVAL 节流</li>
- *   <li>反潜声呐（黄色轮廓）— 独立于 Y 键</li>
+ *   <li>反潜声呐（黄色轮廓）— 独立于火控</li>
  * </ol>
  *
  * <p><b>线程模型</b>: 客户端渲染线程（单线程），无需同步。
  * <p><b>生命周期</b>: 在 {@link com.piranport.client.ClientGameEvents#onClientDisconnect} 中通过 {@link #reset()} 清理。
- * <p><b>高亮优先级</b>: 原版发光 > 火控(玩法高亮) > Y键战场高亮
+ * <p><b>高亮优先级</b>: 原版发光 > 火控 > 声呐
  */
 public class EntityHighlightHandler {
 
-    private static boolean highlightEnabled = false;
     private static final Set<Integer> highlightedEntityIds = new HashSet<>();
     private static final Set<Integer> aswHighlightedEntityIds = new HashSet<>();
 
@@ -46,61 +38,24 @@ public class EntityHighlightHandler {
     private static final String ASW_TEAM_NAME = "pp_asw_sonar";
     private static final Set<String> aswTeamMembers = new HashSet<>();
 
-    /**
-     * Y 键战场高亮全量扫描间隔（tick）。
-     *
-     * <p>每 20 tick（≈1 秒）扫描一次可见实体。原值 4 tick（0.2 秒）过于频繁，
-     * 因为 {@link #isHighlightTarget} 对每个实体执行多次 instanceof 和距离计算，
-     * 大量实体时开销显著。1 秒的刷新延迟对玩家体验无感知。
-     *
-     * @see #tick(Minecraft, Set, boolean)
-     */
-    private static final int ENTITY_SCAN_INTERVAL = 20;
-    private static int entityScanCooldown = 0;
     private static final EntityUuidCache entityCache = new EntityUuidCache();
 
     private EntityHighlightHandler() {}
 
     // ========== Public API ==========
 
-    public static boolean isHighlightEnabled() { return highlightEnabled; }
-
     /** 断开连接时重置所有高亮状态。 */
     public static void reset() {
-        highlightEnabled = false;
         highlightedEntityIds.clear();
         entityCache.clear();
         clearFcTeam(Minecraft.getInstance());
         clearAswTeam(Minecraft.getInstance());
     }
 
-    // ========== Y 键切换 ==========
-
-    /** 处理 Y 键切换：启用/禁用战场高亮。 */
-    public static void toggleHighlight(Minecraft mc) {
-        if (mc.player == null) return;
-        highlightEnabled = !highlightEnabled;
-        if (!highlightEnabled && mc.level != null) {
-            Set<UUID> fcTargets = new HashSet<>(ClientFireControlData.getTargets());
-            for (int id : List.copyOf(highlightedEntityIds)) {
-                Entity e = mc.level.getEntity(id);
-                if (e != null && !fcTargets.contains(e.getUUID()) && !hasVanillaGlow(e)) {
-                    e.setGlowingTag(false);
-                    highlightedEntityIds.remove(id);
-                }
-            }
-        }
-        mc.player.displayClientMessage(
-                net.minecraft.network.chat.Component.translatable(
-                        highlightEnabled ? "message.piranport.highlight_on"
-                                         : "message.piranport.highlight_off"),
-                true);
-    }
-
     // ========== 主 tick 方法 ==========
 
     /**
-     * 每 tick 应用/维持高亮发光效果（火控 + Y键）。
+     * 每 tick 应用/维持高亮发光效果（火控）。
      *
      * @param lockedTargets 当前火控锁定的 UUID 集合
      */
@@ -123,19 +78,6 @@ public class EntityHighlightHandler {
             }
         }
 
-        // Phase 2：Y 键战场高亮 — 完整扫描按 ENTITY_SCAN_INTERVAL 节流
-        boolean doFullScan = highlightEnabled && (entityScanCooldown <= 0);
-        if (doFullScan) {
-            entityScanCooldown = ENTITY_SCAN_INTERVAL;
-            for (Entity entity : mc.level.entitiesForRendering()) {
-                if (!lockedTargets.contains(entity.getUUID()) && isHighlightTarget(entity, localPlayer)) {
-                    entity.setGlowingTag(true);
-                    highlightedEntityIds.add(entity.getId());
-                }
-            }
-        }
-        if (highlightEnabled) entityScanCooldown--;
-
         // Phase 3：移除不再处于任何活跃高亮集合中的实体的发光效果
         if (!highlightedEntityIds.isEmpty()) {
             highlightedEntityIds.removeIf(id -> {
@@ -143,7 +85,6 @@ public class EntityHighlightHandler {
                 if (entity == null) return true;
                 UUID uuid = entity.getUUID();
                 if (lockedTargets.contains(uuid)) return false;
-                if (highlightEnabled && isHighlightTarget(entity, localPlayer)) return false;
                 if (hasVanillaGlow(entity)) return false;
                 entity.setGlowingTag(false);
                 return true;
@@ -154,7 +95,7 @@ public class EntityHighlightHandler {
         syncFcTeam(mc, currentFcMembers);
     }
 
-    /** 反潜声呐高亮 — 独立于 Y 键，使用黄色轮廓。 */
+    /** 反潜声呐高亮 — 独立于火控，使用黄色轮廓。 */
     public static void tickAswSonar(Minecraft mc, Set<UUID> lockedTargets) {
         if (mc.level == null) return;
 
@@ -199,28 +140,6 @@ public class EntityHighlightHandler {
     private static boolean hasVanillaGlow(Entity entity) {
         if (entity instanceof LivingEntity living) {
             return living.hasEffect(MobEffects.GLOWING);
-        }
-        return false;
-    }
-
-    /**
-     * 当 Y 键高亮启用时，判断实体是否应该发光。
-     * 不包含火控目标 — 火控目标单独处理。
-     */
-    private static boolean isHighlightTarget(Entity entity, Player localPlayer) {
-        if (entity instanceof BulletEntity bl && bl.getOwner() == localPlayer) return true;
-
-        if (entity instanceof LivingEntity living && living != localPlayer) {
-            double distSq = entity.distanceToSqr(localPlayer);
-            if (distSq <= 32 * 32) {
-                if (living.getLastHurtByMob() == localPlayer ||
-                        (living instanceof Mob mob
-                                && mob.getTarget() != null && mob.getTarget() == localPlayer)) {
-                    return true;
-                }
-                if (living instanceof Monster) return true;
-                if (living instanceof Animal) return distSq <= 16 * 16;
-            }
         }
         return false;
     }

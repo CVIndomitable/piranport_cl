@@ -64,14 +64,6 @@ public class DepthChargeEntity extends ThrowableItemProjectile {
         return ModItems.DEPTH_CHARGE.get();
     }
 
-    @Override
-    public boolean isCurrentlyGlowing() {
-        if (level().isClientSide() && com.piranport.platform.ClientHooks.isHighlightEnabled()) {
-            return true;
-        }
-        return super.isCurrentlyGlowing();
-    }
-
     /** Heavy — sinks faster than aerial bombs. */
     @Override
     protected double getDefaultGravity() {

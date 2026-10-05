@@ -189,14 +189,6 @@ public class TorpedoEntity extends ThrowableItemProjectile {
     }
 
     @Override
-    public boolean isCurrentlyGlowing() {
-        if (level().isClientSide() && com.piranport.platform.ClientHooks.isHighlightEnabled()) {
-            return true;
-        }
-        return super.isCurrentlyGlowing();
-    }
-
-    @Override
     protected Item getDefaultItem() {
         return switch (caliber) {
             case 610 -> ModItems.TORPEDO_610MM.get();

@@ -5,7 +5,6 @@ import com.piranport.component.LoadedAmmo;
 import com.piranport.component.SlotCooldowns;
 import com.piranport.client.input.ClientInputCoordinator;
 import com.piranport.client.input.DebugInputHandler;
-import com.piranport.client.input.EntityHighlightHandler;
 import com.piranport.dungeon.client.DungeonContinueScreen;
 import com.piranport.dungeon.client.DungeonHudLayer;
 import com.piranport.dungeon.client.DungeonResultScreen;
@@ -66,11 +65,6 @@ public final class ClientItemHooks implements com.piranport.platform.ClientBridg
     @Override
     public void resetClientState() {
         ClientInputCoordinator.resetClientState();
-    }
-
-    @Override
-    public boolean isHighlightEnabled() {
-        return EntityHighlightHandler.isHighlightEnabled();
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
@@ -262,17 +256,7 @@ public final class ClientItemHooks implements com.piranport.platform.ClientBridg
 
     @Override
     public boolean shouldAircraftGlow(AircraftEntity aircraft) {
-        if (isFireControlTarget(aircraft)) {
-            return true;
-        }
-        if (!EntityHighlightHandler.isHighlightEnabled()) {
-            return false;
-        }
-        Minecraft mc = Minecraft.getInstance();
-        if (mc.player == null) {
-            return false;
-        }
-        return aircraft.getOwnerUUID() != null;
+        return isFireControlTarget(aircraft);
     }
 
     @Override

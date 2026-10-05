@@ -49,10 +49,6 @@ public final class ClientHooks {
         bridge.resetClientState();
     }
 
-    public static boolean isHighlightEnabled() {
-        return bridge.isHighlightEnabled();
-    }
-
     public static void initializeSkinCoreItemClient(Object consumer) {
         bridge.initializeSkinCoreItemClient(consumer);
     }

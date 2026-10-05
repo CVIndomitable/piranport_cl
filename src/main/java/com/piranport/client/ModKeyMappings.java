@@ -24,9 +24,6 @@ public class ModKeyMappings {
     public static final KeyMapping TOGGLE_FIGHTER_GROUND_ATTACK =
             new KeyMapping("key.piranport.toggle_fighter_ground_attack", GLFW.GLFW_KEY_U, CATEGORY);
 
-    public static final KeyMapping HIGHLIGHT_ENTITIES =
-            new KeyMapping("key.piranport.highlight_entities", GLFW.GLFW_KEY_Y, CATEGORY);
-
     public static final KeyMapping TOGGLE_AUTO_LAUNCH =
             new KeyMapping("key.piranport.toggle_auto_mode", GLFW.GLFW_KEY_H, CATEGORY);
 

@@ -124,7 +124,6 @@ public class ClientModEvents {
     public static void registerKeyMappings(RegisterKeyMappingsEvent event) {
         event.register(ModKeyMappings.FIRE_CONTROL_SELECT);
         event.register(ModKeyMappings.TOGGLE_FIGHTER_GROUND_ATTACK);
-        event.register(ModKeyMappings.HIGHLIGHT_ENTITIES);
         event.register(ModKeyMappings.TOGGLE_AUTO_LAUNCH);
         event.register(ModKeyMappings.MANUAL_RELOAD);
         event.register(ModKeyMappings.SWITCH_AMMO);

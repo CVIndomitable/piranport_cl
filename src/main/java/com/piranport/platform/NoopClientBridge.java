@@ -32,9 +32,6 @@ class NoopClientBridge implements ClientBridge {
     public void resetClientState() {  }
 
     @Override
-    public boolean isHighlightEnabled() { return false; }
-
-    @Override
     public void initializeSkinCoreItemClient(Object consumer) {  }
 
     @Override

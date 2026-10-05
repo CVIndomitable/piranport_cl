@@ -10,7 +10,6 @@ import com.piranport.client.ClientTorpedoGuidance;
 import com.piranport.client.EntityUuidCache;
 import com.piranport.client.FireControlRadarSnapHandler;
 import com.piranport.client.FireControlVisualRenderer;
-import com.piranport.client.ModKeyMappings;
 import com.piranport.combat.TransformationManager;
 import com.piranport.item.ShipCoreItem;
 import com.piranport.item.ShipType;
@@ -142,7 +141,7 @@ public class ClientInputCoordinator {
         // 6) 弹药选择轮盘 (Tab)
         AmmoSelectionHandler.handleAmmoWheel(mc, mc.player, transformed, inReconMode);
 
-        // 8) 实体高亮 (Y键 + 火控 + 声呐)
+        // 8) 实体高亮 (火控 + 声呐)
         if (mc.level != null) {
             Player localPlayer = mc.player;
             List<UUID> fcTargets = ClientFireControlData.getTargets();
@@ -150,11 +149,6 @@ public class ClientInputCoordinator {
                     ? java.util.Collections.emptySet()
                     : new HashSet<>(fcTargets);
             boolean hasFcTargets = !lockedTargets.isEmpty();
-
-            // 处理 Y 键切换
-            while (ModKeyMappings.HIGHLIGHT_ENTITIES.consumeClick()) {
-                EntityHighlightHandler.toggleHighlight(mc);
-            }
 
             // 应用/维持高亮
             EntityHighlightHandler.tick(mc, lockedTargets, hasFcTargets);

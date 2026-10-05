@@ -42,14 +42,6 @@ public class AerialBombEntity extends ThrowableItemProjectile {
         return ModItems.AERIAL_BOMB.get();
     }
 
-    @Override
-    public boolean isCurrentlyGlowing() {
-        if (level().isClientSide() && com.piranport.platform.ClientHooks.isHighlightEnabled()) {
-            return true;
-        }
-        return super.isCurrentlyGlowing();
-    }
-
     private static final int MAX_LIFETIME = 600; // 30 seconds
 
     @Override

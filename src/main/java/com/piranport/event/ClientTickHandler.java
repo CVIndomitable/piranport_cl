@@ -19,8 +19,4 @@ public class ClientTickHandler {
     public static void resetClientState() {
         ClientHooks.resetClientState();
     }
-
-    public static boolean isHighlightEnabled() {
-        return ClientHooks.isHighlightEnabled();
-    }
 }

@@ -137,6 +137,11 @@ public final class ClientHooks {
         return bridge.isInReconMode();
     }
 
+    /** 本地玩家是否正在线导该实体。服务端为 noop 实现恒 false。 */
+    public static boolean isGuidingTorpedo(int entityId) {
+        return bridge.isGuidingTorpedo(entityId);
+    }
+
     public static void openTownScrollScreen() {
         bridge.openTownScrollScreen();
     }

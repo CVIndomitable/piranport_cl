@@ -95,6 +95,9 @@ class NoopClientBridge implements ClientBridge {
     public boolean isInReconMode() { return false; }
 
     @Override
+    public boolean isGuidingTorpedo(int entityId) { return false; }
+
+    @Override
     public void openTownScrollScreen() {  }
 
     @Override

@@ -69,6 +69,9 @@ public interface ClientBridge {
 
     boolean isInReconMode();
 
+    /** 本地玩家当前是否正在线导指定实体。方案4 客户端权威的位置判据。 */
+    boolean isGuidingTorpedo(int entityId);
+
     void openTownScrollScreen();
 
     void openDungeonResultScreen(String stageName, long timeMillis, boolean isFirstClear, List<String> rewardNames);

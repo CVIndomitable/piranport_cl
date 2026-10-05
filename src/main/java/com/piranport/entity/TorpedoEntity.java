@@ -3,6 +3,7 @@ package com.piranport.entity;
 import com.piranport.combat.TorpedoGuidanceManager;
 import com.piranport.config.ModCommonConfig;
 import com.piranport.config.ModEquipmentConfig;
+import com.piranport.platform.ClientHooks;
 import com.piranport.registry.ModEntityTypes;
 import com.piranport.registry.ModItems;
 import com.piranport.registry.ModMobEffects;
@@ -72,6 +73,11 @@ public class TorpedoEntity extends ThrowableItemProjectile {
     /** 空中下坠的水平衰减／垂直加速度，沿用原实现（未改动的手感参数）。 */
     private static final double AIR_FALL_HORIZONTAL_DECAY = 0.70;
     private static final double AIR_FALL_VERTICAL_ACCEL = 0.25;
+    /**
+     * 线导垂直输入死区：视线 y 分量绝对值小于该值时视为"没有垂直输入"，
+     * 由 surface_* 参数接管深度收敛。避免玩家视线略微俯仰就把深度交给输入、破坏贴水面手感。
+     */
+    private static final double WIRE_VERTICAL_DEADZONE = 0.05;
 
     private int caliber = 533;
     private float damage = 18f;
@@ -220,31 +226,102 @@ public class TorpedoEntity extends ThrowableItemProjectile {
         return wireMaxRange > 0 ? wireMaxRange : WIRE_FALLBACK_RANGE;
     }
 
-    /** 玩家制导：跟随最新方向输入，限制不得出水面 */
+    /**
+     * 玩家制导：跟随玩家视线方向，并按水面参数维持"水面之下贴水面"的深度。
+     *
+     * <p><b>方案4（2026-10-05）：线导期间客户端权威</b>。两侧都跑本方法：
+     * <ul>
+     *   <li>客户端：本地玩家正在引导本鱼雷时，用 {@code mc.player} 的视线直接写 deltaMovement，
+     *       不再等 2 tick 一次的服务端输入回包。配合 {@link #isControlledByLocalInstance()}
+     *       让原版跳过服务端位置校正，玩家看到的就是本地预测的真实位置。</li>
+     *   <li>服务端：仍按上传的输入包驱动一份权威副本（供命中/爆炸判定），并对断线、超程、
+     *       寿命等做兜底；它不是渲染来源，但必须与客户端保持一致以免命中分叉。</li>
+     * </ul>
+     *
+     * <p>垂直方向：玩家有垂直输入时以输入为准（仅在会冲出水面时截断为不上浮）；
+     * 无垂直输入时复用 {@code global.torpedo.surface_*} 参数向目标深度收敛，
+     * 因此线导鱼雷也会从发射深度下潜到水面之下。
+     */
     private boolean applyGuidedMovement() {
-        Entity owner = getOwner();
-        if (!(owner instanceof ServerPlayer sp)) return false;
-        UUID guided = TorpedoGuidanceManager.getGuidedTorpedo(sp.getUUID());
-        if (guided == null || !guided.equals(getUUID())) return false;
-
-        float[] input = TorpedoGuidanceManager.consumeInput(sp.getUUID());
-        Vec3 dir;
-        if (input != null && (input[0] != 0 || input[1] != 0 || input[2] != 0)) {
-            double len = Math.sqrt(input[0] * input[0] + input[1] * input[1] + input[2] * input[2]);
-            if (len < 0.001) dir = headingFromMotion();
-            else dir = new Vec3(input[0] / len, input[1] / len, input[2] / len);
+        // ---- 1) 取方向输入：客户端看本地视线，服务端看上传包 ----
+        double ix, iy, iz;
+        boolean hasInput;
+        if (level().isClientSide()) {
+            Player local = ClientHooks.getClientPlayer();
+            if (local == null || !ClientHooks.isGuidingTorpedo(getId())) return false;
+            Vec3 look = local.getLookAngle();
+            ix = look.x;
+            iy = look.y;
+            iz = look.z;
+            hasInput = true;
         } else {
-            dir = headingFromMotion();
+            Entity owner = getOwner();
+            if (!(owner instanceof ServerPlayer sp)) return false;
+            UUID guided = TorpedoGuidanceManager.getGuidedTorpedo(sp.getUUID());
+            if (guided == null || !guided.equals(getUUID())) return false;
+            // 先消费新包；没有新包的 tick 复用上一包，避免服务端垂直解算与客户端逐 tick 预测交替分叉。
+            float[] input = TorpedoGuidanceManager.consumeInput(sp.getUUID());
+            if (input == null) input = TorpedoGuidanceManager.getLastInput(sp.getUUID());
+            hasInput = input != null && (input[0] != 0 || input[1] != 0 || input[2] != 0);
+            if (hasInput) {
+                ix = input[0];
+                iy = input[1];
+                iz = input[2];
+            } else {
+                Vec3 h = headingFromMotion();
+                ix = h.x;
+                iy = 0;
+                iz = h.z;
+            }
         }
 
-        BlockPos above = BlockPos.containing(getX(), getY() + 0.5, getZ());
-        boolean waterAbove = level().getBlockState(above).getFluidState().is(Fluids.WATER);
-        double vy = dir.y;
-        if (!waterAbove && vy > 0) vy = 0;
+        // ---- 2) 水平方向归一化，垂直单独解算 ----
+        double hLen = Math.sqrt(ix * ix + iz * iz);
+        double dirX, dirZ;
+        if (hLen < 0.001) {
+            Vec3 h = headingFromMotion();
+            dirX = h.x;
+            dirZ = h.z;
+        } else {
+            dirX = ix / hLen;
+            dirZ = iz / hLen;
+        }
 
-        double speed = torpedoSpeed;
-        setDeltaMovement(dir.x * speed, vy * speed, dir.z * speed);
+        Vec3 motion = getDeltaMovement();
+        double vy;
+        double horizSpeed = torpedoSpeed;
+        if (hasInput && Math.abs(iy) > WIRE_VERTICAL_DEADZONE) {
+            // 玩家垂直输入优先：按完整视线归一化，水平随俯仰角缩短，总速不超过鱼雷航速
+            // （与旧实现一致；若只给水平满速+垂直输入，俯冲时总速会超标到 √2 倍）。
+            double len = Math.sqrt(ix * ix + iy * iy + iz * iz);
+            if (len < 0.001) {
+                vy = 0;
+            } else {
+                horizSpeed = torpedoSpeed * (hLen / len);
+                vy = torpedoSpeed * (iy / len);
+            }
+        } else {
+            vy = solveSurfaceVy();
+            if (Double.isNaN(vy)) {
+                // 无水面 / 在水面之上且未进入捕获窗口：垂直沿用原空中下坠手感，水平保持玩家朝向
+                setDeltaMovement(dirX * torpedoSpeed,
+                        motion.y - AIR_FALL_VERTICAL_ACCEL,
+                        dirZ * torpedoSpeed);
+                return true;
+            }
+        }
+
+        // 不得冲出水面：上方无液体时禁止上浮（与旧逻辑一致）
+        if (vy > 0 && !hasWaterAbove()) vy = 0;
+
+        setDeltaMovement(dirX * horizSpeed, vy, dirZ * horizSpeed);
         return true;
+    }
+
+    /** 鱼雷正上方 0.5 格处是否为液体；用于阻止鱼雷冲出水面。 */
+    private boolean hasWaterAbove() {
+        BlockPos above = BlockPos.containing(getX(), getY() + 0.5, getZ());
+        return level().getBlockState(above).getFluidState().is(Fluids.WATER);
     }
 
     private Vec3 headingFromMotion() {
@@ -277,6 +354,45 @@ public class TorpedoEntity extends ThrowableItemProjectile {
     @Override public double lerpTargetX() { return clientLerpSteps > 0 ? clientLerpX : getX(); }
     @Override public double lerpTargetY() { return clientLerpSteps > 0 ? clientLerpY : getY(); }
     @Override public double lerpTargetZ() { return clientLerpSteps > 0 ? clientLerpZ : getZ(); }
+
+    /**
+     * 方案4：线导期间本地玩家驾驶时忽略服务端速度包。
+     *
+     * <p>原版 {@code ClientPacketListener.handleSetEntityMotion} 直接调用 {@code entity.lerpMotion}，
+     * 不走 {@code isControlledByLocalInstance} 判定；NeoForge 的 {@code EntityType.defaultTrackDeltasSupplier}
+     * 对鱼雷返回 true，服务端每 tick 都会广播速度包。若不忽略，服务端速度会在实体 tick 前覆盖本地预测
+     * （{@code ThrowableProjectile.tick} 先按当前 deltaMovement 移动），位置仍被悄悄拽向服务端。
+     */
+    @Override
+    public void lerpMotion(double x, double y, double z) {
+        if (level().isClientSide()
+                && entityData.get(DATA_WIRE_GUIDED)
+                && ClientHooks.isGuidingTorpedo(getId())) {
+            return;
+        }
+        super.lerpMotion(x, y, z);
+    }
+
+    /**
+     * 方案4：线导期间客户端权威，跳过原版服务端位置/传送校正。
+     *
+     * <p>原版 {@code Entity.isControlledByLocalInstance()}（1.21.1 {@code Entity.java:3215}）对非载具实体
+     * 返回 {@code isEffectiveAi()}，即客户端恒 false、服务端恒 true。客户端因此会在
+     * {@code ClientPacketListener.handleMoveEntity}（{@code ClientPacketListener.java:625}）与
+     * {@code handleTeleportEntity}（{@code :578}）里用服务端位置调用 {@code lerpTo}，把本地预测硬拽回去。
+     * 线导时本地玩家就是驾驶者，位置以本地预测为准，故对"本地玩家正在引导的线导鱼雷"返回 true。
+     *
+     * <p>注意只影响线导中的本地鱼雷：其它玩家/无人鱼雷仍按原版接受校正。
+     */
+    @Override
+    public boolean isControlledByLocalInstance() {
+        if (level().isClientSide()
+                && entityData.get(DATA_WIRE_GUIDED)
+                && ClientHooks.isGuidingTorpedo(getId())) {
+            return true;
+        }
+        return super.isControlledByLocalInstance();
+    }
 
     /** 客户端每 tick 从同步数据刷新本地状态，保证与服务端跑同一套运动 AI。 */
     private void syncClientState() {
@@ -359,10 +475,17 @@ public class TorpedoEntity extends ThrowableItemProjectile {
         }
     }
 
-    /** 剩余航程检查：超时爆炸 */
+    /**
+     * 剩余航程检查：超时爆炸。
+     *
+     * <p>寿命由服务端裁决：{@code lifetime} 字段不下发（客户端默认 1200，服务端是
+     * {@code range*20}，可能被调试终端按型号改过），客户端自行倒计时会与服务端分叉——
+     * 线导时表现为客户端雷体提前 discard、第一人称镜头被强制退出。客户端改为只等服务端移除包。
+     */
     private boolean tickLifetime() {
+        if (level().isClientSide()) return false;
         if (--lifetime > 0) return false;
-        if (!level().isClientSide() && !exploded) {
+        if (!exploded) {
             exploded = true;
             explodeCurrentPos();
         }
@@ -390,7 +513,11 @@ public class TorpedoEntity extends ThrowableItemProjectile {
 
     /** 线导：断线检测 + 玩家制导 */
     private boolean tickWireGuidance() {
-        if (level().isClientSide()) return false;
+        if (level().isClientSide()) {
+            // 方案4：客户端权威。本地玩家在引导本鱼雷时，由本地预测直接驱动运动。
+            // 断线/超程/寿命等服务端专属判定不在此镜像，靠服务端下发 wireGuided=false 或移除实体兜底。
+            return wireGuided && applyGuidedMovement();
+        }
         if (wireGuided && launchPos == null) {
             launchPos = position();
         }
@@ -461,37 +588,45 @@ public class TorpedoEntity extends ThrowableItemProjectile {
         double dirX = h > 0.001 ? motion.x / h : 0.0;
         double dirZ = h > 0.001 ? motion.z / h : 0.0;
 
-        int topWaterY = findTopWaterY();
-        if (topWaterY == NO_WATER) {
-            // 附近没有水（陆地上空等）：维持原有的减速坠落
+        double vy = solveSurfaceVy();
+        if (Double.isNaN(vy)) {
+            // 附近没有水（陆地上空等）／在水面之上且未进入捕获窗口：维持原有的减速坠落
             setDeltaMovement(motion.x * AIR_FALL_HORIZONTAL_DECAY,
                     motion.y - AIR_FALL_VERTICAL_ACCEL,
                     motion.z * AIR_FALL_HORIZONTAL_DECAY);
             return;
         }
+
+        setDeltaMovement(dirX * torpedoSpeed, vy, dirZ * torpedoSpeed);
+    }
+
+    /**
+     * 按列内水柱顶面与 {@code global.torpedo.surface_*} 参数解算"水下贴水面"的目标垂直速度。
+     * 线导（{@link #applyGuidedMovement()}）与无人巡航（{@link #tickSurfaceAI()}）共用，保证两侧手感一致。
+     *
+     * @return 目标 vy；返回 {@link Double#NaN} 表示当前不适用（附近无水，或在水面之上且尚未进入捕获窗口），
+     *         调用方应退回空中坠落手感。
+     */
+    private double solveSurfaceVy() {
+        int topWaterY = findTopWaterY();
+        if (topWaterY == NO_WATER) return Double.NaN;
 
         double targetFeetY = topWaterY + STILL_WATER_SURFACE_HEIGHT
                 - surfaceDepth() - getBbHeight() * 0.5;
         double err = targetFeetY - getY();
         double capture = surfaceCaptureRange();
 
-        double vy;
         if (Math.abs(err) <= capture) {
             // 已在目标深度附近：按比例逼近，并限制垂直速度（避免上浮/下潜过猛）
             double maxVy = surfaceVerticalMaxSpeed();
-            vy = Mth.clamp(err * surfaceVerticalAdjust(), -maxVy, maxVy);
-        } else if (err < 0) {
-            // 水面之上但还没进入捕获窗口：继续按原空中手感下坠
-            setDeltaMovement(motion.x * AIR_FALL_HORIZONTAL_DECAY,
-                    motion.y - AIR_FALL_VERTICAL_ACCEL,
-                    motion.z * AIR_FALL_HORIZONTAL_DECAY);
-            return;
-        } else {
-            // 水下且离目标深度超出捕获窗口：保持既有垂直运动（深水巡航）
-            vy = motion.y;
+            return Mth.clamp(err * surfaceVerticalAdjust(), -maxVy, maxVy);
         }
-
-        setDeltaMovement(dirX * torpedoSpeed, vy, dirZ * torpedoSpeed);
+        if (err < 0) {
+            // 水面之上但还没进入捕获窗口：交由调用方按原空中手感下坠
+            return Double.NaN;
+        }
+        // 水下且离目标深度超出捕获窗口：保持既有垂直运动（深水巡航）
+        return getDeltaMovement().y;
     }
 
     /**

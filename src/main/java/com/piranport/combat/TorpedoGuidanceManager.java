@@ -29,6 +29,15 @@ public class TorpedoGuidanceManager {
 
     private static final Map<UUID, UUID> activeGuidance = new ConcurrentHashMap<>();
     private static final Map<UUID, float[]> pendingInput = new ConcurrentHashMap<>();
+    /**
+     * 最近一次方向输入（不随消费清除）。
+     *
+     * <p>方案4 下客户端逐 tick 用本地视角驱动鱼雷，服务端只在收到输入包时才知道玩家意图。
+     * 客户端每 2 tick 才发一次包，若服务端在没收到包的 tick 上退回"无输入"，
+     * 两侧的垂直解算会交替分叉（一个用玩家视线、一个用深度收敛）。
+     * 这里保留上一包，让服务端在包间隙复用玩家意图，缩小权威/预测的偏差。
+     */
+    private static final Map<UUID, float[]> lastInput = new ConcurrentHashMap<>();
     /** 频率限制：记录每个玩家上次输入的时间戳（毫秒），防止 DoS 攻击 */
     private static final Map<UUID, Long> lastInputTime = new ConcurrentHashMap<>();
     /** 最小输入间隔（毫秒）：50ms = 2.5tick，限制客户端发包频率 */
@@ -47,6 +56,7 @@ public class TorpedoGuidanceManager {
     public static void endGuidance(UUID playerUUID) {
         activeGuidance.remove(playerUUID);
         pendingInput.remove(playerUUID);
+        lastInput.remove(playerUUID);
         lastInputTime.remove(playerUUID);
     }
 
@@ -77,12 +87,19 @@ public class TorpedoGuidanceManager {
 
         lastInputTime.put(playerUUID, now);
         pendingInput.put(playerUUID, new float[]{dx, dy, dz});
+        lastInput.put(playerUUID, new float[]{dx, dy, dz});
     }
 
     /** 消费最新的方向输入。如果没有输入则返回 null（鱼雷漂移）。 */
     @Nullable
     public static float[] consumeInput(UUID playerUUID) {
         return pendingInput.remove(playerUUID);
+    }
+
+    /** 最近一次输入，不消费。用于没有新包的 tick 上复用玩家意图。 */
+    @Nullable
+    public static float[] getLastInput(UUID playerUUID) {
+        return lastInput.get(playerUUID);
     }
 
     /** 当被引导的鱼雷被摧毁/导线切断时调用，以便通知客户端退出引导。 */
@@ -93,6 +110,7 @@ public class TorpedoGuidanceManager {
     public static void clearAll() {
         activeGuidance.clear();
         pendingInput.clear();
+        lastInput.clear();
         lastInputTime.clear();
     }
 }

@@ -192,6 +192,12 @@ public final class ClientItemHooks implements com.piranport.platform.ClientBridg
     }
 
     @Override
+    public boolean isGuidingTorpedo(int entityId) {
+        return ClientTorpedoGuidance.isActive()
+                && ClientTorpedoGuidance.getTorpedoEntityId() == entityId;
+    }
+
+    @Override
     public void openTownScrollScreen() {
         Minecraft.getInstance().setScreen(new TownScrollScreen());
     }

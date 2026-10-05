@@ -729,10 +729,28 @@ public final class ModEquipmentConfig {
     // 注意：DungeonScaling 是纯逻辑类且有单测，读取终端参数后在无覆盖时会回落到基准值，
     // 因此单测默认行为与改前逐字节一致。
 
+    // ---- 进本门槛（target=dungeon_capacity）----
+    /**
+     * 单实例同时在线人数上限 = <b>进本门槛</b>：书台满员判定、进本拦截、悬浮字幕 x/N 都读它。默认 4。
+     *
+     * <p>WHY 与缩放钳制拆成两个参数：本参数回答「能进来几个人」，是权威门槛（读取点
+     * {@code DungeonEntryService}、{@code LecternPattern}）；缩放钳制
+     * {@link #DUNGEON_SCALING_PLAYER_CAP} 只回答「怪按几个人增强度」。二者语义不同，
+     * 调大进本门槛不会自动提高怪物强度，调大缩放钳制也不会放更多人进本。</p>
+     */
+    public static final TerminalConfigValue<Integer> DUNGEON_CAPACITY_MAX_PLAYERS =
+            TerminalConfigValue.integer("dungeon", "dungeon_capacity", "max_players", 4, 1, 64);
+
     // ---- 难度缩放（target=dungeon_scaling）----
-    /** 单实例同时在线人数上限（用于缩放取值的钳制）。默认 4。 */
-    public static final TerminalConfigValue<Integer> DUNGEON_MAX_PLAYERS =
-            TerminalConfigValue.integer("dungeon", "dungeon_scaling", "max_players", 4, 1, 64);
+    /**
+     * 缩放公式的<b>人数钳制上限</b>：只钳制 DungeonScaling 里 n 的取值。默认 4。
+     *
+     * <p>WHY 与进本门槛分开：本参数只影响「怪按几个人增强度」；「能进来几个人」由进本门槛
+     * {@link #DUNGEON_CAPACITY_MAX_PLAYERS} 决定。钳制 ≤ 门槛时才有意义；两者不等时，
+     * 超出钳制的人数能进副本但不增强度（例如门槛 8 / 钳制 4 → 8 人能进，强度按 4 人算）。</p>
+     */
+    public static final TerminalConfigValue<Integer> DUNGEON_SCALING_PLAYER_CAP =
+            TerminalConfigValue.integer("dungeon", "dungeon_scaling", "scaling_player_cap", 4, 1, 64);
     /** 血量倍率 = 1 + 该值 × (人数 − 1)。默认 0.5。 */
     public static final TerminalConfigValue<Double> DUNGEON_HEALTH_SCALE_PER_PLAYER =
             TerminalConfigValue.number("dungeon", "dungeon_scaling", "health_scale_per_player", 0.5, 0.0, 100.0);

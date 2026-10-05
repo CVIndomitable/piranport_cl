@@ -1,6 +1,7 @@
 package com.piranport.dungeon.event;
 
 import com.piranport.PiranPort;
+import com.piranport.config.ModEquipmentConfig;
 import com.piranport.dungeon.DungeonConstants;
 import com.piranport.dungeon.data.DungeonRegistry;
 import com.piranport.dungeon.data.NodeData;
@@ -130,8 +131,11 @@ public final class DungeonNodeRouter {
         if (!mgr.beginBattleNode(instance.getInstanceId(), node.nodeId(), keyStack)) return null;
 
         // 副本/22 §五：节点首次激活时锁定在线人数；后续进出不回溯本节点难度。
+        // 快照按「缩放钳制」封顶（global.dungeon_scaling.scaling_player_cap），不是进本门槛——
+        // 门槛决定能进来几人，钳制只决定强度按几人算，两者独立。
         // 同一瞬间快照波数：ceil(基础波数 × (1 + 0.2(n−1)))。脚本节点自管流程，波数恒为 1。
-        int players = Math.max(1, Math.min(4, mgr.countPresentPlayers(instance, player.server)));
+        int scalingCap = ModEquipmentConfig.DUNGEON_SCALING_PLAYER_CAP.get();
+        int players = Math.max(1, Math.min(scalingCap, mgr.countPresentPlayers(instance, player.server)));
         instance.setNodePlayerCount(node.nodeId(), players);
         boolean scripted = node.script() != null && !node.script().isEmpty();
         instance.setNodeWaveTotal(node.nodeId(), scripted ? 1

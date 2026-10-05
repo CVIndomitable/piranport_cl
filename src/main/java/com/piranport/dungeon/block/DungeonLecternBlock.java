@@ -220,7 +220,11 @@ public class DungeonLecternBlock extends BaseEntityBlock {
             case READY -> null;
         };
         if (blocked != null) {
-            player.displayClientMessage(Component.translatable(blocked), true);
+            // 满员文案带进本门槛占位符，其余提示无参数。
+            Component message = "dungeon.piranport.entry_blocked.instance_full".equals(blocked)
+                    ? Component.translatable(blocked, LecternPattern.instanceCapacity())
+                    : Component.translatable(blocked);
+            player.displayClientMessage(message, true);
             return;
         }
         // 整合版 §3.1：有进度弹"最新记录点 / 从头开始"；无进度 ContinueScreen 显示"直接进入"。

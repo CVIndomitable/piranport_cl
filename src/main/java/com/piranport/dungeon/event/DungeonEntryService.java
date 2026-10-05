@@ -1,5 +1,6 @@
 package com.piranport.dungeon.event;
 
+import com.piranport.config.ModEquipmentConfig;
 import com.piranport.dungeon.block.DungeonLecternBlockEntity;
 import com.piranport.dungeon.data.CheckpointData;
 import com.piranport.dungeon.data.DungeonRegistry;
@@ -66,10 +67,15 @@ public final class DungeonEntryService {
             this.key = key;
         }
 
-        /** 提示玩家并返回，替代原先的静默 return。 */
-        void report(ServerPlayer player) {
+        /**
+         * 提示玩家并返回，替代原先的静默 return。
+         *
+         * <p>带可变参数以支持文案占位符（当前仅 INSTANCE_FULL 需要传入进本门槛值），
+         * 其余拒绝原因不传参数即可。</p>
+         */
+        void report(ServerPlayer player, Object... args) {
             player.displayClientMessage(
-                    Component.translatable("dungeon.piranport.entry_blocked." + key), false);
+                    Component.translatable("dungeon.piranport.entry_blocked." + key, args), false);
         }
     }
 
@@ -161,11 +167,13 @@ public final class DungeonEntryService {
             return;
         }
 
-        // 副本/22 §四：同一实例同时在线最多 4 位玩家。历史参与者不占位，
+        // 副本/22 §四：同一实例同时在线人数受进本门槛 global.dungeon_capacity.max_players 限制
+        // （默认 4）。这是权威门槛——缩放钳制只影响强度，不能放更多人进来。历史参与者不占位，
         // 只有实际位于副本区域内的玩家才计入，离开后位置立即释放。
+        int capacity = ModEquipmentConfig.DUNGEON_CAPACITY_MAX_PLAYERS.get();
         if (instance != null && !instance.getPlayerUuids().contains(player.getUUID())
-                && manager.countPresentPlayers(instance, player.server) >= 4) {
-            Reject.INSTANCE_FULL.report(player);
+                && manager.countPresentPlayers(instance, player.server) >= capacity) {
+            Reject.INSTANCE_FULL.report(player, capacity);
             return;
         }
 

@@ -5,15 +5,21 @@ import com.piranport.config.ModEquipmentConfig;
 /**
  * 策划《副本/00》多人缩放纯公式（不碰 MC 类，便于单测）。
  *
- * <p>手感数值（人数上限、血量/波数每玩家增幅、迷路运输舰概率）走调试终端
+ * <p>手感数值（血量/波数每玩家增幅、缩放人数钳制、迷路运输舰概率）走调试终端
  * （global.dungeon_scaling.*，见 {@link ModEquipmentConfig}）。终端参数在无覆盖时回落
  * 到基准值，因此单测默认行为与下沉前一致。</p>
+ *
+ * <p>本类只钳制缩放公式的 n，不负责进本门槛。两者是两个概念：
+ * {@code global.dungeon_scaling.scaling_player_cap}（本类的 n 上限）与
+ * {@code global.dungeon_capacity.max_players}（进本门槛，见 {@link ModEquipmentConfig#DUNGEON_CAPACITY_MAX_PLAYERS}）
+ * 相互独立。钳制 ≤ 门槛时才有意义；两者不等时，超出钳制的人数<b>能进副本但强度不增强</b>
+ * （例如门槛 8 / 钳制 4 → 8 人能进，怪按 4 人算）。</p>
  */
 public final class DungeonScaling {
     private DungeonScaling() {}
 
     private static int clampPlayers(int players) {
-        return Math.max(1, Math.min(ModEquipmentConfig.DUNGEON_MAX_PLAYERS.get(), players));
+        return Math.max(1, Math.min(ModEquipmentConfig.DUNGEON_SCALING_PLAYER_CAP.get(), players));
     }
 
     /**

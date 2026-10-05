@@ -34,7 +34,7 @@ class LecternPatternTest {
 
     @Test
     void fullIsRedButKeyWithdrawable() {
-        var s = LecternPattern.status(true, true, true, LecternPattern.MAX_PLAYERS);
+        var s = LecternPattern.status(true, true, true, LecternPattern.instanceCapacity());
         assertEquals(LecternPattern.Status.FULL, s);
         assertEquals(LecternPattern.RED, LecternPattern.of(s));
         assertTrue(LecternPattern.canWithdraw(s));
@@ -42,7 +42,7 @@ class LecternPatternTest {
 
     @Test
     void builtWithRoomIsGreen() {
-        for (int present = 0; present < LecternPattern.MAX_PLAYERS; present++) {
+        for (int present = 0; present < LecternPattern.instanceCapacity(); present++) {
             var s = LecternPattern.status(true, true, true, present);
             assertEquals(LecternPattern.Status.READY, s);
             assertEquals(LecternPattern.GREEN, LecternPattern.of(s));

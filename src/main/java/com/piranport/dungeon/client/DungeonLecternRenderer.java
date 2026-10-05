@@ -16,7 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 副本书台上方悬浮字幕（副本/17 §3.2）：关卡名、通关情况、当前人数/4。
+ * 副本书台上方悬浮字幕（副本/17 §3.2）：关卡名、通关情况、当前人数/进本门槛。
  * 空书台不显示；建造中/满员额外加一行状态。数据全部来自服务端同步的 BE 字段。
  */
 public class DungeonLecternRenderer implements BlockEntityRenderer<DungeonLecternBlockEntity> {
@@ -52,7 +52,7 @@ public class DungeonLecternRenderer implements BlockEntityRenderer<DungeonLecter
                     : Component.translatable("block.piranport.dungeon_lectern.label.not_cleared",
                             be.getLabelCleared()));
             lines.add(Component.translatable("block.piranport.dungeon_lectern.label.players",
-                    be.getLabelPresent(), LecternPattern.MAX_PLAYERS));
+                    be.getLabelPresent(), LecternPattern.instanceCapacity()));
         }
         switch (status) {
             case BUILDING -> lines.add(Component.translatable("block.piranport.dungeon_lectern.label.building"));

@@ -1,5 +1,6 @@
 package com.piranport.dungeon.instance;
 
+import com.piranport.config.ModEquipmentConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -73,8 +74,12 @@ public class DungeonInstance {
     public Set<String> getClearedNodes() { return java.util.Collections.unmodifiableSet(clearedNodes); }
     public boolean hasEnteredNode(String node) { return enteredNodes.contains(node); }
     public int getNodePlayerCount(String node) { return Math.max(1, nodePlayerCounts.getOrDefault(node, 1)); }
+    /** 节点人数快照按「缩放钳制」封顶（不是进本门槛）；getNodePlayerCount 只保证下限 1。 */
     public void setNodePlayerCount(String node, int count) {
-        if (node != null && !node.isBlank()) nodePlayerCounts.putIfAbsent(node, Math.max(1, Math.min(4, count)));
+        if (node != null && !node.isBlank()) {
+            int scalingCap = ModEquipmentConfig.DUNGEON_SCALING_PLAYER_CAP.get();
+            nodePlayerCounts.putIfAbsent(node, Math.max(1, Math.min(scalingCap, count)));
+        }
     }
 
     // ===== 《副本/00》波次（节点激活瞬间快照总波数） =====

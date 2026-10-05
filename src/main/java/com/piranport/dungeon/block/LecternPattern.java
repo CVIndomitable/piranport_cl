@@ -1,5 +1,6 @@
 package com.piranport.dungeon.block;
 
+import com.piranport.config.ModEquipmentConfig;
 import net.minecraft.util.StringRepresentable;
 
 /**
@@ -7,7 +8,7 @@ import net.minecraft.util.StringRepresentable;
  *
  * <ul>
  *   <li>WHITE — 空书台，未插钥匙</li>
- *   <li>RED — 已插钥匙，副本建造中；或该实例在线人数已满（4 人）；或钥匙无法建出实例</li>
+ *   <li>RED — 已插钥匙，副本建造中；或该实例在线人数已达进本门槛；或钥匙无法建出实例</li>
  *   <li>GREEN — 建造完成且未满员，唯一允许进本的状态</li>
  * </ul>
  *
@@ -18,8 +19,16 @@ public enum LecternPattern implements StringRepresentable {
     RED("red", 0xE04040),
     GREEN("green", 0x50D060);
 
-    /** 副本/22 §四：每个实例同时在线最多 4 位玩家。 */
-    public static final int MAX_PLAYERS = 4;
+    /**
+     * 进本门槛 = 单实例同时在线人数上限（副本/22 §四）。
+     *
+     * <p>每次实时读取终端参数 {@code global.dungeon_capacity.max_players}，默认 4。刻意不缓存成
+     * 编译期常量：策划在终端改门槛后应立即生效，不能等重启。注意它与缩放钳制
+     * {@code global.dungeon_scaling.scaling_player_cap} 是两个概念——这里只管「能不能进」。</p>
+     */
+    public static int instanceCapacity() {
+        return ModEquipmentConfig.DUNGEON_CAPACITY_MAX_PLAYERS.get();
+    }
 
     private final String name;
     private final int tint;
@@ -48,7 +57,7 @@ public enum LecternPattern implements StringRepresentable {
         if (!hasKey) return Status.EMPTY;
         if (!hasInstance) return Status.INVALID;
         if (!built) return Status.BUILDING;
-        if (present >= MAX_PLAYERS) return Status.FULL;
+        if (present >= instanceCapacity()) return Status.FULL;
         return Status.READY;
     }
 

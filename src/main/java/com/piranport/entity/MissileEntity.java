@@ -2,6 +2,7 @@ package com.piranport.entity;
 
 import com.piranport.PiranPort;
 import com.piranport.aviation.FireControlManager;
+import com.piranport.combat.CombatTargeting;
 import com.piranport.combat.FriendlyFireHelper;
 import com.piranport.config.ModCommonConfig;
 import com.piranport.registry.ModEntityTypes;
@@ -285,7 +286,8 @@ public class MissileEntity extends ThrowableItemProjectile {
      */
     private void homeToward(Entity target) {
         Vec3 motion = getDeltaMovement();
-        Vec3 toTarget = target.position().add(0, target.getBbHeight() / 2, 0).subtract(position());
+        // 统一瞄点：取目标眼睛位置（见 CombatTargeting#aimPoint）。
+        Vec3 toTarget = CombatTargeting.aimPoint(target).subtract(position());
         double dist = toTarget.length();
         if (dist < 0.001) return;
 

@@ -2,6 +2,7 @@ package com.piranport.network;
 
 import com.piranport.PiranPort;
 import com.piranport.aviation.FireControlManager;
+import com.piranport.combat.CombatTargeting;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
@@ -82,7 +83,8 @@ public record FireControlPayload(FireAction action, UUID targetUUID) implements 
                 if (validTarget && player.distanceTo(entity) <= simDistBlocks) {
                     // 视线检查：防止客户端伪造透视锁定
                     Vec3 eyePos = player.getEyePosition();
-                    Vec3 targetPos = entity.position().add(0, entity.getBbHeight() * 0.5, 0);
+                    // 统一瞄点：取目标眼睛位置做视线检查，与实弹瞄准口径一致（见 CombatTargeting#aimPoint）。
+                    Vec3 targetPos = CombatTargeting.aimPoint(entity);
                     ClipContext clipContext = new ClipContext(
                             eyePos, targetPos,
                             ClipContext.Block.COLLIDER,

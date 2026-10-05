@@ -5,6 +5,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.Vec3;
 
 /**
  * 共享的敌对判定 —— 近防炮与火控雷达共用。
@@ -43,5 +44,30 @@ public final class CombatTargeting {
         if (target instanceof LivingEntity living && living instanceof Enemy) return true;
 
         return false;
+    }
+
+    /**
+     * 火控统一瞄准点 —— 取目标眼睛位置。
+     *
+     * <p>WHY 用眼睛高度而不是「碰撞箱高度百分比」：
+     * <ol>
+     *   <li>原版判断「眼睛是否浸在液体里」（{@code isEyeInFluid} / 窒息、溺水提示的那个位置）
+     *       用的就是 {@code getEyeY()}，火控瞄点对齐到同一处，才和玩家看到的「瞄准目标的头」
+     *       这一直觉一致。</li>
+     *   <li>此前各调用点各写一套 {@code getBbHeight() * 0.4~0.5}，HUD 预瞄圈与实际弹道会
+     *       按不同百分比取高，出现「圈画在头高、炮弹打腰线」的不一致。此处收敛为唯一真源，
+     *       所有火控路径共用同一口径，百分比不再漂移。</li>
+     * </ol>
+     *
+     * <p><b>必须用 {@link Entity#getEyeY()}</b>：目标可能是 {@code AircraftEntity}，它并不继承
+     * {@code LivingEntity}，而 {@code getEyeY()} 定义在 {@link Entity} 上（{@code LivingEntity}
+     * 上那些眼睛相关 API 对飞机不可用）。返回值与 {@code position()} 同源，均直接读实体的
+     * {@code getX/getY/getZ}，不含任何插值。
+     *
+     * @param target 瞄准的目标实体
+     * @return 目标眼睛位置的世界坐标
+     */
+    public static Vec3 aimPoint(Entity target) {
+        return new Vec3(target.getX(), target.getEyeY(), target.getZ());
     }
 }

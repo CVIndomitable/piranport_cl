@@ -4,6 +4,7 @@ import com.piranport.aviation.FireControlManager;
 import com.piranport.component.LoadedAmmo;
 import com.piranport.component.SlotCooldowns;
 import com.piranport.component.WeaponCooldown;
+import com.piranport.combat.CombatTargeting;
 import com.piranport.combat.TransformationManager;
 import com.piranport.debug.PiranPortDebug;
 import com.piranport.entity.MissileEntity;
@@ -288,7 +289,8 @@ public class MissileFireStrategy {
                 net.minecraft.world.entity.Entity target = sl.getEntity(targetUUID);
                 if (target != null && target.isAlive() && !target.isUnderWater()
                         && !(target instanceof net.minecraft.world.Container)) {
-                    Vec3 toTarget = target.position().add(0, target.getBbHeight() * 0.5, 0)
+                    // 统一瞄点：取目标眼睛位置（见 CombatTargeting#aimPoint）。
+                    Vec3 toTarget = CombatTargeting.aimPoint(target)
                             .subtract(player.getEyePosition());
                     if (toTarget.lengthSqr() > 0.01) {
                         aimDir = toTarget.normalize();
@@ -319,7 +321,8 @@ public class MissileFireStrategy {
                     }
                 }
                 if (nearest != null) {
-                    Vec3 toTarget = nearest.position().add(0, nearest.getBbHeight() * 0.5, 0)
+                    // 统一瞄点：取目标眼睛位置（见 CombatTargeting#aimPoint）。
+                    Vec3 toTarget = CombatTargeting.aimPoint(nearest)
                             .subtract(player.getEyePosition());
                     if (toTarget.lengthSqr() > 0.01) {
                         aimDir = toTarget.normalize();

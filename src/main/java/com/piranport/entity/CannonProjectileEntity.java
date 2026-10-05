@@ -3,6 +3,7 @@ package com.piranport.entity;
 import com.piranport.PiranPort;
 import com.piranport.artillery.config.override.ConfigOverrideManager;
 import com.piranport.combat.CannonImpactEffectBroadcaster;
+import com.piranport.combat.CombatTargeting;
 import com.piranport.combat.FireApplyHelper;
 import com.piranport.combat.ShipTypeMitigationHelper;
 import com.piranport.config.ModArtilleryConfig;
@@ -299,7 +300,8 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
             radarTrackingTarget = null;
             return;
         }
-        Vec3 aim = target.position().add(0, target.getBbHeight() * 0.5, 0);
+        // 统一瞄点：取目标眼睛位置（见 CombatTargeting#aimPoint）。
+        Vec3 aim = CombatTargeting.aimPoint(target);
         setDeltaMovement(com.piranport.combat.cannon.FireControlRadarTracking.steer(
                 position(), getDeltaMovement(), aim,
                 new com.piranport.combat.cannon.FireControlRadarTracking.Params(
@@ -394,7 +396,8 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
             trackingTargetId = -1;
             return;
         }
-        Vec3 toTarget = target.position().add(0, target.getBbHeight() * 0.5, 0)
+        // 统一瞄点：取目标眼睛位置（见 CombatTargeting#aimPoint）。
+        Vec3 toTarget = CombatTargeting.aimPoint(target)
                 .subtract(position()).normalize();
         Vec3 currentDir = vel.normalize();
         Vec3 newDir = currentDir.scale(1.0 - TRACKING_STEER)
@@ -447,6 +450,9 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
 
         Vec3 velNorm = velocity.normalize();
         for (Entity entity : nearby) {
+            // 注意：这里刻意取实体几何中心，不是火控的统一瞄点（CombatTargeting#aimPoint）。
+            // 近炸引信判定的是「弹头与目标整体轮廓的距离」，取中心才与锥形检测的几何语义一致；
+            // 若改用眼睛高度会整体抬高起爆判定面，让贴海/贴地目标的引信提前引爆。
             Vec3 toTarget = entity.position().add(0, entity.getBbHeight() * 0.5, 0).subtract(pos);
             double distSquared = toTarget.lengthSqr();
             if (distSquared > rangeSquared) continue;

@@ -9,6 +9,7 @@ import com.piranport.artillery.ArtilleryItem;
 import com.piranport.artillery.config.ArtilleryCannonData;
 import com.piranport.aviation.ClientFireControlData;
 import com.piranport.combat.BallisticSolver;
+import com.piranport.combat.CombatTargeting;
 import com.piranport.combat.FireControlPrediction;
 import com.piranport.combat.TransformationManager;
 import com.piranport.combat.util.CombatFireUtils;
@@ -178,7 +179,8 @@ public final class FireControlVisualRenderer {
         double drag = Math.max(0.0, data.dragCoeff());
         double gravity = data.gravity() > 0.0f ? data.gravity() / GRAVITY_SCALE : BallisticSolver.DEFAULT_GRAVITY;
         Vec3 eye = mc.player.getEyePosition();
-        Vec3 aim = target.position().add(0.0, target.getBbHeight() * 0.45, 0.0);
+        // 统一瞄点：取目标眼睛位置，与实弹瞄准口径一致（见 CombatTargeting#aimPoint）。
+        Vec3 aim = CombatTargeting.aimPoint(target);
         Vec3 predicted = BallisticSolver.predictImpactPoint(eye, aim, targetVelocity, speed, drag, gravity,
                 BallisticSolver.UNRESTRICTED_MIN_ANGLE, Math.toRadians(data.maxElevation()), PREDICTION_ITERATIONS);
         if (!isFinite(predicted) || predicted.distanceToSqr(eye) > MAX_RENDER_DISTANCE * MAX_RENDER_DISTANCE) return;

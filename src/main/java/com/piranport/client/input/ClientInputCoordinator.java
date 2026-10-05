@@ -8,7 +8,6 @@ import com.piranport.client.CannonImpactEffects;
 import com.piranport.client.ClientScopeHandler;
 import com.piranport.client.ClientTorpedoGuidance;
 import com.piranport.client.EntityUuidCache;
-import com.piranport.client.FireControlRadarSnapHandler;
 import com.piranport.client.FireControlVisualRenderer;
 import com.piranport.combat.TransformationManager;
 import com.piranport.item.ShipCoreItem;
@@ -78,10 +77,6 @@ public class ClientInputCoordinator {
         CannonImpactEffects.clear();
         DebugInputHandler.reset();
         ScopeInputHandler.reset();
-        // 火控雷达吸附是跨 tick 的状态机（锁定目标 + 进入/退出回滞）。
-        // 不清的话，退出存档前锁着的实体 id 会残留到下一个存档：新世界里 id 空间
-        // 从 0 重新分配但含义完全不同（可能是只兔子），吸附会在没按 0 的情况下突然咬上去。
-        FireControlRadarSnapHandler.reset();
         FireControlVisualRenderer.reset();
     }
 
@@ -125,13 +120,6 @@ public class ClientInputCoordinator {
         FireControlInputHandler.handleFighterGroundAttackKey(mc, transformed, inReconMode);
         FireControlInputHandler.handleAutoLaunchKey(mc, transformed, inReconMode);
         FireControlInputHandler.handleManualReloadKey(mc, transformed, inReconMode);
-
-        // 5b) 0 键 — 火控雷达开关（准星吸附），与中键火控锁定列表无关
-        FireControlInputHandler.handleFcRadarToggleKey(mc);
-
-        // 5c) 火控雷达准星吸附：放在所有输入处理之后、渲染之前，
-        //     这样本 tick 的按键操作（含刚按下的 0 键）都已生效，不会有一帧延迟。
-        FireControlRadarSnapHandler.tick(mc);
 
         // 火控第一目标的炮弹落点预瞄圈：使用本 tick 的锁定列表和实体速度。
         com.piranport.client.FireControlVisualRenderer.tick(mc);

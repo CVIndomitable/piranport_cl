@@ -117,7 +117,6 @@ public final class TerminalParameterCatalog {
                 add(specs, "equipment", target, "range", sonar.getBaseRadius(), 1, 1024);
             } else if (item instanceof FireControlRadarItem radar) {
                 add(specs, "equipment", target, "weight", radar.getBaseWeight(), 0, 112);
-                add(specs, "equipment", target, "range", radar.getBaseSnapRangeChunks(), 1, 1024);
             }
         }
         for (ShipType core : ShipType.values()) {

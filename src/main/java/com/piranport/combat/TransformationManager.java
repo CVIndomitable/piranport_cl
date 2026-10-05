@@ -551,14 +551,6 @@ public class TransformationManager {
         return radars;
     }
 
-    /** 核心强化槽里是否装了火控雷达（决定 0 键开关是否可用、准星吸附是否启用）。 */
-    public static boolean hasFireControlRadarEquipped(Player player, ItemStack coreStack) {
-        for (ItemStack s : getCoreStoredContents(coreStack)) {
-            if (s.getItem() instanceof FireControlRadarItem) return true;
-        }
-        return false;
-    }
-
     /**
      * 取核心内已装备的火控雷达。
      *

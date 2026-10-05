@@ -133,7 +133,7 @@ public class ModCreativeTabs {
                         // Radar — 对海 / 对空 / 声纳三种索敌目标各一台
                         output.accept(ModItems.STANDARD_SURFACE_RADAR.get());
                         output.accept(ModItems.STANDARD_AIR_RADAR.get());
-                        // 火控雷达 — 手动开关的准星吸附（火炮瞄准辅助），与上面两台索敌雷达不同类
+                        // 火控雷达 — 给炮弹做追踪（策划决策/火控/05），与上面两台索敌雷达不同类
                         output.accept(ModItems.STANDARD_FIRE_CONTROL_RADAR.get());
                         // Engines
                         output.accept(ModItems.STANDARD_ENGINE.get());

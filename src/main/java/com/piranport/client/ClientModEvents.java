@@ -128,7 +128,6 @@ public class ClientModEvents {
         event.register(ModKeyMappings.MANUAL_RELOAD);
         event.register(ModKeyMappings.SWITCH_AMMO);
         event.register(ModKeyMappings.RECON_EXIT);
-        event.register(ModKeyMappings.TOGGLE_FC_RADAR);
     }
 
     @SubscribeEvent

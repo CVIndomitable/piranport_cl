@@ -8,7 +8,6 @@ import com.piranport.client.input.ClientInputCoordinator;
 import com.piranport.PiranPort;
 import com.piranport.entitycore.ClientEntityCoreData;
 import com.piranport.network.EntityCoreRevertPayload;
-import com.piranport.network.FcRangeRequestPayload;
 import com.piranport.network.RecallAllAircraftPayload;
 import com.piranport.network.SkinRevertPayload;
 import com.piranport.skin.ClientSkinData;
@@ -211,22 +210,11 @@ public class ClientGameEvents {
     /**
      * 跨越维度（下界/末地/换图）或死亡重生时清理客户端静态状态。
      *
-     * <p>WHY 单靠 LoggingOut 不够：火控吸附的锁定目标以 {@link net.minecraft.world.entity.Entity#getId()}
-     * 为键，而实体 id 是<b>每个 {@code ServerLevel} 各自</b>的计数器 —— 换个维度后同一个 id
-     * 完全可能指向另一只怪（甚至一只兔子）。跨维度/重生时玩家并没有断线，{@code LoggingOut} 不会触发，
-     * 残留的锁定 id 就跟着走了：新维度里只要有一只怪恰好落进 8° 锥体内，准星就会把它当成
-     * 「原锁定目标」继续抓，绕过了 4° 的进入阈值。
-     *
-     * <p>用 {@code Clone}（服务端 {@code PlayerList#respawn} 与 {@code ServerPlayer#changeDimension}
-     * 都会走到 {@code ClientPacketListener#handleRespawn}，NeoForge 在那里 post 本事件）：
-     * 它覆盖「死亡重生」与「换维度」两种换实体的场景，而 {@code LoggedIn} 只在真正登录那一次触发。
-     * {@code resetClientState} 是幂等的，重复调用安全。
-     *
-     * <p>清完之后必须<b>补要一次</b>吸附半径：{@code FireControlRadarSnapHandler#reset} 会把
-     * {@code serverSimulationLimitBlocks} 归零，而这个值原先只在玩家按 0 键开关雷达时下发。
-     * 若玩家是在「雷达一直开着」的状态下重生/换维度，就再也不会收到下发，吸附会静默失效
-     * （组件仍显示开启，玩家完全没有线索）。所以这里主动发一个索要包，把缓存重新建立起来。
-     * 服务端会自行复核装备与开关状态，客户端拿不到也不该自己编一个半径。
+     * <p>跨维度/重生时玩家并没有断线，{@code LoggingOut} 不会触发，但客户端上的战力缓存
+     * 仍绑在旧玩家实体上，必须在这里清一遍。用 {@code Clone}（服务端 {@code PlayerList#respawn}
+     * 与 {@code ServerPlayer#changeDimension} 都会走到 {@code ClientPacketListener#handleRespawn}，
+     * NeoForge 在那里 post 本事件）：它覆盖「死亡重生」与「换维度」两种换实体的场景，
+     * 而 {@code LoggedIn} 只在真正登录那一次触发。{@code resetClientState} 是幂等的，重复调用安全。
      */
     @SubscribeEvent
     public static void onClientPlayerClone(ClientPlayerNetworkEvent.Clone event) {
@@ -234,8 +222,5 @@ public class ClientGameEvents {
         // 换维度/重生都可能复用客户端 HUD 静态状态；离开副本时不能把关卡和节点
         // 文案带到主世界。服务端仍会发送显式空状态，这里作为客户端换实体兜底。
         com.piranport.dungeon.client.DungeonHudLayer.clearDungeonState();
-        if (Minecraft.getInstance().getConnection() != null) {
-            PacketDistributor.sendToServer(new FcRangeRequestPayload());
-        }
     }
 }

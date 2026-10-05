@@ -67,27 +67,6 @@ public class ModPackets {
                 ToggleAutoModePayload.STREAM_CODEC,
                 ToggleAutoModePayload::handle
         );
-        // 火控雷达开关（0 键）。服务端翻转 SHIP_FC_RADAR_ON 后，把模拟距离换算出的
-        // 吸附上限另行回发（FcRangeSyncPayload）—— 客户端拿不到服务端的模拟距离。
-        registrar.playToServer(
-                ToggleFcRadarPayload.TYPE,
-                ToggleFcRadarPayload.STREAM_CODEC,
-                ToggleFcRadarPayload::handle
-        );
-        // S2C: 火控雷达准星吸附的半径上限（格）
-        registrar.playToClient(
-                FcRangeSyncPayload.TYPE,
-                FcRangeSyncPayload.STREAM_CODEC,
-                FcRangeSyncPayload::handle
-        );
-        // C2S: 客户端在清掉半径缓存（死亡重生/跨维度）后主动索要一次补发。
-        // 见 FcRangeRequestPayload 的类注释：没有它，处于「雷达一直开着」状态的玩家
-        // 在重生/跨维度后会静默失去吸附。
-        registrar.playToServer(
-                FcRangeRequestPayload.TYPE,
-                FcRangeRequestPayload.STREAM_CODEC,
-                FcRangeRequestPayload::handle
-        );
         // Debug system
         registrar.playToServer(
                 DebugTogglePayload.TYPE,

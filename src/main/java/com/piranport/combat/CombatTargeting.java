@@ -27,7 +27,7 @@ public final class CombatTargeting {
      *
      * @param player 判定发起者（玩家）
      * @param target 待判定实体
-     * @return true 表示可以攻击/吸附
+     * @return true 表示可以攻击
      */
     public static boolean isHostileTarget(Player player, Entity target) {
         if (!target.isAlive() || target == player || target.isAlliedTo(player)) return false;

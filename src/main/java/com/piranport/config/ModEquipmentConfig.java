@@ -666,6 +666,16 @@ public final class ModEquipmentConfig {
     /** 炮弹爆炸威力。默认 1.5。 */
     public static final TerminalConfigValue<Double> LOW_TIER_DESTROYER_EXPLOSION_POWER =
             TerminalConfigValue.number("deep_ocean", "low_tier_destroyer_ai", "explosion_power", 1.5, 0.0, 100.0);
+    /**
+     * 追踪弹触发阈值下限（发）：开火计数（shotsFired）达到 [min, max] 内随机值时打出一发追踪弹。
+     * 默认 2。换算见 LowTierDestroyerEntity#rollTrackingShotThreshold：原写死 2 + nextInt(4) 实际取值
+     * 2..5，故默认 (min,max)=(2,5) 时内部用 min + nextInt(max-min+1) 与改前逐字节等价。
+     */
+    public static final TerminalConfigValue<Integer> LOW_TIER_DESTROYER_TRACKING_SHOT_MIN =
+            TerminalConfigValue.integer("deep_ocean", "low_tier_destroyer_ai", "tracking_shot_min", 2, 1, 12000);
+    /** 追踪弹触发阈值上限（发）。默认 5。 */
+    public static final TerminalConfigValue<Integer> LOW_TIER_DESTROYER_TRACKING_SHOT_MAX =
+            TerminalConfigValue.integer("deep_ocean", "low_tier_destroyer_ai", "tracking_shot_max", 5, 1, 12000);
     /** 共享警戒半径（格）：把当前目标同步给此范围内尚未锁敌的同型驱逐舰。默认 40.0。 */
     public static final TerminalConfigValue<Double> LOW_TIER_DESTROYER_ALERT_RANGE =
             TerminalConfigValue.number("deep_ocean", "low_tier_destroyer_ai", "alert_range", 40.0, 0.0, 512.0);

@@ -50,8 +50,21 @@ public class LowTierDestroyerEntity extends Monster {
 
     public LowTierDestroyerEntity(EntityType<? extends LowTierDestroyerEntity> type, Level level) {
         super(type, level);
-        this.nextTrackingShotAt = 2 + random.nextInt(4); // first tracking at shot 2-5
+        this.nextTrackingShotAt = rollTrackingShotThreshold(); // first tracking at shot 2-5
         this.orbitAngle = random.nextDouble() * Math.PI * 2;
+    }
+
+    /**
+     * 掷出下一发追踪弹的触发阈值（发）。
+     * <p>WHY 这样换算：原写死值是 {@code 2 + random.nextInt(4)}，而 {@code nextInt(n)} 的上界不含，
+     * 实际取值 2..5。终端参数按「含两端的最小/最大 tick 数」定义为 min=2 / max=5，故内部用
+     * {@code min + nextInt(max - min + 1)}；默认值下 = {@code 2 + nextInt(4)}，与改前逐字节等价。
+     */
+    private int rollTrackingShotThreshold() {
+        int min = ModEquipmentConfig.LOW_TIER_DESTROYER_TRACKING_SHOT_MIN.get();
+        int max = ModEquipmentConfig.LOW_TIER_DESTROYER_TRACKING_SHOT_MAX.get();
+        int span = Math.max(max - min + 1, 1);
+        return min + random.nextInt(span);
     }
 
     // --- Attributes ---
@@ -127,7 +140,7 @@ public class LowTierDestroyerEntity extends Monster {
         shotsFired++;
         boolean tracking = (shotsFired >= nextTrackingShotAt);
         if (tracking) {
-            nextTrackingShotAt = shotsFired + 2 + random.nextInt(4);
+            nextTrackingShotAt = shotsFired + rollTrackingShotThreshold();
         }
 
         // Aim: direction to target with arc compensation for gravity
@@ -193,7 +206,7 @@ public class LowTierDestroyerEntity extends Monster {
         shotsFired = tag.getInt("ShotsFired");
         nextTrackingShotAt = tag.getInt("NextTrackingShot");
         if (nextTrackingShotAt == 0) {
-            nextTrackingShotAt = shotsFired + 2 + random.nextInt(4);
+            nextTrackingShotAt = shotsFired + rollTrackingShotThreshold();
         }
     }
 

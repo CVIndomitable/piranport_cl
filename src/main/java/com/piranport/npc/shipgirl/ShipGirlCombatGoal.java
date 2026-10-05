@@ -85,8 +85,10 @@ public class ShipGirlCombatGoal extends Goal {
         float damage = (float) shipGirl.getAttributeValue(
                 net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE);
 
+        // 爆炸威力与深海炮弹共用同一终端参数，避免两处各写一份 1.5f 后改一处漏一处。
+        float explosionPower = (float) (double) ModEquipmentConfig.DEEP_OCEAN_PROJECTILE_EXPLOSION_POWER.get();
         DeepOceanProjectileEntity shell = new DeepOceanProjectileEntity(
-                shipGirl.level(), shipGirl, damage, 1.5f, ballistic);
+                shipGirl.level(), shipGirl, damage, explosionPower, ballistic);
 
         if (tracking) {
             shell.setTrackingTarget(target);

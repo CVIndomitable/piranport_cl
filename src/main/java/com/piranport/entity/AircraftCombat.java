@@ -367,6 +367,19 @@ public class AircraftCombat {
         craft.setDeltaMovement(toTarget.x, yAdjust, toTarget.z);
     }
 
+    // ==== 水平轰炸机投弹参数 ====
+    // 出处：策划决策/航空/18-水平轰炸机轰炸航线模式.md
+    // 投弹高度相对目标的高度差（决策要求 +32）
+    private static final double LEVEL_BOMB_ALTITUDE_OFFSET = 32.0;
+    // 投弹水平距离判据，进入该距离内即投弹（决策要求 <3 格）
+    private static final double LEVEL_BOMB_HORIZ_DROP_DISTANCE = 3.0;
+    // 投弹初速的水平速度乘数，乘载机当前水平速度（决策要求 ×0.1，近乎垂直坠落）；
+    // 此值与 LEVEL_BOMB_VERTICAL_VELOCITY 独立，不可合并
+    private static final double LEVEL_BOMB_HORIZONTAL_VELOCITY_MULTIPLIER = 0.1;
+    // 投弹初速的垂直分量（决策要求 -0.1，近乎垂直坠落）；
+    // 此值与 LEVEL_BOMB_HORIZONTAL_VELOCITY_MULTIPLIER 独立，不可合并
+    private static final double LEVEL_BOMB_VERTICAL_VELOCITY = -0.1;
+
     /** @see AircraftEntity#tickLevelBomberAttack(Player, LivingEntity) */
     public static void tickLevelBomberAttack(AircraftEntity craft, @Nullable Player owner, LivingEntity target) {
         if (craft.remainingAmmo <= 0) {
@@ -381,7 +394,7 @@ public class AircraftCombat {
         double dx = target.getX() - craft.getX();
         double dz = target.getZ() - craft.getZ();
         double horizDist = Math.sqrt(dx * dx + dz * dz);
-        double bombAlt = target.getY() + 30.0;
+        double bombAlt = target.getY() + LEVEL_BOMB_ALTITUDE_OFFSET;
 
         // Phase 1: Approach bombing altitude
         if (craft.getY() < bombAlt - 2.0) {
@@ -405,7 +418,7 @@ public class AircraftCombat {
         craft.levelRunTicks++;
 
         // Drop bomb when within range, or timeout after 200 ticks
-        if ((horizDist < 4.0 || craft.levelRunTicks > 200) && !craft.levelBombDropped) {
+        if ((horizDist < LEVEL_BOMB_HORIZ_DROP_DISTANCE || craft.levelRunTicks > 200) && !craft.levelBombDropped) {
             float bombPower = craft.getPanelDamage();
             int bombCount = Math.max(1, craft.remainingAmmo);
             for (int i = 0; i < bombCount; i++) {
@@ -413,7 +426,7 @@ public class AircraftCombat {
                 double spreadX = (craft.level().random.nextDouble() - 0.5) * 1.0;
                 double spreadZ = (craft.level().random.nextDouble() - 0.5) * 1.0;
                 bomb.moveTo(craft.getX() + spreadX, craft.getY() - 0.5, craft.getZ() + spreadZ, 0, 0);
-                bomb.setDeltaMovement(craft.getDeltaMovement().x * 0.5, -0.3, craft.getDeltaMovement().z * 0.5);
+                bomb.setDeltaMovement(craft.getDeltaMovement().x * LEVEL_BOMB_HORIZONTAL_VELOCITY_MULTIPLIER, LEVEL_BOMB_VERTICAL_VELOCITY, craft.getDeltaMovement().z * LEVEL_BOMB_HORIZONTAL_VELOCITY_MULTIPLIER);
                 bomb.setOwner(owner);
                 craft.level().addFreshEntity(bomb);
             }

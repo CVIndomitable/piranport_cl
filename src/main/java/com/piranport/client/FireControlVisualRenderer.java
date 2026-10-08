@@ -70,6 +70,8 @@ public final class FireControlVisualRenderer {
     /** HUD 预瞄标记半径（GUI 缩放像素）与贴边留白。 */
     private static final int HUD_RADIUS = 7;
     private static final int HUD_MARGIN = 12;
+    /** 圆圈环宽（像素）：1 = 只有最外一圈像素，中心完全留空不遮准星。 */
+    private static final int HUD_RING_THICKNESS = 1;
     private static final int ALPHA = 150;
 
     private static final RenderType LINES = RenderType.create(
@@ -289,7 +291,7 @@ public final class FireControlVisualRenderer {
         hudVisible = true;
     }
 
-    /** HUD 层：每帧把预测落点画成固定像素大小的准星标记。 */
+    /** HUD 层：每帧把预测落点画成固定像素大小的圆圈标记。 */
     @SubscribeEvent
     public static void onRenderGuiLayer(RenderGuiLayerEvent.Post event) {
         if (!event.getName().equals(VanillaGuiLayers.CROSSHAIR) || !hudVisible) return;
@@ -301,8 +303,8 @@ public final class FireControlVisualRenderer {
     }
 
     /**
-     * 预瞄标记：屏幕内画四瓣准星环，视野外画实心小方块（说明"落点在那个方向、不在视野里"）。
-     * 固定像素尺寸 —— 这正是从世界空间搬到 HUD 的目的。
+     * 预瞄标记：屏幕内画圆圈（圆环，中心留空不遮准星），视野外画实心小方块
+     * （说明"落点在那个方向、不在视野里"）。固定像素尺寸 —— 这正是从世界空间搬到 HUD 的目的。
      */
     private static void drawHudMarker(GuiGraphics g, int x, int y, int rgb, boolean onScreen) {
         int color = 0xFF000000 | rgb;
@@ -310,12 +312,21 @@ public final class FireControlVisualRenderer {
             g.fill(x - 3, y - 3, x + 3, y + 3, 0xFF000000 | rgb);
             return;
         }
-        int r = HUD_RADIUS;
-        // 四瓣：每瓣由两段线组成，中间留出中心空隙避免遮挡准星
-        g.fill(x - r, y - 1, x - 2, y + 1, color);
-        g.fill(x + 2, y - 1, x + r, y + 1, color);
-        g.fill(x - 1, y - r, x + 1, y - 2, color);
-        g.fill(x - 1, y + 2, x + 1, y + r, color);
+        // 圆环 = 半径 HUD_RADIUS 的实心圆 − 半径小 HUD_RING_THICKNESS 的内圆。
+        // 逐行扫描线求两个圆在该行的半宽，差集即左右两段环；内圆半宽钳到「外圆半宽 − 1」
+        // 是为了在圆顶/圆底取整后两半宽相等时仍留出 1 像素环，避免圆出现缺口。
+        for (int dy = -HUD_RADIUS; dy <= HUD_RADIUS; dy++) {
+            int outer = rowHalfWidth(HUD_RADIUS, dy);
+            int inner = Math.min(rowHalfWidth(HUD_RADIUS - HUD_RING_THICKNESS, dy), outer - 1);
+            g.fill(x - outer, y + dy, x - inner, y + dy + 1, color);      // 左半环
+            g.fill(x + inner + 1, y + dy, x + outer + 1, y + dy + 1, color); // 右半环
+        }
+    }
+
+    /** 实心圆在第 dy 行（圆心所在行为 0）的半宽像素数；该行整行落在圆外时返回 -1。 */
+    private static int rowHalfWidth(int radius, int dy) {
+        if (Math.abs(dy) > radius) return -1;
+        return (int) Math.round(Math.sqrt((double) radius * radius - (double) dy * dy));
     }
 
     /** 以 start→end 为对称轴的水平扇形：两条边线 + 圆弧。 */

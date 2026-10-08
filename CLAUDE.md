@@ -61,7 +61,7 @@
 - 纯数学在 `combat/FireControlPrediction`（5 tick 采样速度、鱼雷水平拦截闭式解、准星入球判定、扇形角）；火炮预测落点走 `BallisticSolver.predictImpactPoint`（客户端专用）。
 - 扇形圆心角 = 2×max|`CombatFireUtils.getSpreadAngles(管数)`|，散布表改了扇形自动跟随。
 - 颜色为终端参数 `global.fire_control_visual.prediction_line_color` / `prediction_line_active_color`（RGB 整数）。
-- **预瞄点画在 HUD，不在世界空间**：世界空间按透视缩小，远距离落点会糊掉。落点由 `FireControlPrediction.projectToScreen` 用本帧真实投影矩阵投影到 GUI 坐标，标记固定像素尺寸；相机背后的点返回 `null`（投影是镜像假点，只能整帧丢弃），视野外钳到屏幕边缘并画成实心块。开镜缩放改的是投影矩阵，因此自动跟随。鱼雷的线/扇形是 3D 跨度，保留在世界空间
+- **预瞄点画在 HUD，不在世界空间**：世界空间按透视缩小，远距离落点会糊掉。落点由 `FireControlPrediction.projectToScreen` 用本帧真实投影矩阵投影到 GUI 坐标，标记固定像素尺寸（屏幕内为圆圈 `HUD_RADIUS`=7px、环宽 1px、中心留空；`drawHudMarker` 逐行扫描线画圆环）；相机背后的点返回 `null`（投影是镜像假点，只能整帧丢弃），视野外钳到屏幕边缘并画成实心块。开镜缩放改的是投影矩阵，因此自动跟随。鱼雷的线/扇形是 3D 跨度，保留在世界空间
 
 ### 装填（策划决策/武器/07、09）
 - **一次按 R = 一次完整装填**：按下 R 只启动读条（写物品上的 `WEAPON_COOLDOWN`），到期由服务端结算——火炮在 `CannonReloading.tickCannonAutoReload`，舰载机在 `AircraftFireStrategy.tickAircraftReload`，都由 `PlayerTickHandler` 每 tick 调用。自动**启动**关闭（只能 R 键起读条），但自动**结算**必须保留

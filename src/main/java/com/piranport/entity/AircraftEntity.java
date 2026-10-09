@@ -672,10 +672,10 @@ public class AircraftEntity extends Entity {
                             || aircraftType == AircraftInfo.AircraftType.ROCKET_FIGHTER) {
                         // Fighters: hostile mobs OR enemy aircraft
                         boolean hasHostile = !sl.getEntitiesOfClass(LivingEntity.class, box,
-                                e -> e.isAlive() && e != owner && e instanceof Monster).isEmpty();
+                                e -> e instanceof Monster
+                                        && com.piranport.combat.CombatTargeting.isHostileTarget(owner, e)).isEmpty();
                         boolean hasEnemyAircraft = !sl.getEntitiesOfClass(AircraftEntity.class, box,
-                                e -> e.isAlive() && e.getOwnerUUID() != null
-                                        && !e.getOwnerUUID().equals(owner.getUUID())).isEmpty();
+                                e -> com.piranport.combat.CombatTargeting.isHostileTarget(owner, e)).isEmpty();
                         hasNearbyTarget = hasHostile || hasEnemyAircraft;
                     } else {
                         hasNearbyTarget = !sl.getEntitiesOfClass(LivingEntity.class, box,

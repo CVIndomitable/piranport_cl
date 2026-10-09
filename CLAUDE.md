@@ -72,10 +72,10 @@
 
 ### 蓝图与武器制造台配方（项目所有者 2026-09-30 授权实现方编配方）
 - 三档武器蓝图：`standard_weapon_blueprint`（标准型武器蓝图，可合成）/ `improved_weapon_blueprint`（改良型）/ `advanced_weapon_blueprint`（先进型）。**按档位不按口径**——口径是玩法选择，不是进度；鱼雷发射器同一套
-- 档位→蓝图映射在 `WeaponWorkbenchRecipeRegistry.blueprintFor`；初期档 `null` = 无需蓝图。`blueprintSatisfied` 是唯一校验入口：**`requiredBlueprint == null` 表示无需蓝图（蓝图格可空）**，旧实现把它当"不可合成"，导致鱼雷/导弹/深弹/飞机配方在生存模式永远做不出来（副本/21 §1.2）
+- 档位→蓝图映射在 `WeaponWorkbenchRecipeRegistry.blueprintFor`；初期档 `null` = 无需蓝图。`blueprintSatisfied` 是唯一校验入口：**`requiredBlueprint == null` 表示无需蓝图（蓝图格可空）**，旧实现把它当"不可合成"，导致鱼雷/导弹/深弹/飞机配方在生存模式永远做不出来（副本/21 §1.2）。旧中型火炮配方同样不再要求旧中型火炮蓝图
 - 火炮/鱼雷配方由 `CannonCatalog` / `CATALOG_TORPEDO_LAUNCHERS` 循环生成：材料按口径族（小/中/大）+ 联装数 + 档位稀有材料推算，**材料种类上限 5**（+蓝图正好 6 格，制造台需求区 3 列×2 行）；制造时间 小 100 / 中 200 / 大 400，乘档位系数
 - 蓝图不消耗，可在蓝图箱复制；蓝图物品同时登记在 `isWorkbenchBlueprint`（制造台蓝图格投递 + 蓝图箱存放共用一份名单）
-- 07 表炮不再有原版工作台配方（`british_triple_16inch_gun` / `japanese_127mm_twin_gun` 的 `recipe/*.json` 已删），否则绕过制造台的蓝图门槛。Patchouli 火炮基础页已改指武器制造台
+- 07 表炮不再有原版工作台配方（`british_triple_16inch_gun` / `japanese_127mm_twin_gun` 的 `recipe/*.json` 已删），否则绕过制造台的蓝图门槛。Patchouli 火炮基础页已改指武器制造台；三张档位蓝图模型引用各自贴图 ID，贴图暂缺时按用户要求显示紫黑色缺失材质占位
 
 ### 火炮数值（策划决策/数值/06、07）
 - 公式集中在 `artillery/CannonStatFormula`：面板、齐射、装填（tick，可带小数）、负重、DPS；稀有度乘数取 `EquipmentTier`
@@ -110,6 +110,7 @@
 
 ### 手感参数一律进调试终端（2026-10-05，强约定）
 - **凡需策划调手感的数值，一律走 `config/TerminalConfigValue.number/integer/bool(group, target, property, base, min, max)`**，注册在 `ModEquipmentConfig` / `ModProjectilesConfig` / `ModArtilleryConfig`。键自动生成为 `global.<target>.<property>`，经 `TerminalConfigValue.specs()` 被 `TerminalParameterCatalog` 收集进终端；读取用同一对象的 `.get()`。
+- 鱼雷空投衰减 `air_drop_horizontal_decay` / `air_drop_vertical_accel`、非空投回退 `air_fall_horizontal_decay` / `air_fall_vertical_accel`、线导垂直输入死区 `wire_vertical_deadzone` 都由 `ModEquipmentConfig` 注册，默认仍为 `0.98/0.08`、`0.70/0.25`、`0.05`；空投与空中回退是不同运动阶段，参数不合并
 - **不要为手感参数手写 `TerminalParameterCatalog.add(specs, ...)`**：它生成的键是 `<group>.<target>.<property>`（如 `equipment.<target>.<property>`），而 `TerminalConfigValue.get()` 只读 `global.` 键 → 终端里「能改但不生效」的死参数。`add()` 仅用于读取侧也按同一非 global 键直读的目录项（雷达/声呐的 `equipment.<注册名>.*`，以及导弹发射器的 `missile_launcher.<注册路径>.*`，读取在 `MissileLauncherItem#parameterKey`）。
 - **命名避开终端名字启发式**（`TerminalParameterSpec.isLinearSpeed` / `isTickDuration`）：property 恰为 `speed` / `panel_speed` / `initial_speed` / `full_load_speed` / `empty_speed` / `movement_speed` 会按「格/tick × 20」显示成 t/s；property 为 `reload_time` / `fire_cooldown` / `salvo_interval` 或以 `_cooldown` 结尾会按「× 0.05」显示成秒。单位对不上就换名，例如导弹速度曲线用 `speed_initial` / `speed_increment` / `speed_max`（避开 `initial_speed` / `max_speed`）。
 - 本次下沉的主要分组（均为 `global.<target>.*`）：`torpedo`、`torpedo_salvo`、`shell`、`tracking`、`depth_charge`、`missile` / `missile_anti_ship` / `missile_anti_air` / `missile_rocket`、`aerial_bomb`（重力）、`small_ship`、`fire_debuff`、`aircraft_flight`、`fighter_combat` / `dive_bomber_combat` / `torpedo_bomber_combat` / `rocket_fighter_combat`、`level_bomber`、`type3`（终端分组 artillery）、`ciws_20mm` / `ciws_40mm` / `ciws_76mm`（`.damage`）；另有导弹发射器 `missile_launcher.<注册路径>.*`（独立分类「导弹」，不再混在 enhancement）与共享默认值 `global.missile_launcher.*`（单型号键 > 共享值 > 物品基准，判定「已设置」走 `TerminalParameters.isOverridden`）。
@@ -137,7 +138,7 @@
 - 飞行手感不变：Phase 1 爬升 `climb_speed_multiplier` 0.4、Phase 2 航线 `run_speed_multiplier` 0.6、投弹高度 `altitude_offset` +32。
 
 ### 自动索敌的敌我识别（2026-10-05）
-- 自动索敌与「自动进入攻击态」只打敌对目标，不得自动开打 `Animal` / `Villager` / 友军。对地自动索敌走 `CombatTargeting.isHostileTarget`（只认 `Enemy` 与敌对飞机）。
+- 自动索敌与「自动进入攻击态」只打敌对目标，不得自动开打 `Animal` / `Villager` / 友军。对地自动索敌走 `CombatTargeting.isHostileTarget`（只认 `Enemy` 与敌对飞机）。战斗机空对空自动扫描及巡航攻击态入口也共用该判据；机枪仍只自动搜索飞机。
 - **声呐标记不受影响**：仍标记所有水生生物（含鲑鱼/海豚/玩家，策划既定玩法）。声呐判据 `AircraftAswRecon.isAswTarget` 本体保持不变；自动索敌/自动进入攻击态另用 `AircraftAswRecon.isHostileAswTarget`（= `isAswTarget` && `isHostileTarget`），别把过滤加回 `isAswTarget`。
 - 手动中键/火控锁定不限制（尊重玩家意图）。
 

@@ -70,14 +70,6 @@ public class TorpedoEntity extends ThrowableItemProjectile {
     private static final int NO_WATER = Integer.MIN_VALUE;
     /** 原版静止水面顶面相对所在方块底边的高度（物理恒等量，非手感参数）。 */
     private static final double STILL_WATER_SURFACE_HEIGHT = 0.875;
-    /** 空中下坠的水平衰减／垂直加速度，沿用原实现（未改动的手感参数）。 */
-    private static final double AIR_FALL_HORIZONTAL_DECAY = 0.70;
-    private static final double AIR_FALL_VERTICAL_ACCEL = 0.25;
-    /**
-     * 线导垂直输入死区：视线 y 分量绝对值小于该值时视为"没有垂直输入"，
-     * 由 surface_* 参数接管深度收敛。避免玩家视线略微俯仰就把深度交给输入、破坏贴水面手感。
-     */
-    private static final double WIRE_VERTICAL_DEADZONE = 0.05;
 
     private int caliber = 533;
     // 兜底值全部走调试终端（global.torpedo.*）：默认 = 下沉前写死值。真实发射路径
@@ -294,7 +286,7 @@ public class TorpedoEntity extends ThrowableItemProjectile {
         Vec3 motion = getDeltaMovement();
         double vy;
         double horizSpeed = torpedoSpeed;
-        if (hasInput && Math.abs(iy) > WIRE_VERTICAL_DEADZONE) {
+        if (hasInput && Math.abs(iy) > ModEquipmentConfig.TORPEDO_WIRE_VERTICAL_DEADZONE.get()) {
             // 玩家垂直输入优先：按完整视线归一化，水平随俯仰角缩短，总速不超过鱼雷航速
             // （与旧实现一致；若只给水平满速+垂直输入，俯冲时总速会超标到 √2 倍）。
             double len = Math.sqrt(ix * ix + iy * iy + iz * iz);
@@ -309,7 +301,7 @@ public class TorpedoEntity extends ThrowableItemProjectile {
             if (Double.isNaN(vy)) {
                 // 无水面 / 在水面之上且未进入捕获窗口：垂直沿用原空中下坠手感，水平保持玩家朝向
                 setDeltaMovement(dirX * torpedoSpeed,
-                        motion.y - AIR_FALL_VERTICAL_ACCEL,
+                        motion.y - ModEquipmentConfig.TORPEDO_AIR_FALL_VERTICAL_ACCEL.get(),
                         dirZ * torpedoSpeed);
                 return true;
             }
@@ -567,7 +559,9 @@ public class TorpedoEntity extends ThrowableItemProjectile {
             entityData.set(DATA_AIR_DROP, false);
             setDeltaMovement(airDropDirection.x * torpedoSpeed, 0, airDropDirection.z * torpedoSpeed);
         } else {
-            setDeltaMovement(motion.x * 0.98, motion.y - 0.08, motion.z * 0.98);
+            setDeltaMovement(motion.x * ModEquipmentConfig.TORPEDO_AIR_DROP_HORIZONTAL_DECAY.get(),
+                    motion.y - ModEquipmentConfig.TORPEDO_AIR_DROP_VERTICAL_ACCEL.get(),
+                    motion.z * ModEquipmentConfig.TORPEDO_AIR_DROP_HORIZONTAL_DECAY.get());
         }
         return true;
     }
@@ -595,9 +589,9 @@ public class TorpedoEntity extends ThrowableItemProjectile {
         double vy = solveSurfaceVy();
         if (Double.isNaN(vy)) {
             // 附近没有水（陆地上空等）／在水面之上且未进入捕获窗口：维持原有的减速坠落
-            setDeltaMovement(motion.x * AIR_FALL_HORIZONTAL_DECAY,
-                    motion.y - AIR_FALL_VERTICAL_ACCEL,
-                    motion.z * AIR_FALL_HORIZONTAL_DECAY);
+            setDeltaMovement(motion.x * ModEquipmentConfig.TORPEDO_AIR_FALL_HORIZONTAL_DECAY.get(),
+                    motion.y - ModEquipmentConfig.TORPEDO_AIR_FALL_VERTICAL_ACCEL.get(),
+                    motion.z * ModEquipmentConfig.TORPEDO_AIR_FALL_HORIZONTAL_DECAY.get());
             return;
         }
 

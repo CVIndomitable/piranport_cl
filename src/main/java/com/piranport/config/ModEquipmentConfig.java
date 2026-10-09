@@ -77,6 +77,26 @@ public final class ModEquipmentConfig {
     public static final TerminalConfigValue<Double> TORPEDO_SURFACE_CAPTURE_RANGE =
             TerminalConfigValue.number("equipment", "torpedo", "surface_capture_range", 1.0, 0.25, 6.0);
 
+    /** 空投下落阶段的水平速度衰减系数。默认沿用 0.98。 */
+    public static final TerminalConfigValue<Double> TORPEDO_AIR_DROP_HORIZONTAL_DECAY =
+            TerminalConfigValue.number("equipment", "torpedo", "air_drop_horizontal_decay", 0.98, 0.0, 1.0);
+
+    /** 空投下落阶段每 tick 的垂直加速度。默认沿用 0.08。 */
+    public static final TerminalConfigValue<Double> TORPEDO_AIR_DROP_VERTICAL_ACCEL =
+            TerminalConfigValue.number("equipment", "torpedo", "air_drop_vertical_accel", 0.08, 0.0, 0.5);
+
+    /** 非空投空中回退的水平速度衰减系数。默认沿用 0.70。 */
+    public static final TerminalConfigValue<Double> TORPEDO_AIR_FALL_HORIZONTAL_DECAY =
+            TerminalConfigValue.number("equipment", "torpedo", "air_fall_horizontal_decay", 0.70, 0.0, 1.0);
+
+    /** 非空投空中回退每 tick 的垂直加速度。默认沿用 0.25。 */
+    public static final TerminalConfigValue<Double> TORPEDO_AIR_FALL_VERTICAL_ACCEL =
+            TerminalConfigValue.number("equipment", "torpedo", "air_fall_vertical_accel", 0.25, 0.0, 0.5);
+
+    /** 线导模式垂直输入的归一化死区。 */
+    public static final TerminalConfigValue<Double> TORPEDO_WIRE_VERTICAL_DEADZONE =
+            TerminalConfigValue.number("equipment", "torpedo", "wire_vertical_deadzone", 0.05, 0.0, 0.99);
+
     // ===== 鱼雷制导/引信/口径兜底（2026-10-05 下沉）=====
     // WHY：这些原先是 TorpedoEntity 里的写死常量，策划无法在调试终端调手感。
     // 键统一为 global.torpedo.*（与上面的 surface_* 同 target，终端里归到同一目标下）。

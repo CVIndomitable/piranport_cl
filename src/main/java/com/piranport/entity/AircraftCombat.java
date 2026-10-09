@@ -561,8 +561,7 @@ public class AircraftCombat {
         // 搜索敌方飞机
         AircraftEntity airTarget = sl.getEntitiesOfClass(AircraftEntity.class, box,
                         e -> e.isAlive() && e != craft
-                                && e.getOwnerUUID() != null
-                                && !e.getOwnerUUID().equals(owner.getUUID()))
+                                && com.piranport.combat.CombatTargeting.isHostileTarget(owner, e))
                 .stream()
                 .min(java.util.Comparator.comparingDouble(craft::distanceToSqr))
                 .orElse(null);

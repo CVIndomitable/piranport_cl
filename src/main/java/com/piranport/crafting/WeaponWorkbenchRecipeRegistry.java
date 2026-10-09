@@ -183,7 +183,7 @@ public final class WeaponWorkbenchRecipeRegistry {
                 new ItemStack(Items.IRON_INGOT, 6),
                 new ItemStack(Items.GOLD_INGOT, 2),
                 new ItemStack(Items.REDSTONE, 2)
-        ), ModItems.MEDIUM_GUN_BLUEPRINT.get(), 200);
+        ), null, 200);
 
         // 数值/07 注册表 60 门：按档位验稀有度蓝图，按口径族与联装定材料（2026-09-30）。
         for (Item gun : com.piranport.registry.WeaponItems.allCatalogGuns()) {

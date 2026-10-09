@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "piranport:item/japanese_127mm_twin_gun"
+    "layer0": "piranport:item/oto_twin_76mm_rapid_gun"
   }
 }

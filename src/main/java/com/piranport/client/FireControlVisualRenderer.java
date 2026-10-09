@@ -14,6 +14,7 @@ import com.piranport.combat.FireControlPrediction;
 import com.piranport.combat.TransformationManager;
 import com.piranport.combat.util.CombatFireUtils;
 import com.piranport.component.LoadedAmmo;
+import com.piranport.config.ModArtilleryConfig;
 import com.piranport.config.ModEquipmentConfig;
 import com.piranport.item.TorpedoItem;
 import com.piranport.item.TorpedoLauncherItem;
@@ -25,6 +26,7 @@ import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.Item;
@@ -103,6 +105,8 @@ public final class FireControlVisualRenderer {
     private static Vec3 origin;
     private static Vec3 previousOrigin;
     private static double fanHalfDeg;
+    /** CANNON: 目标是否超出「最大射程」——为 true 时落点已钉在最大射程处，HUD 出「超过射程」提示。 */
+    private static boolean outOfRange;
     private static Vec3 renderCamera = Vec3.ZERO;
 
     // ===== HUD 投影结果（世界渲染阶段算好，GUI 阶段直接画）=====
@@ -123,6 +127,7 @@ public final class FireControlVisualRenderer {
         point = null;
         origin = null;
         active = false;
+        outOfRange = false;
         fanHalfDeg = 0;
         update(mc);
         if (mode != previousMode) {
@@ -135,6 +140,7 @@ public final class FireControlVisualRenderer {
         mode = Mode.NONE;
         point = previousPoint = origin = previousOrigin = null;
         active = false;
+        outOfRange = false;
         hudVisible = false;
         hudOnScreen = false;
         SAMPLER.clear();
@@ -183,8 +189,22 @@ public final class FireControlVisualRenderer {
         Vec3 eye = mc.player.getEyePosition();
         // 统一瞄点：取目标眼睛位置，与实弹瞄准口径一致（见 CombatTargeting#aimPoint）。
         Vec3 aim = CombatTargeting.aimPoint(target);
-        Vec3 predicted = BallisticSolver.predictImpactPoint(eye, aim, targetVelocity, speed, drag, gravity,
-                BallisticSolver.UNRESTRICTED_MIN_ANGLE, Math.toRadians(data.maxElevation()), PREDICTION_ITERATIONS);
+        double maxElevation = Math.toRadians(data.maxElevation());
+
+        // 射程截断：目标水平距离超过终端「最大射程」时，不预测目标落点，把落点钉在最大射程处
+        // （沿目标水平方向、与眼位同高），并置超程标志让 HUD 出「超过射程」。与 CannonAiming
+        // 服务端开火的截断口径一致，避免 HUD 画出一个服务端根本不会飞到的落点。
+        double horizontalDist = Math.sqrt((aim.x - eye.x) * (aim.x - eye.x) + (aim.z - eye.z) * (aim.z - eye.z));
+        double maxRange = ModArtilleryConfig.ARTILLERY_MAX_RANGE.get();
+        Vec3 predicted;
+        if (BallisticSolver.beyondMaxRange(horizontalDist, maxRange)) {
+            outOfRange = true;
+            Vec3 flat = new Vec3(aim.x - eye.x, 0.0, aim.z - eye.z);
+            predicted = flat.lengthSqr() < 1.0e-9 ? eye : eye.add(flat.normalize().scale(maxRange));
+        } else {
+            predicted = BallisticSolver.predictImpactPoint(eye, aim, targetVelocity, speed, drag, gravity,
+                    BallisticSolver.UNRESTRICTED_MIN_ANGLE, maxElevation, PREDICTION_ITERATIONS);
+        }
         if (!isFinite(predicted) || predicted.distanceToSqr(eye) > MAX_RENDER_DISTANCE * MAX_RENDER_DISTANCE) return;
         mode = Mode.CANNON;
         point = predicted;
@@ -299,7 +319,15 @@ public final class FireControlVisualRenderer {
         if (mc.player == null) return;
         int rgb = active ? ModEquipmentConfig.PREDICTION_LINE_ACTIVE_COLOR.get()
                 : ModEquipmentConfig.PREDICTION_LINE_COLOR.get();
-        drawHudMarker(event.getGuiGraphics(), Math.round(hudX), Math.round(hudY), rgb, hudOnScreen);
+        GuiGraphics graphics = event.getGuiGraphics();
+        drawHudMarker(graphics, Math.round(hudX), Math.round(hudY), rgb, hudOnScreen);
+        if (outOfRange) {
+            // 超出「最大射程」：落点已钉在最大射程处，明确告诉玩家打不到目标，而不是默默落短。
+            Component text = Component.translatable("hud.piranport.fire_control.out_of_range");
+            graphics.drawString(mc.font, text,
+                    Math.round(hudX) - mc.font.width(text) / 2, Math.round(hudY) - HUD_RADIUS - 10,
+                    0xFFFF5555, true);
+        }
     }
 
     /**

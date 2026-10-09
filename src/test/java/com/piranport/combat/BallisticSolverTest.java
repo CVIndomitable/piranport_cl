@@ -570,6 +570,35 @@ class BallisticSolverTest {
         return Double.NaN;
     }
 
+    // ===== 最大射程截断（2026-10-09 项目所有者）=====
+
+    @Test
+    void beyondMaxRangeOnlyTriggersPastTheLimit() {
+        assertFalse(BallisticSolver.beyondMaxRange(99.9, 100.0), "未超过上限不算超程");
+        assertFalse(BallisticSolver.beyondMaxRange(100.0, 100.0), "刚好等于上限不算超程");
+        assertTrue(BallisticSolver.beyondMaxRange(100.1, 100.0), "超过上限即超程");
+        // 非法上限（未设置/非正）不应把任何目标误判为超程
+        assertFalse(BallisticSolver.beyondMaxRange(500.0, Double.NaN));
+        assertFalse(BallisticSolver.beyondMaxRange(500.0, 0.0));
+    }
+
+    @Test
+    void truncatedAngleLandsAtConfiguredRangeOnLowArc() {
+        double v0 = 2.5;
+        double drag = 0.01;
+        double gravity = 0.05;
+        double maxRange = 50.0; // 低于该炮物理最大射程（约 65 格），确保低/高弹道两根分离
+        double maxAngle = Math.toRadians(89.0);
+        double angle = BallisticSolver.truncatedAngle(v0, drag, gravity, maxRange,
+                BallisticSolver.UNRESTRICTED_MIN_ANGLE, maxAngle);
+        // 落点必须正好落在配置的最大射程点（与发射点同高），而不是物理最大射程角
+        assertProjectileHits(v0, drag, gravity, maxRange, 0.0, new BallisticSolver.Result(angle, false));
+        double physicalMaxAngle = BallisticSolver.calculateMaxRangeAngle(v0, drag, gravity,
+                BallisticSolver.UNRESTRICTED_MIN_ANGLE, maxAngle);
+        assertTrue(angle < physicalMaxAngle - 1.0e-6,
+                "截断角应取低弹道，而非物理最大射程角 " + Math.toDegrees(physicalMaxAngle));
+    }
+
     private static void assertProjectileHits(double speed, double drag, double gravity,
                                              double targetX, double targetY, BallisticSolver.Result result) {
         assertEquals(targetY, projectileHeightAt(speed, result.angle(), drag, gravity, targetX), 0.02,

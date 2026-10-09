@@ -876,6 +876,36 @@ public final class BallisticSolver {
                 : bestCrossingError;
     }
 
+    // ===== 最大射程截断（2026-10-09 项目所有者：控制火炮最大射程）=====
+
+    /**
+     * 目标水平距离是否超出配置的最大射程。
+     *
+     * <p>WHY 单独判定而不复用 {@link Result#outOfRange()}：后者衡量的是「解算误差 &gt; 0.5 格」，
+     * 即物理不可达；而「最大射程」是策划可调的人为上限，可能小于物理射程——此时目标物理上
+     * 够得着，但按截断规则不允许打过去。两者判定口径不同，不能互相替代。
+     */
+    public static boolean beyondMaxRange(double horizontalDist, double maxRange) {
+        return Double.isFinite(horizontalDist) && Double.isFinite(maxRange)
+                && maxRange > 0.0 && horizontalDist > maxRange;
+    }
+
+    /**
+     * 最大射程截断弹道角：落点取在水平距离 {@code maxRange}、与发射点同高处的<b>低弹道</b>仰角。
+     *
+     * <p><b>为什么不是最大仰角</b>：目标超出射程时若直接打物理最大射程角，弹丸会飞过配置的射程
+     * 上限。截断要求「按设定的最大射程射击」，即把落点固定在最大射程点求解：垂直距离取 0
+     * （落点回到发射高度，与 {@link #calculateMaxHorizontalRange} 对「射程」的定义一致），
+     * 水平距离取配置值。求角仍走 {@link #solve}，因此沿用「A(N) 单调反解取低弹道」的正确算法。
+     *
+     * <p>配置值一旦超过物理最大射程，solve 找不到根会按既有规则回退到物理最大射程角，
+     * 与不启用截断时的行为一致（默认 256 格即处于这一档）。
+     */
+    public static double truncatedAngle(double v0, double dragCoeff, double gravity, double maxRange,
+                                        double minAngle, double maxAngle) {
+        return solve(v0, dragCoeff, gravity, maxRange, 0.0, 0.0, minAngle, maxAngle).angle();
+    }
+
     /** 计算最大射程发射角（有阻力时略高于 45°） */
     public static double calculateMaxRangeAngle(double v0, double dragCoeff, double gravity) {
         return calculateMaxRangeAngle(v0, dragCoeff, gravity, UNRESTRICTED_MIN_ANGLE, UNRESTRICTED_MAX_ANGLE);

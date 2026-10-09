@@ -162,21 +162,29 @@ public final class ClientScopeHandler {
 
         if (velocity <= 0 || drag < 0) return;
 
+        // 射程截断：目标超出终端「最大射程」时不再对目标解算，改按最大射程点（与发射点同高）
+        // 解算，并把读数标记为超程（ScopeHudLayer 据此提示超出射程）。与开火路径截断口径一致，
+        // 避免瞄准镜给出一份服务端根本不会采用的目标解。
+        double maxRange = com.piranport.config.ModArtilleryConfig.ARTILLERY_MAX_RANGE.get();
+        boolean truncated = BallisticSolver.beyondMaxRange(targetDistance, maxRange);
+        double solveDist = truncated ? maxRange : targetDistance;
+        double solveVert = truncated ? 0.0 : targetVertical;
+
         // 运行解算（会自动记录性能统计到 BallisticSolverStats）。
         // 经 BallisticDispatcher 分发：实验炮走网络，其余炮走 BallisticSolver。
         // 依据：docs/策划决策/武器/火炮-神经网络弹道解算实验方案.md 4.2
         BallisticSolver.Result result = com.piranport.combat.neural.BallisticDispatcher.solve(
-                weapon, velocity, drag, mcGravity, targetDistance, targetVertical, 0.0,
+                weapon, velocity, drag, mcGravity, solveDist, solveVert, 0.0,
                 BallisticSolver.UNRESTRICTED_MIN_ANGLE,
                 Math.toRadians(effectiveData.maxElevation()));
         lastSolvedAngle = result.angle();
-        lastOutOfRange = result.outOfRange();
+        lastOutOfRange = truncated || result.outOfRange();
         // 落弹时间由仰角回代积分得到（与解算器同一物理模型）。
         // 超射程时不给出读数：回退角是最大射程角，弹丸到不了目标水平距离。
         double flightTicks = lastOutOfRange
                 ? Double.NaN
                 : BallisticSolver.flightTimeTicks(velocity, lastSolvedAngle, drag, mcGravity,
-                        targetDistance, 0.0);
+                        solveDist, 0.0);
         lastFlightSeconds = Double.isFinite(flightTicks) ? flightTicks / 20.0 : Double.NaN;
         hasSolved = true;
     }

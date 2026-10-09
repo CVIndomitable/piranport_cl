@@ -14,6 +14,20 @@ public final class ModArtilleryConfig {
     public static final TerminalConfigValue<Double> BALLISTIC_NO_SOLUTION_THRESHOLD =
             TerminalConfigValue.number("artillery", "artillery", "ballistic_no_solution_threshold", 5.0, 0.5, 50.0);
 
+    /**
+     * 火炮最大射程截断（格），终端显示名「最大射程」。
+     *
+     * <p>语义：目标水平距离超过此值时，火控不再对目标解算，改把落点钉在最大射程处
+     * （沿目标方向、与发射点同高）解算发射，并向玩家提示「超过射程」。
+     * 注意不是「按最大仰角打」——最大仰角（物理最大射程角）会把弹丸送过配置上限。
+     *
+     * <p>默认 256 = 客户端火控最大渲染距离 {@code FireControlVisualRenderer.MAX_RENDER_DISTANCE}，
+     * 高于现役火炮的物理最大射程（初速 2.5~5.0 时约 65~185 格），因此默认等价于「不截断」、
+     * 不改变现有手感；策划调小该值才会真正收紧射程。
+     */
+    public static final TerminalConfigValue<Double> ARTILLERY_MAX_RANGE =
+            TerminalConfigValue.number("artillery", "artillery", "max_range", 256.0, 8.0, 512.0);
+
 
     public static final TerminalConfigValue<Boolean> PERF_CACHE_SOLUTIONS =
             TerminalConfigValue.bool("artillery", "artillery", "perf_cache_solutions", true);

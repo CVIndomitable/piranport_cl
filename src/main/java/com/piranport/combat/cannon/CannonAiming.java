@@ -27,8 +27,12 @@ final class CannonAiming {
         if (aim instanceof CannonAim.MaxRange) {
             float gravity = getProjectileGravity(weapon, player.level());
             double mcGravity = gravity > 0f ? gravity / 196.0 : BallisticSolver.DEFAULT_GRAVITY;
-            double pitch = BallisticSolver.calculateMaxRangeAngle(velocity,
-                    getProjectileDrag(weapon, player.level()), mcGravity,
+            // 「最大射程射击」现在按终端参数「最大射程」取落点，而不是物理最大射程角：
+            // 参数一旦调小，最大射程模式也跟着收紧（截断语义），不再拉满仰角把弹丸打过上限。
+            // 参数超过物理射程时 truncatedAngle 内部自然回退为物理最大射程角，与旧行为一致。
+            double configuredRange = com.piranport.config.ModArtilleryConfig.ARTILLERY_MAX_RANGE.get();
+            double pitch = BallisticSolver.truncatedAngle(velocity,
+                    getProjectileDrag(weapon, player.level()), mcGravity, configuredRange,
                     BallisticSolver.UNRESTRICTED_MIN_ANGLE, getMaxElevationRadians(weapon, player.level()));
             double yaw = Math.toRadians(player.getYRot());
             double cosPitch = Math.cos(pitch);
@@ -76,18 +80,31 @@ final class CannonAiming {
         float drag = getProjectileDrag(weapon, player.level());
         float gravity = getProjectileGravity(weapon, player.level());
         double mcGravity = gravity > 0f ? gravity / 196.0 : BallisticSolver.DEFAULT_GRAVITY;
-        // 经 BallisticDispatcher 分发：实验炮走网络，其余炮走 BallisticSolver。
-        // 依据：docs/策划决策/武器/火炮-神经网络弹道解算实验方案.md 4.2
-        BallisticSolver.Result result = com.piranport.combat.neural.BallisticDispatcher.solve(
-                weapon, velocity, drag, mcGravity,
-                horizontalDist, verticalDist, 0.0,
-                BallisticSolver.UNRESTRICTED_MIN_ANGLE,
-                getMaxElevationRadians(weapon, player.level()));
-        double optimalPitch = result.angle();
+        double maxElevation = getMaxElevationRadians(weapon, player.level());
 
-        if (result.outOfRange()) {
+        // 射程截断（2026-10-09 项目所有者）：目标水平距离超过终端「最大射程」时，不再对目标解算
+        // （目标不可达，解算没有意义），改把落点钉在最大射程点（沿目标方向、与炮口同高）求解，
+        // 并向玩家提示「超过射程」。WHY 不是最大仰角：最大射程角会把弹丸送到物理射程上限，
+        // 越过策划设定的截断线，与「截断」语义正好相反。
+        double configuredRange = com.piranport.config.ModArtilleryConfig.ARTILLERY_MAX_RANGE.get();
+        double optimalPitch;
+        if (BallisticSolver.beyondMaxRange(horizontalDist, configuredRange)) {
+            optimalPitch = BallisticSolver.truncatedAngle(velocity, drag, mcGravity, configuredRange,
+                    BallisticSolver.UNRESTRICTED_MIN_ANGLE, maxElevation);
             player.displayClientMessage(
-                    Component.translatable("message.piranport.out_of_range"), true);
+                    Component.translatable("hud.piranport.fire_control.out_of_range"), true);
+        } else {
+            // 经 BallisticDispatcher 分发：实验炮走网络，其余炮走 BallisticSolver。
+            // 依据：docs/策划决策/武器/火炮-神经网络弹道解算实验方案.md 4.2
+            BallisticSolver.Result result = com.piranport.combat.neural.BallisticDispatcher.solve(
+                    weapon, velocity, drag, mcGravity,
+                    horizontalDist, verticalDist, 0.0,
+                    BallisticSolver.UNRESTRICTED_MIN_ANGLE, maxElevation);
+            optimalPitch = result.angle();
+            if (result.outOfRange()) {
+                player.displayClientMessage(
+                        Component.translatable("message.piranport.out_of_range"), true);
+            }
         }
 
         // 将服务端解算统计发送给客户端

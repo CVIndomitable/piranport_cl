@@ -97,7 +97,6 @@ public class ModItems {
     public static final DeferredItem<Item> RAW_ALUMINUM = MaterialItems.RAW_ALUMINUM;
     public static final DeferredItem<Item> ALUMINUM_INGOT = MaterialItems.ALUMINUM_INGOT;
     public static final DeferredItem<Item> SALT = MaterialItems.SALT;
-    public static final DeferredItem<Item> DIAMOND = MaterialItems.DIAMOND;
 
     // ===== Ship Cores (extracted to WeaponItems) =====
     public static final DeferredItem<ShipCoreItem> SMALL_SHIP_CORE = WeaponItems.SMALL_SHIP_CORE;
@@ -149,9 +148,6 @@ public class ModItems {
     public static final DeferredItem<TorpedoItem> MAGNETIC_TORPEDO_533MM = AmmoItems.MAGNETIC_TORPEDO_533MM;
     public static final DeferredItem<TorpedoItem> WIRE_GUIDED_TORPEDO_533MM = AmmoItems.WIRE_GUIDED_TORPEDO_533MM;
     public static final DeferredItem<TorpedoItem> ACOUSTIC_TORPEDO_533MM = AmmoItems.ACOUSTIC_TORPEDO_533MM;
-
-    // Phase 27: oxygen torpedo (extracted to AmmoItems)
-    public static final DeferredItem<TorpedoItem> OXYGEN_TORPEDO_610MM = AmmoItems.OXYGEN_TORPEDO_610MM;
 
     // ===== Torpedo Ammo (named variants) (extracted to AmmoItems) =====
     public static final DeferredItem<TorpedoItem> TORPEDO_533MM_G7A = AmmoItems.TORPEDO_533MM_G7A;

@@ -86,12 +86,6 @@ public final class AmmoItems {
             ITEMS.register("acoustic_torpedo_533mm",
                     () -> new TorpedoItem(new Item.Properties().stacksTo(16), 533, false, false, true, "acoustic_torpedo_533mm"));
 
-    // Phase 27：策划 §3.3 氧气鱼雷（95 式氧气鱼雷原型）
-    public static final DeferredItem<TorpedoItem> OXYGEN_TORPEDO_610MM =
-            ITEMS.register("oxygen_torpedo_610mm",
-                    () -> new TorpedoItem(new Item.Properties().stacksTo(16),
-                            610, 32f, 30, 1.0f, false, false, false, true, "oxygen_torpedo_610mm"));
-
     // ===== Torpedo Ammo (named variants) =====
     public static final DeferredItem<TorpedoItem> TORPEDO_533MM_G7A =
             ITEMS.register("torpedo_533mm_g7a",

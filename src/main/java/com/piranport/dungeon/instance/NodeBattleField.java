@@ -224,6 +224,7 @@ public final class NodeBattleField {
                                              NodeData node) {
         List<Entity> spawned = new ArrayList<>();
         if (node.enemies() == null) {
+            TerrainGenerationProgress.onEnemiesSpawned(instance, node, 0, null);
             spawnCompletionPortal(dungeonLevel, instance, node.nodeId());
             return spawned;
         }
@@ -231,6 +232,7 @@ public final class NodeBattleField {
         EnemySetData enemySet = DungeonRegistry.INSTANCE.getEnemySet(node.enemies());
         if (enemySet == null) {
             PiranPort.LOGGER.warn("Enemy set not found: {} — spawning completion portal", node.enemies());
+            TerrainGenerationProgress.onEnemiesSpawned(instance, node, 0, node.enemies());
             spawnCompletionPortal(dungeonLevel, instance, node.nodeId());
             return spawned;
         }
@@ -297,6 +299,8 @@ public final class NodeBattleField {
 
         com.piranport.dungeon.saved.DungeonObjectiveData.get(dungeonLevel)
                 .register(instance.getInstanceId(), node.nodeId(), spawned);
+        TerrainGenerationProgress.onEnemiesSpawned(instance, node, spawned.size(),
+                enemySet.enemySetId());
         return spawned;
     }
 

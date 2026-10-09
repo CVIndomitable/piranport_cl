@@ -49,6 +49,8 @@ public final class TerrainGenerationPipeline {
         int granted = budget.reserve(level.getServer().getTickCount(), BLOCKS_PER_TICK);
         int used = advance(level, instance, node, granted);
         budget.release(granted - used);
+        // 唯一的对外推进入口：在此统一播报后台建造进度（节流在 TerrainGenerationProgress 内）。
+        TerrainGenerationProgress.report(level, instance, node);
         return isReady(level, instance, node);
     }
 

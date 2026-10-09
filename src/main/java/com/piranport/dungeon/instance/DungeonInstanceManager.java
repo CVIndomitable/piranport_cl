@@ -96,8 +96,8 @@ public class DungeonInstanceManager extends SavedData {
         instance.setLecternDimension(lecternDimension);
         instances.put(instanceId, instance);
         setDirty();
-        PiranPort.LOGGER.info("Created dungeon instance {} for stage {} (index {}) on lectern insert",
-                instanceId, stageId, index);
+        // 副本/17 §3.1：插钥匙即建实例并开始分帧建造，这里播报「阶段 0」供后台确认建造起点。
+        TerrainGenerationProgress.onInstanceCreated(instanceId, stageId, index);
         return instance;
     }
 

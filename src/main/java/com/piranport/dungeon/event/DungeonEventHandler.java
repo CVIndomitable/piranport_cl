@@ -29,6 +29,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.AddReloadListenerEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.neoforge.event.server.ServerStartedEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 
@@ -113,6 +114,21 @@ public class DungeonEventHandler {
     @SubscribeEvent
     public static void onAddReloadListener(AddReloadListenerEvent event) {
         event.addListener(new com.piranport.dungeon.data.DungeonDataLoader());
+    }
+
+    /**
+     * 副本维度由数据包（{@code data/piranport/dimension/dungeon.json}）定义，随服务器启动一次性构造/加载，
+     * 不是每个实例各建一个维度。这里打一行确认维度可用，避免把「实例建造」误当成「构造维度」。
+     */
+    @SubscribeEvent
+    public static void onServerStarted(ServerStartedEvent event) {
+        if (getDungeonLevel(event.getServer()) == null) {
+            PiranPort.LOGGER.warn("[副本生成] 维度 {} 未加载：副本实例将无法建造，请检查数据包 dimension 定义",
+                    DUNGEON_DIMENSION.location());
+        } else {
+            PiranPort.LOGGER.info("[副本生成] 维度 {} 已构造完成（服务器启动随数据包加载，非每实例新建）",
+                    DUNGEON_DIMENSION.location());
+        }
     }
 
     @SubscribeEvent

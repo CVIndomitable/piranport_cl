@@ -485,7 +485,6 @@ public final class FoodItems {
     public static final DeferredItem<Item> SLICED_SALAMI       = ITEMS.registerSimpleItem("sliced_salami");
     public static final DeferredItem<Item> ALMOND              = ITEMS.registerSimpleItem("almond");
     public static final DeferredItem<Item> ALMOND_POWDER       = ITEMS.registerSimpleItem("almond_powder");
-    public static final DeferredItem<Item> WOODEN_BOWL         = ITEMS.registerSimpleItem("wooden_bowl");
     public static final DeferredItem<Item> WOODEN_BARREL       = ITEMS.registerSimpleItem("wooden_barrel");
 
     // ===== Phase 28: Intermediate Products =====

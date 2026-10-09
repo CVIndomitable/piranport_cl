@@ -1,7 +1,7 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "piranport:item/single_small_gun_empty"
+    "layer0": "piranport:item/british_single_6inch_gun_empty"
   },
   "overrides": [
     {

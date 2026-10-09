@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "piranport:item/us_twin_5inch_gun"
+    "layer0": "piranport:item/us_twin_5inch_dp_gun"
   }
 }

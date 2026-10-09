@@ -97,6 +97,7 @@
 - **结语**：`DungeonResultPayload.ending` 由服务端下发。
 - **记录点光柱**：`DungeonCheckpointBeacon` 用 END_ROD 粒子柱，不新增贴图。
 - **迷路的运输舰**（`entity.piranport.lost_transport`）：第二章起每波 10% 把排序后末位（非旗舰）替换为补给舰 + `piranport_lost_transport` 标签；死亡只掉 1 个战利品（`hentai_trophy`），跳过全部原掉落。
+- **地形生成预算**：`TerrainGenerationPipeline.blocksPerTick()`（原硬编码常量 `BLOCKS_PER_TICK`）走终端参数 `global.terrain.blocks_per_tick`（默认 8192，`ModEquipmentConfig.TERRAIN_BLOCKS_PER_TICK`），生成慢时可临时调大（代价是 TPS）。生成进度按阶段播报到服务端日志（`TerrainGenerationProgress`）。基底 `depthAt` 按列缓存、共享基底不再重复写 POI（P0 优化，行为等价）。
 
 ### 副本进入链路（副本/00 §2.2/§3.1、副本/17 §三）
 - **书台即入口**：入口传送门已作废，`DungeonPortalBlockEntity` 不再调 `DungeonEntryService.enter`，只提示去书台；传送门方块注册保留（兼容旧存档）。

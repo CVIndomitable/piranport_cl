@@ -18,7 +18,7 @@ public final class TerrainWorkBudget extends SavedData {
     public int reserve(long currentTick, int requested) {
         if (tick != currentTick) {
             tick = currentTick;
-            remaining = TerrainGenerationPipeline.BLOCKS_PER_TICK;
+            remaining = TerrainGenerationPipeline.blocksPerTick();
         }
         int reserved = Math.min(remaining, Math.max(0, requested));
         remaining -= reserved;
@@ -26,7 +26,7 @@ public final class TerrainWorkBudget extends SavedData {
     }
 
     public void release(int unused) {
-        remaining = Math.min(TerrainGenerationPipeline.BLOCKS_PER_TICK, remaining + Math.max(0, unused));
+        remaining = Math.min(TerrainGenerationPipeline.blocksPerTick(), remaining + Math.max(0, unused));
     }
 
     @Override

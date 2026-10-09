@@ -811,4 +811,19 @@ public final class ModEquipmentConfig {
     /** 环境破坏影响半径（格）。默认 24。 */
     public static final TerminalConfigValue<Integer> BOSS_ANTI_STUCK_RADIUS =
             TerminalConfigValue.integer("dungeon", "boss_anti_stuck", "radius", 24, 1, 256);
+
+    // ---- 地形生成（target=terrain）----
+    /**
+     * 每 tick 允许写入的地形方块数上限（分帧预算）。默认 8192。
+     *
+     * <p>WHY 进终端：地形是 flat void 手工回填，单实例约 600 万方块，全主线程分帧写；
+     * 该值直接决定书台「建造中」与进本等待的时长（调大更快，但单 tick 卡顿更重），
+     * 需要策划按手感实测调整。</p>
+     *
+     * <p>注意 property 命名避开了 {@code TerminalParameterSpec} 的线性速度 / tick 时长启发式
+     * （既不叫 speed，也不以 _cooldown 结尾、不是 reload_time/fire_cooldown/salvo_interval），
+     * 因此终端按原值显示，不会被 ×20 或 ×0.05 错误换算。</p>
+     */
+    public static final TerminalConfigValue<Integer> TERRAIN_BLOCKS_PER_TICK =
+            TerminalConfigValue.integer("dungeon", "terrain", "blocks_per_tick", 8_192, 1, 1_048_576);
 }

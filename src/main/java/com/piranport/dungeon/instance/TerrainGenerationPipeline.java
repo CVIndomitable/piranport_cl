@@ -1,6 +1,7 @@
 package com.piranport.dungeon.instance;
 
 import com.piranport.PiranPort;
+import com.piranport.config.ModEquipmentConfig;
 import com.piranport.dungeon.DungeonConstants;
 import com.piranport.dungeon.data.CheckpointData;
 import com.piranport.dungeon.data.DungeonRegistry;
@@ -15,17 +16,19 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.saveddata.SavedData;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 /**
  * 副本战场的可恢复分帧生成器。
  *
- * <p>每次 tick 最多写入 {@value #BLOCKS_PER_TICK} 个方块。基底按列深度写入海水和海床，
+ * <p>每次 tick 最多写入 {@link #blocksPerTick()} 个方块（默认 8192，走调试终端
+ * {@code global.terrain.blocks_per_tick} 可调）。基底按列深度写入海水和海床，
  * 特征、POI、边界分阶段处理；避免原先一次调用把 128×128 节点全部同步写完。</p>
  */
 public final class TerrainGenerationPipeline {
-    public static final int BLOCKS_PER_TICK = 8_192;
     public static final int MAP_SIZE = DungeonConstants.MAP_USABLE_SIZE;
     public static final int MAX_DEPTH = 16;
     private static final int SEA = DungeonConstants.SEA_LEVEL;
@@ -33,20 +36,56 @@ public final class TerrainGenerationPipeline {
 
     private TerrainGenerationPipeline() {}
 
+    /** 每 tick 写入上限；默认 8192，可由调试终端 {@code global.terrain.blocks_per_tick} 调整。 */
+    public static int blocksPerTick() {
+        return ModEquipmentConfig.TERRAIN_BLOCKS_PER_TICK.get();
+    }
+
+    /**
+     * 取（或创建）某实例 / 某节点的生成游标。
+     *
+     * <p>WHY 缓存键串：本方法每 tick 会被调用近十次（{@link #tick}、{@link #isReady}、
+     * {@link #queuedBlocks} 及进度播报），每次都要做字符串拼接 + {@link UUID#nameUUIDFromBytes}（MD5）。
+     * 键串只由（实例 ID，节点 ID）决定、与存档内容无关，是纯函数，因此可以长期缓存，命中后零开销。</p>
+     *
+     * <p>WHY 只缓存键串、不缓存 {@link TerrainGenerationState} 句柄：SavedData 在维度卸载 / 重载后
+     * 会换成新的对象，缓存句柄有「写进已作废对象、副本进度丢失」的串档风险。这里始终走
+     * {@code getDataStorage().computeIfAbsent} 取当前有效句柄，只把可以安全复用的键串计算省掉。</p>
+     */
     public static TerrainGenerationState state(ServerLevel level, DungeonInstance instance, NodeData node) {
+        StateKey cacheKey = new StateKey(instance.getInstanceId(), node == null ? null : node.nodeId());
+        String key = KEY_CACHE.get(cacheKey);
+        if (key == null) {
+            key = buildKey(instance, node);
+            // 防御性上限：键串无状态、可无损重算，异常增长时直接清空即可，不会影响存档。
+            if (KEY_CACHE.size() >= KEY_CACHE_LIMIT) KEY_CACHE.clear();
+            KEY_CACHE.put(cacheKey, key);
+        }
+        return level.getDataStorage().computeIfAbsent(FACTORY, key);
+    }
+
+    private static String buildKey(DungeonInstance instance, NodeData node) {
         String key = "piranport_terrain_" + instance.getInstanceId().toString().replace('-', '_');
         if (node != null) {
             key += "_node_" + UUID.nameUUIDFromBytes(node.nodeId().getBytes(StandardCharsets.UTF_8))
                     .toString().replace('-', '_');
         }
-        return level.getDataStorage().computeIfAbsent(
-                new SavedData.Factory<>(TerrainGenerationState::new, TerrainGenerationState::load, null), key);
+        return key;
     }
+
+    /** (实例 ID, 节点 ID) 缓存键；nodeId 为 null 表示共享基底。 */
+    private record StateKey(UUID instanceId, String nodeId) {}
+
+    /** SavedData 工厂无状态，提升为常量以免每次 state() 都新建一个对象。 */
+    private static final SavedData.Factory<TerrainGenerationState> FACTORY =
+            new SavedData.Factory<>(TerrainGenerationState::new, TerrainGenerationState::load, null);
+    private static final int KEY_CACHE_LIMIT = 4096;
+    private static final Map<StateKey, String> KEY_CACHE = new ConcurrentHashMap<>();
 
     /** 开始或继续生成；返回 true 仅表示本节点全部方块已准备好。 */
     public static boolean tick(ServerLevel level, DungeonInstance instance, NodeData node) {
         TerrainWorkBudget budget = TerrainWorkBudget.get(level);
-        int granted = budget.reserve(level.getServer().getTickCount(), BLOCKS_PER_TICK);
+        int granted = budget.reserve(level.getServer().getTickCount(), blocksPerTick());
         int used = advance(level, instance, node, granted);
         budget.release(granted - used);
         // 唯一的对外推进入口：在此统一播报后台建造进度（节流在 TerrainGenerationProgress 内）。
@@ -68,6 +107,14 @@ public final class TerrainGenerationPipeline {
         while (remaining > 0) {
             TerrainGenerationState active = base.phase() == TerrainGenerationState.Phase.READY ? local : base;
             if (active.phase() == TerrainGenerationState.Phase.READY) break;
+            // P0-2：共享基底不写 POI，直接跳过进 BOUNDARY。
+            // WHY 安全：base 与 local 用的是同一个 node、同一份出生点 / 记录点坐标，base 的 POI
+            // 与之后 local 的 POI 写的方块逐块相同（纯重复）；而 local 必定在 isReady 之前跑完
+            // 自己的 POI，出生平台与记录点仍会被写一次，最终世界状态不变，只是少写一遍并更快。
+            if (active == base && active.phase() == TerrainGenerationState.Phase.POI) {
+                active.nextPhase();
+                continue;
+            }
             int used = switch (active.phase()) {
                 case BASE -> processBase(level, active, remaining);
                 case FEATURES -> processFeatures(level, active, remaining);
@@ -110,15 +157,23 @@ public final class TerrainGenerationPipeline {
     private static int processBase(ServerLevel level, TerrainGenerationState state, int budget) {
         long total = (long) MAP_SIZE * MAP_SIZE * (MAX_DEPTH + 1);
         int used = (int) Math.min(total - state.cursor(), budget);
+        // P0-1：同一列（同一 x,z）的 MAX_DEPTH+1 层深度完全相同，depthAt 只需按列算一次。
+        // 本方法分帧执行：游标可从任意 index 起步、跨多次调用，故缓存只在本次批量的连续 index 内
+        // 按列号复用——换列即重算。结果与逐方块调用 depthAt(seed,x,z) 逐位一致（同一 seed + 坐标）。
+        int cachedColumn = -1;
+        int cachedDepth = 0;
         for (int i = 0; i < used; i++) {
             long index = state.cursor() + i;
             int layer = (int) (index % (MAX_DEPTH + 1));
             int column = (int) (index / (MAX_DEPTH + 1));
             int x = column % MAP_SIZE;
             int z = column / MAP_SIZE;
-            int depth = depthAt(state.seed(), x, z);
+            if (column != cachedColumn) {
+                cachedColumn = column;
+                cachedDepth = depthAt(state.seed(), x, z);
+            }
             int y = SEA - MAX_DEPTH + layer;
-            BlockState block = y <= SEA - depth ? Blocks.STONE.defaultBlockState() : Blocks.WATER.defaultBlockState();
+            BlockState block = y <= SEA - cachedDepth ? Blocks.STONE.defaultBlockState() : Blocks.WATER.defaultBlockState();
             level.setBlock(new BlockPos(state.startX() + x, y, state.startZ() + z), block, FLAGS);
         }
         state.advance(used);

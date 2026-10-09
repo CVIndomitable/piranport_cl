@@ -289,7 +289,6 @@ public class ModCreativeTabs {
                         output.accept(ModItems.MILK_ICE_CREAM.get());
                         output.accept(ModItems.EMBRYO_OF_APPLE_PIE.get());
                         output.accept(ModItems.EMBRYO_OF_SALAMI_PIZZA.get());
-                        output.accept(ModItems.WOODEN_BOWL.get());
                         output.accept(ModItems.WOODEN_BARREL.get());
 
                         // 中间品

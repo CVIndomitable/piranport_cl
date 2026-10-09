@@ -676,7 +676,6 @@ public class ModItems {
     public static final DeferredItem<Item> SLICED_SALAMI = FoodItems.SLICED_SALAMI;
     public static final DeferredItem<Item> ALMOND = FoodItems.ALMOND;
     public static final DeferredItem<Item> ALMOND_POWDER = FoodItems.ALMOND_POWDER;
-    public static final DeferredItem<Item> WOODEN_BOWL = FoodItems.WOODEN_BOWL;
     public static final DeferredItem<Item> WOODEN_BARREL = FoodItems.WOODEN_BARREL;
 
     // ===== Phase 28: Intermediate Products (extracted to FoodItems) =====

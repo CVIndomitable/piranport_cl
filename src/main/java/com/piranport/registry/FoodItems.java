@@ -372,14 +372,16 @@ public final class FoodItems {
                             .build())
                     .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 2))));
 
-    /** 鱼雷果汁 — 饥饿 II 180s + 装填加速 II 300s + 抗火 I 300s; 食用后返还玻璃瓶 */
+    /** 鱼雷果汁 — 饥饿 II 180s + 装填加速 II 300s + 抗火 I 300s; 食用后返还玻璃瓶
+     *  可放置为专属模型方块（玻璃杯），一杯一次喝完（servings = 1） */
     public static final DeferredItem<BottleFoodItem> TORPEDO_JUICE = ITEMS.register("torpedo_juice",
             () -> new BottleFoodItem(new Item.Properties()
                     .food(fp(3, 3.8f)
                             .effect(() -> new MobEffectInstance(MobEffects.HUNGER, 3600, 1), 1.0f)
                             .effect(() -> new MobEffectInstance(ModMobEffects.RELOAD_BOOST, 6000, 1), 1.0f)
                             .effect(() -> new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 6000, 0), 1.0f)
-                            .build())));
+                            .build())
+                    .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 1))));
 
     /** 炸鱼天妇罗 — 高速规避 I × 180s; plate × 2 */
     public static final DeferredItem<ModFoodItem> TEMPURA = ITEMS.register("tempura",

@@ -117,9 +117,11 @@ public class PlaceableFoodBlockEntity extends BlockEntity {
 
         remainingServings--;
         if (remainingServings <= 0) {
-            // Drop bowl if bowl container
+            // 容器回收：碗装食物吃完掉碗；鱼雷果汁的玻璃杯吃完掉玻璃瓶（与手持食用一致）
             if (getBlockState().is(ModBlocks.BOWL_FOOD.get())) {
                 Block.popResource(level, worldPosition, new ItemStack(Items.BOWL));
+            } else if (getBlockState().is(ModBlocks.TORPEDO_JUICE.get())) {
+                Block.popResource(level, worldPosition, new ItemStack(Items.GLASS_BOTTLE));
             }
             level.removeBlock(worldPosition, false);
         } else {

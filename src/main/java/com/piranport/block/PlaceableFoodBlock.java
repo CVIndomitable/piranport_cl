@@ -15,6 +15,7 @@ import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
@@ -86,5 +87,20 @@ public class PlaceableFoodBlock extends BaseEntityBlock {
         public static final MapCodec<Toast> CODEC = simpleCodec(Toast::new);
         @Override public MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }
         public Toast(BlockBehaviour.Properties props) { super(Block.box(1, 0, 1, 15, 6, 15), props); }
+    }
+
+    /**
+     * 专属模型食物方块（鱼雷果汁）：模型自带玻璃杯 + 液面 + 杯口斜搭的青柠片。
+     * 碰撞箱拆成"杯体"与"青柠片"两块，避免整块虚拟方框把杯口上方的空气也算进去。
+     */
+    public static class TorpedoJuice extends PlaceableFoodBlock {
+        public static final MapCodec<TorpedoJuice> CODEC = simpleCodec(TorpedoJuice::new);
+        @Override public MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }
+        public TorpedoJuice(BlockBehaviour.Properties props) {
+            super(Shapes.or(
+                    Block.box(4.5, 0, 4.5, 11.5, 10, 11.5),
+                    Block.box(2.0, 8.5, 7.4, 7.0, 13.5, 8.6)
+            ), props);
+        }
     }
 }

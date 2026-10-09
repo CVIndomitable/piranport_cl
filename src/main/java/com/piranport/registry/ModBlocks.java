@@ -265,6 +265,9 @@ public class ModBlocks {
     // 放置时同名方块优先于通用容器，落位逻辑见 ModFoodItem.useOn
     public static final DeferredBlock<PlaceableFoodBlock.Toast> TOAST_BREAD =
             BLOCKS.register("toast_bread", () -> new PlaceableFoodBlock.Toast(foodBlockProps()));
+    // 鱼雷果汁专属食物方块（自带玻璃杯模型），同样走"同名方块优先"落位
+    public static final DeferredBlock<PlaceableFoodBlock.TorpedoJuice> TORPEDO_JUICE =
+            BLOCKS.register("torpedo_juice", () -> new PlaceableFoodBlock.TorpedoJuice(foodBlockProps()));
 
     // ===== Reload Facility =====
     public static final DeferredBlock<ReloadFacilityBlock> RELOAD_FACILITY =

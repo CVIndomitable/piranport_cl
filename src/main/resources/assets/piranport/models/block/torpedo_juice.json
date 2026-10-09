@@ -1,0 +1,54 @@
+{
+  "parent": "block/block",
+  "render_type": "minecraft:translucent",
+  "textures": {
+    "particle": "piranport:block/torpedo_juice_glass_side",
+    "glass_side": "piranport:block/torpedo_juice_glass_side",
+    "glass_top": "piranport:block/torpedo_juice_glass_top",
+    "liquid_side": "piranport:block/torpedo_juice_liquid_side",
+    "liquid_top": "piranport:block/torpedo_juice_liquid_top",
+    "lime_top": "piranport:block/torpedo_juice_lime_top",
+    "lime_side": "piranport:block/torpedo_juice_lime_side"
+  },
+  "elements": [
+    {
+      "name": "liquid",
+      "from": [5, 0.2, 5],
+      "to": [11, 9, 11],
+      "faces": {
+        "up": { "texture": "#liquid_top" },
+        "down": { "texture": "#liquid_side" },
+        "north": { "texture": "#liquid_side" },
+        "south": { "texture": "#liquid_side" },
+        "east": { "texture": "#liquid_side" },
+        "west": { "texture": "#liquid_side" }
+      }
+    },
+    {
+      "name": "glass",
+      "from": [4.5, 0, 4.5],
+      "to": [11.5, 10, 11.5],
+      "faces": {
+        "up": { "texture": "#glass_top" },
+        "down": { "texture": "#glass_side" },
+        "north": { "texture": "#glass_side" },
+        "south": { "texture": "#glass_side" },
+        "east": { "texture": "#glass_side" },
+        "west": { "texture": "#glass_side" }
+      }
+    },
+    {
+      "name": "lime",
+      "from": [2, 8.5, 7.5],
+      "to": [7, 13.5, 8.5],
+      "faces": {
+        "north": { "texture": "#lime_top" },
+        "south": { "texture": "#lime_top" },
+        "up": { "texture": "#lime_side" },
+        "down": { "texture": "#lime_side" },
+        "east": { "texture": "#lime_side" },
+        "west": { "texture": "#lime_side" }
+      }
+    }
+  ]
+}

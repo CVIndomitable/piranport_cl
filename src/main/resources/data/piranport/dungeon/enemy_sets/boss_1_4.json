@@ -1,11 +1,21 @@
 {
   "enemy_set_id": "boss_1_4",
   "spawn_list": [
-    { "entity": "minecraft:husk", "count": 2 },
-    { "entity": "minecraft:zombie", "count": 3 }
+    {
+      "entity": "piranport:deep_ocean_heavy_cruiser",
+      "count": 1
+    },
+    {
+      "entity": "piranport:deep_ocean_light_cruiser",
+      "count": 1
+    },
+    {
+      "entity": "piranport:deep_ocean_destroyer",
+      "count": 2
+    }
   ],
   "flagship": {
-    "entity": "minecraft:wither_skeleton",
+    "entity": "piranport:deep_ocean_battleship",
     "count": 1
   }
 }

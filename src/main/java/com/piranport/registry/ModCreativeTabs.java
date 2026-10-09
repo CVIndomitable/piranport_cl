@@ -128,8 +128,10 @@ public class ModCreativeTabs {
                         output.accept(ModItems.AUTO_CIWS_20MM.get());
                         output.accept(ModItems.AUTO_CIWS_40MM.get());
                         output.accept(ModItems.AUTO_CIWS_76MM.get());
-                        // Sonar
+                        // Sonar — 三档声呐统一放这里；改进型=6-1 关卡奖励，先进型=7-1 关卡奖励
                         output.accept(ModItems.STANDARD_SONAR.get());
+                        output.accept(ModItems.IMPROVED_SONAR.get());
+                        output.accept(ModItems.ADVANCED_SONAR.get());
                         // Radar — 对海 / 对空 / 声纳三种索敌目标各一台
                         output.accept(ModItems.STANDARD_SURFACE_RADAR.get());
                         output.accept(ModItems.STANDARD_AIR_RADAR.get());

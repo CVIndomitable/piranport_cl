@@ -389,6 +389,21 @@ public final class ModEquipmentConfig {
     /** 平飞时对高度差的每 tick 修正比例（0~1）。默认 0.1。 */
     public static final TerminalConfigValue<Double> TORPEDO_BOMBER_ALTITUDE_ADJUST =
             TerminalConfigValue.number("aircraft", "torpedo_bomber_combat", "altitude_adjust", 0.1, 0.0, 1.0);
+    /** 平飞段（低空贴水面接敌段）触发距离：距目标水平距离小于该值时进入平飞段（格）。默认 48.0。 */
+    public static final TerminalConfigValue<Double> TORPEDO_BOMBER_RUN_DISTANCE =
+            TerminalConfigValue.number("aircraft", "torpedo_bomber_combat", "run_distance", 48.0, 0.0, 512.0);
+    /** 平飞段目标高度 = 目标 Y + 该值（格），即贴水面的飞行高度。默认 3.0。 */
+    public static final TerminalConfigValue<Double> TORPEDO_BOMBER_RUN_ALTITUDE =
+            TerminalConfigValue.number("aircraft", "torpedo_bomber_combat", "run_altitude", 3.0, -64.0, 256.0);
+    /** 平飞段速度 = 面板速度 × 该值 × 阶段系数。默认 0.7（比接敌快，体现突入感）。 */
+    public static final TerminalConfigValue<Double> TORPEDO_BOMBER_RUN_SPEED_MULTIPLIER =
+            TerminalConfigValue.number("aircraft", "torpedo_bomber_combat", "run_speed_multiplier", 0.7, 0.0, 5.0);
+    /** 提前量上限（格）：目标速度 × 解算时间外推距离被钳制在该值内，防止脱缰。默认 64.0。 */
+    public static final TerminalConfigValue<Double> TORPEDO_BOMBER_MAX_LEAD =
+            TerminalConfigValue.number("aircraft", "torpedo_bomber_combat", "max_lead", 64.0, 0.0, 1024.0);
+    /** 平飞段超时（tick）：超过仍未到投放点就强制投雷/返航，防卡死。默认 400。 */
+    public static final TerminalConfigValue<Integer> TORPEDO_BOMBER_RUN_TIMEOUT_TICKS =
+            TerminalConfigValue.integer("aircraft", "torpedo_bomber_combat", "run_timeout_ticks", 400, 1, 20000);
 
     // ---- 水平轰炸（tickLevelBomberAttack，target 沿用既有 level_bomber）----
     /** 投弹高度 = 目标 Y + 该值（格）。默认 32.0。 */

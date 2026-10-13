@@ -135,6 +135,12 @@ public class AircraftEntity extends Entity {
     boolean diveCommitted = false;
     @Nullable Vec3 diveTarget = null;
 
+    // 鱼雷机平飞投雷状态
+    // torpedoRunStart 非 null 表示已进入低空平飞段：记录进入时的位置，
+    // 平飞段长度按全局距离而非目标相对距离判定，避免目标移动导致平飞段被拉长/缩短。
+    @Nullable Vec3 torpedoRunStart = null;
+    int torpedoRunTicks = 0;
+
     // 水平轰炸机投弹状态
     boolean levelBombDropped = false;
     @Nullable Vec3 levelRunDirection = null;
@@ -1399,6 +1405,8 @@ public class AircraftEntity extends Entity {
             attackCooldown = 0;
             diveCommitted = false;
             diveTarget = null;
+            torpedoRunStart = null;
+            torpedoRunTicks = 0;
         }
         entityData.set(STATE, newState.ordinal());
         entityData.set(STATE_ID_DATA, stateId(newState));

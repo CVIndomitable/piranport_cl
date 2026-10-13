@@ -332,7 +332,24 @@ public class AircraftCombat {
         }
     }
 
-    /** @see AircraftEntity#tickTorpedoBomberAttack(Player, LivingEntity) */
+    /**
+     * 鱼雷机攻击：接近 → 低空贴水面平飞段 → 到投放点向下投雷。
+     *
+     * <p>阶段划分（用 {@code craft.torpedoRunStart} 区分）：
+     * <ol>
+     *   <li>接近段（torpedoRunStart == null）：保持 approach_altitude 高度飞向目标，
+     *       水平距离 ≤ run_distance 时记录 torpedoRunStart 进入平飞段。</li>
+     *   <li>平飞段：降到 target.Y + run_altitude 贴水面平飞，朝「预测撞击点」直飞。
+     *       每 tick 做提前量解算：鱼雷入水后直线匀速（torpedo_speed），目标匀速直线外推，
+     *       解一元一次 t ≈ 水平距离 / 雷速，预测点 P = T + u·t（u=目标水平速度，
+     *       外推距离钳制在 max_lead 内；目标静止时 u=0，直接瞄当前位置）。</li>
+     *   <li>投放：载机到预测点 P 的水平距离 ≤ release_distance 且高度已降到
+     *       run_altitude 容差内（或平飞超时）时投雷。鱼雷走 airDrop 入水，
+     *       入水方向 = 投放瞬间指向 P 的固定方向，之后直线航行无制导。</li>
+     * </ol>
+     *
+     * @see AircraftEntity#tickTorpedoBomberAttack(Player, LivingEntity)
+     */
     public static void tickTorpedoBomberAttack(AircraftEntity craft, @Nullable Player owner, LivingEntity target) {
         if (craft.remainingAmmo <= 0) {
             if (owner != null && craft.tryAutoResupplyAmmo(owner)) {
@@ -345,20 +362,62 @@ public class AircraftCombat {
         double dx = target.getX() - craft.getX();
         double dz = target.getZ() - craft.getZ();
         double horizDist = Math.sqrt(dx * dx + dz * dz);
-        double approachAlt = ModEquipmentConfig.TORPEDO_BOMBER_APPROACH_ALTITUDE.get();
-        double altitudeDiff = craft.getY() - (target.getY() + approachAlt);
+        double phaseSpeed = craft.phaseSpeedCoefficient();
+        double torpedoSpeed = ModEquipmentConfig.TORPEDO_BOMBER_TORPEDO_SPEED.get();
 
-        // Descend to attack altitude
-        if (altitudeDiff > ModEquipmentConfig.TORPEDO_BOMBER_ALTITUDE_TOLERANCE.get()) {
-            Vec3 descend = new Vec3(dx, target.getY() + approachAlt - craft.getY(), dz).normalize();
-            craft.setDeltaMovement(descend.scale(Math.min(craft.getPanelSpeed()
-                    * ModEquipmentConfig.TORPEDO_BOMBER_DESCEND_SPEED_MULTIPLIER.get()
-                    * craft.phaseSpeedCoefficient(), ModEquipmentConfig.TORPEDO_BOMBER_DESCEND_MAX_SPEED.get())));
-            return;
+        // ---- 提前量解算（平飞段与投放判定共用）----
+        // 一元一次近似：t = 当前水平距离 / 雷速，P = T + u·t。
+        // 鱼雷无制导，这就是投放时交给 TorpedoEntity 的固定入水方向。
+        Vec3 targetVel = target.getDeltaMovement();
+        Vec3 targetVelH = new Vec3(targetVel.x, 0, targetVel.z);
+        double tHit = torpedoSpeed > 0.01 ? horizDist / torpedoSpeed : horizDist / 0.01;
+        Vec3 lead = targetVelH.scale(tHit);
+        double leadLen = lead.length();
+        double maxLead = ModEquipmentConfig.TORPEDO_BOMBER_MAX_LEAD.get();
+        if (leadLen > maxLead) lead = lead.scale(maxLead / leadLen);
+        Vec3 predicted = new Vec3(target.getX(), 0, target.getZ()).add(lead);
+        Vec3 toPredicted = new Vec3(predicted.x - craft.getX(), 0, predicted.z - craft.getZ());
+        double distToPredicted = toPredicted.length();
+
+        // ---- 阶段 1：接近段，保持 approach_altitude 飞向目标 ----
+        if (craft.torpedoRunStart == null) {
+            if (horizDist <= ModEquipmentConfig.TORPEDO_BOMBER_RUN_DISTANCE.get()) {
+                // 进入平飞段
+                craft.torpedoRunStart = craft.position();
+                craft.torpedoRunTicks = 0;
+            } else {
+                double approachAlt = ModEquipmentConfig.TORPEDO_BOMBER_APPROACH_ALTITUDE.get();
+                double altitudeDiff = craft.getY() - (target.getY() + approachAlt);
+                if (altitudeDiff > ModEquipmentConfig.TORPEDO_BOMBER_ALTITUDE_TOLERANCE.get()) {
+                    Vec3 descend = new Vec3(dx, target.getY() + approachAlt - craft.getY(), dz).normalize();
+                    craft.setDeltaMovement(descend.scale(Math.min(craft.getPanelSpeed()
+                            * ModEquipmentConfig.TORPEDO_BOMBER_DESCEND_SPEED_MULTIPLIER.get()
+                            * phaseSpeed, ModEquipmentConfig.TORPEDO_BOMBER_DESCEND_MAX_SPEED.get())));
+                    return;
+                }
+                Vec3 toTarget = new Vec3(dx, 0, dz).normalize().scale(Math.min(craft.getPanelSpeed()
+                        * ModEquipmentConfig.TORPEDO_BOMBER_APPROACH_SPEED_MULTIPLIER.get()
+                        * phaseSpeed, horizDist));
+                double yAdjust = (target.getY() + approachAlt - craft.getY())
+                        * ModEquipmentConfig.TORPEDO_BOMBER_ALTITUDE_ADJUST.get();
+                craft.setDeltaMovement(toTarget.x, yAdjust, toTarget.z);
+                return;
+            }
         }
 
-        if (horizDist < ModEquipmentConfig.TORPEDO_BOMBER_RELEASE_DISTANCE.get() && craft.attackCooldown <= 0) {
-            Vec3 dir = new Vec3(dx, 0, dz).normalize();
+        // ---- 阶段 2：低空贴水面平飞段，朝预测撞击点直飞 ----
+        craft.torpedoRunTicks++;
+        double runAlt = ModEquipmentConfig.TORPEDO_BOMBER_RUN_ALTITUDE.get();
+        double desiredY = target.getY() + runAlt;
+        double runAltDiff = craft.getY() - desiredY;
+        boolean atRunAltitude = runAltDiff <= ModEquipmentConfig.TORPEDO_BOMBER_ALTITUDE_TOLERANCE.get();
+        boolean timeout = craft.torpedoRunTicks > ModEquipmentConfig.TORPEDO_BOMBER_RUN_TIMEOUT_TICKS.get();
+
+        // 投放判据：到预测点的水平距离 ≤ release_distance 且已到贴水面高度；超时强制投。
+        if ((distToPredicted <= ModEquipmentConfig.TORPEDO_BOMBER_RELEASE_DISTANCE.get() && atRunAltitude
+                || timeout)
+                && craft.attackCooldown <= 0 && distToPredicted > 0.01) {
+            Vec3 dir = toPredicted.normalize();
             int toFire = craft.computeSalvoSize(target, craft.getPanelDamage());
             com.piranport.debug.PiranPortDebug.event(
                     "Aircraft TORPEDO_SALVO | entityId={} capacity={} remaining={} firing={} targetHP={}",
@@ -375,7 +434,11 @@ public class AircraftCombat {
                 // 因此不受调试终端的型号航速覆盖影响（玩家发射路径读 TorpedoItem.getSpeed()，
                 // 这里没有型号可查）。这是设计如此，不是漏改 —— 若要让它也受型号覆盖，
                 // 需要先给飞机挂弹定义「所投型号」再按型号取 getSpeed()。
-                Vec3 vel = dir.scale(ModEquipmentConfig.TORPEDO_BOMBER_TORPEDO_SPEED.get())
+                torpedo.setSpeed((float) torpedoSpeed);
+                // 空投下落分支：入水后自动切巡航，方向固定为投放时解算好的 dir（指向预测撞击点），
+                // 之后直线航行直到命中或航程耗尽 —— 无制导。
+                torpedo.setAirDrop(true, dir);
+                Vec3 vel = dir.scale(torpedoSpeed)
                         .add(0, ModEquipmentConfig.TORPEDO_BOMBER_TORPEDO_VERTICAL_SPEED.get(), 0);
                 torpedo.setDeltaMovement(vel);
                 torpedo.setOwner(owner);
@@ -389,12 +452,19 @@ public class AircraftCombat {
             return;
         }
 
-        Vec3 toTarget = new Vec3(dx, 0, dz).normalize().scale(Math.min(craft.getPanelSpeed()
-                * ModEquipmentConfig.TORPEDO_BOMBER_APPROACH_SPEED_MULTIPLIER.get()
-                * craft.phaseSpeedCoefficient(), horizDist));
-        double yAdjust = (target.getY() + approachAlt - craft.getY())
+        // 平飞移动：朝预测点直飞，高度向贴水面收敛
+        double runSpeed = Math.min(craft.getPanelSpeed()
+                * ModEquipmentConfig.TORPEDO_BOMBER_RUN_SPEED_MULTIPLIER.get()
+                * phaseSpeed, Math.max(distToPredicted, 0.1));
+        Vec3 runDir = distToPredicted > 0.01 ? toPredicted.normalize()
+                : (horizDist > 0.01 ? new Vec3(dx, 0, dz).normalize() : new Vec3(0, 0, 1));
+        double yAdjust = (desiredY - craft.getY())
                 * ModEquipmentConfig.TORPEDO_BOMBER_ALTITUDE_ADJUST.get();
-        craft.setDeltaMovement(toTarget.x, yAdjust, toTarget.z);
+        // 高度还差得远时叠加快速下降分量，保证进入平飞段能及时贴到水面
+        if (runAltDiff > ModEquipmentConfig.TORPEDO_BOMBER_ALTITUDE_TOLERANCE.get()) {
+            yAdjust -= Math.min(runAltDiff * 0.2, ModEquipmentConfig.TORPEDO_BOMBER_DESCEND_MAX_SPEED.get());
+        }
+        craft.setDeltaMovement(runDir.x * runSpeed, yAdjust, runDir.z * runSpeed);
     }
 
     // ==== 水平轰炸机投弹参数 ====

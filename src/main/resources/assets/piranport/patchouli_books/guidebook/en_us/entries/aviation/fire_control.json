@@ -7,6 +7,22 @@
     {
       "type": "patchouli:text",
       "text": "piranport.book.aviation.fire_control.p1"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "piranport.book.aviation.fire_control.p2"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "piranport.book.aviation.fire_control.p3"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "piranport.book.aviation.fire_control.p4"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "piranport.book.aviation.fire_control.p5"
     }
   ]
 }

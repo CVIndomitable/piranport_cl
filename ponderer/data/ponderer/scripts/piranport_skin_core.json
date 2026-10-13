@@ -1,0 +1,182 @@
+{
+  "id": "piranport:skin_core",
+  "items": [
+    "piranport:skin_core_4",
+    "piranport:skin_core_18"
+  ],
+  "title": {
+    "zh_cn": "皮兰港：皮肤核心",
+    "en_us": "Piran Port: Skin Core"
+  },
+  "tags": ["piranport", "skin", "cosmetic"],
+  "editable": false,
+  "scenes": [
+    {
+      "id": "apply_skin",
+      "title": {
+        "zh_cn": "潜行右键换肤",
+        "en_us": "Sneak-Click to Apply"
+      },
+      "steps": [
+        {
+          "type": "show_structure",
+          "structure": "ponderer:basic"
+        },
+        {
+          "type": "idle",
+          "duration": 20
+        },
+        {
+          "type": "create_item_entity",
+          "item": "piranport:skin_core_4",
+          "pos": [2, 1, 2]
+        },
+        {
+          "type": "text",
+          "duration": 80,
+          "text": {
+            "zh_cn": "皮肤核心是变身皮肤的载体——大凤、独角兽等各舰娘皮肤各对应一枚核心，物品提示里写着皮肤名。",
+            "en_us": "A Skin Core carries one transformation skin — Taihou, Unicorn and the others each have their own core, named right in the tooltip."
+          },
+          "point": [2.5, 2.2, 2.5],
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 90
+        },
+        {
+          "type": "show_controls",
+          "duration": 80,
+          "point": [2.5, 2.0, 2.5],
+          "direction": "up",
+          "action": "right",
+          "item": "piranport:skin_core_4",
+          "attachKeyFrame": true
+        },
+        {
+          "type": "text",
+          "duration": 80,
+          "text": {
+            "zh_cn": "手持核心潜行 + 右键使用：皮肤立即套用到你的玩家模型上，核心被消耗存进皮肤槽。普通右键不会有反应。",
+            "en_us": "Hold the core and sneak + right-click: the skin applies to your player model at once and the core is stored away. A plain right-click does nothing."
+          },
+          "point": [2.5, 2.6, 2.5],
+          "color": "input",
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 90
+        },
+        {
+          "type": "indicate_success",
+          "blockPos": [2, 1, 2],
+          "attachKeyFrame": true
+        },
+        {
+          "type": "text",
+          "duration": 80,
+          "text": {
+            "zh_cn": "换皮肤不亏：对当前皮肤再用一次同款核心会卸下皮肤并把核心还回来；直接换别的核心时，旧核心自动退回背包。",
+            "en_us": "Skins are never lost: re-using the same core reverts the skin and hands it back, and swapping to a different core returns the old one to your inventory."
+          },
+          "point": [2.5, 1.5, 2.5],
+          "color": "green",
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 90
+        }
+      ]
+    },
+    {
+      "id": "skin_notes",
+      "title": {
+        "zh_cn": "使用注意",
+        "en_us": "Things to Know"
+      },
+      "steps": [
+        {
+          "type": "show_structure",
+          "structure": "ponderer:basic"
+        },
+        {
+          "type": "idle",
+          "duration": 20
+        },
+        {
+          "type": "create_item_entity",
+          "pos": [1.5, 3.0, 2.5],
+          "motion": [0.0, -0.03, 0.0],
+          "count": 1,
+          "item": "piranport:skin_core_4",
+          "attachKeyFrame": true
+        },
+        {
+          "type": "create_item_entity",
+          "pos": [3.5, 3.0, 2.5],
+          "motion": [0.0, -0.03, 0.0],
+          "count": 1,
+          "item": "piranport:skin_core_18",
+          "attachKeyFrame": false
+        },
+        {
+          "type": "text",
+          "duration": 80,
+          "text": {
+            "zh_cn": "皮肤只换外观，不影响舰型数值——速度、装甲、槽位全由舰装核心决定。",
+            "en_us": "Skins are cosmetic only — speed, armor and slots all come from the ship core, never the skin."
+          },
+          "point": [2.5, 3.2, 2.5],
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 90
+        },
+        {
+          "type": "text",
+          "duration": 80,
+          "text": {
+            "zh_cn": "皮肤渲染在你自己的模型上，手臂粗细随账号体型（Steve/Alex）。贴图不匹配时会出现拉伸错位，属于正常现象。",
+            "en_us": "The skin renders on your own model, so arm width follows your account body type (Steve/Alex). Mismatched art can look stretched — that's expected."
+          },
+          "point": [2.5, 2.4, 2.5],
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 90
+        },
+        {
+          "type": "indicate_success",
+          "blockPos": [2, 1, 2],
+          "attachKeyFrame": true
+        },
+        {
+          "type": "text",
+          "duration": 80,
+          "text": {
+            "zh_cn": "同一时刻只能装备一个皮肤。皮肤状态绑定玩家存档，死亡或重进游戏都不会丢。",
+            "en_us": "Only one skin can be active at a time. The active skin is bound to your player data — it survives death and relogs."
+          },
+          "point": [2.5, 1.5, 2.5],
+          "color": "green",
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 90
+        }
+      ]
+    }
+  ]
+}

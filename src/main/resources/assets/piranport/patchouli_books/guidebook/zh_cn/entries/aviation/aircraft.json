@@ -23,6 +23,10 @@
     {
       "type": "patchouli:text",
       "text": "piranport.book.advanced.aircraft_types.p5"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "piranport.book.advanced.aircraft_types.p6"
     }
   ]
 }

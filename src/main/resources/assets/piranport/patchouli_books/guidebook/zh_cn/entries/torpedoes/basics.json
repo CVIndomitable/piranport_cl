@@ -22,6 +22,10 @@
       "type": "patchouli:crafting",
       "recipe": "piranport:quintuple_torpedo_launcher",
       "text": "piranport.book.torpedoes.basics.quint_craft"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "piranport.book.torpedoes.basics.wire"
     }
   ]
 }

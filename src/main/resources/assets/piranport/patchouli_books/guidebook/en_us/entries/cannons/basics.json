@@ -25,6 +25,10 @@
     {
       "type": "patchouli:text",
       "text": "piranport.book.cannons.basics.ops"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "piranport.book.cannons.basics.range"
     }
   ]
 }

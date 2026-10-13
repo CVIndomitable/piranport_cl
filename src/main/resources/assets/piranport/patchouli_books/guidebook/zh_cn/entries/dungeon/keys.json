@@ -1,0 +1,30 @@
+{
+  "name": "piranport.book.dungeon.keys",
+  "category": "piranport:7_dungeon",
+  "icon": "piranport:dungeon_key_ch4",
+  "sortnum": 1,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "piranport.book.dungeon.keys.p1"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "piranport:chapter_key_1",
+      "text": "piranport.book.dungeon.keys.craft_ch1"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "piranport:chapter_key_2",
+      "text": "piranport.book.dungeon.keys.craft_ch2"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "piranport.book.dungeon.keys.p2"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "piranport.book.dungeon.keys.p3"
+    }
+  ]
+}

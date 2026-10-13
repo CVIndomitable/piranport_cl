@@ -1,0 +1,186 @@
+{
+  "id": "piranport:torpedo_manual_reload",
+  "items": [
+    "piranport:quad_torpedo_launcher",
+    "piranport:torpedo_533mm",
+    "piranport:torpedo_reload"
+  ],
+  "title": {
+    "zh_cn": "皮兰港：鱼雷手动装填",
+    "en_us": "Piran Port: Manual Torpedo Reload"
+  },
+  "tags": ["piranport", "torpedo", "reload"],
+  "editable": false,
+  "scenes": [
+    {
+      "id": "manual_load",
+      "title": {
+        "zh_cn": "拖鱼雷到发射器上",
+        "en_us": "Drag Torpedoes onto the Launcher"
+      },
+      "steps": [
+        {
+          "type": "show_structure",
+          "structure": "ponderer:basic"
+        },
+        {
+          "type": "idle",
+          "duration": 20
+        },
+        {
+          "type": "create_item_entity",
+          "pos": [2.5, 2.5, 2.5],
+          "motion": [0.0, -0.03, 0.0],
+          "count": 1,
+          "item": "piranport:quad_torpedo_launcher",
+          "attachKeyFrame": true
+        },
+        {
+          "type": "text",
+          "duration": 80,
+          "text": {
+            "zh_cn": "没有装填设施也能装鱼雷：前提是变身用的舰装核心里装着鱼雷再装填强化件。",
+            "en_us": "No Reload Facility? You can still load torpedoes — as long as your transformed ship core carries a Torpedo Reload enhancement."
+          },
+          "point": [2.5, 2.6, 2.5],
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 90
+        },
+        {
+          "type": "create_item_entity",
+          "pos": [3.5, 3.5, 2.5],
+          "motion": [0.0, -0.03, 0.0],
+          "count": 4,
+          "item": "piranport:torpedo_533mm",
+          "attachKeyFrame": true
+        },
+        {
+          "type": "text",
+          "duration": 90,
+          "text": {
+            "zh_cn": "背包里拿起鱼雷，右键拖到空的发射器上：一次吃满全部发射管，鱼雷口径必须与发射器口径一致。",
+            "en_us": "Pick up torpedoes in the inventory and right-click them onto an empty launcher: it loads every tube at once, and the caliber must match the launcher."
+          },
+          "point": [3.5, 3.4, 2.5],
+          "color": "input",
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 100
+        },
+        {
+          "type": "indicate_success",
+          "blockPos": [2, 1, 2],
+          "attachKeyFrame": true
+        },
+        {
+          "type": "text",
+          "duration": 80,
+          "text": {
+            "zh_cn": "装满的发射器直接可用。没装鱼雷再装填强化件时这个操作无效，只能去装填设施预装。",
+            "en_us": "A full launcher is ready to fire right away. Without the Torpedo Reload enhancement this gesture does nothing — pre-load at a Reload Facility instead."
+          },
+          "point": [2.5, 1.5, 2.5],
+          "color": "green",
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 90
+        }
+      ]
+    },
+    {
+      "id": "reload_rules",
+      "title": {
+        "zh_cn": "满换与半装规则",
+        "en_us": "Full-Swap and Partial-Load Rules"
+      },
+      "steps": [
+        {
+          "type": "show_structure",
+          "structure": "ponderer:basic"
+        },
+        {
+          "type": "idle",
+          "duration": 20
+        },
+        {
+          "type": "create_item_entity",
+          "pos": [2.5, 2.5, 2.5],
+          "motion": [0.0, -0.03, 0.0],
+          "count": 1,
+          "item": "piranport:quad_torpedo_launcher",
+          "attachKeyFrame": true
+        },
+        {
+          "type": "text",
+          "duration": 80,
+          "text": {
+            "zh_cn": "打到一半的发射器拒绝补装——要么射空再装，要么整管换新弹。没有“补几根”这种事。",
+            "en_us": "A half-spent launcher refuses top-ups — fire it dry or swap the whole load. There is no partial reload."
+          },
+          "point": [2.5, 2.6, 2.5],
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 90
+        },
+        {
+          "type": "create_item_entity",
+          "pos": [3.5, 3.5, 2.5],
+          "motion": [0.0, -0.03, 0.0],
+          "count": 4,
+          "item": "piranport:torpedo_533mm_mk17",
+          "attachKeyFrame": true
+        },
+        {
+          "type": "text",
+          "duration": 90,
+          "text": {
+            "zh_cn": "发射器已满时拖入不同型号鱼雷 = 整管换弹：旧鱼雷退回背包，新鱼雷一次装满。换弹也需要足够数量填满全部管。",
+            "en_us": "Dragging a different torpedo type onto a full launcher swaps the whole salvo: the old fish go back to your bag, the new ones fill every tube. You still need enough for a complete load."
+          },
+          "point": [3.5, 3.4, 2.5],
+          "color": "input",
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 100
+        },
+        {
+          "type": "indicate_success",
+          "blockPos": [2, 1, 2],
+          "attachKeyFrame": true
+        },
+        {
+          "type": "text",
+          "duration": 80,
+          "text": {
+            "zh_cn": "同型号再拖会被拒绝（已满）。这套规则和装填设施完全一致——设施是自动化版，手动是随身版。",
+            "en_us": "Re-dragging the same type is refused (already full). Same rules as the Reload Facility — the facility just automates what you can do by hand."
+          },
+          "point": [2.5, 1.5, 2.5],
+          "color": "green",
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 90
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "name": "piranport.book.dungeon.rewards",
+  "category": "piranport:7_dungeon",
+  "icon": "piranport:deploy_medal_ch1",
+  "sortnum": 3,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "piranport.book.dungeon.rewards.p1"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "piranport.book.dungeon.rewards.p2"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "piranport.book.dungeon.rewards.p3"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "piranport.book.dungeon.rewards.p4"
+    }
+  ]
+}

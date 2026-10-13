@@ -1,0 +1,189 @@
+{
+  "id": "piranport:dungeon_lectern_entry",
+  "items": [
+    "piranport:dungeon_lectern",
+    "piranport:dungeon_key_ch1"
+  ],
+  "title": {
+    "zh_cn": "皮兰港：书台进本流程",
+    "en_us": "Piran Port: Lectern Dungeon Entry"
+  },
+  "tags": ["piranport", "dungeon", "lectern"],
+  "editable": false,
+  "scenes": [
+    {
+      "id": "abandoned_portal",
+      "title": {
+        "zh_cn": "野外的废弃传送门",
+        "en_us": "Abandoned Portals in the Wild"
+      },
+      "steps": [
+        {
+          "type": "show_structure",
+          "structure": "ponderer:basic"
+        },
+        {
+          "type": "idle",
+          "duration": 20
+        },
+        {
+          "type": "set_block",
+          "block": "piranport:dungeon_lectern",
+          "blockPos": [2, 1, 2],
+          "attachKeyFrame": true
+        },
+        {
+          "type": "text",
+          "duration": 80,
+          "text": {
+            "zh_cn": "探险时留意海边的废弃传送门——框架底边外侧贴着一座空台面的海域出击书台，旁边箱子常能翻到钥匙碎片。",
+            "en_us": "While exploring, watch the coasts for abandoned portals — an empty Dungeon Lectern hugs the frame's bottom edge, and a nearby chest often holds key fragments."
+          },
+          "point": [2.5, 2.2, 2.5],
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 90
+        },
+        {
+          "type": "create_item_entity",
+          "pos": [2.5, 3.5, 2.5],
+          "motion": [0.0, -0.03, 0.0],
+          "count": 1,
+          "item": "piranport:dungeon_key_ch1",
+          "attachKeyFrame": true
+        },
+        {
+          "type": "show_controls",
+          "duration": 80,
+          "point": [2.5, 1.8, 2.5],
+          "direction": "down",
+          "action": "right",
+          "item": "piranport:dungeon_key_ch1",
+          "attachKeyFrame": false
+        },
+        {
+          "type": "text",
+          "duration": 80,
+          "text": {
+            "zh_cn": "手持副本钥匙右键书台 → 插入。空书台不激活传送门，插钥匙的瞬间门框就开始响应。",
+            "en_us": "Right-click the lectern while holding a Dungeon Key to insert it. An empty lectern never activates the portal — the frame responds the moment a key lands."
+          },
+          "point": [2.5, 2.4, 2.5],
+          "color": "input",
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 90
+        },
+        {
+          "type": "indicate_success",
+          "blockPos": [2, 1, 2],
+          "attachKeyFrame": true
+        },
+        {
+          "type": "text",
+          "duration": 80,
+          "text": {
+            "zh_cn": "钥匙就位后门常开：直接走进开口进本，或右键书台打开出击界面选择续打节点/回起点。",
+            "en_us": "With a key seated the portal stays open — walk straight in, or right-click the lectern to pick a checkpoint or restart from the entry screen."
+          },
+          "point": [2.5, 1.5, 2.5],
+          "color": "green",
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 90
+        }
+      ]
+    },
+    {
+      "id": "lectern_details",
+      "title": {
+        "zh_cn": "书台细节：纹路与撤钥匙",
+        "en_us": "Lectern Details: Glow and Key Withdrawal"
+      },
+      "steps": [
+        {
+          "type": "show_structure",
+          "structure": "ponderer:basic"
+        },
+        {
+          "type": "idle",
+          "duration": 20
+        },
+        {
+          "type": "set_block",
+          "block": "piranport:dungeon_lectern",
+          "blockPos": [2, 1, 2],
+          "attachKeyFrame": true
+        },
+        {
+          "type": "text",
+          "duration": 80,
+          "text": {
+            "zh_cn": "书台纹路即状态灯：白 = 等钥匙，红 = 建造中/副本满员/钥匙无效，绿 = 可进本。右键书台也会弹出对应提示。",
+            "en_us": "The lectern's glow is a status light: white = awaiting key, red = building/full/invalid key, green = ready to enter. Right-clicking shows the same hint as text."
+          },
+          "point": [2.5, 2.2, 2.5],
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 90
+        },
+        {
+          "type": "show_controls",
+          "duration": 80,
+          "point": [2.5, 1.8, 2.5],
+          "direction": "down",
+          "action": "right",
+          "attachKeyFrame": true
+        },
+        {
+          "type": "text",
+          "duration": 80,
+          "text": {
+            "zh_cn": "潜行 + 右键（空手也行）把钥匙撤回背包。副本建造期间钥匙锁定，撤不下来。",
+            "en_us": "Sneak + right-click (even empty-handed) withdraws the key to your inventory. While the instance is building, the key stays locked in."
+          },
+          "point": [2.5, 1.8, 2.5],
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 90
+        },
+        {
+          "type": "indicate_success",
+          "blockPos": [2, 1, 2],
+          "attachKeyFrame": true
+        },
+        {
+          "type": "text",
+          "duration": 80,
+          "text": {
+            "zh_cn": "同一章的钥匙可手工合成：集齐该章钥匙碎片合成正式钥匙；钥匙也能拆解回收碎片换新章。",
+            "en_us": "Chapter keys are craftable — assemble a chapter's key fragments into a working key, or break a key back down into fragments for another chapter."
+          },
+          "point": [2.5, 1.5, 2.5],
+          "color": "green",
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 90
+        }
+      ]
+    }
+  ]
+}

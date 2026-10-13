@@ -21,6 +21,10 @@
       "type": "patchouli:crafting",
       "recipe": "piranport:weapon_workbench",
       "text": "piranport.book.advanced.workbenches.p4"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "piranport.book.arsenal.crafting.blueprint"
     }
   ]
 }

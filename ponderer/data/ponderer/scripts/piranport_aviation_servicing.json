@@ -1,0 +1,183 @@
+{
+  "id": "piranport:aviation_servicing",
+  "items": [
+    "piranport:f4f_wildcat",
+    "piranport:aviation_fuel",
+    "piranport:aerial_bomb",
+    "piranport:aerial_torpedo"
+  ],
+  "title": {
+    "zh_cn": "皮兰港：航空整备",
+    "en_us": "Piran Port: Aircraft Servicing"
+  },
+  "tags": ["piranport", "aviation", "reload"],
+  "editable": false,
+  "scenes": [
+    {
+      "id": "sortie_supplies",
+      "title": {
+        "zh_cn": "出击前备齐补给",
+        "en_us": "Stock Up Before Sortie"
+      },
+      "steps": [
+        {
+          "type": "show_structure",
+          "structure": "ponderer:basic"
+        },
+        {
+          "type": "idle",
+          "duration": 20
+        },
+        {
+          "type": "create_item_entity",
+          "pos": [2.5, 2.5, 2.5],
+          "motion": [0.0, -0.03, 0.0],
+          "count": 1,
+          "item": "piranport:f4f_wildcat",
+          "attachKeyFrame": true
+        },
+        {
+          "type": "text",
+          "duration": 80,
+          "text": {
+            "zh_cn": "飞机放飞前要完成整备：加满航空燃料 + 装好挂载弹药。提示上会红字标出缺油/缺挂载。",
+            "en_us": "An aircraft must be serviced before launch: full aviation fuel plus its ordnance mounted. The tooltip flags fuel/payload shortages in red."
+          },
+          "point": [2.5, 2.6, 2.5],
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 90
+        },
+        {
+          "type": "create_item_entity",
+          "pos": [1.5, 3.5, 2.5],
+          "motion": [0.0, -0.03, 0.0],
+          "count": 1,
+          "item": "piranport:aviation_fuel",
+          "attachKeyFrame": true
+        },
+        {
+          "type": "create_item_entity",
+          "pos": [3.5, 3.5, 2.5],
+          "motion": [0.0, -0.03, 0.0],
+          "count": 1,
+          "item": "piranport:aerial_bomb",
+          "attachKeyFrame": false
+        },
+        {
+          "type": "text",
+          "duration": 90,
+          "text": {
+            "zh_cn": "背包里备好航空燃料和挂载物——轰炸机吃航弹，鱼雷机吃航空鱼雷，战斗机不需要挂载。",
+            "en_us": "Keep aviation fuel and ordnance in your inventory — bombers take aerial bombs, torpedo planes take aerial torpedoes, fighters need no payload."
+          },
+          "point": [2.5, 3.6, 2.5],
+          "color": "input",
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 100
+        },
+        {
+          "type": "indicate_success",
+          "blockPos": [2, 1, 2],
+          "attachKeyFrame": true
+        },
+        {
+          "type": "text",
+          "duration": 80,
+          "text": {
+            "zh_cn": "手持飞机按 R 开始整备读条。缺什么会先提示（缺油/缺弹），补给不齐时不启动读条、不白等。",
+            "en_us": "Hold the aircraft and press R to start the servicing bar. Missing supplies are reported up front — the bar never starts on an empty promise."
+          },
+          "point": [2.5, 1.5, 2.5],
+          "color": "green",
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 90
+        }
+      ]
+    },
+    {
+      "id": "reload_bar",
+      "title": {
+        "zh_cn": "读条结算规则",
+        "en_us": "How the Servicing Bar Resolves"
+      },
+      "steps": [
+        {
+          "type": "show_structure",
+          "structure": "ponderer:basic"
+        },
+        {
+          "type": "idle",
+          "duration": 20
+        },
+        {
+          "type": "create_item_entity",
+          "item": "piranport:f4f_wildcat",
+          "pos": [2, 1, 2]
+        },
+        {
+          "type": "text",
+          "duration": 80,
+          "text": {
+            "zh_cn": "R 键只启动计时——读条走完的那一刻才一次性扣掉 1 份燃料和 1 份挂载物，同时写入出击准备状态。",
+            "en_us": "R only starts the timer — the moment the bar completes it consumes 1 fuel and 1 ordnance in one transaction and marks the plane ready."
+          },
+          "point": [2.5, 2.2, 2.5],
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 90
+        },
+        {
+          "type": "text",
+          "duration": 80,
+          "text": {
+            "zh_cn": "读条期间补给被挪走（丢出/移出背包）会整备失败，读条清空回到未准备状态。已整备完毕再按 R 会提示已完成。",
+            "en_us": "If supplies leave your inventory mid-bar, servicing fails and the bar clears back to unready. Pressing R on a finished plane just says it is already loaded."
+          },
+          "point": [2.5, 2.8, 2.5],
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 90
+        },
+        {
+          "type": "indicate_success",
+          "blockPos": [2, 1, 2],
+          "attachKeyFrame": true
+        },
+        {
+          "type": "text",
+          "duration": 80,
+          "text": {
+            "zh_cn": "整备条和火炮装填条是同一套界面：物品图标上有进度，离开快捷栏会中断。整备好后提示变绿，随时放飞。",
+            "en_us": "Servicing shares the cannon reload UI: progress shows on the item icon, and switching away from the hotbar slot interrupts it. Once done the tooltip turns green — launch any time."
+          },
+          "point": [2.5, 1.5, 2.5],
+          "color": "green",
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 90
+        }
+      ]
+    }
+  ]
+}

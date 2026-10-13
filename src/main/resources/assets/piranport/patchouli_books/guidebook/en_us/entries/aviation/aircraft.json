@@ -15,6 +15,10 @@
     {
       "type": "patchouli:text",
       "text": "piranport.book.aviation.aircraft.recon_craft"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "piranport.book.advanced.aircraft_types.p6"
     }
   ]
 }

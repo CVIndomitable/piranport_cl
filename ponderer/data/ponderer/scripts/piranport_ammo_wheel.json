@@ -1,0 +1,197 @@
+{
+  "id": "piranport:ammo_wheel",
+  "items": [
+    "piranport:single_small_gun",
+    "piranport:small_he_shell",
+    "piranport:small_ap_shell",
+    "piranport:small_vt_shell",
+    "piranport:small_type3_shell"
+  ],
+  "title": {
+    "zh_cn": "皮兰港：弹药轮盘",
+    "en_us": "Piran Port: Ammo Wheel"
+  },
+  "tags": ["piranport", "ammo", "artillery"],
+  "editable": false,
+  "scenes": [
+    {
+      "id": "open_wheel",
+      "title": {
+        "zh_cn": "按住 Tab 打开轮盘",
+        "en_us": "Hold Tab to Open the Wheel"
+      },
+      "steps": [
+        {
+          "type": "show_structure",
+          "structure": "ponderer:basic"
+        },
+        {
+          "type": "idle",
+          "duration": 20
+        },
+        {
+          "type": "create_item_entity",
+          "item": "piranport:single_small_gun",
+          "pos": [2, 1, 2]
+        },
+        {
+          "type": "text",
+          "duration": 80,
+          "text": {
+            "zh_cn": "变身后手持火炮，按住 Tab 键呼出弹药轮盘——轮盘会列出背包里与本炮口径匹配的全部弹种。",
+            "en_us": "While transformed, hold a cannon and press and hold Tab to summon the ammo wheel — it lists every shell in your inventory that fits this gun's caliber."
+          },
+          "point": [2.5, 2.2, 2.5],
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 90
+        },
+        {
+          "type": "create_item_entity",
+          "pos": [1.5, 3.5, 2.5],
+          "motion": [0.0, -0.03, 0.0],
+          "count": 1,
+          "item": "piranport:small_he_shell",
+          "attachKeyFrame": true
+        },
+        {
+          "type": "create_item_entity",
+          "pos": [3.5, 3.5, 2.5],
+          "motion": [0.0, -0.03, 0.0],
+          "count": 1,
+          "item": "piranport:small_ap_shell",
+          "attachKeyFrame": false
+        },
+        {
+          "type": "create_item_entity",
+          "pos": [2.5, 3.5, 1.5],
+          "motion": [0.0, -0.03, 0.0],
+          "count": 1,
+          "item": "piranport:small_vt_shell",
+          "attachKeyFrame": false
+        },
+        {
+          "type": "create_item_entity",
+          "pos": [2.5, 3.5, 3.5],
+          "motion": [0.0, -0.03, 0.0],
+          "count": 1,
+          "item": "piranport:small_type3_shell",
+          "attachKeyFrame": false
+        },
+        {
+          "type": "text",
+          "duration": 90,
+          "text": {
+            "zh_cn": "弹种只有伤害型四种：HE（榴弹）溅射、AP（穿甲弹）破甲、VT（近炸引信）对空、三式弹防空弹幕。",
+            "en_us": "Four damage shell types only: HE for splash, AP for armor, VT for proximity-fuzed air targets, Type-3 for AA barrage."
+          },
+          "point": [2.5, 3.6, 2.5],
+          "color": "input",
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 100
+        },
+        {
+          "type": "indicate_success",
+          "blockPos": [2, 1, 2],
+          "attachKeyFrame": true
+        },
+        {
+          "type": "text",
+          "duration": 80,
+          "text": {
+            "zh_cn": "移动鼠标指向想要的弹种，松开 Tab 即完成切换。切换不收钱不读条，下一轮齐射就用新弹种。",
+            "en_us": "Hover the cursor over the shell you want and release Tab to confirm. Switching is free and instant — the next salvo uses the new type."
+          },
+          "point": [2.5, 1.5, 2.5],
+          "color": "green",
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 90
+        }
+      ]
+    },
+    {
+      "id": "wheel_limits",
+      "title": {
+        "zh_cn": "使用限制",
+        "en_us": "Limitations"
+      },
+      "steps": [
+        {
+          "type": "show_structure",
+          "structure": "ponderer:basic"
+        },
+        {
+          "type": "idle",
+          "duration": 20
+        },
+        {
+          "type": "create_item_entity",
+          "item": "piranport:single_small_gun",
+          "pos": [2, 1, 2]
+        },
+        {
+          "type": "text",
+          "duration": 80,
+          "text": {
+            "zh_cn": "轮盘只在变身舰娘状态下、主手持火炮且不在侦察机视角时可用。空手或手持鱼雷发射器按 Tab 没反应。",
+            "en_us": "The wheel only works while transformed, cannon in main hand, and not in recon view. Empty hand or a torpedo launcher gets no response from Tab."
+          },
+          "point": [2.5, 2.2, 2.5],
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 90
+        },
+        {
+          "type": "text",
+          "duration": 80,
+          "text": {
+            "zh_cn": "小口径炮吃小弹、中口径吃中弹、大口径吃大弹——弹种再大也塞不进小炮，轮盘里不会出现不匹配口径。",
+            "en_us": "Small guns take small shells, medium take medium, large take large. The wheel never offers a caliber your gun can't chamber."
+          },
+          "point": [2.5, 2.8, 2.5],
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 90
+        },
+        {
+          "type": "indicate_success",
+          "blockPos": [2, 1, 2],
+          "attachKeyFrame": true
+        },
+        {
+          "type": "text",
+          "duration": 80,
+          "text": {
+            "zh_cn": "Tab 是默认键位，和其他快捷键冲突时在选项→控制里改绑。",
+            "en_us": "Tab is the default binding — rebind it under Options → Controls if it collides with another key."
+          },
+          "point": [2.5, 1.5, 2.5],
+          "color": "green",
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 90
+        }
+      ]
+    }
+  ]
+}

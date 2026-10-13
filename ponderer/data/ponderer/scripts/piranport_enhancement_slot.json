@@ -1,0 +1,197 @@
+{
+  "id": "piranport:enhancement_slot",
+  "items": [
+    "piranport:medium_ship_core",
+    "piranport:small_armor_plate",
+    "piranport:standard_engine",
+    "piranport:standard_sonar",
+    "piranport:torpedo_reload"
+  ],
+  "title": {
+    "zh_cn": "皮兰港：核心强化槽",
+    "en_us": "Piran Port: Core Enhancement Slots"
+  },
+  "tags": ["piranport", "ship_core", "enhancement"],
+  "editable": false,
+  "scenes": [
+    {
+      "id": "install_enhancement",
+      "title": {
+        "zh_cn": "拖放安装强化件",
+        "en_us": "Drag-and-Drop Installation"
+      },
+      "steps": [
+        {
+          "type": "show_structure",
+          "structure": "ponderer:basic"
+        },
+        {
+          "type": "idle",
+          "duration": 20
+        },
+        {
+          "type": "create_item_entity",
+          "pos": [2.5, 2.5, 2.5],
+          "motion": [0.0, -0.03, 0.0],
+          "count": 1,
+          "item": "piranport:medium_ship_core",
+          "attachKeyFrame": true
+        },
+        {
+          "type": "text",
+          "duration": 80,
+          "text": {
+            "zh_cn": "舰装核心自带强化槽：驱逐 2 格、巡洋 3 格、战列 4 格、潜艇 2 格。安装全部在背包里拖放完成，不需要任何机器。",
+            "en_us": "Every ship core has enhancement slots: destroyer 2, cruiser 3, battleship 4, submarine 2. Everything installs by drag-and-drop inside your inventory — no machine needed."
+          },
+          "point": [2.5, 2.6, 2.5],
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 90
+        },
+        {
+          "type": "create_item_entity",
+          "pos": [1.5, 3.5, 2.5],
+          "motion": [0.0, -0.03, 0.0],
+          "count": 1,
+          "item": "piranport:small_armor_plate",
+          "attachKeyFrame": true
+        },
+        {
+          "type": "create_item_entity",
+          "pos": [3.5, 3.5, 2.5],
+          "motion": [0.0, -0.03, 0.0],
+          "count": 1,
+          "item": "piranport:standard_engine",
+          "attachKeyFrame": false
+        },
+        {
+          "type": "create_item_entity",
+          "pos": [2.5, 3.5, 1.5],
+          "motion": [0.0, -0.03, 0.0],
+          "count": 1,
+          "item": "piranport:standard_sonar",
+          "attachKeyFrame": false
+        },
+        {
+          "type": "create_item_entity",
+          "pos": [2.5, 3.5, 3.5],
+          "motion": [0.0, -0.03, 0.0],
+          "count": 1,
+          "item": "piranport:torpedo_reload",
+          "attachKeyFrame": false
+        },
+        {
+          "type": "text",
+          "duration": 90,
+          "text": {
+            "zh_cn": "打开背包，拿起强化件（装甲板/引擎/声呐/雷达/鱼雷再装填/近防炮）右键点核心——它会被收进第一个空格。",
+            "en_us": "In the inventory, pick up an enhancement (armor plate / engine / sonar / radar / torpedo reload / CIWS) and right-click it onto the core — it drops into the first free slot."
+          },
+          "point": [2.5, 3.6, 2.5],
+          "color": "input",
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 100
+        },
+        {
+          "type": "indicate_success",
+          "blockPos": [2, 1, 2],
+          "attachKeyFrame": true
+        },
+        {
+          "type": "text",
+          "duration": 80,
+          "text": {
+            "zh_cn": "空手右键核心，会把最后装入的强化件取回手上——后进先出。只有白名单装备能进强化槽，其余物品一律拒收。",
+            "en_us": "Right-click the core with an empty cursor to pull the last-installed piece back out — last in, first out. Only whitelisted equipment fits; anything else is refused."
+          },
+          "point": [2.5, 1.5, 2.5],
+          "color": "green",
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 90
+        }
+      ]
+    },
+    {
+      "id": "fuel_drop",
+      "title": {
+        "zh_cn": "顺带一提：燃料也是拖进去",
+        "en_us": "By the Way: Fuel Drops In Too"
+      },
+      "steps": [
+        {
+          "type": "show_structure",
+          "structure": "ponderer:basic"
+        },
+        {
+          "type": "idle",
+          "duration": 20
+        },
+        {
+          "type": "create_item_entity",
+          "pos": [2.5, 2.5, 2.5],
+          "motion": [0.0, -0.03, 0.0],
+          "count": 1,
+          "item": "piranport:medium_ship_core",
+          "attachKeyFrame": true
+        },
+        {
+          "type": "create_item_entity",
+          "pos": [3.5, 3.5, 2.5],
+          "motion": [0.0, -0.03, 0.0],
+          "count": 4,
+          "item": "piranport:fuel",
+          "attachKeyFrame": false
+        },
+        {
+          "type": "text",
+          "duration": 90,
+          "text": {
+            "zh_cn": "燃料不占强化槽：把舰娘燃料（或岩浆桶等炉料）右键拖到核心上，直接灌进油箱直到加满。",
+            "en_us": "Fuel skips the slots entirely: right-click ship fuel (or a lava bucket and other furnace fuels) onto the core to top up the tank."
+          },
+          "point": [3.5, 3.4, 2.5],
+          "color": "input",
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 100
+        },
+        {
+          "type": "indicate_success",
+          "blockPos": [2, 1, 2],
+          "attachKeyFrame": true
+        },
+        {
+          "type": "text",
+          "duration": 80,
+          "text": {
+            "zh_cn": "油箱已满时会发出拒绝音效，不会误吞物品。强化件和燃料共用同一个拖放手势，装什么由物品类型决定。",
+            "en_us": "A full tank plays a refusal sound instead of eating your items. Enhancements and fuel share the same drag gesture — the item type decides where it goes."
+          },
+          "point": [2.5, 1.5, 2.5],
+          "color": "green",
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 90
+        }
+      ]
+    }
+  ]
+}

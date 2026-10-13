@@ -1,0 +1,24 @@
+{
+  "name": "piranport.book.dungeon.nodes",
+  "category": "piranport:7_dungeon",
+  "icon": "piranport:deep_ocean_destroyer_spawn_egg",
+  "sortnum": 2,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "piranport.book.dungeon.nodes.p1"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "piranport.book.dungeon.nodes.p2"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "piranport.book.dungeon.nodes.p3"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "piranport.book.dungeon.nodes.p4"
+    }
+  ]
+}

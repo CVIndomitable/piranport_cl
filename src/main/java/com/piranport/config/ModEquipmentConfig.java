@@ -369,7 +369,7 @@ public final class ModEquipmentConfig {
             TerminalConfigValue.number("aircraft", "torpedo_bomber_combat", "altitude_tolerance", 2.0, 0.0, 64.0);
     /** 投雷距离：目标水平距离小于该值时投雷（格）。默认 6.0。 */
     public static final TerminalConfigValue<Double> TORPEDO_BOMBER_RELEASE_DISTANCE =
-            TerminalConfigValue.number("aircraft", "torpedo_bomber_combat", "release_distance", 6.0, 0.0, 128.0);
+            TerminalConfigValue.number("aircraft", "torpedo_bomber_combat", "release_distance", 10.0, 0.0, 128.0);
     /** 多枚鱼雷的横向偏移间隔（格）。默认 1.2。 */
     public static final TerminalConfigValue<Double> TORPEDO_BOMBER_SPREAD_OFFSET =
             TerminalConfigValue.number("aircraft", "torpedo_bomber_combat", "spread_offset", 1.2, 0.0, 16.0);

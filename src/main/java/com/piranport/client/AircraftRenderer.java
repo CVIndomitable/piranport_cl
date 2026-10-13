@@ -8,10 +8,12 @@ import com.piranport.client.model.F4FModel;
 import com.piranport.entity.AircraftEntity;
 import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.phys.Vec3;
 
 /**
  * Aircraft renderer using 3D entity models. The model and texture are chosen
@@ -60,7 +62,33 @@ public class AircraftRenderer extends EntityRenderer<AircraftEntity> {
         model.renderToBuffer(poseStack, vertexConsumer, packedLight, OverlayTexture.NO_OVERLAY, -1);
 
         poseStack.popPose();
+
+        // 鱼雷机平飞段：画一条机头→预测撞击点的预瞄线。
+        // RenderType.lines() 的顶点在 entity 局部空间（原点在插值后的实体位置），
+        // 所以世界坐标要减去插值实体位置；颜色用半透明白，不遮视野。
+        Vec3 aim = entity.getTorpedoAimPoint();
+        if (aim != null) {
+            double ex = net.minecraft.util.Mth.lerp(partialTick, entity.xo, entity.getX());
+            double ey = net.minecraft.util.Mth.lerp(partialTick, entity.yo, entity.getY());
+            double ez = net.minecraft.util.Mth.lerp(partialTick, entity.zo, entity.getZ());
+            poseStack.pushPose();
+            VertexConsumer line = bufferSource.getBuffer(RenderType.lines());
+            PoseStack.Pose last = poseStack.last();
+            addLineVertex(line, last, 0.0f, 0.5f, 0.0f);
+            addLineVertex(line, last,
+                    (float) (aim.x - ex), (float) (aim.y - ey), (float) (aim.z - ez));
+            poseStack.popPose();
+        }
+
         super.render(entity, entityYaw, partialTick, poseStack, bufferSource, packedLight);
+    }
+
+    private static void addLineVertex(VertexConsumer c, PoseStack.Pose pose,
+                                      float x, float y, float z) {
+        // lines() 需要 normal；方向随便给一个非零向量就行，线段渲染不用光照。
+        c.addVertex(pose.pose(), x, y, z)
+                .setColor(255, 255, 255, 160)
+                .setNormal(pose, 0.0f, 1.0f, 0.0f);
     }
 
     @Override

@@ -103,6 +103,14 @@ public class AircraftEntity extends Entity {
             SynchedEntityData.defineId(AircraftEntity.class, EntityDataSerializers.OPTIONAL_UUID);
     private static final EntityDataAccessor<Integer> WEAPON_SLOT_INDEX =
             SynchedEntityData.defineId(AircraftEntity.class, EntityDataSerializers.INT);
+    // 鱼雷机平飞段预测撞击点，三分量同步到客户端画预瞄线；
+    // 非平飞段全 0 表示无预瞄点（预测点 y=0 无意义，反正不会画到世界原点）。
+    private static final EntityDataAccessor<Float> TORPEDO_AIM_X =
+            SynchedEntityData.defineId(AircraftEntity.class, EntityDataSerializers.FLOAT);
+    private static final EntityDataAccessor<Float> TORPEDO_AIM_Y =
+            SynchedEntityData.defineId(AircraftEntity.class, EntityDataSerializers.FLOAT);
+    private static final EntityDataAccessor<Float> TORPEDO_AIM_Z =
+            SynchedEntityData.defineId(AircraftEntity.class, EntityDataSerializers.FLOAT);
 
     // Saved to NBT
     @Nullable private UUID ownerUUID;
@@ -140,6 +148,9 @@ public class AircraftEntity extends Entity {
     // 平飞段长度按全局距离而非目标相对距离判定，避免目标移动导致平飞段被拉长/缩短。
     @Nullable Vec3 torpedoRunStart = null;
     int torpedoRunTicks = 0;
+    // 平飞段每 tick 解算出的预测撞击点（世界坐标），同步到客户端画预瞄线。
+    // 接近段 / 非平飞段为 null。
+    @Nullable Vec3 torpedoAimPoint = null;
 
     // 水平轰炸机投弹状态
     boolean levelBombDropped = false;
@@ -364,6 +375,9 @@ public class AircraftEntity extends Entity {
         builder.define(AIRCRAFT_DEFINITION_DATA, AircraftDefinitionService.legacyId(AircraftInfo.AircraftType.FIGHTER));
         builder.define(OWNER_ID, Optional.empty());
         builder.define(WEAPON_SLOT_INDEX, -1);
+        builder.define(TORPEDO_AIM_X, 0.0f);
+        builder.define(TORPEDO_AIM_Y, 0.0f);
+        builder.define(TORPEDO_AIM_Z, 0.0f);
     }
 
     /**
@@ -1407,10 +1421,38 @@ public class AircraftEntity extends Entity {
             diveTarget = null;
             torpedoRunStart = null;
             torpedoRunTicks = 0;
+            setTorpedoAimPoint(null);
         }
         entityData.set(STATE, newState.ordinal());
         entityData.set(STATE_ID_DATA, stateId(newState));
         stateTicks = 0;
+    }
+
+    /**
+     * 写入鱼雷机平飞段的预测撞击点，同时刷到同步字段给客户端画预瞄线。
+     * {@code null} 清空（接近段/返航/投放后调用）。
+     */
+    public void setTorpedoAimPoint(@Nullable Vec3 point) {
+        this.torpedoAimPoint = point;
+        if (point == null) {
+            entityData.set(TORPEDO_AIM_X, 0.0f);
+            entityData.set(TORPEDO_AIM_Y, 0.0f);
+            entityData.set(TORPEDO_AIM_Z, 0.0f);
+        } else {
+            entityData.set(TORPEDO_AIM_X, (float) point.x);
+            entityData.set(TORPEDO_AIM_Y, (float) point.y);
+            entityData.set(TORPEDO_AIM_Z, (float) point.z);
+        }
+    }
+
+    /** 客户端读预瞄点；三个分量全 0 视为未设置返回 null。 */
+    @Nullable
+    public Vec3 getTorpedoAimPoint() {
+        float x = entityData.get(TORPEDO_AIM_X);
+        float y = entityData.get(TORPEDO_AIM_Y);
+        float z = entityData.get(TORPEDO_AIM_Z);
+        if (x == 0.0f && y == 0.0f && z == 0.0f) return null;
+        return new Vec3(x, y, z);
     }
 
     private static final FlightState[] FLIGHT_STATE_VALUES = FlightState.values();

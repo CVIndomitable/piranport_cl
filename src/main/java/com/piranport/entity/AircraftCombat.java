@@ -381,6 +381,7 @@ public class AircraftCombat {
 
         // ---- 阶段 1：接近段，保持 approach_altitude 飞向目标 ----
         if (craft.torpedoRunStart == null) {
+            craft.setTorpedoAimPoint(null);
             if (horizDist <= ModEquipmentConfig.TORPEDO_BOMBER_RUN_DISTANCE.get()) {
                 // 进入平飞段
                 craft.torpedoRunStart = craft.position();
@@ -406,6 +407,8 @@ public class AircraftCombat {
         }
 
         // ---- 阶段 2：低空贴水面平飞段，朝预测撞击点直飞 ----
+        // 预测点写到实体上，客户端 renderer 据此画预瞄线。
+        craft.setTorpedoAimPoint(new Vec3(predicted.x, target.getY(), predicted.z));
         craft.torpedoRunTicks++;
         double runAlt = ModEquipmentConfig.TORPEDO_BOMBER_RUN_ALTITUDE.get();
         double desiredY = target.getY() + runAlt;

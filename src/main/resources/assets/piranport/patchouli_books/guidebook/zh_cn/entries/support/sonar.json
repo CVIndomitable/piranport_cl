@@ -1,7 +1,7 @@
 {
   "name": "piranport.book.advanced.sonar",
   "category": "piranport:11_support",
-  "icon": "piranport:sonar",
+  "icon": "piranport:standard_sonar",
   "sortnum": 0,
   "pages": [
     {

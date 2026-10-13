@@ -39,7 +39,7 @@ public class AircraftCombat {
             return;
         }
 
-        boolean canFallback = craft.stateTicks >= 20;
+        boolean canFallback = craft.stateTicks >= ModEquipmentConfig.AIRCRAFT_ATTACK_FALLBACK_TICKS.get();
         switch (attackProfile(craft)) {
             case RECON -> craft.startReturning("recon_no_attack");
             case ROCKET -> {
@@ -173,7 +173,8 @@ public class AircraftCombat {
             BulletEntity bullet = new BulletEntity(craft.level(),
                     craft.getPanelDamage() / ModEquipmentConfig.FIGHTER_BULLET_DAMAGE_DIVISOR.get().floatValue());
             Vec3 dir = toTarget.normalize();
-            bullet.moveTo(craft.getX(), craft.getY() + 0.3, craft.getZ(), bullet.getYRot(), bullet.getXRot());
+            bullet.moveTo(craft.getX(), craft.getY() + ModEquipmentConfig.FIGHTER_BULLET_SPAWN_Y_OFFSET.get(),
+                    craft.getZ(), bullet.getYRot(), bullet.getXRot());
             bullet.setDeltaMovement(dir.scale(ModEquipmentConfig.FIGHTER_BULLET_SPEED.get()));
             bullet.setOwner(owner);
             bullet.setSourceAircraftName(craft.getDisplayName());
@@ -212,7 +213,8 @@ public class AircraftCombat {
                 && altDelta >= ModEquipmentConfig.ROCKET_FIGHTER_WINDOW_ALTITUDE_MIN.get()
                 && altDelta <= ModEquipmentConfig.ROCKET_FIGHTER_WINDOW_ALTITUDE_MAX.get()
                 && craft.attackCooldown <= 0) {
-            Vec3 dir = new Vec3(dx, target.getEyeY() + 0.5 - craft.getY(), dz).normalize();
+            Vec3 dir = new Vec3(dx, target.getEyeY() + ModEquipmentConfig.ROCKET_FIGHTER_AIM_Y_OFFSET.get()
+                    - craft.getY(), dz).normalize();
             // 保留 float 乘法，保证默认 1.2 时与下沉前 1.2f 逐字节一致。
             float rocketDamage = craft.getPanelDamage()
                     * ModEquipmentConfig.ROCKET_FIGHTER_DAMAGE_MULTIPLIER.get().floatValue();
@@ -235,7 +237,8 @@ public class AircraftCombat {
                         rocketDamage, 0f,
                         ModEquipmentConfig.ROCKET_FIGHTER_EXPLOSION_POWER.get().floatValue(),
                         "piranport:rocket_ammo");
-                rocket.moveTo(craft.getX(), craft.getY() + 0.2, craft.getZ(), rocket.getYRot(), rocket.getXRot());
+                rocket.moveTo(craft.getX(), craft.getY() + ModEquipmentConfig.ROCKET_FIGHTER_SPAWN_Y_OFFSET.get(),
+                        craft.getZ(), rocket.getYRot(), rocket.getXRot());
                 rocket.setDeltaMovement(fanDir.x * initSpeed, fanDir.y * initSpeed, fanDir.z * initSpeed);
                 rocket.setOwner(owner);
                 craft.level().addFreshEntity(rocket);
@@ -590,11 +593,12 @@ public class AircraftCombat {
             }
         }
 
-        // Auto-seek: scan for ground targets within 48 blocks
+        // Auto-seek: scan for ground targets within the terminal-configured range
         if (craft.hasEverHadFireControl) return null;
         // 自动索敌必须加敌对过滤：否则鱼、友军、玩家都会被无差别自动开打。
         // 手动火控锁定分支在上方，保持原样不限制（尊重玩家意图）。
-        net.minecraft.world.phys.AABB box = craft.getBoundingBox().inflate(48.0);
+        net.minecraft.world.phys.AABB box = craft.getBoundingBox()
+                .inflate(ModEquipmentConfig.AIRCRAFT_AUTONOMOUS_SEEK_RANGE.get());
         return sl.getEntitiesOfClass(LivingEntity.class, box,
                         e -> e.isAlive() && e != owner
                                 && com.piranport.combat.CombatTargeting.isHostileTarget(owner, e)
@@ -633,7 +637,8 @@ public class AircraftCombat {
         }
 
         // Auto-seek: only enemy aircraft (机枪只能对空)
-        net.minecraft.world.phys.AABB box = craft.getBoundingBox().inflate(48.0);
+        net.minecraft.world.phys.AABB box = craft.getBoundingBox()
+                .inflate(ModEquipmentConfig.AIRCRAFT_AUTONOMOUS_SEEK_RANGE.get());
         // 搜索敌方飞机
         AircraftEntity airTarget = sl.getEntitiesOfClass(AircraftEntity.class, box,
                         e -> e.isAlive() && e != craft

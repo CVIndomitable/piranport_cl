@@ -168,7 +168,7 @@ public class AircraftEntity extends Entity {
     // 侦察区块加载：基于视距的强制加载 + 区块发送
     final java.util.Set<Long> reconForcedChunks = new java.util.HashSet<>();
     final java.util.Set<Long> reconPendingSend = new java.util.HashSet<>();
-    private static final int RECON_CHUNK_SEND_RATE = 16; // max chunks to send per tick
+    // 每 tick 推送区块数已下沉到调试终端 global.recon.chunk_send_rate（ModEquipmentConfig）
 
     // Phase 33: aircraft health (persisted to NBT)
     int aircraftHealth = 20;
@@ -178,10 +178,9 @@ public class AircraftEntity extends Entity {
     private int reconCacheTick = 0;
 
     // 侦察地图槽缓存：上次扫描时拥有者背包中持有 MapItem 的槽位索引
-    // Full-inventory scan (41 slots) is deferred to once per RECON_MAP_REFRESH_TICKS.
+    // 全背包重扫间隔已下沉到调试终端 global.recon.map_refresh_ticks（ModEquipmentConfig）
     @Nullable int[] cachedMapSlots;
-    int mapSlotsRefreshTick = -RECON_MAP_REFRESH_TICKS;
-    private static final int RECON_MAP_REFRESH_TICKS = 100;
+    int mapSlotsRefreshTick = -ModEquipmentConfig.RECON_MAP_REFRESH_TICKS.get();
 
     // 客户端位置插值（防止原始 setPos 跳跃导致的镜头抖动）
     private int clientLerpSteps;
@@ -621,7 +620,8 @@ public class AircraftEntity extends Entity {
         double fwdX = Math.cos(orbitAngle) * fwdSpeed;
         double fwdZ = Math.sin(orbitAngle) * fwdSpeed;
         setDeltaMovement(fwdX, dy > 0 ? rise : -rise, fwdZ);
-        if (stateTicks >= ModEquipmentConfig.AIRCRAFT_LAUNCH_TICKS.get() || Math.abs(dy) < 1.5) {
+        if (stateTicks >= ModEquipmentConfig.AIRCRAFT_LAUNCH_TICKS.get()
+                || Math.abs(dy) < ModEquipmentConfig.AIRCRAFT_LAUNCH_COMPLETE_DY.get()) {
             // RECON goes directly to RECON_ACTIVE; others go to CRUISING
             setState(aircraftType == AircraftInfo.AircraftType.RECON
                     ? FlightState.RECON_ACTIVE : FlightState.CRUISING);
@@ -678,7 +678,7 @@ public class AircraftEntity extends Entity {
             } else {
                 autoSeekDone = true;
                 if (level() instanceof ServerLevel sl) {
-                    AABB box = getBoundingBox().inflate(32.0);
+                    AABB box = getBoundingBox().inflate(ModEquipmentConfig.AIRCRAFT_AUTO_SEEK_RANGE.get());
                     boolean hasNearbyTarget;
                     if (isAsw) {
                         // 自动进入攻击态必须加敌对过滤，否则旁边有鱼/海豚就会自动开打；
@@ -903,14 +903,15 @@ public class AircraftEntity extends Entity {
                 double dy = targetY - getY();
                 double rise = Math.min(panelSpeed * phase, Math.abs(dy));
                 setDeltaMovement(getDeltaMovement().x * 0.5, dy > 0 ? rise : -rise, getDeltaMovement().z * 0.5);
-                if (stateTicks >= ModEquipmentConfig.AIRCRAFT_LAUNCH_TICKS.get() || Math.abs(dy) < 1.5) {
+                if (stateTicks >= ModEquipmentConfig.AIRCRAFT_LAUNCH_TICKS.get()
+                        || Math.abs(dy) < ModEquipmentConfig.AIRCRAFT_LAUNCH_COMPLETE_DY.get()) {
                     setState(FlightState.CRUISING);
                 }
             }
             case CRUISING -> {
                 // Auto-seek players
                 if (level() instanceof ServerLevel sl && (hasBullets || !payloadType.isEmpty())) {
-                    AABB box = getBoundingBox().inflate(48.0);
+                    AABB box = getBoundingBox().inflate(ModEquipmentConfig.AIRCRAFT_AUTONOMOUS_SEEK_RANGE.get());
                     boolean hasTarget = !sl.getEntitiesOfClass(Player.class, box,
                             e -> e.isAlive() && !e.isSpectator()).isEmpty();
                     if (hasTarget) {
@@ -934,7 +935,7 @@ public class AircraftEntity extends Entity {
             case ATTACKING -> {
                 if (remainingAmmo <= 0) { discard(); return; }
                 if (!(level() instanceof ServerLevel sl)) return;
-                AABB box = getBoundingBox().inflate(48.0);
+                AABB box = getBoundingBox().inflate(ModEquipmentConfig.AIRCRAFT_AUTONOMOUS_SEEK_RANGE.get());
                 LivingEntity target = sl.getEntitiesOfClass(Player.class, box,
                                 e -> e.isAlive() && !e.isSpectator())
                         .stream().map(e -> (LivingEntity) e)

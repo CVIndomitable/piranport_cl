@@ -487,6 +487,63 @@ public final class ModEquipmentConfig {
     public static final TerminalConfigValue<Double> AIRCRAFT_MIN_RECON_DISTANCE =
             TerminalConfigValue.number("aircraft", "aircraft_flight", "min_recon_distance", 200.0, 0.0, 8192.0);
 
+    // ===== 舰载机索敌 / 起飞判据 / 攻击兜底（2026-10-13 下沉）=====
+    // WHY：这些原先是 AircraftEntity / AircraftCombat / AircraftAswRecon 里的写死距离与
+    // tick 常量，策划需实时调手感（用户规则）。默认值全部 = 下沉前写死值，行为等价。
+    // 键：global.aircraft.* / global.asw.* / global.recon.* / global.missile.*，
+    // group=aircraft 使其归入终端「航空」分类。
+
+    /** 起飞后首次自动索敌半径（格），玩家所属飞机。默认 32.0。 */
+    public static final TerminalConfigValue<Double> AIRCRAFT_AUTO_SEEK_RANGE =
+            TerminalConfigValue.number("aircraft", "aircraft", "auto_seek_range", 32.0, 0.0, 256.0);
+    /** 攻击态自动索敌 / 自主飞机索敌半径（格）。默认 48.0。
+     *  WHY 与 auto_seek_range 分开：原写死值就是 32 / 48 两档，合并会改变默认行为。 */
+    public static final TerminalConfigValue<Double> AIRCRAFT_AUTONOMOUS_SEEK_RANGE =
+            TerminalConfigValue.number("aircraft", "aircraft", "autonomous_seek_range", 48.0, 0.0, 256.0);
+    /** 攻击态锁不到目标时回退巡航前的宽限（tick）。默认 20。 */
+    public static final TerminalConfigValue<Integer> AIRCRAFT_ATTACK_FALLBACK_TICKS =
+            TerminalConfigValue.integer("aircraft", "aircraft", "attack_fallback_ticks", 20, 1, 400);
+    /** 起飞爬升完成判据：离目标高度差小于该值（格）即视为到位。默认 1.5。 */
+    public static final TerminalConfigValue<Double> AIRCRAFT_LAUNCH_COMPLETE_DY =
+            TerminalConfigValue.number("aircraft", "aircraft", "launch_complete_dy", 1.5, 0.1, 16.0);
+
+    /** 战斗机子弹出膛点相对载机的高度偏移（格）。默认 0.3。 */
+    public static final TerminalConfigValue<Double> FIGHTER_BULLET_SPAWN_Y_OFFSET =
+            TerminalConfigValue.number("aircraft", "fighter_combat", "bullet_spawn_y_offset", 0.3, -32.0, 32.0);
+    /** 火箭机瞄准时在目标眼位上额外加的高度（格）。默认 0.5。 */
+    public static final TerminalConfigValue<Double> ROCKET_FIGHTER_AIM_Y_OFFSET =
+            TerminalConfigValue.number("aircraft", "rocket_fighter_combat", "aim_y_offset", 0.5, -32.0, 32.0);
+    /** 火箭弹出膛点相对载机的高度偏移（格）。默认 0.2。 */
+    public static final TerminalConfigValue<Double> ROCKET_FIGHTER_SPAWN_Y_OFFSET =
+            TerminalConfigValue.number("aircraft", "rocket_fighter_combat", "rocket_spawn_y_offset", 0.2, -32.0, 32.0);
+
+    // ---- 反潜（target=asw）----
+    /** 反潜机自动索敌半径（格）。默认 32.0。 */
+    public static final TerminalConfigValue<Double> ASW_AUTO_SEEK_RANGE =
+            TerminalConfigValue.number("aircraft", "asw", "auto_seek_range", 32.0, 0.0, 256.0);
+    /** 反潜声呐扫描半径（格）。默认 16.0。 */
+    public static final TerminalConfigValue<Double> ASW_SONAR_RANGE =
+            TerminalConfigValue.number("aircraft", "asw", "sonar_range", 16.0, 0.0, 128.0);
+    /** 反潜声呐单次上报的目标数上限（防爆）。默认 128。 */
+    public static final TerminalConfigValue<Integer> ASW_SONAR_MAX_TARGETS =
+            TerminalConfigValue.integer("aircraft", "asw", "sonar_max_targets", 128, 1, 1024);
+    /** 反潜投弹高度 = 目标 Y + 该值（格）。默认 20.0。 */
+    public static final TerminalConfigValue<Double> ASW_ATTACK_HEIGHT_OFFSET =
+            TerminalConfigValue.number("aircraft", "asw", "attack_height_offset", 20.0, -64.0, 256.0);
+
+    // ---- 侦察机（target=recon）----
+    /** 侦察区块每 tick 最多推送给客户端的数量。默认 16。 */
+    public static final TerminalConfigValue<Integer> RECON_CHUNK_SEND_RATE =
+            TerminalConfigValue.integer("aircraft", "recon", "chunk_send_rate", 16, 1, 256);
+    /** 侦察机全背包地图槽重扫间隔（tick）。默认 100。 */
+    public static final TerminalConfigValue<Integer> RECON_MAP_REFRESH_TICKS =
+            TerminalConfigValue.integer("aircraft", "recon", "map_refresh_ticks", 100, 1, 2000);
+
+    // ---- 导弹（target=missile）----
+    /** 导弹无火控锁定时自动锁定半径（格）。默认 32.0。 */
+    public static final TerminalConfigValue<Double> MISSILE_AUTO_LOCK_RANGE =
+            TerminalConfigValue.number("aircraft", "missile", "auto_lock_range", 32.0, 0.0, 256.0);
+
     public record CIWSConfig(TerminalConfigValue<Double> range, TerminalConfigValue<Integer> interval,
                              TerminalConfigValue<Integer> barrels, TerminalConfigValue<Integer> weight,
                              TerminalConfigValue<Double> damage) {}

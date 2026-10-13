@@ -5,6 +5,7 @@ import com.piranport.component.LoadedAmmo;
 import com.piranport.component.SlotCooldowns;
 import com.piranport.component.WeaponCooldown;
 import com.piranport.combat.CombatTargeting;
+import com.piranport.config.ModEquipmentConfig;
 import com.piranport.combat.TransformationManager;
 import com.piranport.debug.PiranPortDebug;
 import com.piranport.entity.MissileEntity;
@@ -303,9 +304,10 @@ public class MissileFireStrategy {
             final boolean antiAirOnly = launcher.getMissileType() == MissileEntity.MissileType.ANTI_AIR;
             if (aimDir == null) {
                 LivingEntity nearest = null;
-                double bestDist = 32.0;
+                double lockRange = ModEquipmentConfig.MISSILE_AUTO_LOCK_RANGE.get();
+                double bestDist = lockRange;
                 for (LivingEntity mob : level.getEntitiesOfClass(LivingEntity.class,
-                        player.getBoundingBox().inflate(32.0),
+                        player.getBoundingBox().inflate(lockRange),
                         e -> e.isAlive() && e.isPickable() && e instanceof Enemy && !e.isUnderWater())) {
                     if (antiAirOnly) {
                         // Anti-air missiles only target airborne enemies (at least 2 blocks above ground)

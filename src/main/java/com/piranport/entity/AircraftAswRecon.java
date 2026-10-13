@@ -5,6 +5,7 @@ import com.piranport.combat.CombatTargeting;
 import com.piranport.component.AircraftAttackMode;
 import com.piranport.aviation.ReconManager;
 import com.piranport.config.ModCommonConfig;
+import com.piranport.config.ModEquipmentConfig;
 import com.piranport.config.ModProjectilesConfig;
 import com.piranport.network.AswSonarSyncPayload;
 import net.minecraft.core.BlockPos;
@@ -54,7 +55,7 @@ public class AircraftAswRecon {
         double seaLevel = craft.level().getSeaLevel();
         double bombAltitude = target.isUnderWater()
             ? seaLevel + 15.0
-            : target.getY() + 20.0;
+            : target.getY() + ModEquipmentConfig.ASW_ATTACK_HEIGHT_OFFSET.get();
 
         if (craft.getY() < bombAltitude - 1.5) {
             Vec3 toPoint = new Vec3(target.getX() - craft.getX(), bombAltitude - craft.getY(), target.getZ() - craft.getZ());
@@ -131,7 +132,7 @@ public class AircraftAswRecon {
         if (craft.hasEverHadFireControl || craft.autoSeekDone) return null;
         if (craft.autoSeekCooldown > 0) { craft.autoSeekCooldown--; return null; }
         craft.autoSeekDone = true;
-        AABB box = craft.getBoundingBox().inflate(32.0);
+        AABB box = craft.getBoundingBox().inflate(ModEquipmentConfig.ASW_AUTO_SEEK_RANGE.get());
         // 自动索敌必须加敌对过滤：不能直接复用 isAswTarget（它认 AQUATIC 动物），
         // 否则鲑鱼/海豚也会被自动开打。已有火控锁定分支保持原样，尊重玩家手动选择。
         return sl.getEntitiesOfClass(LivingEntity.class, box,
@@ -177,12 +178,12 @@ public class AircraftAswRecon {
         if (!(craft.level() instanceof ServerLevel sl)) return;
         if (!(owner instanceof ServerPlayer sp)) return;
 
-        AABB sonarBox = craft.getBoundingBox().inflate(16.0);
+        AABB sonarBox = craft.getBoundingBox().inflate(ModEquipmentConfig.ASW_SONAR_RANGE.get());
         java.util.List<Integer> detectedIds = new java.util.ArrayList<>();
         for (LivingEntity e : sl.getEntitiesOfClass(LivingEntity.class, sonarBox,
                 le -> le.isAlive() && le != owner && (le.isInWater() || isAswTarget(le)))) {
             detectedIds.add(e.getId());
-            if (detectedIds.size() >= 128) break;
+            if (detectedIds.size() >= ModEquipmentConfig.ASW_SONAR_MAX_TARGETS.get()) break;
         }
         if (!detectedIds.isEmpty()) {
             PacketDistributor.sendToPlayer(sp, new AswSonarSyncPayload(craft.getId(), detectedIds));
@@ -228,7 +229,9 @@ public class AircraftAswRecon {
         craft.setDeltaMovement(current.lerp(target, factor));
 
         if (!craft.level().isClientSide && craft.tickCount % 20 == 0) {
-            if (craft.cachedMapSlots == null || craft.tickCount - craft.mapSlotsRefreshTick >= 100) {
+            if (craft.cachedMapSlots == null
+                    || craft.tickCount - craft.mapSlotsRefreshTick
+                            >= ModEquipmentConfig.RECON_MAP_REFRESH_TICKS.get()) {
                 refreshCachedMapSlots(craft, owner);
                 craft.mapSlotsRefreshTick = craft.tickCount;
             }
@@ -301,7 +304,7 @@ public class AircraftAswRecon {
 
         java.util.Iterator<Long> it = craft.reconPendingSend.iterator();
         int sent = 0;
-        while (it.hasNext() && sent < 16) {
+        while (it.hasNext() && sent < ModEquipmentConfig.RECON_CHUNK_SEND_RATE.get()) {
             long key = it.next();
             int x = ChunkPos.getX(key);
             int z = ChunkPos.getZ(key);

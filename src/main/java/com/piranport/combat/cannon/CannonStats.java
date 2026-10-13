@@ -143,6 +143,16 @@ final class CannonStats {
         };
     }
 
+    /** 单炮最大水平射程（格），策划决策/武器/17；<=0 表示不限制。 */
+    static float getMaxHorizontalRange(ItemStack weapon, net.minecraft.world.level.Level level) {
+        Item item = weapon.getItem();
+        if (item instanceof com.piranport.artillery.ArtilleryItem ai) {
+            return level != null ? ai.getEffectiveData(level).maxHorizontalRange()
+                    : ai.getData().maxHorizontalRange();
+        }
+        return 0f;
+    }
+
     static java.util.List<com.piranport.artillery.config.MuzzlePos> getMuzzlePositions(ItemStack weapon, net.minecraft.world.level.Level level) {
         Item item = weapon.getItem();
         if (item instanceof com.piranport.artillery.ArtilleryItem ai) {

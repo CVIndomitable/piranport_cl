@@ -57,7 +57,8 @@ public class ConfigOverrideManager {
                 (float) com.piranport.terminal.TerminalParameters.getDouble(key + "horizontal_spread", c.horizontalSpread()),
                 (float) com.piranport.terminal.TerminalParameters.getDouble(key + "max_elevation", c.maxElevation()),
                 (float) com.piranport.terminal.TerminalParameters.getDouble(key + "turret_speed", c.turretSpeed()),
-                c.loadingMode(), c.caliberInches(), c.tier(), c.velocityClass());
+                c.loadingMode(), c.caliberInches(), c.tier(), c.velocityClass(),
+                (float) com.piranport.terminal.TerminalParameters.getDouble(key + "max_horizontal_range", c.maxHorizontalRange()));
     }
 
     // ==================== 弹药配置覆盖 ====================

@@ -170,6 +170,15 @@ public final class ClientScopeHandler {
         double solveDist = truncated ? maxRange : targetDistance;
         double solveVert = truncated ? 0.0 : targetVertical;
 
+        // 单炮最大水平射程（策划决策/武器/17）：水平距离超该值时按 maxHorizontalRange 解算、
+        // 高度差同比缩放，标记超射程；与服务端 CannonAiming 口径一致，否则 HUD 读数会骗人。
+        double cannonCap = effectiveData.maxHorizontalRange();
+        if (!truncated && cannonCap > 0 && targetDistance > cannonCap) {
+            truncated = true;
+            solveDist = cannonCap;
+            solveVert = targetVertical * (cannonCap / targetDistance);
+        }
+
         // 运行解算（会自动记录性能统计到 BallisticSolverStats）。
         // 经 BallisticDispatcher 分发：实验炮走网络，其余炮走 BallisticSolver。
         // 依据：docs/策划决策/武器/火炮-神经网络弹道解算实验方案.md 4.2
@@ -246,6 +255,11 @@ public final class ClientScopeHandler {
         double mcGravity = data.gravity() > 0f ? data.gravity() / 196.0 : BallisticSolver.DEFAULT_GRAVITY;
         double maxRange = BallisticSolver.calculateMaxHorizontalRange(
                 data.initialSpeed(), data.dragCoeff(), mcGravity);
+        // 策划决策/武器/17：配置的单炮最大水平射程可能高于物理射程，
+        // 射线至少要探到该配置距离，否则超距瞄准点采不到、封顶不会触发。
+        if (data.maxHorizontalRange() > 0) {
+            maxRange = Math.max(maxRange, data.maxHorizontalRange());
+        }
         // 加 10% 余量用于命中点判定
         return Math.min(maxRange * 1.1, SCOPE_RAYCAST_MAX);
     }

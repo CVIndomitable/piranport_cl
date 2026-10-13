@@ -130,7 +130,7 @@ public final class CannonCatalog {
                 muzzles(n, t.muzzleDx(), t.muzzleY()), t.initialSpeed(), t.dragCoeff(), t.gravity(),
                 t.explosionPower(), t.dispersion(), 0, n, n > 1 ? 3.0f : 0.0f, t.projectileWeight(),
                 t.verticalSpread(), t.horizontalSpread(), t.maxElevation(), t.turretSpeed(), "MANUAL",
-                e.caliberInches(), e.tier().id(), "standard");
+                e.caliberInches(), e.tier().id(), "standard", 0f);
     }
 
     public static ArtilleryCannonData fallbackData(String id) {

@@ -71,6 +71,7 @@ public final class TerminalParameterCatalog {
             add(specs, "cannon", target, "horizontal_spread", c.horizontalSpread(), 0, 180);
             add(specs, "cannon", target, "max_elevation", c.maxElevation(), -90, 90);
             add(specs, "cannon", target, "turret_speed", c.turretSpeed(), 0, 180);
+            add(specs, "cannon", target, "max_horizontal_range", c.maxHorizontalRange(), 0, 1000);
         }
         for (AircraftDefinition a : AircraftDefinitionService.snapshot().values()) {
             String target = a.id();

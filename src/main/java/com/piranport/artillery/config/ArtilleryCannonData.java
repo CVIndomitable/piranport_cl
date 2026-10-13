@@ -44,7 +44,14 @@ public record ArtilleryCannonData(
         /** 稀有度：initial/standard/improved/advanced；只改装填。缺省 standard。 */
         String tier,
         /** 初速档：high/standard/low；只改负重。缺省 standard。 */
-        String velocityClass
+        String velocityClass,
+        /**
+         * 最大水平射程（格），策划决策/武器/17-火炮最大水平射程。
+         * 缺省与 0 均表示不限制。开镜瞄准的水平距离超过此值时：仰角按该值解算、
+         * 高度差按 {@code maxHorizontalRange / 实际水平距离} 同比例缩放，并标记超射程；
+         * 弹丸仍以配置初速飞完全程，不截断飞行。女仆直瞄与最大射程指令不读此字段。
+         */
+        float maxHorizontalRange
 ) {
     public static final ArtilleryCannonData DEFAULT = new ArtilleryCannonData(
             14, 1, 6f, 30, 500, 4.0f, List.of(new MuzzlePos(0, 0, 0)),
@@ -71,6 +78,8 @@ public record ArtilleryCannonData(
             caliberInches = 0f;
         }
         if (caliber <= 0) caliber = 1;
+        // 最大水平射程：非有限/负值一律按 0 = 不限制处理
+        if (!Float.isFinite(maxHorizontalRange) || maxHorizontalRange < 0) maxHorizontalRange = 0f;
         if (barrels <= 0) barrels = 1;
         if (initialSpeed <= 0) initialSpeed = 3.0f;
         if (dragCoeff <= 0) dragCoeff = 0.01f;
@@ -107,7 +116,7 @@ public record ArtilleryCannonData(
                                float turretSpeed, String loadingMode) {
         this(caliber, barrels, damage, reloadTime, durability, scopeZoom, muzzles, initialSpeed, dragCoeff,
                 gravity, explosionPower, dispersion, fireCooldown, salvoCount, salvoInterval, projectileWeight,
-                verticalSpread, horizontalSpread, maxElevation, turretSpeed, loadingMode, 0f, null, null);
+                verticalSpread, horizontalSpread, maxElevation, turretSpeed, loadingMode, 0f, null, null, 0f);
     }
 
     /**

@@ -10,6 +10,7 @@ import net.neoforged.neoforge.network.PacketDistributor;
 import static com.piranport.combat.cannon.CannonStats.getMaxElevationRadians;
 import static com.piranport.combat.cannon.CannonStats.getProjectileGravity;
 import static com.piranport.combat.cannon.CannonStats.getProjectileDrag;
+import static com.piranport.combat.cannon.CannonStats.getMaxHorizontalRange;
 
 /** 火炮瞄准：炮口变换、弹道解算和目标方向。 */
 final class CannonAiming {
@@ -19,10 +20,10 @@ final class CannonAiming {
     static Vec3 resolveDirection(Player player, ItemStack weapon, float velocity,
             CannonAim aim, Vec3 aimOrigin, Vec3 spawnPos) {
         if (aim instanceof CannonAim.Aimed aimed) {
-            return computeAimDirection(player, weapon, velocity, aimed.target(), aimOrigin);
+            return computeAimDirection(player, weapon, velocity, aimed.target(), aimOrigin, true);
         }
         if (aim instanceof CannonAim.DirectAim direct) {
-            return computeAimDirection(player, weapon, velocity, direct.target(), aimOrigin);
+            return computeAimDirection(player, weapon, velocity, direct.target(), aimOrigin, false);
         }
         if (aim instanceof CannonAim.MaxRange) {
             float gravity = getProjectileGravity(weapon, player.level());
@@ -69,6 +70,17 @@ final class CannonAiming {
 
     static Vec3 computeAimDirection(Player player, ItemStack weapon,
                                              float velocity, Vec3 aimTarget, Vec3 muzzlePos) {
+        return computeAimDirection(player, weapon, velocity, aimTarget, muzzlePos, false);
+    }
+
+    /**
+     * @param scopeAimed 是否来自开镜瞄准路径（含闭镜沿用的同一解算）。
+     *                   为 true 时才应用单炮 {@code maxHorizontalRange} 封顶；
+     *                   女仆直瞄（DirectAim）与最大射程指令不读此字段。
+     */
+    static Vec3 computeAimDirection(Player player, ItemStack weapon,
+                                             float velocity, Vec3 aimTarget, Vec3 muzzlePos,
+                                             boolean scopeAimed) {
         Vec3 toTarget = aimTarget.subtract(muzzlePos);
         double horizontalDist = Math.sqrt(toTarget.x * toTarget.x + toTarget.z * toTarget.z);
         double verticalDist = toTarget.y;
@@ -81,6 +93,8 @@ final class CannonAiming {
         float gravity = getProjectileGravity(weapon, player.level());
         double mcGravity = gravity > 0f ? gravity / 196.0 : BallisticSolver.DEFAULT_GRAVITY;
         double maxElevation = getMaxElevationRadians(weapon, player.level());
+        // 单炮最大水平射程（策划决策/武器/17）：缺省/0 = 不限制。
+        float maxHorizontalRange = getMaxHorizontalRange(weapon, player.level());
 
         // 射程截断（2026-10-09 项目所有者）：目标水平距离超过终端「最大射程」时，不再对目标解算
         // （目标不可达，解算没有意义），改把落点钉在最大射程点（沿目标方向、与炮口同高）求解，
@@ -91,6 +105,21 @@ final class CannonAiming {
         if (BallisticSolver.beyondMaxRange(horizontalDist, configuredRange)) {
             optimalPitch = BallisticSolver.truncatedAngle(velocity, drag, mcGravity, configuredRange,
                     BallisticSolver.UNRESTRICTED_MIN_ANGLE, maxElevation);
+            player.displayClientMessage(
+                    Component.translatable("hud.piranport.fire_control.out_of_range"), true);
+        } else if (scopeAimed && maxHorizontalRange > 0 && horizontalDist > maxHorizontalRange) {
+            // 单炮最大水平射程（策划决策/武器/17）：只在开镜瞄准路径生效（闭镜沿用同一解算），
+            // DirectAim（女仆直瞄/近程直射）与 MaxRange（最大射程指令）不读此字段。
+            // 超限时仰角按 maxHorizontalRange 解算、高度差按 maxHorizontalRange/实际水平距离
+            // 同比例缩放，并标记超射程；WHY 不退回最大射程仰角：高初速炮会被重新抬成高抛。
+            // 弹丸仍以配置初速飞完全程，不截断飞行。
+            double cap = maxHorizontalRange;
+            double scaledVertical = verticalDist * (cap / horizontalDist);
+            BallisticSolver.Result result = com.piranport.combat.neural.BallisticDispatcher.solve(
+                    weapon, velocity, drag, mcGravity,
+                    cap, scaledVertical, 0.0,
+                    BallisticSolver.UNRESTRICTED_MIN_ANGLE, maxElevation);
+            optimalPitch = result.angle();
             player.displayClientMessage(
                     Component.translatable("hud.piranport.fire_control.out_of_range"), true);
         } else {

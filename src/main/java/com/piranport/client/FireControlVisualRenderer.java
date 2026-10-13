@@ -196,11 +196,14 @@ public final class FireControlVisualRenderer {
         // 服务端开火的截断口径一致，避免 HUD 画出一个服务端根本不会飞到的落点。
         double horizontalDist = Math.sqrt((aim.x - eye.x) * (aim.x - eye.x) + (aim.z - eye.z) * (aim.z - eye.z));
         double maxRange = ModArtilleryConfig.ARTILLERY_MAX_RANGE.get();
+        // 单炮最大水平射程（策划决策/武器/17）：取全局截断与单炮封顶中更紧的一条，与服务端口径一致。
+        double cannonCap = data.maxHorizontalRange();
+        double effectiveRange = cannonCap > 0 ? Math.min(maxRange, cannonCap) : maxRange;
         Vec3 predicted;
-        if (BallisticSolver.beyondMaxRange(horizontalDist, maxRange)) {
+        if (BallisticSolver.beyondMaxRange(horizontalDist, effectiveRange)) {
             outOfRange = true;
             Vec3 flat = new Vec3(aim.x - eye.x, 0.0, aim.z - eye.z);
-            predicted = flat.lengthSqr() < 1.0e-9 ? eye : eye.add(flat.normalize().scale(maxRange));
+            predicted = flat.lengthSqr() < 1.0e-9 ? eye : eye.add(flat.normalize().scale(effectiveRange));
         } else {
             predicted = BallisticSolver.predictImpactPoint(eye, aim, targetVelocity, speed, drag, gravity,
                     BallisticSolver.UNRESTRICTED_MIN_ANGLE, maxElevation, PREDICTION_ITERATIONS);

@@ -66,10 +66,6 @@ public class TorpedoGuidanceManager {
         PacketDistributor.sendToPlayer(player, new TorpedoGuidanceStatePayload(false, 0));
     }
 
-    public static boolean isGuiding(UUID playerUUID) {
-        return activeGuidance.containsKey(playerUUID);
-    }
-
     @Nullable
     public static UUID getGuidedTorpedo(UUID playerUUID) {
         return activeGuidance.get(playerUUID);
@@ -100,11 +96,6 @@ public class TorpedoGuidanceManager {
     @Nullable
     public static float[] getLastInput(UUID playerUUID) {
         return lastInput.get(playerUUID);
-    }
-
-    /** 当被引导的鱼雷被摧毁/导线切断时调用，以便通知客户端退出引导。 */
-    public static void onTorpedoGone(ServerPlayer player) {
-        endGuidance(player);
     }
 
     public static void clearAll() {

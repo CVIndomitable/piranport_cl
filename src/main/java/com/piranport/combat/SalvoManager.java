@@ -134,11 +134,6 @@ public class SalvoManager {
         PENDING.remove(event.getEntity().getUUID());
     }
 
-    /** 移除指定玩家的所有待发射任务。 */
-    public static void removePlayer(UUID uuid) {
-        PENDING.remove(uuid);
-    }
-
     /** 清空所有待发射队列（关服时调用）。 */
     public static void clearAll() {
         PENDING.clear();

@@ -71,7 +71,7 @@ public final class ShipCoreCombat {
 
         // 火炮单击优化：手持冷却时自动找同类型可用炮
         if (weapon.getItem() instanceof com.piranport.artillery.ArtilleryItem) {
-            int[] best = findBestArtillerySlot(player, weapon.getItem(), coreStack);
+            int[] best = CannonInventory.findBestArtillerySlot(player, weapon.getItem(), coreStack);
             if (best != null) {
                 weaponSlot = best[0];
                 coreInventorySlot = best[1];
@@ -187,28 +187,8 @@ public final class ShipCoreCombat {
         return CannonAmmoRules.matchesCaliber(ammo, weapon, level);
     }
 
-    @Nullable
-    public static int[] findBestArtillerySlot(Player player, Item weaponType, ItemStack coreStack) {
-        return CannonInventory.findBestArtillerySlot(player, weaponType, coreStack);
-    }
-
-    public static List<int[]> findMatchingArtillerySlots(Player player, Item weaponType, ItemStack coreStack) {
-        return CannonInventory.findMatchingArtillerySlots(player, weaponType, coreStack);
-    }
-
-    public static void syncAmmoToSiblingGuns(Player player) {
-        CannonReloading.syncAmmoToSiblingGuns(player);
-    }
-
     public static void beginSalvo(ServerPlayer player, Item weaponType,
             int aimMode, double ax, double ay, double az) {
         CannonSalvos.beginSalvo(player, weaponType, aimMode, ax, ay, az);
-    }
-
-    public static void executeSalvoFire(ServerLevel level, ServerPlayer player,
-            int weaponSlot, int coreSlot, Item expectedWeaponType,
-            int aimMode, double ax, double ay, double az) {
-        CannonSalvos.executeSalvoFire(level, player, weaponSlot, coreSlot, expectedWeaponType,
-                aimMode, ax, ay, az);
     }
 }

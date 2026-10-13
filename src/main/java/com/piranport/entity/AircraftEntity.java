@@ -37,8 +37,6 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.player.Player;
@@ -64,7 +62,7 @@ import java.util.UUID;
  *   - 状态机:   tickLaunching → tickCruising → tickAttacking → tickReturning
  *   - 战斗分发: tickAttacking 根据 payloadType 委托各攻击策略
  *       战斗机对空扫射 / 火箭机齐射 / 俯冲轰炸 / 水平轰炸 / 鱼雷投掷 / 反潜深弹 / 侦察
- *   - 火控:     resolveTarget / resolveASWTarget / resolveFighterTarget
+ *   - 火控:     AircraftCombat.resolveTarget / AircraftAswRecon.resolveASWTarget / AircraftCombat.resolveFighterTarget
  *   - 侦察:     tickReconActive + ReconManager（服务端），ClientReconData（客户端）
  *   - 区块加载: updateReconChunkLoading / sendPendingChunks（基于视距）
  *   - 防御:     stuck 检测 / 距离限制 / 最大留空时间
@@ -159,7 +157,6 @@ public class AircraftEntity extends Entity {
     int levelRunTicks = 0;
     int autoSeekCooldown = 20; // 运行时状态，避免首次 tick 立即搜索（不持久化，每次加载重置为 20）
     boolean autoSeekDone = false;    // true after first auto-seek scan (one-shot)
-    private boolean appliedSlowness = false; // tracks if slowness effect was applied to target
     boolean hasEverHadFireControl = false; // true if FC target was ever assigned
     private transient net.minecraft.world.item.Item cachedPayloadItem; // P3 #31: cached Item reference
 
@@ -783,71 +780,7 @@ public class AircraftEntity extends Entity {
         return Math.max(1, Math.min(remainingAmmo, needed));
     }
 
-    /**
-     * FIGHTER: hover at ~11 blocks and fire bullets.
-     * When fighterAmmoEnabled=false (default), ammo is unlimited and the fighter
-     * never returns due to depletion. When true, 64 rounds total (ammoCapacity).
-     * Phase 33: target may be a LivingEntity or an enemy AircraftEntity.
-     */
-    private void tickFighterAttack(@Nullable Player owner, Entity target) {
-        AircraftCombat.tickFighterAttack(this, owner, target);
-    }
-
-    /**
-     * ROCKET_FIGHTER: approach a ground/surface target from altitude, salvo all rockets at once.
-     * After hasFired=true, the aircraft falls back to bullets-only fighter logic against air targets.
-     */
-    private void tickRocketFighterMissileRun(@Nullable Player owner, LivingEntity target) {
-        AircraftCombat.tickRocketFighterMissileRun(this, owner, target);
-    }
-
-    /**
-     * DIVE_BOMBER: climb to target+18 blocks, then commit to a dive with lead prediction.
-     * Once the dive is committed, the drop point is fixed — no more recalculation.
-     */
-    private void tickDiveBomberAttack(@Nullable Player owner, LivingEntity target) {
-        AircraftCombat.tickDiveBomberAttack(this, owner, target);
-    }
-
-    private void tickTorpedoBomberAttack(@Nullable Player owner, LivingEntity target) {
-        AircraftCombat.tickTorpedoBomberAttack(this, owner, target);
-    }
-
-    private void tickLevelBomberAttack(@Nullable Player owner, LivingEntity target) {
-        AircraftCombat.tickLevelBomberAttack(this, owner, target);
-    }
-
-    private LivingEntity resolveTarget(Player owner) { return AircraftCombat.resolveTarget(this, owner); }
-
     private static boolean isAirborneTarget(Entity e) { return AircraftCombat.isAirborneTarget(e); }
-
-    private Entity resolveFighterTarget(Player owner) { return AircraftCombat.resolveFighterTarget(this, owner); }
-
-    // [combat/target methods moved to AircraftCombat and AircraftAswRecon]
-
-
-    /**
-     * ASW: fly at target+20 altitude, drop depth charges when over target.
-     * Similar to level bomber but lower altitude and uses DepthChargeEntity.
-     */
-    private void tickASWAttack(@Nullable Player owner, LivingEntity target) {
-        AircraftAswRecon.tickASWAttack(this, owner, target);
-    }
-
-    /**
-     * ASW target resolution: only targets submarines and aquatic creatures.
-     * 1. FC-locked targets (filtered to ASW-eligible)
-     * 2. Auto-seek: underwater monsters and aquatic creatures within 32 blocks.
-     */
-    @Nullable
-    private LivingEntity resolveASWTarget(Player owner) {
-        return AircraftAswRecon.resolveASWTarget(this, owner);
-    }
-
-    /** Returns true if the entity qualifies as an ASW target (submarine or aquatic creature). */
-    private static boolean isAswTarget(Entity e) {
-        return AircraftAswRecon.isAswTarget(e);
-    }
 
     /**
      * ASW sonar: scan 16-block radius for underwater entities and send detections to owner.
@@ -906,7 +839,7 @@ public class AircraftEntity extends Entity {
         if (!(level() instanceof ServerLevel sl)) return false;
         for (UUID uuid : FireControlManager.getTargets(owner.getUUID())) {
             Entity e = sl.getEntity(uuid);
-            if (e instanceof LivingEntity le && le.isAlive() && isAswTarget(le)) return true;
+            if (e instanceof LivingEntity le && le.isAlive() && AircraftAswRecon.isAswTarget(le)) return true;
         }
         return false;
     }
@@ -1612,14 +1545,6 @@ public class AircraftEntity extends Entity {
             // Clean up recon state
             if (ownerUUID != null) {
                 ReconManager.endRecon(ownerUUID);
-                // Remove slowness if we applied it
-                if (appliedSlowness && level() instanceof ServerLevel sl) {
-                    Player owner = sl.getServer().getPlayerList().getPlayer(ownerUUID);
-                    if (owner != null) {
-                        owner.removeEffect(MobEffects.MOVEMENT_SLOWDOWN);
-                    }
-                    appliedSlowness = false;
-                }
             }
         }
         super.remove(reason);
@@ -1762,7 +1687,6 @@ public class AircraftEntity extends Entity {
         if (tag.contains("LevelDropPointX")) {
             levelDropPoint = new Vec3(tag.getDouble("LevelDropPointX"), tag.getDouble("LevelDropPointY"), tag.getDouble("LevelDropPointZ"));
         }
-        appliedSlowness = tag.getBoolean("AppliedSlowness");
         if (tag.contains("LastKnownState")) {
             try { lastKnownState = FlightState.valueOf(tag.getString("LastKnownState")); }
             catch (IllegalArgumentException e) { lastKnownState = FlightState.LAUNCHING; }
@@ -1838,7 +1762,6 @@ public class AircraftEntity extends Entity {
             tag.putDouble("LevelDropPointY", levelDropPoint.y);
             tag.putDouble("LevelDropPointZ", levelDropPoint.z);
         }
-        tag.putBoolean("AppliedSlowness", appliedSlowness);
         tag.putString("LastKnownState", lastKnownState.name());
         tag.putBoolean("IsForcedReturn", isForcedReturn);
         tag.putDouble("OrbitAngle", orbitAngle);

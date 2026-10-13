@@ -6,11 +6,11 @@
   "pages": [
     {
       "type": "patchouli:text",
-      "text": "$(bold)Sonar System$()$(br2)The sonar device detects submarines and underwater entities.$(br2)$(bold)Usage:$()$(br)• Hold the sonar item$(br)• Right-click to activate a ping$(br)• Nearby submarines will be highlighted$(br)• Effective range depends on sonar tier"
+      "text": "$(bold)Sonar System$()$(br2)Store a sonar in your transformed ship core's enhancement slots and it works automatically — it applies a brief glow to nearby non-player living targets every 40 ticks so you can spot them by eye.$(br2)Three tiers with spherical radius: Standard 24 blocks, Improved 32, Advanced 40. Range is capped by server simulation distance."
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)ASW Sonar$()$(br2)Anti-submarine warfare sonar is mounted on aircraft.$(br2)$(bold)Features:$()$(br)• Automatically scans below aircraft$(br)• Detects submerged submarines$(br)• Shares detection data with allies$(br2)$(bold)Tip:$() Combine sonar with depth charges for effective ASW!"
+      "text": "$(bold)Notes$()$(br2)The sonar marks all aquatic and living non-player creatures — it does not distinguish friend from foe, and does not mark players.$(br2)Best paired with torpedoes and depth charges: confirm the underwater contact first, then fire or close in to drop charges."
     }
   ]
 }

@@ -6,7 +6,7 @@
   "pages": [
     {
       "type": "patchouli:text",
-      "text": "$(bold)Reload Facility$()$(br2)An automated station that reloads ammunition into your weapons.$(br2)$(bold)Features:$()$(br)• Automatically reloads weapons in range$(br)• Supports all ammo types$(br)• Faster than manual reloading$(br)• Requires power/fuel to operate"
+      "text": "$(bold)Reload Facility$()$(br2)A manual station that loads torpedoes or hand-loaded missiles into launchers. It does not automatically resupply players nearby and is not an ammo store.$(br2)The interface has three slots: launcher input, ammo input, loaded output."
     },
     {
       "type": "patchouli:crafting",
@@ -15,7 +15,7 @@
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)Usage$()$(br2)1. Place the reload facility$(br)2. Right-click to open the interface$(br)3. Insert ammunition into the input slots$(br)4. Stand nearby with weapons$(br)5. Weapons reload automatically$(br2)$(bold)Tip:$() Build reload facilities near your base for quick rearming!"
+      "text": "$(bold)Rules & Speed$()$(br2)The facility only outputs fully loaded launchers; already-full or partially loaded launchers are rejected. The output slot must be empty to keep working.$(br2)Each reload takes about 10 seconds (200 ticks), same on land and in water. Hopper on top feeds launchers, side feeds ammo, bottom extracts the product."
     }
   ]
 }

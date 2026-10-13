@@ -1,7 +1,7 @@
 {
   "name": "piranport.book.equipment.armor_engine",
   "category": "piranport:10_equipment",
-  "icon": "piranport:armor_plate",
+  "icon": "piranport:medium_armor_plate",
   "sortnum": 0,
   "pages": [
     {

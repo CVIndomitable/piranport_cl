@@ -6,7 +6,7 @@
   "pages": [
     {
       "type": "patchouli:text",
-      "text": "$(bold)Ammo Selection$()$(br2)Hold a cannon and press $(bold)[R]$() to open the ammo selection overlay.$(br2)$(bold)Controls:$()$(br)• Move mouse to pick ammo type$(br)• Release R to confirm$(br)• Ammo is pulled from your ammo bay"
+      "text": "$(bold)Ammo Selection$()$(br2)Hold a cannon and hold $(bold)[Tab]$() to open the ammo wheel.$(br2)$(bold)Controls:$()$(br)• Move mouse to pick ammo type$(br)• Release Tab to confirm$(br)• Ammo is pulled from your ammo bay$(br2)R is manual reload, not the ammo wheel."
     },
     {
       "type": "patchouli:text",

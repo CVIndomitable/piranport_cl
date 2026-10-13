@@ -10,11 +10,11 @@
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)Config Inspector$()$(br2)A special item that displays entity and block data.$(br2)$(bold)Usage:$()$(br)• Hold the config inspector$(br)• Right-click any entity or block$(br)• View detailed debug information$(br)• Useful for modpack developers"
+      "text": "$(bold)Hit Notifications$()$(br2)The control page toggles hit notifications. When on, weapon hits show damage numbers and a hit marker; when off, nothing is shown."
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)Model Debug Block$()$(br2)A special block for testing model rendering.$(br2)$(bold)Features:$()$(br)• Displays model information$(br)• Shows animation states$(br)• Helps troubleshoot rendering issues$(br2)$(bold)Note:$() These tools are for development and testing only."
+      "text": "$(bold)Cooldown Override$()$(br2)The control page toggles a server-side cooldown override that compresses weapon cooldowns to test-friendly values. Intended for development verification."
     }
   ]
 }

@@ -6,11 +6,11 @@
   "pages": [
     {
       "type": "patchouli:text",
-      "text": "$(bold)Key Bindings$()$(br2)All PiranPort keys can be customized in Controls > Key Binds.$(br2)$(bold)Default Keys:$()$(br)• $(bold)P$(): Lock fire control target$(br)• $(bold)O$(): Cycle next target$(br)• $(bold)I$(): Cancel lock$(br)• $(bold)V$(): Recon aircraft view"
+      "text": "$(bold)Key Bindings$()$(br2)All PiranPort keys can be customized in Controls > Key Binds.$(br2)$(bold)Fire Control:$()$(br)• $(bold)Middle-click$(): select crosshair target (adds; sneak = replace with single target; sneak with no target = clear)$(br2)$(bold)Weapons & Aircraft:$()$(br)• $(bold)Tab$(): cannon ammo wheel$(br)• $(bold)R$(): manual reload$(br)• $(bold)U$(): toggle fighter ground attack$(br)• $(bold)H$(): auto-launch / auto-AA toggle"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)More Keys:$()$(br)• $(bold)U$(): Toggle fighter ground attack$(br)• $(bold)H$(): Fighter auto-launch$(br)• $(bold)R$(): Manual reload$(br)• $(bold)Tab$(): Ammo selection$(br)• $(bold)Right-click$(): Fire held weapon or launch held aircraft while transformed$(br2)$(bold)Tip:$() Rebind keys that conflict with other mods!"
+      "text": "$(bold)Recon:$()$(br)• $(bold)V$(): exit recon view (recon view engages automatically on launch)$(br2)Debug mode, cooldown override, hit notifications and log snapshots live on the debug terminal's control page. Registered keys can be rebound in game settings."
     }
   ]
 }

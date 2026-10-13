@@ -1,7 +1,7 @@
 {
   "name": "piranport.book.equipment.core_modifier",
   "category": "piranport:10_equipment",
-  "icon": "piranport:core_modifier",
+  "icon": "piranport:ship_core_modifier",
   "sortnum": 2,
   "pages": [
     {

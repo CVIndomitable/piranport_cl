@@ -1095,8 +1095,6 @@
   "piranport.book.intro.transform.p1": "Ship cores transform in one mode:$(br)$(br)$(bold)Offhand Mode:$() Place the ship core in your offhand — the rigging activates automatically.$(br)$(br)Your speed decreases based on total equipment weight. Enhancement slots accept $(item)Armor Plates$() for bonus defense and extra weight.",
   "piranport.book.intro.transform.p2": "When a fueled core is in the configured slot, transformation starts automatically; removing the core or running out of fuel ends it automatically. While transformed, hold a cannon, torpedo launcher, missile launcher, or aircraft and $(bold)right-click$() to attack or launch. Drag enhancement items onto the ship core in your inventory to store them; right-click the core with an empty cursor to retrieve the last stored enhancement.",
   "piranport.book.intro.villager_trades": "Villager Trades",
-  "piranport.book.landing": "A guide to ship rigging, weapons, cooking, aviation, combat buffs, and dungeon sorties. Craft it with a Book and an Aluminum Ingot.",
-  "piranport.book.name": "Piran Port Navigation Manual",
   "piranport.book.ruins.enemies": "Abyssal NPC Bestiary",
   "piranport.book.ruins.enemies.p1": "The abyssal forces consist of 9 ship types:$(br)§lSupply§r — Harmless supply unit$(br)§lDestroyer§r — Fast light cannons$(br)§lLight Cruiser§r — Cannons + torpedoes$(br)§lHeavy Cruiser§r — Heavy guns + high armor$(br)§lBattle Cruiser§r — High-damage tracking shells",
   "piranport.book.ruins.enemies.p2": "§lBattleship§r — Strongest cannons + highest defense$(br)§lLight Carrier§r — Launches a few aircraft$(br)§lCarrier§r — Large aircraft squadrons$(br)§lSubmarine§r — Underwater stealth + torpedo attacks$(br)$(br)Abyssal NPCs have fleet alert AI — attacking one may alert the entire fleet!",
@@ -1113,7 +1111,6 @@
   "piranport.book.torpedoes.basics.p1": "Torpedo launchers (Triple/Quad/Quintuple) fire 533mm or 610mm torpedoes in a spread pattern. Torpedoes travel across water surfaces and inflict the $(item)Flooding$() debuff on hit. They self-destruct after 1 minute if they miss.",
   "piranport.book.torpedoes.basics.quad_craft": "Quad torpedo launcher fires 4 torpedoes simultaneously with maximum spread angle and firepower density.",
   "piranport.book.torpedoes.basics.quint_craft": "Quintuple torpedo launcher fires 5 torpedoes simultaneously with the highest firepower output.",
-  "piranport.book.torpedoes.basics.triple_craft": "Triple torpedo launcher fires 3 torpedoes simultaneously with wider spread, effective against multiple targets.",
   "piranport.book.torpedoes.named": "Named Torpedoes",
   "piranport.book.torpedoes.named.p1": "Multiple torpedo variants exist, each with unique damage, range, and speed.$(br)$(br)$(bold)533mm Series:$() Standard, Magnetic (magnetic fuze), Acoustic (homing), Wire-Guided (press $(bold)[9]/[0]$() to steer manually).$(br)$(br)$(bold)German G7 Series:$() G7a standard/magnetic, G7e electric magnetic/acoustic/wire-guided.",
   "piranport.book.torpedoes.named.p2": "$(bold)US MK Series:$() MK14 standard, MK16/MK17 hydrogen peroxide, MK27 acoustic.$(br)$(br)$(bold)Japanese Series:$() Type 91 610mm, Type 93 Mk1 high-speed / Mk3 long-range (oxygen torpedoes), Type 95 530mm/610mm submarine torpedoes, Type 0 720mm heavy torpedo.$(br)$(br)Hover over a torpedo item to view its specific damage/range/speed stats.",
@@ -1603,5 +1600,7 @@
   "piranport.book.intro.villager_trades.p2": "$(bold)Tip:$() the weaponsmith's blueprint trades want $(item)trophy$() items (abyssal drops), not emeralds — he is the steady source of improved and advanced blueprints. The quartermaster is your ammo supply line before your ammo workbench can keep up.",
   "piranport.book.arsenal.special.p3": "$(bold)Type-3 Shells$()$(br2)Type-3 shells are special rounds that scatter multiple submunitions on detonation, forming a barrage.$(br2)$(bold)Best against:$()$(br)• Dense enemy groups$(br)• Intercepting aircraft squadrons$(br)• Area suppression",
   "piranport.book.arsenal.special.p4": "$(bold)Character Weapons$()$(br2)• $(item)Richelieu's Saber$(): melee, 1520 durability, +8 damage$(br)• $(item)Hatsuyuki's Main Gun$(): axe-class, +11 damage$(br)• $(item)Prinz Eugen's Shield$(): 150-degree block arc",
-  "piranport.book.equipment.equipment_gui": "Ship Core Loadout"
+  "piranport.book.equipment.equipment_gui": "Ship Core Loadout",
+  "piranport.book.name": "Piran Port Navigation Manual",
+  "piranport.book.landing": "A guide to ship rigging, weapons, cooking, aviation, combat buffs, and dungeon sorties. Craft it with a Book and an Aluminum Ingot."
 }

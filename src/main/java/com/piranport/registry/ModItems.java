@@ -303,7 +303,7 @@ public class ModItems {
     public static final DeferredItem<ModFoodItem> YOKAN = FoodItems.YOKAN;
     public static final DeferredItem<ModFoodItem> YORKSHIRE_PUDDING = FoodItems.YORKSHIRE_PUDDING;
 
-    // ===== Aircraft Squadrons (Phase 18) — 实际定义见 AircraftItems =====
+    // ===== Aircraft — 实际定义见 AircraftItems =====
     public static final DeferredItem<AircraftItem> XTB2D = AircraftItems.XTB2D;
 
     // ===== Named Aircraft — 实际定义见 AircraftItems =====

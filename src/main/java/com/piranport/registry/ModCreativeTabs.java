@@ -72,14 +72,14 @@ public class ModCreativeTabs {
                         output.accept(ModItems.SEACAT_LAUNCHER.get());
                     }).build());
 
-    // ===== 航空 — 飞机编队 =====
+    // ===== 航空 — 飞机 =====
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> AVIATION_TAB =
             CREATIVE_TABS.register("aviation_tab", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.piranport.aviation"))
                     .withTabsBefore(ResourceKey.create(Registries.CREATIVE_MODE_TAB, PiranPort.modId("weapons_tab")))  // 链式排序：紧接 weapons_tab
                     .icon(() -> ModItems.SEAFIRE.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
-                        // Generic squadrons
+                        // Generic
                         output.accept(ModItems.XTB2D.get());
                         // Torpedo bombers
                         output.accept(ModItems.SWORDFISH_TORPEDO.get());

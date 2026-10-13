@@ -17,7 +17,7 @@ public final class AircraftItems {
     // 共享 ModItems 的 DeferredRegister 实例（同一注册表，保证 ID 不冲突）
     private static final DeferredRegister.Items ITEMS = ModItems.ITEMS;
 
-    // ===== Aircraft Squadrons (Phase 18) =====
+    // ===== Aircraft =====
     public static final DeferredItem<AircraftItem> XTB2D =
             ITEMS.register("xtb2d",
                     () -> new AircraftItem(new Item.Properties().stacksTo(1)

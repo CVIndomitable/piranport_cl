@@ -1,0 +1,255 @@
+{
+  "id": "piranport:torpedo_run",
+  "items": [
+    "piranport:swordfish_torpedo",
+    "piranport:aerial_torpedo"
+  ],
+  "title": {
+    "zh_cn": "皮兰港：鱼雷机攻击",
+    "en_us": "Piran Port: Torpedo Bomber Run"
+  },
+  "tags": [
+    "piranport",
+    "aviation",
+    "torpedo"
+  ],
+  "editable": false,
+  "scenes": [
+    {
+      "id": "torpedo_attack_profile",
+      "title": {
+        "zh_cn": "平飞投雷全过程",
+        "en_us": "Full Torpedo Run"
+      },
+      "steps": [
+        {
+          "type": "show_structure",
+          "structure": "ponderer:basic_xl",
+          "scale": 1.0,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 20
+        },
+        {
+          "type": "text",
+          "duration": 80,
+          "text": {
+            "zh_cn": "鱼雷机的攻击分三段：高空接近 → 贴水面平飞解算提前量 → 到投放点向下投雷，鱼雷入水后直线航行命中目标。",
+            "en_us": "A torpedo bomber attacks in three phases: high-altitude approach → low flat run over the water while computing the lead → drop at the release point. The torpedo runs straight after splashdown — no homing."
+          },
+          "point": [
+            4.5,
+            3.5,
+            4.5
+          ],
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 90
+        },
+        {
+          "type": "set_block",
+          "block": "minecraft:water",
+          "blockPos": [0, 1, 0],
+          "blockPos2": [8, 1, 8],
+          "attachKeyFrame": true
+        },
+        {
+          "type": "text",
+          "duration": 60,
+          "text": {
+            "zh_cn": "目标在海面（示例用僵尸标记）。",
+            "en_us": "The target floats on the surface (a zombie stands in)."
+          },
+          "point": [
+            6.5,
+            2.5,
+            4.5
+          ],
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "create_entity",
+          "entity": "minecraft:zombie",
+          "pos": [
+            6.5,
+            2.0,
+            4.5
+          ],
+          "yaw": 270.0,
+          "pitch": 0.0,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 60
+        },
+        {
+          "type": "text",
+          "duration": 60,
+          "text": {
+            "zh_cn": "第一阶段：高空接近。载机从远处接近目标。",
+            "en_us": "Phase 1 — high approach. The bomber closes in on the target."
+          },
+          "point": [
+            2.5,
+            4.5,
+            4.5
+          ],
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "set_block",
+          "block": "minecraft:white_wool",
+          "blockPos": [0, 4, 4],
+          "blockPos2": [1, 4, 4],
+          "attachKeyFrame": true
+        },
+        {
+          "type": "set_block",
+          "block": "minecraft:black_wool",
+          "blockPos": [0, 4, 3],
+          "blockPos2": [0, 4, 5],
+          "attachKeyFrame": true
+        },
+        {
+          "type": "show_section_and_merge",
+          "direction": "east",
+          "linkId": "plane",
+          "blockPos": [0, 4, 3],
+          "blockPos2": [1, 4, 5],
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 30
+        },
+        {
+          "type": "move_section",
+          "duration": 60,
+          "linkId": "plane",
+          "offset": [
+            3.0,
+            -2.0,
+            0.0
+          ],
+          "attachKeyFrame": true
+        },
+        {
+          "type": "text",
+          "duration": 70,
+          "text": {
+            "zh_cn": "第二阶段：贴水面平飞。载机降到目标上方约 3 格贴水面直飞，同时每刻解算提前量——预测点 = 目标当前位置 + 目标速度 × 鱼雷航行时间。",
+            "en_us": "Phase 2 — flat run just above the water (~3 blocks up). The plane holds a steady heading while the lead is re-solved every tick: aim point = target position + target velocity × torpedo travel time."
+          },
+          "point": [
+            4.5,
+            2.5,
+            4.5
+          ],
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "move_section",
+          "duration": 50,
+          "linkId": "plane",
+          "offset": [
+            2.5,
+            0.0,
+            0.0
+          ],
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 20
+        },
+        {
+          "type": "text",
+          "duration": 70,
+          "text": {
+            "zh_cn": "第三阶段：投放。距预测点约 10 格时投下鱼雷——落点不是目标当前位置，而是鱼雷入水航行到命中时目标会到的位置。",
+            "en_us": "Phase 3 — release. At ~10 blocks from the predicted point the torpedo drops. The aim isn't where the target is now, but where it will be when the torpedo arrives."
+          },
+          "point": [
+            5.5,
+            2.5,
+            4.5
+          ],
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "create_item_entity",
+          "item": "piranport:aerial_torpedo",
+          "pos": [
+            5.5,
+            2.0,
+            4.5
+          ],
+          "motion": [
+            0.1,
+            -0.3,
+            0.0
+          ],
+          "count": 1,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 50
+        },
+        {
+          "type": "text",
+          "duration": 70,
+          "text": {
+            "zh_cn": "鱼雷入水后按投放瞬间的方向直线航行，无制导——提前量在平飞段就已解好。命中目标，或航程耗尽自爆。",
+            "en_us": "After splashdown the torpedo runs straight on the heading fixed at release — no homing. It either hits the target or self-destructs at max range."
+          },
+          "point": [
+            6.5,
+            2.0,
+            4.5
+          ],
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 60
+        },
+        {
+          "type": "text",
+          "duration": 60,
+          "text": {
+            "zh_cn": "若目标静止，提前量为零——直接瞄当前位置投雷即可。目标移动时才需要预判。",
+            "en_us": "On a stationary target the lead is zero — drop straight at its current position. The prediction only matters when the target is moving."
+          },
+          "point": [
+            4.5,
+            3.0,
+            4.5
+          ],
+          "placeNearTarget": true,
+          "attachKeyFrame": true
+        },
+        {
+          "type": "idle",
+          "duration": 60
+        },
+        {
+          "type": "indicate_success",
+          "blockPos": [6, 2, 4],
+          "attachKeyFrame": true
+        }
+      ]
+    }
+  ]
+}

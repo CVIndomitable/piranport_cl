@@ -121,6 +121,16 @@ public record TerminalParameterSpec(String key, String group, String target, Str
     public double displayMin() { return min * displayScale(); }
     public double displayMax() { return max * displayScale(); }
 
+    /** 解析成功后的读取侧钳制：把任意 double 钳到本 spec 的 [min, max]。 */
+    public double clamp(double value) {
+        return Math.min(max, Math.max(min, value));
+    }
+
+    /** 解析成功后的读取侧钳制：把任意 int 钳到本 spec 的 [min, max]。 */
+    public int clamp(int value) {
+        return (int) Math.min((long) max, Math.max((long) min, value));
+    }
+
     private static String parse(ValueType type, String raw, double min, double max, String key) {
         String value = raw.trim();
         return switch (type) {

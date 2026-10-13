@@ -65,6 +65,7 @@ public final class TerminalParametersSavedData extends SavedData {
     }
 
     public void refreshCatalog() {
+        TerminalParameters.invalidateServerSpecIndex();
         var metadata = TerminalParameterCatalog.all();
         Map<String, TerminalParameterSpec> specs = new HashMap<>();
         metadata.forEach(spec -> specs.put(spec.key(), spec));

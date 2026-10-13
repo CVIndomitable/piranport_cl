@@ -47,8 +47,10 @@ public class TorpedoFireStrategy {
         int tubeCount = launcher.getTubeCount();
         int caliber = launcher.getCaliber();
 
-        // Creative mode: auto-find torpedo from inventory
-        if (player.getAbilities().instabuild) {
+        // 膛内有弹优先用膛内弹药发射（含创造模式）——发射器装填状态比"背包里有没有鱼雷"权威。
+        // 创造模式且膛内无弹时才扫背包找 TorpedoItem 当 fallback。
+        LoadedAmmo chambered = launcherStack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
+        if (player.getAbilities().instabuild && !chambered.hasAmmo()) {
             TorpedoItem torpedoType = null;
             int coreSlot = -1;
             for (int i = 0; i < inv.items.size(); i++) {

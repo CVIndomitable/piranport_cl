@@ -114,10 +114,12 @@ public class TorpedoFireStrategy {
 
         // Survival mode: use LOADED_AMMO component
         LoadedAmmo loaded = launcherStack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
-        if (!loaded.hasAmmo() || loaded.count() < tubeCount) {
+        if (!loaded.hasAmmo()) {
             player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
             return;
         }
+        // 部分装填也允许发射：按实际膛内弹数打出，不凭空多打
+        int fireCount = Math.min(loaded.count(), tubeCount);
 
         // Use caliber from method start
         int cooldown = ExperienceShellItem.applyCooldownReduction(player, launcher.getCooldownTicks());
@@ -128,7 +130,7 @@ public class TorpedoFireStrategy {
         Item loadedItem = BuiltInRegistries.ITEM.get(ResourceLocation.parse(loaded.ammoItemId()));
         TorpedoItem loadedTorpedo = loadedItem instanceof TorpedoItem ti ? ti : null;
         float torpedoSpeed = loadedTorpedo != null ? loadedTorpedo.getSpeed() : (caliber == 610 ? 1.0f : 1.2f);
-        float[] angles = CombatFireUtils.getSpreadAngles(tubeCount);
+        float[] angles = CombatFireUtils.getSpreadAngles(fireCount);
         Vec3 look = player.getLookAngle();
 
         TorpedoEntity primaryGuided = null;
@@ -188,8 +190,8 @@ public class TorpedoFireStrategy {
         ItemStack launcherStack = weaponSlot == 40 ? inv.offhand.get(0) : inv.items.get(weaponSlot);
         LoadedAmmo loaded = launcherStack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
 
-        // 优先使用已装填弹药（装填设施装的），用完后才自动从背包装填
-        if (loaded.hasAmmo() && loaded.count() >= launcher.getTubeCount()) {
+        // 优先使用已装填弹药（装填设施装的）；膛内有弹即可发射，不要求满管
+        if (loaded.hasAmmo()) {
             fireTorpedosManualMode(level, player, coreStack, inv, weaponSlot, launcher, cooldowns);
             return;
         }

@@ -544,11 +544,14 @@ public class AircraftCombat {
 
         java.util.List<java.util.UUID> locks = com.piranport.aviation.FireControlManager.getTargets(owner.getUUID());
         if (!locks.isEmpty()) {
+            // 空优开关默认 true：手动锁定也跳过非空中目标；玩家 U 键切换后允许锁地面
+            boolean airOnly = com.piranport.aviation.FireControlManager.isFighterAirOnly(owner.getUUID());
             double closestDist = Double.MAX_VALUE;
             Entity closest = null;
             for (java.util.UUID uuid : locks) {
                 Entity e = sl.getEntity(uuid);
-                if (e != null && e.isAlive()) {
+                if (e != null && e.isAlive()
+                        && (!airOnly || e instanceof AircraftEntity || isAirborneTarget(e))) {
                     double d = craft.distanceToSqr(e);
                     if (d < closestDist) { closestDist = d; closest = e; }
                 }

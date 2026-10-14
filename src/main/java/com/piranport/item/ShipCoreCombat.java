@@ -34,6 +34,12 @@ import static com.piranport.combat.cannon.CannonFiring.fireLoadedCannon;
  * 舰装战斗入口：定位核心和武器后，派发到各武器策略。
  * 火炮装填、弹药、弹道与齐射规则由 combat.cannon 各组件负责。
  * 所有战斗状态修改仅在服务端主线程执行。
+ *
+ * <p><b>门面瘦身约定</b>：本类只保留 {@code tryFireFromInventory} / {@code fireWeaponAtSlot}
+ * 两个真正的武器分派入口。其余 {@code recallAllAircraft} / {@code refillAircraftFuel} /
+ * {@code tickCannonAutoReload} / {@code matchesCaliber} / {@code beginSalvo} 等是纯转发，
+ * <b>不要再往里加新的转发方法</b>——新代码直接调 {@code XxxFireStrategy} / {@code CannonXxx}。
+ * 已有转发随调用方迁移自然删除，不一次性清。
  */
 public final class ShipCoreCombat {
     private ShipCoreCombat() {}

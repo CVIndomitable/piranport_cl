@@ -60,15 +60,16 @@ import java.util.UUID;
  *
  * 架构导航（维护者阅读入口）：
  *   - 状态机:   tickLaunching → tickCruising → tickAttacking → tickReturning
- *   - 战斗分发: tickAttacking 根据 payloadType 委托各攻击策略
- *       战斗机对空扫射 / 火箭机齐射 / 俯冲轰炸 / 水平轰炸 / 鱼雷投掷 / 反潜深弹 / 侦察
- *   - 火控:     AircraftCombat.resolveTarget / AircraftAswRecon.resolveASWTarget / AircraftCombat.resolveFighterTarget
- *   - 侦察:     tickReconActive + ReconManager（服务端），ClientReconData（客户端）
- *   - 区块加载: updateReconChunkLoading / sendPendingChunks（基于视距）
- *   - 防御:     stuck 检测 / 距离限制 / 最大留空时间
- *   - 持久化:   addAdditionalSaveData / readAdditionalSaveData（约 100 个字段）
+ *   - 战斗分发: tickAttacking → AircraftCombatService → AttackStrategyRegistry
+ *       按 definition.attackProfile 分发到 entity 包内 XxxAttackStrategy 子类；
+ *       战术算法在 AircraftCombat（轰炸/鱼雷/机枪），反潜在 AircraftAswRecon。
+ *   - 火控:     AircraftCombat.resolveTarget / resolveFighterTarget
+ *       （共用 resolveLocked + autoSeek 骨架）；反潜索敌 AircraftAswRecon.resolveASWTarget
+ *   - 侦察:     tickReconActive → AircraftAswRecon；区块强加载同处
+ *   - 补给/回收: interact 手动补给；AircraftResupply 负责回收返物/自动补给边界
+ *   - 防御:     stuck 检测 / 距离限制 / 最大留空时间；setState 走合法转移表断言
+ *   - 持久化:   addAdditionalSaveData / readAdditionalSaveData
  *   - 客户端:   lerpTo 重写 + tick() 客户端分支（防镜头抖动）
- *   - ASW 声呐: 水下目标搜索与标记
  *
  * 关键交互面:
  *   - ReconManager（服务端侦察状态）

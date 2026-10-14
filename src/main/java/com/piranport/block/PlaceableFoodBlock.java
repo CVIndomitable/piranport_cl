@@ -90,6 +90,15 @@ public class PlaceableFoodBlock extends BaseEntityBlock {
     }
 
     /**
+     * 专属模型食物方块（鲱鱼罐头）：模型是一罐竖放的罐头（罐身+盖沿），碰撞箱贴合罐体外框。
+     */
+    public static class Surstromming extends PlaceableFoodBlock {
+        public static final MapCodec<Surstromming> CODEC = simpleCodec(Surstromming::new);
+        @Override public MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }
+        public Surstromming(BlockBehaviour.Properties props) { super(Block.box(3.5, 0, 3.5, 12.5, 8, 12.5), props); }
+    }
+
+    /**
      * 专属模型食物方块（鱼雷果汁）：模型自带玻璃杯 + 液面 + 杯口斜搭的青柠片。
      * 碰撞箱拆成"杯体"与"青柠片"两块，避免整块虚拟方框把杯口上方的空气也算进去。
      */

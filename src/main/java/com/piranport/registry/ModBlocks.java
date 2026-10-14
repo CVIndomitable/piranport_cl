@@ -268,6 +268,9 @@ public class ModBlocks {
     // 鱼雷果汁专属食物方块（自带玻璃杯模型），同样走"同名方块优先"落位
     public static final DeferredBlock<PlaceableFoodBlock.TorpedoJuice> TORPEDO_JUICE =
             BLOCKS.register("torpedo_juice", () -> new PlaceableFoodBlock.TorpedoJuice(foodBlockProps()));
+    // 鲱鱼罐头专属食物方块（竖放罐头模型），同样走"同名方块优先"落位
+    public static final DeferredBlock<PlaceableFoodBlock.Surstromming> SURSTROMMING =
+            BLOCKS.register("surstromming", () -> new PlaceableFoodBlock.Surstromming(foodBlockProps()));
 
     // ===== Reload Facility =====
     public static final DeferredBlock<ReloadFacilityBlock> RELOAD_FACILITY =

@@ -84,6 +84,36 @@ public class AircraftEntity extends Entity {
         RECON_ACTIVE  // Phase 32 — ordinal 5, must remain last
     }
 
+    /**
+     * 合法飞行状态转移表 —— setState 据此断言「from → to」在表内，非法转移当场抛异常，
+     * 避免静默进入诡异状态。
+     *
+     * <p>盘点口径（src/main 全部 setState 调用点）：
+     * <ul>
+     *   <li>LAUNCHING → CRUISING / RECON_ACTIVE / RETURNING（强制返航）/ REMOVED</li>
+     *   <li>CRUISING → ATTACKING / RETURNING / REMOVED</li>
+     *   <li>ATTACKING → CRUISING（索敌回退）/ RETURNING / REMOVED</li>
+     *   <li>RECON_ACTIVE → RETURNING / REMOVED</li>
+     *   <li>RETURNING → REMOVED（recallAndRemove / 距离/脱困防御）</li>
+     *   <li>REMOVED → 无（终态）</li>
+     * </ul>
+     * 注：同态 setState（如 RECON_ACTIVE→RECON_ACTIVE 的重复进入）不允许；防御路径
+     * 统一经 startReturning，故所有非终态都能到 RETURNING。
+     */
+    private static final java.util.Map<FlightState, java.util.Set<FlightState>> LEGAL_TRANSITIONS =
+            java.util.Map.of(
+                    FlightState.LAUNCHING, java.util.Set.of(
+                            FlightState.CRUISING, FlightState.RECON_ACTIVE,
+                            FlightState.RETURNING, FlightState.REMOVED),
+                    FlightState.CRUISING, java.util.Set.of(
+                            FlightState.ATTACKING, FlightState.RETURNING, FlightState.REMOVED),
+                    FlightState.ATTACKING, java.util.Set.of(
+                            FlightState.CRUISING, FlightState.RETURNING, FlightState.REMOVED),
+                    FlightState.RECON_ACTIVE, java.util.Set.of(
+                            FlightState.RETURNING, FlightState.REMOVED),
+                    FlightState.RETURNING, java.util.Set.of(FlightState.REMOVED),
+                    FlightState.REMOVED, java.util.Set.of());
+
     private static final EntityDataAccessor<Integer> STATE =
             SynchedEntityData.defineId(AircraftEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Integer> AIRCRAFT_TYPE_DATA =
@@ -116,6 +146,12 @@ public class AircraftEntity extends Entity {
     private int coreInventorySlot = 0;
     AircraftInfo.AircraftType aircraftType = AircraftInfo.AircraftType.FIGHTER;
     String aircraftDefinitionId = AircraftDefinitionService.legacyId(AircraftInfo.AircraftType.FIGHTER);
+    /**
+     * P7 缓存：解析后的机型定义快照，按 aircraftDefinitionId 失效重算。
+     * 命中后热路径（攻击分发/冷却查询）不再每 tick 重建。
+     */
+    @Nullable private volatile AircraftDefinition cachedDefinition;
+    private String cachedDefinitionKey = "";
     AircraftAttackMode attackMode = AircraftAttackMode.FOCUS;
     float panelDamage;
     float panelSpeed;
@@ -1348,6 +1384,15 @@ public class AircraftEntity extends Entity {
     @Nullable
 
     public void setState(FlightState newState) {
+        FlightState from = getFlightState();
+        if (from == newState) return;
+        java.util.Set<FlightState> allowed = LEGAL_TRANSITIONS.getOrDefault(from, java.util.Set.of());
+        if (!allowed.contains(newState)) {
+            // 非法转移当场抛出，避免静默进入诡异状态；防御路径统一经 startReturning 进 RETURNING。
+            throw new IllegalStateException(
+                    "illegal aircraft flight state transition: " + from + " -> " + newState
+                            + " (entityId=" + getId() + ", def=" + aircraftDefinitionId + ")");
+        }
         if (newState == FlightState.ATTACKING) {
             hasFired = false;
             attackCooldown = 0;
@@ -1456,6 +1501,26 @@ public class AircraftEntity extends Entity {
     public String getAircraftDefinitionId() {
         String synced = entityData.get(AIRCRAFT_DEFINITION_DATA);
         return synced == null || synced.isBlank() ? aircraftDefinitionId : synced;
+    }
+
+    /**
+     * P7 缓存：解析当前 definition 并缓存；定义 ID 变化（热重载/存档切换）时自动失效重算。
+     * 命中后热路径不再每 tick 重建 {@link AircraftInfo}/{@link AircraftDefinitionService#resolve}。
+     */
+    @Nullable
+    public AircraftDefinition getResolvedDefinition() {
+        String id = getAircraftDefinitionId();
+        AircraftDefinition hit = cachedDefinition;
+        if (hit != null && id.equals(cachedDefinitionKey)) return hit;
+        AircraftDefinition resolved = AircraftDefinitionService.find(id);
+        if (resolved == null) {
+            AircraftInfo info = new AircraftInfo(getAircraftType(), 1, 0, 0, 0, 1, 0,
+                    AircraftInfo.BombingMode.DIVE, false, id);
+            resolved = AircraftDefinitionService.resolve(info, id);
+        }
+        cachedDefinition = resolved;
+        cachedDefinitionKey = id;
+        return resolved;
     }
 
     /** 当前飞行快照中的生命值。 */

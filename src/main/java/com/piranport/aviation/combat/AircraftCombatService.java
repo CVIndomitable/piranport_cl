@@ -1,8 +1,6 @@
 package com.piranport.aviation.combat;
 
 import com.piranport.aviation.AircraftDefinition;
-import com.piranport.aviation.AircraftDefinitionService;
-import com.piranport.component.AircraftInfo;
 import com.piranport.entity.AircraftEntity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -60,11 +58,7 @@ public final class AircraftCombatService {
     }
 
     private static AircraftDefinition definitionFor(AircraftEntity aircraft) {
-        String id = aircraft.getAircraftDefinitionId();
-        AircraftDefinition definition = AircraftDefinitionService.find(id);
-        if (definition != null) return definition;
-        AircraftInfo info = new AircraftInfo(aircraft.getAircraftType(), 1, 0, 0, 0, 1, 0,
-                AircraftInfo.BombingMode.DIVE, false, id);
-        return AircraftDefinitionService.resolve(info, id);
+        // 解析结果缓存在实体上（getResolvedDefinition），热路径不再每 tick 重建。
+        return aircraft.getResolvedDefinition();
     }
 }

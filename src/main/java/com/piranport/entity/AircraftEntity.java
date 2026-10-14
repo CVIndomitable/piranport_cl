@@ -159,6 +159,13 @@ public class AircraftEntity extends Entity {
     int ammoCapacity = 0;
     private int currentFuel = 0;
     private int fuelCapacity = 1;
+    int getFuelCapacity() { return fuelCapacity; }
+    void setCurrentFuel(int v) { this.currentFuel = v; }
+    int getWeaponSlotIndex() { return weaponSlotIndex; }
+    ItemStack getOriginalStack() { return originalStack; }
+    void setLastReturnResult(String r) { this.lastReturnResult = r; }
+    boolean isForcedReturn() { return isForcedReturn; }
+    long spawnTimeMs() { return spawnTimeMs; }
     boolean hasBullets = false;
     String payloadType = "";
     AircraftInfo.BombingMode bombingMode = AircraftInfo.BombingMode.DIVE;
@@ -194,7 +201,6 @@ public class AircraftEntity extends Entity {
     int autoSeekCooldown = 20; // 运行时状态，避免首次 tick 立即搜索（不持久化，每次加载重置为 20）
     boolean autoSeekDone = false;    // true after first auto-seek scan (one-shot)
     boolean hasEverHadFireControl = false; // true if FC target was ever assigned
-    private transient net.minecraft.world.item.Item cachedPayloadItem; // P3 #31: cached Item reference
 
     // Phase 32 runtime fields
     private FlightState lastKnownState = FlightState.LAUNCHING;
@@ -837,7 +843,7 @@ public class AircraftEntity extends Entity {
     // refreshCachedMapSlots, updateReconChunkLoading, sendPendingChunks
     // moved to AircraftAswRecon
 
-    private void releaseAllForcedChunks() {
+    void releaseAllForcedChunks() {
         AircraftAswRecon.releaseAllForcedChunks(this);
     }
 
@@ -1103,104 +1109,7 @@ public class AircraftEntity extends Entity {
 
     /** Remove entity and return aircraft item to the owner's ship core weapon slot. */
     public void recallAndRemove() {
-        com.piranport.debug.PiranPortDebug.event(
-                "Aircraft RETURN | type={} entityId={} forced={}",
-                aircraftType.name(), getId(), isForcedReturn);
-        boolean returned = false;
-        if (!level().isClientSide() && ownerUUID != null && level() instanceof ServerLevel sl) {
-            Player owner = sl.getServer().getPlayerList().getPlayer(ownerUUID);
-            if (owner != null) {
-                // Clean up recon if active
-                if (getFlightState() == FlightState.RECON_ACTIVE) {
-                    cleanupReconState(owner);
-                }
-                // Action bar notification
-                Component aircraftName = buildReturnStack().getHoverName();
-                String msgKey = isForcedReturn
-                        ? "message.piranport.aircraft_lost"
-                        : "message.piranport.aircraft_returned";
-                owner.displayClientMessage(Component.translatable(msgKey, aircraftName), true);
-                returned = returnItemToOwner(owner);
-                // 实际返还飞机时触发航空回收静默，失联强制销毁不触发。
-                if (!isForcedReturn && level() == owner.level()) {
-                    com.piranport.combat.AASilenceManager.startSilence(owner);
-                }
-            } else {
-                // Owner offline — still clean up recon state and chunks
-                ReconManager.endRecon(ownerUUID);
-                releaseAllForcedChunks();
-                lastReturnResult = "OWNER_OFFLINE";
-            }
-        }
-        // P0-3: 实体移除埋点（带回程是否成功、存活时长）
-        long lifetimeSec = (System.currentTimeMillis() - spawnTimeMs) / 1000L;
-        com.piranport.debug.PiranPortDebug.aircraftRemoved(
-                getId(), ownerUUID, returned, lifetimeSec);
-        discard();
-    }
-
-    private boolean returnItemToOwner(Player player) {
-        if (autonomous) {
-            // 自主飞机不返回物品栏，直接掉落物品
-            Block.popResource(player.level(), player.blockPosition(), buildReturnStack());
-            lastReturnResult = "DROPPED";
-            com.piranport.debug.PiranPortDebug.aircraftReturnItem(
-                    getId(), ownerUUID, true, weaponSlotIndex, "DROPPED");
-            return true;
-        }
-
-        ItemStack returnStack = buildReturnStack();
-        // 直接尝试放回原武器槽：若空则成功，否则原版 placeItemBackInInventory 会自动入库/掉落
-        if (weaponSlotIndex == 40) {
-            if (player.getInventory().offhand.get(0).isEmpty()) {
-                player.getInventory().offhand.set(0, returnStack);
-                lastReturnResult = "SUCCESS";
-                com.piranport.debug.PiranPortDebug.aircraftReturnItem(
-                        getId(), ownerUUID, true, weaponSlotIndex, "SUCCESS");
-                return true;
-            }
-        } else if (weaponSlotIndex >= 0 && weaponSlotIndex < player.getInventory().items.size()
-                && player.getInventory().items.get(weaponSlotIndex).isEmpty()) {
-            player.getInventory().items.set(weaponSlotIndex, returnStack);
-            lastReturnResult = "SUCCESS";
-            com.piranport.debug.PiranPortDebug.aircraftReturnItem(
-                    getId(), ownerUUID, true, weaponSlotIndex, "SUCCESS");
-            return true;
-        }
-        // 槽位已满：placeItemBackInInventory 返回 void，要么合并要么掉落
-        // 通过调用前后槽位变化检测是否合并成功
-        int beforeCount = player.getInventory().items.stream()
-                .mapToInt(s -> s.isEmpty() ? 0 : s.getCount()).sum();
-        player.getInventory().placeItemBackInInventory(returnStack);
-        int afterCount = player.getInventory().items.stream()
-                .mapToInt(s -> s.isEmpty() ? 0 : s.getCount()).sum();
-        String result = afterCount > beforeCount ? "MERGED" : "SLOT_FULL";
-        lastReturnResult = result;
-        com.piranport.debug.PiranPortDebug.aircraftReturnItem(
-                getId(), ownerUUID, true, weaponSlotIndex, result);
-        return afterCount > beforeCount;
-    }
-
-    private ItemStack buildReturnStack() {
-        // Restore original ItemStack if available, preserving custom names/enchants/components
-        ItemStack stack;
-        if (originalStack != null && !originalStack.isEmpty()) {
-            stack = originalStack.copy();
-        } else {
-            stack = switch (aircraftType) {
-                case FIGHTER        -> new ItemStack(ModItems.SEAFIRE.get());
-                case DIVE_BOMBER    -> new ItemStack(ModItems.PETREL_BOMBER.get());
-                case TORPEDO_BOMBER -> new ItemStack(ModItems.SWORDFISH_TORPEDO.get());
-                case LEVEL_BOMBER   -> new ItemStack(ModItems.B25_BOMBER.get());
-                case ASW            -> new ItemStack(ModItems.SWORDFISH_ASW.get());
-                case RECON          -> new ItemStack(ModItems.SAIUN_RECON.get());
-                case ROCKET_FIGHTER -> new ItemStack(ModItems.F6F_HELLCAT_ROCKET.get());
-            };
-        }
-        // Intentionally reset fuel to 0: returning aircraft must be refueled before next sortie
-        AircraftInfo info = stack.get(ModDataComponents.AIRCRAFT_INFO.get());
-        if (info != null) stack.set(ModDataComponents.AIRCRAFT_INFO.get(), info.withCurrentFuel(0));
-        return stack;
+        AircraftResupply.recallAndRemove(this);
     }
 
     @Override
@@ -1246,45 +1155,9 @@ public class AircraftEntity extends Entity {
         return InteractionResult.PASS;
     }
 
-    /**
-     * Attempt to draw payload items from the owner's inventory. Returns true if successful.
-     */
-    /** Lazily resolve the payload type string to an Item reference for fast comparison. */
-    private net.minecraft.world.item.Item resolvePayloadItem() {
-        if (cachedPayloadItem == null && !payloadType.isEmpty()) {
-            net.minecraft.resources.ResourceLocation loc =
-                    net.minecraft.resources.ResourceLocation.tryParse(payloadType);
-            cachedPayloadItem = loc != null ? BuiltInRegistries.ITEM.get(loc) : null;
-        }
-        return cachedPayloadItem;
-    }
-
+    /** 自动补给（空中重新装填挂载）；当前固定关闭，保留为兼容边界。 */
     boolean tryAutoResupplyAmmo(Player owner) {
-        if (payloadType.isEmpty()) return false;
-        // 自动补给是"空中重新装填挂载"，仅在 AUTO_RESUPPLY 开启时可用；手动模式下挂载只走 R 键背包装填
-        // 自动装填固定关闭；保留方法作为旧实体调用方的兼容边界。
-        return false;
-    }
-
-    /**
-     * Attempt to draw one aviation_fuel from the owner's inventory.
-     * Returns true if successful.
-     */
-    private boolean tryAutoResupplyFuel(Player owner) {
-        for (ItemStack ammo : owner.getInventory().items) {
-            if (ammo.is(ModItems.AVIATION_FUEL.get()) && ammo.getCount() > 0) {
-                ammo.shrink(1);
-                currentFuel = fuelCapacity;
-                return true;
-            }
-        }
-        ItemStack offhand = owner.getInventory().offhand.get(0);
-        if (offhand.is(ModItems.AVIATION_FUEL.get()) && offhand.getCount() > 0) {
-            offhand.shrink(1);
-            currentFuel = fuelCapacity;
-            return true;
-        }
-        return false;
+        return AircraftResupply.tryAutoResupplyAmmo(this, owner);
     }
 
     // ===== Phase 33: air combat =====
@@ -1348,7 +1221,7 @@ public class AircraftEntity extends Entity {
             }
             // Action bar shot-down notification
             if (owner != null) {
-                Component aircraftName = buildReturnStack().getHoverName();
+                Component aircraftName = AircraftResupply.buildReturnStack(this).getHoverName();
                 if (attacker != null) {
                     owner.displayClientMessage(Component.translatable(
                             "message.piranport.aircraft_shot_down_by", aircraftName, attacker.getDisplayName()), true);
@@ -1362,7 +1235,7 @@ public class AircraftEntity extends Entity {
                     aircraftType.name(), getId(),
                     attacker != null ? attacker.getType().toShortString() : "unknown");
             // 掉落飞机物品（防爆+浮水）
-            ItemStack dropStack = buildReturnStack();
+            ItemStack dropStack = AircraftResupply.buildReturnStack(this);
             if (!dropStack.isEmpty()) {
                 AircraftDropEntity drop = new AircraftDropEntity(
                         level(), getX(), getY(), getZ(), dropStack);

@@ -31,16 +31,6 @@ class PondererPackTest {
     private static final Path PACK = Path.of(System.getProperty("piranport.pondererPack"));
     private static final Path SOURCE = Path.of(System.getProperty("piranport.pondererSource"));
     private static final String SCRIPT = "data/ponderer/scripts/piranport_processing.json";
-    private static final String[] SCRIPTS = {
-            "data/ponderer/scripts/piranport_ammo_workbench.json",
-            "data/ponderer/scripts/piranport_fire_control.json",
-            "data/ponderer/scripts/piranport_portal_lectern.json",
-            "data/ponderer/scripts/piranport_processing.json",
-            "data/ponderer/scripts/piranport_reload_facility.json",
-            "data/ponderer/scripts/piranport_ship_core_modifier.json",
-            "data/ponderer/scripts/piranport_smoke_candle.json",
-            "data/ponderer/scripts/piranport_weapon_workbench.json"
-    };
     private static final Gson GSON = new GsonBuilder()
             .registerTypeAdapter(LocalizedText.class, new LocalizedText.GsonAdapter())
             .create();
@@ -90,8 +80,11 @@ class PondererPackTest {
     void archiveContainsCurrentSourcesAndMinecraft1211Metadata() throws IOException {
         try (ZipFile archive = new ZipFile(PACK.toFile())) {
             Set<String> expectedFiles = new java.util.LinkedHashSet<>(List.of("pack.json", "pack.mcmeta"));
-            for (String script : SCRIPTS) {
-                expectedFiles.add(script);
+            try (var sourceFiles = Files.list(SOURCE.resolve("data/ponderer/scripts"))) {
+                for (String script : sourceFiles
+                        .map(path -> "data/ponderer/scripts/" + path.getFileName()).toList()) {
+                    expectedFiles.add(script);
+                }
             }
             assertEquals(expectedFiles, archive.stream().filter(entry -> !entry.isDirectory())
                     .map(ZipEntry::getName).collect(java.util.stream.Collectors.toSet()));

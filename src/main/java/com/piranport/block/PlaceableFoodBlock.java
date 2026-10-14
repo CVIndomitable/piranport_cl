@@ -90,6 +90,16 @@ public class PlaceableFoodBlock extends BaseEntityBlock {
     }
 
     /**
+     * 专属模型食物方块（海军烘豆子）：模型自带盘+茄汁豆堆+两片番茄+一小撮橄榄，
+     * 碰撞箱取整盘外框。
+     */
+    public static class NavalBakedBeans extends PlaceableFoodBlock {
+        public static final MapCodec<NavalBakedBeans> CODEC = simpleCodec(NavalBakedBeans::new);
+        @Override public MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }
+        public NavalBakedBeans(BlockBehaviour.Properties props) { super(Block.box(1, 0, 1, 15, 3.5, 15), props); }
+    }
+
+    /**
      * 专属模型食物方块（鲱鱼罐头）：模型是一罐竖放的罐头（罐身+盖沿），碰撞箱贴合罐体外框。
      */
     public static class Surstromming extends PlaceableFoodBlock {

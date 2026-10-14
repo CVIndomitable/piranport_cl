@@ -166,13 +166,17 @@ public class DungeonEventHandler {
         DungeonInstanceManager mgr = DungeonInstanceManager.get((ServerLevel) player.level());
         DungeonInstance instance = mgr.getInstanceForPlayer(player);
         if (instance != null) {
+            // 讲台是位置坐标，不依赖钥匙在场：第三方中途拔钥匙时玩家仍应回门口。
+            // 若钥匙/讲台已毁，读不到钥匙仅意味着副本会话无法继续，不阻塞传送。
             ItemStack key = readKeyFromLectern(instance, player.server);
+            DungeonInstance target = instance;
             if (key.getItem() instanceof DungeonKeyItem) {
                 UUID instanceId = DungeonKeyItem.getInstanceId(key);
                 if (instanceId != null && mgr.getInstance(instanceId) != null) {
-                    teleportToLectern(player, mgr.getInstance(instanceId));
+                    target = mgr.getInstance(instanceId);
                 }
             }
+            teleportToLectern(player, target);
         }
 
         // Notify client to open revive screen
@@ -184,13 +188,11 @@ public class DungeonEventHandler {
      * 受致命伤害时若持有图腾，按原版逻辑结算，此时并未实际死亡。
      */
     private static boolean hasTotemOfUndying(ServerPlayer player) {
-        for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
-            ItemStack stack = player.getInventory().getItem(i);
-            if (stack.is(Items.TOTEM_OF_UNDYING)) {
-                return true;
-            }
-        }
-        return false;
+        // 原版 LivingEntity.checkTotemDeathProtection 只检查主手和副手；
+        // 背包里的图腾不会触发原版保护——若这里误判为持有，事件不取消，
+        // 玩家会真死并在主世界重生，违背「死亡回门口」设计。
+        return player.getMainHandItem().is(Items.TOTEM_OF_UNDYING)
+                || player.getOffhandItem().is(Items.TOTEM_OF_UNDYING);
     }
 
     @SubscribeEvent
@@ -434,6 +436,28 @@ public class DungeonEventHandler {
                 player.getYRot(), player.getXRot());
         PiranPort.LOGGER.debug("Boundary-clamped player {} from {} to {} in instance {}",
                 player.getName().getString(), pos, clamped, instance.getInstanceId());
+
+        // 鞘翅低空滑出边界时，钳制落点可能是开阔海面——脚下 5 格无实体方块则改送节点平台，
+        // 否则玩家会被拉回虚空/水面上方直接坠落。
+        ServerLevel dungeonLevel = (ServerLevel) player.level();
+        BlockPos feet = player.blockPosition();
+        boolean groundBelow = false;
+        for (int dy = 0; dy <= 5; dy++) {
+            if (!dungeonLevel.getBlockState(feet.below(dy)).isAir()) {
+                groundBelow = true;
+                break;
+            }
+        }
+        if (!groundBelow && player.getY() < com.piranport.dungeon.DungeonConstants.SEA_LEVEL) {
+            String nodeId = instance.getCurrentNode();
+            BlockPos spawn = nodeId != null ? instance.getNodeSpawnPos(nodeId) : null;
+            if (spawn != null) {
+                player.teleportTo(dungeonLevel, spawn.getX() + 0.5, spawn.getY(), spawn.getZ() + 0.5,
+                        player.getYRot(), player.getXRot());
+                PiranPort.LOGGER.debug("Boundary-clamp had no ground below; relocated player {} to node spawn {}",
+                        player.getName().getString(), spawn);
+            }
+        }
     }
 
     // ===== Checkpoint (整合版 §3.2) =====

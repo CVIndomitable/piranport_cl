@@ -171,7 +171,9 @@ public final class DungeonNodeRouter {
         // 游标保存到传送前，显式补平台可避免玩家在海水里生成后直接下沉。
         ensureSpawnPlatform(dungeonLevel, spawn);
         boolean entering = DungeonInstanceManager.get(player.serverLevel()).getInstanceForPlayer(player) != instance;
-        if (entering) {
+        // 回城卷轴是「副本内逃生」道具，只在玩家首次进入时发一次；
+        // 重返节点（已在实例里）不再发，避免反复进出刷卷轴。
+        if (entering && !hasTownScroll(player)) {
             ItemStack scroll = new ItemStack(ModItems.TOWN_SCROLL.get());
             if (!player.getInventory().add(scroll)) player.drop(scroll, false);
         }
@@ -236,6 +238,15 @@ public final class DungeonNodeRouter {
                 PiranPort.LOGGER.warn("Unknown script: {}", node.script());
                 NodeBattleField.spawnEnemies(setup.dungeonLevel(), instance, node);
             }
+    }
+
+    /** 玩家背包（含副手栏，Inventory.items 为主栏）是否已持有回城卷轴。 */
+    private static boolean hasTownScroll(ServerPlayer player) {
+        Inventory inv = player.getInventory();
+        for (int i = 0; i < inv.getContainerSize(); i++) {
+            if (inv.getItem(i).is(ModItems.TOWN_SCROLL.get())) return true;
+        }
+        return false;
     }
 
     private static int countItem(ServerPlayer player, Item item) {

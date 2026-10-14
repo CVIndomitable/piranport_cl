@@ -70,13 +70,13 @@ public final class BallisticSolverStats {
     // ===== 缓存命中率 =====
 
     /** 记录一次缓存命中（零成本路径）。 */
-    public void recordCacheHit() { cacheHits++; }
+    public synchronized void recordCacheHit() { cacheHits++; }
 
     /**
      * 记录一次缓存未命中（完整解算）。
      * @param elapsedNs 本次解算耗时
      */
-    public void recordCacheMiss(long elapsedNs) {
+    public synchronized void recordCacheMiss(long elapsedNs) {
         cacheMisses++;
         cacheMissTotalNs += elapsedNs;
         if (elapsedNs > cacheMissMaxNs) cacheMissMaxNs = elapsedNs;
@@ -97,7 +97,7 @@ public final class BallisticSolverStats {
     }
 
     /** 记录三分法计算 */
-    public void recordTernary(long elapsedNs, double verticalError, double horizontalError) {
+    public synchronized void recordTernary(long elapsedNs, double verticalError, double horizontalError) {
         ternaryMinNs = Math.min(ternaryMinNs, elapsedNs);
         ternaryMaxNs = Math.max(ternaryMaxNs, elapsedNs);
         ternaryTotalNs += elapsedNs;
@@ -108,7 +108,7 @@ public final class BallisticSolverStats {
     }
 
     /** 记录牛顿迭代计算 */
-    public void recordNewton(long elapsedNs, double verticalError, double horizontalError) {
+    public synchronized void recordNewton(long elapsedNs, double verticalError, double horizontalError) {
         newtonMinNs = Math.min(newtonMinNs, elapsedNs);
         newtonMaxNs = Math.max(newtonMaxNs, elapsedNs);
         newtonTotalNs += elapsedNs;
@@ -119,7 +119,7 @@ public final class BallisticSolverStats {
     }
 
     /** 记录组合解算的最终精度和选择 */
-    public void recordCombined(double verticalError, double horizontalError, Algorithm chosen, long totalNs) {
+    public synchronized void recordCombined(double verticalError, double horizontalError, Algorithm chosen, long totalNs) {
         combinedVerticalError = verticalError;
         combinedHorizontalError = horizontalError;
         lastChosen = chosen;

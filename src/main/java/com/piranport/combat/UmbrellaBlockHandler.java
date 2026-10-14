@@ -1,7 +1,6 @@
 package com.piranport.combat;
 
 import com.piranport.PiranPort;
-import com.piranport.config.ModEquipmentConfig;
 import com.piranport.item.TaihouUmbrellaItem;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -15,19 +14,10 @@ import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
 
 /**
  * 大凤的伞格挡处理 — 当玩家右键举起伞时，
- * 格挡来自上方150度锥形范围内的伤害。
+ * 格挡来自玩家碰撞箱上方的伤害。
  */
 @EventBusSubscriber(modid = PiranPort.MOD_ID)
 public class UmbrellaBlockHandler {
-
-    /**
-     * 格挡锥半角（度）的真源在 {@link ModEquipmentConfig#DEFENSE_CONE_HALF_ANGLE_DEG}
-     * （{@code global.defense_cone.half_angle_deg}，默认 75 → 150 度锥）。
-     * 与欧根舰盾共用同一参数：两者语义相同 —— 都按「方向向量 · 锥轴 ≥ cos(半角)」判定是否落在对称锥内。
-     */
-    private static double cosHalfAngle() {
-        return Math.cos(Math.toRadians(ModEquipmentConfig.DEFENSE_CONE_HALF_ANGLE_DEG.get()));
-    }
 
     @SubscribeEvent
     public static void onLivingIncomingDamage(LivingIncomingDamageEvent event) {
@@ -46,18 +36,11 @@ public class UmbrellaBlockHandler {
         Vec3 sourcePos = event.getSource().getSourcePosition();
         if (sourcePos == null) return;
 
-        // 玩家中心到伤害源的方向
-        Vec3 playerCenter = player.position().add(0, player.getBbHeight() * 0.5, 0);
-        Vec3 dirToSource = sourcePos.subtract(playerCenter);
-        if (dirToSource.lengthSqr() < 1e-6) return;
-        dirToSource = dirToSource.normalize();
-
-        // 检查伤害源是否在正上方 150 度锥形内
-        // The umbrella protects against attacks coming from above (anti-air).
-        // We check the angle between dirToSource and the UP vector (0, 1, 0).
-        // dot(dirToSource, UP) = dirToSource.y = cos(angle)
-        // If angle <= half angle, then cos(angle) >= cos(half angle)
-        if (dirToSource.y >= cosHalfAngle()) {
+        // 伞只挡「上方来弹」：伤害源高于玩家碰撞箱顶即格挡。
+        // 旧实现用「玩家中心→伤害源」向量与竖直方向的夹角判定，零距离/体内命中时向量退化、
+        // 归一化方向随机导致格挡概率性失效；高度判定没有这个退化情况。
+        // 注意：DEFENSE_CONE_HALF_ANGLE_DEG 是欧根舰盾的方向锥参数，伞不再引用它。
+        if (sourcePos.y > player.getY() + player.getBbHeight()) {
             // 格挡伤害
             event.setCanceled(true);
 

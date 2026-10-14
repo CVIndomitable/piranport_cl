@@ -67,7 +67,8 @@ public class TorpedoAttackGoal extends Goal {
             TorpedoEntity torpedo = new TorpedoEntity(ModEntityTypes.TORPEDO_ENTITY.get(), mob.level());
             torpedo.setPos(mob.getX(), mob.getY() + 0.2, mob.getZ());
             torpedo.setOwner(mob);
-            torpedo.setDamage((float) mob.getAttributeValue(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE));
+            // 鱼雷伤害走按舰种 JSON 配置的 getTorpedoDamage()；ATTACK_DAMAGE 是近战属性（3.0），不是鱼雷伤害
+            torpedo.setDamage(mob.getTorpedoDamage());
 
             double dx = Math.cos(angle);
             double dz = Math.sin(angle);

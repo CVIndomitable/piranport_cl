@@ -224,11 +224,13 @@ public class ShipCoreItem extends Item implements Equipable {
                     int totalAdded = 0;
                     while (!other.isEmpty()) {
                         int space = fuel.maxFuel() - fuel.currentFuel() - totalAdded;
-                        if (space <= 0) break;
-                        int gain = Math.min(fuelValue, space);
-                        totalAdded += gain;
+                        // 单个燃料物品不可拆分：剩余空间装不下整份燃料值时停止消耗，
+                        // 否则会把差额吞掉（如煤炭块 10 点燃料只剩 1 点空间时被吃掉 9 点）。
+                        if (space < fuelValue) break;
+                        totalAdded += fuelValue;
                         other.shrink(1);
                     }
+                    if (totalAdded == 0) return false;
                     stack.set(ModDataComponents.SHIP_CORE_FUEL.get(),
                             fuel.withCurrentFuel(fuel.currentFuel() + totalAdded));
                     player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
@@ -288,6 +290,8 @@ public class ShipCoreItem extends Item implements Equipable {
             return true;
         } else {
             // Extract: cursor is empty → pop last stored plate back to cursor
+            // 光标上已有物品时绝不能覆盖 access.set，否则会静默销毁光标上的整组物品。
+            if (!access.get().isEmpty()) return false;
             for (int i = capacity - 1; i >= 0; i--) {
                 if (!stored.get(i).isEmpty()) {
                     access.set(stored.get(i).copy());

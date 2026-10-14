@@ -21,7 +21,7 @@ import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
  * {@link RegisterGuiLayersEvent}，HUD 实际从不显示。已在 {@link #onRegisterGuiLayers}
  * 中显式注册到 HOTBAR 层上方。</p>
  */
-@EventBusSubscriber(modid = PiranPort.MOD_ID, value = net.neoforged.api.distmarker.Dist.CLIENT)
+@EventBusSubscriber(modid = PiranPort.MOD_ID, value = net.neoforged.api.distmarker.Dist.CLIENT, bus = EventBusSubscriber.Bus.MOD)
 public class DungeonHudLayer implements LayeredDraw.Layer {
     public static final ResourceLocation ID =
             ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "dungeon_hud");

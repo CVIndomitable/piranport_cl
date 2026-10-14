@@ -45,6 +45,8 @@ public final class AircraftLaunchService {
         boolean lightCarrier = carrier instanceof DeepOceanLightCarrierEntity;
         String itemId = carrierAircraftItemId(lightCarrier, aircraftIndex, carrier.getMaxAircraft());
         LivingEntity target = carrier.getTarget();
+        // 目标在本 tick 已死但 selector 未清理时，target 仍是死引用——置 null 让飞机以无目标起飞。
+        if (target != null && !target.isAlive()) target = null;
         Vec3 spawnPosition = carrierSpawnPosition(carrier, target);
         AircraftEntity aircraft = createAutonomous(level, spawnPosition, itemId, target, carrier);
         level.addFreshEntity(aircraft);

@@ -118,6 +118,7 @@ public class ShipGirlCombatGoal extends Goal {
             TorpedoEntity torpedo = new TorpedoEntity(ModEntityTypes.TORPEDO_ENTITY.get(), shipGirl.level());
             torpedo.setPos(shipGirl.getX(), shipGirl.getY() + 0.2, shipGirl.getZ());
             torpedo.setOwner(shipGirl);
+            // 舰娘鱼雷刻意走玩家侧 ATTACK_DAMAGE 属性（跟随舰娘配装加成）；深海鱼雷则用按舰种 JSON 配置的 getTorpedoDamage()，两边口径不同是有意的
             torpedo.setDamage((float) shipGirl.getAttributeValue(
                     net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE));
 

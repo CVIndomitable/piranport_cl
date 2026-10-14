@@ -45,6 +45,21 @@ public final class WeaponReloadLifecycle {
             int currentSlot = findHotbarSlot(inventory, stack);
             if (currentSlot >= 0) {
                 entry.setValue(currentSlot);
+                // 武器在快捷栏内换位时，把核心上的槽位冷却一并迁移到新槽位；
+                // 否则旧槽位会留一条指向不存在武器的冷却，既挡不了旧槽、也让新槽漏过冷却检查。
+                long gameTime = player.level().getGameTime();
+                ItemStack core = TransformationManager.findTransformedCore(player);
+                if (!core.isEmpty()) {
+                    SlotCooldowns cooldowns = core.getOrDefault(
+                            ModDataComponents.SLOT_COOLDOWNS.get(), SlotCooldowns.EMPTY);
+                    if (cooldowns.isOnCooldown(oldSlot, gameTime)) {
+                        long remaining = cooldowns.endTick().get(oldSlot) - gameTime;
+                        // 用无属主重载保持剩余 tick 原样迁移，避免属主版再叠加一次测试冷却覆盖。
+                        core.set(ModDataComponents.SLOT_COOLDOWNS.get(),
+                                cooldowns.withoutSlotCooldown(oldSlot)
+                                        .withSlotCooldown(currentSlot, (int) remaining, gameTime));
+                    }
+                }
                 continue;
             }
             WeaponCooldown cooldown = stack.get(ModDataComponents.WEAPON_COOLDOWN.get());

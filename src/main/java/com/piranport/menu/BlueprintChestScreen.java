@@ -74,6 +74,25 @@ public class BlueprintChestScreen extends AbstractContainerScreen<BlueprintChest
         }
     }
 
+    /**
+     * 修复：BlueprintSlot 与 CopySlot 注册在完全相同的坐标（8+col*18, 34），
+     * 而原版私有 findSlot 返回 slots 列表里第一个命中的槽位——BlueprintSlot 先注册，
+     * 导致复印 tab 下点击永远命中蓝图槽，CopySlot 的取出逻辑永远不会触发。
+     * findSlot 是 private 无法覆写，因此在 slotClicked（protected）里做下标重映射：
+     * 复印 tab 下命中蓝图槽下标(0~8)时，实际向服务端发送对应 CopySlot 的下标(+10)。
+     */
+    @Override
+    protected void slotClicked(Slot slot, int slotId, int mouseButton, net.minecraft.world.inventory.ClickType type) {
+        if (slot != null && getMenu().getCurrentTab() == 1
+                && slot.index >= 0 && slot.index < 9) {
+            this.minecraft.gameMode.handleInventoryMouseClick(
+                    this.menu.containerId, slot.index + BlueprintChestMenu.COPY_SLOT_START,
+                    mouseButton, type, this.minecraft.player);
+            return;
+        }
+        super.slotClicked(slot, slotId, mouseButton, type);
+    }
+
     private void drawSlotBg(GuiGraphics g, int x, int y) {
         g.fill(x, y, x + 18, y + 18, 0xFF373737);
         g.fill(x + 1, y + 1, x + 17, y + 17, 0xFFE0E0E0);

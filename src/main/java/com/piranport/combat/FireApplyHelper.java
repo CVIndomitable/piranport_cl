@@ -74,7 +74,9 @@ public final class FireApplyHelper {
         int maxLevel = ModEquipmentConfig.FIRE_MAX_LEVEL.get();
         MobEffectInstance existing = target.getEffect(ModMobEffects.BURNING);
         int oldAmplifier = existing != null ? existing.getAmplifier() : -1;
-        int newAmplifier = Math.min(maxLevel - 1, Math.max(0, oldAmplifier) + delta);
+        // amplifier = 等级 − 1：无旧效果时 oldAmplifier 为 -1，首击应落在 amplifier delta-1（即等级 delta），
+        // 不能 floor 到 0，否则首击直接变成 amplifier delta（等级 delta+1）。
+        int newAmplifier = Math.min(maxLevel - 1, Math.max(-1, oldAmplifier) + delta);
         target.addEffect(new MobEffectInstance(
                 ModMobEffects.BURNING, durationTicks, newAmplifier, false, false, true));
         // 防 effect 实例未触发刷新时强制刷新：移除后重新施加保证时长

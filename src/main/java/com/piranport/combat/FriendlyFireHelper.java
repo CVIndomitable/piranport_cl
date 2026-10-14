@@ -1,6 +1,5 @@
 package com.piranport.combat;
 
-import com.piranport.config.ModCommonConfig;
 import com.piranport.entity.AircraftEntity;
 import com.piranport.npc.deepocean.AbstractDeepOceanEntity;
 import net.minecraft.world.entity.Entity;
@@ -21,11 +20,13 @@ import java.lang.invoke.MethodType;
  *   2. 女仆 → 自身             → 拦截（禁止自伤）
  *   3. 女仆 → 同主人女仆        → 拦截（禁止友伤）
  *   4. 玩家 → 自己的女仆        → 拦截（禁止友伤）
- *   5. 玩家 → 玩家（友伤关闭）   → 拦截（配置开关）
- *   6. 玩家 → 自己的飞机        → 始终拦截
- *   7. 玩家 → 他人飞机（友伤关闭）→ 拦截
- *   8. 自主飞机 → 自主飞机      → 拦截（禁止AI飞机互相残杀）
- *   9. 以上都不匹配             → 放行（允许命中）
+ *   5. 玩家 → 自己的飞机        → 始终拦截
+ *   6. 自主飞机 → 自主飞机      → 拦截（禁止AI飞机互相残杀）
+ *   7. 以上都不匹配             → 放行（允许命中）
+ *
+ * 策划口径（战斗/07，2026-10-14 修订）：玩家对玩家、玩家对同队玩家召唤物
+ * 一律**不拦截**，友伤防护交由 FTB Teams 等外部组队模组负责。本类只保留
+ * 与「队伍」无关的内部防呆：深海间互伤、女仆对主人、玩家对自己飞机。
  */
 public final class FriendlyFireHelper {
 
@@ -68,8 +69,7 @@ public final class FriendlyFireHelper {
         if (isMaidModLoaded() && checkMaidFriendlyFire(target, owner)) {
             return true;
         }
-        // 4. 玩家友伤关闭时禁止攻击其他玩家
-        // 5-6. 飞机友伤保护
+        // 4-5. 飞机友伤保护：只保护"自己的飞机"——他人飞机不再拦截（战斗/07 2026-10-14 修订）。
         if (target instanceof AircraftEntity aircraft && aircraft.getOwnerUUID() != null) {
             if (owner instanceof Player p && p.getUUID().equals(aircraft.getOwnerUUID())) {
                 return true; // 始终保护自己的飞机

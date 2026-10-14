@@ -238,6 +238,16 @@ public final class BallisticNet {
         }
         Layer[] layers = new Layer[n];
         for (int i = 0; i < n; i++) {
+            // 相邻层维度必须衔接，且每层宽度不得超 scratch 缓冲的 MAX_WIDTH：
+            // 否则 forwardResidual 会在越界/错位时才以更难懂的异常炸掉。
+            if (inDims[i] > MAX_WIDTH || outDims[i] > MAX_WIDTH) {
+                throw new IllegalArgumentException("第 " + i + " 层维度 " + inDims[i] + "→"
+                        + outDims[i] + " 超出 MAX_WIDTH " + MAX_WIDTH);
+            }
+            if (i > 0 && layers[i - 1].outDim != inDims[i]) {
+                throw new IllegalArgumentException("第 " + i + " 层输入维度 " + inDims[i]
+                        + " 与第 " + (i - 1) + " 层输出维度 " + layers[i - 1].outDim + " 不衔接");
+            }
             int expected = inDims[i] * outDims[i];
             if (weights[i].length != expected) {
                 throw new IllegalArgumentException("第 " + i + " 层权重长度应为 " + expected

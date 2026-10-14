@@ -15,7 +15,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
 
 /** 右下防空炮图标：开亮、关暗，静默额外叠加斜线，不改变总开关的亮暗。 */
-@EventBusSubscriber(modid = PiranPort.MOD_ID, value = Dist.CLIENT)
+@EventBusSubscriber(modid = PiranPort.MOD_ID, value = Dist.CLIENT, bus = EventBusSubscriber.Bus.MOD)
 public class AutoModeHudOverlay implements LayeredDraw.Layer {
     public static final ResourceLocation ID =
             ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "auto_mode_hud");

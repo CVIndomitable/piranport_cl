@@ -66,6 +66,12 @@ public class FleetGroup {
 
     public void removeDeadMembers(java.util.function.Predicate<UUID> isDead) {
         members.removeIf(isDead);
+        // 领舰阵亡后由队列下一顺位递补（与 FleetGroupManager.removeMember 的约定一致：
+        // members 按编队顺序排列，get(0) 即继任者）。不重选会让整编队失去领舰，
+        // FollowLeaderGoal 对全员返回 canUse=false，队形和环绕攻击全部停摆。
+        if (leaderUuid != null && !members.contains(leaderUuid)) {
+            leaderUuid = members.isEmpty() ? null : members.get(0);
+        }
     }
 
     public void addMember(UUID entityUuid) {

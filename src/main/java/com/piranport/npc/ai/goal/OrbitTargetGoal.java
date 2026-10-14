@@ -73,9 +73,13 @@ public class OrbitTargetGoal extends Goal {
         }
 
         // Phase transition — start interpolation
+        // 只在过渡已跑完时才开启新一轮插值：过渡中途重采 prevMovement 会反复归零 t，
+        // 导致速度长期卡在插值起点、舰体出现"定住再突然动"的抖动。
         if (newPhase != currentPhase) {
-            prevMovement = mob.getDeltaMovement();
-            transitionTicks = TRANSITION_DURATION;
+            if (transitionTicks == 0) {
+                prevMovement = mob.getDeltaMovement();
+                transitionTicks = TRANSITION_DURATION;
+            }
             currentPhase = newPhase;
         }
 

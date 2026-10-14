@@ -201,7 +201,11 @@ public class ReloadFacilityBlockEntity extends BlockEntity implements MenuProvid
                     && t1.getCaliber() == torpedoLauncher.getCaliber();
             boolean ammo2Valid = !ammo2.isEmpty() && ammo2.getItem() instanceof TorpedoItem t2
                     && t2.getCaliber() == torpedoLauncher.getCaliber();
-            validCombo = (ammo1Valid || ammo2Valid);
+            // 两个弹药槽只要都非空就必须是同一种弹药（同物品 id = 同口径同弹种），
+            // 否则混填时消耗顺序与写入的弹药 id 可能对应不同口径，导致错误配装
+            boolean sameItem = ammo1.isEmpty() || ammo2.isEmpty()
+                    || ItemStack.isSameItem(ammo1, ammo2);
+            validCombo = (ammo1Valid || ammo2Valid) && sameItem;
         } else if (launcherStack.getItem() instanceof MissileLauncherItem missileLauncher
                 && missileLauncher.canReloadInFacility()) {
             // Missile launcher reload (anti-ship / rocket); anti-air 发射器自动装填，禁止走这里
@@ -226,7 +230,10 @@ public class ReloadFacilityBlockEntity extends BlockEntity implements MenuProvid
             ItemStack ammo2 = be.itemHandler.getStackInSlot(EXTRA_AMMO_SLOT);
             boolean ammo1Valid = !ammo1.isEmpty() && ammo1.is(missileLauncher.getAmmoItem());
             boolean ammo2Valid = !ammo2.isEmpty() && ammo2.is(missileLauncher.getAmmoItem());
-            validCombo = (ammo1Valid || ammo2Valid);
+            // 同上：两个弹药槽都非空时必须是同一种弹药，禁止混填
+            boolean sameItem = ammo1.isEmpty() || ammo2.isEmpty()
+                    || ItemStack.isSameItem(ammo1, ammo2);
+            validCombo = (ammo1Valid || ammo2Valid) && sameItem;
         } else {
             be.resetProgress();
             return;

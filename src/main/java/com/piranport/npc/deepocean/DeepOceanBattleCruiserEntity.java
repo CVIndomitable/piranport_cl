@@ -4,6 +4,7 @@ import com.piranport.npc.ai.goal.CannonAttackGoal;
 import com.piranport.npc.ai.goal.FleetAlertGoal;
 import com.piranport.npc.ai.goal.IdleWanderGoal;
 import com.piranport.npc.ai.goal.OrbitTargetGoal;
+import com.piranport.npc.ai.goal.FollowLeaderGoal;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -35,6 +36,8 @@ public class DeepOceanBattleCruiserEntity extends AbstractDeepOceanEntity {
 
     @Override
     protected void registerGoals() {
+        // 有编队时领舰环绕/僚舰跟队，无编队时回落单舰环绕
+        this.goalSelector.addGoal(1, new FollowLeaderGoal(this, 0.11));
         this.goalSelector.addGoal(1, new OrbitTargetGoal(this, 0.11));
         this.goalSelector.addGoal(2, new CannonAttackGoal(this));
         this.goalSelector.addGoal(5, new IdleWanderGoal(this, 0.7, 32));

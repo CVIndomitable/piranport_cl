@@ -27,10 +27,11 @@ public class ClientAswSonarData {
 
     public static void update(int aircraftEntityId, List<Integer> detectedIds) {
         Set<Integer> newSet = new HashSet<>(detectedIds);
+        // 续扫同批目标也要刷新时间戳，否则 40 tick 后 tick() 误判过期，声呐黄框闪断。
+        lastUpdateTick.put(aircraftEntityId, clientTick);
         Set<Integer> oldSet = detectionsByAircraft.get(aircraftEntityId);
         if (oldSet != null && oldSet.equals(newSet)) return;
         detectionsByAircraft.put(aircraftEntityId, newSet);
-        lastUpdateTick.put(aircraftEntityId, clientTick);
     }
 
     /** Check if an entity is detected by any ASW sonar. */

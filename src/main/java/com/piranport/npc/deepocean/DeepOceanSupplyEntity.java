@@ -53,7 +53,9 @@ public class DeepOceanSupplyEntity extends AbstractDeepOceanEntity {
     @Override
     public void aiStep() {
         super.aiStep();
-        if (!level().isClientSide() && tickCount % ModEquipmentConfig.DEEP_OCEAN_SUPPLY_INTERVAL_TICKS.get() == 0) {
+        if (!level().isClientSide()
+                // 间隔配成 0/负会让 % 抛 ArithmeticException 或每 tick 触发，钳到至少 1。
+                && tickCount % Math.max(1, ModEquipmentConfig.DEEP_OCEAN_SUPPLY_INTERVAL_TICKS.get()) == 0) {
             supportNearbyFleet();
         }
     }

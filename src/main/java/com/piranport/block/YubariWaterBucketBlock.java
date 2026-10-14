@@ -99,4 +99,15 @@ public class YubariWaterBucketBlock extends BaseEntityBlock {
                                                Player player, BlockHitResult hit) {
         return InteractionResult.PASS;
     }
+
+    @Override
+    protected void onRemove(BlockState state, Level level, BlockPos pos,
+                            BlockState newState, boolean movedByPiston) {
+        // 本方块注册有 FluidHandler 能力；移除时若不通知缓存失效，
+        // 已缓存 IFluidHandler 的管道会继续对着失效引用抽水。
+        if (!state.is(newState.getBlock())) {
+            level.invalidateCapabilities(pos);
+        }
+        super.onRemove(state, level, pos, newState, movedByPiston);
+    }
 }

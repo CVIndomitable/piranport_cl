@@ -43,6 +43,8 @@ public class SubmergeGoal extends Goal {
     public void start() {
         submerged = true;
         submergeTicks = 0;
+        // 下潜立即隐身；tick() 里的周期性续杯只管维持，不能等首个 40 tick 才生效。
+        mob.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 60, 0, false, false));
     }
 
     @Override

@@ -73,6 +73,14 @@ public class ReloadHelper {
             return;
         }
 
+        // 管内残留旧弹种时禁止混装：残留弹的 LoadedAmmo 是按旧 ammoId 记的，
+        // 直接覆盖成新弹种会让库存里的旧鱼雷"静默变成"新鱼雷（既不消耗也不退还）。
+        String ammoId = BuiltInRegistries.ITEM.getKey(torpedoType).toString();
+        if (current.hasAmmo() && !ammoId.equals(current.ammoItemId())) {
+            player.displayClientMessage(Component.translatable("message.piranport.must_be_empty_to_reload"), true);
+            return;
+        }
+
         // 统计可用弹药数量
         int needed = tubeCount - (current.hasAmmo() ? current.count() : 0);
         int available = 0;
@@ -116,7 +124,6 @@ public class ReloadHelper {
         }
 
         // 设置装填状态
-        String ammoId = BuiltInRegistries.ITEM.getKey(torpedoType).toString();
         launcherStack.set(ModDataComponents.LOADED_AMMO.get(), new LoadedAmmo(tubeCount, ammoId));
 
         // 设置冷却时间。

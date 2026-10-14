@@ -109,6 +109,9 @@ public class StoneMillBlock extends BaseEntityBlock {
     public void onRemove(BlockState state, Level level, BlockPos pos,
                          BlockState newState, boolean movedByPiston) {
         if (!state.is(newState.getBlock())) {
+            // 方块真正被移除（而非同方块状态切换）时，必须通知能力缓存失效，
+            // 否则漏斗等已缓存 IItemHandler 的方块会继续对着旧引用塞物品造成吞物。
+            level.invalidateCapabilities(pos);
             BlockEntity be = level.getBlockEntity(pos);
             if (be instanceof StoneMillBlockEntity mill) {
                 for (int i = 0; i < StoneMillBlockEntity.TOTAL_SLOTS; i++) {

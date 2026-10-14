@@ -23,7 +23,10 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 《副本/22》分歧带路的服务端接线：取玩家上下文 → {@link BranchEvaluator} 判定 →
@@ -33,6 +36,9 @@ import java.util.Set;
  */
 public final class DungeonBranchRouter {
     private DungeonBranchRouter() {}
+
+    /** 分歧带路的每玩家重触发冷却（见 routeFromPortal）。键为玩家 UUID，值为服务端 tick。 */
+    private static final Map<UUID, Long> LAST_ROUTE_TICK = new ConcurrentHashMap<>();
 
     /** 构造玩家当前的分歧上下文（舰体取变身中的舰装核心）。 */
     static BranchEvaluator.Context contextFor(ServerPlayer player) {
@@ -116,6 +122,13 @@ public final class DungeonBranchRouter {
      */
     public static boolean routeFromPortal(ServerPlayer player, DungeonInstance instance, StageData stage,
                                           NodeData fromNode) {
+        // 传送门实体每 10 tick 扫一次玩家；enterNode 未消费（地形未就绪/费用不足等未传送）
+        // 时会反复触发带路广播与排队。给每个玩家加 40 tick 重触发冷却，避免每 10 tick 刷屏。
+        long now = player.server.getTickCount();
+        Long last = LAST_ROUTE_TICK.get(player.getUUID());
+        if (last != null && now - last < 40) return true; // 视为已接管，阻止调用方回讲台连跳
+        LAST_ROUTE_TICK.put(player.getUUID(), now);
+
         String target = resolveChoice(player, instance, fromNode);
         if (target == null) return false;
         NodeData targetNode = stage.nodes().get(target);

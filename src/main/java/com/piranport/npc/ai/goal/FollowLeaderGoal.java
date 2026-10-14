@@ -119,8 +119,11 @@ public class FollowLeaderGoal extends Goal {
         }
 
         if (newPhase != currentPhase) {
-            prevMovement = mob.getDeltaMovement();
-            transitionTicks = TRANSITION_DURATION;
+            // 同 OrbitTargetGoal：过渡未跑完不重启插值，否则相位抖动会让舰体卡顿。
+            if (transitionTicks == 0) {
+                prevMovement = mob.getDeltaMovement();
+                transitionTicks = TRANSITION_DURATION;
+            }
             currentPhase = newPhase;
         }
 

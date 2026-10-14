@@ -570,82 +570,92 @@ public class AircraftCombat {
     // 目标解析
     // ====================================================================
 
-    /** @see AircraftEntity#resolveTarget(Player) */
-    @Nullable
-    public static LivingEntity resolveTarget(AircraftEntity craft, Player owner) {
-        if (!(craft.level() instanceof net.minecraft.server.level.ServerLevel sl)) return null;
-
-        java.util.List<java.util.UUID> locks = com.piranport.aviation.FireControlManager.getTargets(owner.getUUID());
-        if (!locks.isEmpty()) {
-            if (craft.attackMode == AircraftAttackMode.SPREAD) {
-                return locks.stream()
-                        .map(sl::getEntity)
-                        .filter(e -> e instanceof LivingEntity le && le.isAlive() && !isAirborneTarget(e))
-                        .map(e -> (LivingEntity) e)
-                        .min(java.util.Comparator.comparingDouble(craft::distanceTo))
-                        .orElse(null);
-            } else {
-                for (java.util.UUID uuid : locks) {
-                    Entity e = sl.getEntity(uuid);
-                    if (e instanceof LivingEntity le && le.isAlive() && !isAirborneTarget(e)) return le;
-                }
-                return null;
-            }
-        }
-
-        // Auto-seek: scan for ground targets within the terminal-configured range
-        if (craft.hasEverHadFireControl) return null;
-        // 自动索敌必须加敌对过滤：否则鱼、友军、玩家都会被无差别自动开打。
-        // 手动火控锁定分支在上方，保持原样不限制（尊重玩家意图）。
-        net.minecraft.world.phys.AABB box = craft.getBoundingBox()
-                .inflate(ModEquipmentConfig.AIRCRAFT_AUTONOMOUS_SEEK_RANGE.get());
-        return sl.getEntitiesOfClass(LivingEntity.class, box,
-                        e -> e.isAlive() && e != owner
-                                && com.piranport.combat.CombatTargeting.isHostileTarget(owner, e)
-                                && !(e instanceof net.minecraft.world.entity.Mob mob && mob.isNoAi())
-                                && !isAirborneTarget(e))
-                .stream()
-                .min(java.util.Comparator.comparingDouble(craft::distanceTo))
-                .orElse(null);
-    }
-
     /** @see AircraftEntity#isAirborneTarget(Entity) */
     public static boolean isAirborneTarget(Entity e) {
         return e instanceof AircraftEntity;
     }
 
-    /** @see AircraftEntity#resolveFighterTarget(Player) */
+    // ---- 公共索敌骨架：resolveLocked + autoSeek，两个入口仅谓词不同 ----
+
+    /**
+     * 火控锁定分支：遍历锁定 UUID 列表，取首个满足谓词的存活实体。
+     * SPREAD 模式取最近的，FOCUS/FOLLOW 按列表顺序取首个。
+     * 谓词只负责类型/高度过滤，不负责生死（这里统一判 isAlive）。
+     */
     @Nullable
-    public static Entity resolveFighterTarget(AircraftEntity craft, Player owner) {
+    private static <T extends Entity> T resolveLocked(AircraftEntity craft, Player owner,
+                                                      java.util.function.Predicate<Entity> predicate,
+                                                      Class<T> castTo) {
         if (!(craft.level() instanceof net.minecraft.server.level.ServerLevel sl)) return null;
-
         java.util.List<java.util.UUID> locks = com.piranport.aviation.FireControlManager.getTargets(owner.getUUID());
-        if (!locks.isEmpty()) {
-            // 空优开关默认 true：手动锁定也跳过非空中目标；玩家 U 键切换后允许锁地面
-            boolean airOnly = com.piranport.aviation.FireControlManager.isFighterAirOnly(owner.getUUID());
-            double closestDist = Double.MAX_VALUE;
-            Entity closest = null;
-            for (java.util.UUID uuid : locks) {
-                Entity e = sl.getEntity(uuid);
-                if (e != null && e.isAlive()
-                        && (!airOnly || e instanceof AircraftEntity || isAirborneTarget(e))) {
-                    double d = craft.distanceToSqr(e);
-                    if (d < closestDist) { closestDist = d; closest = e; }
-                }
-            }
-            if (closest != null) return closest;
+        if (locks.isEmpty()) return null;
+        if (craft.attackMode == AircraftAttackMode.SPREAD) {
+            return locks.stream()
+                    .map(sl::getEntity)
+                    .filter(e -> e != null && e.isAlive() && predicate.test(e))
+                    .map(castTo::cast)
+                    .min(java.util.Comparator.comparingDouble(craft::distanceTo))
+                    .orElse(null);
         }
+        for (java.util.UUID uuid : locks) {
+            Entity e = sl.getEntity(uuid);
+            if (e != null && e.isAlive() && predicate.test(e)) return castTo.cast(e);
+        }
+        return null;
+    }
 
-        // Auto-seek: only enemy aircraft (机枪只能对空)
-        net.minecraft.world.phys.AABB box = craft.getBoundingBox()
-                .inflate(ModEquipmentConfig.AIRCRAFT_AUTONOMOUS_SEEK_RANGE.get());
-        // 搜索敌方飞机
-        AircraftEntity airTarget = sl.getEntitiesOfClass(AircraftEntity.class, box,
-                        e -> e.isAlive() && e != craft
-                                && com.piranport.combat.CombatTargeting.isHostileTarget(owner, e))
+    /**
+     * 自动索敌分支：以 craft 为中心 inflate(range) 扫 rangeClass，按谓词过滤后取最近。
+     * 调用方负责传入「敌对过滤 + 高度/类型过滤」的合成谓词；
+     * 已锁定过火控（hasEverHadFireControl）或已一次性搜过（autoSeekDone）时由调用方拦截。
+     */
+    @Nullable
+    private static <T extends Entity> T autoSeek(AircraftEntity craft, Player owner,
+                                                 Class<T> rangeClass,
+                                                 java.util.function.Predicate<T> predicate,
+                                                 double range) {
+        if (!(craft.level() instanceof net.minecraft.server.level.ServerLevel sl)) return null;
+        net.minecraft.world.phys.AABB box = craft.getBoundingBox().inflate(range);
+        return sl.getEntitiesOfClass(rangeClass, box, predicate)
                 .stream()
                 .min(java.util.Comparator.comparingDouble(craft::distanceToSqr))
                 .orElse(null);
-        return airTarget;
+    }
+
+    /** @see AircraftEntity#resolveTarget(Player) */
+    @Nullable
+    public static LivingEntity resolveTarget(AircraftEntity craft, Player owner) {
+        LivingEntity locked = resolveLocked(craft, owner,
+                e -> e instanceof LivingEntity && !isAirborneTarget(e), LivingEntity.class);
+        if (locked != null) return locked;
+        if (!com.piranport.aviation.FireControlManager.getTargets(owner.getUUID()).isEmpty()) return null;
+
+        // Auto-seek: scan for ground targets within the terminal-configured range
+        if (craft.hasEverHadFireControl) return null;
+        // 自动索敌必须加敌对过滤：否则鱼、友军、玩家都会被无差别自动开打。
+        // 手动火控锁定分支在上方，保持原样不限制（尊重玩家意图）。
+        return autoSeek(craft, owner, LivingEntity.class,
+                e -> e.isAlive() && e != owner
+                        && com.piranport.combat.CombatTargeting.isHostileTarget(owner, e)
+                        && !(e instanceof net.minecraft.world.entity.Mob mob && mob.isNoAi())
+                        && !isAirborneTarget(e),
+                ModEquipmentConfig.AIRCRAFT_AUTONOMOUS_SEEK_RANGE.get());
+    }
+
+    /** @see AircraftEntity#resolveFighterTarget(Player) */
+    @Nullable
+    public static Entity resolveFighterTarget(AircraftEntity craft, Player owner) {
+        // 空优开关默认 true：手动锁定也跳过非空中目标；玩家 U 键切换后允许锁地面
+        boolean airOnly = com.piranport.aviation.FireControlManager.isFighterAirOnly(owner.getUUID());
+        Entity locked = resolveLocked(craft, owner,
+                e -> !airOnly || e instanceof AircraftEntity || isAirborneTarget(e), Entity.class);
+        if (locked != null) return locked;
+        if (!com.piranport.aviation.FireControlManager.getTargets(owner.getUUID()).isEmpty()) return null;
+
+        // Auto-seek: only enemy aircraft (机枪只能对空)
+        return autoSeek(craft, owner, AircraftEntity.class,
+                e -> e.isAlive() && e != craft
+                        && com.piranport.combat.CombatTargeting.isHostileTarget(owner, e),
+                ModEquipmentConfig.AIRCRAFT_AUTONOMOUS_SEEK_RANGE.get());
     }
 }

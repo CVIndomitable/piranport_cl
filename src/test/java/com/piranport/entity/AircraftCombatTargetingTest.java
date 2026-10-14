@@ -16,12 +16,13 @@ class AircraftCombatTargetingTest {
     void fighterAutoSeekFiltersAircraftWithSharedHostilityRuleAfterManualLocks() throws Exception {
         String source = Files.readString(COMBAT);
         String method = methodBody(source, "public static Entity resolveFighterTarget(", "\n    }\n");
-        int locks = method.indexOf("if (!locks.isEmpty())");
+        // 锁定走 resolveLocked 谓词，自动索敌走 autoSeek；两者在本方法内以调用顺序体现
+        int locked = method.indexOf("resolveLocked(craft, owner,");
         int automaticScan = method.indexOf("// Auto-seek: only enemy aircraft");
 
-        assertTrue(locks >= 0);
-        assertTrue(automaticScan > locks, "手动火控锁定必须先于自动过滤处理");
-        assertTrue(method.contains("getEntitiesOfClass(AircraftEntity.class"), "机枪自动索敌仍只找飞机");
+        assertTrue(locked >= 0);
+        assertTrue(automaticScan > locked, "手动火控锁定必须先于自动过滤处理");
+        assertTrue(method.contains("autoSeek(craft, owner, AircraftEntity.class"), "机枪自动索敌仍只找飞机");
         assertTrue(method.contains("CombatTargeting.isHostileTarget(owner, e)"));
         assertFalse(method.contains("getOwnerUUID()"), "自动索敌不得自行按 owner UUID 另行判断敌我");
     }

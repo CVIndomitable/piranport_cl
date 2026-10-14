@@ -27,6 +27,9 @@ class AircraftCombatServiceTest {
         AttackStrategy custom = new AttackStrategy() {
             @Override public String id() { return "gun"; }
             @Override public AircraftDefinition.AttackProfile profile() { return AircraftDefinition.AttackProfile.GUN; }
+            @Override public void execute(com.piranport.entity.AircraftEntity a,
+                                          net.minecraft.world.entity.player.Player o) {}
+            @Override public void executeAutonomous(com.piranport.entity.AircraftEntity a) {}
         };
         AttackStrategyRegistry.register(custom);
         assertSame(custom, AttackStrategyRegistry.byId(" GUN " ).orElseThrow());
@@ -43,6 +46,7 @@ class AircraftCombatServiceTest {
                                           net.minecraft.world.entity.player.Player owner) {
                 executed.set(true);
             }
+            @Override public void executeAutonomous(com.piranport.entity.AircraftEntity a) {}
         };
         AttackStrategyRegistry.register(custom);
 
@@ -57,6 +61,9 @@ class AircraftCombatServiceTest {
         assertFalse(AircraftCombatService.supports(definition, "missing"));
         assertThrows(IllegalArgumentException.class, () -> new AttackStrategy() {
             @Override public String id() { return "missing"; }
+            @Override public void execute(com.piranport.entity.AircraftEntity a,
+                                          net.minecraft.world.entity.player.Player o) {}
+            @Override public void executeAutonomous(com.piranport.entity.AircraftEntity a) {}
         }.profile());
     }
 

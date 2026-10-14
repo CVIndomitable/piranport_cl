@@ -36,17 +36,19 @@ public final class AttackStrategyRegistry {
     public static synchronized void resetToBuiltIns() { strategies = BUILT_INS; }
 
     private static Map<String, AttackStrategy> createBuiltIns() {
+        // 内置策略在 com.piranport.entity 包（需访问 AircraftEntity 包级成员），
+        // 用全限定名避免 aviation.combat 反向依赖 entity 造成包循环 import。
         Map<String, AttackStrategy> map = new LinkedHashMap<>();
-        for (AircraftDefinition.AttackProfile profile : AircraftDefinition.AttackProfile.values()) {
-            map.put(profile.id(), new ProfileStrategy(profile));
-        }
+        map.put(AircraftDefinition.AttackProfile.NONE.id(), new com.piranport.entity.NoneAttackStrategy());
+        map.put(AircraftDefinition.AttackProfile.GUN.id(), new com.piranport.entity.GunAttackStrategy());
+        map.put(AircraftDefinition.AttackProfile.ROCKET.id(), new com.piranport.entity.RocketAttackStrategy());
+        map.put(AircraftDefinition.AttackProfile.DIVE_BOMB.id(), new com.piranport.entity.DiveBombAttackStrategy());
+        map.put(AircraftDefinition.AttackProfile.LEVEL_BOMB.id(), new com.piranport.entity.LevelBombAttackStrategy());
+        map.put(AircraftDefinition.AttackProfile.TORPEDO.id(), new com.piranport.entity.TorpedoAttackStrategy());
+        map.put(AircraftDefinition.AttackProfile.DEPTH_CHARGE.id(), new com.piranport.entity.DepthChargeAttackStrategy());
+        map.put(AircraftDefinition.AttackProfile.RECON.id(), new com.piranport.entity.ReconAttackStrategy());
         return Map.copyOf(map);
     }
 
     private static String normalize(String id) { return id.trim().toLowerCase(java.util.Locale.ROOT); }
-
-    private record ProfileStrategy(AircraftDefinition.AttackProfile profile) implements AttackStrategy {
-        @Override public String id() { return profile.id(); }
-        @Override public AircraftDefinition.AttackProfile profile() { return profile; }
-    }
 }

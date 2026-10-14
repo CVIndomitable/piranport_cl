@@ -1,13 +1,14 @@
 package com.piranport.aviation.combat;
 
 import com.piranport.aviation.AircraftDefinition;
-import com.piranport.entity.AircraftCombat;
 import com.piranport.entity.AircraftEntity;
 import net.minecraft.world.entity.player.Player;
 import java.util.Objects;
 
-/** 航空攻击策略；默认执行器把既有战术分支作为迁移期实现。 */
-@FunctionalInterface
+/**
+ * 航空攻击策略 —— 每个 AttackProfile 对应一个真实现，注册表即分发器。
+ * 内置策略在 com.piranport.entity 包（XxxAttackStrategy），需访问 AircraftEntity 包级成员。
+ */
 public interface AttackStrategy {
     String id();
 
@@ -24,17 +25,9 @@ public interface AttackStrategy {
         return profile() == definition.attackProfile();
     }
 
-    /**
-     * 执行玩家所属飞机的一个攻击 tick。
-     *
-     * <p>策略注册表的扩展点在这里生效；内置策略仍委托旧战斗分支，避免在迁移时复制战术代码。
-     */
-    default void execute(AircraftEntity aircraft, Player owner) {
-        AircraftCombat.tickAttacking(aircraft, owner);
-    }
+    /** 执行玩家所属飞机的一个攻击 tick。 */
+    void execute(AircraftEntity aircraft, Player owner);
 
     /** 执行自主飞机的一个攻击 tick。 */
-    default void executeAutonomous(AircraftEntity aircraft) {
-        AircraftCombat.tickAutonomousAttacking(aircraft);
-    }
+    void executeAutonomous(AircraftEntity aircraft);
 }

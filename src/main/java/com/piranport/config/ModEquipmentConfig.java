@@ -439,6 +439,12 @@ public final class ModEquipmentConfig {
     /** 投弹后继续平飞再返航的 tick 数。默认 220。 */
     public static final TerminalConfigValue<Integer> LEVEL_BOMBER_RETURN_TICKS =
             TerminalConfigValue.integer("equipment", "level_bomber", "return_ticks", 220, 0, 120000);
+    /** 绕背进场的后方点距离（格）：目标位置 − 目标速度方向 × 该值。默认 40。 */
+    public static final TerminalConfigValue<Double> LEVEL_BOMBER_REAR_APPROACH_DISTANCE =
+            TerminalConfigValue.number("equipment", "level_bomber", "rear_approach_distance", 40.0, 0.0, 256.0);
+    /** 锥外拉起判定时长（tick）：目标连续跑出投弹锥超过该值即放弃航线重新瞄准。默认 20。 */
+    public static final TerminalConfigValue<Integer> LEVEL_BOMBER_ABORT_TICKS =
+            TerminalConfigValue.integer("equipment", "level_bomber", "abort_ticks", 20, 1, 12000);
 
     // ===== 舰载机飞行常量（AircraftEntity）=====
     // WHY：这些原先是 AircraftEntity 的写死飞行常量，属于策划调手感的数值（用户规则）。

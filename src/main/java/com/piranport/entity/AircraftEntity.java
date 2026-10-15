@@ -199,6 +199,11 @@ public class AircraftEntity extends Entity {
     @Nullable Vec3 levelRunDirection = null;
     @Nullable Vec3 levelDropPoint = null;
     int levelRunTicks = 0;
+    // 锥外拉起计数：目标连续跑出投弹锥的 tick 数，超阈值即放弃航线重新瞄准
+    // （AircraftCombat.tickLevelBomberAttack，阈值 = global.level_bomber.abort_ticks）。
+    int levelAbortTicks = 0;
+    // 绕背进场是否完成：移动目标要先飞到其运动方向后方再锁航线，静止目标恒为 true 语义上跳过。
+    boolean levelRearApproachDone = false;
     int autoSeekCooldown = 20; // 运行时状态，避免首次 tick 立即搜索（不持久化，每次加载重置为 20）
     boolean autoSeekDone = false;    // true after first auto-seek scan (one-shot)
     boolean hasEverHadFireControl = false; // true if FC target was ever assigned
@@ -1275,6 +1280,14 @@ public class AircraftEntity extends Entity {
             torpedoRunStart = null;
             torpedoRunTicks = 0;
             setTorpedoAimPoint(null);
+            // 水平轰炸字段同样要清：重进 ATTACKING 若残留旧 levelRunDirection，
+            // 载机会沿上一次的锁定方向直飞，新目标的绕背/提前量全部失效。
+            levelBombDropped = false;
+            levelRunDirection = null;
+            levelDropPoint = null;
+            levelRunTicks = 0;
+            levelAbortTicks = 0;
+            levelRearApproachDone = false;
         }
         entityData.set(STATE, newState.ordinal());
         entityData.set(STATE_ID_DATA, stateId(newState));

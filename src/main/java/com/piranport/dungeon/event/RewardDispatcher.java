@@ -39,4 +39,24 @@ public final class RewardDispatcher {
             player.drop(stack, false);
         }
     }
+
+    /**
+     * 宝箱出口版本：按相同的概率/解析规则产出 ItemStack，但不进背包，
+     * 由调用方收进 {@code out}，最终由出口战利品箱承载。
+     */
+    public static void rollToStack(ServerPlayer player, NodeData.RewardEntry reward,
+                                   List<String> namesOut, List<ItemStack> out) {
+        if (reward.chance() < 1.0f && player.getRandom().nextFloat() > reward.chance()) return;
+
+        Item item = reward.resolvedItem();
+        if (item == null) {
+            PiranPort.LOGGER.warn("副本奖励物品未注册，已跳过发放: {}", reward.item());
+            return;
+        }
+        ItemStack stack = new ItemStack(item, reward.count());
+        if (namesOut != null) {
+            namesOut.add(stack.getHoverName().getString() + " x" + reward.count());
+        }
+        out.add(stack);
+    }
 }

@@ -19,6 +19,7 @@ import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -31,6 +32,9 @@ import java.util.Set;
  *   <li>Sortie 按钮直接发 SelectNodePayload 进入 stage 的 startNode（不再有 SelectStagePayload 中转）</li>
  * </ul>
  * 阶段 3（P1-B）会把这个 screen 替换为 DungeonContinueScreen（"继续/从头开始"对话框）。
+ *
+ * <p>NODE_MAP 布局：左栏保留标题/指引/计时/返回按钮；右栏用 {@link DungeonNodeMapRenderer}
+ * 画三态节点图（不再用 Button widget），点击由 {@link #mouseClicked} 的圆形命中检测接管。</p>
  */
 public class DungeonBookScreen extends AbstractContainerScreen<DungeonBookMenu> {
     private enum ViewMode { STAGE_SELECT, NODE_MAP }
@@ -39,6 +43,9 @@ public class DungeonBookScreen extends AbstractContainerScreen<DungeonBookMenu> 
     private int selectedChapterIndex = 0;
     private String selectedStageId = null;
     private StageData selectedStage = null;
+
+    /** 节点图右栏的屏幕坐标（renderBg 时算出，mouseClicked 命中检测复用）。 */
+    private Map<String, int[]> nodePositions = Map.of();
 
     // Cached data
     private final List<ChapterData> chapters;
@@ -194,69 +201,12 @@ public class DungeonBookScreen extends AbstractContainerScreen<DungeonBookMenu> 
         // 整合版 §3.1：删除"切换准备"按钮（联机大厅作废，无准备机制）
     }
 
+    /** NODE_MAP 左栏只有返回按钮；节点不再是 widget，点击走 {@link #mouseClicked}。 */
     private void buildNodeMapButtons() {
-        if (selectedStage == null) return;
-
-        // Back button
         addRenderableWidget(Button.builder(
                 Component.translatable("gui.piranport.dungeon_book.back"),
                 btn -> { mode = ViewMode.STAGE_SELECT; rebuildButtons(); }
         ).bounds(leftPos + 140, topPos + imageHeight - 25, 60, 18).build());
-
-        // Get current progress from key
-        DungeonProgress progress = getKeyProgress();
-        Set<String> cleared = progress.clearedNodes();
-
-        // Determine reachable nodes
-        Set<String> reachable;
-        if (cleared.isEmpty()) {
-            reachable = Set.of(selectedStage.startNode());
-        } else {
-            reachable = new java.util.HashSet<>();
-            for (String clearedNode : cleared) {
-                reachable.addAll(selectedStage.getReachableFrom(clearedNode));
-            }
-            reachable.removeAll(cleared);
-        }
-
-        // Node buttons
-        for (var entry : selectedStage.nodes().entrySet()) {
-            String nodeId = entry.getKey();
-            NodeData node = entry.getValue();
-
-            boolean isCleared = cleared.contains(nodeId);
-            boolean isReachable = reachable.contains(nodeId);
-
-            String prefix = isCleared ? "[✓] " : isReachable ? "[→] " : "[x] ";
-            String typeLabel = switch (node.type()) {
-                case BATTLE -> "战斗";
-                case BOSS -> "★Boss";
-                case RESOURCE -> "补给";
-                case COST -> "漩涡";
-            };
-
-            Button nodeBtn = Button.builder(
-                    Component.literal(prefix + nodeId + " " + typeLabel),
-                    btn -> {
-                        if (isReachable && !isCleared) {
-                            PacketDistributor.sendToServer(new SelectNodePayload(
-                                    menu.getLecternPos(), menu.getKeySlot(), nodeId));
-                        }
-                    }
-            ).bounds(leftPos + scaleX(node.displayX()), topPos + scaleY(node.displayY()),
-                    70, 16).build();
-
-            nodeBtn.active = isReachable && !isCleared;
-            addRenderableWidget(nodeBtn);
-        }
-    }
-
-    private int scaleX(int displayX) {
-        return (int) (displayX * imageWidth / 400.0) + 5;
-    }
-
-    private int scaleY(int displayY) {
-        return (int) (displayY * (imageHeight - 50) / 400.0) + 20;
     }
 
     private DungeonProgress getKeyProgress() {
@@ -270,6 +220,31 @@ public class DungeonBookScreen extends AbstractContainerScreen<DungeonBookMenu> 
         return DungeonProgress.EMPTY;
     }
 
+    /** 节点图区域：右半栏，避开左栏文字与底部按钮。 */
+    private int graphLeft()   { return leftPos + 110; }
+    private int graphTop()    { return topPos + 46; }
+    private int graphWidth()  { return imageWidth - 116; }
+    private int graphHeight() { return imageHeight - 78; }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        // 节点图点击：自算圆形命中，命中可达且未通关节点即发 SelectNodePayload
+        if (mode == ViewMode.NODE_MAP && selectedStage != null && button == 0) {
+            String hit = DungeonNodeMapRenderer.hitTest(nodePositions, mouseX, mouseY);
+            if (hit != null) {
+                DungeonProgress progress = getKeyProgress();
+                Set<String> cleared = progress.clearedNodes();
+                Set<String> reachable = DungeonNodeMapRenderer.computeReachable(selectedStage, progress);
+                if (reachable.contains(hit) && !cleared.contains(hit)) {
+                    PacketDistributor.sendToServer(new SelectNodePayload(
+                            menu.getLecternPos(), menu.getKeySlot(), hit));
+                }
+                return true;
+            }
+        }
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+
     @Override
     protected void renderBg(GuiGraphics gfx, float partialTick, int mouseX, int mouseY) {
         // Dark background
@@ -278,20 +253,7 @@ public class DungeonBookScreen extends AbstractContainerScreen<DungeonBookMenu> 
         gfx.renderOutline(leftPos, topPos, imageWidth, imageHeight, 0xFF4A4A6A);
 
         if (mode == ViewMode.NODE_MAP && selectedStage != null) {
-            // Draw edges between nodes
-            for (var edge : selectedStage.edges()) {
-                NodeData from = selectedStage.nodes().get(edge.from());
-                NodeData to = selectedStage.nodes().get(edge.to());
-                if (from != null && to != null) {
-                    int x1 = leftPos + scaleX(from.displayX()) + 35;
-                    int y1 = topPos + scaleY(from.displayY()) + 8;
-                    int x2 = leftPos + scaleX(to.displayX()) + 35;
-                    int y2 = topPos + scaleY(to.displayY()) + 8;
-                    drawLine(gfx, x1, y1, x2, y2, 0xFF6A6A8A);
-                }
-            }
-
-            // Title
+            // Title / info 放左栏
             gfx.drawString(font, selectedStage.displayName(),
                     leftPos + 5, topPos + 5, 0xFFFFD700, false);
             gfx.drawString(font, "引导: " + selectedStage.guidance(),
@@ -309,28 +271,15 @@ public class DungeonBookScreen extends AbstractContainerScreen<DungeonBookMenu> 
                         leftPos + imageWidth - font.width(timeStr) - 5, topPos + 5,
                         0xFFAAFFAA, false);
             }
+
+            // 右栏节点图：渲染同时缓存坐标，mouseClicked 用同一份坐标做命中检测，
+            // 两边坐标必然一致（不会出现看得见的点不中的偏移）。
+            nodePositions = DungeonNodeMapRenderer.layout(selectedStage,
+                    graphLeft(), graphTop(), graphWidth(), graphHeight());
+            DungeonNodeMapRenderer.render(gfx, font, selectedStage, nodePositions,
+                    progress, mouseX, mouseY);
         }
         // 整合版 §3.1：删除 STAGE_SELECT 视图中的 lobby 成员列表渲染
-    }
-
-    private void drawLine(GuiGraphics gfx, int x1, int y1, int x2, int y2, int color) {
-        // Simple Bresenham line using fill for each pixel
-        int dx = Math.abs(x2 - x1);
-        int dy = Math.abs(y2 - y1);
-        int sx = x1 < x2 ? 1 : -1;
-        int sy = y1 < y2 ? 1 : -1;
-        int err = dx - dy;
-
-        int maxIterations = 10000; // Safety limit for abnormal input
-        int iterations = 0;
-        while (true) {
-            gfx.fill(x1, y1, x1 + 1, y1 + 1, color);
-            if (x1 == x2 && y1 == y2) break;
-            if (++iterations > maxIterations) break; // Prevent infinite loop
-            int e2 = 2 * err;
-            if (e2 > -dy) { err -= dy; x1 += sx; }
-            if (e2 < dx) { err += dx; y1 += sy; }
-        }
     }
 
     private String formatTime(long millis) {

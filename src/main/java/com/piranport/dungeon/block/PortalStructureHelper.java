@@ -321,15 +321,16 @@ public class PortalStructureHelper {
     }
 
     /**
-     * Builds a complete dungeon portal structure at the given position.
-     * Places a 4x5x4 frame of dungeon portal blocks with a 2x3 interior opening.
-     * Also configures the center block's BlockEntity with instance and node data.
+     * Builds a complete dungeon exit site at the given anchor.
      *
-     * @param level The level to place the structure in
-     * @param cornerPos The position of the bottom corner block of the frame
-     * @param instanceId The dungeon instance ID
-     * @param nodeId The dungeon node ID
-     * @return The center position of the portal interior, or null if placement failed
+     * <p>出口布局（副本/新需求）：以 {@code cornerPos} 为锚点生成一个 3×3 石砖平台，
+     * 平台中央放战利品箱（装着 {@code settleNode} 收集的节点奖励），
+     * 平台一侧竖一副 4×5×4 的 {@code dungeon_portal} 门框（单层 2×3 开口朝外，类下界门），
+     * 门内放 {@code DungeonPortalEntity} 作为"走进入口"的传送判定。</p>
+     *
+     * <p>坐标约定：{@code cornerPos} 是门框局部 (lx=0,ly=0,lz=0) 那一格，
+     * 与历史调用方保持一致（多数传 {@code anchor.below()}）。平台铺在门框开口前方一格，
+     * 顶面与门框底面同高，玩家站上平台即可开箱或走进门。</p>
      */
     public static BlockPos buildPortalStructure(ServerLevel level, BlockPos cornerPos,
                                                 UUID instanceId, String nodeId) {
@@ -341,22 +342,98 @@ public class PortalStructureHelper {
         var instance = com.piranport.dungeon.instance.DungeonInstanceManager.get(level).getInstance(instanceId);
         if (instance == null) return null;
         com.piranport.dungeon.event.DungeonEventHandler.onNodeCompleted(level, instance, nodeId);
-        var portal = com.piranport.dungeon.entity.DungeonPortalEntity.create(level, instanceId, nodeId,
-                cornerPos.getX() + .5, cornerPos.getY() + 1, cornerPos.getZ() + .5);
-        if (portal != null) level.addFreshEntity(portal);
 
-        // We need to determine the facing direction. Since we don't have a facing parameter,
-        // we'll try all horizontal directions and pick the one that works.
+        // 遍历四个水平朝向，选第一个能完整放下的：门框 + 前方 3×3 平台 + 箱子位。
         for (Direction facing : Direction.Plane.HORIZONTAL) {
-            BlockPos center = tryBuildPortalStructure(level, cornerPos, facing, instanceId, nodeId);
+            BlockPos center = tryBuildExitSite(level, cornerPos, facing, instanceId, nodeId);
             if (center != null) {
                 return center;
             }
         }
+        return tryBuildExitSite(level, cornerPos, Direction.NORTH, instanceId, nodeId);
+    }
 
-        // If none of the horizontal orientations work, try placing with North facing
-        // This means we should adjust the cornerPos to be at the right place
-        return tryBuildPortalStructure(level, cornerPos, Direction.NORTH, instanceId, nodeId);
+    /**
+     * 在 {@code facing} 朝向下尝试布置整套出口：3×3 平台、战利品箱、门框、传送门实体。
+     * 返回开口中心坐标；放不下去则返回 null 且不残留半成品（门框预检沿用原逻辑，
+     * 平台与箱子位在覆盖前只做"可替换"判定）。</p>
+     */
+    private static BlockPos tryBuildExitSite(ServerLevel level, BlockPos cornerPos,
+                                             Direction facing, UUID instanceId, String nodeId) {
+        Direction right = facing.getClockWise();
+        Direction back = facing.getOpposite();
+        // 平台位于门框开口正前方一格，3×3，顶面与角点同 Y。
+        BlockPos platformCenter = cornerPos.relative(back, 2).above(1)
+                .relative(right, (FRAME_DEPTH - 1) / 2)
+                .relative(facing, openingMinX() + PORTAL_WIDTH / 2);
+
+        // 平台本身必须是可替换/空气（不许压住实心方块），否则整体换朝向。
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                BlockPos p = platformCenter.offset(dx, 0, dz);
+                BlockState existing = level.getBlockState(p);
+                if (!existing.isAir() && !existing.canBeReplaced()) return null;
+                // 箱子和门要占平台上方一格，也必须是空气/可替换。
+                BlockPos above = p.above();
+                BlockState aboveState = level.getBlockState(above);
+                if (!aboveState.isAir() && !aboveState.canBeReplaced()) return null;
+            }
+        }
+
+        BlockPos center = tryBuildPortalStructure(level, cornerPos, facing, instanceId, nodeId);
+        if (center == null) return null;
+
+        // 平台：石砖主体，四角黑曜石包边——沿用副本要塞平台（STONE_BRICKS）+ 祭坛（OBSIDIAN）的方块语汇。
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                BlockPos p = platformCenter.offset(dx, 0, dz);
+                boolean edge = Math.abs(dx) == 1 && Math.abs(dz) == 1;
+                level.setBlock(p, edge
+                        ? net.minecraft.world.level.block.Blocks.OBSIDIAN.defaultBlockState()
+                        : net.minecraft.world.level.block.Blocks.STONE_BRICKS.defaultBlockState(), 3);
+            }
+        }
+
+        // 战利品箱放在平台中心；奖励来自 settleNode 收集的队列，没有则放一只空箱子也成立。
+        BlockPos chestPos = platformCenter.above();
+        level.setBlock(chestPos,
+                net.minecraft.world.level.block.Blocks.CHEST.defaultBlockState(), 3);
+        if (level.getBlockEntity(chestPos) instanceof net.minecraft.world.level.block.entity.ChestBlockEntity chest) {
+            java.util.List<net.minecraft.world.item.ItemStack> loot =
+                    com.piranport.dungeon.event.DungeonSettlementService.drainPendingLoot(instanceId, nodeId);
+            for (net.minecraft.world.item.ItemStack stack : loot) {
+                // 逐格寻找空位塞入；塞不下就丢在地上，和 RewardDispatcher 的溢出策略一致。
+                if (!insertIntoChest(chest, stack)) {
+                    net.minecraft.world.Containers.dropItemStack(level, chestPos.getX() + .5,
+                            chestPos.getY() + .5, chestPos.getZ() + .5, stack);
+                }
+            }
+            chest.setChanged();
+        }
+
+        // 传送门实体放在开口中心偏下（玩家走入即触发），替代旧版放在角点顶上的位置。
+        var portal = com.piranport.dungeon.entity.DungeonPortalEntity.create(level, instanceId, nodeId,
+                center.getX() + .5, center.getY(), center.getZ() + .5);
+        if (portal != null) level.addFreshEntity(portal);
+        return center;
+    }
+
+    /** 把物品塞进箱子第一个可放位置；返回 false = 箱子已满。 */
+    private static boolean insertIntoChest(net.minecraft.world.level.block.entity.ChestBlockEntity chest,
+                                           net.minecraft.world.item.ItemStack stack) {
+        for (int slot = 0; slot < chest.getContainerSize(); slot++) {
+            net.minecraft.world.item.ItemStack cur = chest.getItem(slot);
+            if (cur.isEmpty()) {
+                chest.setItem(slot, stack.copy());
+                return true;
+            }
+            if (net.minecraft.world.item.ItemStack.isSameItemSameComponents(cur, stack)
+                    && cur.getCount() + stack.getCount() <= cur.getMaxStackSize()) {
+                cur.grow(stack.getCount());
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

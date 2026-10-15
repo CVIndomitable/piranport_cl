@@ -13,18 +13,24 @@ import java.util.Set;
 
 /**
  * Stores dungeon run progress on the key item's DataComponent.
+ *
+ * <p>enteredNodes 是后加字段：节点图 UI 需要区分「已进入未通关」（黄描边）与「未访问」（灰），
+ * 仅靠 clearedNodes 表达不出来。老钥匙的 component 缺这个字段，codec 用 optionalFieldOf
+ * 回落到空集；STREAM_CODEC 内部版本协商交给 NeoForge payload 框架，组件本身按新布局写读。</p>
  */
 public record DungeonProgress(
         String currentNode,
         Set<String> clearedNodes,
+        Set<String> enteredNodes,
         long elapsedMillis,
         boolean timerStarted
 ) {
 
     private static final int MAX_NODE_ID_LENGTH = 128;
     private static final int MAX_CLEARED_NODES = 256;
+    private static final int MAX_ENTERED_NODES = 256;
     public static final DungeonProgress EMPTY =
-            new DungeonProgress("", Set.of(), 0L, false);
+            new DungeonProgress("", Set.of(), Set.of(), 0L, false);
 
     public static final Codec<DungeonProgress> CODEC = RecordCodecBuilder.create(i -> i.group(
             Codec.STRING.optionalFieldOf("current_node", "")
@@ -32,6 +38,9 @@ public record DungeonProgress(
             Codec.STRING.listOf().xmap(l -> (Set<String>) new HashSet<>(l), l -> List.copyOf(l))
                     .optionalFieldOf("cleared_nodes", Set.of())
                     .forGetter(DungeonProgress::clearedNodes),
+            Codec.STRING.listOf().xmap(l -> (Set<String>) new HashSet<>(l), l -> List.copyOf(l))
+                    .optionalFieldOf("entered_nodes", Set.of())
+                    .forGetter(DungeonProgress::enteredNodes),
             Codec.LONG.optionalFieldOf("elapsed_millis", 0L)
                     .forGetter(DungeonProgress::elapsedMillis),
             Codec.BOOL.optionalFieldOf("timer_started", false)
@@ -43,6 +52,10 @@ public record DungeonProgress(
                 ByteBufCodecs.STRING_UTF8.encode(buf, p.currentNode());
                 ByteBufCodecs.VAR_INT.encode(buf, p.clearedNodes().size());
                 for (String s : p.clearedNodes()) {
+                    ByteBufCodecs.STRING_UTF8.encode(buf, s);
+                }
+                ByteBufCodecs.VAR_INT.encode(buf, p.enteredNodes().size());
+                for (String s : p.enteredNodes()) {
                     ByteBufCodecs.STRING_UTF8.encode(buf, s);
                 }
                 buf.writeLong(p.elapsedMillis());
@@ -59,23 +72,34 @@ public record DungeonProgress(
                     String node = ByteBufCodecs.stringUtf8(MAX_NODE_ID_LENGTH).decode(buf);
                     cleared.add(node);
                 }
+                int enteredSize = ByteBufCodecs.VAR_INT.decode(buf);
+                if (enteredSize < 0 || enteredSize > MAX_ENTERED_NODES) {
+                    throw new DecoderException("entered node count out of range: " + enteredSize);
+                }
+                Set<String> entered = new HashSet<>(enteredSize);
+                for (int i = 0; i < enteredSize; i++) {
+                    String node = ByteBufCodecs.stringUtf8(MAX_NODE_ID_LENGTH).decode(buf);
+                    entered.add(node);
+                }
                 long elapsed = buf.readLong();
                 boolean timerStarted = ByteBufCodecs.BOOL.decode(buf);
-                return new DungeonProgress(currentNode, Set.copyOf(cleared), elapsed, timerStarted);
+                return new DungeonProgress(currentNode, Set.copyOf(cleared),
+                        Set.copyOf(entered), elapsed, timerStarted);
             }
     );
 
     public DungeonProgress withCurrentNode(String node) {
-        return new DungeonProgress(node, clearedNodes, elapsedMillis, timerStarted);
+        return new DungeonProgress(node, clearedNodes, enteredNodes, elapsedMillis, timerStarted);
     }
 
     public DungeonProgress withNodeCleared(String node) {
         Set<String> newCleared = new HashSet<>(clearedNodes);
         newCleared.add(node);
-        return new DungeonProgress(currentNode, Set.copyOf(newCleared), elapsedMillis, timerStarted);
+        return new DungeonProgress(currentNode, Set.copyOf(newCleared), enteredNodes,
+                elapsedMillis, timerStarted);
     }
 
     public DungeonProgress withTimerStarted(long elapsedMillis) {
-        return new DungeonProgress(currentNode, clearedNodes, elapsedMillis, true);
+        return new DungeonProgress(currentNode, clearedNodes, enteredNodes, elapsedMillis, true);
     }
 }

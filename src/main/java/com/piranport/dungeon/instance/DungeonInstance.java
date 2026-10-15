@@ -72,6 +72,7 @@ public class DungeonInstance {
     public State getState() { return state; }
     public String getCurrentNode() { return currentNode; }
     public Set<String> getClearedNodes() { return java.util.Collections.unmodifiableSet(clearedNodes); }
+    public Set<String> getEnteredNodes() { return java.util.Collections.unmodifiableSet(enteredNodes); }
     public boolean hasEnteredNode(String node) { return enteredNodes.contains(node); }
     public int getNodePlayerCount(String node) { return Math.max(1, nodePlayerCounts.getOrDefault(node, 1)); }
     /** 节点人数快照按「缩放钳制」封顶（不是进本门槛）；getNodePlayerCount 只保证下限 1。 */
@@ -123,11 +124,15 @@ public class DungeonInstance {
      * 「从头开始」重置：清空节点进度（已进入/已通关/当前节点/波次/分歧/记录点/首通快照），
      * 让玩家下一次 enterNode 走完整的生成与推进流程。
      *
-     * <p>刻意保留：玩家列表、讲台位置、区域索引、实例 ID——这些属于实例身份而非进度；
-     * state 不重置（CREATING→ACTIVE 由 beginBattleNode 的 setStartTimeMillis 路径处理）。
+     * <p>刻意保留：玩家列表、讲台位置、区域索引、实例 ID——这些属于实例身份而非进度。
+     * state 重置为 SUSPENDED 而非保留原值——beginNode 对 COMPLETED/CLEANUP 直接返回
+     * false，不清掉会让「从头开始」清完进度后静默不传送。重置后无人在场，SUSPENDED
+     * 是正确语义（与 createInstanceForLectern 一致），玩家进本后由
+     * refreshPlayerPresence 恢复为 ACTIVE。
      * 计时器清零：重新开始意味着这一次挑战从 0 计。</p>
      */
     public void resetProgress() {
+        state = State.SUSPENDED;
         currentNode = null;
         clearedNodes.clear();
         enteredNodes.clear();

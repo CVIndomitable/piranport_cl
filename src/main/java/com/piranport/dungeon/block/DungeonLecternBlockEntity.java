@@ -48,6 +48,8 @@ public class DungeonLecternBlockEntity extends BlockEntity {
     private int labelCleared = 0;
     private boolean labelCompleted = false;
     private int labelPresent = 0;
+    /** 上次推送给客户端的钥匙 component 哈希；用于捕获不进字幕字段的进度变化。 */
+    private int lastKeyHash = 0;
 
     public DungeonLecternBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntityTypes.DUNGEON_LECTERN.get(), pos, state);
@@ -118,8 +120,15 @@ public class DungeonLecternBlockEntity extends BlockEntity {
             status = LecternPattern.status(true, instance != null && stage != null, built, labelPresent);
         }
         syncHasKeyState();
+        // 钥匙 component（entered/cleared 进度）变化也要推给客户端：
+        // 节点图 UI 靠打开屏幕时读 BE 的 KeyStack 着色，若只在字幕字段变化时发包，
+        // 「已进入未通关」这种不改 labelCleared 的进度就永远到不了客户端。
+        // 用 hashCode 粗比（ItemStack.save 每 tick 太贵），相等时仍靠字幕字段判定。
+        int keyHash = hasKey() ? keyStack.getComponents().hashCode() : 0;
         if (status != prev || !labelStage.equals(prevStage) || labelCleared != prevCleared
-                || labelPresent != prevPresent || labelCompleted != prevCompleted) {
+                || labelPresent != prevPresent || labelCompleted != prevCompleted
+                || keyHash != lastKeyHash) {
+            lastKeyHash = keyHash;
             setChanged();
             level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), Block.UPDATE_CLIENTS);
         }

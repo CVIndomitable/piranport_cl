@@ -392,10 +392,40 @@ public class AircraftCombat {
             return;
         }
 
-        // Phase 2: Lock run direction and execute bomb run
+        // Phase 2a: 绕背进场——移动目标要先绕到其运动方向后方，再顺着目标航向进入投弹航线，
+        // 让提前量解算退化为「同向追尾」，弹着散布最小。静止目标直接跳过本相位。
+        if (!craft.levelRearApproachDone) {
+            Vec3 targetVelH = new Vec3(target.getDeltaMovement().x, 0, target.getDeltaMovement().z);
+            if (targetVelH.lengthSqr() < 1.0e-4) {
+                // 静止目标没有「后方」可言，直接进入原锁航线逻辑。
+                craft.levelRearApproachDone = true;
+            } else {
+                Vec3 targetDir = targetVelH.normalize();
+                double rearDist = ModEquipmentConfig.LEVEL_BOMBER_REAR_APPROACH_DISTANCE.get();
+                Vec3 rearPoint = new Vec3(target.getX() - targetDir.x * rearDist,
+                        bombAlt,
+                        target.getZ() - targetDir.z * rearDist);
+                Vec3 toRear = rearPoint.subtract(craft.position());
+                // 到点容差取航线速度的三分之一并保底 2 格：容差太小会在目标附近绕圈，
+                // 太大则「绕背」名存实亡。
+                double runSpeedNow = craft.getPanelSpeed()
+                        * ModEquipmentConfig.LEVEL_BOMBER_RUN_SPEED_MULTIPLIER.get()
+                        * craft.phaseSpeedCoefficient();
+                if (toRear.length() <= Math.max(runSpeedNow / 3.0, 2.0)) {
+                    craft.levelRearApproachDone = true;
+                } else {
+                    craft.setDeltaMovement(toRear.normalize().scale(
+                            Math.min(runSpeedNow, toRear.length())));
+                    return;
+                }
+            }
+        }
+
+        // Phase 2b: Lock run direction and execute bomb run
         if (craft.levelRunDirection == null) {
             craft.levelRunDirection = new Vec3(dx, 0, dz).normalize();
             craft.levelRunTicks = 0;
+            craft.levelAbortTicks = 0;
         }
 
         double runSpeed = craft.getPanelSpeed() * ModEquipmentConfig.LEVEL_BOMBER_RUN_SPEED_MULTIPLIER.get()
@@ -444,6 +474,25 @@ public class AircraftCombat {
             Vec3 toTarget = new Vec3(dx, 0, dz);
             boolean inRunCone = horizDist < 1.0
                     || toTarget.normalize().dot(runDir) >= 0.9;
+
+            // 锥外拉起：目标跑出 ±25° 锥后若继续直飞，载机会永远错过投弹窗口。
+            // 连续若干 tick 不在锥内就放弃本航线：爬升拉起、清掉锁向，回到绕背/接近相位重新瞄准。
+            if (!inRunCone) {
+                craft.levelAbortTicks++;
+            } else {
+                craft.levelAbortTicks = 0;
+            }
+            if (craft.levelAbortTicks >= ModEquipmentConfig.LEVEL_BOMBER_ABORT_TICKS.get()) {
+                craft.levelRunDirection = null;
+                craft.levelBombDropped = false;
+                craft.levelAbortTicks = 0;
+                craft.levelRearApproachDone = false;
+                craft.setDeltaMovement(new Vec3(runDir.x * runSpeed,
+                        craft.getPanelSpeed() * ModEquipmentConfig.LEVEL_BOMBER_CLIMB_SPEED_MULTIPLIER.get()
+                                * craft.phaseSpeedCoefficient(),
+                        runDir.z * runSpeed));
+                return;
+            }
 
             if (inRunCone
                     && (horizDist <= Math.max(leadDistance, ModEquipmentConfig.LEVEL_BOMBER_MIN_RELEASE_DISTANCE.get())

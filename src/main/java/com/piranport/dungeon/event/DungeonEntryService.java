@@ -233,27 +233,32 @@ public final class DungeonEntryService {
         manager.refreshPlayerPresence(player.server);
     }
 
-    /** 清掉某节点名下所有带副本标签的实体（玩家不受影响）。 */
+    /**
+     * 清掉本实例区域内所有带副本实例标签的实体（玩家不受影响）。
+     *
+     * <p>只清起点节点会让上一局中途节点残留的怪在新一局叠加刷怪，所以范围取整个
+     * 实例分配区域（REGION_SIZE×REGION_SIZE），过滤只按 instTag 不按 nodeTag——
+     * resetProgress 会清 enteredNodes，节点级过滤在此之后也无节点可遍历。</p>
+     */
     private static void resetNodeEntities(ServerLevel dungeonLevel, DungeonInstance instance,
                                           String nodeId) {
-        String nodeTag = "dungeon_node_" + nodeId;
         String instTag = "dungeon_instance_" + instance.getInstanceId();
         java.util.List<net.minecraft.world.entity.Entity> victims = new java.util.ArrayList<>();
-        BlockPos center = instance.getNodeSpawnPos(nodeId);
-        int half = com.piranport.dungeon.DungeonConstants.NODE_AREA_SIZE / 2 + 8;
+        int minX = instance.getRegionOriginX();
+        int minZ = instance.getRegionOriginZ();
+        int size = com.piranport.dungeon.DungeonConstants.REGION_SIZE;
         dungeonLevel.getEntities().get(
                 new net.minecraft.world.phys.AABB(
-                        center.getX() - half, -64, center.getZ() - half,
-                        center.getX() + half, 320, center.getZ() + half),
+                        minX, -64, minZ, minX + size, 320, minZ + size),
                 e -> {
-                    if (e.getTags().contains(nodeTag) && e.getTags().contains(instTag)) {
+                    if (e.getTags().contains(instTag) && !(e instanceof ServerPlayer)) {
                         victims.add(e);
                     }
                 });
         victims.forEach(net.minecraft.world.entity.Entity::discard);
         if (!victims.isEmpty()) {
-            com.piranport.PiranPort.LOGGER.info("[副本] 从头开始：清除节点 {} 残留实体 {} 个",
-                    nodeId, victims.size());
+            com.piranport.PiranPort.LOGGER.info("[副本] 从头开始：清除实例 {} 区域残留实体 {} 个",
+                    instance.getInstanceId(), victims.size());
         }
     }
 

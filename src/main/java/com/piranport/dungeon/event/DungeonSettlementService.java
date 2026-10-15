@@ -32,14 +32,38 @@ public final class DungeonSettlementService {
         if (ratio <= 1.15) return "B";
         return "C";
     }
+    /**
+     * 宝箱出口：节点奖励不再直接塞进背包，而是由出口结构收集进战利品箱。
+     * 该队列在 {@link #settleNode} 清点奖励时逐条入队，随后由
+     * {@link com.piranport.dungeon.block.PortalStructureHelper#buildPortalStructure}
+     * 生成宝箱时取走。结算界面照常展示 namesOut 里的条目。
+     */
+    public static final java.util.Map<String,List<ItemStack>> PENDING_CHEST_LOOT = new java.util.concurrent.ConcurrentHashMap<>();
+    static String lootKey(UUID instanceId,String nodeId){return instanceId+"/"+nodeId;}
+    /** 由 PortalStructureHelper 在摆箱子前调用，取走并清空该节点的待放战利品。 */
+    public static List<ItemStack> drainPendingLoot(UUID instanceId,String nodeId){
+        List<ItemStack> l=PENDING_CHEST_LOOT.remove(lootKey(instanceId,nodeId));
+        return l==null?List.of():l;
+    }
     public static boolean isCounting(DungeonInstance i,String n){return i!=null&&n!=null&&i.getState()==DungeonInstance.State.ACTIVE&&i.hasEnteredNode(n)&&!i.getClearedNodes().contains(n);}
     public static void tickActiveNode(ServerLevel l,DungeonInstance i){if(isCounting(i,i.getCurrentNode()))DungeonSettlementData.get(l).tick(i.getInstanceId(),i.getCurrentNode());}
     public static void recordKill(ServerLevel l,DungeonInstance i,String n,UUID e){if(e!=null&&isCounting(i,n))DungeonSettlementData.get(l).recordKill(i.getInstanceId(),n,e);}
     public static boolean settleNode(ServerLevel l,DungeonInstance i,StageData s,NodeData n,boolean completes){
         DungeonSettlementData d=DungeonSettlementData.get(l); if(!i.getClearedNodes().contains(n.nodeId())||!d.claimSettlement(i.getInstanceId(),n.nodeId()))return false;
         DungeonInstanceManager m=DungeonInstanceManager.get(l); DungeonSavedData first=DungeonSavedData.get(l);
-        for(UUID id:i.getPlayerUuids()){ServerPlayer p=l.getServer().getPlayerList().getPlayer(id);if(p==null||!p.isAlive()||p.isSpectator()||m.getInstanceForPlayer(p)!=i)continue;List<String> rs=new ArrayList<>();for(NodeData.RewardEntry r:n.rewards())RewardDispatcher.give(p,r,rs);if(completes){ModAdvancements.award(p,"dungeon/first_clear");// 首通奖励/标记只给 Boss 击杀瞬间在场（快照）的玩家；eligible 无快照时全员兜底
+        // 宝箱出口：节点奖励按节点roll一次（原为每人一份），放入出口战利品箱；
+        // 首通奖励仍按参与判定发个人背包——这是身份奖励，进公共箱子会被误拿。
+        // 概率roll需要一个随机源：优先用第一个有效玩家，没人则用世界随机数。
+        List<ItemStack> chestLoot=new ArrayList<>();
+        List<String> sharedRewardNames=new ArrayList<>();
+        net.minecraft.util.RandomSource rng=l.getRandom();
+        ServerPlayer roller=null;
+        for(UUID id:i.getPlayerUuids()){ServerPlayer p=l.getServer().getPlayerList().getPlayer(id);if(p!=null&&p.isAlive()&&!p.isSpectator()&&m.getInstanceForPlayer(p)==i){roller=p;break;}}
+        if(roller!=null){for(NodeData.RewardEntry r:n.rewards())RewardDispatcher.rollToStack(roller,r,sharedRewardNames,chestLoot);}
+        else{for(NodeData.RewardEntry r:n.rewards()){if(r.chance()<1.0f&&rng.nextFloat()>r.chance())continue;net.minecraft.world.item.Item item=r.resolvedItem();if(item!=null){chestLoot.add(new ItemStack(item,r.count()));sharedRewardNames.add(item.getDescription().getString()+" x"+r.count());}}}
+        for(UUID id:i.getPlayerUuids()){ServerPlayer p=l.getServer().getPlayerList().getPlayer(id);if(p==null||!p.isAlive()||p.isSpectator()||m.getInstanceForPlayer(p)!=i)continue;List<String> rs=new ArrayList<>(sharedRewardNames);if(completes){ModAdvancements.award(p,"dungeon/first_clear");// 首通奖励/标记只给 Boss 击杀瞬间在场（快照）的玩家；eligible 无快照时全员兜底
 if(FirstClearRules.eligible(i,id)&&!first.hasFirstCleared(s.stageId(),id)){first.markFirstCleared(s.stageId(),id);for(NodeData.RewardEntry r:s.firstClearRewards())RewardDispatcher.give(p,r,rs);int c=completedChapterNumber(s,DungeonRegistry.INSTANCE.getChapter(s.chapter()));if(c>0)giveDeployMedal(p,c,rs);}}PacketDistributor.sendToPlayer(p,new DungeonResultPayload(s.displayName()+" · "+n.nodeId(),d.elapsedMillis(i.getInstanceId(),n.nodeId()),false,rs,d.kills(i.getInstanceId(),n.nodeId())));}
+        if(!chestLoot.isEmpty())PENDING_CHEST_LOOT.put(lootKey(i.getInstanceId(),n.nodeId()),chestLoot);
         return true;
     }
     static int completedChapterNumber(StageData s,ChapterData c){if(c==null||c.stages().isEmpty()||!c.stages().get(c.stages().size()-1).equals(s.stageId())||!s.chapter().matches("chapter_[1-7]"))return -1;return Integer.parseInt(s.chapter().substring(8));}

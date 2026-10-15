@@ -509,6 +509,43 @@ public class DungeonEventHandler {
                 player.getName().getString(), matched.id(), instance.getStageId());
     }
 
+    /**
+     * 潜行持物右键讲台的兜底取钥匙。
+     *
+     * <p>WHY：NeoForge flag1 闸门在「潜行 + 任一手非空」时跳过方块的所有交互回调，
+     * 除非两手物品的 doesSneakBypassUse 都返回 true。钥匙只对拿钥匙的手放行，
+     * 另一手拿任意其他物品（舰装核心等）时 useWithoutItem 永远进不去，钥匙撤不下来。
+     * 该闸门在事件之后才判定，所以在服务端事件里直接补一遍 useWithoutItem 的潜行分支。
+     * 主副手各触发一次事件，取消并返回 CONSUME 后第二只手不会重复执行。</p>
+     */
+    @SubscribeEvent
+    public static void onRightClickBlockForLectern(
+            net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.RightClickBlock event) {
+        if (!(event.getEntity() instanceof ServerPlayer serverPlayer)
+                || serverPlayer.level().isClientSide()) return;
+        if (!serverPlayer.isSecondaryUseActive()) return;
+        BlockPos pos = event.getPos();
+        if (!(serverPlayer.level().getBlockState(pos).getBlock()
+                instanceof com.piranport.dungeon.block.DungeonLecternBlock)) return;
+        if (!(serverPlayer.level().getBlockEntity(pos)
+                instanceof com.piranport.dungeon.block.DungeonLecternBlockEntity lecternBE)) return;
+        if (!lecternBE.hasKey()) {
+            serverPlayer.displayClientMessage(net.minecraft.network.chat.Component.translatable(
+                    "block.piranport.dungeon_lectern.no_key_to_take"), true);
+        } else {
+            lecternBE.refreshStatus();
+            if (!com.piranport.dungeon.block.LecternPattern.canWithdraw(lecternBE.getStatus())) {
+                serverPlayer.displayClientMessage(net.minecraft.network.chat.Component.translatable(
+                        "block.piranport.dungeon_lectern.key_locked"), true);
+            } else {
+                lecternBE.extractKeyForShiftRightClick(serverPlayer);
+            }
+        }
+        // CONSUME：方块逻辑已处理过但不算「用了手中物品」，潜行持物不会再走物品使用。
+        event.setCancellationResult(net.minecraft.world.InteractionResult.CONSUME);
+        event.setCanceled(true);
+    }
+
     // ===== 钥匙三源：章节通关纪念章发放 =====
     private static void giveDeployMedal(ServerPlayer player, int chapterNum) {
         if (chapterNum < 1 || chapterNum > 7) return;

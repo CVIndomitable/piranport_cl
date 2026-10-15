@@ -451,8 +451,10 @@ public class AircraftCombat {
         // 提前距离 = 航弹从投弹高度落到目标高度期间自身的水平前进量（保留前抛的直接后果），
         // 由 LevelBombLead 按 ThrowableProjectile#tick 的逐行物理积分算出。删掉了旧的固定 <3 格判据。
         if (!craft.levelBombDropped) {
-            double craftHorizontalSpeed = Math.sqrt(craft.getDeltaMovement().x * craft.getDeltaMovement().x
-                    + craft.getDeltaMovement().z * craft.getDeltaMovement().z);
+            // 沿 runDir 投影取水平速度，不能用 |deltaMovement|——侧偏修正分量会被算进
+            // 「前抛速度」，让提前量按过大的速度算、落点跟着修正分量随机飘。
+            Vec3 delta = craft.getDeltaMovement();
+            double craftHorizontalSpeed = delta.x * runDir.x + delta.z * runDir.z;
             double horizontalMultiplier = ModEquipmentConfig.LEVEL_BOMBER_HORIZONTAL_VELOCITY_MULTIPLIER.get();
             double dropYOffset = ModEquipmentConfig.LEVEL_BOMBER_DROP_Y_OFFSET.get();
             double verticalVelocity = ModEquipmentConfig.LEVEL_BOMBER_VERTICAL_VELOCITY.get();
@@ -508,10 +510,11 @@ public class AircraftCombat {
                     double spreadZ = (craft.level().random.nextDouble() - 0.5)
                             * ModEquipmentConfig.LEVEL_BOMBER_BOMB_SPREAD.get();
                     bomb.moveTo(craft.getX() + spreadX, craft.getY() - dropYOffset, craft.getZ() + spreadZ, 0, 0);
-                    // 保留前抛：航弹继承载机水平速度 × 倍数（终端可调，默认 0.5）。
-                    bomb.setDeltaMovement(craft.getDeltaMovement().x * horizontalMultiplier,
+                    // 前抛：航弹初速 = runDir × craftHorizontalSpeed（沿航线投影的速度）× 倍数。
+                    // 不能直接用 craft.getDeltaMovement()——横向修正分量会让弹着点横向飘。
+                    bomb.setDeltaMovement(runDir.x * craftHorizontalSpeed * horizontalMultiplier,
                             verticalVelocity,
-                            craft.getDeltaMovement().z * horizontalMultiplier);
+                            runDir.z * craftHorizontalSpeed * horizontalMultiplier);
                     bomb.setOwner(owner);
                     craft.level().addFreshEntity(bomb);
                 }

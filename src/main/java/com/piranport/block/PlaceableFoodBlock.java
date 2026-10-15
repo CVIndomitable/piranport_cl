@@ -100,6 +100,16 @@ public class PlaceableFoodBlock extends BaseEntityBlock {
     }
 
     /**
+     * 专属模型食物方块（萨拉米披萨）：木板托盘（带手柄）+整张披萨+凸起萨拉米片，
+     * 碰撞箱取托盘外框。
+     */
+    public static class SalamiPizza extends PlaceableFoodBlock {
+        public static final MapCodec<SalamiPizza> CODEC = simpleCodec(SalamiPizza::new);
+        @Override public MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }
+        public SalamiPizza(BlockBehaviour.Properties props) { super(Block.box(1, 0, 2, 15, 2.9, 16), props); }
+    }
+
+    /**
      * 专属模型食物方块（马卡龙）：三层甜点架模型（底盘+中盘+顶盘+金支柱+顶环，
      * 各层摆放马卡龙），碰撞箱取整架外框。
      */

@@ -280,6 +280,9 @@ public class ModBlocks {
     // 墨索里尼的屁股专属食物方块（意式军粮罐模型），走"同名方块优先"落位
     public static final DeferredBlock<PlaceableFoodBlock.MussolinisOo> MUSSOLINIS_OO =
             BLOCKS.register("mussolinis_oo", () -> new PlaceableFoodBlock.MussolinisOo(foodBlockProps()));
+    // 萨拉米披萨专属食物方块（木托盘+整张披萨模型），走"同名方块优先"落位
+    public static final DeferredBlock<PlaceableFoodBlock.SalamiPizza> SALAMI_PIZZA =
+            BLOCKS.register("salami_pizza", () -> new PlaceableFoodBlock.SalamiPizza(foodBlockProps()));
 
     // ===== Reload Facility =====
     public static final DeferredBlock<ReloadFacilityBlock> RELOAD_FACILITY =

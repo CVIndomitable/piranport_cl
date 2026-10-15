@@ -464,11 +464,14 @@ public class AircraftCombat {
             // 不写死数字，避免与实体物理/落点标记漂移。
             // C 方案：目标在动的场合，「该投的距离」不再是「到当前位置」，
             // 而是「航弹落地那 tick 目标会在哪里」。静止目标下 targetV=0，退化为原公式。
+            // targetV 必须投影到 runDir 上取带符号标量（同向正、反向负），不能用 3D 距离
+            // —— 3D 模长把「朝载机来」和「背离载机跑」混为一谈，方向错会系统性偏前/偏后。
             Vec3 targetVel = target.getDeltaMovement();
+            double targetVRun = targetVel.x * runDir.x + targetVel.z * runDir.z;
             double leadDistance = LevelBombLead.releaseDistanceToMovingTarget(
                     dropHeight, AerialBombEntity.gravity(),
                     craftHorizontalSpeed * horizontalMultiplier, verticalVelocity,
-                    targetVel.x, targetVel.z, dx, dz);
+                    targetVRun);
 
             // 投弹窗口除了距离，还要求目标仍在航线正前方锥形内：
             // levelRunDirection 锁定后若载机因爬升终点侧偏而不在过目标的直线上，

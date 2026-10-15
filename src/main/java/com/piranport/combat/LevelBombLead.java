@@ -73,35 +73,32 @@ public final class LevelBombLead {
     }
 
     /**
-     * 求「投弹点 → 目标未来位置」的提前距离。
+     * 求「载机到目标的当前水平距离」等于多少时该投弹。
      *
-     * <p>对静止目标等价于 {@link #releaseDistance}；对移动目标，把同一积分过程复用一遍，
-     * 算出航弹从投弹到落地需要多少 tick，再让目标按其当前水平速度走同样的 tick 数，
-     * 得到「载机应该在目标未来位置正上方投弹」对应的水平距离。</p>
+     * <p>命中条件（沿航线一维展开）：弹丸落地瞬间，弹丸前进量 = 初始距离 + 目标在航线
+     * 方向上的位移量。即 {@code forward(t) = horizDist + targetV_run * t}，解出
+     * {@code horizDist = forward(t) − targetV_run * t}，其中 t 是弹丸下落耗时。</p>
      *
-     * <p>WHY 用同一积分而不是解析解：航弹前抛本身带阻尼（0.99）和重力，解析解是
-     * 几何级数求和，容易和实体 tick 顺序错位。数值积分与 {@link #releaseDistance}
-     * 共用同一套循环，保证「载机侧距离」和「目标侧距离」从同一个时间基准展开。</p>
+     * <p>targetV 必须取「目标速度在航线方向的投影」（带符号：同向为正、反向为负），
+     * 不能用 3D 距离或绝对值——目标朝载机飞来时投弹点要更远、背离时更近，方向错会
+     * 系统性偏前或偏后。</p>
+     *
+     * <p>对静止目标 targetVRun=0，退化为 {@link #releaseDistance} 同值。</p>
      *
      * @param dropHeight      投弹点与目标的高度差（格，正数）
      * @param gravity         航弹每 tick 垂直加速度
-     * @param horizontalSpeed 航弹初始水平速度
-     * @param verticalSpeed   航弹初始垂直速度
-     * @param targetVx        目标当前水平速度 x 分量（格/tick）
-     * @param targetVz        目标当前水平速度 z 分量
-     * @param targetDx        目标当前位置相对投弹点的水平偏移 x（用于返回「目标未来位置 → 投弹点」距离）
-     * @param targetDz        目标当前位置相对投弹点的水平偏移 z
+     * @param horizontalSpeed 航弹初始水平速度（沿航线方向，格/tick）
+     * @param verticalSpeed   航弹初始垂直速度（格/tick）
+     * @param targetVRun      目标速度在航线方向的投影（格/tick，同向正、反向负）
      * @return 提前距离（格）；参数退化时返回 0
      */
     public static double releaseDistanceToMovingTarget(double dropHeight, double gravity,
                                                        double horizontalSpeed, double verticalSpeed,
-                                                       double targetVx, double targetVz,
-                                                       double targetDx, double targetDz) {
+                                                       double targetVRun) {
         if (!(dropHeight > 0.0) || !(gravity > 0.0)
                 || !Double.isFinite(dropHeight) || !Double.isFinite(gravity)
                 || !Double.isFinite(horizontalSpeed) || !Double.isFinite(verticalSpeed)
-                || !Double.isFinite(targetVx) || !Double.isFinite(targetVz)
-                || !Double.isFinite(targetDx) || !Double.isFinite(targetDz)) {
+                || !Double.isFinite(targetVRun)) {
             return 0.0;
         }
 
@@ -116,11 +113,9 @@ public final class LevelBombLead {
             vx *= AIR_DRAG;
             vy = vy * AIR_DRAG - gravity;
             if (fallen >= dropHeight) {
-                // 目标在这段时间内也往前走了 targetV * tick
-                double futureX = targetDx + targetVx * tick;
-                double futureZ = targetDz + targetVz * tick;
-                // 载机到「目标未来位置」的连线方向上的距离，才是该投的瞬间
-                return Math.sqrt(futureX * futureX + futureZ * futureZ) - forward;
+                // 弹丸飞 forward 格时目标沿航线走 targetVRun*tick 格；
+                // 投弹瞬间的「当前距离」= forward - 目标位移
+                return forward - targetVRun * tick;
             }
         }
         return forward;

@@ -65,12 +65,13 @@ public record TerminalParameterSpec(String key, String group, String target, Str
         try {
             double parsed = Double.parseDouble(raw);
             double value = parsed * displayScale();
-            // 三个特判保持原样：drag_coeff 科学计数法、线性速度 ×20 的 %.6f、其余走通用整洁化。
+            // drag_coeff 保留科学计数法；其余全部走 tidyDecimal 去二进制尾数。
+            // 原先 isLinearSpeed 用 %.6f——%.6f 写死 6 位小数，既会产生 4.600000
+            // 这种冗余尾零，也不会消除 float→double 加宽带来的二进制尾数
+            //（如 0.23f ×20 = 4.600000083355955 → %.6f 显示 4.600000 看起来正常，
+            // 但 raw 里的 0.23000000416819775 一旦绕过缩放路径直接显示就成了"一堆 9"）。
             if ("drag_coeff".equals(property)) return String.format(Locale.ROOT, "%.6e", value);
-            if (isLinearSpeed()) return String.format(Locale.ROOT, "%.6f", value);
-            // 非速度非拖曳的 DOUBLE：历史上直接回显原始串（tick 时长型的 ×0.05 只在
-            // 上面的 INTEGER 分支生效），这里也只做美观化，不引入新的缩放语义。
-            return tidyDecimal(parsed);
+            return tidyDecimal(value);
         } catch (NumberFormatException ignored) {
             return raw;
         }

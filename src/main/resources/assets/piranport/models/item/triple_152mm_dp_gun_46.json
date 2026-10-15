@@ -8,7 +8,7 @@
       "predicate": {
         "piranport:loaded": 1
       },
-      "model": "piranport:item/triple_152mm_dp_gun_46_empty"
+      "model": "piranport:item/triple_152mm_dp_gun_46_loaded"
     }
   ]
 }

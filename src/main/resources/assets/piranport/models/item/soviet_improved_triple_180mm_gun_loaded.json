@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "piranport:item/chinese_twin_140mm_gun"
+    "layer0": "piranport:item/soviet_improved_triple_180mm_gun"
   }
 }

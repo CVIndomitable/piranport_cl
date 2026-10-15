@@ -100,12 +100,13 @@ public class PlaceableFoodBlock extends BaseEntityBlock {
     }
 
     /**
-     * 专属模型食物方块（马卡龙）：模型自带盘+四颗四色马卡龙，碰撞箱取整盘外框。
+     * 专属模型食物方块（马卡龙）：三层甜点架模型（底盘+中盘+顶盘+金支柱+顶环，
+     * 各层摆放马卡龙），碰撞箱取整架外框。
      */
     public static class Macaron extends PlaceableFoodBlock {
         public static final MapCodec<Macaron> CODEC = simpleCodec(Macaron::new);
         @Override public MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }
-        public Macaron(BlockBehaviour.Properties props) { super(Block.box(2, 0, 2, 14, 3.5, 14), props); }
+        public Macaron(BlockBehaviour.Properties props) { super(Block.box(2, 0, 2, 14, 13.2, 14), props); }
     }
 
     /**

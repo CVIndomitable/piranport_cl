@@ -277,6 +277,9 @@ public class ModBlocks {
     // 马卡龙专属食物方块（盘装四色马卡龙模型），同样走"同名方块优先"落位
     public static final DeferredBlock<PlaceableFoodBlock.Macaron> MACARON =
             BLOCKS.register("macaron", () -> new PlaceableFoodBlock.Macaron(foodBlockProps()));
+    // 豆子罐头方块（意式军粮罐模型）。物品 beans_can 无 PlaceableInfo，仅注册备装饰/展示用
+    public static final DeferredBlock<PlaceableFoodBlock.BeansCan> BEANS_CAN =
+            BLOCKS.register("beans_can", () -> new PlaceableFoodBlock.BeansCan(foodBlockProps()));
 
     // ===== Reload Facility =====
     public static final DeferredBlock<ReloadFacilityBlock> RELOAD_FACILITY =

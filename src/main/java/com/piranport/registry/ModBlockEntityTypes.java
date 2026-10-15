@@ -100,7 +100,8 @@ public class ModBlockEntityTypes {
                             ModBlocks.TORPEDO_JUICE.get(),
                             ModBlocks.SURSTROMMING.get(),
                             ModBlocks.NAVAL_BAKED_BEANS.get(),
-                            ModBlocks.MACARON.get())
+                            ModBlocks.MACARON.get(),
+                            ModBlocks.BEANS_CAN.get())
                             .build(null));
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<SmokeScreenBlockEntity>> SMOKE_SCREEN =

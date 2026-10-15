@@ -110,6 +110,16 @@ public class PlaceableFoodBlock extends BaseEntityBlock {
     }
 
     /**
+     * 专属模型方块（豆子罐头）：意式军粮罐头模型（橄榄绿罐身+白字带+银压边），
+     * 碰撞箱贴合罐体外框。物品侧无 PlaceableInfo，仅作展示/装饰方块注册。
+     */
+    public static class BeansCan extends PlaceableFoodBlock {
+        public static final MapCodec<BeansCan> CODEC = simpleCodec(BeansCan::new);
+        @Override public MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }
+        public BeansCan(BlockBehaviour.Properties props) { super(Block.box(3.5, 0, 3.5, 12.5, 8, 12.5), props); }
+    }
+
+    /**
      * 专属模型食物方块（鲱鱼罐头）：模型是一罐竖放的罐头（罐身+盖沿），碰撞箱贴合罐体外框。
      */
     public static class Surstromming extends PlaceableFoodBlock {

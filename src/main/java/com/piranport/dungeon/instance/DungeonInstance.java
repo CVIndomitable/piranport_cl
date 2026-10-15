@@ -119,6 +119,30 @@ public class DungeonInstance {
         return true;
     }
 
+    /**
+     * 「从头开始」重置：清空节点进度（已进入/已通关/当前节点/波次/分歧/记录点/首通快照），
+     * 让玩家下一次 enterNode 走完整的生成与推进流程。
+     *
+     * <p>刻意保留：玩家列表、讲台位置、区域索引、实例 ID——这些属于实例身份而非进度；
+     * state 不重置（CREATING→ACTIVE 由 beginBattleNode 的 setStartTimeMillis 路径处理）。
+     * 计时器清零：重新开始意味着这一次挑战从 0 计。</p>
+     */
+    public void resetProgress() {
+        currentNode = null;
+        clearedNodes.clear();
+        enteredNodes.clear();
+        nodePlayerCounts.clear();
+        playerCheckpoints.clear();
+        nodeWaveTotals.clear();
+        nodeWaves.clear();
+        branchChoices.clear();
+        bossParticipants.clear();
+        bossParticipantSnapshot = false;
+        startTimeMillis = 0;
+        endTimeMillis = 0;
+        elapsedTicks = 0;
+    }
+
     public boolean clearNode(String node) {
         return enteredNodes.contains(node) && clearedNodes.add(node);
     }

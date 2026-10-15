@@ -402,6 +402,17 @@ public class AircraftCombat {
                 * craft.phaseSpeedCoefficient();
         Vec3 runDir = craft.levelRunDirection;
         Vec3 runVel = new Vec3(runDir.x * runSpeed, 0, runDir.z * runSpeed);
+
+        // 修正爬升终点侧偏：runDir 锁定后，载机可能仍在「过目标直线」的平行线上，
+        // 纯 runDir 速度永远收敛不到目标垂线。加一个「垂直 runDir、指向目标」的修正分量，
+        // 幅度取侧偏的一半并封顶 runSpeed 的 30%，既不抢直线轰炸手感，又把侧偏逐步清零。
+        Vec3 toTargetHoriz = new Vec3(dx, 0, dz);
+        Vec3 lateral = toTargetHoriz.subtract(runDir.scale(toTargetHoriz.dot(runDir)));
+        double lateralDist = lateral.length();
+        if (lateralDist > 0.01) {
+            double correctionSpeed = Math.min(lateralDist * 0.5, runSpeed * 0.3);
+            runVel = runVel.add(lateral.normalize().scale(correctionSpeed));
+        }
         craft.setDeltaMovement(runVel);
 
         craft.levelRunTicks++;
@@ -419,11 +430,24 @@ public class AircraftCombat {
             double dropHeight = (craft.getY() - dropYOffset) - target.getY();
             // 重力读实体（AerialBombEntity.gravity()，终端参数 global.aerial_bomb.gravity），
             // 不写死数字，避免与实体物理/落点标记漂移。
-            double leadDistance = LevelBombLead.releaseDistance(dropHeight, AerialBombEntity.gravity(),
-                    craftHorizontalSpeed * horizontalMultiplier, verticalVelocity);
+            // C 方案：目标在动的场合，「该投的距离」不再是「到当前位置」，
+            // 而是「航弹落地那 tick 目标会在哪里」。静止目标下 targetV=0，退化为原公式。
+            Vec3 targetVel = target.getDeltaMovement();
+            double leadDistance = LevelBombLead.releaseDistanceToMovingTarget(
+                    dropHeight, AerialBombEntity.gravity(),
+                    craftHorizontalSpeed * horizontalMultiplier, verticalVelocity,
+                    targetVel.x, targetVel.z, dx, dz);
 
-            if (horizDist <= Math.max(leadDistance, ModEquipmentConfig.LEVEL_BOMBER_MIN_RELEASE_DISTANCE.get())
-                    || craft.levelRunTicks > ModEquipmentConfig.LEVEL_BOMBER_RUN_TIMEOUT_TICKS.get()) {
+            // 投弹窗口除了距离，还要求目标仍在航线正前方锥形内：
+            // levelRunDirection 锁定后若载机因爬升终点侧偏而不在过目标的直线上，
+            // 纯距离判据会让投弹点偏到目标侧后。点积/模长 = cos(偏角)，≥0.9 ≈ 25°锥。
+            Vec3 toTarget = new Vec3(dx, 0, dz);
+            boolean inRunCone = horizDist < 1.0
+                    || toTarget.normalize().dot(runDir) >= 0.9;
+
+            if (inRunCone
+                    && (horizDist <= Math.max(leadDistance, ModEquipmentConfig.LEVEL_BOMBER_MIN_RELEASE_DISTANCE.get())
+                    || craft.levelRunTicks > ModEquipmentConfig.LEVEL_BOMBER_RUN_TIMEOUT_TICKS.get())) {
                 float bombPower = craft.getPanelDamage();
                 int bombCount = Math.max(1, craft.remainingAmmo);
                 for (int i = 0; i < bombCount; i++) {

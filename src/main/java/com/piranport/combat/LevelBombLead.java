@@ -71,4 +71,58 @@ public final class LevelBombLead {
         }
         return forward;
     }
+
+    /**
+     * 求「投弹点 → 目标未来位置」的提前距离。
+     *
+     * <p>对静止目标等价于 {@link #releaseDistance}；对移动目标，把同一积分过程复用一遍，
+     * 算出航弹从投弹到落地需要多少 tick，再让目标按其当前水平速度走同样的 tick 数，
+     * 得到「载机应该在目标未来位置正上方投弹」对应的水平距离。</p>
+     *
+     * <p>WHY 用同一积分而不是解析解：航弹前抛本身带阻尼（0.99）和重力，解析解是
+     * 几何级数求和，容易和实体 tick 顺序错位。数值积分与 {@link #releaseDistance}
+     * 共用同一套循环，保证「载机侧距离」和「目标侧距离」从同一个时间基准展开。</p>
+     *
+     * @param dropHeight      投弹点与目标的高度差（格，正数）
+     * @param gravity         航弹每 tick 垂直加速度
+     * @param horizontalSpeed 航弹初始水平速度
+     * @param verticalSpeed   航弹初始垂直速度
+     * @param targetVx        目标当前水平速度 x 分量（格/tick）
+     * @param targetVz        目标当前水平速度 z 分量
+     * @param targetDx        目标当前位置相对投弹点的水平偏移 x（用于返回「目标未来位置 → 投弹点」距离）
+     * @param targetDz        目标当前位置相对投弹点的水平偏移 z
+     * @return 提前距离（格）；参数退化时返回 0
+     */
+    public static double releaseDistanceToMovingTarget(double dropHeight, double gravity,
+                                                       double horizontalSpeed, double verticalSpeed,
+                                                       double targetVx, double targetVz,
+                                                       double targetDx, double targetDz) {
+        if (!(dropHeight > 0.0) || !(gravity > 0.0)
+                || !Double.isFinite(dropHeight) || !Double.isFinite(gravity)
+                || !Double.isFinite(horizontalSpeed) || !Double.isFinite(verticalSpeed)
+                || !Double.isFinite(targetVx) || !Double.isFinite(targetVz)
+                || !Double.isFinite(targetDx) || !Double.isFinite(targetDz)) {
+            return 0.0;
+        }
+
+        double vx = horizontalSpeed;
+        double vy = verticalSpeed;
+        double fallen = 0.0;
+        double forward = 0.0;
+
+        for (int tick = 0; tick < MAX_FALL_TICKS; tick++) {
+            fallen += -vy;
+            forward += vx;
+            vx *= AIR_DRAG;
+            vy = vy * AIR_DRAG - gravity;
+            if (fallen >= dropHeight) {
+                // 目标在这段时间内也往前走了 targetV * tick
+                double futureX = targetDx + targetVx * tick;
+                double futureZ = targetDz + targetVz * tick;
+                // 载机到「目标未来位置」的连线方向上的距离，才是该投的瞬间
+                return Math.sqrt(futureX * futureX + futureZ * futureZ) - forward;
+            }
+        }
+        return forward;
+    }
 }

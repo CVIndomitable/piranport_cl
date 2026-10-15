@@ -200,23 +200,22 @@ public final class DungeonEntryService {
             }
             return;
         }
-        // 回起点：起点必然已经生成过地形（曾是入场节点），不做地形检查也不排队；
-        // 即使地形因故未就绪，也只让传送落空/失效，绝不能让请求退回推进分支去重新发奖。
+        // 「从头开始」= 进度清零后重新进战斗：先清掉上一局在起点残留的战斗实体，
+        // 再按正常 enterNode 走刷怪/传送/奖励全流程。
         if (mode == Mode.RESTART) {
-            lectern.setChanged();
-            manager.refreshPlayerPresence(player.server);
-            DungeonNodeRouter.teleportToNode(player, instance, nodeId,
-                    instance.getNodeSpawnPos(nodeId), player.getYRot());
-            markEntered(player);
-            return;
+            resetNodeEntities(dungeonLevel, instance, nodeId);
+            instance.resetProgress();
+            manager.syncKey(instance, key);
+            manager.setDirty();
         }
         if (!instance.hasEnteredNode(nodeId)
                 && !TerrainGenerationPipeline.isReady(dungeonLevel, instance, requested)) {
-            TerrainEntryQueue.get(player.server).enqueue(player, lecternPos, nodeId, fromCheckpoint);
+            TerrainEntryQueue.get(player.server).enqueue(player, lecternPos, nodeId, fromCheckpoint,
+                    mode);
             return;
         }
 
-        if (checkpoint != null) {
+        if (checkpoint != null && mode != Mode.RESTART) {
             float yaw = switch (checkpoint.facing()) {
                 case "north" -> 180f;
                 case "east" -> -90f;
@@ -232,6 +231,30 @@ public final class DungeonEntryService {
         markEntered(player);
         lectern.setChanged();
         manager.refreshPlayerPresence(player.server);
+    }
+
+    /** 清掉某节点名下所有带副本标签的实体（玩家不受影响）。 */
+    private static void resetNodeEntities(ServerLevel dungeonLevel, DungeonInstance instance,
+                                          String nodeId) {
+        String nodeTag = "dungeon_node_" + nodeId;
+        String instTag = "dungeon_instance_" + instance.getInstanceId();
+        java.util.List<net.minecraft.world.entity.Entity> victims = new java.util.ArrayList<>();
+        BlockPos center = instance.getNodeSpawnPos(nodeId);
+        int half = com.piranport.dungeon.DungeonConstants.NODE_AREA_SIZE / 2 + 8;
+        dungeonLevel.getEntities().get(
+                new net.minecraft.world.phys.AABB(
+                        center.getX() - half, -64, center.getZ() - half,
+                        center.getX() + half, 320, center.getZ() + half),
+                e -> {
+                    if (e.getTags().contains(nodeTag) && e.getTags().contains(instTag)) {
+                        victims.add(e);
+                    }
+                });
+        victims.forEach(net.minecraft.world.entity.Entity::discard);
+        if (!victims.isEmpty()) {
+            com.piranport.PiranPort.LOGGER.info("[副本] 从头开始：清除节点 {} 残留实体 {} 个",
+                    nodeId, victims.size());
+        }
     }
 
     /**

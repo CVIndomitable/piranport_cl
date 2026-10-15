@@ -274,6 +274,9 @@ public class ModBlocks {
     // 海军烘豆子专属食物方块（盘装烘豆+番茄片+橄榄模型），同样走"同名方块优先"落位
     public static final DeferredBlock<PlaceableFoodBlock.NavalBakedBeans> NAVAL_BAKED_BEANS =
             BLOCKS.register("naval_baked_beans", () -> new PlaceableFoodBlock.NavalBakedBeans(foodBlockProps()));
+    // 马卡龙专属食物方块（盘装四色马卡龙模型），同样走"同名方块优先"落位
+    public static final DeferredBlock<PlaceableFoodBlock.Macaron> MACARON =
+            BLOCKS.register("macaron", () -> new PlaceableFoodBlock.Macaron(foodBlockProps()));
 
     // ===== Reload Facility =====
     public static final DeferredBlock<ReloadFacilityBlock> RELOAD_FACILITY =

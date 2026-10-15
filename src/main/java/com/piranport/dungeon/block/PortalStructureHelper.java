@@ -324,9 +324,10 @@ public class PortalStructureHelper {
      * Builds a complete dungeon exit site at the given anchor.
      *
      * <p>出口布局（副本/新需求）：以 {@code cornerPos} 为锚点生成一个 3×3 石砖平台，
-     * 平台中央放战利品箱（装着 {@code settleNode} 收集的节点奖励），
+     * 平台中心向上竖一列海晶灯光柱便于远处辨认，
      * 平台一侧竖一副 4×5×4 的 {@code dungeon_portal} 门框（单层 2×3 开口朝外，类下界门），
-     * 门内放 {@code DungeonPortalEntity} 作为"走进入口"的传送判定。</p>
+     * 门内放 {@code DungeonPortalEntity} 作为"走进入口"的传送判定。
+     * 节点奖励由 {@code settleNode} 直接发进玩家背包，这里不再放战利品箱。</p>
      *
      * <p>坐标约定：{@code cornerPos} 是门框局部 (lx=0,ly=0,lz=0) 那一格，
      * 与历史调用方保持一致（多数传 {@code anchor.below()}）。平台铺在门框开口前方一格，
@@ -354,7 +355,7 @@ public class PortalStructureHelper {
     }
 
     /**
-     * 在 {@code facing} 朝向下尝试布置整套出口：3×3 平台、战利品箱、门框、传送门实体。
+     * 在 {@code facing} 朝向下尝试布置整套出口：3×3 平台、光柱、门框、传送门实体。
      * 返回开口中心坐标；放不下去则返回 null 且不残留半成品（门框预检沿用原逻辑，
      * 平台与箱子位在覆盖前只做"可替换"判定）。</p>
      */
@@ -373,7 +374,7 @@ public class PortalStructureHelper {
                 BlockPos p = platformCenter.offset(dx, 0, dz);
                 BlockState existing = level.getBlockState(p);
                 if (!existing.isAir() && !existing.canBeReplaced()) return null;
-                // 箱子和门要占平台上方一格，也必须是空气/可替换。
+                // 光柱和门要占平台上方一格，也必须是空气/可替换。
                 BlockPos above = p.above();
                 BlockState aboveState = level.getBlockState(above);
                 if (!aboveState.isAir() && !aboveState.canBeReplaced()) return null;
@@ -394,21 +395,14 @@ public class PortalStructureHelper {
             }
         }
 
-        // 战利品箱放在平台中心；奖励来自 settleNode 收集的队列，没有则放一只空箱子也成立。
-        BlockPos chestPos = platformCenter.above();
-        level.setBlock(chestPos,
-                net.minecraft.world.level.block.Blocks.CHEST.defaultBlockState(), 3);
-        if (level.getBlockEntity(chestPos) instanceof net.minecraft.world.level.block.entity.ChestBlockEntity chest) {
-            java.util.List<net.minecraft.world.item.ItemStack> loot =
-                    com.piranport.dungeon.event.DungeonSettlementService.drainPendingLoot(instanceId, nodeId);
-            for (net.minecraft.world.item.ItemStack stack : loot) {
-                // 逐格寻找空位塞入；塞不下就丢在地上，和 RewardDispatcher 的溢出策略一致。
-                if (!insertIntoChest(chest, stack)) {
-                    net.minecraft.world.Containers.dropItemStack(level, chestPos.getX() + .5,
-                            chestPos.getY() + .5, chestPos.getZ() + .5, stack);
-                }
-            }
-            chest.setChanged();
+        // 光柱：平台中心向上一列海晶灯（10 格），让玩家在副本维度远处能看到出口方位。
+        // 奖励已改回 settleNode 直接进背包，这里不再放战利品箱。
+        for (int dy = 1; dy <= 10; dy++) {
+            BlockPos beam = platformCenter.above(dy);
+            BlockState existing = level.getBlockState(beam);
+            if (!existing.isAir() && !existing.canBeReplaced()) break;
+            level.setBlock(beam,
+                    net.minecraft.world.level.block.Blocks.SEA_LANTERN.defaultBlockState(), 3);
         }
 
         // 传送门实体放在开口中心偏下（玩家走入即触发），替代旧版放在角点顶上的位置。
@@ -416,24 +410,6 @@ public class PortalStructureHelper {
                 center.getX() + .5, center.getY(), center.getZ() + .5);
         if (portal != null) level.addFreshEntity(portal);
         return center;
-    }
-
-    /** 把物品塞进箱子第一个可放位置；返回 false = 箱子已满。 */
-    private static boolean insertIntoChest(net.minecraft.world.level.block.entity.ChestBlockEntity chest,
-                                           net.minecraft.world.item.ItemStack stack) {
-        for (int slot = 0; slot < chest.getContainerSize(); slot++) {
-            net.minecraft.world.item.ItemStack cur = chest.getItem(slot);
-            if (cur.isEmpty()) {
-                chest.setItem(slot, stack.copy());
-                return true;
-            }
-            if (net.minecraft.world.item.ItemStack.isSameItemSameComponents(cur, stack)
-                    && cur.getCount() + stack.getCount() <= cur.getMaxStackSize()) {
-                cur.grow(stack.getCount());
-                return true;
-            }
-        }
-        return false;
     }
 
     /**

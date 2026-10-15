@@ -1,10 +1,10 @@
 {
   "parent": "block/block",
   "textures": {
-    "particle": "piranport:block/beans_can_top",
-    "top": "piranport:block/beans_can_top",
-    "bottom": "piranport:block/beans_can_bottom",
-    "side": "piranport:block/beans_can_side"
+    "particle": "piranport:block/mussolinis_oo_top",
+    "top": "piranport:block/mussolinis_oo_top",
+    "bottom": "piranport:block/mussolinis_oo_bottom",
+    "side": "piranport:block/mussolinis_oo_side"
   },
   "elements": [
     {

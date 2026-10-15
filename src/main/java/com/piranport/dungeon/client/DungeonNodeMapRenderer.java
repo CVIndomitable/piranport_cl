@@ -152,6 +152,47 @@ public final class DungeonNodeMapRenderer {
         return best;
     }
 
+    /**
+     * 图例：一行五个色块 + 标签，从左到右依次说明三态/可达/当前。
+     * 放在节点图下方（Screen 自己找位置调用），玩家不用记配色含义。
+     */
+    public static void renderLegend(GuiGraphics gfx, Font font, int x, int y) {
+        int swatch = 8;
+        int gap = 4;
+        int itemGap = 14;
+        int cy = y + swatch / 2;
+
+        int cur = x;
+        cur = legendItem(gfx, font, cur, cy, swatch, gap, itemGap,
+                g -> fillCircle(g, 0, 0, swatch / 2, COLOR_CLEARED), "已通关");
+        cur = legendItem(gfx, font, cur, cy, swatch, gap, itemGap,
+                g -> { fillCircle(g, 0, 0, swatch / 2, COLOR_UNVISITED);
+                       outlineCircle(g, 0, 0, swatch / 2, COLOR_ENTERED); }, "进行中");
+        cur = legendItem(gfx, font, cur, cy, swatch, gap, itemGap,
+                g -> fillCircle(g, 0, 0, swatch / 2, COLOR_UNVISITED), "未访问");
+        cur = legendItem(gfx, font, cur, cy, swatch, gap, itemGap,
+                g -> { fillCircle(g, 0, 0, swatch / 2, COLOR_UNVISITED);
+                       outlineCircle(g, 0, 0, swatch / 2 + 1, COLOR_REACHABLE); }, "可前往");
+        legendItem(gfx, font, cur, cy, swatch, gap, itemGap,
+                g -> { fillCircle(g, 0, 0, swatch / 2, COLOR_UNVISITED);
+                       outlineCircle(g, 0, 0, swatch / 2 + 2, COLOR_CURRENT); }, "当前");
+    }
+
+    /** 画一个图例项：色块（以 (0,0) 为圆心的回调）+ 标签；返回下一项起点 x。 */
+    private static int legendItem(GuiGraphics gfx, Font font, int x, int cy, int swatch,
+                                  int gap, int itemGap,
+                                  java.util.function.Consumer<GuiGraphics> draw,
+                                  String label) {
+        // PoseStack 平移让色块回调围绕自身圆心作画，比让回调里写偏移干净
+        gfx.pose().pushPose();
+        gfx.pose().translate(x + swatch / 2.0, cy, 0);
+        draw.accept(gfx);
+        gfx.pose().popPose();
+        gfx.drawString(font, label, x + swatch + gap, cy - font.lineHeight / 2,
+                COLOR_TEXT, false);
+        return x + swatch + gap + font.width(label) + itemGap;
+    }
+
     /** Bresenham 画线（与旧实现一致，1px 像素点）。 */
     private static void drawLine(GuiGraphics gfx, int x1, int y1, int x2, int y2, int color) {
         int dx = Math.abs(x2 - x1);

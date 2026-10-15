@@ -278,6 +278,9 @@ public class DungeonBookScreen extends AbstractContainerScreen<DungeonBookMenu> 
                     graphLeft(), graphTop(), graphWidth(), graphHeight());
             DungeonNodeMapRenderer.render(gfx, font, selectedStage, nodePositions,
                     progress, mouseX, mouseY);
+            // 图例贴节点图区域底部、返回按钮上方一行
+            DungeonNodeMapRenderer.renderLegend(gfx, font,
+                    graphLeft(), topPos + imageHeight - 32);
         }
         // 整合版 §3.1：删除 STAGE_SELECT 视图中的 lobby 成员列表渲染
     }

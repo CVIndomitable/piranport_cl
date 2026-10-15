@@ -157,6 +157,8 @@ public class DungeonContinueScreen extends Screen {
             nodePositions = DungeonNodeMapRenderer.layout(st, gx, gy, gw, gh);
             DungeonNodeMapRenderer.render(gfx, this.font, st, nodePositions,
                     progress(), mouseX, mouseY);
+            // 图例贴右栏底部
+            DungeonNodeMapRenderer.renderLegend(gfx, this.font, gx, this.height - 20);
         } else {
             nodePositions = Map.of();
         }

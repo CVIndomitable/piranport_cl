@@ -1,0 +1,67 @@
+{
+  "parent": "block/block",
+  "textures": {
+    "particle": "piranport:block/rye_basket_side",
+    "basket_side": "piranport:block/rye_basket_side",
+    "basket_top": "piranport:block/rye_basket_top",
+    "bread_top": "piranport:block/rye_bread_top",
+    "bread_side": "piranport:block/rye_bread_side",
+    "bowl_side": "piranport:block/soup_bowl_side",
+    "bowl_top": "piranport:block/soup_bowl_top",
+    "soup": "piranport:block/lablab_soup"
+  },
+  "elements": [
+    {
+      "name": "basket",
+      "from": [1, 0, 3],
+      "to": [9, 3, 11],
+      "faces": {
+        "up": { "texture": "#basket_top" },
+        "down": { "texture": "#basket_side" },
+        "north": { "texture": "#basket_side" },
+        "south": { "texture": "#basket_side" },
+        "east": { "texture": "#basket_side" },
+        "west": { "texture": "#basket_side" }
+      }
+    },
+    {
+      "name": "bread_loaf",
+      "from": [2, 3, 4],
+      "to": [8, 6.5, 10],
+      "faces": {
+        "up": { "texture": "#bread_top" },
+        "down": { "texture": "#bread_side" },
+        "north": { "texture": "#bread_side" },
+        "south": { "texture": "#bread_side" },
+        "east": { "texture": "#bread_side" },
+        "west": { "texture": "#bread_side" }
+      }
+    },
+    {
+      "name": "bowl",
+      "from": [9.5, 0, 4],
+      "to": [14.5, 2.2, 9],
+      "faces": {
+        "up": { "texture": "#bowl_top" },
+        "down": { "texture": "#bowl_side" },
+        "north": { "texture": "#bowl_side" },
+        "south": { "texture": "#bowl_side" },
+        "east": { "texture": "#bowl_side" },
+        "west": { "texture": "#bowl_side" }
+      }
+    },
+    {
+      "name": "soup_surface",
+      "from": [10.3, 2.2, 4.8],
+      "to": [13.7, 2.6, 8.2],
+      "faces": {
+        "up": { "texture": "#soup" },
+        "down": { "texture": "#soup" },
+        "north": { "texture": "#soup" },
+        "south": { "texture": "#soup" },
+        "east": { "texture": "#soup" },
+        "west": { "texture": "#soup" }
+      }
+    }
+  ]
+}

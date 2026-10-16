@@ -100,6 +100,16 @@ public class PlaceableFoodBlock extends BaseEntityBlock {
     }
 
     /**
+     * 专属模型食物方块（黑麦面包扁豆汤）：编织篮装黑列巴（深棕芝麻面包）
+     * + 旁置小白碗扁豆汤。
+     */
+    public static class PeaSoupWithRyeBread extends PlaceableFoodBlock {
+        public static final MapCodec<PeaSoupWithRyeBread> CODEC = simpleCodec(PeaSoupWithRyeBread::new);
+        @Override public MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }
+        public PeaSoupWithRyeBread(BlockBehaviour.Properties props) { super(Block.box(1, 0, 3, 14.5, 6.5, 11), props); }
+    }
+
+    /**
      * 专属模型食物方块（马赛鱼汤）：浅汤盘+橙红浓汤+汤面鱼块/肉丸+盘沿面包片。
      */
     public static class Bouillabaisse extends PlaceableFoodBlock {

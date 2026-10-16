@@ -75,9 +75,9 @@
       }
     },
     {
-      "name": "dumplings",
-      "from": [4, 1, 4],
-      "to": [12, 4, 12],
+      "name": "dumpling_1",
+      "from": [5, 1, 5],
+      "to": [7.5, 2.8, 7.5],
       "faces": {
         "up": { "texture": "#dumpling_top" },
         "down": { "texture": "#dumpling_side" },
@@ -88,9 +88,48 @@
       }
     },
     {
-      "name": "dumplings_peak",
-      "from": [5.5, 4, 5.5],
-      "to": [10.5, 5, 10.5],
+      "name": "dumpling_2",
+      "from": [8.5, 1, 5.5],
+      "to": [11, 2.8, 8],
+      "faces": {
+        "up": { "texture": "#dumpling_top" },
+        "down": { "texture": "#dumpling_side" },
+        "north": { "texture": "#dumpling_side" },
+        "south": { "texture": "#dumpling_side" },
+        "east": { "texture": "#dumpling_side" },
+        "west": { "texture": "#dumpling_side" }
+      }
+    },
+    {
+      "name": "dumpling_3",
+      "from": [5.5, 1, 8.5],
+      "to": [8, 2.8, 11],
+      "faces": {
+        "up": { "texture": "#dumpling_top" },
+        "down": { "texture": "#dumpling_side" },
+        "north": { "texture": "#dumpling_side" },
+        "south": { "texture": "#dumpling_side" },
+        "east": { "texture": "#dumpling_side" },
+        "west": { "texture": "#dumpling_side" }
+      }
+    },
+    {
+      "name": "dumpling_4",
+      "from": [9, 1, 9],
+      "to": [11.5, 2.8, 11.5],
+      "faces": {
+        "up": { "texture": "#dumpling_top" },
+        "down": { "texture": "#dumpling_side" },
+        "north": { "texture": "#dumpling_side" },
+        "south": { "texture": "#dumpling_side" },
+        "east": { "texture": "#dumpling_side" },
+        "west": { "texture": "#dumpling_side" }
+      }
+    },
+    {
+      "name": "dumpling_5",
+      "from": [6.8, 1, 7.2],
+      "to": [9.3, 3.3, 9.7],
       "faces": {
         "up": { "texture": "#dumpling_top" },
         "down": { "texture": "#dumpling_side" },
@@ -102,8 +141,8 @@
     },
     {
       "name": "herb",
-      "from": [3.5, 3, 3.5],
-      "to": [5.5, 4, 5.5],
+      "from": [4.5, 3, 10.5],
+      "to": [6, 3.8, 12],
       "faces": {
         "up": { "texture": "#herb" },
         "down": { "texture": "#herb" },

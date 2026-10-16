@@ -21,6 +21,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.util.RandomSource;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.player.Player;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -81,20 +82,42 @@ public class ClientGameEvents {
         if (ClientReconData.isInReconMode()) return;
 
         if (event.getEntity().isShiftKeyDown()) {
-            int currentEntityCore = ClientEntityCoreData.getActiveEntityCore(event.getEntity().getUUID());
-            if (currentEntityCore > 0) {
-                PacketDistributor.sendToServer(new EntityCoreRevertPayload());
-                return;
-            }
-            int currentSkin = ClientSkinData.getActiveSkin(event.getEntity().getUUID());
-            if (currentSkin > 0) {
-                PacketDistributor.sendToServer(new SkinRevertPayload());
-            }
+            tryRevertEmptyHand(event.getEntity());
             return;
         }
         // 空手右键 → 召回所有飞机
         if (TransformationManager.isPlayerTransformed(event.getEntity())) {
             PacketDistributor.sendToServer(new RecallAllAircraftPayload());
+        }
+    }
+
+    /**
+     * 空手 + 蹲下 + 右键 指向方块时 NeoForge 走 RightClickBlock 而不是 RightClickEmpty，
+     * 需要在这里同样触发脱下路径，否则玩家感觉「核心脱不下来」。
+     * 副本讲台有自己的潜行右键逻辑（钥匙撤取），那里不准脱核心。
+     */
+    @SubscribeEvent
+    public static void onRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
+        if (event.getEntity().level().isClientSide() == false) return;
+        if (ClientReconData.isInReconMode()) return;
+        if (!event.getEntity().isShiftKeyDown()) return;
+        if (!event.getEntity().getMainHandItem().isEmpty()
+                || !event.getEntity().getOffhandItem().isEmpty()) return;
+        // 讲台 block 自己接管 shift+右键（撤钥匙），避免变身玩家右键讲台时被误脱
+        if (event.getEntity().level().getBlockState(event.getPos()).getBlock()
+                instanceof com.piranport.dungeon.block.DungeonLecternBlock) return;
+        tryRevertEmptyHand(event.getEntity());
+    }
+
+    private static void tryRevertEmptyHand(Player player) {
+        int currentEntityCore = ClientEntityCoreData.getActiveEntityCore(player.getUUID());
+        if (currentEntityCore > 0) {
+            PacketDistributor.sendToServer(new EntityCoreRevertPayload());
+            return;
+        }
+        int currentSkin = ClientSkinData.getActiveSkin(player.getUUID());
+        if (currentSkin > 0) {
+            PacketDistributor.sendToServer(new SkinRevertPayload());
         }
     }
 

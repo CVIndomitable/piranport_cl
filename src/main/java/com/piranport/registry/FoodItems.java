@@ -391,6 +391,11 @@ public final class FoodItems {
                             .build())
                     .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("plate", 2))));
 
+    /** 格瓦斯（菜品）— 无 Buff 的饮用菜品版，厨锅烹饪产出；食用后返还玻璃瓶 */
+    public static final DeferredItem<BottleFoodItem> KVASS_DISH = ITEMS.register("kvass_dish",
+            () -> new BottleFoodItem(new Item.Properties()
+                    .food(fp(4, 5.0f).build())));
+
     /** 格瓦斯 — 缓慢 I + 缓降 I + 高速规避 II × 120s; 食用后返还玻璃瓶 */
     public static final DeferredItem<BottleFoodItem> KVASS = ITEMS.register("kvass",
             () -> new BottleFoodItem(new Item.Properties()

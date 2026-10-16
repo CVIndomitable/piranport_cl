@@ -380,6 +380,8 @@ public class ModItems {
     public static final DeferredItem<BottleFoodItem> TORPEDO_JUICE = FoodItems.TORPEDO_JUICE;
     public static final DeferredItem<ModFoodItem> TEMPURA = FoodItems.TEMPURA;
     public static final DeferredItem<BottleFoodItem> KVASS = FoodItems.KVASS;
+    /** 格瓦斯（菜品）— 无 Buff 厨锅版 */
+    public static final DeferredItem<BottleFoodItem> KVASS_DISH = FoodItems.KVASS_DISH;
 
     // ===== Sonar (extracted to AircraftItems) =====
     public static final DeferredItem<SonarItem> STANDARD_SONAR = AircraftItems.STANDARD_SONAR;

@@ -382,6 +382,7 @@ public class ModCreativeTabs {
                         output.accept(ModItems.RUSSIAN_DUMPLING.get());
                         output.accept(ModItems.PEA_SOUP_WITH_RYE_BREAD.get());
                         output.accept(ModItems.KVASS.get());
+                        output.accept(ModItems.KVASS_DISH.get());
                         // --- 菜品：地中海/意大利 ---
                         output.accept(ModItems.BOUILLABAISSE.get());
                         output.accept(ModItems.SALAMI_PIZZA.get());

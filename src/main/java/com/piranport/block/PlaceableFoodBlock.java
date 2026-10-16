@@ -100,6 +100,16 @@ public class PlaceableFoodBlock extends BaseEntityBlock {
     }
 
     /**
+     * 专属模型食物方块（俄式饺子）：浅棕碗（四沿围合）盛奶油色小饺子堆，
+     * 一角露绿色香草。
+     */
+    public static class RussianDumpling extends PlaceableFoodBlock {
+        public static final MapCodec<RussianDumpling> CODEC = simpleCodec(RussianDumpling::new);
+        @Override public MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }
+        public RussianDumpling(BlockBehaviour.Properties props) { super(Block.box(2, 0, 2, 14, 5, 14), props); }
+    }
+
+    /**
      * 专属模型食物方块（黑麦面包扁豆汤）：编织篮装黑列巴（深棕芝麻面包）
      * + 旁置小白碗扁豆汤。
      */

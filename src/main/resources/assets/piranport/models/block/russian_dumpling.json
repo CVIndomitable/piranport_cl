@@ -1,0 +1,117 @@
+{
+  "parent": "block/block",
+  "textures": {
+    "particle": "piranport:block/dumpling_bowl_side",
+    "bowl_side": "piranport:block/dumpling_bowl_side",
+    "bowl_top": "piranport:block/dumpling_bowl_top",
+    "dumpling_top": "piranport:block/dumpling_top",
+    "dumpling_side": "piranport:block/dumpling_side",
+    "herb": "piranport:block/dumpling_herb"
+  },
+  "elements": [
+    {
+      "name": "bowl_base",
+      "from": [3, 0, 3],
+      "to": [13, 1, 13],
+      "faces": {
+        "up": { "texture": "#bowl_top" },
+        "down": { "texture": "#bowl_side" },
+        "north": { "texture": "#bowl_side" },
+        "south": { "texture": "#bowl_side" },
+        "east": { "texture": "#bowl_side" },
+        "west": { "texture": "#bowl_side" }
+      }
+    },
+    {
+      "name": "rim_n",
+      "from": [2, 1, 2],
+      "to": [14, 3, 4],
+      "faces": {
+        "up": { "texture": "#bowl_top" },
+        "down": { "texture": "#bowl_side" },
+        "north": { "texture": "#bowl_side" },
+        "south": { "texture": "#bowl_side" },
+        "east": { "texture": "#bowl_side" },
+        "west": { "texture": "#bowl_side" }
+      }
+    },
+    {
+      "name": "rim_s",
+      "from": [2, 1, 12],
+      "to": [14, 3, 14],
+      "faces": {
+        "up": { "texture": "#bowl_top" },
+        "down": { "texture": "#bowl_side" },
+        "north": { "texture": "#bowl_side" },
+        "south": { "texture": "#bowl_side" },
+        "east": { "texture": "#bowl_side" },
+        "west": { "texture": "#bowl_side" }
+      }
+    },
+    {
+      "name": "rim_w",
+      "from": [2, 1, 4],
+      "to": [4, 3, 12],
+      "faces": {
+        "up": { "texture": "#bowl_top" },
+        "down": { "texture": "#bowl_side" },
+        "north": { "texture": "#bowl_side" },
+        "south": { "texture": "#bowl_side" },
+        "east": { "texture": "#bowl_side" },
+        "west": { "texture": "#bowl_side" }
+      }
+    },
+    {
+      "name": "rim_e",
+      "from": [12, 1, 4],
+      "to": [14, 3, 12],
+      "faces": {
+        "up": { "texture": "#bowl_top" },
+        "down": { "texture": "#bowl_side" },
+        "north": { "texture": "#bowl_side" },
+        "south": { "texture": "#bowl_side" },
+        "east": { "texture": "#bowl_side" },
+        "west": { "texture": "#bowl_side" }
+      }
+    },
+    {
+      "name": "dumplings",
+      "from": [4, 1, 4],
+      "to": [12, 4, 12],
+      "faces": {
+        "up": { "texture": "#dumpling_top" },
+        "down": { "texture": "#dumpling_side" },
+        "north": { "texture": "#dumpling_side" },
+        "south": { "texture": "#dumpling_side" },
+        "east": { "texture": "#dumpling_side" },
+        "west": { "texture": "#dumpling_side" }
+      }
+    },
+    {
+      "name": "dumplings_peak",
+      "from": [5.5, 4, 5.5],
+      "to": [10.5, 5, 10.5],
+      "faces": {
+        "up": { "texture": "#dumpling_top" },
+        "down": { "texture": "#dumpling_side" },
+        "north": { "texture": "#dumpling_side" },
+        "south": { "texture": "#dumpling_side" },
+        "east": { "texture": "#dumpling_side" },
+        "west": { "texture": "#dumpling_side" }
+      }
+    },
+    {
+      "name": "herb",
+      "from": [3.5, 3, 3.5],
+      "to": [5.5, 4, 5.5],
+      "faces": {
+        "up": { "texture": "#herb" },
+        "down": { "texture": "#herb" },
+        "north": { "texture": "#herb" },
+        "south": { "texture": "#herb" },
+        "east": { "texture": "#herb" },
+        "west": { "texture": "#herb" }
+      }
+    }
+  ]
+}

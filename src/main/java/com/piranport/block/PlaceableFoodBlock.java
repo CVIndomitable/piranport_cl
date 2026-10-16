@@ -100,6 +100,15 @@ public class PlaceableFoodBlock extends BaseEntityBlock {
     }
 
     /**
+     * 专属模型食物方块（马赛鱼汤）：浅汤盘+橙红浓汤+汤面鱼块/肉丸+盘沿面包片。
+     */
+    public static class Bouillabaisse extends PlaceableFoodBlock {
+        public static final MapCodec<Bouillabaisse> CODEC = simpleCodec(Bouillabaisse::new);
+        @Override public MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }
+        public Bouillabaisse(BlockBehaviour.Properties props) { super(Block.box(1, 0, 1, 15, 3.6, 15), props); }
+    }
+
+    /**
      * 专属模型食物方块（萨拉米披萨）：木板托盘（带手柄）+整张披萨+凸起萨拉米片，
      * 碰撞箱取托盘外框。
      */

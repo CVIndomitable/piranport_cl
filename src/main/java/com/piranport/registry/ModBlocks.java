@@ -283,6 +283,9 @@ public class ModBlocks {
     // 萨拉米披萨专属食物方块（木托盘+整张披萨模型），走"同名方块优先"落位
     public static final DeferredBlock<PlaceableFoodBlock.SalamiPizza> SALAMI_PIZZA =
             BLOCKS.register("salami_pizza", () -> new PlaceableFoodBlock.SalamiPizza(foodBlockProps()));
+    // 马赛鱼汤专属食物方块（浅汤盘+浓汤+汤料+盘沿面包片），走"同名方块优先"落位
+    public static final DeferredBlock<PlaceableFoodBlock.Bouillabaisse> BOUILLABAISSE =
+            BLOCKS.register("bouillabaisse", () -> new PlaceableFoodBlock.Bouillabaisse(foodBlockProps()));
 
     // ===== Reload Facility =====
     public static final DeferredBlock<ReloadFacilityBlock> RELOAD_FACILITY =

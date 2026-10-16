@@ -1,0 +1,92 @@
+{
+  "parent": "block/block",
+  "textures": {
+    "particle": "piranport:block/bouillabaisse_plate_top",
+    "plate_top": "piranport:block/bouillabaisse_plate_top",
+    "plate_side": "piranport:block/bouillabaisse_plate_side",
+    "soup": "piranport:block/bouillabaisse_soup",
+    "chunk": "piranport:block/bouillabaisse_chunk",
+    "bread_top": "piranport:block/bouillabaisse_bread_top",
+    "bread_side": "piranport:block/bouillabaisse_bread_side"
+  },
+  "elements": [
+    {
+      "name": "plate",
+      "from": [1, 0, 1],
+      "to": [15, 1, 15],
+      "faces": {
+        "up": { "texture": "#plate_top" },
+        "down": { "texture": "#plate_top" },
+        "north": { "texture": "#plate_side" },
+        "south": { "texture": "#plate_side" },
+        "east": { "texture": "#plate_side" },
+        "west": { "texture": "#plate_side" }
+      }
+    },
+    {
+      "name": "bowl_rim",
+      "from": [2.5, 1, 2.5],
+      "to": [13.5, 2.2, 13.5],
+      "faces": {
+        "up": { "texture": "#plate_top" },
+        "down": { "texture": "#plate_side" },
+        "north": { "texture": "#plate_side" },
+        "south": { "texture": "#plate_side" },
+        "east": { "texture": "#plate_side" },
+        "west": { "texture": "#plate_side" }
+      }
+    },
+    {
+      "name": "soup",
+      "from": [3.5, 2.2, 3.5],
+      "to": [12.5, 2.8, 12.5],
+      "faces": {
+        "up": { "texture": "#soup" },
+        "down": { "texture": "#soup" },
+        "north": { "texture": "#soup" },
+        "south": { "texture": "#soup" },
+        "east": { "texture": "#soup" },
+        "west": { "texture": "#soup" }
+      }
+    },
+    {
+      "name": "chunk_fish",
+      "from": [4.5, 2.8, 5],
+      "to": [7, 3.6, 7.5],
+      "faces": {
+        "up": { "texture": "#chunk" },
+        "down": { "texture": "#chunk" },
+        "north": { "texture": "#chunk" },
+        "south": { "texture": "#chunk" },
+        "east": { "texture": "#chunk" },
+        "west": { "texture": "#chunk" }
+      }
+    },
+    {
+      "name": "chunk_meat",
+      "from": [8.5, 2.8, 7],
+      "to": [11, 3.5, 9.5],
+      "faces": {
+        "up": { "texture": "#chunk" },
+        "down": { "texture": "#chunk" },
+        "north": { "texture": "#chunk" },
+        "south": { "texture": "#chunk" },
+        "east": { "texture": "#chunk" },
+        "west": { "texture": "#chunk" }
+      }
+    },
+    {
+      "name": "bread",
+      "from": [10.5, 2.2, 4.5],
+      "to": [14, 3, 9],
+      "faces": {
+        "up": { "texture": "#bread_top" },
+        "down": { "texture": "#bread_side" },
+        "north": { "texture": "#bread_side" },
+        "south": { "texture": "#bread_side" },
+        "east": { "texture": "#bread_side" },
+        "west": { "texture": "#bread_side" }
+      }
+    }
+  ]
+}

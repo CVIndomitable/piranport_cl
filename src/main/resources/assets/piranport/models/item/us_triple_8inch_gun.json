@@ -1,7 +1,7 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "piranport:item/chinese_twin_140mm_gun_empty"
+    "layer0": "piranport:item/us_triple_8inch_gun_empty"
   },
   "overrides": [
     {

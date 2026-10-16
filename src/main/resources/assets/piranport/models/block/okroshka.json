@@ -1,0 +1,156 @@
+{
+  "parent": "block/block",
+  "textures": {
+    "particle": "piranport:block/aspic_plate_top",
+    "plate_top": "piranport:block/aspic_plate_top",
+    "plate_side": "piranport:block/aspic_plate_side",
+    "aspic_top": "piranport:block/aspic_cube_top",
+    "aspic_side": "piranport:block/aspic_cube_side",
+    "herb": "piranport:block/dumpling_herb"
+  },
+  "elements": [
+    {
+      "name": "plate",
+      "from": [1, 0, 1],
+      "to": [15, 0.8, 15],
+      "faces": {
+        "up": { "texture": "#plate_top" },
+        "down": { "texture": "#plate_top" },
+        "north": { "texture": "#plate_side" },
+        "south": { "texture": "#plate_side" },
+        "east": { "texture": "#plate_side" },
+        "west": { "texture": "#plate_side" }
+      }
+    },
+    {
+      "name": "cube_b1",
+      "from": [4, 0.8, 4],
+      "to": [7, 3.8, 7],
+      "faces": {
+        "up": { "texture": "#aspic_top" },
+        "down": { "texture": "#aspic_side" },
+        "north": { "texture": "#aspic_side" },
+        "south": { "texture": "#aspic_side" },
+        "east": { "texture": "#aspic_side" },
+        "west": { "texture": "#aspic_side" }
+      }
+    },
+    {
+      "name": "cube_b2",
+      "from": [7, 0.8, 4],
+      "to": [10, 3.8, 7],
+      "faces": {
+        "up": { "texture": "#aspic_top" },
+        "down": { "texture": "#aspic_side" },
+        "north": { "texture": "#aspic_side" },
+        "south": { "texture": "#aspic_side" },
+        "east": { "texture": "#aspic_side" },
+        "west": { "texture": "#aspic_side" }
+      }
+    },
+    {
+      "name": "cube_b3",
+      "from": [10, 0.8, 5],
+      "to": [13, 3.8, 8],
+      "faces": {
+        "up": { "texture": "#aspic_top" },
+        "down": { "texture": "#aspic_side" },
+        "north": { "texture": "#aspic_side" },
+        "south": { "texture": "#aspic_side" },
+        "east": { "texture": "#aspic_side" },
+        "west": { "texture": "#aspic_side" }
+      }
+    },
+    {
+      "name": "cube_b4",
+      "from": [5.5, 0.8, 7],
+      "to": [8.5, 3.8, 10],
+      "faces": {
+        "up": { "texture": "#aspic_top" },
+        "down": { "texture": "#aspic_side" },
+        "north": { "texture": "#aspic_side" },
+        "south": { "texture": "#aspic_side" },
+        "east": { "texture": "#aspic_side" },
+        "west": { "texture": "#aspic_side" }
+      }
+    },
+    {
+      "name": "cube_b5",
+      "from": [8.5, 0.8, 7.5],
+      "to": [11.5, 3.8, 10.5],
+      "faces": {
+        "up": { "texture": "#aspic_top" },
+        "down": { "texture": "#aspic_side" },
+        "north": { "texture": "#aspic_side" },
+        "south": { "texture": "#aspic_side" },
+        "east": { "texture": "#aspic_side" },
+        "west": { "texture": "#aspic_side" }
+      }
+    },
+    {
+      "name": "cube_m1",
+      "from": [5.5, 3.8, 5],
+      "to": [8.5, 6.8, 8],
+      "faces": {
+        "up": { "texture": "#aspic_top" },
+        "down": { "texture": "#aspic_side" },
+        "north": { "texture": "#aspic_side" },
+        "south": { "texture": "#aspic_side" },
+        "east": { "texture": "#aspic_side" },
+        "west": { "texture": "#aspic_side" }
+      }
+    },
+    {
+      "name": "cube_m2",
+      "from": [8.5, 3.8, 5.5],
+      "to": [11.5, 6.8, 8.5],
+      "faces": {
+        "up": { "texture": "#aspic_top" },
+        "down": { "texture": "#aspic_side" },
+        "north": { "texture": "#aspic_side" },
+        "south": { "texture": "#aspic_side" },
+        "east": { "texture": "#aspic_side" },
+        "west": { "texture": "#aspic_side" }
+      }
+    },
+    {
+      "name": "cube_m3",
+      "from": [6.5, 3.8, 8],
+      "to": [9.5, 6.8, 11],
+      "faces": {
+        "up": { "texture": "#aspic_top" },
+        "down": { "texture": "#aspic_side" },
+        "north": { "texture": "#aspic_side" },
+        "south": { "texture": "#aspic_side" },
+        "east": { "texture": "#aspic_side" },
+        "west": { "texture": "#aspic_side" }
+      }
+    },
+    {
+      "name": "cube_top",
+      "from": [7, 6.8, 6.5],
+      "to": [10, 9.8, 9.5],
+      "faces": {
+        "up": { "texture": "#aspic_top" },
+        "down": { "texture": "#aspic_side" },
+        "north": { "texture": "#aspic_side" },
+        "south": { "texture": "#aspic_side" },
+        "east": { "texture": "#aspic_side" },
+        "west": { "texture": "#aspic_side" }
+      }
+    },
+    {
+      "name": "herb",
+      "from": [3, 0.8, 11],
+      "to": [5.5, 1.6, 13.5],
+      "faces": {
+        "up": { "texture": "#herb" },
+        "down": { "texture": "#herb" },
+        "north": { "texture": "#herb" },
+        "south": { "texture": "#herb" },
+        "east": { "texture": "#herb" },
+        "west": { "texture": "#herb" }
+      }
+    }
+  ]
+}

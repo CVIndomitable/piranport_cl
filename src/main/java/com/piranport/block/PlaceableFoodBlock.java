@@ -100,6 +100,16 @@ public class PlaceableFoodBlock extends BaseEntityBlock {
     }
 
     /**
+     * 专属模型食物方块（俄式肉冻）：平盘上琥珀色肉冻块堆成金字塔
+     * （5 底 + 3 中 + 1 顶，独立小方块），一角露绿色香草。
+     */
+    public static class Okroshka extends PlaceableFoodBlock {
+        public static final MapCodec<Okroshka> CODEC = simpleCodec(Okroshka::new);
+        @Override public MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }
+        public Okroshka(BlockBehaviour.Properties props) { super(Block.box(1, 0, 1, 15, 9.8, 15), props); }
+    }
+
+    /**
      * 专属模型食物方块（俄式饺子）：浅棕碗（四沿围合）盛奶油色小饺子堆，
      * 一角露绿色香草。
      */

@@ -96,7 +96,8 @@ public class Japanese127mmTwinGunRenderer extends BlockEntityWithoutLevelRendere
         if (!stack.is(ModItems.JAPANESE_127MM_TWIN_GUN.get())) return;
 
         if (LOGGED_CONTEXTS.add(displayContext)) {
-            PiranPort.LOGGER.info("Japanese127mmTwinGunRenderer context={}", displayContext);
+            PiranPort.LOGGER.info("Japanese127mmTwinGunRenderer context={} pose={}",
+                    displayContext, poseStack.last().pose());
         }
 
         if (isHandContext(displayContext)) {

@@ -139,6 +139,16 @@ public class PlaceableFoodBlock extends BaseEntityBlock {
     }
 
     /**
+     * 专属模型食物方块（黑森林蛋糕）：白瓷方盘上的方形巧克力蛋糕，
+     * 顶面四坨裱花奶油各顶一颗带梗红樱桃。
+     */
+    public static class BlackForestGateau extends PlaceableFoodBlock {
+        public static final MapCodec<BlackForestGateau> CODEC = simpleCodec(BlackForestGateau::new);
+        @Override public MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }
+        public BlackForestGateau(BlockBehaviour.Properties props) { super(Block.box(0.8, 0, 0.8, 15.2, 10.2, 15.2), props); }
+    }
+
+    /**
      * 专属模型食物方块（罗宋汤）：白瓷底碟+高脚宽口汤盘盛甜菜红汤，
      * 汤面中央一坨酸奶油、左侧欧芹叶。
      */

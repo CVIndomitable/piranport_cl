@@ -105,6 +105,7 @@ public class ModBlockEntityTypes {
                             ModBlocks.SALAMI_PIZZA.get(),
                             ModBlocks.BOUILLABAISSE.get(),
                             ModBlocks.BORSCHT.get(),
+                            ModBlocks.BLACK_FOREST_GATEAU.get(),
                             ModBlocks.PEA_SOUP_WITH_RYE_BREAD.get(),
                             ModBlocks.RUSSIAN_DUMPLING.get(),
                             ModBlocks.OKROSHKA.get())

@@ -367,9 +367,14 @@ public final class ModEquipmentConfig {
     /** 高于投雷高度的判定容差（格），超过则继续下降。默认 2.0。 */
     public static final TerminalConfigValue<Double> TORPEDO_BOMBER_ALTITUDE_TOLERANCE =
             TerminalConfigValue.number("aircraft", "torpedo_bomber_combat", "altitude_tolerance", 2.0, 0.0, 64.0);
-    /** 投雷距离：目标水平距离小于该值时投雷（格）。默认 6.0。 */
+    /**
+     * 投雷距离：载机到「目标当前位置」的水平距离 ≤ 该值时投雷（格）。
+     * <p>预测撞击点只用于决定鱼雷入水后的航向，不再参与投雷距离判定——旧实现用预测点
+     * 距离，目标横向机动时会变成贴着目标 2~3 格投雷。
+     * 默认 30.0；修改时不要超过 run_distance（默认 48），否则进入平飞段就会立即投雷。</p>
+     */
     public static final TerminalConfigValue<Double> TORPEDO_BOMBER_RELEASE_DISTANCE =
-            TerminalConfigValue.number("aircraft", "torpedo_bomber_combat", "release_distance", 10.0, 0.0, 128.0);
+            TerminalConfigValue.number("aircraft", "torpedo_bomber_combat", "release_distance", 30.0, 0.0, 128.0);
     /** 多枚鱼雷的横向偏移间隔（格）。默认 1.2。 */
     public static final TerminalConfigValue<Double> TORPEDO_BOMBER_SPREAD_OFFSET =
             TerminalConfigValue.number("aircraft", "torpedo_bomber_combat", "spread_offset", 1.2, 0.0, 16.0);
@@ -392,6 +397,13 @@ public final class ModEquipmentConfig {
     /** 平飞段（低空贴水面接敌段）触发距离：距目标水平距离小于该值时进入平飞段（格）。默认 48.0。 */
     public static final TerminalConfigValue<Double> TORPEDO_BOMBER_RUN_DISTANCE =
             TerminalConfigValue.number("aircraft", "torpedo_bomber_combat", "run_distance", 48.0, 0.0, 512.0);
+    /**
+     * 开始下降距离：距目标小于该值时，鱼雷机从接敌高度下降到平飞高度（格）。
+     * <p>默认 80，比 run_distance（48）更早，让飞机在进入投雷航线前就贴到水面，
+     * 避免在目标附近才俯冲、看起来像俯冲轰炸机。必须大于 run_distance。</p>
+     */
+    public static final TerminalConfigValue<Double> TORPEDO_BOMBER_DESCENT_START_DISTANCE =
+            TerminalConfigValue.number("aircraft", "torpedo_bomber_combat", "descent_start_distance", 80.0, 0.0, 512.0);
     /** 平飞段目标高度 = 目标 Y + 该值（格），即贴水面的飞行高度。默认 3.0。 */
     public static final TerminalConfigValue<Double> TORPEDO_BOMBER_RUN_ALTITUDE =
             TerminalConfigValue.number("aircraft", "torpedo_bomber_combat", "run_altitude", 3.0, -64.0, 256.0);

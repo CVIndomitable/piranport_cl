@@ -180,10 +180,8 @@ public final class ClientScopeHandler {
         }
 
         // 运行解算（会自动记录性能统计到 BallisticSolverStats）。
-        // 经 BallisticDispatcher 分发：实验炮走网络，其余炮走 BallisticSolver。
-        // 依据：docs/策划决策/武器/火炮-神经网络弹道解算实验方案.md 4.2
-        BallisticSolver.Result result = com.piranport.combat.neural.BallisticDispatcher.solve(
-                weapon, velocity, drag, mcGravity, solveDist, solveVert, 0.0,
+        BallisticSolver.Result result = BallisticSolver.solve(
+                velocity, drag, mcGravity, solveDist, solveVert, 0.0,
                 BallisticSolver.UNRESTRICTED_MIN_ANGLE,
                 Math.toRadians(effectiveData.maxElevation()));
         lastSolvedAngle = result.angle();

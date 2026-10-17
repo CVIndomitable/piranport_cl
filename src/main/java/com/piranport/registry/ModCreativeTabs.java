@@ -1,15 +1,12 @@
 package com.piranport.registry;
 
 import com.piranport.PiranPort;
-import com.piranport.component.LoadedAmmo;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.CreativeModeTabs;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
@@ -49,8 +46,6 @@ public class ModCreativeTabs {
                         for (net.minecraft.world.item.Item gun : WeaponItems.allCatalogGuns()) output.accept(gun);
                         output.accept(ModItems.FRENCH_QUAD_380MM_GUN.get());
                         output.accept(ModItems.FOURTEEN_BARREL_GUN.get());
-                        // 神经网络弹道解算实验炮（实验性质，见 docs/策划决策/武器/火炮-神经网络弹道解算实验方案.md）
-                        output.accept(ModItems.NEURAL_BALLISTIC_TEST_GUN.get());
 
                         // Torpedo Launchers
                         output.accept(ModItems.TRIPLE_TORPEDO_LAUNCHER.get());
@@ -600,41 +595,4 @@ public class ModCreativeTabs {
                         output.accept(ModItems.DEEP_OCEAN_SUBMARINE_SPAWN_EGG.get());
                         output.accept(ModItems.SHIP_GIRL_SPAWN_EGG.get());
                     }).build());
-
-    // ===== 测试武器 — 预装填版本 =====
-    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> TEST_WEAPONS_TAB =
-            CREATIVE_TABS.register("test_weapons_tab", () -> CreativeModeTab.builder()
-                    .title(Component.translatable("itemGroup.piranport.test_weapons"))
-                    .withTabsBefore(ResourceKey.create(Registries.CREATIVE_MODE_TAB, PiranPort.modId("spawn_eggs_tab")))  // 链式排序：紧接 spawn_eggs_tab
-                    .icon(() -> createPreloadedWeapon(ModItems.BRITISH_TRIPLE_16INCH_GUN.get(), "piranport:large_he_shell", 3))
-                    .displayItems((parameters, output) -> {
-                        // Preloaded cannons listed in the design doc.
-                        addPreloadedWeapon(output, ModItems.SINGLE_SMALL_GUN.get(), "piranport:small_he_shell", 1);
-                        addPreloadedWeapon(output, ModItems.JAPANESE_127MM_TWIN_GUN.get(), "piranport:small_he_shell", 2);
-                        addPreloadedWeapon(output, ModItems.MEDIUM_GUN.get(), "piranport:medium_he_shell", 1);
-                        addPreloadedWeapon(output, ModItems.BRITISH_TRIPLE_16INCH_GUN.get(), "piranport:large_he_shell", 3);
-
-                        // Other preloaded test weapons already supported by the current test build.
-                        addPreloadedWeapon(output, ModItems.TRIPLE_TORPEDO_LAUNCHER.get(), "piranport:torpedo_533mm_g7a", 3);
-                        addPreloadedWeapon(output, ModItems.TRIPLE_TORPEDO_LAUNCHER.get(), "piranport:acoustic_torpedo_533mm_g7e", 3);
-                        addPreloadedWeapon(output, ModItems.QUAD_TORPEDO_LAUNCHER.get(), "piranport:torpedo_610mm_type93_mk3", 4);
-
-                        addPreloadedWeapon(output, ModItems.DEPTH_CHARGE_LAUNCHER.get(), "piranport:depth_charge", 1);
-                        addPreloadedWeapon(output, ModItems.DEPTH_CHARGE_LAUNCHER_IMPROVED.get(), "piranport:depth_charge", 2);
-                        addPreloadedWeapon(output, ModItems.DEPTH_CHARGE_LAUNCHER_ADVANCED.get(), "piranport:depth_charge", 3);
-
-                        addPreloadedWeapon(output, ModItems.SY1_LAUNCHER.get(), "piranport:sy1_missile", 4);
-                        addPreloadedWeapon(output, ModItems.MK14_HARPOON_LAUNCHER.get(), "piranport:harpoon_missile", 4);
-                        addPreloadedWeapon(output, ModItems.SHIP_ROCKET_LAUNCHER.get(), "piranport:rocket_ammo", 8);
-                    }).build());
-
-    private static void addPreloadedWeapon(CreativeModeTab.Output output, Item weapon, String ammoId, int count) {
-        output.accept(createPreloadedWeapon(weapon, ammoId, count));
-    }
-
-    private static ItemStack createPreloadedWeapon(Item weapon, String ammoId, int count) {
-        ItemStack stack = weapon.getDefaultInstance();
-        stack.set(ModDataComponents.LOADED_AMMO.get(), new LoadedAmmo(count, ammoId));
-        return stack;
-    }
 }

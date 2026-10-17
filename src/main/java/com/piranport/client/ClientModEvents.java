@@ -256,9 +256,9 @@ public class ClientModEvents {
         // 副本书台：上方悬浮字幕（关卡名 / 通关情况 / 人数）
         event.registerBlockEntityRenderer(ModBlockEntityTypes.DUNGEON_LECTERN.get(),
                 com.piranport.dungeon.client.DungeonLecternRenderer::new);
-        // 副本敌人
+        // 副本敌人：低级驱逐舰也统一用 Alex 人形占位
         event.registerEntityRenderer(ModEntityTypes.LOW_TIER_DESTROYER.get(),
-                com.piranport.client.LowTierDestroyerRenderer::new);
+                ctx -> new AlexSlimMobRenderer<>(ctx));
         // 副本运输机（炮击开场脚本）
         event.registerEntityRenderer(ModEntityTypes.DUNGEON_TRANSPORT_PLANE.get(),
                 com.piranport.client.DungeonTransportPlaneRenderer::new);
@@ -273,31 +273,29 @@ public class ClientModEvents {
         // 深海投射物
         event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_PROJECTILE.get(),
                 ThrownItemRenderer::new);
-        // 深海 NPC 实体（基础舰种贴图 + 程序化舰装轮廓）
+        // 深海 NPC 实体：统一改为 Alex（slim）玩家模型 + 原版 Alex 皮肤占位。
+        // 后续按舰种补皮肤时只改 AlexSlimMobRenderer#getTextureLocation，不再换模型。
         event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_SUPPLY.get(),
-                com.piranport.client.DeepOceanSupplyRenderer::new);
+                ctx -> new AlexSlimMobRenderer<>(ctx));
         event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_DESTROYER.get(),
-                com.piranport.client.DeepOceanDestroyerRenderer::new);
+                ctx -> new AlexSlimMobRenderer<>(ctx));
         event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_LIGHT_CRUISER.get(),
-                com.piranport.client.DeepOceanRenderer::new);
+                ctx -> new AlexSlimMobRenderer<>(ctx));
         event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_HEAVY_CRUISER.get(),
-                com.piranport.client.DeepOceanHeavyCruiserRenderer::new);
+                ctx -> new AlexSlimMobRenderer<>(ctx));
         event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_BATTLE_CRUISER.get(),
-                com.piranport.client.DeepOceanBattleCruiserRenderer::new);
+                ctx -> new AlexSlimMobRenderer<>(ctx));
         event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_BATTLESHIP.get(),
-                com.piranport.client.DeepOceanBattleshipRenderer::new);
+                ctx -> new AlexSlimMobRenderer<>(ctx));
         event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_LIGHT_CARRIER.get(),
-                com.piranport.client.DeepOceanLightCarrierRenderer::new);
+                ctx -> new AlexSlimMobRenderer<>(ctx));
         event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_CARRIER.get(),
-                com.piranport.client.DeepOceanRenderer::new);
+                ctx -> new AlexSlimMobRenderer<>(ctx));
         event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_SUBMARINE.get(),
-                com.piranport.client.DeepOceanSubmarineRenderer::new);
-        // 深海 BOSS 与金猫猫同属 AbstractDeepOceanEntity，走通用渲染器（人形骨架 + 程序化舰装轮廓）。
-        // WHY：漏注册时 EntityRenderDispatcher.shouldRender 直接 NPE 崩客户端，先兜住注册。
-        // TODO 外观：《策划决策/深海/01》第八章的 Boss"特殊建模清单"仍为待补充；《策划决策/副本/18》
-        // 已定金猫猫为"高级战列外观"，落地后换专用/战列档渲染器并补 profileFor 分支。
+                ctx -> new AlexSlimMobRenderer<>(ctx));
         event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_BOSS.get(),
-                com.piranport.client.DeepOceanRenderer::new);
+                ctx -> new AlexSlimMobRenderer<>(ctx));
+        // 金猫猫是活动关的猫，不是深海舰，保留原通用渲染器。
         event.registerEntityRenderer(ModEntityTypes.GOLDENCATCAT.get(),
                 com.piranport.client.DeepOceanRenderer::new);
         // 舰娘 NPC

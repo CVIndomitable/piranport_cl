@@ -44,6 +44,7 @@ class CannonStatFormulaTest {
             new Row("british_triple_6inch_gun", 7, 21, 51.2, 8.2, 21),
             new Row("us_triple_6inch_gun", 7, 21, 41.6, 10.1, 21),
             new Row("mk16_triple_6inch_gun_flashless", 7, 21, 41.6, 10.1, 21),
+            new Row("us_mk16dp_twin_6inch_gun", 7, 14, 33.8, 8.28, 16),
             new Row("improved_triple_6inch_gun", 7, 21, 32.0, 13.13, 21),
             new Row("triple_152mm_dp_gun_46", 7, 21, 32.0, 13.13, 21),
             new Row("swedish_triple_152mm_gun", 7, 21, 32.0, 13.13, 21),
@@ -89,8 +90,8 @@ class CannonStatFormulaTest {
 
     @Test
     void catalogMatchesTable07RowForRow() {
-        assertEquals(60, TABLE_07.size());
-        assertEquals(60, CannonCatalog.ENTRIES.size());
+        assertEquals(61, TABLE_07.size());
+        assertEquals(61, CannonCatalog.ENTRIES.size());
         Set<String> ids = new HashSet<>();
         for (int i = 0; i < TABLE_07.size(); i++) {
             Row row = TABLE_07.get(i);
@@ -180,7 +181,11 @@ class CannonStatFormulaTest {
                     json.reloadTime(), 1e-3, e.id());
             String assetRoot = "assets/piranport/models/item/" + e.id();
             assertNotNull(getClass().getClassLoader().getResource(assetRoot + ".json"), "缺少模型 " + e.id());
-            assertNotNull(getClass().getClassLoader().getResource(assetRoot + "_loaded.json"), "缺少装填模型 " + e.id());
+            // 日本12.7cm连装炮改用 BEWLR + 3D 手持模型（f993c99f），装填态模型名为
+            // japanese_127mm_twin_gun_3d_loaded.json，不再有通用的 _loaded.json。
+            boolean hasLoadedModel = getClass().getClassLoader().getResource(assetRoot + "_loaded.json") != null
+                    || getClass().getClassLoader().getResource(assetRoot + "_3d_loaded.json") != null;
+            assertTrue(hasLoadedModel, "缺少装填模型 " + e.id());
         }
     }
 }

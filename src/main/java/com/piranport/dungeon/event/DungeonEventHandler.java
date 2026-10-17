@@ -265,17 +265,27 @@ public class DungeonEventHandler {
 
     /** 已完成节点的出口按玩家独立使用，不把其他成员从战场强制传走。 */
     public static void onPortalEntered(ServerPlayer player, DungeonInstance instance, String nodeId) {
-        if (instance.getClearedNodes().contains(nodeId)
-                && DungeonInstanceManager.get(player.serverLevel()).getInstanceForPlayer(player) == instance) {
-            // 《副本/22》分歧带路：在分歧点出口当场判定并个人传送；关卡已通关则照常回讲台
-            StageData stage = DungeonRegistry.INSTANCE.getStage(instance.getStageId());
-            NodeData node = stage == null ? null : stage.nodes().get(nodeId);
-            if (node != null && node.hasBranches() && instance.getState() == DungeonInstance.State.ACTIVE
-                    && DungeonBranchRouter.routeFromPortal(player, instance, stage, node)) {
-                return;
-            }
-            teleportToLectern(player, instance);
+        onPortalEntered(player, instance, nodeId, "");
+    }
+
+    /**
+     * @param targetNodeId 这扇门明确通往的节点；空串表示旧存档的单门自动选路。
+     */
+    public static void onPortalEntered(ServerPlayer player, DungeonInstance instance, String nodeId,
+                                       String targetNodeId) {
+        if (!instance.getClearedNodes().contains(nodeId)
+                || DungeonInstanceManager.get(player.serverLevel()).getInstanceForPlayer(player) != instance) {
+            return;
         }
+        // 《副本/12》：非 Boss 终点不退本，出口直接送往下一条节点（有分支时走带路判定）。
+        // 只有当前节点没有后继、实例已通关或无法推进时，才按原逻辑送回讲台。
+        StageData stage = DungeonRegistry.INSTANCE.getStage(instance.getStageId());
+        NodeData node = stage == null ? null : stage.nodes().get(nodeId);
+        if (node != null && DungeonProgressionRouter.tryAdvance(
+                player, instance, stage, node, targetNodeId)) {
+            return;
+        }
+        teleportToLectern(player, instance);
     }
 
     /** 本 tick 已在击杀瞬间快照过的 Boss 节点（instanceId → nodeId），避免 onNodeCompleted 重拍。 */

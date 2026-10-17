@@ -30,14 +30,15 @@ class WeaponWorkbenchRecipeRegistryTest {
     }
 
     @Test
-    void tierBlueprintModelsUseDistinctMissingTexturePlaceholders() throws Exception {
+    void tierBlueprintModelsUseTheirOwnTextures() throws Exception {
         for (String id : new String[] {
                 "standard_weapon_blueprint", "improved_weapon_blueprint", "advanced_weapon_blueprint"
         }) {
             String model = Files.readString(ASSETS.resolve("models/item/" + id + ".json"));
             assertTrue(model.contains("\"layer0\": \"piranport:item/" + id + "\""), id);
-            assertFalse(Files.exists(ASSETS.resolve("textures/item/" + id + ".png")),
-                    id + " 暂无物品贴图，应继续显示缺失贴图占位");
+            // f4c82ef9 已补上三档蓝图贴图；此前的“缺失贴图占位”断言已过期。
+            assertTrue(Files.exists(ASSETS.resolve("textures/item/" + id + ".png")),
+                    id + " 的物品贴图应已存在");
         }
     }
 }

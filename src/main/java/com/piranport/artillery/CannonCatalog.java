@@ -43,6 +43,7 @@ public final class CannonCatalog {
             new Entry("british_triple_6inch_gun", 6.0f, 3, EquipmentTier.STANDARD),
             new Entry("us_triple_6inch_gun", 6.0f, 3, EquipmentTier.IMPROVED),
             new Entry("mk16_triple_6inch_gun_flashless", 6.0f, 3, EquipmentTier.IMPROVED),
+            new Entry("us_mk16dp_twin_6inch_gun", 6.0f, 2, EquipmentTier.IMPROVED),
             new Entry("improved_triple_6inch_gun", 6.0f, 3, EquipmentTier.ADVANCED),
             new Entry("triple_152mm_dp_gun_46", 6.0f, 3, EquipmentTier.ADVANCED),
             new Entry("swedish_triple_152mm_gun", 6.0f, 3, EquipmentTier.ADVANCED),

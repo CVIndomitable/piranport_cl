@@ -31,7 +31,8 @@ class TerminalParameterSpecTest {
         TerminalParameterSpec speed = new TerminalParameterSpec("aircraft.test.panel_speed",
                 "aircraft", "test", "panel_speed", TerminalParameterSpec.ValueType.DOUBLE,
                 "0.5", 0.01, 10);
-        assertEquals("10.000000", speed.displayValue("0.5"));
+        // ece77d20：线性速度也统一走 tidyDecimal，10.0 显示为 "10" 而非 "10.000000"。
+        assertEquals("10", speed.displayValue("0.5"));
         assertEquals("0.75", speed.canonicalDisplay("15"));
         assertEquals(0.2, speed.displayMin(), 1.0e-9);
         assertEquals(200.0, speed.displayMax(), 1.0e-9);
@@ -70,7 +71,7 @@ class TerminalParameterSpecTest {
         TerminalParameterSpec speed = new TerminalParameterSpec("aircraft.test.panel_speed",
                 "aircraft", "test", "panel_speed", TerminalParameterSpec.ValueType.DOUBLE,
                 "0.5", 0.01, 10);
-        assertEquals("10.000000", speed.displayValue("0.5"));
+        assertEquals("10", speed.displayValue("0.5"));
 
         TerminalParameterSpec reload = new TerminalParameterSpec("aircraft.test.reload_time",
                 "aircraft", "test", "reload_time", TerminalParameterSpec.ValueType.INTEGER,

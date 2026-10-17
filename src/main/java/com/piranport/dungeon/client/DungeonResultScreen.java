@@ -62,37 +62,33 @@ public class DungeonResultScreen extends Screen {
         int cx = width / 2;
         int cy = height / 2;
 
-        // Panel
-        gfx.fill(cx - 120, cy - 70, cx + 120, cy + 85, 0xDD1A1A2E);
+        // renderBackground() 可能带强模糊。先铺一块完全不透明的面板，再画控件和文字。
+        gfx.fill(cx - 120, cy - 70, cx + 120, cy + 85, 0xFF1A1A2E);
         gfx.renderOutline(cx - 120, cy - 70, 240, 155, 0xFFFFD700);
 
-        // Title
+        super.render(gfx, mouseX, mouseY, partialTick);
+
+        // 所有文字放在最终 GUI pass（super.render 之后）：部分客户端会在控件层之前
+        // 插入模糊/后处理，先画的文字会被一起虚化。与 Revive / TownScroll 屏幕保持一致。
         gfx.drawCenteredString(font,
                 Component.translatable("gui.piranport.dungeon_result.clear"),
                 cx, cy - 60, 0xFFFFD700);
-
-        // Stage name
         gfx.drawCenteredString(font, Component.literal(stageName), cx, cy - 45, 0xFFFFFFFF);
 
-        // Time
         long totalSec = timeMillis / 1000;
         String timeStr = String.format("%02d:%02d.%03d", totalSec / 60, totalSec % 60, timeMillis % 1000);
         gfx.drawCenteredString(font,
                 Component.translatable("gui.piranport.dungeon_result.time", timeStr),
                 cx, cy - 25, 0xFFAAFFAA);
-
         gfx.drawCenteredString(font,
                 Component.translatable("gui.piranport.dungeon_result.kills", kills),
                 cx, cy - 10, 0xFFFFAA88);
         gfx.drawCenteredString(font, Component.literal(ending), cx, cy + 3, 0xFFD0D0FF);
 
-        // Rewards
         int ry = cy + 29;
         for (String reward : rewardNames) {
             gfx.drawCenteredString(font, Component.literal(reward), cx, ry, 0xFFCCCCCC);
             ry += 12;
         }
-
-        super.render(gfx, mouseX, mouseY, partialTick);
     }
 }

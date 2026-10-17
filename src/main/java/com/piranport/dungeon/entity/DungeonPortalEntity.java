@@ -28,6 +28,9 @@ import java.util.UUID;
 public class DungeonPortalEntity extends Entity {
     private static final EntityDataAccessor<Integer> SPIN_TICK =
             SynchedEntityData.defineId(DungeonPortalEntity.class, EntityDataSerializers.INT);
+    /** 这扇门通往的节点；空串 = 旧存档/单门自动选路。 */
+    private static final EntityDataAccessor<String> DATA_TARGET_NODE =
+            SynchedEntityData.defineId(DungeonPortalEntity.class, EntityDataSerializers.STRING);
 
     /** Auto-discard a portal that nobody touches in 10 minutes — prevents orphan portals
      *  if NBT was corrupted (instanceId == null) or instance was cleaned up early. */
@@ -49,16 +52,27 @@ public class DungeonPortalEntity extends Entity {
 
     public static DungeonPortalEntity create(ServerLevel level, UUID instanceId, String nodeId,
                                               double x, double y, double z) {
+        return create(level, instanceId, nodeId, "", x, y, z);
+    }
+
+    /**
+     * @param targetNodeId 这扇门通往的节点；空串表示旧存档的单门自动选路。
+     */
+    public static DungeonPortalEntity create(ServerLevel level, UUID instanceId, String nodeId,
+                                              String targetNodeId, double x, double y, double z) {
         if (instanceId == null || nodeId == null || nodeId.isBlank()
-                || nodeId.length() > MAX_NODE_ID_LENGTH) {
-            PiranPort.LOGGER.warn("Rejected invalid dungeon portal creation (instance={}, nodeLength={})",
-                    instanceId, nodeId == null ? -1 : nodeId.length());
+                || nodeId.length() > MAX_NODE_ID_LENGTH
+                || (targetNodeId != null && targetNodeId.length() > MAX_NODE_ID_LENGTH)) {
+            PiranPort.LOGGER.warn("Rejected invalid dungeon portal creation (instance={}, nodeLength={}, targetLength={})",
+                    instanceId, nodeId == null ? -1 : nodeId.length(),
+                    targetNodeId == null ? -1 : targetNodeId.length());
             return null;
         }
         DungeonPortalEntity portal = new DungeonPortalEntity(
                 ModEntityTypes.DUNGEON_PORTAL.get(), level);
         portal.instanceId = instanceId;
         portal.nodeId = nodeId;
+        portal.setTargetNodeId(targetNodeId == null ? "" : targetNodeId);
         portal.setPos(x, y, z);
         return portal;
     }
@@ -66,6 +80,19 @@ public class DungeonPortalEntity extends Entity {
     @Override
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
         builder.define(SPIN_TICK, 0);
+        builder.define(DATA_TARGET_NODE, "");
+    }
+
+    /** 这扇门通往的节点；空串 = 单门自动选路（旧存档/终局出口）。 */
+    public String getTargetNodeId() {
+        String target = entityData.get(DATA_TARGET_NODE);
+        return target == null ? "" : target;
+    }
+
+    public void setTargetNodeId(String targetNodeId) {
+        String safe = targetNodeId == null || targetNodeId.length() > MAX_NODE_ID_LENGTH
+                ? "" : targetNodeId;
+        entityData.set(DATA_TARGET_NODE, safe);
     }
 
     @Override
@@ -111,7 +138,7 @@ public class DungeonPortalEntity extends Entity {
             UUID playerId = player.getUUID();
             if (!members.contains(playerId)) continue;
             com.piranport.dungeon.event.DungeonEventHandler.onPortalEntered(
-                    player, mgr.getInstance(instanceId), nodeId);
+                    player, mgr.getInstance(instanceId), nodeId, getTargetNodeId());
             if (enteredPlayers.size() >= MAX_ENTERED_PLAYERS && !enteredPlayers.contains(playerId)) {
                 continue;
             }
@@ -156,6 +183,8 @@ public class DungeonPortalEntity extends Entity {
     protected void addAdditionalSaveData(CompoundTag tag) {
         if (instanceId != null) tag.putUUID("InstanceId", instanceId);
         if (nodeId != null) tag.putString("NodeId", nodeId);
+        String target = getTargetNodeId();
+        if (!target.isEmpty()) tag.putString("TargetNodeId", target);
         if (!enteredPlayers.isEmpty()) {
             net.minecraft.nbt.ListTag list = new net.minecraft.nbt.ListTag();
             for (UUID uuid : enteredPlayers) {
@@ -175,6 +204,11 @@ public class DungeonPortalEntity extends Entity {
             String loadedNodeId = tag.getString("NodeId");
             nodeId = (loadedNodeId.isBlank() || loadedNodeId.length() > MAX_NODE_ID_LENGTH)
                     ? null : loadedNodeId;
+        }
+        if (tag.contains("TargetNodeId", net.minecraft.nbt.Tag.TAG_STRING)) {
+            String loadedTarget = tag.getString("TargetNodeId");
+            setTargetNodeId(loadedTarget.isBlank() || loadedTarget.length() > MAX_NODE_ID_LENGTH
+                    ? "" : loadedTarget);
         }
 
         if (tag.contains("EnteredPlayers")) {

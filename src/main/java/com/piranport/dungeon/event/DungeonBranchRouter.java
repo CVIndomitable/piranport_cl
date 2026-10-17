@@ -6,7 +6,6 @@ import com.piranport.dungeon.data.StageData;
 import com.piranport.dungeon.instance.DungeonInstance;
 import com.piranport.dungeon.instance.DungeonInstanceManager;
 import com.piranport.dungeon.instance.NodeBattleField;
-import com.piranport.dungeon.instance.TerrainEntryQueue;
 import com.piranport.item.ShipCoreItem;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -140,17 +139,18 @@ public final class DungeonBranchRouter {
         // 推进规则（如别人正在打的节点未清）不允许时退回讲台
         if (!DungeonEntryRules.canEnter(instance, stage, target)) return false;
 
-        if (instance.hasEnteredNode(target)
-                || NodeBattleField.isTerrainReady(dungeonLevel, instance, targetNode)) {
-            net.minecraft.world.phys.Vec3 before = player.position();
-            DungeonNodeRouter.enterNode(player.serverLevel(), instance, targetNode, stage, player, key);
-            DungeonEventHandler.markLecternChanged(instance, player.server);
-            // enterNode 某些分支（过路费不足等）不传送：退回讲台，避免每 10 tick 在门里反复触发
-            return player.position().distanceToSqr(before) > 1.0;
+        if (!instance.hasEnteredNode(target)
+                && !NodeBattleField.isTerrainReady(dungeonLevel, instance, targetNode)) {
+            // 地形未就绪：不退本，原地推进建造；传送门每 10 tick 会再次调用本方法。
+            NodeBattleField.tickTerrain(dungeonLevel, instance, targetNode);
+            player.displayClientMessage(net.minecraft.network.chat.Component.translatable(
+                    "dungeon.piranport.advance_building", target), true);
+            return true;
         }
-        // 地形未就绪：先回讲台，再走正常地形排队（就绪后自动送入快照目标）
-        if (!DungeonEventHandler.teleportToLectern(player, instance)) return false;
-        TerrainEntryQueue.get(player.server).enqueue(player, instance.getLecternPos(), target, false);
+        DungeonNodeRouter.enterNode(player.serverLevel(), instance, targetNode, stage, player, key);
+        DungeonEventHandler.markLecternChanged(instance, player.server);
+        // enterNode 某些分支（过路费不足等）不传送：让玩家继续站在门里，40 tick 后由
+        // routeFromPortal 顶部的冷却逻辑重试，而不是直接送回讲台。
         return true;
     }
 }

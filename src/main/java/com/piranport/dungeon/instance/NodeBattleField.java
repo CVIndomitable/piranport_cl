@@ -3,6 +3,7 @@ package com.piranport.dungeon.instance;
 import com.piranport.PiranPort;
 import com.piranport.config.ModEquipmentConfig;
 import com.piranport.dungeon.DungeonConstants;
+import com.piranport.dungeon.data.DungeonNodeOverrides;
 import com.piranport.dungeon.data.DungeonRegistry;
 import com.piranport.dungeon.data.EnemySetData;
 import com.piranport.dungeon.data.NodeData;
@@ -229,7 +230,9 @@ public final class NodeBattleField {
             return spawned;
         }
 
-        EnemySetData enemySet = DungeonRegistry.INSTANCE.getEnemySet(node.enemies());
+        // 调试终端按节点覆盖舰种数量；没有覆盖时返回原敌人组。
+        EnemySetData enemySet = DungeonNodeOverrides.effective(instance.getStageId(), node.nodeId(),
+                DungeonRegistry.INSTANCE.getEnemySet(node.enemies()));
         if (enemySet == null) {
             PiranPort.LOGGER.warn("Enemy set not found: {} — spawning completion portal", node.enemies());
             TerrainGenerationProgress.onEnemiesSpawned(instance, node, 0, node.enemies());
@@ -388,6 +391,10 @@ public final class NodeBattleField {
                 }
                 if (spec.isFlagship) {
                     entity.addTag("dungeon_flagship");
+                    // 只改旗舰数值，不改旗舰是谁；在 difficulty_scale 之后叠加。
+                    if (node.type() == NodeData.NodeType.BOSS) {
+                        DungeonNodeOverrides.applyBossStats(entity, instance.getStageId(), node.nodeId());
+                    }
                 }
             }
 

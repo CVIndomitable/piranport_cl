@@ -12,6 +12,11 @@ import com.piranport.config.ModEquipmentConfig;
 import com.piranport.config.ModProjectilesConfig;
 import com.piranport.config.ModCommonConfig;
 import com.piranport.config.TerminalConfigValue;
+import com.piranport.dungeon.data.DungeonNodeOverrides;
+import com.piranport.dungeon.data.DungeonRegistry;
+import com.piranport.dungeon.data.EnemySetData;
+import com.piranport.dungeon.data.NodeData;
+import com.piranport.dungeon.data.StageData;
 import com.piranport.item.ShipType;
 import com.piranport.item.TorpedoItem;
 import com.piranport.item.MissileLauncherItem;
@@ -145,7 +150,44 @@ public final class TerminalParameterCatalog {
             add(specs, "core", core.name(), "speed_bonus", 0.0, -5, 5);
         }
         addLivingEntitySpecs(specs);
+        addDungeonNodeSpecs(specs);
         return new ArrayList<>(specs.values());
+    }
+
+    /**
+     * 副本节点怪物编成与 Boss 数值。
+     *
+     * <p>“换怪”用节点级、按舰种的数量表示：终端只有 int/double/bool，无法直接
+     * 存敌人组 ID。每个战斗/Boss 节点都暴露 8 种常规深海舰，设 0 即不刷。</p>
+     *
+     * <p>键由 {@link DungeonNodeOverrides#key} 统一生成，读取侧也走该方法；
+     * 不要在这里另拼一套字符串，否则会变成终端能改但游戏不生效的死参数。</p>
+     */
+    private static void addDungeonNodeSpecs(Map<String, TerminalParameterSpec> specs) {
+        for (StageData stage : DungeonRegistry.INSTANCE.getAllStages().values()) {
+            for (NodeData node : stage.nodes().values()) {
+                if (node.type() != NodeData.NodeType.BATTLE
+                        && node.type() != NodeData.NodeType.BOSS) continue;
+                if (node.enemies() == null) continue;
+                EnemySetData enemySet = DungeonRegistry.INSTANCE.getEnemySet(node.enemies());
+                if (enemySet == null) continue;
+
+                String target = DungeonNodeOverrides.target(stage.stageId(), node.nodeId());
+                Map<String, Integer> baseCounts = DungeonNodeOverrides.aggregateSpawnCounts(enemySet);
+                for (String entity : DungeonNodeOverrides.exposedTypes(enemySet)) {
+                    add(specs, "dungeon_node", target,
+                            DungeonNodeOverrides.spawnProperty(entity),
+                            baseCounts.getOrDefault(entity, 0),
+                            0, DungeonNodeOverrides.SPAWN_MAX);
+                }
+                if (node.type() == NodeData.NodeType.BOSS) {
+                    add(specs, "dungeon_node", target, "boss_health_multiplier", 1.0, 0.1, 100.0);
+                    add(specs, "dungeon_node", target, "boss_damage_multiplier", 1.0, 0.1, 100.0);
+                    add(specs, "dungeon_node", target, "boss_armor_bonus", 0.0, 0.0, 1000.0);
+                    add(specs, "dungeon_node", target, "boss_speed_multiplier", 1.0, 0.1, 10.0);
+                }
+            }
+        }
     }
 
     private static void addLivingEntitySpecs(Map<String, TerminalParameterSpec> specs) {

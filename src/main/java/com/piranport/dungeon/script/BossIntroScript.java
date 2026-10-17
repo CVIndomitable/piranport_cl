@@ -3,6 +3,7 @@ package com.piranport.dungeon.script;
 import com.piranport.PiranPort;
 import com.piranport.config.ModEquipmentConfig;
 import com.piranport.dungeon.DungeonConstants;
+import com.piranport.dungeon.data.DungeonNodeOverrides;
 import com.piranport.dungeon.data.DungeonRegistry;
 import com.piranport.dungeon.data.EnemySetData;
 import com.piranport.dungeon.entity.LootShipEntity;
@@ -273,6 +274,7 @@ public class BossIntroScript implements DungeonScript {
         boss.addTag("dungeon_node_" + nodeId);
         boss.addTag("dungeon_flagship");
         boss.addTag("dungeon_boss_intro_target");
+        DungeonNodeOverrides.applyBossStats(boss, stageId, nodeId);
 
         level.addFreshEntity(boss);
         bossUuid = boss.getUUID();
@@ -310,7 +312,9 @@ public class BossIntroScript implements DungeonScript {
     private void spawnEscorts(ServerLevel level) {
         if (escortsSpawned) return;
 
-        EnemySetData enemySet = DungeonRegistry.INSTANCE.getEnemySet(enemySetId);
+        // 调试终端按节点覆盖护卫编成；旗舰仍走 spawnBoss 的原敌人组，身份不变。
+        EnemySetData enemySet = DungeonNodeOverrides.effective(stageId, nodeId,
+                DungeonRegistry.INSTANCE.getEnemySet(enemySetId));
         if (enemySet == null) {
             PiranPort.LOGGER.warn("[BossIntro] Enemy set '{}' not found for escorts", enemySetId);
             escortsSpawned = true;

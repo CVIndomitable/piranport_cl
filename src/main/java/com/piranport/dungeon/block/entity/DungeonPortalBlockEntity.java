@@ -155,6 +155,9 @@ public class DungeonPortalBlockEntity extends BlockEntity {
      * 解析挂载讲台并交给权威入口。失败时给出可见反馈，不静默。
      */
     private void tryEnter(ServerPlayer player) {
+        // 副本内出口门由 DungeonPortalEntity 负责推进/回城；这里的提示只属于主世界入口。
+        // 不拦的话，玩家站在出口门里等待地形建造时会持续收到“传送门未激活”的错误提示。
+        if (instanceId != null) return;
         if (frame == null) {
             player.displayClientMessage(
                     Component.translatable("block.piranport.dungeon_portal.incomplete_structure"), true);

@@ -115,18 +115,16 @@ final class CannonAiming {
             // 弹丸仍以配置初速飞完全程，不截断飞行。
             double cap = maxHorizontalRange;
             double scaledVertical = verticalDist * (cap / horizontalDist);
-            BallisticSolver.Result result = com.piranport.combat.neural.BallisticDispatcher.solve(
-                    weapon, velocity, drag, mcGravity,
+            BallisticSolver.Result result = BallisticSolver.solve(
+                    velocity, drag, mcGravity,
                     cap, scaledVertical, 0.0,
                     BallisticSolver.UNRESTRICTED_MIN_ANGLE, maxElevation);
             optimalPitch = result.angle();
             player.displayClientMessage(
                     Component.translatable("hud.piranport.fire_control.out_of_range"), true);
         } else {
-            // 经 BallisticDispatcher 分发：实验炮走网络，其余炮走 BallisticSolver。
-            // 依据：docs/策划决策/武器/火炮-神经网络弹道解算实验方案.md 4.2
-            BallisticSolver.Result result = com.piranport.combat.neural.BallisticDispatcher.solve(
-                    weapon, velocity, drag, mcGravity,
+            BallisticSolver.Result result = BallisticSolver.solve(
+                    velocity, drag, mcGravity,
                     horizontalDist, verticalDist, 0.0,
                     BallisticSolver.UNRESTRICTED_MIN_ANGLE, maxElevation);
             optimalPitch = result.angle();

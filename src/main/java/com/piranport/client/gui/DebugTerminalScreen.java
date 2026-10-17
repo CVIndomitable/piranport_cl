@@ -1,6 +1,10 @@
 package com.piranport.client.gui;
 
+import com.piranport.aviation.AircraftDefinition;
+import com.piranport.aviation.AircraftDefinitionService;
 import com.piranport.client.input.DebugInputHandler;
+import com.piranport.dungeon.data.StageData;
+import com.piranport.dungeon.network.ClientDungeonData;
 import com.piranport.menu.DebugTerminalMenu;
 import com.piranport.network.DebugCooldownOverridePayload;
 import com.piranport.network.DebugTogglePayload;
@@ -27,6 +31,7 @@ import java.util.ArrayList;
 import java.math.BigDecimal;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -41,8 +46,8 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
     private static final int LIST_TOP = 68;
     private static final int TARGET_ROW_HEIGHT = 21;
     private static final List<String> CATEGORY_ORDER = List.of(
-            "aircraft", "cannon", "enhancement", "deep_ocean", "vanilla_mob", "ship_girl",
-            "ammo", "torpedo", "missile_launcher", "core", "projectile", "system");
+            "aircraft", "cannon", "enhancement", "deep_ocean", "dungeon", "vanilla_mob",
+            "ship_girl", "ammo", "torpedo", "missile_launcher", "core", "projectile", "system");
     private static final List<String> CONTROL_TOOLTIP_KEYS = List.of(
             "debug.tooltip", "cooldown.tooltip", "hit.tooltip", "snapshot.tooltip");
     private final Map<String, String> drafts = new HashMap<>();
@@ -56,6 +61,8 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
     private int page = PAGE_PARAMETERS;
     private boolean detailView;
     private String selectedCategory = "aircraft";
+    /** 副本分类的关卡下钻：null = 关卡列表，非 null = 该关卡的节点列表。 */
+    private String dungeonStageFilter;
     private String selectedGroup;
     private String selectedTarget;
     private int scrollOffset;
@@ -76,7 +83,10 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
     private Button cooldownButton;
     private Button hitButton;
 
-    private record TargetChoice(String category, String group, String target, int parameterCount) {}
+    private enum TargetKind { NORMAL, STAGE, NODE, BACK }
+
+    private record TargetChoice(String category, String group, String target, int parameterCount,
+                                TargetKind kind) {}
 
     public DebugTerminalScreen(DebugTerminalMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
@@ -323,28 +333,56 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
 
     private void rebuildTargets() {
         String needle = query.trim().toLowerCase(Locale.ROOT);
+        boolean searching = !needle.isEmpty();
         Map<String, TargetChoice> unique = new LinkedHashMap<>();
-        for (TerminalParameterSpec spec : TerminalParameters.clientSpecs()) {
-            String category = categoryFor(spec.group());
-            String key = category + "\u0000" + spec.group() + "\u0000"
-                    + targetIdentity(spec.group(), spec.target());
-            unique.computeIfAbsent(key, ignored -> new TargetChoice(category, spec.group(), spec.target(), 0));
-        }
         Map<String, Integer> counts = new HashMap<>();
+        Map<String, java.util.Set<String>> stageNodes = new LinkedHashMap<>();
+
         for (TerminalParameterSpec spec : TerminalParameters.clientSpecs()) {
-            String key = categoryFor(spec.group()) + "\u0000" + spec.group() + "\u0000"
+            boolean dungeonNode = "dungeon_node".equals(spec.group());
+            String stageId = dungeonNode ? stageOf(spec.target()) : null;
+            if (dungeonNode && stageId != null) {
+                stageNodes.computeIfAbsent(stageId, ignored -> new LinkedHashSet<>()).add(spec.target());
+            }
+            // 进入某个关卡后只列该关节点；全局副本参数留在关卡列表层，避免节点列表被稀释。
+            if (!searching && dungeonStageFilter != null && "dungeon".equals(spec.group())) continue;
+            if (!searching && dungeonNode) {
+                // 副本节点两级导航：先在关卡列表选关，进关后再列节点。
+                if (dungeonStageFilter == null) continue;
+                if (!dungeonStageFilter.equals(stageId)) continue;
+            }
+            String category = categoryFor(spec.group());
+            String key = category + "|" + spec.group() + "|"
                     + targetIdentity(spec.group(), spec.target());
+            TargetKind kind = dungeonNode ? TargetKind.NODE : TargetKind.NORMAL;
+            unique.computeIfAbsent(key, ignored ->
+                    new TargetChoice(category, spec.group(), spec.target(), 0, kind));
             counts.merge(key, 1, Integer::sum);
         }
+
         List<TargetChoice> rows = new ArrayList<>();
         for (TargetChoice choice : unique.values()) {
             TargetChoice counted = new TargetChoice(choice.category(), choice.group(), choice.target(),
-                    counts.getOrDefault(choiceKey(choice), 0));
-            String terms = categoryLabel(choice.category()).getString() + " " + targetLabel(counted)
-                    + " " + choice.group() + " " + choice.target();
-            if (terms.toLowerCase(Locale.ROOT).contains(needle)) rows.add(counted);
+                    counts.getOrDefault(choiceKey(choice), 0), choice.kind());
+            if (matchesTarget(counted, needle)) rows.add(counted);
         }
+        if (!searching && dungeonStageFilter == null) {
+            for (var entry : stageNodes.entrySet()) {
+                rows.add(new TargetChoice("dungeon", "dungeon_node", entry.getKey(),
+                        entry.getValue().size(), TargetKind.STAGE));
+            }
+        }
+        if (!searching && dungeonStageFilter != null) {
+            rows.add(new TargetChoice("dungeon", "dungeon_node", "", 0, TargetKind.BACK));
+        }
+
         rows.sort(Comparator.comparingInt((TargetChoice choice) -> CATEGORY_ORDER.indexOf(choice.category()))
+                .thenComparingInt(choice -> switch (choice.kind()) {
+                    case STAGE -> 0;
+                    case BACK -> 1;
+                    case NODE -> 2;
+                    case NORMAL -> 3;
+                })
                 .thenComparing(choice -> targetDisplayName(choice.group(), choice.target()))
                 .thenComparing(TargetChoice::target));
         targets = rows;
@@ -352,8 +390,25 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
                 Math.max(0, targetsForSelectedCategory().size() - targetVisibleRows));
     }
 
+    private boolean matchesTarget(TargetChoice choice, String needle) {
+        String terms = categoryLabel(choice.category()).getString() + " " + targetLabel(choice)
+                + " " + choice.group() + " " + choice.target();
+        return terms.toLowerCase(Locale.ROOT).contains(needle);
+    }
+
+    private static String stageOf(String target) {
+        if (target == null) return "";
+        int slash = target.indexOf('/');
+        return slash > 0 ? target.substring(0, slash) : target;
+    }
+
+    private String stageDisplayName(String stageId) {
+        StageData stage = ClientDungeonData.getStage(stageId);
+        return stage == null ? stageId : stage.displayName();
+    }
+
     private String choiceKey(TargetChoice choice) {
-        return choice.category() + "\u0000" + choice.group() + "\u0000"
+        return choice.category() + "|" + choice.group() + "|"
                 + targetIdentity(choice.group(), choice.target());
     }
 
@@ -374,6 +429,8 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
             case "cannon", "artillery" -> "cannon";
             case "equipment" -> "enhancement";
             case "ship", "deep_ocean" -> "deep_ocean";
+            // 副本缩放/时序与节点编成放在同一分类，避免节点参数散进“系统参数”。
+            case "dungeon", "dungeon_node" -> "dungeon";
             case "vanilla_mob" -> "vanilla_mob";
             case "ship_girl" -> "ship_girl";
             case "ammo" -> "ammo";
@@ -404,15 +461,49 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
     }
 
     private String targetLabel(TargetChoice choice) {
-        return targetDisplayName(choice.group(), choice.target()) + "  ·  "
-                + choice.parameterCount() + " " + label("parameter_count").getString();
+        if (choice.kind() == TargetKind.STAGE) {
+            return stageDisplayName(choice.target()) + "  ·  "
+                    + choice.parameterCount() + " " + label("node_count").getString();
+        }
+        if (choice.kind() == TargetKind.BACK) {
+            return label("back_to_stages").getString();
+        }
+        String count = choice.parameterCount() + " " + label("parameter_count").getString();
+        if (choice.kind() == TargetKind.NODE && query.isBlank()) {
+            // 已经在关卡内：节点列表只显示节点字母，不再重复关卡名。
+            String nodeId = choice.target();
+            int slash = nodeId.indexOf('/');
+            if (slash > 0) nodeId = nodeId.substring(slash + 1);
+            return nodeId + "  ·  " + count;
+        }
+        return targetDisplayName(choice.group(), choice.target()) + "  ·  " + count;
     }
 
     private String parameterName(TerminalParameterSpec spec) {
         String key = "gui.piranport.debug_terminal.parameter." + spec.key();
         String translated = Component.translatable(key).getString();
         if (!translated.equals(key)) return translated;
+        // 节点生成数量：实体名优先走 entity.piranport.<path>，新舰种无需逐条补翻译。
+        if (spec.property().startsWith("spawn_")) {
+            String entityName = spawnEntityName(spec.property());
+            if (entityName != null) return entityName + "数量";
+        }
         return translated("property." + spec.property(), readable(spec.property()));
+    }
+
+    /** 从 spawn_<entity_path> 解析实体中文名；没有实体翻译时回退到属性翻译。 */
+    private String spawnEntityName(String property) {
+        String path = property.substring("spawn_".length());
+        String entityKey = "entity.piranport." + path;
+        String entityName = Component.translatable(entityKey).getString();
+        if (!entityName.equals(entityKey)) return entityName;
+        String propKey = "gui.piranport.debug_terminal.property." + property;
+        String propName = Component.translatable(propKey).getString();
+        if (!propName.equals(propKey)) {
+            return propName.endsWith("数量")
+                    ? propName.substring(0, propName.length() - 2) : propName;
+        }
+        return path;
     }
 
     private String unitSuffix(TerminalParameterSpec spec) {
@@ -425,6 +516,11 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
         String descriptionKey = "gui.piranport.debug_terminal.description." + spec.key();
         Component translated = Component.translatable(descriptionKey);
         if (!translated.getString().equals(descriptionKey)) return translated;
+        // 节点生成数量统一用同一句说明；具体舰种名由 spawnEntityName 解析。
+        if (spec.property().startsWith("spawn_")) {
+            return Component.literal("控制该节点生成多少" + spawnEntityName(spec.property())
+                    + "；设为 0 表示不生成。");
+        }
         String propertyDescriptionKey = "gui.piranport.debug_terminal.description.property."
                 + spec.property();
         Component propertyDescription = Component.translatable(propertyDescriptionKey);
@@ -444,6 +540,17 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
 
     private String targetDisplayName(String group, String rawTarget) {
         if (rawTarget == null || rawTarget.isBlank()) return categoryLabel(categoryFor(group)).getString();
+        // 副本节点目标形如 "7-4/E"，用客户端已同步的关卡名替换裸 ID。
+        if ("dungeon_node".equals(group)) {
+            int slash = rawTarget.indexOf('/');
+            if (slash > 0) {
+                StageData stage = ClientDungeonData.getStage(rawTarget.substring(0, slash));
+                if (stage != null) {
+                    return stage.displayName() + " · " + rawTarget.substring(slash + 1);
+                }
+            }
+            return rawTarget;
+        }
         String path = rawTarget;
         String namespace = "piranport";
         int colon = rawTarget.indexOf(':');
@@ -475,11 +582,32 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
             String key = suffix.startsWith("item.") || suffix.startsWith("entity.")
                     || suffix.startsWith("block.") ? suffix : "gui.piranport.debug_terminal." + suffix;
             String value = Component.translatable(key).getString();
-            if (!value.equals(key)) return value;
+            if (!value.equals(key)) return withAircraftClass(group, path, value);
         }
         // Never expose a raw registry ID in the terminal. A missing translation
         // is still identifiable by its translated category.
-        return translated("group." + group, categoryLabel(categoryFor(group)).getString());
+        return withAircraftClass(group, path,
+                translated("group." + group, categoryLabel(categoryFor(group)).getString()));
+    }
+
+    /**
+     * 飞机分类下，具体机型目标后面补上机种，例如“剑鱼 · 鱼雷机”。
+     * 全局战斗参数的目标（fighter_combat 等）不走这里，它们自己的 target 翻译已写清机种。
+     */
+    private String withAircraftClass(String group, String path, String name) {
+        if (!"aircraft".equals(group)) return name;
+        AircraftDefinition definition = AircraftDefinitionService.find(path);
+        if (definition == null) return name;
+        String type = switch (definition.aircraftClass()) {
+            case FIGHTER -> "战斗机";
+            case ROCKET_FIGHTER -> "火箭战斗机";
+            case DIVE_BOMBER -> "俯冲轰炸机";
+            case LEVEL_BOMBER -> "水平轰炸机";
+            case TORPEDO_BOMBER -> "鱼雷机";
+            case ASW -> "反潜机";
+            case RECON -> "侦察机";
+        };
+        return name + " · " + type;
     }
 
     private String translated(String suffix, String fallback) {
@@ -549,6 +677,9 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
     }
 
     private void selectCategory(String category) {
+        // 切换分类时回到副本分类的关卡列表，避免停留在上一次下钻的节点列表。
+        dungeonStageFilter = null;
+        rebuildTargets();
         List<TargetChoice> choices = targetsForCategory(category);
         if (choices.isEmpty()) {
             localStatus = label("status.no_parameters").getString();
@@ -565,6 +696,32 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
     }
 
     private void openTarget(TargetChoice choice) {
+        if (choice.kind() == TargetKind.STAGE) {
+            dungeonStageFilter = choice.target();
+            selectedCategory = "dungeon";
+            selectedGroup = null;
+            selectedTarget = null;
+            detailView = false;
+            query = "";
+            targetScrollOffset = 0;
+            searchDirty = false;
+            localStatus = "";
+            rebuildWidgets();
+            return;
+        }
+        if (choice.kind() == TargetKind.BACK) {
+            dungeonStageFilter = null;
+            selectedCategory = "dungeon";
+            selectedGroup = null;
+            selectedTarget = null;
+            detailView = false;
+            query = "";
+            targetScrollOffset = 0;
+            searchDirty = false;
+            localStatus = "";
+            rebuildWidgets();
+            return;
+        }
         selectedCategory = choice.category();
         selectedGroup = choice.group();
         selectedTarget = choice.target();
@@ -846,7 +1003,9 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
                         tooltip.add(Component.literal("速度: " + currentSpeed + " / 默认 " + defaultSpeed));
                     }
                     if (!spec.target().isBlank() && !"system".equals(spec.group())) {
-                        tooltip.add(Component.literal(label("object_id").getString() + ": " + spec.target()));
+                        // 目标 ID 也按界面语言显示（舰种、武器、节点名），不要直接露注册名。
+                        tooltip.add(Component.literal(label("object_id").getString() + ": "
+                                + targetDisplayName(spec.group(), spec.target())));
                     }
                     tooltip.add(parameterDescription(spec));
                     graphics.renderTooltip(font, tooltip.stream().map(Component::getVisualOrderText).toList(),

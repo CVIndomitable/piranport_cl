@@ -33,6 +33,9 @@ public class DepthChargeEntity extends ThrowableItemProjectile {
     private float explosionPower = (float) (double) ModProjectilesConfig.DEPTH_CHARGE_EXPLOSION_POWER.get();
     private boolean detonated = false;
 
+    /** 入水时刻的 tickCount；<0 表示尚未入水。引信以它为锚点，而不是全局 tickCount。 */
+    private int waterEntryTick = -1;
+
     /** Required by entity type registration. */
     public DepthChargeEntity(EntityType<? extends DepthChargeEntity> type, Level level) {
         super(type, level);
@@ -83,11 +86,15 @@ public class DepthChargeEntity extends ThrowableItemProjectile {
             if (nowInWater != inWater) {
                 inWater = nowInWater;
                 if (inWater) {
+                    waterEntryTick = tickCount;
                     waterEntryEffectPlayed = false;
                     // 入水时播放水花音效
                     level().playSound(null, getX(), getY(), getZ(),
                             net.minecraft.sounds.SoundEvents.GENERIC_SPLASH, net.minecraft.sounds.SoundSource.NEUTRAL,
                             0.5f, 0.8f + level().getRandom().nextFloat() * 0.4f);
+                } else {
+                    // 出水（被抛回空中）后引信重新上锁，下次入水重新计引信延迟
+                    waterEntryTick = -1;
                 }
             }
 
@@ -101,22 +108,29 @@ public class DepthChargeEntity extends ThrowableItemProjectile {
             }
 
             // P2优化: 错峰执行近炸检测，避免齐投时同一tick内多次检测
-            // 入水后短暂延迟再开始检测，模拟真实深弹入水后下潜启动引信
-            if (tickCount > ModProjectilesConfig.DEPTH_CHARGE_ARM_TICKS.get()
-                    + (inWater ? ModProjectilesConfig.DEPTH_CHARGE_WATER_SINK_DURATION.get() : 0)
+            // 引信只在入水后起算：未入水（空中飞行）不触发近炸，入水后再延迟一段下沉时间
+            if (waterEntryTick >= 0
+                    && tickCount > waterEntryTick + ModProjectilesConfig.DEPTH_CHARGE_WATER_SINK_DURATION.get()
+                            + ModProjectilesConfig.DEPTH_CHARGE_ARM_TICKS.get()
                     && (tickCount + getId()) % ModProjectilesConfig.DEPTH_CHARGE_PROXIMITY_INTERVAL.get() == 0) {
                 checkProximity();
             }
         }
     }
 
-    /** 扫描检测范围内的存活实体，发现目标后引爆。 */
+    /**
+     * 扫描检测范围内的存活实体，发现目标后引爆。
+     * 引信只认水下目标：弹体此时已没入水中，要求目标自己也浸在水里，
+     * 水面舰船/玩家/舰娘不会触发近炸（与鱼雷水下引爆的口径一致）。
+     */
     private void checkProximity() {
         AABB searchBox = getBoundingBox().inflate(ModProjectilesConfig.DEPTH_CHARGE_DETECT_RANGE.get());
         List<Entity> nearby = level().getEntities(this, searchBox, e -> {
             if (e == getOwner()) return false;
             if (com.piranport.combat.FriendlyFireHelper.shouldBlockHit(e, getOwner())) return false;
-            return e.isAlive() && e.isPickable() && e instanceof LivingEntity;
+            if (!(e.isAlive() && e.isPickable() && e instanceof LivingEntity)) return false;
+            // 水面单位不触发引信：目标必须正在水中才引爆
+            return e.isInWater();
         });
         if (!nearby.isEmpty()) {
             detonate();
@@ -165,14 +179,18 @@ public class DepthChargeEntity extends ThrowableItemProjectile {
 
     @Override
     protected boolean canHitEntity(Entity target) {
+        // 入水前不穿人：空中实体不触发碰撞引爆，让深弹正常抛入水中
+        if (!inWater) return false;
         if (com.piranport.combat.FriendlyFireHelper.shouldBlockHit(target, getOwner())) return false;
-        return super.canHitEntity(target);
+        // 引信只认水下目标
+        return target.isInWater() && super.canHitEntity(target);
     }
 
     @Override
     protected void onHitEntity(EntityHitResult result) {
         super.onHitEntity(result);
-        if (!level().isClientSide() && !detonated) {
+        // 碰撞引爆同样以「已入水」为前提：空中撞实体不引爆
+        if (!level().isClientSide() && !detonated && inWater) {
             detonate();
         }
     }
@@ -206,6 +224,8 @@ public class DepthChargeEntity extends ThrowableItemProjectile {
         super.addAdditionalSaveData(tag);
         tag.putFloat("ChargeDamage", damage);
         tag.putFloat("ExplosionPower", explosionPower);
+        tag.putBoolean("InWater", inWater);
+        tag.putInt("WaterEntryTick", waterEntryTick);
     }
 
     @Override
@@ -213,5 +233,7 @@ public class DepthChargeEntity extends ThrowableItemProjectile {
         super.readAdditionalSaveData(tag);
         if (tag.contains("ChargeDamage")) damage = tag.getFloat("ChargeDamage");
         if (tag.contains("ExplosionPower")) explosionPower = tag.getFloat("ExplosionPower");
+        inWater = tag.getBoolean("InWater");
+        waterEntryTick = tag.getInt("WaterEntryTick");
     }
 }

@@ -2,6 +2,10 @@ package com.piranport.dungeon.block;
 
 import com.piranport.PiranPort;
 import com.piranport.dungeon.block.entity.DungeonPortalBlockEntity;
+import com.piranport.dungeon.data.DungeonRegistry;
+import com.piranport.dungeon.data.NodeData;
+import com.piranport.dungeon.data.StageData;
+import com.piranport.dungeon.instance.DungeonInstance;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
@@ -10,6 +14,8 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -340,18 +346,60 @@ public class PortalStructureHelper {
         }
 
         // 此入口由已满足胜利条件的战斗/脚本调用；发奖不依赖玩家是否碰到出口。
-        var instance = com.piranport.dungeon.instance.DungeonInstanceManager.get(level).getInstance(instanceId);
+        DungeonInstance instance = com.piranport.dungeon.instance.DungeonInstanceManager.get(level)
+                .getInstance(instanceId);
         if (instance == null) return null;
         com.piranport.dungeon.event.DungeonEventHandler.onNodeCompleted(level, instance, nodeId);
 
-        // 遍历四个水平朝向，选第一个能完整放下的：门框 + 前方 3×3 平台 + 箱子位。
+        // 《副本/22》多后继节点：每个未清后继一扇门，玩家走进哪扇就去哪个节点。
+        // 单后继/无后继保持原来的单门（target=null 时由 DungeonProgressionRouter 自动选路）。
+        List<String> targets = doorTargets(instance, nodeId);
+        if (targets.size() <= 1) {
+            return buildOneExitSite(level, cornerPos, instanceId, nodeId,
+                    targets.isEmpty() ? null : targets.get(0));
+        }
+
+        // 门沿 Z 轴横排，间距 14 格：4×5×4 门框 + 3×3 平台 + 前方通道不会互相压住。
+        int spacing = 14;
+        int start = -((targets.size() - 1) * spacing) / 2;
+        BlockPos first = null;
+        for (int i = 0; i < targets.size(); i++) {
+            BlockPos anchor = cornerPos.offset(0, 0, start + i * spacing);
+            BlockPos center = buildOneExitSite(level, anchor, instanceId, nodeId, targets.get(i));
+            if (center == null) {
+                // 多门放不下时退化为单门自动选路；已经放下的门保留，玩家仍有路可走。
+                return buildOneExitSite(level, cornerPos, instanceId, nodeId, null);
+            }
+            if (first == null) first = center;
+        }
+        return first;
+    }
+
+    /** 该节点应生成哪些门：普通节点取全部未清直连后继；分支节点仍走单门自动带路。 */
+    private static List<String> doorTargets(DungeonInstance instance, String nodeId) {
+        StageData stage = DungeonRegistry.INSTANCE.getStage(instance.getStageId());
+        NodeData node = stage == null ? null : stage.nodes().get(nodeId);
+        if (node == null || node.hasBranches()) return List.of();
+        LinkedHashSet<String> targets = new LinkedHashSet<>();
+        for (StageData.EdgeData edge : stage.edges()) {
+            if (!edge.from().equals(nodeId)) continue;
+            if (!stage.nodes().containsKey(edge.to())) continue;
+            if (instance.getClearedNodes().contains(edge.to())) continue;
+            targets.add(edge.to());
+        }
+        return List.copyOf(targets);
+    }
+
+    private static BlockPos buildOneExitSite(ServerLevel level, BlockPos cornerPos, UUID instanceId,
+                                             String nodeId, String targetNodeId) {
+        // 遍历四个水平朝向，选第一个能完整放下的：门框 + 前方 3×3 平台 + 光柱。
         for (Direction facing : Direction.Plane.HORIZONTAL) {
-            BlockPos center = tryBuildExitSite(level, cornerPos, facing, instanceId, nodeId);
+            BlockPos center = tryBuildExitSite(level, cornerPos, facing, instanceId, nodeId, targetNodeId);
             if (center != null) {
                 return center;
             }
         }
-        return tryBuildExitSite(level, cornerPos, Direction.NORTH, instanceId, nodeId);
+        return tryBuildExitSite(level, cornerPos, Direction.NORTH, instanceId, nodeId, targetNodeId);
     }
 
     /**
@@ -360,7 +408,8 @@ public class PortalStructureHelper {
      * 平台与箱子位在覆盖前只做"可替换"判定）。</p>
      */
     private static BlockPos tryBuildExitSite(ServerLevel level, BlockPos cornerPos,
-                                             Direction facing, UUID instanceId, String nodeId) {
+                                             Direction facing, UUID instanceId, String nodeId,
+                                             String targetNodeId) {
         Direction right = facing.getClockWise();
         Direction back = facing.getOpposite();
         // 平台位于门框开口正前方一格，3×3，顶面与角点同 Y。
@@ -381,7 +430,8 @@ public class PortalStructureHelper {
             }
         }
 
-        BlockPos center = tryBuildPortalStructure(level, cornerPos, facing, instanceId, nodeId);
+        BlockPos center = tryBuildPortalStructure(level, cornerPos, facing, instanceId, nodeId,
+                targetNodeId);
         if (center == null) return null;
 
         // 平台：石砖主体，四角黑曜石包边——沿用副本要塞平台（STONE_BRICKS）+ 祭坛（OBSIDIAN）的方块语汇。
@@ -407,7 +457,7 @@ public class PortalStructureHelper {
 
         // 传送门实体放在开口中心偏下（玩家走入即触发），替代旧版放在角点顶上的位置。
         var portal = com.piranport.dungeon.entity.DungeonPortalEntity.create(level, instanceId, nodeId,
-                center.getX() + .5, center.getY(), center.getZ() + .5);
+                targetNodeId, center.getX() + .5, center.getY(), center.getZ() + .5);
         if (portal != null) level.addFreshEntity(portal);
         return center;
     }
@@ -417,7 +467,8 @@ public class PortalStructureHelper {
      * Returns the center of the portal interior on success, null on failure.
      */
     private static BlockPos tryBuildPortalStructure(ServerLevel level, BlockPos cornerPos,
-                                                     Direction facing, UUID instanceId, String nodeId) {
+                                                     Direction facing, UUID instanceId, String nodeId,
+                                                     String targetNodeId) {
         if (level == null || cornerPos == null) {
             return null;
         }

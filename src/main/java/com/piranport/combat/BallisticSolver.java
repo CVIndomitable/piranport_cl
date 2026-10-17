@@ -41,7 +41,7 @@ public final class BallisticSolver {
     /**
      * 策划精度上限（格）的公开只读视图。
      *
-     * <p>供外部解算实现（如 {@code combat.neural.BallisticDispatcher}）复用同一判据，
+     * <p>供需要与解算器共用同一可达性判据的调用方复用，
      * 避免两处各写一个常量后漂移。
      */
     public static double maxAcceptableError() {

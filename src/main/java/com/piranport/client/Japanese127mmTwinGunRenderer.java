@@ -150,7 +150,8 @@ public class Japanese127mmTwinGunRenderer extends BlockEntityWithoutLevelRendere
     }
 
     /**
-     * GUI/地面/展示框用的平面图标。模型空间 -0.5..0.5，z=0 平面。
+     * GUI/地面/展示框用的平面图标。
+     * 坐标用方块空间 0..1（渲染管线已在 pose 里 translate(-0.5)，会把它居中）。
      * u/v 按物品图标习惯：左下 (0,1)、右上 (1,0)。
      */
     private static void renderFlatIcon(boolean loaded, PoseStack poseStack,
@@ -161,13 +162,13 @@ public class Japanese127mmTwinGunRenderer extends BlockEntityWithoutLevelRendere
         PoseStack.Pose pose = poseStack.last();
         Vector3f normal = pose.transformNormal(0.0F, 0.0F, 1.0F, new Vector3f());
 
-        iconVertex(consumer, pose, normal, -0.5F, -0.5F, 0.0F, 0.0F, 1.0F,
+        iconVertex(consumer, pose, normal, 0.0F, 0.0F, 0.5F, 0.0F, 1.0F,
                 packedLight, packedOverlay);
-        iconVertex(consumer, pose, normal, 0.5F, -0.5F, 0.0F, 1.0F, 1.0F,
+        iconVertex(consumer, pose, normal, 1.0F, 0.0F, 0.5F, 1.0F, 1.0F,
                 packedLight, packedOverlay);
-        iconVertex(consumer, pose, normal, 0.5F, 0.5F, 0.0F, 1.0F, 0.0F,
+        iconVertex(consumer, pose, normal, 1.0F, 1.0F, 0.5F, 1.0F, 0.0F,
                 packedLight, packedOverlay);
-        iconVertex(consumer, pose, normal, -0.5F, 0.5F, 0.0F, 0.0F, 0.0F,
+        iconVertex(consumer, pose, normal, 0.0F, 1.0F, 0.5F, 0.0F, 0.0F,
                 packedLight, packedOverlay);
     }
 

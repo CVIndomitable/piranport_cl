@@ -23,6 +23,9 @@ import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
 import org.joml.Vector3f;
 
+import java.util.EnumSet;
+import java.util.Set;
+
 /**
  * 日本12.7厘米连装炮的自定义物品渲染。
  *
@@ -39,6 +42,10 @@ import org.joml.Vector3f;
 public class Japanese127mmTwinGunRenderer extends BlockEntityWithoutLevelRenderer {
 
     private static Japanese127mmTwinGunRenderer INSTANCE;
+
+    /** 诊断用：每个显示上下文只打一次日志，确认 BEWLR 是否被调用。 */
+    private static final Set<ItemDisplayContext> LOGGED_CONTEXTS =
+            EnumSet.noneOf(ItemDisplayContext.class);
 
     private static final ResourceLocation ICON_LOADED = ResourceLocation.fromNamespaceAndPath(
             PiranPort.MOD_ID, "textures/item/japanese_127mm_twin_gun.png");
@@ -70,6 +77,7 @@ public class Japanese127mmTwinGunRenderer extends BlockEntityWithoutLevelRendere
             Minecraft mc = Minecraft.getInstance();
             INSTANCE = new Japanese127mmTwinGunRenderer(
                     mc.getBlockEntityRenderDispatcher(), mc.getEntityModels());
+            PiranPort.LOGGER.info("Japanese127mmTwinGunRenderer initialized");
         }
     }
 
@@ -86,6 +94,10 @@ public class Japanese127mmTwinGunRenderer extends BlockEntityWithoutLevelRendere
                              PoseStack poseStack, MultiBufferSource bufferSource,
                              int packedLight, int packedOverlay) {
         if (!stack.is(ModItems.JAPANESE_127MM_TWIN_GUN.get())) return;
+
+        if (LOGGED_CONTEXTS.add(displayContext)) {
+            PiranPort.LOGGER.info("Japanese127mmTwinGunRenderer context={}", displayContext);
+        }
 
         if (isHandContext(displayContext)) {
             renderGun3D(stack, poseStack, bufferSource, packedLight, packedOverlay);

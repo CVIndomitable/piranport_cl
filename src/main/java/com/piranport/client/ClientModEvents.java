@@ -28,6 +28,8 @@ import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.RegisterItemDecorationsEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
+import net.neoforged.neoforge.client.event.ModelEvent;
+import net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsEvent;
 import org.lwjgl.glfw.GLFW;
 import net.neoforged.fml.common.EventBusSubscriber.Bus;
 
@@ -36,10 +38,26 @@ public class ClientModEvents {
 
 
 
+    /** 注册日本12.7厘米连装炮的两份 standalone 3D 模型（BEWLR 直接取用）。 */
+    @SubscribeEvent
+    public static void registerAdditionalModels(ModelEvent.RegisterAdditional event) {
+        event.register(Japanese127mmTwinGunRenderer.MODEL_EMPTY);
+        event.register(Japanese127mmTwinGunRenderer.MODEL_LOADED);
+    }
+
+    /** 给日本12.7厘米连装炮挂自定义渲染器（BEWLR）。 */
+    @SubscribeEvent
+    public static void registerClientExtensions(RegisterClientExtensionsEvent event) {
+        event.registerItem(Japanese127mmTwinGunRenderer.CLIENT_EXTENSIONS,
+                ModItems.JAPANESE_127MM_TWIN_GUN.get());
+    }
+
     @SubscribeEvent
     public static void onClientSetup(FMLClientSetupEvent event) {
         // 初始化皮肤核心 3D 渲染器（需要在客户端主线程访问 EntityModelSet）
         event.enqueueWork(SkinCoreItemRenderer::init);
+        // 日本12.7厘米连装炮：物品栏画 2D 图标，手持渲染 3D 炮塔
+        event.enqueueWork(Japanese127mmTwinGunRenderer::init);
 
         // 注册 "fueled" 物品属性：有燃料时为 1.0，否则为 0.0。
         // 模型使用此谓词在装载和空载纹理之间切换。

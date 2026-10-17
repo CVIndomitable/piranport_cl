@@ -7,10 +7,18 @@
   - gui 用 [30, 225, 0] 等轴测
 本模型不逐面写 uv，整张贴图铺满每个面，靠分盒材质和几何细节出效果。
 
+物品走 Japanese127mmTwinGunRenderer（BEWLR）渲染：
+  - GUI/地面/展示框等上下文画 32x32 图标平面
+  - 第一/第三人称渲染这份 3D 模型
+所以这里只定义手持 display，GUI 不写（保持 identity，图标才正）。
+
 产出：
-  models/item/japanese_127mm_twin_gun_3d.json         共享底座（elements + display）
-  models/item/japanese_127mm_twin_gun.json            默认态（空膛）+ loaded override
-  models/item/japanese_127mm_twin_gun_loaded.json     装填态（仅覆盖炮口材质）
+  models/item/japanese_127mm_twin_gun.json            builtin/entity 物品入口（只放 display）
+  models/item/japanese_127mm_twin_gun_3d.json         空膛 3D 炮塔（standalone 烘焙）
+  models/item/japanese_127mm_twin_gun_3d_loaded.json  装填 3D 炮塔（覆盖炮口材质）
+
+WHY 用 builtin/entity：原版只在 BakedModel.isCustomRenderer() 为 true 时
+才把渲染交给 BEWLR；普通模型即使注册了 IClientItemExtensions 也不会走。
 """
 import json
 import os
@@ -86,41 +94,43 @@ for tag, cx in (("l", 6.4), ("r", 9.6)):
     box(f"muzzle_{tag}", cx - 0.32, 3.4, 19.4, cx + 0.32, 4.0, 19.5,
         "barrel", faces={"south": "muzzle_empty"})
 
-# 沿用 mk16dp 先例的方向：炮口 +Z，yaw 90 让炮口朝角色前方
+# 炮口朝 +Z。手持时绕 Y 转 180° 让炮口朝角色前方（-Z）。
+# 单位：rotation 度、translation 1/16 像素、scale 倍率。
 DISPLAY = {
     "thirdperson_righthand": {
-        "rotation": [0, 90, 0],
-        "translation": [0, 3, 0],
-        "scale": [0.55, 0.55, 0.55],
+        "rotation": [0, 180, 0],
+        "translation": [0, 2, -1],
+        "scale": [0.5, 0.5, 0.5],
     },
     "thirdperson_lefthand": {
-        "rotation": [0, -90, 0],
-        "translation": [0, 3, 0],
-        "scale": [0.55, 0.55, 0.55],
+        "rotation": [0, 180, 0],
+        "translation": [0, 2, -1],
+        "scale": [0.5, 0.5, 0.5],
     },
     "firstperson_righthand": {
-        "rotation": [0, 90, 0],
-        "translation": [0, 4, 0],
-        "scale": [0.6, 0.6, 0.6],
+        "rotation": [0, 180, 0],
+        "translation": [0, 0, 0],
+        "scale": [0.45, 0.45, 0.45],
     },
     "firstperson_lefthand": {
-        "rotation": [0, -90, 0],
-        "translation": [0, 4, 0],
-        "scale": [0.6, 0.6, 0.6],
-    },
-    "gui": {
-        "rotation": [30, 225, 0],
-        "translation": [0, 2, -2],
-        "scale": [0.62, 0.62, 0.62],
-    },
-    "ground": {
-        "translation": [0, 3, 0],
+        "rotation": [0, 180, 0],
+        "translation": [0, 0, 0],
         "scale": [0.45, 0.45, 0.45],
+    },
+    # 掉落物/展示框/头戴走的是 2D 图标，这里沿用原版 item/generated 的变换
+    "ground": {
+        "rotation": [0, 0, 0],
+        "translation": [0, 2, 0],
+        "scale": [0.5, 0.5, 0.5],
     },
     "fixed": {
         "rotation": [0, 180, 0],
-        "translation": [0, 4, 0],
-        "scale": [0.6, 0.6, 0.6],
+        "scale": [1, 1, 1],
+    },
+    "head": {
+        "rotation": [0, 180, 0],
+        "translation": [0, 13, 7],
+        "scale": [1, 1, 1],
     },
 }
 
@@ -138,20 +148,17 @@ base = {
         "muzzle_loaded": TEX["muzzle_loaded"],
     },
     "elements": elements,
+}
+
+# 物品入口：builtin/entity 让原版把渲染交给 BEWLR；
+# display 定义手持/掉落物等上下文，只有 2D 图标会用到（3D 也沿用同一 pose）。
+item_entry = {
+    "parent": "builtin/entity",
     "display": DISPLAY,
 }
 
-default_model = {
-    "parent": "piranport:item/japanese_127mm_twin_gun_3d",
-    "overrides": [
-        {
-            "predicate": {"piranport:loaded": 1},
-            "model": "piranport:item/japanese_127mm_twin_gun_loaded",
-        }
-    ],
-}
-
-loaded_model = {
+# 空膛/装填两份 standalone 3D 模型，BEWLR 按 LOADED_AMMO 组件选择
+loaded_3d = {
     "parent": "piranport:item/japanese_127mm_twin_gun_3d",
     "textures": {
         "muzzle_empty": TEX["muzzle_loaded"],
@@ -169,5 +176,5 @@ def dump(name, data):
 
 if __name__ == "__main__":
     dump("japanese_127mm_twin_gun_3d.json", base)
-    dump("japanese_127mm_twin_gun.json", default_model)
-    dump("japanese_127mm_twin_gun_loaded.json", loaded_model)
+    dump("japanese_127mm_twin_gun_3d_loaded.json", loaded_3d)
+    dump("japanese_127mm_twin_gun.json", item_entry)

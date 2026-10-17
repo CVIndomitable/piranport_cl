@@ -103,7 +103,8 @@ public class Japanese127mmTwinGunRenderer extends BlockEntityWithoutLevelRendere
         if (isHandContext(displayContext)) {
             renderGun3D(stack, poseStack, bufferSource, packedLight, packedOverlay);
         } else {
-            renderFlatIcon(isLoaded(stack), poseStack, bufferSource, packedLight, packedOverlay);
+            renderFlatIcon(displayContext, isLoaded(stack), poseStack, bufferSource,
+                    packedLight, packedOverlay);
         }
     }
 
@@ -154,11 +155,16 @@ public class Japanese127mmTwinGunRenderer extends BlockEntityWithoutLevelRendere
      * 坐标用方块空间 0..1（渲染管线已在 pose 里 translate(-0.5)，会把它居中）。
      * u/v 按物品图标习惯：左下 (0,1)、右上 (1,0)。
      */
-    private static void renderFlatIcon(boolean loaded, PoseStack poseStack,
-                                       MultiBufferSource bufferSource,
+    private static void renderFlatIcon(ItemDisplayContext context, boolean loaded,
+                                       PoseStack poseStack, MultiBufferSource bufferSource,
                                        int packedLight, int packedOverlay) {
         ResourceLocation texture = loaded ? ICON_LOADED : ICON_EMPTY;
-        VertexConsumer consumer = bufferSource.getBuffer(RenderType.entityCutoutNoCull(texture));
+        // GUI 里用 emissive：图标按原色显示。entity 的 cutout 渲染会吃
+        // gui 的两盏方向光，比原版 item shader 暗一档。
+        RenderType type = context == ItemDisplayContext.GUI
+                ? RenderType.entityTranslucentEmissive(texture)
+                : RenderType.entityCutoutNoCull(texture);
+        VertexConsumer consumer = bufferSource.getBuffer(type);
         PoseStack.Pose pose = poseStack.last();
         Vector3f normal = pose.transformNormal(0.0F, 0.0F, 1.0F, new Vector3f());
 

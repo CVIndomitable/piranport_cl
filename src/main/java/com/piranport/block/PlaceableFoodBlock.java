@@ -139,6 +139,16 @@ public class PlaceableFoodBlock extends BaseEntityBlock {
     }
 
     /**
+     * 专属模型食物方块（罗宋汤）：白瓷底碟+高脚宽口汤盘盛甜菜红汤，
+     * 汤面中央一坨酸奶油、左侧欧芹叶。
+     */
+    public static class Borscht extends PlaceableFoodBlock {
+        public static final MapCodec<Borscht> CODEC = simpleCodec(Borscht::new);
+        @Override public MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }
+        public Borscht(BlockBehaviour.Properties props) { super(Block.box(0.5, 0, 0.5, 15.5, 5.4, 15.5), props); }
+    }
+
+    /**
      * 专属模型食物方块（萨拉米披萨）：木板托盘（带手柄）+整张披萨+凸起萨拉米片，
      * 碰撞箱取托盘外框。
      */

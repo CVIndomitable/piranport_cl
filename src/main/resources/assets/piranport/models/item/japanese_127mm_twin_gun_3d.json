@@ -1,0 +1,957 @@
+{
+  "parent": "minecraft:block/block",
+  "gui_light": "front",
+  "ambientocclusion": false,
+  "textures": {
+    "particle": "piranport:item/japanese_127mm_twin_gun_hull",
+    "hull": "piranport:item/japanese_127mm_twin_gun_hull",
+    "hull_dark": "piranport:item/japanese_127mm_twin_gun_hull_dark",
+    "barrel": "piranport:item/japanese_127mm_twin_gun_barrel",
+    "detail": "piranport:item/japanese_127mm_twin_gun_detail",
+    "muzzle_empty": "piranport:item/japanese_127mm_twin_gun_muzzle_empty",
+    "muzzle_loaded": "piranport:item/japanese_127mm_twin_gun_muzzle_loaded"
+  },
+  "elements": [
+    {
+      "name": "ring_base",
+      "from": [
+        4.8,
+        0.0,
+        4.8
+      ],
+      "to": [
+        11.2,
+        0.6,
+        11.2
+      ],
+      "faces": {
+        "north": {
+          "texture": "#hull_dark"
+        },
+        "south": {
+          "texture": "#hull_dark"
+        },
+        "west": {
+          "texture": "#hull_dark"
+        },
+        "east": {
+          "texture": "#hull_dark"
+        },
+        "up": {
+          "texture": "#hull_dark"
+        },
+        "down": {
+          "texture": "#hull_dark"
+        }
+      }
+    },
+    {
+      "name": "ring_top",
+      "from": [
+        4.3,
+        0.6,
+        4.3
+      ],
+      "to": [
+        11.7,
+        1.0,
+        11.7
+      ],
+      "faces": {
+        "north": {
+          "texture": "#hull_dark"
+        },
+        "south": {
+          "texture": "#hull_dark"
+        },
+        "west": {
+          "texture": "#hull_dark"
+        },
+        "east": {
+          "texture": "#hull_dark"
+        },
+        "up": {
+          "texture": "#hull_dark"
+        },
+        "down": {
+          "texture": "#hull_dark"
+        }
+      }
+    },
+    {
+      "name": "hull_low",
+      "from": [
+        4.0,
+        1.0,
+        2.8
+      ],
+      "to": [
+        12.0,
+        2.9,
+        12.4
+      ],
+      "faces": {
+        "north": {
+          "texture": "#hull"
+        },
+        "south": {
+          "texture": "#hull"
+        },
+        "west": {
+          "texture": "#hull"
+        },
+        "east": {
+          "texture": "#hull"
+        },
+        "up": {
+          "texture": "#hull"
+        },
+        "down": {
+          "texture": "#hull"
+        }
+      }
+    },
+    {
+      "name": "hull_mid",
+      "from": [
+        4.2,
+        2.9,
+        3.1
+      ],
+      "to": [
+        11.8,
+        4.3,
+        12.1
+      ],
+      "faces": {
+        "north": {
+          "texture": "#hull"
+        },
+        "south": {
+          "texture": "#hull"
+        },
+        "west": {
+          "texture": "#hull"
+        },
+        "east": {
+          "texture": "#hull"
+        },
+        "up": {
+          "texture": "#hull"
+        },
+        "down": {
+          "texture": "#hull"
+        }
+      }
+    },
+    {
+      "name": "hull_top",
+      "from": [
+        4.6,
+        4.3,
+        3.5
+      ],
+      "to": [
+        11.4,
+        4.8,
+        11.6
+      ],
+      "faces": {
+        "north": {
+          "texture": "#hull"
+        },
+        "south": {
+          "texture": "#hull"
+        },
+        "west": {
+          "texture": "#hull"
+        },
+        "east": {
+          "texture": "#hull"
+        },
+        "up": {
+          "texture": "#hull"
+        },
+        "down": {
+          "texture": "#hull"
+        }
+      }
+    },
+    {
+      "name": "roof_plate",
+      "from": [
+        5.0,
+        4.8,
+        3.9
+      ],
+      "to": [
+        11.0,
+        5.0,
+        11.2
+      ],
+      "faces": {
+        "north": {
+          "texture": "#hull"
+        },
+        "south": {
+          "texture": "#hull"
+        },
+        "west": {
+          "texture": "#hull"
+        },
+        "east": {
+          "texture": "#hull"
+        },
+        "up": {
+          "texture": "#hull"
+        },
+        "down": {
+          "texture": "#hull"
+        }
+      }
+    },
+    {
+      "name": "shield_low",
+      "from": [
+        5.3,
+        1.9,
+        11.9
+      ],
+      "to": [
+        10.7,
+        3.9,
+        13.2
+      ],
+      "faces": {
+        "north": {
+          "texture": "#hull"
+        },
+        "south": {
+          "texture": "#hull"
+        },
+        "west": {
+          "texture": "#hull"
+        },
+        "east": {
+          "texture": "#hull"
+        },
+        "up": {
+          "texture": "#hull"
+        },
+        "down": {
+          "texture": "#hull"
+        }
+      }
+    },
+    {
+      "name": "shield_up",
+      "from": [
+        5.5,
+        3.9,
+        11.8
+      ],
+      "to": [
+        10.5,
+        4.9,
+        13.0
+      ],
+      "faces": {
+        "north": {
+          "texture": "#detail"
+        },
+        "south": {
+          "texture": "#detail"
+        },
+        "west": {
+          "texture": "#detail"
+        },
+        "east": {
+          "texture": "#detail"
+        },
+        "up": {
+          "texture": "#detail"
+        },
+        "down": {
+          "texture": "#detail"
+        }
+      }
+    },
+    {
+      "name": "rear_counterweight",
+      "from": [
+        5.2,
+        1.8,
+        2.0
+      ],
+      "to": [
+        10.8,
+        4.0,
+        2.9
+      ],
+      "faces": {
+        "north": {
+          "texture": "#hull_dark"
+        },
+        "south": {
+          "texture": "#hull_dark"
+        },
+        "west": {
+          "texture": "#hull_dark"
+        },
+        "east": {
+          "texture": "#hull_dark"
+        },
+        "up": {
+          "texture": "#hull_dark"
+        },
+        "down": {
+          "texture": "#hull_dark"
+        }
+      }
+    },
+    {
+      "name": "rear_deck",
+      "from": [
+        5.8,
+        4.0,
+        2.1
+      ],
+      "to": [
+        10.2,
+        4.5,
+        2.8
+      ],
+      "faces": {
+        "north": {
+          "texture": "#detail"
+        },
+        "south": {
+          "texture": "#detail"
+        },
+        "west": {
+          "texture": "#detail"
+        },
+        "east": {
+          "texture": "#detail"
+        },
+        "up": {
+          "texture": "#detail"
+        },
+        "down": {
+          "texture": "#detail"
+        }
+      }
+    },
+    {
+      "name": "port_box",
+      "from": [
+        3.75,
+        1.5,
+        5.5
+      ],
+      "to": [
+        4.0,
+        2.8,
+        7.8
+      ],
+      "faces": {
+        "north": {
+          "texture": "#detail"
+        },
+        "south": {
+          "texture": "#detail"
+        },
+        "west": {
+          "texture": "#detail"
+        },
+        "east": {
+          "texture": "#detail"
+        },
+        "up": {
+          "texture": "#detail"
+        },
+        "down": {
+          "texture": "#detail"
+        }
+      }
+    },
+    {
+      "name": "starboard_box",
+      "from": [
+        12.0,
+        1.5,
+        5.5
+      ],
+      "to": [
+        12.25,
+        2.8,
+        7.8
+      ],
+      "faces": {
+        "north": {
+          "texture": "#detail"
+        },
+        "south": {
+          "texture": "#detail"
+        },
+        "west": {
+          "texture": "#detail"
+        },
+        "east": {
+          "texture": "#detail"
+        },
+        "up": {
+          "texture": "#detail"
+        },
+        "down": {
+          "texture": "#detail"
+        }
+      }
+    },
+    {
+      "name": "rangefinder",
+      "from": [
+        8.9,
+        4.8,
+        4.6
+      ],
+      "to": [
+        10.5,
+        5.4,
+        6.0
+      ],
+      "faces": {
+        "north": {
+          "texture": "#detail"
+        },
+        "south": {
+          "texture": "#detail"
+        },
+        "west": {
+          "texture": "#detail"
+        },
+        "east": {
+          "texture": "#detail"
+        },
+        "up": {
+          "texture": "#detail"
+        },
+        "down": {
+          "texture": "#detail"
+        }
+      }
+    },
+    {
+      "name": "rangefinder_cap",
+      "from": [
+        9.1,
+        5.4,
+        4.8
+      ],
+      "to": [
+        10.3,
+        5.7,
+        5.8
+      ],
+      "faces": {
+        "north": {
+          "texture": "#hull_dark"
+        },
+        "south": {
+          "texture": "#hull_dark"
+        },
+        "west": {
+          "texture": "#hull_dark"
+        },
+        "east": {
+          "texture": "#hull_dark"
+        },
+        "up": {
+          "texture": "#hull_dark"
+        },
+        "down": {
+          "texture": "#hull_dark"
+        }
+      }
+    },
+    {
+      "name": "hatch",
+      "from": [
+        5.8,
+        4.8,
+        8.2
+      ],
+      "to": [
+        7.2,
+        5.0,
+        9.6
+      ],
+      "faces": {
+        "north": {
+          "texture": "#detail"
+        },
+        "south": {
+          "texture": "#detail"
+        },
+        "west": {
+          "texture": "#detail"
+        },
+        "east": {
+          "texture": "#detail"
+        },
+        "up": {
+          "texture": "#detail"
+        },
+        "down": {
+          "texture": "#detail"
+        }
+      }
+    },
+    {
+      "name": "vent",
+      "from": [
+        5.0,
+        4.8,
+        3.9
+      ],
+      "to": [
+        5.8,
+        5.3,
+        4.8
+      ],
+      "faces": {
+        "north": {
+          "texture": "#hull_dark"
+        },
+        "south": {
+          "texture": "#hull_dark"
+        },
+        "west": {
+          "texture": "#hull_dark"
+        },
+        "east": {
+          "texture": "#hull_dark"
+        },
+        "up": {
+          "texture": "#hull_dark"
+        },
+        "down": {
+          "texture": "#hull_dark"
+        }
+      }
+    },
+    {
+      "name": "periscope",
+      "from": [
+        7.6,
+        4.8,
+        3.7
+      ],
+      "to": [
+        8.1,
+        5.4,
+        4.2
+      ],
+      "faces": {
+        "north": {
+          "texture": "#hull_dark"
+        },
+        "south": {
+          "texture": "#hull_dark"
+        },
+        "west": {
+          "texture": "#hull_dark"
+        },
+        "east": {
+          "texture": "#hull_dark"
+        },
+        "up": {
+          "texture": "#hull_dark"
+        },
+        "down": {
+          "texture": "#hull_dark"
+        }
+      }
+    },
+    {
+      "name": "sleeve_l",
+      "from": [
+        5.55,
+        2.9,
+        11.2
+      ],
+      "to": [
+        7.25,
+        4.5,
+        13.6
+      ],
+      "faces": {
+        "north": {
+          "texture": "#barrel"
+        },
+        "south": {
+          "texture": "#barrel"
+        },
+        "west": {
+          "texture": "#barrel"
+        },
+        "east": {
+          "texture": "#barrel"
+        },
+        "up": {
+          "texture": "#barrel"
+        },
+        "down": {
+          "texture": "#barrel"
+        }
+      }
+    },
+    {
+      "name": "barrel_l",
+      "from": [
+        5.8,
+        3.05,
+        13.0
+      ],
+      "to": [
+        7.0,
+        4.35,
+        18.6
+      ],
+      "faces": {
+        "north": {
+          "texture": "#barrel"
+        },
+        "south": {
+          "texture": "#barrel"
+        },
+        "west": {
+          "texture": "#barrel"
+        },
+        "east": {
+          "texture": "#barrel"
+        },
+        "up": {
+          "texture": "#barrel"
+        },
+        "down": {
+          "texture": "#barrel"
+        }
+      }
+    },
+    {
+      "name": "muzzle_ring_l",
+      "from": [
+        5.65,
+        2.9,
+        18.6
+      ],
+      "to": [
+        7.15,
+        4.5,
+        19.4
+      ],
+      "faces": {
+        "north": {
+          "texture": "#barrel"
+        },
+        "south": {
+          "texture": "#barrel"
+        },
+        "west": {
+          "texture": "#barrel"
+        },
+        "east": {
+          "texture": "#barrel"
+        },
+        "up": {
+          "texture": "#barrel"
+        },
+        "down": {
+          "texture": "#barrel"
+        }
+      }
+    },
+    {
+      "name": "muzzle_l",
+      "from": [
+        6.08,
+        3.4,
+        19.4
+      ],
+      "to": [
+        6.72,
+        4.0,
+        19.5
+      ],
+      "faces": {
+        "north": {
+          "texture": "#barrel"
+        },
+        "south": {
+          "texture": "#muzzle_empty"
+        },
+        "west": {
+          "texture": "#barrel"
+        },
+        "east": {
+          "texture": "#barrel"
+        },
+        "up": {
+          "texture": "#barrel"
+        },
+        "down": {
+          "texture": "#barrel"
+        }
+      }
+    },
+    {
+      "name": "sleeve_r",
+      "from": [
+        8.75,
+        2.9,
+        11.2
+      ],
+      "to": [
+        10.45,
+        4.5,
+        13.6
+      ],
+      "faces": {
+        "north": {
+          "texture": "#barrel"
+        },
+        "south": {
+          "texture": "#barrel"
+        },
+        "west": {
+          "texture": "#barrel"
+        },
+        "east": {
+          "texture": "#barrel"
+        },
+        "up": {
+          "texture": "#barrel"
+        },
+        "down": {
+          "texture": "#barrel"
+        }
+      }
+    },
+    {
+      "name": "barrel_r",
+      "from": [
+        9.0,
+        3.05,
+        13.0
+      ],
+      "to": [
+        10.2,
+        4.35,
+        18.6
+      ],
+      "faces": {
+        "north": {
+          "texture": "#barrel"
+        },
+        "south": {
+          "texture": "#barrel"
+        },
+        "west": {
+          "texture": "#barrel"
+        },
+        "east": {
+          "texture": "#barrel"
+        },
+        "up": {
+          "texture": "#barrel"
+        },
+        "down": {
+          "texture": "#barrel"
+        }
+      }
+    },
+    {
+      "name": "muzzle_ring_r",
+      "from": [
+        8.85,
+        2.9,
+        18.6
+      ],
+      "to": [
+        10.35,
+        4.5,
+        19.4
+      ],
+      "faces": {
+        "north": {
+          "texture": "#barrel"
+        },
+        "south": {
+          "texture": "#barrel"
+        },
+        "west": {
+          "texture": "#barrel"
+        },
+        "east": {
+          "texture": "#barrel"
+        },
+        "up": {
+          "texture": "#barrel"
+        },
+        "down": {
+          "texture": "#barrel"
+        }
+      }
+    },
+    {
+      "name": "muzzle_r",
+      "from": [
+        9.28,
+        3.4,
+        19.4
+      ],
+      "to": [
+        9.92,
+        4.0,
+        19.5
+      ],
+      "faces": {
+        "north": {
+          "texture": "#barrel"
+        },
+        "south": {
+          "texture": "#muzzle_empty"
+        },
+        "west": {
+          "texture": "#barrel"
+        },
+        "east": {
+          "texture": "#barrel"
+        },
+        "up": {
+          "texture": "#barrel"
+        },
+        "down": {
+          "texture": "#barrel"
+        }
+      }
+    }
+  ],
+  "display": {
+    "thirdperson_righthand": {
+      "rotation": [
+        0,
+        90,
+        0
+      ],
+      "translation": [
+        0,
+        3,
+        0
+      ],
+      "scale": [
+        0.55,
+        0.55,
+        0.55
+      ]
+    },
+    "thirdperson_lefthand": {
+      "rotation": [
+        0,
+        -90,
+        0
+      ],
+      "translation": [
+        0,
+        3,
+        0
+      ],
+      "scale": [
+        0.55,
+        0.55,
+        0.55
+      ]
+    },
+    "firstperson_righthand": {
+      "rotation": [
+        0,
+        90,
+        0
+      ],
+      "translation": [
+        0,
+        4,
+        0
+      ],
+      "scale": [
+        0.6,
+        0.6,
+        0.6
+      ]
+    },
+    "firstperson_lefthand": {
+      "rotation": [
+        0,
+        -90,
+        0
+      ],
+      "translation": [
+        0,
+        4,
+        0
+      ],
+      "scale": [
+        0.6,
+        0.6,
+        0.6
+      ]
+    },
+    "gui": {
+      "rotation": [
+        30,
+        225,
+        0
+      ],
+      "translation": [
+        0,
+        2,
+        -2
+      ],
+      "scale": [
+        0.62,
+        0.62,
+        0.62
+      ]
+    },
+    "ground": {
+      "translation": [
+        0,
+        3,
+        0
+      ],
+      "scale": [
+        0.45,
+        0.45,
+        0.45
+      ]
+    },
+    "fixed": {
+      "rotation": [
+        0,
+        180,
+        0
+      ],
+      "translation": [
+        0,
+        4,
+        0
+      ],
+      "scale": [
+        0.6,
+        0.6,
+        0.6
+      ]
+    }
+  }
+}

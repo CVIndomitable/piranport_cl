@@ -1,6 +1,6 @@
 {
-  "parent": "minecraft:item/generated",
+  "parent": "piranport:item/japanese_127mm_twin_gun_3d",
   "textures": {
-    "layer0": "piranport:item/japanese_127mm_twin_gun"
+    "muzzle_empty": "piranport:item/japanese_127mm_twin_gun_muzzle_loaded"
   }
 }

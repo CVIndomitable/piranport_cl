@@ -139,6 +139,16 @@ public class PlaceableFoodBlock extends BaseEntityBlock {
     }
 
     /**
+     * 专属模型食物方块（威尼斯墨鱼面）：白椭圆盘上墨黑墨鱼汁意面，
+     * 点缀几圈橙色墨鱼圈和绿色香芹。
+     */
+    public static class VeniceCuttlefishNoodles extends PlaceableFoodBlock {
+        public static final MapCodec<VeniceCuttlefishNoodles> CODEC = simpleCodec(VeniceCuttlefishNoodles::new);
+        @Override public MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }
+        public VeniceCuttlefishNoodles(BlockBehaviour.Properties props) { super(Block.box(0.8, 0, 1.5, 15.2, 2.6, 14.5), props); }
+    }
+
+    /**
      * 专属模型食物方块（东坡肉）：白椭圆盘红亮酱汁里一大块划十字
      * 花刀的东坡肉，四周点缀青菜叶。
      */

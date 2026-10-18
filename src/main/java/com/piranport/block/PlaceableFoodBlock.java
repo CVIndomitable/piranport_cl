@@ -139,6 +139,16 @@ public class PlaceableFoodBlock extends BaseEntityBlock {
     }
 
     /**
+     * 专属模型食物方块（辣条）：米白方形浅盘，红亮油润的辣条
+     * 长短条分三层交错叠放。
+     */
+    public static class Latiao extends PlaceableFoodBlock {
+        public static final MapCodec<Latiao> CODEC = simpleCodec(Latiao::new);
+        @Override public MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }
+        public Latiao(BlockBehaviour.Properties props) { super(Block.box(0.8, 0, 0.8, 15.2, 1.95, 15.2), props); }
+    }
+
+    /**
      * 专属模型食物方块（天妇罗）：黑色方盘垫白纸，四只炸虾天妇罗
      * 竖立成一簇（红虾尾朝上），配深褐蔬菜天妇罗、萝卜泥和绿叶。
      */

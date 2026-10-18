@@ -1,0 +1,6 @@
+{
+  "parent": "piranport:item/british_single_18inch_gun_3d",
+  "textures": {
+    "muzzle_empty": "piranport:item/british_single_18inch_gun_muzzle_loaded"
+  }
+}

@@ -38,18 +38,22 @@ public class ClientModEvents {
 
 
 
-    /** 注册日本12.7厘米连装炮的两份 standalone 3D 模型（BEWLR 直接取用）。 */
+    /** 注册日本12.7厘米连装炮与德国双联203毫米炮的 standalone 3D 模型（BEWLR 直接取用）。 */
     @SubscribeEvent
     public static void registerAdditionalModels(ModelEvent.RegisterAdditional event) {
         event.register(Japanese127mmTwinGunRenderer.MODEL_EMPTY);
         event.register(Japanese127mmTwinGunRenderer.MODEL_LOADED);
+        event.register(GermanTwin203mmGunRenderer.MODEL_EMPTY);
+        event.register(GermanTwin203mmGunRenderer.MODEL_LOADED);
     }
 
-    /** 给日本12.7厘米连装炮挂自定义渲染器（BEWLR）。 */
+    /** 给日本12.7厘米连装炮、德国双联203毫米炮挂自定义渲染器（BEWLR）。 */
     @SubscribeEvent
     public static void registerClientExtensions(RegisterClientExtensionsEvent event) {
         event.registerItem(Japanese127mmTwinGunRenderer.CLIENT_EXTENSIONS,
                 ModItems.JAPANESE_127MM_TWIN_GUN.get());
+        event.registerItem(GermanTwin203mmGunRenderer.CLIENT_EXTENSIONS,
+                ModItems.GERMAN_TWIN_203MM_GUN.get());
     }
 
     @SubscribeEvent
@@ -58,6 +62,8 @@ public class ClientModEvents {
         event.enqueueWork(SkinCoreItemRenderer::init);
         // 日本12.7厘米连装炮：物品栏画 2D 图标，手持渲染 3D 炮塔
         event.enqueueWork(Japanese127mmTwinGunRenderer::init);
+        // 德国双联203毫米炮：同一套 BEWLR 方案
+        event.enqueueWork(GermanTwin203mmGunRenderer::init);
 
         // 注册 "fueled" 物品属性：有燃料时为 1.0，否则为 0.0。
         // 模型使用此谓词在装载和空载纹理之间切换。

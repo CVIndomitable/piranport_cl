@@ -139,7 +139,19 @@ def render(model_path, out_path, assets_root, size=512, supersample=4,
         tw, th = img.size
         src_quad = [(0, 0), (tw, 0), (tw, th), (0, th)]
         dst_quad = [project(p, scale, ox, oy) for p in pts]
-        coeffs = persp_coeffs(src_quad, dst_quad)
+        # 45° 菱形炮管会有面正好侧对相机，投影退化成一条线；
+        # 这种面看不见，而且透视变换会因分母≈0 铺满整张画布，必须先跳过。
+        twice_area = sum(
+            dst_quad[i][0] * dst_quad[(i + 1) % 4][1]
+            - dst_quad[(i + 1) % 4][0] * dst_quad[i][1]
+            for i in range(4)
+        )
+        if abs(twice_area) < 1e-6 * S * S:
+            continue
+        try:
+            coeffs = persp_coeffs(src_quad, dst_quad)
+        except np.linalg.LinAlgError:
+            continue
         warped = img.transform((S, S), Image.PERSPECTIVE, coeffs, Image.BICUBIC)
         warped = shade(warped, light)
         canvas.alpha_composite(warped)

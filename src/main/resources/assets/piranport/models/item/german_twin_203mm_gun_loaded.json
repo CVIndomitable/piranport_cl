@@ -1,6 +1,0 @@
-{
-  "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "piranport:item/german_twin_203mm_gun"
-  }
-}

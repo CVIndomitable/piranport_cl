@@ -138,6 +138,9 @@ public class ModItems {
     public static final DeferredItem<Item> BRITISH_TRIPLE_16INCH_GUN =
             WeaponItems.CATALOG_GUNS.get("british_triple_16inch_gun");
     public static final DeferredItem<Item> GERMAN_TWIN_380MM_GUN = WeaponItems.GERMAN_TWIN_380MM_GUN;
+    /** 德国双联203毫米炮（07 表，双联·精锐）；手持 3D 模型由 GermanTwin203mmGunRenderer 渲染。 */
+    public static final DeferredItem<Item> GERMAN_TWIN_203MM_GUN =
+            WeaponItems.CATALOG_GUNS.get("german_twin_203mm_gun");
     public static final DeferredItem<Item> FRENCH_QUAD_380MM_GUN = WeaponItems.FRENCH_QUAD_380MM_GUN;
     public static final DeferredItem<Item> FOURTEEN_BARREL_GUN = WeaponItems.FOURTEEN_BARREL_GUN;
 

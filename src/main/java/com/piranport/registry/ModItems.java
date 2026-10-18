@@ -147,6 +147,9 @@ public class ModItems {
     /** 德国三联283毫米炮（07 表）；手持 3D 模型由 GermanTriple283mmGunRenderer 渲染。 */
     public static final DeferredItem<Item> GERMAN_TRIPLE_283MM_GUN =
             WeaponItems.CATALOG_GUNS.get("german_triple_283mm_gun");
+    /** 意大利三联305毫米炮（07 表）；手持 3D 模型由 ItalianTriple305mmGunRenderer 渲染。 */
+    public static final DeferredItem<Item> ITALIAN_TRIPLE_305MM_GUN =
+            WeaponItems.CATALOG_GUNS.get("italian_triple_305mm_gun");
     public static final DeferredItem<Item> FRENCH_QUAD_380MM_GUN = WeaponItems.FRENCH_QUAD_380MM_GUN;
     public static final DeferredItem<Item> FOURTEEN_BARREL_GUN = WeaponItems.FOURTEEN_BARREL_GUN;
 

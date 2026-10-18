@@ -139,6 +139,16 @@ public class PlaceableFoodBlock extends BaseEntityBlock {
     }
 
     /**
+     * 专属模型食物方块（图林根肠啤酒）：白色椭圆盘盛两根焦褐烤肠、
+     * 三根浅色香料肠、土豆泥、西兰花与番茄酱挤线，右侧一杯带把啤酒。
+     */
+    public static class ThuringerRostbratwurstUndBier extends PlaceableFoodBlock {
+        public static final MapCodec<ThuringerRostbratwurstUndBier> CODEC = simpleCodec(ThuringerRostbratwurstUndBier::new);
+        @Override public MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }
+        public ThuringerRostbratwurstUndBier(BlockBehaviour.Properties props) { super(Block.box(0.2, 0, 1.0, 16.0, 7.4, 14.0), props); }
+    }
+
+    /**
      * 专属模型食物方块（白香肠面包圈）：巴伐利亚蓝白菱纹椭圆盘，
      * 盘上碱水面包圈 + 两根白香肠 + 肉丸 + 欧芹叶。
      */

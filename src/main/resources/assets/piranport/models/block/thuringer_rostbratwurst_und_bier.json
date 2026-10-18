@@ -1,0 +1,248 @@
+{
+  "parent": "block/block",
+  "render_type": "minecraft:cutout",
+  "textures": { "particle": "piranport:block/thuringer_plate_top", "plate_top": "piranport:block/thuringer_plate_top", "plate_side": "piranport:block/thuringer_plate_side", "sausage_top": "piranport:block/thuringer_sausage_top", "sausage_side": "piranport:block/thuringer_sausage_side", "pale_top": "piranport:block/thuringer_pale_sausage_top", "pale_side": "piranport:block/thuringer_pale_sausage_side", "potato_top": "piranport:block/thuringer_potato_top", "potato_side": "piranport:block/thuringer_potato_side", "broccoli_top": "piranport:block/thuringer_broccoli_top", "broccoli_side": "piranport:block/thuringer_broccoli_side", "ketchup": "piranport:block/thuringer_ketchup", "beer_side": "piranport:block/thuringer_beer_side", "beer_top": "piranport:block/thuringer_beer_top", "foam_top": "piranport:block/thuringer_foam_top", "foam_side": "piranport:block/thuringer_foam_side", "handle": "piranport:block/thuringer_mug_handle" },
+  "elements": [
+    {
+      "name": "plate",
+      "from": [0.2, 0, 1.0],
+      "to": [12.0, 0.6, 14.0],
+      "faces": {
+        "up": { "texture": "#plate_top" },
+        "down": { "texture": "#plate_top" },
+        "north": { "texture": "#plate_side" },
+        "south": { "texture": "#plate_side" },
+        "east": { "texture": "#plate_side" },
+        "west": { "texture": "#plate_side" }
+      }
+    },
+    {
+      "name": "sausage_brown_1",
+      "from": [1.4, 0.62, 10.1],
+      "to": [8.0, 1.77, 11.5],
+      "rotation": {
+        "origin": [4.7, 0.62, 10.8],
+        "axis": "y",
+        "angle": -22.5
+      },
+      "faces": {
+        "up": { "texture": "#sausage_top" },
+        "down": { "texture": "#sausage_side" },
+        "north": { "texture": "#sausage_side" },
+        "south": { "texture": "#sausage_side" },
+        "east": { "texture": "#sausage_side" },
+        "west": { "texture": "#sausage_side" }
+      }
+    },
+    {
+      "name": "sausage_brown_2",
+      "from": [0.4, 0.62, 8.1],
+      "to": [7.0, 1.77, 9.5],
+      "rotation": {
+        "origin": [3.7, 0.62, 8.8],
+        "axis": "y",
+        "angle": -22.5
+      },
+      "faces": {
+        "up": { "texture": "#sausage_top" },
+        "down": { "texture": "#sausage_side" },
+        "north": { "texture": "#sausage_side" },
+        "south": { "texture": "#sausage_side" },
+        "east": { "texture": "#sausage_side" },
+        "west": { "texture": "#sausage_side" }
+      }
+    },
+    {
+      "name": "sausage_pale_1",
+      "from": [1.3, 0.62, 5.55],
+      "to": [7.3, 1.77, 6.85],
+      "rotation": {
+        "origin": [4.3, 0.62, 6.2],
+        "axis": "y",
+        "angle": 22.5
+      },
+      "faces": {
+        "up": { "texture": "#pale_top" },
+        "down": { "texture": "#pale_side" },
+        "north": { "texture": "#pale_side" },
+        "south": { "texture": "#pale_side" },
+        "east": { "texture": "#pale_side" },
+        "west": { "texture": "#pale_side" }
+      }
+    },
+    {
+      "name": "sausage_pale_2",
+      "from": [1.1, 0.62, 4.15],
+      "to": [7.1, 1.77, 5.45],
+      "rotation": {
+        "origin": [4.1, 0.62, 4.8],
+        "axis": "y",
+        "angle": 22.5
+      },
+      "faces": {
+        "up": { "texture": "#pale_top" },
+        "down": { "texture": "#pale_side" },
+        "north": { "texture": "#pale_side" },
+        "south": { "texture": "#pale_side" },
+        "east": { "texture": "#pale_side" },
+        "west": { "texture": "#pale_side" }
+      }
+    },
+    {
+      "name": "sausage_pale_3",
+      "from": [0.9, 0.62, 2.75],
+      "to": [6.9, 1.77, 4.05],
+      "rotation": {
+        "origin": [3.9, 0.62, 3.4],
+        "axis": "y",
+        "angle": 22.5
+      },
+      "faces": {
+        "up": { "texture": "#pale_top" },
+        "down": { "texture": "#pale_side" },
+        "north": { "texture": "#pale_side" },
+        "south": { "texture": "#pale_side" },
+        "east": { "texture": "#pale_side" },
+        "west": { "texture": "#pale_side" }
+      }
+    },
+    {
+      "name": "potato_base",
+      "from": [8.2, 0.62, 6.6],
+      "to": [10.4, 2.1, 8.6],
+      "faces": {
+        "up": { "texture": "#potato_side" },
+        "down": { "texture": "#potato_side" },
+        "north": { "texture": "#potato_side" },
+        "south": { "texture": "#potato_side" },
+        "east": { "texture": "#potato_side" },
+        "west": { "texture": "#potato_side" }
+      }
+    },
+    {
+      "name": "potato_top",
+      "from": [8.4, 2.08, 6.8],
+      "to": [10.2, 2.6, 8.4],
+      "faces": {
+        "up": { "texture": "#potato_top" },
+        "down": { "texture": "#potato_side" },
+        "north": { "texture": "#potato_side" },
+        "south": { "texture": "#potato_side" },
+        "east": { "texture": "#potato_side" },
+        "west": { "texture": "#potato_side" }
+      }
+    },
+    {
+      "name": "broccoli_stem",
+      "from": [8.5, 0.62, 10.5],
+      "to": [9.3, 1.6, 11.3],
+      "faces": {
+        "up": { "texture": "#broccoli_side" },
+        "down": { "texture": "#broccoli_side" },
+        "north": { "texture": "#broccoli_side" },
+        "south": { "texture": "#broccoli_side" },
+        "east": { "texture": "#broccoli_side" },
+        "west": { "texture": "#broccoli_side" }
+      }
+    },
+    {
+      "name": "broccoli_florets",
+      "from": [8.1, 1.55, 10.1],
+      "to": [9.7, 2.5, 11.7],
+      "faces": {
+        "up": { "texture": "#broccoli_top" },
+        "down": { "texture": "#broccoli_side" },
+        "north": { "texture": "#broccoli_side" },
+        "south": { "texture": "#broccoli_side" },
+        "east": { "texture": "#broccoli_side" },
+        "west": { "texture": "#broccoli_side" }
+      }
+    },
+    {
+      "name": "broccoli_tip",
+      "from": [8.5, 2.48, 10.6],
+      "to": [9.7, 2.85, 11.7],
+      "faces": {
+        "up": { "texture": "#broccoli_top" },
+        "down": { "texture": "#broccoli_side" },
+        "north": { "texture": "#broccoli_side" },
+        "south": { "texture": "#broccoli_side" },
+        "east": { "texture": "#broccoli_side" },
+        "west": { "texture": "#broccoli_side" }
+      }
+    },
+    {
+      "name": "ketchup",
+      "from": [1.5, 0.61, 11.4],
+      "to": [7.9, 0.63, 13.4],
+      "faces": {
+        "up": { "texture": "#ketchup" }
+      }
+    },
+    {
+      "name": "beer_body",
+      "from": [12.2, 0, 4.0],
+      "to": [16.0, 5.52, 8.0],
+      "faces": {
+        "up": { "texture": "#beer_top" },
+        "down": { "texture": "#beer_side" },
+        "north": { "texture": "#beer_side" },
+        "south": { "texture": "#beer_side" },
+        "east": { "texture": "#beer_side" },
+        "west": { "texture": "#beer_side" }
+      }
+    },
+    {
+      "name": "foam",
+      "from": [12.2, 5.5, 4.0],
+      "to": [16.0, 7.3, 8.0],
+      "faces": {
+        "up": { "texture": "#foam_top" },
+        "down": { "texture": "#foam_side" },
+        "north": { "texture": "#foam_side" },
+        "south": { "texture": "#foam_side" },
+        "east": { "texture": "#foam_side" },
+        "west": { "texture": "#foam_side" }
+      }
+    },
+    {
+      "name": "handle_top",
+      "from": [13.4, 4.7, 7.9],
+      "to": [14.9, 5.4, 8.6],
+      "faces": {
+        "up": { "texture": "#handle" },
+        "down": { "texture": "#handle" },
+        "north": { "texture": "#handle" },
+        "south": { "texture": "#handle" },
+        "east": { "texture": "#handle" },
+        "west": { "texture": "#handle" }
+      }
+    },
+    {
+      "name": "handle_bottom",
+      "from": [13.4, 1.9, 7.9],
+      "to": [14.9, 2.6, 8.6],
+      "faces": {
+        "up": { "texture": "#handle" },
+        "down": { "texture": "#handle" },
+        "north": { "texture": "#handle" },
+        "south": { "texture": "#handle" },
+        "east": { "texture": "#handle" },
+        "west": { "texture": "#handle" }
+      }
+    },
+    {
+      "name": "handle_outer",
+      "from": [13.4, 1.9, 8.5],
+      "to": [14.9, 5.4, 9.2],
+      "faces": {
+        "up": { "texture": "#handle" },
+        "down": { "texture": "#handle" },
+        "north": { "texture": "#handle" },
+        "south": { "texture": "#handle" },
+        "east": { "texture": "#handle" },
+        "west": { "texture": "#handle" }
+      }
+    }
+  ]
+}

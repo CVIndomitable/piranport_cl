@@ -139,6 +139,16 @@ public class PlaceableFoodBlock extends BaseEntityBlock {
     }
 
     /**
+     * 专属模型食物方块（红茶三明治）：双层金架下午茶点架，上下两层
+     * 摆手指三明治（黄瓜/红色夹心），左侧一套红茶杯碟。
+     */
+    public static class BlackTeaSandwich extends PlaceableFoodBlock {
+        public static final MapCodec<BlackTeaSandwich> CODEC = simpleCodec(BlackTeaSandwich::new);
+        @Override public MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }
+        public BlackTeaSandwich(BlockBehaviour.Properties props) { super(Block.box(0.6, 0, 1.6, 15.4, 6.7, 13.6), props); }
+    }
+
+    /**
      * 专属模型食物方块（美式汉堡）：芝麻面包顶 + 芝士片 + 牛肉饼 +
      * 番茄片 + 生菜 + 底面包的经典叠层。
      */

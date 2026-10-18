@@ -122,6 +122,7 @@ public class ModBlockEntityTypes {
                             ModBlocks.BEET_BLOSSOM.get(),
                             ModBlocks.SALTY_BEAN_CURD.get(),
                             ModBlocks.AMERICAN_BURGER.get(),
+                            ModBlocks.BLACK_TEA_SANDWICH.get(),
                             ModBlocks.PEA_SOUP_WITH_RYE_BREAD.get(),
                             ModBlocks.RUSSIAN_DUMPLING.get(),
                             ModBlocks.OKROSHKA.get())

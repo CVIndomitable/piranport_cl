@@ -1,0 +1,294 @@
+{
+  "parent": "block/block",
+  "render_type": "minecraft:cutout",
+  "textures": { "particle": "piranport:block/tea_sandwich_plate_top", "plate_top": "piranport:block/tea_sandwich_plate_top", "plate_side": "piranport:block/tea_sandwich_plate_side", "gold": "piranport:block/tea_sandwich_gold", "sand_top": "piranport:block/tea_sandwich_top", "sand_cut": "piranport:block/tea_sandwich_cut", "sand_crust": "piranport:block/tea_sandwich_crust", "cup_side": "piranport:block/tea_sandwich_cup_side", "cup_top": "piranport:block/tea_sandwich_cup_top", "cup_handle": "piranport:block/tea_sandwich_cup_handle" },
+  "elements": [
+    {
+      "name": "saucer",
+      "from": [0.6, 0, 8.2],
+      "to": [6.0, 0.35, 13.6],
+      "faces": {
+        "up": { "texture": "#plate_top" },
+        "down": { "texture": "#plate_side" },
+        "north": { "texture": "#plate_side" },
+        "south": { "texture": "#plate_side" },
+        "east": { "texture": "#plate_side" },
+        "west": { "texture": "#plate_side" }
+      }
+    },
+    {
+      "name": "stand_base",
+      "from": [4.8, 0.2, 1.6],
+      "to": [15.4, 0.7, 12.4],
+      "faces": {
+        "up": { "texture": "#plate_top" },
+        "down": { "texture": "#plate_side" },
+        "north": { "texture": "#plate_side" },
+        "south": { "texture": "#plate_side" },
+        "east": { "texture": "#plate_side" },
+        "west": { "texture": "#plate_side" }
+      }
+    },
+    {
+      "name": "column",
+      "from": [10.0, 0.7, 6.8],
+      "to": [10.8, 4.0, 7.6],
+      "faces": {
+        "up": { "texture": "#gold" },
+        "down": { "texture": "#gold" },
+        "north": { "texture": "#gold" },
+        "south": { "texture": "#gold" },
+        "east": { "texture": "#gold" },
+        "west": { "texture": "#gold" }
+      }
+    },
+    {
+      "name": "cup",
+      "from": [1.8, 0.35, 9.6],
+      "to": [4.8, 1.85, 12.2],
+      "faces": {
+        "up": { "texture": "#cup_top" },
+        "down": { "texture": "#cup_side" },
+        "north": { "texture": "#cup_side" },
+        "south": { "texture": "#cup_side" },
+        "east": { "texture": "#cup_side" },
+        "west": { "texture": "#cup_side" }
+      }
+    },
+    {
+      "name": "cup_handle_top",
+      "from": [4.8, 1.35, 10.5],
+      "to": [5.5, 1.65, 11.5],
+      "faces": {
+        "up": { "texture": "#cup_handle" },
+        "down": { "texture": "#cup_handle" },
+        "north": { "texture": "#cup_handle" },
+        "south": { "texture": "#cup_handle" },
+        "east": { "texture": "#cup_handle" },
+        "west": { "texture": "#cup_handle" }
+      }
+    },
+    {
+      "name": "cup_handle_bottom",
+      "from": [4.8, 0.55, 10.5],
+      "to": [5.5, 0.85, 11.5],
+      "faces": {
+        "up": { "texture": "#cup_handle" },
+        "down": { "texture": "#cup_handle" },
+        "north": { "texture": "#cup_handle" },
+        "south": { "texture": "#cup_handle" },
+        "east": { "texture": "#cup_handle" },
+        "west": { "texture": "#cup_handle" }
+      }
+    },
+    {
+      "name": "cup_handle_outer",
+      "from": [5.2, 0.55, 10.5],
+      "to": [5.8, 1.65, 11.5],
+      "faces": {
+        "up": { "texture": "#cup_handle" },
+        "down": { "texture": "#cup_handle" },
+        "north": { "texture": "#cup_handle" },
+        "south": { "texture": "#cup_handle" },
+        "east": { "texture": "#cup_handle" },
+        "west": { "texture": "#cup_handle" }
+      }
+    },
+    {
+      "name": "top_plate",
+      "from": [6.2, 3.8, 3.2],
+      "to": [14.2, 4.3, 9.6],
+      "faces": {
+        "up": { "texture": "#plate_top" },
+        "down": { "texture": "#plate_side" },
+        "north": { "texture": "#plate_side" },
+        "south": { "texture": "#plate_side" },
+        "east": { "texture": "#plate_side" },
+        "west": { "texture": "#plate_side" }
+      }
+    },
+    {
+      "name": "handle_left",
+      "from": [9.4, 4.3, 6.6],
+      "to": [9.8, 6.2, 7.0],
+      "faces": {
+        "up": { "texture": "#gold" },
+        "down": { "texture": "#gold" },
+        "north": { "texture": "#gold" },
+        "south": { "texture": "#gold" },
+        "east": { "texture": "#gold" },
+        "west": { "texture": "#gold" }
+      }
+    },
+    {
+      "name": "handle_right",
+      "from": [10.8, 4.3, 6.6],
+      "to": [11.2, 6.2, 7.0],
+      "faces": {
+        "up": { "texture": "#gold" },
+        "down": { "texture": "#gold" },
+        "north": { "texture": "#gold" },
+        "south": { "texture": "#gold" },
+        "east": { "texture": "#gold" },
+        "west": { "texture": "#gold" }
+      }
+    },
+    {
+      "name": "handle_top",
+      "from": [9.4, 6.2, 6.6],
+      "to": [11.2, 6.7, 7.0],
+      "faces": {
+        "up": { "texture": "#gold" },
+        "down": { "texture": "#gold" },
+        "north": { "texture": "#gold" },
+        "south": { "texture": "#gold" },
+        "east": { "texture": "#gold" },
+        "west": { "texture": "#gold" }
+      }
+    },
+    {
+      "name": "tea_sand_1",
+      "from": [6.3, 0.7, 9.725],
+      "to": [8.5, 2.5, 10.275],
+      "faces": {
+        "up": { "texture": "#sand_top" },
+        "down": { "texture": "#sand_top" },
+        "north": { "texture": "#sand_cut" },
+        "south": { "texture": "#sand_cut" },
+        "east": { "texture": "#sand_crust" },
+        "west": { "texture": "#sand_crust" }
+      },
+      "rotation": {
+        "origin": [7.4, 0.7, 10.0],
+        "axis": "y",
+        "angle": -22.5
+      }
+    },
+    {
+      "name": "tea_sand_2",
+      "from": [7.9, 0.7, 9.625],
+      "to": [10.1, 2.5, 10.175],
+      "faces": {
+        "up": { "texture": "#sand_top" },
+        "down": { "texture": "#sand_top" },
+        "north": { "texture": "#sand_cut" },
+        "south": { "texture": "#sand_cut" },
+        "east": { "texture": "#sand_crust" },
+        "west": { "texture": "#sand_crust" }
+      },
+      "rotation": {
+        "origin": [9.0, 0.7, 9.9],
+        "axis": "y",
+        "angle": 22.5
+      }
+    },
+    {
+      "name": "tea_sand_3",
+      "from": [9.5, 0.7, 9.725],
+      "to": [11.7, 2.5, 10.275],
+      "faces": {
+        "up": { "texture": "#sand_top" },
+        "down": { "texture": "#sand_top" },
+        "north": { "texture": "#sand_cut" },
+        "south": { "texture": "#sand_cut" },
+        "east": { "texture": "#sand_crust" },
+        "west": { "texture": "#sand_crust" }
+      },
+      "rotation": {
+        "origin": [10.6, 0.7, 10.0],
+        "axis": "y",
+        "angle": -22.5
+      }
+    },
+    {
+      "name": "tea_sand_4",
+      "from": [11.1, 0.7, 9.625],
+      "to": [13.3, 2.5, 10.175],
+      "faces": {
+        "up": { "texture": "#sand_top" },
+        "down": { "texture": "#sand_top" },
+        "north": { "texture": "#sand_cut" },
+        "south": { "texture": "#sand_cut" },
+        "east": { "texture": "#sand_crust" },
+        "west": { "texture": "#sand_crust" }
+      },
+      "rotation": {
+        "origin": [12.2, 0.7, 9.9],
+        "axis": "y",
+        "angle": 22.5
+      }
+    },
+    {
+      "name": "tea_sand_top_1",
+      "from": [6.5, 4.3, 4.55],
+      "to": [8.3, 5.5, 5.05],
+      "faces": {
+        "up": { "texture": "#sand_top" },
+        "down": { "texture": "#sand_top" },
+        "north": { "texture": "#sand_cut" },
+        "south": { "texture": "#sand_cut" },
+        "east": { "texture": "#sand_crust" },
+        "west": { "texture": "#sand_crust" }
+      },
+      "rotation": {
+        "origin": [7.4, 4.3, 4.8],
+        "axis": "y",
+        "angle": 0
+      }
+    },
+    {
+      "name": "tea_sand_top_2",
+      "from": [7.9, 4.3, 4.35],
+      "to": [9.7, 5.5, 4.85],
+      "faces": {
+        "up": { "texture": "#sand_top" },
+        "down": { "texture": "#sand_top" },
+        "north": { "texture": "#sand_cut" },
+        "south": { "texture": "#sand_cut" },
+        "east": { "texture": "#sand_crust" },
+        "west": { "texture": "#sand_crust" }
+      },
+      "rotation": {
+        "origin": [8.8, 4.3, 4.6],
+        "axis": "y",
+        "angle": 22.5
+      }
+    },
+    {
+      "name": "tea_sand_top_3",
+      "from": [9.3, 4.3, 4.55],
+      "to": [11.1, 5.5, 5.05],
+      "faces": {
+        "up": { "texture": "#sand_top" },
+        "down": { "texture": "#sand_top" },
+        "north": { "texture": "#sand_cut" },
+        "south": { "texture": "#sand_cut" },
+        "east": { "texture": "#sand_crust" },
+        "west": { "texture": "#sand_crust" }
+      },
+      "rotation": {
+        "origin": [10.2, 4.3, 4.8],
+        "axis": "y",
+        "angle": -22.5
+      }
+    },
+    {
+      "name": "tea_sand_top_4",
+      "from": [10.7, 4.3, 4.35],
+      "to": [12.5, 5.5, 4.85],
+      "faces": {
+        "up": { "texture": "#sand_top" },
+        "down": { "texture": "#sand_top" },
+        "north": { "texture": "#sand_cut" },
+        "south": { "texture": "#sand_cut" },
+        "east": { "texture": "#sand_crust" },
+        "west": { "texture": "#sand_crust" }
+      },
+      "rotation": {
+        "origin": [11.6, 4.3, 4.6],
+        "axis": "y",
+        "angle": 22.5
+      }
+    }
+  ]
+}

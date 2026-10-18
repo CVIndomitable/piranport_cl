@@ -252,6 +252,8 @@ public class AircraftEntity extends Entity {
 
     // 自主模式：飞机无玩家所属（如浮靶或女仆发射的飞机）
     boolean autonomous = false;
+    // 对空雷达标记剩余 tick：雷达每次扫描刷新，断开后倒计时到期撤掉发光（与 GLOWING 药效到期语义一致）
+    private int radarGlowTicks = 0;
     Vec3 homePosition = Vec3.ZERO;
     @Nullable private Vec3 lastHorizontalDir = null; // previous tick's horizontal direction for turn radius
     @Nullable LivingEntity autonomousTarget = null;
@@ -460,6 +462,10 @@ public class AircraftEntity extends Entity {
     @Override
     public void tick() {
         super.tick();
+
+        if (!level().isClientSide() && radarGlowTicks > 0 && --radarGlowTicks == 0) {
+            setGlowingTag(false);
+        }
 
         // Client: position + rotation interpolation + particles
         if (level().isClientSide()) {
@@ -957,11 +963,13 @@ public class AircraftEntity extends Entity {
                 }
             }
             case CRUISING -> {
-                // Auto-seek players
+                // Auto-seek：机枪战斗机只找空中/中立目标，其余自主机仍找玩家
                 if (level() instanceof ServerLevel sl && (hasBullets || !payloadType.isEmpty())) {
-                    AABB box = getBoundingBox().inflate(ModEquipmentConfig.AIRCRAFT_AUTONOMOUS_SEEK_RANGE.get());
-                    boolean hasTarget = !sl.getEntitiesOfClass(Player.class, box,
-                            e -> e.isAlive() && !e.isSpectator()).isEmpty();
+                    boolean hasTarget = hasBullets
+                            ? AircraftCombat.resolveAutonomousFighterTarget(this) != null
+                            : !sl.getEntitiesOfClass(Player.class,
+                                    getBoundingBox().inflate(ModEquipmentConfig.AIRCRAFT_AUTONOMOUS_SEEK_RANGE.get()),
+                                    e -> e.isAlive() && !e.isSpectator()).isEmpty();
                     if (hasTarget) {
                         setState(FlightState.ATTACKING);
                         return;
@@ -983,6 +991,10 @@ public class AircraftEntity extends Entity {
             case ATTACKING -> {
                 if (remainingAmmo <= 0) { discard(); return; }
                 if (!(level() instanceof ServerLevel sl)) return;
+                if (hasBullets) {
+                    tickAutonomousAttacking();
+                    return;
+                }
                 AABB box = getBoundingBox().inflate(ModEquipmentConfig.AIRCRAFT_AUTONOMOUS_SEEK_RANGE.get());
                 LivingEntity target = sl.getEntitiesOfClass(Player.class, box,
                                 e -> e.isAlive() && !e.isSpectator())
@@ -1445,6 +1457,12 @@ public class AircraftEntity extends Entity {
     public UUID getOwnerUUID() { return ownerUUID; }
 
     public boolean isAutonomous() { return autonomous; }
+
+    /** 对空雷达标记：刷新发光并重置倒计时，由服务端雷达扫描周期性调用。 */
+    public void markRadarGlow(int ticks) {
+        radarGlowTicks = ticks;
+        setGlowingTag(true);
+    }
 
     /**
      * Returns the player owner of this aircraft, or null if offline or autonomous.

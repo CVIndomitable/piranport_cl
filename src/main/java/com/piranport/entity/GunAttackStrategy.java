@@ -27,7 +27,8 @@ public class GunAttackStrategy implements AttackStrategy {
 
     @Override
     public void executeAutonomous(AircraftEntity craft) {
-        if (craft.autonomousTarget == null) { craft.startReturning("target_lost"); return; }
-        AircraftCombat.tickFighterAttack(craft, null, craft.autonomousTarget);
+        Entity target = AircraftCombat.resolveAutonomousFighterTarget(craft);
+        if (target == null) { craft.setState(AircraftEntity.FlightState.CRUISING); return; }
+        AircraftCombat.tickFighterAttack(craft, null, target);
     }
 }

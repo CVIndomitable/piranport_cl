@@ -8,10 +8,12 @@ import com.piranport.aviation.FireControlManager;
 import com.piranport.aviation.ReconManager;
 import com.piranport.combat.AASilenceManager;
 import com.piranport.combat.AutoModeState;
+import com.piranport.combat.CombatTargeting;
 import com.piranport.combat.TransformationManager;
 import com.piranport.component.FuelData;
 import com.piranport.config.ModCommonConfig;
 
+import com.piranport.entity.AircraftEntity;
 import com.piranport.item.KirinHeadbandItem;
 import com.piranport.item.FootballArmorItem;
 import com.piranport.item.ExperienceShellItem;
@@ -339,6 +341,25 @@ public class PlayerTickHandler {
                         MobEffects.GLOWING, SONAR_SCAN_INTERVAL, 0, false, false, false));
             }
         }
+
+        // 飞机不是 LivingEntity，上面的扫描捞不到；只有对空雷达能标空中目标，声呐不标飞机
+        if (radars.isEmpty()) return;
+        List<AircraftEntity> aircraft = player.level().getEntitiesOfClass(
+                AircraftEntity.class, scanBox,
+                a -> CombatTargeting.isHostileTarget(player, a));
+        for (AircraftEntity a : aircraft) {
+            if (isDetectedByAirRadar(player, a, radars)) {
+                a.markRadarGlow(SONAR_SCAN_INTERVAL);
+            }
+        }
+    }
+
+    private static boolean isDetectedByAirRadar(Player player, AircraftEntity aircraft, List<RadarItem> radars) {
+        double distance = player.distanceTo(aircraft);
+        for (RadarItem radar : radars) {
+            if (radar.getTarget() == RadarItem.RadarTarget.AIR && radar.getRange() >= distance) return true;
+        }
+        return false;
     }
 
     /**
@@ -398,9 +419,8 @@ public class PlayerTickHandler {
      * 飞行目标判定 —— 与防空导弹的判定（MissileEntity.isValidTarget）保持一致：
      * 离地且不在水中即视为空中，或正在上升（避免把下落中的地面实体误判为空中目标）。
      *
-     * <p>为什么不在这里判断 {@code AircraftEntity}：AircraftEntity 继承自 Entity 而非
-     * LivingEntity，根本进不了本次扫描的实体列表（扫描按 LivingEntity 过滤，见 tickSonarGlow）。
-     * 而且飞机升空后 onGround() 恒为 false，上面的条件已经覆盖，额外分支是死代码。
+     * <p>飞机（AircraftEntity 继承 Entity 而非 LivingEntity）不经过本方法，由 tickSonarGlow 的飞机分支
+     * 直接判定为空中目标，所以这里不需要为它单独分支。
      */
     private static boolean isAirborneTarget(LivingEntity entity) {
         return (!entity.onGround() && !entity.isInWater()) || entity.getDeltaMovement().y > 0.1;

@@ -652,6 +652,28 @@ public class AircraftCombat {
                 ModEquipmentConfig.AIRCRAFT_AUTONOMOUS_SEEK_RANGE.get());
     }
 
+    /**
+     * 自主机枪战斗机的索敌：玩家所属的飞机，或中立生物（非敌对、非玩家的 Mob）。
+     * 不打玩家本体与深海单位（Monster/Enemy），避免战斗机向水面舰船开火。
+     */
+    @Nullable
+    public static Entity resolveAutonomousFighterTarget(AircraftEntity craft) {
+        if (!(craft.level() instanceof ServerLevel sl)) return null;
+        AABB box = craft.getBoundingBox().inflate(ModEquipmentConfig.AIRCRAFT_AUTONOMOUS_SEEK_RANGE.get());
+        return sl.getEntitiesOfClass(Entity.class, box,
+                        e -> e.isAlive() && e != craft && isAutonomousFighterPrey(e))
+                .stream()
+                .min(java.util.Comparator.comparingDouble(craft::distanceToSqr))
+                .orElse(null);
+    }
+
+    private static boolean isAutonomousFighterPrey(Entity e) {
+        if (e instanceof AircraftEntity other) return other.getOwnerUUID() != null;
+        return e instanceof net.minecraft.world.entity.Mob mob
+                && !(mob instanceof net.minecraft.world.entity.monster.Enemy)
+                && !mob.isNoAi();
+    }
+
     /** @see AircraftEntity#resolveFighterTarget(Player) */
     @Nullable
     public static Entity resolveFighterTarget(AircraftEntity craft, Player owner) {

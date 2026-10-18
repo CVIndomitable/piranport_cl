@@ -139,6 +139,16 @@ public class PlaceableFoodBlock extends BaseEntityBlock {
     }
 
     /**
+     * 专属模型食物方块（天妇罗）：黑色方盘垫白纸，四只炸虾天妇罗
+     * 竖立成一簇（红虾尾朝上），配深褐蔬菜天妇罗、萝卜泥和绿叶。
+     */
+    public static class Tempura extends PlaceableFoodBlock {
+        public static final MapCodec<Tempura> CODEC = simpleCodec(Tempura::new);
+        @Override public MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }
+        public Tempura(BlockBehaviour.Properties props) { super(Block.box(0.8, 0, 0.8, 15.2, 5.5, 15.2), props); }
+    }
+
+    /**
      * 专属模型食物方块（羊羹）：淡蓝灰长方瓷盘上，一条切成四片的
      * 暗红棕羊羹，盘面散着几粒红豆。
      */

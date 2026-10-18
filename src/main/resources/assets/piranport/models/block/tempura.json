@@ -1,0 +1,239 @@
+{
+  "parent": "block/block",
+  "render_type": "minecraft:cutout",
+  "textures": {
+    "particle": "piranport:block/tempura_plate_top",
+    "plate_top": "piranport:block/tempura_plate_top",
+    "plate_side": "piranport:block/tempura_plate_side",
+    "paper_top": "piranport:block/tempura_paper_top",
+    "paper_side": "piranport:block/tempura_paper_side",
+    "shrimp_top": "piranport:block/tempura_shrimp_top",
+    "shrimp_side": "piranport:block/tempura_shrimp_side",
+    "shrimp_tail": "piranport:block/tempura_shrimp_tail",
+    "veg_top": "piranport:block/tempura_veg_top",
+    "veg_side": "piranport:block/tempura_veg_side",
+    "daikon_top": "piranport:block/tempura_daikon_top",
+    "daikon_side": "piranport:block/tempura_daikon_side",
+    "garnish": "piranport:block/tempura_garnish"
+  },
+  "elements": [
+    {
+      "name": "plate",
+      "from": [0.8, 0, 0.8],
+      "to": [15.2, 0.8, 15.2],
+      "faces": {
+        "up": { "texture": "#plate_top" },
+        "down": { "texture": "#plate_side" },
+        "north": { "texture": "#plate_side" },
+        "south": { "texture": "#plate_side" },
+        "east": { "texture": "#plate_side" },
+        "west": { "texture": "#plate_side" }
+      }
+    },
+    {
+      "name": "paper",
+      "from": [2.2, 0.82, 2.4],
+      "to": [13.0, 0.88, 12.8],
+      "faces": {
+        "up": { "texture": "#paper_top" },
+        "down": { "texture": "#paper_side" },
+        "north": { "texture": "#paper_side" },
+        "south": { "texture": "#paper_side" },
+        "east": { "texture": "#paper_side" },
+        "west": { "texture": "#paper_side" }
+      }
+    },
+    {
+      "name": "shrimp_a",
+      "from": [6.0, 0.85, 6.2],
+      "to": [7.6, 4.7, 7.4],
+      "rotation": { "origin": [6.8, 0.85, 6.8], "axis": "z", "angle": -22.5 },
+      "faces": {
+        "up": { "texture": "#shrimp_top" },
+        "down": { "texture": "#shrimp_side" },
+        "north": { "texture": "#shrimp_side" },
+        "south": { "texture": "#shrimp_side" },
+        "east": { "texture": "#shrimp_side" },
+        "west": { "texture": "#shrimp_side" }
+      }
+    },
+    {
+      "name": "tail_a",
+      "from": [6.1, 4.65, 6.55],
+      "to": [7.5, 5.15, 6.95],
+      "rotation": { "origin": [6.8, 0.85, 6.8], "axis": "z", "angle": -22.5 },
+      "faces": {
+        "up": { "texture": "#shrimp_tail" },
+        "down": { "texture": "#shrimp_tail" },
+        "north": { "texture": "#shrimp_tail" },
+        "south": { "texture": "#shrimp_tail" },
+        "east": { "texture": "#shrimp_tail" },
+        "west": { "texture": "#shrimp_tail" }
+      }
+    },
+    {
+      "name": "shrimp_b",
+      "from": [7.4, 0.85, 6.0],
+      "to": [9.0, 4.9, 7.2],
+      "rotation": { "origin": [8.2, 0.85, 6.6], "axis": "z", "angle": 22.5 },
+      "faces": {
+        "up": { "texture": "#shrimp_top" },
+        "down": { "texture": "#shrimp_side" },
+        "north": { "texture": "#shrimp_side" },
+        "south": { "texture": "#shrimp_side" },
+        "east": { "texture": "#shrimp_side" },
+        "west": { "texture": "#shrimp_side" }
+      }
+    },
+    {
+      "name": "tail_b",
+      "from": [7.5, 4.85, 6.35],
+      "to": [8.9, 5.35, 6.75],
+      "rotation": { "origin": [8.2, 0.85, 6.6], "axis": "z", "angle": 22.5 },
+      "faces": {
+        "up": { "texture": "#shrimp_tail" },
+        "down": { "texture": "#shrimp_tail" },
+        "north": { "texture": "#shrimp_tail" },
+        "south": { "texture": "#shrimp_tail" },
+        "east": { "texture": "#shrimp_tail" },
+        "west": { "texture": "#shrimp_tail" }
+      }
+    },
+    {
+      "name": "shrimp_c",
+      "from": [7.6, 0.85, 7.6],
+      "to": [9.2, 4.8, 8.8],
+      "rotation": { "origin": [8.4, 0.85, 8.2], "axis": "x", "angle": 22.5 },
+      "faces": {
+        "up": { "texture": "#shrimp_top" },
+        "down": { "texture": "#shrimp_side" },
+        "north": { "texture": "#shrimp_side" },
+        "south": { "texture": "#shrimp_side" },
+        "east": { "texture": "#shrimp_side" },
+        "west": { "texture": "#shrimp_side" }
+      }
+    },
+    {
+      "name": "tail_c",
+      "from": [7.7, 4.75, 7.95],
+      "to": [9.1, 5.25, 8.35],
+      "rotation": { "origin": [8.4, 0.85, 8.2], "axis": "x", "angle": 22.5 },
+      "faces": {
+        "up": { "texture": "#shrimp_tail" },
+        "down": { "texture": "#shrimp_tail" },
+        "north": { "texture": "#shrimp_tail" },
+        "south": { "texture": "#shrimp_tail" },
+        "east": { "texture": "#shrimp_tail" },
+        "west": { "texture": "#shrimp_tail" }
+      }
+    },
+    {
+      "name": "shrimp_d",
+      "from": [6.4, 0.85, 7.2],
+      "to": [8.0, 4.6, 8.4],
+      "rotation": { "origin": [7.2, 0.85, 7.8], "axis": "x", "angle": -22.5 },
+      "faces": {
+        "up": { "texture": "#shrimp_top" },
+        "down": { "texture": "#shrimp_side" },
+        "north": { "texture": "#shrimp_side" },
+        "south": { "texture": "#shrimp_side" },
+        "east": { "texture": "#shrimp_side" },
+        "west": { "texture": "#shrimp_side" }
+      }
+    },
+    {
+      "name": "tail_d",
+      "from": [6.5, 4.55, 7.55],
+      "to": [7.9, 5.05, 7.95],
+      "rotation": { "origin": [7.2, 0.85, 7.8], "axis": "x", "angle": -22.5 },
+      "faces": {
+        "up": { "texture": "#shrimp_tail" },
+        "down": { "texture": "#shrimp_tail" },
+        "north": { "texture": "#shrimp_tail" },
+        "south": { "texture": "#shrimp_tail" },
+        "east": { "texture": "#shrimp_tail" },
+        "west": { "texture": "#shrimp_tail" }
+      }
+    },
+    {
+      "name": "veg_1",
+      "from": [9.8, 0.85, 3.8],
+      "to": [11.8, 2.3, 5.8],
+      "rotation": { "origin": [10.8, 0.85, 4.8], "axis": "y", "angle": 22.5 },
+      "faces": {
+        "up": { "texture": "#veg_top" },
+        "down": { "texture": "#veg_side" },
+        "north": { "texture": "#veg_side" },
+        "south": { "texture": "#veg_side" },
+        "east": { "texture": "#veg_side" },
+        "west": { "texture": "#veg_side" }
+      }
+    },
+    {
+      "name": "veg_2",
+      "from": [10.6, 0.85, 5.4],
+      "to": [12.6, 2.2, 7.4],
+      "rotation": { "origin": [11.6, 0.85, 6.4], "axis": "y", "angle": -22.5 },
+      "faces": {
+        "up": { "texture": "#veg_top" },
+        "down": { "texture": "#veg_side" },
+        "north": { "texture": "#veg_side" },
+        "south": { "texture": "#veg_side" },
+        "east": { "texture": "#veg_side" },
+        "west": { "texture": "#veg_side" }
+      }
+    },
+    {
+      "name": "daikon_base",
+      "from": [8.4, 0.82, 10.4],
+      "to": [10.4, 1.7, 12.2],
+      "faces": {
+        "up": { "texture": "#daikon_top" },
+        "down": { "texture": "#daikon_side" },
+        "north": { "texture": "#daikon_side" },
+        "south": { "texture": "#daikon_side" },
+        "east": { "texture": "#daikon_side" },
+        "west": { "texture": "#daikon_side" }
+      }
+    },
+    {
+      "name": "daikon_top",
+      "from": [8.7, 1.68, 10.7],
+      "to": [10.1, 2.05, 11.9],
+      "faces": {
+        "up": { "texture": "#daikon_top" },
+        "down": { "texture": "#daikon_side" },
+        "north": { "texture": "#daikon_side" },
+        "south": { "texture": "#daikon_side" },
+        "east": { "texture": "#daikon_side" },
+        "west": { "texture": "#daikon_side" }
+      }
+    },
+    {
+      "name": "garnish_1",
+      "from": [10.7, 0.85, 10.3],
+      "to": [11.9, 1.5, 11.5],
+      "faces": {
+        "up": { "texture": "#garnish" },
+        "down": { "texture": "#garnish" },
+        "north": { "texture": "#garnish" },
+        "south": { "texture": "#garnish" },
+        "east": { "texture": "#garnish" },
+        "west": { "texture": "#garnish" }
+      }
+    },
+    {
+      "name": "garnish_2",
+      "from": [11.4, 0.85, 11.3],
+      "to": [12.4, 1.3, 12.3],
+      "faces": {
+        "up": { "texture": "#garnish" },
+        "down": { "texture": "#garnish" },
+        "north": { "texture": "#garnish" },
+        "south": { "texture": "#garnish" },
+        "east": { "texture": "#garnish" },
+        "west": { "texture": "#garnish" }
+      }
+    }
+  ]
+}

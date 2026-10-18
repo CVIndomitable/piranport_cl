@@ -126,6 +126,8 @@ public class ModBlockEntityTypes {
                             ModBlocks.SCHWEINSHAXE.get(),
                             ModBlocks.CHICKEN_TATSUTA.get(),
                             ModBlocks.TANGYUAN.get(),
+                            ModBlocks.EGGS_BENEDICT.get(),
+                            ModBlocks.BLACK_TEA_SCONE.get(),
                             ModBlocks.PEA_SOUP_WITH_RYE_BREAD.get(),
                             ModBlocks.RUSSIAN_DUMPLING.get(),
                             ModBlocks.OKROSHKA.get())

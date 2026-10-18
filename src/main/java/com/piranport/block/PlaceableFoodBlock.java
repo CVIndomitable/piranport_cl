@@ -139,6 +139,26 @@ public class PlaceableFoodBlock extends BaseEntityBlock {
     }
 
     /**
+     * 专属模型食物方块（班尼迪克蛋）：淡蓝白方盘上两片英式松饼，
+     * 叠荷包蛋，淋荷兰酱，配欧芹。
+     */
+    public static class EggsBenedict extends PlaceableFoodBlock {
+        public static final MapCodec<EggsBenedict> CODEC = simpleCodec(EggsBenedict::new);
+        @Override public MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }
+        public EggsBenedict(BlockBehaviour.Properties props) { super(Block.box(0.8, 0, 0.8, 15.2, 3.9, 15.2), props); }
+    }
+
+    /**
+     * 专属模型食物方块（红茶司康饼）：淡蓝白椭圆盘上四只葡萄干司康，
+     * 左后方一套红茶杯碟。
+     */
+    public static class BlackTeaScone extends PlaceableFoodBlock {
+        public static final MapCodec<BlackTeaScone> CODEC = simpleCodec(BlackTeaScone::new);
+        @Override public MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }
+        public BlackTeaScone(BlockBehaviour.Properties props) { super(Block.box(0.4, 0, 0.5, 15.2, 2.1, 15.0), props); }
+    }
+
+    /**
      * 专属模型食物方块（汤圆）：白瓷底盘上放青花瓷碗，金边碗口，
      * 清汤里浮着八颗白汤圆。
      */

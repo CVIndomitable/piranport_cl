@@ -1,0 +1,189 @@
+{
+  "parent": "block/block",
+  "render_type": "minecraft:cutout",
+  "textures": { "particle": "piranport:block/scone_plate_top", "plate_top": "piranport:block/scone_plate_top", "plate_side": "piranport:block/scone_plate_side", "scone_top": "piranport:block/scone_top", "scone_side": "piranport:block/scone_side", "cup_top": "piranport:block/tea_sandwich_cup_top", "cup_side": "piranport:block/tea_sandwich_cup_side", "cup_handle": "piranport:block/tea_sandwich_cup_handle" },
+  "elements": [
+    {
+      "name": "plate",
+      "from": [1.0, 0, 4.2],
+      "to": [15.2, 0.5, 15.0],
+      "faces": {
+        "up": { "texture": "#plate_top" },
+        "down": { "texture": "#plate_side" },
+        "north": { "texture": "#plate_side" },
+        "south": { "texture": "#plate_side" },
+        "east": { "texture": "#plate_side" },
+        "west": { "texture": "#plate_side" }
+      }
+    },
+    {
+      "name": "saucer",
+      "from": [0.5, 0, 0.5],
+      "to": [5.1, 0.3, 3.9],
+      "faces": {
+        "up": { "texture": "#plate_top" },
+        "down": { "texture": "#plate_side" },
+        "north": { "texture": "#plate_side" },
+        "south": { "texture": "#plate_side" },
+        "east": { "texture": "#plate_side" },
+        "west": { "texture": "#plate_side" }
+      }
+    },
+    {
+      "name": "cup",
+      "from": [1.4, 0.3, 1.0],
+      "to": [4.4, 1.7, 3.6],
+      "faces": {
+        "up": { "texture": "#cup_top" },
+        "down": { "texture": "#cup_side" },
+        "north": { "texture": "#cup_side" },
+        "south": { "texture": "#cup_side" },
+        "east": { "texture": "#cup_side" },
+        "west": { "texture": "#cup_side" }
+      }
+    },
+    {
+      "name": "handle_top",
+      "from": [0.8, 1.25, 1.8],
+      "to": [1.5, 1.55, 2.9],
+      "faces": {
+        "up": { "texture": "#cup_handle" },
+        "down": { "texture": "#cup_handle" },
+        "north": { "texture": "#cup_handle" },
+        "south": { "texture": "#cup_handle" },
+        "east": { "texture": "#cup_handle" },
+        "west": { "texture": "#cup_handle" }
+      }
+    },
+    {
+      "name": "handle_bottom",
+      "from": [0.8, 0.55, 1.8],
+      "to": [1.5, 0.85, 2.9],
+      "faces": {
+        "up": { "texture": "#cup_handle" },
+        "down": { "texture": "#cup_handle" },
+        "north": { "texture": "#cup_handle" },
+        "south": { "texture": "#cup_handle" },
+        "east": { "texture": "#cup_handle" },
+        "west": { "texture": "#cup_handle" }
+      }
+    },
+    {
+      "name": "handle_outer",
+      "from": [0.4, 0.55, 1.8],
+      "to": [1.0, 1.55, 2.9],
+      "faces": {
+        "up": { "texture": "#cup_handle" },
+        "down": { "texture": "#cup_handle" },
+        "north": { "texture": "#cup_handle" },
+        "south": { "texture": "#cup_handle" },
+        "east": { "texture": "#cup_handle" },
+        "west": { "texture": "#cup_handle" }
+      }
+    },
+    {
+      "name": "scone_1_base",
+      "from": [4.3, 0.5, 5.9],
+      "to": [7.3, 1.35, 8.9],
+      "faces": {
+        "up": { "texture": "#scone_side" },
+        "down": { "texture": "#scone_side" },
+        "north": { "texture": "#scone_side" },
+        "south": { "texture": "#scone_side" },
+        "east": { "texture": "#scone_side" },
+        "west": { "texture": "#scone_side" }
+      }
+    },
+    {
+      "name": "scone_1_top",
+      "from": [5.0, 1.3, 6.6],
+      "to": [6.6, 2.05, 8.2],
+      "faces": {
+        "up": { "texture": "#scone_top" },
+        "down": { "texture": "#scone_side" },
+        "north": { "texture": "#scone_side" },
+        "south": { "texture": "#scone_side" },
+        "east": { "texture": "#scone_side" },
+        "west": { "texture": "#scone_side" }
+      }
+    },
+    {
+      "name": "scone_2_base",
+      "from": [7.5, 0.5, 4.9],
+      "to": [10.5, 1.35, 7.9],
+      "faces": {
+        "up": { "texture": "#scone_side" },
+        "down": { "texture": "#scone_side" },
+        "north": { "texture": "#scone_side" },
+        "south": { "texture": "#scone_side" },
+        "east": { "texture": "#scone_side" },
+        "west": { "texture": "#scone_side" }
+      }
+    },
+    {
+      "name": "scone_2_top",
+      "from": [8.2, 1.3, 5.6],
+      "to": [9.8, 2.05, 7.2],
+      "faces": {
+        "up": { "texture": "#scone_top" },
+        "down": { "texture": "#scone_side" },
+        "north": { "texture": "#scone_side" },
+        "south": { "texture": "#scone_side" },
+        "east": { "texture": "#scone_side" },
+        "west": { "texture": "#scone_side" }
+      }
+    },
+    {
+      "name": "scone_3_base",
+      "from": [6.1, 0.5, 9.1],
+      "to": [9.1, 1.35, 12.1],
+      "faces": {
+        "up": { "texture": "#scone_side" },
+        "down": { "texture": "#scone_side" },
+        "north": { "texture": "#scone_side" },
+        "south": { "texture": "#scone_side" },
+        "east": { "texture": "#scone_side" },
+        "west": { "texture": "#scone_side" }
+      }
+    },
+    {
+      "name": "scone_3_top",
+      "from": [6.8, 1.3, 9.8],
+      "to": [8.4, 2.05, 11.4],
+      "faces": {
+        "up": { "texture": "#scone_top" },
+        "down": { "texture": "#scone_side" },
+        "north": { "texture": "#scone_side" },
+        "south": { "texture": "#scone_side" },
+        "east": { "texture": "#scone_side" },
+        "west": { "texture": "#scone_side" }
+      }
+    },
+    {
+      "name": "scone_4_base",
+      "from": [9.7, 0.5, 8.5],
+      "to": [12.7, 1.35, 11.5],
+      "faces": {
+        "up": { "texture": "#scone_side" },
+        "down": { "texture": "#scone_side" },
+        "north": { "texture": "#scone_side" },
+        "south": { "texture": "#scone_side" },
+        "east": { "texture": "#scone_side" },
+        "west": { "texture": "#scone_side" }
+      }
+    },
+    {
+      "name": "scone_4_top",
+      "from": [10.4, 1.3, 9.2],
+      "to": [12.0, 2.05, 10.8],
+      "faces": {
+        "up": { "texture": "#scone_top" },
+        "down": { "texture": "#scone_side" },
+        "north": { "texture": "#scone_side" },
+        "south": { "texture": "#scone_side" },
+        "east": { "texture": "#scone_side" },
+        "west": { "texture": "#scone_side" }
+      }
+    }
+  ]
+}

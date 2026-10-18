@@ -1,0 +1,111 @@
+{
+  "parent": "block/block",
+  "render_type": "minecraft:cutout",
+  "textures": { "particle": "piranport:block/benedict_plate_top", "plate_top": "piranport:block/benedict_plate_top", "plate_side": "piranport:block/benedict_plate_side", "muffin_top": "piranport:block/benedict_muffin_top", "muffin_side": "piranport:block/benedict_muffin_side", "egg_top": "piranport:block/benedict_egg_top", "egg_side": "piranport:block/benedict_egg_side", "sauce": "piranport:block/benedict_sauce", "parsley": "piranport:block/benedict_parsley" },
+  "elements": [
+    {
+      "name": "plate",
+      "from": [0.8, 0, 0.8],
+      "to": [15.2, 0.5, 15.2],
+      "faces": {
+        "up": { "texture": "#plate_top" },
+        "down": { "texture": "#plate_side" },
+        "north": { "texture": "#plate_side" },
+        "south": { "texture": "#plate_side" },
+        "east": { "texture": "#plate_side" },
+        "west": { "texture": "#plate_side" }
+      }
+    },
+    {
+      "name": "muffin_1",
+      "from": [2.8, 0.5, 4.0],
+      "to": [9.8, 1.55, 10.0],
+      "rotation": {
+        "origin": [6.3, 0.5, 7.0],
+        "axis": "y",
+        "angle": 22.5
+      },
+      "faces": {
+        "up": { "texture": "#muffin_top" },
+        "down": { "texture": "#muffin_side" },
+        "north": { "texture": "#muffin_side" },
+        "south": { "texture": "#muffin_side" },
+        "east": { "texture": "#muffin_side" },
+        "west": { "texture": "#muffin_side" }
+      }
+    },
+    {
+      "name": "muffin_2",
+      "from": [5.2, 1.45, 5.6],
+      "to": [12.2, 2.5, 11.6],
+      "rotation": {
+        "origin": [8.7, 1.45, 8.6],
+        "axis": "y",
+        "angle": -22.5
+      },
+      "faces": {
+        "up": { "texture": "#muffin_top" },
+        "down": { "texture": "#muffin_side" },
+        "north": { "texture": "#muffin_side" },
+        "south": { "texture": "#muffin_side" },
+        "east": { "texture": "#muffin_side" },
+        "west": { "texture": "#muffin_side" }
+      }
+    },
+    {
+      "name": "egg_base",
+      "from": [5.9, 2.45, 6.6],
+      "to": [10.3, 3.2, 10.8],
+      "faces": {
+        "up": { "texture": "#egg_side" },
+        "down": { "texture": "#egg_side" },
+        "north": { "texture": "#egg_side" },
+        "south": { "texture": "#egg_side" },
+        "east": { "texture": "#egg_side" },
+        "west": { "texture": "#egg_side" }
+      }
+    },
+    {
+      "name": "egg_top",
+      "from": [6.4, 3.15, 7.1],
+      "to": [9.8, 3.7, 10.3],
+      "faces": {
+        "up": { "texture": "#egg_top" },
+        "down": { "texture": "#egg_side" },
+        "north": { "texture": "#egg_side" },
+        "south": { "texture": "#egg_side" },
+        "east": { "texture": "#egg_side" },
+        "west": { "texture": "#egg_side" }
+      }
+    },
+    {
+      "name": "sauce_cap",
+      "from": [6.6, 3.66, 7.3],
+      "to": [9.6, 3.86, 10.1],
+      "faces": {
+        "up": { "texture": "#sauce" }
+      }
+    },
+    {
+      "name": "sauce_drip",
+      "from": [8.6, 1.9, 10.1],
+      "to": [9.9, 3.7, 10.9],
+      "faces": {
+        "up": { "texture": "#sauce" },
+        "down": { "texture": "#sauce" },
+        "north": { "texture": "#sauce" },
+        "south": { "texture": "#sauce" },
+        "east": { "texture": "#sauce" },
+        "west": { "texture": "#sauce" }
+      }
+    },
+    {
+      "name": "parsley",
+      "from": [1.8, 0.52, 6.4],
+      "to": [4.8, 0.54, 10.4],
+      "faces": {
+        "up": { "texture": "#parsley" }
+      }
+    }
+  ]
+}

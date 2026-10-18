@@ -1,0 +1,72 @@
+{
+  "parent": "block/block",
+  "render_type": "minecraft:cutout",
+  "textures": { "particle": "piranport:block/yokan_plate_top", "plate_top": "piranport:block/yokan_plate_top", "plate_side": "piranport:block/yokan_plate_side", "slice_top": "piranport:block/yokan_slice_top", "slice_side": "piranport:block/yokan_slice_side" },
+  "elements": [
+    {
+      "name": "plate",
+      "from": [1.0, 0, 1.5],
+      "to": [15.0, 0.6, 14.5],
+      "faces": {
+        "up": { "texture": "#plate_top" },
+        "down": { "texture": "#plate_side" },
+        "north": { "texture": "#plate_side" },
+        "south": { "texture": "#plate_side" },
+        "east": { "texture": "#plate_side" },
+        "west": { "texture": "#plate_side" }
+      }
+    },
+    {
+      "name": "yokan_1",
+      "from": [3.8, 0.6, 6.4],
+      "to": [5.4, 3.0, 10.4],
+      "faces": {
+        "up": { "texture": "#slice_top" },
+        "down": { "texture": "#slice_side" },
+        "north": { "texture": "#slice_side" },
+        "south": { "texture": "#slice_side" },
+        "east": { "texture": "#slice_side" },
+        "west": { "texture": "#slice_side" }
+      }
+    },
+    {
+      "name": "yokan_2",
+      "from": [5.55, 0.6, 6.7],
+      "to": [7.15, 3.2, 10.7],
+      "faces": {
+        "up": { "texture": "#slice_top" },
+        "down": { "texture": "#slice_side" },
+        "north": { "texture": "#slice_side" },
+        "south": { "texture": "#slice_side" },
+        "east": { "texture": "#slice_side" },
+        "west": { "texture": "#slice_side" }
+      }
+    },
+    {
+      "name": "yokan_3",
+      "from": [7.3, 0.6, 6.5],
+      "to": [8.9, 3.1, 10.5],
+      "faces": {
+        "up": { "texture": "#slice_top" },
+        "down": { "texture": "#slice_side" },
+        "north": { "texture": "#slice_side" },
+        "south": { "texture": "#slice_side" },
+        "east": { "texture": "#slice_side" },
+        "west": { "texture": "#slice_side" }
+      }
+    },
+    {
+      "name": "yokan_4",
+      "from": [9.05, 0.6, 6.8],
+      "to": [10.65, 3.15, 10.8],
+      "faces": {
+        "up": { "texture": "#slice_top" },
+        "down": { "texture": "#slice_side" },
+        "north": { "texture": "#slice_side" },
+        "south": { "texture": "#slice_side" },
+        "east": { "texture": "#slice_side" },
+        "west": { "texture": "#slice_side" }
+      }
+    }
+  ]
+}

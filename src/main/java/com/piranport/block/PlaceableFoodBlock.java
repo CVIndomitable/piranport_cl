@@ -139,6 +139,16 @@ public class PlaceableFoodBlock extends BaseEntityBlock {
     }
 
     /**
+     * 专属模型食物方块（羊羹）：淡蓝灰长方瓷盘上，一条切成四片的
+     * 暗红棕羊羹，盘面散着几粒红豆。
+     */
+    public static class Yokan extends PlaceableFoodBlock {
+        public static final MapCodec<Yokan> CODEC = simpleCodec(Yokan::new);
+        @Override public MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }
+        public Yokan(BlockBehaviour.Properties props) { super(Block.box(1.0, 0, 1.5, 15.0, 3.2, 14.5), props); }
+    }
+
+    /**
      * 专属模型食物方块（皇家海军咸牛肉）：鼓腹橡木桶，两道深灰铁箍，
      * 桶口露出暗红咸牛肉块。
      */

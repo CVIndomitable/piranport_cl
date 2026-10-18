@@ -1,0 +1,124 @@
+{
+  "parent": "block/block",
+  "render_type": "minecraft:cutout",
+  "textures": { "particle": "piranport:block/yorkshire_plate_top", "plate_top": "piranport:block/yorkshire_plate_top", "plate_side": "piranport:block/yorkshire_plate_side", "pud_top": "piranport:block/yorkshire_top", "pud_side": "piranport:block/yorkshire_side", "pud_center": "piranport:block/yorkshire_center" },
+  "elements": [
+    {
+      "name": "plate",
+      "from": [0.8, 0, 1.5],
+      "to": [15.2, 0.4, 14.5],
+      "faces": {
+        "up": { "texture": "#plate_top" },
+        "down": { "texture": "#plate_side" },
+        "north": { "texture": "#plate_side" },
+        "south": { "texture": "#plate_side" },
+        "east": { "texture": "#plate_side" },
+        "west": { "texture": "#plate_side" }
+      }
+    },
+    {
+      "name": "pudding_1",
+      "from": [3.4, 0.4, 4.4],
+      "to": [6.6, 1.4, 7.6],
+      "faces": {
+        "up": { "texture": "#pud_top" },
+        "down": { "texture": "#pud_side" },
+        "north": { "texture": "#pud_side" },
+        "south": { "texture": "#pud_side" },
+        "east": { "texture": "#pud_side" },
+        "west": { "texture": "#pud_side" }
+      }
+    },
+    {
+      "name": "well_1",
+      "from": [4.1, 1.32, 5.1],
+      "to": [5.9, 1.65, 6.9],
+      "faces": {
+        "up": { "texture": "#pud_center" },
+        "down": { "texture": "#pud_side" },
+        "north": { "texture": "#pud_side" },
+        "south": { "texture": "#pud_side" },
+        "east": { "texture": "#pud_side" },
+        "west": { "texture": "#pud_side" }
+      }
+    },
+    {
+      "name": "pudding_2",
+      "from": [8.4, 0.4, 4.0],
+      "to": [11.6, 1.4, 7.2],
+      "faces": {
+        "up": { "texture": "#pud_top" },
+        "down": { "texture": "#pud_side" },
+        "north": { "texture": "#pud_side" },
+        "south": { "texture": "#pud_side" },
+        "east": { "texture": "#pud_side" },
+        "west": { "texture": "#pud_side" }
+      }
+    },
+    {
+      "name": "well_2",
+      "from": [9.1, 1.32, 4.7],
+      "to": [10.9, 1.65, 6.5],
+      "faces": {
+        "up": { "texture": "#pud_center" },
+        "down": { "texture": "#pud_side" },
+        "north": { "texture": "#pud_side" },
+        "south": { "texture": "#pud_side" },
+        "east": { "texture": "#pud_side" },
+        "west": { "texture": "#pud_side" }
+      }
+    },
+    {
+      "name": "pudding_3",
+      "from": [3.0, 0.4, 9.2],
+      "to": [6.2, 1.4, 12.4],
+      "faces": {
+        "up": { "texture": "#pud_top" },
+        "down": { "texture": "#pud_side" },
+        "north": { "texture": "#pud_side" },
+        "south": { "texture": "#pud_side" },
+        "east": { "texture": "#pud_side" },
+        "west": { "texture": "#pud_side" }
+      }
+    },
+    {
+      "name": "well_3",
+      "from": [3.7, 1.32, 9.9],
+      "to": [5.5, 1.65, 11.7],
+      "faces": {
+        "up": { "texture": "#pud_center" },
+        "down": { "texture": "#pud_side" },
+        "north": { "texture": "#pud_side" },
+        "south": { "texture": "#pud_side" },
+        "east": { "texture": "#pud_side" },
+        "west": { "texture": "#pud_side" }
+      }
+    },
+    {
+      "name": "pudding_4",
+      "from": [7.0, 0.4, 9.0],
+      "to": [10.2, 1.4, 12.2],
+      "faces": {
+        "up": { "texture": "#pud_top" },
+        "down": { "texture": "#pud_side" },
+        "north": { "texture": "#pud_side" },
+        "south": { "texture": "#pud_side" },
+        "east": { "texture": "#pud_side" },
+        "west": { "texture": "#pud_side" }
+      }
+    },
+    {
+      "name": "well_4",
+      "from": [7.7, 1.32, 9.7],
+      "to": [9.5, 1.65, 11.5],
+      "faces": {
+        "up": { "texture": "#pud_center" },
+        "down": { "texture": "#pud_side" },
+        "north": { "texture": "#pud_side" },
+        "south": { "texture": "#pud_side" },
+        "east": { "texture": "#pud_side" },
+        "west": { "texture": "#pud_side" }
+      }
+    }
+  ]
+}

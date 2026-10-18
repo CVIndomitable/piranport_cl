@@ -139,6 +139,16 @@ public class PlaceableFoodBlock extends BaseEntityBlock {
     }
 
     /**
+     * 专属模型食物方块（约克郡布丁）：白盘黑边上四只金黄膨起的布丁，
+     * 中间浅色凹陷。
+     */
+    public static class YorkshirePudding extends PlaceableFoodBlock {
+        public static final MapCodec<YorkshirePudding> CODEC = simpleCodec(YorkshirePudding::new);
+        @Override public MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }
+        public YorkshirePudding(BlockBehaviour.Properties props) { super(Block.box(0.8, 0, 1.5, 15.2, 1.7, 14.5), props); }
+    }
+
+    /**
      * 专属模型食物方块（天妇罗荞麦面）：竹编托盘上堆荞麦面，
      * 右侧深棕碗里两只炸虾和一片海苔。
      */

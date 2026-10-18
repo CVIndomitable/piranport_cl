@@ -289,6 +289,9 @@ public class ModBlocks {
     // 黑麦面包扁豆汤专属食物方块（编织篮+黑列巴+汤碗），走"同名方块优先"落位
     public static final DeferredBlock<PlaceableFoodBlock.PeaSoupWithRyeBread> PEA_SOUP_WITH_RYE_BREAD =
             BLOCKS.register("pea_soup_with_rye_bread", () -> new PlaceableFoodBlock.PeaSoupWithRyeBread(foodBlockProps()));
+    // 塔坦苹果挞专属食物方块（蓝边椭圆盘+两只苹果挞+樱桃），走"同名方块优先"落位
+    public static final DeferredBlock<PlaceableFoodBlock.TarteTatin> TARTE_TATIN =
+            BLOCKS.register("tarte_tatin", () -> new PlaceableFoodBlock.TarteTatin(foodBlockProps()));
     // 热狗专属食物方块（油纸+两只热狗+生菜番茄酱），走"同名方块优先"落位
     public static final DeferredBlock<PlaceableFoodBlock.Hotdog> HOTDOG =
             BLOCKS.register("hotdog", () -> new PlaceableFoodBlock.Hotdog(foodBlockProps()));

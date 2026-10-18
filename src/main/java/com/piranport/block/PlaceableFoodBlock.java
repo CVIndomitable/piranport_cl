@@ -139,6 +139,16 @@ public class PlaceableFoodBlock extends BaseEntityBlock {
     }
 
     /**
+     * 专属模型食物方块（塔坦苹果挞）：淡蓝白蓝边椭圆盘上两只苹果挞，
+     * 前侧两颗带梗红樱桃。
+     */
+    public static class TarteTatin extends PlaceableFoodBlock {
+        public static final MapCodec<TarteTatin> CODEC = simpleCodec(TarteTatin::new);
+        @Override public MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }
+        public TarteTatin(BlockBehaviour.Properties props) { super(Block.box(1.0, 0, 2.0, 15.0, 1.6, 14.0), props); }
+    }
+
+    /**
      * 专属模型食物方块（热狗）：棕色油纸上两只热狗面包夹烤肠，
      * 配生菜与番茄酱。
      */

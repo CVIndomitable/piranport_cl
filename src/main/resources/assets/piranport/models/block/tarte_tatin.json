@@ -1,0 +1,98 @@
+{
+  "parent": "block/block",
+  "render_type": "minecraft:cutout",
+  "textures": { "particle": "piranport:block/tarte_tatin_plate_top", "plate_top": "piranport:block/tarte_tatin_plate_top", "plate_side": "piranport:block/tarte_tatin_plate_side", "tart_top": "piranport:block/tarte_tatin_top", "tart_side": "piranport:block/tarte_tatin_side", "caramel": "piranport:block/tarte_tatin_caramel", "cherry": "piranport:block/tarte_tatin_cherry", "stem": "piranport:block/tarte_tatin_stem" },
+  "elements": [
+    {
+      "name": "plate",
+      "from": [1.0, 0, 2.0],
+      "to": [15.0, 0.4, 14.0],
+      "faces": {
+        "up": { "texture": "#plate_top" },
+        "down": { "texture": "#plate_side" },
+        "north": { "texture": "#plate_side" },
+        "south": { "texture": "#plate_side" },
+        "east": { "texture": "#plate_side" },
+        "west": { "texture": "#plate_side" }
+      }
+    },
+    {
+      "name": "tart_1",
+      "from": [4.0, 0.4, 4.6],
+      "to": [9.6, 1.3, 10.2],
+      "faces": {
+        "up": { "texture": "#tart_top" },
+        "down": { "texture": "#tart_side" },
+        "north": { "texture": "#tart_side" },
+        "south": { "texture": "#tart_side" },
+        "east": { "texture": "#tart_side" },
+        "west": { "texture": "#tart_side" }
+      }
+    },
+    {
+      "name": "tart_2",
+      "from": [7.8, 0.4, 7.6],
+      "to": [13.4, 1.4, 13.2],
+      "faces": {
+        "up": { "texture": "#tart_top" },
+        "down": { "texture": "#tart_side" },
+        "north": { "texture": "#tart_side" },
+        "south": { "texture": "#tart_side" },
+        "east": { "texture": "#tart_side" },
+        "west": { "texture": "#tart_side" }
+      }
+    },
+    {
+      "name": "cherry_1",
+      "from": [2.4, 0.4, 10.2],
+      "to": [3.4, 1.1, 11.2],
+      "faces": {
+        "up": { "texture": "#cherry" },
+        "down": { "texture": "#cherry" },
+        "north": { "texture": "#cherry" },
+        "south": { "texture": "#cherry" },
+        "east": { "texture": "#cherry" },
+        "west": { "texture": "#cherry" }
+      }
+    },
+    {
+      "name": "cherry_2",
+      "from": [3.5, 0.4, 11.0],
+      "to": [4.5, 1.1, 12.0],
+      "faces": {
+        "up": { "texture": "#cherry" },
+        "down": { "texture": "#cherry" },
+        "north": { "texture": "#cherry" },
+        "south": { "texture": "#cherry" },
+        "east": { "texture": "#cherry" },
+        "west": { "texture": "#cherry" }
+      }
+    },
+    {
+      "name": "stem_1",
+      "from": [2.8, 1.05, 10.7],
+      "to": [3.1, 1.55, 11.0],
+      "faces": {
+        "up": { "texture": "#stem" },
+        "down": { "texture": "#stem" },
+        "north": { "texture": "#stem" },
+        "south": { "texture": "#stem" },
+        "east": { "texture": "#stem" },
+        "west": { "texture": "#stem" }
+      }
+    },
+    {
+      "name": "stem_2",
+      "from": [3.9, 1.05, 11.5],
+      "to": [4.2, 1.55, 11.8],
+      "faces": {
+        "up": { "texture": "#stem" },
+        "down": { "texture": "#stem" },
+        "north": { "texture": "#stem" },
+        "south": { "texture": "#stem" },
+        "east": { "texture": "#stem" },
+        "west": { "texture": "#stem" }
+      }
+    }
+  ]
+}

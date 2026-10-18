@@ -1,0 +1,264 @@
+{
+  "parent": "block/block",
+  "render_type": "minecraft:cutout",
+  "textures": {
+    "particle": "piranport:block/weisswurst_plate_top",
+    "plate_top": "piranport:block/weisswurst_plate_top",
+    "plate_side": "piranport:block/weisswurst_plate_side",
+    "pretzel_top": "piranport:block/weisswurst_pretzel_top",
+    "pretzel_side": "piranport:block/weisswurst_pretzel_side",
+    "sausage_top": "piranport:block/weisswurst_sausage_top",
+    "sausage_side": "piranport:block/weisswurst_sausage_side",
+    "meatball_top": "piranport:block/weisswurst_meatball_top",
+    "meatball_side": "piranport:block/weisswurst_meatball_side",
+    "parsley": "piranport:block/weisswurst_parsley"
+  },
+  "elements": [
+    {
+      "name": "plate",
+      "from": [0.5, 0, 1.5],
+      "to": [15.5, 0.7, 14.5],
+      "faces": {
+        "up": { "texture": "#plate_top" },
+        "down": { "texture": "#plate_top" },
+        "north": { "texture": "#plate_side" },
+        "south": { "texture": "#plate_side" },
+        "east": { "texture": "#plate_side" },
+        "west": { "texture": "#plate_side" }
+      }
+    },
+    {
+      "name": "pretzel_east",
+      "from": [11.95, 0.72, 3.7],
+      "to": [13.25, 2.52, 6.3],
+      "faces": {
+        "up": { "texture": "#pretzel_top" },
+        "down": { "texture": "#pretzel_side" },
+        "north": { "texture": "#pretzel_side" },
+        "south": { "texture": "#pretzel_side" },
+        "east": { "texture": "#pretzel_side" },
+        "west": { "texture": "#pretzel_side" }
+      }
+    },
+    {
+      "name": "pretzel_se",
+      "from": [11.188, 0.72, 5.538],
+      "to": [12.488, 2.52, 8.138],
+      "rotation": { "origin": [11.838, 0.72, 6.838], "axis": "y", "angle": -45 },
+      "faces": {
+        "up": { "texture": "#pretzel_top" },
+        "down": { "texture": "#pretzel_side" },
+        "north": { "texture": "#pretzel_side" },
+        "south": { "texture": "#pretzel_side" },
+        "east": { "texture": "#pretzel_side" },
+        "west": { "texture": "#pretzel_side" }
+      }
+    },
+    {
+      "name": "pretzel_south",
+      "from": [8.7, 0.72, 6.95],
+      "to": [11.3, 2.52, 8.25],
+      "faces": {
+        "up": { "texture": "#pretzel_top" },
+        "down": { "texture": "#pretzel_side" },
+        "north": { "texture": "#pretzel_side" },
+        "south": { "texture": "#pretzel_side" },
+        "east": { "texture": "#pretzel_side" },
+        "west": { "texture": "#pretzel_side" }
+      }
+    },
+    {
+      "name": "pretzel_sw",
+      "from": [6.862, 0.72, 6.188],
+      "to": [9.462, 2.52, 7.488],
+      "rotation": { "origin": [8.162, 0.72, 6.838], "axis": "y", "angle": -45 },
+      "faces": {
+        "up": { "texture": "#pretzel_top" },
+        "down": { "texture": "#pretzel_side" },
+        "north": { "texture": "#pretzel_side" },
+        "south": { "texture": "#pretzel_side" },
+        "east": { "texture": "#pretzel_side" },
+        "west": { "texture": "#pretzel_side" }
+      }
+    },
+    {
+      "name": "pretzel_west",
+      "from": [6.75, 0.72, 3.7],
+      "to": [8.05, 2.52, 6.3],
+      "faces": {
+        "up": { "texture": "#pretzel_top" },
+        "down": { "texture": "#pretzel_side" },
+        "north": { "texture": "#pretzel_side" },
+        "south": { "texture": "#pretzel_side" },
+        "east": { "texture": "#pretzel_side" },
+        "west": { "texture": "#pretzel_side" }
+      }
+    },
+    {
+      "name": "pretzel_nw",
+      "from": [6.862, 0.72, 2.512],
+      "to": [9.462, 2.52, 3.812],
+      "rotation": { "origin": [8.162, 0.72, 3.162], "axis": "y", "angle": 45 },
+      "faces": {
+        "up": { "texture": "#pretzel_top" },
+        "down": { "texture": "#pretzel_side" },
+        "north": { "texture": "#pretzel_side" },
+        "south": { "texture": "#pretzel_side" },
+        "east": { "texture": "#pretzel_side" },
+        "west": { "texture": "#pretzel_side" }
+      }
+    },
+    {
+      "name": "pretzel_north",
+      "from": [8.7, 0.72, 1.75],
+      "to": [11.3, 2.52, 3.05],
+      "faces": {
+        "up": { "texture": "#pretzel_top" },
+        "down": { "texture": "#pretzel_side" },
+        "north": { "texture": "#pretzel_side" },
+        "south": { "texture": "#pretzel_side" },
+        "east": { "texture": "#pretzel_side" },
+        "west": { "texture": "#pretzel_side" }
+      }
+    },
+    {
+      "name": "pretzel_ne",
+      "from": [11.188, 0.72, 1.862],
+      "to": [12.488, 2.52, 4.462],
+      "rotation": { "origin": [11.838, 0.72, 3.162], "axis": "y", "angle": 45 },
+      "faces": {
+        "up": { "texture": "#pretzel_top" },
+        "down": { "texture": "#pretzel_side" },
+        "north": { "texture": "#pretzel_side" },
+        "south": { "texture": "#pretzel_side" },
+        "east": { "texture": "#pretzel_side" },
+        "west": { "texture": "#pretzel_side" }
+      }
+    },
+    {
+      "name": "sausage_back",
+      "from": [3.7, 0.72, 8.8],
+      "to": [9.3, 1.97, 10.6],
+      "faces": {
+        "up": { "texture": "#sausage_top" },
+        "down": { "texture": "#sausage_side" },
+        "north": { "texture": "#sausage_side" },
+        "south": { "texture": "#sausage_side" },
+        "east": { "texture": "#sausage_side" },
+        "west": { "texture": "#sausage_side" }
+      }
+    },
+    {
+      "name": "sausage_back_left",
+      "from": [3.2, 0.77, 8.9],
+      "to": [3.8, 1.92, 10.5],
+      "faces": {
+        "up": { "texture": "#sausage_top" },
+        "down": { "texture": "#sausage_side" },
+        "north": { "texture": "#sausage_side" },
+        "south": { "texture": "#sausage_side" },
+        "east": { "texture": "#sausage_side" },
+        "west": { "texture": "#sausage_side" }
+      }
+    },
+    {
+      "name": "sausage_back_right",
+      "from": [9.2, 0.77, 8.9],
+      "to": [9.8, 1.92, 10.5],
+      "faces": {
+        "up": { "texture": "#sausage_top" },
+        "down": { "texture": "#sausage_side" },
+        "north": { "texture": "#sausage_side" },
+        "south": { "texture": "#sausage_side" },
+        "east": { "texture": "#sausage_side" },
+        "west": { "texture": "#sausage_side" }
+      }
+    },
+    {
+      "name": "sausage_front",
+      "from": [4.5, 0.72, 10.5],
+      "to": [10.1, 1.97, 12.3],
+      "faces": {
+        "up": { "texture": "#sausage_top" },
+        "down": { "texture": "#sausage_side" },
+        "north": { "texture": "#sausage_side" },
+        "south": { "texture": "#sausage_side" },
+        "east": { "texture": "#sausage_side" },
+        "west": { "texture": "#sausage_side" }
+      }
+    },
+    {
+      "name": "sausage_front_left",
+      "from": [4.0, 0.77, 10.6],
+      "to": [4.6, 1.92, 12.2],
+      "faces": {
+        "up": { "texture": "#sausage_top" },
+        "down": { "texture": "#sausage_side" },
+        "north": { "texture": "#sausage_side" },
+        "south": { "texture": "#sausage_side" },
+        "east": { "texture": "#sausage_side" },
+        "west": { "texture": "#sausage_side" }
+      }
+    },
+    {
+      "name": "sausage_front_right",
+      "from": [10.0, 0.77, 10.6],
+      "to": [10.6, 1.92, 12.2],
+      "faces": {
+        "up": { "texture": "#sausage_top" },
+        "down": { "texture": "#sausage_side" },
+        "north": { "texture": "#sausage_side" },
+        "south": { "texture": "#sausage_side" },
+        "east": { "texture": "#sausage_side" },
+        "west": { "texture": "#sausage_side" }
+      }
+    },
+    {
+      "name": "meatball_base",
+      "from": [1.3, 0.72, 6.0],
+      "to": [3.7, 2.52, 8.4],
+      "faces": {
+        "up": { "texture": "#meatball_side" },
+        "down": { "texture": "#meatball_side" },
+        "north": { "texture": "#meatball_side" },
+        "south": { "texture": "#meatball_side" },
+        "east": { "texture": "#meatball_side" },
+        "west": { "texture": "#meatball_side" }
+      }
+    },
+    {
+      "name": "meatball_mid",
+      "from": [1.6, 2.5, 6.3],
+      "to": [3.4, 3.0, 8.1],
+      "faces": {
+        "up": { "texture": "#meatball_top" },
+        "down": { "texture": "#meatball_side" },
+        "north": { "texture": "#meatball_side" },
+        "south": { "texture": "#meatball_side" },
+        "east": { "texture": "#meatball_side" },
+        "west": { "texture": "#meatball_side" }
+      }
+    },
+    {
+      "name": "meatball_top",
+      "from": [1.9, 2.98, 6.6],
+      "to": [3.1, 3.25, 7.8],
+      "faces": {
+        "up": { "texture": "#meatball_top" },
+        "down": { "texture": "#meatball_side" },
+        "north": { "texture": "#meatball_side" },
+        "south": { "texture": "#meatball_side" },
+        "east": { "texture": "#meatball_side" },
+        "west": { "texture": "#meatball_side" }
+      }
+    },
+    {
+      "name": "parsley",
+      "from": [4.2, 0.73, 6.4],
+      "to": [7.0, 0.75, 8.8],
+      "faces": {
+        "up": { "texture": "#parsley" }
+      }
+    }
+  ]
+}

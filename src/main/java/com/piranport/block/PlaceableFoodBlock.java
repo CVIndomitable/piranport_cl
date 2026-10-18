@@ -139,6 +139,16 @@ public class PlaceableFoodBlock extends BaseEntityBlock {
     }
 
     /**
+     * 专属模型食物方块（白香肠面包圈）：巴伐利亚蓝白菱纹椭圆盘，
+     * 盘上碱水面包圈 + 两根白香肠 + 肉丸 + 欧芹叶。
+     */
+    public static class WeisswurstMitDerBagel extends PlaceableFoodBlock {
+        public static final MapCodec<WeisswurstMitDerBagel> CODEC = simpleCodec(WeisswurstMitDerBagel::new);
+        @Override public MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }
+        public WeisswurstMitDerBagel(BlockBehaviour.Properties props) { super(Block.box(0.5, 0, 1.5, 15.5, 3.3, 14.5), props); }
+    }
+
+    /**
      * 专属模型食物方块（黑森林蛋糕）：白瓷方盘上的方形巧克力蛋糕，
      * 顶面四坨裱花奶油各顶一颗带梗红樱桃。
      */

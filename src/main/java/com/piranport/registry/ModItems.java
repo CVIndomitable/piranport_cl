@@ -156,6 +156,21 @@ public class ModItems {
     /** 意大利三联320毫米炮（07 表）；手持 3D 模型由 ItalianTriple320mmGunRenderer 渲染。 */
     public static final DeferredItem<Item> ITALIAN_TRIPLE_320MM_GUN =
             WeaponItems.CATALOG_GUNS.get("italian_triple_320mm_gun");
+    /** 以下主炮的手持 3D 模型统一走 CatalogGunRenderer。 */
+    public static final DeferredItem<Item> JAPANESE_TWIN_356MM_GUN =
+            WeaponItems.CATALOG_GUNS.get("japanese_twin_356mm_gun");
+    public static final DeferredItem<Item> US_TRIPLE_14INCH_GUN =
+            WeaponItems.CATALOG_GUNS.get("us_triple_14inch_gun");
+    public static final DeferredItem<Item> US_TRIPLE_14INCH_GUN_KAI =
+            WeaponItems.CATALOG_GUNS.get("us_triple_14inch_gun_kai");
+    public static final DeferredItem<Item> BRITISH_QUAD_14INCH_GUN =
+            WeaponItems.CATALOG_GUNS.get("british_quad_14inch_gun");
+    public static final DeferredItem<Item> BRITISH_QUAD_14INCH_GUN_284 =
+            WeaponItems.CATALOG_GUNS.get("british_quad_14inch_gun_284");
+    public static final DeferredItem<Item> BRITISH_TWIN_15INCH_GUN =
+            WeaponItems.CATALOG_GUNS.get("british_twin_15inch_gun");
+    public static final DeferredItem<Item> BRITISH_TWIN_15INCH_GUN_KAI =
+            WeaponItems.CATALOG_GUNS.get("british_twin_15inch_gun_kai");
     public static final DeferredItem<Item> FRENCH_QUAD_380MM_GUN = WeaponItems.FRENCH_QUAD_380MM_GUN;
     public static final DeferredItem<Item> FOURTEEN_BARREL_GUN = WeaponItems.FOURTEEN_BARREL_GUN;
 

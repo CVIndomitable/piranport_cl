@@ -36,7 +36,19 @@ import net.neoforged.fml.common.EventBusSubscriber.Bus;
 @EventBusSubscriber(modid = PiranPort.MOD_ID, value = Dist.CLIENT, bus = Bus.MOD)
 public class ClientModEvents {
 
-
+    /** 2026-10-18 批量主炮：共用 CatalogGunRenderer，改型与原型可共享同一套素材。 */
+    private static final CatalogGunRenderer.Spec JP_356 = CatalogGunRenderer.spec(
+            "japanese_twin_356mm_gun", ModItems.JAPANESE_TWIN_356MM_GUN);
+    private static final CatalogGunRenderer.Spec US_14 = CatalogGunRenderer.spec(
+            "us_triple_14inch_gun", ModItems.US_TRIPLE_14INCH_GUN, ModItems.US_TRIPLE_14INCH_GUN_KAI);
+    private static final CatalogGunRenderer.Spec BRIT_QUAD_14 = CatalogGunRenderer.spec(
+            "british_quad_14inch_gun", ModItems.BRITISH_QUAD_14INCH_GUN);
+    private static final CatalogGunRenderer.Spec BRIT_QUAD_14_284 = CatalogGunRenderer.spec(
+            "british_quad_14inch_gun_284", ModItems.BRITISH_QUAD_14INCH_GUN_284);
+    private static final CatalogGunRenderer.Spec BRIT_TWIN_15 = CatalogGunRenderer.spec(
+            "british_twin_15inch_gun", ModItems.BRITISH_TWIN_15INCH_GUN);
+    private static final CatalogGunRenderer.Spec BRIT_TWIN_15_KAI = CatalogGunRenderer.spec(
+            "british_twin_15inch_gun_kai", ModItems.BRITISH_TWIN_15INCH_GUN_KAI);
 
     /** 注册日本12.7厘米连装炮与德国/意大利/美国三联主炮的 standalone 3D 模型（BEWLR 直接取用）。 */
     @SubscribeEvent
@@ -55,6 +67,10 @@ public class ClientModEvents {
         event.register(UsTriple12inchGunRenderer.MODEL_LOADED);
         event.register(ItalianTriple320mmGunRenderer.MODEL_EMPTY);
         event.register(ItalianTriple320mmGunRenderer.MODEL_LOADED);
+        for (CatalogGunRenderer.Spec spec : CatalogGunRenderer.specs()) {
+            event.register(spec.modelEmpty());
+            event.register(spec.modelLoaded());
+        }
     }
 
     /** 给日本12.7厘米连装炮与德国/意大利/美国三联主炮挂自定义渲染器（BEWLR）。 */
@@ -74,6 +90,11 @@ public class ClientModEvents {
                 ModItems.US_TRIPLE_12INCH_GUN.get());
         event.registerItem(ItalianTriple320mmGunRenderer.CLIENT_EXTENSIONS,
                 ModItems.ITALIAN_TRIPLE_320MM_GUN.get());
+        for (CatalogGunRenderer.Spec spec : CatalogGunRenderer.specs()) {
+            for (var item : spec.items()) {
+                event.registerItem(CatalogGunRenderer.extensionsFor(spec), item.get());
+            }
+        }
     }
 
     @SubscribeEvent
@@ -94,6 +115,8 @@ public class ClientModEvents {
         event.enqueueWork(UsTriple12inchGunRenderer::init);
         // 意大利三联320毫米炮：同一套 BEWLR 方案
         event.enqueueWork(ItalianTriple320mmGunRenderer::init);
+        // 2026-10-18 批量主炮：共用 CatalogGunRenderer
+        event.enqueueWork(CatalogGunRenderer::initAll);
 
         // 注册 "fueled" 物品属性：有燃料时为 1.0，否则为 0.0。
         // 模型使用此谓词在装载和空载纹理之间切换。

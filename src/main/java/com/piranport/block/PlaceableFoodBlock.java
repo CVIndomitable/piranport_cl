@@ -139,6 +139,16 @@ public class PlaceableFoodBlock extends BaseEntityBlock {
     }
 
     /**
+     * 专属模型食物方块（汤圆）：白瓷底盘上放青花瓷碗，金边碗口，
+     * 清汤里浮着八颗白汤圆。
+     */
+    public static class Tangyuan extends PlaceableFoodBlock {
+        public static final MapCodec<Tangyuan> CODEC = simpleCodec(Tangyuan::new);
+        @Override public MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }
+        public Tangyuan(BlockBehaviour.Properties props) { super(Block.box(0.6, 0, 1.2, 15.4, 4.1, 14.8), props); }
+    }
+
+    /**
      * 专属模型食物方块（龙田烧）：几块金黄酥脆的炸鸡堆叠，
      * 上面压两条青椒，前面摆两片柠檬。
      */

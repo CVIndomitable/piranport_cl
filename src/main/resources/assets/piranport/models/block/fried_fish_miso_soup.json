@@ -1,0 +1,142 @@
+{
+  "parent": "block/block",
+  "render_type": "minecraft:cutout",
+  "textures": { "particle": "piranport:block/fish_miso_bowl_side", "bowl_side": "piranport:block/fish_miso_bowl_side", "bowl_top": "piranport:block/fish_miso_bowl_top", "soup": "piranport:block/fish_miso_soup", "plate_top": "piranport:block/fish_miso_plate_top", "plate_side": "piranport:block/fish_miso_plate_side", "dark_top": "piranport:block/fish_miso_dark_top", "dark_side": "piranport:block/fish_miso_dark_side", "fillet_top": "piranport:block/fish_miso_fillet_top", "fillet_side": "piranport:block/fish_miso_fillet_side", "shiso": "piranport:block/fish_miso_shiso", "daikon_top": "piranport:block/fish_miso_daikon_top", "daikon_side": "piranport:block/fish_miso_daikon_side" },
+  "elements": [
+    {
+      "name": "bowl_foot",
+      "from": [2.4, 0, 8.4],
+      "to": [5.4, 0.5, 11.4],
+      "faces": {
+        "up": { "texture": "#bowl_side" },
+        "down": { "texture": "#bowl_side" },
+        "north": { "texture": "#bowl_side" },
+        "south": { "texture": "#bowl_side" },
+        "east": { "texture": "#bowl_side" },
+        "west": { "texture": "#bowl_side" }
+      }
+    },
+    {
+      "name": "bowl_body",
+      "from": [1.4, 0.5, 7.4],
+      "to": [6.4, 2.6, 12.4],
+      "faces": {
+        "up": { "texture": "#bowl_side" },
+        "down": { "texture": "#bowl_side" },
+        "north": { "texture": "#bowl_side" },
+        "south": { "texture": "#bowl_side" },
+        "east": { "texture": "#bowl_side" },
+        "west": { "texture": "#bowl_side" }
+      }
+    },
+    {
+      "name": "bowl_rim",
+      "from": [0.8, 2.6, 6.8],
+      "to": [7.0, 3.2, 13.0],
+      "faces": {
+        "up": { "texture": "#bowl_top" },
+        "down": { "texture": "#bowl_side" },
+        "north": { "texture": "#bowl_side" },
+        "south": { "texture": "#bowl_side" },
+        "east": { "texture": "#bowl_side" },
+        "west": { "texture": "#bowl_side" }
+      }
+    },
+    {
+      "name": "soup",
+      "from": [1.6, 2.5, 7.6],
+      "to": [6.2, 2.54, 12.2],
+      "faces": {
+        "up": { "texture": "#soup" }
+      }
+    },
+    {
+      "name": "plate",
+      "from": [7.6, 0, 3.0],
+      "to": [15.4, 0.5, 12.0],
+      "faces": {
+        "up": { "texture": "#plate_top" },
+        "down": { "texture": "#plate_side" },
+        "north": { "texture": "#plate_side" },
+        "south": { "texture": "#plate_side" },
+        "east": { "texture": "#plate_side" },
+        "west": { "texture": "#plate_side" }
+      }
+    },
+    {
+      "name": "dark_fish",
+      "from": [9.6, 0.5, 3.6],
+      "to": [13.4, 1.6, 6.6],
+      "rotation": {
+        "origin": [11.5, 0.5, 5.1],
+        "axis": "y",
+        "angle": 22.5
+      },
+      "faces": {
+        "up": { "texture": "#dark_top" },
+        "down": { "texture": "#dark_side" },
+        "north": { "texture": "#dark_side" },
+        "south": { "texture": "#dark_side" },
+        "east": { "texture": "#dark_side" },
+        "west": { "texture": "#dark_side" }
+      }
+    },
+    {
+      "name": "fillet",
+      "from": [10.2, 0.5, 5.6],
+      "to": [15.0, 1.7, 9.2],
+      "rotation": {
+        "origin": [12.6, 0.5, 7.4],
+        "axis": "y",
+        "angle": -22.5
+      },
+      "faces": {
+        "up": { "texture": "#fillet_top" },
+        "down": { "texture": "#fillet_side" },
+        "north": { "texture": "#fillet_side" },
+        "south": { "texture": "#fillet_side" },
+        "east": { "texture": "#fillet_side" },
+        "west": { "texture": "#fillet_side" }
+      }
+    },
+    {
+      "name": "shiso",
+      "from": [8.2, 0.5, 8.4],
+      "to": [10.2, 0.8, 10.4],
+      "faces": {
+        "up": { "texture": "#shiso" },
+        "down": { "texture": "#shiso" },
+        "north": { "texture": "#shiso" },
+        "south": { "texture": "#shiso" },
+        "east": { "texture": "#shiso" },
+        "west": { "texture": "#shiso" }
+      }
+    },
+    {
+      "name": "daikon_base",
+      "from": [11.4, 0.5, 9.6],
+      "to": [13.4, 1.2, 11.6],
+      "faces": {
+        "up": { "texture": "#daikon_side" },
+        "down": { "texture": "#daikon_side" },
+        "north": { "texture": "#daikon_side" },
+        "south": { "texture": "#daikon_side" },
+        "east": { "texture": "#daikon_side" },
+        "west": { "texture": "#daikon_side" }
+      }
+    },
+    {
+      "name": "daikon_top",
+      "from": [11.8, 1.15, 10.0],
+      "to": [13.0, 1.5, 11.2],
+      "faces": {
+        "up": { "texture": "#daikon_top" },
+        "down": { "texture": "#daikon_side" },
+        "north": { "texture": "#daikon_side" },
+        "south": { "texture": "#daikon_side" },
+        "east": { "texture": "#daikon_side" },
+        "west": { "texture": "#daikon_side" }
+      }
+    }
+  ]
+}

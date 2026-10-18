@@ -139,6 +139,16 @@ public class PlaceableFoodBlock extends BaseEntityBlock {
     }
 
     /**
+     * 专属模型食物方块（烤鱼味增汤）：左侧深红漆碗味增汤（豆腐/葱花），
+     * 右侧淡蓝白长盘摆深色烤鱼、金黄鱼柳、紫苏叶与萝卜泥。
+     */
+    public static class FriedFishMisoSoup extends PlaceableFoodBlock {
+        public static final MapCodec<FriedFishMisoSoup> CODEC = simpleCodec(FriedFishMisoSoup::new);
+        @Override public MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }
+        public FriedFishMisoSoup(BlockBehaviour.Properties props) { super(Block.box(0.8, 0, 3.0, 15.4, 3.3, 13.0), props); }
+    }
+
+    /**
      * 专属模型食物方块（班尼迪克蛋）：淡蓝白方盘上两片英式松饼，
      * 叠荷包蛋，淋荷兰酱，配欧芹。
      */

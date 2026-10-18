@@ -1,0 +1,180 @@
+{
+  "parent": "block/block",
+  "render_type": "minecraft:cutout",
+  "textures": { "particle": "piranport:block/salted_beef_barrel_side", "barrel_side": "piranport:block/salted_beef_barrel_side", "barrel_top": "piranport:block/salted_beef_barrel_top", "meat_top": "piranport:block/salted_beef_meat_top", "meat_side": "piranport:block/salted_beef_meat_side", "barrel_side_bottom": "piranport:block/salted_beef_barrel_side_hoop_bottom", "barrel_side_top": "piranport:block/salted_beef_barrel_side_hoop_top" },
+  "elements": [
+    {
+      "name": "barrel_base",
+      "from": [2.6, 0, 2.6],
+      "to": [13.4, 1.4, 13.4],
+      "faces": {
+        "up": { "texture": "#barrel_side" },
+        "down": { "texture": "#barrel_side" },
+        "north": { "texture": "#barrel_side" },
+        "south": { "texture": "#barrel_side" },
+        "east": { "texture": "#barrel_side" },
+        "west": { "texture": "#barrel_side" }
+      }
+    },
+    {
+      "name": "barrel_lower",
+      "from": [2.0, 1.4, 2.0],
+      "to": [14.0, 4.0, 14.0],
+      "faces": {
+        "up": { "texture": "#barrel_side" },
+        "down": { "texture": "#barrel_side" },
+        "north": { "texture": "#barrel_side_bottom" },
+        "south": { "texture": "#barrel_side_bottom" },
+        "east": { "texture": "#barrel_side_bottom" },
+        "west": { "texture": "#barrel_side_bottom" }
+      }
+    },
+    {
+      "name": "barrel_bulge",
+      "from": [1.5, 4.0, 1.5],
+      "to": [14.5, 7.4, 14.5],
+      "faces": {
+        "up": { "texture": "#barrel_side" },
+        "down": { "texture": "#barrel_side" },
+        "north": { "texture": "#barrel_side" },
+        "south": { "texture": "#barrel_side" },
+        "east": { "texture": "#barrel_side" },
+        "west": { "texture": "#barrel_side" }
+      }
+    },
+    {
+      "name": "barrel_shoulder",
+      "from": [2.0, 7.4, 2.0],
+      "to": [14.0, 9.2, 14.0],
+      "faces": {
+        "up": { "texture": "#barrel_side" },
+        "down": { "texture": "#barrel_side" },
+        "north": { "texture": "#barrel_side_top" },
+        "south": { "texture": "#barrel_side_top" },
+        "east": { "texture": "#barrel_side_top" },
+        "west": { "texture": "#barrel_side_top" }
+      }
+    },
+    {
+      "name": "barrel_rim",
+      "from": [2.4, 9.2, 2.4],
+      "to": [13.6, 10.2, 13.6],
+      "faces": {
+        "up": { "texture": "#barrel_top" },
+        "down": { "texture": "#barrel_side" },
+        "north": { "texture": "#barrel_side" },
+        "south": { "texture": "#barrel_side" },
+        "east": { "texture": "#barrel_side" },
+        "west": { "texture": "#barrel_side" }
+      }
+    },
+    {
+      "name": "meat_1",
+      "from": [4.9, 10.15, 5.0],
+      "to": [6.7, 11.2, 6.6],
+      "rotation": {
+        "origin": [5.8, 10.15, 5.8],
+        "axis": "y",
+        "angle": 22.5
+      },
+      "faces": {
+        "up": { "texture": "#meat_top" },
+        "down": { "texture": "#meat_side" },
+        "north": { "texture": "#meat_side" },
+        "south": { "texture": "#meat_side" },
+        "east": { "texture": "#meat_side" },
+        "west": { "texture": "#meat_side" }
+      }
+    },
+    {
+      "name": "meat_2",
+      "from": [7.4, 10.15, 4.2],
+      "to": [9.0, 11.35, 5.6],
+      "rotation": {
+        "origin": [8.2, 10.15, 4.9],
+        "axis": "y",
+        "angle": -22.5
+      },
+      "faces": {
+        "up": { "texture": "#meat_top" },
+        "down": { "texture": "#meat_side" },
+        "north": { "texture": "#meat_side" },
+        "south": { "texture": "#meat_side" },
+        "east": { "texture": "#meat_side" },
+        "west": { "texture": "#meat_side" }
+      }
+    },
+    {
+      "name": "meat_3",
+      "from": [9.8, 10.15, 5.5],
+      "to": [11.4, 11.15, 6.9],
+      "rotation": {
+        "origin": [10.6, 10.15, 6.2],
+        "axis": "y",
+        "angle": 0
+      },
+      "faces": {
+        "up": { "texture": "#meat_top" },
+        "down": { "texture": "#meat_side" },
+        "north": { "texture": "#meat_side" },
+        "south": { "texture": "#meat_side" },
+        "east": { "texture": "#meat_side" },
+        "west": { "texture": "#meat_side" }
+      }
+    },
+    {
+      "name": "meat_4",
+      "from": [5.4, 10.15, 7.6],
+      "to": [7.2, 11.3, 9.2],
+      "rotation": {
+        "origin": [6.3, 10.15, 8.4],
+        "axis": "y",
+        "angle": -22.5
+      },
+      "faces": {
+        "up": { "texture": "#meat_top" },
+        "down": { "texture": "#meat_side" },
+        "north": { "texture": "#meat_side" },
+        "south": { "texture": "#meat_side" },
+        "east": { "texture": "#meat_side" },
+        "west": { "texture": "#meat_side" }
+      }
+    },
+    {
+      "name": "meat_5",
+      "from": [8.8, 10.15, 8.4],
+      "to": [10.4, 11.25, 10.0],
+      "rotation": {
+        "origin": [9.6, 10.15, 9.2],
+        "axis": "y",
+        "angle": 22.5
+      },
+      "faces": {
+        "up": { "texture": "#meat_top" },
+        "down": { "texture": "#meat_side" },
+        "north": { "texture": "#meat_side" },
+        "south": { "texture": "#meat_side" },
+        "east": { "texture": "#meat_side" },
+        "west": { "texture": "#meat_side" }
+      }
+    },
+    {
+      "name": "meat_6",
+      "from": [7.0, 10.15, 5.9],
+      "to": [8.6, 11.1, 7.3],
+      "rotation": {
+        "origin": [7.8, 10.15, 6.6],
+        "axis": "y",
+        "angle": 0
+      },
+      "faces": {
+        "up": { "texture": "#meat_top" },
+        "down": { "texture": "#meat_side" },
+        "north": { "texture": "#meat_side" },
+        "south": { "texture": "#meat_side" },
+        "east": { "texture": "#meat_side" },
+        "west": { "texture": "#meat_side" }
+      }
+    }
+  ]
+}

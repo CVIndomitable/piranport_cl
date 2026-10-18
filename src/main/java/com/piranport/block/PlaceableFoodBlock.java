@@ -139,6 +139,16 @@ public class PlaceableFoodBlock extends BaseEntityBlock {
     }
 
     /**
+     * 专属模型食物方块（皇家海军咸牛肉）：鼓腹橡木桶，两道深灰铁箍，
+     * 桶口露出暗红咸牛肉块。
+     */
+    public static class RoyalNavalSaltedBeef extends PlaceableFoodBlock {
+        public static final MapCodec<RoyalNavalSaltedBeef> CODEC = simpleCodec(RoyalNavalSaltedBeef::new);
+        @Override public MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }
+        public RoyalNavalSaltedBeef(BlockBehaviour.Properties props) { super(Block.box(1.5, 0, 1.5, 14.5, 11.5, 14.5), props); }
+    }
+
+    /**
      * 专属模型食物方块（仰望星空派）：深灰波浪边派盘，金黄酥皮压着
      * 橙色五角星，六条沙丁鱼的头/尾从馅里竖出来。
      */

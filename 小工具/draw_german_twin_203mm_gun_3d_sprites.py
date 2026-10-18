@@ -60,20 +60,20 @@ def save(img, name):
 
 
 def hull():
-    save(panel_texture((132, 136, 134), seed=11, grid=8, grid_dark=6,
-                       rivet_dark=13, amp=2.4),
+    save(panel_texture((132, 136, 134), seed=11, grid=8, grid_dark=5,
+                       rivet_dark=5, amp=2.0),
          "german_twin_203mm_gun_hull.png")
 
 
 def hull_dark():
-    save(panel_texture((82, 86, 84), seed=23, grid=8, grid_dark=6,
-                       rivet_dark=13, amp=2.4),
+    save(panel_texture((82, 86, 84), seed=23, grid=8, grid_dark=5,
+                       rivet_dark=5, amp=2.0),
          "german_twin_203mm_gun_hull_dark.png")
 
 
 def detail():
-    save(panel_texture((106, 110, 108), seed=37, grid=8, grid_dark=6,
-                       rivet_dark=14, amp=2.4),
+    save(panel_texture((106, 110, 108), seed=37, grid=8, grid_dark=5,
+                       rivet_dark=6, amp=2.0),
          "german_twin_203mm_gun_detail.png")
 
 

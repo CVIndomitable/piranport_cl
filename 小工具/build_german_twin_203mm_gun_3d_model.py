@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""生成德国双联203毫米炮的 3D 手持模型（对齐日本12.7厘米炮的建模风格）。
+"""生成德国双联203毫米炮的 3D 手持模型（按 Equip_L_18 原画重新建模）。
 
-风格要点（同 build_japanese_127mm_twin_gun_3d_model.py）：
+建模依据（原画 Equip_L_18.png）：
+  - 宽而扁的德式方形炮塔，四边上部有大倒角，屋顶是略窄的平顶；
+  - 前脸整体后倾约 22.5°，下部有一圈外凸的下颚板；
+  - 两个圆形炮口开在前脸，炮根是明显加粗的阶梯套筒，炮管细长；
+  - 屋顶只有两个不对称的测距仪：左后一个圆角矩形盒，右舷后部一个外凸盒；
+  - 座圈是带凸缘的三层收分鼓座，炮塔悬出座圈。
+
+技术要点（同 build_japanese_127mm_twin_gun_3d_model.py）：
   - 逐面写 uv，贴图 32x32、每模型单位 2px，纹理不会被拉伸；
-  - 用小尺寸元素堆细节（舱门、测距仪、扶手、通风格栅），而不是几个大盒子；
-  - 用 ±22.5° 旋转元素做内倾装甲，45° 菱形截面炮管。
-  - 与日本炮的区别：炮塔更宽更扁、前脸更陡、双管间距更窄，取原画
-    Equip_L_18.png 的德式方形炮塔轮廓。
-
-物品走 GermanTwin203mmGunRenderer（BEWLR）：
-  - GUI/地面/展示框等上下文画 32x32 图标；
-  - 第一/第三人称渲染本模型。
+  - 旋转只用 ±22.5°/45°；炮管用 45° 菱形截面近似圆管；
+  - 没有照搬日本炮的吊篮、护栏、天线等原画里不存在的零件。
 
 产出：
   models/item/german_twin_203mm_gun.json            builtin/entity 物品入口（只放 display）
@@ -93,71 +94,73 @@ def diamond(name, cx, cy, z1, z2, half, tex, faces=None, full_uv_faces=()):
         rotation={"angle": 45, "axis": "z", "origin": [cx, cy, (z1 + z2) / 2]})
 
 
-# ================= 座圈（比日本炮更宽更扁） =================
-box("ring_square", 4.2, 0.0, 4.2, 11.8, 0.5, 11.8, "hull_dark")
-box("ring_diamond", 4.8, 0.0, 4.8, 11.2, 0.5, 11.2, "hull_dark",
-    rotation={"angle": 45, "axis": "y", "origin": [8.0, 0.25, 8.0]})
-box("ring_band", 3.8, 0.5, 3.8, 12.2, 0.95, 12.2, "hull_dark")
-box("ring_lip", 3.7, 0.95, 3.7, 12.3, 1.15, 12.3, "hull")
+# ================= 座圈（带凸缘的鼓座） =================
+# WHY 不用「方块 + 45° 方块」拼八角：加法元素只能并集，转角会冒出四片尖角。
+# 原画座圈大部分被炮塔遮住，三层收分的方鼓座已经能读出圆鼓轮廓。
+box("ring_flange", 3.3, 0.0, 3.3, 12.7, 0.45, 12.7, "hull_dark")
+box("ring_drum", 3.8, 0.45, 3.8, 12.2, 0.95, 12.2, "hull_dark")
+box("ring_lip", 3.55, 0.95, 3.55, 12.45, 1.2, 12.45, "hull")
 
 # ================= 炮塔主体 =================
-box("hull_lower", 3.4, 1.15, 2.4, 12.6, 2.9, 12.4, "hull")
-# 两舷向内倾的装甲板，做出上窄下宽的倒角
-box("hull_slope_port", 3.26, 1.15, 2.8, 3.54, 3.4, 12.0, "hull",
-    rotation={"angle": -22.5, "axis": "z", "origin": [3.4, 2.3, 7.4]})
-box("hull_slope_stbd", 12.46, 1.15, 2.8, 12.74, 3.4, 12.0, "hull",
-    rotation={"angle": 22.5, "axis": "z", "origin": [12.6, 2.3, 7.4]})
-box("hull_upper", 3.8, 2.9, 2.8, 12.2, 4.5, 12.0, "hull")
-box("hull_top_step", 4.2, 4.5, 3.2, 11.8, 4.8, 11.4, "hull")
+# 下缘外凸的座圈裙板
+box("hull_skirt", 3.3, 1.2, 2.4, 12.7, 2.0, 12.1, "hull")
+box("hull_lower", 3.5, 2.0, 2.7, 12.5, 3.1, 12.3, "hull")
+box("hull_mid", 3.6, 3.1, 3.0, 12.4, 4.45, 12.0, "hull")
 
-# ================= 前部炮盾（德式陡前脸） =================
-box("shield_base", 4.2, 2.2, 12.3, 11.8, 4.5, 13.5, "hull")
-box("shield_slope", 4.3, 4.35, 12.4, 11.7, 4.65, 13.4, "hull",
-    rotation={"angle": -22.5, "axis": "x", "origin": [8.0, 4.4, 12.9]})
-box("mantlet_center", 6.0, 2.6, 13.3, 10.0, 4.3, 14.2, "detail")
-box("mantlet_port", 5.7, 2.9, 13.6, 6.9, 4.2, 14.5, "detail")
-box("mantlet_stbd", 9.1, 2.9, 13.6, 10.3, 4.2, 14.5, "detail")
-box("shield_trim", 4.1, 4.45, 13.8, 11.9, 4.7, 14.1, "hull_dark")
+# 两舷上部内倾倒角（原画最明显的特征：上部收进、屋顶变窄）
+box("hull_slope_port", 3.46, 2.9, 3.2, 3.74, 4.8, 11.8, "hull",
+    rotation={"angle": -22.5, "axis": "z", "origin": [3.6, 3.85, 7.5]})
+box("hull_slope_stbd", 12.26, 2.9, 3.2, 12.54, 4.8, 11.8, "hull",
+    rotation={"angle": 22.5, "axis": "z", "origin": [12.4, 3.85, 7.5]})
 
-# ================= 后部配重 =================
-box("rear_block", 4.2, 1.6, 1.1, 11.8, 4.2, 2.5, "hull_dark")
-box("rear_step", 4.6, 4.2, 1.6, 11.4, 4.5, 2.5, "hull")
-box("rear_hatch", 6.0, 2.0, 0.85, 10.0, 3.4, 1.15, "detail")
-box("rear_handle", 7.2, 2.6, 0.72, 8.8, 2.9, 0.88, "hull_dark")
+# 屋顶：比炮塔窄一圈，前缘与后缘各有一道倒角
+box("roof", 4.15, 4.45, 3.35, 11.85, 4.75, 11.55, "hull")
+box("roof_front_bevel", 4.1, 4.35, 11.3, 11.9, 4.6, 11.95, "hull",
+    rotation={"angle": -22.5, "axis": "x", "origin": [8.0, 4.45, 11.6]})
+box("roof_rear_bevel", 4.1, 4.35, 2.95, 11.9, 4.6, 3.6, "hull",
+    rotation={"angle": 22.5, "axis": "x", "origin": [8.0, 4.45, 3.3]})
 
-# ================= 两舷舱门与扶手 =================
-box("door_port", 3.16, 1.5, 5.4, 3.4, 2.9, 8.0, "detail")
-box("door_stbd", 12.6, 1.5, 5.4, 12.84, 2.9, 8.0, "detail")
-box("door_handle_port", 3.08, 2.1, 6.5, 3.18, 2.4, 6.9, "hull_dark")
-box("door_handle_stbd", 12.82, 2.1, 6.5, 12.92, 2.4, 6.9, "hull_dark")
-# 侧面抓握扶手：横杆 + 两端短柱
-for tag, x in (("port", 3.1), ("stbd", 12.9)):
-    box(f"step_rail_{tag}", x, 1.9, 8.6, x + 0.16, 2.05, 10.4, "hull_dark")
+# ================= 前脸 =================
+# 下部下颚板（原画前脸下缘外凸的一条厚板）
+box("chin_plate", 3.75, 1.2, 11.9, 12.25, 2.15, 12.55, "hull_dark")
+# 后倾约 22.5° 的主装甲板
+box("front_slope", 3.8, 2.05, 11.85, 12.2, 4.6, 12.4, "hull",
+    rotation={"angle": -22.5, "axis": "x", "origin": [8.0, 2.05, 12.4]})
 
-# ================= 顶部设备（原画的左右测距仪是德式识别点） =================
-box("rangefinder", 4.3, 4.8, 6.4, 6.1, 5.7, 8.4, "detail")
-box("rangefinder_cap", 4.4, 5.7, 6.6, 6.0, 6.0, 8.2, "hull_dark")
-box("side_rangefinder", 11.9, 3.6, 8.2, 12.9, 4.6, 10.2, "detail")
-box("side_rangefinder_cap", 12.0, 4.6, 8.4, 12.8, 4.85, 10.0, "hull_dark")
-box("hatch", 5.4, 4.8, 9.0, 7.0, 5.1, 10.4, "detail")
-box("hatch_handle", 6.0, 5.1, 9.3, 6.4, 5.2, 9.7, "hull_dark")
-box("vent", 9.4, 4.8, 4.0, 10.2, 5.3, 4.8, "hull_dark")
-box("periscope", 8.2, 4.8, 4.2, 8.6, 5.6, 4.6, "hull_dark")
-box("antenna", 4.0, 4.8, 3.4, 4.2, 6.8, 3.6, "hull_dark")
+# 两个炮口暗板：贴在前脸斜面上，深色方块读作炮口开口
+for tag, cx in (("l", 6.5), ("r", 9.5)):
+    box(f"gunport_{tag}", cx - 0.95, 2.45, 12.30, cx + 0.95, 4.15, 12.44,
+        "hull_dark",
+        rotation={"angle": -22.5, "axis": "x", "origin": [8.0, 2.05, 12.4]})
 
-# 后缘护栏：横杆 + 两根立柱
-box("rail_back", 5.2, 4.85, 3.55, 10.8, 5.05, 3.75, "detail")
-for tag, rx in (("l", 5.2), ("r", 10.6)):
-    box(f"rail_post_{tag}", rx, 4.8, 3.55, rx + 0.2, 5.45, 3.75, "hull_dark")
+# ================= 后部 =================
+box("rear_plate", 3.9, 1.4, 2.25, 12.1, 4.45, 2.7, "hull_dark")
+box("rear_top_bevel", 4.0, 4.25, 2.5, 12.0, 4.55, 3.15, "hull",
+    rotation={"angle": 22.5, "axis": "x", "origin": [8.0, 4.4, 2.8]})
+# 右舷后部的小检修口（原画右下侧那块凸起）
+box("side_hatch", 12.46, 1.6, 8.7, 12.62, 2.5, 9.6, "detail")
+box("side_hatch_hinge", 12.58, 2.0, 8.75, 12.7, 2.12, 9.55, "hull_dark")
+
+# ================= 屋顶测距仪（原画左右不对称） =================
+# 左后：低矮的圆角矩形盒
+box("rangefinder_port", 4.55, 4.75, 4.1, 6.75, 5.5, 6.15, "detail")
+box("rangefinder_port_cap", 4.7, 5.5, 4.25, 6.6, 5.7, 6.0, "hull_dark")
+box("rangefinder_port_bevel", 4.6, 5.35, 5.75, 6.7, 5.55, 6.2, "hull_dark",
+    rotation={"angle": -22.5, "axis": "x", "origin": [5.65, 5.45, 5.95]})
+# 右舷后部：从侧舷凸出来的方形盒
+box("rangefinder_stbd", 11.25, 4.05, 7.5, 12.9, 4.95, 9.7, "detail")
+box("rangefinder_stbd_cap", 11.35, 4.95, 7.65, 12.8, 5.15, 9.55, "hull_dark")
 
 # ================= 双联菱形炮管 =================
-for tag, cx in (("l", 6.6), ("r", 9.4)):
-    # 炮根套筒（原画里靠近炮盾的一段明显加粗）
-    diamond(f"barrel_sleeve_{tag}", cx, 3.6, 13.8, 16.2, 0.66, "barrel")
-    diamond(f"barrel_{tag}", cx, 3.6, 16.2, 25.0, 0.5, "barrel")
-    diamond(f"muzzle_ring_{tag}", cx, 3.6, 25.0, 25.8, 0.62, "barrel")
+for tag, cx in (("l", 6.5), ("r", 9.5)):
+    # 炮根阶梯套筒：原画里靠炮盾的一段呈锥形加粗，逐级收细
+    diamond(f"barrel_sleeve_{tag}", cx, 3.35, 11.6, 13.2, 0.72, "barrel")
+    diamond(f"barrel_sleeve_mid_{tag}", cx, 3.35, 13.2, 14.4, 0.6, "barrel")
+    diamond(f"barrel_sleeve_front_{tag}", cx, 3.35, 14.4, 15.4, 0.5, "barrel")
+    diamond(f"barrel_{tag}", cx, 3.35, 15.4, 25.4, 0.4, "barrel")
+    diamond(f"muzzle_ring_{tag}", cx, 3.35, 25.4, 26.0, 0.5, "barrel")
     # 炮口内膛：装填/空膛差异只在这两个小面
-    diamond(f"muzzle_{tag}", cx, 3.6, 25.8, 25.9, 0.34, "barrel",
+    diamond(f"muzzle_{tag}", cx, 3.35, 26.0, 26.1, 0.3, "barrel",
             faces={"south": "muzzle_empty"}, full_uv_faces=("south",))
 
 # 手持时绕 Y 转 180°，让炮口朝角色前方

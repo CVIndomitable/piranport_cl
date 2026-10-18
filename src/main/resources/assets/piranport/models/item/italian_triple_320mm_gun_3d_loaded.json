@@ -1,0 +1,6 @@
+{
+  "parent": "piranport:item/italian_triple_320mm_gun_3d",
+  "textures": {
+    "muzzle_empty": "piranport:item/italian_triple_320mm_gun_muzzle_loaded"
+  }
+}

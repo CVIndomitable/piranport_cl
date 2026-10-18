@@ -139,6 +139,16 @@ public class PlaceableFoodBlock extends BaseEntityBlock {
     }
 
     /**
+     * 专属模型食物方块（美式汉堡）：芝麻面包顶 + 芝士片 + 牛肉饼 +
+     * 番茄片 + 生菜 + 底面包的经典叠层。
+     */
+    public static class AmericanBurger extends PlaceableFoodBlock {
+        public static final MapCodec<AmericanBurger> CODEC = simpleCodec(AmericanBurger::new);
+        @Override public MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }
+        public AmericanBurger(BlockBehaviour.Properties props) { super(Block.box(1.4, 0, 2.3, 14.6, 6.6, 13.7), props); }
+    }
+
+    /**
      * 专属模型食物方块（甜豆花）：白瓷碗盛嫩豆花，浇琥珀糖浆，
      * 配红豆与黄绿蜜豆。
      */

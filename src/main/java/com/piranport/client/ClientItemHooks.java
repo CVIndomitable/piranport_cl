@@ -14,6 +14,7 @@ import com.piranport.dungeon.client.TownScrollScreen;
 import com.piranport.entity.AircraftEntity;
 import com.piranport.item.AircraftItem;
 import com.piranport.item.MissileLauncherItem;
+import com.piranport.item.TorpedoItem;
 import com.piranport.item.TorpedoLauncherItem;
 import com.piranport.network.CannonImpactEffectPayload;
 import com.piranport.registry.ModDataComponents;
@@ -288,26 +289,47 @@ public final class ClientItemHooks implements com.piranport.platform.ClientBridg
     }
 
     /**
-     * 数背包（含副手）里同口径鱼雷的总数。
+     * 鱼雷发射器的两项状态：膛内是否已装填，以及现在能否开火。二者判定不同，不能合并。
+     * 开火可以来自背包取弹，但这不代表膛内已装填。
+     */
+    private static void appendTorpedoStatus(TorpedoLauncherItem launcher, LoadedAmmo loaded,
+                                            Inventory inv, List<Component> tooltip) {
+        int tubes = launcher.getTubeCount();
+        // hasAmmo() 排除 count>0 但 ammoItemId 为空的脏数据（旧存档/组件编辑）
+        boolean chambered = loaded.hasAmmo() && loaded.count() >= tubes;
+        tooltip.add(Component.translatable(chambered ? "tooltip.piranport.weapon_ready" : "tooltip.piranport.weapon_not_loaded")
+                .withStyle(chambered ? ChatFormatting.GREEN : ChatFormatting.RED));
+        boolean canFire = chambered || countInventoryTorpedoes(launcher, inv) >= tubes;
+        tooltip.add(Component.translatable(canFire ? "tooltip.piranport.torpedo.can_fire" : "tooltip.piranport.torpedo.cannot_fire")
+                .withStyle(canFire ? ChatFormatting.GREEN : ChatFormatting.RED));
+    }
+
+    /**
+     * 背包（含副手）里可用于取弹的同口径鱼雷数量。
      *
-     * <p>刻意与 {@code TorpedoFireStrategy.fireTorpedosInventoryMode} 的扫描口径保持一致：
-     * 只认口径、不限弹种，副手仅在武器不在副手时才计入。这里是客户端预测，
-     * 只用来决定 tooltip 报"已装填"还是"未装填"，真正能不能打仍由服务端裁决。
+     * <p>与 {@code TorpedoFireStrategy.fireTorpedosInventoryMode} 一致：先取第一种同口径鱼雷作为弹种，
+     * 只统计该弹种，不跨弹种相加。这里是客户端预测，只决定 tooltip 显示，真正能不能打仍由服务端裁决。
      */
     private static int countInventoryTorpedoes(TorpedoLauncherItem launcher, Inventory inv) {
         int caliber = launcher.getCaliber();
-        int available = 0;
+        Item type = null;
         for (ItemStack s : inv.items) {
-            if (!s.isEmpty() && s.getItem() instanceof com.piranport.item.TorpedoItem ti
-                    && ti.getCaliber() == caliber) {
-                available += s.getCount();
+            if (!s.isEmpty() && s.getItem() instanceof TorpedoItem ti && ti.getCaliber() == caliber) {
+                type = ti;
+                break;
             }
         }
         ItemStack oh = inv.offhand.get(0);
-        if (!oh.isEmpty() && oh.getItem() instanceof com.piranport.item.TorpedoItem ti
-                && ti.getCaliber() == caliber) {
-            available += oh.getCount();
+        if (type == null && !oh.isEmpty() && oh.getItem() instanceof TorpedoItem ti && ti.getCaliber() == caliber) {
+            type = ti;
         }
+        if (type == null) return 0;
+
+        int available = 0;
+        for (ItemStack s : inv.items) {
+            if (s.is(type)) available += s.getCount();
+        }
+        if (oh.is(type)) available += oh.getCount();
         return available;
     }
 
@@ -360,7 +382,7 @@ public final class ClientItemHooks implements com.piranport.platform.ClientBridg
                 || (stack.getItem() instanceof MissileLauncherItem ml && ml.isManualReload())));
 
         if (onCooldown) {
-            if (isCannon) {
+            if (isCannon || isTorpedoLauncher) {
                 tooltip.add(Component.translatable("tooltip.piranport.weapon_reloading")
                         .withStyle(ChatFormatting.YELLOW));
             } else if (needsLoadedAmmo) {
@@ -375,14 +397,12 @@ public final class ClientItemHooks implements com.piranport.platform.ClientBridg
             }
         } else if (needsLoadedAmmo) {
             LoadedAmmo loaded = stack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
-            boolean hasAmmo;
             if (stack.getItem() instanceof TorpedoLauncherItem tl) {
-                // 两种弹药来源都算"能开火"：膛内（装填设施/右键装的）或背包里足量同口径鱼雷（再装填件自动取弹）。
-                // WHY 保留 hasAmmo()：不可信来源（旧存档/组件编辑）可能留下 count>0 但 ammoItemId 为空的脏值，
-                // 只看 count 会把这种管报成"已装填"。判定口径对齐 TorpedoFireStrategy 的手动模式分支。
-                hasAmmo = (loaded.hasAmmo() && loaded.count() >= tl.getTubeCount())
-                        || countInventoryTorpedoes(tl, inv) >= tl.getTubeCount();
-            } else if (stack.getItem() instanceof com.piranport.artillery.ArtilleryItem ai) {
+                appendTorpedoStatus(tl, loaded, inv, tooltip);
+                return;
+            }
+            boolean hasAmmo;
+            if (stack.getItem() instanceof com.piranport.artillery.ArtilleryItem ai) {
                 hasAmmo = loaded.count() >= ai.getEffectiveData(mc.level).barrels();
             } else {
                 hasAmmo = loaded.hasAmmo();

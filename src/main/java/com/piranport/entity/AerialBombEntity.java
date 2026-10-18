@@ -6,6 +6,9 @@ import com.piranport.registry.ModEntityTypes;
 import com.piranport.registry.ModItems;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.player.Player;
@@ -24,6 +27,9 @@ public class AerialBombEntity extends ThrowableItemProjectile {
     private boolean exploded = false;
     private Component sourceAircraftName;
     private UUID sourceAircraftUuid;
+    /** 投弹位置抖动折算成的等效角度散布标准差（度）。同步给客户端，用于落点圈收缩。 */
+    private static final EntityDataAccessor<Float> DISPERSION_DEG =
+            SynchedEntityData.defineId(AerialBombEntity.class, EntityDataSerializers.FLOAT);
 
     /** 实体类型注册所需 */
     public AerialBombEntity(EntityType<? extends AerialBombEntity> type, Level level) {
@@ -65,6 +71,20 @@ public class AerialBombEntity extends ThrowableItemProjectile {
     @Override
     protected double getDefaultGravity() {
         return gravity();
+    }
+
+    @Override
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(DISPERSION_DEG, 0f);
+    }
+
+    public void setDispersionDeg(float degrees) {
+        getEntityData().set(DISPERSION_DEG, degrees);
+    }
+
+    public float getDispersionDeg() {
+        return getEntityData().get(DISPERSION_DEG);
     }
 
     /** Gravity exposed to the client landing marker prediction. */

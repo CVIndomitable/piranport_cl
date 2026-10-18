@@ -50,8 +50,6 @@ public class SonarItem extends Item {
             if (ClientHooks.hasShiftDown()) {
                 tooltip.add(Component.translatable("tooltip.piranport.sonar.radius", getRadius())
                         .withStyle(ChatFormatting.AQUA));
-                tooltip.add(Component.translatable("tooltip.piranport.sonar.weight", getWeight())
-                        .withStyle(ChatFormatting.GRAY));
             } else {
                 tooltip.add(Component.translatable("tooltip.piranport.shift_for_details")
                         .withStyle(ChatFormatting.DARK_GRAY));

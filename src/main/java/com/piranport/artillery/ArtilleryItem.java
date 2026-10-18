@@ -371,11 +371,6 @@ public class ArtilleryItem extends Item {
                         String.format("%.1f", getDamage())).withStyle(net.minecraft.ChatFormatting.RED));
                 tooltipComponents.add(Component.translatable("tooltip.piranport.cooldown",
                         String.format("%.2f", getReloadTicksExact() / 20.0)).withStyle(net.minecraft.ChatFormatting.YELLOW));
-                int formulaWeight = getFormulaWeight();
-                if (formulaWeight >= 0) {
-                    tooltipComponents.add(Component.translatable("tooltip.piranport.cannon.weight", formulaWeight)
-                            .withStyle(net.minecraft.ChatFormatting.GRAY));
-                }
 
                 // 装填进度
                 WeaponCooldown cd = stack.get(ModDataComponents.WEAPON_COOLDOWN.get());

@@ -31,6 +31,10 @@ import java.util.OptionalDouble;
  * so it is visible to every client tracking that projectile.  No client-side
  * fire-control lock or owner-only state is involved; observers can use it to
  * dodge incoming fire as well.</p>
+ *
+ * <p>The ring is the still-unresolved dispersion: its radius is the remaining
+ * flight distance times the dispersion angle, so it shrinks toward the impact
+ * point as the projectile flies and collapses to the cross at landing.</p>
  */
 @EventBusSubscriber(modid = PiranPort.MOD_ID, value = Dist.CLIENT)
 public final class ProjectileLandingMarkerRenderer {
@@ -39,6 +43,8 @@ public final class ProjectileLandingMarkerRenderer {
     private static final int SEGMENTS = 24;
     private static final int PREDICTION_INTERVAL = 4;
     private static final int MAX_PROJECTILES = 64;
+    private static final double MIN_RING_RADIUS = 0.05;
+    private static final float CROSS_ARM = 0.3f;
     private static final RenderType MARKER = RenderType.create(
             "piranport_projectile_landing_marker",
             DefaultVertexFormat.POSITION_COLOR,
@@ -71,10 +77,12 @@ public final class ProjectileLandingMarkerRenderer {
         boolean drew = false;
         for (Marker marker : MARKERS) {
             if (marker.position.distanceToSqr(camera) > MAX_DISTANCE * MAX_DISTANCE) continue;
+            if (!marker.source.isAlive()) continue;
+            double radius = marker.source.position().distanceTo(marker.position) * marker.tanDispersion;
             poseStack.pushPose();
             Vec3 offset = marker.position.subtract(camera);
             poseStack.translate(offset.x, offset.y + 0.04, offset.z);
-            drawRing(consumer, poseStack, marker.radius, marker.red, marker.green, marker.blue);
+            drawRing(consumer, poseStack, radius, marker.red, marker.green, marker.blue);
             poseStack.popPose();
             drew = true;
         }
@@ -94,7 +102,11 @@ public final class ProjectileLandingMarkerRenderer {
             Vec3 impact = predictImpact(level, entity);
             if (impact == null) continue;
             boolean bomb = entity instanceof AerialBombEntity;
-            MARKERS.add(new Marker(impact, bomb ? 0.85 : 0.65,
+            double dispersionDeg = bomb
+                    ? ((AerialBombEntity) entity).getDispersionDeg()
+                    : ((CannonProjectileEntity) entity).getDispersionDeg();
+            double tanDispersion = Math.tan(Math.toRadians(Math.max(0.0, dispersionDeg)));
+            MARKERS.add(new Marker(entity, impact, tanDispersion,
                     255, bomb ? 190 : 80, bomb ? 40 : 32));
             if (++count >= MAX_PROJECTILES) break;
         }
@@ -125,26 +137,30 @@ public final class ProjectileLandingMarkerRenderer {
     private static void drawRing(VertexConsumer consumer, PoseStack poseStack,
                                  double radius, int red, int green, int blue) {
         var pose = poseStack.last().pose();
-        for (int i = 0; i < SEGMENTS; i++) {
-            double a0 = i * Math.PI * 2.0 / SEGMENTS;
-            double a1 = (i + 1) * Math.PI * 2.0 / SEGMENTS;
-            consumer.addVertex(pose, (float) (Math.cos(a0) * radius), 0.0f,
-                            (float) (Math.sin(a0) * radius))
-                    .setColor(red, green, blue, 255);
-            consumer.addVertex(pose, (float) (Math.cos(a1) * radius), 0.0f,
-                            (float) (Math.sin(a1) * radius))
-                    .setColor(red, green, blue, 255);
+        if (radius >= MIN_RING_RADIUS) {
+            for (int i = 0; i < SEGMENTS; i++) {
+                double a0 = i * Math.PI * 2.0 / SEGMENTS;
+                double a1 = (i + 1) * Math.PI * 2.0 / SEGMENTS;
+                consumer.addVertex(pose, (float) (Math.cos(a0) * radius), 0.0f,
+                                (float) (Math.sin(a0) * radius))
+                        .setColor(red, green, blue, 255);
+                consumer.addVertex(pose, (float) (Math.cos(a1) * radius), 0.0f,
+                                (float) (Math.sin(a1) * radius))
+                        .setColor(red, green, blue, 255);
+            }
         }
-        float arm = (float) (radius * 0.65);
-        consumer.addVertex(pose, -arm, 0.01f, 0).setColor(red, green, blue, 255);
-        consumer.addVertex(pose, arm, 0.01f, 0).setColor(red, green, blue, 255);
-        consumer.addVertex(pose, 0, 0.01f, -arm).setColor(red, green, blue, 255);
-        consumer.addVertex(pose, 0, 0.01f, arm).setColor(red, green, blue, 255);
+        consumer.addVertex(pose, -CROSS_ARM, 0.01f, 0).setColor(red, green, blue, 255);
+        consumer.addVertex(pose, CROSS_ARM, 0.01f, 0).setColor(red, green, blue, 255);
+        consumer.addVertex(pose, 0, 0.01f, -CROSS_ARM).setColor(red, green, blue, 255);
+        consumer.addVertex(pose, 0, 0.01f, CROSS_ARM).setColor(red, green, blue, 255);
     }
 
     private static boolean finite(Vec3 value) {
         return Double.isFinite(value.x) && Double.isFinite(value.y) && Double.isFinite(value.z);
     }
 
-    private record Marker(Vec3 position, double radius, int red, int green, int blue) {}
+    /**
+     * source 每帧取当前位置算圈半径（圈随弹丸实时收缩）；落点每 {@link #PREDICTION_INTERVAL} tick 重算一次。
+     */
+    private record Marker(Entity source, Vec3 position, double tanDispersion, int red, int green, int blue) {}
 }

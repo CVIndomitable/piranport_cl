@@ -22,6 +22,9 @@ import com.piranport.registry.ModItems;
 import com.piranport.registry.ModSounds;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
@@ -65,6 +68,9 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
     private float initialSpeed = 2.0f;
     /** Phase 2: 自定义阻力系数（每 tick 按比例衰减速度）。 */
     private float dragCoeff = 0.01f;
+    /** 开火时抽样的角度散布标准差（度）。同步给客户端，用于落点圈收缩。 */
+    private static final EntityDataAccessor<Float> DISPERSION_DEG =
+            SynchedEntityData.defineId(CannonProjectileEntity.class, EntityDataSerializers.FLOAT);
     /** 防止 VT 近炸引信 + onHit 在同一 tick 内双重爆炸。 */
     private boolean exploded = false;
     /** VT 弹水下计时器（tick），水中累计超过60tick（3秒）后近炸。 */
@@ -638,6 +644,20 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
     protected double getDefaultGravity() {
         // customGravity 是真实比例（如 9.8），除以 196 换算为 MC 内部比例
         return customGravity > 0f ? customGravity / 196.0 : 9.8 / 196.0;
+    }
+
+    @Override
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(DISPERSION_DEG, 0f);
+    }
+
+    public void setDispersionDeg(float degrees) {
+        getEntityData().set(DISPERSION_DEG, degrees);
+    }
+
+    public float getDispersionDeg() {
+        return getEntityData().get(DISPERSION_DEG);
     }
 
     /** Gravity exposed to the client landing marker prediction. */

@@ -62,8 +62,6 @@ public class FireControlRadarItem extends Item {
                                 level, String.format("%.0f", tracking.range()),
                                 String.format("%.2f", tracking.turnCoefficient()))
                         .withStyle(ChatFormatting.AQUA));
-                tooltip.add(Component.translatable("tooltip.piranport.fire_control_radar.weight", getWeight())
-                        .withStyle(ChatFormatting.GRAY));
             } else {
                 tooltip.add(Component.translatable("tooltip.piranport.shift_for_details")
                         .withStyle(ChatFormatting.DARK_GRAY));

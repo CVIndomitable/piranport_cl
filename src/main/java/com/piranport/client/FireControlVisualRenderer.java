@@ -63,7 +63,6 @@ import java.util.UUID;
 public final class FireControlVisualRenderer {
 
     private static final double MAX_RENDER_DISTANCE = 256.0;
-    private static final int PREDICTION_ITERATIONS = 2;
     private static final double GRAVITY_SCALE = 196.0;
     private static final double MIN_SPEED = 1.0e-3;
     /** 落点球直径 1.0 格（文档 §4）。 */
@@ -98,6 +97,8 @@ public final class FireControlVisualRenderer {
 
     private static Mode mode = Mode.NONE;
     private static boolean active;
+    /** CANNON: 准星对准预瞄圈时的预测落点；开火解算改指向它。 */
+    private static Vec3 leadPoint;
     /** CANNON: 球心；TORPEDO: 拦截点。 */
     private static Vec3 point;
     private static Vec3 previousPoint;
@@ -127,6 +128,7 @@ public final class FireControlVisualRenderer {
         point = null;
         origin = null;
         active = false;
+        leadPoint = null;
         outOfRange = false;
         fanHalfDeg = 0;
         update(mc);
@@ -146,6 +148,11 @@ public final class FireControlVisualRenderer {
         SAMPLER.clear();
         sampledTarget = null;
         ENTITY_CACHE.clear();
+    }
+
+    /** 本 tick 准星是否对准火炮预瞄圈；是则返回预测落点，否则 null。 */
+    public static Vec3 leadAimPoint() {
+        return leadPoint;
     }
 
     private static void update(Minecraft mc) {
@@ -206,12 +213,13 @@ public final class FireControlVisualRenderer {
             predicted = flat.lengthSqr() < 1.0e-9 ? eye : eye.add(flat.normalize().scale(effectiveRange));
         } else {
             predicted = BallisticSolver.predictImpactPoint(eye, aim, targetVelocity, speed, drag, gravity,
-                    BallisticSolver.UNRESTRICTED_MIN_ANGLE, maxElevation, PREDICTION_ITERATIONS);
+                    BallisticSolver.UNRESTRICTED_MIN_ANGLE, maxElevation, ModEquipmentConfig.PREDICTION_ITERATIONS.get());
         }
         if (!isFinite(predicted) || predicted.distanceToSqr(eye) > MAX_RENDER_DISTANCE * MAX_RENDER_DISTANCE) return;
         mode = Mode.CANNON;
         point = predicted;
         active = FireControlPrediction.rayHitsSphere(eye, mc.player.getViewVector(1.0f), predicted, SPHERE_RADIUS);
+        leadPoint = active ? predicted : null;
     }
 
     private static void updateTorpedo(Minecraft mc, ItemStack held, TorpedoLauncherItem launcher,

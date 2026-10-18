@@ -202,6 +202,9 @@ public class AircraftCombat {
                     double spreadX = (level.random.nextDouble() - 0.5) * ModEquipmentConfig.DIVE_BOMBER_BOMB_SPREAD.get();
                     double spreadZ = (level.random.nextDouble() - 0.5) * ModEquipmentConfig.DIVE_BOMBER_BOMB_SPREAD.get();
                     bomb.moveTo(craft.getX() + spreadX, craft.getY(), craft.getZ() + spreadZ, 0, 0);
+                    double dropHeight = Math.max(1.0, craft.getY() - target.getY());
+                    bomb.setDispersionDeg((float) Math.toDegrees(Math.atan(
+                            ModEquipmentConfig.DIVE_BOMBER_BOMB_SPREAD.get() * 0.5 / dropHeight)));
                     // Preserve the aircraft's horizontal momentum.  Dropping with
                     // a zero horizontal velocity made every dive bomb fall behind
                     // the moving attack run and systematically miss ships at sea.

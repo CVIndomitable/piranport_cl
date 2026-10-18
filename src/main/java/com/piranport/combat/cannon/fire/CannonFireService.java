@@ -108,6 +108,7 @@ public final class CannonFireService {
             } else {
                 var projectile = createProjectile(request, ammo);
                 Vec3 dispersed = com.piranport.artillery.ArtilleryItem.applyDispersion(direction, request.level().random, request.horizontalSpread(), request.verticalSpread());
+                projectile.setDispersionDeg(Math.max(request.horizontalSpread(), request.verticalSpread()));
                 projectile.shoot(dispersed.x, dispersed.y, dispersed.z, (float) dispersed.length(), 0);
                 return request.level().addFreshEntity(projectile);
             }

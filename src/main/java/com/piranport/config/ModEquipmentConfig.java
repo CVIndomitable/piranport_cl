@@ -41,6 +41,9 @@ public final class ModEquipmentConfig {
             TerminalConfigValue.integer("equipment", "fire_control_visual", "prediction_line_color", 0xFFFFFF, 0, 0xFFFFFF);
     public static final TerminalConfigValue<Integer> PREDICTION_LINE_ACTIVE_COLOR =
             TerminalConfigValue.integer("equipment", "fire_control_visual", "prediction_line_active_color", 0x40FF60, 0, 0xFFFFFF);
+    // 火炮落点迭代修正次数（BallisticSolver#predictImpactPoint），默认 2。
+    public static final TerminalConfigValue<Integer> PREDICTION_ITERATIONS =
+            TerminalConfigValue.integer("equipment", "fire_control_visual", "prediction_iterations", 2, 1, 8);
 
     // 5/6/7 联鱼雷最大偏角（度），暂定 5°，由策划在调试终端试验（2026-09-30 项目所有者）。
     // 2/3/4 管沿用《武器/鱼雷-联装设计》固定表，不走此处。

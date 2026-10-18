@@ -97,8 +97,6 @@ public class RadarItem extends Item {
                 tooltip.add(Component.translatable("tooltip.piranport.radar.target."
                                 + getTarget().getSerializedName())
                         .withStyle(ChatFormatting.GOLD));
-                tooltip.add(Component.translatable("tooltip.piranport.radar.weight", getWeight())
-                        .withStyle(ChatFormatting.GRAY));
             } else {
                 tooltip.add(Component.translatable("tooltip.piranport.shift_for_details")
                         .withStyle(ChatFormatting.DARK_GRAY));

@@ -16,11 +16,11 @@ import net.minecraft.world.level.levelgen.feature.FeaturePlaceContext;
 import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
 
 /**
- * 废弃传送门结构：在水面上方自然生成小岛，作为副本教学触点。
+ * 废弃传送门结构：在海面上自然生成小岛，作为副本教学触点。
  *
  * <p>结构组成：
  * <ul>
- *   <li>岛基：草方块+泥土+圆石堆砌的小岛，高出水面 1~2 格</li>
+ *   <li>岛基：泥土从海床一直填到台面，台面与海平面齐平</li>
  *   <li>平台：5×5 石砖台面（边缘苔石砖、次边缘裂纹石砖、中心普通石砖）</li>
  *   <li>传送门：{@code dungeon_portal} 构成的 4×5×4 框架，正面单层 2×3 开口</li>
  *   <li>讲台：{@code dungeon_lectern}（<b>空台面</b>），贴在框架底边外侧</li>
@@ -47,10 +47,8 @@ public class AbandonedPortalStructure extends Feature<NoneFeatureConfiguration> 
     /** 结构深度（不含岛基） */
     private static final int DEPTH = 5;
 
-    /** 岛基半径 */
+    /** 岛基半径（逐列向下填土的水平范围） */
     private static final int ISLAND_RADIUS = 4;
-    /** 岛基高度（高出水面） */
-    private static final int ISLAND_HEIGHT = 2;
 
     /**
      * {@link #findWaterLevel} 从 {@code origin.y} 向上探的最大格数，用于兜住
@@ -123,18 +121,16 @@ public class AbandonedPortalStructure extends Feature<NoneFeatureConfiguration> 
             return false;
         }
 
-        // 平台基准高度：水面 + ISLAND_HEIGHT（岛高出水面）
-        int platformBaseY = waterLevel + ISLAND_HEIGHT;
+        // 台面与水面齐平：台面 y = 水面所在格，岛基从台面下方一直填到海床
+        BlockPos platformBase = new BlockPos(origin.getX(), waterLevel, origin.getZ());
 
         // 检测上方空间是否足够：按"平台原点 + 框架实际溢出方向"取范围。
         // 框架在 facing=NORTH 下占 x∈[1,4]、y∈[1,5]、z∈[0,3]（详见 hasSpace 的 Javadoc）。
-        BlockPos platformBase = new BlockPos(origin.getX(), platformBaseY, origin.getZ());
         if (!hasSpace(level, platformBase)) {
             return false;
         }
 
-        // 生成岛基（草方块+泥土+圆石）
-        placeIsland(level, platformBase, random);
+        placeIsland(level, platformBase);
 
         // 放置底部石砖平台
         placePlatform(level, platformBase, random);
@@ -245,33 +241,27 @@ public class AbandonedPortalStructure extends Feature<NoneFeatureConfiguration> 
     }
 
     /**
-     * 生成岛基：以平台中心为圆心，ISLAND_RADIUS 为半径，
-     * 用草方块、泥土、圆石堆砌高出水面 ISLAND_HEIGHT 格的小岛。
+     * 生成岛基：以平台中心为圆心，ISLAND_RADIUS 为半径，逐列从台面下一格往下填泥土，
+     * 直到碰到海床的实心方块为止。
+     *
+     * <p>旧实现只堆两层、底层落在原水面那格，下面仍是水，整座岛悬在海面上。
+     * 逐列填到海床才能保证每一列都有支撑；遇到沙子等实心海床会停下，不覆盖原地形。</p>
      */
-    private static void placeIsland(WorldGenLevel level, BlockPos platformBase, RandomSource random) {
+    private static void placeIsland(WorldGenLevel level, BlockPos platformBase) {
         int cx = platformBase.getX() + WIDTH / 2;
         int cz = platformBase.getZ() + DEPTH / 2;
-        int islandTopY = platformBase.getY() - 1; // 岛基顶部略低于平台
-        int islandBottomY = islandTopY - ISLAND_HEIGHT + 1;
+        int minY = level.getMinBuildHeight();
 
-        for (int y = islandBottomY; y <= islandTopY; y++) {
-            // 半径随高度递减，形成锥形
-            int radius = ISLAND_RADIUS - (islandTopY - y);
-            if (radius < 1) radius = 1;
-            for (int dx = -radius; dx <= radius; dx++) {
-                for (int dz = -radius; dz <= radius; dz++) {
-                    if (dx * dx + dz * dz > radius * radius) continue;
+        for (int dx = -ISLAND_RADIUS; dx <= ISLAND_RADIUS; dx++) {
+            for (int dz = -ISLAND_RADIUS; dz <= ISLAND_RADIUS; dz++) {
+                if (dx * dx + dz * dz > ISLAND_RADIUS * ISLAND_RADIUS) continue;
+                for (int y = platformBase.getY() - 1; y >= minY; y--) {
                     BlockPos pos = new BlockPos(cx + dx, y, cz + dz);
-                    if (y == islandTopY) {
-                        // 顶层：草方块（随机少量泥土）
-                        level.setBlock(pos, random.nextFloat() < 0.3f ? Blocks.DIRT.defaultBlockState() : Blocks.GRASS_BLOCK.defaultBlockState(), 2);
-                    } else if (y == islandBottomY) {
-                        // 底层：圆石
-                        level.setBlock(pos, Blocks.COBBLESTONE.defaultBlockState(), 2);
-                    } else {
-                        // 中间层：泥土
-                        level.setBlock(pos, Blocks.DIRT.defaultBlockState(), 2);
+                    BlockState state = level.getBlockState(pos);
+                    if (!state.isAir() && !state.is(Blocks.WATER) && !state.canBeReplaced()) {
+                        break;
                     }
+                    level.setBlock(pos, Blocks.DIRT.defaultBlockState(), 2);
                 }
             }
         }

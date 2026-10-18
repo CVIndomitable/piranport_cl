@@ -42,6 +42,8 @@ public final class ClientScopeHandler {
 
     /** 当前有效交点是否属于实体，用于核对准星实际取点。 */
     private static boolean aimedAtEntity = false;
+    /** 当前瞄准点是否为火控预瞄圈的预测落点（HUD 显示「预瞄」）。 */
+    private static boolean aimedAtLead = false;
 
     // ===== 客户端弹道解算相关 =====
     /** 上一次解算的结果（发射仰角，弧度） */
@@ -229,6 +231,13 @@ public final class ClientScopeHandler {
         Vec3 hitPos = target.position();
         hasValidTarget = target.valid();
         aimedAtEntity = target.entity();
+        Vec3 leadPoint = FireControlVisualRenderer.leadAimPoint();
+        aimedAtLead = leadPoint != null;
+        if (leadPoint != null) {
+            hitPos = leadPoint;
+            hasValidTarget = true;
+            aimedAtEntity = false;
+        }
         if (!hasValidTarget) {
             hasSolved = false;
             lastFlightSeconds = Double.NaN;
@@ -323,6 +332,7 @@ public final class ClientScopeHandler {
 
     public static String getTargetKindTranslationKey() {
         return !hasValidTarget ? "hud.piranport.scope.target.miss"
+                : aimedAtLead ? "hud.piranport.scope.target.lead"
                 : aimedAtEntity ? "hud.piranport.scope.target.entity" : "hud.piranport.scope.target.surface";
     }
 

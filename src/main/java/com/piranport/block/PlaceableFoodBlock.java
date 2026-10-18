@@ -139,6 +139,16 @@ public class PlaceableFoodBlock extends BaseEntityBlock {
     }
 
     /**
+     * 专属模型食物方块（麻婆豆腐）：白瓷椭圆浅盘，中央红亮辣油里
+     * 浮着十二块豆腐，撒青葱与深色肉末/花椒。
+     */
+    public static class MapoToFu extends PlaceableFoodBlock {
+        public static final MapCodec<MapoToFu> CODEC = simpleCodec(MapoToFu::new);
+        @Override public MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }
+        public MapoToFu(BlockBehaviour.Properties props) { super(Block.box(0.6, 0, 0.8, 15.4, 2.3, 15.2), props); }
+    }
+
+    /**
      * 专属模型食物方块（海军咖喱）：白色椭圆盘左前方深棕咖喱酱
      * 带土豆/胡萝卜/肉块，右后方一座三层白米饭。
      */

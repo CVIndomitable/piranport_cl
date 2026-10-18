@@ -110,6 +110,7 @@ public class ModBlockEntityTypes {
                             ModBlocks.THURINGER_ROSTBRATWURST_UND_BIER.get(),
                             ModBlocks.APPLE_PIE.get(),
                             ModBlocks.FRIED_FISH_AND_CHIPS.get(),
+                            ModBlocks.NAVAL_CURRY.get(),
                             ModBlocks.PEA_SOUP_WITH_RYE_BREAD.get(),
                             ModBlocks.RUSSIAN_DUMPLING.get(),
                             ModBlocks.OKROSHKA.get())

@@ -1,0 +1,164 @@
+{
+  "parent": "block/block",
+  "render_type": "minecraft:cutout",
+  "textures": {
+    "particle": "piranport:block/naval_curry_plate_top",
+    "plate_top": "piranport:block/naval_curry_plate_top",
+    "plate_side": "piranport:block/naval_curry_plate_side",
+    "sauce": "piranport:block/naval_curry_sauce",
+    "sauce_side": "piranport:block/naval_curry_sauce_side",
+    "rice_top": "piranport:block/naval_curry_rice_top",
+    "rice_side": "piranport:block/naval_curry_rice_side",
+    "potato": "piranport:block/naval_curry_potato",
+    "carrot": "piranport:block/naval_curry_carrot",
+    "meat": "piranport:block/naval_curry_meat"
+  },
+  "elements": [
+    {
+      "name": "plate",
+      "from": [0.5, 0, 1.0],
+      "to": [15.5, 0.6, 15.0],
+      "faces": {
+        "up": { "texture": "#plate_top" },
+        "down": { "texture": "#plate_top" },
+        "north": { "texture": "#plate_side" },
+        "south": { "texture": "#plate_side" },
+        "east": { "texture": "#plate_side" },
+        "west": { "texture": "#plate_side" }
+      }
+    },
+    {
+      "name": "curry_lower",
+      "from": [2.2, 0.62, 5.6],
+      "to": [11.0, 0.84, 13.2],
+      "faces": {
+        "up": { "texture": "#sauce" }
+      }
+    },
+    {
+      "name": "curry_upper",
+      "from": [2.8, 0.82, 6.4],
+      "to": [10.4, 1.02, 12.6],
+      "faces": {
+        "up": { "texture": "#sauce" }
+      }
+    },
+    {
+      "name": "rice_base",
+      "from": [8.6, 0.62, 3.4],
+      "to": [13.2, 1.52, 8.4],
+      "faces": {
+        "up": { "texture": "#rice_top" },
+        "down": { "texture": "#rice_side" },
+        "north": { "texture": "#rice_side" },
+        "south": { "texture": "#rice_side" },
+        "east": { "texture": "#rice_side" },
+        "west": { "texture": "#rice_side" }
+      }
+    },
+    {
+      "name": "rice_mid",
+      "from": [9.0, 1.50, 3.8],
+      "to": [12.8, 2.02, 7.8],
+      "faces": {
+        "up": { "texture": "#rice_top" },
+        "down": { "texture": "#rice_side" },
+        "north": { "texture": "#rice_side" },
+        "south": { "texture": "#rice_side" },
+        "east": { "texture": "#rice_side" },
+        "west": { "texture": "#rice_side" }
+      }
+    },
+    {
+      "name": "rice_top",
+      "from": [9.5, 2.00, 4.3],
+      "to": [12.2, 2.35, 7.2],
+      "faces": {
+        "up": { "texture": "#rice_top" },
+        "down": { "texture": "#rice_side" },
+        "north": { "texture": "#rice_side" },
+        "south": { "texture": "#rice_side" },
+        "east": { "texture": "#rice_side" },
+        "west": { "texture": "#rice_side" }
+      }
+    },
+    {
+      "name": "potato_1",
+      "from": [3.3, 0.90, 8.0],
+      "to": [4.2, 1.40, 8.9],
+      "faces": {
+        "up": { "texture": "#potato" },
+        "down": { "texture": "#potato" },
+        "north": { "texture": "#potato" },
+        "south": { "texture": "#potato" },
+        "east": { "texture": "#potato" },
+        "west": { "texture": "#potato" }
+      }
+    },
+    {
+      "name": "potato_2",
+      "from": [6.1, 0.90, 11.0],
+      "to": [7.0, 1.40, 11.9],
+      "faces": {
+        "up": { "texture": "#potato" },
+        "down": { "texture": "#potato" },
+        "north": { "texture": "#potato" },
+        "south": { "texture": "#potato" },
+        "east": { "texture": "#potato" },
+        "west": { "texture": "#potato" }
+      }
+    },
+    {
+      "name": "carrot_1",
+      "from": [4.6, 0.88, 10.0],
+      "to": [5.4, 1.32, 10.8],
+      "faces": {
+        "up": { "texture": "#carrot" },
+        "down": { "texture": "#carrot" },
+        "north": { "texture": "#carrot" },
+        "south": { "texture": "#carrot" },
+        "east": { "texture": "#carrot" },
+        "west": { "texture": "#carrot" }
+      }
+    },
+    {
+      "name": "carrot_2",
+      "from": [7.6, 0.88, 8.4],
+      "to": [8.4, 1.32, 9.2],
+      "faces": {
+        "up": { "texture": "#carrot" },
+        "down": { "texture": "#carrot" },
+        "north": { "texture": "#carrot" },
+        "south": { "texture": "#carrot" },
+        "east": { "texture": "#carrot" },
+        "west": { "texture": "#carrot" }
+      }
+    },
+    {
+      "name": "meat_1",
+      "from": [3.4, 0.90, 10.5],
+      "to": [4.3, 1.40, 11.4],
+      "faces": {
+        "up": { "texture": "#meat" },
+        "down": { "texture": "#meat" },
+        "north": { "texture": "#meat" },
+        "south": { "texture": "#meat" },
+        "east": { "texture": "#meat" },
+        "west": { "texture": "#meat" }
+      }
+    },
+    {
+      "name": "meat_2",
+      "from": [6.5, 0.90, 11.8],
+      "to": [7.4, 1.40, 12.7],
+      "faces": {
+        "up": { "texture": "#meat" },
+        "down": { "texture": "#meat" },
+        "north": { "texture": "#meat" },
+        "south": { "texture": "#meat" },
+        "east": { "texture": "#meat" },
+        "west": { "texture": "#meat" }
+      }
+    }
+  ]
+}

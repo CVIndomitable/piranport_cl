@@ -139,6 +139,16 @@ public class PlaceableFoodBlock extends BaseEntityBlock {
     }
 
     /**
+     * 专属模型食物方块（海军咖喱）：白色椭圆盘左前方深棕咖喱酱
+     * 带土豆/胡萝卜/肉块，右后方一座三层白米饭。
+     */
+    public static class NavalCurry extends PlaceableFoodBlock {
+        public static final MapCodec<NavalCurry> CODEC = simpleCodec(NavalCurry::new);
+        @Override public MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }
+        public NavalCurry(BlockBehaviour.Properties props) { super(Block.box(0.5, 0, 1.0, 15.5, 2.5, 15.0), props); }
+    }
+
+    /**
      * 专属模型食物方块（炸鱼薯条）：揉皱的报纸垫底、白纸托着金黄炸鱼柳、
      * 一堆粗薯条、一片柠檬和一小枝欧芹。
      */

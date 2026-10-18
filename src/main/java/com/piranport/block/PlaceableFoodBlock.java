@@ -139,6 +139,16 @@ public class PlaceableFoodBlock extends BaseEntityBlock {
     }
 
     /**
+     * 专属模型食物方块（烤猪肘）：红亮脆皮烤猪肘，骨头朝上，
+     * 底下垫浅黄酸菜，右侧一小碟深色肉汁。
+     */
+    public static class Schweinshaxe extends PlaceableFoodBlock {
+        public static final MapCodec<Schweinshaxe> CODEC = simpleCodec(Schweinshaxe::new);
+        @Override public MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }
+        public Schweinshaxe(BlockBehaviour.Properties props) { super(Block.box(1.4, 0, 4.2, 15.7, 8.0, 14.0), props); }
+    }
+
+    /**
      * 专属模型食物方块（红茶三明治）：双层金架下午茶点架，上下两层
      * 摆手指三明治（黄瓜/红色夹心），左侧一套红茶杯碟。
      */

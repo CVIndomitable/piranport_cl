@@ -1,0 +1,103 @@
+{
+  "parent": "block/block",
+  "render_type": "minecraft:cutout",
+  "textures": { "particle": "piranport:block/schweinshaxe_meat_top", "meat_top": "piranport:block/schweinshaxe_meat_top", "meat_side": "piranport:block/schweinshaxe_meat_side", "bone": "piranport:block/schweinshaxe_bone", "kraut": "piranport:block/schweinshaxe_kraut_top", "gravy": "piranport:block/schweinshaxe_gravy_top", "dish_side": "piranport:block/schweinshaxe_dish_side" },
+  "elements": [
+    {
+      "name": "kraut",
+      "from": [1.4, 0.62, 7.0],
+      "to": [9.0, 0.64, 14.0],
+      "faces": {
+        "up": { "texture": "#kraut" }
+      }
+    },
+    {
+      "name": "gravy_dish",
+      "from": [11.9, 0, 5.3],
+      "to": [15.7, 0.75, 9.3],
+      "faces": {
+        "up": { "texture": "#gravy" },
+        "down": { "texture": "#dish_side" },
+        "north": { "texture": "#dish_side" },
+        "south": { "texture": "#dish_side" },
+        "east": { "texture": "#dish_side" },
+        "west": { "texture": "#dish_side" }
+      }
+    },
+    {
+      "name": "knuckle_base",
+      "from": [3.2, 0.6, 4.2],
+      "to": [11.8, 2.4, 11.6],
+      "faces": {
+        "up": { "texture": "#meat_top" },
+        "down": { "texture": "#meat_side" },
+        "north": { "texture": "#meat_side" },
+        "south": { "texture": "#meat_side" },
+        "east": { "texture": "#meat_side" },
+        "west": { "texture": "#meat_side" }
+      }
+    },
+    {
+      "name": "knuckle_mid",
+      "from": [3.8, 2.4, 4.8],
+      "to": [11.2, 4.4, 11.0],
+      "faces": {
+        "up": { "texture": "#meat_top" },
+        "down": { "texture": "#meat_side" },
+        "north": { "texture": "#meat_side" },
+        "south": { "texture": "#meat_side" },
+        "east": { "texture": "#meat_side" },
+        "west": { "texture": "#meat_side" }
+      }
+    },
+    {
+      "name": "knuckle_top",
+      "from": [4.8, 4.4, 5.8],
+      "to": [10.2, 6.1, 10.0],
+      "faces": {
+        "up": { "texture": "#meat_top" },
+        "down": { "texture": "#meat_side" },
+        "north": { "texture": "#meat_side" },
+        "south": { "texture": "#meat_side" },
+        "east": { "texture": "#meat_side" },
+        "west": { "texture": "#meat_side" }
+      }
+    },
+    {
+      "name": "bone",
+      "from": [7.4, 6.05, 7.4],
+      "to": [8.6, 7.45, 8.6],
+      "rotation": {
+        "origin": [8.0, 6.1, 8.0],
+        "axis": "z",
+        "angle": -22.5
+      },
+      "faces": {
+        "up": { "texture": "#bone" },
+        "down": { "texture": "#bone" },
+        "north": { "texture": "#bone" },
+        "south": { "texture": "#bone" },
+        "east": { "texture": "#bone" },
+        "west": { "texture": "#bone" }
+      }
+    },
+    {
+      "name": "bone_knob",
+      "from": [7.15, 7.4, 7.15],
+      "to": [8.85, 7.85, 8.85],
+      "rotation": {
+        "origin": [8.0, 6.1, 8.0],
+        "axis": "z",
+        "angle": -22.5
+      },
+      "faces": {
+        "up": { "texture": "#bone" },
+        "down": { "texture": "#bone" },
+        "north": { "texture": "#bone" },
+        "south": { "texture": "#bone" },
+        "east": { "texture": "#bone" },
+        "west": { "texture": "#bone" }
+      }
+    }
+  ]
+}

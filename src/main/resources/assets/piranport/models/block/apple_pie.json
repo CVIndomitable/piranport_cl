@@ -1,0 +1,132 @@
+{
+  "parent": "block/block",
+  "render_type": "minecraft:cutout",
+  "textures": { "particle": "piranport:block/apple_pie_tin_top", "tin_top": "piranport:block/apple_pie_tin_top", "tin_side": "piranport:block/apple_pie_tin_side", "filling": "piranport:block/apple_pie_filling", "crust_top": "piranport:block/apple_pie_crust_top", "crust_side": "piranport:block/apple_pie_crust_side" },
+  "elements": [
+    {
+      "name": "tin",
+      "from": [1.25, 0, 1.25],
+      "to": [14.75, 1.4, 14.75],
+      "faces": {
+        "up": { "texture": "#tin_top" },
+        "down": { "texture": "#tin_side" },
+        "north": { "texture": "#tin_side" },
+        "south": { "texture": "#tin_side" },
+        "east": { "texture": "#tin_side" },
+        "west": { "texture": "#tin_side" }
+      }
+    },
+    {
+      "name": "filling",
+      "from": [2.5, 1.42, 2.5],
+      "to": [13.5, 1.44, 13.5],
+      "faces": {
+        "up": { "texture": "#filling" }
+      }
+    },
+    {
+      "name": "lattice_x_1",
+      "from": [4.6, 1.43, 3.7],
+      "to": [11.4, 1.72, 4.7],
+      "faces": {
+        "up": { "texture": "#crust_top" },
+        "down": { "texture": "#crust_side" },
+        "north": { "texture": "#crust_side" },
+        "south": { "texture": "#crust_side" },
+        "east": { "texture": "#crust_side" },
+        "west": { "texture": "#crust_side" }
+      }
+    },
+    {
+      "name": "lattice_x_2",
+      "from": [3.1, 1.43, 6.1],
+      "to": [12.9, 1.72, 7.1],
+      "faces": {
+        "up": { "texture": "#crust_top" },
+        "down": { "texture": "#crust_side" },
+        "north": { "texture": "#crust_side" },
+        "south": { "texture": "#crust_side" },
+        "east": { "texture": "#crust_side" },
+        "west": { "texture": "#crust_side" }
+      }
+    },
+    {
+      "name": "lattice_x_3",
+      "from": [3.0, 1.43, 8.5],
+      "to": [13.0, 1.72, 9.5],
+      "faces": {
+        "up": { "texture": "#crust_top" },
+        "down": { "texture": "#crust_side" },
+        "north": { "texture": "#crust_side" },
+        "south": { "texture": "#crust_side" },
+        "east": { "texture": "#crust_side" },
+        "west": { "texture": "#crust_side" }
+      }
+    },
+    {
+      "name": "lattice_x_4",
+      "from": [4.2, 1.43, 10.9],
+      "to": [11.8, 1.72, 11.9],
+      "faces": {
+        "up": { "texture": "#crust_top" },
+        "down": { "texture": "#crust_side" },
+        "north": { "texture": "#crust_side" },
+        "south": { "texture": "#crust_side" },
+        "east": { "texture": "#crust_side" },
+        "west": { "texture": "#crust_side" }
+      }
+    },
+    {
+      "name": "lattice_z_1",
+      "from": [3.7, 1.71, 4.6],
+      "to": [4.7, 2.0, 11.4],
+      "faces": {
+        "up": { "texture": "#crust_top" },
+        "down": { "texture": "#crust_side" },
+        "north": { "texture": "#crust_side" },
+        "south": { "texture": "#crust_side" },
+        "east": { "texture": "#crust_side" },
+        "west": { "texture": "#crust_side" }
+      }
+    },
+    {
+      "name": "lattice_z_2",
+      "from": [6.1, 1.71, 3.1],
+      "to": [7.1, 2.0, 12.9],
+      "faces": {
+        "up": { "texture": "#crust_top" },
+        "down": { "texture": "#crust_side" },
+        "north": { "texture": "#crust_side" },
+        "south": { "texture": "#crust_side" },
+        "east": { "texture": "#crust_side" },
+        "west": { "texture": "#crust_side" }
+      }
+    },
+    {
+      "name": "lattice_z_3",
+      "from": [8.5, 1.71, 3.0],
+      "to": [9.5, 2.0, 13.0],
+      "faces": {
+        "up": { "texture": "#crust_top" },
+        "down": { "texture": "#crust_side" },
+        "north": { "texture": "#crust_side" },
+        "south": { "texture": "#crust_side" },
+        "east": { "texture": "#crust_side" },
+        "west": { "texture": "#crust_side" }
+      }
+    },
+    {
+      "name": "lattice_z_4",
+      "from": [10.9, 1.71, 4.2],
+      "to": [11.9, 2.0, 11.8],
+      "faces": {
+        "up": { "texture": "#crust_top" },
+        "down": { "texture": "#crust_side" },
+        "north": { "texture": "#crust_side" },
+        "south": { "texture": "#crust_side" },
+        "east": { "texture": "#crust_side" },
+        "west": { "texture": "#crust_side" }
+      }
+    }
+  ]
+}

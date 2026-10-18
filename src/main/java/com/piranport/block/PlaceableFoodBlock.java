@@ -139,6 +139,16 @@ public class PlaceableFoodBlock extends BaseEntityBlock {
     }
 
     /**
+     * 专属模型食物方块（苹果派）：深灰金属派盘，圆形金黄苹果馅上铺
+     * 四横四纵的编织酥皮条。
+     */
+    public static class ApplePie extends PlaceableFoodBlock {
+        public static final MapCodec<ApplePie> CODEC = simpleCodec(ApplePie::new);
+        @Override public MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }
+        public ApplePie(BlockBehaviour.Properties props) { super(Block.box(1.25, 0, 1.25, 14.75, 2.0, 14.75), props); }
+    }
+
+    /**
      * 专属模型食物方块（图林根肠啤酒）：白色椭圆盘盛两根焦褐烤肠、
      * 三根浅色香料肠、土豆泥、西兰花与番茄酱挤线，右侧一杯带把啤酒。
      */

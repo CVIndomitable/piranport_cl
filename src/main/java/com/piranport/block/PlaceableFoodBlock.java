@@ -139,6 +139,16 @@ public class PlaceableFoodBlock extends BaseEntityBlock {
     }
 
     /**
+     * 专属模型食物方块（炸鱼薯条）：揉皱的报纸垫底、白纸托着金黄炸鱼柳、
+     * 一堆粗薯条、一片柠檬和一小枝欧芹。
+     */
+    public static class FriedFishAndChips extends PlaceableFoodBlock {
+        public static final MapCodec<FriedFishAndChips> CODEC = simpleCodec(FriedFishAndChips::new);
+        @Override public MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }
+        public FriedFishAndChips(BlockBehaviour.Properties props) { super(Block.box(0.5, 0, 0.5, 15.5, 2.3, 15.5), props); }
+    }
+
+    /**
      * 专属模型食物方块（苹果派）：深灰金属派盘，圆形金黄苹果馅上铺
      * 四横四纵的编织酥皮条。
      */

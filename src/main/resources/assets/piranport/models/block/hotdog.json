@@ -1,0 +1,164 @@
+{
+  "parent": "block/block",
+  "render_type": "minecraft:cutout",
+  "textures": { "particle": "piranport:block/hotdog_paper_top", "paper_top": "piranport:block/hotdog_paper_top", "paper_side": "piranport:block/hotdog_paper_side", "bun_top": "piranport:block/hotdog_bun_top", "bun_side": "piranport:block/hotdog_bun_side", "sausage_top": "piranport:block/hotdog_sausage_top", "sausage_side": "piranport:block/hotdog_sausage_side", "lettuce": "piranport:block/hotdog_lettuce", "ketchup": "piranport:block/hotdog_ketchup" },
+  "elements": [
+    {
+      "name": "paper",
+      "from": [0.8, 0, 2.6],
+      "to": [15.2, 0.25, 14.2],
+      "faces": {
+        "up": { "texture": "#paper_top" },
+        "down": { "texture": "#paper_side" },
+        "north": { "texture": "#paper_side" },
+        "south": { "texture": "#paper_side" },
+        "east": { "texture": "#paper_side" },
+        "west": { "texture": "#paper_side" }
+      }
+    },
+    {
+      "name": "dog_1_bun",
+      "from": [4.6, 0.25, 4.7],
+      "to": [12.6, 1.55, 7.3],
+      "rotation": {
+        "origin": [8.6, 0.25, 6.0],
+        "axis": "y",
+        "angle": -22.5
+      },
+      "faces": {
+        "up": { "texture": "#bun_top" },
+        "down": { "texture": "#bun_side" },
+        "north": { "texture": "#bun_side" },
+        "south": { "texture": "#bun_side" },
+        "east": { "texture": "#bun_side" },
+        "west": { "texture": "#bun_side" }
+      }
+    },
+    {
+      "name": "dog_1_sausage",
+      "from": [5.0, 1.5, 5.35],
+      "to": [12.2, 2.15, 6.65],
+      "rotation": {
+        "origin": [8.6, 0.25, 6.0],
+        "axis": "y",
+        "angle": -22.5
+      },
+      "faces": {
+        "up": { "texture": "#sausage_top" },
+        "down": { "texture": "#sausage_side" },
+        "north": { "texture": "#sausage_side" },
+        "south": { "texture": "#sausage_side" },
+        "east": { "texture": "#sausage_side" },
+        "west": { "texture": "#sausage_side" }
+      }
+    },
+    {
+      "name": "dog_1_lettuce",
+      "from": [5.4, 2.05, 5.5],
+      "to": [11.8, 2.3, 6.5],
+      "rotation": {
+        "origin": [8.6, 0.25, 6.0],
+        "axis": "y",
+        "angle": -22.5
+      },
+      "faces": {
+        "up": { "texture": "#lettuce" },
+        "down": { "texture": "#lettuce" },
+        "north": { "texture": "#lettuce" },
+        "south": { "texture": "#lettuce" },
+        "east": { "texture": "#lettuce" },
+        "west": { "texture": "#lettuce" }
+      }
+    },
+    {
+      "name": "dog_1_ketchup",
+      "from": [5.6, 2.28, 5.75],
+      "to": [11.6, 2.45, 6.25],
+      "rotation": {
+        "origin": [8.6, 0.25, 6.0],
+        "axis": "y",
+        "angle": -22.5
+      },
+      "faces": {
+        "up": { "texture": "#ketchup" },
+        "down": { "texture": "#ketchup" },
+        "north": { "texture": "#ketchup" },
+        "south": { "texture": "#ketchup" },
+        "east": { "texture": "#ketchup" },
+        "west": { "texture": "#ketchup" }
+      }
+    },
+    {
+      "name": "dog_2_bun",
+      "from": [3.0, 0.25, 8.2],
+      "to": [11.0, 1.55, 10.8],
+      "rotation": {
+        "origin": [7.0, 0.25, 9.5],
+        "axis": "y",
+        "angle": -22.5
+      },
+      "faces": {
+        "up": { "texture": "#bun_top" },
+        "down": { "texture": "#bun_side" },
+        "north": { "texture": "#bun_side" },
+        "south": { "texture": "#bun_side" },
+        "east": { "texture": "#bun_side" },
+        "west": { "texture": "#bun_side" }
+      }
+    },
+    {
+      "name": "dog_2_sausage",
+      "from": [3.4, 1.5, 8.85],
+      "to": [10.6, 2.15, 10.15],
+      "rotation": {
+        "origin": [7.0, 0.25, 9.5],
+        "axis": "y",
+        "angle": -22.5
+      },
+      "faces": {
+        "up": { "texture": "#sausage_top" },
+        "down": { "texture": "#sausage_side" },
+        "north": { "texture": "#sausage_side" },
+        "south": { "texture": "#sausage_side" },
+        "east": { "texture": "#sausage_side" },
+        "west": { "texture": "#sausage_side" }
+      }
+    },
+    {
+      "name": "dog_2_lettuce",
+      "from": [3.8, 2.05, 9.0],
+      "to": [10.2, 2.3, 10.0],
+      "rotation": {
+        "origin": [7.0, 0.25, 9.5],
+        "axis": "y",
+        "angle": -22.5
+      },
+      "faces": {
+        "up": { "texture": "#lettuce" },
+        "down": { "texture": "#lettuce" },
+        "north": { "texture": "#lettuce" },
+        "south": { "texture": "#lettuce" },
+        "east": { "texture": "#lettuce" },
+        "west": { "texture": "#lettuce" }
+      }
+    },
+    {
+      "name": "dog_2_ketchup",
+      "from": [4.0, 2.28, 9.25],
+      "to": [10.0, 2.45, 9.75],
+      "rotation": {
+        "origin": [7.0, 0.25, 9.5],
+        "axis": "y",
+        "angle": -22.5
+      },
+      "faces": {
+        "up": { "texture": "#ketchup" },
+        "down": { "texture": "#ketchup" },
+        "north": { "texture": "#ketchup" },
+        "south": { "texture": "#ketchup" },
+        "east": { "texture": "#ketchup" },
+        "west": { "texture": "#ketchup" }
+      }
+    }
+  ]
+}

@@ -139,6 +139,16 @@ public class PlaceableFoodBlock extends BaseEntityBlock {
     }
 
     /**
+     * 专属模型食物方块（热狗）：棕色油纸上两只热狗面包夹烤肠，
+     * 配生菜与番茄酱。
+     */
+    public static class Hotdog extends PlaceableFoodBlock {
+        public static final MapCodec<Hotdog> CODEC = simpleCodec(Hotdog::new);
+        @Override public MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }
+        public Hotdog(BlockBehaviour.Properties props) { super(Block.box(0.8, 0, 2.6, 15.2, 2.5, 14.2), props); }
+    }
+
+    /**
      * 专属模型食物方块（烤鱼味增汤）：左侧深红漆碗味增汤（豆腐/葱花），
      * 右侧淡蓝白长盘摆深色烤鱼、金黄鱼柳、紫苏叶与萝卜泥。
      */

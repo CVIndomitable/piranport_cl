@@ -139,6 +139,16 @@ public class PlaceableFoodBlock extends BaseEntityBlock {
     }
 
     /**
+     * 专属模型食物方块（什锦叉烧炒饭）：白色方形浅盘（盘沿有蓝纹），
+     * 中间一座炒饭，混着叉烧丁、蛋碎、青豆与葱花。
+     */
+    public static class AssortedCharSiuFriedRice extends PlaceableFoodBlock {
+        public static final MapCodec<AssortedCharSiuFriedRice> CODEC = simpleCodec(AssortedCharSiuFriedRice::new);
+        @Override public MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }
+        public AssortedCharSiuFriedRice(BlockBehaviour.Properties props) { super(Block.box(0.8, 0, 0.8, 15.2, 2.4, 15.2), props); }
+    }
+
+    /**
      * 专属模型食物方块（辣条）：米白方形浅盘，红亮油润的辣条
      * 长短条分三层交错叠放。
      */

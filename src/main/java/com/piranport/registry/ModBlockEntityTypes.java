@@ -117,6 +117,7 @@ public class ModBlockEntityTypes {
                             ModBlocks.YOKAN.get(),
                             ModBlocks.TEMPURA.get(),
                             ModBlocks.LATIAO.get(),
+                            ModBlocks.ASSORTED_CHAR_SIU_FRIED_RICE.get(),
                             ModBlocks.PEA_SOUP_WITH_RYE_BREAD.get(),
                             ModBlocks.RUSSIAN_DUMPLING.get(),
                             ModBlocks.OKROSHKA.get())

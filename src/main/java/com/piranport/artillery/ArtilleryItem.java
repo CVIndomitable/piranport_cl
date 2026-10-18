@@ -3,8 +3,9 @@ package com.piranport.artillery;
 import com.piranport.artillery.config.ArtilleryCannonData;
 import com.piranport.artillery.config.ArtilleryConfig;
 import com.piranport.combat.TransformationManager;
+import com.piranport.combat.cannon.CannonInventory;
+import com.piranport.combat.cannon.CannonReloading;
 import com.piranport.component.LoadedAmmo;
-import com.piranport.component.SelectedAmmoType;
 import com.piranport.component.WeaponCooldown;
 import com.piranport.debug.PiranPortDebug;
 import com.piranport.item.ExperienceShellItem;
@@ -354,14 +355,18 @@ public class ArtilleryItem extends Item {
                     .withStyle(net.minecraft.ChatFormatting.GRAY));
         }
 
-        // 当前选中弹种
-        SelectedAmmoType selected = stack.getOrDefault(ModDataComponents.SELECTED_AMMO_TYPE.get(), SelectedAmmoType.EMPTY);
-        if (selected.hasSelection()) {
-            Item ammoItem = BuiltInRegistries.ITEM.get(ResourceLocation.parse(selected.ammoItemId()));
-            tooltipComponents.add(Component.translatable("tooltip.piranport.cannon.selected_ammo",
-                    ammoItem.getDescription().getString())
-                    .withStyle(net.minecraft.ChatFormatting.YELLOW));
+        // 膛内弹种与下一发分开显示：切换弹种只改偏好，膛内弹药要等开火后才会换
+        LoadedAmmo chamber = stack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
+        if (chamber.hasAmmo()) {
+            String chamberName = BuiltInRegistries.ITEM.get(ResourceLocation.parse(chamber.ammoItemId()))
+                    .getDescription().getString();
+            tooltipComponents.add(Component.translatable("tooltip.piranport.cannon.loaded_ammo",
+                    chamber.count(), chamberName).withStyle(net.minecraft.ChatFormatting.GREEN));
+        } else {
+            tooltipComponents.add(Component.translatable("tooltip.piranport.cannon.no_ammo_loaded")
+                    .withStyle(net.minecraft.ChatFormatting.GRAY));
         }
+        appendNextAmmoTooltip(stack, tooltipComponents);
 
         if (ClientHooks.isClient()) {
             if (ClientHooks.hasShiftDown()) {
@@ -400,5 +405,19 @@ public class ArtilleryItem extends Item {
             }
         }
         ShipCoreCombat.appendWeaponCooldownTooltip(stack, tooltipComponents);
+    }
+
+    /** 下一发弹种只在武器位于本地玩家背包时显示：容器或展示栏里的火炮无法按背包预览。 */
+    private static void appendNextAmmoTooltip(ItemStack stack, List<Component> tooltipComponents) {
+        Player player = ClientHooks.getClientPlayer();
+        if (player == null || CannonInventory.findWeaponSlot(player.getInventory(), stack) < 0) return;
+        Item next = CannonReloading.previewNextReloadAmmo(player, stack);
+        if (next == null) {
+            tooltipComponents.add(Component.translatable("tooltip.piranport.cannon.next_ammo_none")
+                    .withStyle(net.minecraft.ChatFormatting.GRAY));
+        } else {
+            tooltipComponents.add(Component.translatable("tooltip.piranport.cannon.next_ammo",
+                    next.getDescription().getString()).withStyle(net.minecraft.ChatFormatting.YELLOW));
+        }
     }
 }

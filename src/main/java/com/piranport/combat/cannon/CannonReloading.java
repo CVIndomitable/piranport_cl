@@ -13,6 +13,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
@@ -81,6 +82,22 @@ public final class CannonReloading {
         startTimer(player, core, weaponSlot, weapon);
         CannonSounds.playCannonReloadStartSound(player, weapon);
         return true;
+    }
+
+    /**
+     * 预览下一发装填的弹种，与开始/结算读条走同一套选弹逻辑，供火炮提示显示。
+     * <p>WHY 不能只看 SELECTED_AMMO_TYPE：偏好弹种库存不足时会回退到背包顺序，只有这里的结果才是实际会装的弹种。
+     * @return 下一发弹种；无核心、不在玩家背包或背包里没有可用弹药时返回 null
+     */
+    @Nullable
+    public static Item previewNextReloadAmmo(Player player, ItemStack weapon) {
+        Inventory inventory = player.getInventory();
+        int slot = CannonInventory.findWeaponSlot(inventory, weapon);
+        if (slot < 0) return null;
+        int coreSlot = findCoreSlotIndex(inventory, player, slot);
+        if (coreSlot == -1) return null;
+        return new AmmoInventory(inventory, coreSlot, slot).chooseReloadAmmo(
+                weapon, getBarrelCount(weapon, player.level()), player.getAbilities().instabuild, player.level());
     }
 
     public static void tryManualCannonReload(Player player, ItemStack core, int coreSlot, ItemStack weapon) {

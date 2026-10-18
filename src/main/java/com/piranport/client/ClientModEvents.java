@@ -73,6 +73,16 @@ public class ClientModEvents {
             "british_single_18inch_gun", ModItems.BRITISH_SINGLE_18INCH_GUN);
     private static final CatalogGunRenderer.Spec BRIT_TWIN_18 = CatalogGunRenderer.spec(
             "british_twin_18inch_gun", ModItems.BRITISH_TWIN_18INCH_GUN);
+    private static final CatalogGunRenderer.Spec US_TWIN_18 = CatalogGunRenderer.spec(
+            "us_twin_18inch_gun", ModItems.US_TWIN_18INCH_GUN);
+    private static final CatalogGunRenderer.Spec JP_460 = CatalogGunRenderer.spec(
+            "japanese_triple_460mm_gun", ModItems.JAPANESE_TRIPLE_460MM_GUN);
+    private static final CatalogGunRenderer.Spec SOV_460 = CatalogGunRenderer.spec(
+            "soviet_triple_460mm_gun", ModItems.SOVIET_TRIPLE_460MM_GUN);
+    private static final CatalogGunRenderer.Spec BRIT_20_TWIN = CatalogGunRenderer.spec(
+            "british_twin_20inch_gun", ModItems.BRITISH_TWIN_20INCH_GUN);
+    private static final CatalogGunRenderer.Spec US_20_TWIN = CatalogGunRenderer.spec(
+            "us_twin_20inch_gun", ModItems.US_TWIN_20INCH_GUN);
 
     /** 注册日本12.7厘米连装炮与德国/意大利/美国三联主炮的 standalone 3D 模型（BEWLR 直接取用）。 */
     @SubscribeEvent

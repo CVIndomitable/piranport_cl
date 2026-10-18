@@ -195,6 +195,16 @@ public class ModItems {
             WeaponItems.CATALOG_GUNS.get("british_single_18inch_gun");
     public static final DeferredItem<Item> BRITISH_TWIN_18INCH_GUN =
             WeaponItems.CATALOG_GUNS.get("british_twin_18inch_gun");
+    public static final DeferredItem<Item> US_TWIN_18INCH_GUN =
+            WeaponItems.CATALOG_GUNS.get("us_twin_18inch_gun");
+    public static final DeferredItem<Item> JAPANESE_TRIPLE_460MM_GUN =
+            WeaponItems.CATALOG_GUNS.get("japanese_triple_460mm_gun");
+    public static final DeferredItem<Item> SOVIET_TRIPLE_460MM_GUN =
+            WeaponItems.CATALOG_GUNS.get("soviet_triple_460mm_gun");
+    public static final DeferredItem<Item> BRITISH_TWIN_20INCH_GUN =
+            WeaponItems.CATALOG_GUNS.get("british_twin_20inch_gun");
+    public static final DeferredItem<Item> US_TWIN_20INCH_GUN =
+            WeaponItems.CATALOG_GUNS.get("us_twin_20inch_gun");
     public static final DeferredItem<Item> FRENCH_QUAD_380MM_GUN = WeaponItems.FRENCH_QUAD_380MM_GUN;
     public static final DeferredItem<Item> FOURTEEN_BARREL_GUN = WeaponItems.FOURTEEN_BARREL_GUN;
 

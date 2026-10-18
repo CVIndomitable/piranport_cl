@@ -1,0 +1,6 @@
+{
+  "parent": "piranport:item/german_twin_406mm_gun_3d",
+  "textures": {
+    "muzzle_empty": "piranport:item/german_twin_406mm_gun_muzzle_loaded"
+  }
+}

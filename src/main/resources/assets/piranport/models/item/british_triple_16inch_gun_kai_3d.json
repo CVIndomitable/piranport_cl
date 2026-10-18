@@ -1,0 +1,13 @@
+{
+  "parent": "piranport:item/british_triple_16inch_gun_3d",
+  "textures": {
+    "hull": "piranport:item/british_triple_16inch_gun_kai_hull",
+    "hull_dark": "piranport:item/british_triple_16inch_gun_kai_hull_dark",
+    "roof": "piranport:item/british_triple_16inch_gun_kai_roof",
+    "barrel": "piranport:item/british_triple_16inch_gun_kai_barrel",
+    "detail": "piranport:item/british_triple_16inch_gun_kai_detail",
+    "muzzle_empty": "piranport:item/british_triple_16inch_gun_kai_muzzle_empty",
+    "muzzle_loaded": "piranport:item/british_triple_16inch_gun_kai_muzzle_loaded",
+    "particle": "piranport:item/british_triple_16inch_gun_kai_hull"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "parent": "piranport:item/us_triple_16inch_gun_mk6_3d",
+  "textures": {
+    "muzzle_empty": "piranport:item/us_triple_16inch_gun_mk6_muzzle_loaded"
+  }
+}

@@ -139,6 +139,16 @@ public class PlaceableFoodBlock extends BaseEntityBlock {
     }
 
     /**
+     * 专属模型食物方块（仰望星空派）：深灰波浪边派盘，金黄酥皮压着
+     * 橙色五角星，六条沙丁鱼的头/尾从馅里竖出来。
+     */
+    public static class StargazyPie extends PlaceableFoodBlock {
+        public static final MapCodec<StargazyPie> CODEC = simpleCodec(StargazyPie::new);
+        @Override public MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }
+        public StargazyPie(BlockBehaviour.Properties props) { super(Block.box(1.0, 0, 1.0, 15.0, 5.9, 15.0), props); }
+    }
+
+    /**
      * 专属模型食物方块（麻婆豆腐）：白瓷椭圆浅盘，中央红亮辣油里
      * 浮着十二块豆腐，撒青葱与深色肉末/花椒。
      */

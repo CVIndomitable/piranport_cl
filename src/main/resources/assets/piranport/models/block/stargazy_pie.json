@@ -1,0 +1,195 @@
+{
+  "parent": "block/block",
+  "render_type": "minecraft:cutout",
+  "textures": { "particle": "piranport:block/stargazy_dish_top", "dish_top": "piranport:block/stargazy_dish_top", "dish_side": "piranport:block/stargazy_dish_side", "crust_top": "piranport:block/stargazy_crust_top", "crust_side": "piranport:block/stargazy_crust_side", "fish_side": "piranport:block/stargazy_fish_side", "fish_head": "piranport:block/stargazy_fish_head", "fish_tail": "piranport:block/stargazy_fish_tail" },
+  "elements": [
+    {
+      "name": "dish",
+      "from": [1.0, 0, 1.0],
+      "to": [15.0, 1.2, 15.0],
+      "faces": {
+        "up": { "texture": "#dish_top" },
+        "down": { "texture": "#dish_side" },
+        "north": { "texture": "#dish_side" },
+        "south": { "texture": "#dish_side" },
+        "east": { "texture": "#dish_side" },
+        "west": { "texture": "#dish_side" }
+      }
+    },
+    {
+      "name": "crust",
+      "from": [1.9, 1.1, 1.9],
+      "to": [14.1, 1.8, 14.1],
+      "faces": {
+        "up": { "texture": "#crust_top" },
+        "down": { "texture": "#crust_side" },
+        "north": { "texture": "#crust_side" },
+        "south": { "texture": "#crust_side" },
+        "east": { "texture": "#crust_side" },
+        "west": { "texture": "#crust_side" }
+      }
+    },
+    {
+      "name": "fish_1",
+      "from": [7.5, 1.75, 4.3],
+      "to": [8.5, 5.35, 4.9],
+      "rotation": {
+        "origin": [8.0, 1.75, 4.6],
+        "axis": "x",
+        "angle": -22.5
+      },
+      "faces": {
+        "up": { "texture": "#fish_tail" },
+        "down": { "texture": "#fish_side" },
+        "north": { "texture": "#fish_side" },
+        "south": { "texture": "#fish_side" },
+        "east": { "texture": "#fish_side" },
+        "west": { "texture": "#fish_side" }
+      }
+    },
+    {
+      "name": "fin_1",
+      "from": [7.3, 5.3, 4.42],
+      "to": [8.7, 5.8, 4.78],
+      "rotation": {
+        "origin": [8.0, 1.75, 4.6],
+        "axis": "x",
+        "angle": -22.5
+      },
+      "faces": {
+        "up": { "texture": "#fish_tail" },
+        "down": { "texture": "#fish_side" },
+        "north": { "texture": "#fish_side" },
+        "south": { "texture": "#fish_side" },
+        "east": { "texture": "#fish_side" },
+        "west": { "texture": "#fish_side" }
+      }
+    },
+    {
+      "name": "fish_2",
+      "from": [10.5, 1.75, 5.5],
+      "to": [11.5, 5.15, 6.1],
+      "rotation": {
+        "origin": [11.0, 1.75, 5.8],
+        "axis": "z",
+        "angle": -22.5
+      },
+      "faces": {
+        "up": { "texture": "#fish_tail" },
+        "down": { "texture": "#fish_side" },
+        "north": { "texture": "#fish_side" },
+        "south": { "texture": "#fish_side" },
+        "east": { "texture": "#fish_side" },
+        "west": { "texture": "#fish_side" }
+      }
+    },
+    {
+      "name": "fin_2",
+      "from": [10.3, 5.1, 5.62],
+      "to": [11.7, 5.6, 5.98],
+      "rotation": {
+        "origin": [11.0, 1.75, 5.8],
+        "axis": "z",
+        "angle": -22.5
+      },
+      "faces": {
+        "up": { "texture": "#fish_tail" },
+        "down": { "texture": "#fish_side" },
+        "north": { "texture": "#fish_side" },
+        "south": { "texture": "#fish_side" },
+        "east": { "texture": "#fish_side" },
+        "west": { "texture": "#fish_side" }
+      }
+    },
+    {
+      "name": "fish_3",
+      "from": [10.9, 1.75, 9.1],
+      "to": [11.9, 5.45, 9.7],
+      "rotation": {
+        "origin": [11.4, 1.75, 9.4],
+        "axis": "z",
+        "angle": -22.5
+      },
+      "faces": {
+        "up": { "texture": "#fish_head" },
+        "down": { "texture": "#fish_side" },
+        "north": { "texture": "#fish_side" },
+        "south": { "texture": "#fish_side" },
+        "east": { "texture": "#fish_side" },
+        "west": { "texture": "#fish_side" }
+      }
+    },
+    {
+      "name": "fish_4",
+      "from": [7.7, 1.75, 11.1],
+      "to": [8.7, 5.25, 11.7],
+      "rotation": {
+        "origin": [8.2, 1.75, 11.4],
+        "axis": "x",
+        "angle": 22.5
+      },
+      "faces": {
+        "up": { "texture": "#fish_tail" },
+        "down": { "texture": "#fish_side" },
+        "north": { "texture": "#fish_side" },
+        "south": { "texture": "#fish_side" },
+        "east": { "texture": "#fish_side" },
+        "west": { "texture": "#fish_side" }
+      }
+    },
+    {
+      "name": "fin_4",
+      "from": [7.5, 5.2, 11.22],
+      "to": [8.9, 5.7, 11.58],
+      "rotation": {
+        "origin": [8.2, 1.75, 11.4],
+        "axis": "x",
+        "angle": 22.5
+      },
+      "faces": {
+        "up": { "texture": "#fish_tail" },
+        "down": { "texture": "#fish_side" },
+        "north": { "texture": "#fish_side" },
+        "south": { "texture": "#fish_side" },
+        "east": { "texture": "#fish_side" },
+        "west": { "texture": "#fish_side" }
+      }
+    },
+    {
+      "name": "fish_5",
+      "from": [4.3, 1.75, 9.9],
+      "to": [5.3, 5.15, 10.5],
+      "rotation": {
+        "origin": [4.8, 1.75, 10.2],
+        "axis": "z",
+        "angle": 22.5
+      },
+      "faces": {
+        "up": { "texture": "#fish_head" },
+        "down": { "texture": "#fish_side" },
+        "north": { "texture": "#fish_side" },
+        "south": { "texture": "#fish_side" },
+        "east": { "texture": "#fish_side" },
+        "west": { "texture": "#fish_side" }
+      }
+    },
+    {
+      "name": "fish_6",
+      "from": [4.4, 1.75, 5.9],
+      "to": [5.4, 5.55, 6.5],
+      "rotation": {
+        "origin": [4.9, 1.75, 6.2],
+        "axis": "z",
+        "angle": 22.5
+      },
+      "faces": {
+        "up": { "texture": "#fish_head" },
+        "down": { "texture": "#fish_side" },
+        "north": { "texture": "#fish_side" },
+        "south": { "texture": "#fish_side" },
+        "east": { "texture": "#fish_side" },
+        "west": { "texture": "#fish_side" }
+      }
+    }
+  ]
+}

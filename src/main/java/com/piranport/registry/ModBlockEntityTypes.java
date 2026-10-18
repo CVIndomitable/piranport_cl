@@ -112,6 +112,7 @@ public class ModBlockEntityTypes {
                             ModBlocks.FRIED_FISH_AND_CHIPS.get(),
                             ModBlocks.NAVAL_CURRY.get(),
                             ModBlocks.MAPO_TOFU.get(),
+                            ModBlocks.STARGAZY_PIE.get(),
                             ModBlocks.PEA_SOUP_WITH_RYE_BREAD.get(),
                             ModBlocks.RUSSIAN_DUMPLING.get(),
                             ModBlocks.OKROSHKA.get())

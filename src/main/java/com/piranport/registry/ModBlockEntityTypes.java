@@ -134,6 +134,7 @@ public class ModBlockEntityTypes {
                             ModBlocks.TEMPURA_SOBA_NOODLE.get(),
                             ModBlocks.YORKSHIRE_PUDDING.get(),
                             ModBlocks.BARBECUE.get(),
+                            ModBlocks.DONGPO_PORK.get(),
                             ModBlocks.PEA_SOUP_WITH_RYE_BREAD.get(),
                             ModBlocks.RUSSIAN_DUMPLING.get(),
                             ModBlocks.OKROSHKA.get())

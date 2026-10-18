@@ -139,6 +139,16 @@ public class PlaceableFoodBlock extends BaseEntityBlock {
     }
 
     /**
+     * 专属模型食物方块（东坡肉）：白椭圆盘红亮酱汁里一大块划十字
+     * 花刀的东坡肉，四周点缀青菜叶。
+     */
+    public static class DongpoPork extends PlaceableFoodBlock {
+        public static final MapCodec<DongpoPork> CODEC = simpleCodec(DongpoPork::new);
+        @Override public MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }
+        public DongpoPork(BlockBehaviour.Properties props) { super(Block.box(0.8, 0, 1.5, 15.2, 2.7, 14.5), props); }
+    }
+
+    /**
      * 专属模型食物方块（烧烤）：黑色圆烤炉与烤网，上面有大块烤肉、
      * 两根香肠和三串彩椒肉串。
      */

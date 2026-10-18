@@ -1,0 +1,6 @@
+{
+  "parent": "piranport:item/italian_triple_381mm_gun_kai_3d",
+  "textures": {
+    "muzzle_empty": "piranport:item/italian_triple_381mm_gun_kai_muzzle_loaded"
+  }
+}

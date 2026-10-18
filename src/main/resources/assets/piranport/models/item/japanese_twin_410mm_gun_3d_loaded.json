@@ -1,0 +1,6 @@
+{
+  "parent": "piranport:item/japanese_twin_410mm_gun_3d",
+  "textures": {
+    "muzzle_empty": "piranport:item/japanese_twin_410mm_gun_muzzle_loaded"
+  }
+}

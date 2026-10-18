@@ -13,8 +13,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * 副本节点图渲染器：DungeonBookScreen 的 NODE_MAP 与 DungeonContinueScreen 共用，
- * 保证两屏的三态配色/命中判定完全一致（需求：继续界面也要有同款节点图）。
+ * 副本节点图渲染器：供 DungeonContinueScreen 右栏使用，三态配色与命中判定集中在这里。
  *
  * <p>状态读自钥匙 component（{@link DungeonProgress}），事件驱动：
  * 服务端每次状态变化时 syncKey 写钥匙，客户端只在打开/重渲染时读取，不周期重读。</p>
@@ -243,19 +242,6 @@ public final class DungeonNodeMapRenderer {
         gfx.fill(cx - y, cy + x, cx - y + 1, cy + x + 1, color);
         gfx.fill(cx + y, cy - x, cx + y + 1, cy - x + 1, color);
         gfx.fill(cx - y, cy - x, cx - y + 1, cy - x + 1, color);
-    }
-
-    /** 便捷工具：取玩家背包里某槽位的钥匙进度（找不到钥匙时返回 EMPTY）。 */
-    public static DungeonProgress progressFromSlot(int keySlot) {
-        Minecraft mc = Minecraft.getInstance();
-        if (mc.player == null) return DungeonProgress.EMPTY;
-        var stack = mc.player.getInventory().getItem(keySlot);
-        if (stack.getItem() instanceof com.piranport.dungeon.key.DungeonKeyItem) {
-            return stack.getOrDefault(
-                    com.piranport.registry.ModDataComponents.DUNGEON_PROGRESS.get(),
-                    DungeonProgress.EMPTY);
-        }
-        return DungeonProgress.EMPTY;
     }
 
     /** 便捷工具：取讲台上插着的钥匙进度（客户端讲台 BE 会同步 KeyStack）。 */

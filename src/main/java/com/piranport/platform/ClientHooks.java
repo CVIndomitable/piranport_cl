@@ -105,8 +105,8 @@ public final class ClientHooks {
         bridge.playSound(sound, volume, pitch);
     }
 
-    public static void openDungeonContinueScreen(BlockPos lecternPos, String stageName, int clearedNodeCount) {
-        bridge.openDungeonContinueScreen(lecternPos, stageName, clearedNodeCount);
+    public static void openDungeonContinueScreen(BlockPos lecternPos) {
+        bridge.openDungeonContinueScreen(lecternPos);
     }
 
     public static void setDebugEnabledClient(boolean enabled) {
@@ -169,8 +169,8 @@ public final class ClientHooks {
         bridge.updateDungeonNode(nodeId);
     }
 
-    public static void setDungeonState(String stageName, String nodeId, long elapsedMillis) {
-        bridge.setDungeonState(stageName, nodeId, elapsedMillis);
+    public static void setDungeonState(String stageName, String nodeName, long elapsedMillis) {
+        bridge.setDungeonState(stageName, nodeName, elapsedMillis);
     }
 
     public static void updateDungeonBossOverlay(String bossName, String shipType, String chapter,

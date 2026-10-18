@@ -26,7 +26,8 @@ public record NodeData(
         double difficultyScale,   // 《副本/00》节点级 difficulty_scale；<=0 表示继承关卡级
         int waves,                // 基础波数（节点敌人列表 = 一波），多人按 DungeonScaling.waveCount 放大
         List<BranchRule> branches, // 《副本/22》分歧带路规则（有序）
-        String branchDefault      // 都不满足时的兜底节点；null = 不分歧
+        String branchDefault,     // 都不满足时的兜底节点；null = 不分歧
+        String displayName        // 节点显示名；未填时见 label()
 ) {
     public NodeData {
         branches = branches == null ? List.of() : List.copyOf(branches);
@@ -39,7 +40,12 @@ public record NodeData(
                     String script, TerrainType terrainType, Set<CombatRestriction> restrictions,
                     SceneData scene) {
         this(nodeId, type, enemies, rewards, cost, costMessage, displayX, displayY, script,
-                terrainType, restrictions, scene, 0.0, 1, List.of(), null);
+                terrainType, restrictions, scene, 0.0, 1, List.of(), null, null);
+    }
+
+    /** HUD 与结算展示用的名字：策划填了显示名就用它，否则退回节点 ID。 */
+    public String label() {
+        return displayName == null || displayName.isBlank() ? nodeId : displayName;
     }
 
     /** 是否配置了分歧带路。 */

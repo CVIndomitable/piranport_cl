@@ -130,9 +130,6 @@ public class ClientModEvents {
         // 蓝图收纳箱
         event.register(ModMenuTypes.BLUEPRINT_CHEST_MENU.get(),
                 com.piranport.menu.BlueprintChestScreen::new);
-        // 副本
-        event.register(ModMenuTypes.DUNGEON_BOOK_MENU.get(),
-                com.piranport.dungeon.client.DungeonBookScreen::new);
         // 调试终端
         event.register(ModMenuTypes.DEBUG_TERMINAL_MENU.get(),
                 com.piranport.client.gui.DebugTerminalScreen::new);

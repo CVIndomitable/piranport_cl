@@ -35,7 +35,6 @@ public class FleetGroup {
 
     public enum State {
         IDLE,    // Wandering, no enemy detected
-        ALERT,   // An enemy was spotted but not yet engaged
         COMBAT   // Actively fighting
     }
 

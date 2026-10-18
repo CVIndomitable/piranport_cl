@@ -154,6 +154,17 @@ public final class TerrainGenerationPipeline {
         };
     }
 
+    /** 节点地形建造的粗略完成比例（0~1）：分母为全部未开始时的 {@link #queuedBlocks} 口径。 */
+    public static double buildFraction(ServerLevel level, DungeonInstance instance, NodeData node) {
+        TerrainType terrain = node.terrainType() == null ? TerrainType.T1_OCEAN : node.terrainType();
+        long total = (long) MAP_SIZE * MAP_SIZE * (MAX_DEPTH + 1) + boundaryBlockCount(level, MAP_SIZE)
+                + featureCount(terrain) + 75L + 28L * checkpointCount(instance, node)
+                + boundaryBlockCount(level, DungeonConstants.NODE_AREA_SIZE);
+        if (total <= 0) return 1.0;
+        double remaining = queuedBlocks(level, instance, node);
+        return Math.max(0.0, Math.min(1.0, 1.0 - remaining / total));
+    }
+
     private static int processBase(ServerLevel level, TerrainGenerationState state, int budget) {
         long total = (long) MAP_SIZE * MAP_SIZE * (MAX_DEPTH + 1);
         int used = (int) Math.min(total - state.cursor(), budget);

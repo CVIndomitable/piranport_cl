@@ -158,11 +158,10 @@ public class KeyResetRecipe extends CustomRecipe {
 
         // 输出：新钥匙（同 stageId + 同 progress，仅 instanceId 移除 = 复制语义）
         ItemStack result = new ItemStack(sourceKey.getItem());
-        String stageId = DungeonKeyItem.getStageId(sourceKey);
-        // 新章节钥匙的章节号已经由物品类型表达，不再回写旧版差分组件；
-        // 只有旧通用钥匙需要保留存档中的 stageId。
-        if (!((DungeonKeyItem) sourceKey.getItem()).isChapterKey() && !stageId.isEmpty()) {
-            result.set(ModDataComponents.DUNGEON_STAGE_ID.get(), stageId);
+        // 章节钥匙可换关，当前关不能再靠物品类型推断，必须把解析出的关卡一起写回。
+        String stageId = DungeonKeyItem.resolveStageId(sourceKey);
+        if (!stageId.isEmpty()) {
+            DungeonKeyItem.setStageId(result, stageId);
         }
         // 保留原有进度（副本/09：复制合成替代重置）
         DungeonProgress originalProgress = DungeonKeyItem.getProgress(sourceKey);

@@ -200,9 +200,8 @@ public final class DungeonEntryService {
             }
             return;
         }
-        // 「从头开始」= 进度清零后重新进战斗：先清掉上一局在起点残留的战斗实体，
-        // 再按正常 enterNode 走刷怪/传送/奖励全流程。
-        if (mode == Mode.RESTART) {
+        // 已通关钥匙不重置：否则「从头开始」会重刷怪并重复发奖，等于绕过「已使用钥匙不能重置」
+        if (mode == Mode.RESTART && instance.getState() != DungeonInstance.State.COMPLETED) {
             resetNodeEntities(dungeonLevel, instance, nodeId);
             instance.resetProgress();
             manager.syncKey(instance, key);

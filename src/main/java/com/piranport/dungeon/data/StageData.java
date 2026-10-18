@@ -93,6 +93,12 @@ public record StageData(
         return Set.copyOf(reachable);
     }
 
+    /** 节点展示名；节点不存在时原样返回 ID。 */
+    public String nodeLabel(String nodeId) {
+        NodeData node = nodes.get(nodeId);
+        return node == null ? nodeId : node.label();
+    }
+
     /**
      * 按节点 ID 字典序计算稳定序号，避免非字母节点 ID 的战场坐标重叠。
      * 未知节点沿用序号 0，具体的节点合法性由入口校验。

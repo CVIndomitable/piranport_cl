@@ -30,6 +30,14 @@ public final class LecternBuildScheduler {
         return TerrainGenerationPipeline.isReady(dungeon, instance, start);
     }
 
+    /** 起点地形建造进度，按 5% 取整（粗略即可，减少书台同步次数）。 */
+    public static int buildPercent(MinecraftServer server, DungeonInstance instance, StageData stage) {
+        ServerLevel dungeon = DungeonEventHandler.getDungeonLevel(server);
+        NodeData start = stage.nodes().get(stage.startNode());
+        if (dungeon == null || start == null) return 0;
+        return (int) Math.floor(TerrainGenerationPipeline.buildFraction(dungeon, instance, start) * 20) * 5;
+    }
+
     /** ServerTickEvent.Post 调用。 */
     public static void tick(MinecraftServer server) {
         ServerLevel dungeon = DungeonEventHandler.getDungeonLevel(server);

@@ -202,18 +202,12 @@ public abstract class AbstractDeepOceanEntity extends Monster {
                 syncFleetState();
             }
 
-            // Fleet state particles (ALERT/COMBAT) — throttled, server-spawned so they sync to all clients
-            if (tickCount % 20 == 0 && level() instanceof ServerLevel sl) {
-                FleetGroup.State state = getFleetState();
-                if (state == FleetGroup.State.ALERT) {
-                    sl.sendParticles(ParticleTypes.WAX_ON,
-                            getX(), getY() + getBbHeight() + 0.5, getZ(),
-                            1, 0, 0.02, 0, 0);
-                } else if (state == FleetGroup.State.COMBAT) {
-                    sl.sendParticles(ParticleTypes.ANGRY_VILLAGER,
-                            getX(), getY() + getBbHeight() + 0.5, getZ(),
-                            1, 0, 0.02, 0, 0);
-                }
+            // 战斗中头顶冒愤怒粒子；节流到每秒一次，服务端生成才能同步给所有客户端
+            if (tickCount % 20 == 0 && level() instanceof ServerLevel sl
+                    && getFleetState() == FleetGroup.State.COMBAT) {
+                sl.sendParticles(ParticleTypes.ANGRY_VILLAGER,
+                        getX(), getY() + getBbHeight() + 0.5, getZ(),
+                        1, 0, 0.02, 0, 0);
             }
         }
 

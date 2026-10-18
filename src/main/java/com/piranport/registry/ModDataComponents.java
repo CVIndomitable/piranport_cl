@@ -173,4 +173,14 @@ public class ModDataComponents {
                     .persistent(com.piranport.dungeon.key.DungeonProgress.CODEC)
                     .networkSynchronized(com.piranport.dungeon.key.DungeonProgress.STREAM_CODEC)
                     .build());
+
+    /** 章节钥匙上「非当前关 → 副本实例」的记录；当前关的实例仍走 DUNGEON_INSTANCE_ID。 */
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<java.util.Map<String, java.util.UUID>>>
+            DUNGEON_STAGE_RUNS = DATA_COMPONENTS.register("dungeon_stage_runs",
+            () -> DataComponentType.<java.util.Map<String, java.util.UUID>>builder()
+                    .persistent(Codec.unboundedMap(Codec.STRING, net.minecraft.core.UUIDUtil.CODEC))
+                    .networkSynchronized(ByteBufCodecs.map(java.util.HashMap::new,
+                            ByteBufCodecs.stringUtf8(MAX_DUNGEON_STAGE_ID_LENGTH),
+                            net.minecraft.core.UUIDUtil.STREAM_CODEC))
+                    .build());
 }

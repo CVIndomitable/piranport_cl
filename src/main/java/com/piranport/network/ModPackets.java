@@ -195,6 +195,11 @@ public class ModPackets {
                 com.piranport.dungeon.network.SelectNodePayload::handle
         );
         registrar.playToServer(
+                com.piranport.dungeon.network.SelectStagePayload.TYPE,
+                com.piranport.dungeon.network.SelectStagePayload.STREAM_CODEC,
+                com.piranport.dungeon.network.SelectStagePayload::handle
+        );
+        registrar.playToServer(
                 com.piranport.dungeon.network.ReviveRequestPayload.TYPE,
                 com.piranport.dungeon.network.ReviveRequestPayload.STREAM_CODEC,
                 com.piranport.dungeon.network.ReviveRequestPayload::handle

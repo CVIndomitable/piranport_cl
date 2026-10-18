@@ -140,9 +140,10 @@ public class ServerGameEvents {
             if (instance == null) continue;
             com.piranport.dungeon.data.StageData stage =
                     com.piranport.dungeon.data.DungeonRegistry.INSTANCE.getStage(instance.getStageId());
+            String currentNode = instance.getCurrentNode();
             PacketDistributor.sendToPlayer(player, new com.piranport.dungeon.network.DungeonStatePayload(
                     stage == null ? instance.getStageId() : stage.displayName(),
-                    instance.getCurrentNode() == null ? "" : instance.getCurrentNode(),
+                    currentNode == null ? "" : (stage == null ? currentNode : stage.nodeLabel(currentNode)),
                     instance.getElapsedMillis()));
         }
     }

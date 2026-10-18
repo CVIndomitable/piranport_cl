@@ -6,40 +6,41 @@ import com.piranport.dungeon.key.DungeonKeyItem;
 import com.piranport.dungeon.key.DungeonProgress;
 import com.piranport.dungeon.network.ClientDungeonData;
 import com.piranport.dungeon.network.SelectNodePayload;
+import com.piranport.dungeon.network.SelectStagePayload;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.PacketDistributor;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 /**
  * 整合版 §3.1 讲台入口"继续/从头开始"对话框。
  *
- * <p>布局：左栏标题 + 继续/从头开始/取消按钮；右栏节点图
- * （{@link DungeonNodeMapRenderer}，与 DungeonBookScreen 同款三态配色）。
- * 节点状态读自讲台 BE 同步下来的钥匙 component——服务端每次进度变化都会经
- * syncKey 写钥匙并由 BE 推 update tag，客户端只在渲染时读，不周期重读。</p>
+ * <p>布局：左栏顶部是章节钥匙可切换的本章关卡列表（普通钥匙不显示）；左栏中部标题 +
+ * 继续/从头开始/取消按钮；右栏节点图（{@link DungeonNodeMapRenderer}）。
+ * 关卡名、节点图都从讲台 BE 读取，换关后随 BE 同步自动刷新。</p>
  *
  * <p>点击可达且未通关的节点会直接发 {@link SelectNodePayload} 进本
- * （等价于在书台节点图上点节点）。</p>
+ * （等价于在书台节点图上点节点）。点击本章其他关会发 {@link SelectStagePayload} 请求换关。</p>
  */
 public class DungeonContinueScreen extends Screen {
+    private static final int STAGE_ROW_TOP = 28;
+    private static final int STAGE_ROW_HEIGHT = 18;
+
     private final BlockPos lecternPos;
-    private final String stageName;
-    private final int clearedNodeCount;
 
     /** 右栏节点图的屏幕坐标缓存（render 时计算，mouseClicked 复用）。 */
     private Map<String, int[]> nodePositions = Map.of();
 
-    public DungeonContinueScreen(BlockPos lecternPos, String stageName, int clearedNodeCount) {
+    public DungeonContinueScreen(BlockPos lecternPos) {
         super(Component.literal("副本入口"));
         this.lecternPos = lecternPos;
-        this.stageName = stageName;
-        this.clearedNodeCount = clearedNodeCount;
     }
 
     /** 左栏宽度；右栏留给节点图。 */
@@ -82,12 +83,15 @@ public class DungeonContinueScreen extends Screen {
         return DungeonNodeMapRenderer.progressFromLectern(lecternPos);
     }
 
+    private ItemStack keyStack() {
+        if (minecraft == null || minecraft.level == null) return ItemStack.EMPTY;
+        if (!(minecraft.level.getBlockEntity(lecternPos) instanceof DungeonLecternBlockEntity be)) return ItemStack.EMPTY;
+        return be.getKeyStack();
+    }
+
     /** 从钥匙上的 stageId 查关卡数据（客户端注册表已同步）。 */
     private StageData stage() {
-        if (minecraft == null || minecraft.level == null) return null;
-        if (!(minecraft.level.getBlockEntity(lecternPos)
-                instanceof DungeonLecternBlockEntity be)) return null;
-        var stack = be.getKeyStack();
+        ItemStack stack = keyStack();
         if (!(stack.getItem() instanceof DungeonKeyItem)) return null;
         // 客户端拿不到服务端 DungeonRegistry，走已同步的 ClientDungeonData
         String stageId = DungeonKeyItem.getStageId(stack);
@@ -111,8 +115,46 @@ public class DungeonContinueScreen extends Screen {
         return null;
     }
 
+    /** 章节钥匙才有换关列表；普通（旧版）钥匙只绑定一关。 */
+    private List<String> chapterStageIds() {
+        ItemStack stack = keyStack();
+        if (!(stack.getItem() instanceof DungeonKeyItem key && key.isChapterKey())) return List.of();
+        StageData st = stage();
+        if (st == null) return List.of();
+        for (var ch : ClientDungeonData.getSortedChapters()) {
+            if (ch.chapterId().equals(st.chapter())) return ch.stages();
+        }
+        return List.of();
+    }
+
+    private int stageRowX() { return 10; }
+    private int stageRowWidth() { return leftColWidth() - 20; }
+    private int stageRowY(int index) { return STAGE_ROW_TOP + index * STAGE_ROW_HEIGHT; }
+
+    private int stageRowAt(double mouseX, double mouseY, int count) {
+        int x = stageRowX();
+        if (mouseX < x || mouseX >= x + stageRowWidth()) return -1;
+        for (int i = 0; i < count; i++) {
+            int y = stageRowY(i);
+            if (mouseY >= y && mouseY < y + STAGE_ROW_HEIGHT) return i;
+        }
+        return -1;
+    }
+
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (button == 0) {
+            List<String> stageIds = chapterStageIds();
+            int row = stageRowAt(mouseX, mouseY, stageIds.size());
+            if (row >= 0) {
+                StageData active = stage();
+                String target = stageIds.get(row);
+                if (active == null || !target.equals(active.stageId())) {
+                    PacketDistributor.sendToServer(new SelectStagePayload(lecternPos, target));
+                }
+                return true;
+            }
+        }
         // 节点图点击：命中可达未通关节点 → 直接进本（keySlot 走讲台钥匙槽位约定 -1，
         // 服务端 DungeonEntryService 以讲台为权威，keySlot 不参与校验）
         if (button == 0) {
@@ -140,15 +182,19 @@ public class DungeonContinueScreen extends Screen {
         gfx.fill(0, 0, this.width, this.height, 0xCC1A1A2E);
         super.render(gfx, mouseX, mouseY, partialTick);
 
-        // 左栏标题与信息
+        StageData st = stage();
         int cx = leftColWidth() / 2;
+
+        renderChapterStageList(gfx, mouseX, mouseY, st);
+
+        // 左栏标题与信息
         gfx.drawCenteredString(this.font, "§6副本入口", cx, this.height / 2 - 50, 0xFFFFD700);
-        gfx.drawCenteredString(this.font, "§f" + stageName, cx, this.height / 2 - 30, 0xFFFFFFFF);
+        gfx.drawCenteredString(this.font, "§f" + (st == null ? "" : st.displayName()),
+                cx, this.height / 2 - 30, 0xFFFFFFFF);
         gfx.drawCenteredString(this.font,
-                "§7已通关节点: §f" + clearedNodeCount, cx, this.height / 2 - 10, 0xFFCCCCCC);
+                "§7已通关节点: §f" + progress().clearedNodes().size(), cx, this.height / 2 - 10, 0xFFCCCCCC);
 
         // 右栏节点图
-        StageData st = stage();
         if (st != null) {
             int gx = leftColWidth() + 10;
             int gy = 20;
@@ -161,6 +207,22 @@ public class DungeonContinueScreen extends Screen {
             DungeonNodeMapRenderer.renderLegend(gfx, this.font, gx, this.height - 20);
         } else {
             nodePositions = Map.of();
+        }
+    }
+
+    private void renderChapterStageList(GuiGraphics gfx, int mouseX, int mouseY, StageData active) {
+        List<String> stageIds = chapterStageIds();
+        for (int i = 0; i < stageIds.size(); i++) {
+            String id = stageIds.get(i);
+            StageData s = ClientDungeonData.getStage(id);
+            String label = s == null ? id : s.displayName();
+            boolean current = active != null && id.equals(active.stageId());
+            int x = stageRowX();
+            int y = stageRowY(i);
+            boolean hover = stageRowAt(mouseX, mouseY, stageIds.size()) == i;
+            int bg = current ? 0xAA3A5A8A : hover ? 0x88444466 : 0x66222233;
+            gfx.fill(x, y, x + stageRowWidth(), y + STAGE_ROW_HEIGHT - 2, bg);
+            gfx.drawString(this.font, (current ? "§e▶ " : "§7") + label, x + 4, y + 4, 0xFFFFFFFF, false);
         }
     }
 

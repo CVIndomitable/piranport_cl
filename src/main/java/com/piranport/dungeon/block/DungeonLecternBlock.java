@@ -28,13 +28,10 @@ import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
-import com.piranport.dungeon.instance.DungeonInstance;
-import com.piranport.dungeon.instance.DungeonInstanceManager;
 import com.piranport.dungeon.network.OpenContinueScreenPayload;
 import net.minecraft.server.level.ServerLevel;
 import net.neoforged.neoforge.network.PacketDistributor;
 
-import java.util.UUID;
 
 /**
  * 副本书台（讲台）方块。策划决策/副本/17 §三：书台本身就是入口，入口传送门已作废。
@@ -228,12 +225,6 @@ public class DungeonLecternBlock extends BaseEntityBlock {
             return;
         }
         // 整合版 §3.1：有进度弹"最新记录点 / 从头开始"；无进度 ContinueScreen 显示"直接进入"。
-        DungeonInstanceManager mgr = DungeonInstanceManager.get(level);
-        String stageDisplay = lecternBE.getLabelStage().isEmpty() ? "(unknown)" : lecternBE.getLabelStage();
-        int clearedCount = 0;
-        UUID instId = com.piranport.dungeon.key.DungeonKeyItem.getInstanceId(lecternBE.getKeyStack());
-        DungeonInstance inst = instId == null ? null : mgr.getInstance(instId);
-        if (inst != null) clearedCount = inst.getClearedNodes().size();
-        PacketDistributor.sendToPlayer(player, new OpenContinueScreenPayload(pos, stageDisplay, clearedCount));
+        PacketDistributor.sendToPlayer(player, new OpenContinueScreenPayload(pos));
     }
 }

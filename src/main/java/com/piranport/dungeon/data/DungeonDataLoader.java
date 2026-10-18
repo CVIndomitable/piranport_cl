@@ -325,6 +325,7 @@ public class DungeonDataLoader extends SimpleJsonResourceReloadListener {
         int displayX = json.has("display_x") ? json.get("display_x").getAsInt() : 0;
         int displayY = json.has("display_y") ? json.get("display_y").getAsInt() : 0;
         String script = json.has("script") ? json.get("script").getAsString() : null;
+        String displayName = json.has("display_name") ? json.get("display_name").getAsString() : null;
         // 节点级 terrain_type 是可选覆盖；未写时继承关卡级（见 parseStage）。
         TerrainType terrainType = stageTerrain;
         if (json.has("terrain_type") && !json.get("terrain_type").isJsonNull()) {
@@ -384,7 +385,7 @@ public class DungeonDataLoader extends SimpleJsonResourceReloadListener {
         return new NodeData(nodeId, type, enemies, List.copyOf(rewards),
                 List.copyOf(cost), costMessage, displayX, displayY, script,
                 terrainType, Set.copyOf(restrictions), scene,
-                nodeDifficulty, waves, List.copyOf(branches), branchDefault);
+                nodeDifficulty, waves, List.copyOf(branches), branchDefault, displayName);
     }
 
     private BranchRule parseBranchRule(JsonObject obj, String nodeId) {

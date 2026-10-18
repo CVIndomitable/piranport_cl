@@ -165,8 +165,8 @@ public final class ClientItemHooks implements com.piranport.platform.ClientBridg
     }
 
     @Override
-    public void openDungeonContinueScreen(net.minecraft.core.BlockPos lecternPos, String stageName, int clearedNodeCount) {
-        Minecraft.getInstance().setScreen(new DungeonContinueScreen(lecternPos, stageName, clearedNodeCount));
+    public void openDungeonContinueScreen(net.minecraft.core.BlockPos lecternPos) {
+        Minecraft.getInstance().setScreen(new DungeonContinueScreen(lecternPos));
     }
 
     @Override
@@ -244,8 +244,8 @@ public final class ClientItemHooks implements com.piranport.platform.ClientBridg
     }
 
     @Override
-    public void setDungeonState(String stageName, String nodeId, long elapsedMillis) {
-        DungeonHudLayer.setDungeonState(stageName, nodeId, elapsedMillis);
+    public void setDungeonState(String stageName, String nodeName, long elapsedMillis) {
+        DungeonHudLayer.setDungeonState(stageName, nodeName, elapsedMillis);
     }
 
     @Override

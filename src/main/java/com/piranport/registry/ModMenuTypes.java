@@ -42,11 +42,6 @@ public class ModMenuTypes {
             MENU_TYPES.register("blueprint_chest",
                     () -> IMenuTypeExtension.create(com.piranport.menu.BlueprintChestMenu::fromNetwork));
 
-    // Dungeon System
-    public static final DeferredHolder<MenuType<?>, MenuType<com.piranport.dungeon.menu.DungeonBookMenu>>
-            DUNGEON_BOOK_MENU = MENU_TYPES.register("dungeon_book",
-                    () -> IMenuTypeExtension.create(com.piranport.dungeon.menu.DungeonBookMenu::fromNetwork));
-
     // Debug Terminal
     public static final DeferredHolder<MenuType<?>, MenuType<com.piranport.menu.DebugTerminalMenu>>
             DEBUG_TERMINAL_MENU = MENU_TYPES.register("debug_terminal",

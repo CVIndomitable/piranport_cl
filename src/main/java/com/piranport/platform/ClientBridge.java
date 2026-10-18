@@ -53,7 +53,7 @@ public interface ClientBridge {
 
     void playSound(SoundEvent sound, float volume, float pitch);
 
-    void openDungeonContinueScreen(BlockPos lecternPos, String stageName, int clearedNodeCount);
+    void openDungeonContinueScreen(BlockPos lecternPos);
 
     void setDebugEnabledClient(boolean enabled);
 
@@ -86,7 +86,7 @@ public interface ClientBridge {
 
     void updateDungeonNode(String nodeId);
 
-    void setDungeonState(String stageName, String nodeId, long elapsedMillis);
+    void setDungeonState(String stageName, String nodeName, long elapsedMillis);
 
     void updateDungeonBossOverlay(String bossName, String shipType, String chapter,
                                   int segment, float health, float maxHealth,

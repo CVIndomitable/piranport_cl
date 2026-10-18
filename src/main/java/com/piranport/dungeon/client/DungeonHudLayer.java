@@ -28,7 +28,7 @@ public class DungeonHudLayer implements LayeredDraw.Layer {
 
     // Client-side state updated by S2C payloads
     private static String currentStageName = "";
-    private static String currentNodeId = "";
+    private static String currentNodeName = "";
     /** 服务端同步下来的关卡总用时。客户端不自己算（原来用墙钟算，暂停后仍在跑）。 */
     private static long timerElapsedMillis = 0;
     private static boolean inDungeon = false;
@@ -41,14 +41,14 @@ public class DungeonHudLayer implements LayeredDraw.Layer {
     private static boolean bossVisible;
     private static long quietUntilMillis;
 
-    public static void setDungeonState(String stageName, String nodeId, long elapsedMillis) {
+    public static void setDungeonState(String stageName, String nodeName, long elapsedMillis) {
         if ((stageName == null || stageName.isEmpty())
-                && (nodeId == null || nodeId.isEmpty()) && elapsedMillis <= 0L) {
+                && (nodeName == null || nodeName.isEmpty()) && elapsedMillis <= 0L) {
             clearDungeonState();
             return;
         }
         currentStageName = stageName;
-        currentNodeId = nodeId;
+        currentNodeName = nodeName;
         timerElapsedMillis = Math.max(0L, elapsedMillis);
         inDungeon = true;
     }
@@ -60,14 +60,14 @@ public class DungeonHudLayer implements LayeredDraw.Layer {
     public static void clearDungeonState() {
         inDungeon = false;
         currentStageName = "";
-        currentNodeId = "";
+        currentNodeName = "";
         timerElapsedMillis = 0;
         clearBossOverlay();
     }
 
     /** Update just the node ID for immediate feedback when entering a new node. */
-    public static void updateNode(String nodeId) {
-        currentNodeId = nodeId;
+    public static void updateNode(String nodeName) {
+        currentNodeName = nodeName;
     }
 
     public static boolean isInDungeon() {
@@ -135,9 +135,9 @@ public class DungeonHudLayer implements LayeredDraw.Layer {
         }
 
         // Current node (top center, below stage name)
-        if (!currentNodeId.isEmpty()) {
+        if (!currentNodeName.isEmpty()) {
             gfx.drawCenteredString(font,
-                    Component.translatable("hud.piranport.dungeon.node", currentNodeId),
+                    Component.translatable("hud.piranport.dungeon.node", currentNodeName),
                     screenWidth / 2, 17, 0xFFAAFFAA);
         }
 

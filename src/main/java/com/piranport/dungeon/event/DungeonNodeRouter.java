@@ -181,7 +181,8 @@ public final class DungeonNodeRouter {
                 yaw, player.getXRot());
         StageData stage = DungeonRegistry.INSTANCE.getStage(instance.getStageId());
         PacketDistributor.sendToPlayer(player, new DungeonStatePayload(
-                stage == null ? instance.getStageId() : stage.displayName(), nodeId, instance.getElapsedMillis()));
+                stage == null ? instance.getStageId() : stage.displayName(),
+                stage == null ? nodeId : stage.nodeLabel(nodeId), instance.getElapsedMillis()));
         DungeonInstanceManager.get(dungeonLevel).refreshPlayerPresence(player.server);
     }
 

@@ -16,7 +16,9 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.LevelReader;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public class DungeonKeyItem extends Item {
@@ -184,6 +186,26 @@ public class DungeonKeyItem extends Item {
      */
     public static void setInstanceId(ItemStack stack, UUID instanceId) {
         stack.set(ModDataComponents.DUNGEON_INSTANCE_ID.get(), instanceId);
+    }
+
+    public static void setStageId(ItemStack stack, String stageId) {
+        stack.set(ModDataComponents.DUNGEON_STAGE_ID.get(), stageId);
+    }
+
+    /** 章节钥匙换关时，把离开的关卡实例登记到钥匙上，之后切回来仍接着打。 */
+    public static void stashStageRun(ItemStack stack, String stageId, UUID instanceId) {
+        if (instanceId == null) return;
+        Map<String, UUID> runs = new HashMap<>(stack.getOrDefault(ModDataComponents.DUNGEON_STAGE_RUNS.get(), Map.of()));
+        runs.put(stageId, instanceId);
+        stack.set(ModDataComponents.DUNGEON_STAGE_RUNS.get(), runs);
+    }
+
+    /** 取出并移除某关已登记的实例；没有则返回 null（该关尚未建过实例）。 */
+    public static UUID takeStageRun(ItemStack stack, String stageId) {
+        Map<String, UUID> runs = new HashMap<>(stack.getOrDefault(ModDataComponents.DUNGEON_STAGE_RUNS.get(), Map.of()));
+        UUID id = runs.remove(stageId);
+        stack.set(ModDataComponents.DUNGEON_STAGE_RUNS.get(), runs);
+        return id;
     }
 
     // ========== 钥匙槽位工具（迁移自 FlagshipManager，整合版 §2.2：钥匙插在讲台上，FlagshipManager 玩家权限概念已取消）==========

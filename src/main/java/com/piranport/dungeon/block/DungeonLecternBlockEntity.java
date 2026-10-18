@@ -6,6 +6,8 @@ import com.piranport.registry.ModBlockEntityTypes;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
@@ -48,6 +50,8 @@ public class DungeonLecternBlockEntity extends BlockEntity {
     private int labelCleared = 0;
     private boolean labelCompleted = false;
     private int labelPresent = 0;
+    /** 建造进度 0-100（5% 一档），仅建造中有效；随 update tag 下发。 */
+    private int buildPercent = 0;
     /** 上次推送给客户端的钥匙 component 哈希；用于捕获不进字幕字段的进度变化。 */
     private int lastKeyHash = 0;
 
@@ -96,11 +100,13 @@ public class DungeonLecternBlockEntity extends BlockEntity {
         String prevStage = labelStage;
         int prevCleared = labelCleared, prevPresent = labelPresent;
         boolean prevCompleted = labelCompleted;
+        int prevPercent = buildPercent;
 
         labelStage = "";
         labelCleared = 0;
         labelCompleted = false;
         labelPresent = 0;
+        buildPercent = 0;
         if (!hasKey()) {
             status = LecternPattern.Status.EMPTY;
         } else {
@@ -116,6 +122,7 @@ public class DungeonLecternBlockEntity extends BlockEntity {
                 labelCompleted = instance.getState() == com.piranport.dungeon.instance.DungeonInstance.State.COMPLETED;
                 labelPresent = manager.countPresentPlayers(instance, serverLevel.getServer());
                 built = LecternBuildScheduler.isBuilt(serverLevel.getServer(), instance, stage);
+                if (!built) buildPercent = LecternBuildScheduler.buildPercent(serverLevel.getServer(), instance, stage);
             }
             status = LecternPattern.status(true, instance != null && stage != null, built, labelPresent);
         }
@@ -127,7 +134,7 @@ public class DungeonLecternBlockEntity extends BlockEntity {
         int keyHash = hasKey() ? keyStack.getComponents().hashCode() : 0;
         if (status != prev || !labelStage.equals(prevStage) || labelCleared != prevCleared
                 || labelPresent != prevPresent || labelCompleted != prevCompleted
-                || keyHash != lastKeyHash) {
+                || buildPercent != prevPercent || keyHash != lastKeyHash) {
             lastKeyHash = keyHash;
             setChanged();
             level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), Block.UPDATE_CLIENTS);
@@ -139,6 +146,7 @@ public class DungeonLecternBlockEntity extends BlockEntity {
     public int getLabelCleared() { return labelCleared; }
     public boolean isLabelCompleted() { return labelCompleted; }
     public int getLabelPresent() { return labelPresent; }
+    public int getBuildPercent() { return buildPercent; }
 
     // ===== Getters =====
 
@@ -163,6 +171,54 @@ public class DungeonLecternBlockEntity extends BlockEntity {
         dungeonInstanceUuid = instanceId;
         setChanged();
     }
+
+    /**
+     * 章节钥匙换关（副本/17）：书台就绪且当前关无人在场时，切到同章另一关。
+     * 目标关曾经建过实例则接回原进度，否则新建。进行中或建造中不允许换，避免离开的关卡失去书台。
+     */
+    public boolean switchStage(ServerPlayer player, String targetStageId) {
+        if (!(level instanceof net.minecraft.server.level.ServerLevel serverLevel) || !hasKey()) return false;
+        if (!(keyStack.getItem() instanceof DungeonKeyItem key && key.isChapterKey())) return false;
+        String currentStageId = DungeonKeyItem.resolveStageId(keyStack);
+        if (currentStageId.equals(targetStageId)) return true;
+        var registry = com.piranport.dungeon.data.DungeonRegistry.INSTANCE;
+        var current = registry.getStage(currentStageId);
+        var target = registry.getStage(targetStageId);
+        if (current == null || target == null || !current.chapter().equals(target.chapter())) return false;
+
+        refreshStatus();
+        if (status != LecternPattern.Status.READY) {
+            player.displayClientMessage(Component.translatable("dungeon.piranport.stage_switch.not_ready"), true);
+            return false;
+        }
+        var manager = com.piranport.dungeon.instance.DungeonInstanceManager.get(serverLevel);
+        UUID currentId = DungeonKeyItem.getInstanceId(keyStack);
+        var currentInstance = currentId == null ? null : manager.getInstance(currentId);
+        if (currentInstance != null && manager.countPresentPlayers(currentInstance, serverLevel.getServer()) > 0) {
+            player.displayClientMessage(Component.translatable("dungeon.piranport.stage_switch.occupied"), true);
+            return false;
+        }
+
+        DungeonKeyItem.stashStageRun(keyStack, currentStageId, currentId);
+        DungeonKeyItem.setStageId(keyStack, targetStageId);
+        UUID targetId = DungeonKeyItem.takeStageRun(keyStack, targetStageId);
+        var instance = targetId == null ? null : manager.getInstance(targetId);
+        if (instance == null) {
+            instance = manager.createInstanceForLectern(targetStageId, worldPosition,
+                    level.dimension().location().toString());
+        }
+        instance.setLecternPos(worldPosition);
+        instance.setLecternDimension(level.dimension().location().toString());
+        DungeonKeyItem.setInstanceId(keyStack, instance.getInstanceId());
+        dungeonInstanceUuid = instance.getInstanceId();
+        manager.syncKey(instance, keyStack);
+        manager.setDirty();
+        setChanged();
+        refreshStatus();
+        syncHasKeyState();
+        return true;
+    }
+
 
     /**
      * 尝试将玩家背包中任意一把钥匙插入讲台。已持有钥匙的讲台拒绝插入。
@@ -333,6 +389,7 @@ public class DungeonLecternBlockEntity extends BlockEntity {
         tag.putInt("LabelCleared", labelCleared);
         tag.putBoolean("LabelCompleted", labelCompleted);
         tag.putInt("LabelPresent", labelPresent);
+        tag.putInt("BuildPercent", buildPercent);
         tag.putString("LabelStatus", getStatus().name());
         return tag;
     }
@@ -354,6 +411,7 @@ public class DungeonLecternBlockEntity extends BlockEntity {
         labelCleared = tag.getInt("LabelCleared");
         labelCompleted = tag.getBoolean("LabelCompleted");
         labelPresent = tag.getInt("LabelPresent");
+        buildPercent = tag.getInt("BuildPercent");
         try {
             status = LecternPattern.Status.valueOf(tag.getString("LabelStatus"));
         } catch (IllegalArgumentException e) {

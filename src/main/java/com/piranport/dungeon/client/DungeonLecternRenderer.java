@@ -3,6 +3,7 @@ package com.piranport.dungeon.client;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.piranport.dungeon.block.LecternPattern;
 import com.piranport.dungeon.block.DungeonLecternBlockEntity;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.renderer.LightTexture;
@@ -55,7 +56,10 @@ public class DungeonLecternRenderer implements BlockEntityRenderer<DungeonLecter
                     be.getLabelPresent(), LecternPattern.instanceCapacity()));
         }
         switch (status) {
-            case BUILDING -> lines.add(Component.translatable("block.piranport.dungeon_lectern.label.building"));
+            case BUILDING -> {
+                lines.add(buildBar(be.getBuildPercent()));
+                lines.add(Component.translatable("block.piranport.dungeon_lectern.label.building"));
+            }
             case FULL -> lines.add(Component.translatable("block.piranport.dungeon_lectern.label.full"));
             case INVALID -> lines.add(Component.translatable("block.piranport.dungeon_lectern.label.invalid"));
             default -> { }
@@ -85,6 +89,14 @@ public class DungeonLecternRenderer implements BlockEntityRenderer<DungeonLecter
             return 0xFF000000 | LecternPattern.of(status).tint();
         }
         return 0xFFD0D0D0;
+    }
+
+    /** 20 格进度条，已完成段绿色、未完成段暗灰；百分比为 5% 取整后的值。 */
+    private static Component buildBar(int percent) {
+        int filled = percent / 5;
+        return Component.literal("█".repeat(filled)).withStyle(ChatFormatting.GREEN)
+                .append(Component.literal("░".repeat(20 - filled)).withStyle(ChatFormatting.DARK_GRAY))
+                .append(Component.literal(" " + percent + "%"));
     }
 
     @Override

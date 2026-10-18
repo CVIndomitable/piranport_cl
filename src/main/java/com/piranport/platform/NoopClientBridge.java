@@ -74,7 +74,7 @@ class NoopClientBridge implements ClientBridge {
     public void playSound(SoundEvent sound, float volume, float pitch) {  }
 
     @Override
-    public void openDungeonContinueScreen(BlockPos lecternPos, String stageName, int clearedNodeCount) {  }
+    public void openDungeonContinueScreen(BlockPos lecternPos) {  }
 
     @Override
     public void setDebugEnabledClient(boolean enabled) {  }
@@ -118,7 +118,7 @@ class NoopClientBridge implements ClientBridge {
     public void updateDungeonNode(String nodeId) {  }
 
     @Override
-    public void setDungeonState(String stageName, String nodeId, long elapsedMillis) {  }
+    public void setDungeonState(String stageName, String nodeName, long elapsedMillis) {  }
 
     @Override
     public void updateDungeonBossOverlay(String bossName, String shipType, String chapter,

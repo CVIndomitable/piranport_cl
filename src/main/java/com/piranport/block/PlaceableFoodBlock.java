@@ -139,6 +139,26 @@ public class PlaceableFoodBlock extends BaseEntityBlock {
     }
 
     /**
+     * 专属模型食物方块（甜豆花）：白瓷碗盛嫩豆花，浇琥珀糖浆，
+     * 配红豆与黄绿蜜豆。
+     */
+    public static class BeetBlossom extends PlaceableFoodBlock {
+        public static final MapCodec<BeetBlossom> CODEC = simpleCodec(BeetBlossom::new);
+        @Override public MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }
+        public BeetBlossom(BlockBehaviour.Properties props) { super(Block.box(1.4, 0, 1.4, 14.6, 5.6, 14.6), props); }
+    }
+
+    /**
+     * 专属模型食物方块（咸豆花）：白瓷碗盛嫩豆花，浇酱色汤汁，
+     * 配深色紫菜/榨菜、葱花与肉末。
+     */
+    public static class SaltyBeanCurd extends PlaceableFoodBlock {
+        public static final MapCodec<SaltyBeanCurd> CODEC = simpleCodec(SaltyBeanCurd::new);
+        @Override public MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }
+        public SaltyBeanCurd(BlockBehaviour.Properties props) { super(Block.box(1.4, 0, 1.4, 14.6, 5.6, 14.6), props); }
+    }
+
+    /**
      * 专属模型食物方块（金镶玉包子）：圆形竹蒸笼，垫着竹编笼底，
      * 里面摆三个带放射褶和粉点的白胖包子。
      */

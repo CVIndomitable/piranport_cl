@@ -1,0 +1,137 @@
+{
+  "parent": "block/block",
+  "render_type": "minecraft:cutout",
+  "textures": { "particle": "piranport:block/douhua_bowl_side", "bowl_top": "piranport:block/douhua_bowl_top", "bowl_side": "piranport:block/douhua_bowl_side", "curd_side": "piranport:block/douhua_curd_side", "curd_top": "piranport:block/douhua_sweet_top", "douhua_red_bean": "piranport:block/douhua_red_bean", "douhua_melon": "piranport:block/douhua_melon" },
+  "elements": [
+    {
+      "name": "bowl_foot",
+      "from": [4.8, 0, 4.8],
+      "to": [11.2, 1.2, 11.2],
+      "faces": {
+        "up": { "texture": "#bowl_side" },
+        "down": { "texture": "#bowl_side" },
+        "north": { "texture": "#bowl_side" },
+        "south": { "texture": "#bowl_side" },
+        "east": { "texture": "#bowl_side" },
+        "west": { "texture": "#bowl_side" }
+      }
+    },
+    {
+      "name": "bowl_lower",
+      "from": [2.8, 1.2, 2.8],
+      "to": [13.2, 3.6, 13.2],
+      "faces": {
+        "up": { "texture": "#bowl_side" },
+        "down": { "texture": "#bowl_side" },
+        "north": { "texture": "#bowl_side" },
+        "south": { "texture": "#bowl_side" },
+        "east": { "texture": "#bowl_side" },
+        "west": { "texture": "#bowl_side" }
+      }
+    },
+    {
+      "name": "bowl_flare",
+      "from": [1.4, 3.6, 1.4],
+      "to": [14.6, 5.6, 14.6],
+      "faces": {
+        "up": { "texture": "#bowl_top" },
+        "down": { "texture": "#bowl_side" },
+        "north": { "texture": "#bowl_side" },
+        "south": { "texture": "#bowl_side" },
+        "east": { "texture": "#bowl_side" },
+        "west": { "texture": "#bowl_side" }
+      }
+    },
+    {
+      "name": "curd",
+      "from": [2.9, 4.4, 2.9],
+      "to": [13.1, 4.9, 13.1],
+      "faces": {
+        "up": { "texture": "#curd_top" },
+        "down": { "texture": "#curd_side" },
+        "north": { "texture": "#curd_side" },
+        "south": { "texture": "#curd_side" },
+        "east": { "texture": "#curd_side" },
+        "west": { "texture": "#curd_side" }
+      }
+    },
+    {
+      "name": "red_bean_1",
+      "from": [9.3, 4.88, 6.7],
+      "to": [9.8, 5.18, 7.15],
+      "faces": {
+        "up": { "texture": "#douhua_red_bean" },
+        "down": { "texture": "#douhua_red_bean" },
+        "north": { "texture": "#douhua_red_bean" },
+        "south": { "texture": "#douhua_red_bean" },
+        "east": { "texture": "#douhua_red_bean" },
+        "west": { "texture": "#douhua_red_bean" }
+      }
+    },
+    {
+      "name": "red_bean_2",
+      "from": [10.0, 4.88, 7.0],
+      "to": [10.5, 5.18, 7.45],
+      "faces": {
+        "up": { "texture": "#douhua_red_bean" },
+        "down": { "texture": "#douhua_red_bean" },
+        "north": { "texture": "#douhua_red_bean" },
+        "south": { "texture": "#douhua_red_bean" },
+        "east": { "texture": "#douhua_red_bean" },
+        "west": { "texture": "#douhua_red_bean" }
+      }
+    },
+    {
+      "name": "red_bean_3",
+      "from": [9.5, 4.88, 7.5],
+      "to": [10.0, 5.18, 7.95],
+      "faces": {
+        "up": { "texture": "#douhua_red_bean" },
+        "down": { "texture": "#douhua_red_bean" },
+        "north": { "texture": "#douhua_red_bean" },
+        "south": { "texture": "#douhua_red_bean" },
+        "east": { "texture": "#douhua_red_bean" },
+        "west": { "texture": "#douhua_red_bean" }
+      }
+    },
+    {
+      "name": "red_bean_4",
+      "from": [10.2, 4.88, 7.9],
+      "to": [10.7, 5.18, 8.35],
+      "faces": {
+        "up": { "texture": "#douhua_red_bean" },
+        "down": { "texture": "#douhua_red_bean" },
+        "north": { "texture": "#douhua_red_bean" },
+        "south": { "texture": "#douhua_red_bean" },
+        "east": { "texture": "#douhua_red_bean" },
+        "west": { "texture": "#douhua_red_bean" }
+      }
+    },
+    {
+      "name": "melon_1",
+      "from": [9.4, 4.88, 9.0],
+      "to": [9.85, 5.15, 9.45],
+      "faces": {
+        "up": { "texture": "#douhua_melon" },
+        "down": { "texture": "#douhua_melon" },
+        "north": { "texture": "#douhua_melon" },
+        "south": { "texture": "#douhua_melon" },
+        "east": { "texture": "#douhua_melon" },
+        "west": { "texture": "#douhua_melon" }
+      }
+    },
+    {
+      "name": "melon_2",
+      "from": [10.1, 4.88, 8.7],
+      "to": [10.55, 5.15, 9.15],
+      "faces": {
+        "up": { "texture": "#douhua_melon" },
+        "down": { "texture": "#douhua_melon" },
+        "north": { "texture": "#douhua_melon" },
+        "south": { "texture": "#douhua_melon" },
+        "east": { "texture": "#douhua_melon" },
+        "west": { "texture": "#douhua_melon" }
+      }
+    }
+  ]
+}

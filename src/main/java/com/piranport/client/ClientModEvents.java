@@ -38,7 +38,7 @@ public class ClientModEvents {
 
 
 
-    /** 注册日本12.7厘米连装炮、德国双联/三联203毫米炮的 standalone 3D 模型（BEWLR 直接取用）。 */
+    /** 注册日本12.7厘米连装炮、德国双联/三联203毫米炮与德国三联283毫米炮的 standalone 3D 模型（BEWLR 直接取用）。 */
     @SubscribeEvent
     public static void registerAdditionalModels(ModelEvent.RegisterAdditional event) {
         event.register(Japanese127mmTwinGunRenderer.MODEL_EMPTY);
@@ -47,9 +47,11 @@ public class ClientModEvents {
         event.register(GermanTwin203mmGunRenderer.MODEL_LOADED);
         event.register(GermanTriple203mmGunRenderer.MODEL_EMPTY);
         event.register(GermanTriple203mmGunRenderer.MODEL_LOADED);
+        event.register(GermanTriple283mmGunRenderer.MODEL_EMPTY);
+        event.register(GermanTriple283mmGunRenderer.MODEL_LOADED);
     }
 
-    /** 给日本12.7厘米连装炮、德国双联/三联203毫米炮挂自定义渲染器（BEWLR）。 */
+    /** 给日本12.7厘米连装炮、德国双联/三联203毫米炮与德国三联283毫米炮挂自定义渲染器（BEWLR）。 */
     @SubscribeEvent
     public static void registerClientExtensions(RegisterClientExtensionsEvent event) {
         event.registerItem(Japanese127mmTwinGunRenderer.CLIENT_EXTENSIONS,
@@ -58,6 +60,8 @@ public class ClientModEvents {
                 ModItems.GERMAN_TWIN_203MM_GUN.get());
         event.registerItem(GermanTriple203mmGunRenderer.CLIENT_EXTENSIONS,
                 ModItems.GERMAN_TRIPLE_203MM_GUN.get());
+        event.registerItem(GermanTriple283mmGunRenderer.CLIENT_EXTENSIONS,
+                ModItems.GERMAN_TRIPLE_283MM_GUN.get());
     }
 
     @SubscribeEvent
@@ -70,6 +74,8 @@ public class ClientModEvents {
         event.enqueueWork(GermanTwin203mmGunRenderer::init);
         // 德国三联203毫米炮：同一套 BEWLR 方案
         event.enqueueWork(GermanTriple203mmGunRenderer::init);
+        // 德国三联283毫米炮：同一套 BEWLR 方案
+        event.enqueueWork(GermanTriple283mmGunRenderer::init);
 
         // 注册 "fueled" 物品属性：有燃料时为 1.0，否则为 0.0。
         // 模型使用此谓词在装载和空载纹理之间切换。

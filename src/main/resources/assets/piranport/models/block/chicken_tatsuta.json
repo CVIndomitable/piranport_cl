@@ -1,0 +1,136 @@
+{
+  "parent": "block/block",
+  "render_type": "minecraft:cutout",
+  "textures": { "particle": "piranport:block/tatsuta_chicken_top", "chicken_top": "piranport:block/tatsuta_chicken_top", "chicken_side": "piranport:block/tatsuta_chicken_side", "pepper": "piranport:block/tatsuta_pepper", "lemon_top": "piranport:block/tatsuta_lemon_top", "lemon_side": "piranport:block/tatsuta_lemon_side" },
+  "elements": [
+    {
+      "name": "chicken_1",
+      "from": [3.5, 0.4, 5.1],
+      "to": [7.5, 2.4, 8.9],
+      "rotation": {
+        "origin": [5.5, 0.4, 7.0],
+        "axis": "y",
+        "angle": 22.5
+      },
+      "faces": {
+        "up": { "texture": "#chicken_top" },
+        "down": { "texture": "#chicken_side" },
+        "north": { "texture": "#chicken_side" },
+        "south": { "texture": "#chicken_side" },
+        "east": { "texture": "#chicken_side" },
+        "west": { "texture": "#chicken_side" }
+      }
+    },
+    {
+      "name": "chicken_2",
+      "from": [6.9, 0.4, 4.6],
+      "to": [11.1, 2.6, 8.2],
+      "rotation": {
+        "origin": [9.0, 0.4, 6.4],
+        "axis": "y",
+        "angle": -22.5
+      },
+      "faces": {
+        "up": { "texture": "#chicken_top" },
+        "down": { "texture": "#chicken_side" },
+        "north": { "texture": "#chicken_side" },
+        "south": { "texture": "#chicken_side" },
+        "east": { "texture": "#chicken_side" },
+        "west": { "texture": "#chicken_side" }
+      }
+    },
+    {
+      "name": "chicken_3",
+      "from": [5.8, 0.4, 8.0],
+      "to": [9.4, 2.2, 11.2],
+      "faces": {
+        "up": { "texture": "#chicken_top" },
+        "down": { "texture": "#chicken_side" },
+        "north": { "texture": "#chicken_side" },
+        "south": { "texture": "#chicken_side" },
+        "east": { "texture": "#chicken_side" },
+        "west": { "texture": "#chicken_side" }
+      }
+    },
+    {
+      "name": "chicken_4",
+      "from": [9.5, 0.4, 8.6],
+      "to": [12.5, 1.9, 11.4],
+      "rotation": {
+        "origin": [11.0, 0.4, 10.0],
+        "axis": "y",
+        "angle": 22.5
+      },
+      "faces": {
+        "up": { "texture": "#chicken_top" },
+        "down": { "texture": "#chicken_side" },
+        "north": { "texture": "#chicken_side" },
+        "south": { "texture": "#chicken_side" },
+        "east": { "texture": "#chicken_side" },
+        "west": { "texture": "#chicken_side" }
+      }
+    },
+    {
+      "name": "pepper_1",
+      "from": [4.6, 2.35, 6.2],
+      "to": [9.6, 2.6, 6.9],
+      "rotation": {
+        "origin": [7.1, 2.35, 6.55],
+        "axis": "y",
+        "angle": 22.5
+      },
+      "faces": {
+        "up": { "texture": "#pepper" },
+        "down": { "texture": "#pepper" },
+        "north": { "texture": "#pepper" },
+        "south": { "texture": "#pepper" },
+        "east": { "texture": "#pepper" },
+        "west": { "texture": "#pepper" }
+      }
+    },
+    {
+      "name": "pepper_2",
+      "from": [5.4, 2.62, 6.9],
+      "to": [9.8, 2.87, 7.6],
+      "rotation": {
+        "origin": [7.6, 2.62, 7.25],
+        "axis": "y",
+        "angle": -22.5
+      },
+      "faces": {
+        "up": { "texture": "#pepper" },
+        "down": { "texture": "#pepper" },
+        "north": { "texture": "#pepper" },
+        "south": { "texture": "#pepper" },
+        "east": { "texture": "#pepper" },
+        "west": { "texture": "#pepper" }
+      }
+    },
+    {
+      "name": "lemon_1",
+      "from": [0.8, 0.35, 9.0],
+      "to": [4.4, 0.7, 12.6],
+      "faces": {
+        "up": { "texture": "#lemon_top" },
+        "down": { "texture": "#lemon_side" },
+        "north": { "texture": "#lemon_side" },
+        "south": { "texture": "#lemon_side" },
+        "east": { "texture": "#lemon_side" },
+        "west": { "texture": "#lemon_side" }
+      }
+    },
+    {
+      "name": "lemon_2",
+      "from": [1.0, 0.7, 8.4],
+      "to": [4.6, 1.05, 12.0],
+      "faces": {
+        "up": { "texture": "#lemon_top" },
+        "down": { "texture": "#lemon_side" },
+        "north": { "texture": "#lemon_side" },
+        "south": { "texture": "#lemon_side" },
+        "east": { "texture": "#lemon_side" },
+        "west": { "texture": "#lemon_side" }
+      }
+    }
+  ]
+}

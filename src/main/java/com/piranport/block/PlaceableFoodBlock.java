@@ -139,6 +139,16 @@ public class PlaceableFoodBlock extends BaseEntityBlock {
     }
 
     /**
+     * 专属模型食物方块（龙田烧）：几块金黄酥脆的炸鸡堆叠，
+     * 上面压两条青椒，前面摆两片柠檬。
+     */
+    public static class ChickenTatsuta extends PlaceableFoodBlock {
+        public static final MapCodec<ChickenTatsuta> CODEC = simpleCodec(ChickenTatsuta::new);
+        @Override public MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }
+        public ChickenTatsuta(BlockBehaviour.Properties props) { super(Block.box(0.8, 0, 4.6, 12.5, 2.9, 12.6), props); }
+    }
+
+    /**
      * 专属模型食物方块（烤猪肘）：红亮脆皮烤猪肘，骨头朝上，
      * 底下垫浅黄酸菜，右侧一小碟深色肉汁。
      */

@@ -139,6 +139,16 @@ public class PlaceableFoodBlock extends BaseEntityBlock {
     }
 
     /**
+     * 专属模型食物方块（金镶玉包子）：圆形竹蒸笼，垫着竹编笼底，
+     * 里面摆三个带放射褶和粉点的白胖包子。
+     */
+    public static class DeluxeBaozi extends PlaceableFoodBlock {
+        public static final MapCodec<DeluxeBaozi> CODEC = simpleCodec(DeluxeBaozi::new);
+        @Override public MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }
+        public DeluxeBaozi(BlockBehaviour.Properties props) { super(Block.box(0.9, 0, 0.9, 15.1, 5.6, 15.1), props); }
+    }
+
+    /**
      * 专属模型食物方块（什锦叉烧炒饭）：白色方形浅盘（盘沿有蓝纹），
      * 中间一座炒饭，混着叉烧丁、蛋碎、青豆与葱花。
      */

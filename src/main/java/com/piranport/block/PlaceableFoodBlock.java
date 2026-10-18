@@ -139,6 +139,16 @@ public class PlaceableFoodBlock extends BaseEntityBlock {
     }
 
     /**
+     * 专属模型食物方块（天妇罗荞麦面）：竹编托盘上堆荞麦面，
+     * 右侧深棕碗里两只炸虾和一片海苔。
+     */
+    public static class TempuraSobaNoodle extends PlaceableFoodBlock {
+        public static final MapCodec<TempuraSobaNoodle> CODEC = simpleCodec(TempuraSobaNoodle::new);
+        @Override public MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }
+        public TempuraSobaNoodle(BlockBehaviour.Properties props) { super(Block.box(0.8, 0, 3.0, 15.6, 4.2, 13.0), props); }
+    }
+
+    /**
      * 专属模型食物方块（塔坦苹果挞）：淡蓝白蓝边椭圆盘上两只苹果挞，
      * 前侧两颗带梗红樱桃。
      */

@@ -1,0 +1,842 @@
+{
+  "parent": "block/block",
+  "render_type": "minecraft:cutout",
+  "textures": {
+    "particle": "piranport:block/bbq_grate",
+    "grate": "piranport:block/bbq_grate",
+    "grill_side": "piranport:block/bbq_grill_side",
+    "meat_top": "piranport:block/bbq_meat_top",
+    "meat_side": "piranport:block/bbq_meat_side",
+    "sausage_top": "piranport:block/bbq_sausage_top",
+    "sausage_side": "piranport:block/bbq_sausage_side",
+    "pepper": "piranport:block/bbq_pepper",
+    "dark_meat": "piranport:block/bbq_dark_meat",
+    "green": "piranport:block/bbq_green",
+    "onion": "piranport:block/bbq_onion",
+    "stick": "piranport:block/bbq_stick"
+  },
+  "elements": [
+    {
+      "name": "grill",
+      "from": [
+        1.2,
+        0,
+        1.2
+      ],
+      "to": [
+        14.8,
+        1.6,
+        14.8
+      ],
+      "faces": {
+        "up": {
+          "texture": "#grate"
+        },
+        "down": {
+          "texture": "#grill_side"
+        },
+        "north": {
+          "texture": "#grill_side"
+        },
+        "south": {
+          "texture": "#grill_side"
+        },
+        "east": {
+          "texture": "#grill_side"
+        },
+        "west": {
+          "texture": "#grill_side"
+        }
+      }
+    },
+    {
+      "name": "grate",
+      "from": [
+        0.9,
+        1.55,
+        0.9
+      ],
+      "to": [
+        15.1,
+        1.85,
+        15.1
+      ],
+      "faces": {
+        "up": {
+          "texture": "#grate"
+        },
+        "down": {
+          "texture": "#grill_side"
+        },
+        "north": {
+          "texture": "#grill_side"
+        },
+        "south": {
+          "texture": "#grill_side"
+        },
+        "east": {
+          "texture": "#grill_side"
+        },
+        "west": {
+          "texture": "#grill_side"
+        }
+      }
+    },
+    {
+      "name": "big_meat",
+      "from": [
+        4.6,
+        1.85,
+        2.6
+      ],
+      "to": [
+        10.6,
+        2.75,
+        6.0
+      ],
+      "rotation": {
+        "origin": [
+          7.6,
+          1.85,
+          4.3
+        ],
+        "axis": "y",
+        "angle": 22.5
+      },
+      "faces": {
+        "up": {
+          "texture": "#meat_top"
+        },
+        "down": {
+          "texture": "#meat_side"
+        },
+        "north": {
+          "texture": "#meat_side"
+        },
+        "south": {
+          "texture": "#meat_side"
+        },
+        "east": {
+          "texture": "#meat_side"
+        },
+        "west": {
+          "texture": "#meat_side"
+        }
+      }
+    },
+    {
+      "name": "sausage_1",
+      "from": [
+        11.0,
+        1.85,
+        5.8
+      ],
+      "to": [
+        14.4,
+        2.65,
+        7.3
+      ],
+      "rotation": {
+        "origin": [
+          12.7,
+          1.85,
+          6.55
+        ],
+        "axis": "y",
+        "angle": 22.5
+      },
+      "faces": {
+        "up": {
+          "texture": "#sausage_top"
+        },
+        "down": {
+          "texture": "#sausage_side"
+        },
+        "north": {
+          "texture": "#sausage_side"
+        },
+        "south": {
+          "texture": "#sausage_side"
+        },
+        "east": {
+          "texture": "#sausage_side"
+        },
+        "west": {
+          "texture": "#sausage_side"
+        }
+      }
+    },
+    {
+      "name": "sausage_2",
+      "from": [
+        11.4,
+        1.85,
+        7.6
+      ],
+      "to": [
+        14.8,
+        2.65,
+        9.1
+      ],
+      "rotation": {
+        "origin": [
+          13.1,
+          1.85,
+          8.35
+        ],
+        "axis": "y",
+        "angle": -22.5
+      },
+      "faces": {
+        "up": {
+          "texture": "#sausage_top"
+        },
+        "down": {
+          "texture": "#sausage_side"
+        },
+        "north": {
+          "texture": "#sausage_side"
+        },
+        "south": {
+          "texture": "#sausage_side"
+        },
+        "east": {
+          "texture": "#sausage_side"
+        },
+        "west": {
+          "texture": "#sausage_side"
+        }
+      }
+    },
+    {
+      "name": "stick_1",
+      "from": [
+        2.4,
+        1.85,
+        7.88
+      ],
+      "to": [
+        12.4,
+        2.05,
+        8.12
+      ],
+      "rotation": {
+        "origin": [
+          2.4,
+          1.85,
+          8.0
+        ],
+        "axis": "y",
+        "angle": 22.5
+      },
+      "faces": {
+        "up": {
+          "texture": "#stick"
+        },
+        "down": {
+          "texture": "#stick"
+        },
+        "north": {
+          "texture": "#stick"
+        },
+        "south": {
+          "texture": "#stick"
+        },
+        "east": {
+          "texture": "#stick"
+        },
+        "west": {
+          "texture": "#stick"
+        }
+      }
+    },
+    {
+      "name": "skewer_1_1",
+      "from": [
+        3.55,
+        1.9,
+        7.55
+      ],
+      "to": [
+        4.45,
+        2.55,
+        8.45
+      ],
+      "rotation": {
+        "origin": [
+          2.4,
+          1.85,
+          8.0
+        ],
+        "axis": "y",
+        "angle": 22.5
+      },
+      "faces": {
+        "up": {
+          "texture": "#green"
+        },
+        "down": {
+          "texture": "#green"
+        },
+        "north": {
+          "texture": "#green"
+        },
+        "south": {
+          "texture": "#green"
+        },
+        "east": {
+          "texture": "#green"
+        },
+        "west": {
+          "texture": "#green"
+        }
+      }
+    },
+    {
+      "name": "skewer_1_2",
+      "from": [
+        5.55,
+        1.9,
+        7.55
+      ],
+      "to": [
+        6.45,
+        2.55,
+        8.45
+      ],
+      "rotation": {
+        "origin": [
+          2.4,
+          1.85,
+          8.0
+        ],
+        "axis": "y",
+        "angle": 22.5
+      },
+      "faces": {
+        "up": {
+          "texture": "#onion"
+        },
+        "down": {
+          "texture": "#onion"
+        },
+        "north": {
+          "texture": "#onion"
+        },
+        "south": {
+          "texture": "#onion"
+        },
+        "east": {
+          "texture": "#onion"
+        },
+        "west": {
+          "texture": "#onion"
+        }
+      }
+    },
+    {
+      "name": "skewer_1_3",
+      "from": [
+        7.55,
+        1.9,
+        7.55
+      ],
+      "to": [
+        8.45,
+        2.55,
+        8.45
+      ],
+      "rotation": {
+        "origin": [
+          2.4,
+          1.85,
+          8.0
+        ],
+        "axis": "y",
+        "angle": 22.5
+      },
+      "faces": {
+        "up": {
+          "texture": "#pepper"
+        },
+        "down": {
+          "texture": "#pepper"
+        },
+        "north": {
+          "texture": "#pepper"
+        },
+        "south": {
+          "texture": "#pepper"
+        },
+        "east": {
+          "texture": "#pepper"
+        },
+        "west": {
+          "texture": "#pepper"
+        }
+      }
+    },
+    {
+      "name": "skewer_1_4",
+      "from": [
+        9.55,
+        1.9,
+        7.55
+      ],
+      "to": [
+        10.45,
+        2.55,
+        8.45
+      ],
+      "rotation": {
+        "origin": [
+          2.4,
+          1.85,
+          8.0
+        ],
+        "axis": "y",
+        "angle": 22.5
+      },
+      "faces": {
+        "up": {
+          "texture": "#dark_meat"
+        },
+        "down": {
+          "texture": "#dark_meat"
+        },
+        "north": {
+          "texture": "#dark_meat"
+        },
+        "south": {
+          "texture": "#dark_meat"
+        },
+        "east": {
+          "texture": "#dark_meat"
+        },
+        "west": {
+          "texture": "#dark_meat"
+        }
+      }
+    },
+    {
+      "name": "stick_2",
+      "from": [
+        2.8,
+        1.85,
+        9.78
+      ],
+      "to": [
+        12.8,
+        2.05,
+        10.02
+      ],
+      "rotation": {
+        "origin": [
+          2.8,
+          1.85,
+          9.9
+        ],
+        "axis": "y",
+        "angle": -22.5
+      },
+      "faces": {
+        "up": {
+          "texture": "#stick"
+        },
+        "down": {
+          "texture": "#stick"
+        },
+        "north": {
+          "texture": "#stick"
+        },
+        "south": {
+          "texture": "#stick"
+        },
+        "east": {
+          "texture": "#stick"
+        },
+        "west": {
+          "texture": "#stick"
+        }
+      }
+    },
+    {
+      "name": "skewer_2_1",
+      "from": [
+        3.95,
+        1.9,
+        9.45
+      ],
+      "to": [
+        4.85,
+        2.55,
+        10.35
+      ],
+      "rotation": {
+        "origin": [
+          2.8,
+          1.85,
+          9.9
+        ],
+        "axis": "y",
+        "angle": -22.5
+      },
+      "faces": {
+        "up": {
+          "texture": "#onion"
+        },
+        "down": {
+          "texture": "#onion"
+        },
+        "north": {
+          "texture": "#onion"
+        },
+        "south": {
+          "texture": "#onion"
+        },
+        "east": {
+          "texture": "#onion"
+        },
+        "west": {
+          "texture": "#onion"
+        }
+      }
+    },
+    {
+      "name": "skewer_2_2",
+      "from": [
+        5.95,
+        1.9,
+        9.45
+      ],
+      "to": [
+        6.85,
+        2.55,
+        10.35
+      ],
+      "rotation": {
+        "origin": [
+          2.8,
+          1.85,
+          9.9
+        ],
+        "axis": "y",
+        "angle": -22.5
+      },
+      "faces": {
+        "up": {
+          "texture": "#pepper"
+        },
+        "down": {
+          "texture": "#pepper"
+        },
+        "north": {
+          "texture": "#pepper"
+        },
+        "south": {
+          "texture": "#pepper"
+        },
+        "east": {
+          "texture": "#pepper"
+        },
+        "west": {
+          "texture": "#pepper"
+        }
+      }
+    },
+    {
+      "name": "skewer_2_3",
+      "from": [
+        7.95,
+        1.9,
+        9.45
+      ],
+      "to": [
+        8.85,
+        2.55,
+        10.35
+      ],
+      "rotation": {
+        "origin": [
+          2.8,
+          1.85,
+          9.9
+        ],
+        "axis": "y",
+        "angle": -22.5
+      },
+      "faces": {
+        "up": {
+          "texture": "#dark_meat"
+        },
+        "down": {
+          "texture": "#dark_meat"
+        },
+        "north": {
+          "texture": "#dark_meat"
+        },
+        "south": {
+          "texture": "#dark_meat"
+        },
+        "east": {
+          "texture": "#dark_meat"
+        },
+        "west": {
+          "texture": "#dark_meat"
+        }
+      }
+    },
+    {
+      "name": "skewer_2_4",
+      "from": [
+        9.95,
+        1.9,
+        9.45
+      ],
+      "to": [
+        10.85,
+        2.55,
+        10.35
+      ],
+      "rotation": {
+        "origin": [
+          2.8,
+          1.85,
+          9.9
+        ],
+        "axis": "y",
+        "angle": -22.5
+      },
+      "faces": {
+        "up": {
+          "texture": "#green"
+        },
+        "down": {
+          "texture": "#green"
+        },
+        "north": {
+          "texture": "#green"
+        },
+        "south": {
+          "texture": "#green"
+        },
+        "east": {
+          "texture": "#green"
+        },
+        "west": {
+          "texture": "#green"
+        }
+      }
+    },
+    {
+      "name": "stick_3",
+      "from": [
+        3.2,
+        1.85,
+        11.58
+      ],
+      "to": [
+        13.2,
+        2.05,
+        11.82
+      ],
+      "rotation": {
+        "origin": [
+          3.2,
+          1.85,
+          11.7
+        ],
+        "axis": "y",
+        "angle": 22.5
+      },
+      "faces": {
+        "up": {
+          "texture": "#stick"
+        },
+        "down": {
+          "texture": "#stick"
+        },
+        "north": {
+          "texture": "#stick"
+        },
+        "south": {
+          "texture": "#stick"
+        },
+        "east": {
+          "texture": "#stick"
+        },
+        "west": {
+          "texture": "#stick"
+        }
+      }
+    },
+    {
+      "name": "skewer_3_1",
+      "from": [
+        4.35,
+        1.9,
+        11.25
+      ],
+      "to": [
+        5.25,
+        2.55,
+        12.15
+      ],
+      "rotation": {
+        "origin": [
+          3.2,
+          1.85,
+          11.7
+        ],
+        "axis": "y",
+        "angle": 22.5
+      },
+      "faces": {
+        "up": {
+          "texture": "#pepper"
+        },
+        "down": {
+          "texture": "#pepper"
+        },
+        "north": {
+          "texture": "#pepper"
+        },
+        "south": {
+          "texture": "#pepper"
+        },
+        "east": {
+          "texture": "#pepper"
+        },
+        "west": {
+          "texture": "#pepper"
+        }
+      }
+    },
+    {
+      "name": "skewer_3_2",
+      "from": [
+        6.35,
+        1.9,
+        11.25
+      ],
+      "to": [
+        7.25,
+        2.55,
+        12.15
+      ],
+      "rotation": {
+        "origin": [
+          3.2,
+          1.85,
+          11.7
+        ],
+        "axis": "y",
+        "angle": 22.5
+      },
+      "faces": {
+        "up": {
+          "texture": "#dark_meat"
+        },
+        "down": {
+          "texture": "#dark_meat"
+        },
+        "north": {
+          "texture": "#dark_meat"
+        },
+        "south": {
+          "texture": "#dark_meat"
+        },
+        "east": {
+          "texture": "#dark_meat"
+        },
+        "west": {
+          "texture": "#dark_meat"
+        }
+      }
+    },
+    {
+      "name": "skewer_3_3",
+      "from": [
+        8.35,
+        1.9,
+        11.25
+      ],
+      "to": [
+        9.25,
+        2.55,
+        12.15
+      ],
+      "rotation": {
+        "origin": [
+          3.2,
+          1.85,
+          11.7
+        ],
+        "axis": "y",
+        "angle": 22.5
+      },
+      "faces": {
+        "up": {
+          "texture": "#green"
+        },
+        "down": {
+          "texture": "#green"
+        },
+        "north": {
+          "texture": "#green"
+        },
+        "south": {
+          "texture": "#green"
+        },
+        "east": {
+          "texture": "#green"
+        },
+        "west": {
+          "texture": "#green"
+        }
+      }
+    },
+    {
+      "name": "skewer_3_4",
+      "from": [
+        10.35,
+        1.9,
+        11.25
+      ],
+      "to": [
+        11.25,
+        2.55,
+        12.15
+      ],
+      "rotation": {
+        "origin": [
+          3.2,
+          1.85,
+          11.7
+        ],
+        "axis": "y",
+        "angle": 22.5
+      },
+      "faces": {
+        "up": {
+          "texture": "#onion"
+        },
+        "down": {
+          "texture": "#onion"
+        },
+        "north": {
+          "texture": "#onion"
+        },
+        "south": {
+          "texture": "#onion"
+        },
+        "east": {
+          "texture": "#onion"
+        },
+        "west": {
+          "texture": "#onion"
+        }
+      }
+    }
+  ]
+}

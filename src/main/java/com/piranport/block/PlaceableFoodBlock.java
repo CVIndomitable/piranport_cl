@@ -139,6 +139,16 @@ public class PlaceableFoodBlock extends BaseEntityBlock {
     }
 
     /**
+     * 专属模型食物方块（烧烤）：黑色圆烤炉与烤网，上面有大块烤肉、
+     * 两根香肠和三串彩椒肉串。
+     */
+    public static class Barbecue extends PlaceableFoodBlock {
+        public static final MapCodec<Barbecue> CODEC = simpleCodec(Barbecue::new);
+        @Override public MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }
+        public Barbecue(BlockBehaviour.Properties props) { super(Block.box(0.9, 0, 0.9, 15.1, 2.8, 15.1), props); }
+    }
+
+    /**
      * 专属模型食物方块（约克郡布丁）：白盘黑边上四只金黄膨起的布丁，
      * 中间浅色凹陷。
      */

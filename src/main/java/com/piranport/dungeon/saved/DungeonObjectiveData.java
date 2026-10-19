@@ -45,6 +45,12 @@ public final class DungeonObjectiveData extends SavedData {
         if (p.enemies.remove(entity) | p.flagships.remove(entity)) setDirty();
     }
 
+    /** 护航失败重置：丢弃该节点的敌人登记与夺旗计时，下一次 register 重新开始。 */
+    public void reset(UUID instance, String node) {
+        Map<String, Progress> nodes = instances.get(instance);
+        if (nodes != null && nodes.remove(node) != null) setDirty();
+    }
+
     public boolean defeated(UUID instance, String node, boolean allEnemies) {
         Progress p = progress(instance, node);
         return p.registered && (allEnemies ? p.enemies : p.flagships).isEmpty();

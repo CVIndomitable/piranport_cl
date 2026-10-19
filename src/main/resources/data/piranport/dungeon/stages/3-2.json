@@ -6,24 +6,35 @@
     "A": {
       "type": "battle",
       "enemies": "enemy_set_3_2a",
+      "escort": {
+        "entity": "piranport:deep_ocean_transport",
+        "target_offset": [0, 0, 56]
+      },
+      "branches": [
+        {
+          "when": {
+            "hull": "small"
+          },
+          "to": "C"
+        }
+      ],
+      "branch_default": "B",
       "display_x": 50,
       "display_y": 200
     },
     "B": {
       "type": "battle",
-      "enemies": "enemy_set_3_2b",
+      "enemies": "enemy_set_3_2c",
       "display_x": 200,
       "display_y": 100
     },
     "C": {
-      "type": "cost",
-      "cost": [
-        {
-          "item": "minecraft:iron_ingot",
-          "count": 6
-        }
-      ],
-      "cost_message": "紧急补给，消耗6铁锭",
+      "type": "battle",
+      "enemies": "enemy_set_3_2b",
+      "escort": {
+        "entity": "piranport:deep_ocean_transport",
+        "target_offset": [0, 0, 56]
+      },
       "display_x": 200,
       "display_y": 300
     },
@@ -40,11 +51,15 @@
       "to": "B"
     },
     {
-      "from": "B",
+      "from": "A",
       "to": "C"
     },
     {
       "from": "C",
+      "to": "B"
+    },
+    {
+      "from": "B",
       "to": "D"
     }
   ],
@@ -63,7 +78,6 @@
     }
   ],
   "victory_conditions": [
-    "ESCORT_ALIVE",
     "KILL_BOSS"
   ],
   "victory_objectives": {

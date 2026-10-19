@@ -1,21 +1,18 @@
 package com.piranport.dungeon.data;
 
 /**
- * 副本场景枚举（整合版 §2.4 + 副本/12 关卡公式 7×5×5）。
+ * 副本天气枚举，规则见《副本/27-天气与昼夜》。
  *
- * <p>决策 12：场景 5 类 = 白天/夜战/雷雨/大雾/烈日（天气/能见度轴），与旧版占位
- * FOREST/DESERT/TUNDRA/VOLCANIC/VOID（生物群系轴）完全不一致，已于 2026-09-07 替换。
- * 实际效果在阶段 3 通过场景 Buff（夜战鱼雷强化/雷雨禁放飞/大雾视距低/烈日发光+响应距离大）实现。</p>
- *
- * <p>当前枚举仅供数据建模；MVP 阶段统一按用户口径走"全部海面"地形，场景枚举
- * 暂不生成不同地形变体，仅保留轴向分类用于后续场景 Buff。</p>
+ * <p>战斗影响由 {@code com.piranport.dungeon.weather} 包在服务端实时结算；
+ * 默认天气是白天，无任何加成或减益。</p>
  */
 public enum SceneData {
-    DAY,        // 白天
-    NIGHT,      // 夜战：鱼雷强化、舰载机无法降落
-    STORM,      // 雷雨：禁放飞、被雷劈
-    FOG,        // 大雾：视距低、怪物响应距离降低
-    HOT_SUN;    // 烈日：敌人发光、响应距离增大
+    DAY,        // 白天：无额外影响
+    NIGHT,      // 夜战：放飞的舰载机无法降落，无鱼雷强化
+    STORM,      // 雷雨：无法放飞飞机，闪电伤害玩家
+    FOG,        // 大雾：怪物响应距离降低（视觉部分未做）
+    HOT_SUN,    // 烈日：敌人发光，怪物响应距离增加
+    CLEAR;      // 晴天：潜艇常驻高亮，与声呐高亮相同
 
     public static SceneData fromString(String s) {
         if (s == null) return null;
@@ -25,6 +22,7 @@ public enum SceneData {
             case "storm" -> STORM;
             case "fog" -> FOG;
             case "hot_sun" -> HOT_SUN;
+            case "clear" -> CLEAR;
             default -> null;
         };
     }

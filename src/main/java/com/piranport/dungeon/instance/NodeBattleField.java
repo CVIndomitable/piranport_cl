@@ -1,6 +1,7 @@
 package com.piranport.dungeon.instance;
 
 import com.piranport.PiranPort;
+import com.piranport.config.ModCommonConfig;
 import com.piranport.config.ModEquipmentConfig;
 import com.piranport.dungeon.DungeonConstants;
 import com.piranport.dungeon.data.DungeonNodeOverrides;
@@ -8,6 +9,8 @@ import com.piranport.dungeon.data.DungeonRegistry;
 import com.piranport.dungeon.data.EnemySetData;
 import com.piranport.dungeon.data.NodeData;
 import com.piranport.dungeon.data.TerrainType;
+import com.piranport.dungeon.escort.EscortRuntime;
+import com.piranport.dungeon.escort.EscortWaveGeometry;
 import com.piranport.npc.ai.FleetGroup;
 import com.piranport.npc.ai.FleetGroupManager;
 import com.piranport.npc.ai.FleetGroup.FormationType;
@@ -21,6 +24,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -223,6 +227,15 @@ public final class NodeBattleField {
      */
     public static List<Entity> spawnEnemies(ServerLevel dungeonLevel, DungeonInstance instance,
                                              NodeData node) {
+        return spawnEnemies(dungeonLevel, instance, node, 0.0);
+    }
+
+    /**
+     * 护航节点的波次由运输船进度驱动：{@code escortProgress} 为运输船当前进度（0~1），
+     * 决定本波刷在航线前方与侧翼的位置。非护航节点忽略该参数。
+     */
+    public static List<Entity> spawnEnemies(ServerLevel dungeonLevel, DungeonInstance instance,
+                                             NodeData node, double escortProgress) {
         List<Entity> spawned = new ArrayList<>();
         if (node.enemies() == null) {
             TerrainGenerationProgress.onEnemiesSpawned(instance, node, 0, null);
@@ -241,8 +254,6 @@ public final class NodeBattleField {
         }
 
         BlockPos center = instance.getNodeSpawnPos(node.nodeId());
-        int spawnRadius = 30;
-
         // 编队生成：收集实体 -> 排序（大前小后） -> 分配队形 -> 生成
         List<SpawnEntry> allEntries = new ArrayList<>();
         for (EnemySetData.SpawnEntry entry : enemySet.spawnList()) {
@@ -252,20 +263,6 @@ public final class NodeBattleField {
             allEntries.add(new SpawnEntry(enemySet.flagship().entity(), enemySet.flagship().count(), true));
         }
 
-        // 区分潜艇与非潜艇（潜艇单独成队，不参与水面舰队形）
-        List<SpawnEntry> surfaceEntries = new ArrayList<>();
-        List<SpawnEntry> subEntries = new ArrayList<>();
-        for (SpawnEntry e : allEntries) {
-            if (e.entityId.contains("submarine")) {
-                subEntries.add(e);
-            } else {
-                surfaceEntries.add(e);
-            }
-        }
-
-        // 解析队形
-        FormationType formation = parseFormation(enemySet.formation());
-
         // 《经济/01》迷路的运输舰：第二章起每波 10%，替换该波排序后的最后一位（非旗舰）。
         // 优先替换水面编队末位；没有水面舰时替换潜艇编队末位。
         var stage = DungeonRegistry.INSTANCE.getStage(instance.getStageId());
@@ -273,21 +270,14 @@ public final class NodeBattleField {
                 && DungeonScaling.lostTransportEligible(stage.chapter())
                 && dungeonLevel.getRandom().nextDouble() < ModEquipmentConfig.DUNGEON_LOST_TRANSPORT_CHANCE.get();
 
-        // 生成水面舰编队
-        if (!surfaceEntries.isEmpty()) {
-            List<Entity> surfaceFleet = spawnFleet(dungeonLevel, instance, node, center, spawnRadius,
-                    surfaceEntries, formation, true, lostTransport);
-            spawned.addAll(surfaceFleet);
+        if (node.escort() != null) {
+            spawned.addAll(spawnEscortWaveGroups(dungeonLevel, instance, node, enemySet, allEntries,
+                    escortProgress, lostTransport));
+        } else {
+            spawned.addAll(spawnGroups(dungeonLevel, instance, node, enemySet, allEntries,
+                    instance.getNodeSpawnPos(node.nodeId()), lostTransport));
         }
 
-        // 生成潜艇编队（潜艇独立行动，不参与队形）
-        if (!subEntries.isEmpty()) {
-            List<Entity> subFleet = spawnFleet(dungeonLevel, instance, node, center, spawnRadius,
-                    subEntries, FormationType.SINGLE_LINE, false, lostTransport && surfaceEntries.isEmpty());
-            spawned.addAll(subFleet);
-        }
-
-        // If nothing could be created, spawn a completion portal as a recovery mechanism.
         if (spawned.isEmpty()) {
             PiranPort.LOGGER.warn("Node '{}' produced 0 entities — spawning recovery portal", node.nodeId());
             spawnCompletionPortal(dungeonLevel, instance, node.nodeId());
@@ -321,6 +311,88 @@ public final class NodeBattleField {
         // spawnEnemies 失败时已放了恢复传送门（节点即完成），这里仍算“已处理”
         PiranPort.LOGGER.debug("Node {} wave {}/{} spawned {} entities", node.nodeId(), wave + 1, total, spawned.size());
         return true;
+    }
+
+    /** 普通节点与护航路径/侧翼共用的编队半径；护航锚点也据此留出边界余量。 */
+    private static final int FLEET_SPAWN_RADIUS = 30;
+
+    /**
+     * 护航波次：旗舰全部放在路径前方；其余非旗舰按一半/一半分到路径与侧翼，
+     * 单数的那一个随波次奇偶交替落在两侧，使两侧长期平衡。
+     */
+    private static List<Entity> spawnEscortWaveGroups(ServerLevel dungeonLevel, DungeonInstance instance,
+                                                       NodeData node, EnemySetData enemySet,
+                                                       List<SpawnEntry> allEntries, double progress,
+                                                       boolean lostTransport) {
+        int wave = instance.getNodeWave(node.nodeId());
+        List<SpawnEntry> pathEntries = new ArrayList<>();
+        List<SpawnEntry> flankEntries = new ArrayList<>();
+        for (SpawnEntry e : allEntries) {
+            if (e.isFlagship) {
+                pathEntries.add(e);
+                continue;
+            }
+            int onPath = e.count / 2 + ((e.count & 1) == 1 && (wave & 1) == 1 ? 1 : 0);
+            int onFlank = e.count - onPath;
+            if (onPath > 0) pathEntries.add(new SpawnEntry(e.entityId, onPath, false));
+            if (onFlank > 0) flankEntries.add(new SpawnEntry(e.entityId, onFlank, false));
+        }
+
+        BlockPos start = instance.getNodeSpawnPos(node.nodeId());
+        Vec3 target = EscortRuntime.targetPoint(instance, node);
+        double sideSign = dungeonLevel.getRandom().nextBoolean() ? 1.0 : -1.0;
+        EscortWaveGeometry.Anchors anchors = EscortWaveGeometry.anchors(
+                start.getX() + 0.5, start.getZ() + 0.5, target.x, target.z, progress,
+                ModCommonConfig.ESCORT_WAVE_AHEAD_DISTANCE.get(),
+                ModCommonConfig.ESCORT_WAVE_FLANK_OFFSET.get(), sideSign);
+        BlockPos pathCenter = clampAnchor(instance, anchors.pathX(), anchors.pathZ());
+        BlockPos flankCenter = clampAnchor(instance, anchors.flankX(), anchors.flankZ());
+
+        // 迷路运输舰只替换非空那一侧的末位，避免两侧各替换一次导致概率翻倍
+        boolean onPath = !pathEntries.isEmpty();
+        List<Entity> spawned = new ArrayList<>(spawnGroups(dungeonLevel, instance, node, enemySet,
+                pathEntries, pathCenter, lostTransport && onPath));
+        spawned.addAll(spawnGroups(dungeonLevel, instance, node, enemySet,
+                flankEntries, flankCenter, lostTransport && !onPath));
+        return spawned;
+    }
+
+    /** 锚点取整并收进可用区域，保证编队半径内的船不会整体刷到副本边界之外。 */
+    private static BlockPos clampAnchor(DungeonInstance instance, double x, double z) {
+        int minX = instance.getUsableMinX() + FLEET_SPAWN_RADIUS;
+        int maxX = instance.getUsableMaxX() - FLEET_SPAWN_RADIUS;
+        int minZ = instance.getUsableMinZ() + FLEET_SPAWN_RADIUS;
+        int maxZ = instance.getUsableMaxZ() - FLEET_SPAWN_RADIUS;
+        int cx = Math.max(minX, Math.min(maxX, (int) Math.round(x)));
+        int cz = Math.max(minZ, Math.min(maxZ, (int) Math.round(z)));
+        return new BlockPos(cx, DungeonConstants.SPAWN_Y, cz);
+    }
+
+    /** 区分潜艇与水面舰，各自成队生成；潜艇不参与水面舰队形。 */
+    private static List<Entity> spawnGroups(ServerLevel dungeonLevel, DungeonInstance instance, NodeData node,
+                                            EnemySetData enemySet, List<SpawnEntry> entries,
+                                            BlockPos center, boolean lostTransport) {
+        List<Entity> out = new ArrayList<>();
+        List<SpawnEntry> surfaceEntries = new ArrayList<>();
+        List<SpawnEntry> subEntries = new ArrayList<>();
+        for (SpawnEntry e : entries) {
+            if (e.entityId.contains("submarine")) {
+                subEntries.add(e);
+            } else {
+                surfaceEntries.add(e);
+            }
+        }
+
+        FormationType formation = parseFormation(enemySet.formation());
+        if (!surfaceEntries.isEmpty()) {
+            out.addAll(spawnFleet(dungeonLevel, instance, node, center, FLEET_SPAWN_RADIUS,
+                    surfaceEntries, formation, true, lostTransport));
+        }
+        if (!subEntries.isEmpty()) {
+            out.addAll(spawnFleet(dungeonLevel, instance, node, center, FLEET_SPAWN_RADIUS,
+                    subEntries, FormationType.SINGLE_LINE, false, lostTransport && surfaceEntries.isEmpty()));
+        }
+        return out;
     }
 
     /** 按策划规则排序后生成编队 */

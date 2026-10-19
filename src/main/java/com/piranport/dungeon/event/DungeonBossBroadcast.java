@@ -69,6 +69,12 @@ public final class DungeonBossBroadcast {
         }
     }
 
+    /** 护航节点刷出运输船后登记：血量同样以 Boss 条显示给实例内全员。 */
+    public static void trackEscort(DungeonInstance instance, Entity transport, String nodeId) {
+        String shipType = transport.getType().getDescription().getString();
+        BOSSES.put(instance.getInstanceId(), new TrackedBoss(transport.getUUID(), nodeId, shipType));
+    }
+
     /** 每 5 tick 推一次铭牌；Boss 死亡/消失后推一次 visible=false 收起。 */
     public static void tick(ServerLevel dungeonLevel) {
         if (BOSSES.isEmpty()) return;

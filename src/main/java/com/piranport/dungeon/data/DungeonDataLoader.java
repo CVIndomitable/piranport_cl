@@ -294,8 +294,6 @@ public class DungeonDataLoader extends SimpleJsonResourceReloadListener {
         boolean requireAll = obj.has("require_all_nodes_cleared")
                 && obj.get("require_all_nodes_cleared").getAsBoolean();
         int surviveSec = obj.has("survive_seconds") ? obj.get("survive_seconds").getAsInt() : 0;
-        String escortKey = obj.has("escort_entity") && !obj.get("escort_entity").isJsonNull()
-                ? obj.get("escort_entity").getAsString() : null;
         int[] reachOffset = null;
         if (obj.has("reach_point_offset") && obj.get("reach_point_offset").isJsonArray()) {
             JsonArray arr = obj.getAsJsonArray("reach_point_offset");
@@ -310,8 +308,28 @@ public class DungeonDataLoader extends SimpleJsonResourceReloadListener {
         int capRadius = obj.has("capture_radius") ? obj.get("capture_radius").getAsInt() : 0;
         int capHold = obj.has("capture_hold_seconds") ? obj.get("capture_hold_seconds").getAsInt() : 0;
         return new StageData.VictoryObjectives(requireAll, surviveSec,
-                escortKey, reachOffset, capRadius, capHold);
+                reachOffset, capRadius, capHold);
     }
+
+    private NodeData.EscortSpec parseEscort(JsonObject obj, String nodeId) {
+        requireField(obj, "entity", "escort of node " + nodeId);
+        return new NodeData.EscortSpec(obj.get("entity").getAsString(),
+                parseTargetOffset(obj, "escort", nodeId));
+    }
+
+    private NodeData.DetourSpec parseDetour(JsonObject obj, String nodeId) {
+        return new NodeData.DetourSpec(parseTargetOffset(obj, "detour", nodeId));
+    }
+
+    private int[] parseTargetOffset(JsonObject obj, String owner, String nodeId) {
+        requireField(obj, "target_offset", owner + " of node " + nodeId);
+        JsonArray arr = obj.getAsJsonArray("target_offset");
+        if (arr.size() != 3) {
+            throw new IllegalArgumentException(owner + ".target_offset 必须是 [dx, dy, dz]，节点 " + nodeId);
+        }
+        return new int[]{arr.get(0).getAsInt(), arr.get(1).getAsInt(), arr.get(2).getAsInt()};
+    }
+
 
     private NodeData parseNode(String nodeId, JsonObject json, TerrainType stageTerrain) {
         requireField(json, "type", "node " + nodeId);
@@ -382,10 +400,20 @@ public class DungeonDataLoader extends SimpleJsonResourceReloadListener {
             throw new IllegalArgumentException("配置了 branches 必须同时写 branch_default，节点 " + nodeId);
         }
 
+        // 《副本/12》护航：节点级 escort 对象（有则本节点以运输船抵达目标点过关）
+        NodeData.EscortSpec escort = json.has("escort")
+                ? parseEscort(json.getAsJsonObject("escort"), nodeId) : null;
+        // 《副本/12》迂回：type 为 detour 时必须配 detour 对象，反之不得配
+        NodeData.DetourSpec detour = json.has("detour")
+                ? parseDetour(json.getAsJsonObject("detour"), nodeId) : null;
+        if ((type == NodeData.NodeType.DETOUR) != (detour != null)) {
+            throw new IllegalArgumentException("detour 节点必须且只能配 detour 对象，节点 " + nodeId);
+        }
+
         return new NodeData(nodeId, type, enemies, List.copyOf(rewards),
                 List.copyOf(cost), costMessage, displayX, displayY, script,
                 terrainType, Set.copyOf(restrictions), scene,
-                nodeDifficulty, waves, List.copyOf(branches), branchDefault, displayName);
+                nodeDifficulty, waves, List.copyOf(branches), branchDefault, displayName, escort, detour);
     }
 
     private BranchRule parseBranchRule(JsonObject obj, String nodeId) {

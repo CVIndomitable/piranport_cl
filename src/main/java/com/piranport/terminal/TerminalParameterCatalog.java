@@ -186,7 +186,8 @@ public final class TerminalParameterCatalog {
         for (StageData stage : DungeonRegistry.INSTANCE.getAllStages().values()) {
             for (NodeData node : stage.nodes().values()) {
                 if (node.type() != NodeData.NodeType.BATTLE
-                        && node.type() != NodeData.NodeType.BOSS) continue;
+                        && node.type() != NodeData.NodeType.BOSS
+                        && node.type() != NodeData.NodeType.DETOUR) continue;
                 if (node.enemies() == null) continue;
                 EnemySetData enemySet = DungeonRegistry.INSTANCE.getEnemySet(node.enemies());
                 if (enemySet == null) continue;

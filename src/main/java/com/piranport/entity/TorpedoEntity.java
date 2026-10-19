@@ -871,10 +871,12 @@ public class TorpedoEntity extends ThrowableItemProjectile {
             Entity directSource = sourceAircraft != null ? sourceAircraft : this;
 
             if (magnetic) {
-                target.hurt(damageSources().explosion(directSource, getOwner()), damage);
+                com.piranport.dungeon.weather.WeatherDamageHandler.hurt(target,
+                        damageSources().explosion(directSource, getOwner()), damage, aerialTorpedo);
                 magneticDetonate();
             } else {
-                target.hurt(damageSources().thrown(directSource, getOwner()), damage);
+                com.piranport.dungeon.weather.WeatherDamageHandler.hurt(target,
+                        damageSources().thrown(directSource, getOwner()), damage, aerialTorpedo);
                 if (target instanceof LivingEntity living) {
                     // 依据：策划决策/战斗/02-Buff系统核心设计.md（进水时长 8 秒 = 160 tick）
                     living.addEffect(new MobEffectInstance(ModMobEffects.FLOODING, 160, 0));

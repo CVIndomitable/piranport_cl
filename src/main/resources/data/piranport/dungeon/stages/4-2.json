@@ -6,27 +6,31 @@
     "A": {
       "type": "battle",
       "enemies": "enemy_set_4_2a",
+      "branches": [
+        {
+          "when": {
+            "hull": "small"
+          },
+          "to": "C"
+        }
+      ],
+      "branch_default": "B",
       "display_x": 50,
       "display_y": 200
     },
     "B": {
-      "type": "resource",
-      "rewards": [
-        {
-          "item": "minecraft:iron_ingot",
-          "count": 16
-        },
-        {
-          "item": "minecraft:copper_ingot",
-          "count": 8
-        }
-      ],
+      "type": "battle",
+      "enemies": "enemy_set_4_2b",
       "display_x": 150,
       "display_y": 100
     },
     "C": {
       "type": "battle",
-      "enemies": "enemy_set_4_2b",
+      "enemies": "enemy_set_4_2c",
+      "escort": {
+        "entity": "piranport:deep_ocean_transport",
+        "target_offset": [0, 0, 56]
+      },
       "display_x": 250,
       "display_y": 100
     },
@@ -41,6 +45,10 @@
     {
       "from": "A",
       "to": "B"
+    },
+    {
+      "from": "A",
+      "to": "C"
     },
     {
       "from": "B",
@@ -66,8 +74,7 @@
     }
   ],
   "victory_conditions": [
-    "TRANSPORT",
-    "ESCORT_ALIVE"
+    "KILL_BOSS"
   ],
   "victory_objectives": {
     "require_all_nodes_cleared": true

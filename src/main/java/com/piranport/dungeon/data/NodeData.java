@@ -27,20 +27,27 @@ public record NodeData(
         int waves,                // 基础波数（节点敌人列表 = 一波），多人按 DungeonScaling.waveCount 放大
         List<BranchRule> branches, // 《副本/22》分歧带路规则（有序）
         String branchDefault,     // 都不满足时的兜底节点；null = 不分歧
-        String displayName        // 节点显示名；未填时见 label()
+        String displayName,       // 节点显示名；未填时见 label()
+        EscortSpec escort,        // 《副本/12》护航：非 null 时本节点以运输船到达目标点过关
+        DetourSpec detour         // 《副本/12》迂回：非 null 时本节点以玩家到达目标点过关
 ) {
     public NodeData {
         branches = branches == null ? List.of() : List.copyOf(branches);
         waves = Math.max(1, waves);
+        if (escort != null && detour != null) {
+            throw new IllegalArgumentException("节点不能同时配置 escort 与 detour: " + nodeId);
+        }
     }
 
-    /** 兼容旧调用方（测试 / 客户端同步）：不带缩放与分歧字段。 */
-    public NodeData(String nodeId, NodeType type, String enemies, List<RewardEntry> rewards,
-                    List<CostEntry> cost, String costMessage, int displayX, int displayY,
-                    String script, TerrainType terrainType, Set<CombatRestriction> restrictions,
-                    SceneData scene) {
-        this(nodeId, type, enemies, rewards, cost, costMessage, displayX, displayY, script,
-                terrainType, restrictions, scene, 0.0, 1, List.of(), null, null);
+    /** 护航节点：刷出的运输船与其目标点（相对节点中心的偏移 [dx, dy, dz]）。 */
+    public record EscortSpec(String entityId, int[] targetOffset) {}
+
+    /** 迂回节点：玩家抵达的目标点（相对节点中心的偏移 [dx, dy, dz]），设在航道尽头。 */
+    public record DetourSpec(int[] targetOffset) {}
+
+    /** 胜利靠到达目标点（护航运输船或迂回玩家）而非清场：清场不开传送门，由到达判定开门。 */
+    public boolean completesByArrival() {
+        return escort != null || detour != null;
     }
 
     /** HUD 与结算展示用的名字：策划填了显示名就用它，否则退回节点 ID。 */
@@ -54,7 +61,7 @@ public record NodeData(
     }
 
     public enum NodeType {
-        BATTLE, BOSS, RESOURCE, COST;
+        BATTLE, BOSS, RESOURCE, COST, DETOUR;
 
         public static NodeType fromString(String s) {
             return switch (s.toLowerCase()) {
@@ -62,6 +69,7 @@ public record NodeData(
                 case "boss" -> BOSS;
                 case "resource" -> RESOURCE;
                 case "cost" -> COST;
+                case "detour" -> DETOUR;
                 default -> throw new IllegalArgumentException("Unknown node type: " + s);
             };
         }

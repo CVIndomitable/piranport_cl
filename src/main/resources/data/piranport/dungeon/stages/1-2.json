@@ -5,7 +5,20 @@
   "nodes": {
     "A": {
       "type": "battle",
-      "enemies": "enemy_set_1a",
+      "enemies": "enemy_set_1_2a",
+      "escort": {
+        "entity": "piranport:deep_ocean_transport",
+        "target_offset": [0, 0, 56]
+      },
+      "branches": [
+        {
+          "when": {
+            "hull": "medium"
+          },
+          "to": "B"
+        }
+      ],
+      "branch_default": "R",
       "display_x": 50,
       "display_y": 150
     },
@@ -13,7 +26,22 @@
       "type": "battle",
       "enemies": "enemy_set_1d",
       "display_x": 200,
-      "display_y": 150
+      "display_y": 100
+    },
+    "R": {
+      "type": "resource",
+      "rewards": [
+        {
+          "item": "minecraft:iron_ingot",
+          "count": 16
+        },
+        {
+          "item": "minecraft:coal",
+          "count": 8
+        }
+      ],
+      "display_x": 200,
+      "display_y": 200
     },
     "C": {
       "type": "boss",
@@ -28,7 +56,15 @@
       "to": "B"
     },
     {
+      "from": "A",
+      "to": "R"
+    },
+    {
       "from": "B",
+      "to": "C"
+    },
+    {
+      "from": "R",
       "to": "C"
     }
   ],

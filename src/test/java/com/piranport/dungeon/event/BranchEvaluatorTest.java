@@ -89,8 +89,8 @@ class BranchEvaluatorTest {
     void canEnterRespectsPerPlayerBranchSnapshot() {
         NodeData a = new NodeData("A", NodeData.NodeType.BATTLE, null, List.of(), List.of(), "", 0, 0,
                 null, TerrainType.T1_OCEAN, Set.of(), SceneData.DAY, 0.0, 1,
-                List.of(new BranchRule("small", null, null, null, null, "B")), "C", null);
-        NodeData plain = new NodeData("B", NodeData.NodeType.BATTLE, null, List.of(), List.of(), "", 0, 0,
+                List.of(new BranchRule("small", null, null, null, null, "B")), "C", null, null, null);
+        NodeData plain = TestNodes.plain("B", NodeData.NodeType.BATTLE, null, List.of(), List.of(), "", 0, 0,
                 null, TerrainType.T1_OCEAN, Set.of(), SceneData.DAY);
         StageData stage = new StageData("t", "chapter_2", "t", Map.of("A", a, "B", plain, "C", plain),
                 List.of(new StageData.EdgeData("A", "B"), new StageData.EdgeData("A", "C")),

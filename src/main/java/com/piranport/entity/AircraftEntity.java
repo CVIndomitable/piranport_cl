@@ -404,7 +404,19 @@ public class AircraftEntity extends Entity implements AircraftAttackContext {
                     "Aircraft RETURNING | class={} entityId={} reason={}",
                     getAircraftClass().getSerializedName(), getId(), reason);
         }
+        if (getOwner() instanceof ServerPlayer owner
+                && com.piranport.dungeon.weather.WeatherRuntime.blocksLanding(owner)) {
+            abandonOnNightLanding(owner);
+            return;
+        }
         setState(FlightState.RETURNING);
+    }
+
+    private void abandonOnNightLanding(ServerPlayer owner) {
+        if (getFlightState() == FlightState.RECON_ACTIVE) cleanupReconState(owner);
+        owner.displayClientMessage(Component.translatable("message.piranport.weather_no_landing"), true);
+        setState(FlightState.REMOVED);
+        discard();
     }
 
     public void recallAndRemove() {

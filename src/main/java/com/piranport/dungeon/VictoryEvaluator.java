@@ -3,6 +3,7 @@ package com.piranport.dungeon;
 import com.piranport.dungeon.data.NodeData;
 import com.piranport.dungeon.data.StageData;
 import com.piranport.dungeon.data.VictoryCondition;
+import com.piranport.dungeon.escort.EscortRuntime;
 import com.piranport.dungeon.instance.DungeonInstance;
 
 import net.minecraft.core.BlockPos;
@@ -62,7 +63,7 @@ public final class VictoryEvaluator {
             case KILL_BOSS -> stage != null && !stage.bossNodes().isEmpty()
                     && instance.getClearedNodes().containsAll(stage.bossNodes());
             case SURVIVE -> checkSurvive(level, instance, obj);
-            case ESCORT -> checkEscort(level, instance, obj);
+            case ESCORT -> checkEscort(level, instance);
             case REACH_POINT -> checkReachPoint(level, instance, stage, obj);
             case CAPTURE_FLAG -> checkCaptureFlag(level, instance, stage, obj);
             case DEFEND_POINT, COLLECT_ITEMS, PUZZLE ->
@@ -92,7 +93,8 @@ public final class VictoryEvaluator {
         }
         if (!obj.requireAllNodesCleared()) return false;
         for (NodeData n : stage.nodes().values()) {
-            if ((n.type() == NodeData.NodeType.BATTLE || n.type() == NodeData.NodeType.BOSS)
+            if ((n.type() == NodeData.NodeType.BATTLE || n.type() == NodeData.NodeType.BOSS
+                    || n.type() == NodeData.NodeType.DETOUR)
                     && !instance.getClearedNodes().contains(n.nodeId())) {
                 return false;
             }
@@ -107,38 +109,26 @@ public final class VictoryEvaluator {
                 .elapsedMillis(instance.getInstanceId(), instance.getCurrentNode()) >= obj.surviveSeconds() * 1000L;
     }
 
-    /**
-     * ESCORT：护送目标实体到达指定位置。
-     * 关卡 JSON 顶层 victory_objectives.escort_entity 配置实体 TagKey；
-     * 当前实现要求关卡内至少有一个该实体类型的 LivingEntity 已存在（到达判定留给脚本）。
-     */
-    private static boolean checkEscort(ServerLevel level, DungeonInstance instance,
-                                       StageData.VictoryObjectives obj) {
-        if (level == null || obj.escortEntityKey() == null || obj.escortEntityKey().isEmpty()
-                || obj.reachPointOffset() == null || stageFor(instance) == null) return false;
+    /** ESCORT：当前节点是护航节点，且它的运输船已抵达目标点。 */
+    private static boolean checkEscort(ServerLevel level, DungeonInstance instance) {
         StageData stage = stageFor(instance);
-        BlockPos target = instance.getNodeSpawnPos(stage.startNode()).offset(
-                obj.reachPointOffset()[0], obj.reachPointOffset()[1], obj.reachPointOffset()[2]);
-        AABB box = new AABB(
-                instance.getUsableMinX(), level.getMinBuildHeight(), instance.getUsableMinZ(),
-                instance.getUsableMaxX(), level.getMaxBuildHeight(), instance.getUsableMaxZ());
-        return !level.getEntitiesOfClass(LivingEntity.class, box,
-                e -> e.isAlive() && e.getTags().contains("dungeon_instance_" + instance.getInstanceId())
-                        && escortMatches(e, obj.escortEntityKey())
-                        && e.distanceToSqr(target.getX() + .5, target.getY() + .5, target.getZ() + .5) <= 16.0).isEmpty();
+        NodeData node = stage == null || instance.getCurrentNode() == null
+                ? null : stage.nodes().get(instance.getCurrentNode());
+        return level != null && node != null && node.escort() != null
+                && EscortRuntime.hasArrived(level, instance, node);
+    }
+
+    /** 到达类节点的胜利判定：护航看运输船，迂回看玩家（与 checkReachPoint 同一抵达规则）。 */
+    private static boolean arrivedAtTarget(ServerLevel level, DungeonInstance instance, NodeData node) {
+        if (node.escort() != null) return EscortRuntime.hasArrived(level, instance, node);
+        int[] offset = node.detour().targetOffset();
+        BlockPos target = instance.getNodeSpawnPos(node.nodeId()).offset(offset[0], offset[1], offset[2]);
+        return !level.getEntitiesOfClass(Player.class, new AABB(target).inflate(4.0),
+                p -> isParticipant(p, instance)).isEmpty();
     }
 
     private static StageData stageFor(DungeonInstance instance) {
         return com.piranport.dungeon.data.DungeonRegistry.INSTANCE.getStage(instance.getStageId());
-    }
-
-    private static boolean escortMatches(LivingEntity entity, String key) {
-        boolean tag = key.startsWith("#");
-        var id = net.minecraft.resources.ResourceLocation.tryParse(tag ? key.substring(1) : key);
-        if (id == null) return false;
-        return tag ? entity.getType().is(net.minecraft.tags.TagKey.create(
-                net.minecraft.core.registries.Registries.ENTITY_TYPE, id))
-                : net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType()).equals(id);
     }
 
     private static boolean isParticipant(Player player, DungeonInstance instance) {
@@ -153,6 +143,17 @@ public final class VictoryEvaluator {
                 || instance.getClearedNodes().contains(instance.getCurrentNode())) return;
         StageData stage = stageFor(instance);
         if (stage == null) return;
+        NodeData current = stage.nodes().get(instance.getCurrentNode());
+        if (current != null && current.completesByArrival()) {
+            // 护航与迂回的胜利只看到达目标点，不走关卡级条件。
+            if (current.escort() != null) EscortRuntime.tickWaves(level, instance, current);
+            if (arrivedAtTarget(level, instance, current)) {
+                com.piranport.dungeon.block.PortalStructureHelper.buildPortalStructure(level,
+                        instance.getNodeSpawnPos(current.nodeId()).offset(4, 0, 0),
+                        instance.getInstanceId(), current.nodeId());
+            }
+            return;
+        }
         var obj = stage.victoryObjectives();
         boolean occupied = false;
         if (obj.reachPointOffset() != null && obj.captureRadius() > 0) {
@@ -164,7 +165,7 @@ public final class VictoryEvaluator {
         com.piranport.dungeon.saved.DungeonObjectiveData.get(level)
                 .tickCapture(instance.getInstanceId(), instance.getCurrentNode(), occupied);
         for (VictoryCondition condition : stage.victoryConditions()) {
-            if ((condition == VictoryCondition.REACH_POINT || condition == VictoryCondition.ESCORT
+            if ((condition == VictoryCondition.REACH_POINT
                     || condition == VictoryCondition.CAPTURE_FLAG || condition == VictoryCondition.SURVIVE)
                     && checkSingle(level, instance, condition)) {
                 com.piranport.dungeon.block.PortalStructureHelper.buildPortalStructure(level,

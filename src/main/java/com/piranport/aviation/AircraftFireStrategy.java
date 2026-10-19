@@ -63,6 +63,11 @@ public class AircraftFireStrategy {
                                               SlotCooldowns cooldowns) {
         ItemStack aircraftStack = weaponSlot == 40 ? inv.offhand.get(0) : inv.items.get(weaponSlot);
 
+        if (com.piranport.dungeon.weather.WeatherRuntime.blocksLaunch(level, player)) {
+            player.displayClientMessage(Component.translatable("message.piranport.weather_no_launch"), true);
+            return;
+        }
+
         // 燃料校验：油量归零则拒绝放飞。创造模式同样要求先完成 R 键装填，
         // 只是不消耗补给；不再跳过准备状态校验。
         AircraftState launchState = AircraftDefinitionService.stateOf(aircraftStack);

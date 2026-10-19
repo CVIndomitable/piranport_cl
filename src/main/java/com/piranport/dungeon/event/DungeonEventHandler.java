@@ -278,6 +278,7 @@ public class DungeonEventHandler {
         BOSS_SNAPSHOT_NODE.remove(instance.getInstanceId());
         if (!manager.markNodeCleared(instance.getInstanceId(), nodeId,
                 readKeyFromLectern(instance, dungeonLevel.getServer()))) return;
+        com.piranport.dungeon.escort.EscortRuntime.releaseTransport(dungeonLevel, instance, nodeId);
         markLecternChanged(instance, dungeonLevel.getServer());
         boolean completes = node.type() == NodeData.NodeType.BOSS
                 && stage.bossNodes().stream().allMatch(instance.getClearedNodes()::contains);

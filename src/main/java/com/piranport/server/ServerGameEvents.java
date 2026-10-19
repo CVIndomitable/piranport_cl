@@ -92,6 +92,7 @@ public class ServerGameEvents {
                 if (instance.getState() == DungeonInstance.State.ACTIVE) instance.tickElapsed();
                 com.piranport.dungeon.event.DungeonSettlementService.tickActiveNode(dungeonLevel, instance);
                 com.piranport.dungeon.VictoryEvaluator.tick(dungeonLevel, instance);
+                com.piranport.dungeon.weather.WeatherRuntime.tick(dungeonLevel, instance);
             }
             // HUD 计时每 5 tick（0.25s）同步一次，足够 mm:ss 显示且暂停时自然停表
             if (event.getServer().getTickCount() % 5 == 0) {
@@ -163,7 +164,8 @@ public class ServerGameEvents {
                     DungeonInstance instance = DungeonInstanceManager.get(sl).getInstance(instanceId);
                     if (instance == null || instance.getState() != DungeonInstance.State.ACTIVE) return;
                     for (String nodeTag : entity.getTags()) {
-                        if (nodeTag.startsWith("dungeon_node_")) {
+                        if (nodeTag.startsWith("dungeon_node_")
+                                && !entity.getTags().contains(com.piranport.dungeon.escort.EscortRuntime.TRANSPORT_TAG)) {
                             com.piranport.dungeon.event.DungeonSettlementService.recordKill(sl, instance,
                                     nodeTag.substring("dungeon_node_".length()), entity.getUUID());
                         }
@@ -202,6 +204,10 @@ public class ServerGameEvents {
         DungeonInstance instance = mgr.getInstance(instanceId);
         if (instance == null || instance.getState() != DungeonInstance.State.ACTIVE
                 || instance.getClearedNodes().contains(nodeId)) return;
+        if (entity.getTags().contains(com.piranport.dungeon.escort.EscortRuntime.TRANSPORT_TAG)) {
+            com.piranport.dungeon.escort.EscortRuntime.onTransportLost(sl, instance, nodeId);
+            return;
+        }
         com.piranport.dungeon.event.DungeonSettlementService.recordKill(sl, instance, nodeId, entity.getUUID());
         var objectives = com.piranport.dungeon.saved.DungeonObjectiveData.get(sl);
         objectives.died(instanceId, nodeId, entity.getUUID());
@@ -218,8 +224,8 @@ public class ServerGameEvents {
         allEnemies |= enemies != null && enemies.flagship() == null;
         boolean anyFlagshipAlive = !objectives.defeated(instanceId, nodeId, allEnemies);
 
-        if (!anyFlagshipAlive && node != null) {
-            // 《副本/00》多人波次：快照总波数未打完 → 刷下一波，不开门
+        if (!anyFlagshipAlive && node != null && node.escort() == null) {
+            // 《副本/00》多人波次：快照总波数未打完 → 刷下一波，不开门；护航节点波次由运输船进度驱动，不走清场
             int wave = instance.getNodeWave(nodeId);
             int total = instance.getNodeWaveTotal(nodeId);
             if (com.piranport.dungeon.instance.NodeBattleField.trySpawnNextWave(sl, instance, node)) {
@@ -236,7 +242,7 @@ public class ServerGameEvents {
             }
         }
 
-        if (!anyFlagshipAlive) {
+        if (!anyFlagshipAlive && (node == null || !node.completesByArrival())) {
             BlockPos portalPos = entity.blockPosition();
             com.piranport.dungeon.block.PortalStructureHelper.buildPortalStructure(
                     sl, portalPos.below(), instanceId, nodeId);

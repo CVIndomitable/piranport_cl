@@ -67,7 +67,7 @@ class StageDataTest {
     private static Map<String, NodeData> nodes(String... nodeIds) {
         Map<String, NodeData> nodes = new HashMap<>();
         for (String nodeId : nodeIds) {
-            nodes.put(nodeId, new NodeData(nodeId, NodeData.NodeType.RESOURCE, null,
+            nodes.put(nodeId, TestNodes.plain(nodeId, NodeData.NodeType.RESOURCE, null,
                     List.of(), List.of(), null, 0, 0, null, TerrainType.T1_OCEAN,
                     Set.of(), SceneData.DAY));
         }

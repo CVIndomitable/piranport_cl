@@ -130,6 +130,87 @@ class DungeonDataLoaderTest {
         return resources;
     }
 
+    /** 护航是节点级字段：只有声明 escort 的节点带运输船，其余节点为 null。 */
+    @Test
+    void escortParsesOnlyOnDeclaringNode() {
+        loader.apply(escortResources("[0, 0, -40]"), null, null);
+        StageData stage = DungeonRegistry.INSTANCE.getStage("test");
+        NodeData.EscortSpec escort = stage.nodes().get("A").escort();
+        assertEquals("piranport:deep_ocean_transport", escort.entityId());
+        assertArrayEquals(new int[]{0, 0, -40}, escort.targetOffset());
+        assertNull(stage.nodes().get("B").escort());
+    }
+
+    @Test
+    void escortTargetOffsetMustBeThreeComponents() {
+        assertThrows(IllegalArgumentException.class,
+                () -> loader.apply(escortResources("[0, -40]"), null, null));
+        assertFalse(DungeonRegistry.INSTANCE.hasStage("test"));
+    }
+
+    /** 迂回：type 为 detour 的节点带 detour 对象，玩家抵达目标点即过关，不需要运输船。 */
+    @Test
+    void detourParsesOnDetourNode() {
+        loader.apply(singleNodeResources("{\"type\":\"detour\","
+                + "\"detour\":{\"target_offset\":[0,0,60]}}"), null, null);
+        NodeData node = DungeonRegistry.INSTANCE.getStage("test").nodes().get("A");
+        assertEquals(NodeData.NodeType.DETOUR, node.type());
+        assertArrayEquals(new int[]{0, 0, 60}, node.detour().targetOffset());
+        assertNull(node.escort());
+        assertTrue(node.completesByArrival());
+    }
+
+    @Test
+    void detourTypeRequiresDetourObject() {
+        assertThrows(IllegalArgumentException.class,
+                () -> loader.apply(singleNodeResources("{\"type\":\"detour\"}"), null, null));
+        assertFalse(DungeonRegistry.INSTANCE.hasStage("test"));
+    }
+
+    @Test
+    void detourObjectRequiresDetourType() {
+        assertThrows(IllegalArgumentException.class,
+                () -> loader.apply(singleNodeResources("{\"type\":\"battle\","
+                        + "\"detour\":{\"target_offset\":[0,0,60]}}"), null, null));
+        assertFalse(DungeonRegistry.INSTANCE.hasStage("test"));
+    }
+
+    @Test
+    void escortAndDetourCannotCoexistOnOneNode() {
+        assertThrows(IllegalArgumentException.class,
+                () -> loader.apply(singleNodeResources("{\"type\":\"detour\","
+                        + "\"escort\":{\"entity\":\"piranport:deep_ocean_transport\",\"target_offset\":[0,0,60]},"
+                        + "\"detour\":{\"target_offset\":[0,0,60]}}"), null, null));
+        assertFalse(DungeonRegistry.INSTANCE.hasStage("test"));
+    }
+
+    private static Map<ResourceLocation, JsonElement> singleNodeResources(String nodeJson) {
+        Map<ResourceLocation, JsonElement> resources = new HashMap<>();
+        resources.put(id("chapters/test"), JsonParser.parseString("""
+                {"chapter_id":"test","display_name":"test","stages":["test"]}
+                """));
+        resources.put(id("stages/test"), JsonParser.parseString("""
+                {"stage_id":"test","chapter":"test","display_name":"test","start_node":"A",
+                 "nodes":{"A":%s,"B":{"type":"resource"}},
+                 "edges":[{"from":"A","to":"B"}],"boss_nodes":[]}
+                """.formatted(nodeJson)));
+        return resources;
+    }
+
+    private static Map<ResourceLocation, JsonElement> escortResources(String targetOffset) {
+        Map<ResourceLocation, JsonElement> resources = new HashMap<>();
+        resources.put(id("chapters/test"), JsonParser.parseString("""
+                {"chapter_id":"test","display_name":"test","stages":["test"]}
+                """));
+        resources.put(id("stages/test"), JsonParser.parseString("""
+                {"stage_id":"test","chapter":"test","display_name":"test","start_node":"A",
+                 "nodes":{"A":{"type":"battle","escort":{"entity":"piranport:deep_ocean_transport",
+                                "target_offset":%s}},"B":{"type":"resource"}},
+                 "edges":[{"from":"A","to":"B"}],"boss_nodes":[]}
+                """.formatted(targetOffset)));
+        return resources;
+    }
+
     private static Map<ResourceLocation, JsonElement> validResources() {
         Map<ResourceLocation, JsonElement> resources = new HashMap<>();
         resources.put(id("chapters/test"), JsonParser.parseString("""

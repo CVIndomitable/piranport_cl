@@ -882,6 +882,8 @@
   "message.piranport.no_ammo": "No ammo!",
   "message.piranport.no_core": "Ship core not found!",
   "message.piranport.no_fuel": "No fuel! Use a fuel bucket to refuel",
+  "message.piranport.weather_no_launch": "Aircraft cannot be launched in a storm",
+  "message.piranport.weather_no_landing": "Aircraft cannot land at night and were lost",
   "message.piranport.no_fuel_enhanced": "§cNo fuel!§r\n§7Use lava bucket, fuel, or blaze powder to refuel.§r",
   "message.piranport.no_weapon": "No weapon equipped!",
   "message.piranport.out_of_range": "Target out of range!",

@@ -6,10 +6,52 @@
     "A": {
       "type": "battle",
       "enemies": "enemy_set_3_1a",
+      "escort": {
+        "entity": "piranport:deep_ocean_transport",
+        "target_offset": [0, 0, 56]
+      },
+      "branches": [
+        {
+          "when": {
+            "hull": "medium"
+          },
+          "to": "B"
+        }
+      ],
+      "branch_default": "C",
       "display_x": 50,
       "display_y": 200
     },
     "B": {
+      "type": "battle",
+      "enemies": "enemy_set_3_1b",
+      "escort": {
+        "entity": "piranport:deep_ocean_transport",
+        "target_offset": [0, 0, 56]
+      },
+      "branches": [
+        {
+          "when": {
+            "role": "侦察"
+          },
+          "to": "R"
+        }
+      ],
+      "branch_default": "D",
+      "display_x": 200,
+      "display_y": 100
+    },
+    "C": {
+      "type": "battle",
+      "enemies": "enemy_set_3_1c",
+      "escort": {
+        "entity": "piranport:deep_ocean_transport",
+        "target_offset": [0, 0, 56]
+      },
+      "display_x": 200,
+      "display_y": 300
+    },
+    "R": {
       "type": "resource",
       "rewards": [
         {
@@ -21,19 +63,19 @@
           "count": 8
         }
       ],
-      "display_x": 150,
-      "display_y": 100
-    },
-    "C": {
-      "type": "battle",
-      "enemies": "enemy_set_3_1b",
-      "display_x": 250,
-      "display_y": 100
+      "display_x": 350,
+      "display_y": 50
     },
     "D": {
+      "type": "battle",
+      "enemies": "enemy_set_3_1b",
+      "display_x": 350,
+      "display_y": 150
+    },
+    "E": {
       "type": "boss",
       "enemies": "boss_3_1",
-      "display_x": 350,
+      "display_x": 500,
       "display_y": 200
     }
   },
@@ -43,17 +85,33 @@
       "to": "B"
     },
     {
-      "from": "B",
+      "from": "A",
       "to": "C"
     },
     {
-      "from": "C",
+      "from": "B",
+      "to": "R"
+    },
+    {
+      "from": "B",
       "to": "D"
+    },
+    {
+      "from": "C",
+      "to": "E"
+    },
+    {
+      "from": "R",
+      "to": "E"
+    },
+    {
+      "from": "D",
+      "to": "E"
     }
   ],
   "start_node": "A",
   "boss_nodes": [
-    "D"
+    "E"
   ],
   "first_clear_rewards": [
     {
@@ -70,7 +128,6 @@
     }
   ],
   "victory_conditions": [
-    "ESCORT_ALIVE",
     "KILL_BOSS"
   ],
   "victory_objectives": {
@@ -79,7 +136,7 @@
   "checkpoints": [
     {
       "id": "cp_3_1a",
-      "node_id": "B",
+      "node_id": "R",
       "pos_x": 0,
       "pos_y": 64,
       "pos_z": 0,

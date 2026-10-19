@@ -5,6 +5,7 @@ import com.piranport.config.ModEquipmentConfig;
 import com.piranport.entity.AircraftEntity;
 import com.piranport.npc.ai.FleetGroup;
 import com.piranport.npc.ai.FleetGroupManager;
+import com.piranport.npc.ai.goal.EscortTransportTargetGoal;
 import com.piranport.dungeon.saved.DungeonSavedData;
 import com.piranport.item.KeyFragmentItem;
 import com.piranport.registry.ModItems;
@@ -48,8 +49,7 @@ import java.util.UUID;
  * {@code customServerAiStep} 中随机骚扰。高级轻巡另有独立对空目标
  * （{@link #getAirTarget()}）与 {@code AntiAircraftAttackGoal}。</p>
  *
- * <p>未实现：《深海/01》§七「默认仇恨护航运输船，玩家攻击或距离太近才转仇恨玩家」
- * 依赖运输船/护航实体，当前代码库没有这类实体，{@code ESCORT_ALIVE} 只是胜利条件枚举。</p>
+ * <p>护航仇恨（《深海/01》§七）：默认仇恨同副本运输船，见 {@link #attacksEscortTransports()}。</p>
  */
 public abstract class AbstractDeepOceanEntity extends Monster {
 
@@ -82,6 +82,15 @@ public abstract class AbstractDeepOceanEntity extends Monster {
 
     protected AbstractDeepOceanEntity(EntityType<? extends AbstractDeepOceanEntity> type, Level level) {
         super(type, level);
+        if (attacksEscortTransports()) {
+            // 优先级 0 早于子类的玩家索敌（优先级 1），仅在玩家未攻击且不在仇恨范围内时才转向运输船
+            this.targetSelector.addGoal(0, new EscortTransportTargetGoal(this));
+        }
+    }
+
+    /** 护航仇恨：深海敌人默认仇恨同副本运输船；运输船自身返回 false。 */
+    protected boolean attacksEscortTransports() {
+        return true;
     }
 
     /** Match crosshair picking to the visible ship rigging, not the tiny humanoid fallback box. */

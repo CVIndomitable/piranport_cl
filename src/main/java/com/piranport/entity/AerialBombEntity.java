@@ -112,7 +112,8 @@ public class AerialBombEntity extends ThrowableItemProjectile {
                 Entity aircraft = sl.getEntity(sourceAircraftUuid);
                 if (aircraft != null) directSource = aircraft;
             }
-            target.hurt(damageSources().thrown(directSource, getOwner()), damage);
+            com.piranport.dungeon.weather.WeatherDamageHandler.hurt(target,
+                    damageSources().thrown(directSource, getOwner()), damage, true);
 
             Level.ExplosionInteraction interaction = ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get()
                     ? Level.ExplosionInteraction.TNT : Level.ExplosionInteraction.NONE;

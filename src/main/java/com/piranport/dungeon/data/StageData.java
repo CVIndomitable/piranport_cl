@@ -67,8 +67,6 @@ public record StageData(
             boolean requireAllNodesCleared,
             /** SURVIVE：存活时长（秒），0 表示无计时 */
             int surviveSeconds,
-            /** ESCORT：护送目标 TagKey 资源位置或实体 id（前缀 escorte_/escort_/...） */
-            String escortEntityKey,
             /** REACH_POINT：目标点相对节点中心的偏移 [dx, dy, dz]（节点坐标 + 偏移 = 实际目标） */
             int[] reachPointOffset,
             /** CAPTURE_FLAG：夺旗判定半径（方块）+ 存活时间（秒） */
@@ -76,7 +74,7 @@ public record StageData(
             int captureHoldSeconds
     ) {
         public static final VictoryObjectives EMPTY =
-                new VictoryObjectives(false, 0, null, null, 0, 0);
+                new VictoryObjectives(false, 0, null, 0, 0);
     }
 
     /**

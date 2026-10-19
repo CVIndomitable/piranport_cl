@@ -6,8 +6,10 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.piranport.PiranPort;
+import com.piranport.dungeon.data.BranchRule;
 import com.piranport.dungeon.data.CheckpointData;
 import com.piranport.dungeon.data.ChapterData;
+import com.piranport.dungeon.data.CombatRestriction;
 import com.piranport.dungeon.data.DungeonRegistry;
 import com.piranport.dungeon.data.TerrainType;
 import com.piranport.dungeon.data.SceneData;
@@ -21,6 +23,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -120,19 +123,7 @@ public record DungeonRegistrySyncPayload(String jsonData,
                                     cObj.get("count").getAsInt()));
                         }
                     }
-                    nodes.put(ne.getKey(), new NodeData(
-                            nObj.get("nodeId").getAsString(),
-                            NodeData.NodeType.valueOf(nObj.get("type").getAsString()),
-                            nObj.has("enemies") ? nObj.get("enemies").getAsString() : null,
-                            List.copyOf(rewards),
-                            List.copyOf(costs),
-                            nObj.has("costMessage") ? nObj.get("costMessage").getAsString() : "",
-                            nObj.get("displayX").getAsInt(),
-                            nObj.get("displayY").getAsInt(),
-                            nObj.has("script") ? nObj.get("script").getAsString() : null,
-                            nObj.has("terrainType") ? TerrainType.fromString(nObj.get("terrainType").getAsString()) : TerrainType.T1_OCEAN,
-                            Set.of(),
-                            SceneData.DAY));
+                    nodes.put(ne.getKey(), readNode(nObj, rewards, costs));
                 }
                 List<StageData.EdgeData> edges = new ArrayList<>();
                 for (JsonElement e : sObj.getAsJsonArray("edges")) {
@@ -267,6 +258,7 @@ public record DungeonRegistrySyncPayload(String jsonData,
                 }
 
                 nodesObj.add(ne.getKey(), nObj);
+                writeNodeConfig(nObj, node);
             }
             sObj.add("nodes", nodesObj);
 
@@ -307,6 +299,111 @@ public record DungeonRegistrySyncPayload(String jsonData,
         root.add("stages", stagesObj);
 
         return new DungeonRegistrySyncPayload(gson.toJson(root));
+    }
+
+    /** 节点的战斗与胜利配置；与 {@link #readNode} 成对，漏写任一字段客户端就丢配置。 */
+    private static void writeNodeConfig(JsonObject nObj, NodeData node) {
+        nObj.addProperty("terrainType", node.terrainType().name());
+        JsonArray restrictions = new JsonArray();
+        for (CombatRestriction r : node.restrictions()) restrictions.add(r.name());
+        nObj.add("restrictions", restrictions);
+        nObj.addProperty("scene", node.scene().name());
+        nObj.addProperty("difficultyScale", node.difficultyScale());
+        nObj.addProperty("waves", node.waves());
+        JsonArray branches = new JsonArray();
+        for (BranchRule b : node.branches()) {
+            JsonObject when = new JsonObject();
+            if (b.hull() != null) when.addProperty("hull", b.hull());
+            if (b.escorts() != null) when.addProperty("escorts", b.escorts());
+            if (b.role() != null) when.addProperty("role", b.role());
+            if (b.carry() != null) when.addProperty("carry", b.carry());
+            if (b.chance() != null) when.addProperty("chance", b.chance());
+            JsonObject bObj = new JsonObject();
+            bObj.add("when", when);
+            bObj.addProperty("to", b.to());
+            branches.add(bObj);
+        }
+        nObj.add("branches", branches);
+        if (node.branchDefault() != null) nObj.addProperty("branchDefault", node.branchDefault());
+        if (node.displayName() != null) nObj.addProperty("displayName", node.displayName());
+        if (node.escort() != null) {
+            JsonObject eObj = new JsonObject();
+            eObj.addProperty("entity", node.escort().entityId());
+            eObj.add("targetOffset", intArray(node.escort().targetOffset()));
+            nObj.add("escort", eObj);
+        }
+        if (node.detour() != null) {
+            JsonObject dObj = new JsonObject();
+            dObj.add("targetOffset", intArray(node.detour().targetOffset()));
+            nObj.add("detour", dObj);
+        }
+    }
+
+    private static JsonArray intArray(int[] values) {
+        JsonArray arr = new JsonArray();
+        for (int v : values) arr.add(v);
+        return arr;
+    }
+
+    private static int[] readIntArray(JsonArray arr) {
+        int[] values = new int[arr.size()];
+        for (int i = 0; i < values.length; i++) values[i] = arr.get(i).getAsInt();
+        return values;
+    }
+
+    private static NodeData readNode(JsonObject nObj, List<NodeData.RewardEntry> rewards,
+                                     List<NodeData.CostEntry> costs) {
+        Set<CombatRestriction> restrictions = EnumSet.noneOf(CombatRestriction.class);
+        if (nObj.has("restrictions")) {
+            for (JsonElement r : nObj.getAsJsonArray("restrictions")) {
+                restrictions.add(CombatRestriction.valueOf(r.getAsString()));
+            }
+        }
+        List<BranchRule> branches = new ArrayList<>();
+        if (nObj.has("branches")) {
+            for (JsonElement be : nObj.getAsJsonArray("branches")) {
+                JsonObject bObj = be.getAsJsonObject();
+                JsonObject when = bObj.getAsJsonObject("when");
+                Double chance = when.has("chance") ? when.get("chance").getAsDouble() : null;
+                branches.add(new BranchRule(
+                        optString(when, "hull"), optString(when, "escorts"),
+                        optString(when, "role"), optString(when, "carry"),
+                        chance, bObj.get("to").getAsString()));
+            }
+        }
+        NodeData.EscortSpec escort = null;
+        if (nObj.has("escort")) {
+            JsonObject eObj = nObj.getAsJsonObject("escort");
+            escort = new NodeData.EscortSpec(eObj.get("entity").getAsString(),
+                    readIntArray(eObj.getAsJsonArray("targetOffset")));
+        }
+        NodeData.DetourSpec detour = nObj.has("detour")
+                ? new NodeData.DetourSpec(readIntArray(nObj.getAsJsonObject("detour").getAsJsonArray("targetOffset")))
+                : null;
+        return new NodeData(
+                nObj.get("nodeId").getAsString(),
+                NodeData.NodeType.valueOf(nObj.get("type").getAsString()),
+                optString(nObj, "enemies"),
+                List.copyOf(rewards),
+                List.copyOf(costs),
+                nObj.has("costMessage") ? nObj.get("costMessage").getAsString() : "",
+                nObj.get("displayX").getAsInt(),
+                nObj.get("displayY").getAsInt(),
+                optString(nObj, "script"),
+                TerrainType.valueOf(nObj.get("terrainType").getAsString()),
+                Set.copyOf(restrictions),
+                SceneData.valueOf(nObj.get("scene").getAsString()),
+                nObj.get("difficultyScale").getAsDouble(),
+                nObj.get("waves").getAsInt(),
+                List.copyOf(branches),
+                optString(nObj, "branchDefault"),
+                optString(nObj, "displayName"),
+                escort,
+                detour);
+    }
+
+    private static String optString(JsonObject obj, String key) {
+        return obj.has(key) && !obj.get(key).isJsonNull() ? obj.get(key).getAsString() : null;
     }
 
     public static void handle(DungeonRegistrySyncPayload payload, IPayloadContext context) {

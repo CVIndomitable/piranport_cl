@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class DungeonEntryRulesTest {
     private final CheckpointData checkpoint = new CheckpointData("cp", "A", 2, 64, -3, "south", "any");
-    private final NodeData node = new NodeData("A", NodeData.NodeType.BATTLE, null,
+    private final NodeData node = TestNodes.plain("A", NodeData.NodeType.BATTLE, null,
             List.of(), List.of(), "", 0, 0, null, TerrainType.T1_OCEAN, Set.of(), SceneData.DAY);
     private final StageData stage = new StageData("test", "test", "test", Map.of("A", node, "B", node),
             List.of(new StageData.EdgeData("A", "B")), "A", List.of("B"), List.of(),

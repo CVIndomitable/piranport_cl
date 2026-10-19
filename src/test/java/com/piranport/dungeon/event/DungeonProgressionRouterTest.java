@@ -4,6 +4,7 @@ import com.piranport.dungeon.data.NodeData;
 import com.piranport.dungeon.data.SceneData;
 import com.piranport.dungeon.data.StageData;
 import com.piranport.dungeon.data.TerrainType;
+import com.piranport.dungeon.data.TestNodes;
 import com.piranport.dungeon.instance.DungeonInstance;
 import org.junit.jupiter.api.Test;
 
@@ -65,7 +66,7 @@ class DungeonProgressionRouterTest {
     private static StageData stage() {
         Map<String, NodeData> nodes = new LinkedHashMap<>();
         for (String id : List.of("A", "B", "C", "D")) {
-            nodes.put(id, new NodeData(id, NodeData.NodeType.BATTLE, null,
+            nodes.put(id, TestNodes.plain(id, NodeData.NodeType.BATTLE, null,
                     List.of(), List.of(), "", 0, 0, null,
                     TerrainType.T1_OCEAN, Set.of(), SceneData.DAY));
         }

@@ -207,6 +207,7 @@ public final class DungeonNodeRouter {
         BattleSetup setup = prepareBattleNode(level, instance, node, player, keyStack);
         if (setup == null) return; // 已通关节点，setup 返回 null
         NodeBattleField.spawnEnemies(setup.dungeonLevel(), instance, node);
+        com.piranport.dungeon.escort.EscortRuntime.spawnTransport(setup.dungeonLevel(), instance, node);
     }
 
     private static void handleScriptedBattleNode(ServerLevel level, DungeonInstance instance,

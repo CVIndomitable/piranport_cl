@@ -15,7 +15,10 @@ import com.piranport.registry.ModEntityTypes;
 import com.piranport.registry.ModItems;
 import com.piranport.registry.ModMenuTypes;
 import net.minecraft.client.renderer.entity.ThrownItemRenderer;
+import net.minecraft.client.renderer.item.CompassItemPropertyFunction;
 import net.minecraft.client.renderer.item.ItemProperties;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.item.component.LodestoneTracker;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -165,6 +168,16 @@ public class ClientModEvents {
         // 没有字符串/枚举谓词，判定又是 "value >= threshold" 且 ItemOverrides 倒序遍历数组，
         // 所以多谓词覆盖**无法表达弹种的互斥取值**（弹药种类 N 也会同时满足种类 M 的阈值）。
         // 目前物品图标只通过 loaded 谓词切换空膛/装填两态；弹种差异不在模型层用浮点魔法数字区分。
+        // 航海罗盘复用原版指南针的 angle 属性与指针帧。1.21.1 的物品属性按物品注册，
+        // 不给自定义物品注册就永远不会转，模型 overrides 会一直停在 0。
+        CompassItemPropertyFunction.CompassTarget compassTarget = (level, stack, entity) -> {
+            LodestoneTracker tracker = stack.get(DataComponents.LODESTONE_TRACKER);
+            return tracker != null ? tracker.target().orElse(null) : null;
+        };
+        event.enqueueWork(() -> ItemProperties.register(ModItems.NAVIGATION_COMPASS.get(),
+                ResourceLocation.withDefaultNamespace("angle"),
+                new CompassItemPropertyFunction(compassTarget)));
+
         event.enqueueWork(() -> {
             // 为所有 AircraftItem 实例注册 "fueled" 属性（包括命名变体）
             for (var entry : ModItems.ITEMS.getEntries()) {

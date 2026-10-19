@@ -16,6 +16,7 @@ import com.piranport.item.GungnirItem;
 import com.piranport.item.HatsuyukiMainGunItem;
 import com.piranport.item.KirinHeadbandItem;
 import com.piranport.item.MysteriousWeaponItem;
+import com.piranport.item.NavigationCompassItem;
 import com.piranport.item.RepairKitItem;
 import com.piranport.item.ShipGirlContractItem;
 import com.piranport.item.KeyFragmentItem;
@@ -144,6 +145,13 @@ public final class SpecialtyItems {
 
     public static final DeferredItem<BlockItem> DUNGEON_LECTERN =
             ITEMS.registerSimpleBlockItem(ModBlocks.DUNGEON_LECTERN);
+
+    /** 海图/04：航海罗盘。新合成默认 default 模式。 */
+    public static final DeferredItem<NavigationCompassItem> NAVIGATION_COMPASS =
+            ITEMS.register("navigation_compass",
+                    () -> new NavigationCompassItem(new Item.Properties().stacksTo(1)
+                            .component(ModDataComponents.NAVIGATION_MODE.get(),
+                                    NavigationCompassItem.MODE_DEFAULT)));
 
     // ===== Skin Cores =====
     public static final DeferredItem<SkinCoreItem> SKIN_CORE_4 =

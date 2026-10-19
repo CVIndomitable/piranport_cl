@@ -200,4 +200,21 @@ public class ModDataComponents {
                             ByteBufCodecs.stringUtf8(MAX_DUNGEON_STAGE_ID_LENGTH),
                             net.minecraft.core.UUIDUtil.STREAM_CODEC))
                     .build());
+    // ===== 航海罗盘（海图/04）=====
+
+    /** default / ship 两态；必须网络同步，否则客户端看不到 ship 模式的附魔光效。 */
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<String>>
+            NAVIGATION_MODE = DATA_COMPONENTS.register("navigation_mode",
+            () -> DataComponentType.<String>builder()
+                    .persistent(Codec.STRING)
+                    .networkSynchronized(ByteBufCodecs.STRING_UTF8)
+                    .build());
+
+    /** 已记录的深海遗迹坐标；只给服务端选目标用，不需要同步到客户端。 */
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<net.minecraft.core.GlobalPos>>
+            NAVIGATION_RUIN = DATA_COMPONENTS.register("navigation_ruin",
+            () -> DataComponentType.<net.minecraft.core.GlobalPos>builder()
+                    .persistent(net.minecraft.core.GlobalPos.CODEC)
+                    .build());
+
 }

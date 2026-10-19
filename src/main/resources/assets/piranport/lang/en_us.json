@@ -1540,6 +1540,7 @@
   "item.piranport.torpedo_launcher_61cm_type9_blueprint": "61cm Torpedo Launcher (9) Blueprint",
   "item.piranport.torpedo_reload": "Torpedo Reload",
   "item.piranport.town_scroll": "Town Scroll",
+  "item.piranport.navigation_compass": "Navigation Compass",
   "item.piranport.town_scroll.recon_blocked": "Cannot use Town Scroll in recon mode",
   "item.piranport.town_scroll.tooltip": "Right-click to return to ruins",
   "item.piranport.triple_152mm_dp_gun_46": "152mm Triple Dual-Purpose Gun (46)",

@@ -491,6 +491,7 @@ public class ModCreativeTabs {
                         output.accept(ModItems.DEPLOY_MEDAL_CH6.get());
                         output.accept(ModItems.DEPLOY_MEDAL_CH7.get());
                         output.accept(ModItems.TOWN_SCROLL.get());
+                        output.accept(ModItems.NAVIGATION_COMPASS.get());
                         output.accept(ModItems.ELITE_DAMAGE_CONTROL.get());
                         output.accept(ModItems.DAMAGE_CONTROL.get());
                         output.accept(ModItems.FIRE_EXTINGUISHER.get());

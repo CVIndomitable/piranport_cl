@@ -22,6 +22,7 @@ import com.piranport.artillery.config.MuzzlePos;
 import com.piranport.item.BottleFoodItem;
 import com.piranport.item.EntityCoreItem;
 import com.piranport.item.ModFoodItem;
+import com.piranport.item.NavigationCompassItem;
 import com.piranport.item.ShipCoreItem;
 import com.piranport.item.ShipGirlContractItem;
 import com.piranport.item.SkinCoreItem;
@@ -572,6 +573,7 @@ public class ModItems {
     public static final DeferredItem<com.piranport.item.KeyFragmentItem> KEY_FRAGMENT_CH7 = SpecialtyItems.KEY_FRAGMENT_CH7;
     public static final DeferredItem<com.piranport.dungeon.item.TownScrollItem> TOWN_SCROLL = SpecialtyItems.TOWN_SCROLL;
     public static final DeferredItem<BlockItem> DUNGEON_LECTERN = SpecialtyItems.DUNGEON_LECTERN;
+    public static final DeferredItem<NavigationCompassItem> NAVIGATION_COMPASS = SpecialtyItems.NAVIGATION_COMPASS;
 
     // ===== Skin Cores (extracted to SpecialtyItems) =====
     public static final DeferredItem<SkinCoreItem> SKIN_CORE_4 = SpecialtyItems.SKIN_CORE_4;

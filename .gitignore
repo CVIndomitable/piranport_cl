@@ -36,3 +36,4 @@ ponderer/PiranPort-Ponderer-1.0.zip
 
 # 小工具预览图与中间产物，只留本地不入库
 小工具/_preview/
+小工具/render_block_model_preview.py.bak_degenerate_faces

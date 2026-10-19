@@ -1,0 +1,23 @@
+{
+  "stage_id": "ulan",
+  "chapter": "chapter_event_ulan",
+  "display_name": "彩蛋 乌兰",
+  "nodes": {
+    "A": {
+      "type": "battle",
+      "script": "ulan_activity",
+      "display_name": "苏赫巴托尔",
+      "display_x": 200,
+      "display_y": 200
+    }
+  },
+  "edges": [],
+  "start_node": "A",
+  "boss_nodes": [],
+  "victory_conditions": ["KILL_ALL"],
+  "victory_objectives": {
+    "require_all_nodes_cleared": true
+  },
+  "terrain_type": "T1",
+  "par_time_seconds": 900
+}

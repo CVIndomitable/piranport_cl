@@ -52,16 +52,6 @@
   "boss_nodes": [
     "D"
   ],
-  "first_clear_rewards": [
-    {
-      "item": "minecraft:iron_ingot",
-      "count": 28
-    },
-    {
-      "item": "piranport:auto_ciws_76mm",
-      "count": 1
-    }
-  ],
   "victory_conditions": [
     "KILL_FLAGSHIP"
   ],

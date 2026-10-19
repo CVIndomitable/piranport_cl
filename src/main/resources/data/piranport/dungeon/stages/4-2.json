@@ -29,7 +29,11 @@
       "enemies": "enemy_set_4_2c",
       "escort": {
         "entity": "piranport:deep_ocean_transport",
-        "target_offset": [0, 0, 56]
+        "target_offset": [
+          0,
+          0,
+          56
+        ]
       },
       "display_x": 250,
       "display_y": 100
@@ -62,16 +66,6 @@
   "start_node": "A",
   "boss_nodes": [
     "D"
-  ],
-  "first_clear_rewards": [
-    {
-      "item": "minecraft:iron_ingot",
-      "count": 44
-    },
-    {
-      "item": "piranport:key_fragment_ch4",
-      "count": 4
-    }
   ],
   "victory_conditions": [
     "KILL_BOSS"

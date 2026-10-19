@@ -182,6 +182,11 @@ public final class DungeonEntryService {
                     player.level().dimension().location().toString());
             if (instance == null) return;
         }
+        // 《副本/18》ulan：新实例首次进本时锁定形态并推进当日计数。
+        // 已有形态说明这把钥匙已经进过本，死亡重进/记录点返场不重复计数。
+        if ("ulan".equals(stage.stageId()) && instance.getActivityVariant() == null) {
+            instance.setActivityVariant(UlanActivityRules.pickVariant(player));
+        }
         lectern.bindInstance(instance.getInstanceId());
         instance.setLecternPos(lecternPos);
         instance.setLecternDimension(player.level().dimension().location().toString());

@@ -66,20 +66,6 @@
   "boss_nodes": [
     "E"
   ],
-  "first_clear_rewards": [
-    {
-      "item": "minecraft:iron_ingot",
-      "count": 64
-    },
-    {
-      "item": "minecraft:gunpowder",
-      "count": 32
-    },
-    {
-      "item": "piranport:mk23_nuclear_shell",
-      "count": 1
-    }
-  ],
   "victory_conditions": [
     "INTERCEPT_ALL",
     "KILL_BOSS"

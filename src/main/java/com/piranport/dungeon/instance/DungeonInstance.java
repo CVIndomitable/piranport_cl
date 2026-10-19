@@ -42,6 +42,8 @@ public class DungeonInstance {
     private final Map<UUID, Map<String, String>> branchChoices = new HashMap<>();
     private final Set<UUID> bossParticipants = new HashSet<>();
     private boolean bossParticipantSnapshot;
+    /** 《副本/18》活动关形态（目前只有 ulan：supply / aviation）。首次进本锁定，存档保留。 */
+    private String activityVariant;
     private BlockPos lecternPos; // the lectern block that opened this instance
     private String lecternDimension; // dimension key of the lectern
     private long startTimeMillis;
@@ -159,6 +161,9 @@ public class DungeonInstance {
         if (playerUuid == null || checkpointId == null) return;
         playerCheckpoints.put(playerUuid, checkpointId);
     }
+    public String getActivityVariant() { return activityVariant; }
+    public void setActivityVariant(String variant) { this.activityVariant = variant; }
+
     public BlockPos getLecternPos() { return lecternPos; }
     public String getLecternDimension() { return lecternDimension; }
     public long getStartTimeMillis() { return startTimeMillis; }
@@ -366,6 +371,9 @@ public class DungeonInstance {
         if (lecternDimension != null) {
             tag.putString("LecternDimension", lecternDimension);
         }
+        if (activityVariant != null) {
+            tag.putString("ActivityVariant", activityVariant);
+        }
         tag.putLong("StartTime", startTimeMillis);
         tag.putLong("EndTime", endTimeMillis);
         tag.putLong("ElapsedTicks", elapsedTicks);
@@ -446,6 +454,9 @@ public class DungeonInstance {
         }
         if (tag.contains("LecternDimension")) {
             inst.lecternDimension = tag.getString("LecternDimension");
+        }
+        if (tag.contains("ActivityVariant")) {
+            inst.activityVariant = tag.getString("ActivityVariant");
         }
         inst.startTimeMillis = tag.getLong("StartTime");
         inst.endTimeMillis = tag.getLong("EndTime");

@@ -45,16 +45,6 @@
   "boss_nodes": [
     "C"
   ],
-  "first_clear_rewards": [
-    {
-      "item": "minecraft:iron_ingot",
-      "count": 52
-    },
-    {
-      "item": "piranport:large_type3_shell",
-      "count": 8
-    }
-  ],
   "victory_conditions": [
     "KILL_ALL"
   ],

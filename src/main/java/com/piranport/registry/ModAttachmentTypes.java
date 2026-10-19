@@ -29,6 +29,17 @@ public class ModAttachmentTypes {
             ATTACHMENT_TYPES.register("entered_dungeon",
                     () -> AttachmentType.builder(() -> false).serialize(Codec.BOOL).copyOnDeath().build());
 
+    /**
+     * 《副本/18》ulan 彩蛋的当日计数：按玩家、按 UTC 地球日。
+     * 只统计「新钥匙第一次成功进本」，死亡重进不重复计数；跨日由 day 字段判零。
+     */
+    public static final Supplier<AttachmentType<Long>> ULAN_DAILY_DAY =
+            ATTACHMENT_TYPES.register("ulan_daily_day",
+                    () -> AttachmentType.builder(() -> 0L).serialize(Codec.LONG).copyOnDeath().build());
+    public static final Supplier<AttachmentType<Integer>> ULAN_DAILY_COUNT =
+            ATTACHMENT_TYPES.register("ulan_daily_count",
+                    () -> AttachmentType.builder(() -> 0).serialize(Codec.INT).copyOnDeath().build());
+
     // 移动预测缓存属于各端的玩家实例，不持久化、不同步，也不复制到重生玩家。
     public static final Supplier<AttachmentType<WaterWalkingState>> WATER_WALKING =
             ATTACHMENT_TYPES.register("water_walking",

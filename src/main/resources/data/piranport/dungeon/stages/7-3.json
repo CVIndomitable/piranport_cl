@@ -73,16 +73,6 @@
     "E",
     "F"
   ],
-  "first_clear_rewards": [
-    {
-      "item": "minecraft:iron_ingot",
-      "count": 64
-    },
-    {
-      "item": "minecraft:copper_ingot",
-      "count": 32
-    }
-  ],
   "victory_conditions": [
     "KILL_ALL_FLAGSHIPS"
   ],

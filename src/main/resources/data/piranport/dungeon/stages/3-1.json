@@ -8,7 +8,11 @@
       "enemies": "enemy_set_3_1a",
       "escort": {
         "entity": "piranport:deep_ocean_transport",
-        "target_offset": [0, 0, 56]
+        "target_offset": [
+          0,
+          0,
+          56
+        ]
       },
       "branches": [
         {
@@ -27,7 +31,11 @@
       "enemies": "enemy_set_3_1b",
       "escort": {
         "entity": "piranport:deep_ocean_transport",
-        "target_offset": [0, 0, 56]
+        "target_offset": [
+          0,
+          0,
+          56
+        ]
       },
       "branches": [
         {
@@ -46,7 +54,11 @@
       "enemies": "enemy_set_3_1c",
       "escort": {
         "entity": "piranport:deep_ocean_transport",
-        "target_offset": [0, 0, 56]
+        "target_offset": [
+          0,
+          0,
+          56
+        ]
       },
       "display_x": 200,
       "display_y": 300
@@ -112,20 +124,6 @@
   "start_node": "A",
   "boss_nodes": [
     "E"
-  ],
-  "first_clear_rewards": [
-    {
-      "item": "minecraft:iron_ingot",
-      "count": 32
-    },
-    {
-      "item": "minecraft:coal",
-      "count": 20
-    },
-    {
-      "item": "piranport:type_1_ap_shell",
-      "count": 8
-    }
   ],
   "victory_conditions": [
     "KILL_BOSS"

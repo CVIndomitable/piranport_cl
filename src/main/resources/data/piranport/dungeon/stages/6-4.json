@@ -69,16 +69,6 @@
   "boss_nodes": [
     "E"
   ],
-  "first_clear_rewards": [
-    {
-      "item": "minecraft:iron_ingot",
-      "count": 64
-    },
-    {
-      "item": "piranport:key_fragment_ch6",
-      "count": 4
-    }
-  ],
   "victory_conditions": [
     "KILL_ALL"
   ],

@@ -66,16 +66,6 @@
   "boss_nodes": [
     "E"
   ],
-  "first_clear_rewards": [
-    {
-      "item": "minecraft:iron_ingot",
-      "count": 40
-    },
-    {
-      "item": "piranport:super_heavy_ap_shell",
-      "count": 4
-    }
-  ],
   "victory_conditions": [
     "ESCORT_ALIVE",
     "KILL_BOSS"

@@ -52,20 +52,6 @@
   "boss_nodes": [
     "D"
   ],
-  "first_clear_rewards": [
-    {
-      "item": "minecraft:iron_ingot",
-      "count": 64
-    },
-    {
-      "item": "piranport:aluminum_ingot",
-      "count": 32
-    },
-    {
-      "item": "piranport:key_fragment_ch7",
-      "count": 4
-    }
-  ],
   "victory_conditions": [
     "KILL_FLAGSHIP",
     "INTERCEPT_ALL"

@@ -26,16 +26,6 @@
   "boss_nodes": [
     "B"
   ],
-  "first_clear_rewards": [
-    {
-      "item": "minecraft:iron_ingot",
-      "count": 24
-    },
-    {
-      "item": "minecraft:gunpowder",
-      "count": 16
-    }
-  ],
   "victory_conditions": [
     "SURVIVE_WAVES"
   ],

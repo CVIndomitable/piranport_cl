@@ -60,15 +60,5 @@
   ],
   "victory_objectives": {
     "require_all_nodes_cleared": true
-  },
-  "first_clear_rewards": [
-    {
-      "item": "minecraft:iron_ingot",
-      "count": 20
-    },
-    {
-      "item": "minecraft:copper_ingot",
-      "count": 8
-    }
-  ]
+  }
 }

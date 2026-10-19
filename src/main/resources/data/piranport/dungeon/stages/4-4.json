@@ -69,16 +69,6 @@
   "boss_nodes": [
     "E"
   ],
-  "first_clear_rewards": [
-    {
-      "item": "minecraft:iron_ingot",
-      "count": 48
-    },
-    {
-      "item": "piranport:high_pressure_boiler",
-      "count": 1
-    }
-  ],
   "victory_conditions": [
     "KILL_FLAGSHIP"
   ],

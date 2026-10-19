@@ -13,11 +13,9 @@
   "edges": [],
   "start_node": "A",
   "boss_nodes": [],
-  "first_clear_rewards": [
-    { "item": "piranport:exp_shell", "count": 16 },
-    { "item": "piranport:toast_bread", "count": 16 }
+  "victory_conditions": [
+    "KILL_ALL"
   ],
-  "victory_conditions": ["KILL_ALL"],
   "victory_objectives": {
     "require_all_nodes_cleared": true
   },

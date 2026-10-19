@@ -75,15 +75,5 @@
   "start_node": "A",
   "boss_nodes": [
     "E"
-  ],
-  "first_clear_rewards": [
-    {
-      "item": "minecraft:iron_ingot",
-      "count": 16
-    },
-    {
-      "item": "minecraft:coal",
-      "count": 12
-    }
   ]
 }

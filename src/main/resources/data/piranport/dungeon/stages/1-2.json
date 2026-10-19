@@ -8,7 +8,11 @@
       "enemies": "enemy_set_1_2a",
       "escort": {
         "entity": "piranport:deep_ocean_transport",
-        "target_offset": [0, 0, 56]
+        "target_offset": [
+          0,
+          0,
+          56
+        ]
       },
       "branches": [
         {
@@ -71,15 +75,5 @@
   "start_node": "A",
   "boss_nodes": [
     "C"
-  ],
-  "first_clear_rewards": [
-    {
-      "item": "minecraft:iron_ingot",
-      "count": 16
-    },
-    {
-      "item": "piranport:aluminum_ingot",
-      "count": 8
-    }
   ]
 }

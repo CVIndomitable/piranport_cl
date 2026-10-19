@@ -26,20 +26,6 @@
   "boss_nodes": [
     "B"
   ],
-  "first_clear_rewards": [
-    {
-      "item": "minecraft:iron_ingot",
-      "count": 64
-    },
-    {
-      "item": "minecraft:coal",
-      "count": 32
-    },
-    {
-      "item": "piranport:advanced_sonar",
-      "count": 1
-    }
-  ],
   "victory_conditions": [
     "INTERCEPT_ALL",
     "KILL_BOSS"

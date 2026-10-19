@@ -66,20 +66,6 @@
   "boss_nodes": [
     "E"
   ],
-  "first_clear_rewards": [
-    {
-      "item": "minecraft:iron_ingot",
-      "count": 60
-    },
-    {
-      "item": "minecraft:copper_ingot",
-      "count": 20
-    },
-    {
-      "item": "piranport:exp_shell",
-      "count": 16
-    }
-  ],
   "victory_conditions": [
     "ESCORT_ALIVE",
     "KILL_ALL"

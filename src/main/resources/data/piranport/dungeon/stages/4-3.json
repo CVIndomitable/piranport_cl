@@ -36,20 +36,6 @@
   "boss_nodes": [
     "C"
   ],
-  "first_clear_rewards": [
-    {
-      "item": "minecraft:iron_ingot",
-      "count": 44
-    },
-    {
-      "item": "piranport:aluminum_ingot",
-      "count": 24
-    },
-    {
-      "item": "piranport:improved_engine",
-      "count": 1
-    }
-  ],
   "victory_conditions": [
     "KILL_FLAGSHIP"
   ],

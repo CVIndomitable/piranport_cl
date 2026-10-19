@@ -36,20 +36,6 @@
   "boss_nodes": [
     "C"
   ],
-  "first_clear_rewards": [
-    {
-      "item": "minecraft:iron_ingot",
-      "count": 52
-    },
-    {
-      "item": "minecraft:gunpowder",
-      "count": 16
-    },
-    {
-      "item": "piranport:magnetic_torpedo_533mm",
-      "count": 8
-    }
-  ],
   "victory_conditions": [
     "KILL_ALL"
   ],

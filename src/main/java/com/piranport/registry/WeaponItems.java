@@ -394,5 +394,53 @@ public final class WeaponItems {
                             6f, 0f, 1.5f, 1, 1200,
                             () -> ModItems.ANTI_AIR_MISSILE.get()));
 
+    // ===== 装备专属蓝图（策划决策/数值/09）=====
+    /**
+     * 注册名 = 装备注册名 + {@code _blueprint}；堆叠 1，改良 UNCOMMON、先进 RARE。
+     * 只覆盖火炮和鱼雷发射器：初期/标准无需蓝图，飞机和弹药（VT、三式弹除外）不查蓝图。
+     */
+    public static final java.util.Map<String, DeferredItem<Item>> EQUIPMENT_BLUEPRINTS = registerEquipmentBlueprints();
+
+    private static java.util.Map<String, DeferredItem<Item>> registerEquipmentBlueprints() {
+        java.util.Map<String, DeferredItem<Item>> map = new java.util.LinkedHashMap<>();
+        // 火炮：07 表按档位；法系四联380 是表外独立注册的改良炮。
+        for (com.piranport.artillery.CannonCatalog.Entry e : com.piranport.artillery.CannonCatalog.ENTRIES) {
+            if (e.tier() == EquipmentTier.INITIAL || e.tier() == EquipmentTier.STANDARD) continue;
+            if (com.piranport.crafting.WeaponCraftability.isUncraftableId(e.id())) continue;
+            registerBlueprint(map, e.id(), e.tier());
+        }
+        registerBlueprint(map, "french_quad_380mm_gun", EquipmentTier.IMPROVED);
+        // 鱼雷发射器：通用三件 + 08 表图鉴发射器，只列可合成的改良/先进。
+        registerLauncherBlueprint(map, "quad_torpedo_launcher", EquipmentTier.IMPROVED);
+        registerLauncherBlueprint(map, "quintuple_torpedo_launcher", EquipmentTier.IMPROVED);
+        registerLauncherBlueprint(map, "quintuple_533mm_torpedo", EquipmentTier.IMPROVED);
+        registerLauncherBlueprint(map, "quintuple_533mm_torpedo_mk17", EquipmentTier.IMPROVED);
+        registerLauncherBlueprint(map, "quintuple_21in_torpedo_mk35", EquipmentTier.IMPROVED);
+        registerLauncherBlueprint(map, "quintuple_torpedo_launcher_53_56", EquipmentTier.IMPROVED);
+        registerLauncherBlueprint(map, "quintuple_torpedo_launcher_53_65", EquipmentTier.IMPROVED);
+        registerLauncherBlueprint(map, "quad_61cm_torpedo", EquipmentTier.IMPROVED);
+        registerLauncherBlueprint(map, "quad_61cm_oxygen_torpedo", EquipmentTier.IMPROVED);
+        registerLauncherBlueprint(map, "torpedo_launcher_61cm_type9", EquipmentTier.IMPROVED);
+        registerLauncherBlueprint(map, "quintuple_61cm_torpedo", EquipmentTier.IMPROVED);
+        registerLauncherBlueprint(map, "quintuple_61cm_oxygen_torpedo", EquipmentTier.IMPROVED);
+        registerLauncherBlueprint(map, "japanese_sextuple_61cm_torpedo", EquipmentTier.ADVANCED);
+        return java.util.Collections.unmodifiableMap(map);
+    }
+
+    private static void registerLauncherBlueprint(java.util.Map<String, DeferredItem<Item>> map, String id,
+                                                  EquipmentTier tier) {
+        if (com.piranport.crafting.WeaponCraftability.isUncraftableId(id)) return;
+        registerBlueprint(map, id, tier);
+    }
+
+    private static void registerBlueprint(java.util.Map<String, DeferredItem<Item>> map, String equipmentId,
+                                          EquipmentTier tier) {
+        var rarity = tier == EquipmentTier.ADVANCED
+                ? net.minecraft.world.item.Rarity.RARE
+                : net.minecraft.world.item.Rarity.UNCOMMON;
+        map.put(equipmentId, ITEMS.register(equipmentId + "_blueprint",
+                () -> new Item(new Item.Properties().stacksTo(1).rarity(rarity))));
+    }
+
     private WeaponItems() {}
 }

@@ -8,7 +8,7 @@
   "ammo_capacity": 1,
   "panel_damage": 18.0,
   "panel_speed": 0.4,
-  "weight": 18,
+  "weight": 16,
   "health": 15,
   "attack_cooldown": 440
 }

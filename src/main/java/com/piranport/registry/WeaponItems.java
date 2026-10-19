@@ -75,19 +75,21 @@ public final class WeaponItems {
     /**
      * 中国双联140毫米炮。
      *
-     * <p>原为单装「中型火炮」（注册 ID {@code medium_gun}），现改为双联并启用中文命名。
-     * 炮口位置相应改为左右各一（±0.3），与 {@link #JAPANESE_127MM_TWIN_GUN} 的双联
-     * 约定一致；双联两管轮流击发，故 {@code salvoInterval} 由 0 改为 5.0。
+     * <p>数值按《数值/06》公式以真实口径 5.51 英寸（140/25.4）、双联、初期档派生：
+     * 单发面板 6、装填 45.63 tick、负重 14。炮口左右各一（±0.3），与
+     * {@link #JAPANESE_127MM_TWIN_GUN} 的双联约定一致；双联两管轮流击发，{@code salvoInterval} 5.0。
      */
     public static final DeferredItem<Item> MEDIUM_GUN =
             ITEMS.register("chinese_twin_140mm_gun", () -> new ArtilleryItem(new Item.Properties().stacksTo(1)
                     .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.CANNON)
                     .durability(1000),
-                    new ArtilleryCannonData(8, 2, 12.0f, 50, 1000, 3.0f,
+                    new ArtilleryCannonData(8, 2, 0.0f, 0.0f, 1000, 3.0f,
                             List.of(new MuzzlePos(0.3, 0.2, 0),
                                     new MuzzlePos(-0.3, 0.2, 0)),
                             3.0f, 0.01f, 9.8f, 1.5f, 0.0f,
-                            15, 1, 5.0f), "chinese_twin_140mm_gun"));
+                            15, 1, 5.0f,
+                            200.0f, 0.0f, 0.0f, 50.0f, 3.0f, "MANUAL",
+                            5.51f, "initial", "standard", 0.0f), "chinese_twin_140mm_gun"));
     // neural_ballistic_test_gun（神经网络弹道实验炮）与 large_gun（大型火炮，旧试验炮）
     // 已删除；原用处改指 07 表「英国三联16英寸炮」。
     /** 德国双联380毫米炮：策划决策/数值/07（15英寸双联·标准：面板 31、装填 135.2 tick、负重 54）。 */
@@ -131,21 +133,23 @@ public final class WeaponItems {
     /**
      * 法国四联380毫米炮 — 大型火炮，四联装。
      *
-     * <p><b>数值均为占位值</b>，待策划定案后调整。取法：口径/初速/弹道参数照
-     * {@link #GERMAN_TWIN_380MM_GUN}（同为 380 口径，保证弹道解算一致），
-     * 联装数改 4、装填介于双联(60)与七联(100)之间、耐久略高于双联。</p>
+     * <p>按《数值/06》以真实口径 15 英寸、四联、改良档派生：单发面板 31、齐射 124。
+     * 装填采用对照表定稿值 167.7 tick（06 公式四联改良为 160.55，此处以项目定稿值为准）。
+     * 物理参数沿用 380 口径族（与 {@link #GERMAN_TWIN_380MM_GUN} 一致），保证弹道解算相同。
      */
     public static final DeferredItem<Item> FRENCH_QUAD_380MM_GUN =
             ITEMS.register("french_quad_380mm_gun", () -> new ArtilleryItem(new Item.Properties().stacksTo(1)
                     .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.CANNON)
                     .durability(2600),
-                    new ArtilleryCannonData(16, 4, 20.0f, 70, 2600, 4.0f,
+                    new ArtilleryCannonData(16, 4, 0.0f, 167.7f, 2600, 4.0f,
                             List.of(new MuzzlePos(0.3, 0.3, 0),
                                     new MuzzlePos(0.1, 0.3, 0),
                                     new MuzzlePos(-0.1, 0.3, 0),
                                     new MuzzlePos(-0.3, 0.3, 0)),
                             3.5f, 0.008f, 9.8f, 2.0f, 0.0f,
-                            20, 4, 3.0f), "french_quad_380mm_gun"));
+                            20, 4, 3.0f,
+                            800.0f, 0.0f, 0.0f, 45.0f, 3.0f, "MANUAL",
+                            15.0f, "improved", "standard", 0.0f), "french_quad_380mm_gun"));
 
     /**
      * 一星期主炮群 — 14联装极限齐射火炮。

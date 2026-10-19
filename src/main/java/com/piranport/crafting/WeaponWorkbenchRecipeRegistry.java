@@ -3,6 +3,7 @@ package com.piranport.crafting;
 import com.piranport.combat.cannon.CannonAmmoRules;
 import com.piranport.component.EquipmentTier;
 import com.piranport.registry.ModItems;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -12,6 +13,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public final class WeaponWorkbenchRecipeRegistry {
     private static final List<WeaponWorkbenchRecipe> ALL_RECIPES;
@@ -31,6 +33,31 @@ public final class WeaponWorkbenchRecipeRegistry {
             frozen.put(e.getKey(), List.copyOf(e.getValue()));
         }
         TAB_CACHE = Map.copyOf(frozen);
+    }
+
+    /**
+     * 无法合成清单——策划决策/数值/09。
+     * 判据：舰R 图鉴不可开发，且其他获取方式是活动奖励或战利品兑换。
+     * 这些装备不进武器制造台，改由对应 Boss 每次通关掉落（副本/21）。
+     */
+    private static final Set<String> UNCRAFTABLE_IDS = Set.of(
+            // 火炮
+            "japanese_triple_460mm_gun",
+            "soviet_triple_460mm_gun",
+            "us_twin_20inch_gun",
+            "british_twin_20inch_gun",
+            // 鱼雷发射器
+            "japanese_triple_72cm_torpedo",
+            "quad_type0_72cm_torpedo",
+            "clt_quad_torpedo_launcher_type0",
+            "sextuple_61cm_torpedo_launcher_93m3",
+            "septuple_torpedo_launcher",
+            "septuple_torpedo_launcher_93m3");
+
+    /** 物品注册名是否在无法合成清单内。 */
+    public static boolean isUncraftable(Item item) {
+        var key = BuiltInRegistries.ITEM.getKey(item);
+        return key != null && UNCRAFTABLE_IDS.contains(key.getPath());
     }
 
     private WeaponWorkbenchRecipeRegistry() {}
@@ -187,6 +214,7 @@ public final class WeaponWorkbenchRecipeRegistry {
 
         // 数值/07 注册表 60 门：按档位验稀有度蓝图，按口径族与联装定材料（2026-09-30）。
         for (Item gun : com.piranport.registry.WeaponItems.allCatalogGuns()) {
+            if (isUncraftable(gun)) continue;
             if (!(gun instanceof com.piranport.artillery.ArtilleryItem artillery)) continue;
             var data = artillery.getData();
             EquipmentTier tier = data.tierOrDefault();
@@ -203,6 +231,7 @@ public final class WeaponWorkbenchRecipeRegistry {
         launchers.add(ModItems.QUINTUPLE_TORPEDO_LAUNCHER.get());
         ModItems.CATALOG_TORPEDO_LAUNCHERS.forEach(l -> launchers.add(l.get()));
         for (var launcher : launchers) {
+            if (isUncraftable(launcher)) continue;
             EquipmentTier tier = launcher.getTier();
             int base = 150 + 25 * launcher.getTubeCount();
             add(r, 1, launcher, torpedoMaterials(launcher.getCaliber(), launcher.getTubeCount(), tier),

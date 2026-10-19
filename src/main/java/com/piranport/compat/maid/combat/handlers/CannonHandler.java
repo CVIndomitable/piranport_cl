@@ -100,14 +100,14 @@ public class CannonHandler implements WeaponHandler {
         Item preferred = AmmoConsumer.getPreferredAmmo(owner, candidates);
         if (preferred != null) {
             Item preferredShell = preferred;
-            int n = Math.min(barrels, AmmoConsumer.isFreebie(owner) ? barrels : AmmoConsumer.count(owner, s -> s.is(preferredShell)));
+            int n = Math.min(barrels, AmmoConsumer.isFreebie(owner) ? barrels : AmmoConsumer.countItem(owner, preferredShell));
             for (int i = 0; i < n; i++) shotShells.add(preferred);
         }
         for (Item shell : candidates) {
             if (shotShells.size() >= barrels) break;
             int already = (int) shotShells.stream().filter(item -> item == shell).count();
             int n = Math.min(barrels - shotShells.size(),
-                    (AmmoConsumer.isFreebie(owner) ? barrels : AmmoConsumer.count(owner, s -> s.is(shell))) - already);
+                    (AmmoConsumer.isFreebie(owner) ? barrels : AmmoConsumer.countItem(owner, shell)) - already);
             for (int i = 0; i < n; i++) shotShells.add(shell);
         }
         if (shotShells.size() != barrels) return;

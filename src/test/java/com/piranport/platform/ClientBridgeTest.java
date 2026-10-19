@@ -21,7 +21,7 @@ class ClientBridgeTest {
         assertNull(ClientHooks.getClientPlayer());
         assertEquals(-1, ClientHooks.getClientGameTime());
         assertEquals(123, ClientHooks.getAircraftGlowColor(null, 123));
-        assertDoesNotThrow(() -> ClientHooks.openDungeonContinueScreen(BlockPos.ZERO, "stage", 1));
+        assertDoesNotThrow(() -> ClientHooks.openDungeonContinueScreen(BlockPos.ZERO));
         assertDoesNotThrow(() -> ClientHooks.playSound(null, 1, 1));
     }
 
@@ -33,15 +33,13 @@ class ClientBridgeTest {
         BlockPos pos = new BlockPos(1, 64, 2);
 
         ClientHooks.playSound(sound, 0.5f, 1.5f);
-        ClientHooks.openDungeonContinueScreen(pos, "stage", 3);
+        ClientHooks.openDungeonContinueScreen(pos);
 
         assertTrue(ClientHooks.isClient());
         assertSame(sound, recording.sound);
         assertEquals(0.5f, recording.volume);
         assertEquals(1.5f, recording.pitch);
         assertEquals(pos, recording.pos);
-        assertEquals("stage", recording.stage);
-        assertEquals(3, recording.cleared);
     }
 
     @Test
@@ -59,8 +57,6 @@ class ClientBridgeTest {
         float volume;
         float pitch;
         BlockPos pos;
-        String stage;
-        int cleared;
 
         @Override
         public boolean isClient() { return true; }
@@ -73,10 +69,8 @@ class ClientBridgeTest {
         }
 
         @Override
-        public void openDungeonContinueScreen(BlockPos pos, String stage, int cleared) {
+        public void openDungeonContinueScreen(BlockPos pos) {
             this.pos = pos;
-            this.stage = stage;
-            this.cleared = cleared;
         }
     }
 }

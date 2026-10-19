@@ -1,108 +1,35 @@
 package com.piranport.client;
 
-import com.piranport.combat.TransformationManager;
 import com.piranport.component.LoadedAmmo;
-import com.piranport.component.WeaponCooldown;
 import com.piranport.item.MissileLauncherItem;
-import com.piranport.item.ShipCoreItem;
-import com.piranport.item.ShipCoreCombat;
-import com.piranport.item.TorpedoItem;
 import com.piranport.item.TorpedoLauncherItem;
 import com.piranport.registry.ModDataComponents;
 import com.piranport.registry.ModItems;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.Mth;
-import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.client.IItemDecorator;
 
 /**
- * 在武器物品图标上绘制耐久条样式的装填进度条。
- * 冷却进度红→黄→绿渐变，类似原版耐久条。
+ * 在武器物品图标上绘制空膛/满膛状态条。
+ *
+ * <p>装填进度条不画在物品图标上：统一由物品栏上方的 {@link ReloadProgressHudLayer} 大读条显示。
  */
 public class WeaponReloadDecorator implements IItemDecorator {
 
     private static final int BAR_WIDTH = 13;
     private static final int BG_COLOR  = 0xFF000000;
-    /** 已装填指示条（普通鱼雷）：满绿，与原版"附魔光效 / 已充能"观感一致。 */
+    /** 已装填指示条（导弹/深弹）：满绿，与原版"附魔光效 / 已充能"观感一致。 */
     private static final int READY_COLOR = 0xFF3FD23F;
-
-    // ===== 弹种颜色 =====
-    // WHY 用渲染器而不是贴图区分弹种：1.21.1 的 overrides 谓词只有浮点数、判定是
-    // "value >= threshold" 且 ItemOverrides 倒序遍历，无法表达弹种的互斥取值
-    // （详见 ClientModEvents 里关于删掉 ammo_type 属性的注释）。
-    // 色相直接沿用 TorpedoItem.tooltip 里已有的 ChatFormatting，玩家不用学两套语言。
-    /** 氧气鱼雷（isOxygen）：青，对应 ChatFormatting.AQUA。 */
-    private static final int AMMO_OXYGEN   = 0xFF40D8E8;
-    /** 声自导鱼雷（isAcoustic）：金，对应 ChatFormatting.GOLD。 */
-    private static final int AMMO_ACOUSTIC = 0xFFFFC24A;
-    /** 线导鱼雷（isWireGuided）：黄，对应 ChatFormatting.YELLOW。 */
-    private static final int AMMO_WIRE     = 0xFFF0D040;
-    /** 磁性鱼雷（isMagnetic）：品红，对应 ChatFormatting.LIGHT_PURPLE。 */
-    private static final int AMMO_MAGNETIC = 0xFFB06CFF;
 
     @Override
     public boolean render(GuiGraphics gui, Font font, ItemStack stack, int x, int y) {
-        // Torpedo launcher without a way to reload: cooldown bar is misleading
-        // (player would think it's reloading), so always show the empty bar instead.
-        boolean torpedoCannotReload = false;
-        if (stack.getItem() instanceof TorpedoLauncherItem) {
-            LoadedAmmo loaded = stack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
-            if (!loaded.hasAmmo() && !hasTorpedoReloadEquipped()) {
-                torpedoCannotReload = true;
-            }
-        }
-
         // 防空导弹发射器始终满装填：弹药直接从背包消耗，不存在 LOADED_AMMO 状态，
         // 也没有"空膛"可言——画空膛条等于谎报状态（见 docs/策划决策/武器/鱼雷-再装填机制.md）。
-        // 冷却条仍要走第 1 段，否则玩家看不到 60s 装填进度。
         boolean isAutoReloadMissile = isAutoReloadMissile(stack);
 
-        // 1. Cooldown bar takes priority (except for torpedo launchers that can't reload)
-        WeaponCooldown cd = stack.get(ModDataComponents.WEAPON_COOLDOWN.get());
-        if (cd != null && !torpedoCannotReload) {
-            Minecraft mc = Minecraft.getInstance();
-            long currentTick = mc.level != null ? mc.level.getGameTime() : 0L;
-
-            float fraction = cd.getFraction(currentTick);
-            if (fraction > 0f) {
-                float progress = 1f - fraction;
-
-                int color = Mth.hsvToRgb(progress / 3f, 1f, 1f) | 0xFF000000;
-
-                int fillW = Math.round(BAR_WIDTH * progress);
-
-                boolean hasDurability = stack.isDamageableItem();
-                int barX = x + 2;
-                // 耐久条在 y+13，避免遮挡：耐久物品装填条下移到 y+14
-                int barY = hasDurability ? (y + 14) : (y + 13);
-
-                gui.fill(barX, barY, barX + BAR_WIDTH, barY + 2, BG_COLOR);
-                if (fillW > 0) {
-                    gui.fill(barX, barY, barX + fillW, barY + 1, color);
-                }
-                return false;
-            }
-        }
-
-        // 2. Phase 4: all cannons auto-resupply — show empty bar when no matching ammo in inventory
-        if (stack.getItem() instanceof com.piranport.artillery.ArtilleryItem) {
-            LoadedAmmo loaded = stack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
-            if (!loaded.hasAmmo() && !hasMatchingAmmoInInventory(stack)) {
-                boolean hasDurability = stack.isDamageableItem();
-                int barX = x + 2;
-                int barY = hasDurability ? (y + 14) : (y + 13);
-                gui.fill(barX, barY, barX + BAR_WIDTH, barY + 2, BG_COLOR);
-            }
-            return false;
-        }
-
-        // 3. Manual-reload launchers (torpedo, missile) — 空膛画黑条、满膛画绿条
+        // 1. Manual-reload launchers (torpedo, missile, depth charge) — 空膛画黑条。
+        //    装填进度不再画在物品图标上，统一由物品栏上方的 ReloadProgressHudLayer 大读条显示。
         //    防空导弹不在此列：它走自动装填，不该有"空膛"态。
         boolean showEmptyBar = (stack.getItem() instanceof MissileLauncherItem
                 && ((MissileLauncherItem) stack.getItem()).getMissileType()
@@ -121,13 +48,11 @@ public class WeaponReloadDecorator implements IItemDecorator {
                 drawBar(gui, stack, x, y, BAR_WIDTH, BG_COLOR);
                 return false;
             }
-            // 已装填：必须画一条明确的"满"指示。
-            // WHY：装填设施出来的发射器身上只有 LOADED_AMMO，没有 WEAPON_COOLDOWN，
-            // 因此永远走不到第 1 段的冷却条分支；上面第 3 段在不装填时又是直接 return。
-            // 结果就是"已装填"比"空膛"画得还少（什么都不画），玩家看图标只会以为没装上，
-            // 而 tooltip（ClientItemHooks.weapon_ready）却报"已装填"——两者对不上。
-            // 这里补一条满条，条色同时表达弹种（见 readyBarColor）。
-            drawBar(gui, stack, x, y, BAR_WIDTH, readyBarColor(ammo));
+            // 已装填：鱼雷发射器靠 loaded/empty 图标切换分辨，不再画满条。
+            // 其他手动发射器没有可靠的图标切换，保留满条。
+            if (!(stack.getItem() instanceof TorpedoLauncherItem)) {
+                drawBar(gui, stack, x, y, BAR_WIDTH, READY_COLOR);
+            }
             return false;
         }
 
@@ -135,37 +60,9 @@ public class WeaponReloadDecorator implements IItemDecorator {
     }
 
     /**
-     * 已装填指示条的颜色 = 膛内鱼雷的真实制导类型。
-     *
-     * <p>判定用 {@link TorpedoItem} 的实例属性而不是 {@code ammoItemId} 字符串关键字：
-     * 关键字匹配会把注册名里恰好含 "magnetic" 之类子串的新弹种误分类，而且一旦改名就静默失效。
-     *
-     * <p>优先级按"对玩家的信息量"排：氧气 &gt; 声自导 &gt; 线导 &gt; 磁性 &gt; 普通。
-     *
-     * @return 膛内没有鱼雷、口径不匹配、或 {@code ammoItemId} 解析不出物品时返回 {@link #READY_COLOR}
-     */
-    private static int readyBarColor(LoadedAmmo ammo) {
-        TorpedoItem torpedo = torpedoOf(ammo);
-        if (torpedo == null) return READY_COLOR;
-        if (torpedo.isOxygen()) return AMMO_OXYGEN;
-        if (torpedo.isAcoustic()) return AMMO_ACOUSTIC;
-        if (torpedo.isWireGuided()) return AMMO_WIRE;
-        if (torpedo.isMagnetic()) return AMMO_MAGNETIC;
-        return READY_COLOR;
-    }
-
-    /** 把 {@link LoadedAmmo#ammoItemId()} 解析回 {@link TorpedoItem}；解析不出或不是鱼雷时返回 null。 */
-    private static TorpedoItem torpedoOf(LoadedAmmo ammo) {
-        if (ammo == null || !ammo.hasAmmo()) return null;
-        ResourceLocation id = ResourceLocation.tryParse(ammo.ammoItemId());
-        if (id == null) return null;
-        return BuiltInRegistries.ITEM.get(id) instanceof TorpedoItem ti ? ti : null;
-    }
-
-    /**
      * 在物品图标下方画一条水平指示条。
      *
-     * <p>条的位置与第 1 段冷却条保持一致：耐久物品下移到 y+14，避开原版 y+13 的耐久条；
+     * <p>耐久物品下移到 y+14，避开原版 y+13 的耐久条；
      * 非耐久物品用 y+13。宽度 13、高度 2 与原版耐久条同规格。
      */
     private static void drawBar(GuiGraphics gui, ItemStack stack, int x, int y, int width, int color) {
@@ -179,23 +76,4 @@ public class WeaponReloadDecorator implements IItemDecorator {
         return stack.getItem() instanceof MissileLauncherItem ml && !ml.isManualReload();
     }
 
-    private static boolean hasMatchingAmmoInInventory(ItemStack weapon) {
-        LocalPlayer player = Minecraft.getInstance().player;
-        if (player == null) return true;
-        Inventory inv = player.getInventory();
-        for (ItemStack s : inv.items) {
-            if (!s.isEmpty() && ShipCoreCombat.matchesCaliber(s, weapon, player.level())) return true;
-        }
-        ItemStack oh = inv.offhand.get(0);
-        if (!oh.isEmpty() && ShipCoreCombat.matchesCaliber(oh, weapon, player.level())) return true;
-        return false;
-    }
-
-    private static boolean hasTorpedoReloadEquipped() {
-        LocalPlayer player = Minecraft.getInstance().player;
-        if (player == null) return false;
-        ItemStack core = TransformationManager.findTransformedCore(player);
-        if (core.isEmpty()) return false;
-        return TransformationManager.hasTorpedoReloadEquipped(player, core);
-    }
 }

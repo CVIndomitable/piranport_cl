@@ -4,6 +4,8 @@ import com.piranport.PiranPort;
 import com.piranport.component.SelectedAmmoType;
 import com.piranport.item.ShipCoreItem;
 import com.piranport.item.ShipCoreCombat;
+import com.piranport.ammo.CreativeAmmoCache;
+import com.piranport.ammo.CreativeAmmoCatalog;
 import com.piranport.registry.ModDataComponents;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
@@ -114,6 +116,14 @@ public class AmmoSelectOverlay {
                     availableAmmos.add(oh.getItem());
                 }
             }
+            // 弹药库勾选的弹种即使背包里没有实体，也要出现在轮盘里。
+            for (Item item : CreativeAmmoCatalog.allItems()) {
+                if (availableAmmos.contains(item) || !CreativeAmmoCache.isSelected(player, item)) continue;
+                ItemStack ammoStack = new ItemStack(item);
+                if (ShipCoreCombat.matchesCaliber(ammoStack, weapon, player.level())) {
+                    availableAmmos.add(item);
+                }
+            }
         }
 
         // 如果只有1种弹药，直接选中
@@ -218,7 +228,8 @@ public class AmmoSelectOverlay {
 
             // 统计弹药数量
             int count = 0;
-            boolean isCreative = player.getAbilities().instabuild;
+            boolean isCreative = player.getAbilities().instabuild
+                    || CreativeAmmoCache.isInfinite(player, ammoItem);
 
             if (!isCreative) {
                 // 生存模式：统计背包中的弹药数量

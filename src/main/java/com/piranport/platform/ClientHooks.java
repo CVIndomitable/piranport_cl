@@ -5,6 +5,7 @@ import com.piranport.network.CannonImpactEffectPayload;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvent;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 
@@ -146,6 +147,10 @@ public final class ClientHooks {
         bridge.openTownScrollScreen();
     }
 
+    public static void openCreativeAmmoCacheScreen(InteractionHand hand) {
+        bridge.openCreativeAmmoCacheScreen(hand);
+    }
+
     public static void openDungeonResultScreen(String stageName, long timeMillis, boolean isFirstClear, List<String> rewardNames) {
         bridge.openDungeonResultScreen(stageName, timeMillis, isFirstClear, rewardNames);
     }
@@ -159,10 +164,6 @@ public final class ClientHooks {
     public static void openDungeonResultScreen(String stageName, long timeMillis, boolean isFirstClear,
                                                List<String> rewardNames, int kills, String ending) {
         bridge.openDungeonResultScreen(stageName, timeMillis, isFirstClear, rewardNames, kills, ending);
-    }
-
-    public static void openDungeonReviveScreen() {
-        bridge.openDungeonReviveScreen();
     }
 
     public static void updateDungeonNode(String nodeId) {

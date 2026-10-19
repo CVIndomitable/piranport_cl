@@ -1,5 +1,6 @@
 package com.piranport.combat.torpedo;
 
+import com.piranport.ammo.CreativeAmmoCache;
 import com.piranport.combat.TorpedoGuidanceManager;
 import com.piranport.combat.TransformationManager;
 import com.piranport.combat.util.CombatFireUtils;
@@ -50,7 +51,9 @@ public class TorpedoFireStrategy {
         // 膛内有弹优先用膛内弹药发射（含创造模式）——发射器装填状态比"背包里有没有鱼雷"权威。
         // 创造模式且膛内无弹时才扫背包找 TorpedoItem 当 fallback。
         LoadedAmmo chambered = launcherStack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
-        if (player.getAbilities().instabuild && !chambered.hasAmmo()) {
+        // 创造模式或弹药库勾选同口径鱼雷时，空膛也能直接发射（与创造模式行为一致）。
+        TorpedoItem cacheTorpedo = CreativeAmmoCache.findInfiniteTorpedo(player, caliber);
+        if ((player.getAbilities().instabuild || cacheTorpedo != null) && !chambered.hasAmmo()) {
             TorpedoItem torpedoType = null;
             int coreSlot = -1;
             for (int i = 0; i < inv.items.size(); i++) {
@@ -70,6 +73,7 @@ public class TorpedoFireStrategy {
                 }
             }
 
+            if (torpedoType == null) torpedoType = cacheTorpedo;
             if (torpedoType == null) {
                 player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
                 return;
@@ -129,7 +133,7 @@ public class TorpedoFireStrategy {
         // Resolve torpedo item to read per-item stats
         Item loadedItem = BuiltInRegistries.ITEM.get(ResourceLocation.parse(loaded.ammoItemId()));
         TorpedoItem loadedTorpedo = loadedItem instanceof TorpedoItem ti ? ti : null;
-        float torpedoSpeed = loadedTorpedo != null ? loadedTorpedo.getSpeed() : (caliber == 610 ? 1.0f : 1.2f);
+        float torpedoSpeed = loadedTorpedo != null ? loadedTorpedo.getSpeed() : 0.3f;
         float[] angles = CombatFireUtils.getSpreadAngles(tubeCount);
         Vec3 look = player.getLookAngle();
 
@@ -217,7 +221,17 @@ public class TorpedoFireStrategy {
             }
         }
 
-        // 创造模式：如果没有鱼雷，使用默认鱼雷类型
+        // 背包里没有实体鱼雷时，使用创造模式弹药库勾选的同口径鱼雷。
+        boolean infinite = false;
+        if (torpedoType == null) {
+            torpedoType = CreativeAmmoCache.findInfiniteTorpedo(player, caliber);
+            infinite = torpedoType != null;
+        }
+        if (torpedoType != null && !infinite) {
+            infinite = CreativeAmmoCache.isInfinite(player, torpedoType);
+        }
+
+        // 创造模式 / 弹药库都没有时才回退到默认鱼雷
         if (torpedoType == null) {
             if (!player.getAbilities().instabuild) {
                 player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
@@ -231,8 +245,8 @@ public class TorpedoFireStrategy {
             }
         }
 
-        // Creative mode: skip ammo consumption
-        if (!player.getAbilities().instabuild) {
+        // Creative mode / 弹药库勾选：skip ammo consumption
+        if (!player.getAbilities().instabuild && !infinite) {
             // Count available ammo of the same type
             int available = 0;
             for (int i = 0; i < inv.items.size(); i++) {

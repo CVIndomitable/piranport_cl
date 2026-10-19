@@ -1,6 +1,7 @@
 package com.piranport.compat.maid.combat.handlers;
 
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
+import com.piranport.ammo.CreativeAmmoCache;
 import com.piranport.compat.maid.combat.AmmoConsumer;
 import com.piranport.compat.maid.combat.WeaponHandler;
 import com.piranport.entity.TorpedoEntity;
@@ -16,7 +17,7 @@ import net.minecraft.world.phys.Vec3;
 import java.util.function.Predicate;
 
 public class TorpedoHandler implements WeaponHandler {
-    private static final float DEFAULT_SPEED = 0.817f;
+    private static final float DEFAULT_SPEED = 0.3f;
 
     @Override
     public boolean handles(Item item) {
@@ -32,6 +33,7 @@ public class TorpedoHandler implements WeaponHandler {
     public boolean hasAmmo(EntityMaid maid, ItemStack stack) {
         if (!(stack.getItem() instanceof TorpedoLauncherItem launcher)) return false;
         Player owner = AmmoConsumer.ownerPlayer(maid);
+        if (CreativeAmmoCache.hasInfiniteTorpedo(owner, launcher.getCaliber())) return true;
         return AmmoConsumer.has(owner, caliberMatcher(launcher.getCaliber()), 1);
     }
 
@@ -42,6 +44,7 @@ public class TorpedoHandler implements WeaponHandler {
         int tubes = Math.max(1, launcher.getTubeCount());
         int caliber = launcher.getCaliber();
         TorpedoItem reference = findFirstTorpedo(owner, caliber);
+        if (reference == null) reference = CreativeAmmoCache.findInfiniteTorpedo(owner, caliber);
 
         // 弹道判定必须先于扣弹药：本 handler 把瞄准向量抹掉 Y 分量（鱼雷只走水平面），
         // 当目标与女仆处于同一 x/z 柱时 aim 退化为零向量，此处会 return。
@@ -56,8 +59,15 @@ public class TorpedoHandler implements WeaponHandler {
         aim = aim.normalize();
         float baseYaw = (float) Math.toDegrees(Math.atan2(-aim.x, aim.z));
 
-        int loaded = AmmoConsumer.consume(owner, caliberMatcher(caliber), tubes);
-        if (loaded <= 0) return;
+        // 弹药库勾选的同口径鱼雷视为无限：整轮齐射都打出去，不扣实体鱼雷。
+        boolean infinite = CreativeAmmoCache.hasInfiniteTorpedo(owner, caliber);
+        int loaded;
+        if (infinite) {
+            loaded = tubes;
+        } else {
+            loaded = AmmoConsumer.consume(owner, caliberMatcher(caliber), tubes);
+            if (loaded <= 0) return;
+        }
 
         Level level = maid.level();
         float damage = reference != null ? reference.getDamage() : 27f;

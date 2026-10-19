@@ -1,6 +1,6 @@
 package com.piranport.aviation;
 
-import com.piranport.component.AircraftInfo;
+import com.piranport.component.AircraftState;
 
 /**
  * 舰载机出击准备判定（纯函数，便于单测）。
@@ -19,20 +19,20 @@ public final class AircraftSortieReadiness {
      * <p>战斗机/侦察机没有对海挂载概念（{@link AircraftDefinition#requiresPayload()} 为 false），
      * 只看燃油；攻击机还必须有挂载。
      */
-    public static boolean isReady(AircraftInfo info, AircraftDefinition definition,
+    public static boolean isReady(AircraftState state, AircraftDefinition definition,
                                   ResolvedAircraftStats stats) {
-        boolean fuelReady = info.currentFuel() >= stats.fuelCapacity();
-        boolean payloadReady = !definition.requiresPayload() || info.payloadLoaded();
+        boolean fuelReady = state.currentFuel() >= stats.fuelCapacity();
+        boolean payloadReady = !definition.requiresPayload() || state.payloadLoaded();
         return fuelReady && payloadReady;
     }
 
     /** 是否还缺燃油（缺 1 个航空燃料才能加满）。 */
-    public static boolean needsFuel(AircraftInfo info, ResolvedAircraftStats stats) {
-        return info.currentFuel() < stats.fuelCapacity();
+    public static boolean needsFuel(AircraftState state, ResolvedAircraftStats stats) {
+        return state.currentFuel() < stats.fuelCapacity();
     }
 
     /** 是否还缺对海挂载物（无挂载概念的机型恒为 false）。 */
-    public static boolean needsPayload(AircraftDefinition definition, AircraftInfo info) {
-        return definition.requiresPayload() && !info.payloadLoaded();
+    public static boolean needsPayload(AircraftDefinition definition, AircraftState state) {
+        return definition.requiresPayload() && !state.payloadLoaded();
     }
 }

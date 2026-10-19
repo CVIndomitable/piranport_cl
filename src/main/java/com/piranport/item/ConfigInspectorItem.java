@@ -88,7 +88,7 @@ public class ConfigInspectorItem extends Item {
                 .sorted(java.util.Comparator.comparing(com.piranport.aviation.AircraftDefinition::id))
                 .forEach(definition -> {
                     var stats = com.piranport.aviation.AircraftStatsService.resolve(definition);
-                    addAircraftStats(player, definition.id(), stats.damage(), stats.speed(), stats.health());
+                    addAircraftStats(player, definition.id().toString(), stats.damage(), stats.speed(), stats.health());
                 });
 
         // 4. 火炮与弹药系统

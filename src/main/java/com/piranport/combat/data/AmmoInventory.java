@@ -1,5 +1,6 @@
 package com.piranport.combat.data;
 
+import com.piranport.ammo.CreativeAmmoCache;
 import com.piranport.registry.ModDataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -40,6 +41,10 @@ public class AmmoInventory {
      */
     @Nullable
     public ItemStack findFirstAmmoStack(Item ammoType) {
+        // 创造模式弹药库：背包里没有实体弹药时返回一个虚拟堆叠，调用方只读不 shrink。
+        if (CreativeAmmoCache.isInfinite(inventory, ammoType)) {
+            return new ItemStack(ammoType);
+        }
         for (int i = 0; i < inventory.items.size(); i++) {
             if (shouldSkipSlot(i)) continue;
             ItemStack stack = inventory.items.get(i);
@@ -64,6 +69,9 @@ public class AmmoInventory {
      * @return 弹药总数
      */
     public int countAmmo(Item ammoType) {
+        if (CreativeAmmoCache.isInfinite(inventory, ammoType)) {
+            return CreativeAmmoCache.INFINITE;
+        }
         int count = 0;
 
         for (int i = 0; i < inventory.items.size(); i++) {
@@ -102,6 +110,10 @@ public class AmmoInventory {
      * @return true 表示成功消耗足够弹药，false 表示背包中弹药不足
      */
     public boolean consumeAmmo(java.util.UUID owner, Item ammoType, int required) {
+        // 勾选为无限时既不校验也不扣真实堆叠。
+        if (CreativeAmmoCache.isInfinite(inventory, ammoType)) {
+            return true;
+        }
         if (countAmmo(ammoType) < required) {
             return false;
         }
@@ -171,6 +183,12 @@ public class AmmoInventory {
         }
 
         Item fallback = findFirstSufficientAmmoByInventoryOrder(weapon, required, level);
+
+        // 背包里没有实体弹药时，再从弹药库的勾选项里挑同口径弹种。
+        if (fallback == null) {
+            fallback = CreativeAmmoCache.findInfinite(inventory,
+                    candidate -> matchesCaliber(new ItemStack(candidate), weapon, level));
+        }
 
         if (fallback == null && creative) {
             Item defaultAmmo = getDefaultAmmoForWeapon(weapon, level);

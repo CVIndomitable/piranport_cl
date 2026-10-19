@@ -513,9 +513,10 @@ public class TransformationManager {
         if (stack.getItem() instanceof EngineItem engine) return engine.getWeight();
         if (stack.getItem() instanceof TorpedoReloadItem tr) return tr.getWeight();
         if (stack.getItem() instanceof com.piranport.item.AircraftItem) {
-            com.piranport.component.AircraftInfo info =
-                    stack.get(ModDataComponents.AIRCRAFT_INFO.get());
-            return info != null ? info.weight() : 0;
+            com.piranport.aviation.AircraftDefinition definition =
+                    com.piranport.aviation.AircraftDefinitionService.resolve(stack);
+            return definition == null ? 0
+                    : com.piranport.aviation.AircraftStatsService.resolve(definition).weight();
         }
         return 0;
     }

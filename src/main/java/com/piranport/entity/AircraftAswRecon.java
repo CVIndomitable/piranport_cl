@@ -1,243 +1,119 @@
 package com.piranport.entity;
 
-import com.piranport.aviation.FireControlManager;
-import com.piranport.combat.CombatTargeting;
-import com.piranport.component.AircraftAttackMode;
 import com.piranport.aviation.ReconManager;
-import com.piranport.config.ModCommonConfig;
+import com.piranport.combat.CombatTargeting;
 import com.piranport.config.ModEquipmentConfig;
-import com.piranport.config.ModProjectilesConfig;
 import com.piranport.network.AswSonarSyncPayload;
-import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.MapItem;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
 import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.network.PacketDistributor;
 
-import javax.annotation.Nullable;
-import java.util.Comparator;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 /**
- * 反潜声呐 + 侦察机子系统 — 从 AircraftEntity 提取的静态辅助方法。
+ * 反潜声呐 + 侦察机子系统。
  *
- * <p><b>设计</b>: 静态方法以 AircraftEntity 为首参数，直接读写其实例字段（同包可见性）。
- * <p><b>线程模型</b>: 服务端主线程。
+ * <p>反潜攻击与目标解析已迁到 {@code aviation.combat.strategy.DepthChargeAttackStrategy}；
+ * 本类只保留声呐扫描、侦察机操控与区块强加载。
  */
 public class AircraftAswRecon {
-
     private AircraftAswRecon() {}
-
-    // ====================================================================
-    // ASW 攻击
-    // ====================================================================
-
-    /** @see AircraftEntity#tickASWAttack(Player, LivingEntity) */
-    public static void tickASWAttack(AircraftEntity craft, @Nullable Player owner, LivingEntity target) {
-        if (craft.remainingAmmo <= 0) {
-            if (owner != null && craft.tryAutoResupplyAmmo(owner)) {
-                // Ammo restored — continue attacking
-            } else {
-                craft.startReturning("asw_ammo_depleted");
-                return;
-            }
-        }
-
-        double seaLevel = craft.level().getSeaLevel();
-        double bombAltitude = target.isUnderWater()
-            ? seaLevel + 15.0
-            : target.getY() + ModEquipmentConfig.ASW_ATTACK_HEIGHT_OFFSET.get();
-
-        if (craft.getY() < bombAltitude - 1.5) {
-            Vec3 toPoint = new Vec3(target.getX() - craft.getX(), bombAltitude - craft.getY(), target.getZ() - craft.getZ());
-            double dist = toPoint.length();
-            craft.setDeltaMovement(toPoint.normalize().scale(Math.min(craft.getPanelSpeed() * 0.4
-                    * craft.phaseSpeedCoefficient(), dist)));
-        } else {
-            double dx = target.getX() - craft.getX();
-            double dz = target.getZ() - craft.getZ();
-            double horizDist = Math.sqrt(dx * dx + dz * dz);
-
-            double targetDepth = Math.max(0, seaLevel - target.getY());
-            double leadDistance = targetDepth * 0.15;
-
-            if (horizDist < (4.0 + leadDistance) && craft.attackCooldown <= 0) {
-                float dcDamage = craft.getPanelDamage() * 1.5f;
-                int toFire = craft.computeSalvoSize(target, dcDamage);
-                com.piranport.debug.PiranPortDebug.event(
-                        "Aircraft ASW_SALVO | entityId={} capacity={} remaining={} firing={} targetHP={}",
-                        craft.getId(), craft.ammoCapacity, craft.remainingAmmo, toFire, target.getHealth());
-                Vec3 hv = craft.getDeltaMovement();
-                double hvLen = hv.horizontalDistance();
-                Vec3 forward = hvLen > 0.01 ? new Vec3(hv.x / hvLen, 0, hv.z / hvLen) : new Vec3(1, 0, 0);
-                for (int i = 0; i < toFire; i++) {
-                    double offset = (i - (toFire - 1) / 2.0) * 0.8;
-                    double spawnX = craft.getX() + forward.x * offset;
-                    double spawnZ = craft.getZ() + forward.z * offset;
-                    // 爆炸威力与玩家/舰娘深弹同源（默认 3.0），避免空投反潜成为第三处写死值
-                    DepthChargeEntity dc = new DepthChargeEntity(craft.level(), dcDamage,
-                            (float) (double) ModProjectilesConfig.DEPTH_CHARGE_EXPLOSION_POWER.get());
-                    dc.moveTo(spawnX, craft.getY(), spawnZ, dc.getYRot(), dc.getXRot());
-                    dc.setDeltaMovement(craft.getDeltaMovement().x * 0.1, -0.1, craft.getDeltaMovement().z * 0.1);
-                    dc.setOwner(owner);
-                    craft.level().addFreshEntity(dc);
-                }
-                craft.remainingAmmo -= toFire;
-                craft.attackCooldown = craft.attackCooldownDuration();
-            }
-
-            Vec3 horizontal = new Vec3(dx, 0, dz).normalize().scale(Math.min(craft.panelSpeed * 0.4
-                    * craft.phaseSpeedCoefficient(), horizDist));
-            double yCorrect = (bombAltitude - craft.getY()) * 0.15;
-            craft.setDeltaMovement(horizontal.x, yCorrect, horizontal.z);
-        }
-    }
-
-    // ====================================================================
-    // ASW 目标解析
-    // ====================================================================
-
-    /** @see AircraftEntity#resolveASWTarget(Player) */
-    @Nullable
-    public static LivingEntity resolveASWTarget(AircraftEntity craft, Player owner) {
-        if (!(craft.level() instanceof ServerLevel sl)) return null;
-
-        List<UUID> locks = FireControlManager.getTargets(owner.getUUID());
-        if (!locks.isEmpty()) {
-            if (craft.attackMode == AircraftAttackMode.SPREAD) {
-                return locks.stream()
-                        .map(sl::getEntity)
-                        .filter(e -> e instanceof LivingEntity le && le.isAlive() && isAswTarget(le))
-                        .map(e -> (LivingEntity) e)
-                        .min(Comparator.comparingDouble(craft::distanceTo))
-                        .orElse(null);
-            } else {
-                for (UUID uuid : locks) {
-                    Entity e = sl.getEntity(uuid);
-                    if (e instanceof LivingEntity le && le.isAlive() && isAswTarget(le)) return le;
-                }
-                return null;
-            }
-        }
-
-        if (craft.hasEverHadFireControl || craft.autoSeekDone) return null;
-        if (craft.autoSeekCooldown > 0) { craft.autoSeekCooldown--; return null; }
-        craft.autoSeekDone = true;
-        AABB box = craft.getBoundingBox().inflate(ModEquipmentConfig.ASW_AUTO_SEEK_RANGE.get());
-        // 自动索敌必须加敌对过滤：不能直接复用 isAswTarget（它认 AQUATIC 动物），
-        // 否则鲑鱼/海豚也会被自动开打。已有火控锁定分支保持原样，尊重玩家手动选择。
-        return sl.getEntitiesOfClass(LivingEntity.class, box,
-                e -> e.isAlive() && e != owner && isHostileAswTarget(owner, e))
-                .stream()
-                .min(Comparator.comparingDouble(craft::distanceTo))
-                .orElse(null);
-    }
 
     /**
      * 声呐检测判据 —— 只判「是不是水下类目标」，不做敌我过滤。
      *
-     * <p>声呐链路（{@link #tickAswSonar}）共用本方法，按策划「声呐标记所有水生生物
-     * （含鲑鱼）是预期玩法，非 bug」必须保持原样。自动索敌/自动进入攻击态请改用
+     * <p>声呐链路共用本方法；自动索敌/自动进入攻击态必须改用
      * {@link #isHostileAswTarget(Player, Entity)}。
      */
-    public static boolean isAswTarget(Entity e) {
-        if (e instanceof com.piranport.npc.deepocean.DeepOceanSubmarineEntity) return true;
-        if (e.getType().is(net.minecraft.tags.EntityTypeTags.AQUATIC)) return true;
-        if (e instanceof net.minecraft.world.entity.monster.Guardian) return true;
-        if (e instanceof net.minecraft.world.entity.monster.Monster && e.isUnderWater()) return true;
-        return false;
+    public static boolean isAswTarget(Entity entity) {
+        if (entity instanceof com.piranport.npc.deepocean.DeepOceanSubmarineEntity) return true;
+        if (entity.getType().is(net.minecraft.tags.EntityTypeTags.AQUATIC)) return true;
+        if (entity instanceof net.minecraft.world.entity.monster.Guardian) return true;
+        return entity instanceof net.minecraft.world.entity.monster.Monster && entity.isUnderWater();
     }
 
     /**
-     * 自动索敌/自动进入攻击态专用判据 —— 实体确属反潜对象 AND 对 owner 敌对。
-     *
-     * <p>WHY 与 {@link #isAswTarget} 分开：后者被声呐链路共用，不能加敌我过滤；
-     * 而自动开打若复用它，会把 AQUATIC 动物（鲑鱼/鱼/鱿鱼/海豚）当成目标。
-     * 敌对口径统一复用 {@link CombatTargeting#isHostileTarget}（只认 {@code Enemy}
-     * 与敌对飞机，动物/村民恒为 false），不另写一套判据以免再次漂移。
+     * 自动索敌/自动进入攻击态专用判据 —— 确属反潜对象 AND 对 owner 敌对。
      */
-    public static boolean isHostileAswTarget(Player owner, Entity e) {
-        return isAswTarget(e) && CombatTargeting.isHostileTarget(owner, e);
+    public static boolean isHostileAswTarget(Player owner, Entity entity) {
+        return isAswTarget(entity) && CombatTargeting.isHostileTarget(owner, entity);
     }
 
-    // ====================================================================
-    // ASW 声呐
-    // ====================================================================
-
-    /** @see AircraftEntity#tickAswSonar(Player) */
+    /** ASW 声呐：扫描半径内的水下目标并同步给客户端，声呐标记不做敌我过滤。 */
     public static void tickAswSonar(AircraftEntity craft, Player owner) {
-        if (!(craft.level() instanceof ServerLevel sl)) return;
-        if (!(owner instanceof ServerPlayer sp)) return;
+        if (!(craft.level() instanceof ServerLevel serverLevel)) return;
+        if (!(owner instanceof ServerPlayer serverPlayer)) return;
 
         AABB sonarBox = craft.getBoundingBox().inflate(ModEquipmentConfig.ASW_SONAR_RANGE.get());
-        java.util.List<Integer> detectedIds = new java.util.ArrayList<>();
-        for (LivingEntity e : sl.getEntitiesOfClass(LivingEntity.class, sonarBox,
-                le -> le.isAlive() && le != owner && (le.isInWater() || isAswTarget(le)))) {
-            detectedIds.add(e.getId());
+        List<Integer> detectedIds = new ArrayList<>();
+        for (LivingEntity entity : serverLevel.getEntitiesOfClass(LivingEntity.class, sonarBox,
+                living -> living.isAlive() && living != owner
+                        && (living.isInWater() || isAswTarget(living)))) {
+            detectedIds.add(entity.getId());
             if (detectedIds.size() >= ModEquipmentConfig.ASW_SONAR_MAX_TARGETS.get()) break;
         }
         if (!detectedIds.isEmpty()) {
-            PacketDistributor.sendToPlayer(sp, new AswSonarSyncPayload(craft.getId(), detectedIds));
+            PacketDistributor.sendToPlayer(serverPlayer,
+                    new AswSonarSyncPayload(craft.getId(), detectedIds));
         }
     }
 
-    // ====================================================================
-    // 侦察机
-    // ====================================================================
-
-    /** @see AircraftEntity#tickReconActive(Player) */
+    /** 侦察机主动操控：读取客户端输入、更新地图、差量强加载区块。 */
     public static void tickReconActive(AircraftEntity craft, Player owner) {
         if (!ReconManager.isInRecon(owner.getUUID())) {
             com.piranport.PiranPort.LOGGER.warn(
-                "Aircraft RECON_DESYNC | entityId={} ownerNotInRecon, forcing state sync", craft.getId());
+                    "Aircraft RECON_DESYNC | entityId={} ownerNotInRecon, forcing state sync",
+                    craft.getId());
             ReconManager.startRecon(owner.getUUID(), craft.getUUID());
         }
 
-        int cx = craft.getBlockX() >> 4;
-        int cz = craft.getBlockZ() >> 4;
-        if (cx != craft.lastForcedChunkX || cz != craft.lastForcedChunkZ) {
-            updateReconChunkLoading(craft, cx, cz);
-            craft.lastForcedChunkX = cx;
-            craft.lastForcedChunkZ = cz;
+        int chunkX = craft.getBlockX() >> 4;
+        int chunkZ = craft.getBlockZ() >> 4;
+        // 集合为空也要重建：读档时旧票据会被解除并清空，只比较坐标会导致重启后不再强加载。
+        if (chunkX != craft.lastForcedChunkX || chunkZ != craft.lastForcedChunkZ
+                || craft.reconForcedChunks.isEmpty()) {
+            updateForcedChunks(craft, chunkX, chunkZ, reconScanRadius(craft));
+            craft.lastForcedChunkX = chunkX;
+            craft.lastForcedChunkZ = chunkZ;
         }
-        if (owner instanceof ServerPlayer sp) {
-            sendPendingChunks(craft, sp);
+        if (owner instanceof ServerPlayer serverPlayer) {
+            sendPendingChunks(craft, serverPlayer);
         }
 
         float[] input = ReconManager.consumeInput(owner.getUUID());
         boolean hasInput = input != null && (input[0] != 0 || input[1] != 0 || input[2] != 0);
         double speed = craft.panelSpeed * 0.5 * craft.phaseSpeedCoefficient();
-        Vec3 target;
+        Vec3Target target;
         if (hasInput) {
-            target = new Vec3(input[0] * speed, input[1] * speed, input[2] * speed);
+            target = new Vec3Target(input[0] * speed, input[1] * speed, input[2] * speed);
         } else {
-            double minSpeed = speed * 0.15;
-            float yawRad = (float) Math.toRadians(craft.getYRot());
-            target = new Vec3(-Math.sin(yawRad) * minSpeed, 0, Math.cos(yawRad) * minSpeed);
+            double minimumSpeed = speed * 0.15;
+            float yawRadians = (float) Math.toRadians(craft.getYRot());
+            target = new Vec3Target(-Math.sin(yawRadians) * minimumSpeed, 0,
+                    Math.cos(yawRadians) * minimumSpeed);
         }
-        Vec3 current = craft.getDeltaMovement();
+        net.minecraft.world.phys.Vec3 current = craft.getDeltaMovement();
         double factor = hasInput ? 0.12 : 0.25;
-        craft.setDeltaMovement(current.lerp(target, factor));
+        craft.setDeltaMovement(current.lerp(target.toVec3(), factor));
 
         if (!craft.level().isClientSide && craft.tickCount % 20 == 0) {
             if (craft.cachedMapSlots == null
                     || craft.tickCount - craft.mapSlotsRefreshTick
-                            >= ModEquipmentConfig.RECON_MAP_REFRESH_TICKS.get()) {
+                    >= ModEquipmentConfig.RECON_MAP_REFRESH_TICKS.get()) {
                 refreshCachedMapSlots(craft, owner);
                 craft.mapSlotsRefreshTick = craft.tickCount;
             }
             if (craft.cachedMapSlots != null) {
                 for (int slot : craft.cachedMapSlots) {
-                    ItemStack stack = owner.getInventory().getItem(slot);
+                    net.minecraft.world.item.ItemStack stack = owner.getInventory().getItem(slot);
                     if (stack.getItem() instanceof MapItem mapItem) {
                         MapItemSavedData mapData = MapItem.getSavedData(stack, craft.level());
                         if (mapData != null && !mapData.locked) {
@@ -250,40 +126,66 @@ public class AircraftAswRecon {
         }
     }
 
-    private static void refreshCachedMapSlots(AircraftEntity craft, Player owner) {
-        int size = owner.getInventory().getContainerSize();
-        int[] buf = new int[size];
-        int n = 0;
-        for (int i = 0; i < size; i++) {
-            if (owner.getInventory().getItem(i).getItem() instanceof MapItem) {
-                buf[n++] = i;
-            }
+    /** 轻量三元组，避免为了构造 Vec3 反复分配命名变量。 */
+    private record Vec3Target(double x, double y, double z) {
+        net.minecraft.world.phys.Vec3 toVec3() {
+            return new net.minecraft.world.phys.Vec3(x, y, z);
         }
-        if (n == 0) { craft.cachedMapSlots = null; return; }
-        int[] out = new int[n];
-        System.arraycopy(buf, 0, out, 0, n);
-        craft.cachedMapSlots = out;
     }
 
-    // ===== Chunk forcing =====
+    private static void refreshCachedMapSlots(AircraftEntity craft, Player owner) {
+        int size = owner.getInventory().getContainerSize();
+        int[] buffer = new int[size];
+        int count = 0;
+        for (int i = 0; i < size; i++) {
+            if (owner.getInventory().getItem(i).getItem() instanceof MapItem) {
+                buffer[count++] = i;
+            }
+        }
+        if (count == 0) {
+            craft.cachedMapSlots = null;
+            return;
+        }
+        int[] slots = new int[count];
+        System.arraycopy(buffer, 0, slots, 0, count);
+        craft.cachedMapSlots = slots;
+    }
 
-    private static void updateReconChunkLoading(AircraftEntity craft, int cx, int cz) {
-        if (!(craft.level() instanceof ServerLevel sl)) return;
-        int radius = Math.min(sl.getServer().getPlayerList().getViewDistance(), 5);
+    /** 返航票据的前瞻距离（格）：提前把即将进入的区块挂上，避免跨区块时掉出 tick 范围。 */
+    private static final double RECON_RETURN_LOOKAHEAD_BLOCKS = 32.0;
 
+    /**
+     * 侦察扫描环半径 = 服务器视距，设置多少就加载多少。
+     *
+     * <p>侦察镜头需要看到和玩家自己站在该处时一样远的地形，因此直接跟随游戏设置，
+     * 不再叠加固定上限。视距越大的服务器，单架侦察机的加载成本越高。
+     */
+    private static int reconScanRadius(AircraftEntity craft) {
+        if (!(craft.level() instanceof ServerLevel serverLevel)) return 3;
+        return serverLevel.getServer().getPlayerList().getViewDistance();
+    }
+
+    private static void updateForcedChunks(AircraftEntity craft, int chunkX, int chunkZ, int radius) {
         java.util.Set<Long> desired = new java.util.HashSet<>();
         for (int dx = -radius; dx <= radius; dx++) {
             for (int dz = -radius; dz <= radius; dz++) {
-                desired.add(ChunkPos.asLong(cx + dx, cz + dz));
+                desired.add(ChunkPos.asLong(chunkX + dx, chunkZ + dz));
             }
         }
+        applyForcedChunks(craft, desired, true);
+    }
 
-        java.util.Iterator<Long> it = craft.reconForcedChunks.iterator();
-        while (it.hasNext()) {
-            long key = it.next();
+    /** 把强制加载集合收敛到 desired；queueForClient 只对侦察态为 true（返航不再推区块）。 */
+    private static void applyForcedChunks(AircraftEntity craft, java.util.Set<Long> desired,
+                                          boolean queueForClient) {
+        if (!(craft.level() instanceof ServerLevel serverLevel)) return;
+
+        java.util.Iterator<Long> iterator = craft.reconForcedChunks.iterator();
+        while (iterator.hasNext()) {
+            long key = iterator.next();
             if (!desired.contains(key)) {
-                sl.setChunkForced(ChunkPos.getX(key), ChunkPos.getZ(key), false);
-                it.remove();
+                serverLevel.setChunkForced(ChunkPos.getX(key), ChunkPos.getZ(key), false);
+                iterator.remove();
             }
         }
 
@@ -291,36 +193,91 @@ public class AircraftAswRecon {
             if (!craft.reconForcedChunks.contains(key)) {
                 int x = ChunkPos.getX(key);
                 int z = ChunkPos.getZ(key);
-                sl.setChunkForced(x, z, true);
+                serverLevel.setChunkForced(x, z, true);
                 craft.reconForcedChunks.add(key);
-                craft.reconPendingSend.add(key);
+                if (queueForClient) {
+                    craft.reconPendingSend.add(key);
+                }
             }
         }
     }
 
+    /**
+     * 返航票据：当前区块 + 前进方向 32 格内的区块。
+     *
+     * <p>只保留覆盖当前与即将进入区块的最小矩形，最多 2×2=4 个区块；方向每 tick 更新，
+     * 斜向跨区块时两个方向都会提前挂上，不会掉出实体 tick 范围。
+     */
+    private static java.util.Set<Long> returnForcedChunkSet(AircraftEntity craft) {
+        int chunkX = craft.getBlockX() >> 4;
+        int chunkZ = craft.getBlockZ() >> 4;
+        int aheadX = chunkX;
+        int aheadZ = chunkZ;
+        net.minecraft.world.phys.Vec3 velocity = craft.getDeltaMovement();
+        if (velocity.lengthSqr() > 1.0e-6) {
+            net.minecraft.world.phys.Vec3 ahead = craft.position()
+                    .add(velocity.normalize().scale(RECON_RETURN_LOOKAHEAD_BLOCKS));
+            net.minecraft.core.BlockPos pos = net.minecraft.core.BlockPos.containing(ahead);
+            aheadX = pos.getX() >> 4;
+            aheadZ = pos.getZ() >> 4;
+        }
+
+        java.util.Set<Long> desired = new java.util.HashSet<>(4);
+        for (int x = Math.min(chunkX, aheadX); x <= Math.max(chunkX, aheadX); x++) {
+            for (int z = Math.min(chunkZ, aheadZ); z <= Math.max(chunkZ, aheadZ); z++) {
+                desired.add(ChunkPos.asLong(x, z));
+            }
+        }
+        return desired;
+    }
+
+    /**
+     * 退出侦察、转入返航：把侦察扫描环收缩成返航票据，而不是全部释放。
+     *
+     * <p>侦察机允许飞到 200 格，可能已经超出玩家的实体 tick 范围；若此时释放全部强加载，
+     * 区块卸载后实体不再 tick，返航会永久冻结。3×3 票据保证返航途中始终能推进。
+     */
+    public static void beginReconReturnLoading(AircraftEntity craft) {
+        applyForcedChunks(craft, returnForcedChunkSet(craft), false);
+        craft.lastForcedChunkX = craft.getBlockX() >> 4;
+        craft.lastForcedChunkZ = craft.getBlockZ() >> 4;
+    }
+
+    /** 返航每 tick：票据跟随前进方向移动；读档后集合为空时也会重建。 */
+    public static void tickReturnLoading(AircraftEntity craft) {
+        // 只有侦察机需要返航票据；普通飞机受距离上限约束，始终在 tick 范围内。
+        if (!craft.isReconAircraft()) return;
+        java.util.Set<Long> desired = returnForcedChunkSet(craft);
+        if (!desired.equals(craft.reconForcedChunks)) {
+            applyForcedChunks(craft, desired, false);
+        }
+        craft.lastForcedChunkX = craft.getBlockX() >> 4;
+        craft.lastForcedChunkZ = craft.getBlockZ() >> 4;
+    }
+
     private static void sendPendingChunks(AircraftEntity craft, ServerPlayer player) {
         if (craft.reconPendingSend.isEmpty()) return;
-        if (!(craft.level() instanceof ServerLevel sl)) return;
+        if (!(craft.level() instanceof ServerLevel serverLevel)) return;
 
-        java.util.Iterator<Long> it = craft.reconPendingSend.iterator();
+        java.util.Iterator<Long> iterator = craft.reconPendingSend.iterator();
         int sent = 0;
-        while (it.hasNext() && sent < ModEquipmentConfig.RECON_CHUNK_SEND_RATE.get()) {
-            long key = it.next();
+        while (iterator.hasNext() && sent < ModEquipmentConfig.RECON_CHUNK_SEND_RATE.get()) {
+            long key = iterator.next();
             int x = ChunkPos.getX(key);
             int z = ChunkPos.getZ(key);
-            net.minecraft.world.level.chunk.LevelChunk chunk = sl.getChunkSource().getChunkNow(x, z);
+            net.minecraft.world.level.chunk.LevelChunk chunk = serverLevel.getChunkSource()
+                    .getChunkNow(x, z);
             if (chunk != null) {
                 player.connection.send(new net.minecraft.network.protocol.game.ClientboundLevelChunkWithLightPacket(
-                        chunk, sl.getLightEngine(), null, null));
-                it.remove();
+                        chunk, serverLevel.getLightEngine(), null, null));
+                iterator.remove();
                 sent++;
             }
         }
     }
 
-    /** @see AircraftEntity#releaseAllForcedChunks() */
     public static void releaseAllForcedChunks(AircraftEntity craft) {
-        if (!(craft.level() instanceof ServerLevel sl)) {
+        if (!(craft.level() instanceof ServerLevel serverLevel)) {
             craft.reconForcedChunks.clear();
             craft.reconPendingSend.clear();
             craft.lastForcedChunkX = Integer.MIN_VALUE;
@@ -328,7 +285,7 @@ public class AircraftAswRecon {
             return;
         }
         for (long key : craft.reconForcedChunks) {
-            sl.setChunkForced(ChunkPos.getX(key), ChunkPos.getZ(key), false);
+            serverLevel.setChunkForced(ChunkPos.getX(key), ChunkPos.getZ(key), false);
         }
         craft.reconForcedChunks.clear();
         craft.reconPendingSend.clear();

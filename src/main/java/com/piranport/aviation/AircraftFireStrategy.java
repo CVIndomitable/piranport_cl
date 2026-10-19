@@ -1,8 +1,9 @@
 package com.piranport.aviation;
 
+import com.piranport.ammo.CreativeAmmoCache;
 import com.piranport.combat.TransformationManager;
 import com.piranport.component.AircraftAttackMode;
-import com.piranport.component.AircraftInfo;
+import com.piranport.component.AircraftState;
 import com.piranport.component.SlotCooldowns;
 import com.piranport.component.WeaponCooldown;
 import com.piranport.config.ModCommonConfig;
@@ -62,25 +63,22 @@ public class AircraftFireStrategy {
                                               SlotCooldowns cooldowns) {
         ItemStack aircraftStack = weaponSlot == 40 ? inv.offhand.get(0) : inv.items.get(weaponSlot);
 
-        // 燃料校验：油量归零则拒绝放飞。
-        // 创造模式整体豁免：创造模式拿到所有飞机都不算"游戏内产出"，
-        // 不存在白嫖问题，因此不对机型做区分——只看 instabuild 一个开关。
-        AircraftInfo launchInfo = aircraftStack.get(ModDataComponents.AIRCRAFT_INFO.get());
+        // 燃料校验：油量归零则拒绝放飞。创造模式同样要求先完成 R 键装填，
+        // 只是不消耗补给；不再跳过准备状态校验。
+        AircraftState launchState = AircraftDefinitionService.stateOf(aircraftStack);
         AircraftDefinition definition = AircraftDefinitionService.resolve(aircraftStack);
-        boolean creativeFree = player.getAbilities().instabuild;
-        if (launchInfo == null || definition == null || (!creativeFree && launchInfo.currentFuel() <= 0)) {
+        if (definition == null || launchState.currentFuel() <= 0) {
             player.displayClientMessage(Component.translatable("message.piranport.no_fuel"), true);
             return;
         }
 
         AircraftAttackMode attackMode = AircraftAttackMode.FOCUS;
-        boolean hasBullets = definition.usesBulletAttack();
-        String payloadType = definition.requiresPayload() ? definition.payloadRegistryName() : "";
+        String payloadType = definition.payloadItem() == null ? "" : definition.payloadItem().toString();
 
-        // 对海挂载未装填则拒绝放飞（创造模式的常规机型无此限制）。
+        // 对海挂载未装填则拒绝放飞，创造模式同样适用。
         // 装填由 R 键读条完成，见 tryStartAircraftReload —— 放飞不再扫描背包消耗挂载物，
         // 挂载物只作装填消耗品，避免"装填后放飞又被扣一次"的双重消耗。
-        if (!payloadType.isEmpty() && !creativeFree && !launchInfo.payloadLoaded()) {
+        if (definition.requiresPayload() && !launchState.payloadLoaded()) {
             player.displayClientMessage(Component.translatable("message.piranport.aircraft_not_loaded"), true);
             com.piranport.debug.PiranPortDebug.aircraftLaunchFailed(
                     player, weaponSlot, aircraftStack, "NO_PAYLOAD");
@@ -88,7 +86,7 @@ public class AircraftFireStrategy {
         }
 
         AircraftEntity aircraft = AircraftEntity.create(level, player, weaponSlot, aircraftStack,
-                attackMode, coreInventorySlot, hasBullets, payloadType);
+                attackMode, coreInventorySlot);
         level.addFreshEntity(aircraft);
         com.piranport.combat.AASilenceManager.startSilence(player);
         spawnAircraftLaunchEffect(level, player, definition);
@@ -97,8 +95,9 @@ public class AircraftFireStrategy {
                 player, weaponSlot, aircraftStack, payloadType, attackMode.name(), aircraft.getId());
         // 旧版事件保留，便于历史脚本兼容
         com.piranport.debug.PiranPortDebug.event(
-                "Aircraft LAUNCH | type={} entityId={} payload={} mode={}",
-                aircraft.getAircraftType().name(), aircraft.getId(), payloadType, attackMode.name());
+                "Aircraft LAUNCH | class={} entityId={} payload={} mode={}",
+                aircraft.getAircraftClass().getSerializedName(), aircraft.getId(), payloadType,
+                attackMode.name());
 
         // Clear the aircraft from inventory
         if (weaponSlot == 40) {
@@ -455,19 +454,22 @@ public class AircraftFireStrategy {
     public static void refillAircraftFuelInventoryMode(Player player) {
         Inventory inv = player.getInventory();
 
+        boolean infiniteFuel = CreativeAmmoCache.isInfinite(player, ModItems.AVIATION_FUEL.get());
         for (ItemStack weapon : inv.items) {
             if (!(weapon.getItem() instanceof AircraftItem)) continue;
-            AircraftInfo info = weapon.get(ModDataComponents.AIRCRAFT_INFO.get());
             AircraftDefinition definition = AircraftDefinitionService.resolve(weapon);
-            if (info == null || definition == null || info.currentFuel() >= AircraftStatsService.resolve(definition).fuelCapacity()) {
+            if (definition == null) continue;
+            AircraftState state = AircraftDefinitionService.stateOf(weapon);
+            int fuelCapacity = AircraftStatsService.resolve(definition).fuelCapacity();
+            if (state.currentFuel() >= fuelCapacity) continue;
+            if (infiniteFuel) {
+                weapon.set(ModDataComponents.AIRCRAFT_STATE.get(), state.withCurrentFuel(fuelCapacity));
                 continue;
             }
-            // Find aviation_fuel in inventory
             for (ItemStack ammo : inv.items) {
                 if (ammo.is(ModItems.AVIATION_FUEL.get()) && ammo.getCount() > 0) {
                     com.piranport.testtools.PiranPortTestTools.consumeAmmo(player.getUUID(), ammo, 1);
-                    weapon.set(ModDataComponents.AIRCRAFT_INFO.get(),
-                            info.withCurrentFuel(AircraftStatsService.resolve(definition).fuelCapacity()));
+                    weapon.set(ModDataComponents.AIRCRAFT_STATE.get(), state.withCurrentFuel(fuelCapacity));
                     break;
                 }
             }
@@ -476,29 +478,12 @@ public class AircraftFireStrategy {
 
     // ===== R 键装填（对海挂载）=====
 
-    /** Resolve the payload registry name from the stable aircraft definition. */
-    public static String payloadRegistryName(AircraftInfo info) {
-        if (info == null) return "";
-        AircraftDefinition definition = AircraftDefinitionService.resolve(info);
-        return definition.requiresPayload() ? definition.payloadRegistryName() : "";
-    }
-
-    /** Compatibility overload for older callers that only have an AircraftType. */
-    @Deprecated(forRemoval = false)
-    public static String payloadRegistryName(AircraftInfo.AircraftType type) {
-        if (type == null) return "";
-        AircraftInfo legacy = new AircraftInfo(type, 1, 0, 0, 0.0F, 1.0F, 0,
-                type == AircraftInfo.AircraftType.ASW
-                        ? AircraftInfo.BombingMode.LEVEL : AircraftInfo.BombingMode.DIVE, true);
-        return payloadRegistryName(legacy);
-    }
-
     /** 返回该槽位飞机是否还需要 R 键装填（对海机型；战斗机/侦察机无挂载概念，返回 false）。 */
     public static boolean needsPayloadLoad(ItemStack aircraftStack) {
-        AircraftInfo info = aircraftStack.get(ModDataComponents.AIRCRAFT_INFO.get());
-        if (info == null) return false;
         AircraftDefinition definition = AircraftDefinitionService.resolve(aircraftStack);
-        return definition != null && definition.requiresPayload() && !info.payloadLoaded();
+        if (definition == null) return false;
+        return definition.requiresPayload()
+                && !AircraftDefinitionService.stateOf(aircraftStack).payloadLoaded();
     }
 
     // ===== R 键装填读条（与火炮共用 WEAPON_COOLDOWN 计时）=====
@@ -508,7 +493,7 @@ public class AircraftFireStrategy {
      *
      * <p>《武器/09-装填类似弩模型》：按键只启动计时，读条到期由服务端扣补给并写入出击准备状态，
      * 因此本方法不做任何消耗。计时组件与火炮共用 {@code WEAPON_COOLDOWN}，于是装填条
-     * （ReloadProgressHudLayer）、物品图标进度条（WeaponReloadDecorator）、离开快捷栏清理
+     * （ReloadProgressHudLayer，物品图标上不再画进度条）、离开快捷栏清理
      * （WeaponReloadLifecycle）全部直接复用，不另立一套状态 —— 这就是"飞机与火炮同一套装填交互"。
      *
      * <p>补给前置校验：缺油/缺挂载物时不启动读条，避免玩家等满读条才发现白等。
@@ -518,9 +503,9 @@ public class AircraftFireStrategy {
     public static void tryStartAircraftReload(Player player, Inventory inv, ItemStack aircraftStack,
                                               int weaponSlot, ItemStack coreStack, int coreSlot) {
         if (player.level().isClientSide()) return;
-        AircraftInfo info = aircraftStack.get(ModDataComponents.AIRCRAFT_INFO.get());
+        AircraftState state = AircraftDefinitionService.stateOf(aircraftStack);
         AircraftDefinition definition = AircraftDefinitionService.resolve(aircraftStack);
-        if (info == null || definition == null) return;
+        if (definition == null) return;
         ResolvedAircraftStats stats = AircraftStatsService.resolve(definition);
         long now = player.level().getGameTime();
 
@@ -529,11 +514,11 @@ public class AircraftFireStrategy {
             player.displayClientMessage(Component.translatable("message.piranport.weapon_reloading"), true);
             return;
         }
-        if (isReadyForSortie(info, definition, stats)) {
+        if (isReadyForSortie(state, definition, stats)) {
             player.displayClientMessage(Component.translatable("message.piranport.aircraft_already_loaded"), true);
             return;
         }
-        if (!suppliesAvailable(player, inv, aircraftStack, weaponSlot, coreSlot, definition, info, stats)) {
+        if (!suppliesAvailable(player, inv, aircraftStack, weaponSlot, coreSlot, definition, state, stats)) {
             return; // 缺什么已由 suppliesAvailable 提示
         }
 
@@ -579,23 +564,31 @@ public class AircraftFireStrategy {
     }
 
     /** 是否已完成出击准备（判定规则见 {@link AircraftSortieReadiness}）。 */
-    public static boolean isReadyForSortie(AircraftInfo info, AircraftDefinition definition,
+    public static boolean isReadyForSortie(AircraftState state, AircraftDefinition definition,
                                            ResolvedAircraftStats stats) {
-        return AircraftSortieReadiness.isReady(info, definition, stats);
+        return AircraftSortieReadiness.isReady(state, definition, stats);
     }
 
     /** 补给是否齐备；不齐时提示缺什么并返回 false（读条前置校验用）。 */
     private static boolean suppliesAvailable(Player player, Inventory inv, ItemStack aircraftStack,
                                              int weaponSlot, int coreSlot,
-                                             AircraftDefinition definition, AircraftInfo info,
+                                             AircraftDefinition definition, AircraftState state,
                                              ResolvedAircraftStats stats) {
+        // 创造模式仍必须按 R 走完整装填流程，只是不要求背包里有补给。
         if (player.getAbilities().instabuild) return true;
-        if (AircraftSortieReadiness.needsPayload(definition, info)
-                && findPayloadSlot(inv, payloadItem(definition), weaponSlot, coreSlot) < 0) {
+
+        net.minecraft.world.item.Item payload = payloadItem(definition);
+        boolean payloadInfinite = payload != null && CreativeAmmoCache.isInfinite(player, payload);
+        boolean fuelInfinite = CreativeAmmoCache.isInfinite(player, ModItems.AVIATION_FUEL.get());
+
+        if (AircraftSortieReadiness.needsPayload(definition, state)
+                && !payloadInfinite
+                && findPayloadSlot(inv, payload, weaponSlot, coreSlot) < 0) {
             player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
             return false;
         }
-        if (AircraftSortieReadiness.needsFuel(info, stats)
+        if (AircraftSortieReadiness.needsFuel(state, stats)
+                && !fuelInfinite
                 && findPayloadSlot(inv, ModItems.AVIATION_FUEL.get(), weaponSlot, coreSlot) < 0) {
             player.displayClientMessage(Component.translatable("message.piranport.aircraft_no_fuel_item"), true);
             return false;
@@ -605,8 +598,7 @@ public class AircraftFireStrategy {
 
     /** 对海挂载物物品；无挂载概念的机型返回 null。 */
     private static net.minecraft.world.item.Item payloadItem(AircraftDefinition definition) {
-        if (!definition.requiresPayload()) return null;
-        return BuiltInRegistries.ITEM.get(ResourceLocation.parse(definition.payloadRegistryName()));
+        return definition.payloadItem() == null ? null : BuiltInRegistries.ITEM.get(definition.payloadItem());
     }
 
     /**
@@ -617,17 +609,16 @@ public class AircraftFireStrategy {
      */
     private static boolean commitSortieSupplies(Player player, Inventory inv, ItemStack aircraftStack,
                                                 int weaponSlot, int coreSlot, boolean warn) {
-        AircraftInfo info = aircraftStack.get(ModDataComponents.AIRCRAFT_INFO.get());
+        AircraftState state = AircraftDefinitionService.stateOf(aircraftStack);
         AircraftDefinition definition = AircraftDefinitionService.resolve(aircraftStack);
-        if (info == null || definition == null) return false;
+        if (definition == null) return false;
         ResolvedAircraftStats stats = AircraftStatsService.resolve(definition);
 
         // 创造模式不消耗补给，但必须真的把飞机写成"已准备"状态。
-        // 早先这里只弹提示就 return，导致创造玩家看到"无需补给"却因为油量仍是 0
-        // 被放飞校验拦下，提示与实际行为自相矛盾。
+        // 创造模式也需要玩家手动按 R 走完读条；这里只是免去背包补给要求。
         if (player.getAbilities().instabuild) {
-            aircraftStack.set(ModDataComponents.AIRCRAFT_INFO.get(),
-                    info.withCurrentFuel(stats.fuelCapacity()).withPayloadLoaded(true));
+            aircraftStack.set(ModDataComponents.AIRCRAFT_STATE.get(),
+                    state.withCurrentFuel(stats.fuelCapacity()).withPayloadLoaded(true));
             if (warn) {
                 player.displayClientMessage(
                         Component.translatable("message.piranport.aircraft_creative_free_load"), true);
@@ -635,33 +626,43 @@ public class AircraftFireStrategy {
             return true;
         }
 
-        boolean needsFuel = AircraftSortieReadiness.needsFuel(info, stats);
-        boolean needsPayload = AircraftSortieReadiness.needsPayload(definition, info);
+        boolean needsFuel = AircraftSortieReadiness.needsFuel(state, stats);
+        boolean needsPayload = AircraftSortieReadiness.needsPayload(definition, state);
         if (!needsFuel && !needsPayload) return true;
 
         net.minecraft.world.item.Item payloadItem = payloadItem(definition);
-        int payloadSlot = payloadItem == null ? -1 : findPayloadSlot(inv, payloadItem, weaponSlot, coreSlot);
-        int fuelSlot = needsFuel ? findPayloadSlot(inv, ModItems.AVIATION_FUEL.get(), weaponSlot, coreSlot) : -1;
+        boolean payloadInfinite = needsPayload && payloadItem != null
+                && CreativeAmmoCache.isInfinite(player, payloadItem);
+        boolean fuelInfinite = needsFuel
+                && CreativeAmmoCache.isInfinite(player, ModItems.AVIATION_FUEL.get());
+        int payloadSlot = needsPayload && !payloadInfinite && payloadItem != null
+                ? findPayloadSlot(inv, payloadItem, weaponSlot, coreSlot) : -1;
+        int fuelSlot = needsFuel && !fuelInfinite
+                ? findPayloadSlot(inv, ModItems.AVIATION_FUEL.get(), weaponSlot, coreSlot) : -1;
 
-        if (needsPayload && payloadSlot < 0) {
+        if (needsPayload && !payloadInfinite && payloadSlot < 0) {
             if (warn) player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
             return false;
         }
-        if (needsFuel && fuelSlot < 0) {
+        if (needsFuel && !fuelInfinite && fuelSlot < 0) {
             if (warn) player.displayClientMessage(
                     Component.translatable("message.piranport.aircraft_no_fuel_item"), true);
             return false;
         }
 
-        if (fuelSlot >= 0) {
-            com.piranport.testtools.PiranPortTestTools.consumeAmmo(player.getUUID(), stackAt(inv, fuelSlot), 1);
-            info = info.withCurrentFuel(stats.fuelCapacity());
+        if (needsFuel) {
+            if (!fuelInfinite) {
+                com.piranport.testtools.PiranPortTestTools.consumeAmmo(player.getUUID(), stackAt(inv, fuelSlot), 1);
+            }
+            state = state.withCurrentFuel(stats.fuelCapacity());
         }
-        if (payloadSlot >= 0) {
-            com.piranport.testtools.PiranPortTestTools.consumeAmmo(player.getUUID(), stackAt(inv, payloadSlot), 1);
-            info = info.withPayloadLoaded(true);
+        if (needsPayload) {
+            if (!payloadInfinite) {
+                com.piranport.testtools.PiranPortTestTools.consumeAmmo(player.getUUID(), stackAt(inv, payloadSlot), 1);
+            }
+            state = state.withPayloadLoaded(true);
         }
-        aircraftStack.set(ModDataComponents.AIRCRAFT_INFO.get(), info);
+        aircraftStack.set(ModDataComponents.AIRCRAFT_STATE.get(), state);
 
         player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
                 SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.5f, 1.4f);
@@ -720,10 +721,10 @@ public class AircraftFireStrategy {
 
             ItemStack weapon = inv.items.get(wi);
             if (weapon.isEmpty() || !(weapon.getItem() instanceof AircraftItem)) continue;
-            AircraftInfo info = weapon.get(ModDataComponents.AIRCRAFT_INFO.get());
-            if (info == null || info.currentFuel() <= 0) continue;
-
             AircraftDefinition definition = AircraftDefinitionService.resolve(weapon);
+            if (definition == null) continue;
+            AircraftState state = AircraftDefinitionService.stateOf(weapon);
+            if (state.currentFuel() <= 0) continue;
             boolean isFighter = definition != null && definition.usesBulletAttack();
             if (!isFighter) continue;
 

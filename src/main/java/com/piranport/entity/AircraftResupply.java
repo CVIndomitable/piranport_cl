@@ -1,6 +1,7 @@
 package com.piranport.entity;
 
-import com.piranport.component.AircraftInfo;
+import com.piranport.ammo.CreativeAmmoCache;
+import com.piranport.component.AircraftState;
 import com.piranport.registry.ModDataComponents;
 import com.piranport.registry.ModItems;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -30,7 +31,7 @@ public class AircraftResupply {
     public static void recallAndRemove(AircraftEntity craft) {
         com.piranport.debug.PiranPortDebug.event(
                 "Aircraft RETURN | type={} entityId={} forced={}",
-                craft.aircraftType.name(), craft.getId(), craft.isForcedReturn());
+                craft.getAircraftClass().getSerializedName(), craft.getId(), craft.isForcedReturn());
         boolean returned = false;
         if (!craft.level().isClientSide() && craft.getOwnerUUID() != null
                 && craft.level() instanceof ServerLevel sl) {
@@ -109,25 +110,14 @@ public class AircraftResupply {
     }
 
     static ItemStack buildReturnStack(AircraftEntity craft) {
-        // Restore original ItemStack if available, preserving custom names/enchants/components
-        ItemStack stack;
+        // 创建时保存的原始物品栈是唯一真源；没有它说明实体不是从物品放飞的，直接返回空。
         ItemStack originalStack = craft.getOriginalStack();
-        if (originalStack != null && !originalStack.isEmpty()) {
-            stack = originalStack.copy();
-        } else {
-            stack = switch (craft.aircraftType) {
-                case FIGHTER        -> new ItemStack(ModItems.SEAFIRE.get());
-                case DIVE_BOMBER    -> new ItemStack(ModItems.PETREL_BOMBER.get());
-                case TORPEDO_BOMBER -> new ItemStack(ModItems.SWORDFISH_TORPEDO.get());
-                case LEVEL_BOMBER   -> new ItemStack(ModItems.B25_BOMBER.get());
-                case ASW            -> new ItemStack(ModItems.SWORDFISH_ASW.get());
-                case RECON          -> new ItemStack(ModItems.SAIUN_RECON.get());
-                case ROCKET_FIGHTER -> new ItemStack(ModItems.F6F_HELLCAT_ROCKET.get());
-            };
-        }
-        // Intentionally reset fuel to 0: returning aircraft must be refueled before next sortie
-        AircraftInfo info = stack.get(ModDataComponents.AIRCRAFT_INFO.get());
-        if (info != null) stack.set(ModDataComponents.AIRCRAFT_INFO.get(), info.withCurrentFuel(0));
+        if (originalStack == null || originalStack.isEmpty()) return ItemStack.EMPTY;
+        ItemStack stack = originalStack.copy();
+        // 返航后必须重新装填燃油，不能把出击时的油量带回去。
+        AircraftState state = stack.get(ModDataComponents.AIRCRAFT_STATE.get());
+        stack.set(ModDataComponents.AIRCRAFT_STATE.get(),
+                state == null ? AircraftState.EMPTY : state.withCurrentFuel(0));
         return stack;
     }
 
@@ -140,7 +130,7 @@ public class AircraftResupply {
      * 自动装填固定关闭；保留方法作为旧实体调用方的兼容边界。
      */
     public static boolean tryAutoResupplyAmmo(AircraftEntity craft, Player owner) {
-        if (craft.payloadType.isEmpty()) return false;
+        if (!craft.requiresPayload()) return false;
         // 自动补给是"空中重新装填挂载"，仅在 AUTO_RESUPPLY 开启时可用；手动模式下挂载只走 R 键背包装填
         return false;
     }
@@ -150,6 +140,10 @@ public class AircraftResupply {
      * Returns true if successful.
      */
     public static boolean tryAutoResupplyFuel(AircraftEntity craft, Player owner) {
+        if (CreativeAmmoCache.isInfinite(owner, ModItems.AVIATION_FUEL.get())) {
+            craft.setCurrentFuel(craft.getFuelCapacity());
+            return true;
+        }
         for (ItemStack ammo : owner.getInventory().items) {
             if (ammo.is(ModItems.AVIATION_FUEL.get()) && ammo.getCount() > 0) {
                 ammo.shrink(1);

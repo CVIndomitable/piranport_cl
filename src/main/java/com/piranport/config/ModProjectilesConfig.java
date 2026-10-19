@@ -93,9 +93,9 @@ public final class ModProjectilesConfig {
     public static final TerminalConfigValue<Double> NPC_TORPEDO_SALVO_SPREAD =
             TerminalConfigValue.number("projectiles", "torpedo_salvo", "spread_angle", 8.0, 0.0, 180.0);
 
-    /** 齐射鱼雷初速（格/tick）。默认 0.8。 */
+    /** 齐射鱼雷初速（格/tick）。默认 0.3（= 6 格/秒）。 */
     public static final TerminalConfigValue<Double> NPC_TORPEDO_SALVO_SPEED =
-            TerminalConfigValue.number("projectiles", "torpedo_salvo", "speed", 0.8, 0.01, 10.0);
+            TerminalConfigValue.number("projectiles", "torpedo_salvo", "speed", 0.3, 0.01, 10.0);
 
     /** 舰娘随从每次炮击后触发雷击的判定分母（1/N 概率）。默认 200。
      *  WHY 与 salvo_cooldown 分开：舰娘版是「每轮炮击 1/N 概率放雷」而非固定冷却，语义不同不可合并。 */

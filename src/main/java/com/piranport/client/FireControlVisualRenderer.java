@@ -245,7 +245,7 @@ public final class FireControlVisualRenderer {
         active = diff <= Math.max(SINGLE_TUBE_ACTIVE_DEG, fanHalfDeg);
     }
 
-    /** 与 TorpedoFireStrategy 一致：装填弹种读 TorpedoItem.getSpeed()，否则 610mm 1.0 / 其他 1.2。 */
+    /** 与 TorpedoFireStrategy 一致：装填弹种读 TorpedoItem.getSpeed()，否则 0.3。 */
     private static double torpedoSpeed(ItemStack launcherStack, TorpedoLauncherItem launcher) {
         LoadedAmmo loaded = launcherStack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
         if (loaded.hasAmmo()) {
@@ -253,7 +253,7 @@ public final class FireControlVisualRenderer {
             Item item = id == null ? null : BuiltInRegistries.ITEM.get(id);
             if (item instanceof TorpedoItem torpedo) return torpedo.getSpeed();
         }
-        return launcher.getCaliber() == 610 ? 1.0 : 1.2;
+        return 0.3;
     }
 
     private static Entity findTarget(Minecraft mc, UUID uuid) {

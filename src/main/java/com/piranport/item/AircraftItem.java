@@ -3,7 +3,10 @@ package com.piranport.item;
 import com.piranport.combat.TransformationManager;
 import com.piranport.aviation.AircraftDefinition;
 import com.piranport.aviation.AircraftDefinitionService;
-import com.piranport.component.AircraftInfo;
+import com.piranport.aviation.AircraftSortieReadiness;
+import com.piranport.aviation.AircraftStatsService;
+import com.piranport.aviation.ResolvedAircraftStats;
+import com.piranport.component.AircraftState;
 import com.piranport.component.WeaponCategory;
 import com.piranport.platform.ClientHooks;
 import com.piranport.registry.ModDataComponents;
@@ -58,12 +61,13 @@ public class AircraftItem extends Item {
         if (action != ClickAction.SECONDARY) return false;
         if (!other.is(ModItems.AVIATION_FUEL.get())) return false;
 
-        AircraftInfo info = stack.get(ModDataComponents.AIRCRAFT_INFO.get());
         AircraftDefinition definition = AircraftDefinitionService.resolve(stack);
-        if (info == null || definition == null || info.currentFuel() >= com.piranport.aviation.AircraftStatsService.resolve(definition).fuelCapacity()) return false;
+        if (definition == null) return false;
+        AircraftState state = AircraftDefinitionService.stateOf(stack);
+        int fuelCapacity = AircraftStatsService.resolve(definition).fuelCapacity();
+        if (state.currentFuel() >= fuelCapacity) return false;
 
-        stack.set(ModDataComponents.AIRCRAFT_INFO.get(), info.withCurrentFuel(
-                com.piranport.aviation.AircraftStatsService.resolve(definition).fuelCapacity()));
+        stack.set(ModDataComponents.AIRCRAFT_STATE.get(), state.withCurrentFuel(fuelCapacity));
         other.shrink(1);
 
         if (!player.level().isClientSide) {
@@ -83,40 +87,34 @@ public class AircraftItem extends Item {
             tooltipComponents.add(Component.translatable("tooltip.piranport.weapon_category." + cat.getSerializedName())
                     .withStyle(net.minecraft.ChatFormatting.DARK_GREEN));
         }
-        AircraftInfo info = stack.get(ModDataComponents.AIRCRAFT_INFO.get());
-        if (info != null) {
-            tooltipComponents.add(Component.translatable("tooltip.piranport.aircraft_type." + info.aircraftType().getSerializedName())
+        AircraftDefinition definition = AircraftDefinitionService.resolve(stack);
+        if (definition != null) {
+            ResolvedAircraftStats stats = AircraftStatsService.resolve(definition);
+            AircraftState state = AircraftDefinitionService.stateOf(stack);
+            tooltipComponents.add(Component.translatable(
+                            "tooltip.piranport.aircraft_type."
+                                    + definition.aircraftClass().getSerializedName())
                     .withStyle(net.minecraft.ChatFormatting.GOLD));
             if (ClientHooks.isClient() && ClientHooks.hasShiftDown()) {
-                if (info.panelDamage() > 0) {
+                if (stats.damage() > 0) {
                     tooltipComponents.add(Component.translatable("tooltip.piranport.aircraft_damage",
-                            String.format("%.1f", info.panelDamage())).withStyle(net.minecraft.ChatFormatting.RED));
+                            String.format("%.1f", stats.damage()))
+                            .withStyle(net.minecraft.ChatFormatting.RED));
                 }
                 tooltipComponents.add(Component.translatable("tooltip.piranport.aircraft_speed",
-                        String.format("%.1f", info.panelSpeed())).withStyle(net.minecraft.ChatFormatting.GREEN));
+                        String.format("%.1f", stats.speed()))
+                        .withStyle(net.minecraft.ChatFormatting.GREEN));
             } else if (ClientHooks.isClient()) {
                 tooltipComponents.add(Component.translatable("tooltip.piranport.shift_for_details")
                         .withStyle(net.minecraft.ChatFormatting.DARK_GRAY));
             }
-            // 出击准备状态（燃料 + 对海挂载）：必须常驻可见，不折叠进 Shift 详情，
-            // 否则玩家无法判断这架飞机现在能不能放飞
-            if (info.currentFuel() > 0) {
-                tooltipComponents.add(Component.translatable("tooltip.piranport.aircraft_fueled")
-                        .withStyle(net.minecraft.ChatFormatting.GREEN));
-            } else {
-                tooltipComponents.add(Component.translatable("tooltip.piranport.aircraft_fuel_short")
-                        .withStyle(net.minecraft.ChatFormatting.RED));
-            }
-            AircraftDefinition definition = AircraftDefinitionService.resolve(stack);
-            if (definition != null && definition.requiresPayload()) {
-                if (info.payloadLoaded()) {
-                    tooltipComponents.add(Component.translatable("tooltip.piranport.aircraft_payload_loaded")
-                            .withStyle(net.minecraft.ChatFormatting.GREEN));
-                } else {
-                    tooltipComponents.add(Component.translatable("tooltip.piranport.aircraft_payload_empty")
-                            .withStyle(net.minecraft.ChatFormatting.RED));
-                }
-            }
+            // 燃料与对海挂载由同一次 R 键装填一起写入，提示只保留一个合并状态。
+            boolean ready = AircraftSortieReadiness.isReady(state, definition, stats);
+            tooltipComponents.add(Component.translatable(ready
+                            ? "tooltip.piranport.weapon_ready"
+                            : "tooltip.piranport.weapon_not_loaded")
+                    .withStyle(ready ? net.minecraft.ChatFormatting.GREEN
+                            : net.minecraft.ChatFormatting.RED));
         }
         ShipCoreCombat.appendWeaponCooldownTooltip(stack, tooltipComponents);
     }

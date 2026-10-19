@@ -130,10 +130,15 @@ public class PortalStructureHelper {
      * 这个 AABB，而不能指望玩家碰到某个方块。</p>
      */
     public static AABB getOpeningAABB(BlockPos origin, Direction facing) {
-        Direction right = facing.getClockWise();
-        BlockPos min = origin.relative(facing, openingMinX()).above(openingMinY());
-        BlockPos max = min.relative(facing, PORTAL_WIDTH).above(PORTAL_HEIGHT).relative(right, 1);
-        return new AABB(min.getX(), min.getY(), min.getZ(), max.getX(), max.getY(), max.getZ());
+        // 用开口的两端块反推包围盒：facing 可能是负轴，手写 min/max 容易把区间写反，
+        // 且旧的 "min + PORTAL_WIDTH" 会多圈进一列框架（宽度实际变成 3）。
+        BlockPos first = origin.relative(facing, openingMinX()).above(openingMinY());
+        BlockPos last = origin.relative(facing, openingMinX() + PORTAL_WIDTH - 1)
+                .above(openingMinY() + PORTAL_HEIGHT - 1);
+        return new AABB(
+                Math.min(first.getX(), last.getX()), first.getY(), Math.min(first.getZ(), last.getZ()),
+                Math.max(first.getX(), last.getX()) + 1, first.getY() + PORTAL_HEIGHT,
+                Math.max(first.getZ(), last.getZ()) + 1);
     }
 
     /**
@@ -227,15 +232,13 @@ public class PortalStructureHelper {
             return null;
         }
 
-        Direction right = facing.getClockWise();
-
-        // Calculate center of the opening
+        // 开口只有前景一层（lz==0）。旧实现还沿 right 取深度中点，ec42b859 把
+        // "2×3×4 隧道"改成"前景单层 2×3"后，那个中点已经落在实心框架块里。
         int openingCenterX = (FRAME_WIDTH - PORTAL_WIDTH) / 2 + PORTAL_WIDTH / 2;
         int openingCenterY = (FRAME_HEIGHT - PORTAL_HEIGHT) / 2 + PORTAL_HEIGHT / 2;
 
         return origin.relative(facing, openingCenterX)
-                .relative(Direction.UP, openingCenterY)
-                .relative(right, (FRAME_DEPTH - 1) / 2);
+                .relative(Direction.UP, openingCenterY);
     }
 
     /**
@@ -245,18 +248,8 @@ public class PortalStructureHelper {
         if (cornerPos == null) {
             return null;
         }
-
-        BlockPos min = cornerPos
-                .relative(facing, (FRAME_WIDTH - PORTAL_WIDTH) / 2)
-                .relative(Direction.UP, (FRAME_HEIGHT - PORTAL_HEIGHT) / 2);
-
-        BlockPos max = min.relative(facing, PORTAL_WIDTH)
-                .relative(Direction.UP, PORTAL_HEIGHT)
-                .relative(facing.getClockWise(), FRAME_DEPTH);
-
-        return new AABB(
-                min.getX(), min.getY(), min.getZ(),
-                max.getX(), max.getY(), max.getZ());
+        // 开口只有前景单层，内部包围盒与进门扫描盒定义一致。
+        return getOpeningAABB(cornerPos, facing);
     }
 
     /**
@@ -322,8 +315,7 @@ public class PortalStructureHelper {
         }
 
         return cornerPos.relative(facing, openingMinX() + PORTAL_WIDTH / 2)
-                .above(openingMinY() + PORTAL_HEIGHT / 2)
-                .relative(right, (FRAME_DEPTH - 1) / 2);
+                .above(openingMinY() + PORTAL_HEIGHT / 2);
     }
 
     /**
@@ -410,20 +402,20 @@ public class PortalStructureHelper {
     private static BlockPos tryBuildExitSite(ServerLevel level, BlockPos cornerPos,
                                              Direction facing, UUID instanceId, String nodeId,
                                              String targetNodeId) {
-        Direction right = facing.getClockWise();
-        Direction back = facing.getOpposite();
-        // 平台位于门框开口正前方一格，3×3，顶面与角点同 Y。
-        BlockPos platformCenter = cornerPos.relative(back, 2).above(1)
-                .relative(right, (FRAME_DEPTH - 1) / 2)
-                .relative(facing, openingMinX() + PORTAL_WIDTH / 2);
+        Direction front = facing.getCounterClockWise();
+        // 开口在 lz==0（即沿 facing 的宽度轴），框架朝 +right 方向长 4 格，
+        // 所以真正的"门外"是 -right = facing.getCounterClockWise()，不是 facing。
+        // 平台中心放到门外第 2 格：3×3 覆盖 lz -3..-1，紧贴门框又不压住开口/框架；
+        // 平台方块与框架底边同层（y=cornerY），顶面 y+1 正好是开口最低一层的地面。
+        BlockPos platformCenter = cornerPos
+                .relative(facing, openingMinX() + PORTAL_WIDTH / 2)
+                .relative(front, 2);
 
-        // 平台本身必须是可替换/空气（不许压住实心方块），否则整体换朝向。
+        // 平台层允许已有地板（节点出生点铺了 5×5 橡木板）：只要求上方可站人，
+        // 否则以 spawn.below() 为锚点的门会因木板不可替换而整座放弃。
         for (int dx = -1; dx <= 1; dx++) {
             for (int dz = -1; dz <= 1; dz++) {
                 BlockPos p = platformCenter.offset(dx, 0, dz);
-                BlockState existing = level.getBlockState(p);
-                if (!existing.isAir() && !existing.canBeReplaced()) return null;
-                // 光柱和门要占平台上方一格，也必须是空气/可替换。
                 BlockPos above = p.above();
                 BlockState aboveState = level.getBlockState(above);
                 if (!aboveState.isAir() && !aboveState.canBeReplaced()) return null;
@@ -438,6 +430,9 @@ public class PortalStructureHelper {
         for (int dx = -1; dx <= 1; dx++) {
             for (int dz = -1; dz <= 1; dz++) {
                 BlockPos p = platformCenter.offset(dx, 0, dz);
+                BlockState existing = level.getBlockState(p);
+                // 已有地板（出生点木板/地形）保留原样，只补空位/水面。
+                if (!existing.isAir() && !existing.canBeReplaced()) continue;
                 boolean edge = Math.abs(dx) == 1 && Math.abs(dz) == 1;
                 level.setBlock(p, edge
                         ? net.minecraft.world.level.block.Blocks.OBSIDIAN.defaultBlockState()
@@ -455,9 +450,12 @@ public class PortalStructureHelper {
                     net.minecraft.world.level.block.Blocks.SEA_LANTERN.defaultBlockState(), 3);
         }
 
-        // 传送门实体放在开口中心偏下（玩家走入即触发），替代旧版放在角点顶上的位置。
+        // 传送门实体是隐形触发体（方案 A：视觉只保留方块门框），放在开口 AABB 正中心。
+        // x/z 用 AABB 中心而不是 BlockPos+0.5，2 格宽开口才真正居中。
+        var opening = getOpeningAABB(cornerPos, facing);
+        var portalCenter = opening.getCenter();
         var portal = com.piranport.dungeon.entity.DungeonPortalEntity.create(level, instanceId, nodeId,
-                targetNodeId, center.getX() + .5, center.getY(), center.getZ() + .5);
+                targetNodeId, portalCenter.x, center.getY(), portalCenter.z);
         if (portal != null) level.addFreshEntity(portal);
         return center;
     }
@@ -490,8 +488,10 @@ public class PortalStructureHelper {
                     // Skip interior for space check
                     boolean isInOpening = isInOpening(x, y, z);
 
-                    if (!isInOpening) {
-                        // Frame block should be replaceable
+                    if (!isInOpening && y > 0) {
+                        // 底边层（ly==0）是地基，允许压过出生点木板/地表；其余层必须可替换，
+                        // 避免把门硬塞进岩壁或建筑。历史实现要求全部门框格可替换，
+                        // 导致以 spawn.below() 为锚点的出口（含出生点 5×5 木板）永远放不下。
                         BlockState existing = level.getBlockState(checkPos);
                         if (!existing.isAir() && !existing.canBeReplaced()) {
                             return null;
@@ -523,15 +523,12 @@ public class PortalStructureHelper {
             }
         }
 
-        // Configure the BlockEntity at the center of the portal
-        // The center block is at the middle of the interior opening
+        // 开口只有前景一层（lz==0），中心就在开口平面上，不能再沿 right 取深度中点。
         int openingCenterX = (FRAME_WIDTH - PORTAL_WIDTH) / 2 + PORTAL_WIDTH / 2;
         int openingCenterY = (FRAME_HEIGHT - PORTAL_HEIGHT) / 2 + PORTAL_HEIGHT / 2;
-        int openingCenterZ = (FRAME_DEPTH - 1) / 2;
 
         BlockPos centerPos = cornerPos.relative(facing, openingCenterX)
-                .relative(Direction.UP, openingCenterY)
-                .relative(right, openingCenterZ);
+                .relative(Direction.UP, openingCenterY);
 
         // Find the nearest dungeon portal block BlockEntity and configure it
         // The interior blocks don't have BlockEntities (they're air), so we need to

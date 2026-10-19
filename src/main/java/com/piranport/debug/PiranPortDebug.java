@@ -856,7 +856,7 @@ public final class PiranPortDebug {
                         break;
                     }
                     sb.append(String.format(Locale.ROOT, "  %s entityId=%d state=%s\n",
-                            a.getAircraftType().name(), a.getId(), a.getFlightState().name()));
+                            a.getAircraftClass().getSerializedName(), a.getId(), a.getFlightState().name()));
                     shown++;
                 }
             }

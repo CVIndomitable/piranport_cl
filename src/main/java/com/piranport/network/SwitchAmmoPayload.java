@@ -1,6 +1,7 @@
 package com.piranport.network;
 
 import com.piranport.PiranPort;
+import com.piranport.ammo.CreativeAmmoCache;
 import com.piranport.item.ShipCoreCombat;
 import com.piranport.registry.ModSounds;
 import io.netty.buffer.ByteBuf;
@@ -71,8 +72,9 @@ public record SwitchAmmoPayload(String ammoItemId) implements CustomPacketPayloa
                 return;
             }
 
-            // 创造模式：跳过背包弹药检查
-            boolean isCreative = player.getAbilities().instabuild;
+            // 创造模式 / 弹药库勾选：跳过背包弹药检查
+            boolean isCreative = player.getAbilities().instabuild
+                    || CreativeAmmoCache.isInfinite(player, ammoItem);
 
             if (!isCreative) {
                 // 生存模式：验证背包中有该弹种

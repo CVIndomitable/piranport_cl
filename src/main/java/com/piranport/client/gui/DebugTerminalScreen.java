@@ -15,6 +15,7 @@ import com.piranport.network.TerminalParameterActionPayload;
 import com.piranport.network.UpdateTerminalParameterPayload;
 import com.piranport.terminal.TerminalParameterSpec;
 import com.piranport.terminal.TerminalParameters;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
@@ -258,13 +259,16 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
             int rowY = y + LIST_TOP + 13 + i * ROW_HEIGHT;
             String key = spec.key();
             if (spec.type() == TerminalParameterSpec.ValueType.BOOLEAN) {
-                addRenderableWidget(Button.builder(booleanLabel(draftValue(spec)), b -> {
-                    selectedKey = key;
-                    String next = Boolean.toString(!Boolean.parseBoolean(draftValue(spec)));
-                    drafts.put(key, next);
-                    b.setMessage(booleanLabel(next));
-                    localStatus = label("status.unsaved").getString();
-                }).bounds(draftX, rowY, draftWidth, 16).build());
+                CheckboxButton checkbox = new CheckboxButton(draftX, rowY, draftWidth, 16,
+                        Boolean.parseBoolean(draftValue(spec)), b -> {
+                            selectedKey = key;
+                            CheckboxButton button = (CheckboxButton) b;
+                            boolean next = !button.selected();
+                            drafts.put(key, Boolean.toString(next));
+                            button.setSelected(next);
+                            localStatus = label("status.unsaved").getString();
+                        });
+                addRenderableWidget(checkbox);
             } else {
                 EditBox box = addRenderableWidget(new EditBox(font, draftX, rowY,
                         draftWidth, 16, Component.literal(parameterName(spec))));
@@ -1087,5 +1091,45 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
             }
         }
         return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    /** 紧凑打勾开关：16px 高，左侧方框 + 勾，右侧“是/否”。 */
+    private static final class CheckboxButton extends Button {
+        private boolean selected;
+
+        private CheckboxButton(int x, int y, int width, int height, boolean selected,
+                               Button.OnPress onPress) {
+            super(x, y, width, height, Component.empty(), onPress, supplier -> supplier.get());
+            this.selected = selected;
+        }
+
+        private boolean selected() {
+            return selected;
+        }
+
+        private void setSelected(boolean selected) {
+            this.selected = selected;
+        }
+
+        @Override
+        protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+            super.renderWidget(graphics, mouseX, mouseY, partialTick);
+            int boxX = getX() + 4;
+            int boxY = getY() + (getHeight() - 9) / 2;
+            graphics.fill(boxX, boxY, boxX + 9, boxY + 9, 0xFF000000);
+            graphics.fill(boxX + 1, boxY + 1, boxX + 8, boxY + 8,
+                    selected ? 0xFF1E6B1E : 0xFF3A3A3A);
+            if (selected) {
+                // 用像素段画对勾，避免依赖字体是否包含 ✓ 字符
+                graphics.fill(boxX + 2, boxY + 5, boxX + 4, boxY + 7, 0xFFFFFFFF);
+                graphics.fill(boxX + 3, boxY + 6, boxX + 5, boxY + 8, 0xFFFFFFFF);
+                graphics.fill(boxX + 4, boxY + 5, boxX + 6, boxY + 7, 0xFFFFFFFF);
+                graphics.fill(boxX + 5, boxY + 4, boxX + 7, boxY + 6, 0xFFFFFFFF);
+                graphics.fill(boxX + 6, boxY + 3, boxX + 8, boxY + 5, 0xFFFFFFFF);
+            }
+            Component stateLabel = label(selected ? "state.yes" : "state.no");
+            graphics.drawString(Minecraft.getInstance().font, stateLabel,
+                    boxX + 13, getY() + 4, 0xFFFFFF, false);
+        }
     }
 }

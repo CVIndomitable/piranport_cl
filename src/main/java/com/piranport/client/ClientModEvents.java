@@ -5,7 +5,6 @@ import com.piranport.client.AircraftRenderer;
 import com.piranport.client.CuttingBoardRenderer;
 import com.piranport.client.PlaceableFoodRenderer;
 import com.piranport.client.WeaponReloadDecorator;
-import com.piranport.component.AircraftInfo;
 import com.piranport.menu.AmmoWorkbenchScreen;
 import com.piranport.menu.CookingPotScreen;
 import com.piranport.menu.ReloadFacilityScreen;
@@ -165,8 +164,7 @@ public class ClientModEvents {
         // WHY：原版 1.21.1 的 overrides[].predicate 只有 (ResourceLocation, float) 一种类型，
         // 没有字符串/枚举谓词，判定又是 "value >= threshold" 且 ItemOverrides 倒序遍历数组，
         // 所以多谓词覆盖**无法表达弹种的互斥取值**（弹药种类 N 也会同时满足种类 M 的阈值）。
-        // 弹种差异一律走客户端渲染（见 TorpedoItem.getIconBadgeColor 与 WeaponReloadDecorator），
-        // 不要在模型层用浮点魔法数字区分。
+        // 目前物品图标只通过 loaded 谓词切换空膛/装填两态；弹种差异不在模型层用浮点魔法数字区分。
         event.enqueueWork(() -> {
             // 为所有 AircraftItem 实例注册 "fueled" 属性（包括命名变体）
             for (var entry : ModItems.ITEMS.getEntries()) {
@@ -178,10 +176,9 @@ public class ClientModEvents {
                                     ? 1.0f : 0.0f);
                 }
                 if (entry.get() instanceof com.piranport.item.AircraftItem) {
-                    ItemProperties.register(entry.get(), fueled, (stack, level, entity, seed) -> {
-                        AircraftInfo info = stack.get(ModDataComponents.AIRCRAFT_INFO.get());
-                        return (info != null && info.currentFuel() > 0) ? 1.0f : 0.0f;
-                    });
+                    ItemProperties.register(entry.get(), fueled, (stack, level, entity, seed) ->
+                            com.piranport.aviation.AircraftDefinitionService.stateOf(stack).currentFuel() > 0
+                                    ? 1.0f : 0.0f);
                 }
                 // 为所有火炮和发射器（鱼雷/导弹/火箭）注册 "loaded" 属性。
                 // 判定依据是 LOADED_AMMO 数据组件，而非某种物品子类特有的状态，
@@ -231,7 +228,6 @@ public class ClientModEvents {
     @SubscribeEvent
     public static void registerKeyMappings(RegisterKeyMappingsEvent event) {
         event.register(ModKeyMappings.FIRE_CONTROL_SELECT);
-        event.register(ModKeyMappings.TOGGLE_FIGHTER_GROUND_ATTACK);
         event.register(ModKeyMappings.TOGGLE_AUTO_LAUNCH);
         event.register(ModKeyMappings.MANUAL_RELOAD);
         event.register(ModKeyMappings.SWITCH_AMMO);
@@ -352,7 +348,7 @@ public class ClientModEvents {
         // 副本运输机（炮击开场脚本）
         event.registerEntityRenderer(ModEntityTypes.DUNGEON_TRANSPORT_PLANE.get(),
                 com.piranport.client.DungeonTransportPlaneRenderer::new);
-        // 副本实体（目前使用 NoopRenderer——视觉效果通过 tick() 中的粒子实现）
+        // 副本出口传送门：实体只做隐形触发与多门去向文字，视觉主体是方块门框 + tick() 粒子
         event.registerEntityRenderer(ModEntityTypes.DUNGEON_PORTAL.get(),
                 com.piranport.dungeon.client.DungeonPortalRenderer::new);
         event.registerEntityRenderer(ModEntityTypes.LOOT_SHIP.get(),

@@ -33,29 +33,29 @@ public class TorpedoItem extends Item {
 
     public TorpedoItem(Properties properties, int caliber) {
         this(properties, caliber, caliber >= 610 ? 28f : 18f,
-                60, caliber >= 610 ? 1.0f : 1.0f, false, false, false, false);
+                60, 0.3f, false, false, false, false);
     }
 
     public TorpedoItem(Properties properties, int caliber, boolean magnetic) {
         this(properties, caliber, caliber >= 610 ? 28f : 18f,
-                60, caliber >= 610 ? 1.0f : 1.0f, magnetic, false, false, false);
+                60, 0.3f, magnetic, false, false, false);
     }
 
     public TorpedoItem(Properties properties, int caliber, boolean magnetic, boolean wireGuided) {
         this(properties, caliber, caliber >= 610 ? 28f : 18f,
-                60, caliber >= 610 ? 1.0f : 1.0f, magnetic, wireGuided, false, false);
+                60, 0.3f, magnetic, wireGuided, false, false);
     }
 
     public TorpedoItem(Properties properties, int caliber, boolean magnetic, boolean wireGuided, boolean acoustic) {
         this(properties, caliber, caliber >= 610 ? 28f : 18f,
-                60, acoustic ? 0.7f : (caliber >= 610 ? 1.0f : 1.0f),
+                60, 0.3f,
                 magnetic, wireGuided, acoustic, false);
     }
 
     public TorpedoItem(Properties properties, int caliber, boolean magnetic, boolean wireGuided,
                        boolean acoustic, boolean oxygen) {
         this(properties, caliber, caliber >= 610 ? 28f : 18f,
-                60, acoustic ? 0.7f : (caliber >= 610 ? 1.0f : 1.0f),
+                60, 0.3f,
                 magnetic, wireGuided, acoustic, oxygen);
     }
 
@@ -65,30 +65,30 @@ public class TorpedoItem extends Item {
      * WHY 需要这一组：上面的简写构造器只传口径/制导标志，跑完参数后 modelKey 落到 null，
      * 于是这些型号在调试终端里根本不可覆盖。注册点本来就知道自己的注册名，
      * 让它把 ID 写在末尾，比让每个注册点展开成 10 参的完整构造器短得多也好读。
-     * 基准航速必须与上面同签名构造器保持一致（口径 610 及以上 28 伤害，声自导 0.7 速），
+     * 基准航速必须与上面同签名构造器保持一致（口径 610 及以上 28 伤害，航速统一 0.3 格/tick），
      * 否则同一个型号「有没有传 ID」会算出两种航速。
      */
 
     public TorpedoItem(Properties properties, int caliber, @Nullable String modelKey) {
         this(properties, caliber, caliber >= 610 ? 28f : 18f,
-                60, 1.0f, false, false, false, false, modelKey);
+                60, 0.3f, false, false, false, false, modelKey);
     }
 
     public TorpedoItem(Properties properties, int caliber, boolean magnetic, @Nullable String modelKey) {
         this(properties, caliber, caliber >= 610 ? 28f : 18f,
-                60, 1.0f, magnetic, false, false, false, modelKey);
+                60, 0.3f, magnetic, false, false, false, modelKey);
     }
 
     public TorpedoItem(Properties properties, int caliber, boolean magnetic, boolean wireGuided,
                        @Nullable String modelKey) {
         this(properties, caliber, caliber >= 610 ? 28f : 18f,
-                60, 1.0f, magnetic, wireGuided, false, false, modelKey);
+                60, 0.3f, magnetic, wireGuided, false, false, modelKey);
     }
 
     public TorpedoItem(Properties properties, int caliber, boolean magnetic, boolean wireGuided,
                        boolean acoustic, @Nullable String modelKey) {
         this(properties, caliber, caliber >= 610 ? 28f : 18f,
-                60, acoustic ? 0.7f : 1.0f, magnetic, wireGuided, acoustic, false, modelKey);
+                60, 0.3f, magnetic, wireGuided, acoustic, false, modelKey);
     }
 
     public TorpedoItem(Properties properties, int caliber, float damage, int range, float speed,

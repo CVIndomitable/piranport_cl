@@ -69,7 +69,7 @@ public class DungeonResultScreen extends Screen {
         super.render(gfx, mouseX, mouseY, partialTick);
 
         // 所有文字放在最终 GUI pass（super.render 之后）：部分客户端会在控件层之前
-        // 插入模糊/后处理，先画的文字会被一起虚化。与 Revive / TownScroll 屏幕保持一致。
+        // 插入模糊/后处理，先画的文字会被一起虚化。与 TownScroll 屏幕保持一致。
         gfx.drawCenteredString(font,
                 Component.translatable("gui.piranport.dungeon_result.clear"),
                 cx, cy - 60, 0xFFFFD700);

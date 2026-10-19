@@ -10,6 +10,7 @@ import com.piranport.combat.AASilenceManager;
 import com.piranport.combat.AutoModeState;
 import com.piranport.combat.CombatTargeting;
 import com.piranport.combat.TransformationManager;
+import com.piranport.ammo.CreativeAmmoCache;
 import com.piranport.component.FuelData;
 import com.piranport.config.ModCommonConfig;
 
@@ -21,6 +22,7 @@ import com.piranport.item.RadarItem;
 import com.piranport.item.ShipCoreItem;
 import com.piranport.item.ShipCoreCombat;
 import com.piranport.registry.ModDataComponents;
+import com.piranport.registry.ModItems;
 import com.piranport.registry.ModMobEffects;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
@@ -486,7 +488,9 @@ public class PlayerTickHandler {
             if (!TransformationManager.isTransformed(coreStack)) {
                 FuelData fuel = coreStack.getOrDefault(ModDataComponents.SHIP_CORE_FUEL.get(),
                         new FuelData(0, ((ShipCoreItem) coreStack.getItem()).getShipType().effectiveFuelCapacity()));
-                if (fuel.isEmpty()) {
+                // 弹药库勾选了燃料：视为无限燃料，空油箱也允许变身（下一 tick 会补满）。
+                boolean infiniteFuel = CreativeAmmoCache.isInfinite(player, ModItems.FUEL.get());
+                if (fuel.isEmpty() && !infiniteFuel) {
                     // 燃料不足提示（聊天框 + 动作栏）
                     Integer cached = lastWeaponLoad.get(player.getUUID());
                     if (cached == null || cached != -999) {
@@ -565,6 +569,21 @@ public class PlayerTickHandler {
     private static void tickFuelConsumption(Player player) {
         // 性能优化：每5tick计算一次燃料消耗
         if (player.tickCount % 5 != 0) return;
+
+        // 弹药库勾选燃料：不消耗，并把油箱维持满格（避免 HUD 显示 0 油）。
+        if (CreativeAmmoCache.isInfinite(player, ModItems.FUEL.get())) {
+            ItemStack core = TransformationManager.findTransformedCore(player);
+            if (core.getItem() instanceof ShipCoreItem sci) {
+                FuelData fuel = core.getOrDefault(ModDataComponents.SHIP_CORE_FUEL.get(),
+                        new FuelData(0, sci.getShipType().effectiveFuelCapacity()));
+                if (!fuel.isFull()) {
+                    core.set(ModDataComponents.SHIP_CORE_FUEL.get(),
+                            fuel.withCurrentFuel(fuel.maxFuel()));
+                    TransformationManager.writeCoreToConfiguredSlot(player, core);
+                }
+            }
+            return;
+        }
 
         UUID uuid = player.getUUID();
         Vec3 currentPos = player.position();

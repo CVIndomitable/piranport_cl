@@ -54,8 +54,7 @@ public class DungeonHudLayer implements LayeredDraw.Layer {
     }
 
     /**
-     * 整合版 P3 修复：仅当服务端明确通知（DungeonStatePayload / PlayerDiedInDungeonPayload /
-     * DungeonResultPayload 等）时才清；不在 render 里调用，避免每帧清除的隐性 bug。
+     * 整合版 P3 修复：仅当服务端明确通知（DungeonStatePayload / DungeonResultPayload 等）时才清；不在 render 里调用，避免每帧清除的隐性 bug。
      */
     public static void clearDungeonState() {
         inDungeon = false;

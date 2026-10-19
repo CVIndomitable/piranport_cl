@@ -1,0 +1,45 @@
+package com.piranport.aviation;
+
+import java.util.Locale;
+import java.util.Set;
+
+/**
+ * 服务端与客户端共享的视觉 ID 白名单。
+ *
+ * <p>数据加载阶段用它做硬校验：未知 {@code visual_id} 直接让定义加载失败，
+ * 不再静默回退到 F4F。客户端 {@code AircraftVisualRegistry} 只负责把白名单里的
+ * ID 映射到具体模型/贴图；新增模型时必须同时在这里和客户端注册表登记。
+ */
+public final class AircraftVisualIds {
+    public static final String B25 = "b25";
+    public static final String F4F = "f4f";
+    public static final String FIGHTER = "fighter";
+    public static final String ROCKET_FIGHTER = "rocket_fighter";
+    public static final String DIVE_BOMBER = "dive_bomber";
+    public static final String LEVEL_BOMBER = "level_bomber";
+    public static final String TORPEDO_BOMBER = "torpedo_bomber";
+    public static final String ASW = "asw";
+    public static final String RECON = "recon";
+
+    private static final Set<String> KNOWN = Set.of(
+            B25, F4F, FIGHTER, ROCKET_FIGHTER, DIVE_BOMBER,
+            LEVEL_BOMBER, TORPEDO_BOMBER, ASW, RECON);
+
+    private AircraftVisualIds() {}
+
+    /** 规范化：去空白、小写、去掉本模组命名空间前缀。 */
+    public static String normalize(String visualId) {
+        if (visualId == null || visualId.isBlank()) return "";
+        String value = visualId.trim().toLowerCase(Locale.ROOT);
+        if (value.startsWith("piranport:")) value = value.substring("piranport:".length());
+        return value;
+    }
+
+    public static boolean isKnown(String visualId) {
+        return KNOWN.contains(normalize(visualId));
+    }
+
+    public static Set<String> known() {
+        return KNOWN;
+    }
+}

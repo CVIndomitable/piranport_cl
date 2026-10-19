@@ -5,6 +5,7 @@ import com.piranport.network.CannonImpactEffectPayload;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvent;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 
@@ -101,6 +102,9 @@ class NoopClientBridge implements ClientBridge {
     public void openTownScrollScreen() {  }
 
     @Override
+    public void openCreativeAmmoCacheScreen(InteractionHand hand) {  }
+
+    @Override
     public void openDungeonResultScreen(String stageName, long timeMillis, boolean isFirstClear, List<String> rewardNames) {  }
 
     @Override
@@ -110,9 +114,6 @@ class NoopClientBridge implements ClientBridge {
     @Override
     public void openDungeonResultScreen(String stageName, long timeMillis, boolean isFirstClear,
                                         List<String> rewardNames, int kills, String ending) {  }
-
-    @Override
-    public void openDungeonReviveScreen() {  }
 
     @Override
     public void updateDungeonNode(String nodeId) {  }

@@ -116,8 +116,7 @@ public class ClientInputCoordinator {
         // 4) 火控按键 (鼠标中键)
         FireControlInputHandler.handleFireControlKeys(mc, transformed, inReconMode);
 
-        // 5) 功能键 (U/H/R)
-        FireControlInputHandler.handleFighterGroundAttackKey(mc, transformed, inReconMode);
+        // 5) 功能键 (H/R)
         FireControlInputHandler.handleAutoLaunchKey(mc, transformed, inReconMode);
         FireControlInputHandler.handleManualReloadKey(mc, transformed, inReconMode);
 

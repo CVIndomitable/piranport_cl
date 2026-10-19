@@ -1,180 +1,224 @@
 package com.piranport.aviation;
 
-import com.piranport.component.AircraftInfo;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.StringRepresentable;
+import org.jetbrains.annotations.Nullable;
 
+import java.util.Locale;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
- * 飞机的静态定义快照。定义只描述一架机型的能力与基础数值，不保存某一架飞机的燃油、装填或目标。
+ * 飞机的静态定义。定义只描述一架机型的能力与基础数值，不保存某一架飞机的燃油、装填或目标。
+ *
+ * <p>定义 ID 就是飞机物品的注册名（例如 {@code piranport:seafire}），不再有
+ * “物品名 / canonical 名 / 旧机种名”三套身份。数据文件路径为
+ * {@code data/<namespace>/aircraft/<path>.json}，加载时据此生成 ID。
+ *
+ * <p>侦察机（{@link AircraftClass#RECON}）不声明 {@code attack_profile}，
+ * 也不允许挂载；其余机种必须声明攻击配置。
  */
 public record AircraftDefinition(
-        String id,
-        AircraftInfo.AircraftType aircraftClass,
-        AttackProfile attackProfile,
-        PayloadType payloadType,
+        ResourceLocation id,
+        AircraftClass aircraftClass,
+        @Nullable AttackProfile attackProfile,
+        @Nullable ResourceLocation payloadItem,
         String visualId,
         int fuelCapacity,
         int ammoCapacity,
         float panelDamage,
         float panelSpeed,
         int weight,
-        AircraftInfo.BombingMode bombingMode,
         int health,
-        int attackCooldown
+        int attackCooldown,
+        @Nullable SelfDefense selfDefense
 ) {
-    /** Compatibility constructor for existing callers and legacy definitions. */
-    public AircraftDefinition(String id, AircraftInfo.AircraftType aircraftClass,
-                              AttackProfile attackProfile, PayloadType payloadType,
-                              String visualId, int fuelCapacity, int ammoCapacity,
-                              float panelDamage, float panelSpeed, int weight,
-                              AircraftInfo.BombingMode bombingMode) {
-        this(id, aircraftClass, attackProfile, payloadType, visualId, fuelCapacity, ammoCapacity,
-                panelDamage, panelSpeed, weight, bombingMode, legacyHealth(aircraftClass),
-                legacyCooldown(aircraftClass));
-    }
-
     public AircraftDefinition {
-        id = requireId(id);
+        Objects.requireNonNull(id, "id");
         Objects.requireNonNull(aircraftClass, "aircraftClass");
-        Objects.requireNonNull(attackProfile, "attackProfile");
-        Objects.requireNonNull(payloadType, "payloadType");
-        visualId = requireId(visualId);
-        Objects.requireNonNull(bombingMode, "bombingMode");
+        if (visualId == null || visualId.isBlank()) {
+            throw new IllegalArgumentException("visual_id is required for " + id);
+        }
+        visualId = AircraftVisualIds.normalize(visualId);
+        if (!AircraftVisualIds.isKnown(visualId)) {
+            throw new IllegalArgumentException("unknown visual_id '" + visualId + "' for " + id
+                    + "; known ids: " + AircraftVisualIds.known());
+        }
         if (fuelCapacity < 1 || ammoCapacity < 0 || weight < 0 || health < 1 || attackCooldown < 1) {
-            throw new IllegalArgumentException("aircraft capacities and weight must be non-negative");
+            throw new IllegalArgumentException("invalid capacities/health/cooldown for " + id);
         }
         if (!Float.isFinite(panelDamage) || panelDamage < 0.0F) {
-            throw new IllegalArgumentException("panelDamage must be finite and non-negative");
+            throw new IllegalArgumentException("panel_damage must be finite and non-negative for " + id);
         }
         if (!Float.isFinite(panelSpeed) || panelSpeed <= 0.0F) {
-            throw new IllegalArgumentException("panelSpeed must be finite and positive");
+            throw new IllegalArgumentException("panel_speed must be finite and positive for " + id);
         }
-        validateCombination(aircraftClass, attackProfile, payloadType, id);
+        if (selfDefense != null && aircraftClass == AircraftClass.RECON) {
+            throw new IllegalArgumentException("recon aircraft must not declare self_defense: " + id);
+        }
+        validateCombination(id, aircraftClass, attackProfile, payloadItem);
     }
 
-    /** 从旧 AircraftInfo 生成迁移期定义；旧数值保持原样，避免本阶段改变平衡。 */
-    public static AircraftDefinition fromLegacy(String id, AircraftInfo info) {
-        Objects.requireNonNull(info, "info");
-        AircraftInfo.AircraftType type = info.aircraftType();
-        AttackProfile profile = AttackProfile.from(type, info.bombingMode());
-        PayloadType payload = PayloadType.from(type);
-        return new AircraftDefinition(id, type, profile, payload, type.getSerializedName(),
-                info.fuelCapacity(), info.ammoCapacity(), info.panelDamage(), info.panelSpeed(),
-                info.weight(), info.bombingMode(), legacyHealth(type), legacyCooldown(type));
-    }
+    /** 静态定义的 JSON 形状；id 来自文件路径，不写在 JSON 里。 */
+    public record JsonDefinition(
+            AircraftClass aircraftClass,
+            Optional<AttackProfile> attackProfile,
+            Optional<ResourceLocation> payloadItem,
+            String visualId,
+            int fuelCapacity,
+            int ammoCapacity,
+            float panelDamage,
+            float panelSpeed,
+            int weight,
+            int health,
+            int attackCooldown,
+            Optional<SelfDefense> selfDefense
+    ) {
+        public static final Codec<JsonDefinition> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+                AircraftClass.CODEC.fieldOf("aircraft_class").forGetter(JsonDefinition::aircraftClass),
+                AttackProfile.CODEC.optionalFieldOf("attack_profile")
+                        .forGetter(JsonDefinition::attackProfile),
+                ResourceLocation.CODEC.optionalFieldOf("payload_item").forGetter(JsonDefinition::payloadItem),
+                Codec.STRING.fieldOf("visual_id").forGetter(JsonDefinition::visualId),
+                Codec.intRange(1, 100_000).fieldOf("fuel_capacity").forGetter(JsonDefinition::fuelCapacity),
+                Codec.intRange(0, 100_000).fieldOf("ammo_capacity").forGetter(JsonDefinition::ammoCapacity),
+                Codec.FLOAT.fieldOf("panel_damage").forGetter(JsonDefinition::panelDamage),
+                Codec.FLOAT.fieldOf("panel_speed").forGetter(JsonDefinition::panelSpeed),
+                Codec.intRange(0, 100_000).fieldOf("weight").forGetter(JsonDefinition::weight),
+                Codec.intRange(1, 100_000).fieldOf("health").forGetter(JsonDefinition::health),
+                Codec.intRange(1, 12_000).fieldOf("attack_cooldown").forGetter(JsonDefinition::attackCooldown),
+                SelfDefense.CODEC.optionalFieldOf("self_defense").forGetter(JsonDefinition::selfDefense)
+        ).apply(instance, JsonDefinition::new));
 
-    private static int legacyHealth(AircraftInfo.AircraftType type) {
-        return switch (type) {
-            case FIGHTER -> 20;
-            case ROCKET_FIGHTER -> 20;
-            case DIVE_BOMBER -> 15;
-            case LEVEL_BOMBER -> 12;
-            case TORPEDO_BOMBER -> 15;
-            case ASW -> 12;
-            case RECON -> 10;
-        };
-    }
+        public AircraftDefinition withId(ResourceLocation id) {
+            return new AircraftDefinition(id, aircraftClass, attackProfile.orElse(null),
+                    payloadItem.orElse(null),
+                    visualId, fuelCapacity, ammoCapacity, panelDamage, panelSpeed, weight,
+                    health, attackCooldown, selfDefense.orElse(null));
+        }
 
-    private static int legacyCooldown(AircraftInfo.AircraftType type) {
-        return switch (type) {
-            case FIGHTER -> 5;
-            case ROCKET_FIGHTER -> 40;
-            case DIVE_BOMBER, LEVEL_BOMBER -> 1;
-            case TORPEDO_BOMBER -> 40;
-            case ASW -> 30;
-            case RECON -> 1;
-        };
-    }
-
-    public String payloadRegistryName() {
-        return payloadType.registryName;
+        public static JsonDefinition from(AircraftDefinition definition) {
+            return new JsonDefinition(definition.aircraftClass(),
+                    Optional.ofNullable(definition.attackProfile()),
+                    Optional.ofNullable(definition.payloadItem()), definition.visualId(),
+                    definition.fuelCapacity(), definition.ammoCapacity(), definition.panelDamage(),
+                    definition.panelSpeed(), definition.weight(), definition.health(),
+                    definition.attackCooldown(), Optional.ofNullable(definition.selfDefense()));
+        }
     }
 
     /** Whether this definition consumes a manually loaded payload before launch. */
     public boolean requiresPayload() {
-        // Rocket fighters carry their rockets as the aircraft's own ammunition.
-        // Keep their historical launch path: R only refuels them, while the
-        // rocket salvo consumes ammoCapacity during combat.
-        return payloadType != PayloadType.NONE && payloadType != PayloadType.ROCKET_AMMO;
+        return payloadItem != null;
     }
 
     /** Whether the aircraft uses the ordinary fighter gun targeting path. */
     public boolean usesGunAttack() {
+        return attackProfile == AttackProfile.GUN || attackProfile == AttackProfile.ROCKET;
+    }
+
+    /** 仅普通机枪战斗机（火箭机的自主索敌走对地目标，不走空优目标）。 */
+    public boolean isGunFighter() {
         return attackProfile == AttackProfile.GUN;
     }
 
     /** Whether the aircraft is treated as an air-to-air/rocket fighter at launch. */
     public boolean usesBulletAttack() {
-        return attackProfile == AttackProfile.GUN || attackProfile == AttackProfile.ROCKET;
+        return usesGunAttack();
     }
 
-    public boolean hasPayload() {
-        return payloadType != PayloadType.NONE;
+    /** Whether the aircraft is a pure attack aircraft (payload, no guns). */
+    public boolean isPayloadAttacker() {
+        return !usesGunAttack() && requiresPayload();
     }
 
-    private static void validateCombination(AircraftInfo.AircraftType aircraftClass,
-                                             AttackProfile attackProfile,
-                                             PayloadType payloadType,
-                                             String id) {
-        boolean valid = switch (aircraftClass) {
-            case FIGHTER -> attackProfile == AttackProfile.GUN || attackProfile == AttackProfile.NONE;
-            case ROCKET_FIGHTER -> attackProfile == AttackProfile.ROCKET;
-            case DIVE_BOMBER -> attackProfile == AttackProfile.DIVE_BOMB && payloadType == PayloadType.AERIAL_BOMB;
-            case LEVEL_BOMBER -> attackProfile == AttackProfile.LEVEL_BOMB && payloadType == PayloadType.AERIAL_BOMB;
-            case TORPEDO_BOMBER -> attackProfile == AttackProfile.TORPEDO && payloadType == PayloadType.AERIAL_TORPEDO;
-            case ASW -> attackProfile == AttackProfile.DEPTH_CHARGE && payloadType == PayloadType.DEPTH_CHARGE;
-            case RECON -> (attackProfile == AttackProfile.NONE || attackProfile == AttackProfile.RECON)
-                    && payloadType == PayloadType.NONE;
-        };
+    public boolean isRecon() {
+        // 侦察机由机种判定：侦察机不声明攻击配置
+        return aircraftClass == AircraftClass.RECON;
+    }
+
+    public boolean hasSonar() {
+        return attackProfile == AttackProfile.DEPTH_CHARGE;
+    }
+
+    private static void validateCombination(ResourceLocation id, AircraftClass aircraftClass,
+                                            @Nullable AttackProfile attackProfile,
+                                            @Nullable ResourceLocation payloadItem) {
+        if (aircraftClass == AircraftClass.RECON) {
+            // 侦察机不声明攻击配置，也不允许挂载
+            if (attackProfile == null && payloadItem == null) {
+                return;
+            }
+            throw invalidCombination(id, aircraftClass, attackProfile, payloadItem);
+        }
+        boolean valid = attackProfile != null && (switch (aircraftClass) {
+            case FIGHTER -> (attackProfile == AttackProfile.GUN || attackProfile == AttackProfile.NONE)
+                    && payloadItem == null;
+            case ROCKET_FIGHTER -> attackProfile == AttackProfile.ROCKET && payloadItem == null;
+            case DIVE_BOMBER -> attackProfile == AttackProfile.DIVE_BOMB
+                    && isPayload(payloadItem, "aerial_bomb");
+            case LEVEL_BOMBER -> attackProfile == AttackProfile.LEVEL_BOMB
+                    && isPayload(payloadItem, "aerial_bomb");
+            case TORPEDO_BOMBER -> attackProfile == AttackProfile.TORPEDO
+                    && isPayload(payloadItem, "aerial_torpedo");
+            case ASW -> attackProfile == AttackProfile.DEPTH_CHARGE
+                    && isPayload(payloadItem, "depth_charge");
+            case RECON -> false; // 已在方法开头处理，这里仅为穷尽枚举
+        });
         if (!valid) {
-            throw new IllegalArgumentException("invalid aircraft definition combination: " + id);
+            throw invalidCombination(id, aircraftClass, attackProfile, payloadItem);
         }
     }
 
-    private static String requireId(String value) {
-        if (value == null || value.isBlank() || value.indexOf(' ') >= 0) {
-            throw new IllegalArgumentException("aircraft IDs must be non-blank and contain no spaces");
-        }
-        return value;
+    private static IllegalArgumentException invalidCombination(ResourceLocation id,
+                                                              AircraftClass aircraftClass,
+                                                              @Nullable AttackProfile attackProfile,
+                                                              @Nullable ResourceLocation payloadItem) {
+        return new IllegalArgumentException("invalid aircraft definition combination for " + id
+                + ": class=" + aircraftClass.getSerializedName()
+                + ", profile=" + (attackProfile == null ? "null" : attackProfile.id())
+                + ", payload=" + payloadItem);
     }
 
-    public enum AttackProfile {
+    private static boolean isPayload(@Nullable ResourceLocation payloadItem, String expectedPath) {
+        return payloadItem != null
+                && "piranport".equals(payloadItem.getNamespace())
+                && expectedPath.equals(payloadItem.getPath());
+    }
+
+    public enum AttackProfile implements StringRepresentable {
         NONE("none"), GUN("gun"), ROCKET("rocket"), DIVE_BOMB("dive_bomb"),
-        LEVEL_BOMB("level_bomb"), TORPEDO("torpedo"), DEPTH_CHARGE("depth_charge"), RECON("recon");
+        LEVEL_BOMB("level_bomb"), TORPEDO("torpedo"), DEPTH_CHARGE("depth_charge");
+
+        public static final Codec<AttackProfile> CODEC =
+                StringRepresentable.fromEnum(AttackProfile::values);
 
         private final String id;
-        AttackProfile(String id) { this.id = id; }
-        public String id() { return id; }
 
-        static AttackProfile from(AircraftInfo.AircraftType type, AircraftInfo.BombingMode mode) {
-            return switch (type) {
-                case FIGHTER -> GUN;
-                case ROCKET_FIGHTER -> ROCKET;
-                case DIVE_BOMBER -> DIVE_BOMB;
-                case LEVEL_BOMBER -> LEVEL_BOMB;
-                case TORPEDO_BOMBER -> TORPEDO;
-                case ASW -> DEPTH_CHARGE;
-                case RECON -> RECON;
-            };
+        AttackProfile(String id) {
+            this.id = id;
         }
-    }
 
-    public enum PayloadType {
-        NONE(""), AERIAL_TORPEDO("piranport:aerial_torpedo"), AERIAL_BOMB("piranport:aerial_bomb"),
-        DEPTH_CHARGE("piranport:depth_charge"), ROCKET_AMMO("piranport:rocket_ammo");
+        @Override
+        public String getSerializedName() {
+            return id;
+        }
 
-        private final String registryName;
-        PayloadType(String registryName) { this.registryName = registryName; }
-        public String registryName() { return registryName; }
+        public String id() {
+            return id;
+        }
 
-        static PayloadType from(AircraftInfo.AircraftType type) {
-            return switch (type) {
-                case TORPEDO_BOMBER -> AERIAL_TORPEDO;
-                case DIVE_BOMBER, LEVEL_BOMBER -> AERIAL_BOMB;
-                case ASW -> DEPTH_CHARGE;
-                case ROCKET_FIGHTER -> ROCKET_AMMO;
-                default -> NONE;
-            };
+        public static AttackProfile byId(String value) {
+            if (value == null || value.isBlank()) return null;
+            String normalized = value.trim().toLowerCase(Locale.ROOT);
+            for (AttackProfile candidate : values()) {
+                if (candidate.id.equals(normalized) || candidate.name().equalsIgnoreCase(normalized)) {
+                    return candidate;
+                }
+            }
+            return null;
         }
     }
 }

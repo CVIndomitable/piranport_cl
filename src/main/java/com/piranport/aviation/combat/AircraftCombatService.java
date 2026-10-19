@@ -2,63 +2,53 @@ package com.piranport.aviation.combat;
 
 import com.piranport.aviation.AircraftDefinition;
 import com.piranport.entity.AircraftEntity;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
-import java.util.Objects;
-import java.util.Optional;
+import org.jetbrains.annotations.Nullable;
 
-/** 航空战斗入口的迁移适配器；不复制现有攻击逻辑。 */
+import java.util.Objects;
+
+/** 航空战斗入口：按定义里的 attack profile 分发到注册表。 */
 public final class AircraftCombatService {
     private AircraftCombatService() {}
 
     public static AttackStrategy strategyFor(AircraftDefinition definition) {
         Objects.requireNonNull(definition, "definition");
+        // 侦察机的 profile 为 null，注册表兜底返回 NONE 策略，避免 NPE
         return AttackStrategyRegistry.forProfile(definition.attackProfile());
     }
 
-    public static String strategyIdFor(AircraftDefinition definition) { return strategyFor(definition).id(); }
-
-    public static Optional<LivingEntity> resolveTarget(
-            AircraftDefinition definition, TargetProvider provider, TargetProvider.TargetContext context) {
-        Objects.requireNonNull(definition, "definition");
-        Objects.requireNonNull(provider, "provider");
-        Objects.requireNonNull(context, "context");
-        if (!context.definition().id().equals(definition.id())) {
-            throw new IllegalArgumentException("target context definition does not match aircraft definition");
-        }
-        return Optional.ofNullable(provider.findTarget(context));
+    public static String strategyIdFor(AircraftDefinition definition) {
+        return strategyFor(definition).id();
     }
 
     public static boolean supports(AircraftDefinition definition, String strategyId) {
         Objects.requireNonNull(definition, "definition");
-        return AttackStrategyRegistry.byId(strategyId).map(s -> s.supports(definition)).orElse(false);
+        return AttackStrategyRegistry.byId(strategyId)
+                .map(strategy -> strategy.supports(definition))
+                .orElse(false);
     }
 
-    /** Runtime attack entry point; tactical behavior remains in AircraftCombat during migration. */
+    /** 玩家所属飞机的一个攻击 tick。 */
     public static void tickAttacking(AircraftEntity aircraft, Player owner) {
         Objects.requireNonNull(aircraft, "aircraft");
         Objects.requireNonNull(owner, "owner");
-        executeAttacking(definitionFor(aircraft), aircraft, owner);
+        executeAttacking(aircraft.getResolvedDefinition(), aircraft, owner);
     }
 
-    /** Runtime entry point for autonomous aircraft. */
+    /** 自主飞机的一个攻击 tick。 */
     public static void tickAutonomousAttacking(AircraftEntity aircraft) {
         Objects.requireNonNull(aircraft, "aircraft");
-        executeAutonomous(definitionFor(aircraft), aircraft);
+        executeAutonomous(aircraft.getResolvedDefinition(), aircraft);
     }
 
     /** 包级执行 seam，供运行时入口和纯策略测试共用。 */
-    static void executeAttacking(AircraftDefinition definition, AircraftEntity aircraft, Player owner) {
-        strategyFor(definition).execute(aircraft, owner);
+    static void executeAttacking(AircraftDefinition definition, AircraftAttackContext context,
+                                 @Nullable Player owner) {
+        strategyFor(definition).execute(context, owner);
     }
 
     /** 包级执行 seam，供自主飞机入口和纯策略测试共用。 */
-    static void executeAutonomous(AircraftDefinition definition, AircraftEntity aircraft) {
-        strategyFor(definition).executeAutonomous(aircraft);
-    }
-
-    private static AircraftDefinition definitionFor(AircraftEntity aircraft) {
-        // 解析结果缓存在实体上（getResolvedDefinition），热路径不再每 tick 重建。
-        return aircraft.getResolvedDefinition();
+    static void executeAutonomous(AircraftDefinition definition, AircraftAttackContext context) {
+        strategyFor(definition).executeAutonomous(context);
     }
 }

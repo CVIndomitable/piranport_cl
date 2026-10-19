@@ -9,7 +9,6 @@ import com.piranport.dungeon.instance.DungeonInstanceManager;
 import com.piranport.dungeon.instance.NodeBattleField;
 import com.piranport.dungeon.key.DungeonKeyItem;
 import com.piranport.dungeon.network.DungeonResultPayload;
-import com.piranport.dungeon.network.PlayerDiedInDungeonPayload;
 import com.piranport.dungeon.saved.DungeonSavedData;
 import com.piranport.dungeon.script.DungeonScriptManager;
 import com.piranport.registry.ModItems;
@@ -176,11 +175,42 @@ public class DungeonEventHandler {
                     target = mgr.getInstance(instanceId);
                 }
             }
-            teleportToLectern(player, target);
-        }
 
-        // Notify client to open revive screen
-        PacketDistributor.sendToPlayer(player, new PlayerDiedInDungeonPayload());
+            // 2026-10-18：删除复活确认界面。与不死图腾的原版结算一致——背包里有图腾
+            // 就直接消耗并传送回当前节点，不再弹确认框；没有图腾才回讲台。
+            String node = target.getCurrentNode();
+            int totemSlot = findTotemSlot(player);
+            ServerLevel dungeonLevel = getDungeonLevel(player.server);
+            boolean revived = false;
+            if (totemSlot >= 0 && node != null && dungeonLevel != null) {
+                player.getInventory().getItem(totemSlot).shrink(1);
+                BlockPos spawn = target.getNodeSpawnPos(node);
+                player.teleportTo(dungeonLevel,
+                        spawn.getX() + 0.5, spawn.getY(), spawn.getZ() + 0.5,
+                        player.getYRot(), player.getXRot());
+                revived = true;
+            }
+
+            if (!revived) {
+                teleportToLectern(player, target);
+                player.sendSystemMessage(net.minecraft.network.chat.Component.translatable(
+                        totemSlot < 0
+                                ? "dungeon.piranport.revive_no_totem"
+                                : "dungeon.piranport.revive_unavailable"));
+            }
+        } else {
+            player.sendSystemMessage(net.minecraft.network.chat.Component.translatable(
+                    "dungeon.piranport.revive_unavailable"));
+        }
+    }
+
+    /** 背包（含副手）中第一个不死图腾的槽位；没有时返回 -1。 */
+    private static int findTotemSlot(ServerPlayer player) {
+        var inventory = player.getInventory();
+        for (int i = 0; i < inventory.getContainerSize(); i++) {
+            if (inventory.getItem(i).is(Items.TOTEM_OF_UNDYING)) return i;
+        }
+        return -1;
     }
 
     /**

@@ -1,5 +1,6 @@
 package com.piranport.client;
 
+import com.piranport.ammo.CreativeAmmoCache;
 import com.piranport.combat.TransformationManager;
 import com.piranport.component.LoadedAmmo;
 import com.piranport.component.SlotCooldowns;
@@ -9,7 +10,6 @@ import com.piranport.dungeon.client.DungeonContinueScreen;
 import com.piranport.dungeon.client.DungeonHudLayer;
 import com.piranport.dungeon.client.DungeonResultScreen;
 import com.piranport.dungeon.network.ClientDungeonData;
-import com.piranport.dungeon.client.DungeonReviveScreen;
 import com.piranport.dungeon.client.TownScrollScreen;
 import com.piranport.entity.AircraftEntity;
 import com.piranport.item.AircraftItem;
@@ -22,6 +22,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
@@ -204,6 +205,11 @@ public final class ClientItemHooks implements com.piranport.platform.ClientBridg
     }
 
     @Override
+    public void openCreativeAmmoCacheScreen(InteractionHand hand) {
+        Minecraft.getInstance().setScreen(new CreativeAmmoCacheScreen(hand));
+    }
+
+    @Override
     public void openDungeonResultScreen(String stageName, long timeMillis,
                                                 boolean isFirstClear, List<String> rewardNames) {
         openDungeonResultScreen(stageName, timeMillis, isFirstClear, rewardNames, 0);
@@ -231,11 +237,6 @@ public final class ClientItemHooks implements com.piranport.platform.ClientBridg
                 .orElse("战区肃清，航路恢复，舰队返回港口。");
         Minecraft.getInstance().setScreen(new DungeonResultScreen(
                 stageName, timeMillis, isFirstClear, rewardNames, kills, ending));
-    }
-
-    @Override
-    public void openDungeonReviveScreen() {
-        Minecraft.getInstance().setScreen(new DungeonReviveScreen());
     }
 
     @Override
@@ -289,17 +290,32 @@ public final class ClientItemHooks implements com.piranport.platform.ClientBridg
     }
 
     /**
-     * 鱼雷发射器的两项状态：膛内是否已装填，以及现在能否开火。二者判定不同，不能合并。
-     * 开火可以来自背包取弹，但这不代表膛内已装填。
+     * 鱼雷发射器「现在能否开火」。膛内状态已由 {@link TorpedoLauncherItem#appendHoverText} 显示，
+     * 这里不再重复输出装填行，只保留开火判定。
+     *
+     * <p>判定必须与 {@code ShipCoreCombat.fireWeaponAtSlot} 的实际分支一致：
+     * 背包取弹只有在装备了「鱼雷再装填」时才会走 inventory 模式；没有该强化时，
+     * 服务端只认膛内弹药。创造模式下：
+     * <ul>
+     *   <li>装了再装填：无弹也能用默认型号发射；</li>
+     *   <li>没装再装填：手动分支仍可从背包取弹发射。</li>
+     * </ul>
+     * 旧实现只看「膛内已装填 || 背包有雷」，因此在没有再装填强化时也会显示可开火，
+     * 实际扣扳机却提示弹药不足。
      */
-    private static void appendTorpedoStatus(TorpedoLauncherItem launcher, LoadedAmmo loaded,
-                                            Inventory inv, List<Component> tooltip) {
+    private static void appendTorpedoStatus(Player player, ItemStack coreStack, TorpedoLauncherItem launcher,
+                                            LoadedAmmo loaded, Inventory inv, List<Component> tooltip) {
         int tubes = launcher.getTubeCount();
         // hasAmmo() 排除 count>0 但 ammoItemId 为空的脏数据（旧存档/组件编辑）
         boolean chambered = loaded.hasAmmo() && loaded.count() >= tubes;
-        tooltip.add(Component.translatable(chambered ? "tooltip.piranport.weapon_ready" : "tooltip.piranport.weapon_not_loaded")
-                .withStyle(chambered ? ChatFormatting.GREEN : ChatFormatting.RED));
-        boolean canFire = chambered || countInventoryTorpedoes(launcher, inv) >= tubes;
+        boolean creative = player.getAbilities().instabuild;
+        boolean infiniteTorpedo = CreativeAmmoCache.hasInfiniteTorpedo(player, launcher.getCaliber());
+        boolean reloadEquipped = TransformationManager.hasTorpedoReloadEquipped(player, coreStack);
+        boolean inventorySalvo = infiniteTorpedo || countInventoryTorpedoes(launcher, inv) >= tubes;
+        boolean canFire = chambered
+                || infiniteTorpedo
+                || (reloadEquipped && creative)
+                || (inventorySalvo && (creative || reloadEquipped));
         tooltip.add(Component.translatable(canFire ? "tooltip.piranport.torpedo.can_fire" : "tooltip.piranport.torpedo.cannot_fire")
                 .withStyle(canFire ? ChatFormatting.GREEN : ChatFormatting.RED));
     }
@@ -398,7 +414,7 @@ public final class ClientItemHooks implements com.piranport.platform.ClientBridg
         } else if (needsLoadedAmmo) {
             LoadedAmmo loaded = stack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
             if (stack.getItem() instanceof TorpedoLauncherItem tl) {
-                appendTorpedoStatus(tl, loaded, inv, tooltip);
+                appendTorpedoStatus(mc.player, coreStack, tl, loaded, inv, tooltip);
                 return;
             }
             boolean hasAmmo;
@@ -414,7 +430,7 @@ public final class ClientItemHooks implements com.piranport.platform.ClientBridg
         } else if (isAutoReloadMissile) {
             MissileLauncherItem mlCheck = (MissileLauncherItem) stack.getItem();
             Item ammoItem = mlCheck.getAmmoItem();
-            boolean hasAmmoInInventory = false;
+            boolean hasAmmoInInventory = CreativeAmmoCache.isInfinite(mc.player, ammoItem);
             for (ItemStack s : inv.items) {
                 if (!s.isEmpty() && s.is(ammoItem)) {
                     hasAmmoInInventory = true;

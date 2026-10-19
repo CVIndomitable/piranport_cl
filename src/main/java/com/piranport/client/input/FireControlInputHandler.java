@@ -8,7 +8,6 @@ import com.piranport.network.ToggleAutoModePayload;
 import com.piranport.network.FireControlPayload;
 import com.piranport.network.ManualReloadPayload;
 import net.minecraft.world.InteractionHand;
-import com.piranport.network.ToggleFighterGroundAttackPayload;
 import com.piranport.client.ClientGameEvents;
 import com.piranport.client.ModKeyMappings;
 import net.minecraft.client.Minecraft;
@@ -26,7 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 火控按键处理(鼠标中键)和战斗机对地/升空/装填功能键(U/H/R键)。
+ * 火控按键处理(鼠标中键)和升空/装填功能键(H/R键)。
  *
  * <p><b>线程模型</b>: 客户端渲染线程（单线程），无需同步。
  */
@@ -89,15 +88,6 @@ public class FireControlInputHandler {
                         FireControlPayload.FireAction.ADD, target.getUUID()));
             }
             // 不蹲下 + 准心无实体 → 静默，不做任何事（避免误清空）
-        }
-    }
-
-    /** 处理 U 键 — 切换战斗机是否攻击地面目标。 */
-    public static void handleFighterGroundAttackKey(Minecraft mc, boolean transformed, boolean inReconMode) {
-        if (mc.player == null) return;
-        while (ModKeyMappings.TOGGLE_FIGHTER_GROUND_ATTACK.consumeClick()) {
-            if (!transformed || inReconMode) continue;
-            PacketDistributor.sendToServer(new ToggleFighterGroundAttackPayload());
         }
     }
 

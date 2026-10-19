@@ -74,6 +74,18 @@ class PayloadCodecRoundtripTest {
         assertEquals(p, roundtrip(ApplyModificationPayload.STREAM_CODEC, p));
     }
 
+    // ===== AircraftDefinitionSyncPayload =====
+    @Test
+    void aircraftDefinitionSyncRoundtrip() {
+        var definition = new com.piranport.aviation.AircraftDefinition(
+                net.minecraft.resources.ResourceLocation.parse("piranport:seafire"),
+                com.piranport.aviation.AircraftClass.FIGHTER,
+                com.piranport.aviation.AircraftDefinition.AttackProfile.GUN,
+                null, "fighter", 1200, 64, 3.0F, 0.9F, 12, 20, 5, null);
+        AircraftDefinitionSyncPayload p = AircraftDefinitionSyncPayload.fromDefinitions(List.of(definition));
+        assertEquals(p, roundtrip(AircraftDefinitionSyncPayload.STREAM_CODEC, p));
+    }
+
     // ===== AswSonarSyncPayload（含 size 守卫）=====
     @Test
     void aswSonarSyncRoundtrip() {
@@ -292,13 +304,6 @@ class PayloadCodecRoundtripTest {
         UUID uuid = UUID.randomUUID();
         SkinSyncPayload p = new SkinSyncPayload(uuid, 23);
         assertEquals(p, roundtrip(SkinSyncPayload.STREAM_CODEC, p));
-    }
-
-    // ===== ToggleFighterGroundAttackPayload (unit codec，无字段) =====
-    @Test
-    void toggleFighterGroundAttackRoundtrip() {
-        ToggleFighterGroundAttackPayload p = new ToggleFighterGroundAttackPayload();
-        assertEquals(p, roundtrip(ToggleFighterGroundAttackPayload.STREAM_CODEC, p));
     }
 
     // ===== 所有 payload 的 TYPE ID 不应为 null =====

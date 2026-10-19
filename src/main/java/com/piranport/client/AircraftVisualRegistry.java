@@ -1,112 +1,63 @@
 package com.piranport.client;
 
 import com.piranport.PiranPort;
-import com.piranport.aviation.AircraftDefinition;
-import com.piranport.aviation.AircraftDefinitionService;
-import com.piranport.component.AircraftInfo;
+import com.piranport.aviation.AircraftVisualIds;
 import com.piranport.entity.AircraftEntity;
 import net.minecraft.resources.ResourceLocation;
 
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
 /**
- * Client-side mapping from an aircraft definition's visual id to the baked
- * model and texture used by {@link AircraftRenderer}.
+ * 客户端视觉 ID → 模型层/贴图映射。
  *
- * <p>The registry deliberately contains model kinds rather than model
- * instances. Models are baked by the renderer provider after layer
- * registration, while this class remains safe to query during client-side
- * entity rendering and unit tests.</p>
+ * <p>视觉 ID 的白名单在 {@link AircraftVisualIds}（服务端数据加载也用它做硬校验）。
+ * 本类只负责映射，不再根据机种猜模型；未知 ID 会显式记录错误并使用占位视觉，
+ * 数据加载阶段已经会先报错，因此正常运行不会走到这里。
  */
 public final class AircraftVisualRegistry {
-    public static final String B25_VISUAL_ID = "b25";
-    public static final String F4F_VISUAL_ID = "f4f";
-    /** Visual IDs currently backed by the two available aircraft model layers. */
-    public static final String FIGHTER_VISUAL_ID = "fighter";
-    public static final String ROCKET_FIGHTER_VISUAL_ID = "rocket_fighter";
-    public static final String DIVE_BOMBER_VISUAL_ID = "dive_bomber";
-    public static final String LEVEL_BOMBER_VISUAL_ID = "level_bomber";
-    public static final String TORPEDO_BOMBER_VISUAL_ID = "torpedo_bomber";
-    public static final String ASW_VISUAL_ID = "asw";
-    public static final String RECON_VISUAL_ID = "recon";
-
     private static final ResourceLocation B25_TEXTURE =
             ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "textures/entity/b25.png");
     private static final ResourceLocation F4F_TEXTURE =
             ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "textures/entity/f4f.png");
 
     private static final AircraftVisual B25 =
-            new AircraftVisual(B25_VISUAL_ID, ModelKind.B25, B25_TEXTURE);
+            new AircraftVisual(AircraftVisualIds.B25, ModelKind.B25, B25_TEXTURE);
     private static final AircraftVisual F4F =
-            new AircraftVisual(F4F_VISUAL_ID, ModelKind.F4F, F4F_TEXTURE);
+            new AircraftVisual(AircraftVisualIds.F4F, ModelKind.F4F, F4F_TEXTURE);
 
-    /**
-     * Aliases preserve the visual output of entities saved before visual IDs
-     * were introduced. The data-defined IDs are listed explicitly even while
-     * they share the existing B25/F4F placeholder layers; this prevents a new
-     * aircraft definition from silently becoming an unknown visual.
-     */
     private static final Map<String, AircraftVisual> VISUALS = Map.ofEntries(
-            Map.entry(B25_VISUAL_ID, B25),
-            Map.entry(LEVEL_BOMBER_VISUAL_ID, B25),
-            Map.entry(DIVE_BOMBER_VISUAL_ID, B25),
-            Map.entry(TORPEDO_BOMBER_VISUAL_ID, B25),
-            Map.entry(ASW_VISUAL_ID, B25),
-            Map.entry(F4F_VISUAL_ID, F4F),
-            Map.entry(FIGHTER_VISUAL_ID, F4F),
-            Map.entry(ROCKET_FIGHTER_VISUAL_ID, F4F),
-            Map.entry(RECON_VISUAL_ID, F4F));
+            Map.entry(AircraftVisualIds.B25, B25),
+            Map.entry(AircraftVisualIds.LEVEL_BOMBER, B25),
+            Map.entry(AircraftVisualIds.DIVE_BOMBER, B25),
+            Map.entry(AircraftVisualIds.TORPEDO_BOMBER, B25),
+            Map.entry(AircraftVisualIds.ASW, B25),
+            Map.entry(AircraftVisualIds.F4F, F4F),
+            Map.entry(AircraftVisualIds.FIGHTER, F4F),
+            Map.entry(AircraftVisualIds.ROCKET_FIGHTER, F4F),
+            Map.entry(AircraftVisualIds.RECON, F4F));
 
     private AircraftVisualRegistry() {}
 
-    /**
-     * Resolves a data-defined visual id. Namespaced IDs from JSON are accepted
-     * when they use this mod's namespace; unknown IDs use the safe F4F visual.
-     */
+    /** 解析视觉 ID；未知 ID 返回显式占位 F4F 并记录错误。 */
     public static AircraftVisual resolve(String visualId) {
-        return VISUALS.getOrDefault(normalize(visualId), F4F);
+        String normalized = AircraftVisualIds.normalize(visualId);
+        AircraftVisual visual = VISUALS.get(normalized);
+        if (visual != null) return visual;
+        PiranPort.LOGGER.error("Unknown aircraft visual_id '{}'; using placeholder {}", visualId,
+                AircraftVisualIds.F4F);
+        return F4F;
     }
 
-    /** Whether a visual ID is explicitly registered rather than using legacy fallback. */
     public static boolean isRegistered(String visualId) {
-        return VISUALS.containsKey(normalize(visualId));
-    }
-
-    /** Resolves the visual declared by an immutable aircraft definition. */
-    public static AircraftVisual resolve(AircraftDefinition definition) {
-        return definition == null ? F4F : resolve(definition.visualId());
+        return VISUALS.containsKey(AircraftVisualIds.normalize(visualId));
     }
 
     /**
-     * Resolves an entity's visual definition on the client. Resource-backed
-     * definitions may be unavailable in a client-only resource view, so the
-     * old LEVEL_BOMBER type is retained as a compatibility fallback. When a
-     * definition is present, its visual id always wins and unknown values
-     * therefore fall back to F4F as required.
+     * 实体渲染入口：只读同步过来的 visual_id，不依赖客户端是否加载了服务端数据包。
      */
     public static AircraftVisual resolve(AircraftEntity entity) {
-        if (entity == null) return F4F;
-
-        String definitionId = entity.getAircraftDefinitionId();
-        AircraftDefinition definition = AircraftDefinitionService.find(definitionId);
-        if (definition == null && definitionId != null && !definitionId.isBlank()) {
-            String canonicalId = AircraftDefinitionService.canonicalResourceId(definitionId);
-            if (!canonicalId.equals(definitionId)) {
-                definition = AircraftDefinitionService.find(canonicalId);
-            }
-        }
-        if (definition != null) return resolve(definition);
-
-        // Old entities have no definition snapshot on the client. Preserve
-        // the pre-refactor B25 rendering until those entities are replaced.
-        return resolveLegacyType(entity.getAircraftType());
-    }
-
-    /** Returns the fallback visual used for legacy entities without a definition. */
-    public static AircraftVisual resolveLegacyType(AircraftInfo.AircraftType aircraftType) {
-        return aircraftType == AircraftInfo.AircraftType.LEVEL_BOMBER ? B25 : F4F;
+        return entity == null ? F4F : resolve(entity.getVisualId());
     }
 
     public enum ModelKind {
@@ -116,19 +67,9 @@ public final class AircraftVisualRegistry {
 
     public record AircraftVisual(String id, ModelKind modelKind, ResourceLocation texture) {
         public AircraftVisual {
-            id = normalize(id);
+            id = AircraftVisualIds.normalize(id);
             Objects.requireNonNull(modelKind, "modelKind");
             Objects.requireNonNull(texture, "texture");
         }
-    }
-
-    private static String normalize(String visualId) {
-        if (visualId == null || visualId.isBlank()) return "";
-        String value = visualId.trim().toLowerCase(Locale.ROOT);
-        ResourceLocation parsed = ResourceLocation.tryParse(value);
-        if (parsed != null && PiranPort.MOD_ID.equals(parsed.getNamespace())) {
-            return parsed.getPath();
-        }
-        return value;
     }
 }

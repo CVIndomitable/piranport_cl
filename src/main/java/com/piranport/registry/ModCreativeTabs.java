@@ -457,6 +457,8 @@ public class ModCreativeTabs {
                         output.accept(ModItems.TERRIER_MISSILE.get());
                         output.accept(ModItems.ANTI_AIR_MISSILE.get());
                         output.accept(ModItems.ROCKET_AMMO.get());
+                        // 调试工具：创造模式弹药库
+                        output.accept(ModItems.CREATIVE_AMMO_CACHE.get());
                     }).build());
 
     // ===== 道具 — 工具 / 副本道具 =====

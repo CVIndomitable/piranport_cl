@@ -1,5 +1,6 @@
 package com.piranport.combat.depthcharge;
 
+import com.piranport.ammo.CreativeAmmoCache;
 import com.piranport.combat.TransformationManager;
 import com.piranport.combat.util.CombatFireUtils;
 import com.piranport.config.ModProjectilesConfig;
@@ -46,7 +47,10 @@ public final class DepthChargeFireStrategy {
                 (float) (double) ModProjectilesConfig.DEPTH_CHARGE_EXPLOSION_POWER.get());
 
         LoadedAmmo loaded = launcherStack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
-        if (!player.getAbilities().instabuild && (!loaded.hasAmmo() || loaded.count() < chargeCount)) {
+        // 弹药库勾选深弹时视为无限，不要求发射器预先装填。
+        boolean infinite = CreativeAmmoCache.isInfinite(player, ModItems.DEPTH_CHARGE.get());
+        if (!player.getAbilities().instabuild && !infinite
+                && (!loaded.hasAmmo() || loaded.count() < chargeCount)) {
             player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
             return;
         }

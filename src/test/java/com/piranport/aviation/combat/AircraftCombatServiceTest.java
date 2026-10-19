@@ -1,7 +1,10 @@
 package com.piranport.aviation.combat;
 
+import com.piranport.aviation.AircraftClass;
 import com.piranport.aviation.AircraftDefinition;
-import com.piranport.component.AircraftInfo;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.player.Player;
+import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -23,35 +26,34 @@ class AircraftCombatServiceTest {
     }
 
     @Test
+    void reconWithoutProfileFallsBackToNoneStrategy() {
+        AircraftDefinition recon = new AircraftDefinition(
+                ResourceLocation.parse("piranport:test_recon"),
+                AircraftClass.RECON, null, null, "recon",
+                100, 0, 0.0f, 1.0f, 1, 20, 5, null);
+
+        assertSame(AttackStrategyRegistry.forProfile(AircraftDefinition.AttackProfile.NONE),
+                AircraftCombatService.strategyFor(recon));
+        assertEquals("none", AircraftCombatService.strategyIdFor(recon));
+    }
+
+    @Test
     void customStrategyCanReplaceStableId() {
-        AttackStrategy custom = new AttackStrategy() {
-            @Override public String id() { return "gun"; }
-            @Override public AircraftDefinition.AttackProfile profile() { return AircraftDefinition.AttackProfile.GUN; }
-            @Override public void execute(com.piranport.entity.AircraftEntity a,
-                                          net.minecraft.world.entity.player.Player o) {}
-            @Override public void executeAutonomous(com.piranport.entity.AircraftEntity a) {}
-        };
+        AttackStrategy custom = strategy("gun", AircraftDefinition.AttackProfile.GUN, ctx -> {});
         AttackStrategyRegistry.register(custom);
-        assertSame(custom, AttackStrategyRegistry.byId(" GUN " ).orElseThrow());
+        assertSame(custom, AttackStrategyRegistry.byId(" GUN ").orElseThrow());
         assertSame(custom, AircraftCombatService.strategyFor(definition(AircraftDefinition.AttackProfile.GUN)));
     }
 
     @Test
     void registeredStrategyControlsExecutionThroughService() {
         AtomicBoolean executed = new AtomicBoolean();
-        AttackStrategy custom = new AttackStrategy() {
-            @Override public String id() { return "gun"; }
-            @Override public AircraftDefinition.AttackProfile profile() { return AircraftDefinition.AttackProfile.GUN; }
-            @Override public void execute(com.piranport.entity.AircraftEntity aircraft,
-                                          net.minecraft.world.entity.player.Player owner) {
-                executed.set(true);
-            }
-            @Override public void executeAutonomous(com.piranport.entity.AircraftEntity a) {}
-        };
-        AttackStrategyRegistry.register(custom);
+        AttackStrategyRegistry.register(strategy("gun", AircraftDefinition.AttackProfile.GUN,
+                ctx -> executed.set(true)));
 
         // 使用包级执行 seam，避免为纯分发测试启动 Minecraft 世界。
-        AircraftCombatService.executeAttacking(definition(AircraftDefinition.AttackProfile.GUN), null, null);
+        AircraftCombatService.executeAttacking(
+                definition(AircraftDefinition.AttackProfile.GUN), null, null);
         assertTrue(executed.get());
     }
 
@@ -59,32 +61,53 @@ class AircraftCombatServiceTest {
     void unknownStrategyIsRejectedWithoutChangingRuntimePath() {
         AircraftDefinition definition = definition(AircraftDefinition.AttackProfile.TORPEDO);
         assertFalse(AircraftCombatService.supports(definition, "missing"));
-        assertThrows(IllegalArgumentException.class, () -> new AttackStrategy() {
+        AttackStrategy missing = new AttackStrategy() {
             @Override public String id() { return "missing"; }
-            @Override public void execute(com.piranport.entity.AircraftEntity a,
-                                          net.minecraft.world.entity.player.Player o) {}
-            @Override public void executeAutonomous(com.piranport.entity.AircraftEntity a) {}
-        }.profile());
+            @Override public void execute(@Nullable AircraftAttackContext context,
+                                          @Nullable Player owner) {}
+            @Override public void executeAutonomous(@Nullable AircraftAttackContext context) {}
+        };
+        assertThrows(IllegalArgumentException.class, missing::profile);
+    }
+
+    private static AttackStrategy strategy(String id, AircraftDefinition.AttackProfile profile,
+                                           java.util.function.Consumer<AircraftAttackContext> action) {
+        return new AttackStrategy() {
+            @Override public String id() { return id; }
+            @Override public AircraftDefinition.AttackProfile profile() { return profile; }
+            @Override public void execute(@Nullable AircraftAttackContext context, @Nullable Player owner) {
+                action.accept(context);
+            }
+            @Override public void executeAutonomous(@Nullable AircraftAttackContext context) {}
+        };
     }
 
     private static AircraftDefinition definition(AircraftDefinition.AttackProfile profile) {
-        AircraftInfo.AircraftType type = switch (profile) {
-            case GUN -> AircraftInfo.AircraftType.FIGHTER;
-            case ROCKET -> AircraftInfo.AircraftType.ROCKET_FIGHTER;
-            case DIVE_BOMB -> AircraftInfo.AircraftType.DIVE_BOMBER;
-            case LEVEL_BOMB -> AircraftInfo.AircraftType.LEVEL_BOMBER;
-            case TORPEDO -> AircraftInfo.AircraftType.TORPEDO_BOMBER;
-            case DEPTH_CHARGE -> AircraftInfo.AircraftType.ASW;
-            case RECON, NONE -> AircraftInfo.AircraftType.RECON;
+        AircraftClass type = switch (profile) {
+            case GUN -> AircraftClass.FIGHTER;
+            case ROCKET -> AircraftClass.ROCKET_FIGHTER;
+            case DIVE_BOMB -> AircraftClass.DIVE_BOMBER;
+            case LEVEL_BOMB -> AircraftClass.LEVEL_BOMBER;
+            case TORPEDO -> AircraftClass.TORPEDO_BOMBER;
+            case DEPTH_CHARGE -> AircraftClass.ASW;
+            case NONE -> AircraftClass.FIGHTER;
         };
-        AircraftDefinition.PayloadType payload = switch (type) {
-            case TORPEDO_BOMBER -> AircraftDefinition.PayloadType.AERIAL_TORPEDO;
-            case DIVE_BOMBER, LEVEL_BOMBER -> AircraftDefinition.PayloadType.AERIAL_BOMB;
-            case ASW -> AircraftDefinition.PayloadType.DEPTH_CHARGE;
-            case ROCKET_FIGHTER -> AircraftDefinition.PayloadType.ROCKET_AMMO;
-            default -> AircraftDefinition.PayloadType.NONE;
+        ResourceLocation payload = switch (type) {
+            case TORPEDO_BOMBER -> ResourceLocation.parse("piranport:aerial_torpedo");
+            case DIVE_BOMBER, LEVEL_BOMBER -> ResourceLocation.parse("piranport:aerial_bomb");
+            case ASW -> ResourceLocation.parse("piranport:depth_charge");
+            default -> null;
         };
-        return new AircraftDefinition("test:" + profile.id(), type, profile, payload, "test_visual",
-                100, 8, 4.0f, 1.0f, 1, AircraftInfo.BombingMode.DIVE);
+        String visual = switch (type) {
+            case FIGHTER -> "fighter";
+            case ROCKET_FIGHTER -> "rocket_fighter";
+            case DIVE_BOMBER -> "dive_bomber";
+            case LEVEL_BOMBER -> "level_bomber";
+            case TORPEDO_BOMBER -> "torpedo_bomber";
+            case ASW -> "asw";
+            case RECON -> "recon"; // 当前 profile 不会派生 RECON，仅为穷尽机种
+        };
+        return new AircraftDefinition(ResourceLocation.parse("piranport:test_" + profile.id()),
+                type, profile, payload, visual, 100, 8, 4.0f, 1.0f, 1, 20, 5, null);
     }
 }

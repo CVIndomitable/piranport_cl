@@ -1,5 +1,6 @@
 package com.piranport.combat;
 
+import com.piranport.ammo.CreativeAmmoCache;
 import com.piranport.component.LoadedAmmo;
 import com.piranport.component.SlotCooldowns;
 import com.piranport.component.WeaponCooldown;
@@ -68,10 +69,17 @@ public class ReloadHelper {
                 torpedoType = ti;
             }
         }
+        // 背包里没有实体鱼雷时，使用弹药库勾选的同口径鱼雷（不消耗实体物品）。
+        boolean infinite = false;
+        if (torpedoType == null) {
+            torpedoType = CreativeAmmoCache.findInfiniteTorpedo(player, caliber);
+            infinite = torpedoType != null;
+        }
         if (torpedoType == null) {
             player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
             return;
         }
+        if (!infinite) infinite = CreativeAmmoCache.isInfinite(player, torpedoType);
 
         // 管内残留旧弹种时禁止混装：残留弹的 LoadedAmmo 是按旧 ammoId 记的，
         // 直接覆盖成新弹种会让库存里的旧鱼雷"静默变成"新鱼雷（既不消耗也不退还）。
@@ -98,13 +106,13 @@ public class ReloadHelper {
             }
         }
 
-        if (available < needed) {
+        if (!infinite && available < needed) {
             player.displayClientMessage(Component.translatable("message.piranport.insufficient_same_ammo"), true);
             return;
         }
 
-        // 消耗弹药
-        int toConsume = needed;
+        // 消耗弹药（弹药库勾选的弹种不扣实体物品）
+        int toConsume = infinite ? 0 : needed;
         for (int i = 0; i < inv.items.size() && toConsume > 0; i++) {
             if (i == coreSlot || i == weaponSlot) continue;
             ItemStack s = inv.items.get(i);
@@ -130,7 +138,7 @@ public class ReloadHelper {
         // WHY 只写武器栈的 WEAPON_COOLDOWN、不写船核心栈的 SLOT_COOLDOWNS：
         // ShipCoreCombat 的开火前检查只读 SLOT_COOLDOWNS，写了它会让"刚装填完"的武器被静默拦截
         // 5-7 秒（无任何提示），即玩家报告的"显示装填了但无法发射"。
-        // 保留 WEAPON_COOLDOWN 是为了让 WeaponReloadDecorator 继续画装填进度条、
+        // 保留 WEAPON_COOLDOWN 是为了让 ReloadProgressHudLayer 继续画装填进度条、
         // 并让上面的 already_reloading 分支仍能区分"装填中"与"已装填"。
         int cooldownTicks = TransformationManager.boostedCooldown(player, launcher.getCooldownTicks());
         launcherStack.set(ModDataComponents.WEAPON_COOLDOWN.get(),
@@ -157,12 +165,13 @@ public class ReloadHelper {
             return;
         }
         Item ammo = launcher.getAmmoItem();
+        boolean infinite = CreativeAmmoCache.isInfinite(player, ammo);
         int ammoSlot = findAmmoSlot(inv, ammo, weaponSlot, coreSlot);
-        if (ammoSlot < 0 && !player.getAbilities().instabuild) {
+        if (ammoSlot < 0 && !player.getAbilities().instabuild && !infinite) {
             player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
             return;
         }
-        if (ammoSlot >= 0 && !player.getAbilities().instabuild) {
+        if (ammoSlot >= 0 && !player.getAbilities().instabuild && !infinite) {
             ItemStack source = ammoSlot == 40 ? inv.offhand.get(0) : inv.items.get(ammoSlot);
             com.piranport.testtools.PiranPortTestTools.consumeAmmo(player.getUUID(), source, 1);
         }
@@ -190,12 +199,15 @@ public class ReloadHelper {
         }
         Item ammo = com.piranport.registry.ModItems.DEPTH_CHARGE.get();
         int needed = launcher.getChargeCount();
+        boolean infinite = CreativeAmmoCache.isInfinite(player, ammo);
         int available = countAmmo(inv, ammo, weaponSlot, coreSlot);
-        if (available < needed && !player.getAbilities().instabuild) {
+        if (available < needed && !player.getAbilities().instabuild && !infinite) {
             player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
             return;
         }
-        if (!player.getAbilities().instabuild) consumeAmmo(inv, ammo, needed, weaponSlot, coreSlot, player.getUUID());
+        if (!player.getAbilities().instabuild && !infinite) {
+            consumeAmmo(inv, ammo, needed, weaponSlot, coreSlot, player.getUUID());
+        }
         launcherStack.set(ModDataComponents.LOADED_AMMO.get(), new LoadedAmmo(needed,
                 BuiltInRegistries.ITEM.getKey(ammo).toString()));
         player.level().playSound(null, player.getX(), player.getY(), player.getZ(),

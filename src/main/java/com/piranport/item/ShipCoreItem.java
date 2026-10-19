@@ -2,7 +2,6 @@ package com.piranport.item;
 
 import com.piranport.aviation.FireControlManager;
 import com.piranport.combat.TransformationManager;
-import com.piranport.component.AircraftInfo;
 import com.piranport.component.FuelData;
 import com.piranport.component.LoadedAmmo;
 import com.piranport.component.SelectedAmmoType;

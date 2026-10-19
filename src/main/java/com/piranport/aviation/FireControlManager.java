@@ -2,7 +2,6 @@ package com.piranport.aviation;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -76,26 +75,8 @@ public class FireControlManager {
         return list == null ? List.of() : List.copyOf(list);
     }
 
-    // ===== Fighter Ground-Attack Mode (default OFF = air-only) =====
-    private static final Set<UUID> FIGHTER_GROUND_ENABLED = ConcurrentHashMap.newKeySet();
-
-    /** Toggle fighter ground-attack mode. Returns true if ground attack is now enabled. */
-    public static boolean toggleFighterGround(UUID playerUUID) {
-        if (!FIGHTER_GROUND_ENABLED.remove(playerUUID)) {
-            FIGHTER_GROUND_ENABLED.add(playerUUID);
-            return true;
-        }
-        return false;
-    }
-
-    /** Returns true if the player's fighters should only attack airborne FC targets (default). */
-    public static boolean isFighterAirOnly(UUID playerUUID) {
-        return !FIGHTER_GROUND_ENABLED.contains(playerUUID);
-    }
-
     /** Remove all state (call on server stop / world unload). */
     public static void clearAll() {
         LOCKED_TARGETS.clear();
-        FIGHTER_GROUND_ENABLED.clear();
     }
 }

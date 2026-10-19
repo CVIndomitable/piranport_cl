@@ -21,9 +21,6 @@ public class ModKeyMappings {
             new KeyMapping("key.piranport.fire_control_select",
                     InputConstants.Type.MOUSE, GLFW.GLFW_MOUSE_BUTTON_MIDDLE, CATEGORY);
 
-    public static final KeyMapping TOGGLE_FIGHTER_GROUND_ATTACK =
-            new KeyMapping("key.piranport.toggle_fighter_ground_attack", GLFW.GLFW_KEY_U, CATEGORY);
-
     public static final KeyMapping TOGGLE_AUTO_LAUNCH =
             new KeyMapping("key.piranport.toggle_auto_mode", GLFW.GLFW_KEY_H, CATEGORY);
 

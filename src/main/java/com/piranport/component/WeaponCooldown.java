@@ -8,7 +8,7 @@ import net.minecraft.network.codec.StreamCodec;
 
 /**
  * Stores cooldown state directly on a weapon item.
- * Rendered as a durability-style bar by WeaponReloadDecorator.
+ * Rendered by the hotbar reload bar (ReloadProgressHudLayer).
  */
 public record WeaponCooldown(long endTick, int totalTick) {
 

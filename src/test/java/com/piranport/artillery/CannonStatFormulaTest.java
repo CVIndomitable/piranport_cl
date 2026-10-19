@@ -12,6 +12,7 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -86,6 +87,15 @@ class CannonStatFormulaTest {
             new Row("soviet_triple_460mm_gun", 42, 126, 128.0, 19.69, 96),
             new Row("british_twin_20inch_gun", 49, 98, 187.2, 10.47, 84),
             new Row("us_twin_20inch_gun", 49, 98, 117.0, 16.75, 84)
+    );
+
+    /**
+     * 改型与原型共用同一套 3D 素材（见 ClientModEvents 的 CatalogGunRenderer.Spec）。
+     * 这些 id 的装填态模型应检查基础型号，而不是要求每个改型各有一份 _3d_loaded.json。
+     */
+    private static final Map<String, String> SHARED_3D_MODEL = Map.of(
+            "us_triple_14inch_gun_kai", "us_triple_14inch_gun",
+            "us_twin_16inch_gun_kai", "us_twin_16inch_gun"
     );
 
     @Test
@@ -182,11 +192,17 @@ class CannonStatFormulaTest {
                     json.reloadTime(), 1e-3, e.id());
             String assetRoot = "assets/piranport/models/item/" + e.id();
             assertNotNull(getClass().getClassLoader().getResource(assetRoot + ".json"), "缺少模型 " + e.id());
+
+            // 改型共用原型素材时，3D 模型按原型 id 检查；图标面片仍按自身 id 检查。
+            String modelId = SHARED_3D_MODEL.getOrDefault(e.id(), e.id());
+            String modelRoot = "assets/piranport/models/item/" + modelId;
+            assertNotNull(getClass().getClassLoader().getResource(modelRoot + ".json"),
+                    "缺少 3D 模型 " + modelId);
             // 日本12.7cm连装炮改用 BEWLR + 3D 手持模型（f993c99f），装填态模型名为
             // japanese_127mm_twin_gun_3d_loaded.json，不再有通用的 _loaded.json。
-            boolean hasLoadedModel = getClass().getClassLoader().getResource(assetRoot + "_loaded.json") != null
-                    || getClass().getClassLoader().getResource(assetRoot + "_3d_loaded.json") != null;
-            assertTrue(hasLoadedModel, "缺少装填模型 " + e.id());
+            boolean hasLoadedModel = getClass().getClassLoader().getResource(modelRoot + "_loaded.json") != null
+                    || getClass().getClassLoader().getResource(modelRoot + "_3d_loaded.json") != null;
+            assertTrue(hasLoadedModel, "缺少装填模型 " + modelId);
         }
     }
 }

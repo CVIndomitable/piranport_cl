@@ -1,21 +1,24 @@
 package com.piranport.entity;
 
 import com.piranport.PiranPort;
-import com.piranport.config.ModEquipmentConfig;
-import com.piranport.aviation.FireControlManager;
+import com.piranport.aviation.AircraftClass;
 import com.piranport.aviation.AircraftDefinition;
 import com.piranport.aviation.AircraftDefinitionService;
+import com.piranport.aviation.AircraftIndex;
 import com.piranport.aviation.AircraftStatsService;
-import com.piranport.aviation.combat.AircraftCombatService;
-import com.piranport.aviation.ResolvedAircraftStats;
-import com.piranport.npc.deepocean.AbstractDeepOceanEntity;
-import net.minecraft.core.registries.BuiltInRegistries;
+import com.piranport.aviation.AircraftVisualIds;
 import com.piranport.aviation.ReconManager;
-import com.piranport.component.AircraftAttackMode;
-import com.piranport.component.AircraftInfo;
+import com.piranport.aviation.ResolvedAircraftStats;
+import com.piranport.aviation.combat.AircraftAttackContext;
+import com.piranport.aviation.combat.DiveBombState;
+import com.piranport.aviation.combat.LevelBombState;
+import com.piranport.aviation.combat.TorpedoRunState;
 import com.piranport.item.ExperienceShellItem;
-import com.piranport.network.AswSonarSyncPayload;
+import com.piranport.component.AircraftAttackMode;
+import com.piranport.component.AircraftState;
+import com.piranport.config.ModEquipmentConfig;
 import com.piranport.network.ReconStatePayload;
+import com.piranport.npc.deepocean.AbstractDeepOceanEntity;
 import com.piranport.platform.ClientHooks;
 import com.piranport.registry.ModDataComponents;
 import com.piranport.registry.ModEntityTypes;
@@ -23,13 +26,10 @@ import com.piranport.registry.ModItems;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.animal.WaterAnimal;
-import net.minecraft.world.entity.monster.Guardian;
-import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -39,68 +39,32 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.item.MapItem;
-import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Comparator;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 /**
  * 飞机实体 — 服务端权威控制，客户端插值渲染。
  *
- * 架构导航（维护者阅读入口）：
- *   - 状态机:   tickLaunching → tickCruising → tickAttacking → tickReturning
- *   - 战斗分发: tickAttacking → AircraftCombatService → AttackStrategyRegistry
- *       按 definition.attackProfile 分发到 entity 包内 XxxAttackStrategy 子类；
- *       战术算法在 AircraftCombat（轰炸/鱼雷/机枪），反潜在 AircraftAswRecon。
- *   - 火控:     AircraftCombat.resolveTarget / resolveFighterTarget
- *       （共用 resolveLocked + autoSeek 骨架）；反潜索敌 AircraftAswRecon.resolveASWTarget
- *   - 侦察:     tickReconActive → AircraftAswRecon；区块强加载同处
- *   - 补给/回收: interact 手动补给；AircraftResupply 负责回收返物/自动补给边界
- *   - 防御:     stuck 检测 / 距离限制 / 最大留空时间；setState 走合法转移表断言
- *   - 持久化:   addAdditionalSaveData / readAdditionalSaveData
- *   - 客户端:   lerpTo 重写 + tick() 客户端分支（防镜头抖动）
- *
- * 关键交互面:
- *   - ReconManager（服务端侦察状态）
- *   - FireControlManager（火控锁定）
- *   - AircraftIndex（按 owner UUID 查找飞机）
- *   - AircraftAttackMode（FOCUS / SPREAD / FOLLOW）
- *   - AircraftInfo（从物品 NBT 读取面板伤害/速度/弹药）
+ * <p>本类只持有状态与访问器；飞行主循环在 {@link AircraftFlight}，攻击战术在
+ * {@code aviation.combat.strategy}。静态数值来自数据包定义，创建时解析成
+ * {@link ResolvedAircraftStats} 快照，飞行中热重载不会改变已起飞的飞机。
  */
-public class AircraftEntity extends Entity {
+public class AircraftEntity extends Entity implements AircraftAttackContext {
 
     public enum FlightState {
         LAUNCHING, CRUISING, ATTACKING, RETURNING, REMOVED,
-        RECON_ACTIVE  // Phase 32 — ordinal 5, must remain last
+        RECON_ACTIVE
     }
 
-    /**
-     * 合法飞行状态转移表 —— setState 据此断言「from → to」在表内，非法转移当场抛异常，
-     * 避免静默进入诡异状态。
-     *
-     * <p>盘点口径（src/main 全部 setState 调用点）：
-     * <ul>
-     *   <li>LAUNCHING → CRUISING / RECON_ACTIVE / RETURNING（强制返航）/ REMOVED</li>
-     *   <li>CRUISING → ATTACKING / RETURNING / REMOVED</li>
-     *   <li>ATTACKING → CRUISING（索敌回退）/ RETURNING / REMOVED</li>
-     *   <li>RECON_ACTIVE → RETURNING / REMOVED</li>
-     *   <li>RETURNING → REMOVED（recallAndRemove / 距离/脱困防御）</li>
-     *   <li>REMOVED → 无（终态）</li>
-     * </ul>
-     * 注：同态 setState（如 RECON_ACTIVE→RECON_ACTIVE 的重复进入）不允许；防御路径
-     * 统一经 startReturning，故所有非终态都能到 RETURNING。
-     */
     private static final java.util.Map<FlightState, java.util.Set<FlightState>> LEGAL_TRANSITIONS =
             java.util.Map.of(
                     FlightState.LAUNCHING, java.util.Set.of(
@@ -115,25 +79,19 @@ public class AircraftEntity extends Entity {
                     FlightState.RETURNING, java.util.Set.of(FlightState.REMOVED),
                     FlightState.REMOVED, java.util.Set.of());
 
-    private static final EntityDataAccessor<Integer> STATE =
-            SynchedEntityData.defineId(AircraftEntity.class, EntityDataSerializers.INT);
-    private static final EntityDataAccessor<Integer> AIRCRAFT_TYPE_DATA =
-            SynchedEntityData.defineId(AircraftEntity.class, EntityDataSerializers.INT);
-    /** 稳定机种 ID；AIRCRAFT_TYPE_DATA 保留给旧网络同步包。 */
-    private static final EntityDataAccessor<String> AIRCRAFT_TYPE_ID_DATA =
-            SynchedEntityData.defineId(AircraftEntity.class, EntityDataSerializers.STRING);
-    /** 稳定状态 ID；STATE 保留给旧网络同步包。 */
+    /** 稳定状态 ID；同步与存档都只使用它，不再写 enum ordinal。 */
     private static final EntityDataAccessor<String> STATE_ID_DATA =
             SynchedEntityData.defineId(AircraftEntity.class, EntityDataSerializers.STRING);
-    /** 稳定定义 ID；AIRCRAFT_TYPE_DATA 仅保留为旧实体同步兼容字段。 */
+    /** 稳定定义 ID（= 飞机物品注册名）。 */
     private static final EntityDataAccessor<String> AIRCRAFT_DEFINITION_DATA =
+            SynchedEntityData.defineId(AircraftEntity.class, EntityDataSerializers.STRING);
+    /** 视觉 ID 同步给客户端，客户端不需要自己加载服务端数据包即可正确渲染。 */
+    private static final EntityDataAccessor<String> VISUAL_ID_DATA =
             SynchedEntityData.defineId(AircraftEntity.class, EntityDataSerializers.STRING);
     private static final EntityDataAccessor<Optional<UUID>> OWNER_ID =
             SynchedEntityData.defineId(AircraftEntity.class, EntityDataSerializers.OPTIONAL_UUID);
     private static final EntityDataAccessor<Integer> WEAPON_SLOT_INDEX =
             SynchedEntityData.defineId(AircraftEntity.class, EntityDataSerializers.INT);
-    // 鱼雷机平飞段预测撞击点，三分量同步到客户端画预瞄线；
-    // 非平飞段全 0 表示无预瞄点（预测点 y=0 无意义，反正不会画到世界原点）。
     private static final EntityDataAccessor<Float> TORPEDO_AIM_X =
             SynchedEntityData.defineId(AircraftEntity.class, EntityDataSerializers.FLOAT);
     private static final EntityDataAccessor<Float> TORPEDO_AIM_Y =
@@ -143,216 +101,103 @@ public class AircraftEntity extends Entity {
 
     // Saved to NBT
     @Nullable private UUID ownerUUID;
-    private int weaponSlotIndex = -1;  // -1表示未设置，避免误用默认值0
+    private int weaponSlotIndex = -1;
     private int coreInventorySlot = 0;
-    AircraftInfo.AircraftType aircraftType = AircraftInfo.AircraftType.FIGHTER;
-    String aircraftDefinitionId = AircraftDefinitionService.legacyId(AircraftInfo.AircraftType.FIGHTER);
-    /**
-     * P7 缓存：解析后的机型定义快照，按 aircraftDefinitionId 失效重算。
-     * 命中后热路径（攻击分发/冷却查询）不再每 tick 重建。
-     */
+    private ResourceLocation aircraftDefinitionId =
+            ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "missing");
     @Nullable private volatile AircraftDefinition cachedDefinition;
-    private String cachedDefinitionKey = "";
+    private volatile boolean cachedDefinitionIsPlaceholder = false;
+    @Nullable private ResolvedAircraftStats resolvedStats;
     AircraftAttackMode attackMode = AircraftAttackMode.FOCUS;
-    float panelDamage;
-    float panelSpeed;
+
     int remainingAmmo = 0;
     int ammoCapacity = 0;
     private int currentFuel = 0;
     private int fuelCapacity = 1;
-    int getFuelCapacity() { return fuelCapacity; }
-    void setCurrentFuel(int v) { this.currentFuel = v; }
-    int getWeaponSlotIndex() { return weaponSlotIndex; }
-    ItemStack getOriginalStack() { return originalStack; }
-    void setLastReturnResult(String r) { this.lastReturnResult = r; }
-    boolean isForcedReturn() { return isForcedReturn; }
-    long spawnTimeMs() { return spawnTimeMs; }
-    boolean hasBullets = false;
-    String payloadType = "";
-    AircraftInfo.BombingMode bombingMode = AircraftInfo.BombingMode.DIVE;
+    float panelSpeed = 1.0f;
+    float panelDamageBase = 0.0f;
 
-    // 运行时（不保存）
-    private int airtimeTicks = 0;
-    private int stuckTicks = 0;
-    private Vec3 stuckCheckPos = Vec3.ZERO;
-    private double orbitAngle = 0;
+    // 运行时（部分需跨区块卸载保存）
+    int airtimeTicks = 0;
+    int stuckTicks = 0;
+    Vec3 stuckCheckPos = Vec3.ZERO;
+    double orbitAngle = 0;
     int stateTicks = 0;
+    int rocketRunTicks = 0;
     int attackCooldown = 0;
-    // 创建时写入的快照；保持正值后攻击 tick 不再查定义表。
     private int flightAttackCooldown = 1;
     private int flightMaxHealth = 0;
+    int aircraftHealth = 20;
     boolean hasFired = false;
-    boolean diveCommitted = false;
-    @Nullable Vec3 diveTarget = null;
 
-    // 鱼雷机平飞投雷状态
-    // torpedoRunStart 非 null 表示已进入低空平飞段：记录进入时的位置，
-    // 平飞段长度按全局距离而非目标相对距离判定，避免目标移动导致平飞段被拉长/缩短。
-    @Nullable Vec3 torpedoRunStart = null;
-    int torpedoRunTicks = 0;
-    // 平飞段每 tick 解算出的预测撞击点（世界坐标），同步到客户端画预瞄线。
-    // 接近段 / 非平飞段为 null。
-    @Nullable Vec3 torpedoAimPoint = null;
+    // 各攻击 profile 的每架次状态
+    final DiveBombState diveBombState = new DiveBombState();
+    final TorpedoRunState torpedoRunState = new TorpedoRunState();
+    final LevelBombState levelBombState = new LevelBombState();
 
-    // 水平轰炸机投弹状态
-    boolean levelBombDropped = false;
-    @Nullable Vec3 levelRunDirection = null;
-    @Nullable Vec3 levelDropPoint = null;
-    int levelRunTicks = 0;
-    // 锥外拉起计数：目标连续跑出投弹锥的 tick 数，超阈值即放弃航线重新瞄准
-    // （AircraftCombat.tickLevelBomberAttack，阈值 = global.level_bomber.abort_ticks）。
-    int levelAbortTicks = 0;
-    // 绕背进场是否完成：移动目标要先飞到其运动方向后方再锁航线，静止目标恒为 true 语义上跳过。
-    boolean levelRearApproachDone = false;
-    int autoSeekCooldown = 20; // 运行时状态，避免首次 tick 立即搜索（不持久化，每次加载重置为 20）
-    boolean autoSeekDone = false;    // true after first auto-seek scan (one-shot)
-    boolean hasEverHadFireControl = false; // true if FC target was ever assigned
+    int autoSeekCooldown = 20;
+    boolean autoSeekDone = false;
+    boolean hasEverHadFireControl = false;
 
-    // Phase 32 runtime fields
-    private FlightState lastKnownState = FlightState.LAUNCHING;
+    FlightState lastKnownState = FlightState.LAUNCHING;
     int lastForcedChunkX = Integer.MIN_VALUE;
     int lastForcedChunkZ = Integer.MIN_VALUE;
 
-    // 侦察区块加载：基于视距的强制加载 + 区块发送
     final java.util.Set<Long> reconForcedChunks = new java.util.HashSet<>();
     final java.util.Set<Long> reconPendingSend = new java.util.HashSet<>();
-    // 每 tick 推送区块数已下沉到调试终端 global.recon.chunk_send_rate（ModEquipmentConfig）
 
-    // Phase 33: aircraft health (persisted to NBT)
-    int aircraftHealth = 20;
-
-    // P3 #6: cached recon aircraft reference for FOLLOW mode (refreshed every 20 ticks)
-    @Nullable private AircraftEntity cachedReconAircraft;
-    private int reconCacheTick = 0;
-
-    // 侦察地图槽缓存：上次扫描时拥有者背包中持有 MapItem 的槽位索引
-    // 全背包重扫间隔已下沉到调试终端 global.recon.map_refresh_ticks（ModEquipmentConfig）
+    @Nullable AircraftEntity cachedReconAircraft;
+    int reconCacheTick = 0;
     @Nullable int[] cachedMapSlots;
     int mapSlotsRefreshTick = -ModEquipmentConfig.RECON_MAP_REFRESH_TICKS.get();
 
-    // 客户端位置插值（防止原始 setPos 跳跃导致的镜头抖动）
     private int clientLerpSteps;
     private double clientLerpX, clientLerpY, clientLerpZ;
     private float clientLerpYRot, clientLerpXRot;
 
-    // P2 #29: preserve original ItemStack across launch-return cycle
     private ItemStack originalStack = ItemStack.EMPTY;
-
-    // Phase 34: set to true when defense mechanisms force a recall (stuck, timeout, distance)
-    private boolean isForcedReturn = false;
-
-    // P0-3: 飞机存活时间（毫秒），用于 REMOVED 埋点
+    boolean isForcedReturn = false;
     private final long spawnTimeMs = System.currentTimeMillis();
-
-    // P0-3: 物品返还结果（SUCCESS / SLOT_FULL / OWNER_OFFLINE），供 REMOVED 关联
-    private String lastReturnResult = null;
-
-    // AircraftIndex 登记：通过 onAddedToLevel 或 tick 回退添加后置为 true
+    @Nullable private String lastReturnResult = null;
     private boolean indexRegistered = false;
-
-    // 自主模式：飞机无玩家所属（如浮靶或女仆发射的飞机）
-    boolean autonomous = false;
-    // 对空雷达标记剩余 tick：雷达每次扫描刷新，断开后倒计时到期撤掉发光（与 GLOWING 药效到期语义一致）
     private int radarGlowTicks = 0;
+    /** 自卫机枪的独立射击冷却；与主武器 attackCooldown 无关。 */
+    int selfDefenseCooldown = 0;
+    @Nullable Vec3 lastHorizontalDir = null;
+
+    boolean autonomous = false;
     Vec3 homePosition = Vec3.ZERO;
-    @Nullable private Vec3 lastHorizontalDir = null; // previous tick's horizontal direction for turn radius
     @Nullable LivingEntity autonomousTarget = null;
-    // NPC 航母发射的飞机：持有者对（甲板容量回收用）
     @Nullable private AbstractDeepOceanEntity aircraftOwner;
 
-    // 飞行手感常量（滞空上限、离所属者距离、脱困、巡航高度、盘旋半径、起飞/返航节奏、
-    // 转弯半径、轨道角速率、最低速比例等）已下沉到调试终端 global.aircraft_flight.*，
-    // 见 ModEquipmentConfig；运行期按需读取，策划可实时调手感。默认值 = 下沉前写死值。
-
-    /**
-     * 动态距离上限：取 max(最小值, (服务器模拟距离 - 1) × 16)。
-     * 留 1 区块余量防止飞机进入无法 tick 的边界。
-     */
-    private double getDistanceLimit(double minimum) {
-        int simDist = 10;
-        if (level() instanceof ServerLevel sl && sl.getServer() != null) {
-            simDist = sl.getServer().getPlayerList().getSimulationDistance();
-        }
-        return Math.max(minimum, (simDist - 1) * 16.0);
-    }
     public AircraftEntity(EntityType<?> type, Level level) {
         super(type, level);
         this.noPhysics = true;
     }
 
-    /** 工厂方法 — 仅在服务端调用 */
+    /** 玩家所属飞机的工厂方法 — 仅在服务端调用。 */
     public static AircraftEntity create(Level level, Player owner, int weaponSlotIndex,
-                                        ItemStack aircraftStack,
-                                        AircraftAttackMode attackMode,
-                                        int coreInventorySlot,
-                                        boolean hasBullets,
-                                        String payloadType) {
+                                        ItemStack aircraftStack, AircraftAttackMode attackMode,
+                                        int coreInventorySlot) {
         AircraftEntity entity = new AircraftEntity(ModEntityTypes.AIRCRAFT_ENTITY.get(), level);
         entity.ownerUUID = owner.getUUID();
         entity.weaponSlotIndex = weaponSlotIndex;
         entity.coreInventorySlot = coreInventorySlot;
         entity.attackMode = attackMode;
-        entity.hasBullets = hasBullets;
-        entity.payloadType = payloadType;
-
-        AircraftInfo info;
-        try {
-            info = aircraftStack.get(ModDataComponents.AIRCRAFT_INFO.get());
-        } catch (Throwable t) {
-            // P1-7: 数据组件读取失败
-            com.piranport.debug.PiranPortDebug.componentReadFailed(
-                    "AIRCRAFT_INFO", aircraftStack, t);
-            info = null;
-        }
-        if (info != null) {
-            AircraftDefinition definition = AircraftDefinitionService.resolve(info, definitionIdFor(aircraftStack, info));
-            ResolvedAircraftStats stats = AircraftStatsService.resolve(definition);
-            entity.aircraftDefinitionId = definition.id();
-            entity.aircraftType = info.aircraftType();
-            entity.panelDamage = ExperienceShellItem.applyAircraftPanelDamageBonus(owner, stats.damage());
-            entity.panelSpeed = ExperienceShellItem.applyAircraftPanelSpeedBonus(owner, stats.speed());
-            entity.ammoCapacity = stats.ammoCapacity();
-            entity.remainingAmmo = stats.ammoCapacity();
-            entity.fuelCapacity = stats.fuelCapacity();
-            entity.currentFuel = info.currentFuel();
-            entity.bombingMode = info.bombingMode();
-        } else {
-            // P1-7: 组件缺失（飞机无 AIRCRAFT_INFO）属于异常
-            com.piranport.debug.PiranPortDebug.componentReadFailed(
-                    "AIRCRAFT_INFO", aircraftStack, "component is null");
-        }
-        // Default payload based on aircraft type when not explicitly configured
-        if (entity.payloadType.isEmpty()) {
-            AircraftDefinition definition = AircraftDefinitionService.find(entity.aircraftDefinitionId);
-            if (definition != null) entity.payloadType = definition.payloadRegistryName();
-            entity.hasBullets = entity.aircraftType == AircraftInfo.AircraftType.FIGHTER;
-        }
-        AircraftDefinition healthDefinition = AircraftDefinitionService.find(entity.aircraftDefinitionId);
-        entity.aircraftHealth = healthDefinition != null
-                ? AircraftStatsService.resolve(healthDefinition).health()
-                : getMaxHealth(entity.aircraftType);
-        entity.flightMaxHealth = entity.aircraftHealth;
-        entity.flightAttackCooldown = entity.resolveAttackCooldown();
-        entity.originalStack = aircraftStack.copy();
-        entity.entityData.set(AIRCRAFT_TYPE_DATA, entity.aircraftType.ordinal());
-        entity.entityData.set(AIRCRAFT_TYPE_ID_DATA, entity.aircraftType.getSerializedName());
-        entity.entityData.set(AIRCRAFT_DEFINITION_DATA, entity.aircraftDefinitionId);
+        entity.initFromStack(aircraftStack, owner, false);
         entity.entityData.set(OWNER_ID, Optional.of(owner.getUUID()));
         entity.entityData.set(WEAPON_SLOT_INDEX, weaponSlotIndex);
 
         Vec3 look = owner.getLookAngle();
-        // 策划案：飞机在玩家前方 0.3–0.5 格生成，按皮肤微调：航母放飞稍远，潜艇更近
         double spawnDistance = 0.45;
-        entity.setPos(owner.getX() + look.x * spawnDistance, owner.getEyeY() - 0.15, owner.getZ() + look.z * spawnDistance);
+        entity.setPos(owner.getX() + look.x * spawnDistance, owner.getEyeY() - 0.15,
+                owner.getZ() + look.z * spawnDistance);
         entity.orbitAngle = Math.atan2(look.z, look.x);
         entity.stuckCheckPos = entity.position();
         return entity;
     }
 
-    /**
-     * Factory for autonomous aircraft (no player owner).
-     * Used by debug commands to spawn aircraft from non-player entities (e.g. floating targets).
-     */
+    /** 自主飞机（无玩家所有者），由深海航母或调试命令创建。 */
     public static AircraftEntity createAutonomous(Level level, Vec3 spawnPos, ItemStack aircraftStack,
                                                   @Nullable LivingEntity target,
                                                   @Nullable AbstractDeepOceanEntity aircraftOwner) {
@@ -361,64 +206,47 @@ public class AircraftEntity extends Entity {
         entity.homePosition = spawnPos;
         entity.autonomousTarget = target;
         entity.aircraftOwner = aircraftOwner;
-
-        AircraftInfo info;
-        try {
-            info = aircraftStack.get(ModDataComponents.AIRCRAFT_INFO.get());
-        } catch (Throwable t) {
-            com.piranport.debug.PiranPortDebug.componentReadFailed(
-                    "AIRCRAFT_INFO", aircraftStack, t);
-            info = null;
-        }
-        if (info != null) {
-            AircraftDefinition definition = AircraftDefinitionService.resolve(info, definitionIdFor(aircraftStack, info));
-            ResolvedAircraftStats stats = AircraftStatsService.resolve(definition);
-            entity.aircraftDefinitionId = definition.id();
-            entity.aircraftType = info.aircraftType();
-            entity.panelDamage = ExperienceShellItem.applyAircraftPanelDamageBonus(null, stats.damage());
-            entity.panelSpeed = ExperienceShellItem.applyAircraftPanelSpeedBonus(null, stats.speed());
-            entity.ammoCapacity = stats.ammoCapacity();
-            entity.remainingAmmo = stats.ammoCapacity();
-            entity.fuelCapacity = stats.fuelCapacity();
-            entity.currentFuel = info.fuelCapacity();
-            entity.bombingMode = info.bombingMode();
-            // 玩家和 NPC 由同一定义解析路径决定挂载，避免自主飞机固定为航弹。
-            entity.payloadType = definition.payloadRegistryName();
-            entity.hasBullets = definition.attackProfile() == AircraftDefinition.AttackProfile.GUN;
-        }
-        AircraftDefinition healthDefinition = AircraftDefinitionService.find(entity.aircraftDefinitionId);
-        entity.aircraftHealth = healthDefinition != null
-                ? AircraftStatsService.resolve(healthDefinition).health()
-                : getMaxHealth(entity.aircraftType);
-        entity.flightMaxHealth = entity.aircraftHealth;
-        entity.flightAttackCooldown = entity.resolveAttackCooldown();
-        entity.originalStack = aircraftStack.copy();
-        entity.entityData.set(AIRCRAFT_TYPE_DATA, entity.aircraftType.ordinal());
-        entity.entityData.set(AIRCRAFT_TYPE_ID_DATA, entity.aircraftType.getSerializedName());
-        entity.entityData.set(AIRCRAFT_DEFINITION_DATA, entity.aircraftDefinitionId);
-
+        entity.initFromStack(aircraftStack, null, true);
         entity.setPos(spawnPos.x, spawnPos.y, spawnPos.z);
         entity.orbitAngle = level.random.nextDouble() * Math.PI * 2;
         entity.stuckCheckPos = entity.position();
         return entity;
     }
 
-    /** 优先使用物品注册名作为稳定定义 ID；旧或未注册物品回退到 AircraftInfo 的兼容 ID。 */
-    private static String definitionIdFor(ItemStack aircraftStack, AircraftInfo info) {
-        if (aircraftStack != null && !aircraftStack.isEmpty()) {
-            net.minecraft.resources.ResourceLocation key = BuiltInRegistries.ITEM.getKey(aircraftStack.getItem());
-            if (key != null && !"minecraft".equals(key.getNamespace())) return key.toString();
-        }
-        return info.definitionId();
+    /**
+     * 玩家与自主飞机共用的初始化：定义 → 快照 → 同步字段。
+     * 自主飞机默认满油，玩家飞机读取物品上的运行时状态。
+     */
+    private void initFromStack(ItemStack stack, @Nullable Player owner, boolean fullFuel) {
+        AircraftDefinition definition = AircraftDefinitionService.require(stack);
+        AircraftState state = AircraftDefinitionService.stateOf(stack);
+        ResolvedAircraftStats resolved = AircraftStatsService.resolve(definition);
+        this.aircraftDefinitionId = definition.id();
+        this.cachedDefinition = definition;
+        this.resolvedStats = resolved;
+        this.panelDamageBase = resolved.damage();
+        this.panelSpeed = ExperienceShellItem.applyAircraftPanelSpeedBonus(owner, resolved.speed());
+        this.ammoCapacity = resolved.ammoCapacity();
+        this.remainingAmmo = resolved.ammoCapacity();
+        this.fuelCapacity = resolved.fuelCapacity();
+        this.currentFuel = fullFuel
+                ? resolved.fuelCapacity()
+                : Math.min(state.currentFuel(), resolved.fuelCapacity());
+        this.aircraftHealth = resolved.health();
+        this.flightMaxHealth = resolved.health();
+        this.flightAttackCooldown = resolved.cooldown();
+        this.originalStack = stack.copy();
+        entityData.set(AIRCRAFT_DEFINITION_DATA, definition.id().toString());
+        entityData.set(VISUAL_ID_DATA, definition.visualId());
+        entityData.set(STATE_ID_DATA, stateId(FlightState.LAUNCHING));
     }
 
     @Override
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
-        builder.define(STATE, FlightState.LAUNCHING.ordinal());
-        builder.define(STATE_ID_DATA, "");
-        builder.define(AIRCRAFT_TYPE_DATA, 0);
-        builder.define(AIRCRAFT_TYPE_ID_DATA, "");
-        builder.define(AIRCRAFT_DEFINITION_DATA, AircraftDefinitionService.legacyId(AircraftInfo.AircraftType.FIGHTER));
+        builder.define(STATE_ID_DATA, stateId(FlightState.LAUNCHING));
+        builder.define(AIRCRAFT_DEFINITION_DATA,
+                ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "missing").toString());
+        builder.define(VISUAL_ID_DATA, AircraftVisualIds.F4F);
         builder.define(OWNER_ID, Optional.empty());
         builder.define(WEAPON_SLOT_INDEX, -1);
         builder.define(TORPEDO_AIM_X, 0.0f);
@@ -426,33 +254,14 @@ public class AircraftEntity extends Entity {
         builder.define(TORPEDO_AIM_Z, 0.0f);
     }
 
-    /**
-     * Override lerpTo to:
-     * 1. Smooth position updates on the client via lerp steps (Entity base class sets
-     *    position directly in lerpTo, which causes camera stutter since xo==x after
-     *    setOldPosAndRot → no partial-tick interpolation).
-     * 2. In recon mode, ignore server rotation (client controls camera via mouse).
-     *    Uses client recon state instead of getFlightState() to avoid race with entity
-     *    data sync — the ReconStatePayload arrives before the STATE data packet.
-     */
     @Override
     public void lerpTo(double x, double y, double z, float yRot, float xRot, int steps) {
-        if (level().isClientSide()) {
-            // Store lerp target; position will be interpolated in tick()
-            this.clientLerpSteps = steps + 2;
-            this.clientLerpX = x;
-            this.clientLerpY = y;
-            this.clientLerpZ = z;
-            // In recon mode, keep client-controlled rotation
-            if (ClientHooks.isReconEntity(getId())) {
-                return;
-            }
-            // Non-recon: store target rotation for smooth lerping in tick()
-            this.clientLerpYRot = yRot;
-            this.clientLerpXRot = xRot;
-            return;
-        }
-        super.lerpTo(x, y, z, yRot, xRot, steps);
+        this.clientLerpX = x;
+        this.clientLerpY = y;
+        this.clientLerpZ = z;
+        this.clientLerpYRot = yRot;
+        this.clientLerpXRot = xRot;
+        this.clientLerpSteps = steps;
     }
 
     @Override public double lerpTargetX() { return clientLerpSteps > 0 ? clientLerpX : getX(); }
@@ -467,21 +276,17 @@ public class AircraftEntity extends Entity {
             setGlowingTag(false);
         }
 
-        // Client: position + rotation interpolation + particles
         if (level().isClientSide()) {
-            // Process position and rotation lerp steps for smooth rendering
             if (clientLerpSteps > 0) {
-                double d = 1.0 / (double) clientLerpSteps;
-                double nx = getX() + (clientLerpX - getX()) * d;
-                double ny = getY() + (clientLerpY - getY()) * d;
-                double nz = getZ() + (clientLerpZ - getZ()) * d;
-                setPos(nx, ny, nz);
-                // Smooth rotation lerp (shortest-path yaw wrapping)
+                double factor = 1.0 / (double) clientLerpSteps;
+                setPos(getX() + (clientLerpX - getX()) * factor,
+                        getY() + (clientLerpY - getY()) * factor,
+                        getZ() + (clientLerpZ - getZ()) * factor);
                 float yDiff = clientLerpYRot - getYRot();
                 while (yDiff > 180f) yDiff -= 360f;
                 while (yDiff < -180f) yDiff += 360f;
-                setYRot(getYRot() + yDiff * (float) d);
-                setXRot(getXRot() + (clientLerpXRot - getXRot()) * (float) d);
+                setYRot(getYRot() + yDiff * (float) factor);
+                setXRot(getXRot() + (clientLerpXRot - getXRot()) * (float) factor);
                 clientLerpSteps--;
             }
             if (getFlightState() == FlightState.CRUISING && tickCount % 8 == 0) {
@@ -490,28 +295,22 @@ public class AircraftEntity extends Entity {
             return;
         }
 
-        // P2-8: PERF 埋点 — 飞机 tick（仅记录 > 5ms 的实例，避免噪声）
         boolean perfEnabled = com.piranport.debug.PiranPortDebug.isServerEnabled();
-        long t0 = perfEnabled ? System.nanoTime() : 0L;
+        long start = perfEnabled ? System.nanoTime() : 0L;
 
-        // Index fallback: if onAddedToLevel fired before ownerUUID was populated by
-        // readAdditionalSaveData, we'd be missing from AircraftIndex — recover here.
         if (!indexRegistered && ownerUUID != null) {
-            com.piranport.aviation.AircraftIndex.add(ownerUUID, this);
+            AircraftIndex.add(ownerUUID, this);
             indexRegistered = true;
         }
 
-        FlightState state = getFlightState();
-        if (state == FlightState.REMOVED) { discard(); return; }
+        if (getFlightState() == FlightState.REMOVED) {
+            discard();
+            return;
+        }
 
         Player owner = getOwner();
-        if (owner == null) {
-            if (autonomous) {
-                tickAutonomousServer();
-                return;
-            }
-            // Clean up recon state if owner goes offline
-            if (ownerUUID != null && state == FlightState.RECON_ACTIVE) {
+        if (owner == null && !autonomous) {
+            if (ownerUUID != null && getFlightState() == FlightState.RECON_ACTIVE) {
                 ReconManager.endRecon(ownerUUID);
                 releaseAllForcedChunks();
             }
@@ -519,398 +318,340 @@ public class AircraftEntity extends Entity {
             return;
         }
 
-        // Detect state transitions and fire enter/exit hooks
-        if (state != lastKnownState) {
-            handleStateTransition(lastKnownState, state, owner);
-            lastKnownState = state;
-        }
+        AircraftFlight.tickServer(this, owner);
 
-        airtimeTicks++;
-        stateTicks++;
-
-        // Fuel consumption: burn 1 fuel per fuel_burn_interval ticks during active flight
-        if (state == FlightState.CRUISING || state == FlightState.ATTACKING || state == FlightState.RECON_ACTIVE) {
-            // 防止燃料容量为0时除零（特殊配置的飞机如侦察机）
-            if (fuelCapacity > 0 && currentFuel > 0 && airtimeTicks % ModEquipmentConfig.AIRCRAFT_FUEL_BURN_INTERVAL.get() == 0) {
-                currentFuel--;
-            }
-            if (currentFuel <= 0) {
-                isForcedReturn = true;
-                startReturning("fuel_empty");
-                if (owner instanceof ServerPlayer sp) {
-                    sp.displayClientMessage(
-                            Component.translatable("message.piranport.aircraft_no_fuel", getDisplayName()), true);
-                }
-                return;
-            }
-        }
-
-        // Defense: 10-min airtime limit
-        if (airtimeTicks >= ModEquipmentConfig.AIRCRAFT_MAX_AIRTIME.get()) {
-            if (state == FlightState.RETURNING) { recallAndRemove(); return; }
-            isForcedReturn = true;
-            startReturning("max_airtime");
-            return;
-        }
-
-        // Defense: stuck detection (disabled in RECON_ACTIVE — player may hover stationary)
-        if (state != FlightState.RECON_ACTIVE && stateTicks % ModEquipmentConfig.AIRCRAFT_STUCK_CHECK_INTERVAL.get() == 0) {
-            double moved = position().distanceTo(stuckCheckPos);
-            if (moved < ModEquipmentConfig.AIRCRAFT_STUCK_THRESHOLD.get()) {
-                stuckTicks += ModEquipmentConfig.AIRCRAFT_STUCK_CHECK_INTERVAL.get();
-                if (stuckTicks >= ModEquipmentConfig.AIRCRAFT_STUCK_CHECK_INTERVAL.get() * 2) { isForcedReturn = true; recallAndRemove(); return; }
-            } else {
-                stuckTicks = 0;
-            }
-            stuckCheckPos = position();
-        }
-
-        // Defense: distance limit
-        // FOLLOW mode uses extended range (recon plane may be 200 blocks away)
-        double maxDist = (state == FlightState.RECON_ACTIVE
-                || attackMode == AircraftAttackMode.FOLLOW)
-                ? getDistanceLimit(ModEquipmentConfig.AIRCRAFT_MIN_RECON_DISTANCE.get()) : getDistanceLimit(ModEquipmentConfig.AIRCRAFT_MIN_DISTANCE_FROM_OWNER.get());
-        if (distanceTo(owner) > maxDist) {
-            if (state == FlightState.RECON_ACTIVE) {
-                // Recon exceeded 200-block range — end recon and return
-                isForcedReturn = true;
-                startReturning("recon_max_distance");
-            } else {
-                Vec3 near = owner.position().add(
-                        (random.nextDouble() - 0.5) * 4, 3, (random.nextDouble() - 0.5) * 4);
-                setPos(near.x, near.y, near.z);
-                stuckTicks = 0;
-                stuckCheckPos = position();
-                isForcedReturn = true;
-                startReturning("distance_limit");
-            }
-            return;
-        }
-
-        if (attackCooldown > 0) attackCooldown--;
-
-        switch (state) {
-            case LAUNCHING      -> tickLaunching(owner);
-            case CRUISING       -> tickCruising(owner);
-            case ATTACKING      -> tickAttacking(owner);
-            case RETURNING      -> tickReturning(owner);
-            case RECON_ACTIVE   -> tickReconActive(owner);
-        }
-
-        // ASW sonar scan: every 20 ticks while cruising or attacking
-        if (aircraftType == AircraftInfo.AircraftType.ASW
-                && (state == FlightState.CRUISING || state == FlightState.ATTACKING)
-                && tickCount % 20 == 0) {
-            tickAswSonar(owner);
-        }
-
-        // === Turn radius constraint + no-hover enforcement ===
-        applyTurnRadiusConstraint(state);
-
-        // Update rotation to face movement direction (nose forward)
-        Vec3 vel = getDeltaMovement();
-        double hDist = vel.horizontalDistance();
-        if (hDist > 0.001) {
-            float targetYaw = (float) (Math.atan2(-vel.x, vel.z) * (180.0 / Math.PI));
-            float targetPitch = (float) (Math.atan2(-vel.y, hDist) * (180.0 / Math.PI));
-            setYRot(targetYaw);
-            setXRot(targetPitch);
-        }
-
-        // Apply movement
-        setPos(getX() + vel.x, getY() + vel.y, getZ() + vel.z);
-
-        // P2-8: PERF 埋点 — 仅记录 > 5ms 的实例，避免噪声
         if (perfEnabled) {
-            long ns = System.nanoTime() - t0;
-            if (ns > 5_000_000L) { // 5 ms
-                com.piranport.debug.PiranPortDebug.perf("AircraftTick", ns,
-                        "entityId=" + getId() + " state=" + state.name()
-                        + " type=" + aircraftType.name());
+            long nanos = System.nanoTime() - start;
+            if (nanos > 5_000_000L) {
+                com.piranport.debug.PiranPortDebug.perf("AircraftTick", nanos,
+                        "entityId=" + getId() + " state=" + getFlightState().name()
+                                + " class=" + getAircraftClass().getSerializedName());
             }
         }
     }
 
-    // ===== State transition hooks =====
+    // ===== 状态机 =====
 
-    private void handleStateTransition(FlightState from, FlightState to, Player owner) {
+    public void setState(FlightState newState) {
+        FlightState from = getFlightState();
+        if (from == newState) return;
+        java.util.Set<FlightState> allowed = LEGAL_TRANSITIONS.getOrDefault(from, java.util.Set.of());
+        if (!allowed.contains(newState)) {
+            throw new IllegalStateException(
+                    "illegal aircraft flight state transition: " + from + " -> " + newState
+                            + " (entityId=" + getId() + ", def=" + aircraftDefinitionId + ")");
+        }
+        if (newState == FlightState.ATTACKING) {
+            hasFired = false;
+            attackCooldown = 0;
+            diveBombState.reset();
+            torpedoRunState.reset();
+            levelBombState.reset();
+            rocketRunTicks = 0;
+            setTorpedoAimPoint(null);
+        }
+        entityData.set(STATE_ID_DATA, stateId(newState));
+        stateTicks = 0;
+    }
+
+    void handleStateTransition(FlightState from, FlightState to, Player owner) {
         if (to == FlightState.RECON_ACTIVE) {
             ReconManager.startRecon(owner.getUUID(), getUUID());
-            // Player body locking is now handled in GameEvents.onPlayerTick
-            // Notify client to switch camera
-            if (owner instanceof ServerPlayer sp) {
-                PacketDistributor.sendToPlayer(sp, new ReconStatePayload(true, getId()));
-                com.piranport.PiranPort.LOGGER.info(
-                    "Aircraft RECON_START | entityId={} sent ReconStatePayload to player", getId());
+            if (owner instanceof ServerPlayer serverPlayer) {
+                PacketDistributor.sendToPlayer(serverPlayer, new ReconStatePayload(true, getId()));
             }
         } else if (from == FlightState.RECON_ACTIVE) {
-            cleanupReconState(owner);
+            if (to == FlightState.RETURNING) {
+                beginReconReturn(owner);
+            } else {
+                cleanupReconState(owner);
+            }
         }
     }
 
     /**
-     * 统一清理侦察机状态：结束侦察、释放区块、通知客户端。
-     * P0修复: 改为public以便在玩家登出时从外部调用
+     * 退出侦察转入返航：结束侦察操控，但保留一小圈强加载直到回家。
+     *
+     * <p>WHY 不直接 {@link #cleanupReconState}：侦察机可能已在实体 tick 范围之外，
+     * 立刻释放区块会让返航永久冻结。返航票据由 {@code AircraftAswRecon.tickReturnLoading}
+     * 随飞机移动，最终由 {@link #remove} 统一释放。
      */
+    void beginReconReturn(Player owner) {
+        ReconManager.endRecon(owner.getUUID());
+        AircraftAswRecon.beginReconReturnLoading(this);
+        if (owner instanceof ServerPlayer serverPlayer) {
+            PacketDistributor.sendToPlayer(serverPlayer, new ReconStatePayload(false, 0));
+        }
+    }
+
     public void cleanupReconState(Player owner) {
         ReconManager.endRecon(owner.getUUID());
         releaseAllForcedChunks();
-        // Notify client to restore camera
-        if (owner instanceof ServerPlayer sp) {
-            PacketDistributor.sendToPlayer(sp, new ReconStatePayload(false, 0));
+        if (owner instanceof ServerPlayer serverPlayer) {
+            PacketDistributor.sendToPlayer(serverPlayer, new ReconStatePayload(false, 0));
         }
     }
 
-    // ===== Tick methods =====
-
-    private void tickLaunching(Player owner) {
-        double phase = phaseSpeedCoefficient();
-        double targetY = owner.getY() + ModEquipmentConfig.AIRCRAFT_CRUISE_ALTITUDE.get();
-        double dy = targetY - getY();
-        double rise = Math.min(panelSpeed * phase, Math.abs(dy));
-        // Horizontal velocity along launch direction (orbitAngle = player's facing at launch)
-        // so the aircraft climbs out diagonally instead of rocketing straight up.
-        double fwdSpeed = panelSpeed * phase;
-        double fwdX = Math.cos(orbitAngle) * fwdSpeed;
-        double fwdZ = Math.sin(orbitAngle) * fwdSpeed;
-        setDeltaMovement(fwdX, dy > 0 ? rise : -rise, fwdZ);
-        if (stateTicks >= ModEquipmentConfig.AIRCRAFT_LAUNCH_TICKS.get()
-                || Math.abs(dy) < ModEquipmentConfig.AIRCRAFT_LAUNCH_COMPLETE_DY.get()) {
-            // RECON goes directly to RECON_ACTIVE; others go to CRUISING
-            setState(aircraftType == AircraftInfo.AircraftType.RECON
-                    ? FlightState.RECON_ACTIVE : FlightState.CRUISING);
+    public void startReturning(String reason) {
+        FlightState current = getFlightState();
+        if (current == FlightState.RETURNING || current == FlightState.REMOVED) return;
+        if (com.piranport.debug.PiranPortDebug.shouldEmit()) {
+            String pos = String.format("[%d,%d,%d]", blockPosition().getX(),
+                    blockPosition().getY(), blockPosition().getZ());
+            com.piranport.debug.PiranPortDebug.aircraftReturnTriggered(
+                    getId(), reason, current, pos);
+            com.piranport.debug.PiranPortDebug.event(
+                    "Aircraft RETURNING | class={} entityId={} reason={}",
+                    getAircraftClass().getSerializedName(), getId(), reason);
         }
+        setState(FlightState.RETURNING);
     }
 
-    private void tickCruising(Player owner) {
-        double phase = phaseSpeedCoefficient();
-        boolean isAsw = aircraftType == AircraftInfo.AircraftType.ASW;
-        // Transition to ATTACKING if owner has locked targets with at least one alive entity
-        if (aircraftType != AircraftInfo.AircraftType.RECON
-                && (hasBullets || !payloadType.isEmpty())
-                && !FireControlManager.getTargets(owner.getUUID()).isEmpty()) {
-            // Verify at least one locked target is still alive before transitioning
-            if (hasAliveLockedTarget(owner)) {
-                // ASW: only transition if there's an alive ASW-eligible target
-                if (isAsw) {
-                    if (hasAliveAswLockedTarget(owner)) {
-                        hasEverHadFireControl = true;
-                        setState(FlightState.ATTACKING);
-                        return;
-                    }
-                    // ASW: alive targets exist but none are aquatic — stay cruising
-                } else {
-                    // Attack aircraft (payload-only, no bullets) skip airborne targets
-                    boolean isAttackAircraft = !hasBullets && !payloadType.isEmpty();
-                    if (!isAttackAircraft || hasAliveGroundLockedTarget(owner)) {
-                        hasEverHadFireControl = true;
-                        setState(FlightState.ATTACKING);
-                        return;
-                    }
-                    // Attack aircraft: alive targets exist but all airborne — stay cruising
-                }
-            } else {
-                // Remove only the dead UUIDs, preserving any newly added targets
-                if (owner.level() instanceof net.minecraft.server.level.ServerLevel sl) {
-                    FireControlManager.removeDeadTargets(owner.getUUID(), targetUuid -> {
-                        Entity e = sl.getEntities().get(targetUuid);
-                        return e == null || !e.isAlive();
-                    });
-                }
-            }
-        }
-
-        // Auto-seek without fire-control locks:
-        // Only search ONCE after launch; if FC target died, just keep orbiting.
-        // Fighters (hasBullets with empty payload) are included via hasBullets check.
-        if ((hasBullets || !payloadType.isEmpty())
-                && aircraftType != AircraftInfo.AircraftType.RECON
-                && !hasEverHadFireControl && !autoSeekDone
-                && FireControlManager.getTargets(owner.getUUID()).isEmpty()) {
-            if (autoSeekCooldown > 0) {
-                autoSeekCooldown--;
-            } else {
-                autoSeekDone = true;
-                if (level() instanceof ServerLevel sl) {
-                    AABB box = getBoundingBox().inflate(ModEquipmentConfig.AIRCRAFT_AUTO_SEEK_RANGE.get());
-                    boolean hasNearbyTarget;
-                    if (isAsw) {
-                        // 自动进入攻击态必须加敌对过滤，否则旁边有鱼/海豚就会自动开打；
-                        // 声呐检测判据 isAswTarget 不加过滤，别在此复用。
-                        hasNearbyTarget = !sl.getEntitiesOfClass(LivingEntity.class, box,
-                                e -> e.isAlive() && e != owner && AircraftAswRecon.isHostileAswTarget(owner, e)).isEmpty();
-                    } else if (aircraftType == AircraftInfo.AircraftType.FIGHTER
-                            || aircraftType == AircraftInfo.AircraftType.ROCKET_FIGHTER) {
-                        // Fighters: hostile mobs OR enemy aircraft
-                        boolean hasHostile = !sl.getEntitiesOfClass(LivingEntity.class, box,
-                                e -> e instanceof Monster
-                                        && com.piranport.combat.CombatTargeting.isHostileTarget(owner, e)).isEmpty();
-                        boolean hasEnemyAircraft = !sl.getEntitiesOfClass(AircraftEntity.class, box,
-                                e -> com.piranport.combat.CombatTargeting.isHostileTarget(owner, e)).isEmpty();
-                        hasNearbyTarget = hasHostile || hasEnemyAircraft;
-                    } else {
-                        hasNearbyTarget = !sl.getEntitiesOfClass(LivingEntity.class, box,
-                                e -> e.isAlive() && e != owner && e instanceof Monster && !isAirborneTarget(e)).isEmpty();
-                    }
-                    if (hasNearbyTarget) {
-                        autoSeekCooldown = 0; // reset so resolveTarget() finds it immediately
-                        setState(FlightState.ATTACKING);
-                        return;
-                    }
-                }
-            }
-        }
-
-        // FOLLOW mode: orbit the owner's active recon aircraft, or fall back to player
-        if (attackMode == AircraftAttackMode.FOLLOW) {
-            // Refresh cache every 20 ticks to avoid per-tick entity lookup
-            if (tickCount - reconCacheTick > 20 || cachedReconAircraft != null && cachedReconAircraft.isRemoved()) {
-                cachedReconAircraft = findOwnerReconAircraft(owner);
-                reconCacheTick = tickCount;
-            }
-            AircraftEntity reconAircraft = cachedReconAircraft;
-            if (reconAircraft != null) {
-                orbitAngle += panelSpeed * ModEquipmentConfig.AIRCRAFT_ORBIT_ANGULAR_RATE.get() * phase;
-                double tx = reconAircraft.getX() + Math.cos(orbitAngle) * ModEquipmentConfig.AIRCRAFT_ORBIT_RADIUS.get();
-                double ty = reconAircraft.getY();  // match recon altitude
-                double tz = reconAircraft.getZ() + Math.sin(orbitAngle) * ModEquipmentConfig.AIRCRAFT_ORBIT_RADIUS.get();
-                Vec3 toTarget = new Vec3(tx - getX(), ty - getY(), tz - getZ());
-                double dist = toTarget.length();
-                if (dist > 0.1) {
-                    setDeltaMovement(toTarget.normalize().scale(Math.min(panelSpeed * phase, dist)));
-                } else {
-                    setDeltaMovement(Vec3.ZERO);
-                }
-                return;
-            }
-            // No active recon — fall through to normal orbit around player
-        }
-
-        orbitAngle += panelSpeed * ModEquipmentConfig.AIRCRAFT_ORBIT_ANGULAR_RATE.get() * phase;
-        double tx = owner.getX() + Math.cos(orbitAngle) * ModEquipmentConfig.AIRCRAFT_ORBIT_RADIUS.get();
-        double ty = owner.getY() + ModEquipmentConfig.AIRCRAFT_CRUISE_ALTITUDE.get();
-        double tz = owner.getZ() + Math.sin(orbitAngle) * ModEquipmentConfig.AIRCRAFT_ORBIT_RADIUS.get();
-        Vec3 toTarget = new Vec3(tx - getX(), ty - getY(), tz - getZ());
-        double dist = toTarget.length();
-        if (dist > 0.1) {
-            setDeltaMovement(toTarget.normalize().scale(Math.min(panelSpeed * phase, dist)));
-        } else {
-            setDeltaMovement(Vec3.ZERO);
-        }
+    public void recallAndRemove() {
+        AircraftResupply.recallAndRemove(this);
     }
-
-    /** Finds the owner's currently active RECON_ACTIVE aircraft, or null if none. */
-    @Nullable
-    private AircraftEntity findOwnerReconAircraft(Player owner) {
-        if (!(level() instanceof ServerLevel sl)) return null;
-        UUID reconEntityId = ReconManager.getReconEntity(owner.getUUID());
-        if (reconEntityId == null) return null;
-        Entity e = sl.getEntity(reconEntityId);
-        if (e instanceof AircraftEntity ae && ae.getFlightState() == FlightState.RECON_ACTIVE) return ae;
-        return null;
-    }
-
-    // ===== ATTACKING dispatch =====
-
-    private void tickAttacking(Player owner) {
-        AircraftCombatService.tickAttacking(this, owner);
-    }
-
-    private void tickAutonomousAttacking() {
-        AircraftCombatService.tickAutonomousAttacking(this);
-    }
-
-    /**
-     * 按目标当前血量与单发伤害决定本次齐射的弹药数。
-     * 简化算法：忽略护甲与伤害减免，用 ceil(HP/damage) 保底能击杀，再与剩余弹量取 min，至少 1 发。
-     * damagePerShot <= 0 时回退为全投剩余弹药。
-     */
-    int computeSalvoSize(LivingEntity target, float damagePerShot) {
-        if (remainingAmmo <= 0) return 0;
-        if (damagePerShot <= 0.01f) return Math.max(1, remainingAmmo);
-        float hp = target.getHealth();
-        if (hp <= 0f) return 1;
-        int needed = (int) Math.ceil(hp / damagePerShot);
-        return Math.max(1, Math.min(remainingAmmo, needed));
-    }
-
-    private static boolean isAirborneTarget(Entity e) { return AircraftCombat.isAirborneTarget(e); }
-
-    /**
-     * ASW sonar: scan 16-block radius for underwater entities and send detections to owner.
-     * Called from main tick every 20 ticks while ASW aircraft is active (CRUISING or ATTACKING).
-     */
-    private void tickAswSonar(Player owner) {
-        AircraftAswRecon.tickAswSonar(this, owner);
-    }
-
-    /**
-     * RECON_ACTIVE: read movement input from ReconManager and apply to entity.
-     * Maintains chunk forcing around current position (view-distance radius, like a player).
-     */
-    private void tickReconActive(Player owner) {
-        AircraftAswRecon.tickReconActive(this, owner);
-    }
-
-    // refreshCachedMapSlots, updateReconChunkLoading, sendPendingChunks
-    // moved to AircraftAswRecon
 
     void releaseAllForcedChunks() {
         AircraftAswRecon.releaseAllForcedChunks(this);
     }
 
-    // ===== Target resolution =====
+    // ===== 交互 =====
+
+    @Override
+    public InteractionResult interact(Player player, InteractionHand hand) {
+        if (level().isClientSide() || ownerUUID == null || !ownerUUID.equals(player.getUUID())) {
+            return InteractionResult.PASS;
+        }
+
+        ItemStack held = player.getItemInHand(hand);
+        if (held.is(ModItems.AVIATION_FUEL.get())) {
+            if (currentFuel < fuelCapacity) {
+                held.shrink(1);
+                currentFuel = fuelCapacity;
+                player.displayClientMessage(
+                        Component.translatable("message.piranport.aircraft_refueled", getDisplayName()),
+                        true);
+                return InteractionResult.sidedSuccess(false);
+            }
+        }
+
+        ResourceLocation payloadItem = getPayloadItemId();
+        if (!held.isEmpty() && payloadItem != null) {
+            ResourceLocation heldId = net.minecraft.core.registries.BuiltInRegistries.ITEM
+                    .getKey(held.getItem());
+            if (payloadItem.equals(heldId) && remainingAmmo < ammoCapacity) {
+                int needed = ammoCapacity - remainingAmmo;
+                int toLoad = Math.min(needed, held.getCount());
+                held.shrink(toLoad);
+                remainingAmmo += toLoad;
+                hasFired = false;
+                player.displayClientMessage(
+                        Component.translatable("message.piranport.aircraft_resupplied", getDisplayName()),
+                        true);
+                return InteractionResult.sidedSuccess(false);
+            }
+        }
+
+        if (held.isEmpty()) {
+            startReturning("player_interact");
+            return InteractionResult.sidedSuccess(false);
+        }
+        return InteractionResult.PASS;
+    }
+
+    @Override
+    public boolean tryAutoResupplyAmmo() {
+        return AircraftResupply.tryAutoResupplyAmmo(this, getOwner());
+    }
+
+    // ===== 受伤 / 击落 =====
+
+    @Override
+    public boolean hurt(DamageSource source, float amount) {
+        if (level().isClientSide()) return false;
+        FlightState state = getFlightState();
+        if (state == FlightState.REMOVED) return false;
+
+        Entity attacker = source.getEntity();
+        if (ownerUUID != null) {
+            if (attacker instanceof Player player && ownerUUID.equals(player.getUUID())) return false;
+            if (attacker instanceof AircraftEntity aircraft
+                    && ownerUUID.equals(aircraft.getOwnerUUID())) return false;
+        }
+        if (autonomous && attacker instanceof AircraftEntity aircraft
+                && aircraft.isAutonomous() && aircraft != this) {
+            return false;
+        }
+
+        aircraftHealth = Math.max(0, Math.min(getAircraftMaxHealth(), aircraftHealth)
+                - (int) Math.ceil(Math.max(0.0F, amount)));
+
+        level().playSound(null, getX(), getY(), getZ(),
+                SoundEvents.IRON_GOLEM_HURT, SoundSource.HOSTILE,
+                0.4f, 1.4f + random.nextFloat() * 0.2f);
+
+        if (aircraftHealth <= 0) {
+            level().playSound(null, getX(), getY(), getZ(),
+                    SoundEvents.GENERIC_EXPLODE, SoundSource.HOSTILE,
+                    1.0f, 0.9f + random.nextFloat() * 0.2f);
+            if (level() instanceof ServerLevel serverLevel) {
+                serverLevel.sendParticles(ParticleTypes.EXPLOSION, getX(), getY(), getZ(),
+                        1, 0.3, 0.3, 0.3, 0.0);
+            }
+            Player owner = getOwner();
+            if (state == FlightState.RECON_ACTIVE && ownerUUID != null) {
+                if (owner != null) cleanupReconState(owner);
+                else {
+                    ReconManager.endRecon(ownerUUID);
+                    releaseAllForcedChunks();
+                }
+            }
+            if (owner != null) {
+                Component aircraftName = AircraftResupply.buildReturnStack(this).getHoverName();
+                if (attacker != null) {
+                    owner.displayClientMessage(Component.translatable(
+                            "message.piranport.aircraft_shot_down_by",
+                            aircraftName, attacker.getDisplayName()), true);
+                } else {
+                    owner.displayClientMessage(Component.translatable(
+                            "message.piranport.aircraft_shot_down", aircraftName), true);
+                }
+            }
+            com.piranport.debug.PiranPortDebug.event(
+                    "Aircraft KILLED | class={} entityId={} attacker={}",
+                    getAircraftClass().getSerializedName(), getId(),
+                    attacker != null ? attacker.getType().toShortString() : "unknown");
+            ItemStack dropStack = AircraftResupply.buildReturnStack(this);
+            if (!dropStack.isEmpty()) {
+                AircraftDropEntity drop = new AircraftDropEntity(level(), getX(), getY(), getZ(), dropStack);
+                level().addFreshEntity(drop);
+            }
+            discard();
+        }
+        return true;
+    }
+
+    // ===== 定义 / 能力查询 =====
+
+    /** 返回实体创建时解析的稳定飞机定义 ID。 */
+    public ResourceLocation getAircraftDefinitionId() {
+        String synced = entityData.get(AIRCRAFT_DEFINITION_DATA);
+        if (synced == null || synced.isBlank()) return aircraftDefinitionId;
+        ResourceLocation parsed = ResourceLocation.tryParse(synced);
+        return parsed == null ? aircraftDefinitionId : parsed;
+    }
 
     /**
-     * Resolves the attack target from the fire control lock list.
-     * Attack aircraft (bombers/torpedo bombers) skip airborne targets — only fighters engage air targets.
+     * 解析当前定义并缓存。客户端也会通过自己的资源包加载定义；若两端定义不一致，
+     * 渲染仍使用同步过来的 {@code visual_id}，不依赖这里的定义。
      */
+    public AircraftDefinition getResolvedDefinition() {
+        ResourceLocation id = getAircraftDefinitionId();
+        AircraftDefinition cached = cachedDefinition;
+        if (cached != null && cached.id().equals(id) && !cachedDefinitionIsPlaceholder) {
+            return cached;
+        }
+        boolean wasPlaceholder = cachedDefinitionIsPlaceholder;
+        AircraftDefinition resolved = AircraftDefinitionService.find(id);
+        boolean placeholder = false;
+        if (resolved != null && wasPlaceholder) {
+            // 客户端先于定义同步渲染过占位定义；拿到真定义后重建统计快照。
+            resolvedStats = null;
+        }
+        if (resolved == null) {
+            PiranPort.LOGGER.error("Missing aircraft definition {} for entity {}; using placeholder",
+                    id, getId());
+            resolved = new AircraftDefinition(id, AircraftClass.FIGHTER,
+                    AircraftDefinition.AttackProfile.NONE, null, AircraftVisualIds.F4F,
+                    1, 0, 0.0F, 1.0F, 0, 1, 1, null);
+            placeholder = true;
+        }
+        cachedDefinition = resolved;
+        cachedDefinitionIsPlaceholder = placeholder;
+        return resolved;
+    }
+
+    private ResolvedAircraftStats resolveStats() {
+        if (resolvedStats == null) {
+            resolvedStats = AircraftStatsService.resolve(getResolvedDefinition());
+        }
+        return resolvedStats;
+    }
+
+    public AircraftClass getAircraftClass() {
+        return getResolvedDefinition().aircraftClass();
+    }
+
+    /** 侦察机返回 null（不声明攻击配置）。 */
     @Nullable
-
-    /** Check if any locked target UUID still resolves to an alive entity. */
-    private boolean hasAliveLockedTarget(Player owner) {
-        if (!(level() instanceof ServerLevel sl)) return false;
-        for (UUID uuid : FireControlManager.getTargets(owner.getUUID())) {
-            Entity e = sl.getEntity(uuid);
-            if (e instanceof LivingEntity le && le.isAlive()) return true;
-        }
-        return false;
+    public AircraftDefinition.AttackProfile getAttackProfile() {
+        return getResolvedDefinition().attackProfile();
     }
 
-    /** Check if any locked target is alive AND on the ground (not airborne, not underwater). */
-    private boolean hasAliveGroundLockedTarget(Player owner) {
-        if (!(level() instanceof ServerLevel sl)) return false;
-        for (UUID uuid : FireControlManager.getTargets(owner.getUUID())) {
-            Entity e = sl.getEntity(uuid);
-            if (e instanceof LivingEntity le && le.isAlive()
-                    && !isAirborneTarget(le) && !le.isUnderWater()) return true;
-        }
-        return false;
+    public boolean requiresPayload() {
+        return getResolvedDefinition().requiresPayload();
     }
 
-    /** Check if any locked target is alive AND is an ASW-eligible target. */
-    private boolean hasAliveAswLockedTarget(Player owner) {
-        if (!(level() instanceof ServerLevel sl)) return false;
-        for (UUID uuid : FireControlManager.getTargets(owner.getUUID())) {
-            Entity e = sl.getEntity(uuid);
-            if (e instanceof LivingEntity le && le.isAlive() && AircraftAswRecon.isAswTarget(le)) return true;
-        }
-        return false;
+    public boolean usesBulletAttack() {
+        return getResolvedDefinition().usesBulletAttack();
     }
 
-    /** An entity is considered airborne if it is not on the ground and not in water. */
-
-    private void tickReturning(Player owner) {
-        double phase = phaseSpeedCoefficient();
-        Vec3 toOwner = owner.getEyePosition().subtract(position());
-        double dist = toOwner.length();
-        if (dist < ModEquipmentConfig.AIRCRAFT_RETURN_ARRIVAL_DISTANCE.get()) { recallAndRemove(); return; }
-        // 返航增速 30%：0.4 × 1.3 = 0.52
-        setDeltaMovement(toOwner.normalize().scale(Math.min(panelSpeed * phase, dist)));
+    public boolean isPayloadAttacker() {
+        return getResolvedDefinition().isPayloadAttacker();
     }
 
-    /** 当前控制阶段相对于机型基础航速的速度乘数。 */
-    double phaseSpeedCoefficient() {
+    public boolean hasSonar() {
+        return getResolvedDefinition().hasSonar();
+    }
+
+    public boolean isReconAircraft() {
+        return getResolvedDefinition().isRecon();
+    }
+
+    @Nullable
+    public ResourceLocation getPayloadItemId() {
+        return getResolvedDefinition().payloadItem();
+    }
+
+    public String getVisualId() {
+        String synced = entityData.get(VISUAL_ID_DATA);
+        return synced == null || synced.isBlank()
+                ? getResolvedDefinition().visualId() : synced;
+    }
+
+    public int getAircraftHealth() {
+        return Math.max(0, aircraftHealth);
+    }
+
+    public int getAircraftMaxHealth() {
+        return Math.max(1, flightMaxHealth > 0 ? flightMaxHealth : aircraftHealth);
+    }
+
+    @Override
+    public AircraftDefinition definition() {
+        return getResolvedDefinition();
+    }
+
+    @Override
+    public ResolvedAircraftStats stats() {
+        return resolveStats();
+    }
+
+    @Override
+    public float panelDamage() {
+        Player owner = getOwner();
+        return owner != null
+                ? ExperienceShellItem.applyAircraftPanelDamageBonus(owner, panelDamageBase)
+                : panelDamageBase;
+    }
+
+    @Override
+    public float panelSpeed() {
+        return panelSpeed;
+    }
+
+    @Override
+    public double phaseSpeedCoefficient() {
         String property = switch (getFlightState()) {
             case LAUNCHING -> "launch_speed_coefficient";
             case CRUISING -> attackMode == AircraftAttackMode.FOLLOW
@@ -923,395 +664,76 @@ public class AircraftEntity extends Entity {
         if (property == null) return 1.0;
         double multiplier = com.piranport.terminal.TerminalParameters.getDouble(
                 "aircraft." + aircraftDefinitionId + "." + property, 1.0);
-        return boundedCoefficient(multiplier);
+        return Double.isFinite(multiplier) ? Math.max(0.05, Math.min(5.0, multiplier)) : 1.0;
     }
 
-    private static double boundedCoefficient(double value) {
-        return Double.isFinite(value) ? Math.max(0.05, Math.min(5.0, value)) : 1.0;
+    // ===== 上下文访问器 =====
+
+    @Override public Entity self() { return this; }
+    @Override public Vec3 eyePosition() { return getEyePosition(); }
+    @Override @Nullable public ServerLevel serverLevel() {
+        return level() instanceof ServerLevel serverLevel ? serverLevel : null;
     }
-
-    // ===== Autonomous (no player owner) tick =====
-
-    private void tickAutonomousServer() {
-        double phase = phaseSpeedCoefficient();
-        FlightState state = getFlightState();
-        if (state == FlightState.REMOVED) { discard(); return; }
-
-        airtimeTicks++;
-        stateTicks++;
-
-        // Fuel consumption
-        if (state == FlightState.CRUISING || state == FlightState.ATTACKING) {
-            // 防止燃料容量为0时除零
-            if (fuelCapacity > 0 && currentFuel > 0 && airtimeTicks % ModEquipmentConfig.AIRCRAFT_FUEL_BURN_INTERVAL.get() == 0) currentFuel--;
-            if (currentFuel <= 0) { discard(); return; }
-        }
-        if (airtimeTicks >= ModEquipmentConfig.AIRCRAFT_MAX_AIRTIME.get()) { discard(); return; }
-        if (position().distanceTo(homePosition) > getDistanceLimit(ModEquipmentConfig.AIRCRAFT_MIN_DISTANCE_FROM_OWNER.get()) * 2) { discard(); return; }
-
-        if (attackCooldown > 0) attackCooldown--;
-
-        switch (state) {
-            case LAUNCHING -> {
-                double targetY = homePosition.y + ModEquipmentConfig.AIRCRAFT_CRUISE_ALTITUDE.get();
-                double dy = targetY - getY();
-                double rise = Math.min(panelSpeed * phase, Math.abs(dy));
-                setDeltaMovement(getDeltaMovement().x * 0.5, dy > 0 ? rise : -rise, getDeltaMovement().z * 0.5);
-                if (stateTicks >= ModEquipmentConfig.AIRCRAFT_LAUNCH_TICKS.get()
-                        || Math.abs(dy) < ModEquipmentConfig.AIRCRAFT_LAUNCH_COMPLETE_DY.get()) {
-                    setState(FlightState.CRUISING);
-                }
-            }
-            case CRUISING -> {
-                // Auto-seek：机枪战斗机只找空中/中立目标，其余自主机仍找玩家
-                if (level() instanceof ServerLevel sl && (hasBullets || !payloadType.isEmpty())) {
-                    boolean hasTarget = hasBullets
-                            ? AircraftCombat.resolveAutonomousFighterTarget(this) != null
-                            : !sl.getEntitiesOfClass(Player.class,
-                                    getBoundingBox().inflate(ModEquipmentConfig.AIRCRAFT_AUTONOMOUS_SEEK_RANGE.get()),
-                                    e -> e.isAlive() && !e.isSpectator()).isEmpty();
-                    if (hasTarget) {
-                        setState(FlightState.ATTACKING);
-                        return;
-                    }
-                }
-                // Orbit home position
-                orbitAngle += panelSpeed * ModEquipmentConfig.AIRCRAFT_ORBIT_ANGULAR_RATE.get() * phase;
-                double tx = homePosition.x + Math.cos(orbitAngle) * ModEquipmentConfig.AIRCRAFT_ORBIT_RADIUS.get();
-                double ty = homePosition.y + ModEquipmentConfig.AIRCRAFT_CRUISE_ALTITUDE.get();
-                double tz = homePosition.z + Math.sin(orbitAngle) * ModEquipmentConfig.AIRCRAFT_ORBIT_RADIUS.get();
-                Vec3 toTarget = new Vec3(tx - getX(), ty - getY(), tz - getZ());
-                double dist = toTarget.length();
-                if (dist > 0.1) {
-                    setDeltaMovement(toTarget.normalize().scale(Math.min(panelSpeed * phase, dist)));
-                } else {
-                    setDeltaMovement(Vec3.ZERO);
-                }
-            }
-            case ATTACKING -> {
-                if (remainingAmmo <= 0) { discard(); return; }
-                if (!(level() instanceof ServerLevel sl)) return;
-                if (hasBullets) {
-                    tickAutonomousAttacking();
-                    return;
-                }
-                AABB box = getBoundingBox().inflate(ModEquipmentConfig.AIRCRAFT_AUTONOMOUS_SEEK_RANGE.get());
-                LivingEntity target = sl.getEntitiesOfClass(Player.class, box,
-                                e -> e.isAlive() && !e.isSpectator())
-                        .stream().map(e -> (LivingEntity) e)
-                        .min(Comparator.comparingDouble(this::distanceTo)).orElse(null);
-                if (target == null) { setState(FlightState.CRUISING); return; }
-                // NPC 与玩家共享 AircraftCombat 的攻击分派；定义决定鱼雷、炸弹、机枪或反潜策略。
-                autonomousTarget = target;
-                tickAutonomousAttacking();
-            }
-            case RETURNING -> discard();
-            default -> {}
-        }
-
-        // === Turn radius constraint + no-hover enforcement ===
-        applyTurnRadiusConstraint(state);
-
-        // Update rotation to face movement direction
-        Vec3 vel = getDeltaMovement();
-        double hDist = vel.horizontalDistance();
-        if (hDist > 0.001) {
-            setYRot((float) (Math.atan2(-vel.x, vel.z) * (180.0 / Math.PI)));
-            setXRot((float) (Math.atan2(-vel.y, hDist) * (180.0 / Math.PI)));
-        }
-
-        // Apply movement (autonomous path — main tick's setPos is not reached)
-        setPos(getX() + vel.x, getY() + vel.y, getZ() + vel.z);
+    @Override @Nullable public Player owner() { return getOwner(); }
+    @Override @Nullable public UUID ownerUuid() { return ownerUUID; }
+    @Override public double distanceToEntity(Entity entity) { return super.distanceTo(entity); }
+    @Override public double distanceToEntitySqr(Entity entity) { return super.distanceToSqr(entity); }
+    @Override public AABB boundingBox() { return getBoundingBox(); }
+    @Override public Vec3 deltaMovement() { return getDeltaMovement(); }
+    @Override public float yRot() { return getYRot(); }
+    @Override public float xRot() { return getXRot(); }
+    @Override public int entityId() { return getId(); }
+    @Override public Component displayName() { return getDisplayName(); }
+    public int ammoCapacity() { return ammoCapacity; }
+    public int remainingAmmo() { return remainingAmmo; }
+    public void setRemainingAmmo(int ammo) { remainingAmmo = Math.max(0, ammo); }
+    public int attackCooldown() { return attackCooldown; }
+    public void setAttackCooldown(int ticks) { attackCooldown = Math.max(0, ticks); }
+    public int attackCooldownDuration() { return Math.max(1, flightAttackCooldown); }
+    public int stateTicks() { return stateTicks; }
+    @Override public int rocketRunTicks() { return rocketRunTicks; }
+    @Override public void setRocketRunTicks(int ticks) { rocketRunTicks = Math.max(0, ticks); }
+    public void resumeCruising() {
+        if (getFlightState() == FlightState.ATTACKING) setState(FlightState.CRUISING);
     }
-
-    // ===== Turn radius constraint =====
-
-    /**
-     * Enforces a circular arc turn with the terminal-configured turn radius
-     * （{@code global.aircraft_flight.turn_radius}）and prevents hovering.
-     * Called after each state's tick method sets the desired delta movement, and before
-     * rotation/position update.
-     */
-    private void applyTurnRadiusConstraint(FlightState state) {
-        Vec3 rawVel = getDeltaMovement();
-
-        // Enforce minimum horizontal speed (no hovering) — skip during LAUNCHING (vertical ascent)
-        if (state != FlightState.LAUNCHING && lastHorizontalDir != null) {
-            double rawHorizSpeed = rawVel.horizontalDistance();
-            double minSpeed = panelSpeed * ModEquipmentConfig.AIRCRAFT_MIN_SPEED_MULTIPLIER.get()
-                    * phaseSpeedCoefficient();
-            if (rawHorizSpeed < minSpeed) {
-                rawVel = new Vec3(lastHorizontalDir.x * minSpeed, rawVel.y, lastHorizontalDir.z * minSpeed);
-                setDeltaMovement(rawVel);
-            }
-        }
-
-        // Apply turn radius constraint
-        Vec3 constrained = constrainTurnRadius(getDeltaMovement());
-        setDeltaMovement(constrained);
-
-        // Update stored horizontal direction for next tick
-        double hd = constrained.horizontalDistance();
-        if (hd > 0.001) {
-            lastHorizontalDir = new Vec3(constrained.x / hd, 0, constrained.z / hd);
-        }
+    public boolean hasFired() { return hasFired; }
+    public void setHasFired(boolean fired) { hasFired = fired; }
+    public int salvoSize(LivingEntity target, float damagePerShot) {
+        if (remainingAmmo <= 0) return 0;
+        if (damagePerShot <= 0.01f) return Math.max(1, remainingAmmo);
+        float health = target.getHealth();
+        if (health <= 0f) return 1;
+        int needed = (int) Math.ceil(health / damagePerShot);
+        return Math.max(1, Math.min(remainingAmmo, needed));
     }
+    public AircraftAttackMode attackMode() { return attackMode; }
+    public boolean hasEverHadFireControl() { return hasEverHadFireControl; }
+    public boolean autoSeekDone() { return autoSeekDone; }
+    public void setAutoSeekDone(boolean done) { autoSeekDone = done; }
+    public int autoSeekCooldown() { return autoSeekCooldown; }
+    public void setAutoSeekCooldown(int ticks) { autoSeekCooldown = Math.max(0, ticks); }
+    @Nullable public LivingEntity autonomousTarget() { return autonomousTarget; }
 
-    /**
-     * Limits horizontal direction change to the maximum angular rate allowed by
-     * a circular arc of the terminal-configured turn radius
-     * （{@code global.aircraft_flight.turn_radius}）.
-     * Vertical (Y) component is passed through unchanged — altitude changes are not arc-limited.
-     */
-    private Vec3 constrainTurnRadius(Vec3 desiredVel) {
-        double desiredHorizSpeed = desiredVel.horizontalDistance();
-
-        // Too slow or no prior direction — allow free movement
-        if (desiredHorizSpeed < 0.001 || lastHorizontalDir == null) {
-            return desiredVel;
-        }
-
-        // Max yaw change per tick:  ω = v / r  (radians)
-        double maxAngle = desiredHorizSpeed / ModEquipmentConfig.AIRCRAFT_TURN_RADIUS.get();
-
-        // Desired horizontal direction
-        double invSpeed = 1.0 / desiredHorizSpeed;
-        double desiredDirX = desiredVel.x * invSpeed;
-        double desiredDirZ = desiredVel.z * invSpeed;
-
-        // Angle between last direction and desired direction
-        double dot = lastHorizontalDir.x * desiredDirX + lastHorizontalDir.z * desiredDirZ;
-        dot = Math.max(-1.0, Math.min(1.0, dot));
-        double angleDiff = Math.acos(dot);
-
-        // Within turn rate — no constraint needed
-        if (angleDiff <= maxAngle) {
-            return desiredVel;
-        }
-
-        // Determine turn direction via 2D cross product (positive = turn left / CCW)
-        double cross = lastHorizontalDir.x * desiredDirZ - lastHorizontalDir.z * desiredDirX;
-        double currentYawRad = Math.atan2(-lastHorizontalDir.x, lastHorizontalDir.z);
-        currentYawRad += (cross >= 0 ? maxAngle : -maxAngle);
-
-        double newX = -Math.sin(currentYawRad) * desiredHorizSpeed;
-        double newZ = Math.cos(currentYawRad) * desiredHorizSpeed;
-
-        return new Vec3(newX, desiredVel.y, newZ);
-    }
-
-    /**
-     * Begin returning to owner — enters RETURNING state so the aircraft visibly
-     * flies back before being recalled.  Safe to call from any state; silently
-     * ignored if already RETURNING or REMOVED.
-     *
-     * @param reason debug reason tag (logged when debug mode is active)
-     */
-    public void startReturning(String reason) {
-        FlightState cur = getFlightState();
-        if (cur == FlightState.RETURNING || cur == FlightState.REMOVED) return;
-        // P0-3: 返航触发埋点（带原因/状态/位置/玩家）
-        // 门控前置：posStr 的 String.format 只服务这两个埋点，必须在确认有会话后才执行，
-        // 否则每架返航飞机都会在主线程无谓分配一次。
-        if (com.piranport.debug.PiranPortDebug.shouldEmit()) {
-            String posStr = String.format("[%d,%d,%d]",
-                    blockPosition().getX(), blockPosition().getY(), blockPosition().getZ());
-            com.piranport.debug.PiranPortDebug.aircraftReturnTriggered(
-                    getId(), reason, getFlightState(), posStr);
-            com.piranport.debug.PiranPortDebug.event(
-                    "Aircraft RETURNING | type={} entityId={} reason={}",
-                    aircraftType.name(), getId(), reason);
-        }
-        setState(FlightState.RETURNING);
-    }
-
-    /** Remove entity and return aircraft item to the owner's ship core weapon slot. */
-    public void recallAndRemove() {
-        AircraftResupply.recallAndRemove(this);
-    }
-
-    @Override
-    public InteractionResult interact(Player player, InteractionHand hand) {
-        if (level().isClientSide() || ownerUUID == null || !ownerUUID.equals(player.getUUID()))
-            return InteractionResult.PASS;
-
-        ItemStack held = player.getItemInHand(hand);
-
-        // Manual fuel resupply: hold aviation_fuel → right-click
-        if (held.is(ModItems.AVIATION_FUEL.get())) {
-            if (currentFuel < fuelCapacity) {
-                held.shrink(1);
-                currentFuel = fuelCapacity;
-                player.displayClientMessage(
-                        Component.translatable("message.piranport.aircraft_refueled", getDisplayName()), true);
-                return InteractionResult.sidedSuccess(false);
-            }
-            // Already full fuel — fall through to recall check
-        }
-
-        // Manual ammo resupply: hold the aircraft's payload item → right-click
-        if (!held.isEmpty() && !payloadType.isEmpty()) {
-            String heldId = BuiltInRegistries.ITEM.getKey(held.getItem()).toString();
-            if (payloadType.equals(heldId) && remainingAmmo < ammoCapacity) {
-                int needed = ammoCapacity - remainingAmmo;
-                int toLoad = Math.min(needed, held.getCount());
-                held.shrink(toLoad);
-                remainingAmmo += toLoad;
-                hasFired = false;
-                player.displayClientMessage(
-                        Component.translatable("message.piranport.aircraft_resupplied", getDisplayName()), true);
-                return InteractionResult.sidedSuccess(false);
-            }
-        }
-
-        // Empty hand → fly back then recall
-        if (held.isEmpty()) {
-            startReturning("player_interact");
-            return InteractionResult.sidedSuccess(false);
-        }
-
-        return InteractionResult.PASS;
-    }
-
-    /** 自动补给（空中重新装填挂载）；当前固定关闭，保留为兼容边界。 */
-    boolean tryAutoResupplyAmmo(Player owner) {
-        return AircraftResupply.tryAutoResupplyAmmo(this, owner);
-    }
-
-    // ===== Phase 33: air combat =====
-
-    private static int getMaxHealth(AircraftInfo.AircraftType type) {
-        return switch (type) {
-            case FIGHTER        -> 20;
-            case DIVE_BOMBER    -> 15;
-            case TORPEDO_BOMBER -> 15;
-            case LEVEL_BOMBER   -> 12;
-            case ASW            -> 12;
-            case RECON          -> 10;
-            case ROCKET_FIGHTER -> 20;
-        };
-    }
-
-    /**
-     * Aircraft takes damage from bullets and other sources.
-     * Friendly fire (same ownerUUID) is ignored.
-     * On death: explosion effect, discard WITHOUT returning item to owner.
-     */
-    @Override
-    public boolean hurt(DamageSource source, float amount) {
-        if (level().isClientSide()) return false;
-        FlightState state = getFlightState();
-        if (state == FlightState.REMOVED) return false;
-
-        // Friendly fire — ignore all damage from the same player's weapons/aircraft
-        Entity attacker = source.getEntity();
-        if (ownerUUID != null) {
-            if (attacker instanceof Player p && ownerUUID.equals(p.getUUID())) return false;
-            if (attacker instanceof AircraftEntity ac && ownerUUID.equals(ac.getOwnerUUID())) return false;
-        }
-        // Autonomous fratricide: damage from another autonomous aircraft's projectile explosion
-        if (autonomous && attacker instanceof AircraftEntity ac && ac.isAutonomous() && ac != this) {
-            return false;
-        }
-
-        // 伤害只作用于本次飞行创建时的快照，不受终端修改或定义热重载影响。
-        aircraftHealth = Math.max(0, Math.min(getAircraftMaxHealth(), aircraftHealth)
-                - (int) Math.ceil(Math.max(0.0F, amount)));
-
-        // Hit sound
-        level().playSound(null, getX(), getY(), getZ(),
-                SoundEvents.IRON_GOLEM_HURT, SoundSource.HOSTILE,
-                0.4f, 1.4f + random.nextFloat() * 0.2f);
-
-        if (aircraftHealth <= 0) {
-            // Explosion effect + destroy (no item return)
-            level().playSound(null, getX(), getY(), getZ(),
-                    SoundEvents.GENERIC_EXPLODE, SoundSource.HOSTILE, 1.0f, 0.9f + random.nextFloat() * 0.2f);
-            if (level() instanceof ServerLevel sl) {
-                sl.sendParticles(ParticleTypes.EXPLOSION, getX(), getY(), getZ(),
-                        1, 0.3, 0.3, 0.3, 0.0);
-            }
-            // Clean up recon state if needed + notify owner
-            Player owner = getOwner();
-            if (state == FlightState.RECON_ACTIVE && ownerUUID != null) {
-                if (owner != null) cleanupReconState(owner);
-                else { ReconManager.endRecon(ownerUUID); releaseAllForcedChunks(); }
-            }
-            // Action bar shot-down notification
-            if (owner != null) {
-                Component aircraftName = AircraftResupply.buildReturnStack(this).getHoverName();
-                if (attacker != null) {
-                    owner.displayClientMessage(Component.translatable(
-                            "message.piranport.aircraft_shot_down_by", aircraftName, attacker.getDisplayName()), true);
-                } else {
-                    owner.displayClientMessage(Component.translatable(
-                            "message.piranport.aircraft_shot_down", aircraftName), true);
-                }
-            }
-            com.piranport.debug.PiranPortDebug.event(
-                    "Aircraft KILLED | type={} entityId={} attacker={}",
-                    aircraftType.name(), getId(),
-                    attacker != null ? attacker.getType().toShortString() : "unknown");
-            // 掉落飞机物品（防爆+浮水）
-            ItemStack dropStack = AircraftResupply.buildReturnStack(this);
-            if (!dropStack.isEmpty()) {
-                AircraftDropEntity drop = new AircraftDropEntity(
-                        level(), getX(), getY(), getZ(), dropStack);
-                level().addFreshEntity(drop);
-            }
-            discard();
-        }
-        return true;
-    }
-
-    /**
-     * Phase 33: fighter target resolution with extended priority:
-     * 1. Fire control locked targets (any entity type)
-     * 2. Enemy aircraft (non-same-owner AircraftEntity, 32-block radius)
-     * 3. Hostile mobs (32-block radius)
-     *
-     * When fighter-air-only mode is active, only FC-locked airborne targets are considered.
-     */
     @Nullable
-
-    public void setState(FlightState newState) {
-        FlightState from = getFlightState();
-        if (from == newState) return;
-        java.util.Set<FlightState> allowed = LEGAL_TRANSITIONS.getOrDefault(from, java.util.Set.of());
-        if (!allowed.contains(newState)) {
-            // 非法转移当场抛出，避免静默进入诡异状态；防御路径统一经 startReturning 进 RETURNING。
-            throw new IllegalStateException(
-                    "illegal aircraft flight state transition: " + from + " -> " + newState
-                            + " (entityId=" + getId() + ", def=" + aircraftDefinitionId + ")");
+    public Player getOwner() {
+        if (ownerUUID == null) return null;
+        if (level() instanceof ServerLevel serverLevel) {
+            return serverLevel.getServer().getPlayerList().getPlayer(ownerUUID);
         }
-        if (newState == FlightState.ATTACKING) {
-            hasFired = false;
-            attackCooldown = 0;
-            diveCommitted = false;
-            diveTarget = null;
-            torpedoRunStart = null;
-            torpedoRunTicks = 0;
-            setTorpedoAimPoint(null);
-            // 水平轰炸字段同样要清：重进 ATTACKING 若残留旧 levelRunDirection，
-            // 载机会沿上一次的锁定方向直飞，新目标的绕背/提前量全部失效。
-            levelBombDropped = false;
-            levelRunDirection = null;
-            levelDropPoint = null;
-            levelRunTicks = 0;
-            levelAbortTicks = 0;
-            levelRearApproachDone = false;
-        }
-        entityData.set(STATE, newState.ordinal());
-        entityData.set(STATE_ID_DATA, stateId(newState));
-        stateTicks = 0;
+        return null;
     }
 
-    /**
-     * 写入鱼雷机平飞段的预测撞击点，同时刷到同步字段给客户端画预瞄线。
-     * {@code null} 清空（接近段/返航/投放后调用）。
-     */
+    @Nullable public UUID getOwnerUUID() { return ownerUUID; }
+    public boolean isAutonomous() { return autonomous; }
+    public boolean isOwnedByPlayer(Player player) {
+        Optional<UUID> id = entityData.get(OWNER_ID);
+        return id.isPresent() && id.get().equals(player.getUUID());
+    }
+
+    // ===== 鱼雷预瞄点 =====
+
     public void setTorpedoAimPoint(@Nullable Vec3 point) {
-        this.torpedoAimPoint = point;
+        torpedoRunState.aimPoint = point;
         if (point == null) {
             entityData.set(TORPEDO_AIM_X, 0.0f);
             entityData.set(TORPEDO_AIM_Y, 0.0f);
@@ -1323,7 +745,6 @@ public class AircraftEntity extends Entity {
         }
     }
 
-    /** 客户端读预瞄点；三个分量全 0 视为未设置返回 null。 */
     @Nullable
     public Vec3 getTorpedoAimPoint() {
         float x = entityData.get(TORPEDO_AIM_X);
@@ -1333,16 +754,15 @@ public class AircraftEntity extends Entity {
         return new Vec3(x, y, z);
     }
 
+    @Override public Vec3 torpedoAimPoint() { return getTorpedoAimPoint(); }
+    @Override public DiveBombState diveBombState() { return diveBombState; }
+    @Override public TorpedoRunState torpedoRunState() { return torpedoRunState; }
+    @Override public LevelBombState levelBombState() { return levelBombState; }
+
+    // ===== 状态 ID =====
+
     private static final FlightState[] FLIGHT_STATE_VALUES = FlightState.values();
-    private static final AircraftInfo.AircraftType[] AIRCRAFT_TYPE_VALUES = AircraftInfo.AircraftType.values();
 
-    /** Safely maps persisted/synced ordinals back to the enum, preserving save compatibility. */
-    private static FlightState stateByOrdinal(int ordinal) {
-        return ordinal >= 0 && ordinal < FLIGHT_STATE_VALUES.length
-                ? FLIGHT_STATE_VALUES[ordinal] : FlightState.REMOVED;
-    }
-
-    /** 新存档和新网络同步使用稳定的小写 ID；旧序号只在兼容路径读取。 */
     static String stateId(FlightState state) {
         return state.name().toLowerCase(java.util.Locale.ROOT);
     }
@@ -1356,167 +776,47 @@ public class AircraftEntity extends Entity {
         return null;
     }
 
-    static AircraftInfo.AircraftType aircraftTypeById(String id) {
-        if (id == null || id.isBlank()) return null;
-        String normalized = id.trim().toLowerCase(java.util.Locale.ROOT);
-        for (AircraftInfo.AircraftType candidate : AIRCRAFT_TYPE_VALUES) {
-            if (candidate.getSerializedName().equals(normalized)
-                    || candidate.name().toLowerCase(java.util.Locale.ROOT).equals(normalized)) {
-                return candidate;
-            }
-        }
-        return null;
-    }
-
     public FlightState getFlightState() {
-        FlightState stable = stateById(entityData.get(STATE_ID_DATA));
-        return stable != null ? stable : stateByOrdinal(entityData.get(STATE));
+        FlightState state = stateById(entityData.get(STATE_ID_DATA));
+        return state != null ? state : FlightState.LAUNCHING;
     }
 
-    public AircraftInfo.AircraftType getAircraftType() {
-        AircraftInfo.AircraftType stable = aircraftTypeById(entityData.get(AIRCRAFT_TYPE_ID_DATA));
-        if (stable != null) return stable;
-        int ordinal = entityData.get(AIRCRAFT_TYPE_DATA);
-        if (ordinal < 0 || ordinal >= AIRCRAFT_TYPE_VALUES.length) return AircraftInfo.AircraftType.FIGHTER;
-        return AIRCRAFT_TYPE_VALUES[ordinal];
-    }
+    // ===== 杂项 =====
 
-    /** 返回创建时快照的冷却；攻击 tick 不重新解析定义或终端参数。 */
-    int attackCooldownDuration() {
-        return Math.max(1, flightAttackCooldown);
-    }
-
-    private int resolveAttackCooldown() {
-        AircraftDefinition definition = AircraftDefinitionService.find(aircraftDefinitionId);
-        return definition != null ? AircraftStatsService.resolve(definition).cooldown() : switch (aircraftType) {
-            case FIGHTER -> 5;
-            case ROCKET_FIGHTER, TORPEDO_BOMBER -> 40;
-            case DIVE_BOMBER, LEVEL_BOMBER, RECON -> 1;
-            case ASW -> 30;
-        };
-    }
-
-    /** 返回实体创建时解析的稳定飞机定义 ID。 */
-    public String getAircraftDefinitionId() {
-        String synced = entityData.get(AIRCRAFT_DEFINITION_DATA);
-        return synced == null || synced.isBlank() ? aircraftDefinitionId : synced;
-    }
-
-    /**
-     * P7 缓存：解析当前 definition 并缓存；定义 ID 变化（热重载/存档切换）时自动失效重算。
-     * 命中后热路径不再每 tick 重建 {@link AircraftInfo}/{@link AircraftDefinitionService#resolve}。
-     */
-    @Nullable
-    public AircraftDefinition getResolvedDefinition() {
-        String id = getAircraftDefinitionId();
-        AircraftDefinition hit = cachedDefinition;
-        if (hit != null && id.equals(cachedDefinitionKey)) return hit;
-        AircraftDefinition resolved = AircraftDefinitionService.find(id);
-        if (resolved == null) {
-            AircraftInfo info = new AircraftInfo(getAircraftType(), 1, 0, 0, 0, 1, 0,
-                    AircraftInfo.BombingMode.DIVE, false, id);
-            resolved = AircraftDefinitionService.resolve(info, id);
-        }
-        cachedDefinition = resolved;
-        cachedDefinitionKey = id;
-        return resolved;
-    }
-
-    /** 当前飞行快照中的生命值。 */
-    public int getAircraftHealth() {
-        return Math.max(0, aircraftHealth);
-    }
-
-    /** 当前飞行快照中的最大生命值，不随定义热重载变化。 */
-    public int getAircraftMaxHealth() {
-        return Math.max(1, flightMaxHealth > 0 ? flightMaxHealth : aircraftHealth);
-    }
-
-    /** 当前飞行快照中的面板伤害。 */
-    public float getPanelDamage() {
-        // 动态应用经验炮弹buff（玩家持有时生效）
-        Player owner = getOwner();
-        if (owner != null) {
-            return ExperienceShellItem.applyAircraftPanelDamageBonus(owner, panelDamage);
-        }
-        return panelDamage;
-    }
-
-    /** 当前飞行快照中的面板速度。保留基础值，速度buff由 phaseSpeedCoefficient 补充。 */
-    public float getPanelSpeed() {
-        return panelSpeed;
-    }
-
-    /** Returns true if this aircraft is owned by the given player. Works client-side (synced). */
-    public boolean isOwnedByPlayer(Player player) {
-        Optional<UUID> id = entityData.get(OWNER_ID);
-        return id.isPresent() && id.get().equals(player.getUUID());
-    }
-
-    @Nullable
-    public UUID getOwnerUUID() { return ownerUUID; }
-
-    public boolean isAutonomous() { return autonomous; }
-
-    /** 对空雷达标记：刷新发光并重置倒计时，由服务端雷达扫描周期性调用。 */
     public void markRadarGlow(int ticks) {
         radarGlowTicks = ticks;
         setGlowingTag(true);
     }
 
-    /**
-     * Returns the player owner of this aircraft, or null if offline or autonomous.
-     * NOTE: server-side only — always returns null on the client side. Client code
-     * that needs to know the owner UUID should use {@link #getOwnerUUID()} instead.
-     */
-    @Nullable
-    public Player getOwner() {
-        if (ownerUUID == null) return null;
-        if (level() instanceof ServerLevel sl) {
-            return sl.getServer().getPlayerList().getPlayer(ownerUUID);
-        }
-        return null;
-    }
-
     @Override
     public boolean isCurrentlyGlowing() {
-        // Vanilla glow has highest priority
         if (super.isCurrentlyGlowing()) return true;
-        if (level().isClientSide()) {
-            return ClientHooks.shouldAircraftGlow(this);
-        }
+        if (level().isClientSide()) return ClientHooks.shouldAircraftGlow(this);
         return false;
     }
 
     @Override
     protected Component getTypeName() {
-        return Component.translatable("entity.piranport.aircraft." + aircraftType.getSerializedName());
+        return Component.translatable("entity.piranport.aircraft."
+                + getAircraftClass().getSerializedName());
     }
 
     @Override
     public int getTeamColor() {
         if (level().isClientSide()) {
-            // Vanilla glow has highest priority for color (unconditional)
-            if (super.isCurrentlyGlowing()) {
-                return super.getTeamColor();
-            }
+            if (super.isCurrentlyGlowing()) return super.getTeamColor();
             return ClientHooks.getAircraftGlowColor(this, super.getTeamColor());
         }
         return super.getTeamColor();
     }
 
-    @Override
-    public boolean isPickable() { return true; }
+    @Override public boolean isPickable() { return true; }
 
     @Override
     public void remove(RemovalReason reason) {
         if (!level().isClientSide()) {
-            // Safety net: release any forced chunks that weren't cleaned up
             releaseAllForcedChunks();
-            // Clean up recon state
-            if (ownerUUID != null) {
-                ReconManager.endRecon(ownerUUID);
-            }
+            if (ownerUUID != null) ReconManager.endRecon(ownerUUID);
         }
         super.remove(reason);
     }
@@ -1525,7 +825,7 @@ public class AircraftEntity extends Entity {
     public void onAddedToLevel() {
         super.onAddedToLevel();
         if (!level().isClientSide() && ownerUUID != null) {
-            com.piranport.aviation.AircraftIndex.add(ownerUUID, this);
+            AircraftIndex.add(ownerUUID, this);
             indexRegistered = true;
         }
     }
@@ -1535,135 +835,141 @@ public class AircraftEntity extends Entity {
         super.onRemovedFromLevel();
         if (!level().isClientSide()) {
             if (ownerUUID != null) {
-                com.piranport.aviation.AircraftIndex.remove(ownerUUID, this);
+                AircraftIndex.remove(ownerUUID, this);
                 indexRegistered = false;
             }
-            // Notify NPC carrier that this aircraft has been returned or destroyed
             if (aircraftOwner != null && !aircraftOwner.isRemoved()) {
                 aircraftOwner.onAircraftReturned();
             }
         }
     }
 
+    // ===== 持久化 =====
+
     @Override
     protected void readAdditionalSaveData(CompoundTag tag) {
         if (tag.hasUUID("OwnerUUID")) ownerUUID = tag.getUUID("OwnerUUID");
         weaponSlotIndex = tag.contains("WeaponSlot") ? tag.getInt("WeaponSlot") : -1;
-        if (!level().isClientSide) {
-            entityData.set(WEAPON_SLOT_INDEX, weaponSlotIndex);
+        coreInventorySlot = tag.contains("CoreSlot") ? tag.getInt("CoreSlot") : 0;
+        entityData.set(WEAPON_SLOT_INDEX, weaponSlotIndex);
+
+        ResourceLocation id = ResourceLocation.tryParse(tag.getString("AircraftDefinitionId"));
+        if (id == null) {
+            PiranPort.LOGGER.error("Aircraft entity {} has no AircraftDefinitionId; it will not fly",
+                    getId());
+            id = ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "missing");
         }
-        coreInventorySlot = tag.getInt("CoreSlot");
-        AircraftInfo.AircraftType savedType = aircraftTypeById(
-                tag.contains("AircraftTypeId") ? tag.getString("AircraftTypeId") : tag.getString("AircraftType"));
-        aircraftType = savedType != null ? savedType : AircraftInfo.AircraftType.FIGHTER;
-        aircraftDefinitionId = tag.contains("AircraftDefinitionId")
-                ? tag.getString("AircraftDefinitionId")
-                : AircraftDefinitionService.legacyId(aircraftType);
+        aircraftDefinitionId = id;
+        entityData.set(AIRCRAFT_DEFINITION_DATA, id.toString());
+        String visual = tag.getString("VisualId");
+        entityData.set(VISUAL_ID_DATA, visual.isBlank() ? AircraftVisualIds.F4F : visual);
+
+        AircraftDefinition definition = AircraftDefinitionService.find(id);
+        if (definition != null) {
+            cachedDefinition = definition;
+            cachedDefinitionIsPlaceholder = false;
+            resolvedStats = AircraftStatsService.resolve(definition);
+        }
+
         try { attackMode = AircraftAttackMode.valueOf(tag.getString("AttackMode")); }
-        catch (IllegalArgumentException e) { attackMode = AircraftAttackMode.FOCUS; }
-        panelDamage = tag.getFloat("PanelDamage");
-        panelSpeed  = tag.getFloat("PanelSpeed");
+        catch (IllegalArgumentException ignored) { attackMode = AircraftAttackMode.FOCUS; }
+
+        currentFuel = tag.getInt("CurrentFuel");
         remainingAmmo = tag.getInt("RemainingAmmo");
         ammoCapacity = tag.getInt("AmmoCapacity");
-        currentFuel = tag.getInt("CurrentFuel");
-        fuelCapacity = tag.getInt("FuelCapacity");
-        if (fuelCapacity <= 0) fuelCapacity = 1; // guard against old saves
-        hasBullets = tag.getBoolean("HasBullets");
-        payloadType = tag.getString("PayloadType");
-        try { bombingMode = AircraftInfo.BombingMode.valueOf(tag.getString("BombingMode")); }
-        catch (IllegalArgumentException e) { bombingMode = AircraftInfo.BombingMode.DIVE; }
-        lastForcedChunkX = tag.getInt("LastForcedChunkX");
-        lastForcedChunkZ = tag.getInt("LastForcedChunkZ");
-        if (!tag.contains("LastForcedChunkX")) lastForcedChunkX = Integer.MIN_VALUE;
-        // Release any forced chunks from the previous session and intentionally do NOT
-        // restore them into reconForcedChunks. Recon resumes from scratch on next tick:
-        // updateReconForcedChunks() will recompute the desired set and re-force the chunks
-        // around the aircraft's current position. If we restored the saved set here, those
-        // entries would be desynced from the (now-released) world state and the eviction
-        // diff in updateReconForcedChunks would leak chunks.
-        if (tag.contains("ReconForcedChunks") && level() instanceof ServerLevel sl) {
-            long[] saved = tag.getLongArray("ReconForcedChunks");
-            for (long key : saved) {
-                sl.setChunkForced(net.minecraft.world.level.ChunkPos.getX(key),
+        fuelCapacity = Math.max(1, tag.getInt("FuelCapacity"));
+        panelSpeed = tag.getFloat("PanelSpeed");
+        panelDamageBase = tag.getFloat("PanelDamage");
+        aircraftHealth = tag.getInt("AircraftHealth");
+        flightMaxHealth = Math.max(1, tag.getInt("FlightMaxHealth"));
+        flightAttackCooldown = Math.max(1, tag.getInt("FlightAttackCooldown"));
+        // 旧/损坏存档缺字段时用当前定义补齐；正常路径全部来自飞行快照。
+        if (resolvedStats != null) {
+            if (fuelCapacity <= 1 && tag.getInt("FuelCapacity") <= 0) fuelCapacity = resolvedStats.fuelCapacity();
+            if (ammoCapacity <= 0 && tag.getInt("AmmoCapacity") <= 0) ammoCapacity = resolvedStats.ammoCapacity();
+            if (panelSpeed <= 0.0f) panelSpeed = resolvedStats.speed();
+            if (panelDamageBase <= 0.0f) panelDamageBase = resolvedStats.damage();
+            if (aircraftHealth <= 0 && !tag.contains("AircraftHealth")) aircraftHealth = resolvedStats.health();
+            if (!tag.contains("FlightMaxHealth")) flightMaxHealth = resolvedStats.health();
+            if (!tag.contains("FlightAttackCooldown")) flightAttackCooldown = resolvedStats.cooldown();
+        }
+        if (panelSpeed <= 0.0f) panelSpeed = 1.0f;
+        aircraftHealth = Math.min(Math.max(0, aircraftHealth), flightMaxHealth);
+        if (remainingAmmo > ammoCapacity) remainingAmmo = ammoCapacity;
+        if (!tag.contains("RemainingAmmo")) remainingAmmo = ammoCapacity;
+
+        lastForcedChunkX = tag.contains("LastForcedChunkX")
+                ? tag.getInt("LastForcedChunkX") : Integer.MIN_VALUE;
+        lastForcedChunkZ = tag.contains("LastForcedChunkZ")
+                ? tag.getInt("LastForcedChunkZ") : Integer.MIN_VALUE;
+        if (tag.contains("ReconForcedChunks") && level() instanceof ServerLevel serverLevel) {
+            for (long key : tag.getLongArray("ReconForcedChunks")) {
+                serverLevel.setChunkForced(net.minecraft.world.level.ChunkPos.getX(key),
                         net.minecraft.world.level.ChunkPos.getZ(key), false);
             }
         }
         reconForcedChunks.clear();
-        int savedOrdinal = tag.contains("FlightState") ? tag.getInt("FlightState") : 0;
-        FlightState savedState = stateById(tag.getString("FlightStateId"));
-        if (savedState == null) {
-            // 旧存档只写序号；仅在稳定 ID 缺失时走兼容读取。
-            savedState = stateByOrdinal(savedOrdinal);
-            if (savedState == FlightState.REMOVED && savedOrdinal != FlightState.REMOVED.ordinal()) {
-                PiranPort.LOGGER.warn("Invalid FlightState ordinal {} for aircraft {}; falling back to {}",
-                        savedOrdinal, getId(), savedState.name());
-            }
-        }
-        entityData.set(STATE, savedState.ordinal());
-        entityData.set(STATE_ID_DATA, stateId(savedState));
-        entityData.set(AIRCRAFT_TYPE_DATA, aircraftType.ordinal());
-        entityData.set(AIRCRAFT_TYPE_ID_DATA, aircraftType.getSerializedName());
-        entityData.set(AIRCRAFT_DEFINITION_DATA, aircraftDefinitionId);
-        if (ownerUUID != null) entityData.set(OWNER_ID, Optional.of(ownerUUID));
 
-        // P1修复: 如果重新加载后状态是RECON_ACTIVE但玩家不在线，强制切换到RETURNING
-        if (getFlightState() == FlightState.RECON_ACTIVE && level() instanceof ServerLevel sl) {
-            if (ownerUUID != null) {
-                ServerPlayer owner = sl.getServer().getPlayerList().getPlayer(ownerUUID);
-                if (owner == null) {
-                    // 玩家不在线，强制切换到返航状态
-                    setState(FlightState.RETURNING);
-                    com.piranport.PiranPort.LOGGER.info("Aircraft {} switched from RECON_ACTIVE to RETURNING (owner offline)", getId());
-                }
-            }
+        FlightState state = stateById(tag.getString("FlightStateId"));
+        if (state == null) state = FlightState.LAUNCHING;
+        entityData.set(STATE_ID_DATA, stateId(state));
+        entityData.set(OWNER_ID, ownerUUID == null ? Optional.empty() : Optional.of(ownerUUID));
+
+        if (getFlightState() == FlightState.RECON_ACTIVE && ownerUUID != null
+                && level() instanceof ServerLevel serverLevel) {
+            ServerPlayer owner = serverLevel.getServer().getPlayerList().getPlayer(ownerUUID);
+            if (owner == null) setState(FlightState.RETURNING);
         }
 
         airtimeTicks = tag.getInt("AirtimeTicks");
         hasFired = tag.getBoolean("HasFired");
-        if (tag.contains("AircraftHealth")) {
-            aircraftHealth = tag.getInt("AircraftHealth");
-        } else {
-            AircraftDefinition definition = AircraftDefinitionService.find(aircraftDefinitionId);
-            if (definition != null) {
-                aircraftHealth = AircraftStatsService.resolve(definition).health();
-            } else {
-                aircraftHealth = getMaxHealth(aircraftType);
-            }
+        stateTicks = tag.getInt("StateTicks");
+        attackCooldown = tag.getInt("AttackCooldown");
+        autoSeekDone = tag.getBoolean("AutoSeekDone");
+        hasEverHadFireControl = tag.getBoolean("HasEverHadFireControl");
+        autoSeekCooldown = tag.getInt("AutoSeekCooldown");
+        diveBombState.committed = tag.getBoolean("DiveCommitted");
+        if (tag.contains("DiveTargetX")) {
+            diveBombState.target = new Vec3(tag.getDouble("DiveTargetX"),
+                    tag.getDouble("DiveTargetY"), tag.getDouble("DiveTargetZ"));
         }
-        flightMaxHealth = tag.contains("FlightMaxHealth")
-                ? Math.max(1, tag.getInt("FlightMaxHealth")) : Math.max(1, aircraftHealth);
-        aircraftHealth = Math.min(Math.max(0, aircraftHealth), flightMaxHealth);
-        flightAttackCooldown = tag.contains("FlightAttackCooldown")
-                ? Math.max(1, tag.getInt("FlightAttackCooldown")) : resolveAttackCooldown();
+        if (tag.contains("TorpedoRunStartX")) {
+            torpedoRunState.runStart = new Vec3(tag.getDouble("TorpedoRunStartX"),
+                    tag.getDouble("TorpedoRunStartY"), tag.getDouble("TorpedoRunStartZ"));
+        }
+        torpedoRunState.runTicks = tag.getInt("TorpedoRunTicks");
+        if (tag.contains("TorpedoAimX")) {
+            torpedoRunState.aimPoint = new Vec3(tag.getDouble("TorpedoAimX"),
+                    tag.getDouble("TorpedoAimY"), tag.getDouble("TorpedoAimZ"));
+            setTorpedoAimPoint(torpedoRunState.aimPoint);
+        }
+        levelBombState.dropped = tag.getBoolean("LevelBombDropped");
+        levelBombState.runTicks = tag.getInt("LevelRunTicks");
+        levelBombState.abortTicks = tag.getInt("LevelAbortTicks");
+        levelBombState.rearApproachDone = tag.getBoolean("LevelRearApproachDone");
+        if (tag.contains("LevelRunDirX")) {
+            levelBombState.runDirection = new Vec3(tag.getDouble("LevelRunDirX"),
+                    tag.getDouble("LevelRunDirY"), tag.getDouble("LevelRunDirZ"));
+        }
+        if (tag.contains("LevelDropPointX")) {
+            levelBombState.dropPoint = new Vec3(tag.getDouble("LevelDropPointX"),
+                    tag.getDouble("LevelDropPointY"), tag.getDouble("LevelDropPointZ"));
+        }
+        if (tag.contains("LastKnownState")) {
+            try { lastKnownState = FlightState.valueOf(tag.getString("LastKnownState")); }
+            catch (IllegalArgumentException ignored) { lastKnownState = FlightState.LAUNCHING; }
+        }
+        isForcedReturn = tag.getBoolean("IsForcedReturn");
+        if (tag.contains("OrbitAngle")) orbitAngle = tag.getDouble("OrbitAngle");
         if (tag.contains("OriginalStack")) {
             originalStack = ItemStack.parse(level().registryAccess(), tag.getCompound("OriginalStack"))
                     .orElse(ItemStack.EMPTY);
         }
         autonomous = tag.getBoolean("Autonomous");
         if (tag.contains("HomeX")) {
-            homePosition = new Vec3(tag.getDouble("HomeX"), tag.getDouble("HomeY"), tag.getDouble("HomeZ"));
+            homePosition = new Vec3(tag.getDouble("HomeX"), tag.getDouble("HomeY"),
+                    tag.getDouble("HomeZ"));
         }
-        stateTicks = tag.getInt("StateTicks");
-        attackCooldown = tag.getInt("AttackCooldown");
-        autoSeekDone = tag.getBoolean("AutoSeekDone");
-        hasEverHadFireControl = tag.getBoolean("HasEverHadFireControl");
-        diveCommitted = tag.getBoolean("DiveCommitted");
-        if (tag.contains("DiveTargetX")) {
-            diveTarget = new Vec3(tag.getDouble("DiveTargetX"), tag.getDouble("DiveTargetY"), tag.getDouble("DiveTargetZ"));
-        }
-        levelBombDropped = tag.getBoolean("LevelBombDropped");
-        if (tag.contains("LevelRunDirX")) {
-            levelRunDirection = new Vec3(tag.getDouble("LevelRunDirX"), tag.getDouble("LevelRunDirY"), tag.getDouble("LevelRunDirZ"));
-        }
-        if (tag.contains("LevelDropPointX")) {
-            levelDropPoint = new Vec3(tag.getDouble("LevelDropPointX"), tag.getDouble("LevelDropPointY"), tag.getDouble("LevelDropPointZ"));
-        }
-        if (tag.contains("LastKnownState")) {
-            try { lastKnownState = FlightState.valueOf(tag.getString("LastKnownState")); }
-            catch (IllegalArgumentException e) { lastKnownState = FlightState.LAUNCHING; }
-        }
-        isForcedReturn = tag.getBoolean("IsForcedReturn");
-        if (tag.contains("OrbitAngle")) orbitAngle = tag.getDouble("OrbitAngle");
     }
 
     @Override
@@ -1671,37 +977,69 @@ public class AircraftEntity extends Entity {
         if (ownerUUID != null) tag.putUUID("OwnerUUID", ownerUUID);
         tag.putInt("WeaponSlot", weaponSlotIndex);
         tag.putInt("CoreSlot", coreInventorySlot);
-        tag.putString("AircraftTypeId", aircraftType.getSerializedName());
-        // 保留旧键一段时间，便于旧工具读取；加载优先使用稳定 ID。
-        tag.putString("AircraftType", aircraftType.name());
-        tag.putString("AircraftDefinitionId", aircraftDefinitionId);
+        tag.putString("AircraftDefinitionId", getAircraftDefinitionId().toString());
+        tag.putString("VisualId", getVisualId());
         tag.putString("AttackMode", attackMode.name());
-        tag.putFloat("PanelDamage", panelDamage);
-        tag.putInt("AmmoCapacity", ammoCapacity);
         tag.putInt("CurrentFuel", currentFuel);
-        tag.putInt("FuelCapacity", fuelCapacity);
-        tag.putBoolean("HasBullets", hasBullets);
-        tag.putString("PayloadType", payloadType);
-        tag.putString("BombingMode", bombingMode.name());
-        tag.putFloat("PanelSpeed", panelSpeed);
         tag.putInt("RemainingAmmo", remainingAmmo);
-        tag.putInt("LastForcedChunkX", lastForcedChunkX);
-        tag.putInt("LastForcedChunkZ", lastForcedChunkZ);
-        // Persist forced chunks so they can be released after server restart
-        if (!reconForcedChunks.isEmpty()) {
-            long[] chunks = new long[reconForcedChunks.size()];
-            int idx = 0;
-            for (long key : reconForcedChunks) chunks[idx++] = key;
-            tag.putLongArray("ReconForcedChunks", chunks);
-        }
-        tag.putString("FlightStateId", stateId(getFlightState()));
-        // 保留旧序号供旧客户端/工具读取，服务端新加载以 FlightStateId 为准。
-        tag.putInt("FlightState", entityData.get(STATE));
-        tag.putInt("AirtimeTicks", airtimeTicks);
-        tag.putBoolean("HasFired", hasFired);
+        tag.putInt("AmmoCapacity", ammoCapacity);
+        tag.putInt("FuelCapacity", fuelCapacity);
+        tag.putFloat("PanelSpeed", panelSpeed);
+        tag.putFloat("PanelDamage", panelDamageBase);
         tag.putInt("AircraftHealth", aircraftHealth);
         tag.putInt("FlightMaxHealth", flightMaxHealth > 0 ? flightMaxHealth : Math.max(1, aircraftHealth));
         tag.putInt("FlightAttackCooldown", Math.max(1, flightAttackCooldown));
+        if (!reconForcedChunks.isEmpty()) {
+            long[] chunks = new long[reconForcedChunks.size()];
+            int index = 0;
+            for (long key : reconForcedChunks) chunks[index++] = key;
+            tag.putLongArray("ReconForcedChunks", chunks);
+        }
+        tag.putInt("LastForcedChunkX", lastForcedChunkX);
+        tag.putInt("LastForcedChunkZ", lastForcedChunkZ);
+        tag.putString("FlightStateId", stateId(getFlightState()));
+        tag.putInt("AirtimeTicks", airtimeTicks);
+        tag.putBoolean("HasFired", hasFired);
+        tag.putInt("StateTicks", stateTicks);
+        tag.putInt("AttackCooldown", attackCooldown);
+        tag.putBoolean("AutoSeekDone", autoSeekDone);
+        tag.putBoolean("HasEverHadFireControl", hasEverHadFireControl);
+        tag.putInt("AutoSeekCooldown", autoSeekCooldown);
+        tag.putBoolean("DiveCommitted", diveBombState.committed);
+        if (diveBombState.target != null) {
+            tag.putDouble("DiveTargetX", diveBombState.target.x);
+            tag.putDouble("DiveTargetY", diveBombState.target.y);
+            tag.putDouble("DiveTargetZ", diveBombState.target.z);
+        }
+        if (torpedoRunState.runStart != null) {
+            tag.putDouble("TorpedoRunStartX", torpedoRunState.runStart.x);
+            tag.putDouble("TorpedoRunStartY", torpedoRunState.runStart.y);
+            tag.putDouble("TorpedoRunStartZ", torpedoRunState.runStart.z);
+        }
+        tag.putInt("TorpedoRunTicks", torpedoRunState.runTicks);
+        Vec3 aim = getTorpedoAimPoint();
+        if (aim != null) {
+            tag.putDouble("TorpedoAimX", aim.x);
+            tag.putDouble("TorpedoAimY", aim.y);
+            tag.putDouble("TorpedoAimZ", aim.z);
+        }
+        tag.putBoolean("LevelBombDropped", levelBombState.dropped);
+        tag.putInt("LevelRunTicks", levelBombState.runTicks);
+        tag.putInt("LevelAbortTicks", levelBombState.abortTicks);
+        tag.putBoolean("LevelRearApproachDone", levelBombState.rearApproachDone);
+        if (levelBombState.runDirection != null) {
+            tag.putDouble("LevelRunDirX", levelBombState.runDirection.x);
+            tag.putDouble("LevelRunDirY", levelBombState.runDirection.y);
+            tag.putDouble("LevelRunDirZ", levelBombState.runDirection.z);
+        }
+        if (levelBombState.dropPoint != null) {
+            tag.putDouble("LevelDropPointX", levelBombState.dropPoint.x);
+            tag.putDouble("LevelDropPointY", levelBombState.dropPoint.y);
+            tag.putDouble("LevelDropPointZ", levelBombState.dropPoint.z);
+        }
+        tag.putString("LastKnownState", lastKnownState.name());
+        tag.putBoolean("IsForcedReturn", isForcedReturn);
+        tag.putDouble("OrbitAngle", orbitAngle);
         if (originalStack != null && !originalStack.isEmpty()) {
             tag.put("OriginalStack", originalStack.save(level().registryAccess()));
         }
@@ -1711,30 +1049,21 @@ public class AircraftEntity extends Entity {
             tag.putDouble("HomeY", homePosition.y);
             tag.putDouble("HomeZ", homePosition.z);
         }
-        // Runtime-but-must-survive-chunk-unload fields
-        tag.putInt("StateTicks", stateTicks);
-        tag.putInt("AttackCooldown", attackCooldown);
-        tag.putBoolean("AutoSeekDone", autoSeekDone);
-        tag.putBoolean("HasEverHadFireControl", hasEverHadFireControl);
-        tag.putBoolean("DiveCommitted", diveCommitted);
-        if (diveTarget != null) {
-            tag.putDouble("DiveTargetX", diveTarget.x);
-            tag.putDouble("DiveTargetY", diveTarget.y);
-            tag.putDouble("DiveTargetZ", diveTarget.z);
-        }
-        tag.putBoolean("LevelBombDropped", levelBombDropped);
-        if (levelRunDirection != null) {
-            tag.putDouble("LevelRunDirX", levelRunDirection.x);
-            tag.putDouble("LevelRunDirY", levelRunDirection.y);
-            tag.putDouble("LevelRunDirZ", levelRunDirection.z);
-        }
-        if (levelDropPoint != null) {
-            tag.putDouble("LevelDropPointX", levelDropPoint.x);
-            tag.putDouble("LevelDropPointY", levelDropPoint.y);
-            tag.putDouble("LevelDropPointZ", levelDropPoint.z);
-        }
-        tag.putString("LastKnownState", lastKnownState.name());
-        tag.putBoolean("IsForcedReturn", isForcedReturn);
-        tag.putDouble("OrbitAngle", orbitAngle);
     }
+
+    // ===== 供包内辅助类/上下文使用的访问器 =====
+
+    int getFuelCapacity() { return fuelCapacity; }
+    int getCurrentFuel() { return currentFuel; }
+    boolean hasFuel() { return currentFuel > 0; }
+    void consumeFuel() { if (currentFuel > 0) currentFuel--; }
+    void setCurrentFuel(int value) { this.currentFuel = Math.max(0, Math.min(fuelCapacity, value)); }
+    void markForcedReturn() { this.isForcedReturn = true; }
+    int getWeaponSlotIndex() { return weaponSlotIndex; }
+    ItemStack getOriginalStack() { return originalStack; }
+    void setLastReturnResult(String result) { this.lastReturnResult = result; }
+    boolean isForcedReturn() { return isForcedReturn; }
+    long spawnTimeMs() { return spawnTimeMs; }
+    int getAirtimeTicks() { return airtimeTicks; }
+    void incrementAirtimeTicks() { this.airtimeTicks++; }
 }

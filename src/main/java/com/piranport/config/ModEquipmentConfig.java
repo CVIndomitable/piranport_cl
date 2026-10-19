@@ -246,14 +246,11 @@ public final class ModEquipmentConfig {
     public static final TerminalConfigValue<Double> FIRE_BOMB_SINGLE_ROLL =
             TerminalConfigValue.number("equipment", "fire_debuff", "bomb_single_roll", 0.8, 0.0, 1.0);
 
-    // ===== 舰载机攻击战术（AircraftCombat）=====
-    // WHY：这些原先是 AircraftCombat 各攻击剖面的写死手感常量，策划需在调试终端实时调，
-    // 故统一下沉（用户规则：需要调手感的数值一律终端可调）。默认值全部 = 下沉前的写死值，
-    // 纯重构、行为逐字节等价。
-    // 插入层选择：AircraftCombatService 只是把「profile → AttackStrategy」映射到旧战斗分支的
-    // 迁移适配器（AttackStrategy 默认 execute 直接调 AircraftCombat.tickAttacking），战术实现
-    // 仍集中在 AircraftCombat 且玩家/自主两条路径共用同一份 tickXxx。因此参数在 AircraftCombat
-    // 这一层读取，而不是塞进各 profile 策略（策略里目前没有任何数值，塞进去反而会把共用战术拆散）。
+    // ===== 舰载机攻击战术（aviation.combat.strategy）=====
+    // WHY：这些原先是各攻击剖面战术里的写死手感常量，策划需在调试终端实时调，
+    // 故统一下沉（用户规则：需要调手感的数值一律终端可调）。默认值全部 = 下沉前的写死值。
+    // 战术实现已经下沉到 aviation.combat.strategy 的各个 AttackStrategy，玩家与自主
+    // 两条路径共用同一份策略；参数仍在策略层读取，终端键与旧版保持兼容。
     // 键：global.<剖面>_combat.*；水平轰炸沿用既有 target level_bomber（与既有
     // horizontal_velocity_multiplier 归到同一目标下）。
     //
@@ -384,10 +381,10 @@ public final class ModEquipmentConfig {
     /** 鱼雷投放点相对载机的高度下沉（格）。默认 1.0。 */
     public static final TerminalConfigValue<Double> TORPEDO_BOMBER_DROP_HEIGHT_OFFSET =
             TerminalConfigValue.number("aircraft", "torpedo_bomber_combat", "drop_height_offset", 1.0, 0.0, 16.0);
-    /** 空投鱼雷初速（格/tick）。默认 0.8。
+    /** 空投鱼雷初速（格/tick）。默认 0.3（= 6 格/秒）。
      *  WHY 与 NPC 齐射的 torpedo_salvo.speed 分开：那是 NPC 水面齐射，这是空投雷，语义不同不可合并。 */
     public static final TerminalConfigValue<Double> TORPEDO_BOMBER_TORPEDO_SPEED =
-            TerminalConfigValue.number("aircraft", "torpedo_bomber_combat", "torpedo_speed", 0.8, 0.0, 10.0);
+            TerminalConfigValue.number("aircraft", "torpedo_bomber_combat", "torpedo_speed", 0.3, 0.0, 10.0);
     /** 空投鱼雷初速的垂直分量（格/tick，入水角度）。默认 -0.1。 */
     public static final TerminalConfigValue<Double> TORPEDO_BOMBER_TORPEDO_VERTICAL_SPEED =
             TerminalConfigValue.number("aircraft", "torpedo_bomber_combat", "torpedo_vertical_speed", -0.1, -10.0, 10.0);
@@ -489,6 +486,9 @@ public final class ModEquipmentConfig {
     /** 滞空上限（tick），超过强制返航/回收。默认 12000。 */
     public static final TerminalConfigValue<Integer> AIRCRAFT_MAX_AIRTIME =
             TerminalConfigValue.integer("aircraft", "aircraft_flight", "max_airtime", 12000, 1, 1000000);
+    /** 返航超时（tick），超过直接回收并返还物品。默认 1200（60 秒）。 */
+    public static final TerminalConfigValue<Integer> AIRCRAFT_RETURN_TIMEOUT_TICKS =
+            TerminalConfigValue.integer("aircraft", "aircraft_flight", "return_timeout_ticks", 1200, 20, 120000);
     /** 轨道角速率（弧度/tick，再乘面板速度与阶段系数）。默认 0.015。 */
     public static final TerminalConfigValue<Double> AIRCRAFT_ORBIT_ANGULAR_RATE =
             TerminalConfigValue.number("aircraft", "aircraft_flight", "orbit_angular_rate", 0.015, 0.0, 3.141592653589793);
@@ -509,7 +509,7 @@ public final class ModEquipmentConfig {
             TerminalConfigValue.number("aircraft", "aircraft_flight", "min_recon_distance", 200.0, 0.0, 8192.0);
 
     // ===== 舰载机索敌 / 起飞判据 / 攻击兜底（2026-10-13 下沉）=====
-    // WHY：这些原先是 AircraftEntity / AircraftCombat / AircraftAswRecon 里的写死距离与
+    // WHY：这些原先是 AircraftEntity / 各攻击策略 / AircraftAswRecon 里的写死距离与
     // tick 常量，策划需实时调手感（用户规则）。默认值全部 = 下沉前写死值，行为等价。
     // 键：global.aircraft.* / global.asw.* / global.recon.* / global.missile.*，
     // group=aircraft 使其归入终端「航空」分类。

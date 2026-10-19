@@ -100,14 +100,15 @@ public class DungeonPortalEntity extends Entity {
         super.tick();
 
         if (level().isClientSide()) {
-            // Client-side: spinning visual + particles (use tickCount directly, no SynchedEntityData write)
+            // 视觉主体是方块门框；实体本身不可见（DungeonPortalRenderer 不再画门），
+            // 只保留开口内的环境粒子。半径压在 0.9 内，避免粒子跑进实心框架块里白白被遮挡。
             if (tickCount % 4 == 0) {
                 double angle = tickCount * 0.1;
                 level().addParticle(net.minecraft.core.particles.ParticleTypes.PORTAL,
-                        getX() + Math.cos(angle) * 1.5,
-                        getY() + 1.0 + Math.sin(tickCount * 0.05) * 0.3,
-                        getZ() + Math.sin(angle) * 1.5,
-                        0, 0.05, 0);
+                        getX() + Math.cos(angle) * 0.9,
+                        getY() - 0.5 + Math.sin(tickCount * 0.15) * 0.9,
+                        getZ() + Math.sin(angle) * 0.9,
+                        0, 0.02, 0);
             }
             return;
         }

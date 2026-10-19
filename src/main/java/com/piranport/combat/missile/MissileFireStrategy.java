@@ -1,5 +1,6 @@
 package com.piranport.combat.missile;
 
+import com.piranport.ammo.CreativeAmmoCache;
 import com.piranport.aviation.FireControlManager;
 import com.piranport.component.LoadedAmmo;
 import com.piranport.component.SlotCooldowns;
@@ -60,9 +61,10 @@ public class MissileFireStrategy {
                                          MissileLauncherItem launcher, SlotCooldowns cooldowns) {
         ItemStack launcherStack = weaponSlot == 40 ? inv.offhand.get(0) : inv.items.get(weaponSlot);
 
-        // Creative mode: auto-find missile from inventory
-        if (player.getAbilities().instabuild) {
-            Item ammoItem = launcher.getAmmoItem();
+        // Creative mode / 弹药库勾选：直接发射，不要求 LOADED_AMMO
+        Item manualAmmo = launcher.getAmmoItem();
+        if (player.getAbilities().instabuild || CreativeAmmoCache.isInfinite(player, manualAmmo)) {
+            Item ammoItem = manualAmmo;
             int coreSlot = -1;
             int ammoSlot = -1;
 
@@ -129,13 +131,16 @@ public class MissileFireStrategy {
                                                Inventory inv, int weaponSlot, int coreSlot,
                                                MissileLauncherItem launcher, SlotCooldowns cooldowns) {
         Item ammoItem = launcher.getAmmoItem();
+        boolean infinite = CreativeAmmoCache.isInfinite(player, ammoItem);
         ItemStack launcherStack = weaponSlot == 40 ? inv.offhand.get(0) : inv.items.get(weaponSlot);
         LoadedAmmo loaded = launcherStack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
-        if (!loaded.hasAmmo()) {
+        if (!loaded.hasAmmo() && !infinite) {
             player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
             return;
         }
-        String ammoId = loaded.ammoItemId();
+        String ammoId = loaded.hasAmmo()
+                ? loaded.ammoItemId()
+                : BuiltInRegistries.ITEM.getKey(ammoItem).toString();
         spawnMissile(level, player, launcherStack, launcher, ammoId);
         launcherStack.remove(ModDataComponents.LOADED_AMMO.get());
 
@@ -155,8 +160,8 @@ public class MissileFireStrategy {
             }
         }
 
-        // Creative mode: always has next round
-        if (player.getAbilities().instabuild) {
+        // Creative mode / 弹药库勾选：always has next round
+        if (player.getAbilities().instabuild || infinite) {
             nextAvailable = 1;
         }
 
@@ -237,8 +242,9 @@ public class MissileFireStrategy {
             // Check cooldown
             if (cooldowns.isOnCooldown(slot, gameTime)) continue;
 
-            // Find ammo in inventory
+            // Find ammo in inventory（弹药库勾选时无需实体弹药）
             Item ammoItem = launcher.getAmmoItem();
+            boolean infinite = CreativeAmmoCache.isInfinite(player, ammoItem);
             int ammoSlot = -1;
             for (int i = 0; i < inv.items.size(); i++) {
                 if (i == coreSlot || i == slot) continue;
@@ -254,12 +260,14 @@ public class MissileFireStrategy {
                     ammoSlot = 40;
                 }
             }
-            if (ammoSlot == -1) continue; // No ammo for this launcher, try next
+            if (ammoSlot == -1 && !infinite) continue; // No ammo for this launcher, try next
 
-            // Consume 1 ammo
+            // Consume 1 ammo（弹药库勾选时不扣实体物品）
             String ammoId = BuiltInRegistries.ITEM.getKey(ammoItem).toString();
-            PiranPortDebug.consumeAmmo(player.getUUID(), 
-                    ammoSlot == 40 ? inv.offhand.get(0) : inv.items.get(ammoSlot), 1);
+            if (ammoSlot >= 0 && !infinite) {
+                PiranPortDebug.consumeAmmo(player.getUUID(),
+                        ammoSlot == 40 ? inv.offhand.get(0) : inv.items.get(ammoSlot), 1);
+            }
 
             // Spawn missile aimed at fire control target
             spawnMissileAutoAim(level, player, stack, launcher, ammoId);

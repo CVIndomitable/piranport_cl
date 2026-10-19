@@ -18,11 +18,6 @@ public class ModPackets {
                 ApplyModificationPayload.STREAM_CODEC,
                 ApplyModificationPayload::handle
         );
-        registrar.playToServer(
-                ToggleFighterGroundAttackPayload.TYPE,
-                ToggleFighterGroundAttackPayload.STREAM_CODEC,
-                ToggleFighterGroundAttackPayload::handle
-        );
         // Phase 20: fire control
         registrar.playToServer(
                 FireControlPayload.TYPE,
@@ -79,6 +74,12 @@ public class ModPackets {
                 DebugToggleAckPayload.STREAM_CODEC,
                 DebugToggleAckPayload::handle
         );
+        // S2C: 飞机定义同步（客户端资源管理器看不到 data/，由服务端下发）
+        registrar.playToClient(
+                AircraftDefinitionSyncPayload.TYPE,
+                AircraftDefinitionSyncPayload.STREAM_CODEC,
+                AircraftDefinitionSyncPayload::handle
+        );
         registrar.playToServer(
                 SnapshotRequestPayload.TYPE,
                 SnapshotRequestPayload.STREAM_CODEC,
@@ -125,6 +126,13 @@ public class ModPackets {
                 SwitchAmmoPayload.TYPE,
                 SwitchAmmoPayload.STREAM_CODEC,
                 SwitchAmmoPayload::handle
+        );
+
+        // 创造模式弹药库 GUI：勾选/全选/清空
+        registrar.playToServer(
+                CreativeAmmoCachePayload.TYPE,
+                CreativeAmmoCachePayload.STREAM_CODEC,
+                CreativeAmmoCachePayload::handle
         );
 
         // Wire-guided torpedo guidance (view-control mode)
@@ -200,11 +208,6 @@ public class ModPackets {
                 com.piranport.dungeon.network.SelectStagePayload::handle
         );
         registrar.playToServer(
-                com.piranport.dungeon.network.ReviveRequestPayload.TYPE,
-                com.piranport.dungeon.network.ReviveRequestPayload.STREAM_CODEC,
-                com.piranport.dungeon.network.ReviveRequestPayload::handle
-        );
-        registrar.playToServer(
                 com.piranport.dungeon.network.TownScrollUsePayload.TYPE,
                 com.piranport.dungeon.network.TownScrollUsePayload.STREAM_CODEC,
                 com.piranport.dungeon.network.TownScrollUsePayload::handle
@@ -250,11 +253,6 @@ public class ModPackets {
                 com.piranport.dungeon.network.DungeonBossOverlayPayload.TYPE,
                 com.piranport.dungeon.network.DungeonBossOverlayPayload.STREAM_CODEC,
                 com.piranport.dungeon.network.DungeonBossOverlayPayload::handle
-        );
-        registrar.playToClient(
-                com.piranport.dungeon.network.PlayerDiedInDungeonPayload.TYPE,
-                com.piranport.dungeon.network.PlayerDiedInDungeonPayload.STREAM_CODEC,
-                com.piranport.dungeon.network.PlayerDiedInDungeonPayload::handle
         );
         registrar.playToClient(
                 com.piranport.dungeon.network.DungeonRegistrySyncPayload.TYPE,

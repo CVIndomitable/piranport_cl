@@ -2,11 +2,17 @@ package com.piranport.client;
 
 import com.piranport.PiranPort;
 import com.piranport.artillery.ArtilleryItem;
+import com.piranport.combat.TransformationManager;
+import com.piranport.component.LoadedAmmo;
 import com.piranport.component.WeaponCooldown;
 import com.piranport.item.AircraftItem;
+import com.piranport.item.DepthChargeLauncherItem;
+import com.piranport.item.MissileLauncherItem;
+import com.piranport.item.TorpedoLauncherItem;
 import com.piranport.registry.ModDataComponents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -15,8 +21,10 @@ import net.neoforged.neoforge.client.event.RenderGuiLayerEvent;
 import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 
 /**
- * HUD 层：显示火炮装填进度条
- * Issue 10: 在 HUD 上显示装填进度，使其更加明显
+ * HUD 层：显示武器装填进度条。
+ *
+ * <p>物品图标上的小读条已移除，这里是装填进度的唯一显示。火炮、舰载机、鱼雷/导弹/深弹
+ * 发射器共用 {@code WEAPON_COOLDOWN} 计时，因此只认组件与武器类型。
  */
 @EventBusSubscriber(modid = PiranPort.MOD_ID, value = Dist.CLIENT)
 public class ReloadProgressHudLayer {
@@ -38,14 +46,15 @@ public class ReloadProgressHudLayer {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || mc.level == null) return;
 
-        // 火炮与舰载机共用一套读条（WEAPON_COOLDOWN），因此这里只认计时组件不认物品种类。
-        ItemStack mainHand = mc.player.getMainHandItem();
-        if (!(mainHand.getItem() instanceof ArtilleryItem) && !(mainHand.getItem() instanceof AircraftItem)) {
-            return;
+        // 主手优先，副手兜底：鱼雷发射器经常放副手。
+        ItemStack weapon = mc.player.getMainHandItem();
+        if (!hasReloadBar(weapon, mc.player)) {
+            weapon = mc.player.getOffhandItem();
+            if (!hasReloadBar(weapon, mc.player)) return;
         }
 
         // 检查是否有冷却
-        WeaponCooldown cooldown = mainHand.get(ModDataComponents.WEAPON_COOLDOWN.get());
+        WeaponCooldown cooldown = weapon.get(ModDataComponents.WEAPON_COOLDOWN.get());
         if (cooldown == null) return;
 
         long currentTime = mc.level.getGameTime();
@@ -65,6 +74,34 @@ public class ReloadProgressHudLayer {
         renderProgressBar(event.getGuiGraphics(), mc, progress, currentTime);
     }
     
+    /**
+     * 该武器是否用大读条显示 {@code WEAPON_COOLDOWN}。
+     *
+     * <p>没有装填手段的空膛鱼雷发射器，开火后的冷却不是"装填中"，不画读条，
+     * 与原物品图标小读条的行为保持一致。
+     */
+    private static boolean hasReloadBar(ItemStack stack, Player player) {
+        if (stack.isEmpty()) return false;
+        boolean isWeapon = stack.getItem() instanceof ArtilleryItem
+                || stack.getItem() instanceof AircraftItem
+                || stack.getItem() instanceof TorpedoLauncherItem
+                || stack.getItem() instanceof MissileLauncherItem
+                || stack.getItem() instanceof DepthChargeLauncherItem;
+        if (!isWeapon) return false;
+        WeaponCooldown cooldown = stack.get(ModDataComponents.WEAPON_COOLDOWN.get());
+        if (cooldown == null) return false;
+        if (stack.getItem() instanceof TorpedoLauncherItem) {
+            LoadedAmmo loaded = stack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
+            if (!loaded.hasAmmo()) {
+                ItemStack core = TransformationManager.findTransformedCore(player);
+                boolean canReload = !core.isEmpty()
+                        && TransformationManager.hasTorpedoReloadEquipped(player, core);
+                if (!canReload) return false;
+            }
+        }
+        return true;
+    }
+
     private static void renderProgressBar(GuiGraphics graphics, Minecraft mc, float progress, long currentTick) {
         int screenWidth = mc.getWindow().getGuiScaledWidth();
         int screenHeight = mc.getWindow().getGuiScaledHeight();

@@ -1,6 +1,7 @@
 package com.piranport.compat.maid.combat;
 
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
+import com.piranport.ammo.CreativeAmmoCache;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
@@ -54,11 +55,21 @@ public final class AmmoConsumer {
     }
 
     public static boolean hasItem(Player player, Item item, int amount) {
+        if (CreativeAmmoCache.isInfinite(player, item)) return true;
         return has(player, s -> !s.isEmpty() && s.is(item), amount);
     }
 
     public static int consumeItem(Player player, Item item, int amount) {
+        // 弹药库勾选的物品不扣真实堆叠。
+        if (CreativeAmmoCache.isInfinite(player, item)) return amount;
         return consume(player, s -> !s.isEmpty() && s.is(item), amount);
+    }
+
+    /** 单个物品的可用数量，弹药库勾选时返回无限。 */
+    public static int countItem(Player player, Item item) {
+        if (player == null) return 0;
+        if (CreativeAmmoCache.isInfinite(player, item)) return CreativeAmmoCache.INFINITE;
+        return count(player, s -> !s.isEmpty() && s.is(item));
     }
 
     /**
@@ -71,6 +82,7 @@ public final class AmmoConsumer {
         if (isFreebie(player)) return Integer.MAX_VALUE;
         int total = 0;
         for (Item item : items) {
+            if (CreativeAmmoCache.isInfinite(player, item)) return CreativeAmmoCache.INFINITE;
             total += count(player, s -> !s.isEmpty() && s.is(item));
         }
         return total;

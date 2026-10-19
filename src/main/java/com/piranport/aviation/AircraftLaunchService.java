@@ -1,6 +1,6 @@
 package com.piranport.aviation;
 
-import com.piranport.component.AircraftInfo;
+import com.piranport.component.AircraftState;
 import com.piranport.entity.AircraftEntity;
 import com.piranport.item.AircraftItem;
 import com.piranport.npc.deepocean.AbstractDeepOceanEntity;
@@ -104,20 +104,15 @@ public final class AircraftLaunchService {
         }
 
         ItemStack launchStack = aircraftStack.copy();
-        AircraftInfo info = launchStack.get(ModDataComponents.AIRCRAFT_INFO.get());
-        if (info == null) {
-            throw new IllegalArgumentException("aircraft item has no AIRCRAFT_INFO component: " + itemId);
-        }
+        AircraftState state = AircraftDefinitionService.stateOf(launchStack);
 
-        // Resolve by the registered item ID before constructing the entity. The
-        // definition may be data-pack backed and can differ from legacy type
-        // defaults, so autonomous aircraft must start with its effective capacity.
+        // 自主飞机按定义满油起飞；定义必须存在，缺失视为数据错误。
         AircraftDefinition definition = AircraftDefinitionService.resolve(launchStack);
         if (definition == null) {
             throw new IllegalArgumentException("aircraft item has no definition: " + itemId);
         }
-        launchStack.set(ModDataComponents.AIRCRAFT_INFO.get(),
-                withFullFuel(info, AircraftStatsService.resolve(definition)));
+        launchStack.set(ModDataComponents.AIRCRAFT_STATE.get(),
+                withFullFuel(state, AircraftStatsService.resolve(definition)));
 
         // Keep createAutonomous on AircraftEntity as the low-level field mapper;
         // this service owns the stable ID, definition and context preparation.
@@ -193,9 +188,7 @@ public final class AircraftLaunchService {
         }
     }
 
-    private static AircraftInfo withFullFuel(AircraftInfo info, ResolvedAircraftStats stats) {
-        return new AircraftInfo(info.aircraftType(), stats.fuelCapacity(), stats.ammoCapacity(), stats.fuelCapacity(),
-                info.panelDamage(), info.panelSpeed(), stats.weight(), info.bombingMode(),
-                info.payloadLoaded(), info.definitionId());
+    private static AircraftState withFullFuel(AircraftState state, ResolvedAircraftStats stats) {
+        return state.withCurrentFuel(stats.fuelCapacity());
     }
 }

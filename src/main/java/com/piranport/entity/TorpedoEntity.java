@@ -59,6 +59,9 @@ public class TorpedoEntity extends ThrowableItemProjectile {
             SynchedEntityData.defineId(TorpedoEntity.class, EntityDataSerializers.FLOAT);
     private static final EntityDataAccessor<Float> DATA_AIR_DROP_DIR_Z =
             SynchedEntityData.defineId(TorpedoEntity.class, EntityDataSerializers.FLOAT);
+    /** 航空鱼雷标记：只由鱼雷机投放，玩家任何发射器都装不进去。 */
+    private static final EntityDataAccessor<Boolean> DATA_AERIAL =
+            SynchedEntityData.defineId(TorpedoEntity.class, EntityDataSerializers.BOOLEAN);
 
     // ===== 方案1：客户端位置插值（照抄 CannonProjectileEntity 的成熟写法）=====
     // 原版 Entity.lerpTo 直接 setPos，导致 xo==x、partial-tick 插值失效 → 抖动。
@@ -75,7 +78,7 @@ public class TorpedoEntity extends ThrowableItemProjectile {
     // 兜底值全部走调试终端（global.torpedo.*）：默认 = 下沉前写死值。真实发射路径
     // （TorpedoFireStrategy）会按型号覆盖伤害/航速/寿命，见类尾口径说明。
     private float damage = (float) (double) ModEquipmentConfig.TORPEDO_DEFAULT_DAMAGE.get();
-    private float torpedoSpeed = 1.0f;
+    private float torpedoSpeed = 0.3f;
     private int lifetime = ModEquipmentConfig.TORPEDO_DEFAULT_LIFETIME.get();
     private float explosionRadius = (float) (double) ModEquipmentConfig.TORPEDO_DEFAULT_EXPLOSION_RADIUS.get();
     private boolean magnetic = false;
@@ -114,6 +117,10 @@ public class TorpedoEntity extends ThrowableItemProjectile {
     private boolean airDrop = false;
     private Vec3 airDropDirection = Vec3.ZERO;
 
+    // 航空鱼雷：技术性雷种，只由鱼雷机投放。用于把默认物品/显示名解析为「航空鱼雷」，
+    // 而不是落到 caliber 对应的 533mm 标准鱼雷。
+    private boolean aerialTorpedo = false;
+
     // 磁性近炸（读终端 global.torpedo.magnetic_*）
     private static double magneticDetonateDist() { return ModEquipmentConfig.TORPEDO_MAGNETIC_DETONATE_DIST.get(); }
     private static int magneticArmTicks() { return ModEquipmentConfig.TORPEDO_MAGNETIC_ARM_TICKS.get(); }
@@ -136,13 +143,13 @@ public class TorpedoEntity extends ThrowableItemProjectile {
             this.explosionRadius = (float) (double) ModEquipmentConfig.TORPEDO_DEFAULT_EXPLOSION_RADIUS.get();
         }
         // 走 setter 而非直接赋字段：同步字段要同时写进 entityData，随生成包下发给客户端。
-        setSpeed(0.9f);
+        setSpeed(0.3f);
     }
 
     @Override
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
         super.defineSynchedData(builder);
-        builder.define(DATA_SPEED, 1.0f);
+        builder.define(DATA_SPEED, 0.3f);
         builder.define(DATA_MAGNETIC, false);
         builder.define(DATA_WIRE_GUIDED, false);
         builder.define(DATA_ACOUSTIC, false);
@@ -150,6 +157,7 @@ public class TorpedoEntity extends ThrowableItemProjectile {
         builder.define(DATA_AIR_DROP, false);
         builder.define(DATA_AIR_DROP_DIR_X, 0.0f);
         builder.define(DATA_AIR_DROP_DIR_Z, 0.0f);
+        builder.define(DATA_AERIAL, false);
     }
 
     public float getTorpedoSpeed() { return torpedoSpeed; }
@@ -191,10 +199,18 @@ public class TorpedoEntity extends ThrowableItemProjectile {
         entityData.set(DATA_AIR_DROP_DIR_Z, (float) this.airDropDirection.z);
     }
 
+    /** 标记为航空鱼雷（仅鱼雷机投放路径调用）。 */
+    public void setAerialTorpedo(boolean aerialTorpedo) {
+        this.aerialTorpedo = aerialTorpedo;
+        entityData.set(DATA_AERIAL, aerialTorpedo);
+    }
+
+    public boolean isAerialTorpedo() { return aerialTorpedo; }
+
     public void setAcoustic(boolean acoustic) {
         this.acoustic = acoustic;
         entityData.set(DATA_ACOUSTIC, acoustic);
-        if (acoustic) setSpeed(0.7f);
+        if (acoustic) setSpeed(0.3f);
     }
 
     /** Phase 27：策划 §3.3 氧气鱼雷 — 高速且无可见航迹 */
@@ -398,6 +414,7 @@ public class TorpedoEntity extends ThrowableItemProjectile {
         this.acoustic = entityData.get(DATA_ACOUSTIC);
         this.oxygen = entityData.get(DATA_OXYGEN);
         this.airDrop = entityData.get(DATA_AIR_DROP);
+        this.aerialTorpedo = entityData.get(DATA_AERIAL);
         if (this.airDrop) {
             this.airDropDirection = new Vec3(
                     entityData.get(DATA_AIR_DROP_DIR_X), 0, entityData.get(DATA_AIR_DROP_DIR_Z));
@@ -406,6 +423,8 @@ public class TorpedoEntity extends ThrowableItemProjectile {
 
     @Override
     protected Item getDefaultItem() {
+        // 航空鱼雷不是可装填型号：命中提示、拾取结果都解析到专用弹药物品「航空鱼雷」。
+        if (aerialTorpedo) return ModItems.AERIAL_TORPEDO.get();
         return switch (caliber) {
             case 610 -> ModItems.TORPEDO_610MM.get();
             case 720 -> ModItems.TORPEDO_720MM_TYPE0.get();
@@ -951,6 +970,13 @@ public class TorpedoEntity extends ThrowableItemProjectile {
         super.remove(reason);
     }
 
+    /** 死亡消息等场景按「航空鱼雷」显示，而不是通用实体名「鱼雷」。 */
+    @Override
+    public Component getDisplayName() {
+        if (aerialTorpedo) return ModItems.AERIAL_TORPEDO.get().getDescription();
+        return super.getDisplayName();
+    }
+
     @Override
     public void addAdditionalSaveData(CompoundTag tag) {
         super.addAdditionalSaveData(tag);
@@ -964,6 +990,7 @@ public class TorpedoEntity extends ThrowableItemProjectile {
         tag.putBoolean("Acoustic", acoustic);
         tag.putBoolean("Oxygen", oxygen);
         tag.putBoolean("AirDrop", airDrop);
+        tag.putBoolean("AerialTorpedo", aerialTorpedo);
         if (airDrop) {
             tag.putDouble("AirDropDirX", airDropDirection.x);
             tag.putDouble("AirDropDirZ", airDropDirection.z);
@@ -991,7 +1018,7 @@ public class TorpedoEntity extends ThrowableItemProjectile {
         caliber = tag.getInt("Caliber");
         damage = tag.getFloat("Damage");
         torpedoSpeed = tag.getFloat("TorpedoSpeed");
-        if (torpedoSpeed <= 0) torpedoSpeed = 1.0f;
+        if (torpedoSpeed <= 0) torpedoSpeed = 0.3f;
         lifetime = tag.getInt("Lifetime");
         if (lifetime <= 0) lifetime = ModEquipmentConfig.TORPEDO_DEFAULT_LIFETIME.get();
         explosionRadius = tag.getFloat("ExplosionRadius");
@@ -1001,6 +1028,7 @@ public class TorpedoEntity extends ThrowableItemProjectile {
         acoustic = tag.getBoolean("Acoustic");
         oxygen = tag.getBoolean("Oxygen");
         airDrop = tag.getBoolean("AirDrop");
+        aerialTorpedo = tag.getBoolean("AerialTorpedo");
         if (airDrop && tag.contains("AirDropDirX")) {
             airDropDirection = new Vec3(tag.getDouble("AirDropDirX"), 0, tag.getDouble("AirDropDirZ"));
         }
@@ -1031,5 +1059,6 @@ public class TorpedoEntity extends ThrowableItemProjectile {
         entityData.set(DATA_AIR_DROP, airDrop);
         entityData.set(DATA_AIR_DROP_DIR_X, (float) airDropDirection.x);
         entityData.set(DATA_AIR_DROP_DIR_Z, (float) airDropDirection.z);
+        entityData.set(DATA_AERIAL, aerialTorpedo);
     }
 }

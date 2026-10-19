@@ -5,6 +5,7 @@ import com.piranport.network.CannonImpactEffectPayload;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvent;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 
@@ -74,6 +75,9 @@ public interface ClientBridge {
 
     void openTownScrollScreen();
 
+    /** 打开创造模式弹药库的勾选界面。 */
+    void openCreativeAmmoCacheScreen(InteractionHand hand);
+
     void openDungeonResultScreen(String stageName, long timeMillis, boolean isFirstClear, List<String> rewardNames);
 
     void openDungeonResultScreen(String stageName, long timeMillis, boolean isFirstClear,
@@ -82,7 +86,6 @@ public interface ClientBridge {
     void openDungeonResultScreen(String stageName, long timeMillis, boolean isFirstClear,
                                  List<String> rewardNames, int kills, String ending);
 
-    void openDungeonReviveScreen();
 
     void updateDungeonNode(String nodeId);
 

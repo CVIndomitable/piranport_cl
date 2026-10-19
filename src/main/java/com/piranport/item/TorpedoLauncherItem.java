@@ -46,7 +46,7 @@ public class TorpedoLauncherItem extends Item {
         return tier;
     }
 
-    /** 发射器负重：ceil((1 + 联装) × 口径英寸² × 0.0055)。只算管子不算弹种（数值/08）。 */
+    /** 发射器负重：ceil((1 + 联装) × 口径英寸² × 0.00275)。只算管子不算弹种（数值/08）。 */
     public int getWeight() {
         return computeWeight(caliber, tubeCount);
     }
@@ -63,9 +63,10 @@ public class TorpedoLauncherItem extends Item {
 
     public static int computeWeight(int caliberMm, int tubes) {
         int inches = caliberInches(caliberMm);
-        // 用整数运算避开 0.0055 的浮点误差：ceil((1+n)·c²·55 / 10000)
+        // 系数 0.00275 = 原 0.0055 的一半（2026-10-18 全局减半）。
+        // 用整数运算避开浮点误差：ceil((1+n)·c²·55 / 20000)
         long numerator = (long) (1 + tubes) * inches * inches * 55L;
-        return (int) ((numerator + 9999L) / 10000L);
+        return (int) ((numerator + 19999L) / 20000L);
     }
 
     public int getCaliber() {
@@ -178,12 +179,8 @@ public class TorpedoLauncherItem extends Item {
                                 List<Component> tooltipComponents, TooltipFlag tooltipFlag) {
         ExperienceShellItem.appendEnhancementTooltip(stack, tooltipComponents);
 
-        WeaponCategory cat = stack.get(ModDataComponents.WEAPON_CATEGORY.get());
-        if (cat != null) {
-            tooltipComponents.add(Component.translatable("tooltip.piranport.weapon_category." + cat.getSerializedName())
-                    .withStyle(net.minecraft.ChatFormatting.DARK_GREEN));
-        }
-
+        // 空膛不再显示「未装填鱼雷」：空膛/装填由物品模型的 loaded/empty 图标切换表达，
+        // 提示只在真正装了雷时给出弹种与数量。
         LoadedAmmo loadedAmmo = stack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
         if (loadedAmmo.hasAmmo()) {
             String ammoName = BuiltInRegistries.ITEM.get(net.minecraft.resources.ResourceLocation.parse(loadedAmmo.ammoItemId()))
@@ -191,22 +188,22 @@ public class TorpedoLauncherItem extends Item {
             tooltipComponents.add(Component.translatable("tooltip.piranport.launcher.loaded_ammo",
                     loadedAmmo.count(), ammoName)
                     .withStyle(net.minecraft.ChatFormatting.GREEN));
-        } else {
-            tooltipComponents.add(Component.translatable("tooltip.piranport.launcher.no_ammo_loaded")
-                    .withStyle(net.minecraft.ChatFormatting.GRAY));
         }
 
-        tooltipComponents.add(tier.tooltip());
         // 数值/08：说明必须写明口径和联装（不藏在 Shift 后）
         tooltipComponents.add(Component.translatable("tooltip.piranport.launcher.spec", caliber, tubeCount)
                 .withStyle(net.minecraft.ChatFormatting.GRAY));
 
         if (ClientHooks.isClient()) {
             if (ClientHooks.hasShiftDown()) {
-                tooltipComponents.add(Component.translatable("tooltip.piranport.launcher.caliber", caliber)
-                        .withStyle(net.minecraft.ChatFormatting.GRAY));
-                tooltipComponents.add(Component.translatable("tooltip.piranport.launcher.tubes", tubeCount)
-                        .withStyle(net.minecraft.ChatFormatting.AQUA));
+                // 类型/稀有度折叠进 Shift 详情；口径与联装仍由上方常驻的 launcher.spec 显示。
+                WeaponCategory cat = stack.get(ModDataComponents.WEAPON_CATEGORY.get());
+                if (cat != null) {
+                    tooltipComponents.add(Component.translatable(
+                                    "tooltip.piranport.weapon_category." + cat.getSerializedName())
+                            .withStyle(net.minecraft.ChatFormatting.DARK_GREEN));
+                }
+                tooltipComponents.add(tier.tooltip());
                 tooltipComponents.add(Component.translatable("tooltip.piranport.cooldown",
                         String.format("%.1f", getCooldownTicks() / 20.0)).withStyle(net.minecraft.ChatFormatting.YELLOW));
                 if (stack.isDamageableItem()) {

@@ -1,9 +1,9 @@
 package com.piranport.aviation;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
+import com.mojang.serialization.JsonOps;
 import com.piranport.PiranPort;
-import com.piranport.component.AircraftInfo;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
@@ -14,123 +14,73 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.AddReloadListenerEvent;
 
 import java.io.BufferedReader;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-/** Loads immutable aircraft definitions from data/&lt;namespace&gt;/aircraft/*.json. */
+/**
+ * Loads immutable aircraft definitions from data/&lt;namespace&gt;/aircraft/*.json.
+ *
+ * <p>定义 ID = 物品注册名。文件 {@code data/piranport/aircraft/seafire.json}
+ * 对应 {@code piranport:seafire}。加载使用 DFU Codec，不做任何旧格式兼容。
+ */
 @EventBusSubscriber(modid = PiranPort.MOD_ID)
 public final class AircraftDefinitionReloadListener
-        extends SimplePreparableReloadListener<Map<String, AircraftDefinition>> {
-    private static final Gson GSON = new GsonBuilder().create();
+        extends SimplePreparableReloadListener<Map<ResourceLocation, AircraftDefinition>> {
 
     @Override
-    protected Map<String, AircraftDefinition> prepare(ResourceManager manager, ProfilerFiller profiler) {
-        Map<String, AircraftDefinition> result = new HashMap<>();
+    protected Map<ResourceLocation, AircraftDefinition> prepare(ResourceManager manager,
+                                                                ProfilerFiller profiler) {
+        Map<ResourceLocation, AircraftDefinition> result = new HashMap<>();
+        List<String> errors = new ArrayList<>();
         for (Map.Entry<ResourceLocation, Resource> entry : manager.listResources("aircraft",
                 location -> location.getPath().endsWith(".json")).entrySet()) {
             ResourceLocation resourceId = entry.getKey();
-            String definitionId = AircraftDefinitionService.canonicalResourceId(resourceId.toString()
-                    .substring(0, resourceId.toString().length() - ".json".length()));
+            ResourceLocation definitionId = definitionId(resourceId);
             try (BufferedReader reader = entry.getValue().openAsReader()) {
-                JsonAircraftDefinition json = GSON.fromJson(reader, JsonAircraftDefinition.class);
-                AircraftDefinition definition = json.toDefinition(definitionId);
+                JsonElement json = JsonParser.parseReader(reader);
+                AircraftDefinition definition = AircraftDefinition.JsonDefinition.CODEC
+                        .parse(JsonOps.INSTANCE, json)
+                        .getOrThrow(message -> new IllegalArgumentException(
+                                "invalid aircraft definition " + resourceId + ": " + message))
+                        .withId(definitionId);
                 if (result.put(definition.id(), definition) != null) {
-                    PiranPort.LOGGER.warn("Duplicate aircraft definition {} from resource {}",
-                            definition.id(), resourceId);
+                    errors.add("duplicate aircraft definition: " + definition.id()
+                            + " (resource " + resourceId + ")");
                 }
             } catch (Exception exception) {
-                PiranPort.LOGGER.error("Failed to load aircraft definition {}", resourceId, exception);
+                errors.add("failed to load " + resourceId + ": " + exception.getMessage());
             }
+        }
+        if (!errors.isEmpty()) {
+            throw new IllegalStateException("aircraft definition load failed:\n - "
+                    + String.join("\n - ", errors));
         }
         return result;
     }
 
     @Override
-    protected void apply(Map<String, AircraftDefinition> definitions, ResourceManager manager,
+    protected void apply(Map<ResourceLocation, AircraftDefinition> definitions, ResourceManager manager,
                          ProfilerFiller profiler) {
+        AircraftCatalog.rebuild(definitions);
         AircraftDefinitionService.replaceAll(definitions);
         PiranPort.LOGGER.info("Loaded {} aircraft definition(s)", definitions.size());
+    }
+
+    /** data/<ns>/aircraft/<path>.json → <ns>:<path>（装备 ID 与物品注册名一致）。 */
+    static ResourceLocation definitionId(ResourceLocation resourceId) {
+        String path = resourceId.getPath();
+        String prefix = "aircraft/";
+        if (!path.startsWith(prefix) || !path.endsWith(".json")) {
+            throw new IllegalArgumentException("not an aircraft definition resource: " + resourceId);
+        }
+        String name = path.substring(prefix.length(), path.length() - ".json".length());
+        return ResourceLocation.fromNamespaceAndPath(resourceId.getNamespace(), name);
     }
 
     @SubscribeEvent
     public static void onAddReloadListeners(AddReloadListenerEvent event) {
         event.addListener(new AircraftDefinitionReloadListener());
-    }
-
-    /** Gson DTO keeps resource parsing independent from the immutable domain record. */
-    static record JsonAircraftDefinition(
-            String aircraft_class,
-            String attack_profile,
-            String payload_type,
-            String visual_id,
-            int fuel_capacity,
-            int ammo_capacity,
-            float panel_damage,
-            float panel_speed,
-            int weight,
-            String bombing_mode,
-            Integer health,
-            Integer attack_cooldown
-    ) {
-        AircraftDefinition toDefinition(String id) {
-            AircraftInfo.AircraftType aircraftType = enumValue(aircraft_class, AircraftInfo.AircraftType.class, "aircraft_class", id);
-            int resolvedHealth = health != null ? health : legacyHealth(aircraftType);
-            int resolvedCooldown = attack_cooldown != null ? attack_cooldown : legacyCooldown(aircraftType);
-            return new AircraftDefinition(
-                    id,
-                    aircraftType,
-                    enumValue(attack_profile, AircraftDefinition.AttackProfile.class, "attack_profile", id),
-                    enumValue(payload_type, AircraftDefinition.PayloadType.class, "payload_type", id),
-                    visual_id,
-                    fuel_capacity,
-                    ammo_capacity,
-                    panel_damage,
-                    panel_speed,
-                    weight,
-                    enumValue(bombing_mode, AircraftInfo.BombingMode.class, "bombing_mode", id),
-                    resolvedHealth, resolvedCooldown);
-        }
-
-        private static int legacyHealth(AircraftInfo.AircraftType type) {
-            return switch (type) {
-                case FIGHTER, ROCKET_FIGHTER -> 20;
-                case DIVE_BOMBER -> 15;
-                case LEVEL_BOMBER -> 12;
-                case TORPEDO_BOMBER -> 15;
-                case ASW -> 12;
-                case RECON -> 10;
-            };
-        }
-
-        private static int legacyCooldown(AircraftInfo.AircraftType type) {
-            return switch (type) {
-                case FIGHTER -> 5;
-                case ROCKET_FIGHTER, TORPEDO_BOMBER -> 40;
-                case DIVE_BOMBER, LEVEL_BOMBER, RECON -> 1;
-                case ASW -> 30;
-            };
-        }
-
-        private static <E> E enumValue(String value, Class<E> type, String field, String id) {
-            if (value == null || value.isBlank()) {
-                throw new IllegalArgumentException(field + " is required for " + id);
-            }
-            String normalized = value.trim().toLowerCase(java.util.Locale.ROOT);
-            for (E constant : type.getEnumConstants()) {
-                String name = ((Enum<?>) constant).name().toLowerCase(java.util.Locale.ROOT);
-                if (name.equals(normalized)) return constant;
-                if (constant instanceof AircraftInfo.AircraftType aircraft
-                        && aircraft.getSerializedName().equals(normalized)) return constant;
-                if (constant instanceof AircraftInfo.BombingMode bombing
-                        && bombing.getSerializedName().equals(normalized)) return constant;
-                if (constant instanceof AircraftDefinition.AttackProfile profile
-                        && profile.id().equals(normalized)) return constant;
-                if (constant instanceof AircraftDefinition.PayloadType payload
-                        && (payload.registryName().equals(normalized)
-                        || payload.registryName().substring(payload.registryName().indexOf(':') + 1)
-                        .equals(normalized))) return constant;
-            }
-            throw new IllegalArgumentException("unknown " + field + " '" + value + "' for " + id);
-        }
     }
 }

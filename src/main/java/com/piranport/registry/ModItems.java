@@ -3,13 +3,13 @@ package com.piranport.registry;
 import com.piranport.item.ShipType;
 
 import com.piranport.PiranPort;
-import com.piranport.component.AircraftInfo;
 import com.piranport.component.FuelData;
 import com.piranport.component.PlaceableInfo;
 import com.piranport.component.WeaponCategory;
 import com.piranport.config.ModProjectilesConfig;
 import com.piranport.entitycore.EntityCoreDefinitions;
 import com.piranport.item.AircraftItem;
+import com.piranport.item.CreativeAmmoCacheItem;
 import com.piranport.item.AmmoItem;
 import com.piranport.item.AbyssalReportItem;
 import com.piranport.item.ArmorPlateItem;
@@ -403,6 +403,9 @@ public class ModItems {
     public static final DeferredItem<AircraftItem> TYPE0_RECON = AircraftItems.TYPE0_RECON;
     public static final DeferredItem<AircraftItem> C1_RECON = AircraftItems.C1_RECON;
     public static final DeferredItem<AircraftItem> SAIUN_RECON = AircraftItems.SAIUN_RECON;
+
+    // ===== 创造模式弹药库（调试工具，extracted to AmmoItems） =====
+    public static final DeferredItem<CreativeAmmoCacheItem> CREATIVE_AMMO_CACHE = AmmoItems.CREATIVE_AMMO_CACHE;
 
     // ===== Aviation Ammo (Phase 18) (extracted to AmmoItems) =====
     public static final DeferredItem<Item> AVIATION_FUEL = AmmoItems.AVIATION_FUEL;

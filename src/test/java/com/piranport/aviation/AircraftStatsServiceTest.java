@@ -1,6 +1,6 @@
 package com.piranport.aviation;
 
-import com.piranport.component.AircraftInfo;
+import net.minecraft.resources.ResourceLocation;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -14,11 +14,11 @@ class AircraftStatsServiceTest {
     }
 
     @Test
-    void resolvesDefinitionValuesAndLegacyValues() {
+    void resolvesDefinitionValues() {
         AircraftDefinition definition = new AircraftDefinition(
-                "piranport:aircraft/test_stats", AircraftInfo.AircraftType.FIGHTER,
-                AircraftDefinition.AttackProfile.GUN, AircraftDefinition.PayloadType.NONE,
-                "test", 900, 7, 11.5F, 1.25F, 19, AircraftInfo.BombingMode.DIVE);
+                ResourceLocation.parse("piranport:test_stats"), AircraftClass.FIGHTER,
+                AircraftDefinition.AttackProfile.GUN, null, "fighter",
+                900, 7, 11.5F, 1.25F, 19, 20, 5, null);
 
         ResolvedAircraftStats stats = AircraftStatsService.resolve(definition);
         assertEquals(definition.id(), stats.definitionId());
@@ -33,10 +33,12 @@ class AircraftStatsServiceTest {
 
     @Test
     void sameDefinitionUsesOneImmutableSnapshot() {
-        AircraftInfo info = new AircraftInfo(AircraftInfo.AircraftType.RECON,
-                400, 0, 100, 2.0F, 1.0F, 4, AircraftInfo.BombingMode.LEVEL, true);
-        ResolvedAircraftStats first = AircraftStatsService.resolve(info);
-        ResolvedAircraftStats second = AircraftStatsService.resolve(AircraftDefinitionService.resolve(info));
+        AircraftDefinition definition = new AircraftDefinition(
+                ResourceLocation.parse("piranport:test_recon"), AircraftClass.RECON,
+                null, null, "recon",
+                400, 0, 2.0F, 1.0F, 4, 10, 1, null);
+        ResolvedAircraftStats first = AircraftStatsService.resolve(definition);
+        ResolvedAircraftStats second = AircraftStatsService.resolve(definition);
         assertSame(first, second);
         assertThrows(UnsupportedOperationException.class, () -> AircraftStatsService.snapshot().clear());
     }
@@ -44,8 +46,8 @@ class AircraftStatsServiceTest {
     @Test
     void invalidSnapshotValuesAreRejected() {
         assertThrows(IllegalArgumentException.class, () ->
-                new ResolvedAircraftStats("piranport:aircraft/bad", 1, 1, 0, 1, 1, 0, 0));
+                new ResolvedAircraftStats(ResourceLocation.parse("piranport:bad"), 1, 1, 0, 1, 1, 0, 0));
         assertThrows(IllegalArgumentException.class, () ->
-                new ResolvedAircraftStats("piranport:aircraft/bad", 1, 0, 1, 1, 1, 0, 0));
+                new ResolvedAircraftStats(ResourceLocation.parse("piranport:bad"), 1, 0, 1, 1, 1, 0, 0));
     }
 }

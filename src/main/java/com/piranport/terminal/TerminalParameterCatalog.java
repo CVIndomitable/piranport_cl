@@ -79,7 +79,7 @@ public final class TerminalParameterCatalog {
             add(specs, "cannon", target, "max_horizontal_range", c.maxHorizontalRange(), 0, 1000);
         }
         for (AircraftDefinition a : AircraftDefinitionService.snapshot().values()) {
-            String target = a.id();
+            String target = a.id().toString();
             add(specs, "aircraft", target, "fuel_capacity", a.fuelCapacity(), 1, 100000);
             add(specs, "aircraft", target, "ammo_capacity", a.ammoCapacity(), 0, 100000);
             add(specs, "aircraft", target, "panel_damage", a.panelDamage(), 0, 10000);
@@ -88,12 +88,31 @@ public final class TerminalParameterCatalog {
             add(specs, "aircraft", target, "health", a.health(), 1, 100000);
             add(specs, "aircraft", target, "attack_cooldown", a.attackCooldown(), 1, 12000);
             add(specs, "aircraft", target, "reload_time", ResolvedAircraftStats.DEFAULT_RELOAD_TIME, 1, 12000);
-            add(specs, "aircraft", target, "launch_speed_coefficient", 0.3, 0.05, 5.0);
-            add(specs, "aircraft", target, "cruise_speed_coefficient", 0.3, 0.05, 5.0);
-            add(specs, "aircraft", target, "attack_speed_coefficient", 0.5, 0.05, 5.0);
-            add(specs, "aircraft", target, "return_speed_coefficient", 0.52, 0.05, 5.0);
-            add(specs, "aircraft", target, "follow_speed_coefficient", 0.35, 0.05, 5.0);
-            add(specs, "aircraft", target, "recon_speed_coefficient", 0.4, 0.05, 5.0);
+            add(specs, "aircraft", target, "launch_speed_coefficient", 0.6, 0.05, 5.0);
+            add(specs, "aircraft", target, "cruise_speed_coefficient", 0.6, 0.05, 5.0);
+            add(specs, "aircraft", target, "attack_speed_coefficient", 1.0, 0.05, 5.0);
+            add(specs, "aircraft", target, "return_speed_coefficient", 1.04, 0.05, 5.0);
+            add(specs, "aircraft", target, "follow_speed_coefficient", 0.7, 0.05, 5.0);
+            add(specs, "aircraft", target, "recon_speed_coefficient", 0.8, 0.05, 5.0);
+
+            // 自卫机枪：四个半空间开关 + 射程/间隔/伤害；只对声明了该能力的机型生成
+            if (a.selfDefense() != null) {
+                var selfDefense = a.selfDefense();
+                add(specs, "aircraft", target, "self_defense_upper",
+                        selfDefense.covers(com.piranport.aviation.SelfDefenseZone.UPPER));
+                add(specs, "aircraft", target, "self_defense_lower",
+                        selfDefense.covers(com.piranport.aviation.SelfDefenseZone.LOWER));
+                add(specs, "aircraft", target, "self_defense_front",
+                        selfDefense.covers(com.piranport.aviation.SelfDefenseZone.FRONT));
+                add(specs, "aircraft", target, "self_defense_rear",
+                        selfDefense.covers(com.piranport.aviation.SelfDefenseZone.REAR));
+                add(specs, "aircraft", target, "self_defense_range",
+                        selfDefense.range(), 0.1, 256.0);
+                add(specs, "aircraft", target, "self_defense_fire_cooldown",
+                        selfDefense.fireCooldown(), 1, 1200);
+                add(specs, "aircraft", target, "self_defense_damage",
+                        selfDefense.damage(), 0.0, 1000.0);
+            }
         }
         Set<String> ammoTargets = new HashSet<>();
         for (AmmoDefinition a : AmmoDefinitionService.all().values()) {

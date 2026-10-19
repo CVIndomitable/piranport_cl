@@ -1,7 +1,5 @@
 package com.piranport.aviation;
 
-import com.piranport.component.AircraftInfo;
-
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -10,12 +8,8 @@ import com.piranport.terminal.TerminalParameters;
 /** Resolves one immutable aircraft statistics snapshot; callers should cache it per aircraft. */
 public final class AircraftStatsService {
     private static final Map<AircraftDefinition, ResolvedAircraftStats> CACHE = new ConcurrentHashMap<>();
-    private AircraftStatsService() {}
 
-    public static ResolvedAircraftStats resolve(AircraftInfo info) {
-        Objects.requireNonNull(info, "info");
-        return resolve(AircraftDefinitionService.resolve(info));
-    }
+    private AircraftStatsService() {}
 
     public static ResolvedAircraftStats resolve(AircraftDefinition definition) {
         Objects.requireNonNull(definition, "definition");
@@ -25,8 +19,13 @@ public final class AircraftStatsService {
                 previous != null && previous.equals(current) ? previous : current);
     }
 
-    public static void clear() { CACHE.clear(); }
-    public static Map<AircraftDefinition, ResolvedAircraftStats> snapshot() { return Map.copyOf(CACHE); }
+    public static void clear() {
+        CACHE.clear();
+    }
+
+    public static Map<AircraftDefinition, ResolvedAircraftStats> snapshot() {
+        return Map.copyOf(CACHE);
+    }
 
     private static ResolvedAircraftStats build(AircraftDefinition definition) {
         String key = "aircraft." + definition.id() + ".";
@@ -40,5 +39,4 @@ public final class AircraftStatsService {
                 TerminalParameters.getInt(key + "weight", definition.weight()),
                 TerminalParameters.getInt(key + "reload_time", ResolvedAircraftStats.DEFAULT_RELOAD_TIME));
     }
-
 }

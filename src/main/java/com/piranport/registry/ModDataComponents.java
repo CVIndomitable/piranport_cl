@@ -2,7 +2,8 @@ package com.piranport.registry;
 
 import com.mojang.serialization.Codec;
 import com.piranport.PiranPort;
-import com.piranport.component.AircraftInfo;
+import com.piranport.component.AircraftState;
+import com.piranport.component.CreativeAmmoSelection;
 import com.piranport.component.CustomCoreConfig;
 import com.piranport.component.FuelData;
 import com.piranport.component.LoadedAmmo;
@@ -38,11 +39,11 @@ public class ModDataComponents {
 
     // ===== v0.4.0 Aviation DataComponents =====
 
-    public static final DeferredHolder<DataComponentType<?>, DataComponentType<AircraftInfo>>
-            AIRCRAFT_INFO = DATA_COMPONENTS.register("aircraft_info",
-            () -> DataComponentType.<AircraftInfo>builder()
-                    .persistent(AircraftInfo.CODEC)
-                    .networkSynchronized(AircraftInfo.STREAM_CODEC)
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<AircraftState>>
+            AIRCRAFT_STATE = DATA_COMPONENTS.register("aircraft_state",
+            () -> DataComponentType.<AircraftState>builder()
+                    .persistent(AircraftState.CODEC)
+                    .networkSynchronized(AircraftState.STREAM_CODEC)
                     .build());
 
     // ===== v0.0.7 Ship Config DataComponents =====
@@ -115,6 +116,15 @@ public class ModDataComponents {
             () -> DataComponentType.<SelectedAmmoType>builder()
                     .persistent(SelectedAmmoType.CODEC)
                     .networkSynchronized(SelectedAmmoType.STREAM_CODEC)
+                    .build());
+
+    // ===== 创造模式弹药库：已勾选的弹药/燃料 =====
+
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<CreativeAmmoSelection>>
+            CREATIVE_AMMO_SELECTION = DATA_COMPONENTS.register("creative_ammo_selection",
+            () -> DataComponentType.<CreativeAmmoSelection>builder()
+                    .persistent(CreativeAmmoSelection.CODEC)
+                    .networkSynchronized(CreativeAmmoSelection.STREAM_CODEC)
                     .build());
 
     // ===== 舰装核心储存强化件 =====

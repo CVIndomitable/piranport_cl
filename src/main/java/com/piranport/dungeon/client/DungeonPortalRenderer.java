@@ -1,9 +1,6 @@
 package com.piranport.dungeon.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.math.Axis;
-import com.piranport.client.SimpleEntityRenderShapes;
 import com.piranport.dungeon.entity.DungeonPortalEntity;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -12,43 +9,29 @@ import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import org.joml.Matrix4f;
 
 /**
- * Simple renderer for the dungeon portal entity.
- * Visual effects are primarily handled via particles in DungeonPortalEntity.tick().
+ * 副本出口传送门的实体渲染器。
+ *
+ * <p><b>这里刻意不再画门（方案 A）。</b>出口的可见主体是
+ * {@code PortalStructureHelper} 摆出的 4×5×4 {@code dungeon_portal} 方块门框；
+ * 实体本身只承担两件事：走进判定（{@code DungeonPortalEntity.tick}）和
+ * 多后继门头顶的"→ 目标节点"文字。此前这里还额外画了一个自转的紫色小门，
+ * 叠在方块门框里，看起来像同一位置有两扇门。</p>
+ *
+ * <p>环境粒子仍由 {@link DungeonPortalEntity#tick()} 在客户端发出，不在这里绘制。</p>
  */
 public class DungeonPortalRenderer extends EntityRenderer<DungeonPortalEntity> {
 
     public DungeonPortalRenderer(EntityRendererProvider.Context context) {
         super(context);
-        this.shadowRadius = 0.45f;
+        // 实体是不可见的触发体，不投影子，否则开口地面上会出现一块莫名的圆影。
+        this.shadowRadius = 0.0f;
     }
 
     @Override
     public void render(DungeonPortalEntity entity, float entityYaw, float partialTick,
                         PoseStack poseStack, MultiBufferSource buffer, int packedLight) {
-        poseStack.pushPose();
-        poseStack.translate(0.0, 0.75, 0.0);
-        float spin = (entity.tickCount + partialTick) * 2.0f;
-        poseStack.mulPose(Axis.YP.rotationDegrees(spin));
-
-        VertexConsumer consumer = SimpleEntityRenderShapes.translucentConsumer(buffer);
-        Matrix4f pose = poseStack.last().pose();
-        int glowLight = 0x00F000F0;
-
-        SimpleEntityRenderShapes.renderCuboid(consumer, pose, -0.72f, -0.82f, -0.08f,
-                -0.54f, 0.82f, 0.08f, 0.18f, 0.05f, 0.28f, 0.86f, packedLight);
-        SimpleEntityRenderShapes.renderCuboid(consumer, pose, 0.54f, -0.82f, -0.08f,
-                0.72f, 0.82f, 0.08f, 0.18f, 0.05f, 0.28f, 0.86f, packedLight);
-        SimpleEntityRenderShapes.renderCuboid(consumer, pose, -0.72f, 0.64f, -0.08f,
-                0.72f, 0.82f, 0.08f, 0.24f, 0.06f, 0.34f, 0.88f, packedLight);
-        SimpleEntityRenderShapes.renderCuboid(consumer, pose, -0.72f, -0.82f, -0.08f,
-                0.72f, -0.64f, 0.08f, 0.12f, 0.04f, 0.22f, 0.82f, packedLight);
-        SimpleEntityRenderShapes.renderCuboid(consumer, pose, -0.50f, -0.58f, -0.025f,
-                0.50f, 0.58f, 0.025f, 0.34f, 0.12f, 0.92f, 0.46f, glowLight);
-
-        poseStack.popPose();
         super.render(entity, entityYaw, partialTick, poseStack, buffer, packedLight);
         renderTargetLabel(entity, poseStack, buffer, packedLight);
     }

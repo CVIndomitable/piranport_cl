@@ -44,6 +44,16 @@ public final class NpcCombatTuning {
         return (float) (double) ModProjectilesConfig.NPC_TORPEDO_SALVO_SPEED.get();
     }
 
+    /** 深海鱼雷持续瞄准时长（ticks）。默认 600。 */
+    public static int torpedoAimTicks() {
+        return ModProjectilesConfig.NPC_TORPEDO_AIM_TICKS.get();
+    }
+
+    /** 深海鱼雷锁定航向后的发射准备时长（ticks）。默认 40。 */
+    public static int torpedoPrepTicks() {
+        return ModProjectilesConfig.NPC_TORPEDO_PREP_TICKS.get();
+    }
+
     /** 舰娘随从每次炮击后触发雷击的判定分母（1/N 概率）。默认 200。 */
     public static int torpedoTriggerRollBound() {
         return ModProjectilesConfig.NPC_TORPEDO_TRIGGER_ROLL_BOUND.get();

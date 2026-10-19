@@ -97,6 +97,14 @@ public final class ModProjectilesConfig {
     public static final TerminalConfigValue<Double> NPC_TORPEDO_SALVO_SPEED =
             TerminalConfigValue.number("projectiles", "torpedo_salvo", "speed", 0.3, 0.01, 10.0);
 
+    /** 深海鱼雷持续瞄准时长（ticks）。默认 600（30 秒），满足后锁定航向。仅 TorpedoAttackGoal 使用。 */
+    public static final TerminalConfigValue<Integer> NPC_TORPEDO_AIM_TICKS =
+            TerminalConfigValue.integer("projectiles", "torpedo_salvo", "aim_ticks", 600, 0, 24000);
+
+    /** 深海鱼雷锁定航向后的发射准备时长（ticks）。默认 40（2 秒），期间播放气泡柱与充气声。仅 TorpedoAttackGoal 使用。 */
+    public static final TerminalConfigValue<Integer> NPC_TORPEDO_PREP_TICKS =
+            TerminalConfigValue.integer("projectiles", "torpedo_salvo", "prep_ticks", 40, 0, 1200);
+
     /** 舰娘随从每次炮击后触发雷击的判定分母（1/N 概率）。默认 200。
      *  WHY 与 salvo_cooldown 分开：舰娘版是「每轮炮击 1/N 概率放雷」而非固定冷却，语义不同不可合并。 */
     public static final TerminalConfigValue<Integer> NPC_TORPEDO_TRIGGER_ROLL_BOUND =

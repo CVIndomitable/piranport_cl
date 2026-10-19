@@ -3,7 +3,7 @@
   "display": {
     "icon": {
       "count": 1,
-      "id": "piranport:abyssal_report"
+      "id": "minecraft:book"
     },
     "title": {
       "translate": "advancements.piranport.ship_girl_story_flagship_debrief.title"

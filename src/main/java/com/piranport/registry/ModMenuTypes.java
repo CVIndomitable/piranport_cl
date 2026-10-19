@@ -26,10 +26,6 @@ public class ModMenuTypes {
             MENU_TYPES.register("reload_facility",
                     () -> IMenuTypeExtension.create(ReloadFacilityMenu::fromNetwork));
 
-    public static final DeferredHolder<MenuType<?>, MenuType<com.piranport.menu.ShipCoreModifierMenu>> SHIP_CORE_MODIFIER_MENU =
-            MENU_TYPES.register("ship_core_modifier",
-                    () -> IMenuTypeExtension.create(com.piranport.menu.ShipCoreModifierMenu::new));
-
     public static final DeferredHolder<MenuType<?>, MenuType<com.piranport.menu.AmmoWorkbenchMenu>> AMMO_WORKBENCH_MENU =
             MENU_TYPES.register("ammo_workbench",
                     () -> IMenuTypeExtension.create(com.piranport.menu.AmmoWorkbenchMenu::fromNetwork));

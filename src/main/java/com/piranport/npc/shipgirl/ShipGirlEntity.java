@@ -421,7 +421,7 @@ public class ShipGirlEntity extends PathfinderMob implements Merchant {
                         : "message.piranport.ship_girl_combat_off"));
             } else if (held.is(ModItems.RICHELIEU_COMMAND_SWORD.get())) {
                 cycleOrder(player);
-            } else if (held.is(ModItems.ABYSSAL_REPORT.get())) {
+            } else if (held.is(Items.BOOK)) {
                 handleAbyssalReport(player, held);
             } else if (held.is(ModItems.REPAIR_KIT.get())) {
                 handleRepairKit(player, held);
@@ -800,7 +800,7 @@ public class ShipGirlEntity extends PathfinderMob implements Merchant {
         player.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING, 20 * 120, 0));
         player.addEffect(new MobEffectInstance(MobEffects.DOLPHINS_GRACE, 20 * 90, 0));
         if (first) {
-            giveOrDrop(player, new ItemStack(ModItems.ABYSSAL_REPORT.get(), 1));
+            giveOrDrop(player, new ItemStack(Items.BOOK, 1));
         }
         addRapport(player, first ? 10 : 2);
         awardBranchAdvancement(player, "story/ship_girl_branch_air_cover", first);
@@ -1044,12 +1044,12 @@ public class ShipGirlEntity extends PathfinderMob implements Merchant {
     private MerchantOffers createOffers() {
         MerchantOffers result = new MerchantOffers();
         result.add(new MerchantOffer(
-                new ItemCost(ModItems.ABYSSAL_REPORT.get(), 1),
+                new ItemCost(Items.BOOK, 1),
                 new ItemStack(ModItems.EXP_SHELL.get(), 1),
                 16, 4, 0.05f));
         result.add(new MerchantOffer(
                 new ItemCost(ModItems.RAW_ALUMINUM.get(), 8),
-                Optional.of(new ItemCost(ModItems.ABYSSAL_REPORT.get(), 1)),
+                Optional.of(new ItemCost(Items.BOOK, 1)),
                 new ItemStack(ModItems.REPAIR_KIT.get(), 1),
                 6, 8, 0.05f));
         result.add(new MerchantOffer(
@@ -1058,17 +1058,17 @@ public class ShipGirlEntity extends PathfinderMob implements Merchant {
                 12, 3, 0.05f));
         result.add(new MerchantOffer(
                 new ItemCost(Items.PAPER, 12),
-                Optional.of(new ItemCost(ModItems.ABYSSAL_REPORT.get(), 1)),
+                Optional.of(new ItemCost(Items.BOOK, 1)),
                 new ItemStack(ModItems.FLAG_J.get(), 1),
                 4, 6, 0.05f));
         result.add(new MerchantOffer(
                 new ItemCost(ModItems.DUNGEON_KEY_CH1.get(), 1),
-                Optional.of(new ItemCost(ModItems.ABYSSAL_REPORT.get(), 1)),
+                Optional.of(new ItemCost(Items.BOOK, 1)),
                 new ItemStack(ModItems.SHIP_GIRL_CONTRACT.get(), 1),
                 2, 12, 0.05f));
         if (rapport >= 20) {
             result.add(new MerchantOffer(
-                    new ItemCost(ModItems.ABYSSAL_REPORT.get(), 1),
+                    new ItemCost(Items.BOOK, 1),
                     Optional.of(new ItemCost(ModItems.RAW_ALUMINUM.get(), 6)),
                     new ItemStack(ModItems.AVIATION_FUEL.get(), 4),
                     8, 6, 0.05f));
@@ -1082,7 +1082,7 @@ public class ShipGirlEntity extends PathfinderMob implements Merchant {
         }
         if (rapport >= 80) {
             result.add(new MerchantOffer(
-                    new ItemCost(ModItems.ABYSSAL_REPORT.get(), 2),
+                    new ItemCost(Items.BOOK, 2),
                     Optional.of(new ItemCost(ModItems.FLAG_J.get(), 1)),
                     new ItemStack(ModItems.SHIP_GIRL_CONTRACT.get(), 1),
                     2, 16, 0.05f));

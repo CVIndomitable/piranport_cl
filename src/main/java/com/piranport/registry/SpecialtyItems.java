@@ -2,7 +2,6 @@ package com.piranport.registry;
 
 import com.piranport.component.WeaponCategory;
 import com.piranport.entitycore.EntityCoreDefinitions;
-import com.piranport.item.AbyssalReportItem;
 import com.piranport.item.CommandSwordItem;
 import com.piranport.item.ConfigInspectorItem;
 import com.piranport.item.DamageControlItem;
@@ -390,13 +389,6 @@ public final class SpecialtyItems {
                             .durability(512)
                             .attributes(GungnirItem.createAttributes())
                             .stacksTo(1)));
-
-    // ===== v0.0.11 Ruins — Reward Items =====
-    // Abyssal Report (深海作战档案)
-    public static final DeferredItem<AbyssalReportItem> ABYSSAL_REPORT =
-            ITEMS.register("abyssal_report",
-                    () -> new AbyssalReportItem(new Item.Properties().stacksTo(16),
-                            "tooltip.piranport.abyssal_report"));
 
     // National Flags (各国国旗)
     public static final DeferredItem<TooltipItem> FLAG_J =

@@ -531,7 +531,6 @@ public class ModCreativeTabs {
                         output.accept(ModItems.CREATIVE_BLUEPRINT.get());
                         output.accept(ModItems.DEBUG_TERMINAL.get());
                         output.accept(ModItems.CONFIG_INSPECTOR.get());
-                        output.accept(ModItems.SHIP_CORE_MODIFIER.get());
                     }).build());
 
     // ===== 装饰 — 家具/花卉/模型 =====
@@ -552,13 +551,11 @@ public class ModCreativeTabs {
             CREATIVE_TABS.register("ruins_tab", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.piranport.ruins"))
                     .withTabsBefore(ResourceKey.create(Registries.CREATIVE_MODE_TAB, PiranPort.modId("decoration_tab")))  // 链式排序：紧接 decoration_tab
-                    .icon(() -> ModItems.ABYSSAL_REPORT.get().getDefaultInstance())
+                    .icon(() -> ModItems.KEY_FRAGMENT_CH1.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
                         // Blocks
                         output.accept(ModItems.ABYSSAL_SPAWNER.get());
-                        output.accept(ModItems.ABYSSAL_SEEP.get());
                         // Story and progression reward items
-                        output.accept(ModItems.ABYSSAL_REPORT.get());
                         output.accept(ModItems.EXP_SHELL.get());
                         // Key Fragments（钥匙碎片，ch1~ch7）
                         output.accept(ModItems.KEY_FRAGMENT_CH1.get());

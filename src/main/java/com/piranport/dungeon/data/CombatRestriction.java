@@ -11,18 +11,14 @@ package com.piranport.dungeon.data;
  */
 public enum CombatRestriction {
     NO_TORPEDO,    // 鱼雷限制：禁用鱼雷
-    AIR_ONLY,      // 仅限航空：只允许舰载机/导弹攻击
     LIMITED_AIR,   // 限制航空：放飞数量/批次受限
-    GUNS_ONLY,     // 仅限火炮：禁用鱼雷+航空
     ANTI_SUB;      // 反潜战：限定反潜装备有效（决策 14）
 
     public static CombatRestriction fromString(String s) {
         if (s == null) return null;
         return switch (s.toLowerCase()) {
             case "no_torpedo" -> NO_TORPEDO;
-            case "air_only" -> AIR_ONLY;
             case "limited_air" -> LIMITED_AIR;
-            case "guns_only" -> GUNS_ONLY;
             case "anti_sub" -> ANTI_SUB;
             default -> null;
         };

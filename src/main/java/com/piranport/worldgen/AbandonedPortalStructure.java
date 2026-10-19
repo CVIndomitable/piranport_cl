@@ -156,7 +156,7 @@ public class AbandonedPortalStructure extends Feature<NoneFeatureConfiguration> 
      * 它只在区块<b>生成过程中</b>被维护，生成完就被丢弃。活体 {@code ServerLevel} 上查它
      * 一律返回 {@code getMinBuildHeight()}。旧写法把返回的最小值当成扫描起点，于是循环
      * 从基岩层开始、根本扫不到水柱，{@code waterLevel} 恒为 minY，feature 直接放弃生成。
-     * （{@link AbyssalSeepFeature} 同样查这个 Types，但它从下往上找"实心且上方是水"的海床，
+     * （深海裂隙特征曾同样查这个 Types，但从下往上找"实心且上方是水"的海床，
      * 起点落到底部反而碰巧命中，所以那个 feature 看起来正常——这是巧合，不是正确性。）</p>
      *
      * <p>现在以调用方给的 {@code origin.y} 为起点向下扫。{@code origin.y} 由 placed_feature

@@ -8,7 +8,6 @@ import com.piranport.block.entity.CookingPotBlockEntity;
 import com.piranport.block.entity.CuttingBoardBlockEntity;
 import com.piranport.block.entity.PlaceableFoodBlockEntity;
 import com.piranport.block.entity.ReloadFacilityBlockEntity;
-import com.piranport.block.entity.ShipCoreModifierBlockEntity;
 import com.piranport.block.entity.SmokeScreenBlockEntity;
 import com.piranport.block.entity.StoneMillBlockEntity;
 import com.piranport.block.entity.StoveBlockEntity;
@@ -47,11 +46,6 @@ public class ModBlockEntityTypes {
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<ReloadFacilityBlockEntity>> RELOAD_FACILITY =
             BLOCK_ENTITY_TYPES.register("reload_facility", () ->
                     BlockEntityType.Builder.of(ReloadFacilityBlockEntity::new, ModBlocks.RELOAD_FACILITY.get())
-                            .build(null));
-
-    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<com.piranport.block.entity.ShipCoreModifierBlockEntity>> SHIP_CORE_MODIFIER =
-            BLOCK_ENTITY_TYPES.register("ship_core_modifier", () ->
-                    BlockEntityType.Builder.of(com.piranport.block.entity.ShipCoreModifierBlockEntity::new, ModBlocks.SHIP_CORE_MODIFIER.get())
                             .build(null));
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<YubariWaterBucketBlockEntity>> YUBARI_WATER_BUCKET =

@@ -1,7 +1,6 @@
 package com.piranport.registry;
 
 import com.piranport.PiranPort;
-import com.piranport.block.AbyssalSeepBlock;
 import com.piranport.block.BlueprintChestBlock;
 import com.piranport.block.CookingPotBlock;
 import com.piranport.block.CuttingBoardBlock;
@@ -401,15 +400,6 @@ public class ModBlocks {
                             .sound(SoundType.METAL)
                             .noOcclusion()));
 
-    // ===== Ship Core Modifier =====
-    public static final DeferredBlock<com.piranport.block.ShipCoreModifierBlock> SHIP_CORE_MODIFIER =
-            BLOCKS.register("ship_core_modifier", () -> new com.piranport.block.ShipCoreModifierBlock(
-                    BlockBehaviour.Properties.of()
-                            .mapColor(MapColor.METAL)
-                            .strength(3.5f, 6.0f)
-                            .requiresCorrectToolForDrops()
-                            .sound(SoundType.METAL)));
-
     // ===== Yubari Water Bucket =====
     public static final DeferredBlock<YubariWaterBucketBlock> YUBARI_WATER_BUCKET =
             BLOCKS.register("yubari_water_bucket", () -> new YubariWaterBucketBlock(
@@ -482,16 +472,6 @@ public class ModBlocks {
                                     .strength(-1.0f, 3600000.0f)
                                     .noLootTable()
                                     .noOcclusion()));
-
-    public static final DeferredBlock<AbyssalSeepBlock> ABYSSAL_SEEP =
-            BLOCKS.register("abyssal_seep",
-                    () -> new AbyssalSeepBlock(
-                            BlockBehaviour.Properties.of()
-                                    .mapColor(MapColor.COLOR_PURPLE)
-                                    .strength(4.0f, 9.0f)
-                                    .requiresCorrectToolForDrops()
-                                    .sound(SoundType.DEEPSLATE)
-                                    .lightLevel(state -> 6)));
 
     // ===== Decorative Blocks (from sheropshire) =====
     public static final DeferredBlock<com.piranport.block.ConfidentialCargoBlock> CONFIDENTIAL_CARGO =

@@ -75,14 +75,9 @@ public class DungeonResultScreen extends Screen {
                 cx, cy - 60, 0xFFFFD700);
         gfx.drawCenteredString(font, Component.literal(stageName), cx, cy - 45, 0xFFFFFFFF);
 
-        long totalSec = timeMillis / 1000;
-        String timeStr = String.format("%02d:%02d.%03d", totalSec / 60, totalSec % 60, timeMillis % 1000);
-        gfx.drawCenteredString(font,
-                Component.translatable("gui.piranport.dungeon_result.time", timeStr),
-                cx, cy - 25, 0xFFAAFFAA);
         gfx.drawCenteredString(font,
                 Component.translatable("gui.piranport.dungeon_result.kills", kills),
-                cx, cy - 10, 0xFFFFAA88);
+                cx, cy - 25, 0xFFFFAA88);
         gfx.drawCenteredString(font, Component.literal(ending), cx, cy + 3, 0xFFD0D0FF);
 
         int ry = cy + 29;

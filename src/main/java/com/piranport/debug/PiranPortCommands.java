@@ -795,8 +795,7 @@ public final class PiranPortCommands {
 
     private static int giveDeepOceanKit(ServerPlayer player) {
         int stacks = 0;
-        stacks += give(player, ModItems.ABYSSAL_SEEP.get(), 8);
-        stacks += give(player, ModItems.ABYSSAL_REPORT.get(), 16);
+        stacks += give(player, Items.BOOK, 16);
         stacks += give(player, ModItems.RAW_ALUMINUM.get(), 32);
         stacks += give(player, ModItems.ALUMINUM_INGOT.get(), 16);
         stacks += give(player, ModItems.AVIATION_FUEL.get(), 16);
@@ -817,7 +816,7 @@ public final class PiranPortCommands {
         stacks += give(player, ModItems.SHIP_GIRL_SPAWN_EGG.get(), 2);
         stacks += give(player, ModItems.SHIP_GIRL_CONTRACT.get(), 2);
         stacks += give(player, ModItems.RICHELIEU_COMMAND_SWORD.get(), 1);
-        stacks += give(player, ModItems.ABYSSAL_REPORT.get(), 16);
+        stacks += give(player, Items.BOOK, 16);
         stacks += give(player, ModItems.REPAIR_KIT.get(), 3);
         stacks += give(player, ModItems.EXP_SHELL.get(), 16);
         stacks += give(player, ModItems.AVIATION_FUEL.get(), 16);

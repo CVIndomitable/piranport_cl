@@ -172,13 +172,6 @@ public final class AmmoItems {
     public static final DeferredItem<Item> AVIATION_FUEL =
             ITEMS.register("aviation_fuel",
                     () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.aviation_fuel"));
-    // Legacy items kept for world compatibility — unified into AERIAL_BOMB below
-    @Deprecated public static final DeferredItem<Item> AERIAL_BOMB_SMALL =
-            ITEMS.register("aerial_bomb_small",
-                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.aerial_bomb"));
-    @Deprecated public static final DeferredItem<Item> AERIAL_BOMB_MEDIUM =
-            ITEMS.register("aerial_bomb_medium",
-                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.aerial_bomb"));
     public static final DeferredItem<Item> AERIAL_TORPEDO =
             ITEMS.register("aerial_torpedo",
                     () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.aerial_torpedo"));

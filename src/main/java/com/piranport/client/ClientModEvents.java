@@ -211,7 +211,6 @@ public class ClientModEvents {
         event.register(ModMenuTypes.STONE_MILL_MENU.get(), StoneMillScreen::new);
         event.register(ModMenuTypes.COOKING_POT_MENU.get(), CookingPotScreen::new);
         event.register(ModMenuTypes.RELOAD_FACILITY_MENU.get(), ReloadFacilityScreen::new);
-        event.register(ModMenuTypes.SHIP_CORE_MODIFIER_MENU.get(), com.piranport.menu.ShipCoreModifierScreen::new);
         // 弹药工作台
         event.register(ModMenuTypes.AMMO_WORKBENCH_MENU.get(), AmmoWorkbenchScreen::new);
         // 武器工作台

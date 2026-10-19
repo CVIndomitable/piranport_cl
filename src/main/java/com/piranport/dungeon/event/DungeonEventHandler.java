@@ -355,7 +355,6 @@ public class DungeonEventHandler {
 
         // 用时取服务端累计 tick，不用墙钟：墙钟会把暂停、以及玩家在讲台整理背包的时间算进去
         long elapsed = instance.getElapsedMillis();
-        String rating = DungeonSettlementService.ratingFor(elapsed, stage.parTimeSeconds());
         if (!mgr.completeInstance(instance.getInstanceId())) return;
         // 结算保留现场供玩家自行离开；脚本调度器看到 COMPLETED 后自行移除，
         // 避免脚本正在遍历时回调删除当前 Map 条目。
@@ -386,7 +385,7 @@ public class DungeonEventHandler {
 
             // Send result screen
             PacketDistributor.sendToPlayer(player,
-                    new DungeonResultPayload(stage.displayName() + " · 评价 " + rating, elapsed,
+                    new DungeonResultPayload(stage.displayName(), elapsed,
                             isFirstClear, rewardNames, 0, stage.ending()));
         }
 

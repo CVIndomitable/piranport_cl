@@ -1,5 +1,5 @@
 {
-  "parent": "piranport:story/read_abyssal_report",
+  "parent": "piranport:root",
   "display": {
     "icon": {
       "count": 1,

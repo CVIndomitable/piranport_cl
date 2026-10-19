@@ -36,8 +36,6 @@ public final class MaterialItems {
     // ===== Abyssal Blocks (v0.0.11) =====
     public static final DeferredItem<BlockItem> ABYSSAL_SPAWNER =
             ITEMS.registerSimpleBlockItem(ModBlocks.ABYSSAL_SPAWNER);
-    public static final DeferredItem<BlockItem> ABYSSAL_SEEP =
-            ITEMS.registerSimpleBlockItem(ModBlocks.ABYSSAL_SEEP);
 
     // ===== Decorative Blocks (from sheropshire) =====
     public static final DeferredItem<BlockItem> CONFIDENTIAL_CARGO =
@@ -92,8 +90,6 @@ public final class MaterialItems {
             ITEMS.registerSimpleBlockItem(ModBlocks.STOVE);
     public static final DeferredItem<BlockItem> RELOAD_FACILITY =
             ITEMS.registerSimpleBlockItem(ModBlocks.RELOAD_FACILITY);
-    public static final DeferredItem<BlockItem> SHIP_CORE_MODIFIER =
-            ITEMS.registerSimpleBlockItem(ModBlocks.SHIP_CORE_MODIFIER);
     public static final DeferredItem<BlockItem> YUBARI_WATER_BUCKET =
             ITEMS.registerSimpleBlockItem(ModBlocks.YUBARI_WATER_BUCKET);
 

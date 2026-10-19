@@ -81,10 +81,6 @@
     {
       "item": "minecraft:copper_ingot",
       "count": 32
-    },
-    {
-      "item": "piranport:abyssal_report",
-      "count": 1
     }
   ],
   "victory_conditions": [

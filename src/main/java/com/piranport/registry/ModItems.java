@@ -11,7 +11,6 @@ import com.piranport.entitycore.EntityCoreDefinitions;
 import com.piranport.item.AircraftItem;
 import com.piranport.item.CreativeAmmoCacheItem;
 import com.piranport.item.AmmoItem;
-import com.piranport.item.AbyssalReportItem;
 import com.piranport.item.ArmorPlateItem;
 import com.piranport.item.FloatingTargetItem;
 import com.piranport.item.GuidebookItem;
@@ -78,7 +77,6 @@ public class ModItems {
 
     // ===== Abyssal Blocks (v0.0.11)（已迁移到 MaterialItems） =====
     public static final DeferredItem<BlockItem> ABYSSAL_SPAWNER = MaterialItems.ABYSSAL_SPAWNER;
-    public static final DeferredItem<BlockItem> ABYSSAL_SEEP = MaterialItems.ABYSSAL_SEEP;
 
     // ===== Decorative Blocks（已迁移到 MaterialItems） =====
     public static final DeferredItem<BlockItem> CONFIDENTIAL_CARGO = MaterialItems.CONFIDENTIAL_CARGO;
@@ -295,7 +293,6 @@ public class ModItems {
     public static final DeferredItem<BlockItem> COOKING_POT = MaterialItems.COOKING_POT;
     public static final DeferredItem<BlockItem> STOVE = MaterialItems.STOVE;
     public static final DeferredItem<BlockItem> RELOAD_FACILITY = MaterialItems.RELOAD_FACILITY;
-    public static final DeferredItem<BlockItem> SHIP_CORE_MODIFIER = MaterialItems.SHIP_CORE_MODIFIER;
     public static final DeferredItem<BlockItem> YUBARI_WATER_BUCKET = MaterialItems.YUBARI_WATER_BUCKET;
 
     public static final DeferredItem<BlockItem> AMMO_WORKBENCH = MaterialItems.AMMO_WORKBENCH;
@@ -409,9 +406,6 @@ public class ModItems {
 
     // ===== Aviation Ammo (Phase 18) (extracted to AmmoItems) =====
     public static final DeferredItem<Item> AVIATION_FUEL = AmmoItems.AVIATION_FUEL;
-    // Legacy items kept for world compatibility — unified into AERIAL_BOMB below
-    @Deprecated public static final DeferredItem<Item> AERIAL_BOMB_SMALL = AmmoItems.AERIAL_BOMB_SMALL;
-    @Deprecated public static final DeferredItem<Item> AERIAL_BOMB_MEDIUM = AmmoItems.AERIAL_BOMB_MEDIUM;
     public static final DeferredItem<Item> AERIAL_TORPEDO = AmmoItems.AERIAL_TORPEDO;
     // Unified aerial bomb (replaces small/medium distinction)
     public static final DeferredItem<Item> AERIAL_BOMB = AmmoItems.AERIAL_BOMB;
@@ -669,7 +663,6 @@ public class ModItems {
     public static final DeferredItem<GungnirItem> GUNGNIR = SpecialtyItems.GUNGNIR;
 
     // ===== v0.0.11 Ruins — Reward Items (extracted to SpecialtyItems) =====
-    public static final DeferredItem<AbyssalReportItem> ABYSSAL_REPORT = SpecialtyItems.ABYSSAL_REPORT;
     public static final DeferredItem<TooltipItem> FLAG_J = SpecialtyItems.FLAG_J;
     public static final DeferredItem<TooltipItem> FLAG_E = SpecialtyItems.FLAG_E;
     public static final DeferredItem<TooltipItem> FLAG_U = SpecialtyItems.FLAG_U;

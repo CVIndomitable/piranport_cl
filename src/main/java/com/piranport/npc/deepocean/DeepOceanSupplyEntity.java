@@ -101,7 +101,7 @@ public class DeepOceanSupplyEntity extends AbstractDeepOceanEntity {
         }
 
         ItemStack held = player.getItemInHand(hand);
-        if (held.is(ModItems.ABYSSAL_REPORT.get())) {
+        if (held.is(net.minecraft.world.item.Items.BOOK)) {
             if (!player.getAbilities().instabuild) {
                 held.shrink(1);
             }
@@ -153,7 +153,7 @@ public class DeepOceanSupplyEntity extends AbstractDeepOceanEntity {
                 held.shrink(1);
             }
             heal(12.0f);
-            giveOrDrop(player, new ItemStack(ModItems.ABYSSAL_REPORT.get(), 1));
+            giveOrDrop(player, new ItemStack(net.minecraft.world.item.Items.BOOK, 1));
             giveOrDrop(player, new ItemStack(ModItems.AVIATION_FUEL.get(), 2));
             player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 20 * 60, 0));
             player.sendSystemMessage(Component.translatable("message.piranport.deep_ocean_supply_drill_trade"));

@@ -13,11 +13,6 @@ public class ModPackets {
     @SubscribeEvent
     public static void register(RegisterPayloadHandlersEvent event) {
         PayloadRegistrar registrar = event.registrar(PROTOCOL_VERSION);
-        registrar.playToServer(
-                ApplyModificationPayload.TYPE,
-                ApplyModificationPayload.STREAM_CODEC,
-                ApplyModificationPayload::handle
-        );
         // Phase 20: fire control
         registrar.playToServer(
                 FireControlPayload.TYPE,

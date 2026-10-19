@@ -19,7 +19,6 @@ public class FollowerSummonPool {
 
     static {
         // 教学关卡固定配给舰娘 ID
-        TUTORIAL_FIXED_SHIPGIRLS.put("t-1", new String[]{"tutorial_destroyer_1"});
         TUTORIAL_FIXED_SHIPGIRLS.put("1-1", new String[]{"tutorial_cruiser_1"});
         TUTORIAL_FIXED_SHIPGIRLS.put("1-2", new String[]{"tutorial_destroyer_1"});
         TUTORIAL_FIXED_SHIPGIRLS.put("1-3", new String[]{"tutorial_cruiser_1", "tutorial_destroyer_1"});

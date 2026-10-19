@@ -66,22 +66,17 @@ public record ManualReloadPayload() implements CustomPacketPayload {
             LOGGER.info("[SERVER] MainHand item class: {}", mainHand.getItem().getClass().getName());
             LOGGER.info("[SERVER] Is mainHand ArtilleryItem? {}", mainHand.getItem() instanceof com.piranport.artillery.ArtilleryItem);
 
-            // 鱼雷发射器：需要装备"鱼雷再装填"增强
+            // 鱼雷发射器：无论是否装备"鱼雷再装填"都能按 R 装填（2026-10-19 修订）。
+            // 无强化 3000 tick 且不提示；有强化 400 tick。
             if (mainHand.getItem() instanceof TorpedoLauncherItem) {
-                if (TransformationManager.hasTorpedoReloadEquipped(player, coreStack)) {
-                    ReloadHelper.reloadTorpedoLauncher(player, inv, mainHand, inv.selected, coreStack, coreSlot);
-                } else {
-                    player.displayClientMessage(
-                            Component.translatable("message.piranport.use_reload_facility"), true);
-                }
+                boolean boosted = TransformationManager.hasTorpedoReloadEquipped(player, coreStack);
+                ReloadHelper.reloadTorpedoLauncher(player, inv, mainHand, inv.selected, coreStack, coreSlot,
+                        boosted ? 400 : 3000, boosted);
                 return;
             } else if (offHand.getItem() instanceof TorpedoLauncherItem) {
-                if (TransformationManager.hasTorpedoReloadEquipped(player, coreStack)) {
-                    ReloadHelper.reloadTorpedoLauncher(player, inv, offHand, 40, coreStack, coreSlot);
-                } else {
-                    player.displayClientMessage(
-                            Component.translatable("message.piranport.use_reload_facility"), true);
-                }
+                boolean boosted = TransformationManager.hasTorpedoReloadEquipped(player, coreStack);
+                ReloadHelper.reloadTorpedoLauncher(player, inv, offHand, 40, coreStack, coreSlot,
+                        boosted ? 400 : 3000, boosted);
                 return;
             }
 

@@ -22,7 +22,10 @@ import net.minecraft.world.item.Item;
 public class ReloadHelper {
 
     /**
-     * 从背包装填鱼雷发射器（需要装备"鱼雷再装填"增强）。
+     * 从背包装填鱼雷发射器（策划决策/武器/鱼雷-再装填机制，2026-10-19 修订）。
+     *
+     * <p>开读条时只检查同口径鱼雷数量，不扣物品；读到 {@code durationTicks} 结束后由
+     * {@code WeaponReloadLifecycle} 统一扣除。无强化 3000 tick、有强化 400 tick。</p>
      *
      * @param player      玩家
      * @param inv         玩家背包
@@ -32,7 +35,8 @@ public class ReloadHelper {
      * @param coreSlot    核心所在槽位
      */
     public static void reloadTorpedoLauncher(Player player, Inventory inv, ItemStack launcherStack,
-                                              int weaponSlot, ItemStack coreStack, int coreSlot) {
+                                              int weaponSlot, ItemStack coreStack, int coreSlot,
+                                              int durationTicks, boolean showStartMessage) {
         // P1修复: 添加服务器端验证
         if (player.level().isClientSide()) return;
 
@@ -111,42 +115,24 @@ public class ReloadHelper {
             return;
         }
 
-        // 消耗弹药（弹药库勾选的弹种不扣实体物品）
-        int toConsume = infinite ? 0 : needed;
-        for (int i = 0; i < inv.items.size() && toConsume > 0; i++) {
-            if (i == coreSlot || i == weaponSlot) continue;
-            ItemStack s = inv.items.get(i);
-            if (!s.isEmpty() && s.getItem() == torpedoType) {
-                int take = Math.min(toConsume, s.getCount());
-                s.shrink(take);
-                toConsume -= take;
-            }
-        }
-        if (toConsume > 0 && weaponSlot != 40 && coreSlot != 40) {
-            ItemStack oh = inv.offhand.get(0);
-            if (!oh.isEmpty() && oh.getItem() == torpedoType) {
-                int take = Math.min(toConsume, oh.getCount());
-                oh.shrink(take);
-                toConsume -= take;
-            }
-        }
+        // 读条期间不扣物品：只记下弹种和待装数量，到期由 tick 统一结算（2026-10-19 修订）。
+        launcherStack.set(ModDataComponents.PENDING_TORPEDO_RELOAD.get(),
+                new com.piranport.component.PendingTorpedoReload(needed, ammoId));
 
-        // 设置装填状态
-        launcherStack.set(ModDataComponents.LOADED_AMMO.get(), new LoadedAmmo(tubeCount, ammoId));
-
-        // 设置冷却时间。
+        // 设置读条时间。
         // WHY 只写武器栈的 WEAPON_COOLDOWN、不写船核心栈的 SLOT_COOLDOWNS：
         // ShipCoreCombat 的开火前检查只读 SLOT_COOLDOWNS，写了它会让"刚装填完"的武器被静默拦截
         // 5-7 秒（无任何提示），即玩家报告的"显示装填了但无法发射"。
-        // 保留 WEAPON_COOLDOWN 是为了让 ReloadProgressHudLayer 继续画装填进度条、
-        // 并让上面的 already_reloading 分支仍能区分"装填中"与"已装填"。
-        int cooldownTicks = TransformationManager.boostedCooldown(player, launcher.getCooldownTicks());
+        // 保留 WEAPON_COOLDOWN 是为了让 ReloadProgressHudLayer 继续画装填进度条。
+        int cooldownTicks = TransformationManager.boostedCooldown(player, durationTicks);
         launcherStack.set(ModDataComponents.WEAPON_COOLDOWN.get(),
                 WeaponCooldown.of(player.getUUID(), player.level().getGameTime(), cooldownTicks));
 
         player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
                 SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.5f, 1.4f);
-        player.displayClientMessage(Component.translatable("message.piranport.reload_start"), true);
+        if (showStartMessage) {
+            player.displayClientMessage(Component.translatable("message.piranport.reload_start"), true);
+        }
     }
 
     /** R 键给防空导弹发射器装入一枚弹药。 */

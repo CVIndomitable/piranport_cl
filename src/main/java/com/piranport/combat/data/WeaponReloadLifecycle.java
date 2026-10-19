@@ -34,6 +34,7 @@ public final class WeaponReloadLifecycle {
     public static void onPlayerTick(net.neoforged.neoforge.event.tick.PlayerTickEvent.Post event) {
         Player player = event.getEntity();
         if (player.level().isClientSide()) return;
+        finishPendingTorpedoReloads(player);
         java.util.IdentityHashMap<ItemStack, Integer> slots = HOTBAR_SLOTS.get(player.getUUID());
         if (slots == null || slots.isEmpty()) return;
         Inventory inventory = player.getInventory();
@@ -62,6 +63,12 @@ public final class WeaponReloadLifecycle {
                 }
                 continue;
             }
+            // 海上鱼雷装填在读条期间不扣物品、也不可取消：武器离开快捷栏时保留冷却和待结算状态，
+            // 由 finishPendingTorpedoReloads 到期统一扣除（2026-10-19 修订）。
+            if (stack.get(ModDataComponents.PENDING_TORPEDO_RELOAD.get()) != null) {
+                iterator.remove();
+                continue;
+            }
             WeaponCooldown cooldown = stack.get(ModDataComponents.WEAPON_COOLDOWN.get());
             boolean reloadWasActive = cooldown != null && cooldown.isOnCooldown(player.level().getGameTime());
             LoadedAmmo loaded = stack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
@@ -86,6 +93,71 @@ public final class WeaponReloadLifecycle {
             iterator.remove();
         }
         if (slots.isEmpty()) HOTBAR_SLOTS.remove(player.getUUID());
+    }
+
+    /**
+     * 结算到期（WEAPON_COOLDOWN 结束）的海上鱼雷装填：
+     * 此时才从背包扣除同口径鱼雷，并一次性装满膛内。读条期间物品不足不扣、不取消。
+     */
+    private static void finishPendingTorpedoReloads(Player player) {
+        Inventory inv = player.getInventory();
+        long now = player.level().getGameTime();
+        for (int i = 0; i < inv.items.size(); i++) {
+            finishOneTorpedoReload(player, inv, inv.items.get(i), now);
+        }
+        finishOneTorpedoReload(player, inv, inv.offhand.get(0), now);
+    }
+
+    private static void finishOneTorpedoReload(Player player, Inventory inv, ItemStack stack, long now) {
+        if (stack.isEmpty() || !(stack.getItem() instanceof com.piranport.item.TorpedoLauncherItem launcher)) return;
+        com.piranport.component.PendingTorpedoReload pending =
+                stack.get(ModDataComponents.PENDING_TORPEDO_RELOAD.get());
+        if (pending == null || !pending.isValid()) return;
+        WeaponCooldown cooldown = stack.getOrDefault(ModDataComponents.WEAPON_COOLDOWN.get(), WeaponCooldown.EMPTY);
+        if (cooldown.isOnCooldown(now)) return;
+
+        ResourceLocation ammoId = ResourceLocation.tryParse(pending.ammoItemId());
+        net.minecraft.world.item.Item ammo = ammoId == null
+                ? net.minecraft.world.item.Items.AIR
+                : BuiltInRegistries.ITEM.get(ammoId);
+        if (ammo == net.minecraft.world.item.Items.AIR) {
+            stack.remove(ModDataComponents.PENDING_TORPEDO_RELOAD.get());
+            return;
+        }
+
+        int available = 0;
+        for (int i = 0; i < inv.items.size(); i++) {
+            ItemStack s = inv.items.get(i);
+            if (!s.isEmpty() && s.is(ammo)) available += s.getCount();
+        }
+        ItemStack offhand = inv.offhand.get(0);
+        if (!offhand.isEmpty() && offhand.is(ammo)) available += offhand.getCount();
+
+        if (available < pending.count()) {
+            stack.remove(ModDataComponents.PENDING_TORPEDO_RELOAD.get());
+            player.displayClientMessage(
+                    net.minecraft.network.chat.Component.translatable("message.piranport.insufficient_same_ammo"), true);
+            return;
+        }
+
+        int left = pending.count();
+        for (int i = 0; i < inv.items.size() && left > 0; i++) {
+            ItemStack s = inv.items.get(i);
+            if (!s.isEmpty() && s.is(ammo)) {
+                int take = Math.min(left, s.getCount());
+                s.shrink(take);
+                left -= take;
+                if (s.getCount() <= 0) inv.setItem(i, ItemStack.EMPTY);
+            }
+        }
+        if (left > 0 && !offhand.isEmpty() && offhand.is(ammo)) {
+            offhand.shrink(left);
+            if (offhand.getCount() <= 0) inv.offhand.set(0, ItemStack.EMPTY);
+        }
+
+        stack.set(ModDataComponents.LOADED_AMMO.get(),
+                new LoadedAmmo(launcher.getTubeCount(), pending.ammoItemId()));
+        stack.remove(ModDataComponents.PENDING_TORPEDO_RELOAD.get());
     }
 
     private static int findHotbarSlot(Inventory inventory, ItemStack stack) {

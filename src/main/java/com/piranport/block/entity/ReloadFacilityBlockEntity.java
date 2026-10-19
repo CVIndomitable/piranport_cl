@@ -35,7 +35,7 @@ import org.jetbrains.annotations.Nullable;
  * 槽位1: 鱼雷弹药（原料槽2，侧面漏斗输入）
  * 槽位2: 备用弹药（原料槽3，策划 4 格）
  * 槽位3: 装填完毕的发射器（产品槽，底部漏斗输出）
- * 装填时间: 10 秒 (200 tick) — 策划要求
+ * 装填时间: 6 秒 (120 tick) — 策划决策/武器/鱼雷-再装填机制 2026-10-19 修订
  */
 public class ReloadFacilityBlockEntity extends BlockEntity implements MenuProvider {
     public static final int LAUNCHER_SLOT = 0;
@@ -43,9 +43,9 @@ public class ReloadFacilityBlockEntity extends BlockEntity implements MenuProvid
     public static final int EXTRA_AMMO_SLOT = 2;
     public static final int OUTPUT_SLOT = 3;
     public static final int TOTAL_SLOTS = 4;
-    public static final int RELOAD_TIME_WATER = 200;  // 10 seconds
-    public static final int RELOAD_TIME_LAND = 200;   // 10 seconds
-    public static final int RELOAD_TIME_DEFAULT = 200; // 10 seconds (fallback)
+    public static final int RELOAD_TIME_WATER = 120;  // 6 seconds
+    public static final int RELOAD_TIME_LAND = 120;   // 6 seconds
+    public static final int RELOAD_TIME_DEFAULT = 120; // 6 seconds (fallback)
 
     private final ItemStackHandler itemHandler = new ItemStackHandler(TOTAL_SLOTS) {
         @Override

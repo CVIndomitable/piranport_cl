@@ -108,6 +108,13 @@ public class ModDataComponents {
                     .persistent(LoadedAmmo.CODEC)
                     .networkSynchronized(LoadedAmmo.STREAM_CODEC)
                     .build());
+    /** 海上 R 键鱼雷装填的待结算状态：读条期间不扣物品，到期才扣。 */
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<com.piranport.component.PendingTorpedoReload>>
+            PENDING_TORPEDO_RELOAD = DATA_COMPONENTS.register("pending_torpedo_reload",
+            () -> DataComponentType.<com.piranport.component.PendingTorpedoReload>builder()
+                    .persistent(com.piranport.component.PendingTorpedoReload.CODEC)
+                    .networkSynchronized(com.piranport.component.PendingTorpedoReload.STREAM_CODEC)
+                    .build());
 
     // ===== 偏好弹种（Phase 4 自动装填） =====
 

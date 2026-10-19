@@ -129,9 +129,15 @@ public class ModCreativeTabs {
                         output.accept(ModItems.ADVANCED_SONAR.get());
                         // Radar — 对海 / 对空 / 声纳三种索敌目标各一台
                         output.accept(ModItems.STANDARD_SURFACE_RADAR.get());
+                        output.accept(ModItems.IMPROVED_SURFACE_RADAR.get());
+                        output.accept(ModItems.ADVANCED_SURFACE_RADAR.get());
                         output.accept(ModItems.STANDARD_AIR_RADAR.get());
+                        output.accept(ModItems.IMPROVED_AA_RADAR.get());
+                        output.accept(ModItems.ADVANCED_AA_RADAR.get());
                         // 火控雷达 — 给炮弹做追踪（策划决策/火控/05），与上面两台索敌雷达不同类
                         output.accept(ModItems.STANDARD_FIRE_CONTROL_RADAR.get());
+                        output.accept(ModItems.IMPROVED_FIRE_CONTROL_RADAR.get());
+                        output.accept(ModItems.ADVANCED_FIRE_CONTROL_RADAR.get());
                         // Engines
                         output.accept(ModItems.STANDARD_ENGINE.get());
                         output.accept(ModItems.IMPROVED_ENGINE.get());

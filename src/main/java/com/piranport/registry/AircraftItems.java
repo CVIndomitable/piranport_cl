@@ -166,29 +166,50 @@ public final class AircraftItems {
                             5, 40));
 
     // ===== Radar =====
-    // 两台雷达各注册一台，索敌范围统一 32 区块、负重 1；
-    // 差异化只体现在「索敌目标」上（对海/对空），二者互斥。
+    // 策划决策/火控/08：对海、对空各三代，共六件；标准 32、改良 48、先进 64 格，
+    // 负重统一 4/6/8。标准不查蓝图，改良/先进各要自己的蓝图。
     public static final DeferredItem<RadarItem> STANDARD_SURFACE_RADAR =
             ITEMS.register("standard_surface_radar",
-                    () -> new RadarItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ARMOR),
-                            1, 32, RadarItem.RadarTarget.SURFACE));
+                    () -> radar(4, 32, RadarItem.RadarTarget.SURFACE));
+    public static final DeferredItem<RadarItem> IMPROVED_SURFACE_RADAR =
+            ITEMS.register("improved_surface_radar",
+                    () -> radar(6, 48, RadarItem.RadarTarget.SURFACE));
+    public static final DeferredItem<RadarItem> ADVANCED_SURFACE_RADAR =
+            ITEMS.register("advanced_surface_radar",
+                    () -> radar(8, 64, RadarItem.RadarTarget.SURFACE));
 
     public static final DeferredItem<RadarItem> STANDARD_AIR_RADAR =
-            ITEMS.register("standard_air_radar",
-                    () -> new RadarItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ARMOR),
-                            1, 32, RadarItem.RadarTarget.AIR));
+            ITEMS.register("standard_aa_radar",
+                    () -> radar(4, 32, RadarItem.RadarTarget.AIR));
+    public static final DeferredItem<RadarItem> IMPROVED_AA_RADAR =
+            ITEMS.register("improved_aa_radar",
+                    () -> radar(6, 48, RadarItem.RadarTarget.AIR));
+    public static final DeferredItem<RadarItem> ADVANCED_AA_RADAR =
+            ITEMS.register("advanced_aa_radar",
+                    () -> radar(8, 64, RadarItem.RadarTarget.AIR));
+
+    private static RadarItem radar(int weight, int range, RadarItem.RadarTarget target) {
+        return new RadarItem(new Item.Properties().stacksTo(1)
+                .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ARMOR),
+                weight, range, target);
+    }
 
     // ===== Fire Control Radar =====
     // 与上面两台索敌雷达是不同东西：那两台是「自动扫描并高亮目标」，这台不给玩家做任何
     // 高亮/瞄准辅助，而是给炮弹做追踪（策划决策/火控/05）。所以它是 FireControlRadarItem
     // 而不是 RadarItem 的第四个枚举值 —— 两者作用对象（高亮目标 vs 偏转炮弹）完全不同。
     public static final DeferredItem<FireControlRadarItem> STANDARD_FIRE_CONTROL_RADAR =
-            ITEMS.register("standard_fire_control_radar",
-                    () -> new FireControlRadarItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ARMOR),
-                            8, 1)); // 火控/05：等级1 负重 8
+            ITEMS.register("standard_fire_control_radar", () -> fireControlRadar(4, 1));
+    public static final DeferredItem<FireControlRadarItem> IMPROVED_FIRE_CONTROL_RADAR =
+            ITEMS.register("improved_fire_control_radar", () -> fireControlRadar(6, 2));
+    public static final DeferredItem<FireControlRadarItem> ADVANCED_FIRE_CONTROL_RADAR =
+            ITEMS.register("advanced_fire_control_radar", () -> fireControlRadar(8, 3));
+
+    private static FireControlRadarItem fireControlRadar(int weight, int level) {
+        return new FireControlRadarItem(new Item.Properties().stacksTo(1)
+                .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ARMOR),
+                weight, level);
+    }
 
     // ===== Engines =====
     public static final DeferredItem<EngineItem> STANDARD_ENGINE =

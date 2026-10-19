@@ -459,6 +459,14 @@ public class ModItems {
     public static final DeferredItem<RadarItem> STANDARD_AIR_RADAR = AircraftItems.STANDARD_AIR_RADAR;
     public static final DeferredItem<FireControlRadarItem> STANDARD_FIRE_CONTROL_RADAR =
             AircraftItems.STANDARD_FIRE_CONTROL_RADAR;
+    public static final DeferredItem<RadarItem> IMPROVED_SURFACE_RADAR = AircraftItems.IMPROVED_SURFACE_RADAR;
+    public static final DeferredItem<RadarItem> ADVANCED_SURFACE_RADAR = AircraftItems.ADVANCED_SURFACE_RADAR;
+    public static final DeferredItem<RadarItem> IMPROVED_AA_RADAR = AircraftItems.IMPROVED_AA_RADAR;
+    public static final DeferredItem<RadarItem> ADVANCED_AA_RADAR = AircraftItems.ADVANCED_AA_RADAR;
+    public static final DeferredItem<FireControlRadarItem> IMPROVED_FIRE_CONTROL_RADAR =
+            AircraftItems.IMPROVED_FIRE_CONTROL_RADAR;
+    public static final DeferredItem<FireControlRadarItem> ADVANCED_FIRE_CONTROL_RADAR =
+            AircraftItems.ADVANCED_FIRE_CONTROL_RADAR;
 
     // ===== Engines (extracted to AircraftItems) =====
     public static final DeferredItem<EngineItem> STANDARD_ENGINE = AircraftItems.STANDARD_ENGINE;

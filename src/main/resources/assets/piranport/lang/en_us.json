@@ -1484,7 +1484,6 @@
   "item.piranport.soybean_milk": "Soybean Milk",
   "item.piranport.soybean_seeds": "Soybean Seeds",
   "item.piranport.spider_gloves": "Spider Gloves",
-  "item.piranport.standard_air_radar": "Standard Air Radar",
   "item.piranport.standard_engine": "Standard Engine",
   "item.piranport.standard_fire_control_radar": "Standard Fire Control Radar",
   "item.piranport.standard_sonar": "Standard Sonar",
@@ -2157,5 +2156,19 @@
   "tooltip.piranport.weapon_not_loaded": "Not Loaded",
   "tooltip.piranport.weapon_ready": "Ready",
   "tooltip.piranport.weapon_reloading": "Reloading",
-  "tooltip.piranport.weight": "Weight: %s"
+  "tooltip.piranport.weight": "Weight: %s",
+  "item.piranport.standard_aa_radar": "Standard AA Radar",
+  "item.piranport.improved_surface_radar": "Improved Surface Radar",
+  "item.piranport.improved_surface_radar_blueprint": "Improved Surface Radar Blueprint",
+  "item.piranport.advanced_surface_radar": "Advanced Surface Radar",
+  "item.piranport.advanced_surface_radar_blueprint": "Advanced Surface Radar Blueprint",
+  "item.piranport.improved_aa_radar": "Improved AA Radar",
+  "item.piranport.improved_aa_radar_blueprint": "Improved AA Radar Blueprint",
+  "item.piranport.advanced_aa_radar": "Advanced AA Radar",
+  "item.piranport.advanced_aa_radar_blueprint": "Advanced AA Radar Blueprint",
+  "item.piranport.improved_fire_control_radar": "Improved Fire Control Radar",
+  "item.piranport.improved_fire_control_radar_blueprint": "Improved Fire Control Radar Blueprint",
+  "item.piranport.advanced_fire_control_radar": "Advanced Fire Control Radar",
+  "item.piranport.advanced_fire_control_radar_blueprint": "Advanced Fire Control Radar Blueprint",
+  "gui.piranport.workbench.tab.equipment": "Equipment"
 }

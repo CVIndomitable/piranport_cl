@@ -1484,7 +1484,6 @@
   "item.piranport.soybean_milk": "豆浆",
   "item.piranport.soybean_seeds": "大豆种子",
   "item.piranport.spider_gloves": "蜘蛛手套",
-  "item.piranport.standard_air_radar": "标准型对空雷达",
   "item.piranport.standard_engine": "标准型动力系统",
   "item.piranport.standard_fire_control_radar": "标准型火控雷达",
   "item.piranport.standard_sonar": "标准型声纳",
@@ -2204,5 +2203,19 @@
   "tooltip.piranport.weapon_not_loaded": "未装填",
   "tooltip.piranport.weapon_ready": "已装填",
   "tooltip.piranport.weapon_reloading": "装填中",
-  "tooltip.piranport.weight": "负重: %s"
+  "tooltip.piranport.weight": "负重: %s",
+  "item.piranport.standard_aa_radar": "标准型对空雷达",
+  "item.piranport.improved_surface_radar": "改良型对海雷达",
+  "item.piranport.improved_surface_radar_blueprint": "改良型对海雷达蓝图",
+  "item.piranport.advanced_surface_radar": "先进型对海雷达",
+  "item.piranport.advanced_surface_radar_blueprint": "先进型对海雷达蓝图",
+  "item.piranport.improved_aa_radar": "改良型对空雷达",
+  "item.piranport.improved_aa_radar_blueprint": "改良型对空雷达蓝图",
+  "item.piranport.advanced_aa_radar": "先进型对空雷达",
+  "item.piranport.advanced_aa_radar_blueprint": "先进型对空雷达蓝图",
+  "item.piranport.improved_fire_control_radar": "改良型火控雷达",
+  "item.piranport.improved_fire_control_radar_blueprint": "改良型火控雷达蓝图",
+  "item.piranport.advanced_fire_control_radar": "先进型火控雷达",
+  "item.piranport.advanced_fire_control_radar_blueprint": "先进型火控雷达蓝图",
+  "gui.piranport.workbench.tab.equipment": "装备"
 }

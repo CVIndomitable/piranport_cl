@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "piranport:item/standard_air_radar"
+    "layer0": "piranport:item/standard_aa_radar"
   }
 }

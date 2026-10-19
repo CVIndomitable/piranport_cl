@@ -30,7 +30,7 @@ import net.neoforged.neoforge.items.SlotItemHandler;
  */
 public class WeaponWorkbenchMenu extends AbstractContainerMenu {
     private static final int BTN_TAB_MIN = 0;
-    private static final int BTN_TAB_MAX = 4;
+    private static final int BTN_TAB_MAX = 5;
     private static final int BTN_RECIPE_BASE = 100;
     private static final int BTN_RECIPE_MAX = 199;
     private static final int BTN_CRAFT = 200;

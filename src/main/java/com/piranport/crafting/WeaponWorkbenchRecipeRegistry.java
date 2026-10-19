@@ -301,6 +301,58 @@ public final class WeaponWorkbenchRecipeRegistry {
                 new ItemStack(Items.GOLD_INGOT, 1)
         ), null, 200);
 
+        // ===== Tab 5: 装备（雷达三代，火控/08）=====
+        add(r, 5, ModItems.STANDARD_SURFACE_RADAR.get(), List.of(
+                new ItemStack(Items.IRON_INGOT, 4),
+                new ItemStack(Items.DAYLIGHT_DETECTOR, 1),
+                new ItemStack(Items.COPPER_INGOT, 2)), null, 200);
+        add(r, 5, ModItems.IMPROVED_SURFACE_RADAR.get(), List.of(
+                new ItemStack(Items.IRON_INGOT, 4),
+                new ItemStack(Items.COPPER_BULB, 1),
+                new ItemStack(Items.DIAMOND, 1),
+                new ItemStack(Items.COPPER_INGOT, 2)),
+                blueprintFor("improved_surface_radar", EquipmentTier.IMPROVED), 300);
+        add(r, 5, ModItems.ADVANCED_SURFACE_RADAR.get(), List.of(
+                new ItemStack(Items.IRON_INGOT, 6),
+                new ItemStack(Items.ENDER_EYE, 1),
+                new ItemStack(Items.NETHERITE_SCRAP, 1),
+                new ItemStack(Items.COPPER_INGOT, 2)),
+                blueprintFor("advanced_surface_radar", EquipmentTier.ADVANCED), 400);
+
+        add(r, 5, ModItems.STANDARD_AIR_RADAR.get(), List.of(
+                new ItemStack(Items.IRON_INGOT, 4),
+                new ItemStack(Items.DAYLIGHT_DETECTOR, 1),
+                new ItemStack(Items.GLOWSTONE_DUST, 2)), null, 200);
+        add(r, 5, ModItems.IMPROVED_AA_RADAR.get(), List.of(
+                new ItemStack(Items.IRON_INGOT, 4),
+                new ItemStack(Items.COPPER_BULB, 1),
+                new ItemStack(Items.DIAMOND, 1),
+                new ItemStack(Items.GLOWSTONE_DUST, 2)),
+                blueprintFor("improved_aa_radar", EquipmentTier.IMPROVED), 300);
+        add(r, 5, ModItems.ADVANCED_AA_RADAR.get(), List.of(
+                new ItemStack(Items.IRON_INGOT, 6),
+                new ItemStack(Items.ENDER_EYE, 1),
+                new ItemStack(Items.NETHERITE_SCRAP, 1),
+                new ItemStack(Items.GLOWSTONE_DUST, 2)),
+                blueprintFor("advanced_aa_radar", EquipmentTier.ADVANCED), 400);
+
+        add(r, 5, ModItems.STANDARD_FIRE_CONTROL_RADAR.get(), List.of(
+                new ItemStack(Items.IRON_INGOT, 4),
+                new ItemStack(Items.DAYLIGHT_DETECTOR, 1),
+                new ItemStack(Items.COMPARATOR, 1)), null, 200);
+        add(r, 5, ModItems.IMPROVED_FIRE_CONTROL_RADAR.get(), List.of(
+                new ItemStack(Items.IRON_INGOT, 4),
+                new ItemStack(Items.COPPER_BULB, 1),
+                new ItemStack(Items.DIAMOND, 1),
+                new ItemStack(Items.COMPARATOR, 1)),
+                blueprintFor("improved_fire_control_radar", EquipmentTier.IMPROVED), 300);
+        add(r, 5, ModItems.ADVANCED_FIRE_CONTROL_RADAR.get(), List.of(
+                new ItemStack(Items.IRON_INGOT, 6),
+                new ItemStack(Items.ENDER_EYE, 1),
+                new ItemStack(Items.NETHERITE_SCRAP, 1),
+                new ItemStack(Items.COMPARATOR, 1)),
+                blueprintFor("advanced_fire_control_radar", EquipmentTier.ADVANCED), 400);
+
         // ===== Tab 4: 飞机 =====
         // 数值/09：按机种分档，材料随档替换；无蓝图。列表只覆盖已注册且有分档的机体。
         for (var holder : com.piranport.registry.AircraftItems.AIRCRAFT_ITEMS) {

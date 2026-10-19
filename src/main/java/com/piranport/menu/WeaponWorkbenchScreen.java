@@ -18,7 +18,7 @@ import java.util.List;
 public class WeaponWorkbenchScreen extends AbstractContainerScreen<WeaponWorkbenchMenu> {
 
     // ===== 布局常量 =====
-    private static final int TAB_W = 30, TAB_H = 26, TAB_COUNT = 5;
+    private static final int TAB_W = 30, TAB_H = 26, TAB_COUNT = 6;
     private static final int DD_X = 8, DD_Y = 20, DD_W = 118, DD_H = 16;
     private static final int DD_ITEM_H = 14, DD_MAX_VISIBLE = 8;
     private static final int CRAFT_X = 152, CRAFT_Y = 100, CRAFT_W = 40, CRAFT_H = 16;
@@ -37,7 +37,8 @@ public class WeaponWorkbenchScreen extends AbstractContainerScreen<WeaponWorkben
             Component.translatable("gui.piranport.workbench.tab.torpedo"),
             Component.translatable("gui.piranport.workbench.tab.missile"),
             Component.translatable("gui.piranport.workbench.tab.depth_charge"),
-            Component.translatable("gui.piranport.workbench.tab.aircraft")
+            Component.translatable("gui.piranport.workbench.tab.aircraft"),
+            Component.translatable("gui.piranport.workbench.tab.equipment")
     };
 
     public WeaponWorkbenchScreen(WeaponWorkbenchMenu menu, Inventory inv, Component title) {
@@ -55,7 +56,8 @@ public class WeaponWorkbenchScreen extends AbstractContainerScreen<WeaponWorkben
                 new ItemStack(ModItems.TRIPLE_TORPEDO_LAUNCHER.get()),
                 new ItemStack(ModItems.TERRIER_LAUNCHER.get()),
                 new ItemStack(ModItems.DEPTH_CHARGE_LAUNCHER.get()),
-                new ItemStack(ModItems.SEAFIRE.get())
+                new ItemStack(ModItems.SEAFIRE.get()),
+                new ItemStack(ModItems.STANDARD_FIRE_CONTROL_RADAR.get())
         };
     }
 

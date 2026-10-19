@@ -424,6 +424,13 @@ public final class WeaponItems {
         registerLauncherBlueprint(map, "quintuple_61cm_torpedo", EquipmentTier.IMPROVED);
         registerLauncherBlueprint(map, "quintuple_61cm_oxygen_torpedo", EquipmentTier.IMPROVED);
         registerLauncherBlueprint(map, "japanese_sextuple_61cm_torpedo", EquipmentTier.ADVANCED);
+        // 雷达三代（火控/08）：改良、先进各要自己的蓝图；标准不查蓝图，不进池。
+        registerBlueprint(map, "improved_surface_radar", EquipmentTier.IMPROVED);
+        registerBlueprint(map, "advanced_surface_radar", EquipmentTier.ADVANCED);
+        registerBlueprint(map, "improved_aa_radar", EquipmentTier.IMPROVED);
+        registerBlueprint(map, "advanced_aa_radar", EquipmentTier.ADVANCED);
+        registerBlueprint(map, "improved_fire_control_radar", EquipmentTier.IMPROVED);
+        registerBlueprint(map, "advanced_fire_control_radar", EquipmentTier.ADVANCED);
         return java.util.Collections.unmodifiableMap(map);
     }
 

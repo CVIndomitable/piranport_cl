@@ -65,6 +65,9 @@ public interface AircraftAttackContext {
 
     void setRemainingAmmo(int ammo);
 
+    /** 本次挂载是否为核航弹（副本/08）；非水平轰炸机恒为 false。 */
+    boolean nuclearPayload();
+
     int attackCooldown();
 
     void setAttackCooldown(int ticks);

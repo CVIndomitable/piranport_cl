@@ -413,6 +413,8 @@ public class ModItems {
     public static final DeferredItem<Item> AERIAL_TORPEDO = AmmoItems.AERIAL_TORPEDO;
     // Unified aerial bomb (replaces small/medium distinction)
     public static final DeferredItem<Item> AERIAL_BOMB = AmmoItems.AERIAL_BOMB;
+    // 核航弹（副本/08，仅三架水平轰炸机可挂）
+    public static final DeferredItem<Item> NUCLEAR_AERIAL_BOMB = AmmoItems.NUCLEAR_AERIAL_BOMB;
     // 深水炸弹
     public static final DeferredItem<Item> DEPTH_CHARGE = AmmoItems.DEPTH_CHARGE;
     // Fighter ammo (子弹)

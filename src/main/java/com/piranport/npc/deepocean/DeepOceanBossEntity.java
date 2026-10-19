@@ -75,7 +75,7 @@ public class DeepOceanBossEntity extends AbstractDeepOceanEntity {
     @Override
     protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean recentlyHit) {
         super.dropCustomDeathLoot(level, source, recentlyHit);
-        // Boss drops: high-tier resources + chance for a key fragment + chance for MK23
+        // Boss drops: high-tier resources + chance for a key fragment (MK23 由机密货物合成，不直接掉)
         spawnAtLocation(new ItemStack(Items.IRON_INGOT, 5 + random.nextInt(4)));
         spawnAtLocation(new ItemStack(Items.GUNPOWDER, 4 + random.nextInt(3)));
         spawnAtLocation(new ItemStack(ModItems.FUEL.get(), 3 + random.nextInt(3)));

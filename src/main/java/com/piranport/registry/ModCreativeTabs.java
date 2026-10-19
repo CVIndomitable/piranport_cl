@@ -453,6 +453,7 @@ public class ModCreativeTabs {
                         output.accept(ModItems.TORPEDO_533MM_53_38.get());
                         // Aviation Ammo
                         output.accept(ModItems.AERIAL_BOMB.get());
+                        output.accept(ModItems.NUCLEAR_AERIAL_BOMB.get());
                         output.accept(ModItems.AERIAL_TORPEDO.get());
                         output.accept(ModItems.DEPTH_CHARGE.get());
                         output.accept(ModItems.FIGHTER_AMMO.get());

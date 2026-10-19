@@ -22,7 +22,7 @@ class AircraftSortieReadinessTest {
     }
 
     private static AircraftState state(int fuel, boolean payloadLoaded) {
-        return new AircraftState(fuel, payloadLoaded);
+        return new AircraftState(fuel, payloadLoaded, false);
     }
 
     @Test

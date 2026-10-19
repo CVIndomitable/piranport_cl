@@ -165,7 +165,7 @@ class AircraftDefinitionTest {
 
     @Test
     void aircraftStateStreamCodecRoundTrips() {
-        AircraftState original = new AircraftState(37, true);
+        AircraftState original = new AircraftState(37, true, false);
         ByteBuf buffer = Unpooled.buffer();
         AircraftState.STREAM_CODEC.encode(buffer, original);
         AircraftState decoded = AircraftState.STREAM_CODEC.decode(buffer);

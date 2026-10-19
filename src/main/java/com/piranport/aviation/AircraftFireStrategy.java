@@ -78,7 +78,9 @@ public class AircraftFireStrategy {
         }
 
         AircraftAttackMode attackMode = AircraftAttackMode.FOCUS;
-        String payloadType = definition.payloadItem() == null ? "" : definition.payloadItem().toString();
+        String payloadType = launchState.nuclearPayload()
+                ? "piranport:nuclear_aerial_bomb"
+                : definition.payloadItem() == null ? "" : definition.payloadItem().toString();
 
         // 对海挂载未装填则拒绝放飞，创造模式同样适用。
         // 装填由 R 键读条完成，见 tryStartAircraftReload —— 放飞不再扫描背包消耗挂载物，
@@ -582,7 +584,7 @@ public class AircraftFireStrategy {
         // 创造模式仍必须按 R 走完整装填流程，只是不要求背包里有补给。
         if (player.getAbilities().instabuild) return true;
 
-        net.minecraft.world.item.Item payload = payloadItem(definition);
+        net.minecraft.world.item.Item payload = selectPayloadItem(player, inv, definition, weaponSlot, coreSlot);
         boolean payloadInfinite = payload != null && CreativeAmmoCache.isInfinite(player, payload);
         boolean fuelInfinite = CreativeAmmoCache.isInfinite(player, ModItems.FUEL.get());
 
@@ -607,6 +609,26 @@ public class AircraftFireStrategy {
     }
 
     /**
+     * 本次装填实际使用的挂载物。
+     *
+     * <p>核航弹是普通航弹的替代装填项（副本/08），不写进 {@code payload_item}：
+     * 白名单机型背包里带着核航弹时优先装核航弹，否则仍装普通航弹。这样同一架飞机
+     * 可以按携带物切换弹种，而无需给每架飞机再定义一套"核弹版"物品。
+     */
+    private static net.minecraft.world.item.Item selectPayloadItem(Player player, Inventory inv,
+                                                                   AircraftDefinition definition,
+                                                                   int weaponSlot, int coreSlot) {
+        if (definition.canCarryNuclearBomb()) {
+            net.minecraft.world.item.Item nuclear = ModItems.NUCLEAR_AERIAL_BOMB.get();
+            if (CreativeAmmoCache.isInfinite(player, nuclear)
+                    || findPayloadSlot(inv, nuclear, weaponSlot, coreSlot) >= 0) {
+                return nuclear;
+            }
+        }
+        return payloadItem(definition);
+    }
+
+    /**
      * 执行一次出击补给事务：消耗 1 航空燃料（加满油）+ 1 对海挂载物。
      *
      * <p>先全量校验再消耗，避免"扣了油才发现没弹"导致状态半残。任一补给在读条期间被拿走
@@ -622,8 +644,10 @@ public class AircraftFireStrategy {
         // 创造模式不消耗补给，但必须真的把飞机写成"已准备"状态。
         // 创造模式也需要玩家手动按 R 走完读条；这里只是免去背包补给要求。
         if (player.getAbilities().instabuild) {
+            boolean nuclear = selectPayloadItem(player, inv, definition, weaponSlot, coreSlot)
+                    == ModItems.NUCLEAR_AERIAL_BOMB.get();
             aircraftStack.set(ModDataComponents.AIRCRAFT_STATE.get(),
-                    state.withCurrentFuel(stats.fuelCapacity()).withPayloadLoaded(true));
+                    state.withCurrentFuel(stats.fuelCapacity()).withPayload(true, nuclear));
             if (warn) {
                 player.displayClientMessage(
                         Component.translatable("message.piranport.aircraft_creative_free_load"), true);
@@ -635,7 +659,8 @@ public class AircraftFireStrategy {
         boolean needsPayload = AircraftSortieReadiness.needsPayload(definition, state);
         if (!needsFuel && !needsPayload) return true;
 
-        net.minecraft.world.item.Item payloadItem = payloadItem(definition);
+        net.minecraft.world.item.Item payloadItem = selectPayloadItem(player, inv, definition,
+                weaponSlot, coreSlot);
         boolean payloadInfinite = needsPayload && payloadItem != null
                 && CreativeAmmoCache.isInfinite(player, payloadItem);
         boolean fuelInfinite = needsFuel
@@ -665,7 +690,7 @@ public class AircraftFireStrategy {
             if (!payloadInfinite) {
                 com.piranport.testtools.PiranPortTestTools.consumeAmmo(player.getUUID(), stackAt(inv, payloadSlot), 1);
             }
-            state = state.withPayloadLoaded(true);
+            state = state.withPayload(true, payloadItem == ModItems.NUCLEAR_AERIAL_BOMB.get());
         }
         aircraftStack.set(ModDataComponents.AIRCRAFT_STATE.get(), state);
 

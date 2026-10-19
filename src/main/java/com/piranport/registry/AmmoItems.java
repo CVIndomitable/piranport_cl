@@ -175,6 +175,10 @@ public final class AmmoItems {
     public static final DeferredItem<Item> AERIAL_BOMB =
             ITEMS.register("aerial_bomb",
                     () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.aerial_bomb"));
+    // 核航弹（副本/08）：只给景云改、B25、XA2J 三架水平轰炸机挂载，威力为同机普通航弹的 10 倍。
+    public static final DeferredItem<Item> NUCLEAR_AERIAL_BOMB =
+            ITEMS.register("nuclear_aerial_bomb",
+                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.nuclear_aerial_bomb"));
     // 深水炸弹
     public static final DeferredItem<Item> DEPTH_CHARGE =
             ITEMS.register("depth_charge",

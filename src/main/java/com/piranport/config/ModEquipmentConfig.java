@@ -443,6 +443,9 @@ public final class ModEquipmentConfig {
     /** 航弹爆炸威力。默认 4.0。 */
     public static final TerminalConfigValue<Double> LEVEL_BOMBER_EXPLOSION_POWER =
             TerminalConfigValue.number("equipment", "level_bomber", "explosion_power", 4.0, 0.0, 100.0);
+    /** 核航弹威力倍率（副本/08：同机普通航弹 ×10）。投弹时一次性写进航弹，命中时不再乘系数。 */
+    public static final TerminalConfigValue<Double> LEVEL_BOMBER_NUCLEAR_POWER_MULTIPLIER =
+            TerminalConfigValue.number("equipment", "level_bomber", "nuclear_power_multiplier", 10.0, 1.0, 100.0);
     /** 航弹投放点相对载机的下沉高度（格），同时也是提前量算的起始高度差。默认 0.5。 */
     public static final TerminalConfigValue<Double> LEVEL_BOMBER_DROP_Y_OFFSET =
             TerminalConfigValue.number("equipment", "level_bomber", "drop_y_offset", 0.5, 0.0, 16.0);

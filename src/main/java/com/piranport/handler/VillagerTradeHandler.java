@@ -97,7 +97,7 @@ public class VillagerTradeHandler {
         // 学徒：只卖 533mm 标准鱼雷，不含磁性/线导/声导/氧气
         t.get(2).add(sell(() -> Items.EMERALD, 12, ModItems.TORPEDO_533MM, 2, EMERALD_USES, 2));
         // 老手～大师：VT 弹蓝图、大口径炮弹蓝图、导弹蓝图、特殊弹药蓝图池均需新增，暂缺。
-        // 不出售 MK23 核炮弹（只由终章 Boss 首通发放）。
+        // 不出售 MK23 核炮弹与核航弹（经济/02：这两件由机密货物合成，不进交易表）。
     }
 
     /** 单输入交易：支付 costCount 个 cost，获得 resultCount 个 result。 */

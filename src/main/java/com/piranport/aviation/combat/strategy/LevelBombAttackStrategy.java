@@ -8,8 +8,10 @@ import com.piranport.aviation.combat.TargetResolution;
 import com.piranport.combat.LevelBombLead;
 import com.piranport.config.ModEquipmentConfig;
 import com.piranport.entity.AerialBombEntity;
+import com.piranport.registry.ModItems;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
@@ -163,11 +165,23 @@ public final class LevelBombAttackStrategy implements AttackStrategy {
                     && (horizontalDistance <= Math.max(leadDistance,
                     ModEquipmentConfig.LEVEL_BOMBER_MIN_RELEASE_DISTANCE.get())
                     || state.runTicks > ModEquipmentConfig.LEVEL_BOMBER_RUN_TIMEOUT_TICKS.get())) {
-                float bombPower = context.panelDamage();
+                // 副本/08：核航弹的威力是同机普通航弹的 10 倍。倍率在投弹时一次性写进航弹，
+                // 命中阶段不再乘系数；伤害、方块破坏与水中规则仍由原版爆炸统一处理。
+                boolean nuclear = context.nuclearPayload();
+                float powerMultiplier = nuclear
+                        ? ModEquipmentConfig.LEVEL_BOMBER_NUCLEAR_POWER_MULTIPLIER.get().floatValue()
+                        : 1.0f;
+                float bombPower = context.panelDamage() * powerMultiplier;
+                float explosionPower = ModEquipmentConfig.LEVEL_BOMBER_EXPLOSION_POWER.get().floatValue()
+                        * powerMultiplier;
                 int bombCount = Math.max(1, context.remainingAmmo());
                 for (int i = 0; i < bombCount; i++) {
                     AerialBombEntity bomb = new AerialBombEntity(context.level(), bombPower / bombCount,
-                            ModEquipmentConfig.LEVEL_BOMBER_EXPLOSION_POWER.get().floatValue());
+                            explosionPower);
+                    if (nuclear) {
+                        // 视觉与命中提示都按核航弹显示；投掷物默认物品是普通航弹。
+                        bomb.setItem(new ItemStack(ModItems.NUCLEAR_AERIAL_BOMB.get()));
+                    }
                     double spreadX = (context.level().random.nextDouble() - 0.5)
                             * ModEquipmentConfig.LEVEL_BOMBER_BOMB_SPREAD.get();
                     double spreadZ = (context.level().random.nextDouble() - 0.5)

@@ -112,6 +112,11 @@ public class AircraftEntity extends Entity implements AircraftAttackContext {
 
     int remainingAmmo = 0;
     int ammoCapacity = 0;
+    /**
+     * 本次挂载是否为核航弹（副本/08）。只对白名单水平轰炸机可能为 true；
+     * 投弹时据此把普通航弹的威力与爆炸倍率整体放大，命中阶段不再二次乘系数。
+     */
+    boolean nuclearPayload = false;
     private int currentFuel = 0;
     private int fuelCapacity = 1;
     float panelSpeed = 1.0f;
@@ -228,6 +233,7 @@ public class AircraftEntity extends Entity implements AircraftAttackContext {
         this.panelSpeed = ExperienceShellItem.applyAircraftPanelSpeedBonus(owner, resolved.speed());
         this.ammoCapacity = resolved.ammoCapacity();
         this.remainingAmmo = resolved.ammoCapacity();
+        this.nuclearPayload = state.nuclearPayload();
         this.fuelCapacity = resolved.fuelCapacity();
         this.currentFuel = fullFuel
                 ? resolved.fuelCapacity()
@@ -451,11 +457,20 @@ public class AircraftEntity extends Entity implements AircraftAttackContext {
         if (!held.isEmpty() && payloadItem != null) {
             ResourceLocation heldId = net.minecraft.core.registries.BuiltInRegistries.ITEM
                     .getKey(held.getItem());
-            if (payloadItem.equals(heldId) && remainingAmmo < ammoCapacity) {
+            // 核航弹是普通航弹的替代装填项（副本/08），只有白名单机型能手动补核航弹。
+            boolean nuclear = held.is(ModItems.NUCLEAR_AERIAL_BOMB.get())
+                    && getResolvedDefinition().canCarryNuclearBomb();
+            if ((nuclear || payloadItem.equals(heldId)) && remainingAmmo < ammoCapacity) {
                 int needed = ammoCapacity - remainingAmmo;
                 int toLoad = Math.min(needed, held.getCount());
                 held.shrink(toLoad);
                 remainingAmmo += toLoad;
+                // 补普通航弹时只有在弹舱为空的情况下才清掉核弹标记，避免混装时误降级。
+                if (nuclear) {
+                    nuclearPayload = true;
+                } else if (remainingAmmo == toLoad) {
+                    nuclearPayload = false;
+                }
                 hasFired = false;
                 player.displayClientMessage(
                         Component.translatable("message.piranport.aircraft_resupplied", getDisplayName()),
@@ -767,6 +782,7 @@ public class AircraftEntity extends Entity implements AircraftAttackContext {
     }
 
     @Override public Vec3 torpedoAimPoint() { return getTorpedoAimPoint(); }
+    @Override public boolean nuclearPayload() { return nuclearPayload; }
     @Override public DiveBombState diveBombState() { return diveBombState; }
     @Override public TorpedoRunState torpedoRunState() { return torpedoRunState; }
     @Override public LevelBombState levelBombState() { return levelBombState; }
@@ -888,6 +904,7 @@ public class AircraftEntity extends Entity implements AircraftAttackContext {
 
         currentFuel = tag.getInt("CurrentFuel");
         remainingAmmo = tag.getInt("RemainingAmmo");
+        nuclearPayload = tag.getBoolean("NuclearPayload");
         ammoCapacity = tag.getInt("AmmoCapacity");
         fuelCapacity = Math.max(1, tag.getInt("FuelCapacity"));
         panelSpeed = tag.getFloat("PanelSpeed");
@@ -994,6 +1011,7 @@ public class AircraftEntity extends Entity implements AircraftAttackContext {
         tag.putString("AttackMode", attackMode.name());
         tag.putInt("CurrentFuel", currentFuel);
         tag.putInt("RemainingAmmo", remainingAmmo);
+        tag.putBoolean("NuclearPayload", nuclearPayload);
         tag.putInt("AmmoCapacity", ammoCapacity);
         tag.putInt("FuelCapacity", fuelCapacity);
         tag.putFloat("PanelSpeed", panelSpeed);

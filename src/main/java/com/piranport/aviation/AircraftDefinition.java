@@ -162,6 +162,20 @@ public record AircraftDefinition(
         return attackProfile == AttackProfile.DEPTH_CHARGE;
     }
 
+    /**
+     * 能否挂载核航弹（副本/08）：仅景云改、B25、XA2J 三架水平轰炸机。
+     *
+     * <p>白名单按注册名而不是机种判断：飞龙同样是俯冲轰炸机、其余水平轰炸机也走同一条
+     * 投弹航线，按机种放行会让核航弹扩散到策划没有批准的机型上。
+     */
+    public boolean canCarryNuclearBomb() {
+        if (!"piranport".equals(id.getNamespace())) return false;
+        return switch (id.getPath()) {
+            case "seiun_kai_bomber", "b25_bomber", "xa2j_bomber" -> true;
+            default -> false;
+        };
+    }
+
     private static void validateCombination(ResourceLocation id, AircraftClass aircraftClass,
                                             @Nullable AttackProfile attackProfile,
                                             @Nullable ResourceLocation payloadItem) {

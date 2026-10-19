@@ -193,6 +193,14 @@ public class AmmoRecipeRegistry {
                 () -> ModItems.LARGE_TYPE3_SHELL.get(), 4, 80,
                 () -> ModItems.LARGE_TYPE3_SHELL_BLUEPRINT.get(),
                 mat(copper, 5), mat(gp, 4), mat(rs, 2));
+
+        // MK23 核炮弹（副本/08、数值/09）：只有大口径主炮能装填，不查蓝图。
+        // 威力 ×10 由 AmmoDefinitionService 的 explosion_multiplier 承担，命中时不再乘系数。
+        Supplier<Item> cargo = () -> ModItems.CONFIDENTIAL_CARGO.get();
+        Supplier<Item> scrap = () -> Items.NETHERITE_SCRAP;
+        add("shell_mk23", AmmoCategory.SHELL, "核炮弹", "大口径",
+                () -> ModItems.MK23_NUCLEAR_SHELL.get(), 1, 200,
+                mat(cargo, 1), mat(copper, 4), mat(gp, 4), mat(scrap, 1));
     }
 
     // ===== Torpedoes =====
@@ -314,6 +322,11 @@ public class AmmoRecipeRegistry {
         add("fighter_ammo", AmmoCategory.AERIAL, "机枪弹", "标准",
                 () -> ModItems.FIGHTER_AMMO.get(), 16, 40,
                 mat(iron, 1), mat(gp, 1));
+        // 核航弹（副本/08、数值/09）：不查蓝图，材料含 7-5 掉落的机密货物。
+        add("aerial_nuclear", AmmoCategory.AERIAL, "核航弹", "标准",
+                () -> ModItems.NUCLEAR_AERIAL_BOMB.get(), 1, 200,
+                mat(() -> ModItems.CONFIDENTIAL_CARGO.get(), 1), mat(iron, 2), mat(gp, 4),
+                mat(() -> Items.NETHERITE_SCRAP, 1));
     }
 
     // ===== Depth Charges =====

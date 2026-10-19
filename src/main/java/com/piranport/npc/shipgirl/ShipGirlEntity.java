@@ -2,6 +2,7 @@ package com.piranport.npc.shipgirl;
 
 import com.piranport.advancement.ModAdvancements;
 import com.piranport.config.ModEquipmentConfig;
+import com.piranport.entity.AircraftEntity;
 import com.piranport.item.KeyFragmentItem;
 import com.piranport.npc.deepocean.AbstractDeepOceanEntity;
 import com.piranport.registry.ModItems;
@@ -44,6 +45,7 @@ import net.minecraft.world.item.trading.Merchant;
 import net.minecraft.world.item.trading.MerchantOffer;
 import net.minecraft.world.item.trading.MerchantOffers;
 import net.minecraft.world.level.Level;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Friendly ship girl NPC. Can be interacted with for basic status dialog.
@@ -358,6 +360,25 @@ public class ShipGirlEntity extends PathfinderMob implements Merchant {
 
     public boolean isCombatAiEnabled() {
         return combatAiEnabled;
+    }
+
+    /**
+     * 对空索敌入口：返回范围内最近的敌方（深海自主）飞机。
+     *
+     * <p>WHY 需要独立入口：{@code AircraftEntity} 不是 {@link LivingEntity}，
+     * 原版 targetSelector / {@code setTarget} 无法把它设为目标。随从舰娘承担
+     * 防空职能时只能自己扫描飞机，再交给 {@code ShipGirlCombatGoal} 的对空分支开火。
+     * 玩家所属飞机（ownerUUID != null）是友军，不由本方法返回。
+     */
+    @Nullable
+    public AircraftEntity findHostileAircraft(double range) {
+        if (!combatAiEnabled || level().isClientSide()) return null;
+        return level().getEntitiesOfClass(AircraftEntity.class,
+                        getBoundingBox().inflate(range),
+                        aircraft -> aircraft.isAlive() && aircraft.isAutonomous())
+                .stream()
+                .min(java.util.Comparator.comparingDouble(this::distanceTo))
+                .orElse(null);
     }
 
     public void setCombatAiEnabled(boolean enabled) {

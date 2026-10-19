@@ -9,6 +9,7 @@ import com.piranport.block.entity.YubariWaterBucketBlockEntity;
 import com.piranport.entity.FloatingTargetEntity;
 import com.piranport.entity.LowTierDestroyerEntity;
 import com.piranport.entity.GoldencatcatEntity;
+import com.piranport.npc.deepocean.DeepOceanArmoredCarrierEntity;
 import com.piranport.npc.deepocean.DeepOceanBossEntity;
 import com.piranport.npc.deepocean.DeepOceanBattleCruiserEntity;
 import com.piranport.npc.deepocean.DeepOceanBattleshipEntity;
@@ -18,7 +19,12 @@ import com.piranport.npc.deepocean.DeepOceanHeavyCruiserEntity;
 import com.piranport.npc.deepocean.DeepOceanLightCarrierEntity;
 import com.piranport.npc.deepocean.DeepOceanLightCruiserEntity;
 import com.piranport.npc.deepocean.DeepOceanSubmarineEntity;
+import com.piranport.npc.deepocean.DeepOceanShinanoEntity;
 import com.piranport.npc.deepocean.DeepOceanSupplyEntity;
+import com.piranport.npc.deepocean.DeepOceanTaihouEntity;
+import com.piranport.npc.deepocean.DeepOceanTorpedoCruiserEntity;
+import com.piranport.npc.deepocean.DeepOceanTransportEntity;
+import com.piranport.npc.deepocean.DeepOceanZuikakuEntity;
 import com.piranport.npc.shipgirl.ShipGirlEntity;
 import com.piranport.registry.ModBlockEntityTypes;
 import com.piranport.registry.ModEntityTypes;
@@ -98,6 +104,18 @@ public class ModLifecycleEvents {
                 DeepOceanCarrierEntity.createAttributes().build());
         event.put(ModEntityTypes.DEEP_OCEAN_SUBMARINE.get(),
                 DeepOceanSubmarineEntity.createAttributes().build());
+        event.put(ModEntityTypes.DEEP_OCEAN_TRANSPORT.get(),
+                DeepOceanTransportEntity.createAttributes().build());
+        event.put(ModEntityTypes.DEEP_OCEAN_ARMORED_CARRIER.get(),
+                DeepOceanArmoredCarrierEntity.createAttributes().build());
+        event.put(ModEntityTypes.DEEP_OCEAN_TORPEDO_CRUISER.get(),
+                DeepOceanTorpedoCruiserEntity.createAttributes().build());
+        event.put(ModEntityTypes.DEEP_OCEAN_TAIHOU.get(),
+                DeepOceanTaihouEntity.createAttributes().build());
+        event.put(ModEntityTypes.DEEP_OCEAN_SHINANO.get(),
+                DeepOceanShinanoEntity.createAttributes().build());
+        event.put(ModEntityTypes.DEEP_OCEAN_ZUIKAKU.get(),
+                DeepOceanZuikakuEntity.createAttributes().build());
         // 舰娘 NPC
         event.put(ModEntityTypes.SHIP_GIRL.get(),
                 ShipGirlEntity.createAttributes().build());

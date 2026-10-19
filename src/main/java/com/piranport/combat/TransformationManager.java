@@ -1,7 +1,11 @@
 package com.piranport.combat;
 
 import com.piranport.PiranPort;
+import com.piranport.aviation.AircraftDefinition;
+import com.piranport.aviation.AircraftIndex;
+import com.piranport.aviation.AircraftStatsService;
 import com.piranport.config.ModCommonConfig;
+import com.piranport.entity.AircraftEntity;
 import com.piranport.item.ArmorPlateItem;
 import com.piranport.item.ShipCoreItem;
 import com.piranport.item.ShipType;
@@ -35,7 +39,8 @@ import java.util.List;
  * 职责概览:
  *   - 变身/解除变身（setTransformed / removeTransformationAttributes）
  *   - 属性计算: applyTransformationAttributes（基于快捷栏武器）
- *   - 负重系统: WEAPON_LOAD_MAP 静态武器重量注册表 + getItemLoad 查询
+ *   - 负重系统: WEAPON_LOAD_MAP 静态武器重量注册表 + getItemLoad 查询；
+ *     总负重 = 快捷栏武器 + 核心内装甲/强化件 + 在飞舰载机（getAirborneAircraftLoad）
  *   - 超重惩罚: applyOverweightPenalty / removeOverweightPenalty
  *   - 装填加速: boostedCooldown（根据 RELOAD_BOOST 效果等级缩减冷却）
  *   - 装备检测: hasSonarEquipped / hasTorpedoReloadEquipped / isFireableWeapon
@@ -193,7 +198,9 @@ public class TransformationManager {
         int armorBonus = getCoreArmorBonus(coreStack);
         double engineSpeedBonus = getCoreEngineSpeedBonus(coreStack);
         int armorLoad  = getCoreArmorLoad(coreStack);
-        int totalLoad  = getInventoryWeaponLoad(inv) + armorLoad;
+        // 2026-10-19 负重决策：核心负重还要计入本玩家所有在飞舰载机，
+        // 保证「放飞/回收不改变总负重」（物品离槽的同时实体进/出 AircraftIndex）。
+        int totalLoad  = getInventoryWeaponLoad(inv) + armorLoad + getAirborneAircraftLoad(player);
 
         double loadRatio = activeType.effectiveMaxLoad() > 0 ? (double) totalLoad / activeType.effectiveMaxLoad() : 0;
         double speedMult = activeType.effectiveEmptySpeed() - (activeType.effectiveEmptySpeed() - activeType.effectiveFullLoadSpeed()) * Math.min(loadRatio, 1.0);
@@ -219,7 +226,8 @@ public class TransformationManager {
 
     /**
      * Sum the load of all weapons and armor plates (not ship cores) in hotbar. Used in inventory mode.
-     * Only scans hotbar slots (0–8).
+     * Only scans hotbar slots (0–8). 在飞舰载机不在这里计数（无 Player 参数），
+     * 需要完整总负重时用 {@link #getEffectiveWeaponLoad(Player)}。
      */
     public static int getInventoryWeaponLoad(net.minecraft.world.entity.player.Inventory inv) {
         int total = 0;
@@ -228,6 +236,49 @@ public class TransformationManager {
             if (isLoadItem(stack)) total += getItemLoad(stack);
         }
         return total;
+    }
+
+    /**
+     * 统计玩家所有在飞舰载机的负重。
+     *
+     * <p>2026-10-19 负重决策：核心负重 = 快捷栏武器 + 核心内装甲/强化件 + 在飞飞机。
+     * 放飞时飞机物品离槽、实体加入 {@link AircraftIndex}；回收时反向操作，
+     * 因此按实体计数既不会与快捷栏重复，也能保证「放飞/回收不改变总负重」。
+     *
+     * <p>在飞状态 = LAUNCHING / CRUISING / RECON_ACTIVE / ATTACKING / RETURNING。
+     * REMOVED（已回收，物品已回到快捷栏）不计；被击落变成 AircraftDropEntity 的飞机
+     * 已离开实体索引，同样不计。编队即使有多个实体也只按每架计一次。
+     */
+    public static int getAirborneAircraftLoad(Player player) {
+        if (player == null || player.level().isClientSide()) return 0;
+        int total = 0;
+        for (AircraftEntity aircraft : AircraftIndex.snapshot(player.getUUID())) {
+            if (aircraft.isRemoved()) continue;
+            AircraftEntity.FlightState state = aircraft.getFlightState();
+            if (state == null || state == AircraftEntity.FlightState.REMOVED) continue;
+            total += getAircraftEntityLoad(aircraft);
+        }
+        return total;
+    }
+
+    /** 在飞实体的负重与物品态同源：按定义解析出的 weight 取（终端可覆盖）。 */
+    private static int getAircraftEntityLoad(AircraftEntity aircraft) {
+        AircraftDefinition definition = aircraft.getResolvedDefinition();
+        return definition == null ? 0 : AircraftStatsService.resolve(definition).weight();
+    }
+
+    /**
+     * 有效总负重 = 快捷栏武器 + 核心内装甲/强化件 + 在飞飞机。
+     *
+     * <p>供 {@code PlayerTickHandler} 的载重缓存键调用。注意不要把在飞飞机塞进
+     * {@link #getInventoryWeaponLoad(net.minecraft.world.entity.player.Inventory)}：
+     * 那个方法没有 Player 参数，取不到 {@link AircraftIndex}。
+     */
+    public static int getEffectiveWeaponLoad(Player player) {
+        if (player == null) return 0;
+        ItemStack coreStack = findTransformedCore(player);
+        int armorLoad = coreStack.isEmpty() ? 0 : getCoreArmorLoad(coreStack);
+        return getInventoryWeaponLoad(player.getInventory()) + armorLoad + getAirborneAircraftLoad(player);
     }
 
     /** 统计玩家快捷栏中装甲板的护甲加成之和（仅扫描 0–8 号槽） */
@@ -340,7 +391,7 @@ public class TransformationManager {
      * 依据：策划决策/数值/03-超载惩罚分级.md（115%/130%/150% 三档阈值）
      *   ratio > 115%: Mining Fatigue I
      *   ratio > 130%: Mining Fatigue II + Weakness II
-     *   ratio > 150%: Mining Fatigue III + Poison II
+     *   ratio > 150%: Mining Fatigue III + Weakness III + Slowness III
      * Effects last 60 ticks (3s), refreshed each recalculation.
      */
     public static void applyOverweightPenalty(Player player, int totalLoad, int maxLoad) {
@@ -360,9 +411,10 @@ public class TransformationManager {
             // 当 totalLoad > 115% maxLoad 时即视为"超载 115%"
             int totalLoadTimes100 = (int) ((double) totalLoad * 100 / maxLoad);
             if (totalLoadTimes100 > 150) {
-                // > 150%：挖掘疲劳 III + 中毒 II
+                // > 150%：挖掘疲劳 III + 虚弱 III + 缓慢 III（2026-10-19 决策）
                 player.addEffect(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, duration, 2, false, false, true));
-                player.addEffect(new MobEffectInstance(MobEffects.POISON, duration, 1, false, false, true));
+                player.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, duration, 2, false, false, true));
+                player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, duration, 2, false, false, true));
             } else if (totalLoadTimes100 > 130) {
                 // > 130%：挖掘疲劳 II + 虚弱 II
                 player.addEffect(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, duration, 1, false, false, true));
@@ -392,12 +444,12 @@ public class TransformationManager {
             player.removeEffect(MobEffects.DIG_SLOWDOWN);
         }
         MobEffectInstance weak = player.getEffect(MobEffects.WEAKNESS);
-        if (weak != null && weak.getAmplifier() <= 1 && weak.getDuration() <= removalDuration) {
+        if (weak != null && weak.getAmplifier() <= 2 && weak.getDuration() <= removalDuration) {
             player.removeEffect(MobEffects.WEAKNESS);
         }
-        MobEffectInstance poison = player.getEffect(MobEffects.POISON);
-        if (poison != null && poison.getAmplifier() <= 1 && poison.getDuration() <= removalDuration) {
-            player.removeEffect(MobEffects.POISON);
+        MobEffectInstance slow = player.getEffect(MobEffects.MOVEMENT_SLOWDOWN);
+        if (slow != null && slow.getAmplifier() <= 2 && slow.getDuration() <= removalDuration) {
+            player.removeEffect(MobEffects.MOVEMENT_SLOWDOWN);
         }
     }
 

@@ -25,8 +25,8 @@ import java.util.Set;
  * 策划决策：消耗品/01-损管设计.md
  *
  * <p>右键使用：清除身上所有 {@link MobEffectCategory#HARMFUL} 效果并灭火。
- * <b>白名单保留"超载相关 buff"</b>（决策 §关键约束：挖掘疲劳/虚弱/中毒不得清除，
- * 这些是舰装过载的安全警示）。
+ * <b>白名单保留"超载相关 buff"</b>（决策 §关键约束：挖掘疲劳/虚弱/缓慢不得清除，
+ * 这些是舰装过载的安全警示；2026-10-19 起 150% 档的中毒改为缓慢）。
  * 冷却走损管自己的终端参数 {@code global.damage_control.use_cooldown}
  * （灭火器 {@link FireExtinguisherItem} 是独立消耗品，有自己的 {@code global.fire_extinguisher.use_cooldown}）。</p>
  */
@@ -44,7 +44,7 @@ public class DamageControlItem extends Item {
                 .orElseThrow());
         OVERLOAD_EFFECT_KEYS.add(BuiltInRegistries.MOB_EFFECT.getResourceKey(MobEffects.WEAKNESS.value())
                 .orElseThrow());
-        OVERLOAD_EFFECT_KEYS.add(BuiltInRegistries.MOB_EFFECT.getResourceKey(MobEffects.POISON.value())
+        OVERLOAD_EFFECT_KEYS.add(BuiltInRegistries.MOB_EFFECT.getResourceKey(MobEffects.MOVEMENT_SLOWDOWN.value())
                 .orElseThrow());
     }
 

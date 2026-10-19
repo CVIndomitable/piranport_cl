@@ -251,6 +251,8 @@ public class MissileEntity extends ThrowableItemProjectile {
 
         // 防空导弹只攻击空中目标（不在地面且不在水中）
         if (missileType == MissileType.ANTI_AIR) {
+            // 飞机恒为空中目标：AircraftEntity 不是 LivingEntity，自主飞机也不参与原版重力/onGround 判定
+            if (target instanceof AircraftEntity) return true;
             // P1修复: 只检测上升运动，避免将下落中的地面实体误判为空中目标
             return (!target.onGround() && !target.isInWater()) || target.getDeltaMovement().y > 0.1;
         }
@@ -283,6 +285,14 @@ public class MissileEntity extends ThrowableItemProjectile {
         for (Entity e : level().getEntities(this, searchBox, e -> {
             if (e == getOwner()) return false;
             if (FriendlyFireHelper.shouldBlockHit(e, getOwner())) return false;
+            if (e instanceof AircraftEntity) {
+                // 敌机不是 LivingEntity/Enemy，必须单独判定。
+                // 只有防空导弹自动追飞机；玩家以外owner保持原有 Enemy 口径，不新增对空能力。
+                if (missileType != MissileType.ANTI_AIR) return false;
+                if (!(getOwner() instanceof Player player)) return false;
+                if (!CombatTargeting.isHostileTarget(player, e)) return false;
+                return e.isPickable() && isValidTarget(e);
+            }
             // Phantom 继承 FlyingMob（非 Monster）— 用 Enemy 接口覆盖所有敌对生物
             if (!(e instanceof Enemy)) return false;
             if (!e.isPickable()) return false;

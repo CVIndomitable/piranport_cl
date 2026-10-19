@@ -2,10 +2,11 @@
   "aircraft_class": "fighter",
   "attack_profile": "gun",
   "visual_id": "fighter",
+  "nation": "us",
   "fuel_capacity": 1200,
   "ammo_capacity": 0,
   "panel_damage": 0.0,
-  "panel_speed": 0.36,
+  "panel_speed": 0.4,
   "weight": 14,
   "health": 20,
   "attack_cooldown": 5

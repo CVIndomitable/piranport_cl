@@ -24,14 +24,14 @@ import java.util.Map;
  *   "entity_type": "piranport:deep_ocean_destroyer",
  *   "max_health": 30.0,
  *   "movement_speed": 0.35,
- *   "follow_range": 24.0,
+ *   "follow_range": 36.0,
  *   "attack_damage": 3.0,
  *   "knockback_resistance": 0.3,
  *   "armor": 4.0,
  *   "shell_damage": 4.0,
  *   "explosion_power": 1.2,
  *   "fire_interval": 100,
- *   "orbit_distance": 12.0,
+ *   "orbit_distance": 18.0,
  *   "can_use_torpedoes": true,
  *   "torpedo_damage": 8.0,
  *   "tracking_interval_min": 3,
@@ -43,7 +43,8 @@ import java.util.Map;
  *
  * <p>loader 在服务端启动时通过 {@code SimpleJsonResourceReloadListener} 扫描该路径，
  * 将字段写入 {@link #DATA} 静态 Map，由对应 Entity 子类按需查询。
- * 缺失字段或文件不存在时回退到子类原硬编码值。</p>
+ * 缺失字段或文件不存在时回退到子类原硬编码值。
+ * {@code follow_range} 允许缺失：缺失时保留子类 {@code createAttributes()} 的硬编码索敌。</p>
  */
 public class DeepOceanDataLoader extends SimpleJsonResourceReloadListener {
 
@@ -66,8 +67,11 @@ public class DeepOceanDataLoader extends SimpleJsonResourceReloadListener {
             try {
                 if (!e.getValue().isJsonObject()) continue;
                 DeepOceanEntityData data = DeepOceanEntityData.fromJson(e.getValue().getAsJsonObject());
-                DATA.put(e.getKey(), data);
-                LOGGER.debug("Loaded deep-ocean NPC data: {}", e.getKey());
+                // 文件名是短名（destroyer.json），实体注册 ID 是 deep_ocean_destroyer；
+                // 因此必须以 JSON 内的 entity_type 作为查询键，getJsonData() 才能命中。
+                ResourceLocation key = ResourceLocation.tryParse(data.entityType());
+                DATA.put(key != null ? key : e.getKey(), data);
+                LOGGER.debug("Loaded deep-ocean NPC data: {} -> {}", e.getKey(), data.entityType());
             } catch (Exception ex) {
                 LOGGER.warn("Failed to load deep-ocean NPC data {}: {}", e.getKey(), ex.getMessage());
             }

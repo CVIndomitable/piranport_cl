@@ -3,11 +3,12 @@
   "attack_profile": "depth_charge",
   "payload_item": "piranport:depth_charge",
   "visual_id": "asw",
+  "nation": "us",
   "fuel_capacity": 1200,
   "ammo_capacity": 4,
   "panel_damage": 8.0,
-  "panel_speed": 0.33,
+  "panel_speed": 0.44,
   "weight": 18,
   "health": 12,
-  "attack_cooldown": 30
+  "attack_cooldown": 320
 }

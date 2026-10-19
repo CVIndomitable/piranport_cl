@@ -1,0 +1,19 @@
+{
+  "entity_type": "piranport:deep_ocean_zuikaku",
+  "max_health": 180.0,
+  "movement_speed": 0.19,
+  "follow_range": 128.0,
+  "attack_damage": 6.0,
+  "knockback_resistance": 0.5,
+  "armor": 20.0,
+  "shell_damage": 6.0,
+  "explosion_power": 2.0,
+  "fire_interval": 160,
+  "orbit_distance": 48.0,
+  "can_use_torpedoes": false,
+  "torpedo_damage": 0.0,
+  "tracking_interval_min": 3,
+  "tracking_interval_max": 6,
+  "can_launch_aircraft": true,
+  "max_aircraft": 8
+}

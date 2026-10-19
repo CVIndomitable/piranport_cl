@@ -31,6 +31,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.FlyingMob;
 import net.minecraft.world.entity.LivingEntity;
@@ -527,15 +528,18 @@ public class PlayerTickHandler {
 
             int weaponLoad = TransformationManager.getInventoryWeaponLoad(inv);
             int armorLoad  = TransformationManager.getCoreArmorLoad(coreStack);
+            // 2026-10-19：在飞飞机也计入核心负重。把它放进缓存键，
+            // 放飞/回收时才会触发航速与超载重算。
+            int airborneLoad = TransformationManager.getAirborneAircraftLoad(player);
             double engineBonus = TransformationManager.getCoreEngineSpeedBonus(coreStack);
             int maxLoad    = ((ShipCoreItem) coreStack.getItem()).getShipType().effectiveMaxLoad();
-            int cacheKey   = java.util.Objects.hash(weaponLoad, armorLoad, maxLoad, engineBonus);
+            int cacheKey   = java.util.Objects.hash(weaponLoad, armorLoad, airborneLoad, maxLoad, engineBonus);
             Integer cached = lastWeaponLoad.get(player.getUUID());
             if (cached == null || cached != cacheKey) {
                 lastWeaponLoad.put(player.getUUID(), cacheKey);
                 TransformationManager.applyTransformationAttributes(player, coreStack);
             } else {
-                int totalLoad = weaponLoad + armorLoad;
+                int totalLoad = weaponLoad + armorLoad + airborneLoad;
                 if (totalLoad > maxLoad && player.tickCount % 40 == 0) {
                     TransformationManager.applyOverweightPenalty(player, totalLoad, maxLoad);
                 }
@@ -560,7 +564,8 @@ public class PlayerTickHandler {
 
                 // 非监听器处理的逻辑保留在这里
                 player.removeEffect(MobEffects.WATER_BREATHING);
-                PlayerAircraftHelper.recallAircraftForPlayer(player);
+                // 取下核心属于正常解除：召回飞机并把物品放回背包，不能走登出用的硬清理。
+                PlayerAircraftHelper.recallAircraftToInventory(player);
             }
         }
     }
@@ -630,7 +635,8 @@ public class PlayerTickHandler {
                     new com.piranport.event.TransformationEvent(player, core, false));
 
             // 非监听器处理的逻辑
-            PlayerAircraftHelper.recallAircraftForPlayer(player);
+            // 燃料耗尽同样是正常解除：召回并返还飞机物品。
+            PlayerAircraftHelper.recallAircraftToInventory(player);
             player.displayClientMessage(
                     Component.translatable("message.piranport.fuel_depleted"), true);
             return;
@@ -646,17 +652,22 @@ public class PlayerTickHandler {
         lastPlayerPos.remove(uuid);
     }
 
-    /** 自动发射战斗机锁定附近飞行敌对生物 */
+    /** 自动发射战斗机锁定附近飞行敌对生物 / 敌机 */
     private static void tickAutoLaunchFighters(Player player, ItemStack coreStack, int coreSlot) {
         // P2-8: PERF 埋点 — 火控解算（每 tick 遍历目标）
         boolean perfEnabled = com.piranport.debug.PiranPortDebug.isServerEnabled();
         long t0 = perfEnabled ? System.nanoTime() : 0L;
 
-        List<LivingEntity> flyingHostiles = player.level().getEntitiesOfClass(
-                LivingEntity.class,
+        // 扫描类型放宽到 Entity：深海自主飞机 AircraftEntity 不是 LivingEntity，也不是 Enemy。
+        // 敌对口径统一走 CombatTargeting.isHostileTarget（玩家飞机按 canHarmPlayer、自主深海飞机按 isAutonomous），
+        // 原版空中敌怪仍保留 FlyingMob/Phantom/Vex 的筛选。
+        List<Entity> flyingHostiles = player.level().getEntitiesOfClass(
+                Entity.class,
                 player.getBoundingBox().inflate(64.0),
-                e -> e.isAlive() && e instanceof Enemy
-                        && (e instanceof FlyingMob || e instanceof Phantom || e instanceof Vex));
+                e -> e.isAlive()
+                        && CombatTargeting.isHostileTarget(player, e)
+                        && (e instanceof AircraftEntity
+                            || e instanceof FlyingMob || e instanceof Phantom || e instanceof Vex));
 
         if (flyingHostiles.isEmpty()) {
             if (perfEnabled) com.piranport.debug.PiranPortDebug.perf("FireControlSolve", System.nanoTime() - t0,
@@ -670,7 +681,7 @@ public class PlayerTickHandler {
                     .map(sl::getEntity)
                     .anyMatch(e -> e != null && e.isAlive());
             if (!hasActiveLock) {
-                LivingEntity nearest = flyingHostiles.stream()
+                Entity nearest = flyingHostiles.stream()
                         .min(Comparator.comparingDouble(player::distanceTo))
                         .orElse(null);
                 if (nearest != null) {
@@ -689,10 +700,14 @@ public class PlayerTickHandler {
     private static void tickAntiAirMissiles(Player player, ItemStack coreStack, int coreSlot) {
         if (AASilenceManager.isSilenced(player)) return;
         boolean hasAirborneHostile = !player.level().getEntitiesOfClass(
-                LivingEntity.class,
+                Entity.class,
                 player.getBoundingBox().inflate(32.0),
                 e -> {
-                    if (!e.isAlive() || !e.isPickable() || !(e instanceof Enemy) || e.isUnderWater()) return false;
+                    if (!e.isAlive() || !e.isPickable()
+                            || !CombatTargeting.isHostileTarget(player, e)) return false;
+                    // 飞机恒为空中目标：AircraftEntity 不继承 LivingEntity，onGround 不是可靠判据
+                    if (e instanceof AircraftEntity) return true;
+                    if (!(e instanceof Enemy) || e.isUnderWater()) return false;
                     BlockPos below = e.blockPosition().below(2);
                     return !e.onGround() && !player.level().getBlockState(below).isSolid();
                 }).isEmpty();

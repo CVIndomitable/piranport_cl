@@ -10,7 +10,6 @@ import com.piranport.config.ModEquipmentConfig;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.AABB;
@@ -218,8 +217,12 @@ final class AircraftFlight {
             craft.discard();
             return;
         }
+        // 机种分工：
+        // - GUN 战斗机由 GunAttackStrategy 自己解析「玩家飞机 / 中立生物」；
+        // - 火箭机、轰炸机、鱼雷机、俯冲轰炸机、反潜机一律把水面玩家本体作为对海目标。
+        //   玩家飞机是 AircraftEntity（非 LivingEntity），不会被这里的 Player 扫描误选。
         if (!craft.getResolvedDefinition().isGunFighter()) {
-            LivingEntity target = nearestPlayer(craft);
+            LivingEntity target = nearestSurfacePlayer(craft);
             if (target == null) {
                 craft.setState(AircraftEntity.FlightState.CRUISING);
                 return;
@@ -331,9 +334,11 @@ final class AircraftFlight {
         if (serverLevel == null) return false;
         boolean hasTarget;
         if (craft.getResolvedDefinition().isGunFighter()) {
+            // 只有 GUN 战斗机争夺制空：64 格内的玩家飞机与中立生物
             hasTarget = TargetResolution.resolveAutonomousFighterTarget(craft) != null;
         } else {
-            hasTarget = nearestPlayer(craft) != null;
+            // 其余机种只对海：扫描水面玩家本体，不把玩家飞机当目标
+            hasTarget = nearestSurfacePlayer(craft) != null;
         }
         if (hasTarget) {
             craft.setState(AircraftEntity.FlightState.ATTACKING);
@@ -342,8 +347,9 @@ final class AircraftFlight {
         return false;
     }
 
+    /** 自主对海机种的目标：最近的玩家本体（水面舰船），不包含玩家所属飞机。 */
     @Nullable
-    private static LivingEntity nearestPlayer(AircraftEntity craft) {
+    private static LivingEntity nearestSurfacePlayer(AircraftEntity craft) {
         ServerLevel serverLevel = craft.level() instanceof ServerLevel level ? level : null;
         if (serverLevel == null) return null;
         AABB box = craft.getBoundingBox().inflate(ModEquipmentConfig.AIRCRAFT_AUTONOMOUS_SEEK_RANGE.get());

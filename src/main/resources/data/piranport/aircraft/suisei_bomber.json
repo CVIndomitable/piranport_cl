@@ -3,11 +3,12 @@
   "attack_profile": "dive_bomb",
   "payload_item": "piranport:aerial_bomb",
   "visual_id": "dive_bomber",
+  "nation": "jp",
   "fuel_capacity": 1200,
   "ammo_capacity": 1,
   "panel_damage": 18.0,
-  "panel_speed": 0.48,
+  "panel_speed": 0.56,
   "weight": 16,
   "health": 15,
-  "attack_cooldown": 1
+  "attack_cooldown": 380
 }

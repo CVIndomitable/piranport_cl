@@ -30,7 +30,9 @@ public class TorpedoAttackGoal extends Goal {
         if (!mob.canUseTorpedoes()) return false;
         LivingEntity target = mob.getTarget();
         if (target == null || !target.isAlive()) return false;
-        return mob.distanceTo(target) <= NpcCombatTuning.torpedoRange();
+        // 鱼雷索敌单独定（《深海/01》2026-10-19：高级雷 40、低级雷 18），
+        // 不复用 follow_range，也不使用全局 torpedo_salvo.range。
+        return mob.distanceTo(target) <= mob.getTorpedoDetectionRange();
     }
 
     @Override

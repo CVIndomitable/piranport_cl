@@ -60,7 +60,9 @@ public final class TorpedoAttackStrategy implements AttackStrategy {
         double dz = target.getZ() - position.z;
         double horizontalDistance = Math.sqrt(dx * dx + dz * dz);
         double phaseSpeed = context.phaseSpeedCoefficient();
-        double torpedoSpeed = ModEquipmentConfig.TORPEDO_BOMBER_TORPEDO_SPEED.get();
+        // 入水速度按载机系别：美/德 2.5 m/s（0.125 block/tick），日/英/意 2.8 m/s（0.14 block/tick）。
+        // 法/未知不在对照表内，按较快的日/英/意档兜底。提前量与 setSpeed 共用此值。
+        double torpedoSpeed = torpedoSpeedFor(context.definition().nation());
 
         // 提前量解算：t = 当前水平距离 / 雷速，P = T + u·t
         Vec3 targetVelocity = target.getDeltaMovement();
@@ -194,5 +196,19 @@ public final class TorpedoAttackStrategy implements AttackStrategy {
         double maxVertical = Math.max(0.05, runSpeed * 0.25);
         yAdjust = Math.max(-maxVertical, Math.min(maxVertical, yAdjust));
         context.setDeltaMovement(new Vec3(runDirection.x * runSpeed, yAdjust, runDirection.z * runSpeed));
+    }
+
+    /**
+     * 航空鱼雷入水速度（block/tick）。美/德 2.5 m/s，日/英/意 2.8 m/s。
+     *
+     * <p>法/未知不在对照表内，走终端参数 {@code global.aircraft.torpedo_bomber_combat.torpedo_speed}
+     * 作为兜底，默认已同步为 0.14（2.8 m/s）；不让该参数变成「能改但不生效」的死参数。</p>
+     */
+    static double torpedoSpeedFor(AircraftDefinition.Nation nation) {
+        return switch (nation) {
+            case US, DE -> 0.125;
+            case JP, GB, IT -> 0.14;
+            case FR, UNKNOWN -> ModEquipmentConfig.TORPEDO_BOMBER_TORPEDO_SPEED.get();
+        };
     }
 }

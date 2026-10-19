@@ -17,9 +17,36 @@ import java.util.UUID;
 public class PlayerAircraftHelper {
 
     /**
-     * 召回并清理玩家的所有飞机
+     * 把玩家所有在飞飞机召回并放回物品栏。
      *
-     * <p>P0修复: 玩家登出时直接清理飞机实体，不走返航流程，避免资源泄漏
+     * <p>与 {@link #recallAircraftForPlayer(Player)} 的区别：后者是登出/死亡/换维度用的
+     * 硬清理路径，直接 {@code discard()} 实体、不返还飞机物品；本方法走
+     * {@link AircraftEntity#recallAndRemove()}，回收后飞机物品回到原武器槽或背包。
+     * 取下核心、燃料耗尽解除变身属于「正常召回」，必须用本方法，否则飞机会连同物品一起消失。
+     *
+     * @return 实际处理的在飞飞机数量
+     */
+    public static int recallAircraftToInventory(Player player) {
+        if (player.level().isClientSide()) return 0;
+        int recalled = 0;
+        for (AircraftEntity aircraft : AircraftIndex.snapshot(player.getUUID())) {
+            if (aircraft.isRemoved()) continue;
+            aircraft.recallAndRemove();
+            recalled++;
+        }
+        if (recalled > 0) {
+            // 变身结束后不再保留火控锁定，避免下次变身沿用旧目标。
+            FireControlManager.clearTargets(player.getUUID());
+        }
+        return recalled;
+    }
+
+    /**
+     * 召回并清理玩家的所有飞机。
+     *
+     * <p>P0 修复：玩家登出/死亡/换维度时直接清理飞机实体，不走返航流程，避免资源泄漏。
+     * 正常解除变身（取下核心、燃料耗尽）请用 {@link #recallAircraftToInventory(Player)}，
+     * 否则飞机物品不会返还。
      *
      * @param player 玩家实体
      */

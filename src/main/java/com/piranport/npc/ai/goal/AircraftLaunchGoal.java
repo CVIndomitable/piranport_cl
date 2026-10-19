@@ -51,7 +51,9 @@ public class AircraftLaunchGoal extends Goal {
         if (target == null || !target.isAlive()) return;
 
         launchAircraft(target);
-        readyCooldown = ModEquipmentConfig.NPC_CARRIER_READY_INTERVAL_TICKS.get();
+        // 各舰种起飞间隔不同（轻母 200 / 航母·装甲航母·大凤·信浓·瑞鹤 160 / 旗舰 240），
+        // 由实体覆写；基类默认仍读终端参数。
+        readyCooldown = mob.getAircraftLaunchInterval();
     }
 
     private void launchAircraft(LivingEntity target) {

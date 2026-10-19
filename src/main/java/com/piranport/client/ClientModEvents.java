@@ -381,6 +381,20 @@ public class ClientModEvents {
                 ctx -> new AlexSlimMobRenderer<>(ctx));
         event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_BOSS.get(),
                 ctx -> new AlexSlimMobRenderer<>(ctx));
+        // 深海扩展舰种：5 艘人形舰（装甲航母/雷巡/大凤/信浓/瑞鹤）沿用 Alex 占位。
+        event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_ARMORED_CARRIER.get(),
+                ctx -> new AlexSlimMobRenderer<>(ctx));
+        event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_TORPEDO_CRUISER.get(),
+                ctx -> new AlexSlimMobRenderer<>(ctx));
+        event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_TAIHOU.get(),
+                ctx -> new AlexSlimMobRenderer<>(ctx));
+        event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_SHINANO.get(),
+                ctx -> new AlexSlimMobRenderer<>(ctx));
+        event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_ZUIKAKU.get(),
+                ctx -> new AlexSlimMobRenderer<>(ctx));
+        // 运输船是箱船，不使用人形模型，单独用方块船体渲染器。
+        event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_TRANSPORT.get(),
+                DeepOceanTransportRenderer::new);
         // 金猫猫是活动关的猫，不是深海舰，保留原通用渲染器。
         event.registerEntityRenderer(ModEntityTypes.GOLDENCATCAT.get(),
                 com.piranport.client.DeepOceanRenderer::new);

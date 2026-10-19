@@ -4,7 +4,12 @@ import com.piranport.component.AircraftState;
 import com.piranport.entity.AircraftEntity;
 import com.piranport.item.AircraftItem;
 import com.piranport.npc.deepocean.AbstractDeepOceanEntity;
+import com.piranport.npc.deepocean.DeepOceanArmoredCarrierEntity;
+import com.piranport.npc.deepocean.DeepOceanBossEntity;
 import com.piranport.npc.deepocean.DeepOceanLightCarrierEntity;
+import com.piranport.npc.deepocean.DeepOceanShinanoEntity;
+import com.piranport.npc.deepocean.DeepOceanTaihouEntity;
+import com.piranport.npc.deepocean.DeepOceanZuikakuEntity;
 import com.piranport.registry.ModDataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -42,8 +47,7 @@ public final class AircraftLaunchService {
             return null;
         }
 
-        boolean lightCarrier = carrier instanceof DeepOceanLightCarrierEntity;
-        String itemId = carrierAircraftItemId(lightCarrier, aircraftIndex, carrier.getMaxAircraft());
+        String itemId = carrierAircraftItemId(carrier, aircraftIndex, carrier.getMaxAircraft());
         LivingEntity target = carrier.getTarget();
         // 目标在本 tick 已死但 selector 未清理时，target 仍是死引用——置 null 让飞机以无目标起飞。
         if (target != null && !target.isAlive()) target = null;
@@ -119,9 +123,61 @@ public final class AircraftLaunchService {
         return AircraftEntity.createAutonomous(level, spawnPosition, launchStack, target, aircraftOwner);
     }
 
-    private static String carrierAircraftItemId(boolean lightCarrier, int aircraftIndex, int maxAircraft) {
-        if (lightCarrier || aircraftIndex < maxAircraft / 2) return "piranport:seafire";
-        return "piranport:petrel_bomber";
+    /**
+     * 深海航母编成（《深海/01》第六章 2026-10-19）：
+     * 轻母 1 战 1 雷；高级航母 2 战 2 轰 1 雷；装甲航母 1 战 2 轰 1 雷；
+     * 大凤 3 战 2 轰 2 雷；信浓 1 战 3 轰 1 雷；瑞鹤 2 战 3 轰 3 雷；
+     * 旗舰 1 战 1 轰（甲板容量大于 2 时循环）。
+     * 低级编队用 1 型，高级编队用 2 型。
+     */
+    private static String carrierAircraftItemId(AbstractDeepOceanEntity carrier, int aircraftIndex, int maxAircraft) {
+        final String f1 = "piranport:deep_sea_fighter_1";
+        final String f2 = "piranport:deep_sea_fighter_2";
+        final String b1 = "piranport:deep_sea_bomber_1";
+        final String b2 = "piranport:deep_sea_bomber_2";
+        final String t1 = "piranport:deep_sea_torpedo_bomber_1";
+        final String t2 = "piranport:deep_sea_torpedo_bomber_2";
+
+        if (carrier instanceof DeepOceanLightCarrierEntity) {
+            return aircraftIndex % 2 == 0 ? f1 : t1;
+        }
+        if (carrier instanceof DeepOceanArmoredCarrierEntity) {
+            return switch (aircraftIndex % 4) {
+                case 0 -> f2;
+                case 1, 2 -> b2;
+                default -> t2;
+            };
+        }
+        if (carrier instanceof DeepOceanTaihouEntity) {
+            return switch (aircraftIndex % 7) {
+                case 0, 1, 2 -> f2;
+                case 3, 4 -> b2;
+                default -> t2;
+            };
+        }
+        if (carrier instanceof DeepOceanShinanoEntity) {
+            return switch (aircraftIndex % 5) {
+                case 0 -> f2;
+                case 1, 2, 3 -> b2;
+                default -> t2;
+            };
+        }
+        if (carrier instanceof DeepOceanZuikakuEntity) {
+            return switch (aircraftIndex % 8) {
+                case 0, 1 -> f2;
+                case 2, 3, 4 -> b2;
+                default -> t2;
+            };
+        }
+        if (carrier instanceof DeepOceanBossEntity) {
+            return aircraftIndex % 2 == 0 ? f2 : b2;
+        }
+        // 普通航母（高级）：2 战 2 轰 1 雷。
+        return switch (aircraftIndex % 5) {
+            case 0, 1 -> f2;
+            case 2, 3 -> b2;
+            default -> t2;
+        };
     }
 
     private static Vec3 carrierSpawnPosition(AbstractDeepOceanEntity carrier, @Nullable LivingEntity target) {

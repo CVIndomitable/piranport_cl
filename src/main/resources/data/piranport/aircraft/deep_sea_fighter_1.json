@@ -1,0 +1,13 @@
+{
+  "aircraft_class": "fighter",
+  "attack_profile": "gun",
+  "visual_id": "fighter",
+  "nation": "unknown",
+  "fuel_capacity": 1200,
+  "ammo_capacity": 64,
+  "panel_damage": 1.0,
+  "panel_speed": 0.64,
+  "weight": 12,
+  "health": 16,
+  "attack_cooldown": 180
+}

@@ -2,7 +2,7 @@
   "entity_type": "piranport:deep_ocean_battleship",
   "max_health": 150.0,
   "movement_speed": 0.20,
-  "follow_range": 48.0,
+  "follow_range": 96.0,
   "attack_damage": 12.0,
   "knockback_resistance": 0.7,
   "armor": 16.0,

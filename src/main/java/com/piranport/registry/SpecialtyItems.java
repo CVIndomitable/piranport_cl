@@ -471,6 +471,30 @@ public final class SpecialtyItems {
             ITEMS.register("deep_ocean_submarine_spawn_egg",
                     () -> new DeferredSpawnEggItem(ModEntityTypes.DEEP_OCEAN_SUBMARINE,
                             0x2D2D3D, 0x334466, new Item.Properties()));
+    public static final DeferredItem<SpawnEggItem> DEEP_OCEAN_TRANSPORT_SPAWN_EGG =
+            ITEMS.register("deep_ocean_transport_spawn_egg",
+                    () -> new DeferredSpawnEggItem(ModEntityTypes.DEEP_OCEAN_TRANSPORT,
+                            0x2D2D3D, 0x8B6C42, new Item.Properties()));
+    public static final DeferredItem<SpawnEggItem> DEEP_OCEAN_ARMORED_CARRIER_SPAWN_EGG =
+            ITEMS.register("deep_ocean_armored_carrier_spawn_egg",
+                    () -> new DeferredSpawnEggItem(ModEntityTypes.DEEP_OCEAN_ARMORED_CARRIER,
+                            0x2D2D3D, 0x6E7F8F, new Item.Properties()));
+    public static final DeferredItem<SpawnEggItem> DEEP_OCEAN_TORPEDO_CRUISER_SPAWN_EGG =
+            ITEMS.register("deep_ocean_torpedo_cruiser_spawn_egg",
+                    () -> new DeferredSpawnEggItem(ModEntityTypes.DEEP_OCEAN_TORPEDO_CRUISER,
+                            0x2D2D3D, 0x55AA99, new Item.Properties()));
+    public static final DeferredItem<SpawnEggItem> DEEP_OCEAN_TAIHOU_SPAWN_EGG =
+            ITEMS.register("deep_ocean_taihou_spawn_egg",
+                    () -> new DeferredSpawnEggItem(ModEntityTypes.DEEP_OCEAN_TAIHOU,
+                            0x2D2D3D, 0xD05A5A, new Item.Properties()));
+    public static final DeferredItem<SpawnEggItem> DEEP_OCEAN_SHINANO_SPAWN_EGG =
+            ITEMS.register("deep_ocean_shinano_spawn_egg",
+                    () -> new DeferredSpawnEggItem(ModEntityTypes.DEEP_OCEAN_SHINANO,
+                            0x2D2D3D, 0x8899CC, new Item.Properties()));
+    public static final DeferredItem<SpawnEggItem> DEEP_OCEAN_ZUIKAKU_SPAWN_EGG =
+            ITEMS.register("deep_ocean_zuikaku_spawn_egg",
+                    () -> new DeferredSpawnEggItem(ModEntityTypes.DEEP_OCEAN_ZUIKAKU,
+                            0x2D2D3D, 0xE0A040, new Item.Properties()));
     public static final DeferredItem<SpawnEggItem> SHIP_GIRL_SPAWN_EGG =
             ITEMS.register("ship_girl_spawn_egg",
                     () -> new DeferredSpawnEggItem(ModEntityTypes.SHIP_GIRL,

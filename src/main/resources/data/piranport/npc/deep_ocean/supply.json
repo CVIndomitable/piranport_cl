@@ -2,7 +2,7 @@
   "entity_type": "piranport:deep_ocean_supply",
   "max_health": 60.0,
   "movement_speed": 0.18,
-  "follow_range": 20.0,
+  "follow_range": 32.0,
   "attack_damage": 2.0,
   "knockback_resistance": 0.1,
   "armor": 4.0,

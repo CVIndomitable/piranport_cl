@@ -118,9 +118,18 @@ public final class TargetResolution {
                 .orElse(null);
     }
 
+    /**
+     * 自主战斗机（深海 GUN 机种）的猎物判定。
+     *
+     * <p>只争夺制空：玩家所属飞机（有 ownerUUID）与中立生物。
+     * 玩家本体不是 {@link Mob}、深海水面舰船是 {@link Enemy}、其他深海自主飞机
+     * 的 ownerUUID 为 null，三者都会被排除；这样战斗机既不会去咬舰船，
+     * 也不会越过「只打飞机和路人」的边界去打玩家本体。
+     */
     private static boolean isAutonomousFighterPrey(Entity entity) {
         if (entity instanceof com.piranport.entity.AircraftEntity other) {
-            return other.getOwnerUUID() != null;
+            // 自主飞机没有 ownerUUID；有主的才是玩家飞机
+            return !other.isAutonomous() && other.getOwnerUUID() != null;
         }
         return entity instanceof Mob mob && !(mob instanceof Enemy) && !mob.isNoAi();
     }

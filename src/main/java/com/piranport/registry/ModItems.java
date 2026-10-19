@@ -689,6 +689,12 @@ public class ModItems {
     public static final DeferredItem<SpawnEggItem> DEEP_OCEAN_LIGHT_CARRIER_SPAWN_EGG = SpecialtyItems.DEEP_OCEAN_LIGHT_CARRIER_SPAWN_EGG;
     public static final DeferredItem<SpawnEggItem> DEEP_OCEAN_CARRIER_SPAWN_EGG = SpecialtyItems.DEEP_OCEAN_CARRIER_SPAWN_EGG;
     public static final DeferredItem<SpawnEggItem> DEEP_OCEAN_SUBMARINE_SPAWN_EGG = SpecialtyItems.DEEP_OCEAN_SUBMARINE_SPAWN_EGG;
+    public static final DeferredItem<SpawnEggItem> DEEP_OCEAN_TRANSPORT_SPAWN_EGG = SpecialtyItems.DEEP_OCEAN_TRANSPORT_SPAWN_EGG;
+    public static final DeferredItem<SpawnEggItem> DEEP_OCEAN_ARMORED_CARRIER_SPAWN_EGG = SpecialtyItems.DEEP_OCEAN_ARMORED_CARRIER_SPAWN_EGG;
+    public static final DeferredItem<SpawnEggItem> DEEP_OCEAN_TORPEDO_CRUISER_SPAWN_EGG = SpecialtyItems.DEEP_OCEAN_TORPEDO_CRUISER_SPAWN_EGG;
+    public static final DeferredItem<SpawnEggItem> DEEP_OCEAN_TAIHOU_SPAWN_EGG = SpecialtyItems.DEEP_OCEAN_TAIHOU_SPAWN_EGG;
+    public static final DeferredItem<SpawnEggItem> DEEP_OCEAN_SHINANO_SPAWN_EGG = SpecialtyItems.DEEP_OCEAN_SHINANO_SPAWN_EGG;
+    public static final DeferredItem<SpawnEggItem> DEEP_OCEAN_ZUIKAKU_SPAWN_EGG = SpecialtyItems.DEEP_OCEAN_ZUIKAKU_SPAWN_EGG;
     public static final DeferredItem<SpawnEggItem> SHIP_GIRL_SPAWN_EGG = SpecialtyItems.SHIP_GIRL_SPAWN_EGG;
 
     // ===== Phase 28: Shipgirl Food Expansion — Crops (produce) (extracted to FoodItems) =====

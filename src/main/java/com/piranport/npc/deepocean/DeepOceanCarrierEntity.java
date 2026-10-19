@@ -2,6 +2,7 @@ package com.piranport.npc.deepocean;
 
 import com.piranport.npc.ai.goal.AircraftLaunchGoal;
 import com.piranport.npc.ai.goal.FleetAlertGoal;
+import com.piranport.npc.ai.goal.LargeShipPriorityTargetGoal;
 import com.piranport.npc.ai.goal.IdleWanderGoal;
 import com.piranport.npc.ai.goal.OrbitTargetGoal;
 import com.piranport.npc.ai.goal.FollowLeaderGoal;
@@ -42,11 +43,20 @@ public class DeepOceanCarrierEntity extends AbstractDeepOceanEntity {
         this.goalSelector.addGoal(2, new AircraftLaunchGoal(this));
         this.goalSelector.addGoal(5, new IdleWanderGoal(this, 0.6, 32));
         this.goalSelector.addGoal(4, new FleetAlertGoal(this));
+        // 《深海/01》§七：航母/战列/旗舰优先锁定大型船；没有大船时回落到最近玩家。
+        this.targetSelector.addGoal(0, new LargeShipPriorityTargetGoal(this));
         this.targetSelector.addGoal(1, new NearestAttackableTargetGoal<>(this, Player.class, true));
         this.targetSelector.addGoal(2, new HurtByTargetGoal(this, AbstractDeepOceanEntity.class));
     }
 
-    @Override public double getOrbitDistance() { return 40.0; }
+    /** 环绕距离走 JSON（《深海/01》orbit ≈ follow/2）；JSON 缺失时保留原硬编码值。 */
+    @Override
+    public double getOrbitDistance() {
+        DeepOceanEntityData data = getJsonData();
+        return data != null ? data.orbitDistance() : 40.0;
+    }
     @Override public boolean canLaunchAircraft() { return true; }
-    @Override public int getMaxAircraft() { return 4; }
+    /** 高级航母编成 2 战 2 轰 1 雷（《深海/01》第六章）。 */
+    @Override public int getMaxAircraft() { return 5; }
+    @Override public int getAircraftLaunchInterval() { return 160; }
 }

@@ -1,10 +1,12 @@
 package com.piranport.npc.shipgirl;
 
 import com.piranport.config.ModEquipmentConfig;
+import com.piranport.entity.AircraftEntity;
 import com.piranport.entity.DeepOceanProjectileEntity;
 import com.piranport.entity.TorpedoEntity;
 import com.piranport.npc.ai.NpcCombatTuning;
 import com.piranport.registry.ModEntityTypes;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.phys.Vec3;
@@ -35,6 +37,9 @@ public class ShipGirlCombatGoal extends Goal {
 
     @Override
     public boolean canUse() {
+        if (!shipGirl.isCombatAiEnabled()) return false;
+        // 对空优先：飞机不是 LivingEntity，无法进入原版 targetSelector/getTarget
+        if (findHostileAircraft() != null) return true;
         LivingEntity target = shipGirl.getTarget();
         if (target == null || !target.isAlive()) return false;
         double dist = shipGirl.distanceTo(target);
@@ -53,10 +58,18 @@ public class ShipGirlCombatGoal extends Goal {
             return;
         }
 
+        // 防空分支：敌方飞机独立于 LivingEntity 目标系统，复用现有舰炮（强制追踪）
+        AircraftEntity airTarget = findHostileAircraft();
+        if (airTarget != null) {
+            fireCannon(airTarget, true);
+            fireCooldown = ModEquipmentConfig.FOLLOW_COMBAT_FIRE_COOLDOWN.get();
+            return;
+        }
+
         LivingEntity target = shipGirl.getTarget();
         if (target == null || !target.isAlive()) return;
 
-        fireCannon(target);
+        fireCannon(target, false);
         fireCooldown = ModEquipmentConfig.FOLLOW_COMBAT_FIRE_COOLDOWN.get();
 
         // 雷击冷却独立计算：每轮炮击有 1/N 概率放雷（N 走终端，默认 200）
@@ -66,11 +79,17 @@ public class ShipGirlCombatGoal extends Goal {
         }
     }
 
-    private void fireCannon(LivingEntity target) {
+    /** 对空时会强制使用追踪弹道；对海仍按原有射速抽样。 */
+    private AircraftEntity findHostileAircraft() {
+        return shipGirl.findHostileAircraft(
+                shipGirl.getAttributeValue(net.minecraft.world.entity.ai.attributes.Attributes.FOLLOW_RANGE));
+    }
+
+    private void fireCannon(Entity target, boolean forceTracking) {
         if (shipGirl.level().isClientSide()) return;
 
         shotsFired++;
-        boolean tracking = (shotsFired >= nextTrackingShotAt);
+        boolean tracking = forceTracking || (shotsFired >= nextTrackingShotAt);
         if (tracking) {
             int span = Math.max(MAX_TRACKING_INTERVAL - MIN_TRACKING_INTERVAL + 1, 1);
             shotsFired = 0;

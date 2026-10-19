@@ -100,6 +100,28 @@ public final class AircraftItems {
     /** F2H女妖 — 5/咬, HP8, 100节 */
     public static final DeferredItem<AircraftItem> F2H_BANSHEE = aircraft("f2h_banshee");
 
+    // --- 深海编队 ---
+    // 敌方航母使用的舰载机，数值见 ../docs/策划决策/数值配置/04-飞机数值表.md「深海编队数值表」。
+    // 注册名与 data/piranport/aircraft/<id>.json 一一对应，定义 ID 由文件路径生成。
+
+    /** 深海战斗机 1 型 — 1/咬, HP16, 12.8m/s */
+    public static final DeferredItem<AircraftItem> DEEP_SEA_FIGHTER_1 = aircraft("deep_sea_fighter_1");
+
+    /** 深海战斗机 2 型 — 3/咬, HP24, 14.4m/s */
+    public static final DeferredItem<AircraftItem> DEEP_SEA_FIGHTER_2 = aircraft("deep_sea_fighter_2");
+
+    /** 深海轰炸机 1 型 — 俯冲轰炸16, HP20, 9.6m/s */
+    public static final DeferredItem<AircraftItem> DEEP_SEA_BOMBER_1 = aircraft("deep_sea_bomber_1");
+
+    /** 深海轰炸机 2 型 — 俯冲轰炸24, HP30, 12.8m/s */
+    public static final DeferredItem<AircraftItem> DEEP_SEA_BOMBER_2 = aircraft("deep_sea_bomber_2");
+
+    /** 深海鱼雷机 1 型 — 鱼雷24, HP20, 9.6m/s */
+    public static final DeferredItem<AircraftItem> DEEP_SEA_TORPEDO_BOMBER_1 = aircraft("deep_sea_torpedo_bomber_1");
+
+    /** 深海鱼雷机 2 型 — 鱼雷32, HP28, 12.8m/s */
+    public static final DeferredItem<AircraftItem> DEEP_SEA_TORPEDO_BOMBER_2 = aircraft("deep_sea_torpedo_bomber_2");
+
     // --- 侦察机 ---
     /** 零式水侦 — HP4, 航程10240, 160节 */
     public static final DeferredItem<AircraftItem> TYPE0_RECON = aircraft("type0_recon");
@@ -118,7 +140,10 @@ public final class AircraftItems {
             SEIUN_KAI_BOMBER, B25_BOMBER, XA2J_BOMBER,
             F6F_HELLCAT_ROCKET, SEAFIRE, ZERO_MODEL52, F4F_WILDCAT, F4U_CORSAIR_ICE,
             F4U_CORSAIR, F2H_BANSHEE,
-            TYPE0_RECON, C1_RECON, SAIUN_RECON);
+            TYPE0_RECON, C1_RECON, SAIUN_RECON,
+            DEEP_SEA_FIGHTER_1, DEEP_SEA_FIGHTER_2,
+            DEEP_SEA_BOMBER_1, DEEP_SEA_BOMBER_2,
+            DEEP_SEA_TORPEDO_BOMBER_1, DEEP_SEA_TORPEDO_BOMBER_2);
 
     // ===== Sonar =====
     public static final DeferredItem<SonarItem> STANDARD_SONAR =

@@ -1,6 +1,7 @@
 package com.piranport.npc.deepocean;
 
 import com.piranport.aviation.AircraftLaunchService;
+import com.piranport.config.ModEquipmentConfig;
 import com.piranport.entity.AircraftEntity;
 import com.piranport.npc.ai.FleetGroup;
 import com.piranport.npc.ai.FleetGroupManager;
@@ -14,15 +15,19 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.SpawnGroupData;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.phys.Vec3;
@@ -37,6 +42,14 @@ import java.util.UUID;
 /**
  * Base class for all Deep Ocean enemy entities.
  * Provides water-walking, fleet group membership, sinking death animation, and shared attributes.
+ *
+ * <p>索敌分层：默认最近玩家（各子类的 {@code NearestAttackableTargetGoal}）；
+ * 航母/战列/旗舰由 {@code LargeShipPriorityTargetGoal} 优先大型船；驱逐在
+ * {@code customServerAiStep} 中随机骚扰。高级轻巡另有独立对空目标
+ * （{@link #getAirTarget()}）与 {@code AntiAircraftAttackGoal}。</p>
+ *
+ * <p>未实现：《深海/01》§七「默认仇恨护航运输船，玩家攻击或距离太近才转仇恨玩家」
+ * 依赖运输船/护航实体，当前代码库没有这类实体，{@code ESCORT_ALIVE} 只是胜利条件枚举。</p>
  */
 public abstract class AbstractDeepOceanEntity extends Monster {
 
@@ -57,6 +70,15 @@ public abstract class AbstractDeepOceanEntity extends Monster {
     @Nullable
     private AbstractDeepOceanEntity aircraftOwner;
     private int currentAircraft = 0;
+
+    // --- Anti-air target ---
+    /**
+     * 对空目标单独存放：{@link AircraftEntity} 继承自 {@code Entity} 而非
+     * {@code LivingEntity}，无法放进原版 {@code Mob.target} 字段。
+     * 仅供 {@code AntiAircraftAttackGoal} 在服务端读写，不参与实体同步。
+     */
+    @Nullable
+    private AircraftEntity airTarget;
 
     protected AbstractDeepOceanEntity(EntityType<? extends AbstractDeepOceanEntity> type, Level level) {
         super(type, level);
@@ -89,6 +111,36 @@ public abstract class AbstractDeepOceanEntity extends Monster {
         ResourceLocation id = BuiltInRegistries.ENTITY_TYPE.getKey(getType());
         if (id == null) return null;
         return DeepOceanDataLoader.get(id);
+    }
+
+    // --- JSON 属性应用 ---
+
+    /**
+     * 把 JSON 的 follow_range 写入本舰索敌属性。
+     *
+     * <p>依据《深海/01》2026-10-19：索敌距离以
+     * {@code data/piranport/npc/deep_ocean/*.json} 的 {@code follow_range} 为准，
+     * 子类 {@code createAttributes()} 的硬编码值只在 JSON 缺失时兜底。</p>
+     *
+     * <p>使用 {@code setBaseValue} 覆盖基础值，不新增 AttributeModifier，
+     * 因此无论生成、读档还是区块重载反复调用都不会叠加。</p>
+     */
+    private void applyJsonFollowRange() {
+        DeepOceanEntityData data = getJsonData();
+        if (data == null || data.followRange() == null) return;
+        var followRange = getAttribute(Attributes.FOLLOW_RANGE);
+        if (followRange != null) {
+            followRange.setBaseValue(data.followRange());
+        }
+    }
+
+    @Nullable
+    @Override
+    public SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty,
+                                        MobSpawnType spawnType, @Nullable SpawnGroupData spawnGroupData) {
+        SpawnGroupData data = super.finalizeSpawn(level, difficulty, spawnType, spawnGroupData);
+        applyJsonFollowRange();
+        return data;
     }
 
     // --- Synched Data ---
@@ -239,6 +291,8 @@ public abstract class AbstractDeepOceanEntity extends Monster {
     public void onAddedToLevel() {
         super.onAddedToLevel();
         if (!level().isClientSide()) {
+            // 读档/命令生成不会走 finalizeSpawn，这里补一次；setBaseValue 幂等。
+            applyJsonFollowRange();
             syncFleetState();
         }
     }
@@ -473,11 +527,45 @@ public abstract class AbstractDeepOceanEntity extends Monster {
     }
 
     /**
+     * 鱼雷索敌距离。
+     *
+     * <p>依据《深海/01》2026-10-19 索敌数值表：鱼雷索敌单独定，高级雷 40 格、
+     * 低级雷 18 格，不再复用 {@code follow_range}，也不使用全局
+     * {@code torpedo_salvo.range}。JSON 未配置时退回本舰常规索敌距离兜底。</p>
+     */
+    public double getTorpedoDetectionRange() {
+        DeepOceanEntityData data = getJsonData();
+        if (data != null && data.torpedoRange() != null) {
+            return data.torpedoRange();
+        }
+        return getAttributeValue(Attributes.FOLLOW_RANGE);
+    }
+
+    /**
      * Max aircraft capacity for carriers. Override in subclasses.
      */
     public int getMaxAircraft() {
         DeepOceanEntityData d = getJsonData();
         return d != null ? d.maxAircraft() : 0;
+    }
+
+    /**
+     * 舰载机起飞间隔（tick）。各舰种覆写（轻母 200 / 航母系 160 / 旗舰 240），
+     * 基类默认仍读调试终端 {@code global.npc_carrier.*}。
+     */
+    public int getAircraftLaunchInterval() {
+        return ModEquipmentConfig.NPC_CARRIER_READY_INTERVAL_TICKS.get();
+    }
+
+    // --- Anti-air target ---
+
+    @Nullable
+    public AircraftEntity getAirTarget() {
+        return airTarget;
+    }
+
+    public void setAirTarget(@Nullable AircraftEntity airTarget) {
+        this.airTarget = airTarget;
     }
 
     // --- Aircraft spawn ---

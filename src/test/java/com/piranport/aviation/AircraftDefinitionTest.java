@@ -143,6 +143,27 @@ class AircraftDefinitionTest {
     }
 
     @Test
+    void nationDefaultsToUnknownAndParsesDeclaredValue() {
+        String template = "{\"aircraft_class\":\"fighter\",\"attack_profile\":\"gun\","
+                + "\"visual_id\":\"fighter\",\"fuel_capacity\":100,\"ammo_capacity\":1,"
+                + "\"panel_damage\":1.0,\"panel_speed\":1.0,\"weight\":1,\"health\":10,"
+                + "\"attack_cooldown\":40%s}";
+
+        AircraftDefinition defaults = AircraftDefinition.JsonDefinition.CODEC
+                .parse(JsonOps.INSTANCE, JsonParser.parseString(String.format(template, "")))
+                .getOrThrow(message -> new IllegalArgumentException(message))
+                .withId(ResourceLocation.parse("piranport:nation_default"));
+        assertEquals(AircraftDefinition.Nation.UNKNOWN, defaults.nation());
+
+        AircraftDefinition declared = AircraftDefinition.JsonDefinition.CODEC
+                .parse(JsonOps.INSTANCE,
+                        JsonParser.parseString(String.format(template, ",\"nation\":\"gb\"")))
+                .getOrThrow(message -> new IllegalArgumentException(message))
+                .withId(ResourceLocation.parse("piranport:nation_declared"));
+        assertEquals(AircraftDefinition.Nation.GB, declared.nation());
+    }
+
+    @Test
     void aircraftStateStreamCodecRoundTrips() {
         AircraftState original = new AircraftState(37, true);
         ByteBuf buffer = Unpooled.buffer();
@@ -160,7 +181,10 @@ class AircraftDefinitionTest {
                 "suisei_bomber", "seiun_kai_bomber", "b25_bomber", "xa2j_bomber",
                 "f6f_hellcat_rocket", "seafire", "zero_model52", "f4f_wildcat",
                 "f4u_corsair_ice", "f4u_corsair", "f2h_banshee",
-                "type0_recon", "c1_recon", "saiun_recon");
+                "type0_recon", "c1_recon", "saiun_recon",
+                "deep_sea_fighter_1", "deep_sea_fighter_2",
+                "deep_sea_bomber_1", "deep_sea_bomber_2",
+                "deep_sea_torpedo_bomber_1", "deep_sea_torpedo_bomber_2");
         Set<ResourceLocation> seen = new HashSet<>();
         for (String id : ids) {
             String resource = "data/piranport/aircraft/" + id + ".json";
@@ -179,6 +203,11 @@ class AircraftDefinitionTest {
                 assertTrue(definition.health() > 0);
                 assertTrue(definition.attackCooldown() > 0);
                 assertTrue(AircraftVisualIds.isKnown(definition.visualId()));
+                // 玩家飞机必须声明系别；深海编队没有国籍，允许 unknown。
+                if (!id.startsWith("deep_sea_")) {
+                    assertNotEquals(AircraftDefinition.Nation.UNKNOWN, definition.nation(),
+                            "aircraft definition must declare nation: " + definition.id());
+                }
                 if ("b25_bomber".equals(id)) {
                     assertNotNull(definition.selfDefense());
                     assertTrue(definition.selfDefense().covers(SelfDefenseZone.UPPER));

@@ -2,7 +2,7 @@
   "entity_type": "piranport:deep_ocean_carrier",
   "max_health": 80.0,
   "movement_speed": 0.18,
-  "follow_range": 56.0,
+  "follow_range": 128.0,
   "attack_damage": 2.0,
   "knockback_resistance": 0.4,
   "armor": 6.0,

@@ -2,7 +2,7 @@
   "entity_type": "piranport:goldencatcat",
   "max_health": 180.0,
   "movement_speed": 0.20,
-  "follow_range": 48.0,
+  "follow_range": 96.0,
   "attack_damage": 5.0,
   "knockback_resistance": 0.9,
   "armor": 24.0,

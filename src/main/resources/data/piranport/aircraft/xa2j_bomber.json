@@ -3,11 +3,12 @@
   "attack_profile": "level_bomb",
   "payload_item": "piranport:aerial_bomb",
   "visual_id": "level_bomber",
+  "nation": "us",
   "fuel_capacity": 1200,
   "ammo_capacity": 32,
   "panel_damage": 46.0,
-  "panel_speed": 0.48,
+  "panel_speed": 0.56,
   "weight": 20,
   "health": 12,
-  "attack_cooldown": 1
+  "attack_cooldown": 520
 }

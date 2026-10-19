@@ -15,11 +15,16 @@ import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 
+import java.util.List;
+
 /**
  * 深海驱逐 — Fast, close-range. Small cannons + torpedoes.
  * HP:30 Armor:4 Speed:1.4 Detection:24 Orbit:12
  */
 public class DeepOceanDestroyerEntity extends AbstractDeepOceanEntity {
+
+    /** 随机骚扰间隔（tick）；《深海/01》§七：驱逐随机骚扰，不锁定单一目标。 */
+    private int harassCooldown = 40;
 
     public DeepOceanDestroyerEntity(EntityType<? extends DeepOceanDestroyerEntity> type, Level level) {
         super(type, level);
@@ -48,7 +53,37 @@ public class DeepOceanDestroyerEntity extends AbstractDeepOceanEntity {
         this.targetSelector.addGoal(2, new HurtByTargetGoal(this, AbstractDeepOceanEntity.class));
     }
 
-    @Override public double getOrbitDistance() { return 12.0; }
+    /**
+     * 驱逐随机骚扰：每 60~120 tick 从附近玩家中随机挑一个（优先换掉当前目标）。
+     * 不覆盖 {@code targetSelector} 的最近目标兜底；没有玩家时保持原行为。
+     */
+    @Override
+    protected void customServerAiStep() {
+        super.customServerAiStep();
+        if (level().isClientSide()) return;
+        if (--harassCooldown > 0) return;
+        harassCooldown = 60 + getRandom().nextInt(61);
+
+        double range = getAttributeValue(Attributes.FOLLOW_RANGE);
+        List<Player> candidates = level().getEntitiesOfClass(Player.class,
+                getBoundingBox().inflate(range),
+                player -> player.isAlive() && !player.isSpectator() && !player.isCreative()
+                        && canAttack(player));
+        if (candidates.isEmpty()) return;
+
+        // 有多个候选时排除当前目标，确保随机骚扰会真正换人而不是反复锁同一艘。
+        if (getTarget() instanceof Player current && candidates.size() > 1) {
+            candidates.remove(current);
+        }
+        setTarget(candidates.get(getRandom().nextInt(candidates.size())));
+    }
+
+    /** 环绕距离走 JSON（《深海/01》orbit ≈ follow/2）；JSON 缺失时保留原硬编码值。 */
+    @Override
+    public double getOrbitDistance() {
+        DeepOceanEntityData data = getJsonData();
+        return data != null ? data.orbitDistance() : 12.0;
+    }
     @Override public int getFireInterval() { return 100; }
     @Override public float getShellDamage() { return 4.0f; }
     @Override public float getExplosionPower() { return 1.2f; }

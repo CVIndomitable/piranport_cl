@@ -1,5 +1,6 @@
 package com.piranport.npc.deepocean;
 
+import com.piranport.npc.ai.goal.AntiAircraftAttackGoal;
 import com.piranport.npc.ai.goal.CannonAttackGoal;
 import com.piranport.npc.ai.goal.FleetAlertGoal;
 import com.piranport.npc.ai.goal.IdleWanderGoal;
@@ -42,13 +43,20 @@ public class DeepOceanLightCruiserEntity extends AbstractDeepOceanEntity {
         this.goalSelector.addGoal(1, new OrbitTargetGoal(this, 0.12));
         this.goalSelector.addGoal(2, new CannonAttackGoal(this));
         this.goalSelector.addGoal(2, new TorpedoAttackGoal(this));
+        // 高级轻巡 = 敌方火炮防空层（《深海/01》§五）：独立对空目标，不占用对海 target。
+        this.goalSelector.addGoal(2, new AntiAircraftAttackGoal(this));
         this.goalSelector.addGoal(5, new IdleWanderGoal(this, 0.8, 32));
         this.goalSelector.addGoal(4, new FleetAlertGoal(this));
         this.targetSelector.addGoal(1, new NearestAttackableTargetGoal<>(this, Player.class, true));
         this.targetSelector.addGoal(2, new HurtByTargetGoal(this, AbstractDeepOceanEntity.class));
     }
 
-    @Override public double getOrbitDistance() { return 16.0; }
+    /** 环绕距离走 JSON（《深海/01》orbit ≈ follow/2）；JSON 缺失时保留原硬编码值。 */
+    @Override
+    public double getOrbitDistance() {
+        DeepOceanEntityData data = getJsonData();
+        return data != null ? data.orbitDistance() : 16.0;
+    }
     @Override public int getFireInterval() { return 80; }
     @Override public float getShellDamage() { return 5.0f; }
     @Override public float getExplosionPower() { return 1.5f; }

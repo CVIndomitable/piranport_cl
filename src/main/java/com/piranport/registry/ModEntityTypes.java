@@ -259,6 +259,49 @@ public class ModEntityTypes {
                     .sized(2.40f, 2.98f).clientTrackingRange(16).updateInterval(3)
                     .build("piranport:deep_ocean_boss"));
 
+    // --- 深海扩展舰种（《深海/01》装甲航母 / 雷巡 / 三位 Boss / 运输船）---
+    public static final DeferredHolder<EntityType<?>, EntityType<com.piranport.npc.deepocean.DeepOceanTransportEntity>>
+            DEEP_OCEAN_TRANSPORT = ENTITY_TYPES.register("deep_ocean_transport",
+            () -> EntityType.Builder.<com.piranport.npc.deepocean.DeepOceanTransportEntity>of(
+                            com.piranport.npc.deepocean.DeepOceanTransportEntity::new, MobCategory.MONSTER)
+                    .sized(3.00f, 2.00f).clientTrackingRange(16).updateInterval(3)
+                    .build("piranport:deep_ocean_transport"));
+
+    public static final DeferredHolder<EntityType<?>, EntityType<com.piranport.npc.deepocean.DeepOceanArmoredCarrierEntity>>
+            DEEP_OCEAN_ARMORED_CARRIER = ENTITY_TYPES.register("deep_ocean_armored_carrier",
+            () -> EntityType.Builder.<com.piranport.npc.deepocean.DeepOceanArmoredCarrierEntity>of(
+                            com.piranport.npc.deepocean.DeepOceanArmoredCarrierEntity::new, MobCategory.MONSTER)
+                    .sized(2.30f, 2.80f).clientTrackingRange(16).updateInterval(3)
+                    .build("piranport:deep_ocean_armored_carrier"));
+
+    public static final DeferredHolder<EntityType<?>, EntityType<com.piranport.npc.deepocean.DeepOceanTorpedoCruiserEntity>>
+            DEEP_OCEAN_TORPEDO_CRUISER = ENTITY_TYPES.register("deep_ocean_torpedo_cruiser",
+            () -> EntityType.Builder.<com.piranport.npc.deepocean.DeepOceanTorpedoCruiserEntity>of(
+                            com.piranport.npc.deepocean.DeepOceanTorpedoCruiserEntity::new, MobCategory.MONSTER)
+                    .sized(1.70f, 2.45f).clientTrackingRange(16).updateInterval(3)
+                    .build("piranport:deep_ocean_torpedo_cruiser"));
+
+    public static final DeferredHolder<EntityType<?>, EntityType<com.piranport.npc.deepocean.DeepOceanTaihouEntity>>
+            DEEP_OCEAN_TAIHOU = ENTITY_TYPES.register("deep_ocean_taihou",
+            () -> EntityType.Builder.<com.piranport.npc.deepocean.DeepOceanTaihouEntity>of(
+                            com.piranport.npc.deepocean.DeepOceanTaihouEntity::new, MobCategory.MONSTER)
+                    .sized(2.30f, 2.80f).clientTrackingRange(16).updateInterval(3)
+                    .build("piranport:deep_ocean_taihou"));
+
+    public static final DeferredHolder<EntityType<?>, EntityType<com.piranport.npc.deepocean.DeepOceanShinanoEntity>>
+            DEEP_OCEAN_SHINANO = ENTITY_TYPES.register("deep_ocean_shinano",
+            () -> EntityType.Builder.<com.piranport.npc.deepocean.DeepOceanShinanoEntity>of(
+                            com.piranport.npc.deepocean.DeepOceanShinanoEntity::new, MobCategory.MONSTER)
+                    .sized(2.40f, 2.90f).clientTrackingRange(16).updateInterval(3)
+                    .build("piranport:deep_ocean_shinano"));
+
+    public static final DeferredHolder<EntityType<?>, EntityType<com.piranport.npc.deepocean.DeepOceanZuikakuEntity>>
+            DEEP_OCEAN_ZUIKAKU = ENTITY_TYPES.register("deep_ocean_zuikaku",
+            () -> EntityType.Builder.<com.piranport.npc.deepocean.DeepOceanZuikakuEntity>of(
+                            com.piranport.npc.deepocean.DeepOceanZuikakuEntity::new, MobCategory.MONSTER)
+                    .sized(2.20f, 2.78f).clientTrackingRange(16).updateInterval(3)
+                    .build("piranport:deep_ocean_zuikaku"));
+
     // --- Goldencatcat (Goldencatcat 活动关卡训练靶) ---
     public static final DeferredHolder<EntityType<?>, EntityType<com.piranport.entity.GoldencatcatEntity>>
             GOLDENCATCAT = ENTITY_TYPES.register("goldencatcat",

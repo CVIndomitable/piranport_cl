@@ -1,10 +1,11 @@
 {
   "aircraft_class": "recon",
   "visual_id": "recon",
+  "nation": "jp",
   "fuel_capacity": 10240,
   "ammo_capacity": 0,
   "panel_damage": 0.0,
-  "panel_speed": 1.05,
+  "panel_speed": 1.4,
   "weight": 8,
   "health": 10,
   "attack_cooldown": 1

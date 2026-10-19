@@ -46,7 +46,13 @@ public class DeepOceanLightCarrierEntity extends AbstractDeepOceanEntity {
         this.targetSelector.addGoal(2, new HurtByTargetGoal(this, AbstractDeepOceanEntity.class));
     }
 
-    @Override public double getOrbitDistance() { return 32.0; }
+    /** 环绕距离走 JSON（《深海/01》orbit ≈ follow/2）；JSON 缺失时保留原硬编码值。 */
+    @Override
+    public double getOrbitDistance() {
+        DeepOceanEntityData data = getJsonData();
+        return data != null ? data.orbitDistance() : 32.0;
+    }
     @Override public boolean canLaunchAircraft() { return true; }
     @Override public int getMaxAircraft() { return 2; }
+    @Override public int getAircraftLaunchInterval() { return 200; }
 }

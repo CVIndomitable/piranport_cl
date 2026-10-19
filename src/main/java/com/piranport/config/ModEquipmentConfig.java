@@ -381,10 +381,11 @@ public final class ModEquipmentConfig {
     /** 鱼雷投放点相对载机的高度下沉（格）。默认 1.0。 */
     public static final TerminalConfigValue<Double> TORPEDO_BOMBER_DROP_HEIGHT_OFFSET =
             TerminalConfigValue.number("aircraft", "torpedo_bomber_combat", "drop_height_offset", 1.0, 0.0, 16.0);
-    /** 空投鱼雷初速（格/tick）。默认 0.3（= 6 格/秒）。
+    /** 空投鱼雷初速兜底（格/tick）。默认 0.14（= 2.8 格/秒，对应日/英/意档）。
+     *  美/德按 0.125 写死在 TorpedoAttackStrategy，法/未知系别才读此参数。
      *  WHY 与 NPC 齐射的 torpedo_salvo.speed 分开：那是 NPC 水面齐射，这是空投雷，语义不同不可合并。 */
     public static final TerminalConfigValue<Double> TORPEDO_BOMBER_TORPEDO_SPEED =
-            TerminalConfigValue.number("aircraft", "torpedo_bomber_combat", "torpedo_speed", 0.3, 0.0, 10.0);
+            TerminalConfigValue.number("aircraft", "torpedo_bomber_combat", "torpedo_speed", 0.14, 0.0, 10.0);
     /** 空投鱼雷初速的垂直分量（格/tick，入水角度）。默认 -0.1。 */
     public static final TerminalConfigValue<Double> TORPEDO_BOMBER_TORPEDO_VERTICAL_SPEED =
             TerminalConfigValue.number("aircraft", "torpedo_bomber_combat", "torpedo_vertical_speed", -0.1, -10.0, 10.0);

@@ -595,6 +595,12 @@ public class ModCreativeTabs {
                         output.accept(ModItems.DEEP_OCEAN_LIGHT_CARRIER_SPAWN_EGG.get());
                         output.accept(ModItems.DEEP_OCEAN_CARRIER_SPAWN_EGG.get());
                         output.accept(ModItems.DEEP_OCEAN_SUBMARINE_SPAWN_EGG.get());
+                        output.accept(ModItems.DEEP_OCEAN_TRANSPORT_SPAWN_EGG.get());
+                        output.accept(ModItems.DEEP_OCEAN_ARMORED_CARRIER_SPAWN_EGG.get());
+                        output.accept(ModItems.DEEP_OCEAN_TORPEDO_CRUISER_SPAWN_EGG.get());
+                        output.accept(ModItems.DEEP_OCEAN_TAIHOU_SPAWN_EGG.get());
+                        output.accept(ModItems.DEEP_OCEAN_SHINANO_SPAWN_EGG.get());
+                        output.accept(ModItems.DEEP_OCEAN_ZUIKAKU_SPAWN_EGG.get());
                         output.accept(ModItems.SHIP_GIRL_SPAWN_EGG.get());
                     }).build());
 }

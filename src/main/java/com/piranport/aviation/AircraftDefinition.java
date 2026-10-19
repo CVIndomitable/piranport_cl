@@ -33,11 +33,13 @@ public record AircraftDefinition(
         int weight,
         int health,
         int attackCooldown,
-        @Nullable SelfDefense selfDefense
+        @Nullable SelfDefense selfDefense,
+        Nation nation
 ) {
     public AircraftDefinition {
         Objects.requireNonNull(id, "id");
         Objects.requireNonNull(aircraftClass, "aircraftClass");
+        Objects.requireNonNull(nation, "nation");
         if (visualId == null || visualId.isBlank()) {
             throw new IllegalArgumentException("visual_id is required for " + id);
         }
@@ -61,6 +63,20 @@ public record AircraftDefinition(
         validateCombination(id, aircraftClass, attackProfile, payloadItem);
     }
 
+    /**
+     * 兼容构造：占位定义与旧调用方不声明 nation 时按 {@link Nation#UNKNOWN} 处理。
+     * 系别只影响分系别数值（如航空鱼雷入水速度），缺失不应阻断定义构造。
+     */
+    public AircraftDefinition(ResourceLocation id, AircraftClass aircraftClass,
+                              @Nullable AttackProfile attackProfile,
+                              @Nullable ResourceLocation payloadItem, String visualId,
+                              int fuelCapacity, int ammoCapacity, float panelDamage,
+                              float panelSpeed, int weight, int health, int attackCooldown,
+                              @Nullable SelfDefense selfDefense) {
+        this(id, aircraftClass, attackProfile, payloadItem, visualId, fuelCapacity, ammoCapacity,
+                panelDamage, panelSpeed, weight, health, attackCooldown, selfDefense, Nation.UNKNOWN);
+    }
+
     /** 静态定义的 JSON 形状；id 来自文件路径，不写在 JSON 里。 */
     public record JsonDefinition(
             AircraftClass aircraftClass,
@@ -74,7 +90,8 @@ public record AircraftDefinition(
             int weight,
             int health,
             int attackCooldown,
-            Optional<SelfDefense> selfDefense
+            Optional<SelfDefense> selfDefense,
+            Nation nation
     ) {
         public static final Codec<JsonDefinition> CODEC = RecordCodecBuilder.create(instance -> instance.group(
                 AircraftClass.CODEC.fieldOf("aircraft_class").forGetter(JsonDefinition::aircraftClass),
@@ -89,14 +106,15 @@ public record AircraftDefinition(
                 Codec.intRange(0, 100_000).fieldOf("weight").forGetter(JsonDefinition::weight),
                 Codec.intRange(1, 100_000).fieldOf("health").forGetter(JsonDefinition::health),
                 Codec.intRange(1, 12_000).fieldOf("attack_cooldown").forGetter(JsonDefinition::attackCooldown),
-                SelfDefense.CODEC.optionalFieldOf("self_defense").forGetter(JsonDefinition::selfDefense)
+                SelfDefense.CODEC.optionalFieldOf("self_defense").forGetter(JsonDefinition::selfDefense),
+                Nation.CODEC.optionalFieldOf("nation", Nation.UNKNOWN).forGetter(JsonDefinition::nation)
         ).apply(instance, JsonDefinition::new));
 
         public AircraftDefinition withId(ResourceLocation id) {
             return new AircraftDefinition(id, aircraftClass, attackProfile.orElse(null),
                     payloadItem.orElse(null),
                     visualId, fuelCapacity, ammoCapacity, panelDamage, panelSpeed, weight,
-                    health, attackCooldown, selfDefense.orElse(null));
+                    health, attackCooldown, selfDefense.orElse(null), nation);
         }
 
         public static JsonDefinition from(AircraftDefinition definition) {
@@ -105,7 +123,8 @@ public record AircraftDefinition(
                     Optional.ofNullable(definition.payloadItem()), definition.visualId(),
                     definition.fuelCapacity(), definition.ammoCapacity(), definition.panelDamage(),
                     definition.panelSpeed(), definition.weight(), definition.health(),
-                    definition.attackCooldown(), Optional.ofNullable(definition.selfDefense()));
+                    definition.attackCooldown(), Optional.ofNullable(definition.selfDefense()),
+                    definition.nation());
         }
     }
 
@@ -219,6 +238,27 @@ public record AircraftDefinition(
                 }
             }
             return null;
+        }
+    }
+
+    /**
+     * 飞机所属系别。数据文件用 {@code nation} 声明（缺省 {@code unknown}）。
+     * 目前只用于按国籍区分的分系别数值（航空鱼雷入水速度）；不参与合成、掉落等逻辑。
+     */
+    public enum Nation implements StringRepresentable {
+        US("us"), JP("jp"), GB("gb"), DE("de"), FR("fr"), IT("it"), UNKNOWN("unknown");
+
+        public static final Codec<Nation> CODEC = StringRepresentable.fromEnum(Nation::values);
+
+        private final String id;
+
+        Nation(String id) {
+            this.id = id;
+        }
+
+        @Override
+        public String getSerializedName() {
+            return id;
         }
     }
 }

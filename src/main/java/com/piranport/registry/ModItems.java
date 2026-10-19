@@ -306,6 +306,10 @@ public class ModItems {
     public static final DeferredItem<Item> STANDARD_WEAPON_BLUEPRINT = MaterialItems.STANDARD_WEAPON_BLUEPRINT;
     public static final DeferredItem<Item> IMPROVED_WEAPON_BLUEPRINT = MaterialItems.IMPROVED_WEAPON_BLUEPRINT;
     public static final DeferredItem<Item> ADVANCED_WEAPON_BLUEPRINT = MaterialItems.ADVANCED_WEAPON_BLUEPRINT;
+    public static final DeferredItem<Item> SMALL_VT_SHELL_BLUEPRINT = MaterialItems.SMALL_VT_SHELL_BLUEPRINT;
+    public static final DeferredItem<Item> SMALL_TYPE3_SHELL_BLUEPRINT = MaterialItems.SMALL_TYPE3_SHELL_BLUEPRINT;
+    public static final DeferredItem<Item> MEDIUM_TYPE3_SHELL_BLUEPRINT = MaterialItems.MEDIUM_TYPE3_SHELL_BLUEPRINT;
+    public static final DeferredItem<Item> LARGE_TYPE3_SHELL_BLUEPRINT = MaterialItems.LARGE_TYPE3_SHELL_BLUEPRINT;
 
     // ===== Intermediate Products (Phase 13/16)（已迁移到 MaterialItems） =====
     public static final DeferredItem<Item> SAUSAGE = MaterialItems.SAUSAGE;

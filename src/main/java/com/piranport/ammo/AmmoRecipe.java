@@ -6,6 +6,7 @@ import net.minecraft.world.item.ItemStack;
 
 import java.util.List;
 import java.util.function.Supplier;
+import org.jetbrains.annotations.Nullable;
 
 public record AmmoRecipe(
         String id,
@@ -16,7 +17,9 @@ public record AmmoRecipe(
         int outputCount,
         List<MaterialRequirement> materials,
         int craftTimeTicks,
-        int totalMaterialValue
+        int totalMaterialValue,
+        /** 合成所需蓝图；null = 不校验。蓝图不消耗，创造蓝图可替代。 */
+        @Nullable Supplier<Item> requiredBlueprint
 ) {
     public ItemStack getResultStack(int quantity) {
         return new ItemStack(resultItem.get(), outputCount * quantity);

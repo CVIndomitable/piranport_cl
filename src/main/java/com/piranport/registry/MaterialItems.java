@@ -118,6 +118,20 @@ public final class MaterialItems {
     public static final DeferredItem<Item> CREATIVE_BLUEPRINT =
             ITEMS.registerSimpleItem("creative_blueprint",
                     new Item.Properties().stacksTo(1).rarity(Rarity.EPIC));
+    // 特种弹药蓝图（数值/09、武器/08）：VT 先进蓝图，三种三式弹各自的改良蓝图。
+    // 注册名 = 弹药注册名 + _blueprint；蓝图不消耗，创造蓝图可替代。
+    public static final DeferredItem<Item> SMALL_VT_SHELL_BLUEPRINT =
+            ITEMS.registerSimpleItem("small_vt_shell_blueprint",
+                    new Item.Properties().stacksTo(1).rarity(Rarity.RARE));
+    public static final DeferredItem<Item> SMALL_TYPE3_SHELL_BLUEPRINT =
+            ITEMS.registerSimpleItem("small_type3_shell_blueprint",
+                    new Item.Properties().stacksTo(1).rarity(Rarity.UNCOMMON));
+    public static final DeferredItem<Item> MEDIUM_TYPE3_SHELL_BLUEPRINT =
+            ITEMS.registerSimpleItem("medium_type3_shell_blueprint",
+                    new Item.Properties().stacksTo(1).rarity(Rarity.UNCOMMON));
+    public static final DeferredItem<Item> LARGE_TYPE3_SHELL_BLUEPRINT =
+            ITEMS.registerSimpleItem("large_type3_shell_blueprint",
+                    new Item.Properties().stacksTo(1).rarity(Rarity.UNCOMMON));
 
     // ===== Intermediate Products (Phase 13/16) =====
     public static final DeferredItem<Item> SAUSAGE            = ITEMS.registerSimpleItem("sausage");

@@ -529,6 +529,10 @@ public class ModCreativeTabs {
                         output.accept(ModItems.ADVANCED_WEAPON_BLUEPRINT.get());
                         // 装备专属蓝图（数值/09）：创造栏按注册顺序列出，生存只从副本/结构箱获得。
                         WeaponItems.EQUIPMENT_BLUEPRINTS.values().forEach(b -> output.accept(b.get()));
+                        output.accept(ModItems.SMALL_VT_SHELL_BLUEPRINT.get());
+                        output.accept(ModItems.SMALL_TYPE3_SHELL_BLUEPRINT.get());
+                        output.accept(ModItems.MEDIUM_TYPE3_SHELL_BLUEPRINT.get());
+                        output.accept(ModItems.LARGE_TYPE3_SHELL_BLUEPRINT.get());
                         output.accept(ModItems.CREATIVE_BLUEPRINT.get());
                         output.accept(ModItems.DEBUG_TERMINAL.get());
                         output.accept(ModItems.CONFIG_INSPECTOR.get());

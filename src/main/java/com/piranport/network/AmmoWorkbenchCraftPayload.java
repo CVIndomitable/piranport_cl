@@ -108,6 +108,15 @@ public record AmmoWorkbenchCraftPayload(BlockPos pos, String recipeId, int quant
                 if (has < required) return;
             }
 
+            // 特种弹药蓝图（数值/09）：VT 要先进蓝图，三种三式弹各要自己的改良蓝图。
+            // 蓝图不消耗；创造蓝图可替代任意配方蓝图。
+            if (recipe.requiredBlueprint() != null) {
+                boolean hasCreative = available.getOrDefault(
+                        com.piranport.registry.ModItems.CREATIVE_BLUEPRINT.get(), 0) > 0;
+                boolean hasBlueprint = available.getOrDefault(recipe.requiredBlueprint().get(), 0) > 0;
+                if (!hasCreative && !hasBlueprint) return;
+            }
+
             // Transfer materials from player inventory into BE's pending buffer.
             NonNullList<ItemStack> taken = NonNullList.create();
             for (AmmoRecipe.MaterialRequirement mat : recipe.materials()) {

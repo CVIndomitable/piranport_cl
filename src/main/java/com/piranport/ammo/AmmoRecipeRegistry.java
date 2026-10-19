@@ -113,9 +113,17 @@ public class AmmoRecipeRegistry {
     private static void add(String id, AmmoCategory cat, String type, String caliber,
                             Supplier<Item> result, int output, int timeTicks,
                             AmmoRecipe.MaterialRequirement... mats) {
+        add(id, cat, type, caliber, result, output, timeTicks, null, mats);
+    }
+
+    /** 带蓝图校验的配方：VT 与三种三式弹各要自己的蓝图（数值/09、武器/08）。 */
+    private static void add(String id, AmmoCategory cat, String type, String caliber,
+                            Supplier<Item> result, int output, int timeTicks,
+                            @org.jetbrains.annotations.Nullable Supplier<Item> blueprint,
+                            AmmoRecipe.MaterialRequirement... mats) {
         int totalValue = AmmoRecipe.calcTotalValue(List.of(mats));
         ALL_RECIPES.add(new AmmoRecipe(id, cat, type, caliber, result, output,
-                List.of(mats), timeTicks, totalValue));
+                List.of(mats), timeTicks, totalValue, blueprint));
     }
 
     // ===== Shells =====
@@ -169,17 +177,21 @@ public class AmmoRecipeRegistry {
         // VT (small only)
         add("shell_vt_s", AmmoCategory.SHELL, "VT弹", "小口径",
                 () -> ModItems.SMALL_VT_SHELL.get(), 4, 60,
+                () -> ModItems.SMALL_VT_SHELL_BLUEPRINT.get(),
                 mat(copper, 2), mat(gp, 1), mat(rs, 2), mat(comp, 1));
 
         // Type 3
         add("shell_t3_s", AmmoCategory.SHELL, "三式弹", "小口径",
                 () -> ModItems.SMALL_TYPE3_SHELL.get(), 8, 40,
+                () -> ModItems.SMALL_TYPE3_SHELL_BLUEPRINT.get(),
                 mat(copper, 2), mat(gp, 2), mat(rs, 1));
         add("shell_t3_m", AmmoCategory.SHELL, "三式弹", "中口径",
                 () -> ModItems.MEDIUM_TYPE3_SHELL.get(), 8, 60,
+                () -> ModItems.MEDIUM_TYPE3_SHELL_BLUEPRINT.get(),
                 mat(copper, 3), mat(gp, 3), mat(rs, 1));
         add("shell_t3_l", AmmoCategory.SHELL, "三式弹", "大口径",
                 () -> ModItems.LARGE_TYPE3_SHELL.get(), 4, 80,
+                () -> ModItems.LARGE_TYPE3_SHELL_BLUEPRINT.get(),
                 mat(copper, 5), mat(gp, 4), mat(rs, 2));
     }
 

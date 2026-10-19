@@ -13,9 +13,13 @@ public record AmmoWorkbenchJEIRecipe(
         String caliberName
 ) {
     public static AmmoWorkbenchJEIRecipe fromAmmoRecipe(AmmoRecipe recipe) {
-        List<ItemStack> inputs = recipe.materials().stream()
+        List<ItemStack> inputs = new java.util.ArrayList<>(recipe.materials().stream()
                 .map(m -> new ItemStack(m.item().get(), m.count()))
-                .toList();
+                .toList());
+        // 蓝图作为额外输入展示：它不消耗，但合成时必须在背包里。
+        if (recipe.requiredBlueprint() != null) {
+            inputs.add(new ItemStack(recipe.requiredBlueprint().get()));
+        }
         return new AmmoWorkbenchJEIRecipe(
                 inputs, recipe.getResultStack(1),
                 recipe.craftTimeTicks(), recipe.typeName(), recipe.caliberName()

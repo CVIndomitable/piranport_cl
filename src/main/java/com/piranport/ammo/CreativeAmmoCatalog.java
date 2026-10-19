@@ -102,7 +102,7 @@ public final class CreativeAmmoCatalog {
 
         Item cacheItem = ModItems.CREATIVE_AMMO_CACHE.get();
         Item shipFuel = ModItems.FUEL.get();
-        Item aviationFuel = ModItems.AVIATION_FUEL.get();
+        Item aviationFuel = ModItems.FUEL.get();
 
         for (Item item : BuiltInRegistries.ITEM) {
             if (item == Items.AIR || item == cacheItem) continue;

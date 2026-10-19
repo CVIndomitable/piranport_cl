@@ -136,23 +136,23 @@ public class AircraftResupply {
     }
 
     /**
-     * Attempt to draw one aviation_fuel from the owner's inventory.
+     * Attempt to draw one fuel item from the owner's inventory.
      * Returns true if successful.
      */
     public static boolean tryAutoResupplyFuel(AircraftEntity craft, Player owner) {
-        if (CreativeAmmoCache.isInfinite(owner, ModItems.AVIATION_FUEL.get())) {
+        if (CreativeAmmoCache.isInfinite(owner, ModItems.FUEL.get())) {
             craft.setCurrentFuel(craft.getFuelCapacity());
             return true;
         }
         for (ItemStack ammo : owner.getInventory().items) {
-            if (ammo.is(ModItems.AVIATION_FUEL.get()) && ammo.getCount() > 0) {
+            if (ammo.is(ModItems.FUEL.get()) && ammo.getCount() > 0) {
                 ammo.shrink(1);
                 craft.setCurrentFuel(craft.getFuelCapacity());
                 return true;
             }
         }
         ItemStack offhand = owner.getInventory().offhand.get(0);
-        if (offhand.is(ModItems.AVIATION_FUEL.get()) && offhand.getCount() > 0) {
+        if (offhand.is(ModItems.FUEL.get()) && offhand.getCount() > 0) {
             offhand.shrink(1);
             craft.setCurrentFuel(craft.getFuelCapacity());
             return true;

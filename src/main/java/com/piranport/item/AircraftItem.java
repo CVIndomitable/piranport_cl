@@ -52,14 +52,14 @@ public class AircraftItem extends Item {
 
 
     /**
-     * Right-click aviation_fuel onto aircraft in inventory to manually load fuel (manual reload mode only).
+     * Right-click fuel onto aircraft in inventory to manually load fuel (manual reload mode only).
      * One fuel item fills the aircraft to full capacity.
      */
     @Override
     public boolean overrideOtherStackedOnMe(ItemStack stack, ItemStack other, Slot slot,
             ClickAction action, Player player, net.minecraft.world.entity.SlotAccess access) {
         if (action != ClickAction.SECONDARY) return false;
-        if (!other.is(ModItems.AVIATION_FUEL.get())) return false;
+        if (!other.is(ModItems.FUEL.get())) return false;
 
         AircraftDefinition definition = AircraftDefinitionService.resolve(stack);
         if (definition == null) return false;

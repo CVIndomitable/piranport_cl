@@ -6,7 +6,7 @@
   "pages": [
     {
       "type": "patchouli:text",
-      "text": "$(bold)Loadout Basics$()$(br2)Ship cores do not need a separate equipment screen. Put cannons, torpedo launchers, missile launchers, or aircraft on your hotbar, then right-click the held item while transformed. Keep shells, torpedoes, missiles, bombs, and aviation fuel in your inventory so weapons can draw from them."
+      "text": "$(bold)Loadout Basics$()$(br2)Ship cores do not need a separate equipment screen. Put cannons, torpedo launchers, missile launchers, or aircraft on your hotbar, then right-click the held item while transformed. Keep shells, torpedoes, missiles, bombs and fuel in your inventory so weapons can draw from them."
     },
     {
       "type": "patchouli:text",

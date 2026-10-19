@@ -445,21 +445,21 @@ public class AircraftFireStrategy {
     }
 
     /**
-     * On transformation: consume aviation_fuel to fill aircraft.
-     * One aviation_fuel item fills one aircraft to full fuelCapacity.
+     * On transformation: consume fuel to fill aircraft.
+     * One fuel item fills one aircraft to full fuelCapacity.
      */
     public static void refillAircraftFuel(Player player, ItemStack coreStack) {
         // 自动装填固定关闭；燃油由手动补给流程处理。
     }
 
     /**
-     * Inventory mode fuel refill: scan inventory for AircraftItem stacks and aviation_fuel,
+     * Inventory mode fuel refill: scan inventory for AircraftItem stacks and fuel,
      * consuming one fuel per aircraft that needs it.
      */
     public static void refillAircraftFuelInventoryMode(Player player) {
         Inventory inv = player.getInventory();
 
-        boolean infiniteFuel = CreativeAmmoCache.isInfinite(player, ModItems.AVIATION_FUEL.get());
+        boolean infiniteFuel = CreativeAmmoCache.isInfinite(player, ModItems.FUEL.get());
         for (ItemStack weapon : inv.items) {
             if (!(weapon.getItem() instanceof AircraftItem)) continue;
             AircraftDefinition definition = AircraftDefinitionService.resolve(weapon);
@@ -472,7 +472,7 @@ public class AircraftFireStrategy {
                 continue;
             }
             for (ItemStack ammo : inv.items) {
-                if (ammo.is(ModItems.AVIATION_FUEL.get()) && ammo.getCount() > 0) {
+                if (ammo.is(ModItems.FUEL.get()) && ammo.getCount() > 0) {
                     com.piranport.testtools.PiranPortTestTools.consumeAmmo(player.getUUID(), ammo, 1);
                     weapon.set(ModDataComponents.AIRCRAFT_STATE.get(), state.withCurrentFuel(fuelCapacity));
                     break;
@@ -584,7 +584,7 @@ public class AircraftFireStrategy {
 
         net.minecraft.world.item.Item payload = payloadItem(definition);
         boolean payloadInfinite = payload != null && CreativeAmmoCache.isInfinite(player, payload);
-        boolean fuelInfinite = CreativeAmmoCache.isInfinite(player, ModItems.AVIATION_FUEL.get());
+        boolean fuelInfinite = CreativeAmmoCache.isInfinite(player, ModItems.FUEL.get());
 
         if (AircraftSortieReadiness.needsPayload(definition, state)
                 && !payloadInfinite
@@ -594,7 +594,7 @@ public class AircraftFireStrategy {
         }
         if (AircraftSortieReadiness.needsFuel(state, stats)
                 && !fuelInfinite
-                && findPayloadSlot(inv, ModItems.AVIATION_FUEL.get(), weaponSlot, coreSlot) < 0) {
+                && findPayloadSlot(inv, ModItems.FUEL.get(), weaponSlot, coreSlot) < 0) {
             player.displayClientMessage(Component.translatable("message.piranport.aircraft_no_fuel_item"), true);
             return false;
         }
@@ -639,11 +639,11 @@ public class AircraftFireStrategy {
         boolean payloadInfinite = needsPayload && payloadItem != null
                 && CreativeAmmoCache.isInfinite(player, payloadItem);
         boolean fuelInfinite = needsFuel
-                && CreativeAmmoCache.isInfinite(player, ModItems.AVIATION_FUEL.get());
+                && CreativeAmmoCache.isInfinite(player, ModItems.FUEL.get());
         int payloadSlot = needsPayload && !payloadInfinite && payloadItem != null
                 ? findPayloadSlot(inv, payloadItem, weaponSlot, coreSlot) : -1;
         int fuelSlot = needsFuel && !fuelInfinite
-                ? findPayloadSlot(inv, ModItems.AVIATION_FUEL.get(), weaponSlot, coreSlot) : -1;
+                ? findPayloadSlot(inv, ModItems.FUEL.get(), weaponSlot, coreSlot) : -1;
 
         if (needsPayload && !payloadInfinite && payloadSlot < 0) {
             if (warn) player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);

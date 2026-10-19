@@ -431,7 +431,7 @@ public abstract class AbstractDeepOceanEntity extends Monster {
         } else if (this instanceof DeepOceanLightCarrierEntity) {
             spawnAtLocation(new ItemStack(Items.IRON_INGOT, 3 + random.nextInt(2)));
             spawnAtLocation(new ItemStack(ModItems.FUEL.get(), 3 + random.nextInt(2)));
-            spawnAtLocation(new ItemStack(ModItems.AVIATION_FUEL.get(), 2 + random.nextInt(2)));
+            spawnAtLocation(new ItemStack(ModItems.FUEL.get(), 2 + random.nextInt(2)));
             spawnAtLocation(new ItemStack(ModItems.RAW_ALUMINUM.get(), 2 + random.nextInt(3)));
             if (random.nextFloat() < 0.3f) {
                 spawnKeyFragment(level);
@@ -439,7 +439,7 @@ public abstract class AbstractDeepOceanEntity extends Monster {
         } else if (this instanceof DeepOceanCarrierEntity) {
             spawnAtLocation(new ItemStack(Items.IRON_INGOT, 5 + random.nextInt(3)));
             spawnAtLocation(new ItemStack(ModItems.FUEL.get(), 4 + random.nextInt(2)));
-            spawnAtLocation(new ItemStack(ModItems.AVIATION_FUEL.get(), 3 + random.nextInt(3)));
+            spawnAtLocation(new ItemStack(ModItems.FUEL.get(), 3 + random.nextInt(3)));
             spawnAtLocation(new ItemStack(ModItems.RAW_ALUMINUM.get(), 4 + random.nextInt(5)));
             if (random.nextFloat() < 0.5f) {
                 spawnKeyFragment(level);

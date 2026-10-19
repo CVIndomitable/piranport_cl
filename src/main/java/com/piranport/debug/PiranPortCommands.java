@@ -798,7 +798,7 @@ public final class PiranPortCommands {
         stacks += give(player, Items.BOOK, 16);
         stacks += give(player, ModItems.RAW_ALUMINUM.get(), 32);
         stacks += give(player, ModItems.ALUMINUM_INGOT.get(), 16);
-        stacks += give(player, ModItems.AVIATION_FUEL.get(), 16);
+        stacks += give(player, ModItems.FUEL.get(), 16);
         stacks += give(player, ModItems.REPAIR_KIT.get(), 3);
         stacks += give(player, ModItems.EXP_SHELL.get(), 8);
         stacks += giveKeyFragments(player, 2);
@@ -819,7 +819,7 @@ public final class PiranPortCommands {
         stacks += give(player, Items.BOOK, 16);
         stacks += give(player, ModItems.REPAIR_KIT.get(), 3);
         stacks += give(player, ModItems.EXP_SHELL.get(), 16);
-        stacks += give(player, ModItems.AVIATION_FUEL.get(), 16);
+        stacks += give(player, ModItems.FUEL.get(), 16);
         stacks += giveKeyFragments(player, 2);
         stacks += giveFlags(player);
         stacks += giveSkinCores(player);

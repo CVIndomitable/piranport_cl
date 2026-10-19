@@ -436,7 +436,7 @@ public class AircraftEntity extends Entity implements AircraftAttackContext {
         }
 
         ItemStack held = player.getItemInHand(hand);
-        if (held.is(ModItems.AVIATION_FUEL.get())) {
+        if (held.is(ModItems.FUEL.get())) {
             if (currentFuel < fuelCapacity) {
                 held.shrink(1);
                 currentFuel = fuelCapacity;

@@ -3,7 +3,7 @@
   "display": {
     "icon": {
       "count": 1,
-      "id": "piranport:aviation_fuel"
+      "id": "piranport:fuel"
     },
     "title": {
       "translate": "advancements.piranport.ship_girl_branch_air_cover.title"

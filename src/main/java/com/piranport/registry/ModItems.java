@@ -405,7 +405,6 @@ public class ModItems {
     public static final DeferredItem<CreativeAmmoCacheItem> CREATIVE_AMMO_CACHE = AmmoItems.CREATIVE_AMMO_CACHE;
 
     // ===== Aviation Ammo (Phase 18) (extracted to AmmoItems) =====
-    public static final DeferredItem<Item> AVIATION_FUEL = AmmoItems.AVIATION_FUEL;
     public static final DeferredItem<Item> AERIAL_TORPEDO = AmmoItems.AERIAL_TORPEDO;
     // Unified aerial bomb (replaces small/medium distinction)
     public static final DeferredItem<Item> AERIAL_BOMB = AmmoItems.AERIAL_BOMB;

@@ -168,10 +168,6 @@ public final class AmmoItems {
             ITEMS.register("creative_ammo_cache",
                     () -> new CreativeAmmoCacheItem(new Item.Properties().stacksTo(1)));
 
-    // ===== Aviation Ammo (Phase 18) =====
-    public static final DeferredItem<Item> AVIATION_FUEL =
-            ITEMS.register("aviation_fuel",
-                    () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.aviation_fuel"));
     public static final DeferredItem<Item> AERIAL_TORPEDO =
             ITEMS.register("aerial_torpedo",
                     () -> new AmmoItem(new Item.Properties(), "tooltip.piranport.ammo_type.aerial_torpedo"));

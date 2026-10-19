@@ -91,7 +91,7 @@ public class AmmoRecipeRegistry {
         registerMaterialValue(Items.CHARCOAL, 1);
         registerMaterialValue(Items.IRON_INGOT, 1);
         // Mod 物品
-        registerMaterialValue(ModItems.AVIATION_FUEL.get(), 3);
+        registerMaterialValue(ModItems.FUEL.get(), 3);
         registerMaterialValue(Items.REDSTONE_TORCH, 2);
         registerMaterialValue(Items.TRIPWIRE_HOOK, 4);
         registerMaterialValue(Items.STRING, 1);
@@ -188,7 +188,7 @@ public class AmmoRecipeRegistry {
     private static void registerTorpedoes() {
         Supplier<Item> iron = () -> Items.IRON_INGOT;
         Supplier<Item> gp   = () -> Items.GUNPOWDER;
-        Supplier<Item> fuel = () -> ModItems.AVIATION_FUEL.get();
+        Supplier<Item> fuel = () -> ModItems.FUEL.get();
         Supplier<Item> rs   = () -> Items.REDSTONE;
         Supplier<Item> comp = () -> Items.COMPARATOR;
         Supplier<Item> torch = () -> Items.REDSTONE_TORCH;
@@ -290,7 +290,7 @@ public class AmmoRecipeRegistry {
     private static void registerAerialAmmo() {
         Supplier<Item> iron = () -> Items.IRON_INGOT;
         Supplier<Item> gp   = () -> Items.GUNPOWDER;
-        Supplier<Item> fuel = () -> ModItems.AVIATION_FUEL.get();
+        Supplier<Item> fuel = () -> ModItems.FUEL.get();
         Supplier<Item> rs   = () -> Items.REDSTONE;
 
         add("aerial_bomb", AmmoCategory.AERIAL, "航弹", "标准",
@@ -321,7 +321,7 @@ public class AmmoRecipeRegistry {
     private static void registerMissiles() {
         Supplier<Item> iron = () -> Items.IRON_INGOT;
         Supplier<Item> gp   = () -> Items.GUNPOWDER;
-        Supplier<Item> fuel = () -> ModItems.AVIATION_FUEL.get();
+        Supplier<Item> fuel = () -> ModItems.FUEL.get();
         Supplier<Item> rs   = () -> Items.REDSTONE;
         Supplier<Item> comp = () -> Items.COMPARATOR;
 

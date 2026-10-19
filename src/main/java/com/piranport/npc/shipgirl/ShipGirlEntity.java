@@ -429,7 +429,7 @@ public class ShipGirlEntity extends PathfinderMob implements Merchant {
                 handleDungeonKey(player, held);
             } else if (held.is(ModItems.EXP_SHELL.get())) {
                 handleDrillBranch(player, held);
-            } else if (held.is(ModItems.AVIATION_FUEL.get())) {
+            } else if (held.is(ModItems.FUEL.get())) {
                 handleAirCoverBranch(player, held);
             } else if (isKeyFragment(held)) {
                 handleKeyFragment(player, held);
@@ -612,7 +612,7 @@ public class ShipGirlEntity extends PathfinderMob implements Merchant {
         consumeOne(player, held);
         heal(18.0f);
         addEffect(new MobEffectInstance(MobEffects.REGENERATION, 20 * 8, 1));
-        giveOrDrop(player, new ItemStack(ModItems.AVIATION_FUEL.get(), 3));
+        giveOrDrop(player, new ItemStack(ModItems.FUEL.get(), 3));
         questStage = QuestStage.CALIBRATION;
         addRapport(player, 10);
         if (player instanceof ServerPlayer serverPlayer) {
@@ -659,7 +659,7 @@ public class ShipGirlEntity extends PathfinderMob implements Merchant {
 
         consumeOne(player, held);
         giveOrDrop(player, new ItemStack(ModItems.EXP_SHELL.get(), 2));
-        giveOrDrop(player, new ItemStack(ModItems.AVIATION_FUEL.get(), 4));
+        giveOrDrop(player, new ItemStack(ModItems.FUEL.get(), 4));
         player.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, 20 * 180, 0));
         followUpStage = FollowUpStage.SHARD_STABILIZATION;
         addRapport(player, 12);
@@ -704,7 +704,7 @@ public class ShipGirlEntity extends PathfinderMob implements Merchant {
         consumeOne(player, held);
         giveOrDrop(player, new ItemStack(ModItems.SHIP_GIRL_CONTRACT.get(), 1));
         giveOrDrop(player, new ItemStack(ModItems.EXP_SHELL.get(), 3));
-        giveOrDrop(player, new ItemStack(ModItems.AVIATION_FUEL.get(), 6));
+        giveOrDrop(player, new ItemStack(ModItems.FUEL.get(), 6));
         player.addEffect(new MobEffectInstance(MobEffects.DOLPHINS_GRACE, 20 * 120, 0));
         followUpStage = FollowUpStage.COMPLETE;
         addRapport(player, 15);
@@ -827,7 +827,7 @@ public class ShipGirlEntity extends PathfinderMob implements Merchant {
     private void handleAllianceSupplyBranch(Player player, ItemStack held) {
         boolean first = markBranchCompleted(BRANCH_ALLIANCE_SUPPLY);
         consumeOne(player, held);
-        giveOrDrop(player, new ItemStack(ModItems.AVIATION_FUEL.get(), first ? 8 : 3));
+        giveOrDrop(player, new ItemStack(ModItems.FUEL.get(), first ? 8 : 3));
         giveOrDrop(player, new ItemStack(ModItems.REPAIR_KIT.get(), first ? 2 : 1));
         if (first) {
             giveOrDrop(player, new ItemStack(ModItems.SHIP_GIRL_CONTRACT.get(), 1));
@@ -1054,7 +1054,7 @@ public class ShipGirlEntity extends PathfinderMob implements Merchant {
                 6, 8, 0.05f));
         result.add(new MerchantOffer(
                 new ItemCost(ModItems.FUEL.get(), 3),
-                new ItemStack(ModItems.AVIATION_FUEL.get(), 2),
+                new ItemStack(ModItems.FUEL.get(), 2),
                 12, 3, 0.05f));
         result.add(new MerchantOffer(
                 new ItemCost(Items.PAPER, 12),
@@ -1070,7 +1070,7 @@ public class ShipGirlEntity extends PathfinderMob implements Merchant {
             result.add(new MerchantOffer(
                     new ItemCost(Items.BOOK, 1),
                     Optional.of(new ItemCost(ModItems.RAW_ALUMINUM.get(), 6)),
-                    new ItemStack(ModItems.AVIATION_FUEL.get(), 4),
+                    new ItemStack(ModItems.FUEL.get(), 4),
                     8, 6, 0.05f));
         }
         if (rapport >= 50) {

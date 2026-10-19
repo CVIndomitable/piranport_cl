@@ -30,13 +30,13 @@ public class AircraftHandler implements WeaponHandler {
     @Override
     public boolean hasAmmo(EntityMaid maid, ItemStack stack) {
         Player owner = AmmoConsumer.ownerPlayer(maid);
-        return AmmoConsumer.hasItem(owner, ModItems.AVIATION_FUEL.get(), FUEL_PER_LAUNCH);
+        return AmmoConsumer.hasItem(owner, ModItems.FUEL.get(), FUEL_PER_LAUNCH);
     }
 
     @Override
     public void fire(EntityMaid maid, LivingEntity target, ItemStack stack) {
         Player owner = AmmoConsumer.ownerPlayer(maid);
-        if (AmmoConsumer.consumeItem(owner, ModItems.AVIATION_FUEL.get(), FUEL_PER_LAUNCH) < FUEL_PER_LAUNCH) {
+        if (AmmoConsumer.consumeItem(owner, ModItems.FUEL.get(), FUEL_PER_LAUNCH) < FUEL_PER_LAUNCH) {
             return;
         }
 

@@ -106,7 +106,7 @@ public class DeepOceanSupplyEntity extends AbstractDeepOceanEntity {
                 held.shrink(1);
             }
             giveOrDrop(player, new ItemStack(ModItems.RAW_ALUMINUM.get(), 4));
-            giveOrDrop(player, new ItemStack(ModItems.AVIATION_FUEL.get(), 2));
+            giveOrDrop(player, new ItemStack(ModItems.FUEL.get(), 2));
             player.addEffect(new MobEffectInstance(MobEffects.WATER_BREATHING, 20 * 90, 0));
             player.sendSystemMessage(Component.translatable("message.piranport.deep_ocean_supply_intel_trade"));
             playTradeFeedback();
@@ -140,7 +140,7 @@ public class DeepOceanSupplyEntity extends AbstractDeepOceanEntity {
             if (!player.getAbilities().instabuild) {
                 held.shrink(1);
             }
-            giveOrDrop(player, new ItemStack(ModItems.AVIATION_FUEL.get(), 4));
+            giveOrDrop(player, new ItemStack(ModItems.FUEL.get(), 4));
             giveOrDrop(player, new ItemStack(ModItems.REPAIR_KIT.get(), 1));
             player.addEffect(new MobEffectInstance(MobEffects.DOLPHINS_GRACE, 20 * 80, 0));
             player.sendSystemMessage(Component.translatable("message.piranport.deep_ocean_supply_flag_trade"));
@@ -154,7 +154,7 @@ public class DeepOceanSupplyEntity extends AbstractDeepOceanEntity {
             }
             heal(12.0f);
             giveOrDrop(player, new ItemStack(net.minecraft.world.item.Items.BOOK, 1));
-            giveOrDrop(player, new ItemStack(ModItems.AVIATION_FUEL.get(), 2));
+            giveOrDrop(player, new ItemStack(ModItems.FUEL.get(), 2));
             player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 20 * 60, 0));
             player.sendSystemMessage(Component.translatable("message.piranport.deep_ocean_supply_drill_trade"));
             playTradeFeedback();

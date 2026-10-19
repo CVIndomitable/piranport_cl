@@ -288,14 +288,17 @@ public final class FireControlVisualRenderer {
         // 预瞄点本身画在 HUD（见类注释）；世界空间只保留鱼雷的线/扇形这类 3D 跨度提示。
         if (mode == Mode.TORPEDO) {
             Vec3 start = previousOrigin == null || origin == null ? origin : previousOrigin.lerp(origin, partial);
-            if (start != null && fanHalfDeg > 0) {
+            if (start != null) {
                 PoseStack poseStack = event.getPoseStack();
                 poseStack.pushPose();
                 renderCamera = camera;
                 Matrix4f pose = poseStack.last().pose();
                 VertexConsumer c = mc.renderBuffers().bufferSource().getBuffer(LINES);
+                // 单管也画预测线（《火控/06》）：线指向水平拦截点，扇形只在多联装时才存在。
                 line(c, pose, start, renderPoint, r, g, b);
-                drawFan(c, pose, start, renderPoint, fanHalfDeg, r, g, b);
+                if (fanHalfDeg > 0) {
+                    drawFan(c, pose, start, renderPoint, fanHalfDeg, r, g, b);
+                }
                 mc.renderBuffers().bufferSource().endBatch(LINES);
                 poseStack.popPose();
             }

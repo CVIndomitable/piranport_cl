@@ -49,7 +49,7 @@ public final class WeaponItems {
                                     new FuelData(0, ShipType.LARGE.fuelCapacity)),
                             ShipType.LARGE));
     public static final DeferredItem<ShipCoreItem> SUBMARINE_CORE =
-            ITEMS.register("submarine_core",
+            ITEMS.register("submarine_ship_core",
                     () -> new ShipCoreItem(new Item.Properties().stacksTo(1)
                             .component(ModDataComponents.SHIP_CORE_FUEL.get(),
                                     new FuelData(0, ShipType.SUBMARINE.fuelCapacity)),

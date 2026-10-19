@@ -2,9 +2,9 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "pattern": [
-    "AIA",
     "IAI",
-    "AIA"
+    "ADA",
+    "IAI"
   ],
   "key": {
     "I": {
@@ -12,9 +12,13 @@
     },
     "A": {
       "item": "piranport:aluminum_ingot"
+    },
+    "D": {
+      "item": "minecraft:diamond"
     }
   },
   "result": {
-    "id": "piranport:large_ship_core"
+    "id": "piranport:large_ship_core",
+    "count": 1
   }
 }

@@ -2,18 +2,15 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "pattern": [
-    "ABA",
-    "BCB",
-    "ABA"
+    "AAA",
+    "ATA",
+    "AAA"
   ],
   "key": {
     "A": {
-      "item": "piranport:key_fragment_ch1"
+      "item": "piranport:aluminum_ingot"
     },
-    "B": {
-      "item": "piranport:repair_kit"
-    },
-    "C": {
+    "T": {
       "item": "minecraft:totem_of_undying"
     }
   },

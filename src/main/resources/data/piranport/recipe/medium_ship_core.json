@@ -2,9 +2,9 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "pattern": [
-    "AI",
-    "IA",
-    "AI"
+    "IAI",
+    "ARA",
+    "IAI"
   ],
   "key": {
     "I": {
@@ -12,9 +12,13 @@
     },
     "A": {
       "item": "piranport:aluminum_ingot"
+    },
+    "R": {
+      "item": "minecraft:redstone"
     }
   },
   "result": {
-    "id": "piranport:medium_ship_core"
+    "id": "piranport:medium_ship_core",
+    "count": 1
   }
 }

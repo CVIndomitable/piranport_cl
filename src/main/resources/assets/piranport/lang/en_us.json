@@ -719,7 +719,6 @@
   "item.piranport.standard_air_radar": "Standard Air Radar",
   "item.piranport.standard_fire_control_radar": "Standard Fire Control Radar",
   "item.piranport.stargazy_pie": "Stargazy Pie",
-  "item.piranport.submarine_core": "Submarine Core",
   "item.piranport.suisei_bomber": "Suisei (Bomber)",
   "item.piranport.super_heavy_ap_shell": "Super Heavy AP Shell",
   "item.piranport.surstromming": "Surströmming",
@@ -2106,5 +2105,6 @@
   "piranport.book.arsenal.special.p4": "$(bold)Character Weapons$()$(br2)• $(item)Richelieu's Saber$(): melee, 1520 durability, +8 damage$(br)• $(item)Hatsuyuki's Main Gun$(): axe-class, +11 damage$(br)• $(item)Prinz Eugen's Shield$(): 150-degree block arc",
   "piranport.book.equipment.equipment_gui": "Ship Core Loadout",
   "piranport.book.name": "Piran Port Navigation Manual",
-  "piranport.book.landing": "A guide to ship rigging, weapons, cooking, aviation, combat buffs, and dungeon sorties. Craft it with a Book and an Aluminum Ingot."
+  "piranport.book.landing": "A guide to ship rigging, weapons, cooking, aviation, combat buffs, and dungeon sorties. Craft it with a Book and an Aluminum Ingot.",
+  "item.piranport.submarine_ship_core": "Submarine Core"
 }

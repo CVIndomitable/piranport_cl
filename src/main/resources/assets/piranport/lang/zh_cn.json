@@ -719,7 +719,6 @@
   "item.piranport.standard_air_radar": "标准型对空雷达",
   "item.piranport.standard_fire_control_radar": "标准型火控雷达",
   "item.piranport.stargazy_pie": "仰望星空派",
-  "item.piranport.submarine_core": "潜艇核心",
   "item.piranport.suisei_bomber": "彗星（轰炸）",
   "item.piranport.super_heavy_ap_shell": "超重穿甲弹",
   "item.piranport.surstromming": "鲱鱼罐头",
@@ -2153,5 +2152,6 @@
   "piranport.book.intro.villager_trades.p1": "$(bold)皮兰港村民职业：$()模组添加三个独立职业，各占一个工作方块：$(br2)• $(bold)武器匠$()（武器合成台）：出售基础火炮与鱼雷、回收铝锭/燃料换绿宝石，用战利品兑换中口径/改良/先进蓝图与特殊武器$(br)• $(bold)后勤员$()（弹药工作台）：回收火药/铜锭，出售各级 HE/AP 炮弹与 533mm 鱼雷$(br)• $(bold)农夫$()（石磨）：回收模组作物换绿宝石",
   "piranport.book.intro.villager_trades.p2": "$(bold)提示：$()武器匠的蓝图交易需要$(item)战利品$()类物品（如深海掉落）而不是绿宝石。改良型与先进型武器蓝图的主要稳定来源就是他；后勤员是弹药补给线，省去早期弹药工作台产能不足时的刷料。",
   "piranport.book.name": "皮兰港航行手册",
-  "piranport.book.landing": "舰装操纵、武器配备、舰上厨艺、航空作战、战斗增益与副本出击指南。用一本书和一块铝锭合成。"
+  "piranport.book.landing": "舰装操纵、武器配备、舰上厨艺、航空作战、战斗增益与副本出击指南。用一本书和一块铝锭合成。",
+  "item.piranport.submarine_ship_core": "潜艇核心"
 }

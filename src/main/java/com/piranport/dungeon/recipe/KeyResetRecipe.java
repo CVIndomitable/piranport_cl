@@ -82,12 +82,19 @@ public class KeyResetRecipe extends CustomRecipe {
      */
     @Override
     public NonNullList<Ingredient> getIngredients() {
+        // 展示主线钥匙的复制形状：左上钥匙、正中铜锭、其余七格铝锭。
+        // 活动钥匙（妄想/地狱/ ulan）是同一配方的另一形态：正中末影之眼、其余紫水晶碎片，
+        // 已在 matches 内按钥匙所属关卡分流。
+        Ingredient anyKey = Ingredient.of(ModItems.DUNGEON_KEY_CH1.get(), ModItems.DUNGEON_KEY_CH2.get(),
+                ModItems.DUNGEON_KEY_CH3.get(), ModItems.DUNGEON_KEY_CH4.get(),
+                ModItems.DUNGEON_KEY_CH5.get(), ModItems.DUNGEON_KEY_CH6.get(),
+                ModItems.DUNGEON_KEY_CH7.get(), ModItems.DUNGEON_KEY.get());
+        Ingredient aluminum = Ingredient.of(ModItems.ALUMINUM_INGOT.get());
+        Ingredient copper = Ingredient.of(Items.COPPER_INGOT);
         return NonNullList.of(Ingredient.EMPTY,
-                Ingredient.of(ModItems.DUNGEON_KEY_CH1.get(), ModItems.DUNGEON_KEY_CH2.get(),
-                        ModItems.DUNGEON_KEY_CH3.get(), ModItems.DUNGEON_KEY_CH4.get(),
-                        ModItems.DUNGEON_KEY_CH5.get(), ModItems.DUNGEON_KEY_CH6.get(),
-                        ModItems.DUNGEON_KEY_CH7.get(), ModItems.DUNGEON_KEY.get()),
-                Ingredient.of(Items.COPPER_INGOT));
+                anyKey, aluminum, aluminum,
+                aluminum, copper, aluminum,
+                aluminum, aluminum, aluminum);
     }
 
     /**
@@ -104,8 +111,8 @@ public class KeyResetRecipe extends CustomRecipe {
 
     @Override
     public boolean canCraftInDimensions(int width, int height) {
-        // 2x2 或 3x3 任意位置均可合成
-        return width * height >= 2;
+        // 左上/正中两个约束位置要求完整 3×3 合成格。
+        return width >= 3 && height >= 3;
     }
 
     /**
@@ -119,29 +126,37 @@ public class KeyResetRecipe extends CustomRecipe {
      * （刚从碎片合成出来、直接拿去做复制）没有 progress 可继承，让它参与复制只会白白消耗铜锭；
      * 要求 progress 非空同时也保证了复制出的钥匙是「同难度全新副本」而不是又一把空白钥匙。</p>
      */
+    /**
+     * 匹配规则（策划决策/副本/17）：
+     * <ul>
+     *   <li>主线钥匙：左上钥匙、正中铜锭、其余七格铝锭；</li>
+     *   <li>活动钥匙（妄想舰队/地狱群岛）：左上钥匙、正中末影之眼、其余七格紫水晶碎片。</li>
+     * </ul>
+     * 钥匙<b>不消耗</b>，合成后留在左上格。
+     */
     @Override
     public boolean matches(CraftingInput input, Level level) {
-        int keyCount = 0;
-        int copperCount = 0;
-        boolean keyUsed = false;
-        for (int i = 0; i < input.size(); i++) {
+        if (input.width() != 3 || input.height() != 3) return false;
+        ItemStack key = input.getItem(0);
+        if (!(key.getItem() instanceof DungeonKeyItem) || key.getCount() != 1) return false;
+        boolean activity = isActivityKey(key);
+        ItemStack catalyst = input.getItem(4);
+        if (catalyst.getCount() != 1) return false;
+        if (activity ? !catalyst.is(Items.ENDER_EYE) : !catalyst.is(Items.COPPER_INGOT)) return false;
+        for (int i = 0; i < 9; i++) {
+            if (i == 0 || i == 4) continue;
             ItemStack stack = input.getItem(i);
-            if (stack.isEmpty()) continue;
-            if (stack.getItem() instanceof DungeonKeyItem) {
-                keyCount++;
-                // 只有"打过副本"的钥匙才可复制：progress 非空即视为已使用。
-                if (!DungeonKeyItem.getProgress(stack).equals(DungeonProgress.EMPTY)) {
-                    keyUsed = true;
-                }
-            } else if (stack.is(Items.COPPER_INGOT)) {
-                copperCount++;
-            } else {
-                // 出现任何第三种物品就不成配方：避免用无关垃圾凑数。
-                return false;
-            }
+            if (stack.getCount() != 1) return false;
+            if (activity ? !stack.is(Items.AMETHYST_SHARD)
+                    : !stack.is(ModItems.ALUMINUM_INGOT.get())) return false;
         }
-        // 1 把已使用的钥匙 + 至少 1 个铜锭；多余的铜锭不额外产出（一次只复制一把）。
-        return keyCount == 1 && keyUsed && copperCount >= 1;
+        return true;
+    }
+
+    /** 活动关钥匙：关卡 id 以 {@code delusion_} 或 {@code hell_} 开头。 */
+    private static boolean isActivityKey(ItemStack key) {
+        String stageId = DungeonKeyItem.resolveStageId(key);
+        return stageId.startsWith("delusion_") || stageId.startsWith("hell_");
     }
 
     @Override
@@ -178,13 +193,9 @@ public class KeyResetRecipe extends CustomRecipe {
     @Override
     public NonNullList<ItemStack> getRemainingItems(CraftingInput input) {
         NonNullList<ItemStack> remaining = NonNullList.withSize(input.size(), ItemStack.EMPTY);
-        for (int i = 0; i < input.size(); i++) {
-            ItemStack stack = input.getItem(i);
-            // 钥匙消耗，其他材料也消耗（不允许剩）
-            if (!stack.isEmpty()) {
-                remaining.set(i, ItemStack.EMPTY);
-            }
-        }
+        // 钥匙不消耗，留在左上格；铜锭/末影之眼与七格材料消耗。
+        ItemStack key = input.getItem(0);
+        if (!key.isEmpty()) remaining.set(0, key.copy());
         return remaining;
     }
 

@@ -1,0 +1,33 @@
+{
+  "name": "piranport:land_ruined_portal/start",
+  "fallback": "minecraft:empty",
+  "elements": [
+    {
+      "weight": 1,
+      "element": {
+        "element_type": "minecraft:single_pool_element",
+        "location": "piranport:land_ruined_portal_intact",
+        "processors": "piranport:land_ruined_portal_processors",
+        "projection": "rigid"
+      }
+    },
+    {
+      "weight": 1,
+      "element": {
+        "element_type": "minecraft:single_pool_element",
+        "location": "piranport:land_ruined_portal_mossy",
+        "processors": "piranport:land_ruined_portal_processors",
+        "projection": "rigid"
+      }
+    },
+    {
+      "weight": 1,
+      "element": {
+        "element_type": "minecraft:single_pool_element",
+        "location": "piranport:land_ruined_portal_cracked",
+        "processors": "piranport:land_ruined_portal_processors",
+        "projection": "rigid"
+      }
+    }
+  ]
+}

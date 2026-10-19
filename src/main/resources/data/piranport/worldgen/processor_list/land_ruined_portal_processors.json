@@ -1,0 +1,8 @@
+{
+  "processors": [
+    {
+      "processor_type": "piranport:loot_chest_processor",
+      "loot_table": "piranport:chests/land_ruined_portal"
+    }
+  ]
+}

@@ -248,58 +248,62 @@ public final class WeaponWorkbenchRecipeRegistry {
         }
 
         // ===== Tab 2: 导弹发射器 =====
+        // 数值/09：全部先进档，直接用先进材料，各要自己的先进蓝图。
         add(r, 2, ModItems.TERRIER_LAUNCHER.get(), List.of(
-                new ItemStack(Items.IRON_INGOT, 4),
-                new ItemStack(Items.REDSTONE, 2),
-                new ItemStack(Items.GOLD_INGOT, 1)
-        ), null, 200);
+                new ItemStack(Items.IRON_INGOT, 8),
+                new ItemStack(Items.NETHERITE_SCRAP, 2),
+                new ItemStack(Items.END_CRYSTAL, 1)
+        ), blueprintFor("terrier_launcher", EquipmentTier.ADVANCED), 400);
 
         add(r, 2, ModItems.SEA_DART_LAUNCHER.get(), List.of(
-                new ItemStack(Items.IRON_INGOT, 4),
-                new ItemStack(Items.REDSTONE, 2),
-                new ItemStack(Items.GOLD_INGOT, 1)
-        ), null, 200);
+                new ItemStack(Items.IRON_INGOT, 6),
+                new ItemStack(Items.NETHERITE_SCRAP, 2),
+                new ItemStack(Items.DRAGON_BREATH, 1)
+        ), blueprintFor("sea_dart_launcher", EquipmentTier.ADVANCED), 400);
 
         add(r, 2, ModItems.SEACAT_LAUNCHER.get(), List.of(
-                new ItemStack(Items.IRON_INGOT, 4),
-                new ItemStack(Items.REDSTONE, 2),
-                new ItemStack(Items.GOLD_INGOT, 1)
-        ), null, 200);
+                new ItemStack(Items.IRON_INGOT, 6),
+                new ItemStack(Items.NETHERITE_SCRAP, 2),
+                new ItemStack(Items.SHULKER_SHELL, 1)
+        ), blueprintFor("seacat_launcher", EquipmentTier.ADVANCED), 400);
 
         add(r, 2, ModItems.SY1_LAUNCHER.get(), List.of(
-                new ItemStack(Items.IRON_INGOT, 6),
-                new ItemStack(Items.GOLD_INGOT, 2),
-                new ItemStack(Items.REDSTONE, 2)
-        ), null, 300);
+                new ItemStack(Items.IRON_INGOT, 8),
+                new ItemStack(ModItems.ALUMINUM_INGOT.get(), 4),
+                new ItemStack(Items.NETHERITE_SCRAP, 2),
+                new ItemStack(Items.NETHER_STAR, 1)
+        ), blueprintFor("sy1_launcher", EquipmentTier.ADVANCED), 500);
 
         add(r, 2, ModItems.MK14_HARPOON_LAUNCHER.get(), List.of(
-                new ItemStack(Items.IRON_INGOT, 6),
-                new ItemStack(Items.GOLD_INGOT, 2),
-                new ItemStack(Items.REDSTONE, 2)
-        ), null, 300);
+                new ItemStack(Items.IRON_INGOT, 8),
+                new ItemStack(ModItems.ALUMINUM_INGOT.get(), 4),
+                new ItemStack(Items.NETHERITE_SCRAP, 2),
+                new ItemStack(Items.CONDUIT, 1)
+        ), blueprintFor("mk14_harpoon_launcher", EquipmentTier.ADVANCED), 500);
 
         add(r, 2, ModItems.SHIP_ROCKET_LAUNCHER.get(), List.of(
-                new ItemStack(Items.IRON_INGOT, 4),
-                new ItemStack(Items.REDSTONE, 2),
-                new ItemStack(Items.GUNPOWDER, 2)
-        ), null, 150);
+                new ItemStack(Items.IRON_INGOT, 6),
+                new ItemStack(Items.GUNPOWDER, 4),
+                new ItemStack(Items.NETHERITE_SCRAP, 1),
+                new ItemStack(Items.DRAGON_BREATH, 1)
+        ), blueprintFor("ship_rocket_launcher", EquipmentTier.ADVANCED), 400);
 
         // ===== Tab 3: 深弹 =====
+        // 数值/09：初期/改良不查蓝图；先进档要自己的改良蓝图。
         add(r, 3, ModItems.DEPTH_CHARGE_LAUNCHER.get(), List.of(
-                new ItemStack(Items.IRON_INGOT, 3),
-                new ItemStack(Items.REDSTONE, 1)
+                new ItemStack(Items.IRON_INGOT, 4),
+                new ItemStack(Items.REDSTONE, 2)
         ), null, 100);
 
         add(r, 3, ModItems.DEPTH_CHARGE_LAUNCHER_IMPROVED.get(), List.of(
-                new ItemStack(Items.IRON_INGOT, 5),
-                new ItemStack(Items.REDSTONE, 2)
-        ), null, 150);
+                new ItemStack(Items.IRON_INGOT, 6),
+                new ItemStack(Items.DIAMOND, 1)
+        ), null, 200);
 
         add(r, 3, ModItems.DEPTH_CHARGE_LAUNCHER_ADVANCED.get(), List.of(
-                new ItemStack(Items.IRON_INGOT, 6),
-                new ItemStack(Items.REDSTONE, 2),
-                new ItemStack(Items.GOLD_INGOT, 1)
-        ), null, 200);
+                new ItemStack(Items.IRON_INGOT, 8),
+                new ItemStack(Items.DIAMOND, 2)
+        ), blueprintFor("depth_charge_launcher_advanced", EquipmentTier.IMPROVED), 300);
 
         // ===== Tab 5: 装备（雷达三代，火控/08）=====
         add(r, 5, ModItems.STANDARD_SURFACE_RADAR.get(), List.of(
@@ -353,6 +357,26 @@ public final class WeaponWorkbenchRecipeRegistry {
                 new ItemStack(Items.COMPARATOR, 1)),
                 blueprintFor("advanced_fire_control_radar", EquipmentTier.ADVANCED), 400);
 
+        // 标准型声呐：4-2 起可合成、不查蓝图（副本/21）。数值/09 未给材料，首轮取铁/铜/红石/比较器。
+        add(r, 5, ModItems.STANDARD_SONAR.get(), List.of(
+                new ItemStack(Items.IRON_INGOT, 8),
+                new ItemStack(Items.COPPER_INGOT, 4),
+                new ItemStack(Items.REDSTONE, 4),
+                new ItemStack(Items.COMPARATOR, 1)), null, 300);
+
+        // 改良/先进引擎：蓝图进 4-2 奖池（副本/21）；材料按先进档口径取铁/铝/钻石/下界合金碎片。
+        add(r, 5, ModItems.IMPROVED_ENGINE.get(), List.of(
+                new ItemStack(Items.IRON_INGOT, 8),
+                new ItemStack(ModItems.ALUMINUM_INGOT.get(), 6),
+                new ItemStack(Items.DIAMOND, 2)),
+                blueprintFor("improved_engine", EquipmentTier.IMPROVED), 300);
+        add(r, 5, ModItems.ADVANCED_ENGINE.get(), List.of(
+                new ItemStack(Items.IRON_INGOT, 10),
+                new ItemStack(ModItems.ALUMINUM_INGOT.get(), 8),
+                new ItemStack(Items.NETHERITE_SCRAP, 2),
+                new ItemStack(Items.END_CRYSTAL, 1)),
+                blueprintFor("advanced_engine", EquipmentTier.ADVANCED), 400);
+
         // ===== Tab 4: 飞机 =====
         // 数值/09：按机种分档，材料随档替换；无蓝图。列表只覆盖已注册且有分档的机体。
         for (var holder : com.piranport.registry.AircraftItems.AIRCRAFT_ITEMS) {
@@ -360,7 +384,8 @@ public final class WeaponWorkbenchRecipeRegistry {
             String id = BuiltInRegistries.ITEM.getKey(airplane).getPath();
             EquipmentTier tier = AIRCRAFT_TIERS.get(id);
             if (tier == null) continue;
-            add(r, 4, airplane, aircraftMaterials(tier), null, craftTime(200, tier));
+            // 改良/先进机体各要自己的蓝图（数值/09）；初期/标准不查。
+            add(r, 4, airplane, aircraftMaterials(tier), blueprintFor(id, tier), craftTime(200, tier));
         }
     }
 }

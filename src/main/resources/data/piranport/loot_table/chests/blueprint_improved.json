@@ -1,0 +1,240 @@
+{
+  "type": "minecraft:chest",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "piranport:bofors_twin_120mm_gun_blueprint",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "piranport:british_quad_14inch_gun_blueprint",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "piranport:british_single_18inch_gun_blueprint",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "piranport:british_triple_16inch_gun_kai_blueprint",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "piranport:british_twin_15inch_gun_kai_blueprint",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "piranport:depth_charge_launcher_advanced_blueprint",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "piranport:f4u_corsair_blueprint",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "piranport:f6f_hellcat_rocket_blueprint",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "piranport:french_quad_380mm_gun_blueprint",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "piranport:german_triple_283mm_gun_blueprint",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "piranport:german_twin_203mm_gun_blueprint",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "piranport:improved_aa_radar_blueprint",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "piranport:improved_engine_blueprint",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "piranport:improved_fire_control_radar_blueprint",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "piranport:improved_surface_radar_blueprint",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "piranport:italian_triple_320mm_gun_blueprint",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "piranport:italian_triple_381mm_gun_blueprint",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "piranport:mk16_triple_6inch_gun_flashless_blueprint",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "piranport:oto_twin_76mm_rapid_gun_blueprint",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "piranport:quad_61cm_oxygen_torpedo_blueprint",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "piranport:quad_61cm_torpedo_blueprint",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "piranport:quad_torpedo_launcher_blueprint",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "piranport:quintuple_21in_torpedo_mk35_blueprint",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "piranport:quintuple_533mm_torpedo_blueprint",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "piranport:quintuple_533mm_torpedo_mk17_blueprint",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "piranport:quintuple_61cm_oxygen_torpedo_blueprint",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "piranport:quintuple_61cm_torpedo_blueprint",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "piranport:quintuple_torpedo_launcher_53_56_blueprint",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "piranport:quintuple_torpedo_launcher_53_65_blueprint",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "piranport:quintuple_torpedo_launcher_blueprint",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "piranport:saiun_recon_blueprint",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "piranport:soviet_triple_180mm_gun_blueprint",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "piranport:suisei_bomber_blueprint",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "piranport:tbf_asw_blueprint",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "piranport:tbf_torpedo_blueprint",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "piranport:tenzan_torpedo_blueprint",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "piranport:torpedo_launcher_61cm_type9_blueprint",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "piranport:type79_twin_100mm_gun_blueprint",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "piranport:us_mk16dp_twin_6inch_gun_blueprint",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "piranport:us_triple_12inch_gun_blueprint",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "piranport:us_triple_16inch_gun_mk6_blueprint",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "piranport:us_triple_6inch_gun_blueprint",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "piranport:us_triple_8inch_gun_blueprint",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "piranport:us_twin_16inch_gun_kai_blueprint",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "piranport:us_twin_18inch_gun_blueprint",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "piranport:us_twin_5inch_dp_gun_blueprint",
+          "weight": 1
+        }
+      ]
+    }
+  ]
+}

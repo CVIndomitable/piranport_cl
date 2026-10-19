@@ -6,17 +6,75 @@
       "entries": [
         {
           "type": "minecraft:item",
+          "name": "minecraft:iron_ingot",
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "min": 8,
+                "max": 16,
+                "type": "minecraft:uniform"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:copper_ingot",
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "min": 4,
+                "max": 8,
+                "type": "minecraft:uniform"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "piranport:fuel",
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
           "name": "piranport:dungeon_key_ch1",
           "functions": [
             {
               "function": "minecraft:set_components",
-              "components": { "piranport:dungeon_stage_id": "1-1" }
+              "components": {
+                "piranport:dungeon_stage_id": "1-1"
+              }
             }
           ]
         }
       ],
       "conditions": [
-        { "condition": "piranport:entered_dungeon", "entered": false }
+        {
+          "condition": "piranport:entered_dungeon",
+          "entered": false
+        }
       ]
     },
     {
@@ -28,13 +86,18 @@
           "functions": [
             {
               "function": "minecraft:set_components",
-              "components": { "piranport:dungeon_stage_id": "goldencatcat" }
+              "components": {
+                "piranport:dungeon_stage_id": "goldencatcat"
+              }
             }
           ]
         }
       ],
       "conditions": [
-        { "condition": "piranport:entered_dungeon", "entered": true }
+        {
+          "condition": "piranport:entered_dungeon",
+          "entered": true
+        }
       ]
     }
   ]

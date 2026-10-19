@@ -2,63 +2,23 @@
   "type": "minecraft:chest",
   "pools": [
     {
-      "rolls": { "min": 6, "max": 12, "type": "minecraft:uniform" },
+      "rolls": { "min": 4, "max": 6, "type": "minecraft:uniform" },
       "entries": [
-        { "type": "minecraft:item", "name": "piranport:large_he_shell", "weight": 8,
-          "functions": [{ "function": "minecraft:set_count", "count": { "min": 4, "max": 16, "type": "minecraft:uniform" } }] },
-        { "type": "minecraft:item", "name": "piranport:large_ap_shell", "weight": 6,
-          "functions": [{ "function": "minecraft:set_count", "count": { "min": 2, "max": 8, "type": "minecraft:uniform" } }] },
-        { "type": "minecraft:item", "name": "piranport:torpedo_610mm", "weight": 4,
-          "functions": [{ "function": "minecraft:set_count", "count": { "min": 1, "max": 3, "type": "minecraft:uniform" } }] },
-        { "type": "minecraft:item", "name": "piranport:british_triple_16inch_gun", "weight": 3 },
-        { "type": "minecraft:item", "name": "piranport:large_armor_plate", "weight": 3 },
-        { "type": "minecraft:item", "name": "piranport:quad_torpedo_launcher", "weight": 2 },
-        { "type": "minecraft:item", "name": "piranport:improved_engine", "weight": 3 },
-        { "type": "minecraft:item", "name": "piranport:advanced_engine", "weight": 2 },
-        { "type": "minecraft:item", "name": "piranport:fuel", "weight": 8,
-          "functions": [{ "function": "minecraft:set_count", "count": { "min": 3, "max": 8, "type": "minecraft:uniform" } }] },
-        { "type": "minecraft:item", "name": "piranport:suisei_bomber", "weight": 2 },
-        { "type": "minecraft:item", "name": "piranport:tenzan_torpedo", "weight": 2 },
-        { "type": "minecraft:item", "name": "piranport:zero_model52", "weight": 2 }
-      ]
-    },
-    {
-      "rolls": { "min": 1, "max": 3, "type": "minecraft:uniform" },
-      "entries": [
-        { "type": "minecraft:item", "name": "piranport:exp_shell", "weight": 6,
-          "functions": [{ "function": "minecraft:set_count", "count": { "min": 2, "max": 5, "type": "minecraft:uniform" } }] },
-        { "type": "minecraft:item", "name": "piranport:flag_j", "weight": 2 },
-        { "type": "minecraft:item", "name": "piranport:flag_e", "weight": 2 },
-        { "type": "minecraft:item", "name": "piranport:flag_u", "weight": 2 },
-        { "type": "minecraft:item", "name": "piranport:flag_g", "weight": 2 },
-        { "type": "minecraft:item", "name": "piranport:flag_f", "weight": 2 },
-        { "type": "minecraft:item", "name": "piranport:flag_i", "weight": 2 },
-        { "type": "minecraft:item", "name": "piranport:flag_c", "weight": 2 }
+        { "type": "minecraft:item", "name": "minecraft:iron_ingot",
+          "functions": [{ "function": "minecraft:set_count", "count": { "min": 24, "max": 40, "type": "minecraft:uniform" } }] },
+        { "type": "minecraft:item", "name": "minecraft:copper_ingot",
+          "functions": [{ "function": "minecraft:set_count", "count": { "min": 12, "max": 20, "type": "minecraft:uniform" } }] },
+        { "type": "minecraft:item", "name": "piranport:aluminum_ingot",
+          "functions": [{ "function": "minecraft:set_count", "count": { "min": 12, "max": 20, "type": "minecraft:uniform" } }] },
+        { "type": "minecraft:item", "name": "minecraft:gunpowder",
+          "functions": [{ "function": "minecraft:set_count", "count": { "min": 8, "max": 12, "type": "minecraft:uniform" } }] }
       ]
     },
     {
       "rolls": 1,
       "entries": [
-        { "type": "minecraft:empty", "weight": 5 }
-      ]
-    },
-    {
-      "rolls": { "min": 1, "max": 2, "type": "minecraft:uniform" },
-      "entries": [
-        { "type": "minecraft:item", "name": "piranport:key_fragment_ch1", "weight": 2 },
-        { "type": "minecraft:item", "name": "piranport:key_fragment_ch2", "weight": 2 },
-        { "type": "minecraft:item", "name": "piranport:key_fragment_ch3", "weight": 2 },
-        { "type": "minecraft:item", "name": "piranport:key_fragment_ch4", "weight": 2 },
-        { "type": "minecraft:item", "name": "piranport:key_fragment_ch5", "weight": 2 },
-        { "type": "minecraft:item", "name": "piranport:key_fragment_ch6", "weight": 2 },
-        { "type": "minecraft:item", "name": "piranport:key_fragment_ch7", "weight": 2 },
-        { "type": "minecraft:empty", "weight": 6 }
-      ]
-    },
-    {
-      "rolls": 1,
-      "entries": [
-        { "type": "minecraft:empty", "weight": 17 }
+        { "type": "minecraft:item", "name": "piranport:fuel",
+          "functions": [{ "function": "minecraft:set_count", "count": 12 }] }
       ]
     }
   ]

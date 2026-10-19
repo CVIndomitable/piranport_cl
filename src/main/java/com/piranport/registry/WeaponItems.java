@@ -397,7 +397,9 @@ public final class WeaponItems {
     // ===== 装备专属蓝图（策划决策/数值/09）=====
     /**
      * 注册名 = 装备注册名 + {@code _blueprint}；堆叠 1，改良 UNCOMMON、先进 RARE。
-     * 只覆盖火炮和鱼雷发射器：初期/标准无需蓝图，飞机和弹药（VT、三式弹除外）不查蓝图。
+     * 覆盖可合成的火炮、鱼雷发射器、导弹发射器、深弹投射器·先进、改良/先进飞机、
+     * 雷达三代与改良/先进引擎（数值/09、火控/08、副本/21）。
+     * 初期/标准无需蓝图；弹药只有 VT 与三种三式弹另有蓝图（在 AmmoRecipe 侧）。
      */
     public static final java.util.Map<String, DeferredItem<Item>> EQUIPMENT_BLUEPRINTS = registerEquipmentBlueprints();
 
@@ -431,6 +433,27 @@ public final class WeaponItems {
         registerBlueprint(map, "advanced_aa_radar", EquipmentTier.ADVANCED);
         registerBlueprint(map, "improved_fire_control_radar", EquipmentTier.IMPROVED);
         registerBlueprint(map, "advanced_fire_control_radar", EquipmentTier.ADVANCED);
+        // 导弹发射器：全部先进档（数值/09）。深弹投射器·先进按改良档。
+        registerBlueprint(map, "ship_rocket_launcher", EquipmentTier.ADVANCED);
+        registerBlueprint(map, "seacat_launcher", EquipmentTier.ADVANCED);
+        registerBlueprint(map, "sea_dart_launcher", EquipmentTier.ADVANCED);
+        registerBlueprint(map, "terrier_launcher", EquipmentTier.ADVANCED);
+        registerBlueprint(map, "mk14_harpoon_launcher", EquipmentTier.ADVANCED);
+        registerBlueprint(map, "sy1_launcher", EquipmentTier.ADVANCED);
+        registerBlueprint(map, "depth_charge_launcher_advanced", EquipmentTier.IMPROVED);
+        // 飞机：只给已注册的改良/先进机体（数值/09 分档表）。
+        registerBlueprint(map, "f4u_corsair", EquipmentTier.IMPROVED);
+        registerBlueprint(map, "f6f_hellcat_rocket", EquipmentTier.IMPROVED);
+        registerBlueprint(map, "suisei_bomber", EquipmentTier.IMPROVED);
+        registerBlueprint(map, "tenzan_torpedo", EquipmentTier.IMPROVED);
+        registerBlueprint(map, "tbf_torpedo", EquipmentTier.IMPROVED);
+        registerBlueprint(map, "tbf_asw", EquipmentTier.IMPROVED);
+        registerBlueprint(map, "saiun_recon", EquipmentTier.IMPROVED);
+        registerBlueprint(map, "seiun_kai_bomber", EquipmentTier.ADVANCED);
+        registerBlueprint(map, "b25_bomber", EquipmentTier.ADVANCED);
+        // 引擎：改良/先进蓝图进 4-2 奖池（副本/21）。
+        registerBlueprint(map, "improved_engine", EquipmentTier.IMPROVED);
+        registerBlueprint(map, "advanced_engine", EquipmentTier.ADVANCED);
         return java.util.Collections.unmodifiableMap(map);
     }
 

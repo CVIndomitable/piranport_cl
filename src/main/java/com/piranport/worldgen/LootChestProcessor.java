@@ -48,6 +48,11 @@ public class LootChestProcessor extends StructureProcessor {
             CompoundTag nbt = relativeBlockInfo.nbt() != null
                     ? relativeBlockInfo.nbt().copy()
                     : new CompoundTag();
+            // 模板可自带 LootTable 标记特定箱子（如深海基地的稀有箱），此时保留预设。
+            // 否则同一结构里的所有箱子都会拿到处理器配置的同一张表，无法区分稀有箱。
+            if (nbt.contains("LootTable")) {
+                return relativeBlockInfo;
+            }
             nbt.putString("LootTable", lootTable.toString());
             nbt.putLong("LootTableSeed", settings.getRandom(relativeBlockInfo.pos()).nextLong());
             return new StructureTemplate.StructureBlockInfo(

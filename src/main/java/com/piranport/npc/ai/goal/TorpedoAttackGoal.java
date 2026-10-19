@@ -43,6 +43,8 @@ public class TorpedoAttackGoal extends Goal {
     public TorpedoAttackGoal(AbstractDeepOceanEntity mob) {
         this.mob = mob;
         setFlags(EnumSet.noneOf(Flag.class));
+        // 生成初始装填（《深海/01》§六）：潜艇已装填，水面舰要等一轮。
+        this.cooldown = mob.startsWithTorpedoesLoaded() ? 0 : mob.getTorpedoCooldownTicks();
     }
 
     @Override
@@ -132,7 +134,7 @@ public class TorpedoAttackGoal extends Goal {
 
         fireTorpedoSalvo(lockedAngle);
         prepElapsed = -1;
-        cooldown = NpcCombatTuning.salvoCooldown();
+        cooldown = mob.getTorpedoCooldownTicks();
     }
 
     /**

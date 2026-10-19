@@ -1,7 +1,7 @@
 {
   "entity_type": "piranport:deep_ocean_light_cruiser",
   "max_health": 50.0,
-  "movement_speed": 0.30,
+  "movement_speed": 0.3,
   "follow_range": 64.0,
   "attack_damage": 5.0,
   "knockback_resistance": 0.4,
@@ -16,5 +16,6 @@
   "tracking_interval_min": 3,
   "tracking_interval_max": 6,
   "can_launch_aircraft": false,
-  "max_aircraft": 0
+  "max_aircraft": 0,
+  "torpedo_cooldown": 2160
 }

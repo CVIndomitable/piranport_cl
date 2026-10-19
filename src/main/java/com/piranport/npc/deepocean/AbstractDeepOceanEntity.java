@@ -536,6 +536,25 @@ public abstract class AbstractDeepOceanEntity extends Monster {
     }
 
     /**
+     * 本舰鱼雷装填时间（《深海/01》§六）：驱逐 1920、轻/重巡与旗舰 2160、潜艇 2400、雷巡另走 1800。
+     * JSON 未配置时退回全局 {@code torpedo_salvo.salvo_cooldown}。
+     */
+    public int getTorpedoCooldownTicks() {
+        DeepOceanEntityData data = getJsonData();
+        if (data != null && data.torpedoCooldown() != null) {
+            return Math.max(1, data.torpedoCooldown());
+        }
+        return com.piranport.npc.ai.NpcCombatTuning.salvoCooldown();
+    }
+
+    /**
+     * 生成时鱼雷是否已装填（《深海/01》§六）：潜艇已装填，水面舰要等一轮装填。
+     */
+    public boolean startsWithTorpedoesLoaded() {
+        return false;
+    }
+
+    /**
      * 鱼雷索敌距离。
      *
      * <p>依据《深海/01》2026-10-19 索敌数值表：鱼雷索敌单独定，高级雷 40 格、

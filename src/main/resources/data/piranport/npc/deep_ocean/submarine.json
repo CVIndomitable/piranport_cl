@@ -1,7 +1,7 @@
 {
   "entity_type": "piranport:deep_ocean_submarine",
   "max_health": 40.0,
-  "movement_speed": 0.20,
+  "movement_speed": 0.2,
   "follow_range": 48.0,
   "attack_damage": 3.0,
   "knockback_resistance": 0.2,
@@ -16,5 +16,6 @@
   "tracking_interval_min": 5,
   "tracking_interval_max": 10,
   "can_launch_aircraft": false,
-  "max_aircraft": 0
+  "max_aircraft": 0,
+  "torpedo_cooldown": 2400
 }

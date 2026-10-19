@@ -20,6 +20,8 @@ public record DeepOceanEntityData(
         int fireInterval,
         double orbitDistance,
         Double torpedoRange,
+        /** 鱼雷装填时间（tick）；null = 用全局 {@code torpedo_salvo.salvo_cooldown} 兜底。 */
+        Integer torpedoCooldown,
         boolean canUseTorpedoes,
         float torpedoDamage,
         int trackingIntervalMin,
@@ -41,6 +43,7 @@ public record DeepOceanEntityData(
                 optInt(obj, "fire_interval", 80),
                 optDouble(obj, "orbit_distance", 16.0),
                 optNullableDouble(obj, "torpedo_range"),
+                optNullableInt(obj, "torpedo_cooldown"),
                 optBool(obj, "can_use_torpedoes", false),
                 optFloat(obj, "torpedo_damage", 8.0f),
                 optInt(obj, "tracking_interval_min", 3),
@@ -56,6 +59,9 @@ public record DeepOceanEntityData(
     /** 可空数值：字段缺失时返回 null，供调用方保留子类硬编码兜底值。 */
     private static Double optNullableDouble(JsonObject o, String k) {
         return o.has(k) && !o.get(k).isJsonNull() ? o.get(k).getAsDouble() : null;
+    }
+    private static Integer optNullableInt(JsonObject o, String k) {
+        return o.has(k) && !o.get(k).isJsonNull() ? o.get(k).getAsInt() : null;
     }
     private static double optDouble(JsonObject o, String k, double d) {
         return o.has(k) && !o.get(k).isJsonNull() ? o.get(k).getAsDouble() : d;

@@ -87,7 +87,7 @@ public final class TerminalParameterCatalog {
             add(specs, "aircraft", target, "weight", a.weight(), 0, 100000);
             add(specs, "aircraft", target, "health", a.health(), 1, 100000);
             add(specs, "aircraft", target, "attack_cooldown", a.attackCooldown(), 1, 12000);
-            add(specs, "aircraft", target, "reload_time", ResolvedAircraftStats.DEFAULT_RELOAD_TIME, 1, 12000);
+            add(specs, "aircraft", target, "reload_time", a.aircraftClass().prepTimeTicks(), 1, 12000);
             add(specs, "aircraft", target, "launch_speed_coefficient", 0.6, 0.05, 5.0);
             add(specs, "aircraft", target, "cruise_speed_coefficient", 0.6, 0.05, 5.0);
             add(specs, "aircraft", target, "attack_speed_coefficient", 1.0, 0.05, 5.0);

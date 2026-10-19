@@ -39,6 +39,19 @@ public enum AircraftClass implements StringRepresentable {
         return serializedName;
     }
 
+    /**
+     * 整备读条（tick）——策划决策/航空/02：按机种而非稀有度。
+     * 战斗机/侦察机 60、火箭机/反潜机 80、俯冲轰炸机/鱼雷机 100、水平轰炸机 160。
+     */
+    public int prepTimeTicks() {
+        return switch (this) {
+            case FIGHTER, RECON -> 60;
+            case ROCKET_FIGHTER, ASW -> 80;
+            case DIVE_BOMBER, TORPEDO_BOMBER -> 100;
+            case LEVEL_BOMBER -> 160;
+        };
+    }
+
     public static AircraftClass byName(String value) {
         if (value == null || value.isBlank()) return null;
         String normalized = value.trim().toLowerCase(Locale.ROOT);

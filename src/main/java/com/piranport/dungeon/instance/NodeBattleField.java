@@ -9,6 +9,7 @@ import com.piranport.dungeon.data.DungeonRegistry;
 import com.piranport.dungeon.data.EnemySetData;
 import com.piranport.dungeon.data.NodeData;
 import com.piranport.dungeon.data.TerrainType;
+import com.piranport.dungeon.escort.EscortRoute;
 import com.piranport.dungeon.escort.EscortRuntime;
 import com.piranport.dungeon.escort.EscortWaveGeometry;
 import com.piranport.npc.ai.FleetGroup;
@@ -26,6 +27,7 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.Vec3;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -227,15 +229,15 @@ public final class NodeBattleField {
      */
     public static List<Entity> spawnEnemies(ServerLevel dungeonLevel, DungeonInstance instance,
                                              NodeData node) {
-        return spawnEnemies(dungeonLevel, instance, node, 0.0);
+        return spawnEnemies(dungeonLevel, instance, node, null, 0.0);
     }
 
     /**
-     * 护航节点的波次由运输船进度驱动：{@code escortProgress} 为运输船当前进度（0~1），
-     * 决定本波刷在航线前方与侧翼的位置。非护航节点忽略该参数。
+     * 护航节点的波次由运输船航线驱动：{@code escortRoute} 为运输船当前航线（无航线时传 null，锚点退回起点到目标的直线），
+     * {@code escortProgress} 为运输船在航线上的弧长占比（0~1），决定本波刷在航线前方与侧翼的位置。非护航节点忽略这两个参数。
      */
     public static List<Entity> spawnEnemies(ServerLevel dungeonLevel, DungeonInstance instance,
-                                             NodeData node, double escortProgress) {
+                                             NodeData node, @Nullable EscortRoute escortRoute, double escortProgress) {
         List<Entity> spawned = new ArrayList<>();
         if (node.enemies() == null) {
             TerrainGenerationProgress.onEnemiesSpawned(instance, node, 0, null);
@@ -272,7 +274,7 @@ public final class NodeBattleField {
 
         if (node.escort() != null) {
             spawned.addAll(spawnEscortWaveGroups(dungeonLevel, instance, node, enemySet, allEntries,
-                    escortProgress, lostTransport));
+                    escortRoute, escortProgress, lostTransport));
         } else {
             spawned.addAll(spawnGroups(dungeonLevel, instance, node, enemySet, allEntries,
                     instance.getNodeSpawnPos(node.nodeId()), lostTransport));
@@ -322,7 +324,8 @@ public final class NodeBattleField {
      */
     private static List<Entity> spawnEscortWaveGroups(ServerLevel dungeonLevel, DungeonInstance instance,
                                                        NodeData node, EnemySetData enemySet,
-                                                       List<SpawnEntry> allEntries, double progress,
+                                                       List<SpawnEntry> allEntries,
+                                                       @Nullable EscortRoute escortRoute, double progress,
                                                        boolean lostTransport) {
         int wave = instance.getNodeWave(node.nodeId());
         List<SpawnEntry> pathEntries = new ArrayList<>();
@@ -340,9 +343,11 @@ public final class NodeBattleField {
 
         BlockPos start = instance.getNodeSpawnPos(node.nodeId());
         Vec3 target = EscortRuntime.targetPoint(instance, node);
+        EscortRoute route = escortRoute != null ? escortRoute
+                : EscortRoute.straight(new Vec3(start.getX() + 0.5, start.getY(), start.getZ() + 0.5), target);
         double sideSign = dungeonLevel.getRandom().nextBoolean() ? 1.0 : -1.0;
         EscortWaveGeometry.Anchors anchors = EscortWaveGeometry.anchors(
-                start.getX() + 0.5, start.getZ() + 0.5, target.x, target.z, progress,
+                route, progress,
                 ModCommonConfig.ESCORT_WAVE_AHEAD_DISTANCE.get(),
                 ModCommonConfig.ESCORT_WAVE_FLANK_OFFSET.get(), sideSign);
         BlockPos pathCenter = clampAnchor(instance, anchors.pathX(), anchors.pathZ());

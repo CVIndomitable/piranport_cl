@@ -8,10 +8,11 @@ import net.minecraft.world.phys.Vec3;
 import java.util.EnumSet;
 
 /**
- * 护航运输船直航到设定目标点（《副本/12》：3 米/秒 = 0.15 格/tick，沿直线不寻路）。
+ * 护航运输船按航线驶向目标（《副本/12》：3 米/秒 = 0.15 格/tick）。有航线时逐个路径点行进以绕开陆地，
+ * 无航线时沿直线驶向目标。
  *
  * <p>WHY 用优先级 0 + MOVE 旗标：运行中会抢占跟随领舰与闲逛，让运输船只听护航路线的指挥。
- * WHY 每 tick 直接写水平速度：直航不需要路径，写速度比 {@code moveTo} 更可预测。
+ * WHY 每 tick 直接写水平速度：路径点之间是短直线，写速度比 {@code moveTo} 更可预测。
  */
 public class EscortSailGoal extends Goal {
 
@@ -49,8 +50,9 @@ public class EscortSailGoal extends Goal {
         double vx = 0;
         double vz = 0;
         if (!transport.hasArrived()) {
-            double dx = target.x - transport.getX();
-            double dz = target.z - transport.getZ();
+            Vec3 steer = transport.getSteerTarget();
+            double dx = steer.x - transport.getX();
+            double dz = steer.z - transport.getZ();
             double len = Math.sqrt(dx * dx + dz * dz);
             if (len > 1e-6) {
                 vx = dx / len * SAIL_SPEED;

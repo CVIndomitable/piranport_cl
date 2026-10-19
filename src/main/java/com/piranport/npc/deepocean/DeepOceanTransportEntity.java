@@ -1,5 +1,6 @@
 package com.piranport.npc.deepocean;
 
+import com.piranport.dungeon.escort.EscortRoute;
 import com.piranport.npc.ai.goal.EscortSailGoal;
 import com.piranport.npc.ai.goal.FollowLeaderGoal;
 import com.piranport.npc.ai.goal.IdleWanderGoal;
@@ -21,7 +22,7 @@ import javax.annotation.Nullable;
  * 只保留跟随领舰与闲逛；被攻击时也不会反击。</p>
  *
  * <p>护航模式：设置了 {@link #setEscortTarget(Vec3)} 后，{@link EscortSailGoal} 优先级 0 接管移动，
- * 沿直线以 0.15 格/tick 驶向目标，压过跟队与闲逛。</p>
+ * 按航线逐个路径点以 0.15 格/tick 驶向目标，压过跟队与闲逛；无航线时直指目标。</p>
  */
 public class DeepOceanTransportEntity extends AbstractDeepOceanEntity {
 
@@ -31,6 +32,10 @@ public class DeepOceanTransportEntity extends AbstractDeepOceanEntity {
 
     @Nullable
     private Vec3 escortTarget;
+
+    /** 运行时航线，不落盘：重启或区块卸载后由副本侧按 {@link #escortTarget} 重新规划。 */
+    @Nullable
+    private EscortRoute escortRoute;
 
     public DeepOceanTransportEntity(EntityType<? extends DeepOceanTransportEntity> type, Level level) {
         super(type, level);
@@ -67,9 +72,27 @@ public class DeepOceanTransportEntity extends AbstractDeepOceanEntity {
         return escortTarget;
     }
 
-    /** 目标点在水平面上已进入船体投影即视为到达，到达后停止水平移动。 */
+    @Nullable
+    public EscortRoute getEscortRoute() {
+        return escortRoute;
+    }
+
+    public void setEscortRoute(@Nullable EscortRoute route) {
+        this.escortRoute = route;
+    }
+
+    /** 当前应驶向的点：有航线时是下一个路径点，否则直接指向原目标。 */
+    @Nullable
+    public Vec3 getSteerTarget() {
+        if (escortTarget == null) return null;
+        return escortRoute != null ? escortRoute.currentWaypoint(getX(), getZ()) : escortTarget;
+    }
+
+    /** 航线终点就是抵达判定点：目标可通行时即原目标，否则为最近的可通行点。 */
     public boolean hasArrived() {
-        return escortTarget != null && EscortSailGoal.containsXZ(getBoundingBox(), escortTarget);
+        if (escortTarget == null) return false;
+        Vec3 arrival = escortRoute != null ? escortRoute.end() : escortTarget;
+        return EscortSailGoal.containsXZ(getBoundingBox(), arrival);
     }
 
     @Override

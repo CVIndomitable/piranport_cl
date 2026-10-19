@@ -280,8 +280,17 @@ public class DungeonEventHandler {
                 readKeyFromLectern(instance, dungeonLevel.getServer()))) return;
         com.piranport.dungeon.escort.EscortRuntime.releaseTransport(dungeonLevel, instance, nodeId);
         markLecternChanged(instance, dungeonLevel.getServer());
-        boolean completes = node.type() == NodeData.NodeType.BOSS
-                && stage.bossNodes().stream().allMatch(instance.getClearedNodes()::contains);
+        boolean completes;
+        if (stage.bossNodes().isEmpty()) {
+            // 无 Boss 的活动/彩蛋关（金猫猫、ulan）：最后一战清完即整关完成。
+            // 主线关卡都有 Boss，不会走到这里。
+            completes = stage.nodes().values().stream()
+                    .filter(n -> n.type() == NodeData.NodeType.BATTLE)
+                    .allMatch(n -> instance.getClearedNodes().contains(n.nodeId()));
+        } else {
+            completes = node.type() == NodeData.NodeType.BOSS
+                    && stage.bossNodes().stream().allMatch(instance.getClearedNodes()::contains);
+        }
         DungeonSettlementService.settleNode(dungeonLevel, instance, stage, node, completes);
         if (completes) completeDungeon(dungeonLevel, instance, stage);
     }
@@ -349,44 +358,16 @@ public class DungeonEventHandler {
                                          StageData stage) {
         MinecraftServer server = dungeonLevel.getServer();
         DungeonInstanceManager mgr = DungeonInstanceManager.get(dungeonLevel);
-        DungeonSavedData savedData = DungeonSavedData.get(dungeonLevel);
-        // 副本排行榜废弃（2026-09-16）：提交排行榜逻辑已禁用
-        // DungeonLeaderboard leaderboard = DungeonLeaderboard.get(dungeonLevel);
-
-        // 用时取服务端累计 tick，不用墙钟：墙钟会把暂停、以及玩家在讲台整理背包的时间算进去
-        long elapsed = instance.getElapsedMillis();
         if (!mgr.completeInstance(instance.getInstanceId())) return;
         // 结算保留现场供玩家自行离开；脚本调度器看到 COMPLETED 后自行移除，
         // 避免脚本正在遍历时回调删除当前 Map 条目。
 
-        // Process each player
+        // 奖励与结算页已在 settleNode(completes=true) 发放；
+        // 这里只负责回城与清理，避免再发一页空奖励把刚发的列表盖掉。
         for (UUID playerUuid : instance.getPlayerUuids()) {
             ServerPlayer player = server.getPlayerList().getPlayer(playerUuid);
             if (player == null) continue;
-
-            // 首通奖励只发给 Boss 击杀瞬间在 Boss 节点范围内的玩家；其他人照常结算/回城但不记首通
-            boolean isFirstClear = FirstClearRules.eligible(instance, playerUuid)
-                    && !savedData.hasFirstCleared(stage.stageId(), playerUuid);
-
-            List<String> rewardNames = new ArrayList<>();
-            if (isFirstClear) {
-                savedData.markFirstCleared(stage.stageId(), playerUuid);
-                for (NodeData.RewardEntry reward : stage.firstClearRewards()) {
-                    RewardDispatcher.give(player, reward, rewardNames);
-                }
-            }
-
-            // Submit to leaderboard — 已禁用
-            // leaderboard.submit(stage.stageId(), playerUuid,
-            //         player.getGameProfile().getName(), elapsed);
-
-            // Teleport back
             teleportToLectern(player, instance);
-
-            // Send result screen
-            PacketDistributor.sendToPlayer(player,
-                    new DungeonResultPayload(stage.displayName(), elapsed,
-                            isFirstClear, rewardNames, 0, stage.ending()));
         }
 
         // Cleanup instance

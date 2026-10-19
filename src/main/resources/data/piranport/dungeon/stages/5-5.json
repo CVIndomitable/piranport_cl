@@ -1,0 +1,82 @@
+{
+  "stage_id": "5-5",
+  "chapter": "chapter_5",
+  "display_name": "5-5 直布罗陀要塞",
+  "nodes": {
+    "A": {
+      "type": "battle",
+      "display_x": 50,
+      "display_y": 200,
+      "enemies": "enemy_set_5_5a"
+    },
+    "B": {
+      "type": "battle",
+      "display_x": 150,
+      "display_y": 100,
+      "enemies": "enemy_set_5_5b",
+      "display_name": "潜艇近道"
+    },
+    "C": {
+      "type": "battle",
+      "display_x": 150,
+      "display_y": 300,
+      "enemies": "enemy_set_5_5c"
+    },
+    "D": {
+      "type": "boss",
+      "display_x": 250,
+      "display_y": 200,
+      "enemies": "boss_5_5"
+    }
+  },
+  "edges": [
+    {
+      "from": "A",
+      "to": "B"
+    },
+    {
+      "from": "A",
+      "to": "C"
+    },
+    {
+      "from": "B",
+      "to": "D"
+    },
+    {
+      "from": "C",
+      "to": "D"
+    }
+  ],
+  "start_node": "A",
+  "boss_nodes": [
+    "D"
+  ],
+  "victory_conditions": [
+    "KILL_ALL"
+  ],
+  "victory_objectives": {
+    "require_all_nodes_cleared": true
+  },
+  "checkpoints": [
+    {
+      "id": "cp_5_5a",
+      "node_id": "B",
+      "pos_x": 0,
+      "pos_y": 64,
+      "pos_z": 0,
+      "facing": "south"
+    },
+    {
+      "id": "cp_5_5b",
+      "node_id": "C",
+      "pos_x": 0,
+      "pos_y": 64,
+      "pos_z": 0,
+      "facing": "south"
+    }
+  ],
+  "terrain_type": "T5",
+  "chapter_mechanism": "anti_submarine",
+  "difficulty_scale": 2.45,
+  "par_time_seconds": 1500
+}

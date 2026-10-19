@@ -1,0 +1,109 @@
+{
+  "stage_id": "7-5",
+  "chapter": "chapter_7",
+  "display_name": "7-5 百慕大防波堤",
+  "nodes": {
+    "A": {
+      "type": "battle",
+      "display_x": 50,
+      "display_y": 200,
+      "enemies": "enemy_set_7_5a"
+    },
+    "B": {
+      "type": "detour",
+      "display_x": 150,
+      "display_y": 100,
+      "detour": {
+        "target_offset": [
+          40,
+          0,
+          0
+        ]
+      },
+      "display_name": "运输队迂回"
+    },
+    "C": {
+      "type": "resource",
+      "display_x": 150,
+      "display_y": 300,
+      "rewards": [
+        {
+          "item": "minecraft:iron_ingot",
+          "count": 32
+        },
+        {
+          "item": "piranport:fuel",
+          "count": 8
+        }
+      ],
+      "display_name": "补给点"
+    },
+    "D": {
+      "type": "battle",
+      "display_x": 250,
+      "display_y": 200,
+      "enemies": "enemy_set_7_5d",
+      "display_name": "防波堤外围"
+    },
+    "E": {
+      "type": "boss",
+      "display_x": 350,
+      "display_y": 200,
+      "enemies": "boss_7_5"
+    }
+  },
+  "edges": [
+    {
+      "from": "A",
+      "to": "B"
+    },
+    {
+      "from": "A",
+      "to": "C"
+    },
+    {
+      "from": "B",
+      "to": "C"
+    },
+    {
+      "from": "C",
+      "to": "D"
+    },
+    {
+      "from": "D",
+      "to": "E"
+    }
+  ],
+  "start_node": "A",
+  "boss_nodes": [
+    "E"
+  ],
+  "victory_conditions": [
+    "KILL_ALL"
+  ],
+  "victory_objectives": {
+    "require_all_nodes_cleared": true
+  },
+  "checkpoints": [
+    {
+      "id": "cp_7_5a",
+      "node_id": "C",
+      "pos_x": 0,
+      "pos_y": 64,
+      "pos_z": 0,
+      "facing": "south"
+    },
+    {
+      "id": "cp_7_5b",
+      "node_id": "D",
+      "pos_x": 0,
+      "pos_y": 64,
+      "pos_z": 0,
+      "facing": "south"
+    }
+  ],
+  "terrain_type": "T5",
+  "chapter_mechanism": "anti_missile",
+  "difficulty_scale": 3.1,
+  "par_time_seconds": 1800
+}

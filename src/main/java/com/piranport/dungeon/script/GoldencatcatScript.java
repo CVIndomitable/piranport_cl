@@ -157,8 +157,7 @@ public class GoldencatcatScript implements DungeonScript {
         com.piranport.dungeon.block.PortalStructureHelper.buildPortalStructure(
                 dungeonLevel, center.below(), instanceId, nodeId);
 
-        // Spawn boss loot ship at portal position
-        spawnLootShip(dungeonLevel, center);
+        // 奖励改由 settleNode 按《副本/21》发放；这里不再放带奖励的货船，避免双发。
 
         finished = true;
         PiranPort.LOGGER.info("[Goldencatcat] Multi-block portal structure built at {}", center);

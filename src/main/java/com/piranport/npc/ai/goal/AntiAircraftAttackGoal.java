@@ -14,20 +14,16 @@ import java.util.EnumSet;
 import java.util.UUID;
 
 /**
- * 高级轻巡的防空火炮层：定期扫描本舰索敌半径内的玩家飞机，以固定间隔发射对空弹。
+ * 敌方防空层：定期扫描本舰索敌半径内的玩家飞机，以固定间隔发射对空弹。
  *
- * <p>依据《深海/01》§五、§六：火炮防空由高级轻巡承担，对空伤害 6、装填 80 tick。
- * 防驱的导弹防空层暂未实现（对应实体不存在）。</p>
+ * <p>依据《深海/01》§五、§六：高级轻巡为火炮防空（对编队 6 / 80 tick），
+ * 防驱为导弹防空（对编队 8 或 10 / 100 tick）。伤害与间隔由实体 JSON 的 aa_damage、aa_fire_interval 给出。</p>
  *
  * <p>{@link AircraftEntity} 不是 {@code LivingEntity}，不能写入原版 target，
  * 因此目标放在 {@link AbstractDeepOceanEntity#getAirTarget()} 的独立字段里。</p>
  */
 public class AntiAircraftAttackGoal extends Goal {
 
-    /** 对空伤害（《深海/01》§六：高级轻巡防空火炮 对编队 6）。 */
-    private static final float DAMAGE = 6.0f;
-    /** 防空火炮装填间隔（tick）。 */
-    private static final int FIRE_INTERVAL = 80;
     /** 无目标时的重新扫描间隔（tick）。 */
     private static final int SCAN_INTERVAL = 20;
     /** 对空弹初速（格/tick）。 */
@@ -36,11 +32,15 @@ public class AntiAircraftAttackGoal extends Goal {
     private static final float PROJECTILE_INACCURACY = 0.75f;
 
     private final AbstractDeepOceanEntity mob;
+    private final float damage;
+    private final int fireInterval;
     private int nextScanTick;
     private int fireCooldown;
 
-    public AntiAircraftAttackGoal(AbstractDeepOceanEntity mob) {
+    public AntiAircraftAttackGoal(AbstractDeepOceanEntity mob, float damage, int fireInterval) {
         this.mob = mob;
+        this.damage = damage;
+        this.fireInterval = fireInterval;
         // 不占用 MOVE/LOOK：防空与对海炮击、环绕走位可以同时进行。
         setFlags(EnumSet.noneOf(Flag.class));
     }
@@ -80,7 +80,7 @@ public class AntiAircraftAttackGoal extends Goal {
             return;
         }
         fireAt(target);
-        fireCooldown = FIRE_INTERVAL;
+        fireCooldown = fireInterval;
     }
 
     /**
@@ -131,7 +131,7 @@ public class AntiAircraftAttackGoal extends Goal {
                 .subtract(eye);
 
         DeepOceanProjectileEntity shell = new DeepOceanProjectileEntity(
-                mob.level(), mob, DAMAGE, 0.0f,
+                mob.level(), mob, damage, 0.0f,
                 DeepOceanProjectileEntity.BallisticType.PARABOLIC_TRACKING);
         shell.setTrackingTarget(target);
         shell.setPos(eye.x, eye.y, eye.z);

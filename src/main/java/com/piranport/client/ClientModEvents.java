@@ -431,8 +431,8 @@ public class ClientModEvents {
         // 金猫猫是活动关的猫，不是深海舰，保留原通用渲染器。
         event.registerEntityRenderer(ModEntityTypes.GOLDENCATCAT.get(),
                 com.piranport.client.DeepOceanRenderer::new);
-        // 舰娘 NPC
+        // 舰娘 NPC：随从暂用艾利克斯（原版细手臂）模型占位，见 AlexSlimMobRenderer
         event.registerEntityRenderer(ModEntityTypes.SHIP_GIRL.get(),
-                com.piranport.client.ShipGirlRenderer::new);
+                com.piranport.client.AlexSlimMobRenderer::new);
     }
 }

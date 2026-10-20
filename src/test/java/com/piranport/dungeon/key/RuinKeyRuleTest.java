@@ -68,7 +68,8 @@ class RuinKeyRuleTest {
         Map<String, Set<String>> allowedStages = Map.of(
                 "supply_depot", Set.of(),
                 "outpost", Set.of(),
-                "abyssal_base", Set.of("delusion_1", "hell_1"));
+                "abyssal_base", Set.of(),
+                "abyssal_base_rare", Set.of("delusion_1", "hell_1"));
         for (Map.Entry<String, Set<String>> e : allowedStages.entrySet()) {
             String name = e.getKey();
             try (InputStream in = getClass().getResourceAsStream("/data/piranport/loot_table/chests/" + name + ".json")) {

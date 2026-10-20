@@ -378,17 +378,35 @@ public class DungeonEventHandler {
 
     // ===== Utility Methods =====
 
+    /**
+     * 回进本书台面前；实例没有书台坐标时回主世界出生点（《副本/00》§3.3）。
+     * 两条路径都先清客户端副本 HUD，跨维度不会可靠触发客户端状态清理。
+     */
     public static boolean teleportToLectern(ServerPlayer player, DungeonInstance instance) {
         BlockPos lecternPos = instance.getLecternPos();
+        ServerLevel targetLevel;
+        double x;
+        double y;
+        double z;
         if (lecternPos == null) {
-            // 整合版 §3.3：决策要求"重生到进入副本时的门口"——若实例未记录讲台位置
-            // （极异常路径：旧存档或被外部清空），拒绝传送并报错，避免错误兜底到主世界 spawn
-            // 导致玩家错误地认为副本丢失。改用 keepPosition+log，让玩家报告。
-            PiranPort.LOGGER.error("Instance {} has no lecternPos; refusing teleport-to-lectern for {}",
-                    instance.getInstanceId(), player.getName().getString());
-            return false;
+            targetLevel = player.server.overworld();
+            BlockPos spawn = targetLevel.getSharedSpawnPos();
+            x = spawn.getX() + 0.5;
+            y = spawn.getY();
+            z = spawn.getZ() + 0.5;
+        } else {
+            targetLevel = resolveLecternLevel(player, instance);
+            x = lecternPos.getX() + 0.5;
+            y = lecternPos.getY() + 1;
+            z = lecternPos.getZ() + 0.5;
         }
 
+        PacketDistributor.sendToPlayer(player, new com.piranport.dungeon.network.DungeonStatePayload("", "", 0L));
+        player.teleportTo(targetLevel, x, y, z, player.getYRot(), player.getXRot());
+        return true;
+    }
+
+    private static ServerLevel resolveLecternLevel(ServerPlayer player, DungeonInstance instance) {
         String dimKey = instance.getLecternDimension();
         ServerLevel targetLevel = null;
         if (dimKey != null) {
@@ -403,17 +421,7 @@ public class DungeonEventHandler {
                         dimKey, instance.getInstanceId());
             }
         }
-        if (targetLevel == null) {
-            targetLevel = player.server.overworld();
-        }
-
-        // 回到主世界后立即清掉客户端副本 HUD。单纯跨维度不会可靠触发客户端
-        // 状态清理（尤其是刚进入副本就使用回城卷轴的路径），所以由服务端显式发送空状态。
-        PacketDistributor.sendToPlayer(player, new com.piranport.dungeon.network.DungeonStatePayload("", "", 0L));
-        player.teleportTo(targetLevel,
-                lecternPos.getX() + 0.5, lecternPos.getY() + 1, lecternPos.getZ() + 0.5,
-                player.getYRot(), player.getXRot());
-        return true;
+        return targetLevel != null ? targetLevel : player.server.overworld();
     }
 
     public static void teleportAllPlayersToLectern(MinecraftServer server,

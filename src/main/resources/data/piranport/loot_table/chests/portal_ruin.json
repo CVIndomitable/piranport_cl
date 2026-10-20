@@ -59,6 +59,15 @@
       "entries": [
         {
           "type": "minecraft:item",
+          "name": "piranport:dungeon_lectern"
+        }
+      ]
+    },
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
           "name": "piranport:dungeon_key_ch1",
           "functions": [
             {

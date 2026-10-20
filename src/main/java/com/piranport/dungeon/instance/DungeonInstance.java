@@ -1,6 +1,7 @@
 package com.piranport.dungeon.instance;
 
 import com.piranport.config.ModEquipmentConfig;
+import com.piranport.dungeon.event.BranchDoors;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -9,6 +10,7 @@ import net.minecraft.nbt.Tag;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -40,6 +42,7 @@ public class DungeonInstance {
     private final Map<String, Integer> nodeWaveTotals = new HashMap<>();
     private final Map<String, Integer> nodeWaves = new HashMap<>();
     private final Map<UUID, Map<String, String>> branchChoices = new HashMap<>();
+    private final Map<UUID, Map<String, List<BranchDoors.Door>>> branchDoors = new HashMap<>();
     private final Set<UUID> bossParticipants = new HashSet<>();
     private boolean bossParticipantSnapshot;
     /** 《副本/18》活动关形态（目前只有 ulan：supply / aviation）。首次进本锁定，存档保留。 */
@@ -105,6 +108,15 @@ public class DungeonInstance {
         if (player == null || fromNode == null || toNode == null) return;
         branchChoices.computeIfAbsent(player, k -> new HashMap<>()).put(fromNode, toNode);
     }
+    /** 玩家抵达分歧门群时定格的亮灭快照；不持久化，重启后下次抵达按当前选择重算。 */
+    public List<BranchDoors.Door> getBranchDoors(UUID player, String fromNode) {
+        Map<String, List<BranchDoors.Door>> m = branchDoors.get(player);
+        return m == null ? null : m.get(fromNode);
+    }
+    public void setBranchDoors(UUID player, String fromNode, List<BranchDoors.Door> doors) {
+        if (player == null || fromNode == null) return;
+        branchDoors.computeIfAbsent(player, k -> new HashMap<>()).put(fromNode, List.copyOf(doors));
+    }
 
     // ===== 首通参与者：Boss 击杀瞬间位于 Boss 节点范围内的玩家 =====
     public Set<UUID> getBossParticipants() { return java.util.Collections.unmodifiableSet(bossParticipants); }
@@ -143,6 +155,7 @@ public class DungeonInstance {
         nodeWaveTotals.clear();
         nodeWaves.clear();
         branchChoices.clear();
+        branchDoors.clear();
         bossParticipants.clear();
         bossParticipantSnapshot = false;
         startTimeMillis = 0;

@@ -126,6 +126,10 @@ class NoopClientBridge implements ClientBridge {
     public void setCaptureProgress(float percent) {  }
 
     @Override
+    public void setBranchDoors(UUID instanceId, String fromNode,
+                               List<com.piranport.dungeon.event.BranchDoors.Door> doors) {  }
+
+    @Override
     public void updateDungeonBossOverlay(String bossName, String shipType, String chapter,
                                          int segment, float health, float maxHealth,
                                          boolean visible, boolean quietBattlefield) {  }

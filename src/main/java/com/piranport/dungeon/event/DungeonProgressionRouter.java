@@ -55,9 +55,9 @@ public final class DungeonProgressionRouter {
         if (player == null || instance == null || stage == null || clearedNode == null) return false;
         if (instance.getState() != DungeonInstance.State.ACTIVE) return false;
 
-        // 分支节点继续走现有带路判定（多扇门的按条件亮灭尚未接入）。
+        // 分支节点的出口是按目标分扇的门：走入哪扇门由 DungeonBranchRouter 按定格快照裁决。
         if (clearedNode.hasBranches()) {
-            return DungeonBranchRouter.routeFromPortal(player, instance, stage, clearedNode);
+            return DungeonBranchRouter.routeFromPortal(player, instance, stage, clearedNode, targetNodeId);
         }
 
         String target = targetNodeId == null || targetNodeId.isBlank()

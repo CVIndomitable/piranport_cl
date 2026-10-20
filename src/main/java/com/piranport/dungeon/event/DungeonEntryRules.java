@@ -26,10 +26,11 @@ public final class DungeonEntryRules {
     }
 
     /**
-     * 《副本/22》分歧感知的推进判定：经由分歧节点解锁的后继，只放行该玩家快照选中的那一条。
-     * 已被任何人进入过的节点照常放行（重返不受分歧限制）。非分歧节点的出边规则不变。
+     * 《副本/22》分歧感知的推进判定：经由分歧节点解锁的后继，只放行该玩家已走入的那扇门。
+     * 玩家未走过分歧门时，其后继一律不放行（讲台不替玩家判定）。已被任何人进入过的节点照常放行
+     * （重返不受分歧限制）。非分歧节点的出边规则不变。
      *
-     * @param choiceFor 给定分歧节点 id，返回该玩家的快照目标（尚未判定时由调用方当场判定并快照）
+     * @param choiceFor 给定分歧节点 id，返回该玩家已选定的目标（尚未走门时为 null）
      */
     public static boolean canEnter(DungeonInstance instance, StageData stage, String nodeId,
                                    java.util.function.Function<String, String> choiceFor) {
@@ -40,10 +41,11 @@ public final class DungeonEntryRules {
             NodeData from = stage.nodes().get(cleared);
             if (from == null || !from.hasBranches()) return true;
             String choice = choiceFor == null ? null : choiceFor.apply(cleared);
-            if (choice == null || choice.equals(nodeId)) return true;
+            if (nodeId.equals(choice)) return true;
         }
         return false;
     }
+
 
     /**
      * "从头开始"（仅传送回起点）的放行判定。

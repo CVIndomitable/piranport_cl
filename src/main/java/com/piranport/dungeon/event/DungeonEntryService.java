@@ -79,11 +79,11 @@ public final class DungeonEntryService {
         }
     }
 
-    /** 分歧点尚未判定的玩家（未走出口、直接在讲台选节点）在此当场判定并快照。 */
+    /** 分歧点的选择只来自玩家走入的门（branchChoices），讲台不替玩家自动判定。 */
     private static boolean canEnterWithBranches(ServerPlayer player, DungeonInstance instance,
                                                 StageData stage, String nodeId) {
         return DungeonEntryRules.canEnter(instance, stage, nodeId, from ->
-                DungeonBranchRouter.resolveChoice(player, instance, stage.nodes().get(from)));
+                instance.getBranchChoice(player.getUUID(), from));
     }
 
     public static void enter(ServerPlayer player, BlockPos lecternPos,

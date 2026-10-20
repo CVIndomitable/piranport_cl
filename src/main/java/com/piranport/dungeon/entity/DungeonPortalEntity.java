@@ -1,6 +1,10 @@
 package com.piranport.dungeon.entity;
 
 import com.piranport.PiranPort;
+import com.piranport.dungeon.data.DungeonRegistry;
+import com.piranport.dungeon.data.NodeData;
+import com.piranport.dungeon.data.StageData;
+import com.piranport.dungeon.event.NodeCaption;
 import com.piranport.dungeon.instance.DungeonInstance;
 import com.piranport.dungeon.instance.DungeonInstanceManager;
 import com.piranport.registry.ModEntityTypes;
@@ -31,10 +35,22 @@ public class DungeonPortalEntity extends Entity {
     /** 这扇门通往的节点；空串 = 旧存档/单门自动选路。 */
     private static final EntityDataAccessor<String> DATA_TARGET_NODE =
             SynchedEntityData.defineId(DungeonPortalEntity.class, EntityDataSerializers.STRING);
+    /** 门所在的分歧来源节点；客户端用它查定格快照与条件文字。 */
+    private static final EntityDataAccessor<String> DATA_SOURCE_NODE =
+            SynchedEntityData.defineId(DungeonPortalEntity.class, EntityDataSerializers.STRING);
+    /** 以下三项由服务端首次 tick 时从实例与关卡数据推出，客户端只读用于渲染标签。 */
+    private static final EntityDataAccessor<String> DATA_STAGE_ID =
+            SynchedEntityData.defineId(DungeonPortalEntity.class, EntityDataSerializers.STRING);
+    private static final EntityDataAccessor<String> DATA_OBJECTIVE_KEY =
+            SynchedEntityData.defineId(DungeonPortalEntity.class, EntityDataSerializers.STRING);
+    private static final EntityDataAccessor<String> DATA_INSTANCE_KEY =
+            SynchedEntityData.defineId(DungeonPortalEntity.class, EntityDataSerializers.STRING);
 
     /** Auto-discard a portal that nobody touches in 10 minutes — prevents orphan portals
      *  if NBT was corrupted (instanceId == null) or instance was cleaned up early. */
     private static final int ORPHAN_DESPAWN_TICKS = 10 * 60 * 20;
+    /** 走近门群的水平半径：相邻门间距为 14 格，半径 6 保证两扇门的触发区不重叠。 */
+    private static final double APPROACH_RADIUS = 6.0;
     /** Defensive cap for persisted/observed portal entries. */
     private static final int MAX_ENTERED_PLAYERS = 64;
     private static final int MAX_NODE_ID_LENGTH = 128;
@@ -42,6 +58,8 @@ public class DungeonPortalEntity extends Entity {
     private UUID instanceId;
     private String nodeId;
     private final Set<UUID> enteredPlayers = new HashSet<>();
+    /** 当前仍在走近范围内的玩家；只在内存中，离开后清除，再次走近会重新触发。 */
+    private final Set<UUID> approachedPlayers = new HashSet<>();
     private int orphanTicks = 0;
 
     public DungeonPortalEntity(EntityType<?> type, Level level) {
@@ -72,6 +90,7 @@ public class DungeonPortalEntity extends Entity {
                 ModEntityTypes.DUNGEON_PORTAL.get(), level);
         portal.instanceId = instanceId;
         portal.nodeId = nodeId;
+        portal.setSourceNodeId(nodeId);
         portal.setTargetNodeId(targetNodeId == null ? "" : targetNodeId);
         portal.setPos(x, y, z);
         return portal;
@@ -81,6 +100,10 @@ public class DungeonPortalEntity extends Entity {
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
         builder.define(SPIN_TICK, 0);
         builder.define(DATA_TARGET_NODE, "");
+        builder.define(DATA_SOURCE_NODE, "");
+        builder.define(DATA_STAGE_ID, "");
+        builder.define(DATA_OBJECTIVE_KEY, "");
+        builder.define(DATA_INSTANCE_KEY, "");
     }
 
     /** 这扇门通往的节点；空串 = 单门自动选路（旧存档/终局出口）。 */
@@ -93,6 +116,33 @@ public class DungeonPortalEntity extends Entity {
         String safe = targetNodeId == null || targetNodeId.length() > MAX_NODE_ID_LENGTH
                 ? "" : targetNodeId;
         entityData.set(DATA_TARGET_NODE, safe);
+    }
+
+    public String getSourceNodeId() { return entityData.get(DATA_SOURCE_NODE); }
+
+    private void setSourceNodeId(String sourceNodeId) {
+        entityData.set(DATA_SOURCE_NODE, sourceNodeId == null ? "" : sourceNodeId);
+    }
+
+    public String getStageId() { return entityData.get(DATA_STAGE_ID); }
+
+    public String getObjectiveKey() { return entityData.get(DATA_OBJECTIVE_KEY); }
+
+    public String getInstanceKey() { return entityData.get(DATA_INSTANCE_KEY); }
+
+    /**
+     * 把门的展示信息从实例推到同步数据：客户端没有实例，只能靠这里带过去。
+     * 目标节点不存在时不写入，标签保持空白，避免显示成错误的节点名。
+     */
+    private void syncDoorInfo(DungeonInstance instance) {
+        String target = getTargetNodeId();
+        if (target.isEmpty()) return;
+        StageData stage = DungeonRegistry.INSTANCE.getStage(instance.getStageId());
+        NodeData targetNode = stage == null ? null : stage.nodes().get(target);
+        if (targetNode == null) return;
+        entityData.set(DATA_STAGE_ID, instance.getStageId());
+        entityData.set(DATA_OBJECTIVE_KEY, NodeCaption.objectiveKey(stage, targetNode));
+        entityData.set(DATA_INSTANCE_KEY, instance.getInstanceId().toString());
     }
 
     @Override
@@ -130,11 +180,28 @@ public class DungeonPortalEntity extends Entity {
         // Server-side: check for nearby players every 10 ticks instead of every tick
         if (tickCount % 10 != 0) return;
 
+        if (getStageId().isEmpty()) syncDoorInfo(mgr.getInstance(instanceId));
+
         AABB area = getBoundingBox().inflate(2.0, 1.0, 2.0);
         List<ServerPlayer> nearbyPlayers = ((ServerLevel) level())
                 .getEntitiesOfClass(ServerPlayer.class, area);
 
         Set<UUID> members = mgr.getInstance(instanceId).getPlayerUuids();
+
+        // 走近门群只触发一次（离开再进才重触发），用于分歧门的定格与下发；半径需小于相邻门的间距（14）。
+        AABB approachArea = getBoundingBox().inflate(APPROACH_RADIUS, 3.0, APPROACH_RADIUS);
+        Set<UUID> approaching = new HashSet<>();
+        for (ServerPlayer player : ((ServerLevel) level()).getEntitiesOfClass(ServerPlayer.class, approachArea)) {
+            UUID playerId = player.getUUID();
+            if (!members.contains(playerId)) continue;
+            approaching.add(playerId);
+            if (approachedPlayers.add(playerId)) {
+                com.piranport.dungeon.event.DungeonEventHandler.onPortalApproached(
+                        player, mgr.getInstance(instanceId), nodeId);
+            }
+        }
+        approachedPlayers.retainAll(approaching);
+
         for (ServerPlayer player : nearbyPlayers) {
             UUID playerId = player.getUUID();
             if (!members.contains(playerId)) continue;
@@ -205,6 +272,7 @@ public class DungeonPortalEntity extends Entity {
             String loadedNodeId = tag.getString("NodeId");
             nodeId = (loadedNodeId.isBlank() || loadedNodeId.length() > MAX_NODE_ID_LENGTH)
                     ? null : loadedNodeId;
+            setSourceNodeId(nodeId);
         }
         if (tag.contains("TargetNodeId", net.minecraft.nbt.Tag.TAG_STRING)) {
             String loadedTarget = tag.getString("TargetNodeId");

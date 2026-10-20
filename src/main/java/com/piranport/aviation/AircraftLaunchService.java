@@ -6,11 +6,13 @@ import com.piranport.item.AircraftItem;
 import com.piranport.npc.deepocean.AbstractDeepOceanEntity;
 import com.piranport.npc.deepocean.DeepOceanArmoredCarrierEntity;
 import com.piranport.npc.deepocean.DeepOceanBossEntity;
+import com.piranport.npc.deepocean.DeepOceanFlagshipEntity;
 import com.piranport.npc.deepocean.DeepOceanLightCarrierEntity;
 import com.piranport.npc.deepocean.DeepOceanShinanoEntity;
 import com.piranport.npc.deepocean.DeepOceanTaihouEntity;
 import com.piranport.npc.deepocean.DeepOceanZuikakuEntity;
 import com.piranport.registry.ModDataComponents;
+import com.piranport.registry.ModEntityTypes;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
@@ -140,6 +142,17 @@ public final class AircraftLaunchService {
 
         if (carrier instanceof DeepOceanLightCarrierEntity) {
             return aircraftIndex % 2 == 0 ? f1 : t1;
+        }
+        // 低级航母与高级航母共用 DeepOceanCarrierEntity，只能按注册类型区分编成。
+        if (carrier.getType() == ModEntityTypes.DEEP_OCEAN_CARRIER.get()) {
+            return switch (aircraftIndex % 3) {
+                case 0 -> f1;
+                case 1 -> b1;
+                default -> t1;
+            };
+        }
+        if (carrier instanceof DeepOceanFlagshipEntity) {
+            return aircraftIndex % 2 == 0 ? f2 : b2;
         }
         if (carrier instanceof DeepOceanArmoredCarrierEntity) {
             return switch (aircraftIndex % 4) {

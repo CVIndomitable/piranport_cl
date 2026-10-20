@@ -533,6 +533,14 @@ public abstract class AbstractDeepOceanEntity extends Monster {
     }
 
     /**
+     * 血量是否定稿、不随关卡 difficulty_scale 缩放（《深海/01》§八：大凤、信浓、瑞鹤）。
+     * 人数倍率仍生效，它是副本通用规则而不是难度系数。
+     */
+    public boolean keepsFixedHealth() {
+        return false;
+    }
+
+    /**
      * Torpedo damage. Override in subclasses.
      */
     public float getTorpedoDamage() {

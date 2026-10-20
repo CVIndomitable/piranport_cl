@@ -60,6 +60,7 @@ public class DeepOceanTaihouEntity extends AbstractDeepOceanEntity {
         return data != null ? data.orbitDistance() : 48.0;
     }
 
+    @Override public boolean keepsFixedHealth() { return true; }
     @Override public boolean canLaunchAircraft() { return true; }
     @Override public int getMaxAircraft() { return 7; }
     @Override public int getAircraftLaunchInterval() { return 160; }

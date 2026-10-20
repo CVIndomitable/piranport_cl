@@ -56,7 +56,5 @@ public class DeepOceanCarrierEntity extends AbstractDeepOceanEntity {
         return data != null ? data.orbitDistance() : 40.0;
     }
     @Override public boolean canLaunchAircraft() { return true; }
-    /** 高级航母编成 2 战 2 轰 1 雷（《深海/01》第六章）。 */
-    @Override public int getMaxAircraft() { return 5; }
     @Override public int getAircraftLaunchInterval() { return 160; }
 }

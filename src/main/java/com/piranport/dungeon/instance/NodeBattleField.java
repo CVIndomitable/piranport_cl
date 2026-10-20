@@ -515,8 +515,10 @@ public final class NodeBattleField {
         double playerScale = DungeonScaling.healthScale(instance.getNodePlayerCount(node.nodeId()));
 
         AttributeInstance health = living.getAttribute(Attributes.MAX_HEALTH);
+        double hpScale = entity instanceof AbstractDeepOceanEntity abyssal && abyssal.keepsFixedHealth()
+                ? 1.0 : scale;
         if (health != null) {
-            health.setBaseValue(Math.max(1.0, health.getBaseValue() * scale * playerScale));
+            health.setBaseValue(Math.max(1.0, health.getBaseValue() * hpScale * playerScale));
             living.setHealth(living.getMaxHealth());
         }
         com.piranport.dungeon.event.DungeonDamageScaleHandler.setDamageScale(entity, scale);

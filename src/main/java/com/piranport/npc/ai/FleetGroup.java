@@ -38,6 +38,9 @@ public class FleetGroup {
         COMBAT   // Actively fighting
     }
 
+    /** 相邻舰船间距 = 该倍数 × 船体尺寸（《深海/01》§三.9） */
+    private static final double HULL_SPACING_FACTOR = 4.0;
+
     private final UUID groupId;
     /** 成员按编队顺序排列（索引 0 = 领舰） */
     private final List<UUID> members = new ArrayList<>();
@@ -65,10 +68,8 @@ public class FleetGroup {
 
     public void removeDeadMembers(java.util.function.Predicate<UUID> isDead) {
         members.removeIf(isDead);
-        // 领舰阵亡后由队列下一顺位递补（与 FleetGroupManager.removeMember 的约定一致：
-        // members 按编队顺序排列，get(0) 即继任者）。不重选会让整编队失去领舰，
-        // FollowLeaderGoal 对全员返回 canUse=false，队形和环绕攻击全部停摆。
-        if (leaderUuid != null && !members.contains(leaderUuid)) {
+        // 领舰可以不在成员表里（Boss 独立领队），因此按领舰本身是否阵亡判定，而不是看是否在成员表中
+        if (leaderUuid != null && isDead.test(leaderUuid)) {
             leaderUuid = members.isEmpty() ? null : members.get(0);
         }
     }
@@ -141,16 +142,34 @@ public class FleetGroup {
     }
 
     /**
-     * 计算给定成员在编队中的队形偏移量。
+     * 队形槽位顺序：槽位 0 为领舰，其余成员按加入顺序排在后面。
+     * 领舰可以不在成员表里（Boss 独立领队），此时它仍占据槽位 0，护卫从槽位 1 起排。
+     */
+    public List<UUID> formationOrder() {
+        List<UUID> order = new ArrayList<>(members.size() + 1);
+        if (leaderUuid != null) {
+            order.add(leaderUuid);
+        }
+        for (UUID uuid : members) {
+            if (!uuid.equals(leaderUuid)) {
+                order.add(uuid);
+            }
+        }
+        return order;
+    }
+
+    /**
+     * 计算队形中某个槽位相对领舰的偏移。间距按前方舰的船体尺寸累加，见《深海/01》§三.9：
+     * 前后间距 = 4 倍船体长度，左右间距 = 4 倍船体宽度。
      *
-     * @param memberIndex   成员在队列中的索引（0 = 领舰）
-     * @param totalMembers  编队总人数
-     * @param leaderPos     领舰当前世界位置
-     * @param targetPos     当前攻击目标位置（用于确定领舰朝向）
+     * @param slot      队形槽位（0 = 领舰）
+     * @param hulls     各槽位船体尺寸，下标即槽位
+     * @param leaderPos 领舰当前世界位置
+     * @param targetPos 当前攻击目标位置（用于确定领舰朝向）
      * @return 相对于 leaderPos 的偏移向量（Y 分量通常为 0）
      */
-    public Vec3 getFormationOffset(int memberIndex, int totalMembers, Vec3 leaderPos, Vec3 targetPos) {
-        if (memberIndex == 0) {
+    public Vec3 getFormationOffset(int slot, List<FleetHull> hulls, Vec3 leaderPos, Vec3 targetPos) {
+        if (slot == 0) {
             return Vec3.ZERO; // 领舰无偏移
         }
 
@@ -169,31 +188,53 @@ public class FleetGroup {
 
         return switch (formation) {
             case DOUBLE_LINE -> {
-                // 复纵阵：两列并行，左右偏移 ±4，前后间距 6
-                // 领舰在最前，第 1、2 个成员在后方 6 格左右各 4，第 3、4 个在后方 12 格...
-                int row = (memberIndex - 1) / 2;
-                int col = (memberIndex - 1) % 2;
-                double lateral = col == 0 ? 4.0 : -4.0;
-                yield right.scale(lateral).add(backward.scale(6.0 * (row + 1)));
+                // 两列并行：第 2k+1 槽在右列、2k+2 在左列，同排共用纵向位置
+                int row = (slot - 1) / 2;
+                int col = (slot - 1) % 2;
+                double back = 0;
+                for (int r = 0; r <= row; r++) {
+                    back += HULL_SPACING_FACTOR * hullAt(hulls, 2 * r + 1).length();
+                }
+                double lateral = (col == 0 ? 1.0 : -1.0) * HULL_SPACING_FACTOR * hullAt(hulls, slot).beam();
+                yield right.scale(lateral).add(backward.scale(back));
             }
             case WHEEL -> {
-                // 轮型阵：围成一圈，半径 12，均匀分布
-                double angle = (2.0 * Math.PI * memberIndex) / totalMembers;
-                yield new Vec3(Math.cos(angle) * 12.0, 0, Math.sin(angle) * 12.0);
+                // 环形：槽位沿圆周均布，半径取使圆周长等于各船纵向间距之和
+                double circumference = 0;
+                for (int j = 1; j < hulls.size(); j++) {
+                    circumference += HULL_SPACING_FACTOR * hullAt(hulls, j).length();
+                }
+                double radius = circumference / (2.0 * Math.PI);
+                double angle = (2.0 * Math.PI * slot) / hulls.size();
+                yield new Vec3(Math.cos(angle) * radius, 0, Math.sin(angle) * radius);
             }
             case SINGLE_HORIZONTAL -> {
-                // 单横阵：一横排，与领舰同前后位置，左右间距 6
-                // 对称分布：memberIndex 1→右6, 2→左6, 3→右12, 4→左12...
-                int side = memberIndex % 2 == 1 ? 1 : -1;
-                int pos = (memberIndex + 1) / 2;
-                yield right.scale(6.0 * pos * side);
+                // 一横排：奇数槽在右、偶数槽在左，同侧船依次向外累加横向间距
+                int side = slot % 2 == 1 ? 1 : -1;
+                double lateral = 0;
+                for (int s = 1; s <= slot; s++) {
+                    int sSide = s % 2 == 1 ? 1 : -1;
+                    if (sSide == side) {
+                        lateral += HULL_SPACING_FACTOR * hullAt(hulls, s).beam();
+                    }
+                }
+                yield right.scale(lateral * side);
             }
             case SINGLE_LINE -> {
-                // 单纵阵（默认）：所有船在领舰后方直线排列，间距 8
-                yield backward.scale(8.0 * memberIndex);
+                // 一字长蛇：所有船在领舰后方直线排列，纵向间距按前方船累加
+                double back = 0;
+                for (int s = 1; s <= slot; s++) {
+                    back += HULL_SPACING_FACTOR * hullAt(hulls, s).length();
+                }
+                yield backward.scale(back);
             }
         };
     }
+
+    private static FleetHull hullAt(List<FleetHull> hulls, int slot) {
+        return slot < hulls.size() ? hulls.get(slot) : FleetHull.DEFAULT;
+    }
+
 
     // --- Serialization ---
 

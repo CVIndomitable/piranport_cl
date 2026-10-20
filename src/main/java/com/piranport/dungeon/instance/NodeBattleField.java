@@ -16,6 +16,7 @@ import com.piranport.npc.ai.FleetGroup;
 import com.piranport.npc.ai.FleetGroupManager;
 import com.piranport.npc.ai.FleetGroup.FormationType;
 import com.piranport.npc.deepocean.AbstractDeepOceanEntity;
+import com.piranport.npc.deepocean.DeepOceanBossEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -437,6 +438,7 @@ public final class NodeBattleField {
         double angleStep = (2.0 * Math.PI) / specs.size();
         double baseAngle = dungeonLevel.getRandom().nextDouble() * Math.PI * 2;
         double baseDist = spawnRadius;
+        boolean bossLeads = false;
 
         for (int i = 0; i < specs.size(); i++) {
             EntitySpec spec = specs.get(i);
@@ -462,9 +464,13 @@ public final class NodeBattleField {
                 // distance/peaceful despawn rules while the node is active.
                 abyssal.addTag("piranport_dungeon");
                 abyssal.setFleetGroupId(groupId);
-                mgr.addMember(groupId, abyssal.getUUID());
-                if (i == 0) {
+                if (abyssal instanceof DeepOceanBossEntity && !bossLeads) {
+                    // Boss 独立领队：占领舰槽位但不计入护卫成员，护卫人数与队形只算护卫
+                    bossLeads = true;
                     group.setLeaderUuid(abyssal.getUUID());
+                } else {
+                    // 无 Boss 时首个护卫即领舰（FleetGroup.addMember 自动设置）
+                    mgr.addMember(groupId, abyssal.getUUID());
                 }
                 if (spec.isFlagship) {
                     entity.addTag("dungeon_flagship");

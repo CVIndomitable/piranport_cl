@@ -2,6 +2,7 @@ package com.piranport.npc.ai.goal;
 
 import com.piranport.npc.ai.FleetGroup;
 import com.piranport.npc.ai.FleetGroupManager;
+import com.piranport.npc.ai.FleetHull;
 import com.piranport.npc.deepocean.AbstractDeepOceanEntity;
 import com.piranport.npc.deepocean.DeepOceanSubmarineEntity;
 import net.minecraft.server.level.ServerLevel;
@@ -10,6 +11,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.phys.Vec3;
 
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.UUID;
@@ -170,21 +172,21 @@ public class FollowLeaderGoal extends Goal {
     private void tickAsFollower(Entity leader, LivingEntity target, FleetGroup group) {
         mob.getLookControl().setLookAt(target, 30.0f, 30.0f);
 
-        // 获取自己在队列中的索引
-        int memberIndex = -1;
-        List<UUID> members = group.getMembers();
-        UUID myUuid = mob.getUUID();
-        for (int i = 0; i < members.size(); i++) {
-            if (members.get(i).equals(myUuid)) {
-                memberIndex = i;
-                break;
-            }
+        // 槽位 0 是领舰（Boss 领队不在成员表里也占此位），护卫从槽位 1 起排
+        List<UUID> order = group.formationOrder();
+        int slot = order.indexOf(mob.getUUID());
+        if (slot <= 0) return;
+
+        ServerLevel sl = (ServerLevel) mob.level();
+        List<FleetHull> hulls = new ArrayList<>(order.size());
+        for (UUID uuid : order) {
+            Entity e = sl.getEntity(uuid);
+            hulls.add(e != null ? FleetHull.of(e.getType()) : FleetHull.DEFAULT);
         }
-        if (memberIndex < 0) return;
 
         Vec3 leaderPos = leader.position();
         Vec3 targetPos = target.position();
-        Vec3 offset = group.getFormationOffset(memberIndex, members.size(), leaderPos, targetPos);
+        Vec3 offset = group.getFormationOffset(slot, hulls, leaderPos, targetPos);
         Vec3 dest = leaderPos.add(offset);
 
         // 平滑移向队形位置

@@ -5,7 +5,9 @@ import com.piranport.dungeon.DungeonConstants;
 import com.piranport.dungeon.data.EnemySetData;
 import com.piranport.npc.ai.FleetGroup;
 import com.piranport.npc.ai.FleetGroupManager;
+import com.piranport.npc.ai.FleetHull;
 import com.piranport.npc.deepocean.AbstractDeepOceanEntity;
+import com.piranport.registry.ModEntityTypes;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
@@ -27,6 +29,9 @@ import java.util.Optional;
  * - 无 formation 字段时回退到原有随机散布逻辑
  */
 public final class FormationGenerator {
+
+    /** 领舰离出生点中心的距离，与随机散布半径一致 */
+    private static final double LEADER_DISTANCE = 30.0;
 
     public enum FormationStyle {
         SINGLE_LINE("single_line", FleetGroup.FormationType.SINGLE_LINE),
@@ -56,7 +61,8 @@ public final class FormationGenerator {
     public record SpawnPlan(
             EntityType<?> entityType,
             Vec3 position,
-            boolean isLeader
+            boolean isLeader,
+            boolean isBoss
     ) {}
 
     private FormationGenerator() {}
@@ -77,17 +83,14 @@ public final class FormationGenerator {
             return List.of();
         }
 
-        List<SpawnPlan> plans = new ArrayList<>();
         var rng = level.getRandom();
 
-        // 收集所有要生成的实体（spawnList + flagship）
+        // 收集所有要生成的实体（spawnList + flagship），保持配置顺序
         List<EnemySetData.SpawnEntry> allEntries = new ArrayList<>(enemySet.spawnList());
         if (enemySet.flagship() != null) {
             allEntries.add(enemySet.flagship());
         }
-
-        // 扁平化为单个实体列表，第一艘默认领舰
-        List<EntityTypeEntry> flat = new ArrayList<>();
+        List<EntityType<?>> ordered = new ArrayList<>();
         for (EnemySetData.SpawnEntry entry : allEntries) {
             EntityType<?> type = resolveEntityType(entry.entity());
             if (type == null) {
@@ -96,41 +99,48 @@ public final class FormationGenerator {
                 continue;
             }
             for (int i = 0; i < entry.count(); i++) {
-                flat.add(new EntityTypeEntry(type, i == 0 && flat.isEmpty()));
+                ordered.add(type);
             }
         }
+        if (ordered.isEmpty()) return List.of();
 
-        if (flat.isEmpty()) return List.of();
+        // Boss 独立领队：第一艘 Boss 占领舰槽位，不计入护卫队形；无 Boss 时沿用首船为领舰
+        EntityType<?> leaderType = ordered.stream()
+                .filter(FormationGenerator::isBossType)
+                .findFirst()
+                .orElse(ordered.get(0));
+        List<EntityType<?>> slotTypes = new ArrayList<>(ordered.size());
+        slotTypes.add(leaderType);
+        boolean leaderRemoved = false;
+        for (EntityType<?> type : ordered) {
+            if (!leaderRemoved && type == leaderType) {
+                leaderRemoved = true;
+                continue;
+            }
+            slotTypes.add(type);
+        }
+        List<FleetHull> hulls = slotTypes.stream().map(FleetHull::of).toList();
 
         // 默认朝向：南（+Z），即从出生点平台向战场深处展开
         Vec3 forward = new Vec3(0, 0, 1);
         Vec3 centerPos = new Vec3(center.getX() + 0.5, DungeonConstants.SPAWN_Y, center.getZ() + 0.5);
+        Vec3 leaderAnchor = centerPos.add(forward.scale(LEADER_DISTANCE));
 
-        // 根据队形计算每艘船的偏移
         FleetGroup tempGroup = new FleetGroup(java.util.UUID.randomUUID());
         tempGroup.setFormation(style.formationType);
-        double leaderDistance = 30.0; // 领舰离出生点中心的距离，与随机散布半径一致
-        for (int i = 0; i < flat.size(); i++) {
-            EntityTypeEntry ete = flat.get(i);
-            Vec3 offset;
-            if (i == 0) {
-                // 领舰放在中心前方 leaderDistance 处
-                offset = forward.scale(leaderDistance);
-            } else {
-                // 编队偏移相对领舰，再叠加上领舰的世界偏移
-                Vec3 formationOffset = tempGroup.getFormationOffset(i, flat.size(), Vec3.ZERO, forward);
-                offset = forward.scale(leaderDistance).add(formationOffset);
-            }
 
-            Vec3 spawnPos = centerPos.add(offset);
+        List<SpawnPlan> plans = new ArrayList<>(slotTypes.size());
+        for (int slot = 0; slot < slotTypes.size(); slot++) {
+            EntityType<?> type = slotTypes.get(slot);
+            Vec3 offset = tempGroup.getFormationOffset(slot, hulls, Vec3.ZERO, forward);
+            Vec3 spawnPos = leaderAnchor.add(offset);
             // 加少量随机抖动避免完全重叠
             spawnPos = new Vec3(
                     spawnPos.x + (rng.nextDouble() - 0.5) * 1.0,
                     DungeonConstants.SPAWN_Y,
                     spawnPos.z + (rng.nextDouble() - 0.5) * 1.0
             );
-
-            plans.add(new SpawnPlan(ete.entityType(), spawnPos, ete.isLeader()));
+            plans.add(new SpawnPlan(type, spawnPos, slot == 0, isBossType(type)));
         }
 
         return plans;
@@ -147,15 +157,17 @@ public final class FormationGenerator {
         if (plans.isEmpty()) return null;
 
         FleetGroup group = FleetGroupManager.get(level).createGroup();
-        // 默认队形：单纵阵（可由策划在 JSON formation 字段中指定，此处先统一为默认）
-        group.setFormation(FleetGroup.FormationType.SINGLE_LINE);
+        // 队形与出生计划必须用同一式，否则跟随阶段的站位会和出生位置对不上
+        group.setFormation(FormationStyle.fromString(enemySet.formation()).formationType);
 
         return new FormationResult(plans, group);
     }
 
     // ===== Helpers =====
 
-    private record EntityTypeEntry(EntityType<?> entityType, boolean isLeader) {}
+    private static boolean isBossType(EntityType<?> type) {
+        return type == ModEntityTypes.DEEP_OCEAN_BOSS.get();
+    }
 
     @SuppressWarnings("unchecked")
     private static EntityType<?> resolveEntityType(String entityId) {

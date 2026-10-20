@@ -411,6 +411,9 @@ public final class ModEquipmentConfig {
     /** 平飞段速度 = 面板速度 × 该值 × 阶段系数。默认 0.7（比接敌快，体现突入感）。 */
     public static final TerminalConfigValue<Double> TORPEDO_BOMBER_RUN_SPEED_MULTIPLIER =
             TerminalConfigValue.number("aircraft", "torpedo_bomber_combat", "run_speed_multiplier", 0.7, 0.0, 5.0);
+    /** 拉开段速度 = 面板速度 × 该值 × 阶段系数。攻击开始时距目标小于 run_distance，先背向拉开再进入接敌。默认 0.5。 */
+    public static final TerminalConfigValue<Double> TORPEDO_BOMBER_EGRESS_SPEED_MULTIPLIER =
+            TerminalConfigValue.number("aircraft", "torpedo_bomber_combat", "egress_speed_multiplier", 0.5, 0.0, 5.0);
     /** 提前量上限（格）：目标速度 × 解算时间外推距离被钳制在该值内，防止脱缰。默认 64.0。 */
     public static final TerminalConfigValue<Double> TORPEDO_BOMBER_MAX_LEAD =
             TerminalConfigValue.number("aircraft", "torpedo_bomber_combat", "max_lead", 64.0, 0.0, 1024.0);

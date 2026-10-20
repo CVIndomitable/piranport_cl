@@ -50,11 +50,7 @@ public final class LevelBombAttackStrategy implements AttackStrategy {
     private static void tickLevel(AircraftAttackContext context, @Nullable Player owner,
                                   LivingEntity target) {
         if (context.remainingAmmo() <= 0) {
-            if (context.tryAutoResupplyAmmo()) {
-                context.resumeCruising();
-            } else {
-                context.startReturning("level_bomber_ammo_depleted");
-            }
+            context.startReturning("level_bomber_ammo_depleted");
             return;
         }
 

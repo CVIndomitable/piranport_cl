@@ -92,8 +92,6 @@ public interface AircraftAttackContext {
 
     int salvoSize(LivingEntity target, float damagePerShot);
 
-    boolean tryAutoResupplyAmmo();
-
     AircraftAttackMode attackMode();
 
     boolean hasEverHadFireControl();

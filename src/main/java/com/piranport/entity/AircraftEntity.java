@@ -486,11 +486,6 @@ public class AircraftEntity extends Entity implements AircraftAttackContext {
         return InteractionResult.PASS;
     }
 
-    @Override
-    public boolean tryAutoResupplyAmmo() {
-        return AircraftResupply.tryAutoResupplyAmmo(this, getOwner());
-    }
-
     // ===== 受伤 / 击落 =====
 
     @Override

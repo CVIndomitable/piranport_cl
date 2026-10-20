@@ -17,7 +17,7 @@ import org.jetbrains.annotations.Nullable;
 /**
  * 鱼雷机攻击策略（profile=torpedo）。
  *
- * <p>接近 → 低空贴水面平飞 → 到预测投放点投雷。平飞段每 tick 用一元一次近似解算
+ * <p>开场过近时先背向拉开到平飞入口距离；接近 → 低空贴水面平飞 → 到预测投放点投雷。平飞段每 tick 用一元一次近似解算
  * 预测撞击点，并同步给客户端画预瞄线。
  */
 public final class TorpedoAttackStrategy implements AttackStrategy {
@@ -48,8 +48,7 @@ public final class TorpedoAttackStrategy implements AttackStrategy {
 
     private static void tickTorpedoRun(AircraftAttackContext context, @Nullable Player owner,
                                        LivingEntity target) {
-        if (context.remainingAmmo() <= 0
-                && !context.tryAutoResupplyAmmo()) {
+        if (context.remainingAmmo() <= 0) {
             context.startReturning("torpedo_bomber_done");
             return;
         }
@@ -89,6 +88,15 @@ public final class TorpedoAttackStrategy implements AttackStrategy {
                     ? runAltitude
                     : ModEquipmentConfig.TORPEDO_BOMBER_APPROACH_ALTITUDE.get());
             boolean atRunAltitude = position.y - (target.getY() + runAltitude) <= tolerance;
+
+            // 从远处正常接近越过入口距离的情况不算过近，只有开场就在入口以内才拉开。
+            if (horizontalDistance >= runDistance) state.standoffReached = true;
+            if (!state.standoffReached && horizontalDistance < runDistance) state.egressing = true;
+            if (state.egressing && horizontalDistance >= runDistance && atRunAltitude) state.egressing = false;
+            if (state.egressing) {
+                tickEgress(context, position, target, dx, dz, horizontalDistance, phaseSpeed, runAltitude);
+                return;
+            }
 
             if (horizontalDistance <= runDistance && atRunAltitude && context.attackCooldown() <= 0) {
                 state.runStart = position;
@@ -196,6 +204,24 @@ public final class TorpedoAttackStrategy implements AttackStrategy {
         double maxVertical = Math.max(0.05, runSpeed * 0.25);
         yAdjust = Math.max(-maxVertical, Math.min(maxVertical, yAdjust));
         context.setDeltaMovement(new Vec3(runDirection.x * runSpeed, yAdjust, runDirection.z * runSpeed));
+    }
+
+    /**
+     * 背向拉开：沿目标到本机的方向飞出，同时把高度调到平飞高度，直到距离与高度都满足平飞入口。
+     */
+    private static void tickEgress(AircraftAttackContext context, Vec3 position, LivingEntity target,
+                                   double dx, double dz, double horizontalDistance,
+                                   double phaseSpeed, double runAltitude) {
+        Vec3 outward = horizontalDistance > 0.01
+                ? new Vec3(-dx, 0, -dz).normalize() : new Vec3(0, 0, 1);
+        double horizontalSpeed = context.panelSpeed()
+                * ModEquipmentConfig.TORPEDO_BOMBER_EGRESS_SPEED_MULTIPLIER.get() * phaseSpeed;
+        double maxVertical = Math.max(0.05, horizontalSpeed * 0.35);
+        double yAdjust = Math.max(-maxVertical, Math.min(maxVertical,
+                (target.getY() + runAltitude - position.y)
+                        * ModEquipmentConfig.TORPEDO_BOMBER_ALTITUDE_ADJUST.get()));
+        context.setDeltaMovement(new Vec3(
+                outward.x * horizontalSpeed, yAdjust, outward.z * horizontalSpeed));
     }
 
     /**

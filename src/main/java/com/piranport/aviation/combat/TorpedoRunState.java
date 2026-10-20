@@ -10,10 +10,16 @@ public final class TorpedoRunState {
     public int runTicks;
     /** 平飞段每 tick 解算出的预测撞击点；接近段为 null。 */
     @Nullable public Vec3 aimPoint;
+    /** 本架次是否已在接近中达到过平飞入口距离；未达到前若距离过近就先拉开。 */
+    public boolean standoffReached;
+    /** 正在背向拉开，直到距离与高度都满足平飞入口条件。 */
+    public boolean egressing;
 
     public void reset() {
         runStart = null;
         runTicks = 0;
         aimPoint = null;
+        standoffReached = false;
+        egressing = false;
     }
 }

@@ -43,11 +43,7 @@ public final class DiveBombAttackStrategy implements AttackStrategy {
     private static void tickDive(AircraftAttackContext context, @Nullable Player owner,
                                  LivingEntity target) {
         if (context.hasFired()) {
-            if (context.tryAutoResupplyAmmo()) {
-                context.resumeCruising();
-            } else {
-                context.startReturning("dive_bomber_done");
-            }
+            context.startReturning("dive_bomber_done");
             return;
         }
 

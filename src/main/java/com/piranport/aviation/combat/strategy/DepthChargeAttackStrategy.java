@@ -51,7 +51,7 @@ public final class DepthChargeAttackStrategy implements AttackStrategy {
 
     private static void tickAswAttack(AircraftAttackContext context, @Nullable Player owner,
                                       LivingEntity target) {
-        if (context.remainingAmmo() <= 0 && !context.tryAutoResupplyAmmo()) {
+        if (context.remainingAmmo() <= 0) {
             context.startReturning("asw_ammo_depleted");
             return;
         }

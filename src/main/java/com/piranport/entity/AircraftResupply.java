@@ -126,16 +126,6 @@ public class AircraftResupply {
     // ====================================================================
 
     /**
-     * Attempt to draw payload items from the owner's inventory. Returns true if successful.
-     * 自动装填固定关闭；保留方法作为旧实体调用方的兼容边界。
-     */
-    public static boolean tryAutoResupplyAmmo(AircraftEntity craft, Player owner) {
-        if (!craft.requiresPayload()) return false;
-        // 自动补给是"空中重新装填挂载"，仅在 AUTO_RESUPPLY 开启时可用；手动模式下挂载只走 R 键背包装填
-        return false;
-    }
-
-    /**
      * Attempt to draw one fuel item from the owner's inventory.
      * Returns true if successful.
      */

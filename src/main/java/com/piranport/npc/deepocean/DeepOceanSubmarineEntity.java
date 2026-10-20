@@ -57,7 +57,6 @@ public class DeepOceanSubmarineEntity extends AbstractDeepOceanEntity {
     }
 
     @Override public boolean canUseTorpedoes() { return true; }
-    @Override public float getTorpedoDamage() { return 12.0f; }
 
     /** 潜艇生成即鱼雷已装填（《深海/01》§六）。 */
     @Override

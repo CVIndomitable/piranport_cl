@@ -80,41 +80,6 @@
           ]
         }
       ]
-    },
-    {
-      "rolls": 1,
-      "entries": [
-        {
-          "type": "minecraft:item",
-          "name": "piranport:dungeon_key",
-          "weight": 15,
-          "functions": [
-            {
-              "function": "minecraft:set_components",
-              "components": {
-                "piranport:dungeon_stage_id": "delusion_1"
-              }
-            }
-          ]
-        },
-        {
-          "type": "minecraft:item",
-          "name": "piranport:dungeon_key",
-          "weight": 15,
-          "functions": [
-            {
-              "function": "minecraft:set_components",
-              "components": {
-                "piranport:dungeon_stage_id": "hell_1"
-              }
-            }
-          ]
-        },
-        {
-          "type": "minecraft:empty",
-          "weight": 170
-        }
-      ]
     }
   ]
 }

@@ -53,8 +53,6 @@ public class DeepOceanBattleCruiserEntity extends AbstractDeepOceanEntity {
         DeepOceanEntityData data = getJsonData();
         return data != null ? data.orbitDistance() : 24.0;
     }
-    @Override public int getFireInterval() { return 70; }
-    @Override public float getShellDamage() { return 8.0f; }
     @Override public float getExplosionPower() { return 2.5f; }
     @Override public int getTrackingIntervalMin() { return 2; } // More frequent tracking
     @Override public int getTrackingIntervalMax() { return 4; }

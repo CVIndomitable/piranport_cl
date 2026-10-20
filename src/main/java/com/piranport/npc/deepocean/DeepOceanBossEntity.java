@@ -61,13 +61,10 @@ public class DeepOceanBossEntity extends AbstractDeepOceanEntity {
         DeepOceanEntityData data = getJsonData();
         return data != null ? data.orbitDistance() : 48.0;
     }
-    @Override public int getFireInterval() { return 60; }
-    @Override public float getShellDamage() { return 15.0f; }
     @Override public float getExplosionPower() { return 4.0f; }
     @Override public int getTrackingIntervalMin() { return 2; }
     @Override public int getTrackingIntervalMax() { return 4; }
     @Override public boolean canUseTorpedoes() { return true; }
-    @Override public float getTorpedoDamage() { return 20.0f; }
     @Override public boolean canLaunchAircraft() { return true; }
     @Override public int getMaxAircraft() { return 6; }
     @Override public int getAircraftLaunchInterval() { return 240; }

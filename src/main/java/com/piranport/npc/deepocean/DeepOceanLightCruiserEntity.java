@@ -7,6 +7,7 @@ import com.piranport.npc.ai.goal.IdleWanderGoal;
 import com.piranport.npc.ai.goal.OrbitTargetGoal;
 import com.piranport.npc.ai.goal.FollowLeaderGoal;
 import com.piranport.npc.ai.goal.TorpedoAttackGoal;
+import com.piranport.registry.ModEntityTypes;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -44,7 +45,10 @@ public class DeepOceanLightCruiserEntity extends AbstractDeepOceanEntity {
         this.goalSelector.addGoal(2, new CannonAttackGoal(this));
         this.goalSelector.addGoal(2, new TorpedoAttackGoal(this));
         // 高级轻巡 = 敌方火炮防空层（《深海/01》§五）：独立对空目标，不占用对海 target。
-        this.goalSelector.addGoal(2, new AntiAircraftAttackGoal(this));
+        // 低级轻巡无防空火炮，不挂此 Goal。
+        if (getType() == ModEntityTypes.DEEP_OCEAN_HIGH_LIGHT_CRUISER.get()) {
+            this.goalSelector.addGoal(2, new AntiAircraftAttackGoal(this));
+        }
         this.goalSelector.addGoal(5, new IdleWanderGoal(this, 0.8, 32));
         this.goalSelector.addGoal(4, new FleetAlertGoal(this));
         this.targetSelector.addGoal(1, new NearestAttackableTargetGoal<>(this, Player.class, true));
@@ -57,11 +61,8 @@ public class DeepOceanLightCruiserEntity extends AbstractDeepOceanEntity {
         DeepOceanEntityData data = getJsonData();
         return data != null ? data.orbitDistance() : 16.0;
     }
-    @Override public int getFireInterval() { return 80; }
-    @Override public float getShellDamage() { return 5.0f; }
     @Override public float getExplosionPower() { return 1.5f; }
     @Override public int getTrackingIntervalMin() { return 3; }
     @Override public int getTrackingIntervalMax() { return 6; }
     @Override public boolean canUseTorpedoes() { return true; }
-    @Override public float getTorpedoDamage() { return 10.0f; }
 }

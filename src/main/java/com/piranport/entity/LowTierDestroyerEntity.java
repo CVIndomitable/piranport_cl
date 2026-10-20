@@ -71,7 +71,7 @@ public class LowTierDestroyerEntity extends Monster {
 
     public static AttributeSupplier.Builder createAttributes() {
         return Monster.createMonsterAttributes()
-                .add(Attributes.MAX_HEALTH, 30.0)          // 15 hearts — easy tutorial mob
+                .add(Attributes.MAX_HEALTH, 16.0)          // 8 hearts — 深海/01 低级驱逐，教学填充单位
                 .add(Attributes.MOVEMENT_SPEED, 0.25)      // ~player walk speed
                 .add(Attributes.FOLLOW_RANGE, ModEquipmentConfig.LOW_TIER_DESTROYER_DETECTION_RANGE.get())
                 .add(Attributes.ATTACK_DAMAGE, 3.0)

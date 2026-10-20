@@ -2,7 +2,7 @@
   "enemy_set_id": "hell_3_i",
   "spawn_list": [
     {
-      "entity": "piranport:deep_ocean_boss",
+      "entity": "piranport:deep_ocean_flagship",
       "count": 1
     },
     {
@@ -15,7 +15,7 @@
     }
   ],
   "flagship": {
-    "entity": "piranport:deep_ocean_boss",
+    "entity": "piranport:deep_ocean_flagship",
     "count": 1
   }
 }

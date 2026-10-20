@@ -82,6 +82,7 @@ public abstract class AbstractDeepOceanEntity extends Monster {
 
     protected AbstractDeepOceanEntity(EntityType<? extends AbstractDeepOceanEntity> type, Level level) {
         super(type, level);
+        applyJsonAttributes();
         if (attacksEscortTransports()) {
             // 优先级 0 早于子类的玩家索敌（优先级 1），仅在玩家未攻击且不在仇恨范围内时才转向运输船
             this.targetSelector.addGoal(0, new EscortTransportTargetGoal(this));
@@ -123,6 +124,33 @@ public abstract class AbstractDeepOceanEntity extends Monster {
     }
 
     // --- JSON 属性应用 ---
+
+    /**
+     * 把 JSON 的血量、护甲、航速写入属性基础值（《深海/01》§二数值表）。
+     *
+     * <p>WHY 放在构造器：副本 difficulty_scale 在 addFreshEntity 之前乘在 MAX_HEALTH 基础值上
+     * （NodeBattleField.applyDungeonDifficulty）。若这里晚于它写入，会把缩放覆盖掉。
+     * setBaseValue 幂等；读档时 NBT 里的属性基础值会再次覆盖，二者不冲突。
+     * 客户端 DATA 为空，这里是空操作，血量由服务端同步。</p>
+     */
+    private void applyJsonAttributes() {
+        DeepOceanEntityData data = getJsonData();
+        if (data == null) return;
+        if (data.maxHealth() != null) {
+            var maxHealth = getAttribute(Attributes.MAX_HEALTH);
+            if (maxHealth != null) maxHealth.setBaseValue(data.maxHealth());
+        }
+        if (data.armor() != null) {
+            var armor = getAttribute(Attributes.ARMOR);
+            if (armor != null) armor.setBaseValue(data.armor());
+        }
+        if (data.movementSpeed() != null) {
+            var speed = getAttribute(Attributes.MOVEMENT_SPEED);
+            if (speed != null) speed.setBaseValue(data.movementSpeed());
+        }
+        // 构造时 LivingEntity 已按旧上限满血，改了上限后要重新填满。
+        setHealth(getMaxHealth());
+    }
 
     /**
      * 把 JSON 的 follow_range 写入本舰索敌属性。

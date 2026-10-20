@@ -327,10 +327,17 @@ public class BossIntroScript implements DungeonScript {
                         enemySet, spawnPos, level);
 
         if (formationResult != null) {
-            // 有 formation 配置：按队形生成
+            // 有 formation 配置：按队形生成。Boss 独立领队——它是护卫编队的领舰但不计入护卫成员，
+            // 其阵亡后由 FleetGroupManager.removeMember 按成员顺序递补。
             com.piranport.npc.ai.FleetGroup group = formationResult.group();
+            if (bossUuid != null) {
+                group.setLeaderUuid(bossUuid);
+                if (level.getEntity(bossUuid) instanceof com.piranport.npc.deepocean.AbstractDeepOceanEntity bossEntity) {
+                    bossEntity.setFleetGroupId(group.getGroupId());
+                }
+            }
             for (com.piranport.dungeon.instance.FormationGenerator.SpawnPlan plan : formationResult.plans()) {
-                if (plan.isLeader()) continue; // 跳过旗舰（Boss 已在 INTRO 生成）
+                if (plan.isLeader()) continue; // 领舰（旗舰）已在 INTRO 生成，此处不再重复出生
                 Entity entity = plan.entityType().create(level);
                 if (entity != null) {
                     entity.setPos(plan.position().x, DungeonConstants.SPAWN_Y, plan.position().z);

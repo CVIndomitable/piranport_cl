@@ -404,6 +404,27 @@ public class ClientModEvents {
                 ctx -> new AlexSlimMobRenderer<>(ctx));
         event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_ZUIKAKU.get(),
                 ctx -> new AlexSlimMobRenderer<>(ctx));
+        // 高级档与旗舰暂无独立模型，沿用同舰种低级的 Alex 占位
+        event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_HIGH_DESTROYER.get(),
+                ctx -> new AlexSlimMobRenderer<>(ctx));
+        event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_HIGH_LIGHT_CRUISER.get(),
+                ctx -> new AlexSlimMobRenderer<>(ctx));
+        event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_HIGH_HEAVY_CRUISER.get(),
+                ctx -> new AlexSlimMobRenderer<>(ctx));
+        event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_HIGH_BATTLE_CRUISER.get(),
+                ctx -> new AlexSlimMobRenderer<>(ctx));
+        event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_HIGH_BATTLESHIP.get(),
+                ctx -> new AlexSlimMobRenderer<>(ctx));
+        event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_HIGH_LIGHT_CARRIER.get(),
+                ctx -> new AlexSlimMobRenderer<>(ctx));
+        event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_HIGH_CARRIER.get(),
+                ctx -> new AlexSlimMobRenderer<>(ctx));
+        event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_HIGH_TORPEDO_CRUISER.get(),
+                ctx -> new AlexSlimMobRenderer<>(ctx));
+        event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_HIGH_SUBMARINE.get(),
+                ctx -> new AlexSlimMobRenderer<>(ctx));
+        event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_FLAGSHIP.get(),
+                ctx -> new AlexSlimMobRenderer<>(ctx));
         // 运输船是箱船，不使用人形模型，单独用方块船体渲染器。
         event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_TRANSPORT.get(),
                 DeepOceanTransportRenderer::new);

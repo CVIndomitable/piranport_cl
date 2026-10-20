@@ -9,7 +9,7 @@
   "panel_damage": 30.0,
   "panel_speed": 0.48,
   "weight": 22,
-  "health": 12,
+  "health": 32,
   "attack_cooldown": 480,
   "self_defense": {
     "zones": [

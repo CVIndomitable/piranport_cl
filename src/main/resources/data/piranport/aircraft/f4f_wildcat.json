@@ -8,6 +8,6 @@
   "panel_damage": 2.0,
   "panel_speed": 0.52,
   "weight": 12,
-  "health": 20,
+  "health": 24,
   "attack_cooldown": 180
 }

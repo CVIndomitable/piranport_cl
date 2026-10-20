@@ -7,7 +7,6 @@ import com.piranport.npc.ai.FleetGroup;
 import com.piranport.npc.ai.FleetGroupManager;
 import com.piranport.npc.ai.FleetHull;
 import com.piranport.npc.deepocean.AbstractDeepOceanEntity;
-import com.piranport.registry.ModEntityTypes;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
@@ -61,8 +60,7 @@ public final class FormationGenerator {
     public record SpawnPlan(
             EntityType<?> entityType,
             Vec3 position,
-            boolean isLeader,
-            boolean isBoss
+            boolean isLeader
     ) {}
 
     private FormationGenerator() {}
@@ -104,11 +102,14 @@ public final class FormationGenerator {
         }
         if (ordered.isEmpty()) return List.of();
 
-        // Boss 独立领队：第一艘 Boss 占领舰槽位，不计入护卫队形；无 Boss 时沿用首船为领舰
-        EntityType<?> leaderType = ordered.stream()
-                .filter(FormationGenerator::isBossType)
-                .findFirst()
-                .orElse(ordered.get(0));
+        // 领舰槽位固定给旗舰：BossIntroScript 在 INTRO 直接生成 enemySet.flagship()，
+        // 它必须占据这个槽位并由调用方跳过，否则同一艘会再以护卫身份生成一次。
+        // 旗舰类型不是 deep_ocean_boss 时（如 boss_1_4 为战列舰）也不能退回首船。
+        EntityType<?> leaderType = enemySet.flagship() == null ? null
+                : resolveEntityType(enemySet.flagship().entity());
+        if (leaderType == null || !ordered.contains(leaderType)) {
+            leaderType = ordered.get(0);
+        }
         List<EntityType<?>> slotTypes = new ArrayList<>(ordered.size());
         slotTypes.add(leaderType);
         boolean leaderRemoved = false;
@@ -140,7 +141,7 @@ public final class FormationGenerator {
                     DungeonConstants.SPAWN_Y,
                     spawnPos.z + (rng.nextDouble() - 0.5) * 1.0
             );
-            plans.add(new SpawnPlan(type, spawnPos, slot == 0, isBossType(type)));
+            plans.add(new SpawnPlan(type, spawnPos, slot == 0));
         }
 
         return plans;
@@ -164,10 +165,6 @@ public final class FormationGenerator {
     }
 
     // ===== Helpers =====
-
-    private static boolean isBossType(EntityType<?> type) {
-        return type == ModEntityTypes.DEEP_OCEAN_BOSS.get();
-    }
 
     @SuppressWarnings("unchecked")
     private static EntityType<?> resolveEntityType(String entityId) {

@@ -337,7 +337,7 @@ public class BossIntroScript implements DungeonScript {
                 }
             }
             for (com.piranport.dungeon.instance.FormationGenerator.SpawnPlan plan : formationResult.plans()) {
-                if (plan.isBoss()) continue; // Boss 已在 INTRO 生成
+                if (plan.isLeader()) continue; // 领舰（旗舰）已在 INTRO 生成，此处不再重复出生
                 Entity entity = plan.entityType().create(level);
                 if (entity != null) {
                     entity.setPos(plan.position().x, DungeonConstants.SPAWN_Y, plan.position().z);

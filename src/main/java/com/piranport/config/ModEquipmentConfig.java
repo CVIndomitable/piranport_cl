@@ -569,24 +569,67 @@ public final class ModEquipmentConfig {
     public static final TerminalConfigValue<Double> MISSILE_AUTO_LOCK_RANGE =
             TerminalConfigValue.number("aircraft", "missile", "auto_lock_range", 32.0, 0.0, 256.0);
 
+    // ===== 强化槽自动近防炮（策划决策/舰装/06-自动近防炮）=====
+    /**
+     * 每座近防炮一组终端参数，target = {@code ciws_<注册名>}。
+     * <p>数值取《舰装/06》注册表：射程、单发、联装、齐射间隔、负重。
+     * {@code accuracy} 是该口径的每发命中率：炮按 0.4 计；火箭按「齐射期望命中」折算
+     * （喷进炮 4/28、UP 2/10），这样齐射期望伤害与文档的「进窗口大约打出」一致。
+     */
     public record CIWSConfig(TerminalConfigValue<Double> range, TerminalConfigValue<Integer> interval,
                              TerminalConfigValue<Integer> barrels, TerminalConfigValue<Integer> weight,
-                             TerminalConfigValue<Double> damage) {}
+                             TerminalConfigValue<Double> damage, TerminalConfigValue<Double> accuracy) {}
 
-    private static CIWSConfig ciws(String caliber) {
-        String target = "ciws_" + caliber;
+    private static CIWSConfig ciws(String id, double range, int interval, int barrels, int weight,
+                                   double damage, double accuracy) {
+        String target = "ciws_" + id;
         return new CIWSConfig(
-                TerminalConfigValue.number("equipment", target, "range", 16.0, 1.0, 128.0),
-                TerminalConfigValue.integer("equipment", target, "interval", 20, 1, 1200),
-                TerminalConfigValue.integer("equipment", target, "barrels", 1, 1, 16),
-                TerminalConfigValue.integer("equipment", target, "weight", 0, 0, 112),
-                // 单管单发基础伤害；最终 = damage × 口径伤害系数 × 管数。默认 1.5（下沉前写死值）。
-                TerminalConfigValue.number("equipment", target, "damage", 1.5, 0.0, 100.0));
+                TerminalConfigValue.number("equipment", target, "range", range, 1.0, 128.0),
+                TerminalConfigValue.integer("equipment", target, "interval", interval, 1, 1200),
+                TerminalConfigValue.integer("equipment", target, "barrels", barrels, 1, 32),
+                TerminalConfigValue.integer("equipment", target, "weight", weight, 0, 112),
+                TerminalConfigValue.number("equipment", target, "damage", damage, 0.0, 100.0),
+                TerminalConfigValue.number("equipment", target, "accuracy", accuracy, 0.0, 1.0));
     }
 
-    public static final CIWSConfig CIWS_20MM = ciws("20mm");
-    public static final CIWSConfig CIWS_40MM = ciws("40mm");
-    public static final CIWSConfig CIWS_76MM = ciws("76mm");
+    // 初期
+    public static final CIWSConfig CIWS_US_TWIN_OERLIKON_20MM =
+            ciws("us_twin_oerlikon_20mm", 16.0, 4, 2, 2, 1.0, 0.40);
+    public static final CIWSConfig CIWS_GERMAN_TWIN_37MM_AA =
+            ciws("german_twin_37mm_aa", 24.0, 8, 2, 2, 2.0, 0.40);
+    // 标准
+    public static final CIWSConfig CIWS_GERMAN_QUAD_20MM_AA =
+            ciws("german_quad_20mm_aa", 16.0, 4, 4, 4, 1.0, 0.40);
+    public static final CIWSConfig CIWS_US_TWIN_BOFORS_40MM =
+            ciws("us_twin_bofors_40mm", 24.0, 5, 2, 3, 2.0, 0.40);
+    public static final CIWSConfig CIWS_QUAD_POM_POM_40MM =
+            ciws("quad_pom_pom_40mm", 22.0, 8, 4, 5, 2.0, 0.40);
+    public static final CIWSConfig CIWS_UP_MARK_I =
+            ciws("up_mark_i", 28.0, 80, 10, 6, 2.0, 0.20);
+    // 改良
+    public static final CIWSConfig CIWS_FRENCH_QUAD_37MM_AA =
+            ciws("french_quad_37mm_aa", 24.0, 5, 4, 4, 2.0, 0.40);
+    public static final CIWSConfig CIWS_US_QUAD_BOFORS_40MM =
+            ciws("us_quad_bofors_40mm", 24.0, 6, 4, 5, 2.0, 0.40);
+    public static final CIWSConfig CIWS_OCTUPLE_POM_POM_40MM =
+            ciws("octuple_pom_pom_40mm", 22.0, 8, 8, 8, 2.0, 0.32);
+    public static final CIWSConfig CIWS_JAPANESE_28_TUBE_AA_ROCKET =
+            ciws("japanese_28_tube_aa_rocket", 28.0, 100, 28, 8, 2.0, 4.0 / 28.0);
+    public static final CIWSConfig CIWS_SM24_ZIF_TWIN_57MM =
+            ciws("sm24_zif_twin_57mm", 30.0, 8, 2, 3, 3.0, 0.40);
+    // 先进
+    public static final CIWSConfig CIWS_AK230 =
+            ciws("ak230", 18.0, 2, 2, 3, 2.0, 0.40);
+    public static final CIWSConfig CIWS_BRITISH_SEXTUPLE_BOFORS_40MM =
+            ciws("british_sextuple_bofors_40mm", 24.0, 6, 6, 6, 2.0, 0.36);
+    public static final CIWSConfig CIWS_SM20_ZIF_QUAD_45MM =
+            ciws("sm20_zif_quad_45mm", 30.0, 8, 4, 5, 3.0, 0.40);
+    public static final CIWSConfig CIWS_BOFORS_M1951_TWIN_57MM =
+            ciws("bofors_m1951_twin_57mm", 30.0, 6, 2, 3, 3.0, 0.40);
+    public static final CIWSConfig CIWS_ZIF75_QUAD_57MM =
+            ciws("zif75_quad_57mm", 30.0, 8, 4, 6, 3.0, 0.40);
+    public static final CIWSConfig CIWS_US_TWIN_3INCH_AA =
+            ciws("us_twin_3inch_aa", 40.0, 10, 2, 5, 5.0, 0.40);
 
     // ===== 导弹发射器共享默认值（2026-10-05）=====
     // WHY 单独一组 global.missile_launcher.*：每个型号的数值已按 missile_launcher.<注册路径>.*

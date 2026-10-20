@@ -216,6 +216,35 @@ public final class WeaponWorkbenchRecipeRegistry {
         };
     }
 
+    /** 近防炮材料：比同档手持炮轻；只按档给固定量，不随联装数膨胀（28 联会失控）。 */
+    static List<ItemStack> ciwsMaterials(EquipmentTier tier) {
+        List<ItemStack> m = new ArrayList<>();
+        switch (tier) {
+            case INITIAL -> {
+                m.add(new ItemStack(Items.IRON_INGOT, 4));
+                m.add(new ItemStack(Items.COPPER_INGOT, 2));
+                m.add(new ItemStack(Items.REDSTONE, 2));
+            }
+            case STANDARD -> {
+                m.add(new ItemStack(Items.IRON_INGOT, 6));
+                m.add(new ItemStack(Items.COPPER_INGOT, 2));
+                m.add(new ItemStack(Items.DIAMOND, 1));
+            }
+            case IMPROVED -> {
+                m.add(new ItemStack(Items.IRON_INGOT, 8));
+                m.add(new ItemStack(Items.COPPER_INGOT, 4));
+                m.add(new ItemStack(Items.DIAMOND, 2));
+            }
+            case ADVANCED -> {
+                m.add(new ItemStack(Items.IRON_INGOT, 10));
+                m.add(new ItemStack(Items.COPPER_INGOT, 4));
+                m.add(new ItemStack(Items.NETHERITE_SCRAP, 2));
+                m.add(new ItemStack(Items.SHULKER_SHELL, 1));
+            }
+        }
+        return List.copyOf(m);
+    }
+
     private static void registerAll(List<WeaponWorkbenchRecipe> r) {
         // ===== Tab 0: 火炮 =====
         // 数值/09：通用占位炮 single_small_gun、medium_gun 生存模式不给配方，只有 07 表火炮进工作台。
@@ -376,6 +405,15 @@ public final class WeaponWorkbenchRecipeRegistry {
                 new ItemStack(Items.NETHERITE_SCRAP, 2),
                 new ItemStack(Items.END_CRYSTAL, 1)),
                 blueprintFor("advanced_engine", EquipmentTier.ADVANCED), 400);
+
+        // ===== 自动近防炮（舰装/06）=====
+        // 初期/标准不查蓝图，改良/先进各要自己的专属蓝图；2-1 通关池抽的正是后 11 张。
+        for (var holder : com.piranport.registry.WeaponItems.CIWS_ITEMS) {
+            com.piranport.item.AutoCIWSItem ciws = holder.get();
+            String id = BuiltInRegistries.ITEM.getKey(ciws).getPath();
+            EquipmentTier tier = ciws.getTier();
+            add(r, 5, ciws, ciwsMaterials(tier), blueprintFor(id, tier), craftTime(100, tier));
+        }
 
         // ===== Tab 4: 飞机 =====
         // 数值/09：按机种分档，材料随档替换；无蓝图。列表只覆盖已注册且有分档的机体。

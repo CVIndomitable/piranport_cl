@@ -119,10 +119,24 @@ public class ModCreativeTabs {
                         output.accept(ModItems.SMALL_ARMOR_PLATE.get());
                         output.accept(ModItems.MEDIUM_ARMOR_PLATE.get());
                         output.accept(ModItems.LARGE_ARMOR_PLATE.get());
-                        // Auto CIWS — 策划决策/舰装/舰装-自动近防炮系统.md
-                        output.accept(ModItems.AUTO_CIWS_20MM.get());
-                        output.accept(ModItems.AUTO_CIWS_40MM.get());
-                        output.accept(ModItems.AUTO_CIWS_76MM.get());
+                        // 自动近防炮 17 座 — 策划决策/舰装/06-自动近防炮
+                        output.accept(ModItems.US_TWIN_OERLIKON_20MM.get());
+                        output.accept(ModItems.GERMAN_TWIN_37MM_AA.get());
+                        output.accept(ModItems.GERMAN_QUAD_20MM_AA.get());
+                        output.accept(ModItems.US_TWIN_BOFORS_40MM.get());
+                        output.accept(ModItems.QUAD_POM_POM_40MM.get());
+                        output.accept(ModItems.UP_MARK_I.get());
+                        output.accept(ModItems.FRENCH_QUAD_37MM_AA.get());
+                        output.accept(ModItems.US_QUAD_BOFORS_40MM.get());
+                        output.accept(ModItems.OCTUPLE_POM_POM_40MM.get());
+                        output.accept(ModItems.JAPANESE_28_TUBE_AA_ROCKET.get());
+                        output.accept(ModItems.SM24_ZIF_TWIN_57MM.get());
+                        output.accept(ModItems.AK230.get());
+                        output.accept(ModItems.BRITISH_SEXTUPLE_BOFORS_40MM.get());
+                        output.accept(ModItems.SM20_ZIF_QUAD_45MM.get());
+                        output.accept(ModItems.BOFORS_M1951_TWIN_57MM.get());
+                        output.accept(ModItems.ZIF75_QUAD_57MM.get());
+                        output.accept(ModItems.US_TWIN_3INCH_AA.get());
                         // Sonar — 三档声呐统一放这里；改进型=6-1 关卡奖励，先进型=7-1 关卡奖励
                         output.accept(ModItems.STANDARD_SONAR.get());
                         output.accept(ModItems.IMPROVED_SONAR.get());

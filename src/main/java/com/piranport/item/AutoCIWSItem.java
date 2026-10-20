@@ -3,6 +3,7 @@ package com.piranport.item;
 import com.piranport.combat.AASilenceManager;
 import com.piranport.combat.CombatTargeting;
 import com.piranport.combat.TransformationManager;
+import com.piranport.component.EquipmentTier;
 import com.piranport.config.ModEquipmentConfig;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
@@ -16,17 +17,18 @@ public class AutoCIWSItem extends Item {
     // DETECT_RADIUS / FIRE_INTERVAL / DAMAGE 三个写死常量已删除：
     // 前两者早已被 CIWSConfig 的 range/interval 取代（无任何引用），
     // DAMAGE 下沉为终端参数 ciws_<caliber>.damage（见 ModEquipmentConfig）。
-    private final float caliberDamage;
+    private final EquipmentTier tier;
     private final ModEquipmentConfig.CIWSConfig config;
 
-    public AutoCIWSItem(Properties properties, float caliberDamage,
+    public AutoCIWSItem(Properties properties, EquipmentTier tier,
                         ModEquipmentConfig.CIWSConfig config) {
         super(properties);
-        this.caliberDamage = caliberDamage;
+        this.tier = tier;
         this.config = config;
     }
 
-    public float getCaliberDamage() { return caliberDamage; }
+    public EquipmentTier getTier() { return tier; }
+    public ModEquipmentConfig.CIWSConfig getConfig() { return config; }
     public int getWeight() { return config.weight().get(); }
 
     /**
@@ -55,8 +57,10 @@ public class AutoCIWSItem extends Item {
                     .min(Comparator.comparingDouble(player::distanceToSqr)).orElse(null);
             if (target == null) continue;
             // 舰载机继承 Entity 并自行处理耐久；不能在已选中飞机后再用 LivingEntity 过滤掉。
+            // 一次齐射 = 联装数 × 单发 × 命中率；火箭的命中率按「齐射期望命中」折算（舰装/06）。
             target.hurt(player.damageSources().mobAttack(player),
-                    ciws.config.damage().get().floatValue() * ciws.caliberDamage * ciws.config.barrels().get());
+                    (float) (ciws.config.damage().get() * ciws.config.barrels().get()
+                            * ciws.config.accuracy().get()));
         }
     }
 }

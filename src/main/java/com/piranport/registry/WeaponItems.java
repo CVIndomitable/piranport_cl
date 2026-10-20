@@ -200,22 +200,105 @@ public final class WeaponItems {
                             2.0f     // salvoInterval
                     ), "fourteen_barrel_gun"));
 
-    // ===== Auto CIWS（强化部件槽 — 策划决策/舰装/舰装-自动近防炮系统.md）=====
-    public static final DeferredItem<AutoCIWSItem> AUTO_CIWS_20MM =
-            ITEMS.register("auto_ciws_20mm",
-                    () -> new AutoCIWSItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ENHANCEMENT),
-                            1.0f, com.piranport.config.ModEquipmentConfig.CIWS_20MM));
-    public static final DeferredItem<AutoCIWSItem> AUTO_CIWS_40MM =
-            ITEMS.register("auto_ciws_40mm",
-                    () -> new AutoCIWSItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ENHANCEMENT),
-                            1.5f, com.piranport.config.ModEquipmentConfig.CIWS_40MM));
-    public static final DeferredItem<AutoCIWSItem> AUTO_CIWS_76MM =
-            ITEMS.register("auto_ciws_76mm",
-                    () -> new AutoCIWSItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ENHANCEMENT),
-                            2.0f, com.piranport.config.ModEquipmentConfig.CIWS_76MM));
+    // ===== 自动近防炮（强化部件槽 — 策划决策/舰装/06-自动近防炮）=====
+    /**
+     * 17 座按《舰装/06》注册表；每座一组终端参数 {@code global.ciws_<注册名>.*}。
+     * 初期/标准可合成且不查蓝图；改良/先进各要自己的专属蓝图（数值/09）。
+     */
+    private static DeferredItem<AutoCIWSItem> ciws(String id, EquipmentTier tier,
+                                                   com.piranport.config.ModEquipmentConfig.CIWSConfig config) {
+        return ITEMS.register(id, () -> new AutoCIWSItem(new Item.Properties().stacksTo(1)
+                .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.ENHANCEMENT), tier, config));
+    }
+
+    public static final DeferredItem<AutoCIWSItem> US_TWIN_OERLIKON_20MM =
+            ciws("us_twin_oerlikon_20mm", EquipmentTier.INITIAL,
+                    com.piranport.config.ModEquipmentConfig.CIWS_US_TWIN_OERLIKON_20MM);
+
+    public static final DeferredItem<AutoCIWSItem> GERMAN_TWIN_37MM_AA =
+            ciws("german_twin_37mm_aa", EquipmentTier.INITIAL,
+                    com.piranport.config.ModEquipmentConfig.CIWS_GERMAN_TWIN_37MM_AA);
+
+    public static final DeferredItem<AutoCIWSItem> GERMAN_QUAD_20MM_AA =
+            ciws("german_quad_20mm_aa", EquipmentTier.STANDARD,
+                    com.piranport.config.ModEquipmentConfig.CIWS_GERMAN_QUAD_20MM_AA);
+
+    public static final DeferredItem<AutoCIWSItem> US_TWIN_BOFORS_40MM =
+            ciws("us_twin_bofors_40mm", EquipmentTier.STANDARD,
+                    com.piranport.config.ModEquipmentConfig.CIWS_US_TWIN_BOFORS_40MM);
+
+    public static final DeferredItem<AutoCIWSItem> QUAD_POM_POM_40MM =
+            ciws("quad_pom_pom_40mm", EquipmentTier.STANDARD,
+                    com.piranport.config.ModEquipmentConfig.CIWS_QUAD_POM_POM_40MM);
+
+    public static final DeferredItem<AutoCIWSItem> UP_MARK_I =
+            ciws("up_mark_i", EquipmentTier.STANDARD,
+                    com.piranport.config.ModEquipmentConfig.CIWS_UP_MARK_I);
+
+    public static final DeferredItem<AutoCIWSItem> FRENCH_QUAD_37MM_AA =
+            ciws("french_quad_37mm_aa", EquipmentTier.IMPROVED,
+                    com.piranport.config.ModEquipmentConfig.CIWS_FRENCH_QUAD_37MM_AA);
+
+    public static final DeferredItem<AutoCIWSItem> US_QUAD_BOFORS_40MM =
+            ciws("us_quad_bofors_40mm", EquipmentTier.IMPROVED,
+                    com.piranport.config.ModEquipmentConfig.CIWS_US_QUAD_BOFORS_40MM);
+
+    public static final DeferredItem<AutoCIWSItem> OCTUPLE_POM_POM_40MM =
+            ciws("octuple_pom_pom_40mm", EquipmentTier.IMPROVED,
+                    com.piranport.config.ModEquipmentConfig.CIWS_OCTUPLE_POM_POM_40MM);
+
+    public static final DeferredItem<AutoCIWSItem> JAPANESE_28_TUBE_AA_ROCKET =
+            ciws("japanese_28_tube_aa_rocket", EquipmentTier.IMPROVED,
+                    com.piranport.config.ModEquipmentConfig.CIWS_JAPANESE_28_TUBE_AA_ROCKET);
+
+    public static final DeferredItem<AutoCIWSItem> SM24_ZIF_TWIN_57MM =
+            ciws("sm24_zif_twin_57mm", EquipmentTier.IMPROVED,
+                    com.piranport.config.ModEquipmentConfig.CIWS_SM24_ZIF_TWIN_57MM);
+
+    public static final DeferredItem<AutoCIWSItem> AK230 =
+            ciws("ak230", EquipmentTier.ADVANCED,
+                    com.piranport.config.ModEquipmentConfig.CIWS_AK230);
+
+    public static final DeferredItem<AutoCIWSItem> BRITISH_SEXTUPLE_BOFORS_40MM =
+            ciws("british_sextuple_bofors_40mm", EquipmentTier.ADVANCED,
+                    com.piranport.config.ModEquipmentConfig.CIWS_BRITISH_SEXTUPLE_BOFORS_40MM);
+
+    public static final DeferredItem<AutoCIWSItem> SM20_ZIF_QUAD_45MM =
+            ciws("sm20_zif_quad_45mm", EquipmentTier.ADVANCED,
+                    com.piranport.config.ModEquipmentConfig.CIWS_SM20_ZIF_QUAD_45MM);
+
+    public static final DeferredItem<AutoCIWSItem> BOFORS_M1951_TWIN_57MM =
+            ciws("bofors_m1951_twin_57mm", EquipmentTier.ADVANCED,
+                    com.piranport.config.ModEquipmentConfig.CIWS_BOFORS_M1951_TWIN_57MM);
+
+    public static final DeferredItem<AutoCIWSItem> ZIF75_QUAD_57MM =
+            ciws("zif75_quad_57mm", EquipmentTier.ADVANCED,
+                    com.piranport.config.ModEquipmentConfig.CIWS_ZIF75_QUAD_57MM);
+
+    public static final DeferredItem<AutoCIWSItem> US_TWIN_3INCH_AA =
+            ciws("us_twin_3inch_aa", EquipmentTier.ADVANCED,
+                    com.piranport.config.ModEquipmentConfig.CIWS_US_TWIN_3INCH_AA);
+
+
+    /** 17 座近防炮，按《舰装/06》注册表顺序；工作台与创造栏按此顺序遍历。 */
+    public static final List<DeferredItem<AutoCIWSItem>> CIWS_ITEMS = List.of(
+            US_TWIN_OERLIKON_20MM,
+            GERMAN_TWIN_37MM_AA,
+            GERMAN_QUAD_20MM_AA,
+            US_TWIN_BOFORS_40MM,
+            QUAD_POM_POM_40MM,
+            UP_MARK_I,
+            FRENCH_QUAD_37MM_AA,
+            US_QUAD_BOFORS_40MM,
+            OCTUPLE_POM_POM_40MM,
+            JAPANESE_28_TUBE_AA_ROCKET,
+            SM24_ZIF_TWIN_57MM,
+            AK230,
+            BRITISH_SEXTUPLE_BOFORS_40MM,
+            SM20_ZIF_QUAD_45MM,
+            BOFORS_M1951_TWIN_57MM,
+            ZIF75_QUAD_57MM,
+            US_TWIN_3INCH_AA);
 
     // ===== Torpedo Launchers =====
     public static final DeferredItem<TorpedoLauncherItem> TRIPLE_TORPEDO_LAUNCHER =
@@ -426,6 +509,18 @@ public final class WeaponItems {
         registerLauncherBlueprint(map, "quintuple_61cm_torpedo", EquipmentTier.IMPROVED);
         registerLauncherBlueprint(map, "quintuple_61cm_oxygen_torpedo", EquipmentTier.IMPROVED);
         registerLauncherBlueprint(map, "japanese_sextuple_61cm_torpedo", EquipmentTier.ADVANCED);
+        // 自动近防炮（舰装/06）：初期/标准不查蓝图；改良 5 座、先进 6 座各要自己的蓝图。
+        registerBlueprint(map, "french_quad_37mm_aa", EquipmentTier.IMPROVED);
+        registerBlueprint(map, "us_quad_bofors_40mm", EquipmentTier.IMPROVED);
+        registerBlueprint(map, "octuple_pom_pom_40mm", EquipmentTier.IMPROVED);
+        registerBlueprint(map, "japanese_28_tube_aa_rocket", EquipmentTier.IMPROVED);
+        registerBlueprint(map, "sm24_zif_twin_57mm", EquipmentTier.IMPROVED);
+        registerBlueprint(map, "ak230", EquipmentTier.ADVANCED);
+        registerBlueprint(map, "british_sextuple_bofors_40mm", EquipmentTier.ADVANCED);
+        registerBlueprint(map, "sm20_zif_quad_45mm", EquipmentTier.ADVANCED);
+        registerBlueprint(map, "bofors_m1951_twin_57mm", EquipmentTier.ADVANCED);
+        registerBlueprint(map, "zif75_quad_57mm", EquipmentTier.ADVANCED);
+        registerBlueprint(map, "us_twin_3inch_aa", EquipmentTier.ADVANCED);
         // 雷达三代（火控/08）：改良、先进各要自己的蓝图；标准不查蓝图，不进池。
         registerBlueprint(map, "improved_surface_radar", EquipmentTier.IMPROVED);
         registerBlueprint(map, "advanced_surface_radar", EquipmentTier.ADVANCED);

@@ -241,10 +241,24 @@ public class ModItems {
     public static final DeferredItem<ArmorPlateItem> MEDIUM_ARMOR_PLATE = MaterialItems.MEDIUM_ARMOR_PLATE;
     public static final DeferredItem<ArmorPlateItem> LARGE_ARMOR_PLATE = MaterialItems.LARGE_ARMOR_PLATE;
 
-    // ===== Auto CIWS（强化部件槽 — 策划决策/舰装/舰装-自动近防炮系统.md）(extracted to WeaponItems) =====
-    public static final DeferredItem<AutoCIWSItem> AUTO_CIWS_20MM = WeaponItems.AUTO_CIWS_20MM;
-    public static final DeferredItem<AutoCIWSItem> AUTO_CIWS_40MM = WeaponItems.AUTO_CIWS_40MM;
-    public static final DeferredItem<AutoCIWSItem> AUTO_CIWS_76MM = WeaponItems.AUTO_CIWS_76MM;
+    // ===== 自动近防炮（强化部件槽 — 策划决策/舰装/06-自动近防炮）(extracted to WeaponItems) =====
+    public static final DeferredItem<AutoCIWSItem> US_TWIN_OERLIKON_20MM = WeaponItems.US_TWIN_OERLIKON_20MM;
+    public static final DeferredItem<AutoCIWSItem> GERMAN_TWIN_37MM_AA = WeaponItems.GERMAN_TWIN_37MM_AA;
+    public static final DeferredItem<AutoCIWSItem> GERMAN_QUAD_20MM_AA = WeaponItems.GERMAN_QUAD_20MM_AA;
+    public static final DeferredItem<AutoCIWSItem> US_TWIN_BOFORS_40MM = WeaponItems.US_TWIN_BOFORS_40MM;
+    public static final DeferredItem<AutoCIWSItem> QUAD_POM_POM_40MM = WeaponItems.QUAD_POM_POM_40MM;
+    public static final DeferredItem<AutoCIWSItem> UP_MARK_I = WeaponItems.UP_MARK_I;
+    public static final DeferredItem<AutoCIWSItem> FRENCH_QUAD_37MM_AA = WeaponItems.FRENCH_QUAD_37MM_AA;
+    public static final DeferredItem<AutoCIWSItem> US_QUAD_BOFORS_40MM = WeaponItems.US_QUAD_BOFORS_40MM;
+    public static final DeferredItem<AutoCIWSItem> OCTUPLE_POM_POM_40MM = WeaponItems.OCTUPLE_POM_POM_40MM;
+    public static final DeferredItem<AutoCIWSItem> JAPANESE_28_TUBE_AA_ROCKET = WeaponItems.JAPANESE_28_TUBE_AA_ROCKET;
+    public static final DeferredItem<AutoCIWSItem> SM24_ZIF_TWIN_57MM = WeaponItems.SM24_ZIF_TWIN_57MM;
+    public static final DeferredItem<AutoCIWSItem> AK230 = WeaponItems.AK230;
+    public static final DeferredItem<AutoCIWSItem> BRITISH_SEXTUPLE_BOFORS_40MM = WeaponItems.BRITISH_SEXTUPLE_BOFORS_40MM;
+    public static final DeferredItem<AutoCIWSItem> SM20_ZIF_QUAD_45MM = WeaponItems.SM20_ZIF_QUAD_45MM;
+    public static final DeferredItem<AutoCIWSItem> BOFORS_M1951_TWIN_57MM = WeaponItems.BOFORS_M1951_TWIN_57MM;
+    public static final DeferredItem<AutoCIWSItem> ZIF75_QUAD_57MM = WeaponItems.ZIF75_QUAD_57MM;
+    public static final DeferredItem<AutoCIWSItem> US_TWIN_3INCH_AA = WeaponItems.US_TWIN_3INCH_AA;
 
     // ===== Food Ingredients (Phase 11a) (extracted to FoodItems) =====
     public static final DeferredItem<Item> FLOUR = FoodItems.FLOUR;

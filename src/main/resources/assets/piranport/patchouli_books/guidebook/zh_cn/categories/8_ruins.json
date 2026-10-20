@@ -1,6 +1,6 @@
 {
   "name": "piranport.book.cat.ruins",
   "description": "piranport.book.cat.ruins.desc",
-  "icon": "minecraft:book",
+  "icon": "piranport:abyssal_report",
   "sortnum": 7
 }

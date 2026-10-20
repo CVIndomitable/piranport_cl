@@ -1,7 +1,7 @@
 {
   "name": "piranport.book.equipment.special",
   "category": "piranport:10_equipment",
-  "icon": "piranport:skin_core_4",
+  "icon": "piranport:skin_core",
   "sortnum": 1,
   "pages": [
     {

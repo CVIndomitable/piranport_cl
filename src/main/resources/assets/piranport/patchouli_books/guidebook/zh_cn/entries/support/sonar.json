@@ -1,24 +1,24 @@
 {
   "name": "piranport.book.advanced.sonar",
   "category": "piranport:11_support",
-  "icon": "piranport:standard_sonar",
+  "icon": "piranport:sonar",
   "sortnum": 0,
   "pages": [
     {
       "type": "patchouli:text",
-      "text": "$(bold)声呐探测$()$(br2)$(item)标准型声呐$()存入正在变身的舰装核心后会自动工作。它不会在地图上生成标记，而是周期性给附近目标施加发光效果，方便肉眼发现。"
+      "text": "$(bold)何时能做$()$(br2)$(item)标准型声呐$()从 4-2 通关起可以合成，不要蓝图。此前合成台不给出。装进正在变身的舰装核心，不占快捷栏。"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)探测范围$()$(br2)声呐每40游戏刻扫描一次，球形范围内生效，并受服务器模拟距离限制。$(br2)三种型号探测半径：$(br)• 标准型声呐：24格$(br)• 改进型声呐：32格$(br)• 先进型声呐：40格$(br2)扫描范围内的活体非玩家目标会短暂发光。"
+      "text": "$(bold)它标什么$()$(br2)标水下目标。不在地图上打点，而是让目标发光。对海雷达、对空雷达是另外两件，标准 32 格，改良 48 格，先进 64 格，不代替声呐。"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)标记目标$()$(br2)标准型声呐会标记附近活体生物，但不会标记玩家，也不会区分敌友。$(br2)它适合在水下、夜间或混战环境中快速确认附近是否有目标。"
+      "text": "$(bold)第五章再用$()$(br2)5-1 的潜艇会上浮，没有声呐也能看见。5-2 起潜艇伏在水下，这时再用声呐。深弹可以更早合成，不必等声呐。"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)战术运用$()$(br2)声呐最适合配合$(l:piranport:advanced/torpedoes)鱼雷$(/l)和$(l:piranport:advanced/depth_charges)深水炸弹$(/l)使用。$(br2)先用声呐确认水下目标，再用火控锁定或靠近投射深弹，可以显著降低漏判。"
+      "text": "配合$(l:piranport:torpedoes/basics)鱼雷$(/l)和$(l:piranport:arsenal/depth_charges)深水炸弹$(/l)。先确认目标，再锁定或投射。"
     }
   ]
 }

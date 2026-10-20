@@ -15,6 +15,7 @@ import com.piranport.npc.deepocean.DeepOceanBattleCruiserEntity;
 import com.piranport.npc.deepocean.DeepOceanBattleshipEntity;
 import com.piranport.npc.deepocean.DeepOceanCarrierEntity;
 import com.piranport.npc.deepocean.DeepOceanDestroyerEntity;
+import com.piranport.npc.deepocean.DeepOceanFlagshipEntity;
 import com.piranport.npc.deepocean.DeepOceanHeavyCruiserEntity;
 import com.piranport.npc.deepocean.DeepOceanLightCarrierEntity;
 import com.piranport.npc.deepocean.DeepOceanLightCruiserEntity;
@@ -116,6 +117,27 @@ public class ModLifecycleEvents {
                 DeepOceanShinanoEntity.createAttributes().build());
         event.put(ModEntityTypes.DEEP_OCEAN_ZUIKAKU.get(),
                 DeepOceanZuikakuEntity.createAttributes().build());
+        // 高级档复用低级的实体类，属性同样由 JSON 覆盖；旗舰类继承战列舰的属性表
+        event.put(ModEntityTypes.DEEP_OCEAN_HIGH_DESTROYER.get(),
+                DeepOceanDestroyerEntity.createAttributes().build());
+        event.put(ModEntityTypes.DEEP_OCEAN_HIGH_LIGHT_CRUISER.get(),
+                DeepOceanLightCruiserEntity.createAttributes().build());
+        event.put(ModEntityTypes.DEEP_OCEAN_HIGH_HEAVY_CRUISER.get(),
+                DeepOceanHeavyCruiserEntity.createAttributes().build());
+        event.put(ModEntityTypes.DEEP_OCEAN_HIGH_BATTLE_CRUISER.get(),
+                DeepOceanBattleCruiserEntity.createAttributes().build());
+        event.put(ModEntityTypes.DEEP_OCEAN_HIGH_BATTLESHIP.get(),
+                DeepOceanBattleshipEntity.createAttributes().build());
+        event.put(ModEntityTypes.DEEP_OCEAN_HIGH_LIGHT_CARRIER.get(),
+                DeepOceanLightCarrierEntity.createAttributes().build());
+        event.put(ModEntityTypes.DEEP_OCEAN_HIGH_CARRIER.get(),
+                DeepOceanCarrierEntity.createAttributes().build());
+        event.put(ModEntityTypes.DEEP_OCEAN_HIGH_TORPEDO_CRUISER.get(),
+                DeepOceanTorpedoCruiserEntity.createAttributes().build());
+        event.put(ModEntityTypes.DEEP_OCEAN_HIGH_SUBMARINE.get(),
+                DeepOceanSubmarineEntity.createAttributes().build());
+        event.put(ModEntityTypes.DEEP_OCEAN_FLAGSHIP.get(),
+                DeepOceanFlagshipEntity.createAttributes().build());
         // 舰娘 NPC
         event.put(ModEntityTypes.SHIP_GIRL.get(),
                 ShipGirlEntity.createAttributes().build());

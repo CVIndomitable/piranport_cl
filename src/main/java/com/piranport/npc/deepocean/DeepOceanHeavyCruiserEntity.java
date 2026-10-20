@@ -27,12 +27,12 @@ public class DeepOceanHeavyCruiserEntity extends AbstractDeepOceanEntity {
 
     public static AttributeSupplier.Builder createAttributes() {
         return Monster.createMonsterAttributes()
-                .add(Attributes.MAX_HEALTH, 80.0)
+                .add(Attributes.MAX_HEALTH, 70.0)
                 .add(Attributes.MOVEMENT_SPEED, 0.25)
                 .add(Attributes.FOLLOW_RANGE, 32.0)
                 .add(Attributes.ATTACK_DAMAGE, 7.0)
                 .add(Attributes.KNOCKBACK_RESISTANCE, 0.6)
-                .add(Attributes.ARMOR, 12.0);
+                .add(Attributes.ARMOR, 16.0);
     }
 
     @Override

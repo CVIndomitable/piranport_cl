@@ -9,12 +9,15 @@ import com.google.gson.JsonObject;
  */
 public record DeepOceanEntityData(
         String entityType,
-        double maxHealth,
-        double movementSpeed,
+        /** 最大血量；null = 用子类 createAttributes() 的兜底值。 */
+        Double maxHealth,
+        /** 移动速度；null = 用子类兜底值。 */
+        Double movementSpeed,
         Double followRange,
         double attackDamage,
         double knockbackResistance,
-        double armor,
+        /** 护甲；null = 用子类兜底值。护甲不受副本 difficulty_scale 影响。 */
+        Double armor,
         float shellDamage,
         float explosionPower,
         int fireInterval,
@@ -32,12 +35,12 @@ public record DeepOceanEntityData(
     public static DeepOceanEntityData fromJson(JsonObject obj) {
         return new DeepOceanEntityData(
                 optString(obj, "entity_type", "unknown"),
-                optDouble(obj, "max_health", 50.0),
-                optDouble(obj, "movement_speed", 0.25),
+                optNullableDouble(obj, "max_health"),
+                optNullableDouble(obj, "movement_speed"),
                 optNullableDouble(obj, "follow_range"),
                 optDouble(obj, "attack_damage", 5.0),
                 optDouble(obj, "knockback_resistance", 0.6),
-                optDouble(obj, "armor", 8.0),
+                optNullableDouble(obj, "armor"),
                 optFloat(obj, "shell_damage", 5.0f),
                 optFloat(obj, "explosion_power", 1.5f),
                 optInt(obj, "fire_interval", 80),

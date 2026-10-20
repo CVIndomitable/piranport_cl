@@ -27,12 +27,12 @@ public class DeepOceanCarrierEntity extends AbstractDeepOceanEntity {
 
     public static AttributeSupplier.Builder createAttributes() {
         return Monster.createMonsterAttributes()
-                .add(Attributes.MAX_HEALTH, 80.0)
+                .add(Attributes.MAX_HEALTH, 120.0)
                 .add(Attributes.MOVEMENT_SPEED, 0.225)
                 .add(Attributes.FOLLOW_RANGE, 64.0)
                 .add(Attributes.ATTACK_DAMAGE, 3.0)
                 .add(Attributes.KNOCKBACK_RESISTANCE, 0.5)
-                .add(Attributes.ARMOR, 8.0);
+                .add(Attributes.ARMOR, 16.0);
     }
 
     @Override

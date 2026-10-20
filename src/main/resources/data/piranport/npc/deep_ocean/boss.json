@@ -1,11 +1,11 @@
 {
   "entity_type": "piranport:deep_ocean_boss",
-  "max_health": 200.0,
+  "max_health": 233.0,
   "movement_speed": 0.15,
   "follow_range": 128.0,
   "attack_damage": 8.0,
   "knockback_resistance": 0.8,
-  "armor": 12.0,
+  "armor": 30.0,
   "shell_damage": 15.0,
   "explosion_power": 4.0,
   "fire_interval": 60,

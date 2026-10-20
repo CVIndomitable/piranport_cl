@@ -1,0 +1,119 @@
+{
+  "stage_id": "delusion_1",
+  "chapter": "chapter_event_delusion",
+  "display_name": "妄想舰队 Ex-1 制空权夺取",
+  "nodes": {
+    "A": {
+      "type": "battle",
+      "enemies": "delusion_1_a",
+      "display_x": 50,
+      "display_y": 200
+    },
+    "C": {
+      "type": "battle",
+      "enemies": "delusion_1_c",
+      "display_x": 150,
+      "display_y": 200
+    },
+    "D": {
+      "type": "resource",
+      "rewards": [
+        {
+          "item": "minecraft:iron_ingot",
+          "count": 16
+        },
+        {
+          "item": "piranport:fuel",
+          "count": 2
+        }
+      ],
+      "branches": [
+        {
+          "when": {
+            "role": "防空"
+          },
+          "to": "F"
+        }
+      ],
+      "branch_default": "E",
+      "display_x": 250,
+      "display_y": 200
+    },
+    "E": {
+      "type": "battle",
+      "enemies": "delusion_1_e",
+      "display_x": 350,
+      "display_y": 100
+    },
+    "F": {
+      "type": "battle",
+      "enemies": "delusion_1_f",
+      "display_x": 350,
+      "display_y": 300
+    },
+    "G": {
+      "type": "boss",
+      "enemies": "delusion_1_g",
+      "display_x": 450,
+      "display_y": 200
+    }
+  },
+  "edges": [
+    {
+      "from": "A",
+      "to": "C"
+    },
+    {
+      "from": "C",
+      "to": "D"
+    },
+    {
+      "from": "D",
+      "to": "E"
+    },
+    {
+      "from": "D",
+      "to": "F"
+    },
+    {
+      "from": "E",
+      "to": "G"
+    },
+    {
+      "from": "F",
+      "to": "G"
+    }
+  ],
+  "start_node": "A",
+  "boss_nodes": [
+    "G"
+  ],
+  "victory_conditions": [
+    "KILL_ALL"
+  ],
+  "victory_objectives": {
+    "require_all_nodes_cleared": true
+  },
+  "checkpoints": [
+    {
+      "id": "cp_delusion_1_e",
+      "node_id": "E",
+      "pos_x": 0,
+      "pos_y": 64,
+      "pos_z": 0,
+      "facing": "south"
+    },
+    {
+      "id": "cp_delusion_1_f",
+      "node_id": "F",
+      "pos_x": 0,
+      "pos_y": 64,
+      "pos_z": 0,
+      "facing": "south"
+    }
+  ],
+  "terrain_type": "T1",
+  "difficulty_scale": 2.7,
+  "par_time_seconds": 1500,
+  "ending": "制空权已夺取，妄想舰队的前哨航空队撤离海域。"
+}

@@ -1,0 +1,8 @@
+{
+  "enemy_set_id": "delusion_1_g",
+  "spawn_list": [],
+  "flagship": {
+    "entity": "piranport:deep_ocean_battleship",
+    "count": 1
+  }
+}

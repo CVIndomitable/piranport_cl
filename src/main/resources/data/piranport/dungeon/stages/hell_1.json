@@ -1,0 +1,113 @@
+{
+  "stage_id": "hell_1",
+  "chapter": "chapter_event_hell",
+  "display_name": "地狱群岛 Ex-1 强行侦查行动",
+  "nodes": {
+    "A": {
+      "type": "battle",
+      "enemies": "hell_1_a",
+      "branches": [
+        {
+          "when": {
+            "hull": "large"
+          },
+          "to": "C"
+        }
+      ],
+      "branch_default": "B",
+      "display_x": 50,
+      "display_y": 300
+    },
+    "B": {
+      "type": "battle",
+      "enemies": "hell_1_b",
+      "branches": [
+        {
+          "when": {
+            "role": "防空"
+          },
+          "to": "C"
+        }
+      ],
+      "branch_default": "D",
+      "display_x": 150,
+      "display_y": 100
+    },
+    "C": {
+      "type": "battle",
+      "enemies": "hell_1_c",
+      "display_x": 250,
+      "display_y": 250
+    },
+    "D": {
+      "type": "battle",
+      "enemies": "hell_1_d",
+      "display_x": 350,
+      "display_y": 100
+    },
+    "E": {
+      "type": "boss",
+      "enemies": "hell_1_e",
+      "display_x": 450,
+      "display_y": 200
+    }
+  },
+  "edges": [
+    {
+      "from": "A",
+      "to": "B"
+    },
+    {
+      "from": "A",
+      "to": "C"
+    },
+    {
+      "from": "B",
+      "to": "C"
+    },
+    {
+      "from": "B",
+      "to": "D"
+    },
+    {
+      "from": "C",
+      "to": "E"
+    },
+    {
+      "from": "D",
+      "to": "E"
+    }
+  ],
+  "start_node": "A",
+  "boss_nodes": [
+    "E"
+  ],
+  "victory_conditions": [
+    "KILL_ALL"
+  ],
+  "victory_objectives": {
+    "require_all_nodes_cleared": true
+  },
+  "checkpoints": [
+    {
+      "id": "cp_hell_1_c",
+      "node_id": "C",
+      "pos_x": 0,
+      "pos_y": 64,
+      "pos_z": 0,
+      "facing": "south"
+    },
+    {
+      "id": "cp_hell_1_d",
+      "node_id": "D",
+      "pos_x": 0,
+      "pos_y": 64,
+      "pos_z": 0,
+      "facing": "south"
+    }
+  ],
+  "terrain_type": "T1",
+  "difficulty_scale": 2.7,
+  "par_time_seconds": 1500,
+  "ending": "侦查目标确认：地狱群岛的南部航道已暴露。"
+}

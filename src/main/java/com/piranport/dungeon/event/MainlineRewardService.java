@@ -20,7 +20,8 @@ import java.util.Map;
 /**
  * 副本/21 主线奖励：每次通关固定三样——材料包、勋章、随机蓝图，重打照发。
  * <p>节点自身的 {@code rewards} 由 {@link DungeonSettlementService} 另行发放，不走这里。
- * 活动 {@code goldencatcat} 与彩蛋 {@code ulan} 是特例，不套主线表。</p>
+ * 活动 {@code goldencatcat}、彩蛋 {@code ulan} 与《副本/18》的妄想舰队/地狱群岛
+ * 是特例，不套主线表。</p>
  */
 public final class MainlineRewardService {
     private MainlineRewardService() {}
@@ -60,6 +61,19 @@ public final class MainlineRewardService {
                     new Amount("minecraft:shulker_shell", 1, 2),
                     new Amount("piranport:fuel", 8, 16))
     );
+
+    /**
+     * 《副本/18》活动关每次通关发燃料桶。航空燃料已按《舰装/02》并入燃料桶，
+     * 所以「燃料桶 ×8 + 航空燃料 ×4」在这里直接记成 ×12。
+     */
+    private static final Map<String, Integer> EVENT_FUEL_REWARDS = Map.of(
+            "delusion_1", 8, "delusion_2", 12, "delusion_3", 16, "delusion_4", 20,
+            "hell_1", 8, "hell_2", 12, "hell_3", 16, "hell_4", 20);
+
+    /** 通关后直接塞进背包的下一关钥匙；第 4 关没有后继，两场也不交叉。 */
+    private static final Map<String, String> EVENT_NEXT_KEYS = Map.of(
+            "delusion_1", "delusion_2", "delusion_2", "delusion_3", "delusion_3", "delusion_4",
+            "hell_1", "hell_2", "hell_2", "hell_3", "hell_3", "hell_4");
 
     /** 关卡额外材料，既不算进材料包，也不替代蓝图与勋章。 */
     private static final Map<String, Amount> STAGE_EXTRAS = Map.of(
@@ -149,6 +163,19 @@ public final class MainlineRewardService {
         }
         if ("ulan".equals(stageId)) {
             give(player, "piranport:fuel", 4, result);
+            return;
+        }
+
+        // 《副本/18》妄想舰队 / 地狱群岛：不套主线奖励，只发燃料桶并递进下一关钥匙。
+        Integer eventFuel = EVENT_FUEL_REWARDS.get(stageId);
+        if (eventFuel != null) {
+            give(player, "piranport:fuel", eventFuel, result);
+            String nextStage = EVENT_NEXT_KEYS.get(stageId);
+            if (nextStage != null) {
+                ItemStack key = new ItemStack(ModItems.DUNGEON_KEY.get());
+                DungeonKeyItem.setStageId(key, nextStage);
+                giveStack(player, key, result);
+            }
             return;
         }
 

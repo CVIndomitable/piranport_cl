@@ -11,7 +11,9 @@ public record WeaponWorkbenchRecipe(
         Item result,
         List<ItemStack> materials,
         @Nullable Item requiredBlueprint,
-        int craftingTime
+        int craftingTime,
+        /** 需要通关的主线关卡；null = 无门槛（副本/21、舰装/06）。 */
+        @Nullable String unlockStage
 ) {
     public ItemStack getResultStack() {
         return new ItemStack(result);

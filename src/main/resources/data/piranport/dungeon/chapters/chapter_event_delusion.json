@@ -1,0 +1,11 @@
+{
+  "chapter_id": "chapter_event_delusion",
+  "display_name": "活动关卡 妄想舰队",
+  "sort_order": 97,
+  "stages": [
+    "delusion_1",
+    "delusion_2",
+    "delusion_3",
+    "delusion_4"
+  ]
+}

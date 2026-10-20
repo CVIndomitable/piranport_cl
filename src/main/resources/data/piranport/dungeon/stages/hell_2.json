@@ -1,0 +1,98 @@
+{
+  "stage_id": "hell_2",
+  "chapter": "chapter_event_hell",
+  "display_name": "地狱群岛 Ex-2 肃清潜艇威胁",
+  "nodes": {
+    "A": {
+      "type": "battle",
+      "enemies": "hell_2_a",
+      "branches": [
+        {
+          "when": {
+            "role": "反潜"
+          },
+          "to": "B"
+        }
+      ],
+      "branch_default": "C",
+      "display_x": 50,
+      "display_y": 200
+    },
+    "B": {
+      "type": "battle",
+      "enemies": "hell_2_b",
+      "display_x": 150,
+      "display_y": 100
+    },
+    "C": {
+      "type": "battle",
+      "enemies": "hell_2_c",
+      "display_x": 150,
+      "display_y": 300
+    },
+    "E": {
+      "type": "cost",
+      "cost": [
+        {
+          "item": "minecraft:gunpowder",
+          "count": 16
+        }
+      ],
+      "cost_message": "弹药补给，消耗16火药",
+      "display_x": 300,
+      "display_y": 200
+    },
+    "I": {
+      "type": "boss",
+      "enemies": "hell_2_i",
+      "display_x": 450,
+      "display_y": 200
+    }
+  },
+  "edges": [
+    {
+      "from": "A",
+      "to": "B"
+    },
+    {
+      "from": "A",
+      "to": "C"
+    },
+    {
+      "from": "B",
+      "to": "E"
+    },
+    {
+      "from": "C",
+      "to": "E"
+    },
+    {
+      "from": "E",
+      "to": "I"
+    }
+  ],
+  "start_node": "A",
+  "boss_nodes": [
+    "I"
+  ],
+  "victory_conditions": [
+    "KILL_ALL"
+  ],
+  "victory_objectives": {
+    "require_all_nodes_cleared": true
+  },
+  "checkpoints": [
+    {
+      "id": "cp_hell_2_e",
+      "node_id": "E",
+      "pos_x": 0,
+      "pos_y": 64,
+      "pos_z": 0,
+      "facing": "south"
+    }
+  ],
+  "terrain_type": "T2",
+  "difficulty_scale": 2.75,
+  "par_time_seconds": 1800,
+  "ending": "潜艇伏击圈被肃清，南部航道的威胁解除。"
+}

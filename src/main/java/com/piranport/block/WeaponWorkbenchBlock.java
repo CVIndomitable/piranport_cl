@@ -100,7 +100,12 @@ public class WeaponWorkbenchBlock extends BaseEntityBlock {
                             Component.translatable("message.piranport.workbench_in_use"), true);
                     return InteractionResult.FAIL;
                 }
-                ((ServerPlayer) player).openMenu(wb, buf -> buf.writeBlockPos(pos));
+                int gateMask = com.piranport.crafting.WeaponWorkbenchRecipeRegistry.gateMask(player);
+                ((ServerPlayer) player).openMenu(wb, buf -> {
+                    buf.writeBlockPos(pos);
+                    // 解锁进度随菜单下发，客户端据此隐藏未到章节的配方。
+                    buf.writeInt(gateMask);
+                });
             }
         }
         return InteractionResult.sidedSuccess(level.isClientSide);

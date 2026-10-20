@@ -1,0 +1,108 @@
+{
+  "stage_id": "delusion_2",
+  "chapter": "chapter_event_delusion",
+  "display_name": "妄想舰队 Ex-2 战列舰队击退",
+  "nodes": {
+    "A": {
+      "type": "battle",
+      "enemies": "delusion_2_a",
+      "branches": [
+        {
+          "when": {
+            "hull": "small"
+          },
+          "to": "C"
+        }
+      ],
+      "branch_default": "B",
+      "display_x": 50,
+      "display_y": 300
+    },
+    "B": {
+      "type": "battle",
+      "enemies": "delusion_2_b",
+      "display_x": 150,
+      "display_y": 100
+    },
+    "C": {
+      "type": "battle",
+      "enemies": "delusion_2_c",
+      "display_x": 250,
+      "display_y": 250
+    },
+    "E": {
+      "type": "cost",
+      "cost": [
+        {
+          "item": "minecraft:gunpowder",
+          "count": 16
+        }
+      ],
+      "cost_message": "弹药补给，消耗16火药",
+      "display_x": 350,
+      "display_y": 250
+    },
+    "G": {
+      "type": "battle",
+      "enemies": "delusion_2_g",
+      "display_x": 450,
+      "display_y": 250
+    },
+    "K": {
+      "type": "boss",
+      "enemies": "delusion_2_k",
+      "display_x": 550,
+      "display_y": 250
+    }
+  },
+  "edges": [
+    {
+      "from": "A",
+      "to": "B"
+    },
+    {
+      "from": "A",
+      "to": "C"
+    },
+    {
+      "from": "B",
+      "to": "C"
+    },
+    {
+      "from": "C",
+      "to": "E"
+    },
+    {
+      "from": "E",
+      "to": "G"
+    },
+    {
+      "from": "G",
+      "to": "K"
+    }
+  ],
+  "start_node": "A",
+  "boss_nodes": [
+    "K"
+  ],
+  "victory_conditions": [
+    "KILL_ALL"
+  ],
+  "victory_objectives": {
+    "require_all_nodes_cleared": true
+  },
+  "checkpoints": [
+    {
+      "id": "cp_delusion_2_g",
+      "node_id": "G",
+      "pos_x": 0,
+      "pos_y": 64,
+      "pos_z": 0,
+      "facing": "south"
+    }
+  ],
+  "terrain_type": "T1",
+  "difficulty_scale": 2.75,
+  "par_time_seconds": 1800,
+  "ending": "战列舰队旗舰沉没，妄想舰队的正面阵线瓦解。"
+}

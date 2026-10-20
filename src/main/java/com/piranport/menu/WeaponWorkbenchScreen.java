@@ -64,11 +64,13 @@ public class WeaponWorkbenchScreen extends AbstractContainerScreen<WeaponWorkben
     // ===== 辅助查询 =====
 
     private List<WeaponWorkbenchRecipe> getCurrentTabRecipes() {
-        return WeaponWorkbenchRecipeRegistry.getRecipesForTab(menu.getSelectedTab());
+        return menu.getVisibleRecipes(menu.getSelectedTab());
     }
 
     private WeaponWorkbenchRecipe getCurrentRecipe() {
-        return WeaponWorkbenchRecipeRegistry.getRecipe(menu.getSelectedTab(), menu.getSelectedRecipe());
+        List<WeaponWorkbenchRecipe> recipes = getCurrentTabRecipes();
+        int idx = menu.getSelectedRecipe();
+        return idx >= 0 && idx < recipes.size() ? recipes.get(idx) : null;
     }
 
     private boolean hasEnoughMaterial(ItemStack required) {
@@ -83,6 +85,7 @@ public class WeaponWorkbenchScreen extends AbstractContainerScreen<WeaponWorkben
     }
 
     private boolean canCraftClient(WeaponWorkbenchRecipe recipe) {
+        if (!menu.isSelectedUnlocked()) return false;
         for (ItemStack required : recipe.materials()) {
             if (!hasEnoughMaterial(required)) return false;
         }

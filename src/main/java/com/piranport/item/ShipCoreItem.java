@@ -195,43 +195,70 @@ public class ShipCoreItem extends Item implements Equipable {
             Slot slot, ClickAction action, Player player, SlotAccess access) {
         if (action != ClickAction.SECONDARY) return false;
 
-        // Fuel refueling: lava bucket -> +1b fuel.
+        // 岩浆桶：1000 秒燃烧时间 → 存量 +100，留下空桶（舰装/02）。
         if (!other.isEmpty() && other.is(net.minecraft.world.item.Items.LAVA_BUCKET)) {
             validateAndFixFuelData(stack);
             FuelData fuel = stack.get(ModDataComponents.SHIP_CORE_FUEL.get());
-            if (!fuel.isFull()) {
+            int space = fuel.maxFuel() - fuel.currentFuel();
+            if (space >= LAVA_BUCKET_FUEL) {
                 stack.set(ModDataComponents.SHIP_CORE_FUEL.get(),
-                        fuel.withCurrentFuel(fuel.currentFuel() + 1));
+                        fuel.withCurrentFuel(fuel.currentFuel() + LAVA_BUCKET_FUEL));
                 access.set(new ItemStack(net.minecraft.world.item.Items.BUCKET));
                 player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
                         SoundEvents.BUCKET_EMPTY_LAVA, SoundSource.PLAYERS, 0.5f, 1.0f);
                 return true;
             }
-            // Full — feedback but don't consume interaction (allow armor install etc.)
+            // 装不下整份就不消耗，避免差额被吞。
             player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
                     SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 0.5f, 1.0f);
             return false;
         }
 
-        // 通用燃料处理：烈焰粉、煤炭块 + 所有熔炉燃料。
+        // 燃料桶：每件固定 +10 存量（舰装/02）。按件计，与熔炉燃烧时间无关。
+        if (!other.isEmpty() && other.is(ModItems.FUEL.get())) {
+            validateAndFixFuelData(stack);
+            FuelData fuel = stack.get(ModDataComponents.SHIP_CORE_FUEL.get());
+            int space = fuel.maxFuel() - fuel.currentFuel();
+            int count = Math.min(other.getCount(), space / FUEL_BUCKET_FUEL);
+            if (count > 0) {
+                stack.set(ModDataComponents.SHIP_CORE_FUEL.get(),
+                        fuel.withCurrentFuel(fuel.currentFuel() + count * FUEL_BUCKET_FUEL));
+                other.shrink(count);
+                player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+                        SoundEvents.BUCKET_EMPTY_LAVA, SoundSource.PLAYERS, 0.5f, 1.0f);
+                return true;
+            }
+            player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+                    SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 0.5f, 1.0f);
+            return false;
+        }
+
+        // 通用熔炉燃料：增加点数 = 整组燃烧时间（秒）÷ 10，向下取整（舰装/02）。
+        // 燃烧时间单位是 tick，所以 ÷200。逐件累加后取整与「先求和再取整」等价，
+        // 且余数会带到下一件，木板这类单件不足 1 点的燃料不会白吃。
         if (!other.isEmpty()) {
-            int fuelValue = getFuelValue(other);
-            if (fuelValue > 0) {
+            int burnPerItem = other.getBurnTime(net.minecraft.world.item.crafting.RecipeType.SMELTING);
+            if (burnPerItem > 0) {
                 validateAndFixFuelData(stack);
                 FuelData fuel = stack.get(ModDataComponents.SHIP_CORE_FUEL.get());
-                if (!fuel.isFull()) {
-                    int totalAdded = 0;
-                    while (!other.isEmpty()) {
-                        int space = fuel.maxFuel() - fuel.currentFuel() - totalAdded;
-                        // 单个燃料物品不可拆分：剩余空间装不下整份燃料值时停止消耗，
-                        // 否则会把差额吞掉（如煤炭块 10 点燃料只剩 1 点空间时被吃掉 9 点）。
-                        if (space < fuelValue) break;
-                        totalAdded += fuelValue;
-                        other.shrink(1);
+                int space = fuel.maxFuel() - fuel.currentFuel();
+                int accumulatedBurn = 0;
+                int gained = 0;
+                int consume = 0;
+                for (int i = 0; i < other.getCount(); i++) {
+                    int nextBurn = accumulatedBurn + burnPerItem;
+                    int nextPoints = nextBurn / TICKS_PER_FUEL_POINT;
+                    if (nextPoints > space) break;
+                    accumulatedBurn = nextBurn;
+                    if (nextPoints > gained) {
+                        gained = nextPoints;
+                        consume = i + 1;
                     }
-                    if (totalAdded == 0) return false;
+                }
+                if (consume > 0) {
                     stack.set(ModDataComponents.SHIP_CORE_FUEL.get(),
-                            fuel.withCurrentFuel(fuel.currentFuel() + totalAdded));
+                            fuel.withCurrentFuel(fuel.currentFuel() + gained));
+                    other.shrink(consume);
                     player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
                             SoundEvents.BUCKET_EMPTY_LAVA, SoundSource.PLAYERS, 0.5f, 1.0f);
                     return true;
@@ -240,27 +267,6 @@ public class ShipCoreItem extends Item implements Equipable {
                         SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 0.5f, 1.0f);
                 return false;
             }
-        }
-
-        // Fuel refueling: fuel item -> batch fill.
-        if (!other.isEmpty() && other.is(ModItems.FUEL.get())) {
-            validateAndFixFuelData(stack);
-            FuelData fuel = stack.get(ModDataComponents.SHIP_CORE_FUEL.get());
-            if (!fuel.isFull()) {
-                int space = fuel.maxFuel() - fuel.currentFuel();
-                if (space <= 0) return false;
-                int toAdd = Math.min(space, other.getCount());
-                stack.set(ModDataComponents.SHIP_CORE_FUEL.get(),
-                        fuel.withCurrentFuel(fuel.currentFuel() + toAdd));
-                other.shrink(toAdd);
-                player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
-                        SoundEvents.BUCKET_EMPTY_LAVA, SoundSource.PLAYERS, 0.5f, 1.0f);
-                return true;
-            }
-            // Full — feedback but don't consume interaction
-            player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
-                    SoundEvents.VILLAGER_NO, SoundSource.PLAYERS, 0.5f, 1.0f);
-            return false;
         }
 
         int capacity = shipType.enhancementSlots;
@@ -306,14 +312,12 @@ public class ShipCoreItem extends Item implements Equipable {
 
     // 辅助方法：获取物品的燃料值（基于熔炉燃烧时间）
     // 烈焰粉特殊处理（不是熔炉燃料但作为燃料源）
-    private int getFuelValue(ItemStack stack) {
-        if (stack.is(net.minecraft.world.item.Items.BLAZE_POWDER)) return 1;
-        int burnTime = stack.getBurnTime(net.minecraft.world.item.crafting.RecipeType.SMELTING);
-        if (burnTime > 0) {
-            return Math.max(1, (burnTime + 1599) / 1600); // 向上取整
-        }
-        return 0;
-    }
+    /** 1 点存量 = 10 秒燃烧时间 = 200 tick（舰装/02）。 */
+    private static final int TICKS_PER_FUEL_POINT = 200;
+    /** 燃料桶每件固定 +10，不读燃烧时间。 */
+    private static final int FUEL_BUCKET_FUEL = 10;
+    /** 岩浆桶 1000 秒 → 100 点。 */
+    private static final int LAVA_BUCKET_FUEL = 100;
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context,

@@ -1,0 +1,69 @@
+{
+  "stage_id": "delusion_4",
+  "chapter": "chapter_event_delusion",
+  "display_name": "妄想舰队 Ex-4 决战主力舰队",
+  "nodes": {
+    "A": {
+      "type": "battle",
+      "enemies": "delusion_4_a",
+      "display_x": 50,
+      "display_y": 200
+    },
+    "B": {
+      "type": "battle",
+      "enemies": "delusion_4_b",
+      "display_x": 150,
+      "display_y": 200
+    },
+    "C": {
+      "type": "battle",
+      "enemies": "delusion_4_c",
+      "display_x": 250,
+      "display_y": 200
+    },
+    "D": {
+      "type": "boss",
+      "enemies": "delusion_4_d",
+      "display_x": 350,
+      "display_y": 200
+    }
+  },
+  "edges": [
+    {
+      "from": "A",
+      "to": "B"
+    },
+    {
+      "from": "B",
+      "to": "C"
+    },
+    {
+      "from": "C",
+      "to": "D"
+    }
+  ],
+  "start_node": "A",
+  "boss_nodes": [
+    "D"
+  ],
+  "victory_conditions": [
+    "KILL_ALL"
+  ],
+  "victory_objectives": {
+    "require_all_nodes_cleared": true
+  },
+  "checkpoints": [
+    {
+      "id": "cp_delusion_4_c",
+      "node_id": "C",
+      "pos_x": 0,
+      "pos_y": 64,
+      "pos_z": 0,
+      "facing": "south"
+    }
+  ],
+  "terrain_type": "T4",
+  "difficulty_scale": 2.85,
+  "par_time_seconds": 2100,
+  "ending": "妄想舰队主力被击退，信浓随旗舰一同沉入深海。"
+}

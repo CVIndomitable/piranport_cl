@@ -61,7 +61,34 @@ public final class WeaponWorkbenchRecipeRegistry {
 
     private static void add(List<WeaponWorkbenchRecipe> list, int tab, Item result, List<ItemStack> materials,
                             @Nullable Item blueprint, int craftingTime) {
-        list.add(new WeaponWorkbenchRecipe(tab, result, materials, blueprint, craftingTime));
+        add(list, tab, result, materials, blueprint, craftingTime, null);
+    }
+
+    private static void add(List<WeaponWorkbenchRecipe> list, int tab, Item result, List<ItemStack> materials,
+                            @Nullable Item blueprint, int craftingTime, @Nullable String unlockStage) {
+        list.add(new WeaponWorkbenchRecipe(tab, result, materials, blueprint, craftingTime, unlockStage));
+    }
+
+    /** 需要按通关进度解锁的关卡；顺序即菜单同步位掩码的位序。 */
+    public static final List<String> GATE_STAGES = List.of("2-1", "4-2");
+
+    /** 服务端把玩家已通关的关卡压成位掩码，随工作台菜单一起发给客户端。 */
+    public static int gateMask(net.minecraft.world.entity.player.Player player) {
+        if (!(player.level() instanceof net.minecraft.server.level.ServerLevel level)) return 0;
+        var cleared = com.piranport.dungeon.saved.DungeonSavedData.get(level)
+                .getFirstClearedStages(player.getUUID());
+        int mask = 0;
+        for (int i = 0; i < GATE_STAGES.size(); i++) {
+            if (cleared.contains(GATE_STAGES.get(i))) mask |= 1 << i;
+        }
+        return mask;
+    }
+
+    /** 配方是否已对这名玩家解锁。 */
+    public static boolean unlocked(WeaponWorkbenchRecipe recipe, int mask) {
+        if (recipe.unlockStage() == null) return true;
+        int bit = GATE_STAGES.indexOf(recipe.unlockStage());
+        return bit >= 0 && (mask & (1 << bit)) != 0;
     }
 
     /**
@@ -391,7 +418,7 @@ public final class WeaponWorkbenchRecipeRegistry {
                 new ItemStack(Items.IRON_INGOT, 8),
                 new ItemStack(Items.COPPER_INGOT, 4),
                 new ItemStack(Items.REDSTONE, 4),
-                new ItemStack(Items.COMPARATOR, 1)), null, 300);
+                new ItemStack(Items.COMPARATOR, 1)), null, 300, "4-2");
 
         // 改良/先进引擎：蓝图进 4-2 奖池（副本/21）；材料按先进档口径取铁/铝/钻石/下界合金碎片。
         add(r, 5, ModItems.IMPROVED_ENGINE.get(), List.of(
@@ -412,7 +439,9 @@ public final class WeaponWorkbenchRecipeRegistry {
             com.piranport.item.AutoCIWSItem ciws = holder.get();
             String id = BuiltInRegistries.ITEM.getKey(ciws).getPath();
             EquipmentTier tier = ciws.getTier();
-            add(r, 5, ciws, ciwsMaterials(tier), blueprintFor(id, tier), craftTime(100, tier));
+            // 初期/标准 2-1 通关后才出现在制造台；改良/先进靠蓝图，不再另设门槛。
+            String gate = (tier == EquipmentTier.INITIAL || tier == EquipmentTier.STANDARD) ? "2-1" : null;
+            add(r, 5, ciws, ciwsMaterials(tier), blueprintFor(id, tier), craftTime(100, tier), gate);
         }
 
         // ===== Tab 4: 飞机 =====

@@ -83,6 +83,7 @@ public final class WeaponItems {
             ITEMS.register("chinese_twin_140mm_gun", () -> new ArtilleryItem(new Item.Properties().stacksTo(1)
                     .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.CANNON)
                     .durability(1000),
+                    // 面板/装填交给 06 公式（6 / 45.63 tick），不再写占位值 8 / 50。
                     new ArtilleryCannonData(8, 2, 0.0f, 0.0f, 1000, 3.0f,
                             List.of(new MuzzlePos(0.3, 0.2, 0),
                                     new MuzzlePos(-0.3, 0.2, 0)),

@@ -1,0 +1,163 @@
+{
+  "stage_id": "delusion_3",
+  "chapter": "chapter_event_delusion",
+  "display_name": "妄想舰队 Ex-3 雷击网突破",
+  "nodes": {
+    "A": {
+      "type": "battle",
+      "enemies": "delusion_3_a",
+      "branches": [
+        {
+          "when": {
+            "role": "防空"
+          },
+          "to": "C"
+        }
+      ],
+      "branch_default": "B",
+      "display_x": 50,
+      "display_y": 200
+    },
+    "B": {
+      "type": "battle",
+      "enemies": "delusion_3_b",
+      "branches": [
+        {
+          "when": {
+            "role": "反潜"
+          },
+          "to": "F"
+        }
+      ],
+      "branch_default": "E",
+      "display_x": 150,
+      "display_y": 100
+    },
+    "C": {
+      "type": "battle",
+      "enemies": "delusion_3_c",
+      "branches": [
+        {
+          "when": {
+            "role": "反潜"
+          },
+          "to": "F"
+        }
+      ],
+      "branch_default": "E",
+      "display_x": 150,
+      "display_y": 300
+    },
+    "E": {
+      "type": "battle",
+      "enemies": "delusion_3_e",
+      "display_x": 250,
+      "display_y": 100
+    },
+    "F": {
+      "type": "battle",
+      "enemies": "delusion_3_f",
+      "display_x": 250,
+      "display_y": 300
+    },
+    "H": {
+      "type": "resource",
+      "rewards": [
+        {
+          "item": "piranport:fuel",
+          "count": 4
+        },
+        {
+          "item": "minecraft:iron_ingot",
+          "count": 12
+        }
+      ],
+      "display_x": 350,
+      "display_y": 200
+    },
+    "J": {
+      "type": "boss",
+      "enemies": "delusion_3_j",
+      "display_x": 450,
+      "display_y": 200
+    }
+  },
+  "edges": [
+    {
+      "from": "A",
+      "to": "B"
+    },
+    {
+      "from": "A",
+      "to": "C"
+    },
+    {
+      "from": "B",
+      "to": "E"
+    },
+    {
+      "from": "B",
+      "to": "F"
+    },
+    {
+      "from": "C",
+      "to": "E"
+    },
+    {
+      "from": "C",
+      "to": "F"
+    },
+    {
+      "from": "E",
+      "to": "H"
+    },
+    {
+      "from": "F",
+      "to": "H"
+    },
+    {
+      "from": "H",
+      "to": "J"
+    }
+  ],
+  "start_node": "A",
+  "boss_nodes": [
+    "J"
+  ],
+  "victory_conditions": [
+    "KILL_ALL"
+  ],
+  "victory_objectives": {
+    "require_all_nodes_cleared": true
+  },
+  "checkpoints": [
+    {
+      "id": "cp_delusion_3_e",
+      "node_id": "E",
+      "pos_x": 0,
+      "pos_y": 64,
+      "pos_z": 0,
+      "facing": "south"
+    },
+    {
+      "id": "cp_delusion_3_f",
+      "node_id": "F",
+      "pos_x": 0,
+      "pos_y": 64,
+      "pos_z": 0,
+      "facing": "south"
+    },
+    {
+      "id": "cp_delusion_3_h",
+      "node_id": "H",
+      "pos_x": 0,
+      "pos_y": 64,
+      "pos_z": 0,
+      "facing": "south"
+    }
+  ],
+  "terrain_type": "T2",
+  "difficulty_scale": 2.8,
+  "par_time_seconds": 1800,
+  "ending": "雷击网被撕开，妄想舰队的雷巡分队覆灭。"
+}

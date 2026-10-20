@@ -2,6 +2,7 @@ package com.piranport.menu;
 
 import com.piranport.block.WeaponWorkbenchBlock;
 import com.piranport.block.entity.WeaponWorkbenchBlockEntity;
+import com.piranport.crafting.WeaponWorkbenchRecipe;
 import com.piranport.crafting.WeaponWorkbenchRecipeRegistry;
 import com.piranport.registry.ModItems;
 import com.piranport.registry.ModMenuTypes;
@@ -16,6 +17,10 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.SlotItemHandler;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Slots: 0=blueprint, 1-6=materials, 7=output, 8-34=player inv, 35-43=hotbar
@@ -36,6 +41,8 @@ public class WeaponWorkbenchMenu extends AbstractContainerMenu {
     private static final int BTN_CRAFT = 200;
 
     private final WeaponWorkbenchBlockEntity blockEntity;
+    /** 玩家已通关的解锁门槛位掩码（见 {@link WeaponWorkbenchRecipeRegistry#GATE_STAGES}）。 */
+    private final int gateMask;
 
     private static class LockedSlot extends SlotItemHandler {
         private final WeaponWorkbenchBlockEntity be;
@@ -67,15 +74,22 @@ public class WeaponWorkbenchMenu extends AbstractContainerMenu {
         BlockPos pos = buf.readBlockPos();
         if (playerInventory.player.level().getBlockEntity(pos)
                 instanceof WeaponWorkbenchBlockEntity be) {
-            return new WeaponWorkbenchMenu(containerId, playerInventory, be);
+            return new WeaponWorkbenchMenu(containerId, playerInventory, be, buf.readInt());
         }
         throw new IllegalStateException("WeaponWorkbenchBlockEntity not found at " + pos);
     }
 
     public WeaponWorkbenchMenu(int containerId, Inventory playerInventory,
                                WeaponWorkbenchBlockEntity be) {
+        this(containerId, playerInventory, be,
+                WeaponWorkbenchRecipeRegistry.gateMask(playerInventory.player));
+    }
+
+    private WeaponWorkbenchMenu(int containerId, Inventory playerInventory,
+                                WeaponWorkbenchBlockEntity be, int gateMask) {
         super(ModMenuTypes.WEAPON_WORKBENCH_MENU.get(), containerId);
         this.blockEntity = be;
+        this.gateMask = gateMask;
 
         IItemHandler handler = be.getItemHandler();
 
@@ -111,7 +125,34 @@ public class WeaponWorkbenchMenu extends AbstractContainerMenu {
     public WeaponWorkbenchBlockEntity getBlockEntity() { return blockEntity; }
 
     public int getSelectedTab()      { return blockEntity.dataAccess.get(0); }
-    public int getSelectedRecipe()   { return blockEntity.dataAccess.get(1); }
+    /** 当前配方在「已解锁列表」中的下标；BE 里存的是整表下标。 */
+    public int getSelectedRecipe()   {
+        List<WeaponWorkbenchRecipe> visible = getVisibleRecipes(getSelectedTab());
+        WeaponWorkbenchRecipe selected = getSelectedRecipeEntry();
+        int idx = selected == null ? -1 : visible.indexOf(selected);
+        return idx < 0 ? 0 : idx;
+    }
+
+    /** 当前选中的配方（整表下标）。 */
+    @Nullable
+    public WeaponWorkbenchRecipe getSelectedRecipeEntry() {
+        return WeaponWorkbenchRecipeRegistry.getRecipe(getSelectedTab(),
+                blockEntity.dataAccess.get(1));
+    }
+
+    /** 已对当前玩家解锁的配方；未解锁的关卡配方不进入下拉列表。 */
+    public List<WeaponWorkbenchRecipe> getVisibleRecipes(int tab) {
+        List<WeaponWorkbenchRecipe> out = new ArrayList<>();
+        for (WeaponWorkbenchRecipe recipe : WeaponWorkbenchRecipeRegistry.getRecipesForTab(tab)) {
+            if (WeaponWorkbenchRecipeRegistry.unlocked(recipe, gateMask)) out.add(recipe);
+        }
+        return out;
+    }
+
+    public boolean isSelectedUnlocked() {
+        WeaponWorkbenchRecipe recipe = getSelectedRecipeEntry();
+        return recipe != null && WeaponWorkbenchRecipeRegistry.unlocked(recipe, gateMask);
+    }
     public int getCraftingProgress() { return blockEntity.dataAccess.get(2); }
     public int getCraftingTotalTime(){ return blockEntity.dataAccess.get(3); }
     public boolean isCrafting()      { return blockEntity.dataAccess.get(4) != 0; }
@@ -127,14 +168,17 @@ public class WeaponWorkbenchMenu extends AbstractContainerMenu {
             return true;
         } else if (id >= BTN_RECIPE_BASE && id <= BTN_RECIPE_MAX) {
             if (blockEntity.isCrafting()) return false;
-            int recipeIdx = id - BTN_RECIPE_BASE;
-            var recipes = WeaponWorkbenchRecipeRegistry.getRecipesForTab(blockEntity.getSelectedTab());
-            if (recipeIdx >= 0 && recipeIdx < recipes.size()) {
-                blockEntity.setSelectedRecipe(recipeIdx);
+            int displayIdx = id - BTN_RECIPE_BASE;
+            var visible = getVisibleRecipes(blockEntity.getSelectedTab());
+            if (displayIdx >= 0 && displayIdx < visible.size()) {
+                int global = WeaponWorkbenchRecipeRegistry
+                        .getRecipesForTab(blockEntity.getSelectedTab()).indexOf(visible.get(displayIdx));
+                if (global >= 0) blockEntity.setSelectedRecipe(global);
             }
             return true;
         } else if (id == BTN_CRAFT) {
-            if (!blockEntity.isCrafting()) {
+            // 服务端复核：菜单里的掩码才是权威，客户端伪造按钮也绕不过关卡门槛。
+            if (!blockEntity.isCrafting() && isSelectedUnlocked()) {
                 blockEntity.startCrafting();
             }
             return true;

@@ -1,0 +1,11 @@
+{
+  "chapter_id": "chapter_event_hell",
+  "display_name": "活动关卡 地狱群岛",
+  "sort_order": 98,
+  "stages": [
+    "hell_1",
+    "hell_2",
+    "hell_3",
+    "hell_4"
+  ]
+}

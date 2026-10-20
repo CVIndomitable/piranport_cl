@@ -2,23 +2,118 @@
   "type": "minecraft:chest",
   "pools": [
     {
-      "rolls": { "min": 4, "max": 6, "type": "minecraft:uniform" },
+      "rolls": {
+        "min": 4,
+        "max": 6,
+        "type": "minecraft:uniform"
+      },
       "entries": [
-        { "type": "minecraft:item", "name": "minecraft:iron_ingot",
-          "functions": [{ "function": "minecraft:set_count", "count": { "min": 24, "max": 40, "type": "minecraft:uniform" } }] },
-        { "type": "minecraft:item", "name": "minecraft:copper_ingot",
-          "functions": [{ "function": "minecraft:set_count", "count": { "min": 12, "max": 20, "type": "minecraft:uniform" } }] },
-        { "type": "minecraft:item", "name": "piranport:aluminum_ingot",
-          "functions": [{ "function": "minecraft:set_count", "count": { "min": 12, "max": 20, "type": "minecraft:uniform" } }] },
-        { "type": "minecraft:item", "name": "minecraft:gunpowder",
-          "functions": [{ "function": "minecraft:set_count", "count": { "min": 8, "max": 12, "type": "minecraft:uniform" } }] }
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:iron_ingot",
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "min": 24,
+                "max": 40,
+                "type": "minecraft:uniform"
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:copper_ingot",
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "min": 12,
+                "max": 20,
+                "type": "minecraft:uniform"
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "piranport:aluminum_ingot",
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "min": 12,
+                "max": 20,
+                "type": "minecraft:uniform"
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:gunpowder",
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "min": 8,
+                "max": 12,
+                "type": "minecraft:uniform"
+              }
+            }
+          ]
+        }
       ]
     },
     {
       "rolls": 1,
       "entries": [
-        { "type": "minecraft:item", "name": "piranport:fuel",
-          "functions": [{ "function": "minecraft:set_count", "count": 12 }] }
+        {
+          "type": "minecraft:item",
+          "name": "piranport:fuel",
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": 12
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "piranport:dungeon_key",
+          "weight": 15,
+          "functions": [
+            {
+              "function": "minecraft:set_components",
+              "components": {
+                "piranport:dungeon_stage_id": "delusion_1"
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "piranport:dungeon_key",
+          "weight": 15,
+          "functions": [
+            {
+              "function": "minecraft:set_components",
+              "components": {
+                "piranport:dungeon_stage_id": "hell_1"
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:empty",
+          "weight": 170
+        }
       ]
     }
   ]

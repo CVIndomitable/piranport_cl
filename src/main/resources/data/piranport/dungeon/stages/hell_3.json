@@ -1,0 +1,109 @@
+{
+  "stage_id": "hell_3",
+  "chapter": "chapter_event_hell",
+  "display_name": "地狱群岛 Ex-3 击破新型战舰",
+  "nodes": {
+    "A": {
+      "type": "battle",
+      "enemies": "hell_3_a",
+      "branches": [
+        {
+          "when": {
+            "role": "防空"
+          },
+          "to": "C"
+        }
+      ],
+      "branch_default": "B",
+      "display_x": 50,
+      "display_y": 300
+    },
+    "B": {
+      "type": "battle",
+      "enemies": "hell_3_b",
+      "display_x": 150,
+      "display_y": 100
+    },
+    "C": {
+      "type": "resource",
+      "rewards": [
+        {
+          "item": "piranport:fuel",
+          "count": 4
+        },
+        {
+          "item": "minecraft:iron_ingot",
+          "count": 16
+        }
+      ],
+      "display_x": 250,
+      "display_y": 200
+    },
+    "D": {
+      "type": "battle",
+      "enemies": "hell_3_d",
+      "display_x": 350,
+      "display_y": 200
+    },
+    "F": {
+      "type": "battle",
+      "enemies": "hell_3_f",
+      "display_x": 450,
+      "display_y": 200
+    },
+    "I": {
+      "type": "battle",
+      "enemies": "hell_3_i",
+      "display_x": 550,
+      "display_y": 200
+    }
+  },
+  "edges": [
+    {
+      "from": "A",
+      "to": "B"
+    },
+    {
+      "from": "A",
+      "to": "C"
+    },
+    {
+      "from": "B",
+      "to": "C"
+    },
+    {
+      "from": "C",
+      "to": "D"
+    },
+    {
+      "from": "D",
+      "to": "F"
+    },
+    {
+      "from": "F",
+      "to": "I"
+    }
+  ],
+  "start_node": "A",
+  "boss_nodes": [],
+  "victory_conditions": [
+    "KILL_ALL"
+  ],
+  "victory_objectives": {
+    "require_all_nodes_cleared": true
+  },
+  "checkpoints": [
+    {
+      "id": "cp_hell_3_f",
+      "node_id": "F",
+      "pos_x": 0,
+      "pos_y": 64,
+      "pos_z": 0,
+      "facing": "south"
+    }
+  ],
+  "terrain_type": "T3",
+  "difficulty_scale": 2.85,
+  "par_time_seconds": 2100,
+  "ending": "新型战舰被击破，地狱群岛的旗舰编队失去核心。"
+}

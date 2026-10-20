@@ -1,0 +1,118 @@
+{
+  "stage_id": "hell_4",
+  "chapter": "chapter_event_hell",
+  "display_name": "地狱群岛 Ex-4 收复南部基地",
+  "nodes": {
+    "A": {
+      "type": "battle",
+      "enemies": "hell_4_a",
+      "branches": [
+        {
+          "when": {
+            "role": "防空"
+          },
+          "to": "C"
+        }
+      ],
+      "branch_default": "B",
+      "display_x": 50,
+      "display_y": 200
+    },
+    "B": {
+      "type": "battle",
+      "enemies": "hell_4_b",
+      "display_x": 150,
+      "display_y": 100
+    },
+    "C": {
+      "type": "battle",
+      "enemies": "hell_4_c",
+      "display_x": 150,
+      "display_y": 300
+    },
+    "E": {
+      "type": "battle",
+      "enemies": "hell_4_e",
+      "display_x": 250,
+      "display_y": 200
+    },
+    "H": {
+      "type": "battle",
+      "enemies": "hell_4_h",
+      "display_x": 350,
+      "display_y": 200
+    },
+    "L": {
+      "type": "cost",
+      "cost": [
+        {
+          "item": "piranport:aluminum_ingot",
+          "count": 8
+        }
+      ],
+      "cost_message": "修复基地栈桥，消耗8铝锭",
+      "display_x": 450,
+      "display_y": 200
+    },
+    "M": {
+      "type": "boss",
+      "enemies": "hell_4_m",
+      "display_x": 550,
+      "display_y": 200
+    }
+  },
+  "edges": [
+    {
+      "from": "A",
+      "to": "B"
+    },
+    {
+      "from": "A",
+      "to": "C"
+    },
+    {
+      "from": "B",
+      "to": "E"
+    },
+    {
+      "from": "C",
+      "to": "E"
+    },
+    {
+      "from": "E",
+      "to": "H"
+    },
+    {
+      "from": "H",
+      "to": "L"
+    },
+    {
+      "from": "L",
+      "to": "M"
+    }
+  ],
+  "start_node": "A",
+  "boss_nodes": [
+    "M"
+  ],
+  "victory_conditions": [
+    "KILL_ALL"
+  ],
+  "victory_objectives": {
+    "require_all_nodes_cleared": true
+  },
+  "checkpoints": [
+    {
+      "id": "cp_hell_4_l",
+      "node_id": "L",
+      "pos_x": 0,
+      "pos_y": 64,
+      "pos_z": 0,
+      "facing": "south"
+    }
+  ],
+  "terrain_type": "T5",
+  "difficulty_scale": 2.9,
+  "par_time_seconds": 2400,
+  "ending": "南部基地收复，瑞鹤的旗舰编队撤离地狱群岛。"
+}

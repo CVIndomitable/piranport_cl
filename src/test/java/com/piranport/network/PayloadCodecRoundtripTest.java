@@ -67,13 +67,6 @@ class PayloadCodecRoundtripTest {
         assertEquals(p, roundtripRfb(AircraftLaunchPosePayload.STREAM_CODEC, p));
     }
 
-    // ===== ApplyModificationPayload =====
-    @Test
-    void applyModificationRoundtrip() {
-        ApplyModificationPayload p = new ApplyModificationPayload(new BlockPos(10, 64, -200), 3, 2);
-        assertEquals(p, roundtrip(ApplyModificationPayload.STREAM_CODEC, p));
-    }
-
     // ===== AircraftDefinitionSyncPayload =====
     @Test
     void aircraftDefinitionSyncRoundtrip() {

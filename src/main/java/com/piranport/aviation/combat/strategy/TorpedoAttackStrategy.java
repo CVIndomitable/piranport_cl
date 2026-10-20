@@ -158,7 +158,7 @@ public final class TorpedoAttackStrategy implements AttackStrategy {
                 && atRunAltitude || timeout)
                 && context.attackCooldown() <= 0 && distanceToPredicted > 0.01) {
             Vec3 direction = toPredicted.normalize();
-            int toFire = context.salvoSize(target, context.panelDamage());
+            int toFire = context.remainingAmmo();
             PiranPortDebug.event(
                     "Aircraft TORPEDO_SALVO | entityId={} capacity={} remaining={} firing={} targetHP={}",
                     context.entityId(), context.ammoCapacity(), context.remainingAmmo(),

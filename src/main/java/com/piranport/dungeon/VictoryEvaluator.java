@@ -5,9 +5,11 @@ import com.piranport.dungeon.data.StageData;
 import com.piranport.dungeon.data.VictoryCondition;
 import com.piranport.dungeon.escort.EscortRuntime;
 import com.piranport.dungeon.instance.DungeonInstance;
+import com.piranport.dungeon.saved.DungeonObjectiveData;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -39,6 +41,12 @@ import net.minecraft.world.phys.AABB;
  * </pre>
  */
 public final class VictoryEvaluator {
+    /** 《副本/12》夺旗：每 5 秒 +1%，即每 tick +0.01%。 */
+    private static final double CAPTURE_GAIN_PER_TICK = 0.01;
+    private static final double CAPTURE_HIT_PENALTY = 1.0;
+    private static final double CAPTURE_DEATH_PENALTY = 25.0;
+    private static final double CAPTURE_COMPLETE_PERCENT = 100.0;
+
 
     private VictoryEvaluator() {}
 
@@ -154,16 +162,9 @@ public final class VictoryEvaluator {
             }
             return;
         }
-        var obj = stage.victoryObjectives();
-        boolean occupied = false;
-        if (obj.reachPointOffset() != null && obj.captureRadius() > 0) {
-            int[] offset = obj.reachPointOffset();
-            BlockPos flag = instance.getNodeSpawnPos(stage.startNode()).offset(offset[0], offset[1], offset[2]);
-            occupied = !level.getEntitiesOfClass(Player.class, new AABB(flag).inflate(obj.captureRadius()),
-                    p -> isParticipant(p, instance)).isEmpty();
+        if (stage.victoryConditions().contains(VictoryCondition.CAPTURE_FLAG)) {
+            tickCaptureFlag(level, instance, stage.victoryObjectives().captureRadius());
         }
-        com.piranport.dungeon.saved.DungeonObjectiveData.get(level)
-                .tickCapture(instance.getInstanceId(), instance.getCurrentNode(), occupied);
         for (VictoryCondition condition : stage.victoryConditions()) {
             if ((condition == VictoryCondition.REACH_POINT
                     || condition == VictoryCondition.CAPTURE_FLAG || condition == VictoryCondition.SURVIVE)
@@ -192,24 +193,53 @@ public final class VictoryEvaluator {
         return !level.getEntitiesOfClass(Player.class, box, p -> isParticipant(p, instance)).isEmpty();
     }
 
+    /** 每 tick 圈内每名玩家 +0.01%，即《副本/12》的每 5 秒 +1%；多人在圈内按人数叠加。 */
+    private static void tickCaptureFlag(ServerLevel level, DungeonInstance instance, int radius) {
+        if (instance.getCurrentNode() == null) return;
+        BlockPos center = instance.getNodeSpawnPos(instance.getCurrentNode());
+        int inside = level.getEntitiesOfClass(Player.class, new AABB(center).inflate(radius),
+                p -> isParticipant(p, instance) && inFlag(p, center, radius)).size();
+        if (inside == 0) return;
+        DungeonObjectiveData.get(level).addCaptureProgress(instance.getInstanceId(),
+                instance.getCurrentNode(), inside * CAPTURE_GAIN_PER_TICK);
+    }
+
+    /** 圈内玩家被深海炮弹、航弹或鱼雷击中：进度 −1%。 */
+    public static void onFlagPlayerHit(ServerLevel level, DungeonInstance instance, ServerPlayer player) {
+        penalizeFlag(level, instance, player, CAPTURE_HIT_PENALTY);
+    }
+
+    /** 圈内玩家死亡（随后回书台即退出副本）：进度 −25%。 */
+    public static void onFlagPlayerDied(ServerLevel level, DungeonInstance instance, ServerPlayer player) {
+        penalizeFlag(level, instance, player, CAPTURE_DEATH_PENALTY);
+    }
+
+    private static void penalizeFlag(ServerLevel level, DungeonInstance instance, Player player, double amount) {
+        StageData stage = stageFor(instance);
+        String nodeId = instance.getCurrentNode();
+        if (stage == null || nodeId == null || instance.getState() != DungeonInstance.State.ACTIVE) return;
+        if (!stage.victoryConditions().contains(VictoryCondition.CAPTURE_FLAG)) return;
+        if (instance.getClearedNodes().contains(nodeId) || !instance.getPlayerUuids().contains(player.getUUID())) return;
+        BlockPos center = instance.getNodeSpawnPos(nodeId);
+        if (!inFlag(player, center, stage.victoryObjectives().captureRadius())) return;
+        DungeonObjectiveData.get(level).addCaptureProgress(instance.getInstanceId(), nodeId, -amount);
+    }
+
+    private static boolean inFlag(Entity entity, BlockPos center, int radius) {
+        double dx = entity.getX() - (center.getX() + 0.5);
+        double dz = entity.getZ() - (center.getZ() + 0.5);
+        return dx * dx + dz * dz <= (double) radius * radius;
+    }
+
     /**
-     * CAPTURE_FLAG：双路径 OR — 玩家在夺旗点存活 N 秒 <b>或</b> 触发 KILL_ALL。
-     * 夺旗点位置与 KILL_ALL 走相同定位（reach_point_offset），存活计时用 DungeonObjectiveData
-     * 的 tick 计数（只在实例 ACTIVE 且玩家在圈内时累加），不用墙钟。
+     * CAPTURE_FLAG：进度满 100% 过关；或触发 KILL_ALL。
+     * 圈心为当前节点中心，进度由 {@link #tickCaptureFlag} 与受击/死亡扣减共同推进。
      */
     private static boolean checkCaptureFlag(ServerLevel level, DungeonInstance instance,
                                             StageData stage, StageData.VictoryObjectives obj) {
-        // OR 路径 1：触发 KILL_ALL
         if (checkKillAll(level, instance, stage, obj)) return true;
-        // OR 路径 2：玩家在夺旗半径内持续 capture_hold_seconds
-        if (level == null || obj.captureRadius() <= 0 || obj.captureHoldSeconds() <= 0) return false;
-        if (stage == null || obj.reachPointOffset() == null) return false;
-        BlockPos center = instance.getNodeSpawnPos(stage.startNode());
-        BlockPos flagPos = center.offset(
-                obj.reachPointOffset()[0], obj.reachPointOffset()[1], obj.reachPointOffset()[2]);
-        AABB box = new AABB(flagPos).inflate(obj.captureRadius());
-        if (level.getEntitiesOfClass(Player.class, box, p -> isParticipant(p, instance)).isEmpty()) return false;
-        return instance.getCurrentNode() != null && com.piranport.dungeon.saved.DungeonObjectiveData.get(level)
-                .captureTicks(instance.getInstanceId(), instance.getCurrentNode()) >= obj.captureHoldSeconds() * 20L;
+        if (level == null || instance.getCurrentNode() == null) return false;
+        return DungeonObjectiveData.get(level)
+                .captureProgress(instance.getInstanceId(), instance.getCurrentNode()) >= CAPTURE_COMPLETE_PERCENT;
     }
 }

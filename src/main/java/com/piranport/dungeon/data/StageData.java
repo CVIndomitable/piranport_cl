@@ -68,12 +68,13 @@ public record StageData(
             int surviveSeconds,
             /** REACH_POINT：目标点相对节点中心的偏移 [dx, dy, dz]（节点坐标 + 偏移 = 实际目标） */
             int[] reachPointOffset,
-            /** CAPTURE_FLAG：夺旗判定半径（方块）+ 存活时间（秒） */
-            int captureRadius,
-            int captureHoldSeconds
+            /** CAPTURE_FLAG：夺旗圈半径（方块），《副本/12》规定 16–24 */
+            int captureRadius
     ) {
+        public static final int DEFAULT_CAPTURE_RADIUS = 20;
+
         public static final VictoryObjectives EMPTY =
-                new VictoryObjectives(false, 0, null, 0, 0);
+                new VictoryObjectives(false, 0, null, DEFAULT_CAPTURE_RADIUS);
     }
 
     /**

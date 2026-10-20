@@ -40,8 +40,15 @@ public class DungeonHudLayer implements LayeredDraw.Layer {
     private static float bossMaxHealth;
     private static boolean bossVisible;
     private static long quietUntilMillis;
+    private static final long CAPTION_DURATION_MILLIS = 6000L;
+    private static String captionObjectiveKey = "";
+    private static String captionSceneKey = "";
+    private static long captionUntilMillis;
+    /** 夺旗占领进度 0–100；负数表示当前节点不是夺旗节点，不画进度条。 */
+    private static float captureProgress = -1f;
 
-    public static void setDungeonState(String stageName, String nodeName, long elapsedMillis) {
+    public static void setDungeonState(String stageName, String nodeName, long elapsedMillis,
+                                       String objectiveKey, String sceneKey) {
         if ((stageName == null || stageName.isEmpty())
                 && (nodeName == null || nodeName.isEmpty()) && elapsedMillis <= 0L) {
             clearDungeonState();
@@ -51,6 +58,11 @@ public class DungeonHudLayer implements LayeredDraw.Layer {
         currentNodeName = nodeName;
         timerElapsedMillis = Math.max(0L, elapsedMillis);
         inDungeon = true;
+        if (objectiveKey != null && !objectiveKey.isEmpty()) {
+            captionObjectiveKey = objectiveKey;
+            captionSceneKey = sceneKey == null ? "" : sceneKey;
+            captionUntilMillis = System.currentTimeMillis() + CAPTION_DURATION_MILLIS;
+        }
     }
 
     /**
@@ -61,7 +73,13 @@ public class DungeonHudLayer implements LayeredDraw.Layer {
         currentStageName = "";
         currentNodeName = "";
         timerElapsedMillis = 0;
+        captionUntilMillis = 0;
+        captureProgress = -1f;
         clearBossOverlay();
+    }
+
+    public static void setCaptureProgress(float percent) {
+        captureProgress = percent < 0f ? -1f : Math.min(100f, percent);
     }
 
     /** Update just the node ID for immediate feedback when entering a new node. */
@@ -114,6 +132,34 @@ public class DungeonHudLayer implements LayeredDraw.Layer {
                 new DungeonHudLayer());
     }
 
+    private static void renderEntryCaption(GuiGraphics gfx, net.minecraft.client.gui.Font font,
+                                           int screenWidth, int screenHeight) {
+        int center = screenWidth / 2;
+        int y = screenHeight / 3;
+        gfx.drawCenteredString(font, Component.literal(currentStageName + " · " + currentNodeName),
+                center, y, 0xFFFFD700);
+        gfx.drawCenteredString(font, Component.translatable(captionObjectiveKey),
+                center, y + 14, 0xFFFFFFFF);
+        if (!captionSceneKey.isEmpty()) {
+            gfx.drawCenteredString(font, Component.translatable(captionSceneKey),
+                    center, y + 28, 0xFFFFB0B0);
+        }
+    }
+
+    /** 《副本/12》夺旗条：开始全红，占领百分比从左往右变绿。 */
+    private static void renderCaptureBar(GuiGraphics gfx, net.minecraft.client.gui.Font font,
+                                         int screenWidth, int top) {
+        int width = Math.min(260, screenWidth - 24);
+        int left = screenWidth / 2 - width / 2;
+        gfx.fill(left, top, left + width, top + 10, 0xFF6A1414);
+        int filled = Math.round(width * captureProgress / 100f);
+        if (filled > 0) gfx.fill(left, top, left + filled, top + 10, 0xFF33CC4D);
+        gfx.renderOutline(left, top, width, 10, 0xFF101018);
+        gfx.drawCenteredString(font,
+                Component.translatable("hud.piranport.dungeon.capture", Math.round(captureProgress)),
+                screenWidth / 2, top + 12, 0xFFFFD0D0);
+    }
+
     @Override
     public void render(GuiGraphics gfx, DeltaTracker deltaTracker) {
         // 整合版 P3 修复：仅在 inDungeon=true 时绘制；不主动调用 clearDungeonState
@@ -140,12 +186,20 @@ public class DungeonHudLayer implements LayeredDraw.Layer {
                     screenWidth / 2, 17, 0xFFAAFFAA);
         }
 
+        if (System.currentTimeMillis() < captionUntilMillis) {
+            renderEntryCaption(gfx, font, screenWidth, gfx.guiHeight());
+        }
+
         // Timer (top right)：直接画服务端同步值，暂停时没有新包自然停表。
         // 只显示到秒——服务端 5 tick 同步一次，毫秒位是没有意义的噪声。
         long totalSec = timerElapsedMillis / 1000;
         String timeStr = String.format("%02d:%02d", totalSec / 60, totalSec % 60);
         int tw = font.width(timeStr);
         gfx.drawString(font, timeStr, screenWidth - tw - 5, 5, 0xFFAAFFAA, false);
+
+        if (captureProgress >= 0f) {
+            renderCaptureBar(gfx, font, screenWidth, bossVisible && !bossName.isEmpty() ? 76 : 32);
+        }
 
         if (bossVisible && !bossName.isEmpty()) {
             int center = screenWidth / 2;

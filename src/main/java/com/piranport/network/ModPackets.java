@@ -250,6 +250,11 @@ public class ModPackets {
                 com.piranport.dungeon.network.DungeonBossOverlayPayload::handle
         );
         registrar.playToClient(
+                com.piranport.dungeon.network.CaptureProgressPayload.TYPE,
+                com.piranport.dungeon.network.CaptureProgressPayload.STREAM_CODEC,
+                com.piranport.dungeon.network.CaptureProgressPayload::handle
+        );
+        registrar.playToClient(
                 com.piranport.dungeon.network.DungeonRegistrySyncPayload.TYPE,
                 com.piranport.dungeon.network.DungeonRegistrySyncPayload.STREAM_CODEC,
                 com.piranport.dungeon.network.DungeonRegistrySyncPayload::handle

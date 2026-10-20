@@ -1,6 +1,7 @@
 package com.piranport.dungeon.event;
 
 import com.piranport.PiranPort;
+import com.piranport.dungeon.VictoryEvaluator;
 import com.piranport.dungeon.data.DungeonRegistry;
 import com.piranport.dungeon.data.NodeData;
 import com.piranport.dungeon.data.StageData;
@@ -165,6 +166,7 @@ public class DungeonEventHandler {
         DungeonInstanceManager mgr = DungeonInstanceManager.get((ServerLevel) player.level());
         DungeonInstance instance = mgr.getInstanceForPlayer(player);
         if (instance != null) {
+            VictoryEvaluator.onFlagPlayerDied((ServerLevel) player.level(), instance, player);
             // 讲台是位置坐标，不依赖钥匙在场：第三方中途拔钥匙时玩家仍应回门口。
             // 若钥匙/讲台已毁，读不到钥匙仅意味着副本会话无法继续，不阻塞传送。
             ItemStack key = readKeyFromLectern(instance, player.server);
@@ -401,7 +403,7 @@ public class DungeonEventHandler {
             z = lecternPos.getZ() + 0.5;
         }
 
-        PacketDistributor.sendToPlayer(player, new com.piranport.dungeon.network.DungeonStatePayload("", "", 0L));
+        PacketDistributor.sendToPlayer(player, new com.piranport.dungeon.network.DungeonStatePayload("", "", 0L, "", ""));
         player.teleportTo(targetLevel, x, y, z, player.getYRot(), player.getXRot());
         return true;
     }

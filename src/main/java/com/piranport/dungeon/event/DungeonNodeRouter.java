@@ -10,6 +10,7 @@ import com.piranport.dungeon.instance.DungeonInstance;
 import com.piranport.dungeon.instance.DungeonInstanceManager;
 import com.piranport.dungeon.instance.NodeBattleField;
 import com.piranport.dungeon.network.DungeonStatePayload;
+import com.piranport.dungeon.weather.WeatherRuntime;
 import com.piranport.registry.ModItems;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -180,9 +181,13 @@ public final class DungeonNodeRouter {
         player.teleportTo(dungeonLevel, spawn.getX() + 0.5, spawn.getY(), spawn.getZ() + 0.5,
                 yaw, player.getXRot());
         StageData stage = DungeonRegistry.INSTANCE.getStage(instance.getStageId());
+        NodeData node = stage == null ? null : stage.nodes().get(nodeId);
+        String objectiveKey = node == null ? "" : NodeCaption.objectiveKey(stage, node);
+        String sceneKey = NodeCaption.sceneKey(WeatherRuntime.effectiveScene(dungeonLevel, instance, nodeId));
         PacketDistributor.sendToPlayer(player, new DungeonStatePayload(
                 stage == null ? instance.getStageId() : stage.displayName(),
-                stage == null ? nodeId : stage.nodeLabel(nodeId), instance.getElapsedMillis()));
+                stage == null ? nodeId : stage.nodeLabel(nodeId), instance.getElapsedMillis(),
+                objectiveKey, sceneKey));
         DungeonInstanceManager.get(dungeonLevel).refreshPlayerPresence(player.server);
     }
 

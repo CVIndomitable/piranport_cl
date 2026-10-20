@@ -145,7 +145,7 @@ public class ServerGameEvents {
             PacketDistributor.sendToPlayer(player, new com.piranport.dungeon.network.DungeonStatePayload(
                     stage == null ? instance.getStageId() : stage.displayName(),
                     currentNode == null ? "" : (stage == null ? currentNode : stage.nodeLabel(currentNode)),
-                    instance.getElapsedMillis()));
+                    instance.getElapsedMillis(), "", ""));
         }
     }
 

@@ -401,7 +401,7 @@ public class DungeonEventHandler {
             z = lecternPos.getZ() + 0.5;
         }
 
-        PacketDistributor.sendToPlayer(player, new com.piranport.dungeon.network.DungeonStatePayload("", "", 0L));
+        PacketDistributor.sendToPlayer(player, new com.piranport.dungeon.network.DungeonStatePayload("", "", 0L, "", ""));
         player.teleportTo(targetLevel, x, y, z, player.getYRot(), player.getXRot());
         return true;
     }

@@ -40,8 +40,13 @@ public class DungeonHudLayer implements LayeredDraw.Layer {
     private static float bossMaxHealth;
     private static boolean bossVisible;
     private static long quietUntilMillis;
+    private static final long CAPTION_DURATION_MILLIS = 6000L;
+    private static String captionObjectiveKey = "";
+    private static String captionSceneKey = "";
+    private static long captionUntilMillis;
 
-    public static void setDungeonState(String stageName, String nodeName, long elapsedMillis) {
+    public static void setDungeonState(String stageName, String nodeName, long elapsedMillis,
+                                       String objectiveKey, String sceneKey) {
         if ((stageName == null || stageName.isEmpty())
                 && (nodeName == null || nodeName.isEmpty()) && elapsedMillis <= 0L) {
             clearDungeonState();
@@ -51,6 +56,11 @@ public class DungeonHudLayer implements LayeredDraw.Layer {
         currentNodeName = nodeName;
         timerElapsedMillis = Math.max(0L, elapsedMillis);
         inDungeon = true;
+        if (objectiveKey != null && !objectiveKey.isEmpty()) {
+            captionObjectiveKey = objectiveKey;
+            captionSceneKey = sceneKey == null ? "" : sceneKey;
+            captionUntilMillis = System.currentTimeMillis() + CAPTION_DURATION_MILLIS;
+        }
     }
 
     /**
@@ -61,6 +71,7 @@ public class DungeonHudLayer implements LayeredDraw.Layer {
         currentStageName = "";
         currentNodeName = "";
         timerElapsedMillis = 0;
+        captionUntilMillis = 0;
         clearBossOverlay();
     }
 
@@ -114,6 +125,20 @@ public class DungeonHudLayer implements LayeredDraw.Layer {
                 new DungeonHudLayer());
     }
 
+    private static void renderEntryCaption(GuiGraphics gfx, net.minecraft.client.gui.Font font,
+                                           int screenWidth, int screenHeight) {
+        int center = screenWidth / 2;
+        int y = screenHeight / 3;
+        gfx.drawCenteredString(font, Component.literal(currentStageName + " · " + currentNodeName),
+                center, y, 0xFFFFD700);
+        gfx.drawCenteredString(font, Component.translatable(captionObjectiveKey),
+                center, y + 14, 0xFFFFFFFF);
+        if (!captionSceneKey.isEmpty()) {
+            gfx.drawCenteredString(font, Component.translatable(captionSceneKey),
+                    center, y + 28, 0xFFFFB0B0);
+        }
+    }
+
     @Override
     public void render(GuiGraphics gfx, DeltaTracker deltaTracker) {
         // 整合版 P3 修复：仅在 inDungeon=true 时绘制；不主动调用 clearDungeonState
@@ -138,6 +163,10 @@ public class DungeonHudLayer implements LayeredDraw.Layer {
             gfx.drawCenteredString(font,
                     Component.translatable("hud.piranport.dungeon.node", currentNodeName),
                     screenWidth / 2, 17, 0xFFAAFFAA);
+        }
+
+        if (System.currentTimeMillis() < captionUntilMillis) {
+            renderEntryCaption(gfx, font, screenWidth, gfx.guiHeight());
         }
 
         // Timer (top right)：直接画服务端同步值，暂停时没有新包自然停表。

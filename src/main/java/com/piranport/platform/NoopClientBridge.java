@@ -119,7 +119,8 @@ class NoopClientBridge implements ClientBridge {
     public void updateDungeonNode(String nodeId) {  }
 
     @Override
-    public void setDungeonState(String stageName, String nodeName, long elapsedMillis) {  }
+    public void setDungeonState(String stageName, String nodeName, long elapsedMillis,
+                                String objectiveKey, String sceneKey) {  }
 
     @Override
     public void updateDungeonBossOverlay(String bossName, String shipType, String chapter,

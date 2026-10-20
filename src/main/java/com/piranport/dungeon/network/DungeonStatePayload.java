@@ -15,7 +15,8 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
  * <p>elapsedMillis 是服务端按 tick 累计的关卡总用时，客户端直接显示、不自行推算，
  * 因此暂停游戏时表会跟着停（详见 {@code DungeonInstance#getElapsedMillis}）。</p>
  */
-public record DungeonStatePayload(String stageName, String nodeName, long elapsedMillis)
+public record DungeonStatePayload(String stageName, String nodeName, long elapsedMillis,
+                                  String objectiveKey, String sceneKey)
         implements CustomPacketPayload {
 
     public static final Type<DungeonStatePayload> TYPE =
@@ -26,11 +27,15 @@ public record DungeonStatePayload(String stageName, String nodeName, long elapse
                 ByteBufCodecs.STRING_UTF8.encode(buf, p.stageName());
                 ByteBufCodecs.STRING_UTF8.encode(buf, p.nodeName());
                 buf.writeLong(p.elapsedMillis());
+                ByteBufCodecs.STRING_UTF8.encode(buf, p.objectiveKey());
+                ByteBufCodecs.STRING_UTF8.encode(buf, p.sceneKey());
             },
             buf -> new DungeonStatePayload(
                     ByteBufCodecs.STRING_UTF8.decode(buf),
                     ByteBufCodecs.STRING_UTF8.decode(buf),
-                    buf.readLong())
+                    buf.readLong(),
+                    ByteBufCodecs.STRING_UTF8.decode(buf),
+                    ByteBufCodecs.STRING_UTF8.decode(buf))
     );
 
     @Override
@@ -39,7 +44,7 @@ public record DungeonStatePayload(String stageName, String nodeName, long elapse
     public static void handle(DungeonStatePayload payload, IPayloadContext context) {
         context.enqueueWork(() -> {
             ClientHooks.setDungeonState(payload.stageName(), payload.nodeName(),
-                    payload.elapsedMillis());
+                    payload.elapsedMillis(), payload.objectiveKey(), payload.sceneKey());
         });
     }
 }

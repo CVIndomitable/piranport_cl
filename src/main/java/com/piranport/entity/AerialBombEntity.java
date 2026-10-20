@@ -16,6 +16,7 @@ import java.util.UUID;
 import net.minecraft.world.entity.projectile.ThrowableItemProjectile;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
@@ -49,6 +50,12 @@ public class AerialBombEntity extends ThrowableItemProjectile {
     }
 
     private static final int MAX_LIFETIME = 600; // 30 seconds
+
+    /** 同批次先爆的航弹冲击波不能把后面还没落下的弹炸飞，否则弹道被打乱、投弹失去意义。 */
+    @Override
+    public boolean ignoreExplosion(Explosion explosion) {
+        return true;
+    }
 
     @Override
     public void tick() {

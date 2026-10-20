@@ -9,6 +9,7 @@ import com.piranport.combat.CombatTargeting;
 import com.piranport.config.ModEquipmentConfig;
 import com.piranport.combat.TransformationManager;
 import com.piranport.debug.PiranPortDebug;
+import com.piranport.entity.AircraftEntity;
 import com.piranport.entity.MissileEntity;
 import com.piranport.item.ExperienceShellItem;
 import com.piranport.item.MissileLauncherItem;
@@ -19,6 +20,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.player.Inventory;
@@ -308,19 +310,24 @@ public class MissileFireStrategy {
                 }
             }
             // 2. No fire control lock — find nearest hostile mob (Enemy interface covers Phantom/Vex/Monster)
-            //    防空导弹自动瞄准仅限飞行目标（离地至少2格的空中目标）
+            //    防空导弹自动瞄准仅限飞行目标（离地至少2格的空中目标）；敌方飞机恒为空中目标，
+            //    与 MissileEntity#findTarget 的自动索敌口径保持一致，否则会先朝天发射再靠飞行中修正。
             final boolean antiAirOnly = launcher.getMissileType() == MissileEntity.MissileType.ANTI_AIR;
             if (aimDir == null) {
-                LivingEntity nearest = null;
+                Entity nearest = null;
                 double lockRange = ModEquipmentConfig.MISSILE_AUTO_LOCK_RANGE.get();
                 double bestDist = lockRange;
-                for (LivingEntity mob : level.getEntitiesOfClass(LivingEntity.class,
+                for (Entity mob : level.getEntitiesOfClass(Entity.class,
                         player.getBoundingBox().inflate(lockRange),
-                        e -> e.isAlive() && e.isPickable() && e instanceof Enemy && !e.isUnderWater())) {
-                    if (antiAirOnly) {
+                        e -> e != player && e.isAlive() && e.isPickable() && !e.isUnderWater()
+                                && (e instanceof AircraftEntity
+                                    ? antiAirOnly && CombatTargeting.isHostileTarget(player, e)
+                                    : e instanceof LivingEntity && e instanceof Enemy))) {
+                    if (antiAirOnly && !(mob instanceof AircraftEntity)) {
                         // Anti-air missiles only target airborne enemies (at least 2 blocks above ground)
-                        net.minecraft.core.BlockPos below = mob.blockPosition().below(2);
-                        if (mob.onGround() || level.getBlockState(below).isSolid()) {
+                        LivingEntity living = (LivingEntity) mob;
+                        net.minecraft.core.BlockPos below = living.blockPosition().below(2);
+                        if (living.onGround() || level.getBlockState(below).isSolid()) {
                             continue;
                         }
                     }

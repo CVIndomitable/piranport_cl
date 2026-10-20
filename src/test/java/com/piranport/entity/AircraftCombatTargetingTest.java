@@ -78,6 +78,39 @@ class AircraftCombatTargetingTest {
         assertFalse(sonar.contains("isHostileAswTarget"), "声呐标记必须保留所有水生生物");
     }
 
+    @Test
+    void autonomousFighterBulletsSpareOwnerPlayers() throws Exception {
+        String bullet = Files.readString(Path.of(
+                "src/main/java/com/piranport/entity/BulletEntity.java"));
+        String canHit = methodBody(bullet, "protected boolean canHitEntity(");
+        assertTrue(canHit.contains("sparesPlayers && target instanceof Player"),
+                "深海自主战斗机子弹不得命中玩家本体");
+
+        String gun = Files.readString(GUN);
+        assertTrue(gun.contains("bullet.setSparesPlayers(owner == null)"),
+                "只有无主人（自主）子弹才启用玩家豁免，玩家飞机子弹保持原行为");
+    }
+
+    @Test
+    void autonomousFighterPreyExcludesPlayerCompanions() throws Exception {
+        String targeting = Files.readString(TARGETING);
+        String prey = methodBody(targeting, "private static boolean isAutonomousFighterPrey(");
+        assertTrue(prey.contains("ShipGirlEntity"),
+                "随从舰娘是普通 Mob 且非 Enemy，必须显式排除，否则会被当成中立生物误打");
+        assertFalse(prey.contains("Player"), "玩家本体不得进入自主战斗机猎物集合");
+    }
+
+    @Test
+    void antiAirAutoAimIncludesHostileAircraftLikeMissileHoming() throws Exception {
+        String fire = Files.readString(Path.of(
+                "src/main/java/com/piranport/combat/missile/MissileFireStrategy.java"));
+        String aim = methodBody(fire, "public static void spawnMissileAutoAim(");
+        assertTrue(aim.contains("e instanceof AircraftEntity"),
+                "防空导弹发射瞄准需与 MissileEntity#findTarget 一样纳入敌机");
+        assertTrue(aim.contains("CombatTargeting.isHostileTarget(player, e)"),
+                "敌机口径必须复用共享敌对判据");
+    }
+
     private static String methodBody(String source, String signature) {
         int start = source.indexOf(signature);
         assertTrue(start >= 0, "找不到方法：" + signature);

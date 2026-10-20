@@ -718,6 +718,8 @@ public class ModItems {
     // ===== Deep Ocean Spawn Eggs (深海生成蛋) (extracted to SpecialtyItems) =====
     public static final DeferredItem<SpawnEggItem> DEEP_OCEAN_SUPPLY_SPAWN_EGG = SpecialtyItems.DEEP_OCEAN_SUPPLY_SPAWN_EGG;
     public static final DeferredItem<SpawnEggItem> DEEP_OCEAN_DESTROYER_SPAWN_EGG = SpecialtyItems.DEEP_OCEAN_DESTROYER_SPAWN_EGG;
+    public static final DeferredItem<SpawnEggItem> DEEP_OCEAN_AIR_DEFENSE_DESTROYER_SPAWN_EGG = SpecialtyItems.DEEP_OCEAN_AIR_DEFENSE_DESTROYER_SPAWN_EGG;
+    public static final DeferredItem<SpawnEggItem> DEEP_OCEAN_HIGH_AIR_DEFENSE_DESTROYER_SPAWN_EGG = SpecialtyItems.DEEP_OCEAN_HIGH_AIR_DEFENSE_DESTROYER_SPAWN_EGG;
     public static final DeferredItem<SpawnEggItem> DEEP_OCEAN_LIGHT_CRUISER_SPAWN_EGG = SpecialtyItems.DEEP_OCEAN_LIGHT_CRUISER_SPAWN_EGG;
     public static final DeferredItem<SpawnEggItem> DEEP_OCEAN_HEAVY_CRUISER_SPAWN_EGG = SpecialtyItems.DEEP_OCEAN_HEAVY_CRUISER_SPAWN_EGG;
     public static final DeferredItem<SpawnEggItem> DEEP_OCEAN_BATTLE_CRUISER_SPAWN_EGG = SpecialtyItems.DEEP_OCEAN_BATTLE_CRUISER_SPAWN_EGG;

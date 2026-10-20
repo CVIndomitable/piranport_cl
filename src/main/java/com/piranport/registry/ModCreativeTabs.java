@@ -625,6 +625,8 @@ public class ModCreativeTabs {
                         // Deep Ocean Spawn Eggs
                         output.accept(ModItems.DEEP_OCEAN_SUPPLY_SPAWN_EGG.get());
                         output.accept(ModItems.DEEP_OCEAN_DESTROYER_SPAWN_EGG.get());
+                        output.accept(ModItems.DEEP_OCEAN_AIR_DEFENSE_DESTROYER_SPAWN_EGG.get());
+                        output.accept(ModItems.DEEP_OCEAN_HIGH_AIR_DEFENSE_DESTROYER_SPAWN_EGG.get());
                         output.accept(ModItems.DEEP_OCEAN_LIGHT_CRUISER_SPAWN_EGG.get());
                         output.accept(ModItems.DEEP_OCEAN_HEAVY_CRUISER_SPAWN_EGG.get());
                         output.accept(ModItems.DEEP_OCEAN_BATTLE_CRUISER_SPAWN_EGG.get());

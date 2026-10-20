@@ -407,6 +407,10 @@ public class ClientModEvents {
         // 高级档与旗舰暂无独立模型，沿用同舰种低级的 Alex 占位
         event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_HIGH_DESTROYER.get(),
                 ctx -> new AlexSlimMobRenderer<>(ctx));
+        event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_AIR_DEFENSE_DESTROYER.get(),
+                ctx -> new AlexSlimMobRenderer<>(ctx));
+        event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_HIGH_AIR_DEFENSE_DESTROYER.get(),
+                ctx -> new AlexSlimMobRenderer<>(ctx));
         event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_HIGH_LIGHT_CRUISER.get(),
                 ctx -> new AlexSlimMobRenderer<>(ctx));
         event.registerEntityRenderer(ModEntityTypes.DEEP_OCEAN_HIGH_HEAVY_CRUISER.get(),

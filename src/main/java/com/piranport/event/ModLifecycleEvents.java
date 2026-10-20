@@ -14,6 +14,7 @@ import com.piranport.npc.deepocean.DeepOceanBossEntity;
 import com.piranport.npc.deepocean.DeepOceanBattleCruiserEntity;
 import com.piranport.npc.deepocean.DeepOceanBattleshipEntity;
 import com.piranport.npc.deepocean.DeepOceanCarrierEntity;
+import com.piranport.npc.deepocean.DeepOceanAirDefenseDestroyerEntity;
 import com.piranport.npc.deepocean.DeepOceanDestroyerEntity;
 import com.piranport.npc.deepocean.DeepOceanFlagshipEntity;
 import com.piranport.npc.deepocean.DeepOceanHeavyCruiserEntity;
@@ -120,6 +121,10 @@ public class ModLifecycleEvents {
         // 高级档复用低级的实体类，属性同样由 JSON 覆盖；旗舰类继承战列舰的属性表
         event.put(ModEntityTypes.DEEP_OCEAN_HIGH_DESTROYER.get(),
                 DeepOceanDestroyerEntity.createAttributes().build());
+        event.put(ModEntityTypes.DEEP_OCEAN_AIR_DEFENSE_DESTROYER.get(),
+                DeepOceanAirDefenseDestroyerEntity.createAttributes().build());
+        event.put(ModEntityTypes.DEEP_OCEAN_HIGH_AIR_DEFENSE_DESTROYER.get(),
+                DeepOceanAirDefenseDestroyerEntity.createAttributes().build());
         event.put(ModEntityTypes.DEEP_OCEAN_HIGH_LIGHT_CRUISER.get(),
                 DeepOceanLightCruiserEntity.createAttributes().build());
         event.put(ModEntityTypes.DEEP_OCEAN_HIGH_HEAVY_CRUISER.get(),

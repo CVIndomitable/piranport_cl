@@ -204,6 +204,13 @@ public class ModEntityTypes {
                     .sized(1.35f, 2.23f).clientTrackingRange(16).updateInterval(3)
                     .build("piranport:deep_ocean_destroyer"));
 
+    public static final DeferredHolder<EntityType<?>, EntityType<com.piranport.npc.deepocean.DeepOceanAirDefenseDestroyerEntity>>
+            DEEP_OCEAN_AIR_DEFENSE_DESTROYER = ENTITY_TYPES.register("deep_ocean_air_defense_destroyer",
+            () -> EntityType.Builder.<com.piranport.npc.deepocean.DeepOceanAirDefenseDestroyerEntity>of(
+                            com.piranport.npc.deepocean.DeepOceanAirDefenseDestroyerEntity::new, MobCategory.MONSTER)
+                    .sized(1.35f, 2.23f).clientTrackingRange(16).updateInterval(3)
+                    .build("piranport:deep_ocean_air_defense_destroyer"));
+
     public static final DeferredHolder<EntityType<?>, EntityType<com.piranport.npc.deepocean.DeepOceanLightCruiserEntity>>
             DEEP_OCEAN_LIGHT_CRUISER = ENTITY_TYPES.register("deep_ocean_light_cruiser",
             () -> EntityType.Builder.<com.piranport.npc.deepocean.DeepOceanLightCruiserEntity>of(
@@ -309,6 +316,13 @@ public class ModEntityTypes {
                             com.piranport.npc.deepocean.DeepOceanDestroyerEntity::new, MobCategory.MONSTER)
                     .sized(1.35f, 2.23f).clientTrackingRange(16).updateInterval(3)
                     .build("piranport:deep_ocean_high_destroyer"));
+
+    public static final DeferredHolder<EntityType<?>, EntityType<com.piranport.npc.deepocean.DeepOceanAirDefenseDestroyerEntity>>
+            DEEP_OCEAN_HIGH_AIR_DEFENSE_DESTROYER = ENTITY_TYPES.register("deep_ocean_high_air_defense_destroyer",
+            () -> EntityType.Builder.<com.piranport.npc.deepocean.DeepOceanAirDefenseDestroyerEntity>of(
+                            com.piranport.npc.deepocean.DeepOceanAirDefenseDestroyerEntity::new, MobCategory.MONSTER)
+                    .sized(1.35f, 2.23f).clientTrackingRange(16).updateInterval(3)
+                    .build("piranport:deep_ocean_high_air_defense_destroyer"));
 
     public static final DeferredHolder<EntityType<?>, EntityType<com.piranport.npc.deepocean.DeepOceanLightCruiserEntity>>
             DEEP_OCEAN_HIGH_LIGHT_CRUISER = ENTITY_TYPES.register("deep_ocean_high_light_cruiser",

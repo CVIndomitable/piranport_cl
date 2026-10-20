@@ -28,7 +28,7 @@ public class DeepOceanLightCarrierEntity extends AbstractDeepOceanEntity {
         return Monster.createMonsterAttributes()
                 .add(Attributes.MAX_HEALTH, 60.0)
                 .add(Attributes.MOVEMENT_SPEED, 0.25)
-                .add(Attributes.FOLLOW_RANGE, 48.0)
+                .add(Attributes.FOLLOW_RANGE, 96.0)
                 .add(Attributes.ATTACK_DAMAGE, 3.0)
                 .add(Attributes.KNOCKBACK_RESISTANCE, 0.4)
                 .add(Attributes.ARMOR, 6.0);

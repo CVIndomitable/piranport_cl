@@ -29,7 +29,7 @@ public class DeepOceanHeavyCruiserEntity extends AbstractDeepOceanEntity {
         return Monster.createMonsterAttributes()
                 .add(Attributes.MAX_HEALTH, 80.0)
                 .add(Attributes.MOVEMENT_SPEED, 0.25)
-                .add(Attributes.FOLLOW_RANGE, 32.0)
+                .add(Attributes.FOLLOW_RANGE, 64.0)
                 .add(Attributes.ATTACK_DAMAGE, 7.0)
                 .add(Attributes.KNOCKBACK_RESISTANCE, 0.6)
                 .add(Attributes.ARMOR, 12.0);

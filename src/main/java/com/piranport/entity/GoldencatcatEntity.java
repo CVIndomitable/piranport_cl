@@ -28,10 +28,19 @@ public class GoldencatcatEntity extends AbstractDeepOceanEntity {
         return Monster.createMonsterAttributes()
                 .add(Attributes.MAX_HEALTH, 180.0)       // 高级战列血量
                 .add(Attributes.MOVEMENT_SPEED, 0.20)    // 正常航速
-                .add(Attributes.FOLLOW_RANGE, 48.0)
+                .add(Attributes.FOLLOW_RANGE, 96.0)
                 .add(Attributes.ATTACK_DAMAGE, 5.0)      // 极低火力
                 .add(Attributes.KNOCKBACK_RESISTANCE, 0.9)
                 .add(Attributes.ARMOR, 24.0);            // 低级战列装甲
+    }
+
+    /**
+     * 训练靶不仇恨护航运输船：它没有任何攻击目标，若接受护航仇恨会把运输船
+     * 设为目标并经 FleetAlert 通知整队，等同于主动招惹护航目标。
+     */
+    @Override
+    protected boolean attacksEscortTransports() {
+        return false;
     }
 
     @Override

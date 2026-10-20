@@ -536,13 +536,20 @@ public abstract class AbstractDeepOceanEntity extends Monster {
     }
 
     /**
+     * 深海鱼雷装填下限（《深海/01》§六「×3（最低90秒）」）。
+     * WHY 只卡 JSON 分支：JSON 值是策划按舰种定稿的装填表，误配成几秒会把齐射打成连发；
+     * 全局终端兜底是调试手感口，不在此强行抬高，否则终端里改了也不生效。
+     */
+    public static final int TORPEDO_RELOAD_FLOOR_TICKS = 1800;
+
+    /**
      * 本舰鱼雷装填时间（《深海/01》§六）：驱逐 1920、轻/重巡与旗舰 2160、潜艇 2400、雷巡另走 1800。
      * JSON 未配置时退回全局 {@code torpedo_salvo.salvo_cooldown}。
      */
     public int getTorpedoCooldownTicks() {
         DeepOceanEntityData data = getJsonData();
         if (data != null && data.torpedoCooldown() != null) {
-            return Math.max(1, data.torpedoCooldown());
+            return Math.max(TORPEDO_RELOAD_FLOOR_TICKS, data.torpedoCooldown());
         }
         return com.piranport.npc.ai.NpcCombatTuning.salvoCooldown();
     }

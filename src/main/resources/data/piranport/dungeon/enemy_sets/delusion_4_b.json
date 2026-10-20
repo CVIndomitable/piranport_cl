@@ -3,7 +3,7 @@
   "spawn_list": [
     {
       "entity": "piranport:deep_ocean_high_battleship",
-      "count": 1
+      "count": 2
     },
     {
       "entity": "piranport:deep_ocean_carrier",
@@ -14,12 +14,8 @@
       "count": 1
     },
     {
-      "entity": "piranport:low_tier_destroyer",
+      "entity": "piranport:deep_ocean_destroyer",
       "count": 1
     }
-  ],
-  "flagship": {
-    "entity": "piranport:deep_ocean_high_battleship",
-    "count": 1
-  }
+  ]
 }

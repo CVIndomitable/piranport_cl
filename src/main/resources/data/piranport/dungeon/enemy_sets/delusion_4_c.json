@@ -3,15 +3,11 @@
   "spawn_list": [
     {
       "entity": "piranport:deep_ocean_high_torpedo_cruiser",
-      "count": 1
+      "count": 2
     },
     {
-      "entity": "piranport:low_tier_destroyer",
+      "entity": "piranport:deep_ocean_destroyer",
       "count": 2
     }
-  ],
-  "flagship": {
-    "entity": "piranport:deep_ocean_high_torpedo_cruiser",
-    "count": 1
-  }
+  ]
 }

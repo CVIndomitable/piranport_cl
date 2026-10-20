@@ -116,15 +116,15 @@
       "to": "H"
     },
     {
-      "from": "H",
-      "to": "J"
-    },
-    {
       "from": "E",
       "to": "J"
     },
     {
       "from": "F",
+      "to": "J"
+    },
+    {
+      "from": "H",
       "to": "J"
     }
   ],
@@ -140,6 +140,14 @@
   },
   "checkpoints": [
     {
+      "id": "cp_delusion_3_h",
+      "node_id": "H",
+      "pos_x": 0,
+      "pos_y": 64,
+      "pos_z": 0,
+      "facing": "south"
+    },
+    {
       "id": "cp_delusion_3_e",
       "node_id": "E",
       "pos_x": 0,
@@ -150,14 +158,6 @@
     {
       "id": "cp_delusion_3_f",
       "node_id": "F",
-      "pos_x": 0,
-      "pos_y": 64,
-      "pos_z": 0,
-      "facing": "south"
-    },
-    {
-      "id": "cp_delusion_3_h",
-      "node_id": "H",
       "pos_x": 0,
       "pos_y": 64,
       "pos_z": 0,

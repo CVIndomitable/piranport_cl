@@ -90,8 +90,6 @@ public interface AircraftAttackContext {
 
     void setHasFired(boolean fired);
 
-    int salvoSize(LivingEntity target, float damagePerShot);
-
     AircraftAttackMode attackMode();
 
     boolean hasEverHadFireControl();

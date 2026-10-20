@@ -79,7 +79,7 @@ public final class DepthChargeAttackStrategy implements AttackStrategy {
 
         if (horizontalDistance < (4.0 + leadDistance) && context.attackCooldown() <= 0) {
             float depthChargeDamage = context.panelDamage() * 1.5f;
-            int toFire = context.salvoSize(target, depthChargeDamage);
+            int toFire = context.remainingAmmo();
             PiranPortDebug.event(
                     "Aircraft ASW_SALVO | entityId={} capacity={} remaining={} firing={} targetHP={}",
                     context.entityId(), context.ammoCapacity(), context.remainingAmmo(),

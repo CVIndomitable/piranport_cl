@@ -90,7 +90,7 @@ public final class RocketAttackStrategy implements AttackStrategy {
                     + ModEquipmentConfig.ROCKET_FIGHTER_AIM_Y_OFFSET.get() - position.y, dz).normalize();
             float rocketDamage = context.panelDamage()
                     * ModEquipmentConfig.ROCKET_FIGHTER_DAMAGE_MULTIPLIER.get().floatValue();
-            int toFire = context.salvoSize(target, rocketDamage);
+            int toFire = context.remainingAmmo();
             PiranPortDebug.event(
                     "Aircraft ROCKET_SALVO | entityId={} capacity={} remaining={} firing={} targetHP={}",
                     context.entityId(), context.ammoCapacity(), context.remainingAmmo(),

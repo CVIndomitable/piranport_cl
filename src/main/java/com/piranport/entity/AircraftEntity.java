@@ -720,14 +720,6 @@ public class AircraftEntity extends Entity implements AircraftAttackContext {
     }
     public boolean hasFired() { return hasFired; }
     public void setHasFired(boolean fired) { hasFired = fired; }
-    public int salvoSize(LivingEntity target, float damagePerShot) {
-        if (remainingAmmo <= 0) return 0;
-        if (damagePerShot <= 0.01f) return Math.max(1, remainingAmmo);
-        float health = target.getHealth();
-        if (health <= 0f) return 1;
-        int needed = (int) Math.ceil(health / damagePerShot);
-        return Math.max(1, Math.min(remainingAmmo, needed));
-    }
     public AircraftAttackMode attackMode() { return attackMode; }
     public boolean hasEverHadFireControl() { return hasEverHadFireControl; }
     public boolean autoSeekDone() { return autoSeekDone; }

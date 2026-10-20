@@ -47,7 +47,10 @@ public class DeepOceanLightCruiserEntity extends AbstractDeepOceanEntity {
         // 高级轻巡 = 敌方火炮防空层（《深海/01》§五）：独立对空目标，不占用对海 target。
         // 低级轻巡无防空火炮，不挂此 Goal。
         if (getType() == ModEntityTypes.DEEP_OCEAN_HIGH_LIGHT_CRUISER.get()) {
-            this.goalSelector.addGoal(2, new AntiAircraftAttackGoal(this));
+            DeepOceanEntityData data = getJsonData();
+            float aaDamage = data != null ? data.aaDamage() : 6.0f;
+            int aaFireInterval = data != null ? data.aaFireInterval() : 80;
+            this.goalSelector.addGoal(2, new AntiAircraftAttackGoal(this, aaDamage, aaFireInterval));
         }
         this.goalSelector.addGoal(5, new IdleWanderGoal(this, 0.8, 32));
         this.goalSelector.addGoal(4, new FleetAlertGoal(this));

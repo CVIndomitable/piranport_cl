@@ -30,7 +30,11 @@ public record DeepOceanEntityData(
         int trackingIntervalMin,
         int trackingIntervalMax,
         boolean canLaunchAircraft,
-        int maxAircraft
+        int maxAircraft,
+        /** 防空对空弹伤害；仅防空类实体（高级轻巡火炮、防驱导弹）读取。 */
+        float aaDamage,
+        /** 防空发射间隔（tick）；仅防空类实体读取。 */
+        int aaFireInterval
 ) {
     public static DeepOceanEntityData fromJson(JsonObject obj) {
         return new DeepOceanEntityData(
@@ -52,7 +56,9 @@ public record DeepOceanEntityData(
                 optInt(obj, "tracking_interval_min", 3),
                 optInt(obj, "tracking_interval_max", 6),
                 optBool(obj, "can_launch_aircraft", false),
-                optInt(obj, "max_aircraft", 0)
+                optInt(obj, "max_aircraft", 0),
+                optFloat(obj, "aa_damage", 6.0f),
+                optInt(obj, "aa_fire_interval", 80)
         );
     }
 

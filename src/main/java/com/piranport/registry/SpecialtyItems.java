@@ -443,6 +443,14 @@ public final class SpecialtyItems {
             ITEMS.register("deep_ocean_destroyer_spawn_egg",
                     () -> new DeferredSpawnEggItem(ModEntityTypes.DEEP_OCEAN_DESTROYER,
                             0x2D2D3D, 0xCC4444, new Item.Properties()));
+    public static final DeferredItem<SpawnEggItem> DEEP_OCEAN_AIR_DEFENSE_DESTROYER_SPAWN_EGG =
+            ITEMS.register("deep_ocean_air_defense_destroyer_spawn_egg",
+                    () -> new DeferredSpawnEggItem(ModEntityTypes.DEEP_OCEAN_AIR_DEFENSE_DESTROYER,
+                            0x2D2D3D, 0x4466CC, new Item.Properties()));
+    public static final DeferredItem<SpawnEggItem> DEEP_OCEAN_HIGH_AIR_DEFENSE_DESTROYER_SPAWN_EGG =
+            ITEMS.register("deep_ocean_high_air_defense_destroyer_spawn_egg",
+                    () -> new DeferredSpawnEggItem(ModEntityTypes.DEEP_OCEAN_HIGH_AIR_DEFENSE_DESTROYER,
+                            0x2D2D3D, 0x6688EE, new Item.Properties()));
     public static final DeferredItem<SpawnEggItem> DEEP_OCEAN_LIGHT_CRUISER_SPAWN_EGG =
             ITEMS.register("deep_ocean_light_cruiser_spawn_egg",
                     () -> new DeferredSpawnEggItem(ModEntityTypes.DEEP_OCEAN_LIGHT_CRUISER,

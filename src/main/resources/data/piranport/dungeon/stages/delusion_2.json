@@ -3,25 +3,30 @@
   "chapter": "chapter_event_delusion",
   "display_name": "妄想舰队 Ex-2 战列舰队击退",
   "nodes": {
-    "A": {
-      "type": "battle",
-      "enemies": "delusion_2_a",
+    "S": {
+      "type": "resource",
       "branches": [
         {
           "when": {
             "hull": "small"
           },
-          "to": "C"
+          "to": "A"
         }
       ],
       "branch_default": "B",
-      "display_x": 50,
+      "display_x": 0,
+      "display_y": 250
+    },
+    "A": {
+      "type": "battle",
+      "enemies": "delusion_2_a",
+      "display_x": 100,
       "display_y": 300
     },
     "B": {
       "type": "battle",
       "enemies": "delusion_2_b",
-      "display_x": 150,
+      "display_x": 100,
       "display_y": 100
     },
     "C": {
@@ -57,7 +62,11 @@
   },
   "edges": [
     {
-      "from": "A",
+      "from": "S",
+      "to": "A"
+    },
+    {
+      "from": "S",
       "to": "B"
     },
     {
@@ -81,7 +90,7 @@
       "to": "K"
     }
   ],
-  "start_node": "A",
+  "start_node": "S",
   "boss_nodes": [
     "K"
   ],

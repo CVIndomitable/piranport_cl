@@ -3,18 +3,23 @@
   "chapter": "chapter_event_hell",
   "display_name": "地狱群岛 Ex-1 强行侦查行动",
   "nodes": {
-    "A": {
-      "type": "battle",
-      "enemies": "hell_1_a",
+    "S": {
+      "type": "resource",
       "branches": [
         {
           "when": {
             "hull": "large"
           },
-          "to": "C"
+          "to": "A"
         }
       ],
       "branch_default": "B",
+      "display_x": 0,
+      "display_y": 300
+    },
+    "A": {
+      "type": "battle",
+      "enemies": "hell_1_a",
       "display_x": 50,
       "display_y": 300
     },
@@ -54,7 +59,11 @@
   },
   "edges": [
     {
-      "from": "A",
+      "from": "S",
+      "to": "A"
+    },
+    {
+      "from": "S",
       "to": "B"
     },
     {
@@ -78,7 +87,7 @@
       "to": "E"
     }
   ],
-  "start_node": "A",
+  "start_node": "S",
   "boss_nodes": [
     "E"
   ],

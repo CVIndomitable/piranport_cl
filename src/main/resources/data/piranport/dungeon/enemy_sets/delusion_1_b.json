@@ -1,0 +1,9 @@
+{
+  "enemy_set_id": "delusion_1_b",
+  "spawn_list": [
+    {
+      "entity": "piranport:deep_ocean_destroyer",
+      "count": 4
+    }
+  ]
+}

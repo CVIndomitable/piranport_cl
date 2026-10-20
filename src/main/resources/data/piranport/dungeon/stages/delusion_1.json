@@ -3,11 +3,22 @@
   "chapter": "chapter_event_delusion",
   "display_name": "妄想舰队 Ex-1 制空权夺取",
   "nodes": {
+    "S": {
+      "type": "resource",
+      "display_x": 0,
+      "display_y": 200
+    },
     "A": {
       "type": "battle",
       "enemies": "delusion_1_a",
       "display_x": 50,
-      "display_y": 200
+      "display_y": 100
+    },
+    "B": {
+      "type": "battle",
+      "enemies": "delusion_1_b",
+      "display_x": 50,
+      "display_y": 300
     },
     "C": {
       "type": "battle",
@@ -60,7 +71,19 @@
   },
   "edges": [
     {
+      "from": "S",
+      "to": "A"
+    },
+    {
+      "from": "S",
+      "to": "B"
+    },
+    {
       "from": "A",
+      "to": "C"
+    },
+    {
+      "from": "B",
       "to": "C"
     },
     {
@@ -84,7 +107,7 @@
       "to": "G"
     }
   ],
-  "start_node": "A",
+  "start_node": "S",
   "boss_nodes": [
     "G"
   ],

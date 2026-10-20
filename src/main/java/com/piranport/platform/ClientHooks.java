@@ -179,6 +179,11 @@ public final class ClientHooks {
         bridge.setCaptureProgress(percent);
     }
 
+    public static void setBranchDoors(UUID instanceId, String fromNode,
+                                      List<com.piranport.dungeon.event.BranchDoors.Door> doors) {
+        bridge.setBranchDoors(instanceId, fromNode, doors);
+    }
+
     public static void updateDungeonBossOverlay(String bossName, String shipType, String chapter,
                                                 int segment, float health, float maxHealth,
                                                 boolean visible, boolean quietBattlefield) {

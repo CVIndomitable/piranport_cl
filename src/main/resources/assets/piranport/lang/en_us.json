@@ -206,6 +206,8 @@
   "dungeon.piranport.boss_alert.title": "Boss Incoming",
   "dungeon.piranport.branch.blocked": "Node %s lies on a branch route and must be entered through its branch door; the lectern cannot send you there directly.",
   "dungeon.piranport.branch.closed": "This door is closed to you.",
+  "dungeon.piranport.branch.cleared": "Cleared",
+  "dungeon.piranport.branch.passed": "Taken",
   "dungeon.piranport.branch.cond.carry": "Carry %s",
   "dungeon.piranport.branch.cond.escorts_expr": "Escorts %s",
   "dungeon.piranport.branch.cond.escorts_min": "At least %s escorts",

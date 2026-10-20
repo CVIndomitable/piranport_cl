@@ -206,6 +206,8 @@
   "dungeon.piranport.boss_alert.title": "首领出现",
   "dungeon.piranport.branch.blocked": "节点 %s 位于分歧路线上，需从对应分歧门走入，讲台无法直接前往。",
   "dungeon.piranport.branch.closed": "这扇门对你关闭。",
+  "dungeon.piranport.branch.cleared": "已清",
+  "dungeon.piranport.branch.passed": "已走过",
   "dungeon.piranport.branch.cond.carry": "携带%s",
   "dungeon.piranport.branch.cond.escorts_expr": "随从 %s",
   "dungeon.piranport.branch.cond.escorts_min": "随从至少 %s",

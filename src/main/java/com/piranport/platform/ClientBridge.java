@@ -94,6 +94,9 @@ public interface ClientBridge {
 
     void setCaptureProgress(float percent);
 
+    void setBranchDoors(UUID instanceId, String fromNode,
+                        List<com.piranport.dungeon.event.BranchDoors.Door> doors);
+
     void updateDungeonBossOverlay(String bossName, String shipType, String chapter,
                                   int segment, float health, float maxHealth,
                                   boolean visible, boolean quietBattlefield);

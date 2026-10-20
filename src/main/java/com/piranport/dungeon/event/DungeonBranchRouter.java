@@ -8,6 +8,7 @@ import com.piranport.dungeon.event.BranchDoors.Door;
 import com.piranport.dungeon.instance.DungeonInstance;
 import com.piranport.dungeon.instance.DungeonInstanceManager;
 import com.piranport.dungeon.instance.NodeBattleField;
+import com.piranport.dungeon.network.BranchDoorsPayload;
 import com.piranport.item.ShipCoreItem;
 import com.piranport.npc.follower.DungeonFollowerManager;
 import com.piranport.npc.shipgirl.ShipGirlEntity;
@@ -22,6 +23,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -77,7 +79,13 @@ public final class DungeonBranchRouter {
      */
     public static void reachGroup(ServerPlayer player, DungeonInstance instance, NodeData fromNode) {
         if (fromNode == null || !fromNode.hasBranches()) return;
-        doorsFor(player, instance, fromNode);
+        sendDoors(player, instance, fromNode, doorsFor(player, instance, fromNode));
+    }
+
+    private static void sendDoors(ServerPlayer player, DungeonInstance instance, NodeData fromNode,
+                                  List<Door> doors) {
+        PacketDistributor.sendToPlayer(player, new BranchDoorsPayload(
+                instance.getInstanceId(), fromNode.nodeId(), doors));
     }
 
     private static List<Door> doorsFor(ServerPlayer player, DungeonInstance instance, NodeData fromNode) {
@@ -157,8 +165,10 @@ public final class DungeonBranchRouter {
 
     private static void choose(ServerPlayer player, DungeonInstance instance, NodeData fromNode, String target) {
         instance.setBranchChoice(player.getUUID(), fromNode.nodeId(), target);
-        instance.setBranchDoors(player.getUUID(), fromNode.nodeId(), BranchDoors.compute(
-                fromNode, contextFor(player, instance), instance.getClearedNodes()::contains, target));
+        List<Door> doors = BranchDoors.compute(
+                fromNode, contextFor(player, instance), instance.getClearedNodes()::contains, target);
+        instance.setBranchDoors(player.getUUID(), fromNode.nodeId(), doors);
+        sendDoors(player, instance, fromNode, doors);
         DungeonInstanceManager.get(player.serverLevel()).setDirty();
         player.playNotifySound(SoundEvents.NOTE_BLOCK_CHIME.value(), SoundSource.PLAYERS, 1.0f, 1.2f);
     }

@@ -6,11 +6,11 @@ import com.piranport.dungeon.data.StageData;
 import com.piranport.dungeon.data.VictoryCondition;
 
 /** 《副本/12》进节点字幕的文案键。服务端只发键，客户端按自己的语言翻译。 */
-final class NodeCaption {
+public final class NodeCaption {
 
     private NodeCaption() {}
 
-    static String objectiveKey(StageData stage, NodeData node) {
+    public static String objectiveKey(StageData stage, NodeData node) {
         if (node.escort() != null) return "hud.piranport.dungeon.objective.escort";
         if (node.completesByArrival()) return "hud.piranport.dungeon.objective.reach";
         if (stage.victoryConditions().contains(VictoryCondition.CAPTURE_FLAG)) {

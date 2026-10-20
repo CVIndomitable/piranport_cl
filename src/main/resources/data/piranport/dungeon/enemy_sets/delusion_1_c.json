@@ -2,16 +2,16 @@
   "enemy_set_id": "delusion_1_c",
   "spawn_list": [
     {
-      "entity": "piranport:deep_ocean_battle_cruiser",
-      "count": 1
-    },
-    {
       "entity": "piranport:deep_ocean_light_cruiser",
       "count": 1
     },
     {
-      "entity": "piranport:deep_ocean_destroyer",
+      "entity": "piranport:low_tier_destroyer",
       "count": 2
     }
-  ]
+  ],
+  "flagship": {
+    "entity": "piranport:deep_ocean_battle_cruiser",
+    "count": 1
+  }
 }

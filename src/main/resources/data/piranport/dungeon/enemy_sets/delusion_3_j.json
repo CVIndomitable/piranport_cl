@@ -2,7 +2,7 @@
   "enemy_set_id": "delusion_3_j",
   "spawn_list": [
     {
-      "entity": "piranport:deep_ocean_torpedo_cruiser",
+      "entity": "piranport:deep_ocean_high_torpedo_cruiser",
       "count": 1
     },
     {
@@ -11,7 +11,7 @@
     }
   ],
   "flagship": {
-    "entity": "piranport:deep_ocean_torpedo_cruiser",
+    "entity": "piranport:deep_ocean_high_torpedo_cruiser",
     "count": 1
   }
 }

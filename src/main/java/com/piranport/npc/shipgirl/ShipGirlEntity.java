@@ -6,8 +6,12 @@ import com.piranport.entity.AircraftEntity;
 import com.piranport.item.KeyFragmentItem;
 import com.piranport.npc.deepocean.AbstractDeepOceanEntity;
 import com.piranport.registry.ModItems;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
@@ -233,6 +237,7 @@ public class ShipGirlEntity extends PathfinderMob implements Merchant {
     private FollowUpStage followUpStage = FollowUpStage.FLAGSHIP_DEBRIEF;
     private int rapport = 0;
     private int branchMask = 0;
+    private final Set<String> followerRoles = new HashSet<>();
     private int[] equipmentSlots = new int[3];
 
     public ShipGirlEntity(EntityType<? extends ShipGirlEntity> type, Level level) {
@@ -317,6 +322,16 @@ public class ShipGirlEntity extends PathfinderMob implements Merchant {
 
     public int getSkinVariant() {
         return entityData.get(DATA_SKIN_VARIANT);
+    }
+
+    /** 随从职能标签（如“防空”“反潜”），供副本分歧门判定；职能来源见《NPC/02》§5、§9。 */
+    public Set<String> getFollowerRoles() {
+        return Collections.unmodifiableSet(followerRoles);
+    }
+
+    public void setFollowerRoles(Collection<String> roles) {
+        followerRoles.clear();
+        followerRoles.addAll(roles);
     }
 
     public int getRapport() {
@@ -1126,6 +1141,11 @@ public class ShipGirlEntity extends PathfinderMob implements Merchant {
         tag.putInt("TradeXp", tradeXp);
         tag.putInt("Rapport", rapport);
         tag.putInt("BranchMask", branchMask);
+        net.minecraft.nbt.ListTag roleList = new net.minecraft.nbt.ListTag();
+        for (String role : followerRoles) {
+            roleList.add(net.minecraft.nbt.StringTag.valueOf(role));
+        }
+        tag.put("FollowerRoles", roleList);
         int[] slots = getEquipmentSlots();
         if (slots.length > 0) {
             net.minecraft.nbt.ListTag slotList = new net.minecraft.nbt.ListTag();
@@ -1178,6 +1198,13 @@ public class ShipGirlEntity extends PathfinderMob implements Merchant {
         rapport = Math.max(0, Math.min(MAX_RAPPORT, tag.getInt("Rapport")));
         entityData.set(DATA_RAPPORT, rapport);
         branchMask = tag.getInt("BranchMask");
+        followerRoles.clear();
+        if (tag.contains("FollowerRoles", Tag.TAG_LIST)) {
+            net.minecraft.nbt.ListTag roleList = tag.getList("FollowerRoles", Tag.TAG_STRING);
+            for (int i = 0; i < roleList.size(); i++) {
+                followerRoles.add(roleList.getString(i));
+            }
+        }
         if (tag.contains("EquipmentSlots", Tag.TAG_LIST)) {
             net.minecraft.nbt.ListTag slotList = tag.getList("EquipmentSlots", Tag.TAG_INT);
             int len = Math.min(slotList.size(), equipmentSlots.length);

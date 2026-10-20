@@ -7,6 +7,8 @@ import com.piranport.dungeon.instance.DungeonInstance;
 import com.piranport.dungeon.instance.DungeonInstanceManager;
 import com.piranport.dungeon.instance.NodeBattleField;
 import com.piranport.item.ShipCoreItem;
+import com.piranport.npc.follower.DungeonFollowerManager;
+import com.piranport.npc.shipgirl.ShipGirlEntity;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
@@ -21,6 +23,8 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 
+import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -31,7 +35,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * 《副本/22》分歧带路的服务端接线：取玩家上下文 → {@link BranchEvaluator} 判定 →
  * 快照到 {@link DungeonInstance#setBranchChoice} → 聊天/标题反馈 → 个人传送。
  *
- * <p>随从系统未开发：escorts 按 0、role 按“无”判定；捆绑传送随从不做。</p>
+ * <p>随从按 {@link DungeonFollowerManager} 中触发者在场且存活的随从计 escorts 与职能位；捆绑传送随从不做。</p>
  */
 public final class DungeonBranchRouter {
     private DungeonBranchRouter() {}
@@ -39,14 +43,20 @@ public final class DungeonBranchRouter {
     /** 分歧带路的每玩家重触发冷却（见 routeFromPortal）。键为玩家 UUID，值为服务端 tick。 */
     private static final Map<UUID, Long> LAST_ROUTE_TICK = new ConcurrentHashMap<>();
 
-    /** 构造玩家当前的分歧上下文（舰体取变身中的舰装核心）。 */
-    static BranchEvaluator.Context contextFor(ServerPlayer player) {
+    /** 构造玩家当前的分歧上下文（舰体取变身中的舰装核心，随从取本副本实例内的在场随从）。 */
+    static BranchEvaluator.Context contextFor(ServerPlayer player, DungeonInstance instance) {
         String hull = null;
         ItemStack core = TransformationManager.findTransformedCore(player);
         if (!core.isEmpty() && core.getItem() instanceof ShipCoreItem shipCore) {
             hull = shipCore.getShipType().name().toLowerCase(Locale.ROOT);
         }
-        return new BranchEvaluator.Context(hull, 0, Set.of(),
+        List<ShipGirlEntity> followers =
+                DungeonFollowerManager.getFollowers(instance.getInstanceId(), player.getUUID());
+        Set<String> roles = new HashSet<>();
+        for (ShipGirlEntity follower : followers) {
+            roles.addAll(follower.getFollowerRoles());
+        }
+        return new BranchEvaluator.Context(hull, followers.size(), roles,
                 itemId -> carries(player, itemId), () -> player.getRandom().nextDouble());
     }
 
@@ -70,7 +80,7 @@ public final class DungeonBranchRouter {
         String existing = instance.getBranchChoice(player.getUUID(), fromNode.nodeId());
         if (existing != null) return existing;
         BranchEvaluator.Decision decision = BranchEvaluator.evaluate(
-                fromNode.branches(), fromNode.branchDefault(), contextFor(player));
+                fromNode.branches(), fromNode.branchDefault(), contextFor(player, instance));
         if (decision.target() == null) return null;
         instance.setBranchChoice(player.getUUID(), fromNode.nodeId(), decision.target());
         DungeonInstanceManager.get(player.serverLevel()).setDirty();

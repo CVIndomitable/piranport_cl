@@ -1,6 +1,8 @@
 package com.piranport.dungeon.event;
 
 import com.piranport.dungeon.data.*;
+import com.piranport.dungeon.event.BranchDoors.Door;
+import com.piranport.dungeon.event.BranchDoors.State;
 import com.piranport.dungeon.instance.DungeonInstance;
 import org.junit.jupiter.api.Test;
 
@@ -18,55 +20,107 @@ class BranchEvaluatorTest {
                 id -> id.equals(carried), () -> roll);
     }
 
-    @Test
-    void firstMatchingRuleWinsInOrder() {
-        List<BranchRule> rules = List.of(
-                new BranchRule("submarine", null, null, null, null, "S"),
-                new BranchRule("small", null, null, null, null, "B"),
-                new BranchRule(null, null, null, null, null, "C"));
-        var d = BranchEvaluator.evaluate(rules, "D", ctx("small", null, 0.5));
-        assertEquals("B", d.target());
-        assertFalse(d.diverted());
-        assertEquals(2, d.results().size()); // 命中后不再判定
-        assertFalse(d.results().get(0).matched());
+    private static NodeData branchNode(List<BranchRule> rules, String branchDefault) {
+        return new NodeData("A", NodeData.NodeType.BATTLE, null, List.of(), List.of(), "", 0, 0,
+                null, TerrainType.T1_OCEAN, Set.of(), SceneData.DAY, 0.0, 1,
+                rules, branchDefault, null, null, null);
+    }
+
+    private static Door doorOf(List<Door> doors, String target) {
+        return doors.stream().filter(d -> d.target().equals(target)).findFirst().orElseThrow();
     }
 
     @Test
-    void defaultIsFallbackAndMarksDiverted() {
-        List<BranchRule> rules = List.of(new BranchRule("large", null, null, null, null, "B"));
-        var d = BranchEvaluator.evaluate(rules, "D", ctx("small", null, 0.5));
-        assertEquals("D", d.target());
-        assertTrue(d.diverted());
-        assertFalse(d.results().get(0).conditions().get(0).met());
-        // 未变身也走 default
-        assertEquals("D", BranchEvaluator.evaluate(rules, "D", ctx(null, null, 0.5)).target());
+    void hullMatchIgnoresCase() {
+        BranchRule r = new BranchRule("medium", null, null, null, null, "B");
+        assertEquals(0, BranchEvaluator.unmetMask(r, ctx("MEDIUM", null, 0)));
+        assertEquals(BranchEvaluator.HULL, BranchEvaluator.unmetMask(r, ctx("small", null, 0)));
+        assertEquals(BranchEvaluator.HULL, BranchEvaluator.unmetMask(r, ctx(null, null, 0)));
     }
 
     @Test
     void allConditionsInARuleAreAnded() {
         BranchRule r = new BranchRule("medium", null, null, "piranport:hentai_trophy", null, "B");
-        assertEquals("B", BranchEvaluator.evaluate(List.of(r), "D",
-                ctx("MEDIUM", "piranport:hentai_trophy", 0)).target());
-        assertEquals("D", BranchEvaluator.evaluate(List.of(r), "D",
-                ctx("medium", "minecraft:stone", 0)).target());
+        assertEquals(0, BranchEvaluator.unmetMask(r, ctx("medium", "piranport:hentai_trophy", 0)));
+        assertEquals(BranchEvaluator.CARRY,
+                BranchEvaluator.unmetMask(r, ctx("medium", "minecraft:stone", 0)));
     }
 
     @Test
     void escortsAndRoleUseUndevelopedDefaults() {
-        // 随从未开发：escorts=0，role=无
-        assertEquals("B", BranchEvaluator.evaluate(
-                List.of(new BranchRule(null, "<=0", null, null, null, "B")), "D", ctx(null, null, 0)).target());
-        assertEquals("D", BranchEvaluator.evaluate(
-                List.of(new BranchRule(null, ">=1", null, null, null, "B")), "D", ctx(null, null, 0)).target());
-        assertEquals("D", BranchEvaluator.evaluate(
-                List.of(new BranchRule(null, null, "escort_carrier", null, null, "B")), "D", ctx(null, null, 0)).target());
+        assertEquals(0, BranchEvaluator.unmetMask(
+                new BranchRule(null, "<=0", null, null, null, "B"), ctx(null, null, 0)));
+        assertEquals(BranchEvaluator.ESCORTS, BranchEvaluator.unmetMask(
+                new BranchRule(null, ">=1", null, null, null, "B"), ctx(null, null, 0)));
+        assertEquals(BranchEvaluator.ROLE, BranchEvaluator.unmetMask(
+                new BranchRule(null, null, "防空", null, null, "B"), ctx(null, null, 0)));
     }
 
     @Test
-    void chanceUsesInjectedRandom() {
+    void chancePassesOnlyBelowThreshold() {
         BranchRule r = new BranchRule(null, null, null, null, 0.3, "B");
-        assertEquals("B", BranchEvaluator.evaluate(List.of(r), "D", ctx(null, null, 0.29)).target());
-        assertEquals("D", BranchEvaluator.evaluate(List.of(r), "D", ctx(null, null, 0.3)).target());
+        assertTrue(BranchEvaluator.chancePasses(r, ctx(null, null, 0.29)));
+        assertFalse(BranchEvaluator.chancePasses(r, ctx(null, null, 0.3)));
+        assertTrue(BranchEvaluator.chancePasses(new BranchRule(null, null, null, null, null, "B"),
+                ctx(null, null, 0.99)));
+    }
+
+    @Test
+    void litDoorForMatchedRuleAndDarkForUnmetOthersDefault() {
+        NodeData node = branchNode(List.of(
+                new BranchRule("small", null, null, null, null, "B"),
+                new BranchRule("large", null, null, null, null, "C")), "D");
+        List<Door> doors = BranchDoors.compute(node, ctx("small", null, 0.5), t -> false, null);
+        assertEquals(State.LIT, doorOf(doors, "B").state());
+        assertEquals(State.DARK, doorOf(doors, "C").state());
+        assertEquals(BranchEvaluator.HULL, doorOf(doors, "C").unmetMask());
+        assertEquals(State.LIT, doorOf(doors, "D").state());
+    }
+
+    @Test
+    void defaultDoorStaysLitWhenNoRuleMatches() {
+        NodeData node = branchNode(List.of(new BranchRule("large", null, null, null, null, "B")), "D");
+        List<Door> doors = BranchDoors.compute(node, ctx(null, null, 0.5), t -> false, null);
+        assertEquals(State.DARK, doorOf(doors, "B").state());
+        assertEquals(State.LIT, doorOf(doors, "D").state());
+    }
+
+    @Test
+    void chanceFailureHidesDoorInsteadOfShowingPercent() {
+        NodeData node = branchNode(List.of(new BranchRule(null, null, null, null, 0.3, "B")), null);
+        assertEquals(State.HIDDEN, doorOf(
+                BranchDoors.compute(node, ctx(null, null, 0.3), t -> false, null), "B").state());
+        assertEquals(State.LIT, doorOf(
+                BranchDoors.compute(node, ctx(null, null, 0.2), t -> false, null), "B").state());
+    }
+
+    @Test
+    void anyPassingRuleForSameTargetLightsDoor() {
+        NodeData node = branchNode(List.of(
+                new BranchRule("large", null, null, null, null, "B"),
+                new BranchRule("small", null, null, null, null, "B")), null);
+        assertEquals(State.LIT, doorOf(
+                BranchDoors.compute(node, ctx("small", null, 0.5), t -> false, null), "B").state());
+    }
+
+    @Test
+    void clearedTargetAlwaysShowsDark() {
+        NodeData node = branchNode(List.of(new BranchRule("small", null, null, null, null, "B")), "D");
+        List<Door> doors = BranchDoors.compute(node, ctx("small", null, 0.5), "B"::equals, null);
+        assertEquals(State.DARK, doorOf(doors, "B").state());
+        assertEquals(0, doorOf(doors, "B").unmetMask());
+        assertEquals(State.LIT, doorOf(doors, "D").state());
+    }
+
+    @Test
+    void chosenRouteLeavesPassedDoorAndHidesTheRest() {
+        NodeData node = branchNode(List.of(
+                new BranchRule("small", null, null, null, null, "B"),
+                new BranchRule(null, null, null, null, null, "C")), "D");
+        List<Door> doors = BranchDoors.compute(node, ctx("small", null, 0.5), t -> false, "B");
+        assertEquals(State.PASSED, doorOf(doors, "B").state());
+        assertEquals(State.HIDDEN, doorOf(doors, "C").state());
+        assertEquals(State.HIDDEN, doorOf(doors, "D").state());
     }
 
     @Test
@@ -87,9 +141,7 @@ class BranchEvaluatorTest {
 
     @Test
     void canEnterRespectsPerPlayerBranchSnapshot() {
-        NodeData a = new NodeData("A", NodeData.NodeType.BATTLE, null, List.of(), List.of(), "", 0, 0,
-                null, TerrainType.T1_OCEAN, Set.of(), SceneData.DAY, 0.0, 1,
-                List.of(new BranchRule("small", null, null, null, null, "B")), "C", null, null, null);
+        NodeData a = branchNode(List.of(new BranchRule("small", null, null, null, null, "B")), "C");
         NodeData plain = TestNodes.plain("B", NodeData.NodeType.BATTLE, null, List.of(), List.of(), "", 0, 0,
                 null, TerrainType.T1_OCEAN, Set.of(), SceneData.DAY);
         StageData stage = new StageData("t", "chapter_2", "t", Map.of("A", a, "B", plain, "C", plain),
@@ -107,6 +159,9 @@ class BranchEvaluatorTest {
         assertTrue(DungeonEntryRules.canEnter(inst, stage, "B", f -> inst.getBranchChoice(p1, f)));
         assertFalse(DungeonEntryRules.canEnter(inst, stage, "C", f -> inst.getBranchChoice(p1, f)));
         assertTrue(DungeonEntryRules.canEnter(inst, stage, "C", f -> inst.getBranchChoice(p2, f)));
+        // 未走过分歧门的玩家不能靠讲台直接进后继
+        UUID p3 = UUID.randomUUID();
+        assertFalse(DungeonEntryRules.canEnter(inst, stage, "B", f -> inst.getBranchChoice(p3, f)));
         // 快照持久化
         DungeonInstance loaded = DungeonInstance.load(inst.save());
         assertEquals("B", loaded.getBranchChoice(p1, "A"));

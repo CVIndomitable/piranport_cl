@@ -310,6 +310,17 @@ public class DungeonEventHandler {
         onPortalEntered(player, instance, nodeId, "");
     }
 
+    /** 玩家走近已清分歧节点的门群：定格本群亮灭（首次抵达时掷概率，之后复用快照）。 */
+    public static void onPortalApproached(ServerPlayer player, DungeonInstance instance, String nodeId) {
+        if (!instance.getClearedNodes().contains(nodeId)
+                || DungeonInstanceManager.get(player.serverLevel()).getInstanceForPlayer(player) != instance) {
+            return;
+        }
+        StageData stage = DungeonRegistry.INSTANCE.getStage(instance.getStageId());
+        NodeData node = stage == null ? null : stage.nodes().get(nodeId);
+        if (node != null) DungeonBranchRouter.reachGroup(player, instance, node);
+    }
+
     /**
      * @param targetNodeId 这扇门明确通往的节点；空串表示旧存档的单门自动选路。
      */

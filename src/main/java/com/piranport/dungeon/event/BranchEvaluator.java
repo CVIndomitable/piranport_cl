@@ -2,19 +2,22 @@ package com.piranport.dungeon.event;
 
 import com.piranport.dungeon.data.BranchRule;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.function.DoubleSupplier;
 import java.util.function.Predicate;
 
 /**
- * 策划《副本/22》分歧带路纯逻辑：按书写顺序判定，第一条全部满足的规则生效，都不满足走 default。
- * 不碰 MC 注册表，便于单测。
+ * 《副本/22》分歧条件的纯判定：每条规则算出未满足的条件位掩码，不碰 MC 注册表，便于单测。
+ * 门的亮灭由 {@link BranchDoors} 按“同一目标的任一规则全满足即亮”汇总。
  */
 public final class BranchEvaluator {
     private BranchEvaluator() {}
+
+    public static final int HULL = 1;
+    public static final int ESCORTS = 2;
+    public static final int ROLE = 4;
+    public static final int CARRY = 8;
 
     /**
      * @param hull   玩家当前舰体（small/medium/large/submarine），未变身为 null
@@ -26,56 +29,32 @@ public final class BranchEvaluator {
     public record Context(String hull, int escorts, Set<String> roles,
                           Predicate<String> carries, DoubleSupplier random) {}
 
-    /** 单个条件的判定结果，用于聊天展示“条件 ✓/✗”。 */
-    public record ConditionResult(String label, boolean met) {}
-
-    public record RuleResult(BranchRule rule, List<ConditionResult> conditions, boolean matched) {}
-
-    /**
-     * @param target   最终目标节点（可能为 null：既无规则命中也无 default）
-     * @param results  已判定的规则（命中后的规则不再判定）
-     * @param diverted 是否被“沟”：没有任何规则命中而落到 default
-     */
-    public record Decision(String target, List<RuleResult> results, boolean diverted) {}
-
-    public static Decision evaluate(List<BranchRule> rules, String branchDefault, Context ctx) {
-        List<RuleResult> results = new ArrayList<>();
-        for (BranchRule rule : rules) {
-            RuleResult rr = evaluateRule(rule, ctx);
-            results.add(rr);
-            if (rr.matched()) {
-                return new Decision(rule.to(), List.copyOf(results), false);
-            }
+    /** 规则中未满足的非概率条件位（HULL/ESCORTS/ROLE/CARRY 的或）；0 表示全部满足。 */
+    public static int unmetMask(BranchRule rule, Context ctx) {
+        int mask = 0;
+        if (rule.hull() != null && !(ctx.hull() != null && ctx.hull().equalsIgnoreCase(rule.hull()))) {
+            mask |= HULL;
         }
-        return new Decision(branchDefault, List.copyOf(results), !rules.isEmpty());
+        if (rule.escorts() != null && !compare(ctx.escorts(), rule.escorts())) {
+            mask |= ESCORTS;
+        }
+        if (rule.role() != null && !(ctx.roles() != null
+                && ctx.roles().contains(rule.role().toLowerCase(Locale.ROOT)))) {
+            mask |= ROLE;
+        }
+        if (rule.carry() != null && !(ctx.carries() != null && ctx.carries().test(rule.carry()))) {
+            mask |= CARRY;
+        }
+        return mask;
     }
 
-    static RuleResult evaluateRule(BranchRule rule, Context ctx) {
-        List<ConditionResult> conds = new ArrayList<>();
-        if (rule.hull() != null) {
-            boolean ok = ctx.hull() != null && ctx.hull().equalsIgnoreCase(rule.hull());
-            conds.add(new ConditionResult("舰体=" + hullName(rule.hull()), ok));
-        }
-        if (rule.escorts() != null) {
-            conds.add(new ConditionResult("随从数" + normalizeComparison(rule.escorts()),
-                    compare(ctx.escorts(), rule.escorts())));
-        }
-        if (rule.role() != null) {
-            boolean ok = ctx.roles() != null && ctx.roles().contains(rule.role().toLowerCase(Locale.ROOT));
-            conds.add(new ConditionResult("随从职能=" + rule.role(), ok));
-        }
-        if (rule.carry() != null) {
-            boolean ok = ctx.carries() != null && ctx.carries().test(rule.carry());
-            conds.add(new ConditionResult("携带 " + rule.carry(), ok));
-        }
-        if (rule.chance() != null) {
-            double roll = ctx.random() == null ? 1.0 : ctx.random().getAsDouble();
-            conds.add(new ConditionResult("概率 " + Math.round(rule.chance() * 100) + "%",
-                    roll < rule.chance()));
-        }
-        boolean matched = true;
-        for (ConditionResult c : conds) matched &= c.met();
-        return new RuleResult(rule, List.copyOf(conds), matched);
+    /**
+     * 概率只决定门在这一次快照里是否存在，不向玩家展示百分比：未通过则该规则不出门。
+     */
+    public static boolean chancePasses(BranchRule rule, Context ctx) {
+        if (rule.chance() == null) return true;
+        double roll = ctx.random() == null ? 1.0 : ctx.random().getAsDouble();
+        return roll < rule.chance();
     }
 
     /** 解析 ">=N" / "<=N" / ">N" / "<N" / "==N" / "=N" / "N"（等于）。格式错误视为不满足。 */
@@ -118,27 +97,11 @@ public final class BranchEvaluator {
         }
     }
 
-    private static String normalizeComparison(String expr) {
-        String s = expr.trim();
-        return Character.isDigit(s.isEmpty() ? 'x' : s.charAt(0)) ? "=" + s : s;
-    }
-
     public static boolean isValidHull(String hull) {
         if (hull == null) return false;
         return switch (hull.toLowerCase(Locale.ROOT)) {
             case "small", "medium", "large", "submarine" -> true;
             default -> false;
-        };
-    }
-
-    public static String hullName(String hull) {
-        if (hull == null) return "未变身";
-        return switch (hull.toLowerCase(Locale.ROOT)) {
-            case "small" -> "小型";
-            case "medium" -> "中型";
-            case "large" -> "大型";
-            case "submarine" -> "潜艇";
-            default -> hull;
         };
     }
 }

@@ -2,6 +2,7 @@ package com.piranport.dungeon.block;
 
 import com.piranport.PiranPort;
 import com.piranport.dungeon.block.entity.DungeonPortalBlockEntity;
+import com.piranport.dungeon.data.BranchRule;
 import com.piranport.dungeon.data.DungeonRegistry;
 import com.piranport.dungeon.data.NodeData;
 import com.piranport.dungeon.data.StageData;
@@ -367,12 +368,24 @@ public class PortalStructureHelper {
         return first;
     }
 
-    /** 该节点应生成哪些门：普通节点取全部未清直连后继；分支节点仍走单门自动带路。 */
+    /**
+     * 该节点应生成哪些门。分支节点：每个分歧目标（含 default）一扇门，已清目标保留为暗门；
+     * 普通节点：取全部未清直连后继。门的亮灭由 {@code BranchDoors} 按玩家决定，这里只管门的数量与位置。
+     */
     private static List<String> doorTargets(DungeonInstance instance, String nodeId) {
         StageData stage = DungeonRegistry.INSTANCE.getStage(instance.getStageId());
         NodeData node = stage == null ? null : stage.nodes().get(nodeId);
-        if (node == null || node.hasBranches()) return List.of();
+        if (node == null) return List.of();
         LinkedHashSet<String> targets = new LinkedHashSet<>();
+        if (node.hasBranches()) {
+            for (BranchRule rule : node.branches()) {
+                if (stage.nodes().containsKey(rule.to())) targets.add(rule.to());
+            }
+            if (node.branchDefault() != null && stage.nodes().containsKey(node.branchDefault())) {
+                targets.add(node.branchDefault());
+            }
+            return List.copyOf(targets);
+        }
         for (StageData.EdgeData edge : stage.edges()) {
             if (!edge.from().equals(nodeId)) continue;
             if (!stage.nodes().containsKey(edge.to())) continue;
@@ -381,6 +394,7 @@ public class PortalStructureHelper {
         }
         return List.copyOf(targets);
     }
+
 
     private static BlockPos buildOneExitSite(ServerLevel level, BlockPos cornerPos, UUID instanceId,
                                              String nodeId, String targetNodeId) {

@@ -35,6 +35,8 @@ public class DungeonPortalEntity extends Entity {
     /** Auto-discard a portal that nobody touches in 10 minutes — prevents orphan portals
      *  if NBT was corrupted (instanceId == null) or instance was cleaned up early. */
     private static final int ORPHAN_DESPAWN_TICKS = 10 * 60 * 20;
+    /** 走近门群的水平半径：相邻门间距为 14 格，半径 6 保证两扇门的触发区不重叠。 */
+    private static final double APPROACH_RADIUS = 6.0;
     /** Defensive cap for persisted/observed portal entries. */
     private static final int MAX_ENTERED_PLAYERS = 64;
     private static final int MAX_NODE_ID_LENGTH = 128;
@@ -42,6 +44,8 @@ public class DungeonPortalEntity extends Entity {
     private UUID instanceId;
     private String nodeId;
     private final Set<UUID> enteredPlayers = new HashSet<>();
+    /** 当前仍在走近范围内的玩家；只在内存中，离开后清除，再次走近会重新触发。 */
+    private final Set<UUID> approachedPlayers = new HashSet<>();
     private int orphanTicks = 0;
 
     public DungeonPortalEntity(EntityType<?> type, Level level) {
@@ -135,6 +139,21 @@ public class DungeonPortalEntity extends Entity {
                 .getEntitiesOfClass(ServerPlayer.class, area);
 
         Set<UUID> members = mgr.getInstance(instanceId).getPlayerUuids();
+
+        // 走近门群只触发一次（离开再进才重触发），用于分歧门的定格与下发；半径需小于相邻门的间距（14）。
+        AABB approachArea = getBoundingBox().inflate(APPROACH_RADIUS, 3.0, APPROACH_RADIUS);
+        Set<UUID> approaching = new HashSet<>();
+        for (ServerPlayer player : ((ServerLevel) level()).getEntitiesOfClass(ServerPlayer.class, approachArea)) {
+            UUID playerId = player.getUUID();
+            if (!members.contains(playerId)) continue;
+            approaching.add(playerId);
+            if (approachedPlayers.add(playerId)) {
+                com.piranport.dungeon.event.DungeonEventHandler.onPortalApproached(
+                        player, mgr.getInstance(instanceId), nodeId);
+            }
+        }
+        approachedPlayers.retainAll(approaching);
+
         for (ServerPlayer player : nearbyPlayers) {
             UUID playerId = player.getUUID();
             if (!members.contains(playerId)) continue;

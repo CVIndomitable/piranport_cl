@@ -142,7 +142,7 @@ public final class WeaponItems {
             ITEMS.register("french_quad_380mm_gun", () -> new ArtilleryItem(new Item.Properties().stacksTo(1)
                     .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.CANNON)
                     .durability(2600),
-                    new ArtilleryCannonData(16, 4, 0.0f, 167.7f, 2600, 4.0f,
+                    new ArtilleryCannonData(16, 4, 0.0f, 0.0f, 2600, 4.0f,
                             List.of(new MuzzlePos(0.3, 0.3, 0),
                                     new MuzzlePos(0.1, 0.3, 0),
                                     new MuzzlePos(-0.1, 0.3, 0),

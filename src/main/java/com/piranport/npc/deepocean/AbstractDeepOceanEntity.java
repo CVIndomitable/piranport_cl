@@ -6,8 +6,6 @@ import com.piranport.entity.AircraftEntity;
 import com.piranport.npc.ai.FleetGroup;
 import com.piranport.npc.ai.FleetGroupManager;
 import com.piranport.npc.ai.goal.EscortTransportTargetGoal;
-import com.piranport.dungeon.saved.DungeonSavedData;
-import com.piranport.item.KeyFragmentItem;
 import com.piranport.registry.ModItems;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -30,14 +28,11 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.common.NeoForgeMod;
-import net.neoforged.neoforge.registries.DeferredItem;
 
 import javax.annotation.Nullable;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -411,8 +406,7 @@ public abstract class AbstractDeepOceanEntity extends Monster {
     @Override
     protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean recentlyHit) {
         super.dropCustomDeathLoot(level, source, recentlyHit);
-        // 钥匙碎片掉落（仅对玩家当前进度章节之前的碎片）：5% 概率
-        dropKeyFragment(level);
+        // 战斗单位不掉钥匙碎片（《副本/17》§5）：钥匙只经遗迹宝箱、活动与合成等路径获得
 
         if (this instanceof DeepOceanCarrierEntity) {
             // 深海翔鹤 Boss 替代为深海航母：1/20 概率必掉镰刀（旗舰主掉落之外的稳定来源）
@@ -420,8 +414,7 @@ public abstract class AbstractDeepOceanEntity extends Monster {
                 spawnAtLocation(new ItemStack(ModItems.SHOUKAKU_SCYTHE.get(), 1));
             }
         } else if (this instanceof DeepOceanSupplyEntity) {
-            spawnAtLocation(new ItemStack(ModItems.FUEL.get(), 2 + random.nextInt(3)));
-            spawnAtLocation(new ItemStack(Items.IRON_INGOT, 1 + random.nextInt(2)));
+            dropSupplyLoot();
         } else if (this instanceof DeepOceanDestroyerEntity) {
             spawnAtLocation(new ItemStack(Items.IRON_INGOT, 1 + random.nextInt(2)));
             if (random.nextFloat() < 0.25f) {
@@ -445,45 +438,29 @@ public abstract class AbstractDeepOceanEntity extends Monster {
             spawnAtLocation(new ItemStack(Items.GUNPOWDER, 3 + random.nextInt(2)));
             spawnAtLocation(new ItemStack(ModItems.FUEL.get(), 2));
             spawnAtLocation(new ItemStack(ModItems.RAW_ALUMINUM.get(), 2 + random.nextInt(3)));
-            if (random.nextFloat() < 0.3f) {
-                spawnKeyFragment(level);
-            }
         } else if (this instanceof DeepOceanBattleshipEntity) {
             spawnAtLocation(new ItemStack(Items.IRON_INGOT, 4 + random.nextInt(3)));
             spawnAtLocation(new ItemStack(Items.GUNPOWDER, 3 + random.nextInt(3)));
             spawnAtLocation(new ItemStack(ModItems.FUEL.get(), 2 + random.nextInt(2)));
             spawnAtLocation(new ItemStack(ModItems.RAW_ALUMINUM.get(), 3 + random.nextInt(4)));
-            if (random.nextFloat() < 0.4f) {
-                spawnKeyFragment(level);
-            }
         } else if (this instanceof DeepOceanLightCarrierEntity) {
             spawnAtLocation(new ItemStack(Items.IRON_INGOT, 3 + random.nextInt(2)));
             spawnAtLocation(new ItemStack(ModItems.FUEL.get(), 3 + random.nextInt(2)));
             spawnAtLocation(new ItemStack(ModItems.FUEL.get(), 2 + random.nextInt(2)));
             spawnAtLocation(new ItemStack(ModItems.RAW_ALUMINUM.get(), 2 + random.nextInt(3)));
-            if (random.nextFloat() < 0.3f) {
-                spawnKeyFragment(level);
-            }
         } else if (this instanceof DeepOceanCarrierEntity) {
             spawnAtLocation(new ItemStack(Items.IRON_INGOT, 5 + random.nextInt(3)));
             spawnAtLocation(new ItemStack(ModItems.FUEL.get(), 4 + random.nextInt(2)));
             spawnAtLocation(new ItemStack(ModItems.FUEL.get(), 3 + random.nextInt(3)));
             spawnAtLocation(new ItemStack(ModItems.RAW_ALUMINUM.get(), 4 + random.nextInt(5)));
-            if (random.nextFloat() < 0.5f) {
-                spawnKeyFragment(level);
-            }
         } else if (this instanceof DeepOceanSubmarineEntity) {
             spawnAtLocation(new ItemStack(Items.IRON_INGOT, 2 + random.nextInt(2)));
             spawnAtLocation(new ItemStack(ModItems.FUEL.get(), 1 + random.nextInt(2)));
-            spawnKeyFragment(level);
         } else if (this instanceof DeepOceanBossEntity) {
             spawnAtLocation(new ItemStack(Items.IRON_INGOT, 5 + random.nextInt(4)));
             spawnAtLocation(new ItemStack(Items.GUNPOWDER, 4 + random.nextInt(3)));
             spawnAtLocation(new ItemStack(ModItems.FUEL.get(), 3 + random.nextInt(3)));
             spawnAtLocation(new ItemStack(ModItems.RAW_ALUMINUM.get(), 4 + random.nextInt(5)));
-            if (random.nextFloat() < 0.6f) {
-                spawnKeyFragment(level);
-            }
             if (random.nextFloat() < 0.15f) {
                 spawnAtLocation(new ItemStack(ModItems.ELITE_DAMAGE_CONTROL.get(), 1));
             }
@@ -722,58 +699,25 @@ public abstract class AbstractDeepOceanEntity extends Monster {
         sinkingTicks = tag.getInt("SinkingTicks");
     }
 
-    // ===== 钥匙三源：钥匙碎片掉落 =====
-    private void dropKeyFragment(ServerLevel level) {
-        if (random.nextFloat() > 0.05f) return; // 5% 概率
-        spawnKeyFragment(level);
-    }
-
     /**
-     * 按击杀者进度掉落 1 个钥匙碎片（章节 ≤ 击杀者已通关的最高章节）。
-     *
-     * <p>原先各型号深海舰掉落的是 9 种无序意志碎片（α~ι）中的某一种，
-     * 现已统一收敛为钥匙碎片这一种通用货币；具体章节仍按玩家进度推导，
-     * 与 {@link #dropKeyFragment} 复用同一套逻辑，不另造分支。</p>
+     * 补给舰货物（《深海/01》§九）：2 次独立抽取，每次按权重抽 1 种货物，允许抽中同种；
+     * 燃料 ×4 与航空燃料 ×2 按《舰装/02》并入燃料桶后合计 ×6。补给舰不掉钥匙、蓝图或 Boss 专属装备。
      */
-    protected void spawnKeyFragment(ServerLevel level) {
-        // 获取击杀者的最高通关章节（仅掉落 ≤ 玩家进度的章节碎片）
-        LivingEntity killer = getKillCredit();
-        if (!(killer instanceof ServerPlayer player)) return;
-        DungeonSavedData savedData = DungeonSavedData.get(level);
-        Set<String> cleared = savedData.getFirstClearedStages(player.getUUID());
-        int maxChapter = 0;
-        for (String stageId : cleared) {
-            int ch = parseChapterFromStageId(stageId);
-            if (ch > maxChapter) maxChapter = ch;
-        }
-        // 玩家未通关任何章节时，掉落 Ch1 碎片
-        int dropChapter = Math.max(1, maxChapter);
-        // 选择具体章节（随机但 ≤ maxChapter）
-        int targetCh = 1 + random.nextInt(Math.max(1, dropChapter));
-        DeferredItem<KeyFragmentItem> fragmentItem = switch (targetCh) {
-            case 1 -> ModItems.KEY_FRAGMENT_CH1;
-            case 2 -> ModItems.KEY_FRAGMENT_CH2;
-            case 3 -> ModItems.KEY_FRAGMENT_CH3;
-            case 4 -> ModItems.KEY_FRAGMENT_CH4;
-            case 5 -> ModItems.KEY_FRAGMENT_CH5;
-            case 6 -> ModItems.KEY_FRAGMENT_CH6;
-            case 7 -> ModItems.KEY_FRAGMENT_CH7;
-            default -> null;
-        };
-        if (fragmentItem != null) {
-            spawnAtLocation(new ItemStack(fragmentItem.get(), 1));
-        }
-    }
-
-    private static int parseChapterFromStageId(String stageId) {
-        if (stageId == null || stageId.isEmpty()) return 0;
-        if (stageId.startsWith("chapter_")) {
-            try {
-                return Integer.parseInt(stageId.substring("chapter_".length()));
-            } catch (NumberFormatException e) {
-                return 0;
+    private void dropSupplyLoot() {
+        for (int i = 0; i < 2; i++) {
+            int roll = random.nextInt(100);
+            if (roll < 30) {
+                spawnAtLocation(new ItemStack(Items.IRON_INGOT, 8 + random.nextInt(5)));
+            } else if (roll < 55) {
+                spawnAtLocation(new ItemStack(Items.COPPER_INGOT, 6 + random.nextInt(5)));
+            } else if (roll < 75) {
+                spawnAtLocation(new ItemStack(Items.COAL, 6 + random.nextInt(5)));
+            } else if (roll < 90) {
+                spawnAtLocation(new ItemStack(Items.GUNPOWDER, 4 + random.nextInt(5)));
+            } else {
+                spawnAtLocation(new ItemStack(ModItems.ALUMINUM_INGOT.get(), 3 + random.nextInt(3)));
             }
         }
-        return 0;
+        spawnAtLocation(new ItemStack(ModItems.FUEL.get(), 6));
     }
 }

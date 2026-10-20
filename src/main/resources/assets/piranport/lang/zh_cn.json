@@ -1056,7 +1056,6 @@
   "gui.piranport.dungeon_result.close": "确认",
   "gui.piranport.dungeon_result.first_clear": "★ 首次通关 ★",
   "gui.piranport.dungeon_result.kills": "击杀：%s",
-  "gui.piranport.dungeon_result.time": "用时：%s",
   "gui.piranport.dungeon_result.title": "通关结算",
   "gui.piranport.enhancement_slots": "强化槽: %s",
   "gui.piranport.exp_cost": "消耗经验: %s 级",

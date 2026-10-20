@@ -18,6 +18,5 @@
   "victory_objectives": {
     "require_all_nodes_cleared": true
   },
-  "terrain_type": "T1",
-  "par_time_seconds": 900
+  "terrain_type": "T1"
 }

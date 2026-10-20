@@ -30,8 +30,7 @@ public record StageData(
         String guidance,
         String objective,
         String ending,
-        float difficultyScale,
-        int parTimeSeconds
+        float difficultyScale
 ) {
     /** Compatibility constructor for callers that predate the stage brief fields. */
     public StageData(String stageId, String chapter, String displayName,
@@ -43,7 +42,7 @@ public record StageData(
         this(stageId, chapter, displayName, nodes, edges, startNode, bossNodes,
                 firstClearRewards, checkpoints, victoryConditions, sceneData,
                 combatRestriction, victoryObjectives, "沿节点图前进，完成当前节点后继续向前。",
-                "完成关卡目标并击破首领。", "战区肃清，航路恢复，舰队返回港口。", 1.0f, 1200);
+                "完成关卡目标并击破首领。", "战区肃清，航路恢复，舰队返回港口。", 1.0f);
     }
     public StageData {
         // 配置发布后保持拓扑稳定，旧快照也不能被调用方持有的可变容器修改。

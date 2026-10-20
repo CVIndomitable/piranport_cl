@@ -104,6 +104,5 @@
   ],
   "terrain_type": "T5",
   "chapter_mechanism": "anti_missile",
-  "difficulty_scale": 3.1,
-  "par_time_seconds": 1800
+  "difficulty_scale": 3.1
 }

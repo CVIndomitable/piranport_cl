@@ -93,6 +93,5 @@
   ],
   "terrain_type": "T3",
   "chapter_mechanism": "multi_mechanic",
-  "difficulty_scale": 1.85,
-  "par_time_seconds": 1200
+  "difficulty_scale": 1.85
 }

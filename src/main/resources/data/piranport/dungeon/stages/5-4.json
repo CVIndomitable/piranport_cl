@@ -95,6 +95,5 @@
   ],
   "terrain_type": "T2",
   "chapter_mechanism": "anti_submarine",
-  "difficulty_scale": 2.35,
-  "par_time_seconds": 1200
+  "difficulty_scale": 2.35
 }

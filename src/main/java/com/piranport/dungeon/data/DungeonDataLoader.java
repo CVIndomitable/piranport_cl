@@ -235,8 +235,6 @@ public class DungeonDataLoader extends SimpleJsonResourceReloadListener {
                 "战区肃清，航路恢复，舰队返回港口。");
         float difficultyScale = json.has("difficulty_scale")
                 ? Math.max(0.1f, json.get("difficulty_scale").getAsFloat()) : 1.0f;
-        int parTimeSeconds = json.has("par_time_seconds")
-                ? Math.max(1, json.get("par_time_seconds").getAsInt()) : 1200;
 
         return new StageData(stageId, chapter, displayName,
                 Map.copyOf(nodes), List.copyOf(edges), startNode,
@@ -244,7 +242,7 @@ public class DungeonDataLoader extends SimpleJsonResourceReloadListener {
                 List.copyOf(checkpoints),
                 Set.copyOf(victoryConditions),
                 stageScene, Set.copyOf(stageRestrictions), objectives,
-                guidance, objective, ending, difficultyScale, parTimeSeconds);
+                guidance, objective, ending, difficultyScale);
     }
 
     private static String textOrDefault(JsonObject json, String key, String fallback) {

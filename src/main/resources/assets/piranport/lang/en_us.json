@@ -1056,7 +1056,6 @@
   "gui.piranport.dungeon_result.close": "OK",
   "gui.piranport.dungeon_result.first_clear": "★ First Clear ★",
   "gui.piranport.dungeon_result.kills": "Kills: %s",
-  "gui.piranport.dungeon_result.time": "Time: %s",
   "gui.piranport.dungeon_result.title": "Result",
   "gui.piranport.enhancement_slots": "Enhancement Slots: %s",
   "gui.piranport.exp_cost": "Experience Cost: %s Levels",

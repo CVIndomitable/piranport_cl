@@ -175,6 +175,10 @@ public final class ClientHooks {
         bridge.setDungeonState(stageName, nodeName, elapsedMillis, objectiveKey, sceneKey);
     }
 
+    public static void setCaptureProgress(float percent) {
+        bridge.setCaptureProgress(percent);
+    }
+
     public static void updateDungeonBossOverlay(String bossName, String shipType, String chapter,
                                                 int segment, float health, float maxHealth,
                                                 boolean visible, boolean quietBattlefield) {

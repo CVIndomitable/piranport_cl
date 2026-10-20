@@ -1085,6 +1085,7 @@
   "hud.piranport.auto_mode_off": "自动模式：关闭",
   "hud.piranport.auto_mode_on": "自动模式：开启（自动模式（H）：关闭）",
   "hud.piranport.dungeon.node": "当前节点：%s",
+  "hud.piranport.dungeon.capture": "占领进度 %s%%",
   "hud.piranport.dungeon.objective.battle": "全歼敌人",
   "hud.piranport.dungeon.objective.escort": "护送对象到达目标点",
   "hud.piranport.dungeon.objective.flag": "停留在旗帜范围内 3 分钟",

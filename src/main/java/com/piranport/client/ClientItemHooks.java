@@ -251,6 +251,11 @@ public final class ClientItemHooks implements com.piranport.platform.ClientBridg
     }
 
     @Override
+    public void setCaptureProgress(float percent) {
+        DungeonHudLayer.setCaptureProgress(percent);
+    }
+
+    @Override
     public void updateDungeonBossOverlay(String bossName, String shipType, String chapter,
                                          int segment, float health, float maxHealth,
                                          boolean visible, boolean quietBattlefield) {

@@ -92,6 +92,8 @@ public interface ClientBridge {
     void setDungeonState(String stageName, String nodeName, long elapsedMillis,
                           String objectiveKey, String sceneKey);
 
+    void setCaptureProgress(float percent);
+
     void updateDungeonBossOverlay(String bossName, String shipType, String chapter,
                                   int segment, float health, float maxHealth,
                                   boolean visible, boolean quietBattlefield);

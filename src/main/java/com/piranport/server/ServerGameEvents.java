@@ -102,6 +102,7 @@ public class ServerGameEvents {
             // 记录点信标光柱（粒子柱，只发给踩过该记录点的玩家）
             if (event.getServer().getTickCount() % 10 == 0) {
                 com.piranport.dungeon.event.DungeonCheckpointBeacon.tick(event.getServer(), dungeonLevel);
+                com.piranport.dungeon.event.DungeonNodeMarkers.tick(event.getServer(), dungeonLevel);
             }
         }
 
@@ -146,6 +147,8 @@ public class ServerGameEvents {
                     stage == null ? instance.getStageId() : stage.displayName(),
                     currentNode == null ? "" : (stage == null ? currentNode : stage.nodeLabel(currentNode)),
                     instance.getElapsedMillis(), "", ""));
+            PacketDistributor.sendToPlayer(player, new com.piranport.dungeon.network.CaptureProgressPayload(
+                    com.piranport.dungeon.event.DungeonNodeMarkers.captureProgressPercent(dungeonLevel, instance)));
         }
     }
 

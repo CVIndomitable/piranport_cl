@@ -123,6 +123,9 @@ class NoopClientBridge implements ClientBridge {
                                 String objectiveKey, String sceneKey) {  }
 
     @Override
+    public void setCaptureProgress(float percent) {  }
+
+    @Override
     public void updateDungeonBossOverlay(String bossName, String shipType, String chapter,
                                          int segment, float health, float maxHealth,
                                          boolean visible, boolean quietBattlefield) {  }

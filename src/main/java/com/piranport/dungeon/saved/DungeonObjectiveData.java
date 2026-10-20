@@ -20,7 +20,8 @@ public final class DungeonObjectiveData extends SavedData {
         boolean registered;
         final Set<UUID> enemies = new HashSet<>();
         final Set<UUID> flagships = new HashSet<>();
-        long captureTicks;
+        /** 夺旗占领进度，0–100 百分比。 */
+        double captureProgress;
     }
 
     private final Map<UUID, Map<String, Progress>> instances = new HashMap<>();
@@ -45,7 +46,7 @@ public final class DungeonObjectiveData extends SavedData {
         if (p.enemies.remove(entity) | p.flagships.remove(entity)) setDirty();
     }
 
-    /** 护航失败重置：丢弃该节点的敌人登记与夺旗计时，下一次 register 重新开始。 */
+    /** 护航失败重置：丢弃该节点的敌人登记与夺旗进度，下一次 register 重新开始。 */
     public void reset(UUID instance, String node) {
         Map<String, Progress> nodes = instances.get(instance);
         if (nodes != null && nodes.remove(node) != null) setDirty();
@@ -56,14 +57,16 @@ public final class DungeonObjectiveData extends SavedData {
         return p.registered && (allEnemies ? p.enemies : p.flagships).isEmpty();
     }
 
-    public void tickCapture(UUID instance, String node, boolean occupied) {
+    /** 离开圈不清零：《副本/12》只规定加减，不规定离圈重置。 */
+    public double addCaptureProgress(UUID instance, String node, double delta) {
         Progress p = progress(instance, node);
-        long next = occupied ? p.captureTicks + 1 : 0;
-        if (next != p.captureTicks) { p.captureTicks = next; setDirty(); }
+        double next = Math.max(0.0, Math.min(100.0, p.captureProgress + delta));
+        if (next != p.captureProgress) { p.captureProgress = next; setDirty(); }
+        return next;
     }
 
-    public long captureTicks(UUID instance, String node) {
-        return progress(instance, node).captureTicks;
+    public double captureProgress(UUID instance, String node) {
+        return progress(instance, node).captureProgress;
     }
 
     @Override
@@ -74,7 +77,7 @@ public final class DungeonObjectiveData extends SavedData {
             record.putUUID("Instance", instance);
             record.putString("Node", node);
             record.putBoolean("Registered", p.registered);
-            record.putLong("CaptureTicks", p.captureTicks);
+            record.putDouble("CaptureProgress", p.captureProgress);
             ListTag enemies = new ListTag();
             for (UUID id : p.enemies) {
                 CompoundTag enemy = new CompoundTag();
@@ -97,7 +100,7 @@ public final class DungeonObjectiveData extends SavedData {
             if (!record.hasUUID("Instance") || record.getString("Node").isBlank()) continue;
             Progress p = data.progress(record.getUUID("Instance"), record.getString("Node"));
             p.registered = record.getBoolean("Registered");
-            p.captureTicks = Math.max(0, record.getLong("CaptureTicks"));
+            p.captureProgress = Math.max(0.0, Math.min(100.0, record.getDouble("CaptureProgress")));
             ListTag enemies = record.getList("Enemies", Tag.TAG_COMPOUND);
             for (int j = 0; j < enemies.size(); j++) {
                 CompoundTag enemy = enemies.getCompound(j);

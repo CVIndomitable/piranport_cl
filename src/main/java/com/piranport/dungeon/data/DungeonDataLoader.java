@@ -303,10 +303,9 @@ public class DungeonDataLoader extends SimpleJsonResourceReloadListener {
                 };
             }
         }
-        int capRadius = obj.has("capture_radius") ? obj.get("capture_radius").getAsInt() : 0;
-        int capHold = obj.has("capture_hold_seconds") ? obj.get("capture_hold_seconds").getAsInt() : 0;
-        return new StageData.VictoryObjectives(requireAll, surviveSec,
-                reachOffset, capRadius, capHold);
+        int capRadius = obj.has("capture_radius") ? obj.get("capture_radius").getAsInt()
+                : StageData.VictoryObjectives.DEFAULT_CAPTURE_RADIUS;
+        return new StageData.VictoryObjectives(requireAll, surviveSec, reachOffset, capRadius);
     }
 
     private NodeData.EscortSpec parseEscort(JsonObject obj, String nodeId) {

@@ -76,7 +76,7 @@
     "I"
   ],
   "victory_conditions": [
-    "KILL_ALL"
+    "KILL_BOSS"
   ],
   "victory_objectives": {
     "require_all_nodes_cleared": true

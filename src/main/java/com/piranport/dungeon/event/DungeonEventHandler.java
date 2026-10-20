@@ -282,11 +282,11 @@ public class DungeonEventHandler {
         markLecternChanged(instance, dungeonLevel.getServer());
         boolean completes;
         if (stage.bossNodes().isEmpty()) {
-            // 无 Boss 的活动/彩蛋关（金猫猫、ulan）：最后一战清完即整关完成。
-            // 主线关卡都有 Boss，不会走到这里。
-            completes = stage.nodes().values().stream()
-                    .filter(n -> n.type() == NodeData.NodeType.BATTLE)
-                    .allMatch(n -> instance.getClearedNodes().contains(n.nodeId()));
+            // 无 Boss 的活动关：终点节点（无出边）全部清完才算通关。分歧关允许跳过某条支路，
+            // 若要求所有战斗节点都清，玩家走 A→C 绕过 B 时将永远无法通关。
+            completes = stage.nodes().keySet().stream()
+                    .filter(id -> stage.edges().stream().noneMatch(e -> e.from().equals(id)))
+                    .allMatch(instance.getClearedNodes()::contains);
         } else {
             completes = node.type() == NodeData.NodeType.BOSS
                     && stage.bossNodes().stream().allMatch(instance.getClearedNodes()::contains);

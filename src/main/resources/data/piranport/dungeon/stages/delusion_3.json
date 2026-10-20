@@ -118,6 +118,14 @@
     {
       "from": "H",
       "to": "J"
+    },
+    {
+      "from": "E",
+      "to": "J"
+    },
+    {
+      "from": "F",
+      "to": "J"
     }
   ],
   "start_node": "A",
@@ -125,7 +133,7 @@
     "J"
   ],
   "victory_conditions": [
-    "KILL_ALL"
+    "KILL_BOSS"
   ],
   "victory_objectives": {
     "require_all_nodes_cleared": true

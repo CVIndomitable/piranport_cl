@@ -20,10 +20,12 @@ public final class AircraftVisualIds {
     public static final String TORPEDO_BOMBER = "torpedo_bomber";
     public static final String ASW = "asw";
     public static final String RECON = "recon";
+    /** 美术占位：模型借用 F4F，贴图借用 B-25，正式美术到位后替换。 */
+    public static final String PLACEHOLDER = "placeholder";
 
     private static final Set<String> KNOWN = Set.of(
             B25, F4F, FIGHTER, ROCKET_FIGHTER, DIVE_BOMBER,
-            LEVEL_BOMBER, TORPEDO_BOMBER, ASW, RECON);
+            LEVEL_BOMBER, TORPEDO_BOMBER, ASW, RECON, PLACEHOLDER);
 
     private AircraftVisualIds() {}
 

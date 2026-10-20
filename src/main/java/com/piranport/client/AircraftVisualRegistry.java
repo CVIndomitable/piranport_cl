@@ -26,6 +26,10 @@ public final class AircraftVisualRegistry {
     private static final AircraftVisual F4F =
             new AircraftVisual(AircraftVisualIds.F4F, ModelKind.F4F, F4F_TEXTURE);
 
+    // 美术占位：待替换为正式模型与贴图。
+    private static final AircraftVisual PLACEHOLDER =
+            new AircraftVisual(AircraftVisualIds.PLACEHOLDER, ModelKind.F4F, B25_TEXTURE);
+
     private static final Map<String, AircraftVisual> VISUALS = Map.ofEntries(
             Map.entry(AircraftVisualIds.B25, B25),
             Map.entry(AircraftVisualIds.LEVEL_BOMBER, B25),
@@ -35,7 +39,8 @@ public final class AircraftVisualRegistry {
             Map.entry(AircraftVisualIds.F4F, F4F),
             Map.entry(AircraftVisualIds.FIGHTER, F4F),
             Map.entry(AircraftVisualIds.ROCKET_FIGHTER, F4F),
-            Map.entry(AircraftVisualIds.RECON, F4F));
+            Map.entry(AircraftVisualIds.RECON, F4F),
+            Map.entry(AircraftVisualIds.PLACEHOLDER, PLACEHOLDER));
 
     private AircraftVisualRegistry() {}
 

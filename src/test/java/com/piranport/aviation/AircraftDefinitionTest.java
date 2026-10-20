@@ -181,6 +181,8 @@ class AircraftDefinitionTest {
                 "suisei_bomber", "seiun_kai_bomber", "b25_bomber", "xa2j_bomber",
                 "f6f_hellcat_rocket", "seafire", "zero_model52", "f4f_wildcat",
                 "f4u_corsair_ice", "f4u_corsair", "f2h_banshee",
+                "type96_fighter", "f2a_buffalo", "reppu", "seafang", "xf5u", "f4u7",
+                "ju87c", "btd_destroyer", "wyvern", "skyraider", "barracuda", "ryusei", "tenga",
                 "type0_recon", "c1_recon", "saiun_recon",
                 "deep_sea_fighter_1", "deep_sea_fighter_2",
                 "deep_sea_bomber_1", "deep_sea_bomber_2",

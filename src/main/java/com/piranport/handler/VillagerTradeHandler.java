@@ -24,8 +24,9 @@ import net.neoforged.neoforge.event.village.VillagerTradesEvent;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Predicate;
+import java.util.Set;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 /**
  * 皮兰港村民交易表（依据：策划决策/经济/02-皮兰港村民职业与交易.md）。
@@ -229,19 +230,25 @@ public class VillagerTradeHandler {
     }
 
     /**
-     * 武器匠老手档的改良蓝图池：火炮、鱼雷管、飞机。
-     * 按稀有度筛改良档，再排除雷达、引擎、深弹投射器——这三类不属于文档给武器匠的池。
+     * 武器匠老手档的改良蓝图池：火炮、鱼雷管、飞机，外加三式弹蓝图。
+     * 按稀有度取改良档，再排除雷达、引擎、深弹投射器和近防炮——近防炮蓝图走主线 2-1，不进这个池。
      */
     private static List<Supplier<? extends ItemLike>> improvedWeaponBlueprints() {
+        Set<String> ciws = WeaponItems.CIWS_ITEMS.stream()
+                .map(holder -> holder.getId().getPath())
+                .collect(Collectors.toSet());
         List<Supplier<? extends ItemLike>> out = new ArrayList<>();
-        Predicate<String> allowed = id -> !id.contains("radar") && !id.contains("engine")
-                && !id.contains("depth_charge");
         for (var entry : WeaponItems.EQUIPMENT_BLUEPRINTS.entrySet()) {
-            if (!allowed.test(entry.getKey())) continue;
+            String id = entry.getKey();
+            if (id.contains("radar") || id.contains("engine") || id.contains("depth_charge") || ciws.contains(id)) {
+                continue;
+            }
             Item blueprint = entry.getValue().get();
             if (new ItemStack(blueprint).getRarity() != Rarity.UNCOMMON) continue;
             out.add(entry.getValue());
         }
+        out.addAll(pool("small_type3_shell_blueprint", "medium_type3_shell_blueprint",
+                "large_type3_shell_blueprint"));
         return out;
     }
 

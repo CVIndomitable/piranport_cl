@@ -45,8 +45,8 @@ import java.util.UUID;
  * Provides water-walking, fleet group membership, sinking death animation, and shared attributes.
  *
  * <p>索敌分层：默认最近玩家（各子类的 {@code NearestAttackableTargetGoal}）；
- * 航母/战列/旗舰由 {@code LargeShipPriorityTargetGoal} 优先大型船；驱逐在
- * {@code customServerAiStep} 中随机骚扰。高级轻巡另有独立对空目标
+ * 航母/战列/旗舰由 {@code LargeShipPriorityTargetGoal} 优先大型船；驱逐由
+ * {@code RandomHarassTargetGoal} 随机骚扰。高级轻巡另有独立对空目标
  * （{@link #getAirTarget()}）与 {@code AntiAircraftAttackGoal}。</p>
  *
  * <p>护航仇恨（《深海/01》§七）：默认仇恨同副本运输船，见 {@link #attacksEscortTransports()}。</p>

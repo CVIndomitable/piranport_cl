@@ -1,0 +1,13 @@
+{
+  "aircraft_class": "rocket_fighter",
+  "attack_profile": "rocket",
+  "visual_id": "placeholder",
+  "nation": "fr",
+  "fuel_capacity": 1200,
+  "ammo_capacity": 8,
+  "panel_damage": 8.0,
+  "panel_speed": 0.6,
+  "weight": 14,
+  "health": 24,
+  "attack_cooldown": 220
+}

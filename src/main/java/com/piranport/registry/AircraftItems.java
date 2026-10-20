@@ -100,6 +100,34 @@ public final class AircraftItems {
     /** F2H女妖 — 5/咬, HP8, 100节 */
     public static final DeferredItem<AircraftItem> F2H_BANSHEE = aircraft("f2h_banshee");
 
+    // --- 以下机型美术未到位，模型与贴图为占位（见 AircraftVisualIds.PLACEHOLDER），待替换 ---
+    /** 九六舰战（战斗）— 1/咬 */
+    public static final DeferredItem<AircraftItem> TYPE96_FIGHTER = aircraft("type96_fighter");
+    /** F2A水牛（战斗）— 1/咬 */
+    public static final DeferredItem<AircraftItem> F2A_BUFFALO = aircraft("f2a_buffalo");
+    /** 烈风（战斗）— 4/咬 */
+    public static final DeferredItem<AircraftItem> REPPU = aircraft("reppu");
+    /** 海毒牙（战斗）— 4/咬 */
+    public static final DeferredItem<AircraftItem> SEAFANG = aircraft("seafang");
+    /** 飞行圆饼 XF5U（战斗）— 3/咬 */
+    public static final DeferredItem<AircraftItem> XF5U = aircraft("xf5u");
+    /** F4U-7（火箭）— 8/枚火箭弹 */
+    public static final DeferredItem<AircraftItem> F4U7 = aircraft("f4u7");
+    /** Ju87C斯图卡（俯冲轰炸）— 俯冲轰炸13 */
+    public static final DeferredItem<AircraftItem> JU87C = aircraft("ju87c");
+    /** BTD毁灭者（俯冲轰炸）— 俯冲轰炸16 */
+    public static final DeferredItem<AircraftItem> BTD_DESTROYER = aircraft("btd_destroyer");
+    /** 飞龙（俯冲轰炸）— 俯冲轰炸22，不能挂核航弹 */
+    public static final DeferredItem<AircraftItem> WYVERN = aircraft("wyvern");
+    /** 天袭者（俯冲轰炸）— 俯冲轰炸12 × 3 */
+    public static final DeferredItem<AircraftItem> SKYRAIDER = aircraft("skyraider");
+    /** 梭鱼（鱼雷）— 鱼雷20 */
+    public static final DeferredItem<AircraftItem> BARRACUDA = aircraft("barracuda");
+    /** 流星（鱼雷）— 鱼雷28 */
+    public static final DeferredItem<AircraftItem> RYUSEI = aircraft("ryusei");
+    /** 天河（鱼雷）— 鱼雷26 */
+    public static final DeferredItem<AircraftItem> TENGA = aircraft("tenga");
+
     // --- 深海编队 ---
     // 敌方航母使用的舰载机，数值见 ../docs/策划决策/数值配置/04-飞机数值表.md「深海编队数值表」。
     // 注册名与 data/piranport/aircraft/<id>.json 一一对应，定义 ID 由文件路径生成。
@@ -140,6 +168,9 @@ public final class AircraftItems {
             SEIUN_KAI_BOMBER, B25_BOMBER, XA2J_BOMBER,
             F6F_HELLCAT_ROCKET, SEAFIRE, ZERO_MODEL52, F4F_WILDCAT, F4U_CORSAIR_ICE,
             F4U_CORSAIR, F2H_BANSHEE,
+            TYPE96_FIGHTER, F2A_BUFFALO, REPPU, SEAFANG, XF5U, F4U7,
+            JU87C, BTD_DESTROYER, WYVERN, SKYRAIDER,
+            BARRACUDA, RYUSEI, TENGA,
             TYPE0_RECON, C1_RECON, SAIUN_RECON,
             DEEP_SEA_FIGHTER_1, DEEP_SEA_FIGHTER_2,
             DEEP_SEA_BOMBER_1, DEEP_SEA_BOMBER_2,

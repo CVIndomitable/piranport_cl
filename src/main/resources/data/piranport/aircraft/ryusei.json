@@ -1,0 +1,14 @@
+{
+  "aircraft_class": "torpedo_bomber",
+  "attack_profile": "torpedo",
+  "payload_item": "piranport:aerial_torpedo",
+  "visual_id": "placeholder",
+  "nation": "jp",
+  "fuel_capacity": 1200,
+  "ammo_capacity": 1,
+  "panel_damage": 28.0,
+  "panel_speed": 0.56,
+  "weight": 16,
+  "health": 24,
+  "attack_cooldown": 380
+}

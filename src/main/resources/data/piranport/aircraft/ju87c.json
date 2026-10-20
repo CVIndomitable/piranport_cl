@@ -1,0 +1,14 @@
+{
+  "aircraft_class": "dive_bomber",
+  "attack_profile": "dive_bomb",
+  "payload_item": "piranport:aerial_bomb",
+  "visual_id": "placeholder",
+  "nation": "de",
+  "fuel_capacity": 1200,
+  "ammo_capacity": 1,
+  "panel_damage": 13.0,
+  "panel_speed": 0.36,
+  "weight": 16,
+  "health": 28,
+  "attack_cooldown": 440
+}

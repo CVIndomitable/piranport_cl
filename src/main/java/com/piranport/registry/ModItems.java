@@ -415,6 +415,20 @@ public class ModItems {
     public static final DeferredItem<AircraftItem> F4U_CORSAIR_ICE = AircraftItems.F4U_CORSAIR_ICE;
     public static final DeferredItem<AircraftItem> F4U_CORSAIR = AircraftItems.F4U_CORSAIR;
     public static final DeferredItem<AircraftItem> F2H_BANSHEE = AircraftItems.F2H_BANSHEE;
+    // --- 美术占位机型 ---
+    public static final DeferredItem<AircraftItem> TYPE96_FIGHTER = AircraftItems.TYPE96_FIGHTER;
+    public static final DeferredItem<AircraftItem> F2A_BUFFALO = AircraftItems.F2A_BUFFALO;
+    public static final DeferredItem<AircraftItem> REPPU = AircraftItems.REPPU;
+    public static final DeferredItem<AircraftItem> SEAFANG = AircraftItems.SEAFANG;
+    public static final DeferredItem<AircraftItem> XF5U = AircraftItems.XF5U;
+    public static final DeferredItem<AircraftItem> F4U7 = AircraftItems.F4U7;
+    public static final DeferredItem<AircraftItem> JU87C = AircraftItems.JU87C;
+    public static final DeferredItem<AircraftItem> BTD_DESTROYER = AircraftItems.BTD_DESTROYER;
+    public static final DeferredItem<AircraftItem> WYVERN = AircraftItems.WYVERN;
+    public static final DeferredItem<AircraftItem> SKYRAIDER = AircraftItems.SKYRAIDER;
+    public static final DeferredItem<AircraftItem> BARRACUDA = AircraftItems.BARRACUDA;
+    public static final DeferredItem<AircraftItem> RYUSEI = AircraftItems.RYUSEI;
+    public static final DeferredItem<AircraftItem> TENGA = AircraftItems.TENGA;
     // --- 侦察机 ---
     public static final DeferredItem<AircraftItem> TYPE0_RECON = AircraftItems.TYPE0_RECON;
     public static final DeferredItem<AircraftItem> C1_RECON = AircraftItems.C1_RECON;

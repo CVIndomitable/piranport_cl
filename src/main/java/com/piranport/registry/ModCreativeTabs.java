@@ -84,24 +84,37 @@ public class ModCreativeTabs {
                         output.accept(ModItems.TENZAN_TORPEDO.get());
                         output.accept(ModItems.TYPE97_TORPEDO.get());
                         output.accept(ModItems.SKY_PIRATE_TORPEDO.get());
+                        output.accept(ModItems.BARRACUDA.get());
+                        output.accept(ModItems.RYUSEI.get());
+                        output.accept(ModItems.TENGA.get());
                         // Dive bombers
                         output.accept(ModItems.PETREL_BOMBER.get());
                         output.accept(ModItems.TYPE99_DIVE_BOMBER.get());
                         output.accept(ModItems.SBD_DAUNTLESS.get());
                         output.accept(ModItems.FIREFLY_AS_MK5.get());
                         output.accept(ModItems.SUISEI_BOMBER.get());
+                        output.accept(ModItems.JU87C.get());
+                        output.accept(ModItems.BTD_DESTROYER.get());
+                        output.accept(ModItems.WYVERN.get());
+                        output.accept(ModItems.SKYRAIDER.get());
                         // Level bombers
                         output.accept(ModItems.SEIUN_KAI_BOMBER.get());
                         output.accept(ModItems.B25_BOMBER.get());
                         output.accept(ModItems.XA2J_BOMBER.get());
                         // Fighters
                         output.accept(ModItems.F6F_HELLCAT_ROCKET.get());
+                        output.accept(ModItems.F4U7.get());
                         output.accept(ModItems.SEAFIRE.get());
                         output.accept(ModItems.ZERO_MODEL52.get());
                         output.accept(ModItems.F4F_WILDCAT.get());
                         output.accept(ModItems.F4U_CORSAIR_ICE.get());
                         output.accept(ModItems.F4U_CORSAIR.get());
                         output.accept(ModItems.F2H_BANSHEE.get());
+                        output.accept(ModItems.TYPE96_FIGHTER.get());
+                        output.accept(ModItems.F2A_BUFFALO.get());
+                        output.accept(ModItems.REPPU.get());
+                        output.accept(ModItems.SEAFANG.get());
+                        output.accept(ModItems.XF5U.get());
                         // Recon
                         output.accept(ModItems.TYPE0_RECON.get());
                         output.accept(ModItems.C1_RECON.get());

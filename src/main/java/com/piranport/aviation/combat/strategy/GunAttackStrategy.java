@@ -76,6 +76,8 @@ public final class GunAttackStrategy implements AttackStrategy {
                     position.z, bullet.getYRot(), bullet.getXRot());
             bullet.setDeltaMovement(direction.scale(ModEquipmentConfig.FIGHTER_BULLET_SPEED.get()));
             bullet.setOwner(owner);
+            // 无主人 = 深海自主战斗机：子弹不得命中玩家本体（《深海/01》战斗机只打飞机与中立生物）
+            bullet.setSparesPlayers(owner == null);
             bullet.setSourceAircraftName(context.displayName());
             bullet.setSourceAircraft(context.self());
             context.level().addFreshEntity(bullet);

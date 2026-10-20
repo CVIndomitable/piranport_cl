@@ -23,6 +23,13 @@ public class BulletEntity extends ThrowableItemProjectile {
     private float damage = 2f;
     private Component sourceAircraftName;
     private UUID sourceAircraftUuid;
+    /**
+     * 深海自主战斗机的子弹不得命中玩家本体。
+     *
+     * <p>WHY：自主子弹 owner 为 null，{@link com.piranport.combat.FriendlyFireHelper} 无法识别发射方，
+     * 瞄准玩家飞机或中立生物时飞行路径上的玩家会被误伤；《深海/01》规定战斗机不攻击玩家本体。</p>
+     */
+    private boolean sparesPlayers = false;
 
     public BulletEntity(EntityType<? extends BulletEntity> type, Level level) {
         super(type, level);
@@ -66,6 +73,7 @@ public class BulletEntity extends ThrowableItemProjectile {
 
     @Override
     protected boolean canHitEntity(Entity target) {
+        if (sparesPlayers && target instanceof Player) return false;
         if (com.piranport.combat.FriendlyFireHelper.shouldBlockHit(target, getOwner())) return false;
         return super.canHitEntity(target);
     }
@@ -105,6 +113,10 @@ public class BulletEntity extends ThrowableItemProjectile {
 
     public void setSourceAircraft(Entity aircraft) {
         this.sourceAircraftUuid = aircraft.getUUID();
+    }
+
+    public void setSparesPlayers(boolean spares) {
+        this.sparesPlayers = spares;
     }
 
     private void notifyOwner(Entity target) {

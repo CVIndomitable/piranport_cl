@@ -125,12 +125,16 @@ public final class TargetResolution {
      * 玩家本体不是 {@link Mob}、深海水面舰船是 {@link Enemy}、其他深海自主飞机
      * 的 ownerUUID 为 null，三者都会被排除；这样战斗机既不会去咬舰船，
      * 也不会越过「只打飞机和路人」的边界去打玩家本体。
+     *
+     * <p>随从舰娘（{@code ShipGirlEntity}）是普通 {@code Mob} 且不是 {@code Enemy}，
+     * 但属于玩家阵营，不能被当成中立生物误伤。
      */
     private static boolean isAutonomousFighterPrey(Entity entity) {
         if (entity instanceof com.piranport.entity.AircraftEntity other) {
             // 自主飞机没有 ownerUUID；有主的才是玩家飞机
             return !other.isAutonomous() && other.getOwnerUUID() != null;
         }
-        return entity instanceof Mob mob && !(mob instanceof Enemy) && !mob.isNoAi();
+        return entity instanceof Mob mob && !(mob instanceof Enemy) && !mob.isNoAi()
+                && !(mob instanceof com.piranport.npc.shipgirl.ShipGirlEntity);
     }
 }

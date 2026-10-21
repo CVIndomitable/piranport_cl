@@ -167,6 +167,9 @@ public final class TorpedoAttackStrategy implements AttackStrategy {
                 TorpedoEntity torpedo = new TorpedoEntity(ModEntityTypes.TORPEDO_ENTITY.get(),
                         context.level());
                 torpedo.setAerialTorpedo(true);
+                // 伤害取载机面板伤害（JSON panel_damage，终端可调）：
+                // 与水平轰炸/俯冲轰炸一致，鱼雷机的标伤就是单发雷的伤害，不再落到 torpedo.default_damage 兜底值。
+                torpedo.setDamage(context.panelDamage());
                 double offsetX = -direction.z * (i - (toFire - 1) / 2.0)
                         * ModEquipmentConfig.TORPEDO_BOMBER_SPREAD_OFFSET.get();
                 double offsetZ = direction.x * (i - (toFire - 1) / 2.0)
@@ -182,11 +185,11 @@ public final class TorpedoAttackStrategy implements AttackStrategy {
                 torpedo.setOwner(owner);
                 context.level().addFreshEntity(torpedo);
             }
-            context.setRemainingAmmo(context.remainingAmmo() - toFire);
+            // 本轮把剩余弹全部投出（toFire = 全部剩余），投完必然空弹，直接返航；
+            // 不需要再判一次剩余——那条分支永远为真，是死代码。
+            context.setRemainingAmmo(0);
             context.setAttackCooldown(context.attackCooldownDuration());
-            if (context.remainingAmmo() <= 0) {
-                context.startReturning("torpedo_launched");
-            }
+            context.startReturning("torpedo_launched");
             return;
         }
 

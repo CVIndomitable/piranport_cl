@@ -25,6 +25,16 @@ public final class TerminalServerEvents {
     public static void started(ServerStartedEvent event) {
         TerminalParameters.setDedicatedServer(!event.getServer().isSingleplayer());
         TerminalParametersSavedData.get(event.getServer().overworld());
+        // 目录条目数会随数据包增长；同步包超过上限会直接踢人，这里先把数字打出来，
+        // 免得下次再靠崩溃堆栈反推（2026-10-21 的「连接中断」就是目录涨过 4096 导致的）。
+        int entries = TerminalParameterCatalog.all().size();
+        if (entries > TerminalParameterSpec.MAX_ENTRIES) {
+            PiranPort.LOGGER.error("Terminal parameter catalog has {} entries, above the {} limit; "
+                    + "client sync will be truncated.", entries, TerminalParameterSpec.MAX_ENTRIES);
+        } else {
+            PiranPort.LOGGER.info("Terminal parameter catalog: {} entries (limit {})",
+                    entries, TerminalParameterSpec.MAX_ENTRIES);
+        }
     }
 
     @SubscribeEvent

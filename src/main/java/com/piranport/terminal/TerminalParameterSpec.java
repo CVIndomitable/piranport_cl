@@ -9,6 +9,16 @@ public record TerminalParameterSpec(String key, String group, String target, Str
                                     ValueType type, String baseValue, double min, double max) {
     public enum ValueType { DOUBLE, INTEGER, BOOLEAN }
 
+    /**
+     * 参数目录条目上限，同步、批量保存、CSV 导入导出共用同一个数。
+     *
+     * <p>WHY 单独放常量：目录条目数由数据包驱动（火炮/飞机/副本节点/生物属性都会长），
+     * 各处各写一个 4096 时，数据一涨就会出现「同步失败踢人、但 CSV 导出也失败」的连锁问题。
+     * 16K 条完整快照约 2~3 MB，NeoForge 的 GenericPacketSplitter 会在超过单包上限时自动分包，
+     * 因此这个值是给「目录爆炸」留的余量，不是网络协议硬限制。</p>
+     */
+    public static final int MAX_ENTRIES = 16_384;
+
     public TerminalParameterSpec {
         if (key == null || key.isBlank() || key.length() > 128 || group == null || group.length() > 128
                 || target == null || target.length() > 128 || property == null || property.length() > 128

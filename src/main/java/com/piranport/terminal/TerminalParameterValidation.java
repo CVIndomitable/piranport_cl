@@ -12,7 +12,8 @@ public final class TerminalParameterValidation {
                                                 Collection<TerminalParameterSpec> metadata) {
         Map<String, TerminalParameterSpec> specs = new HashMap<>();
         for (TerminalParameterSpec spec : metadata) specs.put(spec.key(), spec);
-        if (proposed.size() > 4096) throw new IllegalArgumentException("参数数量超出上限");
+        if (proposed.size() > TerminalParameterSpec.MAX_ENTRIES)
+            throw new IllegalArgumentException("参数数量超出上限");
         Map<String, String> checked = new HashMap<>();
         for (var entry : proposed.entrySet()) {
             TerminalParameterSpec spec = specs.get(entry.getKey());

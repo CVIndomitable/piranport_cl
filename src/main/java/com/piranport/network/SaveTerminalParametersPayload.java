@@ -4,6 +4,7 @@ import com.piranport.PiranPort;
 import com.piranport.combat.TransformationManager;
 import com.piranport.config.ConfigToolPermissions;
 import com.piranport.menu.DebugTerminalMenu;
+import com.piranport.terminal.TerminalParameterSpec;
 import com.piranport.terminal.TerminalParametersSavedData;
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.DecoderException;
@@ -22,7 +23,7 @@ import java.util.Map;
 public record SaveTerminalParametersPayload(Map<String, String> edits) implements CustomPacketPayload {
     public static final Type<SaveTerminalParametersPayload> TYPE = new Type<>(
             ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "save_terminal_parameters"));
-    private static final int MAX_EDITS = 4096;
+    private static final int MAX_EDITS = TerminalParameterSpec.MAX_ENTRIES;
     public static final StreamCodec<ByteBuf, SaveTerminalParametersPayload> STREAM_CODEC = StreamCodec.of(
             (buffer, payload) -> {
                 if (payload.edits().size() > MAX_EDITS) throw new IllegalArgumentException("Too many edits");

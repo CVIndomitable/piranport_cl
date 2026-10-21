@@ -20,8 +20,9 @@ import java.util.Collection;
 
 /** 服务器固定目录内的参数表，严格解析并整批提交。 */
 public final class TerminalParameterCsv {
-    private static final int MAX_BYTES = 1_048_576;
-    private static final int MAX_ROWS = 4096;
+    // 行数与同步/存档共用同一个上限；字节上限随行数一起放宽（单行约 100 字节，留 4 倍余量）。
+    private static final int MAX_BYTES = 4_194_304;
+    private static final int MAX_ROWS = TerminalParameterSpec.MAX_ENTRIES;
     private static final String HEADER = "key,group,target,property,type,base,value,override";
     private static final DateTimeFormatter STAMP = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss_SSS");
 
@@ -50,7 +51,7 @@ public final class TerminalParameterCsv {
                             Boolean.toString(overrides.containsKey(spec.key())))));
             if (lines.size() > MAX_ROWS + 1) throw new IOException("参数数量超出 CSV 上限");
             Files.write(temporary, lines, StandardCharsets.UTF_8);
-            if (Files.size(temporary) > MAX_BYTES) throw new IOException("导出 CSV 超过 1 MiB");
+            if (Files.size(temporary) > MAX_BYTES) throw new IOException("导出 CSV 超过 4 MiB");
             Files.move(temporary, output, StandardCopyOption.REPLACE_EXISTING);
             return filename;
         } finally {
@@ -67,7 +68,7 @@ public final class TerminalParameterCsv {
         checkDirectory(dir);
         Path file = dir.resolve(filename);
         if (!Files.isRegularFile(file, LinkOption.NOFOLLOW_LINKS) || Files.size(file) > MAX_BYTES) {
-            throw new IOException("CSV 不存在、不是普通文件或超过 1 MiB");
+            throw new IOException("CSV 不存在、不是普通文件或超过 4 MiB");
         }
 
         Map<String, String> proposed = parse(Files.readString(file, StandardCharsets.UTF_8),
@@ -84,7 +85,7 @@ public final class TerminalParameterCsv {
 
     public static Map<String, String> parse(String content, Map<String, String> existing,
                                              Collection<TerminalParameterSpec> metadata) throws IOException {
-        if (content.getBytes(StandardCharsets.UTF_8).length > MAX_BYTES) throw new IOException("CSV 超过 1 MiB");
+        if (content.getBytes(StandardCharsets.UTF_8).length > MAX_BYTES) throw new IOException("CSV 超过 4 MiB");
         Map<String, TerminalParameterSpec> specs = new HashMap<>();
         for (TerminalParameterSpec spec : metadata) specs.put(spec.key(), spec);
         Map<String, String> proposed = new HashMap<>(existing);
@@ -100,7 +101,7 @@ public final class TerminalParameterCsv {
                 throw new IOException("CSV 缺少 key/value 列");
             }
             while ((line = reader.readLine()) != null) {
-                if (++count > MAX_ROWS) throw new IOException("CSV 超过 4096 行");
+                if (++count > MAX_ROWS) throw new IOException("CSV 超过 " + MAX_ROWS + " 行");
                 if (line.isBlank()) continue;
                 List<String> cells = parseRow(line);
                 if (cells.size() != headers.size()) throw new IOException("第 " + (count + 1) + " 行列数错误");

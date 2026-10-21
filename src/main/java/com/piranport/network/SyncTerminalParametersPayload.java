@@ -29,7 +29,8 @@ public record SyncTerminalParametersPayload(long revision, Map<String, String> v
         implements CustomPacketPayload {
     public static final Type<SyncTerminalParametersPayload> TYPE = new Type<>(
             ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "sync_terminal_parameters"));
-    private static final int MAX_ROWS = 4096;
+    // 目录条目上限与存档/CSV 共用；见 TerminalParameterSpec.MAX_ENTRIES 的 WHY。
+    private static final int MAX_ROWS = TerminalParameterSpec.MAX_ENTRIES;
     private static final int MAX_KEY = 128;
     private static final int MAX_VALUE = 64;
     private static final int MAX_MESSAGE = 256;
@@ -99,12 +100,34 @@ public record SyncTerminalParametersPayload(long revision, Map<String, String> v
     }
 
     public static SyncTerminalParametersPayload from(TerminalParametersSavedData data, String message) {
-        Map<String, String> values = new HashMap<>();
         Map<String, String> overrides = data.overrides();
-        TerminalParameterCatalog.all().forEach(spec ->
+        List<TerminalParameterSpec> catalog = boundedCatalog(TerminalParameterCatalog.all());
+        Map<String, String> values = new HashMap<>();
+        catalog.forEach(spec ->
                 values.put(spec.key(), overrides.getOrDefault(spec.key(), spec.baseValue())));
         return new SyncTerminalParametersPayload(data.revision(), values, overrides,
-                List.copyOf(TerminalParameterCatalog.all()), boundedMessage(message));
+                List.copyOf(catalog), boundedMessage(message));
+    }
+
+    /**
+     * 目录超过上限时截断而不是抛异常。
+     *
+     * <p>WHY：编码阶段抛异常会让服务端直接踢掉玩家（表现为「连接中断」），
+     * 数据包一涨就是全员进不去。截断的代价只是被截掉的键在客户端退回写死默认值，
+     * 比整个登录失败轻得多。截断说明会打到服务端日志，方便发现目录已经失控。</p>
+     */
+    private static List<TerminalParameterSpec> boundedCatalog(
+            java.util.Collection<TerminalParameterSpec> catalog) {
+        if (catalog.size() <= MAX_ROWS) return new ArrayList<>(catalog);
+        PiranPort.LOGGER.error("Terminal parameter catalog has {} entries, exceeding the sync limit of {}; "
+                + "dropping the tail from client sync. Raise TerminalParameterSpec.MAX_ENTRIES or trim the catalog.",
+                catalog.size(), MAX_ROWS);
+        List<TerminalParameterSpec> truncated = new ArrayList<>(MAX_ROWS);
+        for (TerminalParameterSpec spec : catalog) {
+            if (truncated.size() >= MAX_ROWS) break;
+            truncated.add(spec);
+        }
+        return truncated;
     }
 
     private static String boundedMessage(String message) {

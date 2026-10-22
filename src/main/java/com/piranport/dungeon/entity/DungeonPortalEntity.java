@@ -7,6 +7,7 @@ import com.piranport.dungeon.data.StageData;
 import com.piranport.dungeon.event.NodeCaption;
 import com.piranport.dungeon.instance.DungeonInstance;
 import com.piranport.dungeon.instance.DungeonInstanceManager;
+import com.piranport.dungeon.network.PortalTransitPayload;
 import com.piranport.registry.ModEntityTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -19,8 +20,10 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -54,6 +57,12 @@ public class DungeonPortalEntity extends Entity {
     /** Defensive cap for persisted/observed portal entries. */
     private static final int MAX_ENTERED_PLAYERS = 64;
     private static final int MAX_NODE_ID_LENGTH = 128;
+    /**
+     * 走进门面到真正传送之间的演出时长：20 tick = 1 秒（《副本/26》2026-10-22 补充）。
+     * 与客户端 {@code ClientPortalTransit.TRANSIT_TICKS} 必须一致——两边不同步时
+     * 会出现"演出放完但还没传"或"传送了但镜头还在晃"。
+     */
+    private static final int TRANSIT_TICKS = 20;
 
     private UUID instanceId;
     private String nodeId;
@@ -61,6 +70,10 @@ public class DungeonPortalEntity extends Entity {
     /** 当前仍在走近范围内的玩家；只在内存中，离开后清除，再次走近会重新触发。 */
     private final Set<UUID> approachedPlayers = new HashSet<>();
     private int orphanTicks = 0;
+    /** 玩家 → 剩余倒数 tick。只在服务端内存里：重登/重启即取消，不会把半截演出带进存档。 */
+    private final Map<UUID, Integer> pendingTransit = new HashMap<>();
+    /** 倒数走完却没被传走的玩家 → 剩余重试冷却，避免"留在门内等待"时每秒重播演出。 */
+    private final Map<UUID, Integer> transitCooldown = new HashMap<>();
 
     public DungeonPortalEntity(EntityType<?> type, Level level) {
         super(type, level);
@@ -150,21 +163,20 @@ public class DungeonPortalEntity extends Entity {
         super.tick();
 
         if (level().isClientSide()) {
-            // 视觉主体是方块门框；实体本身不可见（DungeonPortalRenderer 不再画门），
-            // 只保留开口内的环境粒子。半径压在 0.9 内，避免粒子跑进实心框架块里白白被遮挡。
+            // 视觉主体是 DungeonPortalRenderer 画的一片门面，实体本身不可见，只补环境粒子。
+            // 粒子从水面一路飘到门顶（3 格高）、半径压在 1.0 内，贴着 2 格宽的门面走。
             if (tickCount % 4 == 0) {
                 double angle = tickCount * 0.1;
                 level().addParticle(net.minecraft.core.particles.ParticleTypes.PORTAL,
-                        getX() + Math.cos(angle) * 0.9,
-                        getY() - 0.5 + Math.sin(tickCount * 0.15) * 0.9,
-                        getZ() + Math.sin(angle) * 0.9,
+                        getX() + Math.cos(angle) * 1.0,
+                        getY() + random.nextDouble() * 3.0,
+                        getZ() + Math.sin(angle) * 1.0,
                         0, 0.02, 0);
             }
             return;
         }
 
-        // Despawn orphan portals (broken NBT / cleaned-up instance) to avoid
-        // leaving permanently-stuck entities in the dungeon dimension.
+        // 无效 NBT / 实例已清理的门直接销毁，避免副本维度里留下永久卡死的实体。
         if (instanceId == null || nodeId == null || nodeId.isBlank()) {
             PiranPort.LOGGER.warn("Discarding invalid dungeon portal {} (instance={}, nodeLength={})",
                     getId(), instanceId, nodeId == null ? -1 : nodeId.length());
@@ -172,71 +184,115 @@ public class DungeonPortalEntity extends Entity {
             return;
         }
         DungeonInstanceManager mgr = DungeonInstanceManager.get((ServerLevel) level());
-        if (mgr.getInstance(instanceId) == null) {
+        DungeonInstance instance = mgr.getInstance(instanceId);
+        if (instance == null) {
             discard();
             return;
         }
 
-        // Server-side: check for nearby players every 10 ticks instead of every tick
-        if (tickCount % 10 != 0) return;
+        // 走近判定只需 10 tick 一次；但倒数必须每 tick 走，否则 1 秒的演出会被采样成 0.5~1.5 秒。
+        if (tickCount % 10 == 0) {
+            if (getStageId().isEmpty()) syncDoorInfo(instance);
+            scanApproach(instance);
+        }
 
-        if (getStageId().isEmpty()) syncDoorInfo(mgr.getInstance(instanceId));
+        Set<UUID> touching = tickTransit(instance);
+        enteredPlayers.clear();
+        enteredPlayers.addAll(touching);
+        tickOrphanDespawn(instance, touching);
+    }
 
-        AABB area = getBoundingBox().inflate(2.0, 1.0, 2.0);
-        List<ServerPlayer> nearbyPlayers = ((ServerLevel) level())
-                .getEntitiesOfClass(ServerPlayer.class, area);
-
-        Set<UUID> members = mgr.getInstance(instanceId).getPlayerUuids();
-
-        // 走近门群只触发一次（离开再进才重触发），用于分歧门的定格与下发；半径需小于相邻门的间距（14）。
+    /**
+     * 玩家走近门群只触发一次（离开再进才重触发），用于分歧门的定格与下发。
+     * 半径需小于相邻门的间距（14）。
+     */
+    private void scanApproach(DungeonInstance instance) {
+        ServerLevel serverLevel = (ServerLevel) level();
+        Set<UUID> members = instance.getPlayerUuids();
         AABB approachArea = getBoundingBox().inflate(APPROACH_RADIUS, 3.0, APPROACH_RADIUS);
         Set<UUID> approaching = new HashSet<>();
-        for (ServerPlayer player : ((ServerLevel) level()).getEntitiesOfClass(ServerPlayer.class, approachArea)) {
+        for (ServerPlayer player : serverLevel.getEntitiesOfClass(ServerPlayer.class, approachArea)) {
             UUID playerId = player.getUUID();
             if (!members.contains(playerId)) continue;
             approaching.add(playerId);
             if (approachedPlayers.add(playerId)) {
                 com.piranport.dungeon.event.DungeonEventHandler.onPortalApproached(
-                        player, mgr.getInstance(instanceId), nodeId);
+                        player, instance, nodeId);
             }
         }
         approachedPlayers.retainAll(approaching);
+    }
 
-        for (ServerPlayer player : nearbyPlayers) {
+    /**
+     * 触碰判定 + 传送倒数，返回本 tick 站在门内的成员集合。
+     *
+     * <p><b>为什么是"先演出、后传送"：</b>《副本/26》2026-10-22 补充要求走进门面后
+     * 先播约一秒的下界门式演出再传送。所以服务端自己倒数 {@link #TRANSIT_TICKS}，
+     * 倒数结束才交给 {@code DungeonProgressionRouter} 选路/传送；倒数期间走出门范围
+     * 就取消并下发关闭包。</p>
+     */
+    private Set<UUID> tickTransit(DungeonInstance instance) {
+        ServerLevel serverLevel = (ServerLevel) level();
+        Set<UUID> members = instance.getPlayerUuids();
+        List<ServerPlayer> nearby = serverLevel.getEntitiesOfClass(ServerPlayer.class,
+                getBoundingBox().inflate(2.0, 1.0, 2.0));
+
+        Set<UUID> touching = new HashSet<>();
+        for (ServerPlayer player : nearby) {
+            if (members.contains(player.getUUID())) touching.add(player.getUUID());
+        }
+
+        // 走出门面：取消演出，不传送。关闭包由服务端主动发，客户端不自己超时。
+        pendingTransit.entrySet().removeIf(entry -> {
+            if (touching.contains(entry.getKey())) return false;
+            ServerPlayer player = serverLevel.getServer().getPlayerList().getPlayer(entry.getKey());
+            if (player != null) PortalTransitPayload.sendStop(player);
+            return true;
+        });
+
+        transitCooldown.replaceAll((id, left) -> left - 1);
+        transitCooldown.values().removeIf(left -> left <= 0);
+
+        for (ServerPlayer player : nearby) {
             UUID playerId = player.getUUID();
             if (!members.contains(playerId)) continue;
-            com.piranport.dungeon.event.DungeonEventHandler.onPortalEntered(
-                    player, mgr.getInstance(instanceId), nodeId, getTargetNodeId());
-            if (enteredPlayers.size() >= MAX_ENTERED_PLAYERS && !enteredPlayers.contains(playerId)) {
+
+            Integer left = pendingTransit.get(playerId);
+            if (left == null) {
+                // 倒数刚走完还没被传走（地形未就绪/条件不满足）时，等冷却再重来，
+                // 否则"留在门内等待"会每秒重播一次演出。
+                if (transitCooldown.containsKey(playerId)) continue;
+                pendingTransit.put(playerId, TRANSIT_TICKS);
+                PortalTransitPayload.sendStart(player);
                 continue;
             }
-            enteredPlayers.add(playerId);
-        }
 
-        boolean memberNearby = false;
-        for (UUID memberId : members) {
-            if (enteredPlayers.contains(memberId)) {
-                memberNearby = true;
-                break;
+            int next = left - 1;
+            if (next > 0) {
+                pendingTransit.put(playerId, next);
+                continue;
             }
+
+            pendingTransit.remove(playerId);
+            PortalTransitPayload.sendStop(player);
+            com.piranport.dungeon.event.DungeonEventHandler.onPortalEntered(
+                    player, instance, nodeId, getTargetNodeId());
+            transitCooldown.put(playerId, TRANSIT_TICKS);
         }
-        if (!memberNearby) {
-            orphanTicks += 10;
-            if (orphanTicks > ORPHAN_DESPAWN_TICKS) {
-                discard();
-                return;
-            }
-        } else {
+        return touching;
+    }
+
+    /** 没人碰门超过 {@link #ORPHAN_DESPAWN_TICKS} 就销毁，避免实例被清理后留下孤儿门。 */
+    private void tickOrphanDespawn(DungeonInstance instance, Set<UUID> touching) {
+        if (tickCount % 10 != 0) return;
+        // 用"本 tick 有人碰"而不是历史记录判断：出口要一直留给仍在战场里的玩家和回访者。
+        if (!touching.isEmpty()) {
             orphanTicks = 0;
+            return;
         }
-
-        // 传送门只处理当前触碰者的离开/推进，不等待实例中的其他历史成员。
-        if (!enteredPlayers.isEmpty()) {
-            DungeonInstance instance = mgr.getInstance(instanceId);
-            if (instance != null) {
-                // 出口保留给仍在战场中的玩家及之后的回访者，历史触碰记录无需保存。
-                enteredPlayers.clear();
-            }
+        orphanTicks += 10;
+        if (orphanTicks > ORPHAN_DESPAWN_TICKS) {
+            discard();
         }
     }
 

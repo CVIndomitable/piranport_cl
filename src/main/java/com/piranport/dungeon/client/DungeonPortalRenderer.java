@@ -1,6 +1,8 @@
 package com.piranport.dungeon.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.math.Axis;
 import com.piranport.dungeon.data.BranchRule;
 import com.piranport.dungeon.data.NodeData;
 import com.piranport.dungeon.data.StageData;
@@ -11,24 +13,29 @@ import com.piranport.dungeon.network.ClientDungeonData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import org.joml.Matrix4f;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 副本出口传送门的实体渲染器。
+ * 副本出口传送门的实体渲染器：画一片漂浮在水面上的门面 + 门头的去向标签。
  *
- * <p><b>这里刻意不再画门（方案 A）。</b>出口的可见主体是
- * {@code PortalStructureHelper} 摆出的 4×5×4 {@code dungeon_portal} 方块门框；
- * 实体本身只承担两件事：走进判定（{@code DungeonPortalEntity.tick}）和
- * 门头的标签。此前这里还额外画了一个自转的紫色小门，叠在方块门框里，看起来像同一位置有两扇门。</p>
+ * <p><b>门体（《副本/26》2026-10-22 补充）：</b>出口是"一片式"——没有门框、没有平台、
+ * 没有光柱。门面用原版末地门的渲染类型（{@code RenderType.endPortal()}，末地天空 +
+ * 末地传送门的双贴图），紫黑漩涡的观感和下界门同源，且不需要我们额外准备贴图。</p>
  *
- * <p>标签按本地玩家自己的快照着色：条件满足绿色、未满足红色；没有快照（尚未走近）时条件灰色、不表态。
- * 隐藏门不画标签，让玩家只看到确实可走的路线。</p>
+ * <p><b>为什么门面只绕 Y 轴转向镜头：</b>没有门框时，固定朝向的平面从侧面看会退化成
+ * 一条线，玩家会以为门消失了。只绕 Y 轴转向镜头能把门面始终立在玩家眼前（保持竖直），
+ * 又不会像完全公告板那样跟着俯仰歪倒；代价是不给实体加一个"朝向"同步字段。</p>
+ *
+ * <p>标签按本地玩家自己的快照着色：条件满足绿色、未满足红色；没有快照（尚未走近）时
+ * 条件灰色、不表态。隐藏门不画标签，让玩家只看到确实可走的路线。</p>
  *
  * <p>环境粒子仍由 {@link DungeonPortalEntity#tick()} 在客户端发出，不在这里绘制。</p>
  */
@@ -42,10 +49,14 @@ public class DungeonPortalRenderer extends EntityRenderer<DungeonPortalEntity> {
     private static final int COLOR_UNMET = 0xFFFF5555;
     /** 标签行距（字体像素）；渲染缩放 0.025 下约为 0.25 格，门宽 4 格内可放下数行。 */
     private static final int LINE_PIXELS = 10;
+    /** 门面半宽（格）：整片 2 格宽，与水上方的一格门面比例一致。 */
+    private static final float SHEET_HALF_WIDTH = 1.0F;
+    /** 门面高度（格）：3 格，下沿贴着水面（实体原点就在水面高度）。 */
+    private static final float SHEET_HEIGHT = 3.0F;
 
     public DungeonPortalRenderer(EntityRendererProvider.Context context) {
         super(context);
-        // 实体是不可见的触发体，不投影子，否则开口地面上会出现一块莫名的圆影。
+        // 一片薄门面投圆影会很突兀，水面上的门不投影子。
         this.shadowRadius = 0.0f;
     }
 
@@ -53,7 +64,29 @@ public class DungeonPortalRenderer extends EntityRenderer<DungeonPortalEntity> {
     public void render(DungeonPortalEntity entity, float entityYaw, float partialTick,
                         PoseStack poseStack, MultiBufferSource buffer, int packedLight) {
         super.render(entity, entityYaw, partialTick, poseStack, buffer, packedLight);
+        renderSheet(poseStack, buffer);
         renderLabel(entity, poseStack, buffer);
+    }
+
+    /**
+     * 画一片竖直门面。
+     *
+     * <p>顶点顺序按原版 {@code TheEndPortalRenderer} 的正面绕序（左下→右下→右上→左上），
+     * 因为 {@code RenderType.endPortal()} 用的是默认的背面剔除。</p>
+     */
+    private void renderSheet(PoseStack poseStack, MultiBufferSource buffer) {
+        float yaw = Minecraft.getInstance().gameRenderer.getMainCamera().getYRot();
+        poseStack.pushPose();
+        // 让门面的 +Z 法线指向镜头：镜头视线为 (-sinYaw, 0, cosYaw)，
+        // 绕 Y 轴转 (180 - yaw) 度后平面法线正好与之相反。
+        poseStack.mulPose(Axis.YP.rotationDegrees(180.0F - yaw));
+        VertexConsumer consumer = buffer.getBuffer(RenderType.endPortal());
+        Matrix4f pose = poseStack.last().pose();
+        consumer.addVertex(pose, -SHEET_HALF_WIDTH, 0.0F, 0.0F);
+        consumer.addVertex(pose, SHEET_HALF_WIDTH, 0.0F, 0.0F);
+        consumer.addVertex(pose, SHEET_HALF_WIDTH, SHEET_HEIGHT, 0.0F);
+        consumer.addVertex(pose, -SHEET_HALF_WIDTH, SHEET_HEIGHT, 0.0F);
+        poseStack.popPose();
     }
 
     /** 旧存档的单门 target 为空，不显示标签。 */
@@ -65,7 +98,8 @@ public class DungeonPortalRenderer extends EntityRenderer<DungeonPortalEntity> {
 
         Font font = Minecraft.getInstance().font;
         poseStack.pushPose();
-        poseStack.translate(0.0, 1.25, 0.0);
+        // 标签放在门面正上方：门面高 3 格，再抬 0.4 格，离门顶留一点空隙。
+        poseStack.translate(0.0, SHEET_HEIGHT + 0.4, 0.0);
         poseStack.mulPose(this.entityRenderDispatcher.cameraOrientation());
         poseStack.scale(-0.025f, -0.025f, 0.025f);
         var pose = poseStack.last().pose();

@@ -5,7 +5,7 @@ import com.piranport.dungeon.data.NodeData;
 import com.piranport.dungeon.data.StageData;
 import com.piranport.dungeon.instance.DungeonInstance;
 import com.piranport.dungeon.instance.DungeonInstanceManager;
-import com.piranport.dungeon.network.DungeonResultPayload;
+import com.piranport.dungeon.network.NodeClearedToastPayload;
 import com.piranport.dungeon.saved.DungeonSavedData;
 import com.piranport.dungeon.saved.DungeonSettlementData;
 import net.minecraft.server.level.ServerLevel;
@@ -18,8 +18,8 @@ import java.util.UUID;
 
 /**
  * 副本/19：每节点即时发奖。
- * <p>Boss 节点通关时另走《副本/21》主线奖励（材料包、勋章、随机蓝图），
- * 并把整关结算页合并到同一次发包，避免 completeDungeon 再发一页把奖励盖掉。</p>
+ * <p>Boss 节点通关时另走《副本/21》主线奖励（材料包、勋章、随机蓝图）。
+ * 2026-10-22 起不再打开结算页：通关只发一条右上角进度式横幅，奖励照旧直接进包。</p>
  */
 public final class DungeonSettlementService {
     private DungeonSettlementService() {}
@@ -76,12 +76,11 @@ public final class DungeonSettlementService {
                 }
             }
 
-            long time = completes ? i.getElapsedMillis() : d.elapsedMillis(i.getInstanceId(), n.nodeId());
-            PacketDistributor.sendToPlayer(p, new DungeonResultPayload(
-                    completes ? s.displayName() : s.displayName() + " · " + n.nodeId(),
-                    time, firstClear, rs,
-                    d.kills(i.getInstanceId(), n.nodeId()),
-                    completes ? s.ending() : ""));
+            // 《副本/19》2026-10-22 补充：不再弹全屏结算页、不再需要玩家点确认。
+            // 奖励已在上面直接进包，这里只发一条右上角进度式横幅（标题"本节点已通关"）。
+            // 横幅与 buildPortalStructure 摆门是同一拍：看到横幅时后续节点的门已经立在水面上。
+            PacketDistributor.sendToPlayer(p, new NodeClearedToastPayload(
+                    s.displayName(), n.label(), firstClear));
         }
         return true;
     }

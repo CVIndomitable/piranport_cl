@@ -1,6 +1,5 @@
 package com.piranport.dungeon.block;
 
-import com.piranport.PiranPort;
 import com.piranport.dungeon.block.entity.DungeonPortalBlockEntity;
 import com.piranport.dungeon.data.BranchRule;
 import com.piranport.dungeon.data.DungeonRegistry;
@@ -10,6 +9,7 @@ import com.piranport.dungeon.instance.DungeonInstance;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
@@ -320,17 +320,16 @@ public class PortalStructureHelper {
     }
 
     /**
-     * Builds a complete dungeon exit site at the given anchor.
+     * Builds the dungeon exit portal at the given anchor.
      *
-     * <p>出口布局（副本/新需求）：以 {@code cornerPos} 为锚点生成一个 3×3 石砖平台，
-     * 平台中心向上竖一列海晶灯光柱便于远处辨认，
-     * 平台一侧竖一副 4×5×4 的 {@code dungeon_portal} 门框（单层 2×3 开口朝外，类下界门），
-     * 门内放 {@code DungeonPortalEntity} 作为"走进入口"的传送判定。
-     * 节点奖励由 {@code settleNode} 直接发进玩家背包，这里不再放战利品箱。</p>
+     * <p><b>一片式出口（《副本/26》2026-10-22 补充）：</b>不再摆 3×3 平台、海晶灯光柱和
+     * 4×5×4 的 {@code dungeon_portal} 门框，只在水面上放一具 {@code DungeonPortalEntity}，
+     * 由 {@code DungeonPortalRenderer} 画一片门面。门没有碰撞体积、没有门框、没有地基，
+     * 玩家直接穿过去触发传送。节点奖励仍由 {@code settleNode} 直接发进玩家背包。</p>
      *
-     * <p>坐标约定：{@code cornerPos} 是门框局部 (lx=0,ly=0,lz=0) 那一格，
-     * 与历史调用方保持一致（多数传 {@code anchor.below()}）。平台铺在门框开口前方一格，
-     * 顶面与门框底面同高，玩家站上平台即可开箱或走进门。</p>
+     * <p>坐标约定：{@code cornerPos} 是历史锚点（多数传 {@code anchor.below() 或节点出生点}），
+     * 本方法只把它当"出口大致方位"用——实际落点由 {@link #findWaterTopY} 在该列上
+     * 扫出水面高度后决定，因此锚点的 y 不再重要。</p>
      */
     public static BlockPos buildPortalStructure(ServerLevel level, BlockPos cornerPos,
                                                 UUID instanceId, String nodeId) {
@@ -352,7 +351,8 @@ public class PortalStructureHelper {
                     targets.isEmpty() ? null : targets.get(0));
         }
 
-        // 门沿 Z 轴横排，间距 14 格：4×5×4 门框 + 3×3 平台 + 前方通道不会互相压住。
+        // 门沿 Z 轴横排，间距 14 格：一片式门面只有 2 格宽，14 格保证门头标签互不重叠，
+        // 也不会让相邻两扇门的走进判定区（半径 2）重叠。
         int spacing = 14;
         int start = -((targets.size() - 1) * spacing) / 2;
         BlockPos first = null;
@@ -398,7 +398,7 @@ public class PortalStructureHelper {
 
     private static BlockPos buildOneExitSite(ServerLevel level, BlockPos cornerPos, UUID instanceId,
                                              String nodeId, String targetNodeId) {
-        // 遍历四个水平朝向，选第一个能完整放下的：门框 + 前方 3×3 平台 + 光柱。
+        // 一片式出口没有 4×5×4 的占地约束，四个朝向只用来挑一个"门面没插进地形"的落点。
         for (Direction facing : Direction.Plane.HORIZONTAL) {
             BlockPos center = tryBuildExitSite(level, cornerPos, facing, instanceId, nodeId, targetNodeId);
             if (center != null) {
@@ -409,177 +409,65 @@ public class PortalStructureHelper {
     }
 
     /**
-     * 在 {@code facing} 朝向下尝试布置整套出口：3×3 平台、光柱、门框、传送门实体。
-     * 返回开口中心坐标；放不下去则返回 null 且不残留半成品（门框预检沿用原逻辑，
-     * 平台与箱子位在覆盖前只做"可替换"判定）。</p>
+     * 在 {@code facing} 朝向下把一片式出口门面放到水面上。
+     *
+     * <p><b>为什么不再摆门框/平台/光柱：</b>《副本/26》2026-10-22 补充把出口改成一片漂在
+     * 水面上的门面——没有碰撞体积、没有门框、没有地基，玩家直接穿过去。方块门框
+     * {@code dungeon_portal} 只为兼容旧存档保留注册，出口路径不再摆放；世界野生废传送门
+     * 的 {@link #placeFrameGeometry} 不动。</p>
+     *
+     * <p>朝向仍然参与计算：多扇门沿 {@code facing} 的法线错开 2 格，门头标签不会互相叠；
+     * 门面正下方若埋进实心地形（不是水也不是空气），说明这个朝向选错了，返回 null 换下一个。</p>
+     *
+     * @return 门面脚下的坐标；放不下则返回 null
      */
     private static BlockPos tryBuildExitSite(ServerLevel level, BlockPos cornerPos,
                                              Direction facing, UUID instanceId, String nodeId,
                                              String targetNodeId) {
         Direction front = facing.getCounterClockWise();
-        // 开口在 lz==0（即沿 facing 的宽度轴），框架朝 +right 方向长 4 格，
-        // 所以真正的"门外"是 -right = facing.getCounterClockWise()，不是 facing。
-        // 平台中心放到门外第 2 格：3×3 覆盖 lz -3..-1，紧贴门框又不压住开口/框架；
-        // 平台方块与框架底边同层（y=cornerY），顶面 y+1 正好是开口最低一层的地面。
-        BlockPos platformCenter = cornerPos
-                .relative(facing, openingMinX() + PORTAL_WIDTH / 2)
-                .relative(front, 2);
+        BlockPos anchor = cornerPos.relative(facing, PORTAL_WIDTH / 2).relative(front, 2);
 
-        // 平台层允许已有地板（节点出生点铺了 5×5 橡木板）：只要求上方可站人，
-        // 否则以 spawn.below() 为锚点的门会因木板不可替换而整座放弃。
-        for (int dx = -1; dx <= 1; dx++) {
-            for (int dz = -1; dz <= 1; dz++) {
-                BlockPos p = platformCenter.offset(dx, 0, dz);
-                BlockPos above = p.above();
-                BlockState aboveState = level.getBlockState(above);
-                if (!aboveState.isAir() && !aboveState.canBeReplaced()) return null;
+        int waterTopY = findWaterTopY(level, anchor);
+        if (waterTopY < 0) {
+            // 这一列没有水（出生点的 5×5 橡木板平台、或岸上）：退回到海平面，
+            // 但要求落脚点不是实心方块，否则门会插进岸壁/山体，换下一个朝向。
+            BlockPos footing = new BlockPos(anchor.getX(),
+                    com.piranport.dungeon.DungeonConstants.SPAWN_Y - 1, anchor.getZ());
+            BlockState footingState = level.getBlockState(footing);
+            if (!footingState.isAir() && !footingState.canBeReplaced()) {
+                return null;
             }
+            waterTopY = com.piranport.dungeon.DungeonConstants.SPAWN_Y - 1;
         }
+        // 水面高度 = 最上面那格水块的顶面（水在 y=63 时就是 64.0）。
+        double surfaceY = waterTopY + 1.0;
 
-        BlockPos center = tryBuildPortalStructure(level, cornerPos, facing, instanceId, nodeId,
-                targetNodeId);
-        if (center == null) return null;
-
-        // 平台：石砖主体，四角黑曜石包边——沿用副本要塞平台（STONE_BRICKS）+ 祭坛（OBSIDIAN）的方块语汇。
-        for (int dx = -1; dx <= 1; dx++) {
-            for (int dz = -1; dz <= 1; dz++) {
-                BlockPos p = platformCenter.offset(dx, 0, dz);
-                BlockState existing = level.getBlockState(p);
-                // 已有地板（出生点木板/地形）保留原样，只补空位/水面。
-                if (!existing.isAir() && !existing.canBeReplaced()) continue;
-                boolean edge = Math.abs(dx) == 1 && Math.abs(dz) == 1;
-                level.setBlock(p, edge
-                        ? net.minecraft.world.level.block.Blocks.OBSIDIAN.defaultBlockState()
-                        : net.minecraft.world.level.block.Blocks.STONE_BRICKS.defaultBlockState(), 3);
-            }
-        }
-
-        // 光柱：平台中心向上一列海晶灯（10 格），让玩家在副本维度远处能看到出口方位。
-        // 奖励已改回 settleNode 直接进背包，这里不再放战利品箱。
-        for (int dy = 1; dy <= 10; dy++) {
-            BlockPos beam = platformCenter.above(dy);
-            BlockState existing = level.getBlockState(beam);
-            if (!existing.isAir() && !existing.canBeReplaced()) break;
-            level.setBlock(beam,
-                    net.minecraft.world.level.block.Blocks.SEA_LANTERN.defaultBlockState(), 3);
-        }
-
-        // 传送门实体是隐形触发体（方案 A：视觉只保留方块门框），放在开口 AABB 正中心。
-        // x/z 用 AABB 中心而不是 BlockPos+0.5，2 格宽开口才真正居中。
-        var opening = getOpeningAABB(cornerPos, facing);
-        var portalCenter = opening.getCenter();
+        BlockPos center = new BlockPos(anchor.getX(), Mth.floor(surfaceY), anchor.getZ());
+        // x/z 用方块中心，门面才真正居中；y 用水面高度（水柱顶面），下沿正好压在水上。
         var portal = com.piranport.dungeon.entity.DungeonPortalEntity.create(level, instanceId, nodeId,
-                targetNodeId, portalCenter.x, center.getY(), portalCenter.z);
-        if (portal != null) level.addFreshEntity(portal);
+                targetNodeId, center.getX() + 0.5, surfaceY, center.getZ() + 0.5);
+        if (portal == null) return null;
+        level.addFreshEntity(portal);
         return center;
     }
 
     /**
-     * Attempts to build a portal structure with a specific facing direction.
-     * Returns the center of the portal interior on success, null on failure.
+     * 找出 {@code anchor} 那一列最上面那格水块的 y；那一列没有水时返回 -1。
+     *
+     * <p>副本地形把水写在 {@link com.piranport.dungeon.DungeonConstants#SEA_LEVEL} 上下两层，
+     * 但节点出生点那一列可能压着 5×5 橡木板平台，那一列扫不到水。扫描范围放到
+     * SEA_LEVEL 上下各十几格，扫不到就返回 -1，由调用方回退到海平面。</p>
      */
-    private static BlockPos tryBuildPortalStructure(ServerLevel level, BlockPos cornerPos,
-                                                     Direction facing, UUID instanceId, String nodeId,
-                                                     String targetNodeId) {
-        if (level == null || cornerPos == null) {
-            return null;
-        }
-
-        // Check if we have enough space in all directions
-        Direction right = facing.getClockWise();
-        BlockPos maxPos = cornerPos.relative(facing, FRAME_WIDTH - 1)
-                .relative(Direction.UP, FRAME_HEIGHT - 1)
-                .relative(right, FRAME_DEPTH - 1);
-
-        // Check all positions are loadable
-        for (int x = 0; x < FRAME_WIDTH; x++) {
-            for (int y = 0; y < FRAME_HEIGHT; y++) {
-                for (int z = 0; z < FRAME_DEPTH; z++) {
-                    BlockPos checkPos = cornerPos.relative(facing, x)
-                            .relative(Direction.UP, y)
-                            .relative(right, z);
-
-                    // Skip interior for space check
-                    boolean isInOpening = isInOpening(x, y, z);
-
-                    if (!isInOpening && y > 0) {
-                        // 底边层（ly==0）是地基，允许压过出生点木板/地表；其余层必须可替换，
-                        // 避免把门硬塞进岩壁或建筑。历史实现要求全部门框格可替换，
-                        // 导致以 spawn.below() 为锚点的出口（含出生点 5×5 木板）永远放不下。
-                        BlockState existing = level.getBlockState(checkPos);
-                        if (!existing.isAir() && !existing.canBeReplaced()) {
-                            return null;
-                        }
-                    }
-                }
+    private static int findWaterTopY(ServerLevel level, BlockPos anchor) {
+        int top = com.piranport.dungeon.DungeonConstants.SEA_LEVEL + 12;
+        int bottom = com.piranport.dungeon.DungeonConstants.SEA_LEVEL - 16;
+        for (int y = top; y >= bottom; y--) {
+            BlockPos probe = new BlockPos(anchor.getX(), y, anchor.getZ());
+            if (level.getBlockState(probe).getFluidState().is(net.minecraft.tags.FluidTags.WATER)) {
+                return y;
             }
         }
-
-        // Place the frame blocks
-        for (int x = 0; x < FRAME_WIDTH; x++) {
-            for (int y = 0; y < FRAME_HEIGHT; y++) {
-                for (int z = 0; z < FRAME_DEPTH; z++) {
-                    boolean isInOpening = isInOpening(x, y, z);
-
-                    BlockPos placePos = cornerPos.relative(facing, x)
-                            .relative(Direction.UP, y)
-                            .relative(right, z);
-
-                    if (isInOpening) {
-                        // 开口：清成空气（甲——只有前景单层 2×3 是空洞）
-                        level.setBlock(placePos, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(), 3);
-                    } else {
-                        // Place dungeon portal block
-                        level.setBlock(placePos,
-                                com.piranport.registry.ModBlocks.DUNGEON_PORTAL.get().defaultBlockState(), 3);
-                    }
-                }
-            }
-        }
-
-        // 开口只有前景一层（lz==0），中心就在开口平面上，不能再沿 right 取深度中点。
-        int openingCenterX = (FRAME_WIDTH - PORTAL_WIDTH) / 2 + PORTAL_WIDTH / 2;
-        int openingCenterY = (FRAME_HEIGHT - PORTAL_HEIGHT) / 2 + PORTAL_HEIGHT / 2;
-
-        BlockPos centerPos = cornerPos.relative(facing, openingCenterX)
-                .relative(Direction.UP, openingCenterY);
-
-        // Find the nearest dungeon portal block BlockEntity and configure it
-        // The interior blocks don't have BlockEntities (they're air), so we need to
-        // configure one of the surrounding frame blocks.
-        // For simplicity, we'll configure the BlockEntity at the bottom-center of the frame.
-
-        BlockPos bePos = cornerPos.relative(facing, (FRAME_WIDTH - PORTAL_WIDTH) / 2)
-                .relative(right, (FRAME_DEPTH - 1) / 2);
-
-        if (level.getBlockEntity(bePos) instanceof DungeonPortalBlockEntity portalBE) {
-            portalBE.setDungeonData(instanceId, nodeId);
-            portalBE.checkStructure(); // Re-check to mark as complete
-            return centerPos;
-        }
-
-        // If the BE isn't at the expected position, search for it
-        for (int x = 0; x < FRAME_WIDTH; x++) {
-            for (int y = 0; y < FRAME_HEIGHT; y++) {
-                for (int z = 0; z < FRAME_DEPTH; z++) {
-                    boolean isInOpening = isInOpening(x, y, z);
-
-                    if (!isInOpening) {
-                        BlockPos checkPos = cornerPos.relative(facing, x)
-                                .relative(Direction.UP, y)
-                                .relative(right, z);
-
-                        if (level.getBlockEntity(checkPos) instanceof DungeonPortalBlockEntity portalBE) {
-                            portalBE.setDungeonData(instanceId, nodeId);
-                            portalBE.checkStructure();
-                            return centerPos;
-                        }
-                    }
-                }
-            }
-        }
-
-        PiranPort.LOGGER.warn("Failed to find DungeonPortalBlockEntity at portal structure {}", cornerPos);
-        return centerPos;
+        return -1;
     }
+
 }

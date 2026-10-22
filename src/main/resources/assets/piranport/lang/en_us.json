@@ -2264,5 +2264,7 @@
   "item.piranport.sy1_launcher_blueprint": "SY-1 Missile Launcher Blueprint",
   "item.piranport.depth_charge_launcher_advanced_blueprint": "Depth Charge Launcher Mk.III Blueprint",
   "item.piranport.improved_engine_blueprint": "Improved Engine Blueprint",
-  "item.piranport.advanced_engine_blueprint": "Advanced Engine Blueprint"
+  "item.piranport.advanced_engine_blueprint": "Advanced Engine Blueprint",
+  "dungeon.piranport.node_cleared.toast.title": "Node Cleared",
+  "dungeon.piranport.node_cleared.toast.first_clear": "First Clear"
 }

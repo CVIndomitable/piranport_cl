@@ -2322,5 +2322,7 @@
   "piranport.book.beginner.first_weapon.p5": "鱼雷打水下目标。发射器要先装满对应口径。见$(l:piranport:torpedoes/basics)鱼雷$(/l)。",
   "piranport.book.beginner.welcome.p3": "$(bold)按这个顺序$()$(br2)1. $(l:piranport:intro/getting_started)按阶段出海$(/l)$(br)2. $(l:piranport:intro/transformation)变身$(/l)$(br)3. $(l:piranport:cannons/basics)火炮$(/l)$(br)4. $(l:piranport:dungeon/basics)出击$(/l)",
   "piranport.book.zhr.overview.p1": "五类遗迹：书台遗迹、陆地废弃传送门、补给站、前哨站、深海基地。没有可收集的传送门框架。",
-  "piranport.book.zhr.overview.p2": "书台遗迹和陆地废弃传送门没有敌人。深海基地只在深海群系。主线钥匙不必靠遗迹，自己能合成。"
+  "piranport.book.zhr.overview.p2": "书台遗迹和陆地废弃传送门没有敌人。深海基地只在深海群系。主线钥匙不必靠遗迹，自己能合成。",
+  "dungeon.piranport.node_cleared.toast.title": "本节点已通关",
+  "dungeon.piranport.node_cleared.toast.first_clear": "首通"
 }

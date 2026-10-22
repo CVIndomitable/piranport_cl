@@ -168,6 +168,32 @@ public class ClientGameEvents {
     }
 
     /**
+     * 出口传送门的镜头扭曲：在玩家自身 tick <b>之后</b>把
+     * {@code LocalPlayer.spinningEffectIntensity} 抬上去。
+     *
+     * <p>WHY 用 Post：{@code LocalPlayer#handleConfusionTransitionEffect} 在玩家 tick 里
+     * 按 -0.05/tick 衰减这个字段；写在 Pre 的值当 tick 就会被扣掉，拿不到完整的上升曲线。</p>
+     */
+    @SubscribeEvent
+    public static void onClientTickPost(ClientTickEvent.Post event) {
+        com.piranport.dungeon.client.ClientPortalTransit.tick();
+    }
+
+    /**
+     * 出口传送门的紫色遮罩：自己画，不挂原版反胃效果。
+     *
+     * <p>WHY 挂在准星覆层的 Pre：原版把眩晕遮罩画在 {@code gui.render()} 之前，
+     * 准星是第一个 GUI 覆层，挂它的 Pre 能拿到最接近原版的层次（遮罩在 HUD 之下）；
+     * 同时 F1 隐藏 GUI 时准星不渲染，遮罩也自然不画。</p>
+     */
+    @SubscribeEvent
+    public static void onRenderGuiLayerPre(net.neoforged.neoforge.client.event.RenderGuiLayerEvent.Pre event) {
+        if (net.neoforged.neoforge.client.gui.VanillaGuiLayers.CROSSHAIR.equals(event.getName())) {
+            com.piranport.dungeon.client.ClientPortalTransit.renderOverlay(event.getGuiGraphics());
+        }
+    }
+
+    /**
      * 两个按键绑定是否会真的抢同一次按键（物理键码相同，且修饰键语义重叠）。
      *
      * <p>WHY: 光比对键码不够。NeoForge 允许给绑定挂 {@link KeyModifier}（Ctrl / Shift），
@@ -228,6 +254,7 @@ public class ClientGameEvents {
         com.piranport.client.ClientScopeHandler.clear();
         com.piranport.dungeon.client.DungeonHudLayer.clearDungeonState();
         com.piranport.dungeon.network.ClientDungeonData.clear();
+        com.piranport.dungeon.client.ClientPortalTransit.clear();
     }
 
     /**
@@ -245,5 +272,7 @@ public class ClientGameEvents {
         // 换维度/重生都可能复用客户端 HUD 静态状态；离开副本时不能把关卡和节点
         // 文案带到主世界。服务端仍会发送显式空状态，这里作为客户端换实体兜底。
         com.piranport.dungeon.client.DungeonHudLayer.clearDungeonState();
+        // 传送演出可能正卡在跨维度/重生瞬间，换实体后镜头不能再继续晃。
+        com.piranport.dungeon.client.ClientPortalTransit.clear();
     }
 }

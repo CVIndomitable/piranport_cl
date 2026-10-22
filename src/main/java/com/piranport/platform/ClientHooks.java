@@ -166,6 +166,16 @@ public final class ClientHooks {
         bridge.openDungeonResultScreen(stageName, timeMillis, isFirstClear, rewardNames, kills, ending);
     }
 
+    /** 出口传送门的"下界门式演出"开关（PortalTransitPayload）。 */
+    public static void setPortalTransit(boolean active) {
+        bridge.setPortalTransit(active);
+    }
+
+    /** 节点通关右上角进度式横幅（NodeClearedToastPayload）。 */
+    public static void showNodeClearedToast(String stageName, String nodeName, boolean firstClear) {
+        bridge.showNodeClearedToast(stageName, nodeName, firstClear);
+    }
+
     public static void updateDungeonNode(String nodeId) {
         bridge.updateDungeonNode(nodeId);
     }

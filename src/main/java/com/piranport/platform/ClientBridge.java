@@ -86,6 +86,12 @@ public interface ClientBridge {
     void openDungeonResultScreen(String stageName, long timeMillis, boolean isFirstClear,
                                  List<String> rewardNames, int kills, String ending);
 
+    /** 出口传送门的"下界门式演出"开关；时长与传送时机都由服务端决定，客户端只做表现。 */
+    void setPortalTransit(boolean active);
+
+    /** 节点通关：右上角滑下进度式横幅（《副本/19》2026-10-22 补充，取代结算页弹窗）。 */
+    void showNodeClearedToast(String stageName, String nodeName, boolean firstClear);
+
 
     void updateDungeonNode(String nodeId);
 

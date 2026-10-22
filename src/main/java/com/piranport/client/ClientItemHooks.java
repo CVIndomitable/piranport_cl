@@ -6,9 +6,11 @@ import com.piranport.component.LoadedAmmo;
 import com.piranport.component.SlotCooldowns;
 import com.piranport.client.input.ClientInputCoordinator;
 import com.piranport.client.input.DebugInputHandler;
+import com.piranport.dungeon.client.ClientPortalTransit;
 import com.piranport.dungeon.client.DungeonContinueScreen;
 import com.piranport.dungeon.client.DungeonHudLayer;
 import com.piranport.dungeon.client.DungeonResultScreen;
+import com.piranport.dungeon.client.NodeClearedToast;
 import com.piranport.dungeon.network.ClientDungeonData;
 import com.piranport.dungeon.client.TownScrollScreen;
 import com.piranport.entity.AircraftEntity;
@@ -237,6 +239,23 @@ public final class ClientItemHooks implements com.piranport.platform.ClientBridg
                 .orElse("战区肃清，航路恢复，舰队返回港口。");
         Minecraft.getInstance().setScreen(new DungeonResultScreen(
                 stageName, timeMillis, isFirstClear, rewardNames, kills, ending));
+    }
+
+    @Override
+    public void setPortalTransit(boolean active) {
+        if (active) {
+            ClientPortalTransit.start();
+        } else {
+            ClientPortalTransit.stop();
+        }
+    }
+
+    @Override
+    public void showNodeClearedToast(String stageName, String nodeName, boolean firstClear) {
+        // 原版进度横幅的停留时长与进出场动画都由 ToastComponent 统一管理，
+        // 这里只负责把"这一条"塞进右上角队列。
+        Minecraft.getInstance().getToasts().addToast(
+                new NodeClearedToast(stageName, nodeName, firstClear));
     }
 
     @Override

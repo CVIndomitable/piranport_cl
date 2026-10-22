@@ -116,6 +116,12 @@ class NoopClientBridge implements ClientBridge {
                                         List<String> rewardNames, int kills, String ending) {  }
 
     @Override
+    public void setPortalTransit(boolean active) {  }
+
+    @Override
+    public void showNodeClearedToast(String stageName, String nodeName, boolean firstClear) {  }
+
+    @Override
     public void updateDungeonNode(String nodeId) {  }
 
     @Override

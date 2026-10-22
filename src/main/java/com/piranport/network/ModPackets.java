@@ -244,6 +244,18 @@ public class ModPackets {
                 com.piranport.dungeon.network.DungeonResultPayload.STREAM_CODEC,
                 com.piranport.dungeon.network.DungeonResultPayload::handle
         );
+        // 《副本/19》2026-10-22：节点通关右上角进度式横幅（取代结算页弹窗）
+        registrar.playToClient(
+                com.piranport.dungeon.network.NodeClearedToastPayload.TYPE,
+                com.piranport.dungeon.network.NodeClearedToastPayload.STREAM_CODEC,
+                com.piranport.dungeon.network.NodeClearedToastPayload::handle
+        );
+        // 《副本/26》2026-10-22：出口一片式门面的"先演出、后传送"开关
+        registrar.playToClient(
+                com.piranport.dungeon.network.PortalTransitPayload.TYPE,
+                com.piranport.dungeon.network.PortalTransitPayload.STREAM_CODEC,
+                com.piranport.dungeon.network.PortalTransitPayload::handle
+        );
         registrar.playToClient(
                 com.piranport.dungeon.network.DungeonBossOverlayPayload.TYPE,
                 com.piranport.dungeon.network.DungeonBossOverlayPayload.STREAM_CODEC,

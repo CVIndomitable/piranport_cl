@@ -51,8 +51,10 @@ public class DungeonPortalRenderer extends EntityRenderer<DungeonPortalEntity> {
     private static final int LINE_PIXELS = 10;
     /** 门面半宽（格）：整片 2 格宽，与水上方的一格门面比例一致。 */
     private static final float SHEET_HALF_WIDTH = 1.0F;
-    /** 门面高度（格）：3 格，下沿贴着水面（实体原点就在水面高度）。 */
+    /** 门面高度（格）：3 格。 */
     private static final float SHEET_HEIGHT = 3.0F;
+    /** 门面下沿：略微沉进水里 0.25 格，看着才是"漂在水面上"而不是悬在水面上方。 */
+    private static final float SHEET_BOTTOM = -0.25F;
 
     public DungeonPortalRenderer(EntityRendererProvider.Context context) {
         super(context);
@@ -82,8 +84,8 @@ public class DungeonPortalRenderer extends EntityRenderer<DungeonPortalEntity> {
         poseStack.mulPose(Axis.YP.rotationDegrees(180.0F - yaw));
         VertexConsumer consumer = buffer.getBuffer(RenderType.endPortal());
         Matrix4f pose = poseStack.last().pose();
-        consumer.addVertex(pose, -SHEET_HALF_WIDTH, 0.0F, 0.0F);
-        consumer.addVertex(pose, SHEET_HALF_WIDTH, 0.0F, 0.0F);
+        consumer.addVertex(pose, -SHEET_HALF_WIDTH, SHEET_BOTTOM, 0.0F);
+        consumer.addVertex(pose, SHEET_HALF_WIDTH, SHEET_BOTTOM, 0.0F);
         consumer.addVertex(pose, SHEET_HALF_WIDTH, SHEET_HEIGHT, 0.0F);
         consumer.addVertex(pose, -SHEET_HALF_WIDTH, SHEET_HEIGHT, 0.0F);
         poseStack.popPose();

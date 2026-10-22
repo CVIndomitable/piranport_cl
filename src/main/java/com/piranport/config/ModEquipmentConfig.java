@@ -969,4 +969,24 @@ public final class ModEquipmentConfig {
      */
     public static final TerminalConfigValue<Integer> TERRAIN_BLOCKS_PER_TICK =
             TerminalConfigValue.integer("dungeon", "terrain", "blocks_per_tick", 8_192, 1, 1_048_576);
+
+    // ---- 相机震动（target=camera_shake）----
+    /**
+     * 相机震动强度倍率，1.0 = 原始设计值，0 = 完全关闭。
+     *
+     * <p>WHY 进终端：命中/近失弹的镜头晃动是纯手感参数，需要策划按实测调；
+     * 配置检查器也从这里读，不再写死"1.0x"。</p>
+     */
+    public static final TerminalConfigValue<Double> CAMERA_SHAKE_SCALE =
+            TerminalConfigValue.number("equipment", "camera_shake", "intensity_scale", 1.0, 0.0, 4.0);
+
+    // ---- 火控目标面板位置（target=fire_control_visual）----
+    /**
+     * 火控目标面板停靠的角落：0=自动避让 1=左上 2=右上 3=左下 4=右下。
+     *
+     * <p>WHY 进终端：面板会和其他 HUD 抢角落，固定位置交给玩家自己选；
+     * 序号与 {@link HudPosition} 的声明顺序一一对应。</p>
+     */
+    public static final TerminalConfigValue<Integer> FIRE_CONTROL_HUD_CORNER =
+            TerminalConfigValue.integer("equipment", "fire_control_visual", "hud_corner", 0, 0, 4);
 }

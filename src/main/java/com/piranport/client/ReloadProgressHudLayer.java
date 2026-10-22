@@ -18,7 +18,6 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RenderGuiLayerEvent;
-import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 
 /**
  * HUD 层：显示武器装填进度条。
@@ -28,6 +27,12 @@ import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
  */
 @EventBusSubscriber(modid = PiranPort.MOD_ID, value = Dist.CLIENT)
 public class ReloadProgressHudLayer {
+
+    /**
+     * 装填进度条挂靠的原版 GUI 层：经验条（hotbar）层，所以宽度也照抄经验条的 182。
+     * 配置检查器直接读这个字符串，改层就等于改样式。
+     */
+    public static final String STYLE = "HOTBAR";
 
     private static final int BAR_WIDTH = 182;  // 与原版经验条同宽
     private static final int BAR_HEIGHT = 5;
@@ -41,7 +46,7 @@ public class ReloadProgressHudLayer {
     
     @SubscribeEvent
     public static void onRenderGuiLayer(RenderGuiLayerEvent.Post event) {
-        if (!event.getName().equals(VanillaGuiLayers.HOTBAR)) return;
+        if (!event.getName().getPath().equalsIgnoreCase(STYLE)) return;
 
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || mc.level == null) return;

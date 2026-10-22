@@ -55,7 +55,9 @@ public class ClientGameEvents {
     @SubscribeEvent
     public static void onComputeCameraAngles(net.neoforged.neoforge.client.event.ViewportEvent.ComputeCameraAngles event) {
         if (CameraShakeHandler.isShaking()) {
-            float intensity = CameraShakeHandler.getShakeIntensity();
+            // 倍率走调试终端 global.camera_shake.intensity_scale，0 即完全关闭震动。
+            float intensity = CameraShakeHandler.getShakeIntensity()
+                    * com.piranport.config.ModEquipmentConfig.CAMERA_SHAKE_SCALE.get().floatValue();
             if (intensity > 0) {
                 event.setYaw(event.getYaw() + (SHAKE_RANDOM.nextFloat() - 0.5f) * intensity * 2);
                 event.setPitch(event.getPitch() + (SHAKE_RANDOM.nextFloat() - 0.5f) * intensity * 2);

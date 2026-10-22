@@ -27,6 +27,15 @@ import static com.piranport.combat.cannon.CannonStats.getGunCooldown;
  * 火炮固定使用手动装填：只能由 R 键启动读条，读条到期后扣弹并写入 LOADED_AMMO。
  */
 public final class CannonReloading {
+    /**
+     * 火炮是否允许"自动启动"装填。固定 false。
+     *
+     * <p>《武器/09》只保留 R 键启动读条；读条到期由 {@link #tickCannonAutoReload} 结算
+     * （自动*启动*关闭，自动*结算*不能删）。配置检查器直接读这个常量，
+     * 不再写死一句"关闭"。</p>
+     */
+    public static final boolean AUTO_RELOAD_ENABLED = false;
+
     private CannonReloading() {}
 
     /**

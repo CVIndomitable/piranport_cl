@@ -96,7 +96,9 @@ public class FireControlHudLayer {
         int panelHeight = rows * LINE_HEIGHT + 4;
 
         PanelPosition pos = FireControlLayoutCalculator.calculatePosition(
-                sw, sh, PANEL_WIDTH, panelHeight, HudPosition.AUTO, 0, 0
+                sw, sh, PANEL_WIDTH, panelHeight,
+                HudPosition.byIndex(com.piranport.config.ModEquipmentConfig.FIRE_CONTROL_HUD_CORNER.get()),
+                0, 0
         );
 
         int panelX = pos.x();

@@ -1,5 +1,8 @@
 package com.piranport.item;
 
+import com.piranport.client.ReloadProgressHudLayer;
+import com.piranport.combat.TransformationManager;
+import com.piranport.combat.cannon.CannonReloading;
 import com.piranport.config.*;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -38,18 +41,16 @@ public class ConfigInspectorItem extends Item {
     }
 
     /**
-     * 添加Tooltip摘要（显示关键配置）
+     * 添加 Tooltip 摘要。
+     *
+     * <p>只列真正可调的项：友军伤害固定开启、战斗机弹药固定无限是既定设计，不是配置，
+     * 这两行和聊天栏报告完全重复，留着只会多一处会和代码脱节的文案。</p>
      */
     private void addSummaryTooltip(List<Component> tooltip) {
         tooltip.add(Component.literal("━━━━━━━━━━━━━━━━").withStyle(ChatFormatting.DARK_GRAY));
 
-        // 核心开关
         tooltip.add(Component.literal("[核心开关]").withStyle(ChatFormatting.GOLD));
-        tooltip.add(Component.literal("  友军伤害: 开启")
-                .withStyle(ChatFormatting.GRAY));
         tooltip.add(Component.literal("  爆炸破坏: " + formatBoolean(ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get()))
-                .withStyle(ChatFormatting.GRAY));
-        tooltip.add(Component.literal("  自动装填: 关闭")
                 .withStyle(ChatFormatting.GRAY));
 
         tooltip.add(Component.literal("")); // 空行
@@ -66,13 +67,21 @@ public class ConfigInspectorItem extends Item {
                 .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
 
         // 1. 游戏模式与核心开关
+        // 这里的原则：能读到出处的就真读，读不到的要么是既定设计（标明"固定"），
+        // 要么补进调试终端（见 ModEquipmentConfig）。不再写死一句会和代码脱节的文案。
         addSection(player, "游戏模式与核心开关");
         addConfigLine(player, "首次赠书", formatBoolean(ModCommonConfig.GIVE_GUIDEBOOK_ON_FIRST_JOIN.get()));
-        addConfigLine(player, "舰装槽位", "offhand");
-        addConfigLine(player, "友军伤害", "开启");
+        addConfigLine(player, "舰装槽位",
+                TransformationManager.CORE_HAND == net.minecraft.world.InteractionHand.OFF_HAND
+                        ? "offhand" : "mainhand");
+        // 友军伤害固定开启：没有配置项，也不会开放（多人同舰队是核心玩法）。
+        addConfigLine(player, "友军伤害", "开启（固定）");
         addConfigLine(player, "爆炸破坏", formatBoolean(ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get()));
-        addConfigLine(player, "自动装填", "关闭");
-        addConfigLine(player, "战斗机弹药", "无限");
+        // 自动装填固定关闭"自动启动"，读条到期仍会自动结算。
+        addConfigLine(player, "自动装填",
+                CannonReloading.AUTO_RELOAD_ENABLED ? "开启" : "关闭（固定）");
+        // 战斗机弹药固定无限：弹药只由舰载机数据定义，没有补给消耗。
+        addConfigLine(player, "战斗机弹药", "无限（固定）");
 
         // 2. 舰装属性
         addSection(player, "舰装属性");
@@ -107,9 +116,11 @@ public class ConfigInspectorItem extends Item {
 
         // 6. 客户端显示
         addSection(player, "客户端显示");
-        addConfigLine(player, "装填HUD样式", "HOTBAR");
-        addConfigLine(player, "火控位置", "AUTO");
-        addConfigLine(player, "屏幕震动", "1.0x");
+        addConfigLine(player, "装填HUD样式", ReloadProgressHudLayer.STYLE);
+        addConfigLine(player, "火控位置",
+                HudPosition.byIndex(ModEquipmentConfig.FIRE_CONTROL_HUD_CORNER.get()).name());
+        addConfigLine(player, "屏幕震动",
+                String.format("%.2fx", ModEquipmentConfig.CAMERA_SHAKE_SCALE.get()));
 
         // 结束分隔线
         player.sendSystemMessage(Component.literal("━━━━━━━━━━━━━━━━━━━━")

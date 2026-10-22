@@ -73,13 +73,24 @@ public class TransformationManager {
     }
 
     /**
-     * 根据配置获取舰装核心所在槽位的物品。
+     * 舰装核心固定的装备槽。
+     *
+     * <p>WHY 不做成配置项：副手同时是武器槽——{@code CannonInventory} 把 40 号槽（副手）
+     * 当成武器槽位、{@code AmmoInventory} 也按副手扫弹药，把核心挪到主手要连带改整套槽位
+     * 映射，属于设计变更而不是手感参数。这里只是给配置检查器一个可以真读的出处，
+     * 避免界面文案和代码各说各的。</p>
+     */
+    public static final net.minecraft.world.InteractionHand CORE_HAND =
+            net.minecraft.world.InteractionHand.OFF_HAND;
+
+    /**
+     * 读取舰装核心所在槽位的物品。
      *
      * @param player 玩家
      * @return 核心物品栈，如果未装备则返回 ItemStack.EMPTY
      */
     public static ItemStack getCoreFromConfiguredSlot(Player player) {
-        return player.getOffhandItem();
+        return player.getItemInHand(CORE_HAND);
     }
 
     /** 查找当前激活的变身核心。根据配置检测副手或胸甲槽位。 */
@@ -107,7 +118,7 @@ public class TransformationManager {
      * @param coreStack 核心物品栈
      */
     public static void writeCoreToConfiguredSlot(Player player, ItemStack coreStack) {
-        player.getInventory().offhand.set(0, coreStack);
+        player.setItemInHand(CORE_HAND, coreStack);
     }
 
     /**

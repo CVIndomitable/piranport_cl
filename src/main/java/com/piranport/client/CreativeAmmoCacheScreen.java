@@ -142,9 +142,14 @@ public class CreativeAmmoCacheScreen extends Screen {
 
     @Override
     public void render(GuiGraphics gfx, int mouseX, int mouseY, float partialTick) {
+        // 背景只画一次。Screen#render 内部还会再调一次 renderBackground，
+        // 而那一遍的菜单模糊后处理（renderBlurredBackground）会作用在当时已经画好的
+        // 主渲染目标上——也就是我们刚画完的面板、标题、分组名和图标，界面会整片发虚。
+        // 所以下面不再调 super.render，改用等价的控件循环。
         renderBackground(gfx, mouseX, mouseY, partialTick);
 
-        gfx.fill(panelX, panelY, panelX + PANEL_W, panelY + panelH, 0xF0101418);
+        // 完全不透明：模糊后的明亮世界不该透过面板，小图标和 9 号字才看得清。
+        gfx.fill(panelX, panelY, panelX + PANEL_W, panelY + panelH, 0xFF101418);
         gfx.renderOutline(panelX, panelY, PANEL_W, panelH, 0xFFFFD700);
         gfx.drawCenteredString(font, title, panelX + PANEL_W / 2, panelY + 7, 0xFFFFD700);
 
@@ -193,7 +198,10 @@ public class CreativeAmmoCacheScreen extends Screen {
             gfx.fill(trackX, thumbY, trackX + 3, thumbY + thumbH, 0xFF888888);
         }
 
-        super.render(gfx, mouseX, mouseY, partialTick);
+        // 等价于 Screen#render 的控件遍历，但不再重复画背景（见方法开头的说明）。
+        for (var renderable : this.renderables) {
+            renderable.render(gfx, mouseX, mouseY, partialTick);
+        }
 
         if (hovered != null) {
             gfx.renderTooltip(font, new ItemStack(hovered), mouseX, mouseY);

@@ -6,7 +6,7 @@
   "pages": [
     {
       "type": "patchouli:text",
-      "text": "$(bold)Placeable Food$()$(br2)Some dishes can be placed in the world as decorations or for sharing.$(br2)$(bold)Types:$()$(br)• $(item)Plated Dishes$(): Place on blocks$(br)• $(item)Bowled Soups$(): Placeable soup containers$(br)• $(item)Cakes$(): Multi-layer edible cakes$(br2)Right-click to place, right-click again to eat."
+      "text": "$(bold)Placeable Food$()$(br2)Some dishes can be placed in the world as decorations or for sharing.$(br2)$(bold)Types:$()$(br)• $(item)Plated Dishes$(): Place on blocks$(br)• $(item)Bowled Soups$(): Placeable soup containers$(br)• $(item)Cakes$(): Multi-layer edible cakes$(br2)Sneak-right-click to place, right-click to eat."
     },
     {
       "type": "patchouli:text",

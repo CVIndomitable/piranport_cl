@@ -18,6 +18,7 @@ import com.piranport.config.ModArtilleryConfig;
 import com.piranport.config.ModEquipmentConfig;
 import com.piranport.item.TorpedoItem;
 import com.piranport.item.TorpedoLauncherItem;
+import com.piranport.item.MissileLauncherItem;
 import com.piranport.registry.ModDataComponents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -184,6 +185,10 @@ public final class FireControlVisualRenderer {
             updateCannon(mc, artillery, target, targetVelocity);
         } else if (held.getItem() instanceof TorpedoLauncherItem launcher && (transformed || creative)) {
             updateTorpedo(mc, held, launcher, target, targetVelocity);
+        } else if (held.getItem() instanceof MissileLauncherItem launcher
+                && launcher.getMissileType() == com.piranport.entity.MissileEntity.MissileType.ROCKET
+                && (transformed || creative)) {
+            updateTorpedo(mc, held, launcher, target, targetVelocity);
         }
     }
 
@@ -243,6 +248,27 @@ public final class FireControlVisualRenderer {
         double hitYaw = Math.atan2(toHit.z, toHit.x);
         double diff = Math.toDegrees(Math.abs(Math.atan2(Math.sin(lookYaw - hitYaw), Math.cos(lookYaw - hitYaw))));
         active = diff <= Math.max(SINGLE_TUBE_ACTIVE_DEG, fanHalfDeg);
+    }
+
+    /** 火箭弹沿用鱼雷的水平拦截点和贴水线；弹速由导弹类型定义提供。 */
+    private static void updateTorpedo(Minecraft mc, ItemStack held, MissileLauncherItem launcher,
+                                      Entity target, Vec3 targetVelocity) {
+        double speed = com.piranport.entity.MissileEntity.MissileType.ROCKET.initialSpeed();
+        Vec3 start = new Vec3(mc.player.getX(), mc.player.getEyeY() - 0.3, mc.player.getZ());
+        Vec3 hit = FireControlPrediction.torpedoIntercept(start, target.position(), targetVelocity, speed);
+        if (hit == null) return;
+        hit = new Vec3(hit.x, start.y, hit.z);
+        if (hit.distanceToSqr(start) > MAX_RENDER_DISTANCE * MAX_RENDER_DISTANCE) return;
+        mode = Mode.TORPEDO;
+        origin = start;
+        point = hit;
+        fanHalfDeg = 0.0;
+        Vec3 look = mc.player.getLookAngle();
+        Vec3 toHit = hit.subtract(start);
+        double lookYaw = Math.atan2(look.z, look.x);
+        double hitYaw = Math.atan2(toHit.z, toHit.x);
+        double diff = Math.toDegrees(Math.abs(Math.atan2(Math.sin(lookYaw - hitYaw), Math.cos(lookYaw - hitYaw))));
+        active = diff <= SINGLE_TUBE_ACTIVE_DEG;
     }
 
     /** 与 TorpedoFireStrategy 一致：装填弹种读 TorpedoItem.getSpeed()，否则 0.3。 */

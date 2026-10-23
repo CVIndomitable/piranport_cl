@@ -17,7 +17,7 @@ public final class ModEquipmentConfig {
 
 
     public static final TerminalConfigValue<Double> FIRE_CONTROL_RANGE =
-            TerminalConfigValue.number("equipment", "equipment", "fire_control_range", 96.0, 1.0, 256.0);
+            TerminalConfigValue.number("equipment", "equipment", "fire_control_range", 1024.0, 1.0, 4096.0);
 
 
 
@@ -262,9 +262,9 @@ public final class ModEquipmentConfig {
     // 两者都要可调，但不是同一种东西，不能合成一个参数。
 
     // ---- 战斗机（tickFighterAttack）----
-    /** 追击/退避的距离基准（格，目标眼位到飞机的距离）。默认 11.0。 */
+    /** 追击/退避的距离基准（格，目标眼位到飞机的距离）；同时作为机枪开火距离。默认 3.0。 */
     public static final TerminalConfigValue<Double> FIGHTER_HOVER_DISTANCE =
-            TerminalConfigValue.number("aircraft", "fighter_combat", "hover_distance", 11.0, 0.0, 256.0);
+            TerminalConfigValue.number("aircraft", "fighter_combat", "hover_distance", 3.0, 0.0, 256.0);
     /** 悬停死区半宽（格）：距离在基准 ±该值内则减速悬停。默认 3.0。 */
     public static final TerminalConfigValue<Double> FIGHTER_HOVER_BAND =
             TerminalConfigValue.number("aircraft", "fighter_combat", "hover_band", 3.0, 0.0, 128.0);
@@ -283,7 +283,7 @@ public final class ModEquipmentConfig {
     /** 机枪弹速（格/tick）。默认 2.5。 */
     public static final TerminalConfigValue<Double> FIGHTER_BULLET_SPEED =
             TerminalConfigValue.number("aircraft", "fighter_combat", "bullet_speed", 2.5, 0.0, 100.0);
-    /** 机枪开火距离（格）。默认 24.0。 */
+    /** 机枪最大开火距离（格）；实际攻击保持在 hover_distance 附近。默认 24.0。 */
     public static final TerminalConfigValue<Double> FIGHTER_BULLET_RANGE =
             TerminalConfigValue.number("aircraft", "fighter_combat", "bullet_range", 24.0, 0.0, 512.0);
 

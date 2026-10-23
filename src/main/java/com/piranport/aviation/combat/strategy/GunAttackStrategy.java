@@ -64,7 +64,11 @@ public final class GunAttackStrategy implements AttackStrategy {
                     .scale(ModEquipmentConfig.FIGHTER_HOVER_DAMPING.get()));
         }
 
-        if (context.attackCooldown() <= 0 && distance < ModEquipmentConfig.FIGHTER_BULLET_RANGE.get()) {
+        double fireDistance = ModEquipmentConfig.FIGHTER_HOVER_DISTANCE.get();
+        double fireBand = Math.max(0.25, ModEquipmentConfig.FIGHTER_HOVER_BAND.get() * 0.25);
+        if (context.attackCooldown() <= 0
+                && distance <= ModEquipmentConfig.FIGHTER_BULLET_RANGE.get()
+                && Math.abs(distance - fireDistance) <= fireBand) {
             // 保留 float 除法（.floatValue()），保证默认 8.0 时与下沉前 8f 逐字节一致。
             BulletEntity bullet = new BulletEntity(context.level(),
                     context.panelDamage()

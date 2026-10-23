@@ -74,11 +74,9 @@ public record FireControlPayload(FireAction action, UUID targetUUID) implements 
                 Entity entity = player.serverLevel().getEntity(payload.targetUUID());
                 // Cross-dimension protection
                 if (entity != null && entity.level() != player.level()) return;
-                // 锁定距离上限：与客户端共用同一调试终端参数（equipment.fire_control_range），
-                // 保证两侧口径一致；再叠加模拟距离硬上限（防 DoS，模拟距离下限 10 区块 = 160 格，
-                // 因此默认 96 格参数即为实际生效上限）。
-                double lockRange = Math.min(ModEquipmentConfig.FIRE_CONTROL_RANGE.get(),
-                        Math.max(10, player.serverLevel().getServer().getPlayerList().getSimulationDistance()) * 16.0);
+                // 客户端只能提交其射线实际命中的实体 UUID；服务端仍重新验证实体存在、维度、
+                // 配置距离和无遮挡视线，因此模拟距离不需要再作为第二道人为锁定上限。
+                double lockRange = ModEquipmentConfig.FIRE_CONTROL_RANGE.get();
                 // 允许锁 LivingEntity（怪/玩家/动物）和 AircraftEntity（敌方飞机）；
                 // AircraftEntity 不继承 LivingEntity，需单独放行，否则火控无法对空
                 boolean validTarget = entity != null && entity.isAlive() && entity != player

@@ -7,6 +7,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.FlyingMob;
 import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.AABB;
@@ -27,7 +28,9 @@ public final class TargetResolution {
     private TargetResolution() {}
 
     public static boolean isAirborneTarget(Entity entity) {
-        return entity instanceof com.piranport.entity.AircraftEntity;
+        // AircraftEntity 覆盖本模组飞机；FlyingMob 覆盖原版 Phantom/Vex 以及
+        // 其他模组实现 Minecraft 飞行生物接口的目标（例如女仆野生妖精）。
+        return entity instanceof com.piranport.entity.AircraftEntity || entity instanceof FlyingMob;
     }
 
     @Nullable
@@ -98,7 +101,7 @@ public final class TargetResolution {
                 Entity.class);
         if (locked != null) return locked;
         if (!FireControlManager.getTargets(owner.getUUID()).isEmpty()) return null;
-        return autoSeek(ctx, com.piranport.entity.AircraftEntity.class,
+        return autoSeek(ctx, Entity.class,
                 entity -> entity.isAlive() && entity != ctx.self()
                         && CombatTargeting.isHostileTarget(owner, entity),
                 ModEquipmentConfig.AIRCRAFT_AUTONOMOUS_SEEK_RANGE.get());

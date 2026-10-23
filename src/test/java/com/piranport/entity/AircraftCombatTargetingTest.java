@@ -127,8 +127,8 @@ class AircraftCombatTargetingTest {
     void torpedoBomberAimsAtWaterSurfaceAndNeverLaunchesBehind() throws Exception {
         String strategy = Files.readString(Path.of(
                 "src/main/java/com/piranport/aviation/combat/strategy/TorpedoAttackStrategy.java"));
-        assertTrue(strategy.contains("setTorpedoAimPoint(new Vec3(predicted.x, smoothedSurfaceY, predicted.z))"),
-                "鱼雷机预瞄点必须是预测撞击点的水面投影，而不是目标眼睛/几何中心");
+        assertTrue(strategy.contains("setTorpedoAimPoint(new Vec3(target.getX(), smoothedSurfaceY, target.getZ()))"),
+                "鱼雷机预瞄线必须从飞机投影点连到目标当前水面投影点，而不是目标眼睛/几何中心");
         assertTrue(strategy.contains("boolean predictedAhead = horizontalVelocity.lengthSqr()"),
                 "投雷前必须校验预测点在机头前方，避免目标被超车后鱼雷朝后发射");
         assertTrue(strategy.contains("abortTorpedoRun(state)"),

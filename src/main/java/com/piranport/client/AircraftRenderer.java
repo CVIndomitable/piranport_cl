@@ -5,10 +5,10 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 import com.piranport.client.model.B25Model;
 import com.piranport.client.model.F4FModel;
+import com.piranport.config.ModEquipmentConfig;
 import com.piranport.entity.AircraftEntity;
 import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.texture.OverlayTexture;
@@ -63,24 +63,27 @@ public class AircraftRenderer extends EntityRenderer<AircraftEntity> {
 
         poseStack.popPose();
 
-        // 鱼雷机平飞段：画一条贴在预测点世界表面高度的水平预瞄线，与玩家鱼雷发射器同口径。
-        // RenderType.lines() 的顶点在 entity 局部空间（原点在插值后的实体位置），
-        // 所以世界坐标要减去插值实体位置；颜色用半透明白，不遮视野。
+        // 鱼雷机平飞段：从「飞机水面投影点」连到「目标水面投影点」的水平预瞄线。
+        // 线型/颜色复用玩家鱼雷发射器那套（2px、无深度测试、半透明），不再用细白线。
+        // RenderType 的顶点在 entity 局部空间（原点在插值后的实体位置），
+        // 所以世界坐标要减去插值实体位置。
         Vec3 aim = entity.getTorpedoAimPoint();
         if (aim != null) {
             double ex = net.minecraft.util.Mth.lerp(partialTick, entity.xo, entity.getX());
             double ey = net.minecraft.util.Mth.lerp(partialTick, entity.yo, entity.getY());
             double ez = net.minecraft.util.Mth.lerp(partialTick, entity.zo, entity.getZ());
-            // The server synchronizes the predicted water projection as aim.y.
-            // Use that same value instead of a client-side heightmap lookup so the
-            // preview line and the actual 2D drop solution cannot disagree.
+            // 服务端同步的 aim.y 就是目标列的静止水面高度（0.875），
+            // 不再做客户端 heightmap 另算，保证预瞄线贴在同一水平面上。
             float lineY = (float) (aim.y - ey + 0.02);
+            int rgb = ModEquipmentConfig.PREDICTION_LINE_COLOR.get();
+            int r = (rgb >> 16) & 0xFF, g = (rgb >> 8) & 0xFF, b = rgb & 0xFF;
             poseStack.pushPose();
-            VertexConsumer line = bufferSource.getBuffer(RenderType.lines());
+            VertexConsumer line = bufferSource.getBuffer(
+                    FireControlVisualRenderer.torpedoAimLineType());
             PoseStack.Pose last = poseStack.last();
-            addLineVertex(line, last, 0.0f, lineY, 0.0f);
+            addLineVertex(line, last, 0.0f, lineY, 0.0f, r, g, b);
             addLineVertex(line, last,
-                    (float) (aim.x - ex), lineY, (float) (aim.z - ez));
+                    (float) (aim.x - ex), lineY, (float) (aim.z - ez), r, g, b);
             poseStack.popPose();
         }
 
@@ -88,11 +91,9 @@ public class AircraftRenderer extends EntityRenderer<AircraftEntity> {
     }
 
     private static void addLineVertex(VertexConsumer c, PoseStack.Pose pose,
-                                      float x, float y, float z) {
-        // lines() 需要 normal；方向随便给一个非零向量就行，线段渲染不用光照。
-        c.addVertex(pose.pose(), x, y, z)
-                .setColor(255, 255, 255, 160)
-                .setNormal(pose, 0.0f, 1.0f, 0.0f);
+                                      float x, float y, float z, int r, int g, int b) {
+        // torpedoAimLineType 使用 POSITION_COLOR 格式，不需要 normal；alpha 与玩家预瞄线一致。
+        c.addVertex(pose.pose(), x, y, z).setColor(r, g, b, 150);
     }
 
     @Override

@@ -90,6 +90,15 @@ public final class FireControlVisualRenderer {
                     .setLineState(new RenderStateShard.LineStateShard(OptionalDouble.of(2.0)))
                     .createCompositeState(false));
 
+    /**
+     * 鱼雷预瞄线的 RenderType（2px、无深度测试、半透明）。
+     * <p>鱼雷机的水面预瞄线复用同一线型，保证「从飞机投影点连到目标投影点」的观感
+     * 与玩家鱼雷发射器一致；不要另建一套细线。</p>
+     */
+    public static RenderType torpedoAimLineType() {
+        return LINES;
+    }
+
     private enum Mode { NONE, CANNON, TORPEDO, ROCKET }
 
     private static final EntityUuidCache ENTITY_CACHE = new EntityUuidCache();

@@ -212,8 +212,10 @@ public final class TorpedoAttackStrategy implements AttackStrategy {
             }
         }
 
-        // 阶段 2：低空贴水面平飞，朝预测撞击点直飞
-        context.setTorpedoAimPoint(new Vec3(predicted.x, smoothedSurfaceY, predicted.z));
+        // 阶段 2：低空贴水面平飞，朝预测撞击点直飞。
+        // 预瞄线只同步「目标当前水面投影」：客户端从飞机投影点连到目标投影点，
+        // 和玩家鱼雷发射器的水面线同观感；实际投雷仍用本地含提前量的 predicted。
+        context.setTorpedoAimPoint(new Vec3(target.getX(), smoothedSurfaceY, target.getZ()));
         state.runTicks++;
         double runAltitude = ModEquipmentConfig.TORPEDO_BOMBER_RUN_ALTITUDE.get();
         double desiredY = smoothedSurfaceY + runAltitude;

@@ -448,12 +448,13 @@ public final class ClientItemHooks implements com.piranport.platform.ClientBridg
                 appendTorpedoStatus(mc.player, coreStack, tl, loaded, inv, tooltip);
                 return;
             }
-            boolean hasAmmo;
-            if (stack.getItem() instanceof com.piranport.artillery.ArtilleryItem ai) {
-                hasAmmo = loaded.count() >= ai.getEffectiveData(mc.level).barrels();
-            } else {
-                hasAmmo = loaded.hasAmmo();
+            if (stack.getItem() instanceof com.piranport.artillery.ArtilleryItem) {
+                // 主炮的膛内状态由 ArtilleryItem#appendHoverText 自己显示：
+                // “已装填: N × 弹种”或“未装填”。这里再追加一行通用的“已装填/未装填”
+                // 会重复成两行，所以只保留带弹种和管数的那一条。
+                return;
             }
+            boolean hasAmmo = loaded.hasAmmo();
             tooltip.add(Component.translatable(hasAmmo
                             ? "tooltip.piranport.weapon_ready"
                             : "tooltip.piranport.weapon_not_loaded")

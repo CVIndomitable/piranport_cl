@@ -45,7 +45,8 @@ public class ReloadFacilityMenu extends AbstractContainerMenu {
         @Override
         public boolean mayPlace(ItemStack stack) {
             return stack.getItem() instanceof TorpedoItem
-                    || stack.getItem() instanceof MissileItem;
+                    || stack.getItem() instanceof MissileItem
+                    || com.piranport.ammo.CreativeAmmoCache.isCacheStack(stack);
         }
     }
 
@@ -115,7 +116,8 @@ public class ReloadFacilityMenu extends AbstractContainerMenu {
                         || (stack.getItem() instanceof MissileLauncherItem ml && ml.canReloadInFacility())) {
                     if (!moveItemStackTo(stack, 0, 1, false)) return ItemStack.EMPTY;
                 } else if (stack.getItem() instanceof TorpedoItem
-                        || stack.getItem() instanceof MissileItem) {
+                        || stack.getItem() instanceof MissileItem
+                        || com.piranport.ammo.CreativeAmmoCache.isCacheStack(stack)) {
                     if (!moveItemStackTo(stack, 1, 3, false)) return ItemStack.EMPTY;
                 } else {
                     return ItemStack.EMPTY;

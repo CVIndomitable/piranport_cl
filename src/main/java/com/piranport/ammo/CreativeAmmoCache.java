@@ -100,6 +100,35 @@ public final class CreativeAmmoCache {
         return findInfiniteTorpedo(player, caliber) != null;
     }
 
+    /**
+     * 从「放在方块槽位里的弹药库物品」读取勾选项，不依赖玩家背包。
+     * <p>WHY 需要这个入口：装填设施是方块实体，看不到玩家背包；把弹药库放进弹药槽后，
+     * 设施应直接把它当作勾选弹种的无消耗来源。</p>
+     *
+     * @return 第一个已勾选且满足条件的弹药物品；没有勾选项/类型不匹配时返回 null
+     */
+    @Nullable
+    public static Item findSelected(ItemStack cacheStack, Predicate<Item> predicate) {
+        if (!isCacheStack(cacheStack)) return null;
+        CreativeAmmoSelection selection = selection(cacheStack);
+        if (selection.itemIds().isEmpty()) return null;
+        for (Item item : CreativeAmmoCatalog.allItems()) {
+            if (selection.contains(CreativeAmmoCatalog.idOf(item)) && predicate.test(item)) {
+                return item;
+            }
+        }
+        return null;
+    }
+
+    /** 槽位里的弹药库勾选了同口径鱼雷时返回该鱼雷；否则 null。 */
+    @Nullable
+    public static TorpedoItem findSelectedTorpedo(ItemStack cacheStack, int caliber) {
+        Item item = findSelected(cacheStack,
+                candidate -> candidate instanceof TorpedoItem torpedo
+                        && torpedo.getCaliber() == caliber);
+        return item instanceof TorpedoItem torpedo ? torpedo : null;
+    }
+
     /** 某具体物品是否在弹药库中被勾选；{@code null} 玩家/物品一律 false。 */
     public static boolean isSelected(@Nullable Player player, @Nullable Item item) {
         if (player == null || item == null) return false;

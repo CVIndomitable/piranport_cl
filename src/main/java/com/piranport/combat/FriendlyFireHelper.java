@@ -16,6 +16,7 @@ import java.lang.invoke.MethodType;
  * 返回 true 表示该弹药应跳过对此目标的命中。
  *
  * 决策树（首次匹配即返回）：
+ *   0. 玩家手动火控锁定的目标 → 放行（手动锁定优先级最高，可覆盖下列内部防呆）
  *   1. 深海实体 → 深海实体    → 拦截（禁止自相残杀）
  *   2. 女仆 → 自身             → 拦截（禁止自伤）
  *   3. 女仆 → 同主人女仆        → 拦截（禁止友伤）
@@ -27,6 +28,7 @@ import java.lang.invoke.MethodType;
  * 策划口径（战斗/07，2026-10-14 修订）：玩家对玩家、玩家对同队玩家召唤物
  * 一律**不拦截**，友伤防护交由 FTB Teams 等外部组队模组负责。本类只保留
  * 与「队伍」无关的内部防呆：深海间互伤、女仆对主人、玩家对自己飞机。
+ * <p>手动火控锁定是玩家的显式意图，优先于上述防呆——锁自己的飞机/女仆时允许命中。
  */
 public final class FriendlyFireHelper {
 
@@ -61,6 +63,13 @@ public final class FriendlyFireHelper {
      * @return true 表示应拦截（目标为友方）
      */
     public static boolean shouldBlockHit(Entity target, Entity owner) {
+        // 0. 玩家手动火控锁定优先于内部防呆：玩家明确锁定的目标，即使是自己飞机/女仆，
+        //    也允许命中。否则会出现「锁了友方目标，飞机追上去但子弹全被吃掉」的怪现象。
+        //    只认玩家锁定，自主飞机/AI 没有手动锁定，仍受下面的防呆保护。
+        if (owner instanceof Player player
+                && com.piranport.aviation.FireControlManager.isLocked(player.getUUID(), target.getUUID())) {
+            return false;
+        }
         // 1. 深海实体禁止互相残杀
         if (target instanceof AbstractDeepOceanEntity && owner instanceof AbstractDeepOceanEntity) {
             return true;

@@ -75,6 +75,18 @@ public class FireControlManager {
         return list == null ? List.of() : List.copyOf(list);
     }
 
+    /**
+     * 该目标是否被玩家手动/火控锁定。
+     * <p>供 {@code FriendlyFireHelper} 做「手动锁定优先」判断：玩家明确锁定的目标
+     * 即使属于内部防呆范围（自己的飞机/女仆等）也允许命中。这里直接查列表，
+     * 不复制快照，因为命中判定会在弹体逐目标检测里频繁调用。</p>
+     */
+    public static boolean isLocked(UUID playerUUID, UUID targetUUID) {
+        if (playerUUID == null || targetUUID == null) return false;
+        List<UUID> list = LOCKED_TARGETS.get(playerUUID);
+        return list != null && list.contains(targetUUID);
+    }
+
     /** Remove all state (call on server stop / world unload). */
     public static void clearAll() {
         LOCKED_TARGETS.clear();

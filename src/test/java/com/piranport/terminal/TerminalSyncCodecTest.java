@@ -32,14 +32,17 @@ class TerminalSyncCodecTest {
                     new SyncTerminalParametersPayload(1, Map.of(), Map.of(), List.of(), ""));
             buffer.clear();
             net.minecraft.network.codec.ByteBufCodecs.VAR_LONG.encode(buffer, 1L);
-            net.minecraft.network.codec.ByteBufCodecs.VAR_INT.encode(buffer, 4097);
+            // 上限由 TerminalParameterSpec.MAX_ENTRIES 统一维护（目录条目会随数据包增长，别写死 4096）。
+            int oversizedCount = TerminalParameterSpec.MAX_ENTRIES + 1;
+            net.minecraft.network.codec.ByteBufCodecs.VAR_INT.encode(buffer, oversizedCount);
             assertThrows(RuntimeException.class, () -> SyncTerminalParametersPayload.STREAM_CODEC.decode(buffer));
             ByteBuf oversized = Unpooled.buffer();
             try {
                 assertThrows(IllegalArgumentException.class, () -> SyncTerminalParametersPayload.STREAM_CODEC.encode(
                         oversized, new SyncTerminalParametersPayload(1, Map.of(), Map.of(),
-                                java.util.Collections.nCopies(4097, new TerminalParameterSpec("key", "g", "t", "p",
-                                        TerminalParameterSpec.ValueType.BOOLEAN, "false", 0, 1)), "")));
+                                java.util.Collections.nCopies(oversizedCount,
+                                        new TerminalParameterSpec("key", "g", "t", "p",
+                                                TerminalParameterSpec.ValueType.BOOLEAN, "false", 0, 1)), "")));
             } finally { oversized.release(); }
         } finally { buffer.release(); }
     }

@@ -125,6 +125,11 @@ public final class WeaponReloadLifecycle {
             return;
         }
 
+        // 创造弹药库勾选了该弹种时，读条到期不扣任何实体鱼雷。
+        // WHY 必须在这里再判一次：R 键开始装填时只记 pending，真正扣弹在到期结算；
+        // 若只在开始处放行，结算仍会按实体数量报「同类弹药不足」并把 pending 清掉。
+        boolean infinite = com.piranport.ammo.CreativeAmmoCache.isInfinite(player, ammo);
+
         int available = 0;
         for (int i = 0; i < inv.items.size(); i++) {
             ItemStack s = inv.items.get(i);
@@ -133,26 +138,28 @@ public final class WeaponReloadLifecycle {
         ItemStack offhand = inv.offhand.get(0);
         if (!offhand.isEmpty() && offhand.is(ammo)) available += offhand.getCount();
 
-        if (available < pending.count()) {
+        if (!infinite && available < pending.count()) {
             stack.remove(ModDataComponents.PENDING_TORPEDO_RELOAD.get());
             player.displayClientMessage(
                     net.minecraft.network.chat.Component.translatable("message.piranport.insufficient_same_ammo"), true);
             return;
         }
 
-        int left = pending.count();
-        for (int i = 0; i < inv.items.size() && left > 0; i++) {
-            ItemStack s = inv.items.get(i);
-            if (!s.isEmpty() && s.is(ammo)) {
-                int take = Math.min(left, s.getCount());
-                s.shrink(take);
-                left -= take;
-                if (s.getCount() <= 0) inv.setItem(i, ItemStack.EMPTY);
+        if (!infinite) {
+            int left = pending.count();
+            for (int i = 0; i < inv.items.size() && left > 0; i++) {
+                ItemStack s = inv.items.get(i);
+                if (!s.isEmpty() && s.is(ammo)) {
+                    int take = Math.min(left, s.getCount());
+                    s.shrink(take);
+                    left -= take;
+                    if (s.getCount() <= 0) inv.setItem(i, ItemStack.EMPTY);
+                }
             }
-        }
-        if (left > 0 && !offhand.isEmpty() && offhand.is(ammo)) {
-            offhand.shrink(left);
-            if (offhand.getCount() <= 0) inv.offhand.set(0, ItemStack.EMPTY);
+            if (left > 0 && !offhand.isEmpty() && offhand.is(ammo)) {
+                offhand.shrink(left);
+                if (offhand.getCount() <= 0) inv.offhand.set(0, ItemStack.EMPTY);
+            }
         }
 
         stack.set(ModDataComponents.LOADED_AMMO.get(),

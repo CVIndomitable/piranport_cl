@@ -102,29 +102,33 @@ public class ReloadHelper {
         }
         if (!infinite) infinite = CreativeAmmoCache.isInfinite(player, torpedoType);
 
+        // 统计可用弹药数量
+        int needed = tubeCount - (current.hasAmmo() ? current.count() : 0);
+        int available = countAmmo(inv, torpedoType, weaponSlot, coreSlot);
+
+        // 背包里这种弹不够整组时，再给创造弹药库一次机会：
+        // 前面按「背包里第一个同口径鱼雷」选了实体弹种，即使弹药库勾了另一种同口径鱼雷，
+        // 也会因为实体弹数量不足直接报「同类弹药不足」。这里在膛内为空时改用弹药库弹种，
+        // 允许创造测试不拿实体鱼雷也能装满。
+        String ammoId = BuiltInRegistries.ITEM.getKey(torpedoType).toString();
+        if (!infinite && available < needed) {
+            TorpedoItem cached = CreativeAmmoCache.findInfiniteTorpedo(player, caliber);
+            if (cached != null) {
+                String cachedId = BuiltInRegistries.ITEM.getKey(cached).toString();
+                // 膛内有残留弹时必须同弹种；不同弹种仍走「先清空」提示，不静默替换。
+                if (!current.hasAmmo() || cachedId.equals(current.ammoItemId())) {
+                    torpedoType = cached;
+                    ammoId = cachedId;
+                    infinite = true;
+                }
+            }
+        }
+
         // 管内残留旧弹种时禁止混装：残留弹的 LoadedAmmo 是按旧 ammoId 记的，
         // 直接覆盖成新弹种会让库存里的旧鱼雷"静默变成"新鱼雷（既不消耗也不退还）。
-        String ammoId = BuiltInRegistries.ITEM.getKey(torpedoType).toString();
         if (current.hasAmmo() && !ammoId.equals(current.ammoItemId())) {
             player.displayClientMessage(Component.translatable("message.piranport.must_be_empty_to_reload"), true);
             return;
-        }
-
-        // 统计可用弹药数量
-        int needed = tubeCount - (current.hasAmmo() ? current.count() : 0);
-        int available = 0;
-        for (int i = 0; i < inv.items.size(); i++) {
-            if (i == coreSlot || i == weaponSlot) continue;
-            ItemStack s = inv.items.get(i);
-            if (!s.isEmpty() && s.getItem() == torpedoType) {
-                available += s.getCount();
-            }
-        }
-        if (weaponSlot != 40 && coreSlot != 40) {
-            ItemStack oh = inv.offhand.get(0);
-            if (!oh.isEmpty() && oh.getItem() == torpedoType) {
-                available += oh.getCount();
-            }
         }
 
         if (!infinite && available < needed) {

@@ -1,5 +1,6 @@
 package com.piranport.block.entity;
 
+import com.piranport.ammo.CreativeAmmoCache;
 import com.piranport.component.LoadedAmmo;
 import com.piranport.item.MissileItem;
 import com.piranport.item.MissileLauncherItem;
@@ -20,6 +21,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerData;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -167,6 +169,9 @@ public class ReloadFacilityBlockEntity extends BlockEntity implements MenuProvid
         int maxLoad;
         int needed;
         boolean validCombo;
+        // 创造弹药库无限弹药：装填设施没有玩家上下文，按「8 格内最近的、勾选了对应弹种的玩家」判定。
+        // 命中时填装照常计时，但既不要求实体弹药，也不消耗 —— 与 R 键装填的创造弹药库口径一致。
+        String creativeAmmoId = null;
 
         // 合并两个弹药槽数量
         int totalAmmoCount = be.itemHandler.getStackInSlot(AMMO_SLOT).getCount()
@@ -191,6 +196,7 @@ public class ReloadFacilityBlockEntity extends BlockEntity implements MenuProvid
 
             // 空载：要求完全装填
             needed = maxLoad;
+            creativeAmmoId = creativeTorpedoAmmoId(level, pos, torpedoLauncher.getCaliber());
             ItemStack ammo1 = be.itemHandler.getStackInSlot(AMMO_SLOT);
             ItemStack ammo2 = be.itemHandler.getStackInSlot(EXTRA_AMMO_SLOT);
             boolean ammo1Valid = !ammo1.isEmpty() && ammo1.getItem() instanceof TorpedoItem t1
@@ -201,7 +207,7 @@ public class ReloadFacilityBlockEntity extends BlockEntity implements MenuProvid
             // 否则混填时消耗顺序与写入的弹药 id 可能对应不同口径，导致错误配装
             boolean sameItem = ammo1.isEmpty() || ammo2.isEmpty()
                     || ItemStack.isSameItem(ammo1, ammo2);
-            validCombo = (ammo1Valid || ammo2Valid) && sameItem;
+            validCombo = creativeAmmoId != null || ((ammo1Valid || ammo2Valid) && sameItem);
         } else if (launcherStack.getItem() instanceof MissileLauncherItem missileLauncher
                 && missileLauncher.canReloadInFacility()) {
             // Missile launcher reload (anti-ship / rocket); anti-air 发射器自动装填，禁止走这里
@@ -222,20 +228,26 @@ public class ReloadFacilityBlockEntity extends BlockEntity implements MenuProvid
 
             // 空载：要求完全装填
             needed = maxLoad;
+            Item ammoItem = missileLauncher.getAmmoItem();
+            if (findNearbyCreativeLoader(level, pos,
+                    p -> CreativeAmmoCache.isInfinite(p, ammoItem)) != null) {
+                creativeAmmoId = BuiltInRegistries.ITEM.getKey(ammoItem).toString();
+            }
             ItemStack ammo1 = be.itemHandler.getStackInSlot(AMMO_SLOT);
             ItemStack ammo2 = be.itemHandler.getStackInSlot(EXTRA_AMMO_SLOT);
-            boolean ammo1Valid = !ammo1.isEmpty() && ammo1.is(missileLauncher.getAmmoItem());
-            boolean ammo2Valid = !ammo2.isEmpty() && ammo2.is(missileLauncher.getAmmoItem());
+            boolean ammo1Valid = !ammo1.isEmpty() && ammo1.is(ammoItem);
+            boolean ammo2Valid = !ammo2.isEmpty() && ammo2.is(ammoItem);
             // 同上：两个弹药槽都非空时必须是同一种弹药，禁止混填
             boolean sameItem = ammo1.isEmpty() || ammo2.isEmpty()
                     || ItemStack.isSameItem(ammo1, ammo2);
-            validCombo = (ammo1Valid || ammo2Valid) && sameItem;
+            validCombo = creativeAmmoId != null || ((ammo1Valid || ammo2Valid) && sameItem);
         } else {
             be.resetProgress();
             return;
         }
 
-        if (!validCombo || totalAmmoCount < needed) {
+        // 创造弹药库命中时不要求实体弹药数量；否则按槽内实际数量检查。
+        if (!validCombo || (creativeAmmoId == null && totalAmmoCount < needed)) {
             be.resetProgress();
             return;
         }
@@ -250,31 +262,39 @@ public class ReloadFacilityBlockEntity extends BlockEntity implements MenuProvid
 
         be.reloadProgress++;
         if (be.reloadProgress >= be.reloadTotalTime) {
-            // Complete: produce loaded launcher. Prefer AMMO_SLOT first, then EXTRA_AMMO_SLOT.
-            ItemStack ammoSource = be.itemHandler.getStackInSlot(AMMO_SLOT).isEmpty()
-                    ? be.itemHandler.getStackInSlot(EXTRA_AMMO_SLOT)
-                    : be.itemHandler.getStackInSlot(AMMO_SLOT);
-            String ammoId = BuiltInRegistries.ITEM.getKey(ammoSource.getItem()).toString();
+            // Complete: produce loaded launcher.
+            // 创造弹药库命中时用勾选的弹种写入，且不扣除任何实体弹药；
+            // 否则优先消耗 AMMO_SLOT，不够时再消耗 EXTRA_AMMO_SLOT。
+            String ammoId;
+            if (creativeAmmoId != null) {
+                ammoId = creativeAmmoId;
+            } else {
+                ItemStack ammoSource = be.itemHandler.getStackInSlot(AMMO_SLOT).isEmpty()
+                        ? be.itemHandler.getStackInSlot(EXTRA_AMMO_SLOT)
+                        : be.itemHandler.getStackInSlot(AMMO_SLOT);
+                ammoId = BuiltInRegistries.ITEM.getKey(ammoSource.getItem()).toString();
+            }
             ItemStack result = launcherStack.copy();
             result.set(ModDataComponents.LOADED_AMMO.get(), new LoadedAmmo(maxLoad, ammoId));
 
             be.itemHandler.setStackInSlot(OUTPUT_SLOT, result);
             be.itemHandler.setStackInSlot(LAUNCHER_SLOT, ItemStack.EMPTY);
 
-            // 优先消耗 AMMO_SLOT，不够时再消耗 EXTRA_AMMO_SLOT
-            int remaining = needed;
-            ItemStack a1 = be.itemHandler.getStackInSlot(AMMO_SLOT);
-            if (!a1.isEmpty()) {
-                int take = Math.min(remaining, a1.getCount());
-                be.itemHandler.setStackInSlot(AMMO_SLOT, a1.copyWithCount(a1.getCount() - take));
-                remaining -= take;
-            }
-            if (remaining > 0) {
-                ItemStack a2 = be.itemHandler.getStackInSlot(EXTRA_AMMO_SLOT);
-                if (!a2.isEmpty()) {
-                    int take = Math.min(remaining, a2.getCount());
-                    be.itemHandler.setStackInSlot(EXTRA_AMMO_SLOT, a2.copyWithCount(a2.getCount() - take));
+            if (creativeAmmoId == null) {
+                int remaining = needed;
+                ItemStack a1 = be.itemHandler.getStackInSlot(AMMO_SLOT);
+                if (!a1.isEmpty()) {
+                    int take = Math.min(remaining, a1.getCount());
+                    be.itemHandler.setStackInSlot(AMMO_SLOT, a1.copyWithCount(a1.getCount() - take));
                     remaining -= take;
+                }
+                if (remaining > 0) {
+                    ItemStack a2 = be.itemHandler.getStackInSlot(EXTRA_AMMO_SLOT);
+                    if (!a2.isEmpty()) {
+                        int take = Math.min(remaining, a2.getCount());
+                        be.itemHandler.setStackInSlot(EXTRA_AMMO_SLOT, a2.copyWithCount(a2.getCount() - take));
+                        remaining -= take;
+                    }
                 }
             }
 
@@ -294,6 +314,39 @@ public class ReloadFacilityBlockEntity extends BlockEntity implements MenuProvid
 
     private static int modEquipmentReloadTime() {
         return com.piranport.config.ModEquipmentConfig.RELOAD_FACILITY_TIME_TICKS.get();
+    }
+
+    /**
+     * 8 格内最近的、勾选了指定弹种（创造弹药库）的玩家。
+     * <p>装填设施没有玩家上下文，用距离最近的可交互玩家判定；
+     * 创造弹药库的语义本来就是「只认勾选项」，因此只对勾选了的玩家生效。</p>
+     */
+    @Nullable
+    private static Player findNearbyCreativeLoader(Level level, BlockPos pos,
+                                                   java.util.function.Predicate<Player> hasSelectedAmmo) {
+        Player best = null;
+        double bestSq = 8.0 * 8.0;
+        for (Player player : level.players()) {
+            if (player.isSpectator() || player.isDeadOrDying()) continue;
+            double distanceSq = player.distanceToSqr(
+                    pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
+            if (distanceSq > bestSq) continue;
+            if (hasSelectedAmmo.test(player)) {
+                best = player;
+                bestSq = distanceSq;
+            }
+        }
+        return best;
+    }
+
+    /** 创造弹药库里勾选了同口径鱼雷时返回其物品 id；用于免消耗装填。 */
+    @Nullable
+    private static String creativeTorpedoAmmoId(Level level, BlockPos pos, int caliber) {
+        Player player = findNearbyCreativeLoader(level, pos,
+                p -> CreativeAmmoCache.findInfiniteTorpedo(p, caliber) != null);
+        if (player == null) return null;
+        TorpedoItem cached = CreativeAmmoCache.findInfiniteTorpedo(player, caliber);
+        return cached == null ? null : BuiltInRegistries.ITEM.getKey(cached).toString();
     }
 
     /** Comparator output: 15 when output slot has item, 0 otherwise. */

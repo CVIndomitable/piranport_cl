@@ -4,7 +4,6 @@ import com.piranport.component.LoadedAmmo;
 import com.piranport.item.MissileLauncherItem;
 import com.piranport.item.TorpedoLauncherItem;
 import com.piranport.registry.ModDataComponents;
-import com.piranport.registry.ModItems;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.world.item.ItemStack;
@@ -24,22 +23,13 @@ public class WeaponReloadDecorator implements IItemDecorator {
 
     @Override
     public boolean render(GuiGraphics gui, Font font, ItemStack stack, int x, int y) {
-        // 防空导弹发射器始终满装填：弹药直接从背包消耗，不存在 LOADED_AMMO 状态，
-        // 也没有"空膛"可言——画空膛条等于谎报状态（见 docs/策划决策/武器/鱼雷-再装填机制.md）。
-        boolean isAutoReloadMissile = isAutoReloadMissile(stack);
-
-        // 1. Manual-reload launchers (torpedo, missile, depth charge) — 空膛画黑条。
-        //    装填进度不再画在物品图标上，统一由物品栏上方的 ReloadProgressHudLayer 大读条显示。
-        //    防空导弹不在此列：它走自动装填，不该有"空膛"态。
-        boolean showEmptyBar = (stack.getItem() instanceof MissileLauncherItem
-                && ((MissileLauncherItem) stack.getItem()).getMissileType()
-                == com.piranport.entity.MissileEntity.MissileType.ANTI_AIR)
-                || (!isAutoReloadMissile
-                && (stack.getItem() instanceof TorpedoLauncherItem
-                || stack.is(ModItems.SY1_LAUNCHER.get())
-                || stack.is(ModItems.MK14_HARPOON_LAUNCHER.get())
-                || stack.is(ModItems.SHIP_ROCKET_LAUNCHER.get())
-                || stack.getItem() instanceof com.piranport.item.DepthChargeLauncherItem));
+        // 所有鱼雷/导弹/深弹发射器都有空膛态：
+        // - 鱼雷、反舰/火箭导弹走装填设施；
+        // - 防空导弹也要先按 R 装入一枚（见 ReloadHelper#reloadAntiAirMissile）。
+        // 统一读 LOADED_AMMO 画条，不再按型号硬编码白名单，避免新增发射器漏画。
+        boolean showEmptyBar = stack.getItem() instanceof TorpedoLauncherItem
+                || stack.getItem() instanceof MissileLauncherItem
+                || stack.getItem() instanceof com.piranport.item.DepthChargeLauncherItem;
 
         if (showEmptyBar) {
             LoadedAmmo ammo = stack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
@@ -69,11 +59,6 @@ public class WeaponReloadDecorator implements IItemDecorator {
         int barX = x + 2;
         int barY = stack.isDamageableItem() ? (y + 14) : (y + 13);
         gui.fill(barX, barY, barX + width, barY + 2, color);
-    }
-
-    /** 是否为自动装填导弹类型；防空弹药现在仍需先经 R 键装入膛内。 */
-    private static boolean isAutoReloadMissile(ItemStack stack) {
-        return stack.getItem() instanceof MissileLauncherItem ml && !ml.isManualReload();
     }
 
 }

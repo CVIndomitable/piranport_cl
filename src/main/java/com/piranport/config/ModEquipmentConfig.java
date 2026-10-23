@@ -302,6 +302,14 @@ public final class ModEquipmentConfig {
      */
     public static final TerminalConfigValue<Integer> FIGHTER_RESCAN_INTERVAL =
             TerminalConfigValue.integer("aircraft", "fighter_combat", "fighter_rescan_interval", 40, 1, 12000);
+    /**
+     * 战斗机机枪射击间隔（tick）。默认 10（0.5 秒）。
+     * <p>WHY 不复用机型的 {@code attack_cooldown}（128–200 tick）：那是投放武器/一轮攻击的间隔，
+     * 用在 3 格狗斗的机枪上会变成 6–10 秒一发。属性名以 {@code _cooldown} 结尾，
+     * 调试终端按秒显示。</p>
+     */
+    public static final TerminalConfigValue<Integer> FIGHTER_GUN_COOLDOWN =
+            TerminalConfigValue.integer("aircraft", "fighter_combat", "gun_cooldown", 10, 1, 1200);
 
     // ---- 火箭机（tickRocketFighterMissileRun）----
     /** 一轮火箭攻击的最长持续（tick），超时后视为已投弹。默认 200。 */

@@ -16,6 +16,8 @@ import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.UUID;
+
 /**
  * 鱼雷机攻击策略（profile=torpedo）。
  *
@@ -60,6 +62,13 @@ public final class TorpedoAttackStrategy implements AttackStrategy {
         }
 
         TorpedoRunState state = context.torpedoRunState();
+        // 中途换目标（手动多锁定里前一个死亡、或 SPREAD 模式改选最近目标）时，
+        // 旧航线的 runStart/approachDirection/平滑水面高度全部作废，按新目标重新进入。
+        UUID targetId = target.getUUID();
+        if (state.activeTarget != null && !state.activeTarget.equals(targetId)) {
+            state.reset();
+        }
+        state.activeTarget = targetId;
         Vec3 position = context.position();
         double dx = target.getX() - position.x;
         double dz = target.getZ() - position.z;
@@ -256,6 +265,9 @@ public final class TorpedoAttackStrategy implements AttackStrategy {
                         .add(0, ModEquipmentConfig.TORPEDO_BOMBER_TORPEDO_VERTICAL_SPEED.get(), 0);
                 torpedo.setDeltaMovement(velocity);
                 torpedo.setOwner(owner);
+                // 与战斗机子弹同口径：击杀/命中提示显示载机名，而不是笼统的「航空鱼雷」。
+                torpedo.setSourceAircraft(context.self());
+                torpedo.setSourceAircraftName(context.displayName());
                 context.level().addFreshEntity(torpedo);
             }
             // 本轮把剩余弹全部投出（toFire = 全部剩余），投完必然空弹，直接返航；

@@ -75,7 +75,12 @@ public final class GunAttackStrategy implements AttackStrategy {
             BulletEntity bullet = new BulletEntity(context.level(),
                     context.panelDamage()
                             / ModEquipmentConfig.FIGHTER_BULLET_DAMAGE_DIVISOR.get().floatValue());
-            Vec3 direction = toTarget.normalize();
+            // 一阶提前量：子弹飞到目标眼位需要 distance / bullet_speed tick，
+            // 幻翼这类快速目标在 3 格处不提前约差半格，正好从碰撞箱边上擦过去。
+            double bulletSpeed = Math.max(0.1, ModEquipmentConfig.FIGHTER_BULLET_SPEED.get());
+            Vec3 aimPoint = target.getEyePosition()
+                    .add(target.getDeltaMovement().scale(distance / bulletSpeed));
+            Vec3 direction = aimPoint.subtract(context.position()).normalize();
             Vec3 position = context.position();
             bullet.moveTo(position.x,
                     position.y + ModEquipmentConfig.FIGHTER_BULLET_SPAWN_Y_OFFSET.get(),
@@ -87,7 +92,8 @@ public final class GunAttackStrategy implements AttackStrategy {
             bullet.setSourceAircraftName(context.displayName());
             bullet.setSourceAircraft(context.self());
             context.level().addFreshEntity(bullet);
-            context.setAttackCooldown(context.attackCooldownDuration());
+            // 机枪用独立短间隔；机型的 attack_cooldown 是投弹/一轮攻击的节奏，不能拿来卡狗斗。
+            context.setAttackCooldown(ModEquipmentConfig.FIGHTER_GUN_COOLDOWN.get());
             // 战斗机机枪弹药固定无限，不再由配置改变行为。
         }
     }

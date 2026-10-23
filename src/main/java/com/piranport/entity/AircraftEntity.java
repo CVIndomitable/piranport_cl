@@ -959,6 +959,9 @@ public class AircraftEntity extends Entity implements AircraftAttackContext {
                     tag.getDouble("TorpedoRunStartY"), tag.getDouble("TorpedoRunStartZ"));
         }
         torpedoRunState.runTicks = tag.getInt("TorpedoRunTicks");
+        if (tag.hasUUID("TorpedoActiveTarget")) {
+            torpedoRunState.activeTarget = tag.getUUID("TorpedoActiveTarget");
+        }
         if (tag.contains("TorpedoAimX")) {
             torpedoRunState.aimPoint = new Vec3(tag.getDouble("TorpedoAimX"),
                     tag.getDouble("TorpedoAimY"), tag.getDouble("TorpedoAimZ"));
@@ -1039,6 +1042,9 @@ public class AircraftEntity extends Entity implements AircraftAttackContext {
             tag.putDouble("TorpedoRunStartZ", torpedoRunState.runStart.z);
         }
         tag.putInt("TorpedoRunTicks", torpedoRunState.runTicks);
+        if (torpedoRunState.activeTarget != null) {
+            tag.putUUID("TorpedoActiveTarget", torpedoRunState.activeTarget);
+        }
         Vec3 aim = getTorpedoAimPoint();
         if (aim != null) {
             tag.putDouble("TorpedoAimX", aim.x);

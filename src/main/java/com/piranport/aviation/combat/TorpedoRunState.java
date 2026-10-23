@@ -3,6 +3,8 @@ package com.piranport.aviation.combat;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.UUID;
+
 /** 鱼雷机的每架次运行时状态（进入 ATTACKING 时重置）。 */
 public final class TorpedoRunState {
     /** 非 null 表示已进入低空平飞段。 */
@@ -20,6 +22,12 @@ public final class TorpedoRunState {
      * 直接拿它做目标高度会让飞机在下降段一格一格地抽动；这里用一阶滤波抹平。
      */
     @Nullable public Double smoothedSurfaceY;
+    /**
+     * 本轮航线锁定的目标。多目标手动锁定/自动索敌在中途换目标时，
+     * runStart、预瞄方向和已平滑的水面高度都属于旧目标，必须整体复位；
+     * 否则飞机会拿旧航线去投新目标。
+     */
+    @Nullable public UUID activeTarget;
 
     public void reset() {
         runStart = null;
@@ -29,5 +37,6 @@ public final class TorpedoRunState {
         egressing = false;
         approachDirection = null;
         smoothedSurfaceY = null;
+        activeTarget = null;
     }
 }

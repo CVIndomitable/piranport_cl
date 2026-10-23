@@ -18,7 +18,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.item.ItemStack;
@@ -43,9 +42,6 @@ public class ReloadFacilityBlockEntity extends BlockEntity implements MenuProvid
     public static final int EXTRA_AMMO_SLOT = 2;
     public static final int OUTPUT_SLOT = 3;
     public static final int TOTAL_SLOTS = 4;
-    public static final int RELOAD_TIME_WATER = 120;  // 6 seconds
-    public static final int RELOAD_TIME_LAND = 120;   // 6 seconds
-    public static final int RELOAD_TIME_DEFAULT = 120; // 6 seconds (fallback)
 
     private final ItemStackHandler itemHandler = new ItemStackHandler(TOTAL_SLOTS) {
         @Override
@@ -246,8 +242,9 @@ public class ReloadFacilityBlockEntity extends BlockEntity implements MenuProvid
 
         // Start/continue processing
         if (be.reloadTotalTime == 0) {
-            boolean inWater = be.isInWater();
-            be.reloadTotalTime = inWater ? RELOAD_TIME_WATER : RELOAD_TIME_LAND;
+            // 装填节奏进调试终端（global.reload_facility.reload_time，按秒显示）；
+            // 水上/陆地共用同一值，避免同一种设备有两种隐藏节奏。
+            be.reloadTotalTime = modEquipmentReloadTime();
             be.reloadProgress = 0;
         }
 
@@ -295,9 +292,8 @@ public class ReloadFacilityBlockEntity extends BlockEntity implements MenuProvid
         }
     }
 
-    private boolean isInWater() {
-        if (level == null) return false;
-        return level.getFluidState(worldPosition).is(Fluids.WATER);
+    private static int modEquipmentReloadTime() {
+        return com.piranport.config.ModEquipmentConfig.RELOAD_FACILITY_TIME_TICKS.get();
     }
 
     /** Comparator output: 15 when output slot has item, 0 otherwise. */

@@ -2,13 +2,18 @@ package com.piranport.aviation.combat;
 
 import com.piranport.aviation.FireControlManager;
 import com.piranport.combat.CombatTargeting;
+import com.piranport.combat.FriendlyFireHelper;
 import com.piranport.config.ModEquipmentConfig;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.FlyingMob;
+import net.minecraft.world.entity.ai.control.FlyingMoveControl;
+import net.minecraft.world.entity.ai.navigation.FlyingPathNavigation;
+import net.minecraft.world.entity.animal.FlyingAnimal;
 import net.minecraft.world.entity.monster.Enemy;
+import net.minecraft.world.entity.monster.Vex;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.AABB;
 import org.jetbrains.annotations.Nullable;
@@ -28,9 +33,19 @@ public final class TargetResolution {
     private TargetResolution() {}
 
     public static boolean isAirborneTarget(Entity entity) {
-        // AircraftEntity 覆盖本模组飞机；FlyingMob 覆盖原版 Phantom/Vex 以及
-        // 其他模组实现 Minecraft 飞行生物接口的目标（例如女仆野生妖精）。
-        return entity instanceof com.piranport.entity.AircraftEntity || entity instanceof FlyingMob;
+        // 判定必须覆盖「实际会飞」的四类目标，不能只看 FlyingMob：
+        // - 本模组飞机是 Entity，不是 LivingEntity/Mob；
+        // - 原版 Phantom/Ghast 继承 FlyingMob，Vex 只继承 Monster；
+        // - 原版蜜蜂/鹦鹉/悦灵与女仆模组野生妖精实现 FlyingAnimal（EntityFairy 直接继承 Monster）；
+        // - 其他模组的飞行怪通常使用 FlyingPathNavigation，作为最后一道通用兜底。
+        // WHY 用导航类型兜底：不同模组没有统一的「会飞」接口，但飞行 AI 基本都要挂飞行导航；
+        // 这比按注册名硬编码兼容列表更稳，也不会把地面怪误判为空中目标。
+        return entity instanceof com.piranport.entity.AircraftEntity
+                || entity instanceof FlyingMob
+                || entity instanceof FlyingAnimal
+                || entity instanceof Vex
+                || (entity instanceof Mob mob && (mob.getNavigation() instanceof FlyingPathNavigation
+                        || mob.getMoveControl() instanceof FlyingMoveControl));
     }
 
     @Nullable
@@ -103,11 +118,14 @@ public final class TargetResolution {
         if (!FireControlManager.getTargets(owner.getUUID()).isEmpty()) return null;
         return autoSeek(ctx, Entity.class,
                 entity -> entity.isAlive() && entity != ctx.self()
-                        && CombatTargeting.isHostileTarget(owner, entity),
+                        && isAirborneTarget(entity)
+                        && !entity.isAlliedTo(owner)
+                        && !FriendlyFireHelper.shouldBlockHit(entity, owner)
+                        && (CombatTargeting.isHostileTarget(owner, entity) || entity instanceof FlyingMob),
                 ModEquipmentConfig.AIRCRAFT_AUTONOMOUS_SEEK_RANGE.get());
     }
 
-    /** 自主机枪战斗机：只找玩家飞机或中立生物，不主动打深海单位。 */
+    /** 自主机枪战斗机：争夺制空，包含原版和其他模组的 FlyingMob。 */
     @Nullable
     public static Entity resolveAutonomousFighterTarget(AircraftAttackContext ctx) {
         ServerLevel level = ctx.serverLevel();
@@ -136,6 +154,9 @@ public final class TargetResolution {
         if (entity instanceof com.piranport.entity.AircraftEntity other) {
             // 自主飞机没有 ownerUUID；有主的才是玩家飞机
             return !other.isAutonomous() && other.getOwnerUUID() != null;
+        }
+        if (entity instanceof FlyingMob) {
+            return !(entity instanceof com.piranport.entity.AircraftEntity other && other.isAutonomous());
         }
         return entity instanceof Mob mob && !(mob instanceof Enemy) && !mob.isNoAi()
                 && !(mob instanceof com.piranport.npc.shipgirl.ShipGirlEntity);

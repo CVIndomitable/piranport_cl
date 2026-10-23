@@ -8,7 +8,7 @@
       "predicate": {
         "piranport:loaded": 1
       },
-      "model": "piranport:item/sy1_launcher"
+      "model": "piranport:item/sy1_launcher_loaded"
     }
   ]
 }

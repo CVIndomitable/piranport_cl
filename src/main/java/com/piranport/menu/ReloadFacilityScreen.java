@@ -25,31 +25,39 @@ public class ReloadFacilityScreen extends AbstractContainerScreen<ReloadFacility
         g.fill(x, y, x + imageWidth, y + imageHeight, 0xFF8B8B8B);
         g.fill(x + 1, y + 1, x + imageWidth - 1, y + imageHeight - 1, 0xFFC6C6C6);
 
+        // 槽位背景必须与 ReloadFacilityMenu 里的 Slot 坐标完全一致（35/71/107/143）。
+        // drawSlotBg 自己会向外扩 1 像素画边框；这里再减 1 会让物品比框洞偏右下 1 像素 ——
+        // 输出槽紧挨进度条，偏位最明显，就是玩家看到的「输出格子错位」。
         // Input slot 1 (launcher) — left
-        drawSlotBg(g, x + 34, y + 34);
+        drawSlotBg(g, x + 35, y + 35);
         // Input slot 2 (ammo) — center
-        drawSlotBg(g, x + 70, y + 34);
+        drawSlotBg(g, x + 71, y + 35);
+        // Input slot 3 (extra ammo)
+        drawSlotBg(g, x + 107, y + 35);
 
         // Progress arrow between ammo and output
         int progress = menu.getProgress();
         int total = menu.getTotalTime();
-        int arrowWidth = (total > 0) ? (int) (22.0 * progress / total) : 0;
+        int arrowWidth = (total > 0) ? (int) (16.0 * progress / total) : 0;
+        // 进度条夹在「备用弹药槽（107..123）」与「输出槽（143..159）」之间：
+        // 起点 125、终点 141，既不压住弹药槽边框，也不伸进输出槽。
         // Arrow background (dark)
-        g.fill(x + 97, y + 35, x + 119, y + 44, 0xFF4A4A4A);
+        g.fill(x + 125, y + 35, x + 141, y + 44, 0xFF4A4A4A);
         // Arrow fill (green)
         if (arrowWidth > 0) {
-            g.fill(x + 97, y + 35, x + 97 + arrowWidth, y + 44, 0xFF55AA55);
+            g.fill(x + 125, y + 35, x + 125 + arrowWidth, y + 44, 0xFF55AA55);
         }
 
-        // Output slot — right
-        drawSlotBg(g, x + 130, y + 34);
+        // Output slot — right（Slot 坐标为 143,35）
+        drawSlotBg(g, x + 143, y + 35);
 
         // "+" symbol between launcher and ammo slots
         g.drawString(font, "+", x + 56, y + 38, 0xFF404040, false);
 
         // Hint icons below slots (32x32 textures scaled to 16x16)
-        g.blit(LAUNCHER_HINT, x + 34, y + 54, 0, 0, 16, 16, 16, 16);
-        g.blit(TORPEDO_HINT, x + 70, y + 54, 0, 0, 16, 16, 16, 16);
+        g.blit(LAUNCHER_HINT, x + 35, y + 55, 0, 0, 16, 16, 16, 16);
+        g.blit(TORPEDO_HINT, x + 71, y + 55, 0, 0, 16, 16, 16, 16);
+        g.blit(TORPEDO_HINT, x + 107, y + 55, 0, 0, 16, 16, 16, 16);
 
         // Player inventory (3 rows)
         for (int row = 0; row < 3; row++) {

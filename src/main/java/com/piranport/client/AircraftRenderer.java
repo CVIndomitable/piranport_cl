@@ -63,20 +63,24 @@ public class AircraftRenderer extends EntityRenderer<AircraftEntity> {
 
         poseStack.popPose();
 
-        // 鱼雷机平飞段：画一条机身→预测撞击点的水平预瞄线，与鱼雷发射器的预测线同口径。
-        // 预测点的 Y 取的是目标高度，直接连会变成飞机连到目标，所以线只取水平方向并保持机身高度。
+        // 鱼雷机平飞段：画一条贴在预测点世界表面高度的水平预瞄线，与玩家鱼雷发射器同口径。
         // RenderType.lines() 的顶点在 entity 局部空间（原点在插值后的实体位置），
         // 所以世界坐标要减去插值实体位置；颜色用半透明白，不遮视野。
         Vec3 aim = entity.getTorpedoAimPoint();
         if (aim != null) {
             double ex = net.minecraft.util.Mth.lerp(partialTick, entity.xo, entity.getX());
+            double ey = net.minecraft.util.Mth.lerp(partialTick, entity.yo, entity.getY());
             double ez = net.minecraft.util.Mth.lerp(partialTick, entity.zo, entity.getZ());
+            // The server synchronizes the predicted water projection as aim.y.
+            // Use that same value instead of a client-side heightmap lookup so the
+            // preview line and the actual 2D drop solution cannot disagree.
+            float lineY = (float) (aim.y - ey + 0.02);
             poseStack.pushPose();
             VertexConsumer line = bufferSource.getBuffer(RenderType.lines());
             PoseStack.Pose last = poseStack.last();
-            addLineVertex(line, last, 0.0f, 0.5f, 0.0f);
+            addLineVertex(line, last, 0.0f, lineY, 0.0f);
             addLineVertex(line, last,
-                    (float) (aim.x - ex), 0.5f, (float) (aim.z - ez));
+                    (float) (aim.x - ex), lineY, (float) (aim.z - ez));
             poseStack.popPose();
         }
 

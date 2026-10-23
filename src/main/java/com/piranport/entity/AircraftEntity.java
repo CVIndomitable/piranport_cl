@@ -232,8 +232,8 @@ public class AircraftEntity extends Entity implements AircraftAttackContext {
         this.panelDamageBase = resolved.damage();
         this.panelSpeed = ExperienceShellItem.applyAircraftPanelSpeedBonus(owner, resolved.speed());
         this.ammoCapacity = resolved.ammoCapacity();
-        this.remainingAmmo = resolved.ammoCapacity();
         this.nuclearPayload = state.nuclearPayload();
+        this.remainingAmmo = this.nuclearPayload ? 1 : resolved.ammoCapacity();
         this.fuelCapacity = resolved.fuelCapacity();
         this.currentFuel = fullFuel
                 ? resolved.fuelCapacity()
@@ -355,6 +355,10 @@ public class AircraftEntity extends Entity implements AircraftAttackContext {
             levelBombState.reset();
             rocketRunTicks = 0;
             setTorpedoAimPoint(null);
+        } else {
+            // 离开攻击态（返航/巡航）必须清掉预瞄点，否则鱼雷机返航时身后仍拖着
+            // 一条上一轮解算出来的水面白线，看起来像还在瞄准。
+            setTorpedoAimPoint(null);
         }
         entityData.set(STATE_ID_DATA, stateId(newState));
         stateTicks = 0;
@@ -460,8 +464,9 @@ public class AircraftEntity extends Entity implements AircraftAttackContext {
             // 核航弹是普通航弹的替代装填项（副本/08），只有白名单机型能手动补核航弹。
             boolean nuclear = held.is(ModItems.NUCLEAR_AERIAL_BOMB.get())
                     && getResolvedDefinition().canCarryNuclearBomb();
-            if ((nuclear || payloadItem.equals(heldId)) && remainingAmmo < ammoCapacity) {
-                int needed = ammoCapacity - remainingAmmo;
+            int payloadLimit = nuclearPayload ? 1 : ammoCapacity;
+            if ((nuclear || payloadItem.equals(heldId)) && remainingAmmo < payloadLimit) {
+                int needed = payloadLimit - remainingAmmo;
                 int toLoad = Math.min(needed, held.getCount());
                 held.shrink(toLoad);
                 remainingAmmo += toLoad;

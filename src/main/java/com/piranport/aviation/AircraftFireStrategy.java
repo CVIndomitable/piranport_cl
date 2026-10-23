@@ -4,6 +4,7 @@ import com.piranport.ammo.CreativeAmmoCache;
 import com.piranport.combat.TransformationManager;
 import com.piranport.component.AircraftAttackMode;
 import com.piranport.component.AircraftState;
+import com.piranport.component.SelectedAmmoType;
 import com.piranport.component.SlotCooldowns;
 import com.piranport.component.WeaponCooldown;
 import com.piranport.config.ModCommonConfig;
@@ -587,10 +588,12 @@ public class AircraftFireStrategy {
         net.minecraft.world.item.Item payload = selectPayloadItem(player, inv, definition, weaponSlot, coreSlot);
         boolean payloadInfinite = payload != null && CreativeAmmoCache.isInfinite(player, payload);
         boolean fuelInfinite = CreativeAmmoCache.isInfinite(player, ModItems.FUEL.get());
+        int payloadCount = payload == ModItems.NUCLEAR_AERIAL_BOMB.get()
+                ? 1 : Math.max(1, stats.ammoCapacity());
 
         if (AircraftSortieReadiness.needsPayload(definition, state)
                 && !payloadInfinite
-                && findPayloadSlot(inv, payload, weaponSlot, coreSlot) < 0) {
+                && !hasPayloadCount(inv, payload, payloadCount, weaponSlot, coreSlot)) {
             player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
             return false;
         }
@@ -618,6 +621,18 @@ public class AircraftFireStrategy {
     private static net.minecraft.world.item.Item selectPayloadItem(Player player, Inventory inv,
                                                                    AircraftDefinition definition,
                                                                    int weaponSlot, int coreSlot) {
+        ItemStack aircraftStack = stackAt(inv, weaponSlot);
+        SelectedAmmoType selected = aircraftStack.get(ModDataComponents.SELECTED_AMMO_TYPE.get());
+        if (definition.aircraftClass() == AircraftClass.LEVEL_BOMBER
+                && selected != null && selected.hasSelection()) {
+            if ("piranport:aerial_bomb".equals(selected.ammoItemId())) {
+                return payloadItem(definition);
+            }
+            if ("piranport:nuclear_aerial_bomb".equals(selected.ammoItemId())
+                    && definition.canCarryNuclearBomb()) {
+                return ModItems.NUCLEAR_AERIAL_BOMB.get();
+            }
+        }
         if (definition.canCarryNuclearBomb()) {
             net.minecraft.world.item.Item nuclear = ModItems.NUCLEAR_AERIAL_BOMB.get();
             if (CreativeAmmoCache.isInfinite(player, nuclear)
@@ -670,7 +685,14 @@ public class AircraftFireStrategy {
         int fuelSlot = needsFuel && !fuelInfinite
                 ? findPayloadSlot(inv, ModItems.FUEL.get(), weaponSlot, coreSlot) : -1;
 
+        int payloadCount = payloadItem == ModItems.NUCLEAR_AERIAL_BOMB.get()
+                ? 1 : Math.max(1, stats.ammoCapacity());
         if (needsPayload && !payloadInfinite && payloadSlot < 0) {
+            if (warn) player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
+            return false;
+        }
+        if (needsPayload && !payloadInfinite && payloadSlot >= 0
+                && stackAt(inv, payloadSlot).getCount() < payloadCount) {
             if (warn) player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
             return false;
         }
@@ -688,7 +710,8 @@ public class AircraftFireStrategy {
         }
         if (needsPayload) {
             if (!payloadInfinite) {
-                com.piranport.testtools.PiranPortTestTools.consumeAmmo(player.getUUID(), stackAt(inv, payloadSlot), 1);
+                com.piranport.testtools.PiranPortTestTools.consumeAmmo(
+                        player.getUUID(), stackAt(inv, payloadSlot), payloadCount);
             }
             state = state.withPayload(true, payloadItem == ModItems.NUCLEAR_AERIAL_BOMB.get());
         }
@@ -724,6 +747,12 @@ public class AircraftFireStrategy {
             if (!oh.isEmpty() && oh.getItem() == item) return 40;
         }
         return -1;
+    }
+
+    private static boolean hasPayloadCount(Inventory inv, net.minecraft.world.item.Item item, int count,
+                                           int weaponSlot, int coreSlot) {
+        int slot = findPayloadSlot(inv, item, weaponSlot, coreSlot);
+        return slot >= 0 && stackAt(inv, slot).getCount() >= count;
     }
 
     // ===== Auto-launch (Phase 36) =====

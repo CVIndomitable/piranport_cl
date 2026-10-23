@@ -2,6 +2,7 @@ package com.piranport.combat;
 
 import com.piranport.ammo.CreativeAmmoCache;
 import com.piranport.component.LoadedAmmo;
+import com.piranport.component.SelectedAmmoType;
 import com.piranport.component.SlotCooldowns;
 import com.piranport.component.WeaponCooldown;
 import com.piranport.item.TorpedoItem;
@@ -57,9 +58,25 @@ public class ReloadHelper {
             return;
         }
 
-        // 查找第一个匹配的鱼雷类型（严格模式：只消耗同类型物品）
+        // Tab 选择优先；偏好数量不足整组时，回退到原有背包顺序。
         TorpedoItem torpedoType = null;
+        SelectedAmmoType selected = launcherStack.getOrDefault(
+                ModDataComponents.SELECTED_AMMO_TYPE.get(), SelectedAmmoType.EMPTY);
+        if (selected.hasSelection()) {
+            net.minecraft.resources.ResourceLocation selectedId =
+                    net.minecraft.resources.ResourceLocation.tryParse(selected.ammoItemId());
+            Item selectedItem = selectedId == null ? net.minecraft.world.item.Items.AIR
+                    : BuiltInRegistries.ITEM.get(selectedId);
+            if (selectedItem instanceof TorpedoItem selectedTorpedo
+                    && selectedTorpedo.getCaliber() == caliber
+                    && (player.getAbilities().instabuild
+                    || CreativeAmmoCache.isInfinite(player, selectedTorpedo)
+                    || countAmmo(inv, selectedTorpedo, weaponSlot, coreSlot) >= tubeCount)) {
+                torpedoType = selectedTorpedo;
+            }
+        }
         for (int i = 0; i < inv.items.size(); i++) {
+            if (torpedoType != null) break;
             if (i == coreSlot || i == weaponSlot) continue;
             ItemStack s = inv.items.get(i);
             if (!s.isEmpty() && s.getItem() instanceof TorpedoItem ti && ti.getCaliber() == caliber) {

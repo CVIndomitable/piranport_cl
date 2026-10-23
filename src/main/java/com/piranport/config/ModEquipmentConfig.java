@@ -190,6 +190,14 @@ public final class ModEquipmentConfig {
     public static final TerminalConfigValue<Integer> TORPEDO_DEFAULT_LIFETIME =
             TerminalConfigValue.integer("equipment", "torpedo", "default_lifetime", 1200, 1, 100000);
 
+    /**
+     * 装填设施单次装填耗时（tick）。默认 120（6 秒，策划决策/武器/09）。
+     * <p>水上与陆地共用同一节奏；属性名 {@code reload_time} 让调试终端按秒显示，
+     * 与策划口径一致。改这里即同时改变鱼雷与手动导弹装填。</p>
+     */
+    public static final TerminalConfigValue<Integer> RELOAD_FACILITY_TIME_TICKS =
+            TerminalConfigValue.integer("equipment", "reload_facility", "reload_time", 120, 1, 120000);
+
     public static final TerminalConfigValue<Double> ARMOR_PLATE_PROTECTION =
             TerminalConfigValue.number("equipment", "equipment", "armor_plate_protection", 3.0, 0.0, 100.0);
 
@@ -265,9 +273,9 @@ public final class ModEquipmentConfig {
     /** 追击/退避的距离基准（格，目标眼位到飞机的距离）；同时作为机枪开火距离。默认 3.0。 */
     public static final TerminalConfigValue<Double> FIGHTER_HOVER_DISTANCE =
             TerminalConfigValue.number("aircraft", "fighter_combat", "hover_distance", 3.0, 0.0, 256.0);
-    /** 悬停死区半宽（格）：距离在基准 ±该值内则减速悬停。默认 3.0。 */
+    /** 悬停死区半宽（格）：距离在基准 ±该值内则减速悬停。默认 0.5。 */
     public static final TerminalConfigValue<Double> FIGHTER_HOVER_BAND =
-            TerminalConfigValue.number("aircraft", "fighter_combat", "hover_band", 3.0, 0.0, 128.0);
+            TerminalConfigValue.number("aircraft", "fighter_combat", "hover_band", 0.5, 0.0, 128.0);
     /** 追击速度 = 面板速度 × 该值 × 阶段系数。默认 0.5。 */
     public static final TerminalConfigValue<Double> FIGHTER_PURSUIT_MULTIPLIER =
             TerminalConfigValue.number("aircraft", "fighter_combat", "pursuit_multiplier", 0.5, 0.0, 5.0);
@@ -286,6 +294,14 @@ public final class ModEquipmentConfig {
     /** 机枪最大开火距离（格）；实际攻击保持在 hover_distance 附近。默认 24.0。 */
     public static final TerminalConfigValue<Double> FIGHTER_BULLET_RANGE =
             TerminalConfigValue.number("aircraft", "fighter_combat", "bullet_range", 24.0, 0.0, 512.0);
+    /**
+     * 战斗机在巡航态重新扫描空中目标的间隔（tick）。默认 40（2 秒）。
+     * <p>WHY 战斗机不能像轰炸机那样只自动索敌一次：幻翼/女仆野生妖精会在飞机起飞后才出现，
+     * 只扫一次会导致已经在空中的战斗机对后来出现的飞行怪视而不见。扫描仍受
+     * {@code autonomous_seek_range} 与统一敌对判据约束，不会主动攻击中立/友方单位。</p>
+     */
+    public static final TerminalConfigValue<Integer> FIGHTER_RESCAN_INTERVAL =
+            TerminalConfigValue.integer("aircraft", "fighter_combat", "fighter_rescan_interval", 40, 1, 12000);
 
     // ---- 火箭机（tickRocketFighterMissileRun）----
     /** 一轮火箭攻击的最长持续（tick），超时后视为已投弹。默认 200。 */
@@ -420,6 +436,14 @@ public final class ModEquipmentConfig {
     /** 平飞段超时（tick）：超过仍未到投放点就强制投雷/返航，防卡死。默认 400。 */
     public static final TerminalConfigValue<Integer> TORPEDO_BOMBER_RUN_TIMEOUT_TICKS =
             TerminalConfigValue.integer("aircraft", "torpedo_bomber_combat", "run_timeout_ticks", 400, 1, 20000);
+    /**
+     * 航空鱼雷寿命（tick）：入水后超过该时间仍未命中就自毁，避免未命中的鱼雷一直跑到
+     * 默认 1200 tick（约 60 秒、170 格）之外。默认 800（40 秒；0.14 格/tick 下约 112 格）。
+     * <p>WHY 单独于 {@code global.torpedo.default_lifetime}：那是玩家型号鱼雷的兜底寿命，
+     * 空投雷按投放距离和提前量解算需要自己的窗口，不能共用 60 秒长跑。</p>
+     */
+    public static final TerminalConfigValue<Integer> TORPEDO_BOMBER_TORPEDO_LIFETIME =
+            TerminalConfigValue.integer("aircraft", "torpedo_bomber_combat", "torpedo_lifetime", 800, 1, 100000);
 
     // ---- 水平轰炸（tickLevelBomberAttack，target 沿用既有 level_bomber）----
     /** 投弹高度 = 目标 Y + 该值（格）。默认 32.0。 */

@@ -26,10 +26,11 @@ class AircraftCombatTargetingTest {
         assertTrue(nextMethod > 0);
         method = method.substring(0, nextMethod);
         int locked = method.indexOf("resolveLocked(ctx, owner,");
-        int automatic = method.indexOf("return autoSeek(ctx, com.piranport.entity.AircraftEntity.class");
+        int automatic = method.indexOf("return autoSeek(ctx, Entity.class");
         assertTrue(locked >= 0);
         assertTrue(automatic > locked, "手动火控锁定必须先于自动索敌处理");
         assertTrue(method.contains("CombatTargeting.isHostileTarget(owner, entity)"));
+        assertTrue(method.contains("isAirborneTarget(entity)"));
         assertFalse(method.contains("getOwnerUUID()"), "自动索敌不得自行按 owner UUID 另行判断敌我");
 
         String gun = Files.readString(GUN);
@@ -37,20 +38,13 @@ class AircraftCombatTargetingTest {
     }
 
     @Test
-    void fighterCruisingGateUsesSameRuleForExistingHostileTypes() throws Exception {
+    void fighterCruisingGateIncludesVanillaAndModdedFlyingMobs() throws Exception {
         String flight = Files.readString(FLIGHT);
         String method = methodBody(flight, "private static boolean tryEngagePlayerTargets(");
-        // 自动索敌分支以 boolean hasHostile 开头；前面的 usesBulletAttack 分支是火控锁定闸口。
-        int fighterBranch = method.indexOf("boolean hasHostile");
-        int aswBranchEnd = method.indexOf("} else {", fighterBranch);
+        int fighterBranch = method.indexOf("TargetResolution.isAirborneTarget(entity)");
         assertTrue(fighterBranch >= 0);
-        assertTrue(aswBranchEnd > fighterBranch);
-        String fighterGate = method.substring(fighterBranch, aswBranchEnd);
-        assertTrue(fighterGate.contains("entity instanceof Monster"));
-        assertTrue(fighterGate.contains("getEntitiesOfClass(AircraftEntity.class"));
-        assertEquals(2, occurrences(fighterGate, "CombatTargeting.isHostileTarget(owner, entity)"),
-                "Monster 与敌机候选都必须使用共享敌对判据");
-        assertFalse(fighterGate.contains("getOwnerUUID()"));
+        assertTrue(method.contains("entity instanceof net.minecraft.world.entity.FlyingMob"));
+        assertTrue(method.contains("CombatTargeting.isHostileTarget(owner, entity)"));
     }
 
     @Test
@@ -61,8 +55,8 @@ class AircraftCombatTargetingTest {
                 "战斗机/火箭机的手动锁定闸口必须接受敌机（AircraftEntity）");
 
         String helper = methodBody(flight, "private static boolean hasAliveAirLockedTarget(");
-        assertTrue(helper.contains("entity instanceof AircraftEntity aircraft && aircraft.isAlive()"),
-                "敌机不继承 LivingEntity，必须单独判定");
+        assertTrue(helper.contains("TargetResolution.isAirborneTarget(entity)"),
+                "手动火控可锁定原版和模组 FlyingMob");
     }
 
     @Test
@@ -109,6 +103,42 @@ class AircraftCombatTargetingTest {
                 "防空导弹发射瞄准需与 MissileEntity#findTarget 一样纳入敌机");
         assertTrue(aim.contains("CombatTargeting.isHostileTarget(player, e)"),
                 "敌机口径必须复用共享敌对判据");
+    }
+
+    @Test
+    void airborneTargetCoversModdedFlyingMobsAndAutoLaunchUsesSameRule() throws Exception {
+        String targeting = Files.readString(TARGETING);
+        String method = methodBody(targeting, "public static boolean isAirborneTarget(");
+        assertTrue(method.contains("FlyingAnimal"),
+                "女仆野生妖精（EntityFairy）实现 FlyingAnimal 而非 FlyingMob，必须纳入空中目标");
+        assertTrue(method.contains("FlyingPathNavigation"),
+                "其他模组飞行怪用飞行导航时也要视为空中目标");
+        assertTrue(method.contains("entity instanceof Vex"),
+                "Vex 只继承 Monster，不实现 FlyingMob");
+
+        String handler = Files.readString(Path.of(
+                "src/main/java/com/piranport/handler/PlayerTickHandler.java"));
+        String autoLaunch = methodBody(handler, "private static void tickAutoLaunchFighters(");
+        assertTrue(autoLaunch.contains("TargetResolution.isAirborneTarget(e)"),
+                "自动放飞战斗机的扫描必须复用同一套空中目标判定，否则会漏掉幻翼/模组飞行怪");
+    }
+
+    @Test
+    void torpedoBomberAimsAtWaterSurfaceAndNeverLaunchesBehind() throws Exception {
+        String strategy = Files.readString(Path.of(
+                "src/main/java/com/piranport/aviation/combat/strategy/TorpedoAttackStrategy.java"));
+        assertTrue(strategy.contains("setTorpedoAimPoint(new Vec3(predicted.x, smoothedSurfaceY, predicted.z))"),
+                "鱼雷机预瞄点必须是预测撞击点的水面投影，而不是目标眼睛/几何中心");
+        assertTrue(strategy.contains("boolean predictedAhead = horizontalVelocity.lengthSqr()"),
+                "投雷前必须校验预测点在机头前方，避免目标被超车后鱼雷朝后发射");
+        assertTrue(strategy.contains("abortTorpedoRun(state)"),
+                "预测点落到身后时应中断航线重新进入，而不是继续投雷");
+        assertTrue(strategy.contains("TORPEDO_BOMBER_TORPEDO_LIFETIME"),
+                "航空鱼雷必须设置独立寿命，未命中时不能按默认 1200 tick 长时间乱跑");
+        String entity = Files.readString(Path.of(
+                "src/main/java/com/piranport/entity/AircraftEntity.java"));
+        assertTrue(entity.contains("setTorpedoAimPoint(null)") && entity.contains("else {"),
+                "离开攻击态要清空预瞄点，返航时不能残留上一轮的白线");
     }
 
     private static String methodBody(String source, String signature) {

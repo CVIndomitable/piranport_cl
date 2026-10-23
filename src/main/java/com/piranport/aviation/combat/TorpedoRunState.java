@@ -14,6 +14,12 @@ public final class TorpedoRunState {
     public boolean standoffReached;
     /** 正在背向拉开，直到距离与高度都满足平飞入口条件。 */
     public boolean egressing;
+    @Nullable public Vec3 approachDirection;
+    /**
+     * 平滑后的预测点水面高度。水面搜索按方块取整，预测点每跨一格会跳 1.0，
+     * 直接拿它做目标高度会让飞机在下降段一格一格地抽动；这里用一阶滤波抹平。
+     */
+    @Nullable public Double smoothedSurfaceY;
 
     public void reset() {
         runStart = null;
@@ -21,5 +27,7 @@ public final class TorpedoRunState {
         aimPoint = null;
         standoffReached = false;
         egressing = false;
+        approachDirection = null;
+        smoothedSurfaceY = null;
     }
 }

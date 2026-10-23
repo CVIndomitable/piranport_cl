@@ -30,6 +30,7 @@ public class BulletEntity extends ThrowableItemProjectile {
      * 瞄准玩家飞机或中立生物时飞行路径上的玩家会被误伤；《深海/01》规定战斗机不攻击玩家本体。</p>
      */
     private boolean sparesPlayers = false;
+    private boolean missNotified = false;
 
     public BulletEntity(EntityType<? extends BulletEntity> type, Level level) {
         super(type, level);
@@ -50,7 +51,10 @@ public class BulletEntity extends ThrowableItemProjectile {
     @Override
     public void tick() {
         super.tick();
-        if (!level().isClientSide() && tickCount > MAX_LIFETIME) discard();
+        if (!level().isClientSide() && tickCount > MAX_LIFETIME) {
+            notifyOwnerMiss();
+            discard();
+        }
 
         // Phase 10: 弹头尾迹粒子
         if (level().isClientSide && tickCount % 2 == 0 && !isRemoved()) {
@@ -131,8 +135,19 @@ public class BulletEntity extends ThrowableItemProjectile {
     protected void onHitBlock(BlockHitResult result) {
         super.onHitBlock(result);
         if (!level().isClientSide()) {
+            notifyOwnerMiss();
             discard();
         }
+    }
+
+    private void notifyOwnerMiss() {
+        if (missNotified) return;
+        missNotified = true;
+        Entity owner = getOwner();
+        if (!(owner instanceof Player player)) return;
+        Component weaponName = sourceAircraftName != null ? sourceAircraftName : getDefaultItem().getDescription();
+        com.piranport.combat.HitNotifier.send(player,
+                Component.translatable("message.piranport.weapon_miss", weaponName));
     }
 
     @Override

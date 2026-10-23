@@ -90,7 +90,7 @@ public final class FireControlVisualRenderer {
                     .setLineState(new RenderStateShard.LineStateShard(OptionalDouble.of(2.0)))
                     .createCompositeState(false));
 
-    private enum Mode { NONE, CANNON, TORPEDO }
+    private enum Mode { NONE, CANNON, TORPEDO, ROCKET }
 
     private static final EntityUuidCache ENTITY_CACHE = new EntityUuidCache();
     private static final FireControlPrediction.PositionSampler SAMPLER = new FireControlPrediction.PositionSampler();
@@ -188,7 +188,7 @@ public final class FireControlVisualRenderer {
         } else if (held.getItem() instanceof MissileLauncherItem launcher
                 && launcher.getMissileType() == com.piranport.entity.MissileEntity.MissileType.ROCKET
                 && (transformed || creative)) {
-            updateTorpedo(mc, held, launcher, target, targetVelocity);
+            updateRocket(mc, launcher, target, targetVelocity);
         }
     }
 
@@ -250,16 +250,19 @@ public final class FireControlVisualRenderer {
         active = diff <= Math.max(SINGLE_TUBE_ACTIVE_DEG, fanHalfDeg);
     }
 
-    /** 火箭弹沿用鱼雷的水平拦截点和贴水线；弹速由导弹类型定义提供。 */
-    private static void updateTorpedo(Minecraft mc, ItemStack held, MissileLauncherItem launcher,
-                                      Entity target, Vec3 targetVelocity) {
-        double speed = com.piranport.entity.MissileEntity.MissileType.ROCKET.initialSpeed();
+    /** 火箭弹独立预瞄：按火箭「逐 tick 加速、封顶极速」的真实速度曲线求水平拦截点。 */
+    private static void updateRocket(Minecraft mc, MissileLauncherItem launcher,
+                                     Entity target, Vec3 targetVelocity) {
+        var rocket = com.piranport.entity.MissileEntity.MissileType.ROCKET;
         Vec3 start = new Vec3(mc.player.getX(), mc.player.getEyeY() - 0.3, mc.player.getZ());
-        Vec3 hit = FireControlPrediction.torpedoIntercept(start, target.position(), targetVelocity, speed);
+        // 与 MissileEntity#tick 同口径：初速、每 tick 加速度、极速、寿命都读同一套终端参数。
+        Vec3 hit = FireControlPrediction.acceleratingIntercept(start, target.position(), targetVelocity,
+                rocket.initialSpeed(), rocket.speedIncrement(), rocket.maxSpeed(),
+                com.piranport.config.ModProjectilesConfig.MISSILE_LIFETIME_TICKS.get());
         if (hit == null) return;
         hit = new Vec3(hit.x, start.y, hit.z);
         if (hit.distanceToSqr(start) > MAX_RENDER_DISTANCE * MAX_RENDER_DISTANCE) return;
-        mode = Mode.TORPEDO;
+        mode = Mode.ROCKET;
         origin = start;
         point = hit;
         fanHalfDeg = 0.0;
@@ -312,7 +315,7 @@ public final class FireControlVisualRenderer {
         projectToHud(event, renderPoint, mc);
 
         // 预瞄点本身画在 HUD（见类注释）；世界空间只保留鱼雷的线/扇形这类 3D 跨度提示。
-        if (mode == Mode.TORPEDO) {
+        if (mode == Mode.TORPEDO || mode == Mode.ROCKET) {
             Vec3 start = previousOrigin == null || origin == null ? origin : previousOrigin.lerp(origin, partial);
             if (start != null) {
                 PoseStack poseStack = event.getPoseStack();

@@ -73,6 +73,13 @@ public class ModLifecycleEvents {
                 ModBlockEntityTypes.CUTTING_BOARD.get(),
                 CuttingBoardBlockEntity::getItemHandler
         );
+        // 装填设施：方块实体已按方向拆分输入/输出（顶部发射器、侧面弹药、底部产出），
+        // 但此前没有登记 Capability，漏斗/管道实际接不上。
+        event.registerBlockEntity(
+                Capabilities.ItemHandler.BLOCK,
+                ModBlockEntityTypes.RELOAD_FACILITY.get(),
+                com.piranport.block.entity.ReloadFacilityBlockEntity::getItemHandler
+        );
         // 夕张水桶：管道/水槽的无限水源
         event.registerBlockEntity(
                 Capabilities.FluidHandler.BLOCK,

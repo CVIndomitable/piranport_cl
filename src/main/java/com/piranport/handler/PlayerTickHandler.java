@@ -33,11 +33,8 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.entity.FlyingMob;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.monster.Enemy;
-import net.minecraft.world.entity.monster.Phantom;
-import net.minecraft.world.entity.monster.Vex;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -666,8 +663,9 @@ public class PlayerTickHandler {
                 player.getBoundingBox().inflate(64.0),
                 e -> e.isAlive()
                         && CombatTargeting.isHostileTarget(player, e)
-                        && (e instanceof AircraftEntity
-                            || e instanceof FlyingMob || e instanceof Phantom || e instanceof Vex));
+                        // 与战斗机攻击目标共用同一口径：FlyingMob（幻翼/恶魂）、Vex、
+                        // FlyingAnimal（女仆野生妖精等）和飞行导航怪都算空中目标。
+                        && com.piranport.aviation.combat.TargetResolution.isAirborneTarget(e));
 
         if (flyingHostiles.isEmpty()) {
             if (perfEnabled) com.piranport.debug.PiranPortDebug.perf("FireControlSolve", System.nanoTime() - t0,

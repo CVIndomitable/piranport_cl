@@ -65,7 +65,9 @@ public final class GunAttackStrategy implements AttackStrategy {
         }
 
         double fireDistance = ModEquipmentConfig.FIGHTER_HOVER_DISTANCE.get();
-        double fireBand = Math.max(0.25, ModEquipmentConfig.FIGHTER_HOVER_BAND.get() * 0.25);
+        // 开火窗口取整段悬停死区（而不是死区的 1/4）：追击/退避时飞机穿过 ±band 的速度
+        // 远快于 1/4 死区，窗口过窄会变成「贴到 3 格却偶尔才打一发」。
+        double fireBand = Math.max(0.25, ModEquipmentConfig.FIGHTER_HOVER_BAND.get());
         if (context.attackCooldown() <= 0
                 && distance <= ModEquipmentConfig.FIGHTER_BULLET_RANGE.get()
                 && Math.abs(distance - fireDistance) <= fireBand) {

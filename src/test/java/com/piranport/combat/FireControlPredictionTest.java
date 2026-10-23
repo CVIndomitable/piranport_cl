@@ -68,6 +68,43 @@ class FireControlPredictionTest {
     }
 
     @Test
+    void acceleratingInterceptUsesRealSpeedRamp() {
+        // 近距离静止目标：命中点就是目标位置，且解算时间必须早于「用全程平均速度」的估计
+        Vec3 still = FireControlPrediction.acceleratingIntercept(
+                Vec3.ZERO, new Vec3(0, 0, 6), Vec3.ZERO, 0.04, 0.04, 2.0, 600);
+        assertNotNull(still);
+        assertEquals(0.0, still.x, 1e-9);
+        assertEquals(6.0, still.z, 1e-9);
+
+        // 横向移动目标：落点必须沿目标速度方向提前
+        Vec3 moving = FireControlPrediction.acceleratingIntercept(
+                Vec3.ZERO, new Vec3(0, 0, 40), new Vec3(0.5, 0, 0), 0.04, 0.04, 2.0, 600);
+        assertNotNull(moving);
+        assertTrue(moving.x > 0.0, "火箭预瞄必须给横向目标提前量");
+        double hitTime = moving.x / 0.5;
+        assertEquals(Math.hypot(moving.x, moving.z), traveled(0.04, 0.04, 2.0, hitTime), 1.0,
+                "命中点与火箭航程必须一致（允许 tick 内插值与目标单 tick 位移的误差）");
+    }
+
+    @Test
+    void acceleratingInterceptMissesTargetFasterThanRocket() {
+        assertNull(FireControlPrediction.acceleratingIntercept(
+                Vec3.ZERO, new Vec3(0, 0, 50), new Vec3(0, 0, 3.0), 0.04, 0.04, 2.0, 600));
+    }
+
+    /** 与 acceleratingIntercept 相同的逐 tick 航程模型，供断言使用。 */
+    private static double traveled(double initial, double accel, double max, double ticks) {
+        double v = initial;
+        double distance = 0;
+        for (int t = 1; t <= Math.floor(ticks); t++) {
+            distance += v;
+            v = Math.min(max, v + accel);
+        }
+        double fraction = ticks - Math.floor(ticks);
+        return distance + v * Math.max(0.0, fraction);
+    }
+
+    @Test
     void rayHitsSphereWithinRadius() {
         Vec3 eye = Vec3.ZERO;
         Vec3 center = new Vec3(10, 0, 0);

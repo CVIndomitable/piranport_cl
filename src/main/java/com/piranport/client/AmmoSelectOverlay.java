@@ -2,10 +2,8 @@ package com.piranport.client;
 
 import com.piranport.PiranPort;
 import com.piranport.component.SelectedAmmoType;
-import com.piranport.item.ShipCoreItem;
-import com.piranport.item.ShipCoreCombat;
+import com.piranport.combat.data.AmmoSelectionRules;
 import com.piranport.ammo.CreativeAmmoCache;
-import com.piranport.ammo.CreativeAmmoCatalog;
 import com.piranport.registry.ModDataComponents;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
@@ -26,7 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 圆形轮盘弹种选择器：手持火炮时按住 Tab 键显示轮盘，鼠标方向选择弹种。
+ * 圆形轮盘弹种选择器：手持支持弹种选择的武器时按住 Tab 键显示轮盘。
  * 图标排列在屏幕中央的圆形轮盘上，鼠标悬停项黄色高亮，当前选中项白色边框。
  *
  * 打开轮盘时会释放鼠标控制（releaseMouse），允许光标移动；
@@ -85,46 +83,7 @@ public class AmmoSelectOverlay {
         if (player == null) return;
 
         ItemStack weapon = player.getMainHandItem();
-        if (!(weapon.getItem() instanceof com.piranport.artillery.ArtilleryItem)) {
-            return;
-        }
-
-        boolean isCreative = player.getAbilities().instabuild;
-
-        if (isCreative) {
-            // 创造模式：从注册表获取所有匹配口径的弹药
-            for (Item item : BuiltInRegistries.ITEM) {
-                ItemStack ammoStack = new ItemStack(item);
-                if (ShipCoreCombat.matchesCaliber(ammoStack, weapon, player.level())) {
-                    if (!availableAmmos.contains(item)) {
-                        availableAmmos.add(item);
-                    }
-                }
-            }
-        } else {
-            // 生存模式：扫描背包中匹配口径的弹药
-            for (ItemStack s : player.getInventory().items) {
-                if (!s.isEmpty() && ShipCoreCombat.matchesCaliber(s, weapon, player.level())) {
-                    if (!availableAmmos.contains(s.getItem())) {
-                        availableAmmos.add(s.getItem());
-                    }
-                }
-            }
-            ItemStack oh = player.getInventory().offhand.get(0);
-            if (!oh.isEmpty() && ShipCoreCombat.matchesCaliber(oh, weapon, player.level())) {
-                if (!availableAmmos.contains(oh.getItem())) {
-                    availableAmmos.add(oh.getItem());
-                }
-            }
-            // 弹药库勾选的弹种即使背包里没有实体，也要出现在轮盘里。
-            for (Item item : CreativeAmmoCatalog.allItems()) {
-                if (availableAmmos.contains(item) || !CreativeAmmoCache.isSelected(player, item)) continue;
-                ItemStack ammoStack = new ItemStack(item);
-                if (ShipCoreCombat.matchesCaliber(ammoStack, weapon, player.level())) {
-                    availableAmmos.add(item);
-                }
-            }
-        }
+        availableAmmos.addAll(AmmoSelectionRules.available(player, weapon));
 
         // 如果只有1种弹药，直接选中
         if (availableAmmos.size() == 1) {
@@ -176,7 +135,7 @@ public class AmmoSelectOverlay {
         if (player == null) return;
 
         ItemStack weapon = player.getMainHandItem();
-        if (!(weapon.getItem() instanceof com.piranport.artillery.ArtilleryItem)) {
+        if (!AmmoSelectionRules.supports(weapon)) {
             close();
             return;
         }

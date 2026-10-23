@@ -8,7 +8,7 @@
       "predicate": {
         "piranport:loaded": 1
       },
-      "model": "piranport:item/mk14_harpoon_launcher"
+      "model": "piranport:item/mk14_harpoon_launcher_loaded"
     }
   ]
 }

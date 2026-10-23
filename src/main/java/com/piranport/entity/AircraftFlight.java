@@ -9,6 +9,7 @@ import com.piranport.component.AircraftAttackMode;
 import com.piranport.config.ModEquipmentConfig;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
@@ -292,8 +293,11 @@ final class AircraftFlight {
         }
         if (hasLocks) return false;
 
-        // 无火控锁定：起飞后只自动搜索一次
-        if (craft.hasEverHadFireControl || craft.autoSeekDone) return false;
+        // 无火控锁定：轰炸机等只自动搜索一次；纯战斗机周期性重扫，
+        // 否则起飞后才出现的幻翼/女仆野生妖精永远不会被已经在空中的战斗机接战。
+        boolean fighter = craft.getResolvedDefinition().isGunFighter();
+        if (craft.hasEverHadFireControl) return false;
+        if (!fighter && craft.autoSeekDone) return false;
         if (craft.autoSeekCooldown > 0) {
             craft.autoSeekCooldown--;
             return false;
@@ -301,19 +305,24 @@ final class AircraftFlight {
         craft.autoSeekDone = true;
         ServerLevel serverLevel = craft.level() instanceof ServerLevel level ? level : null;
         if (serverLevel == null) return false;
-        AABB box = craft.getBoundingBox().inflate(ModEquipmentConfig.AIRCRAFT_AUTO_SEEK_RANGE.get());
+        double seekRange = fighter
+                ? ModEquipmentConfig.AIRCRAFT_AUTONOMOUS_SEEK_RANGE.get()
+                : ModEquipmentConfig.AIRCRAFT_AUTO_SEEK_RANGE.get();
+        AABB box = craft.getBoundingBox().inflate(seekRange);
         boolean hasNearbyTarget;
         if (craft.hasSonar()) {
             hasNearbyTarget = !serverLevel.getEntitiesOfClass(LivingEntity.class, box,
                     entity -> entity.isAlive() && entity != owner
                             && AircraftAswRecon.isHostileAswTarget(owner, entity)).isEmpty();
         } else if (craft.usesBulletAttack()) {
-            boolean hasHostile = !serverLevel.getEntitiesOfClass(LivingEntity.class, box,
-                    entity -> entity instanceof Monster
-                            && CombatTargeting.isHostileTarget(owner, entity)).isEmpty();
-            boolean hasEnemyAircraft = !serverLevel.getEntitiesOfClass(AircraftEntity.class, box,
-                    entity -> CombatTargeting.isHostileTarget(owner, entity)).isEmpty();
-            hasNearbyTarget = hasHostile || hasEnemyAircraft;
+            // 战斗机自动起飞/进入攻击态必须与实际目标解析保持同一口径：
+            // 原版 Phantom/Vex 和其他模组 FlyingMob 不能漏在“只有 Monster/飞机”的旧入口外。
+            hasNearbyTarget = !serverLevel.getEntitiesOfClass(Entity.class, box,
+                    entity -> entity.isAlive() && entity != craft
+                            && TargetResolution.isAirborneTarget(entity)
+                            && !entity.isAlliedTo(owner)
+                            && (CombatTargeting.isHostileTarget(owner, entity)
+                                || entity instanceof net.minecraft.world.entity.FlyingMob)).isEmpty();
         } else {
             hasNearbyTarget = !serverLevel.getEntitiesOfClass(LivingEntity.class, box,
                     entity -> entity.isAlive() && entity != owner
@@ -325,6 +334,7 @@ final class AircraftFlight {
             craft.setState(AircraftEntity.FlightState.ATTACKING);
             return true;
         }
+        if (fighter) craft.autoSeekCooldown = ModEquipmentConfig.FIGHTER_RESCAN_INTERVAL.get();
         return false;
     }
 
@@ -370,12 +380,12 @@ final class AircraftFlight {
                 ? aircraft : null;
     }
 
-    /** 敌方飞机是 AircraftEntity（不继承 LivingEntity），必须单独判定。 */
+    /** 敌方飞机和原版/模组 FlyingMob 都属于战斗机空中锁定目标。 */
     private static boolean hasAliveAirLockedTarget(AircraftEntity craft, Player owner) {
         if (!(craft.level() instanceof ServerLevel serverLevel)) return false;
         for (UUID uuid : FireControlManager.getTargets(owner.getUUID())) {
             var entity = serverLevel.getEntity(uuid);
-            if (entity instanceof AircraftEntity aircraft && aircraft.isAlive()) return true;
+            if (entity != null && entity.isAlive() && TargetResolution.isAirborneTarget(entity)) return true;
         }
         return false;
     }

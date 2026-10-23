@@ -84,6 +84,47 @@ public final class FireControlPrediction {
     }
 
     /**
+     * 火箭弹水平拦截：火箭不是匀速，而是每 tick 按 {@code acceleration} 加速、封顶 {@code maxSpeed}
+     * （与 {@code MissileEntity} 的位移顺序一致：第 1 tick 走初速，之后逐 tick 加一档）。
+     * 这里逐 tick 累加航程，找到第一个「航程 ≥ 目标水平距离」的时刻，再在 tick 内线性插值。
+     *
+     * <p>WHY 不用 (初速+极速)/2 的平均速度：近距离目标在火箭还没加速完时就已命中，
+     * 用全程平均会把落点画远；远距离目标则相反。逐 tick 累加与实际弹道同构，误差 &lt; 1 tick。</p>
+     *
+     * @param maxTicks 搜索上限（通常取导弹寿命），避免无解时长时间循环
+     * @return 命中点（y 取目标当前高度），无解返回 null
+     */
+    public static Vec3 acceleratingIntercept(Vec3 origin, Vec3 targetPos, Vec3 targetVelocity,
+                                             double initialSpeed, double acceleration, double maxSpeed,
+                                             int maxTicks) {
+        if (!isFinite(origin) || !isFinite(targetPos) || !isFinite(targetVelocity)) return null;
+        if (!(maxSpeed > 1.0e-6) || maxTicks <= 0) return null;
+        double v = Math.max(0.0, Math.min(initialSpeed, maxSpeed));
+        double accel = Math.max(0.0, acceleration);
+        double dx = targetPos.x - origin.x;
+        double dz = targetPos.z - origin.z;
+        double vx = targetVelocity.x;
+        double vz = targetVelocity.z;
+        double traveled = 0.0;
+        for (int t = 1; t <= maxTicks; t++) {
+            traveled += v;
+            double targetDistance = Math.hypot(dx + vx * t, dz + vz * t);
+            if (traveled >= targetDistance) {
+                // 在本 tick 内穿越：从上一 tick 的航程插值到精确时刻
+                double previousTraveled = traveled - v;
+                double fraction = v > 1.0e-9
+                        ? Math.max(0.0, Math.min(1.0, (targetDistance - previousTraveled) / v))
+                        : 0.0;
+                double hitTime = (t - 1) + fraction;
+                return new Vec3(targetPos.x + vx * hitTime, targetPos.y,
+                        targetPos.z + vz * hitTime);
+            }
+            v = Math.min(maxSpeed, v + accel);
+        }
+        return null;
+    }
+
+    /**
      * 准星射线是否进入落点球：射线（只看前方）到球心的最近距离 &lt; radius。
      */
     public static boolean rayHitsSphere(Vec3 eye, Vec3 lookDir, Vec3 center, double radius) {

@@ -63,47 +63,21 @@ public class MissileFireStrategy {
                                          MissileLauncherItem launcher, SlotCooldowns cooldowns) {
         ItemStack launcherStack = weaponSlot == 40 ? inv.offhand.get(0) : inv.items.get(weaponSlot);
 
-        // Creative mode / 弹药库勾选：直接发射，不要求 LOADED_AMMO
+        LoadedAmmo loaded = launcherStack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
+
+        // 只有「创造弹药库」里明确勾选了该弹种才算无限；单纯处于创造模式不再自动免装填。
+        // WHY：反舰导弹是手动装填武器（策划决策/舰装/03），创造模式无限发射会绕过装填设施，
+        // 也让 loaded 贴图和装填状态无法验证。创造模式要测试连射，请在弹药库里勾选弹种。
         Item manualAmmo = launcher.getAmmoItem();
-        if (player.getAbilities().instabuild || CreativeAmmoCache.isInfinite(player, manualAmmo)) {
-            Item ammoItem = manualAmmo;
-            int coreSlot = -1;
-            int ammoSlot = -1;
-
-            for (int i = 0; i < inv.items.size(); i++) {
-                if (i == weaponSlot) continue;
-                ItemStack s = inv.items.get(i);
-                if (s.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(s)) {
-                    coreSlot = i;
-                }
-                if (ammoSlot == -1 && !s.isEmpty() && s.is(ammoItem)) {
-                    ammoSlot = i;
-                }
-            }
-            if (ammoSlot == -1 && weaponSlot != 40 && coreSlot != 40) {
-                ItemStack oh = inv.offhand.get(0);
-                if (!oh.isEmpty() && oh.is(ammoItem)) {
-                    ammoSlot = 40;
-                }
-            }
-
-            String ammoId;
-            if (ammoSlot == -1) {
-                // 创造模式：使用默认弹药
-                ammoId = BuiltInRegistries.ITEM.getKey(ammoItem).toString();
-            } else {
-                ammoId = BuiltInRegistries.ITEM.getKey(ammoItem).toString();
-            }
-
+        if (!loaded.hasAmmo() && CreativeAmmoCache.isInfinite(player, manualAmmo)) {
+            String ammoId = BuiltInRegistries.ITEM.getKey(manualAmmo).toString();
             spawnMissile(level, player, launcherStack, launcher, ammoId);
-
             level.playSound(null, player.getX(), player.getY(), player.getZ(),
                     SoundEvents.FIREWORK_ROCKET_LAUNCH, SoundSource.PLAYERS, 1.0f, 0.8f);
             return;
         }
 
         // Survival mode: use LOADED_AMMO component
-        LoadedAmmo loaded = launcherStack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
         if (!loaded.hasAmmo()) {
             player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
             return;

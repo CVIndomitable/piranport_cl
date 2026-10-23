@@ -1,6 +1,7 @@
 package com.piranport.client.input;
 
 import com.piranport.client.AmmoSelectOverlay;
+import com.piranport.combat.data.AmmoSelectionRules;
 import com.piranport.network.SwitchAmmoPayload;
 import com.piranport.client.ModKeyMappings;
 import net.minecraft.client.Minecraft;
@@ -27,7 +28,7 @@ public class AmmoSelectionHandler {
         if (ModKeyMappings.SWITCH_AMMO.isDown() && !AmmoSelectOverlay.isOpen()) {
             if (transformed && !inReconMode) {
                 ItemStack hand = player.getMainHandItem();
-                if (hand.getItem() instanceof com.piranport.artillery.ArtilleryItem) {
+                if (AmmoSelectionRules.supports(hand)) {
                     AmmoSelectOverlay.open();
                 }
             }

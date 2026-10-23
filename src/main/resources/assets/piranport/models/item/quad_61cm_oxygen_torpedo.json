@@ -1,7 +1,7 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "piranport:item/quad_torpedo_launcher_h2o2"
+    "layer0": "piranport:item/quad_torpedo_launcher_h2o2_empty"
   },
   "overrides": [
     {

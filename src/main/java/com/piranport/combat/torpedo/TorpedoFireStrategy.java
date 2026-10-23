@@ -5,6 +5,7 @@ import com.piranport.combat.TorpedoGuidanceManager;
 import com.piranport.combat.TransformationManager;
 import com.piranport.combat.util.CombatFireUtils;
 import com.piranport.component.LoadedAmmo;
+import com.piranport.component.SelectedAmmoType;
 import com.piranport.component.SlotCooldowns;
 import com.piranport.component.WeaponCooldown;
 import com.piranport.debug.PiranPortDebug;
@@ -204,9 +205,35 @@ public class TorpedoFireStrategy {
         int tubeCount = launcher.getTubeCount();
         int cooldown = ExperienceShellItem.applyCooldownReduction(player, launcher.getCooldownTicks());
 
-        // Find first matching torpedo to determine type (strict: only consume same item type)
+        // Tab 偏好优先；偏好不足一整组时回退到原有背包顺序。
         TorpedoItem torpedoType = null;
+        SelectedAmmoType selected = launcherStack.getOrDefault(
+                ModDataComponents.SELECTED_AMMO_TYPE.get(), SelectedAmmoType.EMPTY);
+        if (selected.hasSelection()) {
+            ResourceLocation selectedId = ResourceLocation.tryParse(selected.ammoItemId());
+            Item selectedItem = selectedId == null ? net.minecraft.world.item.Items.AIR
+                    : BuiltInRegistries.ITEM.get(selectedId);
+            if (selectedItem instanceof TorpedoItem selectedTorpedo
+                    && selectedTorpedo.getCaliber() == caliber) {
+                boolean selectedInfinite = player.getAbilities().instabuild
+                        || CreativeAmmoCache.isInfinite(player, selectedTorpedo);
+                int selectedCount = 0;
+                if (!selectedInfinite) {
+                    for (int i = 0; i < inv.items.size(); i++) {
+                        if (i == coreSlot || i == weaponSlot) continue;
+                        ItemStack s = inv.items.get(i);
+                        if (!s.isEmpty() && s.getItem() == selectedTorpedo) selectedCount += s.getCount();
+                    }
+                    if (weaponSlot != 40 && coreSlot != 40) {
+                        ItemStack oh = inv.offhand.get(0);
+                        if (!oh.isEmpty() && oh.getItem() == selectedTorpedo) selectedCount += oh.getCount();
+                    }
+                }
+                if (selectedInfinite || selectedCount >= tubeCount) torpedoType = selectedTorpedo;
+            }
+        }
         for (int i = 0; i < inv.items.size(); i++) {
+            if (torpedoType != null) break;
             if (i == coreSlot || i == weaponSlot) continue;
             ItemStack s = inv.items.get(i);
             if (!s.isEmpty() && s.getItem() instanceof TorpedoItem ti && ti.getCaliber() == caliber) {

@@ -5,6 +5,8 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.core.Direction;
 import org.joml.Quaternionf;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -75,8 +77,21 @@ public final class BedrockMesh {
         BedrockGeometry.Bone bone = geometry.bones.get(index);
         if (bone.cubes.isEmpty() && bone.children.isEmpty()) return;
 
-        int base = index * 9;
         pose.pushPose();
+        applyBoneTransform(index, pose, poses);
+
+        for (BedrockGeometry.Cube cube : bone.cubes) {
+            renderCube(bone, cube, pose, buffer, light, overlay, color);
+        }
+        for (int child : bone.children) {
+            renderBone(child, pose, buffer, light, overlay, color, poses);
+        }
+        pose.popPose();
+    }
+
+    /** 只应用骨骼自身的位移/旋转/缩放，不含方块和子骨骼。 */
+    private void applyBoneTransform(int index, PoseStack pose, float[] poses) {
+        int base = index * 9;
 
         // 位移：骨骼自身绑定位置 + 动画位移；动画 y 需要按 Bedrock→Java 取反
         float px = localOffsets[index * 3] + poses[base + 3] * scale;
@@ -98,14 +113,26 @@ public final class BedrockMesh {
         if (sx != 1.0F || sy != 1.0F || sz != 1.0F) {
             pose.scale(sx, sy, sz);
         }
+    }
 
-        for (BedrockGeometry.Cube cube : bone.cubes) {
-            renderCube(bone, cube, pose, buffer, light, overlay, color);
+    /**
+     * 把 PoseStack 推进到指定骨骼的坐标系（用于手持物挂点）。
+     * 返回 false 表示模型里没有这根骨骼。
+     */
+    public boolean translateToBone(String boneName, PoseStack pose, float[] poses) {
+        Integer target = geometry.indexByName.get(boneName);
+        if (target == null) return false;
+        // 从目标骨骼回溯到根，再按 根→叶 顺序施加变换
+        List<Integer> path = new ArrayList<>();
+        int current = target;
+        while (current >= 0) {
+            path.add(current);
+            current = geometry.bones.get(current).parent;
         }
-        for (int child : bone.children) {
-            renderBone(child, pose, buffer, light, overlay, color, poses);
+        for (int i = path.size() - 1; i >= 0; i--) {
+            applyBoneTransform(path.get(i), pose, poses);
         }
-        pose.popPose();
+        return true;
     }
 
     private void renderCube(BedrockGeometry.Bone bone, BedrockGeometry.Cube cube, PoseStack pose,

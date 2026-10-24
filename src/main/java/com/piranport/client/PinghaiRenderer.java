@@ -5,6 +5,7 @@ import com.piranport.client.model.bedrock.BedrockAnimation;
 import com.piranport.client.model.bedrock.BedrockEntityModel;
 import com.piranport.client.model.bedrock.BedrockGeometry;
 import com.piranport.client.model.bedrock.BedrockGeometryLoader;
+import com.piranport.client.model.bedrock.BedrockHeldItemLayer;
 import com.piranport.client.model.bedrock.BedrockMesh;
 import com.piranport.entity.PinghaiEntity;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
@@ -24,6 +25,7 @@ public class PinghaiRenderer extends MobRenderer<PinghaiEntity, BedrockEntityMod
 
     public PinghaiRenderer(EntityRendererProvider.Context context) {
         super(context, createModel(context), 0.5F);
+        addLayer(new BedrockHeldItemLayer<>(this, context.getItemInHandRenderer()));
     }
 
     private static BedrockEntityModel<PinghaiEntity> createModel(EntityRendererProvider.Context context) {

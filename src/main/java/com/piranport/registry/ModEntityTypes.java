@@ -11,6 +11,7 @@ import com.piranport.entity.GungnirEntity;
 import com.piranport.entity.RailgunProjectileEntity;
 import com.piranport.entity.DungeonTransportPlaneEntity;
 import com.piranport.entity.LowTierDestroyerEntity;
+import com.piranport.entity.PinghaiEntity;
 import com.piranport.entity.SanshikiPelletEntity;
 import com.piranport.entity.FloatingTargetEntity;
 import com.piranport.entity.DepthChargeEntity;
@@ -403,4 +404,11 @@ public class ModEntityTypes {
                             com.piranport.npc.shipgirl.ShipGirlEntity::new, MobCategory.CREATURE)
                     .sized(0.6f, 1.8f).clientTrackingRange(16).updateInterval(3)
                     .build("piranport:ship_girl"));
+
+    // --- 平海（实体核心替身 / 展示模型） ---
+    public static final DeferredHolder<EntityType<?>, EntityType<PinghaiEntity>>
+            PINGHAI = ENTITY_TYPES.register("pinghai",
+            () -> EntityType.Builder.<PinghaiEntity>of(PinghaiEntity::new, MobCategory.CREATURE)
+                    .sized(0.6f, 1.8f).clientTrackingRange(16).updateInterval(3)
+                    .build("piranport:pinghai"));
 }

@@ -92,6 +92,8 @@ public class ModLifecycleEvents {
     public static void registerEntityAttributes(EntityAttributeCreationEvent event) {
         event.put(ModEntityTypes.FLOATING_TARGET.get(),
                 FloatingTargetEntity.createAttributes().build());
+        event.put(ModEntityTypes.PINGHAI.get(),
+                com.piranport.entity.PinghaiEntity.createAttributes().build());
         event.put(ModEntityTypes.LOW_TIER_DESTROYER.get(),
                 LowTierDestroyerEntity.createAttributes().build());
         // 深海 NPC 实体

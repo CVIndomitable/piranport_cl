@@ -206,6 +206,7 @@ public class ModCreativeTabs {
                         output.accept(ModItems.ENTITY_CORE_DEEP_OCEAN_CARRIER.get());
                         output.accept(ModItems.ENTITY_CORE_DEEP_OCEAN_SUBMARINE.get());
                         output.accept(ModItems.ENTITY_CORE_SHIP_GIRL.get());
+                        output.accept(ModItems.ENTITY_CORE_PINGHAI.get());
                     }).build());
 
     // ===== 农业 — 矿石 / 农业资源 / 食材与加工 =====

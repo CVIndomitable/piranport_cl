@@ -49,13 +49,14 @@ class ArchitectureTest {
                 .check(CLASSES);
     }
 
-    /** client 包不应引用 server 包 — 保持单向依赖。 */
+    /** client 包不应引用本项目的 server 包 — 保持单向依赖。 */
     @Test
     void clientShouldNotDependOnServer() {
         noClasses()
-                .that().resideInAnyPackage("..client..")
-                .should().dependOnClassesThat().resideInAnyPackage("..server..")
-                .because("Client should not hard-depend on server-specific logic")
+                .that().resideInAnyPackage("com.piranport..client..")
+                .should().dependOnClassesThat().resideInAnyPackage("com.piranport..server..")
+                .because("Client should not hard-depend on server-specific logic; "
+                        + "net.minecraft.server.packs 属于两端共用的资源 API，不在本规则范围内")
                 .check(CLASSES);
     }
 

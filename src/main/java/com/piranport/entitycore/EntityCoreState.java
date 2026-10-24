@@ -62,6 +62,8 @@ public class EntityCoreState {
                     new ItemStack(ModItems.ENTITY_CORE_DEEP_OCEAN_SUBMARINE.get());
             case EntityCoreDefinitions.SHIP_GIRL ->
                     new ItemStack(ModItems.ENTITY_CORE_SHIP_GIRL.get());
+            case EntityCoreDefinitions.PINGHAI ->
+                    new ItemStack(ModItems.ENTITY_CORE_PINGHAI.get());
             default -> ItemStack.EMPTY;
         };
     }

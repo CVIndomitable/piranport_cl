@@ -639,6 +639,7 @@ public class ModItems {
     public static final DeferredItem<EntityCoreItem> ENTITY_CORE_DEEP_OCEAN_CARRIER = SpecialtyItems.ENTITY_CORE_DEEP_OCEAN_CARRIER;
     public static final DeferredItem<EntityCoreItem> ENTITY_CORE_DEEP_OCEAN_SUBMARINE = SpecialtyItems.ENTITY_CORE_DEEP_OCEAN_SUBMARINE;
     public static final DeferredItem<EntityCoreItem> ENTITY_CORE_SHIP_GIRL = SpecialtyItems.ENTITY_CORE_SHIP_GIRL;
+    public static final DeferredItem<EntityCoreItem> ENTITY_CORE_PINGHAI = SpecialtyItems.ENTITY_CORE_PINGHAI;
 
     // ===== Fuel (extracted to SpecialtyItems) =====
     public static final DeferredItem<Item> FUEL = SpecialtyItems.FUEL;

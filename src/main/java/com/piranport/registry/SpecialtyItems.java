@@ -259,6 +259,10 @@ public final class SpecialtyItems {
             ITEMS.register("entity_core_ship_girl",
                     () -> new EntityCoreItem(new Item.Properties().stacksTo(1),
                             EntityCoreDefinitions.SHIP_GIRL));
+    public static final DeferredItem<EntityCoreItem> ENTITY_CORE_PINGHAI =
+            ITEMS.register("entity_core_pinghai",
+                    () -> new EntityCoreItem(new Item.Properties().stacksTo(1),
+                            EntityCoreDefinitions.PINGHAI));
 
     // ===== Fuel =====
     public static final DeferredItem<Item> FUEL =

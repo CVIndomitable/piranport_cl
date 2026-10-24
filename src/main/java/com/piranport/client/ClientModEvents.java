@@ -438,5 +438,8 @@ public class ClientModEvents {
         // 舰娘 NPC：随从暂用艾利克斯（原版细手臂）模型占位，见 AlexSlimMobRenderer
         event.registerEntityRenderer(ModEntityTypes.SHIP_GIRL.get(),
                 com.piranport.client.AlexSlimMobRenderer::new);
+        // 平海：YSM 模型转成的 Bedrock 几何渲染器
+        event.registerEntityRenderer(ModEntityTypes.PINGHAI.get(),
+                com.piranport.client.PinghaiRenderer::new);
     }
 }

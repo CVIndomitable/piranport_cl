@@ -42,6 +42,9 @@ public final class AircraftVisualRegistry {
     private static final ResourceLocation F4U7_TEXTURE =
             ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "textures/entity/f4u7.png");
 
+    private static final ResourceLocation TYPE96_FIGHTER_TEXTURE =
+            ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "textures/entity/type96_fighter.png");
+
     private static final AircraftVisual B25 =
             new AircraftVisual(AircraftVisualIds.B25, ModelKind.B25, B25_TEXTURE);
     private static final AircraftVisual F4F =
@@ -68,6 +71,9 @@ public final class AircraftVisualRegistry {
     private static final AircraftVisual F4U7 =
             new AircraftVisual(AircraftVisualIds.F4U7, ModelKind.F4U7, F4U7_TEXTURE);
 
+    private static final AircraftVisual TYPE96_FIGHTER =
+            new AircraftVisual(AircraftVisualIds.TYPE96_FIGHTER, ModelKind.TYPE96_FIGHTER, TYPE96_FIGHTER_TEXTURE);
+
     // 美术占位：待替换为正式模型与贴图。
     private static final AircraftVisual PLACEHOLDER =
             new AircraftVisual(AircraftVisualIds.PLACEHOLDER, ModelKind.F4F, B25_TEXTURE);
@@ -79,6 +85,7 @@ public final class AircraftVisualRegistry {
             Map.entry(AircraftVisualIds.TORPEDO_BOMBER, B25),
             Map.entry(AircraftVisualIds.ASW, B25),
             Map.entry(AircraftVisualIds.F4F, F4F),
+            Map.entry(AircraftVisualIds.TYPE96_FIGHTER, TYPE96_FIGHTER),
             Map.entry(AircraftVisualIds.F4U7, F4U7),
             Map.entry(AircraftVisualIds.SKYRAIDER, SKYRAIDER),
             Map.entry(AircraftVisualIds.WYVERN, WYVERN),
@@ -125,7 +132,8 @@ public final class AircraftVisualRegistry {
         BTD_DESTROYER,
         WYVERN,
         SKYRAIDER,
-        F4U7
+        F4U7,
+        TYPE96_FIGHTER
     }
 
     public record AircraftVisual(String id, ModelKind modelKind, ResourceLocation texture) {

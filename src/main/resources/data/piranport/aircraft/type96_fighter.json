@@ -1,7 +1,7 @@
 {
   "aircraft_class": "fighter",
   "attack_profile": "gun",
-  "visual_id": "placeholder",
+  "visual_id": "type96_fighter",
   "nation": "jp",
   "fuel_capacity": 1200,
   "ammo_capacity": 64,

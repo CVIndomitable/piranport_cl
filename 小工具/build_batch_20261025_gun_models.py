@@ -153,6 +153,8 @@ def write(gid):
             "muzzle_empty", "muzzle_loaded")}
     if gid == "british_single_6inch_gun":
         tex["canvas"] = NS + gid + "_canvas"
+    if gid == "soviet_improved_triple_180mm_gun":
+        tex["stripe"] = NS + gid + "_stripe"
     base_model = {
         "parent": "minecraft:block/block", "gui_light": "front", "ambientocclusion": False,
         "textures": {"particle": tex["hull"], **tex}, "elements": elements,
@@ -387,12 +389,163 @@ def build_mk16_triple_6inch_gun_flashless():
     write(gid)
 
 
+# ================= 13. 改进型6英寸三联主炮（L_516） =================
+def build_improved_triple_6inch_gun():
+    gid = "improved_triple_6inch_gun"
+    base(4.0, dark="hull_dark")
+    box("body_lower", 3.80, 1.05, 3.90, 12.20, 3.40, 11.70, "hull")
+    box("body_upper", 4.00, 3.40, 4.10, 12.00, 4.20, 11.60, "hull")
+    box("roof", 4.00, 4.20, 4.00, 12.00, 4.50, 11.50, "roof")
+    box("roof_slope", 4.10, 4.05, 10.80, 11.90, 4.45, 11.60, "roof",
+        rotation={"angle": -22.5, "axis": "x", "origin": [8.0, 4.20, 11.20]})
+    box("side_plate_l", 3.72, 1.60, 5.60, 3.85, 3.30, 8.20, "detail")
+    box("side_plate_r", 12.15, 1.60, 5.60, 12.28, 3.30, 8.20, "detail")
+    front_port(5.20, 10.80, 2.00, 3.55, 11.72)
+    barrels([(6.20, 2.70, 10.70, 24.00, 0.23),
+             (8.00, 2.70, 10.70, 24.00, 0.23),
+             (9.80, 2.70, 10.70, 24.00, 0.23)], gid)
+    rear_recess(7.4, 1.40, 3.70, 3.88, False)
+    write(gid)
+
+
+# ================= 14. 152毫米三联高平炮(46)（L_493） =================
+def build_triple_152mm_dp_gun_46():
+    gid = "triple_152mm_dp_gun_46"
+    base(4.2)
+    octagon("body_lower", 1.05, 3.20, 4.40, 4.20, 1.30, "hull")
+    octagon("body_bulge", 3.20, 4.80, 4.70, 4.40, 1.45, "hull")
+    octagon("body_upper", 4.80, 5.40, 4.30, 4.00, 1.30, "hull")
+    octagon("body_top", 5.40, 5.70, 3.40, 3.10, 1.00, "roof")
+    front_port(5.20, 10.80, 2.10, 3.80, 12.08)
+    barrels([(6.20, 3.00, 10.90, 24.20, 0.23),
+             (8.00, 3.00, 10.90, 24.20, 0.23),
+             (9.80, 3.00, 10.90, 24.20, 0.23)], gid)
+    # 顶部环形扶手：四段直杆 + 四根立柱
+    for tag, x1, z1, x2, z2 in (("f", 4.90, 10.75, 11.10, 10.87),
+                                ("b", 4.90, 4.73, 11.10, 4.85),
+                                ("l", 4.73, 5.00, 4.85, 10.60),
+                                ("r", 11.15, 5.00, 11.27, 10.60)):
+        box(f"ring_{tag}", x1, 5.70, z1, x2, 5.84, z2, "dark")
+    for tag, x, z in (("fl", 4.90, 10.75), ("fr", 11.10, 10.75),
+                      ("bl", 4.90, 4.73), ("br", 11.10, 4.73)):
+        box(f"ring_post_{tag}", x - 0.06, 5.55, z - 0.06, x + 0.06, 5.84, z + 0.06, "dark")
+    rear_recess(7.4, 1.50, 4.80, 3.60, False)
+    write(gid)
+
+
+# ================= 15. 瑞典三联152毫米炮（L_270） =================
+def build_swedish_triple_152mm_gun():
+    gid = "swedish_triple_152mm_gun"
+    base(3.8)
+    box("body_lower", 3.90, 1.05, 3.90, 12.10, 3.30, 11.60, "hull")
+    box("body_upper", 4.10, 3.30, 4.10, 11.90, 4.20, 11.50, "hull")
+    chamfer("chamfer_fr", 11.55, 11.05, 1.70, 0.55, 1.05, 4.20, -45, "hull")
+    chamfer("chamfer_fl", 4.45, 11.05, 1.70, 0.55, 1.05, 4.20, 45, "hull")
+    box("roof", 4.00, 4.20, 4.00, 12.00, 4.48, 11.40, "roof")
+    box("roof_step", 4.40, 4.48, 4.10, 11.60, 4.72, 5.80, "roof")
+    front_port(5.20, 10.80, 1.95, 3.55, 11.52)
+    barrels([(6.20, 2.65, 10.60, 24.00, 0.23),
+             (8.00, 2.65, 10.60, 24.00, 0.23),
+             (9.80, 2.65, 10.60, 24.00, 0.23)], gid)
+    box("rangefinder", 6.80, 4.72, 4.80, 8.50, 5.20, 6.10, "hull")
+    box("rangefinder_top", 6.90, 5.20, 4.90, 8.40, 5.30, 6.00, "detail")
+    rear_recess(7.4, 1.45, 3.70, 3.88, False)
+    write(gid)
+
+
+# ================= 16. 苏联三联180毫米炮（L_177） =================
+def build_soviet_triple_180mm_gun():
+    gid = "soviet_triple_180mm_gun"
+    base(4.4)
+    octagon("body_lower", 1.05, 3.40, 4.60, 4.40, 1.40, "hull")
+    octagon("body_bulge", 3.40, 5.00, 4.90, 4.60, 1.55, "hull")
+    octagon("body_upper", 5.00, 5.70, 4.50, 4.20, 1.35, "hull")
+    octagon("body_top", 5.70, 6.00, 3.50, 3.20, 1.00, "roof")
+    front_port(5.20, 10.80, 2.20, 4.00, 12.28)
+    barrels([(6.20, 3.20, 11.10, 24.60, 0.25),
+             (8.00, 3.20, 11.10, 24.60, 0.25),
+             (9.80, 3.20, 11.10, 24.60, 0.25)], gid)
+    box("rf_box", 4.60, 5.85, 5.20, 6.40, 6.35, 6.70, "hull")
+    box("rf_top", 4.70, 6.35, 5.30, 6.30, 6.45, 6.60, "roof")
+    for tag, x1, x2 in (("r", 12.60, 12.74), ("l", 3.26, 3.40)):
+        for y in (4.30, 4.80):
+            box(f"handrail_{tag}_{int(y*100)}", x1, y, 4.80, x2, y + 0.09, 9.20, "detail")
+        for z in (5.00, 6.80, 8.60):
+            box(f"handrail_post_{tag}_{int(z*10)}", x1, 3.95, z - 0.05, x2, 4.90, z + 0.05, "detail")
+    rear_recess(7.8, 1.55, 5.00, 3.58, False)
+    write(gid)
+
+
+# ================= 17. 苏联改良型三联180毫米炮（L_301） =================
+def build_soviet_improved_triple_180mm_gun():
+    gid = "soviet_improved_triple_180mm_gun"
+    base(4.3)
+    octagon("body_lower", 1.05, 3.30, 4.50, 4.30, 1.35, "hull")
+    octagon("body_bulge", 3.30, 4.90, 4.80, 4.50, 1.50, "hull")
+    octagon("body_upper", 4.90, 5.60, 4.40, 4.10, 1.30, "hull")
+    octagon("body_top", 5.60, 5.90, 3.40, 3.10, 1.00, "roof")
+    front_port(5.20, 10.80, 2.15, 3.95, 12.18)
+    barrels([(6.20, 3.10, 11.00, 24.40, 0.24),
+             (8.00, 3.10, 11.00, 24.40, 0.24),
+             (9.80, 3.10, 11.00, 24.40, 0.24)], gid)
+    # 右舷红色识别条
+    box("red_stripe", 12.68, 1.40, 5.90, 12.80, 4.80, 7.20, "stripe")
+    box("side_hatch", 12.55, 2.60, 8.00, 12.68, 3.70, 9.20, "detail")
+    rear_recess(7.6, 1.50, 4.80, 3.56, False)
+    write(gid)
+
+
+# ================= 18. 英国双联8英寸炮（L_119） =================
+def build_british_twin_8inch_gun():
+    gid = "british_twin_8inch_gun"
+    base(4.2)
+    box("body_lower", 3.60, 1.05, 3.80, 12.40, 2.80, 11.80, "hull")
+    box("body_upper", 3.90, 2.80, 4.00, 12.10, 3.60, 11.70, "hull")
+    chamfer("chamfer_fr", 11.85, 11.20, 1.70, 0.55, 1.05, 3.60, -45, "hull")
+    chamfer("chamfer_fl", 4.15, 11.20, 1.70, 0.55, 1.05, 3.60, 45, "hull")
+    box("roof", 3.90, 3.60, 4.00, 12.10, 3.88, 11.60, "roof")
+    box("roof_slope", 4.00, 3.45, 10.95, 12.00, 3.85, 11.72, "roof",
+        rotation={"angle": -22.5, "axis": "x", "origin": [8.0, 3.60, 11.35]})
+    front_port(5.80, 10.20, 1.75, 3.10, 11.82)
+    barrels([(6.75, 2.40, 10.80, 24.00, 0.24),
+             (9.25, 2.40, 10.80, 24.00, 0.24)], gid)
+    box("side_plate_l", 3.52, 1.40, 5.80, 3.64, 2.60, 8.40, "detail")
+    box("side_plate_r", 12.36, 1.40, 5.80, 12.48, 2.60, 8.40, "detail")
+    rear_recess(7.2, 1.35, 3.20, 3.78, False)
+    write(gid)
+
+
+# ================= 19. 日本20.3厘米连装炮（L_16） =================
+def build_japanese_twin_203mm_gun():
+    gid = "japanese_twin_203mm_gun"
+    base(3.8)
+    box("body_lower", 3.90, 1.05, 3.90, 12.10, 3.30, 11.60, "hull")
+    box("body_upper", 4.10, 3.30, 4.10, 11.90, 4.20, 11.50, "hull")
+    chamfer("chamfer_fr", 11.55, 11.05, 1.70, 0.55, 1.05, 4.20, -45, "hull")
+    chamfer("chamfer_fl", 4.45, 11.05, 1.70, 0.55, 1.05, 4.20, 45, "hull")
+    box("roof", 4.00, 4.20, 4.00, 12.00, 4.48, 11.40, "roof")
+    box("roof_step", 4.40, 4.48, 4.10, 11.60, 4.72, 5.90, "roof")
+    front_port(5.80, 10.20, 2.00, 3.55, 11.52)
+    barrels([(6.80, 2.70, 10.60, 24.20, 0.24),
+             (9.20, 2.70, 10.60, 24.20, 0.24)], gid)
+    box("periscope_base", 7.60, 4.72, 5.20, 8.40, 5.05, 5.90, "hull")
+    box("periscope", 7.90, 5.05, 5.45, 8.10, 5.75, 5.65, "dark")
+    box("blister_l", 3.80, 2.30, 6.30, 4.02, 3.10, 7.70, "detail")
+    box("blister_r", 11.98, 2.30, 6.30, 12.20, 3.10, 7.70, "detail")
+    rear_recess(6.8, 1.45, 3.80, 3.88, True)
+    write(gid)
+
+
 if __name__ == "__main__":
     for fn in (build_us_single_5inch_gun, build_us_twin_5inch_gun,
                build_us_twin_5inch_dp_gun, build_twin_5inch_l54_dp_gun,
                build_japanese_single_140mm_gun, build_british_single_6inch_gun,
                build_british_twin_6inch_gun, build_japanese_twin_152mm_gun,
                build_british_triple_6inch_gun, build_us_triple_6inch_gun,
-               build_mk16_triple_6inch_gun_flashless):
+               build_mk16_triple_6inch_gun_flashless,
+               build_improved_triple_6inch_gun, build_triple_152mm_dp_gun_46,
+               build_swedish_triple_152mm_gun, build_soviet_triple_180mm_gun,
+               build_soviet_improved_triple_180mm_gun, build_british_twin_8inch_gun,
+               build_japanese_twin_203mm_gun):
         elements.clear()
         fn()

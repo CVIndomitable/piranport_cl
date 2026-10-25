@@ -124,6 +124,28 @@ public class ClientModEvents {
     private static final CatalogGunRenderer.Spec MK16_TRIPLE_6 =
             CatalogGunRenderer.spec("mk16_triple_6inch_gun_flashless",
                     WeaponItems.CATALOG_GUNS.get("mk16_triple_6inch_gun_flashless"));
+    /** 2026-10-25 批次二：三联 6 英寸 / 三联 180 毫米 / 双联 8 英寸。 */
+    private static final CatalogGunRenderer.Spec IMPROVED_TRIPLE_6 =
+            CatalogGunRenderer.spec("improved_triple_6inch_gun",
+                    WeaponItems.CATALOG_GUNS.get("improved_triple_6inch_gun"));
+    private static final CatalogGunRenderer.Spec TRIPLE_152_DP_46 =
+            CatalogGunRenderer.spec("triple_152mm_dp_gun_46",
+                    WeaponItems.CATALOG_GUNS.get("triple_152mm_dp_gun_46"));
+    private static final CatalogGunRenderer.Spec SWEDISH_TRIPLE_152 =
+            CatalogGunRenderer.spec("swedish_triple_152mm_gun",
+                    WeaponItems.CATALOG_GUNS.get("swedish_triple_152mm_gun"));
+    private static final CatalogGunRenderer.Spec SOVIET_TRIPLE_180 =
+            CatalogGunRenderer.spec("soviet_triple_180mm_gun",
+                    WeaponItems.CATALOG_GUNS.get("soviet_triple_180mm_gun"));
+    private static final CatalogGunRenderer.Spec SOVIET_IMPROVED_TRIPLE_180 =
+            CatalogGunRenderer.spec("soviet_improved_triple_180mm_gun",
+                    WeaponItems.CATALOG_GUNS.get("soviet_improved_triple_180mm_gun"));
+    private static final CatalogGunRenderer.Spec BRIT_TWIN_8 =
+            CatalogGunRenderer.spec("british_twin_8inch_gun",
+                    WeaponItems.CATALOG_GUNS.get("british_twin_8inch_gun"));
+    private static final CatalogGunRenderer.Spec JP_TWIN_203 =
+            CatalogGunRenderer.spec("japanese_twin_203mm_gun",
+                    WeaponItems.CATALOG_GUNS.get("japanese_twin_203mm_gun"));
 
     /** 注册日本12厘米单装炮、日本12.7厘米连装炮、博福斯双联120毫米炮与德国/意大利/美国三联主炮的 standalone 3D 模型（BEWLR 直接取用）。 */
     @SubscribeEvent

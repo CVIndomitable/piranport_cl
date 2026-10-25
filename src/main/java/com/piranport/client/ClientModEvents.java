@@ -103,6 +103,8 @@ public class ClientModEvents {
         event.register(UsTriple12inchGunRenderer.MODEL_LOADED);
         event.register(ItalianTriple320mmGunRenderer.MODEL_EMPTY);
         event.register(ItalianTriple320mmGunRenderer.MODEL_LOADED);
+        event.register(Quad533mmTorpedoRenderer.MODEL_EMPTY);
+        event.register(Quad533mmTorpedoRenderer.MODEL_LOADED);
         for (CatalogGunRenderer.Spec spec : CatalogGunRenderer.specs()) {
             event.register(spec.modelEmpty());
             event.register(spec.modelLoaded());
@@ -126,6 +128,10 @@ public class ClientModEvents {
                 ModItems.US_TRIPLE_12INCH_GUN.get());
         event.registerItem(ItalianTriple320mmGunRenderer.CLIENT_EXTENSIONS,
                 ModItems.ITALIAN_TRIPLE_320MM_GUN.get());
+        // 四联533毫米鱼雷（本体与 ur 高速型共用一套发射器渲染）
+        event.registerItem(Quad533mmTorpedoRenderer.CLIENT_EXTENSIONS,
+                ModItems.QUAD_533MM_TORPEDO.get(),
+                ModItems.QUAD_533MM_TORPEDO_UR_HIGH_SPEED.get());
         for (CatalogGunRenderer.Spec spec : CatalogGunRenderer.specs()) {
             for (var item : spec.items()) {
                 event.registerItem(CatalogGunRenderer.extensionsFor(spec), item.get());
@@ -151,6 +157,8 @@ public class ClientModEvents {
         event.enqueueWork(UsTriple12inchGunRenderer::init);
         // 意大利三联320毫米炮：同一套 BEWLR 方案
         event.enqueueWork(ItalianTriple320mmGunRenderer::init);
+        // 四联533毫米鱼雷：鱼雷发射器走同一套 BEWLR 方案
+        event.enqueueWork(Quad533mmTorpedoRenderer::init);
         // 2026-10-18 批量主炮：共用 CatalogGunRenderer
         event.enqueueWork(CatalogGunRenderer::initAll);
 

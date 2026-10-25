@@ -1,0 +1,6 @@
+{
+  "parent": "piranport:item/quad_533mm_torpedo_3d",
+  "textures": {
+    "warhead": "piranport:item/quad_533mm_torpedo_warhead"
+  }
+}

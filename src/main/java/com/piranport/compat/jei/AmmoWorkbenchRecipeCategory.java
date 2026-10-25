@@ -28,6 +28,8 @@ public class AmmoWorkbenchRecipeCategory implements IRecipeCategory<AmmoWorkbenc
     private static final int INPUT_X = 1;
     private static final int INPUT_Y_ROW1 = 4;
     private static final int INPUT_Y_ROW2 = 22;
+    // 两行共 6 个输入槽。当前 47 条配方最多 5 个输入（4 材料 + 1 张不消耗的蓝图），
+    // 足够容纳；若将来新增配方超过 6 个输入，必须同步加行并下调文字位置，否则会重叠。
     private static final int SLOTS_PER_ROW = 3;
     private static final int ARROW_X = 66;
     private static final int ARROW_WIDTH = 28;
@@ -82,10 +84,9 @@ public class AmmoWorkbenchRecipeCategory implements IRecipeCategory<AmmoWorkbenc
         gfx.fill(ARROW_X + ARROW_WIDTH - 6, ARROW_Y - 3, ARROW_X + ARROW_WIDTH, ARROW_Y + 5, arrowColor);
         gfx.fill(ARROW_X + ARROW_WIDTH - 3, ARROW_Y - 2, ARROW_X + ARROW_WIDTH - 1, ARROW_Y + 4, arrowColor);
 
-        // 类型/口径文字
+        // 类型/口径文字（口径为空时只显示类型）
         Minecraft mc = Minecraft.getInstance();
-        String label = recipe.typeName() + " - " + recipe.caliberName();
-        gfx.drawString(mc.font, label, INPUT_X, INPUT_Y_ROW2 + SLOT_SIZE + 2, 0xFF404040, false);
+        gfx.drawString(mc.font, recipe.displayLabel(), INPUT_X, INPUT_Y_ROW2 + SLOT_SIZE + 2, 0xFF404040, false);
 
         // 合成时间
         String timeText = recipe.craftTimeTicks() / 20 + "s";

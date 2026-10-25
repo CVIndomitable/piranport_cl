@@ -25,4 +25,11 @@ public record AmmoWorkbenchJEIRecipe(
                 recipe.craftTimeTicks(), recipe.typeName(), recipe.caliberName()
         );
     }
+
+    /** 类别/口径展示文字：口径为空时不要留下「标准 - 」这样的尾巴。 */
+    public String displayLabel() {
+        return caliberName == null || caliberName.isBlank()
+                ? typeName
+                : typeName + " - " + caliberName;
+    }
 }

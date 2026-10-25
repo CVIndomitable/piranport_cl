@@ -25,6 +25,9 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeManager;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @JeiPlugin
 public class PiranPortJEIPlugin implements IModPlugin {
     private static final ResourceLocation UID =
@@ -73,11 +76,16 @@ public class PiranPortJEIPlugin implements IModPlugin {
                 rm.getAllRecipesFor(ModRecipeTypes.CUTTING_BOARD_TYPE.get())
                         .stream().map(RecipeHolder::value).toList());
 
-        // Ammo Workbench recipes (hardcoded registry)
-        registration.addRecipes(AmmoWorkbenchRecipeCategory.RECIPE_TYPE,
-                AmmoRecipeRegistry.getRecipesForCategory(AmmoCategory.SHELL).stream()
-                        .map(AmmoWorkbenchJEIRecipe::fromAmmoRecipe)
-                        .toList());
+        // 弹药合成台配方来自硬编码注册表。按 AmmoCategory 枚举顺序注册全部类别，
+        // 使 JEI 里的分组顺序与合成台标签页一致（炮弹→鱼雷→航弹→深弹→导弹）。
+        // 新增类别时只要加进枚举就会自动出现在 JEI，不再需要改这里。
+        List<AmmoWorkbenchJEIRecipe> ammoRecipes = new ArrayList<>();
+        for (AmmoCategory category : AmmoCategory.values()) {
+            AmmoRecipeRegistry.getRecipesForCategory(category).stream()
+                    .map(AmmoWorkbenchJEIRecipe::fromAmmoRecipe)
+                    .forEach(ammoRecipes::add);
+        }
+        registration.addRecipes(AmmoWorkbenchRecipeCategory.RECIPE_TYPE, ammoRecipes);
     }
 
     @Override

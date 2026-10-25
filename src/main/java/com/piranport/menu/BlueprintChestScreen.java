@@ -1,12 +1,13 @@
 package com.piranport.menu;
 
+import com.piranport.block.entity.BlueprintChestBlockEntity;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.Slot;
-import net.minecraft.world.item.ItemStack;
 
 public class BlueprintChestScreen extends AbstractContainerScreen<BlueprintChestMenu> {
     public BlueprintChestScreen(BlueprintChestMenu menu, Inventory playerInventory, Component title) {
@@ -75,31 +76,42 @@ public class BlueprintChestScreen extends AbstractContainerScreen<BlueprintChest
     }
 
     /**
-     * 修复：BlueprintSlot 与 CopySlot 注册在完全相同的坐标（8+col*18, 34），
-     * 而原版私有 findSlot 返回 slots 列表里第一个命中的槽位——BlueprintSlot 先注册，
-     * 导致复印 tab 下点击永远命中蓝图槽，CopySlot 的取出逻辑永远不会触发。
-     * findSlot 是 private 无法覆写，因此在 slotClicked（protected）里做下标重映射：
-     * 复印 tab 下命中蓝图槽下标(0~8)时，实际向服务端发送对应 CopySlot 的下标(+10)。
+     * BlueprintSlot 与 CopySlot 注册在完全相同的坐标（8+col*18, 34）。槽位显隐由各自的
+     * {@code isActive()} 按标签页决定，原版 findSlot 会跳过隐藏槽，因此两页互不干扰。
      *
-     * <p>只重映射「取件」类点击。CopySlot 是投影槽：getItem() 每次返回预览副本，
+     * <p>这里再做一层下标兜底：CopySlot 是投影槽，getItem() 每次返回预览副本，
      * set()/remove() 都不经过容器。原版 SWAP（数字键/中键换入快捷栏）分支不调用
      * remove()，而是直接把 slot.getItem() 塞进快捷栏再 setByPlayer(EMPTY)——对
-     * CopySlot 来说就是「白拿一份、不扣纸」。所以 SWAP/PICKUP_ALL/CLONE 必须留在
-     * 真正的蓝图槽上（那是玩家真实物品），不能重映射。</p>
+     * CopySlot 来说就是「白拿一份、不扣纸」。所以非取件类点击必须落回真正的蓝图槽。</p>
      */
     @Override
-    protected void slotClicked(Slot slot, int slotId, int mouseButton, net.minecraft.world.inventory.ClickType type) {
-        if (slot != null && getMenu().getCurrentTab() == 1
-                && slot.index >= 0 && slot.index < 9
-                && (type == net.minecraft.world.inventory.ClickType.PICKUP
-                        || type == net.minecraft.world.inventory.ClickType.QUICK_MOVE
-                        || type == net.minecraft.world.inventory.ClickType.THROW)) {
-            this.minecraft.gameMode.handleInventoryMouseClick(
-                    this.menu.containerId, slot.index + BlueprintChestMenu.COPY_SLOT_START,
-                    mouseButton, type, this.minecraft.player);
-            return;
+    protected void slotClicked(Slot slot, int slotId, int mouseButton, ClickType type) {
+        if (slot != null && getMenu().getCurrentTab() == 1) {
+            // 取件类点击命中蓝图槽（旧路径/直接调用）→ 转发到对应的 CopySlot
+            if (slot.index >= 0 && slot.index < BlueprintChestBlockEntity.BLUEPRINT_SLOTS
+                    && isTakeClick(type)) {
+                sendClick(slot.index + BlueprintChestMenu.COPY_SLOT_START, mouseButton, type);
+                return;
+            }
+            // 非取件类点击命中 CopySlot（isActive 生效后的常规路径）→ 转回真实蓝图槽
+            if (slot.index >= BlueprintChestMenu.COPY_SLOT_START
+                    && slot.index < BlueprintChestMenu.PLAYER_INV_START
+                    && !isTakeClick(type)) {
+                sendClick(slot.index - BlueprintChestMenu.COPY_SLOT_START, mouseButton, type);
+                return;
+            }
         }
         super.slotClicked(slot, slotId, mouseButton, type);
+    }
+
+    /** 取件类点击：会走 CopySlot#remove 从而扣纸。其余类型必须在真实蓝图槽上执行。 */
+    private static boolean isTakeClick(ClickType type) {
+        return type == ClickType.PICKUP || type == ClickType.QUICK_MOVE || type == ClickType.THROW;
+    }
+
+    private void sendClick(int slotIndex, int mouseButton, ClickType type) {
+        this.minecraft.gameMode.handleInventoryMouseClick(
+                this.menu.containerId, slotIndex, mouseButton, type, this.minecraft.player);
     }
 
     private void drawSlotBg(GuiGraphics g, int x, int y) {
@@ -108,48 +120,22 @@ public class BlueprintChestScreen extends AbstractContainerScreen<BlueprintChest
     }
 
     /**
-     * 重写 render，手动控制槽位渲染：仅渲染与当前 tab 匹配的槽位（蓝图/Paper 或 Copy）。
-     * 玩家物品栏始终可见。
+     * 与原版箱子一致：super.render 负责 renderBackground（内部已调 renderBg，背景只画一次）、
+     * 槽位、按钮和 hoveredSlot；tooltip 由子类补一次 renderTooltip（1.21.1 的
+     * AbstractContainerScreen.render 不自己画 tooltip）。
      */
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        renderBackground(g, mouseX, mouseY, partialTick);
-        renderBg(g, partialTick, mouseX, mouseY);
-
-        int tab = getMenu().getCurrentTab();
-        int idx = 0;
-        for (Slot slot : menu.slots) {
-            boolean visible;
-            if (idx < 10) visible = tab == 0;
-            else if (idx < 19) visible = tab == 1;
-            else visible = true;
-            idx++;
-            if (visible) {
-                renderSlotContents(g, slot);
-            }
-        }
-
-        // 按钮和 tooltip
-        for (net.minecraft.client.gui.components.Renderable r : new java.util.ArrayList<>(this.renderables)) {
-            r.render(g, mouseX, mouseY, partialTick);
-        }
-        renderTooltip(g, mouseX, mouseY);
+        super.render(g, mouseX, mouseY, partialTick);
+        this.renderTooltip(g, mouseX, mouseY);
     }
 
-    private void renderSlotContents(GuiGraphics g, Slot slot) {
-        ItemStack stack = slot.getItem();
-        if (stack.isEmpty()) return;
-        int x = leftPos + slot.x;
-        int y = topPos + slot.y;
-        g.pose().pushPose();
-        try {
-            // 简单绘制：使用 itemRenderer
-            net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
-            g.renderItem(stack, x, y);
-            g.renderItemDecorations(mc.font, stack, x, y, null);
-        } catch (Exception ignored) {
-            // 渲染失败时跳过
-        }
-        g.pose().popPose();
+    /**
+     * 顶部两行是自绘标签页按钮，原版标题会压在按钮上，所以只保留玩家背包标签。
+     */
+    @Override
+    protected void renderLabels(GuiGraphics g, int mouseX, int mouseY) {
+        g.drawString(this.font, this.playerInventoryTitle, this.inventoryLabelX,
+                this.inventoryLabelY, 4210752, false);
     }
 }

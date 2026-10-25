@@ -46,7 +46,9 @@ public class BlueprintChestBlockEntity extends BlockEntity implements MenuProvid
         @Override
         public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
             if (stack.isEmpty() || !isItemValid(slot, stack)) return stack;
-            if (slot < BLUEPRINT_SLOTS && hasBlueprint(stack)) {
+            // 自动化（IItemHandler）走这里；GUI 放置走 BlueprintSlot#mayPlace，两条路都要卡。
+            // 排除目标槽自身：往同一格重复插入时交给 super 按容量拒绝，而不是当成重复蓝图。
+            if (slot < BLUEPRINT_SLOTS && hasBlueprintElsewhere(stack, slot)) {
                 return stack;
             }
             return super.insertItem(slot, stack, simulate);
@@ -64,8 +66,21 @@ public class BlueprintChestBlockEntity extends BlockEntity implements MenuProvid
     }
 
     public boolean hasBlueprint(ItemStack stack) {
+        return hasBlueprintElsewhere(stack, -1);
+    }
+
+    /**
+     * 同种蓝图是否已放在除 {@code excludeSlot} 以外的格子里（策划决策 资源/01：一种蓝图最多占一格）。
+     *
+     * <p>必须能排除目标槽自身：槽里已经放着的那份蓝图不能把它自己挡在门外，否则
+     * 原版 SWAP / 合并等「同一格内替换」的点击会被误判成重复。</p>
+     *
+     * @param excludeSlot 要跳过的蓝图槽下标，负数表示不跳过
+     */
+    public boolean hasBlueprintElsewhere(ItemStack stack, int excludeSlot) {
         if (!isBlueprint(stack)) return false;
         for (int i = 0; i < BLUEPRINT_SLOTS; i++) {
+            if (i == excludeSlot) continue;
             ItemStack stored = itemHandler.getStackInSlot(i);
             if (!stored.isEmpty() && ItemStack.isSameItemSameComponents(stored, stack)) {
                 return true;

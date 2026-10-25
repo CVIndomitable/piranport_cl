@@ -10,7 +10,9 @@ import net.minecraft.SharedConstants;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.MappedRegistry;
 import net.minecraft.core.Registry;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.Bootstrap;
 import net.minecraft.world.entity.player.Inventory;
@@ -103,6 +105,14 @@ class BlueprintChestMenuTest {
         return ItemStack.EMPTY;
     }
 
+    private static ItemStack anotherBlueprint(ItemStack exclude) {
+        for (var holder : com.piranport.registry.WeaponItems.EQUIPMENT_BLUEPRINTS.values()) {
+            if (!holder.get().equals(exclude.getItem())) return new ItemStack(holder.get());
+        }
+        fail("EQUIPMENT_BLUEPRINTS 里只有一种蓝图，无法测试异种共存");
+        return ItemStack.EMPTY;
+    }
+
     @Test
     void normalClickInsertDoesNotThrow() {
         BlueprintChestBlockEntity chest = newChest();
@@ -175,6 +185,59 @@ class BlueprintChestMenuTest {
             moved = menu.quickMoveStack(null, BlueprintChestMenu.COPY_SLOT_START);
         }
         assertTrue(guard < 1000, "复印槽 shift-click 不应死循环");
+    }
+
+    /** 复刻原版 AbstractContainerMenu#doClick 的 QUICK_MOVE 分支：先 mayPickup，再循环 quickMoveStack。 */
+    private static void simulateShiftClick(BlueprintChestMenu menu, int slotId) {
+        Slot slot = menu.slots.get(slotId);
+        if (!slot.mayPickup(null)) return;
+        ItemStack moved = menu.quickMoveStack(null, slotId);
+        int extraCalls = 0;
+        while (!moved.isEmpty() && ItemStack.isSameItem(slot.getItem(), moved)) {
+            if (++extraCalls > 1000) fail("quickMoveStack 死循环");
+            moved = menu.quickMoveStack(null, slotId);
+        }
+        assertEquals(0, extraCalls, "一次 shift 点击不应再调用 quickMoveStack");
+    }
+
+    private static int paperCount(BlueprintChestBlockEntity chest) {
+        return chest.getItemHandler().getStackInSlot(BlueprintChestBlockEntity.PAPER_SLOT).getCount();
+    }
+
+    private static int countInInventory(Inventory inventory, ItemStack sample) {
+        int total = 0;
+        for (int i = 0; i < inventory.getContainerSize(); i++) {
+            ItemStack stack = inventory.getItem(i);
+            if (!stack.isEmpty() && ItemStack.isSameItemSameComponents(stack, sample)) {
+                total += stack.getCount();
+            }
+        }
+        return total;
+    }
+
+    /** 一次 shift 点击只复印一份、扣一张纸；再点一次才再复印一份。 */
+    @Test
+    void shiftClickCopiesExactlyOnePerClick() {
+        BlueprintChestBlockEntity chest = newChest();
+        Inventory inventory = new Inventory(null);
+        BlueprintChestMenu menu = new BlueprintChestMenu(1, inventory, chest);
+        ItemStack blueprint = anyBlueprint();
+        chest.getItemHandler().setStackInSlot(0, blueprint.copy());
+        chest.getItemHandler().setStackInSlot(BlueprintChestBlockEntity.PAPER_SLOT,
+                new ItemStack(Items.PAPER, 5));
+
+        simulateShiftClick(menu, BlueprintChestMenu.COPY_SLOT_START);
+        assertEquals(4, paperCount(chest), "一次 shift 点击只应扣 1 张纸");
+        assertEquals(1, countInInventory(inventory, blueprint), "一次 shift 点击只应复印 1 份");
+
+        simulateShiftClick(menu, BlueprintChestMenu.COPY_SLOT_START);
+        assertEquals(3, paperCount(chest));
+        assertEquals(2, countInInventory(inventory, blueprint), "再点一次才应变成 2 份");
+
+        // 普通左键取件不受影响：一次仍是一份
+        ItemStack taken = menu.slots.get(BlueprintChestMenu.COPY_SLOT_START).remove(1);
+        assertEquals(1, taken.getCount());
+        assertEquals(2, paperCount(chest));
     }
 
     /**
@@ -255,6 +318,89 @@ class BlueprintChestMenuTest {
         assertTrue(chest.getItemHandler().insertItem(0, blueprint.copy(), false).isEmpty());
         ItemStack rejected = chest.getItemHandler().insertItem(1, blueprint.copy(), false);
         assertFalse(rejected.isEmpty(), "同一种蓝图不应进入第二个格子");
+    }
+
+    /**
+     * GUI 放置不走 insertItem，而是 SafeInsert / setByPlayer → setStackInSlot。
+     * 去重必须挂在这些路径共同的前置闸门 mayPlace 上，且拒绝时物品要留在手里。
+     */
+    @Test
+    void guiPlacementRejectsDuplicateBlueprintWithoutLosingItem() {
+        BlueprintChestBlockEntity chest = newChest();
+        BlueprintChestMenu menu = new BlueprintChestMenu(1, new Inventory(null), chest);
+        ItemStack blueprint = anyBlueprint();
+        chest.getItemHandler().setStackInSlot(0, blueprint.copy());
+
+        Slot second = menu.slots.get(1);
+        assertFalse(second.mayPlace(blueprint), "同种蓝图必须被第二个格子拒绝");
+        ItemStack left = second.safeInsert(blueprint.copy(), 1);
+        assertEquals(1, left.getCount(), "被拒绝的蓝图必须留在手里，不能被 safeInsert 吞掉");
+        assertTrue(second.getItem().isEmpty());
+
+        // 目标槽自身不能把自己挡住：否则已放入的那份无法再参与同格点击
+        assertTrue(menu.slots.get(0).mayPlace(blueprint), "已占用槽不应因自己而拒绝");
+
+        // 不同蓝图各占一格
+        ItemStack other = anotherBlueprint(blueprint);
+        assertTrue(second.mayPlace(other), "不同蓝图应可共存");
+        assertTrue(second.safeInsert(other.copy(), 1).isEmpty());
+        assertFalse(second.getItem().isEmpty());
+    }
+
+    /** 旧存档可能已经存了重复蓝图：读档必须原样恢复，去重只拦新放入。 */
+    @Test
+    void duplicateBlueprintsFromOldSaveSurviveNbtLoad() {
+        ItemStack blueprint = anyBlueprint();
+        BlueprintChestBlockEntity source = newChest();
+        source.getItemHandler().setStackInSlot(0, blueprint.copy());
+        source.getItemHandler().setStackInSlot(1, blueprint.copy());
+        CompoundTag tag = source.getItemHandler().serializeNBT(RegistryAccess.EMPTY);
+
+        BlueprintChestBlockEntity loaded = newChest();
+        loaded.getItemHandler().deserializeNBT(RegistryAccess.EMPTY, tag);
+
+        assertEquals(blueprint.getItem(), loaded.getItemHandler().getStackInSlot(0).getItem());
+        assertEquals(blueprint.getItem(), loaded.getItemHandler().getStackInSlot(1).getItem(),
+                "读档不能静默丢弃旧存档里的重复蓝图");
+    }
+
+    /** 两个重叠的槽组按标签页互斥显隐；原版 findSlot 只认 isActive 的槽。 */
+    @Test
+    void slotVisibilityFollowsCurrentTab() {
+        BlueprintChestBlockEntity chest = newChest();
+        BlueprintChestMenu menu = new BlueprintChestMenu(1, new Inventory(null), chest);
+
+        for (int i = 0; i < BlueprintChestBlockEntity.TOTAL_SLOTS; i++) {
+            assertTrue(BlueprintChestMenu.isSlotVisibleOnTab(i, 0), "查看页应显示菜单槽 " + i);
+            assertFalse(BlueprintChestMenu.isSlotVisibleOnTab(i, 1), "复印页应隐藏菜单槽 " + i);
+        }
+        for (int i = BlueprintChestMenu.COPY_SLOT_START; i < BlueprintChestMenu.PLAYER_INV_START; i++) {
+            assertFalse(BlueprintChestMenu.isSlotVisibleOnTab(i, 0), "查看页应隐藏复印槽 " + i);
+            assertTrue(BlueprintChestMenu.isSlotVisibleOnTab(i, 1), "复印页应显示复印槽 " + i);
+        }
+        for (int i = BlueprintChestMenu.PLAYER_INV_START; i < BlueprintChestMenu.PLAYER_INV_END; i++) {
+            assertTrue(BlueprintChestMenu.isSlotVisibleOnTab(i, 0), "玩家背包应始终可见");
+            assertTrue(BlueprintChestMenu.isSlotVisibleOnTab(i, 1), "玩家背包应始终可见");
+        }
+
+        menu.setCurrentTab(0);
+        for (int i = 0; i < BlueprintChestBlockEntity.BLUEPRINT_SLOTS; i++) {
+            assertTrue(menu.slots.get(i).isActive(), "查看页蓝图槽应可见");
+            assertFalse(menu.slots.get(BlueprintChestMenu.COPY_SLOT_START + i).isActive(),
+                    "查看页复印槽应隐藏（坐标与蓝图槽重叠）");
+        }
+        assertTrue(menu.slots.get(BlueprintChestBlockEntity.PAPER_SLOT).isActive());
+        assertTrue(menu.slots.get(BlueprintChestMenu.PLAYER_INV_START).isActive());
+
+        menu.setCurrentTab(1);
+        for (int i = 0; i < BlueprintChestBlockEntity.BLUEPRINT_SLOTS; i++) {
+            assertFalse(menu.slots.get(i).isActive(), "复印页蓝图槽应隐藏");
+            assertTrue(menu.slots.get(BlueprintChestMenu.COPY_SLOT_START + i).isActive(),
+                    "复印页复印槽应可见");
+        }
+        assertFalse(menu.slots.get(BlueprintChestBlockEntity.PAPER_SLOT).isActive(),
+                "复印页不应显示纸槽");
+        assertTrue(menu.slots.get(BlueprintChestMenu.PLAYER_INV_START).isActive());
     }
 
     @Test

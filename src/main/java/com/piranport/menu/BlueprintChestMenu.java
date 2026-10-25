@@ -27,27 +27,62 @@ public class BlueprintChestMenu extends AbstractContainerMenu {
 
     private final BlueprintChestBlockEntity blockEntity;
 
-    private static class BlueprintSlot extends SlotItemHandler {
+    /**
+     * 指定菜单槽位在当前标签页下是否可见/可交互。
+     * 0–8 蓝图槽与 9 纸槽只在「查看」页；10–18 复印槽只在「复印」页（与蓝图槽坐标重叠）；
+     * 玩家背包 19–54 始终可见。抽成静态函数，便于在不加载客户端 Screen 的测试里钉死映射。
+     */
+    public static boolean isSlotVisibleOnTab(int slotIndex, int tab) {
+        if (slotIndex < BlueprintChestBlockEntity.TOTAL_SLOTS) return tab == 0;
+        if (slotIndex < PLAYER_INV_START) return tab == 1;
+        return true;
+    }
+
+    private class BlueprintSlot extends SlotItemHandler {
+        /** 对应的 ItemStackHandler 下标（同时等于菜单下标 0–8）。 */
+        private final int handlerIndex;
+
         public BlueprintSlot(IItemHandler itemHandler, int index, int xPosition, int yPosition) {
             super(itemHandler, index, xPosition, yPosition);
+            this.handlerIndex = index;
         }
 
+        /**
+         * 同种蓝图最多一格（策划决策 资源/01）。
+         *
+         * <p>原版所有「把物品放进槽里」的 GUI 路径都先问 mayPlace：左键 safeInsert、
+         * 数字键/中键 SWAP、拖拽分配（QUICK_CRAFT）、shift 快速移动（moveItemStackTo）。
+         * 在这一层拒绝，物品会原样留在玩家手里；若改去拦 setByPlayer，safeInsert 已经
+         * split 过栈，拒绝就会直接吞掉物品。</p>
+         */
         @Override
         public boolean mayPlace(ItemStack stack) {
-            return BlueprintChestBlockEntity.isBlueprint(stack);
+            return BlueprintChestBlockEntity.isBlueprint(stack)
+                    && !blockEntity.hasBlueprintElsewhere(stack, handlerIndex);
         }
 
         @Override
         public int getMaxStackSize() { return 1; }
+
+        @Override
+        public boolean isActive() {
+            return isSlotVisibleOnTab(handlerIndex, BlueprintChestMenu.this.getCurrentTab());
+        }
     }
 
-    private static class PaperSlot extends SlotItemHandler {
+    private class PaperSlot extends SlotItemHandler {
         public PaperSlot(IItemHandler itemHandler, int index, int xPosition, int yPosition) {
             super(itemHandler, index, xPosition, yPosition);
         }
 
         @Override
         public boolean mayPlace(ItemStack stack) { return stack.is(Items.PAPER); }
+
+        @Override
+        public boolean isActive() {
+            return isSlotVisibleOnTab(BlueprintChestBlockEntity.PAPER_SLOT,
+                    BlueprintChestMenu.this.getCurrentTab());
+        }
     }
 
     private class CopySlot extends Slot {
@@ -85,6 +120,12 @@ public class BlueprintChestMenu extends AbstractContainerMenu {
 
         @Override
         public int getMaxStackSize() { return 1; }
+
+        @Override
+        public boolean isActive() {
+            return isSlotVisibleOnTab(COPY_SLOT_START + blueprintIndex,
+                    BlueprintChestMenu.this.getCurrentTab());
+        }
     }
 
     public static BlueprintChestMenu fromNetwork(int containerId, Inventory playerInventory, FriendlyByteBuf buf) {
@@ -142,9 +183,13 @@ public class BlueprintChestMenu extends AbstractContainerMenu {
             if (!moveItemStackTo(moving, PLAYER_INV_START, PLAYER_INV_END, true)) {
                 return ItemStack.EMPTY;
             }
-            if (blockEntity.consumePaperForCopy()) {
-                return copy;
-            }
+            blockEntity.consumePaperForCopy();
+            // 一次 shift 点击只复印一份（策划决策 资源/01：一张纸一份，没有批量复印）。
+            // 原版 doClick 的 QUICK_MOVE 分支是
+            //   while (!moved.isEmpty() && isSameItem(slot.getItem(), moved)) moved = quickMoveStack(...);
+            // 这里返回空栈让这个循环第一次就结束；否则复印槽的投影 getItem() 永远非空，
+            // 会一直复印到纸用完或背包塞满。再次点击才会再复印一份。
+            // 复印槽是投影槽，remove()/set() 都不经过容器，返回空栈不会留下「物品没移走」的状态。
             return ItemStack.EMPTY;
         }
 

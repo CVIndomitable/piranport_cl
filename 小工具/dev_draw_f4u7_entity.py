@@ -52,13 +52,13 @@ BOXES = [
 
 
 def roundel3(img, x0, y0):
-    """3×3 法国圆徽：蓝角 + 白边 + 红芯。"""
+    """3×3 法国圆徽：蓝底 + 白环 + 红芯（避免画成棋盘格）。"""
     for dy in range(3):
         for dx in range(3):
             c = RGB_BLUE
             if dx == 1 and dy == 1:
                 c = RED
-            elif dx == 1 or dy == 1:
+            elif dx == 1 and dy == 0:
                 c = WHITE
             img.putpixel((x0 + dx, y0 + dy), c)
 

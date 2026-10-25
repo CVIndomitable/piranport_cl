@@ -107,6 +107,8 @@ public class ClientModEvents {
         event.register(ItalianTriple320mmGunRenderer.MODEL_LOADED);
         event.register(Quad533mmTorpedoRenderer.MODEL_EMPTY);
         event.register(Quad533mmTorpedoRenderer.MODEL_LOADED);
+        event.register(Quad533mmTorpedoRenderer.MODEL_EMPTY_UR);
+        event.register(Quad533mmTorpedoRenderer.MODEL_LOADED_UR);
         for (CatalogGunRenderer.Spec spec : CatalogGunRenderer.specs()) {
             event.register(spec.modelEmpty());
             event.register(spec.modelLoaded());

@@ -1,0 +1,6 @@
+{
+  "parent": "piranport:item/quad_533mm_torpedo_ur_high_speed_3d",
+  "textures": {
+    "cap": "piranport:item/quad_533mm_torpedo_ur_high_speed_cap_loaded"
+  }
+}

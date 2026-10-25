@@ -42,6 +42,11 @@ public class Quad533mmTorpedoRenderer extends BlockEntityWithoutLevelRenderer {
             PiranPort.MOD_ID, "textures/item/quad_533mm_torpedo.png");
     private static final ResourceLocation ICON_EMPTY = ResourceLocation.fromNamespaceAndPath(
             PiranPort.MOD_ID, "textures/item/quad_533mm_torpedo_empty.png");
+    /** ur 高速型有独立原画，图标与 3D 模型都单独一套。 */
+    private static final ResourceLocation ICON_LOADED_UR = ResourceLocation.fromNamespaceAndPath(
+            PiranPort.MOD_ID, "textures/item/quad_533mm_torpedo_ur_high_speed.png");
+    private static final ResourceLocation ICON_EMPTY_UR = ResourceLocation.fromNamespaceAndPath(
+            PiranPort.MOD_ID, "textures/item/quad_533mm_torpedo_ur_high_speed_empty.png");
 
     /** 两份 standalone 3D 模型，在 ModelEvent.RegisterAdditional 里注册烘焙。 */
     public static final ModelResourceLocation MODEL_EMPTY = ModelResourceLocation.standalone(
@@ -50,6 +55,12 @@ public class Quad533mmTorpedoRenderer extends BlockEntityWithoutLevelRenderer {
     public static final ModelResourceLocation MODEL_LOADED = ModelResourceLocation.standalone(
             ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID,
                     "item/quad_533mm_torpedo_3d_loaded"));
+    public static final ModelResourceLocation MODEL_EMPTY_UR = ModelResourceLocation.standalone(
+            ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID,
+                    "item/quad_533mm_torpedo_ur_high_speed_3d"));
+    public static final ModelResourceLocation MODEL_LOADED_UR = ModelResourceLocation.standalone(
+            ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID,
+                    "item/quad_533mm_torpedo_ur_high_speed_3d_loaded"));
 
     public static final IClientItemExtensions CLIENT_EXTENSIONS = new IClientItemExtensions() {
         @Override
@@ -93,9 +104,13 @@ public class Quad533mmTorpedoRenderer extends BlockEntityWithoutLevelRenderer {
         if (isHandContext(displayContext)) {
             renderLauncher3D(stack, poseStack, bufferSource, packedLight, packedOverlay);
         } else {
-            renderFlatIcon(displayContext, isLoaded(stack), poseStack, bufferSource,
+            renderFlatIcon(displayContext, isLoaded(stack), isUr(stack), poseStack, bufferSource,
                     packedLight, packedOverlay);
         }
+    }
+
+    private static boolean isUr(ItemStack stack) {
+        return stack.is(ModItems.QUAD_533MM_TORPEDO_UR_HIGH_SPEED.get());
     }
 
     private static boolean isHandContext(ItemDisplayContext context) {
@@ -118,8 +133,11 @@ public class Quad533mmTorpedoRenderer extends BlockEntityWithoutLevelRenderer {
                                          MultiBufferSource bufferSource,
                                          int packedLight, int packedOverlay) {
         Minecraft mc = Minecraft.getInstance();
+        boolean ur = isUr(stack);
         BakedModel model = mc.getModelManager().getModel(
-                isLoaded(stack) ? MODEL_LOADED : MODEL_EMPTY);
+                ur
+                        ? (isLoaded(stack) ? MODEL_LOADED_UR : MODEL_EMPTY_UR)
+                        : (isLoaded(stack) ? MODEL_LOADED : MODEL_EMPTY));
         if (model == null || model == mc.getModelManager().getMissingModel()) return;
 
         VertexConsumer consumer = bufferSource.getBuffer(Sheets.translucentItemSheet());
@@ -145,10 +163,12 @@ public class Quad533mmTorpedoRenderer extends BlockEntityWithoutLevelRenderer {
      * 坐标用方块空间 0..1（渲染管线已在 pose 里 translate(-0.5)，会把它居中）。
      * u/v 按物品图标习惯：左下 (0,1)、右上 (1,0)。
      */
-    private static void renderFlatIcon(ItemDisplayContext context, boolean loaded,
+    private static void renderFlatIcon(ItemDisplayContext context, boolean loaded, boolean ur,
                                        PoseStack poseStack, MultiBufferSource bufferSource,
                                        int packedLight, int packedOverlay) {
-        ResourceLocation texture = loaded ? ICON_LOADED : ICON_EMPTY;
+        ResourceLocation texture = ur
+                ? (loaded ? ICON_LOADED_UR : ICON_EMPTY_UR)
+                : (loaded ? ICON_LOADED : ICON_EMPTY);
         // GUI 里用 emissive：图标按原色显示。entity 的 cutout 渲染会吃
         // gui 的两盏方向光，比原版 item shader 暗一档。
         RenderType type = context == ItemDisplayContext.GUI

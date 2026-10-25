@@ -2,6 +2,7 @@ package com.piranport.menu;
 
 import com.piranport.crafting.WeaponWorkbenchRecipe;
 import com.piranport.crafting.WeaponWorkbenchRecipeRegistry;
+import com.piranport.crafting.WeaponWorkbenchTabs;
 import com.piranport.registry.ModItems;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -13,12 +14,13 @@ import java.util.List;
 
 /**
  * 武器合成台 GUI。
- * 左侧5个标签页 | 中上下拉菜单+预览 | 右上蓝图 | 右中原料 | 右下合成/产物 | 底部背包
+ * 左侧6个标签页（数量取 {@link WeaponWorkbenchTabs#TAB_COUNT}）| 中上下拉菜单+预览
+ * | 右上蓝图 | 右中原料 | 右下合成/产物 | 底部背包
  */
 public class WeaponWorkbenchScreen extends AbstractContainerScreen<WeaponWorkbenchMenu> {
 
     // ===== 布局常量 =====
-    private static final int TAB_W = 30, TAB_H = 26, TAB_COUNT = 6;
+    private static final int TAB_W = 30, TAB_H = 26;
     private static final int DD_X = 8, DD_Y = 20, DD_W = 118, DD_H = 16;
     private static final int DD_ITEM_H = 14, DD_MAX_VISIBLE = 8;
     private static final int CRAFT_X = 152, CRAFT_Y = 100, CRAFT_W = 40, CRAFT_H = 16;
@@ -165,7 +167,7 @@ public class WeaponWorkbenchScreen extends AbstractContainerScreen<WeaponWorkben
 
     private void renderTabs(GuiGraphics g, int mx, int my) {
         int selectedTab = menu.getSelectedTab();
-        for (int i = 0; i < TAB_COUNT; i++) {
+        for (int i = 0; i < WeaponWorkbenchTabs.TAB_COUNT; i++) {
             int tx = leftPos - TAB_W;
             int ty = topPos + 6 + i * 28;
             boolean selected = (i == selectedTab);
@@ -371,7 +373,7 @@ public class WeaponWorkbenchScreen extends AbstractContainerScreen<WeaponWorkben
         renderTooltip(g, mouseX, mouseY);
 
         // 标签页悬停提示
-        for (int i = 0; i < TAB_COUNT; i++) {
+        for (int i = 0; i < WeaponWorkbenchTabs.TAB_COUNT; i++) {
             int tx = leftPos - TAB_W;
             int ty = topPos + 6 + i * 28;
             if (mouseX >= tx && mouseX < tx + TAB_W && mouseY >= ty && mouseY < ty + TAB_H) {
@@ -398,7 +400,7 @@ public class WeaponWorkbenchScreen extends AbstractContainerScreen<WeaponWorkben
             }
 
             // 标签页点击
-            for (int i = 0; i < TAB_COUNT; i++) {
+            for (int i = 0; i < WeaponWorkbenchTabs.TAB_COUNT; i++) {
                 int tx = leftPos - TAB_W;
                 int ty = topPos + 6 + i * 28;
                 if (mx >= tx && mx < tx + TAB_W && my >= ty && my < ty + TAB_H) {

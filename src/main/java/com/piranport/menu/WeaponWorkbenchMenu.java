@@ -4,6 +4,7 @@ import com.piranport.block.WeaponWorkbenchBlock;
 import com.piranport.block.entity.WeaponWorkbenchBlockEntity;
 import com.piranport.crafting.WeaponWorkbenchRecipe;
 import com.piranport.crafting.WeaponWorkbenchRecipeRegistry;
+import com.piranport.crafting.WeaponWorkbenchTabs;
 import com.piranport.registry.ModItems;
 import com.piranport.registry.ModMenuTypes;
 import net.minecraft.core.BlockPos;
@@ -26,7 +27,7 @@ import java.util.List;
  * Slots: 0=blueprint, 1-6=materials, 7=output, 8-34=player inv, 35-43=hotbar
  *
  * Button IDs (via clickMenuButton):
- *   0..4  = tab select
+ *   0..TAB_COUNT-1 = tab select
  *   100+n = recipe select (for current tab)
  *   200   = start crafting
  *
@@ -35,7 +36,8 @@ import java.util.List;
  */
 public class WeaponWorkbenchMenu extends AbstractContainerMenu {
     private static final int BTN_TAB_MIN = 0;
-    private static final int BTN_TAB_MAX = 5;
+    /** 页签按钮 id 与页签索引一一对应，上限取共享常量的最后一个索引。 */
+    private static final int BTN_TAB_MAX = WeaponWorkbenchTabs.TAB_COUNT - 1;
     private static final int BTN_RECIPE_BASE = 100;
     private static final int BTN_RECIPE_MAX = 199;
     private static final int BTN_CRAFT = 200;

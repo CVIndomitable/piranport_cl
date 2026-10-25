@@ -2,6 +2,7 @@ package com.piranport.block.entity;
 
 import com.piranport.crafting.WeaponWorkbenchRecipe;
 import com.piranport.crafting.WeaponWorkbenchRecipeRegistry;
+import com.piranport.crafting.WeaponWorkbenchTabs;
 import com.piranport.menu.WeaponWorkbenchMenu;
 import com.piranport.registry.ModBlockEntityTypes;
 import com.piranport.registry.ModItems;
@@ -33,7 +34,6 @@ public class WeaponWorkbenchBlockEntity extends BlockEntity implements MenuProvi
 
     private static final int DATA_SIZE = 5;
     private static final int SAVE_INTERVAL_TICKS = 20;
-    private static final int TAB_COUNT = 5;
     // H4: 如果 tryOpen 锁住后玩家异常退出（断线/crash/menu 关闭事件未送达），
     // 用一个服务端 tick 超时强制释放 currentUser，避免永久锁死工作台。
     private static final int IDLE_RELEASE_TICKS = 100;
@@ -86,7 +86,7 @@ public class WeaponWorkbenchBlockEntity extends BlockEntity implements MenuProvi
     public int getSelectedTab() { return selectedTab; }
 
     public void setSelectedTab(int v) {
-        if (v < 0 || v >= TAB_COUNT) return;
+        if (v < 0 || v >= WeaponWorkbenchTabs.TAB_COUNT) return;
         selectedTab = v;
     }
 
@@ -390,7 +390,8 @@ public class WeaponWorkbenchBlockEntity extends BlockEntity implements MenuProvi
     protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
         if (tag.contains("inventory")) itemHandler.deserializeNBT(registries, tag.getCompound("inventory"));
-        selectedTab = Math.max(0, Math.min(TAB_COUNT - 1, tag.getInt("selectedTab")));
+        selectedTab = Math.max(0, Math.min(
+                WeaponWorkbenchTabs.TAB_COUNT - 1, tag.getInt("selectedTab")));
         selectedRecipe = Math.max(0, tag.getInt("selectedRecipe"));
         craftingProgress = Math.max(0, tag.getInt("craftingProgress"));
         craftingTotalTime = Math.max(0, tag.getInt("craftingTotalTime"));

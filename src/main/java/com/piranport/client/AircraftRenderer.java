@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 import com.piranport.client.model.B25Model;
+import com.piranport.client.model.BarracudaModel;
 import com.piranport.client.model.F4FModel;
 import com.piranport.config.ModEquipmentConfig;
 import com.piranport.entity.AircraftEntity;
@@ -23,12 +24,14 @@ public class AircraftRenderer extends EntityRenderer<AircraftEntity> {
 
     private final B25Model<AircraftEntity> b25Model;
     private final F4FModel<AircraftEntity> f4fModel;
+    private final BarracudaModel<AircraftEntity> barracudaModel;
 
     public AircraftRenderer(EntityRendererProvider.Context ctx) {
         super(ctx);
         this.shadowRadius = 0.5f;
         this.b25Model = new B25Model<>(ctx.bakeLayer(B25Model.LAYER_LOCATION));
         this.f4fModel = new F4FModel<>(ctx.bakeLayer(F4FModel.LAYER_LOCATION));
+        this.barracudaModel = new BarracudaModel<>(ctx.bakeLayer(BarracudaModel.LAYER_LOCATION));
     }
 
     @Override
@@ -52,11 +55,11 @@ public class AircraftRenderer extends EntityRenderer<AircraftEntity> {
         EntityModel<AircraftEntity> model;
         AircraftVisualRegistry.AircraftVisual visual = AircraftVisualRegistry.resolve(entity);
         ResourceLocation texture = visual.texture();
-        if (visual.modelKind() == AircraftVisualRegistry.ModelKind.B25) {
-            model = b25Model;
-        } else {
-            model = f4fModel;
-        }
+        model = switch (visual.modelKind()) {
+            case B25 -> b25Model;
+            case F4F -> f4fModel;
+            case BARRACUDA -> barracudaModel;
+        };
 
         VertexConsumer vertexConsumer = bufferSource.getBuffer(model.renderType(texture));
         model.renderToBuffer(poseStack, vertexConsumer, packedLight, OverlayTexture.NO_OVERLAY, -1);

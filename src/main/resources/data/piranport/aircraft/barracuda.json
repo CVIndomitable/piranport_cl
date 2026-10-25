@@ -2,7 +2,7 @@
   "aircraft_class": "torpedo_bomber",
   "attack_profile": "torpedo",
   "payload_item": "piranport:aerial_torpedo",
-  "visual_id": "placeholder",
+  "visual_id": "barracuda",
   "nation": "gb",
   "fuel_capacity": 1200,
   "ammo_capacity": 1,

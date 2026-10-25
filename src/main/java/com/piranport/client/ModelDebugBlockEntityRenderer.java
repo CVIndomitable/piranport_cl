@@ -6,6 +6,7 @@ import com.mojang.math.Axis;
 import com.piranport.PiranPort;
 import com.piranport.block.entity.ModelDebugBlockEntity;
 import com.piranport.client.model.B25Model;
+import com.piranport.client.model.BarracudaModel;
 import com.piranport.client.model.DeepOceanHeavyCruiserModel;
 import com.piranport.client.model.DeepOceanLightCarrierModel;
 import com.piranport.client.model.F4FModel;
@@ -42,6 +43,8 @@ public class ModelDebugBlockEntityRenderer implements BlockEntityRenderer<ModelD
             ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "textures/entity/b25.png");
     private static final ResourceLocation F4F_TEXTURE =
             ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "textures/entity/f4f.png");
+    private static final ResourceLocation BARRACUDA_TEXTURE =
+            ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "textures/entity/barracuda.png");
     private static final ResourceLocation HEAVY_CRUISER_TEXTURE =
             ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID,
                     "textures/entity/deep_ocean/heavy_cruiser_model.png");
@@ -79,6 +82,7 @@ public class ModelDebugBlockEntityRenderer implements BlockEntityRenderer<ModelD
 
     private final B25Model<Entity> b25;
     private final F4FModel<Entity> f4f;
+    private final BarracudaModel<Entity> barracuda;
     private final DeepOceanHeavyCruiserModel heavyCruiser;
     private final DeepOceanLightCarrierModel lightCarrier;
     private final TorpedoModel torpedo;
@@ -87,6 +91,7 @@ public class ModelDebugBlockEntityRenderer implements BlockEntityRenderer<ModelD
     public ModelDebugBlockEntityRenderer(BlockEntityRendererProvider.Context ctx) {
         this.b25 = new B25Model<>(ctx.getModelSet().bakeLayer(B25Model.LAYER_LOCATION));
         this.f4f = new F4FModel<>(ctx.getModelSet().bakeLayer(F4FModel.LAYER_LOCATION));
+        this.barracuda = new BarracudaModel<>(ctx.getModelSet().bakeLayer(BarracudaModel.LAYER_LOCATION));
         this.heavyCruiser = new DeepOceanHeavyCruiserModel(
                 ctx.getModelSet().bakeLayer(DeepOceanHeavyCruiserModel.LAYER_LOCATION));
         this.lightCarrier = new DeepOceanLightCarrierModel(
@@ -106,6 +111,7 @@ public class ModelDebugBlockEntityRenderer implements BlockEntityRenderer<ModelD
         ResourceLocation texture;
         switch (be.getModelType()) {
             case "f4f" -> { model = f4f; texture = F4F_TEXTURE; }
+            case "barracuda" -> { model = barracuda; texture = BARRACUDA_TEXTURE; }
             case "heavy_cruiser" -> { model = heavyCruiser; texture = HEAVY_CRUISER_TEXTURE; }
             case "light_carrier" -> { model = lightCarrier; texture = LIGHT_CARRIER_TEXTURE; }
             case "torpedo" -> { model = torpedo; texture = TORPEDO_TEXTURE; }

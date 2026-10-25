@@ -2,7 +2,7 @@
   "aircraft_class": "dive_bomber",
   "attack_profile": "dive_bomb",
   "payload_item": "piranport:aerial_bomb",
-  "visual_id": "placeholder",
+  "visual_id": "wyvern",
   "nation": "gb",
   "fuel_capacity": 1200,
   "ammo_capacity": 1,

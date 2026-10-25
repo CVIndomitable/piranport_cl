@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 import com.piranport.client.model.B25Model;
+import com.piranport.client.model.WyvernModel;
 import com.piranport.client.model.BtdDestroyerModel;
 import com.piranport.client.model.Ju87cModel;
 import com.piranport.client.model.BarracudaModel;
@@ -36,6 +37,8 @@ public class AircraftRenderer extends EntityRenderer<AircraftEntity> {
 
     private final BtdDestroyerModel<AircraftEntity> btdDestroyerModel;
 
+    private final WyvernModel<AircraftEntity> wyvernModel;
+
     public AircraftRenderer(EntityRendererProvider.Context ctx) {
         super(ctx);
         this.shadowRadius = 0.5f;
@@ -46,6 +49,7 @@ public class AircraftRenderer extends EntityRenderer<AircraftEntity> {
         this.tengaModel = new TengaModel<>(ctx.bakeLayer(TengaModel.LAYER_LOCATION));
         this.ju87cModel = new Ju87cModel<>(ctx.bakeLayer(Ju87cModel.LAYER_LOCATION));
         this.btdDestroyerModel = new BtdDestroyerModel<>(ctx.bakeLayer(BtdDestroyerModel.LAYER_LOCATION));
+        this.wyvernModel = new WyvernModel<>(ctx.bakeLayer(WyvernModel.LAYER_LOCATION));
     }
 
     @Override
@@ -77,6 +81,7 @@ public class AircraftRenderer extends EntityRenderer<AircraftEntity> {
             case TENGA -> tengaModel;
             case JU87C -> ju87cModel;
             case BTD_DESTROYER -> btdDestroyerModel;
+            case WYVERN -> wyvernModel;
         };
 
         VertexConsumer vertexConsumer = bufferSource.getBuffer(model.renderType(texture));

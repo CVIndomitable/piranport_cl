@@ -11,6 +11,7 @@ import com.piranport.client.model.DeepOceanHeavyCruiserModel;
 import com.piranport.client.model.DeepOceanLightCarrierModel;
 import com.piranport.client.model.F4FModel;
 import com.piranport.client.model.RyuseiModel;
+import com.piranport.client.model.TengaModel;
 import com.piranport.client.model.TorpedoModel;
 import com.piranport.registry.ModItems;
 import net.minecraft.client.model.EntityModel;
@@ -48,6 +49,8 @@ public class ModelDebugBlockEntityRenderer implements BlockEntityRenderer<ModelD
             ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "textures/entity/barracuda.png");
     private static final ResourceLocation RYUSEI_TEXTURE =
             ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "textures/entity/ryusei.png");
+    private static final ResourceLocation TENGA_TEXTURE =
+            ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "textures/entity/tenga.png");
     private static final ResourceLocation HEAVY_CRUISER_TEXTURE =
             ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID,
                     "textures/entity/deep_ocean/heavy_cruiser_model.png");
@@ -87,6 +90,7 @@ public class ModelDebugBlockEntityRenderer implements BlockEntityRenderer<ModelD
     private final F4FModel<Entity> f4f;
     private final BarracudaModel<Entity> barracuda;
     private final RyuseiModel<Entity> ryusei;
+    private final TengaModel<Entity> tenga;
     private final DeepOceanHeavyCruiserModel heavyCruiser;
     private final DeepOceanLightCarrierModel lightCarrier;
     private final TorpedoModel torpedo;
@@ -97,6 +101,7 @@ public class ModelDebugBlockEntityRenderer implements BlockEntityRenderer<ModelD
         this.f4f = new F4FModel<>(ctx.getModelSet().bakeLayer(F4FModel.LAYER_LOCATION));
         this.barracuda = new BarracudaModel<>(ctx.getModelSet().bakeLayer(BarracudaModel.LAYER_LOCATION));
         this.ryusei = new RyuseiModel<>(ctx.getModelSet().bakeLayer(RyuseiModel.LAYER_LOCATION));
+        this.tenga = new TengaModel<>(ctx.getModelSet().bakeLayer(TengaModel.LAYER_LOCATION));
         this.heavyCruiser = new DeepOceanHeavyCruiserModel(
                 ctx.getModelSet().bakeLayer(DeepOceanHeavyCruiserModel.LAYER_LOCATION));
         this.lightCarrier = new DeepOceanLightCarrierModel(
@@ -118,6 +123,7 @@ public class ModelDebugBlockEntityRenderer implements BlockEntityRenderer<ModelD
             case "f4f" -> { model = f4f; texture = F4F_TEXTURE; }
             case "barracuda" -> { model = barracuda; texture = BARRACUDA_TEXTURE; }
             case "ryusei" -> { model = ryusei; texture = RYUSEI_TEXTURE; }
+            case "tenga" -> { model = tenga; texture = TENGA_TEXTURE; }
             case "heavy_cruiser" -> { model = heavyCruiser; texture = HEAVY_CRUISER_TEXTURE; }
             case "light_carrier" -> { model = lightCarrier; texture = LIGHT_CARRIER_TEXTURE; }
             case "torpedo" -> { model = torpedo; texture = TORPEDO_TEXTURE; }

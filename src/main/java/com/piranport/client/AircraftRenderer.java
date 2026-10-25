@@ -7,6 +7,7 @@ import com.piranport.client.model.B25Model;
 import com.piranport.client.model.BarracudaModel;
 import com.piranport.client.model.F4FModel;
 import com.piranport.client.model.RyuseiModel;
+import com.piranport.client.model.TengaModel;
 import com.piranport.config.ModEquipmentConfig;
 import com.piranport.entity.AircraftEntity;
 import net.minecraft.client.model.EntityModel;
@@ -27,6 +28,7 @@ public class AircraftRenderer extends EntityRenderer<AircraftEntity> {
     private final F4FModel<AircraftEntity> f4fModel;
     private final BarracudaModel<AircraftEntity> barracudaModel;
     private final RyuseiModel<AircraftEntity> ryuseiModel;
+    private final TengaModel<AircraftEntity> tengaModel;
 
     public AircraftRenderer(EntityRendererProvider.Context ctx) {
         super(ctx);
@@ -35,6 +37,7 @@ public class AircraftRenderer extends EntityRenderer<AircraftEntity> {
         this.f4fModel = new F4FModel<>(ctx.bakeLayer(F4FModel.LAYER_LOCATION));
         this.barracudaModel = new BarracudaModel<>(ctx.bakeLayer(BarracudaModel.LAYER_LOCATION));
         this.ryuseiModel = new RyuseiModel<>(ctx.bakeLayer(RyuseiModel.LAYER_LOCATION));
+        this.tengaModel = new TengaModel<>(ctx.bakeLayer(TengaModel.LAYER_LOCATION));
     }
 
     @Override
@@ -63,6 +66,7 @@ public class AircraftRenderer extends EntityRenderer<AircraftEntity> {
             case F4F -> f4fModel;
             case BARRACUDA -> barracudaModel;
             case RYUSEI -> ryuseiModel;
+            case TENGA -> tengaModel;
         };
 
         VertexConsumer vertexConsumer = bufferSource.getBuffer(model.renderType(texture));

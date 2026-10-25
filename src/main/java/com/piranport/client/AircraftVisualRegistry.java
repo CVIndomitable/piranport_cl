@@ -24,6 +24,8 @@ public final class AircraftVisualRegistry {
             ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "textures/entity/barracuda.png");
     private static final ResourceLocation RYUSEI_TEXTURE =
             ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "textures/entity/ryusei.png");
+    private static final ResourceLocation TENGA_TEXTURE =
+            ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "textures/entity/tenga.png");
 
     private static final AircraftVisual B25 =
             new AircraftVisual(AircraftVisualIds.B25, ModelKind.B25, B25_TEXTURE);
@@ -33,6 +35,8 @@ public final class AircraftVisualRegistry {
             new AircraftVisual(AircraftVisualIds.BARRACUDA, ModelKind.BARRACUDA, BARRACUDA_TEXTURE);
     private static final AircraftVisual RYUSEI =
             new AircraftVisual(AircraftVisualIds.RYUSEI, ModelKind.RYUSEI, RYUSEI_TEXTURE);
+    private static final AircraftVisual TENGA =
+            new AircraftVisual(AircraftVisualIds.TENGA, ModelKind.TENGA, TENGA_TEXTURE);
 
     // 美术占位：待替换为正式模型与贴图。
     private static final AircraftVisual PLACEHOLDER =
@@ -47,6 +51,7 @@ public final class AircraftVisualRegistry {
             Map.entry(AircraftVisualIds.F4F, F4F),
             Map.entry(AircraftVisualIds.BARRACUDA, BARRACUDA),
             Map.entry(AircraftVisualIds.RYUSEI, RYUSEI),
+            Map.entry(AircraftVisualIds.TENGA, TENGA),
             Map.entry(AircraftVisualIds.FIGHTER, F4F),
             Map.entry(AircraftVisualIds.ROCKET_FIGHTER, F4F),
             Map.entry(AircraftVisualIds.RECON, F4F),
@@ -79,7 +84,8 @@ public final class AircraftVisualRegistry {
         B25,
         F4F,
         BARRACUDA,
-        RYUSEI
+        RYUSEI,
+        TENGA
     }
 
     public record AircraftVisual(String id, ModelKind modelKind, ResourceLocation texture) {

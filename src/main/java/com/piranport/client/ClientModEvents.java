@@ -147,6 +147,57 @@ public class ClientModEvents {
             CatalogGunRenderer.spec("japanese_twin_203mm_gun",
                     WeaponItems.CATALOG_GUNS.get("japanese_twin_203mm_gun"));
 
+    /** 2026-10-25 批次：图鉴鱼雷发射器的手持 3D 模型，统一走 CatalogTorpedoLauncherRenderer。 */
+    private static final CatalogTorpedoLauncherRenderer.Spec QUINT_533_MK17 =
+            CatalogTorpedoLauncherRenderer.spec("quintuple_533mm_torpedo_mk17",
+                    ModItems.QUINTUPLE_533MM_TORPEDO_MK17);
+    private static final CatalogTorpedoLauncherRenderer.Spec QUINT_21IN_MK35 =
+            CatalogTorpedoLauncherRenderer.spec("quintuple_21in_torpedo_mk35",
+                    ModItems.QUINTUPLE_21IN_TORPEDO_MK35);
+    private static final CatalogTorpedoLauncherRenderer.Spec QUINT_53_56 =
+            CatalogTorpedoLauncherRenderer.spec("quintuple_torpedo_launcher_53_56",
+                    ModItems.QUINTUPLE_TORPEDO_LAUNCHER_53_56);
+    private static final CatalogTorpedoLauncherRenderer.Spec QUINT_53_65 =
+            CatalogTorpedoLauncherRenderer.spec("quintuple_torpedo_launcher_53_65",
+                    ModItems.QUINTUPLE_TORPEDO_LAUNCHER_53_65);
+    private static final CatalogTorpedoLauncherRenderer.Spec TRIPLE_61CM =
+            CatalogTorpedoLauncherRenderer.spec("triple_61cm_torpedo",
+                    ModItems.TRIPLE_61CM_TORPEDO);
+    private static final CatalogTorpedoLauncherRenderer.Spec TRIPLE_61CM_OXY =
+            CatalogTorpedoLauncherRenderer.spec("triple_61cm_oxygen_torpedo",
+                    ModItems.TRIPLE_61CM_OXYGEN_TORPEDO);
+    /** 四连 61 厘米常规型与氧气型共用同一张原画。 */
+    private static final CatalogTorpedoLauncherRenderer.Spec QUAD_61CM =
+            CatalogTorpedoLauncherRenderer.spec("quad_61cm_torpedo",
+                    ModItems.QUAD_61CM_TORPEDO, ModItems.QUAD_61CM_OXYGEN_TORPEDO);
+    private static final CatalogTorpedoLauncherRenderer.Spec LAUNCHER_61CM_TYPE9 =
+            CatalogTorpedoLauncherRenderer.spec("torpedo_launcher_61cm_type9",
+                    ModItems.TORPEDO_LAUNCHER_61CM_TYPE9);
+    private static final CatalogTorpedoLauncherRenderer.Spec QUINT_61CM =
+            CatalogTorpedoLauncherRenderer.spec("quintuple_61cm_torpedo",
+                    ModItems.QUINTUPLE_61CM_TORPEDO);
+    private static final CatalogTorpedoLauncherRenderer.Spec QUINT_61CM_OXY =
+            CatalogTorpedoLauncherRenderer.spec("quintuple_61cm_oxygen_torpedo",
+                    ModItems.QUINTUPLE_61CM_OXYGEN_TORPEDO);
+    private static final CatalogTorpedoLauncherRenderer.Spec JP_SEXTUPLE_61CM =
+            CatalogTorpedoLauncherRenderer.spec("japanese_sextuple_61cm_torpedo",
+                    ModItems.JAPANESE_SEXTUPLE_61CM_TORPEDO);
+    private static final CatalogTorpedoLauncherRenderer.Spec SEXTUPLE_93M3 =
+            CatalogTorpedoLauncherRenderer.spec("sextuple_61cm_torpedo_launcher_93m3",
+                    ModItems.SEXTUPLE_61CM_TORPEDO_LAUNCHER_93M3);
+    private static final CatalogTorpedoLauncherRenderer.Spec SEPTUPLE =
+            CatalogTorpedoLauncherRenderer.spec("septuple_torpedo_launcher",
+                    ModItems.SEPTUPLE_TORPEDO_LAUNCHER);
+    private static final CatalogTorpedoLauncherRenderer.Spec SEPTUPLE_93M3 =
+            CatalogTorpedoLauncherRenderer.spec("septuple_torpedo_launcher_93m3",
+                    ModItems.SEPTUPLE_TORPEDO_LAUNCHER_93M3);
+    private static final CatalogTorpedoLauncherRenderer.Spec JP_TRIPLE_72CM =
+            CatalogTorpedoLauncherRenderer.spec("japanese_triple_72cm_torpedo",
+                    ModItems.JAPANESE_TRIPLE_72CM_TORPEDO);
+    private static final CatalogTorpedoLauncherRenderer.Spec CLT_QUAD_TYPE0 =
+            CatalogTorpedoLauncherRenderer.spec("clt_quad_torpedo_launcher_type0",
+                    ModItems.CLT_QUAD_TORPEDO_LAUNCHER_TYPE0);
+
     /** 注册日本12厘米单装炮、日本12.7厘米连装炮、博福斯双联120毫米炮与德国/意大利/美国三联主炮的 standalone 3D 模型（BEWLR 直接取用）。 */
     @SubscribeEvent
     public static void registerAdditionalModels(ModelEvent.RegisterAdditional event) {
@@ -174,6 +225,10 @@ public class ClientModEvents {
         event.register(Quad533mmTorpedoRenderer.MODEL_LOADED_UR);
         event.register(Quintuple533mmTorpedoRenderer.MODEL_EMPTY);
         event.register(Quintuple533mmTorpedoRenderer.MODEL_LOADED);
+        for (CatalogTorpedoLauncherRenderer.Spec spec : CatalogTorpedoLauncherRenderer.specs()) {
+            event.register(spec.modelEmpty());
+            event.register(spec.modelLoaded());
+        }
         for (CatalogGunRenderer.Spec spec : CatalogGunRenderer.specs()) {
             event.register(spec.modelEmpty());
             event.register(spec.modelLoaded());
@@ -208,6 +263,11 @@ public class ClientModEvents {
         // 五联533毫米鱼雷
         event.registerItem(Quintuple533mmTorpedoRenderer.CLIENT_EXTENSIONS,
                 ModItems.QUINTUPLE_533MM_TORPEDO.get());
+        for (CatalogTorpedoLauncherRenderer.Spec spec : CatalogTorpedoLauncherRenderer.specs()) {
+            for (var item : spec.items()) {
+                event.registerItem(CatalogTorpedoLauncherRenderer.extensionsFor(spec), item.get());
+            }
+        }
         for (CatalogGunRenderer.Spec spec : CatalogGunRenderer.specs()) {
             for (var item : spec.items()) {
                 event.registerItem(CatalogGunRenderer.extensionsFor(spec), item.get());
@@ -241,6 +301,8 @@ public class ClientModEvents {
         event.enqueueWork(Quad533mmTorpedoRenderer::init);
         // 五联533毫米鱼雷：同一套 BEWLR 方案
         event.enqueueWork(Quintuple533mmTorpedoRenderer::init);
+        // 图鉴鱼雷发射器批次：共用 CatalogTorpedoLauncherRenderer
+        event.enqueueWork(CatalogTorpedoLauncherRenderer::initAll);
         // 2026-10-18 批量主炮：共用 CatalogGunRenderer
         event.enqueueWork(CatalogGunRenderer::initAll);
 
@@ -384,6 +446,8 @@ public class ClientModEvents {
                 com.piranport.client.model.BarracudaModel::createBodyLayer);
         event.registerLayerDefinition(com.piranport.client.model.RyuseiModel.LAYER_LOCATION,
                 com.piranport.client.model.RyuseiModel::createBodyLayer);
+        event.registerLayerDefinition(com.piranport.client.model.TengaModel.LAYER_LOCATION,
+                com.piranport.client.model.TengaModel::createBodyLayer);
         event.registerLayerDefinition(com.piranport.client.model.TorpedoModel.LAYER_LOCATION,
                 com.piranport.client.model.TorpedoModel::createBodyLayer);
         event.registerLayerDefinition(com.piranport.client.model.UnicornModel.LAYER_LOCATION,

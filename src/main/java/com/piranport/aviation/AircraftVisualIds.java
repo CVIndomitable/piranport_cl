@@ -37,6 +37,8 @@ public final class AircraftVisualIds {
     public static final String REPPU = "reppu";
     /** seafang 专属模型。 */
     public static final String SEAFANG = "seafang";
+    /** xf5u 专属模型。 */
+    public static final String XF5U = "xf5u";
     public static final String FIGHTER = "fighter";
     public static final String ROCKET_FIGHTER = "rocket_fighter";
     public static final String DIVE_BOMBER = "dive_bomber";
@@ -48,7 +50,7 @@ public final class AircraftVisualIds {
     public static final String PLACEHOLDER = "placeholder";
 
     private static final Set<String> KNOWN = Set.of(
-            B25, F4F, SEAFANG, REPPU, F2A_BUFFALO, TYPE96_FIGHTER, F4U7, SKYRAIDER, WYVERN, BTD_DESTROYER, JU87C, BARRACUDA, RYUSEI, TENGA, FIGHTER, ROCKET_FIGHTER, DIVE_BOMBER,
+            B25, F4F, XF5U, SEAFANG, REPPU, F2A_BUFFALO, TYPE96_FIGHTER, F4U7, SKYRAIDER, WYVERN, BTD_DESTROYER, JU87C, BARRACUDA, RYUSEI, TENGA, FIGHTER, ROCKET_FIGHTER, DIVE_BOMBER,
             LEVEL_BOMBER, TORPEDO_BOMBER, ASW, RECON, PLACEHOLDER);
 
     private AircraftVisualIds() {}

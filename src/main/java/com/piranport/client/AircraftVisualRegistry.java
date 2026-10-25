@@ -51,6 +51,9 @@ public final class AircraftVisualRegistry {
     private static final ResourceLocation REPPU_TEXTURE =
             ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "textures/entity/reppu.png");
 
+    private static final ResourceLocation SEAFANG_TEXTURE =
+            ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "textures/entity/seafang.png");
+
     private static final AircraftVisual B25 =
             new AircraftVisual(AircraftVisualIds.B25, ModelKind.B25, B25_TEXTURE);
     private static final AircraftVisual F4F =
@@ -86,6 +89,9 @@ public final class AircraftVisualRegistry {
     private static final AircraftVisual REPPU =
             new AircraftVisual(AircraftVisualIds.REPPU, ModelKind.REPPU, REPPU_TEXTURE);
 
+    private static final AircraftVisual SEAFANG =
+            new AircraftVisual(AircraftVisualIds.SEAFANG, ModelKind.SEAFANG, SEAFANG_TEXTURE);
+
     // 美术占位：待替换为正式模型与贴图。
     private static final AircraftVisual PLACEHOLDER =
             new AircraftVisual(AircraftVisualIds.PLACEHOLDER, ModelKind.F4F, B25_TEXTURE);
@@ -97,6 +103,7 @@ public final class AircraftVisualRegistry {
             Map.entry(AircraftVisualIds.TORPEDO_BOMBER, B25),
             Map.entry(AircraftVisualIds.ASW, B25),
             Map.entry(AircraftVisualIds.F4F, F4F),
+            Map.entry(AircraftVisualIds.SEAFANG, SEAFANG),
             Map.entry(AircraftVisualIds.REPPU, REPPU),
             Map.entry(AircraftVisualIds.F2A_BUFFALO, F2A_BUFFALO),
             Map.entry(AircraftVisualIds.TYPE96_FIGHTER, TYPE96_FIGHTER),
@@ -149,7 +156,8 @@ public final class AircraftVisualRegistry {
         F4U7,
         TYPE96_FIGHTER,
         F2A_BUFFALO,
-        REPPU
+        REPPU,
+        SEAFANG
     }
 
     public record AircraftVisual(String id, ModelKind modelKind, ResourceLocation texture) {

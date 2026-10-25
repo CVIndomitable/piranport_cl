@@ -484,6 +484,8 @@ public class ClientModEvents {
                 com.piranport.client.model.F2aBuffaloModel::createBodyLayer);
         event.registerLayerDefinition(com.piranport.client.model.ReppuModel.LAYER_LOCATION,
                 com.piranport.client.model.ReppuModel::createBodyLayer);
+        event.registerLayerDefinition(com.piranport.client.model.SeafangModel.LAYER_LOCATION,
+                com.piranport.client.model.SeafangModel::createBodyLayer);
     }
 
     @SubscribeEvent

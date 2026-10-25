@@ -172,6 +172,8 @@ public class ClientModEvents {
         event.register(Quad533mmTorpedoRenderer.MODEL_LOADED);
         event.register(Quad533mmTorpedoRenderer.MODEL_EMPTY_UR);
         event.register(Quad533mmTorpedoRenderer.MODEL_LOADED_UR);
+        event.register(Quintuple533mmTorpedoRenderer.MODEL_EMPTY);
+        event.register(Quintuple533mmTorpedoRenderer.MODEL_LOADED);
         for (CatalogGunRenderer.Spec spec : CatalogGunRenderer.specs()) {
             event.register(spec.modelEmpty());
             event.register(spec.modelLoaded());
@@ -203,6 +205,9 @@ public class ClientModEvents {
         event.registerItem(Quad533mmTorpedoRenderer.CLIENT_EXTENSIONS,
                 ModItems.QUAD_533MM_TORPEDO.get(),
                 ModItems.QUAD_533MM_TORPEDO_UR_HIGH_SPEED.get());
+        // 五联533毫米鱼雷
+        event.registerItem(Quintuple533mmTorpedoRenderer.CLIENT_EXTENSIONS,
+                ModItems.QUINTUPLE_533MM_TORPEDO.get());
         for (CatalogGunRenderer.Spec spec : CatalogGunRenderer.specs()) {
             for (var item : spec.items()) {
                 event.registerItem(CatalogGunRenderer.extensionsFor(spec), item.get());
@@ -234,6 +239,8 @@ public class ClientModEvents {
         event.enqueueWork(BoforsTwin120mmGunRenderer::init);
         // 四联533毫米鱼雷：鱼雷发射器走同一套 BEWLR 方案
         event.enqueueWork(Quad533mmTorpedoRenderer::init);
+        // 五联533毫米鱼雷：同一套 BEWLR 方案
+        event.enqueueWork(Quintuple533mmTorpedoRenderer::init);
         // 2026-10-18 批量主炮：共用 CatalogGunRenderer
         event.enqueueWork(CatalogGunRenderer::initAll);
 

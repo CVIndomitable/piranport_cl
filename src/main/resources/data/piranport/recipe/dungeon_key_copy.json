@@ -1,4 +1,5 @@
 {
   "type": "piranport:key_copy",
-  "category": "misc"
+  "chapter": 0,
+  "activity": true
 }

@@ -1,6 +1,8 @@
 package com.piranport.dungeon.recipe;
 
+import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.piranport.PiranPort;
 import com.piranport.dungeon.key.DungeonKeyItem;
 import com.piranport.dungeon.key.DungeonProgress;
@@ -10,6 +12,7 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.CraftingBookCategory;
@@ -20,52 +23,71 @@ import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.level.Level;
 
 /**
- * 整合版 §2.2 末段 + 副本/09 修订：钥匙复制 = 讲台取出 + 合成栏合成 → 保留原有进度，
- * 仅清除 instanceId，生成一把同类型同进度的新钥匙。
+ * 钥匙复制（《副本/17》：副本/09 修订）：保留 stageId 与 progress，仅清除 instanceId，
+ * 生成一把同章/同活动关的新钥匙。左上钥匙不消耗，留在格内。
  *
-     * <p>本合成配方在合成栏中：1 把章节钥匙 + 1 个铜锭 → 1 把同章节的新钥匙
-     * （保留进度，清除 instanceId）。</p>
+ * <h2>为什么按章节拆成多条配方（而不是一条「任意钥匙」配方）</h2>
+ * <p>旧实现只有一条 {@code piranport:key_copy}，{@link #getIngredients()} 里把七把章节钥匙
+ * 和通用钥匙塞进同一个 {@link Ingredient}。这条 Ingredient 在「玩家按配方摆放」时没问题，
+ * 但<b>自动摆放（JEI 的 + 按钮 / 原版配方书）必须从背包里挑一把匹配的钥匙</b>：
+ * JEI 按背包槽位顺序取第一个匹配项，原版 {@code StackedContents} 按 Ingredient 的物品顺序取；
+ * 两条路径都会优先拿到<b>第一章钥匙</b>。玩家明明拿着 5 章钥匙点复制，产物却变成 1 章，
+ * 而且 JEI 的结果图又被 {@code getResultItem} 硬编码成木钥匙——两者叠加就是
+ * 「任意章节钥匙复制后都变成第一章钥匙」。</p>
  *
- * <p>注意：当前保留 stageId 和 progress，仅清除 instanceId（"复制"语义）。</p>
+ * <p>因此每条配方只认<u>一种</u>钥匙物品（{@code chapter} 字段：1～7 对应
+ * {@code dungeon_key_ch1..ch7}，0 对应旧版通用 {@code dungeon_key}）。自动摆放时
+ * Ingredient 只有这一种物品，不会再从背包里抓别的章节；JEI 展示的结果也就是本章钥匙。
+ * {@code activity} 字段只对 {@code chapter=0} 有意义：活动钥匙（金猫猫 / ulan / 妄想 / 地狱）
+ * 用末影之眼 + 紫水晶碎片，旧存档留下的通用主线钥匙仍用铜锭 + 铝锭。</p>
  *
- * <h2>本配方的真实匹配规则（重要，勿被 JSON 误导）</h2>
- * <p>本配方是 {@link CustomRecipe}，匹配规则<b>全部硬编码在 {@link #matches} 里</b>：
- * 「合成格里恰好 1 把<b>使用过的</b> {@link DungeonKeyItem} + 至少 1 个铜锭」即成立。
- * <b>材料已由项目所有者 2026-09-24 定稿为「1 把使用过的钥匙 + 铜锭」</b>：
- * 钥匙打过副本后即为"使用过的钥匙"，与铜锭合成出新钥匙（《副本/17》§一.3 复制扩量）。
- * 判定见 {@link #matches}——<u>铜锭是硬性材料</u>，不再接受任意物品。</p>
+ * <p>材料口径（策划决策/副本/17）：主线钥匙 = 左上钥匙 + 正中铜锭 + 其余七格铝锭；
+ * 活动钥匙 = 左上钥匙 + 正中末影之眼 + 其余七格紫水晶碎片。钥匙<b>不消耗</b>。</p>
  *
- * <p>{@link Serializer#CODEC} 用的是 {@code MapCodec.unit(...)}，<b>对 JSON 完全不反序列化</b>：
- * 只认 {@code type} 字段，其余字段一律<u>读取即忽略</u>。因此
- * {@code data/piranport/recipes/dungeon_key_copy.json} 里<b>不能</b>写
- * {@code pattern} / {@code key} / {@code result} ——它们不会被校验、也不会生效，
- * 只会让下一个人误以为配方受 JSON 约束（本 JSON 曾长期这样写，属误导）。
- * 这份 JSON 因而刻意只留 {@code type} 与 {@code category} 两个字段，
- * 一个 {@code piranport:key_copy} 类型只需存在一次即可覆盖全部七章（章节由钥匙自身的
- * stageId 决定，无需按章写多份）。</p>
+ * <h2>JSON 字段</h2>
+ * <p>{@code data/piranport/recipe/dungeon_key_copy*.json} 只需要
+ * {@code type / chapter / activity}；{@code category} 之类多余字段会被忽略。
+ * 每种钥匙一条 JSON（ch1..ch7 + 活动 + 旧通用），见 {@link Serializer#CODEC}。</p>
  *
- * <p>补：{@code copy_from} 这类"记录复制来源"的 DataComponent <b>不存在</b>
- * （{@code ModDataComponents} 中并无该组件）。策划案《副本/17》§一.3「复制出的空白钥匙」
- * 是靠清空 instanceId 实现的：新钥匙复用原钥匙的 stageId + progress，
- * 由讲台据此重新随机一个全新副本实例。语义上不需要记录来源钥匙。</p>
+ * <p>补：{@code copy_from} 这类"记录复制来源"的 DataComponent 并不存在。策划案
+ * 《副本/17》的「复制出的空白钥匙」是靠清空 instanceId 实现的：新钥匙复用原钥匙的
+ * stageId + progress，由讲台据此建一个全新副本实例。</p>
  *
- * <h2>为什么这里的 {@link #isSpecial()} 被覆写成 {@code false}（有意偏离基类默认）</h2>
+ * <h2>为什么 {@link #isSpecial()} 覆写为 {@code false}</h2>
  * <p>与 {@link ChapterKeyRecipe} 同因：{@link CustomRecipe} 默认 {@code isSpecial() == true}，
- * 而 JEI 的 {@code CategoryRecipeValidator.isValid} 第一步就卡这个返回值，为 true 直接不显示，
- * 该版本 JEI 也没有可注册到原版合成台类别、绕开这道闸门的扩展入口。
- * 本配方本源语义同样是「普通合成」（钥匙 + 铜锭），并非特殊配方，故覆写为 {@code false}，
- * 让 JEI 可见、原版配方书也能识别。</p>
- * <p>注意：这只影响展示与自动摆放，<b>匹配逻辑仍完全以 {@link #matches} 为准</b>。</p>
+ * JEI 不显示特殊配方；本配方语义上是普通合成，故改为 {@code false} 让 JEI / 配方书可见。
+ * 匹配逻辑仍完全以 {@link #matches} 为准。</p>
  */
 public class KeyResetRecipe extends CustomRecipe {
 
-    public KeyResetRecipe(CraftingBookCategory category) {
+    /** 1～7 = 对应章节钥匙；0 = 旧版通用钥匙 {@code dungeon_key}。 */
+    private final int chapter;
+
+    /** 仅 {@code chapter == 0} 有效：true = 活动钥匙摆法（末影之眼 + 紫水晶碎片）。 */
+    private final boolean activity;
+
+    public KeyResetRecipe(int chapter, boolean activity, CraftingBookCategory category) {
         super(category);
+        this.chapter = chapter;
+        // 章节钥匙（1～7）永远走铜锭摆法；只有通用钥匙才分活动/旧主线两种。
+        this.activity = activity && chapter == 0;
+    }
+
+    public int chapter() {
+        return chapter;
+    }
+
+    public boolean activity() {
+        return activity;
+    }
+
+    /** 这条配方复制的钥匙物品。 */
+    private Item sourceItem() {
+        return ModItems.chapterDungeonKey(chapter);
     }
 
     /**
      * 覆写 {@link CustomRecipe} 的 {@code isSpecial() == true} 默认值，改为 {@code false}（理由见类 javadoc）。
-     * 这是<b>有意偏离基类默认</b>的行为：目的是让 JEI 显示本配方、并让原版配方书能识别与自动摆放。
      */
     @Override
     public boolean isSpecial() {
@@ -73,40 +95,34 @@ public class KeyResetRecipe extends CustomRecipe {
     }
 
     /**
-     * 提供给 JEI / 配方书显示的<b>存在性</b>输入列表（2 格：钥匙 + 铜锭）。
+     * JEI / 配方书展示用输入：左上<b>本章</b>钥匙，正中催化剂，其余七格材料。
      *
-     * <p><b>本方法不参与 {@link #matches} 判定，{@link #matches} 才是权威。</b>
-     * 真实规则里还有一个 Ingredient 表达不了的额外约束——钥匙必须是「使用过的」
-     * （{@code progress} 非空，见 {@link #matches}），Ingredient 只能表达「这一格可以是哪些物品」，
-     * 无法表达「这一格的物品必须带某个组件」。所以这里只声明物品种类，组件层面的门控留给 {@code matches}。</p>
+     * <p>关键约束：左上 Ingredient 必须只包含本章这一种钥匙。旧实现把七章钥匙放进同一个
+     * Ingredient，自动摆放时就会从背包里挑到第一章钥匙（根因见类 javadoc）。</p>
      */
     @Override
     public NonNullList<Ingredient> getIngredients() {
-        // 展示主线钥匙的复制形状：左上钥匙、正中铜锭、其余七格铝锭。
-        // 活动钥匙（妄想/地狱/ ulan）是同一配方的另一形态：正中末影之眼、其余紫水晶碎片，
-        // 已在 matches 内按钥匙所属关卡分流。
-        Ingredient anyKey = Ingredient.of(ModItems.DUNGEON_KEY_CH1.get(), ModItems.DUNGEON_KEY_CH2.get(),
-                ModItems.DUNGEON_KEY_CH3.get(), ModItems.DUNGEON_KEY_CH4.get(),
-                ModItems.DUNGEON_KEY_CH5.get(), ModItems.DUNGEON_KEY_CH6.get(),
-                ModItems.DUNGEON_KEY_CH7.get(), ModItems.DUNGEON_KEY.get());
-        Ingredient aluminum = Ingredient.of(ModItems.ALUMINUM_INGOT.get());
-        Ingredient copper = Ingredient.of(Items.COPPER_INGOT);
+        Ingredient key = Ingredient.of(sourceItem());
+        Ingredient filler = activity
+                ? Ingredient.of(Items.AMETHYST_SHARD)
+                : Ingredient.of(ModItems.ALUMINUM_INGOT.get());
+        Ingredient catalyst = activity
+                ? Ingredient.of(Items.ENDER_EYE)
+                : Ingredient.of(Items.COPPER_INGOT);
         return NonNullList.of(Ingredient.EMPTY,
-                anyKey, aluminum, aluminum,
-                aluminum, copper, aluminum,
-                aluminum, aluminum, aluminum);
+                key, filler, filler,
+                filler, catalyst, filler,
+                filler, filler, filler);
     }
 
     /**
-     * 供 JEI / 配方书显示的结果物品：一把副本钥匙。
-     *
-     * <p>刻意不带任何组件：真实产物会继承来源钥匙的 {@code stageId} + {@code progress}
-     * （见 {@link #assemble}），那取决于玩家投入的是哪把钥匙，这里没有唯一正确答案。
-     * 不带组件时 JEI 按物品自身默认组件渲染出钥匙图标，信息量恰好足够。</p>
+     * JEI / 配方书展示结果 = 本章钥匙。因为配方已经按章节拆分，这里的答案唯一，
+     * 不再需要「随便给一把通用钥匙」的妥协。注意不能返回 {@link ItemStack#EMPTY}：
+     * JEI 的 {@code CategoryRecipeValidator} 会把无产物配方整个过滤掉。
      */
     @Override
     public ItemStack getResultItem(HolderLookup.Provider registries) {
-        return new ItemStack(ModItems.DUNGEON_KEY_CH1.get());
+        return new ItemStack(sourceItem());
     }
 
     @Override
@@ -116,30 +132,24 @@ public class KeyResetRecipe extends CustomRecipe {
     }
 
     /**
-     * 匹配规则：<b>恰好 1 把「已使用过的」副本钥匙 + 恰好 1 个铜锭</b>（或多于 1 个也无妨，见下）。
-     *
-     * <p>材料口径由项目所有者 2026-09-24 定稿：<b>钥匙打过副本以后变成"使用过的钥匙"，
-     * 使用过的钥匙与铜锭合成出新钥匙</b>（《副本/17》§一.3 锻造模板式复制，材料档位本文落定为铜锭）。
-     * 原来的实现是「1 把钥匙 + 任意杂质」，等于用一块泥土就能无限复制钥匙，与策划口径不符。</p>
-     *
-     * <p>「使用过」的判定用 {@link DungeonKeyItem#getProgress} 是否为空进度：未使用过的钥匙
-     * （刚从碎片合成出来、直接拿去做复制）没有 progress 可继承，让它参与复制只会白白消耗铜锭；
-     * 要求 progress 非空同时也保证了复制出的钥匙是「同难度全新副本」而不是又一把空白钥匙。</p>
-     */
-    /**
      * 匹配规则（策划决策/副本/17）：
      * <ul>
-     *   <li>主线钥匙：左上钥匙、正中铜锭、其余七格铝锭；</li>
-     *   <li>活动钥匙（妄想舰队/地狱群岛）：左上钥匙、正中末影之眼、其余七格紫水晶碎片。</li>
+     *   <li>左上必须是<b>本条配方指定</b>的那把钥匙（物品类型即章节），且数量为 1；</li>
+     *   <li>主线：正中铜锭，其余七格铝锭；活动：正中末影之眼，其余七格紫水晶碎片；</li>
+     *   <li>钥匙<b>不消耗</b>，合成后留在左上格。</li>
      * </ul>
-     * 钥匙<b>不消耗</b>，合成后留在左上格。
+     *
+     * <p>旧实现还要求钥匙「使用过」（progress 非空）；策划口径从未要求，现已去掉——
+     * 刚合成出来的空白钥匙也应该可以再复制一把。</p>
      */
     @Override
     public boolean matches(CraftingInput input, Level level) {
         if (input.width() != 3 || input.height() != 3) return false;
         ItemStack key = input.getItem(0);
-        if (!(key.getItem() instanceof DungeonKeyItem) || key.getCount() != 1) return false;
-        boolean activity = isActivityKey(key);
+        if (key.getCount() != 1 || !key.is(sourceItem())) return false;
+        // 通用钥匙有两种摆法：活动关（金猫猫/ulan/妄想/地狱）与旧存档主线钥匙。
+        if (chapter == 0 && activity != isActivityStage(DungeonKeyItem.resolveStageId(key))) return false;
+
         ItemStack catalyst = input.getItem(4);
         if (catalyst.getCount() != 1) return false;
         if (activity ? !catalyst.is(Items.ENDER_EYE) : !catalyst.is(Items.COPPER_INGOT)) return false;
@@ -153,23 +163,21 @@ public class KeyResetRecipe extends CustomRecipe {
         return true;
     }
 
-    /** 活动关钥匙：关卡 id 以 {@code delusion_} 或 {@code hell_} 开头。 */
-    private static boolean isActivityKey(ItemStack key) {
-        String stageId = DungeonKeyItem.resolveStageId(key);
-        return stageId.startsWith("delusion_") || stageId.startsWith("hell_");
+    /**
+     * 活动关判定（《副本/18》）：金猫猫、ulan、妄想舰队、地狱群岛都用活动钥匙摆法。
+     * 早先只认 {@code delusion_}/{@code hell_}，金猫猫与 ulan 会被错当成主线钥匙。
+     */
+    private static boolean isActivityStage(String stageId) {
+        return stageId.startsWith("delusion_") || stageId.startsWith("hell_")
+                || stageId.equals("goldencatcat") || stageId.equals("ulan");
     }
 
     @Override
-    public ItemStack assemble(CraftingInput input, net.minecraft.core.HolderLookup.Provider registries) {
-        ItemStack sourceKey = ItemStack.EMPTY;
-        for (int i = 0; i < input.size(); i++) {
-            ItemStack stack = input.getItem(i);
-            if (stack.getItem() instanceof DungeonKeyItem) {
-                sourceKey = stack;
-                break;
-            }
+    public ItemStack assemble(CraftingInput input, HolderLookup.Provider registries) {
+        ItemStack sourceKey = input.getItem(0);
+        if (sourceKey.isEmpty() || !(sourceKey.getItem() instanceof DungeonKeyItem)) {
+            return ItemStack.EMPTY;
         }
-        if (sourceKey.isEmpty()) return ItemStack.EMPTY;
 
         // 输出：新钥匙（同 stageId + 同 progress，仅 instanceId 移除 = 复制语义）
         ItemStack result = new ItemStack(sourceKey.getItem());
@@ -185,8 +193,8 @@ public class KeyResetRecipe extends CustomRecipe {
         }
         // instanceId 不设置（新副本）
 
-        PiranPort.LOGGER.info("KeyCopy: stageId={} (progress preserved, instanceId cleared)",
-                stageId);
+        PiranPort.LOGGER.info("KeyCopy: chapter={} stageId={} (progress preserved, instanceId cleared)",
+                chapter, stageId);
         return result;
     }
 
@@ -207,10 +215,16 @@ public class KeyResetRecipe extends CustomRecipe {
     // ===== Serializer =====
 
     public static class Serializer implements RecipeSerializer<KeyResetRecipe> {
-        // 无参配方：MapCodec.unit 不读任何 JSON 字段（除 type 由 RecipeManager 分派），
-        // 因此 JSON 只需 {"type":"piranport:key_copy","category":"misc"} 两行。
-        public static final MapCodec<KeyResetRecipe> CODEC = MapCodec.unit(
-                new KeyResetRecipe(CraftingBookCategory.MISC));
+
+        /**
+         * {@code chapter}：0～7（见类 javadoc）；{@code activity}：仅 chapter=0 时有效，默认 false。
+         * 每条钥匙一条 JSON，章节/摆法由数据包显式声明，不再靠运行时猜「任意钥匙」。
+         */
+        public static final MapCodec<KeyResetRecipe> CODEC = RecordCodecBuilder.mapCodec(i -> i.group(
+                        Codec.intRange(0, 7).fieldOf("chapter").forGetter(KeyResetRecipe::chapter),
+                        Codec.BOOL.optionalFieldOf("activity", false).forGetter(KeyResetRecipe::activity))
+                .apply(i, (chapter, activity) ->
+                        new KeyResetRecipe(chapter, activity, CraftingBookCategory.MISC)));
 
         @Override
         public MapCodec<KeyResetRecipe> codec() {
@@ -220,8 +234,12 @@ public class KeyResetRecipe extends CustomRecipe {
         @Override
         public StreamCodec<RegistryFriendlyByteBuf, KeyResetRecipe> streamCodec() {
             return StreamCodec.of(
-                    (buf, recipe) -> {},
-                    buf -> new KeyResetRecipe(CraftingBookCategory.MISC));
+                    (buf, recipe) -> {
+                        buf.writeVarInt(recipe.chapter);
+                        buf.writeBoolean(recipe.activity);
+                    },
+                    buf -> new KeyResetRecipe(buf.readVarInt(), buf.readBoolean(),
+                            CraftingBookCategory.MISC));
         }
     }
 }

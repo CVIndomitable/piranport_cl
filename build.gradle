@@ -133,8 +133,26 @@ tasks.named('processResources', ProcessResources).configure {
     }
 }
 
+// 需要真实 Minecraft 内建注册表的测试（@Tag("mc-bootstrap")）必须单独 JVM 跑：
+// 普通单测刻意保持「JVM 从未 Bootstrap.bootStrap()」（DungeonDataValidator 据此跳过注册表校验），
+// 一旦同一 JVM 里 bootstrap 过，DungeonDataLoaderTest 等就会去检查测试环境没注册的模组条目而失败。
+var mcBootstrapTest = tasks.register('mcBootstrapTest', Test) {
+    description = 'Runs tests that need Minecraft BuiltInRegistries bootstrapped (isolated JVM).'
+    group = 'verification'
+    useJUnitPlatform {
+        includeTags 'mc-bootstrap'
+    }
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    dependsOn tasks.named('testClasses')
+}
+
 tasks.named('test', Test).configure {
-    useJUnitPlatform()
+    useJUnitPlatform {
+        excludeTags 'mc-bootstrap'
+    }
+    // 让 ./gradlew test 也覆盖注册表测试；两个任务各自 fork，互不污染静态状态。
+    dependsOn mcBootstrapTest
     dependsOn tasks.named('jar')
     inputs.files(pondererPack).withPropertyName('pondererTutorialPack')
     inputs.files(tasks.named('jar')).withPropertyName('piranportModJar')

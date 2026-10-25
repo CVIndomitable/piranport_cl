@@ -1,11 +1,13 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "piranport:item/level_bomber_squadron_empty"
+    "layer0": "piranport:item/ju87c_empty"
   },
   "overrides": [
     {
-      "predicate": { "piranport:fueled": 1 },
+      "predicate": {
+        "piranport:fueled": 1
+      },
       "model": "piranport:item/ju87c_fueled"
     }
   ]

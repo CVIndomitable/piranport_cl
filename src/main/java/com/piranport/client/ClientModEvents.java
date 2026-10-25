@@ -468,6 +468,8 @@ public class ClientModEvents {
                 com.piranport.client.model.DeepOceanBattleshipModel::createBodyLayer);
         event.registerLayerDefinition(com.piranport.client.model.DeepOceanLightCarrierModel.LAYER_LOCATION,
                 com.piranport.client.model.DeepOceanLightCarrierModel::createBodyLayer);
+        event.registerLayerDefinition(com.piranport.client.model.Ju87cModel.LAYER_LOCATION,
+                com.piranport.client.model.Ju87cModel::createBodyLayer);
     }
 
     @SubscribeEvent

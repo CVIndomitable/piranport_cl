@@ -476,6 +476,8 @@ public class ClientModEvents {
                 com.piranport.client.model.WyvernModel::createBodyLayer);
         event.registerLayerDefinition(com.piranport.client.model.SkyraiderModel.LAYER_LOCATION,
                 com.piranport.client.model.SkyraiderModel::createBodyLayer);
+        event.registerLayerDefinition(com.piranport.client.model.F4u7Model.LAYER_LOCATION,
+                com.piranport.client.model.F4u7Model::createBodyLayer);
     }
 
     @SubscribeEvent

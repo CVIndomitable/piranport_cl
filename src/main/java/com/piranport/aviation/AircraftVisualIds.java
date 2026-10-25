@@ -15,6 +15,8 @@ public final class AircraftVisualIds {
     public static final String F4F = "f4f";
     /** 梭鱼（Fairey Barracuda）鱼雷机专属模型。 */
     public static final String BARRACUDA = "barracuda";
+    /** 流星（横须贺 D4Y）鱼雷机专属模型。 */
+    public static final String RYUSEI = "ryusei";
     public static final String FIGHTER = "fighter";
     public static final String ROCKET_FIGHTER = "rocket_fighter";
     public static final String DIVE_BOMBER = "dive_bomber";
@@ -26,7 +28,7 @@ public final class AircraftVisualIds {
     public static final String PLACEHOLDER = "placeholder";
 
     private static final Set<String> KNOWN = Set.of(
-            B25, F4F, BARRACUDA, FIGHTER, ROCKET_FIGHTER, DIVE_BOMBER,
+            B25, F4F, BARRACUDA, RYUSEI, FIGHTER, ROCKET_FIGHTER, DIVE_BOMBER,
             LEVEL_BOMBER, TORPEDO_BOMBER, ASW, RECON, PLACEHOLDER);
 
     private AircraftVisualIds() {}

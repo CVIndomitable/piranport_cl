@@ -306,6 +306,8 @@ public class ClientModEvents {
                 com.piranport.client.model.F4FModel::createBodyLayer);
         event.registerLayerDefinition(com.piranport.client.model.BarracudaModel.LAYER_LOCATION,
                 com.piranport.client.model.BarracudaModel::createBodyLayer);
+        event.registerLayerDefinition(com.piranport.client.model.RyuseiModel.LAYER_LOCATION,
+                com.piranport.client.model.RyuseiModel::createBodyLayer);
         event.registerLayerDefinition(com.piranport.client.model.TorpedoModel.LAYER_LOCATION,
                 com.piranport.client.model.TorpedoModel::createBodyLayer);
         event.registerLayerDefinition(com.piranport.client.model.UnicornModel.LAYER_LOCATION,

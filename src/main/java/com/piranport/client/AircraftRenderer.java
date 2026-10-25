@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 import com.piranport.client.model.B25Model;
+import com.piranport.client.model.F2aBuffaloModel;
 import com.piranport.client.model.Type96FighterModel;
 import com.piranport.client.model.F4u7Model;
 import com.piranport.client.model.SkyraiderModel;
@@ -48,6 +49,8 @@ public class AircraftRenderer extends EntityRenderer<AircraftEntity> {
 
     private final Type96FighterModel<AircraftEntity> type96FighterModel;
 
+    private final F2aBuffaloModel<AircraftEntity> f2aBuffaloModel;
+
     public AircraftRenderer(EntityRendererProvider.Context ctx) {
         super(ctx);
         this.shadowRadius = 0.5f;
@@ -62,6 +65,7 @@ public class AircraftRenderer extends EntityRenderer<AircraftEntity> {
         this.skyraiderModel = new SkyraiderModel<>(ctx.bakeLayer(SkyraiderModel.LAYER_LOCATION));
         this.f4u7Model = new F4u7Model<>(ctx.bakeLayer(F4u7Model.LAYER_LOCATION));
         this.type96FighterModel = new Type96FighterModel<>(ctx.bakeLayer(Type96FighterModel.LAYER_LOCATION));
+        this.f2aBuffaloModel = new F2aBuffaloModel<>(ctx.bakeLayer(F2aBuffaloModel.LAYER_LOCATION));
     }
 
     @Override
@@ -97,6 +101,7 @@ public class AircraftRenderer extends EntityRenderer<AircraftEntity> {
             case SKYRAIDER -> skyraiderModel;
             case F4U7 -> f4u7Model;
             case TYPE96_FIGHTER -> type96FighterModel;
+            case F2A_BUFFALO -> f2aBuffaloModel;
         };
 
         VertexConsumer vertexConsumer = bufferSource.getBuffer(model.renderType(texture));

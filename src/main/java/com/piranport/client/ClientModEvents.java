@@ -86,7 +86,7 @@ public class ClientModEvents {
     private static final CatalogGunRenderer.Spec US_20_TWIN = CatalogGunRenderer.spec(
             "us_twin_20inch_gun", ModItems.US_TWIN_20INCH_GUN);
 
-    /** 注册日本12厘米单装炮、日本12.7厘米连装炮与德国/意大利/美国三联主炮的 standalone 3D 模型（BEWLR 直接取用）。 */
+    /** 注册日本12厘米单装炮、日本12.7厘米连装炮、博福斯双联120毫米炮与德国/意大利/美国三联主炮的 standalone 3D 模型（BEWLR 直接取用）。 */
     @SubscribeEvent
     public static void registerAdditionalModels(ModelEvent.RegisterAdditional event) {
         event.register(Japanese12cmSingleGunRenderer.MODEL_EMPTY);
@@ -105,6 +105,8 @@ public class ClientModEvents {
         event.register(UsTriple12inchGunRenderer.MODEL_LOADED);
         event.register(ItalianTriple320mmGunRenderer.MODEL_EMPTY);
         event.register(ItalianTriple320mmGunRenderer.MODEL_LOADED);
+        event.register(BoforsTwin120mmGunRenderer.MODEL_EMPTY);
+        event.register(BoforsTwin120mmGunRenderer.MODEL_LOADED);
         event.register(Quad533mmTorpedoRenderer.MODEL_EMPTY);
         event.register(Quad533mmTorpedoRenderer.MODEL_LOADED);
         event.register(Quad533mmTorpedoRenderer.MODEL_EMPTY_UR);
@@ -115,7 +117,7 @@ public class ClientModEvents {
         }
     }
 
-    /** 给日本12厘米单装炮、日本12.7厘米连装炮与德国/意大利/美国三联主炮挂自定义渲染器（BEWLR）。 */
+    /** 给日本12厘米单装炮、日本12.7厘米连装炮、博福斯双联120毫米炮与德国/意大利/美国三联主炮挂自定义渲染器（BEWLR）。 */
     @SubscribeEvent
     public static void registerClientExtensions(RegisterClientExtensionsEvent event) {
         event.registerItem(Japanese12cmSingleGunRenderer.CLIENT_EXTENSIONS,
@@ -134,6 +136,8 @@ public class ClientModEvents {
                 ModItems.US_TRIPLE_12INCH_GUN.get());
         event.registerItem(ItalianTriple320mmGunRenderer.CLIENT_EXTENSIONS,
                 ModItems.ITALIAN_TRIPLE_320MM_GUN.get());
+        event.registerItem(BoforsTwin120mmGunRenderer.CLIENT_EXTENSIONS,
+                ModItems.BOFORS_TWIN_120MM_GUN.get());
         // 四联533毫米鱼雷（本体与 ur 高速型共用一套发射器渲染）
         event.registerItem(Quad533mmTorpedoRenderer.CLIENT_EXTENSIONS,
                 ModItems.QUAD_533MM_TORPEDO.get(),
@@ -165,6 +169,8 @@ public class ClientModEvents {
         event.enqueueWork(UsTriple12inchGunRenderer::init);
         // 意大利三联320毫米炮：同一套 BEWLR 方案
         event.enqueueWork(ItalianTriple320mmGunRenderer::init);
+        // 博福斯双联120毫米炮：同一套 BEWLR 方案
+        event.enqueueWork(BoforsTwin120mmGunRenderer::init);
         // 四联533毫米鱼雷：鱼雷发射器走同一套 BEWLR 方案
         event.enqueueWork(Quad533mmTorpedoRenderer::init);
         // 2026-10-18 批量主炮：共用 CatalogGunRenderer

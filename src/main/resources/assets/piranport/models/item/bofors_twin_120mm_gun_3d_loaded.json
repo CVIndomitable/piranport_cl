@@ -1,0 +1,6 @@
+{
+  "parent": "piranport:item/bofors_twin_120mm_gun_3d",
+  "textures": {
+    "muzzle_empty": "piranport:item/bofors_twin_120mm_gun_muzzle_loaded"
+  }
+}

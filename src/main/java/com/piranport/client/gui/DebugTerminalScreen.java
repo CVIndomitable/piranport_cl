@@ -562,36 +562,71 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
             namespace = rawTarget.substring(0, colon);
             path = rawTarget.substring(colon + 1);
         }
-        List<String> candidates = new ArrayList<>();
-        // Resource IDs often carry a data-only prefix (aircraft/, entity/). The
-        // actual item/entity translation is registered under the final path.
-        String leaf = path;
-        int slash = leaf.lastIndexOf('/');
-        if (slash >= 0 && slash + 1 < leaf.length()) leaf = leaf.substring(slash + 1);
-        if ("core".equals(group)) {
-            candidates.add("ship_type." + path);
-        }
-        candidates.add("target." + group + "." + path);
-        candidates.add("target." + group + "." + leaf);
-        candidates.add("item." + namespace + "." + path);
-        candidates.add("item." + namespace + "." + leaf);
-        if ("equipment".equals(group) && path.startsWith("ciws_")) {
-            candidates.add("item." + namespace + ".auto_" + path);
-        }
-        candidates.add("entity." + namespace + "." + path);
-        candidates.add("entity." + namespace + "." + leaf);
-        candidates.add("block." + namespace + "." + path);
-        candidates.add("group." + group);
-        for (String suffix : candidates) {
-            String key = suffix.startsWith("item.") || suffix.startsWith("entity.")
-                    || suffix.startsWith("block.") ? suffix : "gui.piranport.debug_terminal." + suffix;
+        for (String key : targetTranslationKeys(group, namespace, path)) {
             String value = Component.translatable(key).getString();
             if (!value.equals(key)) return withAircraftClass(group, path, value);
         }
-        // Never expose a raw registry ID in the terminal. A missing translation
-        // is still identifiable by its translated category.
-        return withAircraftClass(group, path,
-                translated("group." + group, categoryLabel(categoryFor(group)).getString()));
+        // 查不到翻译时回退到 target 本身（可读化后的完整路径），而不是分类名：
+        // 分类名会让同一分类下所有缺翻译的目标重名成一整屏“装备/弹体”。
+        return withAircraftClass(group, path, readableTargetName(namespace, path, rawTarget));
+    }
+
+    /**
+     * 终端 target 对照的物品注册路径。
+     * <p>近防炮的终端 target 是 {@code ciws_<注册名>}（见 {@code ModEquipmentConfig#ciws}），
+     * 物品注册名则是去掉 {@code ciws_} 的 {@code <注册名>}。17 座近防炮逐一核对过，
+     * 不存在别名或缩写，故这里可安全去前缀；新增近防炮若有别名，应在此建显式映射。</p>
+     */
+    static String itemTargetPath(String group, String path) {
+        String prefix = "ciws_";
+        if ("equipment".equals(group) && path.startsWith(prefix) && path.length() > prefix.length()) {
+            return path.substring(prefix.length());
+        }
+        return path;
+    }
+
+    /**
+     * target 的翻译键候选，按优先级排列。
+     * <p>资源 ID 常带数据层前缀（aircraft/、entity/ 等），实际翻译注册在末段路径上，
+     * 因此 path 与 leaf 各查一次。抽成纯字符串函数，便于测试复用同一套解析规则。</p>
+     */
+    static List<String> targetTranslationKeys(String group, String namespace, String path) {
+        String leaf = lastPathSegment(path);
+        String itemPath = itemTargetPath(group, path);
+        String itemLeaf = lastPathSegment(itemPath);
+        List<String> keys = new ArrayList<>();
+        if ("core".equals(group)) {
+            keys.add("gui.piranport.debug_terminal.ship_type." + path);
+        }
+        keys.add("gui.piranport.debug_terminal.target." + group + "." + path);
+        if (!leaf.equals(path)) {
+            keys.add("gui.piranport.debug_terminal.target." + group + "." + leaf);
+        }
+        keys.add("item." + namespace + "." + itemPath);
+        if (!itemLeaf.equals(itemPath)) {
+            keys.add("item." + namespace + "." + itemLeaf);
+        }
+        keys.add("entity." + namespace + "." + path);
+        if (!leaf.equals(path)) {
+            keys.add("entity." + namespace + "." + leaf);
+        }
+        keys.add("block." + namespace + "." + path);
+        return keys;
+    }
+
+    private static String lastPathSegment(String path) {
+        int slash = path.lastIndexOf('/');
+        return slash >= 0 && slash + 1 < path.length() ? path.substring(slash + 1) : path;
+    }
+
+    /**
+     * 缺翻译时的可读回退名：保留完整路径（namespace 非 piranport 时连带 namespace），
+     * 只把下划线与路径分隔符换成空格，确保不同 target 仍有区分度。
+     */
+    static String readableTargetName(String namespace, String path, String rawTarget) {
+        String readable = path.replace('/', ' ').replace('_', ' ').trim();
+        if (readable.isEmpty()) readable = rawTarget.trim();
+        return "piranport".equals(namespace) ? readable : namespace + ": " + readable;
     }
 
     /**

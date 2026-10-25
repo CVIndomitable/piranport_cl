@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * 副本/21 主线奖励：每次通关固定三样——材料包、勋章、随机蓝图，重打照发。
@@ -85,9 +86,9 @@ public final class MainlineRewardService {
             "2-4", new Amount("piranport:fuel", 4, 4)
     );
 
-    /** 蓝图池只写装备注册名，发放时拼 {@code _blueprint} 并以实际注册表过滤。 */
-    private static final Map<String, List<String>> BLUEPRINT_POOLS = buildBlueprintPools();
-
+    // 下面两个共用池必须先于 BLUEPRINT_POOLS 声明：Java 按源码顺序初始化静态字段，
+    // buildBlueprintPools() 在 BLUEPRINT_POOLS 初始化时就会执行；若把这两个字段挪到它之后，
+    // Map 里会存进「键存在、值为 null」的条目，抽蓝图时 for-each 直接 NPE（2-1 曾因此崩溃）。
     private static final List<String> CIWS_BLUEPRINTS = List.of(
             "french_quad_37mm_aa", "us_quad_bofors_40mm", "octuple_pom_pom_40mm",
             "japanese_28_tube_aa_rocket", "sm24_zif_twin_57mm",
@@ -98,10 +99,13 @@ public final class MainlineRewardService {
             "ship_rocket_launcher", "seacat_launcher", "sea_dart_launcher",
             "terrier_launcher", "mk14_harpoon_launcher", "sy1_launcher");
 
+    /** 蓝图池只写装备注册名，发放时拼 {@code _blueprint} 并以实际注册表过滤。 */
+    private static final Map<String, List<String>> BLUEPRINT_POOLS = buildBlueprintPools();
+
     private static Map<String, List<String>> buildBlueprintPools() {
         Map<String, List<String>> m = new LinkedHashMap<>();
         // 2-1 起加入可合成的改良、先进近防炮；初期/标准可合成但不要蓝图。
-        m.put("2-1", CIWS_BLUEPRINTS);
+        m.put("2-1", Objects.requireNonNull(CIWS_BLUEPRINTS));
         m.put("3-1", List.of("oto_twin_76mm_rapid_gun", "type79_twin_100mm_gun",
                 "small_type3_shell", "medium_type3_shell", "large_type3_shell"));
         m.put("3-2", List.of("bofors_twin_120mm_gun", "us_twin_5inch_dp_gun"));
@@ -137,8 +141,8 @@ public final class MainlineRewardService {
         m.put("7-1", List.of("terrier_launcher", "mk14_harpoon_launcher",
                 "wyvern", "f4u7", "skyraider"));
         m.put("7-2", List.of("sy1_launcher", "tenga", "ryusei"));
-        m.put("7-4", MISSILE_LAUNCHER_BLUEPRINTS);
-        m.put("7-5", MISSILE_LAUNCHER_BLUEPRINTS);
+        m.put("7-4", Objects.requireNonNull(MISSILE_LAUNCHER_BLUEPRINTS));
+        m.put("7-5", Objects.requireNonNull(MISSILE_LAUNCHER_BLUEPRINTS));
         return m;
     }
 
@@ -146,7 +150,8 @@ public final class MainlineRewardService {
     private static List<String> unionPools(String... stages) {
         List<String> out = new ArrayList<>();
         for (String stage : stages) {
-            out.addAll(BLUEPRINT_POOLS.getOrDefault(stage, List.of()));
+            List<String> p = BLUEPRINT_POOLS.get(stage);
+            if (p != null) out.addAll(p);
         }
         return out;
     }
@@ -260,7 +265,9 @@ public final class MainlineRewardService {
                     "6-1", "6-2", "6-3", "6-4", "7-1", "7-2");
             pool = pool.stream().filter(MainlineRewardService::isAdvancedBlueprint).toList();
         } else {
-            pool = BLUEPRINT_POOLS.getOrDefault(stageId, List.of());
+            // 注意 get() 而非 getOrDefault()：若键存在但值为 null，getOrDefault 会返回 null。
+            List<String> p = BLUEPRINT_POOLS.get(stageId);
+            pool = p != null ? p : List.of();
         }
         List<Item> available = new ArrayList<>();
         for (String base : pool) {

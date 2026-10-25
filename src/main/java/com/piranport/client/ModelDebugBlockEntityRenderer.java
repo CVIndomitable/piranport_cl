@@ -12,6 +12,16 @@ import com.piranport.client.model.DeepOceanLightCarrierModel;
 import com.piranport.client.model.F4FModel;
 import com.piranport.client.model.RyuseiModel;
 import com.piranport.client.model.TengaModel;
+import com.piranport.client.model.Ju87cModel;
+import com.piranport.client.model.BtdDestroyerModel;
+import com.piranport.client.model.WyvernModel;
+import com.piranport.client.model.SkyraiderModel;
+import com.piranport.client.model.F4u7Model;
+import com.piranport.client.model.Type96FighterModel;
+import com.piranport.client.model.F2aBuffaloModel;
+import com.piranport.client.model.ReppuModel;
+import com.piranport.client.model.SeafangModel;
+import com.piranport.client.model.Xf5uModel;
 import com.piranport.client.model.TorpedoModel;
 import com.piranport.registry.ModItems;
 import net.minecraft.client.model.EntityModel;
@@ -51,6 +61,26 @@ public class ModelDebugBlockEntityRenderer implements BlockEntityRenderer<ModelD
             ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "textures/entity/ryusei.png");
     private static final ResourceLocation TENGA_TEXTURE =
             ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "textures/entity/tenga.png");
+    private static final ResourceLocation JU87C_TEXTURE =
+            ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "textures/entity/ju87c.png");
+    private static final ResourceLocation BTD_DESTROYER_TEXTURE =
+            ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "textures/entity/btd_destroyer.png");
+    private static final ResourceLocation WYVERN_TEXTURE =
+            ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "textures/entity/wyvern.png");
+    private static final ResourceLocation SKYRAIDER_TEXTURE =
+            ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "textures/entity/skyraider.png");
+    private static final ResourceLocation F4U7_TEXTURE =
+            ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "textures/entity/f4u7.png");
+    private static final ResourceLocation TYPE96_FIGHTER_TEXTURE =
+            ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "textures/entity/type96_fighter.png");
+    private static final ResourceLocation F2A_BUFFALO_TEXTURE =
+            ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "textures/entity/f2a_buffalo.png");
+    private static final ResourceLocation REPPU_TEXTURE =
+            ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "textures/entity/reppu.png");
+    private static final ResourceLocation SEAFANG_TEXTURE =
+            ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "textures/entity/seafang.png");
+    private static final ResourceLocation XF5U_TEXTURE =
+            ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "textures/entity/xf5u.png");
     private static final ResourceLocation HEAVY_CRUISER_TEXTURE =
             ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID,
                     "textures/entity/deep_ocean/heavy_cruiser_model.png");
@@ -91,6 +121,16 @@ public class ModelDebugBlockEntityRenderer implements BlockEntityRenderer<ModelD
     private final BarracudaModel<Entity> barracuda;
     private final RyuseiModel<Entity> ryusei;
     private final TengaModel<Entity> tenga;
+    private final Ju87cModel<Entity> ju87c;
+    private final BtdDestroyerModel<Entity> btd;
+    private final WyvernModel<Entity> wyvern;
+    private final SkyraiderModel<Entity> skyraider;
+    private final F4u7Model<Entity> f4u7;
+    private final Type96FighterModel<Entity> type96;
+    private final F2aBuffaloModel<Entity> f2a;
+    private final ReppuModel<Entity> reppu;
+    private final SeafangModel<Entity> seafang;
+    private final Xf5uModel<Entity> xf5u;
     private final DeepOceanHeavyCruiserModel heavyCruiser;
     private final DeepOceanLightCarrierModel lightCarrier;
     private final TorpedoModel torpedo;
@@ -102,6 +142,16 @@ public class ModelDebugBlockEntityRenderer implements BlockEntityRenderer<ModelD
         this.barracuda = new BarracudaModel<>(ctx.getModelSet().bakeLayer(BarracudaModel.LAYER_LOCATION));
         this.ryusei = new RyuseiModel<>(ctx.getModelSet().bakeLayer(RyuseiModel.LAYER_LOCATION));
         this.tenga = new TengaModel<>(ctx.getModelSet().bakeLayer(TengaModel.LAYER_LOCATION));
+        this.ju87c = new Ju87cModel<>(ctx.getModelSet().bakeLayer(Ju87cModel.LAYER_LOCATION));
+        this.btd = new BtdDestroyerModel<>(ctx.getModelSet().bakeLayer(BtdDestroyerModel.LAYER_LOCATION));
+        this.wyvern = new WyvernModel<>(ctx.getModelSet().bakeLayer(WyvernModel.LAYER_LOCATION));
+        this.skyraider = new SkyraiderModel<>(ctx.getModelSet().bakeLayer(SkyraiderModel.LAYER_LOCATION));
+        this.f4u7 = new F4u7Model<>(ctx.getModelSet().bakeLayer(F4u7Model.LAYER_LOCATION));
+        this.type96 = new Type96FighterModel<>(ctx.getModelSet().bakeLayer(Type96FighterModel.LAYER_LOCATION));
+        this.f2a = new F2aBuffaloModel<>(ctx.getModelSet().bakeLayer(F2aBuffaloModel.LAYER_LOCATION));
+        this.reppu = new ReppuModel<>(ctx.getModelSet().bakeLayer(ReppuModel.LAYER_LOCATION));
+        this.seafang = new SeafangModel<>(ctx.getModelSet().bakeLayer(SeafangModel.LAYER_LOCATION));
+        this.xf5u = new Xf5uModel<>(ctx.getModelSet().bakeLayer(Xf5uModel.LAYER_LOCATION));
         this.heavyCruiser = new DeepOceanHeavyCruiserModel(
                 ctx.getModelSet().bakeLayer(DeepOceanHeavyCruiserModel.LAYER_LOCATION));
         this.lightCarrier = new DeepOceanLightCarrierModel(
@@ -124,6 +174,16 @@ public class ModelDebugBlockEntityRenderer implements BlockEntityRenderer<ModelD
             case "barracuda" -> { model = barracuda; texture = BARRACUDA_TEXTURE; }
             case "ryusei" -> { model = ryusei; texture = RYUSEI_TEXTURE; }
             case "tenga" -> { model = tenga; texture = TENGA_TEXTURE; }
+            case "ju87c" -> { model = ju87c; texture = JU87C_TEXTURE; }
+            case "btd_destroyer" -> { model = btd; texture = BTD_DESTROYER_TEXTURE; }
+            case "wyvern" -> { model = wyvern; texture = WYVERN_TEXTURE; }
+            case "skyraider" -> { model = skyraider; texture = SKYRAIDER_TEXTURE; }
+            case "f4u7" -> { model = f4u7; texture = F4U7_TEXTURE; }
+            case "type96_fighter" -> { model = type96; texture = TYPE96_FIGHTER_TEXTURE; }
+            case "f2a_buffalo" -> { model = f2a; texture = F2A_BUFFALO_TEXTURE; }
+            case "reppu" -> { model = reppu; texture = REPPU_TEXTURE; }
+            case "seafang" -> { model = seafang; texture = SEAFANG_TEXTURE; }
+            case "xf5u" -> { model = xf5u; texture = XF5U_TEXTURE; }
             case "heavy_cruiser" -> { model = heavyCruiser; texture = HEAVY_CRUISER_TEXTURE; }
             case "light_carrier" -> { model = lightCarrier; texture = LIGHT_CARRIER_TEXTURE; }
             case "torpedo" -> { model = torpedo; texture = TORPEDO_TEXTURE; }

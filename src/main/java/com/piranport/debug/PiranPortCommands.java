@@ -129,6 +129,16 @@ public final class PiranPortCommands {
                                     builder.suggest("barracuda");
                                     builder.suggest("ryusei");
                                     builder.suggest("tenga");
+                                    builder.suggest("ju87c");
+                                    builder.suggest("btd_destroyer");
+                                    builder.suggest("wyvern");
+                                    builder.suggest("skyraider");
+                                    builder.suggest("f4u7");
+                                    builder.suggest("type96_fighter");
+                                    builder.suggest("f2a_buffalo");
+                                    builder.suggest("reppu");
+                                    builder.suggest("seafang");
+                                    builder.suggest("xf5u");
                                     builder.suggest("heavy_cruiser");
                                     builder.suggest("light_carrier");
                                     builder.suggest("torpedo");
@@ -241,7 +251,7 @@ public final class PiranPortCommands {
     // /ppd model_debug 的合法取值。必须与 ModelDebugBlockEntityRenderer 的两个 switch 保持一致，
     // 校验与渲染读同一份名单，避免再次出现"补了渲染忘了补校验"的漏档。
     private static final java.util.List<String> MODEL_DEBUG_TYPES = java.util.List.of(
-            "b25", "f4f", "barracuda", "ryusei", "tenga", "heavy_cruiser", "light_carrier", "torpedo", "shell", "missile");
+            "b25", "f4f", "barracuda", "ryusei", "tenga", "ju87c", "btd_destroyer", "wyvern", "skyraider", "f4u7", "type96_fighter", "f2a_buffalo", "reppu", "seafang", "xf5u", "heavy_cruiser", "light_carrier", "torpedo", "shell", "missile");
     private static final java.util.List<String> MODEL_DEBUG_VARIANTS = java.util.List.of(
             "small", "medium", "large", "anti_air", "anti_ship", "rocket");
 

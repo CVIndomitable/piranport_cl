@@ -1,0 +1,6 @@
+{
+  "parent": "piranport:item/mk16_triple_6inch_gun_flashless_3d",
+  "textures": {
+    "muzzle_empty": "piranport:item/mk16_triple_6inch_gun_flashless_muzzle_loaded"
+  }
+}

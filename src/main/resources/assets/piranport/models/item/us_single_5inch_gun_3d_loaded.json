@@ -1,0 +1,6 @@
+{
+  "parent": "piranport:item/us_single_5inch_gun_3d",
+  "textures": {
+    "muzzle_empty": "piranport:item/us_single_5inch_gun_muzzle_loaded"
+  }
+}

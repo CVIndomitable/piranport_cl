@@ -86,9 +86,11 @@ public class ClientModEvents {
     private static final CatalogGunRenderer.Spec US_20_TWIN = CatalogGunRenderer.spec(
             "us_twin_20inch_gun", ModItems.US_TWIN_20INCH_GUN);
 
-    /** 注册日本12.7厘米连装炮与德国/意大利/美国三联主炮的 standalone 3D 模型（BEWLR 直接取用）。 */
+    /** 注册日本12厘米单装炮、日本12.7厘米连装炮与德国/意大利/美国三联主炮的 standalone 3D 模型（BEWLR 直接取用）。 */
     @SubscribeEvent
     public static void registerAdditionalModels(ModelEvent.RegisterAdditional event) {
+        event.register(Japanese12cmSingleGunRenderer.MODEL_EMPTY);
+        event.register(Japanese12cmSingleGunRenderer.MODEL_LOADED);
         event.register(Japanese127mmTwinGunRenderer.MODEL_EMPTY);
         event.register(Japanese127mmTwinGunRenderer.MODEL_LOADED);
         event.register(GermanTwin203mmGunRenderer.MODEL_EMPTY);
@@ -111,9 +113,11 @@ public class ClientModEvents {
         }
     }
 
-    /** 给日本12.7厘米连装炮与德国/意大利/美国三联主炮挂自定义渲染器（BEWLR）。 */
+    /** 给日本12厘米单装炮、日本12.7厘米连装炮与德国/意大利/美国三联主炮挂自定义渲染器（BEWLR）。 */
     @SubscribeEvent
     public static void registerClientExtensions(RegisterClientExtensionsEvent event) {
+        event.registerItem(Japanese12cmSingleGunRenderer.CLIENT_EXTENSIONS,
+                ModItems.SINGLE_SMALL_GUN.get());
         event.registerItem(Japanese127mmTwinGunRenderer.CLIENT_EXTENSIONS,
                 ModItems.JAPANESE_127MM_TWIN_GUN.get());
         event.registerItem(GermanTwin203mmGunRenderer.CLIENT_EXTENSIONS,
@@ -143,6 +147,8 @@ public class ClientModEvents {
     public static void onClientSetup(FMLClientSetupEvent event) {
         // 初始化皮肤核心 3D 渲染器（需要在客户端主线程访问 EntityModelSet）
         event.enqueueWork(SkinCoreItemRenderer::init);
+        // 日本12厘米单装炮：物品栏画 2D 图标，手持渲染 3D 炮塔
+        event.enqueueWork(Japanese12cmSingleGunRenderer::init);
         // 日本12.7厘米连装炮：物品栏画 2D 图标，手持渲染 3D 炮塔
         event.enqueueWork(Japanese127mmTwinGunRenderer::init);
         // 德国双联203毫米炮：同一套 BEWLR 方案
@@ -258,9 +264,8 @@ public class ClientModEvents {
     public static void registerItemDecorations(RegisterItemDecorationsEvent event) {
         // 武器装填条（武器物品上的耐久条样式）
         WeaponReloadDecorator weaponDecorator = new WeaponReloadDecorator();
-        event.register(ModItems.SINGLE_SMALL_GUN.get(), weaponDecorator);
         event.register(ModItems.MEDIUM_GUN.get(), weaponDecorator);
-        // 07 火炮注册表 60 门（含日本12.7厘米连装炮、德国双联380毫米炮）
+        // 07 火炮注册表 62 门（含日本12厘米单装炮、日本12.7厘米连装炮、德国双联380毫米炮）
         for (net.minecraft.world.item.Item gun : com.piranport.registry.WeaponItems.allCatalogGuns()) {
             event.register(gun, weaponDecorator);
         }

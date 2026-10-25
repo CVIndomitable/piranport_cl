@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * 火炮注册表目录（依据：策划决策/数值/07-火炮注册表.md，60 门）。
+ * 火炮注册表目录（依据：策划决策/数值/07-火炮注册表.md，62 门）。
  *
  * <p>只存定位：英寸口径、联装、稀有度。面板/装填/负重由 {@link CannonStatFormula} 派生，
  * 物理参数按口径族沿用现有同族炮。运行时以 {@code data/piranport/artillery/cannons/<id>.json}
@@ -28,6 +28,8 @@ public final class CannonCatalog {
             new Entry("british_twin_3inch_rapid_gun", 3.0f, 2, EquipmentTier.ADVANCED),
             new Entry("type79_twin_100mm_gun", (float) (100 / 25.4), 2, EquipmentTier.IMPROVED),
             new Entry("type79b_twin_100mm_gun", (float) (100 / 25.4), 2, EquipmentTier.ADVANCED),
+            // 2026-10-25：原通用占位炮单装小型火炮，显示名早已是「日本12厘米单装炮」（120 mm 单装）。
+            new Entry("single_small_gun", (float) (120 / 25.4), 1, EquipmentTier.INITIAL),
             new Entry("bofors_twin_120mm_gun", (float) (120 / 25.4), 2, EquipmentTier.IMPROVED),
             new Entry("german_single_127mm_gun", 5.0f, 1, EquipmentTier.INITIAL),
             new Entry("us_single_5inch_gun", 5.0f, 1, EquipmentTier.STANDARD),

@@ -30,6 +30,7 @@ class CannonStatFormulaTest {
             new Row("british_twin_3inch_rapid_gun", 2, 4, 6.5, 12.31, 7),
             new Row("type79_twin_100mm_gun", 3, 6, 16.37, 7.33, 9),
             new Row("type79b_twin_100mm_gun", 3, 6, 12.59, 9.53, 9),
+            new Row("single_small_gun", 5, 5, 27.24, 3.67, 8),
             new Row("bofors_twin_120mm_gun", 5, 10, 23.02, 8.69, 12),
             new Row("german_single_127mm_gun", 5, 5, 30.0, 3.33, 8),
             new Row("us_single_5inch_gun", 5, 5, 24.0, 4.17, 8),
@@ -100,8 +101,8 @@ class CannonStatFormulaTest {
 
     @Test
     void catalogMatchesTable07RowForRow() {
-        assertEquals(61, TABLE_07.size());
-        assertEquals(61, CannonCatalog.ENTRIES.size());
+        assertEquals(62, TABLE_07.size());
+        assertEquals(62, CannonCatalog.ENTRIES.size());
         Set<String> ids = new HashSet<>();
         for (int i = 0; i < TABLE_07.size(); i++) {
             Row row = TABLE_07.get(i);

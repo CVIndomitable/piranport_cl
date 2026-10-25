@@ -56,14 +56,15 @@ public final class WeaponItems {
                             ShipType.SUBMARINE));
 
     // ===== Guns =====
+    /**
+     * 日本12厘米单装炮（120 mm 单装·初期）。
+     *
+     * <p>2026-10-25 起并入 07 表，改用 {@link #catalogGun} 注册；面板 5、装填 27.24 tick、
+     * 负重 8 由 06 公式派生，运行时数值以
+     * {@code data/piranport/artillery/cannons/single_small_gun.json} 为准。
+     */
     public static final DeferredItem<Item> SINGLE_SMALL_GUN =
-            ITEMS.register("single_small_gun", () -> new ArtilleryItem(new Item.Properties().stacksTo(1)
-                    .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.CANNON)
-                    .durability(500),
-                    new ArtilleryCannonData(4, 1, 6.0f, 30, 500, 2.0f,
-                            List.of(new MuzzlePos(0.2, 0.15, 0)),
-                            2.5f, 0.015f, 9.8f, 1.0f, 0.0f,
-                            10, 1, 0.0f), "single_small_gun"));
+            ITEMS.register("single_small_gun", () -> catalogGun("single_small_gun"));
     /**
      * 日本12.7厘米连装炮 — 八九式十二糎七高角砲。
      *
@@ -99,7 +100,7 @@ public final class WeaponItems {
 
     /**
      * 策划决策/数值/07 注册表其余火炮（id → 物品），顺序同 07 表。
-     * 日本12.7厘米连装炮、德国双联380毫米炮已有独立字段，不在此重复注册。
+     * 日本12厘米单装炮、日本12.7厘米连装炮、德国双联380毫米炮已有独立字段，不在此重复注册。
      */
     public static final java.util.Map<String, DeferredItem<Item>> CATALOG_GUNS = registerCatalogGuns();
 
@@ -107,7 +108,9 @@ public final class WeaponItems {
         java.util.Map<String, DeferredItem<Item>> map = new java.util.LinkedHashMap<>();
         for (com.piranport.artillery.CannonCatalog.Entry e : com.piranport.artillery.CannonCatalog.ENTRIES) {
             String id = e.id();
-            if (id.equals("japanese_127mm_twin_gun") || id.equals("german_twin_380mm_gun")) continue;
+            if (id.equals("single_small_gun")
+                    || id.equals("japanese_127mm_twin_gun")
+                    || id.equals("german_twin_380mm_gun")) continue;
             map.put(id, ITEMS.register(id, () -> catalogGun(id)));
         }
         return java.util.Collections.unmodifiableMap(map);
@@ -120,11 +123,12 @@ public final class WeaponItems {
                 .durability(data.durability()), data, id);
     }
 
-    /** 07 表全部 60 门（含两门独立字段），按表顺序。 */
+    /** 07 表全部 62 门（含三门独立字段），按表顺序。 */
     public static java.util.List<Item> allCatalogGuns() {
         java.util.List<Item> list = new java.util.ArrayList<>();
         for (com.piranport.artillery.CannonCatalog.Entry e : com.piranport.artillery.CannonCatalog.ENTRIES) {
-            if (e.id().equals("japanese_127mm_twin_gun")) list.add(JAPANESE_127MM_TWIN_GUN.get());
+            if (e.id().equals("single_small_gun")) list.add(SINGLE_SMALL_GUN.get());
+            else if (e.id().equals("japanese_127mm_twin_gun")) list.add(JAPANESE_127MM_TWIN_GUN.get());
             else if (e.id().equals("german_twin_380mm_gun")) list.add(GERMAN_TWIN_380MM_GUN.get());
             else list.add(CATALOG_GUNS.get(e.id()).get());
         }

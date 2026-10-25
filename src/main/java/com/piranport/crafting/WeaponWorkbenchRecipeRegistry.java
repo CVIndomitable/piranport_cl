@@ -274,9 +274,11 @@ public final class WeaponWorkbenchRecipeRegistry {
 
     private static void registerAll(List<WeaponWorkbenchRecipe> r) {
         // ===== Tab 0: 火炮 =====
-        // 数值/09：通用占位炮 single_small_gun、medium_gun 生存模式不给配方，只有 07 表火炮进工作台。
-        // 数值/07 注册表 60 门：改良/先进验装备专属蓝图，材料按口径族与联装（数值/09）。
+        // 数值/09：single_small_gun（日本12厘米单装炮，2026-10-25 已并入 07 表）与 medium_gun
+        // 仍属通用占位炮，生存模式不给配方；其余 07 表火炮进工作台。
+        // 数值/07 注册表 62 门：改良/先进验装备专属蓝图，材料按口径族与联装（数值/09）。
         for (Item gun : com.piranport.registry.WeaponItems.allCatalogGuns()) {
+            if (gun == ModItems.SINGLE_SMALL_GUN.get()) continue;
             if (isUncraftable(gun)) continue;
             if (!(gun instanceof com.piranport.artillery.ArtilleryItem artillery)) continue;
             var data = artillery.getData();

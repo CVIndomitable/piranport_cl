@@ -39,10 +39,10 @@ public class ModCreativeTabs {
                     .withTabsBefore(ResourceKey.create(Registries.CREATIVE_MODE_TAB, PiranPort.modId("core_tab")))  // 链式排序：紧接 core_tab
                     .icon(() -> ModItems.MEDIUM_GUN.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
-                        // Guns
-                        output.accept(ModItems.SINGLE_SMALL_GUN.get());
+                        // Guns（medium_gun 仍未并入 07 表，单独放）
                         output.accept(ModItems.MEDIUM_GUN.get());
-                        // 策划决策/数值/07 火炮注册表 60 门（含日本12.7厘米连装炮、德国双联380毫米炮），按表顺序
+                        // 策划决策/数值/07 火炮注册表 62 门（含日本12厘米单装炮、日本12.7厘米连装炮、
+                        // 德国双联380毫米炮），按表顺序
                         for (net.minecraft.world.item.Item gun : WeaponItems.allCatalogGuns()) output.accept(gun);
                         output.accept(ModItems.FRENCH_QUAD_380MM_GUN.get());
                         output.accept(ModItems.FOURTEEN_BARREL_GUN.get());

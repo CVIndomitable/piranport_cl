@@ -544,7 +544,6 @@ public class TransformationManager {
             java.util.Map<net.minecraft.world.item.Item, Integer> temp = new java.util.IdentityHashMap<>();
             // 火炮：策划决策/数值/07 注册表火炮的负重走 ArtilleryItem#getFormulaWeight（数值/06 公式），
             // 不再在此硬编码；这里只保留未进注册表的旧炮。
-            temp.put(ModItems.SINGLE_SMALL_GUN.get(), 4);
             temp.put(ModItems.MEDIUM_GUN.get(), 16);
             temp.put(ModItems.SY1_LAUNCHER.get(), 14);
             temp.put(ModItems.MK14_HARPOON_LAUNCHER.get(), 16);

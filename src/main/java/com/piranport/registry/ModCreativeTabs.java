@@ -558,8 +558,6 @@ public class ModCreativeTabs {
                         output.accept(ModItems.BLUEPRINT_CHEST.get());
                         output.accept(ModItems.DUNGEON_LECTERN.get());
                         output.accept(ModItems.FLOATING_TARGET.get());
-                        output.accept(ModItems.MEDIUM_GUN_BLUEPRINT.get());
-                        output.accept(ModItems.LARGE_GUN_BLUEPRINT.get());
                         output.accept(ModItems.STANDARD_WEAPON_BLUEPRINT.get());
                         output.accept(ModItems.IMPROVED_WEAPON_BLUEPRINT.get());
                         output.accept(ModItems.ADVANCED_WEAPON_BLUEPRINT.get());

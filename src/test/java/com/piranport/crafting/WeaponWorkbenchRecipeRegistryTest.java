@@ -18,7 +18,7 @@ class WeaponWorkbenchRecipeRegistryTest {
         // 数值/09：通用占位炮 medium_gun（中国双联140）不在 07 注册表，生存模式不给配方。
         assertFalse(source.contains("ModItems.MEDIUM_GUN"),
                 "medium_gun 不应再进武器制造台");
-        // 旧中型/大型火炮蓝图只作为物品保留（兼容旧存档），不再是任何配方的蓝图门槛。
+        // 旧中型/大型火炮蓝图物品已删除；保留断言作为防回流守卫，防止旧蓝图重新成为配方门槛。
         assertFalse(source.contains("MEDIUM_GUN_BLUEPRINT"));
         assertFalse(source.contains("LARGE_GUN_BLUEPRINT"));
         // requiredBlueprint == null 表示无需蓝图，不是不可合成（既定设计）。

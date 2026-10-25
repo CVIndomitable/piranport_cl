@@ -318,8 +318,6 @@ public class ModItems {
     public static final DeferredItem<BlockItem> BLUEPRINT_CHEST = MaterialItems.BLUEPRINT_CHEST;
 
     // ===== Blueprints（已迁移到 MaterialItems） =====
-    public static final DeferredItem<Item> MEDIUM_GUN_BLUEPRINT = MaterialItems.MEDIUM_GUN_BLUEPRINT;
-    public static final DeferredItem<Item> LARGE_GUN_BLUEPRINT = MaterialItems.LARGE_GUN_BLUEPRINT;
     public static final DeferredItem<Item> CREATIVE_BLUEPRINT = MaterialItems.CREATIVE_BLUEPRINT;
     public static final DeferredItem<Item> STANDARD_WEAPON_BLUEPRINT = MaterialItems.STANDARD_WEAPON_BLUEPRINT;
     public static final DeferredItem<Item> IMPROVED_WEAPON_BLUEPRINT = MaterialItems.IMPROVED_WEAPON_BLUEPRINT;

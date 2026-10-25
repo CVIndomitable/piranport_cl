@@ -4,6 +4,7 @@ import com.piranport.artillery.ArtilleryItem;
 import com.piranport.artillery.config.ArtilleryCannonData;
 import com.piranport.artillery.config.MuzzlePos;
 import com.piranport.combat.BallisticSolver;
+import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -39,6 +40,18 @@ public final class ClientScopeHandler {
 
     /** 进入瞄准模式之前是否持有火炮 */
     private static boolean heldCannonBeforeScope = false;
+
+    /**
+     * 开镜强制第一人称前玩家的视角。
+     * null = 本次开镜没有由我们强制切过视角（进入时已在第一人称，或已恢复）。
+     */
+    @Nullable
+    private static CameraType cameraTypeBeforeScope = null;
+    /**
+     * 开镜期间玩家是否自己按 F5 改过视角。
+     * 改过则尊重玩家选择，退出开镜时不再把镜头拽回进入前的状态。
+     */
+    private static boolean cameraChangedByPlayer = false;
 
     /** 当前有效交点是否属于实体，用于核对准星实际取点。 */
     private static boolean aimedAtEntity = false;
@@ -79,6 +92,9 @@ public final class ClientScopeHandler {
         if (scoping) return;
         zoomLevel = getZoomFromWeapon(weapon);
         if (zoomLevel <= 0) return;
+        // 先切视角再置 scoping：开镜的第一帧起镜头就是第一人称，不会出现
+        // 「已开镜但自己的角色模型还挡在准星前」的一帧。zoomLevel 只是数值，与切换先后无关。
+        forceFirstPersonForScope();
         scoping = true;
         holdTicks = 0;
         heldCannonBeforeScope = true;
@@ -94,6 +110,9 @@ public final class ClientScopeHandler {
 
     /** 退出瞄准模式 */
     public static void exitScope() {
+        // 所有正常退出路径（松键、切武器、打开界面、死亡界面）都汇到这里，
+        // 在此统一恢复开镜前的视角，避免镜头卡在第一人称。
+        restoreCameraAfterScope();
         scoping = false;
         holdTicks = 0;
         aimedPosition = null;
@@ -110,9 +129,78 @@ public final class ClientScopeHandler {
         serverAngleDeg = 0.0;
     }
 
+    // ===== 开镜视角切换 =====
+
+    /**
+     * 开镜强制第一人称。
+     * WHY：第三人称下开镜时玩家自己的角色模型正好挡在准星前面，完全没法瞄准，
+     * 所以开镜必须切第一人称；同时记录进入前的视角，退出开镜后还原。
+     * 本来就在第一人称时不记录，退出时也就不会多做一次无意义的设置。
+     */
+    private static void forceFirstPersonForScope() {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc == null || mc.options == null) return;
+        CameraType current = mc.options.getCameraType();
+        if (current == CameraType.FIRST_PERSON) return;
+        cameraTypeBeforeScope = current;
+        cameraChangedByPlayer = false;
+        mc.options.setCameraType(CameraType.FIRST_PERSON);
+    }
+
+    /**
+     * 退出开镜时恢复进入前的视角。
+     * WHY 只在「我们强切过」且「玩家没自己改过」时恢复：玩家开镜期间按 F5
+     * 是明确的意图表达，退出开镜时再把视角拽回去会显得像按键失灵。
+     */
+    private static void restoreCameraAfterScope() {
+        CameraType original = cameraTypeBeforeScope;
+        boolean changedByPlayer = cameraChangedByPlayer;
+        // 先清记录：即使下面的恢复因客户端未就绪而跳过，也不能把过期状态留到下一次开镜。
+        cameraTypeBeforeScope = null;
+        cameraChangedByPlayer = false;
+        if (original == null) return;
+        Minecraft mc = Minecraft.getInstance();
+        if (mc == null || mc.options == null) return;
+        CameraType toRestore = cameraTypeToRestore(original, mc.options.getCameraType(), changedByPlayer);
+        if (toRestore != null) {
+            mc.options.setCameraType(toRestore);
+        }
+    }
+
+    /**
+     * 开镜期间玩家按 F5 改过视角就记下来（离开第一人称即视为改过）。
+     * 用「曾经离开第一人称」而不是退出瞬间比较，是为了覆盖玩家连按 F5 又转回
+     * 第一人称的情况：那同样是他自己的选择，不应被我们恢复成第三人称。
+     */
+    private static void detectPlayerCameraChange() {
+        if (cameraTypeBeforeScope == null || cameraChangedByPlayer) return;
+        Minecraft mc = Minecraft.getInstance();
+        if (mc == null || mc.options == null) return;
+        if (mc.options.getCameraType() != CameraType.FIRST_PERSON) {
+            cameraChangedByPlayer = true;
+        }
+    }
+
+    /**
+     * 退出开镜时该恢复的视角；null = 不改视角。抽成纯逻辑便于单测。
+     *
+     * @param original         开镜前记录的原视角；null 表示本次开镜不是我们强切的
+     * @param current          退出瞬间的视角
+     * @param changedByPlayer  开镜期间玩家是否自己切过视角
+     */
+    @Nullable
+    static CameraType cameraTypeToRestore(@Nullable CameraType original, CameraType current,
+                                          boolean changedByPlayer) {
+        if (original == null || changedByPlayer) return null;
+        // 仍停在我们切的第一人称 = 玩家全程没动过视角，按原样恢复；
+        // 否则说明视角已被玩家接管，以玩家当前选择为准。
+        return current == CameraType.FIRST_PERSON ? original : null;
+    }
+
     /** 每客户端 tick 调用，更新长按计数和射线检测 */
     public static void tick(Player player, ItemStack weapon) {
         if (!scoping) return;
+        detectPlayerCameraChange();
         holdTicks++;
 
         // 每 tick 更新射线检测，获取目标位置
@@ -395,8 +483,10 @@ public final class ClientScopeHandler {
         return main.getItem() instanceof ArtilleryItem;
     }
 
-    /** 断开连接等场景清理状态 */
+    /** 断开连接、换维度、死亡重生等场景清理状态 */
     public static void clear() {
+        // 这些场景不走 exitScope，但同样可能卡在开镜强切的第一人称里，必须一并恢复。
+        restoreCameraAfterScope();
         scoping = false;
         holdTicks = 0;
         zoomLevel = 2.0f;

@@ -49,7 +49,7 @@ Mod ID `piranport`，包名 `com.piranport`；Java 21 / NeoForge 21.1.220 / MC 1
 ## 已删除功能（勿照旧文档加回）
 - Y 键战场高亮（`ac9ec5bb`）：模组高亮只剩火控红框 > 声呐黄框（原版发光最优先）
 - 火控雷达 0 键准星吸附（`9003fc00`）：火控雷达只保留炮弹追踪
-- `large_gun` 大型火炮：引用已改指 `british_triple_16inch_gun`；`large_gun_blueprint` 保留但不卡任何配方
+- `large_gun` 大型火炮：引用已改指 `british_triple_16inch_gun`；`large_gun_blueprint` 与 `medium_gun_blueprint` 已于 `2dad8c1f` 删除
 - 副本入口传送门：书台即入口；传送门方块注册仅为兼容旧存档保留
 - `AircraftReloadPayload` 长按读条：R 键统一走 `ManualReloadPayload`
 

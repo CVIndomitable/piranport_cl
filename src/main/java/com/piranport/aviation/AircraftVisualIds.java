@@ -21,6 +21,8 @@ public final class AircraftVisualIds {
     public static final String TENGA = "tenga";
     /** ju87c 专属模型。 */
     public static final String JU87C = "ju87c";
+    /** btd_destroyer 专属模型。 */
+    public static final String BTD_DESTROYER = "btd_destroyer";
     public static final String FIGHTER = "fighter";
     public static final String ROCKET_FIGHTER = "rocket_fighter";
     public static final String DIVE_BOMBER = "dive_bomber";
@@ -32,7 +34,7 @@ public final class AircraftVisualIds {
     public static final String PLACEHOLDER = "placeholder";
 
     private static final Set<String> KNOWN = Set.of(
-            B25, F4F, JU87C, BARRACUDA, RYUSEI, TENGA, FIGHTER, ROCKET_FIGHTER, DIVE_BOMBER,
+            B25, F4F, BTD_DESTROYER, JU87C, BARRACUDA, RYUSEI, TENGA, FIGHTER, ROCKET_FIGHTER, DIVE_BOMBER,
             LEVEL_BOMBER, TORPEDO_BOMBER, ASW, RECON, PLACEHOLDER);
 
     private AircraftVisualIds() {}

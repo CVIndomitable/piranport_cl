@@ -30,6 +30,9 @@ public final class AircraftVisualRegistry {
     private static final ResourceLocation JU87C_TEXTURE =
             ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "textures/entity/ju87c.png");
 
+    private static final ResourceLocation BTD_DESTROYER_TEXTURE =
+            ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "textures/entity/btd_destroyer.png");
+
     private static final AircraftVisual B25 =
             new AircraftVisual(AircraftVisualIds.B25, ModelKind.B25, B25_TEXTURE);
     private static final AircraftVisual F4F =
@@ -44,6 +47,9 @@ public final class AircraftVisualRegistry {
     private static final AircraftVisual JU87C =
             new AircraftVisual(AircraftVisualIds.JU87C, ModelKind.JU87C, JU87C_TEXTURE);
 
+    private static final AircraftVisual BTD_DESTROYER =
+            new AircraftVisual(AircraftVisualIds.BTD_DESTROYER, ModelKind.BTD_DESTROYER, BTD_DESTROYER_TEXTURE);
+
     // 美术占位：待替换为正式模型与贴图。
     private static final AircraftVisual PLACEHOLDER =
             new AircraftVisual(AircraftVisualIds.PLACEHOLDER, ModelKind.F4F, B25_TEXTURE);
@@ -55,6 +61,7 @@ public final class AircraftVisualRegistry {
             Map.entry(AircraftVisualIds.TORPEDO_BOMBER, B25),
             Map.entry(AircraftVisualIds.ASW, B25),
             Map.entry(AircraftVisualIds.F4F, F4F),
+            Map.entry(AircraftVisualIds.BTD_DESTROYER, BTD_DESTROYER),
             Map.entry(AircraftVisualIds.JU87C, JU87C),
             Map.entry(AircraftVisualIds.BARRACUDA, BARRACUDA),
             Map.entry(AircraftVisualIds.RYUSEI, RYUSEI),
@@ -93,7 +100,8 @@ public final class AircraftVisualRegistry {
         BARRACUDA,
         RYUSEI,
         TENGA,
-        JU87C
+        JU87C,
+        BTD_DESTROYER
     }
 
     public record AircraftVisual(String id, ModelKind modelKind, ResourceLocation texture) {

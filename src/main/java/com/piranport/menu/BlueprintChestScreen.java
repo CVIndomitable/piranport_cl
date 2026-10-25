@@ -80,11 +80,20 @@ public class BlueprintChestScreen extends AbstractContainerScreen<BlueprintChest
      * 导致复印 tab 下点击永远命中蓝图槽，CopySlot 的取出逻辑永远不会触发。
      * findSlot 是 private 无法覆写，因此在 slotClicked（protected）里做下标重映射：
      * 复印 tab 下命中蓝图槽下标(0~8)时，实际向服务端发送对应 CopySlot 的下标(+10)。
+     *
+     * <p>只重映射「取件」类点击。CopySlot 是投影槽：getItem() 每次返回预览副本，
+     * set()/remove() 都不经过容器。原版 SWAP（数字键/中键换入快捷栏）分支不调用
+     * remove()，而是直接把 slot.getItem() 塞进快捷栏再 setByPlayer(EMPTY)——对
+     * CopySlot 来说就是「白拿一份、不扣纸」。所以 SWAP/PICKUP_ALL/CLONE 必须留在
+     * 真正的蓝图槽上（那是玩家真实物品），不能重映射。</p>
      */
     @Override
     protected void slotClicked(Slot slot, int slotId, int mouseButton, net.minecraft.world.inventory.ClickType type) {
         if (slot != null && getMenu().getCurrentTab() == 1
-                && slot.index >= 0 && slot.index < 9) {
+                && slot.index >= 0 && slot.index < 9
+                && (type == net.minecraft.world.inventory.ClickType.PICKUP
+                        || type == net.minecraft.world.inventory.ClickType.QUICK_MOVE
+                        || type == net.minecraft.world.inventory.ClickType.THROW)) {
             this.minecraft.gameMode.handleInventoryMouseClick(
                     this.menu.containerId, slot.index + BlueprintChestMenu.COPY_SLOT_START,
                     mouseButton, type, this.minecraft.player);

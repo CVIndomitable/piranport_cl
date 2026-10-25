@@ -178,6 +178,62 @@ class BlueprintChestMenuTest {
     }
 
     /**
+     * 索引/坐标不变量：Screen 的 slotClicked 靠「蓝图槽下标 + COPY_SLOT_START」重映射到复印槽，
+     * 一旦槽位注册顺序或常量漂移，点击就会落到玩家背包甚至越界。这里把当前布局钉死。
+     */
+    @Test
+    void slotIndicesAndOverlappingCoordinatesAreStable() {
+        BlueprintChestBlockEntity chest = newChest();
+        BlueprintChestMenu menu = new BlueprintChestMenu(1, new Inventory(null), chest);
+
+        assertEquals(BlueprintChestBlockEntity.TOTAL_SLOTS
+                        + BlueprintChestBlockEntity.BLUEPRINT_SLOTS
+                        + 27 + 9, menu.slots.size(), "槽位总数");
+        assertEquals(55, menu.slots.size());
+        assertEquals(BlueprintChestBlockEntity.TOTAL_SLOTS, BlueprintChestMenu.COPY_SLOT_START);
+        assertEquals(BlueprintChestMenu.COPY_SLOT_START + BlueprintChestBlockEntity.BLUEPRINT_SLOTS,
+                BlueprintChestMenu.PLAYER_INV_START);
+        assertEquals(menu.slots.size(), BlueprintChestMenu.PLAYER_INV_END);
+
+        for (int i = 0; i < BlueprintChestBlockEntity.BLUEPRINT_SLOTS; i++) {
+            Slot blueprint = menu.slots.get(i);
+            Slot copy = menu.slots.get(BlueprintChestMenu.COPY_SLOT_START + i);
+            assertEquals(8 + i * 18, blueprint.x, "蓝图槽 x");
+            assertEquals(34, blueprint.y, "蓝图槽 y");
+            // 重叠坐标是有意设计：findSlot 先命中蓝图层，Screen 再按 tab 重映射到 CopySlot
+            assertEquals(blueprint.x, copy.x, "复印槽应与蓝图槽同 x");
+            assertEquals(blueprint.y, copy.y, "复印槽应与蓝图槽同 y");
+            assertTrue(copy.index < BlueprintChestMenu.PLAYER_INV_START, "复印槽必须落在玩家背包之前");
+        }
+        assertEquals(80, menu.slots.get(BlueprintChestBlockEntity.PAPER_SLOT).x, "纸槽 x");
+        assertEquals(67, menu.slots.get(BlueprintChestBlockEntity.PAPER_SLOT).y, "纸槽 y");
+    }
+
+    /** 复印 N 号槽必须取 N 号蓝图，不能串位（重映射 +COPY_SLOT_START 的前提）。 */
+    @Test
+    void eachCopySlotPreviewsItsOwnBlueprint() {
+        BlueprintChestBlockEntity chest = newChest();
+        BlueprintChestMenu menu = new BlueprintChestMenu(1, new Inventory(null), chest);
+
+        var blueprints = new java.util.ArrayList<ItemStack>();
+        for (var holder : com.piranport.registry.WeaponItems.EQUIPMENT_BLUEPRINTS.values()) {
+            blueprints.add(new ItemStack(holder.get()));
+            if (blueprints.size() == BlueprintChestBlockEntity.BLUEPRINT_SLOTS) break;
+        }
+        assertEquals(BlueprintChestBlockEntity.BLUEPRINT_SLOTS, blueprints.size(), "至少需要 9 种专属蓝图");
+        for (int i = 0; i < blueprints.size(); i++) {
+            chest.getItemHandler().setStackInSlot(i, blueprints.get(i).copy());
+        }
+        chest.getItemHandler().setStackInSlot(BlueprintChestBlockEntity.PAPER_SLOT,
+                new ItemStack(Items.PAPER, 64));
+
+        for (int i = 0; i < blueprints.size(); i++) {
+            ItemStack preview = menu.slots.get(BlueprintChestMenu.COPY_SLOT_START + i).getItem();
+            assertEquals(blueprints.get(i).getItem(), preview.getItem(), "复印槽 " + i + " 串位");
+        }
+    }
+
+    /**
      * 崩溃根因的直指回归：registerAll 的飞机循环要读 AIRCRAFT_TIERS。
      * 若 AIRCRAFT_TIERS 声明在 static 块之后，类初始化时它还是 null →
      * ExceptionInInitializerError → 首次校验蓝图（isWorkbenchBlueprint）即崩溃。

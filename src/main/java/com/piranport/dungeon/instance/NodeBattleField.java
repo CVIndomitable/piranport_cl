@@ -564,24 +564,44 @@ public final class NodeBattleField {
         return type.get().create(level);
     }
 
-    /** 舰种权重：数值越大越靠前（大船在前）。 */
+    /**
+     * 舰种权重：数值越大越靠前（大船在前；同舰种内高级在前）。
+     *
+     * <p>高级档必须略高于同级低级档，否则会落到 default 10 而沉到潜艇后面。
+     * 特殊 Boss（信浓/大凤/瑞鹤）按 Boss 领队处理，给高于同级航母的权重；
+     * 运输舰由护航运行时单独生成，这里的权重只用于编队兜底。</p>
+     */
     private static int entityWeight(String entityId) {
         return switch (entityId) {
             case "piranport:deep_ocean_flagship" -> 100;
-            case "piranport:deep_ocean_battleship" -> 90;
-            case "piranport:deep_ocean_carrier" -> 85;
-            case "piranport:deep_ocean_battle_cruiser" -> 80;
-            case "piranport:deep_ocean_light_carrier" -> 70;
-            case "piranport:deep_ocean_heavy_cruiser" -> 65;
+            // 特殊 Boss 航母：Boss 应领队
+            case "piranport:deep_ocean_shinano" -> 98;
+            case "piranport:deep_ocean_taihou" -> 97;
+            case "piranport:deep_ocean_zuikaku" -> 96;
+            case "piranport:deep_ocean_high_battleship" -> 94;
+            case "piranport:deep_ocean_battleship" -> 92;
+            case "piranport:deep_ocean_armored_carrier" -> 88;
+            case "piranport:deep_ocean_high_carrier" -> 87;
+            case "piranport:deep_ocean_carrier" -> 86;
+            case "piranport:deep_ocean_high_battle_cruiser" -> 84;
+            case "piranport:deep_ocean_battle_cruiser" -> 83;
+            case "piranport:deep_ocean_high_light_carrier" -> 76;
+            case "piranport:deep_ocean_light_carrier" -> 74;
+            case "piranport:deep_ocean_high_heavy_cruiser" -> 68;
+            case "piranport:deep_ocean_heavy_cruiser" -> 66;
+            case "piranport:deep_ocean_transport" -> 60;
+            case "piranport:deep_ocean_high_air_defense_destroyer" -> 57;
             case "piranport:deep_ocean_guided_destroyer",
                  "piranport:deep_ocean_air_destroyer",
-                 "piranport:deep_ocean_air_defense_destroyer",
-                 "piranport:deep_ocean_high_air_defense_destroyer" -> 55;
-            // 高级轻巡与低级轻巡同档；同为 50 时靠 spawn_list 顺序保证「高级在前」。
-            case "piranport:deep_ocean_light_cruiser",
-                 "piranport:deep_ocean_high_light_cruiser" -> 50;
+                 "piranport:deep_ocean_air_defense_destroyer" -> 55;
+            case "piranport:deep_ocean_high_torpedo_cruiser",
+                 "piranport:deep_ocean_high_light_cruiser" -> 52;
+            case "piranport:deep_ocean_torpedo_cruiser",
+                 "piranport:deep_ocean_light_cruiser" -> 50;
+            case "piranport:deep_ocean_high_destroyer" -> 42;
             case "piranport:deep_ocean_destroyer" -> 40;
             case "piranport:deep_ocean_supply" -> 30;
+            case "piranport:deep_ocean_high_submarine" -> 22;
             case "piranport:deep_ocean_submarine" -> 20;
             default -> 10;
         };

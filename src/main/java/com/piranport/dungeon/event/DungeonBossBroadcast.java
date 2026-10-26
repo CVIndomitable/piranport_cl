@@ -32,7 +32,44 @@ import java.util.UUID;
 public final class DungeonBossBroadcast {
     private DungeonBossBroadcast() {}
 
-    private record TrackedBoss(UUID bossUuid, String nodeId, String shipType) {}
+    /**
+     * 单个 Boss 铭牌的追踪状态。
+     *
+     * <p>{@code recipients} 记录最近一次收到铭牌的玩家：实例被清理（通关后）时实例已经不存在，
+     * 没法再按“实例内玩家”取接收者，必须靠这份记录把 visible=false 补发出去，否则客户端会
+     * 一直挂着最后一次收到的血条。</p>
+     */
+    private static final class TrackedBoss {
+        final UUID bossUuid;
+        final String nodeId;
+        final String shipType;
+        final java.util.Set<UUID> recipients = new java.util.HashSet<>();
+        /** 实体暂时取不到（区块卸载）的连续 tick 数，超过阈值就当作已消失收起。 */
+        int staleTicks;
+
+        TrackedBoss(UUID bossUuid, String nodeId, String shipType) {
+            this.bossUuid = bossUuid;
+            this.nodeId = nodeId;
+            this.shipType = shipType;
+        }
+    }
+
+    /** 区块卸载时最多容忍 10 秒（200 tick）取不到实体，之后强制收起避免血条永久残留。 */
+    private static final int MAX_STALE_TICKS = 200;
+
+    private static DungeonBossOverlayPayload hiddenPayload() {
+        return new DungeonBossOverlayPayload("", "", "", 0, 0f, 1f, false, false);
+    }
+
+    /** 向所有看过这块铭牌的玩家补发隐藏包。实例已不存在时也能定位接收者。 */
+    private static void hideFor(MinecraftServer server, TrackedBoss tracked) {
+        DungeonBossOverlayPayload payload = hiddenPayload();
+        for (UUID id : tracked.recipients) {
+            ServerPlayer player = server.getPlayerList().getPlayer(id);
+            if (player != null) PacketDistributor.sendToPlayer(player, payload);
+        }
+        tracked.recipients.clear();
+    }
 
     /** instanceId → 当前 Boss。纯内存：重启后由下一次生成重新登记，铭牌只是表现层。 */
     private static final Map<UUID, TrackedBoss> BOSSES = new HashMap<>();
@@ -84,27 +121,54 @@ public final class DungeonBossBroadcast {
         while (it.hasNext()) {
             Map.Entry<UUID, TrackedBoss> entry = it.next();
             DungeonInstance instance = mgr.getInstance(entry.getKey());
+            TrackedBoss tracked = entry.getValue();
             if (instance == null || instance.getState() == DungeonInstance.State.CLEANUP) {
+                // 实例已结束：实例对象没了，只能按接收者记录补发隐藏，否则客户端血条永久残留。
+                hideFor(server, tracked);
                 it.remove();
                 continue;
             }
-            TrackedBoss tracked = entry.getValue();
-            Entity boss = dungeonLevel.getEntity(tracked.bossUuid());
-            boolean nodeCleared = instance.getClearedNodes().contains(tracked.nodeId());
-            // 区块卸载导致暂时取不到实体：保持客户端现状，不误收起
-            if (boss == null && !nodeCleared) continue;
+            Entity boss = dungeonLevel.getEntity(tracked.bossUuid);
+            boolean nodeCleared = instance.getClearedNodes().contains(tracked.nodeId);
+            if (boss == null && !nodeCleared) {
+                // 区块卸载导致暂时取不到实体：先保持客户端现状，但超过阈值必须收起，
+                // 否则 Boss 被移除而节点又没标记清空时，旧血条会一直挂着。
+                if (++tracked.staleTicks > MAX_STALE_TICKS) {
+                    hideFor(server, tracked);
+                    it.remove();
+                }
+                continue;
+            }
+            tracked.staleTicks = 0;
             boolean alive = boss instanceof LivingEntity living && living.isAlive();
             float health = alive ? Math.max(0f, ((LivingEntity) boss).getHealth()) : 0f;
             float maxHealth = alive ? Math.max(1f, ((LivingEntity) boss).getMaxHealth()) : 1f;
             int segment = alive ? Math.max(0, Math.min(4, (int) Math.ceil(health / maxHealth * 4.0f))) : 0;
             String name = alive ? boss.getDisplayName().getString() : "";
             var stage = DungeonRegistry.INSTANCE.getStage(instance.getStageId());
-            DungeonBossOverlayPayload payload = new DungeonBossOverlayPayload(name, tracked.shipType(),
+            DungeonBossOverlayPayload payload = new DungeonBossOverlayPayload(name, tracked.shipType,
                     stage == null ? "" : stage.chapter(), segment, health, maxHealth, alive, false);
+
+            java.util.Set<UUID> present = new java.util.HashSet<>();
             for (ServerPlayer player : mgr.getPresentPlayers(instance, server)) {
+                present.add(player.getUUID());
+                tracked.recipients.add(player.getUUID());
                 PacketDistributor.sendToPlayer(player, payload);
             }
-            if (!alive) it.remove();
+            // 已经离开实例的玩家：补发隐藏，避免他们把铭牌带回主世界。
+            if (!tracked.recipients.isEmpty()) {
+                DungeonBossOverlayPayload hidden = hiddenPayload();
+                for (UUID id : new java.util.ArrayList<>(tracked.recipients)) {
+                    if (present.contains(id)) continue;
+                    ServerPlayer player = server.getPlayerList().getPlayer(id);
+                    if (player != null) PacketDistributor.sendToPlayer(player, hidden);
+                    tracked.recipients.remove(id);
+                }
+            }
+            if (!alive) {
+                hideFor(server, tracked);
+                it.remove();
+            }
         }
     }
 }

@@ -62,7 +62,9 @@ public final class HeExplosionHandler {
             // 友伤规则与原命中路径一致：玩家对玩家等仍放行，内部防呆（自己飞机/女仆等）拦截。
             if (FriendlyFireHelper.shouldBlockHit(target, owner)) continue;
 
-            double distance = Math.sqrt(target.distanceToSqr(center));
+            // 按碰撞箱量距离：直接命中时爆心在箱面上，距离为 0，必定吃满伤害；
+            // 原版量到脚底会把高船的命中算远 1–2 格，正是“HE 打了没反应”的元凶之一。
+            double distance = HeExplosionMath.distanceToHitbox(target, center);
             if (distance > reach) continue;
             double normalized = reach > 0.0 ? distance / reach : 1.0;
             float seenPercent = Explosion.getSeenPercent(center, target);

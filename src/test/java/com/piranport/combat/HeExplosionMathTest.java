@@ -67,6 +67,25 @@ class HeExplosionMathTest {
     }
 
     @Test
+    void hitboxDistanceTreatsDirectHitAsZero() {
+        // 舰船碰撞箱：宽 1.6、高 2.38（深海轻巡）。爆心落在箱面/箱内时距离必须为 0，
+        // 不能像原版量脚底那样把命中上甲板算成约 1.2 格。
+        net.minecraft.world.phys.AABB box = new net.minecraft.world.phys.AABB(
+                0.0, 0.0, 0.0, 1.6, 2.38, 1.6);
+        assertEquals(0.0, HeExplosionMath.distanceToHitbox(
+                box, new net.minecraft.world.phys.Vec3(0.8, 2.2, 0.8)), 1.0e-9);
+        assertEquals(0.0, HeExplosionMath.distanceToHitbox(
+                box, new net.minecraft.world.phys.Vec3(1.6, 1.0, 0.8)), 1.0e-9);
+
+        // 箱外 2 格：几何最近距离
+        assertEquals(2.0, HeExplosionMath.distanceToHitbox(
+                box, new net.minecraft.world.phys.Vec3(3.6, 1.0, 0.8)), 1.0e-9);
+        // 斜向：Δx=3、Δy=1 -> sqrt(10)
+        assertEquals(Math.sqrt(10.0), HeExplosionMath.distanceToHitbox(
+                box, new net.minecraft.world.phys.Vec3(4.6, 3.38, 0.8)), 1.0e-9);
+    }
+
+    @Test
     void takeOverCopiesThenClearsAffectedEntities() {
         List<Entity> affected = new ArrayList<>();
         affected.add(null); // 只验证列表契约，不需要真实实体

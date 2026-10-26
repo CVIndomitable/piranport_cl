@@ -179,6 +179,17 @@ public class ClientGameEvents {
     @SubscribeEvent
     public static void onClientTickPost(ClientTickEvent.Post event) {
         com.piranport.dungeon.client.ClientPortalTransit.tick();
+
+        // 维度兜底：副本 HUD（含 Boss 铭牌）只在副本维度里画。跨维度传送偶尔不会走
+        // ClientPlayerNetworkEvent.Clone，服务端清空包也可能丢；这里按玩家当前维度自检，
+        // 只要不在副本维度就清掉，避免回主世界后血条还挂在屏幕上。
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.level != null && com.piranport.dungeon.client.DungeonHudLayer.isInDungeon()
+                && !mc.level.dimension().location().equals(
+                        net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(
+                                PiranPort.MOD_ID, "dungeon"))) {
+            com.piranport.dungeon.client.DungeonHudLayer.clearDungeonState();
+        }
     }
 
     /**

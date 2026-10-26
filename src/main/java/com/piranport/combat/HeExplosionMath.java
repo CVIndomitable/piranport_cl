@@ -1,6 +1,8 @@
 package com.piranport.combat;
 
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,6 +53,26 @@ public final class HeExplosionMath {
                 * Math.max(0.0, damageMultiplier);
         if (!Double.isFinite(amount) || amount <= 0.0) return 0.0f;
         return (float) amount;
+    }
+
+    /**
+     * 爆心到实体碰撞箱的最近距离（点已在箱内时为 0）。
+     *
+     * <p>原版用 {@code entity.distanceToSqr(center)} 量到实体脚底（{@code position()}），
+     * 对 1.6×2.38 的舰船会把“命中船体中上部”算成 1–2 格距离，爆炸伤害被严重低估甚至归零。
+     * HE 是接触/近失爆炸，按碰撞箱计算才符合直觉：直接命中时爆心就在箱面上，距离为 0，
+     * 必定吃到最大伤害。</p>
+     */
+    public static double distanceToHitbox(Entity entity, Vec3 point) {
+        return distanceToHitbox(entity.getBoundingBox(), point);
+    }
+
+    /** {@link #distanceToHitbox(Entity, Vec3)} 的纯几何版本，便于单测。 */
+    public static double distanceToHitbox(AABB box, Vec3 point) {
+        double dx = Math.max(box.minX - point.x, Math.max(0.0, point.x - box.maxX));
+        double dy = Math.max(box.minY - point.y, Math.max(0.0, point.y - box.maxY));
+        double dz = Math.max(box.minZ - point.z, Math.max(0.0, point.z - box.maxZ));
+        return Math.sqrt(dx * dx + dy * dy + dz * dz);
     }
 
     /**

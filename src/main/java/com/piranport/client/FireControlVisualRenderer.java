@@ -40,7 +40,10 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import org.joml.Matrix4f;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.OptionalDouble;
 import java.util.UUID;
 
@@ -48,8 +51,9 @@ import java.util.UUID;
  * 火控可视化预测（策划决策/火控/06）。纯客户端：不改火控列表，不向服务端发坐标。
  *
  * <ul>
- *   <li>手持火炮：第一个火控锁定目标前方的预测落点画成 <b>HUD 标记</b>（固定像素大小），
- *       准星射线进入落点球范围（世界空间判定，半径 1 格）时标记变绿。</li>
+ *   <li>手持火炮：当前预瞄目标前方的预测落点画成 <b>HUD 标记</b>（固定像素大小），
+ *       准星射线进入落点球范围（世界空间判定，半径 1 格）时标记变绿。
+ *       锁定多个目标时，准星方向离谁最近，预瞄圈就归谁。</li>
  *   <li>手持鱼雷发射器：世界里从玩家画白线到水平拦截点，多联装再画以该线为轴的扇形，
  *       圆心角 = 2 × max|散布角|；拦截点本身同样画成 HUD 标记。
  *       玩家水平朝向落在扇形（单管 ±1°）内时标记变绿。</li>
@@ -105,8 +109,15 @@ public final class FireControlVisualRenderer {
     private enum Mode { NONE, CANNON, TORPEDO, ROCKET, ANTI_AIR }
 
     private static final EntityUuidCache ENTITY_CACHE = new EntityUuidCache();
-    private static final FireControlPrediction.PositionSampler SAMPLER = new FireControlPrediction.PositionSampler();
-    private static UUID sampledTarget;
+    /**
+     * 每个火控目标各保留一份速度采样器。
+     *
+     * <p>WHY 不再共用一个：多目标时准星靠近谁就切到谁，如果每次切换都清空采样器，
+     * 新目标的提前量会有一整个采样窗口（5 tick）是零速度，预瞄圈会明显跳一下。</p>
+     */
+    private static final Map<UUID, FireControlPrediction.PositionSampler> SAMPLERS = new HashMap<>();
+    /** 当前预瞄圈归属的目标；变化时重置插值，避免圆圈从旧目标飞到新目标。 */
+    private static UUID selectedTarget;
 
     private static Mode mode = Mode.NONE;
     private static boolean active;
@@ -165,8 +176,8 @@ public final class FireControlVisualRenderer {
         noSolution = false;
         hudVisible = false;
         hudOnScreen = false;
-        SAMPLER.clear();
-        sampledTarget = null;
+        SAMPLERS.clear();
+        selectedTarget = null;
         ENTITY_CACHE.clear();
     }
 
@@ -179,33 +190,67 @@ public final class FireControlVisualRenderer {
         if (mc.player == null || mc.level == null) return;
         List<UUID> targets = ClientFireControlData.getTargets();
         if (targets.isEmpty()) {
-            SAMPLER.clear();
-            sampledTarget = null;
+            SAMPLERS.clear();
+            selectedTarget = null;
             return;
         }
-        UUID targetId = targets.get(0);
-        Entity target = findTarget(mc, targetId);
-        // 死亡下沉中的实体仍可能被客户端解析到，必须按同一口径判失效。
-        if (FireControlTargetState.lost(target)) {
-            SAMPLER.clear();
-            sampledTarget = null;
+
+        // 先给所有锁定目标采样，再按准星挑一个：切换目标时速度窗口不会清零。
+        List<Candidate> candidates = new ArrayList<>(targets.size());
+        for (UUID id : targets) {
+            Entity candidate = findTarget(mc, id);
+            // 死亡下沉中的实体仍可能被客户端解析到，必须按同一口径判失效。
+            if (FireControlTargetState.lost(candidate)) {
+                SAMPLERS.remove(id);
+                continue;
+            }
+            FireControlPrediction.PositionSampler sampler = SAMPLERS.computeIfAbsent(
+                    id, ignored -> new FireControlPrediction.PositionSampler());
+            sampler.push(candidate.position());
+            candidates.add(new Candidate(id, candidate, sampler.velocity()));
+        }
+        SAMPLERS.keySet().retainAll(targets);
+        if (candidates.isEmpty()) {
+            selectedTarget = null;
             return;
         }
-        if (!targetId.equals(sampledTarget)) {
-            SAMPLER.clear();
-            sampledTarget = targetId;
-        }
-        SAMPLER.push(target.position());
-        Vec3 targetVelocity = SAMPLER.velocity();
 
         ItemStack held = mc.player.getMainHandItem();
         boolean transformed = TransformationManager.isPlayerTransformed(mc.player);
         boolean creative = mc.player.getAbilities().instabuild;
-        if (held.getItem() instanceof ArtilleryItem artillery && (transformed || creative)) {
+        if (!(transformed || creative)) return;
+
+        // 多目标时：谁离准星最近，预瞄圈就归谁。单目标时结果与旧行为一致。
+        // 用相机实体而不是玩家取视线方向：侦察模式相机在侦察机上。
+        Entity camera = mc.getCameraEntity() != null ? mc.getCameraEntity() : mc.player;
+        Vec3 eye = camera.getEyePosition();
+        Vec3 look = camera.getLookAngle();
+        Candidate best = candidates.get(0);
+        double bestAngle = Double.MAX_VALUE;
+        for (Candidate candidate : candidates) {
+            Vec3 toTarget = CombatTargeting.aimPoint(candidate.target()).subtract(eye);
+            double angle = toTarget.lengthSqr() < 1.0E-9 ? 0.0
+                    : Math.acos(Math.max(-1.0, Math.min(1.0, look.dot(toTarget.normalize()))));
+            if (angle < bestAngle) {
+                bestAngle = angle;
+                best = candidate;
+            }
+        }
+
+        if (!best.id().equals(selectedTarget)) {
+            // 换目标不做跨目标插值：否则圆圈会从上一个目标的落点一路滑到新目标。
+            previousPoint = null;
+            previousOrigin = null;
+            selectedTarget = best.id();
+        }
+
+        Entity target = best.target();
+        Vec3 targetVelocity = best.velocity();
+        if (held.getItem() instanceof ArtilleryItem artillery) {
             updateCannon(mc, artillery, target, targetVelocity);
-        } else if (held.getItem() instanceof TorpedoLauncherItem launcher && (transformed || creative)) {
+        } else if (held.getItem() instanceof TorpedoLauncherItem launcher) {
             updateTorpedo(mc, held, launcher, target, targetVelocity);
-        } else if (held.getItem() instanceof MissileLauncherItem launcher && (transformed || creative)) {
+        } else if (held.getItem() instanceof MissileLauncherItem launcher) {
             // 同为导弹发射器，按弹种分流：火箭弹打水面（水平拦截），防空导弹打空中目标（保留高度）。
             // WHY 必须显式放行 ANTI_AIR：此前这里只认 ROCKET，防空导弹落到所有分支之外，
             // 玩家锁定深海飞机后 mode 始终是 NONE，完全没有预瞄 —— 而防空导弹恰恰是
@@ -217,6 +262,9 @@ public final class FireControlVisualRenderer {
             }
         }
     }
+
+    /** 多目标选择用的候选：目标实体 + 该目标自己的速度采样。 */
+    private record Candidate(UUID id, Entity target, Vec3 velocity) {}
 
     private static void updateCannon(Minecraft mc, ArtilleryItem artillery, Entity target, Vec3 targetVelocity) {
         ArtilleryCannonData data = artillery.getEffectiveData(mc.level);

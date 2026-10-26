@@ -1057,44 +1057,93 @@ public final class BallisticSolver {
     private static final int PREDICT_MAX_FLIGHT_TICKS = 400;
 
     /**
+     * 客户端预瞄结果：预测落点，以及<b>该落点是否有真实弹道解</b>。
+     *
+     * <p>WHY 需要把「有解」与「预测点」一起返回：{@link #estimateFlightTicks} 在目标超出
+     * 该炮物理射程时会退化到 {@link #PREDICT_MAX_FLIGHT_TICKS} 上限，调用方若只拿到
+     * 「预测点 = 目标位置 + 速度 × 400」，会得到远在数百格外的假提前量。对深海飞机
+     * （速度约 0.5~0.7 格/tick）这一点恰好越过火控 HUD 的 256 格渲染上限，表现为
+     * 「锁定了却完全没有预瞄圈」；对慢速舰船则只是画出一个悄悄跑偏的圈。把 solvable
+     * 一并返回后，调用方可以把无解情况降级成「钉在目标当前位置 + 明确提示」，
+     * 而不是伪造一个能命中的圈。</p>
+     */
+    public record PredictedImpact(net.minecraft.world.phys.Vec3 point, boolean solvable) {}
+
+    /** 估算飞行时间的内部结果：{@code solvable=false} 表示该落点没有可信弹道解。 */
+    private record FlightEstimate(double ticks, boolean solvable) {}
+
+    /**
      * 估算炮弹到达目标水平距离所需 tick，沿用炮弹实体「先自定义阻力、后原版 0.99」的顺序。
      * 仅供客户端预测显示，不参与服务端弹道判定。
      */
     public static double estimateFlightTicks(net.minecraft.world.phys.Vec3 origin, net.minecraft.world.phys.Vec3 target,
                                              double speed, double drag, double gravity,
                                              double minAngle, double maxAngle) {
+        return estimateFlightTicksDetailed(origin, target, speed, drag, gravity, minAngle, maxAngle).ticks();
+    }
+
+    /**
+     * {@link #estimateFlightTicks} 的详细版：同时报告解算结果是否可信。
+     *
+     * <p>{@code solvable} 取最后一次 {@link #solve} 的 {@code outOfRange}（误差 &gt; 0.5 格），
+     * 并在「400 tick 内都没走到目标水平距离」时强制为 false —— 只靠航程判定不够，
+     * 因为高仰角回退解的水平速度可能极小，航程永远追不上。</p>
+     */
+    private static FlightEstimate estimateFlightTicksDetailed(
+            net.minecraft.world.phys.Vec3 origin, net.minecraft.world.phys.Vec3 target,
+            double speed, double drag, double gravity,
+            double minAngle, double maxAngle) {
         net.minecraft.world.phys.Vec3 delta = target.subtract(origin);
         double horizontalDistance = Math.sqrt(delta.x * delta.x + delta.z * delta.z);
-        if (horizontalDistance < 0.05) return 1.0;
-        double angle = solve(speed, drag, gravity, horizontalDistance, delta.y,
-                0.0, minAngle, maxAngle).angle();
+        if (horizontalDistance < 0.05) return new FlightEstimate(1.0, true);
+        Result solution = solve(speed, drag, gravity, horizontalDistance, delta.y,
+                0.0, minAngle, maxAngle);
+        double angle = solution.angle();
+        boolean solvable = !solution.outOfRange();
         double horizontalVelocity = Math.max(0.01, speed * Math.cos(angle));
         double travelled = 0.0;
         double customDrag = 1.0 / (1.0 + Math.max(0.0, drag));
         for (int tick = 1; tick <= PREDICT_MAX_FLIGHT_TICKS; tick++) {
             horizontalVelocity *= customDrag;
             travelled += horizontalVelocity;
-            if (travelled >= horizontalDistance) return tick;
+            if (travelled >= horizontalDistance) return new FlightEstimate(tick, solvable);
             horizontalVelocity *= 0.99;
         }
-        return PREDICT_MAX_FLIGHT_TICKS;
+        return new FlightEstimate(PREDICT_MAX_FLIGHT_TICKS, false);
     }
 
     /**
      * 预测落点：目标按 {@code targetVelocity}（格/tick）匀速运动，迭代修正飞行时间后返回
-     * 炮弹与目标相遇的瞄准点。客户端专用。
+     * 炮弹与目标相遇的瞄准点，并附带该落点是否有真实弹道解。客户端专用。
+     */
+    public static PredictedImpact predictImpact(
+            net.minecraft.world.phys.Vec3 origin, net.minecraft.world.phys.Vec3 targetAimPoint,
+            net.minecraft.world.phys.Vec3 targetVelocity, double speed, double drag, double gravity,
+            double minAngle, double maxAngle, int iterations) {
+        FlightEstimate estimate = estimateFlightTicksDetailed(
+                origin, targetAimPoint, speed, drag, gravity, minAngle, maxAngle);
+        double flightTicks = estimate.ticks();
+        boolean solvable = estimate.solvable();
+        net.minecraft.world.phys.Vec3 predicted = targetAimPoint;
+        for (int i = 0; i < Math.max(1, iterations); i++) {
+            predicted = targetAimPoint.add(targetVelocity.scale(flightTicks));
+            estimate = estimateFlightTicksDetailed(origin, predicted, speed, drag, gravity, minAngle, maxAngle);
+            flightTicks = estimate.ticks();
+            solvable = estimate.solvable();
+        }
+        return new PredictedImpact(predicted, solvable);
+    }
+
+    /**
+     * 旧签名：只返回预测落点。保留给既有调用方/单测；需要判断打不打得中时用
+     * {@link #predictImpact}。
      */
     public static net.minecraft.world.phys.Vec3 predictImpactPoint(
             net.minecraft.world.phys.Vec3 origin, net.minecraft.world.phys.Vec3 targetAimPoint,
             net.minecraft.world.phys.Vec3 targetVelocity, double speed, double drag, double gravity,
             double minAngle, double maxAngle, int iterations) {
-        double flightTicks = estimateFlightTicks(origin, targetAimPoint, speed, drag, gravity, minAngle, maxAngle);
-        net.minecraft.world.phys.Vec3 predicted = targetAimPoint;
-        for (int i = 0; i < Math.max(1, iterations); i++) {
-            predicted = targetAimPoint.add(targetVelocity.scale(flightTicks));
-            flightTicks = estimateFlightTicks(origin, predicted, speed, drag, gravity, minAngle, maxAngle);
-        }
-        return predicted;
+        return predictImpact(origin, targetAimPoint, targetVelocity, speed, drag, gravity,
+                minAngle, maxAngle, iterations).point();
     }
 
     /** 缓存键：包含所有影响弹道的参数，距离已量化 */

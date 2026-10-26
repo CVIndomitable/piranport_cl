@@ -1132,6 +1132,7 @@
   "hud.piranport.dungeon.scene.hot_sun": "烈日：敌人发光，怪物响应距离增加",
   "hud.piranport.dungeon.scene.night": "夜战：飞机放飞后无法降落",
   "hud.piranport.dungeon.scene.storm": "雷雨：无法放飞飞机。闪电会对玩家造成伤害",
+  "hud.piranport.fire_control.no_ballistic_solution": "超出弹道范围",
   "hud.piranport.fire_control.out_of_range": "超过射程",
   "hud.piranport.scope.target.entity": "目标：实体交点",
   "hud.piranport.scope.target.lead": "目标：预瞄",

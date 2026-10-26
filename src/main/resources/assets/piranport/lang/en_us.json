@@ -1132,6 +1132,7 @@
   "hud.piranport.dungeon.scene.hot_sun": "Hot sun: enemies glow, longer enemy response range",
   "hud.piranport.dungeon.scene.night": "Night battle: aircraft cannot land once launched",
   "hud.piranport.dungeon.scene.storm": "Storm: aircraft cannot launch; lightning damages players",
+  "hud.piranport.fire_control.no_ballistic_solution": "Beyond ballistic arc",
   "hud.piranport.fire_control.out_of_range": "Out of range",
   "hud.piranport.scope.target.entity": "Target: entity hit point",
   "hud.piranport.scope.target.lead": "Target: lead aim",

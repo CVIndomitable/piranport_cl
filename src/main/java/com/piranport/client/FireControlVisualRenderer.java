@@ -53,6 +53,8 @@ import java.util.UUID;
  *   <li>手持鱼雷发射器：世界里从玩家画白线到水平拦截点，多联装再画以该线为轴的扇形，
  *       圆心角 = 2 × max|散布角|；拦截点本身同样画成 HUD 标记。
  *       玩家水平朝向落在扇形（单管 ±1°）内时标记变绿。</li>
+ *   <li>手持火箭弹 / 防空导弹发射器：世界里画白色拦截线，拦截点同样画成 HUD 标记。
+ *       火箭弹压到发射高度；防空导弹保留目标高度（猎物在空中）。</li>
  * </ul>
  * 目标速度按 5 tick 位置采样窗口计算；每个客户端 tick 重算，渲染阶段只绘制最近结果并插值。
  *
@@ -100,7 +102,7 @@ public final class FireControlVisualRenderer {
         return LINES;
     }
 
-    private enum Mode { NONE, CANNON, TORPEDO, ROCKET }
+    private enum Mode { NONE, CANNON, TORPEDO, ROCKET, ANTI_AIR }
 
     private static final EntityUuidCache ENTITY_CACHE = new EntityUuidCache();
     private static final FireControlPrediction.PositionSampler SAMPLER = new FireControlPrediction.PositionSampler();
@@ -110,19 +112,24 @@ public final class FireControlVisualRenderer {
     private static boolean active;
     /** CANNON: 准星对准预瞄圈时的预测落点；开火解算改指向它。 */
     private static Vec3 leadPoint;
-    /** CANNON: 球心；TORPEDO: 拦截点。 */
+    /** CANNON: 落点球心；TORPEDO / ROCKET / ANTI_AIR: 拦截点。 */
     private static Vec3 point;
     private static Vec3 previousPoint;
-    /** TORPEDO: 线起点（玩家发射位置）。 */
+    /** TORPEDO / ROCKET / ANTI_AIR: 线起点（玩家发射位置）。 */
     private static Vec3 origin;
     private static Vec3 previousOrigin;
     private static double fanHalfDeg;
     /** CANNON: 目标是否超出「最大射程」——为 true 时落点已钉在最大射程处，HUD 出「超过射程」提示。 */
     private static boolean outOfRange;
+    /**
+     * CANNON: 当前火炮对目标「没有可信弹道解」（太高、太远、或提前量点已超出物理射程）。
+     * 此时落点钉在目标当前位置、圈永不转绿，HUD 提示超出弹道范围 —— 有反馈但不伪造命中。
+     */
+    private static boolean noSolution;
     private static Vec3 renderCamera = Vec3.ZERO;
 
     // ===== HUD 投影结果（世界渲染阶段算好，GUI 阶段直接画）=====
-    /** 本帧是否有可画的预瞄标记（相机背后 / 超出渲染距离时为 false）。 */
+    /** 本帧是否有可画的预瞄标记（相机背后 / 超出渲染距离时为 false；无解标记不受距离限制）。 */
     private static boolean hudVisible;
     /** 标记是否落在屏幕内；false 表示已贴边钳制（目标在视野外）。 */
     private static boolean hudOnScreen;
@@ -141,6 +148,7 @@ public final class FireControlVisualRenderer {
         active = false;
         leadPoint = null;
         outOfRange = false;
+        noSolution = false;
         fanHalfDeg = 0;
         update(mc);
         if (mode != previousMode) {
@@ -154,6 +162,7 @@ public final class FireControlVisualRenderer {
         point = previousPoint = origin = previousOrigin = null;
         active = false;
         outOfRange = false;
+        noSolution = false;
         hudVisible = false;
         hudOnScreen = false;
         SAMPLER.clear();
@@ -196,10 +205,16 @@ public final class FireControlVisualRenderer {
             updateCannon(mc, artillery, target, targetVelocity);
         } else if (held.getItem() instanceof TorpedoLauncherItem launcher && (transformed || creative)) {
             updateTorpedo(mc, held, launcher, target, targetVelocity);
-        } else if (held.getItem() instanceof MissileLauncherItem launcher
-                && launcher.getMissileType() == com.piranport.entity.MissileEntity.MissileType.ROCKET
-                && (transformed || creative)) {
-            updateRocket(mc, launcher, target, targetVelocity);
+        } else if (held.getItem() instanceof MissileLauncherItem launcher && (transformed || creative)) {
+            // 同为导弹发射器，按弹种分流：火箭弹打水面（水平拦截），防空导弹打空中目标（保留高度）。
+            // WHY 必须显式放行 ANTI_AIR：此前这里只认 ROCKET，防空导弹落到所有分支之外，
+            // 玩家锁定深海飞机后 mode 始终是 NONE，完全没有预瞄 —— 而防空导弹恰恰是
+            // 玩家手里最常用来锁飞机的武器。
+            switch (launcher.getMissileType()) {
+                case ROCKET -> updateRocket(mc, launcher, target, targetVelocity);
+                case ANTI_AIR -> updateAntiAirMissile(mc, target, targetVelocity);
+                default -> { }
+            }
         }
     }
 
@@ -228,13 +243,29 @@ public final class FireControlVisualRenderer {
             Vec3 flat = new Vec3(aim.x - eye.x, 0.0, aim.z - eye.z);
             predicted = flat.lengthSqr() < 1.0e-9 ? eye : eye.add(flat.normalize().scale(effectiveRange));
         } else {
-            predicted = BallisticSolver.predictImpactPoint(eye, aim, targetVelocity, speed, drag, gravity,
-                    BallisticSolver.UNRESTRICTED_MIN_ANGLE, maxElevation, ModEquipmentConfig.PREDICTION_ITERATIONS.get());
+            // 提前量点必须检查「打不打得中」：predictImpact 在目标/提前量点超出该炮物理射程时，
+            // 飞行时间会退化到 400 tick 上限，预测点被甩到目标位置 + 速度 × 400。
+            // 深海飞机速度约 0.5~0.7 格/tick，这一甩就是 200~280 格 —— 恰好越过 HUD 的
+            // 256 格渲染上限，于是整圈被下面的提前 return 吃掉，表现为「锁飞机没圈、锁舰船有圈」。
+            // 无解时把标记钉在目标当前位置（不再是假提前量），圈不转绿，HUD 出「超出弹道范围」；
+            // 这比画一个玩家以为能命中的圈诚实，也比什么都不画更符合「锁定了就有反馈」。
+            BallisticSolver.PredictedImpact impact = BallisticSolver.predictImpact(eye, aim, targetVelocity,
+                    speed, drag, gravity, BallisticSolver.UNRESTRICTED_MIN_ANGLE, maxElevation,
+                    ModEquipmentConfig.PREDICTION_ITERATIONS.get());
+            predicted = impact.point();
+            if (!impact.solvable()) {
+                noSolution = true;
+                predicted = aim;
+            }
         }
-        if (!isFinite(predicted) || predicted.distanceToSqr(eye) > MAX_RENDER_DISTANCE * MAX_RENDER_DISTANCE) return;
+        if (!isFinite(predicted)) return;
+        // 无解标记钉在真实目标上：即使目标在 256 格外也要保留 HUD 反馈（渲染阶段同样放行）。
+        if (!noSolution && predicted.distanceToSqr(eye) > MAX_RENDER_DISTANCE * MAX_RENDER_DISTANCE) return;
         mode = Mode.CANNON;
         point = predicted;
-        active = FireControlPrediction.rayHitsSphere(eye, mc.player.getViewVector(1.0f), predicted, SPHERE_RADIUS);
+        // 无解时永不激活：避免玩家沿用于「绿圈 = 能命中」的既有语义。
+        active = !noSolution
+                && FireControlPrediction.rayHitsSphere(eye, mc.player.getViewVector(1.0f), predicted, SPHERE_RADIUS);
         leadPoint = active ? predicted : null;
     }
 
@@ -285,6 +316,40 @@ public final class FireControlVisualRenderer {
         active = diff <= SINGLE_TUBE_ACTIVE_DEG;
     }
 
+    /**
+     * 防空导弹预瞄：与火箭弹同构，但<b>保留目标高度</b>。
+     *
+     * <p>WHY 不像火箭弹那样把 y 压到发射高度：火箭弹打的是水面目标，压平是为了让预瞄线
+     * 贴着水面；防空导弹的猎物在几十格高空，压平会把圈画在海面上 —— 玩家抬头瞄飞机时
+     * 圈却在脚底，等于没有反馈。瞄点统一取 {@link CombatTargeting#aimPoint}（飞机取 eyeY），
+     * 与导弹实体 {@code homeToward} 的追踪口径一致。</p>
+     *
+     * <p>速度曲线（初速 / 每 tick 加速 / 极速 / 寿命）全部读 {@code MissileType} 与调试终端，
+     * 不写死，保证终端改手感后预瞄圈同步变化。与火箭分支共用世界线线型与 HUD 圈样式。</p>
+     */
+    private static void updateAntiAirMissile(Minecraft mc, Entity target, Vec3 targetVelocity) {
+        var antiAir = com.piranport.entity.MissileEntity.MissileType.ANTI_AIR;
+        Vec3 start = new Vec3(mc.player.getX(), mc.player.getEyeY() - 0.3, mc.player.getZ());
+        Vec3 aim = CombatTargeting.aimPoint(target);
+        // 与 MissileEntity#tick 同口径：初速、每 tick 加速度、极速、寿命都读同一套参数。
+        Vec3 hit = FireControlPrediction.acceleratingIntercept(start, aim, targetVelocity,
+                antiAir.initialSpeed(), antiAir.speedIncrement(), antiAir.maxSpeed(),
+                com.piranport.config.ModProjectilesConfig.MISSILE_LIFETIME_TICKS.get());
+        if (hit == null) return;
+        if (hit.distanceToSqr(start) > MAX_RENDER_DISTANCE * MAX_RENDER_DISTANCE) return;
+        mode = Mode.ANTI_AIR;
+        origin = start;
+        point = hit;
+        fanHalfDeg = 0.0;
+        // 激活口径与火箭弹一致：水平朝向压进 ±1° 即视为瞄准（导弹自身会转向追踪）。
+        Vec3 look = mc.player.getLookAngle();
+        Vec3 toHit = hit.subtract(start);
+        double lookYaw = Math.atan2(look.z, look.x);
+        double hitYaw = Math.atan2(toHit.z, toHit.x);
+        double diff = Math.toDegrees(Math.abs(Math.atan2(Math.sin(lookYaw - hitYaw), Math.cos(lookYaw - hitYaw))));
+        active = diff <= SINGLE_TUBE_ACTIVE_DEG;
+    }
+
     /** 与 TorpedoFireStrategy 一致：装填弹种读 TorpedoItem.getSpeed()，否则 0.3。 */
     private static double torpedoSpeed(ItemStack launcherStack, TorpedoLauncherItem launcher) {
         LoadedAmmo loaded = launcherStack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
@@ -317,7 +382,8 @@ public final class FireControlVisualRenderer {
         float partial = event.getPartialTick().getGameTimeDeltaPartialTick(false);
         Vec3 camera = event.getCamera().getPosition();
         Vec3 renderPoint = previousPoint == null ? point : previousPoint.lerp(point, partial);
-        if (renderPoint.distanceToSqr(camera) > MAX_RENDER_DISTANCE * MAX_RENDER_DISTANCE) return;
+        // 无解标记钉在真实目标上，和「预测落点」不同：超远目标也要给反馈，不能按渲染距离丢弃。
+        if (!noSolution && renderPoint.distanceToSqr(camera) > MAX_RENDER_DISTANCE * MAX_RENDER_DISTANCE) return;
 
         int rgb = active ? ModEquipmentConfig.PREDICTION_LINE_ACTIVE_COLOR.get()
                 : ModEquipmentConfig.PREDICTION_LINE_COLOR.get();
@@ -326,7 +392,7 @@ public final class FireControlVisualRenderer {
         projectToHud(event, renderPoint, mc);
 
         // 预瞄点本身画在 HUD（见类注释）；世界空间只保留鱼雷的线/扇形这类 3D 跨度提示。
-        if (mode == Mode.TORPEDO || mode == Mode.ROCKET) {
+        if (mode == Mode.TORPEDO || mode == Mode.ROCKET || mode == Mode.ANTI_AIR) {
             Vec3 start = previousOrigin == null || origin == null ? origin : previousOrigin.lerp(origin, partial);
             if (start != null) {
                 PoseStack poseStack = event.getPoseStack();
@@ -334,7 +400,8 @@ public final class FireControlVisualRenderer {
                 renderCamera = camera;
                 Matrix4f pose = poseStack.last().pose();
                 VertexConsumer c = mc.renderBuffers().bufferSource().getBuffer(LINES);
-                // 单管也画预测线（《火控/06》）：线指向水平拦截点，扇形只在多联装时才存在。
+                // 单管也画预测线（《火控/06》）：鱼雷/火箭是水平拦截点，防空导弹保留目标高度；
+                // 扇形只在多联装鱼雷时才存在。
                 line(c, pose, start, renderPoint, r, g, b);
                 if (fanHalfDeg > 0) {
                     drawFan(c, pose, start, renderPoint, fanHalfDeg, r, g, b);
@@ -375,9 +442,15 @@ public final class FireControlVisualRenderer {
                 : ModEquipmentConfig.PREDICTION_LINE_COLOR.get();
         GuiGraphics graphics = event.getGuiGraphics();
         drawHudMarker(graphics, Math.round(hudX), Math.round(hudY), rgb, hudOnScreen);
-        if (outOfRange) {
-            // 超出「最大射程」：落点已钉在最大射程处，明确告诉玩家打不到目标，而不是默默落短。
-            Component text = Component.translatable("hud.piranport.fire_control.out_of_range");
+        // 两种「打不到」提示互斥：
+        // - outOfRange：超出策划配置的最大射程，落点钉在最大射程处；
+        // - noSolution：弹道本身无解（太高/太远/提前量点超出物理射程），标记钉在目标当前位置。
+        // 都用红色文字说明原因，避免玩家把白色圈误读成「瞄这里就能中」。
+        String hintKey = noSolution
+                ? "hud.piranport.fire_control.no_ballistic_solution"
+                : outOfRange ? "hud.piranport.fire_control.out_of_range" : null;
+        if (hintKey != null) {
+            Component text = Component.translatable(hintKey);
             graphics.drawString(mc.font, text,
                     Math.round(hudX) - mc.font.width(text) / 2, Math.round(hudY) - HUD_RADIUS - 10,
                     0xFFFF5555, true);

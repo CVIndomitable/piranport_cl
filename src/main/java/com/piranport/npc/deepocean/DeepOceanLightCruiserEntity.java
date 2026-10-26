@@ -50,7 +50,8 @@ public class DeepOceanLightCruiserEntity extends AbstractDeepOceanEntity {
             DeepOceanEntityData data = getJsonData();
             float aaDamage = data != null ? data.aaDamage() : 6.0f;
             int aaFireInterval = data != null ? data.aaFireInterval() : 80;
-            this.goalSelector.addGoal(2, new AntiAircraftAttackGoal(this, aaDamage, aaFireInterval));
+            // 高级轻巡 = 火炮防空（《深海/01》§五）：DIRECT 直射 + 近炸，不做制导。
+            this.goalSelector.addGoal(2, new AntiAircraftAttackGoal(this, aaDamage, aaFireInterval, false));
         }
         this.goalSelector.addGoal(5, new IdleWanderGoal(this, 0.8, 32));
         this.goalSelector.addGoal(4, new FleetAlertGoal(this));

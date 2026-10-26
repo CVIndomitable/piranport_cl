@@ -5,6 +5,7 @@ import com.piranport.config.ModEquipmentConfig;
 import com.piranport.entity.AircraftEntity;
 import com.piranport.npc.ai.FleetGroup;
 import com.piranport.npc.ai.FleetGroupManager;
+import com.piranport.npc.ai.goal.AntiAircraftAttackGoal;
 import com.piranport.npc.ai.goal.EscortTransportTargetGoal;
 import com.piranport.registry.ModItems;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -42,7 +43,8 @@ import java.util.UUID;
  * <p>索敌分层：默认最近玩家（各子类的 {@code NearestAttackableTargetGoal}）；
  * 航母/战列/旗舰由 {@code LargeShipPriorityTargetGoal} 优先大型船；驱逐由
  * {@code RandomHarassTargetGoal} 随机骚扰。高级轻巡另有独立对空目标
- * （{@link #getAirTarget()}）与 {@code AntiAircraftAttackGoal}。</p>
+ * （{@link #getAirTarget()}）与 {@code AntiAircraftAttackGoal}；重巡及以上的大型船
+ * 通过 {@link #addMinimalAntiAircraftGoal()} 挂最低档保底防空。</p>
  *
  * <p>护航仇恨（《深海/01》§七）：默认仇恨同副本运输船，见 {@link #attacksEscortTransports()}。</p>
  */
@@ -614,6 +616,32 @@ public abstract class AbstractDeepOceanEntity extends Monster {
 
     public void setAirTarget(@Nullable AircraftEntity airTarget) {
         this.airTarget = airTarget;
+    }
+
+    // --- Anti-air fallback ---
+
+    /** 大型船保底防空炮默认值：目前全部防空档里最低的一档（高级轻巡 6/80、防驱 8 或 10/100）。 */
+    public static final float MINIMAL_AA_DAMAGE = 4.0f;
+    public static final int MINIMAL_AA_FIRE_INTERVAL = 160;
+
+    /**
+     * 给大型船挂一档保底防空炮（priority 2，DIRECT 直射，不制导）。
+     *
+     * <p>WHY：重巡及以上的大型船原先完全没有对空能力，玩家舰载机可以贴着它们无代价输出。
+     * 统一补最低档防空，保证“大型船至少有自卫火力”，同时不抢高级轻巡/防驱的专职防空定位。
+     * 伤害与间隔仍从 JSON 的 {@code aa_damage}/{@code aa_fire_interval} 读取，便于逐舰微调；
+     * 只有整份 JSON 缺失时才退回本方法的默认值。</p>
+     *
+     * <p>注意：{@code DeepOceanFlagshipEntity} 通过 {@code super.registerGoals()} 已继承战列的
+     * 防空 Goal，不要再单独调用本方法，否则两个 Goal 会双倍开火。</p>
+     */
+    protected void addMinimalAntiAircraftGoal() {
+        DeepOceanEntityData data = getJsonData();
+        float aaDamage = data != null ? data.aaDamage() : MINIMAL_AA_DAMAGE;
+        int aaFireInterval = data != null ? data.aaFireInterval() : MINIMAL_AA_FIRE_INTERVAL;
+        // 保底防空只覆盖自卫距离，不跟随 FOLLOW_RANGE（航母/Boss 是 128 格对海索敌距离）。
+        this.goalSelector.addGoal(2, new AntiAircraftAttackGoal(
+                this, aaDamage, aaFireInterval, false, ModEquipmentConfig.AA_MINIMAL_RANGE.get()));
     }
 
     // --- Aircraft spawn ---

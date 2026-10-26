@@ -47,6 +47,8 @@ public class DeepOceanBossEntity extends AbstractDeepOceanEntity {
         this.goalSelector.addGoal(1, new FollowLeaderGoal(this, 0.06));
         this.goalSelector.addGoal(1, new OrbitTargetGoal(this, 0.06));
         this.goalSelector.addGoal(2, new CannonAttackGoal(this));
+        // 大型船保底防空（通用 Boss 也按大型船处理）。
+        this.addMinimalAntiAircraftGoal();
         this.goalSelector.addGoal(5, new IdleWanderGoal(this, 0.4, 32));
         this.goalSelector.addGoal(4, new FleetAlertGoal(this));
         // 《深海/01》§七：航母/战列/旗舰优先锁定大型船；没有大船时回落到最近玩家。

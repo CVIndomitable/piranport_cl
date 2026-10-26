@@ -41,6 +41,8 @@ public class DeepOceanBattleCruiserEntity extends AbstractDeepOceanEntity {
         this.goalSelector.addGoal(1, new FollowLeaderGoal(this, 0.11));
         this.goalSelector.addGoal(1, new OrbitTargetGoal(this, 0.11));
         this.goalSelector.addGoal(2, new CannonAttackGoal(this));
+        // 大型船保底防空（高级档复用本类，低/高级各由自己的 JSON 给数值）。
+        this.addMinimalAntiAircraftGoal();
         this.goalSelector.addGoal(5, new IdleWanderGoal(this, 0.7, 32));
         this.goalSelector.addGoal(4, new FleetAlertGoal(this));
         this.targetSelector.addGoal(1, new NearestAttackableTargetGoal<>(this, Player.class, true));

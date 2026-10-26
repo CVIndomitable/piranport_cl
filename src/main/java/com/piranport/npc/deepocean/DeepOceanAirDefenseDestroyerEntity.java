@@ -46,7 +46,8 @@ public class DeepOceanAirDefenseDestroyerEntity extends AbstractDeepOceanEntity 
         this.goalSelector.addGoal(1, new FollowLeaderGoal(this, 0.12));
         this.goalSelector.addGoal(1, new OrbitTargetGoal(this, 0.12));
         this.goalSelector.addGoal(2, new CannonAttackGoal(this));
-        this.goalSelector.addGoal(2, new AntiAircraftAttackGoal(this, aaDamage, aaFireInterval));
+        // 防驱 = 导弹防空（《深海/01》§五）：GUIDED 全程制导，适合拦截会机动的飞机。
+        this.goalSelector.addGoal(2, new AntiAircraftAttackGoal(this, aaDamage, aaFireInterval, true));
         this.goalSelector.addGoal(5, new IdleWanderGoal(this, 0.8, 32));
         this.goalSelector.addGoal(4, new FleetAlertGoal(this));
         this.targetSelector.addGoal(1, new NearestAttackableTargetGoal<>(this, Player.class, true));

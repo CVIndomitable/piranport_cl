@@ -385,7 +385,10 @@ public final class FireControlVisualRenderer {
         // 无解标记钉在真实目标上，和「预测落点」不同：超远目标也要给反馈，不能按渲染距离丢弃。
         if (!noSolution && renderPoint.distanceToSqr(camera) > MAX_RENDER_DISTANCE * MAX_RENDER_DISTANCE) return;
 
-        int rgb = active ? ModEquipmentConfig.PREDICTION_LINE_ACTIVE_COLOR.get()
+        // 无解（锁上了但算不出弹道）优先转红：告诉玩家「瞄准已生效，只是这一炮打不了」，
+        // 避免白色圈被误读成可以命中的落点。有解时才按「未激活白 / 激活绿」变色。
+        int rgb = noSolution ? ModEquipmentConfig.PREDICTION_LINE_INVALID_COLOR.get()
+                : active ? ModEquipmentConfig.PREDICTION_LINE_ACTIVE_COLOR.get()
                 : ModEquipmentConfig.PREDICTION_LINE_COLOR.get();
         int r = (rgb >> 16) & 0xFF, g = (rgb >> 8) & 0xFF, b = rgb & 0xFF;
 
@@ -438,7 +441,10 @@ public final class FireControlVisualRenderer {
         if (!event.getName().equals(VanillaGuiLayers.CROSSHAIR) || !hudVisible) return;
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
-        int rgb = active ? ModEquipmentConfig.PREDICTION_LINE_ACTIVE_COLOR.get()
+        // 无解（锁上了但算不出弹道）优先转红：告诉玩家「瞄准已生效，只是这一炮打不了」，
+        // 避免白色圈被误读成可以命中的落点。有解时才按「未激活白 / 激活绿」变色。
+        int rgb = noSolution ? ModEquipmentConfig.PREDICTION_LINE_INVALID_COLOR.get()
+                : active ? ModEquipmentConfig.PREDICTION_LINE_ACTIVE_COLOR.get()
                 : ModEquipmentConfig.PREDICTION_LINE_COLOR.get();
         GuiGraphics graphics = event.getGuiGraphics();
         drawHudMarker(graphics, Math.round(hudX), Math.round(hudY), rgb, hudOnScreen);

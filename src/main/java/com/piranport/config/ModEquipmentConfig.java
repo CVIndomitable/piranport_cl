@@ -41,6 +41,15 @@ public final class ModEquipmentConfig {
             TerminalConfigValue.integer("equipment", "fire_control_visual", "prediction_line_color", 0xFFFFFF, 0, 0xFFFFFF);
     public static final TerminalConfigValue<Integer> PREDICTION_LINE_ACTIVE_COLOR =
             TerminalConfigValue.integer("equipment", "fire_control_visual", "prediction_line_active_color", 0x40FF60, 0, 0xFFFFFF);
+    /**
+     * 已锁定但弹道无解时的预瞄圈颜色（红）。
+     *
+     * <p>WHY 单独一档而不是复用「未激活白」：白色圈只说明「有这个目标」，
+     * 玩家会误以为瞄上去就能命中；无解时转红表示「锁上了，但这一炮解算不出来」，
+     * 与圈上方的「超出弹道范围」文字共同传达同一件事。</p>
+     */
+    public static final TerminalConfigValue<Integer> PREDICTION_LINE_INVALID_COLOR =
+            TerminalConfigValue.integer("equipment", "fire_control_visual", "prediction_line_invalid_color", 0xFF5555, 0, 0xFFFFFF);
     // 火炮落点迭代修正次数（BallisticSolver#predictImpactPoint），默认 2。
     public static final TerminalConfigValue<Integer> PREDICTION_ITERATIONS =
             TerminalConfigValue.integer("equipment", "fire_control_visual", "prediction_iterations", 2, 1, 8);
@@ -875,6 +884,35 @@ public final class ModEquipmentConfig {
     /** 共享警戒半径（格）：把当前目标同步给此范围内尚未锁敌的同型驱逐舰。默认 40.0。 */
     public static final TerminalConfigValue<Double> LOW_TIER_DESTROYER_ALERT_RANGE =
             TerminalConfigValue.number("deep_ocean", "low_tier_destroyer_ai", "alert_range", 40.0, 0.0, 512.0);
+
+    // ---- 深海防空弹道（target=aa_shell，AntiAircraftAttackGoal）----
+    // WHY 单独一组：防空弹打的是 +18（巡航）/ +32（水平轰炸）高度的玩家飞机，初速与散布
+    // 直接决定能否在 FOLLOW_RANGE 内命中；它与对海 NPC 炮弹（global.shell.*）用途不同，
+    // 改对海弹道不应连带改变防空手感，故不共用。
+    // property 用 shell_speed 而非 speed：避开终端「线性速度 ×20 显示」的命名启发式。
+    /** 防空火炮（高级轻巡，DIRECT 直射）初速，格/tick。默认 3.0（区间上限）：
+     *  缩短飞行时间可减小目标机动带来的提前量误差，+32 高度 / 水平 40 格仍能稳定命中。 */
+    public static final TerminalConfigValue<Double> AA_GUN_SHELL_SPEED =
+            TerminalConfigValue.number("deep_ocean", "aa_shell", "shell_speed", 3.0, 0.5, 10.0);
+    /** 防空火炮散布（度）。默认 0.75。 */
+    public static final TerminalConfigValue<Double> AA_GUN_INACCURACY =
+            TerminalConfigValue.number("deep_ocean", "aa_shell", "inaccuracy", 0.75, 0.0, 10.0);
+    /** 防空导弹（防驱，GUIDED 全程制导）初速，格/tick。默认 2.2（取需求区间上限，
+     *  给高速掠过的战斗机留能量余量）。 */
+    public static final TerminalConfigValue<Double> AA_GUIDED_SHELL_SPEED =
+            TerminalConfigValue.number("deep_ocean", "aa_shell", "guided_shell_speed", 2.2, 0.5, 10.0);
+    /** 防空导弹散布（度）。制导会修正方向，初速散布只需略小于火炮。默认 0.5。 */
+    public static final TerminalConfigValue<Double> AA_GUIDED_INACCURACY =
+            TerminalConfigValue.number("deep_ocean", "aa_shell", "guided_inaccuracy", 0.5, 0.0, 10.0);
+    /**
+     * 大型船保底防空的最大索敌距离（格）。默认 32.0。
+     *
+     * <p>WHY 不沿用 FOLLOW_RANGE：航母/Boss 的 FOLLOW_RANGE 是 128 格，那是对海索敌距离；
+     * 保底防空只是自卫火力，按 128 格开火会变成全图区域防空伞。专职防空舰（防驱/高级轻巡）
+     * 仍走各自的 FOLLOW_RANGE，不受此参数影响。</p>
+     */
+    public static final TerminalConfigValue<Double> AA_MINIMAL_RANGE =
+            TerminalConfigValue.number("deep_ocean", "aa_shell", "minimal_range", 32.0, 0.0, 256.0);
 
     // ---- 深海炮弹（target=deep_ocean_projectile，DeepOceanProjectileEntity）----
     /** 兜底伤害（仅未由发射方指定时生效，如实体注册构造/NBT 缺省回填）。默认 5.0。 */

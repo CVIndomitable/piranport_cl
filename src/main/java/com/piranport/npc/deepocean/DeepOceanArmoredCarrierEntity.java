@@ -45,6 +45,8 @@ public class DeepOceanArmoredCarrierEntity extends AbstractDeepOceanEntity {
         this.goalSelector.addGoal(1, new FollowLeaderGoal(this, 0.09));
         this.goalSelector.addGoal(1, new OrbitTargetGoal(this, 0.09));
         this.goalSelector.addGoal(2, new AircraftLaunchGoal(this));
+        // 装甲航母同样属于大型船，补最低档防空。
+        this.addMinimalAntiAircraftGoal();
         this.goalSelector.addGoal(5, new IdleWanderGoal(this, 0.6, 32));
         this.goalSelector.addGoal(4, new FleetAlertGoal(this));
         // 《深海/01》§七：航母优先锁定大型船，没有大船时回落到最近玩家。

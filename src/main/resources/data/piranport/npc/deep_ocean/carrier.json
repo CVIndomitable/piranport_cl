@@ -15,5 +15,7 @@
   "tracking_interval_min": 3,
   "tracking_interval_max": 7,
   "can_launch_aircraft": true,
-  "max_aircraft": 3
+  "max_aircraft": 3,
+  "aa_damage": 4.0,
+  "aa_fire_interval": 160
 }

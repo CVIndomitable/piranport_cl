@@ -47,6 +47,8 @@ public class DeepOceanZuikakuEntity extends AbstractDeepOceanEntity {
         this.goalSelector.addGoal(1, new FollowLeaderGoal(this, 0.09));
         this.goalSelector.addGoal(1, new OrbitTargetGoal(this, 0.09));
         this.goalSelector.addGoal(2, new AircraftLaunchGoal(this));
+        // 大型船保底防空（瑞鹤同样属于大型船）。
+        this.addMinimalAntiAircraftGoal();
         this.goalSelector.addGoal(5, new IdleWanderGoal(this, 0.6, 32));
         this.goalSelector.addGoal(4, new FleetAlertGoal(this));
         this.targetSelector.addGoal(0, new LargeShipPriorityTargetGoal(this));

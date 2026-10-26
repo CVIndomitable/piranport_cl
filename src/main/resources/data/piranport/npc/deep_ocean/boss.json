@@ -17,5 +17,7 @@
   "tracking_interval_max": 4,
   "can_launch_aircraft": true,
   "max_aircraft": 6,
-  "torpedo_cooldown": 2160
+  "torpedo_cooldown": 2160,
+  "aa_damage": 4.0,
+  "aa_fire_interval": 160
 }

@@ -7,6 +7,7 @@ import com.piranport.aviation.combat.TargetResolution;
 import com.piranport.combat.CombatTargeting;
 import com.piranport.component.AircraftAttackMode;
 import com.piranport.config.ModEquipmentConfig;
+import com.piranport.npc.deepocean.AbstractDeepOceanEntity;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
@@ -27,7 +28,7 @@ import java.util.UUID;
  * 差异只体现在三处：
  * <ul>
  *   <li>目标来源：玩家走火控锁定，自主飞机走自主索敌；</li>
- *   <li>返航终点：玩家飞回所属者并返还物品，自主飞机直接销毁；</li>
+ *   <li>返航终点：玩家飞回所属者并返还物品，自主飞机飞回母舰后销毁；</li>
  *   <li>侦察：只有玩家飞机有 RECON_ACTIVE 状态。</li>
  * </ul>
  */
@@ -59,7 +60,8 @@ final class AircraftFlight {
             }
             if (!craft.hasFuel()) {
                 if (craft.isAutonomous()) {
-                    craft.discard();
+                    // 自主机没油也先飞回母舰，到附近再销毁；不再在半路凭空消失。
+                    craft.startReturning("fuel_empty");
                     return;
                 }
                 craft.markForcedReturn();
@@ -75,7 +77,11 @@ final class AircraftFlight {
         // 防御：最大留空时间
         if (craft.airtimeTicks >= ModEquipmentConfig.AIRCRAFT_MAX_AIRTIME.get()) {
             if (craft.isAutonomous()) {
-                craft.discard();
+                // 先飞回母舰，避免半路凭空消失；返航本身有 return_timeout 兜底，
+                // 所以已在返航时不再按滞空上限立即销毁。
+                if (state != AircraftEntity.FlightState.RETURNING) {
+                    craft.startReturning("max_airtime");
+                }
                 return;
             }
             if (state == AircraftEntity.FlightState.RETURNING) {
@@ -215,7 +221,8 @@ final class AircraftFlight {
         }
 
         if (craft.remainingAmmo <= 0) {
-            craft.discard();
+            // 打完弹不再原地销毁：返航回母舰，和玩家收飞机一致。
+            craft.startReturning("ammo_depleted");
             return;
         }
         // 机种分工：
@@ -235,7 +242,7 @@ final class AircraftFlight {
 
     private static void tickReturning(AircraftEntity craft, @Nullable Player owner) {
         if (owner == null) {
-            craft.discard();
+            tickAutonomousReturning(craft);
             return;
         }
         // 侦察机返航票据随飞机移动，避免区块卸载导致返航冻结
@@ -253,6 +260,39 @@ final class AircraftFlight {
             return;
         }
         craft.setDeltaMovement(toOwner.normalize().scale(Math.min(craft.panelSpeed() * phase, distance)));
+    }
+
+    /**
+     * 自主机返航：飞回母舰（深海航母），到附近后销毁并释放甲板槽位。
+     *
+     * <p>母舰已经沉没/移除时退回放飞点；连放飞点都没有才直接销毁。
+     * 返航超时沿用玩家机口径，避免母舰被卡住时飞机永远占着甲板槽位。</p>
+     */
+    private static void tickAutonomousReturning(AircraftEntity craft) {
+        AbstractDeepOceanEntity carrier = craft.getAircraftOwnerEntity();
+        Vec3 home = null;
+        if (carrier != null && carrier.isAlive() && !carrier.isRemoved()) {
+            home = carrier.getEyePosition();
+        } else if (craft.homePosition.lengthSqr() > 1.0E-6) {
+            home = craft.homePosition;
+        }
+        if (home == null) {
+            craft.discard();
+            return;
+        }
+        if (craft.stateTicks >= ModEquipmentConfig.AIRCRAFT_RETURN_TIMEOUT_TICKS.get()) {
+            craft.discard();
+            return;
+        }
+        Vec3 toHome = home.subtract(craft.position());
+        double distance = toHome.length();
+        if (distance < ModEquipmentConfig.AIRCRAFT_RETURN_ARRIVAL_DISTANCE.get()) {
+            // 到达母舰附近即视为回收；onRemovedFromLevel 会通知母舰释放甲板槽位。
+            craft.discard();
+            return;
+        }
+        double phase = craft.phaseSpeedCoefficient();
+        craft.setDeltaMovement(toHome.normalize().scale(Math.min(craft.panelSpeed() * phase, distance)));
     }
 
     // ===== 索敌 =====
@@ -357,14 +397,21 @@ final class AircraftFlight {
         return false;
     }
 
-    /** 自主对海机种的目标：最近的玩家本体（水面舰船），不包含玩家所属飞机。 */
+    /**
+     * 自主对海机种的目标：最近的玩家本体（水面舰船），不包含玩家所属飞机。
+     *
+     * <p>除反潜机外，水下玩家不再作为目标：俯冲/水平/鱼雷/火箭机都从水面上方攻击，
+     * 玩家潜到水下后继续锁定只会让飞机对着水面投弹。反潜机（有声呐）仍要打水下目标。</p>
+     */
     @Nullable
     private static LivingEntity nearestSurfacePlayer(AircraftEntity craft) {
         ServerLevel serverLevel = craft.level() instanceof ServerLevel level ? level : null;
         if (serverLevel == null) return null;
         AABB box = craft.getBoundingBox().inflate(ModEquipmentConfig.AIRCRAFT_AUTONOMOUS_SEEK_RANGE.get());
+        boolean underwaterAllowed = craft.getResolvedDefinition().hasSonar();
         return serverLevel.getEntitiesOfClass(Player.class, box,
-                        player -> player.isAlive() && !player.isSpectator())
+                        player -> player.isAlive() && !player.isSpectator()
+                                && (underwaterAllowed || !player.isUnderWater()))
                 .stream()
                 .min(Comparator.comparingDouble(craft::distanceTo))
                 .orElse(null);

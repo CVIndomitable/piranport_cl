@@ -202,6 +202,15 @@ public class AircraftEntity extends Entity implements AircraftAttackContext {
         return entity;
     }
 
+    /**
+     * 自主机的母舰（深海航母）；玩家飞机为 null。
+     * 供返航逻辑读取：自主机打完弹/没油后飞回母舰，到附近再销毁。
+     */
+    @Nullable
+    AbstractDeepOceanEntity getAircraftOwnerEntity() {
+        return aircraftOwner;
+    }
+
     /** 自主飞机（无玩家所有者），由深海航母或调试命令创建。 */
     public static AircraftEntity createAutonomous(Level level, Vec3 spawnPos, ItemStack aircraftStack,
                                                   @Nullable LivingEntity target,

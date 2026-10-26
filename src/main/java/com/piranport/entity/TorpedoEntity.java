@@ -1,5 +1,6 @@
 package com.piranport.entity;
 
+import com.piranport.combat.TorpedoAirDropBallistics;
 import com.piranport.combat.TorpedoGuidanceManager;
 import com.piranport.config.ModCommonConfig;
 import com.piranport.config.ModEquipmentConfig;
@@ -197,6 +198,17 @@ public class TorpedoEntity extends ThrowableItemProjectile {
         entityData.set(DATA_AIR_DROP, airDrop);
         entityData.set(DATA_AIR_DROP_DIR_X, (float) this.airDropDirection.x);
         entityData.set(DATA_AIR_DROP_DIR_Z, (float) this.airDropDirection.z);
+    }
+
+    /**
+     * 空投阶段的固定速度矢量：水平分量 = 鱼雷航速，垂直分量按入水角反解。
+     *
+     * <p>解算逻辑在 {@link com.piranport.combat.TorpedoAirDropBallistics}；这里只负责
+     * 把同步状态（航速、空投方向、终端入水角）喂进去，客户端与服务端跑同一段。
+     */
+    public Vec3 currentAirDropVelocity() {
+        return TorpedoAirDropBallistics.entryVelocity(airDropDirection, torpedoSpeed,
+                ModEquipmentConfig.TORPEDO_BOMBER_TORPEDO_ENTRY_ANGLE.get());
     }
 
     /** 标记为航空鱼雷（仅鱼雷机投放路径调用）。 */
@@ -564,10 +576,9 @@ public class TorpedoEntity extends ThrowableItemProjectile {
         }
     }
 
-    /** 空投下落阶段：垂直入水后切换巡航 */
+    /** 空投下落阶段：按固定入水角下落，入水后切换巡航 */
     private boolean tickAirDrop() {
         if (!airDrop) return false;
-        Vec3 motion = getDeltaMovement();
         BlockPos pos = blockPosition();
         boolean inWater = level().getBlockState(pos).getFluidState().is(Fluids.WATER);
         boolean inAir = level().getBlockState(pos).isAir();
@@ -576,11 +587,13 @@ public class TorpedoEntity extends ThrowableItemProjectile {
         if (inWater || (inAir && waterBelow)) {
             airDrop = false;
             entityData.set(DATA_AIR_DROP, false);
-            setDeltaMovement(airDropDirection.x * torpedoSpeed, 0, airDropDirection.z * torpedoSpeed);
+            // 入水后只保留水平巡航速度：俯角只属于空投段，贴水面航行时雷轴应回到水平。
+            setDeltaMovement(TorpedoAirDropBallistics.cruiseVelocity(airDropDirection, torpedoSpeed));
         } else {
-            setDeltaMovement(motion.x * ModEquipmentConfig.TORPEDO_AIR_DROP_HORIZONTAL_DECAY.get(),
-                    motion.y - ModEquipmentConfig.TORPEDO_AIR_DROP_VERTICAL_ACCEL.get(),
-                    motion.z * ModEquipmentConfig.TORPEDO_AIR_DROP_HORIZONTAL_DECAY.get());
+            // 固定入水角（终端 global.torpedo_bomber_combat.entry_angle，默认 45°）：
+            // 每 tick 按水平分量和角度重算 vy，不做水平衰减、也不累加垂直加速度。
+            // 旧实现（0.98 衰减 + 0.08/tick 加速度）会让角度越落越陡，入水时约 79°，接近垂直砸下。
+            setDeltaMovement(currentAirDropVelocity());
         }
         return true;
     }

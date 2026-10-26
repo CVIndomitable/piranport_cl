@@ -263,9 +263,9 @@ public final class TorpedoAttackStrategy implements AttackStrategy {
                 // 未命中的雷会一直跑到 170 格外才自毁。
                 torpedo.setLifetime(ModEquipmentConfig.TORPEDO_BOMBER_TORPEDO_LIFETIME.get());
                 torpedo.setAirDrop(true, direction);
-                Vec3 velocity = direction.scale(torpedoSpeed)
-                        .add(0, ModEquipmentConfig.TORPEDO_BOMBER_TORPEDO_VERTICAL_SPEED.get(), 0);
-                torpedo.setDeltaMovement(velocity);
+                // 出生即按固定入水角给速度（终端 entry_angle，默认 45°），
+                // 之后每 tick 由 TorpedoEntity#tickAirDrop 重算，角度全程不变。
+                torpedo.setDeltaMovement(torpedo.currentAirDropVelocity());
                 torpedo.setOwner(owner);
                 // 与战斗机子弹同口径：击杀/命中提示显示载机名，而不是笼统的「航空鱼雷」。
                 torpedo.setSourceAircraft(context.self());
@@ -370,7 +370,7 @@ public final class TorpedoAttackStrategy implements AttackStrategy {
     /**
      * 航空鱼雷入水速度（block/tick）。美/德 2.5 m/s，日/英/意 2.8 m/s。
      *
-     * <p>法/未知不在对照表内，走终端参数 {@code global.aircraft.torpedo_bomber_combat.torpedo_speed}
+     * <p>法/未知不在对照表内，走终端参数 {@code global.torpedo_bomber_combat.torpedo_speed}
      * 作为兜底，默认已同步为 0.14（2.8 m/s）；不让该参数变成「能改但不生效」的死参数。</p>
      */
     static double torpedoSpeedFor(AircraftDefinition.Nation nation) {

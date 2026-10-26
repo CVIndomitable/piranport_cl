@@ -80,13 +80,8 @@ public final class ModEquipmentConfig {
     public static final TerminalConfigValue<Double> TORPEDO_SURFACE_CAPTURE_RANGE =
             TerminalConfigValue.number("equipment", "torpedo", "surface_capture_range", 1.0, 0.25, 6.0);
 
-    /** 空投下落阶段的水平速度衰减系数。默认沿用 0.98。 */
-    public static final TerminalConfigValue<Double> TORPEDO_AIR_DROP_HORIZONTAL_DECAY =
-            TerminalConfigValue.number("equipment", "torpedo", "air_drop_horizontal_decay", 0.98, 0.0, 1.0);
-
-    /** 空投下落阶段每 tick 的垂直加速度。默认沿用 0.08。 */
-    public static final TerminalConfigValue<Double> TORPEDO_AIR_DROP_VERTICAL_ACCEL =
-            TerminalConfigValue.number("equipment", "torpedo", "air_drop_vertical_accel", 0.08, 0.0, 0.5);
+    // 空投下落阶段不再有独立的水平衰减/垂直加速度：入水角由
+    // global.torpedo_bomber_combat.entry_angle 固定控制（见 TorpedoEntity#currentAirDropVelocity）。
 
     /** 非空投空中回退的水平速度衰减系数。默认沿用 0.70。 */
     public static final TerminalConfigValue<Double> TORPEDO_AIR_FALL_HORIZONTAL_DECAY =
@@ -410,9 +405,15 @@ public final class ModEquipmentConfig {
      *  WHY 与 NPC 齐射的 torpedo_salvo.speed 分开：那是 NPC 水面齐射，这是空投雷，语义不同不可合并。 */
     public static final TerminalConfigValue<Double> TORPEDO_BOMBER_TORPEDO_SPEED =
             TerminalConfigValue.number("aircraft", "torpedo_bomber_combat", "torpedo_speed", 0.14, 0.0, 10.0);
-    /** 空投鱼雷初速的垂直分量（格/tick，入水角度）。默认 -0.1。 */
-    public static final TerminalConfigValue<Double> TORPEDO_BOMBER_TORPEDO_VERTICAL_SPEED =
-            TerminalConfigValue.number("aircraft", "torpedo_bomber_combat", "torpedo_vertical_speed", -0.1, -10.0, 10.0);
+    /**
+     * 航空鱼雷入水角（度）：0 = 水平，90 = 垂直，默认 45。
+     *
+     * <p>空投段速度方向按该角度固定（{@code vy = -水平速度 × tan θ}），
+     * 下落过程中既不衰减水平速度也不累加垂直加速度，保证出生与入水都是同一角度。
+     * 超出手感范围（≥90°）会让 tan 发散，故上限 89。</p>
+     */
+    public static final TerminalConfigValue<Double> TORPEDO_BOMBER_TORPEDO_ENTRY_ANGLE =
+            TerminalConfigValue.number("aircraft", "torpedo_bomber_combat", "entry_angle", 45.0, 1.0, 89.0);
     /** 平飞接敌速度 = 面板速度 × 该值 × 阶段系数。默认 0.5。 */
     public static final TerminalConfigValue<Double> TORPEDO_BOMBER_APPROACH_SPEED_MULTIPLIER =
             TerminalConfigValue.number("aircraft", "torpedo_bomber_combat", "approach_speed_multiplier", 0.5, 0.0, 5.0);

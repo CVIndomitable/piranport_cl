@@ -117,6 +117,8 @@ public class TorpedoEntity extends ThrowableItemProjectile {
     // 空投下落阶段
     private boolean airDrop = false;
     private Vec3 airDropDirection = Vec3.ZERO;
+    /** 本次空投已持续 tick 数：只用于“投到无水区域”时的兜底结束，不参与角度解算。 */
+    private int airDropTicks = 0;
 
     // 航空鱼雷：技术性雷种，只由鱼雷机投放。用于把默认物品/显示名解析为「航空鱼雷」，
     // 而不是落到 caliber 对应的 533mm 标准鱼雷。
@@ -187,6 +189,7 @@ public class TorpedoEntity extends ThrowableItemProjectile {
 
     public void setAirDrop(boolean airDrop, Vec3 direction) {
         this.airDrop = airDrop;
+        this.airDropTicks = 0;
         Vec3 horizontal = new Vec3(direction.x, 0, direction.z);
         double horizontalLen = horizontal.length();
         if (horizontalLen < 0.001) {
@@ -576,25 +579,31 @@ public class TorpedoEntity extends ThrowableItemProjectile {
         }
     }
 
-    /** 空投下落阶段：按固定入水角下落，入水后切换巡航 */
+    /** 空投下落阶段：按固定入水角下落，脚部真正入水后切换巡航 */
     private boolean tickAirDrop() {
         if (!airDrop) return false;
         BlockPos pos = blockPosition();
-        boolean inWater = level().getBlockState(pos).getFluidState().is(Fluids.WATER);
-        boolean inAir = level().getBlockState(pos).isAir();
-        boolean waterBelow = level().getBlockState(pos.below()).getFluidState().is(Fluids.WATER);
-
-        if (inWater || (inAir && waterBelow)) {
+        BlockState state = level().getBlockState(pos);
+        boolean inWater = state.getFluidState().is(Fluids.WATER);
+        airDropTicks++;
+        // 入水判定只认“脚部所在方块真正是水”：这样最后一步扎进水里的速度方向仍是配置角度
+        // （默认 45°）。旧实现“脚下方块是水就提前结束”会提前约 1 格切到 tickSurfaceAI 的
+        // 空中回退（0.70 衰减 + 0.25/tick 加速度），视觉上仍是接近垂直入水。
+        // 兜底：投到陆地/建筑（脚部方块固体）或长期无水（虚空、无水柱）时必须结束，
+        // 否则空投段会永久接管运动（它跳过 tickSurfaceAI，且速度不含重力）。
+        if (TorpedoAirDropBallistics.shouldEndAirDrop(inWater, state.isSolid(), airDropTicks)) {
             airDrop = false;
             entityData.set(DATA_AIR_DROP, false);
-            // 入水后只保留水平巡航速度：俯角只属于空投段，贴水面航行时雷轴应回到水平。
-            setDeltaMovement(TorpedoAirDropBallistics.cruiseVelocity(airDropDirection, torpedoSpeed));
-        } else {
-            // 固定入水角（终端 global.torpedo_bomber_combat.entry_angle，默认 45°）：
-            // 每 tick 按水平分量和角度重算 vy，不做水平衰减、也不累加垂直加速度。
-            // 旧实现（0.98 衰减 + 0.08/tick 加速度）会让角度越落越陡，入水时约 79°，接近垂直砸下。
-            setDeltaMovement(currentAirDropVelocity());
+            if (inWater) {
+                // 入水后只保留水平巡航速度：俯角只属于空投段，贴水面航行时雷轴应回到水平。
+                setDeltaMovement(TorpedoAirDropBallistics.cruiseVelocity(airDropDirection, torpedoSpeed));
+            }
+            // 非入水结束（固体/超时）保留当前速度，下一 tick 由 tickSurfaceAI 的空中回退接管坠落。
+            return true;
         }
+        // 固定入水角（终端 global.torpedo_bomber_combat.entry_angle，默认 45°）：
+        // 每 tick 按水平分量和角度重算 vy，不做水平衰减、也不累加垂直加速度。
+        setDeltaMovement(currentAirDropVelocity());
         return true;
     }
 

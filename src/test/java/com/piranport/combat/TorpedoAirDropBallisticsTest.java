@@ -65,4 +65,62 @@ class TorpedoAirDropBallisticsTest {
         assertEquals(0.14, Math.hypot(v.x, v.z), EPS);
         assertEquals(0.0, angleDegrees(v), EPS);
     }
+
+    /** 空投段只在脚部方块真正是水时结束；固体/超时是兜底，空中继续下落。 */
+    @Test
+    void airDropEndsOnlyOnRealWaterEntryOrFallbacks() {
+        assertTrue(TorpedoAirDropBallistics.shouldEndAirDrop(true, false, 1),
+                "脚部真正入水 → 结束空投");
+        assertTrue(TorpedoAirDropBallistics.shouldEndAirDrop(false, true, 1),
+                "投到陆地/建筑（脚部方块固体）→ 兜底结束");
+        assertFalse(TorpedoAirDropBallistics.shouldEndAirDrop(
+                        false, false, TorpedoAirDropBallistics.MAX_AIR_DROP_TICKS),
+                "未到超时阈值 → 继续 45° 下落");
+        assertTrue(TorpedoAirDropBallistics.shouldEndAirDrop(
+                        false, false, TorpedoAirDropBallistics.MAX_AIR_DROP_TICKS + 1),
+                "超过最长空投 tick → 兜底结束");
+        assertFalse(TorpedoAirDropBallistics.shouldEndAirDrop(false, false, 8),
+                "水面正上方仍在 45° 下落，不得提前结束");
+    }
+
+    /**
+     * 从出生到脚部真正进入水方块的整段下落（逐 tick 应用固定角度速度），
+     * 最后一步（扎进水里的那一步）仍是 45°，且横向前进约 2 格。
+     */
+    @Test
+    void lastStepIntoWaterIsStillAtEntryAngle() {
+        double waterBlockBottom = 0.0;
+        double surfaceTop = waterBlockBottom + 0.875;
+        // run_altitude 3 − drop_height_offset 1 = 水面上方 2 格
+        double spawnY = surfaceTop + 2.0;
+        Vec3 direction = new Vec3(0, 0, 1);
+        for (double speed : new double[] { 0.125, 0.14 }) {
+            Vec3 v = TorpedoAirDropBallistics.entryVelocity(direction, speed, 45.0);
+            double y = spawnY;
+            double horizontal = 0.0;
+            int ticks = 0;
+            Vec3 stepVelocity = v;
+            // 脚部方块 = floor(y)；进入值为 0 的水方块即真正入水（与 tickAirDrop 判定一致）
+            while (Math.floor(y) > waterBlockBottom && ticks < 200) {
+                stepVelocity = TorpedoAirDropBallistics.entryVelocity(direction, speed, 45.0);
+                y += stepVelocity.y;
+                horizontal += Math.hypot(stepVelocity.x, stepVelocity.z);
+                ticks++;
+            }
+            assertTrue(ticks < 200, "必须在兜底超时前入水");
+            assertEquals(45.0, angleDegrees(stepVelocity), 1.0e-6,
+                    "入水那一步的角度，speed=" + speed);
+            assertEquals(2.0, horizontal, 0.1,
+                    "出生高度 2 格 + 45° → 入水前横向前进约 2 格，speed=" + speed);
+        }
+    }
+
+    /** 实体侧必须把结束判定接到纯函数上，且不能再保留“脚下方块是水就提前结束”。 */
+    @Test
+    void torpedoEntityUsesThePureEndCondition() throws Exception {
+        String source = java.nio.file.Files.readString(java.nio.file.Path.of(
+                "src/main/java/com/piranport/entity/TorpedoEntity.java"));
+        assertTrue(source.contains("shouldEndAirDrop("));
+        assertFalse(source.contains("waterBelow"), "旧的提前结束条件必须删除");
+    }
 }

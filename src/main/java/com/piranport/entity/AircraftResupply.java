@@ -9,7 +9,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.Block;
 
 import javax.annotation.Nullable;
 
@@ -68,12 +67,12 @@ public class AircraftResupply {
 
     static boolean returnItemToOwner(AircraftEntity craft, Player player) {
         if (craft.autonomous) {
-            // 自主飞机不返回物品栏，直接掉落物品
-            Block.popResource(player.level(), player.blockPosition(), buildReturnStack(craft));
-            craft.setLastReturnResult("DROPPED");
+            // 自主飞机（深海航母放出）没有玩家归属：不返还物品栏，也不产生任何掉落物。
+            // 它的 originalStack 只是构造模板，不能流入玩家背包或地面。
+            craft.setLastReturnResult("DISCARDED");
             com.piranport.debug.PiranPortDebug.aircraftReturnItem(
-                    craft.getId(), craft.getOwnerUUID(), true, craft.getWeaponSlotIndex(), "DROPPED");
-            return true;
+                    craft.getId(), craft.getOwnerUUID(), false, craft.getWeaponSlotIndex(), "DISCARDED");
+            return false;
         }
 
         ItemStack returnStack = buildReturnStack(craft);

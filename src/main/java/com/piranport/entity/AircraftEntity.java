@@ -548,10 +548,14 @@ public class AircraftEntity extends Entity implements AircraftAttackContext {
                     "Aircraft KILLED | class={} entityId={} attacker={}",
                     getAircraftClass().getSerializedName(), getId(),
                     attacker != null ? attacker.getType().toShortString() : "unknown");
-            ItemStack dropStack = AircraftResupply.buildReturnStack(this);
-            if (!dropStack.isEmpty()) {
-                AircraftDropEntity drop = new AircraftDropEntity(level(), getX(), getY(), getZ(), dropStack);
-                level().addFreshEntity(drop);
+            // 自主飞机（深海航母放出）没有玩家归属，击落后直接消失：
+            // 它的 originalStack 只是构造时用的模板，不能当战利品掉给任何人。
+            if (!autonomous) {
+                ItemStack dropStack = AircraftResupply.buildReturnStack(this);
+                if (!dropStack.isEmpty()) {
+                    AircraftDropEntity drop = new AircraftDropEntity(level(), getX(), getY(), getZ(), dropStack);
+                    level().addFreshEntity(drop);
+                }
             }
             discard();
         }

@@ -214,7 +214,8 @@ public class DungeonLecternBlock extends BaseEntityBlock {
             case BUILDING -> "block.piranport.dungeon_lectern.building";
             case FULL -> "dungeon.piranport.entry_blocked.instance_full";
             case INVALID -> "block.piranport.dungeon_lectern.invalid_key";
-            case READY -> null;
+            // 章节钥匙本关已通关：允许打开选关界面，但界面里不再提供直接进本。
+            case AWAITING_STAGE, READY -> null;
         };
         if (blocked != null) {
             // 满员文案带进本门槛占位符，其余提示无参数。

@@ -113,8 +113,11 @@ public class DungeonLecternBlockEntity extends BlockEntity {
             var manager = com.piranport.dungeon.instance.DungeonInstanceManager.get(serverLevel);
             UUID id = DungeonKeyItem.getInstanceId(keyStack);
             var instance = id == null ? null : manager.getInstance(id);
-            var stage = com.piranport.dungeon.data.DungeonRegistry.INSTANCE.getStage(
-                    instance != null ? instance.getStageId() : DungeonKeyItem.resolveStageId(keyStack));
+            // 旧存档修复：实例已不存在、但钥匙进度显示本关已通关时，补记完成度并解绑。
+            if (instance == null) recoverCompletedStageFromProgress();
+            String currentStageId = instance != null
+                    ? instance.getStageId() : DungeonKeyItem.resolveStageId(keyStack);
+            var stage = com.piranport.dungeon.data.DungeonRegistry.INSTANCE.getStage(currentStageId);
             if (stage != null) labelStage = stage.displayName();
             boolean built = false;
             if (instance != null && stage != null) {
@@ -124,7 +127,14 @@ public class DungeonLecternBlockEntity extends BlockEntity {
                 built = LecternBuildScheduler.isBuilt(serverLevel.getServer(), instance, stage);
                 if (!built) buildPercent = LecternBuildScheduler.buildPercent(serverLevel.getServer(), instance, stage);
             }
-            status = LecternPattern.status(true, instance != null && stage != null, built, labelPresent);
+            // 章节钥匙通关后实例会被清理、instanceId 被解绑：只要本章还没全通，
+            // 钥匙应停在「等待选关」而不是 INVALID，否则打完一关钥匙就废了。
+            boolean chapterKey = keyStack.getItem() instanceof DungeonKeyItem key && key.isChapterKey();
+            boolean awaitingStage = instance == null && chapterKey
+                    && DungeonKeyItem.isStageCleared(keyStack, currentStageId)
+                    && !DungeonKeyItem.isChapterFullyCleared(keyStack);
+            status = LecternPattern.status(true, instance != null && stage != null, built, labelPresent,
+                    awaitingStage);
         }
         syncHasKeyState();
         // 钥匙 component（entered/cleared 进度）变化也要推给客户端：
@@ -139,6 +149,29 @@ public class DungeonLecternBlockEntity extends BlockEntity {
             setChanged();
             level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), Block.UPDATE_CLIENTS);
         }
+    }
+
+    /**
+     * 旧存档修复：钥匙上的进度已满足通关条件、但实例已不存在时，把本关补记进
+     * {@code DUNGEON_CLEARED_STAGES} 并解绑失效的 instanceId。
+     *
+     * <p>旧版本通关会清理实例却不记录完成度，导致钥匙在书台上直接变成 INVALID；
+     * 玩家手上的旧钥匙不应因为一次修复而被永久判死。</p>
+     */
+    private void recoverCompletedStageFromProgress() {
+        if (!(keyStack.getItem() instanceof DungeonKeyItem key) || !key.isChapterKey()) return;
+        String stageId = DungeonKeyItem.resolveStageId(keyStack);
+        if (stageId == null || stageId.isEmpty()) return;
+        if (DungeonKeyItem.isStageCleared(keyStack, stageId)) return;
+        var stage = com.piranport.dungeon.data.DungeonRegistry.INSTANCE.getStage(stageId);
+        var progress = DungeonKeyItem.getProgress(keyStack);
+        if (!com.piranport.dungeon.key.ChapterKeyProgress.isStageClearedByProgress(
+                stage, progress.clearedNodes())) return;
+        DungeonKeyItem.markStageCleared(keyStack, stageId);
+        DungeonKeyItem.clearInstanceId(keyStack);
+        dungeonInstanceUuid = null;
+        PiranPort.LOGGER.info("DungeonLectern @ {}: recovered completed stage {} from key progress",
+                worldPosition, stageId);
     }
 
     // ===== 字幕（客户端读取） =====
@@ -180,14 +213,23 @@ public class DungeonLecternBlockEntity extends BlockEntity {
         if (!(level instanceof net.minecraft.server.level.ServerLevel serverLevel) || !hasKey()) return false;
         if (!(keyStack.getItem() instanceof DungeonKeyItem key && key.isChapterKey())) return false;
         String currentStageId = DungeonKeyItem.resolveStageId(keyStack);
-        if (currentStageId.equals(targetStageId)) return true;
         var registry = com.piranport.dungeon.data.DungeonRegistry.INSTANCE;
         var current = registry.getStage(currentStageId);
         var target = registry.getStage(targetStageId);
         if (current == null || target == null || !current.chapter().equals(target.chapter())) return false;
+        var chapter = registry.getChapter(target.chapter());
+        if (chapter == null || !chapter.stages().contains(targetStageId)) return false;
+        // 已通关的关卡不能再选：否则同一把钥匙能重打并刷新奖励（重复游玩应复制新钥匙）。
+        if (DungeonKeyItem.isStageCleared(keyStack, targetStageId)) {
+            player.displayClientMessage(
+                    Component.translatable("dungeon.piranport.stage_switch.cleared"), true);
+            return false;
+        }
+        if (currentStageId.equals(targetStageId)) return true;
 
         refreshStatus();
-        if (status != LecternPattern.Status.READY) {
+        // AWAITING_STAGE：本关已通关、实例已解绑，选关正是从该状态继续。
+        if (status != LecternPattern.Status.READY && status != LecternPattern.Status.AWAITING_STAGE) {
             player.displayClientMessage(Component.translatable("dungeon.piranport.stage_switch.not_ready"), true);
             return false;
         }
@@ -263,6 +305,13 @@ public class DungeonLecternBlockEntity extends BlockEntity {
         String stageId = DungeonKeyItem.resolveStageId(keyStack);
         if (stageId == null || stageId.isEmpty()
                 || com.piranport.dungeon.data.DungeonRegistry.INSTANCE.getStage(stageId) == null) return;
+        // 已通关的关卡不能再建实例：钥匙取出再插回来时仍应停在「等待选关」，
+        // 否则会凭空造出已通关关卡的新实例，等于允许重复刷奖励。
+        if (keyStack.getItem() instanceof DungeonKeyItem key && key.isChapterKey()
+                && DungeonKeyItem.isStageCleared(keyStack, stageId)) {
+            dungeonInstanceUuid = null;
+            return;
+        }
         var instance = manager.createInstanceForLectern(stageId, worldPosition,
                 level.dimension().location().toString());
         if (instance == null) return;

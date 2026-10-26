@@ -374,6 +374,10 @@ public class DungeonEventHandler {
         // 结算保留现场供玩家自行离开；脚本调度器看到 COMPLETED 后自行移除，
         // 避免脚本正在遍历时回调删除当前 Map 条目。
 
+        // 实例马上会被 cleanupInstance 移除，完成度必须先落到钥匙上，
+        // 否则章节钥匙会因「instanceId 指向不存在的实例」被判失效。
+        recordStageClearedOnKey(instance, server);
+
         // 奖励与结算页已在 settleNode(completes=true) 发放；
         // 这里只负责回城与清理，避免再发一页空奖励把刚发的列表盖掉。
         for (UUID playerUuid : instance.getPlayerUuids()) {
@@ -386,6 +390,59 @@ public class DungeonEventHandler {
         NodeBattleField.cleanupRegion(dungeonLevel, instance);
         mgr.cleanupInstance(instance.getInstanceId());
         DungeonScriptManager.get(server).remove(instance.getInstanceId());
+        // 实例移除后再刷一次书台状态：章节钥匙应立刻变成「等待选关」/「已失效」，
+        // 而不是等下一次 20 tick 轮询。
+        refreshLecternStatus(instance, server);
+    }
+
+    /**
+     * 通关时把本关写进章节钥匙的已通关集合，并解绑即将被清理的实例。
+     *
+     * <p>钥匙权威源是书台 BE；书台已毁时兜底扫描参与玩家背包里 instanceId 相同的钥匙。
+     * 旧版通用钥匙只绑一关，行为保持不变（不写集合、不解绑）。</p>
+     */
+    private static void recordStageClearedOnKey(DungeonInstance instance, MinecraftServer server) {
+        ItemStack keyStack = findKeyBoundToInstance(instance, server);
+        if (!(keyStack.getItem() instanceof DungeonKeyItem key) || !key.isChapterKey()) return;
+        DungeonKeyItem.markStageCleared(keyStack, instance.getStageId());
+        DungeonKeyItem.clearInstanceId(keyStack);
+        PiranPort.LOGGER.info("[副本] 章节钥匙记录通关关卡 {}（instance {}）",
+                instance.getStageId(), instance.getInstanceId());
+    }
+
+    /** 优先读书台 BE 的钥匙；书台缺失时扫描参与者背包，找绑定了该实例的钥匙。 */
+    private static ItemStack findKeyBoundToInstance(DungeonInstance instance, MinecraftServer server) {
+        ItemStack fromLectern = readKeyFromLectern(instance, server);
+        if (fromLectern.getItem() instanceof DungeonKeyItem
+                && instance.getInstanceId().equals(DungeonKeyItem.getInstanceId(fromLectern))) {
+            return fromLectern;
+        }
+        for (UUID playerUuid : instance.getPlayerUuids()) {
+            ServerPlayer player = server.getPlayerList().getPlayer(playerUuid);
+            if (player == null) continue;
+            var inventory = player.getInventory();
+            for (int i = 0; i < inventory.getContainerSize(); i++) {
+                ItemStack stack = inventory.getItem(i);
+                if (stack.getItem() instanceof DungeonKeyItem
+                        && instance.getInstanceId().equals(DungeonKeyItem.getInstanceId(stack))) {
+                    return stack;
+                }
+            }
+        }
+        return ItemStack.EMPTY;
+    }
+
+    /** 让书台立刻按新钥匙状态重算纹路与字幕（实例已清理后调用）。 */
+    private static void refreshLecternStatus(DungeonInstance instance, MinecraftServer server) {
+        if (instance.getLecternPos() == null || instance.getLecternDimension() == null) return;
+        ResourceLocation parsed = ResourceLocation.tryParse(instance.getLecternDimension());
+        if (parsed == null) return;
+        ServerLevel lecternLevel = server.getLevel(ResourceKey.create(Registries.DIMENSION, parsed));
+        if (lecternLevel != null && lecternLevel.getBlockEntity(instance.getLecternPos())
+                instanceof com.piranport.dungeon.block.DungeonLecternBlockEntity lectern) {
+            lectern.setChanged();
+            lectern.refreshStatus();
+        }
     }
 
     // ===== Utility Methods =====

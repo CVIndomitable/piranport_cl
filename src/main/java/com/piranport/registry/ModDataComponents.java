@@ -200,6 +200,25 @@ public class ModDataComponents {
                             ByteBufCodecs.stringUtf8(MAX_DUNGEON_STAGE_ID_LENGTH),
                             net.minecraft.core.UUIDUtil.STREAM_CODEC))
                     .build());
+
+    /**
+     * 章节钥匙上「本章已通关的关卡 ID」集合。
+     *
+     * <p>WHY：实例通关后会被 {@code DungeonInstanceManager.cleanupInstance} 移除，关卡完成度只存在
+     * 实例里就会随实例消失，导致钥匙打完一关就失效。把完成度搬到钥匙上，钥匙才能继续用于本章
+     * 其他关卡；只有 {@code ChapterData.stages()} 全部进集合后钥匙才失效。</p>
+     *
+     * <p>必须网络同步：选关界面在客户端读钥匙组件，用来把已通关关卡置灰、禁止重复选择。</p>
+     */
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<java.util.Set<String>>>
+            DUNGEON_CLEARED_STAGES = DATA_COMPONENTS.register("dungeon_cleared_stages",
+            () -> DataComponentType.<java.util.Set<String>>builder()
+                    .persistent(Codec.STRING.listOf()
+                            .xmap(list -> (java.util.Set<String>) new java.util.HashSet<>(list),
+                                    list -> java.util.List.copyOf(list)))
+                    .networkSynchronized(ByteBufCodecs.collection(java.util.HashSet::new,
+                            ByteBufCodecs.stringUtf8(MAX_DUNGEON_STAGE_ID_LENGTH)))
+                    .build());
     // ===== 航海罗盘（海图/04）=====
 
     /** default / ship 两态；必须网络同步，否则客户端看不到 ship 模式的附魔光效。 */

@@ -38,6 +38,10 @@ public class DungeonContinueScreen extends Screen {
     /** 右栏节点图的屏幕坐标缓存（render 时计算，mouseClicked 复用）。 */
     private Map<String, int[]> nodePositions = Map.of();
 
+    /** 章节钥匙通关后没有绑定实例，直接进本按钮必须置灰，只能选关。 */
+    private Button continueButton;
+    private Button restartButton;
+
     public DungeonContinueScreen(BlockPos lecternPos) {
         super(Component.literal("副本入口"));
         this.lecternPos = lecternPos;
@@ -52,7 +56,7 @@ public class DungeonContinueScreen extends Screen {
         int cy = this.height / 2;
 
         // 继续按钮
-        addRenderableWidget(Button.builder(
+        continueButton = addRenderableWidget(Button.builder(
                 Component.literal("继续（最新记录点）"),
                 btn -> {
                     PacketDistributor.sendToServer(
@@ -62,7 +66,7 @@ public class DungeonContinueScreen extends Screen {
         ).bounds(cx - 100, cy + 20, 200, 20).build());
 
         // 从头开始按钮
-        addRenderableWidget(Button.builder(
+        restartButton = addRenderableWidget(Button.builder(
                 Component.literal("从头开始"),
                 btn -> {
                     PacketDistributor.sendToServer(
@@ -76,6 +80,33 @@ public class DungeonContinueScreen extends Screen {
                 Component.literal("取消"),
                 btn -> onClose()
         ).bounds(cx - 100, cy + 80, 200, 20).build());
+
+        updateEntryButtons();
+    }
+
+    /**
+     * 直接进本按钮只在钥匙绑定了实例时可用。
+     *
+     * <p>章节钥匙通关后实例被解绑、书台进入「等待选关」；此时继续/从头开始都会被
+     * 服务端拒绝，界面必须同步置灰，避免玩家点出一个静默失败。</p>
+     */
+    private void updateEntryButtons() {
+        ItemStack stack = keyStack();
+        boolean bound = stack.getItem() instanceof DungeonKeyItem
+                && DungeonKeyItem.getInstanceId(stack) != null;
+        if (continueButton != null) continueButton.active = bound;
+        if (restartButton != null) restartButton.active = bound;
+    }
+
+    /** 钥匙上记录的本章已通关关卡；旧版通用钥匙为空集。 */
+    private Set<String> clearedStages() {
+        return DungeonKeyItem.getClearedStages(keyStack());
+    }
+
+    private boolean hasBoundInstance() {
+        ItemStack stack = keyStack();
+        return stack.getItem() instanceof DungeonKeyItem
+                && DungeonKeyItem.getInstanceId(stack) != null;
     }
 
     /** 从客户端讲台 BE 上同步下来的钥匙里取进度；讲台 BE 的 KeyStack 随 update tag 下发。 */
@@ -149,6 +180,8 @@ public class DungeonContinueScreen extends Screen {
             if (row >= 0) {
                 StageData active = stage();
                 String target = stageIds.get(row);
+                // 已通关的关卡不可再选（重复游玩需要复制新钥匙），点击直接吞掉。
+                if (clearedStages().contains(target)) return true;
                 if (active == null || !target.equals(active.stageId())) {
                     PacketDistributor.sendToServer(new SelectStagePayload(lecternPos, target));
                 }
@@ -160,6 +193,8 @@ public class DungeonContinueScreen extends Screen {
         if (button == 0) {
             String hit = DungeonNodeMapRenderer.hitTest(nodePositions, mouseX, mouseY);
             if (hit != null) {
+                // 等待选关（无实例）时节点图不可进本。
+                if (!hasBoundInstance()) return true;
                 StageData st = stage();
                 DungeonProgress progress = progress();
                 if (st != null) {
@@ -178,6 +213,9 @@ public class DungeonContinueScreen extends Screen {
 
     @Override
     public void render(GuiGraphics gfx, int mouseX, int mouseY, float partialTick) {
+        // 换关后钥匙组件会随书台同步刷新，按钮可用性每帧重算。
+        updateEntryButtons();
+
         // 暗背景
         gfx.fill(0, 0, this.width, this.height, 0xCC1A1A2E);
         super.render(gfx, mouseX, mouseY, partialTick);
@@ -191,8 +229,16 @@ public class DungeonContinueScreen extends Screen {
         gfx.drawCenteredString(this.font, "§6副本入口", cx, this.height / 2 - 50, 0xFFFFD700);
         gfx.drawCenteredString(this.font, "§f" + (st == null ? "" : st.displayName()),
                 cx, this.height / 2 - 30, 0xFFFFFFFF);
-        gfx.drawCenteredString(this.font,
-                "§7已通关节点: §f" + progress().clearedNodes().size(), cx, this.height / 2 - 10, 0xFFCCCCCC);
+        List<String> chapterStages = chapterStageIds();
+        if (!chapterStages.isEmpty()) {
+            long cleared = chapterStages.stream().filter(clearedStages()::contains).count();
+            gfx.drawCenteredString(this.font,
+                    "§7本章通关: §f" + cleared + "/" + chapterStages.size(),
+                    cx, this.height / 2 - 10, 0xFFCCCCCC);
+        } else {
+            gfx.drawCenteredString(this.font,
+                    "§7已通关节点: §f" + progress().clearedNodes().size(), cx, this.height / 2 - 10, 0xFFCCCCCC);
+        }
 
         // 右栏节点图
         if (st != null) {
@@ -212,17 +258,23 @@ public class DungeonContinueScreen extends Screen {
 
     private void renderChapterStageList(GuiGraphics gfx, int mouseX, int mouseY, StageData active) {
         List<String> stageIds = chapterStageIds();
+        Set<String> cleared = clearedStages();
         for (int i = 0; i < stageIds.size(); i++) {
             String id = stageIds.get(i);
             StageData s = ClientDungeonData.getStage(id);
             String label = s == null ? id : s.displayName();
             boolean current = active != null && id.equals(active.stageId());
+            boolean stageCleared = cleared.contains(id);
             int x = stageRowX();
             int y = stageRowY(i);
-            boolean hover = stageRowAt(mouseX, mouseY, stageIds.size()) == i;
-            int bg = current ? 0xAA3A5A8A : hover ? 0x88444466 : 0x66222233;
+            boolean hover = !stageCleared && stageRowAt(mouseX, mouseY, stageIds.size()) == i;
+            // 已通关关卡置灰且不响应 hover，暗示不可再选。
+            int bg = stageCleared ? 0x55101010
+                    : current ? 0xAA3A5A8A : hover ? 0x88444466 : 0x66222233;
             gfx.fill(x, y, x + stageRowWidth(), y + STAGE_ROW_HEIGHT - 2, bg);
-            gfx.drawString(this.font, (current ? "§e▶ " : "§7") + label, x + 4, y + 4, 0xFFFFFFFF, false);
+            String prefix = stageCleared ? "§8✔ " : current ? "§e▶ " : "§7";
+            String suffix = stageCleared ? " §8（已通关）" : "";
+            gfx.drawString(this.font, prefix + label + suffix, x + 4, y + 4, 0xFFFFFFFF, false);
         }
     }
 

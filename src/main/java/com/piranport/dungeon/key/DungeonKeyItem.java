@@ -188,6 +188,32 @@ public class DungeonKeyItem extends Item {
         stack.set(ModDataComponents.DUNGEON_INSTANCE_ID.get(), instanceId);
     }
 
+    /**
+     * 解绑实例。章节钥匙通关后调用：实例即将被清理，钥匙回到「等待选关」，
+     * 而不是继续挂着一个已不存在的 UUID 被判失效。
+     */
+    public static void clearInstanceId(ItemStack stack) {
+        stack.remove(ModDataComponents.DUNGEON_INSTANCE_ID.get());
+    }
+
+    // ===== 章节通关记录（副本/17「换关」） =====
+
+    public static java.util.Set<String> getClearedStages(ItemStack stack) {
+        return ChapterKeyProgress.clearedStages(stack);
+    }
+
+    public static boolean isStageCleared(ItemStack stack, String stageId) {
+        return ChapterKeyProgress.isStageCleared(stack, stageId);
+    }
+
+    public static void markStageCleared(ItemStack stack, String stageId) {
+        ChapterKeyProgress.markStageCleared(stack, stageId);
+    }
+
+    public static boolean isChapterFullyCleared(ItemStack stack) {
+        return ChapterKeyProgress.isChapterFullyCleared(stack);
+    }
+
     public static void setStageId(ItemStack stack, String stageId) {
         stack.set(ModDataComponents.DUNGEON_STAGE_ID.get(), stageId);
     }

@@ -8,7 +8,8 @@ import net.minecraft.util.StringRepresentable;
  *
  * <ul>
  *   <li>WHITE — 空书台，未插钥匙</li>
- *   <li>RED — 已插钥匙，副本建造中；或该实例在线人数已达进本门槛；或钥匙无法建出实例</li>
+ *   <li>RED — 已插钥匙，副本建造中；或该实例在线人数已达进本门槛；或钥匙无法建出实例；
+ *       或章节钥匙本关已通关、正在等待选下一关</li>
  *   <li>GREEN — 建造完成且未满员，唯一允许进本的状态</li>
  * </ul>
  *
@@ -44,8 +45,13 @@ public enum LecternPattern implements StringRepresentable {
     /** 纹路面的乘色（BlockColor）。白色 = 不改原贴图。 */
     public int tint() { return tint; }
 
-    /** 书台此刻的进本阻塞原因。 */
-    public enum Status { EMPTY, BUILDING, FULL, INVALID, READY }
+    /**
+     * 书台此刻的进本阻塞原因。
+     *
+     * <p>{@link #AWAITING_STAGE} 是章节钥匙专属：本关已通关、实例已解绑，
+     * 书台可以打开选关界面，但不能直接进本（重复游玩必须复制新钥匙）。</p>
+     */
+    public enum Status { EMPTY, BUILDING, FULL, INVALID, READY, AWAITING_STAGE }
 
     /**
      * @param hasKey     书台上是否插着钥匙
@@ -61,16 +67,30 @@ public enum LecternPattern implements StringRepresentable {
         return Status.READY;
     }
 
+    /**
+     * 带「章节钥匙等待选关」的扩展判定。
+     *
+     * <p>保留四参 {@link #status(boolean, boolean, boolean, int)} 的语义不变，
+     * 只在明确传入 awaiting 标记且确实没有实例时返回 {@link Status#AWAITING_STAGE}。
+     * 有实例时一律按实例状态走，避免章节钥匙在战斗中误开选关。</p>
+     */
+    public static Status status(boolean hasKey, boolean hasInstance, boolean built, int present,
+                                boolean awaitingStageSelection) {
+        if (hasKey && !hasInstance && awaitingStageSelection) return Status.AWAITING_STAGE;
+        return status(hasKey, hasInstance, built, present);
+    }
+
     public static LecternPattern of(Status status) {
         return switch (status) {
             case EMPTY -> WHITE;
             case READY -> GREEN;
-            case BUILDING, FULL, INVALID -> RED;
+            case BUILDING, FULL, INVALID, AWAITING_STAGE -> RED;
         };
     }
 
-    /** 建造中钥匙锁定：只有建造完成（含满员）或钥匙无效时才允许空手潜行撤下。 */
+    /** 建造中钥匙锁定：只有建造完成（含满员）、等待选关或钥匙无效时才允许空手潜行撤下。 */
     public static boolean canWithdraw(Status status) {
-        return status == Status.FULL || status == Status.READY || status == Status.INVALID;
+        return status == Status.FULL || status == Status.READY
+                || status == Status.INVALID || status == Status.AWAITING_STAGE;
     }
 }

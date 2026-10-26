@@ -47,7 +47,9 @@ public class DungeonLecternRenderer implements BlockEntityRenderer<DungeonLecter
         lines.add(stage.isEmpty()
                 ? Component.translatable("block.piranport.dungeon_lectern.label.unknown_stage")
                 : Component.literal(stage));
-        if (status != LecternPattern.Status.INVALID) {
+        // 等待选关时没有实例，节点/人数信息无意义，只提示去左栏选关。
+        if (status != LecternPattern.Status.INVALID
+                && status != LecternPattern.Status.AWAITING_STAGE) {
             lines.add(be.isLabelCompleted()
                     ? Component.translatable("block.piranport.dungeon_lectern.label.cleared")
                     : Component.translatable("block.piranport.dungeon_lectern.label.not_cleared",
@@ -62,6 +64,8 @@ public class DungeonLecternRenderer implements BlockEntityRenderer<DungeonLecter
             }
             case FULL -> lines.add(Component.translatable("block.piranport.dungeon_lectern.label.full"));
             case INVALID -> lines.add(Component.translatable("block.piranport.dungeon_lectern.label.invalid"));
+            case AWAITING_STAGE -> lines.add(
+                    Component.translatable("block.piranport.dungeon_lectern.label.select_stage"));
             default -> { }
         }
 

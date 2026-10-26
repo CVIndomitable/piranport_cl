@@ -58,6 +58,8 @@ public final class DungeonEntryService {
          */
         BLANK_KEY("blank_key"),
         NO_SUCH_STAGE("no_such_stage"),
+        /** 章节钥匙当前关已通关：不能直接进本，必须回书台选其他未通关关卡。 */
+        STAGE_CLEARED("stage_cleared"),
         REJECTED("rejected"),
         NO_NODE("no_node");
 
@@ -126,6 +128,13 @@ public final class DungeonEntryService {
         StageData stage = DungeonRegistry.INSTANCE.getStage(resolvedStageId);
         if (stage == null) {
             Reject.NO_SUCH_STAGE.report(player);
+            return;
+        }
+        // 已通关的章节关卡不能再用同一把钥匙进本：书台此时处于「等待选关」，
+        // 入口请求（继续 / 从头开始 / 点节点）都必须先回书台选其他关。
+        if (key.getItem() instanceof DungeonKeyItem chapterKey && chapterKey.isChapterKey()
+                && DungeonKeyItem.isStageCleared(key, resolvedStageId)) {
+            Reject.STAGE_CLEARED.report(player);
             return;
         }
         DungeonInstanceManager manager = DungeonInstanceManager.get(player.serverLevel());

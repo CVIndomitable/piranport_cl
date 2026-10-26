@@ -59,6 +59,26 @@ class LecternPatternTest {
     }
 
     @Test
+    void awaitingStageSelectionIsRedAndWithdrawable() {
+        // 章节钥匙打完一关后没有实例：允许打开选关，但不能进本（红纹路、可撤钥匙）。
+        var s = LecternPattern.status(true, false, false, 0, true);
+        assertEquals(LecternPattern.Status.AWAITING_STAGE, s);
+        assertEquals(LecternPattern.RED, LecternPattern.of(s));
+        assertTrue(LecternPattern.canWithdraw(s));
+    }
+
+    @Test
+    void awaitingFlagIsIgnoredWhenInstanceStillExists() {
+        // 有实例时按实例真实状态走，避免战斗中误开选关。
+        assertEquals(LecternPattern.Status.READY,
+                LecternPattern.status(true, true, true, 0, true));
+        assertEquals(LecternPattern.Status.BUILDING,
+                LecternPattern.status(true, true, false, 0, true));
+        assertEquals(LecternPattern.Status.EMPTY,
+                LecternPattern.status(false, false, false, 0, true));
+    }
+
+    @Test
     void onlyGreenAllowsEntry() {
         for (var s : LecternPattern.Status.values()) {
             assertEquals(s == LecternPattern.Status.READY, LecternPattern.of(s) == LecternPattern.GREEN, s.name());

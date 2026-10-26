@@ -574,8 +574,12 @@ public final class NodeBattleField {
             case "piranport:deep_ocean_light_carrier" -> 70;
             case "piranport:deep_ocean_heavy_cruiser" -> 65;
             case "piranport:deep_ocean_guided_destroyer",
-                 "piranport:deep_ocean_air_destroyer" -> 55;
-            case "piranport:deep_ocean_light_cruiser" -> 50;
+                 "piranport:deep_ocean_air_destroyer",
+                 "piranport:deep_ocean_air_defense_destroyer",
+                 "piranport:deep_ocean_high_air_defense_destroyer" -> 55;
+            // 高级轻巡与低级轻巡同档；同为 50 时靠 spawn_list 顺序保证「高级在前」。
+            case "piranport:deep_ocean_light_cruiser",
+                 "piranport:deep_ocean_high_light_cruiser" -> 50;
             case "piranport:deep_ocean_destroyer" -> 40;
             case "piranport:deep_ocean_supply" -> 30;
             case "piranport:deep_ocean_submarine" -> 20;

@@ -12,6 +12,10 @@
     {
       "entity": "piranport:deep_ocean_destroyer",
       "count": 2
+    },
+    {
+      "entity": "piranport:deep_ocean_high_light_cruiser",
+      "count": 1
     }
   ]
 }

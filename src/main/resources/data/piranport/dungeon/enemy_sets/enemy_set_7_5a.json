@@ -12,6 +12,10 @@
     {
       "entity": "piranport:deep_ocean_destroyer",
       "count": 4
+    },
+    {
+      "entity": "piranport:deep_ocean_high_air_defense_destroyer",
+      "count": 1
     }
   ],
   "flagship": {

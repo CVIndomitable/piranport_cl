@@ -217,6 +217,10 @@ public final class DungeonEntryService {
         // 已通关钥匙不重置：否则「从头开始」会重刷怪并重复发奖，等于绕过「已使用钥匙不能重置」
         if (mode == Mode.RESTART && instance.getState() != DungeonInstance.State.COMPLETED) {
             resetNodeEntities(dungeonLevel, instance, nodeId);
+            // 「从头开始」会清空节点进度并重刷怪，死亡快照必须一起丢弃，
+            // 否则重返旧节点时会把上一局残留的敌人补刷回新进度。
+            com.piranport.dungeon.instance.DungeonNodeSnapshotService.clearInstance(
+                    dungeonLevel, instance.getInstanceId());
             instance.resetProgress();
             manager.syncKey(instance, key);
             manager.setDirty();

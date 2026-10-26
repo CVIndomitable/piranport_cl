@@ -86,6 +86,8 @@ public class ServerGameEvents {
             // 玩家进入第一个节点后，在剩余预算里后台预生成后续节点，减少出口等待。
             com.piranport.dungeon.instance.TerrainPrebuildScheduler.tick(event.getServer());
             DungeonScriptManager.get(event.getServer()).tickAll(dungeonLevel);
+            // 死亡快照补刷：等节点区块实体加载完成后再判断原实体是否还在。
+            com.piranport.dungeon.instance.DungeonNodeSnapshotService.tick(dungeonLevel);
             for (DungeonInstance instance : DungeonInstanceManager.get(dungeonLevel).getAllInstances()) {
                 // 关卡总用时与服务端 tick 同源：暂停（无 tick）或玩家离开副本（SUSPENDED）都不推进，
                 // 与节点计时/脚本计时器同一口径。客户端不再自行读墙钟，只显示服务端同步下来的值。

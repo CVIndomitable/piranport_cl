@@ -178,6 +178,10 @@ public final class EscortRuntime {
         NodeData node = stage == null ? null : stage.nodes().get(nodeId);
         if (node == null || node.escort() == null) return;
 
+        // 护航失败是《副本/12》唯一允许重置节点敌人的情况：旧快照随旧敌人一起作废，
+        // 否则下次重返会把失败前那批敌人补刷回来。
+        com.piranport.dungeon.instance.DungeonNodeSnapshotService.clearNode(
+                level, instance.getInstanceId(), nodeId);
         discardNodeEntities(level, instance, nodeId);
         DungeonObjectiveData.get(level).reset(instance.getInstanceId(), nodeId);
         instance.setNodeWave(nodeId, 1);

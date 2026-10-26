@@ -165,6 +165,10 @@ public class DungeonEventHandler {
         DungeonInstanceManager mgr = DungeonInstanceManager.get((ServerLevel) player.level());
         DungeonInstance instance = mgr.getInstanceForPlayer(player);
         if (instance != null) {
+            // 《副本/12》玩家死亡不重置敌人：传送离开前把当前仍存活的敌人抓成快照，
+            // 下次重返该节点时若原实体已不在则按快照补刷（脚本节点除外）。
+            com.piranport.dungeon.instance.DungeonNodeSnapshotService.captureOnPlayerDeath(
+                    (ServerLevel) player.level(), instance);
             VictoryEvaluator.onFlagPlayerDied((ServerLevel) player.level(), instance, player);
             // 讲台是位置坐标，不依赖钥匙在场：第三方中途拔钥匙时玩家仍应回门口。
             // 若钥匙/讲台已毁，读不到钥匙仅意味着副本会话无法继续，不阻塞传送。
@@ -279,6 +283,9 @@ public class DungeonEventHandler {
         BOSS_SNAPSHOT_NODE.remove(instance.getInstanceId());
         if (!manager.markNodeCleared(instance.getInstanceId(), nodeId,
                 readKeyFromLectern(instance, dungeonLevel.getServer()))) return;
+        // 节点已通关：死亡快照失效，避免重返时把已结算的敌人补刷回来。
+        com.piranport.dungeon.instance.DungeonNodeSnapshotService.clearNode(
+                dungeonLevel, instance.getInstanceId(), nodeId);
         com.piranport.dungeon.escort.EscortRuntime.releaseTransport(dungeonLevel, instance, nodeId);
         markLecternChanged(instance, dungeonLevel.getServer());
         boolean completes;
@@ -387,6 +394,8 @@ public class DungeonEventHandler {
         }
 
         // Cleanup instance
+        com.piranport.dungeon.instance.DungeonNodeSnapshotService.clearInstance(
+                dungeonLevel, instance.getInstanceId());
         NodeBattleField.cleanupRegion(dungeonLevel, instance);
         mgr.cleanupInstance(instance.getInstanceId());
         DungeonScriptManager.get(server).remove(instance.getInstanceId());

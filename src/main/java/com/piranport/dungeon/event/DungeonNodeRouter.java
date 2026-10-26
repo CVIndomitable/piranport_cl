@@ -180,6 +180,10 @@ public final class DungeonNodeRouter {
         }
         player.teleportTo(dungeonLevel, spawn.getX() + 0.5, spawn.getY(), spawn.getZ() + 0.5,
                 yaw, player.getXRot());
+        // 死亡快照兜底：玩家重新到达未通关节点时，若上次死亡抓拍的剩余敌人已不在，
+        // 等区块实体加载完成后按原 UUID 补刷（普通 BATTLE/BOSS 节点）。
+        com.piranport.dungeon.instance.DungeonNodeSnapshotService.scheduleRestore(
+                dungeonLevel, instance, nodeId);
         StageData stage = DungeonRegistry.INSTANCE.getStage(instance.getStageId());
         NodeData node = stage == null ? null : stage.nodes().get(nodeId);
         String objectiveKey = node == null ? "" : NodeCaption.objectiveKey(stage, node);

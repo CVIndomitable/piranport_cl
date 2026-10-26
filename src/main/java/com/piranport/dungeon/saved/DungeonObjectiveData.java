@@ -57,6 +57,22 @@ public final class DungeonObjectiveData extends SavedData {
         return p.registered && (allEnemies ? p.enemies : p.flagships).isEmpty();
     }
 
+    /** 该节点是否登记过敌人（脚本节点与非战斗节点为 false）。 */
+    public boolean hasRegistration(UUID instance, String node) {
+        return progress(instance, node).registered;
+    }
+
+    /**
+     * 某个实体是否仍被记为存活。
+     *
+     * <p>死亡快照恢复前用它做最后一道裁剪：玩家离开副本期间其他人打死的敌人
+     * 已经从登记表移除，不能再按快照复活。</p>
+     */
+    public boolean isTrackedAlive(UUID instance, String node, UUID entity) {
+        Progress p = progress(instance, node);
+        return p.registered && p.enemies.contains(entity);
+    }
+
     /** 离开圈不清零：《副本/12》只规定加减，不规定离圈重置。 */
     public double addCaptureProgress(UUID instance, String node, double delta) {
         Progress p = progress(instance, node);

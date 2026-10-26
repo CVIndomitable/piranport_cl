@@ -11,6 +11,7 @@ import com.piranport.aviation.ClientFireControlData;
 import com.piranport.combat.BallisticSolver;
 import com.piranport.combat.CombatTargeting;
 import com.piranport.combat.FireControlPrediction;
+import com.piranport.combat.FireControlTargetState;
 import com.piranport.combat.TransformationManager;
 import com.piranport.combat.util.CombatFireUtils;
 import com.piranport.component.LoadedAmmo;
@@ -175,7 +176,8 @@ public final class FireControlVisualRenderer {
         }
         UUID targetId = targets.get(0);
         Entity target = findTarget(mc, targetId);
-        if (target == null || !target.isAlive()) {
+        // 死亡下沉中的实体仍可能被客户端解析到，必须按同一口径判失效。
+        if (FireControlTargetState.lost(target)) {
             SAMPLER.clear();
             sampledTarget = null;
             return;

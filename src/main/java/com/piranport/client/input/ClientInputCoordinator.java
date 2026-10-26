@@ -120,6 +120,17 @@ public class ClientInputCoordinator {
         FireControlInputHandler.handleAutoLaunchKey(mc, transformed, inReconMode);
         FireControlInputHandler.handleManualReloadKey(mc, transformed, inReconMode);
 
+        // 火控目标自检：客户端已确认死亡/已移除的目标立即剔除。
+        // WHY 不能只等服务端包：Boss 死亡后还有下沉动画，实体仍留在世界中；
+        // 同步稍慢或某条清空路径漏发包时，HUD 行、红框、预瞄圈会继续挂在尸体上。
+        // 只在「确实解析到实体」时判死，区块未加载（entity == null）不误删。
+        if (mc.level != null) {
+            ClientFireControlData.removeWhere(uuid -> {
+                net.minecraft.world.entity.Entity entity = EntityHighlightHandler.findEntity(mc.level, uuid);
+                return entity != null && com.piranport.combat.FireControlTargetState.lost(entity);
+            });
+        }
+
         // 火控第一目标的炮弹落点预瞄圈：使用本 tick 的锁定列表和实体速度。
         com.piranport.client.FireControlVisualRenderer.tick(mc);
 

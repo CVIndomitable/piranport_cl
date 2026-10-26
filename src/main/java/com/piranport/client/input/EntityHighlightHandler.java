@@ -1,13 +1,16 @@
 package com.piranport.client.input;
 
 import com.piranport.client.EntityUuidCache;
+import com.piranport.combat.FireControlTargetState;
 import com.piranport.entity.AircraftEntity;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.scores.PlayerTeam;
 import net.minecraft.world.scores.Scoreboard;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -43,6 +46,18 @@ public class EntityHighlightHandler {
 
     // ========== Public API ==========
 
+    /**
+     * 用高亮缓存把 UUID 解析成客户端实体；未加载（区块不在客户端）时返回 null。
+     *
+     * <p>供火控目标自检复用同一份缓存，避免每 tick 再全量扫描一遍实体列表。
+     * 注意：缓存可能返回「已死亡但尚未从客户端移除」的实体，调用方需要自行判定状态。</p>
+     */
+    @Nullable
+    public static Entity findEntity(Level level, UUID uuid) {
+        if (level == null || uuid == null) return null;
+        return entityCache.get(level, uuid);
+    }
+
     /** 断开连接时重置所有高亮状态。 */
     public static void reset() {
         highlightedEntityIds.clear();
@@ -66,7 +81,8 @@ public class EntityHighlightHandler {
         if (hasFcTargets) {
             for (UUID uuid : lockedTargets) {
                 Entity entity = entityCache.get(mc.level, uuid);
-                if (entity != null && entity.isAlive()) {
+                // 与 HUD/预瞄共用同一存活口径：死亡下沉中的实体不能继续挂红框。
+                if (FireControlTargetState.trackable(entity)) {
                     entity.setGlowingTag(true);
                     highlightedEntityIds.add(entity.getId());
                     if (!(entity instanceof AircraftEntity)) {
@@ -82,7 +98,9 @@ public class EntityHighlightHandler {
                 Entity entity = mc.level.getEntity(id);
                 if (entity == null) return true;
                 UUID uuid = entity.getUUID();
-                if (lockedTargets.contains(uuid)) return false;
+                // 只有「仍在锁定列表里且确实还活着」才保留高亮；死亡/下沉中的尸体即使
+                // 客户端列表尚未刷新也必须立刻灭掉红框。
+                if (lockedTargets.contains(uuid) && FireControlTargetState.trackable(entity)) return false;
                 if (hasVanillaGlow(entity)) return false;
                 entity.setGlowingTag(false);
                 return true;

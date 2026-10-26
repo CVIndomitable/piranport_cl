@@ -66,14 +66,14 @@ public class ServerGameEvents {
     /** 每 tick 驱动地牢脚本 */
     @SubscribeEvent
     public static void onServerTick(ServerTickEvent.Post event) {
-        // Dead or unloaded entities must disappear from both server locks and the client HUD.
+        // 死亡/移除/未加载的目标必须同时从服务端锁定列表和客户端 HUD 清掉。
+        // 判定统一走 FireControlTargetState：Boss 死亡后还有下沉动画，只判 isRemoved()
+        // 会在这段窗口里继续把尸体当成火控目标。
         for (ServerPlayer player : event.getServer().getPlayerList().getPlayers()) {
-            if (FireControlManager.removeDeadTargets(player.getUUID(), targetUuid -> {
-                net.minecraft.world.entity.Entity target = player.serverLevel().getEntity(targetUuid);
-                return target == null || target.isRemoved() || !target.isAlive();
-            })) {
-                PacketDistributor.sendToPlayer(player, new FireControlSyncPayload(
-                        FireControlManager.getTargets(player.getUUID())));
+            if (FireControlManager.removeDeadTargets(player.getUUID(), targetUuid ->
+                    com.piranport.combat.FireControlTargetState.lost(
+                            player.serverLevel().getEntity(targetUuid)))) {
+                FireControlSyncPayload.syncTo(player);
             }
         }
 

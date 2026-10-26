@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -34,6 +35,32 @@ class FireControlManagerLockTest {
 
         FireControlManager.clearTargets(player);
         assertFalse(FireControlManager.isLocked(player, target));
+    }
+
+    @Test
+    void removeDeadTargetsDropsOnlyTheDeadOnes() {
+        UUID player = UUID.randomUUID();
+        UUID deadBoss = UUID.randomUUID();
+        UUID liveEscort = UUID.randomUUID();
+        FireControlManager.lock(player, deadBoss);
+        FireControlManager.addTarget(player, liveEscort);
+
+        assertTrue(FireControlManager.removeDeadTargets(player, uuid -> uuid.equals(deadBoss)));
+        assertEquals(List.of(liveEscort), FireControlManager.getTargets(player));
+
+        // 没有死目标可删时返回 false，调用方据此避免无意义地发包
+        assertFalse(FireControlManager.removeDeadTargets(player, uuid -> false));
+    }
+
+    @Test
+    void removeDeadTargetsClearsPlayerEntryWhenListBecomesEmpty() {
+        UUID player = UUID.randomUUID();
+        FireControlManager.lock(player, UUID.randomUUID());
+
+        assertTrue(FireControlManager.removeDeadTargets(player, uuid -> true));
+        assertTrue(FireControlManager.getTargets(player).isEmpty());
+        assertFalse(FireControlManager.removeDeadTargets(player, uuid -> true),
+                "条目已被移除，再次清理不应报告变更");
     }
 
     @Test

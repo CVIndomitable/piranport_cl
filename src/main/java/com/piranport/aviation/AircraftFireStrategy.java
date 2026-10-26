@@ -443,6 +443,8 @@ public class AircraftFireStrategy {
         if (!aircraft.isEmpty()) {
             ReconManager.endRecon(ownerUUID);
             FireControlManager.clearTargets(ownerUUID);
+            // 清空火控列表后必须同步，否则客户端 HUD 仍会显示已作废的锁定目标。
+            com.piranport.network.FireControlSyncPayload.syncIfServerPlayer(player);
         }
         return aircraft.size();
     }

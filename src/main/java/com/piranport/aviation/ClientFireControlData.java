@@ -34,4 +34,24 @@ public class ClientFireControlData {
     public static void clear() {
         lockedTargets.clear();
     }
+
+    /**
+     * 按条件剔除目标（客户端自检用）。
+     *
+     * <p>服务端同步正常时这里是兜底；服务端某个清空路径漏发包时，它也能在
+     * 客户端把已确认死亡的目标剔掉，避免 HUD / 红框一直挂着。</p>
+     *
+     * @param shouldRemove 返回 true 表示该 UUID 应从列表移除
+     * @return 是否有目标被移除
+     */
+    public static boolean removeWhere(java.util.function.Predicate<UUID> shouldRemove) {
+        if (lockedTargets.isEmpty()) return false;
+        List<UUID> kept = new ArrayList<>(lockedTargets.size());
+        for (UUID uuid : lockedTargets) {
+            if (!shouldRemove.test(uuid)) kept.add(uuid);
+        }
+        if (kept.size() == lockedTargets.size()) return false;
+        lockedTargets = kept;
+        return true;
+    }
 }

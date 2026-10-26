@@ -66,6 +66,8 @@ public record RecallAllAircraftPayload() implements CustomPacketPayload {
             if (recalled > 0) {
                 ReconManager.endRecon(ownerUUID);
                 FireControlManager.clearTargets(ownerUUID);
+                // 同步清空结果，避免客户端火控 HUD 继续显示已取消的目标。
+                FireControlSyncPayload.syncTo(sp);
                 sp.displayClientMessage(
                         Component.translatable("message.piranport.aircraft_recalled", recalled), true);
             }

@@ -37,6 +37,8 @@ public class PlayerAircraftHelper {
         if (recalled > 0) {
             // 变身结束后不再保留火控锁定，避免下次变身沿用旧目标。
             FireControlManager.clearTargets(player.getUUID());
+            // 服务端清了客户端必须跟着清，否则 HUD 会一直挂着旧目标。
+            com.piranport.network.FireControlSyncPayload.syncIfServerPlayer(player);
         }
         return recalled;
     }
@@ -67,6 +69,8 @@ public class PlayerAircraftHelper {
         // 清理索引和相关管理器状态
         AircraftIndex.removePlayerAircraft(ownerUUID);
         FireControlManager.clearTargets(ownerUUID);
+        // 登出时玩家已断线，syncTo 内部会跳过；换维度/死亡时则需要把清空结果同步给客户端。
+        com.piranport.network.FireControlSyncPayload.syncIfServerPlayer(player);
         ReconManager.endRecon(ownerUUID);
         TorpedoGuidanceManager.endGuidance(ownerUUID);
     }

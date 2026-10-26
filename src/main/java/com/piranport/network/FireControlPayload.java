@@ -16,10 +16,8 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
-import java.util.List;
 import java.util.UUID;
 
 public record FireControlPayload(FireAction action, UUID targetUUID) implements CustomPacketPayload {
@@ -107,8 +105,7 @@ public record FireControlPayload(FireAction action, UUID targetUUID) implements 
                 }
             }
 
-            List<UUID> targets = FireControlManager.getTargets(playerUUID);
-            PacketDistributor.sendToPlayer(player, new FireControlSyncPayload(targets));
+            FireControlSyncPayload.syncTo(player);
         });
     }
 }

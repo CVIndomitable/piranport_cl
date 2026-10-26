@@ -22,7 +22,7 @@ class ReloadCreativeAmmoTest {
     void startReloadFallsBackToCreativeCacheWhenPhysicalAmmoIsShort() throws Exception {
         String source = Files.readString(RELOAD_HELPER);
         String method = source.substring(source.indexOf("public static void reloadTorpedoLauncher("));
-        int countCheck = method.indexOf("if (!infinite && available < needed)");
+        int countCheck = method.indexOf("!hasTorpedoAmmoSource(infinite, available, needed)");
         int cacheFallback = method.indexOf("CreativeAmmoCache.findInfiniteTorpedo(player, caliber)");
         assertTrue(cacheFallback > 0, "实体鱼雷不足时必须再查创造弹药库");
         assertTrue(cacheFallback < countCheck,

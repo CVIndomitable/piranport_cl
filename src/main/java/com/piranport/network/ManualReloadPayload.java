@@ -66,17 +66,16 @@ public record ManualReloadPayload() implements CustomPacketPayload {
             LOGGER.info("[SERVER] MainHand item class: {}", mainHand.getItem().getClass().getName());
             LOGGER.info("[SERVER] Is mainHand ArtilleryItem? {}", mainHand.getItem() instanceof com.piranport.artillery.ArtilleryItem);
 
-            // 鱼雷发射器：无论是否装备"鱼雷再装填"都能按 R 装填（2026-10-19 修订）。
-            // 无强化 3000 tick 且不提示；有强化 400 tick。
+            // 鱼雷发射器：生存与创造都必须装备"鱼雷再装填"部件。
+            // 部件检查在 ReloadHelper 内（权威侧），缺部件时只提示、不启动读条。
+            // 不再有「无强化 3000 tick」分支——那正是超长读条的来源。
             if (mainHand.getItem() instanceof TorpedoLauncherItem) {
-                boolean boosted = TransformationManager.hasTorpedoReloadEquipped(player, coreStack);
                 ReloadHelper.reloadTorpedoLauncher(player, inv, mainHand, inv.selected, coreStack, coreSlot,
-                        boosted ? 400 : 3000, boosted);
+                        ReloadHelper.TORPEDO_RELOAD_TICKS, true);
                 return;
             } else if (offHand.getItem() instanceof TorpedoLauncherItem) {
-                boolean boosted = TransformationManager.hasTorpedoReloadEquipped(player, coreStack);
                 ReloadHelper.reloadTorpedoLauncher(player, inv, offHand, 40, coreStack, coreSlot,
-                        boosted ? 400 : 3000, boosted);
+                        ReloadHelper.TORPEDO_RELOAD_TICKS, true);
                 return;
             }
 

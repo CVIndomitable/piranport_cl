@@ -22,11 +22,31 @@ import net.minecraft.world.item.Item;
  */
 public class ReloadHelper {
 
+    /** 有再装填部件时的海上装填读条（ticks）。无部件不再走「3000 tick 长读条」。 */
+    public static final int TORPEDO_RELOAD_TICKS = 400;
+    /** 任何手感参数超过这个值都视为异常数据，回落到默认值，避免天文数字读条。 */
+    public static final int MAX_REASONABLE_TICKS = 12_000;
+
+    /** 0/负数/离谱时长一律回落到 400 tick；装填读条不允许出现「永不到期」。 */
+    public static int sanitizeTorpedoReloadTicks(int ticks) {
+        return ticks > 0 && ticks <= MAX_REASONABLE_TICKS ? ticks : TORPEDO_RELOAD_TICKS;
+    }
+
     /**
-     * 从背包装填鱼雷发射器（策划决策/武器/鱼雷-再装填机制，2026-10-19 修订）。
+     * 是否满足真实弹药来源。创造模式本身<b>不是</b>弹药来源：
+     * 只有实体同口径鱼雷够整组，或创造弹药库勾选了该弹种时才放行。
+     */
+    public static boolean hasTorpedoAmmoSource(boolean infinite, int available, int needed) {
+        return infinite || available >= Math.max(1, needed);
+    }
+
+    /**
+     * 从背包装填鱼雷发射器。
      *
-     * <p>开读条时只检查同口径鱼雷数量，不扣物品；读到 {@code durationTicks} 结束后由
-     * {@code WeaponReloadLifecycle} 统一扣除。无强化 3000 tick、有强化 400 tick。</p>
+     * <p>生存与创造都<b>必须</b>装备鱼雷再装填部件；缺部件时只提示、不启动读条。
+     * 开读条时只检查同口径鱼雷数量，不扣物品；读到 {@code durationTicks} 结束后由
+     * {@code WeaponReloadLifecycle} 统一扣除。创造模式同样要求真实弹药来源
+     * （背包实体鱼雷或创造弹药库），不能凭空装填。</p>
      *
      * @param player      玩家
      * @param inv         玩家背包
@@ -42,6 +62,13 @@ public class ReloadHelper {
         if (player.level().isClientSide()) return;
 
         if (!(launcherStack.getItem() instanceof TorpedoLauncherItem launcher)) return;
+
+        // 新规则（2026-10-26）：生存与创造都必须装备鱼雷再装填部件。
+        // 缺部件时不写 PENDING/冷却、不启动读条，只给动作栏提示。
+        if (!TransformationManager.hasTorpedoReloadEquipped(player, coreStack)) {
+            player.displayClientMessage(Component.translatable("message.piranport.need_torpedo_reload"), true);
+            return;
+        }
 
         int tubeCount = launcher.getTubeCount();
         int caliber = launcher.getCaliber();
@@ -69,8 +96,7 @@ public class ReloadHelper {
                     : BuiltInRegistries.ITEM.get(selectedId);
             if (selectedItem instanceof TorpedoItem selectedTorpedo
                     && selectedTorpedo.getCaliber() == caliber
-                    && (player.getAbilities().instabuild
-                    || CreativeAmmoCache.isInfinite(player, selectedTorpedo)
+                    && (CreativeAmmoCache.isInfinite(player, selectedTorpedo)
                     || countAmmo(inv, selectedTorpedo, weaponSlot, coreSlot) >= tubeCount)) {
                 torpedoType = selectedTorpedo;
             }
@@ -131,7 +157,7 @@ public class ReloadHelper {
             return;
         }
 
-        if (!infinite && available < needed) {
+        if (!hasTorpedoAmmoSource(infinite, available, needed)) {
             player.displayClientMessage(Component.translatable("message.piranport.insufficient_same_ammo"), true);
             return;
         }
@@ -145,7 +171,8 @@ public class ReloadHelper {
         // ShipCoreCombat 的开火前检查只读 SLOT_COOLDOWNS，写了它会让"刚装填完"的武器被静默拦截
         // 5-7 秒（无任何提示），即玩家报告的"显示装填了但无法发射"。
         // 保留 WEAPON_COOLDOWN 是为了让 ReloadProgressHudLayer 继续画装填进度条。
-        int cooldownTicks = TransformationManager.boostedCooldown(player, durationTicks);
+        int cooldownTicks = Math.max(1,
+                TransformationManager.boostedCooldown(player, sanitizeTorpedoReloadTicks(durationTicks)));
         launcherStack.set(ModDataComponents.WEAPON_COOLDOWN.get(),
                 WeaponCooldown.of(player.getUUID(), player.level().getGameTime(), cooldownTicks));
 

@@ -77,8 +77,17 @@ public class TorpedoLauncherItem extends Item {
         return tubeCount;
     }
 
+    /** 供应商返回 0/负数/离谱值时使用的合法兜底（三联装默认冷却）。 */
+    public static final int FALLBACK_COOLDOWN_TICKS = 100;
+    /** 超过这个值的冷却视为坏数据：不能让它变成「永不到期」的读条。 */
+    public static final int MAX_REASONABLE_COOLDOWN_TICKS = 12_000;
+
+    public static int sanitizeCooldownTicks(int ticks) {
+        return ticks > 0 && ticks <= MAX_REASONABLE_COOLDOWN_TICKS ? ticks : FALLBACK_COOLDOWN_TICKS;
+    }
+
     public int getCooldownTicks() {
-        return cooldownSupplier.getAsInt();
+        return sanitizeCooldownTicks(cooldownSupplier.getAsInt());
     }
 
     @Override
@@ -108,6 +117,12 @@ public class TorpedoLauncherItem extends Item {
         if (action != ClickAction.SECONDARY) return false;
         if (other.isEmpty() || !(other.getItem() instanceof TorpedoItem torpedo)) return false;
         if (torpedo.getCaliber() != caliber) return false;
+
+        // R 读条期间不能再拖入装填：PENDING 到期会再扣一组弹药，与手动拖入叠加会重复扣弹。
+        if (stack.get(ModDataComponents.PENDING_TORPEDO_RELOAD.get()) != null) {
+            player.displayClientMessage(Component.translatable("message.piranport.already_reloading"), true);
+            return false;
+        }
 
         // Check if player has transformed core with 鱼雷再装填 enhancement
         ItemStack coreStack = com.piranport.combat.TransformationManager.findTransformedCore(player);

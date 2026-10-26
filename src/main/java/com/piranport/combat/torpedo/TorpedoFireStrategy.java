@@ -1,21 +1,16 @@
 package com.piranport.combat.torpedo;
 
-import com.piranport.ammo.CreativeAmmoCache;
 import com.piranport.combat.TorpedoGuidanceManager;
 import com.piranport.combat.TransformationManager;
 import com.piranport.combat.util.CombatFireUtils;
 import com.piranport.component.LoadedAmmo;
-import com.piranport.component.SelectedAmmoType;
 import com.piranport.component.SlotCooldowns;
 import com.piranport.component.WeaponCooldown;
-import com.piranport.debug.PiranPortDebug;
 import com.piranport.entity.TorpedoEntity;
 import com.piranport.item.ExperienceShellItem;
-import com.piranport.item.ShipCoreItem;
 import com.piranport.item.TorpedoItem;
 import com.piranport.item.TorpedoLauncherItem;
 import com.piranport.registry.ModDataComponents;
-import com.piranport.registry.ModItems;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -32,7 +27,8 @@ import net.minecraft.world.phys.Vec3;
 /**
  * 鱼雷开火策略 — 从 {@code ShipCoreCombat} 提取的鱼雷发射相关静态方法集合。
  *
- * <p>包含手动模式开火、背包模式开火、以及创造模式默认鱼雷类型解析。
+ * <p>2026-10-26 决策：生存与创造统一<b>只认膛内弹药</b>。没有已装填鱼雷时不得发射，
+ * 不再按「鱼雷再装填」部件分流到背包取弹；创造模式也不能用免消耗旁路绕过装填状态。
  *
  * <p><b>线程模型</b>：服务端主线程。
  * <p><b>设计</b>：纯静态方法集合，无实例状态。
@@ -43,90 +39,35 @@ public class TorpedoFireStrategy {
 
     private TorpedoFireStrategy() {}
 
+    /** 是否满足一次完整齐射：膛内必须有弹，且数量覆盖全部鱼雷管。 */
+    public static boolean hasFullSalvo(LoadedAmmo loaded, int tubeCount) {
+        return loaded != null && loaded.hasAmmo() && loaded.count() >= tubeCount;
+    }
+
+    /**
+     * 膛内弹齐射。所有模式（含创造）都走这一条路径。
+     */
     public static void fireTorpedosManualMode(Level level, Player player, ItemStack coreStack,
             Inventory inv, int weaponSlot, TorpedoLauncherItem launcher, SlotCooldowns cooldowns) {
         ItemStack launcherStack = weaponSlot == 40 ? inv.offhand.get(0) : inv.items.get(weaponSlot);
         int tubeCount = launcher.getTubeCount();
         int caliber = launcher.getCaliber();
 
-        // 膛内有弹优先用膛内弹药发射（含创造模式）——发射器装填状态比"背包里有没有鱼雷"权威。
-        // 创造模式且膛内无弹时才扫背包找 TorpedoItem 当 fallback。
-        LoadedAmmo chambered = launcherStack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
-        // 创造模式或弹药库勾选同口径鱼雷时，空膛也能直接发射（与创造模式行为一致）。
-        TorpedoItem cacheTorpedo = CreativeAmmoCache.findInfiniteTorpedo(player, caliber);
-        if ((player.getAbilities().instabuild || cacheTorpedo != null) && !chambered.hasAmmo()) {
-            TorpedoItem torpedoType = null;
-            int coreSlot = -1;
-            for (int i = 0; i < inv.items.size(); i++) {
-                if (i == weaponSlot) continue;
-                ItemStack s = inv.items.get(i);
-                if (s.getItem() instanceof ShipCoreItem && TransformationManager.isTransformed(s)) {
-                    coreSlot = i;
-                }
-                if (torpedoType == null && s.getItem() instanceof TorpedoItem ti && ti.getCaliber() == caliber) {
-                    torpedoType = ti;
-                }
-            }
-            if (torpedoType == null && weaponSlot != 40 && coreSlot != 40) {
-                ItemStack oh = inv.offhand.get(0);
-                if (oh.getItem() instanceof TorpedoItem ti && ti.getCaliber() == caliber) {
-                    torpedoType = ti;
-                }
-            }
-
-            if (torpedoType == null) torpedoType = cacheTorpedo;
-            if (torpedoType == null) {
-                player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
-                return;
-            }
-
-            String ammoId = BuiltInRegistries.ITEM.getKey(torpedoType).toString();
-            boolean magnetic = CombatFireUtils.isMagneticTorpedo(ammoId);
-            boolean wireGuided = CombatFireUtils.isWireGuidedTorpedo(ammoId);
-            boolean acousticHoming = CombatFireUtils.isAcousticTorpedo(ammoId);
-            float torpedoSpeed = torpedoType.getSpeed();
-            float[] angles = CombatFireUtils.getSpreadAngles(tubeCount);
-            Vec3 look = player.getLookAngle();
-
-            TorpedoEntity primaryGuided = null;
-            for (float angle : angles) {
-                Vec3 dir = CombatFireUtils.rotateHorizontal(look, Math.toRadians(angle));
-                TorpedoEntity torpedo = new TorpedoEntity(level, player, caliber);
-                torpedo.setDamage(ExperienceShellItem.applyDamageBonus(player, torpedoType.getDamage()));
-                torpedo.setSpeed(torpedoType.getSpeed());
-                torpedo.setLifetime(torpedoType.getLifetimeTicks());
-                if (magnetic) torpedo.setMagnetic(true);
-                if (wireGuided) torpedo.setWireGuided(true);
-                if (acousticHoming) torpedo.setAcoustic(true);
-                torpedo.setPos(player.getX() + dir.x * 0.5, player.getEyeY() - 0.3, player.getZ() + dir.z * 0.5);
-                torpedo.setDeltaMovement(dir.x * torpedoSpeed, 0, dir.z * torpedoSpeed);
-                level.addFreshEntity(torpedo);
-                if (wireGuided && primaryGuided == null) primaryGuided = torpedo;
-            }
-            if (primaryGuided != null && player instanceof ServerPlayer sp) {
-                TorpedoGuidanceManager.startGuidance(sp, primaryGuided);
-            }
-
-            int cooldown = ExperienceShellItem.applyCooldownReduction(player, launcher.getCooldownTicks());
-            int boostedCooldown = TransformationManager.boostedCooldown(player, cooldown);
-            coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
-                    cooldowns.withSlotCooldown(player.getUUID(), weaponSlot, boostedCooldown, level.getGameTime()));
-            launcherStack.set(ModDataComponents.WEAPON_COOLDOWN.get(),
-                    WeaponCooldown.of(player.getUUID(), level.getGameTime(), boostedCooldown));
-
-            level.playSound(null, player.getX(), player.getY(), player.getZ(),
-                    SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 0.4f, 0.4f);
+        // 装填读条中不得开火：R 只启动读条，到期由服务端结算；
+        // 结算前膛内仍是空的，这里先给提示，避免玩家以为还能继续射击。
+        if (launcherStack.get(ModDataComponents.PENDING_TORPEDO_RELOAD.get()) != null) {
+            player.displayClientMessage(Component.translatable("message.piranport.already_reloading"), true);
             return;
         }
 
-        // Survival mode: use LOADED_AMMO component
+        // 生存与创造一致：只认膛内弹药。没有已装填鱼雷时不得发射，
+        // 创造模式也不能用「扫描背包 + 免消耗」绕过装填状态。
         LoadedAmmo loaded = launcherStack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
-        if (!loaded.hasAmmo() || loaded.count() < tubeCount) {
+        if (!hasFullSalvo(loaded, tubeCount)) {
             player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
             return;
         }
 
-        // Use caliber from method start
         int cooldown = ExperienceShellItem.applyCooldownReduction(player, launcher.getCooldownTicks());
         boolean magnetic = CombatFireUtils.isMagneticTorpedo(loaded.ammoItemId());
         boolean wireGuided = CombatFireUtils.isWireGuidedTorpedo(loaded.ammoItemId());
@@ -187,225 +128,5 @@ public class TorpedoFireStrategy {
 
         level.playSound(null, player.getX(), player.getY(), player.getZ(),
                 SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 0.4f, 0.4f);
-    }
-
-    public static void fireTorpedosInventoryMode(Level level, Player player, ItemStack coreStack,
-                                            Inventory inv, int weaponSlot, int coreSlot,
-                                            TorpedoLauncherItem launcher, SlotCooldowns cooldowns) {
-        ItemStack launcherStack = weaponSlot == 40 ? inv.offhand.get(0) : inv.items.get(weaponSlot);
-        LoadedAmmo loaded = launcherStack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
-
-        // 优先使用已装填弹药（装填设施装的），用完后才自动从背包装填
-        if (loaded.hasAmmo() && loaded.count() >= launcher.getTubeCount()) {
-            fireTorpedosManualMode(level, player, coreStack, inv, weaponSlot, launcher, cooldowns);
-            return;
-        }
-
-        int caliber = launcher.getCaliber();
-        int tubeCount = launcher.getTubeCount();
-        int cooldown = ExperienceShellItem.applyCooldownReduction(player, launcher.getCooldownTicks());
-
-        // Tab 偏好优先；偏好不足一整组时回退到原有背包顺序。
-        TorpedoItem torpedoType = null;
-        SelectedAmmoType selected = launcherStack.getOrDefault(
-                ModDataComponents.SELECTED_AMMO_TYPE.get(), SelectedAmmoType.EMPTY);
-        if (selected.hasSelection()) {
-            ResourceLocation selectedId = ResourceLocation.tryParse(selected.ammoItemId());
-            Item selectedItem = selectedId == null ? net.minecraft.world.item.Items.AIR
-                    : BuiltInRegistries.ITEM.get(selectedId);
-            if (selectedItem instanceof TorpedoItem selectedTorpedo
-                    && selectedTorpedo.getCaliber() == caliber) {
-                boolean selectedInfinite = player.getAbilities().instabuild
-                        || CreativeAmmoCache.isInfinite(player, selectedTorpedo);
-                int selectedCount = 0;
-                if (!selectedInfinite) {
-                    for (int i = 0; i < inv.items.size(); i++) {
-                        if (i == coreSlot || i == weaponSlot) continue;
-                        ItemStack s = inv.items.get(i);
-                        if (!s.isEmpty() && s.getItem() == selectedTorpedo) selectedCount += s.getCount();
-                    }
-                    if (weaponSlot != 40 && coreSlot != 40) {
-                        ItemStack oh = inv.offhand.get(0);
-                        if (!oh.isEmpty() && oh.getItem() == selectedTorpedo) selectedCount += oh.getCount();
-                    }
-                }
-                if (selectedInfinite || selectedCount >= tubeCount) torpedoType = selectedTorpedo;
-            }
-        }
-        for (int i = 0; i < inv.items.size(); i++) {
-            if (torpedoType != null) break;
-            if (i == coreSlot || i == weaponSlot) continue;
-            ItemStack s = inv.items.get(i);
-            if (!s.isEmpty() && s.getItem() instanceof TorpedoItem ti && ti.getCaliber() == caliber) {
-                torpedoType = ti;
-                break;
-            }
-        }
-        if (torpedoType == null && weaponSlot != 40 && coreSlot != 40) {
-            ItemStack oh = inv.offhand.get(0);
-            if (!oh.isEmpty() && oh.getItem() instanceof TorpedoItem ti && ti.getCaliber() == caliber) {
-                torpedoType = ti;
-            }
-        }
-
-        // 背包里没有实体鱼雷时，使用创造模式弹药库勾选的同口径鱼雷。
-        boolean infinite = false;
-        if (torpedoType == null) {
-            torpedoType = CreativeAmmoCache.findInfiniteTorpedo(player, caliber);
-            infinite = torpedoType != null;
-        }
-        if (torpedoType != null && !infinite) {
-            infinite = CreativeAmmoCache.isInfinite(player, torpedoType);
-        }
-
-        // 创造模式 / 弹药库都没有时才回退到默认鱼雷
-        if (torpedoType == null) {
-            if (!player.getAbilities().instabuild) {
-                player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
-                return;
-            }
-            // 创造模式：使用默认鱼雷
-            torpedoType = getDefaultTorpedoForCaliber(caliber);
-            if (torpedoType == null) {
-                player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
-                return;
-            }
-        }
-
-        // Creative mode / 弹药库勾选：skip ammo consumption
-        if (!player.getAbilities().instabuild && !infinite) {
-            // Count available ammo of the same type
-            int available = 0;
-            for (int i = 0; i < inv.items.size(); i++) {
-                if (i == coreSlot || i == weaponSlot) continue;
-                ItemStack s = inv.items.get(i);
-                if (!s.isEmpty() && s.getItem() == torpedoType) {
-                    available += s.getCount();
-                }
-            }
-            if (weaponSlot != 40 && coreSlot != 40) {
-                ItemStack oh = inv.offhand.get(0);
-                if (!oh.isEmpty() && oh.getItem() == torpedoType) {
-                    available += oh.getCount();
-                }
-            }
-
-            if (available < tubeCount) {
-                player.displayClientMessage(Component.translatable("message.piranport.insufficient_same_ammo"), true);
-                return;
-            }
-
-            // Consume ammo before spawning entities (prevent TOCTOU)
-            int toConsume = tubeCount;
-            for (int i = 0; i < inv.items.size() && toConsume > 0; i++) {
-                if (i == coreSlot || i == weaponSlot) continue;
-                ItemStack s = inv.items.get(i);
-                if (!s.isEmpty() && s.getItem() == torpedoType) {
-                    int take = Math.min(toConsume, s.getCount());
-                    PiranPortDebug.consumeAmmo(player.getUUID(), s, take);
-                    toConsume -= take;
-                }
-            }
-            if (toConsume > 0 && weaponSlot != 40 && coreSlot != 40) {
-                ItemStack oh = inv.offhand.get(0);
-                if (!oh.isEmpty() && oh.getItem() == torpedoType) {
-                    int take = Math.min(toConsume, oh.getCount());
-                    PiranPortDebug.consumeAmmo(player.getUUID(), oh, take);
-                    toConsume -= take;
-                }
-            }
-        }
-
-        boolean magnetic = torpedoType.isMagnetic();
-        boolean acousticHoming = torpedoType.isAcoustic();
-        boolean wireGuided = torpedoType.isWireGuided();
-        boolean oxygen = torpedoType.isOxygen();
-        float torpedoSpeed = torpedoType.getSpeed();
-        float[] angles = CombatFireUtils.getSpreadAngles(tubeCount);
-        Vec3 look = player.getLookAngle();
-
-        TorpedoEntity primaryGuided = null;
-        for (float angle : angles) {
-            Vec3 dir = CombatFireUtils.rotateHorizontal(look, Math.toRadians(angle));
-            TorpedoEntity torpedo = new TorpedoEntity(level, player, caliber);
-            torpedo.setDamage(ExperienceShellItem.applyDamageBonus(player, torpedoType.getDamage()));
-            torpedo.setSpeed(torpedoType.getSpeed());
-            torpedo.setLifetime(torpedoType.getLifetimeTicks());
-            if (magnetic) torpedo.setMagnetic(true);
-            if (acousticHoming) torpedo.setAcoustic(true);
-            if (oxygen) torpedo.setOxygen(true);
-            if (wireGuided) torpedo.setWireGuided(true);
-            torpedo.setPos(player.getX() + dir.x * 0.5, player.getEyeY() - 0.3, player.getZ() + dir.z * 0.5);
-            torpedo.setDeltaMovement(dir.x * torpedoSpeed, 0, dir.z * torpedoSpeed);
-            level.addFreshEntity(torpedo);
-            if (wireGuided && primaryGuided == null) primaryGuided = torpedo;
-        }
-        if (primaryGuided != null && player instanceof ServerPlayer sp) {
-            TorpedoGuidanceManager.startGuidance(sp, primaryGuided);
-        }
-
-        // Damage launcher in-inventory
-        boolean launcherBroken = false;
-        if (!launcherStack.isEmpty()) {
-            int newDamage = launcherStack.getDamageValue() + 1;
-            if (newDamage >= launcherStack.getMaxDamage()) {
-                if (weaponSlot == 40) inv.offhand.set(0, ItemStack.EMPTY);
-                else inv.items.set(weaponSlot, ItemStack.EMPTY);
-                launcherBroken = true;
-                level.playSound(null, player.getX(), player.getY(), player.getZ(),
-                        SoundEvents.ITEM_BREAK, SoundSource.PLAYERS, 0.8f, 0.8f + level.random.nextFloat() * 0.4f);
-            } else {
-                launcherStack.setDamageValue(newDamage);
-            }
-        }
-
-        // Check if enough torpedoes remain for next salvo
-        int nextAvailable = 0;
-        for (int i = 0; i < inv.items.size(); i++) {
-            if (i == coreSlot || i == weaponSlot) continue;
-            ItemStack s = inv.items.get(i);
-            if (!s.isEmpty() && s.getItem() instanceof TorpedoItem ti && ti.getCaliber() == caliber) {
-                nextAvailable += s.getCount();
-            }
-        }
-        if (weaponSlot != 40 && coreSlot != 40) {
-            ItemStack oh = inv.offhand.get(0);
-            if (!oh.isEmpty() && oh.getItem() instanceof TorpedoItem ti && ti.getCaliber() == caliber) {
-                nextAvailable += oh.getCount();
-            }
-        }
-
-        if (!launcherBroken) {
-            if (nextAvailable >= tubeCount) {
-                int boostedCooldown = TransformationManager.boostedCooldown(player, cooldown);
-                coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
-                        cooldowns.withSlotCooldown(player.getUUID(), weaponSlot, boostedCooldown, level.getGameTime()));
-                launcherStack.set(ModDataComponents.WEAPON_COOLDOWN.get(),
-                        WeaponCooldown.of(player.getUUID(), level.getGameTime(), boostedCooldown));
-            } else {
-                // 背包弹药不足，设置短冷却提示玩家需要补充弹药
-                int penaltyTicks = 10;
-                coreStack.set(ModDataComponents.SLOT_COOLDOWNS.get(),
-                        cooldowns.withSlotCooldown(player.getUUID(), weaponSlot, penaltyTicks, level.getGameTime()));
-                launcherStack.set(ModDataComponents.WEAPON_COOLDOWN.get(),
-                        WeaponCooldown.of(player.getUUID(), level.getGameTime(), penaltyTicks));
-            }
-        }
-
-
-        level.playSound(null, player.getX(), player.getY(), player.getZ(),
-                SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 0.4f, 0.4f);
-    }
-
-    /**
-     * 获取指定口径的默认鱼雷类型（创造模式使用）
-     */
-    public static TorpedoItem getDefaultTorpedoForCaliber(int caliber) {
-        return switch (caliber) {
-            case 533 -> (TorpedoItem) ModItems.TORPEDO_533MM.get();
-            case 610 -> (TorpedoItem) ModItems.TORPEDO_610MM.get();
-            case 720 -> (TorpedoItem) ModItems.TORPEDO_720MM_TYPE0.get();
-            default -> null;
-        };
     }
 }

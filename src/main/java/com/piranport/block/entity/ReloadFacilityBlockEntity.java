@@ -272,6 +272,10 @@ public class ReloadFacilityBlockEntity extends BlockEntity implements MenuProvid
             }
             ItemStack result = launcherStack.copy();
             result.set(ModDataComponents.LOADED_AMMO.get(), new LoadedAmmo(maxLoad, ammoId));
+            // 设施产出必须是干净的满膛态：输入物品上残留的 R 读条 pending / 冷却不能一起复制出去，
+            // 否则玩家取出后 pending 到期还会再扣一组弹药。
+            result.remove(ModDataComponents.PENDING_TORPEDO_RELOAD.get());
+            result.remove(ModDataComponents.WEAPON_COOLDOWN.get());
 
             be.itemHandler.setStackInSlot(OUTPUT_SLOT, result);
             be.itemHandler.setStackInSlot(LAUNCHER_SLOT, ItemStack.EMPTY);

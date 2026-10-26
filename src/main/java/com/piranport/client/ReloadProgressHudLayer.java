@@ -3,7 +3,6 @@ package com.piranport.client;
 import com.piranport.PiranPort;
 import com.piranport.artillery.ArtilleryItem;
 import com.piranport.combat.TransformationManager;
-import com.piranport.component.LoadedAmmo;
 import com.piranport.component.WeaponCooldown;
 import com.piranport.item.AircraftItem;
 import com.piranport.item.DepthChargeLauncherItem;
@@ -82,8 +81,9 @@ public class ReloadProgressHudLayer {
     /**
      * 该武器是否用大读条显示 {@code WEAPON_COOLDOWN}。
      *
-     * <p>没有装填手段的空膛鱼雷发射器，开火后的冷却不是"装填中"，不画读条，
-     * 与原物品图标小读条的行为保持一致。
+     * <p>鱼雷发射器只有装备了「鱼雷再装填」部件才可能进入装填状态，才画读条。
+     * 没有部件的 WEAPON_COOLDOWN 只是发射冷却（旧存档里还可能是异常长值），
+     * 不是"装填中"，不画读条。
      */
     private static boolean hasReloadBar(ItemStack stack, Player player) {
         if (stack.isEmpty()) return false;
@@ -96,13 +96,8 @@ public class ReloadProgressHudLayer {
         WeaponCooldown cooldown = stack.get(ModDataComponents.WEAPON_COOLDOWN.get());
         if (cooldown == null) return false;
         if (stack.getItem() instanceof TorpedoLauncherItem) {
-            LoadedAmmo loaded = stack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
-            if (!loaded.hasAmmo()) {
-                ItemStack core = TransformationManager.findTransformedCore(player);
-                boolean canReload = !core.isEmpty()
-                        && TransformationManager.hasTorpedoReloadEquipped(player, core);
-                if (!canReload) return false;
-            }
+            ItemStack core = TransformationManager.findTransformedCore(player);
+            if (core.isEmpty() || !TransformationManager.hasTorpedoReloadEquipped(player, core)) return false;
         }
         return true;
     }

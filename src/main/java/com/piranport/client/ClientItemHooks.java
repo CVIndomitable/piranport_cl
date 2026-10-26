@@ -16,7 +16,6 @@ import com.piranport.dungeon.client.TownScrollScreen;
 import com.piranport.entity.AircraftEntity;
 import com.piranport.item.AircraftItem;
 import com.piranport.item.MissileLauncherItem;
-import com.piranport.item.TorpedoItem;
 import com.piranport.item.TorpedoLauncherItem;
 import com.piranport.network.CannonImpactEffectPayload;
 import com.piranport.registry.ModDataComponents;
@@ -324,60 +323,16 @@ public final class ClientItemHooks implements com.piranport.platform.ClientBridg
      * 鱼雷发射器「现在能否开火」。膛内状态已由 {@link TorpedoLauncherItem#appendHoverText} 显示，
      * 这里不再重复输出装填行，只保留开火判定。
      *
-     * <p>判定必须与 {@code ShipCoreCombat.fireWeaponAtSlot} 的实际分支一致：
-     * 背包取弹只有在装备了「鱼雷再装填」时才会走 inventory 模式；没有该强化时，
-     * 服务端只认膛内弹药。创造模式下：
-     * <ul>
-     *   <li>装了再装填：无弹也能用默认型号发射；</li>
-     *   <li>没装再装填：手动分支仍可从背包取弹发射。</li>
-     * </ul>
-     * 旧实现只看「膛内已装填 || 背包有雷」，因此在没有再装填强化时也会显示可开火，
-     * 实际扣扳机却提示弹药不足。
+     * <p>2026-10-26 决策：生存/创造一致，<b>只认膛内弹药</b>。创造模式既不能用
+     * 「背包扫描 + 免消耗」发射，也不能跳过装填状态；tooltip 必须与服务端一致。
      */
-    private static void appendTorpedoStatus(Player player, ItemStack coreStack, TorpedoLauncherItem launcher,
-                                            LoadedAmmo loaded, Inventory inv, List<Component> tooltip) {
+    private static void appendTorpedoStatus(TorpedoLauncherItem launcher, LoadedAmmo loaded,
+                                            List<Component> tooltip) {
         int tubes = launcher.getTubeCount();
         // hasAmmo() 排除 count>0 但 ammoItemId 为空的脏数据（旧存档/组件编辑）
-        boolean chambered = loaded.hasAmmo() && loaded.count() >= tubes;
-        boolean creative = player.getAbilities().instabuild;
-        boolean infiniteTorpedo = CreativeAmmoCache.hasInfiniteTorpedo(player, launcher.getCaliber());
-        boolean reloadEquipped = TransformationManager.hasTorpedoReloadEquipped(player, coreStack);
-        boolean inventorySalvo = infiniteTorpedo || countInventoryTorpedoes(launcher, inv) >= tubes;
-        boolean canFire = chambered
-                || infiniteTorpedo
-                || (reloadEquipped && creative)
-                || (inventorySalvo && (creative || reloadEquipped));
+        boolean canFire = loaded.hasAmmo() && loaded.count() >= tubes;
         tooltip.add(Component.translatable(canFire ? "tooltip.piranport.torpedo.can_fire" : "tooltip.piranport.torpedo.cannot_fire")
                 .withStyle(canFire ? ChatFormatting.GREEN : ChatFormatting.RED));
-    }
-
-    /**
-     * 背包（含副手）里可用于取弹的同口径鱼雷数量。
-     *
-     * <p>与 {@code TorpedoFireStrategy.fireTorpedosInventoryMode} 一致：先取第一种同口径鱼雷作为弹种，
-     * 只统计该弹种，不跨弹种相加。这里是客户端预测，只决定 tooltip 显示，真正能不能打仍由服务端裁决。
-     */
-    private static int countInventoryTorpedoes(TorpedoLauncherItem launcher, Inventory inv) {
-        int caliber = launcher.getCaliber();
-        Item type = null;
-        for (ItemStack s : inv.items) {
-            if (!s.isEmpty() && s.getItem() instanceof TorpedoItem ti && ti.getCaliber() == caliber) {
-                type = ti;
-                break;
-            }
-        }
-        ItemStack oh = inv.offhand.get(0);
-        if (type == null && !oh.isEmpty() && oh.getItem() instanceof TorpedoItem ti && ti.getCaliber() == caliber) {
-            type = ti;
-        }
-        if (type == null) return 0;
-
-        int available = 0;
-        for (ItemStack s : inv.items) {
-            if (s.is(type)) available += s.getCount();
-        }
-        if (oh.is(type)) available += oh.getCount();
-        return available;
     }
 
     /**
@@ -445,7 +400,7 @@ public final class ClientItemHooks implements com.piranport.platform.ClientBridg
         } else if (needsLoadedAmmo) {
             LoadedAmmo loaded = stack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
             if (stack.getItem() instanceof TorpedoLauncherItem tl) {
-                appendTorpedoStatus(mc.player, coreStack, tl, loaded, inv, tooltip);
+                appendTorpedoStatus(tl, loaded, tooltip);
                 return;
             }
             if (stack.getItem() instanceof com.piranport.artillery.ArtilleryItem) {

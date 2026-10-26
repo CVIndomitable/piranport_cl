@@ -113,6 +113,15 @@ public final class WeaponReloadLifecycle {
         com.piranport.component.PendingTorpedoReload pending =
                 stack.get(ModDataComponents.PENDING_TORPEDO_RELOAD.get());
         if (pending == null || !pending.isValid()) return;
+
+        // 另一条装填路径（手动拖入 / 装填设施 / 旧存档）已经把膛装满时，
+        // pending 再结算会重复扣一组弹药；直接丢弃 pending，保留已装填结果。
+        LoadedAmmo loaded = stack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
+        if (loaded.hasAmmo() && loaded.count() >= launcher.getTubeCount()) {
+            stack.remove(ModDataComponents.PENDING_TORPEDO_RELOAD.get());
+            return;
+        }
+
         WeaponCooldown cooldown = stack.getOrDefault(ModDataComponents.WEAPON_COOLDOWN.get(), WeaponCooldown.EMPTY);
         if (cooldown.isOnCooldown(now)) return;
 

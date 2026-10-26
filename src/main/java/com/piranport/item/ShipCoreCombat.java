@@ -103,13 +103,10 @@ public final class ShipCoreCombat {
             return false;
         }
 
-        // Torpedo launcher — requires 鱼雷再装填 enhancement for auto-reload
+        // 鱼雷发射器：只认膛内弹药。生存/创造一致，不再按再装填部件分流到「背包取弹」。
+        // WHY：2026-10-26 决策要求没有已装填鱼雷时不得发射，创造模式也不能跳过装填状态。
         if (weapon.getItem() instanceof TorpedoLauncherItem torpedoLauncher) {
-            if (TransformationManager.hasTorpedoReloadEquipped(player, coreStack)) {
-                TorpedoFireStrategy.fireTorpedosInventoryMode(level, player, coreStack, inv, weaponSlot, coreInventorySlot, torpedoLauncher, cooldowns);
-            } else {
-                TorpedoFireStrategy.fireTorpedosManualMode(level, player, coreStack, inv, weaponSlot, torpedoLauncher, cooldowns);
-            }
+            TorpedoFireStrategy.fireTorpedosManualMode(level, player, coreStack, inv, weaponSlot, torpedoLauncher, cooldowns);
             return true;
         }
 

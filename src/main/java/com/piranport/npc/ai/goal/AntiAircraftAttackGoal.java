@@ -1,8 +1,10 @@
 package com.piranport.npc.ai.goal;
 
 import com.piranport.config.ModEquipmentConfig;
+import com.piranport.config.ModProjectilesConfig;
 import com.piranport.entity.AircraftEntity;
 import com.piranport.entity.DeepOceanProjectileEntity;
+import com.piranport.entity.MissileEntity;
 import com.piranport.npc.deepocean.AbstractDeepOceanEntity;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.Goal;
@@ -35,7 +37,7 @@ public class AntiAircraftAttackGoal extends Goal {
     private final AbstractDeepOceanEntity mob;
     private final float damage;
     private final int fireInterval;
-    /** 防驱 = 导弹（GUIDED，全程比例导引）；高级轻巡 = 火炮（DIRECT 直射 + 近炸）。 */
+    /** 防驱 = 现成 ANTI_AIR 导弹实体；高级轻巡 = DIRECT 直射火炮 + 近炸。 */
     private final boolean guided;
     /**
      * 对空索敌距离（格）；&lt;= 0 时沿用 {@link Attributes#FOLLOW_RANGE}。
@@ -148,29 +150,59 @@ public class AntiAircraftAttackGoal extends Goal {
         Vec3 targetCenter = target.position().add(0, target.getBbHeight() * 0.5, 0);
         Vec3 targetVelocity = target.getDeltaMovement();
 
-        double speed = guided
-                ? ModEquipmentConfig.AA_GUIDED_SHELL_SPEED.get()
-                : ModEquipmentConfig.AA_GUN_SHELL_SPEED.get();
-        float inaccuracy = (float) (double) (guided
-                ? ModEquipmentConfig.AA_GUIDED_INACCURACY.get()
-                : ModEquipmentConfig.AA_GUN_INACCURACY.get());
+        if (guided) {
+            fireAntiAirMissile(target, eye, targetCenter, targetVelocity);
+        } else {
+            fireFlakShell(target, eye, targetCenter, targetVelocity);
+        }
+    }
 
-        // 提前量：把目标外推到弹丸抵达时刻。DIRECT/GUIDED 都不吃重力，因此只需匹配
-        // 「沿直线飞过的路程」，不需要抛物线抬升。
+    /**
+     * 防驱：直接复用现成的 {@link MissileEntity} ANTI_AIR。
+     *
+     * <p>WHY 不自造制导炮弹：ANTI_AIR 已支持锁定 {@code AircraftEntity}、12°/tick 制导、
+     * 爆炸伤害与客户端渲染，速度曲线也在终端（{@code global.missile_anti_air.*}）。
+     * 这里只负责给出一个合理的初始朝向，之后交给导弹自己的制导。</p>
+     *
+     * <p>explosionPower 传 0：防空导弹只打飞机，不应破坏方块或对水面造成爆炸伤害；
+     * 命中伤害走 ANTI_AIR 分支的 {@code target.hurt(explosion(...), damage)}。</p>
+     */
+    private void fireAntiAirMissile(AircraftEntity target, Vec3 eye, Vec3 targetCenter, Vec3 targetVelocity) {
+        MissileEntity.MissileType type = MissileEntity.MissileType.ANTI_AIR;
+
+        // 导弹从极低速持续加速，不能沿用炮弹的 0.99 阻力模型；按它的加速曲线单独解算提前量。
+        double flightTicks = solveMissileLeadTicks(eye, targetCenter, targetVelocity);
+        Vec3 aim = targetCenter.add(targetVelocity.scale(flightTicks)).subtract(eye);
+        if (aim.lengthSqr() < 1.0E-6) {
+            aim = new Vec3(0.0, 1.0, 0.0);
+        }
+
+        MissileEntity missile = new MissileEntity(mob.level(), type, damage, 0.0f, 0.0f,
+                "piranport:missile_projectile_anti_air");
+        missile.setOwner(mob);
+        missile.setPos(eye.x, eye.y, eye.z);
+        // ANTI_AIR 的 isValidTarget 对 AircraftEntity 直接返回 true；手动目标会跳过自动搜索。
+        missile.setTrackedTarget(target);
+        missile.setDeltaMovement(aim.normalize().scale(type.initialSpeed()));
+        mob.level().addFreshEntity(missile);
+    }
+
+    /** 高级轻巡：DIRECT 直射 + 近炸，无制导。 */
+    private void fireFlakShell(AircraftEntity target, Vec3 eye, Vec3 targetCenter, Vec3 targetVelocity) {
+        double speed = ModEquipmentConfig.AA_GUN_SHELL_SPEED.get();
+        float inaccuracy = (float) (double) ModEquipmentConfig.AA_GUN_INACCURACY.get();
+
+        // 提前量：把目标外推到弹丸抵达时刻。DIRECT 不吃重力，只需匹配「沿直线飞过的路程」。
         double flightTicks = solveLeadTicks(eye, targetCenter, targetVelocity, speed);
-        Vec3 aimPoint = targetCenter.add(targetVelocity.scale(flightTicks));
-        Vec3 aim = aimPoint.subtract(eye);
+        Vec3 aim = targetCenter.add(targetVelocity.scale(flightTicks)).subtract(eye);
         if (aim.lengthSqr() < 1.0E-6) {
             // 目标与炮口几乎重合：给一个朝上的兜底方向，避免 normalize 出 NaN。
             aim = new Vec3(0.0, 1.0, 0.0);
         }
 
-        DeepOceanProjectileEntity.BallisticType ballistic = guided
-                ? DeepOceanProjectileEntity.BallisticType.GUIDED
-                : DeepOceanProjectileEntity.BallisticType.DIRECT;
         DeepOceanProjectileEntity shell = new DeepOceanProjectileEntity(
-                mob.level(), mob, damage, 0.0f, ballistic);
-        // DIRECT 也记录目标：近炸结算时优先打这个目标，而不是范围内随便一架飞机。
+                mob.level(), mob, damage, 0.0f, DeepOceanProjectileEntity.BallisticType.DIRECT);
+        // 记录目标：近炸结算时优先打这个目标，而不是范围内随便一架飞机。
         shell.setTrackingTarget(target);
         // 近炸半径复用深海炮弹参数（默认 3.0）；防空弹爆炸威力为 0，杀伤完全走近炸直接伤害。
         shell.setProximityFuse(true,
@@ -205,5 +237,56 @@ public class AntiAircraftAttackGoal extends Goal {
         double ratio = distance * (1.0 - DRAG) / speed; // = 1 - 0.99^n
         if (ratio >= 1.0) return maxTicks;              // 该初速在寿命内飞不到这个距离
         return Math.min(Math.max(Math.log(1.0 - ratio) / Math.log(DRAG), 0.0), maxTicks);
+    }
+
+    /**
+     * 导弹的提前量解算。
+     *
+     * <p>WHY 不能复用火炮公式：ANTI_AIR 从 0.05 格/tick 起步、每 tick +0.05、极速 3.0，
+     * 前期几乎停在原地；用恒定速度或 0.99 阻力模型都会把抵达时间算得太短。</p>
+     */
+    private static double solveMissileLeadTicks(Vec3 eye, Vec3 targetCenter, Vec3 targetVelocity) {
+        MissileEntity.MissileType type = MissileEntity.MissileType.ANTI_AIR;
+        float initial = type.initialSpeed();
+        float increment = type.speedIncrement();
+        float maxSpeed = type.maxSpeed();
+        double maxTicks = ModProjectilesConfig.MISSILE_LIFETIME_TICKS.get();
+        double ticks = 0.0;
+        for (int i = 0; i < LEAD_ITERATIONS; i++) {
+            Vec3 predicted = targetCenter.add(targetVelocity.scale(ticks));
+            ticks = missileTicksForDistance(predicted.distanceTo(eye),
+                    initial, increment, maxSpeed, maxTicks);
+            if (!Double.isFinite(ticks)) ticks = 0.0;
+        }
+        return Math.min(Math.max(ticks, 0.0), maxTicks);
+    }
+
+    /** 二分反解「按导弹加速曲线飞完 distance 需要多少 tick」。 */
+    private static double missileTicksForDistance(double distance, float initial, float increment,
+                                                  float maxSpeed, double maxTicks) {
+        if (distance <= 0.0) return 0.0;
+        if (missilePathLength(maxTicks, initial, increment, maxSpeed) < distance) return maxTicks;
+        double low = 0.0;
+        double high = maxTicks;
+        for (int i = 0; i < 32; i++) {
+            double mid = (low + high) * 0.5;
+            if (missilePathLength(mid, initial, increment, maxSpeed) >= distance) high = mid;
+            else low = mid;
+        }
+        return high;
+    }
+
+    /**
+     * 导弹 n tick 内飞过的路程：第 k tick 的位移速度是 min(initial + increment×k, maxSpeed)。
+     * 加速段按等差求和，封顶后按极速线性累加。
+     */
+    private static double missilePathLength(double ticks, float initial, float increment, float maxSpeed) {
+        if (ticks <= 0.0) return 0.0;
+        if (increment <= 1.0E-6) return Math.min(initial, maxSpeed) * ticks;
+        double cappedTicks = Math.max(0.0, (maxSpeed - initial) / increment);
+        double accelerating = Math.min(ticks, cappedTicks);
+        double distance = initial * accelerating + increment * accelerating * (accelerating + 1.0) * 0.5;
+        if (ticks > cappedTicks) distance += maxSpeed * (ticks - cappedTicks);
+        return distance;
     }
 }

@@ -36,7 +36,8 @@ public class DeepOceanProjectileEntity extends ThrowableItemProjectile {
         PARABOLIC,           // Standard arc
         PARABOLIC_TRACKING,  // Arc then track after apex
         DIRECT,              // Straight line (no gravity)
-        // 全程比例导引、无重力。防空导弹专用。
+        // 全程比例导引、无重力。防空 Goal 现已改用现成的 MissileEntity ANTI_AIR，
+        // 本模式暂无调用方，保留为可用弹道类型。
         // WHY 必须追加在末尾：NBT 存的是 ordinal，插在中间会让旧存档的弹道类型整体错位。
         GUIDED
     }

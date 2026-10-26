@@ -18,6 +18,20 @@ public final class ModProjectilesConfig {
     public static final TerminalConfigValue<Double> AP_ARMOR_IGNORE =
             TerminalConfigValue.number("projectiles", "projectiles", "ap_armor_ignore", 0.5, 0.0, 1.0);
 
+    // ===== HE 爆炸（CannonProjectileEntity + HeExplosionHandler）=====
+    // WHY 拆成两个参数：原版一次 explode(power) 同时决定半径、实体伤害与方块破坏，
+    // 策划需要分别调「打人疼不疼」和「炸得宽不宽」。半径倍率写进传给 explode 的 power，
+    // 实体伤害由 HeExplosionHandler 用同一 power 自行结算（见该类注释）。
+    // 键：global.projectiles.he_entity_damage_multiplier / he_explosion_radius_multiplier。
+
+    /** HE 爆炸对实体的伤害倍率（只作用于实体伤害，不影响半径与方块破坏）。默认 1.0。 */
+    public static final TerminalConfigValue<Double> HE_ENTITY_DAMAGE_MULTIPLIER =
+            TerminalConfigValue.number("projectiles", "projectiles", "he_entity_damage_multiplier", 1.0, 0.0, 100.0);
+
+    /** HE 爆炸半径倍率（实际传给 level().explode 的 power = 基础威力 × 该值）。默认 1.0。 */
+    public static final TerminalConfigValue<Double> HE_EXPLOSION_RADIUS_MULTIPLIER =
+            TerminalConfigValue.number("projectiles", "projectiles", "he_explosion_radius_multiplier", 1.0, 0.1, 10.0);
+
     public static final TerminalConfigValue<Integer> TRIPLE_TORPEDO_LAUNCHER_COOLDOWN =
             TerminalConfigValue.integer("projectiles", "projectiles", "triple_torpedo_launcher_cooldown", 100, 1, 6000);
 

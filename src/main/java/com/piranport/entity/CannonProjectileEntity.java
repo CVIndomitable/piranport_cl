@@ -5,6 +5,7 @@ import com.piranport.artillery.config.override.ConfigOverrideManager;
 import com.piranport.combat.CannonImpactEffectBroadcaster;
 import com.piranport.combat.CombatTargeting;
 import com.piranport.combat.FireApplyHelper;
+import com.piranport.combat.HeExplosionMath;
 import com.piranport.combat.ShipTypeMitigationHelper;
 import com.piranport.config.ModArtilleryConfig;
 import com.piranport.config.ModCommonConfig;
@@ -379,7 +380,9 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
                         ? Level.ExplosionInteraction.TNT : Level.ExplosionInteraction.NONE;
                 double multiplier = getProjectileDouble("UNDERWATER_EXPLOSION_MULTIPLIER",
                         ModProjectilesConfig.UNDERWATER_EXPLOSION_MULTIPLIER.get());
-                float scaledPower = explosionPower * (float) multiplier;
+                float scaledPower = HeExplosionMath.effectivePower(
+                        explosionPower * (float) multiplier,
+                        ModProjectilesConfig.HE_EXPLOSION_RADIUS_MULTIPLIER.get());
                 level().explode(this, getX(), getY(), getZ(), scaledPower, interaction);
                 sendImpactEffect(CannonImpactEffectPayload.Kind.HE, scaledPower);
             }
@@ -490,10 +493,11 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         exploded = true;
         Level.ExplosionInteraction interaction = ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get()
                 ? Level.ExplosionInteraction.TNT : Level.ExplosionInteraction.NONE;
-        level().explode(this, getX(), getY(), getZ(), explosionPower, interaction);
-        sendImpactEffect(CannonImpactEffectPayload.Kind.VT, explosionPower);
-        level().playSound(null, getX(), getY(), getZ(),
-                ModSounds.CANNON_EXPLOSION.get(), SoundSource.PLAYERS, 2.0f, 0.9f + random.nextFloat() * 0.2f);
+        float power = radiusScaledPower();
+        // VT 近炸没有命中点：引信就是在弹头当前位置起爆的，保持用当前位置作爆心。
+        level().explode(this, getX(), getY(), getZ(), power, interaction);
+        sendImpactEffect(CannonImpactEffectPayload.Kind.VT, power);
+        playExplosionSoundAt(position());
         level().broadcastEntityEvent(this, (byte) 3);
         discard();
     }
@@ -520,14 +524,17 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
                 // HE：仅由范围爆炸造成伤害；命中目标不再额外承受一次直击伤害。
                 Level.ExplosionInteraction interaction = ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get()
                         ? Level.ExplosionInteraction.TNT : Level.ExplosionInteraction.NONE;
-                level().explode(this, getX(), getY(), getZ(), explosionPower, interaction);
+                // 爆心必须用真实命中点：super.tick 先结算命中、再 setPos，
+                // 用 getX/getY/getZ 会落后本 tick 的位移，爆炸半径经常完全够不到目标。
+                Vec3 impact = result.getLocation();
+                float power = radiusScaledPower();
+                level().explode(this, impact.x, impact.y, impact.z, power, interaction);
                 // 依据：策划决策/战斗/04-起火Debuff替代原版着火.md（HE 命中按口径概率施火）
                 if (target instanceof LivingEntity living) {
                     FireApplyHelper.tryApplyFire(living, getItem().getItem(), false);
                 }
-                sendImpactEffect(CannonImpactEffectPayload.Kind.HE, explosionPower);
-                level().playSound(null, getX(), getY(), getZ(),
-                        ModSounds.CANNON_EXPLOSION.get(), SoundSource.PLAYERS, 2.0f, 0.9f + random.nextFloat() * 0.2f);
+                sendImpactEffectAt(impact, CannonImpactEffectPayload.Kind.HE, power);
+                playExplosionSoundAt(impact);
             } else {
                 // AP：130% 基础直击伤害，与原版箭矢一样随速度衰减，忽略 50% 目标护甲
                 float apMultiplier = (float) getProjectileDouble("AP_DAMAGE_MULTIPLIER",
@@ -609,10 +616,12 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
                 boolean breakBlocks = ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get() && !isInWater();
                 Level.ExplosionInteraction interaction = breakBlocks
                         ? Level.ExplosionInteraction.TNT : Level.ExplosionInteraction.NONE;
-                level().explode(this, getX(), getY(), getZ(), explosionPower, interaction);
-                sendImpactEffect(CannonImpactEffectPayload.Kind.HE, explosionPower);
-                level().playSound(null, getX(), getY(), getZ(),
-                        ModSounds.CANNON_EXPLOSION.get(), SoundSource.PLAYERS, 2.0f, 0.9f + random.nextFloat() * 0.2f);
+                // 同 onHitEntity：super.tick 先命中后 setPos，必须用方块命中点做爆心。
+                Vec3 impact = result.getLocation();
+                float power = radiusScaledPower();
+                level().explode(this, impact.x, impact.y, impact.z, power, interaction);
+                sendImpactEffectAt(impact, CannonImpactEffectPayload.Kind.HE, power);
+                playExplosionSoundAt(impact);
             } else {
                 // AP：若抗性 < 黑曜石则破坏方块并以物品形式掉落；AP 在水中时不破坏方块
                 if (ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get() && !isInWater()) {
@@ -628,7 +637,23 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
     }
 
     private void sendImpactEffect(CannonImpactEffectPayload.Kind kind, float power) {
-        CannonImpactEffectBroadcaster.send(level(), getX(), getY(), getZ(), power, kind);
+        sendImpactEffectAt(position(), kind, power);
+    }
+
+    private void sendImpactEffectAt(Vec3 at, CannonImpactEffectPayload.Kind kind, float power) {
+        CannonImpactEffectBroadcaster.send(level(), at.x, at.y, at.z, power, kind);
+    }
+
+    private void playExplosionSoundAt(Vec3 at) {
+        level().playSound(null, at.x, at.y, at.z,
+                ModSounds.CANNON_EXPLOSION.get(), SoundSource.PLAYERS,
+                2.0f, 0.9f + random.nextFloat() * 0.2f);
+    }
+
+    /** HE 爆炸的实际威力：基础威力 × 终端半径倍率（实体伤害由 HeExplosionHandler 同源结算）。 */
+    private float radiusScaledPower() {
+        return HeExplosionMath.effectivePower(explosionPower,
+                ModProjectilesConfig.HE_EXPLOSION_RADIUS_MULTIPLIER.get());
     }
 
     @Override
@@ -738,7 +763,8 @@ public class CannonProjectileEntity extends ThrowableItemProjectile {
         }
     }
 
-    private boolean isHighExplosive() {
+    /** 供 {@link com.piranport.combat.HeExplosionHandler} 识别本模组 HE 爆炸（含 VT 近炸）。 */
+    public boolean isHighExplosive() {
         return behaviorStrategy().highExplosive();
     }
 

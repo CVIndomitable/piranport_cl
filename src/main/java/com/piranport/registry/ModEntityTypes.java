@@ -78,7 +78,9 @@ public class ModEntityTypes {
             AERIAL_BOMB = ENTITY_TYPES.register("aerial_bomb",
             () -> EntityType.Builder.<AerialBombEntity>of(AerialBombEntity::new, MobCategory.MISC)
                     .sized(0.25f, 0.25f)
-                    .clientTrackingRange(8)
+                    // 与落点标记渲染器的 MAX_DISTANCE（256 格）对齐：航弹落点圈要能覆盖
+                    // 俯冲投弹点被提前量甩远的极端情况，8 格区块（128 格）会在边界外静默丢实体。
+                    .clientTrackingRange(16)
                     .updateInterval(5)
                     .build("piranport:aerial_bomb"));
 

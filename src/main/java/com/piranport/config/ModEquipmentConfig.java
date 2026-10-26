@@ -381,6 +381,42 @@ public final class ModEquipmentConfig {
     /** 俯冲投弹的随机散布幅度（格）：坐标偏移 = (rand-0.5) × 该值。默认 0.5。 */
     public static final TerminalConfigValue<Double> DIVE_BOMBER_BOMB_SPREAD =
             TerminalConfigValue.number("aircraft", "dive_bomber_combat", "bomb_spread", 0.5, 0.0, 16.0);
+    /**
+     * 提交俯冲时提前量上限（格）。默认 64.0（与鱼雷机同值）。
+     *
+     * <p>WHY 必须封顶：提前量 = 目标瞬时速度 × 预估飞行时间，而预估飞行时间可以长达上百 tick。
+     * 目标只要在提交瞬间有一点竖直速度（跳水、坠落），乘出来就会把瞄准点拉到水面以下几十格；
+     * 水平方向也会把投弹点甩到玩家几十格外，航弹甚至落在客户端 128 格实体追踪范围之外。
+     * 与鱼雷机 {@link #TORPEDO_BOMBER_MAX_LEAD} 同一思路：允许预判，但不允许脱缰。</p>
+     */
+    public static final TerminalConfigValue<Double> DIVE_BOMBER_MAX_LEAD =
+            TerminalConfigValue.number("aircraft", "dive_bomber_combat", "max_lead", 64.0, 0.0, 1024.0);
+    /**
+     * 俯冲安全高度（格，相对 max(水面, 目标 Y)）。默认 2.0。
+     *
+     * <p>WHY 不能沿用瞄准点原样下潜：俯冲轰炸机是「冲投弹点」，投弹点若低于水面，
+     * 整架飞机会扎进海里。安全高度同时约束「瞄准点 Y」与「每 tick 的实际下潜量」，
+     * 保证飞机在投弹前始终留在水面上方。</p>
+     */
+    public static final TerminalConfigValue<Double> DIVE_BOMBER_MIN_ALTITUDE =
+            TerminalConfigValue.number("aircraft", "dive_bomber_combat", "dive_min_altitude", 2.0, 0.0, 64.0);
+    /**
+     * 目标躲开判定（格）。默认 80.0。
+     *
+     * <p>俯冲途中目标眼睛位置到「提交的投弹点」的距离超过此值即拉起中止，回到巡航后
+     * 重新索敌、重新提交。WHY 用「到投弹点的距离」而不是「相对提交瞬间的位移」：
+     * 提前量本身就把投弹点放在目标前方（上限 {@link #DIVE_BOMBER_MAX_LEAD} 64 格），
+     * 阈值必须大于这个上限，否则每次提交都会立刻误判为「已躲开」。
+     * WHY 不无限追踪：committed dive 是既定设计，允许重新瞄准，但不允许导弹式跟着玩家转。</p>
+     */
+    public static final TerminalConfigValue<Double> DIVE_BOMBER_ABORT_DEVIATION =
+            TerminalConfigValue.number("aircraft", "dive_bomber_combat", "abort_deviation", 80.0, 0.0, 256.0);
+    /** 拉起时的竖直速度（格/tick，正值向上）。默认 0.25。 */
+    public static final TerminalConfigValue<Double> DIVE_BOMBER_PULL_UP_CLIMB_RATE =
+            TerminalConfigValue.number("aircraft", "dive_bomber_combat", "pull_up_climb_rate", 0.25, 0.0, 5.0);
+    /** 拉起时的前飞速度 = 面板速度 × 该值 × 阶段系数。默认 0.6。 */
+    public static final TerminalConfigValue<Double> DIVE_BOMBER_PULL_UP_FORWARD_MULTIPLIER =
+            TerminalConfigValue.number("aircraft", "dive_bomber_combat", "pull_up_forward_multiplier", 0.6, 0.0, 5.0);
 
     // ---- 鱼雷机（tickTorpedoBomberAttack）----
     /** 投雷高度 = 目标 Y + 该值（格）。默认 12.0。 */

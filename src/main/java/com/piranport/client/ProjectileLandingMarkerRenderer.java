@@ -21,8 +21,10 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.OptionalDouble;
+import java.util.Set;
 
 /**
  * Draws the predicted impact point of every tracked aerial bomb and shell.
@@ -59,6 +61,8 @@ public final class ProjectileLandingMarkerRenderer {
                     .setLineState(new RenderStateShard.LineStateShard(OptionalDouble.of(2.0)))
                     .createCompositeState(false));
     private static final List<Marker> MARKERS = new ArrayList<>();
+    /** 上一次重算时已见过的航弹实体 ID，用于「新航弹立即重算」。 */
+    private static final Set<Integer> knownBombIds = new HashSet<>();
     private static ClientLevel cachedLevel;
     private static long lastPredictionTick = Long.MIN_VALUE;
 
@@ -91,31 +95,65 @@ public final class ProjectileLandingMarkerRenderer {
 
     private static void refreshMarkers(ClientLevel level, Vec3 camera) {
         long gameTime = level.getGameTime();
-        if (cachedLevel == level && gameTime - lastPredictionTick < PREDICTION_INTERVAL) return;
+        boolean levelChanged = cachedLevel != level;
+        List<Entity> bombs = new ArrayList<>();
+        List<Entity> shells = new ArrayList<>();
+        for (Entity entity : level.entitiesForRendering()) {
+            boolean bomb = entity instanceof AerialBombEntity;
+            if (!bomb && !(entity instanceof CannonProjectileEntity)) continue;
+            if (!entity.isAlive() || entity.distanceToSqr(camera) > MAX_DISTANCE * MAX_DISTANCE) continue;
+            (bomb ? bombs : shells).add(entity);
+        }
+        // 新出现的航弹立即重算，不等 4 tick 间隔：俯冲投弹点离水面只有两三格，航弹往往只活几个 tick，
+        // 刚好落在两次重算之间就会整段没有落点标记。
+        boolean newBomb = false;
+        for (Entity bomb : bombs) {
+            if (!knownBombIds.contains(bomb.getId())) {
+                newBomb = true;
+                break;
+            }
+        }
+        boolean intervalElapsed = levelChanged || gameTime - lastPredictionTick >= PREDICTION_INTERVAL;
+        if (!intervalElapsed && !newBomb) return;
         cachedLevel = level;
         lastPredictionTick = gameTime;
         MARKERS.clear();
-        int count = 0;
-        for (Entity entity : level.entitiesForRendering()) {
-            if (!(entity instanceof AerialBombEntity) && !(entity instanceof CannonProjectileEntity)) continue;
-            if (!entity.isAlive() || entity.distanceToSqr(camera) > MAX_DISTANCE * MAX_DISTANCE) continue;
-            Vec3 impact = predictImpact(level, entity);
-            if (impact == null) continue;
-            boolean bomb = entity instanceof AerialBombEntity;
-            double dispersionDeg = bomb
-                    ? ((AerialBombEntity) entity).getDispersionDeg()
-                    : ((CannonProjectileEntity) entity).getDispersionDeg();
-            double tanDispersion = Math.tan(Math.toRadians(Math.max(0.0, dispersionDeg)));
-            MARKERS.add(new Marker(entity, impact, tanDispersion,
-                    255, bomb ? 190 : 80, bomb ? 40 : 32));
-            if (++count >= MAX_PROJECTILES) break;
+        knownBombIds.clear();
+        for (Entity bomb : bombs) {
+            knownBombIds.add(bomb.getId());
         }
+        // 航弹优先：俯冲炸弹投下后只活几个 tick，数量又远少于深海舰炮炮弹。
+        // 若按实体遍历顺序与炮弹共享上限，舰队战里炮弹会先占满 MAX_PROJECTILES，航弹永远进不了列表。
+        int count = 0;
+        for (Entity bomb : bombs) {
+            if (count >= MAX_PROJECTILES) break;
+            if (addMarker(level, bomb)) count++;
+        }
+        for (Entity shell : shells) {
+            if (count >= MAX_PROJECTILES) break;
+            if (addMarker(level, shell)) count++;
+        }
+    }
+
+    private static boolean addMarker(ClientLevel level, Entity entity) {
+        Vec3 impact = predictImpact(level, entity);
+        if (impact == null) return false;
+        boolean bomb = entity instanceof AerialBombEntity;
+        double dispersionDeg = bomb
+                ? ((AerialBombEntity) entity).getDispersionDeg()
+                : ((CannonProjectileEntity) entity).getDispersionDeg();
+        double tanDispersion = Math.tan(Math.toRadians(Math.max(0.0, dispersionDeg)));
+        MARKERS.add(new Marker(entity, impact, tanDispersion,
+                255, bomb ? 190 : 80, bomb ? 40 : 32));
+        return true;
     }
 
     private static Vec3 predictImpact(ClientLevel level, Entity entity) {
         Vec3 position = entity.position();
         Vec3 velocity = entity.getDeltaMovement();
-        if (!finite(position) || !finite(velocity) || velocity.lengthSqr() < 1.0e-8) return null;
+        if (!finite(position) || !finite(velocity)) return null;
+        // 速度尚未同步（刚生成、速度为 0）时不再直接丢弃：航弹受重力影响，仍能按竖直下落推算落点。
+        // 否则敌方投弹点/弹速延迟一帧同步，短命的俯冲航弹就会整段没有落点标记。
         double gravity = entity instanceof AerialBombEntity bomb
                 ? bomb.getMarkerGravity()
                 : ((CannonProjectileEntity) entity).getMarkerGravity();

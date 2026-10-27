@@ -1052,6 +1052,7 @@
   "gui.piranport.debug_terminal.target.aircraft.torpedo_bomber_combat": "鱼雷机战斗（所有鱼雷机）",
   "gui.piranport.debug_terminal.target.artillery.artillery": "火炮系统",
   "gui.piranport.debug_terminal.target.artillery.type3": "三式弹对空",
+  "gui.piranport.debug_terminal.target.deep_ocean.aa_shell": "深海防空炮",
   "gui.piranport.debug_terminal.target.deep_ocean.deep_ocean_projectile": "深海炮弹",
   "gui.piranport.debug_terminal.target.deep_ocean.deep_ocean_supply_ai": "深海补给舰",
   "gui.piranport.debug_terminal.target.deep_ocean.low_tier_destroyer_ai": "低阶驱逐舰",

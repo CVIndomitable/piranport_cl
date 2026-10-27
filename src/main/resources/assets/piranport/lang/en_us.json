@@ -1052,6 +1052,7 @@
   "gui.piranport.debug_terminal.target.aircraft.torpedo_bomber_combat": "Torpedo bomber combat (all torpedo bombers)",
   "gui.piranport.debug_terminal.target.artillery.artillery": "Artillery system",
   "gui.piranport.debug_terminal.target.artillery.type3": "Type 3 AA shells",
+  "gui.piranport.debug_terminal.target.deep_ocean.aa_shell": "Abyssal AA Gun",
   "gui.piranport.debug_terminal.target.deep_ocean.deep_ocean_projectile": "Abyssal Shell",
   "gui.piranport.debug_terminal.target.deep_ocean.deep_ocean_supply_ai": "Abyssal Supply Ship",
   "gui.piranport.debug_terminal.target.deep_ocean.low_tier_destroyer_ai": "Low-Tier Destroyer",

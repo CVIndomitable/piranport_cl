@@ -6,11 +6,11 @@
   "pages": [
     {
       "type": "patchouli:text",
-      "text": "$(bold)Key Bindings$()$(br2)All PiranPort keys can be customized in Controls > Key Binds.$(br2)$(bold)Fire Control:$()$(br)• $(bold)Middle-click$(): select crosshair target (adds; sneak = replace with single target; sneak with no target = clear)$(br2)$(bold)Weapons & Aircraft:$()$(br)• $(bold)Tab$(): cannon ammo wheel$(br)• $(bold)R$(): manual reload$(br)• $(bold)U$(): toggle fighter ground attack$(br)• $(bold)H$(): auto-launch / auto-AA toggle"
+      "text": "$(bold)Key Bindings$()$(br2)$(bold)Fire Control:$()$(br)• $(bold)Middle-click$(): select crosshair target (adds; sneak = replace with single target; sneak with no target = clear)$(br2)$(bold)Weapons & Aircraft:$()$(br)• $(bold)Tab$(): cannon ammo wheel$(br)• $(bold)R$(): reload (cannon reload bar, torpedo re-arm, aircraft fuel+payload, SAM resupply)$(br)• $(bold)H$(): auto-launch / auto-AA / auto-CIWS toggle$(br)• $(bold)V$(): exit recon view"
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)Recon:$()$(br)• $(bold)V$(): exit recon view (recon view engages automatically on launch)$(br2)Debug mode, cooldown override, hit notifications and log snapshots live on the debug terminal's control page. Registered keys can be rebound in game settings."
+      "text": "$(bold)Field Tools:$()$(br2)Debug mode, cooldown override, hit notifications and log snapshots live on the debug terminal's control page. Registered keys can be rebound in game settings."
     }
   ]
 }

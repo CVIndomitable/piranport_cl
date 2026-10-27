@@ -19,10 +19,6 @@
     {
       "type": "patchouli:text",
       "text": "piranport.book.aviation.fire_control.p4"
-    },
-    {
-      "type": "patchouli:text",
-      "text": "piranport.book.aviation.fire_control.p5"
     }
   ]
 }

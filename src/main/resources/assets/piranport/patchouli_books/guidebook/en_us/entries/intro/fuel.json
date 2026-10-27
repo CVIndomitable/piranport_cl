@@ -25,6 +25,10 @@
     {
       "type": "patchouli:text",
       "text": "piranport.book.intro.fuel.p3"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "piranport.book.intro.fuel.aviation_fuel"
     }
   ]
 }

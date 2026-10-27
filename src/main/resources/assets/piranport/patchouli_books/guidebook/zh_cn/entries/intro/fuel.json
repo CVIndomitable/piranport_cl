@@ -23,8 +23,7 @@
       "text": "piranport.book.intro.fuel.p2"
     },
     {
-      "type": "patchouli:blasting",
-      "recipe": "piranport:aviation_fuel_from_blasting_charcoal",
+      "type": "patchouli:text",
       "text": "piranport.book.intro.fuel.aviation_fuel"
     }
   ]

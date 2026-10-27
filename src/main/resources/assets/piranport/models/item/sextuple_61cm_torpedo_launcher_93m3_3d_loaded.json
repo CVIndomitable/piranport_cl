@@ -1,0 +1,6 @@
+{
+  "parent": "piranport:item/sextuple_61cm_torpedo_launcher_93m3_3d",
+  "textures": {
+    "cap": "piranport:item/sextuple_61cm_torpedo_launcher_93m3_cap_loaded"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "parent": "piranport:item/septuple_torpedo_launcher_3d",
+  "textures": {
+    "cap": "piranport:item/septuple_torpedo_launcher_cap_loaded"
+  }
+}

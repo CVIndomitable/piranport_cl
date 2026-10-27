@@ -1,0 +1,6 @@
+{
+  "parent": "piranport:item/triple_61cm_oxygen_torpedo_3d",
+  "textures": {
+    "cap": "piranport:item/triple_61cm_oxygen_torpedo_cap_loaded"
+  }
+}

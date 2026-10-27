@@ -1,0 +1,6 @@
+{
+  "parent": "piranport:item/quad_61cm_torpedo_3d",
+  "textures": {
+    "cap": "piranport:item/quad_61cm_torpedo_cap_loaded"
+  }
+}

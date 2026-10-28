@@ -205,7 +205,7 @@ public final class AmmoItems {
 
     // ===== 导弹 3D 渲染载体（隐藏物品，不加入创造模式标签页） =====
     // MissileProjectileRenderer 按飞行中导弹携带的弹药物品选择其一，渲染对应的细长弹体模型。
-    // 真实的导弹物品（anti_air_missile / harpoon_missile 等）图标保持原有 2D 贴图不变，
+    // 真实的导弹物品（sea_dart_missile / harpoon_missile 等）图标保持原有 2D 贴图不变，
     // 只有飞行中的导弹用这几个 3D 模型，故用隐藏载体物品承载模型。
     public static final DeferredItem<Item> MISSILE_PROJECTILE_ANTI_AIR =
             ITEMS.register("missile_projectile_anti_air", () -> new Item(new Item.Properties()));
@@ -229,8 +229,14 @@ public final class AmmoItems {
             ITEMS.register("terrier_missile",
                     () -> new MissileItem(new Item.Properties().stacksTo(16),
                             com.piranport.entity.MissileEntity.MissileType.ANTI_AIR, 9f));
-    public static final DeferredItem<MissileItem> ANTI_AIR_MISSILE =
-            ITEMS.register("anti_air_missile",
+    // 箭型防空导弹：仅供箭型防空导弹发射器使用
+    public static final DeferredItem<MissileItem> SEA_DART_MISSILE =
+            ITEMS.register("sea_dart_missile",
+                    () -> new MissileItem(new Item.Properties().stacksTo(16),
+                            com.piranport.entity.MissileEntity.MissileType.ANTI_AIR, 6f));
+    // 海猫防空导弹：仅供海猫防空导弹发射器使用
+    public static final DeferredItem<MissileItem> SEACAT_MISSILE =
+            ITEMS.register("seacat_missile",
                     () -> new MissileItem(new Item.Properties().stacksTo(16),
                             com.piranport.entity.MissileEntity.MissileType.ANTI_AIR, 6f));
     public static final DeferredItem<MissileItem> ROCKET_AMMO =

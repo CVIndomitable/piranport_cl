@@ -548,7 +548,8 @@ public class ModItems {
     public static final DeferredItem<MissileItem> SY1_MISSILE = AmmoItems.SY1_MISSILE;
     public static final DeferredItem<MissileItem> HARPOON_MISSILE = AmmoItems.HARPOON_MISSILE;
     public static final DeferredItem<MissileItem> TERRIER_MISSILE = AmmoItems.TERRIER_MISSILE;
-    public static final DeferredItem<MissileItem> ANTI_AIR_MISSILE = AmmoItems.ANTI_AIR_MISSILE;
+    public static final DeferredItem<MissileItem> SEA_DART_MISSILE = AmmoItems.SEA_DART_MISSILE;
+    public static final DeferredItem<MissileItem> SEACAT_MISSILE = AmmoItems.SEACAT_MISSILE;
     public static final DeferredItem<MissileItem> ROCKET_AMMO = AmmoItems.ROCKET_AMMO;
 
     // ===== Missile Launchers (extracted to WeaponItems) =====
@@ -630,16 +631,6 @@ public class ModItems {
     public static final DeferredItem<SkinCoreItem> SKIN_CORE_24 = SpecialtyItems.SKIN_CORE_24;
 
     // ===== Entity Cores (extracted to SpecialtyItems) =====
-    public static final DeferredItem<EntityCoreItem> ENTITY_CORE_DEEP_OCEAN_SUPPLY = SpecialtyItems.ENTITY_CORE_DEEP_OCEAN_SUPPLY;
-    public static final DeferredItem<EntityCoreItem> ENTITY_CORE_DEEP_OCEAN_DESTROYER = SpecialtyItems.ENTITY_CORE_DEEP_OCEAN_DESTROYER;
-    public static final DeferredItem<EntityCoreItem> ENTITY_CORE_DEEP_OCEAN_LIGHT_CRUISER = SpecialtyItems.ENTITY_CORE_DEEP_OCEAN_LIGHT_CRUISER;
-    public static final DeferredItem<EntityCoreItem> ENTITY_CORE_DEEP_OCEAN_HEAVY_CRUISER = SpecialtyItems.ENTITY_CORE_DEEP_OCEAN_HEAVY_CRUISER;
-    public static final DeferredItem<EntityCoreItem> ENTITY_CORE_DEEP_OCEAN_BATTLE_CRUISER = SpecialtyItems.ENTITY_CORE_DEEP_OCEAN_BATTLE_CRUISER;
-    public static final DeferredItem<EntityCoreItem> ENTITY_CORE_DEEP_OCEAN_BATTLESHIP = SpecialtyItems.ENTITY_CORE_DEEP_OCEAN_BATTLESHIP;
-    public static final DeferredItem<EntityCoreItem> ENTITY_CORE_DEEP_OCEAN_LIGHT_CARRIER = SpecialtyItems.ENTITY_CORE_DEEP_OCEAN_LIGHT_CARRIER;
-    public static final DeferredItem<EntityCoreItem> ENTITY_CORE_DEEP_OCEAN_CARRIER = SpecialtyItems.ENTITY_CORE_DEEP_OCEAN_CARRIER;
-    public static final DeferredItem<EntityCoreItem> ENTITY_CORE_DEEP_OCEAN_SUBMARINE = SpecialtyItems.ENTITY_CORE_DEEP_OCEAN_SUBMARINE;
-    public static final DeferredItem<EntityCoreItem> ENTITY_CORE_SHIP_GIRL = SpecialtyItems.ENTITY_CORE_SHIP_GIRL;
     public static final DeferredItem<EntityCoreItem> ENTITY_CORE_PINGHAI = SpecialtyItems.ENTITY_CORE_PINGHAI;
 
     // ===== Fuel (extracted to SpecialtyItems) =====

@@ -41,27 +41,9 @@ public class EntityCoreState {
     }
 
     public static ItemStack getEntityCoreItem(int coreId) {
+        // 只有平海核心仍是物品；其余 coreId 的变身定义保留，但复原时不再返还物品
+        // 返回 EMPTY 而非抛异常，保证旧存档里已激活的深海核心可以正常复原
         return switch (coreId) {
-            case EntityCoreDefinitions.DEEP_OCEAN_SUPPLY ->
-                    new ItemStack(ModItems.ENTITY_CORE_DEEP_OCEAN_SUPPLY.get());
-            case EntityCoreDefinitions.DEEP_OCEAN_DESTROYER ->
-                    new ItemStack(ModItems.ENTITY_CORE_DEEP_OCEAN_DESTROYER.get());
-            case EntityCoreDefinitions.DEEP_OCEAN_LIGHT_CRUISER ->
-                    new ItemStack(ModItems.ENTITY_CORE_DEEP_OCEAN_LIGHT_CRUISER.get());
-            case EntityCoreDefinitions.DEEP_OCEAN_HEAVY_CRUISER ->
-                    new ItemStack(ModItems.ENTITY_CORE_DEEP_OCEAN_HEAVY_CRUISER.get());
-            case EntityCoreDefinitions.DEEP_OCEAN_BATTLE_CRUISER ->
-                    new ItemStack(ModItems.ENTITY_CORE_DEEP_OCEAN_BATTLE_CRUISER.get());
-            case EntityCoreDefinitions.DEEP_OCEAN_BATTLESHIP ->
-                    new ItemStack(ModItems.ENTITY_CORE_DEEP_OCEAN_BATTLESHIP.get());
-            case EntityCoreDefinitions.DEEP_OCEAN_LIGHT_CARRIER ->
-                    new ItemStack(ModItems.ENTITY_CORE_DEEP_OCEAN_LIGHT_CARRIER.get());
-            case EntityCoreDefinitions.DEEP_OCEAN_CARRIER ->
-                    new ItemStack(ModItems.ENTITY_CORE_DEEP_OCEAN_CARRIER.get());
-            case EntityCoreDefinitions.DEEP_OCEAN_SUBMARINE ->
-                    new ItemStack(ModItems.ENTITY_CORE_DEEP_OCEAN_SUBMARINE.get());
-            case EntityCoreDefinitions.SHIP_GIRL ->
-                    new ItemStack(ModItems.ENTITY_CORE_SHIP_GIRL.get());
             case EntityCoreDefinitions.PINGHAI ->
                     new ItemStack(ModItems.ENTITY_CORE_PINGHAI.get());
             default -> ItemStack.EMPTY;

@@ -28,7 +28,7 @@ import net.minecraft.world.phys.Vec3;
  * net.minecraft.world.entity.projectile.ThrowableItemProjectile#getItem()} 同步到客户端，
  * 因此用物品身份做判据才是可靠的。
  *
- * <p>真实导弹物品（anti_air_missile / harpoon_missile 等）的图标保持原有 2D 贴图不变，
+ * <p>真实导弹物品（sea_dart_missile / harpoon_missile 等）的图标保持原有 2D 贴图不变，
  * 3D 模型由隐藏载体物品 {@code missile_projectile_*} 承载，渲染时临时构造其 ItemStack。
  */
 public class MissileProjectileRenderer extends EntityRenderer<MissileEntity> {
@@ -58,7 +58,8 @@ public class MissileProjectileRenderer extends EntityRenderer<MissileEntity> {
      * 保持与 MissileEntity#resolveDisplayItem 的默认值一致。
      */
     private static Model selectModel(ItemStack ammo) {
-        if (ammo.is(ModItems.TERRIER_MISSILE) || ammo.is(ModItems.ANTI_AIR_MISSILE)) {
+        if (ammo.is(ModItems.TERRIER_MISSILE) || ammo.is(ModItems.SEA_DART_MISSILE)
+                || ammo.is(ModItems.SEACAT_MISSILE)) {
             return new Model(new ItemStack(ModItems.MISSILE_PROJECTILE_ANTI_AIR.get()), ANTI_AIR_SCALE);
         }
         if (ammo.is(ModItems.ROCKET_AMMO)) {

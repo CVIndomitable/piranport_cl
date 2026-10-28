@@ -7,6 +7,7 @@
     "hull": "piranport:item/british_twin_6inch_gun_hull",
     "roof": "piranport:item/british_twin_6inch_gun_roof",
     "hull_dark": "piranport:item/british_twin_6inch_gun_hull_dark",
+    "dark": "piranport:item/british_twin_6inch_gun_hull_dark",
     "detail": "piranport:item/british_twin_6inch_gun_detail",
     "barrel": "piranport:item/british_twin_6inch_gun_barrel",
     "interior": "piranport:item/british_twin_6inch_gun_interior",

@@ -471,7 +471,7 @@ public final class WeaponItems {
                                     .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.MISSILE),
                             com.piranport.entity.MissileEntity.MissileType.ANTI_AIR,
                             6f, 0f, 1.5f, 1, 1200,
-                            () -> ModItems.ANTI_AIR_MISSILE.get()));
+                            () -> ModItems.SEA_DART_MISSILE.get()));
     // 海猫防空导弹（Seacat）: 伤害6, 冷却60s, 负重6
     public static final DeferredItem<MissileLauncherItem> SEACAT_LAUNCHER =
             ITEMS.register("seacat_launcher",
@@ -480,7 +480,7 @@ public final class WeaponItems {
                                     .component(ModDataComponents.WEAPON_CATEGORY.get(), WeaponCategory.MISSILE),
                             com.piranport.entity.MissileEntity.MissileType.ANTI_AIR,
                             6f, 0f, 1.5f, 1, 1200,
-                            () -> ModItems.ANTI_AIR_MISSILE.get()));
+                            () -> ModItems.SEACAT_MISSILE.get()));
 
     // ===== 装备专属蓝图（策划决策/数值/09）=====
     /**

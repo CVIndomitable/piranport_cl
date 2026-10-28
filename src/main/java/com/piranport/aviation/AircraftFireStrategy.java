@@ -779,15 +779,23 @@ public class AircraftFireStrategy {
         for (int wi = 0; wi < 9; wi++) {
             if (wi == coreSlot) continue;
             if (cooldowns.isOnCooldown(wi, gameTime)) continue;
+            // 玩家手持槽里的飞机是正在手动整备、准备自己放飞的那一架，自动升空不得代劳。
+            // WHY：R 键装填会把手持飞机写成就绪，若自动升空只按“可出击”判定，玩家按完 R
+            // 就会被下一 tick 自动放出去。航空/23 规定放飞仍由玩家右键主动输入；
+            // 这里的自动升空只应接替玩家去放飞其它槽位里闲置且已就绪的战斗机。
+            if (wi == inv.selected) continue;
 
             ItemStack weapon = inv.items.get(wi);
             if (weapon.isEmpty() || !(weapon.getItem() instanceof AircraftItem)) continue;
             AircraftDefinition definition = AircraftDefinitionService.resolve(weapon);
             if (definition == null) continue;
+            if (!definition.usesBulletAttack()) continue;
+            // 与手动放飞、tooltip、图标共用同一出击准备判定：只有真正 ready
+            // （满油 + 需要挂载的机型已挂载）的飞机才允许自动升空。
+            // 不能再用“油量 > 0”放行：半油或没完成整备的飞机会被自动升空提前消耗。
             AircraftState state = AircraftDefinitionService.stateOf(weapon);
-            if (state.currentFuel() <= 0) continue;
-            boolean isFighter = definition != null && definition.usesBulletAttack();
-            if (!isFighter) continue;
+            ResolvedAircraftStats stats = AircraftStatsService.resolve(definition);
+            if (!AircraftSortieReadiness.isReady(state, definition, stats)) continue;
 
             launchAircraftInventoryMode(level, player, coreStack, inv, wi, coreSlot, cooldowns);
             com.piranport.debug.PiranPortDebug.event(

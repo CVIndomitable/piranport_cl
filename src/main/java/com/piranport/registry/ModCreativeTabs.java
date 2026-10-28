@@ -195,17 +195,7 @@ public class ModCreativeTabs {
                         output.accept(ModItems.SKIN_CORE_22.get());
                         output.accept(ModItems.SKIN_CORE_23.get());
                         output.accept(ModItems.SKIN_CORE_24.get());
-                        // Entity Cores
-                        output.accept(ModItems.ENTITY_CORE_DEEP_OCEAN_SUPPLY.get());
-                        output.accept(ModItems.ENTITY_CORE_DEEP_OCEAN_DESTROYER.get());
-                        output.accept(ModItems.ENTITY_CORE_DEEP_OCEAN_LIGHT_CRUISER.get());
-                        output.accept(ModItems.ENTITY_CORE_DEEP_OCEAN_HEAVY_CRUISER.get());
-                        output.accept(ModItems.ENTITY_CORE_DEEP_OCEAN_BATTLE_CRUISER.get());
-                        output.accept(ModItems.ENTITY_CORE_DEEP_OCEAN_BATTLESHIP.get());
-                        output.accept(ModItems.ENTITY_CORE_DEEP_OCEAN_LIGHT_CARRIER.get());
-                        output.accept(ModItems.ENTITY_CORE_DEEP_OCEAN_CARRIER.get());
-                        output.accept(ModItems.ENTITY_CORE_DEEP_OCEAN_SUBMARINE.get());
-                        output.accept(ModItems.ENTITY_CORE_SHIP_GIRL.get());
+                        // Entity Cores（仅平海核心，其余核心物品已移除）
                         output.accept(ModItems.ENTITY_CORE_PINGHAI.get());
                     }).build());
 
@@ -489,7 +479,8 @@ public class ModCreativeTabs {
                         output.accept(ModItems.SY1_MISSILE.get());
                         output.accept(ModItems.HARPOON_MISSILE.get());
                         output.accept(ModItems.TERRIER_MISSILE.get());
-                        output.accept(ModItems.ANTI_AIR_MISSILE.get());
+                        output.accept(ModItems.SEA_DART_MISSILE.get());
+                        output.accept(ModItems.SEACAT_MISSILE.get());
                         output.accept(ModItems.ROCKET_AMMO.get());
                         // 调试工具：创造模式弹药库
                         output.accept(ModItems.CREATIVE_AMMO_CACHE.get());

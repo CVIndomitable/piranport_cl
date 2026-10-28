@@ -11,6 +11,7 @@ import com.piranport.debug.PiranPortDebug;
 import com.piranport.item.ExperienceShellItem;
 import com.piranport.item.ShipCoreItem;
 import com.piranport.item.ShipCoreCombat;
+import com.piranport.item.WeaponDurabilityBar;
 import com.piranport.platform.ClientHooks;
 import com.piranport.registry.ModDataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -100,10 +101,28 @@ public class ArtilleryItem extends Item {
     public float getCustomGravity() { return getData().gravity(); }
     public float getExplosionPower() { return getData().explosionPower(); }
 
-    /** 火炮自动装填固定关闭；保留数据字段仅用于旧配置和存档兼容。 */
-    public boolean isAutoLoading() { return false; }
+    /**
+     * 是否自动装填：读取本炮 JSON 的 {@code loadingMode}。
+     *
+     * <p>WHY 按炮种而不是全局开关：自动装填目前只对显式声明 AUTO 的炮例外开放
+     * （英国双联3英寸速射炮），其余火炮仍只能按 R 键启动读条。用 {@link #getData()}
+     * 而不是 {@link #getEffectiveData}：loadingMode 不参与终端参数覆盖，而本方法在
+     * 每 tick 的装填扫描里逐把武器调用，走终端读取会做二十多次无意义的参数查询。</p>
+     */
+    public boolean isAutoLoading() { return getData().isAutoLoading(); }
 
-    public String getLoadingMode() { return "MANUAL"; }
+    public String getLoadingMode() { return getData().loadingMode(); }
+
+    /**
+     * 平时不显示原版耐久条，只在火炮损坏（耐久剩最后一点）时显示空条。
+     *
+     * <p>WHY：炮管底部的弹种/装填状态图标会被原版耐久条盖住；火炮的损坏判定本来就是
+     * 「damage >= 最大耐久 - 1」，此时已经不能开火，用空耐久条提示即可。剩余耐久仍在 tooltip。
+     */
+    @Override
+    public boolean isBarVisible(ItemStack stack) {
+        return WeaponDurabilityBar.showWhenBroken(stack);
+    }
 
     /** 获取散布角（度）。优先使用 JSON 配置，未配置时按口径计算。 */
     public float getDispersionAngle() {
@@ -338,9 +357,9 @@ public class ArtilleryItem extends Item {
                     .withStyle(net.minecraft.ChatFormatting.AQUA));
         }
 
-        // 装填模式（策划决策/武器/07-火炮装填双模式.md）
+        // 装填模式按炮种数据展示（策划决策/武器/02-火炮装填；当前只有 3 英寸速射炮是自动）
         tooltipComponents.add(Component.translatable(
-                "tooltip.piranport.cannon.loading_mode.manual")
+                "tooltip.piranport.cannon.loading_mode." + (isAutoLoading() ? "auto" : "manual"))
                 .withStyle(net.minecraft.ChatFormatting.GOLD));
 
         // 耐久状态

@@ -219,46 +219,7 @@ public final class SpecialtyItems {
                     () -> new SkinCoreItem(new Item.Properties().stacksTo(1), 24));
 
     // ===== Entity Cores =====
-    public static final DeferredItem<EntityCoreItem> ENTITY_CORE_DEEP_OCEAN_SUPPLY =
-            ITEMS.register("entity_core_deep_ocean_supply",
-                    () -> new EntityCoreItem(new Item.Properties().stacksTo(1),
-                            EntityCoreDefinitions.DEEP_OCEAN_SUPPLY));
-    public static final DeferredItem<EntityCoreItem> ENTITY_CORE_DEEP_OCEAN_DESTROYER =
-            ITEMS.register("entity_core_deep_ocean_destroyer",
-                    () -> new EntityCoreItem(new Item.Properties().stacksTo(1),
-                            EntityCoreDefinitions.DEEP_OCEAN_DESTROYER));
-    public static final DeferredItem<EntityCoreItem> ENTITY_CORE_DEEP_OCEAN_LIGHT_CRUISER =
-            ITEMS.register("entity_core_deep_ocean_light_cruiser",
-                    () -> new EntityCoreItem(new Item.Properties().stacksTo(1),
-                            EntityCoreDefinitions.DEEP_OCEAN_LIGHT_CRUISER));
-    public static final DeferredItem<EntityCoreItem> ENTITY_CORE_DEEP_OCEAN_HEAVY_CRUISER =
-            ITEMS.register("entity_core_deep_ocean_heavy_cruiser",
-                    () -> new EntityCoreItem(new Item.Properties().stacksTo(1),
-                            EntityCoreDefinitions.DEEP_OCEAN_HEAVY_CRUISER));
-    public static final DeferredItem<EntityCoreItem> ENTITY_CORE_DEEP_OCEAN_BATTLE_CRUISER =
-            ITEMS.register("entity_core_deep_ocean_battle_cruiser",
-                    () -> new EntityCoreItem(new Item.Properties().stacksTo(1),
-                            EntityCoreDefinitions.DEEP_OCEAN_BATTLE_CRUISER));
-    public static final DeferredItem<EntityCoreItem> ENTITY_CORE_DEEP_OCEAN_BATTLESHIP =
-            ITEMS.register("entity_core_deep_ocean_battleship",
-                    () -> new EntityCoreItem(new Item.Properties().stacksTo(1),
-                            EntityCoreDefinitions.DEEP_OCEAN_BATTLESHIP));
-    public static final DeferredItem<EntityCoreItem> ENTITY_CORE_DEEP_OCEAN_LIGHT_CARRIER =
-            ITEMS.register("entity_core_deep_ocean_light_carrier",
-                    () -> new EntityCoreItem(new Item.Properties().stacksTo(1),
-                            EntityCoreDefinitions.DEEP_OCEAN_LIGHT_CARRIER));
-    public static final DeferredItem<EntityCoreItem> ENTITY_CORE_DEEP_OCEAN_CARRIER =
-            ITEMS.register("entity_core_deep_ocean_carrier",
-                    () -> new EntityCoreItem(new Item.Properties().stacksTo(1),
-                            EntityCoreDefinitions.DEEP_OCEAN_CARRIER));
-    public static final DeferredItem<EntityCoreItem> ENTITY_CORE_DEEP_OCEAN_SUBMARINE =
-            ITEMS.register("entity_core_deep_ocean_submarine",
-                    () -> new EntityCoreItem(new Item.Properties().stacksTo(1),
-                            EntityCoreDefinitions.DEEP_OCEAN_SUBMARINE));
-    public static final DeferredItem<EntityCoreItem> ENTITY_CORE_SHIP_GIRL =
-            ITEMS.register("entity_core_ship_girl",
-                    () -> new EntityCoreItem(new Item.Properties().stacksTo(1),
-                            EntityCoreDefinitions.SHIP_GIRL));
+    // 只保留平海核心：其余深海/舰娘核心物品已移除，变身定义仍保留在 EntityCoreDefinitions
     public static final DeferredItem<EntityCoreItem> ENTITY_CORE_PINGHAI =
             ITEMS.register("entity_core_pinghai",
                     () -> new EntityCoreItem(new Item.Properties().stacksTo(1),

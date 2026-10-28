@@ -24,28 +24,22 @@ import static com.piranport.combat.cannon.CannonStats.getGunCooldown;
 
 /**
  * 火炮装填生命周期：武器保存唯一读条，HUD 和提示直接读取武器。
- * 火炮固定使用手动装填：只能由 R 键启动读条，读条到期后扣弹并写入 LOADED_AMMO。
+ * 手动炮（默认）只能由 R 键启动读条；数据声明 {@code loadingMode=AUTO} 的炮由服务端
+ * tick 自动启动（当前仅英国双联3英寸速射炮）。两条路径共用同一套到期结算与扣弹事务。
  */
 public final class CannonReloading {
-    /**
-     * 火炮是否允许"自动启动"装填。固定 false。
-     *
-     * <p>《武器/09》只保留 R 键启动读条；读条到期由 {@link #tickCannonAutoReload} 结算
-     * （自动*启动*关闭，自动*结算*不能删）。配置检查器直接读这个常量，
-     * 不再写死一句"关闭"。</p>
-     */
-    public static final boolean AUTO_RELOAD_ENABLED = false;
 
     private CannonReloading() {}
 
     /**
-     * 服务端每 tick：结算读条到期的火炮。
+     * 服务端每 tick：启动自动炮的读条，并结算所有到期读条。
      *
-     * <p>WHY 需要这段而不仅仅是 R 键入口：《武器/09-装填类似弩模型》规定"读条完成时才从背包
-     * 消耗足量弹药，并写入 LOADED_AMMO"——读条走完就该装好，不该要求玩家再按一次 R。
-     * 2026-09-26 的 a48acb7f「固定关闭火炮自动装填」把这里的 COMPLETE 结算连同"自动启动"
-     * 一起删掉了，导致读条满了仍是空膛（与 docs/1.0/测试计划.md B.2.2「已装弹 → 再按 R →
-     * 提示已装弹」也对不上）。本方法只恢复"到期结算"，启动依然只能由 R 键触发。
+     * <p>WHY 读条到期必须结算（不改回手按一次 R）：读条完成时才从背包消耗足量弹药并写入
+     * LOADED_AMMO，读条走完就该装好。2026-09-26 的 a48acb7f「固定关闭火炮自动装填」曾把
+     * COMPLETE 结算连同"自动启动"一起删掉，导致读条满了仍是空膛；到期结算已于 2026-10-02 恢复。
+     *
+     * <p>本轮按炮种恢复"自动启动"：只有 {@code loadingMode=AUTO} 的炮（当前仅英国双联3英寸
+     * 速射炮）会在空膛时得到 START；手动炮的 START 不会出现，启动仍只能由 R 键触发。
      */
     public static void tickCannonAutoReload(Player player, ItemStack coreStack) {
         if (player.level().isClientSide() || !player.isAlive() || player.isSpectator() || coreStack.isEmpty()) return;
@@ -57,19 +51,20 @@ public final class CannonReloading {
     }
 
     private static void tickSlot(Player player, ItemStack core, int slot, ItemStack weapon) {
-        if (!(weapon.getItem() instanceof ArtilleryItem)) return;
+        if (!(weapon.getItem() instanceof ArtilleryItem artillery)) return;
         int coreSlot = findCoreSlotIndex(player.getInventory(), player, slot);
         if (coreSlot == -1) return;
         WeaponState state = new WeaponState(weapon);
         boolean loaded = isCannonReadyToFire(weapon, player.level());
         WeaponCooldown cooldown = state.getCooldown();
-        // automatic 固定传 false：本方法只做"读条到期结算"，不启动装填（启动只能由 R 键触发），
-        // 所以 START 分支在这里不可达。
-        CannonReloadPhase phase = CannonReloadPhase.resolve(loaded, false,
+        // automatic 来自炮种数据：只有自动炮空膛且无读条时得到 START，由本 tick 启动读条；
+        // 手动炮得到 IDLE，行为与以前完全一致（启动只能由 R 键触发）。
+        CannonReloadPhase phase = CannonReloadPhase.resolve(loaded, artillery.isAutoLoading(),
                 cooldown == null ? null : cooldown.endTick(), player.level().getGameTime());
         boolean changed = switch (phase) {
             case LOADED -> clearCannonReloadState(core, weapon, slot);
-            case IDLE, START, WAIT -> false;
+            case START -> startCannonReloadIfPossible(player, core, player.getInventory(), slot, coreSlot, weapon);
+            case IDLE, WAIT -> false;
             case COMPLETE -> completeCannonReload(player, core, player.getInventory(), slot, coreSlot, weapon);
         };
         if (changed) TransformationManager.writeCoreToConfiguredSlot(player, core);

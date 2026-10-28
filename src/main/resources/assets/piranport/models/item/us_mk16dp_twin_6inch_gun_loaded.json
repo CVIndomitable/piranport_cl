@@ -1,3 +1,6 @@
 {
-  "parent": "piranport:block/us_mk16dp_twin_6inch_gun"
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "piranport:item/us_mk16dp_twin_6inch_gun"
+  }
 }

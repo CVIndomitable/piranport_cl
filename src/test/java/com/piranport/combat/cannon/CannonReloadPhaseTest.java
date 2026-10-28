@@ -16,9 +16,17 @@ class CannonReloadPhaseTest {
     }
 
     @Test
-    void emptyCannonAlwaysWaitsForManualInput() {
-        assertEquals(IDLE, resolve(false, true, null, 100));
+    void emptyAutomaticCannonStartsButManualWaitsForInput() {
+        // 只有数据声明 AUTO 的炮才会在空膛时得到 START；手动炮的空膛是稳定状态。
+        assertEquals(START, resolve(false, true, null, 100));
         assertEquals(IDLE, resolve(false, false, null, 100));
+    }
+
+    @Test
+    void automaticCannonRestartsAfterItsBarrelIsFiredEmpty() {
+        // 开火打空后武器上不残留读条计时：下一 tick 自动炮重新 START，手动炮回到等 R 的 IDLE。
+        assertEquals(START, resolve(false, true, null, 201));
+        assertEquals(IDLE, resolve(false, false, null, 201));
     }
 
     @Test
@@ -38,7 +46,8 @@ class CannonReloadPhaseTest {
 
     @Test
     void emptyCooldownMarkerNeverCompletesAFreeReload() {
-        assertEquals(IDLE, resolve(false, true, 0L, 100));
+        // endTick=0 视为没有读条：自动炮会当作空膛重新 START，手动炮仍 IDLE，都不会直接 COMPLETE。
+        assertEquals(START, resolve(false, true, 0L, 100));
         assertEquals(IDLE, resolve(false, false, 0L, 100));
     }
 

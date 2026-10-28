@@ -6,10 +6,11 @@
   - 一座低矮宽大的八角形装甲炮座：短壁板 + 一圈外凸腰箍 + 收分斜肩 + 平顶甲板，
     甲板比斜肩高出一小步，形成一圈压边；
   - 甲板四周一圈细栏杆（16 根立柱 + 8 段上横杆 + 两道斜拉杆），板面有两道长条
-    舱盖槽、几颗圆头螺栓、一个矮圆包，靠管口一侧还有一个大圆盖；
+    舱盖槽、几颗圆头螺栓、一个矮圆包，靠长雷头一侧还有一个大圆盖；
   - 炮座正前方壁板上是一扇带框装甲舱门；
   - 三根鱼雷管横贯炮座上部，正好从壁板顶沿与甲板压边之间伸出：
-    +Z 一端是黑管口（空膛黑膛 / 装填金属封盖），-Z 一端两道管箍 + 细长抛光钢雷头。
+    +Z 一端是两道管箍 + 细长抛光钢雷头（长的一侧，原画里与甲板大圆盖同侧），
+    -Z 一端是黑管口（空膛黑膛 / 装填金属封盖）。
   - 比例取自原画：炮座宽度 ≈ 3 个管径，壁板高度 ≈ 1.7 个管径，整体低矮。
 
 技术要点：
@@ -19,7 +20,7 @@
   - 鱼雷管/圆盖用「轴对齐方盒 + 45° 绕 Z 方盒」叠成八棱柱；
   - 逐面写 uv，贴图 32x32、每模型单位 2px，长面 uv 夹到 16；
   - 装填/空膛的差异只在管口端面贴图（cap_empty / cap_loaded）；
-  - 模型中心在 x=8，管口朝 +Z，物品 display 旋转 180° 后朝角色前方。
+  - 模型中心在 x=8，长雷头端朝 +Z，物品 display 旋转 180° 后朝角色前方。
 
 产出：
   models/item/triple_61cm_torpedo.json               builtin/entity 物品入口（只放 display）
@@ -68,9 +69,18 @@ BACK_Z = CZ - R_WALL      # 后方平面 z = 1.8
 TUBE_Y = 3.95             # 管轴高度：管顶刚好藏在甲板压边之下
 TUBE_R = 1.14
 TUBE_XS = (5.70, 8.00, 10.30)
-TUBE_FRONT = 15.75        # 管口桩起点
-TUBE_CAP = 18.00          # 管口端面（黑膛/封盖）
-TUBE_BACK = -2.00         # 管身尾端（雷头从这里往后接）
+TUBE_FRONT = 15.75        # 管口桩起点（镜像前的 +Z 侧基准）
+TUBE_CAP = 18.00          # 管口端面（黑膛/封盖，镜像前的 +Z 侧基准）
+TUBE_BACK = -2.00         # 管身尾端（镜像前的 -Z 侧基准，雷头从这里往外接）
+
+
+def mirror_z(z):
+    """把鱼雷管总成绕炮座中心做 Z 轴镜像。
+
+    WHY 只镜像管总成而不是整个模型：原画里长雷头端与甲板大圆盖在炮座同一侧
+    （+Z）；若整体镜像，大圆盖和舱门会被转到雷头对面，与原画不符。
+    """
+    return 2.0 * CZ - z
 
 
 def _uv_for(face, x1, y1, z1, x2, y2, z2, seed):
@@ -187,25 +197,33 @@ octagon_y("top_plate", CX, CZ, Y_BEVEL_TOP, Y_PLATE_TOP, R_PLATE, "plate",
 
 # ================= 三根鱼雷管 =================
 for tag, cx in zip("abc", TUBE_XS):
-    # 管身：从炮座后方一直贯到正前方
-    octagon_z(f"tube_{tag}", cx, TUBE_Y, TUBE_BACK, TUBE_FRONT, TUBE_R, "tube")
-    # 管口一侧：管箍 + 管口桩（端面贴 cap，空膛/装填只差这一张图）
-    octagon_z(f"band_front_{tag}", cx, TUBE_Y, 15.10, 15.75, TUBE_R * 1.09, "ring")
-    octagon_z(f"muzzle_{tag}", cx, TUBE_Y, TUBE_FRONT, TUBE_CAP, TUBE_R * 0.95,
-              "ring", faces={"south": "cap"}, full_uv_faces=("south",))
-    # 雷头一侧：两道管箍 + 逐段收细的抛光钢雷头（原画最左端的细长雷头）
-    octagon_z(f"band_rear_{tag}", cx, TUBE_Y, TUBE_BACK - 0.60, TUBE_BACK,
-              TUBE_R * 1.09, "ring")
-    octagon_z(f"band_rear2_{tag}", cx, TUBE_Y, TUBE_BACK - 1.15, TUBE_BACK - 0.60,
+    # 管身：镜像后从炮座后壁内侧一直贯到前方
+    octagon_z(f"tube_{tag}", cx, TUBE_Y, mirror_z(TUBE_FRONT),
+              mirror_z(TUBE_BACK), TUBE_R, "tube")
+    # 短管口一侧（-Z，炮座后方）：管箍 + 管口桩（端面贴 cap，空膛/装填只差这一张图）
+    octagon_z(f"band_front_{tag}", cx, TUBE_Y, mirror_z(15.75),
+              mirror_z(15.10), TUBE_R * 1.09, "ring")
+    octagon_z(f"muzzle_{tag}", cx, TUBE_Y, mirror_z(TUBE_CAP),
+              mirror_z(TUBE_FRONT), TUBE_R * 0.95, "ring",
+              faces={"north": "cap"}, full_uv_faces=("north",))
+    # 长雷头一侧（+Z，炮座前方）：两道管箍 + 逐段收细的抛光钢雷头
+    octagon_z(f"band_rear_{tag}", cx, TUBE_Y, mirror_z(TUBE_BACK),
+              mirror_z(TUBE_BACK - 0.60), TUBE_R * 1.09, "ring")
+    octagon_z(f"band_rear2_{tag}", cx, TUBE_Y,
+              mirror_z(TUBE_BACK - 0.60), mirror_z(TUBE_BACK - 1.15),
               TUBE_R * 1.03, "ring")
-    octagon_z(f"warhead_neck_{tag}", cx, TUBE_Y, TUBE_BACK - 1.50,
-              TUBE_BACK - 1.15, TUBE_R * 0.82, "warhead")
-    octagon_z(f"warhead_body_{tag}", cx, TUBE_Y, TUBE_BACK - 2.00,
-              TUBE_BACK - 1.50, TUBE_R * 0.77, "warhead")
-    octagon_z(f"warhead_tip1_{tag}", cx, TUBE_Y, TUBE_BACK - 2.45,
-              TUBE_BACK - 2.00, TUBE_R * 0.58, "warhead")
-    octagon_z(f"warhead_tip2_{tag}", cx, TUBE_Y, TUBE_BACK - 2.75,
-              TUBE_BACK - 2.45, TUBE_R * 0.30, "warhead")
+    octagon_z(f"warhead_neck_{tag}", cx, TUBE_Y,
+              mirror_z(TUBE_BACK - 1.15), mirror_z(TUBE_BACK - 1.50),
+              TUBE_R * 0.82, "warhead")
+    octagon_z(f"warhead_body_{tag}", cx, TUBE_Y,
+              mirror_z(TUBE_BACK - 1.50), mirror_z(TUBE_BACK - 2.00),
+              TUBE_R * 0.77, "warhead")
+    octagon_z(f"warhead_tip1_{tag}", cx, TUBE_Y,
+              mirror_z(TUBE_BACK - 2.00), mirror_z(TUBE_BACK - 2.45),
+              TUBE_R * 0.58, "warhead")
+    octagon_z(f"warhead_tip2_{tag}", cx, TUBE_Y,
+              mirror_z(TUBE_BACK - 2.45), mirror_z(TUBE_BACK - 2.75),
+              TUBE_R * 0.30, "warhead")
 
 # ================= 甲板栏杆 =================
 RAIL_R = 5.15              # 栏杆所在的内切圆半径（甲板 r=5.45 之内）
@@ -271,7 +289,7 @@ hatch("hatch_a", 5.35, 8.30, 8.25, 9.20)
 hatch("hatch_b", 6.30, 10.30, 8.80, 11.00,
       rot={"angle": 22.5, "axis": "y", "origin": [7.55, Y_PLATE_TOP, 10.65]})
 
-# 大圆盖（原画甲板上靠管口一侧的圆盖）
+# 大圆盖（原画甲板上靠长雷头一侧的圆盖）
 octagon_y("deck_cap", 10.30, 11.30, Y_PLATE_TOP, Y_PLATE_TOP + 0.28, 1.10,
           "ring", inset=0.004)
 octagon_y("deck_cap_top", 10.30, 11.30, Y_PLATE_TOP + 0.28, Y_PLATE_TOP + 0.35,
@@ -308,7 +326,7 @@ box("deck_strip", 6.10, Y_PLATE_TOP, 10.05, 10.90, Y_PLATE_TOP + 0.07, 10.30,
     "detail",
     rotation={"angle": -45, "axis": "y", "origin": [8.50, Y_PLATE_TOP, 10.175]})
 
-# 手持时绕 Y 转 180°，让管口朝角色前方
+# 手持时绕 Y 转 180°，让长雷头端朝角色前方
 DISPLAY = {
     "thirdperson_righthand": {
         "rotation": [0, 180, 0],

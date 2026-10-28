@@ -89,16 +89,28 @@ public final class ModEquipmentConfig {
     public static final TerminalConfigValue<Double> TORPEDO_SURFACE_CAPTURE_RANGE =
             TerminalConfigValue.number("equipment", "torpedo", "surface_capture_range", 1.0, 0.25, 6.0);
 
+    // ===== 非空投空中段（手持/舰船/NPC/随从发射）=====
     // 空投下落阶段不再有独立的水平衰减/垂直加速度：入水角由
     // global.torpedo_bomber_combat.entry_angle 固定控制（见 TorpedoEntity#currentAirDropVelocity）。
+    //
+    // 用户口径（2026-10-28）：发射出去的鱼雷要「平着飞出去再落水」。
+    // 旧默认 0.70 水平衰减 + 0.25 格/tick² 下坠，三四 tick 就把出膛水平速度吃光
+    // （全程水平位移不到 1 格），实测入水角 82°~90°，看起来就是垂直扎进水里。
+    // 现在水平不衰减、垂直接近原版投掷物重力（0.03），并给下坠速度封顶。
 
-    /** 非空投空中回退的水平速度衰减系数。默认沿用 0.70。 */
+    /** 非空投空中回退的水平速度保留比例。默认 1.0 = 不衰减，鱼雷带着出膛水平速度平飞。 */
     public static final TerminalConfigValue<Double> TORPEDO_AIR_FALL_HORIZONTAL_DECAY =
-            TerminalConfigValue.number("equipment", "torpedo", "air_fall_horizontal_decay", 0.70, 0.0, 1.0);
+            TerminalConfigValue.number("equipment", "torpedo", "air_fall_horizontal_decay", 1.0, 0.0, 1.0);
 
-    /** 非空投空中回退每 tick 的垂直加速度。默认沿用 0.25。 */
+    /** 非空投空中回退每 tick 的垂直加速度（格/tick²）。默认 0.03 = 原版投掷物的重力值。 */
     public static final TerminalConfigValue<Double> TORPEDO_AIR_FALL_VERTICAL_ACCEL =
-            TerminalConfigValue.number("equipment", "torpedo", "air_fall_vertical_accel", 0.25, 0.0, 0.5);
+            TerminalConfigValue.number("equipment", "torpedo", "air_fall_vertical_accel", 0.03, 0.0, 0.5);
+
+    /** 非空投空中回退的下坠速度上限（格/tick）。默认 0.3 = 鱼雷航速，即入水角最多约 45°
+     *  （与航空鱼雷的固定入水角同一档）；再高的发射点、打到陆地上也不会变成垂直下坠。
+     *  下限不为 0：0 会让鱼雷永远落不下来。 */
+    public static final TerminalConfigValue<Double> TORPEDO_AIR_FALL_TERMINAL_SPEED =
+            TerminalConfigValue.number("equipment", "torpedo", "air_fall_terminal_speed", 0.3, 0.05, 1.0);
 
     /** 线导模式垂直输入的归一化死区。 */
     public static final TerminalConfigValue<Double> TORPEDO_WIRE_VERTICAL_DEADZONE =

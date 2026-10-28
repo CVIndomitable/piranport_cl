@@ -8,6 +8,7 @@ import com.piranport.aviation.AircraftStatsService;
 import com.piranport.aviation.ResolvedAircraftStats;
 import com.piranport.component.AircraftState;
 import com.piranport.component.WeaponCategory;
+import com.piranport.component.WeaponCooldown;
 import com.piranport.platform.ClientHooks;
 import com.piranport.registry.ModDataComponents;
 import com.piranport.registry.ModItems;
@@ -31,6 +32,12 @@ public class AircraftItem extends Item {
 
     public AircraftItem(Properties properties) {
         super(properties);
+    }
+
+    /** 平时隐藏原版耐久条，避免盖住图标底部的两态标识；只在损坏时显示空条。 */
+    @Override
+    public boolean isBarVisible(ItemStack stack) {
+        return WeaponDurabilityBar.showWhenBroken(stack);
     }
 
     @Override
@@ -108,14 +115,26 @@ public class AircraftItem extends Item {
                 tooltipComponents.add(Component.translatable("tooltip.piranport.shift_for_details")
                         .withStyle(net.minecraft.ChatFormatting.DARK_GRAY));
             }
-            // 燃料与对海挂载由同一次 R 键装填一起写入，提示只保留一个合并状态。
+            // 一架飞机只输出一条状态：装填中 > 已装填 > 未装填。
+            // WHY 由这里统一负责：图标谓词（ClientModEvents 的 fueled）也用
+            // AircraftSortieReadiness 判定，两处必须同源；装填读条期间若再让
+            // appendWeaponCooldownTooltip 追加一行，就会出现「未装填 + 装填中」两条。
             boolean ready = AircraftSortieReadiness.isReady(state, definition, stats);
-            tooltipComponents.add(Component.translatable(ready
-                            ? "tooltip.piranport.weapon_ready"
-                            : "tooltip.piranport.weapon_not_loaded")
-                    .withStyle(ready ? net.minecraft.ChatFormatting.GREEN
-                            : net.minecraft.ChatFormatting.RED));
+            WeaponCooldown cooldown = stack.get(ModDataComponents.WEAPON_COOLDOWN.get());
+            Level level = context.level();
+            boolean reloading = level != null && cooldown != null
+                    && cooldown.isOnCooldown(level.getGameTime());
+            if (reloading) {
+                tooltipComponents.add(Component.translatable("tooltip.piranport.weapon_reloading")
+                        .withStyle(net.minecraft.ChatFormatting.YELLOW));
+            } else {
+                tooltipComponents.add(Component.translatable(ready
+                                ? "tooltip.piranport.weapon_ready"
+                                : "tooltip.piranport.weapon_not_loaded")
+                        .withStyle(ready ? net.minecraft.ChatFormatting.GREEN
+                                : net.minecraft.ChatFormatting.RED));
+            }
         }
-        ShipCoreCombat.appendWeaponCooldownTooltip(stack, tooltipComponents);
+        // 状态行已由本方法输出；不要再调用 appendWeaponCooldownTooltip 追加第二行。
     }
 }

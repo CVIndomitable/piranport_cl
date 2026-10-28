@@ -96,6 +96,18 @@ public class TorpedoLauncherItem extends Item {
         com.piranport.combat.data.WeaponReloadLifecycle.tick(stack, level, entity, slot);
     }
 
+    /**
+     * 平时不显示原版耐久条，只在损坏（耐久剩最后一点）时显示空条。
+     *
+     * <p>WHY：空膛图标的黄色警告三角、满膛图标的弹种标识都画在贴图底部（y+13..15），
+     * 原版耐久条正好盖在同一位置。武器平时不需要耐久条，损坏时再用空条提示；
+     * 剩余耐久仍可在 tooltip 查看。规则与火炮共用 {@link WeaponDurabilityBar}。</p>
+     */
+    @Override
+    public boolean isBarVisible(ItemStack stack) {
+        return WeaponDurabilityBar.showWhenBroken(stack);
+    }
+
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
@@ -193,6 +205,10 @@ public class TorpedoLauncherItem extends Item {
     public void appendHoverText(ItemStack stack, TooltipContext context,
                                 List<Component> tooltipComponents, TooltipFlag tooltipFlag) {
         ExperienceShellItem.appendEnhancementTooltip(stack, tooltipComponents);
+        if (WeaponDurabilityBar.isBroken(stack)) {
+            tooltipComponents.add(Component.translatable("tooltip.piranport.weapon.damaged")
+                    .withStyle(net.minecraft.ChatFormatting.RED));
+        }
 
         // 空膛不再显示「未装填鱼雷」：空膛/装填由物品模型的 loaded/empty 图标切换表达，
         // 提示只在真正装了雷时给出弹种与数量。

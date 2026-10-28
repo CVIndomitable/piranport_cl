@@ -51,11 +51,8 @@ public class ReloadProgressHudLayer {
         if (mc.player == null || mc.level == null) return;
 
         // 主手优先，副手兜底：鱼雷发射器经常放副手。
-        ItemStack weapon = mc.player.getMainHandItem();
-        if (!hasReloadBar(weapon, mc.player)) {
-            weapon = mc.player.getOffhandItem();
-            if (!hasReloadBar(weapon, mc.player)) return;
-        }
+        ItemStack weapon = hudReloadWeapon(mc.player);
+        if (weapon.isEmpty()) return;
 
         // 检查是否有冷却
         WeaponCooldown cooldown = weapon.get(ModDataComponents.WEAPON_COOLDOWN.get());
@@ -79,13 +76,27 @@ public class ReloadProgressHudLayer {
     }
     
     /**
+     * 大读条当前显示的那一件装备：主手优先，其次副手；两处都没有可装填武器时返回 {@link ItemStack#EMPTY}。
+     *
+     * <p>抽出来给物品图标小读条共用：小读条要跳过这一件，否则同一件装备会同时出现大条和小条。
+     * 注意返回的是玩家背包里的原始实例，调用方可用 {@code ==} 与正在渲染的堆叠比较。
+     */
+    static ItemStack hudReloadWeapon(Player player) {
+        ItemStack main = player.getMainHandItem();
+        if (hasReloadBar(main, player)) return main;
+        ItemStack off = player.getOffhandItem();
+        if (hasReloadBar(off, player)) return off;
+        return ItemStack.EMPTY;
+    }
+
+    /**
      * 该武器是否用大读条显示 {@code WEAPON_COOLDOWN}。
      *
      * <p>鱼雷发射器只有装备了「鱼雷再装填」部件才可能进入装填状态，才画读条。
      * 没有部件的 WEAPON_COOLDOWN 只是发射冷却（旧存档里还可能是异常长值），
      * 不是"装填中"，不画读条。
      */
-    private static boolean hasReloadBar(ItemStack stack, Player player) {
+    static boolean hasReloadBar(ItemStack stack, Player player) {
         if (stack.isEmpty()) return false;
         boolean isWeapon = stack.getItem() instanceof ArtilleryItem
                 || stack.getItem() instanceof AircraftItem

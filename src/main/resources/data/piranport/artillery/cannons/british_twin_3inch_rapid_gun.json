@@ -18,7 +18,7 @@
   "horizontalSpread": 1.5,
   "maxElevation": 60.0,
   "turretSpeed": 3.5,
-  "loadingMode": "MANUAL",
+  "loadingMode": "AUTO",
   "muzzles": [
     {
       "x": 0.15,

@@ -2,7 +2,6 @@ package com.piranport.item;
 
 import com.piranport.client.ReloadProgressHudLayer;
 import com.piranport.combat.TransformationManager;
-import com.piranport.combat.cannon.CannonReloading;
 import com.piranport.config.*;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -77,9 +76,16 @@ public class ConfigInspectorItem extends Item {
         // 友军伤害固定开启：没有配置项，也不会开放（多人同舰队是核心玩法）。
         addConfigLine(player, "友军伤害", "开启（固定）");
         addConfigLine(player, "爆炸破坏", formatBoolean(ModCommonConfig.EXPLOSION_BLOCK_DAMAGE.get()));
-        // 自动装填固定关闭"自动启动"，读条到期仍会自动结算。
-        addConfigLine(player, "自动装填",
-                CannonReloading.AUTO_RELOAD_ENABLED ? "开启" : "关闭（固定）");
+        // 自动装填是按炮种的例外：只有 JSON 声明 loadingMode=AUTO 的炮自动启动读条，其余仍按 R 手动装填。
+        // 这里直接从数据列出自动炮，避免再写一句会和 JSON 脱节的固定文案。
+        java.util.List<String> autoLoadingCannons =
+                com.piranport.artillery.config.ArtilleryConfig.getAllCannonNames().stream()
+                        .filter(id -> com.piranport.artillery.config.ArtilleryConfig.get(id).isAutoLoading())
+                        .sorted()
+                        .toList();
+        addConfigLine(player, "自动装填", autoLoadingCannons.isEmpty()
+                ? "关闭（全部手动）"
+                : "按炮种：" + String.join("、", autoLoadingCannons) + "（其余手动）");
         // 战斗机弹药固定无限：弹药只由舰载机数据定义，没有补给消耗。
         addConfigLine(player, "战斗机弹药", "无限（固定）");
 

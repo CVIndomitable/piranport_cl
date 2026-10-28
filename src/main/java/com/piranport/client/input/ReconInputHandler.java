@@ -34,6 +34,9 @@ public class ReconInputHandler {
         }
 
         if (mc.level != null) {
+            // 侦察机可能飞出原版区块缓存半径：放宽客户端接收范围，否则服务器手工推来的
+            // 远处区块会被 ClientChunkCache 以「not in the view range」丢弃。
+            ClientReconData.keepChunkCacheExpanded();
             Entity reconEntity = mc.level.getEntity(ClientReconData.getReconEntityId());
             if (reconEntity != null) {
                 if (mc.getCameraEntity() != reconEntity) {
@@ -67,15 +70,9 @@ public class ReconInputHandler {
 
         if (!ClientReconData.isInReconMode()) return;
 
-        int entityId = ClientReconData.getReconEntityId();
-        if (mc.level != null) {
-            Entity reconEntity = mc.level.getEntity(entityId);
-            if (reconEntity == null) {
-                com.piranport.PiranPort.LOGGER.warn("ClientReconInput ENTITY_MISSING | entityId={}", entityId);
-                return;
-            }
-        }
-
+        // 输入是服务端权威的侦察状态机驱动的，不能以客户端实体是否存在为前提：
+        // 侦察机飞出原版实体追踪范围时客户端实体可能短暂缺失，若此时停止发包，
+        // 服务端收不到输入会按「无输入」让飞机自己爬升/转弯，玩家就会觉得撞墙。
         Options opts = mc.options;
         boolean anyKey = opts.keyUp.isDown() || opts.keyDown.isDown()
                 || opts.keyLeft.isDown() || opts.keyRight.isDown()

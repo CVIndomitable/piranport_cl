@@ -343,6 +343,9 @@ public final class ClientItemHooks implements com.piranport.platform.ClientBridg
     public void appendWeaponCooldownTooltip(ItemStack stack, List<Component> tooltip) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || mc.level == null) return;
+        // 舰载机的状态行（未装填 / 装填中 / 已装填）由 AircraftItem#appendHoverText 统一输出，
+        // 这里提前放行。否则同一架飞机会出现第二条状态行（例如读条期间「未装填 + 装填中」）。
+        if (stack.getItem() instanceof com.piranport.item.AircraftItem) return;
 
         Inventory inv = mc.player.getInventory();
         ItemStack coreStack = TransformationManager.findTransformedCore(mc.player);

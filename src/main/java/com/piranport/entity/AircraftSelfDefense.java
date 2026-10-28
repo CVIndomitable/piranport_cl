@@ -70,7 +70,8 @@ final class AircraftSelfDefense {
                 bullet.getYRot(), bullet.getXRot());
         bullet.setDeltaMovement(direction.scale(ModEquipmentConfig.FIGHTER_BULLET_SPEED.get()));
         bullet.setOwner(owner);
-        bullet.setSourceAircraftName(craft.getDisplayName());
+        // 命中提示的武器名要用载机物品名（如「飞行圆饼」），不能用实体类型名（「战斗机」）。
+        bullet.setSourceAircraftName(craft.displayName());
         bullet.setSourceAircraft(craft);
         craft.level().addFreshEntity(bullet);
         craft.selfDefenseCooldown = Math.max(1, fireCooldown);

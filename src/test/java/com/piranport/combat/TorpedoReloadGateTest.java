@@ -115,8 +115,10 @@ class TorpedoReloadGateTest {
 
     @Test
     void hudOnlyShowsTorpedoBarWithReloadPart() throws Exception {
+        // 只锚方法签名、不断言可见性：hasReloadBar 现在是包内可见，
+        // 供 WeaponReloadDecorator 复用同一套"是否该画装填条"判断。
         String body = methodBody(read("client/ReloadProgressHudLayer.java"),
-                "private static boolean hasReloadBar(");
+                "boolean hasReloadBar(");
         assertTrue(body.contains("hasTorpedoReloadEquipped(player, core)"),
                 "没有再装填部件时不画鱼雷读条");
     }

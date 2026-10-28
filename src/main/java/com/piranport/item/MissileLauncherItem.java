@@ -84,6 +84,12 @@ public class MissileLauncherItem extends Item {
 
     public Item getAmmoItem() { return ammoItem.get(); }
 
+    /** 平时隐藏原版耐久条，避免盖住弹种/装填图标；只在损坏时显示空条。 */
+    @Override
+    public boolean isBarVisible(ItemStack stack) {
+        return WeaponDurabilityBar.showWhenBroken(stack);
+    }
+
     /** 单型号覆盖 &gt; 共享默认 &gt; 物品基准。 */
     private double effectiveDouble(String property, TerminalConfigValue<Double> shared, double base) {
         String key = parameterKey(property);

@@ -188,6 +188,9 @@ class CannonStatFormulaTest {
             assertEquals(fb, json, e.id() + " JSON 与代码回退值不一致");
             assertEquals(e.caliberInches(), json.caliberInches(), 1e-4, e.id());
             assertEquals(e.tier().id(), json.tier(), e.id());
+            // 自动装填是按炮种的例外：只允许英国双联3英寸速射炮为 AUTO，其余必须保持 MANUAL。
+            assertEquals("british_twin_3inch_rapid_gun".equals(e.id()) ? "AUTO" : "MANUAL",
+                    json.loadingMode(), e.id());
             assertEquals(CannonStatFormula.panelDamage(e.caliberInches()), (int) json.damage(), e.id());
             assertEquals(CannonStatFormula.reloadTicks(e.caliberInches(), e.barrels(), e.tier()),
                     json.reloadTime(), 1e-3, e.id());

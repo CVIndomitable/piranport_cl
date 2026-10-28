@@ -151,6 +151,17 @@ public class AircraftEntity extends Entity implements AircraftAttackContext {
     final java.util.Set<Long> reconForcedChunks = new java.util.HashSet<>();
     final java.util.Set<Long> reconPendingSend = new java.util.HashSet<>();
 
+    /**
+     * 服务端：owner 是否仍在原版实体追踪集合里。
+     *
+     * <p>ChunkMap 只把实体同步给「实体所在区块在玩家区块追踪范围内且距离 ≤ 视距」的玩家；
+     * 侦察机允许飞出该范围，飞出去后 owner 会收到移除包，客户端摄像机随之冻结。
+     * 该字段由 {@code PlayerEvent.StartTracking/StopTracking} 精确维护，false 时改走手工同步。
+     */
+    boolean reconOwnerTracksEntity = true;
+    /** 服务端：是否已给 owner 手工补发过生成包；退出侦察/回收时必须补发移除包，避免客户端残留幽灵实体。 */
+    boolean reconEntityManuallySynced = false;
+
     @Nullable AircraftEntity cachedReconAircraft;
     int reconCacheTick = 0;
     @Nullable int[] cachedMapSlots;
@@ -389,6 +400,23 @@ public class AircraftEntity extends Entity implements AircraftAttackContext {
     }
 
     /**
+     * 由实体追踪事件驱动：记录 owner 是否还收得到原版实体包。
+     *
+     * <p>只认 owner 本人；其他玩家进出追踪范围不影响侦察机镜头。不按飞行状态过滤：
+     * 飞机可能在进入 RECON_ACTIVE 之前就已经脱离追踪（例如主人被传送走），
+     * 状态过滤会漏掉那一次 StopTracking，导致侦察开始时误以为仍在追踪。
+     *
+     * <p>重新被追踪时原版 {@code addPairing} 已经补发过生成包，手工同步标记必须清零。
+     */
+    public void updateReconTracking(Player player, boolean tracked) {
+        if (ownerUUID == null || !ownerUUID.equals(player.getUUID())) return;
+        reconOwnerTracksEntity = tracked;
+        if (tracked) {
+            reconEntityManuallySynced = false;
+        }
+    }
+
+    /**
      * 退出侦察转入返航：结束侦察操控，但保留一小圈强加载直到回家。
      *
      * <p>WHY 不直接 {@link #cleanupReconState}：侦察机可能已在实体 tick 范围之外，
@@ -398,6 +426,8 @@ public class AircraftEntity extends Entity implements AircraftAttackContext {
     void beginReconReturn(Player owner) {
         ReconManager.endRecon(owner.getUUID());
         AircraftAswRecon.beginReconReturnLoading(this);
+        // 手工生成的客户端实体必须在交出镜头时移除，否则原版追踪恢复前会一直残留。
+        AircraftAswRecon.removeManualReconEntity(this);
         if (owner instanceof ServerPlayer serverPlayer) {
             PacketDistributor.sendToPlayer(serverPlayer, new ReconStatePayload(false, 0));
         }
@@ -444,6 +474,8 @@ public class AircraftEntity extends Entity implements AircraftAttackContext {
 
     void releaseAllForcedChunks() {
         AircraftAswRecon.releaseAllForcedChunks(this);
+        // 所有清理路径（退出侦察、回收、实体移除）都会走到这里，统一补发移除包防幽灵实体。
+        AircraftAswRecon.removeManualReconEntity(this);
     }
 
     // ===== 交互 =====
@@ -723,7 +755,30 @@ public class AircraftEntity extends Entity implements AircraftAttackContext {
     @Override public float yRot() { return getYRot(); }
     @Override public float xRot() { return getXRot(); }
     @Override public int entityId() { return getId(); }
-    @Override public Component displayName() { return getDisplayName(); }
+    /**
+     * 火控/攻击上下文里的「武器名」，用于命中、击杀、未命中提示。
+     *
+     * <p>必须返回载机物品名（例如「飞行圆饼」），不能落到实体类型名
+     * （{@link #getTypeName()} 只会给出「战斗机」）。{@code originalStack} 在
+     * {@link #create}/{@link #createAutonomous} 时保存并随 NBT 持久化，深海自主飞机
+     * 也走同一逻辑，显示对应物品名，不按机种写死。物品带自定义名时同样生效。
+     */
+    @Override
+    public Component displayName() {
+        if (!originalStack.isEmpty()) {
+            return originalStack.getHoverName();
+        }
+        // 兜底：旧存档没有 originalStack 时，按定义 ID 反查注册物品名。
+        AircraftDefinition definition = getResolvedDefinition();
+        if (definition != null) {
+            net.minecraft.world.item.Item item = net.minecraft.core.registries.BuiltInRegistries.ITEM
+                    .get(definition.id());
+            if (item != net.minecraft.world.item.Items.AIR) {
+                return item.getDescription();
+            }
+        }
+        return getDisplayName();
+    }
     public int ammoCapacity() { return ammoCapacity; }
     public int remainingAmmo() { return remainingAmmo; }
     public void setRemainingAmmo(int ammo) { remainingAmmo = Math.max(0, ammo); }

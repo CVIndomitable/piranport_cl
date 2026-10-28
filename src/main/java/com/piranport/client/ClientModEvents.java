@@ -124,6 +124,10 @@ public class ClientModEvents {
     private static final CatalogGunRenderer.Spec MK16_TRIPLE_6 =
             CatalogGunRenderer.spec("mk16_triple_6inch_gun_flashless",
                     WeaponItems.CATALOG_GUNS.get("mk16_triple_6inch_gun_flashless"));
+    /** MK16DP 双联 6 英寸高射炮：同一套 BEWLR（物品栏图标 / 手持 3D 炮塔）。 */
+    private static final CatalogGunRenderer.Spec US_MK16DP_TWIN_6 =
+            CatalogGunRenderer.spec("us_mk16dp_twin_6inch_gun",
+                    WeaponItems.CATALOG_GUNS.get("us_mk16dp_twin_6inch_gun"));
     /** 2026-10-25 批次二：三联 6 英寸 / 三联 180 毫米 / 双联 8 英寸。 */
     private static final CatalogGunRenderer.Spec IMPROVED_TRIPLE_6 =
             CatalogGunRenderer.spec("improved_triple_6inch_gun",
@@ -341,9 +345,17 @@ public class ClientModEvents {
                                     ? 1.0f : 0.0f);
                 }
                 if (entry.get() instanceof com.piranport.item.AircraftItem) {
-                    ItemProperties.register(entry.get(), fueled, (stack, level, entity, seed) ->
-                            com.piranport.aviation.AircraftDefinitionService.stateOf(stack).currentFuel() > 0
-                                    ? 1.0f : 0.0f);
+                    // 图标两态 = 可出击 / 不可出击，必须与 tooltip 共用 AircraftSortieReadiness：
+                    // 只看油 > 0 会让“满油但没挂载的攻击机”或“只加了一部分油”显示成已装填，
+                    // 而 tooltip 仍写未装填。
+                    ItemProperties.register(entry.get(), fueled, (stack, level, entity, seed) -> {
+                        var definition = com.piranport.aviation.AircraftDefinitionService.resolve(stack);
+                        if (definition == null) return 0.0f;
+                        var state = com.piranport.aviation.AircraftDefinitionService.stateOf(stack);
+                        var stats = com.piranport.aviation.AircraftStatsService.resolve(definition);
+                        return com.piranport.aviation.AircraftSortieReadiness.isReady(
+                                state, definition, stats) ? 1.0f : 0.0f;
+                    });
                 }
                 // 为所有火炮和发射器（鱼雷/导弹/火箭）注册 "loaded" 属性。
                 // 判定依据是 LOADED_AMMO 数据组件，而非某种物品子类特有的状态，
@@ -421,6 +433,13 @@ public class ClientModEvents {
         event.register(ModItems.SY1_LAUNCHER.get(), weaponDecorator);
         event.register(ModItems.MK14_HARPOON_LAUNCHER.get(), weaponDecorator);
         event.register(ModItems.SHIP_ROCKET_LAUNCHER.get(), weaponDecorator);
+        // 不在 07 表里的两门试验火炮（allCatalogGuns 覆盖不到），同样要画装填小条
+        event.register(ModItems.FRENCH_QUAD_380MM_GUN.get(), weaponDecorator);
+        event.register(ModItems.FOURTEEN_BARREL_GUN.get(), weaponDecorator);
+        // 舰载机：格纳库里也能看到其它机型的装填进度
+        for (var aircraft : com.piranport.registry.AircraftItems.AIRCRAFT_ITEMS) {
+            event.register(aircraft.get(), weaponDecorator);
+        }
     }
 
     @SubscribeEvent

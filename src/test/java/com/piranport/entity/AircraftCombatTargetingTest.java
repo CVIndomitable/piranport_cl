@@ -124,6 +124,22 @@ class AircraftCombatTargetingTest {
     }
 
     @Test
+    void autoLaunchNeverTakesAircraftFromTheHeldSlot() throws Exception {
+        String strategy = Files.readString(Path.of(
+                "src/main/java/com/piranport/aviation/AircraftFireStrategy.java"));
+        String loop = methodBody(strategy, "public static boolean tryAutoLaunchFighter(");
+        int heldSlotSkip = loop.indexOf("if (wi == inv.selected) continue;");
+        int launch = loop.indexOf("launchAircraftInventoryMode(");
+        assertTrue(heldSlotSkip >= 0,
+                "自动升空不得代玩家放飞手持槽里的飞机：R 装填满油后不能等于立即起飞");
+        assertTrue(launch > heldSlotSkip, "手持槽必须在真正放飞之前被跳过");
+        assertTrue(loop.contains("AircraftSortieReadiness.isReady(state, definition, stats)"),
+                "自动升空必须与手动放飞共用出击准备判定（满油 + 必要挂载）");
+        assertFalse(loop.contains("currentFuel() > 0"),
+                "不能只看油量 > 0：半油/未完成整备的飞机不得自动升空");
+    }
+
+    @Test
     void torpedoBomberAimsAtWaterSurfaceAndNeverLaunchesBehind() throws Exception {
         String strategy = Files.readString(Path.of(
                 "src/main/java/com/piranport/aviation/combat/strategy/TorpedoAttackStrategy.java"));

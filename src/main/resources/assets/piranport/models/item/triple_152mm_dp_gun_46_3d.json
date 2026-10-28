@@ -7,6 +7,7 @@
     "hull": "piranport:item/triple_152mm_dp_gun_46_hull",
     "roof": "piranport:item/triple_152mm_dp_gun_46_roof",
     "hull_dark": "piranport:item/triple_152mm_dp_gun_46_hull_dark",
+    "dark": "piranport:item/triple_152mm_dp_gun_46_hull_dark",
     "detail": "piranport:item/triple_152mm_dp_gun_46_detail",
     "barrel": "piranport:item/triple_152mm_dp_gun_46_barrel",
     "interior": "piranport:item/triple_152mm_dp_gun_46_interior",

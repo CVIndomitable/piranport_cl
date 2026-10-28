@@ -28,6 +28,9 @@ public class AircraftResupply {
 
     /** @see AircraftEntity#recallAndRemove() */
     public static void recallAndRemove(AircraftEntity craft) {
+        // 返航到达与玩家主动召回可能在同一 tick 各调一次；实体一旦 discard 就不能再返还物品，
+        // 否则同一架飞机会被还回两份。这里以实体是否已移除作为唯一闸口。
+        if (craft.isRemoved()) return;
         com.piranport.debug.PiranPortDebug.event(
                 "Aircraft RETURN | type={} entityId={} forced={}",
                 craft.getAircraftClass().getSerializedName(), craft.getId(), craft.isForcedReturn());

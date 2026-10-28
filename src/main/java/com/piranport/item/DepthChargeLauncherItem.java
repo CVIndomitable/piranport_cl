@@ -51,6 +51,12 @@ public class DepthChargeLauncherItem extends Item {
         return cooldownTicks;
     }
 
+    /** 平时隐藏原版耐久条，避免盖住空膛/装填图标；只在损坏时显示空条。 */
+    @Override
+    public boolean isBarVisible(ItemStack stack) {
+        return WeaponDurabilityBar.showWhenBroken(stack);
+    }
+
     public SpreadPattern getSpreadPattern() {
         return spreadPattern;
     }
@@ -74,6 +80,10 @@ public class DepthChargeLauncherItem extends Item {
     public void appendHoverText(ItemStack stack, TooltipContext context,
                                 List<Component> tooltipComponents, TooltipFlag tooltipFlag) {
         ExperienceShellItem.appendEnhancementTooltip(stack, tooltipComponents);
+        if (WeaponDurabilityBar.isBroken(stack)) {
+            tooltipComponents.add(Component.translatable("tooltip.piranport.weapon.damaged")
+                    .withStyle(ChatFormatting.RED));
+        }
 
         WeaponCategory cat = stack.get(ModDataComponents.WEAPON_CATEGORY.get());
         if (cat != null) {

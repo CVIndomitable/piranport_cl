@@ -11,6 +11,7 @@ import com.piranport.debug.PiranPortDebug;
 import com.piranport.entity.DepthChargeEntity;
 import com.piranport.item.DepthChargeLauncherItem;
 import com.piranport.item.ExperienceShellItem;
+import com.piranport.item.WeaponDurabilityBar;
 import com.piranport.registry.ModDataComponents;
 import com.piranport.registry.ModItems;
 import net.minecraft.network.chat.Component;
@@ -38,6 +39,11 @@ public final class DepthChargeFireStrategy {
                                         Inventory inv, int weaponSlot, int coreSlot,
                                         DepthChargeLauncherItem launcher, SlotCooldowns cooldowns) {
         ItemStack launcherStack = weaponSlot == 40 ? inv.offhand.get(0) : inv.items.get(weaponSlot);
+        // 耐久打满后发射器停在损坏状态而不销毁；损坏后不能继续发射。
+        if (WeaponDurabilityBar.isBroken(launcherStack)) {
+            player.displayClientMessage(Component.translatable("message.piranport.weapon_damaged"), true);
+            return;
+        }
         int chargeCount = launcher.getChargeCount();
         int cooldown = ExperienceShellItem.applyCooldownReduction(player, launcher.getCooldownTicks());
         // 基础伤害/威力与 DepthChargeEntity 兜底值同源（global.depth_charge.*），再叠加玩家强化加成。
@@ -86,8 +92,8 @@ public final class DepthChargeFireStrategy {
         if (!launcherStack.isEmpty()) {
             int newDamage = launcherStack.getDamageValue() + 1;
             if (newDamage >= launcherStack.getMaxDamage()) {
-                if (weaponSlot == 40) inv.offhand.set(0, ItemStack.EMPTY);
-                else inv.items.set(weaponSlot, ItemStack.EMPTY);
+                // 耐久耗尽后停在损坏状态（不销毁物品）：下一发会被开火前的损坏检查拦下。
+                launcherStack.setDamageValue(Math.max(0, launcherStack.getMaxDamage() - 1));
                 launcherBroken = true;
                 level.playSound(null, player.getX(), player.getY(), player.getZ(),
                         SoundEvents.ITEM_BREAK, SoundSource.PLAYERS, 0.8f, 0.8f + level.random.nextFloat() * 0.4f);

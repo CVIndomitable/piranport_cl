@@ -10,6 +10,7 @@ import com.piranport.entity.TorpedoEntity;
 import com.piranport.item.ExperienceShellItem;
 import com.piranport.item.TorpedoItem;
 import com.piranport.item.TorpedoLauncherItem;
+import com.piranport.item.WeaponDurabilityBar;
 import com.piranport.registry.ModDataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
@@ -50,6 +51,11 @@ public class TorpedoFireStrategy {
     public static void fireTorpedosManualMode(Level level, Player player, ItemStack coreStack,
             Inventory inv, int weaponSlot, TorpedoLauncherItem launcher, SlotCooldowns cooldowns) {
         ItemStack launcherStack = weaponSlot == 40 ? inv.offhand.get(0) : inv.items.get(weaponSlot);
+        // 耐久打满后发射器停在损坏状态而不销毁；损坏后不能继续发射。
+        if (WeaponDurabilityBar.isBroken(launcherStack)) {
+            player.displayClientMessage(Component.translatable("message.piranport.weapon_damaged"), true);
+            return;
+        }
         int tubeCount = launcher.getTubeCount();
         int caliber = launcher.getCaliber();
 
@@ -108,8 +114,8 @@ public class TorpedoFireStrategy {
         if (!launcherStack.isEmpty()) {
             int newDamage = launcherStack.getDamageValue() + 1;
             if (newDamage >= launcherStack.getMaxDamage()) {
-                if (weaponSlot == 40) inv.offhand.set(0, ItemStack.EMPTY);
-                else inv.items.set(weaponSlot, ItemStack.EMPTY);
+                // 耐久耗尽后停在损坏状态（不销毁物品）：下一发会被开火前的损坏检查拦下。
+                launcherStack.setDamageValue(Math.max(0, launcherStack.getMaxDamage() - 1));
                 launcherBroken = true;
                 level.playSound(null, player.getX(), player.getY(), player.getZ(),
                         SoundEvents.ITEM_BREAK, SoundSource.PLAYERS, 0.8f, 0.8f + level.random.nextFloat() * 0.4f);

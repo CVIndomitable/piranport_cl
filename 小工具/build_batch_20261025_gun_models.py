@@ -151,6 +151,9 @@ def write(gid):
     tex = {k: NS + gid + "_" + k for k in
            ("hull", "roof", "hull_dark", "detail", "barrel", "interior",
             "muzzle_empty", "muzzle_loaded")}
+    # base() 的底座法兰面用独立语义键 dark，实际复用 hull_dark 贴图；
+    # 必须在这里显式登记，否则模型里 #dark 指向未定义纹理，渲染成 missing texture
+    tex["dark"] = NS + gid + "_hull_dark"
     if gid == "british_single_6inch_gun":
         tex["canvas"] = NS + gid + "_canvas"
     if gid == "soviet_improved_triple_180mm_gun":

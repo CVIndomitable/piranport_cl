@@ -125,6 +125,16 @@ public final class CannonCatalog {
         return List.copyOf(list);
     }
 
+    /**
+     * 声明自动装填（JSON {@code loadingMode=AUTO}）的炮种镜像。
+     *
+     * <p>WHY 要在这里也记一份：注册期回退数据是资源未加载时（专用服务器客户端）唯一能读到的
+     * 火炮数据，单测 {@code cannonJsonMatchesCatalogFallback} 保证它与 JSON 一致。目前只有
+     * 英国双联3英寸速射炮是按炮种的例外，其余 61 门仍是 R 键手动装填。
+     */
+    private static final java.util.Set<String> AUTO_LOADING_IDS =
+            java.util.Set.of("british_twin_3inch_rapid_gun");
+
     /** 注册期回退数据；damage/reloadTime 传 0，由 ArtilleryCannonData 按公式派生。 */
     public static ArtilleryCannonData fallbackData(Entry e) {
         Template t = template(e.caliberInches());
@@ -132,7 +142,8 @@ public final class CannonCatalog {
         return new ArtilleryCannonData(0, n, 0f, 0f, t.durability(), t.scopeZoom(),
                 muzzles(n, t.muzzleDx(), t.muzzleY()), t.initialSpeed(), t.dragCoeff(), t.gravity(),
                 t.explosionPower(), t.dispersion(), 0, n, n > 1 ? 3.0f : 0.0f, t.projectileWeight(),
-                t.verticalSpread(), t.horizontalSpread(), t.maxElevation(), t.turretSpeed(), "MANUAL",
+                t.verticalSpread(), t.horizontalSpread(), t.maxElevation(), t.turretSpeed(),
+                AUTO_LOADING_IDS.contains(e.id()) ? "AUTO" : "MANUAL",
                 e.caliberInches(), e.tier().id(), "standard", 0f);
     }
 

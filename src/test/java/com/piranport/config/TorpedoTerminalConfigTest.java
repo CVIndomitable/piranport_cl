@@ -25,8 +25,10 @@ class TorpedoTerminalConfigTest {
                 .filter(spec -> spec.key().startsWith("global.torpedo."))
                 .collect(Collectors.toMap(TerminalParameterSpec::key, Function.identity()));
 
-        assertSpec(specs, "air_fall_horizontal_decay", "0.7", 0.0, 1.0);
-        assertSpec(specs, "air_fall_vertical_accel", "0.25", 0.0, 0.5);
+        // 用户口径 2026-10-28：鱼雷要「平着飞出去再落水」，水平不再衰减、垂直接近原版重力。
+        assertSpec(specs, "air_fall_horizontal_decay", "1.0", 0.0, 1.0);
+        assertSpec(specs, "air_fall_vertical_accel", "0.03", 0.0, 0.5);
+        assertSpec(specs, "air_fall_terminal_speed", "0.3", 0.05, 1.0);
         assertSpec(specs, "wire_vertical_deadzone", "0.05", 0.0, 0.99);
     }
 
@@ -61,8 +63,13 @@ class TorpedoTerminalConfigTest {
 
         assertTrue(source.contains("TORPEDO_AIR_FALL_HORIZONTAL_DECAY.get()"));
         assertTrue(source.contains("TORPEDO_AIR_FALL_VERTICAL_ACCEL.get()"));
+        assertTrue(source.contains("TORPEDO_AIR_FALL_TERMINAL_SPEED.get()"));
         assertTrue(source.contains("TORPEDO_WIRE_VERTICAL_DEADZONE.get()"));
         assertTrue(source.contains("TORPEDO_BOMBER_TORPEDO_ENTRY_ANGLE.get()"));
+        // 空中回退必须走纯函数，不能再在实体里写死「乘衰减 + 加加速度」。
+        assertTrue(source.contains("TorpedoAirFallBallistics."));
+        assertFalse(source.contains("motion.y - ModEquipmentConfig.TORPEDO_AIR_FALL_VERTICAL_ACCEL"));
+        assertFalse(source.contains("motion.x * ModEquipmentConfig.TORPEDO_AIR_FALL_HORIZONTAL_DECAY"));
         assertFalse(source.contains("motion.x * 0.98"));
         assertFalse(source.contains("motion.y - 0.08"));
     }
@@ -73,7 +80,8 @@ class TorpedoTerminalConfigTest {
             String language = java.nio.file.Files.readString(java.nio.file.Path.of(
                     "src/main/resources/assets/piranport/lang/" + locale + ".json"));
             for (String property : new String[] {
-                    "air_fall_horizontal_decay", "air_fall_vertical_accel", "wire_vertical_deadzone"
+                    "air_fall_horizontal_decay", "air_fall_vertical_accel",
+                    "air_fall_terminal_speed", "wire_vertical_deadzone"
             }) {
                 assertTrue(language.contains("gui.piranport.debug_terminal.property." + property),
                         locale + " missing label " + property);

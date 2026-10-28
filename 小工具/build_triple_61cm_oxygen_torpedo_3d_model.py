@@ -7,8 +7,9 @@
     壁板上有一条斜向加强条；
   - 甲板栏杆立柱更密（16 根），除上横杆外还有一道中横杆；
   - 甲板右前方有一个很大的圆盖（原画最显眼的地标），旁边两道长条舱盖槽；
-  - 三根鱼雷管更粗，+Z 一端是黑管口（空膛黑膛 / 装填金属封盖），
-    -Z 一端是又粗又钝的抛光钢雷头（氧气雷的识别点），只一道管箍。
+  - 三根鱼雷管更粗，+Z 一端是又粗又钝的抛光钢雷头（氧气雷的识别点，
+    也是「长的一侧」，原画里与甲板大圆盖同侧），-Z 一端是黑管口
+    （空膛黑膛 / 装填金属封盖）。
 
 技术要点：
   - 八角形用「两个正交方盒 + 四个 45° 方盒」拼出切角八棱柱：正交方盒给 ±X/±Z
@@ -16,7 +17,7 @@
   - 鱼雷管/圆盖用「轴对齐方盒 + 45° 绕 Z 方盒」叠成八棱柱；
   - 逐面写 uv，贴图 32x32、每模型单位 2px，长面 uv 夹到 16；
   - 装填/空膛的差异只在管口端面贴图（cap_empty / cap_loaded）；
-  - 模型中心在 x=8，管口朝 +Z，物品 display 旋转 180° 后朝角色前方。
+  - 模型中心在 x=8，长雷头端朝 +Z，物品 display 旋转 180° 后朝角色前方。
 
 产出：
   models/item/triple_61cm_oxygen_torpedo.json               builtin/entity 物品入口
@@ -65,9 +66,18 @@ BACK_Z = CZ - R_WALL      # -Z 平面 z = 1.7
 TUBE_Y = 4.25             # 管轴高度：管顶刚好藏在甲板压边之下
 TUBE_R = 1.20             # 比常规型更粗
 TUBE_XS = (5.55, 8.00, 10.45)
-TUBE_FRONT = 16.05        # 管口桩起点
-TUBE_CAP = 18.20          # 管口端面
-TUBE_BACK = -2.20         # 管身尾端
+TUBE_FRONT = 16.05        # 管口桩起点（镜像前的 +Z 侧基准）
+TUBE_CAP = 18.20          # 管口端面（镜像前的 +Z 侧基准）
+TUBE_BACK = -2.20         # 管身尾端（镜像前的 -Z 侧基准）
+
+
+def mirror_z(z):
+    """把鱼雷管总成绕炮座中心做 Z 轴镜像。
+
+    WHY 只镜像管总成而不是整个模型：原画里长雷头端与甲板大圆盖、舱门在炮座
+    同一侧（+Z）；若整体镜像，大圆盖和舱门会被转到雷头对面，与原画不符。
+    """
+    return 2.0 * CZ - z
 
 
 def _uv_for(face, x1, y1, z1, x2, y2, z2, seed):
@@ -176,22 +186,30 @@ octagon_y("top_plate", CX, CZ, Y_BEVEL_TOP, Y_PLATE_TOP, R_PLATE, "plate",
 
 # ================= 三根氧气鱼雷管 =================
 for tag, cx in zip("abc", TUBE_XS):
-    octagon_z(f"tube_{tag}", cx, TUBE_Y, TUBE_BACK, TUBE_FRONT, TUBE_R, "tube")
-    # 管口一侧：宽管箍 + 管口桩（端面贴 cap）
-    octagon_z(f"band_front_{tag}", cx, TUBE_Y, 15.20, 15.95, TUBE_R * 1.10, "ring")
-    octagon_z(f"muzzle_{tag}", cx, TUBE_Y, TUBE_FRONT, TUBE_CAP, TUBE_R * 0.94,
-              "ring", faces={"south": "cap"}, full_uv_faces=("south",))
-    # 雷头一侧：一道粗管箍 + 又粗又钝的抛光钢雷头
-    octagon_z(f"band_rear_{tag}", cx, TUBE_Y, TUBE_BACK - 0.70, TUBE_BACK,
-              TUBE_R * 1.12, "ring")
-    octagon_z(f"warhead_neck_{tag}", cx, TUBE_Y, TUBE_BACK - 1.30,
-              TUBE_BACK - 0.70, TUBE_R * 1.06, "warhead")
-    octagon_z(f"warhead_body_{tag}", cx, TUBE_Y, TUBE_BACK - 2.00,
-              TUBE_BACK - 1.30, TUBE_R * 0.94, "warhead")
-    octagon_z(f"warhead_mid_{tag}", cx, TUBE_Y, TUBE_BACK - 2.60,
-              TUBE_BACK - 2.00, TUBE_R * 0.72, "warhead")
-    octagon_z(f"warhead_tip_{tag}", cx, TUBE_Y, TUBE_BACK - 3.00,
-              TUBE_BACK - 2.60, TUBE_R * 0.38, "warhead")
+    # 管身：镜像后从炮座后壁内侧一直贯到前方
+    octagon_z(f"tube_{tag}", cx, TUBE_Y, mirror_z(TUBE_FRONT),
+              mirror_z(TUBE_BACK), TUBE_R, "tube")
+    # 短管口一侧（-Z，炮座后方）：宽管箍 + 管口桩（端面贴 cap）
+    octagon_z(f"band_front_{tag}", cx, TUBE_Y, mirror_z(15.95),
+              mirror_z(15.20), TUBE_R * 1.10, "ring")
+    octagon_z(f"muzzle_{tag}", cx, TUBE_Y, mirror_z(TUBE_CAP),
+              mirror_z(TUBE_FRONT), TUBE_R * 0.94, "ring",
+              faces={"north": "cap"}, full_uv_faces=("north",))
+    # 长雷头一侧（+Z，炮座前方）：一道粗管箍 + 又粗又钝的抛光钢雷头
+    octagon_z(f"band_rear_{tag}", cx, TUBE_Y, mirror_z(TUBE_BACK),
+              mirror_z(TUBE_BACK - 0.70), TUBE_R * 1.12, "ring")
+    octagon_z(f"warhead_neck_{tag}", cx, TUBE_Y,
+              mirror_z(TUBE_BACK - 0.70), mirror_z(TUBE_BACK - 1.30),
+              TUBE_R * 1.06, "warhead")
+    octagon_z(f"warhead_body_{tag}", cx, TUBE_Y,
+              mirror_z(TUBE_BACK - 1.30), mirror_z(TUBE_BACK - 2.00),
+              TUBE_R * 0.94, "warhead")
+    octagon_z(f"warhead_mid_{tag}", cx, TUBE_Y,
+              mirror_z(TUBE_BACK - 2.00), mirror_z(TUBE_BACK - 2.60),
+              TUBE_R * 0.72, "warhead")
+    octagon_z(f"warhead_tip_{tag}", cx, TUBE_Y,
+              mirror_z(TUBE_BACK - 2.60), mirror_z(TUBE_BACK - 3.00),
+              TUBE_R * 0.38, "warhead")
 
 # ================= 甲板栏杆（立柱更密，另有中横杆） =================
 RAIL_R = 5.45              # 内切圆半径（甲板 r=5.75 之内）
@@ -301,7 +319,7 @@ for i, bx in enumerate((6.20, 9.80)):
     octagon_z(f"back_bolt_{i}", bx, 4.05, BACK_Z - 0.12, BACK_Z + 0.02, 0.28,
               "ring")
 
-# 手持时绕 Y 转 180°，让管口朝角色前方
+# 手持时绕 Y 转 180°，让长雷头端朝角色前方
 DISPLAY = {
     "thirdperson_righthand": {
         "rotation": [0, 180, 0],

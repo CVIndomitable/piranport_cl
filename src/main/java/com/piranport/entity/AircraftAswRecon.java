@@ -4,6 +4,11 @@ import com.piranport.aviation.ReconManager;
 import com.piranport.combat.CombatTargeting;
 import com.piranport.config.ModEquipmentConfig;
 import com.piranport.network.AswSonarSyncPayload;
+import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
+import net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket;
+import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket;
+import net.minecraft.network.protocol.game.ClientboundTeleportEntityPacket;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
@@ -86,6 +91,10 @@ public class AircraftAswRecon {
         }
         if (owner instanceof ServerPlayer serverPlayer) {
             sendPendingChunks(craft, serverPlayer);
+            // owner 已飞出原版实体追踪范围：手工把飞机实体重新同步过去，否则客户端丢实体、镜头冻结。
+            if (!craft.reconOwnerTracksEntity) {
+                syncDetachedReconEntity(craft, serverPlayer);
+            }
         }
 
         float[] input = ReconManager.consumeInput(owner.getUUID());
@@ -272,6 +281,52 @@ public class AircraftAswRecon {
                         chunk, serverLevel.getLightEngine(), null, null));
                 iterator.remove();
                 sent++;
+            }
+        }
+    }
+
+    /**
+     * 侦察机飞出原版实体追踪范围后，手工维持 owner 客户端上的飞机实体。
+     *
+     * <p>WHY 需要：{@code ChunkMap.TrackedEntity.updatePlayer} 要求实体所在区块在玩家的
+     * 区块追踪范围内、且距离 ≤ 视距 × 16，否则向玩家发移除包。侦察机航程（兜底 200 格）
+     * 大于该范围，原版会在半路把实体从 owner 客户端摘掉：摄像机冻结在最后位置、
+     * {@code ReconInputHandler} 又找不到实体，表现就是「撞空气墙」。
+     *
+     * <p>生成包只在第一次补发（与原版配对包等价：生成 + 同步数据）；位置用绝对传送包
+     * 每 tick 补一次，因为远处时 {@code ServerEntity.sendChanges} 不会发给 owner。
+     */
+    private static void syncDetachedReconEntity(AircraftEntity craft, ServerPlayer player) {
+        if (!craft.reconEntityManuallySynced) {
+            player.connection.send(new ClientboundAddEntityPacket(
+                    craft.getId(), craft.getUUID(),
+                    craft.getX(), craft.getY(), craft.getZ(),
+                    craft.getXRot(), craft.getYRot(), craft.getType(), 0,
+                    craft.getDeltaMovement(), craft.getYHeadRot()));
+            java.util.List<SynchedEntityData.DataValue<?>> data =
+                    craft.getEntityData().getNonDefaultValues();
+            if (data != null) {
+                player.connection.send(new ClientboundSetEntityDataPacket(craft.getId(), data));
+            }
+            craft.reconEntityManuallySynced = true;
+        }
+        player.connection.send(new ClientboundTeleportEntityPacket(craft));
+    }
+
+    /**
+     * 移除手工同步出来的客户端实体。
+     *
+     * <p>手工生成包绕过了原版 {@code seenBy} 集合，{@code broadcastRemoved} 不会通知 owner，
+     * 因此退出侦察/回收时必须自己补一个移除包；否则客户端会残留一架不再存在的飞机。
+     */
+    public static void removeManualReconEntity(AircraftEntity craft) {
+        if (!craft.reconEntityManuallySynced) return;
+        craft.reconEntityManuallySynced = false;
+        if (craft.level() instanceof ServerLevel serverLevel && craft.getOwnerUUID() != null) {
+            ServerPlayer owner = serverLevel.getServer().getPlayerList()
+                    .getPlayer(craft.getOwnerUUID());
+            if (owner != null) {
+                owner.connection.send(new ClientboundRemoveEntitiesPacket(craft.getId()));
             }
         }
     }

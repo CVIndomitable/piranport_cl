@@ -1,6 +1,7 @@
 package com.piranport.entity;
 
 import com.piranport.combat.TorpedoAirDropBallistics;
+import com.piranport.combat.TorpedoAirFallBallistics;
 import com.piranport.combat.TorpedoGuidanceManager;
 import com.piranport.config.ModCommonConfig;
 import com.piranport.config.ModEquipmentConfig;
@@ -330,9 +331,11 @@ public class TorpedoEntity extends ThrowableItemProjectile {
         } else {
             vy = solveSurfaceVy();
             if (Double.isNaN(vy)) {
-                // 无水面 / 在水面之上且未进入捕获窗口：垂直沿用原空中下坠手感，水平保持玩家朝向
+                // 无水面 / 在水面之上且未进入捕获窗口：水平保持玩家朝向的航速平飞，
+                // 垂直走与无人鱼雷相同的空中回退弹道（重力 + 下坠限速，不再越落越陡）。
                 setDeltaMovement(dirX * torpedoSpeed,
-                        motion.y - ModEquipmentConfig.TORPEDO_AIR_FALL_VERTICAL_ACCEL.get(),
+                        TorpedoAirFallBallistics.nextVerticalSpeed(motion.y,
+                                airFallVerticalAccel(), airFallTerminalSpeed()),
                         dirZ * torpedoSpeed);
                 return true;
             }
@@ -588,7 +591,7 @@ public class TorpedoEntity extends ThrowableItemProjectile {
         airDropTicks++;
         // 入水判定只认“脚部所在方块真正是水”：这样最后一步扎进水里的速度方向仍是配置角度
         // （默认 45°）。旧实现“脚下方块是水就提前结束”会提前约 1 格切到 tickSurfaceAI 的
-        // 空中回退（0.70 衰减 + 0.25/tick 加速度），视觉上仍是接近垂直入水。
+        // 空中回退（当时是 0.70 衰减 + 0.25/tick 加速度），视觉上仍是接近垂直入水。
         // 兜底：投到陆地/建筑（脚部方块固体）或长期无水（虚空、无水柱）时必须结束，
         // 否则空投段会永久接管运动（它跳过 tickSurfaceAI，且速度不含重力）。
         if (TorpedoAirDropBallistics.shouldEndAirDrop(inWater, state.isSolid(), airDropTicks)) {
@@ -629,10 +632,11 @@ public class TorpedoEntity extends ThrowableItemProjectile {
 
         double vy = solveSurfaceVy();
         if (Double.isNaN(vy)) {
-            // 附近没有水（陆地上空等）／在水面之上且未进入捕获窗口：维持原有的减速坠落
-            setDeltaMovement(motion.x * ModEquipmentConfig.TORPEDO_AIR_FALL_HORIZONTAL_DECAY.get(),
-                    motion.y - ModEquipmentConfig.TORPEDO_AIR_FALL_VERTICAL_ACCEL.get(),
-                    motion.z * ModEquipmentConfig.TORPEDO_AIR_FALL_HORIZONTAL_DECAY.get());
+            // 附近没有水（陆地上空等）／在水面之上且未进入捕获窗口：
+            // 保留水平航速平飞，垂直按「接近原版重力 + 下坠限速」落回水面
+            // （旧实现水平乘 0.70，几 tick 就吃光水平速度，鱼雷几乎是垂直扎进水里）。
+            setDeltaMovement(TorpedoAirFallBallistics.nextMotion(motion,
+                    airFallHorizontalDecay(), airFallVerticalAccel(), airFallTerminalSpeed()));
             return;
         }
 
@@ -700,6 +704,19 @@ public class TorpedoEntity extends ThrowableItemProjectile {
 
     private static double surfaceCaptureRange() {
         return ModEquipmentConfig.TORPEDO_SURFACE_CAPTURE_RANGE.get();
+    }
+
+    // 空中回退（非空投）：手感参数全部读终端 global.torpedo.air_fall_*。
+    private static double airFallHorizontalDecay() {
+        return ModEquipmentConfig.TORPEDO_AIR_FALL_HORIZONTAL_DECAY.get();
+    }
+
+    private static double airFallVerticalAccel() {
+        return ModEquipmentConfig.TORPEDO_AIR_FALL_VERTICAL_ACCEL.get();
+    }
+
+    private static double airFallTerminalSpeed() {
+        return ModEquipmentConfig.TORPEDO_AIR_FALL_TERMINAL_SPEED.get();
     }
 
     // ==================== 辅助方法 ====================

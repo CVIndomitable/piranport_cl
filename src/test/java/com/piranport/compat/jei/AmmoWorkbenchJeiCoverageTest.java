@@ -34,8 +34,8 @@ class AmmoWorkbenchJeiCoverageTest {
         assertEquals(23, count(source, "AmmoCategory.TORPEDO"), "鱼雷配方数");
         assertEquals(4, count(source, "AmmoCategory.AERIAL"), "航弹配方数");
         assertEquals(1, count(source, "AmmoCategory.DEPTH_CHARGE"), "深弹配方数");
-        assertEquals(5, count(source, "AmmoCategory.MISSILE"), "导弹配方数");
-        assertEquals(47, count(source, "add(\""), "注册表配方总数");
+        assertEquals(6, count(source, "AmmoCategory.MISSILE"), "导弹配方数");
+        assertEquals(48, count(source, "add(\""), "注册表配方总数");
     }
 
     @Test

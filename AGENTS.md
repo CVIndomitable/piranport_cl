@@ -7,7 +7,7 @@
 - **Package**: `com.piranport`
 - **License**: All Rights Reserved (同人项目)
 - **Language**: Java 21
-- **Platform**: NeoForge 21.1.220 for Minecraft 1.21.1
+- **Platform**: NeoForge 21.1.265 for Minecraft 1.21.1
 - **Gradle Plugin**: ModDevGradle (推荐) 或 NeoGradle
 - **MDK 模板**: https://github.com/NeoForgeMDKs/MDK-1.21.1-ModDevGradle
 
@@ -73,7 +73,7 @@ mod_group_id=com.piranport
 mod_authors=PiranPort Dev Team
 mod_description=Minecraft mod based on Warship Girls R
 minecraft_version=1.21.1
-neo_version=21.1.220
+neo_version=21.1.265
 ```
 
 **重要**: 测试版 `mod_version` 必须保留 `-dev` 后缀，打包前检查补上。

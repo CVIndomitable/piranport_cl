@@ -1,7 +1,7 @@
 # 皮兰港 (Piran Port) Mod
 
 > 基于战舰少女R世界观的 Minecraft 综合性模组（同人项目，All Rights Reserved）
-> NeoForge 21.1.220 for Minecraft 1.21.1 | 版本 **v1.1.58-dev**
+> NeoForge 21.1.265 for Minecraft 1.21.1 | 版本 **v1.1.58-dev**
 > 由 Claude Code (AI) 协助开发
 
 ---

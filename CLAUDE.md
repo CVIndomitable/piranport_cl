@@ -1,7 +1,7 @@
 # CLAUDE.md — 皮兰港 (Piran Port) Minecraft Mod
 
 基于战舰少女R世界观的 Minecraft 综合模组（同人项目，All Rights Reserved）：玩家扮演舰娘，装备舰载武器，与深海敌人战斗。
-Mod ID `piranport`，包名 `com.piranport`；Java 21 / NeoForge 21.1.220 / MC 1.21.1 / ModDevGradle。
+Mod ID `piranport`，包名 `com.piranport`；Java 21 / NeoForge 21.1.265 / MC 1.21.1 / ModDevGradle。
 
 ## 分支与文档
 - dev = 测试版（本仓库，新玩法）；main = 稳定版 v1.0.0（仅修 bug）

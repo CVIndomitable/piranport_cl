@@ -144,7 +144,7 @@ public class ClientGameEvents {
      * 变身/侦察状态下接管原版「选取方块」的点击队列。
      *
      * <p>WHY: 原版 keyPickItem 默认绑定鼠标中键，与火控选择键头碰头。实测时序
-     * （neoforge-21.1.220-sources）：{@code Minecraft.tick()} 内先发 Pre
+     * （neoforge-21.1.265-sources）：{@code Minecraft.tick()} 内先发 Pre
      * （ClientHooks.fireClientTickPre），再调 {@code handleKeybinds()}（消费
      * keyPickItem 并执行 pickBlock），最后发 Post。所以在 Post 阶段才清队列已经晚了
      * 一步，必须挂在 tick 头部的 Pre；否则创造模式下每按一次火控中键都会替换快捷栏物品。

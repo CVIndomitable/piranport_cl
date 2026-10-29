@@ -26,7 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * <p>每次 tick 最多写入 {@link #blocksPerTick()} 个方块（默认 8192，走调试终端
  * {@code global.terrain.blocks_per_tick} 可调）。基底按列深度写入海水和海床，
- * 特征、POI、边界分阶段处理；避免原先一次调用把 128×128 节点全部同步写完。</p>
+ * 特征、POI、边界分阶段处理；避免一次调用把 512×512 节点全部同步写完。</p>
  */
 public final class TerrainGenerationPipeline {
     public static final int MAP_SIZE = DungeonConstants.MAP_USABLE_SIZE;
@@ -253,9 +253,8 @@ public final class TerrainGenerationPipeline {
      * 中心</b>（{@link TerrainGenerationState#initializeNode} 传入 spawn）。旧实现一律按"角"用，
      * 等于以节点中心为角向外扫环。</p>
      *
-     * <p><b>其二：跨度对不上对象。</b>环边长写死 {@code MAP_SIZE}（512），但节点只占
-     * {@code NODE_AREA_SIZE}（128）、中心间距也只有 128。512 是 128 的 4 倍——这个跨度从来
-     * 没有对应的设计对象：节点是 4×4 网格排布的，512 的环一个格子根本放不下。</p>
+     * <p><b>其二：跨度必须对应对象。</b>共享基底使用 {@code MAP_SIZE}（2048），节点局部使用
+     * {@code NODE_AREA_SIZE}（512）。两者分别对应整关可玩区和单个节点，不能共用同一跨度。</p>
      *
      * <p>只修第一条不够：环仍会横穿同列/同行邻居的出生点（只是从"跨 4 列"缩成"跨邻居"），
      * 玩家依旧被隐形墙围住。<b>两条必须一起修</b>——按状态类型选取跨度：节点用
@@ -271,8 +270,8 @@ public final class TerrainGenerationPipeline {
      * 现在竖直方向一路写到 {@code level.getMaxBuildHeight()} 的最后一层
      * （主世界即 y=319），并在顶端铺满一整层屏障"加盖"，与围墙顶部咬合，形成封闭笼子。</p>
      *
-     * <p>代价是方块数：环体 = 周长 × 高度。共享基底 512×4×273 ≈ 56 万，节点 128×4×273 ≈ 14 万，
-     * 另加顶盖（基底 512² ≈ 26 万、节点 128² ≈ 1.6 万）。仍按 8192/帧分帧写入，
+     * <p>代价是方块数：环体 = 周长 × 高度。共享基底 2048×4×273 ≈ 224 万，节点 512×4×273 ≈ 56 万，
+     * 另加顶盖（基底 2048² ≈ 419 万、节点 512² ≈ 26 万）。仍按 8192/帧分帧写入，
      * {@link #queuedBlocks} 的估算同步改为按各自跨度计费，否则入口进度会低估到接近 0。</p>
      */
     private static int processBoundary(ServerLevel level, TerrainGenerationState state, int budget) {
@@ -379,7 +378,10 @@ public final class TerrainGenerationPipeline {
             }
             case T3_WRECKAGE -> {
                 int band = (int) (index / 256), local = (int) (index % 256);
-                x += local % 128 - 64; z += band * 40 - 20 + local / 128; y = SEA - 1;
+                int areaSize = DungeonConstants.NODE_AREA_SIZE;
+                x += local % areaSize - areaSize / 2;
+                z += band * (areaSize / 3) - areaSize / 6 + local / areaSize;
+                y = SEA - 1;
                 block = local % 7 == 0 ? Blocks.CHEST : Blocks.OAK_PLANKS;
             }
             case T4_ISLAND_CHAIN -> {

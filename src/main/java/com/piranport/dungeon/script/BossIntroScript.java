@@ -98,7 +98,7 @@ public class BossIntroScript implements DungeonScript {
         this.stageDisplayName = stageDisplayName;
         this.stageId = instance.getStageId();
         this.playerUuids = List.copyOf(playerUuids);
-        this.spawnPos = instance.getNodeSpawnPos(nodeId);
+        this.spawnPos = instance.getEnemySpawnPos(nodeId);
         this.enemySetId = enemySetId;
     }
 
@@ -268,8 +268,9 @@ public class BossIntroScript implements DungeonScript {
             return;
         }
 
-        // Boss 出生在玩家 spawn 前方 30 格
-        boss.setPos(spawnPos.getX() + 0.5, DungeonConstants.SPAWN_Y, spawnPos.getZ() + 30);
+        // Boss 出生在深海侧前方，避免与玩家出生点重叠。
+        int approach = DungeonConstants.NODE_AREA_SIZE * 30 / 128;
+        boss.setPos(spawnPos.getX() + 0.5, DungeonConstants.SPAWN_Y, spawnPos.getZ() + approach);
         boss.addTag("dungeon_instance_" + instanceId);
         boss.addTag("dungeon_node_" + nodeId);
         boss.addTag("dungeon_flagship");
@@ -300,7 +301,7 @@ public class BossIntroScript implements DungeonScript {
         if (tickCounter > ModEquipmentConfig.DUNGEON_BOSS_INTRO_BATTLE_TIMEOUT_TICKS.get()
                 + ModEquipmentConfig.DUNGEON_BOSS_INTRO_PHASE_TIMEOUT_TICKS.get() && !finished) {
             PiranPort.LOGGER.warn("[BossIntro] Battle timeout, forcing outro");
-            bossDeathPos = spawnPos.offset(0, 0, 30);
+            bossDeathPos = spawnPos.offset(0, 0, DungeonConstants.NODE_AREA_SIZE * 30 / 128);
             phase = Phase.DEFEATED;
             defeatDelayTicks = 0;
             changed = true;

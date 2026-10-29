@@ -95,14 +95,15 @@ public class ArtilleryIntroScript implements DungeonScript {
         this.nodeId = nodeId;
         this.stageDisplayName = stageDisplayName;
         this.playerUuids = List.copyOf(playerUuids);
-        this.spawnPos = instance.getNodeSpawnPos(nodeId);
+        this.spawnPos = instance.getPlayerSpawnPos(nodeId);
 
-        // Pick a random drop point 30-50 blocks from spawn. Use a per-instance Random
+        // Pick a random drop point 120-200 blocks from spawn. Use a per-instance Random
         // so dungeon generation stays deterministic-ish without touching level RNG here.
         java.util.Random rng = new java.util.Random(instanceId.getLeastSignificantBits()
                 ^ instanceId.getMostSignificantBits() ^ nodeId.hashCode());
         double angle = rng.nextDouble() * Math.PI * 2;
-        double distance = 30 + rng.nextDouble() * 20;
+        double distance = DungeonConstants.NODE_AREA_SIZE * 30 / 128
+                + rng.nextDouble() * DungeonConstants.NODE_AREA_SIZE * 20 / 128;
         this.crateDropPos = spawnPos.offset(
                 (int) (Math.cos(angle) * distance), 0,
                 (int) (Math.sin(angle) * distance));
@@ -279,8 +280,9 @@ public class ArtilleryIntroScript implements DungeonScript {
         double dz = crateDropPos.getZ() - spawnPos.getZ();
         double len = Math.sqrt(dx * dx + dz * dz);
         if (len < 1) len = 1;
-        double startX = spawnPos.getX() - (dx / len) * 60;
-        double startZ = spawnPos.getZ() - (dz / len) * 60;
+        double distance = DungeonConstants.NODE_AREA_SIZE * 60 / 128.0;
+        double startX = spawnPos.getX() - (dx / len) * distance;
+        double startZ = spawnPos.getZ() - (dz / len) * distance;
 
         DungeonTransportPlaneEntity plane = DungeonTransportPlaneEntity.create(level,
                 startX, startZ,
@@ -429,8 +431,9 @@ public class ArtilleryIntroScript implements DungeonScript {
         double dz = crateDropPos.getZ() - spawnPos.getZ();
         double len = Math.sqrt(dx * dx + dz * dz);
         if (len < 1) len = 1;
-        double enemyBaseX = crateDropPos.getX() + (dx / len) * 40;
-        double enemyBaseZ = crateDropPos.getZ() + (dz / len) * 40;
+        double enemyDistance = DungeonConstants.NODE_AREA_SIZE * 40 / 128.0;
+        double enemyBaseX = crateDropPos.getX() + (dx / len) * enemyDistance;
+        double enemyBaseZ = crateDropPos.getZ() + (dz / len) * enemyDistance;
 
         var rng = level.getRandom();
         for (ServerPlayer player : online) {

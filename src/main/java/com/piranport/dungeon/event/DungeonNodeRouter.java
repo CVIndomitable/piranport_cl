@@ -48,7 +48,7 @@ public final class DungeonNodeRouter {
         if (dungeonLevel == null || (!instance.hasEnteredNode(node.nodeId())
                 && !NodeBattleField.isTerrainReady(dungeonLevel, instance, node))) return;
         if (instance.hasEnteredNode(node.nodeId())) {
-            teleportToNode(player, instance, node.nodeId(), instance.getNodeSpawnPos(node.nodeId()), player.getYRot());
+            teleportToNode(player, instance, node.nodeId(), instance.getPlayerSpawnPos(node.nodeId()), player.getYRot());
             return;
         }
         switch (node.type()) {
@@ -122,7 +122,7 @@ public final class DungeonNodeRouter {
         }
 
         if (instance.hasEnteredNode(node.nodeId())) {
-            teleportToNode(player, instance, node.nodeId(), instance.getNodeSpawnPos(node.nodeId()), player.getYRot());
+            teleportToNode(player, instance, node.nodeId(), instance.getPlayerSpawnPos(node.nodeId()), player.getYRot());
             return null;
         }
         DungeonInstanceManager mgr = DungeonInstanceManager.get(level);
@@ -151,7 +151,7 @@ public final class DungeonNodeRouter {
         // 玩家自行进入，不将历史参与者从主世界或其他副本强制传送过来。
         List<ServerPlayer> toTeleport = List.of(player);
         List<UUID> playerUuids = List.of(player.getUUID());
-        teleportToNode(player, instance, node.nodeId(), instance.getNodeSpawnPos(node.nodeId()), player.getYRot());
+        teleportToNode(player, instance, node.nodeId(), instance.getPlayerSpawnPos(node.nodeId()), player.getYRot());
 
         return new BattleSetup(dungeonLevel, toTeleport, playerUuids);
     }
@@ -160,7 +160,7 @@ public final class DungeonNodeRouter {
         ServerLevel dungeonLevel = DungeonEventHandler.getDungeonLevel(player.server);
         if (dungeonLevel == null) return;
         if (!NodeBattleField.isTerrainReady(dungeonLevel, instance, node)) return;
-        teleportToNode(player, instance, node.nodeId(), instance.getNodeSpawnPos(node.nodeId()), player.getYRot());
+        teleportToNode(player, instance, node.nodeId(), instance.getPlayerSpawnPos(node.nodeId()), player.getYRot());
     }
 
     /** 所有重返路径共用副本维度与 HUD 同步；不改变正在运行脚本的当前节点。 */

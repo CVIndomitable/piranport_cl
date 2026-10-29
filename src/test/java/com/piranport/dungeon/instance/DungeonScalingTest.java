@@ -1,5 +1,6 @@
 package com.piranport.dungeon.instance;
 
+import com.piranport.dungeon.DungeonConstants;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -59,11 +60,25 @@ class DungeonScalingTest {
 
     @Test
     void firstClearParticipationRequiresBeingInsideBossTile() {
-        // tile 128, center (64,64) → [0,128)
-        assertTrue(DungeonScaling.isInsideNodeTile(64, 64, 64, 64, 128));
-        assertTrue(DungeonScaling.isInsideNodeTile(0, 127.9, 64, 64, 128));
-        assertFalse(DungeonScaling.isInsideNodeTile(128, 64, 64, 64, 128));
-        assertFalse(DungeonScaling.isInsideNodeTile(-0.1, 64, 64, 64, 128));
-        assertFalse(DungeonScaling.isInsideNodeTile(300, 300, 64, 64, 128));
+        // tile 512, center (256,256) → [0,512)
+        assertTrue(DungeonScaling.isInsideNodeTile(256, 256, 256, 256, 512));
+        assertTrue(DungeonScaling.isInsideNodeTile(0, 511.9, 256, 256, 512));
+        assertFalse(DungeonScaling.isInsideNodeTile(512, 256, 256, 256, 512));
+        assertFalse(DungeonScaling.isInsideNodeTile(-0.1, 256, 256, 256, 512));
+        assertFalse(DungeonScaling.isInsideNodeTile(700, 700, 256, 256, 512));
+    }
+
+    @Test
+    void dungeonGeometryUses512NodeAndOppositeSideSpawns() {
+        assertEquals(512, DungeonConstants.NODE_AREA_SIZE);
+        assertEquals(2048, DungeonConstants.MAP_USABLE_SIZE);
+        assertEquals(4096, DungeonConstants.REGION_SIZE);
+        assertEquals(1024, DungeonConstants.MAP_BORDER_PADDING);
+
+        DungeonInstance instance = new DungeonInstance(java.util.UUID.randomUUID(), "test_stage", 0);
+        assertEquals(1280, instance.getNodeSpawnPos("A").getX());
+        assertEquals(1152, instance.getPlayerSpawnPos("A").getX());
+        assertEquals(1408, instance.getEnemySpawnPos("A").getX());
+        assertEquals(1280, instance.getEnemySpawnPos("A").getZ());
     }
 }

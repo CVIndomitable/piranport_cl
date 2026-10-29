@@ -45,7 +45,7 @@ public class GoldencatcatScript implements DungeonScript {
         this.instanceId = instance.getInstanceId();
         this.nodeId = nodeId;
         this.playerUuids = List.copyOf(playerUuids);
-        this.spawnPos = instance.getNodeSpawnPos(nodeId);
+        this.spawnPos = instance.getEnemySpawnPos(nodeId);
     }
 
     private GoldencatcatScript(CompoundTag tag) {

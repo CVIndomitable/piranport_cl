@@ -256,7 +256,7 @@ public final class NodeBattleField {
             return spawned;
         }
 
-        BlockPos center = instance.getNodeSpawnPos(node.nodeId());
+        BlockPos center = instance.getEnemySpawnPos(node.nodeId());
         // 编队生成：收集实体 -> 排序（大前小后） -> 分配队形 -> 生成
         List<SpawnEntry> allEntries = new ArrayList<>();
         for (EnemySetData.SpawnEntry entry : enemySet.spawnList()) {
@@ -317,7 +317,7 @@ public final class NodeBattleField {
     }
 
     /** 普通节点与护航路径/侧翼共用的编队半径；护航锚点也据此留出边界余量。 */
-    private static final int FLEET_SPAWN_RADIUS = 30;
+    private static final int FLEET_SPAWN_RADIUS = DungeonConstants.NODE_AREA_SIZE * 30 / 128;
 
     /**
      * 护航波次：旗舰全部放在路径前方；其余非旗舰按一半/一半分到路径与侧翼，
@@ -342,7 +342,7 @@ public final class NodeBattleField {
             if (onFlank > 0) flankEntries.add(new SpawnEntry(e.entityId, onFlank, false));
         }
 
-        BlockPos start = instance.getNodeSpawnPos(node.nodeId());
+        BlockPos start = instance.getEnemySpawnPos(node.nodeId());
         Vec3 target = EscortRuntime.targetPoint(instance, node);
         EscortRoute route = escortRoute != null ? escortRoute
                 : EscortRoute.straight(new Vec3(start.getX() + 0.5, start.getY(), start.getZ() + 0.5), target);

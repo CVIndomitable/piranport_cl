@@ -189,7 +189,7 @@ public class DungeonEventHandler {
             boolean revived = false;
             if (totemSlot >= 0 && node != null && dungeonLevel != null) {
                 player.getInventory().getItem(totemSlot).shrink(1);
-                BlockPos spawn = target.getNodeSpawnPos(node);
+                BlockPos spawn = target.getPlayerSpawnPos(node);
                 player.teleportTo(dungeonLevel,
                         spawn.getX() + 0.5, spawn.getY(), spawn.getZ() + 0.5,
                         player.getYRot(), player.getXRot());
@@ -355,7 +355,7 @@ public class DungeonEventHandler {
     }
 
     /**
-     * 《副本/00》首通参与判定：Boss 击杀瞬间位于 Boss 节点 128×128 战场范围内（副本维度、存活、非旁观）的参与者。
+     * 《副本/00》首通参与判定：Boss 击杀瞬间位于 Boss 节点 512×512 战场范围内（副本维度、存活、非旁观）的参与者。
      */
     public static void snapshotBossParticipants(MinecraftServer server, DungeonInstance instance, String nodeId) {
         BlockPos center = instance.getNodeSpawnPos(nodeId);
@@ -520,9 +520,9 @@ public class DungeonEventHandler {
     // ===== Boundary Protection (整合版 §2.1 / 副本/01) =====
 
     /**
-     * 副本/01 §2.1：每个实例分配 1024×1024 子区域（实际 512×512 居中）。
+     * 副本/01 §2.1：每个实例分配 4096×4096 子区域（实际 2048×2048 居中）。
      * 若玩家（因鞘翅/坐骑/推进器）跨过边界进入相邻实例子区域或走出可玩区，
-     * 每 tick 拉回当前实例的 512×512 可玩区最近点。避免出现"误入他人副本"的体验事故。
+     * 每 tick 拉回当前实例的 2048×2048 可玩区最近点。避免出现"误入他人副本"的体验事故。
      */
     @SubscribeEvent
     public static void onPlayerTick(PlayerTickEvent.Post event) {
@@ -557,7 +557,7 @@ public class DungeonEventHandler {
         }
         if (!groundBelow && player.getY() < com.piranport.dungeon.DungeonConstants.SEA_LEVEL) {
             String nodeId = instance.getCurrentNode();
-            BlockPos spawn = nodeId != null ? instance.getNodeSpawnPos(nodeId) : null;
+            BlockPos spawn = nodeId != null ? instance.getPlayerSpawnPos(nodeId) : null;
             if (spawn != null) {
                 player.teleportTo(dungeonLevel, spawn.getX() + 0.5, spawn.getY(), spawn.getZ() + 0.5,
                         player.getYRot(), player.getXRot());

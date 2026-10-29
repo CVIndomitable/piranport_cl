@@ -48,7 +48,7 @@ public final class EscortRuntime {
         Entity transport = NodeBattleField.createEntity(level, spec.entityId());
         if (transport == null) return;
 
-        BlockPos center = instance.getNodeSpawnPos(node.nodeId());
+        BlockPos center = instance.getEnemySpawnPos(node.nodeId());
         transport.setPos(center.getX() + 0.5, DungeonConstants.SPAWN_Y, center.getZ() + 0.5);
         transport.addTag(instanceTag(instance));
         transport.addTag(nodeTag(node.nodeId()));

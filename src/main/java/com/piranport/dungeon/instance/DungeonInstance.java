@@ -205,7 +205,7 @@ public class DungeonInstance {
         return gridZ * com.piranport.dungeon.DungeonConstants.REGION_SIZE;
     }
 
-    /** Inclusive min corner of this instance's playable 512x512 area (副本/01 §2.1: 居中). */
+    /** Inclusive min corner of this instance's playable 2048x2048 area (副本/01 §2.1: 居中). */
     public int getUsableMinX() {
         return getRegionOriginX() + com.piranport.dungeon.DungeonConstants.MAP_BORDER_PADDING;
     }
@@ -228,7 +228,7 @@ public class DungeonInstance {
     /**
      * Returns true if the given block position is inside this instance's playable area.
      * Used by the boundary-protection tick to push players back when they cross into the
-     * padding buffer surrounding the 512x512 usable region (副本/01 §2.1).
+     * padding buffer surrounding the 2048x2048 usable region (副本/01 §2.1).
      */
     public boolean isInsideUsableArea(BlockPos pos) {
         return pos.getX() >= getUsableMinX() && pos.getX() <= getUsableMaxX()
@@ -246,13 +246,13 @@ public class DungeonInstance {
     }
 
     /**
-     * Returns the spawn position for players entering this instance's current node.
+     * Returns the center position for the current node's 512x512 battlefield.
      * Uses the stage's deterministic lexicographic node index when available so
      * nodeIds like "boss1"/"boss2" don't collide. Falls back to first-letter
      * mapping for legacy single-letter ids when the stage hasn't loaded yet.
      *
      * <p>Nodes are laid out on a 4x4 grid (MAX_NODES_PER_USABLE_SIDE=4) within the centered
-     * 512x512 usable area; each node occupies a 128x128 battlefield tile. Single-instance
+     * 2048x2048 usable area; each node occupies a 512x512 battlefield tile. Single-instance
      * capacity = 16 nodes, well above the 4-5 nodes used by stage 1-1..7-3 (副本/14).</p>
      */
     public BlockPos getNodeSpawnPos(String nodeId) {
@@ -272,7 +272,7 @@ public class DungeonInstance {
                         com.piranport.dungeon.DungeonConstants.MAX_NODES_PER_STAGE);
             }
         }
-        // 4×4 节点网格（512×512 可玩区内，每节点 128×128）
+        // 4×4 节点网格（2048×2048 可玩区内，每节点 512×512）
         int gridX = Math.floorMod(nodeIndex, com.piranport.dungeon.DungeonConstants.MAX_NODES_PER_USABLE_SIDE);
         int gridZ = Math.floorDiv(nodeIndex, com.piranport.dungeon.DungeonConstants.MAX_NODES_PER_USABLE_SIDE);
         int nodeX = getUsableMinX() + gridX * com.piranport.dungeon.DungeonConstants.NODE_AREA_SIZE
@@ -280,6 +280,22 @@ public class DungeonInstance {
         int nodeZ = getUsableMinZ() + gridZ * com.piranport.dungeon.DungeonConstants.NODE_AREA_SIZE
                 + com.piranport.dungeon.DungeonConstants.NODE_AREA_SIZE / 2;
         return new BlockPos(nodeX, com.piranport.dungeon.DungeonConstants.SPAWN_Y, nodeZ);
+    }
+
+    /** 玩家出生点：节点西侧，距节点边缘 128 格，面向深海东侧。 */
+    public BlockPos getPlayerSpawnPos(String nodeId) {
+        BlockPos center = getNodeSpawnPos(nodeId);
+        int offset = com.piranport.dungeon.DungeonConstants.NODE_AREA_SIZE / 2
+                - com.piranport.dungeon.DungeonConstants.NODE_SPAWN_EDGE_MARGIN;
+        return center.offset(-offset, 0, 0);
+    }
+
+    /** 深海出生点：节点东侧，与玩家出生点相对，距节点边缘 128 格。 */
+    public BlockPos getEnemySpawnPos(String nodeId) {
+        BlockPos center = getNodeSpawnPos(nodeId);
+        int offset = com.piranport.dungeon.DungeonConstants.NODE_AREA_SIZE / 2
+                - com.piranport.dungeon.DungeonConstants.NODE_SPAWN_EDGE_MARGIN;
+        return center.offset(offset, 0, 0);
     }
 
     // ===== Setters =====

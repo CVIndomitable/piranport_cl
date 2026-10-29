@@ -35,7 +35,8 @@ public final class AircraftDefinitionReloadListener
         Map<ResourceLocation, AircraftDefinition> result = new HashMap<>();
         List<String> errors = new ArrayList<>();
         for (Map.Entry<ResourceLocation, Resource> entry : manager.listResources("aircraft",
-                location -> location.getPath().endsWith(".json")).entrySet()) {
+                location -> location.getNamespace().equals(PiranPort.MOD_ID)
+                        && location.getPath().endsWith(".json")).entrySet()) {
             ResourceLocation resourceId = entry.getKey();
             ResourceLocation definitionId = definitionId(resourceId);
             try (BufferedReader reader = entry.getValue().openAsReader()) {

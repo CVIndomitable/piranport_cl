@@ -37,7 +37,7 @@ import java.util.WeakHashMap;
  *
  * <p><b>位姿</b>：与 {@link RiggingSocketTransforms#applyHullBase} 完全共用同一套
  * 「躯干 + 0.28/0.34 偏移 + 放飞后仰」，这样从旧程序化船体换到模型时位置不会跳；
- * 之后再做 GeckoLib 的上下翻转（{@code Axis.XP(180)}）、yawOffset 与缩放。
+ * 之后做 Y 轴反射（模型 +Y 朝上 → 玩家 -Y 朝上），再叠加 yawOffset 与缩放。
  *
  * <p><b>为什么按玩家 × 模型维护 animatable</b>：与 {@link RiggingAttachedLayer} 同理，
  * 父类缓存按 Level 只存一个实例，多个玩家会共用同一套动画状态而互相串。
@@ -142,7 +142,11 @@ public class RiggingHullLayer extends AttachedAnimatableRenderLayer<
 
         poseStack.pushPose();
         RiggingSocketTransforms.applyHullBase(poseStack, parentModel, launchPose);
-        poseStack.mulPose(Axis.XP.rotationDegrees(180.0f));
+        // 模型：+Y 朝上、+Z 朝船首、+X 朝左；玩家模型：+Y 朝下、+Z 朝前、+X 朝左。
+        // 用 Y 轴反射而不是 XP(180)：模型 +Y → 玩家 -Y（视觉上仍是「上」），
+        // +Z 船首保持朝前、+X 左右不变。XP(180) 会把 +Z 一起翻到背后（实机前后反向）。
+        // GeoModel 默认 RenderType 是 entityCutoutNoCull，负 Y 缩放不会剔除面。
+        poseStack.scale(1.0f, -1.0f, 1.0f);
         poseStack.mulPose(Axis.YP.rotationDegrees(def.yawOffset()));
         poseStack.scale(def.scale(), def.scale(), def.scale());
         renderer.render(poseStack, animatable, bufferSource, null, null, packedLight, partialTick);

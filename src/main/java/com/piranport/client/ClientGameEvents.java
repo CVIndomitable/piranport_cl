@@ -127,8 +127,9 @@ public class ClientGameEvents {
      * 第一人称手持规则：
      * <ul>
      *   <li>侦察模式：全部隐藏（摄像机在飞机上）</li>
-     *   <li>已变身：只有主手舰载机保留（飞机要拿在手里放飞），其余主手物品与副手核心全部隐藏；
-     *       武器只以舰装挂点形式出现</li>
+     *   <li>已变身：只隐藏「已挂在舰装上」的武器（判断同第三人称，见
+     *       {@link RiggingClientState#isHandItemHidden}）；主手飞机保留，
+     *       副手变身核心隐藏，工具/食物/方块等普通物品原版显示</li>
      * </ul>
      */
     @SubscribeEvent
@@ -139,13 +140,10 @@ public class ClientGameEvents {
         }
         net.minecraft.client.player.AbstractClientPlayer player = Minecraft.getInstance().player;
         if (player == null) return;
-        if (!RiggingClientState.isRenderedAsTransformed(player)) return;
-        // 只有主手舰载机保留；副手（含核心）与主手其它物品都隐藏。
-        if (event.getHand() == net.minecraft.world.InteractionHand.MAIN_HAND
-                && event.getItemStack().getItem() instanceof com.piranport.item.AircraftItem) {
-            return;
+        boolean mainHand = event.getHand() == net.minecraft.world.InteractionHand.MAIN_HAND;
+        if (RiggingClientState.isHandItemHidden(player, mainHand, event.getItemStack())) {
+            event.setCanceled(true);
         }
-        event.setCanceled(true);
     }
 
     /** 烟雾隐身：观察者有隐身效果（身处烟雾）时不渲染其他实体 */

@@ -1,12 +1,16 @@
 package com.piranport.client;
 
 import com.piranport.combat.TransformationManager;
+import com.piranport.item.AircraftItem;
+import com.piranport.item.ShipCoreItem;
 import com.piranport.registry.ModAttachmentTypes;
+import com.piranport.rigging.RiggingCategory;
 import com.piranport.rigging.RiggingLoadout;
 import com.piranport.rigging.RiggingLoadoutResolver;
 import com.piranport.skin.ClientSkinData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.world.item.ItemStack;
 
 /**
  * 舰装渲染层共用的客户端状态读取。
@@ -47,5 +51,28 @@ public final class RiggingClientState {
         return localPlayer
                 ? TransformationManager.isPlayerTransformed(player)
                 : ClientSkinData.getActiveSkin(player.getUUID()) > 0;
+    }
+
+    /**
+     * 变身后某只手是否应隐藏该物品。第一人称（{@code RenderHandEvent}）与
+     * 第三人称（{@code ItemInHandLayer} mixin）共用，避免两处判断漂移。
+     *
+     * <p>规则：
+     * <ul>
+     *   <li>主手：舰装武器（炮/鱼雷/导弹/深弹，即 {@link RiggingCategory#resolve}
+     *       非 null）隐藏，因为它们只出现在舰装挂点上；飞机例外，要拿在手里放飞；
+     *       工具/食物/方块等普通物品原版正常显示</li>
+     *   <li>副手：只有变身核心 {@link ShipCoreItem} 隐藏（它是舰装核心，不是手持物）；
+     *       其它副手物品正常显示</li>
+     * </ul>
+     */
+    public static boolean isHandItemHidden(AbstractClientPlayer player, boolean mainHand,
+                                           ItemStack stack) {
+        if (!isRenderedAsTransformed(player)) return false;
+        if (mainHand) {
+            if (stack.getItem() instanceof AircraftItem) return false;
+            return RiggingCategory.resolve(stack) != null;
+        }
+        return stack.getItem() instanceof ShipCoreItem;
     }
 }

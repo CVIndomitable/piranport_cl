@@ -84,19 +84,20 @@ public final class RiggingSocketTransforms {
             // 不再由 RiggingLoadoutResolver 分配。
             case LEG_LEFT -> new MountPose(2.6f, 6.0f, 0.0f, 90.0f, 0.0f, 90.0f, 0.40f);
             case LEG_RIGHT -> new MountPose(-2.6f, 6.0f, 0.0f, -90.0f, 0.0f, -90.0f, 0.40f);
-            // 舷侧：底座落在上下炮位平台上、炮口朝前。x 暂保持 ±4.0，
-            // 等手臂外移的最终值出来再统一调。
-            case SIDE_LEFT_1 -> new MountPose(4.0f, 0.2f, 0.4f, 0.0f, 0.0f, 0.0f, 0.42f);
-            case SIDE_LEFT_2 -> new MountPose(4.0f, 3.6f, -0.4f, 0.0f, 0.0f, 0.0f, 0.42f);
-            case SIDE_RIGHT_1 -> new MountPose(-4.0f, 0.2f, 0.4f, 0.0f, 0.0f, 0.0f, 0.42f);
-            case SIDE_RIGHT_2 -> new MountPose(-4.0f, 3.6f, -0.4f, 0.0f, 0.0f, 0.0f, 0.42f);
+            // 舷侧：底座落在上下炮位平台上、炮口朝前。x 已随建模线程的手臂外移定稿。
+            case SIDE_LEFT_1 -> new MountPose(9.5f, 0.2f, 0.4f, 0.0f, 0.0f, 0.0f, 0.42f);
+            case SIDE_LEFT_2 -> new MountPose(9.5f, 3.6f, -0.4f, 0.0f, 0.0f, 0.0f, 0.42f);
+            case SIDE_RIGHT_1 -> new MountPose(-9.5f, 0.2f, 0.4f, 0.0f, 0.0f, 0.0f, 0.42f);
+            case SIDE_RIGHT_2 -> new MountPose(-9.5f, 3.6f, -0.4f, 0.0f, 0.0f, 0.0f, 0.42f);
             // 后背：TODO 朝向等策划确认。深弹/防空导弹若也改朝前会穿进身体，
             // 所以暂时保留「朝后 + 左右倾斜」的旧角度。
             case BACK_1 -> new MountPose(2.2f, 2.2f, -3.4f, 180.0f, 0.0f, 90.0f, 0.38f);
             case BACK_2 -> new MountPose(-2.2f, 2.2f, -3.4f, 180.0f, 0.0f, -90.0f, 0.38f);
-            // 甲板：右舷甲板前后各一，面朝上平放
-            case DECK_1 -> new MountPose(-5.6f, 0.4f, -2.2f, 0.0f, -90.0f, 0.0f, 0.34f);
-            case DECK_2 -> new MountPose(-5.6f, 0.4f, 2.2f, 0.0f, -90.0f, 0.0f, 0.34f);
+            // 甲板：右舷甲板前后各一，面朝上平放。
+            // 甲板模型 z -1.0 / -6.0 → 玩家空间 z = -model z = +1.0 / +6.0；
+            // 甲板 x 中心 -15.0。
+            case DECK_1 -> new MountPose(-15.0f, 0.4f, 1.0f, 0.0f, -90.0f, 0.0f, 0.34f);
+            case DECK_2 -> new MountPose(-15.0f, 0.4f, 6.0f, 0.0f, -90.0f, 0.0f, 0.34f);
             // 腰部：鱼雷发射器底座落在腰部支架上、管口朝前。
             // 位置沿用占位值（右侧 z 前移是为了补偿发射器模型原点不居中），
             // x 等手臂外移的最终值出来再统一调。

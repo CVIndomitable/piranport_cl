@@ -24,7 +24,8 @@ public final class RiggingHullModelRegistry {
     /** 通用舰体：所有非航母形态共用。 */
     public static final RiggingHullModelDef GENERAL_HULL =
             hull("general_hull", "general_hull");
-    /** 航母舰体：去掉右臂，右侧由飞行甲板接管。 */
+    /** 航母舰体：去掉右臂的变体。<b>暂不引用，待删除</b>——当前航母配置保留通用舰体双臂，
+     *  飞行甲板直接叠在右舷；资产文件先保留，等甲板与右臂的最终关系确认后再清理。 */
     public static final RiggingHullModelDef CARRIER_HULL =
             hull("carrier_hull", "general_hull");
     /** 航母飞行甲板：只在快捷栏里有舰载机时叠加。 */

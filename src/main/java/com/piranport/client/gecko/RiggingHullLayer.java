@@ -29,9 +29,9 @@ import java.util.WeakHashMap;
  *
  * <p><b>模型选择</b>：
  * <ul>
- *   <li>基础舰体：{@link RiggingHullModelRegistry#GENERAL_HULL}；
- *       快捷栏有舰载机时改画 {@link RiggingHullModelRegistry#CARRIER_HULL}</li>
- *   <li>有舰载机时额外叠加 {@link RiggingHullModelRegistry#CARRIER_DECK}</li>
+ *   <li>基础舰体始终是 {@link RiggingHullModelRegistry#GENERAL_HULL}（保留双臂）</li>
+ *   <li>有舰载机时额外叠加 {@link RiggingHullModelRegistry#CARRIER_DECK}；
+ *       甲板内缘 x=-11.5 正好贴右臂外缘，不需要额外偏移</li>
  *   <li>有腰部鱼雷挂点时叠加 {@link RiggingHullModelRegistry#WAIST_TORPEDO_RACK}</li>
  * </ul>
  *
@@ -50,7 +50,6 @@ public class RiggingHullLayer extends AttachedAnimatableRenderLayer<
         GeoObjectRenderer<RiggingAnimatable>> {
 
     private final RiggingObjectRenderer generalHullRenderer;
-    private final RiggingObjectRenderer carrierHullRenderer;
     private final RiggingObjectRenderer carrierDeckRenderer;
     private final RiggingObjectRenderer waistRackRenderer;
 
@@ -65,8 +64,6 @@ public class RiggingHullLayer extends AttachedAnimatableRenderLayer<
         super(parent, level -> new RiggingAnimatable(RiggingHullModelRegistry.GENERAL_HULL));
         this.generalHullRenderer =
                 new RiggingObjectRenderer(RiggingHullModelRegistry.GENERAL_HULL);
-        this.carrierHullRenderer =
-                new RiggingObjectRenderer(RiggingHullModelRegistry.CARRIER_HULL);
         this.carrierDeckRenderer =
                 new RiggingObjectRenderer(RiggingHullModelRegistry.CARRIER_DECK);
         this.waistRackRenderer =
@@ -104,16 +101,10 @@ public class RiggingHullLayer extends AttachedAnimatableRenderLayer<
         float launchPose = AircraftLaunchPoseClientState.intensity(player.getId(), partialTick);
         HullAnimatables set = animatablesFor(player);
 
-        // 1. 基础舰体：有舰载机时右臂去掉、换成航母舰体。
-        if (loadout.hasAircraft()) {
-            renderModel(poseStack, bufferSource, packedLight, partialTick, parentModel,
-                    RiggingHullModelRegistry.CARRIER_HULL, set.carrierHull(),
-                    carrierHullRenderer, launchPose);
-        } else {
-            renderModel(poseStack, bufferSource, packedLight, partialTick, parentModel,
-                    RiggingHullModelRegistry.GENERAL_HULL, set.generalHull(),
-                    generalHullRenderer, launchPose);
-        }
+        // 1. 基础舰体：航母配置也保留双臂（甲板内缘正好贴右臂外缘）。
+        renderModel(poseStack, bufferSource, packedLight, partialTick, parentModel,
+                RiggingHullModelRegistry.GENERAL_HULL, set.generalHull(),
+                generalHullRenderer, launchPose);
 
         // 2. 飞行甲板：只在有舰载机时叠加。
         if (loadout.hasAircraft()) {
@@ -161,7 +152,6 @@ public class RiggingHullLayer extends AttachedAnimatableRenderLayer<
     private HullAnimatables animatablesFor(AbstractClientPlayer player) {
         return animatables.computeIfAbsent(player, ignored -> new HullAnimatables(
                 new RiggingAnimatable(RiggingHullModelRegistry.GENERAL_HULL),
-                new RiggingAnimatable(RiggingHullModelRegistry.CARRIER_HULL),
                 new RiggingAnimatable(RiggingHullModelRegistry.CARRIER_DECK),
                 new RiggingAnimatable(RiggingHullModelRegistry.WAIST_TORPEDO_RACK)));
     }
@@ -181,7 +171,6 @@ public class RiggingHullLayer extends AttachedAnimatableRenderLayer<
     /** 每个玩家 × 每个船体部件一份动画状态，避免多人动画串台。 */
     private record HullAnimatables(
             RiggingAnimatable generalHull,
-            RiggingAnimatable carrierHull,
             RiggingAnimatable carrierDeck,
             RiggingAnimatable waistRack) {}
 }

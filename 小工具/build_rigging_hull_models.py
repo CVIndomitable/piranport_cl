@@ -53,6 +53,7 @@ MATERIALS = {
     "funnel_mouth": None,
     "vent_panel": None,
     "gold_stripe": None,
+    "flag": None,
 }
 
 FACES = ("north", "south", "east", "west", "up", "down")
@@ -154,6 +155,19 @@ def _paint_gold_stripe(px, x0, y0, w, h):
         _hline(px, x0, y0 + h // 2, w, gold)
 
 
+def _paint_flag(px, x0, y0, w, h):
+    """桅顶小旗：靠近桅杆一侧黄铜旗杆，上半白、下半红。
+
+    2×2 的面也要能读出来，所以只用横条 + 左列，不画斜纹。
+    """
+    red, pale, gold = PALETTE["red"], PALETTE["pale"], PALETTE["gold_dark"]
+    _fill(px, x0, y0, w, h, red)
+    if h >= 2:
+        _hline(px, x0, y0, w, pale)
+    if w >= 2:
+        _vline(px, x0, y0, h, gold)
+
+
 def paint_face(px, x0, y0, w, h, material):
     """按材质画一个面区域。纯色块，无抗锯齿、无噪点。"""
     if material == "platform_ring":
@@ -167,6 +181,9 @@ def paint_face(px, x0, y0, w, h, material):
         return
     if material == "gold_stripe":
         _paint_gold_stripe(px, x0, y0, w, h)
+        return
+    if material == "flag":
+        _paint_flag(px, x0, y0, w, h)
         return
 
     spec = MATERIALS[material]
@@ -398,7 +415,7 @@ def build_general_hull():
     从正面不会挡住太多。
     """
     m = BedrockModel("geometry.general_hull", texture_size=64,
-                     visible_bounds=(2, 2, (0, 0.25, 0)), texel_scale=2)
+                     visible_bounds=(2, 2, (0, 0.25, 0)), texel_scale=1)
     m.bone("root")
     m.bone("hull_base", parent="root", pivot=(0, 0, 0))
     m.bone("stack", parent="hull_base", pivot=(0, 0, 4))
@@ -425,6 +442,7 @@ def build_general_hull():
            {"up": "funnel_mouth", "down": "armor_mid"})
     m.cube("stack", (-0.5, 5.4, 4.2), (1, 11, 1), "armor_light")        # 桅杆
     m.cube("stack", (-3, 13.4, 4.2), (6, 1, 1), "armor_mid")            # 横桁
+    m.cube("stack", (0.5, 14.4, 4.2), (3, 2, 1), "flag")                # 桅顶信号旗
     m.cube("stack", (-0.5, 16.4, 4.2), (1, 1, 1), "trim_gold")          # 桅顶金饰
 
     # ---- 左右机械臂（镜像）；平台顶面 = 挂点 y ----

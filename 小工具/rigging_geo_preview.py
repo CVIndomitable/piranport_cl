@@ -49,6 +49,12 @@ FACE_SHADE = {
     "east": 0.62, "west": 0.62,
 }
 
+# RiggingSocketTransforms.applyBase 在进入 body 之后还会 translate(0, 0.28, 0.34) 格。
+# 该平移发生在 XP(180) 翻转之前，换算到「模型空间」要过 R_x(180)：
+#   R_x(180) * (0, 4.48, 5.44) = (0, -4.48, -5.44)
+# 也就是船体整体相对 body pivot 下移 4.48、前移 5.44 个模型单位。
+SHARED_BODY_OFFSET = np.array([0.0, -4.48, -5.44], dtype=float)
+
 
 def _shade_for_normal(n):
     """按世界法线的主轴取光，旋转过的骨骼/方块也能得到正确明暗。"""
@@ -296,11 +302,17 @@ def _fit_scale(projected_points, size, margin=0.88):
     return scale, cx, cy
 
 
-def render_view(faces, tex, view_name, size=720, ss=3, show_player=False):
+def render_view(faces, tex, view_name, size=720, ss=3, show_player=False,
+                shared_offset=False):
     """渲染一个视角，返回 PIL 图像。
 
     faces 来自 gather_faces；tex 是 numpy 数组 (H,W,4)。
+    shared_offset=True 时把船体整体按 applyBase 的共享平移移到玩家模型实际位置，
+    玩家参考保持 body pivot 不动，于是两张图能直接对比接线方式。
     """
+    if shared_offset:
+        faces = [dict(f, verts=[v + SHARED_BODY_OFFSET for v in f["verts"]])
+                 for f in faces]
     cam = Camera(**VIEWS[view_name])
     S = int(size * ss)
     tex_h, tex_w = tex.shape[:2]
@@ -403,6 +415,8 @@ def main():
     ap.add_argument("--size", type=int, default=720, help="输出边长(像素)")
     ap.add_argument("--ss", type=int, default=3, help="超采样倍数")
     ap.add_argument("--show-player", action="store_true", help="叠加玩家上身参考")
+    ap.add_argument("--shared-offset", action="store_true",
+                    help="船体叠加 applyBase 的共享偏移 (0,-4.48,-5.44)，玩家参考不动")
     args = ap.parse_args()
 
     tex_img = Image.open(args.texture).convert("RGBA")
@@ -422,7 +436,8 @@ def main():
         if v not in VIEWS:
             raise SystemExit(f"未知视角 {v}；可选 {', '.join(VIEWS)}")
         img = render_view(faces, tex, v, size=args.size, ss=args.ss,
-                          show_player=args.show_player)
+                          show_player=args.show_player,
+                          shared_offset=args.shared_offset)
         path = args.out if len(views) == 1 else f"{stem}_{v}{ext}"
         img.convert("RGB").save(path)
         print("preview:", path)

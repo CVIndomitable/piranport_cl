@@ -1,0 +1,13 @@
+{
+  "values": [
+    "piranport:salt",
+    {
+      "id": "#c:salt",
+      "required": false
+    },
+    {
+      "id": "#forge:dusts/salt",
+      "required": false
+    }
+  ]
+}

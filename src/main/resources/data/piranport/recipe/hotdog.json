@@ -1,7 +1,7 @@
 {
   "type": "minecraft:crafting_shapeless",
   "ingredients": [
-    {"item": "minecraft:bread"},
+    {"tag": "c:foods/bread"},
     {"item": "piranport:sausage"}
   ],
   "result": {"id": "piranport:hotdog", "count": 2}

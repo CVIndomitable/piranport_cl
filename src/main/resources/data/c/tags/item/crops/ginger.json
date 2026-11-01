@@ -1,0 +1,9 @@
+{
+  "values": [
+    "piranport:ginger",
+    {
+      "id": "#forge:crops/ginger",
+      "required": false
+    }
+  ]
+}

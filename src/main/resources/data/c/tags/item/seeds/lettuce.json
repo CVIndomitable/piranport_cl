@@ -1,0 +1,9 @@
+{
+  "values": [
+    "piranport:lettuce_seeds",
+    {
+      "id": "#forge:seeds/lettuce",
+      "required": false
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "values": [
+    "piranport:chili_seeds",
+    {
+      "id": "#forge:seeds/chili",
+      "required": false
+    }
+  ]
+}

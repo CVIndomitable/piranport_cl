@@ -1,0 +1,9 @@
+{
+  "values": [
+    "piranport:rye_seeds",
+    {
+      "id": "#forge:seeds/rye",
+      "required": false
+    }
+  ]
+}

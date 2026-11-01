@@ -4,7 +4,7 @@
   "group": "salt",
   "ingredients": [
     {
-      "item": "piranport:salt_block"
+      "tag": "c:storage_blocks/salt"
     }
   ],
   "result": {

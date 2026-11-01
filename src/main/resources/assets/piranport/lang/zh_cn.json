@@ -1730,6 +1730,8 @@
   "jei.piranport.cooking_pot": "厨锅",
   "jei.piranport.cutting_board": "砧板",
   "jei.piranport.stone_mill": "石磨",
+  "jei.piranport.weapon_workbench": "武器合成台",
+  "jei.piranport.weapon_workbench.unlock": "通关 %s 解锁",
   "key.categories.piranport": "皮兰港",
   "key.piranport.cycle_weapon": "切换武器",
   "key.piranport.fire_control_select": "火控选择目标 [鼠标中键]（蹲下=单选/清空）",

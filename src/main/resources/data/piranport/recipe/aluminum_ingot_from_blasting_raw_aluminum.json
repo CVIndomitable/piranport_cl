@@ -3,7 +3,7 @@
   "category": "misc",
   "group": "aluminum_ingot",
   "ingredient": {
-    "item": "piranport:raw_aluminum"
+    "tag": "c:raw_materials/aluminum"
   },
   "result": {
     "id": "piranport:aluminum_ingot"

@@ -1,15 +1,15 @@
 {
   "type": "piranport:cooking_pot",
   "ingredients": [
-    {"item": "minecraft:beetroot"},
+    {"tag": "c:crops/beetroot"},
     {"item": "piranport:kvass"},
-    {"item": "piranport:onion"},
-    {"item": "piranport:lettuce"},
+    {"tag": "c:crops/onion"},
+    {"tag": "c:crops/lettuce"},
     {"item": "minecraft:cooked_beef"},
     {"item": "minecraft:cooked_porkchop"},
-    {"item": "piranport:salt"},
-    {"item": "minecraft:carrot"},
-    {"item": "minecraft:potato"}
+    {"tag": "c:dusts/salt"},
+    {"tag": "c:crops/carrot"},
+    {"tag": "c:crops/potato"}
   ],
   "result": {"id": "piranport:borscht", "count": 1},
   "cookingTime": 300

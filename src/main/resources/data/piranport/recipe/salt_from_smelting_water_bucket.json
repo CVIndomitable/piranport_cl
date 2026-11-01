@@ -3,7 +3,7 @@
   "category": "misc",
   "group": "salt",
   "ingredient": {
-    "item": "minecraft:water_bucket"
+    "tag": "c:buckets/water"
   },
   "result": {
     "id": "piranport:salt"

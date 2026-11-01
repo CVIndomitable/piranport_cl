@@ -8,10 +8,10 @@
   ],
   "key": {
     "I": {
-      "item": "minecraft:iron_ingot"
+      "tag": "c:ingots/iron"
     },
     "A": {
-      "item": "piranport:aluminum_ingot"
+      "tag": "c:ingots/aluminum"
     },
     "P": {
       "item": "minecraft:prismarine_crystals"

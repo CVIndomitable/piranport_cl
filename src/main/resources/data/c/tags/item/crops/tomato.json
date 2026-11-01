@@ -1,0 +1,9 @@
+{
+  "values": [
+    "piranport:tomato",
+    {
+      "id": "#forge:crops/tomato",
+      "required": false
+    }
+  ]
+}

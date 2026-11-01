@@ -1,7 +1,7 @@
 {
   "type": "piranport:stone_mill",
   "ingredients": [
-    {"item": "piranport:rice"}
+    {"tag": "c:crops/rice"}
   ],
   "result": {"id": "piranport:rice_flour", "count": 1},
   "processingtime": 200

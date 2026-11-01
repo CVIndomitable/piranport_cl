@@ -3,7 +3,7 @@
   "category": "misc",
   "group": "aluminum_ingot",
   "ingredient": {
-    "item": "piranport:bauxite_ore"
+    "tag": "c:ores/aluminum"
   },
   "result": {
     "id": "piranport:raw_aluminum"

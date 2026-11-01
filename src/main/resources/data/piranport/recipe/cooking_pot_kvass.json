@@ -2,13 +2,13 @@
   "type": "piranport:cooking_pot",
   "ingredients": [
     {
-      "item": "minecraft:bread"
+      "tag": "c:foods/bread"
     },
     {
       "item": "piranport:yeast"
     },
     {
-      "item": "minecraft:water_bucket"
+      "tag": "c:buckets/water"
     }
   ],
   "result": {

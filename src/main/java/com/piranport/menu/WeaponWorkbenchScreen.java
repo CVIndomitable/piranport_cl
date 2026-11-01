@@ -1,5 +1,6 @@
 package com.piranport.menu;
 
+import com.piranport.compat.MaterialCompat;
 import com.piranport.crafting.WeaponWorkbenchRecipe;
 import com.piranport.crafting.WeaponWorkbenchRecipeRegistry;
 import com.piranport.crafting.WeaponWorkbenchTabs;
@@ -79,7 +80,7 @@ public class WeaponWorkbenchScreen extends AbstractContainerScreen<WeaponWorkben
         int needed = required.getCount();
         for (int i = 1; i <= 6; i++) {
             ItemStack slotStack = menu.getSlot(i).getItem();
-            if (slotStack.is(required.getItem())) {
+            if (MaterialCompat.matches(required, slotStack)) {
                 needed -= slotStack.getCount();
             }
         }

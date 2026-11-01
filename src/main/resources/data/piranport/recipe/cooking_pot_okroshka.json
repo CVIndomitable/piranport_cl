@@ -1,7 +1,7 @@
 {
   "type": "piranport:cooking_pot",
   "ingredients": [
-    {"item": "minecraft:water_bucket"},
+    {"tag": "c:buckets/water"},
     {"item": "minecraft:chicken"},
     {"item": "minecraft:porkchop"}
   ],

@@ -1,0 +1,9 @@
+{
+  "values": [
+    "piranport:onion",
+    {
+      "id": "#forge:crops/onion",
+      "required": false
+    }
+  ]
+}

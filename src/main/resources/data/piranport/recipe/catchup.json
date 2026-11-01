@@ -1,13 +1,13 @@
 {
   "type": "minecraft:crafting_shapeless",
   "ingredients": [
-    {"item": "piranport:tomato"},
-    {"item": "piranport:tomato"},
-    {"item": "piranport:tomato"},
+    {"tag": "c:crops/tomato"},
+    {"tag": "c:crops/tomato"},
+    {"tag": "c:crops/tomato"},
     {"item": "minecraft:sugar"},
     {"item": "minecraft:sugar"},
     {"item": "minecraft:sugar"},
-    {"item": "piranport:salt"},
+    {"tag": "c:dusts/salt"},
     {"item": "piranport:vinegar"}
   ],
   "result": {"id": "piranport:catchup", "count": 3}

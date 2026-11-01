@@ -4,7 +4,7 @@
   "group": "aluminum_ingot",
   "ingredients": [
     {
-      "item": "piranport:aluminum_block"
+      "tag": "c:storage_blocks/aluminum"
     }
   ],
   "result": {

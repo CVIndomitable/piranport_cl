@@ -8,13 +8,13 @@
   ],
   "key": {
     "I": {
-      "item": "minecraft:iron_ingot"
+      "tag": "c:ingots/iron"
     },
     "A": {
-      "item": "piranport:aluminum_ingot"
+      "tag": "c:ingots/aluminum"
     },
     "D": {
-      "item": "minecraft:diamond"
+      "tag": "c:gems/diamond"
     }
   },
   "result": {

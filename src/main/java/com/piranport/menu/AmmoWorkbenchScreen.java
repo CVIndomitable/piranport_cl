@@ -3,6 +3,7 @@ package com.piranport.menu;
 import com.piranport.ammo.AmmoCategory;
 import com.piranport.ammo.AmmoRecipe;
 import com.piranport.ammo.AmmoRecipeRegistry;
+import com.piranport.compat.MaterialCompat;
 import com.piranport.network.AmmoWorkbenchCancelPayload;
 import com.piranport.network.AmmoWorkbenchCraftPayload;
 import com.piranport.registry.ModItems;
@@ -136,7 +137,7 @@ public class AmmoWorkbenchScreen extends AbstractContainerScreen<AmmoWorkbenchMe
         if (currentRecipe == null) return false;
         for (AmmoRecipe.MaterialRequirement mat : currentRecipe.materials()) {
             int required = mat.getRequired(quantity);
-            int has = available.getOrDefault(mat.item().get(), 0);
+            int has = MaterialCompat.count(available, mat.item().get());
             if (has < required) return false;
         }
         return true;
@@ -252,7 +253,7 @@ public class AmmoWorkbenchScreen extends AbstractContainerScreen<AmmoWorkbenchMe
             int barY = y + 88 + i * 12;
             AmmoRecipe.MaterialRequirement mat = mats.get(i);
             int required = mat.getRequired(qty);
-            int has = available.getOrDefault(mat.item().get(), 0);
+            int has = MaterialCompat.count(available, mat.item().get());
             boolean sufficient = has >= required;
 
             ItemStack icon = new ItemStack(mat.item().get());

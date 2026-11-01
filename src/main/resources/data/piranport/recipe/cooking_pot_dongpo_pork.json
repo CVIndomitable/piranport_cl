@@ -5,7 +5,7 @@
     {"item": "piranport:cooking_wine"},
     {"item": "piranport:soy_sauce"},
     {"item": "minecraft:sugar"},
-    {"item": "piranport:ginger"}
+    {"tag": "c:crops/ginger"}
   ],
   "result": {"id": "piranport:dongpo_pork", "count": 1},
   "cookingTime": 300

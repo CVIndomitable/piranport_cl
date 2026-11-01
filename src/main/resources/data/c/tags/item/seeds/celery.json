@@ -1,0 +1,9 @@
+{
+  "values": [
+    "piranport:celery_seeds",
+    {
+      "id": "#forge:seeds/celery",
+      "required": false
+    }
+  ]
+}

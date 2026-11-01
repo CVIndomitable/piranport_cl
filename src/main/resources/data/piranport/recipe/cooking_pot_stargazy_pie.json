@@ -5,7 +5,7 @@
     {"item": "minecraft:brown_mushroom"},
     {"item": "piranport:cheese"},
     {"item": "piranport:bacon"},
-    {"item": "minecraft:egg"},
+    {"tag": "c:eggs"},
     {"item": "minecraft:cod"},
     {"item": "minecraft:salmon"},
     {"item": "piranport:pie_crust"}

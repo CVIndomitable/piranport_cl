@@ -3,7 +3,7 @@
   "ingredients": [
     {"item": "piranport:fermented_fish"},
     {"item": "piranport:fermented_fish"},
-    {"item": "minecraft:iron_nugget"}
+    {"tag": "c:nuggets/iron"}
   ],
   "result": {"id": "piranport:surstromming", "count": 1}
 }

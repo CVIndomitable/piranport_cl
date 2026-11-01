@@ -1,0 +1,9 @@
+{
+  "values": [
+    "piranport:rice_seeds",
+    {
+      "id": "#forge:seeds/rice",
+      "required": false
+    }
+  ]
+}

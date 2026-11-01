@@ -8,7 +8,7 @@
   "key": {
     "B": {"item": "piranport:round_bun"},
     "M": {"item": "minecraft:beef"},
-    "T": {"item": "piranport:tomato"}
+    "T": {"tag": "c:crops/tomato"}
   },
   "result": {"id": "piranport:american_burger", "count": 1}
 }

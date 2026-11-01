@@ -1,0 +1,9 @@
+{
+  "values": [
+    "piranport:lettuce",
+    {
+      "id": "#forge:crops/lettuce",
+      "required": false
+    }
+  ]
+}

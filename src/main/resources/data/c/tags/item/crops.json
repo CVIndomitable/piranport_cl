@@ -1,0 +1,20 @@
+{
+  "values": [
+    "#c:crops/tomato",
+    "#c:crops/chili",
+    "#c:crops/garlic",
+    "#c:crops/onion",
+    "#c:crops/lettuce",
+    "#c:crops/soybean",
+    "#c:crops/celery",
+    "#c:crops/lablab_bean",
+    "#c:crops/ormosia",
+    "#c:crops/rye",
+    "#c:crops/rice",
+    "#c:crops/ginger",
+    "#c:crops/peach",
+    "#c:crops/pineapple",
+    "#c:crops/walnut",
+    "#c:crops/almond"
+  ]
+}

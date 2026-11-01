@@ -1,7 +1,7 @@
 {
   "type": "minecraft:crafting_shapeless",
   "ingredients": [
-    {"item": "piranport:soybean"}
+    {"tag": "c:crops/soybean"}
   ],
   "result": {"id": "piranport:edible_oil", "count": 1}
 }

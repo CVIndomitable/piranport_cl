@@ -1,11 +1,11 @@
 {
   "type": "minecraft:crafting_shapeless",
   "ingredients": [
-    {"item": "piranport:ginger"},
-    {"item": "piranport:garlic"},
-    {"item": "piranport:onion"},
+    {"tag": "c:crops/ginger"},
+    {"tag": "c:crops/garlic"},
+    {"tag": "c:crops/onion"},
     {"item": "piranport:edible_oil"},
-    {"item": "piranport:chili"}
+    {"tag": "c:crops/chili"}
   ],
   "result": {"id": "piranport:curry_powder", "count": 1}
 }

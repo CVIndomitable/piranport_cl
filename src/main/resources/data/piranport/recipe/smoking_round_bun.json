@@ -1,6 +1,6 @@
 {
   "type": "minecraft:smoking",
-  "ingredient": {"item": "piranport:flour"},
+  "ingredient": {"tag": "c:foods/flour"},
   "result": {"id": "piranport:round_bun", "count": 1},
   "experience": 0.15,
   "cookingtime": 200

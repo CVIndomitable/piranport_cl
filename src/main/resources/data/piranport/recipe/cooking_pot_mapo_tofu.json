@@ -4,7 +4,7 @@
     {"item": "piranport:tofu"},
     {"item": "piranport:tofu"},
     {"item": "piranport:pork_paste"},
-    {"item": "piranport:salt"},
+    {"tag": "c:dusts/salt"},
     {"item": "piranport:chili_powder"},
     {"item": "piranport:soy_sauce"},
     {"item": "minecraft:sugar"}

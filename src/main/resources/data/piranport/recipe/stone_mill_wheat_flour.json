@@ -1,7 +1,7 @@
 {
   "type": "piranport:stone_mill",
   "ingredients": [
-    {"item": "minecraft:wheat"}
+    {"tag": "c:crops/wheat"}
   ],
   "result": {"id": "piranport:flour", "count": 1},
   "processingtime": 200

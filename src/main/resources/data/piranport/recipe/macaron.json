@@ -8,7 +8,7 @@
   "key": {
     "S": {"item": "minecraft:sugar"},
     "A": {"item": "piranport:almond_powder"},
-    "E": {"item": "minecraft:egg"},
+    "E": {"tag": "c:eggs"},
     "D": {"tag": "c:dyes"}
   },
   "result": {"id": "piranport:macaron", "count": 8}

@@ -1,7 +1,7 @@
 {
   "type": "minecraft:crafting_shapeless",
   "ingredients": [
-    {"item": "piranport:peach"}
+    {"tag": "c:crops/peach"}
   ],
   "result": {"id": "piranport:walnut", "count": 1}
 }

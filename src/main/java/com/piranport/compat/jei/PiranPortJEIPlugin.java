@@ -3,6 +3,8 @@ package com.piranport.compat.jei;
 import com.piranport.PiranPort;
 import com.piranport.ammo.AmmoCategory;
 import com.piranport.ammo.AmmoRecipeRegistry;
+import com.piranport.crafting.WeaponWorkbenchRecipeRegistry;
+import com.piranport.crafting.WeaponWorkbenchTabs;
 import com.piranport.dungeon.key.DungeonKeyItem;
 import com.piranport.menu.CookingPotMenu;
 import com.piranport.menu.StoneMillMenu;
@@ -54,7 +56,8 @@ public class PiranPortJEIPlugin implements IModPlugin {
                 new CookingPotRecipeCategory(guiHelper),
                 new StoneMillRecipeCategory(guiHelper),
                 new CuttingBoardRecipeCategory(guiHelper),
-                new AmmoWorkbenchRecipeCategory(guiHelper)
+                new AmmoWorkbenchRecipeCategory(guiHelper),
+                new WeaponWorkbenchRecipeCategory(guiHelper)
         );
     }
 
@@ -86,6 +89,16 @@ public class PiranPortJEIPlugin implements IModPlugin {
                     .forEach(ammoRecipes::add);
         }
         registration.addRecipes(AmmoWorkbenchRecipeCategory.RECIPE_TYPE, ammoRecipes);
+
+        // 武器制造台配方同样来自硬编码注册表。按页签 0..TAB_COUNT-1 顺序注册，
+        // 使 JEI 的分组顺序与制造台页签一致（火炮→鱼雷→导弹→深弹→飞机→装备）。
+        List<WeaponWorkbenchJEIRecipe> weaponRecipes = new ArrayList<>();
+        for (int tab = 0; tab < WeaponWorkbenchTabs.TAB_COUNT; tab++) {
+            WeaponWorkbenchRecipeRegistry.getRecipesForTab(tab).stream()
+                    .map(WeaponWorkbenchJEIRecipe::fromRecipe)
+                    .forEach(weaponRecipes::add);
+        }
+        registration.addRecipes(WeaponWorkbenchRecipeCategory.RECIPE_TYPE, weaponRecipes);
     }
 
     @Override
@@ -98,6 +111,8 @@ public class PiranPortJEIPlugin implements IModPlugin {
                 CuttingBoardRecipeCategory.RECIPE_TYPE);
         registration.addRecipeCatalyst(new ItemStack(ModBlocks.AMMO_WORKBENCH.get()),
                 AmmoWorkbenchRecipeCategory.RECIPE_TYPE);
+        registration.addRecipeCatalyst(new ItemStack(ModBlocks.WEAPON_WORKBENCH.get()),
+                WeaponWorkbenchRecipeCategory.RECIPE_TYPE);
     }
 
     @Override

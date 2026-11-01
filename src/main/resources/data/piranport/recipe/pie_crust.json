@@ -1,10 +1,10 @@
 {
   "type": "minecraft:crafting_shapeless",
   "ingredients": [
-    {"item": "piranport:flour"},
-    {"item": "piranport:flour"},
+    {"tag": "c:foods/flour"},
+    {"tag": "c:foods/flour"},
     {"item": "piranport:edible_oil"},
-    {"item": "minecraft:milk_bucket"}
+    {"tag": "c:buckets/milk"}
   ],
   "result": {"id": "piranport:pie_crust", "count": 3}
 }

@@ -1730,6 +1730,8 @@
   "jei.piranport.cooking_pot": "Cooking Pot",
   "jei.piranport.cutting_board": "Cutting Board",
   "jei.piranport.stone_mill": "Stone Mill",
+  "jei.piranport.weapon_workbench": "Weapon Workbench",
+  "jei.piranport.weapon_workbench.unlock": "Clear %s to unlock",
   "key.categories.piranport": "Piran Port",
   "key.piranport.cycle_weapon": "Cycle Weapon",
   "key.piranport.fire_control_select": "Fire Control Select [Mouse Middle] (Sneak=Single/Clear)",

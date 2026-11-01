@@ -4,7 +4,7 @@
     {"item": "minecraft:dried_kelp"},
     {"item": "piranport:gypsum_chip"},
     {"item": "piranport:soybean_milk"},
-    {"item": "piranport:salt"},
+    {"tag": "c:dusts/salt"},
     {"item": "minecraft:bowl"}
   ],
   "result": {"id": "piranport:salty_bean_curd", "count": 1},

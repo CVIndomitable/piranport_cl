@@ -1,8 +1,8 @@
 {
   "type": "minecraft:crafting_shapeless",
   "ingredients": [
-    {"item": "minecraft:egg"},
-    {"item": "minecraft:milk_bucket"},
+    {"tag": "c:eggs"},
+    {"tag": "c:buckets/milk"},
     {"item": "minecraft:sugar"}
   ],
   "result": {"id": "piranport:cream", "count": 1}

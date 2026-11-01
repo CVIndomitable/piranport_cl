@@ -8,9 +8,9 @@
   "key": {
     "T": {"item": "piranport:toast_bread"},
     "B": {"item": "piranport:bacon"},
-    "E": {"item": "minecraft:egg"},
+    "E": {"tag": "c:eggs"},
     "U": {"item": "piranport:butter"},
-    "S": {"item": "piranport:salt"}
+    "S": {"tag": "c:dusts/salt"}
   },
   "result": {"id": "piranport:eggs_benedict", "count": 3}
 }

@@ -1,7 +1,7 @@
 {
   "type": "piranport:stone_mill",
   "ingredients": [
-    {"item": "piranport:walnut"}
+    {"tag": "c:crops/walnut"}
   ],
   "result": {"id": "piranport:walnut_powder", "count": 1},
   "processingtime": 200

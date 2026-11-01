@@ -2,8 +2,8 @@
   "type": "minecraft:crafting_shapeless",
   "ingredients": [
     {"item": "minecraft:beef"},
-    {"item": "piranport:salt"},
-    {"item": "minecraft:iron_nugget"}
+    {"tag": "c:dusts/salt"},
+    {"tag": "c:nuggets/iron"}
   ],
   "result": {"id": "piranport:mussolinis_oo", "count": 1}
 }

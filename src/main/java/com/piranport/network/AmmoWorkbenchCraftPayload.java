@@ -4,6 +4,7 @@ import com.piranport.PiranPort;
 import com.piranport.ammo.AmmoRecipe;
 import com.piranport.ammo.AmmoRecipeRegistry;
 import com.piranport.block.entity.AmmoWorkbenchBlockEntity;
+import com.piranport.compat.MaterialCompat;
 import com.piranport.menu.AmmoWorkbenchMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
@@ -104,7 +105,7 @@ public record AmmoWorkbenchCraftPayload(BlockPos pos, String recipeId, int quant
             }
             for (AmmoRecipe.MaterialRequirement mat : recipe.materials()) {
                 int required = mat.getRequired(qty);
-                int has = available.getOrDefault(mat.item().get(), 0);
+                int has = MaterialCompat.count(available, mat.item().get());
                 if (has < required) return;
             }
 
@@ -124,7 +125,7 @@ public record AmmoWorkbenchCraftPayload(BlockPos pos, String recipeId, int quant
                 // 仅遍历主背包（items, 0-35）+ 副手，排除盔甲槽
                 for (int i = 0; i < player.getInventory().items.size() && toConsume > 0; i++) {
                     ItemStack stack = player.getInventory().items.get(i);
-                    if (stack.is(mat.item().get())) {
+                    if (MaterialCompat.matches(mat.item().get(), stack)) {
                         int take = Math.min(toConsume, stack.getCount());
                         ItemStack movedPart = stack.copyWithCount(take);
                         stack.shrink(take);
@@ -139,7 +140,7 @@ public record AmmoWorkbenchCraftPayload(BlockPos pos, String recipeId, int quant
                 // 检查副手
                 if (toConsume > 0) {
                     ItemStack oh = player.getInventory().offhand.get(0);
-                    if (oh.is(mat.item().get())) {
+                    if (MaterialCompat.matches(mat.item().get(), oh)) {
                         int take = Math.min(toConsume, oh.getCount());
                         ItemStack movedPart = oh.copyWithCount(take);
                         oh.shrink(take);

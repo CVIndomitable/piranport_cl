@@ -1,5 +1,6 @@
 package com.piranport.block.entity;
 
+import com.piranport.compat.MaterialCompat;
 import com.piranport.crafting.WeaponWorkbenchRecipe;
 import com.piranport.crafting.WeaponWorkbenchRecipeRegistry;
 import com.piranport.crafting.WeaponWorkbenchTabs;
@@ -289,7 +290,7 @@ public class WeaponWorkbenchBlockEntity extends BlockEntity implements MenuProvi
             int needed = required.getCount();
             for (int i = MATERIAL_START; i <= MATERIAL_END; i++) {
                 ItemStack inSlot = itemHandler.getStackInSlot(i);
-                if (inSlot.is(required.getItem())) {
+                if (MaterialCompat.matches(required, inSlot)) {
                     needed -= inSlot.getCount();
                 }
             }
@@ -309,7 +310,7 @@ public class WeaponWorkbenchBlockEntity extends BlockEntity implements MenuProvi
             int toConsume = required.getCount();
             for (int i = MATERIAL_START; i <= MATERIAL_END && toConsume > 0; i++) {
                 ItemStack inSlot = itemHandler.getStackInSlot(i);
-                if (inSlot.is(required.getItem())) {
+                if (MaterialCompat.matches(required, inSlot)) {
                     int consume = Math.min(toConsume, inSlot.getCount());
                     inSlot.shrink(consume);
                     itemHandler.setStackInSlot(i, inSlot);

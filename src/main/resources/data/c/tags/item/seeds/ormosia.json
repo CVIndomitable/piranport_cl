@@ -1,0 +1,9 @@
+{
+  "values": [
+    "piranport:ormosia_seeds",
+    {
+      "id": "#forge:seeds/ormosia",
+      "required": false
+    }
+  ]
+}

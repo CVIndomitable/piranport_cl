@@ -1,0 +1,9 @@
+{
+  "values": [
+    "piranport:pineapple_seed",
+    {
+      "id": "#forge:seeds/pineapple",
+      "required": false
+    }
+  ]
+}

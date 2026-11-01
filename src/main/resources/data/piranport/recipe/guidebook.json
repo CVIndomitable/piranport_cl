@@ -6,7 +6,7 @@
     "B"
   ],
   "key": {
-    "A": {"item": "piranport:aluminum_ingot"},
+    "A": {"tag": "c:ingots/aluminum"},
     "B": {"item": "minecraft:book"}
   },
   "result": {

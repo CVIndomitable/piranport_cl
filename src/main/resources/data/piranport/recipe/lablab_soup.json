@@ -2,9 +2,9 @@
   "type": "minecraft:crafting_shapeless",
   "ingredients": [
     {"item": "minecraft:bowl"},
-    {"item": "piranport:lablab_bean"},
-    {"item": "piranport:lablab_bean"},
-    {"item": "minecraft:water_bucket"}
+    {"tag": "c:crops/lablab_bean"},
+    {"tag": "c:crops/lablab_bean"},
+    {"tag": "c:buckets/water"}
   ],
   "result": {"id": "piranport:lablab_soup", "count": 1}
 }

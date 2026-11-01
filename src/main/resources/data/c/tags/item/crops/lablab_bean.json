@@ -1,0 +1,9 @@
+{
+  "values": [
+    "piranport:lablab_bean",
+    {
+      "id": "#forge:crops/lablab_bean",
+      "required": false
+    }
+  ]
+}

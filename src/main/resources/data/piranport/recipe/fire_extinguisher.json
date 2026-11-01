@@ -8,7 +8,7 @@
   ],
   "key": {
     "A": {
-      "item": "minecraft:iron_ingot"
+      "tag": "c:ingots/iron"
     },
     "B": {
       "item": "minecraft:bucket"

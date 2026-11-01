@@ -1,0 +1,9 @@
+{
+  "values": [
+    "piranport:tomato_seeds",
+    {
+      "id": "#forge:seeds/tomato",
+      "required": false
+    }
+  ]
+}

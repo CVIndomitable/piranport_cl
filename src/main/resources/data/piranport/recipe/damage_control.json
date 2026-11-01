@@ -8,10 +8,10 @@
   ],
   "key": {
     "A": {
-      "item": "minecraft:iron_ingot"
+      "tag": "c:ingots/iron"
     },
     "B": {
-      "item": "minecraft:redstone"
+      "tag": "c:dusts/redstone"
     },
     "C": {
       "item": "minecraft:brewing_stand"

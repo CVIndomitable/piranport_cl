@@ -1,9 +1,9 @@
 {
   "type": "piranport:cooking_pot",
   "ingredients": [
-    {"item": "piranport:soybean"},
-    {"item": "piranport:soybean"},
-    {"item": "piranport:tomato"}
+    {"tag": "c:crops/soybean"},
+    {"tag": "c:crops/soybean"},
+    {"tag": "c:crops/tomato"}
   ],
   "result": {"id": "piranport:naval_baked_beans", "count": 1},
   "cookingTime": 200

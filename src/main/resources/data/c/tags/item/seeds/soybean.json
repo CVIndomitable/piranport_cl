@@ -1,0 +1,9 @@
+{
+  "values": [
+    "piranport:soybean_seeds",
+    {
+      "id": "#forge:seeds/soybean",
+      "required": false
+    }
+  ]
+}

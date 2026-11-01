@@ -1,0 +1,9 @@
+{
+  "values": [
+    "piranport:garlic_seeds",
+    {
+      "id": "#forge:seeds/garlic",
+      "required": false
+    }
+  ]
+}

@@ -8,7 +8,7 @@
   "key": {
     "B": {"item": "minecraft:beef"},
     "W": {"item": "piranport:wooden_barrel"},
-    "S": {"item": "piranport:salt"}
+    "S": {"tag": "c:dusts/salt"}
   },
   "result": {"id": "piranport:royal_naval_salted_beef", "count": 1}
 }

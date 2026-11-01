@@ -413,12 +413,17 @@ def build_general_hull():
       BACK_1       (2.2, -2.2,  3.4)   BACK_2       (-2.2,-2.2,  3.4)
     平台顶面正好落在挂点 y 上；机械臂主体藏在玩家手臂后方（z≥1），
     从正面不会挡住太多。
+
+    stack（烟囱 + 桅杆 + 小旗）整体相对基座偏移 (0, -1, -4)，由一块静态托架
+    接回 hull_base。这样叠上 applyBase 的共享平移后，烟囱落在躯干后缘之外，
+    侧视能看到完整的背部轮廓，而不是从头顶长出来。
     """
     m = BedrockModel("geometry.general_hull", texture_size=64,
                      visible_bounds=(2, 2, (0, 0.25, 0)), texel_scale=1)
     m.bone("root")
     m.bone("hull_base", parent="root", pivot=(0, 0, 0))
-    m.bone("stack", parent="hull_base", pivot=(0, 0, 4))
+    # stack 的 pivot 放在托架与烟囱的接触面（z=1），待机摆动时根部不脱开
+    m.bone("stack", parent="hull_base", pivot=(0, -0.4, 1))
     m.bone("arm_left", parent="hull_base", pivot=(4, -1.8, 1.5))
     m.bone("arm_right", parent="hull_base", pivot=(-4, -1.8, 1.5))
 
@@ -435,15 +440,19 @@ def build_general_hull():
     m.cube("hull_base", (-3, -3.2, 2.6), (2, 1, 2), "armor_light",
            {"up": "platform_ring"})
 
-    # ---- 烟囱 / 桅杆（用贴图表现细节，几何只分 6 块）----
-    m.cube("stack", (-1.5, 0.6, 3), (3, 3, 2), "armor_light")           # 烟囱下段
-    m.cube("stack", (-1, 3.6, 3), (2, 1, 2), "armor_light")             # 烟囱上段收窄
-    m.cube("stack", (-2, 4.4, 2.8), (4, 1, 2), "armor_white",           # 烟囱冠
+    # ---- 烟囱 / 桅杆（整体后移到后背之后；几何只分 6 块）----
+    # stack 相对 hull_base 的位移是 (0, -1, -4)：z 后退 4 单位后，
+    # 加上 applyBase 的共享偏移才真正落在躯干后缘之外，不再贴着头。
+    # 下面的托架是 hull_base 的静态块，负责把后移后的烟囱接回上背。
+    m.cube("hull_base", (-1, -0.4, 1), (2, 1, 2), "metal_dark")         # 烟囱托架
+    m.cube("stack", (-1.5, -0.4, -1), (3, 3, 2), "armor_light")         # 烟囱下段
+    m.cube("stack", (-1, 2.6, -1), (2, 1, 2), "armor_light")            # 烟囱上段收窄
+    m.cube("stack", (-2, 3.4, -1.2), (4, 1, 2), "armor_white",          # 烟囱冠
            {"up": "funnel_mouth", "down": "armor_mid"})
-    m.cube("stack", (-0.5, 5.4, 4.2), (1, 11, 1), "armor_light")        # 桅杆
-    m.cube("stack", (-3, 13.4, 4.2), (6, 1, 1), "armor_mid")            # 横桁
-    m.cube("stack", (0.5, 14.4, 4.2), (3, 2, 1), "flag")                # 桅顶信号旗
-    m.cube("stack", (-0.5, 16.4, 4.2), (1, 1, 1), "trim_gold")          # 桅顶金饰
+    m.cube("stack", (-0.5, 4.4, 0.2), (1, 11, 1), "armor_light")        # 桅杆
+    m.cube("stack", (-3, 12.4, 0.2), (6, 1, 1), "armor_mid")            # 横桁
+    m.cube("stack", (0.5, 13.4, 0.2), (3, 2, 1), "flag")                # 桅顶信号旗
+    m.cube("stack", (-0.5, 15.4, 0.2), (1, 1, 1), "trim_gold")          # 桅顶金饰
 
     # ---- 左右机械臂（镜像）；平台顶面 = 挂点 y ----
     def arm(side, sign):

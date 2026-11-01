@@ -98,11 +98,16 @@ public final class RiggingSocketTransforms {
             // 甲板 x 中心 -15.0。
             case DECK_1 -> new MountPose(-15.0f, 0.4f, 1.0f, 0.0f, -90.0f, 0.0f, 0.34f);
             case DECK_2 -> new MountPose(-15.0f, 0.4f, 6.0f, 0.0f, -90.0f, 0.0f, 0.34f);
-            // 腰部：鱼雷发射器底座落在腰部支架上、管口朝前。
-            // 位置沿用占位值（右侧 z 前移是为了补偿发射器模型原点不居中），
-            // x 等手臂外移的最终值出来再统一调。
-            case WAIST_LEFT -> new MountPose(4.3f, 5.1f, 0.2f, 0.0f, 0.0f, 0.0f, 0.36f);
-            case WAIST_RIGHT -> new MountPose(-4.3f, 5.1f, 3.8f, 0.0f, 0.0f, 0.0f, 0.36f);
+            // 腰部：左右两具鱼雷发射器必须和玩家平行——同一高度、同一前后位置、管口一致朝前。
+            // 有效变换链 mountRot → XP(180) → scale → FIXED Y180 等价于 Z 轴 180°：
+            // 模型 +X 镜像、+Y 翻成玩家上方、+Z 保持朝前。
+            // 鱼雷 standalone 模型（quad_533mm_torpedo_3d）x 2.6..13.4、底面 y=0，
+            // 按 scale 0.36 换算：左舷 x=9.0 → 发射器落在腰部托盘 x 4..8 上，
+            // 右舷 x=-4.0 → 落在镜像托盘上。两具 z 都取 0，管口一致朝前；
+            // y=4.82 让底座（模型 y=0 经物品管线 translate(-0.5) 下沉 0.5*0.36=0.18）
+            // 压在托盘顶面 player y=5.0。右舷原先 z=3.8 的前后补偿已删除。
+            case WAIST_LEFT -> new MountPose(9.0f, 4.82f, 0.0f, 0.0f, 0.0f, 0.0f, 0.36f);
+            case WAIST_RIGHT -> new MountPose(-4.0f, 4.82f, 0.0f, 0.0f, 0.0f, 0.0f, 0.36f);
         };
     }
 

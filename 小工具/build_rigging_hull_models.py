@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 """舰装 Bedrock 模型构建器（GeckoLib）。
 
-这一轮产出「通用舰装架」：背部基座 + 烟囱/桅杆 + 左右机械臂（末端两个炮位平台）。
+这一轮产出「通用舰装架」：背部基座 + 烟囱/桅杆 + 左右 L 型侧扶手。
+横臂从背后伸出，到身体侧外后沿前后方向折成扶手，武器在同一高度前后排列。
 之后航母甲板 / 腰部鱼雷架复用同一套 BedrockModel + Atlas，不用另起炉灶。
 
 约定（与 RiggingAttachedLayer 一致，别搞反）：
@@ -54,6 +55,7 @@ MATERIALS = {
     "vent_panel": None,
     "gold_stripe": None,
     "flag": None,
+    "rail_top": None,
 }
 
 FACES = ("north", "south", "east", "west", "up", "down")
@@ -168,6 +170,32 @@ def _paint_flag(px, x0, y0, w, h):
         _vline(px, x0, y0, h, gold)
 
 
+def _paint_rail_top(px, x0, y0, w, h):
+    """L 型扶手顶面：3 宽 × 18 长，前后各画一个炮座环。
+
+    up 面的 uv v+ 对应模型 -Z：v=0 在 z=+9（后），v=18 在 z=-9（前）。
+    炮位在 z=±6，因此环心在 v=3 / v=15。
+    """
+    base, dark, light, pale = (PALETTE["base"], PALETTE["dark"],
+                               PALETTE["light"], PALETTE["pale"])
+    _fill(px, x0, y0, w, h, base)
+    if w >= 3:
+        _vline(px, x0, y0, h, dark)
+        _vline(px, x0 + w - 1, y0, h, dark)
+        _vline(px, x0 + w // 2, y0, h, light)
+    for cy in (3, 15):
+        if cy >= h:
+            continue
+        for dy in (-1, 0, 1):
+            yy = cy + dy
+            if not (0 <= yy < h):
+                continue
+            for dx in (-1, 0, 1):
+                xx = w // 2 + dx
+                if 0 <= xx < w:
+                    px[x0 + xx, y0 + yy] = pale if (dx == 0 and dy == 0) else dark
+
+
 def paint_face(px, x0, y0, w, h, material):
     """按材质画一个面区域。纯色块，无抗锯齿、无噪点。"""
     if material == "platform_ring":
@@ -184,6 +212,9 @@ def paint_face(px, x0, y0, w, h, material):
         return
     if material == "flag":
         _paint_flag(px, x0, y0, w, h)
+        return
+    if material == "rail_top":
+        _paint_rail_top(px, x0, y0, w, h)
         return
 
     spec = MATERIALS[material]
@@ -407,14 +438,16 @@ class BedrockModel:
 def build_general_hull():
     """7 号原画的通用火炮舰装架：背部基座 + 烟囱桅杆 + 左右机械臂。
 
-    尺寸对齐 RiggingSocketTransforms.mountPose。**机械臂已外移**，SIDE_* 的 x
-    从 ±4.0 改为 ±9.5（Java 的 mountPose 需同步改；y/z 不变）：
-      SIDE_LEFT_1  (9.5, -0.2, -0.4)   SIDE_LEFT_2  (9.5, -3.6,  0.4)
-      SIDE_RIGHT_1 (-9.5,-0.2, -0.4)   SIDE_RIGHT_2 (-9.5,-3.6,  0.4)
-      BACK_1       (2.2, -2.2,  3.4)   BACK_2       (-2.2,-2.2,  3.4)
-    平台顶面正好落在挂点 y 上；平台中心 x=±9.5，外缘立柱到 ±11.5，
-    玩家胳膊在 ±5..±9，机械臂从正面看位于胳膊外侧。
-    横臂从背板 x=3 一直伸到 x=9，是机械臂与 hull_base 的唯一水平连接梁。
+    尺寸对齐 RiggingSocketTransforms.mountPose。**机械臂是 L 型扶手**：
+    背后横臂伸出到身体侧外，再沿身体侧面向前后折成纵向扶手。
+    SIDE_* 的 x 从 ±4.0 改为 ±9.5，y/z 改为同一高度、前后两个炮位
+    （Java 的 mountPose 需同步改；SIDE_*_1 = 前）：
+      SIDE_LEFT_1  (9.5, -1.8, -6)   SIDE_LEFT_2  (9.5, -1.8,  6)
+      SIDE_RIGHT_1 (-9.5,-1.8, -6)   SIDE_RIGHT_2 (-9.5,-1.8,  6)
+      BACK_1       (2.2, -2.2,  3.4)  BACK_2      (-2.2,-2.2,  3.4)
+    扶手顶面 y=-1.8，主纵梁 x 8.5..11.5（外缘 ±11.5），长度 z -9..9；
+    两个炮位在 z=-6/+6，间距 12 单位，大于炮塔约 10.25 单位的足迹。
+    横臂从背板 x=3 伸到 x=9，是机械臂与 hull_base 的唯一水平连接梁。
 
     stack（烟囱 + 桅杆 + 小旗）整体相对基座偏移 (0, -1, -4)，由一块静态托架
     接回 hull_base。这样叠上 applyBase 的共享平移后，烟囱落在躯干后缘之外，
@@ -456,37 +489,29 @@ def build_general_hull():
     m.cube("stack", (0.5, 13.4, 0.2), (3, 2, 1), "flag")                # 桅顶信号旗
     m.cube("stack", (-0.5, 15.4, 0.2), (1, 1, 1), "trim_gold")          # 桅顶金饰
 
-    # ---- 左右机械臂（镜像）；平台顶面 = 挂点 y，中心 x = ±9.5 ----
-    # 玩家胳膊在 x 5..9（右舷 -9..-5），机械臂外移到 8.5..11.5：
-    # 平台中心 9.5、外缘立柱到 11.5，从正面看就在胳膊外侧，不再藏进躯干。
-    # 横臂加长到 x 3..9，继续从背板接出，作为唯一的水平连接梁。
+    # ---- 左右 L 型扶手（镜像）；顶面 y=-1.8，前后炮位 z=-6/+6 ----
+    # 造型：背后横臂 → 身体侧外的纵向扶手（主纵梁 + 下纵梁 + 前后立柱）。
+    # 主纵梁 x 8.5..11.5 保证外缘 ±11.5；挂点 x=±9.5 落在梁的偏内侧。
+    # 炮塔足迹约 10.25 模型单位，前后间距 12 单位，不会互相穿插。
     def arm(side, sign):
         # side: "left"/"right"；sign: +1 左舷 / -1 右舷
         mirror = (lambda o, s: ((-(o[0] + s[0]), o[1], o[2]), s)) if sign < 0 else \
                  (lambda o, s: (o, s))
         b = f"arm_{side}"
-        # 水平连接梁：从背板外缘 x=3 伸到外移后的机械臂内侧 x=9
-        o, s = mirror((3, -2.4, 1), (6, 1, 1))
+        # 水平横臂：从背板外缘 x=3 伸到扶手内侧 x=9
+        o, s = mirror((3, -2.8, 1), (6, 1, 1))
         m.cube(b, o, s, "armor_light")
-        # 肩块
-        o, s = mirror((8.5, -1.4, 1), (2, 2, 1))
-        m.cube(b, o, s, "armor_light")
-        # 外侧立柱（外缘 x=11.5）
-        o, s = mirror((10.5, -5.4, 1), (1, 4, 1))
-        m.cube(b, o, s, "armor_mid")
-        # 内侧立柱
-        o, s = mirror((8, -5.4, 1), (1, 4, 1))
-        m.cube(b, o, s, "armor_mid")
-        # 上层炮位平台（SIDE_*_1；顶面 y=-0.2，覆盖挂点 z=-0.4）
-        o, s = mirror((8.5, -1.2, -1.6), (2, 1, 3))
-        m.cube(b, o, s, "armor_light", {"up": "platform_ring"})
-        # 下层炮位平台（SIDE_*_2；顶面 y=-3.6，覆盖挂点 z=+0.4）
-        o, s = mirror((8.5, -4.6, -1.1), (2, 1, 3))
-        m.cube(b, o, s, "armor_light", {"up": "platform_ring"})
-        # 底部船体块（半个船身的下缘），外侧面一条黄铜水线
-        o, s = mirror((8.5, -5.4, -1.9), (2, 1, 4))
-        m.cube(b, o, s, "armor_mid",
-               {"east": "gold_stripe", "west": "gold_stripe"})
+        # 主纵梁（扶手顶面）：沿 z 前后通长，顶面画两个炮座环
+        o, s = mirror((8.5, -2.8, -9), (3, 1, 18))
+        m.cube(b, o, s, "armor_light", {"up": "rail_top"})
+        # 下纵梁：在主纵梁下方 1 单位，前后通长
+        o, s = mirror((9, -4.8, -9), (1, 1, 18))
+        m.cube(b, o, s, "metal_dark")
+        # 前立柱 / 后立柱：连接主纵梁与下纵梁
+        o, s = mirror((9, -3.8, -9), (1, 1, 1))
+        m.cube(b, o, s, "metal_dark")
+        o, s = mirror((9, -3.8, 8), (1, 1, 1))
+        m.cube(b, o, s, "metal_dark")
 
     arm("left", +1)
     arm("right", -1)

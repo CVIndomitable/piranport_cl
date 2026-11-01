@@ -84,11 +84,13 @@ public final class RiggingSocketTransforms {
             // 不再由 RiggingLoadoutResolver 分配。
             case LEG_LEFT -> new MountPose(2.6f, 6.0f, 0.0f, 90.0f, 0.0f, 90.0f, 0.40f);
             case LEG_RIGHT -> new MountPose(-2.6f, 6.0f, 0.0f, -90.0f, 0.0f, -90.0f, 0.40f);
-            // 舷侧：底座落在上下炮位平台上、炮口朝前。x 已随建模线程的手臂外移定稿。
-            case SIDE_LEFT_1 -> new MountPose(9.5f, 0.2f, 0.4f, 0.0f, 0.0f, 0.0f, 0.42f);
-            case SIDE_LEFT_2 -> new MountPose(9.5f, 3.6f, -0.4f, 0.0f, 0.0f, 0.0f, 0.42f);
-            case SIDE_RIGHT_1 -> new MountPose(-9.5f, 0.2f, 0.4f, 0.0f, 0.0f, 0.0f, 0.42f);
-            case SIDE_RIGHT_2 -> new MountPose(-9.5f, 3.6f, -0.4f, 0.0f, 0.0f, 0.0f, 0.42f);
+            // 舷侧：L 型扶手的最终坐标（hull 48122f10）。前后各一个炮位，
+            // 底座在扶手上、炮口朝前。x 保持 ±9.5；y 统一 1.8；
+            // 模型空间 -Z 是前，玩家空间 +Z 是前，所以 _1（前）= +6.0、_2（后）= -6.0。
+            case SIDE_LEFT_1 -> new MountPose(9.5f, 1.8f, 6.0f, 0.0f, 0.0f, 0.0f, 0.42f);
+            case SIDE_LEFT_2 -> new MountPose(9.5f, 1.8f, -6.0f, 0.0f, 0.0f, 0.0f, 0.42f);
+            case SIDE_RIGHT_1 -> new MountPose(-9.5f, 1.8f, 6.0f, 0.0f, 0.0f, 0.0f, 0.42f);
+            case SIDE_RIGHT_2 -> new MountPose(-9.5f, 1.8f, -6.0f, 0.0f, 0.0f, 0.0f, 0.42f);
             // 后背：TODO 朝向等策划确认。深弹/防空导弹若也改朝前会穿进身体，
             // 所以暂时保留「朝后 + 左右倾斜」的旧角度。
             case BACK_1 -> new MountPose(2.2f, 2.2f, -3.4f, 180.0f, 0.0f, 90.0f, 0.38f);

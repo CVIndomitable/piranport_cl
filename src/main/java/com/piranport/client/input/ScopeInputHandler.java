@@ -1,15 +1,19 @@
 package com.piranport.client.input;
 
+import com.piranport.artillery.ArtilleryItem;
 import com.piranport.client.AmmoSelectOverlay;
 import com.piranport.client.ClientScopeHandler;
+import com.piranport.component.LoadedAmmo;
 import com.piranport.network.SalvoFirePayload;
 import com.piranport.network.ScopeEnterPayload;
 import com.piranport.network.ScopeFirePayload;
+import com.piranport.registry.ModDataComponents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.network.PacketDistributor;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * 瞄准镜输入处理：按住右键进入瞄准镜，左键发射，松开右键退出。
@@ -32,6 +36,10 @@ public class ScopeInputHandler {
     private static Item lastAttackClickItemType = null;
     private static final int DOUBLE_CLICK_WINDOW_TICKS = 15;
 
+    // 自动装填火炮按住连射的「等一次空膛」状态，详见 tickAutoFireHold。
+    private static Item autoFireWaitItem = null;
+    private static boolean autoFireWaitingForReload = false;
+
     private ScopeInputHandler() {}
 
     public static void reset() {
@@ -39,6 +47,7 @@ public class ScopeInputHandler {
         attackWasDown = false;
         lastAttackClickTick = -1;
         lastAttackClickItemType = null;
+        clearAutoFireHold();
     }
 
     /**
@@ -69,6 +78,7 @@ public class ScopeInputHandler {
         // 不再持有火炮：清理闭镜准星射线，避免残留落点被下次开火使用。
         if (!holdingCannon) {
             ClientScopeHandler.clearQuickAim();
+            clearAutoFireHold();
         }
 
         // 进入瞄准镜时关闭弹药轮盘
@@ -102,57 +112,133 @@ public class ScopeInputHandler {
             }
         }
 
-        // 左键：开火（单击 / 双击）。弹药轮盘打开时禁止开炮，避免切弹药误触发射。
+        // 左键：开火（单击 / 双击）。弹药轮盘或任意界面打开时禁止开炮，避免误触发射。
         boolean attackDown = mc.options.keyAttack.isDown();
-        if (attackDown && !attackWasDown && holdingCannon && !AmmoSelectOverlay.isOpen()) {
-            boolean fired = false;
-            ItemStack heldStack = mc.player.getMainHandItem();
-            boolean isArtillery = heldStack.getItem() instanceof com.piranport.artillery.ArtilleryItem;
-
-            // 双击检测：同类型火炮，且在窗口内
-            if (isArtillery && lastAttackClickTick >= 0
-                    && (mc.level.getGameTime() - lastAttackClickTick) <= DOUBLE_CLICK_WINDOW_TICKS
-                    && lastAttackClickItemType == heldStack.getItem()
-                    && mc.getConnection() != null) {
-                // 双击：齐射所有同型炮
-                fired = true;
-                // 开镜/闭镜同一套算法：都用手持火炮维护的准星射线落点。
-                // 差别只在服务端散布 ×1.1（闭镜无火控 GUI 辅助的代价）。依据：策划决策/武器/13
-                if (ClientScopeHandler.hasValidTarget() && ClientScopeHandler.getAimedPosition() != null) {
-                    Vec3 target = ClientScopeHandler.getAimedPosition();
-                    PacketDistributor.sendToServer(SalvoFirePayload.aimedFire(target.x, target.y, target.z));
-                } else {
-                    PacketDistributor.sendToServer(SalvoFirePayload.maxRangeFire());
-                }
-                // 重置，防三击被当作新一轮双击
-                lastAttackClickTick = -1;
-                lastAttackClickItemType = null;
-            } else if (mc.getConnection() != null) {
-                // 单击
-                fired = true;
-                // 开镜/闭镜同一套算法：都用手持火炮维护的准星射线落点。
-                // 差别只在服务端散布 ×1.1（闭镜无火控 GUI 辅助的代价）。依据：策划决策/武器/13
-                if (ClientScopeHandler.hasValidTarget() && ClientScopeHandler.getAimedPosition() != null) {
-                    Vec3 target = ClientScopeHandler.getAimedPosition();
-                    PacketDistributor.sendToServer(ScopeFirePayload.aimedFire(target.x, target.y, target.z));
-                } else {
-                    PacketDistributor.sendToServer(ScopeFirePayload.maxRangeFire());
-                }
-                // 记录供双击检测
-                if (isArtillery) {
-                    lastAttackClickTick = mc.level.getGameTime();
-                    lastAttackClickItemType = heldStack.getItem();
-                } else {
-                    lastAttackClickTick = -1;
-                    lastAttackClickItemType = null;
-                }
-            }
-
-            if (fired) {
-                suppressCannonHandAnimation(mc);
-            }
+        boolean canFire = holdingCannon && mc.screen == null && !AmmoSelectOverlay.isOpen();
+        if (attackDown && !attackWasDown && canFire) {
+            // 按下的第一发仍走单击/双击语义；自动炮此后的连射由 tickAutoFireHold 接管。
+            handleAttackPress(mc);
+        } else if (attackDown && attackWasDown && canFire) {
+            tickAutoFireHold(mc);
+        }
+        if (!attackDown) {
+            // 松键结束本轮连射：再按下的第一发回到边沿逻辑。
+            clearAutoFireHold();
         }
         attackWasDown = attackDown;
+    }
+
+    /** 左键按下的第一发：双击齐射，否则单击射一发。 */
+    private static void handleAttackPress(Minecraft mc) {
+        if (mc.getConnection() == null) return;
+
+        ItemStack heldStack = mc.player.getMainHandItem();
+        boolean isArtillery = heldStack.getItem() instanceof ArtilleryItem;
+        // 记录按下瞬间客户端看到的装填状态，供连射的「等一次空膛」判断（见 tickAutoFireHold）。
+        boolean hadAmmo = isArtillery && hasLoadedAmmo(heldStack);
+
+        // 双击检测：同类型火炮，且在窗口内
+        if (isArtillery && lastAttackClickTick >= 0
+                && (mc.level.getGameTime() - lastAttackClickTick) <= DOUBLE_CLICK_WINDOW_TICKS
+                && lastAttackClickItemType == heldStack.getItem()) {
+            // 双击：齐射所有同型炮
+            Vec3 target = aimTargetOrNull();
+            if (target != null) {
+                PacketDistributor.sendToServer(SalvoFirePayload.aimedFire(target.x, target.y, target.z));
+            } else {
+                PacketDistributor.sendToServer(SalvoFirePayload.maxRangeFire());
+            }
+            // 重置，防三击被当作新一轮双击
+            lastAttackClickTick = -1;
+            lastAttackClickItemType = null;
+        } else {
+            // 单击
+            fireAimedOrMaxRange(mc);
+            // 记录供双击检测
+            if (isArtillery) {
+                lastAttackClickTick = mc.level.getGameTime();
+                lastAttackClickItemType = heldStack.getItem();
+            } else {
+                lastAttackClickTick = -1;
+                lastAttackClickItemType = null;
+            }
+        }
+
+        suppressCannonHandAnimation(mc);
+        if (isArtillery && ((ArtilleryItem) heldStack.getItem()).isAutoLoading()) {
+            // 自动炮按住连射：按下时若客户端确实看见膛内有弹，就要等一次空膛再发下一发；
+            // 若按下时就看见空膛，装填完成即是新的一发，无需再等。
+            autoFireWaitItem = heldStack.getItem();
+            autoFireWaitingForReload = hadAmmo;
+        }
+    }
+
+    /**
+     * 自动装填火炮按住开火键连射：每个 tick 检查膛内状态，装好一发就再打一发。
+     *
+     * <p>未装填时不发包，避免每 tick 空包；手动装填火炮不走这里，仍是单击/双击一次。
+     *
+     * <p>WHY 要等一次「空膛」观测才允许下一发：服务端清空 LOADED_AMMO 的同步比客户端发包
+     * 晚一 tick，只按 hasAmmo 判断会在同一轮里重复发包，服务端回「未装填」提示。
+     */
+    private static void tickAutoFireHold(Minecraft mc) {
+        ItemStack heldStack = mc.player.getMainHandItem();
+        if (!(heldStack.getItem() instanceof ArtilleryItem artillery) || !artillery.isAutoLoading()) {
+            // 换成手动炮/非火炮：旧炮的连射状态不能留着。
+            clearAutoFireHold();
+            return;
+        }
+        // 换炮后旧炮的「等空膛」不能继承到新炮，否则新炮装好弹也永远等不到空膛。
+        if (autoFireWaitItem != heldStack.getItem()) {
+            autoFireWaitItem = heldStack.getItem();
+            autoFireWaitingForReload = false;
+        }
+        if (!hasLoadedAmmo(heldStack)) {
+            // 已经看到空膛，下一次装填完成才是新的一发。
+            autoFireWaitingForReload = false;
+            return;
+        }
+        if (autoFireWaitingForReload) return;
+        if (!fireAimedOrMaxRange(mc)) return;
+        autoFireWaitingForReload = true;
+        suppressCannonHandAnimation(mc);
+    }
+
+    /** 当前准星落点；没有有效目标时返回 null（调用方回退最大射程）。 */
+    @Nullable
+    private static Vec3 aimTargetOrNull() {
+        if (!ClientScopeHandler.hasValidTarget()) return null;
+        return ClientScopeHandler.getAimedPosition();
+    }
+
+    /**
+     * 单击与连射共用：有准星落点走弹道解算，否则按最大射程仰角开火。
+     * 开镜/闭镜同一套算法，差别只在服务端散布 ×1.1（策划决策/武器/13 方案 B）。
+     *
+     * @return 是否已把开火请求发给服务端
+     */
+    private static boolean fireAimedOrMaxRange(Minecraft mc) {
+        if (mc.getConnection() == null) return false;
+        Vec3 target = aimTargetOrNull();
+        if (target != null) {
+            PacketDistributor.sendToServer(ScopeFirePayload.aimedFire(target.x, target.y, target.z));
+        } else {
+            PacketDistributor.sendToServer(ScopeFirePayload.maxRangeFire());
+        }
+        return true;
+    }
+
+    /**
+     * 客户端看到的膛内状态。判据与 ArtilleryItem/WeaponState 一致：LOADED_AMMO 是否有弹。
+     * 该组件已 networkSynchronized，客户端渲染器本来就读它判断空膛/装填两态。
+     */
+    private static boolean hasLoadedAmmo(ItemStack stack) {
+        return stack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY).hasAmmo();
+    }
+
+    private static void clearAutoFireHold() {
+        autoFireWaitItem = null;
+        autoFireWaitingForReload = false;
     }
 
     private static void suppressCannonHandAnimation(Minecraft mc) {

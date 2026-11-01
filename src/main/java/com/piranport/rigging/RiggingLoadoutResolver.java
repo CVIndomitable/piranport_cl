@@ -23,10 +23,20 @@ public final class RiggingLoadoutResolver {
 
     private static final List<RiggingSocket> WAIST_SOCKETS =
             List.of(RiggingSocket.WAIST_LEFT, RiggingSocket.WAIST_RIGHT);
-    private static final List<RiggingSocket> LEFT_SIDE_SOCKETS =
+    /**
+     * 舷侧炮位的分配顺序：<b>按前后，不按左右</b>。
+     *
+     * <p>WHY：舰装容量有限，只会显示其中几个炮位；候选列表已把当前选中槽排最前，
+     * 按「左前 → 右前 → 左后 → 右后」分配，主手武器就一定落在最前面的
+     * {@code SIDE_LEFT_1}，玩家低头就能看到自己当前拿的炮。
+     * 旧顺序（先填满左舷再填右舷）会让主手武器出现在左后，未必是最显眼的位置。
+     */
+    private static final List<RiggingSocket> SIDE_FRONT_TO_BACK =
+            List.of(RiggingSocket.SIDE_LEFT_1, RiggingSocket.SIDE_RIGHT_1,
+                    RiggingSocket.SIDE_LEFT_2, RiggingSocket.SIDE_RIGHT_2);
+    /** 带飞机时右舷整侧换成飞行甲板，只剩左舷两个炮位，顺序仍是前 → 后。 */
+    private static final List<RiggingSocket> SIDE_FRONT_TO_BACK_CARRIER =
             List.of(RiggingSocket.SIDE_LEFT_1, RiggingSocket.SIDE_LEFT_2);
-    private static final List<RiggingSocket> RIGHT_SIDE_SOCKETS =
-            List.of(RiggingSocket.SIDE_RIGHT_1, RiggingSocket.SIDE_RIGHT_2);
     private static final List<RiggingSocket> DECK_SOCKETS =
             List.of(RiggingSocket.DECK_1, RiggingSocket.DECK_2);
     private static final List<RiggingSocket> BACK_SOCKETS =
@@ -57,7 +67,9 @@ public final class RiggingLoadoutResolver {
      * <ol>
      *   <li>当前选中的快捷栏武器最先占位，其余按快捷栏 0→8 顺序</li>
      *   <li>鱼雷 → 腰部左、右</li>
-     *   <li>主炮 / 反舰导弹 / 火箭弹 → 左舷两个位，再右舷两个位</li>
+     *   <li>主炮 / 反舰导弹 / 火箭弹 → 按前后顺序占舷侧炮位：
+     *       无飞机时 左前 → 右前 → 左后 → 右后；有飞机时右舷换甲板，只剩 左前 → 左后。
+     *       当前选中槽排最前，所以主手武器固定落在最前面的 {@code SIDE_LEFT_1}</li>
      *   <li>有任意舰载机时右舷整侧改成飞行甲板，右舷炮位取消，飞机 → 甲板两个位</li>
      *   <li>深弹 / 防空导弹 → 后背两个位</li>
      *   <li>超出容量的物品直接丢弃（物品栏、数值、开火都不受影响）</li>
@@ -84,22 +96,17 @@ public final class RiggingLoadoutResolver {
 
         List<RiggingMount> mounts = new ArrayList<>();
         int waist = 0;
-        int leftSide = 0;
-        int rightSide = 0;
+        int side = 0;
         int deck = 0;
         int back = 0;
+        // 有飞机时右舷整侧换成飞行甲板，右舷炮位不存在。
+        List<RiggingSocket> sideSockets =
+                hasAircraft ? SIDE_FRONT_TO_BACK_CARRIER : SIDE_FRONT_TO_BACK;
         for (Candidate candidate : candidates) {
             RiggingSocket socket = switch (candidate.category()) {
                 case TORPEDO -> waist < WAIST_SOCKETS.size() ? WAIST_SOCKETS.get(waist++) : null;
-                case CANNON, MISSILE_ASM -> {
-                    if (leftSide < LEFT_SIDE_SOCKETS.size()) {
-                        yield LEFT_SIDE_SOCKETS.get(leftSide++);
-                    }
-                    // 带飞机时右舷没有炮位：整侧换成了飞行甲板。
-                    yield !hasAircraft && rightSide < RIGHT_SIDE_SOCKETS.size()
-                            ? RIGHT_SIDE_SOCKETS.get(rightSide++)
-                            : null;
-                }
+                case CANNON, MISSILE_ASM ->
+                        side < sideSockets.size() ? sideSockets.get(side++) : null;
                 case AIRCRAFT -> hasAircraft && deck < DECK_SOCKETS.size()
                         ? DECK_SOCKETS.get(deck++)
                         : null;

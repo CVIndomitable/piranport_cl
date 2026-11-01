@@ -9,13 +9,15 @@
     1 单位 = 1/16 格；原点 = 躯干 body pivot；
     +Y 朝上；-Z 朝前、+Z 朝后；+X 左舷、-X 右舷。
 
-模型只做「挂架」：左右各一块从髋侧外伸的托板 + 一块矮后挡板，
-不画发射管本体、不做环状抱箍。托板顶面与挂点齐平，发射器底座压在上面、
-后缘靠住挡板；托板向前伸出托住底座前段。
+模型只做「挂架」：腰部横梁 + 左右吊带 + 大腿根托板，不画发射管本体。
+托板顶面 player y=11（大腿根）；模型 z -5..1 对应 player z -1..+5，
+即托板中心前移到 player z=+2.0。腰带留在腰上，用 1 块上接头 + 1 条吊带
+把托板吊下来，不悬空。
 
-配套挂点（建议新增 WAIST_LEFT / WAIST_RIGHT，见下方 WAIST_MOUNTS）：
-发射器「底座在托板上、管口朝前」= 绕 X 翻 180°（pitch 180）。
-因为 item 原点在底座角上而不是中心，左右两侧的 x 原点不对称。
+配套挂点（WAIST_LEFT / WAIST_RIGHT，接线侧已在 mountPose 里）：
+- 模型空间 +Z 朝后、玩家空间 +Z 朝前，所以挂点 z = -模型 z。
+- 发射器底座下沉补偿 8*0.36 = 2.88 单位 → mount y = 托板顶面 player y - 2.88。
+- yaw 180 让 3D 发射器管口朝前、底座落在托板上。
 
 用法：
     python3 build_rigging_torpedo_rack.py            # 写 geo/png/animation
@@ -36,24 +38,26 @@ from build_rigging_hull_models import BedrockModel  # noqa: E402
 IDENTIFIER = "geometry.waist_torpedo_rack"
 ASSET_STEM = "waist_torpedo_rack"
 
-# 配套挂点，数值直接对应 RiggingSocketTransforms.mountPose 的玩家空间参数：
-# x 左舷、y 向下、z 向后（与模型 +Z 同向）。
-# pitch=180 让 item 的 +Y 仍然朝上、+Z（管口）朝前，底座落在 y=0 平面上。
-# 左右 x 原点不对称是因为 item 原点在底座角上：同一个旋转下发射器永远
-# 从原点向 +X 伸出，所以右舷只能把原点放到外舷角（-9.36）才能落在髋外侧。
+# 配套挂点（RiggingSocketTransforms.mountPose 的玩家空间参数）：
+# x 左舷、y 向下、z 向前。托板顶面 player y=11 → mount y = 11.0 - 2.88 = 8.12；
+# 托板 z 中心 模型 -2.0 → 挂点 z = +2.0（朝前）。
 LAUNCHER_SCALE = 0.36
 WAIST_MOUNTS = {
-    "left": dict(x=3.6, y=5.0, z=2.0, yaw=0.0, pitch=180.0, roll=0.0),
-    "right": dict(x=-9.36, y=5.0, z=2.0, yaw=0.0, pitch=180.0, roll=0.0),
+    "left": dict(x=6.0, y=11.0, z=2.0, yaw=180.0, pitch=0.0, roll=0.0),
+    "right": dict(x=-6.0, y=11.0, z=2.0, yaw=180.0, pitch=0.0, roll=0.0),
 }
+# item 物模型的底座中心（x 中心 8、z 中心 (2.8+20.3)/2）；预览时用它把底座对到挂点
+LAUNCHER_ITEM_CENTER_X = 8.0
+LAUNCHER_ITEM_CENTER_Z = 11.55
 
-# 托板（模型空间）：x 4..8、厚 1（顶面 y -5）、z -3..2，向体前伸到 z=-3。
+# 托板（模型空间）：x 4..8、顶面 y -11（player y 11）、z -5..1（player z -1..+5）
 SADDLE_X0, SADDLE_X1 = 4, 8
-SADDLE_TOP_Y = -5
-SADDLE_Z0, SADDLE_Z1 = -3, 2
-# 后挡板：压在托板后沿上，前脸 z=1，正好接住发射器后缘（z≈0.99）。
-BACKSTOP_Z0, BACKSTOP_Z1 = 1, 3
-BACKSTOP_TOP_Y = -4
+SADDLE_TOP_Y = -11
+SADDLE_Z0, SADDLE_Z1 = -5, 1
+# 吊带/上接头：上接头从腰部横梁前脸前伸 1 格，吊带垂直落到托板后沿 z=1；
+# x 7..8 落在托板宽度内，吊带底端与托板后脸是面接触而不是只擦一个角。
+STRAP_X = 7
+LINK_Z0, LINK_Z1 = 1, 2
 
 # 预检查用：确认环内开口能装下推荐的发射器物模型
 LAUNCHER_PROXY_ITEM = "quintuple_61cm_torpedo"
@@ -73,31 +77,31 @@ def _add(m, bone, origin, size, material, face_materials=None, sign=1):
 
 
 def build_waist_torpedo_rack():
-    """左/右腰侧伸出支架 + 一条深色腰带。几何共 6 块，贴图 64×64 1:1。"""
+    """腰部横梁 + 左右吊带 + 大腿根托板。几何共 8 块，贴图 64×64 1:1。"""
     m = BedrockModel(IDENTIFIER, texture_size=64,
-                     # 模型中心大致在 body pivot 下方 5 单位、体前 0.5 单位
-                     visible_bounds=(2, 2, (0, -0.3, 0.0)), texel_scale=1)
+                     # 模型中心大致在 body pivot 下方 8.5 单位、托板靠前
+                     visible_bounds=(2, 2, (0, -0.45, 0.1)), texel_scale=1)
     m.bone("root")
     m.bone("waist_belt", parent="root", pivot=(0, -5, 2))
-    m.bone("rack_left", parent="waist_belt", pivot=(4, -5, 1.5))
-    m.bone("rack_right", parent="waist_belt", pivot=(-4, -5, 1.5))
+    m.bone("rack_left", parent="waist_belt", pivot=(7.5, -5.5, 1.5))
+    m.bone("rack_right", parent="waist_belt", pivot=(-7.5, -5.5, 1.5))
 
-    # ---- 腰带（2 块）：横在腰后，托板从这条带子上生根 ----
-    m.cube("waist_belt", (-4, -5.5, 2), (8, 1, 1), "metal_dark")
+    # ---- 腰部横梁（1 块）+ 红结（1 块）：留在腰上，两端伸到髋外侧接吊带 ----
+    m.cube("waist_belt", (-8, -5.5, 2), (16, 1, 1), "metal_dark")
     m.cube("waist_belt", (-1, -5.5, 3), (2, 1, 1), "red_accent")
 
-    # ---- 左右伸出支架（每侧 2 块，全部镜像 X）----
-    # 1) 托板：顶面 y=-5 与挂点齐平，向前伸到 z=-3；顶面炮座环纹给底座一个"座"
-    # 2) 后挡板：压在托板后沿，向上 1 格，接住发射器后缘并连到腰带上
+    # ---- 每侧 3 块：上接头 + 吊带 + 托板（全部镜像 X）----
+    # 1) 上接头：从横梁前脸往前 1 格，给吊带一个可见挂点
+    # 2) 吊带：垂直落到大腿根，贴在托板后沿
+    # 3) 托板：顶面 y=-11 与挂点齐平，向前伸到模型 z=-5；顶面炮座环纹当"座"
     for side, sign in (("left", 1), ("right", -1)):
         bone = f"rack_{side}"
+        _add(m, bone, (STRAP_X, -5.5, LINK_Z0), (1, 1, 1), "armor_mid",
+             {"north": "trim_gold"}, sign)
+        _add(m, bone, (STRAP_X, -11.5, LINK_Z0), (1, 6, 1), "armor_mid", None, sign)
         _add(m, bone, (SADDLE_X0, SADDLE_TOP_Y - 1, SADDLE_Z0),
              (SADDLE_X1 - SADDLE_X0, 1, SADDLE_Z1 - SADDLE_Z0),
              "armor_light", {"up": "platform_ring"}, sign)
-        _add(m, bone, (SADDLE_X0, SADDLE_TOP_Y, BACKSTOP_Z0),
-             (SADDLE_X1 - SADDLE_X0, BACKSTOP_TOP_Y - SADDLE_TOP_Y,
-              BACKSTOP_Z1 - BACKSTOP_Z0),
-             "armor_mid", {"up": "trim_gold"}, sign)
     return m
 
 
@@ -198,20 +202,20 @@ def _launcher_elements(repo_root):
 
 
 def launcher_model_boxes(repo_root, side):
-    """把发射器 3D 物模型按挂点姿态换算成模型空间的轴对齐盒。
+    """按接线后的目标摆放，把五联装物模型换算成模型空间的轴对齐盒。
 
-    pitch 180 是 90° 的整数倍，盒子旋转后仍是轴对齐，不需要矩阵分解。
-    玩家空间映射：(x, y, z) -> (x, -y, -z)（+Y 上、+Z 管口朝前），
-    再按 模型 y = -玩家 y、模型 z = 玩家 z 换到舰装空间：
-        模型 = 挂点 + (s*x, s*y, -s*z)
-    发射器因此从 item 原点向 +X 伸出，右舷要靠挂点 x 落到外舷角。
+    这是预览代理，不是物品渲染管线的逐字模拟：接线用 yaw 180 + 底座补偿
+    8*0.36，让底座中心落在挂点 x 上、管口（item +Z）朝模型 -Z。
+    item 原点在底座角上，所以先减掉底座中心 (8, 11.55)：
+        模型 = (挂点x - s*(x-8), -挂点y + s*y, -挂点z - s*(z-11.55))
+    旋转全是 0°/180°，盒子仍是轴对齐，不用矩阵分解。
     """
     elements = _launcher_elements(repo_root)
     if not elements:
         return []
     s = LAUNCHER_SCALE
     mnt = WAIST_MOUNTS[side]
-    mx, my, mz = mnt["x"], -mnt["y"], mnt["z"]
+    mx, my, mz = mnt["x"], -mnt["y"], -mnt["z"]
     boxes = []
     for e in elements:
         x0, y0, z0 = e["from"]
@@ -220,7 +224,11 @@ def launcher_model_boxes(repo_root, side):
         for xi in (x0, x1):
             for yi in (y0, y1):
                 for zi in (z0, z1):
-                    pts.append((mx + s * xi, my + s * yi, mz - s * zi))
+                    pts.append((
+                        mx - s * (xi - LAUNCHER_ITEM_CENTER_X),
+                        my + s * yi,
+                        mz - s * (zi - LAUNCHER_ITEM_CENTER_Z),
+                    ))
         boxes.append((
             tuple(min(p[i] for p in pts) for i in range(3)),
             tuple(max(p[i] for p in pts) for i in range(3)),
@@ -251,9 +259,11 @@ def report_symmetry(model):
 
 
 def report_launcher_fit(repo_root):
-    """检查发射器底座是否压在托板上、后缘靠住挡板、且不穿躯干。"""
-    print(f"托板: x {SADDLE_X0}..{SADDLE_X1}, 顶面 y {SADDLE_TOP_Y}, "
-          f"z {SADDLE_Z0}..{SADDLE_Z1}；后挡板前脸 z {BACKSTOP_Z0}")
+    """检查发射器底座是否压在托板上、管口朝前、且不穿躯干。"""
+    z_center_model = (SADDLE_Z0 + SADDLE_Z1) / 2.0
+    print(f"托板: 模型 x {SADDLE_X0}..{SADDLE_X1}, 顶面 y {SADDLE_TOP_Y}, "
+          f"z {SADDLE_Z0}..{SADDLE_Z1} "
+          f"→ player y={-SADDLE_TOP_Y:.1f}, z 中心={-z_center_model:+.1f}")
     for side in ("left", "right"):
         boxes = launcher_model_boxes(repo_root, side)
         if not boxes:
@@ -272,15 +282,13 @@ def report_launcher_fit(repo_root):
         ox = max(0.0, min(bx1, sx1) - max(bx0, sx0))
         oz = max(0.0, min(bz1, SADDLE_Z1) - max(bz0, SADDLE_Z0))
         ratio = ox * oz / max((bx1 - bx0) * (bz1 - bz0), 1e-9)
+        inner = lo[0] if side == "left" else -hi[0]   # 到躯干中心一侧的最近距离
         bottom_ok = abs(lo[1] - SADDLE_TOP_Y) < 1e-3
-        rear_ok = abs(bz1 - BACKSTOP_Z0) < 0.15
-        body_ok = lo[0] >= 4 - 1e-6 if side == "left" else hi[0] <= -4 + 1e-6
         print(f"  {side}: 发射器 x {lo[0]:.2f}..{hi[0]:.2f}, "
               f"y {lo[1]:.2f}..{hi[1]:.2f}, z {lo[2]:.2f}..{hi[2]:.2f}")
-        print(f"    底座压在托板 y={SADDLE_TOP_Y}: {'OK' if bottom_ok else 'NG'}; "
-              f"后缘靠挡板 z={BACKSTOP_Z0}: {'OK' if rear_ok else 'NG'}; "
-              f"不穿躯干(|x|>=4): {'OK' if body_ok else 'NG'}; "
-              f"托板承托底座 {ratio * 100:.0f}%")
+        print(f"    底座压托板 y={SADDLE_TOP_Y}: {'OK' if bottom_ok else 'NG'}; "
+              f"管口 z={lo[2]:.2f}（负=朝前）; 后缘 z={bz1:.2f} 贴吊带 z={LINK_Z0}; "
+              f"内缘 |x|={inner:.2f}（躯干面 4.0）; 承托 {ratio * 100:.0f}%")
 
 
 # ---------------------------------------------------------------- 预览
@@ -341,7 +349,7 @@ def write_previews(repo_root, out_dir):
     render(f"{prefix}_player_front.png", "front", show_player=True)
     # applyBase 的共享偏移 (0, 0.28, 0.34) 格之后的位置
     render(f"{prefix}_player_iso.png", "iso", show_player=True, shared_offset=True)
-    # 叠发射器物模型，确认底座压在托板上、管口朝前
+    # 叠发射器物模型，确认底座压在托板上、管口朝前、托板在大腿根
     render(f"{prefix}_launcher_iso.png", "iso", launcher=True)
     render(f"{prefix}_launcher_left.png", "left", launcher=True)
 

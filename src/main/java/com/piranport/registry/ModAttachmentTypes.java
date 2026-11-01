@@ -3,6 +3,7 @@ package com.piranport.registry;
 import com.mojang.serialization.Codec;
 import com.piranport.PiranPort;
 import com.piranport.handler.WaterWalkingState;
+import com.piranport.rigging.RiggingLoadout;
 import net.neoforged.neoforge.attachment.AttachmentType;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.neoforged.neoforge.registries.NeoForgeRegistries;
@@ -48,4 +49,18 @@ public class ModAttachmentTypes {
     public static final Supplier<AttachmentType<com.piranport.combat.AASilenceState>> AA_SILENCE =
             ATTACHMENT_TYPES.register("aa_silence",
                     () -> AttachmentType.builder(com.piranport.combat.AASilenceState::new).build());
+
+    /**
+     * 玩家舰装挂点快照：服务端 {@link com.piranport.handler.RiggingLoadoutHandler} 定时重建，
+     * 内容变化才 setData（附件同步自动广播给看得见该玩家的客户端）。
+     *
+     * <p><b>只 sync 不 serialize</b>：值里是 count=1 的 ItemStack 展示副本，只服务渲染，
+     * 不需要进存档；NeoForge 的 {@code AttachmentType.Builder#sync(StreamCodec)} 支持独立使用。
+     * 非持久化附件在玩家重生时也不会被复制，服务端下一个周期会重新填上。
+     */
+    public static final Supplier<AttachmentType<RiggingLoadout>> RIGGING_LOADOUT =
+            ATTACHMENT_TYPES.register("rigging_loadout",
+                    () -> AttachmentType.builder(() -> RiggingLoadout.EMPTY)
+                            .sync(RiggingLoadout.STREAM_CODEC)
+                            .build());
 }

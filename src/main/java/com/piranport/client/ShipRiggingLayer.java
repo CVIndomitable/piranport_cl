@@ -3,12 +3,10 @@ package com.piranport.client;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
+import com.piranport.client.gecko.RiggingModelRegistry;
 import com.piranport.combat.TransformationManager;
-import com.piranport.registry.ModAttachmentTypes;
 import com.piranport.rigging.RiggingLoadout;
-import com.piranport.rigging.RiggingLoadoutResolver;
 import com.piranport.rigging.RiggingMount;
-import com.piranport.rigging.RiggingSocket;
 import com.piranport.skin.ClientSkinData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.PlayerModel;
@@ -24,10 +22,10 @@ import org.joml.Matrix4f;
 /**
  * 玩家舰装渲染层：程序化舰体轮廓 + 按挂点摆放的武器占位模型。
  *
- * <p><b>数据来源</b>：挂点分配由服务端算好放进 {@link ModAttachmentTypes#RIGGING_LOADOUT}，
+ * <p><b>数据来源</b>：挂点分配由服务端算好放进 {@link com.piranport.registry.ModAttachmentTypes#RIGGING_LOADOUT}，
  * 所有看得见该玩家的客户端都只读这份快照 —— 远程玩家的背包客户端根本拿不到。
  * 只有本地玩家在快照到达之前（进服第一帧 / 单人模式）才用
- * {@link RiggingLoadoutResolver} 现场兜底。
+ * {@link com.piranport.rigging.RiggingLoadoutResolver} 现场兜底。
  *
  * <p><b>Phase 范围</b>：只做视觉与数据，不改弹道起点、不隐藏手持武器（Phase 2/3 再接）。
  */
@@ -74,41 +72,19 @@ public class ShipRiggingLayer extends RenderLayer<AbstractClientPlayer, PlayerMo
                        AbstractClientPlayer player, float limbSwing, float limbSwingAmount,
                        float partialTick, float ageInTicks, float netHeadYaw, float headPitch) {
         if (player.isInvisible()) return;
-        if (!isRenderedAsTransformed(player)) return;
+        if (!RiggingClientState.isRenderedAsTransformed(player)) return;
 
-        RiggingLoadout loadout = resolveLoadout(player);
+        RiggingLoadout loadout = RiggingClientState.resolveLoadout(player);
         int skinId = AircraftLaunchPoseClientState.skinId(
                 player.getId(), ClientSkinData.getActiveSkin(player.getUUID()));
         float launchPose = AircraftLaunchPoseClientState.intensity(player.getId(), partialTick);
 
         renderHull(poseStack, bufferSource, packedLight, player, loadout, skinId, launchPose);
         for (RiggingMount mount : loadout.mounts()) {
+            // 已有 GeckoLib 模型的装备由 RiggingAttachedLayer 绘制，这里不能再画一份物品模型。
+            if (RiggingModelRegistry.isRegistered(mount.stack())) continue;
             renderMount(poseStack, bufferSource, packedLight, player, mount, launchPose);
         }
-    }
-
-    /**
-     * 远程玩家只认同步快照；本地玩家在没有快照时按背包现场算一份。
-     *
-     * <p>{@link RiggingLoadout#isEmpty()} 用的是 selectedSlot = -1 哨兵，
-     * 所以「已变身但快捷栏里没武器」不会被误判成没有快照。
-     */
-    private static RiggingLoadout resolveLoadout(AbstractClientPlayer player) {
-        RiggingLoadout synced = player.getData(ModAttachmentTypes.RIGGING_LOADOUT.get());
-        if (!synced.isEmpty()) return synced;
-
-        boolean localPlayer = player == Minecraft.getInstance().player;
-        if (localPlayer && TransformationManager.isPlayerTransformed(player)) {
-            return RiggingLoadoutResolver.resolve(player, ClientSkinData.getActiveSkin(player.getUUID()));
-        }
-        return synced;
-    }
-
-    private static boolean isRenderedAsTransformed(AbstractClientPlayer player) {
-        boolean localPlayer = player == Minecraft.getInstance().player;
-        return localPlayer
-                ? TransformationManager.isPlayerTransformed(player)
-                : ClientSkinData.getActiveSkin(player.getUUID()) > 0;
     }
 
     private void renderHull(PoseStack poseStack, MultiBufferSource bufferSource, int packedLight,
@@ -517,30 +493,17 @@ public class ShipRiggingLayer extends RenderLayer<AbstractClientPlayer, PlayerMo
     /**
      * 按挂点摆一个物品模型。
      *
-     * <p>腿挂点必须先 {@code translateAndRotate} 腿部模型，偏移才是相对大腿的；
-     * 其余挂点以躯干为基准。
+     * <p>挂点参考系统一由 {@link RiggingSocketTransforms} 提供，和 GeckoLib 层共用，
+     * 避免两套坐标漂移。
      */
     private void renderMount(PoseStack poseStack, MultiBufferSource bufferSource, int packedLight,
                              AbstractClientPlayer player, RiggingMount mount, float launchPose) {
         poseStack.pushPose();
-        switch (mount.socket()) {
-            case LEG_LEFT -> this.getParentModel().leftLeg.translateAndRotate(poseStack);
-            case LEG_RIGHT -> this.getParentModel().rightLeg.translateAndRotate(poseStack);
-            default -> {
-                // 与 renderHull 用同一参考系：躯干变换 + 舰体偏移 + 放飞后仰，
-                // 否则挂点坐标和画出来的舷侧/甲板对不上。
-                this.getParentModel().body.translateAndRotate(poseStack);
-                poseStack.translate(0.0, 0.28 + launchPose * 0.035, 0.34 - launchPose * 0.035);
-                poseStack.mulPose(Axis.XP.rotationDegrees(-3.0f * launchPose));
-            }
-        }
+        RiggingSocketTransforms.applyBase(poseStack, this.getParentModel(), mount.socket(), launchPose);
 
-        MountPose pose = mountPose(mount.socket(), launchPose);
-        // mountPose 的 x/y/z 与玩家模型骨骼同单位（1/16 格），PoseStack 是格单位。
-        poseStack.translate(pose.x() / 16.0f, pose.y() / 16.0f, pose.z() / 16.0f);
-        poseStack.mulPose(Axis.YP.rotationDegrees(pose.yaw()));
-        poseStack.mulPose(Axis.XP.rotationDegrees(pose.pitch()));
-        poseStack.mulPose(Axis.ZP.rotationDegrees(pose.roll()));
+        RiggingSocketTransforms.MountPose pose =
+                RiggingSocketTransforms.mountPose(mount.socket(), launchPose);
+        RiggingSocketTransforms.applyMountFrame(poseStack, pose);
         poseStack.scale(pose.scale(), pose.scale(), pose.scale());
 
         Minecraft.getInstance().getItemRenderer().renderStatic(
@@ -548,32 +511,6 @@ public class ShipRiggingLayer extends RenderLayer<AbstractClientPlayer, PlayerMo
                 poseStack, bufferSource, player.level(), player.getId() * 31 + mount.socket().ordinal());
         poseStack.popPose();
     }
-
-    /**
-     * 各挂点的占位位姿。模型空间里 1 单位 = 1/16 格，+y 朝下、+z 朝前（模型 -z 是后背）。
-     *
-     * <p>这些数值是占位观感，最终美术模型进来后应直接换成挂点模型，不再依赖这些偏移。
-     */
-    private static MountPose mountPose(RiggingSocket socket, float launchPose) {
-        return switch (socket) {
-            // 腿部：相对大腿 pivot 向外偏移，鱼雷管贴着外侧
-            case LEG_LEFT -> new MountPose(2.6f, 6.0f, 0.0f, 90.0f, 0.0f, 90.0f, 0.40f);
-            case LEG_RIGHT -> new MountPose(-2.6f, 6.0f, 0.0f, -90.0f, 0.0f, -90.0f, 0.40f);
-            // 舷侧：上下两个平台，炮口朝外（舰体后仰已由共享变换处理）
-            case SIDE_LEFT_1 -> new MountPose(4.0f, 0.2f, 0.4f, 90.0f, -4.0f * launchPose, 90.0f, 0.42f);
-            case SIDE_LEFT_2 -> new MountPose(4.0f, 3.6f, -0.4f, 90.0f, -4.0f * launchPose, 90.0f, 0.42f);
-            case SIDE_RIGHT_1 -> new MountPose(-4.0f, 0.2f, 0.4f, -90.0f, -4.0f * launchPose, -90.0f, 0.42f);
-            case SIDE_RIGHT_2 -> new MountPose(-4.0f, 3.6f, -0.4f, -90.0f, -4.0f * launchPose, -90.0f, 0.42f);
-            // 后背：烟囱左右各一，朝后
-            case BACK_1 -> new MountPose(2.2f, 2.2f, -3.4f, 180.0f, 0.0f, 90.0f, 0.38f);
-            case BACK_2 -> new MountPose(-2.2f, 2.2f, -3.4f, 180.0f, 0.0f, -90.0f, 0.38f);
-            // 甲板：右舷甲板前后各一，面朝上平放
-            case DECK_1 -> new MountPose(-5.6f, 0.4f, -2.2f, 0.0f, -90.0f, 0.0f, 0.34f);
-            case DECK_2 -> new MountPose(-5.6f, 0.4f, 2.2f, 0.0f, -90.0f, 0.0f, 0.34f);
-        };
-    }
-
-    private record MountPose(float x, float y, float z, float yaw, float pitch, float roll, float scale) {}
 
     private static void renderCuboid(VertexConsumer consumer, Matrix4f pose,
                                      float minX, float minY, float minZ,

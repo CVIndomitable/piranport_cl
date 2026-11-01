@@ -451,6 +451,12 @@ public class ClientModEvents {
                         new com.piranport.client.SkinOverlayLayer(playerRenderer));
                 playerRenderer.addLayer(
                         new com.piranport.client.ShipRiggingLayer(playerRenderer));
+                // 有 GeckoLib 模型的武器各挂一个 layer；未登记的武器仍由上面的占位层画物品模型。
+                for (com.piranport.client.gecko.RiggingModelDef def
+                        : com.piranport.client.gecko.RiggingModelRegistry.all()) {
+                    playerRenderer.addLayer(
+                            new com.piranport.client.gecko.RiggingAttachedLayer(playerRenderer, def));
+                }
             }
         }
     }

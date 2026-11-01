@@ -108,7 +108,7 @@ public final class TargetResolution {
                 ModEquipmentConfig.AIRCRAFT_AUTONOMOUS_SEEK_RANGE.get());
     }
 
-    /** 战斗机目标：只接受空中目标；手动锁定优先，自动索敌只找敌对飞机。 */
+    /** 战斗机目标：只接受空中目标；手动锁定优先且不受高度限制，自动索敌只找高于玩家的敌对飞机。 */
     @Nullable
     public static Entity resolveFighterTarget(AircraftAttackContext ctx, Player owner) {
         Entity locked = resolveLocked(ctx, owner,
@@ -119,6 +119,9 @@ public final class TargetResolution {
         return autoSeek(ctx, Entity.class,
                 entity -> entity.isAlive() && entity != ctx.self()
                         && isAirborneTarget(entity)
+                        // 自动索敌只追高于玩家的目标：玩家脚下洞穴/坑里的飞行怪会让战斗机钻地；
+                        // 低于或同高度的目标不自动打，但手动火控锁定不受此限制（《航空/24》）。
+                        && entity.getY() > owner.getY()
                         && !entity.isAlliedTo(owner)
                         && !FriendlyFireHelper.shouldBlockHit(entity, owner)
                         && (CombatTargeting.isHostileTarget(owner, entity) || entity instanceof FlyingMob),

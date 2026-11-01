@@ -124,6 +124,27 @@ class AircraftCombatTargetingTest {
     }
 
     @Test
+    void autoSeekAndAntiAirIgnoreTargetsBelowPlayer() throws Exception {
+        String targeting = Files.readString(TARGETING);
+        String fighter = methodBody(targeting, "public static Entity resolveFighterTarget(");
+        int autoSeekStart = fighter.indexOf("return autoSeek(ctx, Entity.class");
+        assertTrue(autoSeekStart > 0);
+        assertTrue(fighter.substring(autoSeekStart).contains("entity.getY() > owner.getY()"),
+                "自动索敌只接受高于玩家底座的目标，避免战斗机钻地追击");
+        assertFalse(fighter.substring(0, autoSeekStart).contains("getY() >"),
+                "手动火控锁定不受高度过滤限制（《航空/24》）");
+
+        String handler = Files.readString(Path.of(
+                "src/main/java/com/piranport/handler/PlayerTickHandler.java"));
+        String autoLaunch = methodBody(handler, "private static void tickAutoLaunchFighters(");
+        assertTrue(autoLaunch.contains("e.getY() > player.getY()"),
+                "自动升空只考虑高于玩家的飞行敌对生物");
+        String antiAir = methodBody(handler, "private static void tickAntiAirMissiles(");
+        assertTrue(antiAir.contains("e.getY() <= player.getY()"),
+                "防空导弹扫描同样排除低于/同高度的目标");
+    }
+
+    @Test
     void autoLaunchNeverTakesAircraftFromTheHeldSlot() throws Exception {
         String strategy = Files.readString(Path.of(
                 "src/main/java/com/piranport/aviation/AircraftFireStrategy.java"));

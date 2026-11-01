@@ -649,7 +649,7 @@ public class PlayerTickHandler {
         lastPlayerPos.remove(uuid);
     }
 
-    /** 自动发射战斗机锁定附近飞行敌对生物 / 敌机 */
+    /** 自动发射战斗机锁定附近高于玩家的飞行敌对生物 / 敌机 */
     private static void tickAutoLaunchFighters(Player player, ItemStack coreStack, int coreSlot) {
         // P2-8: PERF 埋点 — 火控解算（每 tick 遍历目标）
         boolean perfEnabled = com.piranport.debug.PiranPortDebug.isServerEnabled();
@@ -658,10 +658,13 @@ public class PlayerTickHandler {
         // 扫描类型放宽到 Entity：深海自主飞机 AircraftEntity 不是 LivingEntity，也不是 Enemy。
         // 敌对口径统一走 CombatTargeting.isHostileTarget（玩家飞机按 canHarmPlayer、自主深海飞机按 isAutonomous），
         // 原版空中敌怪仍保留 FlyingMob/Phantom/Vex 的筛选。
+        // 只要高于玩家的目标：玩家脚下洞穴/坑里的飞行怪不应触发自动升空，否则战斗机会钻地追目标；
+        // 低于或同高度的目标不自动打，但仍可手动火控锁定。
         List<Entity> flyingHostiles = player.level().getEntitiesOfClass(
                 Entity.class,
                 player.getBoundingBox().inflate(64.0),
                 e -> e.isAlive()
+                        && e.getY() > player.getY()
                         && CombatTargeting.isHostileTarget(player, e)
                         // 与战斗机攻击目标共用同一口径：FlyingMob（幻翼/恶魂）、Vex、
                         // FlyingAnimal（女仆野生妖精等）和飞行导航怪都算空中目标。
@@ -694,14 +697,17 @@ public class PlayerTickHandler {
                 "player=" + player.getName().getString() + " targets=" + flyingHostiles.size());
     }
 
-    /** 防空导弹：检测32格内空中敌对目标 */
+    /** 防空导弹：检测32格内高于玩家的空中敌对目标 */
     private static void tickAntiAirMissiles(Player player, ItemStack coreStack, int coreSlot) {
         if (AASilenceManager.isSilenced(player)) return;
         boolean hasAirborneHostile = !player.level().getEntitiesOfClass(
                 Entity.class,
                 player.getBoundingBox().inflate(32.0),
                 e -> {
+                    // 只打高于玩家的空中目标：脚下洞穴里的飞行怪不应触发防空，
+                    // 否则导弹/战斗机会钻进地下；低于或同高度的目标仍可手动火控锁定。
                     if (!e.isAlive() || !e.isPickable()
+                            || e.getY() <= player.getY()
                             || !CombatTargeting.isHostileTarget(player, e)) return false;
                     // 飞机恒为空中目标：AircraftEntity 不继承 LivingEntity，onGround 不是可靠判据
                     if (e instanceof AircraftEntity) return true;

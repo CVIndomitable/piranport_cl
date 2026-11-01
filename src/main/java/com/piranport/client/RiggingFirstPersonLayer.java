@@ -38,10 +38,15 @@ import java.util.WeakHashMap;
  * 对不上。这里直接在 {@link RenderLevelStageEvent} 的相机相对世界栈里画，天然就是视角相对的：
  * 相机旋转已经烘焙进 poseStack，平移/旋转都以「屏幕前、屏幕两侧」为基准，转头时舰装跟着视角走。
  *
- * <p><b>坐标系换算</b>：舰装 geo 模型 +Y 朝上、+X 为左、+Z 为船首。相机相对栈里 +Y 朝上、
- * -Z 为视线前方、+X 为屏幕右。因此水平转 180° 后，模型船首朝向视线前方、模型左臂落在屏幕左侧，
- * 正好是「站在舰装内部」的视角。第三人称那套 {@code Axis.XP(180)} 是玩家模型帧（+Y 朝下）专用的，
- * 这里不能照搬。
+ * <p><b>坐标系换算</b>：舰装 geo 模型（见 {@code 小工具/rigging_geo_preview.py}）为
+ * +Y 朝上、-Z 朝前、+X 为左舷；相机相对栈为 +Y 朝上、-Z 为视线前方、+X 为屏幕右。
+ * 两者的 Y/Z 一致，只有 X 相反：期望把「模型 +X（左）」放到「屏幕左（view -X）」，
+ * 同时保持「模型 -Z（前）」仍在视线前方。这是一个 X 轴反射，纯旋转做不到
+ * （Y180 会把真正的船首转到相机背后，飞行甲板会跑到身后）。
+ * 所以这里用 {@code scale(-s, s, s)} 做镜像，基础旋转保持 0；
+ * 负缩放会翻转三角形绕序，必须用 no-cull 的渲染类型（GeckoLib 默认
+ * {@code entityCutoutNoCull} 正满足）。第三人称那套 {@code Axis.XP(180)} 是玩家模型帧
+ * （+Y 朝下、-Z 朝前）专用的，这里不能照搬。
  *
  * <p><b>只画本地玩家</b>：第一人称视野里只有自己的舰装。
  *
@@ -98,19 +103,21 @@ public final class RiggingFirstPersonLayer {
         poseStack.pushPose();
 
         // 视角相对：先在相机前方摆好位置，再绕视线做 yaw/pitch/roll，最后缩放。
+        // offset 在镜像之前生效，所以 offset_x 的正负仍按「+ 为屏幕右」理解。
         poseStack.translate(
                 ModEquipmentConfig.RIGGING_FP_OFFSET_X.get(),
                 ModEquipmentConfig.RIGGING_FP_OFFSET_Y.get(),
                 ModEquipmentConfig.RIGGING_FP_OFFSET_Z.get());
-        // 基础 180°：模型 +Z 为船首，相机前方是 -Z；转过来才能看到舰装背面、双臂落在屏幕两侧。
-        poseStack.mulPose(Axis.YP.rotationDegrees(180.0f
-                + ModEquipmentConfig.RIGGING_FP_YAW.get().floatValue()));
+        poseStack.mulPose(Axis.YP.rotationDegrees(
+                ModEquipmentConfig.RIGGING_FP_YAW.get().floatValue()));
         poseStack.mulPose(Axis.XP.rotationDegrees(
                 ModEquipmentConfig.RIGGING_FP_PITCH.get().floatValue()));
         poseStack.mulPose(Axis.ZP.rotationDegrees(
                 ModEquipmentConfig.RIGGING_FP_ROLL.get().floatValue()));
+        // X 轴镜像：模型 +X（左舷）→ 屏幕左，-Z（船首）仍指向视线前方，+Y 仍朝上。
+        // 基础旋转为 0；负缩放翻转绕序，依赖 no-cull 渲染类型（见类注释）。
         float scale = ModEquipmentConfig.RIGGING_FP_SCALE.get().floatValue();
-        poseStack.scale(scale, scale, scale);
+        poseStack.scale(-scale, scale, scale);
 
         FpAnimatables animatables = animatablesFor(player);
         MultiBufferSource.BufferSource bufferSource = mc.renderBuffers().bufferSource();

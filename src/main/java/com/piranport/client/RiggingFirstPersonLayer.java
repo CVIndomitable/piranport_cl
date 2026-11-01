@@ -5,7 +5,10 @@ import com.mojang.math.Axis;
 import com.piranport.PiranPort;
 import com.piranport.client.gecko.RiggingAnimatable;
 import com.piranport.client.gecko.RiggingHullModelRegistry;
+import com.piranport.client.gecko.RiggingModelDef;
+import com.piranport.client.gecko.RiggingModelRegistry;
 import com.piranport.client.gecko.RiggingObjectRenderer;
+import com.piranport.client.gecko.RiggingRenderContext;
 import com.piranport.client.gecko.RiggingRenderDef;
 import com.piranport.config.ModEquipmentConfig;
 import com.piranport.rigging.RiggingCategory;
@@ -16,10 +19,12 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
+import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -27,6 +32,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import software.bernie.geckolib.cache.GeckoLibCache;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -57,8 +63,11 @@ import java.util.WeakHashMap;
  * 默认会把视线中央糊住，所以默认只保留左右机械臂（跳过 hull_base / stack 的方块，
  * 但保留它们的子骨骼）。终端 {@code global.rigging_fp.show_body} 可开回完整船体做对比。
  *
- * <p>平台上的武器模型（{@code RiggingAttachedLayer} 那一套）本阶段不参与第一人称，
- * 等下一轮把挂点接到这里的船体位姿后再加。
+ * <p><b>挂载武器</b>：船体画完后按 {@link RiggingSocketTransforms#mountPose} 逐个挂点补画。
+ * 挂点坐标是第三人称玩家模型空间（+Y 朝下、+Z 朝前），换算到这里的身体模型空间
+ * （+Y 朝上、+Z 船首）只需 {@code (x, -y, z)}；不再套第三人称的 {@code Axis.XP(180)}。
+ * 三类武器各有自己的补偿角（见 {@link #renderGeckoWeapon} / {@link #renderItemWeapon}），
+ * 原因写在方法注释里。
  */
 @EventBusSubscriber(modid = PiranPort.MOD_ID, value = Dist.CLIENT)
 public final class RiggingFirstPersonLayer {
@@ -77,6 +86,12 @@ public final class RiggingFirstPersonLayer {
             new RiggingObjectRenderer(RiggingHullModelRegistry.CARRIER_DECK);
     private static final RiggingObjectRenderer WAIST_RACK_RENDERER =
             new RiggingObjectRenderer(RiggingHullModelRegistry.WAIST_TORPEDO_RACK);
+
+    /** 已登记 GeckoLib 的武器（目前是四种导弹发射器）按玩家 × 模型维护动画状态。 */
+    private static final Map<AbstractClientPlayer, Map<RiggingModelDef, RiggingAnimatable>>
+            MISSILE_ANIMATABLES = new WeakHashMap<>();
+    /** 每个 GeckoLib 武器模型一个对象渲染器。 */
+    private static final Map<RiggingModelDef, RiggingObjectRenderer> MISSILE_RENDERERS = new HashMap<>();
 
     private RiggingFirstPersonLayer() {}
 
@@ -148,6 +163,11 @@ public final class RiggingFirstPersonLayer {
                     WAIST_RACK_RENDERER);
         }
 
+        // 挂载武器最后画：和船体共用同一个身体变换（含 scale / offset / yaw-pitch-roll）。
+        renderWeapons(poseStack, bufferSource, packedLight, partialTick, player, loadout);
+        // 物品渲染（FIXED）与 BEWLR 3D 模型的批次留到这时统一提交。
+        bufferSource.endBatch();
+
         poseStack.popPose();
     }
 
@@ -170,6 +190,106 @@ public final class RiggingFirstPersonLayer {
         }
         renderer.render(poseStack, animatable, bufferSource, null, null, packedLight, partialTick);
         bufferSource.endBatch(RenderType.entityCutoutNoCull(def.texture()));
+    }
+
+    /** 逐个挂点补画武器：GeckoLib 导弹走模型渲染，其余走物品渲染管线。 */
+    private static void renderWeapons(PoseStack poseStack, MultiBufferSource.BufferSource bufferSource,
+                                      int packedLight, float partialTick,
+                                      AbstractClientPlayer player, RiggingLoadout loadout) {
+        for (RiggingMount mount : loadout.mounts()) {
+            // 第一人称不跟随 third-person 的放飞后仰；mountPose 目前也不使用该参数。
+            RiggingSocketTransforms.MountPose pose =
+                    RiggingSocketTransforms.mountPose(mount.socket(), 0.0f);
+            RiggingModelDef def = RiggingModelRegistry.find(mount.stack());
+            if (def != null) {
+                renderGeckoWeapon(poseStack, bufferSource, packedLight, partialTick,
+                        player, def, pose);
+            } else {
+                renderItemWeapon(poseStack, bufferSource, packedLight, player, mount, pose);
+            }
+        }
+    }
+
+    /**
+     * 已登记 GeckoLib 的导弹发射器（{@code RiggingAttachedLayer} 的同一批模型）。
+     *
+     * <p>第三人称的顺序是 {@code XP(180) → YP(yawOffset) → 挂点 yaw/pitch/roll}；
+     * 第一人称的模型空间本来就是 +Y 朝上，不需要 XP(180)，直接把
+     * {@code yawOffset + 挂点 yaw} 合起来用。这样 sy1 这类 -Z 朝前的模型和 terrier
+     * 这类 +Z 朝前的模型都会朝身体前方。
+     */
+    private static void renderGeckoWeapon(PoseStack poseStack, MultiBufferSource.BufferSource bufferSource,
+                                          int packedLight, float partialTick,
+                                          AbstractClientPlayer player, RiggingModelDef def,
+                                          RiggingSocketTransforms.MountPose pose) {
+        poseStack.pushPose();
+        // 挂点坐标是玩家模型空间（+Y 下），换到身体模型空间（+Y 上）只翻 y。
+        poseStack.translate(pose.x() / 16.0f, -pose.y() / 16.0f, pose.z() / 16.0f);
+        poseStack.mulPose(Axis.YP.rotationDegrees(def.yawOffset() + pose.yaw()));
+        poseStack.mulPose(Axis.XP.rotationDegrees(pose.pitch()));
+        poseStack.mulPose(Axis.ZP.rotationDegrees(pose.roll()));
+        poseStack.scale(def.scale(), def.scale(), def.scale());
+        renderPart(poseStack, bufferSource, packedLight, partialTick, def,
+                missileAnimatable(player, def), missileRenderer(def));
+        poseStack.popPose();
+    }
+
+    /**
+     * 未登记 GeckoLib 的挂载武器：主炮/鱼雷/深弹/防空导弹走 BEWLR，飞机走平面图标。
+     *
+     * <p><b>为什么 3D 武器要额外 yaw+180</b>：这些 BEWLR 模型的父模型是
+     * {@code minecraft:block/block}，它的 FIXED 显示变换只有 scale 0.5、<b>没有</b> Y180
+     * （Y180 是 {@code item/generated} 的固定变换）。第三人称靠 {@code XP(180)} 把炮口+
+     * 底座摆正；第一人称不能套 XP(180)，所以用挂点 yaw+180 达到同样的「炮口朝前、底座朝下」。
+     *
+     * <p><b>飞机为什么用另一组符号</b>：飞机是 {@code item/generated} 的平面图标，
+     * FIXED 自带 Y180。抵消这 Y180 后，等效角变成 {@code yaw / -pitch / -roll}；
+     * DECK 的 pitch=-90 因此变成 +90，图标平铺、正面朝上，从上方能看到正确的图标。
+     */
+    private static void renderItemWeapon(PoseStack poseStack, MultiBufferSource.BufferSource bufferSource,
+                                         int packedLight, AbstractClientPlayer player,
+                                         RiggingMount mount, RiggingSocketTransforms.MountPose pose) {
+        poseStack.pushPose();
+        poseStack.translate(pose.x() / 16.0f, -pose.y() / 16.0f, pose.z() / 16.0f);
+
+        boolean flatIcon = isDeckSocket(mount.socket());
+        if (flatIcon) {
+            poseStack.mulPose(Axis.YP.rotationDegrees(pose.yaw()));
+            poseStack.mulPose(Axis.XP.rotationDegrees(-pose.pitch()));
+            poseStack.mulPose(Axis.ZP.rotationDegrees(-pose.roll()));
+        } else {
+            poseStack.mulPose(Axis.YP.rotationDegrees(pose.yaw() + 180.0f));
+            poseStack.mulPose(Axis.XP.rotationDegrees(pose.pitch()));
+            poseStack.mulPose(Axis.ZP.rotationDegrees(pose.roll()));
+        }
+        poseStack.scale(pose.scale(), pose.scale(), pose.scale());
+
+        // BEWLR 无法区分「展示框的 FIXED」和「舰装挂点的 FIXED」，用标记告诉它这次要 3D。
+        RiggingRenderContext.setRiggingPass(true);
+        try {
+            Minecraft.getInstance().getItemRenderer().renderStatic(
+                    mount.stack(), ItemDisplayContext.FIXED, packedLight, OverlayTexture.NO_OVERLAY,
+                    poseStack, bufferSource, player.level(),
+                    player.getId() * 31 + mount.socket().ordinal());
+        } finally {
+            RiggingRenderContext.setRiggingPass(false);
+        }
+        poseStack.popPose();
+    }
+
+    /** 甲板挂点只放飞机（平面图标）；其它挂点都是 3D 武器模型或 GeckoLib 导弹。 */
+    private static boolean isDeckSocket(RiggingSocket socket) {
+        return socket == RiggingSocket.DECK_1 || socket == RiggingSocket.DECK_2;
+    }
+
+    private static RiggingAnimatable missileAnimatable(AbstractClientPlayer player, RiggingModelDef def) {
+        return MISSILE_ANIMATABLES
+                .computeIfAbsent(player, ignored -> new HashMap<>())
+                .computeIfAbsent(def, RiggingAnimatable::new);
+    }
+
+    private static RiggingObjectRenderer missileRenderer(RiggingModelDef def) {
+        return MISSILE_RENDERERS.computeIfAbsent(def, RiggingObjectRenderer::new);
     }
 
     private static FpAnimatables animatablesFor(AbstractClientPlayer player) {

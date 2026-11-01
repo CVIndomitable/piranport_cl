@@ -56,7 +56,10 @@ builder.MATERIALS.update({
 # ---------------------------------------------------------------- 尺寸常量
 # 甲板面（模型空间）。取整到 1 单位，和程序化占位的 6.6×9.2 尽量对齐。
 DECK_X0, DECK_X1 = -9.0, -2.0      # 右舷向外伸出，内缘略压进躯干
-DECK_Z0, DECK_Z1 = -4.5, 4.5       # 前 -Z、后 +Z 对称
+# 甲板 z 比原占位（±4.6）加长到 ±5.5：单架飞机平面足迹约 5.44 单位，
+# 两架前后排布后前后各留 0.58 单位边距，避免机翼压在甲板外。
+DECK_Z0, DECK_Z1 = -5.5, 5.5
+DECK_LENGTH = int(DECK_Z1 - DECK_Z0)
 DECK_TOP_Y = -0.8                  # 甲板顶面（player 0.8）
 DECK_THICKNESS = 1
 
@@ -77,7 +80,7 @@ def paint_deck_top(px, x0, y0, w, h):
         v 轴 = 模型 -z（甲板后端 +z → 前端 -z）
     所以跑道方向是纹理的竖向：中线与轨道都画成竖线。
 
-    只在 7×9 的顶面上生效；其他尺寸退回纯木板，避免以后改尺寸时画花。
+    只在 7 宽的顶面上生效；其他宽度退回纯木板，避免以后改尺寸时画花。
     """
     P = builder.PALETTE
     # 纵向木板：逐列换色，两舷边缘压深，作为甲板收边
@@ -137,15 +140,15 @@ def build_carrier_deck():
     # 舰岛挂在甲板上，叠一点独立摆动
     m.bone("island", parent="deck", pivot=(-8.5, -0.8, 3.5))
 
-    # ---- 甲板本体：顶面 7×9 的跑道贴图，外舷侧面用金属收边 ----
+    # ---- 甲板本体：顶面 7×11 的跑道贴图，外舷侧面用金属收边 ----
     m.cube("deck", (DECK_X0, DECK_TOP_Y - DECK_THICKNESS, DECK_Z0),
-           (7, DECK_THICKNESS, 9), "deck_edge", {
+           (7, DECK_THICKNESS, DECK_LENGTH), "deck_edge", {
                "up": "deck_top",
                "down": "deck_under",
                "west": "metal_gray",   # west = 模型 -X，外舷侧
            })
     # 外舷下方的一层加厚条，从侧面看像舰体舷台
-    m.cube("deck", (-9.4, -2.8, DECK_Z0), (1, 1, 9), "metal_dark")
+    m.cube("deck", (-9.4, -2.8, DECK_Z0), (1, 1, DECK_LENGTH), "metal_dark")
 
     # ---- 支撑桁架（金属灰）：根部托架 + 纵向龙骨 + 两榀横梁 ----
     # 根部托架放在甲板靠躯干的一端（local z 2.5..4.5），并向下延伸 2 单位，
@@ -153,19 +156,21 @@ def build_carrier_deck():
     # 而不是悬空的一块板。
     m.cube("mount", (-5.0, -3.8, 2.5), (2, 2, 2), "metal_gray")
     # 纵向龙骨贴外舷，y 比横梁高 0.05 避免共面 z-fighting
-    m.cube("mount", (-8.5, -2.75, -3.5), (1, 1, 7), "metal_dark")
+    m.cube("mount", (-8.5, -2.75, -4.5), (1, 1, 9), "metal_dark")
     m.cube("mount", (-8.5, -2.8, -3.5), (6, 1, 1), "metal_dark")
     m.cube("mount", (-8.5, -2.8, 2.5), (6, 1, 1), "metal_dark")
 
-    # ---- 右舷小舰岛：1 宽 × 2 深，贴着外舷边缘，避免压住飞机位 ----
-    m.cube("island", (-9.0, -0.8, 2.5), (1, 2, 2), "armor_light", {
+    # ---- 右舷小舰岛：1 宽 × 2 深，半格探出舷外 ----
+    # 舰岛 x=-9.5..-8.5：一半压在甲板上保持连接，一半探出舷外。
+    # DECK_1 飞机足迹最外到 x=-8.32，中间留 0.18 单位，不再压住飞机。
+    m.cube("island", (-9.5, -0.8, 2.5), (1, 2, 2), "armor_light", {
         "west": "armor_mid",
         "up": "armor_white",
     })
-    m.cube("island", (-9.0, 1.2, 2.75), (1, 1, 1), "armor_white", {
+    m.cube("island", (-9.5, 1.2, 2.75), (1, 1, 1), "armor_white", {
         "west": "armor_mid",
     })
-    m.cube("island", (-9.0, 2.2, 3.0), (1, 1, 1), "metal_dark")
+    m.cube("island", (-9.5, 2.2, 3.0), (1, 1, 1), "metal_dark")
 
     return m
 
@@ -226,6 +231,12 @@ def print_coordinate_check():
         print(f"  {name} footprint x={mx - half:.2f}..{mx + half:.2f} "
               f"z={mz - half:.2f}..{mz + half:.2f} "
               f"(deck x={DECK_X0}..{DECK_X1}, z={DECK_Z0}..{DECK_Z1})")
+    # 舰岛 x=-9.5..-8.5，半格压在甲板上；与 DECK_1 足迹最外沿比较
+    island_x0, island_x1 = -9.5, -8.5
+    sprite_min_x = DECK_MOUNTS["DECK_1"][0] - half
+    print(f"island x={island_x0}..{island_x1} z=2.5..4.5  "
+          f"DECK_1 sprite min_x={sprite_min_x:.2f}  "
+          f"clearance={sprite_min_x - island_x1:+.2f}")
 
 
 # ---------------------------------------------------------------- 落盘
@@ -233,7 +244,7 @@ def write_assets(model, repo_root, dry_run=False):
     img, placed, used = model.build_texture()
 
     # 甲板顶面二次绘制：木纹 + 中线 + 弹射轨道
-    deck_key = ("deck_top", 7, 9)
+    deck_key = ("deck_top", 7, DECK_LENGTH)
     if deck_key not in placed:
         raise RuntimeError(f"找不到甲板顶面 UV 区域 {deck_key}，检查甲板尺寸")
     u, v = placed[deck_key]
@@ -254,7 +265,7 @@ def write_assets(model, repo_root, dry_run=False):
     print(f"atlas regions={len(placed)} used_px={used}/4096 "
           f"({used / 4096 * 100:.1f}%)")
     print(f"palette opaque={len(builder.PALETTE)}")
-    print(f"deck top uv={placed[deck_key]} size=(7, 9)")
+    print(f"deck top uv={placed[deck_key]} size=(7, {DECK_LENGTH})")
     print_coordinate_check()
 
     if dry_run:

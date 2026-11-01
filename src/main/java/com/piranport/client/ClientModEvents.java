@@ -524,8 +524,12 @@ public class ClientModEvents {
                 CannonProjectileRenderer::new);
         event.registerEntityRenderer(ModEntityTypes.TORPEDO_ENTITY.get(),
                 TorpedoRenderer::new);
-        event.registerEntityRenderer(ModEntityTypes.AIRCRAFT_ENTITY.get(),
-                AircraftRenderer::new);
+        event.registerEntityRenderer(ModEntityTypes.AIRCRAFT_ENTITY.get(), ctx -> {
+            // 甲板飞机复用飞行实体的 EntityModel；在这里拿 EntityModelSet 预烘焙
+            // （FMLClientSetupEvent 阶段层定义还没加载，不能在那里 bake）。
+            AircraftRiggingModelRenderer.init(ctx.getModelSet());
+            return new AircraftRenderer(ctx);
+        });
         // 飞机被击落后掉落的物品实体（AircraftDropEntity extends ItemEntity）。
         // WHY：EntityRenderDispatcher.getRenderer 只按 entity.getType() 查表，原版 ItemEntity
         // 的渲染器挂在 minecraft:item 这个 EntityType 上，不会被子类类型继承；漏注册时

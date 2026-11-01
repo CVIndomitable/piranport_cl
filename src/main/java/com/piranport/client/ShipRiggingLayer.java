@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import com.piranport.client.gecko.RiggingModelRegistry;
 import com.piranport.client.gecko.RiggingRenderContext;
+import com.piranport.rigging.RiggingCategory;
 import com.piranport.rigging.RiggingLoadout;
 import com.piranport.rigging.RiggingMount;
 import net.minecraft.client.Minecraft;
@@ -66,6 +67,9 @@ public class ShipRiggingLayer extends RenderLayer<AbstractClientPlayer, PlayerMo
      */
     private void renderMount(PoseStack poseStack, MultiBufferSource bufferSource, int packedLight,
                              AbstractClientPlayer player, RiggingMount mount, float launchPose) {
+        // 甲板飞机复用飞行实体的 3D 模型；定义缺失时返回 false，回退到下面的物品图标。
+        if (renderDeckAircraft(poseStack, bufferSource, packedLight, mount, launchPose)) return;
+
         poseStack.pushPose();
         RiggingSocketTransforms.applyBase(poseStack, this.getParentModel(), mount.socket(), launchPose);
 
@@ -93,5 +97,30 @@ public class ShipRiggingLayer extends RenderLayer<AbstractClientPlayer, PlayerMo
             RiggingRenderContext.setRiggingPass(false);
         }
         poseStack.popPose();
+    }
+
+    /**
+     * 甲板飞机：复用飞行实体的 3D 模型，平放在甲板顶面、机头朝船首。
+     *
+     * <p>不能套 {@link RiggingSocketTransforms#mountPose} 的 DECK pitch=-90：那是给平面
+     * 物品图标「躺平」用的。这里只借挂点的 x/z，进入与 {@code RiggingHullLayer}
+     * 相同的 +Y 朝上模型坐标系后，按甲板顶面高度落点。
+     *
+     * @return true 表示已按 3D 模型画出；false 表示不是飞机或没有定义，调用方走物品图标。
+     */
+    private boolean renderDeckAircraft(PoseStack poseStack, MultiBufferSource bufferSource,
+                                       int packedLight, RiggingMount mount, float launchPose) {
+        if (mount.category() != RiggingCategory.AIRCRAFT) return false;
+
+        poseStack.pushPose();
+        RiggingSocketTransforms.applyBase(poseStack, this.getParentModel(), mount.socket(), launchPose);
+        // 与 RiggingHullLayer 一致：玩家模型 +Y 朝下 → 舰装模型 +Y 朝上（甲板/飞机的坐标系）。
+        poseStack.scale(1.0f, -1.0f, 1.0f);
+        AircraftRiggingModelRenderer.translateToDeck(poseStack, mount.socket());
+        boolean rendered = AircraftRiggingModelRenderer.render(
+                mount.stack(), poseStack, bufferSource, packedLight,
+                AircraftRiggingModelRenderer.DECK_SCALE);
+        poseStack.popPose();
+        return rendered;
     }
 }

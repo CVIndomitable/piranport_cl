@@ -197,6 +197,11 @@ public final class RiggingFirstPersonLayer {
                                       int packedLight, float partialTick,
                                       AbstractClientPlayer player, RiggingLoadout loadout) {
         for (RiggingMount mount : loadout.mounts()) {
+            // 甲板飞机改用飞行实体的 3D 模型；定义缺失时返回 false，回退到平面图标。
+            if (mount.category() == RiggingCategory.AIRCRAFT
+                    && renderDeckAircraft(poseStack, bufferSource, packedLight, mount)) {
+                continue;
+            }
             // 第一人称不跟随 third-person 的放飞后仰；mountPose 目前也不使用该参数。
             RiggingSocketTransforms.MountPose pose =
                     RiggingSocketTransforms.mountPose(mount.socket(), 0.0f);
@@ -208,6 +213,25 @@ public final class RiggingFirstPersonLayer {
                 renderItemWeapon(poseStack, bufferSource, packedLight, player, mount, pose);
             }
         }
+    }
+
+    /**
+     * 甲板飞机：复用 {@link AircraftRiggingModelRenderer} 的飞行实体模型，平放在甲板顶面、
+     * 机头朝船首。第一人称 PoseStack 已经在「+Y 上、+Z 船首、+X 左舷」的舰装模型坐标系里，
+     * 不需要第三人称的 {@code scale(1,-1,1)}，也不能套 DECK 挂点的 pitch=-90（那是平面图标用的）。
+     *
+     * @return true 表示已画出 3D 飞机；false 表示不是飞机或客户端暂无定义，调用方回退平面图标
+     */
+    private static boolean renderDeckAircraft(PoseStack poseStack,
+                                              MultiBufferSource.BufferSource bufferSource,
+                                              int packedLight, RiggingMount mount) {
+        poseStack.pushPose();
+        AircraftRiggingModelRenderer.translateToDeck(poseStack, mount.socket());
+        boolean rendered = AircraftRiggingModelRenderer.render(
+                mount.stack(), poseStack, bufferSource, packedLight,
+                AircraftRiggingModelRenderer.DECK_SCALE);
+        poseStack.popPose();
+        return rendered;
     }
 
     /**

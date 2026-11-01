@@ -18,7 +18,9 @@ DECK_1/2 挂点 player y 0.4 → model y -0.4，正好落在甲面上方 0.4 单
 
 甲板整体挂在右臂外侧（双臂外移后右臂外缘约 x=-11.5）：
     内缘 x=-11.5（贴右臂外缘）、外缘 x=-18.5、中心 x=-15.0，宽 7、长 11。
-桁架只做右臂外缘到甲板内缘的短支架，不再从躯干拉长梁。
+    甲板向前伸：z=-9.0..+2.0（中心 z=-3.5），后缘只到身体中心附近；
+    顶面 y=-0.8 平放。桁架只做右臂外缘到甲板内缘的短支架，
+    前段悬空部分不向躯干拉长梁。
 
 贴图 64×64、1:1（1 texel = 1/16 格）：所有面的 uv_size 等于面尺寸，
 跑道中线与两条弹射轨道直接在甲板顶面 UV 区域内逐像素画，不额外堆几何。
@@ -58,19 +60,19 @@ builder.MATERIALS.update({
 })
 
 # ---------------------------------------------------------------- 尺寸常量
-# 甲板面（模型空间）。挂在右臂外侧，宽 7、长 11。
+# 甲板面（模型空间）。挂在右臂外侧，宽 7、长 11，整体向前伸。
 DECK_X0, DECK_X1 = -18.5, -11.5    # 内缘贴右臂外缘 x=-11.5，外缘 -18.5
-# 甲板 z 比原占位（±4.6）加长到 ±5.5：单架飞机平面足迹约 5.44 单位，
-# 两架前后排布后前后各留 0.58 单位边距，避免机翼压在甲板外。
-DECK_Z0, DECK_Z1 = -5.5, 5.5
+# z=-9.0..+2.0：大部分在身体前方，后缘只到身体中心附近（中心 z=-3.5）。
+DECK_Z0, DECK_Z1 = -9.0, 2.0
 DECK_LENGTH = int(DECK_Z1 - DECK_Z0)
-DECK_TOP_Y = -0.8                  # 甲板顶面（player 0.8）
+DECK_TOP_Y = -0.8                  # 甲板顶面（player 0.8），平放
 DECK_THICKNESS = 1
 
 # DECK_1/2 挂点换算到模型空间（x 不变，y/z 取反）
+# DECK_1 靠后、DECK_2 靠前；两机足迹 z=-8.72..1.72，前后各留 0.28。
 DECK_MOUNTS = {
-    "DECK_1": (-15.0, -0.4, 2.2),
-    "DECK_2": (-15.0, -0.4, -2.2),
+    "DECK_1": (-15.0, -0.4, -1.0),
+    "DECK_2": (-15.0, -0.4, -6.0),
 }
 MOUNT_CLEARANCE = 0.4              # 飞机挂点应在甲面上方约 0.4 单位
 
@@ -140,9 +142,9 @@ def build_carrier_deck():
     # 支撑桁架跟随躯干，不参与待机浮动
     m.bone("mount", parent="root", pivot=(0, 0, 0))
     # 甲板整体做极轻微浮动；pivot 取甲板中心
-    m.bone("deck", parent="root", pivot=(-15.0, -1.3, 0))
+    m.bone("deck", parent="root", pivot=(-15.0, -1.3, -3.5))
     # 舰岛挂在甲板上，叠一点独立摆动
-    m.bone("island", parent="deck", pivot=(-18.5, -0.8, 3.5))
+    m.bone("island", parent="deck", pivot=(-18.5, -0.8, 1.0))
 
     # ---- 甲板本体：顶面 7×11 的跑道贴图，外舷侧面用金属收边 ----
     m.cube("deck", (DECK_X0, DECK_TOP_Y - DECK_THICKNESS, DECK_Z0),
@@ -155,24 +157,24 @@ def build_carrier_deck():
     m.cube("deck", (-18.9, -2.8, DECK_Z0), (1, 1, DECK_LENGTH), "metal_dark")
 
     # ---- 短支架（金属灰）：只连接右臂外缘 x=-11.5 与甲板内缘 ----
-    # 两榀托架分别承在前后段，东侧端面停在 x=-11.5，与右臂外缘贴合，
-    # 不向躯干方向延伸，也不插进右臂平台。
-    m.cube("mount", (-13.5, -3.0, -3.5), (2, 2, 2), "metal_gray")
-    m.cube("mount", (-13.5, -3.0, 1.5), (2, 2, 2), "metal_gray")
-    # 内侧纵向龙骨把两榀托架和甲板内缘连起来
-    m.cube("mount", (-13.0, -2.8, -4.5), (1, 1, 9), "metal_dark")
+    # 两榀托架集中在右臂接触区 z=-2.0..+2.0，东侧端面停在 x=-11.5，
+    # 与右臂外缘贴合；甲板前段（z<-2）悬空，不向躯干拉长梁。
+    m.cube("mount", (-13.5, -3.0, -2.0), (2, 2, 2), "metal_gray")
+    m.cube("mount", (-13.5, -3.0, 0.0), (2, 2, 2), "metal_gray")
+    # 内侧短龙骨把两榀托架和甲板内缘连起来
+    m.cube("mount", (-13.0, -2.8, -2.0), (1, 1, 4), "metal_dark")
 
-    # ---- 右舷小舰岛：1 宽 × 2 深，压在甲板外舷后段 ----
-    # 舰岛 x=-19.0..-18.0：半格搭在甲板外缘保持连接，半格探出舷外。
+    # ---- 右舷小舰岛：1 宽 × 2 深，放在甲板后段外舷 ----
+    # 舰岛 x=-19.0..-18.0、z=0..2（甲板最后 2 单位），一半搭甲板、一半探出舷外。
     # DECK_1 飞机足迹最外到 x=-17.72，中间留 0.28 单位，不压飞机。
-    m.cube("island", (-19.0, -0.8, 2.5), (1, 2, 2), "armor_light", {
+    m.cube("island", (-19.0, -0.8, 0.0), (1, 2, 2), "armor_light", {
         "west": "armor_mid",
         "up": "armor_white",
     })
-    m.cube("island", (-19.0, 1.2, 2.75), (1, 1, 1), "armor_white", {
+    m.cube("island", (-19.0, 1.2, 0.5), (1, 1, 1), "armor_white", {
         "west": "armor_mid",
     })
-    m.cube("island", (-19.0, 2.2, 3.0), (1, 1, 1), "metal_dark")
+    m.cube("island", (-19.0, 2.2, 0.5), (1, 1, 1), "metal_dark")
 
     return m
 
@@ -233,14 +235,16 @@ def print_coordinate_check():
         print(f"  {name} footprint x={mx - half:.2f}..{mx + half:.2f} "
               f"z={mz - half:.2f}..{mz + half:.2f} "
               f"(deck x={DECK_X0}..{DECK_X1}, z={DECK_Z0}..{DECK_Z1})")
-    # 舰岛 x=-19.0..-18.0，半格搭在甲板外缘；与 DECK_1 足迹最外沿比较
+    print(f"deck center z={(DECK_Z0 + DECK_Z1) / 2:+.1f} "
+          f"(甲板向前伸，后缘只到身体中心附近)")
+    # 舰岛 x=-19.0..-18.0、z=0..2，半格搭在甲板外缘；与 DECK_1 足迹最外沿比较
     island_x0, island_x1 = -19.0, -18.0
     sprite_min_x = DECK_MOUNTS["DECK_1"][0] - half
-    print(f"island x={island_x0}..{island_x1} z=2.5..4.5  "
+    print(f"island x={island_x0}..{island_x1} z=0..2  "
           f"DECK_1 sprite min_x={sprite_min_x:.2f}  "
           f"clearance={sprite_min_x - island_x1:+.2f}")
-    print("support: brackets x=-13.5..-11.5 (贴右臂外缘), "
-          "inner keel x=-13.0..-12.0, z=-4.5..4.5")
+    print("support: brackets x=-13.5..-11.5 z=-2.0..+2.0 (贴右臂外缘), "
+          "inner keel x=-13.0..-12.0 z=-2.0..+2.0")
 
 
 # ---------------------------------------------------------------- 落盘

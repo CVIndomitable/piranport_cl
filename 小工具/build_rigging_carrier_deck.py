@@ -133,16 +133,16 @@ def build_carrier_deck():
     """
     m = builder.BedrockModel(
         "geometry.carrier_deck", texture_size=64,
-        visible_bounds=(2, 2, (-0.9, 0.1, 0)),
+        visible_bounds=(2, 2, (-0.95, 0.1, 0)),
         texel_scale=1,  # 严格 1:1，1 texel = 1/16 格
     )
     m.bone("root")
     # 支撑桁架跟随躯干，不参与待机浮动
     m.bone("mount", parent="root", pivot=(0, 0, 0))
-    # 甲板整体做极轻微浮动；pivot 取甲板中心附近
-    m.bone("deck", parent="root", pivot=(-5.5, -1.3, 0))
+    # 甲板整体做极轻微浮动；pivot 取甲板中心
+    m.bone("deck", parent="root", pivot=(-15.0, -1.3, 0))
     # 舰岛挂在甲板上，叠一点独立摆动
-    m.bone("island", parent="deck", pivot=(-8.5, -0.8, 3.5))
+    m.bone("island", parent="deck", pivot=(-18.5, -0.8, 3.5))
 
     # ---- 甲板本体：顶面 7×11 的跑道贴图，外舷侧面用金属收边 ----
     m.cube("deck", (DECK_X0, DECK_TOP_Y - DECK_THICKNESS, DECK_Z0),

@@ -4,6 +4,7 @@ import com.piranport.artillery.ArtilleryItem;
 import com.piranport.client.AmmoSelectOverlay;
 import com.piranport.client.ClientScopeHandler;
 import com.piranport.component.LoadedAmmo;
+import com.piranport.config.ModArtilleryConfig;
 import com.piranport.network.SalvoFirePayload;
 import com.piranport.network.ScopeEnterPayload;
 import com.piranport.network.ScopeFirePayload;
@@ -39,6 +40,8 @@ public class ScopeInputHandler {
     // 自动装填火炮按住连射的「等一次空膛」状态，详见 tickAutoFireHold。
     private static Item autoFireWaitItem = null;
     private static boolean autoFireWaitingForReload = false;
+    /** 进入「等空膛」时的 gameTime，用于超时重试（三式弹撞实体上限时服务端不清膛）。 */
+    private static long autoFireWaitingSinceTick = -1;
 
     private ScopeInputHandler() {}
 
@@ -170,6 +173,7 @@ public class ScopeInputHandler {
             // 若按下时就看见空膛，装填完成即是新的一发，无需再等。
             autoFireWaitItem = heldStack.getItem();
             autoFireWaitingForReload = hadAmmo;
+            if (hadAmmo) autoFireWaitingSinceTick = mc.level.getGameTime();
         }
     }
 
@@ -180,6 +184,11 @@ public class ScopeInputHandler {
      *
      * <p>WHY 要等一次「空膛」观测才允许下一发：服务端清空 LOADED_AMMO 的同步比客户端发包
      * 晚一 tick，只按 hasAmmo 判断会在同一轮里重复发包，服务端回「未装填」提示。
+     *
+     * <p>WHY 还要有超时重试：三式弹一次生成几十颗弹丸，撞上实体上限（perf_shrapnel_limit 等）时
+     * 服务端放弃这次射击、<b>不清空膛内弹药</b>。死等空膛就会永远等不到，表现为三式弹不能连射。
+     * 等满 {@link ModArtilleryConfig#AUTO_FIRE_RETRY_TICKS} 仍未见空膛，就把上一发当作被服务端
+     * 拒绝，允许重发；上限释放后自动接上。
      */
     private static void tickAutoFireHold(Minecraft mc) {
         ItemStack heldStack = mc.player.getMainHandItem();
@@ -198,9 +207,17 @@ public class ScopeInputHandler {
             autoFireWaitingForReload = false;
             return;
         }
-        if (autoFireWaitingForReload) return;
+        if (autoFireWaitingForReload) {
+            long now = mc.level.getGameTime();
+            if (now - autoFireWaitingSinceTick < ModArtilleryConfig.AUTO_FIRE_RETRY_TICKS.get()) {
+                return;
+            }
+            // 超过重试间隔膛内仍有弹：上一发大概率被实体上限等条件拒绝，按未发出处理再试一次。
+            autoFireWaitingForReload = false;
+        }
         if (!fireAimedOrMaxRange(mc)) return;
         autoFireWaitingForReload = true;
+        autoFireWaitingSinceTick = mc.level.getGameTime();
         suppressCannonHandAnimation(mc);
     }
 
@@ -236,9 +253,15 @@ public class ScopeInputHandler {
         return stack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY).hasAmmo();
     }
 
+    /** 换弹种会让服务端重启读条，客户端连射的「等空膛/重试」状态一并作废。 */
+    public static void onAmmoSelectionChanged() {
+        clearAutoFireHold();
+    }
+
     private static void clearAutoFireHold() {
         autoFireWaitItem = null;
         autoFireWaitingForReload = false;
+        autoFireWaitingSinceTick = -1;
     }
 
     private static void suppressCannonHandAnimation(Minecraft mc) {

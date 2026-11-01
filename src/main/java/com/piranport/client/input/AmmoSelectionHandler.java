@@ -40,6 +40,8 @@ public class AmmoSelectionHandler {
             if (selectedAmmo != null) {
                 String ammoId = BuiltInRegistries.ITEM.getKey(selectedAmmo).toString();
                 PacketDistributor.sendToServer(new SwitchAmmoPayload(ammoId));
+                // 换弹种后膛内状态与读条都会重置，自动炮连射的等待状态不能沿用旧弹的。
+                ScopeInputHandler.onAmmoSelectionChanged();
             }
             AmmoSelectOverlay.close();
         }

@@ -53,6 +53,17 @@ public final class ModArtilleryConfig {
     public static final TerminalConfigValue<Integer> PELLET_MAX_LIFETIME =
             TerminalConfigValue.integer("artillery", "artillery", "pellet_max_lifetime", 200, 20, 600);
 
+    /**
+     * 自动装填火炮按住连射时，等待「空膛」观测的最长时间（tick）。
+     *
+     * <p>WHY 需要超时重试：三式弹一次生成 TYPE3_PELLET_COUNT 个弹丸，撞上
+     * {@link #PERF_SHRAPNEL_LIMIT} 等实体上限时，服务端 {@code CannonFiring} 直接放弃这次
+     * 射击且<b>不清空</b> LOADED_AMMO。客户端若死等空膛就再也不会开火，表现为三式弹不能连射。
+     * 超过该时长膛内仍有弹时，按「上一发被服务端拒绝」处理，允许再发一次；上限释放后自动接上。
+     */
+    public static final TerminalConfigValue<Integer> AUTO_FIRE_RETRY_TICKS =
+            TerminalConfigValue.integer("artillery", "auto_fire", "retry_ticks", 20, 1, 200);
+
     // ===== 三式弹（对空弹幕）参数（策划决策/武器）=====
     // 键：artillery/type3/* → global.type3.*。原先写死在 CannonFireService，现供策划调手感。
     // 注意：pellet_count 增大会同时占用 PERF_SHRAPNEL_LIMIT 的性能预算，需一并调整。

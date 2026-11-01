@@ -65,11 +65,12 @@ public final class RiggingLoadoutResolver {
     /**
      * 挂点分配规则（只依赖快捷栏内容，便于单元测试与两端复用）：
      * <ol>
-     *   <li>当前选中的快捷栏武器最先占位，其余按快捷栏 0→8 顺序</li>
+     *   <li>主手是主炮 / 反舰导弹时，该槽最先占位；其余情况（主手是鱼雷、深弹、
+     *       防空导弹或飞机）不特殊提前，所有武器按快捷栏 0→8 顺序</li>
      *   <li>鱼雷 → 腰部左、右</li>
      *   <li>主炮 / 反舰导弹 / 火箭弹 → 按前后顺序占舷侧炮位：
      *       无飞机时 左前 → 右前 → 左后 → 右后；有飞机时右舷换甲板，只剩 左前 → 左后。
-     *       当前选中槽排最前，所以主手武器固定落在最前面的 {@code SIDE_LEFT_1}</li>
+     *       主手是主炮/反舰导弹时该槽排最前，因此主手固定落在最前面的 {@code SIDE_LEFT_1}</li>
      *   <li>有任意舰载机时右舷整侧改成飞行甲板，右舷炮位取消，飞机 → 甲板两个位</li>
      *   <li>深弹 / 防空导弹 → 后背两个位</li>
      *   <li>超出容量的物品直接丢弃（物品栏、数值、开火都不受影响）</li>
@@ -90,9 +91,20 @@ public final class RiggingLoadoutResolver {
             }
         }
 
-        // 选中槽排到最前；其余保持快捷栏顺序（List.sort 稳定）。
-        candidates.sort(Comparator.comparingInt(candidate ->
-                candidate.slot() == selectedSlot ? -1 : candidate.slot()));
+        // 只有主手是主炮/反舰导弹时才把它排到最前。
+        // WHY：主炮/反舰导弹是「看得见的主武器」，主手必须出现在最前面的舷侧炮位；
+        // 鱼雷/深弹/防空导弹走各自的分类挂点（腰部/背部），按自然顺序即可，
+        // 否则主手一换整套挂点就会重排，观感上很乱。
+        RiggingCategory selectedCategory = selectedSlot >= 0 && selectedSlot < HOTBAR_SIZE
+                ? RiggingCategory.resolve(inventory.items.get(selectedSlot))
+                : null;
+        boolean selectedIsSurfaceWeapon = selectedCategory == RiggingCategory.CANNON
+                || selectedCategory == RiggingCategory.MISSILE_ASM;
+        if (selectedIsSurfaceWeapon) {
+            // 选中槽排到最前；其余保持快捷栏顺序（List.sort 稳定）。
+            candidates.sort(Comparator.comparingInt(candidate ->
+                    candidate.slot() == selectedSlot ? -1 : candidate.slot()));
+        }
 
         List<RiggingMount> mounts = new ArrayList<>();
         int waist = 0;

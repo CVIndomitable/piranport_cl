@@ -24,7 +24,7 @@ public final class ModEquipmentConfig {
     /** 整体缩放。 */
     public static final TerminalConfigValue<Double> RIGGING_FP_SCALE =
             TerminalConfigValue.number("rigging_fp", "rigging_fp", "scale", 0.8, 0.1, 3.0);
-    /** 绕竖直轴旋转（度）；0 = 舰装基础朝向（船首朝视线前方，双臂在屏幕两侧），镜像后从后方看到舰装背面。 */
+    /** 绕竖直轴旋转（度）；0 = 舰装与视线同向（看到的是舰装背面，双臂在屏幕两侧）。 */
     public static final TerminalConfigValue<Double> RIGGING_FP_YAW =
             TerminalConfigValue.number("rigging_fp", "rigging_fp", "yaw", 0.0, -180.0, 180.0);
     /** 俯仰（度）。 */

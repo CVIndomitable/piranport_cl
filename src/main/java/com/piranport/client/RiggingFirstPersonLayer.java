@@ -197,6 +197,12 @@ public final class RiggingFirstPersonLayer {
                                       int packedLight, float partialTick,
                                       AbstractClientPlayer player, RiggingLoadout loadout) {
         for (RiggingMount mount : loadout.mounts()) {
+            // 第一人称不显示背部防空导弹/深弹发射器的模型（第三人称保持）。
+            // 按 category 而不是 BACK_* 挂点判断，背部以后扩展别的装备时不会误伤。
+            if (mount.category() == RiggingCategory.MISSILE_SAM
+                    || mount.category() == RiggingCategory.DEPTH_CHARGE) {
+                continue;
+            }
             // 甲板飞机改用飞行实体的 3D 模型；定义缺失时返回 false，回退到平面图标。
             if (mount.category() == RiggingCategory.AIRCRAFT
                     && renderDeckAircraft(poseStack, bufferSource, packedLight, mount)) {

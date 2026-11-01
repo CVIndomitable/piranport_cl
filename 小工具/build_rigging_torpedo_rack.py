@@ -5,14 +5,16 @@
 复用 build_rigging_hull_models.py 的 BedrockModel / 调色板 / 贴图打包（只读导入），
 不复制第二套坐标与贴图逻辑。
 
-坐标约定（与通用舰装架完全一致，别搞反）：
+坐标约定（2026-11-01 船体层改为 Y 轴负缩放后）：
     1 单位 = 1/16 格；原点 = 躯干 body pivot；
-    +Y 朝上；-Z 朝前、+Z 朝后；+X 左舷、-X 右舷。
+    +Y 朝上；+Z 朝船首/玩家前方、-Z 朝后；+X 左舷、-X 右舷。
+    （旧版 XP(180) 是 -Z 朝前；现在是 scale(1,-1,1)，player z = model z，
+    共享平移也变成模型 (0,-4.48,+5.44)。）
 
 模型只做「挂架」：腰部横梁 + 左右吊带 + 大腿根托板，不画发射管本体。
-托板顶面 player y=11（大腿根）；模型 z -6..2 对应 player z -2..+6，
-即托板中心前移到 player z=+2.0。8 深是为了在 yaw 180 下把发射器底座板
-完整兜在板面上。腰带留在腰上，用 1 块上接头 + 1 条吊带把托板吊下来，不悬空。
+托板顶面 player y=11（大腿根），模型 z -2..+6（player z 中心 +2.0）；
+8 深是为了在 yaw 180 下把发射器底座板完整兜在板面上。
+腰带留在腰上，用 1 块上接头 + 1 条吊带把托板吊下来，不悬空。
 
 配套挂点（WAIST_LEFT / WAIST_RIGHT，接线侧已在 mountPose 里）：
 - 模型空间 +Z 朝后、玩家空间 +Z 朝前，所以挂点 z = -模型 z。
@@ -38,10 +40,9 @@ from build_rigging_hull_models import BedrockModel  # noqa: E402
 IDENTIFIER = "geometry.waist_torpedo_rack"
 ASSET_STEM = "waist_torpedo_rack"
 
-# 配套挂点（RiggingSocketTransforms.mountPose 的玩家空间参数）：
-# x 左舷、y 向下、z 向前。托板顶面 player y=11 时，物品管线把模型中心 y=8
-# 下移 8*0.36=2.88，所以 mount y = 11.0 - 2.88 = 8.12；
-# 托板 z 中心 模型 -2.0 → 挂点 z = +2.0（朝前）。
+# 配套挂点（RiggingSocketTransforms.mountPose 的玩家空间参数，+Z 朝前）：
+# 托板顶面 player y=11 时，物品管线把模型中心 y=8 下移 8*0.36=2.88，
+# 所以 mount y = 11.0 - 2.88 = 8.12；托板 z 中心 = +2.0，挂点 z 也取 +2.0。
 LAUNCHER_SCALE = 0.36
 WAIST_MOUNTS = {
     "left": dict(x=6.0, y=8.12, z=2.0, yaw=180.0, pitch=0.0, roll=0.0),
@@ -50,16 +51,17 @@ WAIST_MOUNTS = {
 # 物品管线的 -0.5 格居中：item 的 (8,8,8) 落在挂点上，不是几何中心。
 LAUNCHER_ITEM_CENTER = 8.0
 
-# 托板（模型空间）：x 4..8、顶面 y -11（player y 11）、
-# z -6..2（player z -2..+6，中心 +2.0）；8 深是为了让 yaw 180 后下移的
-# quad_533mm 底座板（模型 z -3.56..-0.76）完整落在板面上。
+# 托板（模型空间，+Z 朝前）：x 4..8、顶面 y -11（player y 11）、
+# z -2..+6（player z 中心 +2.0）；8 深是为了让 yaw 180 后的
+# quad_533mm 底座板（模型 z +2.76..+5.56）完整落在板面上、不前伸。
 SADDLE_X0, SADDLE_X1 = 4, 8
 SADDLE_TOP_Y = -11
-SADDLE_Z0, SADDLE_Z1 = -6, 2
-# 吊带/上接头：上接头从腰部横梁前脸前伸 1 格，吊带垂直落到托板后沿；
-# 吊带 z 1..2 落在托板 z -6..2 内、x 7..8 落在板宽内，底端插进托板里。
+SADDLE_Z0, SADDLE_Z1 = -2, 6
+# 吊带/上接头：底座板在 z +0.13..+5.56，板面唯一空档在托板后沿，
+# 所以吊带放在 z -2..-1、上接头从腰带 (z 2..3) 往体后伸到 z -2。
 STRAP_X = 7
-LINK_Z0, LINK_Z1 = 1, 2
+LINK_Z0, LINK_Z1 = -2, 2
+STRAP_Z0, STRAP_Z1 = -2, -1
 
 # 预检查用：ghost 用五联装；接线侧当前参考 quad_533mm_torpedo_3d，两个都核
 LAUNCHER_PROXY_ITEM = "quintuple_61cm_torpedo"
@@ -94,14 +96,15 @@ def build_waist_torpedo_rack():
     m.cube("waist_belt", (-1, -5.5, 3), (2, 1, 1), "red_accent")
 
     # ---- 每侧 3 块：上接头 + 吊带 + 托板（全部镜像 X）----
-    # 1) 上接头：从横梁前脸往前 1 格，给吊带一个可见挂点
-    # 2) 吊带：垂直落到大腿根，贴在托板后沿
-    # 3) 托板：顶面 y=-11 与挂点齐平，向前伸到模型 z=-5；顶面炮座环纹当"座"
+    # 1) 上接头：从腰带往体后伸到托板后沿，跨过底座板占不到的空档
+    # 2) 吊带：垂直落到大腿根，插进托板后沿
+    # 3) 托板：顶面 y=-11 与挂点齐平，z -2..+6 向前伸出
     for side, sign in (("left", 1), ("right", -1)):
         bone = f"rack_{side}"
-        _add(m, bone, (STRAP_X, -5.5, LINK_Z0), (1, 1, 1), "armor_mid",
-             {"north": "trim_gold"}, sign)
-        _add(m, bone, (STRAP_X, -11.5, LINK_Z0), (1, 6, 1), "armor_mid", None, sign)
+        _add(m, bone, (STRAP_X, -5.5, LINK_Z0), (1, 1, LINK_Z1 - LINK_Z0),
+             "armor_mid", {"up": "trim_gold"}, sign)
+        _add(m, bone, (STRAP_X, -11.5, STRAP_Z0), (1, 6, STRAP_Z1 - STRAP_Z0),
+             "armor_mid", None, sign)
         _add(m, bone, (SADDLE_X0, SADDLE_TOP_Y - 1, SADDLE_Z0),
              (SADDLE_X1 - SADDLE_X0, 1, SADDLE_Z1 - SADDLE_Z0),
              "armor_light", {"up": "platform_ring"}, sign)
@@ -210,12 +213,12 @@ def _transform_elements(elements, side):
     物品管线先 translate(-0.5)（item (8,8,8) 对到挂点），再按挂点旋转。
     WAIST 用 yaw 180，净效果 X(180)：item +Y 朝上、+Z（管口）朝前。
     模型空间 +Z 朝后，所以：
-        模型 = (挂点x + s*(x-8), -挂点y + s*(y-8), -挂点z - s*(z-8))
+        模型 = (挂点x + s*(x-8), -挂点y + s*(y-8), 挂点z + s*(z-8))
     旋转都是 0°/180°，盒子仍轴对齐。
     """
     s = LAUNCHER_SCALE
     mnt = WAIST_MOUNTS[side]
-    mx, my, mz = mnt["x"], -mnt["y"], -mnt["z"]
+    mx, my, mz = mnt["x"], -mnt["y"], mnt["z"]
     c = LAUNCHER_ITEM_CENTER
     boxes = []
     for e in elements:
@@ -228,7 +231,7 @@ def _transform_elements(elements, side):
                     pts.append((
                         mx + s * (xi - c),
                         my + s * (yi - c),
-                        mz - s * (zi - c),
+                        mz + s * (zi - c),
                     ))
         boxes.append((
             tuple(min(p[i] for p in pts) for i in range(3)),
@@ -288,8 +291,10 @@ def _report_one(repo_root, side, item):
     print(f"    底座压板 y={SADDLE_TOP_Y}: {'OK' if bottom_ok else 'NG'}; "
           f"板内(x {4}..{8}，镜像后): {'OK' if in_x else 'NG'}; "
           f"板内(z {SADDLE_Z0}..{SADDLE_Z1}): {'OK' if in_z else 'NG'}")
-    print(f"    整机 x {lo[0]:.2f}..{hi[0]:.2f}, 管口 z={lo[2]:.2f}（负=朝前）, "
-          f"内缘 |x|={inner:.2f}（躯干面 4.0）")
+    print(f"    整机 x {lo[0]:.2f}..{hi[0]:.2f}, 管口 z={hi[2]:.2f}（正=朝前）, "
+          f"内缘 |x|={inner:.2f}（躯干面 4.0）; "
+          f"吊带 z {STRAP_Z0}..{STRAP_Z1} 与底座后缘 {bl[2]:.2f} 的间隙 "
+          f"{bl[2] - STRAP_Z1:.2f}")
 
 
 def report_launcher_fit(repo_root):
@@ -297,7 +302,7 @@ def report_launcher_fit(repo_root):
     z_center_model = (SADDLE_Z0 + SADDLE_Z1) / 2.0
     print(f"托板: 模型 x {SADDLE_X0}..{SADDLE_X1}, 顶面 y {SADDLE_TOP_Y}, "
           f"z {SADDLE_Z0}..{SADDLE_Z1} "
-          f"→ player y={-SADDLE_TOP_Y:.1f}, z 中心={-z_center_model:+.1f}, "
+          f"→ player y={-SADDLE_TOP_Y:.1f}, z 中心={z_center_model:+.1f}, "
           f"挂点 y={-SADDLE_TOP_Y - 8 * LAUNCHER_SCALE:.2f}")
     for side in ("left", "right"):
         _report_one(repo_root, side, LAUNCHER_PROXY_ITEM)
@@ -327,6 +332,17 @@ def _player_ghost_with_launcher(repo_root):
 def write_previews(repo_root, out_dir):
     import numpy as np
     import rigging_geo_preview as pv
+
+    # 预览器默认还是旧约定（-Z 朝前、共享偏移 -5.44）。当前船体层是 scale(1,-1,1)：
+    # 运行时换成 +Z 朝前的相机与模型 (0,-4.48,+5.44) 的共享偏移，不改共享工具文件。
+    pv.VIEWS.update({
+        "iso": dict(eye=(14.0, 9.0, 17.0), target=(0.0, 2.0, 1.5)),
+        "front": dict(eye=(0.0, 2.0, 24.0), target=(0.0, 2.0, 1.5)),
+        "back": dict(eye=(0.0, 2.0, -24.0), target=(0.0, 2.0, 1.5)),
+        "left": dict(eye=(26.0, 2.0, 1.5), target=(0.0, 2.0, 1.5)),
+        "right": dict(eye=(-26.0, 2.0, 1.5), target=(0.0, 2.0, 1.5)),
+    })
+    pv.SHARED_BODY_OFFSET = np.array([0.0, -4.48, 5.44])
 
     os.makedirs(out_dir, exist_ok=True)
     geo_path, tex_path, _ = asset_paths(repo_root)

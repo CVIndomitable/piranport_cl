@@ -12,19 +12,23 @@ public final class ModEquipmentConfig {
     /** 第一人称舰装总开关。 */
     public static final TerminalConfigValue<Boolean> RIGGING_FP_ENABLED =
             TerminalConfigValue.bool("rigging_fp", "rigging_fp", "enabled", true);
-    /** 横向偏移（格，+X 屏幕右）。0 = 以视线为中轴。 */
+    /** 横向偏移（格，+ 为屏幕右/身体右侧）。0 = 以身体中轴为准。 */
     public static final TerminalConfigValue<Double> RIGGING_FP_OFFSET_X =
             TerminalConfigValue.number("rigging_fp", "rigging_fp", "offset_x", 0.0, -2.0, 2.0);
-    /** 纵向偏移（格，+Y 上）。负值把舰装往下压到视线下方。 */
+    /**
+     * 纵向偏移（格，+ 为上），相对玩家眼睛。
+     * 默认 -0.10 把舰装压在眼睛下方一点：平视时机械臂在视野下缘的两侧，
+     * 低头看正下方时舰装中心正好进入视野。
+     */
     public static final TerminalConfigValue<Double> RIGGING_FP_OFFSET_Y =
-            TerminalConfigValue.number("rigging_fp", "rigging_fp", "offset_y", -0.35, -2.0, 2.0);
-    /** 前后偏移（格，-Z 为视线前方）。默认放在相机前 1 格，避免被近裁剪面切掉。 */
+            TerminalConfigValue.number("rigging_fp", "rigging_fp", "offset_y", -0.10, -2.0, 2.0);
+    /** 前后偏移（格，- 为身体前方）。0 = 舰装中心与身体重合。 */
     public static final TerminalConfigValue<Double> RIGGING_FP_OFFSET_Z =
-            TerminalConfigValue.number("rigging_fp", "rigging_fp", "offset_z", -1.0, -2.0, 2.0);
+            TerminalConfigValue.number("rigging_fp", "rigging_fp", "offset_z", 0.0, -2.0, 2.0);
     /** 整体缩放。 */
     public static final TerminalConfigValue<Double> RIGGING_FP_SCALE =
             TerminalConfigValue.number("rigging_fp", "rigging_fp", "scale", 0.8, 0.1, 3.0);
-    /** 绕竖直轴旋转（度）；0 = 舰装与视线同向（看到的是舰装背面，双臂在屏幕两侧）。 */
+    /** 绕竖直轴旋转（度）；0 = 舰装与身体同向（船首朝身体前方，双臂在身体两侧）。 */
     public static final TerminalConfigValue<Double> RIGGING_FP_YAW =
             TerminalConfigValue.number("rigging_fp", "rigging_fp", "yaw", 0.0, -180.0, 180.0);
     /** 俯仰（度）。 */

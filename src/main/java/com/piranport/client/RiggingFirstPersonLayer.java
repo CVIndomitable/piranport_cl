@@ -19,6 +19,8 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -35,15 +37,19 @@ import java.util.WeakHashMap;
  *
  * <p><b>为什么不用 RenderLayer</b>：第一人称不渲染玩家实体模型，整棵 RenderLayer 树不会执行；
  * 而第一人称手部（{@code RenderHandEvent}）的坐标系是手部骨骼，和「舰装挂在玩家身上的位置」
- * 对不上。这里直接在 {@link RenderLevelStageEvent} 的相机相对世界栈里画，天然就是视角相对的：
- * 相机旋转已经烘焙进 poseStack，平移/旋转都以「屏幕前、屏幕两侧」为基准，转头时舰装跟着视角走。
+ * 对不上。这里直接在 {@link RenderLevelStageEvent} 的 PoseStack 里画。
  *
- * <p><b>坐标系换算</b>：舰装 geo 模型的船体/甲板为 +Y 朝上、<b>+Z 为船首</b>、+X 为左舷
+ * <p><b>PoseStack 的真实坐标系</b>：1.21.1 的 {@code RenderLevelStageEvent} 栈是
+ * <b>相机相对、世界轴向</b>的——原点在相机位置，相机旋转在全局 model-view 矩阵里，
+ * 不在 PoseStack 上（实体渲染也是 {@code translate(entity - camera)} 后直接画）。
+ * 所以这里可以按世界坐标平移、只应用身体朝向；相机抬头/低头不会带动舰装，
+ * 低头时舰装自然留在身体周围、出现在视野下方。
+ *
+ * <p><b>朝向换算</b>：舰装 geo 模型的船体/甲板为 +Y 朝上、<b>+Z 为船首</b>、+X 为左舷
  * （注意 {@code 小工具/rigging_geo_preview.py} 顶部写的「-Z 朝前」对船体不适用，
- * 实机确认船首在 +Z）。相机相对栈为 +Y 朝上、-Z 为视线前方、+X 为屏幕右。
- * 水平转 180° 后：模型 +Z（船首）→ view -Z（视线前方），模型 +X（左）→ view -X（屏幕左），
- * +Y 保持朝上，正好是「站在舰装内部」的视角。第三人称那套 {@code Axis.XP(180)} 是
- * 玩家模型帧（+Y 朝下）专用的，这里不能照搬。
+ * 实机确认船首在 +Z）。世界轴 +Y 朝上、+Z 朝南；玩家身体 yaw=0 朝南、yaw 增大转向西。
+ * 因此绕世界 Y 转 {@code -bodyYaw} 后：模型 +Z（船首）指向身体前方、+X（左舷）在身体左侧，
+ * 不需要第三人称那套 {@code Axis.XP(180)}（那是玩家模型帧 +Y 朝下专用的），也不需要镜像。
  *
  * <p><b>只画本地玩家</b>：第一人称视野里只有自己的舰装。
  *
@@ -82,7 +88,7 @@ public final class RiggingFirstPersonLayer {
         Minecraft mc = Minecraft.getInstance();
         AbstractClientPlayer player = mc.player;
         if (player == null || mc.level == null) return;
-        // 旁观/第三人称（含前置视角）都不画：前置视角下相机会跑到身体前方，这套「视角相对」位姿会错位。
+        // 旁观/第三人称（含前置视角）都不画：前置视角下相机不在眼睛位置，身体相对位姿会错位。
         if (!mc.options.getCameraType().isFirstPerson()) return;
         if (mc.getCameraEntity() != player) return;
         if (player.isInvisible()) return;
@@ -96,17 +102,26 @@ public final class RiggingFirstPersonLayer {
         int packedLight = LevelRenderer.getLightColor(mc.level,
                 BlockPos.containing(player.getEyePosition(partialTick)));
 
+        // 身体朝向取插值后的 yBodyRot，不用头部/相机 pitch。
+        float bodyYaw = Mth.rotLerp(partialTick, player.yBodyRotO, player.yBodyRot);
+        Vec3 camera = event.getCamera().getPosition();
+        Vec3 eye = player.getEyePosition(partialTick);
+        double offsetX = ModEquipmentConfig.RIGGING_FP_OFFSET_X.get();
+        double offsetY = ModEquipmentConfig.RIGGING_FP_OFFSET_Y.get();
+        double offsetZ = ModEquipmentConfig.RIGGING_FP_OFFSET_Z.get();
+
         PoseStack poseStack = event.getPoseStack();
         poseStack.pushPose();
 
-        // 视角相对：先在相机前方摆好位置，再绕视线做 yaw/pitch/roll，最后缩放。
-        poseStack.translate(
-                ModEquipmentConfig.RIGGING_FP_OFFSET_X.get(),
-                ModEquipmentConfig.RIGGING_FP_OFFSET_Y.get(),
-                ModEquipmentConfig.RIGGING_FP_OFFSET_Z.get());
-        // 基础 180°：模型 +Z 为船首、相机前方是 -Z；转过来后船首朝视线前方、左舷落在屏幕左侧。
-        poseStack.mulPose(Axis.YP.rotationDegrees(180.0f
-                + ModEquipmentConfig.RIGGING_FP_YAW.get().floatValue()));
+        // 1. 从「相机为原点的世界轴栈」平移到玩家眼睛；offset_y 直接沿世界 Y 抬高/压低。
+        poseStack.translate(eye.x - camera.x, eye.y - camera.y + offsetY, eye.z - camera.z);
+        // 2. 只应用身体朝向：模型 +Z（船首）跟身体前方，头部俯仰不参与。
+        poseStack.mulPose(Axis.YP.rotationDegrees(-bodyYaw));
+        // 3. 身体系水平微调：+X 是左舷、+Z 是船首；终端语义保持「+offset_x 屏幕右、-offset_z 前方」。
+        poseStack.translate(-offsetX, 0.0, -offsetZ);
+        // 4. 终端微调角度，最后缩放。
+        poseStack.mulPose(Axis.YP.rotationDegrees(
+                ModEquipmentConfig.RIGGING_FP_YAW.get().floatValue()));
         poseStack.mulPose(Axis.XP.rotationDegrees(
                 ModEquipmentConfig.RIGGING_FP_PITCH.get().floatValue()));
         poseStack.mulPose(Axis.ZP.rotationDegrees(

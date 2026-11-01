@@ -1,5 +1,6 @@
 package com.piranport.registry;
 
+import com.piranport.combat.AutoModeState;
 import com.piranport.item.ShipType;
 
 import com.piranport.component.FuelData;
@@ -30,30 +31,33 @@ public final class WeaponItems {
     private static final DeferredRegister.Items ITEMS = ModItems.ITEMS;
 
     // ===== Ship Cores =====
+    /**
+     * 4 种核心共用的物品属性。
+     *
+     * <p>2026-11-01 决定：新产生的舰装核心默认开启自动模式（H 键总开关，见《航空/06-自动升空》）。
+     * WHY 写在物品默认组件上：合成、战利品、创造栏、/give 等一切新建栈路径都会自动带上，
+     * 不需要逐条路径补写。旧存档的兼容处理见 {@link AutoModeState#fromStack}。</p>
+     */
+    private static Item.Properties shipCoreProperties(ShipType type) {
+        return new Item.Properties().stacksTo(1)
+                .component(ModDataComponents.SHIP_CORE_FUEL.get(),
+                        new FuelData(0, type.fuelCapacity))
+                .component(ModDataComponents.SHIP_AUTO_MODE.get(), AutoModeState.ON.getId())
+                .component(ModDataComponents.SHIP_AUTO_LAUNCH.get(), true);
+    }
+
     public static final DeferredItem<ShipCoreItem> SMALL_SHIP_CORE =
             ITEMS.register("small_ship_core",
-                    () -> new ShipCoreItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.SHIP_CORE_FUEL.get(),
-                                    new FuelData(0, ShipType.SMALL.fuelCapacity)),
-                            ShipType.SMALL));
+                    () -> new ShipCoreItem(shipCoreProperties(ShipType.SMALL), ShipType.SMALL));
     public static final DeferredItem<ShipCoreItem> MEDIUM_SHIP_CORE =
             ITEMS.register("medium_ship_core",
-                    () -> new ShipCoreItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.SHIP_CORE_FUEL.get(),
-                                    new FuelData(0, ShipType.MEDIUM.fuelCapacity)),
-                            ShipType.MEDIUM));
+                    () -> new ShipCoreItem(shipCoreProperties(ShipType.MEDIUM), ShipType.MEDIUM));
     public static final DeferredItem<ShipCoreItem> LARGE_SHIP_CORE =
             ITEMS.register("large_ship_core",
-                    () -> new ShipCoreItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.SHIP_CORE_FUEL.get(),
-                                    new FuelData(0, ShipType.LARGE.fuelCapacity)),
-                            ShipType.LARGE));
+                    () -> new ShipCoreItem(shipCoreProperties(ShipType.LARGE), ShipType.LARGE));
     public static final DeferredItem<ShipCoreItem> SUBMARINE_CORE =
             ITEMS.register("submarine_ship_core",
-                    () -> new ShipCoreItem(new Item.Properties().stacksTo(1)
-                            .component(ModDataComponents.SHIP_CORE_FUEL.get(),
-                                    new FuelData(0, ShipType.SUBMARINE.fuelCapacity)),
-                            ShipType.SUBMARINE));
+                    () -> new ShipCoreItem(shipCoreProperties(ShipType.SUBMARINE), ShipType.SUBMARINE));
 
     // ===== Guns =====
     /**

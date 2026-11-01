@@ -48,6 +48,7 @@ public class ModDataComponents {
 
     // ===== v0.0.7 Ship Config DataComponents =====
 
+    /** 旧版 H 键开关；现与 {@link #SHIP_AUTO_MODE} 同步写入，仅用于兼容旧存档。 */
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<Boolean>>
             SHIP_AUTO_LAUNCH = DATA_COMPONENTS.register("ship_auto_launch",
             () -> DataComponentType.<Boolean>builder()
@@ -55,7 +56,8 @@ public class ModDataComponents {
                     .networkSynchronized(ByteBufCodecs.BOOL)
                     .build());
 
-    // ===== 自动模式三态（0=OFF, 1=AA_ONLY, 2=FULL_AUTO）=====
+    // ===== 自动模式二态（0=OFF, 1=ON）；新产生的舰装核心物品默认 1 =====
+    // 旧存档里的 2（全自动）由 AutoModeState.fromId 归入 ON。
 
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<Integer>>
             SHIP_AUTO_MODE = DATA_COMPONENTS.register("ship_auto_mode",

@@ -14,6 +14,7 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RenderPlayerEvent;
@@ -35,8 +36,22 @@ public class EntityCorePlayerRenderHandler {
      */
     private static final Set<Integer> FAILED_CORES = new HashSet<>();
 
-    @SubscribeEvent
+    /**
+     * 实体核心替身：只在没人接管玩家渲染时才画。
+     *
+     * <p>WHY 用 LOWEST + receiveCanceled：Yes Steve Model 等「取消原版渲染、自己画玩家」
+     * 的 mod 在 NORMAL 优先级取消 {@link RenderPlayerEvent.Pre}。同为 NORMAL 时谁先注册
+     * 谁生效，结果不可控；降到 LOWEST 并放行已取消事件，保证替换渲染的 mod 优先。
+     * 官方 YSM 2.6.5 在更外层 {@code EntityRenderDispatcher} 就跳过整个 {@code PlayerRenderer.render}，
+     * 本事件根本不会触发；这里主要覆盖 {@code UseCompatibilityRenderer} / OpenYSM / 其它 cancel 式实现。
+     *
+     * <p>receiveCanceled=true 不会造成重复渲染：事件一旦被别的 mod 取消，我们直接 return，
+     * 不画替身；只有没人取消时（isCanceled=false）才走下面的渲染并自行取消原版渲染。
+     */
+    @SubscribeEvent(priority = EventPriority.LOWEST, receiveCanceled = true)
     public static void onRenderPlayerPre(RenderPlayerEvent.Pre event) {
+        // 已有渲染替换者接管（YSM 兼容渲染路径等），替身让位，避免两套模型叠画
+        if (event.isCanceled()) return;
         if (!(event.getEntity() instanceof AbstractClientPlayer player)) return;
         if (player.isInvisible()) return;
 

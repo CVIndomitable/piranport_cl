@@ -72,8 +72,11 @@ public final class RiggingSocketTransforms {
     /**
      * 各挂点的占位位姿。模型空间里 1 单位 = 1/16 格，+y 朝下。
      *
-     * <p>这些数值最初是给武器物品模型用的占位观感；GeckoLib 模型沿用同一套挂点偏移，
-     * 只在缩放和模型前后朝向（yawOffset）上有自己的参数。
+     * <p><b>2026-11-01 起挂点画的是 3D 模型，不是平面图标</b>：
+     * 舷侧与腰部挂点的 yaw/pitch/roll 全部为 0，让模型底座落在舰装平台上、
+     * 炮口/管口朝前（+Z）。不要再按平面图标那套「朝外 90°」调角度。
+     *
+     * <p>GeckoLib 模型沿用同一套挂点偏移，只在缩放和模型前后朝向（yawOffset）上有自己的参数。
      */
     public static MountPose mountPose(RiggingSocket socket, float launchPose) {
         return switch (socket) {
@@ -81,22 +84,24 @@ public final class RiggingSocketTransforms {
             // 不再由 RiggingLoadoutResolver 分配。
             case LEG_LEFT -> new MountPose(2.6f, 6.0f, 0.0f, 90.0f, 0.0f, 90.0f, 0.40f);
             case LEG_RIGHT -> new MountPose(-2.6f, 6.0f, 0.0f, -90.0f, 0.0f, -90.0f, 0.40f);
-            // 舷侧：上下两个平台，炮口朝外（舰体后仰已由共享变换处理）
-            case SIDE_LEFT_1 -> new MountPose(4.0f, 0.2f, 0.4f, 90.0f, -4.0f * launchPose, 90.0f, 0.42f);
-            case SIDE_LEFT_2 -> new MountPose(4.0f, 3.6f, -0.4f, 90.0f, -4.0f * launchPose, 90.0f, 0.42f);
-            case SIDE_RIGHT_1 -> new MountPose(-4.0f, 0.2f, 0.4f, -90.0f, -4.0f * launchPose, -90.0f, 0.42f);
-            case SIDE_RIGHT_2 -> new MountPose(-4.0f, 3.6f, -0.4f, -90.0f, -4.0f * launchPose, -90.0f, 0.42f);
-            // 后背：烟囱左右各一，朝后
+            // 舷侧：底座落在上下炮位平台上、炮口朝前。x 暂保持 ±4.0，
+            // 等手臂外移的最终值出来再统一调。
+            case SIDE_LEFT_1 -> new MountPose(4.0f, 0.2f, 0.4f, 0.0f, 0.0f, 0.0f, 0.42f);
+            case SIDE_LEFT_2 -> new MountPose(4.0f, 3.6f, -0.4f, 0.0f, 0.0f, 0.0f, 0.42f);
+            case SIDE_RIGHT_1 -> new MountPose(-4.0f, 0.2f, 0.4f, 0.0f, 0.0f, 0.0f, 0.42f);
+            case SIDE_RIGHT_2 -> new MountPose(-4.0f, 3.6f, -0.4f, 0.0f, 0.0f, 0.0f, 0.42f);
+            // 后背：TODO 朝向等策划确认。深弹/防空导弹若也改朝前会穿进身体，
+            // 所以暂时保留「朝后 + 左右倾斜」的旧角度。
             case BACK_1 -> new MountPose(2.2f, 2.2f, -3.4f, 180.0f, 0.0f, 90.0f, 0.38f);
             case BACK_2 -> new MountPose(-2.2f, 2.2f, -3.4f, 180.0f, 0.0f, -90.0f, 0.38f);
             // 甲板：右舷甲板前后各一，面朝上平放
             case DECK_1 -> new MountPose(-5.6f, 0.4f, -2.2f, 0.0f, -90.0f, 0.0f, 0.34f);
             case DECK_2 -> new MountPose(-5.6f, 0.4f, 2.2f, 0.0f, -90.0f, 0.0f, 0.34f);
-            // 腰部：鱼雷发射器挂在腰带两侧，与腰部鱼雷架模型对齐。
-            // 右舷 z 前移 3.6 是为了补偿鱼雷发射器物品模型原点不居中；
-            // roll 保持 +90（不能照抄 LEG_RIGHT 的 -90，那会让右舷炮管上下颠倒）。
-            case WAIST_LEFT -> new MountPose(4.3f, 5.1f, 0.2f, 90.0f, 0.0f, 90.0f, 0.36f);
-            case WAIST_RIGHT -> new MountPose(-4.3f, 5.1f, 3.8f, -90.0f, 0.0f, 90.0f, 0.36f);
+            // 腰部：鱼雷发射器底座落在腰部支架上、管口朝前。
+            // 位置沿用占位值（右侧 z 前移是为了补偿发射器模型原点不居中），
+            // x 等手臂外移的最终值出来再统一调。
+            case WAIST_LEFT -> new MountPose(4.3f, 5.1f, 0.2f, 0.0f, 0.0f, 0.0f, 0.36f);
+            case WAIST_RIGHT -> new MountPose(-4.3f, 5.1f, 3.8f, 0.0f, 0.0f, 0.0f, 0.36f);
         };
     }
 

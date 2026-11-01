@@ -161,10 +161,14 @@ public class CatalogGunRenderer extends BlockEntityWithoutLevelRenderer {
     }
 
     private static boolean isHandContext(ItemDisplayContext context) {
+        // 第一/第三人称持有 + 固定展示（舰装挂点、物品展示框）都画 3D 模型。
+        // FIXED 不放进来时，挂点只能拿到 renderFlatIcon 的平面图标。
+        // GUI 图标、地面掉落物（GUI / GROUND / NONE）保持 2D。
         return context == ItemDisplayContext.FIRST_PERSON_RIGHT_HAND
                 || context == ItemDisplayContext.FIRST_PERSON_LEFT_HAND
                 || context == ItemDisplayContext.THIRD_PERSON_RIGHT_HAND
-                || context == ItemDisplayContext.THIRD_PERSON_LEFT_HAND;
+                || context == ItemDisplayContext.THIRD_PERSON_LEFT_HAND
+                || context == ItemDisplayContext.FIXED;
     }
 
     private static boolean isLoaded(ItemStack stack) {

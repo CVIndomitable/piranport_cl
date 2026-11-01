@@ -1,6 +1,7 @@
 package com.piranport.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Axis;
 import com.piranport.client.gecko.RiggingModelRegistry;
 import com.piranport.rigging.RiggingLoadout;
 import com.piranport.rigging.RiggingMount;
@@ -51,10 +52,14 @@ public class ShipRiggingLayer extends RenderLayer<AbstractClientPlayer, PlayerMo
     }
 
     /**
-     * 按挂点摆一个物品模型。
+     * 按挂点摆一个 3D 物品模型（BEWLR 武器炮塔 / 鱼雷发射器）。
      *
      * <p>挂点参考系统一由 {@link RiggingSocketTransforms} 提供，和 GeckoLib 层共用，
      * 避免两套坐标漂移。
+     *
+     * <p>用 {@link ItemDisplayContext#FIXED}：它的 display 只有 180° Y 旋转、scale 1、
+     * 无平移，最适合「模型底部原点直接落在挂点」的场景。但 BEWLR 的 3D 分支只在
+     * 第一/第三人称与 FIXED 下触发（其余上下文是 GUI 平面图标）。
      */
     private void renderMount(PoseStack poseStack, MultiBufferSource bufferSource, int packedLight,
                              AbstractClientPlayer player, RiggingMount mount, float launchPose) {
@@ -64,6 +69,13 @@ public class ShipRiggingLayer extends RenderLayer<AbstractClientPlayer, PlayerMo
         RiggingSocketTransforms.MountPose pose =
                 RiggingSocketTransforms.mountPose(mount.socket(), launchPose);
         RiggingSocketTransforms.applyMountFrame(poseStack, pose);
+
+        // 物品模型坐标系 +Y 朝上、炮口朝 +Z；玩家模型坐标系 +Y 朝下、+Z 朝前。
+        // 绕 X 翻 180° 把模型的「上」翻成玩家模型的「下」（底座落在平台上），
+        // 同时 +Z 仍朝前（炮口朝前）。FIXED 自带的 180° Y 与本翻转组合等价于
+        // 绕 Z 转 180°：模型立起来且不左右调头。
+        // 必须在挂点 yaw/pitch/roll 之后、缩放之前，与 GeckoLib 层的 Axis.XP(180) 语义一致。
+        poseStack.mulPose(Axis.XP.rotationDegrees(180.0f));
         poseStack.scale(pose.scale(), pose.scale(), pose.scale());
 
         Minecraft.getInstance().getItemRenderer().renderStatic(

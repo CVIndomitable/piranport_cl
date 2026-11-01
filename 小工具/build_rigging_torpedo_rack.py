@@ -10,9 +10,9 @@
     +Y 朝上；-Z 朝前、+Z 朝后；+X 左舷、-X 右舷。
 
 模型只做「挂架」：腰部横梁 + 左右吊带 + 大腿根托板，不画发射管本体。
-托板顶面 player y=11（大腿根）；模型 z -5..1 对应 player z -1..+5，
-即托板中心前移到 player z=+2.0。腰带留在腰上，用 1 块上接头 + 1 条吊带
-把托板吊下来，不悬空。
+托板顶面 player y=11（大腿根）；模型 z -6..2 对应 player z -2..+6，
+即托板中心前移到 player z=+2.0。8 深是为了在 yaw 180 下把发射器底座板
+完整兜在板面上。腰带留在腰上，用 1 块上接头 + 1 条吊带把托板吊下来，不悬空。
 
 配套挂点（WAIST_LEFT / WAIST_RIGHT，接线侧已在 mountPose 里）：
 - 模型空间 +Z 朝后、玩家空间 +Z 朝前，所以挂点 z = -模型 z。
@@ -39,28 +39,31 @@ IDENTIFIER = "geometry.waist_torpedo_rack"
 ASSET_STEM = "waist_torpedo_rack"
 
 # 配套挂点（RiggingSocketTransforms.mountPose 的玩家空间参数）：
-# x 左舷、y 向下、z 向前。托板顶面 player y=11 → mount y = 11.0 - 2.88 = 8.12；
+# x 左舷、y 向下、z 向前。托板顶面 player y=11 时，物品管线把模型中心 y=8
+# 下移 8*0.36=2.88，所以 mount y = 11.0 - 2.88 = 8.12；
 # 托板 z 中心 模型 -2.0 → 挂点 z = +2.0（朝前）。
 LAUNCHER_SCALE = 0.36
 WAIST_MOUNTS = {
-    "left": dict(x=6.0, y=11.0, z=2.0, yaw=180.0, pitch=0.0, roll=0.0),
-    "right": dict(x=-6.0, y=11.0, z=2.0, yaw=180.0, pitch=0.0, roll=0.0),
+    "left": dict(x=6.0, y=8.12, z=2.0, yaw=180.0, pitch=0.0, roll=0.0),
+    "right": dict(x=-6.0, y=8.12, z=2.0, yaw=180.0, pitch=0.0, roll=0.0),
 }
-# item 物模型的底座中心（x 中心 8、z 中心 (2.8+20.3)/2）；预览时用它把底座对到挂点
-LAUNCHER_ITEM_CENTER_X = 8.0
-LAUNCHER_ITEM_CENTER_Z = 11.55
+# 物品管线的 -0.5 格居中：item 的 (8,8,8) 落在挂点上，不是几何中心。
+LAUNCHER_ITEM_CENTER = 8.0
 
-# 托板（模型空间）：x 4..8、顶面 y -11（player y 11）、z -5..1（player z -1..+5）
+# 托板（模型空间）：x 4..8、顶面 y -11（player y 11）、
+# z -6..2（player z -2..+6，中心 +2.0）；8 深是为了让 yaw 180 后下移的
+# quad_533mm 底座板（模型 z -3.56..-0.76）完整落在板面上。
 SADDLE_X0, SADDLE_X1 = 4, 8
 SADDLE_TOP_Y = -11
-SADDLE_Z0, SADDLE_Z1 = -5, 1
-# 吊带/上接头：上接头从腰部横梁前脸前伸 1 格，吊带垂直落到托板后沿 z=1；
-# x 7..8 落在托板宽度内，吊带底端与托板后脸是面接触而不是只擦一个角。
+SADDLE_Z0, SADDLE_Z1 = -6, 2
+# 吊带/上接头：上接头从腰部横梁前脸前伸 1 格，吊带垂直落到托板后沿；
+# 吊带 z 1..2 落在托板 z -6..2 内、x 7..8 落在板宽内，底端插进托板里。
 STRAP_X = 7
 LINK_Z0, LINK_Z1 = 1, 2
 
-# 预检查用：确认环内开口能装下推荐的发射器物模型
+# 预检查用：ghost 用五联装；接线侧当前参考 quad_533mm_torpedo_3d，两个都核
 LAUNCHER_PROXY_ITEM = "quintuple_61cm_torpedo"
+LAUNCHER_WIRING_ITEM = "quad_533mm_torpedo"
 
 
 def _add(m, bone, origin, size, material, face_materials=None, sign=1):
@@ -192,30 +195,28 @@ def write_assets(model, repo_root, dry_run=False):
 
 
 # ---------------------------------------------------------------- 发射器占位
-def _launcher_elements(repo_root):
+def _launcher_elements(repo_root, item=None):
     path = os.path.join(repo_root, "src/main/resources/assets/piranport/models/item",
-                        f"{LAUNCHER_PROXY_ITEM}_3d.json")
+                        f"{item or LAUNCHER_PROXY_ITEM}_3d.json")
     if not os.path.exists(path):
         return []
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f).get("elements", [])
 
 
-def launcher_model_boxes(repo_root, side):
-    """按接线后的目标摆放，把五联装物模型换算成模型空间的轴对齐盒。
+def _transform_elements(elements, side):
+    """把 item 3D 物模型按接线姿态换算成模型空间的轴对齐盒。
 
-    这是预览代理，不是物品渲染管线的逐字模拟：接线用 yaw 180 + 底座补偿
-    8*0.36，让底座中心落在挂点 x 上、管口（item +Z）朝模型 -Z。
-    item 原点在底座角上，所以先减掉底座中心 (8, 11.55)：
-        模型 = (挂点x - s*(x-8), -挂点y + s*y, -挂点z - s*(z-11.55))
-    旋转全是 0°/180°，盒子仍是轴对齐，不用矩阵分解。
+    物品管线先 translate(-0.5)（item (8,8,8) 对到挂点），再按挂点旋转。
+    WAIST 用 yaw 180，净效果 X(180)：item +Y 朝上、+Z（管口）朝前。
+    模型空间 +Z 朝后，所以：
+        模型 = (挂点x + s*(x-8), -挂点y + s*(y-8), -挂点z - s*(z-8))
+    旋转都是 0°/180°，盒子仍轴对齐。
     """
-    elements = _launcher_elements(repo_root)
-    if not elements:
-        return []
     s = LAUNCHER_SCALE
     mnt = WAIST_MOUNTS[side]
     mx, my, mz = mnt["x"], -mnt["y"], -mnt["z"]
+    c = LAUNCHER_ITEM_CENTER
     boxes = []
     for e in elements:
         x0, y0, z0 = e["from"]
@@ -225,15 +226,20 @@ def launcher_model_boxes(repo_root, side):
             for yi in (y0, y1):
                 for zi in (z0, z1):
                     pts.append((
-                        mx - s * (xi - LAUNCHER_ITEM_CENTER_X),
-                        my + s * yi,
-                        mz - s * (zi - LAUNCHER_ITEM_CENTER_Z),
+                        mx + s * (xi - c),
+                        my + s * (yi - c),
+                        mz - s * (zi - c),
                     ))
         boxes.append((
             tuple(min(p[i] for p in pts) for i in range(3)),
             tuple(max(p[i] for p in pts) for i in range(3)),
         ))
     return boxes
+
+
+def launcher_model_boxes(repo_root, side):
+    elements = _launcher_elements(repo_root)
+    return _transform_elements(elements, side) if elements else []
 
 
 def _cube_signature(cube, mirror=False):
@@ -258,37 +264,47 @@ def report_symmetry(model):
           f"({len(left)} / {len(right)} 块)")
 
 
+def _report_one(repo_root, side, item):
+    elements = _launcher_elements(repo_root, item)
+    if not elements:
+        print(f"  {side}: 找不到 {item}_3d.json")
+        return
+    boxes = _transform_elements(elements, side)
+    base = _transform_elements(
+        [e for e in elements if e["from"][1] <= min(x["from"][1] for x in elements) + 0.6],
+        side)
+    lo = tuple(min(b[0][i] for b in boxes) for i in range(3))
+    hi = tuple(max(b[1][i] for b in boxes) for i in range(3))
+    bl = tuple(min(b[0][i] for b in base) for i in range(3))
+    bh = tuple(max(b[1][i] for b in base) for i in range(3))
+    sx0, sx1 = ((SADDLE_X0, SADDLE_X1) if side == "left"
+                else (-SADDLE_X1, -SADDLE_X0))
+    in_x = bl[0] >= sx0 - 0.05 and bh[0] <= sx1 + 0.05
+    in_z = bl[2] >= SADDLE_Z0 and bh[2] <= SADDLE_Z1
+    bottom_ok = abs(bl[1] - SADDLE_TOP_Y) < 1e-3
+    inner = lo[0] if side == "left" else -hi[0]
+    print(f"  {side} {item}: 底座 x {bl[0]:.2f}..{bh[0]:.2f}, y {bl[1]:.2f}, "
+          f"z {bl[2]:.2f}..{bh[2]:.2f}")
+    print(f"    底座压板 y={SADDLE_TOP_Y}: {'OK' if bottom_ok else 'NG'}; "
+          f"板内(x {4}..{8}，镜像后): {'OK' if in_x else 'NG'}; "
+          f"板内(z {SADDLE_Z0}..{SADDLE_Z1}): {'OK' if in_z else 'NG'}")
+    print(f"    整机 x {lo[0]:.2f}..{hi[0]:.2f}, 管口 z={lo[2]:.2f}（负=朝前）, "
+          f"内缘 |x|={inner:.2f}（躯干面 4.0）")
+
+
 def report_launcher_fit(repo_root):
-    """检查发射器底座是否压在托板上、管口朝前、且不穿躯干。"""
+    """检查发射器底座板是否完整压在托板上、管口朝前、且不穿躯干。"""
     z_center_model = (SADDLE_Z0 + SADDLE_Z1) / 2.0
     print(f"托板: 模型 x {SADDLE_X0}..{SADDLE_X1}, 顶面 y {SADDLE_TOP_Y}, "
           f"z {SADDLE_Z0}..{SADDLE_Z1} "
-          f"→ player y={-SADDLE_TOP_Y:.1f}, z 中心={-z_center_model:+.1f}")
+          f"→ player y={-SADDLE_TOP_Y:.1f}, z 中心={-z_center_model:+.1f}, "
+          f"挂点 y={-SADDLE_TOP_Y - 8 * LAUNCHER_SCALE:.2f}")
     for side in ("left", "right"):
-        boxes = launcher_model_boxes(repo_root, side)
-        if not boxes:
-            print(f"  {side}: 找不到 {LAUNCHER_PROXY_ITEM}_3d.json")
-            continue
-        sx0, sx1 = ((SADDLE_X0, SADDLE_X1) if side == "left"
-                    else (-SADDLE_X1, -SADDLE_X0))
-        lo = tuple(min(b[0][i] for b in boxes) for i in range(3))
-        hi = tuple(max(b[1][i] for b in boxes) for i in range(3))
-        # 底座 = item y 最小的一层盒子（底板），用它算与托板的重叠面积
-        base = [b for b in boxes if b[0][1] <= lo[1] + 0.25]
-        bx0 = min(b[0][0] for b in base)
-        bx1 = max(b[1][0] for b in base)
-        bz0 = min(b[0][2] for b in base)
-        bz1 = max(b[1][2] for b in base)
-        ox = max(0.0, min(bx1, sx1) - max(bx0, sx0))
-        oz = max(0.0, min(bz1, SADDLE_Z1) - max(bz0, SADDLE_Z0))
-        ratio = ox * oz / max((bx1 - bx0) * (bz1 - bz0), 1e-9)
-        inner = lo[0] if side == "left" else -hi[0]   # 到躯干中心一侧的最近距离
-        bottom_ok = abs(lo[1] - SADDLE_TOP_Y) < 1e-3
-        print(f"  {side}: 发射器 x {lo[0]:.2f}..{hi[0]:.2f}, "
-              f"y {lo[1]:.2f}..{hi[1]:.2f}, z {lo[2]:.2f}..{hi[2]:.2f}")
-        print(f"    底座压托板 y={SADDLE_TOP_Y}: {'OK' if bottom_ok else 'NG'}; "
-              f"管口 z={lo[2]:.2f}（负=朝前）; 后缘 z={bz1:.2f} 贴吊带 z={LINK_Z0}; "
-              f"内缘 |x|={inner:.2f}（躯干面 4.0）; 承托 {ratio * 100:.0f}%")
+        _report_one(repo_root, side, LAUNCHER_PROXY_ITEM)
+    # 接线侧参考的模型也核一遍
+    print(f"参考模型 {LAUNCHER_WIRING_ITEM}:")
+    for side in ("left", "right"):
+        _report_one(repo_root, side, LAUNCHER_WIRING_ITEM)
 
 
 # ---------------------------------------------------------------- 预览

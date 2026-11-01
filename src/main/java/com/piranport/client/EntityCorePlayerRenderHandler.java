@@ -42,8 +42,9 @@ public class EntityCorePlayerRenderHandler {
      * <p>WHY 用 LOWEST + receiveCanceled：Yes Steve Model 等「取消原版渲染、自己画玩家」
      * 的 mod 在 NORMAL 优先级取消 {@link RenderPlayerEvent.Pre}。同为 NORMAL 时谁先注册
      * 谁生效，结果不可控；降到 LOWEST 并放行已取消事件，保证替换渲染的 mod 优先。
-     * 官方 YSM 2.6.5 在更外层 {@code EntityRenderDispatcher} 就跳过整个 {@code PlayerRenderer.render}，
-     * 本事件根本不会触发；这里主要覆盖 {@code UseCompatibilityRenderer} / OpenYSM / 其它 cancel 式实现。
+     * 官方 YSM 2.6.5 会在更外层跳过原版 {@code PlayerRenderer.render}（{@code EntityRenderDispatcher}
+     * 的 WrapWithCondition，或 {@code RenderPlayerEvent.Pre} 取消）；无论走哪条，本事件要么不触发，
+     * 要么已被取消，因此这里只覆盖「没人接管」的情况。
      *
      * <p>receiveCanceled=true 不会造成重复渲染：事件一旦被别的 mod 取消，我们直接 return，
      * 不画替身；只有没人取消时（isCanceled=false）才走下面的渲染并自行取消原版渲染。

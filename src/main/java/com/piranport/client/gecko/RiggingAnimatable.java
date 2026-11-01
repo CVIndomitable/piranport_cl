@@ -24,14 +24,14 @@ import software.bernie.geckolib.util.RenderUtil;
  */
 public class RiggingAnimatable implements GeoAnimatable {
 
-    private final RiggingModelDef def;
+    private final RiggingRenderDef def;
     private final AnimatableInstanceCache cache = new InstancedAnimatableInstanceCache(this);
     private final AnimationController<RiggingAnimatable> mainController;
 
     /** 解析后的待机动画；null 表示还没解析过。 */
     private RawAnimation idleAnimation;
 
-    public RiggingAnimatable(RiggingModelDef def) {
+    public RiggingAnimatable(RiggingRenderDef def) {
         this.def = def;
         this.mainController = new AnimationController<>(this, "main", 0, state -> {
             RawAnimation idle = resolveIdleAnimation();
@@ -47,7 +47,7 @@ public class RiggingAnimatable implements GeoAnimatable {
                 RawAnimation.begin().thenPlay(def.fireAnimation()));
     }
 
-    public RiggingModelDef def() {
+    public RiggingRenderDef def() {
         return def;
     }
 

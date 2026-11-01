@@ -17,9 +17,9 @@ import software.bernie.geckolib.renderer.GeoRenderer;
 @SuppressWarnings("deprecation")
 public class RiggingGeoModel extends GeoModel<RiggingAnimatable> {
 
-    private final RiggingModelDef def;
+    private final RiggingRenderDef def;
 
-    public RiggingGeoModel(RiggingModelDef def) {
+    public RiggingGeoModel(RiggingRenderDef def) {
         this.def = def;
     }
 

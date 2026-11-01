@@ -449,6 +449,9 @@ public class ClientModEvents {
             if (renderer instanceof PlayerRenderer playerRenderer) {
                 playerRenderer.addLayer(
                         new com.piranport.client.SkinOverlayLayer(playerRenderer));
+                // 船体/甲板/腰部鱼雷架：GeckoLib 模型层；武器占位层排在其后。
+                playerRenderer.addLayer(
+                        new com.piranport.client.gecko.RiggingHullLayer(playerRenderer));
                 playerRenderer.addLayer(
                         new com.piranport.client.ShipRiggingLayer(playerRenderer));
                 // 有 GeckoLib 模型的武器各挂一个 layer；未登记的武器仍由上面的占位层画物品模型。

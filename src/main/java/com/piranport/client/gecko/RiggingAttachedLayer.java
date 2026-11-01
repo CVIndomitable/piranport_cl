@@ -1,7 +1,6 @@
 package com.piranport.client.gecko;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 import com.piranport.client.AircraftLaunchPoseClientState;
 import com.piranport.client.RiggingClientState;
@@ -12,8 +11,6 @@ import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.RenderLayerParent;
-import org.joml.Matrix4f;
-import software.bernie.geckolib.cache.object.BakedGeoModel;
 import software.bernie.geckolib.renderer.GeoObjectRenderer;
 import software.bernie.geckolib.renderer.layer.vanilla.AttachedAnimatableRenderLayer;
 
@@ -132,27 +129,5 @@ public class RiggingAttachedLayer extends AttachedAnimatableRenderLayer<
 
     private boolean isThisModel(RiggingMount mount) {
         return def.equals(RiggingModelRegistry.find(mount.stack()));
-    }
-
-    /**
-     * 去掉父类 {@code GeoObjectRenderer#preRender} 的 {@code translate(0.5, 0.51, 0.5)}。
-     *
-     * <p>那是给「以方块中心为原点」的独立对象用的；舰装挂点原点已经是模型基座底面中心，
-     * 照搬会让每个模型都偏移半格。其余（保存矩阵、应用 scaleWidth/Height）与父类一致。
-     */
-    private static final class RiggingObjectRenderer extends GeoObjectRenderer<RiggingAnimatable> {
-
-        RiggingObjectRenderer(RiggingModelDef def) {
-            super(new RiggingGeoModel(def));
-        }
-
-        @Override
-        public void preRender(PoseStack poseStack, RiggingAnimatable animatable, BakedGeoModel model,
-                              MultiBufferSource bufferSource, VertexConsumer buffer, boolean isReRender,
-                              float partialTick, int packedLight, int packedOverlay, int colour) {
-            this.objectRenderTranslations = new Matrix4f(poseStack.last().pose());
-            scaleModelForRender(this.scaleWidth, this.scaleHeight, poseStack, animatable, model,
-                    isReRender, partialTick, packedLight, packedOverlay);
-        }
     }
 }

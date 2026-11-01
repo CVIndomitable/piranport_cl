@@ -21,8 +21,8 @@ public final class RiggingLoadoutResolver {
     /** 只扫描快捷栏 0~8：背包里的武器不挂到舰装上。 */
     public static final int HOTBAR_SIZE = 9;
 
-    private static final List<RiggingSocket> LEG_SOCKETS =
-            List.of(RiggingSocket.LEG_LEFT, RiggingSocket.LEG_RIGHT);
+    private static final List<RiggingSocket> WAIST_SOCKETS =
+            List.of(RiggingSocket.WAIST_LEFT, RiggingSocket.WAIST_RIGHT);
     private static final List<RiggingSocket> LEFT_SIDE_SOCKETS =
             List.of(RiggingSocket.SIDE_LEFT_1, RiggingSocket.SIDE_LEFT_2);
     private static final List<RiggingSocket> RIGHT_SIDE_SOCKETS =
@@ -56,7 +56,7 @@ public final class RiggingLoadoutResolver {
      * 挂点分配规则（只依赖快捷栏内容，便于单元测试与两端复用）：
      * <ol>
      *   <li>当前选中的快捷栏武器最先占位，其余按快捷栏 0→8 顺序</li>
-     *   <li>鱼雷 → 左腿、右腿</li>
+     *   <li>鱼雷 → 腰部左、右</li>
      *   <li>主炮 / 反舰导弹 / 火箭弹 → 左舷两个位，再右舷两个位</li>
      *   <li>有任意舰载机时右舷整侧改成飞行甲板，右舷炮位取消，飞机 → 甲板两个位</li>
      *   <li>深弹 / 防空导弹 → 后背两个位</li>
@@ -83,14 +83,14 @@ public final class RiggingLoadoutResolver {
                 candidate.slot() == selectedSlot ? -1 : candidate.slot()));
 
         List<RiggingMount> mounts = new ArrayList<>();
-        int leg = 0;
+        int waist = 0;
         int leftSide = 0;
         int rightSide = 0;
         int deck = 0;
         int back = 0;
         for (Candidate candidate : candidates) {
             RiggingSocket socket = switch (candidate.category()) {
-                case TORPEDO -> leg < LEG_SOCKETS.size() ? LEG_SOCKETS.get(leg++) : null;
+                case TORPEDO -> waist < WAIST_SOCKETS.size() ? WAIST_SOCKETS.get(waist++) : null;
                 case CANNON, MISSILE_ASM -> {
                     if (leftSide < LEFT_SIDE_SOCKETS.size()) {
                         yield LEFT_SIDE_SOCKETS.get(leftSide++);

@@ -32,7 +32,7 @@ public record RiggingModelDef(
         float yawOffset,
         float scale,
         String idleAnimation,
-        String fireAnimation) {
+        String fireAnimation) implements RiggingRenderDef {
 
     /** 四个导弹模型的动画名一致；保留常量方便注册表与默认值引用。 */
     public static final String DEFAULT_IDLE_ANIMATION = "idle";

@@ -22,18 +22,30 @@ public final class RiggingSocketTransforms {
      * <p>腿挂点必须先 {@code translateAndRotate} 腿部模型，偏移才是相对大腿的；
      * 其余挂点以躯干为基准，并与舰体 hull 用同一套偏移 + 放飞后仰，
      * 否则挂点坐标和画出来的舷侧/甲板对不上。
+     *
+     * <p>2026-11-01 起鱼雷挂点在腰部（{@code WAIST_*}），走躯干默认分支，
+     * 与 GeckoLib 船体共用 {@link #applyHullBase} 的共享偏移。
      */
     public static void applyBase(PoseStack poseStack, PlayerModel<?> parentModel,
                                  RiggingSocket socket, float launchPose) {
         switch (socket) {
             case LEG_LEFT -> parentModel.leftLeg.translateAndRotate(poseStack);
             case LEG_RIGHT -> parentModel.rightLeg.translateAndRotate(poseStack);
-            default -> {
-                parentModel.body.translateAndRotate(poseStack);
-                poseStack.translate(0.0, 0.28 + launchPose * 0.035, 0.34 - launchPose * 0.035);
-                poseStack.mulPose(Axis.XP.rotationDegrees(-3.0f * launchPose));
-            }
+            default -> applyHullBase(poseStack, parentModel, launchPose);
         }
+    }
+
+    /**
+     * 船体 / 躯干挂点共用的基准变换。
+     *
+     * <p>船体层的整个模型和侧舷、背部、甲板、腰部挂点都必须用这一个方法，
+     * 切换渲染实现时位置才不会跳。改这里的偏移会同时影响所有挂点。
+     */
+    public static void applyHullBase(PoseStack poseStack, PlayerModel<?> parentModel,
+                                     float launchPose) {
+        parentModel.body.translateAndRotate(poseStack);
+        poseStack.translate(0.0, 0.28 + launchPose * 0.035, 0.34 - launchPose * 0.035);
+        poseStack.mulPose(Axis.XP.rotationDegrees(-3.0f * launchPose));
     }
 
     /**
@@ -65,7 +77,8 @@ public final class RiggingSocketTransforms {
      */
     public static MountPose mountPose(RiggingSocket socket, float launchPose) {
         return switch (socket) {
-            // 腿部：相对大腿 pivot 向外偏移，鱼雷管贴着外侧
+            // 腿部：占位历史值。2026-11-01 起鱼雷改挂腰部，这两个挂点保留仅为网络序号兼容，
+            // 不再由 RiggingLoadoutResolver 分配。
             case LEG_LEFT -> new MountPose(2.6f, 6.0f, 0.0f, 90.0f, 0.0f, 90.0f, 0.40f);
             case LEG_RIGHT -> new MountPose(-2.6f, 6.0f, 0.0f, -90.0f, 0.0f, -90.0f, 0.40f);
             // 舷侧：上下两个平台，炮口朝外（舰体后仰已由共享变换处理）
@@ -79,6 +92,11 @@ public final class RiggingSocketTransforms {
             // 甲板：右舷甲板前后各一，面朝上平放
             case DECK_1 -> new MountPose(-5.6f, 0.4f, -2.2f, 0.0f, -90.0f, 0.0f, 0.34f);
             case DECK_2 -> new MountPose(-5.6f, 0.4f, 2.2f, 0.0f, -90.0f, 0.0f, 0.34f);
+            // 腰部：鱼雷发射器挂在腰带两侧，与腰部鱼雷架模型对齐。
+            // 右舷 z 前移 3.6 是为了补偿鱼雷发射器物品模型原点不居中；
+            // roll 保持 +90（不能照抄 LEG_RIGHT 的 -90，那会让右舷炮管上下颠倒）。
+            case WAIST_LEFT -> new MountPose(4.3f, 5.1f, 0.2f, 90.0f, 0.0f, 90.0f, 0.36f);
+            case WAIST_RIGHT -> new MountPose(-4.3f, 5.1f, 3.8f, -90.0f, 0.0f, 90.0f, 0.36f);
         };
     }
 

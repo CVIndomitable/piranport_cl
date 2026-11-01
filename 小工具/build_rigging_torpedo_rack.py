@@ -45,19 +45,21 @@ ASSET_STEM = "waist_torpedo_rack"
 # 所以 mount y = 11.0 - 2.88 = 8.12；托板 z 中心 = +2.0，挂点 z 也取 +2.0。
 LAUNCHER_SCALE = 0.36
 WAIST_MOUNTS = {
-    "left": dict(x=6.0, y=8.12, z=2.0, yaw=180.0, pitch=0.0, roll=0.0),
-    "right": dict(x=-6.0, y=8.12, z=2.0, yaw=180.0, pitch=0.0, roll=0.0),
+    "left": dict(x=10.0, y=8.12, z=2.0, yaw=180.0, pitch=0.0, roll=0.0),
+    "right": dict(x=-10.0, y=8.12, z=2.0, yaw=180.0, pitch=0.0, roll=0.0),
 }
 # 物品管线的 -0.5 格居中：item 的 (8,8,8) 落在挂点上，不是几何中心。
 LAUNCHER_ITEM_CENTER = 8.0
 
-# 托板（模型空间，+Z 朝前）：x 4..8、顶面 y -11（player y 11）、
+# 托板（模型空间，+Z 朝前）：x 8..12、顶面 y -11（player y 11）、
 # z -2..+6（player z 中心 +2.0）；8 深是为了让 yaw 180 后的
 # quad_533mm 底座板（模型 z +2.76..+5.56）完整落在板面上、不前伸。
-SADDLE_X0, SADDLE_X1 = 4, 8
+# x 中心 10 在垂柱 (x 7..8) 外侧，托板内缘正好贴垂柱外脸。
+SADDLE_X0, SADDLE_X1 = 8, 12
 SADDLE_TOP_Y = -11
 SADDLE_Z0, SADDLE_Z1 = -2, 6
-# 吊带/上接头：底座板在 z +0.13..+5.56，板面唯一空档在托板后沿，
+# 吊带/上接头：x 7..8 留在内舷（腰带端部），外脸 x=8 正好贴托板内缘；
+# 底座板在 z +0.13..+5.56，板面唯一空档在托板后沿，
 # 所以吊带放在 z -2..-1、上接头从腰带 (z 2..3) 往体后伸到 z -2。
 STRAP_X = 7
 LINK_Z0, LINK_Z1 = -2, 2
@@ -289,7 +291,7 @@ def _report_one(repo_root, side, item):
     print(f"  {side} {item}: 底座 x {bl[0]:.2f}..{bh[0]:.2f}, y {bl[1]:.2f}, "
           f"z {bl[2]:.2f}..{bh[2]:.2f}")
     print(f"    底座压板 y={SADDLE_TOP_Y}: {'OK' if bottom_ok else 'NG'}; "
-          f"板内(x {4}..{8}，镜像后): {'OK' if in_x else 'NG'}; "
+          f"板内(x {SADDLE_X0}..{SADDLE_X1}，镜像后): {'OK' if in_x else 'NG'}; "
           f"板内(z {SADDLE_Z0}..{SADDLE_Z1}): {'OK' if in_z else 'NG'}")
     print(f"    整机 x {lo[0]:.2f}..{hi[0]:.2f}, 管口 z={hi[2]:.2f}（正=朝前）, "
           f"内缘 |x|={inner:.2f}（躯干面 4.0）; "

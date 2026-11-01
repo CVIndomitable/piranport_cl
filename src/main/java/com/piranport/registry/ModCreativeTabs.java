@@ -576,25 +576,17 @@ public class ModCreativeTabs {
                         output.accept(ModItems.B25_MODEL.get());
                     }).build());
 
-    // ===== 遗迹 — 深渊方块/碎片/国旗/档案 =====
+    // ===== 遗迹 — 深渊方块/国旗/档案 =====
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> RUINS_TAB =
             CREATIVE_TABS.register("ruins_tab", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.piranport.ruins"))
                     .withTabsBefore(ResourceKey.create(Registries.CREATIVE_MODE_TAB, PiranPort.modId("decoration_tab")))  // 链式排序：紧接 decoration_tab
-                    .icon(() -> ModItems.KEY_FRAGMENT_CH1.get().getDefaultInstance())
+                    .icon(() -> ModItems.EXP_SHELL.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
                         // Blocks
                         output.accept(ModItems.ABYSSAL_SPAWNER.get());
                         // Story and progression reward items
                         output.accept(ModItems.EXP_SHELL.get());
-                        // Key Fragments（钥匙碎片，ch1~ch7）
-                        output.accept(ModItems.KEY_FRAGMENT_CH1.get());
-                        output.accept(ModItems.KEY_FRAGMENT_CH2.get());
-                        output.accept(ModItems.KEY_FRAGMENT_CH3.get());
-                        output.accept(ModItems.KEY_FRAGMENT_CH4.get());
-                        output.accept(ModItems.KEY_FRAGMENT_CH5.get());
-                        output.accept(ModItems.KEY_FRAGMENT_CH6.get());
-                        output.accept(ModItems.KEY_FRAGMENT_CH7.get());
                         // National Flags
                         output.accept(ModItems.FLAG_J.get());
                         output.accept(ModItems.FLAG_E.get());

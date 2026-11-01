@@ -813,7 +813,6 @@ public final class PiranPortCommands {
         stacks += give(player, ModItems.FUEL.get(), 16);
         stacks += give(player, ModItems.REPAIR_KIT.get(), 3);
         stacks += give(player, ModItems.EXP_SHELL.get(), 8);
-        stacks += giveKeyFragments(player, 2);
         stacks += giveFlags(player);
         stacks += give(player, ModItems.DEEP_OCEAN_SUPPLY_SPAWN_EGG.get(), 2);
         stacks += give(player, ModItems.DEEP_OCEAN_DESTROYER_SPAWN_EGG.get(), 2);
@@ -832,7 +831,8 @@ public final class PiranPortCommands {
         stacks += give(player, ModItems.REPAIR_KIT.get(), 3);
         stacks += give(player, ModItems.EXP_SHELL.get(), 16);
         stacks += give(player, ModItems.FUEL.get(), 16);
-        stacks += giveKeyFragments(player, 2);
+        // 舰娘定标/信标研究现在收生铝，验收套件同步补一份，避免还要单独去挖。
+        stacks += give(player, ModItems.RAW_ALUMINUM.get(), 16);
         stacks += giveFlags(player);
         stacks += giveSkinCores(player);
         return stacks;
@@ -873,25 +873,6 @@ public final class PiranPortCommands {
         stacks += give(player, log, 8);
         stacks += give(player, leaves, 8);
         stacks += give(player, sapling, 4);
-        return stacks;
-    }
-
-    /**
-     * 发钥匙碎片（ch1~ch7 各 count 个）。
-     *
-     * <p>原先发的是 9 种无序意志碎片（α~ι）。碎片体系收敛为单一通用货币
-     * 「钥匙碎片」后，这里改为把 7 个章节的钥匙碎片各发一份——调试时仍需覆盖
-     * 全章节，否则测不了「某章的钥匙合不出来」这类问题。</p>
-     */
-    private static int giveKeyFragments(ServerPlayer player, int count) {
-        int stacks = 0;
-        stacks += give(player, ModItems.KEY_FRAGMENT_CH1.get(), count);
-        stacks += give(player, ModItems.KEY_FRAGMENT_CH2.get(), count);
-        stacks += give(player, ModItems.KEY_FRAGMENT_CH3.get(), count);
-        stacks += give(player, ModItems.KEY_FRAGMENT_CH4.get(), count);
-        stacks += give(player, ModItems.KEY_FRAGMENT_CH5.get(), count);
-        stacks += give(player, ModItems.KEY_FRAGMENT_CH6.get(), count);
-        stacks += give(player, ModItems.KEY_FRAGMENT_CH7.get(), count);
         return stacks;
     }
 

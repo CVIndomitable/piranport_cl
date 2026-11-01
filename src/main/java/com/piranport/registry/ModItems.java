@@ -595,14 +595,6 @@ public class ModItems {
     public static final DeferredItem<com.piranport.item.DeployMedalItem> DEPLOY_MEDAL_CH6 = SpecialtyItems.DEPLOY_MEDAL_CH6;
     public static final DeferredItem<com.piranport.item.DeployMedalItem> DEPLOY_MEDAL_CH7 = SpecialtyItems.DEPLOY_MEDAL_CH7;
 
-    // ===== Chapter Gating: Key Fragments (钥匙碎片) =====
-    public static final DeferredItem<com.piranport.item.KeyFragmentItem> KEY_FRAGMENT_CH1 = SpecialtyItems.KEY_FRAGMENT_CH1;
-    public static final DeferredItem<com.piranport.item.KeyFragmentItem> KEY_FRAGMENT_CH2 = SpecialtyItems.KEY_FRAGMENT_CH2;
-    public static final DeferredItem<com.piranport.item.KeyFragmentItem> KEY_FRAGMENT_CH3 = SpecialtyItems.KEY_FRAGMENT_CH3;
-    public static final DeferredItem<com.piranport.item.KeyFragmentItem> KEY_FRAGMENT_CH4 = SpecialtyItems.KEY_FRAGMENT_CH4;
-    public static final DeferredItem<com.piranport.item.KeyFragmentItem> KEY_FRAGMENT_CH5 = SpecialtyItems.KEY_FRAGMENT_CH5;
-    public static final DeferredItem<com.piranport.item.KeyFragmentItem> KEY_FRAGMENT_CH6 = SpecialtyItems.KEY_FRAGMENT_CH6;
-    public static final DeferredItem<com.piranport.item.KeyFragmentItem> KEY_FRAGMENT_CH7 = SpecialtyItems.KEY_FRAGMENT_CH7;
     public static final DeferredItem<com.piranport.dungeon.item.TownScrollItem> TOWN_SCROLL = SpecialtyItems.TOWN_SCROLL;
     public static final DeferredItem<BlockItem> DUNGEON_LECTERN = SpecialtyItems.DUNGEON_LECTERN;
     public static final DeferredItem<NavigationCompassItem> NAVIGATION_COMPASS = SpecialtyItems.NAVIGATION_COMPASS;

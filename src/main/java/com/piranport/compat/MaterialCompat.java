@@ -21,7 +21,7 @@ import java.util.Map;
  * 标签感知匹配，避免每个调用点各写一份 if。</p>
  *
  * <p>未收录的 required 退化为精确物品匹配（{@link #tagFor} 返回 null），行为与改动前
- * 完全一致。铝锭/粗铝是本模组材料，需映射到约定的 c: 标签。</p>
+ * 完全一致。铝锭/生铝是本模组材料，需映射到约定的 c: 标签。</p>
  */
 public final class MaterialCompat {
 

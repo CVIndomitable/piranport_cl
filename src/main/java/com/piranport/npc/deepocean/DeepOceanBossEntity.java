@@ -74,7 +74,7 @@ public class DeepOceanBossEntity extends AbstractDeepOceanEntity {
     @Override
     protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean recentlyHit) {
         super.dropCustomDeathLoot(level, source, recentlyHit);
-        // Boss 掉落：高阶资源 + 精英损害管制（战斗单位不掉钥匙碎片，《副本/17》§5）
+        // Boss 掉落：高阶资源 + 精英损害管制（战斗单位不掉钥匙，《副本/17》§5）
         // MK23 由机密货物合成，不直接掉
         spawnAtLocation(new ItemStack(Items.IRON_INGOT, 5 + random.nextInt(4)));
         spawnAtLocation(new ItemStack(Items.GUNPOWDER, 4 + random.nextInt(3)));

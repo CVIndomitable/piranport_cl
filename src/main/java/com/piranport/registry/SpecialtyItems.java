@@ -19,7 +19,6 @@ import com.piranport.item.MysteriousWeaponItem;
 import com.piranport.item.NavigationCompassItem;
 import com.piranport.item.RepairKitItem;
 import com.piranport.item.ShipGirlContractItem;
-import com.piranport.item.KeyFragmentItem;
 import com.piranport.item.ShoukakuScytheItem;
 import com.piranport.item.SkinCoreItem;
 import com.piranport.item.SmokeCandleItem;
@@ -114,30 +113,6 @@ public final class SpecialtyItems {
     public static final DeferredItem<DeployMedalItem> DEPLOY_MEDAL_CH7 =
             ITEMS.register("deploy_medal_ch7",
                     () -> new DeployMedalItem(7, new Item.Properties().stacksTo(1)));
-
-    // ===== Chapter Gating: Key Fragments (钥匙碎片) =====
-    // 4 个碎片合成 1 把钥匙
-    public static final DeferredItem<KeyFragmentItem> KEY_FRAGMENT_CH1 =
-            ITEMS.register("key_fragment_ch1",
-                    () -> new KeyFragmentItem(1, new Item.Properties().stacksTo(64)));
-    public static final DeferredItem<KeyFragmentItem> KEY_FRAGMENT_CH2 =
-            ITEMS.register("key_fragment_ch2",
-                    () -> new KeyFragmentItem(2, new Item.Properties().stacksTo(64)));
-    public static final DeferredItem<KeyFragmentItem> KEY_FRAGMENT_CH3 =
-            ITEMS.register("key_fragment_ch3",
-                    () -> new KeyFragmentItem(3, new Item.Properties().stacksTo(64)));
-    public static final DeferredItem<KeyFragmentItem> KEY_FRAGMENT_CH4 =
-            ITEMS.register("key_fragment_ch4",
-                    () -> new KeyFragmentItem(4, new Item.Properties().stacksTo(64)));
-    public static final DeferredItem<KeyFragmentItem> KEY_FRAGMENT_CH5 =
-            ITEMS.register("key_fragment_ch5",
-                    () -> new KeyFragmentItem(5, new Item.Properties().stacksTo(64)));
-    public static final DeferredItem<KeyFragmentItem> KEY_FRAGMENT_CH6 =
-            ITEMS.register("key_fragment_ch6",
-                    () -> new KeyFragmentItem(6, new Item.Properties().stacksTo(64)));
-    public static final DeferredItem<KeyFragmentItem> KEY_FRAGMENT_CH7 =
-            ITEMS.register("key_fragment_ch7",
-                    () -> new KeyFragmentItem(7, new Item.Properties().stacksTo(64)));
 
     public static final DeferredItem<com.piranport.dungeon.item.TownScrollItem> TOWN_SCROLL =
             ITEMS.register("town_scroll",

@@ -391,7 +391,7 @@ public abstract class AbstractDeepOceanEntity extends Monster {
      */
     /**
      * 《经济/01》迷路的运输舰：只掉 1 个战利品（hentai_trophy），跳过战利品表、
-     * 钥匙碎片与补给舰原掉落。经验照常。
+     * 章节钥匙与补给舰原掉落。经验照常。
      */
     @Override
     protected void dropAllDeathLoot(ServerLevel level, DamageSource source) {
@@ -408,7 +408,7 @@ public abstract class AbstractDeepOceanEntity extends Monster {
     @Override
     protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean recentlyHit) {
         super.dropCustomDeathLoot(level, source, recentlyHit);
-        // 战斗单位不掉钥匙碎片（《副本/17》§5）：钥匙只经遗迹宝箱、活动与合成等路径获得
+        // 战斗单位不掉钥匙（《副本/17》§5）：钥匙只经遗迹宝箱、活动与合成等路径获得
 
         if (this instanceof DeepOceanCarrierEntity) {
             // 深海翔鹤 Boss 替代为深海航母：1/20 概率必掉镰刀（旗舰主掉落之外的稳定来源）

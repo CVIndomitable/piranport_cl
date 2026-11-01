@@ -3,7 +3,6 @@ package com.piranport.npc.shipgirl;
 import com.piranport.advancement.ModAdvancements;
 import com.piranport.config.ModEquipmentConfig;
 import com.piranport.entity.AircraftEntity;
-import com.piranport.item.KeyFragmentItem;
 import com.piranport.npc.deepocean.AbstractDeepOceanEntity;
 import com.piranport.registry.ModItems;
 import java.util.Collection;
@@ -72,14 +71,14 @@ public class ShipGirlEntity extends PathfinderMob implements Merchant {
     private static final int BRANCH_MAINTENANCE = 1 << 1;
     private static final int BRANCH_DRILL = 1 << 2;
     private static final int BRANCH_AIR_COVER = 1 << 3;
-    private static final int BRANCH_SHARD_RESEARCH = 1 << 4;
+    private static final int BRANCH_BEACON_RESEARCH = 1 << 4;
     private static final int BRANCH_ALLIANCE_SUPPLY = 1 << 5;
     private static final int[] BRANCH_FLAGS = {
             BRANCH_RECON,
             BRANCH_MAINTENANCE,
             BRANCH_DRILL,
             BRANCH_AIR_COVER,
-            BRANCH_SHARD_RESEARCH,
+            BRANCH_BEACON_RESEARCH,
             BRANCH_ALLIANCE_SUPPLY
     };
 
@@ -110,7 +109,7 @@ public class ShipGirlEntity extends PathfinderMob implements Merchant {
 
     private enum FollowUpStage {
         FLAGSHIP_DEBRIEF("message.piranport.ship_girl_followup_stage_flagship"),
-        SHARD_STABILIZATION("message.piranport.ship_girl_followup_stage_shard"),
+        BEACON_STABILIZATION("message.piranport.ship_girl_followup_stage_beacon"),
         ALLIANCE_CONTACT("message.piranport.ship_girl_followup_stage_alliance"),
         COMPLETE("message.piranport.ship_girl_followup_stage_complete");
 
@@ -154,7 +153,7 @@ public class ShipGirlEntity extends PathfinderMob implements Merchant {
             "message.piranport.ship_girl_dialogue_followup_flagship_3"
     };
 
-    private static final String[] FOLLOWUP_SHARD_DIALOGUE_KEYS = {
+    private static final String[] FOLLOWUP_BEACON_DIALOGUE_KEYS = {
             "message.piranport.ship_girl_dialogue_followup_shard_1",
             "message.piranport.ship_girl_dialogue_followup_shard_2",
             "message.piranport.ship_girl_dialogue_followup_shard_3"
@@ -446,8 +445,8 @@ public class ShipGirlEntity extends PathfinderMob implements Merchant {
                 handleDrillBranch(player, held);
             } else if (held.is(ModItems.FUEL.get())) {
                 handleAirCoverBranch(player, held);
-            } else if (isKeyFragment(held)) {
-                handleKeyFragment(player, held);
+            } else if (isRawAluminum(held) && expectsRawAluminum()) {
+                handleRawAluminum(player, held);
             } else if (isNationalFlag(held)) {
                 handleNationalFlag(player, held);
             } else if (held.is(ModItems.FUEL.get())) {
@@ -525,8 +524,8 @@ public class ShipGirlEntity extends PathfinderMob implements Merchant {
             }
             return COMPLETE_DIALOGUE_KEYS;
         }
-        if (followUpStage == FollowUpStage.SHARD_STABILIZATION) {
-            return FOLLOWUP_SHARD_DIALOGUE_KEYS;
+        if (followUpStage == FollowUpStage.BEACON_STABILIZATION) {
+            return FOLLOWUP_BEACON_DIALOGUE_KEYS;
         }
         if (followUpStage == FollowUpStage.ALLIANCE_CONTACT) {
             return FOLLOWUP_ALLIANCE_DIALOGUE_KEYS;
@@ -676,7 +675,7 @@ public class ShipGirlEntity extends PathfinderMob implements Merchant {
         giveOrDrop(player, new ItemStack(ModItems.EXP_SHELL.get(), 2));
         giveOrDrop(player, new ItemStack(ModItems.FUEL.get(), 4));
         player.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, 20 * 180, 0));
-        followUpStage = FollowUpStage.SHARD_STABILIZATION;
+        followUpStage = FollowUpStage.BEACON_STABILIZATION;
         addRapport(player, 12);
         if (player instanceof ServerPlayer serverPlayer) {
             ModAdvancements.award(serverPlayer, "story/ship_girl_story_flagship_debrief");
@@ -685,12 +684,12 @@ public class ShipGirlEntity extends PathfinderMob implements Merchant {
         playQuestFeedback(player, ParticleTypes.SOUL_FIRE_FLAME, 30, 1.2f);
     }
 
-    private void handleKeyFragment(Player player, ItemStack held) {
+    private void handleRawAluminum(Player player, ItemStack held) {
         if (isBranchReady()) {
-            handleFragmentResearchBranch(player, held);
+            handleBeaconResearchBranch(player, held);
             return;
         }
-        if (!isReadyForFollowUp(player, FollowUpStage.SHARD_STABILIZATION)) {
+        if (!isReadyForFollowUp(player, FollowUpStage.BEACON_STABILIZATION)) {
             return;
         }
 
@@ -750,6 +749,16 @@ public class ShipGirlEntity extends PathfinderMob implements Merchant {
 
     private boolean isBranchReady() {
         return questStage == QuestStage.COMPLETE && followUpStage == FollowUpStage.COMPLETE;
+    }
+
+    /**
+     * 生铝现在是很常见的材料，不能像碎片那样一持有就拦截右键交互。
+     * 只有定标阶段或信标研究分支真正需要交付时才拦截；其余情况回落普通对话/交易。
+     */
+    private boolean expectsRawAluminum() {
+        return isBranchReady()
+                || (questStage == QuestStage.COMPLETE
+                    && followUpStage == FollowUpStage.BEACON_STABILIZATION);
     }
 
     private void handleReconBranch(Player player, ItemStack held) {
@@ -825,8 +834,8 @@ public class ShipGirlEntity extends PathfinderMob implements Merchant {
         playQuestFeedback(player, ParticleTypes.CLOUD, first ? 30 : 12, 1.55f);
     }
 
-    private void handleFragmentResearchBranch(Player player, ItemStack held) {
-        boolean first = markBranchCompleted(BRANCH_SHARD_RESEARCH);
+    private void handleBeaconResearchBranch(Player player, ItemStack held) {
+        boolean first = markBranchCompleted(BRANCH_BEACON_RESEARCH);
         consumeOne(player, held);
         giveOrDrop(player, new ItemStack(ModItems.RAW_ALUMINUM.get(), first ? 16 : 6));
         giveOrDrop(player, new ItemStack(ModItems.EXP_SHELL.get(), first ? 2 : 1));
@@ -918,15 +927,12 @@ public class ShipGirlEntity extends PathfinderMob implements Merchant {
     }
 
     /**
-     * 判断手持物是否为钥匙碎片。
+     * 判断手持物是否为生铝。
      *
-     * <p>原先这里枚举的是 9 种无序意志碎片（α~ι）。碎片体系收敛为单一通用货币
-     * 「钥匙碎片」后，改为按类型判定 {@link KeyFragmentItem}，章节由物品自身携带
-     * （{@link KeyFragmentItem#getChapterNumber()}），
-     * 与 {@code ChapterKeyRecipe} 的判定方式保持一致。</p>
+     * <p>钥匙碎片体系已整体删除，定标阶段与信标研究分支统一改为交付生铝。</p>
      */
-    private boolean isKeyFragment(ItemStack stack) {
-        return stack.getItem() instanceof KeyFragmentItem;
+    private boolean isRawAluminum(ItemStack stack) {
+        return stack.is(ModItems.RAW_ALUMINUM.get());
     }
 
     private boolean isNationalFlag(ItemStack stack) {

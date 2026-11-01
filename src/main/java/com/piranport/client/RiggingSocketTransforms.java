@@ -108,13 +108,14 @@ public final class RiggingSocketTransforms {
             // 腰部：左右两具鱼雷发射器必须和玩家平行——同一高度、同一前后位置、管口一致朝前。
             // 朝向同样取 yaw=180（与舷侧同一推导：XP(180)×FIXED Y(180)×Y(180) = X(180)），
             // 管口转到与角色同向、左右不镜像。
-            // 鱼雷 standalone 模型（quad_533mm_torpedo_3d）的 X 中心正好在模型原点（x=8），
-            // 经 scale 后仍以挂点为中心；左右托盘中心 x=±6，所以挂点取 ±6。
-            // 底座下沉补偿：translate(-0.5) 是 0.5 格，经 scale 后下沉 8*0.36=2.88 个 mountPose 单位；
-            // 托盘顶面 player y=5.0，所以 mount y = 5.0 - 2.88 = 2.12。
-            // 两具 z 都取 0，管口一致朝前。右舷原先 z=3.8 的前后补偿已删除。
-            case WAIST_LEFT -> new MountPose(6.0f, 2.12f, 0.0f, 180.0f, 0.0f, 0.0f, 0.36f);
-            case WAIST_RIGHT -> new MountPose(-6.0f, 2.12f, 0.0f, 180.0f, 0.0f, 0.0f, 0.36f);
+            // 托盘（7e61dabe）：模型 x 4..8、顶面 y=-11、z -6..2。GeckoLib 导入只镜像 X，
+            // Y/Z 保持不变；船体层用 Y 轴反射、也不翻 Z，所以 player z = model z：
+            // 托盘 z 中心 = -2.0、顶面 player y = +11.0。
+            // 鱼雷模型 X 中心正好在原点，托盘中心 x=±6，所以挂点 x=±6；
+            // 底座下沉补偿 8*0.36=2.88 → mount y = 11.0 - 2.88 = 8.12；
+            // 挂点 z 取托盘中心 -2.0（yaw 180 时 quad 底座板落在 z -5.56..-2.76，完整压在板上）。
+            case WAIST_LEFT -> new MountPose(6.0f, 8.12f, -2.0f, 180.0f, 0.0f, 0.0f, 0.36f);
+            case WAIST_RIGHT -> new MountPose(-6.0f, 8.12f, -2.0f, 180.0f, 0.0f, 0.0f, 0.36f);
         };
     }
 

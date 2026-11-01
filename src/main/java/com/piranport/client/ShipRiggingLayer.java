@@ -117,9 +117,10 @@ public class ShipRiggingLayer extends RenderLayer<AbstractClientPlayer, PlayerMo
         // 与 RiggingHullLayer 一致：玩家模型 +Y 朝下 → 舰装模型 +Y 朝上（甲板/飞机的坐标系）。
         poseStack.scale(1.0f, -1.0f, 1.0f);
         AircraftRiggingModelRenderer.translateToDeck(poseStack, mount.socket());
+        // 玩家模型层的 -Z 才是角色前方（+Z 是后，用户实机确认），传 true 让机头转到 -Z。
         boolean rendered = AircraftRiggingModelRenderer.render(
                 mount.stack(), poseStack, bufferSource, packedLight,
-                AircraftRiggingModelRenderer.DECK_SCALE);
+                AircraftRiggingModelRenderer.DECK_SCALE, true);
         poseStack.popPose();
         return rendered;
     }

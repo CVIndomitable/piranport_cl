@@ -120,16 +120,35 @@ public final class AircraftRiggingModelRenderer {
     }
 
     /**
-     * 在调用方给定的落点（+Y 上、+Z 前）画一架平放的飞机，机腹贴 y=0、机头朝 +Z。
+     * 画一架平放的飞机，机腹贴 y=0、机头朝 +Z（第一人称 / GeckoLib geo 坐标，+Z 是船首）。
+     *
+     * <p>等价于 {@code render(..., playerModelFrame = false)}。
+     */
+    public static boolean render(ItemStack stack, PoseStack poseStack, MultiBufferSource bufferSource,
+                                 int packedLight, float scale) {
+        return render(stack, poseStack, bufferSource, packedLight, scale, false);
+    }
+
+    /**
+     * 在调用方给定的落点画一架平放的飞机，机腹贴 y=0。
      *
      * <p>不调用 {@code setupAnim}：LayerDefinition 的静态姿态就是平飞姿态，甲板展示足够；
      * 也因此不需要构造假的 {@link AircraftEntity}。
      *
+     * <p><b>两个调用方的「前方」是相反的</b>：第一人称 / GeckoLib geo 坐标里 +Z 是船首
+     * （{@code RiggingFirstPersonLayer} 用 {@code YP(-bodyYaw)} 直接把 +Z 对到身体前方）；
+     * 第三人称玩家模型层经过原版实体的 180° yaw，<b>-Z 才是角色前方</b>
+     * （{@code RiggingLoadoutResolver} 里用户实机确认过「玩家模型 +Z 是后」）。
+     * 所以第三人称必须传 {@code playerModelFrame = true}，让机头再绕竖直轴转 180° 到 -Z；
+     * 第一人称保持 +Z。两层各自对齐自己帧里的「前」，飞机朝向才会都正确。
+     *
+     * @param playerModelFrame true = 第三人称玩家模型层（-Z 朝前，额外绕 Y 180°）；
+     *                         false = 第一人称 / GeckoLib geo 坐标（+Z 朝前）
      * @return false 表示物品不是可识别的飞机（客户端还没拿到定义），没有画任何东西；
      *         调用方可据此回退到旧的物品图标。
      */
     public static boolean render(ItemStack stack, PoseStack poseStack, MultiBufferSource bufferSource,
-                                 int packedLight, float scale) {
+                                 int packedLight, float scale, boolean playerModelFrame) {
         AircraftDefinition definition = AircraftDefinitionService.resolve(stack);
         if (definition == null) return false;
         AircraftVisualRegistry.AircraftVisual visual =
@@ -138,6 +157,13 @@ public final class AircraftRiggingModelRenderer {
         if (model == null) return false;
 
         poseStack.pushPose();
+        if (playerModelFrame) {
+            // 外层绕竖直轴 180°：机头从 +Z 转到 -Z（玩家前方）。
+            // 与下面的 XP(180) 都是 180° 旋转、可交换，结果等价于绕 Z 180°：
+            // 机腹仍朝下、机翼仍水平，模型 +X → -X 是正常偏航，不是镜像。
+            // 必须放在落点平移之外（调用方已先 translateToDeck），否则挂点会被一起转走。
+            poseStack.mulPose(Axis.YP.rotationDegrees(180.0f));
+        }
         // 模型 +Y 朝下、机头 -Z → 甲板系 +Y 朝上、机头 +Z。绕 X 180° 是正常旋转，
         // 左右（模型 +X）保持不变，不会镜像涂装。
         poseStack.mulPose(Axis.XP.rotationDegrees(180.0f));

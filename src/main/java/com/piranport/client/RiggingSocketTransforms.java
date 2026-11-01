@@ -96,10 +96,13 @@ public final class RiggingSocketTransforms {
             case SIDE_LEFT_2 -> new MountPose(9.5f, -1.56f, -6.0f, 180.0f, 0.0f, 0.0f, 0.42f);
             case SIDE_RIGHT_1 -> new MountPose(-9.5f, -1.56f, 6.0f, 180.0f, 0.0f, 0.0f, 0.42f);
             case SIDE_RIGHT_2 -> new MountPose(-9.5f, -1.56f, -6.0f, 180.0f, 0.0f, 0.0f, 0.42f);
-            // 后背：TODO 朝向等策划确认。深弹/防空导弹若也改朝前会穿进身体，
-            // 所以暂时保留「朝后 + 左右倾斜」的旧角度。
-            case BACK_1 -> new MountPose(2.2f, 2.2f, -3.4f, 180.0f, 0.0f, 90.0f, 0.38f);
-            case BACK_2 -> new MountPose(-2.2f, 2.2f, -3.4f, 180.0f, 0.0f, -90.0f, 0.38f);
+            // 后背：深弹 / 防空导弹现在也是 3D 模型，必须正放（roll=0），不能沿用平面图标那套 roll±90 横躺。
+            // 两具分别朝左/右，避免模型互相穿插，也符合背部挂点的视觉：
+            // BACK_1 在左（x +2.2）朝左/+X（yaw 90），BACK_2 在右（x -2.2）朝右/-X（yaw -90）。
+            // y 含底座下沉补偿：8*scale=8*0.38=3.04，背平台顶面 player y=2.2 → 挂点 y=-0.84。
+            // x ±2.2、z -3.4 保持不变。
+            case BACK_1 -> new MountPose(2.2f, -0.84f, -3.4f, 90.0f, 0.0f, 0.0f, 0.38f);
+            case BACK_2 -> new MountPose(-2.2f, -0.84f, -3.4f, -90.0f, 0.0f, 0.0f, 0.38f);
             // 甲板：右侧甲板前后各一，面朝上平放。
             // carrier_deck 已 X 镜像到模型 x +11.5..+18.5（554e1308）。GeckoLib 导入会镜像 X，
             // 所以渲染到玩家空间是 x -18.5..-11.5（中心 -15）＝角色右侧（玩家模型 +X 是左）。

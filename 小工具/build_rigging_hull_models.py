@@ -407,12 +407,14 @@ class BedrockModel:
 def build_general_hull():
     """7 号原画的通用火炮舰装架：背部基座 + 烟囱桅杆 + 左右机械臂。
 
-    尺寸全部对齐 RiggingSocketTransforms.mountPose（模型空间 = 玩家空间 Y/Z 取反）：
-      SIDE_LEFT_1  (4.0, -0.2, -0.4)   SIDE_LEFT_2  (4.0, -3.6,  0.4)
-      SIDE_RIGHT_1 (-4.0,-0.2, -0.4)   SIDE_RIGHT_2 (-4.0,-3.6,  0.4)
+    尺寸对齐 RiggingSocketTransforms.mountPose。**机械臂已外移**，SIDE_* 的 x
+    从 ±4.0 改为 ±9.5（Java 的 mountPose 需同步改；y/z 不变）：
+      SIDE_LEFT_1  (9.5, -0.2, -0.4)   SIDE_LEFT_2  (9.5, -3.6,  0.4)
+      SIDE_RIGHT_1 (-9.5,-0.2, -0.4)   SIDE_RIGHT_2 (-9.5,-3.6,  0.4)
       BACK_1       (2.2, -2.2,  3.4)   BACK_2       (-2.2,-2.2,  3.4)
-    平台顶面正好落在挂点 y 上；机械臂主体藏在玩家手臂后方（z≥1），
-    从正面不会挡住太多。
+    平台顶面正好落在挂点 y 上；平台中心 x=±9.5，外缘立柱到 ±11.5，
+    玩家胳膊在 ±5..±9，机械臂从正面看位于胳膊外侧。
+    横臂从背板 x=3 一直伸到 x=9，是机械臂与 hull_base 的唯一水平连接梁。
 
     stack（烟囱 + 桅杆 + 小旗）整体相对基座偏移 (0, -1, -4)，由一块静态托架
     接回 hull_base。这样叠上 applyBase 的共享平移后，烟囱落在躯干后缘之外，
@@ -424,8 +426,8 @@ def build_general_hull():
     m.bone("hull_base", parent="root", pivot=(0, 0, 0))
     # stack 的 pivot 放在托架与烟囱的接触面（z=1），待机摆动时根部不脱开
     m.bone("stack", parent="hull_base", pivot=(0, -0.4, 1))
-    m.bone("arm_left", parent="hull_base", pivot=(4, -1.8, 1.5))
-    m.bone("arm_right", parent="hull_base", pivot=(-4, -1.8, 1.5))
+    m.bone("arm_left", parent="hull_base", pivot=(9.5, -1.8, 1.5))
+    m.bone("arm_right", parent="hull_base", pivot=(-9.5, -1.8, 1.5))
 
     # ---- 背部基座（贴着躯干背面 z=2，向下覆盖到玩家 y≈4.6）----
     m.cube("hull_base", (-4, -4.6, 2), (8, 4, 1), "armor_light",         # 背板
@@ -454,32 +456,35 @@ def build_general_hull():
     m.cube("stack", (0.5, 13.4, 0.2), (3, 2, 1), "flag")                # 桅顶信号旗
     m.cube("stack", (-0.5, 15.4, 0.2), (1, 1, 1), "trim_gold")          # 桅顶金饰
 
-    # ---- 左右机械臂（镜像）；平台顶面 = 挂点 y ----
+    # ---- 左右机械臂（镜像）；平台顶面 = 挂点 y，中心 x = ±9.5 ----
+    # 玩家胳膊在 x 5..9（右舷 -9..-5），机械臂外移到 8.5..11.5：
+    # 平台中心 9.5、外缘立柱到 11.5，从正面看就在胳膊外侧，不再藏进躯干。
+    # 横臂加长到 x 3..9，继续从背板接出，作为唯一的水平连接梁。
     def arm(side, sign):
         # side: "left"/"right"；sign: +1 左舷 / -1 右舷
         mirror = (lambda o, s: ((-(o[0] + s[0]), o[1], o[2]), s)) if sign < 0 else \
                  (lambda o, s: (o, s))
         b = f"arm_{side}"
-        # 横臂：从背板伸到外侧立柱，藏在玩家手臂后面
-        o, s = mirror((2, -2.4, 1), (3, 1, 1))
+        # 水平连接梁：从背板外缘 x=3 伸到外移后的机械臂内侧 x=9
+        o, s = mirror((3, -2.4, 1), (6, 1, 1))
         m.cube(b, o, s, "armor_light")
-        # 肩块：把横臂和上层平台连成一体，从背面看是机械肩甲
-        o, s = mirror((3, -1.4, 1), (2, 2, 1))
+        # 肩块
+        o, s = mirror((8.5, -1.4, 1), (2, 2, 1))
         m.cube(b, o, s, "armor_light")
-        # 外侧立柱
-        o, s = mirror((4, -5.4, 1), (1, 4, 1))
+        # 外侧立柱（外缘 x=11.5）
+        o, s = mirror((10.5, -5.4, 1), (1, 4, 1))
         m.cube(b, o, s, "armor_mid")
         # 内侧立柱
-        o, s = mirror((2.5, -5.4, 1), (1, 4, 1))
+        o, s = mirror((8, -5.4, 1), (1, 4, 1))
         m.cube(b, o, s, "armor_mid")
-        # 上层炮位平台（SIDE_*_1 挂点）
-        o, s = mirror((3, -1.2, -1.6), (2, 1, 3))
+        # 上层炮位平台（SIDE_*_1；顶面 y=-0.2，覆盖挂点 z=-0.4）
+        o, s = mirror((8.5, -1.2, -1.6), (2, 1, 3))
         m.cube(b, o, s, "armor_light", {"up": "platform_ring"})
-        # 下层炮位平台（SIDE_*_2 挂点）
-        o, s = mirror((3, -4.6, -1.1), (2, 1, 3))
+        # 下层炮位平台（SIDE_*_2；顶面 y=-3.6，覆盖挂点 z=+0.4）
+        o, s = mirror((8.5, -4.6, -1.1), (2, 1, 3))
         m.cube(b, o, s, "armor_light", {"up": "platform_ring"})
         # 底部船体块（半个船身的下缘），外侧面一条黄铜水线
-        o, s = mirror((3, -5.4, -1.9), (2, 1, 4))
+        o, s = mirror((8.5, -5.4, -1.9), (2, 1, 4))
         m.cube(b, o, s, "armor_mid",
                {"east": "gold_stripe", "west": "gold_stripe"})
 

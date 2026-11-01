@@ -7,7 +7,8 @@
 
 坐标（与通用舰装架同一套，别搞反）：
     1 单位 = 1/16 格；原点 = 躯干 body pivot（applyBase 之后、XP(180) 之前）；
-    +Y 朝上；-Z 朝前；+X 左舷、-X 右舷。
+    +Y 朝上；+Z 朝船首（前）、-Z 朝船尾（后）；
+    +X 为实机角色右侧（用户实测确认；旧注释里的左右舷标签不再使用）。
 
 程序化占位在玩家空间（+Y 朝下、+Z 朝前）给出，换算到模型空间：
     model_x = player_x
@@ -16,11 +17,11 @@
 甲板面 player y 0.8..1.2 → model y -1.2..-0.8，取顶面 -0.8、厚 1 单位；
 DECK_1/2 挂点 player y 0.4 → model y -0.4，正好落在甲面上方 0.4 单位。
 
-甲板整体挂在右臂外侧（双臂外移后右臂外缘约 x=-11.5）：
-    内缘 x=-11.5（贴右臂外缘）、外缘 x=-18.5、中心 x=-15.0，宽 7、长 11。
+甲板整体挂在角色右侧（+X）机械臂外侧：
+    内缘 x=+11.5（贴 +X 臂外缘）、外缘 x=+18.5、中心 x=+15.0，宽 7、长 11。
     模型 +Z 是船首：甲板向 +Z 前伸，z=-2.0..+9.0（中心 z=+3.5），
     舰岛在船尾 z=-2.0..0.0；顶面 y=-0.8 平放。
-    后段短支架贴右臂外缘，前伸部分用内侧纵向龙骨 + 阶梯吊臂托住，
+    后段短支架贴 +X 臂外缘，前伸部分用内侧纵向龙骨 + 阶梯吊臂托住，
     不向躯干拉长梁。
 
 贴图 64×64、1:1（1 texel = 1/16 格）：所有面的 uv_size 等于面尺寸，
@@ -61,8 +62,8 @@ builder.MATERIALS.update({
 })
 
 # ---------------------------------------------------------------- 尺寸常量
-# 甲板面（模型空间）。挂在右臂外侧，宽 7、长 11，整体向 +Z（船首）前伸。
-DECK_X0, DECK_X1 = -18.5, -11.5    # 内缘贴右臂外缘 x=-11.5，外缘 -18.5
+# 甲板面（模型空间）。挂在角色右侧（+X）机械臂外侧，宽 7、长 11。
+DECK_X0, DECK_X1 = 11.5, 18.5      # 内缘贴 +X 臂外缘 x=+11.5，外缘 +18.5
 # z=-2.0..+9.0：舰岛在船尾 -2..0，甲板主体向 +Z 前伸到 +9（中心 z=+3.5）。
 DECK_Z0, DECK_Z1 = -2.0, 9.0
 DECK_LENGTH = int(DECK_Z1 - DECK_Z0)
@@ -72,8 +73,8 @@ DECK_THICKNESS = 1
 # DECK_1/2 挂点换算到模型空间（模型 +Z = 船首，与 Java 的 player z 同向）
 # DECK_1 靠后、DECK_2 靠前；两机足迹 z=-1.72..8.72，前后各留 0.28。
 DECK_MOUNTS = {
-    "DECK_1": (-15.0, -0.4, 1.0),
-    "DECK_2": (-15.0, -0.4, 6.0),
+    "DECK_1": (15.0, -0.4, 1.0),
+    "DECK_2": (15.0, -0.4, 6.0),
 }
 MOUNT_CLEARANCE = 0.4              # 飞机挂点应在甲面上方约 0.4 单位
 
@@ -127,7 +128,7 @@ def paint_deck_top(px, x0, y0, w, h):
 
 # ---------------------------------------------------------------- 模型
 def build_carrier_deck():
-    """右舷飞行甲板：挂在右臂外侧，木甲板面 + 外舷收边 + 短支架 + 小舰岛。
+    """角色右侧（+X）飞行甲板：挂在 +X 机械臂外侧，木甲板面 + 外舷收边 + 短支架 + 舰岛。
 
     几何总数 9 块，远低于 20 块上限：
       deck 骨骼  2 块（甲板本体、外舷加厚条）
@@ -136,49 +137,49 @@ def build_carrier_deck():
     """
     m = builder.BedrockModel(
         "geometry.carrier_deck", texture_size=64,
-        visible_bounds=(2, 2, (-0.95, 0.1, 0)),
+        visible_bounds=(2, 2, (0.95, 0.1, 0)),
         texel_scale=1,  # 严格 1:1，1 texel = 1/16 格
     )
     m.bone("root")
     # 支撑桁架跟随躯干，不参与待机浮动
     m.bone("mount", parent="root", pivot=(0, 0, 0))
     # 甲板整体做极轻微浮动；pivot 取甲板中心
-    m.bone("deck", parent="root", pivot=(-15.0, -1.3, 3.5))
+    m.bone("deck", parent="root", pivot=(15.0, -1.3, 3.5))
     # 舰岛挂在甲板上，叠一点独立摆动
-    m.bone("island", parent="deck", pivot=(-18.5, -0.8, -1.0))
+    m.bone("island", parent="deck", pivot=(18.5, -0.8, -1.0))
 
     # ---- 甲板本体：顶面 7×11 的跑道贴图，外舷侧面用金属收边 ----
     m.cube("deck", (DECK_X0, DECK_TOP_Y - DECK_THICKNESS, DECK_Z0),
            (7, DECK_THICKNESS, DECK_LENGTH), "deck_edge", {
                "up": "deck_top",
                "down": "deck_under",
-               "west": "metal_gray",   # west = 模型 -X，外舷侧
+               "east": "metal_gray",   # east = 模型 +X，外舷侧
            })
     # 外舷下方的一层加厚条，从侧面看像舰体舷台
-    m.cube("deck", (-18.9, -2.8, DECK_Z0), (1, 1, DECK_LENGTH), "metal_dark")
+    m.cube("deck", (17.9, -2.8, DECK_Z0), (1, 1, DECK_LENGTH), "metal_dark")
 
     # ---- 后段短支架 + 前伸吊臂（金属灰），不向躯干拉梁 ----
-    # 右臂外缘只有 x=-11.5 的立柱（z≈1..2）真正能受力：
-    #   1. 后段短支架：x -13.5..-11.5、z 1..3，东端面贴住右臂立柱；
+    # +X 臂外缘 x=+11.5（z=-9..+9 纵梁）真正能受力：
+    #   1. 后段短支架：x +11.5..+13.5、z 1..3，西端面贴住 +X 臂外缘；
     #   2. 内侧纵向龙骨：沿甲板内缘 z -2..+9，顶面贴甲板底面，把前后段托住；
     #   3. 两段阶梯吊臂：从后段支架向 +Z（船首）逐级下探，托住龙骨前段。
     # 三段都是轴对齐块，用台阶模拟斜撑（不引入非 90° 旋转）。
-    m.cube("mount", (-13.5, -3.0, 1.0), (2, 2, 2), "metal_gray")
-    m.cube("mount", (-13.0, -2.75, -2.0), (1, 1, 11), "metal_dark")
-    m.cube("mount", (-14.0, -3.2, 3.0), (2, 2, 4), "metal_gray")
-    m.cube("mount", (-14.5, -3.4, 7.0), (2, 2, 2), "metal_gray")
+    m.cube("mount", (11.5, -3.0, 1.0), (2, 2, 2), "metal_gray")
+    m.cube("mount", (12.0, -2.75, -2.0), (1, 1, 11), "metal_dark")
+    m.cube("mount", (12.0, -3.2, 3.0), (2, 2, 4), "metal_gray")
+    m.cube("mount", (12.5, -3.4, 7.0), (2, 2, 2), "metal_gray")
 
-    # ---- 右舷小舰岛：1 宽 × 2 深，放在船尾外舷 ----
-    # 舰岛 x=-19.0..-18.0、z=-2..0（甲板最尾端），一半搭甲板、一半探出舷外。
-    # DECK_1 飞机足迹最外到 x=-17.72，中间留 0.28 单位，不压飞机。
-    m.cube("island", (-19.0, -0.8, -2.0), (1, 2, 2), "armor_light", {
-        "west": "armor_mid",
+    # ---- 右侧小舰岛：1 宽 × 2 深，放在船尾外舷 ----
+    # 舰岛 x=+18..+19、z=-2..0（甲板最尾端），一半搭甲板、一半探出舷外。
+    # DECK_1 飞机足迹最外到 x=+17.72，中间留 0.28 单位，不压飞机。
+    m.cube("island", (18.0, -0.8, -2.0), (1, 2, 2), "armor_light", {
+        "east": "armor_mid",
         "up": "armor_white",
     })
-    m.cube("island", (-19.0, 1.2, -1.5), (1, 1, 1), "armor_white", {
-        "west": "armor_mid",
+    m.cube("island", (18.0, 1.2, -1.5), (1, 1, 1), "armor_white", {
+        "east": "armor_mid",
     })
-    m.cube("island", (-19.0, 2.2, -1.5), (1, 1, 1), "metal_dark")
+    m.cube("island", (18.0, 2.2, -1.5), (1, 1, 1), "metal_dark")
 
     return m
 
@@ -241,15 +242,15 @@ def print_coordinate_check():
               f"(deck x={DECK_X0}..{DECK_X1}, z={DECK_Z0}..{DECK_Z1})")
     print(f"deck center z={(DECK_Z0 + DECK_Z1) / 2:+.1f} "
           f"(模型 +Z = 船首，甲板向 +Z 前伸)")
-    # 舰岛 x=-19.0..-18.0、z=-2..0（船尾），半格搭在甲板外缘；与 DECK_1 足迹最外沿比较
-    island_x0, island_x1 = -19.0, -18.0
-    sprite_min_x = DECK_MOUNTS["DECK_1"][0] - half
+    # 舰岛 x=+18..+19、z=-2..0（船尾），半格搭在甲板外缘；与 DECK_1 足迹最外沿比较
+    island_x0, island_x1 = 18.0, 19.0
+    sprite_max_x = DECK_MOUNTS["DECK_1"][0] + half
     print(f"island x={island_x0}..{island_x1} z=-2..0  "
-          f"DECK_1 sprite min_x={sprite_min_x:.2f}  "
-          f"clearance={sprite_min_x - island_x1:+.2f}")
-    print("support: rear bracket x=-13.5..-11.5 z=1..3 (贴右臂立柱); "
-          "keel x=-13.0..-12.0 z=-2..9; "
-          "boom x=-14.5..-12.0 z=3..9 (阶梯吊臂)")
+          f"DECK_1 sprite max_x={sprite_max_x:.2f}  "
+          f"clearance={island_x0 - sprite_max_x:+.2f}")
+    print("support: rear bracket x=11.5..13.5 z=1..3 (贴 +X 臂外缘); "
+          "keel x=12.0..13.0 z=-2..9; "
+          "boom x=12.0..14.5 z=3..9 (阶梯吊臂)")
 
 
 # ---------------------------------------------------------------- 落盘

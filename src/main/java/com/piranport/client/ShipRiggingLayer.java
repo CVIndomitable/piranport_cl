@@ -3,6 +3,7 @@ package com.piranport.client;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import com.piranport.client.gecko.RiggingModelRegistry;
+import com.piranport.client.gecko.RiggingRenderContext;
 import com.piranport.rigging.RiggingLoadout;
 import com.piranport.rigging.RiggingMount;
 import net.minecraft.client.Minecraft;
@@ -58,8 +59,10 @@ public class ShipRiggingLayer extends RenderLayer<AbstractClientPlayer, PlayerMo
      * 避免两套坐标漂移。
      *
      * <p>用 {@link ItemDisplayContext#FIXED}：它的 display 只有 180° Y 旋转、scale 1、
-     * 无平移，最适合「模型底部原点直接落在挂点」的场景。但 BEWLR 的 3D 分支只在
-     * 第一/第三人称与 FIXED 下触发（其余上下文是 GUI 平面图标）。
+     * 无平移，最适合「模型底部原点直接落在挂点」的场景。BEWLR 只看上下文无法区分
+     * 「展示框的 FIXED」（要图标）与「舰装挂点的 FIXED」（要 3D），所以这里额外用
+     * {@link RiggingRenderContext} 标记「本次是舰装渲染」，BEWLR 只在
+     * {@code FIXED && isRiggingPass()} 时走 3D 分支。
      */
     private void renderMount(PoseStack poseStack, MultiBufferSource bufferSource, int packedLight,
                              AbstractClientPlayer player, RiggingMount mount, float launchPose) {
@@ -78,9 +81,17 @@ public class ShipRiggingLayer extends RenderLayer<AbstractClientPlayer, PlayerMo
         poseStack.mulPose(Axis.XP.rotationDegrees(180.0f));
         poseStack.scale(pose.scale(), pose.scale(), pose.scale());
 
-        Minecraft.getInstance().getItemRenderer().renderStatic(
-                mount.stack(), ItemDisplayContext.FIXED, packedLight, OverlayTexture.NO_OVERLAY,
-                poseStack, bufferSource, player.level(), player.getId() * 31 + mount.socket().ordinal());
+        // BEWLR 无法区分「展示框的 FIXED」和「舰装挂点的 FIXED」，用标记告诉它这次要 3D。
+        // try/finally 防止异常时把标记留在 true，导致后续展示框/手持变成 3D。
+        RiggingRenderContext.setRiggingPass(true);
+        try {
+            Minecraft.getInstance().getItemRenderer().renderStatic(
+                    mount.stack(), ItemDisplayContext.FIXED, packedLight, OverlayTexture.NO_OVERLAY,
+                    poseStack, bufferSource, player.level(),
+                    player.getId() * 31 + mount.socket().ordinal());
+        } finally {
+            RiggingRenderContext.setRiggingPass(false);
+        }
         poseStack.popPose();
     }
 }

@@ -3,6 +3,7 @@ package com.piranport.client;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.piranport.PiranPort;
+import com.piranport.client.gecko.RiggingRenderContext;
 import com.piranport.component.LoadedAmmo;
 import com.piranport.registry.ModDataComponents;
 import net.minecraft.client.Minecraft;
@@ -32,12 +33,12 @@ import java.util.function.Supplier;
 /**
  * 07 表批量主炮的通用自定义物品渲染（BEWLR）。
  *
- * <p>同一套逻辑服务多门炮：物品栏画 32x32 图标，第一/第三人称渲染对应
+ * <p>同一套逻辑服务多门炮：物品栏画 32x32 图标，舰装挂点（FIXED + rigging pass）渲染对应
  * {@code models/item/<id>_3d.json} 的立体炮塔。每门炮用 {@link Spec} 描述
  * 物品、图标和模型路径，避免为每门炮重复一份 180 行渲染器。</p>
  *
  * <p>WHY：物品模型无法按显示上下文切换模型，只有 BEWLR 能同时做到
- * 「物品栏是图标、手持是立体炮塔」。图标不依赖模型 JSON，直接绑定原贴图，
+ * 「物品栏/手持/展示框是图标、舰装挂点是立体炮塔」。图标不依赖模型 JSON，直接绑定原贴图，
  * 装填/空膛两态在这里按 LOADED_AMMO 组件选择。</p>
  */
 public class CatalogGunRenderer extends BlockEntityWithoutLevelRenderer {
@@ -152,23 +153,12 @@ public class CatalogGunRenderer extends BlockEntityWithoutLevelRenderer {
                              int packedLight, int packedOverlay) {
         if (!spec.matches(stack)) return;
 
-        if (isHandContext(displayContext)) {
+        if (displayContext == ItemDisplayContext.FIXED && RiggingRenderContext.isRiggingPass()) {
             renderGun3D(stack, poseStack, bufferSource, packedLight, packedOverlay);
         } else {
             renderFlatIcon(displayContext, isLoaded(stack), poseStack, bufferSource,
                     packedLight, packedOverlay);
         }
-    }
-
-    private static boolean isHandContext(ItemDisplayContext context) {
-        // 第一/第三人称持有 + 固定展示（舰装挂点、物品展示框）都画 3D 模型。
-        // FIXED 不放进来时，挂点只能拿到 renderFlatIcon 的平面图标。
-        // GUI 图标、地面掉落物（GUI / GROUND / NONE）保持 2D。
-        return context == ItemDisplayContext.FIRST_PERSON_RIGHT_HAND
-                || context == ItemDisplayContext.FIRST_PERSON_LEFT_HAND
-                || context == ItemDisplayContext.THIRD_PERSON_RIGHT_HAND
-                || context == ItemDisplayContext.THIRD_PERSON_LEFT_HAND
-                || context == ItemDisplayContext.FIXED;
     }
 
     private static boolean isLoaded(ItemStack stack) {

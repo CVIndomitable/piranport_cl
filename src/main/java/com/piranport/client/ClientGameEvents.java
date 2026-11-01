@@ -123,12 +123,29 @@ public class ClientGameEvents {
         }
     }
 
-    /** 侦察模式下隐藏玩家手/手臂 — 摄像机在飞机上 */
+    /**
+     * 第一人称手持规则：
+     * <ul>
+     *   <li>侦察模式：全部隐藏（摄像机在飞机上）</li>
+     *   <li>已变身：只有主手舰载机保留（飞机要拿在手里放飞），其余主手物品与副手核心全部隐藏；
+     *       武器只以舰装挂点形式出现</li>
+     * </ul>
+     */
     @SubscribeEvent
     public static void onRenderHand(RenderHandEvent event) {
         if (ClientReconData.isInReconMode()) {
             event.setCanceled(true);
+            return;
         }
+        net.minecraft.client.player.AbstractClientPlayer player = Minecraft.getInstance().player;
+        if (player == null) return;
+        if (!RiggingClientState.isRenderedAsTransformed(player)) return;
+        // 只有主手舰载机保留；副手（含核心）与主手其它物品都隐藏。
+        if (event.getHand() == net.minecraft.world.InteractionHand.MAIN_HAND
+                && event.getItemStack().getItem() instanceof com.piranport.item.AircraftItem) {
+            return;
+        }
+        event.setCanceled(true);
     }
 
     /** 烟雾隐身：观察者有隐身效果（身处烟雾）时不渲染其他实体 */

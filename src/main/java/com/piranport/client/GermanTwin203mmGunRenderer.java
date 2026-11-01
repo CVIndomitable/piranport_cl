@@ -3,6 +3,7 @@ package com.piranport.client;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.piranport.PiranPort;
+import com.piranport.client.gecko.RiggingRenderContext;
 import com.piranport.component.LoadedAmmo;
 import com.piranport.registry.ModDataComponents;
 import com.piranport.registry.ModItems;
@@ -28,12 +29,12 @@ import org.joml.Vector3f;
  *
  * <p>做法与 {@link Japanese127mmTwinGunRenderer} 一致：
  * <ul>
- *   <li>第一/第三人称：渲染 models/item/german_twin_203mm_gun_3d.json 的 3D 炮塔；</li>
+ *   <li>舰装挂点（FIXED + rigging pass）：渲染 models/item/german_twin_203mm_gun_3d.json 的 3D 炮塔；</li>
  *   <li>GUI/掉落物/展示框等：直接画 32x32 物品图标，保持普通物品的外观。</li>
  * </ul>
  *
  * <p>WHY：物品模型无法按显示上下文切换模型，只有 BEWLR 能同时做到
- * 「物品栏是图标、手持是立体炮塔」。图标不依赖模型 JSON，直接绑定原贴图，
+ * 「物品栏/手持/展示框是图标、舰装挂点是立体炮塔」。图标不依赖模型 JSON，直接绑定原贴图，
  * 装填/空膛两态在这里按 LOADED_AMMO 组件选择。
  */
 public class GermanTwin203mmGunRenderer extends BlockEntityWithoutLevelRenderer {
@@ -88,23 +89,12 @@ public class GermanTwin203mmGunRenderer extends BlockEntityWithoutLevelRenderer 
                              int packedLight, int packedOverlay) {
         if (!stack.is(ModItems.GERMAN_TWIN_203MM_GUN.get())) return;
 
-        if (isHandContext(displayContext)) {
+        if (displayContext == ItemDisplayContext.FIXED && RiggingRenderContext.isRiggingPass()) {
             renderGun3D(stack, poseStack, bufferSource, packedLight, packedOverlay);
         } else {
             renderFlatIcon(displayContext, isLoaded(stack), poseStack, bufferSource,
                     packedLight, packedOverlay);
         }
-    }
-
-    private static boolean isHandContext(ItemDisplayContext context) {
-        // 第一/第三人称持有 + 固定展示（舰装挂点、物品展示框）都画 3D 模型。
-        // FIXED 不放进来时，挂点只能拿到 renderFlatIcon 的平面图标。
-        // GUI 图标、地面掉落物（GUI / GROUND / NONE）保持 2D。
-        return context == ItemDisplayContext.FIRST_PERSON_RIGHT_HAND
-                || context == ItemDisplayContext.FIRST_PERSON_LEFT_HAND
-                || context == ItemDisplayContext.THIRD_PERSON_RIGHT_HAND
-                || context == ItemDisplayContext.THIRD_PERSON_LEFT_HAND
-                || context == ItemDisplayContext.FIXED;
     }
 
     private static boolean isLoaded(ItemStack stack) {

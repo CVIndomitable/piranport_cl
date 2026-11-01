@@ -4,7 +4,44 @@ package com.piranport.config;
 public final class ModEquipmentConfig {
     private ModEquipmentConfig() {}
 
+    // ===== 第一人称舰装渲染（RiggingFirstPersonLayer）=====
+    // WHY 全部下沉到终端：第一人称舰装是纯视觉手感，偏移/缩放/角度必须能在游戏里实时调，
+    // 否则每改一次都要重编译。键统一为 global.rigging_fp.*，默认值是一组「站在舰装内部」的估计值。
+    // 属性名避开终端的单位启发式（speed / reload_time / *_cooldown），否则会被显示成格秒或秒。
 
+    /** 第一人称舰装总开关。 */
+    public static final TerminalConfigValue<Boolean> RIGGING_FP_ENABLED =
+            TerminalConfigValue.bool("rigging_fp", "rigging_fp", "enabled", true);
+    /** 横向偏移（格，+X 屏幕右）。0 = 以视线为中轴。 */
+    public static final TerminalConfigValue<Double> RIGGING_FP_OFFSET_X =
+            TerminalConfigValue.number("rigging_fp", "rigging_fp", "offset_x", 0.0, -2.0, 2.0);
+    /** 纵向偏移（格，+Y 上）。负值把舰装往下压到视线下方。 */
+    public static final TerminalConfigValue<Double> RIGGING_FP_OFFSET_Y =
+            TerminalConfigValue.number("rigging_fp", "rigging_fp", "offset_y", -0.35, -2.0, 2.0);
+    /** 前后偏移（格，-Z 为视线前方）。默认放在相机前 1 格，避免被近裁剪面切掉。 */
+    public static final TerminalConfigValue<Double> RIGGING_FP_OFFSET_Z =
+            TerminalConfigValue.number("rigging_fp", "rigging_fp", "offset_z", -1.0, -2.0, 2.0);
+    /** 整体缩放。 */
+    public static final TerminalConfigValue<Double> RIGGING_FP_SCALE =
+            TerminalConfigValue.number("rigging_fp", "rigging_fp", "scale", 0.8, 0.1, 3.0);
+    /** 绕竖直轴旋转（度）；0 = 舰装与视线同向（看到的是舰装背面，双臂在屏幕两侧）。 */
+    public static final TerminalConfigValue<Double> RIGGING_FP_YAW =
+            TerminalConfigValue.number("rigging_fp", "rigging_fp", "yaw", 0.0, -180.0, 180.0);
+    /** 俯仰（度）。 */
+    public static final TerminalConfigValue<Double> RIGGING_FP_PITCH =
+            TerminalConfigValue.number("rigging_fp", "rigging_fp", "pitch", 0.0, -180.0, 180.0);
+    /** 翻滚（度）。 */
+    public static final TerminalConfigValue<Double> RIGGING_FP_ROLL =
+            TerminalConfigValue.number("rigging_fp", "rigging_fp", "roll", 0.0, -180.0, 180.0);
+    /**
+     * 是否渲染背部船体（hull_base）+ 烟囱/桅杆（stack）。
+     *
+     * <p>WHY 默认关闭：第一人称下烟囱/桅杆从模型原点向上伸出将近 1 格，会正好糊在视线中央。
+     * 关掉后只保留左右机械臂（以及飞行甲板、腰部鱼雷架），符合「舰装在屏幕两侧余光里」的规则。
+     * 想要完整船体时可以打开对比效果。
+     */
+    public static final TerminalConfigValue<Boolean> RIGGING_FP_SHOW_BODY =
+            TerminalConfigValue.bool("rigging_fp", "rigging_fp", "show_body", false);
 
     public static final TerminalConfigValue<Double> SONAR_RANGE =
             TerminalConfigValue.number("equipment", "equipment", "sonar_range", 64.0, 1.0, 256.0);

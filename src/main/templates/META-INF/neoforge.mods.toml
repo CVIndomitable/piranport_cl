@@ -41,6 +41,14 @@ Minecraft mod based on Warship Girls R (战舰少女R).
     ordering="AFTER"
     side="BOTH"
 
+# 玩家舰装使用 GeckoLib 的 Bedrock 几何与骨骼动画，客户端必须安装。
+[[dependencies.${mod_id}]]
+    modId="geckolib"
+    type="required"
+    versionRange="[4.9.3,)"
+    ordering="AFTER"
+    side="CLIENT"
+
 [[dependencies.${mod_id}]]
     modId="ponderer"
     type="optional"

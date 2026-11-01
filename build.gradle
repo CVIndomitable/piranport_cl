@@ -27,6 +27,11 @@ repositories {
         name = "Modrinth"
         url = "https://api.modrinth.com/maven"
     }
+    // GeckoLib 官方 Maven：玩家舰装使用 Bedrock 骨骼模型与动画，作为必需前置。
+    maven {
+        name = "GeckoLib"
+        url = "https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/"
+    }
 }
 
 base {
@@ -94,6 +99,12 @@ dependencies {
     // Touhou Little Maid — soft dependency for maid rigging compat (optional at runtime)
     compileOnly "maven.modrinth:touhou-little-maid:1.5.2-neoforge+mc1.21.1"
     localRuntime "maven.modrinth:touhou-little-maid:1.5.2-neoforge+mc1.21.1"
+
+    // GeckoLib — 内置（JarJar），玩家无需单独安装；变身舰装使用 Bedrock 几何 + 骨骼动画。
+    // jarJar 负责把 jar 嵌进最终产物，compileOnly/localRuntime 分别供编译与开发运行。
+    jarJar "software.bernie.geckolib:geckolib-neoforge-1.21.1:4.9.3"
+    compileOnly "software.bernie.geckolib:geckolib-neoforge-1.21.1:4.9.3"
+    localRuntime "software.bernie.geckolib:geckolib-neoforge-1.21.1:4.9.3"
 
     // ArchUnit — 架构约束测试
     testImplementation "org.junit.jupiter:junit-jupiter:5.11.0"

@@ -26,9 +26,9 @@ public final class RiggingModelRegistry {
     private static final List<RiggingModelDef> ALL;
 
     static {
-        // 四个导弹发射器的模型局部前向不一致：
-        // sy1 / terrier 导弹朝 +Z，mk14 / sea_dart 导弹朝 -Z（建模时与模型代理确认）。
-        register(missile("sy1_launcher", 180.0f, 0.30f));
+        // 模型局部前向：sy1 / mk14 / sea_dart 朝 -Z，terrier 朝 +Z。
+        // 渲染层用 Axis.XP(180) 做玩家模型 ↔ GeckoLib 的上下翻转；+Z 的模型额外转 180°。
+        register(missile("sy1_launcher", 0.0f, 0.30f));
         register(missile("mk14_harpoon_launcher", 0.0f, 0.30f));
         register(missile("terrier_launcher", 180.0f, 0.26f));
         register(missile("sea_dart_launcher", 0.0f, 0.30f));

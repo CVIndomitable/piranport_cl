@@ -7,7 +7,8 @@ package com.piranport.rigging;
  * <ul>
  *   <li>腰部左/右：各 1 个鱼雷发射器挂点（原大腿挂点，已改到腰部）</li>
  *   <li>左舷：2 个挂点，主炮或反舰导弹/火箭弹</li>
- *   <li>右舷：2 个挂点，主炮或反舰导弹/火箭弹；<b>只要快捷栏里有飞机，右舷整侧换成飞行甲板</b></li>
+ *   <li>右舷：2 个挂点，主炮或反舰导弹/火箭弹；飞行甲板挂在右臂<b>之外</b>，
+ *       有飞机时右舷炮位仍然可用</li>
  *   <li>后背：2 个挂点，深弹或防空导弹；上方是烟囱与桅杆（GeckoLib 船体模型）</li>
  *   <li>甲板：2 个飞机位，仅在有飞机时存在</li>
  * </ul>
@@ -20,9 +21,13 @@ package com.piranport.rigging;
 public enum RiggingSocket {
     LEG_LEFT,
     LEG_RIGHT,
+    /** 左后炮位。 */
     SIDE_LEFT_1,
+    /** 左前炮位。 */
     SIDE_LEFT_2,
+    /** 右后炮位。 */
     SIDE_RIGHT_1,
+    /** 右前炮位（主手优先落点）。 */
     SIDE_RIGHT_2,
     DECK_1,
     DECK_2,

@@ -24,19 +24,19 @@ public final class RiggingLoadoutResolver {
     private static final List<RiggingSocket> WAIST_SOCKETS =
             List.of(RiggingSocket.WAIST_LEFT, RiggingSocket.WAIST_RIGHT);
     /**
-     * 舷侧炮位的分配顺序：<b>按前后，不按左右</b>。
+     * 舷侧炮位的分配顺序：<b>右前 → 左前 → 右后 → 左后</b>。
      *
      * <p>WHY：舰装容量有限，只会显示其中几个炮位；候选列表已把当前选中槽排最前，
-     * 按「左前 → 右前 → 左后 → 右后」分配，主手武器就一定落在最前面的
-     * {@code SIDE_LEFT_1}，玩家低头就能看到自己当前拿的炮。
-     * 旧顺序（先填满左舷再填右舷）会让主手武器出现在左后，未必是最显眼的位置。
+     * 按这个顺序分配，主手武器一定落在最显眼的右前角 {@code SIDE_RIGHT_2}。
+     * 用户实机确认：玩家模型 +X 是左、+Z 是后，所以 x=-9.5、z=-6 的
+     * {@code SIDE_RIGHT_2} 才是右前；旧顺序把主手放到了左后 {@code SIDE_LEFT_1}。
+     *
+     * <p>甲板现在挂在右臂之外，右臂平台仍然存在，所以有飞机时也按同一顺序分配，
+     * 不再禁用右舷炮位（{@code hasAircraft} 只决定是否叠加甲板模型与飞机挂点）。
      */
-    private static final List<RiggingSocket> SIDE_FRONT_TO_BACK =
-            List.of(RiggingSocket.SIDE_LEFT_1, RiggingSocket.SIDE_RIGHT_1,
-                    RiggingSocket.SIDE_LEFT_2, RiggingSocket.SIDE_RIGHT_2);
-    /** 带飞机时右舷整侧换成飞行甲板，只剩左舷两个炮位，顺序仍是前 → 后。 */
-    private static final List<RiggingSocket> SIDE_FRONT_TO_BACK_CARRIER =
-            List.of(RiggingSocket.SIDE_LEFT_1, RiggingSocket.SIDE_LEFT_2);
+    private static final List<RiggingSocket> SIDE_ORDER =
+            List.of(RiggingSocket.SIDE_RIGHT_2, RiggingSocket.SIDE_LEFT_2,
+                    RiggingSocket.SIDE_RIGHT_1, RiggingSocket.SIDE_LEFT_1);
     private static final List<RiggingSocket> DECK_SOCKETS =
             List.of(RiggingSocket.DECK_1, RiggingSocket.DECK_2);
     private static final List<RiggingSocket> BACK_SOCKETS =
@@ -68,10 +68,11 @@ public final class RiggingLoadoutResolver {
      *   <li>主手是主炮 / 反舰导弹时，该槽最先占位；其余情况（主手是鱼雷、深弹、
      *       防空导弹或飞机）不特殊提前，所有武器按快捷栏 0→8 顺序</li>
      *   <li>鱼雷 → 腰部左、右</li>
-     *   <li>主炮 / 反舰导弹 / 火箭弹 → 按前后顺序占舷侧炮位：
-     *       无飞机时 左前 → 右前 → 左后 → 右后；有飞机时右舷换甲板，只剩 左前 → 左后。
-     *       主手是主炮/反舰导弹时该槽排最前，因此主手固定落在最前面的 {@code SIDE_LEFT_1}</li>
-     *   <li>有任意舰载机时右舷整侧改成飞行甲板，右舷炮位取消，飞机 → 甲板两个位</li>
+     *   <li>主炮 / 反舰导弹 / 火箭弹 → 按固定顺序占舷侧炮位：
+     *       <b>右前 → 左前 → 右后 → 左后</b>。主手是主炮/反舰导弹时该槽排最前，
+     *       因此主手固定落在右前角的 {@code SIDE_RIGHT_2}</li>
+     *   <li>有任意舰载机时叠加飞行甲板（在右臂之外），飞机 → 甲板两个位；
+     *       右臂炮位仍然可用，不再禁用右舷</li>
      *   <li>深弹 / 防空导弹 → 后背两个位</li>
      *   <li>超出容量的物品直接丢弃（物品栏、数值、开火都不受影响）</li>
      * </ol>
@@ -111,14 +112,11 @@ public final class RiggingLoadoutResolver {
         int side = 0;
         int deck = 0;
         int back = 0;
-        // 有飞机时右舷整侧换成飞行甲板，右舷炮位不存在。
-        List<RiggingSocket> sideSockets =
-                hasAircraft ? SIDE_FRONT_TO_BACK_CARRIER : SIDE_FRONT_TO_BACK;
         for (Candidate candidate : candidates) {
             RiggingSocket socket = switch (candidate.category()) {
                 case TORPEDO -> waist < WAIST_SOCKETS.size() ? WAIST_SOCKETS.get(waist++) : null;
                 case CANNON, MISSILE_ASM ->
-                        side < sideSockets.size() ? sideSockets.get(side++) : null;
+                        side < SIDE_ORDER.size() ? SIDE_ORDER.get(side++) : null;
                 case AIRCRAFT -> hasAircraft && deck < DECK_SOCKETS.size()
                         ? DECK_SOCKETS.get(deck++)
                         : null;

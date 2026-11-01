@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "piranport:item/dungeon_key_5",
+    "layer1": "piranport:item/dungeon_key_num_1"
+  }
+}

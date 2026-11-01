@@ -6,7 +6,7 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "piranport:dungeon_key_ch1",
+          "name": "piranport:dungeon_key_1_1",
           "functions": [
             {
               "function": "minecraft:set_components",

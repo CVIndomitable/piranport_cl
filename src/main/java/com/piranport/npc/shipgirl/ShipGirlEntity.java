@@ -1083,7 +1083,7 @@ public class ShipGirlEntity extends PathfinderMob implements Merchant {
                 new ItemStack(ModItems.FLAG_J.get(), 1),
                 4, 6, 0.05f));
         result.add(new MerchantOffer(
-                new ItemCost(ModItems.DUNGEON_KEY_CH1.get(), 1),
+                new ItemCost(ModItems.stageDungeonKey("1-1"), 1),
                 Optional.of(new ItemCost(Items.BOOK, 1)),
                 new ItemStack(ModItems.SHIP_GIRL_CONTRACT.get(), 1),
                 2, 12, 0.05f));

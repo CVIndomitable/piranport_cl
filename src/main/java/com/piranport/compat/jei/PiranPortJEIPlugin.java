@@ -40,8 +40,8 @@ public class PiranPortJEIPlugin implements IModPlugin {
 
     @Override
     public void registerItemSubtypes(mezz.jei.api.registration.ISubtypeRegistration registration) {
-        // 章节钥匙现在是七个独立物品。旧版通用钥匙仍注册解释器，避免旧存档里的
-        // stage/progress 组件在 JEI 中被错误去重。
+        // 主线关卡钥匙是 30 个独立物品，关卡由物品类型决定；通用活动钥匙仍按组件里的
+        // stage 区分，避免不同的活动关卡在 JEI 中被错误去重。
         registration.registerSubtypeInterpreter(com.piranport.registry.ModItems.DUNGEON_KEY.get(),
                 (stack, context) -> {
                     String stageId = DungeonKeyItem.getStageId(stack);

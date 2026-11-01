@@ -11,7 +11,6 @@ import com.piranport.dungeon.instance.NodeBattleField;
 import com.piranport.dungeon.key.DungeonKeyItem;
 import com.piranport.dungeon.saved.DungeonSavedData;
 import com.piranport.dungeon.script.DungeonScriptManager;
-import com.piranport.registry.ModItems;
 import com.piranport.advancement.ModAdvancements;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
@@ -381,9 +380,9 @@ public class DungeonEventHandler {
         // 结算保留现场供玩家自行离开；脚本调度器看到 COMPLETED 后自行移除，
         // 避免脚本正在遍历时回调删除当前 Map 条目。
 
-        // 实例马上会被 cleanupInstance 移除，完成度必须先落到钥匙上，
-        // 否则章节钥匙会因「instanceId 指向不存在的实例」被判失效。
-        recordStageClearedOnKey(instance, server);
+        // 实例马上会被 cleanupInstance 移除，必须先解绑钥匙上即将失效的 instanceId，
+        // 否则钥匙会因「instanceId 指向不存在的实例」被判失效；取出再插回即可重开新实例。
+        releaseKeyAfterClear(instance, server);
 
         // 奖励与结算页已在 settleNode(completes=true) 发放；
         // 这里只负责回城与清理，避免再发一页空奖励把刚发的列表盖掉。
@@ -405,17 +404,16 @@ public class DungeonEventHandler {
     }
 
     /**
-     * 通关时把本关写进章节钥匙的已通关集合，并解绑即将被清理的实例。
+     * 通关时解绑即将被清理的实例，让钥匙回到「未绑定」状态。
      *
      * <p>钥匙权威源是书台 BE；书台已毁时兜底扫描参与玩家背包里 instanceId 相同的钥匙。
-     * 旧版通用钥匙只绑一关，行为保持不变（不写集合、不解绑）。</p>
+     * 取出再插回讲台会按钥匙自身的关卡建一个全新实例（重打照发奖励）。</p>
      */
-    private static void recordStageClearedOnKey(DungeonInstance instance, MinecraftServer server) {
+    private static void releaseKeyAfterClear(DungeonInstance instance, MinecraftServer server) {
         ItemStack keyStack = findKeyBoundToInstance(instance, server);
-        if (!(keyStack.getItem() instanceof DungeonKeyItem key) || !key.isChapterKey()) return;
-        DungeonKeyItem.markStageCleared(keyStack, instance.getStageId());
+        if (!(keyStack.getItem() instanceof DungeonKeyItem)) return;
         DungeonKeyItem.clearInstanceId(keyStack);
-        PiranPort.LOGGER.info("[副本] 章节钥匙记录通关关卡 {}（instance {}）",
+        PiranPort.LOGGER.info("[副本] 通关后解绑钥匙：关卡 {}（instance {}）",
                 instance.getStageId(), instance.getInstanceId());
     }
 
@@ -653,36 +651,4 @@ public class DungeonEventHandler {
         event.setCanceled(true);
     }
 
-    // ===== 钥匙三源：章节通关纪念章发放 =====
-    private static void giveDeployMedal(ServerPlayer player, int chapterNum) {
-        if (chapterNum < 1 || chapterNum > 7) return;
-        ItemStack medal = switch (chapterNum) {
-            case 1 -> new ItemStack(ModItems.DEPLOY_MEDAL_CH1.get());
-            case 2 -> new ItemStack(ModItems.DEPLOY_MEDAL_CH2.get());
-            case 3 -> new ItemStack(ModItems.DEPLOY_MEDAL_CH3.get());
-            case 4 -> new ItemStack(ModItems.DEPLOY_MEDAL_CH4.get());
-            case 5 -> new ItemStack(ModItems.DEPLOY_MEDAL_CH5.get());
-            case 6 -> new ItemStack(ModItems.DEPLOY_MEDAL_CH6.get());
-            case 7 -> new ItemStack(ModItems.DEPLOY_MEDAL_CH7.get());
-            default -> ItemStack.EMPTY;
-        };
-        if (!medal.isEmpty()) {
-            if (!player.getInventory().add(medal)) {
-                player.drop(medal, false);
-            }
-            PiranPort.LOGGER.info("Gave deploy medal Ch{} to {}", chapterNum, player.getName().getString());
-        }
-    }
-
-    private static int parseChapterFromStageId(String stageId) {
-        if (stageId == null || stageId.isEmpty()) return -1;
-        if (stageId.startsWith("chapter_")) {
-            try {
-                return Integer.parseInt(stageId.substring("chapter_".length()));
-            } catch (NumberFormatException e) {
-                return -1;
-            }
-        }
-        return -1;
-    }
 }

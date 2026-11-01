@@ -23,6 +23,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class RuinKeyRuleTest {
 
     private static final Pattern STAGE_ID = Pattern.compile("\"piranport:dungeon_stage_id\"\\s*:\\s*\"([^\"]+)\"");
+    /** 主线关卡钥匙的物品 ID（dungeon_key_1_1 ～ dungeon_key_7_5）。 */
+    private static final Pattern MAINLINE_KEY =
+            Pattern.compile("\"piranport:dungeon_key_\\d+_\\d+\"");
 
     @Test
     void newcomerGetsFirstStage() {
@@ -59,7 +62,7 @@ class RuinKeyRuleTest {
     }
 
     /**
-     * 补给站 / 前哨站 / 深海基地不掉主线钥匙（dungeon_key_ch*）与传送门激活核心。
+     * 补给站 / 前哨站 / 深海基地不掉主线关卡钥匙（dungeon_key_&lt;章&gt;_&lt;关&gt;）与传送门激活核心。
      * 深海基地的活动钥匙（delusion_1 / hell_1）属于活动关卡，《海图/01》与《副本/17》允许掉落，
      * 因此只校验其关卡标识仅为这两个活动关，不把整个 dungeon_key 物品名一刀切。
      */
@@ -75,7 +78,7 @@ class RuinKeyRuleTest {
             try (InputStream in = getClass().getResourceAsStream("/data/piranport/loot_table/chests/" + name + ".json")) {
                 assertNotNull(in, name);
                 String text = new String(in.readAllBytes(), StandardCharsets.UTF_8);
-                assertFalse(text.contains("dungeon_key_ch"), name + " 不应再掉主线钥匙");
+                assertFalse(MAINLINE_KEY.matcher(text).find(), name + " 不应再掉主线关卡钥匙");
                 assertFalse(text.contains("portal_activation_core"), name + " 不应再掉传送门激活核心");
                 Matcher m = STAGE_ID.matcher(text);
                 while (m.find()) {

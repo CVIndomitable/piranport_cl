@@ -10,6 +10,8 @@ import net.minecraft.world.item.CreativeModeTabs;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
+import java.util.List;
+
 public class ModCreativeTabs {
     public static final DeferredRegister<CreativeModeTab> CREATIVE_TABS =
             DeferredRegister.create(Registries.CREATIVE_MODE_TAB, PiranPort.MOD_ID);
@@ -495,14 +497,7 @@ public class ModCreativeTabs {
                     .displayItems((parameters, output) -> {
                         output.accept(ModItems.UNICORN_HARP.get());
                         output.accept(ModItems.GUIDEBOOK.get());
-                        // 每章使用独立物品；章节号不再通过同一把钥匙的组件差分。
-                        output.accept(ModItems.DUNGEON_KEY_CH1.get());
-                        output.accept(ModItems.DUNGEON_KEY_CH2.get());
-                        output.accept(ModItems.DUNGEON_KEY_CH3.get());
-                        output.accept(ModItems.DUNGEON_KEY_CH4.get());
-                        output.accept(ModItems.DUNGEON_KEY_CH5.get());
-                        output.accept(ModItems.DUNGEON_KEY_CH6.get());
-                        output.accept(ModItems.DUNGEON_KEY_CH7.get());
+                        // 主线关卡钥匙在独立的「副本钥匙」标签页；这里只放章末奖章。
                         output.accept(ModItems.DEPLOY_MEDAL_CH1.get());
                         output.accept(ModItems.DEPLOY_MEDAL_CH2.get());
                         output.accept(ModItems.DEPLOY_MEDAL_CH3.get());
@@ -536,11 +531,28 @@ public class ModCreativeTabs {
                         output.accept(ModItems.GUNGNIR.get());
                     }).build());
 
+    // ===== 副本钥匙 — 通用活动钥匙 + 30 把主线关卡钥匙 =====
+    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> DUNGEON_KEYS_TAB =
+            CREATIVE_TABS.register("dungeon_keys_tab", () -> CreativeModeTab.builder()
+                    .title(Component.translatable("itemGroup.piranport.dungeon_keys"))
+                    .withTabsBefore(ResourceKey.create(Registries.CREATIVE_MODE_TAB, PiranPort.modId("props_tab")))  // 链式排序：紧接 props_tab
+                    .icon(() -> DungeonKeyItems.stageKey("1-1").getDefaultInstance())
+                    .displayItems((parameters, output) -> {
+                        // 通用钥匙只服务活动关；主线按章、按关列出，顺序与 DungeonKeyItems 一致。
+                        output.accept(ModItems.DUNGEON_KEY.get());
+                        for (List<String> stages : DungeonKeyItems.MAINLINE_STAGES.values()) {
+                            for (String stageId : stages) {
+                                net.minecraft.world.item.Item key = DungeonKeyItems.stageKey(stageId);
+                                if (key != null) output.accept(key);
+                            }
+                        }
+                    }).build());
+
     // ===== 设施 — 装填设施 / 合成台 / 蓝图 =====
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> FACILITY_TAB =
             CREATIVE_TABS.register("facility_tab", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.piranport.facility"))
-                    .withTabsBefore(ResourceKey.create(Registries.CREATIVE_MODE_TAB, PiranPort.modId("props_tab")))  // 链式排序：紧接 props_tab
+                    .withTabsBefore(ResourceKey.create(Registries.CREATIVE_MODE_TAB, PiranPort.modId("dungeon_keys_tab")))  // 链式排序：紧接 dungeon_keys_tab
                     .icon(() -> ModItems.WEAPON_WORKBENCH.get().getDefaultInstance())
                     .displayItems((parameters, output) -> {
                         output.accept(ModItems.RELOAD_FACILITY.get());

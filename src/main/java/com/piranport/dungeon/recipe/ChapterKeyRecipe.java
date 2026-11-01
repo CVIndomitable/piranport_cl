@@ -3,12 +3,15 @@ package com.piranport.dungeon.recipe;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.piranport.compat.MaterialCompat;
 import com.piranport.item.DeployMedalItem;
+import com.piranport.registry.DungeonKeyItems;
 import com.piranport.registry.ModItems;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.CraftingBookCategory;
@@ -17,9 +20,10 @@ import net.minecraft.world.item.crafting.CustomRecipe;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.level.Level;
+import net.neoforged.neoforge.common.Tags;
 
 /**
- * 第 2 章及以后的主线钥匙合成——策划决策/副本/17。
+ * 下一章 1-1 关卡钥匙的合成——策划决策/副本/17。
  *
  * <p>摆法（3×3，位置固定）：</p>
  * <pre>
@@ -28,12 +32,15 @@ import net.minecraft.world.level.Level;
  * 铝   铝 铝
  * </pre>
  *
- * <p>左上角放<b>上一章</b>的出击纪念章，正中铜锭，其余七格铝锭。
+ * <p>左上角放<b>上一章章末关</b>的出击纪念章，正中铜锭，其余七格铝锭。
  * 奖章只是进度凭证，<b>不消耗</b>（留在合成格内），铜锭与铝锭消耗。
- * 章节号由奖章自身章节 +1 推断，因此一份 {@code piranport:chapter_key} JSON
- * 即可覆盖 2～7 章。</p>
+ * 产出关卡 = 奖章章节 + 1 的 1-1（例如第 1 章奖章 → {@code 2-1} 钥匙；
+ * 第 6 章奖章 → {@code 7-1} 钥匙）。第 7 章奖章没有后继，不参与合成。</p>
  *
- * <p>第 1 章钥匙没有前置奖章，用普通有序合成 {@code chapter_key_1.json}。</p>
+ * <p>第 1 章的 1-1 钥匙没有前置奖章，用普通有序合成 {@code chapter_key_1.json}。</p>
+ *
+ * <p>铜锭/铝锭判定走 {@link MaterialCompat}，与配方 JSON 里的 {@code c:ingots/*}
+ * 标签保持一致：装了提供等价材料的模组时也能合成。</p>
  */
 public class ChapterKeyRecipe extends CustomRecipe {
 
@@ -67,17 +74,24 @@ public class ChapterKeyRecipe extends CustomRecipe {
         return chapter >= 2 && chapter <= 7 ? chapter : 0;
     }
 
+    /** 目标关卡：下一章的 1-1（关卡 ID 以连字符分隔，物品 ID 才用下划线）。 */
+    private static Item resultItem(int chapter) {
+        return DungeonKeyItems.stageKey(chapter + "-1");
+    }
+
     @Override
     public boolean matches(CraftingInput input, Level level) {
         // 必须正好 3×3，保证"左上/正中"两个约束位置有意义。
         if (input.width() != 3 || input.height() != 3) return false;
         if (input.getItem(0).getCount() != 1) return false;
         if (chapterFromMedal(input.getItem(0)) == 0) return false;
-        if (!input.getItem(4).is(Items.COPPER_INGOT) || input.getItem(4).getCount() != 1) return false;
+        ItemStack catalyst = input.getItem(4);
+        if (catalyst.getCount() != 1 || !MaterialCompat.matches(Items.COPPER_INGOT, catalyst)) return false;
         for (int i = 0; i < 9; i++) {
             if (i == 0 || i == 4) continue;
             ItemStack stack = input.getItem(i);
-            if (!stack.is(ModItems.ALUMINUM_INGOT.get()) || stack.getCount() != 1) return false;
+            if (stack.getCount() != 1
+                    || !MaterialCompat.matches(ModItems.ALUMINUM_INGOT.get(), stack)) return false;
         }
         return true;
     }
@@ -86,7 +100,8 @@ public class ChapterKeyRecipe extends CustomRecipe {
     public ItemStack assemble(CraftingInput input, HolderLookup.Provider registries) {
         int chapter = chapterFromMedal(input.getItem(0));
         if (chapter == 0) chapter = chapterNumber;
-        return new ItemStack(ModItems.chapterDungeonKey(chapter));
+        Item result = resultItem(chapter);
+        return result == null ? ItemStack.EMPTY : new ItemStack(result);
     }
 
     @Override
@@ -101,7 +116,7 @@ public class ChapterKeyRecipe extends CustomRecipe {
     /**
      * JEI / 配方书展示用输入。真实判定以 {@link #matches} 为准——
      * 「奖章章节 +1」这种跨格一致性无法用 Ingredient 表达，故这里给出形状：
-     * 左上奖章通配，正中铜锭，其余七格铝锭。
+     * 左上奖章通配，正中铜锭标签，其余七格铝锭标签。
      */
     @Override
     public NonNullList<Ingredient> getIngredients() {
@@ -109,8 +124,8 @@ public class ChapterKeyRecipe extends CustomRecipe {
                 ModItems.DEPLOY_MEDAL_CH1.get(), ModItems.DEPLOY_MEDAL_CH2.get(),
                 ModItems.DEPLOY_MEDAL_CH3.get(), ModItems.DEPLOY_MEDAL_CH4.get(),
                 ModItems.DEPLOY_MEDAL_CH5.get(), ModItems.DEPLOY_MEDAL_CH6.get());
-        Ingredient aluminum = Ingredient.of(ModItems.ALUMINUM_INGOT.get());
-        Ingredient copper = Ingredient.of(Items.COPPER_INGOT);
+        Ingredient aluminum = Ingredient.of(MaterialCompat.INGOTS_ALUMINUM);
+        Ingredient copper = Ingredient.of(Tags.Items.INGOTS_COPPER);
         return NonNullList.of(Ingredient.EMPTY,
                 anyMedal, aluminum, aluminum,
                 aluminum, copper, aluminum,
@@ -119,7 +134,8 @@ public class ChapterKeyRecipe extends CustomRecipe {
 
     @Override
     public ItemStack getResultItem(HolderLookup.Provider registries) {
-        return new ItemStack(ModItems.chapterDungeonKey(Math.max(2, chapterNumber)));
+        Item result = resultItem(Math.max(2, chapterNumber));
+        return result == null ? ItemStack.EMPTY : new ItemStack(result);
     }
 
     @Override

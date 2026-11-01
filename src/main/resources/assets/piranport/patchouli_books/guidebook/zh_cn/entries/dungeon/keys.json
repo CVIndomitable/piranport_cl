@@ -1,7 +1,7 @@
 {
   "name": "piranport.book.dungeon.keys",
   "category": "piranport:7_dungeon",
-  "icon": "piranport:dungeon_key_ch4",
+  "icon": "piranport:dungeon_key_1_1",
   "sortnum": 1,
   "pages": [
     {
@@ -15,7 +15,7 @@
     },
     {
       "type": "patchouli:crafting",
-      "recipe": "piranport:chapter_key_2",
+      "recipe": "piranport:chapter_key_from_medal",
       "text": "piranport.book.dungeon.keys.craft_ch2"
     },
     {

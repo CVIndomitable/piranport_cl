@@ -26,7 +26,8 @@ import java.util.Map;
 public final class MaterialCompat {
 
     // 本模组材料对应的 c: 通用标签；NeoForge 的 Tags 里没有收录，需自行创建
-    private static final TagKey<Item> INGOTS_ALUMINUM = commonTag("ingots/aluminum");
+    /** 铝锭通用标签；配方展示也用同一份定义，避免 getIngredients 与 matches 口径不一致。 */
+    public static final TagKey<Item> INGOTS_ALUMINUM = commonTag("ingots/aluminum");
     private static final TagKey<Item> RAW_MATERIALS_ALUMINUM = commonTag("raw_materials/aluminum");
 
     private MaterialCompat() {}

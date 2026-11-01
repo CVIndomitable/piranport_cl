@@ -83,6 +83,9 @@ public class PiranPort {
         ModDataComponents.DATA_COMPONENTS.register(modEventBus);
         ModBlocks.BLOCKS.register(modEventBus);
         ModItems.ITEMS.register(modEventBus);
+        // 30 把关卡钥匙与 ModItems 共用同一个 DeferredRegister；显式初始化，保证在
+        // RegisterEvent 之前入队（不能等首次用到时才加载本类）。
+        com.piranport.registry.DungeonKeyItems.init();
         ModCreativeTabs.CREATIVE_TABS.register(modEventBus);
         ModMenuTypes.MENU_TYPES.register(modEventBus);
         ModEntityTypes.ENTITY_TYPES.register(modEventBus);

@@ -2,6 +2,7 @@ package com.piranport.dungeon.event;
 
 import com.piranport.dungeon.data.StageData;
 import com.piranport.dungeon.key.DungeonKeyItem;
+import com.piranport.registry.DungeonKeyItems;
 import com.piranport.registry.ModItems;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -19,7 +20,7 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * 副本/21 主线奖励：每次通关固定三样——材料包、勋章、随机蓝图，重打照发。
+ * 副本/21 主线奖励：每次通关发材料包、随机蓝图与进度奖励（下一关钥匙或章末奖章），重打照发。
  * <p>节点自身的 {@code rewards} 由 {@link DungeonSettlementService} 另行发放，不走这里。
  * 活动 {@code goldencatcat}、彩蛋 {@code ulan} 与《副本/18》的妄想舰队/地狱群岛
  * 是特例，不套主线表。</p>
@@ -196,8 +197,20 @@ public final class MainlineRewardService {
             }
         }
 
-        // 勋章：每次通关 1 枚，旧「只有章末发」的规则作废。
-        giveMedal(player, chapter, result);
+        // 钥匙 / 奖章：非章末关发下一关钥匙，章末关发本章奖章（用于合成下一章 1-1 钥匙）。
+        // 每次通关都发，重打照发。
+        if (DungeonKeyItems.isFinalStage(stageId)) {
+            giveMedal(player, chapter, result);
+        } else {
+            String nextStage = DungeonKeyItems.nextStage(stageId);
+            Item nextKey = nextStage == null ? null : DungeonKeyItems.stageKey(nextStage);
+            if (nextKey != null) {
+                giveStack(player, new ItemStack(nextKey), result);
+            } else {
+                // 关卡表缺失时的兜底：至少不要吞掉本该发放的进度奖励。
+                giveMedal(player, chapter, result);
+            }
+        }
 
         // 蓝图：1-1 至 1-4 没有，2-1 起按关卡池抽 1 张。
         rollBlueprint(player, stageId, result);

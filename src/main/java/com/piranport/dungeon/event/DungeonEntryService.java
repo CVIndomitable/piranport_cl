@@ -54,12 +54,10 @@ public final class DungeonEntryService {
          * <p>补给站遗迹掉落的通用 {@code dungeon_key} 注册时 DUNGEON_STAGE_ID 默认为空串，
          * 从未绑定关卡。此前它和"关卡已删除"共用 {@link #NO_SUCH_STAGE}，玩家看到的是
          * 「钥匙上的关卡不存在（可能已被删除）」——把人引向"钥匙坏了/存档丢了"，
-         * 而真实原因是"这把钥匙是空白的，需要先合成为某个章节的钥匙"。</p>
+         * 而真实原因是"这把通用钥匙还没绑定关卡，需要改插一把对应关卡的钥匙"。</p>
          */
         BLANK_KEY("blank_key"),
         NO_SUCH_STAGE("no_such_stage"),
-        /** 章节钥匙当前关已通关：不能直接进本，必须回书台选其他未通关关卡。 */
-        STAGE_CLEARED("stage_cleared"),
         REJECTED("rejected"),
         NO_NODE("no_node");
 
@@ -116,11 +114,10 @@ public final class DungeonEntryService {
             return;
         }
         ItemStack key = lectern.getKeyStack();
-        // 必须解析 chapter_* → 真实关卡 ID：章节钥匙（ChapterKeyRecipe 产物）存的是章节 ID，
-        // 直接查 stages 表恒为 null，玩家看到的会是"钥匙上的副本不存在"。
+        // 关卡钥匙直接返回物品自带的固定关卡；通用活动钥匙读组件。
         String resolvedStageId = DungeonKeyItem.resolveStageId(key);
-        // 空白钥匙（无 stageId）单独报错：它从未绑定关卡，不是"关卡被删了"。
-        // 玩家需要的是"先去合成一把章节钥匙"这个指引，而不是去怀疑存档损坏。
+        // 空白通用钥匙（无 stageId）单独报错：它从未绑定关卡，不是"关卡被删了"。
+        // 玩家需要的是"先去拿一把对应关卡的钥匙"这个指引，而不是去怀疑存档损坏。
         if (resolvedStageId == null || resolvedStageId.isEmpty()) {
             Reject.BLANK_KEY.report(player);
             return;
@@ -128,13 +125,6 @@ public final class DungeonEntryService {
         StageData stage = DungeonRegistry.INSTANCE.getStage(resolvedStageId);
         if (stage == null) {
             Reject.NO_SUCH_STAGE.report(player);
-            return;
-        }
-        // 已通关的章节关卡不能再用同一把钥匙进本：书台此时处于「等待选关」，
-        // 入口请求（继续 / 从头开始 / 点节点）都必须先回书台选其他关。
-        if (key.getItem() instanceof DungeonKeyItem chapterKey && chapterKey.isChapterKey()
-                && DungeonKeyItem.isStageCleared(key, resolvedStageId)) {
-            Reject.STAGE_CLEARED.report(player);
             return;
         }
         DungeonInstanceManager manager = DungeonInstanceManager.get(player.serverLevel());

@@ -1,7 +1,6 @@
 package com.piranport.dungeon.key;
 
 import com.piranport.dungeon.block.DungeonLecternBlock;
-import com.piranport.dungeon.data.ChapterData;
 import com.piranport.dungeon.data.DungeonRegistry;
 import com.piranport.dungeon.data.StageData;
 import com.piranport.registry.ModDataComponents;
@@ -15,35 +14,39 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.LevelReader;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
+/**
+ * 副本钥匙。两种形态：
+ *
+ * <ul>
+ *   <li><b>关卡钥匙</b>（{@code fixedStageId != null}）：30 把主线钥匙，物品类型即关卡，
+ *       插上书台就固定进这一关，关卡不可修改；</li>
+ *   <li><b>通用钥匙</b>（{@code fixedStageId == null}）：活动关（妄想/地狱/金猫猫/ulan）
+ *       使用，关卡写在 {@link ModDataComponents#DUNGEON_STAGE_ID} 组件里。</li>
+ * </ul>
+ */
 public class DungeonKeyItem extends Item {
-    /**
-     * 章节钥匙的章节号。0 表示旧版通用钥匙；旧钥匙仍通过
-     * {@link com.piranport.registry.ModDataComponents#DUNGEON_STAGE_ID} 兼容读取。
-     */
-    private final int chapterNumber;
+    /** 固定关卡 ID；null 表示通用活动钥匙（关卡从组件读取）。 */
+    @Nullable
+    private final String fixedStageId;
 
     public DungeonKeyItem(Properties props) {
-        this(0, props);
+        this(null, props);
     }
 
-    /** 创建一个绑定固定章节的钥匙。章节号属于物品类型，不再写在钥匙组件里做差分。 */
-    public DungeonKeyItem(int chapterNumber, Properties props) {
+    /** 创建一个绑定固定关卡的钥匙。关卡属于物品类型，不再写在钥匙组件里做差分。 */
+    public DungeonKeyItem(String fixedStageId, Properties props) {
         super(props);
-        this.chapterNumber = chapterNumber;
+        this.fixedStageId = fixedStageId;
     }
 
-    public int getChapterNumber() {
-        return chapterNumber;
-    }
-
-    public boolean isChapterKey() {
-        return chapterNumber >= 1;
+    @Nullable
+    public String getFixedStageId() {
+        return fixedStageId;
     }
 
     /**
@@ -94,70 +97,33 @@ public class DungeonKeyItem extends Item {
             }
         }
 
-        UUID instanceId = stack.get(ModDataComponents.DUNGEON_INSTANCE_ID.get());
-        if (instanceId != null) {
-            DungeonProgress progress = stack.getOrDefault(
-                    ModDataComponents.DUNGEON_PROGRESS.get(), DungeonProgress.EMPTY);
-            if (!progress.clearedNodes().isEmpty()) {
-                tooltip.add(Component.translatable("item.piranport.dungeon_key.progress",
-                        progress.clearedNodes().size()).withStyle(ChatFormatting.AQUA));
-            }
+        DungeonProgress progress = stack.getOrDefault(
+                ModDataComponents.DUNGEON_PROGRESS.get(), DungeonProgress.EMPTY);
+        if (!progress.clearedNodes().isEmpty()) {
+            tooltip.add(Component.translatable("item.piranport.dungeon_key.progress",
+                    progress.clearedNodes().size()).withStyle(ChatFormatting.AQUA));
         }
     }
 
-    /**
-     * Gets the stage ID from a dungeon key stack.
-     */
     /**
      * 把钥匙上的"入口 ID"解析成真实的关卡 ID。
      *
-     * <p><b>为什么需要这一步：</b>钥匙的 {@code DUNGEON_STAGE_ID} 并不总是关卡 ID。
-     * {@link com.piranport.dungeon.recipe.ChapterKeyRecipe} 合成出来的章节钥匙写的是
-     * {@code chapter_*}（如 {@code chapter_1}），而 {@code DungeonRegistry} 里
-     * {@code stages} 表只认 {@code 1-1} 这类关卡 ID、{@code chapter_1} 在 {@code chapters} 表里。
-     * 直接拿 chapter ID 去 {@code getStage} 必然返回 null → 入口报
-     * "钥匙上的副本不存在"——这正是"点继续/从头开始都进不去"的根因。</p>
+     * <p>关卡钥匙直接返回物品自带的固定关卡；通用活动钥匙读
+     * {@link ModDataComponents#DUNGEON_STAGE_ID} 组件。解析结果是唯一入口，
+     * 入口服务与书台必须共用，避免出现"对话框显示了关卡名、点进去却说副本不存在"。</p>
      *
-     * <p>解析规则与讲台打开 ContinueScreen 时的显示名回退（{@code DungeonLecternBlock.useWithoutItem}）
-     * 完全一致，两处必须同进退，否则会出现"对话框显示了章节名、点进去却说副本不存在"。
-     * 因此这里做成唯一的解析入口，两边共用。</p>
-     *
-     * @return 真实关卡 ID；无法解析时返回原值（调用方据此报错，不要静默替换成默认关卡）
+     * @return 真实关卡 ID；无法解析时返回空串（调用方据此报错，不要静默替换成默认关卡）
      */
     public static String resolveStageId(ItemStack stack) {
-        String id = getStageId(stack);
-        if (id.startsWith("chapter_")) {
-            ChapterData chapter = DungeonRegistry.INSTANCE.getChapter(id);
-            if (chapter != null && !chapter.stages().isEmpty()) {
-                return chapter.stages().get(0);
-            }
-        }
-        return id;
+        return getStageId(stack);
     }
 
+    /** 关卡钥匙返回固定关卡；通用钥匙返回组件里的关卡。 */
     public static String getStageId(ItemStack stack) {
-        String stored = stack.getOrDefault(ModDataComponents.DUNGEON_STAGE_ID.get(), "");
-        if (!stored.isEmpty()) return stored;
-        if (stack.getItem() instanceof DungeonKeyItem key && key.isChapterKey()) {
-            return "chapter_" + key.getChapterNumber();
+        if (stack.getItem() instanceof DungeonKeyItem key && key.fixedStageId != null) {
+            return key.fixedStageId;
         }
-        return "";
-    }
-
-    /** 返回钥匙所属章节；旧版通用钥匙从旧组件回退解析。 */
-    public static int getChapterNumber(ItemStack stack) {
-        if (stack.getItem() instanceof DungeonKeyItem key && key.isChapterKey()) {
-            return key.getChapterNumber();
-        }
-        String stageId = stack.getOrDefault(ModDataComponents.DUNGEON_STAGE_ID.get(), "");
-        if (stageId.startsWith("chapter_")) {
-            try {
-                return Integer.parseInt(stageId.substring("chapter_".length()));
-            } catch (NumberFormatException ignored) {
-                // fall through to the legacy unknown value
-            }
-        }
-        return 0;
+        return stack.getOrDefault(ModDataComponents.DUNGEON_STAGE_ID.get(), "");
     }
 
     /**
@@ -189,49 +155,19 @@ public class DungeonKeyItem extends Item {
     }
 
     /**
-     * 解绑实例。章节钥匙通关后调用：实例即将被清理，钥匙回到「等待选关」，
-     * 而不是继续挂着一个已不存在的 UUID 被判失效。
+     * 解绑实例。通关后调用：实例即将被清理，钥匙回到「未绑定」，
+     * 而不是继续挂着一个已不存在的 UUID 被判失效。取出再插回即可重开新实例。
      */
     public static void clearInstanceId(ItemStack stack) {
         stack.remove(ModDataComponents.DUNGEON_INSTANCE_ID.get());
     }
 
-    // ===== 章节通关记录（副本/17「换关」） =====
-
-    public static java.util.Set<String> getClearedStages(ItemStack stack) {
-        return ChapterKeyProgress.clearedStages(stack);
-    }
-
-    public static boolean isStageCleared(ItemStack stack, String stageId) {
-        return ChapterKeyProgress.isStageCleared(stack, stageId);
-    }
-
-    public static void markStageCleared(ItemStack stack, String stageId) {
-        ChapterKeyProgress.markStageCleared(stack, stageId);
-    }
-
-    public static boolean isChapterFullyCleared(ItemStack stack) {
-        return ChapterKeyProgress.isChapterFullyCleared(stack);
-    }
-
+    /**
+     * 写入关卡。关卡钥匙的关卡由物品类型决定，写入会被忽略；只有通用活动钥匙会写组件。
+     */
     public static void setStageId(ItemStack stack, String stageId) {
+        if (stack.getItem() instanceof DungeonKeyItem key && key.fixedStageId != null) return;
         stack.set(ModDataComponents.DUNGEON_STAGE_ID.get(), stageId);
-    }
-
-    /** 章节钥匙换关时，把离开的关卡实例登记到钥匙上，之后切回来仍接着打。 */
-    public static void stashStageRun(ItemStack stack, String stageId, UUID instanceId) {
-        if (instanceId == null) return;
-        Map<String, UUID> runs = new HashMap<>(stack.getOrDefault(ModDataComponents.DUNGEON_STAGE_RUNS.get(), Map.of()));
-        runs.put(stageId, instanceId);
-        stack.set(ModDataComponents.DUNGEON_STAGE_RUNS.get(), runs);
-    }
-
-    /** 取出并移除某关已登记的实例；没有则返回 null（该关尚未建过实例）。 */
-    public static UUID takeStageRun(ItemStack stack, String stageId) {
-        Map<String, UUID> runs = new HashMap<>(stack.getOrDefault(ModDataComponents.DUNGEON_STAGE_RUNS.get(), Map.of()));
-        UUID id = runs.remove(stageId);
-        stack.set(ModDataComponents.DUNGEON_STAGE_RUNS.get(), runs);
-        return id;
     }
 
     // ========== 钥匙槽位工具（迁移自 FlagshipManager，整合版 §2.2：钥匙插在讲台上，FlagshipManager 玩家权限概念已取消）==========

@@ -2,7 +2,7 @@
   "id": "piranport:dungeon_lectern_entry",
   "items": [
     "piranport:dungeon_lectern",
-    "piranport:dungeon_key_ch1"
+    "piranport:dungeon_key_1_1"
   ],
   "title": {
     "zh_cn": "皮兰港：书台进本流程",
@@ -52,7 +52,7 @@
           "pos": [2.5, 3.5, 2.5],
           "motion": [0.0, -0.03, 0.0],
           "count": 1,
-          "item": "piranport:dungeon_key_ch1",
+          "item": "piranport:dungeon_key_1_1",
           "attachKeyFrame": true
         },
         {
@@ -61,7 +61,7 @@
           "point": [2.5, 1.8, 2.5],
           "direction": "down",
           "action": "right",
-          "item": "piranport:dungeon_key_ch1",
+          "item": "piranport:dungeon_key_1_1",
           "attachKeyFrame": false
         },
         {

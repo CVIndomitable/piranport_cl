@@ -198,11 +198,6 @@ public class ModPackets {
                 com.piranport.dungeon.network.SelectNodePayload::handle
         );
         registrar.playToServer(
-                com.piranport.dungeon.network.SelectStagePayload.TYPE,
-                com.piranport.dungeon.network.SelectStagePayload.STREAM_CODEC,
-                com.piranport.dungeon.network.SelectStagePayload::handle
-        );
-        registrar.playToServer(
                 com.piranport.dungeon.network.TownScrollUsePayload.TYPE,
                 com.piranport.dungeon.network.TownScrollUsePayload.STREAM_CODEC,
                 com.piranport.dungeon.network.TownScrollUsePayload::handle

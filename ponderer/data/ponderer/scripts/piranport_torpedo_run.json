@@ -128,7 +128,7 @@
         },
         {
           "type": "idle",
-          "duration": 30
+          "duration": 60
         },
         {
           "type": "move_section",
@@ -169,7 +169,7 @@
         },
         {
           "type": "idle",
-          "duration": 20
+          "duration": 70
         },
         {
           "type": "text",
@@ -204,7 +204,7 @@
         },
         {
           "type": "idle",
-          "duration": 50
+          "duration": 70
         },
         {
           "type": "text",
@@ -223,7 +223,7 @@
         },
         {
           "type": "idle",
-          "duration": 60
+          "duration": 70
         },
         {
           "type": "text",

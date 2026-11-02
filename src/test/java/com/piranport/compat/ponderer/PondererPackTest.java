@@ -130,18 +130,32 @@ class PondererPackTest {
 
     @Test
     void textOverlaysHaveTimeToFinishBeforeNextCaptionAndSceneEnd() throws IOException {
-        for (DslScene.SceneSegment segment : readScene().scenes) {
-            int elapsedTicks = 0;
-            int textEndTick = 0;
-            for (DslScene.DslStep step : segment.steps) {
-                if ("idle".equals(step.type)) {
-                    elapsedTicks += step.durationOrDefault(20);
-                } else if ("text".equals(step.type)) {
-                    assertTrue(elapsedTicks >= textEndTick, segment.id + " has overlapping captions");
-                    textEndTick = elapsedTicks + step.durationOrDefault(60);
+        try (var scripts = Files.list(SOURCE.resolve("data/ponderer/scripts"))) {
+            for (Path script : scripts.filter(path -> path.toString().endsWith(".json")).toList()) {
+                DslScene scene;
+                try (var reader = Files.newBufferedReader(script, StandardCharsets.UTF_8)) {
+                    scene = GSON.fromJson(reader, DslScene.class);
+                }
+                assertNotNull(scene.id, script.toString());
+                assertFalse(scene.items.isEmpty(), script.toString());
+                assertLocalized(scene.title);
+                assertFalse(scene.scenes.isEmpty(), script.toString());
+                for (DslScene.SceneSegment segment : scene.scenes) {
+                    assertLocalized(segment.title);
+                    int elapsedTicks = 0;
+                    int textEndTick = 0;
+                    for (DslScene.DslStep step : segment.steps) {
+                        if ("idle".equals(step.type)) {
+                            elapsedTicks += step.durationOrDefault(20);
+                        } else if ("text".equals(step.type)) {
+                            assertLocalized(step.text);
+                            assertTrue(elapsedTicks >= textEndTick, segment.id + " has overlapping captions");
+                            textEndTick = elapsedTicks + step.durationOrDefault(60);
+                        }
+                    }
+                    assertTrue(elapsedTicks >= textEndTick, segment.id + " ends before its final caption");
                 }
             }
-            assertTrue(elapsedTicks >= textEndTick, segment.id + " ends before its final caption");
         }
     }
 

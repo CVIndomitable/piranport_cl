@@ -14,8 +14,8 @@
     {
       "id": "abandoned_portal",
       "title": {
-        "zh_cn": "野外的废弃传送门",
-        "en_us": "Abandoned Portals in the Wild"
+        "zh_cn": "书台与副本钥匙",
+        "en_us": "Lectern and Dungeon Key"
       },
       "steps": [
         {
@@ -36,8 +36,8 @@
           "type": "text",
           "duration": 80,
           "text": {
-            "zh_cn": "探险时留意海边的废弃传送门——框架底边外侧贴着一座空台面的海域出击书台，旁边箱子常能翻到钥匙碎片。",
-            "en_us": "While exploring, watch the coasts for abandoned portals — an empty Dungeon Lectern hugs the frame's bottom edge, and a nearby chest often holds key fragments."
+            "zh_cn": "海域出击书台本身就是副本入口，也可以合成后自行放置。准备一把副本钥匙。",
+            "en_us": "The Dungeon Lectern itself is the entrance. You can craft and place one; prepare a dungeon key."
           },
           "point": [2.5, 2.2, 2.5],
           "placeNearTarget": true,
@@ -68,8 +68,8 @@
           "type": "text",
           "duration": 80,
           "text": {
-            "zh_cn": "手持副本钥匙右键书台 → 插入。空书台不激活传送门，插钥匙的瞬间门框就开始响应。",
-            "en_us": "Right-click the lectern while holding a Dungeon Key to insert it. An empty lectern never activates the portal — the frame responds the moment a key lands."
+            "zh_cn": "手持副本钥匙右键空书台插入。插入后副本开始建造，等待书台纹路变绿。",
+            "en_us": "Right-click the empty lectern with a dungeon key to insert it. The instance begins building; wait until the lectern turns green."
           },
           "point": [2.5, 2.4, 2.5],
           "color": "input",
@@ -89,8 +89,8 @@
           "type": "text",
           "duration": 80,
           "text": {
-            "zh_cn": "钥匙就位后门常开：直接走进开口进本，或右键书台打开出击界面选择续打节点/回起点。",
-            "en_us": "With a key seated the portal stays open — walk straight in, or right-click the lectern to pick a checkpoint or restart from the entry screen."
+            "zh_cn": "纹路变绿后右键书台，在出击界面选择最新记录点或从头开始；不需要入口传送门。",
+            "en_us": "When the lectern turns green, right-click it and choose the latest checkpoint or restart. No entrance portal is needed."
           },
           "point": [2.5, 1.5, 2.5],
           "color": "green",
@@ -151,8 +151,8 @@
           "type": "text",
           "duration": 80,
           "text": {
-            "zh_cn": "潜行 + 右键（空手也行）把钥匙撤回背包。副本建造期间钥匙锁定，撤不下来。",
-            "en_us": "Sneak + right-click (even empty-handed) withdraws the key to your inventory. While the instance is building, the key stays locked in."
+            "zh_cn": "空手潜行并右键书台可收回钥匙。副本建造期间钥匙锁定，无法撤下。",
+            "en_us": "Sneak and right-click the lectern with an empty hand to withdraw the key. It stays locked while the instance is building."
           },
           "point": [2.5, 1.8, 2.5],
           "placeNearTarget": true,
@@ -171,8 +171,8 @@
           "type": "text",
           "duration": 80,
           "text": {
-            "zh_cn": "同一章的钥匙可手工合成：集齐该章钥匙碎片合成正式钥匙；钥匙也能拆解回收碎片换新章。",
-            "en_us": "Chapter keys are craftable — assemble a chapter's key fragments into a working key, or break a key back down into fragments for another chapter."
+            "zh_cn": "钥匙可以合成或复制；已绑定的钥匙保留其副本进度。具体配方请查看 JEI。",
+            "en_us": "Keys can be crafted or copied; a bound key retains its instance progress. See JEI for the recipes."
           },
           "point": [2.5, 1.5, 2.5],
           "color": "green",

@@ -1,0 +1,26 @@
+{
+  "id": "piranport:supply_chain", "items": ["piranport:ammo_workbench", "piranport:weapon_workbench", "piranport:reload_facility"],
+  "title": {"zh_cn": "皮兰港：武器与弹药后勤", "en_us": "Piran Port: Weapons and Ammunition Logistics"},
+  "tags": ["piranport", "crafting", "reload"], "editable": false,
+  "scenes": [{
+    "id": "production_and_loading", "title": {"zh_cn": "生产与装填", "en_us": "Production and Loading"},
+    "steps": [
+      {"type": "show_structure", "structure": "ponderer:basic"}, {"type": "idle", "duration": 20},
+      {"type": "set_block", "block": "piranport:ammo_workbench", "blockPos": [1, 1, 2]},
+      {"type": "create_item_entity", "item": "minecraft:iron_ingot", "pos": [1.5, 2.5, 2.5]},
+      {"type": "text", "duration": 100, "text": {"zh_cn": "收集和加工所需材料。在弹药工作台手动选择配方，生产对应武器的弹药。", "en_us": "Gather and process the required materials. Select a recipe manually at the ammo workbench to make compatible ammunition."}, "point": [1.5, 2.5, 2.5], "placeNearTarget": true, "attachKeyFrame": true},
+      {"type": "idle", "duration": 110},
+      {"type": "set_block", "block": "piranport:weapon_workbench", "blockPos": [2, 1, 2]},
+      {"type": "create_item_entity", "item": "piranport:quad_torpedo_launcher", "pos": [2.5, 2.5, 2.5]},
+      {"type": "text", "duration": 100, "text": {"zh_cn": "在武器工作台制作武器本体。查看 JEI 确认原料、蓝图及具体配方。", "en_us": "Make the weapon at the weapon workbench. Consult JEI for materials, blueprints and individual recipes."}, "point": [2.5, 2.5, 2.5], "placeNearTarget": true, "attachKeyFrame": true},
+      {"type": "idle", "duration": 110},
+      {"type": "set_block", "block": "piranport:reload_facility", "blockPos": [3, 1, 2]},
+      {"type": "create_item_entity", "item": "piranport:torpedo_533mm", "pos": [3.5, 2.5, 2.5]},
+      {"type": "text", "duration": 110, "text": {"zh_cn": "将鱼雷发射器和足量同口径鱼雷放入再装填设施，等待装满后取出。并非所有武器都使用这台设施。", "en_us": "Put a torpedo launcher and enough matching-caliber torpedoes into the reload facility. Wait for a full load and retrieve it; not every weapon uses this facility."}, "point": [3.5, 2.5, 2.5], "placeNearTarget": true, "attachKeyFrame": true},
+      {"type": "idle", "duration": 120},
+      {"type": "indicate_success", "blockPos": [3, 1, 2]},
+      {"type": "text", "duration": 100, "text": {"zh_cn": "装满的发射器可以带上出航。弹药耗尽后回到补给环节，形成生产与装填循环。", "en_us": "Take the loaded launcher on sortie. When ammunition runs out, return to the supply steps and repeat the production and loading cycle."}, "point": [3.5, 1.5, 2.5], "color": "green", "placeNearTarget": true, "attachKeyFrame": true},
+      {"type": "idle", "duration": 110}
+    ]
+  }]
+}

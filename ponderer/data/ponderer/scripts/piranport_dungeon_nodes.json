@@ -1,0 +1,24 @@
+{
+  "id": "piranport:dungeon_nodes", "items": ["piranport:dungeon_lectern", "piranport:dungeon_key_1_1"],
+  "title": {"zh_cn": "皮兰港：副本节点", "en_us": "Piran Port: Dungeon Nodes"},
+  "tags": ["piranport", "dungeon"], "editable": false,
+  "scenes": [{
+    "id": "progression", "title": {"zh_cn": "出击、分歧与记录", "en_us": "Entry, Branches and Checkpoints"},
+    "steps": [
+      {"type": "show_structure", "structure": "ponderer:basic"}, {"type": "idle", "duration": 20},
+      {"type": "set_block", "block": "piranport:dungeon_lectern", "blockPos": [1, 1, 2]},
+      {"type": "create_item_entity", "item": "piranport:dungeon_key_1_1", "pos": [1.5, 2.5, 2.5]},
+      {"type": "text", "duration": 100, "text": {"zh_cn": "钥匙插入书台、等待建造完成后，右键书台选择从头开始或从最新记录点进入。", "en_us": "Insert a key and wait for construction. Right-click the lectern to start over or enter from the latest checkpoint."}, "point": [1.5, 2.5, 2.5], "placeNearTarget": true, "attachKeyFrame": true},
+      {"type": "idle", "duration": 110},
+      {"type": "create_entity", "entity": "minecraft:zombie", "pos": [3.5, 2.0, 2.5], "yaw": 90.0, "pitch": 0.0},
+      {"type": "text", "duration": 100, "text": {"zh_cn": "进入节点后完成当前目标。节点完成后，跟随出口前往下一节点；示例中的僵尸代表敌人。", "en_us": "Complete the current node's objective, then follow its exit to the next node. The zombie represents an enemy."}, "point": [3.5, 2.5, 2.5], "placeNearTarget": true, "attachKeyFrame": true},
+      {"type": "idle", "duration": 110},
+      {"type": "set_block", "block": "minecraft:beacon", "blockPos": [3, 1, 3]},
+      {"type": "text", "duration": 110, "text": {"zh_cn": "遇到分歧时，走入可用的亮门选择航路。记录点解锁后可用于后续返场；信标仅代表记录点。", "en_us": "At a branch, enter an available lit gate to choose a route. An unlocked checkpoint can be used to return later; the beacon represents it."}, "point": [3.5, 2.0, 3.5], "placeNearTarget": true, "attachKeyFrame": true},
+      {"type": "idle", "duration": 120},
+      {"type": "indicate_success", "blockPos": [3, 1, 3]},
+      {"type": "text", "duration": 100, "text": {"zh_cn": "完成最终节点后结算离场；再次从书台出击时，可选择继续或重新开始。", "en_us": "Complete the final node to settle and leave. On a later sortie from the lectern, choose to continue or restart."}, "point": [3.5, 1.5, 3.5], "color": "green", "placeNearTarget": true, "attachKeyFrame": true},
+      {"type": "idle", "duration": 110}
+    ]
+  }]
+}

@@ -59,8 +59,8 @@
           "type": "text",
           "duration": 80,
           "text": {
-            "zh_cn": "手持核心潜行 + 右键使用：皮肤立即套用到你的玩家模型上，核心被消耗存进皮肤槽。普通右键不会有反应。",
-            "en_us": "Hold the core and sneak + right-click: the skin applies to your player model at once and the core is stored away. A plain right-click does nothing."
+            "zh_cn": "手持皮肤核心潜行右键，应用该外观并消耗核心；普通右键不会应用。",
+            "en_us": "Hold a skin core and sneak-right-click to apply its appearance and consume the core. Plain right-click does not apply it."
           },
           "point": [2.5, 2.6, 2.5],
           "color": "input",
@@ -80,8 +80,8 @@
           "type": "text",
           "duration": 80,
           "text": {
-            "zh_cn": "换皮肤不亏：对当前皮肤再用一次同款核心会卸下皮肤并把核心还回来；直接换别的核心时，旧核心自动退回背包。",
-            "en_us": "Skins are never lost: re-using the same core reverts the skin and hands it back, and swapping to a different core returns the old one to your inventory."
+            "zh_cn": "双手空置时潜行右键可恢复外观并返还核心；若同时启用实体核心，会先解除实体核心。切换到不同皮肤也会返还旧核心。",
+            "en_us": "With both hands empty, sneak-right-click to revert and recover the core. An active entity core is reverted first. Switching to a different skin also returns the old core."
           },
           "point": [2.5, 1.5, 2.5],
           "color": "green",
@@ -144,8 +144,8 @@
           "type": "text",
           "duration": 80,
           "text": {
-            "zh_cn": "皮肤渲染在你自己的模型上，手臂粗细随账号体型（Steve/Alex）。贴图不匹配时会出现拉伸错位，属于正常现象。",
-            "en_us": "The skin renders on your own model, so arm width follows your account body type (Steve/Alex). Mismatched art can look stretched — that's expected."
+            "zh_cn": "皮肤显示在玩家模型上；舰装的船体和武器层另行渲染，不改变玩家本体的碰撞箱。",
+            "en_us": "The skin renders on the player model. Rigging hull and weapon layers render separately and do not change the player's hitbox."
           },
           "point": [2.5, 2.4, 2.5],
           "placeNearTarget": true,

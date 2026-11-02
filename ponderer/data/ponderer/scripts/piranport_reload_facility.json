@@ -115,8 +115,8 @@
           "type": "text",
           "duration": 80,
           "text": {
-            "zh_cn": "下方漏斗 → 装填完毕的发射器出口。装填时间为 6 秒（120 tick）。",
-            "en_us": "Hopper below → output slot. Reload takes 6 seconds (120 ticks)."
+            "zh_cn": "下方漏斗 → 装填完毕的发射器出口。默认装填 6 秒，可在调试终端调整。",
+            "en_us": "Hopper below → output slot. Reload defaults to 6 seconds and can be adjusted in the debug terminal."
           },
           "point": [2.5, 0.7, 2.5],
           "color": "green",

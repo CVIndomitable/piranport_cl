@@ -22,7 +22,7 @@ Ponderer 直接扫描 `resourcepacks/` 中的教程 ZIP，不要求先在原版�
 - Ponderer 可从 Modrinth Maven 获取。本项目的回归测试使用 `maven.modrinth:the-ponderer:YzFWxoks`，对应 1.10.6.1 的 NeoForge 构建；这是仅测试依赖，不会打入模组。
 - `./gradlew test --tests 'com.piranport.compat.ponderer.*'` 检查正式 JAR 内嵌资源、首次安装、重复启动、升级、手改保护，并调用 Ponderer 实际的 `PonderPackInfo.fromZip`，检查脚本解析、双语文本和字幕等待间隔。
 
-当前共 20 个脚本。下表列出主要绑定物品；完整绑定以各脚本 `items` 为准。战斗和副本中的示例靶标、信标是示意，不代表虚拟场景运行了真实战斗或副本逻辑。
+当前共 24 个脚本。下表列出主要绑定物品；完整绑定以各脚本 `items` 为准。战斗和副本中的示例靶标、信标是示意，不代表虚拟场景运行了真实战斗或副本逻辑。
 
 | 脚本 ID | 绑定物品 | 章节数 |
 |---|---|---|
@@ -38,6 +38,10 @@ Ponderer 直接扫描 `resourcepacks/` 中的教程 ZIP，不要求先在原版�
 | `piranport:aviation_servicing`, `torpedo_run` | 飞机与航空补给 | 3 |
 | `piranport:torpedo_choices`, `torpedo_manual_reload` | 鱼雷、发射器 | 3 |
 | `piranport:asw_defense`, `air_defense` | 声呐、深弹、防空装备 | 2 |
+| `piranport:detection_equipment` | 对海、对空、火控雷达与声呐 | 2 |
+| `piranport:damage_control` | 烟雾弹、照明弹发射器、损管与修复物品 | 1 |
+| `piranport:shipgirl_orders` | 舰娘契约、指挥剑 | 1（召集与指挥） |
+| `piranport:villager_economy` | 战利品、工作站 | 1（村民与兑换） |
 | `piranport:dungeon_lectern_entry`, `dungeon_nodes` | 书台、钥匙 | 3 |
 | `piranport:supply_chain` | 弹药工作台、武器工作台、再装填设施 | 1 |
 

@@ -1,0 +1,28 @@
+{
+  "id": "piranport:asw_defense",
+  "items": ["piranport:standard_sonar", "piranport:swordfish_asw", "piranport:depth_charge_launcher", "piranport:depth_charge"],
+  "title": {"zh_cn": "皮兰港：反潜作战", "en_us": "Piran Port: Anti-submarine Warfare"},
+  "tags": ["piranport", "asw", "sonar"], "editable": false,
+  "scenes": [{
+    "id": "detect_and_attack", "title": {"zh_cn": "发现与攻击", "en_us": "Detect and Attack"},
+    "steps": [
+      {"type": "show_structure", "structure": "ponderer:basic"},
+      {"type": "idle", "duration": 20},
+      {"type": "set_block", "block": "minecraft:water", "blockPos": [0, 1, 0], "blockPos2": [4, 1, 4]},
+      {"type": "create_entity", "entity": "minecraft:drowned", "pos": [3.5, 1.0, 2.5], "yaw": 90.0, "pitch": 0.0},
+      {"type": "create_item_entity", "item": "piranport:standard_sonar", "pos": [1.5, 2.5, 2.5]},
+      {"type": "text", "duration": 110, "text": {"zh_cn": "把声呐装入舰装核心的强化槽并变身。被动声呐会标出附近生物，回波不等于敌人。", "en_us": "Install sonar in a core enhancement slot and transform. Passive sonar marks nearby creatures; a contact is not necessarily an enemy."}, "point": [1.5, 2.5, 2.5], "placeNearTarget": true, "attachKeyFrame": true},
+      {"type": "idle", "duration": 120},
+      {"type": "create_item_entity", "item": "piranport:swordfish_asw", "pos": [2.5, 3.0, 2.5]},
+      {"type": "text", "duration": 110, "text": {"zh_cn": "整备并放飞反潜机，它能发现水中生物；黄色标记同样不区分敌我，先确认目标。", "en_us": "Service and launch an ASW aircraft to find creatures in water. Yellow contacts do not identify friend or foe; check before attacking."}, "point": [3.5, 2.0, 2.5], "placeNearTarget": true, "attachKeyFrame": true},
+      {"type": "idle", "duration": 120},
+      {"type": "create_item_entity", "item": "piranport:depth_charge_launcher", "pos": [1.5, 3.0, 1.5]},
+      {"type": "create_item_entity", "item": "piranport:depth_charge", "pos": [2.5, 3.0, 1.5]},
+      {"type": "text", "duration": 100, "text": {"zh_cn": "装填深弹发射器或使用已挂载深弹的反潜机，攻击确认的水下敌人。", "en_us": "Load a depth-charge launcher or use an ASW aircraft carrying depth charges against a confirmed underwater enemy."}, "point": [2.5, 2.5, 2.5], "placeNearTarget": true, "attachKeyFrame": true},
+      {"type": "idle", "duration": 110},
+      {"type": "indicate_success", "blockPos": [3, 1, 2]},
+      {"type": "text", "duration": 90, "text": {"zh_cn": "目标被发现后仍需命中才能造成伤害；溺尸在此仅代表水下目标。", "en_us": "Detection alone does not deal damage: the attack must hit. The drowned here represents an underwater target."}, "point": [3.5, 1.5, 2.5], "color": "green", "placeNearTarget": true, "attachKeyFrame": true},
+      {"type": "idle", "duration": 100}
+    ]
+  }]
+}

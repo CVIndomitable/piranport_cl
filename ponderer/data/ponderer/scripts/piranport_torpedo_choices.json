@@ -1,0 +1,30 @@
+{
+  "id": "piranport:torpedo_choices",
+  "items": ["piranport:torpedo_533mm", "piranport:magnetic_torpedo_533mm", "piranport:acoustic_torpedo_533mm", "piranport:wire_guided_torpedo_533mm"],
+  "title": {"zh_cn": "皮兰港：鱼雷选型", "en_us": "Piran Port: Choosing Torpedoes"},
+  "tags": ["piranport", "torpedo"], "editable": false,
+  "scenes": [{
+    "id": "guidance_choices", "title": {"zh_cn": "直航与制导", "en_us": "Straight Running and Guidance"},
+    "steps": [
+      {"type": "show_structure", "structure": "ponderer:basic"},
+      {"type": "idle", "duration": 20},
+      {"type": "set_block", "block": "minecraft:water", "blockPos": [0, 1, 0], "blockPos2": [4, 1, 4]},
+      {"type": "create_entity", "entity": "minecraft:zombie", "pos": [3.5, 2.0, 2.5], "yaw": 90.0, "pitch": 0.0},
+      {"type": "create_item_entity", "item": "piranport:torpedo_533mm", "pos": [1.5, 2.5, 2.5]},
+      {"type": "text", "duration": 100, "text": {"zh_cn": "标准鱼雷沿发射方向直航。面对移动目标，先估计目标航向和鱼雷航行时间。", "en_us": "Standard torpedoes run straight. Against a moving target, lead it based on its heading and the torpedo's travel time."}, "point": [2.5, 2.5, 2.5], "placeNearTarget": true, "attachKeyFrame": true},
+      {"type": "idle", "duration": 110},
+      {"type": "create_item_entity", "item": "piranport:magnetic_torpedo_533mm", "pos": [1.5, 3.0, 1.5]},
+      {"type": "text", "duration": 100, "text": {"zh_cn": "磁性鱼雷靠近目标时可近炸，但仍需瞄准航路；近炸范围不能替代提前量。", "en_us": "Magnetic torpedoes can detonate near a target, but still need a well-aimed course and lead."}, "point": [3.5, 2.5, 2.5], "placeNearTarget": true, "attachKeyFrame": true},
+      {"type": "idle", "duration": 110},
+      {"type": "create_item_entity", "item": "piranport:acoustic_torpedo_533mm", "pos": [2.5, 3.0, 1.5]},
+      {"type": "text", "duration": 110, "text": {"zh_cn": "声导鱼雷能搜索并转向目标，但转向和探测范围有限；潜行目标更难被发现。", "en_us": "Acoustic torpedoes search for and turn toward targets, but detection and turning are limited. Sneaking targets are harder to detect."}, "point": [2.5, 3.0, 1.5], "placeNearTarget": true, "attachKeyFrame": true},
+      {"type": "idle", "duration": 120},
+      {"type": "create_item_entity", "item": "piranport:wire_guided_torpedo_533mm", "pos": [3.5, 3.0, 1.5]},
+      {"type": "text", "duration": 110, "text": {"zh_cn": "线导鱼雷使用鱼雷视角操纵；退出制导键默认为 V。导线超出长度后断开，鱼雷继续直航。", "en_us": "Guide a wire-guided torpedo from its own view; V exits guidance by default. Beyond the wire limit it disconnects and continues straight."}, "point": [3.5, 3.0, 1.5], "placeNearTarget": true, "attachKeyFrame": true},
+      {"type": "idle", "duration": 120},
+      {"type": "indicate_success", "blockPos": [3, 1, 2]},
+      {"type": "text", "duration": 100, "text": {"zh_cn": "选好适合目标的型号，用同口径发射器装填后发射。这里的僵尸仅代表目标。", "en_us": "Choose a suitable type and load it into a matching-caliber launcher. The zombie here only represents a target."}, "point": [3.5, 1.5, 2.5], "color": "green", "placeNearTarget": true, "attachKeyFrame": true},
+      {"type": "idle", "duration": 110}
+    ]
+  }]
+}

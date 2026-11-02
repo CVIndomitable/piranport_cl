@@ -92,8 +92,8 @@
           "type": "text",
           "duration": 80,
           "text": {
-            "zh_cn": "飞机在快捷栏且补给充足、无竞争时自动整备。资源紧张时，手持飞机按 R 分配补给。",
-            "en_us": "Aircraft in the hotbar are serviced automatically when supplies are sufficient. When supplies are contested, hold an aircraft and press R to allocate them."
+            "zh_cn": "当前版本中，变身后手持飞机，按装填键（默认 R）启动整备；补给不足时无法启动。",
+            "en_us": "In this version, transform, hold the aircraft and press the reload key (R by default) to start servicing. Insufficient supplies prevent it from starting."
           },
           "point": [2.5, 1.5, 2.5],
           "color": "green",

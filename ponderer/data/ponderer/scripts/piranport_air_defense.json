@@ -1,0 +1,26 @@
+{
+  "id": "piranport:air_defense",
+  "items": ["piranport:us_twin_oerlikon_20mm", "piranport:seacat_launcher", "piranport:seacat_missile"],
+  "title": {"zh_cn": "皮兰港：防空与近防", "en_us": "Piran Port: Air Defense"},
+  "tags": ["piranport", "air_defense"], "editable": false,
+  "scenes": [{
+    "id": "automatic_defense", "title": {"zh_cn": "自动防空", "en_us": "Automatic Air Defense"},
+    "steps": [
+      {"type": "show_structure", "structure": "ponderer:basic"},
+      {"type": "idle", "duration": 20},
+      {"type": "create_item_entity", "item": "piranport:small_ship_core", "pos": [1.5, 2.5, 2.5]},
+      {"type": "create_item_entity", "item": "piranport:us_twin_oerlikon_20mm", "pos": [2.5, 2.5, 2.5]},
+      {"type": "create_item_entity", "item": "piranport:seacat_launcher", "pos": [3.5, 2.5, 2.5]},
+      {"type": "text", "duration": 110, "text": {"zh_cn": "近防炮装在核心强化槽；防空导弹发射器是另一层防御，出航前检查装填。", "en_us": "Install CIWS in a core enhancement slot. An anti-air missile launcher provides another layer; check its ammunition before sailing."}, "point": [2.5, 2.5, 2.5], "placeNearTarget": true, "attachKeyFrame": true},
+      {"type": "idle", "duration": 120},
+      {"type": "create_entity", "entity": "minecraft:phantom", "pos": [3.5, 4.0, 2.5], "yaw": 90.0, "pitch": 0.0},
+      {"type": "text", "duration": 110, "text": {"zh_cn": "自动模式控制近防炮、防空导弹与战斗机自动升空。自动模式键默认为 H，用界面状态确认是否开启。", "en_us": "Auto mode controls CIWS, anti-air missiles and automatic fighter launch. Toggle it with H by default and check its HUD indicator."}, "point": [3.5, 4.0, 2.5], "placeNearTarget": true, "attachKeyFrame": true},
+      {"type": "idle", "duration": 120},
+      {"type": "text", "duration": 110, "text": {"zh_cn": "自动防空需要合适目标和可用装备；大口径炮开火或飞机起降后，近防炮会短暂停火。", "en_us": "Automatic defenses need a suitable target and usable equipment. CIWS pauses briefly after large guns fire or aircraft launch or land."}, "point": [2.5, 2.5, 2.5], "placeNearTarget": true, "attachKeyFrame": true},
+      {"type": "idle", "duration": 120},
+      {"type": "indicate_success", "blockPos": [3, 1, 2]},
+      {"type": "text", "duration": 90, "text": {"zh_cn": "目标进入有效范围后自动防御才会响应；幻翼仅用于代表空中威胁。", "en_us": "Automatic defense responds when a valid target enters range. The phantom only represents an air threat."}, "point": [3.5, 1.5, 2.5], "color": "green", "placeNearTarget": true, "attachKeyFrame": true},
+      {"type": "idle", "duration": 100}
+    ]
+  }]
+}

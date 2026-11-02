@@ -1,0 +1,26 @@
+{
+  "id": "piranport:villager_economy", "items": ["piranport:hentai_trophy", "piranport:weapon_workbench", "piranport:ammo_workbench", "piranport:stone_mill"],
+  "title": {"zh_cn": "皮兰港：村民与战利品", "en_us": "Piran Port: Villagers and Trophies"},
+  "tags": ["piranport", "villager", "economy"], "editable": false,
+  "scenes": [{
+    "id": "trade_cycle", "title": {"zh_cn": "获取与兑换", "en_us": "Earning and Trading"},
+    "steps": [
+      {"type": "show_structure", "structure": "ponderer:basic"}, {"type": "idle", "duration": 20},
+      {"type": "create_item_entity", "item": "piranport:hentai_trophy", "pos": [1.5, 2.5, 2.5]},
+      {"type": "create_entity", "entity": "minecraft:villager", "pos": [3.5, 2.0, 2.5], "yaw": 90.0, "pitch": 0.0},
+      {"type": "text", "duration": 110, "text": {"zh_cn": "从第二章起，部分敌方波次可能出现迷路的运输舰；击败它可获得战利品。", "en_us": "From chapter two onward, some enemy waves may include a lost transport ship. Defeat it to obtain a trophy."}, "point": [1.5, 2.5, 2.5], "placeNearTarget": true, "attachKeyFrame": true},
+      {"type": "idle", "duration": 120},
+      {"type": "set_block", "block": "piranport:weapon_workbench", "blockPos": [1, 1, 1]},
+      {"type": "set_block", "block": "piranport:ammo_workbench", "blockPos": [2, 1, 1]},
+      {"type": "set_block", "block": "piranport:stone_mill", "blockPos": [3, 1, 1]},
+      {"type": "text", "duration": 110, "text": {"zh_cn": "武器工作台、弹药工作台与石磨分别对应皮兰港武器匠、后勤员和农夫的工作站。", "en_us": "The weapon workbench, ammo workbench and stone mill are job sites for the port weaponsmith, quartermaster and farmer."}, "point": [2.5, 2.0, 1.5], "placeNearTarget": true, "attachKeyFrame": true},
+      {"type": "idle", "duration": 120},
+      {"type": "show_controls", "duration": 80, "point": [3.5, 2.0, 2.5], "direction": "down", "action": "right"},
+      {"type": "text", "duration": 110, "text": {"zh_cn": "与对应职业村民交易并提升职业等级。较高级交易可使用战利品兑换蓝图或特定装备。", "en_us": "Trade with the appropriate villager and raise their profession level. Higher-level offers can exchange trophies for blueprints or certain equipment."}, "point": [3.5, 2.5, 2.5], "placeNearTarget": true, "attachKeyFrame": true},
+      {"type": "idle", "duration": 120},
+      {"type": "indicate_success", "blockPos": [3, 1, 2]},
+      {"type": "text", "duration": 100, "text": {"zh_cn": "战利品是独立交易货币，不直接兑换绿宝石。查看村民当前报价和剩余交易次数。", "en_us": "Trophies are a separate trade currency, not exchanged directly for emeralds. Check each villager's current offers and remaining uses."}, "point": [3.5, 1.5, 2.5], "color": "green", "placeNearTarget": true, "attachKeyFrame": true},
+      {"type": "idle", "duration": 110}
+    ]
+  }]
+}

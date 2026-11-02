@@ -1,0 +1,24 @@
+{
+  "id": "piranport:shipgirl_orders", "items": ["piranport:ship_girl_contract", "piranport:richelieu_command_sword"],
+  "title": {"zh_cn": "皮兰港：舰娘与指挥", "en_us": "Piran Port: Ship Girls and Orders"},
+  "tags": ["piranport", "shipgirl", "orders"], "editable": false,
+  "scenes": [{
+    "id": "recruit_and_order", "title": {"zh_cn": "召集与指挥", "en_us": "Recruitment and Orders"},
+    "steps": [
+      {"type": "show_structure", "structure": "ponderer:basic"}, {"type": "idle", "duration": 20},
+      {"type": "create_item_entity", "item": "piranport:ship_girl_contract", "pos": [1.5, 2.5, 2.5]},
+      {"type": "show_controls", "duration": 80, "point": [2.5, 1.5, 2.5], "direction": "down", "action": "right", "item": "piranport:ship_girl_contract"},
+      {"type": "text", "duration": 100, "text": {"zh_cn": "手持舰娘契约，对有足够空间的方块右键，召集一名舰娘。", "en_us": "Hold a ship-girl contract and right-click a block with enough free space to summon a ship girl."}, "point": [1.5, 2.5, 2.5], "placeNearTarget": true, "attachKeyFrame": true},
+      {"type": "idle", "duration": 110},
+      {"type": "create_entity", "entity": "piranport:ship_girl", "pos": [3.5, 2.0, 2.5], "yaw": 90.0, "pitch": 0.0},
+      {"type": "text", "duration": 100, "text": {"zh_cn": "与舰娘互动可查看状态、对话与交易。潜行互动可切换其战斗 AI。", "en_us": "Interact with the ship girl to see status, dialogue and trades. Sneak-interact to toggle her combat AI."}, "point": [3.5, 2.5, 2.5], "placeNearTarget": true, "attachKeyFrame": true},
+      {"type": "idle", "duration": 110},
+      {"type": "create_item_entity", "item": "piranport:richelieu_command_sword", "pos": [2.5, 2.5, 2.5]},
+      {"type": "text", "duration": 110, "text": {"zh_cn": "不潜行时手持黎塞留指挥剑右键舰娘，可依次切换跟随、驻守与巡逻。留意聊天栏中的当前命令。", "en_us": "Without sneaking, right-click her with Richelieu's command sword to cycle follow, hold position and patrol. Check chat for the current order."}, "point": [2.5, 2.5, 2.5], "placeNearTarget": true, "attachKeyFrame": true},
+      {"type": "idle", "duration": 120},
+      {"type": "indicate_success", "blockPos": [3, 1, 2]},
+      {"type": "text", "duration": 100, "text": {"zh_cn": "收到跟随命令后，舰娘会向发出命令的玩家移动；驻守时则停留在当前位置附近。", "en_us": "On a follow order the ship girl moves toward the player who issued it; on hold she stays near her current position."}, "point": [3.5, 1.5, 2.5], "color": "green", "placeNearTarget": true, "attachKeyFrame": true},
+      {"type": "idle", "duration": 110}
+    ]
+  }]
+}

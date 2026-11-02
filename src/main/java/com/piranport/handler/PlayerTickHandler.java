@@ -2,7 +2,6 @@ package com.piranport.handler;
 
 import com.piranport.item.ShipType;
 import com.piranport.item.AutoCIWSItem;
-
 import com.piranport.PiranPort;
 import com.piranport.aviation.FireControlManager;
 import com.piranport.aviation.ReconManager;
@@ -10,10 +9,6 @@ import com.piranport.combat.AASilenceManager;
 import com.piranport.combat.AutoModeState;
 import com.piranport.combat.CombatTargeting;
 import com.piranport.combat.TransformationManager;
-import com.piranport.ammo.CreativeAmmoCache;
-import com.piranport.component.FuelData;
-import com.piranport.config.ModCommonConfig;
-
 import com.piranport.entity.AircraftEntity;
 import com.piranport.item.KirinHeadbandItem;
 import com.piranport.item.FootballArmorItem;
@@ -22,13 +17,9 @@ import com.piranport.item.RadarItem;
 import com.piranport.item.ShipCoreItem;
 import com.piranport.item.ShipCoreCombat;
 import com.piranport.registry.ModDataComponents;
-import com.piranport.registry.ModItems;
 import com.piranport.registry.ModMobEffects;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
@@ -44,20 +35,17 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.common.NeoForgeMod;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
-
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 玩家 Tick 处理器 — 驱动水上行走及服务端燃料、声呐、自动战斗等。
  *
  * <p><b>线程模型</b>: 水上行走由各逻辑端的玩家实例独立驱动，其余逻辑仅在服务端主线程运行。
- * 服务端缓存使用 ConcurrentHashMap 防御服务器关闭时的竞态条件。
+ * 燃料与负重状态分别由对应模块独占，入口只协调生命周期。
  * <p><b>缓存生命周期</b>:
- *   {@link #lastWeaponLoad} / {@link #lastPlayerPos} / {@link #accumulatedDistance} —
+ *   {@link PlayerLoadoutTick} / {@link PlayerFuelTick} 的缓存 —
  *   在 {@link #onPlayerLogout(UUID)} 中清理以单向释放内存，
  *   全局清理通过 {@link #clearCaches()} 在 {@link com.piranport.server.ServerGameEvents#onServerStopped} 中调用。
  * <p><b>访问限制</b>: 静态缓存仅供服务端使用，水上行走状态由 {@link WaterWalkingHandler} 隔离到玩家实例。
@@ -72,54 +60,41 @@ public class PlayerTickHandler {
     private static final int SLOWNESS_CLEANUP_INTERVAL = 20;
     /** 自动战斗检查间隔（tick）*/
     private static final int AUTO_COMBAT_INTERVAL = 40;
-    /** 负重检查间隔（tick）- 降低频率以提升性能 */
-    private static final int INVENTORY_LOAD_CHECK_INTERVAL = 10;
-    /** 传送检测距离阈值（格）- 降低以避免误判鞘翅飞行 */
-    private static final double TELEPORT_DETECTION_THRESHOLD = 64.0;
 
-    // ==================== 缓存 Maps ====================
-    /** 玩家 UUID → 上次背包武器总载重。用于属性重算检测。 */
-    private static final Map<UUID, Integer> lastWeaponLoad = new ConcurrentHashMap<>();
-    /** 玩家 UUID → 上次 tick 位置。用于计算移动距离（燃料消耗用）。 */
-    private static final Map<UUID, Vec3> lastPlayerPos = new ConcurrentHashMap<>();
-    /** 玩家 UUID → 累计移动距离。用于按距离驱动的燃料消耗。 */
-    private static final Map<UUID, Double> accumulatedDistance = new ConcurrentHashMap<>();
     /** 清理所有缓存（服务器关闭时调用）*/
     public static void clearCaches() {
-        lastWeaponLoad.clear();
-        lastPlayerPos.clear();
-        accumulatedDistance.clear();
+        PlayerLoadoutTick.clear();
+        PlayerFuelTick.clear();
     }
 
     /** 玩家登出时清理该玩家的缓存条目，防止长时间运行内存泄漏 */
     public static void onPlayerLogout(UUID uuid) {
-        lastWeaponLoad.remove(uuid);
-        lastPlayerPos.remove(uuid);
-        accumulatedDistance.remove(uuid);
+        PlayerLoadoutTick.forget(uuid);
+        PlayerFuelTick.forget(uuid);
     }
 
     /**
      * 强制使某玩家的载重缓存失效，让下一次 tick 无条件重算属性。
      *
      * <p>WHY 需要外部触发：tick 循环只在
-     * {@code Objects.hash(weaponLoad, armorLoad, maxLoad, engineBonus)} 变化时才重算。
-     * 调试终端改的是速度覆盖值，它不是这四个输入之一，写入后缓存仍然"命中"，
+     * {@code Objects.hash(weaponLoad, armorLoad, airborneLoad, maxLoad, engineBonus)} 变化时才重算。
+     * 调试终端改的是速度覆盖值，它不在这些输入中，写入后缓存仍然"命中"，
      * 结果就是「数值改了但角色速度不变」。删掉缓存条目即可让下一 tick 重算。
      */
     public static void invalidateLoadCache(Player player) {
         if (player != null) {
-            lastWeaponLoad.remove(player.getUUID());
+            PlayerLoadoutTick.forget(player.getUUID());
         }
     }
 
     /** 定期清理离线玩家的缓存条目，防止服务器崩溃导致的内存泄漏 */
-    public static void cleanupOfflinePlayers(net.minecraft.server.MinecraftServer server) {        java.util.Set<UUID> onlineUuids = server.getPlayerList().getPlayers().stream()
+    public static void cleanupOfflinePlayers(net.minecraft.server.MinecraftServer server) {
+        java.util.Set<UUID> onlineUuids = server.getPlayerList().getPlayers().stream()
                 .map(net.minecraft.world.entity.Entity::getUUID)
                 .collect(java.util.stream.Collectors.toSet());
 
-        lastWeaponLoad.keySet().removeIf(uuid -> !onlineUuids.contains(uuid));
-        lastPlayerPos.keySet().removeIf(uuid -> !onlineUuids.contains(uuid));
-        accumulatedDistance.keySet().removeIf(uuid -> !onlineUuids.contains(uuid));
+        PlayerLoadoutTick.retainOnline(onlineUuids);
+        PlayerFuelTick.retainOnline(onlineUuids);
     }
 
     @SubscribeEvent
@@ -131,7 +106,7 @@ public class PlayerTickHandler {
         // 其他逻辑只在服务端执行
         if (!isClientSide) {
             tickEquipmentPassives(player);
-            tickInventoryLoad(player);
+            PlayerLoadoutTick.tick(player);
             tickReconBodyLock(player);
         }
 
@@ -146,8 +121,7 @@ public class PlayerTickHandler {
             WaterWalkingHandler.clear(player);
             if (!isClientSide) {
                 AASilenceManager.clear(player);
-                lastPlayerPos.remove(player.getUUID());
-                accumulatedDistance.remove(player.getUUID());
+                PlayerFuelTick.forget(player.getUUID());
 
                 // 调试日志：帮助诊断变身检测失败
                 if (player.tickCount % 100 == 0 && player.isInWater()) {
@@ -169,7 +143,7 @@ public class PlayerTickHandler {
 
         // 服务端专属逻辑
         if (!isClientSide) {
-            tickFuelConsumption(player);
+            PlayerFuelTick.tick(player, PlayerLoadoutTick::forget);
             if (!TransformationManager.isPlayerTransformed(player)) {
                 WaterWalkingHandler.clear(player);
                 return;
@@ -229,14 +203,6 @@ public class PlayerTickHandler {
             player.addEffect(new MobEffectInstance(ModMobEffects.EXPERIENCE_BOOST, 25, 0, false, false, true));
         } else {
             player.removeEffect(ModMobEffects.EXPERIENCE_BOOST);
-        }
-    }
-
-    /** 检测背包武器变化并重算属性 */
-    private static void tickInventoryLoad(Player player) {
-        // 降低检查频率至每5tick，减少重复计算
-        if (player.tickCount % INVENTORY_LOAD_CHECK_INTERVAL == 0) {
-            tickInventoryLoadCheck(player);
         }
     }
 
@@ -471,182 +437,6 @@ public class PlayerTickHandler {
             tickAutoLaunchFighters(player, autoLaunchCore, autoLaunchSlot);
             tickAntiAirMissiles(player, autoLaunchCore, autoLaunchSlot);
         }
-    }
-
-    /**
-     * 通过配置的槽位驱动变身。
-     * 配置槽位放入核心 → 自动变身；移除核心 → 自动解除；核心不动 → 仅武器变化时重算属性。
-     */
-    private static void tickInventoryLoadCheck(Player player) {
-        Inventory inv = player.getInventory();
-        ItemStack coreStack = TransformationManager.getCoreFromConfiguredSlot(player);
-        boolean hasCoreEquipped = coreStack.getItem() instanceof ShipCoreItem;
-
-        if (hasCoreEquipped) {
-            if (!TransformationManager.isTransformed(coreStack)) {
-                FuelData fuel = coreStack.getOrDefault(ModDataComponents.SHIP_CORE_FUEL.get(),
-                        new FuelData(0, ((ShipCoreItem) coreStack.getItem()).getShipType().effectiveFuelCapacity()));
-                // 弹药库勾选了燃料：视为无限燃料，空油箱也允许变身（下一 tick 会补满）。
-                boolean infiniteFuel = CreativeAmmoCache.isInfinite(player, ModItems.FUEL.get());
-                if (fuel.isEmpty() && !infiniteFuel) {
-                    // 燃料不足提示（聊天框 + 动作栏）
-                    Integer cached = lastWeaponLoad.get(player.getUUID());
-                    if (cached == null || cached != -999) {
-                        lastWeaponLoad.put(player.getUUID(), -999);
-                        player.sendSystemMessage(
-                            Component.translatable("message.piranport.no_fuel_enhanced"));
-                        player.displayClientMessage(
-                            Component.translatable("message.piranport.no_fuel"), true);
-                    }
-                    return;
-                }
-                Integer cached = lastWeaponLoad.get(player.getUUID());
-                if (cached != null && cached == -999) {
-                    lastWeaponLoad.remove(player.getUUID());
-                }
-                TransformationManager.setTransformedAndWriteBack(player, coreStack, true);
-                // 重新读取核心以获取最新的ItemStack引用（DataComponents可能创建新实例）
-                coreStack = TransformationManager.getCoreFromConfiguredSlot(player);
-
-                com.piranport.debug.PiranPortDebug.event("Transform ON | player={} core={} transformed={}",
-                    player.getName().getString(),
-                    coreStack.getItem().getClass().getSimpleName(),
-                    TransformationManager.isTransformed(coreStack));
-
-                // 发布变身激活事件 (监听器会处理属性/消息/粒子)
-                com.piranport.event.EventBus.getInstance().post(
-                        new com.piranport.event.TransformationEvent(player, coreStack, true));
-
-                // 非监听器处理的逻辑保留在这里
-                ShipCoreCombat.refillAircraftFuel(player, coreStack);
-                lastWeaponLoad.put(player.getUUID(), -1);
-                return;
-            }
-
-            int weaponLoad = TransformationManager.getInventoryWeaponLoad(inv);
-            int armorLoad  = TransformationManager.getCoreArmorLoad(coreStack);
-            // 2026-10-19：在飞飞机也计入核心负重。把它放进缓存键，
-            // 放飞/回收时才会触发航速与超载重算。
-            int airborneLoad = TransformationManager.getAirborneAircraftLoad(player);
-            double engineBonus = TransformationManager.getCoreEngineSpeedBonus(coreStack);
-            int maxLoad    = ((ShipCoreItem) coreStack.getItem()).getShipType().effectiveMaxLoad();
-            int cacheKey   = java.util.Objects.hash(weaponLoad, armorLoad, airborneLoad, maxLoad, engineBonus);
-            Integer cached = lastWeaponLoad.get(player.getUUID());
-            if (cached == null || cached != cacheKey) {
-                lastWeaponLoad.put(player.getUUID(), cacheKey);
-                TransformationManager.applyTransformationAttributes(player, coreStack);
-            } else {
-                int totalLoad = weaponLoad + armorLoad + airborneLoad;
-                if (totalLoad > maxLoad && player.tickCount % 40 == 0) {
-                    TransformationManager.applyOverweightPenalty(player, totalLoad, maxLoad);
-                }
-            }
-        } else {
-            for (int i = 0; i < inv.items.size(); i++) {
-                ItemStack stack = inv.items.get(i);
-                if (stack.getItem() instanceof ShipCoreItem
-                        && TransformationManager.isTransformed(stack)) {
-                    TransformationManager.setTransformed(stack, false);
-                    // P1修复: 显式写回以确保状态同步（DataComponents可能创建新ItemStack）
-                    inv.items.set(i, stack);
-                }
-            }
-            if (lastWeaponLoad.remove(player.getUUID()) != null) {
-                // 发布变身解除事件 (监听器会处理属性/消息)
-                ItemStack core = TransformationManager.findTransformedCore(player);
-                if (!core.isEmpty()) {
-                    com.piranport.event.EventBus.getInstance().post(
-                            new com.piranport.event.TransformationEvent(player, core, false));
-                }
-
-                // 非监听器处理的逻辑保留在这里
-                player.removeEffect(MobEffects.WATER_BREATHING);
-                // 取下核心属于正常解除：召回飞机并把物品放回背包，不能走登出用的硬清理。
-                PlayerAircraftHelper.recallAircraftToInventory(player);
-            }
-        }
-    }
-
-    /** 燃料消耗：基于移动距离，耗尽时自动解除变身（每5tick计算一次） */
-    private static void tickFuelConsumption(Player player) {
-        // 性能优化：每5tick计算一次燃料消耗
-        if (player.tickCount % 5 != 0) return;
-
-        // 弹药库勾选燃料：不消耗，并把油箱维持满格（避免 HUD 显示 0 油）。
-        if (CreativeAmmoCache.isInfinite(player, ModItems.FUEL.get())) {
-            ItemStack core = TransformationManager.findTransformedCore(player);
-            if (core.getItem() instanceof ShipCoreItem sci) {
-                FuelData fuel = core.getOrDefault(ModDataComponents.SHIP_CORE_FUEL.get(),
-                        new FuelData(0, sci.getShipType().effectiveFuelCapacity()));
-                if (!fuel.isFull()) {
-                    core.set(ModDataComponents.SHIP_CORE_FUEL.get(),
-                            fuel.withCurrentFuel(fuel.maxFuel()));
-                    TransformationManager.writeCoreToConfiguredSlot(player, core);
-                }
-            }
-            return;
-        }
-
-        UUID uuid = player.getUUID();
-        Vec3 currentPos = player.position();
-        Vec3 lastPos = lastPlayerPos.put(uuid, currentPos);
-        if (lastPos == null) return;
-
-        double dist = currentPos.distanceTo(lastPos);
-        // P1修复: 降低传送检测阈值至32格，避免误判高速鞘翅飞行
-        final double TELEPORT_THRESHOLD = 32.0;
-        if (dist > TELEPORT_THRESHOLD || player.isFallFlying()) {
-            lastPlayerPos.put(uuid, currentPos);
-            accumulatedDistance.remove(uuid);
-            return;
-        }
-        if (dist < 0.001) return;
-
-        ItemStack core = TransformationManager.findTransformedCore(player);
-        if (!(core.getItem() instanceof ShipCoreItem sci)) return;
-
-        double threshold = sci.getShipType().effectiveDistancePerFuel();
-        double acc = accumulatedDistance.getOrDefault(uuid, 0.0) + dist;
-        FuelData fuel = core.getOrDefault(ModDataComponents.SHIP_CORE_FUEL.get(),
-                new FuelData(0, sci.getShipType().effectiveFuelCapacity()));
-
-        while (acc >= threshold && fuel.currentFuel() > 0) {
-            acc -= threshold;
-            fuel = fuel.withCurrentFuel(fuel.currentFuel() - 1);
-        }
-        core.set(ModDataComponents.SHIP_CORE_FUEL.get(), fuel);
-
-        // 写回槽位以确保燃料数据同步
-        TransformationManager.writeCoreToConfiguredSlot(player, core);
-
-        if (fuel.isEmpty()) {
-            cleanupPlayerState(uuid);
-            TransformationManager.setTransformedAndWriteBack(player, core, false);
-
-            // 发布燃料耗尽事件
-            com.piranport.event.EventBus.getInstance().post(
-                    new com.piranport.event.FuelDepletedEvent(player, core));
-
-            // 发布变身解除事件
-            com.piranport.event.EventBus.getInstance().post(
-                    new com.piranport.event.TransformationEvent(player, core, false));
-
-            // 非监听器处理的逻辑
-            // 燃料耗尽同样是正常解除：召回并返还飞机物品。
-            PlayerAircraftHelper.recallAircraftToInventory(player);
-            player.displayClientMessage(
-                    Component.translatable("message.piranport.fuel_depleted"), true);
-            return;
-        }
-
-        accumulatedDistance.put(uuid, acc);
-    }
-
-    /** 清理玩家状态缓存（燃料耗尽、登出等场景统一调用）*/
-    private static void cleanupPlayerState(UUID uuid) {
-        lastWeaponLoad.remove(uuid);
-        accumulatedDistance.remove(uuid);
-        lastPlayerPos.remove(uuid);
     }
 
     /** 自动发射战斗机锁定附近高于玩家的飞行敌对生物 / 敌机 */

@@ -1,0 +1,42 @@
+{
+  "id": "piranport:first_voyage",
+  "items": ["piranport:small_ship_core", "piranport:medium_ship_core", "piranport:large_ship_core", "piranport:submarine_ship_core"],
+  "title": {"zh_cn": "皮兰港：第一次出航", "en_us": "Piran Port: First Voyage"},
+  "tags": ["piranport", "ship_core", "fuel"],
+  "editable": false,
+  "scenes": [
+    {
+      "id": "fuel_and_transform",
+      "title": {"zh_cn": "加油与变身", "en_us": "Fuel and Transformation"},
+      "steps": [
+        {"type": "show_structure", "structure": "ponderer:basic"},
+        {"type": "idle", "duration": 20},
+        {"type": "create_item_entity", "item": "piranport:small_ship_core", "pos": [2.5, 2.5, 2.5]},
+        {"type": "create_item_entity", "item": "piranport:fuel", "pos": [1.5, 2.5, 2.5]},
+        {"type": "show_controls", "duration": 80, "point": [2.5, 2.0, 2.5], "direction": "down", "action": "right", "item": "piranport:fuel"},
+        {"type": "text", "duration": 100, "text": {"zh_cn": "在背包中拿起燃料桶，右键舰装核心加油。核心必须有燃料才能变身。", "en_us": "Pick up fuel in your inventory and right-click the ship core to refuel it. The core needs fuel to transform."}, "point": [2.5, 2.5, 2.5], "placeNearTarget": true, "attachKeyFrame": true},
+        {"type": "idle", "duration": 110},
+        {"type": "text", "duration": 100, "text": {"zh_cn": "将有燃料的核心放入副手，即进入舰娘状态；核心放在背包里不会变身。", "en_us": "Place a fueled core in your offhand to transform. A core in the inventory alone does not transform you."}, "point": [2.5, 2.5, 2.5], "placeNearTarget": true, "attachKeyFrame": true},
+        {"type": "idle", "duration": 110},
+        {"type": "indicate_success", "blockPos": [2, 1, 2]},
+        {"type": "text", "duration": 100, "text": {"zh_cn": "航行会消耗核心燃料。取下副手核心或燃料耗尽即解除变身，并召回在飞飞机。", "en_us": "Travel consumes core fuel. Removing the offhand core or running out of fuel ends transformation and recalls airborne aircraft."}, "point": [2.5, 1.5, 2.5], "color": "green", "placeNearTarget": true, "attachKeyFrame": true},
+        {"type": "idle", "duration": 110}
+      ]
+    },
+    {
+      "id": "weight",
+      "title": {"zh_cn": "武器与负重", "en_us": "Weapons and Weight"},
+      "steps": [
+        {"type": "show_structure", "structure": "ponderer:basic"},
+        {"type": "idle", "duration": 20},
+        {"type": "create_item_entity", "item": "piranport:single_small_gun", "pos": [1.5, 2.5, 2.5]},
+        {"type": "create_item_entity", "item": "piranport:f4f_wildcat", "pos": [3.5, 2.5, 2.5]},
+        {"type": "text", "duration": 100, "text": {"zh_cn": "武器和飞机放在快捷栏。快捷栏武器与自己的在飞飞机都计入负重；超载会带来惩罚。", "en_us": "Keep weapons and aircraft in the hotbar. Hotbar weapons and your airborne aircraft count toward weight; overload incurs penalties."}, "point": [2.5, 2.5, 2.5], "placeNearTarget": true, "attachKeyFrame": true},
+        {"type": "idle", "duration": 110},
+        {"type": "indicate_success", "blockPos": [2, 1, 2]},
+        {"type": "text", "duration": 90, "text": {"zh_cn": "检查核心燃料和负重后，就能携带武器出航；放飞飞机不会降低总负重。", "en_us": "Check fuel and weight before sailing with your weapons. Launching aircraft does not reduce total weight."}, "point": [2.5, 1.5, 2.5], "color": "green", "placeNearTarget": true, "attachKeyFrame": true},
+        {"type": "idle", "duration": 100}
+      ]
+    }
+  ]
+}

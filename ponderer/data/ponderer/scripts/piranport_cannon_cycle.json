@@ -1,0 +1,28 @@
+{
+  "id": "piranport:cannon_cycle",
+  "items": ["piranport:single_small_gun"],
+  "title": {"zh_cn": "皮兰港：火炮射击循环", "en_us": "Piran Port: Cannon Firing Cycle"},
+  "tags": ["piranport", "artillery", "fire_control"],
+  "editable": false,
+  "scenes": [{
+    "id": "aim_fire_reload",
+    "title": {"zh_cn": "选弹、瞄准与射击", "en_us": "Select, Aim and Fire"},
+    "steps": [
+      {"type": "show_structure", "structure": "ponderer:basic"},
+      {"type": "idle", "duration": 20},
+      {"type": "create_item_entity", "item": "piranport:single_small_gun", "pos": [1.5, 2.5, 2.5]},
+      {"type": "create_item_entity", "item": "piranport:small_he_shell", "pos": [2.5, 2.5, 2.5]},
+      {"type": "create_entity", "entity": "minecraft:zombie", "pos": [4.5, 2.0, 2.5], "yaw": 90.0, "pitch": 0.0},
+      {"type": "text", "duration": 100, "text": {"zh_cn": "变身后携带火炮和同口径炮弹。弹药轮盘可选择弹种，示例使用 HE 榴弹。", "en_us": "While transformed, carry a cannon and compatible shells. Select the shell type in the ammo wheel; this example uses HE."}, "point": [2.5, 2.5, 2.5], "placeNearTarget": true, "attachKeyFrame": true},
+      {"type": "idle", "duration": 110},
+      {"type": "text", "duration": 100, "text": {"zh_cn": "对准目标使用火控选择键（默认鼠标中键）；预测提示辅助瞄准，但不会保证命中。", "en_us": "Point at the target and use fire-control select (middle mouse by default). The prediction helps aim but does not guarantee a hit."}, "point": [4.5, 3.0, 2.5], "placeNearTarget": true, "attachKeyFrame": true},
+      {"type": "idle", "duration": 110},
+      {"type": "show_controls", "duration": 80, "point": [1.5, 2.0, 2.5], "direction": "down", "action": "left", "item": "piranport:single_small_gun"},
+      {"type": "text", "duration": 100, "text": {"zh_cn": "按住右键进入瞄准镜，左键开火；开火后观察落点，再修正瞄准。", "en_us": "Hold right-click for the scope and left-click to fire. Observe the impact and correct your aim."}, "point": [1.5, 2.5, 2.5], "placeNearTarget": true, "attachKeyFrame": true},
+      {"type": "idle", "duration": 110},
+      {"type": "indicate_success", "blockPos": [4, 1, 2]},
+      {"type": "text", "duration": 110, "text": {"zh_cn": "装填完成且膛内有弹后可以再次射击。自动装填炮会自行开始；手动炮可按装填键（默认 R）启动。", "en_us": "Once the reload finishes and a shell is chambered, fire again. Automatic guns reload themselves; manual guns can start reloading with the reload key (R by default)."}, "point": [2.5, 1.5, 2.5], "color": "green", "placeNearTarget": true, "attachKeyFrame": true},
+      {"type": "idle", "duration": 120}
+    ]
+  }]
+}

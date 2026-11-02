@@ -61,8 +61,8 @@
           "type": "text",
           "duration": 80,
           "text": {
-            "zh_cn": "松开右键开火后，弹丸落点处会出现红色圆圈。红圈从约1格半径开始，随弹丸飞行逐渐缩小至接触时变成一个点。",
-            "en_us": "After firing, a red circle appears at the landing point. The circle starts at ~1 block radius and shrinks as the shell flies, becoming a dot on impact."
+            "zh_cn": "按住右键瞄准时按左键开火；松开右键退出瞄准镜。开火后落点处的圆圈会随弹丸飞行缩小。",
+            "en_us": "While holding right-click to aim, left-click to fire; release right-click to leave the scope. The landing circle shrinks as the shell flies."
           },
           "point": [
             2.5,

@@ -106,8 +106,8 @@
           "type": "text",
           "duration": 80,
           "text": {
-            "zh_cn": "移动鼠标指向想要的弹种，松开 Tab 即完成切换。切换不收钱不读条，下一轮齐射就用新弹种。",
-            "en_us": "Hover the cursor over the shell you want and release Tab to confirm. Switching is free and instant — the next salvo uses the new type."
+            "zh_cn": "移动鼠标选择弹种，松开 Tab 确认。正在装填的同型炮会重置进度；已经装好的炮弹不变。",
+            "en_us": "Point to a shell and release Tab to confirm. Reloading guns of the same type restart; shells already loaded are not replaced."
           },
           "point": [2.5, 1.5, 2.5],
           "color": "green",

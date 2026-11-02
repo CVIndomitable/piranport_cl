@@ -1,0 +1,43 @@
+{
+  "id": "piranport:detection_equipment",
+  "items": ["piranport:standard_surface_radar", "piranport:standard_aa_radar", "piranport:standard_fire_control_radar", "piranport:standard_sonar"],
+  "title": {"zh_cn": "皮兰港：探测与火控", "en_us": "Piran Port: Detection and Fire Control"},
+  "tags": ["piranport", "radar", "sonar", "fire_control"],
+  "editable": false,
+  "scenes": [
+    {
+      "id": "detection", "title": {"zh_cn": "选择探测装备", "en_us": "Choosing Detection Equipment"},
+      "steps": [
+        {"type": "show_structure", "structure": "ponderer:basic"}, {"type": "idle", "duration": 20},
+        {"type": "create_item_entity", "item": "piranport:small_ship_core", "pos": [2.5, 2.5, 2.5]},
+        {"type": "create_item_entity", "item": "piranport:standard_surface_radar", "pos": [1.5, 2.5, 2.5]},
+        {"type": "text", "duration": 110, "text": {"zh_cn": "把雷达或声呐装进舰装核心强化槽，变身后进行被动探测。设备占槽并计入负重。", "en_us": "Install radar or sonar in a core enhancement slot. It detects passively while transformed, using a slot and adding weight."}, "point": [2.5, 2.5, 2.5], "placeNearTarget": true, "attachKeyFrame": true},
+        {"type": "idle", "duration": 120},
+        {"type": "create_entity", "entity": "minecraft:zombie", "pos": [3.5, 2.0, 2.5], "yaw": 90.0, "pitch": 0.0},
+        {"type": "create_item_entity", "item": "piranport:standard_aa_radar", "pos": [1.5, 3.0, 1.5]},
+        {"type": "text", "duration": 110, "text": {"zh_cn": "对海雷达探测水面及水上目标，对空雷达探测空中目标；不同型号的探测距离不同。", "en_us": "Surface radar detects surface targets; air radar detects airborne targets. Detection range varies by model."}, "point": [3.5, 2.5, 2.5], "placeNearTarget": true, "attachKeyFrame": true},
+        {"type": "idle", "duration": 120},
+        {"type": "create_item_entity", "item": "piranport:standard_sonar", "pos": [2.5, 3.0, 1.5]},
+        {"type": "indicate_success", "blockPos": [3, 1, 2]},
+        {"type": "text", "duration": 110, "text": {"zh_cn": "舰装被动声呐还会标记附近非玩家生物，包括友方和陆地生物；发现标记后先辨认目标。", "en_us": "Core sonar also marks nearby non-player creatures, including friendly and land creatures. Identify a contact before attacking."}, "point": [2.5, 2.5, 1.5], "color": "green", "placeNearTarget": true, "attachKeyFrame": true},
+        {"type": "idle", "duration": 120}
+      ]
+    },
+    {
+      "id": "fire_control", "title": {"zh_cn": "锁定与炮弹追踪", "en_us": "Target Lock and Shell Tracking"},
+      "steps": [
+        {"type": "show_structure", "structure": "ponderer:basic"}, {"type": "idle", "duration": 20},
+        {"type": "create_entity", "entity": "minecraft:zombie", "pos": [3.5, 2.0, 2.5], "yaw": 90.0, "pitch": 0.0},
+        {"type": "create_item_entity", "item": "piranport:single_small_gun", "pos": [1.5, 2.5, 2.5]},
+        {"type": "text", "duration": 110, "text": {"zh_cn": "探测高亮不等于火控锁定。对准目标使用火控选择键（默认鼠标中键）建立锁定。", "en_us": "A detection highlight is not a fire-control lock. Aim at the target and use fire-control select (middle mouse by default) to lock it."}, "point": [3.5, 2.5, 2.5], "placeNearTarget": true, "attachKeyFrame": true},
+        {"type": "idle", "duration": 120},
+        {"type": "create_item_entity", "item": "piranport:standard_fire_control_radar", "pos": [2.5, 2.5, 1.5]},
+        {"type": "text", "duration": 110, "text": {"zh_cn": "火控雷达不负责被动高亮；装备后对已锁定目标开炮，炮弹接近目标时可获得有限追踪。", "en_us": "Fire-control radar does not provide passive highlights. With a target locked, it gives fired shells limited tracking near the target."}, "point": [2.5, 2.5, 1.5], "placeNearTarget": true, "attachKeyFrame": true},
+        {"type": "idle", "duration": 120},
+        {"type": "indicate_success", "blockPos": [3, 1, 2]},
+        {"type": "text", "duration": 100, "text": {"zh_cn": "先发现、再锁定、再瞄准开火。火控雷达不能保证命中；示例僵尸代表目标。", "en_us": "Detect, lock, aim and fire. Fire-control radar does not guarantee a hit; the zombie represents a target."}, "point": [3.5, 1.5, 2.5], "color": "green", "placeNearTarget": true, "attachKeyFrame": true},
+        {"type": "idle", "duration": 110}
+      ]
+    }
+  ]
+}

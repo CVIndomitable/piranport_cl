@@ -1,0 +1,27 @@
+{
+  "id": "piranport:damage_control",
+  "items": ["piranport:smoke_candle", "piranport:flare_launcher", "piranport:damage_control", "piranport:fire_extinguisher", "piranport:quick_repair"],
+  "title": {"zh_cn": "皮兰港：战术与损管", "en_us": "Piran Port: Tactical Survival"},
+  "tags": ["piranport", "survival", "consumables"], "editable": false,
+  "scenes": [{
+    "id": "cover_and_repair", "title": {"zh_cn": "遮蔽、照明与损管", "en_us": "Cover, Illumination and Damage Control"},
+    "steps": [
+      {"type": "show_structure", "structure": "ponderer:basic"}, {"type": "idle", "duration": 20},
+      {"type": "create_entity", "entity": "minecraft:zombie", "pos": [3.5, 2.0, 2.5], "yaw": 90.0, "pitch": 0.0},
+      {"type": "create_item_entity", "item": "piranport:smoke_candle", "pos": [1.5, 2.5, 2.5]},
+      {"type": "text", "duration": 110, "text": {"zh_cn": "遭遇威胁时可手持烟雾弹右键制造烟幕，争取撤离或重新部署的时间。", "en_us": "When threatened, hold the smoke candle and right-click to create cover for withdrawal or repositioning."}, "point": [1.5, 2.5, 2.5], "placeNearTarget": true, "attachKeyFrame": true},
+      {"type": "idle", "duration": 120},
+      {"type": "create_item_entity", "item": "piranport:flare_launcher", "pos": [2.5, 3.0, 2.5]},
+      {"type": "text", "duration": 100, "text": {"zh_cn": "手持照明弹发射器右键发射照明弹，帮助观察黑暗区域；它不是火炮弹种。", "en_us": "Right-click with a flare launcher to illuminate a dark area. Flares are not cannon ammunition."}, "point": [2.5, 3.0, 2.5], "placeNearTarget": true, "attachKeyFrame": true},
+      {"type": "idle", "duration": 110},
+      {"type": "create_item_entity", "item": "piranport:damage_control", "pos": [1.5, 3.0, 1.5]},
+      {"type": "create_item_entity", "item": "piranport:fire_extinguisher", "pos": [3.5, 3.0, 1.5]},
+      {"type": "text", "duration": 110, "text": {"zh_cn": "手持损管或灭火器右键处理火焰和有害效果；超载相关的挖掘疲劳、虚弱与迟缓不会被清除。", "en_us": "Right-click damage control or the extinguisher to clear fire and harmful effects. Mining fatigue, weakness and slowness are retained."}, "point": [2.5, 3.0, 1.5], "placeNearTarget": true, "attachKeyFrame": true},
+      {"type": "idle", "duration": 120},
+      {"type": "create_item_entity", "item": "piranport:quick_repair", "pos": [2.5, 2.5, 2.5]},
+      {"type": "indicate_success", "blockPos": [2, 1, 2]},
+      {"type": "text", "duration": 100, "text": {"zh_cn": "血量不足时可使用快速修复恢复生命。确认状态稳定后再重返战斗。", "en_us": "Use quick repair to restore health when needed, then check your condition before re-engaging."}, "point": [2.5, 1.5, 2.5], "color": "green", "placeNearTarget": true, "attachKeyFrame": true},
+      {"type": "idle", "duration": 110}
+    ]
+  }]
+}

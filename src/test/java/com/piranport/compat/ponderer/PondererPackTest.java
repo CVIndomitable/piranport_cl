@@ -159,6 +159,34 @@ class PondererPackTest {
         }
     }
 
+    @Test
+    void modItemAndBlockReferencesHaveModels() throws IOException {
+        try (var scripts = Files.list(SOURCE.resolve("data/ponderer/scripts"))) {
+            for (Path script : scripts.filter(path -> path.toString().endsWith(".json")).toList()) {
+                DslScene scene;
+                try (var reader = Files.newBufferedReader(script, StandardCharsets.UTF_8)) {
+                    scene = GSON.fromJson(reader, DslScene.class);
+                }
+                for (String item : scene.items) assertModModelExists(item, script);
+                for (DslScene.SceneSegment segment : scene.scenes) {
+                    for (DslScene.DslStep step : segment.steps) {
+                        if (step.item != null) assertModModelExists(step.item, script);
+                        if (step.block != null) assertModModelExists(step.block, script);
+                    }
+                }
+            }
+        }
+    }
+
+    private static void assertModModelExists(String id, Path script) {
+        if (!id.startsWith("piranport:")) return;
+        String path = id.substring("piranport:".length());
+        Path models = SOURCE.getParent().resolve("src/main/resources/assets/piranport/models");
+        assertTrue(Files.isRegularFile(models.resolve("item").resolve(path + ".json"))
+                || Files.isRegularFile(models.resolve("block").resolve(path + ".json")),
+                script.getFileName() + " references a mod item or block without a model: " + id);
+    }
+
     private static DslScene readScene() throws IOException {
         try (ZipFile archive = new ZipFile(PACK.toFile());
              var reader = new InputStreamReader(archive.getInputStream(archive.getEntry(SCRIPT)),

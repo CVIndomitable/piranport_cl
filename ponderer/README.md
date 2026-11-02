@@ -22,18 +22,24 @@ Ponderer 直接扫描 `resourcepacks/` 中的教程 ZIP，不要求先在原版�
 - Ponderer 可从 Modrinth Maven 获取。本项目的回归测试使用 `maven.modrinth:the-ponderer:YzFWxoks`，对应 1.10.6.1 的 NeoForge 构建；这是仅测试依赖，不会打入模组。
 - `./gradlew test --tests 'com.piranport.compat.ponderer.*'` 检查正式 JAR 内嵌资源、首次安装、重复启动、升级、手改保护，并调用 Ponderer 实际的 `PonderPackInfo.fromZip`，检查脚本解析、双语文本和字幕等待间隔。
 
-当前共 8 个脚本，覆盖 10 个物品：3 个工作台系列（弹药工作台、武器工作台）、加工三件套（石磨/厨锅/砧板）、再装填设施、舰核改装台、烟雾弹、火控与落点提示、副本传送门与讲台。任一绑定物品都能进入其脚本对应的章节。
+当前共 20 个脚本。下表列出主要绑定物品；完整绑定以各脚本 `items` 为准。战斗和副本中的示例靶标、信标是示意，不代表虚拟场景运行了真实战斗或副本逻辑。
 
 | 脚本 ID | 绑定物品 | 章节数 |
 |---|---|---|
 | `piranport:ammo_workbench` | `ammo_workbench` | 2（五大分类、自动化） |
 | `piranport:weapon_workbench` | `weapon_workbench` | 2（GUI 流程、占用保护） |
 | `piranport:reload_facility` | `reload_facility` | 2（四槽布局、装填规则与比较器） |
-| `piranport:ship_core_modifier` | `ship_core_modifier` | 1（投入/改装/取出） |
+| `piranport:first_voyage` | 各船型舰装核心 | 2（燃料与变身、负重） |
+| `piranport:enhancement_slot` | 舰装核心、强化件 | 2（强化槽与燃料） |
+| `piranport:skin_core` | 皮肤核心 | 2 |
 | `piranport:smoke_candle` | `smoke_candle` | 2（3×3×2 烟雾区、隐身与衰减） |
 | `piranport:processing` | `stone_mill`, `cooking_pot`, `cutting_board` | 3 |
-| `piranport:fire_control` | `artillery_scope` | 2（瞄准镜与落点提示、快捷键与配置） |
-| `piranport:portal_lectern` | `dungeon_lectern` | 3（门框与开口、讲台贴底边、走进传送门） |
+| `piranport:fire_control`, `cannon_cycle`, `ammo_wheel` | `single_small_gun`、炮弹 | 5（瞄准、射击、选弹） |
+| `piranport:aviation_servicing`, `torpedo_run` | 飞机与航空补给 | 3 |
+| `piranport:torpedo_choices`, `torpedo_manual_reload` | 鱼雷、发射器 | 3 |
+| `piranport:asw_defense`, `air_defense` | 声呐、深弹、防空装备 | 2 |
+| `piranport:dungeon_lectern_entry`, `dungeon_nodes` | 书台、钥匙 | 3 |
+| `piranport:supply_chain` | 弹药工作台、武器工作台、再装填设施 | 1 |
 
 ## 安装时序与更新
 
@@ -54,7 +60,7 @@ Ignoring pack with invalid portable pack name 'PiranPort'
 
 这意味着整个包被拒绝，物品上不会出现 W 提示。内部名称现为 `piranport`，必须使用小写安全字符；ZIP 的展示文件名不受此项限制。
 
-`/ponderer reload` 后，有默认示例且没有其他教程的实例应报告加载 **2 个脚本场景**：默认示例和 `piranport:processing`。后三个章节属于同一个脚本，不能用加载数是否为 3 判断是否成功。
+`/ponderer reload` 后可在日志中检查加载的脚本；一个脚本可以包含多个章节，章节数不等于脚本数。
 
 检查绑定物品时可依次执行：
 

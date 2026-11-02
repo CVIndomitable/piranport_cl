@@ -1,17 +1,19 @@
 package com.piranport.handler;
 
-import com.piranport.combat.TransformationManager;
 import com.piranport.ammo.CreativeAmmoCache;
+import com.piranport.combat.TransformationManager;
 import com.piranport.component.FuelData;
-import com.piranport.item.ShipCoreItem;
 import com.piranport.item.ShipCoreCombat;
+import com.piranport.item.ShipCoreItem;
 import com.piranport.registry.ModDataComponents;
 import com.piranport.registry.ModItems;
+
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;

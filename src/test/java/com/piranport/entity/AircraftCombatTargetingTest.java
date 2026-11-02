@@ -117,7 +117,7 @@ class AircraftCombatTargetingTest {
                 "Vex 只继承 Monster，不实现 FlyingMob");
 
         String handler = Files.readString(Path.of(
-                "src/main/java/com/piranport/handler/PlayerTickHandler.java"));
+                "src/main/java/com/piranport/handler/PlayerAutoCombatTick.java"));
         String autoLaunch = methodBody(handler, "private static void tickAutoLaunchFighters(");
         assertTrue(autoLaunch.contains("TargetResolution.isAirborneTarget(e)"),
                 "自动放飞战斗机的扫描必须复用同一套空中目标判定，否则会漏掉幻翼/模组飞行怪");
@@ -135,7 +135,7 @@ class AircraftCombatTargetingTest {
                 "手动火控锁定不受高度过滤限制（《航空/24》）");
 
         String handler = Files.readString(Path.of(
-                "src/main/java/com/piranport/handler/PlayerTickHandler.java"));
+                "src/main/java/com/piranport/handler/PlayerAutoCombatTick.java"));
         String autoLaunch = methodBody(handler, "private static void tickAutoLaunchFighters(");
         assertTrue(autoLaunch.contains("e.getY() > player.getY()"),
                 "自动升空只考虑高于玩家的飞行敌对生物");

@@ -4,7 +4,7 @@
 Mod ID `piranport`，包名 `com.piranport`；Java 21 / NeoForge 21.1.265 / MC 1.21.1 / ModDevGradle。
 
 ## 分支与文档
-- dev = 测试版（本仓库，新玩法）；main = 稳定版 v1.0.0（仅修 bug）
+- dev = 当前唯一主体开发线；main 和其他版本线暂停。主体与附属统一策划、独立程序仓库。
 - 版本号以 `gradle.properties` 为准。**测试版 `mod_version` 必须带 `-dev` 后缀**，打包前检查
 - 文档统一在 `../docs/`（独立 git 仓库），本仓库不放 docs/：
   - `../docs/策划决策/`：一切策划决策的真源（见下节）

@@ -38,3 +38,8 @@ ponderer/PiranPort-Ponderer-1.0.zip
 小工具/_preview/
 小工具/_backup_*/
 小工具/render_block_model_preview.py.bak_degenerate_faces
+
+# 本地 AI 美术工具仓库的兼容入口
+/小工具
+
+/tools

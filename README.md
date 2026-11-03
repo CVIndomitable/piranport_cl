@@ -1,7 +1,7 @@
 # 皮兰港 (Piran Port) Mod
 
 > 基于战舰少女R世界观的 Minecraft 综合性模组（同人项目，All Rights Reserved）
-> NeoForge 21.1.265 for Minecraft 1.21.1 | 版本 **v1.1.58-dev**
+> NeoForge 21.1.265 for Minecraft 1.21.1 | 版本 **v1.1.61-dev**
 > 由 Claude Code (AI) 协助开发
 
 ---
@@ -37,11 +37,11 @@
 ## 安装
 
 1. 安装 **NeoForge 21.1.x**（对应 Minecraft 1.21.1）
-2. 将 `piranport-1.1.58-dev.jar` 放入 `mods/` 文件夹
+2. 将 `piranport-1.1.61-dev.jar` 放入 `mods/` 文件夹
 3. （可选）JEI 查看厨房/弹药配方；Patchouli 阅读航行手册（未安装时手册物品会提示）
 4. 启动游戏
 
-**附属模组**（独立仓库，单向依赖本模组，可不装）：
+**附属模组**（独立仓库、统一策划；可独立运行，可选联动）：
 - `piranport-coffee` — 咖啡与饮品扩展
 - `piranport-resources` — 资源树扩展
 
@@ -211,7 +211,7 @@
 ## 构建
 
 ```bash
-./gradlew build        # → build/libs/piranport-1.1.58-dev.jar
+./gradlew build        # → build/libs/piranport-1.1.61-dev.jar
 ./gradlew runClient    # 开发环境启动
 ./gradlew runData      # 数据生成
 ```
@@ -226,3 +226,7 @@
 - `../docs/皮兰港 版本路线图.md` — 版本规划
 - `../docs/版本记录/` — 版本更新日志
 - `../docs/troubleshooting/` — 问题排查
+
+## 美术制作工具
+
+建模、贴图与离线预览脚本在工作区 `ai美术工具/` 本地 Git 仓库维护，不随本仓库分发。最终资源已包含在 src/ 中，常规构建无需运行这些生成器。

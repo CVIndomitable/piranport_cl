@@ -19,9 +19,9 @@
 
 ## Version & Documentation
 
-- **当前版本**: v1.1.47-dev (测试版)
-- **稳定版本**: v1.0.0 (main 分支，仅修 bug)
-- **开发策略**: main = 稳定版，dev = 测试版新玩法
+- **当前版本**: 以 `gradle.properties` 为准
+- **其他版本线**: 暂停开发
+- **开发策略**: 本仓库 dev 为当前唯一主体开发线，附属独立仓库、统一策划
 - **版本路线图**: `../docs/皮兰港 版本路线图.md`
 - **技术参考手册**: `../docs/皮兰港技术参考手册.md` — 完整目录结构、API 坑、核心系统详解、配置系统
 - **更新日志**: `../docs/版本记录/CHANGELOG-1.1.6-dev.md`
@@ -59,7 +59,7 @@
 ```bash
 ./gradlew runClient    # 运行客户端
 ./gradlew runData      # DataGen
-./gradlew build        # 构建 → build/libs/piranport-1.1.47-dev.jar
+./gradlew build        # 构建 → build/libs/piranport-1.1.61-dev.jar
 ```
 
 ### gradle.properties
@@ -68,7 +68,7 @@
 mod_id=piranport
 mod_name=Piran Port
 mod_license=All Rights Reserved
-mod_version=1.1.47-dev
+mod_version=1.1.61-dev
 mod_group_id=com.piranport
 mod_authors=PiranPort Dev Team
 mod_description=Minecraft mod based on Warship Girls R
@@ -115,3 +115,7 @@ neo_version=21.1.265
   - 样式名称区分大小写，使用前需验证
   - 修改文档后记得保存到新文件，避免覆盖原文件
 
+
+## 本地美术工具
+
+建模、贴图、离线预览脚本在 `../ai美术工具/` 本地 Git 中维护；本仓库只提交最终游戏资源。旧 tools/ 和 小工具/ 是本地兼容入口，GitHub 克隆不包含它们。构建游戏模组不依赖美术生成器。

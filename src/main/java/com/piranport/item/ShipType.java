@@ -5,10 +5,10 @@ public enum ShipType {
     //                  hp   cost  wpn ammo enh fuel dist  满载  空载  护甲 韧性 nationality
     // 血量叠加玩家基础 20：SMALL 20 / MEDIUM 30 / LARGE 40 / SUBMARINE 12
     //   依据：舰装/舰装-核心数值.md 2026-09-09 定稿（潜艇 12）
-    SMALL(  0,  40, 4, 4, 2, 10, 100.0, 1.15, 1.4,   8,  4, "U"),
-    MEDIUM(10,  64, 5, 4, 3, 20,  70.0, 1.0,  1.2,  12,  8, "U"),
+    SMALL(  0,  80, 4, 4, 2, 10, 100.0, 1.15, 1.4,   8,  4, "U"),
+    MEDIUM(10,  96, 5, 4, 3, 20,  70.0, 1.0,  1.2,  12,  8, "U"),
     LARGE( 20, 112, 6, 4, 4, 30,  50.0, 0.85, 1.0,  16, 12, "U"),
-    SUBMARINE(-8, 32, 4, 4, 2, 10, 100.0, 0.7, 0.8,  4,  0, "U");
+    SUBMARINE(-8, 72, 4, 4, 2, 10, 100.0, 0.7, 0.8,  4,  0, "U");
 
     public final int healthBonus;
     public final int maxLoad;

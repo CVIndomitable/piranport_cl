@@ -6,6 +6,7 @@ import com.piranport.registry.ModDataComponents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.client.IItemDecorator;
@@ -95,16 +96,17 @@ public class WeaponReloadDecorator implements IItemDecorator {
         // 非耐久物品没有原版耐久条，直接占用 y+13..y+15（与空膛黑条同一基准）。
         int barY = stack.isDamageableItem() ? (y + 11) : (y + 13);
         int barX = x + 2;
-        gui.fill(barX, barY, barX + BAR_WIDTH, barY + 2, BG_COLOR);
+        // 与原版耐久条一样使用无深度测试的覆盖层，避免被物品图标遮挡。
+        gui.fill(RenderType.guiOverlay(), barX, barY, barX + BAR_WIDTH, barY + 2, BG_COLOR);
         // 进度极小时至少露 1px 橙色，避免只剩黑底看起来像"空"。
         int progressWidth = Math.max(1, (int) (BAR_WIDTH * progress));
-        gui.fill(barX, barY, barX + progressWidth, barY + 2, RELOAD_COLOR);
+        gui.fill(RenderType.guiOverlay(), barX, barY, barX + progressWidth, barY + 2, RELOAD_COLOR);
     }
 
     /** 在物品图标下方画一条水平指示条（宽度 13、高度 2，与原版耐久条同规格）。 */
     private static void drawBar(GuiGraphics gui, int x, int barY, int width, int color) {
         int barX = x + 2;
-        gui.fill(barX, barY, barX + width, barY + 2, color);
+        gui.fill(RenderType.guiOverlay(), barX, barY, barX + width, barY + 2, color);
     }
 
 }

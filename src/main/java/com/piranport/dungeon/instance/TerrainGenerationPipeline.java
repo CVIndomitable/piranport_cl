@@ -93,33 +93,19 @@ public final class TerrainGenerationPipeline {
         return isReady(level, instance, node);
     }
 
-    /** 调度器提供额度；共享基底和该节点特征都完成后才放行。每个写入占一个额度。 */
+    /** 调度器提供额度；节点海床、特征和边界都完成后才放行。 */
     public static int advance(ServerLevel level, DungeonInstance instance, NodeData node, int budget) {
         if (budget <= 0) return 0;
         long seed = instance.getInstanceId().getMostSignificantBits() ^ instance.getInstanceId().getLeastSignificantBits();
-        TerrainGenerationState base = state(level, instance, null);
-        base.initialize(instance.getUsableMinX(), instance.getUsableMinZ(), seed, 0);
-        TerrainGenerationState local = state(level, instance, node);
-        BlockPos spawn = instance.getNodeSpawnPos(node.nodeId());
-        TerrainType terrain = node.terrainType() == null ? TerrainType.T1_OCEAN : node.terrainType();
-        local.initializeNode(spawn.getX(), spawn.getZ(), seed ^ node.nodeId().hashCode() * 31L, terrain.ordinal());
+        TerrainGenerationState local = nodeState(level, instance, node);
         int remaining = budget;
         while (remaining > 0) {
-            TerrainGenerationState active = base.phase() == TerrainGenerationState.Phase.READY ? local : base;
-            if (active.phase() == TerrainGenerationState.Phase.READY) break;
-            // P0-2：共享基底不写 POI，直接跳过进 BOUNDARY。
-            // WHY 安全：base 与 local 用的是同一个 node、同一份出生点 / 记录点坐标，base 的 POI
-            // 与之后 local 的 POI 写的方块逐块相同（纯重复）；而 local 必定在 isReady 之前跑完
-            // 自己的 POI，出生平台与记录点仍会被写一次，最终世界状态不变，只是少写一遍并更快。
-            if (active == base && active.phase() == TerrainGenerationState.Phase.POI) {
-                active.nextPhase();
-                continue;
-            }
-            int used = switch (active.phase()) {
-                case BASE -> processBase(level, active, remaining);
-                case FEATURES -> processFeatures(level, active, remaining);
-                case POI -> processPoi(level, instance, node, active, remaining);
-                case BOUNDARY -> processBoundary(level, active, remaining);
+            if (local.phase() == TerrainGenerationState.Phase.READY) break;
+            int used = switch (local.phase()) {
+                case BASE -> processBase(level, instance, local, seed, remaining);
+                case FEATURES -> processFeatures(level, local, remaining);
+                case POI -> processPoi(level, instance, node, local, remaining);
+                case BOUNDARY -> processBoundary(level, local, remaining);
                 case READY -> 0;
             };
             remaining -= used;
@@ -128,28 +114,37 @@ public final class TerrainGenerationPipeline {
     }
 
     public static boolean isReady(ServerLevel level, DungeonInstance instance, NodeData node) {
-        return state(level, instance, null).phase() == TerrainGenerationState.Phase.READY
-                && state(level, instance, node).phase() == TerrainGenerationState.Phase.READY;
+        return nodeState(level, instance, node).phase() == TerrainGenerationState.Phase.READY;
+    }
+
+    private static TerrainGenerationState nodeState(ServerLevel level, DungeonInstance instance, NodeData node) {
+        TerrainGenerationState shared = state(level, instance, null);
+        TerrainGenerationState local = state(level, instance, node);
+        BlockPos center = instance.getNodeSpawnPos(node.nodeId());
+        long seed = instance.getInstanceId().getMostSignificantBits() ^ instance.getInstanceId().getLeastSignificantBits();
+        TerrainType terrain = node.terrainType() == null ? TerrainType.T1_OCEAN : node.terrainType();
+        // 旧共享游标离开 BASE 即代表整图海床已铺完，即使当时仍在建边界。
+        boolean sharedBaseComplete = shared.initialized() && shared.phase() != TerrainGenerationState.Phase.BASE;
+        local.initializeNode(center.getX(), center.getZ(), seed ^ node.nodeId().hashCode() * 31L,
+                terrain.ordinal(), sharedBaseComplete, instance.hasEnteredNode(node.nodeId()));
+        return local;
     }
 
     /** 当前持久化队列尚需写入的近似方块数，入口可用于调试或进度提示。 */
     public static long queuedBlocks(ServerLevel level, DungeonInstance instance, NodeData node) {
-        TerrainGenerationState base = state(level, instance, null);
-        TerrainGenerationState local = state(level, instance, node);
-        // 屏障环是整块地图规模和节点规模两套，各自按自己的跨度与高度计费，不能共用一份估算。
-        long baseBoundary = boundaryBlockCount(level, MAP_SIZE);
+        TerrainGenerationState local = nodeState(level, instance, node);
         long localBoundary = boundaryBlockCount(level, DungeonConstants.NODE_AREA_SIZE);
-        long shared = switch (base.phase()) {
-            case BASE -> Math.max(0, (long) MAP_SIZE * MAP_SIZE * (MAX_DEPTH + 1) - base.cursor()) + baseBoundary;
-            case BOUNDARY -> Math.max(0, baseBoundary - base.cursor());
-            default -> 0;
-        };
         long features = featureCount(node.terrainType() == null ? TerrainType.T1_OCEAN : node.terrainType());
         long poi = 75 + 28 * checkpointCount(instance, node);
-        return shared + switch (local.phase()) {
-            case BASE, FEATURES -> Math.max(0, features - local.cursor()) + poi + localBoundary;
-            case POI -> Math.max(0, poi - local.cursor()) + localBoundary;
-            case BOUNDARY -> Math.max(0, localBoundary - local.cursor());
+        return remainingBlocks(local.phase(), local.cursor(), features, poi, localBoundary);
+    }
+
+    static long remainingBlocks(TerrainGenerationState.Phase phase, long cursor, long features, long poi, long boundary) {
+        return switch (phase) {
+            case BASE -> Math.max(0, baseBlockCount() - cursor) + features + poi + boundary;
+            case FEATURES -> Math.max(0, features - cursor) + poi + boundary;
+            case POI -> Math.max(0, poi - cursor) + boundary;
+            case BOUNDARY -> Math.max(0, boundary - cursor);
             default -> 0;
         };
     }
@@ -157,16 +152,20 @@ public final class TerrainGenerationPipeline {
     /** 节点地形建造的粗略完成比例（0~1）：分母为全部未开始时的 {@link #queuedBlocks} 口径。 */
     public static double buildFraction(ServerLevel level, DungeonInstance instance, NodeData node) {
         TerrainType terrain = node.terrainType() == null ? TerrainType.T1_OCEAN : node.terrainType();
-        long total = (long) MAP_SIZE * MAP_SIZE * (MAX_DEPTH + 1) + boundaryBlockCount(level, MAP_SIZE)
-                + featureCount(terrain) + 75L + 28L * checkpointCount(instance, node)
+        long total = baseBlockCount() + featureCount(terrain) + 75L + 28L * checkpointCount(instance, node)
                 + boundaryBlockCount(level, DungeonConstants.NODE_AREA_SIZE);
         if (total <= 0) return 1.0;
         double remaining = queuedBlocks(level, instance, node);
         return Math.max(0.0, Math.min(1.0, 1.0 - remaining / total));
     }
 
-    private static int processBase(ServerLevel level, TerrainGenerationState state, int budget) {
-        long total = (long) MAP_SIZE * MAP_SIZE * (MAX_DEPTH + 1);
+    static long baseBlockCount() {
+        return (long) DungeonConstants.NODE_AREA_SIZE * DungeonConstants.NODE_AREA_SIZE * (MAX_DEPTH + 1);
+    }
+
+    private static int processBase(ServerLevel level, DungeonInstance instance, TerrainGenerationState state,
+                                   long seed, int budget) {
+        long total = baseBlockCount();
         int used = (int) Math.min(total - state.cursor(), budget);
         // P0-1：同一列（同一 x,z）的 MAX_DEPTH+1 层深度完全相同，depthAt 只需按列算一次。
         // 本方法分帧执行：游标可从任意 index 起步、跨多次调用，故缓存只在本次批量的连续 index 内
@@ -177,19 +176,29 @@ public final class TerrainGenerationPipeline {
             long index = state.cursor() + i;
             int layer = (int) (index % (MAX_DEPTH + 1));
             int column = (int) (index / (MAX_DEPTH + 1));
-            int x = column % MAP_SIZE;
-            int z = column / MAP_SIZE;
+            int x = baseColumnX(state.startX(), column);
+            int z = baseColumnZ(state.startZ(), column);
             if (column != cachedColumn) {
                 cachedColumn = column;
-                cachedDepth = depthAt(state.seed(), x, z);
+                cachedDepth = depthAt(seed, x - instance.getUsableMinX(), z - instance.getUsableMinZ());
             }
             int y = SEA - MAX_DEPTH + layer;
             BlockState block = y <= SEA - cachedDepth ? Blocks.STONE.defaultBlockState() : Blocks.WATER.defaultBlockState();
-            level.setBlock(new BlockPos(state.startX() + x, y, state.startZ() + z), block, FLAGS);
+            level.setBlock(new BlockPos(x, y, z), block, FLAGS);
         }
         state.advance(used);
         if (state.cursor() >= total) state.nextPhase();
         return used;
+    }
+
+    static int baseColumnX(int centerX, int column) {
+        int span = DungeonConstants.NODE_AREA_SIZE;
+        return centerX - span / 2 + column % span;
+    }
+
+    static int baseColumnZ(int centerZ, int column) {
+        int span = DungeonConstants.NODE_AREA_SIZE;
+        return centerZ - span / 2 + column / span;
     }
 
     private static int processFeatures(ServerLevel level, TerrainGenerationState state, int budget) {
@@ -244,36 +253,7 @@ public final class TerrainGenerationPipeline {
         return used;
     }
 
-    /**
-     * 写入边界的屏障环。
-     *
-     * <h2>两处独立缺陷（260924 审查 P0-5，对抗验证后确认）</h2>
-     * <p><b>其一：坐标基准混淆。</b>{@code state.startX()/startZ()} 对共享基底是实例可用区的
-     * <b>最小角</b>（{@link DungeonInstance#getUsableMinX()}），对节点局部状态却是<b>该节点的出生
-     * 中心</b>（{@link TerrainGenerationState#initializeNode} 传入 spawn）。旧实现一律按"角"用，
-     * 等于以节点中心为角向外扫环。</p>
-     *
-     * <p><b>其二：跨度必须对应对象。</b>共享基底使用 {@code MAP_SIZE}（2048），节点局部使用
-     * {@code NODE_AREA_SIZE}（512）。两者分别对应整关可玩区和单个节点，不能共用同一跨度。</p>
-     *
-     * <p>只修第一条不够：环仍会横穿同列/同行邻居的出生点（只是从"跨 4 列"缩成"跨邻居"），
-     * 玩家依旧被隐形墙围住。<b>两条必须一起修</b>——按状态类型选取跨度：节点用
-     * {@code NODE_AREA_SIZE}，共享基底才用 {@code MAP_SIZE}。</p>
-     *
-     * <p>另注：玩家越界防护是<b>整实例级</b>的
-     * （{@code DungeonEventHandler} 把玩家钳回 {@code getUsableMinX/MaxX} 的可用区），
-     * 与节点级屏障环职责不同，二者不冲突。</p>
-     *
-     * <h2>高度：写满到建筑高度上限并加盖（260929）</h2>
-     * <p>旧实现只写 {@code MAX_DEPTH + 7}（y=47..69）层——比海面高 6 格。玩家只要自己搭方块、
-     * 用火箭鞘翅或任何升空手段越过 70 层，就等于走出了空气墙：屏障环变成一道可以绕过去的矮栅栏。
-     * 现在竖直方向一路写到 {@code level.getMaxBuildHeight()} 的最后一层
-     * （主世界即 y=319），并在顶端铺满一整层屏障"加盖"，与围墙顶部咬合，形成封闭笼子。</p>
-     *
-     * <p>代价是方块数：环体 = 周长 × 高度。共享基底 2048×4×273 ≈ 224 万，节点 512×4×273 ≈ 56 万，
-     * 另加顶盖（基底 2048² ≈ 419 万、节点 512² ≈ 26 万）。仍按 8192/帧分帧写入，
-     * {@link #queuedBlocks} 的估算同步改为按各自跨度计费，否则入口进度会低估到接近 0。</p>
-     */
+    /** 节点屏障从海床底部写到建筑高度上限并加盖，避免从上下方绕出。 */
     private static int processBoundary(ServerLevel level, TerrainGenerationState state, int budget) {
         // 节点局部状态：跨度 = 节点边长，坐标基准 = 出生中心回退半格。
         // 共享基底状态：跨度 = 整张地图，坐标基准本来就是角。

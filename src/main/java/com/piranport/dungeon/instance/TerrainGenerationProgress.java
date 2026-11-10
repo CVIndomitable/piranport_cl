@@ -13,8 +13,8 @@ import java.util.UUID;
 /**
  * 副本建造的后台进度播报（服务端控制台）。
  *
- * <p>副本实例的地形由 {@link TerrainGenerationPipeline} 分帧推进：先铺共享的方块基底
- * （海水/海床）与整图屏障环，再按节点写地形特征、POI（出生平台与记录点）和节点屏障环；
+ * <p>副本实例的地形由 {@link TerrainGenerationPipeline} 按节点分帧推进：先铺节点海水/海床，
+ * 再写地形特征、POI（出生平台与记录点）和节点屏障环；
  * 地形就绪后玩家才进本，进本时才刷怪。这些阶段原先在控制台完全静默，玩家只能靠书台纹路
  * 颜色猜建造进度。本类在阶段切换、每跨越 10% 进度时各打一行中文日志，并在完成时打一行总耗时，
  * 便于服务器后台确认「卡在哪一步」。</p>
@@ -113,20 +113,9 @@ public final class TerrainGenerationProgress {
     }
 
     /**
-     * 当前实际在写哪个阶段：共享基底未就绪时一律先报基底状态（含它顺带走的整图边界），
-     * 基底就绪后才轮到该节点的局部地形。
+     * 当前节点实际在写哪个阶段。
      */
     private static String phaseName(ServerLevel level, DungeonInstance instance, NodeData node) {
-        TerrainGenerationState base = TerrainGenerationPipeline.state(level, instance, null);
-        if (base.phase() != TerrainGenerationState.Phase.READY) {
-            return switch (base.phase()) {
-                case BASE -> "方块基底（共享海床）";
-                case FEATURES -> "地形特征（共享）";
-                case POI -> "POI（共享，出生平台/记录点）";
-                case BOUNDARY -> "边界屏障环（整图）";
-                case READY -> "就绪";
-            };
-        }
         TerrainGenerationState local = TerrainGenerationPipeline.state(level, instance, node);
         return switch (local.phase()) {
             case BASE -> "方块基底（节点）";

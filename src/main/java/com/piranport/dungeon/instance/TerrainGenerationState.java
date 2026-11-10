@@ -18,6 +18,7 @@ public final class TerrainGenerationState extends SavedData {
     private int terrainOrdinal;
     private boolean initialized;
     private boolean nodeSpecific;
+    private boolean nodeBasePlanned;
 
     public TerrainGenerationState() {}
 
@@ -40,11 +41,22 @@ public final class TerrainGenerationState extends SavedData {
         setDirty();
     }
 
-    public void initializeNode(int centerX, int centerZ, long seed, int terrainOrdinal) {
-        if (initialized) return;
-        initialize(centerX, centerZ, seed, terrainOrdinal);
-        nodeSpecific = true;
-        phase = Phase.FEATURES;
+    public void initializeNode(int centerX, int centerZ, long seed, int terrainOrdinal,
+                               boolean sharedBaseComplete, boolean entered) {
+        if (!initialized) {
+            initialize(centerX, centerZ, seed, terrainOrdinal);
+            nodeSpecific = true;
+            phase = sharedBaseComplete || entered ? Phase.FEATURES : Phase.BASE;
+        } else if (nodeSpecific && !nodeBasePlanned && !sharedBaseComplete && !entered
+                && phase == Phase.FEATURES && cursor == 0) {
+            // 旧生成器在共享海床完成前就创建节点游标，但不会开始节点特征。
+            // 只迁移这个尚未使用的状态，避免重铺已进入或已修改的节点。
+            phase = Phase.BASE;
+        }
+        if (!nodeBasePlanned) {
+            nodeBasePlanned = true;
+            setDirty();
+        }
     }
 
     public void advance(long amount) {
@@ -79,8 +91,9 @@ public final class TerrainGenerationState extends SavedData {
         tag.putLong("Seed", seed);
         tag.putInt("Terrain", terrainOrdinal);
         tag.putBoolean("Initialized", initialized);
-        tag.putInt("Version", 3);
+        tag.putInt("Version", 4);
         tag.putBoolean("NodeSpecific", nodeSpecific);
+        tag.putBoolean("NodeBasePlanned", nodeBasePlanned);
         return tag;
     }
 
@@ -98,6 +111,7 @@ public final class TerrainGenerationState extends SavedData {
         state.terrainOrdinal = Math.max(0, Math.min(5, tag.getInt("Terrain")));
         state.initialized = tag.getBoolean("Initialized");
         state.nodeSpecific = tag.getBoolean("NodeSpecific");
+        state.nodeBasePlanned = tag.getBoolean("NodeBasePlanned");
         // 旧版本把首节点特征写入共享游标。保留海面进度，独立节点游标负责补齐各节点。
         if (tag.getInt("Version") < 2 && (state.phase == Phase.FEATURES || state.phase == Phase.POI)) {
             state.phase = Phase.BOUNDARY;

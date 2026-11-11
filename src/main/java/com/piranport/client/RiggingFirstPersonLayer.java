@@ -244,9 +244,8 @@ public final class RiggingFirstPersonLayer {
      * 已登记 GeckoLib 的导弹发射器（{@code RiggingAttachedLayer} 的同一批模型）。
      *
      * <p>第三人称的顺序是 {@code XP(180) → YP(yawOffset) → 挂点 yaw/pitch/roll}；
-     * 第一人称的模型空间本来就是 +Y 朝上，不需要 XP(180)，直接把
-     * {@code yawOffset + 挂点 yaw} 合起来用。这样 sy1 这类 -Z 朝前的模型和 terrier
-     * 这类 +Z 朝前的模型都会朝身体前方。
+     * 第一人称模型空间本来就是 +Y 朝上，不需要 XP(180)，但要补回它带来的前后翻转。
+     * yawOffset 和挂点 yaw 保持原有含义，额外旋转 180° 与第三人称方向一致。
      */
     private static void renderGeckoWeapon(PoseStack poseStack, MultiBufferSource.BufferSource bufferSource,
                                           int packedLight, float partialTick,
@@ -255,7 +254,7 @@ public final class RiggingFirstPersonLayer {
         poseStack.pushPose();
         // 挂点坐标是玩家模型空间（+Y 下），换到身体模型空间（+Y 上）只翻 y。
         poseStack.translate(pose.x() / 16.0f, -pose.y() / 16.0f, pose.z() / 16.0f);
-        poseStack.mulPose(Axis.YP.rotationDegrees(def.yawOffset() + pose.yaw()));
+        poseStack.mulPose(Axis.YP.rotationDegrees(def.yawOffset() + pose.yaw() + 180.0f));
         poseStack.mulPose(Axis.XP.rotationDegrees(pose.pitch()));
         poseStack.mulPose(Axis.ZP.rotationDegrees(pose.roll()));
         poseStack.scale(def.scale(), def.scale(), def.scale());
@@ -267,10 +266,7 @@ public final class RiggingFirstPersonLayer {
     /**
      * 未登记 GeckoLib 的挂载武器：主炮/鱼雷/深弹/防空导弹走 BEWLR，飞机走平面图标。
      *
-     * <p><b>为什么 3D 武器要额外 yaw+180</b>：这些 BEWLR 模型的父模型是
-     * {@code minecraft:block/block}，它的 FIXED 显示变换只有 scale 0.5、<b>没有</b> Y180
-     * （Y180 是 {@code item/generated} 的固定变换）。第三人称靠 {@code XP(180)} 把炮口+
-     * 底座摆正；第一人称不能套 XP(180)，所以用挂点 yaw+180 达到同样的「炮口朝前、底座朝下」。
+     * <p>3D 武器保留挂点 yaw；原先附加的 180° 会让第一人称炮口与第三人称相反。
      *
      * <p><b>飞机为什么用另一组符号</b>：飞机是 {@code item/generated} 的平面图标，
      * FIXED 自带 Y180。抵消这 Y180 后，等效角变成 {@code yaw / -pitch / -roll}；
@@ -288,7 +284,7 @@ public final class RiggingFirstPersonLayer {
             poseStack.mulPose(Axis.XP.rotationDegrees(-pose.pitch()));
             poseStack.mulPose(Axis.ZP.rotationDegrees(-pose.roll()));
         } else {
-            poseStack.mulPose(Axis.YP.rotationDegrees(pose.yaw() + 180.0f));
+            poseStack.mulPose(Axis.YP.rotationDegrees(pose.yaw()));
             poseStack.mulPose(Axis.XP.rotationDegrees(pose.pitch()));
             poseStack.mulPose(Axis.ZP.rotationDegrees(pose.roll()));
         }

@@ -221,7 +221,7 @@ public final class TerrainGenerationPipeline {
                 }
             }
         }
-        // 战斗节点的玩家落点在中心西侧，不是中心的标记平台。
+        // 玩家落点位于节点角落，不能复用中心的标记平台。
         BlockPos playerSpawn = instance.getPlayerSpawnPos(node.nodeId());
         for (int dx = -2; dx <= 2; dx++) {
             for (int dz = -2; dz <= 2; dz++) {

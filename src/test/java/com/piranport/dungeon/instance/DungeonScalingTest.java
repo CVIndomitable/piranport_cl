@@ -78,7 +78,8 @@ class DungeonScalingTest {
         DungeonInstance instance = new DungeonInstance(java.util.UUID.randomUUID(), "test_stage", 0);
         assertEquals(1280, instance.getNodeSpawnPos("A").getX());
         assertEquals(1152, instance.getPlayerSpawnPos("A").getX());
+        assertEquals(1152, instance.getPlayerSpawnPos("A").getZ());
         assertEquals(1408, instance.getEnemySpawnPos("A").getX());
-        assertEquals(1280, instance.getEnemySpawnPos("A").getZ());
+        assertEquals(1408, instance.getEnemySpawnPos("A").getZ());
     }
 }

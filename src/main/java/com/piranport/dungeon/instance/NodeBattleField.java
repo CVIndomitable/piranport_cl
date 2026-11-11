@@ -278,7 +278,7 @@ public final class NodeBattleField {
                     escortRoute, escortProgress, lostTransport));
         } else {
             spawned.addAll(spawnGroups(dungeonLevel, instance, node, enemySet, allEntries,
-                    normalFleetCenter(instance.getPlayerSpawnPos(node.nodeId())), NORMAL_FLEET_RADIUS, lostTransport));
+                    instance.getEnemySpawnPos(node.nodeId()), NORMAL_FLEET_RADIUS, lostTransport));
         }
 
         if (spawned.isEmpty()) {
@@ -316,12 +316,8 @@ public final class NodeBattleField {
         return true;
     }
 
-    /** 普通战斗编队在玩家前方生成，不能散到视距或低阶敌人索敌范围以外。 */
-    private static final int NORMAL_FLEET_DISTANCE = 24;
+    /** 普通编队集中出生于对角，随后先向节点中心航行。 */
     static final int NORMAL_FLEET_RADIUS = 6;
-    static BlockPos normalFleetCenter(BlockPos playerSpawn) {
-        return playerSpawn.east(NORMAL_FLEET_DISTANCE);
-    }
 
     static Vec3 fleetPosition(BlockPos center, int radius, double angle) {
         return new Vec3(center.getX() + Math.cos(angle) * radius, DungeonConstants.SPAWN_Y,
@@ -470,18 +466,18 @@ public final class NodeBattleField {
             double ez = position.z;
             entity.setPos(ex, DungeonConstants.SPAWN_Y, ez);
 
+            if (spec.isFlagship) {
+                entity.addTag("dungeon_flagship");
+                if (node.type() == NodeData.NodeType.BOSS) {
+                    DungeonNodeOverrides.applyBossStats(entity, instance.getStageId(), node.nodeId());
+                }
+            }
+
             if (entity instanceof AbstractDeepOceanEntity abyssal) {
                 // Dungeon ships must not be cleaned up by the vanilla mob
                 // distance/peaceful despawn rules while the node is active.
                 abyssal.addTag("piranport_dungeon");
                 abyssal.setFleetGroupId(groupId);
-                if (spec.isFlagship) {
-                    entity.addTag("dungeon_flagship");
-                    // 只改旗舰数值，不改旗舰是谁；在 difficulty_scale 之后叠加。
-                    if (node.type() == NodeData.NodeType.BOSS) {
-                        DungeonNodeOverrides.applyBossStats(entity, instance.getStageId(), node.nodeId());
-                    }
-                }
             }
 
             if (entity instanceof net.minecraft.world.entity.Mob mob) {
@@ -493,8 +489,14 @@ public final class NodeBattleField {
 
             entity.addTag("dungeon_instance_" + instance.getInstanceId());
             entity.addTag("dungeon_node_" + node.nodeId());
+            if (node.escort() == null && entity instanceof net.minecraft.world.entity.Mob mob) {
+                DungeonFleetApproach.prepare(mob, instance.getNodeSpawnPos(node.nodeId()));
+            }
             if (dungeonLevel.addFreshEntity(entity)) {
                 fleet.add(entity);
+                if (node.escort() == null && entity instanceof net.minecraft.world.entity.Mob) {
+                    DungeonFleetApproach.track(dungeonLevel, instance, node.nodeId(), entity);
+                }
                 if (entity instanceof AbstractDeepOceanEntity abyssal) {
                     if (abyssal instanceof DeepOceanBossEntity && !bossLeads) {
                         bossLeads = true;

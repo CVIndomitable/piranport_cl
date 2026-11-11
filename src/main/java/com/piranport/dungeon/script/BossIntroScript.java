@@ -268,16 +268,18 @@ public class BossIntroScript implements DungeonScript {
             return;
         }
 
-        // Boss 出生在深海侧前方，避免与玩家出生点重叠。
-        int approach = DungeonConstants.NODE_AREA_SIZE * 30 / 128;
-        boss.setPos(spawnPos.getX() + 0.5, DungeonConstants.SPAWN_Y, spawnPos.getZ() + approach);
+        // Boss 与玩家从对角出发，入场后向节点中心航行。
+        boss.setPos(spawnPos.getX() + 0.5, DungeonConstants.SPAWN_Y, spawnPos.getZ() + 0.5);
         boss.addTag("dungeon_instance_" + instanceId);
         boss.addTag("dungeon_node_" + nodeId);
         boss.addTag("dungeon_flagship");
         boss.addTag("dungeon_boss_intro_target");
         DungeonNodeOverrides.applyBossStats(boss, stageId, nodeId);
 
-        level.addFreshEntity(boss);
+        if (!com.piranport.dungeon.instance.DungeonFleetApproach.spawnScripted(level, instanceId, nodeId, boss)) {
+            PiranPort.LOGGER.error("[BossIntro] Failed to add boss entity for instance {}", instanceId);
+            return;
+        }
         bossUuid = boss.getUUID();
         bossSpawned = true;
 
@@ -301,7 +303,7 @@ public class BossIntroScript implements DungeonScript {
         if (tickCounter > ModEquipmentConfig.DUNGEON_BOSS_INTRO_BATTLE_TIMEOUT_TICKS.get()
                 + ModEquipmentConfig.DUNGEON_BOSS_INTRO_PHASE_TIMEOUT_TICKS.get() && !finished) {
             PiranPort.LOGGER.warn("[BossIntro] Battle timeout, forcing outro");
-            bossDeathPos = spawnPos.offset(0, 0, DungeonConstants.NODE_AREA_SIZE * 30 / 128);
+            bossDeathPos = spawnPos;
             phase = Phase.DEFEATED;
             defeatDelayTicks = 0;
             changed = true;
@@ -344,7 +346,7 @@ public class BossIntroScript implements DungeonScript {
                     entity.setPos(plan.position().x, DungeonConstants.SPAWN_Y, plan.position().z);
                     entity.addTag("dungeon_instance_" + instanceId);
                     entity.addTag("dungeon_node_" + nodeId);
-                    level.addFreshEntity(entity);
+                    if (!com.piranport.dungeon.instance.DungeonFleetApproach.spawnScripted(level, instanceId, nodeId, entity)) continue;
                     totalEscorts++;
                     if (entity instanceof com.piranport.npc.deepocean.AbstractDeepOceanEntity deep) {
                         com.piranport.npc.ai.FleetGroupManager.get(level)
@@ -366,7 +368,7 @@ public class BossIntroScript implements DungeonScript {
                         entity.setPos(ex, DungeonConstants.SPAWN_Y, ez);
                         entity.addTag("dungeon_instance_" + instanceId);
                         entity.addTag("dungeon_node_" + nodeId);
-                        level.addFreshEntity(entity);
+                        if (!com.piranport.dungeon.instance.DungeonFleetApproach.spawnScripted(level, instanceId, nodeId, entity)) continue;
                         totalEscorts++;
                     }
                 }

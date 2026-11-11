@@ -78,10 +78,10 @@ public final class DungeonScriptManager extends SavedData {
         DungeonInstanceManager instances = DungeonInstanceManager.get(dungeonLevel);
         instances.refreshPlayerPresence(dungeonLevel.getServer());
         tickAll(dungeonLevel, instances::getInstance, instance -> {
-            // 重连时实体 NBT 可能尚未加载，等待节点入口区块实体就绪，不将缺失实体当作死亡。
+            // 重连时先等玩家实际出生点的实体区块就绪；节点中心可能在玩家视距之外。
             String node = instance.getCurrentNode();
             return node != null && dungeonLevel.areEntitiesLoaded(
-                    new ChunkPos(instance.getNodeSpawnPos(node)).toLong());
+                    new ChunkPos(instance.getPlayerSpawnPos(node)).toLong());
         });
     }
 

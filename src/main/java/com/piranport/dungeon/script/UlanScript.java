@@ -104,7 +104,10 @@ public class UlanScript implements DungeonScript {
         entity.addTag("dungeon_instance_" + instanceId);
         entity.addTag("dungeon_node_" + nodeId);
         entity.addTag("dungeon_script");
-        level.addFreshEntity(entity);
+        if (!com.piranport.dungeon.instance.DungeonFleetApproach.spawnScripted(level, instanceId, nodeId, entity)) {
+            PiranPort.LOGGER.warn("[Ulan] 无法加入实体 {}，直接完成关卡", entityId);
+            portalPending = true;
+        }
     }
 
     @Override

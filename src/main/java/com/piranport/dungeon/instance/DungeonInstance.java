@@ -282,20 +282,20 @@ public class DungeonInstance {
         return new BlockPos(nodeX, com.piranport.dungeon.DungeonConstants.SPAWN_Y, nodeZ);
     }
 
-    /** 玩家出生点：节点西侧，距节点边缘 128 格，面向深海东侧。 */
+    /** 玩家出生点位于节点西北角内侧。 */
     public BlockPos getPlayerSpawnPos(String nodeId) {
         BlockPos center = getNodeSpawnPos(nodeId);
         int offset = com.piranport.dungeon.DungeonConstants.NODE_AREA_SIZE / 2
                 - com.piranport.dungeon.DungeonConstants.NODE_SPAWN_EDGE_MARGIN;
-        return center.offset(-offset, 0, 0);
+        return center.offset(-offset, 0, -offset);
     }
 
-    /** 深海出生点：节点东侧，与玩家出生点相对，距节点边缘 128 格。 */
+    /** 深海出生点位于与玩家相对的东南角内侧。 */
     public BlockPos getEnemySpawnPos(String nodeId) {
         BlockPos center = getNodeSpawnPos(nodeId);
         int offset = com.piranport.dungeon.DungeonConstants.NODE_AREA_SIZE / 2
                 - com.piranport.dungeon.DungeonConstants.NODE_SPAWN_EDGE_MARGIN;
-        return center.offset(offset, 0, 0);
+        return center.offset(offset, 0, offset);
     }
 
     // ===== Setters =====

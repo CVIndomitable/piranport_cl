@@ -7,16 +7,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class NodeBattleFieldSpawnTest {
     @Test
-    void normalFleetAlwaysSpawnsInFrontAndWithinLowTierDetectionRange() {
-        for (BlockPos playerSpawn : new BlockPos[]{new BlockPos(1152, 64, 1280), new BlockPos(-128, 64, -256)}) {
-            BlockPos center = NodeBattleField.normalFleetCenter(playerSpawn);
+    void normalFleetStaysNearEnemyCorner() {
+        for (BlockPos center : new BlockPos[]{new BlockPos(1408, 64, 1408), new BlockPos(-128, 64, -256)}) {
             for (int degrees = 0; degrees < 360; degrees++) {
                 var position = NodeBattleField.fleetPosition(center, NodeBattleField.NORMAL_FLEET_RADIUS,
                         Math.toRadians(degrees));
-                double dx = position.x - playerSpawn.getX();
-                double dz = position.z - playerSpawn.getZ();
-                assertTrue(dx > 0);
-                assertTrue(Math.hypot(dx, dz) <= 30.000001);
+                double dx = position.x - center.getX();
+                double dz = position.z - center.getZ();
+                assertTrue(Math.abs(Math.hypot(dx, dz) - NodeBattleField.NORMAL_FLEET_RADIUS) < 0.000001);
             }
         }
     }

@@ -21,6 +21,8 @@ import static com.piranport.combat.cannon.CannonStats.*;
 
 /** 玩家只适配瞄准与炮口；弹种、限额、实体及散布由共享发射边界处理。 */
 final class CannonProjectiles {
+    private static final CannonSmokeLimiter<ItemStack> SMALL_CALIBER_SMOKE = new CannonSmokeLimiter<>(20);
+
     private CannonProjectiles() {}
 
     static CannonFireService.Result fireCannonSalvo(Level level, Player player, ItemStack weapon,
@@ -59,12 +61,17 @@ final class CannonProjectiles {
             weapon.setDamageValue(weapon.getDamageValue() + 1);
         }
         if (level instanceof ServerLevel serverLevel) {
+            boolean smallCaliber = isSmallCaliber(weapon, level);
+            boolean emitSmoke = !smallCaliber || SMALL_CALIBER_SMOKE.shouldEmit(
+                    weapon, serverLevel.getServer().getTickCount());
             for (int barrel = 0; barrel < result.shots(); barrel++) {
                 Vec3 spawn = shots.get(barrel).request().spawnPosition();
                 Vec3 flame = spawn.add(player.getLookAngle().scale(.3));
                 serverLevel.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, flame.x, flame.y, flame.z, 3, .2, .2, .2, .05);
-                serverLevel.sendParticles(ParticleTypes.CLOUD, flame.x, flame.y, flame.z,
-                        isSmallCaliber(weapon, level) ? 1 : 2, .3, .15, .3, .01);
+                if (emitSmoke) {
+                    serverLevel.sendParticles(ParticleTypes.CLOUD, flame.x, flame.y, flame.z,
+                            smallCaliber ? 1 : 2, .3, .15, .3, .01);
+                }
                 serverLevel.sendParticles(ParticleTypes.LAVA, flame.x, flame.y, flame.z, 1, .1, .1, .1, 0);
             }
         }

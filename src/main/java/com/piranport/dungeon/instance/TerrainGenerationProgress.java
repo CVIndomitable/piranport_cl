@@ -36,6 +36,7 @@ public final class TerrainGenerationProgress {
 
     private static final class Track {
         final long startTick;
+        final long startNanos;
         final long total;
         double reported;      // 已播报到的进度（对齐到 STEP 的整数倍）
         String phase = "";    // 已播报到的阶段名
@@ -44,6 +45,7 @@ public final class TerrainGenerationProgress {
 
         Track(long startTick, long total, long now) {
             this.startTick = startTick;
+            this.startNanos = System.nanoTime();
             this.total = total;
             this.lastSeenTick = now;
             // 允许首帧立即播报（否则世界刚启动 tick 计数 < MIN_INTERVAL_TICKS 时首行会被吞掉）。
@@ -89,9 +91,10 @@ public final class TerrainGenerationProgress {
         if (ready) {
             TRACKS.remove(key);
             double seconds = (now - track.startTick) / 20.0;
-            PiranPort.LOGGER.info("[副本生成] 实例 {} 关卡 {} 节点 {} | 地形建造完成 | 共约 {} 方块 | 耗时 {}（{} tick）",
+            PiranPort.LOGGER.info("[副本生成] 实例 {} 关卡 {} 节点 {} | 地形建造完成 | 初始剩余约 {} 方块位置 | 墙钟耗时 {} | tick 时间 {}（{} tick）",
                     shortId(instance.getInstanceId()), instance.getStageId(), node.nodeId(),
-                    track.total, formatSeconds(seconds), now - track.startTick);
+                    track.total, formatSeconds((System.nanoTime() - track.startNanos) / 1_000_000_000.0),
+                    formatSeconds(seconds), now - track.startTick);
             return;
         }
 
@@ -105,9 +108,10 @@ public final class TerrainGenerationProgress {
             track.phase = phase;
             track.reported = Math.floor(fraction / STEP) * STEP;
             track.lastLogTick = now;
-            PiranPort.LOGGER.info("[副本生成] 实例 {} 关卡 {} 节点 {} | 阶段：{} | 进度 {}% | 剩余约 {} 方块 | 已用 {}",
+            PiranPort.LOGGER.info("[副本生成] 实例 {} 关卡 {} 节点 {} | 阶段：{} | 进度 {}% | 剩余约 {} 方块 | 墙钟已用 {} | tick 时间 {}",
                     shortId(instance.getInstanceId()), instance.getStageId(), node.nodeId(),
                     phase, (int) Math.round(fraction * 100), remaining,
+                    formatSeconds((System.nanoTime() - track.startNanos) / 1_000_000_000.0),
                     formatSeconds((now - track.startTick) / 20.0));
         }
     }

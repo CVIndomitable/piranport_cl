@@ -84,11 +84,13 @@ public final class TerrainGenerationPipeline {
 
     /** 开始或继续生成；返回 true 仅表示本节点全部方块已准备好。 */
     public static boolean tick(ServerLevel level, DungeonInstance instance, NodeData node) {
+        // 从首次加载区块之前开始计墙钟，不能漏掉第一帧的同步生成开销。
+        TerrainGenerationProgress.report(level, instance, node);
         TerrainWorkBudget budget = TerrainWorkBudget.get(level);
         int granted = budget.reserve(level.getServer().getTickCount(), blocksPerTick());
         int used = advance(level, instance, node, granted);
         budget.release(granted - used);
-        // 唯一的对外推进入口：在此统一播报后台建造进度（节流在 TerrainGenerationProgress 内）。
+        // 阶段切换和完成仍在本 tick 内播报。
         TerrainGenerationProgress.report(level, instance, node);
         return isReady(level, instance, node);
     }
@@ -166,29 +168,54 @@ public final class TerrainGenerationPipeline {
     private static int processBase(ServerLevel level, DungeonInstance instance, TerrainGenerationState state,
                                    long seed, int budget) {
         long total = baseBlockCount();
-        int used = (int) Math.min(total - state.cursor(), budget);
-        // P0-1：同一列（同一 x,z）的 MAX_DEPTH+1 层深度完全相同，depthAt 只需按列算一次。
-        // 本方法分帧执行：游标可从任意 index 起步、跨多次调用，故缓存只在本次批量的连续 index 内
-        // 按列号复用——换列即重算。结果与逐方块调用 depthAt(seed,x,z) 逐位一致（同一 seed + 坐标）。
+        int used = 0;
+        long cursor = state.cursor();
+        boolean oceanGenerator = level.getChunkSource().getGenerator() instanceof DungeonOceanGenerator;
+        BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
         int cachedColumn = -1;
         int cachedDepth = 0;
-        for (int i = 0; i < used; i++) {
-            long index = state.cursor() + i;
-            int layer = (int) (index % (MAX_DEPTH + 1));
-            int column = (int) (index / (MAX_DEPTH + 1));
+        while (cursor < total && used < budget) {
+            int layer = (int) (cursor % (MAX_DEPTH + 1));
+            int column = (int) (cursor / (MAX_DEPTH + 1));
             int x = baseColumnX(state.startX(), column);
             int z = baseColumnZ(state.startZ(), column);
+            // 只有逐格确认完整的生成器海床后才跳过；旧世界/混合区块仍按旧游标回填。
+            if (oceanGenerator && layer == 0 && budget - used >= 4) {
+                // 首次加载区块可能触发完整世界生成；单独计费，避免一帧拉起整排新区块。
+                if (!level.getChunkSource().hasChunk(x >> 4, z >> 4)) {
+                    int chunkCost = Math.min(1024, budget - 4);
+                    if (used > 0 && budget - used < chunkCost + 4) break;
+                    used += chunkCost;
+                }
+                if (generatedOceanColumn(level.getChunk(x >> 4, z >> 4), pos, x, z)) {
+                    cursor += MAX_DEPTH + 1;
+                    used += 4;
+                    continue;
+                }
+            }
             if (column != cachedColumn) {
                 cachedColumn = column;
                 cachedDepth = depthAt(seed, x - instance.getUsableMinX(), z - instance.getUsableMinZ());
             }
             int y = SEA - MAX_DEPTH + layer;
             BlockState block = y <= SEA - cachedDepth ? Blocks.STONE.defaultBlockState() : Blocks.WATER.defaultBlockState();
-            level.setBlock(new BlockPos(x, y, z), block, FLAGS);
+            level.setBlock(pos.set(x, y, z), block, FLAGS);
+            cursor++;
+            used++;
         }
-        state.advance(used);
+        state.advance(cursor - state.cursor());
         if (state.cursor() >= total) state.nextPhase();
         return used;
+    }
+
+    static boolean generatedOceanColumn(net.minecraft.world.level.BlockGetter chunk,
+                                        BlockPos.MutableBlockPos pos, int x, int z) {
+        int floor = DungeonOceanGenerator.seaFloor(x, z);
+        for (int y = SEA - MAX_DEPTH; y <= SEA; y++) {
+            Block expected = y <= floor ? Blocks.STONE : Blocks.WATER;
+            if (!chunk.getBlockState(pos.set(x, y, z)).equals(expected.defaultBlockState())) return false;
+        }
+        return true;
     }
 
     static int baseColumnX(int centerX, int column) {

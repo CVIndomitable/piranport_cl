@@ -1,7 +1,7 @@
 {
   "type": "piranport:dungeon",
   "generator": {
-    "type": "minecraft:flat",
+    "type": "piranport:dungeon_ocean",
     "settings": {
       "biome": "minecraft:the_void",
       "lakes": false,

@@ -96,6 +96,7 @@ public class PiranPort {
         com.piranport.dungeon.recipe.ModRecipeSerializers.RECIPE_SERIALIZERS.register(modEventBus);
         ModBiomeModifiers.BIOME_MODIFIER_SERIALIZERS.register(modEventBus);
         ModFeatures.FEATURES.register(modEventBus);
+        com.piranport.registry.ModChunkGenerators.GENERATORS.register(modEventBus);
         ModStructureProcessors.STRUCTURE_PROCESSORS.register(modEventBus);
         ModArmorMaterials.ARMOR_MATERIALS.register(modEventBus);
         ModAttachmentTypes.ATTACHMENT_TYPES.register(modEventBus);

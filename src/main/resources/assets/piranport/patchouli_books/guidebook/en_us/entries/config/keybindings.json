@@ -6,7 +6,7 @@
   "pages": [
     {
       "type": "patchouli:text",
-      "text": "$(bold)Key Bindings$()$(br2)$(bold)Fire Control:$()$(br)• $(bold)Middle-click$(): select crosshair target (adds; sneak = replace with single target; sneak with no target = clear)$(br2)$(bold)Weapons & Aircraft:$()$(br)• $(bold)Tab$(): cannon ammo wheel$(br)• $(bold)R$(): reload (cannon reload bar, torpedo re-arm, aircraft fuel+payload, SAM resupply)$(br)• $(bold)H$(): auto-launch / auto-AA / auto-CIWS toggle$(br)• $(bold)V$(): exit recon view"
+      "text": "$(bold)Key Bindings$()$(br2)$(bold)Fire Control:$()$(br)• $(bold)Middle-click$(): select crosshair target (adds; sneak = replace with single target; sneak with no target = clear)$(br2)$(bold)Weapons & Aircraft:$()$(br)• $(bold)Tab$(): cannon ammo wheel$(br)• $(bold)R$(): torpedo re-arm, aircraft fuel+payload, SAM resupply$(br)• $(bold)H$(): auto-launch / auto-AA / auto-CIWS toggle$(br)• $(bold)V$(): exit recon view"
     },
     {
       "type": "patchouli:text",

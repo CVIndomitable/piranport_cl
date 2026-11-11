@@ -126,11 +126,11 @@ public final class CannonCatalog {
     }
 
     /**
-     * 声明自动装填（JSON {@code loadingMode=AUTO}）的炮种镜像。
+     * 旧 AUTO 标记的炮种镜像，现只保留其按住连射行为。
      *
      * <p>WHY 要在这里也记一份：注册期回退数据是资源未加载时（专用服务器客户端）唯一能读到的
      * 火炮数据，单测 {@code cannonJsonMatchesCatalogFallback} 保证它与 JSON 一致。目前只有
-     * 英国双联3英寸速射炮是按炮种的例外，其余 61 门仍是 R 键手动装填。
+     * 英国双联3英寸速射炮支持按住连射；所有火炮都自动装填。
      */
     private static final java.util.Set<String> AUTO_LOADING_IDS =
             java.util.Set.of("british_twin_3inch_rapid_gun");

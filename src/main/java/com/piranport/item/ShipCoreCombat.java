@@ -178,10 +178,6 @@ public final class ShipCoreCombat {
         CannonReloading.tickCannonAutoReload(player, coreStack);
     }
 
-    public static void tryManualCannonReload(Player player, ItemStack coreStack, int coreSlot, ItemStack weapon) {
-        CannonReloading.tryManualCannonReload(player, coreStack, coreSlot, weapon);
-    }
-
     public static boolean matchesCaliber(ItemStack ammo, ItemStack weapon) {
         return CannonAmmoRules.matchesCaliber(ammo, weapon, null);
     }

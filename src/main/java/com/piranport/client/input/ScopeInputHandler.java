@@ -119,7 +119,7 @@ public class ScopeInputHandler {
         boolean attackDown = mc.options.keyAttack.isDown();
         boolean canFire = holdingCannon && mc.screen == null && !AmmoSelectOverlay.isOpen();
         if (attackDown && !attackWasDown && canFire) {
-            // 按下的第一发仍走单击/双击语义；自动炮此后的连射由 tickAutoFireHold 接管。
+            // 按下的第一发仍走单击/双击语义；支持连射的炮由 tickAutoFireHold 接管。
             handleAttackPress(mc);
         } else if (attackDown && attackWasDown && canFire) {
             tickAutoFireHold(mc);
@@ -168,8 +168,8 @@ public class ScopeInputHandler {
         }
 
         suppressCannonHandAnimation(mc);
-        if (isArtillery && ((ArtilleryItem) heldStack.getItem()).isAutoLoading()) {
-            // 自动炮按住连射：按下时若客户端确实看见膛内有弹，就要等一次空膛再发下一发；
+        if (isArtillery && ((ArtilleryItem) heldStack.getItem()).supportsHoldFire()) {
+            // 按住连射：按下时若客户端确实看见膛内有弹，就要等一次空膛再发下一发；
             // 若按下时就看见空膛，装填完成即是新的一发，无需再等。
             autoFireWaitItem = heldStack.getItem();
             autoFireWaitingForReload = hadAmmo;
@@ -178,9 +178,9 @@ public class ScopeInputHandler {
     }
 
     /**
-     * 自动装填火炮按住开火键连射：每个 tick 检查膛内状态，装好一发就再打一发。
+     * 支持连射的火炮按住开火键时，装好一发就再打一发。
      *
-     * <p>未装填时不发包，避免每 tick 空包；手动装填火炮不走这里，仍是单击/双击一次。
+     * <p>未装填时不发包，避免每 tick 空包；其他火炮仍是单击/双击一次。
      *
      * <p>WHY 要等一次「空膛」观测才允许下一发：服务端清空 LOADED_AMMO 的同步比客户端发包
      * 晚一 tick，只按 hasAmmo 判断会在同一轮里重复发包，服务端回「未装填」提示。
@@ -192,8 +192,8 @@ public class ScopeInputHandler {
      */
     private static void tickAutoFireHold(Minecraft mc) {
         ItemStack heldStack = mc.player.getMainHandItem();
-        if (!(heldStack.getItem() instanceof ArtilleryItem artillery) || !artillery.isAutoLoading()) {
-            // 换成手动炮/非火炮：旧炮的连射状态不能留着。
+        if (!(heldStack.getItem() instanceof ArtilleryItem artillery) || !artillery.supportsHoldFire()) {
+            // 换成不支持连射的炮或非火炮时清理旧状态。
             clearAutoFireHold();
             return;
         }

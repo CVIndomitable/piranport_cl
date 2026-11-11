@@ -22,7 +22,6 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.ClickAction;
 import net.minecraft.world.inventory.Slot;
@@ -41,7 +40,7 @@ import java.util.List;
  * 火炮物品基类。
  * Phase 1: 基础射击逻辑（右键发射直线炮弹）
  * Phase 2: 抛物线弹道 + 散布系统 + 调试模式
- * 装填事务委托 CannonReloading，按武器属性区分自动与手动模式。
+ * 装填事务委托 CannonReloading，所有火炮自动装填。
  */
 public class ArtilleryItem extends Item {
 
@@ -101,17 +100,8 @@ public class ArtilleryItem extends Item {
     public float getCustomGravity() { return getData().gravity(); }
     public float getExplosionPower() { return getData().explosionPower(); }
 
-    /**
-     * 是否自动装填：读取本炮 JSON 的 {@code loadingMode}。
-     *
-     * <p>WHY 按炮种而不是全局开关：自动装填目前只对显式声明 AUTO 的炮例外开放
-     * （英国双联3英寸速射炮），其余火炮仍只能按 R 键启动读条。用 {@link #getData()}
-     * 而不是 {@link #getEffectiveData}：loadingMode 不参与终端参数覆盖，而本方法在
-     * 每 tick 的装填扫描里逐把武器调用，走终端读取会做二十多次无意义的参数查询。</p>
-     */
-    public boolean isAutoLoading() { return getData().isAutoLoading(); }
-
-    public String getLoadingMode() { return getData().loadingMode(); }
+    /** 保留旧 AUTO 数据的按住连射行为；该字段不再控制装填。 */
+    public boolean supportsHoldFire() { return getData().isAutoLoading(); }
 
     /**
      * 平时不显示原版耐久条，只在火炮损坏（耐久剩最后一点）时显示空条。
@@ -159,17 +149,9 @@ public class ArtilleryItem extends Item {
                 ClientHooks.toggleArtilleryScope(player, stack);
                 return InteractionResultHolder.fail(stack);
             }
-            // 弩式读条：手动模式且未装弹时，客户端开始使用动画
-            if (!isAutoLoading() && !hasLoadedAmmo(stack)) {
-                return InteractionResultHolder.consume(stack);
-            }
             return InteractionResultHolder.pass(stack);
         }
 
-        // 服务端：手动模式且未装弹时，接受使用动作以启动读条
-        if (!isAutoLoading() && !hasLoadedAmmo(stack)) {
-            return InteractionResultHolder.consume(stack);
-        }
         return InteractionResultHolder.pass(stack);
     }
 
@@ -198,27 +180,10 @@ public class ArtilleryItem extends Item {
         return true;
     }
 
-    // ===== 弩式读条装填（Crossbow-style Charged Reload） =====
-
-    /** 使用引用语义的 Map 跟踪每把武器的读条进度（避免 ItemStack.equals 按内容匹配）。 */
-    private static final java.util.Map<ItemStack, Integer> chargeTicks = new java.util.IdentityHashMap<>();
-
     @Override
     public void inventoryTick(ItemStack stack, Level level, net.minecraft.world.entity.Entity entity,
                               int slot, boolean selected) {
         com.piranport.combat.data.WeaponReloadLifecycle.tick(stack, level, entity, slot);
-        if (!level.isClientSide() && entity instanceof Player player && slot >= 9
-                && player.isUsingItem() && player.getUseItem() == stack) {
-            player.stopUsingItem();
-            chargeTicks.remove(stack);
-        }
-    }
-
-    /** 读条持续时间 = 武器装填时间（ticks）。 */
-    @Override
-    public int getUseDuration(ItemStack stack, LivingEntity entity) {
-        // 持续使用时长须客户端/服务端一致，不能随机进位，取四舍五入。
-        return Math.max(1, Math.round(getEffectiveData(entity == null ? null : entity.level()).reloadTime()));
     }
 
     /**
@@ -229,50 +194,6 @@ public class ArtilleryItem extends Item {
         ArtilleryCannonData d = getEffectiveData(null);
         if (!d.usesInchCaliber()) return -1;
         return CannonStatFormula.weight(d.caliberInches(), d.barrels(), d.velocityClassOrDefault());
-    }
-
-    /** 每 tick 累计读条进度（仅服务端、手动模式、未装弹时）。 */
-    @Override
-    public void onUseTick(Level level, LivingEntity livingEntity, ItemStack stack, int chargeTicks) {
-        if (level.isClientSide()) return;
-        if (!(livingEntity instanceof Player player)) return;
-        if (isAutoLoading()) return;
-        if (hasLoadedAmmo(stack)) return;
-
-        // 将每 tick 的进度写入引用 Map
-        ArtilleryItem.chargeTicks.put(stack, chargeTicks);
-    }
-
-    /** 读条完成（右键按住直到满）：执行装填。 */
-    @Override
-    public ItemStack finishUsingItem(ItemStack stack, Level level, LivingEntity entity) {
-        if (!level.isClientSide() && entity instanceof Player player) {
-            if (!isAutoLoading() && !hasLoadedAmmo(stack)) {
-                int charge = chargeTicks.getOrDefault(stack, 0);
-                if (charge >= getUseDuration(stack, entity)) {
-                    completeCrossbowReload(player, stack);
-                }
-                chargeTicks.remove(stack);
-            }
-        }
-        return stack;
-    }
-
-    /** 提前松手（右键未满就释放）：取消读条。 */
-    @Override
-    public void releaseUsing(ItemStack stack, Level level, LivingEntity entity, int chargeTicks) {
-        if (level.isClientSide()) return;
-        ArtilleryItem.chargeTicks.remove(stack);
-    }
-
-    /** 判断武器是否已装弹。 */
-    private boolean hasLoadedAmmo(ItemStack stack) {
-        return stack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY).hasAmmo();
-    }
-
-    /** 持续使用读条完成后，交由统一装填事务扣弹并写入膛内状态。 */
-    private void completeCrossbowReload(Player player, ItemStack weapon) {
-        com.piranport.combat.cannon.CannonReloading.completeManualUse(player, weapon);
     }
 
     /**
@@ -357,9 +278,8 @@ public class ArtilleryItem extends Item {
                     .withStyle(net.minecraft.ChatFormatting.AQUA));
         }
 
-        // 装填模式按炮种数据展示（策划决策/武器/02-火炮装填；当前只有 3 英寸速射炮是自动）
         tooltipComponents.add(Component.translatable(
-                "tooltip.piranport.cannon.loading_mode." + (isAutoLoading() ? "auto" : "manual"))
+                "tooltip.piranport.cannon.loading_mode.auto")
                 .withStyle(net.minecraft.ChatFormatting.GOLD));
 
         // 耐久状态

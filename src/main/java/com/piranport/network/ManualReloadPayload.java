@@ -113,20 +113,9 @@ public record ManualReloadPayload() implements CustomPacketPayload {
                 return;
             }
 
-            // 火炮：依据策划决策/武器/07-火炮装填双模式.md
-            // 自动模式 = 开火后冷却（FPS 风格），不需要 R 键；手动模式 = 必须按 R 键启动读条
-            if (mainHand.getItem() instanceof com.piranport.artillery.ArtilleryItem ai) {
-                LOGGER.info("[SERVER] MainHand is ArtilleryItem - isAutoLoading: {}", ai.isAutoLoading());
-                if (!ai.isAutoLoading()) {
-                    // 手动模式：仅在空炮且无读条时启动读条；已装弹或已在读条时提示
-                    com.piranport.item.ShipCoreCombat.tryManualCannonReload(player, coreStack, coreSlot, mainHand);
-                }
-                return;
-            } else if (offHand.getItem() instanceof com.piranport.artillery.ArtilleryItem ai) {
-                LOGGER.info("[SERVER] OffHand is ArtilleryItem - isAutoLoading: {}", ai.isAutoLoading());
-                if (!ai.isAutoLoading()) {
-                    com.piranport.item.ShipCoreCombat.tryManualCannonReload(player, coreStack, coreSlot, offHand);
-                }
+            // 火炮自动装填，R 键不改变其状态。
+            if (mainHand.getItem() instanceof com.piranport.artillery.ArtilleryItem
+                    || offHand.getItem() instanceof com.piranport.artillery.ArtilleryItem) {
                 return;
             }
             LOGGER.info("[SERVER] No valid weapon found for manual reload");

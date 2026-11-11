@@ -26,12 +26,7 @@ public record ArtilleryCannonData(
         float maxElevation,
         float turretSpeed,
         /**
-         * 装填模式：策划决策/武器/07-火炮装填双模式.md
-         * <ul>
-         *   <li>"AUTO" — 开火后冷却（FPS 风格，发射即进入装填）</li>
-         *   <li>"MANUAL" — 装填时冷却（玩家按 R 键启动读条）</li>
-         * </ul>
-         * 默认按口径：<=4 = AUTO（与"小口径自动"设计参考一致）；>4 = MANUAL。
+         * 旧版装填模式字段，保留以兼容数据和原有按住连射行为，不再控制火炮装填。
          */
         String loadingMode,
         /**
@@ -94,7 +89,7 @@ public record ArtilleryCannonData(
         if (horizontalSpread <= 0) horizontalSpread = dispersion;
         if (maxElevation <= 0) maxElevation = getDefaultMaxElevation(caliber);
         if (turretSpeed <= 0) turretSpeed = 3.0f;
-        // 装填模式：缺省按口径（<=4 = AUTO, >4 = MANUAL）
+        // 旧字段缺省值保留原逻辑，以免改变已有数据的按住连射行为。
         if (loadingMode == null || loadingMode.isBlank()) {
             loadingMode = (caliber <= 4) ? "AUTO" : "MANUAL";
         } else {
@@ -203,7 +198,7 @@ public record ArtilleryCannonData(
                 20, 1, 5.0f);
     }
 
-    /** 是否为自动装填模式（开火后自动进入装填） */
+    /** 旧 AUTO 标记，现只用于保留按住连射行为。 */
     public boolean isAutoLoading() {
         return "AUTO".equals(loadingMode);
     }

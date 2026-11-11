@@ -256,13 +256,6 @@ class PayloadCodecRoundtripTest {
         assertEquals(p, roundtrip(RecallAllAircraftPayload.STREAM_CODEC, p));
     }
 
-    // ===== SalvoFirePayload =====
-    @Test
-    void salvoFireRoundtrip() {
-        SalvoFirePayload p = new SalvoFirePayload((byte) 1, 100.5, 64.0, -200.5);
-        assertEquals(p, roundtrip(SalvoFirePayload.STREAM_CODEC, p));
-    }
-
     // ===== ScopeEnterPayload =====
     @Test
     void scopeEnterRoundtrip() {
@@ -316,7 +309,7 @@ class PayloadCodecRoundtripTest {
         assertNotNull(SkinSyncPayload.TYPE);
         assertNotNull(EntityCoreSyncPayload.TYPE);
         assertNotNull(AswSonarSyncPayload.TYPE);
-        assertNotNull(SalvoFirePayload.class);
+        assertNotNull(CannonHoldFirePayload.class);
         assertNotNull(ShakeEffectPayload.class);
         assertNotNull(AircraftLaunchPosePayload.class);
         assertNotNull(CannonImpactEffectPayload.class);

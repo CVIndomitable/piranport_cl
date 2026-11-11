@@ -119,12 +119,6 @@ public final class CannonReloading {
         if (!core.isEmpty()) TransformationManager.writeCoreToConfiguredSlot(player, core);
     }
 
-    public static void syncAmmoToSiblingGuns(Player player) {
-        ItemStack source = player.getMainHandItem();
-        String selected = new WeaponState(source).getSelectedAmmoType().ammoItemId();
-        if (selected != null && !selected.isEmpty()) selectAmmo(player, source, selected);
-    }
-
     private static void updateSelection(Player player, ItemStack core, int slot,
             ItemStack weapon, Item type, String ammoId) {
         if (weapon.getItem() != type) return;

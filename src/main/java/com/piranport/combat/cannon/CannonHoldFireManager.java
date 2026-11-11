@@ -63,6 +63,11 @@ public final class CannonHoldFireManager {
         SESSIONS.remove(player.getUUID());
     }
 
+    /** 清理停服时尚未收到松键或登出事件的会话。 */
+    public static void clearAll() {
+        SESSIONS.clear();
+    }
+
     private static boolean valid(ServerPlayer player, Session session) {
         return session.context.isValid(player, player.serverLevel(), player.getMainHandItem(),
                 player.isAlive(), player.isSpectator())

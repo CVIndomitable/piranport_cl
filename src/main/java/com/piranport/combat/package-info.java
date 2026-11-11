@@ -5,7 +5,7 @@
  * <ul>
  *   <li>{@link com.piranport.combat.TransformationManager} — 变身状态管理</li>
  *   <li>{@link com.piranport.combat.BallisticSolver} — 弹道求解器</li>
- *   <li>{@link com.piranport.combat.SalvoManager} — 齐射调度器</li>
+ *   <li>{@link com.piranport.combat.cannon.CannonHoldFireManager} — 火炮按住轮射</li>
  *   <li>{@link com.piranport.combat.TorpedoGuidanceManager} — 鱼雷制导</li>
  * </ul>
  *

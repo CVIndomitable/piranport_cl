@@ -26,7 +26,6 @@ import com.piranport.combat.cannon.CannonAim.*;
 import com.piranport.combat.cannon.CannonAmmoRules;
 import com.piranport.combat.cannon.CannonReloading;
 import com.piranport.combat.cannon.CannonInventory;
-import com.piranport.combat.cannon.CannonSalvos;
 import static com.piranport.combat.cannon.CannonInventory.findCoreSlotIndex;
 import static com.piranport.combat.cannon.CannonFiring.fireLoadedCannon;
 
@@ -37,7 +36,7 @@ import static com.piranport.combat.cannon.CannonFiring.fireLoadedCannon;
  *
  * <p><b>门面瘦身约定</b>：本类只保留 {@code tryFireFromInventory} / {@code fireWeaponAtSlot}
  * 两个真正的武器分派入口。其余 {@code recallAllAircraft} / {@code refillAircraftFuel} /
- * {@code tickCannonAutoReload} / {@code matchesCaliber} / {@code beginSalvo} 等是纯转发，
+ * {@code tickCannonAutoReload} / {@code matchesCaliber} 等是纯转发，
  * <b>不要再往里加新的转发方法</b>——新代码直接调 {@code XxxFireStrategy} / {@code CannonXxx}。
  * 已有转发随调用方迁移自然删除，不一次性清。
  */
@@ -186,8 +185,4 @@ public final class ShipCoreCombat {
         return CannonAmmoRules.matchesCaliber(ammo, weapon, level);
     }
 
-    public static void beginSalvo(ServerPlayer player, Item weaponType,
-            int aimMode, double ax, double ay, double az) {
-        CannonSalvos.beginSalvo(player, weaponType, aimMode, ax, ay, az);
-    }
 }

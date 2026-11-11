@@ -3,8 +3,6 @@ package com.piranport.combat.cannon;
 import com.piranport.combat.TransformationManager;
 import com.piranport.combat.data.WeaponState;
 import net.minecraft.world.item.Item;
-import java.util.ArrayList;
-import java.util.List;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -75,32 +73,6 @@ public final class CannonInventory {
             if (ready.test(slot)) return slot;
         }
         return -1;
-    }
-
-    public static List<int[]> findMatchingArtillerySlots(Player player, Item weaponType, ItemStack coreStack) {
-        List<int[]> result = new ArrayList<>();
-        Inventory inv = player.getInventory();
-        long now = player.level().getGameTime();
-
-        for (int i = 0; i < inv.items.size(); i++) {
-            ItemStack stack = inv.items.get(i);
-            if (stack.getItem() == weaponType
-                    && !new WeaponState(stack).isOnCooldown(now)
-                    && isCannonReadyToFire(stack, player.level())) {
-                int coreSlot = findCoreSlotIndex(inv, player, i);
-                result.add(new int[]{i, coreSlot});
-            }
-        }
-
-        ItemStack offhand = inv.offhand.get(0);
-        if (offhand.getItem() == weaponType
-                && !new WeaponState(offhand).isOnCooldown(now)
-                && isCannonReadyToFire(offhand, player.level())) {
-            int coreSlot = findCoreSlotIndex(inv, player, 40);
-            result.add(new int[]{40, coreSlot});
-        }
-
-        return result;
     }
 
     /** 按实例定位，副手使用 40；不把脱离背包的旧 ItemStack 当成主手。 */

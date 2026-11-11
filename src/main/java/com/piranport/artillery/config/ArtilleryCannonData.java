@@ -26,7 +26,7 @@ public record ArtilleryCannonData(
         float maxElevation,
         float turretSpeed,
         /**
-         * 旧版装填模式字段，保留以兼容数据和原有按住连射行为，不再控制火炮装填。
+         * 旧版装填模式字段，仅为兼容现有数据保留，不控制装填或射击。
          */
         String loadingMode,
         /**
@@ -89,7 +89,7 @@ public record ArtilleryCannonData(
         if (horizontalSpread <= 0) horizontalSpread = dispersion;
         if (maxElevation <= 0) maxElevation = getDefaultMaxElevation(caliber);
         if (turretSpeed <= 0) turretSpeed = 3.0f;
-        // 旧字段缺省值保留原逻辑，以免改变已有数据的按住连射行为。
+        // 旧字段缺省值保留原逻辑，兼容已有数据。
         if (loadingMode == null || loadingMode.isBlank()) {
             loadingMode = (caliber <= 4) ? "AUTO" : "MANUAL";
         } else {
@@ -198,7 +198,7 @@ public record ArtilleryCannonData(
                 20, 1, 5.0f);
     }
 
-    /** 旧 AUTO 标记，现只用于保留按住连射行为。 */
+    /** 旧数据兼容查询，不决定火炮装填或射击行为。 */
     public boolean isAutoLoading() {
         return "AUTO".equals(loadingMode);
     }

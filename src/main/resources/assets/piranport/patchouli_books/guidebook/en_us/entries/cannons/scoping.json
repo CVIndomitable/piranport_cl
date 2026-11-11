@@ -10,7 +10,7 @@
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)Controls:$()$(br)• Right-click: Enter scope mode$(br)• Mouse: Adjust aim$(br)• Scroll wheel: Adjust zoom level$(br)• Left-click: Fire$(br)• Right-click or Esc: Exit scope$(br2)$(bold)Tip:$() Scope mode reduces spread and improves accuracy. Use for long-range engagements!"
+      "text": "$(bold)Controls:$()$(br)• Hold right-click: Aim$(br)• Mouse: Adjust aim$(br)• Scroll wheel: Adjust zoom level$(br)• Tap left-click: Fire one ready cannon, preferring the held cannon$(br)• Hold left-click: Fire ready cannons of the same type at salvo intervals$(br)• Release to stop firing"
     }
   ]
 }

@@ -188,7 +188,7 @@ class CannonStatFormulaTest {
             assertEquals(fb, json, e.id() + " JSON 与代码回退值不一致");
             assertEquals(e.caliberInches(), json.caliberInches(), 1e-4, e.id());
             assertEquals(e.tier().id(), json.tier(), e.id());
-            // 旧 AUTO 标记保留速射炮按住连射，所有炮的装填与此字段无关。
+            // 旧 AUTO 标记只保留数据兼容，装填与射击不依赖此字段。
             assertEquals("british_twin_3inch_rapid_gun".equals(e.id()) ? "AUTO" : "MANUAL",
                     json.loadingMode(), e.id());
             assertEquals(CannonStatFormula.panelDamage(e.caliberInches()), (int) json.damage(), e.id());

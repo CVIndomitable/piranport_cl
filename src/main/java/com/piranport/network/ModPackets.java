@@ -283,6 +283,11 @@ public class ModPackets {
                 ScopeFirePayload.STREAM_CODEC,
                 ScopeFirePayload::handle
         );
+        registrar.playToServer(
+                CannonHoldFirePayload.TYPE,
+                CannonHoldFirePayload.STREAM_CODEC,
+                CannonHoldFirePayload::handle
+        );
 
         // ===== Salvo Fire (double-click) =====
         registrar.playToServer(

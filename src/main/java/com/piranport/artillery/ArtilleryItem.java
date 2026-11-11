@@ -100,9 +100,6 @@ public class ArtilleryItem extends Item {
     public float getCustomGravity() { return getData().gravity(); }
     public float getExplosionPower() { return getData().explosionPower(); }
 
-    /** 保留旧 AUTO 数据的按住连射行为；该字段不再控制装填。 */
-    public boolean supportsHoldFire() { return getData().isAutoLoading(); }
-
     /**
      * 平时不显示原版耐久条，只在火炮损坏（耐久剩最后一点）时显示空条。
      *

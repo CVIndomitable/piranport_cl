@@ -271,6 +271,15 @@ class PayloadCodecRoundtripTest {
     }
 
     // ===== ScopeFirePayload =====
+
+    @Test
+    void cannonHoldFireRoundTrip() {
+        for (byte action : new byte[]{CannonHoldFirePayload.START, CannonHoldFirePayload.UPDATE,
+                CannonHoldFirePayload.STOP}) {
+            CannonHoldFirePayload payload = new CannonHoldFirePayload(action, true, 4.5, 64, -20);
+            assertEquals(payload, roundtrip(CannonHoldFirePayload.STREAM_CODEC, payload));
+        }
+    }
     @Test
     void scopeFireRoundtrip() {
         ScopeFirePayload p = new ScopeFirePayload(ScopeFirePayload.FireMode.QUICK_FIRE, 1.0, 2.0, 3.0);

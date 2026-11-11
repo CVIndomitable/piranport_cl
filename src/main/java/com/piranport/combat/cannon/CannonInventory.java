@@ -37,41 +37,44 @@ public final class CannonInventory {
     }
 
     public static int[] findBestArtillerySlot(Player player, Item weaponType, ItemStack coreStack) {
+        return findReadyArtillerySlot(player, weaponType, -1);
+    }
+
+    static int[] findNextArtillerySlot(Player player, Item weaponType, int previousSlot) {
+        return findReadyArtillerySlot(player, weaponType, previousSlot);
+    }
+
+    private static int[] findReadyArtillerySlot(Player player, Item weaponType, int previousSlot) {
         Inventory inv = player.getInventory();
         long now = player.level().getGameTime();
-
-        // 优先手持
-        int heldSlot = inv.selected;
-        ItemStack held = inv.items.get(heldSlot);
-        if (held.getItem() == weaponType
-                && !new WeaponState(held).isOnCooldown(now)
-                && isCannonReadyToFire(held, player.level())) {
-            int coreSlot = findCoreSlotIndex(inv, player, heldSlot);
-            return new int[]{heldSlot, coreSlot};
-        }
-
-        // 从左到右扫描
-        for (int i = 0; i < inv.items.size(); i++) {
-            if (i == heldSlot) continue;
-            ItemStack stack = inv.items.get(i);
-            if (stack.getItem() == weaponType
+        java.util.function.IntPredicate ready = i -> {
+            ItemStack stack = weaponAt(inv, i);
+            return stack.getItem() == weaponType
                     && !new WeaponState(stack).isOnCooldown(now)
-                    && isCannonReadyToFire(stack, player.level())) {
-                int coreSlot = findCoreSlotIndex(inv, player, i);
-                return new int[]{i, coreSlot};
-            }
-        }
+                    && !CannonStats.isCannonDamaged(stack, player.level())
+                    && isCannonReadyToFire(stack, player.level());
+        };
+        int slot = previousSlot < 0 ? chooseReadySlot(inv.items.size(), inv.selected, ready)
+                : chooseNextReadySlot(inv.items.size(), previousSlot, ready);
+        return slot < 0 ? null : new int[]{slot, findCoreSlotIndex(inv, player, slot)};
+    }
 
-        // 副手
-        ItemStack offhand = inv.offhand.get(0);
-        if (offhand.getItem() == weaponType
-                && !new WeaponState(offhand).isOnCooldown(now)
-                && isCannonReadyToFire(offhand, player.level())) {
-            int coreSlot = findCoreSlotIndex(inv, player, 40);
-            return new int[]{40, coreSlot};
+    static int chooseReadySlot(int size, int selected, java.util.function.IntPredicate ready) {
+        if (selected >= 0 && selected < size && ready.test(selected)) return selected;
+        for (int i = 0; i < size; i++) {
+            if (i != selected && ready.test(i)) return i;
         }
+        return ready.test(40) ? 40 : -1;
+    }
 
-        return null;
+    static int chooseNextReadySlot(int size, int previousSlot, java.util.function.IntPredicate ready) {
+        int start = previousSlot == 40 ? size : previousSlot;
+        for (int offset = 1; offset <= size + 1; offset++) {
+            int index = (start + offset) % (size + 1);
+            int slot = index == size ? 40 : index;
+            if (ready.test(slot)) return slot;
+        }
+        return -1;
     }
 
     public static List<int[]> findMatchingArtillerySlots(Player player, Item weaponType, ItemStack coreStack) {

@@ -278,7 +278,7 @@ public final class NodeBattleField {
                     escortRoute, escortProgress, lostTransport));
         } else {
             spawned.addAll(spawnGroups(dungeonLevel, instance, node, enemySet, allEntries,
-                    instance.getNodeSpawnPos(node.nodeId()), lostTransport));
+                    normalFleetCenter(instance.getPlayerSpawnPos(node.nodeId())), NORMAL_FLEET_RADIUS, lostTransport));
         }
 
         if (spawned.isEmpty()) {
@@ -316,7 +316,19 @@ public final class NodeBattleField {
         return true;
     }
 
-    /** 普通节点与护航路径/侧翼共用的编队半径；护航锚点也据此留出边界余量。 */
+    /** 普通战斗编队在玩家前方生成，不能散到视距或低阶敌人索敌范围以外。 */
+    private static final int NORMAL_FLEET_DISTANCE = 24;
+    static final int NORMAL_FLEET_RADIUS = 6;
+    static BlockPos normalFleetCenter(BlockPos playerSpawn) {
+        return playerSpawn.east(NORMAL_FLEET_DISTANCE);
+    }
+
+    static Vec3 fleetPosition(BlockPos center, int radius, double angle) {
+        return new Vec3(center.getX() + Math.cos(angle) * radius, DungeonConstants.SPAWN_Y,
+                center.getZ() + Math.sin(angle) * radius);
+    }
+
+    /** 护航路径和侧翼维持原有范围及边界余量。 */
     private static final int FLEET_SPAWN_RADIUS = DungeonConstants.NODE_AREA_SIZE * 30 / 128;
 
     /**
@@ -357,9 +369,9 @@ public final class NodeBattleField {
         // 迷路运输舰只替换非空那一侧的末位，避免两侧各替换一次导致概率翻倍
         boolean onPath = !pathEntries.isEmpty();
         List<Entity> spawned = new ArrayList<>(spawnGroups(dungeonLevel, instance, node, enemySet,
-                pathEntries, pathCenter, lostTransport && onPath));
+                pathEntries, pathCenter, FLEET_SPAWN_RADIUS, lostTransport && onPath));
         spawned.addAll(spawnGroups(dungeonLevel, instance, node, enemySet,
-                flankEntries, flankCenter, lostTransport && !onPath));
+                flankEntries, flankCenter, FLEET_SPAWN_RADIUS, lostTransport && !onPath));
         return spawned;
     }
 
@@ -377,7 +389,7 @@ public final class NodeBattleField {
     /** 区分潜艇与水面舰，各自成队生成；潜艇不参与水面舰队形。 */
     private static List<Entity> spawnGroups(ServerLevel dungeonLevel, DungeonInstance instance, NodeData node,
                                             EnemySetData enemySet, List<SpawnEntry> entries,
-                                            BlockPos center, boolean lostTransport) {
+                                            BlockPos center, int spawnRadius, boolean lostTransport) {
         List<Entity> out = new ArrayList<>();
         List<SpawnEntry> surfaceEntries = new ArrayList<>();
         List<SpawnEntry> subEntries = new ArrayList<>();
@@ -391,11 +403,11 @@ public final class NodeBattleField {
 
         FormationType formation = parseFormation(enemySet.formation());
         if (!surfaceEntries.isEmpty()) {
-            out.addAll(spawnFleet(dungeonLevel, instance, node, center, FLEET_SPAWN_RADIUS,
+            out.addAll(spawnFleet(dungeonLevel, instance, node, center, spawnRadius,
                     surfaceEntries, formation, true, lostTransport));
         }
         if (!subEntries.isEmpty()) {
-            out.addAll(spawnFleet(dungeonLevel, instance, node, center, FLEET_SPAWN_RADIUS,
+            out.addAll(spawnFleet(dungeonLevel, instance, node, center, spawnRadius,
                     subEntries, FormationType.SINGLE_LINE, false, lostTransport && surfaceEntries.isEmpty()));
         }
         return out;
@@ -437,7 +449,6 @@ public final class NodeBattleField {
         // 逐个生成
         double angleStep = (2.0 * Math.PI) / specs.size();
         double baseAngle = dungeonLevel.getRandom().nextDouble() * Math.PI * 2;
-        double baseDist = spawnRadius;
         boolean bossLeads = false;
 
         for (int i = 0; i < specs.size(); i++) {
@@ -454,9 +465,9 @@ public final class NodeBattleField {
 
             // 初始位置：在编队队形中均匀分布（后续由 FollowLeaderGoal 微调）
             double angle = baseAngle + angleStep * i;
-            double dist = baseDist;
-            double ex = center.getX() + Math.cos(angle) * dist;
-            double ez = center.getZ() + Math.sin(angle) * dist;
+            Vec3 position = fleetPosition(center, spawnRadius, angle);
+            double ex = position.x;
+            double ez = position.z;
             entity.setPos(ex, DungeonConstants.SPAWN_Y, ez);
 
             if (entity instanceof AbstractDeepOceanEntity abyssal) {
@@ -464,14 +475,6 @@ public final class NodeBattleField {
                 // distance/peaceful despawn rules while the node is active.
                 abyssal.addTag("piranport_dungeon");
                 abyssal.setFleetGroupId(groupId);
-                if (abyssal instanceof DeepOceanBossEntity && !bossLeads) {
-                    // Boss 独立领队：占领舰槽位但不计入护卫成员，护卫人数与队形只算护卫
-                    bossLeads = true;
-                    group.setLeaderUuid(abyssal.getUUID());
-                } else {
-                    // 无 Boss 时首个护卫即领舰（FleetGroup.addMember 自动设置）
-                    mgr.addMember(groupId, abyssal.getUUID());
-                }
                 if (spec.isFlagship) {
                     entity.addTag("dungeon_flagship");
                     // 只改旗舰数值，不改旗舰是谁；在 difficulty_scale 之后叠加。
@@ -490,8 +493,20 @@ public final class NodeBattleField {
 
             entity.addTag("dungeon_instance_" + instance.getInstanceId());
             entity.addTag("dungeon_node_" + node.nodeId());
-            dungeonLevel.addFreshEntity(entity);
-            fleet.add(entity);
+            if (dungeonLevel.addFreshEntity(entity)) {
+                fleet.add(entity);
+                if (entity instanceof AbstractDeepOceanEntity abyssal) {
+                    if (abyssal instanceof DeepOceanBossEntity && !bossLeads) {
+                        bossLeads = true;
+                        group.setLeaderUuid(abyssal.getUUID());
+                    } else {
+                        mgr.addMember(groupId, abyssal.getUUID());
+                    }
+                }
+            } else {
+                PiranPort.LOGGER.warn("副本 {} 节点 {} 无法生成敌人 {} 于 {}", instance.getInstanceId(),
+                        node.nodeId(), spec.entityId(), entity.blockPosition());
+            }
         }
 
         return fleet;

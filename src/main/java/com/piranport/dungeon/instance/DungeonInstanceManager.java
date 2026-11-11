@@ -40,11 +40,6 @@ public class DungeonInstanceManager extends SavedData {
 
     private final Map<UUID, DungeonInstance> instances = new HashMap<>();
     private int nextIndex = 0;
-    private final java.util.Queue<Integer> freedIndices = new java.util.ArrayDeque<>();
-    /** Indices freed this tick — moved to freedIndices on next sweepLeaks() call so
-     *  any in-flight crate/portal references in the just-discarded region cannot
-     *  resolve into a freshly-created instance reusing the same offset. */
-    private final java.util.List<Integer> pendingFreedIndices = new java.util.ArrayList<>();
 
     public DungeonInstanceManager() {}
 
@@ -62,7 +57,8 @@ public class DungeonInstanceManager extends SavedData {
         }
 
         UUID instanceId = UUID.randomUUID();
-        int index = freedIndices.isEmpty() ? nextIndex++ : freedIndices.poll();
+        // 区块只在首次生成时应用地形计划；旧坐标即使释放也不能重新分配给另一关。
+        int index = nextIndex++;
         DungeonInstance instance = new DungeonInstance(instanceId, stageId, index);
         instance.setState(DungeonInstance.State.ACTIVE);
         instance.setLecternPos(lecternPos);
@@ -88,7 +84,7 @@ public class DungeonInstanceManager extends SavedData {
             return null;
         }
         UUID instanceId = UUID.randomUUID();
-        int index = freedIndices.isEmpty() ? nextIndex++ : freedIndices.poll();
+        int index = nextIndex++;
         DungeonInstance instance = new DungeonInstance(instanceId, stageId, index);
         // 无人在场 → 挂起，关卡计时不在建造/等待期间推进；首个玩家进本时 refreshPlayerPresence 恢复。
         instance.setState(DungeonInstance.State.SUSPENDED);
@@ -176,16 +172,10 @@ public class DungeonInstanceManager extends SavedData {
         return false;
     }
 
-    /**
-     * Cleans up an instance, removing it from the active list.
-     * The actual block/entity cleanup in the dungeon dimension should happen before calling this.
-     * The freed region index is delayed until the next sweepLeaks() pass so a brand-new
-     * instance cannot land on top of any not-yet-discarded entities from the old region.
-     */
+    /** 清理实例；已生成过的区域不能分配给新的实例。 */
     public void cleanupInstance(UUID instanceId) {
         DungeonInstance inst = instances.remove(instanceId);
         if (inst != null) {
-            pendingFreedIndices.add(inst.getInstanceIndex());
             inst.setState(DungeonInstance.State.CLEANUP);
             setDirty();
             PiranPort.LOGGER.info("Cleaned up dungeon instance {}", instanceId);
@@ -194,15 +184,9 @@ public class DungeonInstanceManager extends SavedData {
 
     /**
      * 整合版 §3.4：副本永远不会重置进度，也不会自动删除；复制钥匙创建独立的新实例。
-     * 本方法仅将 pendingFreedIndices 提升为 freedIndices 供后续新实例复用区域索引；
-     * SUSPENDED 状态的实例永不被自动清理（区块卸载由原版 ChunkUnloadEvent 接管）。
+     * SUSPENDED 状态的实例永不被自动清理；已生成区域不会被新实例复用。
      */
     public void sweepLeaks() {
-        if (!pendingFreedIndices.isEmpty()) {
-            freedIndices.addAll(pendingFreedIndices);
-            pendingFreedIndices.clear();
-            setDirty();
-        }
     }
 
     /** 战斗只登记已进入，通关由传送门结算登记。 */
@@ -247,13 +231,6 @@ public class DungeonInstanceManager extends SavedData {
     @Override
     public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
         tag.putInt("NextIndex", nextIndex);
-        if (!freedIndices.isEmpty()) {
-            tag.putIntArray("FreedIndices", freedIndices.stream().mapToInt(Integer::intValue).toArray());
-        }
-        // P0 #2: 持久化 pendingFreedIndices 防止服务器崩溃时索引永久丢失
-        if (!pendingFreedIndices.isEmpty()) {
-            tag.putIntArray("PendingFreedIndices", pendingFreedIndices.stream().mapToInt(Integer::intValue).toArray());
-        }
         ListTag list = new ListTag();
         for (DungeonInstance inst : instances.values()) {
             list.add(inst.save());
@@ -265,17 +242,6 @@ public class DungeonInstanceManager extends SavedData {
     public static DungeonInstanceManager load(CompoundTag tag, HolderLookup.Provider registries) {
         DungeonInstanceManager mgr = new DungeonInstanceManager();
         mgr.nextIndex = tag.getInt("NextIndex");
-        if (tag.contains("FreedIndices")) {
-            for (int idx : tag.getIntArray("FreedIndices")) {
-                mgr.freedIndices.add(idx);
-            }
-        }
-        // P0 #2: 恢复 pendingFreedIndices
-        if (tag.contains("PendingFreedIndices")) {
-            for (int idx : tag.getIntArray("PendingFreedIndices")) {
-                mgr.pendingFreedIndices.add(idx);
-            }
-        }
         ListTag list = tag.getList("Instances", Tag.TAG_COMPOUND);
         for (int i = 0; i < list.size(); i++) {
             DungeonInstance inst = DungeonInstance.load(list.getCompound(i));

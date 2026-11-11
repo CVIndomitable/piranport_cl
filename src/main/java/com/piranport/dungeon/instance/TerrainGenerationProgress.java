@@ -13,8 +13,8 @@ import java.util.UUID;
 /**
  * 副本建造的后台进度播报（服务端控制台）。
  *
- * <p>副本实例的地形由 {@link TerrainGenerationPipeline} 按节点分帧推进：先铺节点海水/海床，
- * 再写地形特征、POI（出生平台与记录点）和节点屏障环；
+ * <p>副本实例的地形由 {@link TerrainGenerationPipeline} 按节点分帧请求区块；
+ * 海洋、节点地形、POI 和屏障随区块生成；
  * 地形就绪后玩家才进本，进本时才刷怪。这些阶段原先在控制台完全静默，玩家只能靠书台纹路
  * 颜色猜建造进度。本类在阶段切换、每跨越 10% 进度时各打一行中文日志，并在完成时打一行总耗时，
  * 便于服务器后台确认「卡在哪一步」。</p>
@@ -76,7 +76,7 @@ public final class TerrainGenerationProgress {
         if (instance == null || node == null) return;
         long now = level.getServer().getTickCount();
         String key = instance.getInstanceId() + "|" + node.nodeId();
-        long remaining = TerrainGenerationPipeline.queuedBlocks(level, instance, node);
+        long remaining = TerrainGenerationPipeline.queuedChunks(level, instance, node);
         boolean ready = TerrainGenerationPipeline.isReady(level, instance, node);
 
         Track track = TRACKS.get(key);
@@ -91,7 +91,7 @@ public final class TerrainGenerationProgress {
         if (ready) {
             TRACKS.remove(key);
             double seconds = (now - track.startTick) / 20.0;
-            PiranPort.LOGGER.info("[副本生成] 实例 {} 关卡 {} 节点 {} | 地形建造完成 | 初始剩余约 {} 方块位置 | 墙钟耗时 {} | tick 时间 {}（{} tick）",
+            PiranPort.LOGGER.info("[副本生成] 实例 {} 关卡 {} 节点 {} | 地形建造完成 | 初始剩余 {} 区块 | 墙钟耗时 {} | tick 时间 {}（{} tick）",
                     shortId(instance.getInstanceId()), instance.getStageId(), node.nodeId(),
                     track.total, formatSeconds((System.nanoTime() - track.startNanos) / 1_000_000_000.0),
                     formatSeconds(seconds), now - track.startTick);
@@ -108,7 +108,7 @@ public final class TerrainGenerationProgress {
             track.phase = phase;
             track.reported = Math.floor(fraction / STEP) * STEP;
             track.lastLogTick = now;
-            PiranPort.LOGGER.info("[副本生成] 实例 {} 关卡 {} 节点 {} | 阶段：{} | 进度 {}% | 剩余约 {} 方块 | 墙钟已用 {} | tick 时间 {}",
+            PiranPort.LOGGER.info("[副本生成] 实例 {} 关卡 {} 节点 {} | 阶段：{} | 进度 {}% | 剩余 {} 区块 | 墙钟已用 {} | tick 时间 {}",
                     shortId(instance.getInstanceId()), instance.getStageId(), node.nodeId(),
                     phase, (int) Math.round(fraction * 100), remaining,
                     formatSeconds((System.nanoTime() - track.startNanos) / 1_000_000_000.0),
@@ -122,7 +122,7 @@ public final class TerrainGenerationProgress {
     private static String phaseName(ServerLevel level, DungeonInstance instance, NodeData node) {
         TerrainGenerationState local = TerrainGenerationPipeline.state(level, instance, node);
         return switch (local.phase()) {
-            case BASE -> "方块基底（节点）";
+            case BASE -> "区块准备（节点）";
             case FEATURES -> "地形特征（节点：" + terrainName(node) + "）";
             case POI -> "POI（节点，出生平台/记录点）";
             case BOUNDARY -> "边界屏障环（节点）";

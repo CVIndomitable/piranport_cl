@@ -116,7 +116,7 @@ public final class DungeonProgressionRouter {
         if (!instance.hasEnteredNode(targetId)
                 && !NodeBattleField.isTerrainReady(dungeonLevel, instance, target)) {
             NodeBattleField.tickTerrain(dungeonLevel, instance, target);
-            notifyBuilding(player, targetId);
+            notifyBuilding(player, targetId, dungeonLevel, instance, target);
             return true;
         }
 
@@ -139,13 +139,17 @@ public final class DungeonProgressionRouter {
         return true;
     }
 
-    private static void notifyBuilding(ServerPlayer player, String targetId) {
+    private static void notifyBuilding(ServerPlayer player, String targetId, ServerLevel level,
+                                       DungeonInstance instance, NodeData node) {
         long now = player.server.getTickCount();
         Long last = LAST_BUILD_MESSAGE.get(player.getUUID());
         if (last != null && now - last < BUILD_MESSAGE_INTERVAL) return;
         LAST_BUILD_MESSAGE.put(player.getUUID(), now);
+        double progress = com.piranport.dungeon.instance.TerrainGenerationPipeline.buildFraction(level, instance, node);
         player.displayClientMessage(
-                Component.translatable("dungeon.piranport.advance_building", targetId), true);
+                Component.translatable("dungeon.piranport.advance_building", targetId)
+                        .append(" " + com.piranport.dungeon.instance.TerrainGenerationPipeline.progressBar(progress)
+                                + " " + (int) (progress * 100) + "%"), true);
     }
 
     private static void notifyBlocked(ServerPlayer player, String targetId) {

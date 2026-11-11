@@ -146,8 +146,10 @@ public final class DungeonBranchRouter {
                 && !NodeBattleField.isTerrainReady(dungeonLevel, instance, targetNode)) {
             // 地形未就绪：不退本，原地推进建造；传送门每 10 tick 会再次调用本方法。
             NodeBattleField.tickTerrain(dungeonLevel, instance, targetNode);
-            player.displayClientMessage(Component.translatable(
-                    "dungeon.piranport.advance_building", target), true);
+            double progress = com.piranport.dungeon.instance.TerrainGenerationPipeline.buildFraction(dungeonLevel, instance, targetNode);
+            player.displayClientMessage(Component.translatable("dungeon.piranport.advance_building", target)
+                    .append(" " + com.piranport.dungeon.instance.TerrainGenerationPipeline.progressBar(progress)
+                            + " " + (int) (progress * 100) + "%"), true);
             return true;
         }
         DungeonNodeRouter.enterNode(player.serverLevel(), instance, targetNode, stage, player, key);

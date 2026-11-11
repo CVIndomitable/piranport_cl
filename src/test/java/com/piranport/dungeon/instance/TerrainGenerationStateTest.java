@@ -8,6 +8,13 @@ import static org.junit.jupiter.api.Assertions.*;
 /** 验证分帧游标和存档恢复，不启动完整 Minecraft 世界。 */
 class TerrainGenerationStateTest {
     @Test
+    void progressBarTracksChunkPreparation() {
+        assertEquals("[..........]", TerrainGenerationPipeline.progressBar(0));
+        assertEquals("[|||||.....]", TerrainGenerationPipeline.progressBar(0.5));
+        assertEquals("[||||||||||]", TerrainGenerationPipeline.progressBar(1));
+    }
+
+    @Test
     void progressesInOrderAndDoesNotSkipPhase() {
         var state = new TerrainGenerationState();
         state.initialize(256, 256, 42L, 3);
@@ -94,26 +101,7 @@ class TerrainGenerationStateTest {
     }
 
     @Test
-    void remainingWorkCountsNodeBaseAndEachPhaseSeparately() {
-        long base = 512L * 512 * 17;
-        assertEquals(base, TerrainGenerationPipeline.baseBlockCount());
-        assertEquals(base + 500 + 75 + 1000,
-                TerrainGenerationPipeline.remainingBlocks(TerrainGenerationState.Phase.BASE, 0, 500, 75, 1000));
-        assertEquals(base - 8192 + 500 + 75 + 1000,
-                TerrainGenerationPipeline.remainingBlocks(TerrainGenerationState.Phase.BASE, 8192, 500, 75, 1000));
-        assertEquals(400 + 75 + 1000,
-                TerrainGenerationPipeline.remainingBlocks(TerrainGenerationState.Phase.FEATURES, 100, 500, 75, 1000));
-        assertEquals(0, TerrainGenerationPipeline.remainingBlocks(TerrainGenerationState.Phase.READY, 0, 500, 75, 1000));
-    }
-
-    @Test
-    void nodeBaseColumnsStayInsideTheirOwnTile() {
-        int centerX = -768, centerZ = 1280;
-        assertEquals(-1024, TerrainGenerationPipeline.baseColumnX(centerX, 0));
-        assertEquals(1024, TerrainGenerationPipeline.baseColumnZ(centerZ, 0));
-        assertEquals(-513, TerrainGenerationPipeline.baseColumnX(centerX, 512 * 512 - 1));
-        assertEquals(1535, TerrainGenerationPipeline.baseColumnZ(centerZ, 512 * 512 - 1));
-        assertEquals(-1024, TerrainGenerationPipeline.baseColumnX(centerX, 512));
-        assertEquals(1025, TerrainGenerationPipeline.baseColumnZ(centerZ, 512));
+    void nodeContains1024Chunks() {
+        assertEquals(1024, TerrainGenerationPipeline.nodeChunkCount());
     }
 }

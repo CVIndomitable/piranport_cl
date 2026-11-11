@@ -6,6 +6,7 @@ import com.piranport.dungeon.DungeonConstants;
 import com.piranport.dungeon.data.CheckpointData;
 import com.piranport.dungeon.data.DungeonRegistry;
 import com.piranport.dungeon.data.NodeData;
+import com.piranport.dungeon.data.StageData;
 import com.piranport.dungeon.data.TerrainType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -19,24 +20,22 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiConsumer;
 
 
 /**
  * 副本战场的可恢复分帧生成器。
  *
- * <p>每次 tick 最多写入 {@link #blocksPerTick()} 个方块（默认 8192，走调试终端
- * {@code global.terrain.blocks_per_tick} 可调）。基底按列深度写入海水和海床，
- * 特征、POI、边界分阶段处理；避免一次调用把 512×512 节点全部同步写完。</p>
+ * <p>每 tick 使用 {@link #blocksPerTick()} 额度（默认 8192）；每次请求区块计 1024。
+ * 海洋、屏障、固定节点特征和 POI 都由区块生成器写入。</p>
  */
 public final class TerrainGenerationPipeline {
-    public static final int MAP_SIZE = DungeonConstants.MAP_USABLE_SIZE;
     public static final int MAX_DEPTH = 16;
     private static final int SEA = DungeonConstants.SEA_LEVEL;
-    private static final int FLAGS = 2 | 16 | 64;
 
     private TerrainGenerationPipeline() {}
 
-    /** 每 tick 写入上限；默认 8192，可由调试终端 {@code global.terrain.blocks_per_tick} 调整。 */
+    /** 每 tick 的区块准备额度，沿用终端参数 {@code global.terrain.blocks_per_tick}。 */
     public static int blocksPerTick() {
         return ModEquipmentConfig.TERRAIN_BLOCKS_PER_TICK.get();
     }
@@ -45,7 +44,7 @@ public final class TerrainGenerationPipeline {
      * 取（或创建）某实例 / 某节点的生成游标。
      *
      * <p>WHY 缓存键串：本方法每 tick 会被调用近十次（{@link #tick}、{@link #isReady}、
-     * {@link #queuedBlocks} 及进度播报），每次都要做字符串拼接 + {@link UUID#nameUUIDFromBytes}（MD5）。
+     * {@link #queuedChunks} 及进度播报），每次都要做字符串拼接 + {@link UUID#nameUUIDFromBytes}（MD5）。
      * 键串只由（实例 ID，节点 ID）决定、与存档内容无关，是纯函数，因此可以长期缓存，命中后零开销。</p>
      *
      * <p>WHY 只缓存键串、不缓存 {@link TerrainGenerationState} 句柄：SavedData 在维度卸载 / 重载后
@@ -84,6 +83,7 @@ public final class TerrainGenerationPipeline {
 
     /** 开始或继续生成；返回 true 仅表示本节点全部方块已准备好。 */
     public static boolean tick(ServerLevel level, DungeonInstance instance, NodeData node) {
+        registerPlans(level, instance);
         // 从首次加载区块之前开始计墙钟，不能漏掉第一帧的同步生成开销。
         TerrainGenerationProgress.report(level, instance, node);
         TerrainWorkBudget budget = TerrainWorkBudget.get(level);
@@ -95,19 +95,25 @@ public final class TerrainGenerationPipeline {
         return isReady(level, instance, node);
     }
 
-    /** 调度器提供额度；节点海床、特征和边界都完成后才放行。 */
+    /** 在请求任何节点区块前发布整个实例的计划，避免邻接区块提前生成时缺少地形。 */
+    public static void registerPlans(ServerLevel level, DungeonInstance instance) {
+        StageData stage = DungeonRegistry.INSTANCE.getStage(instance.getStageId());
+        if (stage != null && level.getChunkSource().getGenerator() instanceof DungeonOceanGenerator generator) {
+            generator.registerPlans(instance, stage);
+        }
+    }
+
+    /** 调度器提供额度；节点区块全部准备完成后才放行。 */
     public static int advance(ServerLevel level, DungeonInstance instance, NodeData node, int budget) {
         if (budget <= 0) return 0;
-        long seed = instance.getInstanceId().getMostSignificantBits() ^ instance.getInstanceId().getLeastSignificantBits();
         TerrainGenerationState local = nodeState(level, instance, node);
         int remaining = budget;
         while (remaining > 0) {
             if (local.phase() == TerrainGenerationState.Phase.READY) break;
             int used = switch (local.phase()) {
-                case BASE -> processBase(level, instance, local, seed, remaining);
-                case FEATURES -> processFeatures(level, local, remaining);
-                case POI -> processPoi(level, instance, node, local, remaining);
-                case BOUNDARY -> processBoundary(level, local, remaining);
+                case BASE -> processBase(level, local, remaining);
+                case FEATURES, POI -> { local.nextPhase(); yield 0; }
+                case BOUNDARY -> { local.markReady(); yield 0; }
                 case READY -> 0;
             };
             remaining -= used;
@@ -132,133 +138,73 @@ public final class TerrainGenerationPipeline {
         return local;
     }
 
-    /** 当前持久化队列尚需写入的近似方块数，入口可用于调试或进度提示。 */
-    public static long queuedBlocks(ServerLevel level, DungeonInstance instance, NodeData node) {
+    /** 返回节点尚需准备的区块数。 */
+    public static long queuedChunks(ServerLevel level, DungeonInstance instance, NodeData node) {
         TerrainGenerationState local = nodeState(level, instance, node);
-        long localBoundary = boundaryBlockCount(level, DungeonConstants.NODE_AREA_SIZE);
-        long features = featureCount(node.terrainType() == null ? TerrainType.T1_OCEAN : node.terrainType());
-        long poi = 75 + 28 * checkpointCount(instance, node);
-        return remainingBlocks(local.phase(), local.cursor(), features, poi, localBoundary);
+        return local.phase() == TerrainGenerationState.Phase.BASE
+                ? Math.max(0, nodeChunkCount() - local.cursor()) : 0;
     }
 
-    static long remainingBlocks(TerrainGenerationState.Phase phase, long cursor, long features, long poi, long boundary) {
-        return switch (phase) {
-            case BASE -> Math.max(0, baseBlockCount() - cursor) + features + poi + boundary;
-            case FEATURES -> Math.max(0, features - cursor) + poi + boundary;
-            case POI -> Math.max(0, poi - cursor) + boundary;
-            case BOUNDARY -> Math.max(0, boundary - cursor);
-            default -> 0;
-        };
-    }
-
-    /** 节点地形建造的粗略完成比例（0~1）：分母为全部未开始时的 {@link #queuedBlocks} 口径。 */
+    /** 节点区块准备比例（0~1）。 */
     public static double buildFraction(ServerLevel level, DungeonInstance instance, NodeData node) {
-        TerrainType terrain = node.terrainType() == null ? TerrainType.T1_OCEAN : node.terrainType();
-        long total = baseBlockCount() + featureCount(terrain) + 75L + 28L * checkpointCount(instance, node)
-                + boundaryBlockCount(level, DungeonConstants.NODE_AREA_SIZE);
+        long total = nodeChunkCount();
         if (total <= 0) return 1.0;
-        double remaining = queuedBlocks(level, instance, node);
+        double remaining = queuedChunks(level, instance, node);
         return Math.max(0.0, Math.min(1.0, 1.0 - remaining / total));
     }
 
-    static long baseBlockCount() {
-        return (long) DungeonConstants.NODE_AREA_SIZE * DungeonConstants.NODE_AREA_SIZE * (MAX_DEPTH + 1);
+    public static String progressBar(double fraction) {
+        int filled = (int) Math.floor(Math.max(0, Math.min(1, fraction)) * 10);
+        return "[" + "|".repeat(filled) + ".".repeat(10 - filled) + "]";
     }
 
-    private static int processBase(ServerLevel level, DungeonInstance instance, TerrainGenerationState state,
-                                   long seed, int budget) {
-        long total = baseBlockCount();
+    static long nodeChunkCount() {
+        long side = DungeonConstants.NODE_AREA_SIZE / 16;
+        return side * side;
+    }
+
+    private static int processBase(ServerLevel level, TerrainGenerationState state, int budget) {
+        long total = nodeChunkCount();
         int used = 0;
         long cursor = state.cursor();
-        boolean oceanGenerator = level.getChunkSource().getGenerator() instanceof DungeonOceanGenerator;
-        BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
-        int cachedColumn = -1;
-        int cachedDepth = 0;
+        int chunksPerSide = DungeonConstants.NODE_AREA_SIZE / 16;
+        int minChunkX = (state.startX() - DungeonConstants.NODE_AREA_SIZE / 2) >> 4;
+        int minChunkZ = (state.startZ() - DungeonConstants.NODE_AREA_SIZE / 2) >> 4;
         while (cursor < total && used < budget) {
-            int layer = (int) (cursor % (MAX_DEPTH + 1));
-            int column = (int) (cursor / (MAX_DEPTH + 1));
-            int x = baseColumnX(state.startX(), column);
-            int z = baseColumnZ(state.startZ(), column);
-            // 只有逐格确认完整的生成器海床后才跳过；旧世界/混合区块仍按旧游标回填。
-            if (oceanGenerator && layer == 0 && budget - used >= 4) {
-                // 首次加载区块可能触发完整世界生成；单独计费，避免一帧拉起整排新区块。
-                if (!level.getChunkSource().hasChunk(x >> 4, z >> 4)) {
-                    int chunkCost = Math.min(1024, budget - 4);
-                    if (used > 0 && budget - used < chunkCost + 4) break;
-                    used += chunkCost;
-                }
-                if (generatedOceanColumn(level.getChunk(x >> 4, z >> 4), pos, x, z)) {
-                    cursor += MAX_DEPTH + 1;
-                    used += 4;
-                    continue;
-                }
-            }
-            if (column != cachedColumn) {
-                cachedColumn = column;
-                cachedDepth = depthAt(seed, x - instance.getUsableMinX(), z - instance.getUsableMinZ());
-            }
-            int y = SEA - MAX_DEPTH + layer;
-            BlockState block = y <= SEA - cachedDepth ? Blocks.STONE.defaultBlockState() : Blocks.WATER.defaultBlockState();
-            level.setBlock(pos.set(x, y, z), block, FLAGS);
+            int chunk = (int) cursor;
+            int cost = Math.min(1024, budget - used);
+            level.getChunk(minChunkX + chunk % chunksPerSide, minChunkZ + chunk / chunksPerSide);
             cursor++;
-            used++;
+            used += cost;
         }
         state.advance(cursor - state.cursor());
         if (state.cursor() >= total) state.nextPhase();
         return used;
     }
 
-    static boolean generatedOceanColumn(net.minecraft.world.level.BlockGetter chunk,
-                                        BlockPos.MutableBlockPos pos, int x, int z) {
-        int floor = DungeonOceanGenerator.seaFloor(x, z);
-        for (int y = SEA - MAX_DEPTH; y <= SEA; y++) {
-            Block expected = y <= floor ? Blocks.STONE : Blocks.WATER;
-            if (!chunk.getBlockState(pos.set(x, y, z)).equals(expected.defaultBlockState())) return false;
+    static void planNode(DungeonInstance instance, StageData stage, NodeData node,
+                         BiConsumer<BlockPos, BlockState> add) {
+        BlockPos spawn = instance.getNodeSpawnPos(node.nodeId());
+        long seed = instance.getInstanceId().getMostSignificantBits() ^ instance.getInstanceId().getLeastSignificantBits();
+        TerrainGenerationState state = new TerrainGenerationState();
+        TerrainType terrain = node.terrainType() == null ? TerrainType.T1_OCEAN : node.terrainType();
+        state.initialize(spawn.getX(), spawn.getZ(), seed ^ node.nodeId().hashCode() * 31L, terrain.ordinal());
+        for (long index = 0; index < featureCount(terrain); index++) {
+            placeFeature(add, state, terrain, index);
         }
-        return true;
-    }
-
-    static int baseColumnX(int centerX, int column) {
-        int span = DungeonConstants.NODE_AREA_SIZE;
-        return centerX - span / 2 + column % span;
-    }
-
-    static int baseColumnZ(int centerZ, int column) {
-        int span = DungeonConstants.NODE_AREA_SIZE;
-        return centerZ - span / 2 + column / span;
-    }
-
-    private static int processFeatures(ServerLevel level, TerrainGenerationState state, int budget) {
-        TerrainType terrain = TerrainType.values()[state.terrainOrdinal()];
-        long total = featureCount(terrain);
-        if (total == 0) {
-            state.nextPhase();
-            return 0;
-        }
-        int used = (int) Math.min(total - state.cursor(), budget);
-        for (int i = 0; i < used; i++) placeFeature(level, state, terrain, state.cursor() + i);
-        state.advance(used);
-        if (state.cursor() >= total) state.nextPhase();
-        return used;
-    }
-
-    private static int processPoi(ServerLevel level, DungeonInstance instance, NodeData node,
-                                  TerrainGenerationState state, int budget) {
-        long total = 75L + 28 * checkpointCount(instance, node);
-        int used = (int) Math.min(total - state.cursor(), budget);
-        for (int i = 0; i < used; i++) {
-            long index = state.cursor() + i;
-            BlockPos spawn = instance.getNodeSpawnPos(node.nodeId());
+        var checkpoints = stage.checkpoints().stream().filter(c -> node.nodeId().equals(c.nodeId())).toList();
+        long total = 75L + 28L * checkpoints.size();
+        for (long index = 0; index < total; index++) {
             if (index < 75) {
                 int cell = (int) (index / 3), layer = (int) (index % 3);
                 int dx = cell % 5 - 2;
                 int dz = cell / 5 - 2;
-                level.setBlock(spawn.offset(dx, layer - 1, dz),
-                        (layer == 0 ? Blocks.OAK_PLANKS : Blocks.AIR).defaultBlockState(), FLAGS);
+                add.accept(spawn.offset(dx, layer - 1, dz),
+                        (layer == 0 ? Blocks.OAK_PLANKS : Blocks.AIR).defaultBlockState());
             } else {
                 int checkpointIndex = (int) ((index - 75) / 28);
                 int localIndex = (int) ((index - 75) % 28);
-                CheckpointData checkpoint = checkpoint(instance, node, checkpointIndex);
+                CheckpointData checkpoint = checkpoints.get(checkpointIndex);
                 if (checkpoint != null) {
                     Block block = BuiltInRegistries.BLOCK.getOptional(
                             ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "dungeon_checkpoint"))
@@ -266,76 +212,25 @@ public final class TerrainGenerationPipeline {
                     BlockPos pos = new BlockPos(spawn.getX() + checkpoint.posX(), checkpoint.posY(),
                             spawn.getZ() + checkpoint.posZ());
                     if (localIndex == 27) {
-                        level.setBlock(pos, block.defaultBlockState(), FLAGS);
+                        add.accept(pos, block.defaultBlockState());
                     } else {
                         int cell = localIndex / 3, layer = localIndex % 3;
-                        level.setBlock(pos.offset(cell % 3 - 1, layer - 1, cell / 3 - 1),
-                                (layer == 0 ? Blocks.SMOOTH_STONE : Blocks.AIR).defaultBlockState(), FLAGS);
+                        add.accept(pos.offset(cell % 3 - 1, layer - 1, cell / 3 - 1),
+                                (layer == 0 ? Blocks.SMOOTH_STONE : Blocks.AIR).defaultBlockState());
                     }
                 }
             }
         }
-        state.advance(used);
-        if (state.cursor() >= total) state.nextPhase();
-        return used;
-    }
-
-    /** 节点屏障从海床底部写到建筑高度上限并加盖，避免从上下方绕出。 */
-    private static int processBoundary(ServerLevel level, TerrainGenerationState state, int budget) {
-        // 节点局部状态：跨度 = 节点边长，坐标基准 = 出生中心回退半格。
-        // 共享基底状态：跨度 = 整张地图，坐标基准本来就是角。
-        boolean nodeLocal = state.nodeSpecific();
-        int span = nodeLocal ? DungeonConstants.NODE_AREA_SIZE : MAP_SIZE;
-        int originX = nodeLocal ? state.startX() - span / 2 : state.startX();
-        int originZ = nodeLocal ? state.startZ() - span / 2 : state.startZ();
-        int bottomY = barrierBottomY();
-        int height = boundaryHeight(level);
-        int topY = barrierTopY(level);
-        long ring = (long) span * 4 * height;
-        long total = ring + (long) span * span;
-        int used = (int) Math.min(total - state.cursor(), budget);
-        BlockState barrier = Blocks.BARRIER.defaultBlockState();
-        for (int i = 0; i < used; i++) {
-            long index = state.cursor() + i;
-            if (index < ring) {
-                int side = (int) (index / ((long) span * height));
-                int rem = (int) (index % ((long) span * height));
-                int offset = rem / height;
-                int y = bottomY + rem % height;
-                int x = originX + (side < 2 ? offset : side == 2 ? 0 : span - 1);
-                int z = originZ + (side < 2 ? side == 0 ? 0 : span - 1 : offset);
-                level.setBlock(new BlockPos(x, y, z), barrier, FLAGS);
-            } else {
-                // 加盖：顶端整层封死（含与围墙重叠的一圈，写屏障是幂等的），
-                // 防止玩家从围墙正上方越顶。
-                long cap = index - ring;
-                int x = originX + (int) (cap % span);
-                int z = originZ + (int) (cap / span);
-                level.setBlock(new BlockPos(x, topY, z), barrier, FLAGS);
+        // 战斗节点的玩家落点在中心西侧，不是中心的标记平台。
+        BlockPos playerSpawn = instance.getPlayerSpawnPos(node.nodeId());
+        for (int dx = -2; dx <= 2; dx++) {
+            for (int dz = -2; dz <= 2; dz++) {
+                BlockPos floor = new BlockPos(playerSpawn.getX() + dx, SEA, playerSpawn.getZ() + dz);
+                add.accept(floor, Blocks.OAK_PLANKS.defaultBlockState());
+                add.accept(floor.above(), Blocks.AIR.defaultBlockState());
             }
         }
-        state.advance(used);
-        if (state.cursor() >= total) state.markReady();
-        return used;
-    }
-
-    /** 屏障环顶端 = 建筑高度上限的最后一层（主世界 y=319，其上放不了方块也飞不上去）。 */
-    private static int barrierTopY(ServerLevel level) {
-        return level.getMaxBuildHeight() - 1;
-    }
-
-    /** 屏障环底端 = 共享基底写入的最低层，与水底齐平，不留水下缝隙。 */
-    private static int barrierBottomY() {
-        return SEA - MAX_DEPTH;
-    }
-
-    private static int boundaryHeight(ServerLevel level) {
-        return barrierTopY(level) - barrierBottomY() + 1;
-    }
-
-    /** 环体（周长 × 高度）+ 顶盖（整层），供分帧游标与队列估算共用同一口径。 */
-    private static long boundaryBlockCount(ServerLevel level, int span) {
-        return (long) span * 4 * boundaryHeight(level) + (long) span * span;
+        add.accept(playerSpawn.above(), Blocks.AIR.defaultBlockState());
     }
 
     static int depthAt(long seed, int x, int z) {
@@ -367,7 +262,7 @@ public final class TerrainGenerationPipeline {
         };
     }
 
-    private static void placeFeature(ServerLevel level, TerrainGenerationState state, TerrainType terrain, long index) {
+    private static void placeFeature(BiConsumer<BlockPos, BlockState> add, TerrainGenerationState state, TerrainType terrain, long index) {
         int cx = state.startX();
         int cz = state.startZ();
         Block block = Blocks.STONE;
@@ -417,18 +312,7 @@ public final class TerrainGenerationPipeline {
             }
             default -> { return; }
         }
-        level.setBlock(new BlockPos(x, y, z), block.defaultBlockState(), FLAGS);
-    }
-
-    private static long checkpointCount(DungeonInstance instance, NodeData node) {
-        var stage = DungeonRegistry.INSTANCE.getStage(instance.getStageId());
-        return stage == null ? 0 : stage.checkpoints().stream().filter(c -> node.nodeId().equals(c.nodeId())).count();
-    }
-
-    private static CheckpointData checkpoint(DungeonInstance instance, NodeData node, int index) {
-        var stage = DungeonRegistry.INSTANCE.getStage(instance.getStageId());
-        if (stage == null) return null;
-        return stage.checkpoints().stream().filter(c -> node.nodeId().equals(c.nodeId())).skip(index).findFirst().orElse(null);
+        add.accept(new BlockPos(x, y, z), block.defaultBlockState());
     }
 
 }

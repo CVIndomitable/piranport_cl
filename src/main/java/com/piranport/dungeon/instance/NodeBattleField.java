@@ -65,8 +65,8 @@ public final class NodeBattleField {
     }
 
     /** 供入口 UI/调度器显示剩余地形队列工作量。 */
-    public static long queuedTerrainBlocks(ServerLevel dungeonLevel, DungeonInstance instance, NodeData node) {
-        return TerrainGenerationPipeline.queuedBlocks(dungeonLevel, instance, node);
+    public static long queuedTerrainChunks(ServerLevel dungeonLevel, DungeonInstance instance, NodeData node) {
+        return TerrainGenerationPipeline.queuedChunks(dungeonLevel, instance, node);
     }
 
     // ===== 技术指南 05：六种地形特征生成器 =====

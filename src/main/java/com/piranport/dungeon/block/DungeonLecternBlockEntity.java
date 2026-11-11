@@ -219,6 +219,10 @@ public class DungeonLecternBlockEntity extends BlockEntity {
         var instance = manager.createInstanceForLectern(stageId, worldPosition,
                 level.dimension().location().toString());
         if (instance == null) return;
+        var dungeon = com.piranport.dungeon.event.DungeonEventHandler.getDungeonLevel(serverLevel.getServer());
+        if (dungeon != null) {
+            com.piranport.dungeon.instance.TerrainGenerationPipeline.registerPlans(dungeon, instance);
+        }
         DungeonKeyItem.setInstanceId(keyStack, instance.getInstanceId());
         dungeonInstanceUuid = instance.getInstanceId();
         manager.syncKey(instance, keyStack);

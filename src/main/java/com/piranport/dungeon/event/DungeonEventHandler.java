@@ -124,6 +124,10 @@ public class DungeonEventHandler {
             PiranPort.LOGGER.warn("[副本生成] 维度 {} 未加载：副本实例将无法建造，请检查数据包 dimension 定义",
                     DUNGEON_DIMENSION.location());
         } else {
+            ServerLevel dungeon = getDungeonLevel(event.getServer());
+            for (var instance : com.piranport.dungeon.instance.DungeonInstanceManager.get(event.getServer().overworld()).getAllInstances()) {
+                com.piranport.dungeon.instance.TerrainGenerationPipeline.registerPlans(dungeon, instance);
+            }
             PiranPort.LOGGER.info("[副本生成] 维度 {} 已构造完成（服务器启动随数据包加载，非每实例新建）",
                     DUNGEON_DIMENSION.location());
         }

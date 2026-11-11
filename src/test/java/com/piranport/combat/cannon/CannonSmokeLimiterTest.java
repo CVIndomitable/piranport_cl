@@ -7,17 +7,17 @@ import static org.junit.jupiter.api.Assertions.*;
 class CannonSmokeLimiterTest {
     @Test
     void limitsEachWeaponIndependentlyAndEmitsAtTheBoundary() {
-        CannonSmokeLimiter<Object> limiter = new CannonSmokeLimiter<>(20);
+        CannonSmokeLimiter<Object> limiter = new CannonSmokeLimiter<>(CannonProjectiles.SMALL_CALIBER_SMOKE_INTERVAL_TICKS);
         Object first = new Object();
         Object second = new Object();
 
         assertTrue(limiter.shouldEmit(first, 100));
         assertFalse(limiter.shouldEmit(first, 101));
         assertTrue(limiter.shouldEmit(second, 101));
-        assertFalse(limiter.shouldEmit(first, 119));
-        assertTrue(limiter.shouldEmit(first, 120));
-        assertFalse(limiter.shouldEmit(second, 120));
-        assertTrue(limiter.shouldEmit(second, 121));
+        assertFalse(limiter.shouldEmit(first, 139));
+        assertTrue(limiter.shouldEmit(first, 140));
+        assertFalse(limiter.shouldEmit(second, 140));
+        assertTrue(limiter.shouldEmit(second, 141));
     }
 
     @Test

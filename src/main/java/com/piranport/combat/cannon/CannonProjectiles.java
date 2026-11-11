@@ -21,7 +21,9 @@ import static com.piranport.combat.cannon.CannonStats.*;
 
 /** 玩家只适配瞄准与炮口；弹种、限额、实体及散布由共享发射边界处理。 */
 final class CannonProjectiles {
-    private static final CannonSmokeLimiter<ItemStack> SMALL_CALIBER_SMOKE = new CannonSmokeLimiter<>(20);
+    static final int SMALL_CALIBER_SMOKE_INTERVAL_TICKS = 40;
+    private static final CannonSmokeLimiter<ItemStack> SMALL_CALIBER_SMOKE =
+            new CannonSmokeLimiter<>(SMALL_CALIBER_SMOKE_INTERVAL_TICKS);
 
     private CannonProjectiles() {}
 

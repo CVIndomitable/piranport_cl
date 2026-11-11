@@ -8,7 +8,7 @@ import net.neoforged.neoforge.network.PacketDistributor;
 /**
  * 测试工具集 — 与调试系统隔离。
  *
- * <p>职责：提供会修改玩法行为（冷却覆盖、弹药免消耗等）的"测试人员专用工具"。
+ * <p>职责：提供会修改玩法行为（如冷却覆盖）的"测试人员专用工具"。
  * 这些工具会污染游戏取证的纯净度，因此与 {@link PiranPortDebug} 严格隔离：
  * <ul>
  *   <li>独立的会话编号（testSessionId），互不干扰</li>
@@ -21,7 +21,7 @@ import net.neoforged.neoforge.network.PacketDistributor;
  * <p>设计原则：
  * <ul>
  *   <li>不与 {@link PiranPortDebug} 共享任何状态字段</li>
- *   <li>读取消耗（弹药、物品）时检测测试模式并跳过，但保留其他逻辑（飞机起飞、武器开火）</li>
+ *   <li>测试模式不跳过弹药、燃料等物品消耗</li>
  *   <li>玩家开启测试模式前应确认无调试会话在跑（{@link PiranPortDebug#isServerEnabled()}）</li>
  * </ul>
  */
@@ -201,20 +201,15 @@ public final class PiranPortTestTools {
         return ticks;
     }
 
-    /**
-     * 测试模式下消耗物品时跳过（与 {@link PiranPortDebug#consumeAmmo} 等价但隔离）
-     * 这是为了避免测试人员因为弹药耗尽而无法复现问题。
-     *
-     * <p>无 owner 重载：{@code null} 视为非属主，正常消耗。
-     */
+    /** 消耗物品，测试模式与普通模式一致。 */
     public static void consumeAmmo(net.minecraft.world.item.ItemStack stack, int count) {
         consumeAmmo(null, stack, count);
     }
 
-    /** 见 {@link #consumeAmmo(net.minecraft.world.item.ItemStack, int)}，带所有者校验 */
+    /** 保留 owner 参数兼容现有调用，测试模式不再豁免消耗。 */
     public static void consumeAmmo(java.util.UUID owner,
                                    net.minecraft.world.item.ItemStack stack, int count) {
-        if (!isActiveOwner(owner)) stack.shrink(count);
+        stack.shrink(count);
     }
 
     /**

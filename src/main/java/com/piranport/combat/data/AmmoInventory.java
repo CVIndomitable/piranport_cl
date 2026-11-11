@@ -10,11 +10,10 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
 import static com.piranport.combat.cannon.CannonAmmoRules.matchesCaliber;
-import static com.piranport.combat.cannon.CannonAmmoRules.getDefaultAmmoForWeapon;
 
 /**
  * 弹药背包扫描器 — 封装背包中弹药的查找、统计和消耗逻辑。
- * <p>自动跳过核心槽和武器槽，支持偏好弹种优先级和创造模式兜底。</p>
+ * <p>自动跳过核心槽和武器槽，支持偏好弹种优先级和创造弹药库。</p>
  */
 public class AmmoInventory {
 
@@ -103,8 +102,8 @@ public class AmmoInventory {
     }
 
     /**
-     * 消耗指定数量的弹药（带所有者校验，只有测试模式属主免耗）。
-     * @param owner 弹药所属玩家 UUID；{@code null} 表示无玩家上下文，正常消耗
+     * 消耗指定数量的弹药；创造弹药库勾选的弹药仍为无限。
+     * @param owner 弹药所属玩家 UUID；可为 {@code null}
      * @param ammoType 弹药物品类型
      * @param required 需要消耗的数量
      * @return true 表示成功消耗足够弹药，false 表示背包中弹药不足
@@ -125,7 +124,7 @@ public class AmmoInventory {
             ItemStack stack = inventory.items.get(i);
             if (!stack.isEmpty() && stack.getItem() == ammoType) {
                 int take = Math.min(toConsume, stack.getCount());
-                com.piranport.debug.PiranPortDebug.consumeAmmo(owner, stack, take);
+                stack.shrink(take);
                 toConsume -= take;
             }
         }
@@ -134,7 +133,7 @@ public class AmmoInventory {
             ItemStack offhand = inventory.offhand.get(0);
             if (!offhand.isEmpty() && offhand.getItem() == ammoType) {
                 int take = Math.min(toConsume, offhand.getCount());
-                com.piranport.debug.PiranPortDebug.consumeAmmo(owner, offhand, take);
+                offhand.shrink(take);
                 toConsume -= take;
             }
         }
@@ -143,15 +142,14 @@ public class AmmoInventory {
     }
 
     /**
-     * 根据装填优先级选择弹药：偏好弹种优先，不足时按背包顺序回退，创造模式默认弹种兜底。
+     * 根据装填优先级选择弹药：偏好弹种优先，不足时按背包顺序回退。
      * @param weapon 武器物品堆叠（用于读取偏好弹种和匹配口径）
      * @param required 需要装填的数量（通常为管数）
-     * @param creative 是否为创造模式（true 时无视背包数量）
      * @param level 世界对象（用于应用配置覆盖后的口径匹配，可为 null）
      * @return 选中的弹药物品类型，无可用弹药返回 null
      */
     @Nullable
-    public Item chooseReloadAmmo(ItemStack weapon, int required, boolean creative, @Nullable Level level) {
+    public Item chooseReloadAmmo(ItemStack weapon, int required, @Nullable Level level) {
         WeaponState weaponState = new WeaponState(weapon);
         var preferred = weaponState.getSelectedAmmoType();
 
@@ -161,9 +159,9 @@ public class AmmoInventory {
         // 就执行完毕，因此必须把整个调用包在 shouldEmit() 里。
         if (com.piranport.debug.PiranPortDebug.shouldEmit()) {
             com.piranport.debug.PiranPortDebug.event(
-                    "AmmoInventory.chooseReloadAmmo | weapon={} required={} creative={} hasPreferred={}",
+                    "AmmoInventory.chooseReloadAmmo | weapon={} required={} hasPreferred={}",
                     net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(weapon.getItem()).getPath(),
-                    required, creative, preferred.hasSelection());
+                    required, preferred.hasSelection());
         }
 
         if (preferred.hasSelection()) {
@@ -173,7 +171,7 @@ public class AmmoInventory {
                 if (preferredItem != null && preferredItem != net.minecraft.world.item.Items.AIR) {
                     ItemStack ammoStack = new ItemStack(preferredItem);
                     if (matchesCaliber(ammoStack, weapon, level)) {
-                        if (creative || countAmmo(preferredItem) >= required) {
+                        if (countAmmo(preferredItem) >= required) {
                             com.piranport.debug.PiranPortDebug.event("  → Preferred ammo selected: {}", preferred.ammoItemId());
                             return preferredItem;
                         }
@@ -188,13 +186,6 @@ public class AmmoInventory {
         if (fallback == null) {
             fallback = CreativeAmmoCache.findInfinite(inventory,
                     candidate -> matchesCaliber(new ItemStack(candidate), weapon, level));
-        }
-
-        if (fallback == null && creative) {
-            Item defaultAmmo = getDefaultAmmoForWeapon(weapon, level);
-            com.piranport.debug.PiranPortDebug.event("  → Creative fallback: {}",
-                defaultAmmo != null ? net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(defaultAmmo).toString() : "null");
-            return defaultAmmo;
         }
 
         com.piranport.debug.PiranPortDebug.event("  → Fallback result: {}",

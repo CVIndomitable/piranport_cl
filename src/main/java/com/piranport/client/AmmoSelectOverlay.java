@@ -187,11 +187,12 @@ public class AmmoSelectOverlay {
 
             // 统计弹药数量
             int count = 0;
-            boolean isCreative = player.getAbilities().instabuild
+            boolean isCreative = (player.getAbilities().instabuild
+                    && !(weapon.getItem() instanceof com.piranport.artillery.ArtilleryItem))
                     || CreativeAmmoCache.isInfinite(player, ammoItem);
 
             if (!isCreative) {
-                // 生存模式：统计背包中的弹药数量
+                // 非无限来源：统计背包中的弹药数量。
                 for (ItemStack s : player.getInventory().items) {
                     if (s.getItem() == ammoItem) count += s.getCount();
                 }

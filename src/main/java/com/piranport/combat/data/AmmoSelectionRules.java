@@ -50,7 +50,7 @@ public final class AmmoSelectionRules {
         List<Item> result = new ArrayList<>();
         if (!supports(weapon)) return result;
 
-        boolean creative = player.getAbilities().instabuild;
+        boolean creative = player.getAbilities().instabuild && !(weapon.getItem() instanceof ArtilleryItem);
         if (creative) {
             for (Item item : BuiltInRegistries.ITEM) {
                 if (matches(weapon, item, player)) result.add(item);
@@ -71,7 +71,8 @@ public final class AmmoSelectionRules {
 
     public static boolean hasAvailable(Player player, ItemStack weapon, Item ammo) {
         if (!matches(weapon, ammo, player)) return false;
-        if (player.getAbilities().instabuild || CreativeAmmoCache.isInfinite(player, ammo)) return true;
+        if ((player.getAbilities().instabuild && !(weapon.getItem() instanceof ArtilleryItem))
+                || CreativeAmmoCache.isInfinite(player, ammo)) return true;
         for (ItemStack stack : player.getInventory().items) {
             if (!stack.isEmpty() && stack.getItem() == ammo) return true;
         }

@@ -182,7 +182,7 @@ public final class PiranPortDebug {
             if (existing != null) {
                 return ToggleResult.ALREADY_OPEN.apply(existing.sessionId);
             }
-            // 反向互斥：测试模式开启时拒绝开启调试会话，避免调试日志被冷却覆盖/免耗弹药污染。
+            // 反向互斥：测试模式开启时拒绝开启调试会话，避免调试日志被冷却覆盖污染。
             // 测试模式侧（PiranPortTestTools.toggleFor）已做正向互斥，此处补齐另一个方向。
             if (com.piranport.testtools.PiranPortTestTools.isTestModeActive()) {
                 return ToggleResult.TEST_ACTIVE;
@@ -288,9 +288,7 @@ public final class PiranPortDebug {
     }
 
     /**
-     * 测试模式（F8 debug ON）创造背包装填：调用方原本要 {@code stack.shrink(count)}，
-     * 此处在测试模式下跳过消耗，等价于弹药/载荷无限。
-     * 非测试模式时等价于 {@code stack.shrink(count)}。
+     * 消耗物品，测试模式与普通模式一致。
      */
     /**
      * @deprecated consumeAmmo 已迁移到 {@link com.piranport.testtools.PiranPortTestTools#consumeAmmo}，
@@ -304,7 +302,7 @@ public final class PiranPortDebug {
 
     /**
      * @deprecated 改用 {@code PiranPortTestTools.consumeAmmo(UUID, stack, count)}：
-     * 只有测试模式属主才应免耗弹药，无 owner 版本会让全服玩家一起无限弹药。
+     * 测试模式不再豁免物品消耗。
      */
     @Deprecated
     public static void consumeAmmo(UUID owner, ItemStack stack, int count) {

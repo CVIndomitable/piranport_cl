@@ -68,8 +68,7 @@ public final class CannonReloading {
             return removeLegacyCooldown(core, weaponSlot);
         }
         AmmoInventory ammo = new AmmoInventory(inventory, coreSlot, weaponSlot);
-        Item type = ammo.chooseReloadAmmo(weapon, getBarrelCount(weapon, player.level()),
-                player.getAbilities().instabuild, player.level());
+        Item type = ammo.chooseReloadAmmo(weapon, getBarrelCount(weapon, player.level()), player.level());
         if (type == null) return clearCannonReloadState(core, weapon, weaponSlot);
         ammo.recordAmmoType(weapon, type);
         startTimer(player, core, weaponSlot, weapon);
@@ -90,15 +89,15 @@ public final class CannonReloading {
         int coreSlot = findCoreSlotIndex(inventory, player, slot);
         if (coreSlot == -1) return null;
         return new AmmoInventory(inventory, coreSlot, slot).chooseReloadAmmo(
-                weapon, getBarrelCount(weapon, player.level()), player.getAbilities().instabuild, player.level());
+                weapon, getBarrelCount(weapon, player.level()), player.level());
     }
 
     private static boolean completeCannonReload(Player player, ItemStack core, Inventory inventory,
             int weaponSlot, int coreSlot, ItemStack weapon) {
         int barrels = getBarrelCount(weapon, player.level());
         AmmoInventory ammo = new AmmoInventory(inventory, coreSlot, weaponSlot);
-        Item type = ammo.chooseReloadAmmo(weapon, barrels, player.getAbilities().instabuild, player.level());
-        if (type == null || (!player.getAbilities().instabuild && !ammo.consumeAmmo(player.getUUID(), type, barrels))) {
+        Item type = ammo.chooseReloadAmmo(weapon, barrels, player.level());
+        if (type == null || !ammo.consumeAmmo(player.getUUID(), type, barrels)) {
             return clearCannonReloadState(core, weapon, weaponSlot);
         }
         new WeaponState(weapon).setLoadedAmmo(barrels, BuiltInRegistries.ITEM.getKey(type).toString());

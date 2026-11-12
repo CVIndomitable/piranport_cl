@@ -275,10 +275,6 @@ public class ArtilleryItem extends Item {
                     .withStyle(net.minecraft.ChatFormatting.AQUA));
         }
 
-        tooltipComponents.add(Component.translatable(
-                "tooltip.piranport.cannon.loading_mode.auto")
-                .withStyle(net.minecraft.ChatFormatting.GOLD));
-
         // 耐久状态
         if (stack.isDamageableItem() && stack.getDamageValue() >= stack.getMaxDamage() - 1) {
             tooltipComponents.add(Component.translatable("tooltip.piranport.cannon.damaged")

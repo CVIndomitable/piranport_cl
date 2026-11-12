@@ -2258,7 +2258,6 @@
   "tooltip.piranport.cannon.family.medium": "中口径",
   "tooltip.piranport.cannon.family.small": "小口径",
   "tooltip.piranport.cannon.loaded_ammo": "已装填: %s × %s",
-  "tooltip.piranport.cannon.loading_mode.auto": "空膛时自动装填",
   "tooltip.piranport.cannon.next_ammo": "下一发: %s",
   "tooltip.piranport.cannon.next_ammo_none": "下一发: 无可用弹药",
   "tooltip.piranport.cannon.no_ammo_loaded": "未装填弹药",

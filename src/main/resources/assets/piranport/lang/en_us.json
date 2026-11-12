@@ -2217,7 +2217,6 @@
   "tooltip.piranport.cannon.family.medium": "Medium caliber",
   "tooltip.piranport.cannon.family.small": "Small caliber",
   "tooltip.piranport.cannon.loaded_ammo": "Loaded: %s × %s",
-  "tooltip.piranport.cannon.loading_mode.auto": "Reloads automatically when empty",
   "tooltip.piranport.cannon.next_ammo": "Next: %s",
   "tooltip.piranport.cannon.next_ammo_none": "Next: No Ammo Available",
   "tooltip.piranport.cannon.no_ammo_loaded": "No Ammo Loaded",

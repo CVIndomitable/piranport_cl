@@ -42,4 +42,25 @@ class ReloadCreativeAmmoTest {
         assertTrue(method.contains("if (!infinite) {"),
                 "无限弹时不得扣实体鱼雷");
     }
+
+    @Test
+    void creativeModeAloneDoesNotProvideAmmo() {
+        assertFalse(ReloadHelper.hasAmmoSource(false, 0, 1));
+        assertTrue(ReloadHelper.hasAmmoSource(false, 1, 1));
+        assertTrue(ReloadHelper.hasAmmoSource(true, 0, 1));
+    }
+
+    @Test
+    void missileAndDepthChargeReloadRequireInventoryOrSelectedCache() throws Exception {
+        String source = Files.readString(RELOAD_HELPER);
+        String antiAir = source.substring(source.indexOf("public static void reloadAntiAirMissile("),
+                source.indexOf("/** R 键给深弹发射器"));
+        String depthCharge = source.substring(source.indexOf("public static void reloadDepthChargeLauncher("),
+                source.indexOf("private static int findAmmoSlot("));
+
+        assertFalse(antiAir.contains("instabuild"));
+        assertFalse(depthCharge.contains("instabuild"));
+        assertTrue(antiAir.contains("hasAmmoSource(infinite"));
+        assertTrue(depthCharge.contains("hasAmmoSource(infinite"));
+    }
 }

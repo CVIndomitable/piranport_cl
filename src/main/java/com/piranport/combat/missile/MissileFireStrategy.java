@@ -136,8 +136,8 @@ public class MissileFireStrategy {
             }
         }
 
-        // Creative mode / 弹药库勾选：always has next round
-        if (player.getAbilities().instabuild || infinite) {
+        // Only an explicitly selected creative ammo cache supplies an unlimited next round.
+        if (infinite) {
             nextAvailable = 1;
         }
 
@@ -241,8 +241,7 @@ public class MissileFireStrategy {
             // Consume 1 ammo（弹药库勾选时不扣实体物品）
             String ammoId = BuiltInRegistries.ITEM.getKey(ammoItem).toString();
             if (ammoSlot >= 0 && !infinite) {
-                PiranPortDebug.consumeAmmo(player.getUUID(),
-                        ammoSlot == 40 ? inv.offhand.get(0) : inv.items.get(ammoSlot), 1);
+                (ammoSlot == 40 ? inv.offhand.get(0) : inv.items.get(ammoSlot)).shrink(1);
             }
 
             // Spawn missile aimed at fire control target

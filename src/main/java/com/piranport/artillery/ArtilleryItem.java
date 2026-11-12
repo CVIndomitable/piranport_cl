@@ -168,7 +168,7 @@ public class ArtilleryItem extends Item {
 
         String ammoId = BuiltInRegistries.ITEM.getKey(other.getItem()).toString();
         stack.set(ModDataComponents.LOADED_AMMO.get(), new LoadedAmmo(effectiveBarrels, ammoId));
-        com.piranport.debug.PiranPortDebug.consumeAmmo(player.getUUID(), other, effectiveBarrels);
+        other.shrink(effectiveBarrels);
 
         if (!player.level().isClientSide()) {
             player.level().playSound(null, player.getX(), player.getY(), player.getZ(),

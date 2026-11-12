@@ -55,8 +55,7 @@ public final class DepthChargeFireStrategy {
         LoadedAmmo loaded = launcherStack.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
         // 弹药库勾选深弹时视为无限，不要求发射器预先装填。
         boolean infinite = CreativeAmmoCache.isInfinite(player, ModItems.DEPTH_CHARGE.get());
-        if (!player.getAbilities().instabuild && !infinite
-                && (!loaded.hasAmmo() || loaded.count() < chargeCount)) {
+        if (!infinite && (!loaded.hasAmmo() || loaded.count() < chargeCount)) {
             player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
             return;
         }

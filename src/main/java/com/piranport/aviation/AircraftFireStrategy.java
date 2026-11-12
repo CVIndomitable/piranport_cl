@@ -478,7 +478,7 @@ public class AircraftFireStrategy {
             }
             for (ItemStack ammo : inv.items) {
                 if (ammo.is(ModItems.FUEL.get()) && ammo.getCount() > 0) {
-                    com.piranport.testtools.PiranPortTestTools.consumeAmmo(player.getUUID(), ammo, 1);
+                    ammo.shrink(1);
                     weapon.set(ModDataComponents.AIRCRAFT_STATE.get(), state.withCurrentFuel(fuelCapacity));
                     break;
                 }
@@ -584,9 +584,6 @@ public class AircraftFireStrategy {
                                              int weaponSlot, int coreSlot,
                                              AircraftDefinition definition, AircraftState state,
                                              ResolvedAircraftStats stats) {
-        // 创造模式仍必须按 R 走完整装填流程，只是不要求背包里有补给。
-        if (player.getAbilities().instabuild) return true;
-
         net.minecraft.world.item.Item payload = selectPayloadItem(player, inv, definition, weaponSlot, coreSlot);
         boolean payloadInfinite = payload != null && CreativeAmmoCache.isInfinite(player, payload);
         boolean fuelInfinite = CreativeAmmoCache.isInfinite(player, ModItems.FUEL.get());
@@ -658,20 +655,6 @@ public class AircraftFireStrategy {
         if (definition == null) return false;
         ResolvedAircraftStats stats = AircraftStatsService.resolve(definition);
 
-        // 创造模式不消耗补给，但必须真的把飞机写成"已准备"状态。
-        // 创造模式也需要玩家手动按 R 走完读条；这里只是免去背包补给要求。
-        if (player.getAbilities().instabuild) {
-            boolean nuclear = selectPayloadItem(player, inv, definition, weaponSlot, coreSlot)
-                    == ModItems.NUCLEAR_AERIAL_BOMB.get();
-            aircraftStack.set(ModDataComponents.AIRCRAFT_STATE.get(),
-                    state.withCurrentFuel(stats.fuelCapacity()).withPayload(true, nuclear));
-            if (warn) {
-                player.displayClientMessage(
-                        Component.translatable("message.piranport.aircraft_creative_free_load"), true);
-            }
-            return true;
-        }
-
         boolean needsFuel = AircraftSortieReadiness.needsFuel(state, stats);
         boolean needsPayload = AircraftSortieReadiness.needsPayload(definition, state);
         if (!needsFuel && !needsPayload) return true;
@@ -706,14 +689,13 @@ public class AircraftFireStrategy {
 
         if (needsFuel) {
             if (!fuelInfinite) {
-                com.piranport.testtools.PiranPortTestTools.consumeAmmo(player.getUUID(), stackAt(inv, fuelSlot), 1);
+                stackAt(inv, fuelSlot).shrink(1);
             }
             state = state.withCurrentFuel(stats.fuelCapacity());
         }
         if (needsPayload) {
             if (!payloadInfinite) {
-                com.piranport.testtools.PiranPortTestTools.consumeAmmo(
-                        player.getUUID(), stackAt(inv, payloadSlot), payloadCount);
+                stackAt(inv, payloadSlot).shrink(payloadCount);
             }
             state = state.withPayload(true, payloadItem == ModItems.NUCLEAR_AERIAL_BOMB.get());
         }

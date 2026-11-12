@@ -36,8 +36,12 @@ public class ReloadHelper {
      * 是否满足真实弹药来源。创造模式本身<b>不是</b>弹药来源：
      * 只有实体同口径鱼雷够整组，或创造弹药库勾选了该弹种时才放行。
      */
-    public static boolean hasTorpedoAmmoSource(boolean infinite, int available, int needed) {
+    public static boolean hasAmmoSource(boolean infinite, int available, int needed) {
         return infinite || available >= Math.max(1, needed);
+    }
+
+    public static boolean hasTorpedoAmmoSource(boolean infinite, int available, int needed) {
+        return hasAmmoSource(infinite, available, needed);
     }
 
     /**
@@ -201,13 +205,13 @@ public class ReloadHelper {
         Item ammo = launcher.getAmmoItem();
         boolean infinite = CreativeAmmoCache.isInfinite(player, ammo);
         int ammoSlot = findAmmoSlot(inv, ammo, weaponSlot, coreSlot);
-        if (ammoSlot < 0 && !player.getAbilities().instabuild && !infinite) {
+        if (!hasAmmoSource(infinite, ammoSlot < 0 ? 0 : 1, 1)) {
             player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
             return;
         }
-        if (ammoSlot >= 0 && !player.getAbilities().instabuild && !infinite) {
+        if (ammoSlot >= 0 && !infinite) {
             ItemStack source = ammoSlot == 40 ? inv.offhand.get(0) : inv.items.get(ammoSlot);
-            com.piranport.testtools.PiranPortTestTools.consumeAmmo(player.getUUID(), source, 1);
+            source.shrink(1);
         }
         String ammoId = BuiltInRegistries.ITEM.getKey(ammo).toString();
         launcherStack.set(ModDataComponents.LOADED_AMMO.get(), new LoadedAmmo(1, ammoId));
@@ -235,12 +239,12 @@ public class ReloadHelper {
         int needed = launcher.getChargeCount();
         boolean infinite = CreativeAmmoCache.isInfinite(player, ammo);
         int available = countAmmo(inv, ammo, weaponSlot, coreSlot);
-        if (available < needed && !player.getAbilities().instabuild && !infinite) {
+        if (!hasAmmoSource(infinite, available, needed)) {
             player.displayClientMessage(Component.translatable("message.piranport.no_ammo"), true);
             return;
         }
-        if (!player.getAbilities().instabuild && !infinite) {
-            consumeAmmo(inv, ammo, needed, weaponSlot, coreSlot, player.getUUID());
+        if (!infinite) {
+            consumeAmmo(inv, ammo, needed, weaponSlot, coreSlot);
         }
         launcherStack.set(ModDataComponents.LOADED_AMMO.get(), new LoadedAmmo(needed,
                 BuiltInRegistries.ITEM.getKey(ammo).toString()));
@@ -267,20 +271,19 @@ public class ReloadHelper {
         return count;
     }
 
-    private static void consumeAmmo(Inventory inv, Item ammo, int count, int weaponSlot, int coreSlot,
-                                    java.util.UUID owner) {
+    private static void consumeAmmo(Inventory inv, Item ammo, int count, int weaponSlot, int coreSlot) {
         int remaining = count;
         for (int i = 0; i < inv.items.size() && remaining > 0; i++) {
             if (i == weaponSlot || i == coreSlot) continue;
             ItemStack stack = inv.items.get(i);
             if (!stack.is(ammo)) continue;
             int take = Math.min(remaining, stack.getCount());
-            com.piranport.testtools.PiranPortTestTools.consumeAmmo(owner, stack, take);
+            stack.shrink(take);
             remaining -= take;
         }
         if (remaining > 0 && weaponSlot != 40 && coreSlot != 40) {
             ItemStack stack = inv.offhand.get(0);
-            if (stack.is(ammo)) com.piranport.testtools.PiranPortTestTools.consumeAmmo(owner, stack, remaining);
+            if (stack.is(ammo)) stack.shrink(remaining);
         }
     }
 }

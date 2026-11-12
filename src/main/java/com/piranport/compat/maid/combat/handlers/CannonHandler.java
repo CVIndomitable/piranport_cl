@@ -54,7 +54,6 @@ public class CannonHandler implements WeaponHandler {
         if (!(stack.getItem() instanceof ArtilleryItem ai)) return false;
         Player owner = AmmoConsumer.ownerPlayer(maid);
         if (owner == null) return false;
-        if (AmmoConsumer.isFreebie(owner)) return true;
         // 必须凑满一个完整弹夹才放行：fire() 里 loaded 按 Math.min 逐管装填，
         // 弹药不足整夹会照样扣弹但弹数少于 barrels，混装/残缺状态下会一直打残缺齐射。
         // 这里按候选表合计数量判定，兼容「两种弹各半夹、合计刚好够」的合法情形。
@@ -100,14 +99,14 @@ public class CannonHandler implements WeaponHandler {
         Item preferred = AmmoConsumer.getPreferredAmmo(owner, candidates);
         if (preferred != null) {
             Item preferredShell = preferred;
-            int n = Math.min(barrels, AmmoConsumer.isFreebie(owner) ? barrels : AmmoConsumer.countItem(owner, preferredShell));
+            int n = Math.min(barrels, AmmoConsumer.countItem(owner, preferredShell));
             for (int i = 0; i < n; i++) shotShells.add(preferred);
         }
         for (Item shell : candidates) {
             if (shotShells.size() >= barrels) break;
             int already = (int) shotShells.stream().filter(item -> item == shell).count();
             int n = Math.min(barrels - shotShells.size(),
-                    (AmmoConsumer.isFreebie(owner) ? barrels : AmmoConsumer.countItem(owner, shell)) - already);
+                    AmmoConsumer.countItem(owner, shell) - already);
             for (int i = 0; i < n; i++) shotShells.add(shell);
         }
         if (shotShells.size() != barrels) return;

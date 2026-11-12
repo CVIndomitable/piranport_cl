@@ -17,10 +17,6 @@ public final class AmmoConsumer {
         return maid.getOwner() instanceof Player p ? p : null;
     }
 
-    public static boolean isFreebie(Player player) {
-        return player != null && player.getAbilities().instabuild;
-    }
-
     public static int count(Player player, Predicate<ItemStack> pred) {
         if (player == null) return 0;
         int total = 0;
@@ -34,13 +30,11 @@ public final class AmmoConsumer {
 
     public static boolean has(Player player, Predicate<ItemStack> pred, int amount) {
         if (player == null) return false;
-        if (isFreebie(player)) return true;
         return count(player, pred) >= amount;
     }
 
     public static int consume(Player player, Predicate<ItemStack> pred, int amount) {
         if (player == null || amount <= 0) return 0;
-        if (isFreebie(player)) return amount;
         int remaining = amount;
         Inventory inv = player.getInventory();
         for (int i = 0; i < inv.getContainerSize() && remaining > 0; i++) {
@@ -79,7 +73,6 @@ public final class AmmoConsumer {
      */
     public static int countAnyOf(Player player, List<Item> items) {
         if (player == null) return 0;
-        if (isFreebie(player)) return Integer.MAX_VALUE;
         int total = 0;
         for (Item item : items) {
             if (CreativeAmmoCache.isInfinite(player, item)) return CreativeAmmoCache.INFINITE;

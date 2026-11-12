@@ -187,11 +187,9 @@ public class AmmoSelectOverlay {
 
             // 统计弹药数量
             int count = 0;
-            boolean isCreative = (player.getAbilities().instabuild
-                    && !(weapon.getItem() instanceof com.piranport.artillery.ArtilleryItem))
-                    || CreativeAmmoCache.isInfinite(player, ammoItem);
+            boolean isInfinite = CreativeAmmoCache.isInfinite(player, ammoItem);
 
-            if (!isCreative) {
+            if (!isInfinite) {
                 // 非无限来源：统计背包中的弹药数量。
                 for (ItemStack s : player.getInventory().items) {
                     if (s.getItem() == ammoItem) count += s.getCount();
@@ -212,7 +210,7 @@ public class AmmoSelectOverlay {
             gui.renderFakeItem(new ItemStack(ammoItem, 1), bx, by);
 
             // 数量显示
-            String countStr = isCreative ? "∞" : String.valueOf(count);
+            String countStr = isInfinite ? "∞" : String.valueOf(count);
             gui.drawString(mc.font, countStr,
                     bx + slotSize - mc.font.width(countStr),
                     by + slotSize - mc.font.lineHeight, 0xFFFFFF);

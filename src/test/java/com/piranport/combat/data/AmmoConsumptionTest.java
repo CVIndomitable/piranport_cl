@@ -3,7 +3,6 @@ package com.piranport.combat.data;
 import com.piranport.component.CreativeAmmoSelection;
 import com.piranport.registry.ModDataComponents;
 import com.piranport.registry.ModItems;
-import com.piranport.testtools.PiranPortTestTools;
 import net.minecraft.SharedConstants;
 import net.minecraft.core.MappedRegistry;
 import net.minecraft.core.Registry;
@@ -14,7 +13,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -52,9 +50,6 @@ class AmmoConsumptionTest {
         Registry.register(registry, target.getId(), entries.get(target).get());
     }
 
-    @AfterEach
-    void closeTestMode() { PiranPortTestTools.closeAll(); }
-
     @Test
     void consumesAcrossStacksAndRejectsInsufficientAmmoWithoutPartialLoss() {
         Inventory inventory = new Inventory(null);
@@ -71,16 +66,12 @@ class AmmoConsumptionTest {
     }
 
     @Test
-    void testModeOwnerStillConsumesItems() {
+    void ownerConsumesItems() {
         UUID owner = UUID.randomUUID();
-        assertEquals(PiranPortTestTools.ToggleResult.OPENED, PiranPortTestTools.toggleFor(owner, true));
         Inventory inventory = new Inventory(null);
         inventory.setItem(0, new ItemStack(Items.IRON_INGOT, 4));
         assertTrue(new AmmoInventory(inventory, 40, 8).consumeAmmo(owner, Items.IRON_INGOT, 3));
         assertEquals(1, inventory.getItem(0).getCount());
-        ItemStack fuel = new ItemStack(Items.COAL, 2);
-        PiranPortTestTools.consumeAmmo(owner, fuel, 1);
-        assertEquals(1, fuel.getCount());
     }
 
     @Test
@@ -101,6 +92,7 @@ class AmmoConsumptionTest {
         String selection = Files.readString(Path.of("src/main/java/com/piranport/combat/data/AmmoSelectionRules.java"));
         assertFalse(reload.contains("instabuild"));
         assertTrue(reload.contains("!ammo.consumeAmmo(player.getUUID(), type, barrels)"));
-        assertTrue(selection.contains("player.getAbilities().instabuild && !(weapon.getItem() instanceof ArtilleryItem)"));
+        assertFalse(selection.contains("instabuild"));
+        assertTrue(selection.contains("CreativeAmmoCache.isInfinite(player, ammo)"));
     }
 }

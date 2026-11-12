@@ -9,7 +9,6 @@ import com.piranport.item.AircraftItem;
 import com.piranport.item.TorpedoItem;
 import com.piranport.item.TorpedoLauncherItem;
 import com.piranport.item.ShipCoreCombat;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -50,14 +49,6 @@ public final class AmmoSelectionRules {
         List<Item> result = new ArrayList<>();
         if (!supports(weapon)) return result;
 
-        boolean creative = player.getAbilities().instabuild && !(weapon.getItem() instanceof ArtilleryItem);
-        if (creative) {
-            for (Item item : BuiltInRegistries.ITEM) {
-                if (matches(weapon, item, player)) result.add(item);
-            }
-            return result;
-        }
-
         for (ItemStack stack : player.getInventory().items) {
             addIfAvailable(result, player, weapon, stack);
         }
@@ -71,8 +62,7 @@ public final class AmmoSelectionRules {
 
     public static boolean hasAvailable(Player player, ItemStack weapon, Item ammo) {
         if (!matches(weapon, ammo, player)) return false;
-        if ((player.getAbilities().instabuild && !(weapon.getItem() instanceof ArtilleryItem))
-                || CreativeAmmoCache.isInfinite(player, ammo)) return true;
+        if (CreativeAmmoCache.isInfinite(player, ammo)) return true;
         for (ItemStack stack : player.getInventory().items) {
             if (!stack.isEmpty() && stack.getItem() == ammo) return true;
         }

@@ -1,4 +1,12 @@
 {
+  "gui.piranport.debug_terminal.property.breath_fall": "呼吸下沉（模型单位）",
+  "gui.piranport.debug_terminal.property.breath_period_ticks": "呼吸周期（tick）",
+  "gui.piranport.debug_terminal.property.breath_rise": "呼吸上浮（模型单位）",
+  "gui.piranport.debug_terminal.property.deploy_ticks": "甲板展开时长（tick）",
+  "gui.piranport.debug_terminal.property.flight_ticks": "离板过渡时长（tick）",
+  "gui.piranport.debug_terminal.property.roll_ticks": "甲板滑跑时长（tick）",
+  "gui.piranport.debug_terminal.target.equipment.aircraft_launch": "舰载机放飞动画",
+  "gui.piranport.debug_terminal.target.equipment.rigging_motion": "舰装呼吸浮动",
   "advancements.piranport.defeat_abyssal_flagship.description": "击败深海世界中的深海旗舰",
   "advancements.piranport.defeat_abyssal_flagship.title": "旗舰沉没",
   "advancements.piranport.dungeon_first_clear.description": "首次完成一个副本关卡",

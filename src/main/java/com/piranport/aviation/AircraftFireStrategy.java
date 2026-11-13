@@ -11,8 +11,14 @@ import com.piranport.config.ModCommonConfig;
 import com.piranport.entity.AircraftEntity;
 import com.piranport.item.AircraftItem;
 import com.piranport.item.ShipCoreItem;
-import com.piranport.network.AircraftLaunchPosePayload;
+import com.piranport.config.ModEquipmentConfig;
+import com.piranport.handler.RiggingLoadoutHandler;
+import com.piranport.network.AircraftLaunchVisualPayload;
+import com.piranport.registry.ModAttachmentTypes;
 import com.piranport.registry.ModDataComponents;
+import com.piranport.rigging.RiggingLoadoutResolver;
+import com.piranport.rigging.RiggingMount;
+import com.piranport.rigging.RiggingSocket;
 import com.piranport.registry.ModItems;
 import com.piranport.skin.SkinManager;
 import net.minecraft.core.particles.ParticleOptions;
@@ -96,6 +102,25 @@ public class AircraftFireStrategy {
         AircraftEntity aircraft = AircraftEntity.create(level, player, weaponSlot, aircraftStack,
                 attackMode, coreInventorySlot);
         level.addFreshEntity(aircraft);
+        if (level instanceof ServerLevel serverLevel) {
+            // 最近同步的机位可能比背包落后半秒，交接以客户端实际看见的那份快照为准。
+            var loadout = player.getData(ModAttachmentTypes.RIGGING_LOADOUT.get());
+            var mount = loadout.mounts().stream().filter(m -> m.sourceSlot() == weaponSlot
+                    && m.stack().is(aircraftStack.getItem())).findFirst();
+            if (mount.isEmpty()) {
+                loadout = RiggingLoadoutResolver.assign(inv, SkinManager.getActiveSkin(player));
+                mount = loadout.mounts().stream().filter(m -> m.sourceSlot() == weaponSlot).findFirst();
+            }
+            RiggingSocket socket = mount.map(RiggingMount::socket).orElse(RiggingSocket.DECK_1);
+            PacketDistributor.sendToPlayersNear(serverLevel, null, player.getX(), player.getY(), player.getZ(),
+                    Math.max(48.0, serverLevel.getServer().getPlayerList().getSimulationDistance() * 16.0),
+                    new AircraftLaunchVisualPayload(player.getId(), player.getUUID(),
+                            aircraft.getId(), aircraft.getUUID(), weaponSlot, socket.ordinal(), definition.visualId(),
+                            loadout.fingerprint(), level.getGameTime(),
+                            ModEquipmentConfig.AIRCRAFT_LAUNCH_DEPLOY_TICKS.get(),
+                            ModEquipmentConfig.AIRCRAFT_LAUNCH_ROLL_TICKS.get(),
+                            ModEquipmentConfig.AIRCRAFT_LAUNCH_FLIGHT_TICKS.get()));
+        }
         com.piranport.combat.AASilenceManager.startSilence(player);
         spawnAircraftLaunchEffect(level, player, definition);
         // P0-3: 起飞成功埋点（带玩家短UUID、槽位、物品hash、payload、mode、entityId）
@@ -112,6 +137,10 @@ public class AircraftFireStrategy {
             inv.offhand.set(0, ItemStack.EMPTY);
         } else {
             inv.items.set(weaponSlot, ItemStack.EMPTY);
+        }
+
+        if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+            RiggingLoadoutHandler.refresh(serverPlayer);
         }
 
         int launchCooldown = TransformationManager.boostedCooldown(player, 20);
@@ -161,14 +190,6 @@ public class AircraftFireStrategy {
         Vec3 origin = player.position().add(0, 1.1, 0).add(horizontal.scale(0.35));
         int skinId = SkinManager.getActiveSkin(player);
         LaunchProfile profile = resolveLaunchProfile(skinId);
-        double poseRadius = serverLevel.getServer().getPlayerList().getSimulationDistance() * 16.0;
-        PacketDistributor.sendToPlayersNear(
-                serverLevel,
-                null,
-                player.getX(), player.getY(), player.getZ(),
-                Math.max(48.0, poseRadius),
-                new AircraftLaunchPosePayload(player.getId(), skinId, 18));
-
         for (int i = 0; i < 9; i++) {
             double t = (i - 4) / 4.0;
             Vec3 p = origin.add(right.scale(t * profile.width()))

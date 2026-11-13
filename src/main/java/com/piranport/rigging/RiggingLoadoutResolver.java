@@ -23,20 +23,12 @@ public final class RiggingLoadoutResolver {
 
     private static final List<RiggingSocket> WAIST_SOCKETS =
             List.of(RiggingSocket.WAIST_LEFT, RiggingSocket.WAIST_RIGHT);
-    /**
-     * 舷侧炮位的分配顺序：<b>右前 → 左前 → 右后 → 左后</b>。
-     *
-     * <p>WHY：舰装容量有限，只会显示其中几个炮位；候选列表已把当前选中槽排最前，
-     * 按这个顺序分配，主手武器一定落在最显眼的右前角 {@code SIDE_RIGHT_2}。
-     * 用户实机确认：玩家模型 +X 是左、+Z 是后，所以 x=-9.5、z=-6 的
-     * {@code SIDE_RIGHT_2} 才是右前；旧顺序把主手放到了左后 {@code SIDE_LEFT_1}。
-     *
-     * <p>甲板现在挂在右臂之外，右臂平台仍然存在，所以有飞机时也按同一顺序分配，
-     * 不再禁用右舷炮位（{@code hasAircraft} 只决定是否叠加甲板模型与飞机挂点）。
-     */
+    /** 主手优先放前炮位；携带飞机时右侧整臂让给甲板，仅保留左侧炮位。 */
     private static final List<RiggingSocket> SIDE_ORDER =
             List.of(RiggingSocket.SIDE_RIGHT_2, RiggingSocket.SIDE_LEFT_2,
                     RiggingSocket.SIDE_RIGHT_1, RiggingSocket.SIDE_LEFT_1);
+    private static final List<RiggingSocket> CARRIER_SIDE_ORDER =
+            List.of(RiggingSocket.SIDE_LEFT_2, RiggingSocket.SIDE_LEFT_1);
     private static final List<RiggingSocket> DECK_SOCKETS =
             List.of(RiggingSocket.DECK_1, RiggingSocket.DECK_2);
     private static final List<RiggingSocket> BACK_SOCKETS =
@@ -70,9 +62,9 @@ public final class RiggingLoadoutResolver {
      *   <li>鱼雷 → 腰部左、右</li>
      *   <li>主炮 / 反舰导弹 / 火箭弹 → 按固定顺序占舷侧炮位：
      *       <b>右前 → 左前 → 右后 → 左后</b>。主手是主炮/反舰导弹时该槽排最前，
-     *       因此主手固定落在右前角的 {@code SIDE_RIGHT_2}</li>
-     *   <li>有任意舰载机时叠加飞行甲板（在右臂之外），飞机 → 甲板两个位；
-     *       右臂炮位仍然可用，不再禁用右舷</li>
+     *       无飞机时主手落在右前角，有飞机时落在左前角</li>
+     *   <li>有任意舰载机时飞行甲板替代右侧炮架，飞机 → 甲板两个位；
+     *       火炮/反舰导弹只分配左侧两个炮位</li>
      *   <li>深弹 / 防空导弹 → 后背两个位</li>
      *   <li>超出容量的物品直接丢弃（物品栏、数值、开火都不受影响）</li>
      * </ol>
@@ -107,6 +99,7 @@ public final class RiggingLoadoutResolver {
                     candidate.slot() == selectedSlot ? -1 : candidate.slot()));
         }
 
+        List<RiggingSocket> sideOrder = sideSockets(hasAircraft);
         List<RiggingMount> mounts = new ArrayList<>();
         int waist = 0;
         int side = 0;
@@ -116,7 +109,7 @@ public final class RiggingLoadoutResolver {
             RiggingSocket socket = switch (candidate.category()) {
                 case TORPEDO -> waist < WAIST_SOCKETS.size() ? WAIST_SOCKETS.get(waist++) : null;
                 case CANNON, MISSILE_ASM ->
-                        side < SIDE_ORDER.size() ? SIDE_ORDER.get(side++) : null;
+                        side < sideOrder.size() ? sideOrder.get(side++) : null;
                 case AIRCRAFT -> hasAircraft && deck < DECK_SOCKETS.size()
                         ? DECK_SOCKETS.get(deck++)
                         : null;
@@ -125,7 +118,7 @@ public final class RiggingLoadoutResolver {
                         : null;
             };
             if (socket != null) {
-                mounts.add(new RiggingMount(socket, candidate.category(), candidate.stack()));
+                mounts.add(new RiggingMount(socket, candidate.category(), candidate.stack(), candidate.slot()));
             }
         }
 
@@ -144,6 +137,10 @@ public final class RiggingLoadoutResolver {
             case 17 -> RiggingLoadout.HULL_SUBMARINE;
             default -> hasAircraft ? RiggingLoadout.HULL_CARRIER : RiggingLoadout.HULL_DEFAULT;
         };
+    }
+
+    public static List<RiggingSocket> sideSockets(boolean hasAircraft) {
+        return hasAircraft ? CARRIER_SIDE_ORDER : SIDE_ORDER;
     }
 
     private record Candidate(int slot, RiggingCategory category, ItemStack stack) {}

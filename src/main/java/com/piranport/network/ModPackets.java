@@ -8,11 +8,13 @@ import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 
 @EventBusSubscriber(modid = PiranPort.MOD_ID)
 public class ModPackets {
-    public static final String PROTOCOL_VERSION = "1";
+    public static final String PROTOCOL_VERSION = "2";
 
     @SubscribeEvent
     public static void register(RegisterPayloadHandlersEvent event) {
         PayloadRegistrar registrar = event.registrar(PROTOCOL_VERSION);
+        registrar.playToClient(AircraftLaunchVisualPayload.TYPE, AircraftLaunchVisualPayload.STREAM_CODEC,
+                AircraftLaunchVisualPayload::handle);
         // Phase 20: fire control
         registrar.playToServer(
                 FireControlPayload.TYPE,

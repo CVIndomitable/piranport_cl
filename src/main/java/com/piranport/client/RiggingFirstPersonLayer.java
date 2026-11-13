@@ -147,12 +147,18 @@ public final class RiggingFirstPersonLayer {
         FpAnimatables animatables = animatablesFor(player);
         MultiBufferSource.BufferSource bufferSource = mc.renderBuffers().bufferSource();
 
-        HULL_RENDERER.setHiddenBoneCubes(ModEquipmentConfig.RIGGING_FP_SHOW_BODY.get()
-                ? Set.of() : BODY_BONES);
+        Set<String> hiddenBones = new HashSet<>();
+        if (!ModEquipmentConfig.RIGGING_FP_SHOW_BODY.get()) hiddenBones.addAll(BODY_BONES);
+        boolean showDeck = loadout.hasAircraft() || AircraftLaunchVisualClientState.hasActiveDeck(player.getId());
+        if (showDeck) hiddenBones.add("arm_left");
+        HULL_RENDERER.setHiddenBoneCubes(hiddenBones);
+        DECK_RENDERER.setDeckDeployment(AircraftLaunchVisualClientState.deckDeployment(player.getId(), partialTick));
+        poseStack.pushPose();
+        RiggingSocketTransforms.applyFirstPersonBreathing(poseStack, null);
         renderPart(poseStack, bufferSource, packedLight, partialTick,
                 RiggingHullModelRegistry.GENERAL_HULL, animatables.generalHull(), HULL_RENDERER);
 
-        if (loadout.hasAircraft()) {
+        if (showDeck) {
             renderPart(poseStack, bufferSource, packedLight, partialTick,
                     RiggingHullModelRegistry.CARRIER_DECK, animatables.carrierDeck(), DECK_RENDERER);
         }
@@ -163,6 +169,9 @@ public final class RiggingFirstPersonLayer {
                     WAIST_RACK_RENDERER);
         }
 
+        AircraftLaunchVisualClientState.renderDeckAircraft(player.getId(), poseStack,
+                bufferSource, packedLight, partialTick, true);
+        poseStack.popPose();
         // 挂载武器最后画：和船体共用同一个身体变换（含 scale / offset / yaw-pitch-roll）。
         renderWeapons(poseStack, bufferSource, packedLight, partialTick, player, loadout);
         // 物品渲染（FIXED）与 BEWLR 3D 模型的批次留到这时统一提交。
@@ -197,6 +206,10 @@ public final class RiggingFirstPersonLayer {
                                       int packedLight, float partialTick,
                                       AbstractClientPlayer player, RiggingLoadout loadout) {
         for (RiggingMount mount : loadout.mounts()) {
+            if (AircraftLaunchVisualClientState.shouldHideMount(player.getId(), mount)) continue;
+            if (AircraftLaunchVisualClientState.hasActiveDeck(player.getId())
+                    && (mount.socket() == RiggingSocket.SIDE_RIGHT_1
+                    || mount.socket() == RiggingSocket.SIDE_RIGHT_2)) continue;
             // 第一人称不显示背部防空导弹/深弹发射器的模型（第三人称保持）。
             // 按 category 而不是 BACK_* 挂点判断，背部以后扩展别的装备时不会误伤。
             if (mount.category() == RiggingCategory.MISSILE_SAM
@@ -205,7 +218,8 @@ public final class RiggingFirstPersonLayer {
             }
             // 甲板飞机改用飞行实体的 3D 模型；定义缺失时返回 false，回退到平面图标。
             if (mount.category() == RiggingCategory.AIRCRAFT
-                    && renderDeckAircraft(poseStack, bufferSource, packedLight, mount)) {
+                    && renderDeckAircraft(poseStack, bufferSource, packedLight, mount,
+                    AircraftLaunchVisualClientState.deckDeployment(player.getId(), partialTick))) {
                 continue;
             }
             // 第一人称不跟随 third-person 的放飞后仰；mountPose 目前也不使用该参数。
@@ -214,7 +228,7 @@ public final class RiggingFirstPersonLayer {
             RiggingModelDef def = RiggingModelRegistry.find(mount.stack());
             if (def != null) {
                 renderGeckoWeapon(poseStack, bufferSource, packedLight, partialTick,
-                        player, def, pose);
+                        player, def, mount.socket(), pose);
             } else {
                 renderItemWeapon(poseStack, bufferSource, packedLight, player, mount, pose);
             }
@@ -230,8 +244,10 @@ public final class RiggingFirstPersonLayer {
      */
     private static boolean renderDeckAircraft(PoseStack poseStack,
                                               MultiBufferSource.BufferSource bufferSource,
-                                              int packedLight, RiggingMount mount) {
+                                              int packedLight, RiggingMount mount, float deployment) {
         poseStack.pushPose();
+        RiggingSocketTransforms.applyFirstPersonBreathing(poseStack, mount.socket());
+        RiggingSocketTransforms.applyDeckFold(poseStack, deployment);
         AircraftRiggingModelRenderer.translateToDeck(poseStack, mount.socket());
         boolean rendered = AircraftRiggingModelRenderer.render(
                 mount.stack(), poseStack, bufferSource, packedLight,
@@ -250,8 +266,10 @@ public final class RiggingFirstPersonLayer {
     private static void renderGeckoWeapon(PoseStack poseStack, MultiBufferSource.BufferSource bufferSource,
                                           int packedLight, float partialTick,
                                           AbstractClientPlayer player, RiggingModelDef def,
+                                          RiggingSocket socket,
                                           RiggingSocketTransforms.MountPose pose) {
         poseStack.pushPose();
+        RiggingSocketTransforms.applyFirstPersonBreathing(poseStack, socket);
         // 挂点坐标是玩家模型空间（+Y 下），换到身体模型空间（+Y 上）只翻 y。
         poseStack.translate(pose.x() / 16.0f, -pose.y() / 16.0f, pose.z() / 16.0f);
         poseStack.mulPose(Axis.YP.rotationDegrees(def.yawOffset() + pose.yaw() + 180.0f));
@@ -276,6 +294,7 @@ public final class RiggingFirstPersonLayer {
                                          int packedLight, AbstractClientPlayer player,
                                          RiggingMount mount, RiggingSocketTransforms.MountPose pose) {
         poseStack.pushPose();
+        RiggingSocketTransforms.applyFirstPersonBreathing(poseStack, mount.socket());
         poseStack.translate(pose.x() / 16.0f, -pose.y() / 16.0f, pose.z() / 16.0f);
 
         boolean flatIcon = isDeckSocket(mount.socket());
@@ -286,7 +305,7 @@ public final class RiggingFirstPersonLayer {
         } else {
             poseStack.mulPose(Axis.YP.rotationDegrees(pose.yaw()));
             poseStack.mulPose(Axis.XP.rotationDegrees(pose.pitch()));
-            poseStack.mulPose(Axis.ZP.rotationDegrees(pose.roll()));
+            poseStack.mulPose(Axis.ZP.rotationDegrees(-pose.roll()));
         }
         poseStack.scale(pose.scale(), pose.scale(), pose.scale());
 

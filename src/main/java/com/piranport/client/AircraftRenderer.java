@@ -83,19 +83,34 @@ public class AircraftRenderer extends EntityRenderer<AircraftEntity> {
     @Override
     public void render(AircraftEntity entity, float entityYaw, float partialTick,
                        PoseStack poseStack, MultiBufferSource bufferSource, int packedLight) {
+        var launch = AircraftLaunchVisualClientState.flight(entity, partialTick);
+        float launchAge = launch == null ? 0 : AircraftLaunchVisualClientState.flightAge(launch, partialTick);
+        if (launch != null && launchAge < launch.timeline.departureTick()) return;
         poseStack.pushPose();
+        float renderScale = 1.5f;
+        float pitch = net.minecraft.util.Mth.lerp(partialTick, entity.xRotO, entity.getXRot());
+        if (launch != null && launch.position != null) {
+            float progress = launch.timeline.flight(launchAge);
+            double ex = net.minecraft.util.Mth.lerp(partialTick, entity.xo, entity.getX());
+            double ey = net.minecraft.util.Mth.lerp(partialTick, entity.yo, entity.getY());
+            double ez = net.minecraft.util.Mth.lerp(partialTick, entity.zo, entity.getZ());
+            poseStack.translate((launch.position.x - ex) * (1 - progress),
+                    (launch.position.y - ey) * (1 - progress), (launch.position.z - ez) * (1 - progress));
+            entityYaw = net.minecraft.util.Mth.rotLerp(progress, launch.yaw, entityYaw);
+            pitch = net.minecraft.util.Mth.lerp(progress, launch.pitch, pitch);
+            renderScale = net.minecraft.util.Mth.lerp(progress, launch.scale, 1.5f);
+        }
 
         // Canonical MC entity rotation: YP(180 - yaw) with scale(-1, -1, 1).
         // The model is authored facing -Z (nose at Z=-5); this rotates the
         // nose to +Z at yaw=0 (entity facing south) and flips the upside-down
         // Blockbench Y/X convention.
         poseStack.mulPose(Axis.YP.rotationDegrees(180.0f - entityYaw));
-        float pitch = net.minecraft.util.Mth.lerp(partialTick, entity.xRotO, entity.getXRot());
         // Pitch flips sign because the model's forward (+Z after Y rotation) is
         // achieved via a 180° flip; a positive Minecraft xRot (nose-down) must
         // rotate the model's local nose downward.
         poseStack.mulPose(Axis.XP.rotationDegrees(-pitch));
-        poseStack.scale(-1.5f, -1.5f, 1.5f);
+        poseStack.scale(-renderScale, -renderScale, renderScale);
         poseStack.translate(0.0, -1.501, 0.0);
 
         EntityModel<AircraftEntity> model;
@@ -155,6 +170,17 @@ public class AircraftRenderer extends EntityRenderer<AircraftEntity> {
                                       float x, float y, float z, int r, int g, int b) {
         // torpedoAimLineType 使用 POSITION_COLOR 格式，不需要 normal；alpha 与玩家预瞄线一致。
         c.addVertex(pose.pose(), x, y, z).setColor(r, g, b, 150);
+    }
+
+    @Override
+    protected float getShadowRadius(AircraftEntity entity) {
+        return AircraftLaunchVisualClientState.flight(entity, 0) != null ? 0 : super.getShadowRadius(entity);
+    }
+
+    @Override
+    public boolean shouldRender(AircraftEntity entity, net.minecraft.client.renderer.culling.Frustum frustum,
+                                double x, double y, double z) {
+        return AircraftLaunchVisualClientState.flight(entity, 0) != null || super.shouldRender(entity, frustum, x, y, z);
     }
 
     @Override

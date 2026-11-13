@@ -45,12 +45,24 @@ public class ShipRiggingLayer extends RenderLayer<AbstractClientPlayer, PlayerMo
 
         RiggingLoadout loadout = RiggingClientState.resolveLoadout(player);
         float launchPose = AircraftLaunchPoseClientState.intensity(player.getId(), partialTick);
+        float deployment = AircraftLaunchVisualClientState.deckDeployment(player.getId(), partialTick);
 
         for (RiggingMount mount : loadout.mounts()) {
+            if (AircraftLaunchVisualClientState.shouldHideMount(player.getId(), mount)) continue;
+            if (AircraftLaunchVisualClientState.hasActiveDeck(player.getId())
+                    && (mount.socket() == com.piranport.rigging.RiggingSocket.SIDE_RIGHT_1
+                    || mount.socket() == com.piranport.rigging.RiggingSocket.SIDE_RIGHT_2)) continue;
             // 已有 GeckoLib 模型的装备由 RiggingAttachedLayer 绘制，这里不能再画一份物品模型。
             if (RiggingModelRegistry.isRegistered(mount.stack())) continue;
-            renderMount(poseStack, bufferSource, packedLight, player, mount, launchPose);
+            renderMount(poseStack, bufferSource, packedLight, player, mount, launchPose, deployment);
         }
+        poseStack.pushPose();
+        RiggingSocketTransforms.applyHullBase(poseStack, getParentModel(), launchPose);
+        RiggingSocketTransforms.applyThirdPersonBreathing(poseStack, null);
+        poseStack.scale(1, -1, 1);
+        AircraftLaunchVisualClientState.renderDeckAircraft(player.getId(), poseStack,
+                bufferSource, packedLight, partialTick, false);
+        poseStack.popPose();
     }
 
     /**
@@ -66,12 +78,12 @@ public class ShipRiggingLayer extends RenderLayer<AbstractClientPlayer, PlayerMo
      * {@code FIXED && isRiggingPass()} 时走 3D 分支。
      */
     private void renderMount(PoseStack poseStack, MultiBufferSource bufferSource, int packedLight,
-                             AbstractClientPlayer player, RiggingMount mount, float launchPose) {
-        // 甲板飞机复用飞行实体的 3D 模型；定义缺失时返回 false，回退到下面的物品图标。
-        if (renderDeckAircraft(poseStack, bufferSource, packedLight, mount, launchPose)) return;
+                             AbstractClientPlayer player, RiggingMount mount, float launchPose, float deployment) {
+        if (renderDeckAircraft(poseStack, bufferSource, packedLight, mount, launchPose, deployment)) return;
 
         poseStack.pushPose();
         RiggingSocketTransforms.applyBase(poseStack, this.getParentModel(), mount.socket(), launchPose);
+        RiggingSocketTransforms.applyThirdPersonBreathing(poseStack, mount.socket());
 
         RiggingSocketTransforms.MountPose pose =
                 RiggingSocketTransforms.mountPose(mount.socket(), launchPose);
@@ -109,13 +121,15 @@ public class ShipRiggingLayer extends RenderLayer<AbstractClientPlayer, PlayerMo
      * @return true 表示已按 3D 模型画出；false 表示不是飞机或没有定义，调用方走物品图标。
      */
     private boolean renderDeckAircraft(PoseStack poseStack, MultiBufferSource bufferSource,
-                                       int packedLight, RiggingMount mount, float launchPose) {
+                                       int packedLight, RiggingMount mount, float launchPose, float deployment) {
         if (mount.category() != RiggingCategory.AIRCRAFT) return false;
 
         poseStack.pushPose();
         RiggingSocketTransforms.applyBase(poseStack, this.getParentModel(), mount.socket(), launchPose);
+        RiggingSocketTransforms.applyThirdPersonBreathing(poseStack, mount.socket());
         // 与 RiggingHullLayer 一致：玩家模型 +Y 朝下 → 舰装模型 +Y 朝上（甲板/飞机的坐标系）。
         poseStack.scale(1.0f, -1.0f, 1.0f);
+        RiggingSocketTransforms.applyDeckFold(poseStack, deployment);
         AircraftRiggingModelRenderer.translateToDeck(poseStack, mount.socket());
         // 玩家模型层的 -Z 才是角色前方（+Z 是后，用户实机确认），传 true 让机头转到 -Z。
         boolean rendered = AircraftRiggingModelRenderer.render(

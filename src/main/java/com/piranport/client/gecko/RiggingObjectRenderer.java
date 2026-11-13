@@ -2,7 +2,9 @@ package com.piranport.client.gecko;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.piranport.client.RiggingSocketTransforms;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import org.joml.Matrix4f;
 import software.bernie.geckolib.cache.object.BakedGeoModel;
 import software.bernie.geckolib.cache.object.GeoBone;
@@ -24,6 +26,26 @@ public final class RiggingObjectRenderer extends GeoObjectRenderer<RiggingAnimat
 
     /** 默认不隐藏任何骨骼；第一人称层会按需设置。 */
     private Set<String> hiddenBoneCubes = Set.of();
+    private float deckDeployment;
+
+    public void setDeckDeployment(float deployment) {
+        this.deckDeployment = deployment;
+    }
+
+    @Override
+    public void renderRecursively(PoseStack poseStack, RiggingAnimatable animatable, GeoBone bone,
+                                  RenderType renderType, MultiBufferSource bufferSource,
+                                  VertexConsumer buffer, boolean isReRender, float partialTick,
+                                  int packedLight, int packedOverlay, int colour) {
+        // 铰链支架固定在身上，只翻折 deck 及其子骨骼；不修改全局共享的烘焙骨骼。
+        poseStack.pushPose();
+        if (bone.getName().equals("deck")) {
+            RiggingSocketTransforms.applyDeckFold(poseStack, deckDeployment);
+        }
+        super.renderRecursively(poseStack, animatable, bone, renderType, bufferSource, buffer,
+                isReRender, partialTick, packedLight, packedOverlay, colour);
+        poseStack.popPose();
+    }
 
     public RiggingObjectRenderer(RiggingRenderDef def) {
         super(new RiggingGeoModel(def));

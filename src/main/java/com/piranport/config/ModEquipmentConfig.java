@@ -4,6 +4,21 @@ package com.piranport.config;
 public final class ModEquipmentConfig {
     private ModEquipmentConfig() {}
 
+    // 放飞时读取一次并随视觉包同步，避免动画途中终端修改导致两端不同步。
+    public static final TerminalConfigValue<Integer> AIRCRAFT_LAUNCH_DEPLOY_TICKS =
+            TerminalConfigValue.integer("equipment", "aircraft_launch", "deploy_ticks", 6, 1, 100);
+    public static final TerminalConfigValue<Integer> AIRCRAFT_LAUNCH_ROLL_TICKS =
+            TerminalConfigValue.integer("equipment", "aircraft_launch", "roll_ticks", 8, 1, 100);
+    public static final TerminalConfigValue<Integer> AIRCRAFT_LAUNCH_FLIGHT_TICKS =
+            TerminalConfigValue.integer("equipment", "aircraft_launch", "flight_ticks", 16, 1, 100);
+
+    public static final TerminalConfigValue<Integer> RIGGING_BREATH_PERIOD_TICKS =
+            TerminalConfigValue.integer("equipment", "rigging_motion", "breath_period_ticks", 80, 4, 1200);
+    public static final TerminalConfigValue<Double> RIGGING_BREATH_RISE =
+            TerminalConfigValue.number("equipment", "rigging_motion", "breath_rise", 0.35, 0.0, 8.0);
+    public static final TerminalConfigValue<Double> RIGGING_BREATH_FALL =
+            TerminalConfigValue.number("equipment", "rigging_motion", "breath_fall", 0.22, 0.0, 8.0);
+
     // ===== 第一人称舰装渲染（RiggingFirstPersonLayer）=====
     // WHY 全部下沉到终端：第一人称舰装是纯视觉手感，偏移/缩放/角度必须能在游戏里实时调，
     // 否则每改一次都要重编译。键统一为 global.rigging_fp.*，默认值是一组「站在舰装内部」的估计值。

@@ -65,6 +65,7 @@ public record RiggingLoadout(
         for (RiggingMount mount : mounts) {
             hash = hash * 31 + mount.socket().ordinal();
             hash = hash * 31 + mount.category().ordinal();
+            hash = hash * 31 + mount.sourceSlot();
             hash = hash * 31 + BuiltInRegistries.ITEM.getId(mount.stack().getItem());
         }
         hash = hash * 31 + (hasAircraft ? 1 : 0);
@@ -89,7 +90,8 @@ public record RiggingLoadout(
                         RiggingSocket socket = RiggingSocket.byId(buf.readVarInt());
                         RiggingCategory category = RiggingCategory.byId(buf.readVarInt());
                         ItemStack stack = ItemStack.STREAM_CODEC.decode(buf);
-                        mounts.add(new RiggingMount(socket, category, stack));
+                        int sourceSlot = buf.readVarInt() - 1;
+                        mounts.add(new RiggingMount(socket, category, stack, sourceSlot));
                     }
                     boolean hasAircraft = buf.readBoolean();
                     int hullProfile = buf.readVarInt();
@@ -104,6 +106,7 @@ public record RiggingLoadout(
                         buf.writeVarInt(mount.socket().ordinal());
                         buf.writeVarInt(mount.category().ordinal());
                         ItemStack.STREAM_CODEC.encode(buf, mount.stack());
+                        buf.writeVarInt(mount.sourceSlot() + 1);
                     }
                     buf.writeBoolean(loadout.hasAircraft());
                     buf.writeVarInt(loadout.hullProfile());

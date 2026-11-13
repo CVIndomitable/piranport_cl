@@ -115,6 +115,11 @@ public final class ClientItemHooks implements com.piranport.platform.ClientBridg
     }
 
     @Override
+    public void triggerAircraftLaunchVisual(com.piranport.network.AircraftLaunchVisualPayload payload) {
+        AircraftLaunchVisualClientState.trigger(payload);
+    }
+
+    @Override
     public void spawnCannonImpactEffect(CannonImpactEffectPayload payload) {
         CannonImpactEffects.spawn(payload);
     }

@@ -45,7 +45,8 @@ public final class RiggingLoadoutHandler {
         refresh(player);
     }
 
-    private static void refresh(ServerPlayer player) {
+    /** 出击清槽后立即同步，避免旧静态飞机与放飞动画重叠。 */
+    public static void refresh(ServerPlayer player) {
         UUID id = player.getUUID();
         RiggingLoadout loadout = RiggingLoadoutResolver.resolve(player);
 

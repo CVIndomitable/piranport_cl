@@ -10,7 +10,11 @@ import java.util.Objects;
  * <p>{@code stack} 是 count=1 的展示副本：同步与渲染都只需要外观，不携带真实数量，
  * 也避免客户端误把展示栈当成可操作物品。
  */
-public record RiggingMount(RiggingSocket socket, RiggingCategory category, ItemStack stack) {
+public record RiggingMount(RiggingSocket socket, RiggingCategory category, ItemStack stack, int sourceSlot) {
+
+    public RiggingMount(RiggingSocket socket, RiggingCategory category, ItemStack stack) {
+        this(socket, category, stack, -1);
+    }
 
     public RiggingMount {
         Objects.requireNonNull(socket, "socket");

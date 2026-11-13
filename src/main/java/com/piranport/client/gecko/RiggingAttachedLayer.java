@@ -3,6 +3,8 @@ package com.piranport.client.gecko;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import com.piranport.client.AircraftLaunchPoseClientState;
+import com.piranport.client.AircraftLaunchVisualClientState;
+import com.piranport.rigging.RiggingSocket;
 import com.piranport.client.RiggingClientState;
 import com.piranport.client.RiggingSocketTransforms;
 import com.piranport.rigging.RiggingLoadout;
@@ -83,10 +85,15 @@ public class RiggingAttachedLayer extends AttachedAnimatableRenderLayer<
 
         for (RiggingMount mount : loadout.mounts()) {
             if (!isThisModel(mount)) continue;
+            if (AircraftLaunchVisualClientState.hasActiveDeck(player.getId())
+                    && (mount.socket() == RiggingSocket.SIDE_RIGHT_1
+                    || mount.socket() == RiggingSocket.SIDE_RIGHT_2)) continue;
 
             poseStack.pushPose();
             // 1. 进入躯干/腿参考系，并加上舰体共享偏移与放飞后仰
             RiggingSocketTransforms.applyBase(poseStack, parentModel, mount.socket(), launchPose);
+            // 舰体的呼吸位移来自 GeckoLib 的 hull_base 骨骼；武器是独立模型，需补上同一相位。
+            RiggingSocketTransforms.applyThirdPersonBreathing(poseStack, mount.socket());
             // 2. 挂点偏移
             RiggingSocketTransforms.MountPose pose =
                     RiggingSocketTransforms.mountPose(mount.socket(), launchPose);

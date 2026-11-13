@@ -69,7 +69,7 @@ class RiggingLoadoutCodecTest {
                         new RiggingMount(RiggingSocket.SIDE_LEFT_1, RiggingCategory.CANNON,
                                 new ItemStack(Items.IRON_AXE)),
                         new RiggingMount(RiggingSocket.DECK_1, RiggingCategory.AIRCRAFT,
-                                new ItemStack(Items.ELYTRA))),
+                                new ItemStack(Items.ELYTRA), 7)),
                 true,
                 RiggingLoadout.HULL_CARRIER,
                 3);
@@ -116,6 +116,7 @@ class RiggingLoadoutCodecTest {
             RiggingMount actualMount = actual.mounts().get(i);
             assertEquals(expectedMount.socket(), actualMount.socket());
             assertEquals(expectedMount.category(), actualMount.category());
+            assertEquals(expectedMount.sourceSlot(), actualMount.sourceSlot());
             assertEquals(1, actualMount.stack().getCount());
             assertTrue(ItemStack.matches(expectedMount.stack(), actualMount.stack()),
                     "物品栈应逐项一致: " + expectedMount.stack() + " vs " + actualMount.stack());

@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import com.piranport.PiranPort;
 import com.piranport.client.AircraftLaunchPoseClientState;
+import com.piranport.client.AircraftLaunchVisualClientState;
 import com.piranport.client.RiggingClientState;
 import com.piranport.client.RiggingSocketTransforms;
 import com.piranport.rigging.RiggingCategory;
@@ -29,9 +30,8 @@ import java.util.WeakHashMap;
  *
  * <p><b>模型选择</b>：
  * <ul>
- *   <li>基础舰体始终是 {@link RiggingHullModelRegistry#GENERAL_HULL}（保留双臂）</li>
- *   <li>有舰载机时额外叠加 {@link RiggingHullModelRegistry#CARRIER_DECK}；
- *       甲板内缘 x=-11.5 正好贴右臂外缘，不需要额外偏移</li>
+ *   <li>基础舰体使用 {@link RiggingHullModelRegistry#GENERAL_HULL}；携带飞机时隐藏右侧炮架</li>
+ *   <li>有舰载机时增加 {@link RiggingHullModelRegistry#CARRIER_DECK}，收起时竖挂、放飞时伸平</li>
  *   <li>有腰部鱼雷挂点时叠加 {@link RiggingHullModelRegistry#WAIST_TORPEDO_RACK}</li>
  * </ul>
  *
@@ -101,13 +101,16 @@ public class RiggingHullLayer extends AttachedAnimatableRenderLayer<
         float launchPose = AircraftLaunchPoseClientState.intensity(player.getId(), partialTick);
         HullAnimatables set = animatablesFor(player);
 
-        // 1. 基础舰体：航母配置也保留双臂（甲板内缘正好贴右臂外缘）。
+        // GeckoLib 导入镜像 X：geo 的 arm_left 在玩家右侧，携带飞机时须隐藏这一臂。
+        boolean showDeck = loadout.hasAircraft() || AircraftLaunchVisualClientState.hasActiveDeck(player.getId());
+        generalHullRenderer.setHiddenBoneCubes(showDeck ? Set.of("arm_left") : Set.of());
+        carrierDeckRenderer.setDeckDeployment(AircraftLaunchVisualClientState.deckDeployment(player.getId(), partialTick));
         renderModel(poseStack, bufferSource, packedLight, partialTick, parentModel,
                 RiggingHullModelRegistry.GENERAL_HULL, set.generalHull(),
                 generalHullRenderer, launchPose);
 
         // 2. 飞行甲板：只在有舰载机时叠加。
-        if (loadout.hasAircraft()) {
+        if (showDeck) {
             renderModel(poseStack, bufferSource, packedLight, partialTick, parentModel,
                     RiggingHullModelRegistry.CARRIER_DECK, set.carrierDeck(),
                     carrierDeckRenderer, launchPose);
@@ -142,6 +145,7 @@ public class RiggingHullLayer extends AttachedAnimatableRenderLayer<
 
         poseStack.pushPose();
         RiggingSocketTransforms.applyHullBase(poseStack, parentModel, launchPose);
+        RiggingSocketTransforms.applyThirdPersonBreathing(poseStack, null);
         // 模型：+Y 朝上、+Z 朝船首、+X 朝左；玩家模型：+Y 朝下、+Z 朝前、+X 朝左。
         // 用 Y 轴反射而不是 XP(180)：模型 +Y → 玩家 -Y（视觉上仍是「上」），
         // +Z 船首保持朝前、+X 左右不变。XP(180) 会把 +Z 一起翻到背后（实机前后反向）。

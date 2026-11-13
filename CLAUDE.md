@@ -53,6 +53,13 @@ Mod ID `piranport`，包名 `com.piranport`；Java 21 / NeoForge 21.1.265 / MC 1
 - 副本入口传送门：书台即入口；传送门方块注册仅为兼容旧存档保留
 - `AircraftReloadPayload` 长按读条：R 键统一走 `ManualReloadPayload`
 
+## 舰装视觉实现
+- `RiggingSocketTransforms` 统一舰体、支架与武器的呼吸位移；资产动画不再单独移动承载骨骼。呼吸参数在 `global.rigging_motion.*`。
+- 鱼雷使用腰部细支架侧挂，底座朝腿、上表面朝外、管口朝前。有飞机时右炮架让位给翻折甲板，`RiggingLoadoutResolver` 只分配左侧炮位；GeckoLib 导入镜像 X，玩家右架对应 geo 的 `arm_left`。
+- `AircraftLaunchVisualPayload` 关联来源槽位、旧快照和真实飞机 UUID；`AircraftLaunchVisualClientState` 在甲板上画滑跑飞机，离板后由 `AircraftRenderer` 过渡到真实实体位置和飞行尺寸。该过程不修改服务端运动、清槽或冷却。
+- `global.aircraft_launch.deploy_ticks/roll_ticks/flight_ticks` 默认 6/8/16 tick。末架出击期间保留甲板，旧姿态包继续供非玩家单位使用。
+- 离线组合预览：`python3 ../ai美术工具/测试版/小工具/preview_rigging_assembly.py . build/offline-renders/rigging`；只读成品资产，不生成或覆盖模型。完整动态效果仍以客户端实际渲染为准。
+
 ## Build & Run
 ```bash
 ./gradlew runClient    # 运行客户端

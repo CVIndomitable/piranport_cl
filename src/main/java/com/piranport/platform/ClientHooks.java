@@ -78,6 +78,10 @@ public final class ClientHooks {
         bridge.triggerAircraftLaunchPose(entityId, skinId, durationTicks);
     }
 
+    public static void triggerAircraftLaunchVisual(com.piranport.network.AircraftLaunchVisualPayload payload) {
+        bridge.triggerAircraftLaunchVisual(payload);
+    }
+
     public static void spawnCannonImpactEffect(CannonImpactEffectPayload payload) {
         bridge.spawnCannonImpactEffect(payload);
     }

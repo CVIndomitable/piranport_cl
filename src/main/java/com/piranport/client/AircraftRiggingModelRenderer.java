@@ -57,21 +57,12 @@ public final class AircraftRiggingModelRenderer {
 
     /**
      * 甲板飞机缩放：最大机翼是 Tenga 的 18 单位，乘 0.38 后约 6.8 单位，
-     * 能完整落在宽 7 单位的飞行甲板内（甲板 x -18.5..-11.5，中心 -15）。
+     * 能完整落在宽 7 单位的飞行甲板内（展开后 x -13.5..-6.5，中心 -10）。
      */
     public static final float DECK_SCALE = 0.38f;
 
     /** EntityModel 空间里 {@code PartPose.y = 24} 对应的地面高度（格）。 */
     private static final float MODEL_GROUND_Y = 1.5f;
-
-    /**
-     * carrier_deck 甲板顶面在舰装模型坐标系里的 y（格）。
-     * Geo 模型里是 y=-0.8，但 GeckoLib/挂点都按 1 单位 = 1/16 格换算，所以是 -0.05 格。
-     */
-    private static final float DECK_TOP_Y = -0.8f / 16.0f;
-
-    /** 抬高一点避免机腹与甲板顶面共面闪烁。 */
-    private static final float DECK_CLEARANCE = 0.01f;
 
     private static Map<AircraftVisualRegistry.ModelKind, EntityModel<AircraftEntity>> models;
 
@@ -151,8 +142,12 @@ public final class AircraftRiggingModelRenderer {
                                  int packedLight, float scale, boolean playerModelFrame) {
         AircraftDefinition definition = AircraftDefinitionService.resolve(stack);
         if (definition == null) return false;
-        AircraftVisualRegistry.AircraftVisual visual =
-                AircraftVisualRegistry.resolve(definition.visualId());
+        return render(definition.visualId(), poseStack, bufferSource, packedLight, scale, playerModelFrame);
+    }
+
+    public static boolean render(String visualId, PoseStack poseStack, MultiBufferSource bufferSource,
+                                 int packedLight, float scale, boolean playerModelFrame) {
+        AircraftVisualRegistry.AircraftVisual visual = AircraftVisualRegistry.resolve(visualId);
         EntityModel<AircraftEntity> model = models().get(visual.modelKind());
         if (model == null) return false;
 
@@ -187,7 +182,7 @@ public final class AircraftRiggingModelRenderer {
     public static void translateToDeck(PoseStack poseStack, RiggingSocket socket) {
         RiggingSocketTransforms.MountPose pose =
                 RiggingSocketTransforms.mountPose(socket, 0.0f);
-        poseStack.translate(pose.x() / 16.0f, DECK_TOP_Y + DECK_CLEARANCE, pose.z() / 16.0f);
+        poseStack.translate(pose.x() / 16.0f, RiggingDeckPose.AIRCRAFT_Y / 16.0f, pose.z() / 16.0f);
     }
 
     private static Map<AircraftVisualRegistry.ModelKind, EntityModel<AircraftEntity>> models() {

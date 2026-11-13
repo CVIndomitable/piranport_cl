@@ -1,4 +1,12 @@
 {
+  "gui.piranport.debug_terminal.property.breath_fall": "Breathing fall (model units)",
+  "gui.piranport.debug_terminal.property.breath_period_ticks": "Breathing period (ticks)",
+  "gui.piranport.debug_terminal.property.breath_rise": "Breathing rise (model units)",
+  "gui.piranport.debug_terminal.property.deploy_ticks": "Deck deployment duration (ticks)",
+  "gui.piranport.debug_terminal.property.flight_ticks": "Airborne transition (ticks)",
+  "gui.piranport.debug_terminal.property.roll_ticks": "Deck takeoff run (ticks)",
+  "gui.piranport.debug_terminal.target.equipment.aircraft_launch": "Carrier launch animation",
+  "gui.piranport.debug_terminal.target.equipment.rigging_motion": "Rigging breathing motion",
   "advancements.piranport.defeat_abyssal_flagship.description": "Defeat the abyssal flagship in the abyssal world",
   "advancements.piranport.defeat_abyssal_flagship.title": "Flagship Sunk",
   "advancements.piranport.dungeon_first_clear.description": "Complete a dungeon stage for the first time",

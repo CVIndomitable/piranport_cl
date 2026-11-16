@@ -103,15 +103,6 @@ public class PlayerConnectionHandler {
         EntityCoreState.syncAllEntityCoresToPlayer(joiner);
         PacketDistributor.sendToPlayer(joiner, DungeonRegistrySyncPayload.fromRegistry());
 
-        // 测试模式水印的客户端状态是进程级布尔量。属主「开着测试模式」掉线重连后，
-        // 服务端状态还在（cooldownOverrideEnabled 是静态字段），因此只给属主恢复开启水印。
-        // 非属主不发送关闭包，避免每次进入存档都在聊天栏显示「测试模式已关闭」。
-        if (com.piranport.testtools.PiranPortTestTools.isActiveOwner(joiner.getUUID())) {
-            PacketDistributor.sendToPlayer(joiner,
-                    new com.piranport.network.TestModeWatermarkPayload(
-                            true, com.piranport.testtools.PiranPortTestTools.currentTestSessionId()));
-        }
-
         var slowness = joiner.getEffect(MobEffects.MOVEMENT_SLOWDOWN);
         if (slowness != null && slowness.getAmplifier() >= 9) {
             joiner.removeEffect(MobEffects.MOVEMENT_SLOWDOWN);

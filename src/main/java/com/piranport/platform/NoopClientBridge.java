@@ -81,9 +81,6 @@ class NoopClientBridge implements ClientBridge {
     public void setDebugEnabledClient(boolean enabled) {  }
 
     @Override
-    public void setTestModeClient(boolean enabled) {  }
-
-    @Override
     public void setServerSolverStats(int ternaryIters, int newtonIters) {  }
 
     @Override

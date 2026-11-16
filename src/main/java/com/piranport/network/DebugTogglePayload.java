@@ -36,7 +36,7 @@ public record DebugTogglePayload(boolean enabled) implements CustomPacketPayload
                     }
                     var result = PiranPortDebug.togglePlayer(sp.getUUID(), sp.getScoreboardName(), payload.enabled());
                     // sessionId 必须原样回传：客户端要靠它拼日志文件名。
-                    // 回传 payload.enabled() 会让 TEST_ACTIVE 等反向拒绝场景在客户端显示成"已开启"。
+                    // 使用服务端确认状态，避免客户端显示与实际会话不一致。
                     PacketDistributor.sendToPlayer(sp,
                             new DebugToggleAckPayload(result.enabled(), result.sessionId(), result.status()));
                 }));

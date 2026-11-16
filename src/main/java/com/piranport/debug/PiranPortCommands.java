@@ -237,13 +237,10 @@ public final class PiranPortCommands {
         double avgTickMs = recentTicks > 0 ? (double) recentNanos / recentTicks / 1_000_000.0 : 0.0;
 
         int sessionCount = com.piranport.debug.PiranPortDebug.isServerEnabled() ? 1 : 0;
-        boolean testMode = com.piranport.testtools.PiranPortTestTools.isTestModeActive();
-
         String msg = String.format(java.util.Locale.ROOT,
-                "§7[PP TPS] tick=%d tps=%.2f avgTick=%.2fms debugSession=%s testMode=%s",
+                "§7[PP TPS] tick=%d tps=%.2f avgTick=%.2fms debugSession=%s",
                 tickCount, tps, avgTickMs,
-                sessionCount > 0 ? "ACTIVE" : "off",
-                testMode ? "§cON" : "off");
+                sessionCount > 0 ? "ACTIVE" : "off");
         source.sendSuccess(() -> Component.literal(msg), false);
         return 1;
     }

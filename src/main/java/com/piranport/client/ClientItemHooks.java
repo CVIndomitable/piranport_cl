@@ -172,11 +172,6 @@ public final class ClientItemHooks implements com.piranport.platform.ClientBridg
     }
 
     @Override
-    public void setTestModeClient(boolean enabled) {
-        DebugInputHandler.setTestModeClient(enabled);
-    }
-
-    @Override
     public void openDungeonContinueScreen(net.minecraft.core.BlockPos lecternPos) {
         Minecraft.getInstance().setScreen(new DungeonContinueScreen(lecternPos));
     }

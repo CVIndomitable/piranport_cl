@@ -22,7 +22,6 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
  *   <li>{@code ALREADY_OPEN}  — 已是开启状态（幂等）</li>
  *   <li>{@code ALREADY_CLOSED}— 已是关闭状态（幂等）</li>
  *   <li>{@code NO_PERMISSION} — 玩家无 OP 权限</li>
- *   <li>{@code TEST_ACTIVE}   — 反向互斥：测试模式运行中，拒绝开启调试</li>
  * </ul>
  */
 public record DebugToggleAckPayload(boolean enabled, long sessionId, String status)
@@ -80,8 +79,6 @@ public record DebugToggleAckPayload(boolean enabled, long sessionId, String stat
                     msg = "[PP] 调试已是关闭状态";
                 case "NO_PERMISSION" ->
                     msg = "[PP] 调试需要 OP 权限";
-                case "TEST_ACTIVE" ->
-                    msg = "[PP] 测试模式运行中，无法开启调试：请先按 N 关闭测试模式";
                 default ->
                     msg = "[PP] 调试状态: " + payload.status();
             }

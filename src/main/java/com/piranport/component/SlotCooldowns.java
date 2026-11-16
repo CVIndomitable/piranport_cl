@@ -115,13 +115,12 @@ public record SlotCooldowns(Map<Integer, Long> endTick, Map<Integer, Integer> to
         return withSlotCooldown(null, slot, ticks, currentTick);
     }
 
-    /** 带所有者版本：只有测试模式属主才享受冷却覆盖。 */
+    /** Compatibility overload for callers that track the player who triggered the cooldown. */
     public SlotCooldowns withSlotCooldown(java.util.UUID owner, int slot, int ticks, long currentTick) {
-        int adjusted = com.piranport.testtools.PiranPortTestTools.applyCooldownOverride(owner, ticks);
         Map<Integer, Long> newEnd = new HashMap<>(endTick);
         Map<Integer, Integer> newTotal = new HashMap<>(totalTick);
-        newEnd.put(slot, currentTick + adjusted);
-        newTotal.put(slot, adjusted);
+        newEnd.put(slot, currentTick + ticks);
+        newTotal.put(slot, ticks);
         return new SlotCooldowns(Map.copyOf(newEnd), Map.copyOf(newTotal));
     }
 

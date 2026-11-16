@@ -55,7 +55,7 @@ public final class WeaponReloadLifecycle {
                             ModDataComponents.SLOT_COOLDOWNS.get(), SlotCooldowns.EMPTY);
                     if (cooldowns.isOnCooldown(oldSlot, gameTime)) {
                         long remaining = cooldowns.endTick().get(oldSlot) - gameTime;
-                        // 用无属主重载保持剩余 tick 原样迁移，避免属主版再叠加一次测试冷却覆盖。
+                        // 保持剩余 tick 原样迁移。
                         core.set(ModDataComponents.SLOT_COOLDOWNS.get(),
                                 cooldowns.withoutSlotCooldown(oldSlot)
                                         .withSlotCooldown(currentSlot, (int) remaining, gameTime));

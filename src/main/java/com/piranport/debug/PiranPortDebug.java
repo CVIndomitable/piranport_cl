@@ -143,9 +143,6 @@ public final class PiranPortDebug {
     /** 全局快照限频时间戳：跨玩家共享，避免多人同时刷快照叠加成主线程尖峰 */
     private static final AtomicLong LAST_GLOBAL_SNAPSHOT_MS = new AtomicLong(0L);
 
-    /** 冷却覆盖时长（5 秒 = 100 tick）— 由 {@link com.piranport.testtools.PiranPortTestTools} 实际使用 */
-    public static final int COOLDOWN_OVERRIDE_TICKS = 100; // 5 seconds
-
     // Client-side toggle (set from ClientTickHandler F8 handler)
     private static volatile boolean clientEnabled = false;
 
@@ -161,7 +158,7 @@ public final class PiranPortDebug {
 
     /**
      * 向后兼容：返回是否至少有一个玩家开启了调试会话。
-     * 旧代码用此判断"测试模式是否激活"，新代码应改用 {@link #isSessionActive(UUID)}。
+     * 新代码应使用 {@link #isSessionActive(UUID)} 查询指定玩家。
      */
     public static boolean isServerEnabled() {
         return !SESSIONS.isEmpty();
@@ -181,11 +178,6 @@ public final class PiranPortDebug {
         if (wantEnabled) {
             if (existing != null) {
                 return ToggleResult.ALREADY_OPEN.apply(existing.sessionId);
-            }
-            // 反向互斥：测试模式开启时拒绝开启调试会话，避免调试日志被冷却覆盖污染。
-            // 测试模式侧（PiranPortTestTools.toggleFor）已做正向互斥，此处补齐另一个方向。
-            if (com.piranport.testtools.PiranPortTestTools.isTestModeActive()) {
-                return ToggleResult.TEST_ACTIVE;
             }
             DebugSession session = openSession(playerUuid, playerName);
             return ToggleResult.OPENED.apply(session.sessionId);
@@ -234,80 +226,6 @@ public final class PiranPortDebug {
     }
 
     public enum CloseReason { USER, LOGOUT, TIMEOUT, SERVER_STOP, REPLACED }
-
-    // -------------------------------------------------------------------------
-    // Test tool isolation (P2-9) — 冷却覆盖已迁移到 PiranPortTestTools
-    // 此处保留向后兼容的 setCooldownOverride，内部委托给 TestTools。
-    // -------------------------------------------------------------------------
-
-    /**
-     * @deprecated 冷却覆盖已迁移到 {@link com.piranport.testtools.PiranPortTestTools#toggleFor}，
-     * 保留此方法仅为向后兼容。
-     */
-    @Deprecated
-    public static void setCooldownOverride(boolean enabled) {
-        // 注意：此方法无法获取玩家 UUID，因此仅做日志记录，不切换实际状态。
-        // 新代码应通过 DebugCooldownOverridePayload 调用 PiranPortTestTools.toggleFor(uuid, enabled)。
-        LOG.warn("[PiranPortDebug] setCooldownOverride({}) is deprecated; "
-                + "use DebugCooldownOverridePayload with player UUID", enabled);
-    }
-
-    /**
-     * @deprecated 冷却覆盖已迁移到 {@link com.piranport.testtools.PiranPortTestTools}，
-     * 调用方应改用 {@code PiranPortTestTools.applyCooldownOverride}。
-     * 保留此方法仅为向后兼容，内部委托到 TestTools。
-     */
-    @Deprecated
-    public static int applyCooldownOverride(int ticks) {
-        return com.piranport.testtools.PiranPortTestTools.applyCooldownOverride(ticks);
-    }
-
-    /**
-     * @deprecated 改用 {@code PiranPortTestTools.applyCooldownOverride(UUID, int)}：
-     * 只有测试模式属主才应享受覆盖，无 owner 版本会误伤全服玩家。
-     */
-    @Deprecated
-    public static int applyCooldownOverride(UUID owner, int ticks) {
-        return com.piranport.testtools.PiranPortTestTools.applyCooldownOverride(owner, ticks);
-    }
-
-    /**
-     * @deprecated 同上，已迁移到 {@link com.piranport.testtools.PiranPortTestTools#isCooldownOverrideEnabled()}
-     */
-    @Deprecated
-    public static boolean isCooldownOverrideEnabled() {
-        return com.piranport.testtools.PiranPortTestTools.isCooldownOverrideEnabled();
-    }
-
-    /**
-     * @deprecated 已迁移到 {@link com.piranport.testtools.PiranPortTestTools#isTestModeActive()}
-     */
-    @Deprecated
-    public static boolean isTestModeActive() {
-        return com.piranport.testtools.PiranPortTestTools.isTestModeActive();
-    }
-
-    /**
-     * 消耗物品，测试模式与普通模式一致。
-     */
-    /**
-     * @deprecated consumeAmmo 已迁移到 {@link com.piranport.testtools.PiranPortTestTools#consumeAmmo}，
-     * 调用方应改用 {@code PiranPortTestTools.consumeAmmo(stack, count)}。
-     * 保留此方法仅为向后兼容。
-     */
-    @Deprecated
-    public static void consumeAmmo(ItemStack stack, int count) {
-        com.piranport.testtools.PiranPortTestTools.consumeAmmo(stack, count);
-    }
-
-    /**
-     * @deprecated 改用 {@code PiranPortTestTools.consumeAmmo(UUID, stack, count)}：
-     * 测试模式不再豁免物品消耗。
-     */
-    @Deprecated
-    public static void consumeAmmo(UUID owner, ItemStack stack, int count) {
-        com.piranport.testtools.PiranPortTestTools.consumeAmmo(owner, stack, count);
-    }
 
     // -------------------------------------------------------------------------
     // Logging API
@@ -906,9 +824,6 @@ public final class PiranPortDebug {
         public static final ToggleResult CLOSED = new ToggleResult(false, -1L, "CLOSED");
         public static final ToggleResult ALREADY_OPEN = new ToggleResult(true, -1L, "ALREADY_OPEN");
         public static final ToggleResult ALREADY_CLOSED = new ToggleResult(false, -1L, "ALREADY_CLOSED");
-        /** 反向互斥：测试模式正在运行，拒绝开启调试会话 */
-        public static final ToggleResult TEST_ACTIVE = new ToggleResult(false, -1L, "TEST_ACTIVE");
-
         public ToggleResult apply(long sid) {
             return new ToggleResult(enabled, sid, status);
         }

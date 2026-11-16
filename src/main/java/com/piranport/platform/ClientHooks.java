@@ -126,10 +126,6 @@ public final class ClientHooks {
         bridge.setHitDisplayEnabledClient(enabled);
     }
 
-    public static void setTestModeClient(boolean enabled) {
-        bridge.setTestModeClient(enabled);
-    }
-
     public static void setServerSolverStats(int ternaryIters, int newtonIters) {
         bridge.setServerSolverStats(ternaryIters, newtonIters);
     }

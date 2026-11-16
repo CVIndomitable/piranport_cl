@@ -6,7 +6,6 @@ import com.piranport.client.input.DebugInputHandler;
 import com.piranport.dungeon.data.StageData;
 import com.piranport.dungeon.network.ClientDungeonData;
 import com.piranport.menu.DebugTerminalMenu;
-import com.piranport.network.DebugCooldownOverridePayload;
 import com.piranport.network.DebugTogglePayload;
 import com.piranport.network.HitDisplayTogglePayload;
 import com.piranport.network.SnapshotRequestPayload;
@@ -50,7 +49,7 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
             "aircraft", "cannon", "enhancement", "deep_ocean", "dungeon", "vanilla_mob",
             "ship_girl", "ammo", "torpedo", "missile_launcher", "core", "projectile", "system");
     private static final List<String> CONTROL_TOOLTIP_KEYS = List.of(
-            "debug.tooltip", "cooldown.tooltip", "hit.tooltip", "snapshot.tooltip");
+            "debug.tooltip", "hit.tooltip", "snapshot.tooltip");
     private final Map<String, String> drafts = new HashMap<>();
     private final Map<String, EditBox> editors = new HashMap<>();
     private List<TerminalParameterSpec> visible = List.of();
@@ -81,7 +80,6 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
     private EditBox searchBox;
     private EditBox filenameBox;
     private Button debugButton;
-    private Button cooldownButton;
     private Button hitButton;
 
     private enum TargetKind { NORMAL, STAGE, NODE, BACK }
@@ -114,7 +112,6 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
         searchBox = null;
         filenameBox = null;
         debugButton = null;
-        cooldownButton = null;
         hitButton = null;
         rebuildList();
         int x = left();
@@ -292,19 +289,14 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
                         PacketDistributor.sendToServer(new DebugTogglePayload(
                                 !DebugInputHandler.isDebugEnabledClient())))
                 .bounds(controlX, y + 49, controlWidth, 20).build());
-        cooldownButton = addRenderableWidget(Button.builder(toggleLabel("cooldown",
-                        DebugInputHandler.isTestModeClient()), b ->
-                        PacketDistributor.sendToServer(new DebugCooldownOverridePayload(
-                                !DebugInputHandler.isTestModeClient())))
-                .bounds(controlX, y + 73, controlWidth, 20).build());
         hitButton = addRenderableWidget(Button.builder(toggleLabel("hit",
                         DebugInputHandler.isHitDisplayEnabled()), b ->
                         PacketDistributor.sendToServer(new HitDisplayTogglePayload(
                                 !DebugInputHandler.isHitDisplayEnabled())))
-                .bounds(controlX, y + 97, controlWidth, 20).build());
+                .bounds(controlX, y + 73, controlWidth, 20).build());
         addRenderableWidget(Button.builder(label("control.snapshot"), b ->
                         PacketDistributor.sendToServer(new SnapshotRequestPayload(true)))
-                .bounds(controlX, y + 121, controlWidth, 20).build());
+                .bounds(controlX, y + 97, controlWidth, 20).build());
     }
 
     private Component toggleLabel(String name, boolean value) {
@@ -976,7 +968,6 @@ public class DebugTerminalScreen extends AbstractContainerScreen<DebugTerminalMe
         }
         if (page == PAGE_CONTROLS) {
             debugButton.setMessage(toggleLabel("debug", DebugInputHandler.isDebugEnabledClient()));
-            cooldownButton.setMessage(toggleLabel("cooldown", DebugInputHandler.isTestModeClient()));
             hitButton.setMessage(toggleLabel("hit", DebugInputHandler.isHitDisplayEnabled()));
         }
         super.render(graphics, mouseX, mouseY, partialTick);

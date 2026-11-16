@@ -6,15 +6,11 @@
   "pages": [
     {
       "type": "patchouli:text",
-      "text": "$(bold)Debug Terminal$()$(br2)Operators can right-click the terminal to edit parameters or use the control page for debug mode, cooldown override, hit notifications and log snapshots. Shift-right-click requests a snapshot directly. CSV files are read and written on the server."
+      "text": "$(bold)Debug Terminal$()$(br2)Operators can right-click the terminal to edit parameters or use the control page for debug sessions, hit notifications and log snapshots. Shift-right-click requests a snapshot directly. CSV files are read and written on the server."
     },
     {
       "type": "patchouli:text",
       "text": "$(bold)Hit Notifications$()$(br2)The control page toggles hit notifications. When on, weapon hits show damage numbers and a hit marker; when off, nothing is shown."
-    },
-    {
-      "type": "patchouli:text",
-      "text": "$(bold)Cooldown Override$()$(br2)The control page toggles a server-side cooldown override that compresses weapon cooldowns to test-friendly values. Intended for development verification."
     }
   ]
 }

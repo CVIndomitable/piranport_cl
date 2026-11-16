@@ -10,7 +10,7 @@
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)Field Tools:$()$(br2)Debug mode, cooldown override, hit notifications and log snapshots live on the debug terminal's control page. Registered keys can be rebound in game settings."
+      "text": "$(bold)Field Tools:$()$(br2)Debug sessions, hit notifications and log snapshots live on the debug terminal's control page. Registered keys can be rebound in game settings."
     }
   ]
 }

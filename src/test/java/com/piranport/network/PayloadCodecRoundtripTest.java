@@ -148,13 +148,6 @@ class PayloadCodecRoundtripTest {
         assertEquals(p, roundtrip(CannonImpactEffectPayload.STREAM_CODEC, p));
     }
 
-    // ===== DebugCooldownOverridePayload =====
-    @Test
-    void debugCooldownOverrideRoundtrip() {
-        DebugCooldownOverridePayload p = new DebugCooldownOverridePayload(true);
-        assertEquals(p, roundtrip(DebugCooldownOverridePayload.STREAM_CODEC, p));
-    }
-
     // ===== DebugTogglePayload =====
     @Test
     void debugToggleRoundtrip() {

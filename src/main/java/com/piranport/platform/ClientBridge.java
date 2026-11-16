@@ -64,8 +64,6 @@ public interface ClientBridge {
 
     default void setHitDisplayEnabledClient(boolean enabled) { }
 
-    void setTestModeClient(boolean enabled);
-
     void setServerSolverStats(int ternaryIters, int newtonIters);
 
     void setServerSolverStats(int ternaryIters, int newtonIters, long totalUs, double verticalError, double horizontalError, double angleDeg);

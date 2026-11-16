@@ -149,10 +149,10 @@ public final class RiggingFirstPersonLayer {
 
         Set<String> hiddenBones = new HashSet<>();
         if (!ModEquipmentConfig.RIGGING_FP_SHOW_BODY.get()) hiddenBones.addAll(BODY_BONES);
-        boolean showDeck = loadout.hasAircraft() || AircraftLaunchVisualClientState.hasActiveDeck(player.getId());
+        boolean showDeck = RiggingDeckClientState.showDeck(loadout, player.getId());
         if (showDeck) hiddenBones.add("arm_left");
         HULL_RENDERER.setHiddenBoneCubes(hiddenBones);
-        DECK_RENDERER.setDeckDeployment(AircraftLaunchVisualClientState.deckDeployment(player.getId(), partialTick));
+        DECK_RENDERER.setDeckPitch(RiggingDeckClientState.pitch(player.getId(), partialTick), true);
         poseStack.pushPose();
         RiggingSocketTransforms.applyFirstPersonBreathing(poseStack, null);
         renderPart(poseStack, bufferSource, packedLight, partialTick,
@@ -169,7 +169,7 @@ public final class RiggingFirstPersonLayer {
                     WAIST_RACK_RENDERER);
         }
 
-        AircraftLaunchVisualClientState.renderDeckAircraft(player.getId(), poseStack,
+        RiggingDeckClientState.renderAircraft(player.getId(), poseStack,
                 bufferSource, packedLight, partialTick, true);
         poseStack.popPose();
         // 挂载武器最后画：和船体共用同一个身体变换（含 scale / offset / yaw-pitch-roll）。
@@ -206,8 +206,8 @@ public final class RiggingFirstPersonLayer {
                                       int packedLight, float partialTick,
                                       AbstractClientPlayer player, RiggingLoadout loadout) {
         for (RiggingMount mount : loadout.mounts()) {
-            if (AircraftLaunchVisualClientState.shouldHideMount(player.getId(), mount)) continue;
-            if (AircraftLaunchVisualClientState.hasActiveDeck(player.getId())
+            if (RiggingDeckClientState.shouldHideMount(player.getId(), mount)) continue;
+            if (RiggingDeckClientState.hasActiveAnimation(player.getId())
                     && (mount.socket() == RiggingSocket.SIDE_RIGHT_1
                     || mount.socket() == RiggingSocket.SIDE_RIGHT_2)) continue;
             // 第一人称不显示背部防空导弹/深弹发射器的模型（第三人称保持）。
@@ -219,7 +219,7 @@ public final class RiggingFirstPersonLayer {
             // 甲板飞机改用飞行实体的 3D 模型；定义缺失时返回 false，回退到平面图标。
             if (mount.category() == RiggingCategory.AIRCRAFT
                     && renderDeckAircraft(poseStack, bufferSource, packedLight, mount,
-                    AircraftLaunchVisualClientState.deckDeployment(player.getId(), partialTick))) {
+                    RiggingDeckClientState.pitch(player.getId(), partialTick))) {
                 continue;
             }
             // 第一人称不跟随 third-person 的放飞后仰；mountPose 目前也不使用该参数。
@@ -244,10 +244,10 @@ public final class RiggingFirstPersonLayer {
      */
     private static boolean renderDeckAircraft(PoseStack poseStack,
                                               MultiBufferSource.BufferSource bufferSource,
-                                              int packedLight, RiggingMount mount, float deployment) {
+                                              int packedLight, RiggingMount mount, float deckPitch) {
         poseStack.pushPose();
         RiggingSocketTransforms.applyFirstPersonBreathing(poseStack, mount.socket());
-        RiggingSocketTransforms.applyDeckFold(poseStack, deployment);
+        RiggingSocketTransforms.applyDeckPose(poseStack, deckPitch, true);
         AircraftRiggingModelRenderer.translateToDeck(poseStack, mount.socket());
         boolean rendered = AircraftRiggingModelRenderer.render(
                 mount.stack(), poseStack, bufferSource, packedLight,

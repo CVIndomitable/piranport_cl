@@ -4,7 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import com.piranport.PiranPort;
 import com.piranport.client.AircraftLaunchPoseClientState;
-import com.piranport.client.AircraftLaunchVisualClientState;
+import com.piranport.client.RiggingDeckClientState;
 import com.piranport.client.RiggingClientState;
 import com.piranport.client.RiggingSocketTransforms;
 import com.piranport.rigging.RiggingCategory;
@@ -31,7 +31,7 @@ import java.util.WeakHashMap;
  * <p><b>模型选择</b>：
  * <ul>
  *   <li>基础舰体使用 {@link RiggingHullModelRegistry#GENERAL_HULL}；携带飞机时隐藏右侧炮架</li>
- *   <li>有舰载机时增加 {@link RiggingHullModelRegistry#CARRIER_DECK}，收起时竖挂、放飞时伸平</li>
+ *   <li>有舰载机时增加 {@link RiggingHullModelRegistry#CARRIER_DECK}，按待机、接机、放飞状态俯仰</li>
  *   <li>有腰部鱼雷挂点时叠加 {@link RiggingHullModelRegistry#WAIST_TORPEDO_RACK}</li>
  * </ul>
  *
@@ -102,9 +102,9 @@ public class RiggingHullLayer extends AttachedAnimatableRenderLayer<
         HullAnimatables set = animatablesFor(player);
 
         // GeckoLib 导入镜像 X：geo 的 arm_left 在玩家右侧，携带飞机时须隐藏这一臂。
-        boolean showDeck = loadout.hasAircraft() || AircraftLaunchVisualClientState.hasActiveDeck(player.getId());
+        boolean showDeck = RiggingDeckClientState.showDeck(loadout, player.getId());
         generalHullRenderer.setHiddenBoneCubes(showDeck ? Set.of("arm_left") : Set.of());
-        carrierDeckRenderer.setDeckDeployment(AircraftLaunchVisualClientState.deckDeployment(player.getId(), partialTick));
+        carrierDeckRenderer.setDeckPitch(RiggingDeckClientState.pitch(player.getId(), partialTick), false);
         renderModel(poseStack, bufferSource, packedLight, partialTick, parentModel,
                 RiggingHullModelRegistry.GENERAL_HULL, set.generalHull(),
                 generalHullRenderer, launchPose);

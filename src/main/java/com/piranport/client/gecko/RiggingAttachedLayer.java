@@ -3,7 +3,7 @@ package com.piranport.client.gecko;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import com.piranport.client.AircraftLaunchPoseClientState;
-import com.piranport.client.AircraftLaunchVisualClientState;
+import com.piranport.client.RiggingDeckClientState;
 import com.piranport.rigging.RiggingSocket;
 import com.piranport.client.RiggingClientState;
 import com.piranport.client.RiggingSocketTransforms;
@@ -85,7 +85,7 @@ public class RiggingAttachedLayer extends AttachedAnimatableRenderLayer<
 
         for (RiggingMount mount : loadout.mounts()) {
             if (!isThisModel(mount)) continue;
-            if (AircraftLaunchVisualClientState.hasActiveDeck(player.getId())
+            if (RiggingDeckClientState.hasActiveAnimation(player.getId())
                     && (mount.socket() == RiggingSocket.SIDE_RIGHT_1
                     || mount.socket() == RiggingSocket.SIDE_RIGHT_2)) continue;
 

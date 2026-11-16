@@ -15,6 +15,8 @@ public class ModPackets {
         PayloadRegistrar registrar = event.registrar(PROTOCOL_VERSION);
         registrar.playToClient(AircraftLaunchVisualPayload.TYPE, AircraftLaunchVisualPayload.STREAM_CODEC,
                 AircraftLaunchVisualPayload::handle);
+        registrar.playToClient(AircraftLandingVisualPayload.TYPE, AircraftLandingVisualPayload.STREAM_CODEC,
+                AircraftLandingVisualPayload::handle);
         // Phase 20: fire control
         registrar.playToServer(
                 FireControlPayload.TYPE,

@@ -12,6 +12,17 @@ public final class ModEquipmentConfig {
     public static final TerminalConfigValue<Integer> AIRCRAFT_LAUNCH_FLIGHT_TICKS =
             TerminalConfigValue.integer("equipment", "aircraft_launch", "flight_ticks", 16, 1, 100);
 
+    public static final TerminalConfigValue<Integer> AIRCRAFT_LANDING_APPROACH_TICKS =
+            TerminalConfigValue.integer("equipment", "aircraft_landing", "approach_ticks", 16, 1, 100);
+    public static final TerminalConfigValue<Integer> AIRCRAFT_LANDING_ROLL_TICKS =
+            TerminalConfigValue.integer("equipment", "aircraft_landing", "roll_ticks", 8, 1, 100);
+    public static final TerminalConfigValue<Integer> AIRCRAFT_LANDING_SETTLE_TICKS =
+            TerminalConfigValue.integer("equipment", "aircraft_landing", "settle_ticks", 6, 1, 100);
+    public static final TerminalConfigValue<Double> RIGGING_DECK_IDLE_PITCH =
+            TerminalConfigValue.number("equipment", "rigging_deck", "idle_pitch", -45.0, -80.0, 0.0);
+    public static final TerminalConfigValue<Double> RIGGING_DECK_LAUNCH_PITCH =
+            TerminalConfigValue.number("equipment", "rigging_deck", "launch_pitch", 15.0, 0.0, 45.0);
+
     public static final TerminalConfigValue<Integer> RIGGING_BREATH_PERIOD_TICKS =
             TerminalConfigValue.integer("equipment", "rigging_motion", "breath_period_ticks", 80, 4, 1200);
     public static final TerminalConfigValue<Double> RIGGING_BREATH_RISE =

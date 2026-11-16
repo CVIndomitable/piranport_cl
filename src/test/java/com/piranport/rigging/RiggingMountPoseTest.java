@@ -43,18 +43,24 @@ class RiggingMountPoseTest {
     }
 
     @Test
-    void foldedDeckFacesOutwardAndHingeStaysFixed() {
-        for (float deployment : new float[]{0, 0.25f, 0.5f, 1}) {
-            PoseStack stack = new PoseStack();
-            RiggingSocketTransforms.applyDeckFold(stack, deployment);
-            Vector3f hinge = new Vector3f(-RiggingDeckPose.HINGE_X / 16, RiggingDeckPose.HINGE_Y / 16, 0);
-            Vector3f transformed = stack.last().pose().transformPosition(new Vector3f(hinge));
-            assertEquals(0, transformed.distance(hinge), 1e-5);
-            Vector3f up = stack.last().pose().transformDirection(new Vector3f(0, 1, 0));
-            if (deployment == 0) assertEquals(-1, up.x, 1e-5);
-            if (deployment == 1) assertEquals(1, up.y, 1e-5);
-            Vector3f front = stack.last().pose().transformDirection(new Vector3f(0, 0, -1));
-            assertEquals(-1, front.z, 1e-5);
+    void deckPitchMatchesBothViewsAndKeepsHingeFixed() {
+        assertEquals(-45, RiggingDeckPose.pitchDegrees(0, 0, -45, 15));
+        assertEquals(15, RiggingDeckPose.pitchDegrees(1, 0, -45, 15));
+        assertEquals(0, RiggingDeckPose.pitchDegrees(0, 1, -45, 15));
+        assertEquals(0, RiggingDeckPose.pitchDegrees(1, 1, -45, 15));
+        for (boolean firstPerson : new boolean[]{false, true}) {
+            for (float pitch : new float[]{-45, 0, 15}) {
+                PoseStack stack = new PoseStack();
+                RiggingSocketTransforms.applyDeckPose(stack, pitch, firstPerson);
+                Vector3f hinge = new Vector3f(-RiggingDeckPose.HINGE_X / 16, RiggingDeckPose.HINGE_Y / 16, 0);
+                Vector3f transformed = stack.last().pose().transformPosition(new Vector3f(hinge));
+                assertEquals(0, transformed.distance(hinge), 1e-5);
+                Vector3f up = stack.last().pose().transformDirection(new Vector3f(0, 1, 0));
+                Vector3f front = stack.last().pose().transformDirection(new Vector3f(0, 0, firstPerson ? 1 : -1));
+                assertEquals(Math.sin(Math.toRadians(pitch)), front.y, 1e-5);
+                assertEquals(Math.cos(Math.toRadians(pitch)), up.y, 1e-5);
+                assertEquals(0, up.x, 1e-5, "不再向舷外竖翻");
+            }
         }
     }
 

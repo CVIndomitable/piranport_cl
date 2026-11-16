@@ -42,6 +42,8 @@ public interface ClientBridge {
 
     default void triggerAircraftLaunchVisual(com.piranport.network.AircraftLaunchVisualPayload payload) {}
 
+    default void triggerAircraftLandingVisual(com.piranport.network.AircraftLandingVisualPayload payload) {}
+
     void spawnCannonImpactEffect(CannonImpactEffectPayload payload);
 
     void updateAswSonar(int aircraftEntityId, List<Integer> detectedEntityIds);

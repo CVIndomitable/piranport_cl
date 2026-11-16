@@ -74,6 +74,14 @@ class PayloadCodecRoundtripTest {
         assertEquals(p, roundtripRfb(AircraftLaunchVisualPayload.STREAM_CODEC, p));
     }
 
+    @Test
+    void aircraftLandingVisualRoundtrip() {
+        var p = new AircraftLandingVisualPayload(42, UUID.randomUUID(), 73, UUID.randomUUID(),
+                7, 6, "fighter", -12.5, 64.25, 100.75, -120.5f, 14.25f,
+                1234L, 123456789L, 16, 8, 6);
+        assertEquals(p, roundtripRfb(AircraftLandingVisualPayload.STREAM_CODEC, p));
+    }
+
     // ===== AircraftDefinitionSyncPayload =====
     @Test
     void aircraftDefinitionSyncRoundtrip() {

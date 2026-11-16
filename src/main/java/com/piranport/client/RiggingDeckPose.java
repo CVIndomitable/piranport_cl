@@ -14,7 +14,9 @@ public final class RiggingDeckPose {
 
     private RiggingDeckPose() {}
 
-    public static float foldDegrees(float deployment) {
-        return 90.0f * (1.0f - Math.clamp(deployment, 0.0f, 1.0f));
+    public static float pitchDegrees(float launchWeight, float landingWeight, float idlePitch, float launchPitch) {
+        float launch = idlePitch + (launchPitch - idlePitch) * Math.clamp(launchWeight, 0.0f, 1.0f);
+        // 同时收放时优先保持接机面水平；离板飞机仍跟随实际甲板姿态。
+        return launch + (0.0f - launch) * Math.clamp(landingWeight, 0.0f, 1.0f);
     }
 }

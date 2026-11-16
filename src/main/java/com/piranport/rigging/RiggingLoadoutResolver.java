@@ -11,7 +11,7 @@ import java.util.Comparator;
 import java.util.List;
 
 /**
- * 从快捷栏推导舰装挂点分配。服务端与客户端共用同一套规则。
+ * 从快捷栏与在飞飞机推导舰装挂点分配。服务端同步结果；客户端兜底只扫描快捷栏。
  *
  * <p>服务端在每个玩家的 tick 里调用它生成 {@link RiggingLoadout} 并同步；
  * 客户端只在「本地玩家尚未收到快照」时用它兜底（进服第一帧、单人模式）。
@@ -51,7 +51,10 @@ public final class RiggingLoadoutResolver {
         if (TransformationManager.findTransformedCore(player).isEmpty()) {
             return RiggingLoadout.EMPTY;
         }
-        return assign(player.getInventory(), skinId);
+        boolean airborne = !player.level().isClientSide() && com.piranport.aviation.AircraftIndex
+                .snapshot(player.getUUID()).stream()
+                .anyMatch(craft -> !craft.isRemoved() && craft.isAlive() && craft.level() == player.level());
+        return assign(player.getInventory(), skinId, airborne);
     }
 
     /**
@@ -70,10 +73,14 @@ public final class RiggingLoadoutResolver {
      * </ol>
      */
     public static RiggingLoadout assign(Inventory inventory, int skinId) {
+        return assign(inventory, skinId, false);
+    }
+
+    public static RiggingLoadout assign(Inventory inventory, int skinId, boolean airborne) {
         int selectedSlot = inventory.selected;
 
         List<Candidate> candidates = new ArrayList<>();
-        boolean hasAircraft = false;
+        boolean hasAircraft = airborne;
         for (int slot = 0; slot < HOTBAR_SIZE; slot++) {
             ItemStack stack = inventory.items.get(slot);
             RiggingCategory category = RiggingCategory.resolve(stack);

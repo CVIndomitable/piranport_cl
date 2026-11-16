@@ -28,6 +28,11 @@ public class AircraftResupply {
 
     /** @see AircraftEntity#recallAndRemove() */
     public static void recallAndRemove(AircraftEntity craft) {
+        recallAndRemove(craft, false);
+    }
+
+    /** 只有飞行逻辑确认到达玩家附近时才允许生成降落视觉。 */
+    static void recallAndRemove(AircraftEntity craft, boolean arrived) {
         // 返航到达与玩家主动召回可能在同一 tick 各调一次；实体一旦 discard 就不能再返还物品，
         // 否则同一架飞机会被还回两份。这里以实体是否已移除作为唯一闸口。
         if (craft.isRemoved()) return;
@@ -49,7 +54,17 @@ public class AircraftResupply {
                         ? "message.piranport.aircraft_lost"
                         : "message.piranport.aircraft_returned";
                 owner.displayClientMessage(Component.translatable(msgKey, aircraftName), true);
+                int slot = craft.getWeaponSlotIndex();
+                boolean landingCandidate = arrived && !craft.isAutonomous()
+                        && owner.isAlive() && owner.level() == craft.level()
+                        && slot >= 0 && slot < com.piranport.rigging.RiggingLoadoutResolver.HOTBAR_SIZE
+                        && owner.getInventory().items.get(slot).isEmpty()
+                        && craft.getOriginalStack() != null && !craft.getOriginalStack().isEmpty();
                 returned = returnItemToOwner(craft, owner);
+                if (returned && owner instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+                    com.piranport.handler.RiggingLoadoutHandler.refresh(serverPlayer);
+                    if (landingCandidate) sendLandingVisual(craft, serverPlayer, sl, slot);
+                }
                 // 实际返还飞机时触发航空回收静默，失联强制销毁不触发。
                 if (!craft.isForcedReturn() && craft.level() == owner.level()) {
                     com.piranport.combat.AASilenceManager.startSilence(owner);
@@ -66,6 +81,26 @@ public class AircraftResupply {
         com.piranport.debug.PiranPortDebug.aircraftRemoved(
                 craft.getId(), craft.getOwnerUUID(), returned, lifetimeSec);
         craft.discard();
+    }
+
+    private static void sendLandingVisual(AircraftEntity craft, net.minecraft.server.level.ServerPlayer owner,
+                                          ServerLevel level, int slot) {
+        if (!owner.hasData(com.piranport.registry.ModAttachmentTypes.RIGGING_LOADOUT)) return;
+        var loadout = owner.getData(com.piranport.registry.ModAttachmentTypes.RIGGING_LOADOUT.get());
+        var mount = loadout.mounts().stream().filter(m -> m.sourceSlot() == slot
+                && m.category() == com.piranport.rigging.RiggingCategory.AIRCRAFT
+                && m.stack().is(craft.getOriginalStack().getItem())).findFirst();
+        if (mount.isEmpty()) return;
+        net.neoforged.neoforge.network.PacketDistributor.sendToPlayersNear(level, null,
+                owner.getX(), owner.getY(), owner.getZ(),
+                Math.max(48.0, level.getServer().getPlayerList().getSimulationDistance() * 16.0),
+                new com.piranport.network.AircraftLandingVisualPayload(owner.getId(), owner.getUUID(),
+                        craft.getId(), craft.getUUID(), slot, mount.get().socket().ordinal(), craft.getVisualId(),
+                        craft.getX(), craft.getY(), craft.getZ(), craft.getYRot(), craft.getXRot(),
+                        loadout.fingerprint(), level.getGameTime(),
+                        com.piranport.config.ModEquipmentConfig.AIRCRAFT_LANDING_APPROACH_TICKS.get(),
+                        com.piranport.config.ModEquipmentConfig.AIRCRAFT_LANDING_ROLL_TICKS.get(),
+                        com.piranport.config.ModEquipmentConfig.AIRCRAFT_LANDING_SETTLE_TICKS.get()));
     }
 
     static boolean returnItemToOwner(AircraftEntity craft, Player player) {

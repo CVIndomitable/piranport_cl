@@ -1,4 +1,10 @@
 {
+  "gui.piranport.debug_terminal.target.equipment.aircraft_landing": "Carrier landing animation",
+  "gui.piranport.debug_terminal.target.equipment.rigging_deck": "Flight deck attitude",
+  "gui.piranport.debug_terminal.property.approach_ticks": "Landing approach duration (ticks)",
+  "gui.piranport.debug_terminal.property.settle_ticks": "Parking transition duration (ticks)",
+  "gui.piranport.debug_terminal.property.idle_pitch": "Idle deck pitch (degrees)",
+  "gui.piranport.debug_terminal.property.launch_pitch": "Launch deck pitch (degrees)",
   "gui.piranport.debug_terminal.property.breath_fall": "Breathing fall (model units)",
   "gui.piranport.debug_terminal.property.breath_period_ticks": "Breathing period (ticks)",
   "gui.piranport.debug_terminal.property.breath_rise": "Breathing rise (model units)",

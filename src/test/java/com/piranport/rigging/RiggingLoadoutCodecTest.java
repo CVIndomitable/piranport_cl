@@ -61,6 +61,33 @@ class RiggingLoadoutCodecTest {
     }
 
     @Test
+    void airborneAircraftKeepsEmptyDeckUntilLastAircraftGone() {
+        var inventory = new net.minecraft.world.entity.player.Inventory(null);
+        RiggingLoadout airborne = RiggingLoadoutResolver.assign(inventory, 0, true);
+        assertTrue(airborne.hasAircraft());
+        assertTrue(airborne.mounts().isEmpty());
+        assertFalse(airborne.isEmpty(), "空甲板不是未变身哨兵，渲染层不能将其跳过");
+        RegistryFriendlyByteBuf buffer = newBuffer();
+        try {
+            RiggingLoadout.STREAM_CODEC.encode(buffer, airborne);
+            RiggingLoadout decoded = RiggingLoadout.STREAM_CODEC.decode(buffer);
+            assertTrue(decoded.hasAircraft());
+            assertFalse(decoded.isEmpty());
+            assertTrue(decoded.mounts().isEmpty());
+            assertEquals(0, buffer.readableBytes());
+        } finally {
+            buffer.release();
+        }
+        assertEquals(RiggingLoadout.HULL_CARRIER, airborne.hullProfile());
+        assertEquals(List.of(RiggingSocket.SIDE_LEFT_2, RiggingSocket.SIDE_LEFT_1),
+                RiggingLoadoutResolver.sideSockets(airborne.hasAircraft()));
+        RiggingLoadout landed = RiggingLoadoutResolver.assign(inventory, 0, false);
+        assertFalse(landed.hasAircraft());
+        assertEquals(RiggingLoadout.HULL_DEFAULT, landed.hullProfile());
+        assertEquals(landed.hasAircraft(), RiggingLoadoutResolver.assign(inventory, 0).hasAircraft());
+    }
+
+    @Test
     void roundTripsFullLoadout() {
         RiggingLoadout original = new RiggingLoadout(
                 List.of(

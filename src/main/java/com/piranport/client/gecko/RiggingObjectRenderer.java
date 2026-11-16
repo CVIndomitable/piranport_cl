@@ -26,10 +26,12 @@ public final class RiggingObjectRenderer extends GeoObjectRenderer<RiggingAnimat
 
     /** 默认不隐藏任何骨骼；第一人称层会按需设置。 */
     private Set<String> hiddenBoneCubes = Set.of();
-    private float deckDeployment;
+    private float deckPitch;
+    private boolean deckFirstPerson;
 
-    public void setDeckDeployment(float deployment) {
-        this.deckDeployment = deployment;
+    public void setDeckPitch(float pitch, boolean firstPerson) {
+        this.deckPitch = pitch;
+        this.deckFirstPerson = firstPerson;
     }
 
     @Override
@@ -40,7 +42,7 @@ public final class RiggingObjectRenderer extends GeoObjectRenderer<RiggingAnimat
         // 铰链支架固定在身上，只翻折 deck 及其子骨骼；不修改全局共享的烘焙骨骼。
         poseStack.pushPose();
         if (bone.getName().equals("deck")) {
-            RiggingSocketTransforms.applyDeckFold(poseStack, deckDeployment);
+            RiggingSocketTransforms.applyDeckPose(poseStack, deckPitch, deckFirstPerson);
         }
         super.renderRecursively(poseStack, animatable, bone, renderType, bufferSource, buffer,
                 isReRender, partialTick, packedLight, packedOverlay, colour);

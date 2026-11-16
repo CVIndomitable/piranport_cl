@@ -54,10 +54,10 @@ public final class RiggingSocketTransforms {
         return modelUnits / 16.0f;
     }
 
-    /** 甲板以靠身侧的纵向铰链翻折，收起时顶面朝身体右外侧。坐标系为 +Y 朝上。 */
-    public static void applyDeckFold(PoseStack poseStack, float deployment) {
+    /** +Y 朝上；正俯仰表示甲板前端抬高。两个视角的前向 Z 符号相反。 */
+    public static void applyDeckPose(PoseStack poseStack, float pitch, boolean firstPerson) {
         poseStack.translate(-RiggingDeckPose.HINGE_X / 16.0f, RiggingDeckPose.HINGE_Y / 16.0f, 0.0);
-        poseStack.mulPose(Axis.ZP.rotationDegrees(RiggingDeckPose.foldDegrees(deployment)));
+        poseStack.mulPose(Axis.XP.rotationDegrees(firstPerson ? -pitch : pitch));
         poseStack.translate(RiggingDeckPose.HINGE_X / 16.0f, -RiggingDeckPose.HINGE_Y / 16.0f, 0.0);
     }
 

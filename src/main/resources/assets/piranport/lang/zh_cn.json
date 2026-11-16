@@ -1,4 +1,10 @@
 {
+  "gui.piranport.debug_terminal.target.equipment.aircraft_landing": "舰载机降落动画",
+  "gui.piranport.debug_terminal.target.equipment.rigging_deck": "飞行甲板姿态",
+  "gui.piranport.debug_terminal.property.approach_ticks": "降落进场时长（tick）",
+  "gui.piranport.debug_terminal.property.settle_ticks": "停放复位时长（tick）",
+  "gui.piranport.debug_terminal.property.idle_pitch": "平时甲板俯仰（度）",
+  "gui.piranport.debug_terminal.property.launch_pitch": "放飞甲板仰角（度）",
   "gui.piranport.debug_terminal.property.breath_fall": "呼吸下沉（模型单位）",
   "gui.piranport.debug_terminal.property.breath_period_ticks": "呼吸周期（tick）",
   "gui.piranport.debug_terminal.property.breath_rise": "呼吸上浮（模型单位）",

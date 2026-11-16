@@ -83,6 +83,7 @@ public class AircraftRenderer extends EntityRenderer<AircraftEntity> {
     @Override
     public void render(AircraftEntity entity, float entityYaw, float partialTick,
                        PoseStack poseStack, MultiBufferSource bufferSource, int packedLight) {
+        if (AircraftLandingVisualClientState.hidesEntity(entity)) return;
         var launch = AircraftLaunchVisualClientState.flight(entity, partialTick);
         float launchAge = launch == null ? 0 : AircraftLaunchVisualClientState.flightAge(launch, partialTick);
         if (launch != null && launchAge < launch.timeline.departureTick()) return;
@@ -174,7 +175,8 @@ public class AircraftRenderer extends EntityRenderer<AircraftEntity> {
 
     @Override
     protected float getShadowRadius(AircraftEntity entity) {
-        return AircraftLaunchVisualClientState.flight(entity, 0) != null ? 0 : super.getShadowRadius(entity);
+        return AircraftLaunchVisualClientState.flight(entity, 0) != null
+                || AircraftLandingVisualClientState.hidesEntity(entity) ? 0 : super.getShadowRadius(entity);
     }
 
     @Override

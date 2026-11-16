@@ -256,7 +256,7 @@ final class AircraftFlight {
         Vec3 toOwner = owner.getEyePosition().subtract(craft.position());
         double distance = toOwner.length();
         if (distance < ModEquipmentConfig.AIRCRAFT_RETURN_ARRIVAL_DISTANCE.get()) {
-            craft.recallAndRemove();
+            AircraftResupply.recallAndRemove(craft, true);
             return;
         }
         craft.setDeltaMovement(toOwner.normalize().scale(Math.min(craft.panelSpeed() * phase, distance)));

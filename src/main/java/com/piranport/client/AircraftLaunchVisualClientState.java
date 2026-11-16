@@ -45,6 +45,7 @@ public final class AircraftLaunchVisualClientState {
         if (level == null || p.deployTicks() < 1 || p.deployTicks() > 100 || p.rollTicks() < 1
                 || p.rollTicks() > 100 || p.flightTicks() < 1 || p.flightTicks() > 100
                 || (p.socketId() != RiggingSocket.DECK_1.ordinal() && p.socketId() != RiggingSocket.DECK_2.ordinal())) return;
+        AircraftLandingVisualClientState.cancelSlot(p.launcherUuid(), p.sourceSlot());
         FLIGHTS.put(p.aircraftUuid(), new Flight(p));
     }
 
@@ -95,13 +96,15 @@ public final class AircraftLaunchVisualClientState {
                                           int light, float partialTick, boolean firstPerson) {
         cleanup();
         if (level == null) return;
-        float deployment = deckDeployment(launcherId, partialTick);
+        float pitch = RiggingDeckClientState.pitch(launcherId, partialTick);
         for (Flight f : FLIGHTS.values()) {
             if (!validLauncher(f, launcherId)) continue;
             float age = age(f, partialTick);
             if (age < 0 || age >= f.timeline.departureTick()) continue;
             float edgeZ = (firstPerson ? RiggingDeckPose.EDGE_Z : -RiggingDeckPose.EDGE_Z) / 16;
-            // 记录完全伸平后的精确离板点；低帧率下也不会从最后一个半程滑跑位置起飞。
+            poses.pushPose();
+            RiggingSocketTransforms.applyDeckPose(poses, pitch, firstPerson);
+            // 离板点和朝向取实际甲板姿态，收放同时发生时也不会从错误高度交接。
             Vector3f p = poses.last().pose().transformPosition(new Vector3f(
                     RiggingDeckPose.CENTER_X / 16, RiggingDeckPose.AIRCRAFT_Y / 16, edgeZ));
             Vec3 camera = Minecraft.getInstance().gameRenderer.getMainCamera().getPosition();
@@ -111,8 +114,6 @@ public final class AircraftLaunchVisualClientState {
             Vector3f forward = poses.last().pose().transformDirection(new Vector3f(0, 0, firstPerson ? 1 : -1));
             f.yaw = (float) Math.toDegrees(Math.atan2(-forward.x, forward.z));
             f.pitch = (float) Math.toDegrees(Math.atan2(-forward.y, Math.hypot(forward.x, forward.z)));
-            poses.pushPose();
-            RiggingSocketTransforms.applyDeckFold(poses, deployment);
             float startZ = RiggingDeckPose.aircraftZ(f.packet.socketId() == RiggingSocket.DECK_1.ordinal()) / 16;
             poses.translate(RiggingDeckPose.CENTER_X / 16, RiggingDeckPose.AIRCRAFT_Y / 16,
                     Mth.lerp(f.timeline.roll(age), startZ, edgeZ));

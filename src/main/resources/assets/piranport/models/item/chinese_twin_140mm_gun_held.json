@@ -1,0 +1,80 @@
+{
+  "loader": "neoforge:obj",
+  "model": "piranport:models/item/chinese_twin_140mm_gun_held.obj",
+  "flip_v": true,
+  "automatic_culling": false,
+  "emissive_ambient": false,
+  "textures": {
+    "particle": "piranport:item/chinese_twin_140mm_gun_held"
+  },
+  "display": {
+    "firstperson_righthand": {
+      "rotation": [
+        0,
+        26,
+        0
+      ],
+      "translation": [
+        -2.9,
+        2.4,
+        -2.4
+      ],
+      "scale": [
+        0.93,
+        0.93,
+        0.93
+      ]
+    },
+    "firstperson_lefthand": {
+      "rotation": [
+        0,
+        26,
+        0
+      ],
+      "translation": [
+        -2.9,
+        2.4,
+        -2.4
+      ],
+      "scale": [
+        0.93,
+        0.93,
+        0.93
+      ]
+    },
+    "thirdperson_righthand": {
+      "rotation": [
+        90,
+        0,
+        0
+      ],
+      "translation": [
+        0,
+        1,
+        -1
+      ],
+      "scale": [
+        1.05,
+        1.05,
+        1.05
+      ]
+    },
+    "thirdperson_lefthand": {
+      "rotation": [
+        90,
+        0,
+        0
+      ],
+      "translation": [
+        0,
+        1,
+        -1
+      ],
+      "scale": [
+        1.05,
+        1.05,
+        1.05
+      ]
+    }
+  }
+}

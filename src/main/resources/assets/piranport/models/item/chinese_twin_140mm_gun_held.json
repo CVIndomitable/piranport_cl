@@ -1,11 +1,7 @@
 {
-  "loader": "neoforge:obj",
-  "model": "piranport:models/item/chinese_twin_140mm_gun_held.obj",
-  "flip_v": true,
-  "automatic_culling": false,
-  "emissive_ambient": false,
   "textures": {
-    "particle": "piranport:item/chinese_twin_140mm_gun_held"
+    "particle": "piranport:item/chinese_twin_140mm_gun_held",
+    "skin": "piranport:item/chinese_twin_140mm_gun_held"
   },
   "display": {
     "firstperson_righthand": {
@@ -76,5 +72,931 @@
         1.05
       ]
     }
-  }
+  },
+  "elements": [
+    {
+      "name": "turntable",
+      "from": [
+        5.5,
+        7,
+        6
+      ],
+      "to": [
+        10.5,
+        7.5,
+        10.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0.0,
+            4.0,
+            4.0,
+            8.0
+          ],
+          "texture": "#skin"
+        },
+        "south": {
+          "uv": [
+            0.0,
+            4.0,
+            4.0,
+            8.0
+          ],
+          "texture": "#skin"
+        },
+        "east": {
+          "uv": [
+            0.0,
+            4.0,
+            4.0,
+            8.0
+          ],
+          "texture": "#skin"
+        },
+        "west": {
+          "uv": [
+            4.0,
+            4.0,
+            0.0,
+            8.0
+          ],
+          "texture": "#skin"
+        },
+        "down": {
+          "uv": [
+            0.0,
+            4.0,
+            4.0,
+            8.0
+          ],
+          "texture": "#skin"
+        }
+      }
+    },
+    {
+      "name": "turret_skirt",
+      "from": [
+        5,
+        7.5,
+        5
+      ],
+      "to": [
+        11,
+        8,
+        11.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4.0,
+            4.0,
+            8.0,
+            8.0
+          ],
+          "texture": "#skin"
+        },
+        "south": {
+          "uv": [
+            4.0,
+            4.0,
+            8.0,
+            8.0
+          ],
+          "texture": "#skin"
+        },
+        "east": {
+          "uv": [
+            4.0,
+            4.0,
+            8.0,
+            8.0
+          ],
+          "texture": "#skin"
+        },
+        "west": {
+          "uv": [
+            8.0,
+            4.0,
+            4.0,
+            8.0
+          ],
+          "texture": "#skin"
+        },
+        "up": {
+          "uv": [
+            4.0,
+            4.0,
+            8.0,
+            8.0
+          ],
+          "texture": "#skin"
+        },
+        "down": {
+          "uv": [
+            4.0,
+            4.0,
+            8.0,
+            8.0
+          ],
+          "texture": "#skin"
+        }
+      }
+    },
+    {
+      "name": "rear_plate",
+      "from": [
+        5,
+        8,
+        10.5
+      ],
+      "to": [
+        11,
+        11.5,
+        12
+      ],
+      "faces": {
+        "south": {
+          "uv": [
+            12.0,
+            0.0,
+            16.0,
+            4.0
+          ],
+          "texture": "#skin"
+        },
+        "east": {
+          "uv": [
+            0.0,
+            0.0,
+            4.0,
+            4.0
+          ],
+          "texture": "#skin"
+        },
+        "west": {
+          "uv": [
+            4.0,
+            0.0,
+            0.0,
+            4.0
+          ],
+          "texture": "#skin"
+        },
+        "up": {
+          "uv": [
+            8.0,
+            0.0,
+            12.0,
+            4.0
+          ],
+          "texture": "#skin"
+        },
+        "down": {
+          "uv": [
+            0.0,
+            0.0,
+            4.0,
+            4.0
+          ],
+          "texture": "#skin"
+        }
+      }
+    },
+    {
+      "name": "side_armor",
+      "from": [
+        4.5,
+        8,
+        6.5
+      ],
+      "to": [
+        11.5,
+        11.5,
+        10.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0.0,
+            0.0,
+            4.0,
+            4.0
+          ],
+          "texture": "#skin"
+        },
+        "south": {
+          "uv": [
+            0.0,
+            0.0,
+            4.0,
+            4.0
+          ],
+          "texture": "#skin"
+        },
+        "east": {
+          "uv": [
+            4.0,
+            0.0,
+            8.0,
+            4.0
+          ],
+          "texture": "#skin"
+        },
+        "west": {
+          "uv": [
+            8.0,
+            0.0,
+            4.0,
+            4.0
+          ],
+          "texture": "#skin"
+        },
+        "up": {
+          "uv": [
+            8.0,
+            0.0,
+            12.0,
+            4.0
+          ],
+          "texture": "#skin"
+        },
+        "down": {
+          "uv": [
+            0.0,
+            0.0,
+            4.0,
+            4.0
+          ],
+          "texture": "#skin"
+        }
+      }
+    },
+    {
+      "name": "front_shoulder",
+      "from": [
+        5,
+        8,
+        5.5
+      ],
+      "to": [
+        11,
+        11.5,
+        6.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0.0,
+            0.0,
+            4.0,
+            4.0
+          ],
+          "texture": "#skin"
+        },
+        "east": {
+          "uv": [
+            0.0,
+            0.0,
+            4.0,
+            4.0
+          ],
+          "texture": "#skin"
+        },
+        "west": {
+          "uv": [
+            4.0,
+            0.0,
+            0.0,
+            4.0
+          ],
+          "texture": "#skin"
+        },
+        "up": {
+          "uv": [
+            8.0,
+            0.0,
+            12.0,
+            4.0
+          ],
+          "texture": "#skin"
+        },
+        "down": {
+          "uv": [
+            0.0,
+            0.0,
+            4.0,
+            4.0
+          ],
+          "texture": "#skin"
+        }
+      }
+    },
+    {
+      "name": "roof_plate",
+      "from": [
+        5,
+        11.5,
+        6.5
+      ],
+      "to": [
+        11,
+        12,
+        11.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            12.0,
+            4.0,
+            16.0,
+            8.0
+          ],
+          "texture": "#skin"
+        },
+        "south": {
+          "uv": [
+            12.0,
+            4.0,
+            16.0,
+            8.0
+          ],
+          "texture": "#skin"
+        },
+        "east": {
+          "uv": [
+            12.0,
+            4.0,
+            16.0,
+            8.0
+          ],
+          "texture": "#skin"
+        },
+        "west": {
+          "uv": [
+            16.0,
+            4.0,
+            12.0,
+            8.0
+          ],
+          "texture": "#skin"
+        },
+        "up": {
+          "uv": [
+            8.0,
+            0.0,
+            12.0,
+            4.0
+          ],
+          "texture": "#skin"
+        }
+      }
+    },
+    {
+      "name": "slot_back",
+      "from": [
+        5.5,
+        8,
+        5
+      ],
+      "to": [
+        10.5,
+        11.5,
+        5.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            8.0,
+            4.0,
+            12.0,
+            8.0
+          ],
+          "texture": "#skin"
+        },
+        "east": {
+          "uv": [
+            0.0,
+            0.0,
+            4.0,
+            4.0
+          ],
+          "texture": "#skin"
+        },
+        "west": {
+          "uv": [
+            4.0,
+            0.0,
+            0.0,
+            4.0
+          ],
+          "texture": "#skin"
+        },
+        "up": {
+          "uv": [
+            12.0,
+            4.0,
+            16.0,
+            8.0
+          ],
+          "texture": "#skin"
+        },
+        "down": {
+          "uv": [
+            0.0,
+            0.0,
+            4.0,
+            4.0
+          ],
+          "texture": "#skin"
+        }
+      }
+    },
+    {
+      "name": "lower_front",
+      "from": [
+        5.5,
+        8,
+        4.5
+      ],
+      "to": [
+        10.5,
+        8.75,
+        5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            12.0,
+            4.0,
+            16.0,
+            8.0
+          ],
+          "texture": "#skin"
+        },
+        "east": {
+          "uv": [
+            12.0,
+            4.0,
+            16.0,
+            8.0
+          ],
+          "texture": "#skin"
+        },
+        "west": {
+          "uv": [
+            16.0,
+            4.0,
+            12.0,
+            8.0
+          ],
+          "texture": "#skin"
+        },
+        "up": {
+          "uv": [
+            12.0,
+            4.0,
+            16.0,
+            8.0
+          ],
+          "texture": "#skin"
+        },
+        "down": {
+          "uv": [
+            12.0,
+            4.0,
+            16.0,
+            8.0
+          ],
+          "texture": "#skin"
+        }
+      }
+    },
+    {
+      "name": "upper_front",
+      "from": [
+        5.5,
+        11,
+        4.5
+      ],
+      "to": [
+        10.5,
+        11.5,
+        5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0.0,
+            0.0,
+            4.0,
+            4.0
+          ],
+          "texture": "#skin"
+        },
+        "east": {
+          "uv": [
+            0.0,
+            0.0,
+            4.0,
+            4.0
+          ],
+          "texture": "#skin"
+        },
+        "west": {
+          "uv": [
+            4.0,
+            0.0,
+            0.0,
+            4.0
+          ],
+          "texture": "#skin"
+        },
+        "up": {
+          "uv": [
+            8.0,
+            0.0,
+            12.0,
+            4.0
+          ],
+          "texture": "#skin"
+        },
+        "down": {
+          "uv": [
+            0.0,
+            0.0,
+            4.0,
+            4.0
+          ],
+          "texture": "#skin"
+        }
+      }
+    },
+    {
+      "name": "front_port",
+      "from": [
+        5.5,
+        8.75,
+        4.5
+      ],
+      "to": [
+        6,
+        11,
+        5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0.0,
+            0.0,
+            4.0,
+            4.0
+          ],
+          "texture": "#skin"
+        },
+        "east": {
+          "uv": [
+            0.0,
+            0.0,
+            4.0,
+            4.0
+          ],
+          "texture": "#skin"
+        },
+        "west": {
+          "uv": [
+            4.0,
+            0.0,
+            0.0,
+            4.0
+          ],
+          "texture": "#skin"
+        }
+      }
+    },
+    {
+      "name": "front_center",
+      "from": [
+        7.5,
+        8.75,
+        4.5
+      ],
+      "to": [
+        8.5,
+        11,
+        5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0.0,
+            0.0,
+            4.0,
+            4.0
+          ],
+          "texture": "#skin"
+        },
+        "east": {
+          "uv": [
+            0.0,
+            0.0,
+            4.0,
+            4.0
+          ],
+          "texture": "#skin"
+        },
+        "west": {
+          "uv": [
+            4.0,
+            0.0,
+            0.0,
+            4.0
+          ],
+          "texture": "#skin"
+        }
+      }
+    },
+    {
+      "name": "front_starboard",
+      "from": [
+        10,
+        8.75,
+        4.5
+      ],
+      "to": [
+        10.5,
+        11,
+        5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0.0,
+            0.0,
+            4.0,
+            4.0
+          ],
+          "texture": "#skin"
+        },
+        "east": {
+          "uv": [
+            0.0,
+            0.0,
+            4.0,
+            4.0
+          ],
+          "texture": "#skin"
+        },
+        "west": {
+          "uv": [
+            4.0,
+            0.0,
+            0.0,
+            4.0
+          ],
+          "texture": "#skin"
+        }
+      }
+    },
+    {
+      "name": "port_collar",
+      "from": [
+        6.25,
+        9.5,
+        3
+      ],
+      "to": [
+        7.25,
+        10.5,
+        5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            8.0,
+            8.0,
+            12.0,
+            12.0
+          ],
+          "texture": "#skin"
+        },
+        "east": {
+          "uv": [
+            8.0,
+            8.0,
+            12.0,
+            12.0
+          ],
+          "texture": "#skin"
+        },
+        "west": {
+          "uv": [
+            12.0,
+            8.0,
+            8.0,
+            12.0
+          ],
+          "texture": "#skin"
+        },
+        "up": {
+          "uv": [
+            4.0,
+            8.0,
+            8.0,
+            12.0
+          ],
+          "texture": "#skin"
+        },
+        "down": {
+          "uv": [
+            8.0,
+            8.0,
+            12.0,
+            12.0
+          ],
+          "texture": "#skin"
+        }
+      }
+    },
+    {
+      "name": "port_barrel",
+      "from": [
+        6.4375,
+        9.6875,
+        -4.25
+      ],
+      "to": [
+        7.0625,
+        10.3125,
+        3
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            12.0,
+            8.0,
+            16.0,
+            12.0
+          ],
+          "texture": "#skin"
+        },
+        "east": {
+          "uv": [
+            0.0,
+            8.0,
+            4.0,
+            12.0
+          ],
+          "texture": "#skin"
+        },
+        "west": {
+          "uv": [
+            4.0,
+            8.0,
+            0.0,
+            12.0
+          ],
+          "texture": "#skin"
+        },
+        "up": {
+          "uv": [
+            4.0,
+            8.0,
+            8.0,
+            12.0
+          ],
+          "texture": "#skin"
+        },
+        "down": {
+          "uv": [
+            8.0,
+            8.0,
+            12.0,
+            12.0
+          ],
+          "texture": "#skin"
+        }
+      }
+    },
+    {
+      "name": "starboard_collar",
+      "from": [
+        8.75,
+        9.5,
+        3
+      ],
+      "to": [
+        9.75,
+        10.5,
+        5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            8.0,
+            8.0,
+            12.0,
+            12.0
+          ],
+          "texture": "#skin"
+        },
+        "east": {
+          "uv": [
+            8.0,
+            8.0,
+            12.0,
+            12.0
+          ],
+          "texture": "#skin"
+        },
+        "west": {
+          "uv": [
+            12.0,
+            8.0,
+            8.0,
+            12.0
+          ],
+          "texture": "#skin"
+        },
+        "up": {
+          "uv": [
+            4.0,
+            8.0,
+            8.0,
+            12.0
+          ],
+          "texture": "#skin"
+        },
+        "down": {
+          "uv": [
+            8.0,
+            8.0,
+            12.0,
+            12.0
+          ],
+          "texture": "#skin"
+        }
+      }
+    },
+    {
+      "name": "starboard_barrel",
+      "from": [
+        8.9375,
+        9.6875,
+        -4.25
+      ],
+      "to": [
+        9.5625,
+        10.3125,
+        3
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            12.0,
+            8.0,
+            16.0,
+            12.0
+          ],
+          "texture": "#skin"
+        },
+        "east": {
+          "uv": [
+            0.0,
+            8.0,
+            4.0,
+            12.0
+          ],
+          "texture": "#skin"
+        },
+        "west": {
+          "uv": [
+            4.0,
+            8.0,
+            0.0,
+            12.0
+          ],
+          "texture": "#skin"
+        },
+        "up": {
+          "uv": [
+            4.0,
+            8.0,
+            8.0,
+            12.0
+          ],
+          "texture": "#skin"
+        },
+        "down": {
+          "uv": [
+            8.0,
+            8.0,
+            12.0,
+            12.0
+          ],
+          "texture": "#skin"
+        }
+      }
+    }
+  ]
 }

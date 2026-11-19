@@ -371,6 +371,11 @@ public class ClientModEvents {
                     });
                 }
             }
+            // 舰装和展示框同用 FIXED，只有舰装渲染期间才切到奥托炮的挂载模型。
+            ItemProperties.register(WeaponItems.CATALOG_GUNS.get("oto_twin_76mm_rapid_gun").get(),
+                    ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "rigging_mount"),
+                    (stack, level, entity, seed) -> com.piranport.client.gecko.RiggingRenderContext.isRiggingPass()
+                            ? 1.0f : 0.0f);
         });
     }
 

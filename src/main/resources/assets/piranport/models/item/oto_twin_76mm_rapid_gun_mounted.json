@@ -1,0 +1,17 @@
+{
+  "parent": "piranport:item/oto_twin_76mm_rapid_gun_held",
+  "display": {
+    "fixed": {
+      "translation": [
+        0,
+        -8,
+        0
+      ],
+      "scale": [
+        0.82,
+        0.82,
+        0.82
+      ]
+    }
+  }
+}

@@ -1,7 +1,28 @@
 {
-  "parent": "minecraft:item/generated",
+  "loader": "neoforge:separate_transforms",
+  "gui_light": "front",
   "textures": {
-    "layer0": "piranport:item/oto_twin_76mm_rapid_gun_empty"
+    "particle": "piranport:item/oto_twin_76mm_rapid_gun_empty"
+  },
+  "base": {
+    "parent": "minecraft:item/generated",
+    "textures": {
+      "layer0": "piranport:item/oto_twin_76mm_rapid_gun_empty"
+    }
+  },
+  "perspectives": {
+    "firstperson_righthand": {
+      "parent": "piranport:item/oto_twin_76mm_rapid_gun_held"
+    },
+    "firstperson_lefthand": {
+      "parent": "piranport:item/oto_twin_76mm_rapid_gun_held"
+    },
+    "thirdperson_righthand": {
+      "parent": "piranport:item/oto_twin_76mm_rapid_gun_held"
+    },
+    "thirdperson_lefthand": {
+      "parent": "piranport:item/oto_twin_76mm_rapid_gun_held"
+    }
   },
   "overrides": [
     {
@@ -9,6 +30,12 @@
         "piranport:loaded": 1
       },
       "model": "piranport:item/oto_twin_76mm_rapid_gun_loaded"
+    },
+    {
+      "predicate": {
+        "piranport:rigging_mount": 1
+      },
+      "model": "piranport:item/oto_twin_76mm_rapid_gun_mounted"
     }
   ]
 }

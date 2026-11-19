@@ -25,7 +25,7 @@ public final class RiggingLoadoutResolver {
 
     private static final List<RiggingSocket> WAIST_SOCKETS =
             List.of(RiggingSocket.WAIST_LEFT, RiggingSocket.WAIST_RIGHT);
-    /** 主手优先放前炮位；携带飞机时右侧整臂让给甲板，仅保留左侧炮位。 */
+    /** 无甲板时供所有舷侧武器使用；有甲板时仅主手能占用右前。 */
     private static final List<RiggingSocket> SIDE_ORDER =
             List.of(RiggingSocket.SIDE_RIGHT_2, RiggingSocket.SIDE_LEFT_2,
                     RiggingSocket.SIDE_RIGHT_1, RiggingSocket.SIDE_LEFT_1);
@@ -75,9 +75,9 @@ public final class RiggingLoadoutResolver {
      *   <li>鱼雷 → 腰部左、右</li>
      *   <li>主炮 / 反舰导弹 / 火箭弹 → 按固定顺序占舷侧炮位：
      *       <b>右前 → 左前 → 右后 → 左后</b>。主手是主炮/反舰导弹时该槽排最前，
-     *       无飞机时主手落在右前角，有飞机时落在左前角</li>
+     *       始终落在右前角</li>
      *   <li>有任意舰载机时飞行甲板替代右侧炮架，飞机 → 甲板两个位；
-     *       火炮/反舰导弹只分配左侧两个炮位</li>
+     *       主手以外的舷侧武器只分配左侧两个炮位</li>
      *   <li>深弹 / 防空导弹 → 后背两个位</li>
      *   <li>超出容量的物品直接丢弃（物品栏、数值、开火都不受影响）</li>
      * </ol>
@@ -124,8 +124,9 @@ public final class RiggingLoadoutResolver {
         for (Candidate candidate : candidates) {
             RiggingSocket socket = switch (candidate.category()) {
                 case TORPEDO -> waist < WAIST_SOCKETS.size() ? WAIST_SOCKETS.get(waist++) : null;
-                case CANNON, MISSILE_ASM ->
-                        side < sideOrder.size() ? sideOrder.get(side++) : null;
+                case CANNON, MISSILE_ASM -> hasAircraft && candidate.slot() == selectedSlot
+                        ? RiggingSocket.SIDE_RIGHT_2
+                        : side < sideOrder.size() ? sideOrder.get(side++) : null;
                 case AIRCRAFT -> hasAircraft && deck < DECK_SOCKETS.size()
                         ? DECK_SOCKETS.get(deck++)
                         : null;

@@ -44,18 +44,17 @@ public class ShipRiggingLayer extends RenderLayer<AbstractClientPlayer, PlayerMo
         if (!RiggingClientState.isRenderedAsTransformed(player)) return;
 
         RiggingLoadout loadout = RiggingClientState.resolveLoadout(player);
+        boolean showDeck = RiggingDeckClientState.showDeck(loadout, player.getId());
         float launchPose = AircraftLaunchPoseClientState.intensity(player.getId(), partialTick);
         float deckPitch = RiggingDeckClientState.pitch(player.getId(), partialTick);
 
         for (RiggingMount original : loadout.mounts()) {
             RiggingMount mount = RiggingDeckClientState.parkedMount(player.getId(), loadout, original, partialTick);
             if (mount == null) continue;
-            if (RiggingDeckClientState.hasActiveAnimation(player.getId())
-                    && (mount.socket() == com.piranport.rigging.RiggingSocket.SIDE_RIGHT_1
-                    || mount.socket() == com.piranport.rigging.RiggingSocket.SIDE_RIGHT_2)) continue;
+            if (RiggingDeckClientState.hidesSideMount(loadout, mount, showDeck)) continue;
             // 已有 GeckoLib 模型的装备由 RiggingAttachedLayer 绘制，这里不能再画一份物品模型。
             if (RiggingModelRegistry.isRegistered(mount.stack())) continue;
-            renderMount(poseStack, bufferSource, packedLight, player, mount, launchPose, deckPitch);
+            renderMount(poseStack, bufferSource, packedLight, player, mount, launchPose, deckPitch, showDeck);
         }
         poseStack.pushPose();
         RiggingSocketTransforms.applyHullBase(poseStack, getParentModel(), launchPose);
@@ -79,7 +78,8 @@ public class ShipRiggingLayer extends RenderLayer<AbstractClientPlayer, PlayerMo
      * {@code FIXED && isRiggingPass()} 时走 3D 分支。
      */
     private void renderMount(PoseStack poseStack, MultiBufferSource bufferSource, int packedLight,
-                             AbstractClientPlayer player, RiggingMount mount, float launchPose, float deckPitch) {
+                             AbstractClientPlayer player, RiggingMount mount, float launchPose, float deckPitch,
+                             boolean showDeck) {
         if (renderDeckAircraft(poseStack, bufferSource, packedLight, mount, launchPose, deckPitch)) return;
 
         poseStack.pushPose();
@@ -87,7 +87,7 @@ public class ShipRiggingLayer extends RenderLayer<AbstractClientPlayer, PlayerMo
         RiggingSocketTransforms.applyThirdPersonBreathing(poseStack, mount.socket());
 
         RiggingSocketTransforms.MountPose pose =
-                RiggingSocketTransforms.mountPose(mount.socket(), launchPose);
+                RiggingSocketTransforms.mountPose(mount.socket(), showDeck, false);
         RiggingSocketTransforms.applyMountFrame(poseStack, pose);
 
         // 物品模型坐标系 +Y 朝上、炮口朝 +Z；玩家模型坐标系 +Y 朝下、+Z 朝前。

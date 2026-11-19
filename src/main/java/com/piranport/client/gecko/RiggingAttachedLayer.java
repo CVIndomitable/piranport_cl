@@ -4,7 +4,6 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import com.piranport.client.AircraftLaunchPoseClientState;
 import com.piranport.client.RiggingDeckClientState;
-import com.piranport.rigging.RiggingSocket;
 import com.piranport.client.RiggingClientState;
 import com.piranport.client.RiggingSocketTransforms;
 import com.piranport.rigging.RiggingLoadout;
@@ -81,13 +80,12 @@ public class RiggingAttachedLayer extends AttachedAnimatableRenderLayer<
                                            float ageInTicks, float limbSwing, float limbSwingAmount,
                                            float netHeadYaw, float headPitch) {
         RiggingLoadout loadout = RiggingClientState.resolveLoadout(player);
+        boolean showDeck = RiggingDeckClientState.showDeck(loadout, player.getId());
         float launchPose = AircraftLaunchPoseClientState.intensity(player.getId(), partialTick);
 
         for (RiggingMount mount : loadout.mounts()) {
             if (!isThisModel(mount)) continue;
-            if (RiggingDeckClientState.hasActiveAnimation(player.getId())
-                    && (mount.socket() == RiggingSocket.SIDE_RIGHT_1
-                    || mount.socket() == RiggingSocket.SIDE_RIGHT_2)) continue;
+            if (RiggingDeckClientState.hidesSideMount(loadout, mount, showDeck)) continue;
 
             poseStack.pushPose();
             // 1. 进入躯干/腿参考系，并加上舰体共享偏移与放飞后仰
@@ -96,7 +94,7 @@ public class RiggingAttachedLayer extends AttachedAnimatableRenderLayer<
             RiggingSocketTransforms.applyThirdPersonBreathing(poseStack, mount.socket());
             // 2. 挂点偏移
             RiggingSocketTransforms.MountPose pose =
-                    RiggingSocketTransforms.mountPose(mount.socket(), launchPose);
+                    RiggingSocketTransforms.mountPose(mount.socket(), showDeck, false);
             RiggingSocketTransforms.applyMountOffset(poseStack, pose);
 
             // 3. GeckoLib 模型 +Y 朝上，玩家模型参考系 +Y 朝下：先绕 X 翻 180°。

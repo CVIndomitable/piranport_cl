@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class RiggingMountPoseTest {
     @Test
-    void aircraftReplacesRightGunSockets() {
+    void aircraftReplacesRightSpareGunSockets() {
         assertEquals(List.of(RiggingSocket.SIDE_LEFT_2, RiggingSocket.SIDE_LEFT_1),
                 RiggingLoadoutResolver.sideSockets(true));
         assertEquals(4, RiggingLoadoutResolver.sideSockets(false).size());
@@ -21,10 +21,22 @@ class RiggingMountPoseTest {
     }
 
     @Test
+    void rightFrontMountClearsDeckWithEitherForwardAxis() {
+        for (boolean firstPerson : new boolean[]{false, true}) {
+            var normal = RiggingSocketTransforms.mountPose(RiggingSocket.SIDE_RIGHT_2, false, firstPerson);
+            var carrier = RiggingSocketTransforms.mountPose(RiggingSocket.SIDE_RIGHT_2, true, firstPerson);
+            int forward = firstPerson ? 1 : -1;
+            assertTrue(normal.x() < 0 && normal.z() * forward > 0);
+            assertTrue(carrier.x() < normal.x());
+            assertTrue(carrier.z() * forward > RiggingDeckPose.EDGE_Z + 5);
+        }
+    }
+
+    @Test
     void torpedoBasesFaceLegsWhileTopsFaceOutwardAndTubesFaceForward() {
         for (RiggingSocket socket : List.of(RiggingSocket.WAIST_LEFT, RiggingSocket.WAIST_RIGHT)) {
             float side = socket == RiggingSocket.WAIST_LEFT ? 1 : -1;
-            var mount = RiggingSocketTransforms.mountPose(socket, 0);
+            var mount = RiggingSocketTransforms.mountPose(socket, false, false);
             PoseStack stack = new PoseStack();
             RiggingSocketTransforms.applyMountFrame(stack, mount);
             stack.mulPose(Axis.XP.rotationDegrees(180));

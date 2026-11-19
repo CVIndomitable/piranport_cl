@@ -64,8 +64,7 @@ import java.util.WeakHashMap;
  * 但保留它们的子骨骼）。终端 {@code global.rigging_fp.show_body} 可开回完整船体做对比。
  *
  * <p><b>挂载武器</b>：船体画完后按 {@link RiggingSocketTransforms#mountPose} 逐个挂点补画。
- * 挂点坐标是第三人称玩家模型空间（+Y 朝下、+Z 朝前），换算到这里的身体模型空间
- * （+Y 朝上、+Z 船首）只需 {@code (x, -y, z)}；不再套第三人称的 {@code Axis.XP(180)}。
+ * 挂点按第一人称取 +Z 朝前，再翻转 Y 进入 +Y 朝上的身体模型空间。
  * 三类武器各有自己的补偿角（见 {@link #renderGeckoWeapon} / {@link #renderItemWeapon}），
  * 原因写在方法注释里。
  */
@@ -152,6 +151,7 @@ public final class RiggingFirstPersonLayer {
         boolean showDeck = RiggingDeckClientState.showDeck(loadout, player.getId());
         if (showDeck) hiddenBones.add("arm_left");
         HULL_RENDERER.setHiddenBoneCubes(hiddenBones);
+        DECK_RENDERER.setMainHandSupportVisible(RiggingDeckClientState.showMainHandSupport(loadout, showDeck));
         DECK_RENDERER.setDeckPitch(RiggingDeckClientState.pitch(player.getId(), partialTick), true);
         poseStack.pushPose();
         RiggingSocketTransforms.applyFirstPersonBreathing(poseStack, null);
@@ -173,7 +173,7 @@ public final class RiggingFirstPersonLayer {
                 bufferSource, packedLight, partialTick, true);
         poseStack.popPose();
         // 挂载武器最后画：和船体共用同一个身体变换（含 scale / offset / yaw-pitch-roll）。
-        renderWeapons(poseStack, bufferSource, packedLight, partialTick, player, loadout);
+        renderWeapons(poseStack, bufferSource, packedLight, partialTick, player, loadout, showDeck);
         // 物品渲染（FIXED）与 BEWLR 3D 模型的批次留到这时统一提交。
         bufferSource.endBatch();
 
@@ -204,13 +204,11 @@ public final class RiggingFirstPersonLayer {
     /** 逐个挂点补画武器：GeckoLib 导弹走模型渲染，其余走物品渲染管线。 */
     private static void renderWeapons(PoseStack poseStack, MultiBufferSource.BufferSource bufferSource,
                                       int packedLight, float partialTick,
-                                      AbstractClientPlayer player, RiggingLoadout loadout) {
+                                      AbstractClientPlayer player, RiggingLoadout loadout, boolean showDeck) {
         for (RiggingMount original : loadout.mounts()) {
             RiggingMount mount = RiggingDeckClientState.parkedMount(player.getId(), loadout, original, partialTick);
             if (mount == null) continue;
-            if (RiggingDeckClientState.hasActiveAnimation(player.getId())
-                    && (mount.socket() == RiggingSocket.SIDE_RIGHT_1
-                    || mount.socket() == RiggingSocket.SIDE_RIGHT_2)) continue;
+            if (RiggingDeckClientState.hidesSideMount(loadout, mount, showDeck)) continue;
             // 第一人称不显示背部防空导弹/深弹发射器的模型（第三人称保持）。
             // 按 category 而不是 BACK_* 挂点判断，背部以后扩展别的装备时不会误伤。
             if (mount.category() == RiggingCategory.MISSILE_SAM
@@ -223,9 +221,8 @@ public final class RiggingFirstPersonLayer {
                     RiggingDeckClientState.pitch(player.getId(), partialTick))) {
                 continue;
             }
-            // 第一人称不跟随 third-person 的放飞后仰；mountPose 目前也不使用该参数。
             RiggingSocketTransforms.MountPose pose =
-                    RiggingSocketTransforms.mountPose(mount.socket(), 0.0f);
+                    RiggingSocketTransforms.mountPose(mount.socket(), showDeck, true);
             RiggingModelDef def = RiggingModelRegistry.find(mount.stack());
             if (def != null) {
                 renderGeckoWeapon(poseStack, bufferSource, packedLight, partialTick,
@@ -260,9 +257,7 @@ public final class RiggingFirstPersonLayer {
     /**
      * 已登记 GeckoLib 的导弹发射器（{@code RiggingAttachedLayer} 的同一批模型）。
      *
-     * <p>第三人称的顺序是 {@code XP(180) → YP(yawOffset) → 挂点 yaw/pitch/roll}；
-     * 第一人称模型空间本来就是 +Y 朝上，不需要 XP(180)，但要补回它带来的前后翻转。
-     * yawOffset 和挂点 yaw 保持原有含义，额外旋转 180° 与第三人称方向一致。
+     * <p>只显示舷侧反舰导弹，模型的 -Z 前向通过挂点 yaw 转到第一人称的 +Z 前向。
      */
     private static void renderGeckoWeapon(PoseStack poseStack, MultiBufferSource.BufferSource bufferSource,
                                           int packedLight, float partialTick,
@@ -273,7 +268,7 @@ public final class RiggingFirstPersonLayer {
         RiggingSocketTransforms.applyFirstPersonBreathing(poseStack, socket);
         // 挂点坐标是玩家模型空间（+Y 下），换到身体模型空间（+Y 上）只翻 y。
         poseStack.translate(pose.x() / 16.0f, -pose.y() / 16.0f, pose.z() / 16.0f);
-        poseStack.mulPose(Axis.YP.rotationDegrees(def.yawOffset() + pose.yaw() + 180.0f));
+        poseStack.mulPose(Axis.YP.rotationDegrees(def.yawOffset() + pose.yaw()));
         poseStack.mulPose(Axis.XP.rotationDegrees(pose.pitch()));
         poseStack.mulPose(Axis.ZP.rotationDegrees(pose.roll()));
         poseStack.scale(def.scale(), def.scale(), def.scale());
@@ -297,8 +292,7 @@ public final class RiggingFirstPersonLayer {
         poseStack.pushPose();
         RiggingSocketTransforms.applyFirstPersonBreathing(poseStack, mount.socket());
         boolean flatIcon = isDeckSocket(mount.socket());
-        poseStack.translate(pose.x() / 16.0f, -pose.y() / 16.0f,
-                (flatIcon ? RiggingDeckPose.aircraftZ(mount.socket(), true) : pose.z()) / 16.0f);
+        poseStack.translate(pose.x() / 16.0f, -pose.y() / 16.0f, pose.z() / 16.0f);
         if (flatIcon) {
             poseStack.mulPose(Axis.YP.rotationDegrees(pose.yaw()));
             poseStack.mulPose(Axis.XP.rotationDegrees(-pose.pitch()));

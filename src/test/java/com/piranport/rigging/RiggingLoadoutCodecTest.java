@@ -1,7 +1,11 @@
 package com.piranport.rigging;
 
 import com.piranport.aviation.AircraftLandingTimeline;
+import com.piranport.artillery.ArtilleryItem;
+import com.piranport.client.RiggingDeckClientState;
+import com.piranport.entity.MissileEntity;
 import com.piranport.item.AircraftItem;
+import com.piranport.item.MissileLauncherItem;
 import io.netty.buffer.Unpooled;
 import net.minecraft.SharedConstants;
 import net.minecraft.core.MappedRegistry;
@@ -42,6 +46,8 @@ class RiggingLoadoutCodecTest {
     private static boolean bootstrapped;
     private static AircraftItem testAircraftA;
     private static AircraftItem testAircraftB;
+    private static ArtilleryItem testCannon;
+    private static MissileLauncherItem testAntiShipLauncher;
 
     @BeforeAll
     static void bootstrap() {
@@ -63,6 +69,13 @@ class RiggingLoadoutCodecTest {
         testAircraftB = Registry.register(BuiltInRegistries.ITEM,
                 ResourceLocation.fromNamespaceAndPath("piranport_test", "aircraft_b"),
                 new AircraftItem(new Item.Properties()));
+        testCannon = Registry.register(BuiltInRegistries.ITEM,
+                ResourceLocation.fromNamespaceAndPath("piranport_test", "cannon"),
+                new ArtilleryItem(new Item.Properties()));
+        testAntiShipLauncher = Registry.register(BuiltInRegistries.ITEM,
+                ResourceLocation.fromNamespaceAndPath("piranport_test", "anti_ship_launcher"),
+                new MissileLauncherItem(new Item.Properties(), MissileEntity.MissileType.ANTI_SHIP,
+                        1, 1, 1, 1, 1, () -> Items.ARROW));
         // 纯 JUnit 环境没有 NeoForge 的注册表同步阶段，item 注册表默认 doesSync=false，
         // ItemStack.STREAM_CODEC 会拒绝按 ID 编解码。这里只给测试 JVM 打上同步标记。
         markItemRegistrySynced();
@@ -123,6 +136,57 @@ class RiggingLoadoutCodecTest {
     }
 
     @Test
+    void selectedSideWeaponKeepsRightFrontWithParkedAirborneOrAnimatingDeck() {
+        Inventory inventory = new Inventory(null);
+        inventory.items.set(0, new ItemStack(testCannon));
+        inventory.items.set(1, new ItemStack(testCannon));
+        inventory.items.set(2, new ItemStack(testCannon));
+        inventory.items.set(5, new ItemStack(testAntiShipLauncher));
+        inventory.items.set(6, new ItemStack(testAircraftA));
+        inventory.selected = 5;
+
+        var parked = RiggingLoadoutResolver.assign(inventory, 0);
+        assertEquals(RiggingSocket.SIDE_RIGHT_2, socketForSlot(parked, 5));
+        assertEquals(RiggingSocket.SIDE_LEFT_2, socketForSlot(parked, 0));
+        assertEquals(RiggingSocket.SIDE_LEFT_1, socketForSlot(parked, 1));
+        assertEquals(RiggingSocket.DECK_1, socketForSlot(parked, 6));
+        assertEquals(4, parked.mounts().size());
+
+        inventory.items.set(6, ItemStack.EMPTY);
+        inventory.selected = 1;
+        var airborne = RiggingLoadoutResolver.assign(inventory, 0, true);
+        assertEquals(RiggingSocket.SIDE_RIGHT_2, socketForSlot(airborne, 1));
+        var afterLanding = RiggingLoadoutResolver.assign(inventory, 0);
+        assertEquals(RiggingSocket.SIDE_RIGHT_2, socketForSlot(afterLanding, 1));
+        assertEquals(RiggingSocket.SIDE_RIGHT_1, socketForSlot(afterLanding, 2));
+        assertTrue(RiggingDeckClientState.showMainHandSupport(afterLanding, true));
+        assertFalse(RiggingDeckClientState.showMainHandSupport(afterLanding, false));
+        assertFalse(RiggingDeckClientState.hidesSideMount(afterLanding, mountForSlot(afterLanding, 1), true));
+        assertTrue(RiggingDeckClientState.hidesSideMount(afterLanding, mountForSlot(afterLanding, 2), true));
+        assertFalse(RiggingDeckClientState.hidesSideMount(afterLanding, mountForSlot(afterLanding, 2), false));
+    }
+
+    @Test
+    void selectingAircraftDoesNotGiveSpareWeaponTheRightFrontSupport() {
+        Inventory inventory = new Inventory(null);
+        inventory.items.set(0, new ItemStack(testCannon));
+        inventory.items.set(1, new ItemStack(testAircraftA));
+        inventory.items.set(5, new ItemStack(testAircraftB));
+        inventory.selected = 5;
+
+        var loadout = RiggingLoadoutResolver.assign(inventory, 0);
+        assertEquals(RiggingSocket.SIDE_LEFT_2, socketForSlot(loadout, 0));
+        assertEquals(RiggingSocket.DECK_1, socketForSlot(loadout, 5));
+        assertFalse(RiggingDeckClientState.showMainHandSupport(loadout, true));
+
+        inventory.items.set(1, ItemStack.EMPTY);
+        inventory.items.set(5, ItemStack.EMPTY);
+        var noAircraft = RiggingLoadoutResolver.assign(inventory, 0);
+        assertEquals(RiggingSocket.SIDE_RIGHT_2, socketForSlot(noAircraft, 0));
+        assertTrue(RiggingDeckClientState.hidesSideMount(noAircraft, mountForSlot(noAircraft, 0), true));
+    }
+
+    @Test
     void staggeredLandingsOnlyRestoreParkedAircraftAfterLastLanding() {
         Inventory inventory = new Inventory(null);
         inventory.items.set(2, new ItemStack(testAircraftA));
@@ -148,11 +212,14 @@ class RiggingLoadoutCodecTest {
     }
 
     private static RiggingSocket socketForSlot(RiggingLoadout loadout, int sourceSlot) {
+        return mountForSlot(loadout, sourceSlot).socket();
+    }
+
+    private static RiggingMount mountForSlot(RiggingLoadout loadout, int sourceSlot) {
         return loadout.mounts().stream()
                 .filter(mount -> mount.sourceSlot() == sourceSlot)
                 .findFirst()
-                .orElseThrow(() -> new AssertionError("missing aircraft mount for slot " + sourceSlot))
-                .socket();
+                .orElseThrow(() -> new AssertionError("missing mount for slot " + sourceSlot));
     }
 
     @Test

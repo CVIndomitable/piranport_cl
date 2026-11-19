@@ -76,21 +76,24 @@ public final class RiggingSocketTransforms {
         applyMountRotations(poseStack, pose);
     }
 
-    /** 玩家模型空间：+X 朝左，+Y 朝下，-Z 朝前。物品 FIXED 会再绕 Y 转 180°。 */
-    public static MountPose mountPose(RiggingSocket socket, float launchPose) {
+    /** X 朝左、Y 朝下；第一人称取正 Z 为前，第三人称取负 Z 为前。 */
+    public static MountPose mountPose(RiggingSocket socket, boolean showDeck, boolean firstPerson) {
+        float forward = firstPerson ? 1.0f : -1.0f;
         return switch (socket) {
             // 旧腿挂点仅保留网络序号兼容，新快照分配 WAIST_*。
             case LEG_LEFT -> new MountPose(2.6f, 6.0f, 0.0f, 90.0f, 0.0f, 90.0f, 0.40f);
             case LEG_RIGHT -> new MountPose(-2.6f, 6.0f, 0.0f, -90.0f, 0.0f, -90.0f, 0.40f);
             // 底座补偿为 8 × scale；平台顶面 y=1.8，故挂点 y=1.8-3.36。
-            case SIDE_LEFT_1 -> new MountPose(9.5f, -1.56f, 6.0f, 180.0f, 0.0f, 0.0f, 0.42f);
-            case SIDE_LEFT_2 -> new MountPose(9.5f, -1.56f, -6.0f, 180.0f, 0.0f, 0.0f, 0.42f);
-            case SIDE_RIGHT_1 -> new MountPose(-9.5f, -1.56f, 6.0f, 180.0f, 0.0f, 0.0f, 0.42f);
-            case SIDE_RIGHT_2 -> new MountPose(-9.5f, -1.56f, -6.0f, 180.0f, 0.0f, 0.0f, 0.42f);
+            case SIDE_LEFT_1 -> new MountPose(9.5f, -1.56f, -6.0f * forward, 180.0f, 0.0f, 0.0f, 0.42f);
+            case SIDE_LEFT_2 -> new MountPose(9.5f, -1.56f, 6.0f * forward, 180.0f, 0.0f, 0.0f, 0.42f);
+            case SIDE_RIGHT_1 -> new MountPose(-9.5f, -1.56f, -6.0f * forward, 180.0f, 0.0f, 0.0f, 0.42f);
+            // 有甲板时与 carrier_deck 的 main_hand_support 炮座对齐。
+            case SIDE_RIGHT_2 -> new MountPose(showDeck ? -18.5f : -9.5f, -1.56f,
+                    (showDeck ? 18.0f : 6.0f) * forward, 180.0f, 0.0f, 0.0f, 0.42f);
             case BACK_1 -> new MountPose(2.2f, -0.84f, 3.4f, 90.0f, 0.0f, 0.0f, 0.38f);
             case BACK_2 -> new MountPose(-2.2f, -0.84f, 3.4f, -90.0f, 0.0f, 0.0f, 0.38f);
             case DECK_1, DECK_2 -> new MountPose(RiggingDeckPose.CENTER_X, 0.4f,
-                    RiggingDeckPose.aircraftZ(socket, false), 0.0f, -90.0f, 0.0f, 0.34f);
+                    RiggingDeckPose.aircraftZ(socket, firstPerson), 0.0f, -90.0f, 0.0f, 0.34f);
             // 底面转向腿侧，原模型上方转向舷外；补偿随侧翻改沿 X，底座贴支架 x=±8。
             case WAIST_LEFT -> new MountPose(10.88f, 9.0f, 2.0f, 180.0f, 0.0f, -90.0f, 0.36f);
             case WAIST_RIGHT -> new MountPose(-10.88f, 9.0f, 2.0f, 180.0f, 0.0f, 90.0f, 0.36f);

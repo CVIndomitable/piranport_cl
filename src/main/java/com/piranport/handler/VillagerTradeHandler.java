@@ -20,7 +20,9 @@ import net.minecraft.world.item.trading.MerchantOffer;
 import net.minecraft.world.level.ItemLike;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.common.BasicItemListing;
 import net.neoforged.neoforge.event.village.VillagerTradesEvent;
+import net.neoforged.neoforge.event.village.WandererTradesEvent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,7 +33,7 @@ import java.util.stream.Collectors;
 /**
  * 皮兰港村民交易表（依据：策划决策/经济/02-皮兰港村民职业与交易.md）。
  *
- * <p>只给三个皮兰港职业加交易；不再往原版农民/工具匠里塞模组商品（02 共同规则第一条）。
+ * <p>村民交易限三个皮兰港职业；流浪商人另有独立的稀有商品池。
  * 战利品（{@code hentai_trophy}）是独立货币：只出现在支付侧，不与绿宝石互换。
  * 战利品交易补货次数 {@link #TROPHY_USES} 低于绿宝石交易，防止刷运输舰买空后期内容。
  *
@@ -49,6 +51,11 @@ public class VillagerTradeHandler {
     static final TerminalConfigValue<Integer> RECYCLE_USES = ModEquipmentConfig.VILLAGER_RECYCLE_USES;
     /** 战利品交易补货前最大次数，设计上应低于绿宝石交易（终端可调，默认 3）。 */
     static final TerminalConfigValue<Integer> TROPHY_USES = ModEquipmentConfig.VILLAGER_TROPHY_USES;
+
+    @SubscribeEvent
+    public static void onWandererTrades(WandererTradesEvent event) {
+        event.getRareTrades().add(new BasicItemListing(8, new ItemStack(ModItems.HE_WEI_DAO.get()), 3, 1, 0.0f));
+    }
 
     @SubscribeEvent
     public static void onVillagerTrades(VillagerTradesEvent event) {

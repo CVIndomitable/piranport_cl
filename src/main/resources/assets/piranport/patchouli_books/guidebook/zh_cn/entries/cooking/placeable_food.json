@@ -1,7 +1,7 @@
 {
   "name": "piranport.book.advanced.placeable_food",
   "category": "piranport:4_cooking",
-  "icon": "piranport:placeable_food",
+  "icon": "piranport:royal_naval_salted_beef",
   "sortnum": 4,
   "pages": [
     {
@@ -11,6 +11,10 @@
     {
       "type": "patchouli:text",
       "text": "$(bold)多人分享$()$(br2)放置的食物可以被其他玩家食用，适合：$(br2)• 多人游戏中的聚餐$(br)• 基地装饰$(br)• 食物展示$(br2)$(bold)提示：$()不同食物有不同的食用次数和恢复效果。"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)皇家海军咸牛肉$()$(br2)潜行右键把咸牛肉放在方块顶面，再拿空碗右键，即可盛出一份盘装皇家海军咸牛肉。整桶共两份；如果已经吃了一口，就只能再盛一份。$(br2)$(bold)合味道$()$(br2)流浪商人偶尔出售，8 个绿宝石换 1 份，每位抽中这项交易的商人限售 3 份。"
     }
   ]
 }

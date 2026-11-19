@@ -1,7 +1,7 @@
 {
   "name": "piranport.book.cooking.placeable_food",
   "category": "piranport:4_cooking",
-  "icon": "piranport:placeable_food",
+  "icon": "piranport:royal_naval_salted_beef",
   "sortnum": 4,
   "pages": [
     {
@@ -11,6 +11,10 @@
     {
       "type": "patchouli:text",
       "text": "$(bold)Multiplayer Sharing$()$(br2)Placed food can be consumed by other players, perfect for:$(br2)• Multiplayer dining parties$(br)• Base decoration$(br)• Food displays$(br2)$(bold)Tip:$() Different foods have different serving counts and restoration effects!"
+    },
+    {
+      "type": "patchouli:text",
+      "text": "$(bold)Royal Naval Salted Beef$()$(br2)Sneak and use the beef on top of a block to set it down. Use an empty bowl on the barrel to take one plated serving. A full barrel holds two servings; eating one leaves just one to take away.$(br2)$(bold)He Wei Dao$()$(br2)Some wandering traders offer one cup for 8 emeralds, up to 3 times."
     }
   ]
 }

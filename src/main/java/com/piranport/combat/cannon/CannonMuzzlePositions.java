@@ -29,7 +29,7 @@ public final class CannonMuzzlePositions {
             Vec3 eye = player.getEyePosition();
             return muzzles.stream().map(m -> eye.add(handheldOffset(m, player.getYRot(), player.getXRot()))).toList();
         }
-        var mount = RiggingGeometry.sideMount(socket, loadout.hasAircraft());
+        var mount = RiggingGeometry.sideMount(socket);
         var itemId = BuiltInRegistries.ITEM.getKey(weapon.getItem());
         String model = itemId.getNamespace().equals("piranport") ? itemId.getPath() : "";
         Vec3 feet = player.position();

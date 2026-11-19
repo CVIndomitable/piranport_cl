@@ -51,10 +51,10 @@ public class ShipRiggingLayer extends RenderLayer<AbstractClientPlayer, PlayerMo
         for (RiggingMount original : loadout.mounts()) {
             RiggingMount mount = RiggingDeckClientState.parkedMount(player.getId(), loadout, original, partialTick);
             if (mount == null) continue;
-            if (RiggingDeckClientState.hidesSideMount(loadout, mount, showDeck)) continue;
+            if (RiggingDeckClientState.hidesSideMount(mount, showDeck)) continue;
             // 已有 GeckoLib 模型的装备由 RiggingAttachedLayer 绘制，这里不能再画一份物品模型。
             if (RiggingModelRegistry.isRegistered(mount.stack())) continue;
-            renderMount(poseStack, bufferSource, packedLight, player, mount, launchPose, deckPitch, showDeck);
+            renderMount(poseStack, bufferSource, packedLight, player, mount, launchPose, deckPitch);
         }
         poseStack.pushPose();
         RiggingSocketTransforms.applyHullBase(poseStack, getParentModel(), launchPose);
@@ -78,8 +78,7 @@ public class ShipRiggingLayer extends RenderLayer<AbstractClientPlayer, PlayerMo
      * {@code FIXED && isRiggingPass()} 时走 3D 分支。
      */
     private void renderMount(PoseStack poseStack, MultiBufferSource bufferSource, int packedLight,
-                             AbstractClientPlayer player, RiggingMount mount, float launchPose, float deckPitch,
-                             boolean showDeck) {
+                             AbstractClientPlayer player, RiggingMount mount, float launchPose, float deckPitch) {
         if (renderDeckAircraft(poseStack, bufferSource, packedLight, mount, launchPose, deckPitch)) return;
 
         poseStack.pushPose();
@@ -87,7 +86,7 @@ public class ShipRiggingLayer extends RenderLayer<AbstractClientPlayer, PlayerMo
         RiggingSocketTransforms.applyThirdPersonBreathing(poseStack, mount.socket());
 
         RiggingSocketTransforms.MountPose pose =
-                RiggingSocketTransforms.mountPose(mount.socket(), showDeck, false);
+                RiggingSocketTransforms.mountPose(mount.socket(), false);
         RiggingSocketTransforms.applyMountFrame(poseStack, pose);
 
         // 物品模型坐标系 +Y 朝上、炮口朝 +Z；玩家模型坐标系 +Y 朝下、+Z 朝前。

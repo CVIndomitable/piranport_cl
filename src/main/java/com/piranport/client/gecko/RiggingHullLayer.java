@@ -104,7 +104,6 @@ public class RiggingHullLayer extends AttachedAnimatableRenderLayer<
         // GeckoLib 导入镜像 X：geo 的 arm_left 在玩家右侧，携带飞机时须隐藏这一臂。
         boolean showDeck = RiggingDeckClientState.showDeck(loadout, player.getId());
         generalHullRenderer.setHiddenBoneCubes(showDeck ? Set.of("arm_left") : Set.of());
-        carrierDeckRenderer.setMainHandSupportVisible(RiggingDeckClientState.showMainHandSupport(loadout, showDeck));
         carrierDeckRenderer.setDeckPitch(RiggingDeckClientState.pitch(player.getId(), partialTick), false);
         renderModel(poseStack, bufferSource, packedLight, partialTick, parentModel,
                 RiggingHullModelRegistry.GENERAL_HULL, set.generalHull(),

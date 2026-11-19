@@ -21,17 +21,10 @@ public final class RiggingDeckClientState {
         return loadout.hasAircraft() || hasActiveAnimation(playerId);
     }
 
-    /** 甲板还在播放动画时，快照可能已恢复双臂分配；右舷仍只显示主手。 */
-    public static boolean hidesSideMount(RiggingLoadout loadout, RiggingMount mount, boolean showDeck) {
-        return showDeck && switch (mount.socket()) {
-            case SIDE_RIGHT_1 -> true;
-            case SIDE_RIGHT_2 -> !loadout.isMainHandSideMount(mount);
-            default -> false;
-        };
-    }
-
-    public static boolean showMainHandSupport(RiggingLoadout loadout, boolean showDeck) {
-        return showDeck && loadout.mounts().stream().anyMatch(loadout::isMainHandSideMount);
+    /** 甲板还在播放动画时，快照可能已恢复双臂分配；右舷仍须让给甲板。 */
+    public static boolean hidesSideMount(RiggingMount mount, boolean showDeck) {
+        return showDeck && (mount.socket() == RiggingSocket.SIDE_RIGHT_1
+                || mount.socket() == RiggingSocket.SIDE_RIGHT_2);
     }
 
     public static float pitch(int playerId, float partialTick) {

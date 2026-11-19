@@ -25,10 +25,10 @@ public final class RiggingLoadoutResolver {
 
     private static final List<RiggingSocket> WAIST_SOCKETS =
             List.of(RiggingSocket.WAIST_LEFT, RiggingSocket.WAIST_RIGHT);
-    /** 无甲板时供所有舷侧武器使用；有甲板时仅主手能占用右前。 */
+    /** 主手优先占左前炮位；有甲板时只用左侧炮位。 */
     private static final List<RiggingSocket> SIDE_ORDER =
-            List.of(RiggingSocket.SIDE_RIGHT_2, RiggingSocket.SIDE_LEFT_2,
-                    RiggingSocket.SIDE_RIGHT_1, RiggingSocket.SIDE_LEFT_1);
+            List.of(RiggingSocket.SIDE_LEFT_2, RiggingSocket.SIDE_RIGHT_2,
+                    RiggingSocket.SIDE_LEFT_1, RiggingSocket.SIDE_RIGHT_1);
     private static final List<RiggingSocket> CARRIER_SIDE_ORDER =
             List.of(RiggingSocket.SIDE_LEFT_2, RiggingSocket.SIDE_LEFT_1);
     private static final List<RiggingSocket> DECK_SOCKETS =
@@ -79,10 +79,10 @@ public final class RiggingLoadoutResolver {
      *   <li>主手是主炮、反舰导弹或飞机时，该槽最先占用同类挂点；其余按快捷栏 0→8 顺序</li>
      *   <li>鱼雷 → 腰部左、右</li>
      *   <li>主炮 / 反舰导弹 / 火箭弹 → 按固定顺序占舷侧炮位：
-     *       <b>右前 → 左前 → 右后 → 左后</b>。主手是主炮/反舰导弹时该槽排最前，
-     *       始终落在右前角</li>
+     *       <b>左前 → 右前 → 左后 → 右后</b>。主手是舷侧武器时该槽排最前，
+     *       始终落在左前角</li>
      *   <li>有任意舰载机时飞行甲板替代右侧炮架，飞机 → 甲板两个位；
-     *       主手以外的舷侧武器只分配左侧两个炮位</li>
+     *       舷侧武器只分配左前、左后两个炮位</li>
      *   <li>深弹 / 防空导弹 → 后背两个位</li>
      *   <li>超出容量的物品直接丢弃（物品栏、数值、开火都不受影响）</li>
      * </ol>
@@ -129,9 +129,7 @@ public final class RiggingLoadoutResolver {
         for (Candidate candidate : candidates) {
             RiggingSocket socket = switch (candidate.category()) {
                 case TORPEDO -> waist < WAIST_SOCKETS.size() ? WAIST_SOCKETS.get(waist++) : null;
-                case CANNON, MISSILE_ASM -> hasAircraft && candidate.slot() == selectedSlot
-                        ? RiggingSocket.SIDE_RIGHT_2
-                        : side < sideOrder.size() ? sideOrder.get(side++) : null;
+                case CANNON, MISSILE_ASM -> side < sideOrder.size() ? sideOrder.get(side++) : null;
                 case AIRCRAFT -> hasAircraft && deck < DECK_SOCKETS.size()
                         ? DECK_SOCKETS.get(deck++)
                         : null;

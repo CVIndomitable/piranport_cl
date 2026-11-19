@@ -55,11 +55,6 @@ public record RiggingLoadout(
         return hasReturningAircraft || landingAnimationActive;
     }
 
-    public boolean isMainHandSideMount(RiggingMount mount) {
-        return selectedSlot >= 0 && mount.sourceSlot() == selectedSlot
-                && mount.socket() == RiggingSocket.SIDE_RIGHT_2;
-    }
-
     /**
      * 廉价内容指纹，供服务端判断要不要重新发包。
      *

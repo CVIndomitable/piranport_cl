@@ -151,7 +151,6 @@ public final class RiggingFirstPersonLayer {
         boolean showDeck = RiggingDeckClientState.showDeck(loadout, player.getId());
         if (showDeck) hiddenBones.add("arm_left");
         HULL_RENDERER.setHiddenBoneCubes(hiddenBones);
-        DECK_RENDERER.setMainHandSupportVisible(RiggingDeckClientState.showMainHandSupport(loadout, showDeck));
         DECK_RENDERER.setDeckPitch(RiggingDeckClientState.pitch(player.getId(), partialTick), true);
         poseStack.pushPose();
         RiggingSocketTransforms.applyFirstPersonBreathing(poseStack, null);
@@ -208,7 +207,7 @@ public final class RiggingFirstPersonLayer {
         for (RiggingMount original : loadout.mounts()) {
             RiggingMount mount = RiggingDeckClientState.parkedMount(player.getId(), loadout, original, partialTick);
             if (mount == null) continue;
-            if (RiggingDeckClientState.hidesSideMount(loadout, mount, showDeck)) continue;
+            if (RiggingDeckClientState.hidesSideMount(mount, showDeck)) continue;
             // 第一人称不显示背部防空导弹/深弹发射器的模型（第三人称保持）。
             // 按 category 而不是 BACK_* 挂点判断，背部以后扩展别的装备时不会误伤。
             if (mount.category() == RiggingCategory.MISSILE_SAM
@@ -222,7 +221,7 @@ public final class RiggingFirstPersonLayer {
                 continue;
             }
             RiggingSocketTransforms.MountPose pose =
-                    RiggingSocketTransforms.mountPose(mount.socket(), showDeck, true);
+                    RiggingSocketTransforms.mountPose(mount.socket(), true);
             RiggingModelDef def = RiggingModelRegistry.find(mount.stack());
             if (def != null) {
                 renderGeckoWeapon(poseStack, bufferSource, packedLight, partialTick,

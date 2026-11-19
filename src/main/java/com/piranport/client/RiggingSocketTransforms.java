@@ -79,7 +79,7 @@ public final class RiggingSocketTransforms {
     }
 
     /** X 朝左、Y 朝下；第一人称取正 Z 为前，第三人称取负 Z 为前。 */
-    public static MountPose mountPose(RiggingSocket socket, boolean showDeck, boolean firstPerson) {
+    public static MountPose mountPose(RiggingSocket socket, boolean firstPerson) {
         float forward = firstPerson ? 1.0f : -1.0f;
         return switch (socket) {
             // 旧腿挂点仅保留网络序号兼容，新快照分配 WAIST_*。
@@ -87,7 +87,7 @@ public final class RiggingSocketTransforms {
             case LEG_RIGHT -> new MountPose(-2.6f, 6.0f, 0.0f, -90.0f, 0.0f, -90.0f, 0.40f);
             // 底座补偿为 8 × scale；平台顶面 y=1.8，故挂点 y=1.8-3.36。
             case SIDE_LEFT_1, SIDE_LEFT_2, SIDE_RIGHT_1, SIDE_RIGHT_2 -> {
-                var mount = RiggingGeometry.sideMount(socket, showDeck);
+                var mount = RiggingGeometry.sideMount(socket);
                 yield new MountPose(mount.left(), RiggingGeometry.SideMount.DOWN, mount.forward() * forward,
                         180.0f, 0.0f, 0.0f, RiggingGeometry.SIDE_ITEM_SCALE);
             }

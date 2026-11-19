@@ -17,18 +17,20 @@ class RiggingMountPoseTest {
         assertEquals(List.of(RiggingSocket.SIDE_LEFT_2, RiggingSocket.SIDE_LEFT_1),
                 RiggingLoadoutResolver.sideSockets(true));
         assertEquals(4, RiggingLoadoutResolver.sideSockets(false).size());
-        assertEquals(RiggingSocket.SIDE_RIGHT_2, RiggingLoadoutResolver.sideSockets(false).getFirst());
+        assertEquals(RiggingSocket.SIDE_LEFT_2, RiggingLoadoutResolver.sideSockets(false).getFirst());
     }
 
     @Test
-    void rightFrontMountClearsDeckWithEitherForwardAxis() {
+    void leftFrontMountOpposesDeckWithEitherForwardAxis() {
         for (boolean firstPerson : new boolean[]{false, true}) {
-            var normal = RiggingSocketTransforms.mountPose(RiggingSocket.SIDE_RIGHT_2, false, firstPerson);
-            var carrier = RiggingSocketTransforms.mountPose(RiggingSocket.SIDE_RIGHT_2, true, firstPerson);
+            var mainHand = RiggingSocketTransforms.mountPose(RiggingSocket.SIDE_LEFT_2, firstPerson);
+            var aircraft = RiggingSocketTransforms.mountPose(RiggingSocket.DECK_1, firstPerson);
+            var rightFront = RiggingSocketTransforms.mountPose(RiggingSocket.SIDE_RIGHT_2, firstPerson);
             int forward = firstPerson ? 1 : -1;
-            assertTrue(normal.x() < 0 && normal.z() * forward > 0);
-            assertTrue(carrier.x() < normal.x());
-            assertTrue(carrier.z() * forward > RiggingDeckPose.EDGE_Z + 5);
+            assertTrue(mainHand.x() > 0 && mainHand.z() * forward > 0);
+            assertTrue(aircraft.x() < 0);
+            assertEquals(-mainHand.x(), rightFront.x());
+            assertEquals(mainHand.z(), rightFront.z());
         }
     }
 
@@ -36,7 +38,7 @@ class RiggingMountPoseTest {
     void torpedoBasesFaceLegsWhileTopsFaceOutwardAndTubesFaceForward() {
         for (RiggingSocket socket : List.of(RiggingSocket.WAIST_LEFT, RiggingSocket.WAIST_RIGHT)) {
             float side = socket == RiggingSocket.WAIST_LEFT ? 1 : -1;
-            var mount = RiggingSocketTransforms.mountPose(socket, false, false);
+            var mount = RiggingSocketTransforms.mountPose(socket, false);
             PoseStack stack = new PoseStack();
             RiggingSocketTransforms.applyMountFrame(stack, mount);
             stack.mulPose(Axis.XP.rotationDegrees(180));

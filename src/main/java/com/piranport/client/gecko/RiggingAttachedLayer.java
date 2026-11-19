@@ -85,7 +85,7 @@ public class RiggingAttachedLayer extends AttachedAnimatableRenderLayer<
 
         for (RiggingMount mount : loadout.mounts()) {
             if (!isThisModel(mount)) continue;
-            if (RiggingDeckClientState.hidesSideMount(loadout, mount, showDeck)) continue;
+            if (RiggingDeckClientState.hidesSideMount(mount, showDeck)) continue;
 
             poseStack.pushPose();
             // 1. 进入躯干/腿参考系，并加上舰体共享偏移与放飞后仰
@@ -94,7 +94,7 @@ public class RiggingAttachedLayer extends AttachedAnimatableRenderLayer<
             RiggingSocketTransforms.applyThirdPersonBreathing(poseStack, mount.socket());
             // 2. 挂点偏移
             RiggingSocketTransforms.MountPose pose =
-                    RiggingSocketTransforms.mountPose(mount.socket(), showDeck, false);
+                    RiggingSocketTransforms.mountPose(mount.socket(), false);
             RiggingSocketTransforms.applyMountOffset(poseStack, pose);
 
             // 3. GeckoLib 模型 +Y 朝上，玩家模型参考系 +Y 朝下：先绕 X 翻 180°。

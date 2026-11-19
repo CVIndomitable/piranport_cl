@@ -29,10 +29,6 @@ public final class RiggingObjectRenderer extends GeoObjectRenderer<RiggingAnimat
     private float deckPitch;
     private boolean deckFirstPerson;
 
-    public void setMainHandSupportVisible(boolean visible) {
-        setHiddenBoneCubes(visible ? Set.of() : Set.of("main_hand_support"));
-    }
-
     public void setDeckPitch(float pitch, boolean firstPerson) {
         this.deckPitch = pitch;
         this.deckFirstPerson = firstPerson;
@@ -47,9 +43,6 @@ public final class RiggingObjectRenderer extends GeoObjectRenderer<RiggingAnimat
         poseStack.pushPose();
         if (bone.getName().equals("deck")) {
             RiggingSocketTransforms.applyDeckPose(poseStack, deckPitch, deckFirstPerson);
-        } else if (deckFirstPerson && bone.getName().equals("main_hand_support")) {
-            // 支架随身体固定；仅镜像资产前向以匹配第一人称挂点。
-            poseStack.scale(1, 1, -1);
         }
         super.renderRecursively(poseStack, animatable, bone, renderType, bufferSource, buffer,
                 isReRender, partialTick, packedLight, packedOverlay, colour);

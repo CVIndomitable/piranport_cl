@@ -136,7 +136,7 @@ class RiggingLoadoutCodecTest {
     }
 
     @Test
-    void selectedSideWeaponKeepsRightFrontWithParkedAirborneOrAnimatingDeck() {
+    void selectedSideWeaponKeepsLeftFrontWithParkedAirborneOrAnimatingDeck() {
         Inventory inventory = new Inventory(null);
         inventory.items.set(0, new ItemStack(testCannon));
         inventory.items.set(1, new ItemStack(testCannon));
@@ -146,28 +146,27 @@ class RiggingLoadoutCodecTest {
         inventory.selected = 5;
 
         var parked = RiggingLoadoutResolver.assign(inventory, 0);
-        assertEquals(RiggingSocket.SIDE_RIGHT_2, socketForSlot(parked, 5));
-        assertEquals(RiggingSocket.SIDE_LEFT_2, socketForSlot(parked, 0));
-        assertEquals(RiggingSocket.SIDE_LEFT_1, socketForSlot(parked, 1));
+        assertEquals(RiggingSocket.SIDE_LEFT_2, socketForSlot(parked, 5));
+        assertEquals(RiggingSocket.SIDE_LEFT_1, socketForSlot(parked, 0));
         assertEquals(RiggingSocket.DECK_1, socketForSlot(parked, 6));
-        assertEquals(4, parked.mounts().size());
+        assertEquals(3, parked.mounts().size());
 
         inventory.items.set(6, ItemStack.EMPTY);
         inventory.selected = 1;
         var airborne = RiggingLoadoutResolver.assign(inventory, 0, true);
-        assertEquals(RiggingSocket.SIDE_RIGHT_2, socketForSlot(airborne, 1));
+        assertEquals(RiggingSocket.SIDE_LEFT_2, socketForSlot(airborne, 1));
         var afterLanding = RiggingLoadoutResolver.assign(inventory, 0);
-        assertEquals(RiggingSocket.SIDE_RIGHT_2, socketForSlot(afterLanding, 1));
-        assertEquals(RiggingSocket.SIDE_RIGHT_1, socketForSlot(afterLanding, 2));
-        assertTrue(RiggingDeckClientState.showMainHandSupport(afterLanding, true));
-        assertFalse(RiggingDeckClientState.showMainHandSupport(afterLanding, false));
-        assertFalse(RiggingDeckClientState.hidesSideMount(afterLanding, mountForSlot(afterLanding, 1), true));
-        assertTrue(RiggingDeckClientState.hidesSideMount(afterLanding, mountForSlot(afterLanding, 2), true));
-        assertFalse(RiggingDeckClientState.hidesSideMount(afterLanding, mountForSlot(afterLanding, 2), false));
+        assertEquals(RiggingSocket.SIDE_LEFT_2, socketForSlot(afterLanding, 1));
+        assertEquals(RiggingSocket.SIDE_LEFT_1, socketForSlot(afterLanding, 2));
+        assertFalse(RiggingDeckClientState.hidesSideMount(mountForSlot(afterLanding, 1), true));
+        for (int slot : List.of(0, 5)) {
+            assertTrue(RiggingDeckClientState.hidesSideMount(mountForSlot(afterLanding, slot), true));
+            assertFalse(RiggingDeckClientState.hidesSideMount(mountForSlot(afterLanding, slot), false));
+        }
     }
 
     @Test
-    void selectingAircraftDoesNotGiveSpareWeaponTheRightFrontSupport() {
+    void selectingAircraftKeepsAircraftAndSpareCannonInTheirOwnFrontSlots() {
         Inventory inventory = new Inventory(null);
         inventory.items.set(0, new ItemStack(testCannon));
         inventory.items.set(1, new ItemStack(testAircraftA));
@@ -177,13 +176,6 @@ class RiggingLoadoutCodecTest {
         var loadout = RiggingLoadoutResolver.assign(inventory, 0);
         assertEquals(RiggingSocket.SIDE_LEFT_2, socketForSlot(loadout, 0));
         assertEquals(RiggingSocket.DECK_1, socketForSlot(loadout, 5));
-        assertFalse(RiggingDeckClientState.showMainHandSupport(loadout, true));
-
-        inventory.items.set(1, ItemStack.EMPTY);
-        inventory.items.set(5, ItemStack.EMPTY);
-        var noAircraft = RiggingLoadoutResolver.assign(inventory, 0);
-        assertEquals(RiggingSocket.SIDE_RIGHT_2, socketForSlot(noAircraft, 0));
-        assertTrue(RiggingDeckClientState.hidesSideMount(noAircraft, mountForSlot(noAircraft, 0), true));
     }
 
     @Test

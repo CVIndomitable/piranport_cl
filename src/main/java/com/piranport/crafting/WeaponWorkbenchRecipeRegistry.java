@@ -1,5 +1,6 @@
 package com.piranport.crafting;
 
+import com.piranport.PiranPort;
 import com.piranport.combat.cannon.CannonAmmoRules;
 import com.piranport.component.EquipmentTier;
 import com.piranport.registry.ModItems;
@@ -16,42 +17,6 @@ import java.util.List;
 import java.util.Map;
 
 public final class WeaponWorkbenchRecipeRegistry {
-    // 静态初始化按源码顺序执行：下面的 static 块会调用 registerAll，而 registerAll 的飞机循环
-    // 要读 AIRCRAFT_TIERS。AIRCRAFT_TIERS 若声明在 static 块之后，执行到时仍是 null，
-    // 首次触碰本类（例如往蓝图收纳箱放蓝图 → isWorkbenchBlueprint）就会
-    // ExceptionInInitializerError → 之后全部 NoClassDefFoundError（2026-10-25 实测崩溃）。
-    // 因此所有被 registerAll 读取的静态表都必须声明在 static 块之前，新增时同理。
-    /**
-     * 飞机分档（策划决策/数值/09）。表内未列出的机体不生成配方：
-     * 无法合成的三架（女妖、XA2J、空中海盗）、深海敌机、活动涂装与通用占位 {@code xtb2d}。
-     */
-    private static final Map<String, EquipmentTier> AIRCRAFT_TIERS = Map.ofEntries(
-            // 初期
-            Map.entry("petrel_bomber", EquipmentTier.INITIAL),
-            Map.entry("type99_dive_bomber", EquipmentTier.INITIAL),
-            Map.entry("swordfish_torpedo", EquipmentTier.INITIAL),
-            Map.entry("swordfish_asw", EquipmentTier.INITIAL),
-            Map.entry("type0_recon", EquipmentTier.INITIAL),
-            // 标准
-            Map.entry("f4f_wildcat", EquipmentTier.STANDARD),
-            Map.entry("seafire", EquipmentTier.STANDARD),
-            Map.entry("zero_model52", EquipmentTier.STANDARD),
-            Map.entry("sbd_dauntless", EquipmentTier.STANDARD),
-            Map.entry("firefly_as_mk5", EquipmentTier.STANDARD),
-            Map.entry("type97_torpedo", EquipmentTier.STANDARD),
-            Map.entry("c1_recon", EquipmentTier.STANDARD),
-            // 改良
-            Map.entry("f4u_corsair", EquipmentTier.IMPROVED),
-            Map.entry("f6f_hellcat_rocket", EquipmentTier.IMPROVED),
-            Map.entry("suisei_bomber", EquipmentTier.IMPROVED),
-            Map.entry("tenzan_torpedo", EquipmentTier.IMPROVED),
-            Map.entry("tbf_torpedo", EquipmentTier.IMPROVED),
-            Map.entry("tbf_asw", EquipmentTier.IMPROVED),
-            Map.entry("saiun_recon", EquipmentTier.IMPROVED),
-            // 先进
-            Map.entry("seiun_kai_bomber", EquipmentTier.ADVANCED),
-            Map.entry("b25_bomber", EquipmentTier.ADVANCED));
-
     private static final List<WeaponWorkbenchRecipe> ALL_RECIPES;
     private static final Map<Integer, List<WeaponWorkbenchRecipe>> TAB_CACHE;
 
@@ -452,14 +417,10 @@ public final class WeaponWorkbenchRecipeRegistry {
         }
 
         // ===== Tab 4: 飞机 =====
-        // 数值/09：按机种分档，材料随档替换；无蓝图。列表只覆盖已注册且有分档的机体。
-        for (var holder : com.piranport.registry.AircraftItems.AIRCRAFT_ITEMS) {
-            Item airplane = holder.get();
-            String id = BuiltInRegistries.ITEM.getKey(airplane).getPath();
-            EquipmentTier tier = AIRCRAFT_TIERS.get(id);
-            if (tier == null) continue;
-            // 改良/先进机体各要自己的蓝图（数值/09）；初期/标准不查。
-            add(r, 4, airplane, aircraftMaterials(tier), blueprintFor(id, tier), craftTime(200, tier));
+        for (var aircraft : CraftableAircraft.ALL) {
+            Item airplane = BuiltInRegistries.ITEM.getOptional(PiranPort.modId(aircraft.id())).orElseThrow();
+            Item blueprint = aircraft.needsBlueprint() ? WeaponItems.EQUIPMENT_BLUEPRINTS.get(aircraft.id()).get() : null;
+            add(r, 4, airplane, aircraftMaterials(aircraft.tier()), blueprint, craftTime(200, aircraft.tier()));
         }
     }
 }

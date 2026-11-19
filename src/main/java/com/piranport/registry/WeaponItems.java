@@ -1,6 +1,7 @@
 package com.piranport.registry;
 
 import com.piranport.combat.AutoModeState;
+import com.piranport.crafting.CraftableAircraft;
 import com.piranport.item.ShipType;
 
 import com.piranport.component.FuelData;
@@ -545,16 +546,9 @@ public final class WeaponItems {
         registerBlueprint(map, "mk14_harpoon_launcher", EquipmentTier.ADVANCED);
         registerBlueprint(map, "sy1_launcher", EquipmentTier.ADVANCED);
         registerBlueprint(map, "depth_charge_launcher_advanced", EquipmentTier.IMPROVED);
-        // 飞机：只给已注册的改良/先进机体（数值/09 分档表）。
-        registerBlueprint(map, "f4u_corsair", EquipmentTier.IMPROVED);
-        registerBlueprint(map, "f6f_hellcat_rocket", EquipmentTier.IMPROVED);
-        registerBlueprint(map, "suisei_bomber", EquipmentTier.IMPROVED);
-        registerBlueprint(map, "tenzan_torpedo", EquipmentTier.IMPROVED);
-        registerBlueprint(map, "tbf_torpedo", EquipmentTier.IMPROVED);
-        registerBlueprint(map, "tbf_asw", EquipmentTier.IMPROVED);
-        registerBlueprint(map, "saiun_recon", EquipmentTier.IMPROVED);
-        registerBlueprint(map, "seiun_kai_bomber", EquipmentTier.ADVANCED);
-        registerBlueprint(map, "b25_bomber", EquipmentTier.ADVANCED);
+        for (var aircraft : CraftableAircraft.ALL) {
+            if (aircraft.needsBlueprint()) registerBlueprint(map, aircraft.id(), aircraft.tier());
+        }
         // 引擎：改良/先进蓝图进 4-2 奖池（副本/21）。
         registerBlueprint(map, "improved_engine", EquipmentTier.IMPROVED);
         registerBlueprint(map, "advanced_engine", EquipmentTier.ADVANCED);

@@ -1,0 +1,6 @@
+{
+  "parent": "piranport:item/single_small_gun_held",
+  "textures": {
+    "skin": "piranport:item/single_small_gun_mc_loaded"
+  }
+}

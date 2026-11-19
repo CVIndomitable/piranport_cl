@@ -68,6 +68,7 @@ public final class CannonMuzzlePositions {
     /** Tip after the item's FIXED transform, in model pixels (left, up, forward). */
     static Vec3 modelTip(String model, int barrel, MuzzlePos legacy) {
         return switch (model) {
+            case "single_small_gun" -> new Vec3(-1.5, -2, 16);
             case "chinese_twin_140mm_gun" -> new Vec3(barrel == 0 ? 2.25 : -2.25, -3.5, 17.25);
             case "oto_twin_76mm_rapid_gun" -> barrel == 0
                     ? new Vec3(0, -5.13, 19.68) : new Vec3(0, -1.85, 12.30);

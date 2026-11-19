@@ -207,6 +207,8 @@ public class ClientModEvents {
     public static void registerAdditionalModels(ModelEvent.RegisterAdditional event) {
         event.register(Japanese12cmSingleGunRenderer.MODEL_EMPTY);
         event.register(Japanese12cmSingleGunRenderer.MODEL_LOADED);
+        event.register(Japanese12cmSingleGunRenderer.HELD_EMPTY);
+        event.register(Japanese12cmSingleGunRenderer.HELD_LOADED);
         event.register(Japanese127mmTwinGunRenderer.MODEL_EMPTY);
         event.register(Japanese127mmTwinGunRenderer.MODEL_LOADED);
         event.register(GermanTwin203mmGunRenderer.MODEL_EMPTY);

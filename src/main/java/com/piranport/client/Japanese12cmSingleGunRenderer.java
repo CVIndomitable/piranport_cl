@@ -27,12 +27,9 @@ import org.joml.Vector3f;
 /**
  * 日本12厘米单装炮的自定义物品渲染。
  *
- * <p>舰装挂点（FIXED + rigging pass）渲染 models/item/single_small_gun_3d.json 的 3D 炮塔；
- * GUI/手持/掉落物/展示框等上下文直接画 32x32 物品图标。
+ * <p>双手渲染带握把的模型，舰装挂点使用带回转座的模型，其他场合保留 32x32 原图标。
  *
- * <p>WHY：物品模型无法按显示上下文切换模型，只有 BEWLR 能同时做到
- * 「物品栏/手持/展示框是图标、舰装挂点是立体炮塔」。图标不依赖模型 JSON，直接绑定原贴图，
- * 装填/空膛两态在这里按 LOADED_AMMO 组件选择。
+ * <p>展示框与舰装都用 FIXED，需要舰装渲染作用域才能区分。两套模型和图标均保留装填/空膛两态。
  */
 public class Japanese12cmSingleGunRenderer extends BlockEntityWithoutLevelRenderer {
 
@@ -43,13 +40,17 @@ public class Japanese12cmSingleGunRenderer extends BlockEntityWithoutLevelRender
     private static final ResourceLocation ICON_EMPTY = ResourceLocation.fromNamespaceAndPath(
             PiranPort.MOD_ID, "textures/item/single_small_gun_empty.png");
 
-    /** 两份 standalone 3D 模型，在 ModelEvent.RegisterAdditional 里注册烘焙。 */
+    /** 由 ModelEvent.RegisterAdditional 注册烘焙。 */
     public static final ModelResourceLocation MODEL_EMPTY = ModelResourceLocation.standalone(
             ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID,
                     "item/single_small_gun_3d"));
     public static final ModelResourceLocation MODEL_LOADED = ModelResourceLocation.standalone(
             ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID,
                     "item/single_small_gun_3d_loaded"));
+    public static final ModelResourceLocation HELD_EMPTY = ModelResourceLocation.standalone(
+            ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "item/single_small_gun_held"));
+    public static final ModelResourceLocation HELD_LOADED = ModelResourceLocation.standalone(
+            ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "item/single_small_gun_held_loaded"));
 
     public static final IClientItemExtensions CLIENT_EXTENSIONS = new IClientItemExtensions() {
         @Override
@@ -86,12 +87,20 @@ public class Japanese12cmSingleGunRenderer extends BlockEntityWithoutLevelRender
                              int packedLight, int packedOverlay) {
         if (!stack.is(ModItems.SINGLE_SMALL_GUN.get())) return;
 
+        boolean loaded = isLoaded(stack);
         if (displayContext == ItemDisplayContext.FIXED && RiggingRenderContext.isRiggingPass()) {
-            renderGun3D(stack, poseStack, bufferSource, packedLight, packedOverlay);
-        } else {
-            renderFlatIcon(displayContext, isLoaded(stack), poseStack, bufferSource,
-                    packedLight, packedOverlay);
+            if (renderGun3D(loaded ? MODEL_LOADED : MODEL_EMPTY, poseStack, bufferSource, packedLight, packedOverlay)) {
+                return;
+            }
+        } else if (displayContext == ItemDisplayContext.FIRST_PERSON_RIGHT_HAND
+                || displayContext == ItemDisplayContext.FIRST_PERSON_LEFT_HAND
+                || displayContext == ItemDisplayContext.THIRD_PERSON_RIGHT_HAND
+                || displayContext == ItemDisplayContext.THIRD_PERSON_LEFT_HAND) {
+            if (renderGun3D(loaded ? HELD_LOADED : HELD_EMPTY, poseStack, bufferSource, packedLight, packedOverlay)) {
+                return;
+            }
         }
+        renderFlatIcon(displayContext, loaded, poseStack, bufferSource, packedLight, packedOverlay);
     }
 
     private static boolean isLoaded(ItemStack stack) {
@@ -103,13 +112,12 @@ public class Japanese12cmSingleGunRenderer extends BlockEntityWithoutLevelRender
      * 渲染 3D 炮塔。模型是 standalone 注册的，按 LOADED_AMMO 选空膛/装填版本。
      * 坐标空间：物品渲染管线已在 pose 中做过 translate(-0.5)，模型坐标即 0..1。
      */
-    private static void renderGun3D(ItemStack stack, PoseStack poseStack,
-                                    MultiBufferSource bufferSource,
-                                    int packedLight, int packedOverlay) {
+    private static boolean renderGun3D(ModelResourceLocation resource, PoseStack poseStack,
+                                       MultiBufferSource bufferSource,
+                                       int packedLight, int packedOverlay) {
         Minecraft mc = Minecraft.getInstance();
-        BakedModel model = mc.getModelManager().getModel(
-                isLoaded(stack) ? MODEL_LOADED : MODEL_EMPTY);
-        if (model == null || model == mc.getModelManager().getMissingModel()) return;
+        BakedModel model = mc.getModelManager().getModel(resource);
+        if (model == null || model == mc.getModelManager().getMissingModel()) return false;
 
         VertexConsumer consumer = bufferSource.getBuffer(Sheets.translucentItemSheet());
         PoseStack.Pose pose = poseStack.last();
@@ -127,6 +135,7 @@ public class Japanese12cmSingleGunRenderer extends BlockEntityWithoutLevelRender
             consumer.putBulkData(pose, quad, 1.0F, 1.0F, 1.0F, 1.0F,
                     packedLight, packedOverlay);
         }
+        return true;
     }
 
     /**

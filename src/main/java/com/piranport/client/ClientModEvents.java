@@ -88,9 +88,6 @@ public class ClientModEvents {
             "us_twin_20inch_gun", ModItems.US_TWIN_20INCH_GUN);
 
     /** 2026-10-25 批次：中口径主炮的手持 3D 模型，统一走 CatalogGunRenderer。 */
-    private static final CatalogGunRenderer.Spec DE_SINGLE_127 =
-            CatalogGunRenderer.spec("german_single_127mm_gun",
-                    WeaponItems.CATALOG_GUNS.get("german_single_127mm_gun"));
     private static final CatalogGunRenderer.Spec US_SINGLE_5IN =
             CatalogGunRenderer.spec("us_single_5inch_gun",
                     WeaponItems.CATALOG_GUNS.get("us_single_5inch_gun"));
@@ -373,6 +370,10 @@ public class ClientModEvents {
                     (stack, level, entity, seed) -> com.piranport.client.gecko.RiggingRenderContext.isRiggingPass()
                             ? 1.0f : 0.0f);
             ItemProperties.register(WeaponItems.CATALOG_GUNS.get("british_twin_3inch_rapid_gun").get(),
+                    ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "rigging_mount"),
+                    (stack, level, entity, seed) -> com.piranport.client.gecko.RiggingRenderContext.isRiggingPass()
+                            ? 1.0f : 0.0f);
+            ItemProperties.register(WeaponItems.CATALOG_GUNS.get("german_single_127mm_gun").get(),
                     ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "rigging_mount"),
                     (stack, level, entity, seed) -> com.piranport.client.gecko.RiggingRenderContext.isRiggingPass()
                             ? 1.0f : 0.0f);

@@ -352,7 +352,6 @@ public class ModItems {
     public static final DeferredItem<ModFoodItem> PASTA = FoodItems.PASTA;
     public static final DeferredItem<ModFoodItem> COOKED_RICE = FoodItems.COOKED_RICE;
     public static final DeferredItem<ModFoodItem> BEET_BLOSSOM = FoodItems.BEET_BLOSSOM;
-    public static final DeferredItem<ModFoodItem> MISO_SOUP = FoodItems.MISO_SOUP;
     public static final DeferredItem<ModFoodItem> BARBECUE = FoodItems.BARBECUE;
     public static final DeferredItem<ModFoodItem> BLACK_FOREST_GATEAU = FoodItems.BLACK_FOREST_GATEAU;
     public static final DeferredItem<ModFoodItem> BLACK_TEA_SANDWICH = FoodItems.BLACK_TEA_SANDWICH;

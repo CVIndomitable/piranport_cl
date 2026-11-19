@@ -197,11 +197,6 @@ public final class FoodItems {
                             .build())
                     .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("bowl", 1))));
 
-    public static final DeferredItem<ModFoodItem> MISO_SOUP = ITEMS.register("miso_soup",
-            () -> new ModFoodItem(new Item.Properties()
-                    .food(fp(6, 7.5f).build())
-                    .component(ModDataComponents.PLACEABLE_INFO.get(), new PlaceableInfo("bowl", 2))));
-
     public static final DeferredItem<ModFoodItem> BARBECUE = ITEMS.register("barbecue",
             () -> new ModFoodItem(new Item.Properties()
                     .food(fp(5, 6f).build())

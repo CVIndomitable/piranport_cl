@@ -115,6 +115,12 @@ public class PlaceableFoodBlockEntity extends BlockEntity {
             }
         }
 
+        takeServing();
+    }
+
+    /** 直接食用和用碗分装共用同一份余量；仅直接食用时结算食物效果。 */
+    public boolean takeServing() {
+        if (level == null || level.isClientSide || remainingServings <= 0) return false;
         remainingServings--;
         if (remainingServings <= 0) {
             // 容器回收：碗装食物吃完掉碗；鱼雷果汁的玻璃杯吃完掉玻璃瓶（与手持食用一致）
@@ -128,6 +134,7 @@ public class PlaceableFoodBlockEntity extends BlockEntity {
             setChanged();
             level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
         }
+        return true;
     }
 
     @Nullable

@@ -2,9 +2,15 @@ package com.piranport.block;
 
 import com.mojang.serialization.MapCodec;
 import com.piranport.block.entity.PlaceableFoodBlockEntity;
+import com.piranport.registry.ModItems;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.ItemUtils;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseEntityBlock;
@@ -366,6 +372,27 @@ public class PlaceableFoodBlock extends BaseEntityBlock {
         public static final MapCodec<RoyalNavalSaltedBeef> CODEC = simpleCodec(RoyalNavalSaltedBeef::new);
         @Override public MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }
         public RoyalNavalSaltedBeef(BlockBehaviour.Properties props) { super(Block.box(1.5, 0, 1.5, 14.5, 11.5, 14.5), props); }
+
+        @Override
+        protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos,
+                                                  Player player, InteractionHand hand, BlockHitResult hit) {
+            if (!stack.is(Items.BOWL)) {
+                // 主手默认会先吃掉一份；空主手时让副手的碗先分装。
+                if (hand == InteractionHand.MAIN_HAND && stack.isEmpty() && player.getOffhandItem().is(Items.BOWL)) {
+                    return ItemInteractionResult.SKIP_DEFAULT_BLOCK_INTERACTION;
+                }
+                return super.useItemOn(stack, state, level, pos, player, hand, hit);
+            }
+            if (!(level.getBlockEntity(pos) instanceof PlaceableFoodBlockEntity food) || food.isEmpty()) {
+                return ItemInteractionResult.FAIL;
+            }
+            if (!level.isClientSide) {
+                if (!food.takeServing()) return ItemInteractionResult.FAIL;
+                ItemStack plated = new ItemStack(ModItems.PLATED_ROYAL_NAVAL_SALTED_BEEF.get());
+                player.setItemInHand(hand, ItemUtils.createFilledResult(stack, player, plated, false));
+            }
+            return ItemInteractionResult.sidedSuccess(level.isClientSide);
+        }
     }
 
     /**

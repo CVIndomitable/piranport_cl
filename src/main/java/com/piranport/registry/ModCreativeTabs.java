@@ -367,7 +367,6 @@ public class ModCreativeTabs {
                         output.accept(ModItems.LATIAO.get());
                         output.accept(ModItems.YOKAN.get());
                         // --- 菜品：日式 ---
-                        output.accept(ModItems.MISO_SOUP.get());
                         output.accept(ModItems.FRIED_FISH_MISO_SOUP.get());
                         output.accept(ModItems.CHICKEN_TATSUTA.get());
                         output.accept(ModItems.TEMPURA.get());

@@ -1,0 +1,9 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {"item": "minecraft:porkchop"},
+    {"item": "minecraft:beef"},
+    {"tag": "c:dusts/salt"}
+  ],
+  "result": {"id": "piranport:salami", "count": 1}
+}

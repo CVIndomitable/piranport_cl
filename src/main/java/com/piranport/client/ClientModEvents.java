@@ -376,6 +376,10 @@ public class ClientModEvents {
                     ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "rigging_mount"),
                     (stack, level, entity, seed) -> com.piranport.client.gecko.RiggingRenderContext.isRiggingPass()
                             ? 1.0f : 0.0f);
+            ItemProperties.register(WeaponItems.CATALOG_GUNS.get("british_twin_3inch_rapid_gun").get(),
+                    ResourceLocation.fromNamespaceAndPath(PiranPort.MOD_ID, "rigging_mount"),
+                    (stack, level, entity, seed) -> com.piranport.client.gecko.RiggingRenderContext.isRiggingPass()
+                            ? 1.0f : 0.0f);
         });
     }
 

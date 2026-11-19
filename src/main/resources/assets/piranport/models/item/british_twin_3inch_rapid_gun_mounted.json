@@ -1,0 +1,17 @@
+{
+  "parent": "piranport:item/british_twin_3inch_rapid_gun_held",
+  "display": {
+    "fixed": {
+      "translation": [
+        0,
+        -8,
+        0
+      ],
+      "scale": [
+        0.82,
+        0.82,
+        0.82
+      ]
+    }
+  }
+}

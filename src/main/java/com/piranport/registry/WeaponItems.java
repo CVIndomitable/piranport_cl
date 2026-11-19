@@ -552,6 +552,8 @@ public final class WeaponItems {
         // 引擎：改良/先进蓝图进 4-2 奖池（副本/21）。
         registerBlueprint(map, "improved_engine", EquipmentTier.IMPROVED);
         registerBlueprint(map, "advanced_engine", EquipmentTier.ADVANCED);
+        registerBlueprint(map, "improved_sonar", EquipmentTier.IMPROVED);
+        registerBlueprint(map, "advanced_sonar", EquipmentTier.ADVANCED);
         return java.util.Collections.unmodifiableMap(map);
     }
 

@@ -385,7 +385,7 @@ public final class WeaponWorkbenchRecipeRegistry {
                 new ItemStack(Items.COMPARATOR, 1)),
                 blueprintFor("advanced_fire_control_radar", EquipmentTier.ADVANCED), 400);
 
-        // 标准型声呐：4-2 起可合成、不查蓝图（副本/21）。数值/09 未给材料，首轮取铁/铜/红石/比较器。
+        // 标准型声呐按 4-2 进度解锁（副本/21），不需要蓝图。
         add(r, 5, ModItems.STANDARD_SONAR.get(), List.of(
                 new ItemStack(Items.IRON_INGOT, 8),
                 new ItemStack(Items.COPPER_INGOT, 4),
@@ -415,6 +415,22 @@ public final class WeaponWorkbenchRecipeRegistry {
             String gate = (tier == EquipmentTier.INITIAL || tier == EquipmentTier.STANDARD) ? "2-1" : null;
             add(r, 5, ciws, ciwsMaterials(tier), blueprintFor(id, tier), craftTime(100, tier), gate);
         }
+
+        // 装备页按下标存档；新增声纳追加在近防炮之后，保留旧配方的位置。
+        add(r, 5, ModItems.IMPROVED_SONAR.get(), List.of(
+                new ItemStack(Items.IRON_INGOT, 8),
+                new ItemStack(Items.COPPER_INGOT, 4),
+                new ItemStack(Items.COMPARATOR),
+                new ItemStack(Items.PRISMARINE_CRYSTALS, 4),
+                new ItemStack(Items.DIAMOND)),
+                WeaponItems.EQUIPMENT_BLUEPRINTS.get("improved_sonar").get(), 300);
+        add(r, 5, ModItems.ADVANCED_SONAR.get(), List.of(
+                new ItemStack(Items.IRON_INGOT, 8),
+                new ItemStack(Items.COPPER_INGOT, 4),
+                new ItemStack(Items.COMPARATOR),
+                new ItemStack(Items.CONDUIT),
+                new ItemStack(Items.NETHERITE_SCRAP, 2)),
+                WeaponItems.EQUIPMENT_BLUEPRINTS.get("advanced_sonar").get(), 400);
 
         // ===== Tab 4: 飞机 =====
         for (var aircraft : CraftableAircraft.ALL) {

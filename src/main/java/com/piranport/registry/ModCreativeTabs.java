@@ -152,7 +152,7 @@ public class ModCreativeTabs {
                         output.accept(ModItems.BOFORS_M1951_TWIN_57MM.get());
                         output.accept(ModItems.ZIF75_QUAD_57MM.get());
                         output.accept(ModItems.US_TWIN_3INCH_AA.get());
-                        // Sonar — 三档声呐统一放这里；改进型=6-1 关卡奖励，先进型=7-1 关卡奖励
+                        // 三档声纳；6-1、7-1 奖励池投放对应专属蓝图。
                         output.accept(ModItems.STANDARD_SONAR.get());
                         output.accept(ModItems.IMPROVED_SONAR.get());
                         output.accept(ModItems.ADVANCED_SONAR.get());

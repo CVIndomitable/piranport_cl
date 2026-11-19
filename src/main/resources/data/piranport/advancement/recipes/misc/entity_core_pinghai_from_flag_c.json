@@ -1,0 +1,15 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_flag_c": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {"items": [{"items": "piranport:flag_c"}]}
+    },
+    "has_the_recipe": {
+      "trigger": "minecraft:recipe_unlocked",
+      "conditions": {"recipe": "piranport:entity_core_pinghai_from_flag_c"}
+    }
+  },
+  "requirements": [["has_flag_c", "has_the_recipe"]],
+  "rewards": {"recipes": ["piranport:entity_core_pinghai_from_flag_c"]}
+}

@@ -7,6 +7,10 @@
     {
       "type": "patchouli:text",
       "text": "piranport.book.intro.skins.p1"
+    },
+    {
+      "type": "patchouli:crafting",
+      "recipe": "piranport:entity_core_pinghai_from_flag_c"
     }
   ]
 }

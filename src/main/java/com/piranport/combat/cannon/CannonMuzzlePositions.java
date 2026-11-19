@@ -71,6 +71,7 @@ public final class CannonMuzzlePositions {
             case "chinese_twin_140mm_gun" -> new Vec3(barrel == 0 ? 2.25 : -2.25, -3.5, 17.25);
             case "oto_twin_76mm_rapid_gun" -> barrel == 0
                     ? new Vec3(0, -5.13, 19.68) : new Vec3(0, -1.85, 12.30);
+            case "type79_twin_100mm_gun" -> new Vec3(barrel == 0 ? 2 : -2, 1, 17);
             // The modeled barrels are elevated; measure the tip after the element rotation and FIXED.
             case "type79b_twin_100mm_gun" -> new Vec3(barrel == 0 ? 1.6564 : -1.6564, 4.832, 18.3171);
             case "british_triple_6inch_gun" -> new Vec3(1.8 * (1 - barrel), -5.05, 16.5);

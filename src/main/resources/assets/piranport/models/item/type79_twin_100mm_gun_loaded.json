@@ -1,6 +1,27 @@
 {
-  "parent": "minecraft:item/generated",
+  "loader": "neoforge:separate_transforms",
+  "gui_light": "front",
   "textures": {
-    "layer0": "piranport:item/type79_twin_100mm_gun"
+    "particle": "piranport:item/type79_twin_100mm_gun"
+  },
+  "base": {
+    "parent": "minecraft:item/generated",
+    "textures": {
+      "layer0": "piranport:item/type79_twin_100mm_gun"
+    }
+  },
+  "perspectives": {
+    "firstperson_righthand": {
+      "parent": "piranport:item/type79_twin_100mm_gun_held"
+    },
+    "thirdperson_righthand": {
+      "parent": "piranport:item/type79_twin_100mm_gun_held"
+    },
+    "firstperson_lefthand": {
+      "parent": "piranport:item/type79_twin_100mm_gun_held"
+    },
+    "thirdperson_lefthand": {
+      "parent": "piranport:item/type79_twin_100mm_gun_held"
+    }
   }
 }

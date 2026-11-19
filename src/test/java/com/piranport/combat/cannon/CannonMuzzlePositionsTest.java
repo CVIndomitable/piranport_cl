@@ -40,6 +40,13 @@ class CannonMuzzlePositionsTest {
     }
 
     @Test
+    void type79UsesTheNewMountedBarrelTips() {
+        var legacy = new MuzzlePos(0.15, 0.2, 0);
+        assertEquals(new Vec3(2, 1, 17), CannonMuzzlePositions.modelTip("type79_twin_100mm_gun", 0, legacy));
+        assertEquals(new Vec3(-2, 1, 17), CannonMuzzlePositions.modelTip("type79_twin_100mm_gun", 1, legacy));
+    }
+
+    @Test
     void obstructedMuzzleStaysOnShootersSideOfWall() {
         Vec3 eye = new Vec3(0, 2, 0);
         assertEquals(new Vec3(0, 2, 0.45), CannonMuzzlePositions.beforeObstruction(eye, eye.add(0, 0, 0.50)));

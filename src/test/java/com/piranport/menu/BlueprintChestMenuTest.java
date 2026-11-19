@@ -289,6 +289,34 @@ class BlueprintChestMenuTest {
     }
 
     @Test
+    void frenchQuad380RequiresItsOwnBlueprintAndImprovedLargeGunMaterials() {
+        var recipes = WeaponWorkbenchRecipeRegistry.getRecipesForTab(0);
+        var matches = recipes.stream().filter(r -> r.result() == ModItems.FRENCH_QUAD_380MM_GUN.get()).toList();
+        assertEquals(1, matches.size());
+        var recipe = matches.getFirst();
+        assertEquals(600, recipe.craftingTime());
+        assertTrue(WeaponWorkbenchRecipeRegistry.unlocked(recipe, 0));
+
+        var bench = new WeaponWorkbenchBlockEntity(BlockPos.ZERO, ModBlocks.WEAPON_WORKBENCH.get().defaultBlockState());
+        bench.setSelectedTab(0);
+        bench.setSelectedRecipe(recipes.indexOf(recipe));
+        var slots = bench.getItemHandler();
+        int first = WeaponWorkbenchBlockEntity.MATERIAL_START;
+        slots.setStackInSlot(first, new ItemStack(Items.IRON_INGOT, 28));
+        slots.setStackInSlot(first + 1, new ItemStack(ModItems.ALUMINUM_INGOT.get(), 12));
+        slots.setStackInSlot(first + 2, new ItemStack(Items.DIAMOND, 2));
+        assertFalse(bench.startCrafting());
+        var blueprints = com.piranport.registry.WeaponItems.EQUIPMENT_BLUEPRINTS;
+        slots.setStackInSlot(WeaponWorkbenchBlockEntity.BLUEPRINT_SLOT, blueprints.get("italian_triple_381mm_gun").get().getDefaultInstance());
+        assertFalse(bench.startCrafting());
+        slots.setStackInSlot(WeaponWorkbenchBlockEntity.BLUEPRINT_SLOT, blueprints.get("french_quad_380mm_gun").get().getDefaultInstance());
+        slots.setStackInSlot(first + 2, new ItemStack(Items.DIAMOND));
+        assertFalse(bench.startCrafting());
+        slots.setStackInSlot(first + 2, new ItemStack(Items.DIAMOND, 2));
+        assertTrue(bench.startCrafting());
+    }
+
+    @Test
     void sonarCraftingRequiresTheMatchingBlueprintAndAllMaterials() {
         var recipes = WeaponWorkbenchRecipeRegistry.getRecipesForTab(5);
         for (boolean advanced : List.of(false, true)) {

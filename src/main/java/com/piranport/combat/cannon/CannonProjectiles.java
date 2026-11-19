@@ -69,7 +69,8 @@ final class CannonProjectiles {
             for (int barrel = 0; barrel < result.shots(); barrel++) {
                 Vec3 spawn = shots.get(barrel).request().spawnPosition();
                 Vec3 flame = spawn.add(player.getLookAngle().scale(.3));
-                serverLevel.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, flame.x, flame.y, flame.z, 3, .2, .2, .2, .05);
+                serverLevel.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, flame.x, flame.y, flame.z,
+                        smallCaliber ? 1 : 3, .2, .2, .2, .05);
                 if (emitSmoke) {
                     serverLevel.sendParticles(ParticleTypes.CLOUD, flame.x, flame.y, flame.z,
                             smallCaliber ? 1 : 2, .3, .15, .3, .01);

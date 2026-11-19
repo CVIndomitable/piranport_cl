@@ -14,6 +14,10 @@
     },
     {
       "type": "patchouli:text",
+      "text": "piranport.book.equipment.armor_reload_recipes"
+    },
+    {
+      "type": "patchouli:text",
       "text": "piranport.book.advanced.equipment.p3"
     },
     {

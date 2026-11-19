@@ -439,6 +439,22 @@ public final class WeaponWorkbenchRecipeRegistry {
                 new ItemStack(ModItems.FUEL.get(), 2),
                 new ItemStack(Items.DIAMOND)), null, 200);
 
+        add(r, 5, ModItems.SMALL_ARMOR_PLATE.get(), List.of(
+                new ItemStack(Items.IRON_INGOT, 6),
+                new ItemStack(Items.COPPER_INGOT, 2)), null, 120);
+        add(r, 5, ModItems.MEDIUM_ARMOR_PLATE.get(), List.of(
+                new ItemStack(Items.IRON_INGOT, 12),
+                new ItemStack(ModItems.ALUMINUM_INGOT.get(), 4)), null, 200);
+        add(r, 5, ModItems.LARGE_ARMOR_PLATE.get(), List.of(
+                new ItemStack(Items.IRON_INGOT, 18),
+                new ItemStack(ModItems.ALUMINUM_INGOT.get(), 6),
+                new ItemStack(Items.DIAMOND)), null, 300);
+        add(r, 5, ModItems.TORPEDO_RELOAD.get(), List.of(
+                new ItemStack(Items.IRON_INGOT, 8),
+                new ItemStack(Items.PISTON, 2),
+                new ItemStack(Items.HOPPER),
+                new ItemStack(Items.REDSTONE, 4)), null, 240);
+
         // ===== Tab 4: 飞机 =====
         for (var aircraft : CraftableAircraft.ALL) {
             Item airplane = BuiltInRegistries.ITEM.getOptional(PiranPort.modId(aircraft.id())).orElseThrow();

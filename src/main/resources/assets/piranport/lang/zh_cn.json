@@ -2155,6 +2155,7 @@
   "piranport.book.dungeon.rewards.p3": "$(bold)活动关卡：$()「活动 金猫猫打靶练习」是独立活动章，Boss 金猫猫是几乎不还手的移动靶（战列舰外观），通关发经验炮弹与吐司面包。$(br2)主线共七章 30 关：第五、七章各 5 关，其余各 4 关；难度按章递增。",
   "piranport.book.dungeon.rewards.p4": "$(bold)失败与重试：$()歼灭不设失败条件。阵亡可用不死图腾复活，或回到书台再从记录点返回；副本内敌人、宝箱与进度不因离开而重置。$(item)回城卷轴$()可提前退出副本回到遗迹。$(br2)副本死亡不惩罚是核心定位——代价只有跑图时间。",
   "piranport.book.equipment.armor_engine": "装甲与引擎",
+  "piranport.book.equipment.armor_reload_recipes": "$(bold)制造强化件$()$(br)武器制造台 → 装备，无需蓝图。$(br2)$(item)小型附加装甲$()：铁锭 ×6、铜锭 ×2。$(br)$(item)中型附加装甲$()：铁锭 ×12、铝锭 ×4。$(br)$(item)大型附加装甲$()：铁锭 ×18、铝锭 ×6、钻石 ×1。$(br2)$(item)鱼雷再装填$()：铁锭 ×8、活塞 ×2、漏斗 ×1、红石粉 ×4。",
   "piranport.book.equipment.engine_sources": "$(bold)柴油机$()$(br)在武器制造台的「装备」页放入铁锭 ×8、铜锭 ×4、活塞 ×2、燃料桶 ×2、钻石 ×1。无需蓝图，10 秒制成 1 台。$(br2)$(bold)高温高压锅炉$()$(br)通关 3-4「全线增援」时，在 Boss 节点的玩家每人获得 1 个，重打照发。",
   "piranport.book.equipment.equipment_gui": "装备方式",
   "piranport.book.equipment.special": "特殊装备",

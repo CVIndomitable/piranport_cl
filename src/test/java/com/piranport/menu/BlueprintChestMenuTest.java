@@ -319,6 +319,32 @@ class BlueprintChestMenuTest {
         }
     }
 
+    @Test
+    void armorAndReloadCanStartWithOnlySurvivalMaterials() {
+        var recipes = WeaponWorkbenchRecipeRegistry.getRecipesForTab(5);
+        for (var item : List.of(ModItems.SMALL_ARMOR_PLATE.get(), ModItems.MEDIUM_ARMOR_PLATE.get(),
+                ModItems.LARGE_ARMOR_PLATE.get(), ModItems.TORPEDO_RELOAD.get())) {
+            var matches = recipes.stream().filter(r -> r.result() == item).toList();
+            assertEquals(1, matches.size());
+            var recipe = matches.getFirst();
+            assertTrue(WeaponWorkbenchRecipeRegistry.unlocked(recipe, 0));
+            assertEquals(1, recipe.getResultStack().getCount());
+            var bench = new WeaponWorkbenchBlockEntity(BlockPos.ZERO, ModBlocks.WEAPON_WORKBENCH.get().defaultBlockState());
+            bench.setSelectedTab(5);
+            bench.setSelectedRecipe(recipes.indexOf(recipe));
+            var inputs = recipe.materials();
+            for (int i = 0; i < inputs.size() - 1; i++) {
+                bench.getItemHandler().setStackInSlot(WeaponWorkbenchBlockEntity.MATERIAL_START + i, inputs.get(i).copy());
+            }
+            int lastSlot = WeaponWorkbenchBlockEntity.MATERIAL_START + inputs.size() - 1;
+            ItemStack last = inputs.getLast();
+            bench.getItemHandler().setStackInSlot(lastSlot, last.copyWithCount(last.getCount() - 1));
+            assertFalse(bench.startCrafting());
+            bench.getItemHandler().setStackInSlot(lastSlot, last.copy());
+            assertTrue(bench.startCrafting());
+        }
+    }
+
     /** 同一种蓝图不允许放进第二个格子（策划决策 资源/01）。 */
     @Test
     void duplicateBlueprintIsRejectedByHandler() {

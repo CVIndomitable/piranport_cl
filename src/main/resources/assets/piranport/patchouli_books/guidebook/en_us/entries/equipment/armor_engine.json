@@ -10,6 +10,10 @@
     },
     {
       "type": "patchouli:text",
+      "text": "piranport.book.equipment.armor_reload_recipes"
+    },
+    {
+      "type": "patchouli:text",
       "text": "$(bold)Engines$()$(br2)Engine upgrades improve your movement speed and agility.$(br2)$(bold)Effects:$()$(br)• Increased movement speed$(br)• Better evasion capability$(br)• Reduced weight penalty$(br2)$(bold)Tip:$() Combine armor and engines for balanced performance!"
     },
     {

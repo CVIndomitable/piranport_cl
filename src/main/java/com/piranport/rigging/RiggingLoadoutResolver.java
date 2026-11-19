@@ -106,6 +106,18 @@ public final class RiggingLoadoutResolver {
                     candidate.slot() == selectedSlot ? -1 : candidate.slot()));
         }
 
+        // 主手飞机固定停在甲板前方（DECK_1）。放飞视觉从该机位交接到真实实体，
+        // 如果主手飞机落到后方机位，飞机会先穿过甲板/舰装再进入放飞轨迹。
+        // 只调整飞机之间的分配顺序，不改变其它类别按快捷栏顺序分配的规则。
+        List<Candidate> aircraftCandidates = candidates.stream()
+                .filter(candidate -> candidate.category() == RiggingCategory.AIRCRAFT)
+                .toList();
+        if (selectedCategory == RiggingCategory.AIRCRAFT && aircraftCandidates.size() > 1) {
+            aircraftCandidates = new ArrayList<>(aircraftCandidates);
+            aircraftCandidates.sort(Comparator.comparingInt(candidate ->
+                    candidate.slot() == selectedSlot ? -1 : candidate.slot()));
+        }
+
         List<RiggingSocket> sideOrder = sideSockets(hasAircraft);
         List<RiggingMount> mounts = new ArrayList<>();
         int waist = 0;
@@ -125,7 +137,13 @@ public final class RiggingLoadoutResolver {
                         : null;
             };
             if (socket != null) {
-                mounts.add(new RiggingMount(socket, candidate.category(), candidate.stack(), candidate.slot()));
+                Candidate mountCandidate = candidate;
+                if (candidate.category() == RiggingCategory.AIRCRAFT
+                        && selectedCategory == RiggingCategory.AIRCRAFT) {
+                    mountCandidate = aircraftCandidates.get(deck - 1);
+                }
+                mounts.add(new RiggingMount(socket, mountCandidate.category(), mountCandidate.stack(),
+                        mountCandidate.slot()));
             }
         }
 

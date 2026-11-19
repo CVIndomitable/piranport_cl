@@ -1,11 +1,17 @@
 package com.piranport.rigging;
 
+import com.piranport.item.AircraftItem;
 import io.netty.buffer.Unpooled;
 import net.minecraft.SharedConstants;
+import net.minecraft.core.MappedRegistry;
+import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.Bootstrap;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import org.junit.jupiter.api.BeforeAll;
@@ -32,6 +38,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class RiggingLoadoutCodecTest {
 
     private static boolean bootstrapped;
+    private static AircraftItem testAircraftA;
+    private static AircraftItem testAircraftB;
 
     @BeforeAll
     static void bootstrap() {
@@ -44,6 +52,15 @@ class RiggingLoadoutCodecTest {
         net.neoforged.fml.loading.LoadingModList.of(
                 List.of(), List.of(), List.of(), List.of(), Map.of());
         Bootstrap.bootStrap();
+        if (BuiltInRegistries.ITEM instanceof MappedRegistry<?> mapped) {
+            mapped.unfreeze();
+        }
+        testAircraftA = Registry.register(BuiltInRegistries.ITEM,
+                ResourceLocation.fromNamespaceAndPath("piranport_test", "aircraft_a"),
+                new AircraftItem(new Item.Properties()));
+        testAircraftB = Registry.register(BuiltInRegistries.ITEM,
+                ResourceLocation.fromNamespaceAndPath("piranport_test", "aircraft_b"),
+                new AircraftItem(new Item.Properties()));
         // 纯 JUnit 环境没有 NeoForge 的注册表同步阶段，item 注册表默认 doesSync=false，
         // ItemStack.STREAM_CODEC 会拒绝按 ID 编解码。这里只给测试 JVM 打上同步标记。
         markItemRegistrySynced();
@@ -85,6 +102,30 @@ class RiggingLoadoutCodecTest {
         assertFalse(landed.hasAircraft());
         assertEquals(RiggingLoadout.HULL_DEFAULT, landed.hullProfile());
         assertEquals(landed.hasAircraft(), RiggingLoadoutResolver.assign(inventory, 0).hasAircraft());
+    }
+
+    @Test
+    void selectedAircraftUsesForwardDeckSlot() {
+        Inventory inventory = new Inventory(null);
+        ItemStack rearAircraft = new ItemStack(testAircraftA);
+        ItemStack selectedAircraft = new ItemStack(testAircraftB);
+        inventory.items.set(2, rearAircraft);
+        inventory.items.set(5, selectedAircraft);
+        inventory.selected = 5;
+
+        RiggingLoadout loadout = RiggingLoadoutResolver.assign(inventory, 0);
+
+        assertEquals(RiggingSocket.DECK_1, socketForSlot(loadout, 5),
+                "主手飞机必须使用甲板前方机位，放飞交接才不会穿过舰装");
+        assertEquals(RiggingSocket.DECK_2, socketForSlot(loadout, 2));
+    }
+
+    private static RiggingSocket socketForSlot(RiggingLoadout loadout, int sourceSlot) {
+        return loadout.mounts().stream()
+                .filter(mount -> mount.sourceSlot() == sourceSlot)
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("missing aircraft mount for slot " + sourceSlot))
+                .socket();
     }
 
     @Test

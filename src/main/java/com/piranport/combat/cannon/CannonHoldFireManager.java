@@ -3,6 +3,8 @@ package com.piranport.combat.cannon;
 import com.piranport.PiranPort;
 import com.piranport.artillery.ArtilleryItem;
 import com.piranport.combat.TransformationManager;
+import com.piranport.combat.cannon.CannonHoldCadence.ShotResult;
+import com.piranport.combat.data.WeaponState;
 import com.piranport.component.LoadedAmmo;
 import com.piranport.registry.ModDataComponents;
 import net.minecraft.server.level.ServerPlayer;
@@ -48,7 +50,7 @@ public final class CannonHoldFireManager {
                 || TransformationManager.findTransformedCore(player).isEmpty()) return;
         Session session = new Session(player, cannon, target);
         SESSIONS.put(player.getUUID(), session);
-        if (!fireOne(player, session)) session.cadence.stop();
+        session.cadence.onAttempt(session.lastUpdate, fireOne(player, session));
     }
 
     public static void update(ServerPlayer player, Vec3 target) {
@@ -74,21 +76,32 @@ public final class CannonHoldFireManager {
                 && !TransformationManager.findTransformedCore(player).isEmpty();
     }
 
-    private static boolean fireOne(ServerPlayer player, Session session) {
+    private static ShotResult fireOne(ServerPlayer player, Session session) {
         ItemStack core = TransformationManager.findTransformedCore(player);
         int[] slot = session.lastFiredSlot < 0
                 ? CannonInventory.findBestArtillerySlot(player, player.getMainHandItem().getItem(), core)
                 : CannonInventory.findNextArtillerySlot(player, player.getMainHandItem().getItem(), session.lastFiredSlot);
-        if (slot == null || slot[1] == -1) return false;
+        if (slot == null) return canWaitForSingleCannonReload(player)
+                ? ShotResult.WAITING_FOR_RELOAD : ShotResult.UNAVAILABLE;
+        if (slot[1] == -1) return ShotResult.UNAVAILABLE;
         ItemStack weapon = CannonInventory.weaponAt(player.getInventory(), slot[0]);
         LoadedAmmo before = weapon.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
         CannonAim aim = session.target == null ? new CannonAim.MaxRange() : new CannonAim.Aimed(session.target);
         CannonFiring.fireLoadedCannon(player.serverLevel(), player, core, player.getInventory(),
                 slot[0], slot[1], weapon, aim);
         LoadedAmmo after = weapon.getOrDefault(ModDataComponents.LOADED_AMMO.get(), LoadedAmmo.EMPTY);
-        if (after.count() >= before.count()) return false;
+        if (after.count() >= before.count()) return ShotResult.UNAVAILABLE;
         session.lastFiredSlot = slot[0];
-        return true;
+        return ShotResult.FIRED;
+    }
+
+    private static boolean canWaitForSingleCannonReload(ServerPlayer player) {
+        ItemStack held = player.getMainHandItem();
+        if (CannonInventory.hasOtherCannonOfType(player.getInventory(), held.getItem())
+                || CannonStats.isCannonDamaged(held, player.serverLevel())) return false;
+        // After a zero-interval shot the auto-reload tick may not have started the timer yet.
+        return new WeaponState(held).isOnCooldown(player.serverLevel().getGameTime())
+                || CannonReloading.previewNextReloadAmmo(player, held) != null;
     }
 
     @SubscribeEvent
@@ -108,11 +121,7 @@ public final class CannonHoldFireManager {
             // Zero interval can fire all currently ready guns in this tick, bounded by inventory size.
             int limit = session.cadence.simultaneous() ? player.getInventory().items.size() + 1 : 1;
             for (int i = 0; i < limit; i++) {
-                if (!fireOne(player, session)) {
-                    session.cadence.stop();
-                    break;
-                }
-                session.cadence.fired(now);
+                if (!session.cadence.onAttempt(now, fireOne(player, session))) break;
             }
         }
     }

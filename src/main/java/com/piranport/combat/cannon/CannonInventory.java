@@ -42,6 +42,13 @@ public final class CannonInventory {
         return findReadyArtillerySlot(player, weaponType, previousSlot);
     }
 
+    static boolean hasOtherCannonOfType(Inventory inventory, Item weaponType) {
+        for (int slot = 0; slot < inventory.items.size(); slot++) {
+            if (slot != inventory.selected && inventory.items.get(slot).is(weaponType)) return true;
+        }
+        return inventory.offhand.get(0).is(weaponType);
+    }
+
     private static int[] findReadyArtillerySlot(Player player, Item weaponType, int previousSlot) {
         Inventory inv = player.getInventory();
         long now = player.level().getGameTime();

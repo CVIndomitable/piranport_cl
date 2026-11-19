@@ -10,7 +10,7 @@
     },
     {
       "type": "patchouli:text",
-      "text": "$(bold)Controls:$()$(br)• Hold right-click: Aim$(br)• Mouse: Adjust aim$(br)• Scroll wheel: Adjust zoom level$(br)• Tap left-click: Fire one ready cannon, preferring the held cannon$(br)• Hold left-click: Fire ready cannons of the same type at salvo intervals$(br)• Release to stop firing"
+      "text": "$(bold)Controls:$()$(br)• Hold right-click: Aim$(br)• Mouse: Adjust aim$(br)• Scroll wheel: Adjust zoom level$(br)• Tap left-click: Fire one ready cannon, preferring the held cannon$(br)• Hold left-click: Cycle matching cannons, or fire a lone cannon again after each reload$(br)• Release to stop firing"
     }
   ]
 }

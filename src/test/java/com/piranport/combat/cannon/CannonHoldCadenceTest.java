@@ -1,6 +1,10 @@
 package com.piranport.combat.cannon;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+
+import static com.piranport.combat.cannon.CannonHoldCadence.ShotResult.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class CannonHoldCadenceTest {
@@ -11,7 +15,7 @@ class CannonHoldCadenceTest {
         cadence.confirmHold();
         assertFalse(cadence.canFire(102));
         assertTrue(cadence.canFire(103));
-        cadence.fired(103);
+        assertTrue(cadence.onAttempt(103, FIRED));
         assertFalse(cadence.canFire(105));
         assertTrue(cadence.canFire(106));
     }
@@ -29,11 +33,42 @@ class CannonHoldCadenceTest {
         assertThrows(IllegalArgumentException.class, () -> new CannonHoldCadence(0, Float.NaN));
     }
 
+    @ParameterizedTest
+    @ValueSource(floats = {0, 3})
+    void singleGunResumesAfterEachReloadWithoutAnotherPress(float interval) {
+        CannonHoldCadence cadence = new CannonHoldCadence(100, interval);
+        assertTrue(cadence.onAttempt(100, FIRED));
+        cadence.confirmHold();
+
+        // For a zero interval this first attempt can happen in the same tick as the shot.
+        long nextAttempt = 100 + (long) interval;
+        assertTrue(cadence.canFire(nextAttempt));
+        assertFalse(cadence.onAttempt(nextAttempt, WAITING_FOR_RELOAD));
+        assertTrue(cadence.canFire(nextAttempt + 1));
+        assertFalse(cadence.onAttempt(nextAttempt + 1, WAITING_FOR_RELOAD));
+        assertTrue(cadence.canFire(140));
+        assertTrue(cadence.onAttempt(140, FIRED));
+
+        assertTrue(cadence.canFire(140 + (long) interval));
+        assertFalse(cadence.onAttempt(140 + (long) interval, WAITING_FOR_RELOAD));
+        assertTrue(cadence.canFire(180));
+        assertTrue(cadence.onAttempt(180, FIRED));
+    }
+
+    @Test
+    void pressingDuringReloadStillRequiresHoldConfirmation() {
+        CannonHoldCadence cadence = new CannonHoldCadence(100, 0);
+        assertFalse(cadence.onAttempt(100, WAITING_FOR_RELOAD));
+        assertFalse(cadence.canFire(110));
+        cadence.confirmHold();
+        assertTrue(cadence.canFire(110));
+    }
+
     @Test
     void exhaustedSequenceCannotRestartWhileHeld() {
         CannonHoldCadence cadence = new CannonHoldCadence(100, 1);
         cadence.confirmHold();
-        cadence.stop();
+        assertFalse(cadence.onAttempt(101, UNAVAILABLE));
         cadence.confirmHold();
         assertFalse(cadence.canFire(200));
     }

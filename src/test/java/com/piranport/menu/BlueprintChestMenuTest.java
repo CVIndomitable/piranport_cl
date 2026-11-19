@@ -1,6 +1,8 @@
 package com.piranport.menu;
 
 import com.piranport.block.entity.BlueprintChestBlockEntity;
+import com.piranport.block.entity.WeaponWorkbenchBlockEntity;
+import com.piranport.crafting.WeaponWorkbenchRecipeRegistry;
 import com.piranport.registry.ModBlockEntityTypes;
 import com.piranport.registry.ModBlocks;
 import com.piranport.registry.ModDataComponents;
@@ -27,6 +29,7 @@ import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
@@ -296,18 +299,56 @@ class BlueprintChestMenuTest {
         }
     }
 
-    /**
-     * 崩溃根因的直指回归：registerAll 的飞机循环要读 AIRCRAFT_TIERS。
-     * 若 AIRCRAFT_TIERS 声明在 static 块之后，类初始化时它还是 null →
-     * ExceptionInInitializerError → 首次校验蓝图（isWorkbenchBlueprint）即崩溃。
-     */
+    /** 制造台存档只记下标，原来的配方不能被新飞机挤到别的位置。 */
     @Test
-    void aircraftRecipesAreBuiltDuringStaticInit() {
-        var tab4 = com.piranport.crafting.WeaponWorkbenchRecipeRegistry.getRecipesForTab(4);
-        assertFalse(tab4.isEmpty(), "静态初始化应读到 AIRCRAFT_TIERS 并生成飞机配方");
-        assertTrue(tab4.stream().anyMatch(r ->
-                        BuiltInRegistries.ITEM.getKey(r.result()).getPath().equals("f4u_corsair")),
-                "改良机 f4u_corsair 应出现在飞机页配方里");
+    void oldAircraftRecipeIndicesSurviveTheUpdate() {
+        var ids = WeaponWorkbenchRecipeRegistry.getRecipesForTab(4).stream()
+                .map(recipe -> BuiltInRegistries.ITEM.getKey(recipe.result()).getPath()).toList();
+        assertEquals(List.of("swordfish_torpedo", "swordfish_asw", "tbf_torpedo", "tbf_asw",
+                "tenzan_torpedo", "type97_torpedo", "petrel_bomber", "type99_dive_bomber",
+                "sbd_dauntless", "firefly_as_mk5", "suisei_bomber", "seiun_kai_bomber", "b25_bomber",
+                "f6f_hellcat_rocket", "seafire", "zero_model52", "f4f_wildcat", "f4u_corsair",
+                "type0_recon", "c1_recon", "saiun_recon"), ids.subList(0, 21));
+    }
+
+    @Test
+    void newAircraftCanStartWithPreciselyTheirSurvivalIngredients() {
+        var aluminum = ModItems.ALUMINUM_INGOT.get();
+        var recipes = WeaponWorkbenchRecipeRegistry.getRecipesForTab(4);
+        record Group(List<String> ids, List<ItemStack> materials, int ticks, boolean blueprint) {}
+        for (var group : List.of(
+                new Group(List.of("type96_fighter", "f2a_buffalo"),
+                        List.of(new ItemStack(aluminum, 8), new ItemStack(Items.REDSTONE, 4)), 200, false),
+                new Group(List.of("barracuda", "ju87c"),
+                        List.of(new ItemStack(aluminum, 12), new ItemStack(Items.DIAMOND)), 250, false),
+                new Group(List.of("btd_destroyer"),
+                        List.of(new ItemStack(aluminum, 16), new ItemStack(Items.DIAMOND, 2)), 300, true),
+                new Group(List.of("seafang", "wyvern", "xf5u", "f4u7", "skyraider", "reppu", "tenga", "ryusei"),
+                        List.of(new ItemStack(aluminum, 20), new ItemStack(Items.NETHERITE_SCRAP, 3),
+                                new ItemStack(Items.END_CRYSTAL)), 400, true))) {
+            for (String id : group.ids()) {
+                var recipe = recipes.stream().filter(r -> BuiltInRegistries.ITEM.getKey(r.result()).getPath().equals(id))
+                        .findFirst().orElseThrow(() -> new AssertionError(id));
+                assertEquals(group.ticks(), recipe.craftingTime(), id);
+                assertNull(recipe.unlockStage(), id);
+                var bench = new WeaponWorkbenchBlockEntity(BlockPos.ZERO, ModBlocks.WEAPON_WORKBENCH.get().defaultBlockState());
+                bench.setSelectedTab(4);
+                bench.setSelectedRecipe(recipes.indexOf(recipe));
+                for (int i = 0; i < group.materials().size(); i++) {
+                    bench.getItemHandler().setStackInSlot(WeaponWorkbenchBlockEntity.MATERIAL_START + i, group.materials().get(i).copy());
+                }
+                if (group.blueprint()) {
+                    assertFalse(bench.startCrafting(), id);
+                    var slot = WeaponWorkbenchBlockEntity.BLUEPRINT_SLOT;
+                    var wrong = BuiltInRegistries.ITEM.getOptional(ResourceLocation.parse("piranport:b25_bomber_blueprint")).orElseThrow();
+                    bench.getItemHandler().setStackInSlot(slot, new ItemStack(wrong));
+                    assertFalse(bench.startCrafting(), id);
+                    var matching = BuiltInRegistries.ITEM.getOptional(ResourceLocation.parse("piranport:" + id + "_blueprint")).orElseThrow();
+                    bench.getItemHandler().setStackInSlot(slot, new ItemStack(matching));
+                }
+                assertTrue(bench.startCrafting(), id);
+            }
+        }
     }
 
     /** 同一种蓝图不允许放进第二个格子（策划决策 资源/01）。 */

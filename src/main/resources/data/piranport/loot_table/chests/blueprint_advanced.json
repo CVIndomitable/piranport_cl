@@ -41,6 +41,11 @@
         },
         {
           "type": "minecraft:item",
+          "name": "piranport:f4u7_blueprint",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
           "name": "piranport:german_skc40_triple_420mm_gun_blueprint",
           "weight": 1
         },
@@ -81,6 +86,16 @@
         },
         {
           "type": "minecraft:item",
+          "name": "piranport:reppu_blueprint",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "piranport:ryusei_blueprint",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
           "name": "piranport:sea_dart_launcher_blueprint",
           "weight": 1
         },
@@ -91,12 +106,22 @@
         },
         {
           "type": "minecraft:item",
+          "name": "piranport:seafang_blueprint",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
           "name": "piranport:seiun_kai_bomber_blueprint",
           "weight": 1
         },
         {
           "type": "minecraft:item",
           "name": "piranport:ship_rocket_launcher_blueprint",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "piranport:skyraider_blueprint",
           "weight": 1
         },
         {
@@ -112,6 +137,11 @@
         {
           "type": "minecraft:item",
           "name": "piranport:sy1_launcher_blueprint",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "piranport:tenga_blueprint",
           "weight": 1
         },
         {
@@ -142,6 +172,16 @@
         {
           "type": "minecraft:item",
           "name": "piranport:us_triple_16inch_gun_mk7_blueprint",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "piranport:wyvern_blueprint",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "piranport:xf5u_blueprint",
           "weight": 1
         }
       ]
